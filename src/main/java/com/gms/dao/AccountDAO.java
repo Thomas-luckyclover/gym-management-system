@@ -31,7 +31,6 @@ public class AccountDAO {
      * @return Account tương ứng hoặc null nếu không tìm thấy
      * @throws SQLException khi có lỗi kết nối hoặc truy vấn SQL
      */
-    
     public Account findByEmail(String email) throws SQLException {
         try (Connection conn = DBContext.getConnection()) {
             return findByEmail(conn, email);
