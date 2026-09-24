@@ -11,7 +11,7 @@
 # encrypt=false: SQL Server cài trên máy cá nhân thường không có chứng chỉ SSL
 db.url=jdbc:sqlserver://localhost:1433;databaseName=GMS;encrypt=false;trustServerCertificate=true
 db.username=sa
-db.password=DOI_THANH_MAT_KHAU_SA_CUA_BAN
+db.password=sa
 
 # ===== Email Gateway — SMTP Gmail (SRS API-03) =====
 # mail.app-password là "App Password" 16 ký tự tạo trong Google Account, KHÔNG phải mật khẩu Gmail
