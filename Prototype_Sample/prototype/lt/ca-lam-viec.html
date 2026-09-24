@@ -1,0 +1,264 @@
+﻿<!DOCTYPE html>
+<html lang="vi">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
+<title>Ca làm việc — Super Gym Lễ tân</title>
+<meta name="robots" content="noindex">
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Montserrat:wght@600;700;800&family=Inter:wght@400;500;600;700&display=swap">
+<script src="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/7.3.1/js/all.min.js" crossorigin="anonymous"></script>
+<link rel="stylesheet" href="../style.css">
+<link rel="stylesheet" href="../customer.css">
+</head>
+<body class="cust staff">
+<div id="toastRoot"></div>
+<div id="modalRoot"></div>
+
+<!-- 7.4.1 — Shift Session · L2 · UC-23 -->
+<div class="cust-shell" id="custShell">
+
+  <div class="cust-dock" id="custDock">
+    <aside class="cust-sidebar">
+      <a class="cust-brand" href="check-in.html">
+        <b>Super Gym</b><span>Lễ tân</span>
+      </a>
+      <nav class="cust-nav">
+        <h4>Tại quầy</h4>
+        <a href="check-in.html"><i class="fa-solid fa-door-open"></i>Check-in</a>
+        <a href="ban-hang.html"><i class="fa-solid fa-cart-shopping"></i>Bán hàng</a>
+        <a href="ban-goi-pt.html"><i class="fa-solid fa-user-check"></i>Bán gói PT</a>
+        <a href="ca-lam-viec.html" aria-current="page"><i class="fa-solid fa-cash-register"></i>Ca làm việc</a>
+        <h4>Hội viên</h4>
+        <a href="hoi-vien.html"><i class="fa-solid fa-user-group"></i>Hồ sơ khách</a>
+        <a href="bao-luu.html"><i class="fa-solid fa-circle-pause"></i>Bảo lưu</a>
+        <h4>Cơ sở vật chất</h4>
+        <a href="co-so-vat-chat.html"><i class="fa-solid fa-boxes-stacked"></i>Danh mục</a>
+        <a href="bao-tri.html"><i class="fa-solid fa-screwdriver-wrench"></i>Yêu cầu bảo trì</a>
+        <h4>Cá nhân</h4>
+        <a href="nghi-phep.html"><i class="fa-solid fa-plane-departure"></i>Nghỉ phép</a>
+        <a href="tai-khoan.html"><i class="fa-solid fa-user-gear"></i>Cài đặt tài khoản</a>
+      </nav>
+      <div class="cust-sidebar-foot">
+        <a href="../dang-nhap.html"><i class="fa-solid fa-arrow-right-from-bracket"></i>Đăng xuất</a>
+      </div>
+    </aside>
+    <button class="cust-handle" type="button" id="dockHandle"
+            aria-label="Mở menu điều hướng" aria-expanded="false" aria-controls="custDock">
+      <i class="fa-solid fa-chevron-right"></i>
+    </button>
+  </div>
+
+  <div class="cust-main">
+    <header class="cust-topbar">
+      <div>
+        <h1>Ca làm việc</h1>
+      </div>
+      <div class="cust-topbar-actions">
+        <a class="badge badge-ok" href="ca-lam-viec.html" id="shiftChip"><i class="fa-solid fa-circle-check"></i> Ca chiều 20/09 đang mở</a>
+        <a class="cust-user" href="tai-khoan.html" title="Cài đặt tài khoản">
+          <span class="avatar">NH</span>
+          <span class="cust-user-text">
+            <b>Nguyễn Thị Hoa</b>
+            <span>Lễ tân · NV-0042</span>
+          </span>
+        </a>
+      </div>
+    </header>
+
+    <main class="cust-content">
+      <section class="status-hero" id="shiftHero">
+        <div>
+          <span class="section-label">Ca chiều · 20/09/2026</span>
+          <h2>Đang mở từ 14:00</h2>
+          <p class="muted">Mở bởi Nguyễn Thị Hoa · NV-0042. Mọi hoá đơn phát sinh từ lúc này được tính vào ca.</p>
+        </div>
+        <div class="btn-row">
+          <button class="btn btn-primary" type="button" id="btnOpen" hidden>Mở ca</button>
+          <button class="btn btn-primary" type="button" id="btnClose">Chốt ca</button>
+        </div>
+      </section>
+
+      <div class="kpi-row">
+        <div class="kpi-card">
+          <span class="kpi-label">Tiền mặt</span>
+          <b class="kpi-value tabular" id="kCash">2.602.800đ</b>
+          <span class="kpi-foot">4 hoá đơn</span>
+        </div>
+        <div class="kpi-card">
+          <span class="kpi-label">Chuyển khoản</span>
+          <b class="kpi-value tabular" id="kBank">9.180.000đ</b>
+          <span class="kpi-foot">3 hoá đơn</span>
+        </div>
+        <div class="kpi-card">
+          <span class="kpi-label">Tổng thu</span>
+          <b class="kpi-value tabular" id="kAll">11.782.800đ</b>
+          <span class="kpi-foot">7 hoá đơn hợp lệ</span>
+        </div>
+        <div class="kpi-card">
+          <span class="kpi-label">Đơn chờ xử lý</span>
+          <b class="kpi-value tabular" id="kPend">1</b>
+          <span class="kpi-foot">Phải xong trước khi chốt ca</span>
+        </div>
+      </div>
+
+      <div class="alert-banner warn" id="pendBox">
+        <i class="fa-solid fa-hourglass-half"></i>
+        <span><b>HD-20904 đang chờ xác nhận chuyển khoản.</b> Đối chiếu biến động số dư rồi xác nhận, hoặc huỷ đơn kèm lý do.</span>
+        <button class="btn btn-outline btn-sm" type="button" id="pendOk">Xác nhận đã nhận tiền</button>
+      </div>
+
+      <section class="panel">
+        <div class="panel-head"><h2>Giao dịch trong ca</h2></div>
+        <div class="toolbar">
+          <div class="search">
+            <i class="fa-solid fa-magnifying-glass"></i>
+            <input id="txq" type="search" placeholder="Tìm mã hoá đơn hoặc tên khách" aria-label="Tìm giao dịch">
+          </div>
+          <label for="txPay">Hình thức</label>
+          <select id="txPay">
+            <option value="all">Tất cả</option>
+            <option value="cash">Tiền mặt</option>
+            <option value="bank">Chuyển khoản</option>
+          </select>
+          <label for="txSt">Trạng thái</label>
+          <select id="txSt">
+            <option value="all">Tất cả</option>
+            <option value="ok">Hợp lệ</option>
+            <option value="void">Đã huỷ</option>
+          </select>
+          <button class="btn btn-ghost btn-sm reset" type="button" id="txReset">Xoá lọc</button>
+        </div>
+
+        <div class="data-list" id="txList">
+          <div class="data-row" data-pay="cash" data-st="ok" data-q="HD-20903 Trịnh Quốc Bảo Gói 3 Tháng">
+            <div class="row-main">
+              <div class="row-title">HD-20903 · Trịnh Quốc Bảo</div>
+              <div class="row-meta">
+                <span><i class="fa-solid fa-clock"></i> 14:12</span>
+                <span><i class="fa-solid fa-dumbbell"></i> Gói 3 Tháng</span>
+                <span class="badge badge-muted">Tiền mặt</span>
+              </div>
+            </div>
+            <div class="row-end">
+              <b class="tabular">1.782.000đ</b>
+              <button class="btn btn-ghost btn-sm" type="button" data-void="HD-20903">Huỷ đơn</button>
+            </div>
+          </div>
+          <div class="data-row" data-pay="bank" data-st="ok" data-q="HD-20902 Mai Anh Thư Gói 1 Tháng">
+            <div class="row-main">
+              <div class="row-title">HD-20902 · Mai Anh Thư</div>
+              <div class="row-meta">
+                <span><i class="fa-solid fa-clock"></i> 13:48</span>
+                <span><i class="fa-solid fa-dumbbell"></i> Gói 1 Tháng</span>
+                <span class="badge badge-muted">Chuyển khoản</span>
+              </div>
+            </div>
+            <div class="row-end">
+              <b class="tabular">648.000đ</b>
+              <button class="btn btn-ghost btn-sm" type="button" data-void="HD-20902">Huỷ đơn</button>
+            </div>
+          </div>
+          <div class="data-row" data-pay="bank" data-st="ok" data-q="HD-20901 Vũ Hải Nam Gói PT 12 buổi">
+            <div class="row-main">
+              <div class="row-title">HD-20901 · Vũ Hải Nam</div>
+              <div class="row-meta">
+                <span><i class="fa-solid fa-clock"></i> 13:20</span>
+                <span><i class="fa-solid fa-dumbbell"></i> Gói PT 12 buổi</span>
+                <span class="badge badge-muted">Chuyển khoản</span>
+              </div>
+            </div>
+            <div class="row-end">
+              <b class="tabular">5.184.000đ</b>
+              <button class="btn btn-ghost btn-sm" type="button" data-void="HD-20901">Huỷ đơn</button>
+            </div>
+          </div>
+          <div class="data-row" data-pay="cash" data-st="ok" data-q="HD-20900 Lê Minh Tuấn Gói Ngày">
+            <div class="row-main">
+              <div class="row-title">HD-20900 · Lê Minh Tuấn</div>
+              <div class="row-meta">
+                <span><i class="fa-solid fa-clock"></i> 12:55</span>
+                <span><i class="fa-solid fa-dumbbell"></i> Gói Ngày</span>
+                <span class="badge badge-muted">Tiền mặt</span>
+              </div>
+            </div>
+            <div class="row-end">
+              <b class="tabular">86.400đ</b>
+              <button class="btn btn-ghost btn-sm" type="button" data-void="HD-20900">Huỷ đơn</button>
+            </div>
+          </div>
+          <div class="data-row" data-pay="cash" data-st="void" data-q="HD-20899 Ngô Thị Lan Gói 1 Tháng">
+            <div class="row-main">
+              <div class="row-title">HD-20899 · Ngô Thị Lan <span class="badge badge-danger">Đã huỷ</span></div>
+              <div class="row-meta">
+                <span><i class="fa-solid fa-clock"></i> 12:10</span>
+                <span><i class="fa-solid fa-dumbbell"></i> Gói 1 Tháng</span>
+                <span class="badge badge-muted">Tiền mặt</span>
+                <span><i class="fa-solid fa-circle-info"></i> Khách đổi ý ngay tại quầy</span>
+              </div>
+            </div>
+            <div class="row-end">
+              <b class="tabular is-void">648.000đ</b>
+            </div>
+          </div>
+          <div class="data-row" data-pay="bank" data-st="ok" data-q="HD-20898 Trần Bảo Ngọc Gói 6 Tháng">
+            <div class="row-main">
+              <div class="row-title">HD-20898 · Trần Bảo Ngọc</div>
+              <div class="row-meta">
+                <span><i class="fa-solid fa-clock"></i> 11:30</span>
+                <span><i class="fa-solid fa-dumbbell"></i> Gói 6 Tháng</span>
+                <span class="badge badge-muted">Chuyển khoản</span>
+              </div>
+            </div>
+            <div class="row-end">
+              <b class="tabular">3.348.000đ</b>
+              <button class="btn btn-ghost btn-sm" type="button" data-void="HD-20898">Huỷ đơn</button>
+            </div>
+          </div>
+          <div class="data-row" data-pay="cash" data-st="ok" data-q="HD-20897 Bùi Thanh Hà Gói Ngày">
+            <div class="row-main">
+              <div class="row-title">HD-20897 · Bùi Thanh Hà</div>
+              <div class="row-meta">
+                <span><i class="fa-solid fa-clock"></i> 10:42</span>
+                <span><i class="fa-solid fa-dumbbell"></i> Gói Ngày</span>
+                <span class="badge badge-muted">Tiền mặt</span>
+              </div>
+            </div>
+            <div class="row-end">
+              <b class="tabular">86.400đ</b>
+              <button class="btn btn-ghost btn-sm" type="button" data-void="HD-20897">Huỷ đơn</button>
+            </div>
+          </div>
+          <div class="data-row" data-pay="cash" data-st="ok" data-q="HD-20896 Đỗ Văn Khang Gói 1 Tháng">
+            <div class="row-main">
+              <div class="row-title">HD-20896 · Đỗ Văn Khang</div>
+              <div class="row-meta">
+                <span><i class="fa-solid fa-clock"></i> 09:15</span>
+                <span><i class="fa-solid fa-dumbbell"></i> Gói 1 Tháng</span>
+                <span class="badge badge-muted">Tiền mặt</span>
+              </div>
+            </div>
+            <div class="row-end">
+              <b class="tabular">648.000đ</b>
+              <button class="btn btn-ghost btn-sm" type="button" data-void="HD-20896">Huỷ đơn</button>
+            </div>
+          </div>
+        <div class="empty-state" data-empty hidden>
+          <div class="empty-icon"><i class="fa-solid fa-box-open"></i></div>
+          <p>Không có giao dịch nào khớp bộ lọc.</p>
+        </div>
+        </div>
+
+      <div class="pager" data-pager>
+        <div class="pager-info"></div>
+        <div class="pager-btns"></div>
+      </div>
+      </section>
+    </main>
+  </div>
+</div>
+
+<script src="../app.js"></script>
+<script src="../kh/customer.js"></script>
+<script src="ca-lam-viec.js"></script>
+</body>
+</html>

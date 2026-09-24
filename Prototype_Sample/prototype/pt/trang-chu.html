@@ -1,0 +1,337 @@
+﻿<!DOCTYPE html>
+<html lang="vi">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
+<title>Tổng quan — Super Gym PT</title>
+<meta name="robots" content="noindex">
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Montserrat:wght@600;700;800&family=Inter:wght@400;500;600;700&display=swap">
+<script src="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/7.3.1/js/all.min.js" crossorigin="anonymous"></script>
+<link rel="stylesheet" href="../style.css">
+<link rel="stylesheet" href="../customer.css">
+</head>
+<body class="cust staff">
+<div id="toastRoot"></div>
+<div id="modalRoot"></div>
+
+<!-- 9.5.1 — PT Dashboard · L1 · UC-32 -->
+<div class="cust-shell" id="custShell">
+
+  <div class="cust-dock" id="custDock">
+    <aside class="cust-sidebar">
+      <a class="cust-brand" href="trang-chu.html">
+        <b>Super Gym</b><span>Huấn luyện viên</span>
+      </a>
+      <nav class="cust-nav">
+        <h4>Hôm nay</h4>
+        <a href="trang-chu.html" aria-current="page"><i class="fa-solid fa-gauge-high"></i>Tổng quan</a>
+        <a href="diem-danh.html"><i class="fa-solid fa-clipboard-check"></i>Điểm danh</a>
+        <h4>Lịch dạy</h4>
+        <a href="lich-ranh.html"><i class="fa-solid fa-calendar-days"></i>Lịch rảnh</a>
+        <h4>Khách phụ trách</h4>
+        <a href="khach-cua-toi.html"><i class="fa-solid fa-user-group"></i>Khách của tôi</a>
+        <h4>Cá nhân</h4>
+        <a href="nghi-phep.html"><i class="fa-solid fa-plane-departure"></i>Nghỉ phép</a>
+        <a href="tai-khoan.html"><i class="fa-solid fa-user-gear"></i>Cài đặt tài khoản</a>
+      </nav>
+      <div class="cust-sidebar-foot">
+        <a href="../dang-nhap.html"><i class="fa-solid fa-arrow-right-from-bracket"></i>Đăng xuất</a>
+      </div>
+    </aside>
+    <button class="cust-handle" type="button" id="dockHandle"
+            aria-label="Mở menu điều hướng" aria-expanded="false" aria-controls="custDock">
+      <i class="fa-solid fa-chevron-right"></i>
+    </button>
+  </div>
+
+  <div class="cust-main">
+    <header class="cust-topbar">
+      <div>
+        <h1>Tổng quan</h1>
+      </div>
+      <div class="cust-topbar-actions">
+        <a class="btn btn-primary btn-sm" href="diem-danh.html">Điểm danh hôm nay</a>
+        <a class="cust-user" href="tai-khoan.html" title="Cài đặt tài khoản">
+          <span class="avatar">HL</span>
+          <span class="cust-user-text">
+            <b>Hoàng Long</b>
+            <span>PT · NV-0118</span>
+          </span>
+        </a>
+      </div>
+    </header>
+
+    <main class="cust-content">
+      <div class="split">
+        <div class="col-main">
+
+          <section class="panel">
+            <div class="panel-head">
+              <div>
+                <h2>Hoa hồng</h2>
+                <p data-period-note>Tính tới hết 20/09 · 28 buổi đã dạy</p>
+              </div>
+              <div style="display:flex;align-items:center;gap:var(--space-3)">
+                <label for="periodPick" class="muted">Kỳ</label>
+                <select id="periodPick">
+                  <option value="2026-09">Tháng 09/2026</option>
+                  <option value="2026-08">Tháng 08/2026</option>
+                  <option value="2026-07">Tháng 07/2026</option>
+                  <option value="q3">Quý III/2026</option>
+                </select>
+                <span class="badge badge-muted">70% đơn giá buổi</span>
+              </div>
+            </div>
+
+            <div class="kpi-value tabular is-key" style="font-size:2rem" data-period-total>10.472.000đ</div>
+
+            <table class="tx-table">
+              <thead>
+                <tr><th>Nguồn buổi</th><th>Số buổi</th><th>Hoa hồng / buổi</th><th>Thành tiền</th></tr>
+              </thead>
+              <tbody data-period="2026-09">
+                <tr>
+                  <td data-label="Nguồn buổi">Gói PT 10 buổi & Gói Tháng</td>
+                  <td data-label="Số buổi" class="tabular">18</td>
+                  <td data-label="Hoa hồng / buổi" class="tabular">315.000đ</td>
+                  <td data-label="Thành tiền" class="tabular">5.670.000đ</td>
+                </tr>
+                <tr>
+                  <td data-label="Nguồn buổi">Gói PT Couple</td>
+                  <td data-label="Số buổi" class="tabular">4</td>
+                  <td data-label="Hoa hồng / buổi" class="tabular">623.000đ</td>
+                  <td data-label="Thành tiền" class="tabular">2.492.000đ</td>
+                </tr>
+                <tr>
+                  <td data-label="Nguồn buổi">Buổi lẻ khách tự đặt</td>
+                  <td data-label="Số buổi" class="tabular">6</td>
+                  <td data-label="Hoa hồng / buổi" class="tabular">385.000đ</td>
+                  <td data-label="Thành tiền" class="tabular">2.310.000đ</td>
+                </tr>
+              </tbody>
+              <tbody data-period="2026-08" hidden>
+                <tr>
+                  <td data-label="Nguồn buổi">Gói PT 10 buổi & Gói Tháng</td>
+                  <td data-label="Số buổi" class="tabular">24</td>
+                  <td data-label="Hoa hồng / buổi" class="tabular">315.000đ</td>
+                  <td data-label="Thành tiền" class="tabular">7.560.000đ</td>
+                </tr>
+                <tr>
+                  <td data-label="Nguồn buổi">Gói PT Couple</td>
+                  <td data-label="Số buổi" class="tabular">6</td>
+                  <td data-label="Hoa hồng / buổi" class="tabular">623.000đ</td>
+                  <td data-label="Thành tiền" class="tabular">3.738.000đ</td>
+                </tr>
+                <tr>
+                  <td data-label="Nguồn buổi">Buổi lẻ khách tự đặt</td>
+                  <td data-label="Số buổi" class="tabular">9</td>
+                  <td data-label="Hoa hồng / buổi" class="tabular">385.000đ</td>
+                  <td data-label="Thành tiền" class="tabular">3.465.000đ</td>
+                </tr>
+              </tbody>
+              <tbody data-period="2026-07" hidden>
+                <tr>
+                  <td data-label="Nguồn buổi">Gói PT 10 buổi & Gói Tháng</td>
+                  <td data-label="Số buổi" class="tabular">21</td>
+                  <td data-label="Hoa hồng / buổi" class="tabular">315.000đ</td>
+                  <td data-label="Thành tiền" class="tabular">6.615.000đ</td>
+                </tr>
+                <tr>
+                  <td data-label="Nguồn buổi">Gói PT Couple</td>
+                  <td data-label="Số buổi" class="tabular">6</td>
+                  <td data-label="Hoa hồng / buổi" class="tabular">623.000đ</td>
+                  <td data-label="Thành tiền" class="tabular">3.738.000đ</td>
+                </tr>
+                <tr>
+                  <td data-label="Nguồn buổi">Buổi lẻ khách tự đặt</td>
+                  <td data-label="Số buổi" class="tabular">4</td>
+                  <td data-label="Hoa hồng / buổi" class="tabular">385.000đ</td>
+                  <td data-label="Thành tiền" class="tabular">1.540.000đ</td>
+                </tr>
+              </tbody>
+              <tbody data-period="q3" hidden>
+                <tr>
+                  <td data-label="Nguồn buổi">Gói PT 10 buổi & Gói Tháng</td>
+                  <td data-label="Số buổi" class="tabular">63</td>
+                  <td data-label="Hoa hồng / buổi" class="tabular">315.000đ</td>
+                  <td data-label="Thành tiền" class="tabular">19.845.000đ</td>
+                </tr>
+                <tr>
+                  <td data-label="Nguồn buổi">Gói PT Couple</td>
+                  <td data-label="Số buổi" class="tabular">16</td>
+                  <td data-label="Hoa hồng / buổi" class="tabular">623.000đ</td>
+                  <td data-label="Thành tiền" class="tabular">9.968.000đ</td>
+                </tr>
+                <tr>
+                  <td data-label="Nguồn buổi">Buổi lẻ khách tự đặt</td>
+                  <td data-label="Số buổi" class="tabular">19</td>
+                  <td data-label="Hoa hồng / buổi" class="tabular">385.000đ</td>
+                  <td data-label="Thành tiền" class="tabular">7.315.000đ</td>
+                </tr>
+              </tbody>
+            </table>
+
+            <p class="muted">Buổi khách hủy vẫn tính hoa hồng cho bạn. Buổi bạn chuyển cho PT khác thì hoa hồng thuộc về PT nhận.</p>
+          </section>
+
+          <section class="panel">
+            <div class="panel-head">
+              <h2>Buổi sắp tới</h2>
+              <a class="btn btn-ghost btn-sm" href="diem-danh.html">Mở điểm danh <i class="fa-solid fa-arrow-right"></i></a>
+            </div>
+
+            <div class="toolbar">
+              <div class="search">
+                <i class="fa-solid fa-magnifying-glass"></i>
+                <input id="upSearch" type="search" placeholder="Tìm khách" aria-label="Tìm khách">
+              </div>
+              <label for="upRange">Trong</label>
+              <select id="upRange">
+                <option value="1">Hôm nay</option>
+                <option value="3">3 ngày tới</option>
+                <option value="7" selected>7 ngày tới</option>
+                <option value="30">30 ngày tới</option>
+              </select>
+              <label for="upPkg">Gói</label>
+              <select id="upPkg">
+                <option value="all">Tất cả</option>
+                <option value="pack">Gói PT 10 buổi</option>
+                <option value="month">Gói PT Tháng</option>
+                <option value="couple">Gói PT Couple</option>
+                <option value="single">Buổi lẻ</option>
+              </select>
+              <button class="btn btn-ghost btn-sm reset" type="button" id="upReset">Xoá lọc</button>
+            </div>
+
+            <div class="data-list" id="upList">
+              <a class="data-row" href="diem-danh.html" data-in="0" data-pkg="pack" data-q="nguyễn minh an">
+                <div class="row-main">
+                  <div class="row-title">Hôm nay · 19:00 – 20:30</div>
+                  <div class="row-meta">
+                    <span><i class="fa-solid fa-user"></i> Nguyễn Minh An</span>
+                    <span><i class="fa-solid fa-layer-group"></i> Gói PT 10 buổi</span>
+                  </div>
+                </div>
+                <span class="badge badge-info">Đã xếp</span>
+              </a>
+              <a class="data-row" href="diem-danh.html" data-in="1" data-pkg="month" data-q="trần gia bảo">
+                <div class="row-main">
+                  <div class="row-title">Mai · 08:00 – 09:30</div>
+                  <div class="row-meta">
+                    <span><i class="fa-solid fa-user"></i> Trần Gia Bảo</span>
+                    <span><i class="fa-solid fa-layer-group"></i> Gói PT Tháng</span>
+                  </div>
+                </div>
+                <span class="badge badge-info">Đã xếp</span>
+              </a>
+              <a class="data-row" href="diem-danh.html" data-in="2" data-pkg="pack" data-q="lê thu hà">
+                <div class="row-main">
+                  <div class="row-title">22/09 · 19:00 – 20:30 <span class="badge badge-warn"><i class="fa-solid fa-triangle-exclamation"></i> Chưa có gói tập</span></div>
+                  <div class="row-meta">
+                    <span><i class="fa-solid fa-user"></i> Lê Thu Hà</span>
+                    <span><i class="fa-solid fa-layer-group"></i> Gói PT 10 buổi</span>
+                  </div>
+                </div>
+                <span class="badge badge-info">Đã xếp</span>
+              </a>
+              <a class="data-row" href="diem-danh.html" data-in="3" data-pkg="couple" data-q="vũ hoài nam & đỗ lan chi">
+                <div class="row-main">
+                  <div class="row-title">23/09 · 17:00 – 18:30 <span class="badge badge-muted">Couple</span></div>
+                  <div class="row-meta">
+                    <span><i class="fa-solid fa-user"></i> Vũ Hoài Nam & Đỗ Lan Chi</span>
+                    <span><i class="fa-solid fa-layer-group"></i> Gói PT Couple</span>
+                  </div>
+                </div>
+                <span class="badge badge-info">Đã xếp</span>
+              </a>
+              <a class="data-row" href="diem-danh.html" data-in="5" data-pkg="pack" data-q="phạm quốc huy">
+                <div class="row-main">
+                  <div class="row-title">25/09 · 18:00 – 19:30</div>
+                  <div class="row-meta">
+                    <span><i class="fa-solid fa-user"></i> Phạm Quốc Huy</span>
+                    <span><i class="fa-solid fa-layer-group"></i> Gói PT 10 buổi</span>
+                  </div>
+                </div>
+                <span class="badge badge-info">Đã xếp</span>
+              </a>
+              <a class="data-row" href="diem-danh.html" data-in="6" data-pkg="month" data-q="trần gia bảo">
+                <div class="row-main">
+                  <div class="row-title">26/09 · 08:00 – 09:30</div>
+                  <div class="row-meta">
+                    <span><i class="fa-solid fa-user"></i> Trần Gia Bảo</span>
+                    <span><i class="fa-solid fa-layer-group"></i> Gói PT Tháng</span>
+                  </div>
+                </div>
+                <span class="badge badge-info">Đã xếp</span>
+              </a>
+              <a class="data-row" href="diem-danh.html" data-in="10" data-pkg="single" data-q="bùi khánh linh">
+                <div class="row-main">
+                  <div class="row-title">30/09 · 17:00 – 18:30</div>
+                  <div class="row-meta">
+                    <span><i class="fa-solid fa-user"></i> Bùi Khánh Linh</span>
+                    <span><i class="fa-solid fa-layer-group"></i> Buổi lẻ</span>
+                  </div>
+                </div>
+                <span class="badge badge-info">Đã xếp</span>
+              </a>
+              <a class="data-row" href="diem-danh.html" data-in="12" data-pkg="single" data-q="nguyễn minh an">
+                <div class="row-main">
+                  <div class="row-title">02/10 · 19:00 – 20:30</div>
+                  <div class="row-meta">
+                    <span><i class="fa-solid fa-user"></i> Nguyễn Minh An</span>
+                    <span><i class="fa-solid fa-layer-group"></i> Buổi lẻ</span>
+                  </div>
+                </div>
+                <span class="badge badge-info">Đã xếp</span>
+              </a>
+              <div class="empty-state" data-empty hidden>
+                <div class="empty-icon"><i class="fa-solid fa-box-open"></i></div>
+                <p>Không có buổi nào khớp bộ lọc.</p>
+              </div>
+            </div>
+          </section>
+
+          <div class="alert-banner warn">
+            <i class="fa-solid fa-triangle-exclamation"></i>
+            <span><b>1 khách</b> có buổi nằm ngoài hạn gói tập. Nhắc khách gia hạn trước buổi ngày 22/09.</span>
+            <a class="btn btn-outline btn-sm" href="khach-cua-toi.html">Xem khách</a>
+          </div>
+
+        </div>
+
+        <aside class="col-side">
+          <div class="kpi-card">
+            <div class="kpi-top"><i class="fa-solid fa-user-group"></i><span class="section-label">Khách phụ trách</span></div>
+            <div class="kpi-value tabular is-key">8</div>
+            <div class="kpi-note">6 gói còn hiệu lực · 2 sắp hết hạn</div>
+            <a class="btn btn-ghost btn-sm btn-block" href="khach-cua-toi.html" style="margin-top:var(--space-4)">Khách của tôi</a>
+          </div>
+          <div class="side-card">
+            <span class="section-label">Dự kiến còn lại tháng này</span>
+            <h3 class="tabular">2.975.000đ</h3>
+            <div class="side-row"><span>Buổi đã xếp</span><b>9</b></div>
+            <p class="muted" style="margin-top:var(--space-3)">Chốt khi buổi hoàn thành hoặc khách vắng.</p>
+          </div>
+
+          <div class="side-card">
+            <span class="section-label">Tuần này</span>
+            <div class="side-row"><span>Buổi đã xếp</span><b>11</b></div>
+            <div class="side-row"><span>Đã dạy</span><b>4</b></div>
+            <div class="side-row"><span>Slot còn trống</span><b>6</b></div>
+          </div>
+          <div class="side-card">
+            <span class="section-label">Lịch rảnh</span>
+            <p class="muted">Khách chỉ đặt được slot trong tuần hiện tại; từ Thứ 7 mở thêm tuần kế.</p>
+            <a class="btn btn-ghost btn-sm btn-block" href="lich-ranh.html">Quản lý lịch rảnh</a>
+          </div>
+        </aside>
+      </div>
+    </main>
+  </div>
+</div>
+
+<script src="../app.js"></script>
+<script src="../kh/customer.js"></script>
+<script src="trang-chu.js"></script>
+</body>
+</html>

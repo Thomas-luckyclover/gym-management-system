@@ -1,0 +1,80 @@
+<!DOCTYPE html>
+<html lang="vi">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
+<title>Đăng nhập — Super Gym</title>
+<meta name="description" content="Đăng nhập tài khoản Super Gym bằng email/số điện thoại và mật khẩu.">
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Montserrat:wght@600;700;800&family=Inter:wght@400;500;600;700&display=swap">
+<script src="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/7.3.1/js/all.min.js" crossorigin="anonymous"></script>
+<link rel="stylesheet" href="style.css">
+</head>
+<body class="dark auth-dark">
+<div id="toastRoot"></div>
+<div id="modalRoot"></div>
+
+<!-- ============ 1.2.1 — ĐĂNG NHẬP ============
+     .step-panel: form đăng nhập, chặn tài khoản chưa có mật khẩu (MSG-005),
+     chặn khoá 5 lần sai liên tiếp trong 5 phút. -->
+<div class="auth-shell">
+  <div class="auth-top">
+    <a class="auth-brand" href="index.html">Super Gym</a>
+    <a class="auth-back" href="index.html"><i class="fa-solid fa-arrow-left"></i> Về trang chủ</a>
+  </div>
+
+  <div class="auth-card">
+
+    <!-- ---------- Form đăng nhập ---------- -->
+    <div class="step-panel" data-step="form">
+      <div class="auth-head">
+        <h1>Đăng nhập</h1>
+        <p>Nhập email hoặc số điện thoại và mật khẩu để tiếp tục.</p>
+      </div>
+      <form id="loginForm" novalidate>
+        <label class="field">
+          <span class="field-label">Email hoặc số điện thoại</span>
+          <input id="loginId" type="text" placeholder="ban@email.com hoặc 090xxxxxxx" autocomplete="username" value="giabao.tran@email.com">
+          <span class="field-error" id="loginIdErr" hidden></span>
+        </label>
+        <label class="field">
+          <span class="field-label">Mật khẩu</span>
+          <span class="input-wrap">
+            <input id="loginPass" type="password" placeholder="Nhập mật khẩu" autocomplete="current-password" value="matkhau123">
+            <button type="button" class="pw-toggle" data-pw-toggle="loginPass" aria-label="Hiện mật khẩu"><i class="fa-solid fa-eye"></i></button>
+          </span>
+          <span class="field-error" id="loginPassErr" hidden></span>
+        </label>
+        <p class="auth-switch" style="margin: 0 0 16px; text-align: right;"><a href="quen-mat-khau.html">Quên mật khẩu?</a></p>
+        <button class="btn btn-primary btn-block" type="submit" id="loginSubmitBtn">Đăng nhập</button>
+      </form>
+      <p class="auth-switch">Chưa có tài khoản? <a href="dang-ky.html">Đăng ký</a></p>
+    </div>
+
+    <!-- ---------- Tài khoản chưa có mật khẩu (MSG-005) ---------- -->
+    <div class="step-panel" data-step="blocked-no-password" hidden>
+      <div class="auth-head"><h1>Chưa thể đăng nhập</h1></div>
+      <div class="msg-banner warning"><i class="fa-solid fa-triangle-exclamation"></i><span>Tài khoản chưa có mật khẩu. Vui lòng kiểm tra email để đặt mật khẩu lần đầu.</span></div>
+      <div class="btn-row">
+        <a class="btn btn-primary" href="quen-mat-khau.html">Đặt mật khẩu</a>
+        <button class="btn btn-outline" type="button" data-back-form>Thử lại</button>
+      </div>
+    </div>
+
+    <!-- ---------- Khoá đăng nhập sau 5 lần sai ---------- -->
+    <div class="step-panel" data-step="blocked-lock" hidden>
+      <div class="auth-head"><h1>Tài khoản tạm khoá</h1></div>
+      <div class="msg-banner warning"><i class="fa-solid fa-triangle-exclamation"></i><span>Bạn đã nhập sai mật khẩu 5 lần. Vui lòng thử lại sau <b data-lock-remaining>5 phút</b>, hoặc dùng chức năng Quên mật khẩu.</span></div>
+      <div class="btn-row">
+        <a class="btn btn-primary" href="quen-mat-khau.html">Quên mật khẩu</a>
+        <button class="btn btn-outline" type="button" data-back-form>Quay lại</button>
+      </div>
+    </div>
+
+  </div>
+  <p class="auth-foot-note">© 2026 Super Gym</p>
+</div>
+
+<script src="app.js"></script>
+<script src="dang-nhap.js"></script>
+</body>
+</html>

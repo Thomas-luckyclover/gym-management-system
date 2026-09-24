@@ -1,0 +1,1086 @@
+<!DOCTYPE html>
+<html lang="vi">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>GMS Manager — Mockup v24</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Be+Vietnam+Pro:wght@600;700;800&family=Montserrat:wght@600;700;800&family=Work+Sans:wght@400;500;600;700&display=swap" rel="stylesheet">
+<style>
+:root{--role:#3B4FA0;--role-hover:#2F3F85;--role-bg:#EDEFFA;--role-border:#C5CCEC}
+:root{
+  --page:#FAFAF8; --card:#FFFFFF; --text:#23221F; --text2:#6B6960; --border:#E7E5DF;
+  --success:#2F8F5B; --warning:#D69E2E; --danger:#D32F3F; --info:#2E6FBA;
+  --success-bg:#E8F4EC; --warning-bg:#FBF3E2; --danger-bg:#FBE9EA; --info-bg:#E8F0F9;
+  --r-sm:6px; --r-md:10px; --r-lg:14px;
+  --font:"Work Sans","Segoe UI",system-ui,sans-serif;
+  --heading:"Be Vietnam Pro","Segoe UI",system-ui,sans-serif;
+  --display:"Montserrat","Segoe UI",system-ui,sans-serif;
+}
+*{box-sizing:border-box}
+html,body{margin:0}
+body{font-family:var(--font);font-size:14px;line-height:1.5;color:var(--text);background:var(--page);-webkit-font-smoothing:antialiased}
+button,input,select,textarea{font:inherit;color:inherit}
+a{color:var(--role)}
+:focus-visible{outline:2px solid var(--role);outline-offset:2px}
+@media (prefers-reduced-motion:reduce){*{transition:none!important;animation:none!important}}
+.num{font-variant-numeric:tabular-nums}
+.muted{color:var(--text2)}
+
+.app{display:grid;grid-template-columns:244px minmax(0,1fr);min-height:100vh}
+.sidebar{background:var(--card);border-right:1px solid var(--border);display:flex;flex-direction:column;position:sticky;top:0;height:100vh;overflow:auto}
+.brand{display:flex;align-items:center;gap:10px;padding:18px 20px 14px}
+.brand-mark{width:32px;height:32px;border-radius:8px;background:var(--role);color:#fff;display:grid;place-items:center;font:800 12px var(--display)}
+.brand-name{font:700 15px/1.2 var(--display)}
+.brand-role{font-size:12px;color:var(--role);font-weight:600}
+.nav{padding:4px 12px;display:flex;flex-direction:column;gap:1px;flex:1}
+.nav-group{font-size:12px;color:var(--text2);padding:12px 10px 4px}
+.nav a{display:flex;align-items:center;gap:10px;padding:8px 10px;border-radius:var(--r-sm);color:var(--text);text-decoration:none;font-weight:500}
+.nav a:hover{background:var(--page)}
+.nav a.active{background:var(--role-bg);color:var(--role);font-weight:600;box-shadow:inset 3px 0 0 var(--role)}
+.nav svg{width:18px;height:18px;flex:none;stroke:currentColor;fill:none;stroke-width:1.7;stroke-linecap:round;stroke-linejoin:round}
+.nav .badge{margin-left:auto;background:var(--danger);color:#fff;font-size:11px;font-weight:700;border-radius:999px;padding:0 7px;line-height:18px}
+.side-foot{border-top:1px solid var(--border);padding:12px}
+.me{display:flex;align-items:center;gap:10px;padding:8px;border-radius:var(--r-sm);text-decoration:none;color:var(--text)}
+.me:hover{background:var(--page)}
+.me small{display:block;color:var(--text2);font-size:12px}
+.avatar{width:32px;height:32px;border-radius:50%;display:grid;place-items:center;font-weight:600;font-size:12px;flex:none;background:var(--role-bg);color:var(--role)}
+.logout{margin-top:4px;width:100%;text-align:left;background:none;border:0;padding:8px;border-radius:var(--r-sm);color:var(--text2);cursor:pointer}
+.logout:hover{background:var(--page);color:var(--text)}
+
+.main{min-width:0;display:flex;flex-direction:column}
+.topbar{display:flex;align-items:center;justify-content:space-between;gap:16px;padding:12px 32px;border-bottom:1px solid var(--border);background:var(--card);flex-wrap:wrap}
+.crumbs{font-size:13px;color:var(--text2)}
+.crumbs a{color:var(--text2);text-decoration:none}
+.crumbs a:hover{color:var(--role)}
+.crumbs b{color:var(--text);font-weight:600}
+.top-right{display:flex;align-items:center;gap:16px;flex-wrap:wrap}
+.spec-toggle{display:flex;align-items:center;gap:8px;font-size:12px;color:var(--text2);cursor:pointer;user-select:none}
+.spec-toggle input{accent-color:var(--role)}
+.content{padding:26px 32px 72px;max-width:1240px;width:100%}
+
+.spec{display:inline-flex;align-items:center;font:600 11px/1.4 var(--font);text-transform:none;letter-spacing:0;color:var(--role);background:var(--role-bg);border:1px dashed var(--role-border);border-radius:4px;padding:1px 6px;vertical-align:middle;white-space:nowrap}
+body.no-spec .spec,body.no-spec .spec-only{display:none!important}
+
+.page-head{display:flex;justify-content:space-between;align-items:flex-end;gap:16px;margin-bottom:20px;flex-wrap:wrap}
+.page-head>div:first-child{flex:1;min-width:0}
+.page-head h1{font:700 26px/1.3 var(--heading);text-transform:uppercase;letter-spacing:.02em;margin:0 0 4px}
+.page-head h1 .spec{vertical-align:4px}
+.page-head p{margin:0;color:var(--text2);max-width:72ch}
+.head-actions{display:flex;gap:8px;flex-wrap:wrap;flex:none}
+
+.btn{display:inline-flex;align-items:center;justify-content:center;gap:8px;border-radius:var(--r-sm);border:1px solid var(--border);background:var(--card);padding:8px 14px;font-weight:600;cursor:pointer;text-decoration:none;color:var(--text);transition:background .12s,border-color .12s;white-space:nowrap}
+.btn:hover{background:var(--page);border-color:#D4D1C8}
+.btn-primary{background:var(--role);border-color:var(--role);color:#fff}
+.btn-primary:hover{background:var(--role-hover);border-color:var(--role-hover)}
+.btn-danger{color:var(--danger);border-color:#EFC5C9}
+.btn-danger:hover{background:var(--danger-bg);border-color:var(--danger)}
+.btn-danger-solid{background:var(--danger);border-color:var(--danger);color:#fff}
+.btn-danger-solid:hover{background:#B72633}
+.btn-success{background:var(--success);border-color:var(--success);color:#fff}
+.btn-success:hover{background:#26764B}
+.btn[disabled],.btn[aria-disabled="true"]{opacity:.45;cursor:not-allowed}
+.btn-sm{padding:5px 11px;font-size:13px}
+.btn-lg{padding:12px 20px;font-size:15px}
+.btn-block{width:100%}
+.btn svg{width:16px;height:16px;stroke:currentColor;fill:none;stroke-width:2;stroke-linecap:round;stroke-linejoin:round}
+
+.card{background:var(--card);border:1px solid var(--border);border-radius:var(--r-md)}
+.pad{padding:20px}
+.card h2{font:600 16px/1.35 var(--heading);margin:0 0 4px}
+.card .sub{color:var(--text2);font-size:13px;margin:0 0 16px}
+.card-head{display:flex;justify-content:space-between;align-items:center;gap:12px;padding:16px 20px;border-bottom:1px solid var(--border);flex-wrap:wrap}
+.card-head h2{margin:0}
+.stack>*+*{margin-top:16px}
+.grid2{display:grid;grid-template-columns:minmax(0,1fr) 320px;gap:20px;align-items:start}
+.grid-half{display:grid;grid-template-columns:1fr 1fr;gap:16px}
+
+.filters{display:flex;gap:10px;flex-wrap:wrap;align-items:center;padding:12px 16px;border-bottom:1px solid var(--border)}
+.input,.select,textarea.input{border:1px solid var(--border);background:var(--card);border-radius:var(--r-sm);padding:8px 10px;min-height:38px;width:100%}
+textarea.input{min-height:84px;resize:vertical}
+.input:focus,.select:focus,textarea.input:focus{outline:none;border-color:var(--role);box-shadow:0 0 0 3px var(--role-bg)}
+.input[readonly],.input:disabled,.select:disabled{background:var(--page);color:var(--text2)}
+.filters .select{width:auto;min-width:150px}
+.search{position:relative;flex:1;min-width:220px}
+.search .input{padding-left:34px}
+.search svg{position:absolute;left:10px;top:50%;transform:translateY(-50%);width:16px;height:16px;stroke:var(--text2);fill:none;stroke-width:2}
+
+.tabs{display:flex;gap:2px;border-bottom:1px solid var(--border);padding:0 12px;overflow-x:auto}
+.tabs button{border:0;background:none;padding:12px 12px;font-weight:600;color:var(--text2);cursor:pointer;border-bottom:2px solid transparent;margin-bottom:-1px;white-space:nowrap}
+.tabs button[aria-selected="true"]{color:var(--role);border-color:var(--role)}
+.tabs .count{font-size:11px;background:var(--page);border:1px solid var(--border);padding:0 6px;border-radius:999px;margin-left:6px;color:var(--text2)}
+.tabs button[aria-selected="true"] .count{background:var(--role-bg);border-color:var(--role-border);color:var(--role)}
+
+.table-wrap{overflow-x:auto}
+table{width:100%;border-collapse:collapse}
+th{text-align:left;font-size:11px;font-weight:600;color:var(--text2);text-transform:uppercase;letter-spacing:.06em;padding:10px 16px;border-bottom:1px solid var(--border);white-space:nowrap}
+td{padding:12px 16px;border-bottom:1px solid var(--border);vertical-align:middle}
+tbody tr:last-child td{border-bottom:0}
+tr.click{cursor:pointer}
+tr.click:hover{background:var(--role-bg)}
+tr.pinned td{background:#FFFBF2}
+tr.struck td{color:var(--text2);text-decoration:line-through}
+tr.struck td.keep{text-decoration:none}
+td.r,th.r{text-align:right}
+td.num,td.r{white-space:nowrap}
+.who{display:flex;align-items:center;gap:10px}
+.who b{display:block;font-weight:600}
+.who small{color:var(--text2);font-size:12px}
+.table-foot{display:flex;justify-content:space-between;align-items:center;padding:12px 16px;border-top:1px solid var(--border);color:var(--text2);font-size:13px;gap:10px;flex-wrap:wrap}
+.empty{padding:40px 16px;text-align:center;color:var(--text2)}
+
+.pill{display:inline-flex;align-items:center;gap:6px;font-size:12px;font-weight:600;padding:3px 10px;border-radius:999px;white-space:nowrap}
+.pill::before{content:"";width:6px;height:6px;border-radius:50%;background:currentColor}
+.pill.nodot::before{display:none}
+.p-ok{background:var(--success-bg);color:var(--success)}
+.p-warn{background:var(--warning-bg);color:#A87712}
+.p-danger{background:var(--danger-bg);color:var(--danger)}
+.p-info{background:var(--info-bg);color:var(--info)}
+.p-muted{background:#F0EFEB;color:var(--text2)}
+.p-role{background:var(--role-bg);color:var(--role)}
+
+.f{display:flex;flex-direction:column;gap:6px}
+.f label,.f .lbl{font-size:13px;font-weight:600}
+.f .req{color:var(--danger);margin-left:2px}
+.f .hint{font-size:12px;color:var(--text2)}
+.f .err{font-size:12px;color:var(--danger);display:none}
+.f.bad .input,.f.bad .select{border-color:var(--danger)}
+.f.bad .err{display:block}
+.form-grid{display:grid;grid-template-columns:1fr 1fr;gap:16px}
+.full{grid-column:1/-1}
+.form-actions{display:flex;gap:10px;justify-content:flex-end;padding:14px 20px;border-top:1px solid var(--border);background:#FCFCFA;border-radius:0 0 var(--r-md) var(--r-md);flex-wrap:wrap}
+.radio-row{display:flex;gap:10px;flex-wrap:wrap}
+.opt{display:flex;align-items:center;gap:8px;border:1px solid var(--border);border-radius:var(--r-sm);padding:9px 12px;cursor:pointer;background:var(--card)}
+.opt input{accent-color:var(--role);margin:0}
+.opt:has(input:checked){border-color:var(--role);background:var(--role-bg)}
+.opt:has(input:disabled){opacity:.55;cursor:not-allowed}
+.check{display:flex;gap:8px;align-items:flex-start;cursor:pointer}
+.check input{accent-color:var(--role);margin-top:3px}
+
+.banner{display:flex;gap:12px;padding:12px 14px;border-radius:var(--r-sm);border:1px solid;font-size:13px;align-items:flex-start}
+.banner+.banner{margin-top:10px}
+.banner svg{width:18px;height:18px;flex:none;margin-top:1px;stroke:currentColor;fill:none;stroke-width:2;stroke-linecap:round}
+.banner b{display:block;margin-bottom:2px}
+.banner ul{margin:6px 0 0;padding-left:18px}
+.b-warn{background:var(--warning-bg);border-color:#EDD39C;color:#6E5210}
+.b-info{background:var(--info-bg);border-color:#BFD3EC;color:#234F87}
+.b-danger{background:var(--danger-bg);border-color:#F0C3C8;color:#8E1F2A}
+.b-ok{background:var(--success-bg);border-color:#BFE0CB;color:#1F6B42}
+.b-muted{background:var(--page);border-color:var(--border);color:var(--text2)}
+.b-role{background:var(--role-bg);border-color:var(--role-border);color:var(--text)}
+
+.kv{display:grid;grid-template-columns:auto 1fr;gap:8px 16px;font-size:13px;margin:0}
+.kv dt{color:var(--text2)}
+.kv dd{margin:0;font-weight:500}
+.kv dd.r{text-align:right}
+.sum{display:grid;grid-template-columns:1fr auto;gap:8px 16px;font-size:14px}
+.sum .t{font-weight:700;font-size:18px;border-top:1px solid var(--border);padding-top:10px;font-family:var(--display)}
+
+.stat{padding:16px 18px}
+.stat .l{font-size:13px;color:var(--text2)}
+.stat .v{font:700 28px/1.15 var(--display);margin:6px 0 2px;font-variant-numeric:tabular-nums;letter-spacing:-.01em}
+.stat .d{font-size:12px;color:var(--text2)}
+.stats{display:grid;grid-template-columns:repeat(4,1fr);gap:12px;margin-bottom:16px}
+
+.tip-wrap{position:relative;display:inline-block}
+.tip{display:none;position:absolute;right:0;top:calc(100% + 6px);width:260px;background:var(--text);color:#fff;font-size:12px;line-height:1.45;padding:9px 11px;border-radius:var(--r-sm);z-index:10;text-align:left;font-weight:400;white-space:normal}
+.tip-wrap:hover .tip,.tip-wrap:focus-within .tip{display:block}
+
+.overlay{position:fixed;inset:0;background:rgba(35,34,31,.45);display:none;align-items:center;justify-content:center;padding:20px;z-index:50}
+.overlay.open{display:flex}
+.modal{background:var(--card);border-radius:var(--r-lg);width:100%;max-width:480px;box-shadow:0 20px 50px rgba(35,34,31,.25);animation:pop .16s ease-out}
+@keyframes pop{from{transform:scale(.97);opacity:0}to{transform:none;opacity:1}}
+.modal-body{padding:22px 22px 6px}
+.modal-body h2{font:600 18px var(--heading);margin:0 0 8px}
+.modal-body p{margin:0 0 14px;color:var(--text2)}
+.modal-foot{display:flex;justify-content:flex-end;gap:10px;padding:14px 22px 20px}
+
+.drawer{position:fixed;top:0;right:0;bottom:0;width:min(440px,100%);background:var(--card);border-left:1px solid var(--border);z-index:45;transform:translateX(100%);transition:transform .2s,visibility .2s;visibility:hidden;display:flex;flex-direction:column}
+.drawer.open{transform:none;visibility:visible;box-shadow:-10px 0 30px rgba(35,34,31,.12)}
+.drawer-head{display:flex;justify-content:space-between;align-items:center;padding:16px 20px;border-bottom:1px solid var(--border)}
+.drawer-head h2{font:600 16px var(--heading);margin:0}
+.drawer-body{padding:20px;overflow:auto;flex:1}
+.x{border:0;background:none;font-size:20px;cursor:pointer;color:var(--text2);line-height:1}
+
+.toast{position:fixed;bottom:24px;right:24px;display:flex;gap:10px;align-items:flex-start;background:var(--text);color:#fff;padding:12px 16px;border-radius:var(--r-md);max-width:440px;font-size:13px;box-shadow:0 10px 30px rgba(0,0,0,.2);transform:translateY(20px);opacity:0;pointer-events:none;transition:all .2s;z-index:60}
+.toast.show{transform:none;opacity:1}
+.toast .dot{width:8px;height:8px;border-radius:50%;margin-top:6px;flex:none}
+.toast .spec{background:rgba(255,255,255,.12);color:#fff;border-color:rgba(255,255,255,.3);margin-left:6px}
+
+.auth{min-height:100vh;display:grid;place-items:center;padding:24px}
+.auth-card{width:100%;max-width:400px;padding:32px}
+.auth-card h1{font:700 22px var(--heading);text-transform:uppercase;margin:16px 0 4px}
+
+.mini-bar{height:8px;background:var(--page);border:1px solid var(--border);border-radius:4px;overflow:hidden}
+.mini-bar i{display:block;height:100%;background:var(--role)}
+
+@media (max-width:1024px){.grid2{grid-template-columns:1fr}.stats{grid-template-columns:repeat(2,1fr)}}
+@media (max-width:760px){
+  .app{grid-template-columns:minmax(0,1fr)}
+  .sidebar{position:static;height:auto;border-right:0;border-bottom:1px solid var(--border)}
+  .nav{flex-direction:row;overflow-x:auto;padding:0 12px 10px}
+  .nav-group,.side-foot{display:none}
+  .nav a{white-space:nowrap}
+  .content{padding:18px 16px 48px}
+  .topbar{padding:10px 16px}
+  .form-grid,.grid-half{grid-template-columns:1fr}
+  table{min-width:640px}
+}
+
+/* ===== Layout kiểu khu Customer: sidebar dock trượt + topbar mang tiêu đề ===== */
+body.dock{--sidebar-w:252px}
+.dock .app{display:block;min-height:100vh}
+.dock .dockwrap{position:fixed;left:0;top:0;bottom:0;width:0;z-index:120}
+.dock .sidebar{position:absolute;left:0;top:0;height:100vh;width:var(--sidebar-w);display:flex;flex-direction:column;background:#0D0D0D;color:#C9C5BC;border:0;padding:20px 16px 16px;overflow-y:auto;transform:translateX(calc(-1 * var(--sidebar-w)));transition:transform .28s cubic-bezier(.4,0,.2,1);box-shadow:0 0 40px rgba(0,0,0,.35)}
+.dock .dockwrap:hover .sidebar,.dock .dockwrap:focus-within .sidebar,.dock .dockwrap.is-open .sidebar{transform:none}
+.dock .dock-handle{position:absolute;left:0;top:50%;translate:0 -50%;width:28px;height:72px;border:0;border-radius:0 10px 10px 0;background:var(--role);color:#fff;display:grid;place-items:center;cursor:pointer;box-shadow:4px 0 18px rgba(0,0,0,.22);transition:left .28s cubic-bezier(.4,0,.2,1),background .15s}
+.dock .dockwrap:hover .dock-handle,.dock .dockwrap:focus-within .dock-handle,.dock .dockwrap.is-open .dock-handle{left:var(--sidebar-w)}
+.dock .dock-handle:hover{background:var(--role-hover)}
+.dock .dock-handle svg{width:12px;height:12px;stroke:currentColor;fill:none;stroke-width:2.5;stroke-linecap:round;stroke-linejoin:round;transition:rotate .28s}
+.dock .dockwrap:hover .dock-handle svg,.dock .dockwrap.is-open .dock-handle svg{rotate:180deg}
+.dock .brand{display:block;padding:0 8px;margin-bottom:28px}
+.dock .brand-mark{display:none}
+.dock .brand-name{display:block;font:800 19px/1.2 var(--display);letter-spacing:-.02em;text-transform:uppercase;color:#fff}
+.dock .brand-role{font-size:11px;letter-spacing:.1em;text-transform:uppercase;color:var(--role-border);font-weight:600}
+.dock .nav{padding:0;gap:4px;flex:none}
+.dock .nav-group{font-size:11px;font-weight:500;text-transform:uppercase;letter-spacing:.12em;color:#6F6C64;padding:0;margin:22px 8px 6px}
+.dock .nav-group:first-child{margin-top:0}
+.dock .nav a{color:#C9C5BC;padding:8px 12px;font-size:14px;border-radius:8px;box-shadow:none}
+.dock .nav a svg{opacity:.75}
+.dock .nav a:hover{background:rgba(255,255,255,.06);color:#fff}
+.dock .nav a.active{background:var(--role);color:#fff;font-weight:600;box-shadow:none}
+.dock .nav a.active svg{opacity:1}
+.dock .side-foot{margin-top:auto;padding:20px 0 0;border-top:1px solid rgba(255,255,255,.09)}
+.dock .side-foot .me{display:none}
+.dock .logout{color:#8F8B81;padding:8px 12px;margin:0}
+.dock .logout:hover{color:#fff;background:rgba(255,255,255,.06)}
+.dock .main{min-height:100vh}
+.dock .topbar{position:sticky;top:0;z-index:40;display:flex;align-items:center;gap:16px;flex-wrap:nowrap;padding:14px max(48px,calc((100% - 1224px)/2)) 14px max(76px,calc((100% - 1224px)/2));background:rgba(250,250,248,.93);backdrop-filter:blur(10px);border-bottom:1px solid var(--border)}
+.dock .tb-left{min-width:0}
+.dock .tb-left .crumbs{font-size:12.5px}
+.dock .tb-title{font:700 18px/1.3 var(--heading);text-transform:uppercase;letter-spacing:.02em;margin:2px 0 0;color:var(--text)}
+.dock .tb-title .spec{vertical-align:2px;text-transform:none;letter-spacing:0}
+.dock .top-right{margin-left:auto;display:flex;align-items:center;gap:14px;flex:none}
+.dock .tb-user{display:flex;align-items:center;gap:12px;padding:6px 8px 6px 16px;border-left:1px solid var(--border);border-radius:8px;text-decoration:none;color:var(--text);transition:background .15s}
+.dock .tb-user:hover{background:var(--role-bg)}
+.dock .tb-user .avatar{width:36px;height:36px;background:var(--role);color:#fff;font:700 13px var(--display)}
+.dock .tb-user b{display:block;font-size:13.5px;font-weight:600;line-height:1.3}
+.dock .tb-user small{font-size:12px;color:var(--text2)}
+.dock .content{padding:40px max(48px,calc((100% - 1224px)/2)) 72px max(76px,calc((100% - 1224px)/2));max-width:none}
+.dock .page-intro{display:flex;justify-content:space-between;align-items:flex-end;gap:16px;flex-wrap:wrap;margin-bottom:24px}
+.dock .page-intro p{margin:0;color:var(--text2);max-width:72ch}
+@media (max-width:900px){
+  .dock .topbar{padding:12px 16px 12px 46px}
+  .dock .content{padding:24px 16px 64px 46px}
+  .dock .tb-user-text,.dock .spec-toggle span{display:none}
+}
+@media (max-width:760px){.dock .sidebar{position:absolute;height:100vh}.dock .nav{flex-direction:column;overflow:visible;padding:0}.dock .nav-group,.dock .side-foot{display:block}}
+
+</style>
+</head>
+<body class="dock">
+<div id="root"></div>
+<div id="chrome"></div>
+<script>
+/* ===================== CORE (dùng chung Lễ tân / Manager) ===================== */
+const $=s=>document.querySelector(s);
+const $$=s=>[...document.querySelectorAll(s)];
+const esc=s=>String(s??'').replace(/[&<>"]/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'}[c]));
+const vnd=n=>Math.round(n).toLocaleString('vi-VN')+'đ';
+const spec=t=>`<span class="spec">${t}</span>`;
+const initials=n=>n.trim().split(/\s+/).slice(-2).map(w=>w[0]).join('').toUpperCase();
+const fmtPhone=p=>String(p).replace(/(\d{4})(\d{3})(\d{3})/,'$1 $2 $3');
+const pill=(t,k='muted',nodot)=>`<span class="pill p-${k} ${nodot?'nodot':''}">${t}</span>`;
+const TODAY={d:20,m:9,y:2026,label:'20/09/2026',dow:'Chủ nhật'};
+const I={
+  search:'<svg viewBox="0 0 24 24"><circle cx="11" cy="11" r="7"/><path d="m20 20-3.5-3.5"/></svg>',
+  plus:'<svg viewBox="0 0 24 24"><path d="M12 5v14M5 12h14"/></svg>',
+  info:'<svg viewBox="0 0 24 24"><circle cx="12" cy="12" r="9"/><path d="M12 8h.01M11 12h1v5h1"/></svg>',
+  warn:'<svg viewBox="0 0 24 24"><path d="M12 3 2 20h20z"/><path d="M12 10v4M12 17h.01"/></svg>',
+  ok:'<svg viewBox="0 0 24 24"><path d="M5 12.5l4.5 4.5L19 7.5"/></svg>',
+  x:'<svg viewBox="0 0 24 24"><circle cx="12" cy="12" r="9"/><path d="m9 9 6 6M15 9l-6 6"/></svg>',
+  lock:'<svg viewBox="0 0 24 24"><rect x="5" y="11" width="14" height="10" rx="2"/><path d="M8 11V8a4 4 0 0 1 8 0v3"/></svg>',
+  users:'<svg viewBox="0 0 24 24"><circle cx="9" cy="8" r="3.5"/><path d="M2.5 20c.6-3.6 3.3-5.5 6.5-5.5s5.9 1.9 6.5 5.5"/><path d="M16 4.6a3.5 3.5 0 0 1 0 6.8M18.5 14.8c1.6.7 2.7 2.4 3 5.2"/></svg>',
+  door:'<svg viewBox="0 0 24 24"><path d="M4 21h16M6 21V4h9v17"/><path d="M15 4l3 2v15"/><circle cx="12" cy="12.5" r=".8"/></svg>',
+  cart:'<svg viewBox="0 0 24 24"><circle cx="9" cy="20" r="1.5"/><circle cx="18" cy="20" r="1.5"/><path d="M2 3h3l2.4 12h11.2L21 7H6.2"/></svg>',
+  coach:'<svg viewBox="0 0 24 24"><circle cx="9" cy="7" r="3"/><path d="M3 20c.5-3.5 3-5.5 6-5.5s5.5 2 6 5.5M16 11h5M18.5 8.5v5"/></svg>',
+  cash:'<svg viewBox="0 0 24 24"><rect x="2" y="6" width="20" height="12" rx="2"/><circle cx="12" cy="12" r="2.5"/><path d="M6 10v4M18 10v4"/></svg>',
+  pause:'<svg viewBox="0 0 24 24"><circle cx="12" cy="12" r="9"/><path d="M10 9v6M14 9v6"/></svg>',
+  box:'<svg viewBox="0 0 24 24"><path d="M3 7l9-4 9 4v10l-9 4-9-4z"/><path d="M3 7l9 4 9-4M12 11v10"/></svg>',
+  wrench:'<svg viewBox="0 0 24 24"><path d="M14.7 6.3a4 4 0 0 0 5 5L21 13l-8 8-3-3 8-8-1.3-1.3a4 4 0 0 0-5-5z"/><path d="M4 20l5-5"/></svg>',
+  cal:'<svg viewBox="0 0 24 24"><rect x="3" y="5" width="18" height="16" rx="2"/><path d="M3 10h18M8 3v4M16 3v4"/></svg>',
+  gear:'<svg viewBox="0 0 24 24"><circle cx="12" cy="12" r="3"/><path d="M19.4 15a1.7 1.7 0 0 0 .3 1.8l.1.1a2 2 0 1 1-2.8 2.8l-.1-.1a1.7 1.7 0 0 0-1.8-.3 1.7 1.7 0 0 0-1 1.5V21a2 2 0 0 1-4 0v-.1a1.7 1.7 0 0 0-1.1-1.5 1.7 1.7 0 0 0-1.8.3l-.1.1a2 2 0 1 1-2.8-2.8l.1-.1a1.7 1.7 0 0 0 .3-1.8 1.7 1.7 0 0 0-1.5-1H3a2 2 0 0 1 0-4h.1a1.7 1.7 0 0 0 1.5-1.1 1.7 1.7 0 0 0-.3-1.8l-.1-.1a2 2 0 1 1 2.8-2.8l.1.1a1.7 1.7 0 0 0 1.8.3H9a1.7 1.7 0 0 0 1-1.5V3a2 2 0 0 1 4 0v.1a1.7 1.7 0 0 0 1 1.5 1.7 1.7 0 0 0 1.8-.3l.1-.1a2 2 0 1 1 2.8 2.8l-.1.1a1.7 1.7 0 0 0-.3 1.8V9a1.7 1.7 0 0 0 1.5 1H21a2 2 0 0 1 0 4h-.1a1.7 1.7 0 0 0-1.5 1z"/></svg>',
+  clock:'<svg viewBox="0 0 24 24"><circle cx="12" cy="12" r="9"/><path d="M12 7v5l3 2"/></svg>',
+  tag:'<svg viewBox="0 0 24 24"><path d="M3 12V3h9l9 9-9 9z"/><circle cx="7.5" cy="7.5" r="1.3"/></svg>',
+  ticket:'<svg viewBox="0 0 24 24"><path d="M3 8a2 2 0 0 0 0 4v4h18v-4a2 2 0 0 1 0-4V4H3z"/></svg>',
+  chart:'<svg viewBox="0 0 24 24"><path d="M4 20V4M4 20h16"/><path d="M8 16v-4M12 16V8M16 16v-6"/></svg>',
+  chat:'<svg viewBox="0 0 24 24"><path d="M4 5h16v11H9l-5 4z"/></svg>',
+  doc:'<svg viewBox="0 0 24 24"><path d="M6 3h9l4 4v14H6z"/><path d="M15 3v4h4M9 12h7M9 16h7"/></svg>',
+  bell:'<svg viewBox="0 0 24 24"><path d="M6 16V11a6 6 0 0 1 12 0v5l2 2H4z"/><path d="M10 20a2 2 0 0 0 4 0"/></svg>',
+  cam:'<svg viewBox="0 0 24 24"><path d="M4 8h3l2-3h6l2 3h3v11H4z"/><circle cx="12" cy="13" r="3.5"/></svg>',
+  person:'<svg viewBox="0 0 64 64"><circle cx="32" cy="24" r="11"/><path d="M12 58c2-12 10-18 20-18s18 6 20 18"/></svg>',
+  back:'<svg viewBox="0 0 24 24"><path d="M15 6l-6 6 6 6"/></svg>',
+};
+
+const CHEV='<svg viewBox="0 0 24 24"><path d="m9 6 6 6-6 6"/></svg>';
+function toggleDock(){const d=$('#dock'),h=$('#dockHandle');if(!d)return;const o=d.classList.toggle('is-open');h.setAttribute('aria-expanded',String(o));h.setAttribute('aria-label',o?'Đóng menu điều hướng':'Mở menu điều hướng')}
+function shell(active,crumbs,body,title){
+  const nav=NAV.map(n=>n.group?`<div class="nav-group">${n.group}</div>`:
+    `<a href="${n.href}" class="${active===n.key?'active':''}" ${active===n.key?'aria-current="page"':''}>${I[n.icon]}<span>${n.label}</span>${n.badge&&n.badge()?`<span class="badge">${n.badge()}</span>`:''}</a>`).join('');
+  if(ROLE.dock){
+    const parts=crumbs.split(' / ');const parent=parts.slice(0,-1).join(' / ');
+    return `<div class="app">
+    <div class="dockwrap" id="dock">
+      <aside class="sidebar">
+        <div class="brand"><div class="brand-name">Super Gym</div><div class="brand-role">${ROLE.area}</div></div>
+        <nav class="nav" aria-label="Điều hướng chính">${nav}</nav>
+        <div class="side-foot"><button class="logout" onclick="location.hash='#/signin'">Đăng xuất</button></div>
+      </aside>
+      <button class="dock-handle" id="dockHandle" type="button" aria-label="Mở menu điều hướng" aria-expanded="false" aria-controls="dock" onclick="toggleDock()">${CHEV}</button>
+    </div>
+    <div class="main">
+      <header class="topbar"><div class="tb-left">${parent?`<div class="crumbs">${parent}</div>`:''}<h1 class="tb-title">${title||parts[parts.length-1].replace(/<[^>]+>/g,'')}</h1></div>
+        <div class="top-right">${ROLE.topExtra?ROLE.topExtra():''}
+          <a class="tb-user" href="#/settings" title="Cài đặt tài khoản"><span class="avatar">${initials(ROLE.me.name)}</span><span class="tb-user-text"><b>${ROLE.me.name}</b><small>${ROLE.me.title}</small></span></a></div></header>
+      <main class="content">${body}</main>
+    </div>
+  </div>`;
+  }
+  return `<div class="app">
+    <aside class="sidebar">
+      <div class="brand"><div class="brand-mark">GMS</div><div><div class="brand-name">Super Gym</div><div class="brand-role">${ROLE.label}</div></div></div>
+      <nav class="nav" aria-label="Điều hướng chính">${nav}</nav>
+      <div class="side-foot">
+        <a class="me" href="#/settings"><span class="avatar">${initials(ROLE.me.name)}</span><span>${ROLE.me.name}<small>${ROLE.me.title}</small></span></a>
+        <button class="logout" onclick="location.hash='#/signin'">Đăng xuất</button>
+      </div>
+    </aside>
+    <div class="main">
+      <div class="topbar"><div class="crumbs">${crumbs}</div>
+        <div class="top-right">${ROLE.topExtra?ROLE.topExtra():''}</div></div>
+      <main class="content">${body}</main>
+    </div>
+  </div>`;
+}
+function render(html){$('#root').innerHTML=html;window.scrollTo(0,0)}
+function page(active,crumbs,title,code,desc,actions,body){
+  if(ROLE.dock) return shell(active,crumbs,`${desc||actions?`<div class="page-intro"><div>${desc?`<p>${desc}</p>`:''}</div>${actions?`<div class="head-actions">${actions}</div>`:''}</div>`:''}${body}`,`${title}`);
+  return shell(active,crumbs,`<div class="page-head"><div><h1>${title}</h1>${desc?`<p>${desc}</p>`:''}</div>${actions?`<div class="head-actions">${actions}</div>`:''}</div>${body}`);
+}
+const crumb=(...parts)=>parts.map((p,i)=>i===parts.length-1?`<b>${p[0]}</b>`:`<a href="${p[1]}">${p[0]}</a>`).join(' / ');
+
+let toastT;
+function toast(code,text,kind='ok'){
+  const t=$('#toast');
+  $('#toast-text').innerHTML=esc(text);
+  t.querySelector('.dot').style.background={ok:'#6FD19B',danger:'#F07C86',warn:'#F0C368',info:'#8DB6E6'}[kind];
+  t.classList.add('show');clearTimeout(toastT);toastT=setTimeout(()=>t.classList.remove('show'),4000);
+}
+let modalCb=null,lastFocus=null,modalNeedReason=false;
+function modal({title,text,ok='Xác nhận',danger=false,reason=false,reasonLabel='Lý do',reasonErr='Vui lòng nhập lý do.',onOk}){
+  lastFocus=document.activeElement;modalNeedReason=reason;
+  $('#m-title').innerHTML=title;$('#m-text').innerHTML=text||'';
+  const w=$('#m-reason-wrap');w.style.display=reason?'':'none';w.classList.remove('bad');
+  $('#m-reason-label').innerHTML=reasonLabel+' <span class="req">*</span>';$('#m-reason-err').innerHTML=reasonErr;$('#m-reason').value='';
+  const b=$('#m-ok');b.textContent=ok;b.className='btn '+(danger?'btn-danger-solid':'btn-primary');
+  modalCb=onOk;$('#overlay').classList.add('open');setTimeout(()=>(reason?$('#m-reason'):b).focus(),30);
+}
+function closeModal(){$('#overlay').classList.remove('open');if(lastFocus&&lastFocus.focus)lastFocus.focus()}
+function drawer(title,html){$('#d-title').innerHTML=title;$('#d-body').innerHTML=html;$('#drawer').classList.add('open')}
+function closeDrawer(){$('#drawer').classList.remove('open')}
+function bindCoreChrome(){
+  $('#m-cancel').onclick=closeModal;
+  $('#overlay').onclick=e=>{if(e.target.id==='overlay')closeModal()};
+  $('#d-close').onclick=closeDrawer;
+  document.addEventListener('keydown',e=>{if(e.key==='Escape'){closeModal();closeDrawer();const d=$('#dock');if(d&&d.classList.contains('is-open'))toggleDock()}});
+  $('#m-ok').onclick=()=>{const r=$('#m-reason').value.trim();
+    if(modalNeedReason&&!r){$('#m-reason-wrap').classList.add('bad');$('#m-reason').focus();return}
+    const cb=modalCb;closeModal();cb&&cb(r)};
+}
+function bindRows(){$$('[data-go]').forEach(r=>{r.onclick=e=>{if(e.target.closest('a,button,input,select'))return;location.hash=r.dataset.go};r.onkeydown=e=>{if(e.key==='Enter')location.hash=r.dataset.go}})}
+function mark(id,ok){const el=document.getElementById(id);if(el)el.classList.toggle('bad',!ok);return ok}
+const val=id=>{const e=document.getElementById(id);return e?e.value:''};
+
+function viewSignIn(){
+  render(`<div class="auth"><div class="card auth-card">
+    <div class="brand-mark" style="width:40px;height:40px">GMS</div>
+    <h1>Đăng nhập</h1>
+    <p class="muted" style="margin:0 0 20px">Dùng email hoặc số điện thoại. Tài khoản nhân viên không bị khóa tự động.</p>
+    <div class="f" style="margin-bottom:12px"><label for="si1">Email hoặc SĐT</label><input class="input" id="si1" value="${ROLE.me.email}"></div>
+    <div class="f" style="margin-bottom:16px"><label for="si2">Mật khẩu</label><input class="input" id="si2" type="password" value="12345678"></div>
+    <button class="btn btn-primary btn-block btn-lg" onclick="location.hash='${ROLE.home}'">Đăng nhập</button>
+    <p style="margin:14px 0 0;font-size:13px"><a href="#/signin" onclick="toast('','Đã gửi mã khôi phục tới email của bạn.','info');return false">Quên mật khẩu?</a></p>
+  </div></div>`);
+}
+function viewSettings(){
+  let step='idle';
+  const draw=()=>{render(page('', '<b>Cài đặt tài khoản</b>','Cài đặt tài khoản','1.4.1 / L2 / dùng chung','Hồ sơ đăng nhập của bạn. Đổi email hoặc SĐT phải xác thực bằng mã gửi tới email mới.','',`
+    <div class="grid-half">
+      <div class="card"><div class="pad">
+        <h2>Hồ sơ</h2><p class="sub">Ảnh đại diện, email và số điện thoại</p>
+        <div style="display:flex;gap:14px;align-items:center;margin-bottom:16px"><span class="avatar" style="width:56px;height:56px;font-size:18px">${initials(ROLE.me.name)}</span><button class="btn btn-sm" onclick="toast('','Mở hộp chọn ảnh (mô phỏng).','info')">Đổi ảnh</button></div>
+        <div class="stack">
+          <div class="f"><label for="s-email">Email</label><input class="input" id="s-email" value="${ROLE.me.email}"></div>
+          <div class="f"><label for="s-phone">Số điện thoại</label><input class="input num" id="s-phone" value="${ROLE.me.phone}"></div>
+          ${step==='code'?`<div class="banner b-info">${I.info}<div><b>Nhập mã đã gửi tới email mới</b>Mã có hiệu lực trong 15 phút.</div></div>
+          <div class="f" id="f-code"><label for="s-code">Mã xác thực</label><input class="input num" id="s-code" maxlength="6"><span class="err">Mã không đúng.</span></div>`:''}
+        </div></div>
+        <div class="form-actions">${step==='code'?`<button class="btn" id="s-cancel">Hủy</button><button class="btn btn-primary" id="s-verify">Xác nhận mã</button>`:`<button class="btn btn-primary" id="s-save">Lưu thay đổi</button>`}</div>
+      </div>
+      <div class="card"><div class="pad">
+        <h2>Đổi mật khẩu</h2><p class="sub">Đổi xong, mọi phiên đăng nhập khác bị đăng xuất.</p>
+        <div class="stack"><div class="f"><label for="p1">Mật khẩu hiện tại</label><input class="input" type="password" id="p1"></div>
+        <div class="f"><label for="p2">Mật khẩu mới</label><input class="input" type="password" id="p2"></div>
+        <div class="f" id="f-p3"><label for="p3">Nhập lại mật khẩu mới</label><input class="input" type="password" id="p3"><span class="err">Mật khẩu nhập lại không khớp.</span></div></div></div>
+        <div class="form-actions"><button class="btn" id="pw-save">Đổi mật khẩu</button></div>
+      </div>
+    </div>`));
+    const sv=$('#s-save');if(sv)sv.onclick=()=>{const changed=val('s-email')!==ROLE.me.email||val('s-phone')!==ROLE.me.phone;
+      if(changed){step='code';draw();toast('MSG-013','Đã gửi mã xác thực tới email mới.','info')}else toast('MSG-017','Đã lưu thay đổi.')};
+    const vf=$('#s-verify');if(vf)vf.onclick=()=>{if(val('s-code')!=='246810'){mark('f-code',false);return}
+      ROLE.me.email=val('s-email');ROLE.me.phone=val('s-phone');step='idle';draw();toast('MSG-016','Đổi email thành công. Đã gửi thông báo tới email cũ; mọi phiên đăng nhập đã bị đăng xuất.')};
+    const sc=$('#s-cancel');if(sc)sc.onclick=()=>{step='idle';draw()};
+    $('#pw-save').onclick=()=>{if(!mark('f-p3',val('p2')&&val('p2')===val('p3')))return;toast('MSG-011','Đổi mật khẩu thành công. Mọi phiên đăng nhập cũ đã bị đăng xuất.')};
+  };draw();
+}
+const CHROME=`<div class="overlay" id="overlay" role="dialog" aria-modal="true" aria-labelledby="m-title"><div class="modal"><div class="modal-body"><h2 id="m-title"></h2><div id="m-text"></div>
+  <div class="f" id="m-reason-wrap"><label for="m-reason" id="m-reason-label">Lý do</label><textarea class="input" id="m-reason" rows="3"></textarea><span class="err" id="m-reason-err"></span></div></div>
+  <div class="modal-foot"><button class="btn" id="m-cancel">Hủy</button><button class="btn btn-primary" id="m-ok">Xác nhận</button></div></div></div>
+  <aside class="drawer" id="drawer" aria-label="Chi tiết"><div class="drawer-head"><h2 id="d-title"></h2><button class="x" id="d-close" aria-label="Đóng">×</button></div><div class="drawer-body" id="d-body"></div></aside>
+  <div class="toast" id="toast" role="status" aria-live="polite"><span class="dot"></span><span id="toast-text"></span></div>`;
+function exportCSV(name,headers,rows){
+  const q=v=>{v=String(v??'');return /[",\n;]/.test(v)?'"'+v.replace(/"/g,'""')+'"':v};
+  const csv='\uFEFF'+[headers,...rows].map(r=>r.map(q).join(',')).join('\r\n');
+  const a=document.createElement('a');a.href=URL.createObjectURL(new Blob([csv],{type:'text/csv;charset=utf-8'}));a.download=name;document.body.appendChild(a);a.click();a.remove();
+  toast('',`Đã xuất ${rows.length} dòng ra file ${name}.`);
+}
+I.dl='<svg viewBox="0 0 24 24"><path d="M12 4v11M7 10l5 5 5-5M5 20h14"/></svg>';
+function startApp(ROUTES){
+  bindCoreChrome();
+  const route=()=>{closeDrawer();$('#overlay').classList.remove('open');const h=(location.hash||ROLE.home).split('?')[0];
+    for(const [re,fn] of ROUTES){const m=h.match(re);if(m){fn(...m.slice(1).map(decodeURIComponent));return}}
+    location.hash=ROLE.home;};
+  window.addEventListener('hashchange',route);route();
+}
+
+document.getElementById('chrome').innerHTML=CHROME;
+/* ===================== MANAGER ===================== */
+const ROLE={label:'Quản lý',area:'Khu vực quản lý',dock:true,home:'#/params',me:{name:'Nguyễn Văn An',title:'Manager',email:'an.nv@gms.vn',phone:'0903456789'}};
+const pad=n=>String(n).padStart(2,'0');
+const D=s=>{const[d,m,y]=s.split('/').map(Number);return new Date(y,m-1,d)};
+const fmtD=dt=>`${pad(dt.getDate())}/${pad(dt.getMonth()+1)}/${dt.getFullYear()}`;
+const fromIso=s=>{const[y,m,d]=s.split('-').map(Number);return new Date(y,m-1,d)};
+const toIso=s=>{const[d,m,y]=s.split('/');return `${y}-${m}-${d}`};
+const NOW=new Date(2026,8,20,14,20);
+
+/* ---------- DATA ---------- */
+let PARAMS=[
+ {k:'freezeTimes',label:'Số lần bảo lưu tối đa mỗi gói',v:1,unit:'lần',min:0,max:5,desc:'Mỗi gói tập được bảo lưu tối đa bấy nhiêu lần.'},
+ {k:'freezeDays',label:'Thời hạn bảo lưu tối đa',v:30,unit:'ngày',min:1,max:90,desc:'Tổng số ngày của một lần bảo lưu.'},
+ {k:'minPt',label:'Số PT tối thiểu còn lại mỗi ca',v:2,unit:'người',min:1,max:10,desc:'Căn cứ để khóa nút Duyệt đơn nghỉ.'},
+ {k:'minLt',label:'Số Lễ tân tối thiểu còn lại mỗi ca',v:1,unit:'người',min:1,max:5,desc:'Căn cứ để khóa nút Duyệt đơn nghỉ.'},
+ {k:'vat',label:'% VAT',v:8,unit:'%',min:0,max:20,desc:'Được chép vào đơn lúc tạo đơn. Giá niêm yết đã gồm VAT.'},
+ {k:'comm',label:'% hoa hồng PT mặc định',v:70,unit:'%',min:0,max:100,desc:'Áp cho PT mới. Mỗi PT có thể đặt riêng ở hồ sơ nhân sự.'},
+ {k:'payLimit',label:'Hạn thanh toán đơn online',v:20,unit:'phút',min:5,max:120,desc:'Quá hạn, đơn online tự hủy.'},
+ {k:'leaveSubmit',label:'Giờ chốt nộp đơn nghỉ',v:'15:00',unit:'ngày liền trước ngày nghỉ',type:'time',desc:'Sau giờ này PT và Lễ tân không nộp được đơn cho ngày hôm sau.'},
+ {k:'leaveApprove',label:'Giờ chốt duyệt đơn nghỉ',v:'20:00',unit:'ngày liền trước ngày nghỉ',type:'time',desc:'Đơn còn chờ sau giờ này bị hệ thống tự từ chối. Phải muộn hơn giờ chốt nộp.'},
+ {k:'hours',label:'Giờ mở / đóng cửa mặc định',v:'05:30 – 22:00',unit:'',link:'#/hours',desc:''},
+];
+let HOURS={open:'05:30',close:'22:00',exc:[{date:'01/10/2026',closed:false,open:'05:30',close:'14:00',note:'Bảo trì điều hòa buổi chiều'},{date:'18/10/2026',closed:false,open:'07:00',close:'20:00',note:'Giải chạy nội bộ'},{date:'01/01/2027',closed:true,note:'Tết Dương lịch'}]};
+const DURS=['1 ngày','1 tháng','3 tháng','9 tháng','12 tháng'];
+let MPKG=[
+ {id:'G-01',name:'Vé 1 ngày',price:60000,dur:'1 ngày',desc:'Vào phòng tập trong ngày mua. Hết hiệu lực sau lượt check-in đầu tiên.',status:'Active',running:14},
+ {id:'G-02',name:'Gói 1 tháng',price:450000,dur:'1 tháng',desc:'',status:'Active',running:86},
+ {id:'G-03',name:'Gói 3 tháng',price:1290000,dur:'3 tháng',desc:'',status:'Active',running:132},
+ {id:'G-04',name:'Gói 6 tháng (cũ)',price:2390000,dur:'9 tháng',desc:'Đã thay bằng gói 9 tháng.',status:'Inactive',running:9},
+ {id:'G-05',name:'Gói 9 tháng',price:3450000,dur:'9 tháng',desc:'',status:'Active',running:41},
+ {id:'G-06',name:'Gói 12 tháng',price:4200000,dur:'12 tháng',desc:'',status:'Active',running:67},
+];
+let PTPKG=[
+ {id:'P-01',name:'PT 12 buổi',n:12,price:4800000,type:'single',status:'Active'},
+ {id:'P-02',name:'PT 24 buổi',n:24,price:9200000,type:'single',status:'Active'},
+ {id:'P-03',name:'Couple 12 buổi',n:12,price:7200000,type:'couple',status:'Active'},
+ {id:'P-04',name:'PT 8 buổi (thử)',n:8,price:3400000,type:'single',status:'Inactive'},
+];
+let VOUCH=[
+ {code:'THU10',kind:'pct',value:10,used:22,max:50,per:1,min:0,scope:'all',from:'01/09/2026',to:'30/09/2026',status:'Active'},
+ {code:'GYM15',kind:'pct',value:15,used:8,max:20,per:1,min:0,scope:'gym',from:'15/09/2026',to:'15/10/2026',status:'Active'},
+ {code:'GIAM200',kind:'amt',value:200000,used:0,max:100,per:1,min:2000000,scope:'gym',from:'20/09/2026',to:'31/12/2026',status:'Active'},
+ {code:'HE2026',kind:'pct',value:20,used:64,max:64,per:1,min:0,scope:'all',from:'01/06/2026',to:'31/08/2026',status:'Inactive'},
+];
+let STAFF=[
+ {id:'NV003',name:'Nguyễn Văn An',dob:'1988-03-14',title:'Manager',phone:'0903456789',email:'an.nv@gms.vn',start:'2024-03-01',status:'Active'},
+ {id:'NV004',name:'Phạm Đức Thắng',dob:'1994-06-20',title:'PT',phone:'0934567890',email:'thang.pd@gms.vn',start:'2024-05-10',comm:70,status:'Active',pending:{sessions:3,shifts:0,orders:0}},
+ {id:'NV005',name:'Hoàng Mai Linh',dob:'1997-11-02',title:'PT',phone:'0978123456',email:'linh.hm@gms.vn',start:'2024-08-01',comm:72,status:'Active',pending:{sessions:5,shifts:0,orders:0}},
+ {id:'NV011',name:'Đinh Công Sơn',dob:'1996-01-25',title:'PT',phone:'0966558812',email:'son.dc@gms.vn',start:'2025-02-15',comm:70,status:'Active',pending:{sessions:0,shifts:0,orders:0}},
+ {id:'NV012',name:'Mai Phương Thảo',dob:'1999-09-09',title:'PT',phone:'0827441290',email:'thao.mp@gms.vn',start:'2025-06-01',comm:65,status:'Active',pending:{sessions:2,shifts:0,orders:0}},
+ {id:'NV006',name:'Nguyễn Thị Hoa',dob:'1998-04-04',title:'Lễ tân',phone:'0356789012',email:'hoa.nt@gms.vn',start:'2024-04-01',status:'Active',pending:{sessions:0,shifts:1,orders:1}},
+ {id:'NV009',name:'Bùi Khánh Vân',dob:'2000-12-01',title:'Lễ tân',phone:'0707654321',email:'van.bk@gms.vn',start:'2025-07-01',status:'Active',pending:{sessions:0,shifts:0,orders:0}},
+ {id:'NV008',name:'Đỗ Quang Huy',dob:'1993-08-18',title:'PT',phone:'0961234987',email:'huy.dq@gms.vn',start:'2024-02-01',comm:70,status:'Inactive',pending:{sessions:0,shifts:0,orders:0}},
+];
+// số người còn lại của ca TRƯỚC khi duyệt đơn (đã trừ các đơn đã duyệt)
+const CAPACITY={'21/09/2026|Ca sáng':{pt:3,lt:2},'22/09/2026|Ca chiều':{pt:2,lt:2},'23/09/2026|Ca sáng':{pt:3,lt:1},'25/09/2026|Ca sáng':{pt:3,lt:2},'25/09/2026|Ca chiều':{pt:4,lt:2}};
+let LEAVES=[
+ {id:'NP-31',who:'Hoàng Mai Linh',title:'PT',date:'21/09/2026',shift:'Ca sáng',type:'Nghỉ ốm',reason:'Sốt, có giấy khám',sent:'20/09/2026 08:10',status:'Pending'},
+ {id:'NP-32',who:'Đinh Công Sơn',title:'PT',date:'22/09/2026',shift:'Ca chiều',type:'Nghỉ việc riêng',reason:'Đám cưới người thân',sent:'19/09/2026 16:40',status:'Pending'},
+ {id:'NP-33',who:'Bùi Khánh Vân',title:'Lễ tân',date:'23/09/2026',shift:'Ca sáng',type:'Nghỉ phép năm',reason:'Về quê',sent:'19/09/2026 09:00',status:'Pending'},
+ {id:'NP-34',who:'Nguyễn Thị Hoa',title:'Lễ tân',date:'25/09/2026',shift:'Cả ngày',type:'Nghỉ việc riêng',reason:'Làm thủ tục giấy tờ',sent:'18/09/2026 10:15',status:'Pending'},
+ {id:'NP-28',who:'Mai Phương Thảo',title:'PT',date:'19/09/2026',shift:'Ca chiều',type:'Nghỉ việc riêng',reason:'Việc gia đình',sent:'17/09/2026 11:00',status:'Rejected',why:'Quá hạn duyệt',auto:true},
+ {id:'NP-25',who:'Nguyễn Thị Hoa',title:'Lễ tân',date:'12/09/2026',shift:'Ca sáng',type:'Nghỉ việc riêng',reason:'Đưa con đi khám',sent:'10/09/2026 09:30',status:'Approved'},
+];
+const ST={New:['Mới tạo','info'],Active:['Đang hoạt động','ok'],Frozen:['Đang bảo lưu','warn'],Expired:['Hết hạn','muted'],Inactive:['Đã xóa','danger']};
+let CUSTOMERS=[
+ {id:'KH-1001',name:'Trần Bảo Ngọc',phone:'0902345678',email:'ngoc.tb@gmail.com',dob:'12/04/1996',type:'Tự chủ',status:'Active',pkg:'Gói 3 tháng, hạn 15/11/2026',pt:'PT 12 buổi, còn 8 buổi'},
+ {id:'KH-1003',name:'Phạm Thu Trang',phone:'0934111222',email:'trang.pt@gmail.com',dob:'02/07/1998',type:'Tự chủ',status:'Frozen',pkg:'Gói 12 tháng, bảo lưu tới 05/10/2026',pt:''},
+ {id:'KH-1004',name:'Đỗ Văn Khang',phone:'0987654321',email:'khang.dv@gmail.com',dob:'30/11/1985',type:'Tự chủ',status:'Expired',pkg:'Gói 1 tháng, hết hạn 10/09/2026',pt:'PT 12 buổi, còn 4 buổi'},
+ {id:'KH-1007',name:'Hoàng Gia Huy',phone:'0388990011',email:'',dob:'05/05/2017',type:'Phụ thuộc',guardian:'Hoàng Văn Hùng (Bố) · 0388 990 012',status:'New',pkg:'',pt:''},
+ {id:'KH-1008',name:'Bùi Thanh Hà',phone:'0967123123',email:'ha.bt@gmail.com',dob:'03/03/1995',type:'Tự chủ',status:'Active',pkg:'Gói 9 tháng, hạn 01/03/2027',pt:'',pendingDelete:{by:'Nguyễn Thị Hoa',at:'19/09/2026 17:05',reason:'Khách chuyển công tác vào TP.HCM, xin dừng tập.',active:[['Gói 9 tháng','hạn 01/03/2027, còn 162 ngày']],ptLeft:0}},
+ {id:'KH-1009',name:'Trịnh Quốc Bảo',phone:'0909111222',email:'bao.tq@gmail.com',dob:'12/12/1992',type:'Tự chủ',status:'Active',pkg:'Gói 3 tháng, hạn 01/12/2026',pt:'PT 12 buổi, còn 6 buổi',pendingDelete:{by:'Bùi Khánh Vân',at:'20/09/2026 09:12',reason:'Khách yêu cầu xóa dữ liệu cá nhân.',active:[['Gói 3 tháng','hạn 01/12/2026, còn 72 ngày'],['PT 12 buổi','còn 6 buổi chưa dùng']],ptLeft:6}},
+ {id:'KH-1010',name:'Mai Anh Thư',phone:'0826554433',email:'thu.ma@gmail.com',dob:'10/10/2001',type:'Tự chủ',status:'Active',pkg:'Gói 1 tháng, hạn 05/10/2026',pt:''},
+ {id:'KH-0975',name:'Lương Văn Tài',phone:'0911000975',email:'tai.lv@gmail.com',dob:'01/01/1990',type:'Tự chủ',status:'Inactive',pkg:'',pt:''},
+];
+let ORDERS=[
+ {id:'DH-2046',cust:'Trần Bảo Ngọc',pkg:'PT 12 buổi',amount:4800000,method:'Tiền mặt',status:'Paid',at:'20/09/2026 14:25',ch:'Quầy',att:[['14:25','Tiền mặt','Success']]},
+ {id:'DH-2045',cust:'Đỗ Văn Khang',pkg:'Gói 3 tháng (GYM15)',amount:1096500,method:'Tiền mặt',status:'Paid',at:'20/09/2026 14:24',ch:'Quầy',att:[['14:24','Tiền mặt','Success']]},
+ {id:'DH-2044',cust:'Lý Văn Hòa',pkg:'Gói 3 tháng',amount:1290000,method:'Tiền mặt',status:'Pending',at:'20/09/2026 14:16',ch:'Quầy',att:[]},
+ {id:'DH-2040',cust:'Ngô Thị Lan',pkg:'Gói 1 tháng',amount:450000,method:'Cổng thanh toán',status:'Paid',at:'18/09/2026 21:40',ch:'Online',att:[['21:32','Cổng thanh toán','Failed'],['21:40','Cổng thanh toán','Success']]},
+ {id:'DH-2038',cust:'Phan Thảo Vy',pkg:'Gói 3 tháng',amount:1290000,method:'Cổng thanh toán',status:'Cancelled',at:'18/09/2026 10:02',ch:'Online',refund:true,att:[['10:02','Cổng thanh toán','Expired'],['10:25','Cổng thanh toán','Success']],note:'Cổng báo thành công sau khi đơn đã tự hủy do quá hạn.'},
+ {id:'DH-2031',cust:'Lê Minh Tuấn',pkg:'Vé 1 ngày',amount:60000,method:'Chuyển khoản',status:'Cancelled',at:'16/09/2026 07:15',ch:'Quầy',reason:'Bấm nhầm gói, đã lập lại đơn DH-2032',att:[['07:15','Chuyển khoản','Success']]},
+ {id:'DH-2027',cust:'Mai Anh Thư',pkg:'Gói 1 tháng',amount:450000,method:'Cổng thanh toán',status:'Paid',at:'05/09/2026 19:02',ch:'Online',refund:true,att:[['19:00','Cổng thanh toán','Success'],['19:02','Cổng thanh toán','Success']],note:'Khách bị trừ tiền 2 lần do bấm thanh toán hai lần.'},
+];
+const SHIFTS=[
+ {d:'20/09/2026',s:'Ca sáng',lt:'Bùi Khánh Vân',cash:3240000,tr:1290000,counted:3240000,why:''},
+ {d:'19/09/2026',s:'Ca chiều',lt:'Nguyễn Thị Hoa',cash:5120000,tr:4800000,counted:5100000,why:'Thối nhầm 20.000đ cho khách mua vé ngày'},
+ {d:'19/09/2026',s:'Ca sáng',lt:'Bùi Khánh Vân',cash:2150000,tr:0,counted:2150000,why:''},
+];
+let FAC=[
+ {id:'CS-01',name:'Máy chạy bộ số 3',cat:'Cardio',loc:'Khu cardio',qty:1,cond:'Available',open:0,status:'Active'},
+ {id:'CS-02',name:'Máy chạy bộ số 7',cat:'Cardio',loc:'Khu cardio',qty:1,cond:'Under Maintenance',open:1,status:'Active'},
+ {id:'CS-04',name:'Khung squat',cat:'Tạ tự do',loc:'Khu tạ tự do',qty:4,cond:'Available',open:0,status:'Active'},
+ {id:'CS-05',name:'Ghế đa năng',cat:'Tạ tự do',loc:'Khu tạ tự do',qty:10,cond:'Available',open:0,status:'Active'},
+ {id:'CS-06',name:'Máy kéo cáp đa năng',cat:'Máy tập',loc:'Khu máy',qty:3,cond:'Available',open:0,status:'Active'},
+ {id:'CS-09',name:'Tủ đồ số 45',cat:'Tiện ích',loc:'Phòng thay đồ',qty:1,cond:'Available',open:1,status:'Active'},
+ {id:'CS-11',name:'Xe đạp tập đời cũ',cat:'Cardio',loc:'Kho',qty:2,cond:'Retired',open:0,status:'Active'},
+];
+let REQ=[
+ {id:'BT-121',item:'Tủ đồ số 45',desc:'Khóa tủ bị kẹt, không rút được chìa.',by:'Nguyễn Thị Hoa',date:'19/09/2026',status:'Open'},
+ {id:'BT-122',item:'Máy kéo cáp đa năng',desc:'Dây cáp bên trái bị sờn, có nguy cơ đứt.',by:'Bùi Khánh Vân',date:'20/09/2026',status:'Open'},
+ {id:'BT-118',item:'Máy chạy bộ số 7',desc:'Băng chạy bị trượt khi tăng tốc trên 10 km/h.',by:'Nguyễn Thị Hoa',date:'17/09/2026',status:'In Progress'},
+ {id:'BT-112',item:'Ghế đa năng',desc:'Đệm ghế số 4 rách nhẹ.',by:'Bùi Khánh Vân',date:'12/09/2026',status:'Rejected',why:'Đã có lịch thay đệm định kỳ ngày 01/10.'},
+ {id:'BT-109',item:'Vòi sen phòng tắm nam số 2',desc:'Nước nóng yếu.',by:'Nguyễn Thị Hoa',date:'10/09/2026',status:'Closed'},
+];
+let FEEDBACK=[
+ {id:1,cust:'Trần Bảo Ngọc',at:'20/09/2026 07:45',text:'Khu tạ tự do buổi tối hơi đông, mong phòng tập cân nhắc thêm một khung squat.',read:false},
+ {id:2,cust:'Mai Anh Thư',at:'19/09/2026 21:10',text:'Phòng tắm nữ thiếu máy sấy tóc vào giờ cao điểm.',read:false},
+ {id:3,cust:'Trịnh Quốc Bảo',at:'18/09/2026 18:30',text:'PT Thắng hướng dẫn rất kỹ. Cảm ơn phòng tập.',read:true},
+ {id:4,cust:'Ngô Thị Lan',at:'16/09/2026 06:20',text:'Nhạc ở khu cardio buổi sáng hơi to.',read:true},
+];
+let BLOG=[
+ {id:1,title:'Khu tập chức năng mở cửa từ tháng 10',date:'17/09/2026',status:'Active',body:'<p>Thêm 120 m² sàn tập với làn cỏ nhân tạo, xe đẩy sled, battle rope và khung xà.</p>'},
+ {id:2,title:'5 bài compound cho người mới tập tạ',date:'15/09/2026',status:'Active',body:'<p>Squat, deadlift, bench press, overhead press và row.</p>'},
+ {id:3,title:'Ăn gì trước buổi tập sáng sớm?',date:'12/09/2026',status:'Active',body:'<p>Một bữa nhỏ dễ tiêu 45–60 phút trước khi tập.</p>'},
+ {id:4,title:'Lịch tập Tết 2027',date:'—',status:'Inactive',body:'<p>Bản nháp.</p>'},
+ {id:5,title:'Giờ mở cửa dịp Quốc khánh 2/9',date:'28/08/2026',status:'Inactive',body:'<p>Ngày 2/9 phòng tập mở từ 07:00 đến 20:00.</p>'},
+];
+let SENT=[{title:'Lịch bảo trì điều hòa 01/10',to:'Tất cả',at:'18/09/2026 09:00'}];
+
+const NAV=[
+ {group:'Cấu hình'},
+ {key:'params',href:'#/params',icon:'gear',label:'Tham số'},
+ {key:'hours',href:'#/hours',icon:'clock',label:'Giờ hoạt động'},
+ {group:'Danh mục'},
+ {key:'packages',href:'#/packages',icon:'ticket',label:'Danh mục gói'},
+ {key:'vouchers',href:'#/vouchers',icon:'tag',label:'Voucher'},
+ {group:'Nhân sự & hội viên'},
+ {key:'staff',href:'#/staff',icon:'users',label:'Nhân sự'},
+ {key:'leaves',href:'#/leaves',icon:'cal',label:'Đơn nghỉ phép',badge:()=>LEAVES.filter(l=>l.status==='Pending').length||''},
+ {key:'customers',href:'#/customers',icon:'users',label:'Hội viên',badge:()=>CUSTOMERS.filter(c=>c.pendingDelete).length||''},
+ {group:'Vận hành'},
+ {key:'tx',href:'#/transactions',icon:'cash',label:'Giao dịch'},
+ {key:'facility',href:'#/facility',icon:'box',label:'Cơ sở vật chất'},
+ {key:'maint',href:'#/maintenance',icon:'wrench',label:'Bảo trì',badge:()=>REQ.filter(r=>r.status==='Open').length||''},
+ {key:'feedback',href:'#/feedback',icon:'chat',label:'Góp ý',badge:()=>FEEDBACK.filter(f=>!f.read).length||''},
+ {group:'Nội dung & báo cáo'},
+ {key:'blog',href:'#/blog',icon:'doc',label:'Blog'},
+ {key:'notify',href:'#/notify',icon:'bell',label:'Thông báo'},
+ {key:'report',href:'#/report',icon:'chart',label:'Báo cáo'},
+];
+const active_=s=>s==='Active'?pill('Đang bán','ok'):pill('Ngừng bán','muted');
+const lockTip=(label,tip,cls='btn-danger')=>`<span class="tip-wrap"><button class="btn btn-sm ${cls}" aria-disabled="true">${label}</button><span class="tip">${tip}</span></span>`;
+
+/* ---------- 4.1.1 / 4.1.2 PARAMS ---------- */
+function viewParams(){
+  render(page('params',crumb(['Tham số']),'Tham số vận hành','4.1.1 / L1 / UC-09','Danh mục cố định. Bấm vào một dòng để sửa.','',`
+    <div class="banner b-info" style="margin-bottom:16px">${I.info}<span>Thay đổi chỉ áp dụng cho bản ghi tạo mới từ thời điểm lưu, không áp ngược cho đơn và hồ sơ đã tạo.</span></div>
+    <div class="card"><div class="table-wrap"><table><thead><tr><th>Tham số</th><th class="r">Giá trị</th><th></th></tr></thead><tbody>
+    ${PARAMS.map(p=>`<tr class="click" tabindex="0" data-go="${p.link||'#/params/'+p.k}"><td><b>${p.label}</b><div class="muted" style="font-size:12px">${p.link?'Sửa ở màn Giờ hoạt động':'Áp dụng cho bản ghi tạo mới từ thời điểm lưu'}</div></td><td class="r num"><b style="font-size:15px">${p.v}</b> <span class="muted">${p.unit}</span></td><td class="r muted" style="width:40px">›</td></tr>`).join('')}
+    </tbody></table></div></div>`));
+  bindRows();
+}
+function viewParam(k){
+  const p=PARAMS.find(x=>x.k===k);if(!p||p.link){location.hash='#/params';return}
+  render(page('params',crumb(['Tham số','#/params'],[p.label]),p.label,'4.1.2 / L2 / UC-09',p.desc,'',`
+    <div class="card" style="max-width:720px"><div class="pad">
+      <div class="grid-half" style="margin-bottom:16px">
+        <div class="f"><span class="lbl">Giá trị hiện tại</span><div class="input num" style="background:var(--page);display:flex;align-items:center">${p.v} ${p.unit}</div></div>
+        <div class="f" id="f-pv"><label for="pv">Giá trị mới<span class="req">*</span></label><input class="input num" id="pv" ${p.type==='time'?'type="time"':'inputmode="numeric"'} value="${p.v}"><span class="err" id="pvErr"></span><span class="hint">${p.type==='time'?p.unit:`Từ ${p.min} đến ${p.max} ${p.unit}`}</span></div>
+      </div>
+      <div class="banner b-info">${I.info}<span>Thay đổi chỉ áp dụng cho bản ghi tạo mới từ thời điểm lưu, không áp ngược cho đơn và hồ sơ đã tạo.</span></div>
+      <p class="muted" style="font-size:12px;margin:12px 0 0">Mọi lần sửa được ghi vào nhật ký hệ thống để Admin tra cứu.</p>
+    </div><div class="form-actions"><a class="btn" href="#/params">Hủy</a><button class="btn btn-primary" id="pSave">Lưu</button></div></div>`));
+  $('#pSave').onclick=()=>{const v=val('pv').trim();let err=null;
+    if(p.type==='time'){if(!/^\d{2}:\d{2}$/.test(v))err='Nhập giờ dạng hh:mm.';
+      else if(k==='leaveApprove'&&v<=PARAMS.find(x=>x.k==='leaveSubmit').v)err='Giờ chốt duyệt phải muộn hơn giờ chốt nộp ('+PARAMS.find(x=>x.k==='leaveSubmit').v+').';
+      else if(k==='leaveSubmit'&&v>=PARAMS.find(x=>x.k==='leaveApprove').v)err='Giờ chốt nộp phải sớm hơn giờ chốt duyệt ('+PARAMS.find(x=>x.k==='leaveApprove').v+').'}
+    else {const n=Number(v);if(v===''||isNaN(n)||!Number.isInteger(n)||n<p.min||n>p.max)err=`Phải là số nguyên từ ${p.min} đến ${p.max}.`}
+    if(err){$('#pvErr').innerHTML='Giá trị không hợp lệ. '+err+' ';mark('f-pv',false);return}
+    p.v=p.type==='time'?v:Number(v);toast('MSG-035','Đã cập nhật tham số.');location.hash='#/params'};
+}
+
+/* ---------- 4.1.3 HOURS ---------- */
+let HX={adding:false,old:null};
+function viewHours(){
+  if(!HX.old)HX.old={...HOURS};
+  const narrowed=HOURS.open>HX.old.open||HOURS.close<HX.old.close;
+  render(page('hours',crumb(['Giờ hoạt động']),'Giờ hoạt động','4.1.3 / L2 / UC-11','Một khung giờ mặc định cho mọi ngày. Chỉ khai báo ngoại lệ cho ngày có giờ khác.','',`
+    <div class="card" style="margin-bottom:16px"><div class="card-head"><h2>Giờ mặc định</h2></div><div class="pad">
+      <div class="grid-half" style="max-width:520px">
+        <div class="f"><label for="h-o">Giờ mở cửa</label><input class="input" type="time" id="h-o" value="${HOURS.open}"></div>
+        <div class="f" id="f-hc"><label for="h-c">Giờ đóng cửa</label><input class="input" type="time" id="h-c" value="${HOURS.close}"><span class="err">Giờ đóng cửa phải sau giờ mở cửa.</span></div>
+      </div>
+      <div class="banner b-info" style="margin-top:14px">${I.info}<span>Mỗi ngày mở cửa sẽ tự sinh 2 ca trực: ca sáng và ca chiều. Ngày đóng cửa không sinh ca.</span></div>
+      ${narrowed?`<div class="banner b-warn">${I.warn}<span>Thu hẹp giờ mở cửa có thể khiến một số khung giờ rảnh của PT nằm ngoài giờ hoạt động.</span></div>`:''}
+    </div><div class="form-actions"><button class="btn btn-primary" id="hSave">Lưu giờ mặc định</button></div></div>
+    <div class="card"><div class="card-head"><h2>Ngày có giờ khác</h2><button class="btn btn-sm btn-primary" id="addExc">${I.plus} Thêm ngoại lệ</button></div>
+      ${HX.adding?`<div class="pad" style="border-bottom:1px solid var(--border);background:#FCFCFA"><div class="form-grid">
+        <div class="f" id="f-ed"><label for="e-d">Ngày áp dụng<span class="req">*</span></label><input class="input" type="date" id="e-d"><span class="err">Chọn ngày.</span></div>
+        <div class="f"><span class="lbl">Kiểu</span><label class="check" style="margin-top:8px"><input type="checkbox" id="e-cl"> Đóng cửa cả ngày</label></div>
+        <div class="f"><label for="e-o">Giờ mở</label><input class="input" type="time" id="e-o" value="${HOURS.open}"></div>
+        <div class="f" id="f-ec"><label for="e-c">Giờ đóng</label><input class="input" type="time" id="e-c" value="${HOURS.close}"><span class="err">Giờ đóng cửa phải sau giờ mở cửa.</span></div>
+        <div class="f full"><label for="e-n">Ghi chú</label><input class="input" id="e-n" placeholder="VD: Tết Nguyên đán"></div>
+      </div><div style="display:flex;gap:8px;justify-content:flex-end;margin-top:14px"><button class="btn" id="excCancel">Hủy</button><button class="btn btn-primary" id="excSave">Lưu ngoại lệ</button></div></div>`:''}
+      <div class="table-wrap"><table><thead><tr><th>Ngày</th><th>Giờ</th><th>Ghi chú</th><th></th></tr></thead><tbody>
+      ${HOURS.exc.map((e,i)=>`<tr><td class="num"><b>${e.date}</b></td><td>${e.closed?pill('Đóng cửa cả ngày','danger'):`<span class="num">${e.open} – ${e.close}</span>`}</td><td>${esc(e.note)}</td><td class="r"><button class="btn btn-sm" data-delx="${i}">Xóa</button></td></tr>`).join('')}
+      </tbody></table></div></div>`));
+  $('#h-o').onchange=e=>{HOURS.open=e.target.value;viewHours()};$('#h-c').onchange=e=>{HOURS.close=e.target.value;viewHours()};
+  $('#hSave').onclick=()=>{if(!mark('f-hc',HOURS.close>HOURS.open))return;PARAMS.find(p=>p.k==='hours').v=`${HOURS.open} – ${HOURS.close}`;HX.old={...HOURS};toast('','Đã lưu giờ mặc định. Ca trực các ngày tới được sinh lại theo giờ mới.');viewHours()};
+  $('#addExc').onclick=()=>{HX.adding=true;viewHours()};
+  const ec=$('#excCancel');if(ec)ec.onclick=()=>{HX.adding=false;viewHours()};
+  const cl=$('#e-cl');if(cl)cl.onchange=()=>{$('#e-o').disabled=cl.checked;$('#e-c').disabled=cl.checked};
+  const es=$('#excSave');if(es)es.onclick=()=>{const d=val('e-d');const closed=$('#e-cl').checked;
+    let ok=mark('f-ed',!!d);if(!closed)ok&=mark('f-ec',val('e-c')>val('e-o'));if(!ok)return;
+    const ds=fmtD(fromIso(d));const ex={date:ds,closed,open:val('e-o'),close:val('e-c'),note:val('e-n').trim()};
+    const i=HOURS.exc.findIndex(x=>x.date===ds);
+    const put=()=>{if(i>=0)HOURS.exc[i]=ex;else HOURS.exc.push(ex);HOURS.exc.sort((a,b)=>D(a.date)-D(b.date));HX.adding=false;toast('','Đã lưu ngoại lệ ngày '+ds+'.');viewHours()};
+    if(i>=0)modal({title:'Ghi đè ngoại lệ?',text:`<p>Đã có ngoại lệ cho ngày ${ds.slice(0,5)}. Lưu sẽ ghi đè ngoại lệ cũ.</p>`,ok:'Ghi đè',onOk:put});else put()};
+  $$('[data-delx]').forEach(b=>b.onclick=()=>{HOURS.exc.splice(+b.dataset.delx,1);viewHours()});
+}
+
+/* ---------- 4.2.x PACKAGES ---------- */
+let PKF={st:'all'};
+const pkgTabs=a=>`<div class="tabs" role="tablist"><button role="tab" aria-selected="${a==='g'}" onclick="location.hash='#/packages'">Gói tập & gói ngày</button><button role="tab" aria-selected="${a==='p'}" onclick="location.hash='#/ptpackages'">Gói PT</button></div>`;
+function stopSale(p,back){modal({title:`Ngừng bán gói ${esc(p.name)}?`,text:`<p>Gói sẽ biến khỏi danh mục bán mới; các đơn đang chạy không bị ảnh hưởng.</p>${p.running?`<p><b>${p.running}</b> đơn đang chạy vẫn giữ nguyên.</p>`:''}`,ok:'Ngừng bán',danger:true,onOk:()=>{p.status='Inactive';toast('','Đã ngừng bán '+p.name+'.');back()}})}
+function viewPackages(){
+  const rows=MPKG.filter(p=>PKF.st==='all'||p.status===PKF.st);
+  render(page('packages',crumb(['Danh mục gói']),'Danh mục gói','4.2.1 / L1 / UC-10','Giá niêm yết là giá cuối khách trả, đã gồm VAT.',`<a class="btn btn-primary" href="#/packages/new">${I.plus} Thêm gói</a>`,`
+    <div class="card">${pkgTabs('g')}<div class="filters"><select class="select" id="pst"><option value="all">Mọi trạng thái</option><option value="Active" ${PKF.st==='Active'?'selected':''}>Đang bán</option><option value="Inactive" ${PKF.st==='Inactive'?'selected':''}>Ngừng bán</option></select></div>
+    <div class="table-wrap"><table><thead><tr><th>Tên gói</th><th>Thời hạn</th><th class="r">Giá (gồm VAT)</th><th class="r">Đơn đang chạy</th><th>Trạng thái</th><th></th></tr></thead><tbody>
+    ${rows.map(p=>`<tr class="click" tabindex="0" data-go="#/packages/${p.id}"><td><b>${esc(p.name)}</b></td><td>${p.dur}</td><td class="r num">${vnd(p.price)}</td><td class="r num">${p.running}</td><td>${active_(p.status)}</td><td class="r">${p.status==='Active'?`<button class="btn btn-sm btn-danger" data-stop="${p.id}">Ngừng bán</button>`:''}</td></tr>`).join('')}
+    </tbody></table></div></div>`));
+  $('#pst').onchange=e=>{PKF.st=e.target.value;viewPackages()};
+  $$('[data-stop]').forEach(b=>b.onclick=()=>stopSale(MPKG.find(p=>p.id===b.dataset.stop),viewPackages));bindRows();
+}
+function viewPackage(id){
+  const isNew=id==='new';const p=isNew?{name:'',price:'',dur:'1 tháng',desc:'',status:'Active'}:MPKG.find(x=>x.id===id);if(!p){location.hash='#/packages';return}
+  render(page('packages',crumb(['Danh mục gói','#/packages'],[isNew?'Thêm gói':p.name]),isNew?'Thêm gói tập':esc(p.name),'4.2.2 / L2 / UC-10','','',`
+    <div class="card" style="max-width:760px"><div class="pad"><div class="form-grid">
+      <div class="f full" id="f-pn"><label for="pn">Tên gói<span class="req">*</span></label><input class="input" id="pn" value="${esc(p.name)}"><span class="err">Tên gói không được để trống.</span></div>
+      <div class="f" id="f-pp"><label for="pp">Giá (đã gồm VAT)<span class="req">*</span></label><input class="input num" id="pp" inputmode="numeric" value="${p.price}"><span class="hint">Giá đã bao gồm VAT. Đổi giá không áp dụng cho đơn đã tạo.</span><span class="err">Nhập giá lớn hơn 0.</span></div>
+      <div class="f"><label for="pd">Thời hạn<span class="req">*</span></label><select class="select" id="pd">${DURS.map(d=>`<option ${d===p.dur?'selected':''}>${d}</option>`).join('')}</select><span class="hint">Danh sách thời hạn do Manager quản lý.</span></div>
+      <div class="f full"><label for="pdesc">Mô tả</label><textarea class="input" id="pdesc">${esc(p.desc)}</textarea></div>
+      <div class="f"><span class="lbl">Trạng thái</span><div>${active_(p.status)}</div></div>
+    </div></div><div class="form-actions">${!isNew&&p.status==='Active'?`<button class="btn btn-danger" id="stop" style="margin-right:auto">Ngừng bán</button>`:''}<a class="btn" href="#/packages">Hủy</a><button class="btn btn-primary" id="save">Lưu</button></div></div>`));
+  const st=$('#stop');if(st)st.onclick=()=>stopSale(p,()=>location.hash='#/packages');
+  $('#save').onclick=()=>{const n=val('pn').trim(),pr=+val('pp').replace(/\D/g,'');const ok=mark('f-pn',!!n)&mark('f-pp',pr>0);if(!ok)return;
+    Object.assign(p,{name:n,price:pr,dur:val('pd'),desc:val('pdesc')});if(isNew)MPKG.push({...p,id:'G-0'+(MPKG.length+1),running:0});toast('MSG-042','Đã lưu gói.');location.hash='#/packages'};
+}
+function viewPtPackages(){
+  const rows=PTPKG.filter(p=>PKF.st==='all'||p.status===PKF.st);
+  render(page('packages',crumb(['Danh mục gói','#/packages'],['Gói PT']),'Danh mục gói','4.2.3 / L1 / UC-10','Gói PT tính theo số buổi và không áp voucher.',`<a class="btn btn-primary" href="#/ptpackages/new">${I.plus} Thêm gói PT</a>`,`
+    <div class="card">${pkgTabs('p')}<div class="filters"><select class="select" id="ptype"><option value="all">Đơn và couple</option><option value="single" ${PKF.t==='single'?'selected':''}>Gói đơn</option><option value="couple" ${PKF.t==='couple'?'selected':''}>Gói couple</option></select></div>
+    <div class="table-wrap"><table><thead><tr><th>Tên gói</th><th class="r">Số buổi</th><th class="r">Giá</th><th class="r">Giá trị 1 buổi</th><th>Loại</th><th>Trạng thái</th><th></th></tr></thead><tbody>
+    ${rows.filter(p=>!PKF.t||PKF.t==='all'||p.type===PKF.t).map(p=>`<tr class="click" tabindex="0" data-go="#/ptpackages/${p.id}"><td><b>${esc(p.name)}</b></td><td class="r num">${p.n}</td><td class="r num">${vnd(p.price)}</td><td class="r num muted">${vnd(p.price/p.n)}</td><td>${p.type==='couple'?'Couple':'Đơn'}</td><td>${active_(p.status)}</td><td class="r">${p.status==='Active'?`<button class="btn btn-sm btn-danger" data-stop="${p.id}">Ngừng bán</button>`:''}</td></tr>`).join('')}
+    </tbody></table></div></div>`));
+  $('#ptype').onchange=e=>{PKF.t=e.target.value;viewPtPackages()};
+  $$('[data-stop]').forEach(b=>b.onclick=()=>stopSale(PTPKG.find(p=>p.id===b.dataset.stop),viewPtPackages));bindRows();
+}
+function viewPtPackage(id){
+  const isNew=id==='new';const p=isNew?{name:'',n:12,price:'',type:'single',status:'Active'}:PTPKG.find(x=>x.id===id);if(!p){location.hash='#/ptpackages';return}
+  const per=()=>{const n=+val('ptn'),pr=+val('ptp').replace(/\D/g,'');$('#per').textContent=n&&pr?vnd(pr/n):'—'};
+  render(page('packages',crumb(['Danh mục gói','#/packages'],['Gói PT','#/ptpackages'],[isNew?'Thêm gói PT':p.name]),isNew?'Thêm gói PT':esc(p.name),'4.2.4 / L2 / UC-10','','',`
+    <div class="card" style="max-width:760px"><div class="pad"><div class="form-grid">
+      <div class="f full" id="f-ptn2"><label for="ptname">Tên gói<span class="req">*</span></label><input class="input" id="ptname" value="${esc(p.name)}"><span class="err">Tên gói không được để trống.</span></div>
+      <div class="f" id="f-ptn"><label for="ptn">Số buổi<span class="req">*</span></label><input class="input num" id="ptn" inputmode="numeric" value="${p.n}"><span class="err">Nhập số buổi lớn hơn 0.</span></div>
+      <div class="f" id="f-ptp"><label for="ptp">Giá<span class="req">*</span></label><input class="input num" id="ptp" inputmode="numeric" value="${p.price}"><span class="err">Nhập giá lớn hơn 0.</span></div>
+      <div class="f full"><span class="lbl">Loại</span><div class="radio-row"><label class="opt"><input type="radio" name="ptt" value="single" ${p.type==='single'?'checked':''}> Đơn (1 khách)</label><label class="opt"><input type="radio" name="ptt" value="couple" ${p.type==='couple'?'checked':''}> Couple (2 khách)</label></div></div>
+      <div class="f full"><div class="banner b-role">${I.info}<div><b>Giá trị 1 buổi: <span id="per" class="num">${p.price?vnd(p.price/p.n):'—'}</span></b>Chốt vào từng buổi khi đơn được thanh toán, làm căn cứ tính hoa hồng PT. Gói PT không áp dụng voucher.</div></div></div>
+    </div></div><div class="form-actions">${!isNew&&p.status==='Active'?`<button class="btn btn-danger" id="stop" style="margin-right:auto">Ngừng bán</button>`:''}<a class="btn" href="#/ptpackages">Hủy</a><button class="btn btn-primary" id="save">Lưu</button></div></div>`));
+  $('#ptn').oninput=per;$('#ptp').oninput=per;
+  const st=$('#stop');if(st)st.onclick=()=>stopSale(p,()=>location.hash='#/ptpackages');
+  $('#save').onclick=()=>{const nm=val('ptname').trim(),n=+val('ptn'),pr=+val('ptp').replace(/\D/g,'');const ok=mark('f-ptn2',!!nm)&mark('f-ptn',n>0)&mark('f-ptp',pr>0);if(!ok)return;
+    Object.assign(p,{name:nm,n,price:pr,type:$('input[name=ptt]:checked').value});if(isNew)PTPKG.push({...p,id:'P-0'+(PTPKG.length+1)});toast('MSG-042','Đã lưu gói.');location.hash='#/ptpackages'};
+}
+
+/* ---------- 4.3.x VOUCHERS ---------- */
+let VF={st:'all',scope:'all'};
+const vVal=v=>v.kind==='pct'?`${v.value}%`:vnd(v.value);
+const vScope=s=>s==='all'?'Gói tập & gói ngày':'Chỉ gói tập';
+function viewVouchers(){
+  const rows=VOUCH.filter(v=>(VF.st==='all'||v.status===VF.st)&&(VF.scope==='all'||v.scope===VF.scope));
+  render(page('vouchers',crumb(['Voucher']),'Voucher','4.3.1 / L1 / UC-12','Voucher không bao giờ áp cho gói PT.',`<a class="btn btn-primary" href="#/vouchers/new">${I.plus} Thêm voucher</a>`,`
+    <div class="card"><div class="filters">
+      <select class="select" id="vs"><option value="all">Mọi trạng thái</option><option value="Active" ${VF.st==='Active'?'selected':''}>Đang hoạt động</option><option value="Inactive" ${VF.st==='Inactive'?'selected':''}>Đã vô hiệu hóa</option></select>
+      <select class="select" id="vsc"><option value="all">Mọi phạm vi</option><option value="gym" ${VF.scope==='gym'?'selected':''}>Chỉ gói tập</option><option value="all2" ${VF.scope==='all2'?'selected':''}>Gói tập & gói ngày</option></select></div>
+    <div class="table-wrap"><table><thead><tr><th>Mã</th><th class="r">Giảm</th><th>Đã dùng</th><th>Phạm vi</th><th>Hiệu lực</th><th>Trạng thái</th><th></th></tr></thead><tbody>
+    ${rows.filter(v=>VF.scope!=='all2'||v.scope==='all').map(v=>`<tr class="click" tabindex="0" data-go="#/vouchers/${v.code}"><td><b class="num">${v.code}</b></td><td class="r num">${vVal(v)}</td><td style="min-width:120px"><div class="num" style="font-size:13px">${v.used}/${v.max}</div><div class="mini-bar"><i style="width:${v.used/v.max*100}%"></i></div></td><td>${vScope(v.scope)}</td><td class="num">${v.from.slice(0,5)} – ${v.to}</td><td>${v.status==='Active'?pill('Đang hoạt động','ok'):pill('Đã vô hiệu hóa','muted')}</td>
+      <td class="r" style="white-space:nowrap">${v.status==='Active'?`<button class="btn btn-sm" data-off="${v.code}">Vô hiệu hóa</button> `:''}${v.used>0?lockTip('Xóa','Voucher đã được sử dụng nên chỉ có thể vô hiệu hóa, không thể xóa.'):`<button class="btn btn-sm btn-danger" data-del="${v.code}">Xóa</button>`}</td></tr>`).join('')}
+    </tbody></table></div></div>`));
+  $('#vs').onchange=e=>{VF.st=e.target.value;viewVouchers()};$('#vsc').onchange=e=>{VF.scope=e.target.value==='all2'?'all2':e.target.value;viewVouchers()};
+  $$('[data-off]').forEach(b=>b.onclick=()=>{const v=VOUCH.find(x=>x.code===b.dataset.off);modal({title:`Vô hiệu hóa ${v.code}?`,text:'<p>Mã sẽ không dùng được cho đơn mới. Đơn đã áp mã không bị ảnh hưởng.</p>',ok:'Vô hiệu hóa',danger:true,onOk:()=>{v.status='Inactive';toast('','Đã vô hiệu hóa '+v.code+'.');viewVouchers()}})});
+  $$('[data-del]').forEach(b=>b.onclick=()=>{const v=VOUCH.find(x=>x.code===b.dataset.del);modal({title:`Xóa ${v.code}?`,text:'<p>Mã chưa được dùng lần nào nên xóa được.</p>',ok:'Xóa',danger:true,onOk:()=>{VOUCH=VOUCH.filter(x=>x!==v);toast('','Đã xóa '+v.code+'.');viewVouchers()}})});
+  bindRows();
+}
+function viewVoucher(code){
+  const isNew=code==='new';const v=isNew?{code:'',kind:'pct',value:'',used:0,max:'',per:1,min:0,scope:'all',from:'20/09/2026',to:'20/10/2026',status:'Active'}:VOUCH.find(x=>x.code===code);if(!v){location.hash='#/vouchers';return}
+  render(page('vouchers',crumb(['Voucher','#/vouchers'],[isNew?'Thêm voucher':v.code]),isNew?'Thêm voucher':v.code,'4.3.2 / L2 / UC-12',v.used?`Đã dùng ${v.used} lượt. Sửa điều kiện không áp ngược cho đơn đã áp mã.`:'','',`
+    <div class="grid-half" style="align-items:start">
+      <div class="card"><div class="card-head"><h2>Giá trị giảm</h2></div><div class="pad stack">
+        <div class="f" id="f-vc"><label for="vc">Mã<span class="req">*</span></label><input class="input num" id="vc" value="${v.code}" style="text-transform:uppercase" ${isNew?'':'readonly'}><span class="err" id="vcErr">Mã voucher đã tồn tại.</span></div>
+        <div class="f"><span class="lbl">Kiểu giảm</span><div class="radio-row"><label class="opt"><input type="radio" name="vk" value="pct" ${v.kind==='pct'?'checked':''}> Theo %</label><label class="opt"><input type="radio" name="vk" value="amt" ${v.kind==='amt'?'checked':''}> Số tiền cố định</label></div></div>
+        <div class="f" id="f-vv"><label for="vv">Giá trị giảm<span class="req">*</span></label><input class="input num" id="vv" inputmode="numeric" value="${v.value}"><span class="err">Nhập giá trị hợp lệ (% từ 1 đến 100).</span></div>
+      </div></div>
+      <div class="card"><div class="card-head"><h2>Điều kiện áp dụng</h2></div><div class="pad stack">
+        <div class="grid-half"><div class="f" id="f-vm"><label for="vm">Tổng lượt tối đa<span class="req">*</span></label><input class="input num" id="vm" value="${v.max}"><span class="err">Nhập số lớn hơn 0.</span></div>
+        <div class="f"><label for="vp">Số lần mỗi khách</label><input class="input num" id="vp" value="${v.per??''}" placeholder="Không giới hạn"><span class="hint">Mặc định 1. Để trống là không giới hạn.</span></div></div>
+        <div class="f"><label for="vmin">Giá trị đơn tối thiểu</label><input class="input num" id="vmin" value="${v.min}"><span class="hint">Tính trên giá trước giảm.</span></div>
+        <div class="f"><span class="lbl">Phạm vi</span><div class="radio-row"><label class="opt"><input type="radio" name="vsc" value="all" ${v.scope==='all'?'checked':''}> Gói tập & gói ngày</label><label class="opt"><input type="radio" name="vsc" value="gym" ${v.scope==='gym'?'checked':''}> Chỉ gói tập</label></div><span class="hint">Không có phạm vi nào gồm gói PT.</span></div>
+        <div class="grid-half"><div class="f"><label for="vf">Từ ngày</label><input class="input" type="date" id="vf" value="${toIso(v.from)}"></div><div class="f" id="f-vt"><label for="vt">Đến ngày</label><input class="input" type="date" id="vt" value="${toIso(v.to)}"><span class="err">Ngày kết thúc phải sau ngày bắt đầu.</span></div></div>
+      </div></div>
+    </div>
+    <div class="card" style="margin-top:16px"><div class="form-actions" style="border-top:0"><a class="btn" href="#/vouchers">Hủy</a><button class="btn btn-primary" id="save">Lưu voucher</button></div></div>`));
+  $('#save').onclick=()=>{const c=val('vc').trim().toUpperCase(),kind=$('input[name=vk]:checked').value,value=+val('vv').replace(/\D/g,''),max=+val('vm'),f=val('vf'),t=val('vt');
+    const dup=isNew&&VOUCH.some(x=>x.code===c);$('#vcErr').innerHTML=!c?'Mã không được để trống.':'Mã voucher đã tồn tại. ';
+    const ok=mark('f-vc',!!c&&!dup)&mark('f-vv',value>0&&(kind!=='pct'||value<=100))&mark('f-vm',max>0)&mark('f-vt',t>f);if(!ok)return;
+    Object.assign(v,{code:c,kind,value,max,per:val('vp')===''?null:+val('vp'),min:+val('vmin').replace(/\D/g,'')||0,scope:$('input[name=vsc]:checked').value,from:fmtD(fromIso(f)),to:fmtD(fromIso(t))});
+    if(isNew)VOUCH.unshift(v);toast('','Đã lưu voucher '+c+'.');location.hash='#/vouchers'};
+}
+
+/* ---------- 5.1.x STAFF ---------- */
+let SF={title:'all',st:'Active'};
+function viewStaff(){
+  const rows=STAFF.filter(s=>(SF.title==='all'||s.title===SF.title)&&(SF.st==='all'||s.status===SF.st));
+  render(page('staff',crumb(['Nhân sự']),'Nhân sự','5.1.1 / L1 / UC-13','Tài khoản đăng nhập của nhân viên do Admin quản lý.',`<a class="btn btn-primary" href="#/staff/new">${I.plus} Thêm nhân sự</a>`,`
+    <div class="card"><div class="filters">
+      <select class="select" id="sft"><option value="all">Mọi chức danh</option>${['Manager','PT','Lễ tân'].map(t=>`<option ${SF.title===t?'selected':''}>${t}</option>`).join('')}</select>
+      <select class="select" id="sfs"><option value="all">Mọi trạng thái</option><option value="Active" ${SF.st==='Active'?'selected':''}>Đang làm việc</option><option value="Inactive" ${SF.st==='Inactive'?'selected':''}>Đã nghỉ việc</option></select></div>
+    <div class="table-wrap"><table><thead><tr><th>Nhân sự</th><th>Chức danh</th><th>SĐT</th><th class="r">Hoa hồng</th><th>Trạng thái</th></tr></thead><tbody>
+    ${rows.map(s=>`<tr class="click" tabindex="0" data-go="#/staff/${s.id}"><td><div class="who"><span class="avatar">${initials(s.name)}</span><div><b>${esc(s.name)}</b><small>${s.email}</small></div></div></td><td>${s.title}</td><td class="num">${fmtPhone(s.phone)}</td><td class="r num">${s.title==='PT'?s.comm+'%':'<span class="muted">—</span>'}</td><td>${s.status==='Active'?pill('Đang làm việc','ok'):pill('Đã nghỉ việc','muted')}</td></tr>`).join('')}
+    </tbody></table></div><div class="table-foot"><span>${rows.length} người</span></div></div>`));
+  $('#sft').onchange=e=>{SF.title=e.target.value;viewStaff()};$('#sfs').onchange=e=>{SF.st=e.target.value;viewStaff()};bindRows();
+}
+function viewStaffOne(id){
+  const isNew=id==='new';const s=isNew?{name:'',dob:'',title:'PT',phone:'',email:'',start:'2026-09-21',comm:PARAMS.find(p=>p.k==='comm').v,status:'Active',pending:{sessions:0,shifts:0,orders:0}}:STAFF.find(x=>x.id===id);if(!s){location.hash='#/staff';return}
+  const pd=s.pending||{sessions:0,shifts:0,orders:0};const busy=!isNew&&(pd.sessions||pd.shifts||pd.orders);
+  const title=s._t||s.title;const off=s.status==='Inactive';
+  render(page('staff',crumb(['Nhân sự','#/staff'],[isNew?'Thêm nhân sự':s.name]),isNew?'Thêm nhân sự':esc(s.name),'5.1.2 / L2 / UC-13',off?'Đã nghỉ việc. Lịch sử buổi dạy, ca trực và giao dịch vẫn được giữ.':'','',`
+    <div class="grid2"><div class="card"><div class="pad"><div class="form-grid">
+      <div class="f full" id="f-sn"><label for="sn">Họ và tên<span class="req">*</span></label><input class="input" id="sn" value="${esc(s.name)}" ${off?'disabled':''}><span class="err">Họ và tên không được để trống.</span></div>
+      <div class="f"><label for="sd">Ngày sinh</label><input class="input" type="date" id="sd" value="${s.dob}" ${off?'disabled':''}></div>
+      <div class="f"><label for="st">Chức danh<span class="req">*</span></label><select class="select" id="st" ${busy||off?'disabled':''}>${['PT','Lễ tân','Manager'].map(t=>`<option ${t===title?'selected':''}>${t}</option>`).join('')}</select></div>
+      ${busy?`<div class="full banner b-warn">${I.lock}<div><b>Không đổi được chức danh khi ${esc(s.name)} còn việc chưa xong: ${pd.sessions} buổi đã xếp, ${pd.shifts} ca chưa đóng, ${pd.orders} đơn chưa thu tiền.</b></div></div>`:''}
+      <div class="f" id="f-sp"><label for="sp">SĐT<span class="req">*</span></label><input class="input num" id="sp" value="${s.phone}" maxlength="10" ${off?'disabled':''}><span class="err">SĐT phải gồm 10 chữ số, bắt đầu bằng 0.</span></div>
+      <div class="f" id="f-se"><label for="se">Email (dùng để đăng nhập)<span class="req">*</span></label><input class="input" id="se" value="${s.email}" ${off?'disabled':''}><span class="err">Email chưa đúng định dạng.</span></div>
+      <div class="f"><label for="ss">Ngày vào làm</label><input class="input" type="date" id="ss" value="${s.start}" ${off?'disabled':''}></div>
+      ${title==='PT'?`<div class="full" style="border:1px solid var(--role-border);background:var(--role-bg);border-radius:var(--r-md);padding:14px 16px"><div class="f" id="f-sc" style="max-width:240px"><label for="sc">% hoa hồng</label><input class="input num" id="sc" value="${s.comm??70}" ${off?'disabled':''}><span class="hint">% hoa hồng mặc định là ${PARAMS.find(p=>p.k==='comm').v}%, có thể đặt riêng cho từng PT.</span><span class="err">Từ 0 đến 100.</span></div></div>`:''}
+    </div></div>${off?'':`<div class="form-actions">${isNew?'':`<button class="btn btn-danger" id="quit" style="margin-right:auto">Ghi nhận nghỉ việc</button>`}<a class="btn" href="#/staff">Hủy</a><button class="btn btn-primary" id="save">Lưu</button></div>`}</div>
+    <aside class="stack"><div class="card pad"><h2>Tài khoản đăng nhập</h2><p class="sub" style="margin:0">Admin tạo, khóa và mở tài khoản ở màn Tài khoản hệ thống. Ghi nhận nghỉ việc ở đây sẽ khóa tài khoản ngay.</p></div>
+    ${!isNew?`<div class="card pad"><h2>Việc đang treo</h2><dl class="kv" style="margin-top:10px"><dt>Buổi đã xếp</dt><dd>${pd.sessions}</dd><dt>Ca chưa đóng</dt><dd>${pd.shifts}</dd><dt>Đơn chưa thu tiền</dt><dd>${pd.orders}</dd></dl></div>`:''}</aside></div>`));
+  const stSel=$('#st');if(stSel)stSel.onchange=e=>{s._t=e.target.value;viewStaffOne(id)};
+  const q=$('#quit');if(q)q.onclick=()=>modal({title:`Ghi nhận ${esc(s.name)} nghỉ việc?`,text:`<p>Quyền truy cập bị khóa ngay, lịch sử dữ liệu vẫn được giữ.</p>`,ok:'Ghi nhận nghỉ việc',danger:true,onOk:()=>{s.status='Inactive';toast('','Đã ghi nhận nghỉ việc. Tài khoản đăng nhập đã bị khóa.');location.hash='#/staff'}});
+  const sv=$('#save');if(sv)sv.onclick=()=>{const ok=mark('f-sn',!!val('sn').trim())&mark('f-sp',/^0\d{9}$/.test(val('sp')))&mark('f-se',/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(val('se')))&(title!=='PT'||mark('f-sc',+val('sc')>=0&&+val('sc')<=100));if(!ok)return;
+    Object.assign(s,{name:val('sn').trim(),dob:val('sd'),title:val('st')||title,phone:val('sp'),email:val('se'),start:val('ss'),comm:title==='PT'?+val('sc'):undefined});delete s._t;
+    if(isNew)STAFF.push({...s,id:'NV0'+(20+STAFF.length)});toast('','Đã lưu hồ sơ nhân sự.');location.hash='#/staff'};
+}
+
+/* ---------- 5.2.x LEAVES ---------- */
+let LF={tab:'Pending'};
+const deadlineOf=l=>{const d=D(l.date);d.setDate(d.getDate()-1);const[h,m]=PARAMS.find(p=>p.k==='leaveApprove').v.split(':');d.setHours(+h,+m,0,0);return d};
+const leftTxt=l=>{const ms=deadlineOf(l)-NOW;if(ms<=0)return pill('Quá hạn','danger');const h=Math.floor(ms/36e5),m=Math.floor(ms%36e5/6e4);const txt=h>=24?`${Math.floor(h/24)} ngày ${h%24} giờ`:`${h} giờ ${m} phút`;return h<6?pill('Còn '+txt,'danger'):`<span class="num">Còn ${txt}</span>`};
+const LS={Pending:['Đang chờ','info'],Approved:['Đã duyệt','ok'],Rejected:['Đã từ chối','danger']};
+function viewLeaves(){
+  const tabs=[['all','Tất cả'],['Pending','Đang chờ'],['Approved','Đã duyệt'],['Rejected','Đã từ chối']];
+  let rows=LEAVES.filter(l=>LF.tab==='all'||l.status===LF.tab);rows.sort((a,b)=>(a.status==='Pending'?0:1)-(b.status==='Pending'?0:1)||deadlineOf(a)-deadlineOf(b));
+  render(page('leaves',crumb(['Đơn nghỉ phép']),'Đơn nghỉ phép','5.2.2 / L1 / UC-15',`Hạn duyệt là ${PARAMS.find(p=>p.k==='leaveApprove').v} ngày liền trước ngày nghỉ. Quá hạn, hệ thống tự từ chối.`,'',`
+    <div class="card"><div class="tabs" role="tablist">${tabs.map(([k,l])=>`<button role="tab" aria-selected="${LF.tab===k}" data-tab="${k}">${l}<span class="count">${k==='all'?LEAVES.length:LEAVES.filter(x=>x.status===k).length}</span></button>`).join('')}</div>
+    <div class="table-wrap">${rows.length?`<table><thead><tr><th>Người nộp</th><th>Ngày & ca nghỉ</th><th>Loại</th><th>Trạng thái</th><th>Tới giờ chốt duyệt</th></tr></thead><tbody>
+    ${rows.map(l=>`<tr class="click ${l.status==='Pending'?'pinned':''}" tabindex="0" data-go="#/leaves/${l.id}"><td><div class="who"><span class="avatar">${initials(l.who)}</span><div><b>${esc(l.who)}</b><small>${l.title}</small></div></div></td><td><b class="num">${l.date}</b><div class="muted" style="font-size:12px">${l.shift}</div></td><td>${l.type}</td><td>${pill(LS[l.status][0],LS[l.status][1])}${l.auto?`<div class="muted" style="font-size:12px">Tự động: quá hạn duyệt</div>`:''}</td><td>${l.status==='Pending'?leftTxt(l):'<span class="muted">—</span>'}</td></tr>`).join('')}
+    </tbody></table>`:`<div class="empty">Không có đơn nào.</div>`}</div></div>`));
+  $$('[data-tab]').forEach(b=>b.onclick=()=>{LF.tab=b.dataset.tab;viewLeaves()});bindRows();
+}
+function capOf(l){const shifts=l.shift==='Cả ngày'?['Ca sáng','Ca chiều']:[l.shift];return shifts.map(s=>{const c=CAPACITY[`${l.date}|${s}`]||{pt:3,lt:2};const after={pt:c.pt-(l.title==='PT'?1:0),lt:c.lt-(l.title==='Lễ tân'?1:0)};return {s,before:c,after}})}
+function viewLeave(id){
+  const l=LEAVES.find(x=>x.id===id);if(!l){location.hash='#/leaves';return}
+  const minPt=PARAMS.find(p=>p.k==='minPt').v,minLt=PARAMS.find(p=>p.k==='minLt').v;
+  const caps=capOf(l);const bad=caps.filter(c=>c.after.pt<minPt||c.after.lt<minLt);
+  const pending=l.status==='Pending';
+  render(page('leaves',crumb(['Đơn nghỉ phép','#/leaves'],[l.id]),`Đơn nghỉ ${l.id}`,'5.2.3 / L2 / UC-15','','',`
+    <div class="grid2"><div class="card"><div class="pad">
+      <div class="who" style="margin-bottom:16px"><span class="avatar" style="width:44px;height:44px">${initials(l.who)}</span><div><b style="font-size:16px">${esc(l.who)}</b><small>${l.title} · nộp lúc ${l.sent}</small></div></div>
+      <dl class="kv"><dt>Ngày nghỉ</dt><dd class="num">${l.date}</dd><dt>Ca</dt><dd>${l.shift}</dd><dt>Loại nghỉ</dt><dd>${l.type}</dd><dt>Lý do</dt><dd>${esc(l.reason)}</dd><dt>Trạng thái</dt><dd>${pill(LS[l.status][0],LS[l.status][1])} ${l.why?`<span class="muted">· ${esc(l.why)}</span>`:''}</dd>${pending?`<dt>Tới giờ chốt</dt><dd>${leftTxt(l)}</dd>`:''}</dl>
+      ${pending&&bad.length?`<div class="banner b-danger" style="margin-top:16px">${I.lock}<div><b>Không duyệt được: sau khi duyệt, ${bad.map(c=>`${c.s.toLowerCase()} ${l.date.slice(0,5)} chỉ còn ${[c.after.pt<minPt?`${c.after.pt} PT (tối thiểu ${minPt})`:'',c.after.lt<minLt?`${c.after.lt} Lễ tân (tối thiểu ${minLt})`:''].filter(Boolean).join(' và ')}`).join('; ')}.</b>Chỉ còn cách từ chối, hoặc để hệ thống tự từ chối khi quá hạn.</div></div>`:''}
+    </div>${pending?`<div class="form-actions"><button class="btn btn-danger" id="rej">Từ chối</button><button class="btn btn-primary" id="apr" ${bad.length?'disabled':''}>Duyệt</button></div>`:''}</div>
+    <aside class="card pad"><h2>Định biên ca sau khi duyệt</h2><p class="sub">Tối thiểu ${minPt} PT và ${minLt} Lễ tân mỗi ca.</p>
+      ${caps.map(c=>`<div style="border:1px solid var(--border);border-radius:var(--r-sm);padding:12px;margin-bottom:10px"><b>${c.s} ${l.date.slice(0,5)}</b>
+        <div style="display:grid;grid-template-columns:1fr auto auto;gap:4px 14px;margin-top:8px;font-size:13px"><span class="muted"></span><span class="muted">Hiện tại</span><span class="muted">Sau duyệt</span>
+        <span>PT</span><span class="num">${c.before.pt}</span><span class="num" style="font-weight:700;color:${c.after.pt<minPt?'var(--danger)':'var(--success)'}">${c.after.pt}</span>
+        <span>Lễ tân</span><span class="num">${c.before.lt}</span><span class="num" style="font-weight:700;color:${c.after.lt<minLt?'var(--danger)':'var(--success)'}">${c.after.lt}</span></div></div>`).join('')}
+    </aside></div>`));
+  const a=$('#apr');if(a)a.onclick=()=>{l.status='Approved';toast('MSG-059',`Đã duyệt đơn nghỉ của ${l.who}.`);location.hash='#/leaves'};
+  const r=$('#rej');if(r)r.onclick=()=>modal({title:`Từ chối đơn nghỉ của ${esc(l.who)}?`,text:'<p>Người nộp nhận thông báo kèm lý do.</p>',ok:'Từ chối',danger:true,reason:true,reasonLabel:'Lý do từ chối',reasonErr:'Vui lòng nhập lý do từ chối. ',onOk:x=>{l.status='Rejected';l.why=x;toast('MSG-060',`Đã từ chối đơn nghỉ của ${l.who}.`);location.hash='#/leaves'}});
+}
+
+/* ---------- 6.1.x CUSTOMERS ---------- */
+let CF={tab:'all',member:'all',q:''};
+function viewCustomers(){
+  const tabs=[['all','Tất cả'],['New','Mới tạo'],['Active','Đang hoạt động'],['Frozen','Đang bảo lưu'],['Expired','Hết hạn'],['Inactive','Đã xóa'],['pending','Chờ duyệt xóa']];
+  let rows=CUSTOMERS.filter(c=>(CF.tab==='all'?c.status!=='Inactive':CF.tab==='pending'?c.pendingDelete:c.status===CF.tab)&&(CF.member==='all'||(CF.member==='yes'?c.status!=='New':c.status==='New'))&&(!CF.q||(c.name+c.phone+c.id).toLowerCase().includes(CF.q.toLowerCase())));
+  rows.sort((a,b)=>(b.pendingDelete?1:0)-(a.pendingDelete?1:0));
+  render(page('customers',crumb(['Hội viên']),'Hồ sơ khách','6.1.1 / L1 / UC-16, UC-17','Quản lý xem hồ sơ và duyệt yêu cầu xóa. Tạo và sửa hồ sơ do Lễ tân làm.','',`
+    <div class="card"><div class="tabs" role="tablist">${tabs.map(([k,l])=>`<button role="tab" aria-selected="${CF.tab===k}" data-tab="${k}">${l}<span class="count">${k==='all'?CUSTOMERS.filter(c=>c.status!=='Inactive').length:k==='pending'?CUSTOMERS.filter(c=>c.pendingDelete).length:CUSTOMERS.filter(c=>c.status===k).length}</span></button>`).join('')}</div>
+    <div class="filters"><div class="search">${I.search}<input class="input" id="cq" placeholder="Tìm theo tên, SĐT hoặc mã khách" value="${esc(CF.q)}"></div>
+      <select class="select" id="cm"><option value="all">Hội viên và chưa là hội viên</option><option value="yes" ${CF.member==='yes'?'selected':''}>Hội viên</option><option value="no" ${CF.member==='no'?'selected':''}>Chưa là hội viên</option></select></div>
+    <div class="table-wrap">${rows.length?`<table><thead><tr><th>Mã khách</th><th>Khách</th><th>SĐT</th><th>Trạng thái</th><th>Hội viên</th></tr></thead><tbody>
+    ${rows.map(c=>`<tr class="click ${c.pendingDelete?'pinned':''}" tabindex="0" data-go="#/customers/${c.id}"><td class="num">${c.id}</td><td><div class="who"><span class="avatar">${initials(c.name)}</span><div><b>${esc(c.name)}</b><small>${c.pkg||'Chưa có gói'}</small></div></div></td><td class="num">${fmtPhone(c.phone)}</td><td>${pill(ST[c.status][0],ST[c.status][1])} ${c.pendingDelete?pill('Chờ duyệt xóa','danger'):''}</td><td>${c.status==='New'?'<span class="muted">Chưa</span>':'Hội viên'}</td></tr>`).join('')}
+    </tbody></table>`:`<div class="empty">Không có dữ liệu phù hợp với bộ lọc.</div>`}</div></div>`));
+  $$('[data-tab]').forEach(b=>b.onclick=()=>{CF.tab=b.dataset.tab;viewCustomers()});$('#cm').onchange=e=>{CF.member=e.target.value;viewCustomers()};
+  $('#cq').oninput=e=>{CF.q=e.target.value;const p=e.target.selectionStart;viewCustomers();const n=$('#cq');n.focus();n.setSelectionRange(p,p)};bindRows();
+}
+function viewCustomer(id){
+  const c=CUSTOMERS.find(x=>x.id===id);if(!c){location.hash='#/customers';return}
+  const pdl=c.pendingDelete;
+  const info=`<dl class="kv"><dt>Mã khách</dt><dd class="num">${c.id}</dd><dt>Loại hồ sơ</dt><dd>${c.type}</dd><dt>Ngày sinh</dt><dd class="num">${c.dob}</dd><dt>SĐT</dt><dd class="num">${fmtPhone(c.phone)}</dd><dt>Email</dt><dd>${c.email||'<span class="muted">Không có</span>'}</dd>${c.guardian?`<dt>Người giám hộ</dt><dd>${c.guardian}</dd>`:''}<dt>Trạng thái</dt><dd>${pill(ST[c.status][0],ST[c.status][1])}</dd><dt>Gói tập</dt><dd>${c.pkg||'<span class="muted">Không có</span>'}</dd><dt>Gói PT</dt><dd>${c.pt||'<span class="muted">Không có</span>'}</dd></dl>`;
+  const photo=`<div style="width:120px;aspect-ratio:3/4;border-radius:8px;background:var(--role-bg);border:1px solid var(--role-border);display:grid;place-items:center"><svg viewBox="0 0 64 64" style="width:65%;stroke:var(--role);fill:none;stroke-width:2.5">${I.person.replace(/<\/?svg[^>]*>/g,'')}</svg></div>`;
+  if(!pdl){render(page('customers',crumb(['Hội viên','#/customers'],[c.name]),esc(c.name),'6.1.2 / L2 / UC-16','Chế độ xem. Mọi trường bị khóa; sửa hồ sơ do Lễ tân thực hiện.','',`
+    <div class="card pad" style="display:flex;gap:24px;flex-wrap:wrap;max-width:820px">${photo}<div style="flex:1;min-width:260px">${info}</div></div>`));return}
+  render(page('customers',crumb(['Hội viên','#/customers'],[c.name]),'Yêu cầu xóa hồ sơ','6.1.3 / L2 / UC-17',`${esc(c.name)} · ${c.id}`,'',`
+    <div class="grid2"><div class="stack">
+      <div class="card"><div class="card-head"><h2>Lý do Lễ tân yêu cầu xóa</h2><span class="muted">${esc(pdl.by)} · ${pdl.at}</span></div><div class="pad"><p style="margin:0;font-size:15px">${esc(pdl.reason)}</p></div></div>
+      <div class="card"><div class="card-head"><h2>Khách còn đang dùng</h2></div><div class="pad">
+        <div class="banner b-warn" style="margin-bottom:14px">${I.warn}<span><b>Khách còn ${pdl.active.filter(a=>!a[0].startsWith('PT')).length} gói đang chạy và ${pdl.ptLeft} buổi PT chưa dùng.</b></span></div>
+        <table><tbody>${pdl.active.map(a=>`<tr><td><b>${a[0]}</b></td><td class="muted">${a[1]}</td></tr>`).join('')}</tbody></table></div>
+        <div class="form-actions"><button class="btn btn-danger" id="rej">Từ chối</button><button class="btn btn-primary" id="apr">Duyệt xóa</button></div></div>
+    </div><aside class="card pad"><div style="display:flex;gap:14px;margin-bottom:14px">${photo}</div>${info}</aside></div>`));
+  $('#apr').onclick=()=>modal({title:`Duyệt xóa hồ sơ ${esc(c.name)}?`,text:'<p>Hồ sơ chuyển sang Đã xóa. Các gói và buổi PT còn lại không dùng được nữa; lịch sử vẫn được giữ.</p>',ok:'Duyệt xóa',danger:true,onOk:()=>{c.status='Inactive';delete c.pendingDelete;toast('MSG-076',`Đã duyệt xóa hồ sơ ${c.name}.`);location.hash='#/customers'}});
+  $('#rej').onclick=()=>modal({title:'Từ chối yêu cầu xóa?',text:'<p>Hồ sơ bỏ cờ chờ duyệt xóa và trở lại trạng thái cũ.</p>',ok:'Từ chối',danger:true,reason:true,reasonLabel:'Lý do từ chối',reasonErr:'Vui lòng nhập lý do từ chối. ',onOk:()=>{delete c.pendingDelete;toast('MSG-077','Đã từ chối yêu cầu xóa. Hồ sơ trở lại trạng thái cũ.');location.hash='#/customers'}});
+}
+
+/* ---------- 7.4.3 TRANSACTIONS ---------- */
+let TF={tab:'orders',method:'all',st:'all',refund:false};
+const OS={Paid:['Đã thanh toán','ok'],Pending:['Chờ thanh toán','warn'],Cancelled:['Đã hủy','muted']};
+const AS={Success:'ok',Failed:'danger',Expired:'muted',Pending:'warn'};
+function viewTx(){
+  const vat=PARAMS.find(p=>p.k==='vat').v;
+  const rows=ORDERS.filter(o=>(TF.method==='all'||o.method===TF.method)&&(TF.st==='all'||o.status===TF.st)&&(!TF.refund||o.refund));
+  const body=TF.tab==='orders'?`
+    <div class="filters">
+      <select class="select" id="tm"><option value="all">Mọi phương thức</option>${['Tiền mặt','Chuyển khoản','Cổng thanh toán'].map(m=>`<option ${TF.method===m?'selected':''}>${m}</option>`).join('')}</select>
+      <select class="select" id="ts"><option value="all">Mọi trạng thái</option>${Object.entries(OS).map(([k,v])=>`<option value="${k}" ${TF.st===k?'selected':''}>${v[0]}</option>`).join('')}</select>
+      <label class="opt" style="padding:7px 12px"><input type="checkbox" id="tr" ${TF.refund?'checked':''}> Giao dịch thành công cần hoàn tiền <span class="pill p-danger nodot" style="margin-left:4px">${ORDERS.filter(o=>o.refund).length}</span></label></div>
+    ${TF.refund?`<div class="banner b-warn" style="margin:12px 16px 0">${I.warn}<span>Các giao dịch trong danh sách này cần hoàn tiền thủ công cho khách, ngoài hệ thống. Đánh dấu đã hoàn chỉ là ghi chú, không đổi trạng thái đơn hay giao dịch.</span></div>`:''}
+    <div class="table-wrap"><table><thead><tr><th>Mã đơn</th><th>Thời điểm</th><th>Khách</th><th>Gói</th><th class="r">Số tiền</th><th class="r">Trong đó VAT</th><th>Phương thức</th><th>Trạng thái</th></tr></thead><tbody>
+    ${rows.map(o=>`<tr class="click" tabindex="0" data-order="${o.id}"><td class="num"><b>${o.id}</b><div class="muted" style="font-size:12px">${o.ch}</div></td><td class="num">${o.at}</td><td>${esc(o.cust)}</td><td>${esc(o.pkg)}</td><td class="r num">${vnd(o.amount)}</td><td class="r num muted">${vnd(o.amount-o.amount/(1+vat/100))}</td><td>${o.method}</td><td>${pill(OS[o.status][0],OS[o.status][1])}${o.refund?' '+pill(o.refunded?'Đã hoàn':'Cần hoàn tiền',o.refunded?'muted':'danger'):''}</td></tr>`).join('')}
+    </tbody></table></div>`:`
+    <div class="table-wrap"><table><thead><tr><th>Ngày</th><th>Ca</th><th>Lễ tân</th><th class="r">Tiền mặt</th><th class="r">Chuyển khoản</th><th class="r">Thực đếm</th><th class="r">Chênh lệch</th><th>Lý do chênh lệch</th></tr></thead><tbody>
+    ${SHIFTS.map(s=>{const d=s.counted-s.cash;return `<tr><td class="num">${s.d}</td><td>${s.s}</td><td>${s.lt}</td><td class="r num">${vnd(s.cash)}</td><td class="r num">${vnd(s.tr)}</td><td class="r num">${vnd(s.counted)}</td><td class="r num" style="color:${d?'var(--danger)':'var(--success)'};font-weight:600">${d?(d>0?'+':'')+vnd(d):'0đ'}</td><td>${esc(s.why)||'<span class="muted">—</span>'}</td></tr>`}).join('')}
+    </tbody></table></div>`;
+  render(page('tx',crumb(['Giao dịch']),'Giao dịch toàn hệ thống','7.4.3 / L1 / UC-26','Chỉ đọc. Bấm vào một đơn để xem các lần thanh toán.',`<button class="btn" id="xls">${I.dl} Xuất Excel</button>`,`
+    <div class="card"><div class="tabs" role="tablist"><button role="tab" aria-selected="${TF.tab==='orders'}" data-tab="orders">Đơn & giao dịch</button><button role="tab" aria-selected="${TF.tab==='shifts'}" data-tab="shifts">Lịch sử ca đã đóng</button></div>${body}</div>`));
+  $$('[data-tab]').forEach(b=>b.onclick=()=>{TF.tab=b.dataset.tab;viewTx()});
+  $('#xls').onclick=()=>{if(TF.tab==='orders')exportCSV('giao-dich_20-09-2026.csv',['Mã đơn','Thời điểm','Kênh','Khách','Gói','Số tiền','Trong đó VAT','Phương thức','Trạng thái','Cần hoàn tiền','Lý do hủy'],rows.map(o=>[o.id,o.at,o.ch,o.cust,o.pkg,o.amount,Math.round(o.amount-o.amount/(1+vat/100)),o.method,OS[o.status][0],o.refund?(o.refunded?'Đã hoàn':'Cần hoàn'):'',o.reason||'']));
+    else exportCSV('lich-su-ca_20-09-2026.csv',['Ngày','Ca','Lễ tân','Tiền mặt','Chuyển khoản','Thực đếm','Chênh lệch','Lý do chênh lệch'],SHIFTS.map(s=>[s.d,s.s,s.lt,s.cash,s.tr,s.counted,s.counted-s.cash,s.why]))};
+  const tm=$('#tm');if(tm){tm.onchange=e=>{TF.method=e.target.value;viewTx()};$('#ts').onchange=e=>{TF.st=e.target.value;viewTx()};$('#tr').onchange=e=>{TF.refund=e.target.checked;viewTx()}}
+  $$('[data-order]').forEach(r=>r.onclick=()=>{const o=ORDERS.find(x=>x.id===r.dataset.order);
+    drawer(`Đơn ${o.id}`,`<dl class="kv" style="margin-bottom:18px"><dt>Khách</dt><dd>${esc(o.cust)}</dd><dt>Gói</dt><dd>${esc(o.pkg)}</dd><dt>Kênh</dt><dd>${o.ch}</dd><dt>Trạng thái</dt><dd>${pill(OS[o.status][0],OS[o.status][1])}</dd>${o.reason?`<dt>Lý do hủy</dt><dd>${esc(o.reason)}</dd>`:''}</dl>
+      <div class="sum" style="margin-bottom:20px"><span class="muted">Giá trước VAT</span><span class="num">${vnd(o.amount/(1+vat/100))}</span><span class="muted">VAT ${vat}%</span><span class="num">${vnd(o.amount-o.amount/(1+vat/100))}</span><span class="t">Tổng</span><span class="t num">${vnd(o.amount)}</span></div>
+      <h3 style="font:600 14px var(--heading);margin:0 0 8px">Các lần thanh toán (${o.att.length})</h3>
+      ${o.att.length?`<table style="min-width:0"><tbody>${o.att.map((a,i)=>`<tr><td class="num">#${i+1}</td><td class="num">${a[0]}</td><td>${a[1]}</td><td>${pill(a[2],AS[a[2]])}</td></tr>`).join('')}</tbody></table>`:'<p class="muted">Chưa có lần thanh toán nào.</p>'}
+      ${o.refund?`<div class="banner b-warn" style="margin-top:18px">${I.warn}<div><b>Cần hoàn tiền thủ công</b>${esc(o.note)}</div></div><label class="check" style="margin-top:12px"><input type="checkbox" id="rf" ${o.refunded?'checked':''}> Đã hoàn tiền cho khách (ghi chú, không đổi trạng thái)</label>`:''}`);
+    const rf=$('#rf');if(rf)rf.onchange=e=>{o.refunded=e.target.checked;toast('','Đã cập nhật ghi chú hoàn tiền.','info');const k=TF;viewTx();}});
+}
+
+/* ---------- 8.1.x FACILITY ---------- */
+let FF={cat:'all',cond:'all'};
+const COND={Available:['Sẵn sàng','ok'],'Under Maintenance':['Đang bảo trì','warn'],Retired:['Ngừng sử dụng','muted']};
+function viewFacility(){
+  const cats=[...new Set(FAC.map(f=>f.cat))];
+  const rows=FAC.filter(f=>f.status==='Active'&&(FF.cat==='all'||f.cat===FF.cat)&&(FF.cond==='all'||f.cond===FF.cond));
+  render(page('facility',crumb(['Cơ sở vật chất']),'Cơ sở vật chất','8.1.1 / L1 / UC-27','Danh mục này là nguồn Lễ tân chọn khi báo hỏng.',`<a class="btn btn-primary" href="#/facility/new">${I.plus} Thêm hạng mục</a>`,`
+    <div class="card"><div class="filters"><select class="select" id="fc"><option value="all">Mọi phân loại</option>${cats.map(c=>`<option ${FF.cat===c?'selected':''}>${c}</option>`).join('')}</select>
+      <select class="select" id="fd"><option value="all">Mọi tình trạng</option>${Object.entries(COND).map(([k,v])=>`<option value="${k}" ${FF.cond===k?'selected':''}>${v[0]}</option>`).join('')}</select></div>
+    <div class="table-wrap"><table><thead><tr><th>Hạng mục</th><th>Phân loại</th><th>Vị trí</th><th class="r">Số lượng</th><th>Tình trạng</th><th></th></tr></thead><tbody>
+    ${rows.map(f=>`<tr class="click" tabindex="0" data-go="#/facility/${f.id}"><td><b>${esc(f.name)}</b><div class="muted" style="font-size:12px">${f.id}</div></td><td>${f.cat}</td><td>${f.loc}</td><td class="r num">${f.qty}</td><td>${pill(COND[f.cond][0],COND[f.cond][1])}</td>
+      <td class="r">${f.open?lockTip('Xóa',`Không xóa được: hạng mục còn ${f.open} yêu cầu bảo trì chưa đóng.`):`<button class="btn btn-sm btn-danger" data-del="${f.id}">Xóa</button>`}</td></tr>`).join('')}
+    </tbody></table></div></div>`));
+  $('#fc').onchange=e=>{FF.cat=e.target.value;viewFacility()};$('#fd').onchange=e=>{FF.cond=e.target.value;viewFacility()};
+  $$('[data-del]').forEach(b=>b.onclick=()=>{const f=FAC.find(x=>x.id===b.dataset.del);modal({title:`Xóa ${esc(f.name)}?`,text:'<p>Hạng mục chuyển sang Ngừng hoạt động và biến khỏi danh mục Lễ tân thấy. Lịch sử bảo trì vẫn được giữ.</p>',ok:'Xóa',danger:true,onOk:()=>{f.status='Inactive';toast('','Đã xóa '+f.name+'.');viewFacility()}})});bindRows();
+}
+function viewFacilityOne(id){
+  const isNew=id==='new';const f=isNew?{name:'',cat:'Cardio',loc:'',qty:1,cond:'Available',open:0}:FAC.find(x=>x.id===id);if(!f){location.hash='#/facility';return}
+  render(page('facility',crumb(['Cơ sở vật chất','#/facility'],[isNew?'Thêm hạng mục':f.name]),isNew?'Thêm hạng mục':esc(f.name),'8.1.2 / L2 / UC-27','','',`
+    <div class="card" style="max-width:760px"><div class="pad"><div class="form-grid">
+      <div class="f full" id="f-fn"><label for="fn">Tên hạng mục<span class="req">*</span></label><input class="input" id="fn" value="${esc(f.name)}"><span class="err">Không được để trống.</span></div>
+      <div class="f"><label for="fcat">Phân loại</label><select class="select" id="fcat">${['Cardio','Tạ tự do','Máy tập','Tiện ích'].map(c=>`<option ${c===f.cat?'selected':''}>${c}</option>`).join('')}</select></div>
+      <div class="f"><label for="floc">Vị trí</label><input class="input" id="floc" value="${esc(f.loc)}"></div>
+      <div class="f"><label for="fq">Số lượng</label><input class="input num" id="fq" value="${f.qty}"></div>
+      <div class="f"><label for="fcond">Tình trạng</label><select class="select" id="fcond">${Object.entries(COND).map(([k,v])=>`<option value="${k}" ${k===f.cond?'selected':''}>${v[0]}</option>`).join('')}</select><span class="hint">Duyệt yêu cầu bảo trì có thể tự chuyển sang Đang bảo trì.</span></div>
+      ${f.open?`<div class="full banner b-warn">${I.lock}<span>Không xóa được: hạng mục còn ${f.open} yêu cầu bảo trì chưa đóng.</span></div>`:''}
+    </div></div><div class="form-actions"><a class="btn" href="#/facility">Hủy</a><button class="btn btn-primary" id="save">Lưu</button></div></div>`));
+  $('#save').onclick=()=>{if(!mark('f-fn',!!val('fn').trim()))return;Object.assign(f,{name:val('fn').trim(),cat:val('fcat'),loc:val('floc'),qty:+val('fq')||1,cond:val('fcond')});if(isNew)FAC.push({...f,id:'CS-'+(20+FAC.length),status:'Active'});toast('','Đã lưu hạng mục.');location.hash='#/facility'};
+}
+
+/* ---------- 8.2.x MAINTENANCE ---------- */
+let MF={tab:'all'};
+const RS={Open:['Open · chờ duyệt','info'],'In Progress':['In Progress · đang xử lý','warn'],Rejected:['Rejected · từ chối','danger'],Closed:['Closed · đã đóng','muted']};
+function viewMaint(){
+  const tabs=[['all','Tất cả'],['Open','Open'],['In Progress','In Progress'],['Rejected','Rejected'],['Closed','Closed']];
+  let rows=REQ.filter(r=>MF.tab==='all'||r.status===MF.tab);rows.sort((a,b)=>(a.status==='Open'?0:1)-(b.status==='Open'?0:1));
+  render(page('maint',crumb(['Bảo trì']),'Yêu cầu bảo trì','8.2.2 / L1 / UC-29','Quản lý duyệt hoặc từ chối. Lễ tân đóng yêu cầu sau khi kiểm tra đã sửa xong.','',`
+    <div class="card"><div class="tabs" role="tablist">${tabs.map(([k,l])=>`<button role="tab" aria-selected="${MF.tab===k}" data-tab="${k}">${l}<span class="count">${k==='all'?REQ.length:REQ.filter(r=>r.status===k).length}</span></button>`).join('')}</div>
+    <div class="table-wrap"><table><thead><tr><th>Mã</th><th>Hạng mục</th><th>Mô tả sự cố</th><th>Người tạo</th><th>Ngày tạo</th><th>Trạng thái</th></tr></thead><tbody>
+    ${rows.map(r=>`<tr class="click ${r.status==='Open'?'pinned':''}" tabindex="0" data-go="#/maintenance/${r.id}"><td class="num">${r.id}</td><td><b>${esc(r.item)}</b></td><td style="max-width:300px">${esc(r.desc)}</td><td>${r.by}</td><td class="num">${r.date}</td><td>${pill(RS[r.status][0],RS[r.status][1])}</td></tr>`).join('')}
+    </tbody></table></div></div>`));
+  $$('[data-tab]').forEach(b=>b.onclick=()=>{MF.tab=b.dataset.tab;viewMaint()});bindRows();
+}
+function viewMaintOne(id){
+  const r=REQ.find(x=>x.id===id);if(!r){location.hash='#/maintenance';return}
+  const f=FAC.find(x=>x.name===r.item);
+  render(page('maint',crumb(['Bảo trì','#/maintenance'],[r.id]),`Yêu cầu ${r.id}`,'8.2.3 / L2 / UC-29','Màn này không có nút Đóng: việc đóng yêu cầu thuộc về Lễ tân.','',`
+    <div class="card" style="max-width:760px"><div class="pad">
+      <dl class="kv"><dt>Hạng mục</dt><dd>${esc(r.item)}</dd><dt>Mô tả sự cố</dt><dd>${esc(r.desc)}</dd><dt>Người tạo</dt><dd>${r.by}</dd><dt>Ngày tạo</dt><dd class="num">${r.date}</dd><dt>Trạng thái</dt><dd>${pill(RS[r.status][0],RS[r.status][1])}</dd>${r.why?`<dt>Lý do từ chối</dt><dd>${esc(r.why)}</dd>`:''}</dl>
+      ${r.status==='Open'&&f?`<label class="check" style="margin-top:18px"><input type="checkbox" id="toMaint" checked> Chuyển tình trạng hạng mục sang <b>Đang bảo trì</b> khi duyệt</label>`:''}
+    </div>${r.status==='Open'?`<div class="form-actions"><button class="btn btn-danger" id="rej">Từ chối</button><button class="btn btn-primary" id="apr">Duyệt</button></div>`:''}</div>`));
+  const a=$('#apr');if(a)a.onclick=()=>{r.status='In Progress';if(f&&$('#toMaint').checked)f.cond='Under Maintenance';toast('MSG-132','Đã duyệt. Yêu cầu chuyển sang Đang xử lý; Lễ tân sẽ đóng sau khi sửa xong.');location.hash='#/maintenance'};
+  const rj=$('#rej');if(rj)rj.onclick=()=>modal({title:`Từ chối yêu cầu ${r.id}?`,text:'<p>Lễ tân nhận thông báo kèm lý do.</p>',ok:'Từ chối',danger:true,reason:true,reasonLabel:'Lý do từ chối',reasonErr:'Vui lòng nhập lý do từ chối. ',onOk:x=>{r.status='Rejected';r.why=x;if(f)f.open=Math.max(0,f.open-1);toast('','Đã từ chối yêu cầu '+r.id+'.');location.hash='#/maintenance'}});
+}
+
+/* ---------- 10.2.2 FEEDBACK ---------- */
+function viewFeedback(){
+  render(page('feedback',crumb(['Góp ý']),'Góp ý của khách','10.2.2 / L1 / UC-43','Kênh góp ý duy nhất của hệ thống. Chỉ đọc, không có ô trả lời.','',`
+    <div class="card"><div class="table-wrap"><table><thead><tr><th>Nội dung</th><th>Khách</th><th>Thời điểm</th><th></th></tr></thead><tbody>
+    ${FEEDBACK.map(f=>`<tr class="click" tabindex="0" data-fb="${f.id}" style="${f.read?'':'font-weight:600'}"><td style="max-width:460px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis">${esc(f.text)}</td><td>${esc(f.cust)}</td><td class="num">${f.at}</td><td>${f.read?pill('Đã đọc','muted'):pill('Chưa đọc','role')}</td></tr>`).join('')}
+    </tbody></table></div></div>`));
+  $$('[data-fb]').forEach(r=>{r.onclick=()=>{const f=FEEDBACK.find(x=>x.id===+r.dataset.fb);f.read=true;viewFeedback();drawer('Góp ý',`<p class="muted" style="margin:0 0 12px">${esc(f.cust)} · ${f.at}</p><p style="font-size:15px;line-height:1.7;margin:0">${esc(f.text)}</p>`)};r.onkeydown=e=>{if(e.key==='Enter')r.onclick()}});
+}
+
+/* ---------- 11.1.x BLOG ---------- */
+let BF={st:'all'};
+function unpublish(b,back){modal({title:'Gỡ đăng bài?',text:`<p>Gỡ đăng bài "${esc(b.title)}"? Bài sẽ biến khỏi trang công khai ngay lập tức.</p>`,ok:'Gỡ đăng',danger:true,onOk:()=>{b.status='Inactive';toast('','Đã gỡ đăng bài.');back()}})}
+function viewBlog(){
+  const rows=BLOG.filter(b=>BF.st==='all'||b.status===BF.st);
+  render(page('blog',crumb(['Blog']),'Quản lý blog','11.1.1 / L1 / UC-45','Bài đang đăng hiện ở trang công khai; gỡ đăng thì biến mất ngay, dữ liệu vẫn còn.',`<a class="btn btn-primary" href="#/blog/new">${I.plus} Viết bài</a>`,`
+    <div class="card"><div class="filters"><select class="select" id="bs"><option value="all">Mọi trạng thái</option><option value="Active" ${BF.st==='Active'?'selected':''}>Đang đăng</option><option value="Inactive" ${BF.st==='Inactive'?'selected':''}>Nháp / đã gỡ</option></select></div>
+    <div class="table-wrap"><table><thead><tr><th>Tiêu đề</th><th>Ngày đăng</th><th>Trạng thái</th><th></th></tr></thead><tbody>
+    ${rows.map(b=>`<tr class="click" tabindex="0" data-go="#/blog/${b.id}"><td><b>${esc(b.title)}</b></td><td class="num">${b.date}</td><td>${b.status==='Active'?pill('Đang đăng','ok'):pill('Nháp / đã gỡ','muted')}</td><td class="r">${b.status==='Active'?`<button class="btn btn-sm btn-danger" data-un="${b.id}">Gỡ đăng</button>`:`<button class="btn btn-sm" data-pub="${b.id}">Đăng lại</button>`}</td></tr>`).join('')}
+    </tbody></table></div></div>`));
+  $('#bs').onchange=e=>{BF.st=e.target.value;viewBlog()};
+  $$('[data-un]').forEach(x=>x.onclick=()=>unpublish(BLOG.find(b=>b.id===+x.dataset.un),viewBlog));
+  $$('[data-pub]').forEach(x=>x.onclick=()=>{const b=BLOG.find(y=>y.id===+x.dataset.pub);b.status='Active';if(b.date==='—')b.date='20/09/2026';toast('','Đã đăng bài.');viewBlog()});bindRows();
+}
+function viewEditor(id){
+  const isNew=id==='new';const b=isNew?{title:'',body:'',status:'Inactive',date:'—'}:BLOG.find(x=>x.id===+id);if(!b){location.hash='#/blog';return}
+  render(page('blog',crumb(['Blog','#/blog'],[isNew?'Bài mới':b.title]),isNew?'Bài viết mới':'Sửa bài viết','11.1.2 / L2 / UC-45',b.status==='Active'?'Bài đang đăng trên trang công khai.':'Bài đang là nháp, chưa hiện ở trang công khai.','',`
+    <div class="grid2"><div class="card"><div class="pad stack">
+      <div class="f" id="f-bt"><label for="bt">Tiêu đề<span class="req">*</span></label><input class="input" id="bt" style="font-size:18px;font-weight:600" value="${esc(b.title)}"><span class="err">Tiêu đề không được để trống.</span></div>
+      <div class="f"><span class="lbl">Nội dung</span>
+        <div style="border:1px solid var(--border);border-radius:var(--r-sm)"><div style="display:flex;gap:4px;padding:6px;border-bottom:1px solid var(--border);background:#FCFCFA">
+          ${[['bold','<b>B</b>'],['italic','<i>I</i>'],['formatBlock:h2','H2'],['insertUnorderedList','• Danh sách']].map(([c,l])=>`<button class="btn btn-sm" data-cmd="${c}" type="button">${l}</button>`).join('')}</div>
+        <div id="bb" contenteditable="true" style="min-height:280px;padding:14px 16px;outline:none;font-size:15px;line-height:1.7">${b.body}</div></div></div>
+    </div><div class="form-actions"><a class="btn" href="#/blog">Hủy</a><button class="btn" id="draft">Lưu nháp</button><button class="btn btn-primary" id="pub">Đăng</button></div></div>
+    <aside class="card pad"><h2>Ảnh đại diện</h2><p class="sub">Hiện ở thẻ bài trên trang Blog.</p>
+      <div id="cover" style="aspect-ratio:16/9;border:1px dashed var(--border);border-radius:var(--r-sm);display:grid;place-items:center;color:var(--text2);background:var(--page);cursor:pointer">${b.cover?'<span style="color:var(--role);font-weight:600">anh-bia.jpg · 1200×675</span>':'Bấm để chọn ảnh'}</div></aside></div>`));
+  $$('[data-cmd]').forEach(x=>x.onclick=()=>{const[c,a]=x.dataset.cmd.split(':');document.execCommand(c,false,a);$('#bb').focus()});
+  $('#cover').onclick=()=>{b.cover=true;$('#cover').innerHTML='<span style="color:var(--role);font-weight:600">anh-bia.jpg · 1200×675</span>'};
+  const save=st=>{if(!mark('f-bt',!!val('bt').trim()))return;
+    const doIt=()=>{Object.assign(b,{title:val('bt').trim(),body:$('#bb').innerHTML,status:st});if(st==='Active'&&b.date==='—')b.date='20/09/2026';if(isNew)BLOG.unshift({...b,id:BLOG.length+10});toast('',st==='Active'?'Đã đăng bài.':'Đã lưu nháp.');location.hash='#/blog'};
+    if(st==='Inactive'&&b.status==='Active'&&!isNew)modal({title:'Gỡ đăng bài?',text:`<p>Lưu nháp sẽ gỡ bài "${esc(b.title)}" khỏi trang công khai ngay lập tức.</p>`,ok:'Gỡ đăng và lưu nháp',danger:true,onOk:doIt});else doIt()};
+  $('#draft').onclick=()=>save('Inactive');$('#pub').onclick=()=>save('Active');
+}
+
+/* ---------- 11.2.1 NOTIFY ---------- */
+function viewNotify(){
+  render(page('notify',crumb(['Thông báo']),'Gửi thông báo','11.2.1 / L2 / UC-44','Thông báo do Quản lý chủ động gửi. Thông báo tự động của hệ thống (đổi lịch buổi tập, kết quả duyệt đơn) không đi qua màn này.','',`
+    <div class="grid2"><div class="card"><div class="pad stack">
+      <div class="f" id="f-nt"><label for="nt">Tiêu đề<span class="req">*</span></label><input class="input" id="nt"><span class="err">Tiêu đề không được để trống.</span></div>
+      <div class="f" id="f-nc"><label for="nc">Nội dung (chỉ văn bản)<span class="req">*</span></label><textarea class="input" id="nc" rows="6"></textarea><span class="err">Nội dung thông báo không được để trống.</span></div>
+      <div class="f"><span class="lbl">Gửi tới</span><div class="radio-row">${['Tất cả','Hội viên','PT','Lễ tân','Nhân viên (PT và Lễ tân)'].map((x,i)=>`<label class="opt"><input type="radio" name="to" value="${x}" ${i===0?'checked':''}> ${x}</label>`).join('')}</div></div>
+    </div><div class="form-actions"><button class="btn btn-primary" id="send">Gửi thông báo</button></div></div>
+    <aside class="card"><div class="card-head"><h2>Đã gửi gần đây</h2></div><ul style="list-style:none;margin:0;padding:6px 20px 12px">${SENT.map(s=>`<li style="padding:10px 0;border-bottom:1px solid var(--border)"><b>${esc(s.title)}</b><div class="muted" style="font-size:12px">${s.to} · ${s.at}</div></li>`).join('')}</ul></aside></div>`));
+  $('#send').onclick=()=>{const ok=mark('f-nt',!!val('nt').trim())&mark('f-nc',!!val('nc').trim());if(!ok)return;const to=$('input[name=to]:checked').value;
+    modal({title:`Gửi tới ${to}?`,text:'<p>Thông báo gửi ngay, không thu hồi được.</p>',ok:'Gửi',onOk:()=>{SENT.unshift({title:val('nt').trim(),to,at:'20/09/2026 14:20'});toast('MSG-179',`Đã gửi thông báo tới ${to}.`);viewNotify()}})};
+}
+
+/* ---------- 12.1.1 REPORT ---------- */
+let RP={from:'2026-09-01',to:'2026-09-20'};
+function viewReport(){
+  const bad=RP.from>RP.to;
+  const days=20;let rev=[18.2,12.4,9.8,15.1,22.6,31.4,26.8,14.9,11.2,13.7,19.5,24.8,33.1,28.4,16.3,12.9,14.4,21.7,27.3,19.6].slice(0,days);
+  const pk=[['Gói 1 tháng',42,18900000],['Gói 3 tháng',31,39990000],['Gói 9 tháng',9,31050000],['Gói 12 tháng',14,58800000],['Vé 1 ngày',186,11160000],['Gói PT (các loại)',17,86400000]];
+  const total=pk.reduce((a,p)=>a+p[2],0);const raw=rev.reduce((a,b)=>a+b,0);rev=rev.map(v=>v*total/1e6/raw);
+  const pts=[['Phạm Đức Thắng',70,58,3,2,1],['Hoàng Mai Linh',72,52,4,1,0],['Đinh Công Sơn',70,34,2,3,1],['Mai Phương Thảo',65,29,1,0,2]];
+  const commOf=p=>(p[2]+p[3]+p[4]+p[5])*400000*p[1]/100;const commTotal=pts.reduce((a,p)=>a+commOf(p),0);
+  const W=680,H=220,pad=34,bw=(W-pad-10)/days;const max=25;
+  const svg=`<svg viewBox="0 0 ${W} ${H+24}" role="img" aria-label="Doanh thu theo ngày" style="width:100%;height:auto">
+    ${[0,5,10,15,20].map(v=>{const y=H-v/max*(H-16);return `<line x1="${pad}" x2="${W-6}" y1="${y}" y2="${y}" stroke="#E7E5DF"/><text x="${pad-6}" y="${y+4}" font-size="10" text-anchor="end" fill="#6B6960">${v}tr</text>`}).join('')}
+    ${rev.map((v,i)=>{const h=v/max*(H-16),x=pad+i*bw+bw*.18;return `<rect x="${x}" y="${H-h}" width="${bw*.64}" height="${h}" rx="3" fill="${i===days-1?'#3B4FA0':'#B9C1E6'}"><title>${i+1}/09: ${v.toFixed(1)} triệu</title></rect>${i%3===0?`<text x="${x+bw*.32}" y="${H+16}" font-size="10" text-anchor="middle" fill="#6B6960">${i+1}/9</text>`:''}`}).join('')}</svg>`;
+  const vat=PARAMS.find(p=>p.k==='vat').v;
+  render(page('report',crumb(['Báo cáo']),'Báo cáo vận hành & doanh thu','12.1.1 / L1 / UC-46',`Số liệu cập nhật lúc 14:20 20/09, không theo thời gian thực.`,`
+    <div style="display:flex;gap:8px;align-items:flex-end;flex-wrap:wrap"><div class="f"><label for="rf">Từ ngày</label><input class="input" type="date" id="rf" value="${RP.from}"></div><div class="f"><label for="rt">Đến ngày</label><input class="input" type="date" id="rt" value="${RP.to}"></div><button class="btn btn-primary" id="rgo">Xem</button><button class="btn" id="xls" ${bad?'disabled':''}>${I.dl} Xuất Excel</button></div>`,
+    bad?`<div class="card empty">Ngày bắt đầu phải trước ngày kết thúc.</div>`:`
+    <section class="stats" style="grid-template-columns:repeat(5,1fr)">
+      <div class="card stat"><div class="l">Doanh thu</div><div class="v">${(total/1e6).toFixed(1).replace('.',',')} tr</div><div class="d">Đã gồm VAT</div></div>
+      <div class="card stat"><div class="l">Hội viên đang hoạt động</div><div class="v">412</div><div class="d">+38 hội viên mới</div></div>
+      <div class="card stat"><div class="l">Gói đang chạy</div><div class="v">340</div><div class="d">Gói tập, không gồm vé ngày</div></div>
+      <div class="card stat"><div class="l">Hoa hồng PT</div><div class="v">${(commTotal/1e6).toFixed(1).replace('.',',')} tr</div><div class="d">Theo % riêng từng PT</div></div>
+      <div class="card stat"><div class="l">Vé 1 ngày</div><div class="v">186</div><div class="d">lượt · 11,2 tr doanh thu</div></div>
+    </section>
+    <div class="card pad" style="margin-bottom:16px"><h2>Doanh thu theo ngày</h2><p class="sub">Triệu đồng, đã gồm VAT</p>${svg}</div>
+    <div class="grid-half" style="align-items:start">
+      <div class="card"><div class="card-head"><h2>Doanh thu theo gói</h2></div><div class="table-wrap"><table><thead><tr><th>Gói</th><th class="r">Số đơn</th><th class="r">Doanh thu</th><th class="r">VAT ${vat}%</th></tr></thead><tbody>
+        ${pk.map(p=>`<tr><td>${p[0]}</td><td class="r num">${p[1]}</td><td class="r num">${vnd(p[2])}</td><td class="r num muted">${vnd(p[2]-p[2]/(1+vat/100))}</td></tr>`).join('')}</tbody></table></div></div>
+      <div class="card"><div class="card-head"><h2>Hoa hồng PT</h2></div><div class="table-wrap"><table><thead><tr><th>PT</th><th class="r">Hoàn thành</th><th class="r">Vắng</th><th class="r">Hủy</th><th class="r">Hoa hồng</th></tr></thead><tbody>
+        ${pts.map(p=>{const n=p[2]+p[3]+p[4]+p[5];return `<tr><td>${p[0]} <span class="muted">(${p[1]}%)</span></td><td class="r num">${p[2]}</td><td class="r num">${p[3]}</td><td class="r num">${p[4]+p[5]}</td><td class="r num"><b>${vnd(commOf(p))}</b></td></tr>`}).join('')}</tbody></table></div>
+        <p class="muted" style="font-size:12px;margin:0;padding:12px 16px;border-top:1px solid var(--border)">Hoa hồng vẫn tính cho buổi khách vắng, khách tự hủy và buổi PT hủy.</p></div>
+    </div>`));
+  $('#rgo').onclick=()=>{RP.from=val('rf');RP.to=val('rt');viewReport()};
+  const x=$('#xls');if(x)x.onclick=()=>{const f=d=>d.split('-').reverse().join('-');
+    const r=[['DOANH THU THEO GÓI','','',''],['Gói','Số đơn','Doanh thu (gồm VAT)','VAT '+vat+'%'],...pk.map(p=>[p[0],p[1],p[2],Math.round(p[2]-p[2]/(1+vat/100))]),['Tổng','',total,''],['','','',''],
+      ['HOA HỒNG PT','','',''],['PT','% hoa hồng','Hoàn thành','Vắng','Hủy','Hoa hồng'],...pts.map(p=>[p[0],p[1],p[2],p[3],p[4]+p[5],commOf(p)]),['Tổng','','','','',commTotal]];
+    exportCSV(`bao-cao_${f(RP.from)}_den_${f(RP.to)}.csv`,[`Báo cáo ${f(RP.from)} đến ${f(RP.to)}`,'','',''],r)};
+}
+
+startApp([
+ [/^#\/signin$/,viewSignIn],[/^#\/settings$/,viewSettings],
+ [/^#\/params$/,viewParams],[/^#\/params\/(\w+)$/,viewParam],[/^#\/hours$/,viewHours],
+ [/^#\/packages$/,viewPackages],[/^#\/packages\/([\w-]+)$/,viewPackage],[/^#\/ptpackages$/,viewPtPackages],[/^#\/ptpackages\/([\w-]+)$/,viewPtPackage],
+ [/^#\/vouchers$/,viewVouchers],[/^#\/vouchers\/([\w-]+)$/,viewVoucher],
+ [/^#\/staff$/,viewStaff],[/^#\/staff\/([\w-]+)$/,viewStaffOne],[/^#\/leaves$/,viewLeaves],[/^#\/leaves\/([\w-]+)$/,viewLeave],
+ [/^#\/customers$/,viewCustomers],[/^#\/customers\/([\w-]+)$/,viewCustomer],
+ [/^#\/transactions$/,viewTx],[/^#\/facility$/,viewFacility],[/^#\/facility\/([\w-]+)$/,viewFacilityOne],
+ [/^#\/maintenance$/,viewMaint],[/^#\/maintenance\/([\w-]+)$/,viewMaintOne],[/^#\/feedback$/,viewFeedback],
+ [/^#\/blog$/,viewBlog],[/^#\/blog\/(\w+)$/,viewEditor],[/^#\/notify$/,viewNotify],[/^#\/report$/,viewReport],
+]);
+
+</script>
+</body>
+</html>

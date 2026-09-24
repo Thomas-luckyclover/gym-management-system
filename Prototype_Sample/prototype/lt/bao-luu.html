@@ -1,0 +1,152 @@
+﻿<!DOCTYPE html>
+<html lang="vi">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
+<title>Bảo lưu — Super Gym Lễ tân</title>
+<meta name="robots" content="noindex">
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Montserrat:wght@600;700;800&family=Inter:wght@400;500;600;700&display=swap">
+<script src="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/7.3.1/js/all.min.js" crossorigin="anonymous"></script>
+<link rel="stylesheet" href="../style.css">
+<link rel="stylesheet" href="../customer.css">
+</head>
+<body class="cust staff">
+<div id="toastRoot"></div>
+<div id="modalRoot"></div>
+
+<!-- 6.2.1 — Freeze Membership Form · L2 · UC-18 -->
+<div class="cust-shell" id="custShell">
+
+  <div class="cust-dock" id="custDock">
+    <aside class="cust-sidebar">
+      <a class="cust-brand" href="check-in.html">
+        <b>Super Gym</b><span>Lễ tân</span>
+      </a>
+      <nav class="cust-nav">
+        <h4>Tại quầy</h4>
+        <a href="check-in.html"><i class="fa-solid fa-door-open"></i>Check-in</a>
+        <a href="ban-hang.html"><i class="fa-solid fa-cart-shopping"></i>Bán hàng</a>
+        <a href="ban-goi-pt.html"><i class="fa-solid fa-user-check"></i>Bán gói PT</a>
+        <a href="ca-lam-viec.html"><i class="fa-solid fa-cash-register"></i>Ca làm việc</a>
+        <h4>Hội viên</h4>
+        <a href="hoi-vien.html"><i class="fa-solid fa-user-group"></i>Hồ sơ khách</a>
+        <a href="bao-luu.html" aria-current="page"><i class="fa-solid fa-circle-pause"></i>Bảo lưu</a>
+        <h4>Cơ sở vật chất</h4>
+        <a href="co-so-vat-chat.html"><i class="fa-solid fa-boxes-stacked"></i>Danh mục</a>
+        <a href="bao-tri.html"><i class="fa-solid fa-screwdriver-wrench"></i>Yêu cầu bảo trì</a>
+        <h4>Cá nhân</h4>
+        <a href="nghi-phep.html"><i class="fa-solid fa-plane-departure"></i>Nghỉ phép</a>
+        <a href="tai-khoan.html"><i class="fa-solid fa-user-gear"></i>Cài đặt tài khoản</a>
+      </nav>
+      <div class="cust-sidebar-foot">
+        <a href="../dang-nhap.html"><i class="fa-solid fa-arrow-right-from-bracket"></i>Đăng xuất</a>
+      </div>
+    </aside>
+    <button class="cust-handle" type="button" id="dockHandle"
+            aria-label="Mở menu điều hướng" aria-expanded="false" aria-controls="custDock">
+      <i class="fa-solid fa-chevron-right"></i>
+    </button>
+  </div>
+
+  <div class="cust-main">
+    <header class="cust-topbar">
+      <div>
+        <h1>Bảo lưu gói tập</h1>
+      </div>
+      <div class="cust-topbar-actions">
+        <a class="badge badge-ok" href="ca-lam-viec.html" id="shiftChip"><i class="fa-solid fa-circle-check"></i> Ca chiều 20/09 đang mở</a>
+        <a class="cust-user" href="tai-khoan.html" title="Cài đặt tài khoản">
+          <span class="avatar">NH</span>
+          <span class="cust-user-text">
+            <b>Nguyễn Thị Hoa</b>
+            <span>Lễ tân · NV-0042</span>
+          </span>
+        </a>
+      </div>
+    </header>
+
+    <main class="cust-content">
+      <div class="split">
+        <div class="col-main">
+          <section class="panel">
+            <div class="panel-head">
+              <div><h2>Thông tin bảo lưu</h2><p>Miễn phí · tối đa 30 ngày · mỗi gói dùng được một lần.</p></div>
+            </div>
+            <form id="fzForm" novalidate>
+              <label class="field">
+                <span class="field-label">Khách</span>
+                <select id="fzCust">
+                  <option value="">Chọn khách…</option>
+                  <option value="KH-1001">KH-1001 · Trần Bảo Ngọc</option>
+                  <option value="KH-1002">KH-1002 · Lê Minh Tuấn</option>
+                  <option value="KH-1003">KH-1003 · Phạm Thu Trang</option>
+                  <option value="KH-1004">KH-1004 · Đỗ Văn Khang</option>
+                  <option value="KH-1005">KH-1005 · Vũ Hải Nam</option>
+                  <option value="KH-1006">KH-1006 · Ngô Thị Lan</option>
+                  <option value="KH-1008">KH-1008 · Bùi Thanh Hà</option>
+                  <option value="KH-1009">KH-1009 · Trịnh Quốc Bảo</option>
+                  <option value="KH-1010">KH-1010 · Mai Anh Thư</option>
+                </select>
+                <span class="field-error" id="fzCustErr" hidden></span>
+              </label>
+
+              <div class="alert-banner danger" id="fzBlock" hidden>
+                <i class="fa-solid fa-circle-xmark"></i>
+                <span id="fzBlockText"></span>
+              </div>
+
+              <div class="form-grid">
+                <label class="field"><span class="field-label">Ngày bắt đầu</span>
+                  <input id="fzStart" type="date" value="2026-09-21" min="2026-09-21">
+                  <span class="field-error" id="fzStartErr" hidden></span></label>
+                <label class="field"><span class="field-label">Ngày kết thúc</span>
+                  <input id="fzEnd" type="date" value="2026-10-20">
+                  <span class="field-hint"><i class="fa-solid fa-circle-info"></i><span id="fzDays">30 ngày — chạm trần cho phép.</span></span>
+                  <span class="field-error" id="fzEndErr" hidden></span></label>
+              </div>
+
+              <label class="field">
+                <span class="field-label">Lý do</span>
+                <textarea id="fzReason" rows="3" placeholder="Đi công tác, chấn thương, về quê dài ngày…"></textarea>
+                <span class="field-error" id="fzReasonErr" hidden></span>
+              </label>
+
+              <div class="alert-banner warn" id="fzClash" hidden>
+                <i class="fa-solid fa-triangle-exclamation"></i>
+                <span><b>Có buổi PT nằm trong khoảng bảo lưu.</b> Các buổi dưới đây sẽ bị huỷ và hoàn lại vào số buổi còn lại của khách.
+                  <span class="clash-list" id="fzClashList"></span>
+                </span>
+              </div>
+
+              <div class="btn-row">
+                <button class="btn btn-primary" type="submit" id="fzSave" disabled>Lưu bảo lưu</button>
+              </div>
+            </form>
+          </section>
+        </div>
+
+        <aside class="col-side">
+          <div class="side-card">
+            <span class="section-label">Gói hiện tại</span>
+            <div id="fzInfo"><p class="muted">Chọn khách để xem gói đang chạy.</p></div>
+          </div>
+          <div class="side-card">
+            <span class="section-label">Quy tắc</span>
+            <ul class="rule-list">
+              <li>Hạn gói dời đúng bằng số ngày bảo lưu.</li>
+              <li>Ngày bắt đầu từ mai trở đi, không hồi tố.</li>
+              <li>Đang bảo lưu thì khách không check-in được.</li>
+              <li>Huỷ sớm thì hạn tính lại theo ngày huỷ thực tế.</li>
+            </ul>
+          </div>
+        </aside>
+      </div>
+    </main>
+  </div>
+</div>
+
+<script src="../app.js"></script>
+<script src="../kh/customer.js"></script>
+<script src="bao-luu.js"></script>
+</body>
+</html>

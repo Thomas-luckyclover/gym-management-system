@@ -1,0 +1,189 @@
+﻿<!DOCTYPE html>
+<html lang="vi">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
+<title>Hồ sơ khách — Super Gym Lễ tân</title>
+<meta name="robots" content="noindex">
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Montserrat:wght@600;700;800&family=Inter:wght@400;500;600;700&display=swap">
+<script src="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/7.3.1/js/all.min.js" crossorigin="anonymous"></script>
+<link rel="stylesheet" href="../style.css">
+<link rel="stylesheet" href="../customer.css">
+</head>
+<body class="cust staff">
+<div id="toastRoot"></div>
+<div id="modalRoot"></div>
+
+<!-- 6.1.2 — Customer Details · L2 · UC-16 (dùng lại cho 7.3.1 khi vào từ luồng bán hàng) -->
+<div class="cust-shell" id="custShell">
+
+  <div class="cust-dock" id="custDock">
+    <aside class="cust-sidebar">
+      <a class="cust-brand" href="check-in.html">
+        <b>Super Gym</b><span>Lễ tân</span>
+      </a>
+      <nav class="cust-nav">
+        <h4>Tại quầy</h4>
+        <a href="check-in.html"><i class="fa-solid fa-door-open"></i>Check-in</a>
+        <a href="ban-hang.html"><i class="fa-solid fa-cart-shopping"></i>Bán hàng</a>
+        <a href="ban-goi-pt.html"><i class="fa-solid fa-user-check"></i>Bán gói PT</a>
+        <a href="ca-lam-viec.html"><i class="fa-solid fa-cash-register"></i>Ca làm việc</a>
+        <h4>Hội viên</h4>
+        <a href="hoi-vien.html" aria-current="page"><i class="fa-solid fa-user-group"></i>Hồ sơ khách</a>
+        <a href="bao-luu.html"><i class="fa-solid fa-circle-pause"></i>Bảo lưu</a>
+        <h4>Cơ sở vật chất</h4>
+        <a href="co-so-vat-chat.html"><i class="fa-solid fa-boxes-stacked"></i>Danh mục</a>
+        <a href="bao-tri.html"><i class="fa-solid fa-screwdriver-wrench"></i>Yêu cầu bảo trì</a>
+        <h4>Cá nhân</h4>
+        <a href="nghi-phep.html"><i class="fa-solid fa-plane-departure"></i>Nghỉ phép</a>
+        <a href="tai-khoan.html"><i class="fa-solid fa-user-gear"></i>Cài đặt tài khoản</a>
+      </nav>
+      <div class="cust-sidebar-foot">
+        <a href="../dang-nhap.html"><i class="fa-solid fa-arrow-right-from-bracket"></i>Đăng xuất</a>
+      </div>
+    </aside>
+    <button class="cust-handle" type="button" id="dockHandle"
+            aria-label="Mở menu điều hướng" aria-expanded="false" aria-controls="custDock">
+      <i class="fa-solid fa-chevron-right"></i>
+    </button>
+  </div>
+
+  <div class="cust-main">
+    <header class="cust-topbar">
+      <div>
+        <div class="crumb"><a href="hoi-vien.html">Hồ sơ khách</a> <i class="fa-solid fa-chevron-right"></i> <span>Hồ sơ mới</span></div>
+        <h1>Thêm hồ sơ khách</h1>
+      </div>
+      <div class="cust-topbar-actions">
+        <a class="badge badge-ok" href="ca-lam-viec.html" id="shiftChip"><i class="fa-solid fa-circle-check"></i> Ca chiều 20/09 đang mở</a>
+        <a class="cust-user" href="tai-khoan.html" title="Cài đặt tài khoản">
+          <span class="avatar">NH</span>
+          <span class="cust-user-text">
+            <b>Nguyễn Thị Hoa</b>
+            <span>Lễ tân · NV-0042</span>
+          </span>
+        </a>
+      </div>
+    </header>
+
+    <main class="cust-content">
+      <!-- Bước 1: tra trùng số điện thoại trước khi mở phần còn lại -->
+      <div class="step-panel" data-step="phone">
+        <div class="split">
+          <div class="col-main">
+            <section class="panel">
+              <div class="panel-head">
+                <div><h2>Bước 1 · Kiểm tra số điện thoại</h2><p>Tra trùng trước để không tạo hai hồ sơ cho cùng một người.</p></div>
+              </div>
+              <form id="phoneForm" class="toolbar" novalidate>
+                <div class="search no-icon">
+                  <input id="cfPhone" type="tel" inputmode="numeric" maxlength="10" placeholder="10 số, bắt đầu bằng 0" aria-label="Số điện thoại">
+                </div>
+                <button class="btn btn-primary" type="submit">Kiểm tra</button>
+              </form>
+              <span class="field-error" id="cfPhoneErr" hidden></span>
+
+              <div class="alert-banner warn" id="dupBox" hidden>
+                <i class="fa-solid fa-triangle-exclamation"></i>
+                <span>Số này đã có hồ sơ: <b id="dupName"></b>. Dùng hồ sơ cũ thay vì tạo thêm.</span>
+                <a class="btn btn-outline btn-sm" href="hoi-vien.html">Mở hồ sơ</a>
+              </div>
+
+              <p class="muted">Thử <b class="tabular">0902345678</b> để thấy nhánh trùng, hoặc một số bất kỳ để tạo mới.</p>
+            </section>
+          </div>
+        </div>
+      </div>
+
+      <!-- Bước 2: form hồ sơ -->
+      <div class="step-panel" data-step="form" hidden>
+        <div class="split">
+          <div class="col-main">
+            <section class="panel">
+              <div class="panel-head"><h2>Thông tin hồ sơ</h2><span class="muted">SĐT <b class="tabular" data-cf-phone></b></span></div>
+              <form id="custForm" novalidate>
+                <div class="field">
+                  <span class="field-label">Loại hồ sơ</span>
+                  <div class="pt-picker">
+                    <label class="pt-option"><input type="radio" name="ctype" value="self" checked>
+                      <span class="pt-body"><b>Tự chủ</b><small>Khách tự quản lý tài khoản và lịch tập</small></span></label>
+                    <label class="pt-option"><input type="radio" name="ctype" value="dep">
+                      <span class="pt-body"><b>Phụ thuộc</b><small>Trẻ em, mọi liên hệ qua người giám hộ</small></span></label>
+                  </div>
+                  <span class="field-hint"><i class="fa-solid fa-circle-info"></i><span>Chỉ chọn được lúc tạo. Lưu xong thì không đổi lại được.</span></span>
+                </div>
+
+                <div class="form-grid">
+                  <label class="field span-2">
+                    <span class="field-label">Họ và tên</span>
+                    <input id="cfName" type="text" placeholder="Nguyễn Văn A">
+                    <span class="field-error" id="cfNameErr" hidden></span>
+                  </label>
+                  <label class="field">
+                    <span class="field-label">Ngày sinh</span>
+                    <input id="cfDob" type="date" max="2026-09-20">
+                    <span class="field-hint"><i class="fa-solid fa-circle-info"></i><span>Dùng để kiểm tra mốc 10 tuổi khi bán gói PT và validate tuổi.</span></span>
+                    <span class="field-error" id="cfDobErr" hidden></span>
+                  </label>
+                  <label class="field" data-self>
+                    <span class="field-label">Email</span>
+                    <input id="cfEmail" type="email" placeholder="ban@email.com">
+                    <span class="field-hint"><i class="fa-solid fa-circle-info"></i><span>Nếu để trống, khách sẽ không có tài khoản đăng nhập (phải ra quầy mỗi lần).</span></span>
+                    <span class="field-error" id="cfEmailErr" hidden></span>
+                  </label>
+                </div>
+
+                <div data-dep hidden>
+                  <span class="section-label">Người giám hộ</span>
+                  <div class="form-grid" style="margin-top:var(--space-3)">
+                    <label class="field"><span class="field-label">Họ tên</span>
+                      <input id="gName" type="text"><span class="field-error" id="gNameErr" hidden></span></label>
+                    <label class="field"><span class="field-label">Quan hệ</span>
+                      <input id="gRel" type="text" placeholder="Bố, Mẹ, Người giám hộ"><span class="field-error" id="gRelErr" hidden></span></label>
+                    <label class="field span-2"><span class="field-label">Số điện thoại giám hộ</span>
+                      <input id="gPhone" type="tel" inputmode="numeric" maxlength="10"><span class="field-error" id="gPhoneErr" hidden></span></label>
+                  </div>
+                </div>
+
+                <div class="alert-banner warn" id="youngBox" hidden>
+                  <i class="fa-solid fa-triangle-exclamation"></i>
+                  <span>Khách dưới 10 tuổi chưa dùng được dịch vụ PT. Hồ sơ và gói tập thường vẫn bán bình thường.</span>
+                </div>
+
+                <label class="pay-option" data-self>
+                  <input type="checkbox" id="cfAcc">
+                  <span class="pay-body"><b>Tạo tài khoản đăng nhập</b><small>Chỉ áp dụng cho gói từ 1 tháng. Khách tự đặt mật khẩu qua link "Quên mật khẩu".</small></span>
+                </label>
+
+                <div class="btn-row">
+                  <a class="btn btn-ghost" href="hoi-vien.html">Huỷ</a>
+                  <button class="btn btn-primary" type="submit">Tạo hồ sơ</button>
+                </div>
+              </form>
+            </section>
+          </div>
+
+          <aside class="col-side">
+            <div class="side-card">
+              <span class="section-label">Ảnh check-in</span>
+              <p class="muted">Bắt buộc với mọi gói trừ vé ngày. Chỉ Lễ tân chụp được, khách không tự đổi.</p>
+              <div class="ci-photo is-empty" id="photoBox"><span>Chưa có<br>ảnh</span></div>
+              <button class="btn btn-ghost btn-sm btn-block" type="button" id="camBtn"><i class="fa-solid fa-camera"></i> Mở camera quầy</button>
+            </div>
+            <div class="side-card">
+              <span class="section-label">Xoá hồ sơ</span>
+              <p class="muted">Lễ tân gửi đề nghị kèm lý do. Quản lý duyệt thì hồ sơ mới ẩn khỏi danh sách.</p>
+              <button class="btn btn-ghost btn-sm btn-block" type="button" id="delBtn"><i class="fa-solid fa-trash-can"></i> Đề nghị xoá hồ sơ</button>
+            </div>
+          </aside>
+        </div>
+      </div>
+    </main>
+  </div>
+</div>
+
+<script src="../app.js"></script>
+<script src="../kh/customer.js"></script>
+<script src="ho-so-khach.js"></script>
+</body>
+</html>

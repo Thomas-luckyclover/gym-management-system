@@ -1,0 +1,357 @@
+﻿<!DOCTYPE html>
+<html lang="vi">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
+<title>Bán gói PT — Super Gym Lễ tân</title>
+<meta name="robots" content="noindex">
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Montserrat:wght@600;700;800&family=Inter:wght@400;500;600;700&display=swap">
+<script src="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/7.3.1/js/all.min.js" crossorigin="anonymous"></script>
+<link rel="stylesheet" href="../style.css">
+<link rel="stylesheet" href="../customer.css">
+</head>
+<body class="cust staff">
+<div id="toastRoot"></div>
+<div id="modalRoot"></div>
+
+<!-- 7.2.1 — PT Package Sale · L2 · UC-22 -->
+<div class="cust-shell" id="custShell">
+
+  <div class="cust-dock" id="custDock">
+    <aside class="cust-sidebar">
+      <a class="cust-brand" href="check-in.html">
+        <b>Super Gym</b><span>Lễ tân</span>
+      </a>
+      <nav class="cust-nav">
+        <h4>Tại quầy</h4>
+        <a href="check-in.html"><i class="fa-solid fa-door-open"></i>Check-in</a>
+        <a href="ban-hang.html"><i class="fa-solid fa-cart-shopping"></i>Bán hàng</a>
+        <a href="ban-goi-pt.html" aria-current="page"><i class="fa-solid fa-user-check"></i>Bán gói PT</a>
+        <a href="ca-lam-viec.html"><i class="fa-solid fa-cash-register"></i>Ca làm việc</a>
+        <h4>Hội viên</h4>
+        <a href="hoi-vien.html"><i class="fa-solid fa-user-group"></i>Hồ sơ khách</a>
+        <a href="bao-luu.html"><i class="fa-solid fa-circle-pause"></i>Bảo lưu</a>
+        <h4>Cơ sở vật chất</h4>
+        <a href="co-so-vat-chat.html"><i class="fa-solid fa-boxes-stacked"></i>Danh mục</a>
+        <a href="bao-tri.html"><i class="fa-solid fa-screwdriver-wrench"></i>Yêu cầu bảo trì</a>
+        <h4>Cá nhân</h4>
+        <a href="nghi-phep.html"><i class="fa-solid fa-plane-departure"></i>Nghỉ phép</a>
+        <a href="tai-khoan.html"><i class="fa-solid fa-user-gear"></i>Cài đặt tài khoản</a>
+      </nav>
+      <div class="cust-sidebar-foot">
+        <a href="../dang-nhap.html"><i class="fa-solid fa-arrow-right-from-bracket"></i>Đăng xuất</a>
+      </div>
+    </aside>
+    <button class="cust-handle" type="button" id="dockHandle"
+            aria-label="Mở menu điều hướng" aria-expanded="false" aria-controls="custDock">
+      <i class="fa-solid fa-chevron-right"></i>
+    </button>
+  </div>
+
+  <div class="cust-main">
+    <header class="cust-topbar">
+      <div>
+        <h1>Bán gói PT</h1>
+      </div>
+      <div class="cust-topbar-actions">
+        <a class="badge badge-ok" href="ca-lam-viec.html" id="shiftChip"><i class="fa-solid fa-circle-check"></i> Ca chiều 20/09 đang mở</a>
+        <a class="cust-user" href="tai-khoan.html" title="Cài đặt tài khoản">
+          <span class="avatar">NH</span>
+          <span class="cust-user-text">
+            <b>Nguyễn Thị Hoa</b>
+            <span>Lễ tân · NV-0042</span>
+          </span>
+        </a>
+      </div>
+    </header>
+
+    <main class="cust-content">
+      <div class="split">
+        <div class="col-main">
+
+          <section class="panel">
+            <div class="panel-head"><h2>1 · Khách mua</h2><span class="muted">Phải đang có gói tập còn hạn</span></div>
+            <div class="toolbar">
+              <div class="search">
+                <i class="fa-solid fa-magnifying-glass"></i>
+                <input id="ptq" type="search" placeholder="Tìm tên, SĐT hoặc mã khách" aria-label="Tìm khách">
+              </div>
+            </div>
+            <div class="pick-list" id="ptCust">
+              <label class="pick-row" data-q="Trần Bảo Ngọc 0902345678 KH-1001">
+                <input type="radio" name="ptcust" value="KH-1001" data-name="Trần Bảo Ngọc">
+                <span class="pick-body">
+                  <b>Trần Bảo Ngọc</b>
+                  <small>KH-1001 · 0902 345 678 · Gói 3 Tháng tới 15/11/2026</small>
+                </span>
+                <span class="badge badge-ok">Đủ điều kiện</span>
+              </label>
+              <label class="pick-row" data-block="Vé ngày không đủ điều kiện mua gói PT." data-q="Lê Minh Tuấn 0913456789 KH-1002">
+                <input type="radio" name="ptcust" value="KH-1002" data-name="Lê Minh Tuấn">
+                <span class="pick-body">
+                  <b>Lê Minh Tuấn</b>
+                  <small>KH-1002 · 0913 456 789 · Gói Ngày tới 20/09/2026</small>
+                </span>
+                <span class="badge badge-muted">Không đủ điều kiện</span>
+              </label>
+              <label class="pick-row" data-block="Gói đang bảo lưu tới 05/10/2026 — không bán thêm gói PT." data-q="Phạm Thu Trang 0934111222 KH-1003">
+                <input type="radio" name="ptcust" value="KH-1003" data-name="Phạm Thu Trang">
+                <span class="pick-body">
+                  <b>Phạm Thu Trang</b>
+                  <small>KH-1003 · 0934 111 222 · Gói 12 Tháng tới 01/03/2027</small>
+                </span>
+                <span class="badge badge-muted">Không đủ điều kiện</span>
+              </label>
+              <label class="pick-row" data-block="Gói tập đã hết hạn 10/09/2026 — gia hạn trước khi bán gói PT." data-q="Đỗ Văn Khang 0987654321 KH-1004">
+                <input type="radio" name="ptcust" value="KH-1004" data-name="Đỗ Văn Khang">
+                <span class="pick-body">
+                  <b>Đỗ Văn Khang</b>
+                  <small>KH-1004 · 0987 654 321 · Gói 1 Tháng tới 10/09/2026</small>
+                </span>
+                <span class="badge badge-muted">Không đủ điều kiện</span>
+              </label>
+              <label class="pick-row" data-block="Chưa có gói tập còn hạn. Bán gói tập trước." data-q="Vũ Hải Nam 0971222333 KH-1005">
+                <input type="radio" name="ptcust" value="KH-1005" data-name="Vũ Hải Nam">
+                <span class="pick-body">
+                  <b>Vũ Hải Nam</b>
+                  <small>KH-1005 · 0971 222 333 · chưa có gói</small>
+                </span>
+                <span class="badge badge-muted">Không đủ điều kiện</span>
+              </label>
+              <label class="pick-row" data-q="Ngô Thị Lan 0355667788 KH-1006">
+                <input type="radio" name="ptcust" value="KH-1006" data-name="Ngô Thị Lan">
+                <span class="pick-body">
+                  <b>Ngô Thị Lan</b>
+                  <small>KH-1006 · 0355 667 788 · Gói 1 Tháng tới 18/10/2026</small>
+                </span>
+                <span class="badge badge-ok">Đủ điều kiện</span>
+              </label>
+              <label class="pick-row" data-block="Khách 9 tuổi — chưa đủ 10 tuổi để dùng dịch vụ PT." data-q="Hoàng Gia Huy 0388990011 KH-1007">
+                <input type="radio" name="ptcust" value="KH-1007" data-name="Hoàng Gia Huy">
+                <span class="pick-body">
+                  <b>Hoàng Gia Huy</b>
+                  <small>KH-1007 · 0388 990 011 · chưa có gói</small>
+                </span>
+                <span class="badge badge-muted">Không đủ điều kiện</span>
+              </label>
+              <label class="pick-row" data-q="Bùi Thanh Hà 0967123123 KH-1008">
+                <input type="radio" name="ptcust" value="KH-1008" data-name="Bùi Thanh Hà">
+                <span class="pick-body">
+                  <b>Bùi Thanh Hà</b>
+                  <small>KH-1008 · 0967 123 123 · Gói 9 Tháng tới 01/03/2027</small>
+                </span>
+                <span class="badge badge-ok">Đủ điều kiện</span>
+              </label>
+              <label class="pick-row" data-q="Trịnh Quốc Bảo 0909111222 KH-1009">
+                <input type="radio" name="ptcust" value="KH-1009" data-name="Trịnh Quốc Bảo">
+                <span class="pick-body">
+                  <b>Trịnh Quốc Bảo</b>
+                  <small>KH-1009 · 0909 111 222 · Gói 3 Tháng tới 01/12/2026</small>
+                </span>
+                <span class="badge badge-ok">Đủ điều kiện</span>
+              </label>
+              <label class="pick-row" data-q="Mai Anh Thư 0826554433 KH-1010">
+                <input type="radio" name="ptcust" value="KH-1010" data-name="Mai Anh Thư">
+                <span class="pick-body">
+                  <b>Mai Anh Thư</b>
+                  <small>KH-1010 · 0826 554 433 · Gói 1 Tháng tới 05/10/2026</small>
+                </span>
+                <span class="badge badge-ok">Đủ điều kiện</span>
+              </label>
+        <div class="empty-state" data-empty hidden>
+          <div class="empty-icon"><i class="fa-solid fa-box-open"></i></div>
+          <p>Không có khách nào khớp.</p>
+        </div>
+            </div>
+            <div class="alert-banner danger" id="ptBlock" hidden>
+              <i class="fa-solid fa-circle-xmark"></i>
+              <span id="ptBlockText"></span>
+            </div>
+          </section>
+
+          <section class="panel">
+            <div class="panel-head"><h2>2 · Loại gói</h2><span class="muted">Đơn giản hóa - chỉ 3 loại gói PT</span></div>
+            <div class="pt-picker">
+              <label class="pt-option"><input type="radio" name="ptkind" value="k1month" checked
+                       data-months="1" data-price="4500000" data-min="4" data-max="6">
+                <span class="pt-body"><b>Gói 1 Tháng · cá nhân</b><small>Rải buổi trong 1 tháng · 4.500.000đ</small></span></label>
+              <label class="pt-option"><input type="radio" name="ptkind" value="k1month-couple"
+                       data-months="1" data-price="6750000" data-min="4" data-max="6" data-couple-kind>
+                <span class="pt-body"><b>Gói 1 Tháng · đôi</b><small>Hai người tập chung trong 1 tháng · 6.750.000đ</small></span></label>
+              <label class="pt-option"><input type="radio" name="ptkind" value="one"
+                       data-months="0" data-price="450000" data-n="1" data-min="1" data-max="1">
+                <span class="pt-body"><b>Buổi lẻ hôm nay</b><small>Một buổi, PT chốt giờ trực tiếp với khách · 450.000đ</small></span></label>
+            </div>
+            <label class="field" data-couple hidden style="margin-top:var(--space-4)">
+              <span class="field-label">Người tập cùng</span>
+              <select id="ptPartner">
+                <option value="">Chọn khách…</option>
+                <option value="KH-1001">KH-1001 · Trần Bảo Ngọc</option>
+                <option value="KH-1006">KH-1006 · Ngô Thị Lan</option>
+                <option value="KH-1008">KH-1008 · Bùi Thanh Hà</option>
+                <option value="KH-1009">KH-1009 · Trịnh Quốc Bảo</option>
+                <option value="KH-1010">KH-1010 · Mai Anh Thư</option>
+              </select>
+              <span class="field-hint"><i class="fa-solid fa-circle-info"></i><span>Người tập cùng cũng phải đang có gói tập còn hạn.</span></span>
+              <span class="field-error" id="ptPartnerErr" hidden></span>
+            </label>
+          </section>
+
+          <section class="panel">
+            <div class="panel-head"><h2>3 · Huấn luyện viên</h2></div>
+            <div class="pick-list" id="ptCoach">
+              <label class="pick-row">
+                <input type="radio" name="ptcoach" value="PT-01" data-name="Nguyễn Minh An">
+                <span class="pick-body"><b>Nguyễn Minh An</b><small>Tăng cơ · Giảm mỡ · đang kèm 8/12 khách</small></span>
+              </label>
+              <label class="pick-row">
+                <input type="radio" name="ptcoach" value="PT-02" data-name="Lê Thu Hà">
+                <span class="pick-body"><b>Lê Thu Hà</b><small>Yoga · Phục hồi · đang kèm 6/12 khách</small></span>
+              </label>
+              <label class="pick-row">
+                <input type="radio" name="ptcoach" value="PT-03" data-name="Phạm Đức Trọng">
+                <span class="pick-body"><b>Phạm Đức Trọng</b><small>Powerlifting · đang kèm 11/12 khách</small></span>
+              </label>
+            </div>
+          </section>
+
+          <section class="panel" data-fixed>
+            <div class="panel-head">
+              <div>
+                <h2>4 · Chọn ngày bắt đầu và buổi tập</h2>
+                <p id="wkLead">Với gói 1 tháng, chọn ngày bắt đầu (hệ thống tự tính ngày kết thúc). Tick các buổi tập trong tháng, mỗi ngày T2-T6 chỉ tick được 1 buổi, T7/CN không được chọn.</p>
+              </div>
+            </div>
+
+            <!-- Chưa chọn PT thì chưa có UI chọn buổi -->
+            <div class="wk-empty" id="wkEmpty">
+              <i class="fa-solid fa-user-clock"></i>
+              <p>Chọn huấn luyện viên ở bước 3. Sau đó chọn ngày bắt đầu gói và các buổi tập.</p>
+            </div>
+
+            <div class="wk-wrap" id="wkWrap" hidden>
+              
+              <!-- Chọn ngày bắt đầu gói (kết thúc tự tính) -->
+              <div style="margin-bottom:var(--space-4)">
+                <label class="field">
+                  <span class="field-label">Ngày bắt đầu gói</span>
+                  <input type="date" id="ptStartDate" value="">
+                  <span class="field-hint"><i class="fa-solid fa-circle-info"></i><span>Chọn ngày bắt đầu, hệ thống sẽ tự tính ngày kết thúc theo loại gói.</span></span>
+                </label>
+                <p id="ptDateRange" class="muted" style="margin-top:var(--space-2);font-size:.85rem" hidden>
+                  <i class="fa-solid fa-calendar-days"></i> Khoảng gói: <b id="ptRangeText">—</b>
+                </p>
+              </div>
+
+              <!-- Điều hướng tuần -->
+              <div class="wk-nav" style="margin-bottom:var(--space-4)">
+                <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:var(--space-2)">
+                  <div>
+                    <h3 id="wkLabel" style="margin:0;font-size:1.125rem">—</h3>
+                  </div>
+                  <div style="display:flex;gap:var(--space-2);align-items:center">
+                    <span class="badge badge-muted" id="wkCount">0 buổi đã chọn</span>
+                    <button type="button" id="wkPrev" class="btn btn-ghost btn-sm"><i class="fa-solid fa-chevron-left"></i></button>
+                    <button type="button" id="wkNext" class="btn btn-ghost btn-sm"><i class="fa-solid fa-chevron-right"></i></button>
+                  </div>
+                </div>
+              </div>
+
+              <!-- Calendar grid theo tuần -->
+              <div class="cal-scroll">
+                <div class="cal" id="ptCal" style="--cal-h:1020px">
+                  <div class="cal-head"><span class="section-label">Giờ</span></div>
+                  <div class="cal-head" id="calHead0"></div>
+                  <div class="cal-head" id="calHead1"></div>
+                  <div class="cal-head" id="calHead2"></div>
+                  <div class="cal-head" id="calHead3"></div>
+                  <div class="cal-head" id="calHead4"></div>
+                  <div class="cal-head is-weekend" id="calHead5"></div>
+                  <div class="cal-head is-weekend" id="calHead6"></div>
+
+                  <div class="cal-axis">
+                    <b style="top:0.000%">05:00</b>
+                    <b style="top:5.882%">06:00</b>
+                    <b style="top:11.765%">07:00</b>
+                    <b style="top:17.647%">08:00</b>
+                    <b style="top:23.529%">09:00</b>
+                    <b style="top:29.412%">10:00</b>
+                    <b style="top:35.294%">11:00</b>
+                    <b style="top:41.176%">12:00</b>
+                    <b style="top:47.059%">13:00</b>
+                    <b style="top:52.941%">14:00</b>
+                    <b style="top:58.824%">15:00</b>
+                    <b style="top:64.706%">16:00</b>
+                    <b style="top:70.588%">17:00</b>
+                    <b style="top:76.471%">18:00</b>
+                    <b style="top:82.353%">19:00</b>
+                    <b style="top:88.235%">20:00</b>
+                    <b style="top:94.118%">21:00</b>
+                    <b style="top:100.000%">22:00</b>
+                  </div>
+
+                  <div class="cal-col" data-col="0"></div>
+                  <div class="cal-col" data-col="1"></div>
+                  <div class="cal-col" data-col="2"></div>
+                  <div class="cal-col" data-col="3"></div>
+                  <div class="cal-col" data-col="4"></div>
+                  <div class="cal-col is-weekend" data-col="5"></div>
+                  <div class="cal-col is-weekend" data-col="6"></div>
+                </div>
+              </div>
+              
+              <div style="display:flex;gap:var(--space-2);margin-top:var(--space-3)">
+                <button type="button" id="wkToday" class="btn btn-ghost btn-sm"><i class="fa-solid fa-calendar-day"></i> Về tuần đầu</button>
+                <button type="button" id="wkRepeat" class="btn btn-ghost btn-sm">Lặp tuần đang xem</button>
+                <button type="button" id="wkClear" class="btn btn-ghost btn-sm">Xóa tuần đang xem</button>
+              </div>
+
+              <div class="tt-legend" style="margin-top:var(--space-3)">
+                <span><i class="open"></i> Khung rảnh - chọn để đặt</span>
+                <span><i class="draft"></i> Đã chọn</span>
+                <span><i class="booked"></i> PT đã có khách</span>
+              </div>
+              <p class="muted" style="margin-top:var(--space-2)"><small>Lưu ý: Prototype hiển thị lịch rảnh cố định. Thực tế sẽ query từ database theo tuần.</small></p>
+            </div>
+          </section>
+
+          <section class="panel" data-plan hidden>
+            <div class="panel-head">
+              <div>
+                <h2>5 · Tóm tắt buổi đã chọn</h2>
+                <p>Thanh toán xong là chốt toàn bộ các buổi này.</p>
+              </div>
+              <span class="badge" id="planBadge"></span>
+            </div>
+            <div id="planList"></div>
+          </section>
+
+        </div>
+
+        <aside class="col-side">
+          <div class="side-card sticky">
+            <span class="section-label">Đơn gói PT</span>
+            <dl class="sum-list">
+              <div><dt>Khách</dt><dd data-sum-cust>—</dd></div>
+              <div><dt>Loại</dt><dd data-sum-kind>Gói 1 Tháng · cá nhân</dd></div>
+              <div><dt>PT</dt><dd data-sum-coach>—</dd></div>
+              <div><dt>Buổi đã chọn</dt><dd data-sum-slots>—</dd></div>
+              <div><dt>Thời gian</dt><dd data-sum-plan>—</dd></div>
+              <div><dt>Giá gói</dt><dd class="tabular" data-sum-sub>4.500.000đ</dd></div>
+              <div class="sum-sub"><dt>Giá chưa VAT</dt><dd class="tabular" data-sum-net>4.166.667đ</dd></div>
+              <div class="sum-sub"><dt>VAT 8% (đã gồm)</dt><dd class="tabular" data-sum-vat>333.333đ</dd></div>
+              <div class="sum-total"><dt>Tổng thu</dt><dd class="tabular" data-sum-total>4.500.000đ</dd></div>
+            </dl>
+            <button class="btn btn-primary btn-block" type="button" id="ptPay" disabled>Kết đơn</button>
+          </div>
+        </aside>
+      </div>
+    </main>
+  </div>
+</div>
+
+<script src="../app.js"></script>
+<script src="../kh/customer.js"></script>
+<script src="ban-goi-pt.js"></script>
+</body>
+</html>

@@ -1,0 +1,47 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!--
+    Hàm EL dùng trong JSP để định dạng tiền và ngày giờ đúng GBR-01, GBR-29.
+    (JSTL fmt:formatDate KHÔNG hỗ trợ LocalDate/LocalDateTime của Java 8+, nên cần các hàm này.)
+
+    Khai báo đầu JSP:
+        <%@ taglib prefix="gms" uri="/WEB-INF/gms-functions.tld" %>
+
+    Dùng:
+        <c:out value="${gms:formatMoney(order.amountPayable)}" />      → 1.250.000đ
+        <c:out value="${gms:formatDate(customer.dateOfBirth)}" />      → 24/09/2026
+        <c:out value="${gms:formatTime(slot.startTime)}" />            → 14:30
+        <c:out value="${gms:formatDateTime(order.createdAt)}" />       → 24/09/2026 14:30
+-->
+<taglib xmlns="https://jakarta.ee/xml/ns/jakartaee"
+        xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+        xsi:schemaLocation="https://jakarta.ee/xml/ns/jakartaee https://jakarta.ee/xml/ns/jakartaee/web-jsptaglibrary_3_0.xsd"
+        version="3.0">
+
+    <tlib-version>1.0</tlib-version>
+    <short-name>gms</short-name>
+    <uri>/WEB-INF/gms-functions.tld</uri>
+
+    <function>
+        <name>formatMoney</name>
+        <function-class>com.gms.util.MoneyUtil</function-class>
+        <function-signature>java.lang.String formatMoney(long)</function-signature>
+    </function>
+
+    <function>
+        <name>formatDate</name>
+        <function-class>com.gms.util.DateTimeUtil</function-class>
+        <function-signature>java.lang.String formatDate(java.time.LocalDate)</function-signature>
+    </function>
+
+    <function>
+        <name>formatTime</name>
+        <function-class>com.gms.util.DateTimeUtil</function-class>
+        <function-signature>java.lang.String formatTime(java.time.LocalTime)</function-signature>
+    </function>
+
+    <function>
+        <name>formatDateTime</name>
+        <function-class>com.gms.util.DateTimeUtil</function-class>
+        <function-signature>java.lang.String formatDateTime(java.time.LocalDateTime)</function-signature>
+    </function>
+</taglib>

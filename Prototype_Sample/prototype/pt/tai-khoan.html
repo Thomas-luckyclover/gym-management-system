@@ -1,0 +1,180 @@
+﻿<!DOCTYPE html>
+<html lang="vi">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
+<title>Cài đặt tài khoản — Super Gym PT</title>
+<meta name="robots" content="noindex">
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Montserrat:wght@600;700;800&family=Inter:wght@400;500;600;700&display=swap">
+<script src="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/7.3.1/js/all.min.js" crossorigin="anonymous"></script>
+<link rel="stylesheet" href="../style.css">
+<link rel="stylesheet" href="../customer.css">
+</head>
+<body class="cust staff">
+<div id="toastRoot"></div>
+<div id="modalRoot"></div>
+
+<!-- 1.4.1 — Account Settings · L2 · UC-04 (biến thể PT) -->
+<div class="cust-shell" id="custShell">
+
+  <div class="cust-dock" id="custDock">
+    <aside class="cust-sidebar">
+      <a class="cust-brand" href="trang-chu.html">
+        <b>Super Gym</b><span>Huấn luyện viên</span>
+      </a>
+      <nav class="cust-nav">
+        <h4>Hôm nay</h4>
+        <a href="trang-chu.html"><i class="fa-solid fa-gauge-high"></i>Tổng quan</a>
+        <a href="diem-danh.html"><i class="fa-solid fa-clipboard-check"></i>Điểm danh</a>
+        <h4>Lịch dạy</h4>
+        <a href="lich-ranh.html"><i class="fa-solid fa-calendar-days"></i>Lịch rảnh</a>
+        <h4>Khách phụ trách</h4>
+        <a href="khach-cua-toi.html"><i class="fa-solid fa-user-group"></i>Khách của tôi</a>
+        <h4>Cá nhân</h4>
+        <a href="nghi-phep.html"><i class="fa-solid fa-plane-departure"></i>Nghỉ phép</a>
+        <a href="tai-khoan.html" aria-current="page"><i class="fa-solid fa-user-gear"></i>Cài đặt tài khoản</a>
+      </nav>
+      <div class="cust-sidebar-foot">
+        <a href="../dang-nhap.html"><i class="fa-solid fa-arrow-right-from-bracket"></i>Đăng xuất</a>
+      </div>
+    </aside>
+    <button class="cust-handle" type="button" id="dockHandle"
+            aria-label="Mở menu điều hướng" aria-expanded="false" aria-controls="custDock">
+      <i class="fa-solid fa-chevron-right"></i>
+    </button>
+  </div>
+
+  <div class="cust-main">
+    <header class="cust-topbar">
+      <div>
+        <h1>Cài đặt tài khoản</h1>
+      </div>
+      <div class="cust-topbar-actions">
+        <a class="cust-user" href="tai-khoan.html" title="Cài đặt tài khoản">
+          <span class="avatar">HL</span>
+          <span class="cust-user-text">
+            <b>Hoàng Long</b>
+            <span>PT · NV-0118</span>
+          </span>
+        </a>
+      </div>
+    </header>
+
+    <main class="cust-content">
+      <div class="split">
+        <div class="col-main">
+          <div class="tabs" role="tablist">
+            <button type="button" role="tab" aria-selected="true" data-tab="profile">Hồ sơ</button>
+            <button type="button" role="tab" aria-selected="false" data-tab="password">Mật khẩu</button>
+          </div>
+
+          <div data-tab-panel="profile">
+            <section class="panel">
+              <form id="profileForm" novalidate>
+                <div class="form-grid">
+                  <label class="field">
+                    <span class="field-label">Email</span>
+                    <input id="acctEmail" type="email" value="long.hoang@supergym.vn" autocomplete="email">
+                    <span class="field-hint"><i class="fa-solid fa-circle-info"></i><span>Mã xác thực gửi tới email mới.</span></span>
+                    <span class="field-error" id="acctEmailErr" hidden></span>
+                  </label>
+                  <label class="field">
+                    <span class="field-label">Số điện thoại</span>
+                    <input id="acctPhone" type="tel" inputmode="numeric" value="0908777111" autocomplete="tel">
+                    <span class="field-error" id="acctPhoneErr" hidden></span>
+                  </label>
+                </div>
+                <button class="btn btn-primary" type="submit">Lưu thay đổi</button>
+              </form>
+            </section>
+
+            <section class="panel" id="verifyPanel" hidden style="margin-top:var(--space-5)">
+              <div class="panel-head"><h2>Xác thực thay đổi</h2></div>
+              <div class="msg-banner success">
+                <i class="fa-solid fa-circle-check"></i>
+                <span>Mã đã gửi tới <b id="verifyTarget"></b>.</span>
+              </div>
+              <form id="verifyForm" novalidate>
+                <label class="field">
+                  <span class="field-label">Mã xác thực</span>
+                  <input id="verifyCode" class="otp-input" inputmode="numeric" maxlength="6" placeholder="––––––" value="123456">
+                  <span class="field-error" id="verifyCodeErr" hidden></span>
+                </label>
+                <button class="btn btn-primary" type="submit">Xác nhận</button>
+              </form>
+            </section>
+          </div>
+
+          <div data-tab-panel="password" hidden>
+            <section class="panel">
+              <div class="panel-head"><h2>Đổi mật khẩu</h2><span class="muted">Đổi xong sẽ đăng xuất mọi phiên</span></div>
+              <form id="passwordForm" novalidate>
+                <label class="field">
+                  <span class="field-label">Mật khẩu hiện tại</span>
+                  <span class="input-wrap">
+                    <input id="oldPass" type="password" autocomplete="current-password">
+                    <button type="button" class="pw-toggle" data-pw-toggle="oldPass" aria-label="Hiện mật khẩu"><i class="fa-solid fa-eye"></i></button>
+                  </span>
+                  <span class="field-error" id="oldPassErr" hidden></span>
+                </label>
+                <div class="form-grid">
+                  <label class="field">
+                    <span class="field-label">Mật khẩu mới</span>
+                    <span class="input-wrap">
+                      <input id="newPass" type="password" placeholder="Tối thiểu 6 ký tự" autocomplete="new-password">
+                      <button type="button" class="pw-toggle" data-pw-toggle="newPass" aria-label="Hiện mật khẩu"><i class="fa-solid fa-eye"></i></button>
+                    </span>
+                    <span class="field-error" id="newPassErr" hidden></span>
+                  </label>
+                  <label class="field">
+                    <span class="field-label">Nhập lại</span>
+                    <input id="newPass2" type="password" autocomplete="new-password">
+                    <span class="field-error" id="newPass2Err" hidden></span>
+                  </label>
+                </div>
+                <button class="btn btn-primary" type="submit">Đổi mật khẩu</button>
+              </form>
+            </section>
+          </div>
+        </div>
+
+        <aside class="col-side">
+          <!-- UC-04: phần này là của riêng bạn, tự sửa, không cần ai duyệt -->
+          <div class="side-card">
+            <div class="avatar-row">
+              <span class="avatar-lg" id="acAvatar">HL</span>
+              <div>
+                <h3>Hoàng Long</h3>
+                <p class="muted">PT · NV-0118</p>
+              </div>
+            </div>
+            <button class="btn btn-ghost btn-sm btn-block" type="button" id="avatarBtn"><i class="fa-solid fa-camera"></i> Đổi ảnh đại diện</button>
+            <p class="muted" style="margin-top:var(--space-3)">Ảnh đại diện, email, số điện thoại và mật khẩu là của riêng bạn. Tự đổi, không qua Quản lý.</p>
+          </div>
+          <!-- UC-13: hồ sơ nhân sự là quyền riêng của Quản lý, PT chỉ xem -->
+          <div class="side-card">
+            <div class="side-head">
+              <span class="section-label">Hồ sơ nhân sự</span>
+              <span class="badge badge-muted"><i class="fa-solid fa-lock"></i> Chỉ đọc</span>
+            </div>
+            <div class="side-row"><span>Họ và tên</span><b>Hoàng Long</b></div>
+            <div class="side-row"><span>Ngày sinh</span><b>09/07/1994</b></div>
+            <div class="side-row"><span>Mã nhân viên</span><b class="tabular">NV-0118</b></div>
+            <div class="side-row"><span>Vị trí</span><b>Huấn luyện viên</b></div>
+            <div class="side-row"><span>Chuyên môn</span><b>Strength &amp; Conditioning</b></div>
+            <div class="side-row"><span>Ngày vào làm</span><b>16/01/2023</b></div>
+            <div class="side-row"><span>Tỷ lệ hoa hồng</span><b>70%</b></div>
+            <div class="side-row"><span>Trạng thái</span><b><span class="badge badge-ok">Đang làm việc</span></b></div>
+            <p class="muted" style="margin-top:var(--space-3)">Chỉ Quản lý sửa được. Đổi vị trí, đổi tỷ lệ hoa hồng hay cho nghỉ việc đều do Quản lý thao tác. Tài khoản đăng nhập do Quản trị hệ thống cấp.</p>
+          </div>
+        </aside>
+      </div>
+    </main>
+  </div>
+</div>
+
+<script src="../app.js"></script>
+<script src="../kh/customer.js"></script>
+<script src="tai-khoan.js"></script>
+</body>
+</html>

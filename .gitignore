@@ -1,0 +1,19 @@
+# ===== Cấu hình riêng từng máy (chứa mật khẩu DB, khóa VNPay, app password Gmail) =====
+src/main/resources/application.properties
+
+# ===== Build Maven =====
+target/
+
+# ===== IDE =====
+.idea/
+*.iml
+.vscode/
+nbproject/private/
+nb-configuration.xml
+.settings/
+.classpath
+.project
+
+# ===== Hệ điều hành =====
+.DS_Store
+Thumbs.db

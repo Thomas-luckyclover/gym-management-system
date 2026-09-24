@@ -1,0 +1,410 @@
+﻿<!DOCTYPE html>
+<html lang="vi">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
+<title>Check-in — Super Gym Lễ tân</title>
+<meta name="robots" content="noindex">
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Montserrat:wght@600;700;800&family=Inter:wght@400;500;600;700&display=swap">
+<script src="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/7.3.1/js/all.min.js" crossorigin="anonymous"></script>
+<link rel="stylesheet" href="../style.css">
+<link rel="stylesheet" href="../customer.css">
+</head>
+<body class="cust staff">
+<div id="toastRoot"></div>
+<div id="modalRoot"></div>
+
+<!-- 6.3.1 — Member Check-in Search · L2 · UC-19 -->
+<div class="cust-shell" id="custShell">
+
+  <div class="cust-dock" id="custDock">
+    <aside class="cust-sidebar">
+      <a class="cust-brand" href="check-in.html">
+        <b>Super Gym</b><span>Lễ tân</span>
+      </a>
+      <nav class="cust-nav">
+        <h4>Tại quầy</h4>
+        <a href="check-in.html" aria-current="page"><i class="fa-solid fa-door-open"></i>Check-in</a>
+        <a href="ban-hang.html"><i class="fa-solid fa-cart-shopping"></i>Bán hàng</a>
+        <a href="ban-goi-pt.html"><i class="fa-solid fa-user-check"></i>Bán gói PT</a>
+        <a href="ca-lam-viec.html"><i class="fa-solid fa-cash-register"></i>Ca làm việc</a>
+        <h4>Hội viên</h4>
+        <a href="hoi-vien.html"><i class="fa-solid fa-user-group"></i>Hồ sơ khách</a>
+        <a href="bao-luu.html"><i class="fa-solid fa-circle-pause"></i>Bảo lưu</a>
+        <h4>Cơ sở vật chất</h4>
+        <a href="co-so-vat-chat.html"><i class="fa-solid fa-boxes-stacked"></i>Danh mục</a>
+        <a href="bao-tri.html"><i class="fa-solid fa-screwdriver-wrench"></i>Yêu cầu bảo trì</a>
+        <h4>Cá nhân</h4>
+        <a href="nghi-phep.html"><i class="fa-solid fa-plane-departure"></i>Nghỉ phép</a>
+        <a href="tai-khoan.html"><i class="fa-solid fa-user-gear"></i>Cài đặt tài khoản</a>
+      </nav>
+      <div class="cust-sidebar-foot">
+        <a href="../dang-nhap.html"><i class="fa-solid fa-arrow-right-from-bracket"></i>Đăng xuất</a>
+      </div>
+    </aside>
+    <button class="cust-handle" type="button" id="dockHandle"
+            aria-label="Mở menu điều hướng" aria-expanded="false" aria-controls="custDock">
+      <i class="fa-solid fa-chevron-right"></i>
+    </button>
+  </div>
+
+  <div class="cust-main">
+    <header class="cust-topbar">
+      <div>
+        <h1>Check-in hội viên</h1>
+      </div>
+      <div class="cust-topbar-actions">
+        <a class="badge badge-ok" href="ca-lam-viec.html" id="shiftChip"><i class="fa-solid fa-circle-check"></i> Ca chiều 20/09 đang mở</a>
+        <a class="cust-user" href="tai-khoan.html" title="Cài đặt tài khoản">
+          <span class="avatar">NH</span>
+          <span class="cust-user-text">
+            <b>Nguyễn Thị Hoa</b>
+            <span>Lễ tân · NV-0042</span>
+          </span>
+        </a>
+      </div>
+    </header>
+
+    <main class="cust-content">
+      <div class="split">
+        <div class="col-main">
+
+          <section class="panel">
+            <div class="panel-head">
+              <div>
+                <h2>Tìm khách</h2>
+                <p>Nhập mã khách hoặc số điện thoại. Khách không cần thẻ, không cần đăng nhập.</p>
+              </div>
+            </div>
+            <form id="ciForm" class="toolbar" novalidate>
+              <div class="search">
+                <i class="fa-solid fa-magnifying-glass"></i>
+                <input id="ciq" type="search" placeholder="KH-1001 hoặc 0902345678" autocomplete="off" aria-label="Mã khách hoặc số điện thoại">
+              </div>
+              <button class="btn btn-primary" type="submit">Tìm</button>
+              <label class="reset check-inline">
+                <input type="checkbox" id="ciOutside"> Giả lập ngoài giờ mở cửa
+              </label>
+            </form>
+          </section>
+
+          <div id="ciResult">
+        <section class="panel ci-card" data-ci="KH-1001" data-phone="0902345678" hidden>
+          <div class="ci-top">
+            <div class="ci-photo" data-ci-face><img src="https://images.unsplash.com/photo-1494790108377-be9c29b29330?w=240&h=300&fit=crop&q=80" alt="Ảnh check-in của Trần Bảo Ngọc" loading="lazy"></div>
+            <div class="ci-id">
+              <h2>Trần Bảo Ngọc <span class="badge badge-ok">Đang hoạt động</span></h2>
+              <div class="row-meta">
+                <span><i class="fa-solid fa-id-card"></i> KH-1001</span>
+                <span><i class="fa-solid fa-phone"></i> 0902 345 678</span>
+              </div>
+              <div class="row-meta">
+                <span><i class="fa-solid fa-dumbbell"></i> Gói 3 Tháng · tới 15/11/2026</span>
+                <span><i class="fa-solid fa-user-check"></i> PT 12 buổi · còn 8</span>
+              </div>
+            </div>
+          </div>
+
+          <div class="alert-banner ok">
+            <i class="fa-solid fa-circle-check"></i>
+            <span><b>Đủ điều kiện vào tập.</b> Gói còn hạn tới 15/11/2026. Mời khách vào tập.</span>
+          </div>
+
+          <div class="btn-row">
+            <a class="btn btn-ghost" href="ho-so-khach.html">Mở hồ sơ</a>
+            <button class="btn btn-primary" type="button" data-ci-go><i class="fa-solid fa-door-open"></i> Xác nhận vào tập</button>
+          </div>
+        </section>
+        <section class="panel ci-card" data-ci="KH-1002" data-phone="0913456789" data-once hidden>
+          <div class="ci-top">
+            <div class="ci-photo" data-ci-face><img src="https://images.unsplash.com/photo-1500648767791-00dcc994a43e?w=240&h=300&fit=crop&q=80" alt="Ảnh check-in của Lê Minh Tuấn" loading="lazy"></div>
+            <div class="ci-id">
+              <h2>Lê Minh Tuấn <span class="badge badge-ok">Đang hoạt động</span></h2>
+              <div class="row-meta">
+                <span><i class="fa-solid fa-id-card"></i> KH-1002</span>
+                <span><i class="fa-solid fa-phone"></i> 0913 456 789</span>
+              </div>
+              <div class="row-meta">
+                <span><i class="fa-solid fa-dumbbell"></i> Gói Ngày · tới 20/09/2026</span>
+              </div>
+            </div>
+          </div>
+
+          <div class="alert-banner ok">
+            <i class="fa-solid fa-circle-check"></i>
+            <span><b>Đủ điều kiện vào tập.</b> Vé ngày chỉ vào được một lượt. Xác nhận là dùng hết vé.</span>
+          </div>
+
+          <div class="btn-row">
+            <a class="btn btn-ghost" href="ho-so-khach.html">Mở hồ sơ</a>
+            <button class="btn btn-primary" type="button" data-ci-go><i class="fa-solid fa-door-open"></i> Xác nhận vào tập</button>
+          </div>
+        </section>
+        <section class="panel ci-card" data-ci="KH-1003" data-phone="0934111222" hidden>
+          <div class="ci-top">
+            <div class="ci-photo" data-ci-face><img src="https://images.unsplash.com/photo-1438761681033-6461ffad8d80?w=240&h=300&fit=crop&q=80" alt="Ảnh check-in của Phạm Thu Trang" loading="lazy"></div>
+            <div class="ci-id">
+              <h2>Phạm Thu Trang <span class="badge badge-warn">Đang bảo lưu</span></h2>
+              <div class="row-meta">
+                <span><i class="fa-solid fa-id-card"></i> KH-1003</span>
+                <span><i class="fa-solid fa-phone"></i> 0934 111 222</span>
+              </div>
+              <div class="row-meta">
+                <span><i class="fa-solid fa-dumbbell"></i> Gói 12 Tháng · tới 01/03/2027</span>
+              </div>
+            </div>
+          </div>
+
+          <div class="alert-banner danger">
+            <i class="fa-solid fa-circle-xmark"></i>
+            <span><b>Từ chối vào tập.</b> Gói đang bảo lưu tới 05/10/2026. Khách phải huỷ bảo lưu trước khi vào tập.</span>
+          </div>
+
+          <div class="btn-row">
+            <a class="btn btn-ghost" href="ho-so-khach.html">Mở hồ sơ</a>
+            <a class="btn btn-outline btn-sm" href="bao-luu.html">Mở màn bảo lưu</a>
+          </div>
+        </section>
+        <section class="panel ci-card" data-ci="KH-1004" data-phone="0987654321" hidden>
+          <div class="ci-top">
+            <div class="ci-photo" data-ci-face><img src="https://images.unsplash.com/photo-1507003211169-0a1dd7228f2d?w=240&h=300&fit=crop&q=80" alt="Ảnh check-in của Đỗ Văn Khang" loading="lazy"></div>
+            <div class="ci-id">
+              <h2>Đỗ Văn Khang <span class="badge badge-muted">Hết hạn</span></h2>
+              <div class="row-meta">
+                <span><i class="fa-solid fa-id-card"></i> KH-1004</span>
+                <span><i class="fa-solid fa-phone"></i> 0987 654 321</span>
+              </div>
+              <div class="row-meta">
+                <span><i class="fa-solid fa-dumbbell"></i> Gói 1 Tháng · tới 10/09/2026</span>
+                <span><i class="fa-solid fa-user-check"></i> PT 12 buổi · còn 4</span>
+              </div>
+            </div>
+          </div>
+
+          <div class="alert-banner danger">
+            <i class="fa-solid fa-circle-xmark"></i>
+            <span><b>Từ chối vào tập.</b> Gói 1 Tháng hết hạn 10/09/2026. Gia hạn hoặc bán gói mới để khách vào tập.</span>
+          </div>
+
+          <div class="btn-row">
+            <a class="btn btn-ghost" href="ho-so-khach.html">Mở hồ sơ</a>
+            <a class="btn btn-primary btn-sm" href="ban-hang.html">Gia hạn</a>
+          </div>
+        </section>
+        <section class="panel ci-card" data-ci="KH-1005" data-phone="0971222333" hidden>
+          <div class="ci-top">
+            <div class="ci-photo" data-ci-face><img src="https://images.unsplash.com/photo-1506794778202-cad84cf45f1d?w=240&h=300&fit=crop&q=80" alt="Ảnh check-in của Vũ Hải Nam" loading="lazy"></div>
+            <div class="ci-id">
+              <h2>Vũ Hải Nam <span class="badge badge-ok">Đang hoạt động</span></h2>
+              <div class="row-meta">
+                <span><i class="fa-solid fa-id-card"></i> KH-1005</span>
+                <span><i class="fa-solid fa-phone"></i> 0971 222 333</span>
+              </div>
+              <div class="row-meta">
+                <span><i class="fa-solid fa-dumbbell"></i> Chưa có gói tập</span>
+                <span><i class="fa-solid fa-user-check"></i> PT 12 buổi · còn 10</span>
+              </div>
+            </div>
+          </div>
+
+          <div class="alert-banner danger">
+            <i class="fa-solid fa-circle-xmark"></i>
+            <span><b>Từ chối vào tập.</b> Khách chỉ có gói PT, không có gói tập tự do. Buổi PT gần nhất 22/09 lúc 18:00 — chưa tới giờ.</span>
+          </div>
+
+          <div class="btn-row">
+            <a class="btn btn-ghost" href="ho-so-khach.html">Mở hồ sơ</a>
+            <a class="btn btn-outline btn-sm" href="ban-hang.html">Bán gói tập</a>
+          </div>
+        </section>
+        <section class="panel ci-card" data-ci="KH-1006" data-phone="0355667788" hidden>
+          <div class="ci-top">
+            <div class="ci-photo is-empty" data-ci-face><span>Chưa có<br>ảnh</span></div>
+            <div class="ci-id">
+              <h2>Ngô Thị Lan <span class="badge badge-ok">Đang hoạt động</span></h2>
+              <div class="row-meta">
+                <span><i class="fa-solid fa-id-card"></i> KH-1006</span>
+                <span><i class="fa-solid fa-phone"></i> 0355 667 788</span>
+              </div>
+              <div class="row-meta">
+                <span><i class="fa-solid fa-dumbbell"></i> Gói 1 Tháng · tới 18/10/2026</span>
+              </div>
+            </div>
+          </div>
+
+          <div class="alert-banner warn">
+            <i class="fa-solid fa-camera"></i>
+            <span><b>Thiếu ảnh check-in.</b> Khách mua online, chưa có ảnh check-in. Chụp ảnh tại quầy rồi mới cho vào.</span>
+          </div>
+
+          <div class="btn-row">
+            <a class="btn btn-ghost" href="ho-so-khach.html">Mở hồ sơ</a>
+            <button class="btn btn-primary" type="button" data-ci-photo><i class="fa-solid fa-camera"></i> Chụp ảnh tại quầy</button>
+          </div>
+        </section>
+        <section class="panel ci-card" data-ci="KH-1007" data-phone="0388990011" hidden>
+          <div class="ci-top">
+            <div class="ci-photo is-empty" data-ci-face><span>Chưa có<br>ảnh</span></div>
+            <div class="ci-id">
+              <h2>Hoàng Gia Huy <span class="badge badge-info">Mới tạo</span></h2>
+              <div class="row-meta">
+                <span><i class="fa-solid fa-id-card"></i> KH-1007</span>
+                <span><i class="fa-solid fa-phone"></i> 0388 990 011</span>
+              </div>
+              <div class="row-meta">
+                <span><i class="fa-solid fa-dumbbell"></i> Chưa có gói tập</span>
+              </div>
+            </div>
+          </div>
+
+          <div class="alert-banner danger">
+            <i class="fa-solid fa-circle-xmark"></i>
+            <span><b>Từ chối vào tập.</b> Hồ sơ mới tạo, chưa có gói nào. Đây là hồ sơ phụ thuộc — người giám hộ đứng tên thanh toán.</span>
+          </div>
+
+          <div class="btn-row">
+            <a class="btn btn-ghost" href="ho-so-khach.html">Mở hồ sơ</a>
+            <a class="btn btn-primary btn-sm" href="ban-hang.html">Bán gói</a>
+          </div>
+        </section>
+        <section class="panel ci-card" data-ci="KH-1008" data-phone="0967123123" hidden>
+          <div class="ci-top">
+            <div class="ci-photo" data-ci-face><img src="https://images.unsplash.com/photo-1544005313-94ddf0286df2?w=240&h=300&fit=crop&q=80" alt="Ảnh check-in của Bùi Thanh Hà" loading="lazy"></div>
+            <div class="ci-id">
+              <h2>Bùi Thanh Hà <span class="badge badge-ok">Đang hoạt động</span> <span class="badge badge-danger">Chờ duyệt xoá</span></h2>
+              <div class="row-meta">
+                <span><i class="fa-solid fa-id-card"></i> KH-1008</span>
+                <span><i class="fa-solid fa-phone"></i> 0967 123 123</span>
+              </div>
+              <div class="row-meta">
+                <span><i class="fa-solid fa-dumbbell"></i> Gói 9 Tháng · tới 01/03/2027</span>
+              </div>
+            </div>
+          </div>
+
+          <div class="alert-banner danger">
+            <i class="fa-solid fa-circle-xmark"></i>
+            <span><b>Từ chối vào tập.</b> Hồ sơ đang chờ Quản lý duyệt xoá — không cho vào tập trong thời gian chờ duyệt.</span>
+          </div>
+
+          <div class="btn-row">
+            <a class="btn btn-ghost" href="ho-so-khach.html">Mở hồ sơ</a>
+            <button class="btn btn-primary" type="button" data-ci-go><i class="fa-solid fa-door-open"></i> Xác nhận vào tập</button>
+          </div>
+        </section>
+        <section class="panel ci-card" data-ci="KH-1009" data-phone="0909111222" hidden>
+          <div class="ci-top">
+            <div class="ci-photo" data-ci-face><img src="https://images.unsplash.com/photo-1519085360753-af0119f7cbe7?w=240&h=300&fit=crop&q=80" alt="Ảnh check-in của Trịnh Quốc Bảo" loading="lazy"></div>
+            <div class="ci-id">
+              <h2>Trịnh Quốc Bảo <span class="badge badge-ok">Đang hoạt động</span></h2>
+              <div class="row-meta">
+                <span><i class="fa-solid fa-id-card"></i> KH-1009</span>
+                <span><i class="fa-solid fa-phone"></i> 0909 111 222</span>
+              </div>
+              <div class="row-meta">
+                <span><i class="fa-solid fa-dumbbell"></i> Gói 3 Tháng · tới 01/12/2026</span>
+                <span><i class="fa-solid fa-user-check"></i> PT 12 buổi · còn 6</span>
+              </div>
+            </div>
+          </div>
+
+          <div class="alert-banner ok">
+            <i class="fa-solid fa-circle-check"></i>
+            <span><b>Đủ điều kiện vào tập.</b> Gói còn hạn tới 01/12/2026. Hôm nay có buổi PT 19:00 với PT Nguyễn Minh An.</span>
+          </div>
+
+          <div class="btn-row">
+            <a class="btn btn-ghost" href="ho-so-khach.html">Mở hồ sơ</a>
+            <button class="btn btn-primary" type="button" data-ci-go><i class="fa-solid fa-door-open"></i> Xác nhận vào tập</button>
+          </div>
+        </section>
+        <section class="panel ci-card" data-ci="KH-1010" data-phone="0826554433" hidden>
+          <div class="ci-top">
+            <div class="ci-photo" data-ci-face><img src="https://images.unsplash.com/photo-1517841905240-472988babdf9?w=240&h=300&fit=crop&q=80" alt="Ảnh check-in của Mai Anh Thư" loading="lazy"></div>
+            <div class="ci-id">
+              <h2>Mai Anh Thư <span class="badge badge-ok">Đang hoạt động</span></h2>
+              <div class="row-meta">
+                <span><i class="fa-solid fa-id-card"></i> KH-1010</span>
+                <span><i class="fa-solid fa-phone"></i> 0826 554 433</span>
+              </div>
+              <div class="row-meta">
+                <span><i class="fa-solid fa-dumbbell"></i> Gói 1 Tháng · tới 05/10/2026</span>
+              </div>
+            </div>
+          </div>
+
+          <div class="alert-banner ok">
+            <i class="fa-solid fa-circle-check"></i>
+            <span><b>Đủ điều kiện vào tập.</b> Gói còn 15 ngày, hết hạn 05/10/2026. Nhắc khách gia hạn.</span>
+          </div>
+
+          <div class="btn-row">
+            <a class="btn btn-ghost" href="ho-so-khach.html">Mở hồ sơ</a>
+            <a class="btn btn-outline btn-sm" href="ban-hang.html">Gia hạn</a>
+            <button class="btn btn-primary" type="button" data-ci-go><i class="fa-solid fa-door-open"></i> Xác nhận vào tập</button>
+          </div>
+        </section>
+
+            <section class="panel ci-card" data-ci="__none" hidden>
+              <div class="alert-banner danger">
+                <i class="fa-solid fa-circle-xmark"></i>
+                <span><b>Không tìm thấy hồ sơ.</b> Kiểm tra lại mã khách hoặc số điện thoại. Khách chưa từng đến thì tạo hồ sơ mới.</span>
+              </div>
+              <div class="btn-row">
+                <a class="btn btn-primary" href="ho-so-khach.html"><i class="fa-solid fa-plus"></i> Tạo hồ sơ mới</a>
+              </div>
+            </section>
+
+            <section class="panel ci-card" data-ci="__closed" hidden>
+              <div class="alert-banner danger">
+                <i class="fa-solid fa-clock"></i>
+                <span><b>Ngoài giờ mở cửa.</b> Cơ sở nhận khách 05:00 – 22:00 hằng ngày. Không check-in được ngoài khung này.</span>
+              </div>
+            </section>
+
+            <section class="panel ci-card" data-ci="__used" hidden>
+              <div class="alert-banner danger">
+                <i class="fa-solid fa-ticket"></i>
+                <span><b>Vé ngày đã dùng hôm nay.</b> Mỗi vé chỉ vào được một lượt. Bán vé mới nếu khách muốn quay lại.</span>
+              </div>
+              <div class="btn-row">
+                <a class="btn btn-primary" href="ban-hang.html">Bán vé ngày</a>
+              </div>
+            </section>
+          </div>
+
+        </div>
+
+        <aside class="col-side">
+          <div class="side-card">
+            <span class="section-label">Lượt vào ca này</span>
+            <div class="data-list plain" id="ciLog">
+              <div class="data-row"><div class="row-main"><div class="row-title">Trịnh Quốc Bảo</div></div><b class="tabular">14:12</b></div>
+              <div class="data-row"><div class="row-main"><div class="row-title">Lê Minh Tuấn</div></div><b class="tabular">14:06</b></div>
+              <div class="data-row"><div class="row-main"><div class="row-title">Mai Anh Thư</div></div><b class="tabular">14:03</b></div>
+            </div>
+          </div>
+          <div class="side-card">
+            <span class="section-label">Mã thử nhanh</span>
+            <div class="try-list">
+              <button class="btn btn-ghost btn-sm" type="button" data-try="KH-1001"><span class="tabular">KH-1001</span><span>Hợp lệ</span></button>
+              <button class="btn btn-ghost btn-sm" type="button" data-try="KH-1002"><span class="tabular">KH-1002</span><span>Vé ngày</span></button>
+              <button class="btn btn-ghost btn-sm" type="button" data-try="KH-1006"><span class="tabular">KH-1006</span><span>Thiếu ảnh</span></button>
+              <button class="btn btn-ghost btn-sm" type="button" data-try="KH-1003"><span class="tabular">KH-1003</span><span>Đang bảo lưu</span></button>
+              <button class="btn btn-ghost btn-sm" type="button" data-try="KH-1004"><span class="tabular">KH-1004</span><span>Hết hạn</span></button>
+              <button class="btn btn-ghost btn-sm" type="button" data-try="KH-1005"><span class="tabular">KH-1005</span><span>Chỉ có gói PT</span></button>
+              <button class="btn btn-ghost btn-sm" type="button" data-try="KH-1007"><span class="tabular">KH-1007</span><span>Chưa có gói</span></button>
+              <button class="btn btn-ghost btn-sm" type="button" data-try="0999999999"><span class="tabular">0999999999</span><span>Không tồn tại</span></button>
+            </div>
+          </div>
+        </aside>
+      </div>
+    </main>
+  </div>
+</div>
+
+<script src="../app.js"></script>
+<script src="../kh/customer.js"></script>
+<script src="check-in.js"></script>
+</body>
+</html>

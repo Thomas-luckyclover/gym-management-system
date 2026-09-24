@@ -1,0 +1,162 @@
+﻿<!DOCTYPE html>
+<html lang="vi">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
+<title>Trang cá nhân — Super Gym</title>
+<meta name="robots" content="noindex">
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Montserrat:wght@600;700;800&family=Inter:wght@400;500;600;700&display=swap">
+<script src="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/7.3.1/js/all.min.js" crossorigin="anonymous"></script>
+<link rel="stylesheet" href="../style.css">
+<link rel="stylesheet" href="../customer.css">
+</head>
+<body class="cust member">
+<div id="toastRoot"></div>
+<div id="modalRoot"></div>
+
+<!-- 10.1.1 — Customer Dashboard · L1 · UC-41 -->
+<div class="cust-shell" id="custShell">
+
+  <!-- Dock điều hướng: thu gọn mặc định, rê vào tay cầm thì trượt ra. -->
+  <div class="cust-dock" id="custDock">
+    <aside class="cust-sidebar">
+      <a class="cust-brand" href="trang-ca-nhan.html">
+        <b>Super Gym</b><span>Khu vực hội viên</span>
+      </a>
+      <nav class="cust-nav">
+        <h4>Tổng quan</h4>
+      <a href="trang-ca-nhan.html" aria-current="page"><i class="fa-solid fa-gauge-high"></i>Trang cá nhân</a>
+        <h4>Gói tập</h4>
+      <a href="mua-goi.html"><i class="fa-solid fa-cart-shopping"></i>Mua gói</a>
+      <a href="lich-su-giao-dich.html"><i class="fa-solid fa-receipt"></i>Lịch sử giao dịch</a>
+        <h4>Lịch tập</h4>
+      <a href="lich-cua-toi.html"><i class="fa-solid fa-calendar-check"></i>Lịch của tôi</a>
+      <a href="buoi-pt.html"><i class="fa-solid fa-user-check"></i>Buổi PT của tôi</a>
+      <a href="dat-buoi-le.html"><i class="fa-solid fa-calendar-plus"></i>Đặt buổi lẻ</a>
+      <a href="giao-an.html"><i class="fa-solid fa-clipboard-list"></i>Giáo án của tôi</a>
+        <h4>Tài khoản</h4>
+      <a href="tai-khoan.html"><i class="fa-solid fa-user-gear"></i>Cài đặt tài khoản</a>
+        <h4>Hòm thư</h4>
+      <a href="gop-y.html"><i class="fa-solid fa-inbox"></i>Hòm thư góp ý</a>
+      </nav>
+      <div class="cust-sidebar-foot">
+        <a href="../dang-nhap.html"><i class="fa-solid fa-arrow-right-from-bracket"></i>Đăng xuất</a>
+      </div>
+    </aside>
+    <button class="cust-handle" type="button" id="dockHandle"
+            aria-label="Mở menu điều hướng" aria-expanded="false" aria-controls="custDock">
+      <i class="fa-solid fa-chevron-right"></i>
+    </button>
+  </div>
+
+  <div class="cust-main">
+    <header class="cust-topbar">
+      <div>
+        <h1>Trang cá nhân</h1>
+      </div>
+      <div class="cust-topbar-actions">
+        <a class="cust-user" href="tai-khoan.html" title="Cài đặt tài khoản">
+          <span class="avatar">AN</span>
+          <span class="cust-user-text">
+            <b>Nguyễn Minh An</b>
+            <span>KH-0241</span>
+          </span>
+        </a>
+      </div>
+    </header>
+
+    <main class="cust-content">
+      <div class="split">
+        <div class="col-main">
+
+          <section class="status-hero">
+            <div>
+              <div class="section-label">Gói 6 Tháng</div>
+              <h2>Còn 55 ngày tập</h2>
+              <div class="status-meta">
+                <div><b class="tabular">14/11/2026</b><span>Hết hạn</span></div>
+                <div><b class="tabular">4 / 10</b><span>Buổi PT còn lại</span></div>
+                <div><b class="tabular">KH-0241</b><span>Mã hội viên</span></div>
+              </div>
+            </div>
+            <a class="btn btn-primary" href="mua-goi.html">Gia hạn <i class="fa-solid fa-arrow-right"></i></a>
+          </section>
+
+          <div class="alert-banner warn">
+            <i class="fa-solid fa-triangle-exclamation"></i>
+            <span>Buổi PT ngày <b>18/11</b> nằm ngoài hạn gói tập. Không gia hạn thì buổi đó tính là vắng.</span>
+            <a class="btn btn-outline btn-sm" href="mua-goi.html">Gia hạn</a>
+          </div>
+
+          <section class="panel">
+            <div class="panel-head">
+              <h2>Buổi tập sắp tới</h2>
+              <a class="btn btn-ghost btn-sm" href="lich-cua-toi.html">Tất cả lịch <i class="fa-solid fa-arrow-right"></i></a>
+            </div>
+            <div class="data-list">
+              <div class="data-row">
+                <div class="row-main">
+                  <div class="row-title">T4 · 23/09 · 19:00</div>
+                  <div class="row-meta"><span><i class="fa-solid fa-user-check"></i> Hoàng Long</span><span><i class="fa-solid fa-layer-group"></i> Gói PT</span></div>
+                </div>
+                <span class="badge badge-info">Đã xếp</span>
+              </div>
+              <div class="data-row">
+                <div class="row-main">
+                  <div class="row-title">T7 · 26/09 · 08:00</div>
+                  <div class="row-meta"><span><i class="fa-solid fa-user-check"></i> Hoàng Long</span><span><i class="fa-solid fa-layer-group"></i> Gói PT</span></div>
+                </div>
+                <span class="badge badge-info">Đã xếp</span>
+              </div>
+              <div class="data-row">
+                <div class="row-main">
+                  <div class="row-title">T4 · 30/09 · 17:00</div>
+                  <div class="row-meta"><span><i class="fa-solid fa-user-check"></i> Phạm Thu Trang</span><span><i class="fa-solid fa-ticket"></i> Buổi lẻ</span></div>
+                </div>
+                <span class="badge badge-info">Đã xếp</span>
+              </div>
+            </div>
+          </section>
+
+        </div>
+
+        <aside class="col-side">
+          <div class="side-card">
+            <span class="section-label">Gói tập</span>
+            <h3>Gói 6 Tháng</h3>
+            <div class="kpi-bar" style="margin-block:var(--space-3)"><i style="width:69%"></i></div>
+            <div class="side-row"><span>Bắt đầu</span><b>15/05/2026</b></div>
+            <div class="side-row"><span>Hết hạn</span><b>14/11/2026</b></div>
+            <div class="side-row"><span>Còn lại</span><b>55 ngày</b></div>
+          </div>
+
+          <div class="side-card">
+            <span class="section-label">Gói PT 10 buổi</span>
+            <h3>Còn 4 buổi</h3>
+            <div class="kpi-bar muted" style="margin-block:var(--space-3)"><i style="width:40%"></i></div>
+            <div class="side-row"><span>Đã xếp lịch</span><b>3 buổi</b></div>
+            <div class="side-row"><span>Đã dùng</span><b>3 buổi</b></div>
+            <div class="side-row"><span>Lượt đổi lịch</span><b>2 / 3</b></div>
+          </div>
+
+          <div class="side-card">
+            <span class="section-label">PT phụ trách</span>
+            <div style="display:flex;align-items:center;gap:var(--space-3)">
+              <span class="avatar" style="width:40px;height:40px;border-radius:50%;background:var(--primary);color:#fff;display:grid;place-items:center;font-weight:700">HL</span>
+              <div>
+                <h3>Hoàng Long</h3>
+                <p class="muted">Strength &amp; Conditioning</p>
+              </div>
+            </div>
+            <a class="btn btn-ghost btn-sm btn-block" href="giao-an.html" style="margin-top:var(--space-4)">Xem giáo án</a>
+          </div>
+        </aside>
+      </div>
+    </main>
+  </div>
+</div>
+
+<script src="../app.js"></script>
+<script src="customer.js"></script>
+</body>
+</html>

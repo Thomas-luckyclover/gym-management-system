@@ -1,0 +1,221 @@
+﻿<!DOCTYPE html>
+<html lang="vi">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
+<title>Hồ sơ khách — Super Gym Lễ tân</title>
+<meta name="robots" content="noindex">
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Montserrat:wght@600;700;800&family=Inter:wght@400;500;600;700&display=swap">
+<script src="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/7.3.1/js/all.min.js" crossorigin="anonymous"></script>
+<link rel="stylesheet" href="../style.css">
+<link rel="stylesheet" href="../customer.css">
+</head>
+<body class="cust staff">
+<div id="toastRoot"></div>
+<div id="modalRoot"></div>
+
+<!-- 6.1.1 — Customer List · L1 · UC-16 -->
+<div class="cust-shell" id="custShell">
+
+  <div class="cust-dock" id="custDock">
+    <aside class="cust-sidebar">
+      <a class="cust-brand" href="check-in.html">
+        <b>Super Gym</b><span>Lễ tân</span>
+      </a>
+      <nav class="cust-nav">
+        <h4>Tại quầy</h4>
+        <a href="check-in.html"><i class="fa-solid fa-door-open"></i>Check-in</a>
+        <a href="ban-hang.html"><i class="fa-solid fa-cart-shopping"></i>Bán hàng</a>
+        <a href="ban-goi-pt.html"><i class="fa-solid fa-user-check"></i>Bán gói PT</a>
+        <a href="ca-lam-viec.html"><i class="fa-solid fa-cash-register"></i>Ca làm việc</a>
+        <h4>Hội viên</h4>
+        <a href="hoi-vien.html" aria-current="page"><i class="fa-solid fa-user-group"></i>Hồ sơ khách</a>
+        <a href="bao-luu.html"><i class="fa-solid fa-circle-pause"></i>Bảo lưu</a>
+        <h4>Cơ sở vật chất</h4>
+        <a href="co-so-vat-chat.html"><i class="fa-solid fa-boxes-stacked"></i>Danh mục</a>
+        <a href="bao-tri.html"><i class="fa-solid fa-screwdriver-wrench"></i>Yêu cầu bảo trì</a>
+        <h4>Cá nhân</h4>
+        <a href="nghi-phep.html"><i class="fa-solid fa-plane-departure"></i>Nghỉ phép</a>
+        <a href="tai-khoan.html"><i class="fa-solid fa-user-gear"></i>Cài đặt tài khoản</a>
+      </nav>
+      <div class="cust-sidebar-foot">
+        <a href="../dang-nhap.html"><i class="fa-solid fa-arrow-right-from-bracket"></i>Đăng xuất</a>
+      </div>
+    </aside>
+    <button class="cust-handle" type="button" id="dockHandle"
+            aria-label="Mở menu điều hướng" aria-expanded="false" aria-controls="custDock">
+      <i class="fa-solid fa-chevron-right"></i>
+    </button>
+  </div>
+
+  <div class="cust-main">
+    <header class="cust-topbar">
+      <div>
+        <h1>Hồ sơ khách</h1>
+      </div>
+      <div class="cust-topbar-actions">
+        <a class="btn btn-primary btn-sm" href="ho-so-khach.html"><i class="fa-solid fa-plus"></i> Thêm hồ sơ</a>
+        <a class="badge badge-ok" href="ca-lam-viec.html" id="shiftChip"><i class="fa-solid fa-circle-check"></i> Ca chiều 20/09 đang mở</a>
+        <a class="cust-user" href="tai-khoan.html" title="Cài đặt tài khoản">
+          <span class="avatar">NH</span>
+          <span class="cust-user-text">
+            <b>Nguyễn Thị Hoa</b>
+            <span>Lễ tân · NV-0042</span>
+          </span>
+        </a>
+      </div>
+    </header>
+
+    <main class="cust-content">
+      <div class="toolbar">
+        <div class="search">
+          <i class="fa-solid fa-magnifying-glass"></i>
+          <input id="clq" type="search" placeholder="Tìm theo tên, số điện thoại hoặc mã khách" aria-label="Tìm khách">
+        </div>
+        <label for="clSt">Trạng thái</label>
+        <select id="clSt">
+          <option value="all">Tất cả</option>
+          <option value="Active">Đang hoạt động</option>
+          <option value="Frozen">Đang bảo lưu</option>
+          <option value="Expired">Hết hạn</option>
+          <option value="New">Mới tạo</option>
+        </select>
+        <label for="clMem">Gói tập</label>
+        <select id="clMem">
+          <option value="all">Tất cả</option>
+          <option value="yes">Đang có gói</option>
+          <option value="no">Chưa có gói</option>
+        </select>
+        <button class="btn btn-ghost btn-sm reset" type="button" id="clReset">Xoá lọc</button>
+      </div>
+
+      <div class="data-list" id="clList">
+        <a class="data-row" href="ho-so-khach.html" data-st="Active" data-mem="yes" data-q="Bùi Thanh Hà 0967123123 KH-1008">
+          <div class="row-main">
+            <div class="row-title">Bùi Thanh Hà <span class="badge badge-ok">Đang hoạt động</span> <span class="badge badge-danger">Chờ duyệt xoá</span></div>
+            <div class="row-meta">
+              <span><i class="fa-solid fa-id-card"></i> KH-1008</span>
+              <span><i class="fa-solid fa-phone"></i> 0967 123 123</span>
+              <span><i class="fa-solid fa-dumbbell"></i> Gói 9 Tháng · tới 01/03/2027</span>
+            </div>
+          </div>
+          <i class="fa-solid fa-chevron-right" style="color:var(--text-soft)"></i>
+        </a>
+        <a class="data-row" href="ho-so-khach.html" data-st="Active" data-mem="yes" data-q="Trần Bảo Ngọc 0902345678 KH-1001">
+          <div class="row-main">
+            <div class="row-title">Trần Bảo Ngọc <span class="badge badge-ok">Đang hoạt động</span></div>
+            <div class="row-meta">
+              <span><i class="fa-solid fa-id-card"></i> KH-1001</span>
+              <span><i class="fa-solid fa-phone"></i> 0902 345 678</span>
+              <span><i class="fa-solid fa-dumbbell"></i> Gói 3 Tháng · tới 15/11/2026</span>
+            </div>
+          </div>
+          <i class="fa-solid fa-chevron-right" style="color:var(--text-soft)"></i>
+        </a>
+        <a class="data-row" href="ho-so-khach.html" data-st="Active" data-mem="yes" data-q="Lê Minh Tuấn 0913456789 KH-1002">
+          <div class="row-main">
+            <div class="row-title">Lê Minh Tuấn <span class="badge badge-ok">Đang hoạt động</span></div>
+            <div class="row-meta">
+              <span><i class="fa-solid fa-id-card"></i> KH-1002</span>
+              <span><i class="fa-solid fa-phone"></i> 0913 456 789</span>
+              <span><i class="fa-solid fa-dumbbell"></i> Gói Ngày · tới 20/09/2026</span>
+            </div>
+          </div>
+          <i class="fa-solid fa-chevron-right" style="color:var(--text-soft)"></i>
+        </a>
+        <a class="data-row" href="ho-so-khach.html" data-st="Frozen" data-mem="yes" data-q="Phạm Thu Trang 0934111222 KH-1003">
+          <div class="row-main">
+            <div class="row-title">Phạm Thu Trang <span class="badge badge-warn">Đang bảo lưu</span></div>
+            <div class="row-meta">
+              <span><i class="fa-solid fa-id-card"></i> KH-1003</span>
+              <span><i class="fa-solid fa-phone"></i> 0934 111 222</span>
+              <span><i class="fa-solid fa-dumbbell"></i> Gói 12 Tháng · tới 01/03/2027</span>
+            </div>
+          </div>
+          <i class="fa-solid fa-chevron-right" style="color:var(--text-soft)"></i>
+        </a>
+        <a class="data-row" href="ho-so-khach.html" data-st="Expired" data-mem="yes" data-q="Đỗ Văn Khang 0987654321 KH-1004">
+          <div class="row-main">
+            <div class="row-title">Đỗ Văn Khang <span class="badge badge-muted">Hết hạn</span></div>
+            <div class="row-meta">
+              <span><i class="fa-solid fa-id-card"></i> KH-1004</span>
+              <span><i class="fa-solid fa-phone"></i> 0987 654 321</span>
+              <span><i class="fa-solid fa-dumbbell"></i> Gói 1 Tháng · tới 10/09/2026</span>
+            </div>
+          </div>
+          <i class="fa-solid fa-chevron-right" style="color:var(--text-soft)"></i>
+        </a>
+        <a class="data-row" href="ho-so-khach.html" data-st="Active" data-mem="no" data-q="Vũ Hải Nam 0971222333 KH-1005">
+          <div class="row-main">
+            <div class="row-title">Vũ Hải Nam <span class="badge badge-ok">Đang hoạt động</span></div>
+            <div class="row-meta">
+              <span><i class="fa-solid fa-id-card"></i> KH-1005</span>
+              <span><i class="fa-solid fa-phone"></i> 0971 222 333</span>
+              <span><i class="fa-solid fa-dumbbell"></i> Chưa có gói tập</span>
+            </div>
+          </div>
+          <i class="fa-solid fa-chevron-right" style="color:var(--text-soft)"></i>
+        </a>
+        <a class="data-row" href="ho-so-khach.html" data-st="Active" data-mem="yes" data-q="Ngô Thị Lan 0355667788 KH-1006">
+          <div class="row-main">
+            <div class="row-title">Ngô Thị Lan <span class="badge badge-ok">Đang hoạt động</span></div>
+            <div class="row-meta">
+              <span><i class="fa-solid fa-id-card"></i> KH-1006</span>
+              <span><i class="fa-solid fa-phone"></i> 0355 667 788</span>
+              <span><i class="fa-solid fa-dumbbell"></i> Gói 1 Tháng · tới 18/10/2026</span>
+            </div>
+          </div>
+          <i class="fa-solid fa-chevron-right" style="color:var(--text-soft)"></i>
+        </a>
+        <a class="data-row" href="ho-so-khach.html" data-st="New" data-mem="no" data-q="Hoàng Gia Huy 0388990011 KH-1007">
+          <div class="row-main">
+            <div class="row-title">Hoàng Gia Huy <span class="badge badge-info">Mới tạo</span></div>
+            <div class="row-meta">
+              <span><i class="fa-solid fa-id-card"></i> KH-1007</span>
+              <span><i class="fa-solid fa-phone"></i> 0388 990 011</span>
+              <span><i class="fa-solid fa-dumbbell"></i> Chưa có gói tập</span>
+            </div>
+          </div>
+          <i class="fa-solid fa-chevron-right" style="color:var(--text-soft)"></i>
+        </a>
+        <a class="data-row" href="ho-so-khach.html" data-st="Active" data-mem="yes" data-q="Trịnh Quốc Bảo 0909111222 KH-1009">
+          <div class="row-main">
+            <div class="row-title">Trịnh Quốc Bảo <span class="badge badge-ok">Đang hoạt động</span></div>
+            <div class="row-meta">
+              <span><i class="fa-solid fa-id-card"></i> KH-1009</span>
+              <span><i class="fa-solid fa-phone"></i> 0909 111 222</span>
+              <span><i class="fa-solid fa-dumbbell"></i> Gói 3 Tháng · tới 01/12/2026</span>
+            </div>
+          </div>
+          <i class="fa-solid fa-chevron-right" style="color:var(--text-soft)"></i>
+        </a>
+        <a class="data-row" href="ho-so-khach.html" data-st="Active" data-mem="yes" data-q="Mai Anh Thư 0826554433 KH-1010">
+          <div class="row-main">
+            <div class="row-title">Mai Anh Thư <span class="badge badge-ok">Đang hoạt động</span></div>
+            <div class="row-meta">
+              <span><i class="fa-solid fa-id-card"></i> KH-1010</span>
+              <span><i class="fa-solid fa-phone"></i> 0826 554 433</span>
+              <span><i class="fa-solid fa-dumbbell"></i> Gói 1 Tháng · tới 05/10/2026</span>
+            </div>
+          </div>
+          <i class="fa-solid fa-chevron-right" style="color:var(--text-soft)"></i>
+        </a>
+        <div class="empty-state" data-empty hidden>
+          <div class="empty-icon"><i class="fa-solid fa-box-open"></i></div>
+          <p>Không có hồ sơ nào khớp bộ lọc.</p>
+        </div>
+      </div>
+
+      <div class="pager" data-pager>
+        <div class="pager-info"></div>
+        <div class="pager-btns"></div>
+      </div>
+    </main>
+  </div>
+</div>
+
+<script src="../app.js"></script>
+<script src="../kh/customer.js"></script>
+<script src="hoi-vien.js"></script>
+</body>
+</html>

@@ -1,0 +1,210 @@
+﻿<!DOCTYPE html>
+<html lang="vi">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
+<title>Điểm danh — Super Gym PT</title>
+<meta name="robots" content="noindex">
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Montserrat:wght@600;700;800&family=Inter:wght@400;500;600;700&display=swap">
+<script src="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/7.3.1/js/all.min.js" crossorigin="anonymous"></script>
+<link rel="stylesheet" href="../style.css">
+<link rel="stylesheet" href="../customer.css">
+</head>
+<body class="cust staff">
+<div id="toastRoot"></div>
+<div id="modalRoot"></div>
+
+<!-- 9.4.1 — Session Attendance Form · L2 · UC-31 + UC-35 -->
+<div class="cust-shell" id="custShell">
+
+  <div class="cust-dock" id="custDock">
+    <aside class="cust-sidebar">
+      <a class="cust-brand" href="trang-chu.html">
+        <b>Super Gym</b><span>Huấn luyện viên</span>
+      </a>
+      <nav class="cust-nav">
+        <h4>Hôm nay</h4>
+        <a href="trang-chu.html"><i class="fa-solid fa-gauge-high"></i>Tổng quan</a>
+        <a href="diem-danh.html" aria-current="page"><i class="fa-solid fa-clipboard-check"></i>Điểm danh</a>
+        <h4>Lịch dạy</h4>
+        <a href="lich-ranh.html"><i class="fa-solid fa-calendar-days"></i>Lịch rảnh</a>
+        <h4>Khách phụ trách</h4>
+        <a href="khach-cua-toi.html"><i class="fa-solid fa-user-group"></i>Khách của tôi</a>
+        <h4>Cá nhân</h4>
+        <a href="nghi-phep.html"><i class="fa-solid fa-plane-departure"></i>Nghỉ phép</a>
+        <a href="tai-khoan.html"><i class="fa-solid fa-user-gear"></i>Cài đặt tài khoản</a>
+      </nav>
+      <div class="cust-sidebar-foot">
+        <a href="../dang-nhap.html"><i class="fa-solid fa-arrow-right-from-bracket"></i>Đăng xuất</a>
+      </div>
+    </aside>
+    <button class="cust-handle" type="button" id="dockHandle"
+            aria-label="Mở menu điều hướng" aria-expanded="false" aria-controls="custDock">
+      <i class="fa-solid fa-chevron-right"></i>
+    </button>
+  </div>
+
+  <div class="cust-main">
+    <header class="cust-topbar">
+      <div>
+        <h1>Điểm danh</h1>
+      </div>
+      <div class="cust-topbar-actions">
+        <span class="muted">Chủ Nhật · 20/09/2026</span>
+        <a class="cust-user" href="tai-khoan.html" title="Cài đặt tài khoản">
+          <span class="avatar">HL</span>
+          <span class="cust-user-text">
+            <b>Hoàng Long</b>
+            <span>PT · NV-0118</span>
+          </span>
+        </a>
+      </div>
+    </header>
+
+    <main class="cust-content">
+      <div class="split">
+        <div class="col-main">
+
+          <div class="toolbar">
+            <label for="attDate">Ngày</label>
+            <input id="attDate" type="date" value="2026-09-20">
+            <label for="attShift">Ca</label>
+            <select id="attShift">
+              <option value="all">Cả ngày</option>
+              <option value="sang">Ca sáng · 06:00–14:00</option>
+              <option value="chieu">Ca chiều · 14:00–22:00</option>
+            </select>
+            <div class="search">
+              <i class="fa-solid fa-magnifying-glass"></i>
+              <input id="attSearch" type="search" placeholder="Tìm khách" aria-label="Tìm khách">
+            </div>
+            <button class="btn btn-ghost btn-sm reset" type="button" id="attReset">Xoá lọc</button>
+          </div>
+
+          <div class="alert-banner info">
+            <i class="fa-solid fa-circle-info"></i>
+            <span>Mặc định là <b>Có mặt</b>. Chỉ tick khi khách vắng, rồi xác nhận một lần cho nhiều buổi.</span>
+          </div>
+
+          <div class="att-list" id="attList">
+            <article class="att-card is-done" data-shift="sang" data-q="phạm quốc huy">
+              <div class="att-head">
+                <label class="att-pick">
+                  
+                  <span class="att-time">06:00 – 07:30</span>
+                </label>
+                <span class="badge badge-ok">Hoàn thành</span>
+              </div>
+              <div class="att-body">
+                <b>Phạm Quốc Huy</b>
+                <div class="row-meta">
+                  <span><i class="fa-solid fa-layer-group"></i> Gói PT 10 buổi</span>
+                </div>
+              </div>
+
+            </article>
+            <article class="att-card" data-shift="sang" data-q="trần gia bảo">
+              <div class="att-head">
+                <label class="att-pick">
+                  <input type="checkbox" data-att-pick data-when="08:00 – 09:30" data-who="Trần Gia Bảo">
+                  <span class="att-time">08:00 – 09:30</span>
+                </label>
+                <span class="badge badge-info">Đã xếp</span>
+              </div>
+              <div class="att-body">
+                <b>Trần Gia Bảo</b>
+                <div class="row-meta">
+                  <span><i class="fa-solid fa-layer-group"></i> Gói PT Tháng</span>
+                </div>
+              </div>
+              <div class="att-foot">
+                <button class="btn btn-ghost btn-sm" type="button" disabled title="Chỉ hiện trong cửa sổ 24h trước buổi tập. Buổi này chưa tới giờ.">Không dạy được</button>
+              </div>
+            </article>
+            <article class="att-card" data-shift="chieu" data-q="vũ hoài nam & đỗ lan chi">
+              <div class="att-head">
+                <label class="att-pick">
+                  <input type="checkbox" data-att-pick data-when="17:00 – 18:30" data-who="Vũ Hoài Nam & Đỗ Lan Chi">
+                  <span class="att-time">17:00 – 18:30</span>
+                </label>
+                <span class="badge badge-info">Đã xếp</span>
+              </div>
+              <div class="att-body">
+                <b>Vũ Hoài Nam & Đỗ Lan Chi</b>
+                <div class="row-meta">
+                  <span><i class="fa-solid fa-layer-group"></i> Gói PT Couple</span>
+                  <span class="badge badge-muted">Couple</span>
+                </div>
+                <p class="muted">Gói couple: chỉ đánh vắng khi cả hai khách đều không đến.</p>
+              </div>
+              <div class="att-foot">
+                <button class="btn btn-ghost btn-sm" type="button" data-cannot-teach data-when="17:00 – 18:30" data-who="Vũ Hoài Nam & Đỗ Lan Chi" data-couple>Không dạy được</button>
+              </div>
+            </article>
+            <article class="att-card" data-shift="chieu" data-q="nguyễn minh an">
+              <div class="att-head">
+                <label class="att-pick">
+                  <input type="checkbox" data-att-pick data-when="19:00 – 20:30" data-who="Nguyễn Minh An">
+                  <span class="att-time">19:00 – 20:30</span>
+                </label>
+                <span class="badge badge-info">Đã xếp</span>
+              </div>
+              <div class="att-body">
+                <b>Nguyễn Minh An</b>
+                <div class="row-meta">
+                  <span><i class="fa-solid fa-layer-group"></i> Gói PT 10 buổi</span>
+                </div>
+              </div>
+              <div class="att-foot">
+                <button class="btn btn-ghost btn-sm" type="button" data-cannot-teach data-when="19:00 – 20:30" data-who="Nguyễn Minh An">Không dạy được</button>
+              </div>
+            </article>
+            <article class="att-card" data-shift="chieu" data-q="lê thu hà">
+              <div class="att-head">
+                <label class="att-pick">
+                  <input type="checkbox" data-att-pick data-when="20:30 – 22:00" data-who="Lê Thu Hà">
+                  <span class="att-time">20:30 – 22:00</span>
+                </label>
+                <span class="badge badge-info">Đã xếp</span>
+              </div>
+              <div class="att-body">
+                <b>Lê Thu Hà</b>
+                <div class="row-meta">
+                  <span><i class="fa-solid fa-layer-group"></i> Gói PT 10 buổi</span>
+                  <span class="badge badge-warn"><i class="fa-solid fa-triangle-exclamation"></i> Chưa có gói tập</span>
+                </div>
+              </div>
+              <div class="att-foot">
+                <button class="btn btn-ghost btn-sm" type="button" data-cannot-teach data-when="20:30 – 22:00" data-who="Lê Thu Hà" data-dependent>Không dạy được</button>
+              </div>
+            </article>
+            <div class="empty-state" data-empty hidden>
+              <div class="empty-icon"><i class="fa-solid fa-box-open"></i></div>
+              <p>Không có buổi nào khớp bộ lọc.</p>
+            </div>
+          </div>
+
+        </div>
+
+        <aside class="col-side">
+          <div class="side-card">
+            <span class="section-label">Đánh vắng</span>
+            <div class="side-row"><span>Đang chọn</span><b id="attCount">0 buổi</b></div>
+            <p class="muted" style="margin-top:var(--space-3)">Buổi đánh vắng vẫn bị trừ khỏi gói và không hoàn tiền.</p>
+            <button class="btn btn-primary btn-block" type="button" id="attConfirm" disabled>Xác nhận vắng</button>
+          </div>
+          <div class="side-card">
+            <span class="section-label">Cửa sổ điểm danh</span>
+            <p class="muted">Chỉ điểm danh được trong cửa sổ 24 giờ trước buổi tập. Quá 24 giờ sau khi buổi kết thúc, hệ thống tự chốt theo lịch sử check-in của khách.</p>
+          </div>
+        </aside>
+      </div>
+    </main>
+  </div>
+</div>
+
+<script src="../app.js"></script>
+<script src="../kh/customer.js"></script>
+<script src="diem-danh.js"></script>
+</body>
+</html>

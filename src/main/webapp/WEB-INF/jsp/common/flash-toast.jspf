@@ -1,0 +1,16 @@
+<%--
+  flash-toast.jspf — hiện toast được Servlet gắn trước khi redirect (RequestUtil.setFlashToast).
+  Include 1 lần, ngay sau thẻ mở <body> của mọi trang:  <%@ include file="/WEB-INF/jsp/common/flash-toast.jspf" %>
+
+  Luồng: Servlet setFlashToast → redirect → JSP này in 1 thẻ div ẩn chứa type + message → xóa khỏi session
+  → js/common.js (hàm showFlashToastFromPage) đọc thẻ #flashToast và hiện toast.
+  Dùng c:out để escape nội dung (chống XSS — codeImplementationFrontend.md Mục 1).
+--%>
+<%@ taglib prefix="c" uri="jakarta.tags.core" %>
+<c:if test="${not empty sessionScope.flashToast}">
+  <div id="flashToast"
+       data-type="<c:out value='${sessionScope.flashToast.type}' />"
+       data-message="<c:out value='${sessionScope.flashToast.message}' />"
+       hidden></div>
+  <c:remove var="flashToast" scope="session" />
+</c:if>

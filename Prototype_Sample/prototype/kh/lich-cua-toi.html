@@ -1,0 +1,198 @@
+﻿<!DOCTYPE html>
+<html lang="vi">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
+<title>Lịch của tôi — Super Gym</title>
+<meta name="robots" content="noindex">
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Montserrat:wght@600;700;800&family=Inter:wght@400;500;600;700&display=swap">
+<script src="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/7.3.1/js/all.min.js" crossorigin="anonymous"></script>
+<link rel="stylesheet" href="../style.css">
+<link rel="stylesheet" href="../customer.css">
+</head>
+<body class="cust member">
+<div id="toastRoot"></div>
+<div id="modalRoot"></div>
+
+<!-- 9.3.2 — My Bookings List · L1 · UC-36 -->
+<div class="cust-shell" id="custShell">
+
+  <!-- Dock điều hướng: thu gọn mặc định, rê vào tay cầm thì trượt ra. -->
+  <div class="cust-dock" id="custDock">
+    <aside class="cust-sidebar">
+      <a class="cust-brand" href="trang-ca-nhan.html">
+        <b>Super Gym</b><span>Khu vực hội viên</span>
+      </a>
+      <nav class="cust-nav">
+        <h4>Tổng quan</h4>
+      <a href="trang-ca-nhan.html"><i class="fa-solid fa-gauge-high"></i>Trang cá nhân</a>
+        <h4>Gói tập</h4>
+      <a href="mua-goi.html"><i class="fa-solid fa-cart-shopping"></i>Mua gói</a>
+      <a href="lich-su-giao-dich.html"><i class="fa-solid fa-receipt"></i>Lịch sử giao dịch</a>
+        <h4>Lịch tập</h4>
+      <a href="lich-cua-toi.html" aria-current="page"><i class="fa-solid fa-calendar-check"></i>Lịch của tôi</a>
+      <a href="buoi-pt.html"><i class="fa-solid fa-user-check"></i>Buổi PT của tôi</a>
+      <a href="dat-buoi-le.html"><i class="fa-solid fa-calendar-plus"></i>Đặt buổi lẻ</a>
+      <a href="giao-an.html"><i class="fa-solid fa-clipboard-list"></i>Giáo án của tôi</a>
+        <h4>Tài khoản</h4>
+      <a href="tai-khoan.html"><i class="fa-solid fa-user-gear"></i>Cài đặt tài khoản</a>
+        <h4>Hòm thư</h4>
+      <a href="gop-y.html"><i class="fa-solid fa-inbox"></i>Hòm thư góp ý</a>
+      </nav>
+      <div class="cust-sidebar-foot">
+        <a href="../dang-nhap.html"><i class="fa-solid fa-arrow-right-from-bracket"></i>Đăng xuất</a>
+      </div>
+    </aside>
+    <button class="cust-handle" type="button" id="dockHandle"
+            aria-label="Mở menu điều hướng" aria-expanded="false" aria-controls="custDock">
+      <i class="fa-solid fa-chevron-right"></i>
+    </button>
+  </div>
+
+  <div class="cust-main">
+    <header class="cust-topbar">
+      <div>
+        <h1>Lịch của tôi</h1>
+      </div>
+      <div class="cust-topbar-actions">
+        <a class="btn btn-primary btn-sm" href="dat-buoi-le.html">Đặt buổi lẻ</a>
+        <a class="cust-user" href="tai-khoan.html" title="Cài đặt tài khoản">
+          <span class="avatar">AN</span>
+          <span class="cust-user-text">
+            <b>Nguyễn Minh An</b>
+            <span>KH-0241</span>
+          </span>
+        </a>
+      </div>
+    </header>
+
+    <main class="cust-content">
+      <div class="toolbar">
+        <div class="search">
+          <i class="fa-solid fa-magnifying-glass"></i>
+          <input id="sSearch" type="search" placeholder="Tìm theo PT hoặc ngày" aria-label="Tìm buổi tập">
+        </div>
+        <label for="sState">Trạng thái</label>
+        <select id="sState">
+          <option value="all">Tất cả</option>
+          <option value="scheduled">Đã xếp</option>
+          <option value="completed">Hoàn thành</option>
+          <option value="missed">Vắng</option>
+          <option value="cancelled">Đã hủy</option>
+        </select>
+        <label for="sKind">Loại</label>
+        <select id="sKind">
+          <option value="all">Tất cả</option>
+          <option value="package">Gói PT</option>
+          <option value="single">Buổi lẻ</option>
+        </select>
+        <button class="btn btn-ghost btn-sm reset" type="button" id="sReset">Xoá lọc</button>
+      </div>
+
+      <div class="data-list" data-session-list>
+        <div class="data-row" data-state="scheduled" data-kind="package" data-q="hoàng long 18/11/2026">
+          <div class="row-main">
+            <div class="row-title">18/11/2026 · 19:00 <span class="badge badge-info">Đã xếp</span> <span class="badge badge-muted">Gói PT</span> <span class="badge badge-warn"><i class="fa-solid fa-triangle-exclamation"></i> Ngoài hạn gói</span></div>
+            <div class="row-meta"><span><i class="fa-solid fa-user-check"></i> Hoàng Long</span></div>
+          </div>
+          <div class="row-actions">
+            <a class="btn btn-ghost btn-sm" href="doi-lich.html">Đổi lịch</a>
+            <button class="btn btn-outline btn-sm" type="button" data-cancel-session data-when="18/11/2026 19:00">Hủy</button>
+          </div>
+        </div>
+        <div class="data-row" data-state="scheduled" data-kind="single" data-q="phạm thu trang 30/09/2026">
+          <div class="row-main">
+            <div class="row-title">30/09/2026 · 17:00 <span class="badge badge-info">Đã xếp</span> <span class="badge badge-muted">Buổi lẻ</span></div>
+            <div class="row-meta"><span><i class="fa-solid fa-user-check"></i> Phạm Thu Trang</span></div>
+          </div>
+          <div class="row-actions">
+            <button class="btn btn-outline btn-sm" type="button" data-cancel-session data-when="30/09/2026 17:00">Hủy</button>
+          </div>
+        </div>
+        <div class="data-row" data-state="scheduled" data-kind="package" data-q="hoàng long 26/09/2026">
+          <div class="row-main">
+            <div class="row-title">26/09/2026 · 08:00 <span class="badge badge-info">Đã xếp</span> <span class="badge badge-muted">Gói PT</span></div>
+            <div class="row-meta"><span><i class="fa-solid fa-user-check"></i> Hoàng Long</span></div>
+          </div>
+          <div class="row-actions">
+            <a class="btn btn-ghost btn-sm" href="doi-lich.html">Đổi lịch</a>
+            <button class="btn btn-outline btn-sm" type="button" data-cancel-session data-when="26/09/2026 08:00">Hủy</button>
+          </div>
+        </div>
+        <div class="data-row" data-state="scheduled" data-kind="package" data-q="hoàng long 23/09/2026">
+          <div class="row-main">
+            <div class="row-title">23/09/2026 · 19:00 <span class="badge badge-info">Đã xếp</span> <span class="badge badge-muted">Gói PT</span></div>
+            <div class="row-meta"><span><i class="fa-solid fa-user-check"></i> Hoàng Long</span></div>
+          </div>
+          <div class="row-actions">
+            <a class="btn btn-ghost btn-sm" href="doi-lich.html">Đổi lịch</a>
+            <button class="btn btn-outline btn-sm" type="button" data-cancel-session data-when="23/09/2026 19:00">Hủy</button>
+          </div>
+        </div>
+        <div class="data-row" data-state="completed" data-kind="package" data-q="hoàng long 16/09/2026">
+          <div class="row-main">
+            <div class="row-title">16/09/2026 · 19:00 <span class="badge badge-ok">Hoàn thành</span> <span class="badge badge-muted">Gói PT</span></div>
+            <div class="row-meta"><span><i class="fa-solid fa-user-check"></i> Hoàng Long</span></div>
+          </div>
+        </div>
+        <div class="data-row" data-state="completed" data-kind="single" data-q="đỗ minh khoa 12/09/2026">
+          <div class="row-main">
+            <div class="row-title">12/09/2026 · 18:00 <span class="badge badge-ok">Hoàn thành</span> <span class="badge badge-muted">Buổi lẻ</span></div>
+            <div class="row-meta"><span><i class="fa-solid fa-user-check"></i> Đỗ Minh Khoa</span></div>
+          </div>
+        </div>
+        <div class="data-row" data-state="missed" data-kind="package" data-q="hoàng long 09/09/2026">
+          <div class="row-main">
+            <div class="row-title">09/09/2026 · 19:00 <span class="badge badge-danger">Vắng</span> <span class="badge badge-muted">Gói PT</span></div>
+            <div class="row-meta"><span><i class="fa-solid fa-user-check"></i> Hoàng Long</span></div>
+          </div>
+        </div>
+        <div class="data-row" data-state="completed" data-kind="package" data-q="hoàng long 05/09/2026">
+          <div class="row-main">
+            <div class="row-title">05/09/2026 · 07:00 <span class="badge badge-ok">Hoàn thành</span> <span class="badge badge-muted">Gói PT</span></div>
+            <div class="row-meta"><span><i class="fa-solid fa-user-check"></i> Hoàng Long</span></div>
+          </div>
+        </div>
+        <div class="data-row" data-state="cancelled" data-kind="package" data-q="hoàng long 02/09/2026">
+          <div class="row-main">
+            <div class="row-title">02/09/2026 · 19:00 <span class="badge badge-muted">Đã hủy</span> <span class="badge badge-muted">Gói PT</span></div>
+            <div class="row-meta"><span><i class="fa-solid fa-user-check"></i> Hoàng Long</span></div>
+          </div>
+        </div>
+        <div class="data-row" data-state="completed" data-kind="package" data-q="hoàng long 29/08/2026">
+          <div class="row-main">
+            <div class="row-title">29/08/2026 · 19:00 <span class="badge badge-ok">Hoàn thành</span> <span class="badge badge-muted">Gói PT</span></div>
+            <div class="row-meta"><span><i class="fa-solid fa-user-check"></i> Hoàng Long</span></div>
+          </div>
+        </div>
+        <div class="data-row" data-state="completed" data-kind="single" data-q="phạm thu trang 24/08/2026">
+          <div class="row-main">
+            <div class="row-title">24/08/2026 · 17:00 <span class="badge badge-ok">Hoàn thành</span> <span class="badge badge-muted">Buổi lẻ</span></div>
+            <div class="row-meta"><span><i class="fa-solid fa-user-check"></i> Phạm Thu Trang</span></div>
+          </div>
+        </div>
+        <div class="data-row" data-state="missed" data-kind="package" data-q="hoàng long 19/08/2026">
+          <div class="row-main">
+            <div class="row-title">19/08/2026 · 19:00 <span class="badge badge-danger">Vắng</span> <span class="badge badge-muted">Gói PT</span></div>
+            <div class="row-meta"><span><i class="fa-solid fa-user-check"></i> Hoàng Long</span></div>
+          </div>
+        </div>
+        <div class="empty-state" data-empty hidden>
+          <div class="empty-icon"><i class="fa-solid fa-box-open"></i></div>
+          <p>Không có kết quả phù hợp.</p>
+        </div>
+      </div>
+
+      <div class="pager" data-pager="s">
+        <div class="pager-info"></div>
+        <div class="pager-btns"></div>
+      </div>
+    </main>
+  </div>
+</div>
+
+<script src="../app.js"></script>
+<script src="customer.js"></script>
+<script src="lich-tap.js"></script>
+</body>
+</html>

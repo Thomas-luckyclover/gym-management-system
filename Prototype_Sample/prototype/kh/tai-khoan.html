@@ -1,0 +1,199 @@
+﻿<!DOCTYPE html>
+<html lang="vi">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
+<title>Cài đặt tài khoản — Super Gym</title>
+<meta name="robots" content="noindex">
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Montserrat:wght@600;700;800&family=Inter:wght@400;500;600;700&display=swap">
+<script src="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/7.3.1/js/all.min.js" crossorigin="anonymous"></script>
+<link rel="stylesheet" href="../style.css">
+<link rel="stylesheet" href="../customer.css">
+</head>
+<body class="cust member">
+<div id="toastRoot"></div>
+<div id="modalRoot"></div>
+
+<!-- 1.4.1 — Account Settings · L2 · UC-04 (biến thể Customer) -->
+<div class="cust-shell" id="custShell">
+
+  <!-- Dock điều hướng: thu gọn mặc định, rê vào tay cầm thì trượt ra. -->
+  <div class="cust-dock" id="custDock">
+    <aside class="cust-sidebar">
+      <a class="cust-brand" href="trang-ca-nhan.html">
+        <b>Super Gym</b><span>Khu vực hội viên</span>
+      </a>
+      <nav class="cust-nav">
+        <h4>Tổng quan</h4>
+      <a href="trang-ca-nhan.html"><i class="fa-solid fa-gauge-high"></i>Trang cá nhân</a>
+        <h4>Gói tập</h4>
+      <a href="mua-goi.html"><i class="fa-solid fa-cart-shopping"></i>Mua gói</a>
+      <a href="lich-su-giao-dich.html"><i class="fa-solid fa-receipt"></i>Lịch sử giao dịch</a>
+        <h4>Lịch tập</h4>
+      <a href="lich-cua-toi.html"><i class="fa-solid fa-calendar-check"></i>Lịch của tôi</a>
+      <a href="buoi-pt.html"><i class="fa-solid fa-user-check"></i>Buổi PT của tôi</a>
+      <a href="dat-buoi-le.html"><i class="fa-solid fa-calendar-plus"></i>Đặt buổi lẻ</a>
+      <a href="giao-an.html"><i class="fa-solid fa-clipboard-list"></i>Giáo án của tôi</a>
+        <h4>Tài khoản</h4>
+      <a href="tai-khoan.html" aria-current="page"><i class="fa-solid fa-user-gear"></i>Cài đặt tài khoản</a>
+        <h4>Hòm thư</h4>
+      <a href="gop-y.html"><i class="fa-solid fa-inbox"></i>Hòm thư góp ý</a>
+      </nav>
+      <div class="cust-sidebar-foot">
+        <a href="../dang-nhap.html"><i class="fa-solid fa-arrow-right-from-bracket"></i>Đăng xuất</a>
+      </div>
+    </aside>
+    <button class="cust-handle" type="button" id="dockHandle"
+            aria-label="Mở menu điều hướng" aria-expanded="false" aria-controls="custDock">
+      <i class="fa-solid fa-chevron-right"></i>
+    </button>
+  </div>
+
+  <div class="cust-main">
+    <header class="cust-topbar">
+      <div>
+        <h1>Cài đặt tài khoản</h1>
+      </div>
+      <div class="cust-topbar-actions">
+        <a class="cust-user" href="tai-khoan.html" title="Cài đặt tài khoản">
+          <span class="avatar">AN</span>
+          <span class="cust-user-text">
+            <b>Nguyễn Minh An</b>
+            <span>KH-0241</span>
+          </span>
+        </a>
+      </div>
+    </header>
+
+    <main class="cust-content">
+      <div class="split">
+        <div class="col-main">
+          <div class="tabs" role="tablist">
+            <button type="button" role="tab" aria-selected="true" data-tab="profile">Hồ sơ</button>
+            <button type="button" role="tab" aria-selected="false" data-tab="password">Mật khẩu</button>
+            <button type="button" role="tab" aria-selected="false" data-tab="dependents">Hồ sơ phụ thuộc</button>
+          </div>
+
+          <div data-tab-panel="profile">
+            <section class="panel">
+              <form id="profileForm" novalidate>
+                <div class="form-grid">
+                  <label class="field">
+                    <span class="field-label">Email</span>
+                    <input id="acctEmail" type="email" value="an.nguyen@email.com" autocomplete="email">
+                    <span class="field-hint"><i class="fa-solid fa-circle-info"></i><span>Mã xác thực gửi tới email mới.</span></span>
+                    <span class="field-error" id="acctEmailErr" hidden></span>
+                  </label>
+                  <label class="field">
+                    <span class="field-label">Số điện thoại</span>
+                    <input id="acctPhone" type="tel" inputmode="numeric" value="0905123456" autocomplete="tel">
+                    <span class="field-error" id="acctPhoneErr" hidden></span>
+                  </label>
+                  <label class="field">
+                    <span class="field-label">Ngày sinh</span>
+                    <input id="acctDob" type="date" value="1998-04-22" max="2026-09-20" readonly>
+                    <span class="field-hint"><i class="fa-solid fa-circle-info"></i><span>Ngày sinh chỉ được cập nhật tại quầy Lễ tân.</span></span>
+                    <span class="field-error" id="acctDobErr" hidden></span>
+                  </label>
+                </div>
+                <button class="btn btn-primary" type="submit">Lưu thay đổi</button>
+              </form>
+            </section>
+
+            <section class="panel" id="verifyPanel" hidden style="margin-top:var(--space-5)">
+              <div class="panel-head"><h2>Xác thực thay đổi</h2></div>
+              <div class="msg-banner success">
+                <i class="fa-solid fa-circle-check"></i>
+                <span>Mã đã gửi tới <b id="verifyTarget"></b>.</span>
+              </div>
+              <form id="verifyForm" novalidate>
+                <label class="field">
+                  <span class="field-label">Mã xác thực</span>
+                  <input id="verifyCode" class="otp-input" inputmode="numeric" maxlength="6" placeholder="––––––" value="123456">
+                  <span class="field-error" id="verifyCodeErr" hidden></span>
+                </label>
+                <button class="btn btn-primary" type="submit">Xác nhận</button>
+              </form>
+            </section>
+          </div>
+
+          <div data-tab-panel="password" hidden>
+            <section class="panel">
+              <div class="panel-head"><h2>Đổi mật khẩu</h2><span class="muted">Đổi xong sẽ đăng xuất mọi phiên</span></div>
+              <form id="passwordForm" novalidate>
+                <label class="field">
+                  <span class="field-label">Mật khẩu hiện tại</span>
+                  <span class="input-wrap">
+                    <input id="oldPass" type="password" autocomplete="current-password">
+                    <button type="button" class="pw-toggle" data-pw-toggle="oldPass" aria-label="Hiện mật khẩu"><i class="fa-solid fa-eye"></i></button>
+                  </span>
+                  <span class="field-error" id="oldPassErr" hidden></span>
+                </label>
+                <div class="form-grid">
+                  <label class="field">
+                    <span class="field-label">Mật khẩu mới</span>
+                    <span class="input-wrap">
+                      <input id="newPass" type="password" placeholder="8-64 ký tự, có chữ và số" autocomplete="new-password">
+                      <button type="button" class="pw-toggle" data-pw-toggle="newPass" aria-label="Hiện mật khẩu"><i class="fa-solid fa-eye"></i></button>
+                    </span>
+                    <span class="field-error" id="newPassErr" hidden></span>
+                  </label>
+                  <label class="field">
+                    <span class="field-label">Nhập lại</span>
+                    <input id="newPass2" type="password" autocomplete="new-password">
+                    <span class="field-error" id="newPass2Err" hidden></span>
+                  </label>
+                </div>
+                <button class="btn btn-primary" type="submit">Đổi mật khẩu</button>
+              </form>
+            </section>
+          </div>
+
+          <div data-tab-panel="dependents" hidden>
+            <section class="panel">
+              <div class="panel-head"><h2>Hồ sơ phụ thuộc</h2></div>
+              <div class="data-list">
+                <div class="data-row">
+                  <div class="row-main">
+                    <div class="row-title">Nguyễn Minh Anh <span class="badge badge-muted">8 tuổi</span></div>
+                    <div class="row-meta">
+                      <span><i class="fa-solid fa-id-card"></i> KH-0242</span>
+                      <span><i class="fa-solid fa-dumbbell"></i> Gói 3 Tháng · tới 30/11/2026</span>
+                    </div>
+                  </div>
+                </div>
+              </div>
+              <p class="muted">Dưới 10 tuổi không đặt được buổi PT. Mọi thay đổi về lịch liên hệ trực tiếp PT phụ trách.</p>
+            </section>
+          </div>
+        </div>
+
+        <aside class="col-side">
+          <div class="side-card">
+            <div class="avatar-row">
+              <span class="avatar-lg">AN</span>
+              <div>
+                <h3>Nguyễn Minh An</h3>
+                <p class="muted">KH-0241 · từ 15/05/2026</p>
+              </div>
+            </div>
+            <button class="btn btn-ghost btn-sm btn-block" type="button" style="margin-top:var(--space-4)">Đổi ảnh đại diện</button>
+          </div>
+          <div class="side-card">
+            <span class="section-label">Lễ tân cập nhật</span>
+            <div class="side-row"><span>Họ và tên</span><b>Nguyễn Minh An</b></div>
+            <div class="side-row"><span>Ảnh check-in</span><b>20/05/2026</b></div>
+            <div class="side-row"><span>Người giám hộ</span><b>—</b></div>
+            <p class="muted" style="margin-top:var(--space-3)">Cần sửa thì liên hệ quầy.</p>
+          </div>
+        </aside>
+      </div>
+    </main>
+  </div>
+</div>
+
+<script src="../app.js"></script>
+<script src="customer.js"></script>
+<script src="tai-khoan.js"></script>
+</body>
+</html>

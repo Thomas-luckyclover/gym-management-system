@@ -1,0 +1,145 @@
+﻿<!DOCTYPE html>
+<html lang="vi">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
+<title>Giáo án của tôi — Super Gym</title>
+<meta name="robots" content="noindex">
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Montserrat:wght@600;700;800&family=Inter:wght@400;500;600;700&display=swap">
+<script src="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/7.3.1/js/all.min.js" crossorigin="anonymous"></script>
+<link rel="stylesheet" href="../style.css">
+<link rel="stylesheet" href="../customer.css">
+</head>
+<body class="cust member">
+<div id="toastRoot"></div>
+<div id="modalRoot"></div>
+
+<!-- 9.6.3 — Workout & Diet Plan View · L2 · UC-40 -->
+<div class="cust-shell" id="custShell">
+
+  <!-- Dock điều hướng: thu gọn mặc định, rê vào tay cầm thì trượt ra. -->
+  <div class="cust-dock" id="custDock">
+    <aside class="cust-sidebar">
+      <a class="cust-brand" href="trang-ca-nhan.html">
+        <b>Super Gym</b><span>Khu vực hội viên</span>
+      </a>
+      <nav class="cust-nav">
+        <h4>Tổng quan</h4>
+      <a href="trang-ca-nhan.html"><i class="fa-solid fa-gauge-high"></i>Trang cá nhân</a>
+        <h4>Gói tập</h4>
+      <a href="mua-goi.html"><i class="fa-solid fa-cart-shopping"></i>Mua gói</a>
+      <a href="lich-su-giao-dich.html"><i class="fa-solid fa-receipt"></i>Lịch sử giao dịch</a>
+        <h4>Lịch tập</h4>
+      <a href="lich-cua-toi.html"><i class="fa-solid fa-calendar-check"></i>Lịch của tôi</a>
+      <a href="buoi-pt.html"><i class="fa-solid fa-user-check"></i>Buổi PT của tôi</a>
+      <a href="dat-buoi-le.html"><i class="fa-solid fa-calendar-plus"></i>Đặt buổi lẻ</a>
+      <a href="giao-an.html" aria-current="page"><i class="fa-solid fa-clipboard-list"></i>Giáo án của tôi</a>
+        <h4>Tài khoản</h4>
+      <a href="tai-khoan.html"><i class="fa-solid fa-user-gear"></i>Cài đặt tài khoản</a>
+        <h4>Hòm thư</h4>
+      <a href="gop-y.html"><i class="fa-solid fa-inbox"></i>Hòm thư góp ý</a>
+      </nav>
+      <div class="cust-sidebar-foot">
+        <a href="../dang-nhap.html"><i class="fa-solid fa-arrow-right-from-bracket"></i>Đăng xuất</a>
+      </div>
+    </aside>
+    <button class="cust-handle" type="button" id="dockHandle"
+            aria-label="Mở menu điều hướng" aria-expanded="false" aria-controls="custDock">
+      <i class="fa-solid fa-chevron-right"></i>
+    </button>
+  </div>
+
+  <div class="cust-main">
+    <header class="cust-topbar">
+      <div>
+        <h1>Giáo án của tôi</h1>
+      </div>
+      <div class="cust-topbar-actions">
+        <a class="cust-user" href="tai-khoan.html" title="Cài đặt tài khoản">
+          <span class="avatar">AN</span>
+          <span class="cust-user-text">
+            <b>Nguyễn Minh An</b>
+            <span>KH-0241</span>
+          </span>
+        </a>
+      </div>
+    </header>
+
+    <main class="cust-content">
+      <div class="split">
+        <div class="col-main">
+          <section class="panel">
+            <div class="tabs" role="tablist">
+              <button type="button" role="tab" aria-selected="true" data-tab="workout">Giáo án tập</button>
+              <button type="button" role="tab" aria-selected="false" data-tab="diet">Thực đơn</button>
+            </div>
+
+            <div class="toolbar">
+              <div class="search">
+                <i class="fa-solid fa-magnifying-glass"></i>
+                <input id="planSearch" type="search" placeholder="Tìm bài tập hoặc món ăn" aria-label="Tìm trong giáo án">
+              </div>
+              <button class="btn btn-ghost btn-sm reset" type="button" id="planReset">Xoá lọc</button>
+            </div>
+            <div class="empty-state" id="planEmpty" hidden>
+              <div class="empty-icon"><i class="fa-solid fa-box-open"></i></div>
+              <p>Không tìm thấy mục nào.</p>
+            </div>
+            <div data-tab-panel="workout">
+          <div class="plan-text">
+            <p class="plan-line is-head">Thứ 2 — Đẩy (60 phút)</p>
+            <p class="plan-line is-item">Bench press: 4×8, nghỉ 90s</p>
+            <p class="plan-line is-item">Overhead press: 3×10</p>
+            <p class="plan-line is-item">Incline dumbbell press: 3×12</p>
+            <p class="plan-line is-item">Tricep pushdown: 3×15</p>
+            <p class="plan-line is-head">Thứ 4 — Kéo (60 phút)</p>
+            <p class="plan-line is-item">Lat pulldown: 4×10</p>
+            <p class="plan-line is-item">Seated row: 3×12</p>
+            <p class="plan-line is-item">Face pull: 3×15</p>
+            <p class="plan-line is-item">Bicep curl: 3×12</p>
+            <p class="plan-line is-head">Thứ 6 — Chân &amp; core (70 phút)</p>
+            <p class="plan-line is-item">Squat: 4×8, xuống đủ sâu</p>
+            <p class="plan-line is-item">Romanian deadlift: 3×10</p>
+            <p class="plan-line is-item">Leg press: 3×12</p>
+            <p class="plan-line is-item">Plank: 3×45s</p>
+          </div>
+            </div>
+            <div data-tab-panel="diet" hidden>
+          <div class="plan-text">
+            <p class="plan-line is-head">Ngày tập — 2.200 kcal, 130g đạm</p>
+            <p class="plan-line is-item">Sáng: yến mạch, sữa chua Hy Lạp, chuối</p>
+            <p class="plan-line is-item">Trước tập 90 phút: bánh mì nguyên cám, 2 trứng</p>
+            <p class="plan-line is-item">Sau tập 30–60 phút: ức gà 150g, gạo lứt, rau luộc</p>
+            <p class="plan-line is-item">Tối: cá hồi áp chảo, khoai lang, salad</p>
+            <p class="plan-line is-head">Ngày nghỉ — 1.900 kcal, 120g đạm</p>
+            <p class="plan-line is-item">Sáng: trứng ốp, bánh mì đen, bơ</p>
+            <p class="plan-line is-item">Trưa: thịt bò xào, cơm, rau xanh</p>
+            <p class="plan-line is-item">Phụ: sữa chua không đường, óc chó</p>
+            <p class="plan-line is-item">Tối: đậu phụ sốt cà, canh rau</p>
+          </div>
+            </div>
+          </section>
+        </div>
+
+        <aside class="col-side">
+          <div class="side-card">
+            <span class="section-label">Người soạn</span>
+            <div style="display:flex;align-items:center;gap:var(--space-3)">
+              <span style="width:40px;height:40px;border-radius:50%;background:var(--primary);color:#fff;display:grid;place-items:center;font-weight:700">HL</span>
+              <div>
+                <h3>Hoàng Long</h3>
+                <p class="muted">Strength &amp; Conditioning</p>
+              </div>
+            </div>
+          </div>
+        </aside>
+      </div>
+    </main>
+  </div>
+</div>
+
+<script src="../app.js"></script>
+<script src="customer.js"></script>
+<script src="giao-an.js"></script>
+</body>
+</html>

@@ -1,0 +1,306 @@
+﻿<!DOCTYPE html>
+<html lang="vi">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
+<title>Blog — Super Gym</title>
+<meta name="description" content="Kiến thức tập luyện, dinh dưỡng và tin tức phòng gym từ đội ngũ huấn luyện viên Super Gym.">
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Montserrat:wght@600;700;800&family=Inter:wght@400;500;600;700&display=swap">
+<script src="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/7.3.1/js/all.min.js" crossorigin="anonymous"></script>
+<link rel="stylesheet" href="style.css">
+</head>
+<body class="dark">
+<div id="toastRoot"></div>
+
+<!-- ============================ HEADER ============================ -->
+<header class="site-header">
+  <div class="header-inner">
+    <a class="brand" href="index.html">
+      <span class="brand-mark">Super Gym</span>
+    </a>
+    <nav class="nav-links">
+      <a href="index.html">Trang chủ</a>
+      <a href="index.html#dich-vu">Dịch vụ</a>
+      <a href="index.html#pricing">Bảng giá</a>
+      <a href="index.html#co-so-vat-chat">Cơ sở vật chất</a>
+      <a href="blog.html" aria-current="page">Blog</a>
+      <a href="index.html#faq">Hỏi đáp</a>
+    </nav>
+    <div class="header-actions">
+      <a class="btn btn-ghost btn-sm" href="dang-nhap.html">Đăng nhập</a>
+      <a class="btn btn-lime btn-sm" href="dang-ky.html">Đăng ký</a>
+    </div>
+    <button class="hamburger" type="button" data-mobile-nav aria-label="Mở menu" aria-expanded="false" aria-controls="mobileNav">
+      <i class="fa-solid fa-bars"></i>
+    </button>
+  </div>
+  <div class="mobile-nav" id="mobileNav" hidden>
+    <a href="index.html">Trang chủ</a>
+    <a href="index.html#dich-vu">Dịch vụ</a>
+    <a href="index.html#pricing">Bảng giá</a>
+    <a href="index.html#co-so-vat-chat">Cơ sở vật chất</a>
+    <a href="blog.html">Blog</a>
+    <a href="index.html#faq">Hỏi đáp</a>
+    <a href="dang-nhap.html">Đăng nhập</a>
+    <a href="dang-ky.html">Đăng ký</a>
+  </div>
+</header>
+
+<!-- ======================= 2.2.1 — BLOG LIST ======================= -->
+<div class="wrap">
+  <div class="page-head">
+    <h1>Blog Super Gym</h1>
+    <p>Kiến thức tập luyện, dinh dưỡng và tin tức phòng gym, cập nhật mỗi tuần từ đội ngũ huấn luyện viên.</p>
+  </div>
+
+  <div class="blog-controls">
+    <div class="search-input-wrap">
+      <i class="fa-solid fa-magnifying-glass"></i>
+      <input id="blogSearch" type="search" placeholder="Tìm bài viết theo tiêu đề..." aria-label="Tìm bài viết theo tiêu đề">
+    </div>
+    <div class="chip-filter" id="chipFilter">
+      <button type="button" class="active" data-category="Tất cả">Tất cả</button>
+      <button type="button" data-category="Tập luyện">Tập luyện</button>
+      <button type="button" data-category="Dinh dưỡng">Dinh dưỡng</button>
+      <button type="button" data-category="Tin tức">Tin tức</button>
+    </div>
+    <div class="result-count" id="resultCount" role="status">13 bài viết</div>
+  </div>
+
+  <!-- Toàn bộ bài viết đang đăng nằm sẵn trong HTML, xếp sẵn theo ngày giảm dần.
+       JS chỉ ẩn/hiện khi lọc và phân trang. -->
+  <div class="post-grid" id="blogGrid">
+    <a class="post-card" href="blog/khoi-dong-giam-chan-thuong.html"
+       data-category="Tập luyện" data-title="5 bài khởi động giúp giảm chấn thương trước buổi tập nặng">
+      <div class="post-thumb tone-amber">
+        <svg class="cover-pattern" viewBox="0 0 400 200" preserveAspectRatio="xMidYMid slice" aria-hidden="true"><g fill="rgba(255,255,255,.3)"><circle cx="22" cy="150" r="4"/><circle cx="50" cy="122" r="4"/><circle cx="78" cy="160" r="4"/><circle cx="22" cy="180" r="4"/><circle cx="50" cy="180" r="4"/><circle cx="78" cy="190" r="4"/><circle cx="106" cy="142" r="4"/><circle cx="6" cy="120" r="4"/><circle cx="106" cy="180" r="4"/></g></svg>
+        <span class="post-thumb-icon"><i class="fa-solid fa-dumbbell"></i></span>
+      </div>
+      <div class="post-body">
+        <span class="chip chip-tap-luyen">Tập luyện</span>
+        <h3>5 bài khởi động giúp giảm chấn thương trước buổi tập nặng</h3>
+        <p class="post-excerpt">Bỏ qua khởi động là nguyên nhân phổ biến gây chấn thương vai và gối. Đây là 5 động tác 8 phút nên làm trước mọi buổi tập.</p>
+        <div class="post-meta"><i class="fa-solid fa-calendar-days"></i> 12/09/2026</div>
+      </div>
+    </a>
+
+    <a class="post-card" href="blog/an-gi-truoc-sau-buoi-tap.html"
+       data-category="Dinh dưỡng" data-title="ăn gì trước và sau buổi tập để tối ưu phục hồi cơ bắp">
+      <div class="post-thumb tone-green">
+        <svg class="cover-pattern" viewBox="0 0 400 200" preserveAspectRatio="xMidYMid slice" aria-hidden="true"><g fill="none" stroke="rgba(255,255,255,.28)" stroke-width="3"><circle cx="368" cy="188" r="24"/><circle cx="368" cy="188" r="44"/><circle cx="368" cy="188" r="64"/></g></svg>
+        <span class="post-thumb-icon"><i class="fa-solid fa-apple-whole"></i></span>
+      </div>
+      <div class="post-body">
+        <span class="chip chip-dinh-duong">Dinh dưỡng</span>
+        <h3>Ăn gì trước và sau buổi tập để tối ưu phục hồi cơ bắp</h3>
+        <p class="post-excerpt">Thời điểm và loại thực phẩm nạp vào quanh buổi tập ảnh hưởng trực tiếp đến hiệu suất và tốc độ phục hồi.</p>
+        <div class="post-meta"><i class="fa-solid fa-calendar-days"></i> 08/09/2026</div>
+      </div>
+    </a>
+
+    <a class="post-card" href="blog/khai-truong-khu-gian-co.html"
+       data-category="Tin tức" data-title="super gym khai trương khu giãn cơ &amp; phục hồi tại chi nhánh trung tâm">
+      <div class="post-thumb tone-blue">
+        <svg class="cover-pattern" viewBox="0 0 400 200" preserveAspectRatio="xMidYMid slice" aria-hidden="true"><circle cx="30" cy="6" r="90" fill="rgba(255,255,255,.16)"/></svg>
+        <span class="post-thumb-icon"><i class="fa-solid fa-bullhorn"></i></span>
+      </div>
+      <div class="post-body">
+        <span class="chip chip-tin-tuc">Tin tức</span>
+        <h3>Super Gym khai trương khu giãn cơ &amp; phục hồi tại chi nhánh trung tâm</h3>
+        <p class="post-excerpt">Khu vực foam roller, máy nén khí phục hồi và ghế massage chính thức mở cửa phục vụ hội viên từ tuần này.</p>
+        <div class="post-meta"><i class="fa-solid fa-calendar-days"></i> 01/09/2026</div>
+      </div>
+    </a>
+
+    <a class="post-card" href="blog/protein-bao-nhieu-la-du.html"
+       data-category="Dinh dưỡng" data-title="protein bao nhiêu là đủ? công thức tính nhanh theo cân nặng">
+      <div class="post-thumb tone-green">
+        <svg class="cover-pattern" viewBox="0 0 400 200" preserveAspectRatio="xMidYMid slice" aria-hidden="true"><g stroke="rgba(255,255,255,.26)" stroke-width="14"><line x1="260" y1="-20" x2="460" y2="180"/><line x1="320" y1="-20" x2="520" y2="180"/><line x1="380" y1="-20" x2="580" y2="180"/></g></svg>
+        <span class="post-thumb-icon"><i class="fa-solid fa-apple-whole"></i></span>
+      </div>
+      <div class="post-body">
+        <span class="chip chip-dinh-duong">Dinh dưỡng</span>
+        <h3>Protein bao nhiêu là đủ? Công thức tính nhanh theo cân nặng</h3>
+        <p class="post-excerpt">Không cần bảng tính phức tạp — đây là công thức ước lượng lượng đạm cần nạp mỗi ngày theo mục tiêu tập luyện.</p>
+        <div class="post-meta"><i class="fa-solid fa-calendar-days"></i> 25/08/2026</div>
+      </div>
+    </a>
+
+    <a class="post-card" href="blog/ba-loi-squat-pho-bien.html"
+       data-category="Tập luyện" data-title="3 lỗi phổ biến khi squat khiến bạn không lên cơ">
+      <div class="post-thumb tone-amber">
+        <svg class="cover-pattern" viewBox="0 0 400 200" preserveAspectRatio="xMidYMid slice" aria-hidden="true"><g fill="rgba(255,255,255,.3)"><circle cx="22" cy="150" r="4"/><circle cx="50" cy="122" r="4"/><circle cx="78" cy="160" r="4"/><circle cx="22" cy="180" r="4"/><circle cx="50" cy="180" r="4"/><circle cx="78" cy="190" r="4"/><circle cx="106" cy="142" r="4"/><circle cx="6" cy="120" r="4"/><circle cx="106" cy="180" r="4"/></g></svg>
+        <span class="post-thumb-icon"><i class="fa-solid fa-dumbbell"></i></span>
+      </div>
+      <div class="post-body">
+        <span class="chip chip-tap-luyen">Tập luyện</span>
+        <h3>3 lỗi phổ biến khi squat khiến bạn không lên cơ</h3>
+        <p class="post-excerpt">Squat sai kỹ thuật không chỉ chậm tiến bộ mà còn tăng nguy cơ đau lưng dưới và đầu gối.</p>
+        <div class="post-meta"><i class="fa-solid fa-calendar-days"></i> 18/08/2026</div>
+      </div>
+    </a>
+
+    <a class="post-card" href="blog/ngu-du-giac-voi-nguoi-tap-gym.html"
+       data-category="Dinh dưỡng" data-title="ngủ đủ giấc quan trọng thế nào với người tập gym?">
+      <div class="post-thumb tone-green">
+        <svg class="cover-pattern" viewBox="0 0 400 200" preserveAspectRatio="xMidYMid slice" aria-hidden="true"><circle cx="30" cy="6" r="90" fill="rgba(255,255,255,.16)"/></svg>
+        <span class="post-thumb-icon"><i class="fa-solid fa-apple-whole"></i></span>
+      </div>
+      <div class="post-body">
+        <span class="chip chip-dinh-duong">Dinh dưỡng</span>
+        <h3>Ngủ đủ giấc quan trọng thế nào với người tập gym?</h3>
+        <p class="post-excerpt">Tập nặng nhưng ngủ ít có thể khiến mọi nỗ lực trong phòng gym gần như không mang lại hiệu quả.</p>
+        <div class="post-meta"><i class="fa-solid fa-calendar-days"></i> 02/08/2026</div>
+      </div>
+    </a>
+
+    <a class="post-card" href="blog/chon-goi-tap-phu-hop.html"
+       data-category="Tập luyện" data-title="hướng dẫn chọn gói tập phù hợp với mục tiêu của bạn">
+      <div class="post-thumb tone-amber">
+        <svg class="cover-pattern" viewBox="0 0 400 200" preserveAspectRatio="xMidYMid slice" aria-hidden="true"><g stroke="rgba(255,255,255,.26)" stroke-width="14"><line x1="260" y1="-20" x2="460" y2="180"/><line x1="320" y1="-20" x2="520" y2="180"/><line x1="380" y1="-20" x2="580" y2="180"/></g></svg>
+        <span class="post-thumb-icon"><i class="fa-solid fa-dumbbell"></i></span>
+      </div>
+      <div class="post-body">
+        <span class="chip chip-tap-luyen">Tập luyện</span>
+        <h3>Hướng dẫn chọn gói tập phù hợp với mục tiêu của bạn</h3>
+        <p class="post-excerpt">Gói 1 tháng hay gói 12 tháng — nên bắt đầu từ đâu tuỳ theo mục tiêu và tần suất tập của bạn.</p>
+        <div class="post-meta"><i class="fa-solid fa-calendar-days"></i> 27/07/2026</div>
+      </div>
+    </a>
+
+    <a class="post-card" href="blog/cardio-hay-ta-nang-truoc.html"
+       data-category="Tập luyện" data-title="cardio hay tạ nặng trước? thứ tự nào tối ưu hơn cho mục tiêu giảm mỡ">
+      <div class="post-thumb tone-amber">
+        <svg class="cover-pattern" viewBox="0 0 400 200" preserveAspectRatio="xMidYMid slice" aria-hidden="true"><g fill="rgba(255,255,255,.3)"><circle cx="22" cy="150" r="4"/><circle cx="50" cy="122" r="4"/><circle cx="78" cy="160" r="4"/><circle cx="22" cy="180" r="4"/><circle cx="50" cy="180" r="4"/><circle cx="78" cy="190" r="4"/><circle cx="106" cy="142" r="4"/><circle cx="6" cy="120" r="4"/><circle cx="106" cy="180" r="4"/></g></svg>
+        <span class="post-thumb-icon"><i class="fa-solid fa-dumbbell"></i></span>
+      </div>
+      <div class="post-body">
+        <span class="chip chip-tap-luyen">Tập luyện</span>
+        <h3>Cardio hay tạ nặng trước? Thứ tự nào tối ưu hơn cho mục tiêu giảm mỡ</h3>
+        <p class="post-excerpt">Thứ tự bài tập trong cùng một buổi ảnh hưởng đến hiệu suất từng phần — dưới đây là cách sắp xếp hợp lý.</p>
+        <div class="post-meta"><i class="fa-solid fa-calendar-days"></i> 20/07/2026</div>
+      </div>
+    </a>
+
+    <a class="post-card" href="blog/creatine-co-can-thiet.html"
+       data-category="Dinh dưỡng" data-title="creatine có thực sự cần thiết? giải đáp từ góc nhìn khoa học">
+      <div class="post-thumb tone-green">
+        <svg class="cover-pattern" viewBox="0 0 400 200" preserveAspectRatio="xMidYMid slice" aria-hidden="true"><g fill="none" stroke="rgba(255,255,255,.28)" stroke-width="3"><circle cx="368" cy="188" r="24"/><circle cx="368" cy="188" r="44"/><circle cx="368" cy="188" r="64"/></g></svg>
+        <span class="post-thumb-icon"><i class="fa-solid fa-apple-whole"></i></span>
+      </div>
+      <div class="post-body">
+        <span class="chip chip-dinh-duong">Dinh dưỡng</span>
+        <h3>Creatine có thực sự cần thiết? Giải đáp từ góc nhìn khoa học</h3>
+        <p class="post-excerpt">Là một trong những thực phẩm bổ sung được nghiên cứu nhiều nhất, creatine có đáng để bổ sung vào chế độ tập của bạn?</p>
+        <div class="post-meta"><i class="fa-solid fa-calendar-days"></i> 14/07/2026</div>
+      </div>
+    </a>
+
+    <a class="post-card" href="blog/ung-dung-dat-lich-pt.html"
+       data-category="Tin tức" data-title="super gym ra mắt ứng dụng đặt lịch pt mới trên điện thoại">
+      <div class="post-thumb tone-blue">
+        <svg class="cover-pattern" viewBox="0 0 400 200" preserveAspectRatio="xMidYMid slice" aria-hidden="true"><circle cx="30" cy="6" r="90" fill="rgba(255,255,255,.16)"/></svg>
+        <span class="post-thumb-icon"><i class="fa-solid fa-bullhorn"></i></span>
+      </div>
+      <div class="post-body">
+        <span class="chip chip-tin-tuc">Tin tức</span>
+        <h3>Super Gym ra mắt ứng dụng đặt lịch PT mới trên điện thoại</h3>
+        <p class="post-excerpt">Hội viên có thể xem khung giờ rảnh của PT, đặt buổi lẻ và theo dõi giáo án ngay trên ứng dụng.</p>
+        <div class="post-meta"><i class="fa-solid fa-calendar-days"></i> 05/07/2026</div>
+      </div>
+    </a>
+
+    <a class="post-card" href="blog/tap-lung-dung-cach.html"
+       data-category="Tập luyện" data-title="tập lưng đúng cách: 4 bài kéo giúp cải thiện tư thế dân văn phòng">
+      <div class="post-thumb tone-amber">
+        <svg class="cover-pattern" viewBox="0 0 400 200" preserveAspectRatio="xMidYMid slice" aria-hidden="true"><g stroke="rgba(255,255,255,.26)" stroke-width="14"><line x1="260" y1="-20" x2="460" y2="180"/><line x1="320" y1="-20" x2="520" y2="180"/><line x1="380" y1="-20" x2="580" y2="180"/></g></svg>
+        <span class="post-thumb-icon"><i class="fa-solid fa-dumbbell"></i></span>
+      </div>
+      <div class="post-body">
+        <span class="chip chip-tap-luyen">Tập luyện</span>
+        <h3>Tập lưng đúng cách: 4 bài kéo giúp cải thiện tư thế dân văn phòng</h3>
+        <p class="post-excerpt">Ngồi nhiều khiến vai khòm về trước — nhóm bài kéo (pull) sau đây giúp cân bằng lại tư thế.</p>
+        <div class="post-meta"><i class="fa-solid fa-calendar-days"></i> 28/06/2026</div>
+      </div>
+    </a>
+
+    <a class="post-card" href="blog/nhin-an-gian-doan.html"
+       data-category="Dinh dưỡng" data-title="nhịn ăn gián đoạn có phù hợp với người tập gym?">
+      <div class="post-thumb tone-green">
+        <svg class="cover-pattern" viewBox="0 0 400 200" preserveAspectRatio="xMidYMid slice" aria-hidden="true"><g fill="rgba(255,255,255,.3)"><circle cx="22" cy="150" r="4"/><circle cx="50" cy="122" r="4"/><circle cx="78" cy="160" r="4"/><circle cx="22" cy="180" r="4"/><circle cx="50" cy="180" r="4"/><circle cx="78" cy="190" r="4"/><circle cx="106" cy="142" r="4"/><circle cx="6" cy="120" r="4"/><circle cx="106" cy="180" r="4"/></g></svg>
+        <span class="post-thumb-icon"><i class="fa-solid fa-apple-whole"></i></span>
+      </div>
+      <div class="post-body">
+        <span class="chip chip-dinh-duong">Dinh dưỡng</span>
+        <h3>Nhịn ăn gián đoạn có phù hợp với người tập gym?</h3>
+        <p class="post-excerpt">IF giúp một số người kiểm soát calo dễ hơn, nhưng không phải là lựa chọn tối ưu cho mọi mục tiêu tập luyện.</p>
+        <div class="post-meta"><i class="fa-solid fa-calendar-days"></i> 20/06/2026</div>
+      </div>
+    </a>
+
+    <a class="post-card" href="blog/mo-rong-gio-cuoi-tuan.html"
+       data-category="Tin tức" data-title="super gym mở rộng giờ hoạt động cuối tuần từ tháng sau">
+      <div class="post-thumb tone-blue">
+        <svg class="cover-pattern" viewBox="0 0 400 200" preserveAspectRatio="xMidYMid slice" aria-hidden="true"><g fill="none" stroke="rgba(255,255,255,.28)" stroke-width="3"><circle cx="368" cy="188" r="24"/><circle cx="368" cy="188" r="44"/><circle cx="368" cy="188" r="64"/></g></svg>
+        <span class="post-thumb-icon"><i class="fa-solid fa-bullhorn"></i></span>
+      </div>
+      <div class="post-body">
+        <span class="chip chip-tin-tuc">Tin tức</span>
+        <h3>Super Gym mở rộng giờ hoạt động cuối tuần từ tháng sau</h3>
+        <p class="post-excerpt">Từ tháng sau, phòng tập mở cửa sớm hơn vào Thứ 7 và Chủ Nhật để phục vụ nhu cầu tập cuối tuần.</p>
+        <div class="post-meta"><i class="fa-solid fa-calendar-days"></i> 12/06/2026</div>
+      </div>
+    </a>
+
+    <div class="empty-state" id="blogEmpty" hidden>
+      <div class="empty-icon"><i class="fa-solid fa-box-open"></i></div>
+      <p><b>Không có dữ liệu phù hợp với bộ lọc.</b><br>Thử từ khoá khác hoặc chọn lại danh mục.</p>
+    </div>
+  </div>
+
+  <div class="pagination" id="blogPagination"></div>
+</div>
+
+<!-- ============================ FOOTER ============================ -->
+<footer class="site-footer">
+  <div class="footer-inner">
+    <div>
+      <div class="footer-brand">Super Gym</div>
+      <p class="footer-tag">Theo dõi tiến độ, đặt lịch PT và quản lý gói tập trong một tài khoản duy nhất.</p>
+      <div class="footer-social">
+        <a href="#" aria-label="Facebook"><i class="fa-brands fa-facebook-f"></i></a>
+        <a href="#" aria-label="Instagram"><i class="fa-brands fa-instagram"></i></a>
+        <a href="#" aria-label="YouTube"><i class="fa-brands fa-youtube"></i></a>
+      </div>
+    </div>
+    <div class="footer-col">
+      <h4>Khám phá</h4>
+      <a href="index.html">Trang chủ</a>
+      <a href="index.html#pricing">Bảng giá</a>
+      <a href="index.html#co-so-vat-chat">Cơ sở vật chất</a>
+      <a href="blog.html">Blog</a>
+    </div>
+    <div class="footer-col">
+      <h4>Tài khoản</h4>
+      <a href="dang-nhap.html">Đăng nhập</a>
+      <a href="dang-ky.html">Đăng ký</a>
+      <a href="quen-mat-khau.html">Quên mật khẩu</a>
+      <a href="index.html#faq">Câu hỏi thường gặp</a>
+    </div>
+    <div class="footer-col">
+      <h4>Liên hệ</h4>
+      <p><i class="fa-solid fa-location-dot"></i> 12 Nguyễn Huệ, Q.1, TP.HCM</p>
+      <p><i class="fa-solid fa-clock"></i> 06:00 – 22:00 mỗi ngày</p>
+      <a href="tel:19006868"><i class="fa-solid fa-phone"></i> 1900 6868</a>
+      <a href="mailto:hi@supergym.vn"><i class="fa-solid fa-envelope"></i> hi@supergym.vn</a>
+    </div>
+  </div>
+  <div class="footer-bottom">
+    <span>© 2026 Super Gym</span>
+  </div>
+</footer>
+
+<script src="app.js"></script>
+<script src="blog.js"></script>
+</body>
+</html>

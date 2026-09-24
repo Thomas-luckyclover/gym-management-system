@@ -1,0 +1,241 @@
+﻿<!DOCTYPE html>
+<html lang="vi">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
+<title>Khách của tôi — Super Gym PT</title>
+<meta name="robots" content="noindex">
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Montserrat:wght@600;700;800&family=Inter:wght@400;500;600;700&display=swap">
+<script src="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/7.3.1/js/all.min.js" crossorigin="anonymous"></script>
+<link rel="stylesheet" href="../style.css">
+<link rel="stylesheet" href="../customer.css">
+</head>
+<body class="cust staff">
+<div id="toastRoot"></div>
+<div id="modalRoot"></div>
+
+<!-- 9.5.2 — Client List · L1 · UC-32 -->
+<div class="cust-shell" id="custShell">
+
+  <div class="cust-dock" id="custDock">
+    <aside class="cust-sidebar">
+      <a class="cust-brand" href="trang-chu.html">
+        <b>Super Gym</b><span>Huấn luyện viên</span>
+      </a>
+      <nav class="cust-nav">
+        <h4>Hôm nay</h4>
+        <a href="trang-chu.html"><i class="fa-solid fa-gauge-high"></i>Tổng quan</a>
+        <a href="diem-danh.html"><i class="fa-solid fa-clipboard-check"></i>Điểm danh</a>
+        <h4>Lịch dạy</h4>
+        <a href="lich-ranh.html"><i class="fa-solid fa-calendar-days"></i>Lịch rảnh</a>
+        <h4>Khách phụ trách</h4>
+        <a href="khach-cua-toi.html" aria-current="page"><i class="fa-solid fa-user-group"></i>Khách của tôi</a>
+        <h4>Cá nhân</h4>
+        <a href="nghi-phep.html"><i class="fa-solid fa-plane-departure"></i>Nghỉ phép</a>
+        <a href="tai-khoan.html"><i class="fa-solid fa-user-gear"></i>Cài đặt tài khoản</a>
+      </nav>
+      <div class="cust-sidebar-foot">
+        <a href="../dang-nhap.html"><i class="fa-solid fa-arrow-right-from-bracket"></i>Đăng xuất</a>
+      </div>
+    </aside>
+    <button class="cust-handle" type="button" id="dockHandle"
+            aria-label="Mở menu điều hướng" aria-expanded="false" aria-controls="custDock">
+      <i class="fa-solid fa-chevron-right"></i>
+    </button>
+  </div>
+
+  <div class="cust-main">
+    <header class="cust-topbar">
+      <div>
+        <h1>Khách của tôi</h1>
+      </div>
+      <div class="cust-topbar-actions">
+        <a class="cust-user" href="tai-khoan.html" title="Cài đặt tài khoản">
+          <span class="avatar">HL</span>
+          <span class="cust-user-text">
+            <b>Hoàng Long</b>
+            <span>PT · NV-0118</span>
+          </span>
+        </a>
+      </div>
+    </header>
+
+    <main class="cust-content">
+      <div class="toolbar">
+        <div class="search">
+          <i class="fa-solid fa-magnifying-glass"></i>
+          <input id="cSearch" type="search" placeholder="Tìm tên khách hoặc mã hội viên" aria-label="Tìm khách">
+        </div>
+        <label for="cState">Trạng thái gói</label>
+        <select id="cState">
+          <option value="all">Tất cả</option>
+          <option value="active">Còn hiệu lực</option>
+          <option value="frozen">Bảo lưu</option>
+          <option value="expired">Hết hạn</option>
+        </select>
+        <label for="cPkg">Gói PT</label>
+        <select id="cPkg">
+          <option value="all">Tất cả</option>
+          <option value="Gói PT 10 buổi">10 buổi</option>
+          <option value="Gói PT Tháng">Tháng</option>
+          <option value="Gói PT Couple">Couple</option>
+        </select>
+        <button class="btn btn-ghost btn-sm reset" type="button" id="cReset">Xoá lọc</button>
+      </div>
+
+      <div class="data-list" id="clientList">
+        <div class="data-row" data-state="active" data-pkg="Gói PT 10 buổi" data-q="nguyễn minh an sg-0241">
+          <div class="row-main">
+            <div class="row-title">
+              <span class="avatar" style="width:30px;height:30px;border-radius:50%;display:inline-grid;place-items:center;font-size:.72rem;font-weight:700">MA</span>
+              Nguyễn Minh An <span class="badge badge-ok">Còn hiệu lực</span>
+            </div>
+            <div class="row-meta">
+              <span><i class="fa-solid fa-id-card"></i> SG-0241</span>
+              <span><i class="fa-solid fa-layer-group"></i> Gói PT 10 buổi · còn 4 buổi</span>
+              <span><i class="fa-solid fa-calendar-days"></i> Gói tập tới 14/11/2026</span>
+            </div>
+          </div>
+          <div class="row-actions">
+            <a class="btn btn-ghost btn-sm" href="ghi-chu.html">Ghi chú</a>
+            <a class="btn btn-outline btn-sm" href="giao-an.html">Giáo án</a>
+          </div>
+        </div>
+        <div class="data-row" data-state="active" data-pkg="Gói PT Tháng" data-q="trần gia bảo sg-0318">
+          <div class="row-main">
+            <div class="row-title">
+              <span class="avatar" style="width:30px;height:30px;border-radius:50%;display:inline-grid;place-items:center;font-size:.72rem;font-weight:700">GB</span>
+              Trần Gia Bảo <span class="badge badge-ok">Còn hiệu lực</span>
+            </div>
+            <div class="row-meta">
+              <span><i class="fa-solid fa-id-card"></i> SG-0318</span>
+              <span><i class="fa-solid fa-layer-group"></i> Gói PT Tháng · còn 14 buổi</span>
+              <span><i class="fa-solid fa-calendar-days"></i> Gói tập tới 02/12/2026</span>
+            </div>
+          </div>
+          <div class="row-actions">
+            <a class="btn btn-ghost btn-sm" href="ghi-chu.html">Ghi chú</a>
+            <a class="btn btn-outline btn-sm" href="giao-an.html">Giáo án</a>
+          </div>
+        </div>
+        <div class="data-row" data-state="expired" data-pkg="Gói PT 10 buổi" data-q="lê thu hà sg-0276">
+          <div class="row-main">
+            <div class="row-title">
+              <span class="avatar" style="width:30px;height:30px;border-radius:50%;display:inline-grid;place-items:center;font-size:.72rem;font-weight:700">TH</span>
+              Lê Thu Hà <span class="badge badge-danger">Hết hạn</span>
+            </div>
+            <div class="row-meta">
+              <span><i class="fa-solid fa-id-card"></i> SG-0276</span>
+              <span><i class="fa-solid fa-layer-group"></i> Gói PT 10 buổi · còn 3 buổi</span>
+              <span><i class="fa-solid fa-calendar-days"></i> Gói tập hết hạn 12/09/2026</span>
+            </div>
+          </div>
+          <div class="row-actions">
+            <a class="btn btn-ghost btn-sm" href="ghi-chu.html">Ghi chú</a>
+            <a class="btn btn-outline btn-sm" href="giao-an.html">Giáo án</a>
+          </div>
+        </div>
+        <div class="data-row" data-state="active" data-pkg="Gói PT 10 buổi" data-q="phạm quốc huy sg-0402">
+          <div class="row-main">
+            <div class="row-title">
+              <span class="avatar" style="width:30px;height:30px;border-radius:50%;display:inline-grid;place-items:center;font-size:.72rem;font-weight:700">QH</span>
+              Phạm Quốc Huy <span class="badge badge-ok">Còn hiệu lực</span>
+            </div>
+            <div class="row-meta">
+              <span><i class="fa-solid fa-id-card"></i> SG-0402</span>
+              <span><i class="fa-solid fa-layer-group"></i> Gói PT 10 buổi · còn 7 buổi</span>
+              <span><i class="fa-solid fa-calendar-days"></i> Gói tập tới 30/10/2026</span>
+            </div>
+          </div>
+          <div class="row-actions">
+            <a class="btn btn-ghost btn-sm" href="ghi-chu.html">Ghi chú</a>
+            <a class="btn btn-outline btn-sm" href="giao-an.html">Giáo án</a>
+          </div>
+        </div>
+        <div class="data-row" data-state="active" data-pkg="Gói PT Couple" data-q="vũ hoài nam sg-0355">
+          <div class="row-main">
+            <div class="row-title">
+              <span class="avatar" style="width:30px;height:30px;border-radius:50%;display:inline-grid;place-items:center;font-size:.72rem;font-weight:700">HN</span>
+              Vũ Hoài Nam <span class="badge badge-ok">Còn hiệu lực</span>
+            </div>
+            <div class="row-meta">
+              <span><i class="fa-solid fa-id-card"></i> SG-0355</span>
+              <span><i class="fa-solid fa-layer-group"></i> Gói PT Couple · còn 5 buổi</span>
+              <span><i class="fa-solid fa-calendar-days"></i> Quota chung với Đỗ Lan Chi</span>
+            </div>
+          </div>
+          <div class="row-actions">
+            <a class="btn btn-ghost btn-sm" href="ghi-chu.html">Ghi chú</a>
+            <a class="btn btn-outline btn-sm" href="giao-an.html">Giáo án</a>
+          </div>
+        </div>
+        <div class="data-row" data-state="active" data-pkg="Gói PT Couple" data-q="đỗ lan chi sg-0356">
+          <div class="row-main">
+            <div class="row-title">
+              <span class="avatar" style="width:30px;height:30px;border-radius:50%;display:inline-grid;place-items:center;font-size:.72rem;font-weight:700">LC</span>
+              Đỗ Lan Chi <span class="badge badge-ok">Còn hiệu lực</span>
+            </div>
+            <div class="row-meta">
+              <span><i class="fa-solid fa-id-card"></i> SG-0356</span>
+              <span><i class="fa-solid fa-layer-group"></i> Gói PT Couple · còn 5 buổi</span>
+              <span><i class="fa-solid fa-calendar-days"></i> Quota chung với Vũ Hoài Nam</span>
+            </div>
+          </div>
+          <div class="row-actions">
+            <a class="btn btn-ghost btn-sm" href="ghi-chu.html">Ghi chú</a>
+            <a class="btn btn-outline btn-sm" href="giao-an.html">Giáo án</a>
+          </div>
+        </div>
+        <div class="data-row" data-state="frozen" data-pkg="Gói PT 10 buổi" data-q="bùi khánh linh sg-0299">
+          <div class="row-main">
+            <div class="row-title">
+              <span class="avatar" style="width:30px;height:30px;border-radius:50%;display:inline-grid;place-items:center;font-size:.72rem;font-weight:700">KL</span>
+              Bùi Khánh Linh <span class="badge badge-warn">Bảo lưu</span>
+            </div>
+            <div class="row-meta">
+              <span><i class="fa-solid fa-id-card"></i> SG-0299</span>
+              <span><i class="fa-solid fa-layer-group"></i> Gói PT 10 buổi · còn 6 buổi</span>
+              <span><i class="fa-solid fa-calendar-days"></i> Đang bảo lưu tới 05/10/2026</span>
+            </div>
+          </div>
+          <div class="row-actions">
+            <a class="btn btn-ghost btn-sm" href="ghi-chu.html">Ghi chú</a>
+            <a class="btn btn-outline btn-sm" href="giao-an.html">Giáo án</a>
+          </div>
+        </div>
+        <div class="data-row" data-state="expired" data-pkg="Gói PT Tháng" data-q="hoàng đức duy sg-0433">
+          <div class="row-main">
+            <div class="row-title">
+              <span class="avatar" style="width:30px;height:30px;border-radius:50%;display:inline-grid;place-items:center;font-size:.72rem;font-weight:700">ĐD</span>
+              Hoàng Đức Duy <span class="badge badge-danger">Hết hạn</span>
+            </div>
+            <div class="row-meta">
+              <span><i class="fa-solid fa-id-card"></i> SG-0433</span>
+              <span><i class="fa-solid fa-layer-group"></i> Gói PT Tháng · còn 0 buổi</span>
+              <span><i class="fa-solid fa-calendar-days"></i> Gói tập hết hạn 31/08/2026</span>
+            </div>
+          </div>
+          <div class="row-actions">
+            <a class="btn btn-ghost btn-sm" href="ghi-chu.html">Ghi chú</a>
+            <a class="btn btn-outline btn-sm" href="giao-an.html">Giáo án</a>
+          </div>
+        </div>
+        <div class="empty-state" data-empty hidden>
+          <div class="empty-icon"><i class="fa-solid fa-box-open"></i></div>
+          <p>Không có khách nào khớp bộ lọc.</p>
+        </div>
+      </div>
+
+      <div class="pager" data-pager>
+        <div class="pager-info"></div>
+        <div class="pager-btns"></div>
+      </div>
+    </main>
+  </div>
+</div>
+
+<script src="../app.js"></script>
+<script src="../kh/customer.js"></script>
+<script src="khach-cua-toi.js"></script>
+</body>
+</html>

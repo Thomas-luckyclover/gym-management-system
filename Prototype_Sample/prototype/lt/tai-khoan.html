@@ -1,0 +1,202 @@
+﻿<!DOCTYPE html>
+<html lang="vi">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
+<title>Cài đặt tài khoản — Super Gym Lễ tân</title>
+<meta name="robots" content="noindex">
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Montserrat:wght@600;700;800&family=Inter:wght@400;500;600;700&display=swap">
+<script src="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/7.3.1/js/all.min.js" crossorigin="anonymous"></script>
+<link rel="stylesheet" href="../style.css">
+<link rel="stylesheet" href="../customer.css">
+</head>
+<body class="cust staff">
+<div id="toastRoot"></div>
+<div id="modalRoot"></div>
+
+<!-- 1.4.1 — Account Settings · L2 · UC-04 -->
+<div class="cust-shell" id="custShell">
+
+  <div class="cust-dock" id="custDock">
+    <aside class="cust-sidebar">
+      <a class="cust-brand" href="check-in.html">
+        <b>Super Gym</b><span>Lễ tân</span>
+      </a>
+      <nav class="cust-nav">
+        <h4>Tại quầy</h4>
+        <a href="check-in.html"><i class="fa-solid fa-door-open"></i>Check-in</a>
+        <a href="ban-hang.html"><i class="fa-solid fa-cart-shopping"></i>Bán hàng</a>
+        <a href="ban-goi-pt.html"><i class="fa-solid fa-user-check"></i>Bán gói PT</a>
+        <a href="ca-lam-viec.html"><i class="fa-solid fa-cash-register"></i>Ca làm việc</a>
+        <h4>Hội viên</h4>
+        <a href="hoi-vien.html"><i class="fa-solid fa-user-group"></i>Hồ sơ khách</a>
+        <a href="bao-luu.html"><i class="fa-solid fa-circle-pause"></i>Bảo lưu</a>
+        <h4>Cơ sở vật chất</h4>
+        <a href="co-so-vat-chat.html"><i class="fa-solid fa-boxes-stacked"></i>Danh mục</a>
+        <a href="bao-tri.html"><i class="fa-solid fa-screwdriver-wrench"></i>Yêu cầu bảo trì</a>
+        <h4>Cá nhân</h4>
+        <a href="nghi-phep.html"><i class="fa-solid fa-plane-departure"></i>Nghỉ phép</a>
+        <a href="tai-khoan.html" aria-current="page"><i class="fa-solid fa-user-gear"></i>Cài đặt tài khoản</a>
+      </nav>
+      <div class="cust-sidebar-foot">
+        <a href="../dang-nhap.html"><i class="fa-solid fa-arrow-right-from-bracket"></i>Đăng xuất</a>
+      </div>
+    </aside>
+    <button class="cust-handle" type="button" id="dockHandle"
+            aria-label="Mở menu điều hướng" aria-expanded="false" aria-controls="custDock">
+      <i class="fa-solid fa-chevron-right"></i>
+    </button>
+  </div>
+
+  <div class="cust-main">
+    <header class="cust-topbar">
+      <div>
+        <h1>Cài đặt tài khoản</h1>
+      </div>
+      <div class="cust-topbar-actions">
+        <a class="badge badge-ok" href="ca-lam-viec.html" id="shiftChip"><i class="fa-solid fa-circle-check"></i> Ca chiều 20/09 đang mở</a>
+        <a class="cust-user" href="tai-khoan.html" title="Cài đặt tài khoản">
+          <span class="avatar">NH</span>
+          <span class="cust-user-text">
+            <b>Nguyễn Thị Hoa</b>
+            <span>Lễ tân · NV-0042</span>
+          </span>
+        </a>
+      </div>
+    </header>
+
+    <main class="cust-content">
+      <div class="split">
+        <div class="col-main">
+
+          <!-- UC-13: hồ sơ nhân sự là quyền riêng của Quản lý, Lễ tân chỉ xem -->
+          <section class="panel">
+            <div class="panel-head">
+              <div>
+                <h2>Hồ sơ nhân sự</h2>
+                <p>Chỉ Quản lý sửa được. Đổi vị trí, điều chuyển hay cho nghỉ việc đều do Quản lý thao tác.</p>
+              </div>
+              <span class="badge badge-muted"><i class="fa-solid fa-lock"></i> Chỉ đọc</span>
+            </div>
+            <dl class="sum-list">
+              <div><dt>Họ và tên</dt><dd>Nguyễn Thị Hoa</dd></div>
+              <div><dt>Ngày sinh</dt><dd>18/11/1998</dd></div>
+              <div><dt>Mã nhân viên</dt><dd class="tabular">NV-0042</dd></div>
+              <div><dt>Vị trí</dt><dd>Lễ tân</dd></div>
+              <div><dt>Cơ sở</dt><dd>Super Gym Cầu Giấy</dd></div>
+              <div><dt>Ngày vào làm</dt><dd>04/03/2024</dd></div>
+              <div><dt>Trạng thái</dt><dd><span class="badge badge-ok">Đang làm việc</span></dd></div>
+            </dl>
+            <p class="muted">Tài khoản đăng nhập do Quản trị hệ thống cấp. Sai thông tin thì báo Quản lý, không sửa ở đây.</p>
+          </section>
+
+          <section class="panel">
+            <div class="panel-head"><h2>Email đăng nhập</h2></div>
+            <form id="emailForm" novalidate>
+              <div class="form-grid">
+                <label class="field">
+                  <span class="field-label">Email hiện tại</span>
+                  <input type="email" value="hoa.nguyen@supergym.vn" disabled>
+                </label>
+                <label class="field">
+                  <span class="field-label">Email mới</span>
+                  <input id="acEmail" type="email" placeholder="email.moi@supergym.vn">
+                  <span class="field-error" id="acEmailErr" hidden></span>
+                </label>
+              </div>
+              <span class="field-hint"><i class="fa-solid fa-circle-info"></i><span>Mã xác thực gửi tới <b>email mới</b>. Nhập đúng mã thì email cũ mới ngừng hiệu lực.</span></span>
+              <div class="btn-row"><button class="btn btn-primary" type="submit">Gửi mã xác thực</button></div>
+            </form>
+
+            <div class="otp-box" id="emailOtp" hidden>
+              <label class="field">
+                <span class="field-label">Mã xác thực gửi tới <b data-otp-target></b></span>
+                <input id="acOtp" class="otp-input" type="text" inputmode="numeric" maxlength="6" placeholder="000000">
+                <span class="field-hint"><i class="fa-solid fa-circle-info"></i><span>Mã thử: <b class="tabular">246810</b>. Hết hạn sau <b class="tabular" id="acOtpTimer">05:00</b>.</span></span>
+                <span class="field-error" id="acOtpErr" hidden></span>
+              </label>
+              <div class="btn-row">
+                <button class="btn btn-ghost" type="button" id="acOtpCancel">Huỷ</button>
+                <button class="btn btn-primary" type="button" id="acOtpOk">Xác nhận đổi email</button>
+              </div>
+            </div>
+          </section>
+
+          <section class="panel">
+            <div class="panel-head"><h2>Số điện thoại</h2></div>
+            <form id="phoneForm" novalidate>
+              <div class="form-grid">
+                <label class="field">
+                  <span class="field-label">Số hiện tại</span>
+                  <input type="tel" value="0912 888 042" disabled>
+                </label>
+                <label class="field">
+                  <span class="field-label">Số mới</span>
+                  <input id="acPhone" type="tel" inputmode="numeric" maxlength="10" placeholder="10 số, bắt đầu bằng 0">
+                  <span class="field-error" id="acPhoneErr" hidden></span>
+                </label>
+              </div>
+              <div class="btn-row"><button class="btn btn-primary" type="submit">Lưu số mới</button></div>
+            </form>
+          </section>
+
+          <section class="panel">
+            <div class="panel-head"><h2>Mật khẩu</h2></div>
+            <form id="pwForm" novalidate>
+              <label class="field">
+                <span class="field-label">Mật khẩu hiện tại</span>
+                <input id="pwOld" type="password" placeholder="••••••••">
+                <span class="field-error" id="pwOldErr" hidden></span>
+              </label>
+              <div class="form-grid">
+                <label class="field">
+                  <span class="field-label">Mật khẩu mới</span>
+                  <input id="pwNew" type="password" placeholder="Tối thiểu 8 ký tự">
+                  <span class="field-error" id="pwNewErr" hidden></span>
+                </label>
+                <label class="field">
+                  <span class="field-label">Nhập lại mật khẩu mới</span>
+                  <input id="pwNew2" type="password">
+                  <span class="field-error" id="pwNew2Err" hidden></span>
+                </label>
+              </div>
+              <div class="btn-row"><button class="btn btn-primary" type="submit">Đổi mật khẩu</button></div>
+            </form>
+          </section>
+
+        </div>
+
+        <aside class="col-side">
+          <!-- UC-04: phần này là của riêng bạn, tự sửa, không cần ai duyệt -->
+          <div class="side-card">
+            <div class="avatar-row">
+              <span class="avatar-lg" id="acAvatar">NH</span>
+              <div>
+                <h3>Nguyễn Thị Hoa</h3>
+                <p class="muted">Lễ tân · NV-0042</p>
+              </div>
+            </div>
+            <button class="btn btn-ghost btn-sm btn-block" type="button" id="avatarBtn"><i class="fa-solid fa-camera"></i> Đổi ảnh đại diện</button>
+            <p class="muted">Ảnh đại diện, email, số điện thoại và mật khẩu là của riêng bạn. Tự đổi, không qua Quản lý.</p>
+          </div>
+          <div class="side-card">
+            <span class="section-label">Phiên đăng nhập</span>
+            <div class="side-row"><span>Máy quầy lễ tân</span><b>Đang dùng</b></div>
+            <div class="side-row"><span>Đăng nhập lúc</span><b class="tabular">13:58 · 20/09</b></div>
+            <button class="btn btn-ghost btn-sm btn-block" type="button" id="logoutAll" style="margin-top:var(--space-4)">Đăng xuất mọi thiết bị khác</button>
+          </div>
+          <div class="side-card">
+            <span class="section-label">Lưu ý</span>
+            <p class="muted">Máy quầy là máy dùng chung. Khoá màn hình mỗi khi rời quầy và không lưu mật khẩu trên trình duyệt.</p>
+          </div>
+        </aside>
+      </div>
+    </main>
+  </div>
+</div>
+
+<script src="../app.js"></script>
+<script src="../kh/customer.js"></script>
+<script src="tai-khoan.js"></script>
+</body>
+</html>

@@ -1,0 +1,216 @@
+﻿<!DOCTYPE html>
+<html lang="vi">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
+<title>Yêu cầu bảo trì — Super Gym Lễ tân</title>
+<meta name="robots" content="noindex">
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Montserrat:wght@600;700;800&family=Inter:wght@400;500;600;700&display=swap">
+<script src="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/7.3.1/js/all.min.js" crossorigin="anonymous"></script>
+<link rel="stylesheet" href="../style.css">
+<link rel="stylesheet" href="../customer.css">
+</head>
+<body class="cust staff">
+<div id="toastRoot"></div>
+<div id="modalRoot"></div>
+
+<!-- 8.2.1 — Maintenance Request · L2 · UC-28 -->
+<div class="cust-shell" id="custShell">
+
+  <div class="cust-dock" id="custDock">
+    <aside class="cust-sidebar">
+      <a class="cust-brand" href="check-in.html">
+        <b>Super Gym</b><span>Lễ tân</span>
+      </a>
+      <nav class="cust-nav">
+        <h4>Tại quầy</h4>
+        <a href="check-in.html"><i class="fa-solid fa-door-open"></i>Check-in</a>
+        <a href="ban-hang.html"><i class="fa-solid fa-cart-shopping"></i>Bán hàng</a>
+        <a href="ban-goi-pt.html"><i class="fa-solid fa-user-check"></i>Bán gói PT</a>
+        <a href="ca-lam-viec.html"><i class="fa-solid fa-cash-register"></i>Ca làm việc</a>
+        <h4>Hội viên</h4>
+        <a href="hoi-vien.html"><i class="fa-solid fa-user-group"></i>Hồ sơ khách</a>
+        <a href="bao-luu.html"><i class="fa-solid fa-circle-pause"></i>Bảo lưu</a>
+        <h4>Cơ sở vật chất</h4>
+        <a href="co-so-vat-chat.html"><i class="fa-solid fa-boxes-stacked"></i>Danh mục</a>
+        <a href="bao-tri.html" aria-current="page"><i class="fa-solid fa-screwdriver-wrench"></i>Yêu cầu bảo trì</a>
+        <h4>Cá nhân</h4>
+        <a href="nghi-phep.html"><i class="fa-solid fa-plane-departure"></i>Nghỉ phép</a>
+        <a href="tai-khoan.html"><i class="fa-solid fa-user-gear"></i>Cài đặt tài khoản</a>
+      </nav>
+      <div class="cust-sidebar-foot">
+        <a href="../dang-nhap.html"><i class="fa-solid fa-arrow-right-from-bracket"></i>Đăng xuất</a>
+      </div>
+    </aside>
+    <button class="cust-handle" type="button" id="dockHandle"
+            aria-label="Mở menu điều hướng" aria-expanded="false" aria-controls="custDock">
+      <i class="fa-solid fa-chevron-right"></i>
+    </button>
+  </div>
+
+  <div class="cust-main">
+    <header class="cust-topbar">
+      <div>
+        <h1>Yêu cầu bảo trì</h1>
+      </div>
+      <div class="cust-topbar-actions">
+        <a class="badge badge-ok" href="ca-lam-viec.html" id="shiftChip"><i class="fa-solid fa-circle-check"></i> Ca chiều 20/09 đang mở</a>
+        <a class="cust-user" href="tai-khoan.html" title="Cài đặt tài khoản">
+          <span class="avatar">NH</span>
+          <span class="cust-user-text">
+            <b>Nguyễn Thị Hoa</b>
+            <span>Lễ tân · NV-0042</span>
+          </span>
+        </a>
+      </div>
+    </header>
+
+    <main class="cust-content">
+      <div class="split is-single">
+        <div class="col-main">
+          <section class="panel">
+            <div class="panel-head"><h2>Gửi yêu cầu mới</h2></div>
+            <form id="mtForm" novalidate>
+              <label class="field">
+                <span class="field-label">Thiết bị</span>
+                <select id="mtEq">
+                  <option value="">Chọn thiết bị…</option>
+                  <option value="TB-0101">TB-0101 · Máy chạy bộ Technogym Run</option>
+                  <option value="TB-0102">TB-0102 · Máy chạy bộ Technogym Run</option>
+                  <option value="TB-0103">TB-0103 · Xe đạp tập Keiser M3i</option>
+                  <option value="TB-0201">TB-0201 · Giàn tạ đa năng Hammer</option>
+                  <option value="TB-0202">TB-0202 · Máy kéo cáp Life Fitness</option>
+                  <option value="TB-0203">TB-0203 · Máy đẩy ngực Matrix</option>
+                  <option value="TB-0301">TB-0301 · Giá squat Rogue R-3</option>
+                  <option value="TB-0302">TB-0302 · Bộ tạ đòn Olympic 150kg</option>
+                  <option value="TB-0303">TB-0303 · Bộ tạ đơn 2–40kg</option>
+                  <option value="TB-0401">TB-0401 · Điều hoà Daikin 24000BTU</option>
+                  <option value="TB-0402">TB-0402 · Bình nóng lạnh Ariston</option>
+                  <option value="TB-0403">TB-0403 · Tủ khoá cá nhân · dãy A</option>
+                </select>
+                <span class="field-error" id="mtEqErr" hidden></span>
+              </label>
+              <label class="field">
+                <span class="field-label">Mức ưu tiên</span>
+                <select id="mtPri">
+                  <option>Thường</option>
+                  <option>Khẩn</option>
+                  <option>Thấp</option>
+                </select>
+                <span class="field-hint"><i class="fa-solid fa-circle-info"></i><span>Chọn Khẩn khi thiết bị có nguy cơ gây thương tích.</span></span>
+              </label>
+              <label class="field">
+                <span class="field-label">Mô tả hỏng hóc</span>
+                <textarea id="mtDesc" rows="4" placeholder="Hỏng ở đâu, xảy ra khi nào, đã xử lý tạm thế nào"></textarea>
+                <span class="field-error" id="mtDescErr" hidden></span>
+              </label>
+              <label class="pay-option">
+                <input type="checkbox" id="mtStop">
+                <span class="pay-body"><b>Đã dán cảnh báo, ngừng cho khách dùng</b><small>Chọn khi thiết bị không còn an toàn</small></span>
+              </label>
+              <div class="btn-row">
+                <button class="btn btn-primary" type="submit">Gửi yêu cầu</button>
+              </div>
+            </form>
+          </section>
+
+          <section class="panel">
+            <div class="panel-head"><h2>Yêu cầu của tôi</h2></div>
+            <div class="toolbar">
+              <div class="search">
+                <i class="fa-solid fa-magnifying-glass"></i>
+                <input id="mtq" type="search" placeholder="Tìm mã yêu cầu hoặc tên thiết bị" aria-label="Tìm yêu cầu">
+              </div>
+              <label for="mtSt">Trạng thái</label>
+              <select id="mtSt">
+                <option value="all">Tất cả</option>
+                <option value="pending">Chờ duyệt</option>
+                <option value="approved">Đã duyệt</option>
+                <option value="doing">Đang xử lý</option>
+                <option value="done">Đã đóng</option>
+                <option value="rejected">Từ chối</option>
+              </select>
+              <button class="btn btn-ghost btn-sm reset" type="button" id="mtReset">Xoá lọc</button>
+            </div>
+
+            <div class="data-list" id="mtList">
+              <div class="data-row" data-st="approved" data-q="BT-0312 TB-0203 · Máy đẩy ngực Matrix">
+                <div class="row-main">
+                  <div class="row-title">BT-0312 · TB-0203 · Máy đẩy ngực Matrix <span class="badge badge-info">Đã duyệt</span></div>
+                  <div class="row-meta">
+                    <span><i class="fa-solid fa-calendar"></i> 19/09/2026</span>
+                    <span><i class="fa-solid fa-flag"></i> Khẩn</span>
+                    <span><i class="fa-solid fa-quote-left"></i> Gãy chốt điều chỉnh ghế, khách có thể kẹt tay.</span>
+                  </div>
+                  <div class="row-meta"><span><i class="fa-solid fa-user-tie"></i> Quản lý duyệt 19/09 · thợ hẹn 21/09</span></div>
+                </div>
+                <button class="btn btn-outline btn-sm" type="button" data-close="BT-0312">Đóng yêu cầu</button>
+              </div>
+              <div class="data-row" data-st="doing" data-q="BT-0311 TB-0401 · Điều hoà Daikin">
+                <div class="row-main">
+                  <div class="row-title">BT-0311 · TB-0401 · Điều hoà Daikin <span class="badge badge-info">Đang xử lý</span></div>
+                  <div class="row-meta">
+                    <span><i class="fa-solid fa-calendar"></i> 17/09/2026</span>
+                    <span><i class="fa-solid fa-flag"></i> Thường</span>
+                    <span><i class="fa-solid fa-quote-left"></i> Chảy nước xuống sàn khu tạ máy.</span>
+                  </div>
+                  <div class="row-meta"><span><i class="fa-solid fa-user-tie"></i> Thợ đang xử lý từ 18/09</span></div>
+                </div>
+                <button class="btn btn-outline btn-sm" type="button" data-close="BT-0311">Đóng yêu cầu</button>
+              </div>
+              <div class="data-row" data-st="pending" data-q="BT-0309 TB-0103 · Xe đạp Keiser M3i">
+                <div class="row-main">
+                  <div class="row-title">BT-0309 · TB-0103 · Xe đạp Keiser M3i <span class="badge badge-warn">Chờ duyệt</span></div>
+                  <div class="row-meta">
+                    <span><i class="fa-solid fa-calendar"></i> 12/09/2026</span>
+                    <span><i class="fa-solid fa-flag"></i> Thường</span>
+                    <span><i class="fa-solid fa-quote-left"></i> Bánh đà kêu to khi đạp nhanh.</span>
+                  </div>
+                  <div class="row-meta"><span><i class="fa-solid fa-user-tie"></i> Chờ Quản lý duyệt</span></div>
+                </div>
+              </div>
+              <div class="data-row" data-st="done" data-q="BT-0305 TB-0302 · Bộ tạ đòn Olympic">
+                <div class="row-main">
+                  <div class="row-title">BT-0305 · TB-0302 · Bộ tạ đòn Olympic <span class="badge badge-ok">Đã đóng</span></div>
+                  <div class="row-meta">
+                    <span><i class="fa-solid fa-calendar"></i> 02/09/2026</span>
+                    <span><i class="fa-solid fa-flag"></i> Thấp</span>
+                    <span><i class="fa-solid fa-quote-left"></i> Thiếu 2 chốt khoá tạ.</span>
+                  </div>
+                  <div class="row-meta"><span><i class="fa-solid fa-user-tie"></i> Đã đóng 05/09</span></div>
+                </div>
+              </div>
+              <div class="data-row" data-st="rejected" data-q="BT-0301 TB-0403 · Tủ khoá dãy A">
+                <div class="row-main">
+                  <div class="row-title">BT-0301 · TB-0403 · Tủ khoá dãy A <span class="badge badge-muted">Từ chối</span></div>
+                  <div class="row-meta">
+                    <span><i class="fa-solid fa-calendar"></i> 21/08/2026</span>
+                    <span><i class="fa-solid fa-flag"></i> Thường</span>
+                    <span><i class="fa-solid fa-quote-left"></i> Ba ổ khoá kẹt, khách phàn nàn.</span>
+                  </div>
+                  <div class="row-meta"><span><i class="fa-solid fa-user-tie"></i> Quản lý từ chối 22/08 · đã có hợp đồng thay toàn bộ dãy A</span></div>
+                </div>
+              </div>
+        <div class="empty-state" data-empty hidden>
+          <div class="empty-icon"><i class="fa-solid fa-box-open"></i></div>
+          <p>Không có yêu cầu nào khớp bộ lọc.</p>
+        </div>
+            </div>
+
+      <div class="pager" data-pager>
+        <div class="pager-info"></div>
+        <div class="pager-btns"></div>
+      </div>
+          </section>
+        </div>
+
+      </div>
+    </main>
+  </div>
+</div>
+
+<script src="../app.js"></script>
+<script src="../kh/customer.js"></script>
+<script src="bao-tri.js"></script>
+</body>
+</html>

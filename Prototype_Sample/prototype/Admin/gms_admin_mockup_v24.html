@@ -1,0 +1,1132 @@
+<!DOCTYPE html>
+<html lang="vi">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>GMS Admin — Mockup v24 (Montserrat + Work Sans)</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Be+Vietnam+Pro:wght@600;700;800&family=Montserrat:wght@600;700;800&family=Work+Sans:wght@400;500;600;700&display=swap" rel="stylesheet">
+<style>
+:root{
+  --admin:#5B3FA0; --admin-hover:#4A3287; --admin-bg:#F1ECFB; --admin-border:#D8CCF0;
+  --manager:#3B4FA0; --staff:#0E8E82; --staff-bg:#E7F6F3; --customer:#E2583E; --customer-bg:#FDEDEB;
+  --page:#FAFAF8; --card:#FFFFFF; --text:#23221F; --text2:#6B6960; --border:#E7E5DF;
+  --success:#2F8F5B; --warning:#D69E2E; --danger:#D32F3F; --info:#2E6FBA;
+  --success-bg:#E8F4EC; --warning-bg:#FBF3E2; --danger-bg:#FBE9EA; --info-bg:#E8F0F9;
+  --r-sm:6px; --r-md:10px; --r-lg:14px;
+  --font:"Work Sans", "Segoe UI", system-ui, -apple-system, sans-serif;
+  --display:"Montserrat", "Segoe UI", system-ui, sans-serif;
+}
+*{box-sizing:border-box}
+html,body{margin:0}
+body{font-family:var(--font);font-size:14px;line-height:1.5;color:var(--text);background:var(--page);-webkit-font-smoothing:antialiased}
+button,input,select,textarea{font:inherit;color:inherit}
+a{color:var(--admin)}
+:focus-visible{outline:2px solid var(--admin);outline-offset:2px}
+@media (prefers-reduced-motion:reduce){*{transition:none!important;animation:none!important}}
+
+/* ---------- App shell ---------- */
+.app{display:grid;grid-template-columns:240px minmax(0,1fr);min-height:100vh}
+.sidebar{background:var(--card);border-right:1px solid var(--border);display:flex;flex-direction:column;position:sticky;top:0;height:100vh}
+.brand{display:flex;align-items:center;gap:10px;padding:20px 20px 18px}
+.brand-mark{width:32px;height:32px;border-radius:8px;background:var(--admin);color:#fff;display:grid;place-items:center;font-weight:700;font-size:13px;letter-spacing:.02em}
+.brand-name{font-weight:700;font-size:15px}
+.brand-role{font-size:12px;color:var(--admin);font-weight:600}
+.nav{padding:8px 12px;display:flex;flex-direction:column;gap:2px;flex:1}
+.nav-group{font-size:12px;color:var(--text2);padding:14px 10px 6px}
+.nav a{display:flex;align-items:center;gap:10px;padding:9px 10px;border-radius:var(--r-sm);color:var(--text);text-decoration:none;font-weight:500}
+.nav a:hover{background:var(--page)}
+.nav a.active{background:var(--admin-bg);color:var(--admin);font-weight:600;box-shadow:inset 3px 0 0 var(--admin)}
+.nav svg{width:18px;height:18px;flex:none;stroke:currentColor;fill:none;stroke-width:1.7;stroke-linecap:round;stroke-linejoin:round}
+.side-foot{border-top:1px solid var(--border);padding:12px}
+.me{display:flex;align-items:center;gap:10px;padding:8px;border-radius:var(--r-sm);text-decoration:none;color:var(--text)}
+.me:hover{background:var(--page)}
+.avatar{width:32px;height:32px;border-radius:50%;display:grid;place-items:center;font-weight:600;font-size:12px;flex:none;background:var(--admin-bg);color:var(--admin)}
+.me small{display:block;color:var(--text2);font-size:12px}
+.logout{margin-top:4px;width:100%;text-align:left;background:none;border:0;padding:8px;border-radius:var(--r-sm);color:var(--text2);cursor:pointer}
+.logout:hover{background:var(--page);color:var(--text)}
+
+.main{min-width:0;display:flex;flex-direction:column}
+.topbar{display:flex;align-items:center;justify-content:space-between;gap:16px;padding:14px 32px;border-bottom:1px solid var(--border);background:var(--card)}
+.crumbs{font-size:13px;color:var(--text2)}
+.crumbs a{color:var(--text2);text-decoration:none}
+.crumbs a:hover{color:var(--admin)}
+.crumbs b{color:var(--text);font-weight:600}
+.spec-toggle{display:flex;align-items:center;gap:8px;font-size:12px;color:var(--text2);cursor:pointer;user-select:none}
+.spec-toggle input{accent-color:var(--admin)}
+.content{padding:28px 32px 64px;max-width:1240px;width:100%}
+
+/* spec tags (screen code / layout / UC / message) */
+.spec{display:inline-flex;gap:6px;align-items:center;font-size:11px;font-weight:600;color:var(--admin);background:var(--admin-bg);border:1px dashed var(--admin-border);border-radius:4px;padding:1px 6px;vertical-align:middle;white-space:nowrap}
+body.no-spec .spec{display:none}
+
+/* ---------- Page header ---------- */
+.page-head{display:flex;justify-content:space-between;align-items:flex-end;gap:16px;margin-bottom:20px;flex-wrap:wrap}
+.page-head h1{font-size:24px;line-height:1.25;font-weight:700;margin:0 0 4px;letter-spacing:-.01em}
+.page-head p{margin:0;color:var(--text2);max-width:64ch}
+
+/* ---------- Buttons ---------- */
+.btn{display:inline-flex;align-items:center;gap:8px;border-radius:var(--r-sm);border:1px solid var(--border);background:var(--card);padding:8px 14px;font-weight:600;cursor:pointer;text-decoration:none;color:var(--text);transition:background .12s,border-color .12s}
+.btn:hover{background:var(--page);border-color:#D4D1C8}
+.btn-primary{background:var(--admin);border-color:var(--admin);color:#fff}
+.btn-primary:hover{background:var(--admin-hover);border-color:var(--admin-hover)}
+.btn-danger{color:var(--danger);border-color:#EFC5C9}
+.btn-danger:hover{background:var(--danger-bg);border-color:var(--danger)}
+.btn-danger-solid{background:var(--danger);border-color:var(--danger);color:#fff}
+.btn-danger-solid:hover{background:#B72633}
+.btn[disabled],.btn[aria-disabled="true"]{opacity:.45;cursor:not-allowed}
+.btn svg{width:16px;height:16px;stroke:currentColor;fill:none;stroke-width:2;stroke-linecap:round}
+
+/* ---------- Card ---------- */
+.card{background:var(--card);border:1px solid var(--border);border-radius:var(--r-md)}
+.card-pad{padding:20px}
+.card h2{font-size:16px;margin:0 0 4px;font-weight:600}
+.card .sub{color:var(--text2);font-size:13px;margin:0 0 16px}
+
+/* ---------- Filters ---------- */
+.filters{display:flex;gap:10px;flex-wrap:wrap;align-items:center;padding:14px 16px;border-bottom:1px solid var(--border)}
+.field-inline{display:flex;flex-direction:column;gap:4px}
+.field-inline label{font-size:12px;color:var(--text2)}
+.input,.select,textarea.input{border:1px solid var(--border);background:var(--card);border-radius:var(--r-sm);padding:8px 10px;min-height:36px}
+.input:focus,.select:focus{outline:none;border-color:var(--admin);box-shadow:0 0 0 3px var(--admin-bg)}
+.input[readonly]{background:var(--page);color:var(--text)}
+.select:disabled,.input:disabled{background:var(--page);color:var(--text2);cursor:not-allowed}
+.search{position:relative;flex:1;min-width:220px}
+.search input{width:100%;padding-left:34px}
+.search svg{position:absolute;left:10px;top:50%;transform:translateY(-50%);width:16px;height:16px;stroke:var(--text2);fill:none;stroke-width:2}
+.seg{display:inline-flex;border:1px solid var(--border);border-radius:var(--r-sm);overflow:hidden;background:var(--card)}
+.seg button{border:0;background:none;padding:7px 12px;cursor:pointer;font-weight:500;color:var(--text2);border-right:1px solid var(--border)}
+.seg button:last-child{border-right:0}
+.seg button[aria-pressed="true"]{background:var(--admin-bg);color:var(--admin);font-weight:600}
+
+/* ---------- Table ---------- */
+.table-wrap{overflow-x:auto}
+table{width:100%;border-collapse:collapse}
+th{text-align:left;font-size:12px;font-weight:600;color:var(--text2);padding:10px 16px;border-bottom:1px solid var(--border);background:#FCFCFA;white-space:nowrap}
+td{padding:12px 16px;border-bottom:1px solid var(--border);vertical-align:middle}
+tbody tr{cursor:pointer}
+tbody tr:hover{background:#FBFAFD}
+tbody tr:last-child td{border-bottom:0}
+.who{display:flex;align-items:center;gap:10px}
+.who b{font-weight:600;display:block}
+.who small{color:var(--text2);font-size:12px}
+.num{font-variant-numeric:tabular-nums}
+
+/* role & status */
+.role{display:inline-block;font-size:12px;font-weight:600;padding:2px 8px;border-radius:999px}
+.role-Admin{background:var(--admin-bg);color:var(--admin)}
+.role-Manager{background:#EDEFFA;color:var(--manager)}
+.role-PT,.role-LeTan{background:var(--staff-bg);color:#0B766C}
+.role-Khach{background:var(--customer-bg);color:#C6472F}
+.status{display:inline-flex;align-items:center;gap:6px;font-size:13px;font-weight:500}
+.status::before{content:"";width:8px;height:8px;border-radius:50%;background:currentColor}
+.st-active{color:var(--success)}
+.st-locked{color:var(--danger)}
+.st-temp{color:#A87712}
+.st-inactive{color:var(--text2)}
+
+.table-foot{display:flex;justify-content:space-between;align-items:center;padding:12px 16px;border-top:1px solid var(--border);color:var(--text2);font-size:13px;flex-wrap:wrap;gap:10px}
+.pager{display:flex;gap:4px}
+.pager button{min-width:32px;height:32px;border:1px solid var(--border);background:var(--card);border-radius:var(--r-sm);cursor:pointer}
+.pager button[aria-current="page"]{background:var(--admin);border-color:var(--admin);color:#fff;font-weight:600}
+.empty{padding:48px 16px;text-align:center;color:var(--text2)}
+
+.tabs{display:flex;gap:4px;border-bottom:1px solid var(--border);margin-bottom:16px}
+.tabs button{border:0;background:none;padding:10px 14px;font-weight:600;color:var(--text2);cursor:pointer;border-bottom:2px solid transparent;margin-bottom:-1px}
+.tabs button[aria-selected="true"]{color:var(--admin);border-color:var(--admin)}
+.tabs .count{font-size:12px;background:var(--page);border:1px solid var(--border);padding:0 6px;border-radius:999px;margin-left:6px;color:var(--text2)}
+.tabs button[aria-selected="true"] .count{background:var(--admin-bg);border-color:var(--admin-border);color:var(--admin)}
+
+/* ---------- Detail (L2) ---------- */
+.detail{display:grid;grid-template-columns:minmax(0,1fr) 320px;gap:20px;align-items:start}
+.form-grid{display:grid;grid-template-columns:1fr 1fr;gap:16px}
+.f{display:flex;flex-direction:column;gap:6px}
+.f.full{grid-column:1/-1}
+.f label{font-size:13px;font-weight:600}
+.f label .req{color:var(--danger);margin-left:2px}
+.f .hint{font-size:12px;color:var(--text2)}
+.f .err{font-size:12px;color:var(--danger);display:none}
+.f.invalid .input{border-color:var(--danger)}
+.f.invalid .err{display:block}
+.form-actions{display:flex;gap:10px;justify-content:flex-end;padding:16px 20px;border-top:1px solid var(--border);background:#FCFCFA;border-radius:0 0 var(--r-md) var(--r-md)}
+.detail-head{display:flex;align-items:center;gap:16px;margin-bottom:20px;flex-wrap:wrap}
+.detail-head .avatar{width:52px;height:52px;font-size:17px}
+.detail-head h1{font-size:22px;margin:0 0 4px;font-weight:700}
+.detail-head .meta{display:flex;gap:10px;align-items:center;flex-wrap:wrap;color:var(--text2);font-size:13px}
+.detail-head .grow{flex:1}
+
+.side-card{padding:18px}
+.side-card h3{font-size:14px;margin:0 0 12px;font-weight:600}
+.side-card + .side-card{margin-top:16px}
+.act-list{display:flex;flex-direction:column;gap:8px}
+.act-list .btn{justify-content:flex-start;width:100%}
+.act-note{font-size:12px;color:var(--text2);margin:10px 0 0}
+.tip-wrap{position:relative}
+.tip{display:none;position:absolute;left:0;right:0;top:calc(100% + 6px);background:var(--text);color:#fff;font-size:12px;line-height:1.45;padding:9px 11px;border-radius:var(--r-sm);z-index:5}
+.tip-wrap:hover .tip,.tip-wrap:focus-within .tip{display:block}
+
+.banner{display:flex;gap:12px;padding:12px 14px;border-radius:var(--r-sm);border:1px solid;margin-bottom:16px;font-size:13px;align-items:flex-start}
+.banner svg{width:18px;height:18px;flex:none;margin-top:1px;stroke:currentColor;fill:none;stroke-width:2;stroke-linecap:round}
+.banner b{display:block;margin-bottom:2px}
+.b-warn{background:var(--warning-bg);border-color:#EDD39C;color:#7A5A12}
+.b-info{background:var(--info-bg);border-color:#BFD3EC;color:#234F87}
+.b-muted{background:var(--page);border-color:var(--border);color:var(--text2)}
+.b-admin{background:var(--admin-bg);border-color:var(--admin-border);color:#44307A}
+
+.lockbox{border:1px solid #EDD39C;background:var(--warning-bg);border-radius:var(--r-md);padding:16px;margin-bottom:16px}
+.lockbox .t{font-size:13px;color:#7A5A12;margin:0 0 2px}
+.lockbox .clock{font-size:28px;font-weight:700;font-variant-numeric:tabular-nums;color:#5C430C;margin:4px 0 2px;letter-spacing:-.01em}
+.lockbox .s{font-size:12px;color:#7A5A12;margin:0 0 12px}
+
+.kv{display:grid;grid-template-columns:auto 1fr;gap:6px 14px;font-size:13px;margin:0}
+.kv dt{color:var(--text2)}
+.kv dd{margin:0;font-weight:500}
+
+.mini-log{list-style:none;margin:0;padding:0;font-size:13px}
+.mini-log li{padding:10px 0;border-bottom:1px solid var(--border)}
+.mini-log li:last-child{border-bottom:0}
+.mini-log time{display:block;font-size:12px;color:var(--text2)}
+
+/* ---------- Audit log (the signature piece) ---------- */
+.ledger-day{padding:10px 20px;font-size:13px;font-weight:600;color:var(--text2);background:#FCFCFA;border-bottom:1px solid var(--border);border-top:1px solid var(--border);position:sticky;top:0}
+.ledger-day:first-child{border-top:0}
+.entry{display:grid;grid-template-columns:64px 1fr;gap:16px;padding:16px 20px;border-bottom:1px solid var(--border)}
+.entry:last-child{border-bottom:0}
+.entry time{font-variant-numeric:tabular-nums;font-weight:600;color:var(--text);font-size:14px;padding-top:1px}
+.sentence{font-size:15px;line-height:1.7;max-width:78ch}
+.sentence .actor{font-weight:600}
+.sentence .actor .r{font-weight:500;color:var(--text2)}
+.sentence .obj{font-weight:600}
+.v-old{background:var(--danger-bg);color:#9E2330;text-decoration:line-through;text-decoration-thickness:1px;padding:1px 6px;border-radius:4px;font-variant-numeric:tabular-nums;white-space:nowrap}
+.v-new{background:var(--success-bg);color:#1F6B42;padding:1px 6px;border-radius:4px;font-weight:600;font-variant-numeric:tabular-nums;white-space:nowrap}
+.why{margin-top:4px;font-size:13px;color:var(--text2)}
+.why b{color:var(--text);font-weight:500}
+.kind{display:inline-block;font-size:11px;font-weight:600;color:var(--text2);border:1px solid var(--border);border-radius:4px;padding:0 6px;margin-left:6px;vertical-align:2px}
+.readonly-note{display:flex;align-items:center;gap:8px;font-size:13px;color:var(--text2)}
+.readonly-note svg{width:16px;height:16px;stroke:currentColor;fill:none;stroke-width:2}
+
+/* ---------- Report ---------- */
+.stamp{font-size:13px;color:var(--text2)}
+.stats{display:grid;grid-template-columns:repeat(4,1fr);gap:12px;margin-bottom:16px}
+.stat{padding:16px 18px}
+.stat .l{font-size:13px;color:var(--text2)}
+.stat .v{font-size:28px;font-weight:700;line-height:1.2;margin:4px 0 2px;font-variant-numeric:tabular-nums;letter-spacing:-.01em}
+.stat .d{font-size:12px;color:var(--text2)}
+.stat .d .up{color:var(--success);font-weight:600}
+.stat .d .down{color:var(--danger);font-weight:600}
+.two{display:grid;grid-template-columns:1.6fr 1fr;gap:16px;margin-bottom:16px}
+.chart svg{width:100%;height:auto;display:block}
+.bars{display:flex;flex-direction:column;gap:12px}
+.bar-row{display:grid;grid-template-columns:130px 1fr 40px;gap:10px;align-items:center;font-size:13px}
+.bar-track{height:8px;background:var(--page);border-radius:4px;overflow:hidden;border:1px solid var(--border)}
+.bar-fill{height:100%;border-radius:4px}
+.audit-block{border:1px solid var(--admin-border);border-radius:var(--r-lg);background:linear-gradient(var(--admin-bg),var(--admin-bg)) top/100% 64px no-repeat,var(--card);overflow:hidden}
+.audit-head{display:flex;justify-content:space-between;align-items:center;gap:12px;padding:16px 20px;flex-wrap:wrap}
+.audit-head h2{font-size:17px;margin:0;color:#3F2B75}
+.audit-head p{margin:2px 0 0;font-size:13px;color:#5E4C8F}
+.audit-body{padding:4px 20px 20px}
+.audit-stats{display:grid;grid-template-columns:repeat(4,1fr);gap:12px;margin:12px 0 18px}
+.audit-stats .stat{border:1px solid var(--border);border-radius:var(--r-md);background:var(--card)}
+.error-inline{display:none;color:var(--danger);font-size:12px;margin-top:6px}
+.range-bad .error-inline{display:block}
+.range-bad .input{border-color:var(--danger)}
+
+/* ---------- Auth (L4) ---------- */
+.auth{min-height:100vh;display:grid;place-items:center;padding:24px;background:var(--page)}
+.auth-card{width:100%;max-width:400px;padding:32px}
+.auth-card h1{font-size:22px;margin:16px 0 4px}
+.auth-card p.lead{color:var(--text2);margin:0 0 24px}
+.auth-card .f{margin-bottom:14px}
+.auth-card .btn-primary{width:100%;justify-content:center;padding:10px}
+.auth-links{display:flex;justify-content:space-between;margin-top:14px;font-size:13px}
+.auth-foot{margin-top:18px;text-align:center;font-size:12px;color:var(--text2)}
+
+/* ---------- Modal (L5) ---------- */
+.overlay{position:fixed;inset:0;background:rgba(35,34,31,.45);display:none;align-items:center;justify-content:center;padding:20px;z-index:50}
+.overlay.open{display:flex}
+.modal{background:var(--card);border-radius:var(--r-lg);width:100%;max-width:460px;box-shadow:0 20px 50px rgba(35,34,31,.25);animation:pop .16s ease-out}
+@keyframes pop{from{transform:scale(.97);opacity:0}to{transform:none;opacity:1}}
+.modal-body{padding:22px 22px 8px}
+.modal-body h2{font-size:18px;margin:0 0 8px}
+.modal-body p{margin:0 0 14px;color:var(--text2)}
+.modal-body ul{margin:0 0 14px;padding-left:18px;color:var(--text2);font-size:13px}
+.modal-foot{display:flex;justify-content:flex-end;gap:10px;padding:14px 22px 20px}
+
+/* ---------- Toast ---------- */
+.toast{position:fixed;bottom:24px;right:24px;display:flex;gap:10px;align-items:flex-start;background:var(--text);color:#fff;padding:12px 16px;border-radius:var(--r-md);max-width:420px;font-size:13px;box-shadow:0 10px 30px rgba(0,0,0,.2);transform:translateY(20px);opacity:0;pointer-events:none;transition:all .2s;z-index:60}
+.toast.show{transform:none;opacity:1}
+.toast .dot{width:8px;height:8px;border-radius:50%;margin-top:6px;flex:none}
+.toast .spec{background:rgba(255,255,255,.12);color:#fff;border-color:rgba(255,255,255,.3);margin-left:6px}
+
+/* ---------- User list v3 ---------- */
+.list-head{display:flex;justify-content:space-between;align-items:center;gap:16px;margin-bottom:18px;flex-wrap:wrap}
+.list-head h1{margin:0}
+.list-head p{margin:4px 0 0;color:var(--text2)}
+.head-actions{display:flex;gap:8px;align-items:center;flex:none}
+.list-head > div:first-child{flex:1;min-width:0}
+@media (min-width:761px){.list-head{flex-wrap:nowrap}}
+.lock-callout{display:flex;align-items:center;gap:10px;padding:10px 14px;margin-bottom:14px;border-radius:var(--r-md);background:var(--warning-bg);border:1px solid #EDD39C;color:#6E5210;font-size:13px}
+.lock-callout svg{width:16px;height:16px;stroke:currentColor;fill:none;stroke-width:2;flex:none}
+.lock-callout .grow{flex:1}
+.link-btn{background:none;border:0;padding:0;font-weight:600;color:var(--admin);cursor:pointer;text-decoration:underline;text-underline-offset:3px}
+.lock-callout .link-btn{color:#6E5210}
+
+.ucard{overflow:hidden}
+.ucard-top{padding:14px 16px 0}
+.chips{display:flex;gap:6px;flex-wrap:wrap}
+.chip{display:inline-flex;align-items:center;gap:8px;border:1px solid var(--border);background:var(--card);border-radius:999px;padding:5px 12px;font-size:13px;font-weight:500;color:var(--text2);cursor:pointer}
+.chip:hover{border-color:#D4D1C8;color:var(--text)}
+.chip b{font-weight:700;color:var(--text);font-variant-numeric:tabular-nums}
+.chip[aria-pressed="true"]{background:var(--text);border-color:var(--text);color:#fff}
+.chip[aria-pressed="true"] b{color:#fff}
+.ucard-tools{display:flex;gap:10px;align-items:center;padding:12px 16px 14px;border-bottom:1px solid var(--border);flex-wrap:wrap}
+.ucard-tools .search{flex:1;min-width:220px}
+.ucard-tools .input,.ucard-tools .select{height:38px}
+.ucard-tools .select{min-width:160px}
+.rank-toggle{display:inline-flex;align-items:center;gap:8px;height:38px;padding:0 12px;border-radius:var(--r-sm);border:1px solid var(--border);cursor:pointer;font-weight:500;font-size:13px;color:var(--text2);user-select:none;background:var(--card)}
+.rank-toggle input{accent-color:var(--admin);margin:0}
+.rank-toggle.on{background:var(--admin-bg);border-color:var(--admin-border);color:var(--admin);font-weight:600}
+
+.utable th{background:var(--card);font-weight:500}
+.utable td{padding:11px 16px;white-space:nowrap}
+.utable tbody tr:not(.grp):hover{background:#F8F6FC}
+.utable tr.grp{cursor:default}
+.utable tr.grp td{padding:14px 16px 6px;border-bottom:0;font-size:12px;font-weight:600;color:var(--text2);background:var(--card)}
+.utable tr.grp td span{display:inline-flex;align-items:center;gap:8px}
+.utable tr.grp td span::after{content:"";display:inline-block;width:40px;height:1px;background:var(--border)}
+.rank{display:inline-grid;place-items:center;width:24px;height:24px;border-radius:6px;color:#fff;font-family:var(--display);font-weight:800;font-size:12px}
+.av{width:36px;height:36px;border-radius:50%;display:grid;place-items:center;font-weight:700;font-size:14px;flex:none;font-family:var(--display)}
+.who{gap:12px}
+.who b{font-size:14px}
+.pill{display:inline-block;font-size:12px;font-weight:600;padding:3px 10px;border-radius:999px;white-space:nowrap}
+.p-Admin{background:var(--admin-bg);color:var(--admin)}
+.p-Manager{background:#EDEFFA;color:var(--manager)}
+.p-PT{background:var(--staff-bg);color:#0B766C}
+.p-LeTan{background:#E4F2EF;color:#0B665E}
+.p-Khach{background:var(--customer-bg);color:#C6472F}
+.when b{display:block;font-weight:500}
+.when small{color:var(--text2);font-size:12px}
+th.sortable{padding:0}
+th.sortable button{all:unset;box-sizing:border-box;display:inline-flex;align-items:center;gap:6px;width:100%;padding:10px 16px;cursor:pointer}
+th.sortable button:hover{color:var(--text)}
+th.sortable button:focus-visible{outline:2px solid var(--admin);outline-offset:-2px}
+th .arrow{width:12px;height:12px;stroke:currentColor;fill:none;stroke-width:2;opacity:.35}
+th[aria-sort="ascending"] .arrow,th[aria-sort="descending"] .arrow{opacity:1;color:var(--admin)}
+th[aria-sort="descending"] .arrow{transform:rotate(180deg)}
+.col-rank{width:60px;padding-right:0!important}
+.col-act{width:90px;text-align:right}
+tr.row-inactive .who b,tr.row-inactive td{color:var(--text2)}
+.btn-ghost{border-color:transparent;background:transparent;color:var(--admin);padding:6px 10px;font-size:13px}
+.btn-ghost svg{width:14px;height:14px}
+.utable tbody tr:hover .btn-ghost{background:var(--card);border-color:var(--admin-border)}
+.pager button:disabled{opacity:.4;cursor:not-allowed}
+.back-row{display:flex;justify-content:space-between;align-items:center;padding:14px 16px;border-bottom:1px solid var(--border);gap:10px;flex-wrap:wrap;font-size:13px;color:var(--text2)}
+
+
+/* ---------- Cấp bậc: số trong ô viền nhạt + tên vai trò ---------- */
+.col-lvl{width:150px}
+.lv-badge{display:inline-grid;place-items:center;width:22px;height:22px;border-radius:6px;border:1px solid var(--border);background:var(--page);color:var(--text2);font-size:12px;font-weight:600;font-variant-numeric:tabular-nums;margin-right:10px;vertical-align:middle}
+.lv-role{font-weight:500;vertical-align:middle}
+tr.row-inactive .lv-badge{opacity:.6}
+.utable tr.grp-start td{border-top:1px solid #D4D1C8}
+.utable th{text-transform:uppercase;font-size:11px;letter-spacing:.06em;font-weight:600}
+
+/* ---------- Heading trang in hoa ---------- */
+.page-head h1,.list-head h1,.detail-head h1,.auth-card h1{
+  text-transform:uppercase;letter-spacing:.02em;line-height:1.35;
+}
+.page-head h1 .spec,.list-head h1 .spec,.detail-head h1 .spec,.auth-card h1 .spec{text-transform:none}
+
+
+/* ---------- User list v4 (theo layout mẫu) ---------- */
+.tbar{display:flex;gap:10px;align-items:center;padding:12px;margin-bottom:14px;flex-wrap:wrap}
+.tbar .search{flex:1;min-width:240px}
+.tbar .input,.tbar .select{height:38px}
+.tbar .select{min-width:150px}
+.tbar .sep{width:1px;align-self:stretch;background:var(--border);margin:0 2px}
+.tbar .cnt{font-size:13px;color:var(--text2);white-space:nowrap}
+.rk{display:inline-grid;place-items:center;width:22px;height:22px;border-radius:5px;color:#fff;font-size:12px;font-weight:700;font-variant-numeric:tabular-nums}
+.av-solid{width:34px;height:34px;border-radius:50%;display:grid;place-items:center;color:#fff;font-weight:700;font-size:13px;flex:none}
+.dpill{display:inline-flex;align-items:center;gap:6px;font-size:12px;font-weight:600;padding:3px 10px;border-radius:999px;white-space:nowrap}
+.dpill::before{content:"";width:6px;height:6px;border-radius:50%;background:currentColor}
+.dp-active{background:var(--success-bg);color:var(--success)}
+.dp-locked{background:var(--danger-bg);color:var(--danger)}
+.dp-inactive{background:#F0EFEB;color:var(--text2)}
+.dp-temp{background:var(--warning-bg);color:#A87712}
+.utable.v4 td{padding:12px 16px;white-space:nowrap}
+.utable.v4 .col-rk{width:56px;padding-right:0}
+.utable.v4 tbody tr:hover{background:#FAF8FD}
+.utable.v4 .btn-sm{padding:5px 14px;font-size:13px}
+.foot3{display:grid;grid-template-columns:1fr auto 1fr;align-items:center;gap:12px;padding:12px 16px;border-top:1px solid var(--border);font-size:13px;color:var(--text2)}
+.foot3 b{color:var(--text)}
+.foot3 .right{justify-self:end;display:flex;align-items:center;gap:6px}
+.foot3 .select{height:30px;min-height:30px;padding:2px 6px}
+@media (max-width:760px){.foot3{grid-template-columns:1fr}.foot3 .right{justify-self:start}.utable.v4{min-width:820px}}
+/* ---------- Display type: Montserrat ---------- */
+.page-head h1,.detail-head h1,.auth-card h1,.card h2,.modal-body h2,.audit-head h2,.brand-name,
+.stat .v,.lockbox .clock,.brand-mark{
+  font-family:var(--display);font-weight:700;letter-spacing:-.015em;
+}
+.page-head h1{font-size:28px;line-height:1.2;font-weight:800;margin-bottom:6px}
+.detail-head h1{font-size:26px;line-height:1.2;font-weight:800;margin-bottom:6px}
+.auth-card h1{font-size:26px;line-height:1.2;font-weight:800}
+.card h2{font-size:16px;line-height:1.3}
+.modal-body h2{font-size:19px;line-height:1.3}
+.audit-head h2{font-size:18px;line-height:1.3}
+.brand-name{font-size:15px;line-height:1.2}
+.brand-mark{font-size:12px;font-weight:800;letter-spacing:0}
+.stat .v{font-size:30px;line-height:1.1;margin:6px 0 4px;font-variant-numeric:tabular-nums}
+.lockbox .clock{font-size:30px;line-height:1.2;font-variant-numeric:tabular-nums}
+.ledger-day{font-family:var(--display);font-weight:700;font-size:13px;color:var(--text)}
+.page-head h1 .spec,.detail-head h1 .spec,.auth-card h1 .spec{font-family:var(--font);letter-spacing:0;vertical-align:4px}
+
+/* ---------- Responsive ---------- */
+@media (max-width:1024px){
+  .stats,.audit-stats{grid-template-columns:repeat(2,1fr)}
+  .two{grid-template-columns:1fr}
+  .detail{grid-template-columns:1fr}
+}
+@media (max-width:760px){
+  .app{grid-template-columns:minmax(0,1fr)}
+  .utable{min-width:760px}
+  .topbar{flex-wrap:wrap}
+  .sidebar{position:static;height:auto;border-right:0;border-bottom:1px solid var(--border)}
+  .nav{flex-direction:row;overflow-x:auto;padding:0 12px 10px}
+  .nav-group,.side-foot{display:none}
+  .nav a{white-space:nowrap}
+  .content{padding:20px 16px 48px}
+  .topbar{padding:12px 16px}
+  .form-grid{grid-template-columns:1fr}
+  .entry{grid-template-columns:1fr;gap:4px}
+  .bar-row{grid-template-columns:100px 1fr 32px}
+}
+.page-head h1,.list-head h1{font-size:26px}
+.detail-head h1{font-size:24px}
+.auth-card h1{font-size:24px}
+/* Tiêu đề: Be Vietnam Pro (các phần khác giữ nguyên) */
+:root{--heading:"Be Vietnam Pro","Segoe UI",system-ui,sans-serif}
+.page-head h1,.list-head h1,.detail-head h1,.auth-card h1,.card h2,.modal-body h2,.audit-head h2{font-family:var(--heading)}
+:root{--role:var(--admin);--role-hover:var(--admin-hover);--role-bg:var(--admin-bg);--role-border:var(--admin-border)}
+/* ===== Layout kiểu khu Customer: sidebar dock trượt + topbar mang tiêu đề ===== */
+body.dock{--sidebar-w:252px}
+.dock .app{display:block;min-height:100vh}
+.dock .dockwrap{position:fixed;left:0;top:0;bottom:0;width:0;z-index:120}
+.dock .sidebar{position:absolute;left:0;top:0;height:100vh;width:var(--sidebar-w);display:flex;flex-direction:column;background:#0D0D0D;color:#C9C5BC;border:0;padding:20px 16px 16px;overflow-y:auto;transform:translateX(calc(-1 * var(--sidebar-w)));transition:transform .28s cubic-bezier(.4,0,.2,1);box-shadow:0 0 40px rgba(0,0,0,.35)}
+.dock .dockwrap:hover .sidebar,.dock .dockwrap:focus-within .sidebar,.dock .dockwrap.is-open .sidebar{transform:none}
+.dock .dock-handle{position:absolute;left:0;top:50%;translate:0 -50%;width:28px;height:72px;border:0;border-radius:0 10px 10px 0;background:var(--role);color:#fff;display:grid;place-items:center;cursor:pointer;box-shadow:4px 0 18px rgba(0,0,0,.22);transition:left .28s cubic-bezier(.4,0,.2,1),background .15s}
+.dock .dockwrap:hover .dock-handle,.dock .dockwrap:focus-within .dock-handle,.dock .dockwrap.is-open .dock-handle{left:var(--sidebar-w)}
+.dock .dock-handle:hover{background:var(--role-hover)}
+.dock .dock-handle svg{width:12px;height:12px;stroke:currentColor;fill:none;stroke-width:2.5;stroke-linecap:round;stroke-linejoin:round;transition:rotate .28s}
+.dock .dockwrap:hover .dock-handle svg,.dock .dockwrap.is-open .dock-handle svg{rotate:180deg}
+.dock .brand{display:block;padding:0 8px;margin-bottom:28px}
+.dock .brand-mark{display:none}
+.dock .brand-name{display:block;font:800 19px/1.2 var(--display);letter-spacing:-.02em;text-transform:uppercase;color:#fff}
+.dock .brand-role{font-size:11px;letter-spacing:.1em;text-transform:uppercase;color:var(--role-border);font-weight:600}
+.dock .nav{padding:0;gap:4px;flex:none}
+.dock .nav-group{font-size:11px;font-weight:500;text-transform:uppercase;letter-spacing:.12em;color:#6F6C64;padding:0;margin:22px 8px 6px}
+.dock .nav-group:first-child{margin-top:0}
+.dock .nav a{color:#C9C5BC;padding:8px 12px;font-size:14px;border-radius:8px;box-shadow:none}
+.dock .nav a svg{opacity:.75}
+.dock .nav a:hover{background:rgba(255,255,255,.06);color:#fff}
+.dock .nav a.active{background:var(--role);color:#fff;font-weight:600;box-shadow:none}
+.dock .nav a.active svg{opacity:1}
+.dock .side-foot{margin-top:auto;padding:20px 0 0;border-top:1px solid rgba(255,255,255,.09)}
+.dock .side-foot .me{display:none}
+.dock .logout{color:#8F8B81;padding:8px 12px;margin:0}
+.dock .logout:hover{color:#fff;background:rgba(255,255,255,.06)}
+.dock .main{min-height:100vh}
+.dock .topbar{position:sticky;top:0;z-index:40;display:flex;align-items:center;gap:16px;flex-wrap:nowrap;padding:14px max(48px,calc((100% - 1224px)/2)) 14px max(76px,calc((100% - 1224px)/2));background:rgba(250,250,248,.93);backdrop-filter:blur(10px);border-bottom:1px solid var(--border)}
+.dock .tb-left{min-width:0}
+.dock .tb-left .crumbs{font-size:12.5px}
+.dock .tb-title{font:700 18px/1.3 var(--heading);text-transform:uppercase;letter-spacing:.02em;margin:2px 0 0;color:var(--text)}
+.dock .tb-title .spec{vertical-align:2px;text-transform:none;letter-spacing:0}
+.dock .top-right{margin-left:auto;display:flex;align-items:center;gap:14px;flex:none}
+.dock .tb-user{display:flex;align-items:center;gap:12px;padding:6px 8px 6px 16px;border-left:1px solid var(--border);border-radius:8px;text-decoration:none;color:var(--text);transition:background .15s}
+.dock .tb-user:hover{background:var(--role-bg)}
+.dock .tb-user .avatar{width:36px;height:36px;background:var(--role);color:#fff;font:700 13px var(--display)}
+.dock .tb-user b{display:block;font-size:13.5px;font-weight:600;line-height:1.3}
+.dock .tb-user small{font-size:12px;color:var(--text2)}
+.dock .content{padding:40px max(48px,calc((100% - 1224px)/2)) 72px max(76px,calc((100% - 1224px)/2));max-width:none}
+.dock .page-intro{display:flex;justify-content:space-between;align-items:flex-end;gap:16px;flex-wrap:wrap;margin-bottom:24px}
+.dock .page-intro p{margin:0;color:var(--text2);max-width:72ch}
+@media (max-width:900px){
+  .dock .topbar{padding:12px 16px 12px 46px}
+  .dock .content{padding:24px 16px 64px 46px}
+  .dock .tb-user-text,.dock .spec-toggle span{display:none}
+}
+@media (max-width:760px){.dock .sidebar{position:absolute;height:100vh}.dock .nav{flex-direction:column;overflow:visible;padding:0}.dock .nav-group,.dock .side-foot{display:block}}
+
+.dock .list-head,.dock .page-head{margin-bottom:24px}
+</style>
+</head>
+<body class="dock">
+
+<div id="root"></div>
+
+<!-- Modal L5 -->
+<div class="overlay" id="overlay" role="dialog" aria-modal="true" aria-labelledby="m-title">
+  <div class="modal">
+    <div class="modal-body">
+      <h2 id="m-title"></h2>
+      <div id="m-text"></div>
+      <div class="f" id="m-reason-wrap">
+        <label for="m-reason">Lý do <span class="req">*</span></label>
+        <textarea class="input" id="m-reason" rows="3" placeholder="Lý do được ghi vào nhật ký hệ thống"></textarea>
+        <span class="err">Nhập lý do để tiếp tục.</span>
+      </div>
+    </div>
+    <div class="modal-foot">
+      <button class="btn" id="m-cancel">Hủy</button>
+      <button class="btn btn-danger-solid" id="m-ok"></button>
+    </div>
+  </div>
+</div>
+
+<div class="toast" id="toast" role="status" aria-live="polite"><span class="dot"></span><span id="toast-text"></span></div>
+
+<script>
+/* ======================= DATA ======================= */
+const ME = {id:'NV001', name:'Trần Minh Quân', email:'quan.tm@gms.vn', phone:'0912345678'};
+
+let users = [
+  {id:'NV001',name:'Trần Minh Quân',role:'Admin',email:'quan.tm@gms.vn',phone:'0912345678',status:'active',since:'03/2024',lastLogin:'19/09/2026 08:02'},
+  {id:'NV002',name:'Lê Thu Hà',role:'Admin',email:'ha.lt@gms.vn',phone:'0987112233',status:'locked',since:'06/2024',lockReason:'Nghỉ thai sản, tạm khóa để bảo mật',lastLogin:'28/07/2026 17:45'},
+  {id:'NV003',name:'Nguyễn Văn An',role:'Manager',email:'an.nv@gms.vn',phone:'0903456789',status:'active',since:'03/2024',lastLogin:'19/09/2026 07:31'},
+  {id:'NV010',name:'Trịnh Hải Yến',role:'Manager',email:'yen.th@gms.vn',phone:'0917334455',status:'active',since:'11/2024',lastLogin:'18/09/2026 21:14'},
+  {id:'NV004',name:'Phạm Đức Thắng',role:'PT',email:'thang.pd@gms.vn',phone:'0934567890',status:'active',since:'05/2024',pending:'Còn 3 buổi PT Scheduled và phụ trách 2 gói PT đang chạy',lastLogin:'19/09/2026 06:10'},
+  {id:'NV005',name:'Hoàng Mai Linh',role:'PT',email:'linh.hm@gms.vn',phone:'0978123456',status:'active',since:'08/2024',lastLogin:'18/09/2026 19:52'},
+  {id:'NV011',name:'Đinh Công Sơn',role:'PT',email:'son.dc@gms.vn',phone:'0966558812',status:'active',since:'02/2025',lastLogin:'19/09/2026 05:48'},
+  {id:'NV012',name:'Mai Phương Thảo',role:'PT',email:'thao.mp@gms.vn',phone:'0827441290',status:'active',since:'06/2025',lastLogin:'17/09/2026 18:05'},
+  {id:'NV008',name:'Đỗ Quang Huy',role:'PT',email:'huy.dq@gms.vn',phone:'0961234987',status:'inactive',since:'02/2024',leftAt:'02/09/2026',lastLogin:'02/09/2026 11:20'},
+  {id:'NV006',name:'Nguyễn Thị Hoa',role:'Lễ tân',email:'hoa.nt@gms.vn',phone:'0356789012',status:'active',since:'04/2024',lastLogin:'19/09/2026 13:58'},
+  {id:'NV009',name:'Bùi Khánh Vân',role:'Lễ tân',email:'van.bk@gms.vn',phone:'0707654321',status:'active',since:'07/2025',lastLogin:'19/09/2026 05:55'},
+  {id:'NV013',name:'Lý Thanh Trúc',role:'Lễ tân',email:'truc.lt@gms.vn',phone:'0588901234',status:'active',since:'03/2026',lastLogin:'18/09/2026 22:03'},
+  {id:'NV007',name:'Vũ Thanh Tùng',role:'Lễ tân',email:'tung.vt@gms.vn',phone:'0389012345',status:'locked',since:'01/2025',lockReason:'Nghi lộ mật khẩu, chờ đặt lại',lastLogin:'19/09/2026 10:47'},
+];
+
+// Tài khoản khách đang khóa tạm (E6.6 / E6.8)
+let tempLocked = [
+  {id:'KH-10482',name:'Phan Thảo Vy',role:'Khách',email:'thaovy.p@gmail.com',phone:'0915778899',status:'temp',fails:5,unlockInSec:192},
+  {id:'KH-09917',name:'Lương Gia Bảo',role:'Khách',email:'giabao.l@gmail.com',phone:'0398221144',status:'temp',fails:5,unlockInSec:41},
+];
+const customers = [...tempLocked];
+
+const audit = [
+  {d:'19/09/2026',t:'14:20',type:'Hội viên',role:'Lễ tân',actor:'Nguyễn Thị Hoa',did:'đổi SĐT của hội viên',obj:'Trần Bảo Ngọc',from:'0901 234 567',to:'0902 345 678',why:'khách đổi số'},
+  {d:'19/09/2026',t:'11:05',type:'Tài khoản',role:'Admin',actor:'Trần Minh Quân',did:'khóa tài khoản của Lễ tân',obj:'Vũ Thanh Tùng',from:'Hoạt động',to:'Đã khóa',why:'nghi lộ mật khẩu, chờ đặt lại'},
+  {d:'19/09/2026',t:'09:42',type:'Giá gói',role:'Manager',actor:'Nguyễn Văn An',did:'đổi giá gói',obj:'Gói tập 3 tháng',from:'1.350.000đ',to:'1.290.000đ',why:'khuyến mãi tháng 10'},
+  {d:'19/09/2026',t:'08:15',type:'Tài khoản',role:'Hệ thống',actor:'',did:'khóa tạm tài khoản khách',obj:'Phan Thảo Vy',from:'Hoạt động',to:'Khóa tạm 5 phút',why:'nhập sai mật khẩu 5 lần liên tiếp'},
+  {d:'18/09/2026',t:'20:00',type:'Đơn nghỉ phép',role:'Hệ thống',actor:'',did:'tự từ chối đơn nghỉ của PT',obj:'Hoàng Mai Linh',from:'Chờ duyệt',to:'Từ chối',why:'quá hạn duyệt'},
+  {d:'18/09/2026',t:'17:31',type:'Đơn nghỉ phép',role:'Manager',actor:'Nguyễn Văn An',did:'duyệt đơn nghỉ ngày 20/09 của Lễ tân',obj:'Bùi Khánh Vân',from:'Chờ duyệt',to:'Đã duyệt',why:'ca 20/09 vẫn đủ 1 Lễ tân'},
+  {d:'18/09/2026',t:'15:48',type:'Voucher',role:'Manager',actor:'Nguyễn Văn An',did:'vô hiệu hóa voucher',obj:'THU2026',from:'Hoạt động',to:'Ngừng hoạt động',why:'hết ngân sách chương trình'},
+  {d:'18/09/2026',t:'10:12',type:'Tài khoản',role:'Admin',actor:'Trần Minh Quân',did:'tạo tài khoản Lễ tân cho',obj:'Bùi Khánh Vân',from:'',to:'Hoạt động',why:'nhân viên mới ca sáng'},
+  {d:'17/09/2026',t:'16:40',type:'Hội viên',role:'Lễ tân',actor:'Bùi Khánh Vân',did:'từ chối yêu cầu xóa hồ sơ của hội viên',obj:'Đặng Minh Khoa',from:'Chờ xử lý',to:'Từ chối',why:'hội viên còn gói tập đang chạy'},
+  {d:'17/09/2026',t:'09:03',type:'Tài khoản',role:'Admin',actor:'Trần Minh Quân',did:'mở khóa sớm tài khoản khách',obj:'Ngô Thị Lan',from:'Khóa tạm',to:'Hoạt động',why:'khách gọi tổng đài xác minh danh tính'},
+  {d:'02/09/2026',t:'18:10',type:'Tài khoản',role:'Admin',actor:'Trần Minh Quân',did:'vô hiệu hóa tài khoản PT',obj:'Đỗ Quang Huy',from:'Hoạt động',to:'Ngừng hoạt động',why:'nghỉ việc từ 02/09'},
+];
+
+const MSG = {
+  'MSG-028':'Đã tạo tài khoản. Nhân viên đăng nhập được ngay bằng email hoặc SĐT.',
+  'MSG-029':'Đã lưu thay đổi tài khoản.',
+  'MSG-030':'SĐT hoặc email này đã thuộc một tài khoản nhân viên khác.',
+  'MSG-031':'Không thể thực hiện: đây là Admin cuối cùng còn hoạt động.',
+  'MSG-032':'Đã cập nhật trạng thái tài khoản và ghi vào nhật ký.',
+  'MSG-181':'Không có dữ liệu trong khoảng thời gian đã chọn.',
+  'MSG-182':'Ngày bắt đầu phải trước hoặc bằng ngày kết thúc.',
+};
+
+const STATUS = {active:['Hoạt động','st-active'],locked:['Đã khóa','st-locked'],temp:['Khóa tạm','st-temp'],inactive:['Ngừng hoạt động','st-inactive']};
+const roleClass = r => r==='Lễ tân'?'LeTan':r==='Khách'?'Khach':r;
+const initials = n => n.split(' ').slice(-2).map(w=>w[0]).join('').toUpperCase();
+const esc = s => String(s).replace(/[&<>"]/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'}[c]));
+const activeAdmins = () => users.filter(u=>u.role==='Admin'&&u.status==='active');
+const isLastAdmin = u => u.role==='Admin' && u.status==='active' && activeAdmins().length===1;
+
+/* ======================= ICONS ======================= */
+const I = {
+  users:'<svg viewBox="0 0 24 24"><circle cx="9" cy="8" r="3.5"/><path d="M2.5 20c.6-3.6 3.3-5.5 6.5-5.5s5.9 1.9 6.5 5.5"/><path d="M16 4.6a3.5 3.5 0 0 1 0 6.8M18.5 14.8c1.6.7 2.7 2.4 3 5.2"/></svg>',
+  log:'<svg viewBox="0 0 24 24"><path d="M6 3h9l4 4v14H6z"/><path d="M15 3v4h4M9 12h7M9 16h7M9 8h3"/></svg>',
+  chart:'<svg viewBox="0 0 24 24"><path d="M4 20V4M4 20h16"/><path d="M8 16v-4M12 16V8M16 16v-6"/></svg>',
+  search:'<svg viewBox="0 0 24 24"><circle cx="11" cy="11" r="7"/><path d="m20 20-3.5-3.5"/></svg>',
+  plus:'<svg viewBox="0 0 24 24"><path d="M12 5v14M5 12h14"/></svg>',
+  lock:'<svg viewBox="0 0 24 24"><rect x="5" y="11" width="14" height="10" rx="2"/><path d="M8 11V8a4 4 0 0 1 8 0v3"/></svg>',
+  unlock:'<svg viewBox="0 0 24 24"><rect x="5" y="11" width="14" height="10" rx="2"/><path d="M8 11V8a4 4 0 0 1 7.5-2"/></svg>',
+  off:'<svg viewBox="0 0 24 24"><circle cx="12" cy="12" r="9"/><path d="m6 6 12 12"/></svg>',
+  info:'<svg viewBox="0 0 24 24"><circle cx="12" cy="12" r="9"/><path d="M12 8h.01M11 12h1v5h1"/></svg>',
+  warn:'<svg viewBox="0 0 24 24"><path d="M12 3 2 20h20z"/><path d="M12 10v4M12 17h.01"/></svg>',
+  shield:'<svg viewBox="0 0 24 24"><path d="M12 3 4 6v6c0 4.5 3.4 8 8 9 4.6-1 8-4.5 8-9V6z"/><path d="m9 12 2 2 4-4"/></svg>',
+  eye:'<svg viewBox="0 0 24 24"><path d="M2 12s3.5-7 10-7 10 7 10 7-3.5 7-10 7S2 12 2 12z"/><circle cx="12" cy="12" r="3"/></svg>',
+  edit:'<svg viewBox="0 0 24 24"><path d="M4 20h4L19 9l-4-4L4 16z"/></svg>',
+};
+
+/* ======================= SHELL ======================= */
+const CHEV='<svg viewBox="0 0 24 24"><path d="m9 6 6 6-6 6"/></svg>';
+function toggleDock(){const d=document.getElementById('dock'),h=document.getElementById('dockHandle');if(!d)return;const o=d.classList.toggle('is-open');h.setAttribute('aria-expanded',String(o));h.setAttribute('aria-label',o?'Đóng menu điều hướng':'Mở menu điều hướng')}
+document.addEventListener('keydown',e=>{const d=document.getElementById('dock');if(e.key==='Escape'&&d&&d.classList.contains('is-open'))toggleDock()});
+function shell(active, crumbs, body, title){
+  const nav = (key,href,icon,label)=>`<a href="${href}" class="${active===key?'active':''}" ${active===key?'aria-current="page"':''}>${I[icon]}<span>${label}</span></a>`;
+  // Tiêu đề trang chuyển lên topbar (giống khu Customer): lấy h1 của page-head/list-head.
+  if(!title){
+    const m=body.match(/(<div class="(?:page-head|list-head)">\s*<div>\s*)<h1>([\s\S]*?)<\/h1>/);
+    if(m){title=m[2];body=body.replace(m[0],m[1]);}
+    else if(body.includes('class="detail-head"')) title='Chi tiết tài khoản';
+  }
+  const parts=crumbs.split(' / ');const parent=parts.slice(0,-1).join(' / ');
+  return `
+  <div class="app">
+    <div class="dockwrap" id="dock">
+      <aside class="sidebar">
+        <div class="brand"><div class="brand-name">Super Gym</div><div class="brand-role">Quản trị hệ thống</div></div>
+        <nav class="nav" aria-label="Điều hướng chính">
+          <div class="nav-group">Tài khoản & bảo mật</div>
+          ${nav('users','#/users','users','Tài khoản hệ thống')}
+          ${nav('audit','#/audit','log','Audit Log')}
+          <div class="nav-group">Theo dõi</div>
+          ${nav('report','#/report','chart','Báo cáo')}
+        </nav>
+        <div class="side-foot"><button class="logout" onclick="location.hash='#/signin'">Đăng xuất</button></div>
+      </aside>
+      <button class="dock-handle" id="dockHandle" type="button" aria-label="Mở menu điều hướng" aria-expanded="false" aria-controls="dock" onclick="toggleDock()">${CHEV}</button>
+    </div>
+    <div class="main">
+      <header class="topbar">
+        <div class="tb-left">${parent?`<div class="crumbs">${parent}</div>`:''}<h1 class="tb-title">${title||parts[parts.length-1].replace(/<[^>]+>/g,'')}</h1></div>
+        <div class="top-right">
+          
+          <a class="tb-user" href="#/settings" title="Cài đặt tài khoản"><span class="avatar">${initials(ME.name)}</span><span class="tb-user-text"><b>${ME.name}</b><small>Admin</small></span></a>
+        </div>
+      </header>
+      <main class="content">${body}</main>
+    </div>
+  </div>`;
+}
+const spec = t => `<span class="spec">${t}</span>`;
+
+/* ======================= 3.1.1 USER LIST ======================= */
+// Cấp bậc hiển thị: 1 Admin > 2 Manager > 3 PT > 4 Lễ tân
+const RANK={'Admin':1,'Manager':2,'PT':3,'Lễ tân':4};
+const ROLE_COLOR={'Admin':'#5B3FA0','Manager':'#3B4FA0','PT':'#0E8E82','Lễ tân':'#0B766C','Khách':'#E2583E'};
+const STATUS_ORDER={active:0,temp:1,locked:2,inactive:3};
+const PAGE_SIZE=10;
+let listState={tab:'staff',role:'all',status:'all',q:'',rankFirst:true,sort:{key:null,dir:1},page:1};
+const loginKey=d=>{if(!d)return '';const[dd,t]=d.split(' ');const[a,b,c]=dd.split('/');return `${c}${b}${a}${t}`};
+const firstLetter=n=>n.trim().split(' ').pop()[0].toUpperCase();
+
+function sortedStaff(){
+  const q=listState.q.toLowerCase();
+  let rows=users.filter(u=>(listState.role==='all'||u.role===listState.role)&&(listState.status==='all'||u.status===listState.status)&&(!q||(u.name+u.email+u.phone+u.id).toLowerCase().includes(q)));
+  const {key,dir}=listState.sort;
+  const cmp={
+    name:(a,b)=>a.name.split(' ').pop().localeCompare(b.name.split(' ').pop(),'vi')||a.name.localeCompare(b.name,'vi'),
+    role:(a,b)=>RANK[a.role]-RANK[b.role],
+    status:(a,b)=>STATUS_ORDER[a.status]-STATUS_ORDER[b.status],
+    login:(a,b)=>loginKey(a.lastLogin).localeCompare(loginKey(b.lastLogin)),
+  };
+  rows.sort((a,b)=>{
+    if(listState.rankFirst){const r=RANK[a.role]-RANK[b.role];if(r)return r}
+    if(key){const c=cmp[key](a,b)*dir;if(c)return c}
+    return STATUS_ORDER[a.status]-STATUS_ORDER[b.status]||cmp.name(a,b);
+  });
+  return rows;
+}
+
+function viewUserList(){
+  const staff=listState.tab==='staff';
+  const all=staff?sortedStaff():tempLocked;
+  const size=listState.size||10;
+  const pages=Math.max(1,Math.ceil(all.length/size));
+  if(listState.page>pages)listState.page=pages;
+  const start=(listState.page-1)*size;
+  const rows=all.slice(start,start+size);
+  const off=u=>u.status==='inactive';
+  const col=u=>off(u)?'#B9B6AD':ROLE_COLOR[u.role];
+  const sortIcon='<svg class="arrow" viewBox="0 0 24 24" aria-hidden="true"><path d="m6 15 6-6 6 6"/></svg>';
+  const sortTh=(key,label)=>{const on=listState.sort.key===key;
+    return `<th class="sortable" aria-sort="${on?(listState.sort.dir===1?'ascending':'descending'):'none'}"><button data-sort="${key}">${label}${sortIcon}</button></th>`};
+  const who=u=>`<div class="who"><span class="av-solid" style="background:${col(u)}">${firstLetter(u.name)}</span><div><b>${esc(u.name)}</b><small>${esc(u.email)}</small></div></div>`;
+  const pill=u=>`<span class="dpill p-${roleClass(u.role)}">${u.role}</span>`;
+  const st=u=>`<span class="dpill dp-${u.status}">${STATUS[u.status][0]}</span>`;
+  const view=u=>`<a class="btn btn-sm" href="#/users/${u.id}" aria-label="Xem ${esc(u.name)}">Xem</a>`;
+
+  const staffTable=`<table class="utable v4"><thead><tr>
+      <th class="col-rk" title="1 Admin, 2 Manager, 3 PT, 4 Lễ tân">Cấp</th>
+      ${sortTh('name','Tài khoản')}${sortTh('role','Vai trò')}<th>SĐT</th>${sortTh('status','Trạng thái')}${sortTh('login','Đăng nhập gần nhất')}<th class="col-act"></th>
+    </tr></thead><tbody>${rows.map(u=>`<tr tabindex="0" data-go="#/users/${u.id}" class="${off(u)?'row-inactive':''}">
+      <td class="col-rk"><span class="rk" style="background:${col(u)}" title="Cấp ${RANK[u.role]}">${RANK[u.role]}</span></td>
+      <td>${who(u)}</td><td>${pill(u)}</td><td class="num">${u.phone}</td><td>${st(u)}</td>
+      <td class="num">${u.lastLogin||'Chưa đăng nhập'}</td><td class="col-act">${view(u)}</td></tr>`).join('')}</tbody></table>`;
+  const tempTable=`<table class="utable v4"><thead><tr><th>Tài khoản</th><th>SĐT</th><th>Trạng thái</th><th>Số lần sai</th><th>Tự mở khóa sau</th><th class="col-act"></th></tr></thead>
+    <tbody>${rows.map(u=>`<tr tabindex="0" data-go="#/users/${u.id}"><td>${who(u)}</td><td class="num">${u.phone}</td><td>${st(u)}</td><td class="num">${u.fails} lần</td>
+      <td class="num" data-countdown="${u.id}">${fmtCd(u.unlockInSec)}</td><td class="col-act">${view(u)}</td></tr>`).join('')}</tbody></table>`;
+
+  const body=`
+    <div class="list-head">
+      <div>
+        <h1>${staff?'Danh sách tài khoản hệ thống':'Khách đang khóa tạm'}</h1>
+        <p>${staff?'Quản lý tài khoản Admin, Manager, PT, Lễ tân. Mặc định sắp xếp theo cấp bậc, cấp cao hơn hiện trước. ':'Hết 5 phút, tài khoản tự mở và rời khỏi danh sách này.'}</p>
+      </div>
+      <div class="head-actions">
+        ${staff?`<button class="btn" id="btnExport"><svg viewBox="0 0 24 24"><path d="M12 4v11M7 10l5 5 5-5M5 20h14"/></svg> Xuất Excel</button>
+        <a class="btn btn-primary" href="#/users/new">${I.plus} Thêm tài khoản</a>`:`<button class="btn" data-tab="staff">‹ Quay lại danh sách nhân viên</button>`}
+      </div>
+    </div>
+
+    ${staff&&tempLocked.length?`<div class="lock-callout">${I.lock}<span class="grow"><b>${tempLocked.length} tài khoản khách</b> đang bị khóa tạm do nhập sai mật khẩu.</span><button class="link-btn" data-tab="temp">Xem và mở khóa</button></div>`:''}
+
+    ${staff?`<div class="card tbar">
+      <div class="search">${I.search}<input class="input" id="q" placeholder="Tìm theo tên, email hoặc số điện thoại..." value="${esc(listState.q)}" aria-label="Tìm tài khoản"></div>
+      <select class="select" id="fRole" aria-label="Lọc vai trò"><option value="all">Tất cả vai trò</option>${Object.keys(RANK).map(r=>`<option value="${r}" ${listState.role===r?'selected':''}>${r}</option>`).join('')}</select>
+      <select class="select" id="fStatus" aria-label="Lọc trạng thái">
+        <option value="all">Tất cả trạng thái</option>
+        <option value="active" ${listState.status==='active'?'selected':''}>Hoạt động</option>
+        <option value="locked" ${listState.status==='locked'?'selected':''}>Đã khóa</option>
+        <option value="inactive" ${listState.status==='inactive'?'selected':''}>Ngừng hoạt động</option>
+      </select>
+      <span class="sep"></span>
+      <label class="rank-toggle ${listState.rankFirst?'on':''}"><input type="checkbox" id="fRank" ${listState.rankFirst?'checked':''}> Ưu tiên theo cấp bậc</label>
+      <span class="cnt">${all.length} tài khoản</span>
+    </div>`:''}
+
+    <div class="card">
+      <div class="table-wrap">${rows.length?(staff?staffTable:tempTable):`<div class="empty">${staff?'Không có tài khoản khớp bộ lọc. Thử bỏ bớt điều kiện lọc.':'Hiện không có tài khoản khách nào đang bị khóa tạm.'}</div>`}</div>
+      <div class="foot3">
+        <span>Hiển thị <b>${all.length?start+1:0}–${Math.min(start+size,all.length)}</b> trong <b>${all.length}</b> tài khoản</span>
+        <div class="pager">
+          <button data-page="${listState.page-1}" ${listState.page===1?'disabled':''} aria-label="Trang trước">‹</button>
+          ${Array.from({length:pages},(_,i)=>`<button data-page="${i+1}" ${i+1===listState.page?'aria-current="page"':''}>${i+1}</button>`).join('')}
+          <button data-page="${listState.page+1}" ${listState.page===pages?'disabled':''} aria-label="Trang sau">›</button>
+        </div>
+        <span class="right">Hiển thị <select class="select" id="fSize" aria-label="Số dòng mỗi trang">${[5,10,20,50].map(n=>`<option ${n===size?'selected':''}>${n}</option>`).join('')}</select> / trang</span>
+      </div>
+    </div>`;
+  render(shell('users',staff?'<b>Tài khoản hệ thống</b>':'<a href="#/users" data-tab="staff">Tài khoản hệ thống</a> / <b>Khách đang khóa tạm</b>',body));
+
+  document.querySelectorAll('[data-tab]').forEach(b=>b.onclick=e=>{e.preventDefault();listState.tab=b.dataset.tab;listState.page=1;viewUserList()});
+  document.querySelectorAll('[data-page]').forEach(b=>b.onclick=()=>{listState.page=+b.dataset.page;viewUserList()});
+  document.querySelectorAll('[data-sort]').forEach(b=>b.onclick=()=>{const k=b.dataset.sort;
+    listState.sort=listState.sort.key===k?(listState.sort.dir===1?{key:k,dir:-1}:{key:null,dir:1}):{key:k,dir:1};viewUserList()});
+  const on=(id,ev,fn)=>{const el=document.getElementById(id);if(el)el[ev]=fn};
+  on('fRole','onchange',e=>{listState.role=e.target.value;listState.page=1;viewUserList()});
+  on('fStatus','onchange',e=>{listState.status=e.target.value;listState.page=1;viewUserList()});
+  on('fRank','onchange',e=>{listState.rankFirst=e.target.checked;viewUserList()});
+  on('fSize','onchange',e=>{listState.size=+e.target.value;listState.page=1;viewUserList()});
+  on('btnExport','onclick',exportCsv);
+  const q=document.getElementById('q');
+  if(q)q.oninput=e=>{listState.q=e.target.value;listState.page=1;const pos=e.target.selectionStart;viewUserList();const n=document.getElementById('q');n.focus();n.setSelectionRange(pos,pos)};
+  bindRowNav();
+}
+
+function exportCsv(){
+  const head=['Cấp','Mã','Họ tên','Email','SĐT','Vai trò','Trạng thái','Đăng nhập gần nhất'];
+  const lines=[head,...sortedStaff().map(u=>[RANK[u.role],u.id,u.name,u.email,u.phone,u.role,STATUS[u.status][0],u.lastLogin||''])]
+    .map(r=>r.map(c=>`"${String(c).replace(/"/g,'""')}"`).join(','));
+  const blob=new Blob(['\ufeff'+lines.join('\r\n')],{type:'text/csv;charset=utf-8'});
+  const a=document.createElement('a');a.href=URL.createObjectURL(blob);a.download='tai-khoan-he-thong.csv';a.click();
+  setTimeout(()=>URL.revokeObjectURL(a.href),1000);
+}
+
+/* ======================= 3.1.2 USER DETAILS ======================= */
+let editing = false;
+function viewUserDetail(id){
+  const isNew = id==='new';
+  const cust = customers.find(x=>x.id===id);
+  if(cust) return viewCustomerLock(cust);
+  const u = isNew ? {id:'(tự sinh)',name:'',role:'Lễ tân',email:'',phone:'',status:'active'} : users.find(x=>x.id===id);
+  if(!u) return viewUserList();
+  const edit = isNew || editing;
+  const last = !isNew && isLastAdmin(u);
+  const inactive = u.status==='inactive';
+  const roleLocked = last || !!u.pending;
+  const logs = audit.filter(a=>a.obj===u.name||a.actor===u.name).slice(0,4);
+
+  const roleOpts = ['Admin','Manager','PT','Lễ tân'].map(r=>`<option ${u.role===r?'selected':''}>${r}</option>`).join('');
+  const tipBtn = (cls,icon,label,act,disabledTip)=> disabledTip
+    ? `<div class="tip-wrap"><button class="btn ${cls}" aria-disabled="true" aria-describedby="tip-${act}" data-blocked="1">${I[icon]} ${label}</button><div class="tip" id="tip-${act}" role="tooltip">${disabledTip}</div></div>`
+    : `<button class="btn ${cls}" data-act="${act}">${I[icon]} ${label}</button>`;
+  const lastTip = 'Đây là Admin cuối cùng còn hoạt động. Hệ thống luôn cần ít nhất một Admin, nên không thể khóa, vô hiệu hóa hay hạ quyền tài khoản này. Hãy kích hoạt hoặc tạo thêm một Admin khác trước.';
+
+  const body = `
+    ${isNew ? `
+      <div class="page-head"><div><h1>Thêm tài khoản</h1><p>Tài khoản dùng được ngay sau khi lưu. Email là bắt buộc vì mã khôi phục mật khẩu chỉ gửi qua email.</p></div></div>
+    ` : `
+      <div class="detail-head">
+        <span class="avatar">${initials(u.name)}</span>
+        <div class="grow">
+          <h1>${esc(u.name)}</h1>
+          <div class="meta"><span class="role role-${roleClass(u.role)}">${u.role}</span><span class="status ${STATUS[u.status][1]}">${STATUS[u.status][0]}</span><span>${u.id}</span><span>Làm việc từ ${u.since}</span></div>
+        </div>
+        ${!edit && !inactive ? `<button class="btn" id="btnEdit">${I.edit} Sửa thông tin</button>`:''}
+      </div>
+    `}
+
+    ${last ? `<div class="banner b-admin">${I.shield}<div><b>Admin cuối cùng còn hoạt động</b>Các thao tác khóa, vô hiệu hóa và đổi vai trò bị chặn cho tài khoản này.</div></div>`:''}
+    ${inactive ? `<div class="banner b-muted">${I.info}<div><b>Đã nghỉ việc từ ${u.leftAt}</b>Tài khoản bị khóa quyền, mọi phiên đăng nhập đã bị đăng xuất. Lịch sử buổi dạy, ca trực và giao dịch vẫn giữ nguyên. SĐT và email đã được giải phóng.</div></div>`:''}
+    ${u.status==='locked' ? `<div class="banner b-warn">${I.lock}<div><b>Tài khoản đang bị khóa</b>Lý do: ${esc(u.lockReason||'')}</div></div>`:''}
+
+    <div class="detail">
+      <div class="card">
+        <div class="card-pad">
+          <h2>Thông tin tài khoản</h2>
+          <p class="sub">${edit?'Các trường có dấu * là bắt buộc.':'Bấm “Sửa thông tin” để chỉnh.'}</p>
+          <form class="form-grid" id="uform" novalidate>
+            <div class="f full" id="f-name"><label for="i-name">Họ và tên${edit?'<span class="req">*</span>':''}</label>
+              <input class="input" id="i-name" value="${esc(u.name)}" ${edit?'':'readonly'} placeholder="VD: Nguyễn Thị Hoa">
+              <span class="err">Nhập họ và tên.</span></div>
+            <div class="f" id="f-email"><label for="i-email">Email${edit?'<span class="req">*</span>':''}</label>
+              <input class="input" id="i-email" type="email" value="${esc(u.email)}" ${edit?'':'readonly'} placeholder="ten@tenmien">
+              <span class="err">Email phải có dạng ten@tenmien.</span></div>
+            <div class="f" id="f-phone"><label for="i-phone">Số điện thoại${edit?'<span class="req">*</span>':''}</label>
+              <input class="input num" id="i-phone" inputmode="numeric" maxlength="10" value="${esc(u.phone)}" ${edit?'':'readonly'} placeholder="10 chữ số, bắt đầu bằng 0">
+              <span class="err">SĐT phải gồm 10 chữ số, bắt đầu bằng 0 và đúng đầu số di động Việt Nam.</span></div>
+            <div class="f" id="f-role"><label for="i-role">Vai trò${edit?'<span class="req">*</span>':''}</label>
+              <select class="select" id="i-role" ${edit && !(roleLocked&&!isNew)?'':'disabled'}>${roleOpts}</select>
+              ${!isNew && u.pending ? `<span class="hint">Chưa đổi được vai trò: ${esc(u.pending)}. Xử lý xong các việc này rồi mới đổi.</span>` : ''}
+              ${last ? `<span class="hint">Không hạ quyền Admin cuối cùng.</span>`:''}
+              ${isNew ? `<span class="hint">Chỉ Admin mới cấp được vai trò Admin.</span>`:''}
+            </div>
+            <div class="f"><label>Trạng thái</label><input class="input" value="${STATUS[u.status][0]}" readonly></div>
+          </form>
+        </div>
+        ${edit ? `<div class="form-actions">
+          <a class="btn" href="${isNew?'#/users':'#/users/'+u.id}" id="btnCancel">Hủy</a>
+          <button class="btn btn-primary" id="btnSave">${isNew?'Tạo tài khoản':'Lưu thay đổi'}</button>
+        </div>`:''}
+      </div>
+
+      ${isNew ? `<aside>
+        <div class="card side-card"><h3>Sau khi tạo</h3>
+          <dl class="kv"><dt>Đăng nhập</dt><dd>Email hoặc SĐT + mật khẩu</dd><dt>Khóa tự động</dt><dd>Không áp cho nhân viên</dd><dt>Nhật ký</dt><dd>Ghi lại người tạo và thời điểm</dd></dl>
+        </div></aside>` : `
+      <aside>
+        ${!inactive ? `<div class="card side-card">
+          <h3>Trạng thái & quyền</h3>
+          <div class="act-list">
+            ${u.status==='locked'
+              ? `<button class="btn" data-act="unlock">${I.unlock} Mở khóa tài khoản</button>`
+              : tipBtn('btn-danger','lock','Khóa tài khoản','lock', last?lastTip:null)}
+            ${tipBtn('btn-danger','off','Vô hiệu hóa (nghỉ việc)','deactivate', last?lastTip:null)}
+          </div>
+          <p class="act-note">Hệ thống không xóa thật tài khoản. Vô hiệu hóa chuyển sang “Ngừng hoạt động” và giữ toàn bộ lịch sử.</p>
+        </div>`:''}
+        <div class="card side-card">
+          <h3>Hoạt động gần đây</h3>
+          ${logs.length?`<ul class="mini-log">${logs.map(a=>`<li>${a.actor?esc(a.actor):'Hệ thống'} ${esc(a.did)} <b>${esc(a.obj)}</b><time>${a.t}, ${a.d}</time></li>`).join('')}</ul>`:'<p class="act-note" style="margin:0">Chưa có thao tác nào liên quan.</p>'}
+          <p class="act-note"><a href="#/audit?obj=${encodeURIComponent(u.name)}">Xem đầy đủ trong Audit Log</a></p>
+        </div>
+      </aside>`}
+    </div>`;
+  render(shell('users',`<a href="#/users">Tài khoản hệ thống</a> / <b>${isNew?'Thêm tài khoản':esc(u.name)}</b>`,body));
+
+  const be=document.getElementById('btnEdit'); if(be) be.onclick=()=>{editing=true;viewUserDetail(id)};
+  const bc=document.getElementById('btnCancel'); if(bc) bc.onclick=()=>{editing=false};
+  document.querySelectorAll('[data-blocked]').forEach(b=>b.onclick=()=>toast('MSG-031','danger'));
+  const save=document.getElementById('btnSave');
+  if(save) save.onclick=e=>{
+    e.preventDefault();
+    const v={name:val('i-name').trim(),email:val('i-email').trim(),phone:val('i-phone').trim(),role:val('i-role')};
+    let ok=true;
+    ok&=mark('f-name',v.name.length>0);
+    ok&=mark('f-email',/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(v.email));
+    ok&=mark('f-phone',/^0(3|5|7|8|9)\d{8}$/.test(v.phone));
+    if(!ok) return;
+    const dup=users.find(x=>x.id!==u.id&&x.status!=='inactive'&&(x.phone===v.phone||x.email.toLowerCase()===v.email.toLowerCase()));
+    if(dup){toast('MSG-030','danger');return}
+    if(isNew){
+      const nid='NV0'+(20+users.length);
+      users.push({id:nid,...v,status:'active',since:'09/2026',lastLogin:''});
+      toast('MSG-028','success');editing=false;location.hash='#/users';
+    } else {
+      Object.assign(u,v);editing=false;toast('MSG-029','success');location.hash='#/users';
+    }
+  };
+  // live phone validation (FR-05)
+  const ip=document.getElementById('i-phone');
+  if(ip&&edit){ip.oninput=()=>{ip.value=ip.value.replace(/\D/g,'');if(ip.value.length===10)mark('f-phone',/^0(3|5|7|8|9)\d{8}$/.test(ip.value));else document.getElementById('f-phone').classList.remove('invalid')}}
+
+  document.querySelectorAll('[data-act]').forEach(b=>b.onclick=()=>{
+    const a=b.dataset.act;
+    if(a==='lock') confirmModal({title:`Khóa tài khoản ${u.name}?`,text:`<p>Người này bị đăng xuất khỏi mọi phiên và không đăng nhập được cho tới khi Admin mở khóa.</p>`,ok:'Khóa tài khoản',onOk:r=>{u.status='locked';u.lockReason=r;done()}});
+    if(a==='deactivate') confirmModal({title:`Vô hiệu hóa tài khoản ${u.name}?`,text:`<p>Dùng khi nhân viên nghỉ việc. Sau khi xác nhận:</p><ul><li>Khóa quyền và đăng xuất mọi phiên ngay lập tức</li><li>Giữ nguyên lịch sử buổi dạy, ca trực, giao dịch</li><li>Giải phóng SĐT và email để dùng cho hồ sơ khác</li></ul>`,ok:'Vô hiệu hóa',onOk:()=>{u.status='inactive';u.leftAt='19/09/2026';done()}});
+    if(a==='unlock') confirmModal({title:`Mở khóa tài khoản ${u.name}?`,text:`<p>Người này đăng nhập lại được ngay bằng mật khẩu hiện tại.</p>`,ok:'Mở khóa',safe:true,onOk:()=>{u.status='active';done()}});
+  });
+  function done(){toast('MSG-032','success');viewUserDetail(id)}
+}
+
+/* ---------- 3.1.2 variant: customer temp-locked (E6.8) ---------- */
+function viewCustomerLock(c){
+  const body = `
+    <div class="detail-head">
+      <span class="avatar" style="background:var(--customer-bg);color:#C6472F">${initials(c.name)}</span>
+      <div class="grow">
+        <h1>${esc(c.name)}</h1>
+        <div class="meta"><span class="role role-Khach">Khách</span><span class="status ${STATUS[c.status][1]}">${STATUS[c.status][0]}</span><span>${c.id}</span></div>
+      </div>
+    </div>
+    <div class="detail">
+      <div>
+        ${c.status==='temp' ? `
+        <div class="lockbox">
+          <p class="t"><b>Đang khóa tạm do nhập sai mật khẩu ${c.fails} lần liên tiếp</b></p>
+          <div class="clock" data-countdown="${c.id}">${fmtCd(c.unlockInSec)}</div>
+          <p class="s">Tự mở khóa lúc ${unlockAt(c.unlockInSec)} hôm nay. Mở sớm khi đã xác minh đúng là chủ tài khoản.</p>
+          <button class="btn btn-primary" id="btnUnlockNow">${I.unlock} Mở khóa ngay</button>
+        </div>` : `
+        <div class="banner b-info">${I.info}<div><b>Tài khoản đã mở khóa</b>Bộ đếm sai mật khẩu đã về 0. Khách đăng nhập lại được ngay.</div></div>`}
+        <div class="card card-pad">
+          <h2>Thông tin tài khoản khách</h2>
+          <p class="sub">Admin chỉ xem và mở khóa. Hồ sơ khách do Lễ tân hoặc chính khách chỉnh sửa.</p>
+          <dl class="kv"><dt>Email</dt><dd>${esc(c.email)}</dd><dt>SĐT</dt><dd class="num">${fmtPhone(c.phone)}</dd><dt>Số lần sai liên tiếp</dt><dd class="num">${c.fails}</dd></dl>
+        </div>
+      </div>
+      <aside><div class="card side-card"><h3>Quy tắc khóa tạm</h3>
+        <dl class="kv"><dt>Ngưỡng</dt><dd>5 lần sai liên tiếp</dd><dt>Thời gian</dt><dd>5 phút, tự mở</dd><dt>Đăng nhập đúng</dt><dd>Bộ đếm về 0</dd><dt>Nhân viên</dt><dd>Không bị khóa tự động</dd></dl>
+      </div></aside>
+    </div>`;
+  render(shell('users',`<a href="#/users">Tài khoản hệ thống</a> / <a href="#/users" onclick="listState.tab='temp'">Khách đang khóa tạm</a> / <b>${esc(c.name)}</b>`,body));
+  const b=document.getElementById('btnUnlockNow');
+  if(b) b.onclick=()=>confirmModal({title:`Mở khóa sớm cho ${c.name}?`,text:`<p>Tài khoản mở ngay và bộ đếm sai mật khẩu về 0. Thao tác được ghi vào nhật ký.</p>`,ok:'Mở khóa ngay',safe:true,onOk:()=>{
+    tempLocked=tempLocked.filter(x=>x.id!==c.id);c.status='active';c.fails=0;toast('MSG-032','success');viewCustomerLock(c)}});
+}
+
+/* ======================= 3.2.1 AUDIT LOG ======================= */
+let auditState={actor:'all',type:'all',from:'2026-09-01',to:'2026-09-19',obj:''};
+function viewAudit(){
+  const hq=new URLSearchParams(location.hash.split('?')[1]||'');
+  if(hq.get('obj')!==null){auditState.obj=hq.get('obj');}
+  const toISO=d=>{const [dd,mm,yy]=d.split('/');return `${yy}-${mm}-${dd}`};
+  const list=audit.filter(a=>
+    (auditState.actor==='all'||(a.actor||'Hệ thống')===auditState.actor)&&
+    (auditState.type==='all'||a.type===auditState.type)&&
+    toISO(a.d)>=auditState.from&&toISO(a.d)<=auditState.to&&
+    (!auditState.obj||a.obj===auditState.obj||a.actor===auditState.obj));
+  const actors=[...new Set(audit.map(a=>a.actor||'Hệ thống'))];
+  const types=[...new Set(audit.map(a=>a.type))];
+  const days=[...new Set(list.map(a=>a.d))];
+  const dayName=d=>{const [dd,mm,yy]=d.split('/');const w=['Chủ nhật','Thứ Hai','Thứ Ba','Thứ Tư','Thứ Năm','Thứ Sáu','Thứ Bảy'][new Date(`${yy}-${mm}-${dd}`).getDay()];return `${w}, ${d}`};
+  const sentence=a=>{
+    const who=a.actor?`<span class="actor"><span class="r">${a.role}</span> ${esc(a.actor)}</span>`:`<span class="actor">Hệ thống</span>`;
+    const change=a.from?` từ <span class="v-old">${esc(a.from)}</span> sang <span class="v-new">${esc(a.to)}</span>`:` với trạng thái <span class="v-new">${esc(a.to)}</span>`;
+    return `${who} ${esc(a.did)} <span class="obj">${esc(a.obj)}</span>${change}.`;
+  };
+  const body=`
+    <div class="page-head">
+      <div><h1>Audit Log</h1><p>Mọi thao tác nhạy cảm được ghi tự động: đổi giá, thao tác tài khoản, xóa, duyệt và từ chối.</p></div>
+      <div class="readonly-note">${I.lock} Chỉ tra cứu. Bản ghi không sửa, không xóa được.</div>
+    </div>
+    <div class="card">
+      <div class="filters">
+        <div class="field-inline"><label for="a-actor">Người thao tác</label><select class="select" id="a-actor"><option value="all">Tất cả</option>${actors.map(x=>`<option ${auditState.actor===x?'selected':''}>${x}</option>`).join('')}</select></div>
+        <div class="field-inline"><label for="a-type">Đối tượng</label><select class="select" id="a-type"><option value="all">Tất cả</option>${types.map(x=>`<option ${auditState.type===x?'selected':''}>${x}</option>`).join('')}</select></div>
+        <div class="field-inline"><label for="a-from">Từ ngày</label><input class="input" type="date" id="a-from" value="${auditState.from}"></div>
+        <div class="field-inline"><label for="a-to">Đến ngày</label><input class="input" type="date" id="a-to" value="${auditState.to}"></div>
+        ${auditState.obj?`<div class="field-inline"><label>Liên quan tới</label><button class="btn" id="clearObj" title="Bỏ lọc">${esc(auditState.obj)} ✕</button></div>`:''}
+      </div>
+      <div>
+      ${list.length?days.map(d=>`<div class="ledger-day">${dayName(d)}</div>`+list.filter(a=>a.d===d).map(a=>`
+        <article class="entry">
+          <time>${a.t}</time>
+          <div><div class="sentence">${sentence(a)}</div>
+          <div class="why">Lý do: <b>${esc(a.why)}</b><span class="kind">${a.type}</span></div></div>
+        </article>`).join('')).join(''):`<div class="empty">Không có bản ghi nào khớp bộ lọc. Thử mở rộng khoảng thời gian.</div>`}
+      </div>
+      <div class="table-foot"><span>${list.length} bản ghi</span><div class="pager"><button aria-current="page">1</button><button>2</button><button>3</button></div></div>
+    </div>`;
+  render(shell('audit','<b>Audit Log</b>',body));
+  const bind=(id,key)=>document.getElementById(id).onchange=e=>{auditState[key]=e.target.value;viewAudit()};
+  bind('a-actor','actor');bind('a-type','type');bind('a-from','from');bind('a-to','to');
+  const co=document.getElementById('clearObj'); if(co) co.onclick=()=>{auditState.obj='';location.hash='#/audit'};
+}
+
+/* ======================= 12.1.2 REPORT ======================= */
+let rep={from:'2026-09-06',to:'2026-09-19'};
+function viewReport(){
+  const bad=rep.from>rep.to;
+  const checkins=[212,198,240,251,233,276,190,205,219,246,262,241,288,201];
+  const labels=Array.from({length:14},(_,i)=>{const d=new Date(2026,8,6+i);return `${d.getDate()}/${d.getMonth()+1}`});
+  const max=300,W=640,H=220,pad=28,bw=(W-pad*2)/14;
+  const svg=`<svg viewBox="0 0 ${W} ${H+24}" role="img" aria-label="Lượt check-in theo ngày">
+    ${[0,100,200,300].map(v=>{const y=H-(v/max)*(H-20);return `<line x1="${pad}" x2="${W-8}" y1="${y}" y2="${y}" stroke="#E7E5DF"/><text x="${pad-6}" y="${y+4}" font-size="10" text-anchor="end" fill="#6B6960">${v}</text>`}).join('')}
+    ${checkins.map((v,i)=>{const h=(v/max)*(H-20);const x=pad+i*bw+bw*.2;return `<rect x="${x}" y="${H-h}" width="${bw*.6}" height="${h}" rx="3" fill="${i===13?'#5B3FA0':'#C9BCE9'}"><title>${labels[i]}: ${v} lượt</title></rect><text x="${x+bw*.3}" y="${H+16}" font-size="10" text-anchor="middle" fill="#6B6960">${labels[i]}</text>`}).join('')}
+  </svg>`;
+  const types=[['Thao tác tài khoản',18,'#5B3FA0'],['Duyệt / từ chối',34,'#0E8E82'],['Đổi giá',6,'#3B4FA0'],['Xóa (vô hiệu hóa)',9,'#D32F3F']];
+  const tmax=Math.max(...types.map(t=>t[1]));
+  const body=`
+    <div class="page-head">
+      <div><h1>Báo cáo vận hành</h1><p class="stamp">Số liệu chụp tại lúc truy vấn, không cập nhật trực tiếp. Cập nhật lúc 10:42, 19/09/2026.</p></div>
+      <div class="${bad?'range-bad':''}">
+        <div style="display:flex;gap:8px;align-items:flex-end;flex-wrap:wrap">
+          <div class="field-inline"><label for="r-from">Từ ngày</label><input class="input" type="date" id="r-from" value="${rep.from}"></div>
+          <div class="field-inline"><label for="r-to">Đến ngày</label><input class="input" type="date" id="r-to" value="${rep.to}"></div>
+          <button class="btn btn-primary" id="r-go">Xem báo cáo</button>
+        </div>
+        <div class="error-inline">${MSG['MSG-182']}</div>
+      </div>
+    </div>
+
+    ${bad?`<div class="card empty">${MSG['MSG-181']}</div>`:`
+    <section class="stats">
+      <div class="card stat"><div class="l">Lượt check-in</div><div class="v">3.262</div><div class="d"><span class="up">+8,4%</span> so với 14 ngày trước</div></div>
+      <div class="card stat"><div class="l">Hội viên mới</div><div class="v">74</div><div class="d"><span class="up">+12</span> so với 14 ngày trước</div></div>
+      <div class="card stat"><div class="l">Buổi PT hoàn thành</div><div class="v">418</div><div class="d">Trên 452 buổi đã lên lịch</div></div>
+      <div class="card stat"><div class="l">Buổi PT vắng</div><div class="v">7,5%</div><div class="d"><span class="down">+1,2 điểm</span> so với kỳ trước</div></div>
+    </section>
+
+    <section class="two">
+      <div class="card card-pad chart"><h2>Lượt check-in theo ngày</h2><p class="sub">Gồm cả khách mua gói ngày</p>${svg}</div>
+      <div class="card"><div class="card-pad" style="padding-bottom:8px"><h2>Nhân sự theo ca</h2><p class="sub">Trung bình mỗi ca trong kỳ</p></div>
+        <div class="table-wrap"><table><thead><tr><th>Ca</th><th>PT</th><th>Lễ tân</th><th>Đơn nghỉ duyệt</th></tr></thead><tbody style="cursor:default">
+          <tr><td>Sáng</td><td class="num">4,2</td><td class="num">2,0</td><td class="num">5</td></tr>
+          <tr><td>Chiều</td><td class="num">3,1</td><td class="num">1,6</td><td class="num">3</td></tr>
+          <tr><td>Tối</td><td class="num">5,4</td><td class="num">2,1</td><td class="num">8</td></tr>
+        </tbody></table></div></div>
+    </section>
+
+    <section class="audit-block" aria-labelledby="audit-h">
+      <div class="audit-head">
+        <div><h2 id="audit-h">${I.shield.replace('<svg','<svg style="width:18px;height:18px;vertical-align:-3px;margin-right:6px;stroke:#5B3FA0;fill:none;stroke-width:2"')}Chỉ số audit & bảo mật</h2><p>Chỉ Admin thấy phần này. Dữ liệu lấy từ Audit Log.</p></div>
+        <a class="btn" href="#/audit">Mở Audit Log</a>
+      </div>
+      <div class="audit-body">
+        <div class="audit-stats">
+          <div class="stat"><div class="l">Thao tác nhạy cảm</div><div class="v">67</div><div class="d">Trong kỳ đã chọn</div></div>
+          <div class="stat"><div class="l">Khóa tạm tài khoản khách</div><div class="v">23</div><div class="d">3 lần Admin mở sớm</div></div>
+          <div class="stat"><div class="l">Tài khoản nhân viên bị khóa</div><div class="v">2</div><div class="d">Đang khóa tại thời điểm truy vấn</div></div>
+          <div class="stat"><div class="l">Đơn nghỉ tự từ chối</div><div class="v">4</div><div class="d">Do quá hạn duyệt</div></div>
+        </div>
+        <div class="two" style="margin:0">
+          <div class="card card-pad"><h2>Thao tác nhạy cảm theo loại</h2><p class="sub">Số bản ghi nhật ký</p>
+            <div class="bars">${types.map(t=>`<div class="bar-row"><span>${t[0]}</span><div class="bar-track"><div class="bar-fill" style="width:${t[1]/tmax*100}%;background:${t[2]}"></div></div><span class="num" style="text-align:right">${t[1]}</span></div>`).join('')}</div>
+          </div>
+          <div class="card"><div class="card-pad" style="padding-bottom:8px"><h2>Người thao tác nhiều nhất</h2></div>
+            <div class="table-wrap"><table><tbody style="cursor:default">
+              <tr><td>Nguyễn Văn An <span class="role role-Manager">Manager</span></td><td class="num" style="text-align:right">29</td></tr>
+              <tr><td>Nguyễn Thị Hoa <span class="role role-LeTan">Lễ tân</span></td><td class="num" style="text-align:right">14</td></tr>
+              <tr><td>Trần Minh Quân <span class="role role-Admin">Admin</span></td><td class="num" style="text-align:right">11</td></tr>
+            </tbody></table></div></div>
+        </div>
+      </div>
+    </section>`}`;
+  render(shell('report','<b>Báo cáo</b>',body));
+  document.getElementById('r-go').onclick=()=>{rep.from=val('r-from');rep.to=val('r-to');viewReport()};
+}
+
+/* ======================= 1.4.1 ACCOUNT SETTINGS ======================= */
+function viewSettings(){
+  const body=`
+    <div class="page-head"><div><h1>Cài đặt tài khoản</h1><p>Hồ sơ và mật khẩu của chính bạn.</p></div></div>
+    <div class="detail">
+      <div class="card"><div class="card-pad">
+        <h2>Hồ sơ</h2><p class="sub">Đổi email cần xác thực qua mã gửi tới email mới.</p>
+        <div class="form-grid">
+          <div class="f full"><label for="s-name">Họ và tên</label><input class="input" id="s-name" value="${ME.name}"></div>
+          <div class="f"><label for="s-email">Email</label><input class="input" id="s-email" value="${ME.email}"></div>
+          <div class="f"><label for="s-phone">Số điện thoại</label><input class="input num" id="s-phone" value="${ME.phone}"></div>
+        </div></div>
+        <div class="form-actions"><button class="btn btn-primary" onclick="toast('MSG-029','success')">Lưu thay đổi</button></div>
+      </div>
+      <div class="card"><div class="card-pad">
+        <h2>Đổi mật khẩu</h2><p class="sub">Đổi xong, mọi phiên đăng nhập khác bị đăng xuất.</p>
+        <div class="f" style="margin-bottom:12px"><label for="p1">Mật khẩu hiện tại</label><input class="input" type="password" id="p1"></div>
+        <div class="f" style="margin-bottom:12px"><label for="p2">Mật khẩu mới</label><input class="input" type="password" id="p2"></div>
+        <button class="btn">Đổi mật khẩu</button>
+      </div></div>
+    </div>`;
+  render(shell('', '<b>Cài đặt tài khoản</b>', body));
+}
+
+/* ======================= 1.1.1 SIGN IN / 1.2.1 FORGOT (L4) ======================= */
+function viewSignIn(){
+  render(`<div class="auth"><div>
+    <div class="card auth-card">
+      <div class="brand-mark">GMS</div>
+      <h1>Đăng nhập</h1>
+      <p class="lead">Dùng email hoặc số điện thoại đã đăng ký.</p>
+      <div class="f"><label for="l-id">Email hoặc SĐT</label><input class="input" id="l-id" value="quan.tm@gms.vn" autocomplete="username"></div>
+      <div class="f"><label for="l-pw">Mật khẩu</label><input class="input" id="l-pw" type="password" value="••••••••" autocomplete="current-password"></div>
+      <button class="btn btn-primary" onclick="location.hash='#/users'">Đăng nhập</button>
+      <div class="auth-links"><a href="#/forgot">Quên mật khẩu?</a></div>
+    </div>
+    <p class="auth-foot">Mockup: bấm Đăng nhập để vào khu Admin</p>
+  </div></div>`);
+}
+function viewForgot(){
+  render(`<div class="auth"><div class="card auth-card">
+      <div class="brand-mark">GMS</div>
+      <h1>Khôi phục mật khẩu</h1>
+      <p class="lead">Nhập email của tài khoản. Mã khôi phục được gửi qua email và hết hạn sau 15 phút.</p>
+      <div class="f"><label for="fg">Email</label><input class="input" id="fg" placeholder="ten@tenmien"></div>
+      <button class="btn btn-primary" onclick="toast('Đã gửi mã khôi phục tới email nếu tài khoản tồn tại.','success',true)">Gửi mã khôi phục</button>
+      <div class="auth-links"><a href="#/signin">Quay lại đăng nhập</a></div>
+  </div></div>`);
+}
+
+/* ======================= HELPERS ======================= */
+function render(html){document.getElementById('root').innerHTML=html;
+  
+  window.scrollTo(0,0);}
+function val(id){return document.getElementById(id).value}
+function mark(id,ok){document.getElementById(id).classList.toggle('invalid',!ok);return ok}
+function fmtPhone(p){return p.replace(/(\d{4})(\d{3})(\d{3})/,'$1 $2 $3')}
+function fmtCd(s){s=Math.max(0,s);return `${Math.floor(s/60)} phút ${String(s%60).padStart(2,'0')} giây`}
+function unlockAt(s){const d=new Date(Date.now()+s*1000);return `${String(d.getHours()).padStart(2,'0')}:${String(d.getMinutes()).padStart(2,'0')}`}
+function bindRowNav(){document.querySelectorAll('[data-go]').forEach(r=>{r.onclick=e=>{if(e.target.closest('a'))return;editing=false;location.hash=r.dataset.go};r.onkeydown=e=>{if(e.key==='Enter'){editing=false;location.hash=r.dataset.go}}})}
+
+let toastTimer;
+function toast(code,kind,raw){
+  const t=document.getElementById('toast');
+  const text=raw?code:(MSG[code]||code);
+  document.getElementById('toast-text').innerHTML=esc(text);
+  t.querySelector('.dot').style.background=kind==='danger'?'#F07C86':'#6FD19B';
+  t.classList.add('show');clearTimeout(toastTimer);toastTimer=setTimeout(()=>t.classList.remove('show'),3600);
+}
+
+let modalCb=null,lastFocus=null;
+function confirmModal({title,text,ok,onOk,safe}){
+  lastFocus=document.activeElement;
+  document.getElementById('m-title').textContent=title;
+  document.getElementById('m-text').innerHTML=text;
+  const okb=document.getElementById('m-ok');okb.textContent=ok;okb.className='btn '+(safe?'btn-primary':'btn-danger-solid');
+  const r=document.getElementById('m-reason');r.value='';r.parentElement.classList.remove('invalid');
+  modalCb=onOk;document.getElementById('overlay').classList.add('open');setTimeout(()=>r.focus(),30);
+}
+function closeModal(){document.getElementById('overlay').classList.remove('open');if(lastFocus)lastFocus.focus()}
+document.getElementById('m-cancel').onclick=closeModal;
+document.getElementById('overlay').onclick=e=>{if(e.target.id==='overlay')closeModal()};
+document.addEventListener('keydown',e=>{if(e.key==='Escape'&&document.getElementById('overlay').classList.contains('open'))closeModal()});
+document.getElementById('m-ok').onclick=()=>{
+  const r=document.getElementById('m-reason');
+  if(!r.value.trim()){r.parentElement.classList.add('invalid');r.focus();return}
+  const cb=modalCb;closeModal();cb&&cb(r.value.trim());
+};
+
+// countdown for temp-locked customers
+setInterval(()=>{
+  tempLocked.forEach(c=>c.unlockInSec--);
+  const expired=tempLocked.filter(c=>c.unlockInSec<=0);
+  expired.forEach(c=>{c.status='active';c.fails=0});
+  tempLocked=tempLocked.filter(c=>c.unlockInSec>0);
+  document.querySelectorAll('[data-countdown]').forEach(el=>{
+    const c=tempLocked.find(x=>x.id===el.dataset.countdown);
+    if(c) el.textContent=fmtCd(c.unlockInSec);
+  });
+  if(expired.length && location.hash.startsWith('#/users')) route();
+},1000);
+
+/* ======================= ROUTER ======================= */
+function route(){
+  const h=(location.hash||'#/signin').split('?')[0];
+  if(h==='#/signin') return viewSignIn();
+  if(h==='#/forgot') return viewForgot();
+  if(h==='#/users') return viewUserList();
+  if(h.startsWith('#/users/')) return viewUserDetail(decodeURIComponent(h.slice(8)));
+  if(h==='#/audit') return viewAudit();
+  if(h==='#/report') return viewReport();
+  if(h==='#/settings') return viewSettings();
+  viewSignIn();
+}
+window.addEventListener('hashchange',route);
+route();
+</script>
+</body>
+</html>

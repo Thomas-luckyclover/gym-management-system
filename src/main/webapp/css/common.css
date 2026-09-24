@@ -1,0 +1,643 @@
+/* =====================================================================
+   common.css — Lớp 2/3: nền tảng + thành phần dùng chung mọi trang
+   Chỉ dùng token từ tokens.css. Chỉ Leader sửa file này.
+   Các class/id đánh dấu [JS] được js/common.js tạo hoặc thao tác — đổi tên phải sửa common.js cùng lúc.
+
+   1. Nền tảng (reset, chữ, link, focus)
+   2. Nút bấm
+   3. Ô nhập & lỗi dưới ô
+   4. Toast
+   5. Hộp thoại xác nhận
+   6. Tab
+   7. Badge trạng thái (GBR-28) & tiền (GBR-29)
+   8. Trạng thái rỗng (GBR-21)
+   9. Trang lỗi 403/404/500
+   ===================================================================== */
+
+/* ===== 1. NỀN TẢNG ===== */
+
+*,
+*::before,
+*::after {
+  box-sizing: border-box;
+}
+
+/* Bắt buộc: thuộc tính hidden phải thắng các class có display riêng (.field-error, .toast...) */
+[hidden] {
+  display: none !important;
+}
+
+body {
+  margin: var(--space-0);
+  background: var(--color-bg);
+  color: var(--color-text);
+  font-family: var(--font-body);
+  font-size: var(--font-size-body);
+  line-height: var(--line-height-normal);
+  -webkit-font-smoothing: antialiased;
+}
+
+h1,
+h2,
+h3,
+h4 {
+  margin: var(--space-0);
+  font-family: var(--font-heading);
+  line-height: var(--line-height-tight);
+  color: var(--color-accent-ink);
+  text-wrap: balance;
+}
+
+h1 {
+  font-size: var(--font-size-2xl);
+  font-weight: var(--font-weight-extrabold);
+  letter-spacing: var(--letter-spacing-tight);
+}
+
+h2 {
+  font-size: var(--font-size-xl);
+  font-weight: var(--font-weight-bold);
+}
+
+h3 {
+  font-size: var(--font-size-lg);
+  font-weight: var(--font-weight-bold);
+  line-height: var(--line-height-snug);
+}
+
+p {
+  margin: var(--space-0);
+}
+
+a {
+  color: var(--color-link);
+  text-decoration: none;
+}
+
+a:hover {
+  text-decoration: underline;
+}
+
+img {
+  display: block;
+  max-width: 100%;
+}
+
+button,
+input,
+select,
+textarea {
+  font: inherit;
+  color: inherit;
+}
+
+button {
+  cursor: pointer;
+}
+
+/* Viền focus khi dùng bàn phím — không bao giờ xóa outline mà không thay thế */
+:focus-visible {
+  outline: var(--focus-outline-width) solid var(--color-primary);
+  outline-offset: var(--focus-outline-offset);
+}
+
+::selection {
+  background: var(--color-primary-tint);
+  color: var(--color-primary-hover);
+}
+
+/* Chữ số đều nhau cho bảng số liệu, mã đơn */
+.tabular {
+  font-variant-numeric: var(--font-numeric);
+}
+
+/* Ẩn khỏi mắt nhưng trình đọc màn hình vẫn đọc (nhãn cho nút chỉ có icon) */
+.visually-hidden {
+  position: absolute;
+  width: 1px;
+  height: 1px;
+  overflow: hidden;
+  clip-path: inset(50%);
+  white-space: nowrap;
+}
+
+/* ===== 2. NÚT BẤM ===== */
+
+/* Nút cơ bản — hình dạng theo theme (--radius-button: bo tròn 2 đầu ở khu Guest/Hội viên, bo nhẹ ở khu quản trị) */
+.btn {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: var(--space-2);
+  min-height: var(--control-height-md);
+  padding: var(--space-2-5) var(--space-4-5);
+  border: var(--border-width) solid transparent;
+  border-radius: var(--radius-button);
+  font-family: var(--font-display);
+  font-size: var(--font-size-md);
+  font-weight: var(--font-weight-semibold);
+  line-height: var(--line-height-none);
+  white-space: nowrap;
+  text-decoration: none;
+  cursor: pointer;
+  transition: background var(--duration-base) var(--ease-standard), border-color var(--duration-base) var(--ease-standard), color var(--duration-base) var(--ease-standard), transform var(--duration-fast) var(--ease-standard);
+}
+
+.btn:hover {
+  text-decoration: none;
+}
+
+.btn:active {
+  transform: translateY(var(--border-width));
+}
+
+.btn:disabled,
+.btn[aria-disabled="true"] {
+  cursor: not-allowed;
+  opacity: var(--opacity-disabled);
+  transform: none;
+}
+
+.btn svg {
+  width: var(--icon-size-sm);
+  height: var(--icon-size-sm);
+}
+
+/* Hành động chính — mỗi màn chỉ 1 nút này */
+.btn-primary {
+  background: var(--color-primary);
+  border-color: var(--color-primary);
+  color: var(--color-on-primary);
+  box-shadow: var(--shadow-button-primary);
+}
+
+.btn-primary:hover {
+  background: var(--color-primary-hover);
+  border-color: var(--color-primary-hover);
+}
+
+/* Hành động phụ có viền */
+.btn-outline {
+  background: var(--color-surface);
+  border-color: var(--color-primary-border);
+  color: var(--color-primary-hover);
+}
+
+.btn-outline:hover {
+  background: var(--color-primary-tint);
+}
+
+/* Hành động phụ nhẹ nhất */
+.btn-ghost {
+  background: transparent;
+  border-color: var(--color-border);
+  color: var(--color-text);
+}
+
+.btn-ghost:hover {
+  border-color: var(--color-primary-border);
+  color: var(--color-primary-hover);
+}
+
+/* Hành động phá hủy: xóa, hủy, từ chối (GBR-23) */
+.btn-danger {
+  background: var(--color-danger);
+  border-color: var(--color-danger);
+  color: var(--color-on-primary);
+}
+
+.btn-danger:hover {
+  background: var(--color-danger-hover);
+  border-color: var(--color-danger-hover);
+}
+
+.btn-sm {
+  min-height: var(--control-height-sm);
+  padding: var(--space-1-5) var(--space-3-5);
+  font-size: var(--font-size-sm);
+}
+
+.btn-lg {
+  min-height: var(--control-height-lg);
+  padding: var(--space-3) var(--space-5);
+  font-size: var(--font-size-base);
+}
+
+.btn-block {
+  width: 100%;
+}
+
+/* Hàng nút */
+.btn-row {
+  display: flex;
+  flex-wrap: wrap;
+  gap: var(--space-2-5);
+}
+
+/* [JS] common.js — setButtonLoading() thêm/xóa class này khi đang chờ server (GBR-22), vẽ vòng xoay trước chữ */
+.btn.is-loading::before {
+  content: "";
+  width: var(--icon-size-sm);
+  height: var(--icon-size-sm);
+  border: var(--border-width-thick) solid currentColor;
+  border-right-color: transparent;
+  border-radius: var(--radius-circle);
+  animation: spin var(--duration-spin) linear infinite;
+}
+
+@keyframes spin {
+  to {
+    transform: rotate(360deg);
+  }
+}
+
+/* ===== 3. Ô NHẬP & LỖI DƯỚI Ô (GBR-17, GBR-25) ===== */
+
+/* Khối 1 ô nhập: nhãn → ô → gợi ý → lỗi */
+.field {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-2);
+  margin-bottom: var(--space-4);
+}
+
+.field-label {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  font-size: var(--font-size-sm);
+  font-weight: var(--font-weight-medium);
+  color: var(--color-text);
+}
+
+.field input,
+.field select,
+.field textarea {
+  width: 100%;
+  min-height: var(--control-height-md);
+  padding: var(--space-2-5) var(--space-3);
+  border: var(--border-width) solid var(--color-border);
+  border-radius: var(--radius-sm);
+  background: var(--color-surface);
+  color: var(--color-text);
+  transition: border-color var(--duration-base) var(--ease-standard), box-shadow var(--duration-base) var(--ease-standard);
+}
+
+.field textarea {
+  min-height: var(--control-height-textarea);
+  line-height: var(--line-height-normal);
+  resize: vertical;
+}
+
+.field input:focus,
+.field select:focus,
+.field textarea:focus {
+  outline: none;
+  border-color: var(--color-primary);
+  box-shadow: var(--shadow-focus);
+}
+
+/* Ô chỉ đọc / bị khóa: nền xám + gợi ý ai được sửa (GBR-25) */
+.field input:disabled,
+.field input[readonly],
+.field select:disabled,
+.field textarea[readonly] {
+  background: var(--color-surface-muted);
+  color: var(--color-text-soft);
+  cursor: not-allowed;
+}
+
+/* [JS] common.js — showFieldError() thêm, clearFieldError() xóa: viền đỏ ô nhập sai */
+.field input.invalid,
+.field select.invalid,
+.field textarea.invalid {
+  border-color: var(--color-danger);
+}
+
+.field input.invalid:focus,
+.field select.invalid:focus,
+.field textarea.invalid:focus {
+  box-shadow: var(--shadow-focus-danger);
+}
+
+/* Dòng gợi ý dưới ô (VD "Ngày sinh chỉ được cập nhật tại quầy Lễ tân") */
+.field-hint {
+  display: flex;
+  align-items: flex-start;
+  gap: var(--space-1-5);
+  font-size: var(--font-size-xs);
+  color: var(--color-text-soft);
+}
+
+/* [JS] common.js — id = id ô nhập + "Error"; showFieldError() ghi nội dung và hiện, clearFieldError() ẩn.
+   getFieldErrorElement() tự tạo nếu JSP chưa có sẵn */
+.field-error {
+  display: flex;
+  align-items: flex-start;
+  gap: var(--space-1-5);
+  font-size: var(--font-size-xs);
+  font-weight: var(--font-weight-semibold);
+  color: var(--color-danger);
+}
+
+.field-error svg {
+  flex-shrink: 0;
+  width: var(--icon-size-xs);
+  height: var(--icon-size-xs);
+  margin-top: var(--space-0-5);
+}
+
+/* Ô nhập có nút nằm bên trong (nút con mắt mật khẩu) */
+.input-wrap {
+  position: relative;
+  display: flex;
+}
+
+.input-wrap input {
+  padding-right: var(--space-10);
+}
+
+/* [JS] common.js — bindPasswordToggles() gắn sự kiện cho nút có data-password-toggle, đổi icon mắt mở/gạch */
+.password-toggle {
+  position: absolute;
+  top: 50%;
+  right: var(--space-1-5);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: var(--control-height-sm);
+  height: var(--control-height-sm);
+  border: none;
+  border-radius: var(--radius-sm);
+  background: none;
+  color: var(--color-text-soft);
+  transform: translateY(-50%);
+}
+
+.password-toggle:hover {
+  background: var(--color-surface-muted);
+  color: var(--color-text);
+}
+
+/* ===== 4. TOAST (GBR-34) ===== */
+
+/* [JS] common.js — getToastContainer() tạo khung này nếu trang chưa có; showToast() thêm toast vào đây */
+#toastRoot {
+  position: fixed;
+  top: calc(var(--space-4) + env(safe-area-inset-top, 0px));
+  right: var(--space-4);
+  z-index: var(--z-toast);
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-2-5);
+  width: min(var(--layout-toast-width), calc(100vw - var(--space-6)));
+}
+
+/* [JS] common.js — showToast() tạo .toast + .toast-<loại>, thêm .show để trượt vào; removeToast() bỏ .show rồi xóa */
+.toast {
+  display: flex;
+  align-items: flex-start;
+  gap: var(--space-2-5);
+  padding: var(--space-3) var(--space-3-5);
+  border: var(--border-width) solid var(--color-border);
+  border-left-width: var(--border-width-accent);
+  border-radius: var(--radius-md);
+  background: var(--color-surface);
+  color: var(--color-text);
+  box-shadow: var(--shadow-pop);
+  font-size: var(--font-size-sm);
+  font-weight: var(--font-weight-semibold);
+  opacity: 0;
+  transform: translateY(calc(-1 * var(--space-2)));
+  transition: opacity var(--duration-slow) var(--ease-out), transform var(--duration-slow) var(--ease-out);
+}
+
+.toast.show {
+  opacity: 1;
+  transform: translateY(0);
+}
+
+.toast .toast-icon {
+  flex-shrink: 0;
+  width: var(--icon-size-sm);
+  height: var(--icon-size-sm);
+  margin-top: var(--space-0-5);
+}
+
+.toast-message {
+  flex: 1;
+}
+
+/* Nút X đóng toast — toast lỗi chỉ đóng bằng nút này */
+.toast-close {
+  flex-shrink: 0;
+  padding: var(--space-0-5);
+  border: none;
+  background: none;
+  color: var(--color-text-muted);
+  line-height: var(--line-height-none);
+}
+
+.toast-close:hover {
+  color: var(--color-text);
+}
+
+.toast-success {
+  border-left-color: var(--color-success);
+}
+
+.toast-success .toast-icon {
+  color: var(--color-success);
+}
+
+.toast-info {
+  border-left-color: var(--color-info);
+}
+
+.toast-info .toast-icon {
+  color: var(--color-info);
+}
+
+.toast-warning {
+  border-left-color: var(--color-warning);
+}
+
+.toast-warning .toast-icon {
+  color: var(--color-warning);
+}
+
+.toast-error {
+  border-left-color: var(--color-danger);
+}
+
+.toast-error .toast-icon {
+  color: var(--color-danger);
+}
+
+/* ===== 5. HỘP THOẠI XÁC NHẬN (GBR-23) ===== */
+
+/* [JS] common.js — openConfirmDialog() tạo nền mờ + hộp; closeConfirmDialog() xóa. Bấm nền mờ là đóng */
+.modal-backdrop {
+  position: fixed;
+  inset: 0;
+  z-index: var(--z-modal);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: var(--space-4-5);
+  background: var(--color-overlay);
+  animation: fade-in var(--duration-slow) var(--ease-out);
+}
+
+.modal-box {
+  width: 100%;
+  max-width: var(--layout-dialog-width);
+  padding: var(--space-6) var(--space-5) var(--space-5);
+  border-radius: var(--radius-lg);
+  background: var(--color-surface);
+  box-shadow: var(--shadow-pop);
+}
+
+.modal-title {
+  margin-bottom: var(--space-2);
+  font-size: var(--font-size-lg);
+}
+
+.modal-message {
+  margin-bottom: var(--space-5);
+  font-size: var(--font-size-md);
+  color: var(--color-text-soft);
+}
+
+.modal-actions {
+  justify-content: flex-end;
+  margin-top: var(--space-2);
+}
+
+@keyframes fade-in {
+  from {
+    opacity: 0;
+  }
+}
+
+/* ===== 6. TAB ===== */
+
+/* [JS] common.js — bindTabs() đổi aria-selected của nút [data-tab] và ẩn/hiện [data-tab-panel] */
+[role="tablist"] {
+  display: flex;
+  gap: var(--space-0-5);
+  overflow-x: auto;
+  border-bottom: var(--border-width) solid var(--color-border);
+}
+
+[role="tablist"] [data-tab] {
+  margin-bottom: calc(-1 * var(--border-width));
+  padding: var(--space-3);
+  border: none;
+  border-bottom: var(--border-width-thick) solid transparent;
+  background: none;
+  color: var(--color-text-soft);
+  font-weight: var(--font-weight-semibold);
+  white-space: nowrap;
+}
+
+[role="tablist"] [data-tab][aria-selected="true"] {
+  border-bottom-color: var(--color-primary);
+  color: var(--color-primary);
+}
+
+/* ===== 7. BADGE TRẠNG THÁI (GBR-28) & TIỀN (GBR-29) ===== */
+
+/* Nhãn trạng thái — cùng 1 màu cho cùng 1 nghĩa trên MỌI màn:
+   xanh = hoạt động/thành công · vàng = chờ/giữ chỗ · đỏ = từ chối/hủy/lỗi · xám = ngừng/hết hạn */
+.badge {
+  display: inline-flex;
+  align-items: center;
+  gap: var(--space-1-5);
+  padding: var(--space-0-5) var(--space-2);
+  border: var(--border-width) solid transparent;
+  border-radius: var(--radius-pill);
+  font-size: var(--font-size-xs);
+  font-weight: var(--font-weight-semibold);
+  white-space: nowrap;
+}
+
+.badge-success {
+  background: var(--color-success-tint);
+  border-color: var(--color-success-border);
+  color: var(--color-success-ink);
+}
+
+.badge-warning {
+  background: var(--color-warning-tint);
+  border-color: var(--color-warning-border);
+  color: var(--color-warning-ink);
+}
+
+.badge-danger {
+  background: var(--color-danger-tint);
+  border-color: var(--color-danger-border);
+  color: var(--color-danger-ink);
+}
+
+.badge-info {
+  background: var(--color-info-tint);
+  border-color: var(--color-info-border);
+  color: var(--color-info-ink);
+}
+
+.badge-neutral {
+  background: var(--color-neutral-tint);
+  border-color: var(--color-neutral-border);
+  color: var(--color-text-soft);
+}
+
+/* Ô tiền: căn phải, chữ số đều (GBR-29) — dùng cho <td> và mọi chỗ hiện số tiền */
+.money {
+  text-align: right;
+  white-space: nowrap;
+  font-variant-numeric: var(--font-numeric);
+}
+
+/* ===== 8. TRẠNG THÁI RỖNG (GBR-21) ===== */
+
+/* [JS] common.js — renderEmptyState() tạo khối này cho danh sách AJAX; JSP cũng dùng lại cho danh sách render sẵn */
+.empty-state {
+  padding: var(--space-10) var(--space-4-5);
+  border: var(--border-width) dashed var(--color-border);
+  border-radius: var(--radius-lg);
+  background: var(--color-surface);
+  color: var(--color-text-soft);
+  text-align: center;
+}
+
+/* ===== 9. TRANG LỖI 403/404/500 (WEB-INF/jsp/error) ===== */
+
+.error-page {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: var(--space-3);
+  min-height: 100vh;
+  padding: var(--space-6) var(--layout-gutter-mobile);
+  text-align: center;
+}
+
+.error-page__code {
+  font-family: var(--font-display);
+  font-size: var(--font-size-display);
+  font-weight: var(--font-weight-extrabold);
+  color: var(--color-primary);
+  line-height: var(--line-height-none);
+}
+
+.error-page__title {
+  font-size: var(--font-size-2xl);
+}
+
+.error-page__message {
+  max-width: var(--layout-text-max-width);
+  margin-bottom: var(--space-3);
+  color: var(--color-text-soft);
+}

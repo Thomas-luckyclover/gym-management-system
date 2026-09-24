@@ -1,0 +1,469 @@
+/* =====================================================================
+   tokens.css — DESIGN TOKENS của GYM MANAGEMENT SYSTEM (Super Gym)
+   Lớp 1/3 của CSS: tokens.css → common.css → css/pages/<vai-trò>/<màn>.css
+
+   Nguồn giá trị: prototype GUEST GYM (style.css, customer.css) + mockup Manager/Admin v24.
+   Quy tắc: mọi file CSS khác CHỈ được dùng var(--...) từ file này,
+   cấm hard-code mã màu / px / font / bo góc / đổ bóng (agents.md Phần 1).
+   Chỉ Leader sửa file này; cần token mới thì báo Leader.
+
+   Mục lục:
+   1. Khoảng cách (spacing)
+   2. Bo góc (radius) — đã giảm 19% các bo góc lớn
+   3. Chữ (font, cỡ chữ, độ đậm, dòng, giãn chữ)
+   4. Đổ bóng, viền, focus
+   5. Lớp chồng (z-index)
+   6. Chuyển động (motion)
+   7. Bố cục & kích thước thành phần
+   8. Màu — theme mặc định (Guest nền sáng · Đồng cổ)
+   9. Theme theo vai trò (gắn class lên <body>)
+   10. Giảm chuyển động theo cài đặt hệ điều hành
+   ===================================================================== */
+
+:root {
+  /* ===== 1. KHOẢNG CÁCH — mọi margin/padding/gap lấy từ thang này ===== */
+  --space-0: 0;
+  /* viền trang trí, khe rất nhỏ */
+  --space-0-5: 2px;
+  /* icon ↔ chữ */
+  --space-1: 4px;
+  /* khe giữa chip, gap label nhỏ */
+  --space-1-5: 6px;
+  /* padding nút nhỏ, gap label ↔ input */
+  --space-2: 8px;
+  /* padding input, gap trong nhóm nút */
+  --space-2-5: 10px;
+  /* padding card nhỏ, gap giữa item trong list */
+  --space-3: 12px;
+  /* padding toast, banner */
+  --space-3-5: 14px;
+  /* padding chuẩn của card, gap giữa block nội dung */
+  --space-4: 16px;
+  /* padding card lớn, padding ngang nút */
+  --space-4-5: 20px;
+  /* khoảng cách giữa các khối trong 1 section */
+  --space-5: 24px;
+  /* margin giữa block lớn (header ↔ nội dung) */
+  --space-6: 32px;
+  --space-7: 40px;
+  /* khoảng cách giữa các section chính */
+  --space-8: 48px;
+  /* padding hero, padding tổng thể trang */
+  --space-10: 64px;
+  --space-12: 80px;
+
+  /* ===== 2. BO GÓC =====
+     Các bo góc lớn giảm 19% so với prototype (nhân 0.81), bo góc nhỏ giữ nguyên:
+       md : 12px × 0.81 = 9.72px   (input to, banner, toast, FAQ, ô thống kê)
+       lg : 18px × 0.81 = 14.58px  (card, form đăng nhập, modal; gộp luôn card 16px của hero)
+     Muốn chỉnh lại độ giảm chỉ cần đổi --radius-reduce-ratio. */
+  --radius-reduce-ratio: 0.81;
+  --radius-none: 0;
+  /* tag spec, checkbox, vạch trang trí */
+  --radius-xs: 4px;
+  /* input, nút vuông, mục menu */
+  --radius-sm: 8px;
+  --radius-md: calc(12px * var(--radius-reduce-ratio));
+  --radius-lg: calc(18px * var(--radius-reduce-ratio));
+  /* nút bo tròn 2 đầu, chip, badge — dạng viên thuốc, không áp tỉ lệ giảm */
+  --radius-pill: 999px;
+  /* avatar, chấm trạng thái */
+  --radius-circle: 50%;
+  /* hình dạng nút: khu Guest/Hội viên/Nhân viên bo tròn 2 đầu như prototype */
+  --radius-button: var(--radius-pill);
+
+  /* ===== 3. CHỮ ===== */
+  /* Montserrat: tiêu đề lớn, nút CTA, số liệu */
+  --font-display: "Montserrat", "Segoe UI", system-ui, sans-serif;
+  /* Tiêu đề trang/card — khu Manager/Admin đổi sang Be Vietnam Pro (dấu tiếng Việt không bị cắt) */
+  --font-heading: "Montserrat", "Segoe UI", system-ui, sans-serif;
+  /* Nội dung, nhãn, chú thích */
+  --font-body: "Inter", "Segoe UI", system-ui, sans-serif;
+  /* Số tiền, mã đơn: chữ số đều nhau để cột thẳng hàng — dùng kèm font-variant-numeric */
+  --font-numeric: tabular-nums;
+
+  /* Cỡ chữ (1rem = 16px) */
+  /* 11px — tag spec, nhãn siêu nhỏ */
+  --font-size-2xs: 0.6875rem;
+  /* 12px — chú thích, header bảng, badge */
+  --font-size-xs: 0.75rem;
+  /* 13px — lỗi dưới ô nhập, nút nhỏ, breadcrumb */
+  --font-size-sm: 0.8125rem;
+  /* 14px — nội dung phụ, nội dung chính khu Manager/Admin */
+  --font-size-md: 0.875rem;
+  /* 15px — nội dung chính khu Guest/Hội viên/Nhân viên */
+  --font-size-base: 0.9375rem;
+  /* 17px — tiêu đề card, đoạn dẫn */
+  --font-size-lg: 1.0625rem;
+  /* 20px — tiêu đề khối nhỏ */
+  --font-size-xl: 1.25rem;
+  /* 24px — tiêu đề trang */
+  --font-size-2xl: 1.5rem;
+  /* Tiêu đề section, co giãn theo màn hình */
+  --font-size-3xl: clamp(1.45rem, 2.7vw, 1.95rem);
+  /* Tiêu đề trang nổi bật */
+  --font-size-4xl: clamp(1.7rem, 3.4vw, 2.2rem);
+  /* Tiêu đề hero trang chủ */
+  --font-size-display: clamp(2.1rem, 4.9vw, 3.4rem);
+  /* Cỡ chữ nội dung theo vai trò — component dùng token này, theme tự đổi */
+  --font-size-body: var(--font-size-base);
+
+  --font-weight-regular: 400;
+  --font-weight-medium: 500;
+  --font-weight-semibold: 600;
+  --font-weight-bold: 700;
+  --font-weight-extrabold: 800;
+
+  --line-height-none: 1;
+  /* tiêu đề */
+  --line-height-tight: 1.2;
+  /* tiêu đề nhỏ, dòng trong bảng */
+  --line-height-snug: 1.35;
+  /* nội dung */
+  --line-height-normal: 1.55;
+  /* bài viết blog dài */
+  --line-height-relaxed: 1.7;
+
+  --letter-spacing-tighter: -0.03em;
+  --letter-spacing-tight: -0.02em;
+  --letter-spacing-normal: 0;
+  --letter-spacing-wide: 0.04em;
+  /* chữ IN HOA nhỏ: eyebrow, header bảng */
+  --letter-spacing-wider: 0.1em;
+  --letter-spacing-widest: 0.12em;
+
+  /* ===== 4. ĐỔ BÓNG, VIỀN, FOCUS ===== */
+  --border-width: 1px;
+  --border-width-thick: 2px;
+  /* vạch nhấn trái của toast/mục menu đang chọn */
+  --border-width-accent: 3px;
+
+  /* card nằm trên nền trang */
+  --shadow-card: 0 1px 2px rgba(35, 34, 31, 0.04), 0 10px 28px -16px rgba(35, 34, 31, 0.18);
+  /* toast, modal, form đăng nhập */
+  --shadow-pop: 0 20px 48px -20px rgba(35, 34, 31, 0.32);
+  /* thẻ nổi trên nền đen (hero) */
+  --shadow-float: 0 26px 60px -24px rgba(0, 0, 0, 0.55);
+  /* sidebar trượt ra */
+  --shadow-drawer: 0 0 40px rgba(0, 0, 0, 0.35);
+  --focus-outline-width: 2px;
+  --focus-outline-offset: 2px;
+
+  /* ===== 5. LỚP CHỒNG (z-index) — không tự đặt số khác ===== */
+  --z-base: 1;
+  --z-sticky: 20;
+  --z-header: 40;
+  --z-sidebar: 120;
+  --z-dropdown: 200;
+  --z-modal: 300;
+  /* toast nằm trên cả modal để thấy kết quả sau khi bấm Xác nhận */
+  --z-toast: 400;
+
+  /* ===== 6. CHUYỂN ĐỘNG ===== */
+  /* hover nút, đổi viền input */
+  --duration-fast: 120ms;
+  --duration-base: 150ms;
+  /* toast/modal xuất hiện */
+  --duration-slow: 250ms;
+  /* sidebar trượt */
+  --duration-slower: 280ms;
+  /* 1 vòng quay của biểu tượng đang tải */
+  --duration-spin: 700ms;
+  --ease-standard: cubic-bezier(0.4, 0, 0.2, 1);
+  --ease-out: cubic-bezier(0, 0, 0.2, 1);
+
+  /* ===== 7. BỐ CỤC & KÍCH THƯỚC THÀNH PHẦN =====
+     Breakpoint (CSS không cho dùng biến trong @media, dùng ĐÚNG các số này):
+       480px (điện thoại nhỏ) · 640px (điện thoại) · 900px (máy tính bảng) · 1080px (laptop nhỏ) */
+  /* bề rộng nội dung trang công khai */
+  --layout-container-width: 1180px;
+  /* bề rộng vùng nội dung khu quản trị */
+  --layout-content-width: 1240px;
+  --layout-sidebar-width: 252px;
+  --layout-gutter: 24px;
+  --layout-gutter-mobile: 16px;
+  /* độ rộng tối đa của form đăng nhập/đăng ký */
+  --layout-auth-card-width: 440px;
+  --layout-dialog-width: 420px;
+  --layout-toast-width: 370px;
+  /* đoạn văn dài quá số ký tự này khó đọc */
+  --layout-text-max-width: 72ch;
+
+  --control-height-sm: 32px;
+  --control-height-md: 38px;
+  --control-height-lg: 46px;
+  --control-height-textarea: 120px;
+  /* độ mờ của nút/ô bị khóa */
+  --opacity-disabled: 0.5;
+  --icon-size-xs: 12px;
+  --icon-size-sm: 14px;
+  --icon-size-md: 16px;
+  --icon-size-lg: 18px;
+  --avatar-size-sm: 32px;
+  --avatar-size-md: 46px;
+  --avatar-size-lg: 64px;
+
+  /* ===== 8. MÀU — THEME MẶC ĐỊNH: Guest nền sáng · Đồng cổ (trang đăng nhập/đăng ký/quên mật khẩu) =====
+     Nguyên tắc dùng màu (từ prototype):
+     - primary CHỈ cho hành động chính (nút CTA) và đúng 1 con số quan trọng nhất mỗi màn.
+     - Trạng thái dùng bộ success/warning/danger/info (GBR-28: xanh = hoạt động/thành công,
+       vàng = chờ/giữ chỗ, đỏ = từ chối/hủy/lỗi, xám = ngừng/hết hạn) — giống nhau trên mọi màn.
+     - Vàng chanh (lime) chỉ dùng trên nền đen, hoặc làm mảng nhỏ đi với chữ đen; không bao giờ làm màu chữ trên nền trắng. */
+
+  /* Màu thương hiệu của theme */
+  --color-primary: #A9762C;
+  --color-primary-hover: #8F6121;
+  --color-primary-tint: #F6EFE2;
+  --color-primary-border: #D9C4A0;
+  /* chữ/icon đặt trên nền primary */
+  --color-on-primary: #FFFFFF;
+  /* tiêu đề và số liệu phụ — KHÔNG dùng màu thương hiệu */
+  --color-accent-ink: #23221F;
+  /* pill phụ, nền avatar */
+  --color-tag: #F3F1EC;
+  /* dòng được ghim trong bảng */
+  --color-row-pinned: #FFFBF2;
+
+  /* Bề mặt */
+  --color-bg: #FAFAF8;
+  --color-surface: #FFFFFF;
+  /* nền phụ: ô readonly, header bảng, khối ghi chú */
+  --color-surface-muted: #F3F1EC;
+  --color-surface-hover: #F6F4EE;
+  /* nền đen: header trang chủ, hero, sidebar hội viên */
+  --color-surface-inverse: #0D0D0D;
+  --color-surface-inverse-soft: #161513;
+  /* nền mờ phía sau modal */
+  --color-overlay: rgba(26, 25, 23, 0.5);
+
+  /* Chữ */
+  --color-text: #23221F;
+  --color-text-soft: #6B6960;
+  --color-text-muted: #8F8B81;
+  --color-text-disabled: #B8B4AA;
+  --color-text-inverse: #F3F1EC;
+  --color-text-inverse-soft: #C9C5BC;
+
+  /* Viền */
+  --color-border: #E7E5DF;
+  --color-border-strong: #D4D1C8;
+  --color-border-inverse: rgba(255, 255, 255, 0.11);
+
+  /* Trạng thái: màu chính · nền nhạt · viền · chữ đậm (chữ đặt trên nền nhạt) */
+  --color-success: #2F8F5B;
+  --color-success-tint: #E9F5EF;
+  --color-success-border: #BFE1CD;
+  --color-success-ink: #1F6B41;
+  --color-warning: #D69E2E;
+  --color-warning-tint: #FCF3DE;
+  --color-warning-border: #F0D89A;
+  --color-warning-ink: #8A5A0E;
+  --color-danger: #D32F3F;
+  --color-danger-hover: #B8283A;
+  --color-danger-tint: #FBEAEC;
+  --color-danger-border: #F0BCC2;
+  --color-danger-ink: #9A2230;
+  --color-info: #2E6FBA;
+  --color-info-tint: #E9F1FB;
+  --color-info-border: #BBD5F1;
+  --color-info-ink: #1E4F87;
+  /* trạng thái ngừng hoạt động / hết hạn */
+  --color-neutral: #8F8B81;
+  --color-neutral-tint: #F3F1EC;
+  --color-neutral-border: #E7E5DF;
+
+  /* Vàng chanh — accent nổi bật của trang công khai */
+  --color-lime: #D4FF3F;
+  --color-lime-hover: #B8E62E;
+  --color-lime-ink: #0D0D0D;
+
+  /* Màu nhận diện vai trò — dùng cho badge vai trò ở màn Admin (User List, Audit Log) */
+  --color-role-admin: #5B3FA0;
+  --color-role-admin-tint: #F1ECFB;
+  --color-role-manager: #3B4FA0;
+  --color-role-manager-tint: #EDEFFA;
+  --color-role-staff: #0B766C;
+  --color-role-staff-tint: #E7F6F3;
+  --color-role-customer: #C6472F;
+  --color-role-customer-tint: #FDEDEB;
+
+  /* Bóng phát sáng dưới nút chính — ăn theo màu theme */
+  --shadow-button-primary: 0 8px 20px -12px rgba(169, 118, 44, 0.9);
+
+  color-scheme: light;
+}
+
+/* ===== Token PHỤ THUỘC token khác — khai báo lại trên phần tử gắn theme =====
+   Lý do: biến CSS tham chiếu biến khác được tính 1 lần tại nơi khai báo. Nếu chỉ đặt ở :root,
+   khu Hội viên vẫn nhận màu focus của theme Guest. Đặt thêm trên [class*="theme-"] để tính lại theo theme. */
+:root,
+[class*="theme-"] {
+  /* vòng sáng quanh input đang focus */
+  --shadow-focus: 0 0 0 3px var(--color-primary-tint);
+  /* vòng sáng đỏ quanh ô đang báo lỗi */
+  --shadow-focus-danger: 0 0 0 3px var(--color-danger-tint);
+  /* vạch màu bên trái mục menu đang chọn */
+  --shadow-inset-accent: inset var(--border-width-accent) 0 0 var(--color-primary);
+  --color-link: var(--color-primary-hover);
+}
+
+/* =====================================================================
+   9. THEME THEO VAI TRÒ — gắn đúng 1 class lên thẻ <body> của layout:
+     theme-guest        Trang xác thực (đăng nhập, đăng ký, quên mật khẩu), trang lỗi
+     theme-guest-dark   Trang chủ, blog (nền đen + vàng chanh)
+     theme-member       Khu Hội viên /customer/*
+     theme-staff        Khu PT /pt/* và Lễ tân /receptionist/*
+     theme-manager      Khu Quản lý /manager/*
+     theme-admin        Khu Quản trị /admin/*
+   Theme chỉ đổi lại giá trị token; component trong common.css tự ăn theo.
+   ===================================================================== */
+
+/* Guest nền sáng — chính là giá trị mặc định ở :root, khai báo để JSP ghi rõ theme đang dùng */
+.theme-guest {
+  --color-primary: #A9762C;
+}
+
+/* Guest nền đen · Vàng chanh — trang chủ và blog */
+.theme-guest-dark {
+  --color-primary: var(--color-lime);
+  --color-primary-hover: #DFFF6B;
+  --color-primary-tint: rgba(212, 255, 63, 0.12);
+  --color-primary-border: rgba(212, 255, 63, 0.38);
+  --color-on-primary: var(--color-lime-ink);
+  --color-accent-ink: #FFFFFF;
+  --color-bg: #0D0D0D;
+  --color-surface: #141413;
+  --color-surface-muted: #121211;
+  --color-surface-hover: #181716;
+  --color-text: #F3F1EC;
+  --color-text-soft: #A09C93;
+  --color-text-muted: #79766F;
+  --color-border: rgba(255, 255, 255, 0.11);
+  --color-border-strong: rgba(255, 255, 255, 0.2);
+  --color-link: var(--color-lime);
+  --color-overlay: rgba(0, 0, 0, 0.6);
+  --shadow-button-primary: 0 10px 30px -12px rgba(212, 255, 63, 0.55);
+  color-scheme: dark;
+}
+
+/* Hội viên · Nâu đất (Umber) */
+.theme-member {
+  --color-primary: #6B4A35;
+  --color-primary-hover: #503628;
+  --color-primary-tint: #F1EAE3;
+  --color-primary-border: #D4C4B4;
+  --color-accent-ink: #23221F;
+  --color-bg: #FAF8F6;
+  --color-surface-muted: #EFEBE3;
+  --color-surface-hover: #F4F0EA;
+  --color-text: #23221F;
+  --color-text-soft: #6E655D;
+  --color-border: #E5DED7;
+  --color-border-strong: #D8BFA6;
+  --color-success: #2F7A50;
+  --color-success-tint: #EAF3ED;
+  --color-success-border: #C5DECF;
+  --color-info: #3A6291;
+  --color-info-tint: #EDF1F6;
+  --color-info-border: #C8D6E6;
+  --color-warning: #B07D18;
+  --color-warning-tint: #FAF3E2;
+  --color-warning-border: #E6D4A6;
+  --color-danger: #A83232;
+  --color-danger-hover: #8F2A2A;
+  --color-danger-tint: #F9EAEA;
+  --color-danger-border: #E8C4C4;
+  --shadow-button-primary: 0 8px 20px -12px rgba(107, 74, 53, 0.8);
+}
+
+/* Nhân viên (PT, Lễ tân) · Xanh rêu đá (Slate Pine) */
+.theme-staff {
+  --color-primary: #3D6B5C;
+  --color-primary-hover: #2A4D42;
+  /* be-xám canvas, cố ý không pha từ primary */
+  --color-primary-tint: #EAE7DD;
+  /* nâu-xám, lệch trục khỏi xanh */
+  --color-primary-border: #A89A85;
+  /* xanh đen thay cho đen thuần */
+  --color-accent-ink: #1F3830;
+  /* pill phụ, avatar dùng chung 1 màu cho mọi người */
+  --color-tag: #B8CFC5;
+  --color-bg: #F6F4EE;
+  --color-surface-muted: #EFEBE3;
+  --color-surface-hover: #F1EEE6;
+  --color-text: #222624;
+  --color-text-soft: #65706B;
+  --color-border: #D8D2C4;
+  --color-border-strong: #C4BCAB;
+  --color-success: #2F7A50;
+  --color-success-tint: #E9F2EC;
+  --color-success-border: #C2DCCD;
+  --color-info: #3A6291;
+  --color-info-tint: #ECF1F6;
+  --color-info-border: #C8D6E6;
+  --color-warning: #A5760F;
+  --color-warning-tint: #F8F2E0;
+  --color-warning-border: #E0CFA2;
+  --color-danger: #A13A3A;
+  --color-danger-hover: #873030;
+  --color-danger-tint: #F7EBEB;
+  --color-danger-border: #E4C5C5;
+  --shadow-button-primary: 0 8px 20px -12px rgba(61, 107, 92, 0.8);
+}
+
+/* Quản lý · Chàm (Indigo) — bố cục dày thông tin: chữ 14px, bo góc nhỏ hơn */
+.theme-manager {
+  --color-primary: #3B4FA0;
+  --color-primary-hover: #2F3F85;
+  --color-primary-tint: #EDEFFA;
+  --color-primary-border: #C5CCEC;
+  --color-success-tint: #E8F4EC;
+  --color-warning-tint: #FBF3E2;
+  --color-danger-hover: #B72633;
+  --color-danger-tint: #FBE9EA;
+  --color-info-tint: #E8F0F9;
+  /* nền header bảng */
+  --color-surface-muted: #FCFCFA;
+  --font-body: "Work Sans", "Segoe UI", system-ui, sans-serif;
+  --font-heading: "Be Vietnam Pro", "Segoe UI", system-ui, sans-serif;
+  --font-size-body: var(--font-size-md);
+  /* mockup Manager dùng bo 6px cho input/nút — giữ nguyên, không tăng lên 8px */
+  --radius-sm: 6px;
+  /* khu quản trị: nút góc vuông bo nhẹ như mockup */
+  --radius-button: var(--radius-sm);
+  --layout-sidebar-width: 244px;
+  --shadow-button-primary: none;
+}
+
+/* Quản trị · Tím (Violet) — cùng bố cục với Quản lý */
+.theme-admin {
+  --color-primary: #5B3FA0;
+  --color-primary-hover: #4A3287;
+  --color-primary-tint: #F1ECFB;
+  --color-primary-border: #D8CCF0;
+  --color-success-tint: #E8F4EC;
+  --color-warning-tint: #FBF3E2;
+  --color-danger-hover: #B72633;
+  --color-danger-tint: #FBE9EA;
+  --color-info-tint: #E8F0F9;
+  --color-surface-muted: #FCFCFA;
+  --color-surface-hover: #FBFAFD;
+  --font-body: "Work Sans", "Segoe UI", system-ui, sans-serif;
+  --font-heading: "Be Vietnam Pro", "Segoe UI", system-ui, sans-serif;
+  --font-size-body: var(--font-size-md);
+  --radius-sm: 6px;
+  /* khu quản trị: nút góc vuông bo nhẹ như mockup */
+  --radius-button: var(--radius-sm);
+  --layout-sidebar-width: 240px;
+  --shadow-button-primary: none;
+}
+
+/* ===== 10. GIẢM CHUYỂN ĐỘNG — người dùng bật "Reduce motion" trong hệ điều hành ===== */
+@media (prefers-reduced-motion: reduce) {
+  :root {
+    --duration-fast: 0ms;
+    --duration-base: 0ms;
+    --duration-slow: 0ms;
+    --duration-slower: 0ms;
+  }
+}

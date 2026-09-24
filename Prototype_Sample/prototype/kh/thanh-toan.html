@@ -1,0 +1,183 @@
+﻿<!DOCTYPE html>
+<html lang="vi">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
+<title>Thanh toán — Super Gym</title>
+<meta name="robots" content="noindex">
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Montserrat:wght@600;700;800&family=Inter:wght@400;500;600;700&display=swap">
+<script src="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/7.3.1/js/all.min.js" crossorigin="anonymous"></script>
+<link rel="stylesheet" href="../style.css">
+<link rel="stylesheet" href="../customer.css">
+</head>
+<body class="cust member">
+<div id="toastRoot"></div>
+<div id="modalRoot"></div>
+
+<!-- 7.1.2 — Checkout / Payment · L2 · UC-22 -->
+<div class="cust-shell" id="custShell">
+
+  <!-- Dock điều hướng: thu gọn mặc định, rê vào tay cầm thì trượt ra. -->
+  <div class="cust-dock" id="custDock">
+    <aside class="cust-sidebar">
+      <a class="cust-brand" href="trang-ca-nhan.html">
+        <b>Super Gym</b><span>Khu vực hội viên</span>
+      </a>
+      <nav class="cust-nav">
+        <h4>Tổng quan</h4>
+      <a href="trang-ca-nhan.html"><i class="fa-solid fa-gauge-high"></i>Trang cá nhân</a>
+        <h4>Gói tập</h4>
+      <a href="mua-goi.html" aria-current="page"><i class="fa-solid fa-cart-shopping"></i>Mua gói</a>
+      <a href="lich-su-giao-dich.html"><i class="fa-solid fa-receipt"></i>Lịch sử giao dịch</a>
+        <h4>Lịch tập</h4>
+      <a href="lich-cua-toi.html"><i class="fa-solid fa-calendar-check"></i>Lịch của tôi</a>
+      <a href="buoi-pt.html"><i class="fa-solid fa-user-check"></i>Buổi PT của tôi</a>
+      <a href="dat-buoi-le.html"><i class="fa-solid fa-calendar-plus"></i>Đặt buổi lẻ</a>
+      <a href="giao-an.html"><i class="fa-solid fa-clipboard-list"></i>Giáo án của tôi</a>
+        <h4>Tài khoản</h4>
+      <a href="tai-khoan.html"><i class="fa-solid fa-user-gear"></i>Cài đặt tài khoản</a>
+        <h4>Hòm thư</h4>
+      <a href="gop-y.html"><i class="fa-solid fa-inbox"></i>Hòm thư góp ý</a>
+      </nav>
+      <div class="cust-sidebar-foot">
+        <a href="../dang-nhap.html"><i class="fa-solid fa-arrow-right-from-bracket"></i>Đăng xuất</a>
+      </div>
+    </aside>
+    <button class="cust-handle" type="button" id="dockHandle"
+            aria-label="Mở menu điều hướng" aria-expanded="false" aria-controls="custDock">
+      <i class="fa-solid fa-chevron-right"></i>
+    </button>
+  </div>
+
+  <div class="cust-main">
+    <header class="cust-topbar">
+      <div>
+        <div class="crumb"><a href="mua-goi.html">Mua gói</a> <i class="fa-solid fa-chevron-right"></i> <span>Đơn DH-2026-1191</span></div>
+        <h1>Thanh toán</h1>
+      </div>
+      <div class="cust-topbar-actions">
+        <a class="cust-user" href="tai-khoan.html" title="Cài đặt tài khoản">
+          <span class="avatar">AN</span>
+          <span class="cust-user-text">
+            <b>Nguyễn Minh An</b>
+            <span>KH-0241</span>
+          </span>
+        </a>
+      </div>
+    </header>
+
+    <main class="cust-content">
+      <div class="step-panel" data-step="pending">
+        <div class="split">
+          <div class="col-main">
+
+            <section class="panel">
+              <div class="panel-head"><h2>Gói đã chọn</h2></div>
+              <div class="data-list">
+                <div class="data-row">
+                  <div class="row-main">
+                    <div class="row-title">Gói 6 Tháng</div>
+                    <div class="row-meta"><span><i class="fa-solid fa-calendar-days"></i> 6 tháng kể từ ngày kích hoạt</span></div>
+                  </div>
+                  <b class="tabular">3.990.000đ</b>
+                </div>
+              </div>
+            </section>
+
+            <section class="panel">
+              <div class="panel-head"><h2>Mã giảm giá</h2><span class="muted">Mỗi đơn 1 mã</span></div>
+              <form class="voucher-row" id="voucherForm" novalidate>
+                <input id="voucherInput" placeholder="Nhập mã" autocomplete="off" aria-label="Mã voucher">
+                <button class="btn btn-outline" type="submit" id="voucherBtn">Áp dụng</button>
+              </form>
+              <div id="voucherMsg"></div>
+            </section>
+
+            <section class="panel">
+              <div class="panel-head"><h2>Phương thức</h2></div>
+              <label class="pay-option">
+                <input type="radio" name="pay" value="gateway" checked>
+                <i class="fa-solid fa-credit-card"></i>
+                <span><b>Cổng thanh toán online</b><small>Thẻ nội địa, thẻ quốc tế, ví điện tử</small></span>
+              </label>
+            </section>
+
+          </div>
+
+          <aside class="col-side">
+            <div class="countdown-bar" id="countdownBar">
+              <i class="fa-solid fa-clock"></i>
+              <span>Đơn tự hủy sau</span>
+              <b class="tabular" id="payCountdown">20:00</b>
+            </div>
+            <div class="msg-banner info" style="margin-top:var(--space-3);font-size:0.875rem">
+              <i class="fa-solid fa-circle-info"></i>
+              <span>Link thanh toán có hiệu lực 5 phút. Quá thời gian này cần tạo đơn mới.</span>
+            </div>
+            <div class="side-card">
+              <span class="section-label">Tóm tắt đơn</span>
+              <div class="side-row"><span>Tiền hàng</span><b>3.694.444đ</b></div>
+              <div class="side-row"><span>VAT 8%</span><b>295.556đ</b></div>
+              <div class="side-row" id="discountRow" hidden><span>Giảm <b id="discountCode" style="font-weight:600"></b></span><b id="discountAmount" style="color:var(--success)"></b></div>
+              <div class="sum-row total" style="margin-top:var(--space-3)"><span>Phải trả</span><b class="tabular" id="grandTotal">3.990.000đ</b></div>
+              <button class="btn btn-primary btn-block" type="button" id="payBtn" style="margin-top:var(--space-4)">Thanh toán</button>
+            </div>
+          </aside>
+        </div>
+      </div>
+
+      <div class="step-panel" data-step="failed" hidden>
+        <div class="split">
+          <div class="col-main">
+            <div class="alert-banner danger">
+              <i class="fa-solid fa-circle-xmark"></i>
+              <span>Thanh toán không thành công. Thử lại trước <b id="retryDeadline">—</b>.</span>
+            </div>
+            <section class="panel">
+              <div class="panel-head"><h2>Đơn vẫn đang giữ</h2></div>
+              <p class="muted">Giao dịch lỗi không hủy đơn. Mã giảm giá đã áp vẫn còn hiệu lực.</p>
+              <button class="btn btn-primary btn-block" type="button" id="retryBtn">Thanh toán lại</button>
+              <a class="btn btn-ghost btn-block" href="lich-su-giao-dich.html">Xem lịch sử giao dịch</a>
+            </section>
+          </div>
+        </div>
+      </div>
+
+      <div class="step-panel" data-step="expired" hidden>
+        <div class="split">
+          <div class="col-main">
+            <div class="alert-banner warn">
+              <i class="fa-solid fa-triangle-exclamation"></i>
+              <span>Đơn đã quá hạn thanh toán và bị hủy.</span>
+            </div>
+            <a class="btn btn-primary" href="mua-goi.html" style="width:fit-content">Mua lại</a>
+          </div>
+        </div>
+      </div>
+
+      <div class="step-panel" data-step="paid" hidden>
+        <div class="split">
+          <div class="col-main">
+            <section class="panel">
+              <div class="success-icon" style="margin-inline:auto"><i class="fa-solid fa-circle-check"></i></div>
+              <h2 style="text-align:center">Gói đã kích hoạt</h2>
+              <p class="muted" style="text-align:center">DH-2026-1191 · Gói 6 Tháng · <b id="paidAmount">3.990.000đ</b></p>
+              <p class="muted" style="text-align:center;margin-top:0.5rem"><small>Giá tại thời điểm đặt: 3.990.000đ (VAT 8% đã gồm)</small></p>
+              <div class="note-box">
+                <i class="fa-solid fa-location-dot"></i>
+                <span>Lần đầu tới phòng tập, ghé quầy chụp ảnh check-in.</span>
+              </div>
+              <a class="btn btn-primary btn-block" href="trang-ca-nhan.html">Về trang cá nhân</a>
+            </section>
+          </div>
+        </div>
+      </div>
+    </main>
+  </div>
+</div>
+
+<script src="../app.js"></script>
+<script src="customer.js"></script>
+<script src="thanh-toan.js"></script>
+</body>
+</html>

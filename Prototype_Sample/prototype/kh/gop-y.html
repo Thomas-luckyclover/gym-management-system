@@ -1,0 +1,113 @@
+﻿<!DOCTYPE html>
+<html lang="vi">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
+<title>Hòm thư góp ý — Super Gym</title>
+<meta name="robots" content="noindex">
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Montserrat:wght@600;700;800&family=Inter:wght@400;500;600;700&display=swap">
+<script src="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/7.3.1/js/all.min.js" crossorigin="anonymous"></script>
+<link rel="stylesheet" href="../style.css">
+<link rel="stylesheet" href="../customer.css">
+</head>
+<body class="cust member">
+<div id="toastRoot"></div>
+<div id="modalRoot"></div>
+
+<!-- 10.2.1 — Submit Feedback Form · L2 · UC-42 -->
+<div class="cust-shell" id="custShell">
+
+  <!-- Dock điều hướng: thu gọn mặc định, rê vào tay cầm thì trượt ra. -->
+  <div class="cust-dock" id="custDock">
+    <aside class="cust-sidebar">
+      <a class="cust-brand" href="trang-ca-nhan.html">
+        <b>Super Gym</b><span>Khu vực hội viên</span>
+      </a>
+      <nav class="cust-nav">
+        <h4>Tổng quan</h4>
+      <a href="trang-ca-nhan.html"><i class="fa-solid fa-gauge-high"></i>Trang cá nhân</a>
+        <h4>Gói tập</h4>
+      <a href="mua-goi.html"><i class="fa-solid fa-cart-shopping"></i>Mua gói</a>
+      <a href="lich-su-giao-dich.html"><i class="fa-solid fa-receipt"></i>Lịch sử giao dịch</a>
+        <h4>Lịch tập</h4>
+      <a href="lich-cua-toi.html"><i class="fa-solid fa-calendar-check"></i>Lịch của tôi</a>
+      <a href="buoi-pt.html"><i class="fa-solid fa-user-check"></i>Buổi PT của tôi</a>
+      <a href="dat-buoi-le.html"><i class="fa-solid fa-calendar-plus"></i>Đặt buổi lẻ</a>
+      <a href="giao-an.html"><i class="fa-solid fa-clipboard-list"></i>Giáo án của tôi</a>
+        <h4>Tài khoản</h4>
+      <a href="tai-khoan.html"><i class="fa-solid fa-user-gear"></i>Cài đặt tài khoản</a>
+        <h4>Hòm thư</h4>
+      <a href="gop-y.html" aria-current="page"><i class="fa-solid fa-inbox"></i>Hòm thư góp ý</a>
+      </nav>
+      <div class="cust-sidebar-foot">
+        <a href="../dang-nhap.html"><i class="fa-solid fa-arrow-right-from-bracket"></i>Đăng xuất</a>
+      </div>
+    </aside>
+    <button class="cust-handle" type="button" id="dockHandle"
+            aria-label="Mở menu điều hướng" aria-expanded="false" aria-controls="custDock">
+      <i class="fa-solid fa-chevron-right"></i>
+    </button>
+  </div>
+
+  <div class="cust-main">
+    <header class="cust-topbar">
+      <div>
+        <h1>Hòm thư góp ý</h1>
+      </div>
+      <div class="cust-topbar-actions">
+        <a class="cust-user" href="tai-khoan.html" title="Cài đặt tài khoản">
+          <span class="avatar">AN</span>
+          <span class="cust-user-text">
+            <b>Nguyễn Minh An</b>
+            <span>KH-0241</span>
+          </span>
+        </a>
+      </div>
+    </header>
+
+    <main class="cust-content">
+      <div class="step-panel" data-step="form">
+        <div class="split">
+          <div class="col-main">
+            <section class="panel">
+              <div class="panel-head"><h2>Bạn muốn nói gì với Quản lý?</h2></div>
+              <form id="feedbackForm" novalidate>
+                <label class="field">
+                  <span class="field-label">Nội dung</span>
+                  <textarea id="feedbackText" rows="8" placeholder="Ví dụ: khu tạ giờ cao điểm thiếu ghế bench."></textarea>
+                  <span class="field-error" id="feedbackTextErr" hidden></span>
+                </label>
+                <button class="btn btn-primary" type="submit">Gửi góp ý</button>
+              </form>
+            </section>
+          </div>
+          <aside class="col-side">
+            <div class="side-card">
+              <span class="section-label">Lưu ý</span>
+              <p class="muted">Góp ý gửi thẳng tới Quản lý. Hệ thống không hiển thị trạng thái xử lý và không trả lời trong ứng dụng.</p>
+              <p class="muted" style="margin-top:var(--space-3)">Cần phản hồi ngay? Gọi quầy <b style="color:var(--accent-ink)">1900 6868</b>.</p>
+            </div>
+          </aside>
+        </div>
+      </div>
+
+      <div class="step-panel" data-step="done" hidden>
+        <div class="split"><div class="col-main">
+          <section class="panel">
+            <div class="success-icon" style="margin-inline:auto"><i class="fa-solid fa-circle-check"></i></div>
+            <h2 style="text-align:center">Đã gửi</h2>
+            <p class="muted" style="text-align:center">Quản lý sẽ đọc góp ý của bạn. Hệ thống không trả lời trong ứng dụng.</p>
+            <a class="btn btn-primary btn-block" href="trang-ca-nhan.html">Về trang cá nhân</a>
+            <button class="btn btn-ghost btn-block" type="button" data-feedback-again>Gửi góp ý khác</button>
+          </section>
+        </div></div>
+      </div>
+    </main>
+  </div>
+</div>
+
+<script src="../app.js"></script>
+<script src="customer.js"></script>
+<script src="gop-y.js"></script>
+</body>
+</html>

@@ -1,0 +1,641 @@
+<!DOCTYPE html>
+<html lang="vi">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
+<title>Super Gym — Tập đúng cách, đo được tiến bộ</title>
+<meta name="description" content="Prototype luồng Guest của Super Gym: trang chủ, blog, đăng ký 6 nhánh, đăng nhập và quên mật khẩu — dựng theo tài liệu GMS v24.">
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Montserrat:wght@600;700;800&family=Inter:wght@400;500;600;700&display=swap">
+<script src="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/7.3.1/js/all.min.js" crossorigin="anonymous"></script>
+<link rel="stylesheet" href="style.css">
+</head>
+<body class="dark">
+<div id="toastRoot"></div>
+
+<!-- ============================ HEADER ============================ -->
+<header class="site-header">
+  <div class="header-inner">
+    <a class="brand" href="index.html">
+      <span class="brand-mark">Super Gym</span>
+    </a>
+    <nav class="nav-links">
+      <a href="index.html" aria-current="page">Trang chủ</a>
+      <a href="#dich-vu">Dịch vụ</a>
+      <a href="#pricing">Bảng giá</a>
+      <a href="#co-so-vat-chat">Cơ sở vật chất</a>
+      <a href="blog.html">Blog</a>
+      <a href="#faq">Hỏi đáp</a>
+    </nav>
+    <div class="header-actions">
+      <a class="btn btn-ghost btn-sm" href="dang-nhap.html">Đăng nhập</a>
+      <a class="btn btn-lime btn-sm" href="dang-ky.html">Đăng ký</a>
+    </div>
+    <button class="hamburger" type="button" data-mobile-nav aria-label="Mở menu" aria-expanded="false" aria-controls="mobileNav">
+      <i class="fa-solid fa-bars"></i>
+    </button>
+  </div>
+  <div class="mobile-nav" id="mobileNav" hidden>
+    <a href="index.html">Trang chủ</a>
+    <a href="#dich-vu">Dịch vụ</a>
+    <a href="#pricing">Bảng giá</a>
+    <a href="#co-so-vat-chat">Cơ sở vật chất</a>
+    <a href="blog.html">Blog</a>
+    <a href="#faq">Hỏi đáp</a>
+    <a href="dang-nhap.html">Đăng nhập</a>
+    <a href="dang-ky.html">Đăng ký</a>
+  </div>
+</header>
+
+<!-- ========================= 2.1.1 — HERO ========================= -->
+<section class="hero">
+  <div class="hero-glow"></div><div class="hero-grid-lines"></div>
+  <div class="hero-inner">
+    <div>
+      <h1>Tập đúng cách,<br><em>đo được</em> tiến bộ.</h1>
+      <p class="lead">Một tài khoản duy nhất cho tất cả: mua gói, check-in tại quầy, đặt lịch huấn luyện viên riêng và theo dõi từng buổi tập của bạn.</p>
+      <div class="hero-actions">
+        <a class="btn btn-lime" href="dang-ky.html">Đăng ký ngay <i class="fa-solid fa-arrow-right"></i></a>
+        <a class="btn btn-onink" href="#pricing">Xem bảng giá</a>
+      </div>
+      <div class="hero-stats">
+        <div class="hero-stat"><b class="tabular">1.200+</b><span>hội viên</span></div>
+        <div class="hero-stat"><b class="tabular">18</b><span>huấn luyện viên</span></div>
+        <div class="hero-stat"><b class="tabular">06:00–22:00</b><span>mở cửa mỗi ngày</span></div>
+      </div>
+    </div>
+    <div class="hero-visual">
+      <div class="hv-card hv-member">
+        <div class="hv-member-top"><span class="hv-label">Thẻ hội viên</span><span class="hv-pill">Active</span></div>
+        <div class="hv-name">NGUYỄN MINH AN</div>
+        <div class="hv-rows">
+          <div class="hv-row"><span>Mã hội viên</span><b>SG-0241</b></div>
+          <div class="hv-row"><span>Gói 6 tháng</span><b>đến 14/03/2027</b></div>
+        </div>
+        <div class="hv-code"><i style="height:72%"></i><i style="height:36%"></i><i style="height:48%"></i><i style="height:84%"></i><i style="height:24%"></i><i style="height:60%"></i><i style="height:36%"></i><i style="height:96%"></i><i style="height:48%"></i><i style="height:24%"></i><i style="height:72%"></i><i style="height:36%"></i><i style="height:60%"></i><i style="height:84%"></i><i style="height:24%"></i><i style="height:48%"></i><i style="height:96%"></i><i style="height:36%"></i><i style="height:60%"></i><i style="height:24%"></i><i style="height:72%"></i><i style="height:48%"></i><i style="height:36%"></i><i style="height:84%"></i><i style="height:60%"></i><i style="height:24%"></i><i style="height:48%"></i><i style="height:72%"></i><i style="height:36%"></i><i style="height:96%"></i><i style="height:24%"></i><i style="height:60%"></i><i style="height:48%"></i><i style="height:36%"></i></div>
+      </div>
+      <div class="hv-card hv-checkin">
+        <span class="hv-ico"><i class="fa-solid fa-check"></i></span>
+        <div><b>Đã check-in 06:42</b><span>Chi nhánh Nguyễn Huệ</span></div>
+      </div>
+      <div class="hv-card hv-session">
+        <div class="hv-session-head"><span>Buổi PT kế tiếp</span><b>T4 · 19:00</b></div>
+        <div class="hv-session-row">
+          <span class="hv-avatar">HL</span>
+          <div><b>PT Hoàng Long</b><span>Strength &amp; Conditioning</span></div>
+        </div>
+        <div class="hv-progress">
+          <div class="hv-progress-bar"><i></i></div>
+          <div class="hv-progress-label"><span>Tiến độ gói PT</span><b class="tabular">8 / 10 buổi</b></div>
+        </div>
+      </div>
+    </div>
+  </div>
+</section>
+
+
+<!-- ============ CƠ SỞ VẬT CHẤT — băng ảnh chạy sang phải ============
+     Hover vào băng thì dừng lại và ảnh lên màu để xem kỹ. -->
+<section class="photo-band" id="co-so-vat-chat">
+  <div class="band-head">
+    <span class="eyebrow-dark">Cơ sở vật chất</span>
+    <h2>Sàn tập <em>1.800m²</em>, thiết bị bảo trì định kỳ</h2>
+    <p>Tạ tự do, cardio, giãn cơ phục hồi và phòng tắm nước nóng trên cùng một sàn.</p>
+  </div>
+      <div class="marquee">
+        <div class="marquee-track">
+          <figure class="ph">
+            <img src="https://images.unsplash.com/photo-1534438327276-14e5300c3a48?w=560&h=560&fit=crop&q=80"
+                 width="560" height="560" loading="eager" decoding="async"
+                 alt="Giá tạ tay trong khu tạ tự do">
+            <figcaption>Khu tạ tự do</figcaption>
+          </figure>
+          <figure class="ph">
+            <img src="https://images.unsplash.com/photo-1517836357463-d25dfeac3438?w=560&h=560&fit=crop&q=80"
+                 width="560" height="560" loading="eager" decoding="async"
+                 alt="Hội viên tập tạ đòn trên sàn tập">
+            <figcaption>Sàn tập chính</figcaption>
+          </figure>
+          <figure class="ph">
+            <img src="https://images.unsplash.com/photo-1593079831268-3381b0db4a77?w=560&h=560&fit=crop&q=80"
+                 width="560" height="560" loading="eager" decoding="async"
+                 alt="Dãy máy chạy trong khu cardio">
+            <figcaption>Khu cardio</figcaption>
+          </figure>
+          <figure class="ph">
+            <img src="https://images.unsplash.com/photo-1576678927484-cc907957088c?w=560&h=560&fit=crop&q=80"
+                 width="560" height="560" loading="eager" decoding="async"
+                 alt="Giá tạ tay xếp theo mức cân">
+            <figcaption>Tạ tay tới 50kg</figcaption>
+          </figure>
+          <figure class="ph">
+            <img src="https://images.unsplash.com/photo-1550345332-09e3ac987658?w=560&h=560&fit=crop&q=80"
+                 width="560" height="560" loading="eager" decoding="async"
+                 alt="Hội viên tập dây thừng chiến đấu">
+            <figcaption>Lớp chức năng</figcaption>
+          </figure>
+          <figure class="ph">
+            <img src="https://images.unsplash.com/photo-1584735935682-2f2b69dff9d2?w=560&h=560&fit=crop&q=80"
+                 width="560" height="560" loading="eager" decoding="async"
+                 alt="Huấn luyện viên hướng dẫn bài tay trước">
+            <figcaption>Huấn luyện 1-kèm-1</figcaption>
+          </figure>
+          <figure class="ph">
+            <img src="https://images.unsplash.com/photo-1534438327276-14e5300c3a48?w=560&h=560&fit=crop&q=80"
+                 width="560" height="560" loading="lazy" decoding="async"
+                 alt="" aria-hidden="true">
+            <figcaption>Khu tạ tự do</figcaption>
+          </figure>
+          <figure class="ph">
+            <img src="https://images.unsplash.com/photo-1517836357463-d25dfeac3438?w=560&h=560&fit=crop&q=80"
+                 width="560" height="560" loading="lazy" decoding="async"
+                 alt="" aria-hidden="true">
+            <figcaption>Sàn tập chính</figcaption>
+          </figure>
+          <figure class="ph">
+            <img src="https://images.unsplash.com/photo-1593079831268-3381b0db4a77?w=560&h=560&fit=crop&q=80"
+                 width="560" height="560" loading="lazy" decoding="async"
+                 alt="" aria-hidden="true">
+            <figcaption>Khu cardio</figcaption>
+          </figure>
+          <figure class="ph">
+            <img src="https://images.unsplash.com/photo-1576678927484-cc907957088c?w=560&h=560&fit=crop&q=80"
+                 width="560" height="560" loading="lazy" decoding="async"
+                 alt="" aria-hidden="true">
+            <figcaption>Tạ tay tới 50kg</figcaption>
+          </figure>
+          <figure class="ph">
+            <img src="https://images.unsplash.com/photo-1550345332-09e3ac987658?w=560&h=560&fit=crop&q=80"
+                 width="560" height="560" loading="lazy" decoding="async"
+                 alt="" aria-hidden="true">
+            <figcaption>Lớp chức năng</figcaption>
+          </figure>
+          <figure class="ph">
+            <img src="https://images.unsplash.com/photo-1584735935682-2f2b69dff9d2?w=560&h=560&fit=crop&q=80"
+                 width="560" height="560" loading="lazy" decoding="async"
+                 alt="" aria-hidden="true">
+            <figcaption>Huấn luyện 1-kèm-1</figcaption>
+          </figure>
+        </div>
+      </div>
+      <div class="marquee marquee-slow">
+        <div class="marquee-track">
+          <figure class="ph">
+            <img src="https://images.unsplash.com/photo-1605296867304-46d5465a13f1?w=560&h=560&fit=crop&q=80"
+                 width="560" height="560" loading="eager" decoding="async"
+                 alt="Hội viên chuẩn bị nâng tạ đòn">
+            <figcaption>Khu powerlifting</figcaption>
+          </figure>
+          <figure class="ph">
+            <img src="https://images.unsplash.com/photo-1571902943202-507ec2618e8f?w=560&h=560&fit=crop&q=80"
+                 width="560" height="560" loading="eager" decoding="async"
+                 alt="Dãy ghế đẩy trong phòng tập">
+            <figcaption>Khu ghế đẩy</figcaption>
+          </figure>
+          <figure class="ph">
+            <img src="https://images.unsplash.com/photo-1549060279-7e168fcee0c2?w=560&h=560&fit=crop&q=80"
+                 width="560" height="560" loading="eager" decoding="async"
+                 alt="Bàn tay nắm thanh tạ đòn">
+            <figcaption>Tạ đòn chuẩn thi đấu</figcaption>
+          </figure>
+          <figure class="ph">
+            <img src="https://images.unsplash.com/photo-1558611848-73f7eb4001a1?w=560&h=560&fit=crop&q=80"
+                 width="560" height="560" loading="eager" decoding="async"
+                 alt="Giàn squat trước gương lớn">
+            <figcaption>Giàn squat</figcaption>
+          </figure>
+          <figure class="ph">
+            <img src="https://images.unsplash.com/photo-1526506118085-60ce8714f8c5?w=560&h=560&fit=crop&q=80"
+                 width="560" height="560" loading="eager" decoding="async"
+                 alt="Hội viên kéo xà đơn">
+            <figcaption>Khu xà & kéo</figcaption>
+          </figure>
+          <figure class="ph">
+            <img src="https://images.unsplash.com/photo-1540497077202-7c8a3999166f?w=560&h=560&fit=crop&q=80"
+                 width="560" height="560" loading="eager" decoding="async"
+                 alt="Toàn cảnh sàn máy tập">
+            <figcaption>Sàn máy tập</figcaption>
+          </figure>
+          <figure class="ph">
+            <img src="https://images.unsplash.com/photo-1605296867304-46d5465a13f1?w=560&h=560&fit=crop&q=80"
+                 width="560" height="560" loading="lazy" decoding="async"
+                 alt="" aria-hidden="true">
+            <figcaption>Khu powerlifting</figcaption>
+          </figure>
+          <figure class="ph">
+            <img src="https://images.unsplash.com/photo-1571902943202-507ec2618e8f?w=560&h=560&fit=crop&q=80"
+                 width="560" height="560" loading="lazy" decoding="async"
+                 alt="" aria-hidden="true">
+            <figcaption>Khu ghế đẩy</figcaption>
+          </figure>
+          <figure class="ph">
+            <img src="https://images.unsplash.com/photo-1549060279-7e168fcee0c2?w=560&h=560&fit=crop&q=80"
+                 width="560" height="560" loading="lazy" decoding="async"
+                 alt="" aria-hidden="true">
+            <figcaption>Tạ đòn chuẩn thi đấu</figcaption>
+          </figure>
+          <figure class="ph">
+            <img src="https://images.unsplash.com/photo-1558611848-73f7eb4001a1?w=560&h=560&fit=crop&q=80"
+                 width="560" height="560" loading="lazy" decoding="async"
+                 alt="" aria-hidden="true">
+            <figcaption>Giàn squat</figcaption>
+          </figure>
+          <figure class="ph">
+            <img src="https://images.unsplash.com/photo-1526506118085-60ce8714f8c5?w=560&h=560&fit=crop&q=80"
+                 width="560" height="560" loading="lazy" decoding="async"
+                 alt="" aria-hidden="true">
+            <figcaption>Khu xà & kéo</figcaption>
+          </figure>
+          <figure class="ph">
+            <img src="https://images.unsplash.com/photo-1540497077202-7c8a3999166f?w=560&h=560&fit=crop&q=80"
+                 width="560" height="560" loading="lazy" decoding="async"
+                 alt="" aria-hidden="true">
+            <figcaption>Sàn máy tập</figcaption>
+          </figure>
+        </div>
+      </div>
+</section>
+
+<!-- ========================== DỊCH VỤ ========================== -->
+<section class="section" id="dich-vu">
+  <div class="wrap">
+    <div class="section-head">
+      <span class="eyebrow">Dịch vụ</span>
+      <h2>Mọi thứ bạn cần để <span class="mark">bắt đầu</span> tập luyện</h2>
+    </div>
+    <div class="services-grid">
+      <div class="service-card">
+        <div class="service-icon"><i class="fa-solid fa-dumbbell"></i></div>
+        <h3>Phòng tập tự do</h3>
+        <p>Khu tạ tự do, máy tập và cardio đầy đủ, mở cửa suốt khung giờ hoạt động — vào bao nhiêu lần trong ngày cũng được.</p>
+      </div>
+      <div class="service-card">
+        <div class="service-icon"><i class="fa-solid fa-user-check"></i></div>
+        <h3>Personal Trainer 1-kèm-1</h3>
+        <p>Giáo án cá nhân hoá theo mục tiêu, PT điểm danh và ghi nhận tiến độ sau từng buổi tập.</p>
+      </div>
+      <div class="service-card">
+        <div class="service-icon"><i class="fa-solid fa-user-group"></i></div>
+        <h3>Gói Couple</h3>
+        <p>Tập cùng bạn bè hoặc người thân trên cùng khung giờ, chia sẻ chi phí và giữ động lực lâu hơn.</p>
+      </div>
+      <div class="service-card">
+        <div class="service-icon"><i class="fa-solid fa-chart-line"></i></div>
+        <h3>Theo dõi tiến độ</h3>
+        <p>Lịch sử buổi tập, giáo án và ghi chú của PT nằm gọn trong trang cá nhân sau khi bạn có tài khoản.</p>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- ======================= BẮT ĐẦU THẾ NÀO ======================= -->
+<section class="section section-alt" id="bat-dau">
+  <div class="wrap">
+    <div class="section-head">
+      <span class="eyebrow">Bắt đầu thế nào</span>
+      <h2>Bốn bước từ người lạ thành hội viên</h2>
+    </div>
+    <div class="steps-grid">
+      <div class="step-card">
+        <div class="step-num">01</div>
+        <h3>Đăng ký tài khoản</h3>
+        <p>Nhập số điện thoại để hệ thống kiểm tra bạn đã có hồ sơ tại phòng gym chưa, rồi điền thông tin cơ bản.</p>
+        <span class="step-tag online">Online · 2 phút</span>
+      </div>
+      <div class="step-card">
+        <div class="step-num">02</div>
+        <h3>Chọn gói &amp; thanh toán</h3>
+        <p>Gói tập và gói ngày thanh toán online ngay trong tài khoản. Riêng gói PT đăng ký tại quầy để được tư vấn lộ trình.</p>
+        <span class="step-tag online">Online</span>
+      </div>
+      <div class="step-card">
+        <div class="step-num">03</div>
+        <h3>Chụp ảnh check-in</h3>
+        <p>Lần đầu tới phòng tập, Lễ tân chụp ảnh check-in cho bạn. Bắt buộc với mọi gói, chỉ trừ gói ngày.</p>
+        <span class="step-tag counter">Tại quầy</span>
+      </div>
+      <div class="step-card">
+        <div class="step-num">04</div>
+        <h3>Check-in &amp; tập</h3>
+        <p>Đọc mã hội viên hoặc số điện thoại tại quầy, Lễ tân xác nhận và bạn vào tập trong giờ hoạt động.</p>
+        <span class="step-tag counter">Tại quầy</span>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- ====================== BẢNG GIÁ GÓI TẬP ====================== -->
+<section class="section" id="pricing">
+  <div class="wrap">
+    <div class="section-head">
+      <span class="eyebrow">Bảng giá</span>
+      <h2>Chọn gói phù hợp với <span class="mark">mục tiêu</span> của bạn</h2>
+      <p>Đã gồm VAT, không phí ẩn. Muốn thử một buổi thì hỏi quầy về gói ngày.</p>
+    </div>
+    <div class="pricing-grid">
+
+      <div class="price-card">
+        <h3>Gói 1 Tháng</h3>
+        <div class="price-amount tabular">799.000đ<small> / 1 tháng</small></div>
+        <p class="price-desc">Bắt đầu xây thói quen tập luyện, không ràng buộc dài hạn.</p>
+        <ul class="price-features">
+          <li><i class="fa-solid fa-check"></i><span>Quyền lợi do Manager cấu hình</span></li>
+          <li><i class="fa-solid fa-check"></i><span>Các gói sẽ query từ database</span></li>
+        </ul>
+        <a class="btn btn-outline btn-block" href="dang-ky.html">Đăng ký gói này</a>
+      </div>
+
+      <div class="price-card">
+        <h3>Gói 3 Tháng</h3>
+        <div class="price-amount tabular">2.190.000đ<small> / 3 tháng</small></div>
+        <div class="price-permonth tabular">≈ 730.000đ mỗi tháng</div>
+        <span class="price-save">Tiết kiệm 9%</span>
+        <p class="price-desc">Đủ thời gian để thấy chuyển biến rõ rệt về thể lực.</p>
+        <ul class="price-features">
+          <li><i class="fa-solid fa-check"></i><span>Quyền lợi do Manager cấu hình</span></li>
+          <li><i class="fa-solid fa-check"></i><span>Các gói sẽ query từ database</span></li>
+        </ul>
+        <a class="btn btn-outline btn-block" href="dang-ky.html">Đăng ký gói này</a>
+      </div>
+
+      <div class="price-card highlight">
+        <span class="price-badge">Phổ biến nhất</span>
+        <h3>Gói 6 Tháng</h3>
+        <div class="price-amount tabular">3.990.000đ<small> / 6 tháng</small></div>
+        <div class="price-permonth tabular">≈ 665.000đ mỗi tháng</div>
+        <span class="price-save">Tiết kiệm 17%</span>
+        <p class="price-desc">Lựa chọn cân bằng giữa mức cam kết và chi phí.</p>
+        <ul class="price-features">
+          <li><i class="fa-solid fa-check"></i><span>Quyền lợi do Manager cấu hình</span></li>
+          <li><i class="fa-solid fa-check"></i><span>Các gói sẽ query từ database</span></li>
+        </ul>
+        <a class="btn btn-primary btn-block" href="dang-ky.html">Đăng ký gói này</a>
+      </div>
+
+      <div class="price-card">
+        <span class="price-badge">Tiết kiệm nhất</span>
+        <h3>Gói 12 Tháng</h3>
+        <div class="price-amount tabular">6.990.000đ<small> / 12 tháng</small></div>
+        <div class="price-permonth tabular">≈ 582.500đ mỗi tháng</div>
+        <span class="price-save">Tiết kiệm 27%</span>
+        <p class="price-desc">Mức giá tốt nhất cho người xác định tập luyện lâu dài.</p>
+        <ul class="price-features">
+          <li><i class="fa-solid fa-check"></i><span>Quyền lợi do Manager cấu hình</span></li>
+          <li><i class="fa-solid fa-check"></i><span>Các gói sẽ query từ database</span></li>
+        </ul>
+        <a class="btn btn-outline btn-block" href="dang-ky.html">Đăng ký gói này</a>
+      </div>
+
+    </div>
+  </div>
+</section>
+
+<!-- ======================== GÓI PT — dải đen ======================== -->
+<section class="pt-band" id="pt-pricing">
+  <div class="hero-glow"></div>
+  <div class="wrap">
+    <div class="band-head">
+      <span class="eyebrow-dark">Personal Trainer</span>
+      <h2>Huấn luyện cùng <em>chuyên gia</em></h2>
+      <p>Gói dài hạn đăng ký tại quầy. Buổi lẻ đặt online.</p>
+    </div>
+    <div class="pt-grid">
+      <div class="pt-tile">
+        <h3>Gói 1 Tháng · cá nhân</h3>
+        <div class="pt-price">4.500.000đ<small>/ tháng</small></div>
+        <p>Rải buổi tập trong 1 tháng, linh hoạt theo lịch của bạn.</p>
+        <span class="pt-chan counter">
+          <i class="fa-solid fa-shop"></i>
+          Đăng ký tại quầy
+        </span>
+      </div>
+      <div class="pt-tile">
+        <h3>Gói 1 Tháng · đôi</h3>
+        <div class="pt-price">6.750.000đ<small>/ tháng · 2 người</small></div>
+        <p>Tập cùng bạn tập hoặc người thân với PT riêng, chia sẻ chi phí.</p>
+        <span class="pt-chan counter">
+          <i class="fa-solid fa-shop"></i>
+          Đăng ký tại quầy
+        </span>
+      </div>
+      <div class="pt-tile is-online">
+        <h3>Buổi lẻ</h3>
+        <div class="pt-price">550.000đ<small>/ buổi</small></div>
+        <p>Trải nghiệm 1 buổi PT, đặt và thanh toán ngay trong tài khoản.</p>
+        <span class="pt-chan online">
+          <i class="fa-solid fa-globe"></i>
+          Đặt online
+        </span>
+      </div>
+    </div>
+    <p class="pt-foot"><i class="fa-solid fa-circle-info"></i><span>Đơn giản hóa: Chỉ 3 loại gói PT. Quyền lợi chi tiết do Manager nhập. Giá thực tế query từ database.</span></p>
+  </div>
+</section>
+
+<!-- =========================== ĐỘI NGŨ =========================== -->
+<section class="section section-alt" id="doi-ngu">
+  <div class="wrap">
+    <div class="section-head">
+      <span class="eyebrow">Đội ngũ</span>
+      <h2>Huấn luyện viên của Super Gym</h2>
+    </div>
+    <div class="coach-grid">
+      <div class="coach-card">
+        <div class="coach-avatar tone-amber">HL</div>
+        <h3>Hoàng Long</h3>
+        <div class="coach-role">Strength &amp; Conditioning</div>
+        <div class="coach-meta">8 năm kinh nghiệm · 1.400+ buổi đã dạy</div>
+      </div>
+      <div class="coach-card">
+        <div class="coach-avatar tone-rust">TT</div>
+        <h3>Phạm Thu Trang</h3>
+        <div class="coach-role">Giảm mỡ · Thể hình nữ</div>
+        <div class="coach-meta">6 năm kinh nghiệm · 1.100+ buổi đã dạy</div>
+      </div>
+      <div class="coach-card">
+        <div class="coach-avatar tone-green">MK</div>
+        <h3>Đỗ Minh Khoa</h3>
+        <div class="coach-role">Tăng cơ · Powerlifting</div>
+        <div class="coach-meta">9 năm kinh nghiệm · 1.800+ buổi đã dạy</div>
+      </div>
+      <div class="coach-card">
+        <div class="coach-avatar tone-blue">HY</div>
+        <h3>Vũ Hải Yến</h3>
+        <div class="coach-role">Yoga &amp; Phục hồi chấn thương</div>
+        <div class="coach-meta">5 năm kinh nghiệm · 900+ buổi đã dạy</div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- ====================== BÀI VIẾT MỚI NHẤT ====================== -->
+<section class="section">
+  <div class="wrap">
+    <div class="section-head-row">
+      <div>
+        <span class="eyebrow">Blog</span>
+        <h2>Bài viết mới nhất</h2>
+      </div>
+      <a class="btn btn-ghost btn-sm" href="blog.html">Xem tất cả <i class="fa-solid fa-arrow-right"></i></a>
+    </div>
+    <div class="post-grid">
+
+      <a class="post-card" href="blog/khoi-dong-giam-chan-thuong.html">
+        <div class="post-thumb tone-amber">
+          <svg class="cover-pattern" viewBox="0 0 400 200" preserveAspectRatio="xMidYMid slice" aria-hidden="true"><g fill="rgba(255,255,255,.3)"><circle cx="22" cy="150" r="4"/><circle cx="50" cy="122" r="4"/><circle cx="78" cy="160" r="4"/><circle cx="22" cy="180" r="4"/><circle cx="50" cy="180" r="4"/><circle cx="78" cy="190" r="4"/><circle cx="106" cy="142" r="4"/><circle cx="6" cy="120" r="4"/><circle cx="106" cy="180" r="4"/></g></svg>
+          <span class="post-thumb-icon"><i class="fa-solid fa-dumbbell"></i></span>
+        </div>
+        <div class="post-body">
+          <span class="chip chip-tap-luyen">Tập luyện</span>
+          <h3>5 bài khởi động giúp giảm chấn thương trước buổi tập nặng</h3>
+          <p class="post-excerpt">Bỏ qua khởi động là nguyên nhân phổ biến gây chấn thương vai và gối. Đây là 5 động tác 8 phút nên làm trước mọi buổi tập.</p>
+          <div class="post-meta"><i class="fa-solid fa-calendar-days"></i> 12/09/2026</div>
+        </div>
+      </a>
+
+      <a class="post-card" href="blog/an-gi-truoc-sau-buoi-tap.html">
+        <div class="post-thumb tone-green">
+          <svg class="cover-pattern" viewBox="0 0 400 200" preserveAspectRatio="xMidYMid slice" aria-hidden="true"><g fill="none" stroke="rgba(255,255,255,.28)" stroke-width="3"><circle cx="368" cy="188" r="24"/><circle cx="368" cy="188" r="44"/><circle cx="368" cy="188" r="64"/></g></svg>
+          <span class="post-thumb-icon"><i class="fa-solid fa-apple-whole"></i></span>
+        </div>
+        <div class="post-body">
+          <span class="chip chip-dinh-duong">Dinh dưỡng</span>
+          <h3>Ăn gì trước và sau buổi tập để tối ưu phục hồi cơ bắp</h3>
+          <p class="post-excerpt">Thời điểm và loại thực phẩm nạp vào quanh buổi tập ảnh hưởng trực tiếp đến hiệu suất và tốc độ phục hồi.</p>
+          <div class="post-meta"><i class="fa-solid fa-calendar-days"></i> 08/09/2026</div>
+        </div>
+      </a>
+
+      <a class="post-card" href="blog/khai-truong-khu-gian-co.html">
+        <div class="post-thumb tone-blue">
+          <svg class="cover-pattern" viewBox="0 0 400 200" preserveAspectRatio="xMidYMid slice" aria-hidden="true"><circle cx="30" cy="6" r="90" fill="rgba(255,255,255,.16)"/></svg>
+          <span class="post-thumb-icon"><i class="fa-solid fa-bullhorn"></i></span>
+        </div>
+        <div class="post-body">
+          <span class="chip chip-tin-tuc">Tin tức</span>
+          <h3>Super Gym khai trương khu giãn cơ &amp; phục hồi tại chi nhánh trung tâm</h3>
+          <p class="post-excerpt">Khu vực foam roller, máy nén khí phục hồi và ghế massage chính thức mở cửa phục vụ hội viên từ tuần này.</p>
+          <div class="post-meta"><i class="fa-solid fa-calendar-days"></i> 01/09/2026</div>
+        </div>
+      </a>
+
+    </div>
+  </div>
+</section>
+
+<!-- ============================= FAQ ============================= -->
+<section class="section section-alt" id="faq">
+  <div class="wrap">
+    <div class="section-head center">
+      <span class="eyebrow">Hỏi đáp</span>
+      <h2>Câu hỏi thường gặp</h2>
+    </div>
+    <div class="faq-list">
+
+      <details class="faq-item">
+        <summary>Tôi đã có hồ sơ tại quầy nhưng chưa có tài khoản thì đăng ký thế nào? <i class="fa-solid fa-chevron-down"></i></summary>
+        <div class="faq-answer">Bạn vào trang Đăng ký và nhập số điện thoại đã dùng tại quầy. Hệ thống nhận ra hồ sơ cũ và gửi mã xác thực tới email đã đăng ký trên hồ sơ đó. Nhập đúng mã là tài khoản được gắn vào hồ sơ cũ, toàn bộ lịch sử gói tập của bạn được giữ nguyên — không tạo hồ sơ trùng.</div>
+      </details>
+
+      <details class="faq-item">
+        <summary>Gói PT có mua online được không? <i class="fa-solid fa-chevron-down"></i></summary>
+        <div class="faq-answer">Không. Mọi gói PT (Couple, Gói Tháng 22 buổi, Gói 10 buổi) chỉ đăng ký trực tiếp tại quầy để huấn luyện viên tư vấn lộ trình và xếp lịch cố định. Riêng buổi lẻ thì bạn đặt và thanh toán online trong tài khoản. Điều kiện chung: phải đang có gói tập còn hiệu lực.</div>
+      </details>
+
+      <details class="faq-item">
+        <summary>Tôi có thể bảo lưu gói tập khi đi công tác dài ngày không? <i class="fa-solid fa-chevron-down"></i></summary>
+        <div class="faq-answer">Được. Bạn ra quầy yêu cầu Lễ tân bảo lưu, tối đa theo số ngày cho phép của từng gói. Hết hạn bảo lưu hệ thống tự kích hoạt lại gói và dời hạn sử dụng ra đúng số ngày đã bảo lưu. Lưu ý gói PT không áp dụng bảo lưu, và trong thời gian bảo lưu bạn không check-in hay đặt buổi mới được.</div>
+      </details>
+
+      <details class="faq-item">
+        <summary>Vì sao phải ra quầy chụp ảnh check-in? <i class="fa-solid fa-chevron-down"></i></summary>
+        <div class="faq-answer">Ảnh check-in giúp Lễ tân xác nhận đúng người khi bạn vào phòng tập. Ảnh là bắt buộc với mọi gói, chỉ trừ gói ngày. Bạn chụp một lần tại quầy khi hoàn tất gói đầu tiên, không cần chụp lại ở các lần gia hạn sau.</div>
+      </details>
+
+      <details class="faq-item">
+        <summary>Trẻ em có tập được không? <i class="fa-solid fa-chevron-down"></i></summary>
+        <div class="faq-answer">Trẻ dưới 10 tuổi không sử dụng dịch vụ PT và không đặt được buổi tập với huấn luyện viên. Hồ sơ của trẻ được tạo dưới dạng hồ sơ phụ thuộc gắn với người giám hộ, và mọi thao tác về lịch tập đều do người giám hộ làm việc trực tiếp với Lễ tân hoặc PT phụ trách.</div>
+      </details>
+
+      <details class="faq-item">
+        <summary>Buổi PT đã đặt có đổi lịch hoặc hủy được không? <i class="fa-solid fa-chevron-down"></i></summary>
+        <div class="faq-answer">Với gói PT, bạn được đổi lịch tối đa 3 lần cho mỗi gói, chỉ đổi sang Thứ 7 hoặc Chủ Nhật trong tuần hiện tại. Buổi lẻ mua riêng thì không đổi lịch được. Trường hợp hủy, buổi vẫn bị trừ khỏi gói và không được hoàn tiền — nên hãy cân nhắc trước khi xác nhận.</div>
+      </details>
+
+      <details class="faq-item">
+        <summary>Quên mật khẩu thì lấy lại bằng cách nào? <i class="fa-solid fa-chevron-down"></i></summary>
+        <div class="faq-answer">Bấm "Quên mật khẩu" ở trang Đăng nhập và nhập email đã đăng ký. Hệ thống gửi mã khôi phục có hiệu lực trong 15 phút. Sau khi đổi mật khẩu thành công, mọi phiên đăng nhập cũ sẽ bị đăng xuất để đảm bảo an toàn.</div>
+      </details>
+
+      <details class="faq-item">
+        <summary>Giá trên website đã gồm VAT chưa? <i class="fa-solid fa-chevron-down"></i></summary>
+        <div class="faq-answer">Rồi. Giá hiển thị là số tiền cuối cùng bạn trả, đã bao gồm VAT, không phát sinh thêm phí nào khác. Gói đã ngừng bán sẽ không còn hiển thị trên bảng giá, và các đơn đang chạy của gói đó vẫn không bị ảnh hưởng.</div>
+      </details>
+
+    </div>
+  </div>
+</section>
+
+<!-- =========================== CTA BAND =========================== -->
+<section class="cta-band">
+  <div class="hero-glow"></div>
+  <div class="cta-inner">
+    <div>
+      <h2>Sẵn sàng cho <em>buổi tập đầu tiên?</em></h2>
+      <p>Hai phút để tạo tài khoản. Từng đến quầy rồi thì hồ sơ cũ tự khớp vào.</p>
+    </div>
+    <div class="btn-row">
+      <a class="btn btn-lime" href="dang-ky.html">Đăng ký ngay <i class="fa-solid fa-arrow-right"></i></a>
+      <a class="btn btn-onink" href="dang-ky.html">Đăng ký ngay</a>
+    </div>
+  </div>
+</section>
+
+<!-- ============================ FOOTER ============================ -->
+<footer class="site-footer">
+  <div class="footer-inner">
+    <div>
+      <div class="footer-brand">Super Gym</div>
+      <p class="footer-tag">Theo dõi tiến độ, đặt lịch PT và quản lý gói tập trong một tài khoản duy nhất.</p>
+      <div class="footer-social">
+        <a href="#" aria-label="Facebook"><i class="fa-brands fa-facebook-f"></i></a>
+        <a href="#" aria-label="Instagram"><i class="fa-brands fa-instagram"></i></a>
+        <a href="#" aria-label="YouTube"><i class="fa-brands fa-youtube"></i></a>
+      </div>
+    </div>
+    <div class="footer-col">
+      <h4>Khám phá</h4>
+      <a href="index.html">Trang chủ</a>
+      <a href="#pricing">Bảng giá</a>
+      <a href="#co-so-vat-chat">Cơ sở vật chất</a>
+      <a href="blog.html">Blog</a>
+    </div>
+    <div class="footer-col">
+      <h4>Tài khoản</h4>
+      <a href="dang-nhap.html">Đăng nhập</a>
+      <a href="dang-ky.html">Đăng ký</a>
+      <a href="quen-mat-khau.html">Quên mật khẩu</a>
+      <a href="#faq">Câu hỏi thường gặp</a>
+    </div>
+    <div class="footer-col">
+      <h4>Liên hệ</h4>
+      <p><i class="fa-solid fa-location-dot"></i> 12 Nguyễn Huệ, Q.1, TP.HCM</p>
+      <p><i class="fa-solid fa-clock"></i> 06:00 – 22:00 mỗi ngày</p>
+      <a href="tel:19006868"><i class="fa-solid fa-phone"></i> 1900 6868</a>
+      <a href="mailto:hi@supergym.vn"><i class="fa-solid fa-envelope"></i> hi@supergym.vn</a>
+    </div>
+  </div>
+  <div class="footer-bottom">
+    <span>© 2026 Super Gym</span>
+  </div>
+</footer>
+
+<script src="app.js"></script>
+<script>
+  /* Gói PT chỉ bán tại quầy — nút chỉ hiện nhắc, không dẫn đi đâu. */
+  document.querySelectorAll('[data-counter-only]').forEach(btn => {
+    btn.addEventListener('click', () =>
+      showToast('info', 'Gói PT chỉ mua tại quầy. Vui lòng liên hệ Lễ tân.'));
+  });
+</script>
+</body>
+</html>

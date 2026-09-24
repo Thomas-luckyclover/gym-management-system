@@ -1,0 +1,33 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!--
+    web.xml — CHỈ dùng để khai báo trang lỗi (codeImplementationBackend.md Mục 3, ngoại lệ duy nhất).
+    TUYỆT ĐỐI không thêm <servlet>, <servlet-mapping>, <filter>, <filter-mapping>, <listener> vào file này:
+    Servlet dùng @WebServlet, Filter dùng @WebFilter, Listener dùng @WebListener.
+-->
+<web-app xmlns="https://jakarta.ee/xml/ns/jakartaee"
+         xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+         xsi:schemaLocation="https://jakarta.ee/xml/ns/jakartaee https://jakarta.ee/xml/ns/jakartaee/web-app_6_0.xsd"
+         version="6.0">
+
+    <!-- Sai vai trò — RoleAreaFilter gọi sendError(403) -->
+    <error-page>
+        <error-code>403</error-code>
+        <location>/WEB-INF/jsp/error/403.jsp</location>
+    </error-page>
+
+    <!-- Không tìm thấy URL -->
+    <error-page>
+        <error-code>404</error-code>
+        <location>/WEB-INF/jsp/error/404.jsp</location>
+    </error-page>
+
+    <!-- Lỗi không bắt được ở tầng code — không để lộ stack trace ra màn hình -->
+    <error-page>
+        <error-code>500</error-code>
+        <location>/WEB-INF/jsp/error/500.jsp</location>
+    </error-page>
+    <error-page>
+        <exception-type>java.lang.Throwable</exception-type>
+        <location>/WEB-INF/jsp/error/500.jsp</location>
+    </error-page>
+</web-app>

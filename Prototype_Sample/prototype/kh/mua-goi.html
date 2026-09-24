@@ -1,0 +1,142 @@
+﻿<!DOCTYPE html>
+<html lang="vi">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
+<title>Mua gói — Super Gym</title>
+<meta name="robots" content="noindex">
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Montserrat:wght@600;700;800&family=Inter:wght@400;500;600;700&display=swap">
+<script src="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/7.3.1/js/all.min.js" crossorigin="anonymous"></script>
+<link rel="stylesheet" href="../style.css">
+<link rel="stylesheet" href="../customer.css">
+</head>
+<body class="cust member">
+<div id="toastRoot"></div>
+<div id="modalRoot"></div>
+
+<!-- 7.1.1 — Package Selection · L1 · UC-22 -->
+<div class="cust-shell" id="custShell">
+
+  <!-- Dock điều hướng: thu gọn mặc định, rê vào tay cầm thì trượt ra. -->
+  <div class="cust-dock" id="custDock">
+    <aside class="cust-sidebar">
+      <a class="cust-brand" href="trang-ca-nhan.html">
+        <b>Super Gym</b><span>Khu vực hội viên</span>
+      </a>
+      <nav class="cust-nav">
+        <h4>Tổng quan</h4>
+      <a href="trang-ca-nhan.html"><i class="fa-solid fa-gauge-high"></i>Trang cá nhân</a>
+        <h4>Gói tập</h4>
+      <a href="mua-goi.html" aria-current="page"><i class="fa-solid fa-cart-shopping"></i>Mua gói</a>
+      <a href="lich-su-giao-dich.html"><i class="fa-solid fa-receipt"></i>Lịch sử giao dịch</a>
+        <h4>Lịch tập</h4>
+      <a href="lich-cua-toi.html"><i class="fa-solid fa-calendar-check"></i>Lịch của tôi</a>
+      <a href="buoi-pt.html"><i class="fa-solid fa-user-check"></i>Buổi PT của tôi</a>
+      <a href="dat-buoi-le.html"><i class="fa-solid fa-calendar-plus"></i>Đặt buổi lẻ</a>
+      <a href="giao-an.html"><i class="fa-solid fa-clipboard-list"></i>Giáo án của tôi</a>
+        <h4>Tài khoản</h4>
+      <a href="tai-khoan.html"><i class="fa-solid fa-user-gear"></i>Cài đặt tài khoản</a>
+        <h4>Hòm thư</h4>
+      <a href="gop-y.html"><i class="fa-solid fa-inbox"></i>Hòm thư góp ý</a>
+      </nav>
+      <div class="cust-sidebar-foot">
+        <a href="../dang-nhap.html"><i class="fa-solid fa-arrow-right-from-bracket"></i>Đăng xuất</a>
+      </div>
+    </aside>
+    <button class="cust-handle" type="button" id="dockHandle"
+            aria-label="Mở menu điều hướng" aria-expanded="false" aria-controls="custDock">
+      <i class="fa-solid fa-chevron-right"></i>
+    </button>
+  </div>
+
+  <div class="cust-main">
+    <header class="cust-topbar">
+      <div>
+        <h1>Mua gói</h1>
+      </div>
+      <div class="cust-topbar-actions">
+        <span class="muted">Gói hiện tại hết hạn 14/11</span>
+        <a class="cust-user" href="tai-khoan.html" title="Cài đặt tài khoản">
+          <span class="avatar">AN</span>
+          <span class="cust-user-text">
+            <b>Nguyễn Minh An</b>
+            <span>KH-0241</span>
+          </span>
+        </a>
+      </div>
+    </header>
+
+    <main class="cust-content">
+      <div class="toolbar">
+        <div class="search">
+          <i class="fa-solid fa-magnifying-glass"></i>
+          <input id="pkgSearch" type="search" placeholder="Tìm gói" aria-label="Tìm gói">
+        </div>
+        <label for="pkgKind">Loại</label>
+        <select id="pkgKind">
+          <option value="all">Tất cả</option>
+          <option value="goi-tap">Gói tập</option>
+          <option value="goi-ngay">Gói ngày</option>
+        </select>
+        <label for="pkgSort">Sắp xếp</label>
+        <select id="pkgSort">
+          <option value="months">Thời hạn tăng dần</option>
+          <option value="price-asc">Giá thấp → cao</option>
+          <option value="price-desc">Giá cao → thấp</option>
+        </select>
+        <button class="btn btn-ghost btn-sm reset" type="button" id="pkgReset">Xoá lọc</button>
+      </div>
+
+      <p class="muted">Gói PT chỉ mua tại quầy. Giá đã gồm VAT.</p>
+
+      <section class="pricing-grid" id="pkgGrid">
+        <div class="price-card" data-kind="goi-tap" data-price="799000" data-months="1" data-name="gói 1 tháng">
+          <h3>Gói 1 Tháng</h3>
+          <div class="price-amount tabular">799.000đ<small> / 1 tháng</small></div>
+          <p class="price-desc">Không ràng buộc, dừng lúc nào cũng được.</p>
+          <a class="btn btn-outline btn-block" href="thanh-toan.html">Chọn gói</a>
+        </div>
+        <div class="price-card" data-kind="goi-tap" data-price="2190000" data-months="3" data-name="gói 3 tháng">
+          <h3>Gói 3 Tháng</h3>
+          <div class="price-amount tabular">2.190.000đ<small> / 3 tháng</small></div>
+          <span class="price-save">Tiết kiệm 9%</span>
+          <p class="price-desc">Đủ dài để thấy thể lực đổi khác.</p>
+          <a class="btn btn-outline btn-block" href="thanh-toan.html">Chọn gói</a>
+        </div>
+        <div class="price-card highlight" data-kind="goi-tap" data-price="3990000" data-months="6" data-name="gói 6 tháng">
+          <span class="price-badge">Phổ biến nhất</span>
+          <h3>Gói 6 Tháng</h3>
+          <div class="price-amount tabular">3.990.000đ<small> / 6 tháng</small></div>
+          <span class="price-save">Tiết kiệm 17%</span>
+          <p class="price-desc">Cân bằng giữa cam kết và chi phí.</p>
+          <a class="btn btn-primary btn-block" href="thanh-toan.html">Chọn gói</a>
+        </div>
+        <div class="price-card" data-kind="goi-tap" data-price="6990000" data-months="12" data-name="gói 12 tháng">
+          <span class="price-badge">Tiết kiệm nhất</span>
+          <h3>Gói 12 Tháng</h3>
+          <div class="price-amount tabular">6.990.000đ<small> / 12 tháng</small></div>
+          <span class="price-save">Tiết kiệm 27%</span>
+          <p class="price-desc">Rẻ nhất tính theo tháng.</p>
+          <a class="btn btn-outline btn-block" href="thanh-toan.html">Chọn gói</a>
+        </div>
+        <div class="price-card" data-kind="goi-ngay" data-price="120000" data-months="0" data-name="gói ngày">
+          <h3>Gói Ngày</h3>
+          <div class="price-amount tabular">120.000đ<small> / 1 ngày</small></div>
+          <p class="price-desc">Vào tập một ngày, miễn ảnh check-in.</p>
+          <small class="muted" style="display:block;margin-top:0.5rem">Một lần vào, hết hạn 23:59 cùng ngày nếu chưa check-in</small>
+          <a class="btn btn-outline btn-block" href="thanh-toan.html">Chọn gói</a>
+        </div>
+        <div class="empty-state" id="pkgEmpty" hidden>
+          <div class="empty-icon"><i class="fa-solid fa-box-open"></i></div>
+          <p>Không có gói nào khớp bộ lọc.</p>
+        </div>
+      </section>
+    </main>
+  </div>
+</div>
+
+<script src="../app.js"></script>
+<script src="customer.js"></script>
+<script src="mua-goi.js"></script>
+</body>
+</html>

@@ -1,0 +1,150 @@
+﻿<!DOCTYPE html>
+<html lang="vi">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
+<title>Soạn giáo án — Super Gym PT</title>
+<meta name="robots" content="noindex">
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Montserrat:wght@600;700;800&family=Inter:wght@400;500;600;700&display=swap">
+<script src="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/7.3.1/js/all.min.js" crossorigin="anonymous"></script>
+<link rel="stylesheet" href="../style.css">
+<link rel="stylesheet" href="../customer.css">
+</head>
+<body class="cust staff">
+<div id="toastRoot"></div>
+<div id="modalRoot"></div>
+
+<!-- 9.6.2 — Workout & Diet Plan Editor · L2 · UC-34 -->
+<div class="cust-shell" id="custShell">
+
+  <div class="cust-dock" id="custDock">
+    <aside class="cust-sidebar">
+      <a class="cust-brand" href="trang-chu.html">
+        <b>Super Gym</b><span>Huấn luyện viên</span>
+      </a>
+      <nav class="cust-nav">
+        <h4>Hôm nay</h4>
+        <a href="trang-chu.html"><i class="fa-solid fa-gauge-high"></i>Tổng quan</a>
+        <a href="diem-danh.html"><i class="fa-solid fa-clipboard-check"></i>Điểm danh</a>
+        <h4>Lịch dạy</h4>
+        <a href="lich-ranh.html"><i class="fa-solid fa-calendar-days"></i>Lịch rảnh</a>
+        <h4>Khách phụ trách</h4>
+        <a href="khach-cua-toi.html" aria-current="page"><i class="fa-solid fa-user-group"></i>Khách của tôi</a>
+        <h4>Cá nhân</h4>
+        <a href="nghi-phep.html"><i class="fa-solid fa-plane-departure"></i>Nghỉ phép</a>
+        <a href="tai-khoan.html"><i class="fa-solid fa-user-gear"></i>Cài đặt tài khoản</a>
+      </nav>
+      <div class="cust-sidebar-foot">
+        <a href="../dang-nhap.html"><i class="fa-solid fa-arrow-right-from-bracket"></i>Đăng xuất</a>
+      </div>
+    </aside>
+    <button class="cust-handle" type="button" id="dockHandle"
+            aria-label="Mở menu điều hướng" aria-expanded="false" aria-controls="custDock">
+      <i class="fa-solid fa-chevron-right"></i>
+    </button>
+  </div>
+
+  <div class="cust-main">
+    <header class="cust-topbar">
+      <div>
+        <div class="crumb"><a href="khach-cua-toi.html">Khách của tôi</a> <i class="fa-solid fa-chevron-right"></i> <span>Nguyễn Minh An</span></div>
+        <h1>Soạn giáo án</h1>
+      </div>
+      <div class="cust-topbar-actions">
+        <span class="badge badge-muted" id="planState">Bản nháp</span>
+        <a class="cust-user" href="tai-khoan.html" title="Cài đặt tài khoản">
+          <span class="avatar">HL</span>
+          <span class="cust-user-text">
+            <b>Hoàng Long</b>
+            <span>PT · NV-0118</span>
+          </span>
+        </a>
+      </div>
+    </header>
+
+    <main class="cust-content">
+      <div class="split">
+        <div class="col-main">
+          <section class="panel">
+            <div class="tabs" role="tablist">
+              <button type="button" role="tab" aria-selected="true" data-tab="workout">Giáo án tập</button>
+              <button type="button" role="tab" aria-selected="false" data-tab="diet">Thực đơn</button>
+            </div>
+
+            <div data-tab-panel="workout">
+              <label class="field">
+                <span class="field-label">Nội dung giáo án</span>
+                <textarea id="planWorkout" rows="14">Thứ 2 — Đẩy (60 phút)
+- Bench press: 4×8, nghỉ 90s
+- Overhead press: 3×10
+- Incline dumbbell press: 3×12
+- Tricep pushdown: 3×15
+
+Thứ 4 — Kéo (60 phút)
+- Lat pulldown: 4×10
+- Seated row: 3×12
+- Face pull: 3×15
+- Bicep curl: 3×12
+
+Thứ 6 — Chân &amp; core (70 phút)
+- Squat: 4×8, xuống đủ sâu
+- Romanian deadlift: 3×10
+- Leg press: 3×12
+- Plank: 3×45s</textarea>
+                <span class="field-error" id="planWorkoutErr" hidden></span>
+              </label>
+            </div>
+
+            <div data-tab-panel="diet" hidden>
+              <label class="field">
+                <span class="field-label">Nội dung thực đơn</span>
+                <textarea id="planDiet" rows="14">Ngày tập — 2.200 kcal, 130g đạm
+- Sáng: yến mạch, sữa chua Hy Lạp, chuối
+- Trước tập 90 phút: bánh mì nguyên cám, 2 trứng
+- Sau tập 30–60 phút: ức gà 150g, gạo lứt, rau luộc
+- Tối: cá hồi áp chảo, khoai lang, salad
+
+Ngày nghỉ — 1.900 kcal, 120g đạm
+- Sáng: trứng ốp, bánh mì đen, bơ
+- Trưa: thịt bò xào, cơm, rau xanh
+- Phụ: sữa chua không đường, óc chó
+- Tối: đậu phụ sốt cà, canh rau</textarea>
+                <span class="field-error" id="planDietErr" hidden></span>
+              </label>
+            </div>
+
+            <div class="btn-row">
+              <button class="btn btn-ghost" type="button" id="saveDraft">Lưu nháp</button>
+              <button class="btn btn-primary" type="button" id="publishPlan">Publish</button>
+            </div>
+          </section>
+        </div>
+
+        <aside class="col-side">
+          <div class="side-card">
+            <span class="section-label">Khách</span>
+            <div style="display:flex;align-items:center;gap:var(--space-3)">
+              <span class="avatar" style="width:40px;height:40px;border-radius:50%;display:grid;place-items:center;font-weight:700">MA</span>
+              <div>
+                <h3>Nguyễn Minh An</h3>
+                <p class="muted">SG-0241</p>
+              </div>
+            </div>
+          </div>
+          <div class="side-card">
+            <span class="section-label">Trạng thái</span>
+            <div class="side-row"><span>Lưu nháp lúc</span><b id="draftAt">—</b></div>
+            <div class="side-row"><span>Publish lúc</span><b id="publishAt">—</b></div>
+            <p class="muted" style="margin-top:var(--space-3)">Khách chỉ xem được sau khi bạn bấm Publish.</p>
+          </div>
+        </aside>
+      </div>
+    </main>
+  </div>
+</div>
+
+<script src="../app.js"></script>
+<script src="../kh/customer.js"></script>
+<script src="giao-an.js"></script>
+</body>
+</html>

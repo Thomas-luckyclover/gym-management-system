@@ -1,0 +1,259 @@
+﻿<!DOCTYPE html>
+<html lang="vi">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
+<title>Đặt buổi lẻ — Super Gym</title>
+<meta name="robots" content="noindex">
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Montserrat:wght@600;700;800&family=Inter:wght@400;500;600;700&display=swap">
+<script src="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/7.3.1/js/all.min.js" crossorigin="anonymous"></script>
+<link rel="stylesheet" href="../style.css">
+<link rel="stylesheet" href="../customer.css">
+</head>
+<body class="cust member">
+<div id="toastRoot"></div>
+<div id="modalRoot"></div>
+
+<!-- 9.3.1 — Book Single Session Form · L2 · UC-37 -->
+<div class="cust-shell" id="custShell">
+
+  <!-- Dock điều hướng: thu gọn mặc định, rê vào tay cầm thì trượt ra. -->
+  <div class="cust-dock" id="custDock">
+    <aside class="cust-sidebar">
+      <a class="cust-brand" href="trang-ca-nhan.html">
+        <b>Super Gym</b><span>Khu vực hội viên</span>
+      </a>
+      <nav class="cust-nav">
+        <h4>Tổng quan</h4>
+      <a href="trang-ca-nhan.html"><i class="fa-solid fa-gauge-high"></i>Trang cá nhân</a>
+        <h4>Gói tập</h4>
+      <a href="mua-goi.html"><i class="fa-solid fa-cart-shopping"></i>Mua gói</a>
+      <a href="lich-su-giao-dich.html"><i class="fa-solid fa-receipt"></i>Lịch sử giao dịch</a>
+        <h4>Lịch tập</h4>
+      <a href="lich-cua-toi.html"><i class="fa-solid fa-calendar-check"></i>Lịch của tôi</a>
+      <a href="buoi-pt.html"><i class="fa-solid fa-user-check"></i>Buổi PT của tôi</a>
+      <a href="dat-buoi-le.html" aria-current="page"><i class="fa-solid fa-calendar-plus"></i>Đặt buổi lẻ</a>
+      <a href="giao-an.html"><i class="fa-solid fa-clipboard-list"></i>Giáo án của tôi</a>
+        <h4>Tài khoản</h4>
+      <a href="tai-khoan.html"><i class="fa-solid fa-user-gear"></i>Cài đặt tài khoản</a>
+        <h4>Hòm thư</h4>
+      <a href="gop-y.html"><i class="fa-solid fa-inbox"></i>Hòm thư góp ý</a>
+      </nav>
+      <div class="cust-sidebar-foot">
+        <a href="../dang-nhap.html"><i class="fa-solid fa-arrow-right-from-bracket"></i>Đăng xuất</a>
+      </div>
+    </aside>
+    <button class="cust-handle" type="button" id="dockHandle"
+            aria-label="Mở menu điều hướng" aria-expanded="false" aria-controls="custDock">
+      <i class="fa-solid fa-chevron-right"></i>
+    </button>
+  </div>
+
+  <div class="cust-main">
+    <header class="cust-topbar">
+      <div>
+        <h1>Đặt buổi lẻ</h1>
+      </div>
+      <div class="cust-topbar-actions">
+        <a class="cust-user" href="tai-khoan.html" title="Cài đặt tài khoản">
+          <span class="avatar">AN</span>
+          <span class="cust-user-text">
+            <b>Nguyễn Minh An</b>
+            <span>KH-0241</span>
+          </span>
+        </a>
+      </div>
+    </header>
+
+    <main class="cust-content">
+      <div class="step-panel" data-step="form">
+        <div class="split">
+          <div class="col-main">
+
+            <section class="panel">
+              <div class="panel-head"><h2>Chọn huấn luyện viên</h2><span class="muted" id="ptCount"></span></div>
+
+              <div class="toolbar">
+                <div class="search">
+                  <i class="fa-solid fa-magnifying-glass"></i>
+                  <input id="ptSearch" type="search" placeholder="Tên hoặc chuyên môn" aria-label="Tìm huấn luyện viên">
+                </div>
+                <label for="ptSpec">Chuyên môn</label>
+                <select id="ptSpec">
+                  <option value="all">Tất cả</option>
+                  <option value="strength">Sức mạnh</option>
+                  <option value="giam-mo">Giảm mỡ</option>
+                  <option value="tang-co">Tăng cơ</option>
+                  <option value="phuc-hoi">Phục hồi</option>
+                </select>
+                <label for="slotBand">Rảnh khung giờ</label>
+                <select id="slotBand">
+                  <option value="all">Bất kỳ</option>
+                  <option value="sang">Sáng · 06:00–10:00</option>
+                  <option value="chieu">Chiều · 14:00–16:00</option>
+                  <option value="toi">Tối · 18:00–20:00</option>
+                </select>
+                <button class="btn btn-ghost btn-sm reset" type="button" id="ptReset">Xoá lọc</button>
+              </div>
+
+              <div class="pt-picker" id="ptPicker">
+                <label class="pt-option" data-spec="strength" data-q="hoàng long strength conditioning sức mạnh">
+                  <input type="radio" name="pt" value="Hoàng Long" checked>
+                  <span class="avatar tone-amber">HL</span>
+                  <span><b>Hoàng Long</b><small>Strength &amp; Conditioning</small></span>
+                </label>
+                <label class="pt-option" data-spec="giam-mo" data-q="phạm thu trang giảm mỡ thể hình nữ">
+                  <input type="radio" name="pt" value="Phạm Thu Trang">
+                  <span class="avatar tone-rust">TT</span>
+                  <span><b>Phạm Thu Trang</b><small>Giảm mỡ · Thể hình nữ</small></span>
+                </label>
+                <label class="pt-option" data-spec="tang-co" data-q="đỗ minh khoa tăng cơ powerlifting sức mạnh">
+                  <input type="radio" name="pt" value="Đỗ Minh Khoa">
+                  <span class="avatar tone-green">MK</span>
+                  <span><b>Đỗ Minh Khoa</b><small>Tăng cơ · Powerlifting</small></span>
+                </label>
+                <label class="pt-option" data-spec="phuc-hoi" data-q="vũ hải yến yoga phục hồi chấn thương">
+                  <input type="radio" name="pt" value="Vũ Hải Yến">
+                  <span class="avatar tone-blue">HY</span>
+                  <span><b>Vũ Hải Yến</b><small>Yoga &amp; Phục hồi</small></span>
+                </label>
+                <div class="empty-state" id="ptEmpty" hidden>
+                  <div class="empty-icon"><i class="fa-solid fa-user-slash"></i></div>
+                  <p>Không có PT nào khớp bộ lọc.</p>
+                </div>
+              </div>
+            </section>
+
+            <section class="panel">
+              <div class="panel-head"><h2>Khung giờ trống</h2></div>
+              <div class="toolbar" style="border:none;padding:0;background:transparent">
+                <b data-week-label style="font-size:.88rem"></b>
+                <span class="muted reset">Lịch trống của <b data-grid-pt style="color:var(--accent-ink)">Hoàng Long</b></span>
+              </div>
+              <div class="note-box" style="margin-bottom:var(--space-3)">
+                <i class="fa-solid fa-circle-info"></i>
+                <span>Chỉ hiển thị các slot đã được PT publish. Slot chưa publish sẽ không xuất hiện trong lịch.</span>
+              </div>
+              <div class="slot-grid">
+          <div class="slot-day">
+            <b data-day-label="0">T2<em>–</em></b>
+            <button class="slot" type="button" aria-pressed="false" data-day="0" data-time="06:00" data-band="sang">06:00</button>
+            <button class="slot" type="button" aria-pressed="false" data-day="0" data-time="08:00" data-band="sang" disabled title="Slot đã có người đặt">08:00</button>
+            <button class="slot" type="button" aria-pressed="false" data-day="0" data-time="10:00" data-band="sang">10:00</button>
+            <button class="slot" type="button" aria-pressed="false" data-day="0" data-time="14:00" data-band="chieu">14:00</button>
+            <button class="slot" type="button" aria-pressed="false" data-day="0" data-time="16:00" data-band="chieu">16:00</button>
+            <button class="slot" type="button" aria-pressed="false" data-day="0" data-time="18:00" data-band="toi">18:00</button>
+            <button class="slot" type="button" aria-pressed="false" data-day="0" data-time="19:00" data-band="toi" disabled title="Slot đã có người đặt">19:00</button>
+            <button class="slot" type="button" aria-pressed="false" data-day="0" data-time="20:00" data-band="toi">20:00</button>
+          </div>
+          <div class="slot-day">
+            <b data-day-label="1">T3<em>–</em></b>
+            <button class="slot" type="button" aria-pressed="false" data-day="1" data-time="06:00" data-band="sang" disabled title="Slot đã có người đặt">06:00</button>
+            <button class="slot" type="button" aria-pressed="false" data-day="1" data-time="08:00" data-band="sang">08:00</button>
+            <button class="slot" type="button" aria-pressed="false" data-day="1" data-time="10:00" data-band="sang">10:00</button>
+            <button class="slot" type="button" aria-pressed="false" data-day="1" data-time="14:00" data-band="chieu">14:00</button>
+            <button class="slot" type="button" aria-pressed="false" data-day="1" data-time="16:00" data-band="chieu">16:00</button>
+            <button class="slot" type="button" aria-pressed="false" data-day="1" data-time="18:00" data-band="toi" disabled title="Slot đã có người đặt">18:00</button>
+            <button class="slot" type="button" aria-pressed="false" data-day="1" data-time="19:00" data-band="toi">19:00</button>
+            <button class="slot" type="button" aria-pressed="false" data-day="1" data-time="20:00" data-band="toi">20:00</button>
+          </div>
+          <div class="slot-day">
+            <b data-day-label="2">T4<em>–</em></b>
+            <button class="slot" type="button" aria-pressed="false" data-day="2" data-time="06:00" data-band="sang">06:00</button>
+            <button class="slot" type="button" aria-pressed="false" data-day="2" data-time="08:00" data-band="sang">08:00</button>
+            <button class="slot" type="button" aria-pressed="false" data-day="2" data-time="10:00" data-band="sang">10:00</button>
+            <button class="slot" type="button" aria-pressed="false" data-day="2" data-time="14:00" data-band="chieu">14:00</button>
+            <button class="slot" type="button" aria-pressed="false" data-day="2" data-time="16:00" data-band="chieu">16:00</button>
+            <button class="slot" type="button" aria-pressed="false" data-day="2" data-time="18:00" data-band="toi">18:00</button>
+            <button class="slot" type="button" aria-pressed="false" data-day="2" data-time="19:00" data-band="toi" disabled title="Slot đã có người đặt">19:00</button>
+            <button class="slot" type="button" aria-pressed="false" data-day="2" data-time="20:00" data-band="toi">20:00</button>
+          </div>
+          <div class="slot-day">
+            <b data-day-label="3">T5<em>–</em></b>
+            <button class="slot" type="button" aria-pressed="false" data-day="3" data-time="06:00" data-band="sang">06:00</button>
+            <button class="slot" type="button" aria-pressed="false" data-day="3" data-time="08:00" data-band="sang">08:00</button>
+            <button class="slot" type="button" aria-pressed="false" data-day="3" data-time="10:00" data-band="sang">10:00</button>
+            <button class="slot" type="button" aria-pressed="false" data-day="3" data-time="14:00" data-band="chieu" disabled title="Slot đã có người đặt">14:00</button>
+            <button class="slot" type="button" aria-pressed="false" data-day="3" data-time="16:00" data-band="chieu">16:00</button>
+            <button class="slot" type="button" aria-pressed="false" data-day="3" data-time="18:00" data-band="toi">18:00</button>
+            <button class="slot" type="button" aria-pressed="false" data-day="3" data-time="19:00" data-band="toi">19:00</button>
+            <button class="slot" type="button" aria-pressed="false" data-day="3" data-time="20:00" data-band="toi" disabled title="Slot đã có người đặt">20:00</button>
+          </div>
+          <div class="slot-day">
+            <b data-day-label="4">T6<em>–</em></b>
+            <button class="slot" type="button" aria-pressed="false" data-day="4" data-time="06:00" data-band="sang">06:00</button>
+            <button class="slot" type="button" aria-pressed="false" data-day="4" data-time="08:00" data-band="sang" disabled title="Slot đã có người đặt">08:00</button>
+            <button class="slot" type="button" aria-pressed="false" data-day="4" data-time="10:00" data-band="sang" disabled title="Slot đã có người đặt">10:00</button>
+            <button class="slot" type="button" aria-pressed="false" data-day="4" data-time="14:00" data-band="chieu">14:00</button>
+            <button class="slot" type="button" aria-pressed="false" data-day="4" data-time="16:00" data-band="chieu">16:00</button>
+            <button class="slot" type="button" aria-pressed="false" data-day="4" data-time="18:00" data-band="toi">18:00</button>
+            <button class="slot" type="button" aria-pressed="false" data-day="4" data-time="19:00" data-band="toi">19:00</button>
+            <button class="slot" type="button" aria-pressed="false" data-day="4" data-time="20:00" data-band="toi">20:00</button>
+          </div>
+          <div class="slot-day">
+            <b data-day-label="5">T7<em>–</em></b>
+            <button class="slot" type="button" aria-pressed="false" data-day="5" data-time="06:00" data-band="sang" disabled title="Slot đã có người đặt">06:00</button>
+            <button class="slot" type="button" aria-pressed="false" data-day="5" data-time="08:00" data-band="sang">08:00</button>
+            <button class="slot" type="button" aria-pressed="false" data-day="5" data-time="10:00" data-band="sang">10:00</button>
+            <button class="slot" type="button" aria-pressed="false" data-day="5" data-time="14:00" data-band="chieu">14:00</button>
+            <button class="slot" type="button" aria-pressed="false" data-day="5" data-time="16:00" data-band="chieu" disabled title="Slot đã có người đặt">16:00</button>
+            <button class="slot" type="button" aria-pressed="false" data-day="5" data-time="18:00" data-band="toi">18:00</button>
+            <button class="slot" type="button" aria-pressed="false" data-day="5" data-time="19:00" data-band="toi">19:00</button>
+            <button class="slot" type="button" aria-pressed="false" data-day="5" data-time="20:00" data-band="toi">20:00</button>
+          </div>
+          <div class="slot-day">
+            <b data-day-label="6">CN<em>–</em></b>
+            <button class="slot" type="button" aria-pressed="false" data-day="6" data-time="06:00" data-band="sang">06:00</button>
+            <button class="slot" type="button" aria-pressed="false" data-day="6" data-time="08:00" data-band="sang">08:00</button>
+            <button class="slot" type="button" aria-pressed="false" data-day="6" data-time="10:00" data-band="sang">10:00</button>
+            <button class="slot" type="button" aria-pressed="false" data-day="6" data-time="14:00" data-band="chieu">14:00</button>
+            <button class="slot" type="button" aria-pressed="false" data-day="6" data-time="16:00" data-band="chieu">16:00</button>
+            <button class="slot" type="button" aria-pressed="false" data-day="6" data-time="18:00" data-band="toi">18:00</button>
+            <button class="slot" type="button" aria-pressed="false" data-day="6" data-time="19:00" data-band="toi" disabled title="Slot đã có người đặt">19:00</button>
+            <button class="slot" type="button" aria-pressed="false" data-day="6" data-time="20:00" data-band="toi">20:00</button>
+          </div>
+              </div>
+          <div class="legend">
+            <span><i></i> Còn trống</span>
+            <span><i class="taken"></i> Đã có người đặt</span>
+            <span><i class="picked"></i> Đang chọn</span>
+          </div>
+            </section>
+
+          </div>
+
+          <aside class="col-side">
+            <div class="side-card">
+              <span class="section-label">Buổi lẻ</span>
+              <div class="side-row"><span>Huấn luyện viên</span><b data-summary-pt>Hoàng Long</b></div>
+              <div class="side-row"><span>Thời gian</span><b data-summary-slot>Chưa chọn</b></div>
+              <div class="sum-row total" style="margin-top:var(--space-3)"><span>Phải trả</span><b class="tabular">550.000đ</b></div>
+              <div class="alert-banner info" style="margin-top:var(--space-4);font-size:.82rem">
+                <i class="fa-solid fa-circle-info"></i>
+                <span>Slot giữ sau khi thanh toán. Buổi lẻ không đổi lịch.</span>
+              </div>
+              <button class="btn btn-primary btn-block" type="button" id="bookBtn" disabled>Chọn khung giờ</button>
+            </div>
+          </aside>
+        </div>
+      </div>
+
+      <div class="step-panel" data-step="done" hidden>
+        <div class="split"><div class="col-main">
+          <section class="panel">
+            <div class="success-icon" style="margin-inline:auto"><i class="fa-solid fa-circle-check"></i></div>
+            <h2 style="text-align:center">Đã giữ slot</h2>
+            <p class="muted" style="text-align:center"><b data-done-slot></b> với <b data-done-pt></b></p>
+            <a class="btn btn-primary btn-block" href="lich-cua-toi.html">Xem lịch của tôi</a>
+          </section>
+        </div></div>
+      </div>
+    </main>
+  </div>
+</div>
+
+<script src="../app.js"></script>
+<script src="customer.js"></script>
+<script src="dat-buoi-le.js"></script>
+</body>
+</html>

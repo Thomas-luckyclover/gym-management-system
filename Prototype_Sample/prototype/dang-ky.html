@@ -1,0 +1,159 @@
+<!DOCTYPE html>
+<html lang="vi">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
+<title>Đăng ký tài khoản — Super Gym</title>
+<meta name="description" content="Tạo tài khoản Super Gym. Nhập số điện thoại để hệ thống kiểm tra hồ sơ sẵn có tại phòng gym trước khi đăng ký.">
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Montserrat:wght@600;700;800&family=Inter:wght@400;500;600;700&display=swap">
+<script src="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/7.3.1/js/all.min.js" crossorigin="anonymous"></script>
+<link rel="stylesheet" href="style.css">
+</head>
+<body class="dark auth-dark">
+<div id="toastRoot"></div>
+<div id="modalRoot"></div>
+
+<!-- ============ 1.3.1 — ĐĂNG KÝ TÀI KHOẢN (6 nhánh tra trùng SĐT) ============
+     Cả 8 màn của luồng đều nằm sẵn trong HTML dưới dạng .step-panel.
+     dang-ky.js chỉ bật đúng một panel theo kết quả tra số điện thoại. -->
+<div class="auth-shell">
+  <div class="auth-top">
+    <a class="auth-brand" href="index.html">Super Gym</a>
+    <a class="auth-back" href="index.html"><i class="fa-solid fa-arrow-left"></i> Về trang chủ</a>
+  </div>
+
+  <div class="auth-card">
+
+    <!-- ---------- Bước 1: nhập SĐT để tra trùng trước ---------- -->
+    <div class="step-panel" data-step="phone">
+      <div class="auth-head">
+        <h1>Tạo tài khoản</h1>
+        <p>Nhập số điện thoại để hệ thống kiểm tra hồ sơ sẵn có tại phòng gym.</p>
+      </div>
+      <form id="phoneForm" novalidate>
+        <label class="field">
+          <span class="field-label">Số điện thoại</span>
+          <input id="regPhone" type="tel" inputmode="numeric" placeholder="090 xxx xxxx" autocomplete="tel" value="0912345678">
+          <span class="field-error" id="regPhoneErr" hidden></span>
+        </label>
+        <button class="btn btn-primary btn-block" type="submit">Tiếp tục</button>
+      </form>
+      <p class="auth-switch">Đã có tài khoản? <a href="dang-nhap.html">Đăng nhập</a></p>
+    </div>
+
+    <!-- ---------- Bước 2: form đăng ký đầy đủ ---------- -->
+    <div class="step-panel" data-step="form" hidden>
+      <span class="phone-chip"><i class="fa-solid fa-phone"></i> <span data-phone-display></span> <a href="#" data-reset-phone>Đổi số</a></span>
+      <div class="auth-head">
+        <h1>Tạo tài khoản</h1>
+        <p>Điền thông tin để tạo tài khoản hội viên Super Gym.</p>
+      </div>
+      <form id="regForm" novalidate>
+        <label class="field">
+          <span class="field-label">Email</span>
+          <input id="regEmail" type="email" placeholder="ban@email.com" autocomplete="email" value="giabao.tran@email.com">
+          <span class="field-error" id="regEmailErr" hidden></span>
+        </label>
+        <label class="field">
+          <span class="field-label">Mật khẩu</span>
+          <span class="input-wrap">
+            <input id="regPass" type="password" placeholder="8-64 ký tự, có chữ và số" autocomplete="new-password" value="matkhau123">
+            <button type="button" class="pw-toggle" data-pw-toggle="regPass" aria-label="Hiện mật khẩu"><i class="fa-solid fa-eye"></i></button>
+          </span>
+          <span class="field-error" id="regPassErr" hidden></span>
+        </label>
+        <label class="field">
+          <span class="field-label">Xác nhận mật khẩu</span>
+          <input id="regPass2" type="password" placeholder="Nhập lại mật khẩu" autocomplete="new-password" value="matkhau123">
+          <span class="field-error" id="regPass2Err" hidden></span>
+        </label>
+        <label class="field">
+          <span class="field-label">Họ và tên</span>
+          <input id="regName" type="text" placeholder="Nguyễn Văn A" autocomplete="name" value="Trần Gia Bảo">
+          <span class="field-error" id="regNameErr" hidden></span>
+        </label>
+        <label class="field">
+          <span class="field-label">Ngày sinh</span>
+          <input id="regDob" type="date" value="1998-04-22">
+          <span class="field-hint"><i class="fa-solid fa-circle-info"></i><span>Lưu ý: Thành viên dưới 10 tuổi không thể mua gói PT. Nếu đăng ký cho trẻ em, vui lòng liên hệ quầy.</span></span>
+          <span class="field-error" id="regDobErr" hidden></span>
+        </label>
+        <button class="btn btn-primary btn-block" type="submit" id="regSubmitBtn">Tạo tài khoản</button>
+      </form>
+    </div>
+
+    <!-- ---------- Màn nhập OTP ---------- -->
+    <div class="step-panel" data-step="otp" hidden>
+      <div class="auth-head"><h1>Nhập mã xác thực</h1></div>
+      <div class="msg-banner info"><i class="fa-solid fa-circle-info"></i><span>Nhập mã xác thực vừa gửi tới email <b data-otp-email></b> và SĐT <b data-phone-display></b> để hoàn tất đăng ký.</span></div>
+      <form id="otpForm" novalidate>
+        <label class="field">
+          <span class="field-label">Mã xác thực (6 số)</span>
+          <input id="otpInput" class="otp-input" inputmode="numeric" maxlength="6" placeholder="––––––" value="123456">
+          <span class="field-hint"><i class="fa-solid fa-circle-info"></i><span>Không nhận được mã? Kiểm tra hộp thư rác hoặc bấm Gửi lại mã.</span></span>
+          <span class="field-error" id="otpInputErr" hidden></span>
+        </label>
+        <button class="btn btn-primary btn-block" type="submit">Xác thực</button>
+      </form>
+      <div class="center-row"><button class="btn-link" type="button" id="resendBtn">Gửi lại mã</button></div>
+      <p class="auth-switch"><a href="#" data-reset-phone><i class="fa-solid fa-arrow-left"></i> Dùng số khác</a></p>
+    </div>
+
+    <!-- ---------- Nhánh 3: số đã có tài khoản ---------- -->
+    <div class="step-panel" data-step="blocked-account" hidden>
+      <span class="phone-chip"><i class="fa-solid fa-phone"></i> <span data-phone-display></span> <a href="#" data-reset-phone>Đổi số</a></span>
+      <div class="auth-head"><h1>Không tạo được tài khoản</h1></div>
+      <div class="msg-banner warning"><i class="fa-solid fa-triangle-exclamation"></i><span>Số điện thoại này đã có tài khoản. Vui lòng đăng nhập hoặc dùng chức năng Quên mật khẩu.</span></div>
+      <div class="btn-row">
+        <a class="btn btn-primary" href="dang-nhap.html">Đăng nhập</a>
+        <a class="btn btn-outline" href="quen-mat-khau.html">Quên mật khẩu</a>
+      </div>
+      <p class="auth-switch"><a href="#" data-reset-phone><i class="fa-solid fa-arrow-left"></i> Dùng số khác</a></p>
+    </div>
+
+    <!-- ---------- Nhánh 4: email nhập vào không khớp hồ sơ ---------- -->
+    <div class="step-panel" data-step="blocked-email-mismatch" hidden>
+      <div class="auth-head"><h1>Email không khớp hồ sơ</h1></div>
+      <div class="msg-banner warning"><i class="fa-solid fa-triangle-exclamation"></i><span>Số điện thoại này đã đăng ký với một email khác (<b data-profile-email></b>). Dùng đúng email đó, hoặc ra quầy để được hỗ trợ.</span></div>
+      <div class="counter-box"><i class="fa-solid fa-location-dot"></i><span><b>Quầy Lễ tân:</b> 12 Nguyễn Huệ, Q.1, TP.HCM — mở cửa 06:00 – 22:00 mỗi ngày. Mang theo giấy tờ tuỳ thân để Lễ tân đối chiếu hồ sơ.</span></div>
+      <div class="btn-row">
+        <button class="btn btn-primary" type="button" id="retryEmailBtn">Thử email khác</button>
+        <button class="btn btn-outline" type="button" data-reset-phone>Dùng số khác</button>
+      </div>
+    </div>
+
+    <!-- ---------- Hồ sơ chưa có email ---------- -->
+    <div class="step-panel" data-step="blocked-no-email" hidden>
+      <div class="auth-head"><h1>Cần bổ sung thông tin tại quầy</h1></div>
+      <div class="msg-banner warning"><i class="fa-solid fa-triangle-exclamation"></i><span>Hồ sơ của số điện thoại này chưa có email. Vui lòng ra quầy gặp Lễ tân để bổ sung trước khi tạo tài khoản.</span></div>
+      <div class="counter-box"><i class="fa-solid fa-location-dot"></i><span><b>Quầy Lễ tân:</b> 12 Nguyễn Huệ, Q.1, TP.HCM — mở cửa 06:00 – 22:00 mỗi ngày. Mang theo giấy tờ tuỳ thân để Lễ tân đối chiếu hồ sơ.</span></div>
+      <button class="btn btn-outline btn-block" type="button" data-reset-phone><i class="fa-solid fa-arrow-left"></i> Dùng số khác</button>
+    </div>
+
+    <!-- ---------- Màn thành công ---------- -->
+    <div class="step-panel" data-step="success" hidden>
+      <div class="success-panel">
+        <div class="success-icon"><i class="fa-solid fa-circle-check"></i></div>
+        <h1>Tạo tài khoản thành công</h1>
+        <p data-success-mode="new">Tài khoản đã sẵn sàng. Từ giờ bạn là hội viên và dùng được các chức năng dành cho khách hàng.</p>
+        <p data-success-mode="linked" hidden>Hồ sơ cũ của bạn tại phòng gym đã được gắn vào tài khoản mới — toàn bộ lịch sử gói tập được giữ nguyên.</p>
+        <div class="next-box">
+          <h4>Bước tiếp theo</h4>
+          <ul>
+            <li>Chọn và thanh toán gói tập ngay.</li>
+            <li>Ra quầy chụp ảnh check-in (bắt buộc với mọi gói, trừ gói ngày).</li>
+            <li>Muốn tập với PT thì đăng ký gói PT tại quầy sau khi đã có gói tập.</li>
+          </ul>
+        </div>
+        <a class="btn btn-primary btn-block" href="dang-nhap.html">Đăng nhập ngay</a>
+      </div>
+    </div>
+
+  </div>
+  <p class="auth-foot-note">© 2026 Super Gym</p>
+</div>
+
+<script src="app.js"></script>
+<script src="dang-ky.js"></script>
+</body>
+</html>

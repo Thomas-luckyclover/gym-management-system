@@ -1,0 +1,291 @@
+﻿<!DOCTYPE html>
+<html lang="vi">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
+<title>Bán hàng — Super Gym Lễ tân</title>
+<meta name="robots" content="noindex">
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Montserrat:wght@600;700;800&family=Inter:wght@400;500;600;700&display=swap">
+<script src="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/7.3.1/js/all.min.js" crossorigin="anonymous"></script>
+<link rel="stylesheet" href="../style.css">
+<link rel="stylesheet" href="../customer.css">
+</head>
+<body class="cust staff">
+<div id="toastRoot"></div>
+<div id="modalRoot"></div>
+
+<!-- 7.1.3 — Walk-in Sale · L2 · UC-21 (bao gồm 7.3.2 gia hạn) -->
+<div class="cust-shell" id="custShell">
+
+  <div class="cust-dock" id="custDock">
+    <aside class="cust-sidebar">
+      <a class="cust-brand" href="check-in.html">
+        <b>Super Gym</b><span>Lễ tân</span>
+      </a>
+      <nav class="cust-nav">
+        <h4>Tại quầy</h4>
+        <a href="check-in.html"><i class="fa-solid fa-door-open"></i>Check-in</a>
+        <a href="ban-hang.html" aria-current="page"><i class="fa-solid fa-cart-shopping"></i>Bán hàng</a>
+        <a href="ban-goi-pt.html"><i class="fa-solid fa-user-check"></i>Bán gói PT</a>
+        <a href="ca-lam-viec.html"><i class="fa-solid fa-cash-register"></i>Ca làm việc</a>
+        <h4>Hội viên</h4>
+        <a href="hoi-vien.html"><i class="fa-solid fa-user-group"></i>Hồ sơ khách</a>
+        <a href="bao-luu.html"><i class="fa-solid fa-circle-pause"></i>Bảo lưu</a>
+        <h4>Cơ sở vật chất</h4>
+        <a href="co-so-vat-chat.html"><i class="fa-solid fa-boxes-stacked"></i>Danh mục</a>
+        <a href="bao-tri.html"><i class="fa-solid fa-screwdriver-wrench"></i>Yêu cầu bảo trì</a>
+        <h4>Cá nhân</h4>
+        <a href="nghi-phep.html"><i class="fa-solid fa-plane-departure"></i>Nghỉ phép</a>
+        <a href="tai-khoan.html"><i class="fa-solid fa-user-gear"></i>Cài đặt tài khoản</a>
+      </nav>
+      <div class="cust-sidebar-foot">
+        <a href="../dang-nhap.html"><i class="fa-solid fa-arrow-right-from-bracket"></i>Đăng xuất</a>
+      </div>
+    </aside>
+    <button class="cust-handle" type="button" id="dockHandle"
+            aria-label="Mở menu điều hướng" aria-expanded="false" aria-controls="custDock">
+      <i class="fa-solid fa-chevron-right"></i>
+    </button>
+  </div>
+
+  <div class="cust-main">
+    <header class="cust-topbar">
+      <div>
+        <h1>Bán gói tập</h1>
+      </div>
+      <div class="cust-topbar-actions">
+        <a class="badge badge-ok" href="ca-lam-viec.html" id="shiftChip"><i class="fa-solid fa-circle-check"></i> Ca chiều 20/09 đang mở</a>
+        <a class="cust-user" href="tai-khoan.html" title="Cài đặt tài khoản">
+          <span class="avatar">NH</span>
+          <span class="cust-user-text">
+            <b>Nguyễn Thị Hoa</b>
+            <span>Lễ tân · NV-0042</span>
+          </span>
+        </a>
+      </div>
+    </header>
+
+    <main class="cust-content">
+      <div class="split">
+        <div class="col-main">
+
+          <section class="panel">
+            <div class="panel-head"><h2>1 · Khách mua</h2></div>
+            <div class="toolbar">
+              <div class="search">
+                <i class="fa-solid fa-magnifying-glass"></i>
+                <input id="shq" type="search" placeholder="Tìm tên, SĐT hoặc mã khách" aria-label="Tìm khách">
+              </div>
+              <a class="btn btn-ghost btn-sm" href="ho-so-khach.html"><i class="fa-solid fa-plus"></i> Khách mới</a>
+            </div>
+            <div class="pick-list" id="shCust">
+              <label class="pick-row" data-q="Trần Bảo Ngọc 0902345678 KH-1001" data-renew="Gói 3 Tháng · hết hạn 15/11/2026">
+                <input type="radio" name="shcust" value="KH-1001" data-name="Trần Bảo Ngọc">
+                <span class="pick-body">
+                  <b>Trần Bảo Ngọc</b>
+                  <small>KH-1001 · 0902 345 678 · Gói 3 Tháng tới 15/11/2026</small>
+                </span>
+                <span class="badge badge-ok">Đang hoạt động</span>
+              </label>
+              <label class="pick-row" data-q="Lê Minh Tuấn 0913456789 KH-1002" data-renew="Gói Ngày · hết hạn 20/09/2026" data-nophoto>
+                <input type="radio" name="shcust" value="KH-1002" data-name="Lê Minh Tuấn">
+                <span class="pick-body">
+                  <b>Lê Minh Tuấn</b>
+                  <small>KH-1002 · 0913 456 789 · Gói Ngày tới 20/09/2026</small>
+                </span>
+                <span class="badge badge-ok">Đang hoạt động</span>
+              </label>
+              <label class="pick-row" data-q="Phạm Thu Trang 0934111222 KH-1003" data-renew="Gói 12 Tháng · hết hạn 01/03/2027">
+                <input type="radio" name="shcust" value="KH-1003" data-name="Phạm Thu Trang">
+                <span class="pick-body">
+                  <b>Phạm Thu Trang</b>
+                  <small>KH-1003 · 0934 111 222 · Gói 12 Tháng tới 01/03/2027</small>
+                </span>
+                <span class="badge badge-warn">Đang bảo lưu</span>
+              </label>
+              <label class="pick-row" data-q="Đỗ Văn Khang 0987654321 KH-1004" data-renew="Gói 1 Tháng · hết hạn 10/09/2026">
+                <input type="radio" name="shcust" value="KH-1004" data-name="Đỗ Văn Khang">
+                <span class="pick-body">
+                  <b>Đỗ Văn Khang</b>
+                  <small>KH-1004 · 0987 654 321 · Gói 1 Tháng tới 10/09/2026</small>
+                </span>
+                <span class="badge badge-muted">Hết hạn</span>
+              </label>
+              <label class="pick-row" data-q="Vũ Hải Nam 0971222333 KH-1005">
+                <input type="radio" name="shcust" value="KH-1005" data-name="Vũ Hải Nam">
+                <span class="pick-body">
+                  <b>Vũ Hải Nam</b>
+                  <small>KH-1005 · 0971 222 333 · chưa có gói</small>
+                </span>
+                <span class="badge badge-ok">Đang hoạt động</span>
+              </label>
+              <label class="pick-row" data-q="Ngô Thị Lan 0355667788 KH-1006" data-renew="Gói 1 Tháng · hết hạn 18/10/2026" data-nophoto>
+                <input type="radio" name="shcust" value="KH-1006" data-name="Ngô Thị Lan">
+                <span class="pick-body">
+                  <b>Ngô Thị Lan</b>
+                  <small>KH-1006 · 0355 667 788 · Gói 1 Tháng tới 18/10/2026</small>
+                </span>
+                <span class="badge badge-ok">Đang hoạt động</span>
+              </label>
+              <label class="pick-row" data-q="Hoàng Gia Huy 0388990011 KH-1007" data-nophoto>
+                <input type="radio" name="shcust" value="KH-1007" data-name="Hoàng Gia Huy">
+                <span class="pick-body">
+                  <b>Hoàng Gia Huy</b>
+                  <small>KH-1007 · 0388 990 011 · chưa có gói</small>
+                </span>
+                <span class="badge badge-info">Mới tạo</span>
+              </label>
+              <label class="pick-row" data-q="Bùi Thanh Hà 0967123123 KH-1008" data-renew="Gói 9 Tháng · hết hạn 01/03/2027">
+                <input type="radio" name="shcust" value="KH-1008" data-name="Bùi Thanh Hà">
+                <span class="pick-body">
+                  <b>Bùi Thanh Hà</b>
+                  <small>KH-1008 · 0967 123 123 · Gói 9 Tháng tới 01/03/2027</small>
+                </span>
+                <span class="badge badge-ok">Đang hoạt động</span>
+              </label>
+              <label class="pick-row" data-q="Trịnh Quốc Bảo 0909111222 KH-1009" data-renew="Gói 3 Tháng · hết hạn 01/12/2026">
+                <input type="radio" name="shcust" value="KH-1009" data-name="Trịnh Quốc Bảo">
+                <span class="pick-body">
+                  <b>Trịnh Quốc Bảo</b>
+                  <small>KH-1009 · 0909 111 222 · Gói 3 Tháng tới 01/12/2026</small>
+                </span>
+                <span class="badge badge-ok">Đang hoạt động</span>
+              </label>
+              <label class="pick-row" data-q="Mai Anh Thư 0826554433 KH-1010" data-renew="Gói 1 Tháng · hết hạn 05/10/2026">
+                <input type="radio" name="shcust" value="KH-1010" data-name="Mai Anh Thư">
+                <span class="pick-body">
+                  <b>Mai Anh Thư</b>
+                  <small>KH-1010 · 0826 554 433 · Gói 1 Tháng tới 05/10/2026</small>
+                </span>
+                <span class="badge badge-ok">Đang hoạt động</span>
+              </label>
+        <div class="empty-state" data-empty hidden>
+          <div class="empty-icon"><i class="fa-solid fa-box-open"></i></div>
+          <p>Không có khách nào khớp.</p>
+        </div>
+            </div>
+            <div class="alert-banner info" id="shRenew" hidden>
+              <i class="fa-solid fa-rotate"></i>
+              <span><b>Đây là đơn gia hạn.</b> <span id="shRenewText"></span> Gói mới nối tiếp ngay sau ngày hết hạn, khách không mất ngày nào.</span>
+            </div>
+            <div class="alert-banner warn" id="shPhoto" hidden>
+              <i class="fa-solid fa-camera"></i>
+              <span><b>Khách chưa có ảnh check-in.</b> Chụp ảnh trước khi kết đơn, trừ khi bán vé ngày.</span>
+              <button class="btn btn-outline btn-sm" type="button" id="shCam">Chụp ảnh</button>
+            </div>
+          </section>
+
+          <section class="panel">
+            <div class="panel-head"><h2>2 · Gói tập</h2></div>
+            <div class="pick-list pick-grid" id="shPkg">
+              <label class="pick-row" data-price="80000" data-day="1">
+                <input type="radio" name="shpkg" value="P-DAY" data-name="Gói Ngày">
+                <span class="pick-body">
+                  <b>Gói Ngày</b>
+                  <small>1 ngày · Vào một lượt, không cần ảnh check-in</small>
+                </span>
+                <b class="tabular">80.000đ</b>
+              </label>
+              <label class="pick-row" data-price="600000" data-day="0">
+                <input type="radio" name="shpkg" value="P-1M" data-name="Gói 1 Tháng">
+                <span class="pick-body">
+                  <b>Gói 1 Tháng</b>
+                  <small>30 ngày</small>
+                </span>
+                <b class="tabular">600.000đ</b>
+              </label>
+              <label class="pick-row" data-price="1650000" data-day="0">
+                <input type="radio" name="shpkg" value="P-3M" data-name="Gói 3 Tháng">
+                <span class="pick-body">
+                  <b>Gói 3 Tháng</b>
+                  <small>90 ngày · Tiết kiệm 150.000đ</small>
+                </span>
+                <b class="tabular">1.650.000đ</b>
+              </label>
+              <label class="pick-row" data-price="3100000" data-day="0">
+                <input type="radio" name="shpkg" value="P-6M" data-name="Gói 6 Tháng">
+                <span class="pick-body">
+                  <b>Gói 6 Tháng</b>
+                  <small>180 ngày · Tiết kiệm 500.000đ</small>
+                </span>
+                <b class="tabular">3.100.000đ</b>
+              </label>
+              <label class="pick-row" data-price="4400000" data-day="0">
+                <input type="radio" name="shpkg" value="P-9M" data-name="Gói 9 Tháng">
+                <span class="pick-body">
+                  <b>Gói 9 Tháng</b>
+                  <small>270 ngày · Tiết kiệm 1.000.000đ</small>
+                </span>
+                <b class="tabular">4.400.000đ</b>
+              </label>
+              <label class="pick-row" data-price="5600000" data-day="0">
+                <input type="radio" name="shpkg" value="P-12M" data-name="Gói 12 Tháng">
+                <span class="pick-body">
+                  <b>Gói 12 Tháng</b>
+                  <small>365 ngày · Tiết kiệm 1.600.000đ</small>
+                </span>
+                <b class="tabular">5.600.000đ</b>
+              </label>
+            </div>
+          </section>
+
+          <section class="panel">
+            <div class="panel-head"><h2>3 · Voucher</h2><span class="muted">Mỗi đơn dùng tối đa một mã</span></div>
+            <form id="shVcForm" class="toolbar" novalidate>
+              <div class="search no-icon">
+                <input id="shVc" type="text" placeholder="Nhập mã, ví dụ CHAOBAN10" aria-label="Mã voucher">
+              </div>
+              <button class="btn btn-ghost" type="submit">Áp dụng</button>
+            </form>
+            <span class="field-error" id="shVcErr" hidden></span>
+            <div class="vc-chip" id="shVcOk" hidden>
+              <i class="fa-solid fa-ticket"></i>
+              <span><b data-vc-code></b> — <span data-vc-desc></span></span>
+              <button class="btn btn-link" type="button" id="shVcDrop">Gỡ</button>
+            </div>
+            <div class="vc-hints">
+              <button class="btn btn-ghost btn-sm" type="button" data-vc="CHAOBAN10"><span class="tabular">CHAOBAN10</span><span>Giảm 10%, đơn từ 500.000đ</span></button>
+              <button class="btn btn-ghost btn-sm" type="button" data-vc="THANG9"><span class="tabular">THANG9</span><span>Giảm 15%, đơn từ 1.500.000đ</span></button>
+              <button class="btn btn-ghost btn-sm" type="button" data-vc="HETHAN"><span class="tabular">HETHAN</span><span>Đã hết hạn 31/08/2026</span></button>
+              <button class="btn btn-ghost btn-sm" type="button" data-vc="DUNGROI"><span class="tabular">DUNGROI</span><span>Khách đã dùng mã này</span></button>
+            </div>
+          </section>
+
+          <section class="panel">
+            <div class="panel-head"><h2>4 · Thanh toán</h2></div>
+            <div class="pt-picker">
+              <label class="pt-option"><input type="radio" name="shpay" value="cash" checked>
+                <span class="pt-body"><b>Tiền mặt</b><small>Ghi vào ca, đối chiếu khi chốt</small></span></label>
+              <label class="pt-option"><input type="radio" name="shpay" value="bank">
+                <span class="pt-body"><b>Chuyển khoản</b><small>Xác nhận biến động số dư rồi mới kết đơn</small></span></label>
+            </div>
+          </section>
+
+        </div>
+
+        <aside class="col-side">
+          <div class="side-card sticky">
+            <span class="section-label">Đơn hàng</span>
+            <dl class="sum-list" id="shSum">
+              <div><dt>Khách</dt><dd data-sum-cust>—</dd></div>
+              <div><dt>Gói</dt><dd data-sum-pkg>—</dd></div>
+              <div><dt>Giá gói</dt><dd class="tabular" data-sum-sub>0đ</dd></div>
+              <div data-sum-discount-row hidden><dt>Giảm giá</dt><dd class="tabular" data-sum-discount>0đ</dd></div>
+              <div class="sum-sub"><dt>Giá chưa VAT</dt><dd class="tabular" data-sum-net>0đ</dd></div>
+              <div class="sum-sub"><dt>VAT 8% (đã gồm)</dt><dd class="tabular" data-sum-vat>0đ</dd></div>
+              <div class="sum-total"><dt>Tổng thu</dt><dd class="tabular" data-sum-total>0đ</dd></div>
+            </dl>
+            <button class="btn btn-primary btn-block" type="button" id="shPay" disabled>Kết đơn</button>
+            <p class="muted" id="shBlock" hidden></p>
+          </div>
+        </aside>
+      </div>
+    </main>
+  </div>
+</div>
+
+<script src="../app.js"></script>
+<script src="../kh/customer.js"></script>
+<script src="ban-hang.js"></script>
+</body>
+</html>

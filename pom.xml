@@ -1,0 +1,149 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!--
+    pom.xml — GYM MANAGEMENT SYSTEM (GMS) · SWP391 · Nhóm G5
+
+    Nguồn chuẩn cho TOÀN BỘ thư viện của dự án (agents.md Phần 1, codeImplementationBackend.md Mục 9).
+    Clone về là build được ngay, không ai phải tự add .jar bằng tay.
+
+    Môi trường chạy:
+    - JDK 17 (build bằng JDK 17 hoặc mới hơn đều được, bytecode luôn ra Java 17)
+    - Apache Tomcat 10.1.x (Jakarta EE 10: Servlet 6.0, JSP 3.1) — dùng package jakarta.*, KHÔNG dùng javax.*
+    - SQL Server 2019+
+
+    Quy tắc sửa file này (codeImplementationBackend.md Mục 9.3):
+    - Chỉ Leader thêm/sửa dependency, để 5 người không bị lệch version.
+    - Luôn ghi version cụ thể, cấm LATEST/RELEASE.
+    - Thêm xong phải chạy lại: mvn clean package
+-->
+<project xmlns="http://maven.apache.org/POM/4.0.0"
+         xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+         xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 https://maven.apache.org/xsd/maven-4.0.0.xsd">
+    <modelVersion>4.0.0</modelVersion>
+
+    <groupId>com.gms</groupId>
+    <artifactId>gym-management-system</artifactId>
+    <version>1.0-SNAPSHOT</version>
+    <packaging>war</packaging>
+    <name>Gym Management System</name>
+
+    <properties>
+        <!-- Phiên bản Java dùng chung cả project — không tự ý đổi -->
+        <maven.compiler.release>17</maven.compiler.release>
+        <!-- Bắt buộc UTF-8 để không lỗi font tiếng Việt -->
+        <project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
+        <project.reporting.outputEncoding>UTF-8</project.reporting.outputEncoding>
+    </properties>
+
+    <dependencies>
+        <!-- ===== Nền tảng Web (Tomcat 10.1) ===== -->
+
+        <!-- Servlet API 6.0. scope provided: Tomcat đã có sẵn lúc chạy, không đóng gói vào .war.
+             Nếu máy dùng Tomcat 10.0.x (Servlet 5.0) thì đổi version thành 5.0.0 -->
+        <dependency>
+            <groupId>jakarta.servlet</groupId>
+            <artifactId>jakarta.servlet-api</artifactId>
+            <version>6.0.0</version>
+            <scope>provided</scope>
+        </dependency>
+
+        <!-- JSTL 3.0 cho JSP (c:if, c:forEach, c:out, fmt:...). Tomcat KHÔNG có sẵn nên phải đóng gói kèm.
+             Khai báo trong JSP: <%@ taglib prefix="c" uri="jakarta.tags.core" %> -->
+        <dependency>
+            <groupId>jakarta.servlet.jsp.jstl</groupId>
+            <artifactId>jakarta.servlet.jsp.jstl-api</artifactId>
+            <version>3.0.0</version>
+        </dependency>
+        <dependency>
+            <groupId>org.glassfish.web</groupId>
+            <artifactId>jakarta.servlet.jsp.jstl</artifactId>
+            <version>3.0.1</version>
+        </dependency>
+
+        <!-- ===== Database ===== -->
+
+        <!-- Driver kết nối SQL Server (bản cho Java 11+) -->
+        <dependency>
+            <groupId>com.microsoft.sqlserver</groupId>
+            <artifactId>mssql-jdbc</artifactId>
+            <version>13.4.0.jre11</version>
+        </dependency>
+
+        <!-- ===== Bảo mật ===== -->
+
+        <!-- BCrypt hash mật khẩu (agents.md Phần 1 — bắt buộc) -->
+        <dependency>
+            <groupId>org.mindrot</groupId>
+            <artifactId>jbcrypt</artifactId>
+            <version>0.4</version>
+        </dependency>
+
+        <!-- ===== AJAX / JSON ===== -->
+
+        <!-- Gson: chuyển object Java <-> JSON cho các Servlet trả dữ liệu AJAX (dùng qua util/JsonUtil) -->
+        <dependency>
+            <groupId>com.google.code.gson</groupId>
+            <artifactId>gson</artifactId>
+            <version>2.11.0</version>
+        </dependency>
+
+        <!-- ===== Tích hợp bên thứ 3 ===== -->
+
+        <!-- Jakarta Mail (bản cài đặt Eclipse Angus): gửi email mã xác thực qua SMTP Gmail — SRS API-03.
+             Tự kéo theo jakarta.mail-api + jakarta.activation, không cần khai báo thêm.
+             VNPay (API-01, API-02) KHÔNG cần thư viện: chỉ là HTTP redirect + HMAC-SHA512 có sẵn trong JDK -->
+        <dependency>
+            <groupId>org.eclipse.angus</groupId>
+            <artifactId>angus-mail</artifactId>
+            <version>2.0.3</version>
+        </dependency>
+
+        <!-- ===== Xuất file ===== -->
+
+        <!-- Apache POI: xuất Excel .xlsx — SRS 7.4.2 "Export filtered records to Excel" (màn System-wide Transactions).
+             Báo cáo 12.1.x chỉ cần CSV, tự ghi bằng Java, không cần thư viện -->
+        <dependency>
+            <groupId>org.apache.poi</groupId>
+            <artifactId>poi-ooxml</artifactId>
+            <version>5.3.0</version>
+        </dependency>
+
+        <!-- ===== Test ===== -->
+
+        <!-- JUnit 5: test các hàm thuần trong util/ và phần ký số VNPay. scope test: không vào .war -->
+        <dependency>
+            <groupId>org.junit.jupiter</groupId>
+            <artifactId>junit-jupiter</artifactId>
+            <version>5.11.0</version>
+            <scope>test</scope>
+        </dependency>
+    </dependencies>
+
+    <build>
+        <!-- Tên file build ra: target/gms.war → deploy lên Tomcat có context path là /gms -->
+        <finalName>gms</finalName>
+
+        <plugins>
+            <plugin>
+                <groupId>org.apache.maven.plugins</groupId>
+                <artifactId>maven-compiler-plugin</artifactId>
+                <version>3.13.0</version>
+                <configuration>
+                    <release>17</release>
+                    <encoding>UTF-8</encoding>
+                </configuration>
+            </plugin>
+
+            <plugin>
+                <groupId>org.apache.maven.plugins</groupId>
+                <artifactId>maven-war-plugin</artifactId>
+                <version>3.4.0</version>
+            </plugin>
+
+            <plugin>
+                <groupId>org.apache.maven.plugins</groupId>
+                <artifactId>maven-surefire-plugin</artifactId>
+                <version>3.5.0</version>
+            </plugin>
+        </plugins>
+    </build>
+</project>

@@ -1,0 +1,162 @@
+﻿<!DOCTYPE html>
+<html lang="vi">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
+<title>Nghỉ phép — Super Gym Lễ tân</title>
+<meta name="robots" content="noindex">
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Montserrat:wght@600;700;800&family=Inter:wght@400;500;600;700&display=swap">
+<script src="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/7.3.1/js/all.min.js" crossorigin="anonymous"></script>
+<link rel="stylesheet" href="../style.css">
+<link rel="stylesheet" href="../customer.css">
+</head>
+<body class="cust staff">
+<div id="toastRoot"></div>
+<div id="modalRoot"></div>
+
+<!-- 5.2.1 — Leave Request Form · L2 · UC-13 -->
+<div class="cust-shell" id="custShell">
+
+  <div class="cust-dock" id="custDock">
+    <aside class="cust-sidebar">
+      <a class="cust-brand" href="check-in.html">
+        <b>Super Gym</b><span>Lễ tân</span>
+      </a>
+      <nav class="cust-nav">
+        <h4>Tại quầy</h4>
+        <a href="check-in.html"><i class="fa-solid fa-door-open"></i>Check-in</a>
+        <a href="ban-hang.html"><i class="fa-solid fa-cart-shopping"></i>Bán hàng</a>
+        <a href="ban-goi-pt.html"><i class="fa-solid fa-user-check"></i>Bán gói PT</a>
+        <a href="ca-lam-viec.html"><i class="fa-solid fa-cash-register"></i>Ca làm việc</a>
+        <h4>Hội viên</h4>
+        <a href="hoi-vien.html"><i class="fa-solid fa-user-group"></i>Hồ sơ khách</a>
+        <a href="bao-luu.html"><i class="fa-solid fa-circle-pause"></i>Bảo lưu</a>
+        <h4>Cơ sở vật chất</h4>
+        <a href="co-so-vat-chat.html"><i class="fa-solid fa-boxes-stacked"></i>Danh mục</a>
+        <a href="bao-tri.html"><i class="fa-solid fa-screwdriver-wrench"></i>Yêu cầu bảo trì</a>
+        <h4>Cá nhân</h4>
+        <a href="nghi-phep.html" aria-current="page"><i class="fa-solid fa-plane-departure"></i>Nghỉ phép</a>
+        <a href="tai-khoan.html"><i class="fa-solid fa-user-gear"></i>Cài đặt tài khoản</a>
+      </nav>
+      <div class="cust-sidebar-foot">
+        <a href="../dang-nhap.html"><i class="fa-solid fa-arrow-right-from-bracket"></i>Đăng xuất</a>
+      </div>
+    </aside>
+    <button class="cust-handle" type="button" id="dockHandle"
+            aria-label="Mở menu điều hướng" aria-expanded="false" aria-controls="custDock">
+      <i class="fa-solid fa-chevron-right"></i>
+    </button>
+  </div>
+
+  <div class="cust-main">
+    <header class="cust-topbar">
+      <div>
+        <h1>Xin nghỉ phép</h1>
+      </div>
+      <div class="cust-topbar-actions">
+        <a class="badge badge-ok" href="ca-lam-viec.html" id="shiftChip"><i class="fa-solid fa-circle-check"></i> Ca chiều 20/09 đang mở</a>
+        <a class="cust-user" href="tai-khoan.html" title="Cài đặt tài khoản">
+          <span class="avatar">NH</span>
+          <span class="cust-user-text">
+            <b>Nguyễn Thị Hoa</b>
+            <span>Lễ tân · NV-0042</span>
+          </span>
+        </a>
+      </div>
+    </header>
+
+    <main class="cust-content">
+      <div class="split">
+        <div class="col-main">
+
+          <div class="alert-banner warn" id="clashBanner" hidden>
+            <i class="fa-solid fa-triangle-exclamation"></i>
+            <span>Bạn được xếp <b id="clashCount">0</b> ca trực trong ngày này. Quản lý phải tìm người thay trước khi duyệt đơn.</span>
+            <a class="btn btn-outline btn-sm" href="ca-lam-viec.html">Xem ca trực</a>
+          </div>
+
+          <section class="panel">
+            <form id="leaveForm" novalidate>
+              <div class="form-grid">
+                <label class="field">
+                  <span class="field-label">Loại nghỉ</span>
+                  <select id="leaveType">
+                    <option>Nghỉ phép năm</option>
+                    <option>Nghỉ ốm</option>
+                    <option>Nghỉ không lương</option>
+                  </select>
+                </label>
+                <label class="field">
+                  <span class="field-label">Ngày nghỉ</span>
+                  <input id="leaveDate" type="date" value="2026-09-25">
+                  <span class="field-error" id="leaveDateErr" hidden></span>
+                </label>
+              </div>
+              <label class="field">
+                <span class="field-label">Lý do</span>
+                <textarea id="leaveReason" rows="4" placeholder="Nêu ngắn gọn lý do nghỉ"></textarea>
+                <span class="field-error" id="leaveReasonErr" hidden></span>
+              </label>
+              <button class="btn btn-primary" type="submit" id="leaveSubmit">Nộp đơn</button>
+            </form>
+          </section>
+
+          <section class="panel">
+            <div class="panel-head"><h2>Đơn đã nộp</h2></div>
+            <div class="data-list">
+              <div class="data-row">
+                <div class="row-main">
+                  <div class="row-title">10/09/2026 <span class="badge badge-ok">Đã duyệt</span></div>
+                  <div class="row-meta">
+                    <span><i class="fa-solid fa-tag"></i> Nghỉ phép năm</span>
+                    <span><i class="fa-solid fa-quote-left"></i> Về quê giỗ họ</span>
+                  </div>
+                </div>
+              </div>
+              <div class="data-row">
+                <div class="row-main">
+                  <div class="row-title">26/08/2026 <span class="badge badge-ok">Đã duyệt</span></div>
+                  <div class="row-meta">
+                    <span><i class="fa-solid fa-tag"></i> Nghỉ ốm</span>
+                    <span><i class="fa-solid fa-quote-left"></i> Sốt cao, có giấy khám</span>
+                  </div>
+                </div>
+              </div>
+              <div class="data-row">
+                <div class="row-main">
+                  <div class="row-title">08/08/2026 <span class="badge badge-danger">Từ chối</span></div>
+                  <div class="row-meta">
+                    <span><i class="fa-solid fa-tag"></i> Nghỉ không lương</span>
+                    <span><i class="fa-solid fa-quote-left"></i> Trùng đợt khuyến mãi, quầy thiếu người</span>
+                  </div>
+                </div>
+              </div>
+            </div>
+          </section>
+
+        </div>
+
+        <aside class="col-side">
+          <div class="side-card">
+            <span class="section-label">Hạn nộp</span>
+            <div class="side-row"><span>Ngày nghỉ</span><b id="infoDate">25/09/2026</b></div>
+            <div class="side-row"><span>Chốt nộp</span><b id="infoDeadline">15:00 · 24/09</b></div>
+            <p class="muted" style="margin-top:var(--space-3)">Quá giờ chốt thì nghỉ đột xuất phải báo trực tiếp Quản lý, ngoài hệ thống.</p>
+          </div>
+          <div class="side-card">
+            <span class="section-label">Định biên quầy hôm đó</span>
+            <div class="side-row"><span>Lễ tân không nghỉ</span><b>2</b></div>
+            <div class="side-row"><span>Ca cần phủ</span><b>Sáng, Chiều</b></div>
+            <p class="muted" style="margin-top:var(--space-3)">Chỉ để tham khảo. Quyết định cuối thuộc về Quản lý.</p>
+          </div>
+        </aside>
+      </div>
+    </main>
+  </div>
+</div>
+
+<script src="../app.js"></script>
+<script src="../kh/customer.js"></script>
+<script src="nghi-phep.js"></script>
+</body>
+</html>
