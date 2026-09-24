@@ -279,8 +279,12 @@ public class BlogService {
             return "";
         }
 
-        // B1: chuyển nội dung HTML sang văn bản thuần
-        String plainText = stripHtml(content);
+        // B1: chuyển nội dung HTML sang văn bản thuần (ưu tiên bỏ tiêu đề h1-h6 để lấy đoạn văn)
+        String contentWithoutHeadings = content.replaceAll("(?is)<h[1-6][^>]*>.*?</h[1-6]>", " ");
+        String plainText = stripHtml(contentWithoutHeadings);
+        if (plainText.isEmpty()) {
+            plainText = stripHtml(content);
+        }
         if (plainText.isEmpty()) {
             return "";
         }
