@@ -54,6 +54,5 @@ public final class AppConstants {
     public static final int IMAGE_MAX_DIMENSION_PX = 2000;
 
     private AppConstants() {
-        //helloooooooooooo
-    }ads
+    }
 }
