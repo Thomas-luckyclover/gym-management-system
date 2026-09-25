@@ -1,22 +1,13 @@
-/*
- * Click nbfs://nbhost/SystemFileSystem/Templates/Licenses/license-default.txt to change this license
- * Click nbfs://nbhost/SystemFileSystem/Templates/Classes/Class.java to edit this template
- */
 package com.gms.entity;
 
-/**
- *
- * @author Le Cong Minh
- */
-
 import java.time.LocalDateTime;
-
 
 /**
  * Entity ánh xạ bảng SystemConfigs — 20 tham số P-01…P-20 lưu dạng key-value (agents.md Phần 13).
  * Không hard-code giá trị tham số ở nơi khác, luôn đọc qua SystemConfigService.
+ *
+ * @author Le Cong Minh
  */
-
 public class SystemConfig {
     private final int systemConfigId;
     private String configKey;
@@ -25,23 +16,16 @@ public class SystemConfig {
     private LocalDateTime updatedAt;
     private Integer updatedByEmployeeId;
 
-    
     /**
-    * @param systemConfigId id định danh (khóa chính, bất biến)
-    */
-    
-    
-    
+     * @param systemConfigId id định danh (khóa chính, bất biến)
+     */
     public SystemConfig(int systemConfigId) {
         this.systemConfigId = systemConfigId;
     }
-    
-    
-    
-    
+
     // ===== Getter/Setter =====
 
-    
+
     public int getSystemConfigId() {
         return systemConfigId;
     }
@@ -85,12 +69,4 @@ public class SystemConfig {
     public void setUpdatedByEmployeeId(Integer updatedByEmployeeId) {
         this.updatedByEmployeeId = updatedByEmployeeId;
     }
-
-    
-    
-    
-    
-    
-    
-    
 }
