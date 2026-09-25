@@ -1,6 +1,5 @@
 package com.gms.service;
 
-import com.gms.constant.AppConstants;
 import com.gms.constant.Messages;
 import com.gms.constant.Role;
 import com.gms.dao.AccountDAO;
@@ -15,8 +14,6 @@ import com.gms.listener.SessionRegistryListener;
 import com.gms.util.PasswordUtil;
 import com.gms.util.ValidationUtil;
 import java.sql.SQLException;
-import java.util.LinkedHashMap;
-import java.util.Map;
 
 /**
  * Nghiệp vụ Account Settings - UC-04.
@@ -33,6 +30,13 @@ public class AccountSettingsService {
         employeeDAO = new EmployeeDAO();
     }
 
+    /**
+     * Lấy thông tin tài khoản và hồ sơ của người dùng hiện tại.
+     *
+     * @param accountId id tài khoản đang đăng nhập
+     * @param sessionRole vai trò lưu trong session
+     * @return dữ liệu Account Settings
+     */
     public ServiceResult<AccountSettingsView> getAccountSettings(
             int accountId,
             Role sessionRole
@@ -50,8 +54,9 @@ public class AccountSettingsService {
                 return ServiceResult.fail(message);
             }
 
-            Person person
-                    = personDAO.findById(account.getPersonId());
+            Person person = personDAO.findById(
+                    account.getPersonId()
+            );
 
             if (person == null) {
                 String message = String.format(
@@ -64,8 +69,8 @@ public class AccountSettingsService {
 
             Employee employee = null;
 
-            boolean isCustomer
-                    = sessionRole == Role.CUSTOMER;
+            boolean isCustomer =
+                    sessionRole == Role.CUSTOMER;
 
             if (!isCustomer) {
                 employee = employeeDAO.findByPersonId(
@@ -73,13 +78,13 @@ public class AccountSettingsService {
                 );
             }
 
-            String employeeCode
-                    = employee == null
-                    ? null
-                    : employee.getEmployeeCode();
+            String employeeCode =
+                    employee == null
+                            ? null
+                            : employee.getEmployeeCode();
 
-            AccountSettingsView view
-                    = new AccountSettingsView(
+            AccountSettingsView view =
+                    new AccountSettingsView(
                             account.getAccountId(),
                             person.getPersonId(),
                             person.getFullName(),
@@ -95,103 +100,160 @@ public class AccountSettingsService {
 
         } catch (SQLException e) {
             e.printStackTrace();
+
             return ServiceResult.fail(
                     Messages.MSG04_SYSTEM_BUSY
             );
         }
     }
 
+    /**
+     * Đổi mật khẩu cho chính tài khoản đang đăng nhập.
+     *
+     * Thứ tự kiểm tra:
+     * 1. Mật khẩu hiện tại có được nhập.
+     * 2. Mật khẩu hiện tại phải đúng.
+     * 3. Mật khẩu mới phải đúng định dạng.
+     * 4. Mật khẩu mới phải khác mật khẩu hiện tại.
+     * 5. Xác nhận mật khẩu phải khớp.
+     * 6. Cập nhật mật khẩu và đăng xuất các phiên khác.
+     *
+     * @param accountId id tài khoản hiện tại
+     * @param currentPassword mật khẩu hiện tại
+     * @param newPassword mật khẩu mới
+     * @param confirmPassword xác nhận mật khẩu mới
+     * @param currentSessionId id phiên hiện tại cần giữ lại
+     * @return kết quả đổi mật khẩu
+     */
     public ServiceResult<Void> changePassword(
             int accountId,
-            String currentSessionId,
             String currentPassword,
             String newPassword,
-            String confirmPassword
+            String confirmPassword,
+            String currentSessionId
     ) {
 
-        Map<String, String> fieldErrors
-                = validatePasswordForm(
-                        currentPassword,
-                        newPassword,
-                        confirmPassword
-                );
-
-        if (!fieldErrors.isEmpty()) {
-            return ServiceResult.failFields(fieldErrors);
+        // B1: Bắt buộc nhập mật khẩu hiện tại
+        if (ValidationUtil.isNullOrEmpty(
+                currentPassword
+        )) {
+            return ServiceResult.failField(
+                    "currentPassword",
+                    "Vui lòng nhập mật khẩu hiện tại."
+            );
         }
 
         try {
-            Account account = accountDAO.findById(accountId);
+            Account account =
+                    accountDAO.findById(accountId);
 
             if (account == null) {
-                String message = String.format(
-                        Messages.MSG08_NOT_FOUND,
-                        "tài khoản"
-                );
-
-                return ServiceResult.fail(message);
-            }
-
-            String oldPasswordHash
-                    = account.getPasswordHash();
-
-            if (oldPasswordHash == null) {
                 return ServiceResult.fail(
-                        Messages.MSG38_NO_PASSWORD_YET
+                        "Không tìm thấy tài khoản."
                 );
             }
 
-            boolean currentPasswordCorrect
-                    = PasswordUtil.checkPassword(
+            // B2: Kiểm tra mật khẩu hiện tại trước tiên
+            boolean isCurrentPasswordCorrect =
+                    PasswordUtil.checkPassword(
                             currentPassword,
-                            oldPasswordHash
+                            account.getPasswordHash()
                     );
 
-            if (!currentPasswordCorrect) {
+            if (!isCurrentPasswordCorrect) {
                 return ServiceResult.failField(
                         "currentPassword",
-                        Messages.MSG34_WRONG_CREDENTIALS_STAFF
+                        "Mật khẩu hiện tại không đúng."
                 );
             }
 
-            boolean sameAsOldPassword
-                    = PasswordUtil.checkPassword(
-                            newPassword,
-                            oldPasswordHash
-                    );
-
-            if (sameAsOldPassword) {
+            // B3: Chỉ kiểm tra mật khẩu mới
+            // sau khi mật khẩu hiện tại đã đúng
+            if (ValidationUtil.isNullOrEmpty(
+                    newPassword
+            )) {
                 return ServiceResult.failField(
                         "newPassword",
-                        Messages.MSG48_PASSWORD_SAME_AS_OLD
+                        "Vui lòng nhập mật khẩu mới."
                 );
             }
 
-            String newPasswordHash
-                    = PasswordUtil.hashPassword(newPassword);
+            boolean isNewPasswordValid =
+                    ValidationUtil.isValidPassword(
+                            newPassword
+                    );
 
-            boolean updated
-                    = accountDAO.updatePasswordHash(
+            if (!isNewPasswordValid) {
+                return ServiceResult.failField(
+                        "newPassword",
+                        "Mật khẩu phải từ 8–64 ký tự và có ít nhất 1 chữ cái, 1 chữ số."
+                );
+            }
+
+            // B4: Mật khẩu mới không được giống mật khẩu cũ
+            boolean isSameAsCurrentPassword =
+                    PasswordUtil.checkPassword(
+                            newPassword,
+                            account.getPasswordHash()
+                    );
+
+            if (isSameAsCurrentPassword) {
+                return ServiceResult.failField(
+                        "newPassword",
+                        "Mật khẩu mới phải khác mật khẩu hiện tại."
+                );
+            }
+
+            // B5: Bắt buộc nhập xác nhận mật khẩu
+            if (ValidationUtil.isNullOrEmpty(
+                    confirmPassword
+            )) {
+                return ServiceResult.failField(
+                        "confirmPassword",
+                        "Vui lòng xác nhận mật khẩu mới."
+                );
+            }
+
+            // B6: Xác nhận phải khớp mật khẩu mới
+            boolean isPasswordMatched =
+                    newPassword.equals(
+                            confirmPassword
+                    );
+
+            if (!isPasswordMatched) {
+                return ServiceResult.failField(
+                        "confirmPassword",
+                        "Mật khẩu xác nhận không khớp."
+                );
+            }
+
+            // B7: Hash mật khẩu mới
+            String newPasswordHash =
+                    PasswordUtil.hashPassword(
+                            newPassword
+                    );
+
+            boolean isUpdated =
+                    accountDAO.updatePasswordHash(
                             accountId,
                             newPasswordHash
                     );
 
-            if (!updated) {
+            if (!isUpdated) {
                 return ServiceResult.fail(
-                        Messages.MSG04_SYSTEM_BUSY
+                        "Không thể cập nhật mật khẩu."
                 );
             }
 
+            // B8: Đăng xuất tất cả phiên khác,
+            // giữ lại phiên hiện tại
             SessionRegistryListener
                     .invalidateSessionsOfAccount(
                             accountId,
                             currentSessionId
                     );
 
-            return ServiceResult.ok(
-                    null,
-                    Messages.MSG49_PASSWORD_CHANGED
-            );
+            return ServiceResult.ok(null);
 
         } catch (SQLException e) {
             e.printStackTrace();
@@ -200,77 +262,5 @@ public class AccountSettingsService {
                     Messages.MSG04_SYSTEM_BUSY
             );
         }
-    }
-
-    private Map<String, String> validatePasswordForm(
-            String currentPassword,
-            String newPassword,
-            String confirmPassword
-    ) {
-
-        Map<String, String> errors
-                = new LinkedHashMap<>();
-
-        if (ValidationUtil.isNullOrEmpty(
-                currentPassword
-        )) {
-
-            errors.put(
-                    "currentPassword",
-                    String.format(
-                            Messages.MSG09_REQUIRED,
-                            "Mật khẩu hiện tại"
-                    )
-            );
-        }
-
-        if (ValidationUtil.isNullOrEmpty(newPassword)) {
-
-            errors.put(
-                    "newPassword",
-                    String.format(
-                            Messages.MSG09_REQUIRED,
-                            "Mật khẩu mới"
-                    )
-            );
-
-        } else if (!ValidationUtil.isValidPassword(
-                newPassword
-        )) {
-
-            errors.put(
-                    "newPassword",
-                    String.format(
-                            Messages.EXTRA_PASSWORD_RULE,
-                            AppConstants.PASSWORD_MIN_LENGTH,
-                            AppConstants.PASSWORD_MAX_LENGTH
-                    )
-            );
-        }
-
-        if (ValidationUtil.isNullOrEmpty(
-                confirmPassword
-        )) {
-
-            errors.put(
-                    "confirmPassword",
-                    String.format(
-                            Messages.MSG09_REQUIRED,
-                            "Xác nhận mật khẩu"
-                    )
-            );
-
-        } else if (newPassword != null
-                && !newPassword.equals(
-                        confirmPassword
-                )) {
-
-            errors.put(
-                    "confirmPassword",
-                    Messages.MSG47_PASSWORD_MISMATCH
-            );
-        }
-
-        return errors;
     }
 }
