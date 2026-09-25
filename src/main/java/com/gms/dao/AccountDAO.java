@@ -14,11 +14,13 @@ import java.time.LocalDateTime;
  * Data Access Object (DAO) cho bảng Accounts.
  * Thao tác trực tiếp với cơ sở dữ liệu SQL Server, không chứa logic nghiệp vụ.
  *
- * <p>Quy tắc:</p>
+ * <p>
+ * Quy tắc:
+ * </p>
  * <ul>
- *   <li>Sử dụng PreparedStatement, không nối chuỗi SQL.</li>
- *   <li>Khai báo throws SQLException để tầng Service xử lý.</li>
- *   <li>Hỗ trợ phương thức nhận Connection từ ngoài để phục vụ Transaction.</li>
+ * <li>Sử dụng PreparedStatement, không nối chuỗi SQL.</li>
+ * <li>Khai báo throws SQLException để tầng Service xử lý.</li>
+ * <li>Hỗ trợ phương thức nhận Connection từ ngoài để phục vụ Transaction.</li>
  * </ul>
  */
 public class AccountDAO {
@@ -27,6 +29,7 @@ public class AccountDAO {
 
     /**
      * Tìm tài khoản theo Email của người dùng (JOIN với bảng Persons).
+     * 
      * @param email Email đăng ký của tài khoản
      * @return Account tương ứng hoặc null nếu không tìm thấy
      * @throws SQLException khi có lỗi kết nối hoặc truy vấn SQL
@@ -61,6 +64,7 @@ public class AccountDAO {
 
     /**
      * Tìm tài khoản theo Số điện thoại của người dùng (JOIN với bảng Persons).
+     * 
      * @param phone Số điện thoại đăng ký
      * @return Account tương ứng hoặc null nếu không tìm thấy
      * @throws SQLException khi có lỗi kết nối hoặc truy vấn SQL
@@ -72,7 +76,8 @@ public class AccountDAO {
     }
 
     /**
-     * Tìm tài khoản theo Số điện thoại dùng Connection có sẵn (dùng trong Transaction).
+     * Tìm tài khoản theo Số điện thoại dùng Connection có sẵn (dùng trong
+     * Transaction).
      */
     public Account findByPhone(Connection conn, String phone) throws SQLException {
         String sql = """
@@ -95,6 +100,7 @@ public class AccountDAO {
 
     /**
      * Tìm tài khoản theo AccountId (khóa chính).
+     * 
      * @param accountId ID của tài khoản
      * @return Account tương ứng hoặc null nếu không tìm thấy
      * @throws SQLException khi có lỗi kết nối hoặc truy vấn SQL
@@ -130,7 +136,8 @@ public class AccountDAO {
 
     /**
      * Cập nhật mật khẩu mới (đã hash BCrypt) cho tài khoản.
-     * @param accountId ID của tài khoản cần đổi mật khẩu
+     * 
+     * @param accountId       ID của tài khoản cần đổi mật khẩu
      * @param newPasswordHash Chuỗi hash mật khẩu mới
      * @return true nếu cập nhật thành công, false nếu không tìm thấy accountId
      * @throws SQLException khi có lỗi SQL
@@ -160,6 +167,7 @@ public class AccountDAO {
 
     /**
      * Tăng số lần đăng nhập sai liên tiếp lên 1 (phục vụ BR-01).
+     * 
      * @param accountId ID tài khoản nhập sai mật khẩu
      * @return true nếu cập nhật thành công
      * @throws SQLException khi có lỗi SQL
@@ -187,7 +195,9 @@ public class AccountDAO {
     }
 
     /**
-     * Đặt lại số lần đăng nhập sai về 0 và xóa thời điểm khóa tạm (khi đăng nhập thành công hoặc hết hạn khóa theo BR-02).
+     * Đặt lại số lần đăng nhập sai về 0 và xóa thời điểm khóa tạm (khi đăng nhập
+     * thành công hoặc hết hạn khóa theo BR-02).
+     * 
      * @param accountId ID tài khoản cần reset
      * @return true nếu cập nhật thành công
      * @throws SQLException khi có lỗi SQL
@@ -216,9 +226,11 @@ public class AccountDAO {
     }
 
     /**
-     * Đặt thời gian khóa tạm thời cho tài khoản do nhập sai quá số lần quy định (BR-01, P-17, P-18).
+     * Đặt thời gian khóa tạm thời cho tài khoản do nhập sai quá số lần quy định
+     * (BR-01, P-17, P-18).
      * Lưu ý: Không thay đổi cột Status (LockedUntil chỉ dùng cho khóa tạm).
-     * @param accountId ID tài khoản bị khóa
+     * 
+     * @param accountId   ID tài khoản bị khóa
      * @param lockedUntil Thời điểm kết thúc khóa tạm
      * @return true nếu cập nhật thành công
      * @throws SQLException khi có lỗi SQL
@@ -247,8 +259,10 @@ public class AccountDAO {
     }
 
     /**
-     * Cập nhật thời điểm đăng nhập gần nhất (LastLoginAt) khi người dùng đăng nhập thành công.
-     * @param accountId ID tài khoản đăng nhập
+     * Cập nhật thời điểm đăng nhập gần nhất (LastLoginAt) khi người dùng đăng nhập
+     * thành công.
+     * 
+     * @param accountId   ID tài khoản đăng nhập
      * @param lastLoginAt Thời điểm đăng nhập
      * @return true nếu cập nhật thành công
      * @throws SQLException khi có lỗi SQL
@@ -297,6 +311,7 @@ public class AccountDAO {
         Timestamp createdAtTs = rs.getTimestamp("CreatedAt");
         LocalDateTime createdAt = createdAtTs != null ? createdAtTs.toLocalDateTime() : null;
 
-        return new Account(accountId, personId, passwordHash, status, failedLoginCount, lockedUntil, lastLoginAt, createdAt);
+        return new Account(accountId, personId, passwordHash, status, failedLoginCount, lockedUntil, lastLoginAt,
+                createdAt);
     }
 }

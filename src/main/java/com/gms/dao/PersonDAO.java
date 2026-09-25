@@ -19,7 +19,8 @@ public class PersonDAO {
 
     /**
      * Thêm mới một Person trong transaction dùng chung Connection.
-     * @param conn Connection tham gia transaction
+     * 
+     * @param conn   Connection tham gia transaction
      * @param person đối tượng Person cần chèn
      * @return PersonId tự sinh trong database
      * @throws SQLException khi truy vấn gặp lỗi
@@ -59,6 +60,7 @@ public class PersonDAO {
 
     /**
      * Thêm mới một Person dùng Connection riêng lẻ ngoài transaction.
+     * 
      * @param person đối tượng Person cần chèn
      * @return PersonId tự sinh trong database
      * @throws SQLException khi truy vấn gặp lỗi
@@ -72,8 +74,10 @@ public class PersonDAO {
     // ===== Cập nhật =====
 
     /**
-     * Cập nhật thông tin cơ bản của Person (họ tên, ngày sinh, avatar) trong transaction.
-     * @param conn Connection tham gia transaction
+     * Cập nhật thông tin cơ bản của Person (họ tên, ngày sinh, avatar) trong
+     * transaction.
+     * 
+     * @param conn   Connection tham gia transaction
      * @param person đối tượng Person chứa dữ liệu mới
      * @throws SQLException khi truy vấn gặp lỗi
      */
@@ -94,6 +98,7 @@ public class PersonDAO {
 
     /**
      * Tìm Person theo PersonId.
+     * 
      * @param personId khóa chính của Person
      * @return đối tượng Person hoặc null nếu không tồn tại
      * @throws SQLException khi truy vấn gặp lỗi
@@ -103,7 +108,7 @@ public class PersonDAO {
                 + "FROM Persons WHERE PersonId = ?";
 
         try (Connection conn = DBContext.getConnection();
-             PreparedStatement stmt = conn.prepareStatement(sql)) {
+                PreparedStatement stmt = conn.prepareStatement(sql)) {
             stmt.setInt(1, personId);
 
             try (ResultSet rs = stmt.executeQuery()) {
@@ -117,6 +122,7 @@ public class PersonDAO {
 
     /**
      * Tìm Person đang hoạt động (IsReleased = 0) theo số điện thoại.
+     * 
      * @param phone số điện thoại 10 chữ số
      * @return đối tượng Person hoặc null nếu không tìm thấy
      * @throws SQLException khi truy vấn gặp lỗi
@@ -126,7 +132,7 @@ public class PersonDAO {
                 + "FROM Persons WHERE Phone = ? AND IsReleased = 0";
 
         try (Connection conn = DBContext.getConnection();
-             PreparedStatement stmt = conn.prepareStatement(sql)) {
+                PreparedStatement stmt = conn.prepareStatement(sql)) {
             stmt.setString(1, phone);
 
             try (ResultSet rs = stmt.executeQuery()) {
@@ -140,6 +146,7 @@ public class PersonDAO {
 
     /**
      * Tìm Person đang hoạt động (IsReleased = 0) theo địa chỉ email.
+     * 
      * @param email địa chỉ email
      * @return đối tượng Person hoặc null nếu không tìm thấy
      * @throws SQLException khi truy vấn gặp lỗi
@@ -149,7 +156,7 @@ public class PersonDAO {
                 + "FROM Persons WHERE Email = ? AND IsReleased = 0";
 
         try (Connection conn = DBContext.getConnection();
-             PreparedStatement stmt = conn.prepareStatement(sql)) {
+                PreparedStatement stmt = conn.prepareStatement(sql)) {
             stmt.setString(1, email);
 
             try (ResultSet rs = stmt.executeQuery()) {
@@ -165,6 +172,7 @@ public class PersonDAO {
 
     /**
      * Kiểm tra số điện thoại có đang tồn tại ở hồ sơ active không (DBR-22).
+     * 
      * @param phone số điện thoại cần kiểm tra
      * @return true nếu đã có người khác đang sử dụng
      * @throws SQLException khi truy vấn gặp lỗi
@@ -173,7 +181,7 @@ public class PersonDAO {
         String sql = "SELECT 1 FROM Persons WHERE Phone = ? AND IsReleased = 0";
 
         try (Connection conn = DBContext.getConnection();
-             PreparedStatement stmt = conn.prepareStatement(sql)) {
+                PreparedStatement stmt = conn.prepareStatement(sql)) {
             stmt.setString(1, phone);
 
             try (ResultSet rs = stmt.executeQuery()) {
@@ -184,6 +192,7 @@ public class PersonDAO {
 
     /**
      * Kiểm tra email có đang tồn tại ở hồ sơ active không (DBR-23).
+     * 
      * @param email địa chỉ email cần kiểm tra
      * @return true nếu đã có người khác đang sử dụng
      * @throws SQLException khi truy vấn gặp lỗi
@@ -192,7 +201,7 @@ public class PersonDAO {
         String sql = "SELECT 1 FROM Persons WHERE Email = ? AND IsReleased = 0";
 
         try (Connection conn = DBContext.getConnection();
-             PreparedStatement stmt = conn.prepareStatement(sql)) {
+                PreparedStatement stmt = conn.prepareStatement(sql)) {
             stmt.setString(1, email);
 
             try (ResultSet rs = stmt.executeQuery()) {

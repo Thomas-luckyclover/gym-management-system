@@ -28,7 +28,8 @@ public class Person {
         this.email = email;
     }
 
-    public Person(int personId, String fullName, LocalDate dateOfBirth, String phone, String email, String avatar, boolean isReleased, LocalDateTime createdAt) {
+    public Person(int personId, String fullName, LocalDate dateOfBirth, String phone, String email, String avatar,
+            boolean isReleased, LocalDateTime createdAt) {
         this.personId = personId;
         this.fullName = fullName;
         this.dateOfBirth = dateOfBirth;
@@ -103,4 +104,3 @@ public class Person {
         this.createdAt = createdAt;
     }
 }
-
