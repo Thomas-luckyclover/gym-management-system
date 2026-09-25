@@ -11,7 +11,7 @@
 # encrypt=false: SQL Server cài trên máy cá nhân thường không có chứng chỉ SSL
 db.url=jdbc:sqlserver://localhost:1433;databaseName=GMS;encrypt=false;trustServerCertificate=true
 db.username=sa
-db.password=DOI_THANH_MAT_KHAU_SA_CUA_BAN
+db.password=sa
 
 # ===== Email Gateway — SMTP Gmail (SRS API-03) =====
 # mail.app-password là "App Password" 16 ký tự tạo trong Google Account, KHÔNG phải mật khẩu Gmail
@@ -28,7 +28,7 @@ vnpay.tmn-code=XXXXXXXX
 vnpay.hash-secret=XXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXX
 vnpay.pay-url=https://sandbox.vnpayment.vn/paymentv2/vpcpay.html
 # Trang trình duyệt quay về sau khi thanh toán (chỉ hiển thị kết quả)
-vnpay.return-url=http://localhost:8080/gms/payment/vnpay-return
+vnpay.return-url=http://localhost:8080/gym-management-system/payment/vnpay-return
 
 # ===== Số điện thoại (DBR-17, P-16) — đầu số nhà mạng hợp lệ, cách nhau bởi dấu phẩy =====
 phone.valid-prefixes=032,033,034,035,036,037,038,039,086,096,097,098,070,076,077,078,079,089,090,093,081,082,083,084,085,088,091,094,052,056,058,092,059,099,087,055

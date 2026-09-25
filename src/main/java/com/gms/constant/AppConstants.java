@@ -42,15 +42,15 @@ public final class AppConstants {
     /** Khoảng cách tối thiểu giữa 2 lần yêu cầu gửi mã xác thực. */
     public static final int CODE_RESEND_GAP_SECONDS = 60;
 
+    /** CBR-94: đếm số lần xin mã trong khoảng thời gian này (60 phút); xin tới lần thứ 5 thì khóa. */
+    public static final int CODE_REQUEST_WINDOW_MINUTES = 60;
+
     // ===== Độ dài/định dạng dữ liệu (DBR-01 … DBR-15) =====
 
     public static final int FULL_NAME_MIN_LENGTH = 2;
     public static final int FULL_NAME_MAX_LENGTH = 50;
 
-    /**
-     * DBR-02: 8–64 ký tự (SRS 1.2.2 đang ghi 6–64 — xem docs/notes.md, chờ nhóm
-     * chốt).
-     */
+    /** DBR-02: 8–64 ký tự */
     public static final int PASSWORD_MIN_LENGTH = 8;
     public static final int PASSWORD_MAX_LENGTH = 64;
 
@@ -60,11 +60,11 @@ public final class AppConstants {
     public static final int REASON_MAX_LENGTH = 500;
     public static final int MAX_AGE_YEARS = 100;
 
+    
     /** DBR-08: ảnh JPG/PNG tối đa 5 MB, tối đa 2000 x 2000 px. */
     public static final long IMAGE_MAX_BYTES = 5L * 1024 * 1024;
     public static final int IMAGE_MAX_DIMENSION_PX = 2000;
 
-    private AppConstants() {
-
+    private AppConstants() { // để chặn constructor tự tạo mặc định
     }
 }

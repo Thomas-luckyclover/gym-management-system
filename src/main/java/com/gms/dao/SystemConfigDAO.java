@@ -1,9 +1,4 @@
-/*
- * Click nbfs://nbhost/SystemFileSystem/Templates/Licenses/license-default.txt to change this license
- * Click nbfs://nbhost/SystemFileSystem/Templates/Classes/Class.java to edit this template
- */
 package com.gms.dao;
-
 
 import com.gms.entity.SystemConfig;
 import com.gms.util.DBContext;
@@ -16,14 +11,10 @@ import java.util.ArrayList;
 import java.util.List;
 
 /**
- *
- * @author Le Cong Minh
- */
-
-
-/**
  * DAO cho bảng SystemConfigs — 20 tham số P-01…P-20 (agents.md Phần 13).
  * Chỉ truy vấn, không nghiệp vụ; SystemConfigService gọi DAO này rồi tự parse int/List theo nhu cầu.
+ *
+ * @author Le Cong Minh
  */
 public class SystemConfigDAO {
 
