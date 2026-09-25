@@ -1,60 +1,111 @@
 /**
- * login.js — JavaScript xử lý tương tác cho trang Đăng nhập (#1 Sign In)
+ * login.js — tương tác trang Đăng nhập, khớp prototype dang-nhap.js
+ * (validate ô nhập, chuyển panel chưa có mật khẩu / tạm khoá).
  */
 document.addEventListener("DOMContentLoaded", function () {
-    const togglePasswordBtn = document.getElementById("togglePasswordBtn");
-    const passwordInput = document.getElementById("passwordInput");
-    const loginForm = document.getElementById("loginForm");
-    const identifierInput = document.getElementById("identifierInput");
-    const identifierError = document.getElementById("identifierError");
-    const passwordError = document.getElementById("passwordError");
-    const generalErrorBanner = document.getElementById("generalErrorBanner");
-    const generalErrorText = document.getElementById("generalErrorText");
-
-    // Toggle Hiện / Ẩn mật khẩu
-    if (togglePasswordBtn && passwordInput) {
-        togglePasswordBtn.addEventListener("click", function () {
-            const isPassword = passwordInput.getAttribute("type") === "password";
-            passwordInput.setAttribute("type", isPassword ? "text" : "password");
-            const icon = togglePasswordBtn.querySelector("i");
-            if (icon) {
-                icon.className = isPassword ? "fa-solid fa-eye-slash eye-icon" : "fa-solid fa-eye eye-icon";
-            }
-        });
-    }
-
-    // Validate form phía client trước khi submit
-    if (loginForm) {
-        loginForm.addEventListener("submit", function (e) {
-            let isValid = true;
-
-            // Xóa các thông báo lỗi cũ
-            if (identifierError) identifierError.textContent = "";
-            if (passwordError) passwordError.textContent = "";
-            if (generalErrorBanner) generalErrorBanner.classList.add("hidden");
-
-            const identifierVal = identifierInput ? identifierInput.value.trim() : "";
-            const passwordVal = passwordInput ? passwordInput.value : "";
-
-            if (!identifierVal) {
-                if (identifierError) identifierError.textContent = "Nhập email hoặc số điện thoại.";
-                if (identifierInput) identifierInput.closest(".form-group").classList.add("has-error");
-                isValid = false;
-            } else {
-                if (identifierInput) identifierInput.closest(".form-group").classList.remove("has-error");
-            }
-
-            if (!passwordVal) {
-                if (passwordError) passwordError.textContent = "Mật khẩu là bắt buộc.";
-                if (passwordInput) passwordInput.closest(".form-group").classList.add("has-error");
-                isValid = false;
-            } else {
-                if (passwordInput) passwordInput.closest(".form-group").classList.remove("has-error");
-            }
-
-            if (!isValid) {
-                e.preventDefault();
-            }
-        });
-    }
+    setupLoginFormValidation();
+    setupLoginStepBackButtons();
 });
+
+// Hiện lại form đăng nhập khi bấm "Thử lại" / "Quay lại" trên panel cảnh báo
+function setupLoginStepBackButtons() {
+    const backButtons = document.querySelectorAll("[data-back-form]");
+
+    backButtons.forEach(function (button) {
+        button.addEventListener("click", function (event) {
+            event.preventDefault();
+            showLoginStep("form");
+        });
+    });
+}
+
+function showLoginStep(stepName) {
+    const panels = document.querySelectorAll(".step-panel");
+
+    panels.forEach(function (panel) {
+        const panelStep = panel.getAttribute("data-step");
+        const shouldShow = panelStep === stepName;
+
+        if (shouldShow) {
+            panel.removeAttribute("hidden");
+        } else {
+            panel.setAttribute("hidden", "hidden");
+        }
+    });
+}
+
+// Kiểm tra identifier + mật khẩu trước khi gửi form POST /login
+// Input: #identifier, #password
+// Output: hiện lỗi dưới ô (identifierError / passwordError) hoặc cho submit
+function setupLoginFormValidation() {
+    const loginForm = document.getElementById("loginForm");
+
+    if (!loginForm) {
+        return;
+    }
+
+    const identifierInput = document.getElementById("identifier");
+    const passwordInput = document.getElementById("password");
+
+    loginForm.addEventListener("submit", function (event) {
+        let isValid = true;
+
+        const identifierValue = identifierInput ? identifierInput.value.trim() : "";
+        const passwordValue = passwordInput ? passwordInput.value : "";
+
+        clearLoginFieldError(identifierInput, "identifierError");
+        clearLoginFieldError(passwordInput, "passwordError");
+
+        if (!identifierValue) {
+            showLoginFieldError(
+                identifierInput,
+                "identifierError",
+                MESSAGES.MSG39_IDENTIFIER_REQUIRED
+            );
+            isValid = false;
+        }
+
+        if (!passwordValue) {
+            showLoginFieldError(
+                passwordInput,
+                "passwordError",
+                formatMessage(MESSAGES.MSG09_REQUIRED, ["Mật khẩu"])
+            );
+            isValid = false;
+        }
+
+        if (!isValid) {
+            event.preventDefault();
+        }
+    });
+}
+
+function showLoginFieldError(inputElement, errorId, message) {
+    if (inputElement) {
+        inputElement.classList.add("invalid");
+    }
+
+    const errorElement = document.getElementById(errorId);
+
+    if (!errorElement) {
+        return;
+    }
+
+    errorElement.textContent = message;
+    errorElement.removeAttribute("hidden");
+}
+
+function clearLoginFieldError(inputElement, errorId) {
+    if (inputElement) {
+        inputElement.classList.remove("invalid");
+    }
+
+    const errorElement = document.getElementById(errorId);
+
+    if (!errorElement) {
+        return;
+    }
+
+    errorElement.textContent = "";
+    errorElement.setAttribute("hidden", "hidden");
+}

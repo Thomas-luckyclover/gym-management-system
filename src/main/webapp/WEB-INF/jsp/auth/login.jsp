@@ -3,96 +3,154 @@
 <!DOCTYPE html>
 <html lang="vi">
 <head>
-    <%@ include file="/WEB-INF/jsp/common/head.jspf" %>
-    <title>Đăng nhập · Super Gym</title>
-    <link rel="stylesheet" href="${pageContext.request.contextPath}/css/pages/auth/login.css">
-    <script src="${pageContext.request.contextPath}/js/pages/auth/login.js" defer></script>
+  <%@ include file="/WEB-INF/jsp/common/head.jspf" %>
+  <title>Đăng nhập — Super Gym</title>
+  <link rel="stylesheet" href="${pageContext.request.contextPath}/css/pages/auth/login.css">
+  <script src="${pageContext.request.contextPath}/js/pages/auth/login.js" defer></script>
 </head>
-<body class="auth-page">
-    <%@ include file="/WEB-INF/jsp/common/flash-toast.jspf" %>
+<%-- Theme tối + kính mờ: khớp prototype dang-nhap.html (body.dark.auth-dark) --%>
+<body class="theme-guest-dark auth-dark">
+  <%@ include file="/WEB-INF/jsp/common/flash-toast.jspf" %>
 
-    <main class="auth-container">
-        <div class="auth-card">
-            <!-- Header/Logo section -->
-            <div class="auth-header">
-                <a href="${pageContext.request.contextPath}/" class="auth-logo">
-                    <i class="fa-solid fa-dumbbell logo-icon"></i>
-                    <span class="logo-text">SUPER <strong>GYM</strong></span>
-                </a>
-                <h1 class="auth-title">Đăng nhập tài khoản</h1>
-                <p class="auth-subtitle">Chào mừng bạn quay trở lại với Super Gym</p>
-            </div>
+  <%--
+    loginStep do LoginServlet set khi POST thất bại:
+    form | blocked-no-password (MSG38) | blocked-lock (MSG35).
+    GET mặc định là form.
+  --%>
+  <c:set var="loginStep" value="${empty loginStep ? 'form' : loginStep}" />
 
-            <!-- Banner báo lỗi chung nếu có -->
-            <div id="generalErrorBanner" class="auth-alert error-alert <c:if test='${empty errorMessage}'>hidden</c:if>">
-                <i class="fa-solid fa-circle-exclamation alert-icon"></i>
-                <span id="generalErrorText"><c:out value="${errorMessage}" /></span>
-            </div>
+  <div class="auth-shell">
+    <div class="auth-top">
+      <a class="auth-brand" href="${pageContext.request.contextPath}/">Super Gym</a>
+      <a class="auth-back" href="${pageContext.request.contextPath}/">
+        <i class="fa-solid fa-arrow-left"></i> Về trang chủ
+      </a>
+    </div>
 
-            <!-- Form đăng nhập -->
-            <form id="loginForm" action="${pageContext.request.contextPath}/login" method="post" class="auth-form" novalidate>
-                <c:if test="${not empty returnUrl}">
-                    <input type="hidden" name="returnUrl" value="<c:out value='${returnUrl}' />">
-                </c:if>
+    <div class="auth-card">
 
-                <!-- Identifier: Email hoặc Số điện thoại -->
-                <div class="form-group <c:if test='${not empty fieldErrors.identifier}'>has-error</c:if>">
-                    <label for="identifierInput" class="form-label">Email hoặc Số điện thoại <span class="required-star">*</span></label>
-                    <div class="input-wrapper">
-                        <i class="fa-solid fa-user input-icon"></i>
-                        <input type="text"
-                               id="identifierInput"
-                               name="identifier"
-                               class="form-control"
-                               placeholder="Nhập email hoặc số điện thoại đăng ký"
-                               value="<c:out value='${identifier}' />"
-                               autocomplete="username"
-                               required>
-                    </div>
-                    <span id="identifierError" class="field-error">
-                        <c:out value="${fieldErrors.identifier}" />
-                    </span>
-                </div>
-
-                <!-- Password -->
-                <div class="form-group <c:if test='${not empty fieldErrors.password}'>has-error</c:if>">
-                    <div class="label-row">
-                        <label for="passwordInput" class="form-label">Mật khẩu <span class="required-star">*</span></label>
-                        <a href="${pageContext.request.contextPath}/forgot-password" class="forgot-link">Quên mật khẩu?</a>
-                    </div>
-                    <div class="input-wrapper">
-                        <i class="fa-solid fa-lock input-icon"></i>
-                        <input type="password"
-                               id="passwordInput"
-                               name="password"
-                               class="form-control"
-                               placeholder="Nhập mật khẩu của bạn"
-                               autocomplete="current-password"
-                               required>
-                        <button type="button" id="togglePasswordBtn" class="toggle-password-btn" aria-label="Hiện/Ẩn mật khẩu">
-                            <i class="fa-solid fa-eye eye-icon"></i>
-                        </button>
-                    </div>
-                    <span id="passwordError" class="field-error">
-                        <c:out value="${fieldErrors.password}" />
-                    </span>
-                </div>
-
-                <!-- Submit Button -->
-                <button type="submit" id="submitBtn" class="btn btn-primary btn-block btn-lg">
-                    <span class="btn-text">Đăng nhập</span>
-                    <i class="fa-solid fa-right-to-bracket btn-icon"></i>
-                </button>
-            </form>
-
-            <!-- Footer links -->
-            <div class="auth-footer">
-                <p>Chưa có tài khoản? <a href="${pageContext.request.contextPath}/register" class="register-link">Đăng ký ngay</a></p>
-                <a href="${pageContext.request.contextPath}/" class="back-home-link">
-                    <i class="fa-solid fa-arrow-left"></i> Quay lại trang chủ
-                </a>
-            </div>
+      <%-- ---------- Form đăng nhập ---------- --%>
+      <div class="step-panel" data-step="form" <c:if test="${loginStep ne 'form'}">hidden</c:if>>
+        <div class="auth-head">
+          <h1>Đăng nhập</h1>
+          <p>Nhập email hoặc số điện thoại và mật khẩu để tiếp tục.</p>
         </div>
-    </main>
+
+        <c:if test="${not empty errorMessage and loginStep eq 'form'}">
+          <div class="msg-banner error" role="alert">
+            <i class="fa-solid fa-triangle-exclamation"></i>
+            <span><c:out value="${errorMessage}" /></span>
+          </div>
+        </c:if>
+
+        <form id="loginForm"
+              action="${pageContext.request.contextPath}/login"
+              method="post"
+              novalidate>
+          <c:if test="${not empty returnUrl}">
+            <input type="hidden" name="returnUrl" value="<c:out value='${returnUrl}' />">
+          </c:if>
+
+          <label class="field">
+            <span class="field-label">Email hoặc số điện thoại</span>
+            <input id="identifier"
+                   name="identifier"
+                   type="text"
+                   placeholder="ban@email.com hoặc 090xxxxxxx"
+                   autocomplete="username"
+                   value="<c:out value='${identifier}' />"
+                   required>
+            <span class="field-error"
+                  id="identifierError"
+                  <c:if test="${empty fieldErrors.identifier}">hidden</c:if>><c:out value="${fieldErrors.identifier}" /></span>
+          </label>
+
+          <label class="field">
+            <span class="field-label">Mật khẩu</span>
+            <span class="input-wrap">
+              <input id="password"
+                     name="password"
+                     type="password"
+                     placeholder="Nhập mật khẩu"
+                     autocomplete="current-password"
+                     required>
+              <button type="button"
+                      class="pw-toggle"
+                      data-password-toggle="password"
+                      aria-label="Hiện mật khẩu">
+                <i class="fa-solid fa-eye"></i>
+              </button>
+            </span>
+            <span class="field-error"
+                  id="passwordError"
+                  <c:if test="${empty fieldErrors.password}">hidden</c:if>><c:out value="${fieldErrors.password}" /></span>
+          </label>
+
+          <p class="auth-switch auth-forgot">
+            <a href="${pageContext.request.contextPath}/forgot-password">Quên mật khẩu?</a>
+          </p>
+
+          <button class="btn btn-primary btn-block" type="submit" id="loginSubmitBtn">
+            Đăng nhập
+          </button>
+        </form>
+
+        <p class="auth-switch">
+          Chưa có tài khoản?
+          <a href="${pageContext.request.contextPath}/register">Đăng ký</a>
+        </p>
+      </div>
+
+      <%-- ---------- Tài khoản chưa có mật khẩu (MSG38) ---------- --%>
+      <div class="step-panel" data-step="blocked-no-password" <c:if test="${loginStep ne 'blocked-no-password'}">hidden</c:if>>
+        <div class="auth-head">
+          <h1>Chưa thể đăng nhập</h1>
+        </div>
+        <div class="msg-banner warning" role="alert">
+          <i class="fa-solid fa-triangle-exclamation"></i>
+          <span>
+            <c:choose>
+              <c:when test="${not empty errorMessage}">
+                <c:out value="${errorMessage}" />
+              </c:when>
+              <c:otherwise>
+                Tài khoản chưa có mật khẩu. Vui lòng kiểm tra email để đặt mật khẩu lần đầu.
+              </c:otherwise>
+            </c:choose>
+          </span>
+        </div>
+        <div class="btn-row">
+          <a class="btn btn-primary" href="${pageContext.request.contextPath}/forgot-password">Đặt mật khẩu</a>
+          <button class="btn btn-outline" type="button" data-back-form>Thử lại</button>
+        </div>
+      </div>
+
+      <%-- ---------- Khoá đăng nhập sau quá số lần sai (MSG35) ---------- --%>
+      <div class="step-panel" data-step="blocked-lock" <c:if test="${loginStep ne 'blocked-lock'}">hidden</c:if>>
+        <div class="auth-head">
+          <h1>Tài khoản tạm khoá</h1>
+        </div>
+        <div class="msg-banner warning" role="alert">
+          <i class="fa-solid fa-triangle-exclamation"></i>
+          <span>
+            <c:choose>
+              <c:when test="${not empty errorMessage}">
+                <c:out value="${errorMessage}" />
+              </c:when>
+              <c:otherwise>
+                Bạn đã nhập sai mật khẩu quá số lần cho phép. Vui lòng thử lại sau, hoặc dùng chức năng Quên mật khẩu.
+              </c:otherwise>
+            </c:choose>
+          </span>
+        </div>
+        <div class="btn-row">
+          <a class="btn btn-primary" href="${pageContext.request.contextPath}/forgot-password">Quên mật khẩu</a>
+          <button class="btn btn-outline" type="button" data-back-form>Quay lại</button>
+        </div>
+      </div>
+
+    </div>
+    <p class="auth-foot-note">© 2026 Super Gym</p>
+  </div>
 </body>
 </html>
