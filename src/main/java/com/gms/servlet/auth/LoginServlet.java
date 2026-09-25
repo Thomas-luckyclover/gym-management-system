@@ -20,12 +20,17 @@ import java.io.IOException;
 /**
  * Servlet đăng nhập hệ thống (#1 Sign In, /login).
  *
- * <p>Quy trình:</p>
+ * <p>
+ * Quy trình:
+ * </p>
  * <ul>
- *   <li>doGet: Nếu đã đăng nhập -> chuyển về trang chính của vai trò. Nếu chưa -> hiển thị form đăng nhập.</li>
- *   <li>doPost: Đọc tham số identifier & password -> gọi AuthService.login.</li>
- *   <li>Thành công: đổi session id (chống Session Fixation), lưu accountId, role, displayName, set timeout 7200s -> redirect.</li>
- *   <li>Thất bại: nếu AJAX -> trả JsonResponse.from(result); nếu Form submit -> set attribute & forward lại JSP.</li>
+ * <li>doGet: Nếu đã đăng nhập -> chuyển về trang chính của vai trò. Nếu chưa ->
+ * hiển thị form đăng nhập.</li>
+ * <li>doPost: Đọc tham số identifier & password -> gọi AuthService.login.</li>
+ * <li>Thành công: đổi session id (chống Session Fixation), lưu accountId, role,
+ * displayName, set timeout 7200s -> redirect.</li>
+ * <li>Thất bại: nếu AJAX -> trả JsonResponse.from(result); nếu Form submit ->
+ * set attribute & forward lại JSP.</li>
  * </ul>
  */
 @WebServlet("/login")

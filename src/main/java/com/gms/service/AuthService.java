@@ -22,26 +22,42 @@ import java.util.Map;
 /**
  * Service xử lý nghiệp vụ Xác thực & Tài khoản (Phase 1, SRS #1 Sign In).
  *
- * <p>Quy tắc Đăng nhập (B1 – B8 theo quy tắc Phase 1 Mục 2.1):</p>
+ * <p>
+ * Quy tắc Đăng nhập (B1 – B8 theo quy tắc Phase 1 Mục 2.1):
+ * </p>
  * <ul>
- *   <li>B1 & B2: Kiểm tra dữ liệu nhập (identifier, password).</li>
- *   <li>B3: Tìm tài khoản theo Email hoặc SĐT (Person JOIN Accounts).</li>
- *   <li>B4: Kiểm tra trạng thái Inactive hoặc Admin khóa (Account.Status != ACTIVE).</li>
- *   <li>B5: Kiểm tra thời gian khóa tạm thời (LockedUntil). Hết hạn -> tự reset (BR-02).</li>
- *   <li>B6: Kiểm tra tài khoản chưa có mật khẩu (PasswordHash IS NULL).</li>
- *   <li>B7: Kiểm tra mật khẩu (Phân biệt Staff vs Customer cho đếm sai/khóa tạm).</li>
- *   <li>B8: Đăng nhập thành công -> Reset failed counter, update LastLoginAt.</li>
+ * <li>B1 & B2: Kiểm tra dữ liệu nhập (identifier, password).</li>
+ * <li>B3: Tìm tài khoản theo Email hoặc SĐT (Person JOIN Accounts).</li>
+ * <li>B4: Kiểm tra trạng thái Inactive hoặc Admin khóa (Account.Status !=
+ * ACTIVE).</li>
+ * <li>B5: Kiểm tra thời gian khóa tạm thời (LockedUntil). Hết hạn -> tự reset
+ * (BR-02).</li>
+ * <li>B6: Kiểm tra tài khoản chưa có mật khẩu (PasswordHash IS NULL).</li>
+ * <li>B7: Kiểm tra mật khẩu (Phân biệt Staff vs Customer cho đếm sai/khóa
+ * tạm).</li>
+ * <li>B8: Đăng nhập thành công -> Reset failed counter, update
+ * LastLoginAt.</li>
  * </ul>
  *
- * <p>LƯU Ý: Các thông số cấu hình P-17 (MAX_FAILED_ATTEMPTS = 5) và P-18 (LOCK_MINUTES = 5)
- * hiện đang dùng hằng số tạm thời, sẽ được nâng cấp đọc qua SystemConfigService khi có API từ Minh LC.</p>
+ * <p>
+ * LƯU Ý: Các thông số cấu hình P-17 (MAX_FAILED_ATTEMPTS = 5) và P-18
+ * (LOCK_MINUTES = 5)
+ * hiện đang dùng hằng số tạm thời, sẽ được nâng cấp đọc qua SystemConfigService
+ * khi có API từ Minh LC.
+ * </p>
  */
 public class AuthService {
 
-    /** P-17: Số lần nhập sai tối đa trước khi khóa tạm. Tạm dùng hằng số, chờ SystemConfigService từ Minh LC. */
+    /**
+     * P-17: Số lần nhập sai tối đa trước khi khóa tạm. Tạm dùng hằng số, chờ
+     * SystemConfigService từ Minh LC.
+     */
     private static final int MAX_FAILED_ATTEMPTS = 5;
 
-    /** P-18: Thời gian khóa tạm (phút). Tạm dùng hằng số, chờ SystemConfigService từ Minh LC. */
+    /**
+     * P-18: Thời gian khóa tạm (phút). Tạm dùng hằng số, chờ SystemConfigService từ
+     * Minh LC.
+     */
     private static final int LOCK_MINUTES = 5;
 
     private final AccountDAO accountDAO;
@@ -111,7 +127,8 @@ public class AuthService {
                     long remainingSeconds = Duration.between(now, account.getLockedUntil()).getSeconds();
                     long remainingMinutes = (remainingSeconds + 59) / 60;
                     String remainingStr = remainingMinutes + " phút";
-                    return ServiceResult.fail(String.format(Messages.MSG35_ACCOUNT_TEMP_LOCKED, LOCK_MINUTES, remainingStr));
+                    return ServiceResult
+                            .fail(String.format(Messages.MSG35_ACCOUNT_TEMP_LOCKED, LOCK_MINUTES, remainingStr));
                 } else {
                     // Hết hạn khóa tạm -> reset số lần sai (BR-02)
                     accountDAO.resetFailedLogin(conn, account.getAccountId());
@@ -147,10 +164,12 @@ public class AuthService {
                         LocalDateTime lockTime = now.plusMinutes(LOCK_MINUTES);
                         accountDAO.lockUntil(conn, account.getAccountId(), lockTime);
                         account.setLockedUntil(lockTime);
-                        return ServiceResult.fail(String.format(Messages.MSG35_ACCOUNT_TEMP_LOCKED, LOCK_MINUTES, LOCK_MINUTES + " phút"));
+                        return ServiceResult.fail(String.format(Messages.MSG35_ACCOUNT_TEMP_LOCKED, LOCK_MINUTES,
+                                LOCK_MINUTES + " phút"));
                     } else {
                         int attemptsLeft = MAX_FAILED_ATTEMPTS - newFailedCount;
-                        return ServiceResult.fail(String.format(Messages.MSG33_WRONG_CREDENTIALS_ATTEMPTS_LEFT, attemptsLeft));
+                        return ServiceResult
+                                .fail(String.format(Messages.MSG33_WRONG_CREDENTIALS_ATTEMPTS_LEFT, attemptsLeft));
                     }
                 }
             }
@@ -173,8 +192,7 @@ public class AuthService {
                     profile.phone,
                     profile.avatar,
                     role,
-                    role.getHomePath()
-            );
+                    role.getHomePath());
 
             return ServiceResult.ok(loginResult);
 
@@ -183,7 +201,7 @@ public class AuthService {
         }
     }
 
-    // ===== Private Helper đọc thông tin Person & Role mà KHÔNG cần Person.java / PersonDAO.java =====
+    // ===== Private Helper đọc thông tin Person & Role=====
 
     private static class PersonProfile {
         final String fullName;
