@@ -1,18 +1,3 @@
-<%--
-  profile-customer.jspf — Giao diện Cài đặt tài khoản dành riêng cho vai trò Hội viên (Customer).
-  Khớp prototype Customer (kh/tai-khoan.html — UC-04 Manage Personal Account, biến thể Customer).
-
-  Request attributes mà Servlet/Service cần chuẩn bị trước khi forward tới trang cha bao gồm file này:
-    - fullName, customerCode, joinedAt (LocalDate), dateOfBirth (LocalDate)   : hồ sơ Person/Customer
-    - checkInPhotoUpdatedAt (LocalDate, có thể null)                         : lần Lễ tân cập nhật ảnh check-in gần nhất
-    - guardianName (String, chỉ có với hồ sơ Dependent, null với hồ sơ Self)
-    - userEmail, userPhone                                                  : giá trị hiện tại để đổ vào input
-    - errorMessage, fieldErrors (Map<String,String>)                        : lỗi hiển thị nếu submit thất bại
-    - requireVerification (Boolean), verifyTarget (String)                  : bước xác thực email/SĐT mới
-    - dependents (List<DependentProfileView>)                               : xem tab-dependents.jspf
-  Không đặt logic tính tuổi/hạn gói trong JSP — Service phải tính sẵn trước khi forward (đúng nguyên tắc
-  tách nghiệp vụ khỏi View, giống cách BlogService.enrichPost() đã làm với Blog).
---%>
 <%@ page contentType="text/html; charset=UTF-8" pageEncoding="UTF-8" %>
 <%@ taglib prefix="c" uri="jakarta.tags.core" %>
 <%@ taglib prefix="fn" uri="jakarta.tags.functions" %>

@@ -1,10 +1,3 @@
-<%--
-  layout-customer.jspf — Sidebar & Header khung dùng chung cho khu vực Hội viên (Customer).
-  Khớp prototype Customer (Prototype/prototype/kh/*.html).
-  Trang gọi include này PHẢI set request attribute "activeNav" trước, VD:
-      request.setAttribute("activeNav", "account");
-  để tô sáng đúng mục đang chọn trên menu (GBR-01: nav item đang chọn có aria-current="page").
---%>
 <%@ page contentType="text/html; charset=UTF-8" pageEncoding="UTF-8" %>
 <%@ taglib prefix="c" uri="jakarta.tags.core" %>
 
