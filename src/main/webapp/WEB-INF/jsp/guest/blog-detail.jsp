@@ -11,82 +11,16 @@
   <link rel="stylesheet" href="${pageContext.request.contextPath}/css/pages/guest/blog-detail.css">
   <script src="${pageContext.request.contextPath}/js/pages/guest/blog-detail.js" defer></script>
 </head>
-<body class="theme-guest">
+<body class="theme-guest-dark">
   <%-- Flash Toast thông báo redirect từ server nếu có --%>
   <%@ include file="/WEB-INF/jsp/common/flash-toast.jspf" %>
 
   <%-- Thanh chỉ báo tiến trình đọc bài viết (được tính toán bởi blog-detail.js) --%>
   <div class="reading-progress" id="readingProgressBar" aria-hidden="true"></div>
 
-  <%-- ============================ HEADER KHÁCH ============================ --%>
-  <header class="site-header">
-    <div class="header-inner">
-      <a class="brand" href="${pageContext.request.contextPath}/">
-        <span class="brand-mark">Super Gym</span>
-      </a>
-
-      <%-- Menu điều hướng chính --%>
-      <nav class="nav-links">
-        <a href="${pageContext.request.contextPath}/">Trang chủ</a>
-        <a href="${pageContext.request.contextPath}/#dich-vu">Dịch vụ</a>
-        <a href="${pageContext.request.contextPath}/#pricing">Bảng giá</a>
-        <a href="${pageContext.request.contextPath}/#co-so-vat-chat">Cơ sở vật chất</a>
-        <a href="${pageContext.request.contextPath}/blog" aria-current="page">Blog</a>
-        <a href="${pageContext.request.contextPath}/#faq">Hỏi đáp</a>
-      </nav>
-
-      <%-- Nút tương tác tài khoản --%>
-      <div class="header-actions">
-        <c:choose>
-          <c:when test="${not empty sessionScope.accountId}">
-            <a class="btn btn-ghost btn-sm" href="${pageContext.request.contextPath}/customer/dashboard">
-              <i class="fa-regular fa-user"></i> <c:out value="${sessionScope.displayName}" />
-            </a>
-            <form action="${pageContext.request.contextPath}/logout" method="post" style="display:inline;">
-              <button class="btn btn-ghost btn-sm" type="submit" aria-label="Đăng xuất">
-                <i class="fa-solid fa-arrow-right-from-bracket"></i> Đăng xuất
-              </button>
-            </form>
-          </c:when>
-          <c:otherwise>
-            <a class="btn btn-ghost btn-sm" href="${pageContext.request.contextPath}/login">Đăng nhập</a>
-            <a class="btn btn-lime btn-sm" href="${pageContext.request.contextPath}/register">Đăng ký</a>
-          </c:otherwise>
-        </c:choose>
-      </div>
-
-      <%-- Nút menu mobile --%>
-      <button class="hamburger" type="button" data-toggle-target="mobileNav" aria-label="Mở menu" aria-expanded="false" aria-controls="mobileNav">
-        <i class="fa-solid fa-bars"></i>
-      </button>
-    </div>
-
-    <%-- Menu mở rộng trên thiết bị di động --%>
-    <div class="mobile-nav" id="mobileNav" hidden>
-      <a href="${pageContext.request.contextPath}/">Trang chủ</a>
-      <a href="${pageContext.request.contextPath}/#dich-vu">Dịch vụ</a>
-      <a href="${pageContext.request.contextPath}/#pricing">Bảng giá</a>
-      <a href="${pageContext.request.contextPath}/#co-so-vat-chat">Cơ sở vật chất</a>
-      <a href="${pageContext.request.contextPath}/blog" aria-current="page">Blog</a>
-      <a href="${pageContext.request.contextPath}/#faq">Hỏi đáp</a>
-      <c:choose>
-        <c:when test="${not empty sessionScope.accountId}">
-          <a href="${pageContext.request.contextPath}/customer/dashboard">
-            <i class="fa-regular fa-user"></i> <c:out value="${sessionScope.displayName}" />
-          </a>
-          <form action="${pageContext.request.contextPath}/logout" method="post" style="display:block; padding: 10px 0;">
-            <button class="btn btn-ghost btn-sm" type="submit">
-              <i class="fa-solid fa-arrow-right-from-bracket"></i> Đăng xuất
-            </button>
-          </form>
-        </c:when>
-        <c:otherwise>
-          <a href="${pageContext.request.contextPath}/login">Đăng nhập</a>
-          <a href="${pageContext.request.contextPath}/register">Đăng ký</a>
-        </c:otherwise>
-      </c:choose>
-    </div>
-  </header>
+  <%-- Header dùng chung cho luồng khách --%>
+  <c:set var="activeNav" value="blog" />
+  <%@ include file="/WEB-INF/jsp/common/guest-header.jspf" %>
 
   <%-- ====================== CHI TIẾT BÀI VIẾT (SRS #7 / 2.2.2) ====================== --%>
   <main class="main-content">
@@ -245,43 +179,7 @@
     </c:if>
   </main>
 
-  <%-- ============================ FOOTER KHÁCH ============================ --%>
-  <footer class="site-footer">
-    <div class="footer-inner">
-      <div>
-        <div class="footer-brand">Super Gym</div>
-        <p class="footer-tag">Theo dõi tiến độ, đặt lịch PT và quản lý gói tập trong một tài khoản duy nhất.</p>
-        <div class="footer-social">
-          <a href="#" aria-label="Facebook"><i class="fa-brands fa-facebook-f"></i></a>
-          <a href="#" aria-label="Instagram"><i class="fa-brands fa-instagram"></i></a>
-          <a href="#" aria-label="YouTube"><i class="fa-brands fa-youtube"></i></a>
-        </div>
-      </div>
-      <div class="footer-col">
-        <h4>Khám phá</h4>
-        <a href="${pageContext.request.contextPath}/">Trang chủ</a>
-        <a href="${pageContext.request.contextPath}/#pricing">Bảng giá</a>
-        <a href="${pageContext.request.contextPath}/#co-so-vat-chat">Cơ sở vật chất</a>
-        <a href="${pageContext.request.contextPath}/blog">Blog</a>
-      </div>
-      <div class="footer-col">
-        <h4>Tài khoản</h4>
-        <a href="${pageContext.request.contextPath}/login">Đăng nhập</a>
-        <a href="${pageContext.request.contextPath}/register">Đăng ký</a>
-        <a href="${pageContext.request.contextPath}/forgot-password">Quên mật khẩu</a>
-        <a href="${pageContext.request.contextPath}/#faq">Câu hỏi thường gặp</a>
-      </div>
-      <div class="footer-col">
-        <h4>Liên hệ</h4>
-        <p><i class="fa-solid fa-location-dot"></i> 12 Nguyễn Huệ, Q.1, TP.HCM</p>
-        <p><i class="fa-solid fa-clock"></i> 05:30 – 22:00 mỗi ngày</p>
-        <a href="tel:19006868"><i class="fa-solid fa-phone"></i> 1900 6868</a>
-        <a href="mailto:hi@supergym.vn"><i class="fa-solid fa-envelope"></i> hi@supergym.vn</a>
-      </div>
-    </div>
-    <div class="footer-bottom">
-      <span>© 2026 Super Gym. All rights reserved.</span>
-    </div>
-  </footer>
+  <%-- Footer dùng chung cho luồng khách --%>
+  <%@ include file="/WEB-INF/jsp/common/guest-footer.jspf" %>
 </body>
 </html>

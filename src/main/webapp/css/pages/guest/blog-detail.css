@@ -17,99 +17,6 @@
   transition: width var(--duration-fast) linear;
 }
 
-/* ============================ HEADER KHÁCH ============================ */
-.site-header {
-  background: var(--color-surface);
-  border-bottom: 1px solid var(--color-border);
-  position: sticky;
-  top: 0;
-  z-index: var(--z-sticky, 100);
-}
-
-.header-inner {
-  max-width: var(--layout-container-max, 1180px);
-  margin: 0 auto;
-  padding: var(--space-3) var(--space-5);
-  display: flex;
-  align-items: center;
-  justify-content: space-between;
-  gap: var(--space-4);
-}
-
-.brand {
-  display: inline-flex;
-  align-items: center;
-  text-decoration: none;
-}
-
-.brand-mark {
-  font-family: var(--font-display);
-  font-weight: 800;
-  font-size: var(--font-size-xl);
-  color: var(--color-primary);
-  letter-spacing: -0.02em;
-  text-transform: uppercase;
-}
-
-.nav-links {
-  display: flex;
-  align-items: center;
-  gap: var(--space-5);
-}
-
-.nav-links a {
-  color: var(--color-text-soft);
-  font-size: var(--font-size-md);
-  font-weight: 600;
-  text-decoration: none;
-  transition: color var(--duration-fast);
-  padding: var(--space-1-5) 0;
-}
-
-.nav-links a:hover,
-.nav-links a[aria-current="page"] {
-  color: var(--color-primary);
-  border-bottom: 2px solid var(--color-primary);
-}
-
-.header-actions {
-  display: flex;
-  align-items: center;
-  gap: var(--space-2-5);
-}
-
-.hamburger {
-  display: none;
-  background: none;
-  border: 1px solid var(--color-border);
-  border-radius: var(--radius-sm);
-  padding: var(--space-2);
-  color: var(--color-text);
-  font-size: var(--font-size-lg);
-  cursor: pointer;
-}
-
-/* id này được dùng trong common.js / blog-detail.js — hàm toggleMobileNav() mở/đóng menu trên mobile */
-#mobileNav {
-  background: var(--color-surface);
-  border-top: 1px solid var(--color-border);
-  padding: var(--space-4) var(--space-5);
-  display: flex;
-  flex-direction: column;
-  gap: var(--space-3);
-}
-
-#mobileNav a {
-  color: var(--color-text);
-  text-decoration: none;
-  font-weight: 600;
-  padding: var(--space-2) 0;
-  border-bottom: 1px solid var(--color-border-subtle, #f0eee9);
-}
-
-#mobileNav a:hover {
-  color: var(--color-primary);
-}
 
 /* ============================ BỐ CỤC CHÍNH BÀI VIẾT ============================ */
 .main-content {
@@ -461,6 +368,7 @@
 .post-card:hover {
   transform: translateY(-3px);
   box-shadow: var(--shadow-pop);
+  border-color: var(--color-primary-border);
 }
 
 .post-thumb {
@@ -529,120 +437,14 @@
   margin-top: auto;
 }
 
-/* ============================ FOOTER KHÁCH ============================ */
-.site-footer {
-  background: var(--color-surface-inverse, #0D0D0D);
-  color: var(--color-text-inverse, #E9E7E2);
-}
-
-.footer-inner {
-  max-width: var(--layout-container-max, 1180px);
-  margin: 0 auto;
-  padding: var(--space-8) var(--space-5) var(--space-6);
-  display: grid;
-  grid-template-columns: 1.5fr repeat(3, 1fr);
-  gap: var(--space-6);
-}
-
-.footer-brand {
-  font-family: var(--font-display);
-  font-weight: 800;
-  font-size: var(--font-size-xl);
-  color: #fff;
-  letter-spacing: -0.02em;
-  text-transform: uppercase;
-}
-
-.footer-tag {
-  color: var(--color-text-muted, #8F8B81);
-  font-size: var(--font-size-sm);
-  margin-top: var(--space-2-5);
-  max-width: 34ch;
-  line-height: 1.5;
-}
-
-.footer-social {
-  display: flex;
-  gap: var(--space-2-5);
-  margin-top: var(--space-4);
-}
-
-.footer-social a {
-  width: 36px;
-  height: 36px;
-  border-radius: var(--radius-circle);
-  background: rgba(255, 255, 255, 0.08);
-  display: inline-flex;
-  align-items: center;
-  justify-content: center;
-  color: #C9C5BC;
-  text-decoration: none;
-  transition: all var(--duration-fast);
-}
-
-.footer-social a:hover {
-  background: var(--color-lime, #D4FF3F);
-  color: var(--color-lime-ink, #0D0D0D);
-}
-
-.footer-col h4 {
-  font-size: var(--font-size-xs);
-  text-transform: uppercase;
-  letter-spacing: 0.1em;
-  color: var(--color-text-muted, #8F8B81);
-  margin-bottom: var(--space-3);
-}
-
-.footer-col a,
-.footer-col p {
-  display: block;
-  color: #C9C5BC;
-  font-size: var(--font-size-sm);
-  padding: var(--space-1) 0;
-  text-decoration: none;
-  margin: 0;
-}
-
-.footer-col a:hover {
-  color: var(--color-lime, #D4FF3F);
-}
-
-.footer-col a i,
-.footer-col p i {
-  width: 14px;
-  margin-right: var(--space-1);
-  color: var(--color-lime, #D4FF3F);
-}
-
-.footer-bottom {
-  border-top: 1px solid rgba(255, 255, 255, 0.09);
-  padding: var(--space-4) var(--space-5);
-  text-align: center;
-  color: #6F6C64;
-  font-size: var(--font-size-xs);
-}
-
 /* ============================ RESPONSIVE CHO MÀN HÌNH NHỎ ============================ */
 @media (max-width: 900px) {
   .post-grid {
     grid-template-columns: repeat(2, 1fr);
   }
-
-  .footer-inner {
-    grid-template-columns: repeat(2, 1fr);
-  }
 }
 
 @media (max-width: 768px) {
-  .nav-links,
-  .header-actions {
-    display: none;
-  }
-
-  .hamburger {
-    display: inline-flex;
-  }
-
   .article-cover {
     height: 220px;
   }
@@ -654,10 +456,6 @@
 
 @media (max-width: 600px) {
   .post-grid {
-    grid-template-columns: 1fr;
-  }
-
-  .footer-inner {
     grid-template-columns: 1fr;
   }
 
