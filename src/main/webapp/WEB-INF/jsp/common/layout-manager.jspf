@@ -1,0 +1,125 @@
+<%--
+  layout-manager.jspf — Sidebar & Header khung dùng chung cho khu vực Quản lý (Manager).
+  Khớp prototype Manager (gms_manager_mockup_v24.html).
+--%>
+<%@ page contentType="text/html; charset=UTF-8" pageEncoding="UTF-8" %>
+<%@ taglib prefix="c" uri="jakarta.tags.core" %>
+
+<div class="dockwrap" id="dock">
+    <aside class="sidebar">
+        <div class="brand">
+            <div class="brand-name">Super Gym</div>
+            <div class="brand-role">Khu vực quản lý</div>
+        </div>
+        
+        <nav class="nav" aria-label="Điều hướng chính">
+            <!-- Nhóm: Cấu hình -->
+            <div class="nav-group">Cấu hình</div>
+            <a href="${pageContext.request.contextPath}/manager/parameters" 
+               class="<c:if test="${activeNav == 'parameters'}">active</c:if>"
+               <c:if test="${activeNav == 'parameters'}">aria-current="page"</c:if>>
+                <i class="fa-solid fa-gear nav-icon"></i>
+                <span>Tham số</span>
+            </a>
+            <a href="${pageContext.request.contextPath}/manager/operating-hours" 
+               class="<c:if test="${activeNav == 'hours'}">active</c:if>"
+               <c:if test="${activeNav == 'hours'}">aria-current="page"</c:if>>
+                <i class="fa-solid fa-clock nav-icon"></i>
+                <span>Giờ hoạt động</span>
+            </a>
+
+            <!-- Nhóm: Danh mục -->
+            <div class="nav-group">Danh mục</div>
+            <a href="${pageContext.request.contextPath}/manager/membership-packages" 
+               class="<c:if test="${activeNav == 'packages'}">active</c:if>"
+               <c:if test="${activeNav == 'packages'}">aria-current="page"</c:if>>
+                <i class="fa-solid fa-ticket nav-icon"></i>
+                <span>Danh mục gói</span>
+            </a>
+            <a href="${pageContext.request.contextPath}/manager/vouchers" 
+               class="<c:if test="${activeNav == 'vouchers'}">active</c:if>"
+               <c:if test="${activeNav == 'vouchers'}">aria-current="page"</c:if>>
+                <i class="fa-solid fa-tag nav-icon"></i>
+                <span>Voucher</span>
+            </a>
+
+            <!-- Nhóm: Nhân sự & hội viên -->
+            <div class="nav-group">Nhân sự &amp; hội viên</div>
+            <a href="${pageContext.request.contextPath}/manager/staff" 
+               class="<c:if test="${activeNav == 'staff'}">active</c:if>"
+               <c:if test="${activeNav == 'staff'}">aria-current="page"</c:if>>
+                <i class="fa-solid fa-users nav-icon"></i>
+                <span>Nhân sự</span>
+            </a>
+            <a href="${pageContext.request.contextPath}/manager/leave-requests" 
+               class="<c:if test="${activeNav == 'leaves'}">active</c:if>"
+               <c:if test="${activeNav == 'leaves'}">aria-current="page"</c:if>>
+                <i class="fa-solid fa-calendar-days nav-icon"></i>
+                <span>Đơn nghỉ phép</span>
+            </a>
+            <a href="${pageContext.request.contextPath}/manager/members" 
+               class="<c:if test="${activeNav == 'members'}">active</c:if>"
+               <c:if test="${activeNav == 'members'}">aria-current="page"</c:if>>
+                <i class="fa-solid fa-user-group nav-icon"></i>
+                <span>Hội viên</span>
+            </a>
+
+            <!-- Nhóm: Vận hành -->
+            <div class="nav-group">Vận hành</div>
+            <a href="${pageContext.request.contextPath}/manager/transactions" 
+               class="<c:if test="${activeNav == 'transactions'}">active</c:if>"
+               <c:if test="${activeNav == 'transactions'}">aria-current="page"</c:if>>
+                <i class="fa-solid fa-money-bill-wave nav-icon"></i>
+                <span>Giao dịch</span>
+            </a>
+            <a href="${pageContext.request.contextPath}/manager/facilities" 
+               class="<c:if test="${activeNav == 'facilities'}">active</c:if>"
+               <c:if test="${activeNav == 'facilities'}">aria-current="page"</c:if>>
+                <i class="fa-solid fa-box-archive nav-icon"></i>
+                <span>Cơ sở vật chất</span>
+            </a>
+            <a href="${pageContext.request.contextPath}/manager/maintenance-requests" 
+               class="<c:if test="${activeNav == 'maintenance'}">active</c:if>"
+               <c:if test="${activeNav == 'maintenance'}">aria-current="page"</c:if>>
+                <i class="fa-solid fa-wrench nav-icon"></i>
+                <span>Bảo trì</span>
+            </a>
+            <a href="${pageContext.request.contextPath}/manager/feedback" 
+               class="<c:if test="${activeNav == 'feedback'}">active</c:if>"
+               <c:if test="${activeNav == 'feedback'}">aria-current="page"</c:if>>
+                <i class="fa-solid fa-comments nav-icon"></i>
+                <span>Góp ý</span>
+            </a>
+
+            <!-- Nhóm: Nội dung & báo cáo -->
+            <div class="nav-group">Nội dung &amp; báo cáo</div>
+            <a href="${pageContext.request.contextPath}/blog" 
+               class="<c:if test="${activeNav == 'blog'}">active</c:if>"
+               <c:if test="${activeNav == 'blog'}">aria-current="page"</c:if>>
+                <i class="fa-solid fa-newspaper nav-icon"></i>
+                <span>Blog</span>
+            </a>
+            <a href="${pageContext.request.contextPath}/manager/dashboard" 
+               class="<c:if test="${activeNav == 'report'}">active</c:if>"
+               <c:if test="${activeNav == 'report'}">aria-current="page"</c:if>>
+                <i class="fa-solid fa-chart-line nav-icon"></i>
+                <span>Báo cáo</span>
+            </a>
+        </nav>
+
+        <div class="side-foot">
+            <a class="me" href="${pageContext.request.contextPath}/account" title="Cài đặt tài khoản">
+                <span class="avatar"><c:out value="${sessionScope.displayName.substring(0, 1)}" default="M" /></span>
+                <span>
+                    <b><c:out value="${sessionScope.displayName}" default="Quản lý" /></b>
+                    <small>Quản lý</small>
+                </span>
+            </a>
+            <form action="${pageContext.request.contextPath}/logout" method="post">
+                <button type="submit" class="logout">
+                    <i class="fa-solid fa-right-from-bracket"></i> Đăng xuất
+                </button>
+            </form>
+        </div>
+    </aside>
+</div>

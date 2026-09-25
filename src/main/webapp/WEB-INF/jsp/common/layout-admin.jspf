@@ -1,0 +1,96 @@
+<%@ page pageEncoding="UTF-8" %>
+<div class="dockwrap" id="dock">
+
+    <aside class="sidebar">
+
+        <div class="brand">
+            <div class="brand-name">
+                Super Gym
+            </div>
+
+            <div class="brand-role">
+                Quản trị hệ thống
+            </div>
+        </div>
+
+        <nav class="nav" aria-label="Điều hướng chính">
+
+            <div class="nav-group">
+                Tài khoản &amp; bảo mật
+            </div>
+
+            <a
+                href="${pageContext.request.contextPath}/admin/accounts"
+                class="nav-link"
+            >
+                <svg viewBox="0 0 24 24" aria-hidden="true">
+                    <circle cx="9" cy="8" r="3.5"></circle>
+                    <path d="M2.5 20c.6-3.6 3.3-5.5 6.5-5.5s5.9 1.9 6.5 5.5"></path>
+                    <path d="M16 4.6a3.5 3.5 0 0 1 0 6.8"></path>
+                    <path d="M18.5 14.8c1.6.7 2.7 2.4 3 5.2"></path>
+                </svg>
+
+                <span>Tài khoản hệ thống</span>
+            </a>
+
+            <a
+                href="${pageContext.request.contextPath}/admin/audit"
+                class="nav-link"
+            >
+                <svg viewBox="0 0 24 24" aria-hidden="true">
+                    <path d="M6 3h12v18H6z"></path>
+                    <path d="M9 7h6"></path>
+                    <path d="M9 11h6"></path>
+                    <path d="M9 15h4"></path>
+                </svg>
+
+                <span>Audit Log</span>
+            </a>
+
+            <div class="nav-group">
+                Theo dõi
+            </div>
+
+            <a
+                href="${pageContext.request.contextPath}/admin/report"
+                class="nav-link"
+            >
+                <svg viewBox="0 0 24 24" aria-hidden="true">
+                    <path d="M4 20V10"></path>
+                    <path d="M10 20V4"></path>
+                    <path d="M16 20v-7"></path>
+                    <path d="M22 20H2"></path>
+                </svg>
+
+                <span>Báo cáo</span>
+            </a>
+
+        </nav>
+
+        <div class="side-foot">
+
+            <a
+                href="${pageContext.request.contextPath}/logout"
+                class="logout"
+            >
+                Đăng xuất
+            </a>
+
+        </div>
+
+    </aside>
+
+    <button
+        id="dockHandle"
+        class="dock-handle"
+        type="button"
+        aria-label="Mở menu điều hướng"
+        aria-expanded="false"
+        aria-controls="dock"
+    >
+        <svg viewBox="0 0 24 24" aria-hidden="true">
+            <path d="m9 6 6 6-6 6"></path>
+        </svg>
+    </button>
+
+</div>
