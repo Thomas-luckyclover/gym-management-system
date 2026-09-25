@@ -6,14 +6,18 @@ import java.time.LocalDateTime;
  * Entity ánh xạ 1-1 với bảng Accounts trong database SQL Server.
  * Quản lý thông tin tài khoản đăng nhập của người dùng (Person).
  * 
- * <p>Quy tắc & Ràng buộc nghiệp vụ (DBR-02, CBR-17, CBR-18, BR-01, BR-02):</p>
+ * <p>
+ * Quy tắc & Ràng buộc nghiệp vụ (DBR-02, CBR-17, CBR-18, BR-01, BR-02):
+ * </p>
  * <ul>
- *   <li>1 Account gắn đúng 1 Person (UQ_Accounts_PersonId).</li>
- *   <li>PasswordHash có thể NULL nếu tài khoản do Lễ tân tạo (khách chưa đặt mật khẩu).</li>
- *   <li>Status bao gồm: Active, Locked, Inactive.</li>
- *   <li>FailedLoginCount đếm số lần sai mật khẩu liên tiếp (tối đa 5 lần theo BR-01).</li>
- *   <li>LockedUntil lưu thời điểm khóa tạm thời do nhập sai mật khẩu.</li>
- *   <li>accountId, personId, createdAt là bất biến (final), không có setter.</li>
+ * <li>1 Account gắn đúng 1 Person (UQ_Accounts_PersonId).</li>
+ * <li>PasswordHash có thể NULL nếu tài khoản do Lễ tân tạo (khách chưa đặt mật
+ * khẩu).</li>
+ * <li>Status bao gồm: Active, Locked, Inactive.</li>
+ * <li>FailedLoginCount đếm số lần sai mật khẩu liên tiếp (tối đa 5 lần theo
+ * BR-01).</li>
+ * <li>LockedUntil lưu thời điểm khóa tạm thời do nhập sai mật khẩu.</li>
+ * <li>accountId, personId, createdAt là bất biến (final), không có setter.</li>
  * </ul>
  */
 public class Account {
@@ -38,6 +42,7 @@ public class Account {
 
         /**
          * Chuyển giá trị chuỗi từ DB thành enum Status.
+         * 
          * @param dbValue giá trị trong DB (VD "Active")
          * @return Status tương ứng, hoặc null nếu không khớp
          */
@@ -69,10 +74,12 @@ public class Account {
     private final LocalDateTime createdAt;
 
     /**
-     * Constructor tạo đối tượng mới chưa có trong DB (accountId = 0, createdAt = LocalDateTime.now()).
-     * @param personId ID của Person sở hữu tài khoản
+     * Constructor tạo đối tượng mới chưa có trong DB (accountId = 0, createdAt =
+     * LocalDateTime.now()).
+     * 
+     * @param personId     ID của Person sở hữu tài khoản
      * @param passwordHash mật khẩu đã băm (hoặc null nếu chưa đặt)
-     * @param status trạng thái tài khoản
+     * @param status       trạng thái tài khoản
      */
     public Account(int personId, String passwordHash, Status status) {
         this.accountId = 0;
@@ -87,18 +94,19 @@ public class Account {
 
     /**
      * Constructor đầy đủ dùng cho DAO khi đọc từ database.
-     * @param accountId khóa chính AccountId
-     * @param personId khóa ngoại PersonId
-     * @param passwordHash mật khẩu đã băm
-     * @param status trạng thái tài khoản
+     * 
+     * @param accountId        khóa chính AccountId
+     * @param personId         khóa ngoại PersonId
+     * @param passwordHash     mật khẩu đã băm
+     * @param status           trạng thái tài khoản
      * @param failedLoginCount số lần đăng nhập sai
-     * @param lockedUntil thời điểm hết hạn khóa tạm
-     * @param lastLoginAt thời điểm đăng nhập gần nhất
-     * @param createdAt thời điểm tạo tài khoản
+     * @param lockedUntil      thời điểm hết hạn khóa tạm
+     * @param lastLoginAt      thời điểm đăng nhập gần nhất
+     * @param createdAt        thời điểm tạo tài khoản
      */
     public Account(int accountId, int personId, String passwordHash, Status status,
-                   int failedLoginCount, LocalDateTime lockedUntil, LocalDateTime lastLoginAt,
-                   LocalDateTime createdAt) {
+            int failedLoginCount, LocalDateTime lockedUntil, LocalDateTime lastLoginAt,
+            LocalDateTime createdAt) {
         this.accountId = accountId;
         this.personId = personId;
         this.passwordHash = passwordHash;
