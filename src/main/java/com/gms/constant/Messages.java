@@ -99,6 +99,12 @@ public final class Messages {
     /** DBR-04: tuổi vượt quá 100. */
     public static final String EXTRA_DOB_TOO_OLD = "Ngày sinh không hợp lệ (tuổi không quá %d).";
 
+    /** CBR-94: bấm "Gửi lại mã" khi chưa đủ 60 giây kể từ lần gửi trước. */
+    public static final String EXTRA_CODE_RESEND_TOO_SOON = "Vui lòng chờ %d giây nữa rồi bấm Gửi lại mã.";
+
+    /** CBR-31: link đặt mật khẩu sai, đã dùng hoặc đã hết hạn. */
+    public static final String EXTRA_SETUP_LINK_INVALID = "Link đặt mật khẩu không còn hiệu lực. Vui lòng dùng Quên mật khẩu để đặt lại.";
+
     private Messages() {
     }
 }
