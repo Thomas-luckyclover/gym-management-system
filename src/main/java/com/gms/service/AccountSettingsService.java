@@ -14,7 +14,14 @@ import com.gms.listener.SessionRegistryListener;
 import com.gms.util.PasswordUtil;
 import com.gms.util.ValidationUtil;
 import java.sql.SQLException;
+import com.gms.constant.AppConstants;
 
+import java.io.IOException;
+import java.io.InputStream;
+import java.nio.file.Files;
+import java.nio.file.Path;
+import java.nio.file.StandardCopyOption;
+import java.util.UUID;
 /**
  * Nghiệp vụ Account Settings - UC-04.
  */
@@ -99,8 +106,6 @@ public class AccountSettingsService {
             return ServiceResult.ok(view);
 
         } catch (SQLException e) {
-            e.printStackTrace();
-
             return ServiceResult.fail(
                     Messages.MSG04_SYSTEM_BUSY
             );
@@ -261,6 +266,247 @@ public class AccountSettingsService {
             return ServiceResult.fail(
                     Messages.MSG04_SYSTEM_BUSY
             );
+        }
+    }
+    /**
+     * Cập nhật avatar cho chính tài khoản đang đăng nhập.
+     *
+     * Ảnh hợp lệ phải là JPG hoặc PNG và không vượt quá dung lượng
+     * được quy định bởi ValidationUtil/AppConstants.
+     *
+     * @param accountId id tài khoản hiện tại
+     * @param contentType MIME type của file
+     * @param sizeInBytes kích thước file
+     * @param inputStream dữ liệu ảnh
+     * @param uploadDirectory thư mục lưu avatar vật lý
+     * @return kết quả cập nhật
+     */
+    public ServiceResult<Void> updateAvatar(
+            int accountId,
+            String contentType,
+            long sizeInBytes,
+            InputStream inputStream,
+            Path uploadDirectory
+    ) {
+
+        boolean isValidImage =
+                ValidationUtil.isValidImageFile(
+                        contentType,
+                        sizeInBytes
+                );
+
+        if (!isValidImage) {
+
+            long maxSizeMb =
+                    AppConstants.IMAGE_MAX_BYTES
+                            / (1024L * 1024L);
+
+            String message =
+                    String.format(
+                            Messages.MSG20_INVALID_IMAGE,
+                            maxSizeMb + " MB"
+                    );
+
+            return ServiceResult.failField(
+                    "avatarFile",
+                    message
+            );
+        }
+
+        if (inputStream == null
+                || uploadDirectory == null) {
+
+            return ServiceResult.fail(
+                    Messages.MSG04_SYSTEM_BUSY
+            );
+        }
+
+        Path newFilePath = null;
+
+        try {
+
+            Account account =
+                    accountDAO.findById(accountId);
+
+            if (account == null) {
+
+                return ServiceResult.fail(
+                        String.format(
+                                Messages.MSG08_NOT_FOUND,
+                                "tài khoản"
+                        )
+                );
+            }
+
+            Person person =
+                    personDAO.findById(
+                            account.getPersonId()
+                    );
+
+            if (person == null) {
+
+                return ServiceResult.fail(
+                        String.format(
+                                Messages.MSG08_NOT_FOUND,
+                                "hồ sơ"
+                        )
+                );
+            }
+
+            Files.createDirectories(
+                    uploadDirectory
+            );
+
+            String extension =
+                    "image/png".equals(contentType)
+                            ? ".png"
+                            : ".jpg";
+
+            String fileName =
+                    "avatar-"
+                            + person.getPersonId()
+                            + "-"
+                            + UUID.randomUUID()
+                            + extension;
+
+            newFilePath =
+                    uploadDirectory
+                            .resolve(fileName)
+                            .normalize();
+
+            Path normalizedDirectory =
+                    uploadDirectory
+                            .toAbsolutePath()
+                            .normalize();
+
+            Path normalizedFile =
+                    newFilePath
+                            .toAbsolutePath()
+                            .normalize();
+
+            if (!normalizedFile.startsWith(
+                    normalizedDirectory
+            )) {
+
+                return ServiceResult.fail(
+                        Messages.MSG04_SYSTEM_BUSY
+                );
+            }
+
+            Files.copy(
+                    inputStream,
+                    newFilePath,
+                    StandardCopyOption.REPLACE_EXISTING
+            );
+
+            String avatarPath =
+                    "/uploads/avatar/"
+                            + fileName;
+
+            boolean isUpdated =
+                    personDAO.updateAvatar(
+                            person.getPersonId(),
+                            avatarPath
+                    );
+
+            if (!isUpdated) {
+
+                Files.deleteIfExists(
+                        newFilePath
+                );
+
+                return ServiceResult.fail(
+                        Messages.MSG04_SYSTEM_BUSY
+                );
+            }
+
+            deleteOldAvatarFile(
+                    person.getAvatar(),
+                    uploadDirectory
+            );
+
+            return ServiceResult.ok(null);
+
+        } catch (SQLException | IOException e) {
+
+            if (newFilePath != null) {
+
+                try {
+
+                    Files.deleteIfExists(
+                            newFilePath
+                    );
+
+                } catch (IOException ignored) {
+                    // Không làm thay đổi kết quả lỗi chính.
+                }
+            }
+
+            e.printStackTrace();
+
+            return ServiceResult.fail(
+                    Messages.MSG04_SYSTEM_BUSY
+            );
+        }
+    }
+    /**
+     * Xóa avatar cũ do chức năng Account Settings tạo ra.
+     * Không đụng tới ảnh check-in hay loại ảnh khác.
+     *
+     * @param oldAvatarPath đường dẫn avatar cũ trong DB
+     * @param uploadDirectory thư mục avatar vật lý
+     */
+    private void deleteOldAvatarFile(
+            String oldAvatarPath,
+            Path uploadDirectory
+    ) {
+
+        if (ValidationUtil.isNullOrEmpty(
+                oldAvatarPath
+        )) {
+            return;
+        }
+
+        String avatarPrefix =
+                "/uploads/avatar/";
+
+        if (!oldAvatarPath.startsWith(
+                avatarPrefix
+        )) {
+            return;
+        }
+
+        String oldFileName =
+                oldAvatarPath.substring(
+                        avatarPrefix.length()
+                );
+
+        Path normalizedDirectory =
+                uploadDirectory
+                        .toAbsolutePath()
+                        .normalize();
+
+        Path oldFile =
+                uploadDirectory
+                        .resolve(oldFileName)
+                        .toAbsolutePath()
+                        .normalize();
+
+        if (!oldFile.startsWith(
+                normalizedDirectory
+        )) {
+            return;
+        }
+
+        try {
+
+            Files.deleteIfExists(
+                    oldFile
+            );
+
+        } catch (IOException ignored) {
+            // Avatar mới đã cập nhật thành công;
+            // lỗi cleanup file cũ không làm rollback nghiệp vụ.
         }
     }
 }

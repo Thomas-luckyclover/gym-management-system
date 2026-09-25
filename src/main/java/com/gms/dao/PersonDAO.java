@@ -2,6 +2,7 @@ package com.gms.dao;
 
 import com.gms.entity.Person;
 import com.gms.util.DBContext;
+
 import java.sql.Connection;
 import java.sql.PreparedStatement;
 import java.sql.ResultSet;
@@ -20,8 +21,8 @@ public class PersonDAO {
                 + "WHERE PersonId = ?";
 
         try (Connection connection = DBContext.getConnection();
-                PreparedStatement statement
-                = connection.prepareStatement(sql)) {
+             PreparedStatement statement
+                     = connection.prepareStatement(sql)) {
 
             statement.setInt(1, personId);
 
@@ -33,6 +34,46 @@ public class PersonDAO {
         }
 
         return null;
+    }
+
+    /**
+     * Cập nhật đường dẫn ảnh đại diện của một Person.
+     *
+     * @param personId   id hồ sơ
+     * @param avatarPath đường dẫn avatar được lưu
+     * @return true nếu cập nhật đúng một bản ghi
+     * @throws SQLException khi truy vấn database lỗi
+     */
+    public boolean updateAvatar(
+            int personId,
+            String avatarPath
+    ) throws SQLException {
+
+        String sql =
+                "UPDATE Persons "
+                        + "SET Avatar = ? "
+                        + "WHERE PersonId = ?";
+
+        try (Connection connection =
+                     DBContext.getConnection();
+             PreparedStatement statement =
+                     connection.prepareStatement(sql)) {
+
+            statement.setString(
+                    1,
+                    avatarPath
+            );
+
+            statement.setInt(
+                    2,
+                    personId
+            );
+
+            int affectedRows =
+                    statement.executeUpdate();
+
+            return affectedRows == 1;
+        }
     }
 
     private Person mapResultSetToPerson(ResultSet resultSet)

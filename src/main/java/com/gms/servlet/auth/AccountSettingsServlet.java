@@ -13,13 +13,18 @@ import jakarta.servlet.http.HttpServlet;
 import jakarta.servlet.http.HttpServletRequest;
 import jakarta.servlet.http.HttpServletResponse;
 import jakarta.servlet.http.HttpSession;
+import jakarta.servlet.annotation.MultipartConfig;
+import jakarta.servlet.http.Part;
 
+import java.io.InputStream;
+import java.nio.file.Path;
 import java.io.IOException;
 
 /**
  * Controller cho Account Settings dùng chung mọi vai trò.
  */
 @WebServlet("/account")
+@MultipartConfig
 public class AccountSettingsServlet extends HttpServlet {
 
     private static final String VIEW_NAME =
@@ -36,7 +41,8 @@ public class AccountSettingsServlet extends HttpServlet {
 
     private static final String TAB_DEPENDENTS =
             "dependents";
-
+    private static final String ACTION_UPDATE_AVATAR =
+            "updateAvatar";
     private final AccountSettingsService accountSettingsService =
             new AccountSettingsService();
 
@@ -73,6 +79,15 @@ public class AccountSettingsServlet extends HttpServlet {
 
             return;
         }
+        if (ACTION_UPDATE_AVATAR.equals(action)) {
+
+            handleUpdateAvatar(
+                    request,
+                    response
+            );
+
+            return;
+        }
 
         RequestUtil.setFlashToast(
                 request,
@@ -90,7 +105,7 @@ public class AccountSettingsServlet extends HttpServlet {
     /**
      * Xử lý đổi mật khẩu.
      *
-     * @param request request hiện tại
+     * @param request  request hiện tại
      * @param response response hiện tại
      */
     private void handleChangePassword(
@@ -189,11 +204,169 @@ public class AccountSettingsServlet extends HttpServlet {
                 "/account?tab=password"
         );
     }
+    /**
+     * Xử lý upload và cập nhật avatar.
+     *
+     * @param request request hiện tại
+     * @param response response hiện tại
+     */
+    private void handleUpdateAvatar(
+            HttpServletRequest request,
+            HttpServletResponse response
+    ) throws ServletException, IOException {
 
+        HttpSession session =
+                request.getSession(false);
+
+        if (session == null) {
+
+            RequestUtil.redirect(
+                    request,
+                    response,
+                    "/login"
+            );
+
+            return;
+        }
+
+        Integer accountId =
+                (Integer) session.getAttribute(
+                        SessionKey.ACCOUNT_ID
+                );
+
+        if (accountId == null) {
+
+            RequestUtil.redirect(
+                    request,
+                    response,
+                    "/login"
+            );
+
+            return;
+        }
+
+        Part avatarPart =
+                request.getPart(
+                        "avatarFile"
+                );
+
+        if (avatarPart == null
+                || avatarPart.getSize() == 0) {
+
+            request.setAttribute(
+                    "avatarError",
+                    String.format(
+                            Messages.MSG09_REQUIRED,
+                            "Ảnh đại diện"
+                    )
+            );
+
+            request.setAttribute(
+                    "activeTab",
+                    TAB_PROFILE
+            );
+
+            renderAccountSettings(
+                    request,
+                    response
+            );
+
+            return;
+        }
+
+        String uploadDirectoryValue =
+                getServletContext()
+                        .getRealPath(
+                                "/uploads/avatar"
+                        );
+
+        if (uploadDirectoryValue == null) {
+
+            request.setAttribute(
+                    "avatarError",
+                    Messages.MSG04_SYSTEM_BUSY
+            );
+
+            request.setAttribute(
+                    "activeTab",
+                    TAB_PROFILE
+            );
+
+            renderAccountSettings(
+                    request,
+                    response
+            );
+
+            return;
+        }
+
+        Path uploadDirectory =
+                Path.of(
+                        uploadDirectoryValue
+                );
+
+        ServiceResult<Void> result;
+
+        try (InputStream inputStream =
+                     avatarPart.getInputStream()) {
+
+            result =
+                    accountSettingsService.updateAvatar(
+                            accountId,
+                            avatarPart.getContentType(),
+                            avatarPart.getSize(),
+                            inputStream,
+                            uploadDirectory
+                    );
+        }
+
+        if (!result.isSuccess()) {
+
+            request.setAttribute(
+                    "avatarError",
+                    result.getMessage()
+            );
+
+            if (result.getFieldErrors() != null
+                    && result.getFieldErrors()
+                    .get("avatarFile") != null) {
+
+                request.setAttribute(
+                        "avatarError",
+                        result.getFieldErrors()
+                                .get("avatarFile")
+                );
+            }
+
+            request.setAttribute(
+                    "activeTab",
+                    TAB_PROFILE
+            );
+
+            renderAccountSettings(
+                    request,
+                    response
+            );
+
+            return;
+        }
+
+        RequestUtil.setFlashToast(
+                request,
+                "success",
+                Messages.MSG58_AVATAR_CHANGED
+        );
+
+        RequestUtil.redirect(
+                request,
+                response,
+                "/account?tab=profile"
+        );
+    }
     /**
      * Tải dữ liệu và hiển thị Account Settings.
      *
-     * @param request request hiện tại
+     * @param request  request hiện tại
      * @param response response hiện tại
      */
     private void renderAccountSettings(
@@ -310,7 +483,7 @@ public class AccountSettingsServlet extends HttpServlet {
      * Chọn layout, profile và theme tương ứng với vai trò.
      *
      * @param request request hiện tại
-     * @param role vai trò hiện tại
+     * @param role    vai trò hiện tại
      */
     private void configureRoleView(
             HttpServletRequest request,
@@ -420,7 +593,7 @@ public class AccountSettingsServlet extends HttpServlet {
      * Xác định tab đang được mở.
      *
      * @param request request hiện tại
-     * @param role vai trò hiện tại
+     * @param role    vai trò hiện tại
      * @return tên tab hợp lệ
      */
     private String resolveActiveTab(
