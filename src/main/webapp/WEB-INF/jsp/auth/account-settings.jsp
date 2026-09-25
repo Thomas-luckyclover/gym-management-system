@@ -39,6 +39,12 @@
 
         </c:when>
 
+        <c:when test="${currentRole.dbValue eq 'Manager'}">
+
+            <%@ include file="/WEB-INF/jsp/common/layout-manager.jspf" %>
+
+        </c:when>
+
         <c:otherwise>
 
             <%-- Layout role khác đang chờ merge từ thành viên phụ trách. --%>
@@ -113,7 +119,14 @@
             <div class="page-intro">
 
                 <p>
-                    Hồ sơ và mật khẩu của chính bạn.
+                    <c:choose>
+                        <c:when test="${currentRole.dbValue eq 'Manager'}">
+                            Hồ sơ đăng nhập của bạn. Đổi email hoặc SĐT phải xác thực bằng mã gửi tới email mới.
+                        </c:when>
+                        <c:otherwise>
+                            Hồ sơ và mật khẩu của chính bạn.
+                        </c:otherwise>
+                    </c:choose>
                 </p>
 
             </div>
@@ -133,6 +146,13 @@
 
 
             <c:if test="${empty pageError}">
+
+                <%-- Manager: 2 cột Hồ sơ + Mật khẩu như prototype, không dùng tab --%>
+                <c:if test="${currentRole.dbValue eq 'Manager'}">
+                    <%@ include file="/WEB-INF/jsp/auth/account/profile-manager.jspf" %>
+                </c:if>
+
+                <c:if test="${currentRole.dbValue ne 'Manager'}">
 
                 <%-- ================= TAB ================= --%>
 
@@ -260,6 +280,8 @@
                     </c:choose>
 
                 </div>
+
+                </c:if>
 
             </c:if>
 

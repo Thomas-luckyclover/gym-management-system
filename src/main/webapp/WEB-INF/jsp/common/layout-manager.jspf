@@ -1,125 +1,175 @@
 <%--
-  layout-manager.jspf — Sidebar & Header khung dùng chung cho khu vực Quản lý (Manager).
-  Khớp prototype Manager (gms_manager_mockup_v24.html).
+  layout-manager.jspf — Sidebar dock khu Quản lý.
+  Khớp prototype Manager gms_manager_mockup_v24.html (ROLE.dock + NAV).
 --%>
-<%@ page contentType="text/html; charset=UTF-8" pageEncoding="UTF-8" %>
+<%@ page pageEncoding="UTF-8" %>
 <%@ taglib prefix="c" uri="jakarta.tags.core" %>
 
 <div class="dockwrap" id="dock">
-    <aside class="sidebar">
-        <div class="brand">
-            <div class="brand-name">Super Gym</div>
-            <div class="brand-role">Khu vực quản lý</div>
-        </div>
-        
-        <nav class="nav" aria-label="Điều hướng chính">
-            <!-- Nhóm: Cấu hình -->
-            <div class="nav-group">Cấu hình</div>
-            <a href="${pageContext.request.contextPath}/manager/parameters" 
-               class="<c:if test="${activeNav == 'parameters'}">active</c:if>"
-               <c:if test="${activeNav == 'parameters'}">aria-current="page"</c:if>>
-                <i class="fa-solid fa-gear nav-icon"></i>
-                <span>Tham số</span>
-            </a>
-            <a href="${pageContext.request.contextPath}/manager/operating-hours" 
-               class="<c:if test="${activeNav == 'hours'}">active</c:if>"
-               <c:if test="${activeNav == 'hours'}">aria-current="page"</c:if>>
-                <i class="fa-solid fa-clock nav-icon"></i>
-                <span>Giờ hoạt động</span>
-            </a>
+  <aside class="sidebar">
+    <div class="brand">
+      <div class="brand-name">Super Gym</div>
+      <div class="brand-role">Khu vực quản lý</div>
+    </div>
 
-            <!-- Nhóm: Danh mục -->
-            <div class="nav-group">Danh mục</div>
-            <a href="${pageContext.request.contextPath}/manager/membership-packages" 
-               class="<c:if test="${activeNav == 'packages'}">active</c:if>"
-               <c:if test="${activeNav == 'packages'}">aria-current="page"</c:if>>
-                <i class="fa-solid fa-ticket nav-icon"></i>
-                <span>Danh mục gói</span>
-            </a>
-            <a href="${pageContext.request.contextPath}/manager/vouchers" 
-               class="<c:if test="${activeNav == 'vouchers'}">active</c:if>"
-               <c:if test="${activeNav == 'vouchers'}">aria-current="page"</c:if>>
-                <i class="fa-solid fa-tag nav-icon"></i>
-                <span>Voucher</span>
-            </a>
+    <nav class="nav" aria-label="Điều hướng chính">
+      <%-- Nhóm: Cấu hình --%>
+      <div class="nav-group">Cấu hình</div>
+      <a href="${pageContext.request.contextPath}/manager/parameters"
+         class="nav-link<c:if test="${activeNav == 'parameters'}"> active</c:if>"
+         <c:if test="${activeNav == 'parameters'}">aria-current="page"</c:if>>
+        <svg viewBox="0 0 24 24" aria-hidden="true">
+          <circle cx="12" cy="12" r="3"></circle>
+          <path d="M19.4 15a1.7 1.7 0 0 0 .3 1.8l.1.1a2 2 0 1 1-2.8 2.8l-.1-.1a1.7 1.7 0 0 0-1.8-.3 1.7 1.7 0 0 0-1 1.5V21a2 2 0 0 1-4 0v-.1a1.7 1.7 0 0 0-1.1-1.5 1.7 1.7 0 0 0-1.8.3l-.1.1a2 2 0 1 1-2.8-2.8l.1-.1a1.7 1.7 0 0 0 .3-1.8 1.7 1.7 0 0 0-1.5-1H3a2 2 0 0 1 0-4h.1a1.7 1.7 0 0 0 1.5-1.1 1.7 1.7 0 0 0-.3-1.8l-.1-.1a2 2 0 1 1 2.8-2.8l.1.1a1.7 1.7 0 0 0 1.8.3H9a1.7 1.7 0 0 0 1-1.5V3a2 2 0 0 1 4 0v.1a1.7 1.7 0 0 0 1 1.5 1.7 1.7 0 0 0 1.8-.3l.1-.1a2 2 0 1 1 2.8 2.8l-.1.1a1.7 1.7 0 0 0-.3 1.8V9a1.7 1.7 0 0 0 1.5 1H21a2 2 0 0 1 0 4h-.1a1.7 1.7 0 0 0-1.5 1z"></path>
+        </svg>
+        <span>Tham số</span>
+      </a>
+      <a href="${pageContext.request.contextPath}/manager/operating-hours"
+         class="nav-link<c:if test="${activeNav == 'hours'}"> active</c:if>"
+         <c:if test="${activeNav == 'hours'}">aria-current="page"</c:if>>
+        <svg viewBox="0 0 24 24" aria-hidden="true">
+          <circle cx="12" cy="12" r="9"></circle>
+          <path d="M12 7v5l3 2"></path>
+        </svg>
+        <span>Giờ hoạt động</span>
+      </a>
 
-            <!-- Nhóm: Nhân sự & hội viên -->
-            <div class="nav-group">Nhân sự &amp; hội viên</div>
-            <a href="${pageContext.request.contextPath}/manager/staff" 
-               class="<c:if test="${activeNav == 'staff'}">active</c:if>"
-               <c:if test="${activeNav == 'staff'}">aria-current="page"</c:if>>
-                <i class="fa-solid fa-users nav-icon"></i>
-                <span>Nhân sự</span>
-            </a>
-            <a href="${pageContext.request.contextPath}/manager/leave-requests" 
-               class="<c:if test="${activeNav == 'leaves'}">active</c:if>"
-               <c:if test="${activeNav == 'leaves'}">aria-current="page"</c:if>>
-                <i class="fa-solid fa-calendar-days nav-icon"></i>
-                <span>Đơn nghỉ phép</span>
-            </a>
-            <a href="${pageContext.request.contextPath}/manager/members" 
-               class="<c:if test="${activeNav == 'members'}">active</c:if>"
-               <c:if test="${activeNav == 'members'}">aria-current="page"</c:if>>
-                <i class="fa-solid fa-user-group nav-icon"></i>
-                <span>Hội viên</span>
-            </a>
+      <%-- Nhóm: Danh mục --%>
+      <div class="nav-group">Danh mục</div>
+      <a href="${pageContext.request.contextPath}/manager/membership-packages"
+         class="nav-link<c:if test="${activeNav == 'packages'}"> active</c:if>"
+         <c:if test="${activeNav == 'packages'}">aria-current="page"</c:if>>
+        <svg viewBox="0 0 24 24" aria-hidden="true">
+          <path d="M3 8a2 2 0 0 0 0 4v4h18v-4a2 2 0 0 1 0-4V4H3z"></path>
+        </svg>
+        <span>Danh mục gói</span>
+      </a>
+      <a href="${pageContext.request.contextPath}/manager/vouchers"
+         class="nav-link<c:if test="${activeNav == 'vouchers'}"> active</c:if>"
+         <c:if test="${activeNav == 'vouchers'}">aria-current="page"</c:if>>
+        <svg viewBox="0 0 24 24" aria-hidden="true">
+          <path d="M3 12V3h9l9 9-9 9z"></path>
+          <circle cx="7.5" cy="7.5" r="1.3"></circle>
+        </svg>
+        <span>Voucher</span>
+      </a>
 
-            <!-- Nhóm: Vận hành -->
-            <div class="nav-group">Vận hành</div>
-            <a href="${pageContext.request.contextPath}/manager/transactions" 
-               class="<c:if test="${activeNav == 'transactions'}">active</c:if>"
-               <c:if test="${activeNav == 'transactions'}">aria-current="page"</c:if>>
-                <i class="fa-solid fa-money-bill-wave nav-icon"></i>
-                <span>Giao dịch</span>
-            </a>
-            <a href="${pageContext.request.contextPath}/manager/facilities" 
-               class="<c:if test="${activeNav == 'facilities'}">active</c:if>"
-               <c:if test="${activeNav == 'facilities'}">aria-current="page"</c:if>>
-                <i class="fa-solid fa-box-archive nav-icon"></i>
-                <span>Cơ sở vật chất</span>
-            </a>
-            <a href="${pageContext.request.contextPath}/manager/maintenance-requests" 
-               class="<c:if test="${activeNav == 'maintenance'}">active</c:if>"
-               <c:if test="${activeNav == 'maintenance'}">aria-current="page"</c:if>>
-                <i class="fa-solid fa-wrench nav-icon"></i>
-                <span>Bảo trì</span>
-            </a>
-            <a href="${pageContext.request.contextPath}/manager/feedback" 
-               class="<c:if test="${activeNav == 'feedback'}">active</c:if>"
-               <c:if test="${activeNav == 'feedback'}">aria-current="page"</c:if>>
-                <i class="fa-solid fa-comments nav-icon"></i>
-                <span>Góp ý</span>
-            </a>
+      <%-- Nhóm: Nhân sự & hội viên --%>
+      <div class="nav-group">Nhân sự &amp; hội viên</div>
+      <a href="${pageContext.request.contextPath}/manager/staff"
+         class="nav-link<c:if test="${activeNav == 'staff'}"> active</c:if>"
+         <c:if test="${activeNav == 'staff'}">aria-current="page"</c:if>>
+        <svg viewBox="0 0 24 24" aria-hidden="true">
+          <circle cx="9" cy="8" r="3.5"></circle>
+          <path d="M2.5 20c.6-3.6 3.3-5.5 6.5-5.5s5.9 1.9 6.5 5.5"></path>
+          <path d="M16 4.6a3.5 3.5 0 0 1 0 6.8M18.5 14.8c1.6.7 2.7 2.4 3 5.2"></path>
+        </svg>
+        <span>Nhân sự</span>
+      </a>
+      <a href="${pageContext.request.contextPath}/manager/leave-requests"
+         class="nav-link<c:if test="${activeNav == 'leaves'}"> active</c:if>"
+         <c:if test="${activeNav == 'leaves'}">aria-current="page"</c:if>>
+        <svg viewBox="0 0 24 24" aria-hidden="true">
+          <rect x="3" y="5" width="18" height="16" rx="2"></rect>
+          <path d="M3 10h18M8 3v4M16 3v4"></path>
+        </svg>
+        <span>Đơn nghỉ phép</span>
+      </a>
+      <a href="${pageContext.request.contextPath}/manager/members"
+         class="nav-link<c:if test="${activeNav == 'members'}"> active</c:if>"
+         <c:if test="${activeNav == 'members'}">aria-current="page"</c:if>>
+        <svg viewBox="0 0 24 24" aria-hidden="true">
+          <circle cx="9" cy="8" r="3.5"></circle>
+          <path d="M2.5 20c.6-3.6 3.3-5.5 6.5-5.5s5.9 1.9 6.5 5.5"></path>
+          <path d="M16 4.6a3.5 3.5 0 0 1 0 6.8M18.5 14.8c1.6.7 2.7 2.4 3 5.2"></path>
+        </svg>
+        <span>Hội viên</span>
+      </a>
 
-            <!-- Nhóm: Nội dung & báo cáo -->
-            <div class="nav-group">Nội dung &amp; báo cáo</div>
-            <a href="${pageContext.request.contextPath}/blog" 
-               class="<c:if test="${activeNav == 'blog'}">active</c:if>"
-               <c:if test="${activeNav == 'blog'}">aria-current="page"</c:if>>
-                <i class="fa-solid fa-newspaper nav-icon"></i>
-                <span>Blog</span>
-            </a>
-            <a href="${pageContext.request.contextPath}/manager/dashboard" 
-               class="<c:if test="${activeNav == 'report'}">active</c:if>"
-               <c:if test="${activeNav == 'report'}">aria-current="page"</c:if>>
-                <i class="fa-solid fa-chart-line nav-icon"></i>
-                <span>Báo cáo</span>
-            </a>
-        </nav>
+      <%-- Nhóm: Vận hành --%>
+      <div class="nav-group">Vận hành</div>
+      <a href="${pageContext.request.contextPath}/manager/transactions"
+         class="nav-link<c:if test="${activeNav == 'transactions'}"> active</c:if>"
+         <c:if test="${activeNav == 'transactions'}">aria-current="page"</c:if>>
+        <svg viewBox="0 0 24 24" aria-hidden="true">
+          <rect x="2" y="6" width="20" height="12" rx="2"></rect>
+          <circle cx="12" cy="12" r="2.5"></circle>
+          <path d="M6 10v4M18 10v4"></path>
+        </svg>
+        <span>Giao dịch</span>
+      </a>
+      <a href="${pageContext.request.contextPath}/manager/facilities"
+         class="nav-link<c:if test="${activeNav == 'facilities'}"> active</c:if>"
+         <c:if test="${activeNav == 'facilities'}">aria-current="page"</c:if>>
+        <svg viewBox="0 0 24 24" aria-hidden="true">
+          <path d="M3 7l9-4 9 4v10l-9 4-9-4z"></path>
+          <path d="M3 7l9 4 9-4M12 11v10"></path>
+        </svg>
+        <span>Cơ sở vật chất</span>
+      </a>
+      <a href="${pageContext.request.contextPath}/manager/maintenance-requests"
+         class="nav-link<c:if test="${activeNav == 'maintenance'}"> active</c:if>"
+         <c:if test="${activeNav == 'maintenance'}">aria-current="page"</c:if>>
+        <svg viewBox="0 0 24 24" aria-hidden="true">
+          <path d="M14.7 6.3a4 4 0 0 0 5 5L21 13l-8 8-3-3 8-8-1.3-1.3a4 4 0 0 0-5-5z"></path>
+          <path d="M4 20l5-5"></path>
+        </svg>
+        <span>Bảo trì</span>
+      </a>
+      <a href="${pageContext.request.contextPath}/manager/feedback"
+         class="nav-link<c:if test="${activeNav == 'feedback'}"> active</c:if>"
+         <c:if test="${activeNav == 'feedback'}">aria-current="page"</c:if>>
+        <svg viewBox="0 0 24 24" aria-hidden="true">
+          <path d="M4 5h16v11H9l-5 4z"></path>
+        </svg>
+        <span>Góp ý</span>
+      </a>
 
-        <div class="side-foot">
-            <a class="me" href="${pageContext.request.contextPath}/account" title="Cài đặt tài khoản">
-                <span class="avatar"><c:out value="${sessionScope.displayName.substring(0, 1)}" default="M" /></span>
-                <span>
-                    <b><c:out value="${sessionScope.displayName}" default="Quản lý" /></b>
-                    <small>Quản lý</small>
-                </span>
-            </a>
-            <form action="${pageContext.request.contextPath}/logout" method="post">
-                <button type="submit" class="logout">
-                    <i class="fa-solid fa-right-from-bracket"></i> Đăng xuất
-                </button>
-            </form>
-        </div>
-    </aside>
+      <%-- Nhóm: Nội dung & báo cáo --%>
+      <div class="nav-group">Nội dung &amp; báo cáo</div>
+      <a href="${pageContext.request.contextPath}/manager/blog-posts"
+         class="nav-link<c:if test="${activeNav == 'blog'}"> active</c:if>"
+         <c:if test="${activeNav == 'blog'}">aria-current="page"</c:if>>
+        <svg viewBox="0 0 24 24" aria-hidden="true">
+          <path d="M6 3h9l4 4v14H6z"></path>
+          <path d="M15 3v4h4M9 12h7M9 16h7"></path>
+        </svg>
+        <span>Blog</span>
+      </a>
+      <a href="${pageContext.request.contextPath}/manager/notifications/send"
+         class="nav-link<c:if test="${activeNav == 'notify'}"> active</c:if>"
+         <c:if test="${activeNav == 'notify'}">aria-current="page"</c:if>>
+        <svg viewBox="0 0 24 24" aria-hidden="true">
+          <path d="M6 16V11a6 6 0 0 1 12 0v5l2 2H4z"></path>
+          <path d="M10 20a2 2 0 0 0 4 0"></path>
+        </svg>
+        <span>Thông báo</span>
+      </a>
+      <a href="${pageContext.request.contextPath}/manager/dashboard"
+         class="nav-link<c:if test="${activeNav == 'report'}"> active</c:if>"
+         <c:if test="${activeNav == 'report'}">aria-current="page"</c:if>>
+        <svg viewBox="0 0 24 24" aria-hidden="true">
+          <path d="M4 20V4M4 20h16"></path>
+          <path d="M8 16v-4M12 16V8M16 16v-6"></path>
+        </svg>
+        <span>Báo cáo</span>
+      </a>
+    </nav>
+
+    <%-- Prototype dock ẩn khối "me"; tài khoản nằm trên topbar --%>
+    <div class="side-foot">
+      <a href="${pageContext.request.contextPath}/logout" class="logout">Đăng xuất</a>
+    </div>
+  </aside>
+
+  <button class="dock-handle"
+          id="dockHandle"
+          type="button"
+          aria-label="Mở menu điều hướng"
+          aria-expanded="false"
+          aria-controls="dock">
+    <svg viewBox="0 0 24 24" aria-hidden="true">
+      <path d="m9 6 6 6-6 6"></path>
+    </svg>
+  </button>
 </div>

@@ -1,5 +1,6 @@
 package com.gms.servlet.auth;
 
+import com.gms.constant.Messages;
 import com.gms.constant.Role;
 import com.gms.constant.SessionKey;
 import com.gms.dto.JsonResponse;
@@ -107,11 +108,28 @@ public class LoginServlet extends HttpServlet {
                 request.setAttribute("identifier", identifier);
                 request.setAttribute("errorMessage", result.getMessage());
                 request.setAttribute("fieldErrors", result.getFieldErrors());
+                request.setAttribute("loginStep", resolveLoginStep(result.getMessage()));
                 if (RequestUtil.isSafeReturnUrl(returnUrl)) {
                     request.setAttribute("returnUrl", returnUrl);
                 }
                 RequestUtil.forward(request, response, "auth/login");
             }
         }
+    }
+
+    /**
+     * Chọn panel giao diện đăng nhập theo câu thông báo từ AuthService.
+     *
+     * @param errorMessage thông báo lỗi login
+     * @return form | blocked-no-password | blocked-lock
+     */
+    private String resolveLoginStep(String errorMessage) {
+        if (Messages.MSG38_NO_PASSWORD_YET.equals(errorMessage)) {
+            return "blocked-no-password";
+        }
+        if (errorMessage != null && errorMessage.startsWith("Tài khoản bị khóa")) {
+            return "blocked-lock";
+        }
+        return "form";
     }
 }
