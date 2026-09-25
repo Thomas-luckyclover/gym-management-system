@@ -34,4 +34,4 @@ vnpay.return-url=http://localhost:8080/gym-management-system/payment/vnpay-retur
 phone.valid-prefixes=032,033,034,035,036,037,038,039,086,096,097,098,070,076,077,078,079,089,090,093,081,082,083,084,085,088,091,094,052,056,058,092,059,099,087,055
 
 # ===== Upload ảnh (DBR-08) — thư mục NGOÀI project để redeploy không mất ảnh =====
-app.upload-dir=C:/gms-uploads
+app.upload-dir=D:\GMS\Upload
