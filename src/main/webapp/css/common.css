@@ -641,3 +641,177 @@ button {
   margin-bottom: var(--space-3);
   color: var(--color-text-soft);
 }
+
+/* =====================================================================
+   HEADER / FOOTER TRANG KHÁCH — dùng cho common/guest-header.jspf, guest-footer.jspf
+   (trang chủ, blog). Màu tự đổi theo theme trên <body>: theme-guest-dark (nền đen) / theme-guest.
+   ===================================================================== */
+.site-header {
+  position: sticky;
+  top: 0;
+  z-index: var(--z-header);
+  background: var(--color-surface);
+  border-bottom: var(--border-width) solid var(--color-border);
+}
+
+.header-inner {
+  max-width: var(--layout-container-width);
+  margin: 0 auto;
+  padding: var(--space-3) var(--layout-gutter);
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: var(--space-4);
+}
+
+.brand {
+  display: flex;
+  align-items: center;
+  gap: var(--space-2);
+  text-decoration: none;
+}
+
+.brand-logo {
+  display: block;
+  width: 72px;
+  height: 54px;
+  border-radius: var(--radius-sm, 6px);
+}
+
+.brand-mark {
+  font-family: var(--font-display);
+  font-weight: var(--font-weight-extrabold);
+  font-size: var(--font-size-xl);
+  color: var(--color-primary);
+  text-transform: uppercase;
+  letter-spacing: var(--letter-spacing-tight);
+}
+
+.nav-links {
+  display: flex;
+  gap: var(--space-5);
+}
+
+.nav-links a {
+  color: var(--color-text-soft);
+  font-size: var(--font-size-md);
+  font-weight: var(--font-weight-semibold);
+  text-decoration: none;
+}
+
+.nav-links a:hover,
+.nav-links a[aria-current="page"] {
+  color: var(--color-primary);
+}
+
+.header-actions {
+  display: flex;
+  align-items: center;
+  gap: var(--space-2-5);
+}
+
+.inline-form {
+  display: inline;
+}
+
+.hamburger {
+  display: none;
+  padding: var(--space-2);
+  background: none;
+  border: var(--border-width) solid var(--color-border);
+  border-radius: var(--radius-sm);
+  color: var(--color-text);
+  cursor: pointer;
+}
+
+/* Chỉ hiện khi bỏ thuộc tính hidden (common.js bật/tắt qua data-toggle-target) */
+.mobile-nav:not([hidden]) {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-3);
+  padding: var(--space-4) var(--layout-gutter);
+  border-top: var(--border-width) solid var(--color-border);
+}
+
+.mobile-nav a {
+  color: var(--color-text);
+  font-weight: var(--font-weight-semibold);
+  text-decoration: none;
+}
+
+.site-footer {
+  background: var(--color-surface-inverse);
+  color: var(--color-text-inverse-soft);
+}
+
+.footer-inner {
+  max-width: var(--layout-container-width);
+  margin: 0 auto;
+  padding: var(--space-8) var(--layout-gutter) var(--space-6);
+  display: grid;
+  grid-template-columns: 1.5fr repeat(3, 1fr);
+  gap: var(--space-6);
+}
+
+.footer-brand {
+  font-family: var(--font-display);
+  font-weight: var(--font-weight-extrabold);
+  font-size: var(--font-size-xl);
+  color: var(--color-text-inverse);
+  text-transform: uppercase;
+}
+
+.footer-tag {
+  margin-top: var(--space-2-5);
+  max-width: 34ch;
+  font-size: var(--font-size-sm);
+}
+
+.footer-col h4 {
+  margin-bottom: var(--space-3);
+  font-size: var(--font-size-xs);
+  text-transform: uppercase;
+  letter-spacing: var(--letter-spacing-wider);
+  color: var(--color-text-inverse);
+}
+
+.footer-col a,
+.footer-col p {
+  display: block;
+  margin: 0;
+  padding: var(--space-1) 0;
+  font-size: var(--font-size-sm);
+  color: var(--color-text-inverse-soft);
+  text-decoration: none;
+}
+
+.footer-col a:hover {
+  color: var(--color-lime);
+}
+
+.footer-col i {
+  width: 16px;
+  color: var(--color-lime);
+}
+
+.footer-bottom {
+  padding: var(--space-4) var(--layout-gutter);
+  border-top: var(--border-width) solid var(--color-border-inverse);
+  text-align: center;
+  font-size: var(--font-size-xs);
+}
+
+@media (max-width: 768px) {
+  .nav-links,
+  .header-actions {
+    display: none;
+  }
+
+  .hamburger {
+    display: inline-flex;
+  }
+
+  .footer-inner {
+    grid-template-columns: 1fr 1fr;
+  }
+}

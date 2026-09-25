@@ -1,0 +1,75 @@
+<%@ page pageEncoding="UTF-8" %>
+<%--
+  guest-header.jspf — header dùng chung cho trang khách: trang chủ, blog.
+  CSS nằm trong common.css (mục "Header/Footer trang khách").
+
+  Cách dùng (đặt ngay sau <body>), activeNav để tô đậm mục menu đang mở: home | blog
+      <c:set var="activeNav" value="home" />
+      <%@ include file="/WEB-INF/jsp/common/guest-header.jspf" %>
+
+  Đã đăng nhập: nút tên người dùng trỏ về /login — LoginServlet tự chuyển tới đúng trang chính của vai trò
+  (Hội viên → /customer/dashboard, PT → /pt/dashboard...), nên header không cần biết vai trò.
+--%>
+<c:set var="ctx" value="${pageContext.request.contextPath}" />
+<header class="site-header">
+  <div class="header-inner">
+    <a class="brand" href="${ctx}/">
+      <img class="brand-logo" src="${ctx}/images/logo-mark.png?v=2" alt="" width="72" height="54">
+      <span class="brand-mark">Super Gym</span>
+    </a>
+
+    <nav class="nav-links" aria-label="Menu chính">
+      <a href="${ctx}/" ${activeNav == 'home' ? 'aria-current="page"' : ''}>Trang chủ</a>
+      <a href="${ctx}/#dich-vu">Dịch vụ</a>
+      <a href="${ctx}/#pricing">Bảng giá</a>
+      <a href="${ctx}/#doi-ngu">Huấn luyện viên</a>
+      <a href="${ctx}/blog" ${activeNav == 'blog' ? 'aria-current="page"' : ''}>Blog</a>
+      <a href="${ctx}/#faq">Hỏi đáp</a>
+    </nav>
+
+    <div class="header-actions">
+      <c:choose>
+        <c:when test="${not empty sessionScope.accountId}">
+          <a class="btn btn-ghost btn-sm" href="${ctx}/login">
+            <i class="fa-regular fa-user"></i> <c:out value="${sessionScope.displayName}" />
+          </a>
+          <form action="${ctx}/logout" method="post" class="inline-form">
+            <button class="btn btn-ghost btn-sm" type="submit">
+              <i class="fa-solid fa-arrow-right-from-bracket"></i> Đăng xuất
+            </button>
+          </form>
+        </c:when>
+        <c:otherwise>
+          <a class="btn btn-ghost btn-sm" href="${ctx}/login">Đăng nhập</a>
+          <a class="btn btn-primary btn-sm" href="${ctx}/register">Đăng ký</a>
+        </c:otherwise>
+      </c:choose>
+    </div>
+
+    <%-- common.js tự bắt [data-toggle-target] để mở/đóng menu mobile --%>
+    <button class="hamburger" type="button" data-toggle-target="mobileNav"
+            aria-label="Mở menu" aria-expanded="false" aria-controls="mobileNav">
+      <i class="fa-solid fa-bars"></i>
+    </button>
+  </div>
+
+  <div class="mobile-nav" id="mobileNav" hidden>
+    <a href="${ctx}/">Trang chủ</a>
+    <a href="${ctx}/#pricing">Bảng giá</a>
+    <a href="${ctx}/#doi-ngu">Huấn luyện viên</a>
+    <a href="${ctx}/blog">Blog</a>
+    <a href="${ctx}/#faq">Hỏi đáp</a>
+    <c:choose>
+      <c:when test="${not empty sessionScope.accountId}">
+        <a href="${ctx}/login"><i class="fa-regular fa-user"></i> <c:out value="${sessionScope.displayName}" /></a>
+        <form action="${ctx}/logout" method="post">
+          <button class="btn btn-ghost btn-sm" type="submit">Đăng xuất</button>
+        </form>
+      </c:when>
+      <c:otherwise>
+        <a href="${ctx}/login">Đăng nhập</a>
+        <a href="${ctx}/register">Đăng ký</a>
+      </c:otherwise>
+    </c:choose>
+  </div>
+</header>
