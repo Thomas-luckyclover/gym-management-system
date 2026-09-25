@@ -592,3 +592,6 @@ body.dock {
 .account-tab-content {
     width: 100%;
 }
+img.avatar {
+    object-fit: cover;
+}

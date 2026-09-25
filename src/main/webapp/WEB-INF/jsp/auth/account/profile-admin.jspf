@@ -94,6 +94,11 @@
                 </button>
 
             </form>
+            <c:if test="${not empty avatarError}">
+                <span class="field-error">
+                    <c:out value="${avatarError}" />
+                </span>
+            </c:if>
 
         </div>
         <h2>Hồ sơ</h2>

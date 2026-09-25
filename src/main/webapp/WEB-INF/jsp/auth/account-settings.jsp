@@ -71,13 +71,29 @@
                         title="Cài đặt tài khoản"
                     >
 
-                        <span class="avatar">
+                        <c:choose>
 
-                            <c:out
-                                value="${accountSettings.fullName.substring(0, 1)}"
-                            />
+                            <c:when test="${not empty accountSettings.avatar}">
 
-                        </span>
+                                <img
+                                    class="avatar"
+                                    src="${pageContext.request.contextPath}${accountSettings.avatar}"
+                                    alt="Ảnh đại diện"
+                                >
+
+                            </c:when>
+
+                            <c:otherwise>
+
+                                <span class="avatar">
+                                    <c:out
+                                        value="${accountSettings.fullName.substring(0, 1)}"
+                                    />
+                                </span>
+
+                            </c:otherwise>
+
+                        </c:choose>
 
                         <span class="tb-user-text">
 

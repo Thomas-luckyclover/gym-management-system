@@ -234,4 +234,25 @@ public class PersonDAO {
 
                 return person;
         }
+
+        /**
+         * Cập nhật đường dẫn ảnh đại diện của hồ sơ.
+         *
+         * @param personId   mã hồ sơ
+         * @param avatarPath đường dẫn ảnh đại diện
+         * @return true nếu cập nhật thành công
+         * @throws SQLException khi truy vấn database lỗi
+         */
+        public boolean updateAvatar(int personId, String avatarPath) throws SQLException {
+                String sql = "UPDATE Persons SET Avatar = ? WHERE PersonId = ?";
+
+                try (Connection conn = DBContext.getConnection();
+                                PreparedStatement stmt = conn.prepareStatement(sql)) {
+
+                        stmt.setString(1, avatarPath);
+                        stmt.setInt(2, personId);
+
+                        return stmt.executeUpdate() == 1;
+                }
+        }
 }
