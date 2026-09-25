@@ -1,0 +1,190 @@
+<%--
+  profile-manager.jspf — Giao diện Cài đặt tài khoản dành riêng cho vai trò Quản lý (Manager).
+  Khớp prototype Manager v24 (màn #4 Account Settings / UC-04 Manage Personal Account).
+--%>
+<%@ page contentType="text/html; charset=UTF-8" pageEncoding="UTF-8" %>
+<%@ taglib prefix="c" uri="jakarta.tags.core" %>
+
+<div class="account-settings-wrap">
+    <div class="page-head">
+        <div>
+            <h1>Tài khoản cá nhân</h1>
+            <p>Quản lý thông tin liên hệ và mật khẩu đăng nhập tài khoản Quản lý.</p>
+        </div>
+    </div>
+
+    <!-- Banner báo lỗi chung nếu có -->
+    <div id="generalErrorBanner" class="auth-alert error-alert <c:if test='${empty errorMessage}'>hidden</c:if>">
+        <i class="fa-solid fa-circle-exclamation alert-icon"></i>
+        <span id="generalErrorText"><c:out value="${errorMessage}" /></span>
+    </div>
+
+    <div class="grid-half">
+        <!-- Thông tin cá nhân & Liên hệ -->
+        <div class="card pad">
+            <h2>Thông tin tài khoản</h2>
+            <p class="sub">Thông tin cá nhân và liên hệ của người dùng.</p>
+
+            <form id="profileForm" 
+                  action="${pageContext.request.contextPath}/account/update-profile" 
+                  method="post" 
+                  class="stack" 
+                  novalidate 
+                  data-validate 
+                  data-unsaved-warning>
+                  
+                <div class="f">
+                    <label for="fullNameInput">Họ và tên</label>
+                    <input class="input" 
+                           type="text" 
+                           id="fullNameInput" 
+                           value="<c:out value='${fullName}' default='${sessionScope.displayName}' />" 
+                           readonly 
+                           disabled>
+                    <span class="hint">Thông tin cá nhân do Ban Quản trị cập nhật.</span>
+                </div>
+
+                <div class="f">
+                    <label for="positionInput">Chức danh</label>
+                    <input class="input" 
+                           type="text" 
+                           id="positionInput" 
+                           value="Quản lý (Manager)" 
+                           readonly 
+                           disabled>
+                </div>
+
+                <!-- Ô nhập Email -->
+                <div class="f <c:if test='${not empty fieldErrors.email}'>bad</c:if>">
+                    <label for="emailInput">Email đăng nhập <span class="req">*</span></label>
+                    <input class="input" 
+                           type="email" 
+                           id="emailInput" 
+                           name="email" 
+                           value="<c:out value='${userEmail}' />" 
+                           maxlength="100" 
+                           data-rule="email" 
+                           data-label="Email đăng nhập" 
+                           required>
+                    <span class="err"><c:out value="${fieldErrors.email}" /></span>
+                    <span class="hint">Đổi email sẽ gửi mã xác thực 6 số tới email mới để xác nhận.</span>
+                </div>
+
+                <!-- Ô nhập Số điện thoại -->
+                <div class="f <c:if test='${not empty fieldErrors.phone}'>bad</c:if>">
+                    <label for="phoneInput">Số điện thoại <span class="req">*</span></label>
+                    <input class="input" 
+                           type="tel" 
+                           id="phoneInput" 
+                           name="phone" 
+                           value="<c:out value='${userPhone}' />" 
+                           maxlength="10" 
+                           inputmode="numeric" 
+                           data-rule="phone" 
+                           data-label="Số điện thoại" 
+                           required>
+                    <span class="err"><c:out value="${fieldErrors.phone}" /></span>
+                    <span class="hint">Đổi số điện thoại sẽ gửi mã xác thực 6 số tới email hiện tại.</span>
+                </div>
+
+                <!-- Bước 2: Nhập mã xác thực (khi người dùng thay đổi Email/SĐT) -->
+                <div id="verificationCodeStep" class="f <c:if test='${not empty fieldErrors.code}'>bad</c:if> <c:if test='${empty requireVerification}'>hidden</c:if>">
+                    <div class="label-row">
+                        <label for="verificationCodeInput">Mã xác thực (6 chữ số) <span class="req">*</span></label>
+                        <button type="button" id="resendCodeBtn" class="btn btn-sm btn-link" disabled data-resend-countdown="60">
+                            Gửi lại mã (<span id="resendTimer">60</span>s)
+                        </button>
+                    </div>
+                    <input class="input" 
+                           type="text" 
+                           id="verificationCodeInput" 
+                           name="verificationCode" 
+                           maxlength="6" 
+                           inputmode="numeric" 
+                           data-rule="verificationCode" 
+                           data-label="Mã xác thực" 
+                           placeholder="Nhập 6 chữ số">
+                    <span class="err"><c:out value="${fieldErrors.code}" /></span>
+                    <span class="hint">Mã xác thực có hiệu lực trong 15 phút: <strong id="codeExpirationTimer" data-countdown-seconds="900">15:00</strong></span>
+                </div>
+
+                <div class="form-actions">
+                    <button type="submit" id="saveProfileBtn" class="btn btn-primary">Lưu thay đổi</button>
+                </div>
+            </form>
+        </div>
+
+        <!-- Đổi mật khẩu -->
+        <div class="card pad">
+            <h2>Đổi mật khẩu</h2>
+            <p class="sub">Sau khi đổi mật khẩu thành công, tất cả các phiên đăng nhập trên thiết bị khác sẽ bị đăng xuất.</p>
+
+            <form id="changePasswordForm" 
+                  action="${pageContext.request.contextPath}/account/change-password" 
+                  method="post" 
+                  class="stack" 
+                  novalidate 
+                  data-validate 
+                  data-unsaved-warning>
+
+                <div class="f <c:if test='${not empty fieldErrors.oldPassword}'>bad</c:if>">
+                    <label for="oldPassword">Mật khẩu hiện tại <span class="req">*</span></label>
+                    <div class="input-wrapper">
+                        <input class="input" 
+                               type="password" 
+                               id="oldPassword" 
+                               name="oldPassword" 
+                               autocomplete="current-password" 
+                               data-label="Mật khẩu hiện tại" 
+                               required>
+                        <button type="button" class="toggle-password-btn" data-password-toggle="oldPassword" aria-label="Hiện/Ẩn mật khẩu">
+                            <i class="fa-solid fa-eye eye-icon"></i>
+                        </button>
+                    </div>
+                    <span class="err"><c:out value="${fieldErrors.oldPassword}" /></span>
+                </div>
+
+                <div class="f <c:if test='${not empty fieldErrors.newPassword}'>bad</c:if>">
+                    <label for="newPassword">Mật khẩu mới <span class="req">*</span></label>
+                    <div class="input-wrapper">
+                        <input class="input" 
+                               type="password" 
+                               id="newPassword" 
+                               name="newPassword" 
+                               autocomplete="new-password" 
+                               data-rule="password" 
+                               data-label="Mật khẩu mới" 
+                               required>
+                        <button type="button" class="toggle-password-btn" data-password-toggle="newPassword" aria-label="Hiện/Ẩn mật khẩu">
+                            <i class="fa-solid fa-eye eye-icon"></i>
+                        </button>
+                    </div>
+                    <span class="hint">Mật khẩu từ 8–64 ký tự, gồm cả chữ cái và chữ số.</span>
+                    <span class="err"><c:out value="${fieldErrors.newPassword}" /></span>
+                </div>
+
+                <div class="f <c:if test='${not empty fieldErrors.confirmPassword}'>bad</c:if>">
+                    <label for="confirmPassword">Nhập lại mật khẩu mới <span class="req">*</span></label>
+                    <div class="input-wrapper">
+                        <input class="input" 
+                               type="password" 
+                               id="confirmPassword" 
+                               name="confirmPassword" 
+                               autocomplete="new-password" 
+                               data-match="newPassword" 
+                               data-label="Nhập lại mật khẩu mới" 
+                               required>
+                        <button type="button" class="toggle-password-btn" data-password-toggle="confirmPassword" aria-label="Hiện/Ẩn mật khẩu">
+                            <i class="fa-solid fa-eye eye-icon"></i>
+                        </button>
+                    </div>
+                    <span class="err"><c:out value="${fieldErrors.confirmPassword}" /></span>
+                </div>
+
+                <div class="form-actions">
+                    <button type="submit" id="changePasswordBtn" class="btn btn-primary">Đổi mật khẩu</button>
+                </div>
+            </form>
+        </div>
+    </div>
+</div>
