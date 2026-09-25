@@ -283,6 +283,6 @@ function validateConfirmPasswordField(passwordInput, confirmInput) {
         return false;
     }
 
-    setFieldError(input, "confirmPasswordError", "");
+    setFieldError(confirmInput, "confirmPasswordError", "");
     return true;
 }
