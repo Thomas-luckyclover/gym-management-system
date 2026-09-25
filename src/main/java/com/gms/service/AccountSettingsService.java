@@ -106,6 +106,7 @@ public class AccountSettingsService {
             return ServiceResult.ok(view);
 
         } catch (SQLException e) {
+            e.printStackTrace();
             return ServiceResult.fail(
                     Messages.MSG04_SYSTEM_BUSY
             );

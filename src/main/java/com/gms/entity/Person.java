@@ -4,34 +4,47 @@ import java.time.LocalDate;
 import java.time.LocalDateTime;
 
 /**
- * Thông tin chung của một người trong hệ thống, ánh xạ bảng Persons.
+ * Entity ánh xạ bảng Persons trong cơ sở dữ liệu.
+ * Chứa thông tin định danh con người dùng chung cho cả khách hàng và nhân viên.
  */
 public class Person {
 
-    private final int personId;
+    private int personId;
     private String fullName;
     private LocalDate dateOfBirth;
     private String phone;
     private String email;
     private String avatar;
-    private boolean released;
-    private final LocalDateTime createdAt;
+    private boolean isReleased;
+    private LocalDateTime createdAt;
 
-    public Person(int personId, String fullName, LocalDate dateOfBirth,
-            String phone, String email, String avatar,
-            boolean released, LocalDateTime createdAt) {
+    public Person() {
+    }
+
+    public Person(String fullName, LocalDate dateOfBirth, String phone, String email) {
+        this.fullName = fullName;
+        this.dateOfBirth = dateOfBirth;
+        this.phone = phone;
+        this.email = email;
+    }
+
+    public Person(int personId, String fullName, LocalDate dateOfBirth, String phone, String email, String avatar, boolean isReleased, LocalDateTime createdAt) {
         this.personId = personId;
         this.fullName = fullName;
         this.dateOfBirth = dateOfBirth;
         this.phone = phone;
         this.email = email;
         this.avatar = avatar;
-        this.released = released;
+        this.isReleased = isReleased;
         this.createdAt = createdAt;
     }
 
     public int getPersonId() {
         return personId;
+    }
+
+    public void setPersonId(int personId) {
+        this.personId = personId;
     }
 
     public String getFullName() {
@@ -75,14 +88,18 @@ public class Person {
     }
 
     public boolean isReleased() {
-        return released;
+        return isReleased;
     }
 
     public void setReleased(boolean released) {
-        this.released = released;
+        isReleased = released;
     }
 
     public LocalDateTime getCreatedAt() {
         return createdAt;
+    }
+
+    public void setCreatedAt(LocalDateTime createdAt) {
+        this.createdAt = createdAt;
     }
 }
