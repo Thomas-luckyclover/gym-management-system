@@ -1,0 +1,41 @@
+<%@ page pageEncoding="UTF-8" %>
+<%--
+  guest-footer.jspf — footer dùng chung cho trang khách: trang chủ, blog.
+  CSS nằm trong common.css (mục "Header/Footer trang khách").
+
+  Cách dùng (đặt cuối <body>):
+      <%@ include file="/WEB-INF/jsp/common/guest-footer.jspf" %>
+
+  Giờ mở cửa (luật 2.6): trang nào có dữ liệu thì set biến openingHours trước khi include, VD trang chủ:
+      <c:set var="openingHours" value="${home.openingHours}" />
+  Không set ở footer ẩn dòng giờ mở cửa (không hiện giờ giả).
+--%>
+<footer class="site-footer">
+  <div class="footer-inner">
+    <div>
+      <div class="footer-brand">Super Gym</div>
+      <p class="footer-tag">Theo dõi tiến độ, đặt lịch PT và quản lý gói tập trong một tài khoản duy nhất.</p>
+    </div>
+    <div class="footer-col">
+      <h4>Khám phá</h4>
+      <a href="${pageContext.request.contextPath}/">Trang chủ</a>
+      <a href="${pageContext.request.contextPath}/#pricing">Bảng giá</a>
+      <a href="${pageContext.request.contextPath}/blog">Blog</a>
+    </div>
+    <div class="footer-col">
+      <h4>Tài khoản</h4>
+      <a href="${pageContext.request.contextPath}/login">Đăng nhập</a>
+      <a href="${pageContext.request.contextPath}/register">Đăng ký</a>
+      <a href="${pageContext.request.contextPath}/forgot-password">Quên mật khẩu</a>
+    </div>
+    <div class="footer-col">
+      <h4>Liên hệ</h4>
+      <p><i class="fa-solid fa-location-dot"></i> 12 Nguyễn Huệ, Q.1, TP.HCM</p>
+      <c:if test="${not empty openingHours}">
+        <p><i class="fa-solid fa-clock"></i> <c:out value="${openingHours}" /> mỗi ngày</p>
+      </c:if>
+      <a href="tel:19006868"><i class="fa-solid fa-phone"></i> 1900 6868</a>
+    </div>
+  </div>
+  <div class="footer-bottom">© 2026 Super Gym</div>
+</footer>
