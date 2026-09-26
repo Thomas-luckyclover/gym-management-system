@@ -15,7 +15,9 @@ import com.gms.util.PasswordUtil;
 import com.gms.util.ValidationUtil;
 import java.sql.SQLException;
 import com.gms.constant.AppConstants;
+import com.gms.util.DBContext;
 
+import java.sql.Connection;
 import java.io.IOException;
 import java.io.InputStream;
 import java.nio.file.Files;
@@ -30,11 +32,13 @@ public class AccountSettingsService {
     private final AccountDAO accountDAO;
     private final PersonDAO personDAO;
     private final EmployeeDAO employeeDAO;
+    private final AuditLogService auditLogService;
 
     public AccountSettingsService() {
         accountDAO = new AccountDAO();
         personDAO = new PersonDAO();
         employeeDAO = new EmployeeDAO();
+        auditLogService = new AuditLogService();
     }
 
     /**
@@ -239,20 +243,55 @@ public class AccountSettingsService {
                             newPassword
                     );
 
-            boolean isUpdated =
-                    accountDAO.updatePasswordHash(
+// B8: Cập nhật mật khẩu và ghi AuditLog
+// trong cùng một transaction
+            try (Connection conn =
+                         DBContext.getConnection()) {
+
+                conn.setAutoCommit(false);
+
+                try {
+                    boolean isUpdated =
+                            accountDAO.updatePasswordHash(
+                                    conn,
+                                    accountId,
+                                    newPasswordHash
+                            );
+
+                    if (!isUpdated) {
+                        conn.rollback();
+
+                        return ServiceResult.fail(
+                                "Không thể cập nhật mật khẩu."
+                        );
+                    }
+
+                    auditLogService.logInTransaction(
+                            conn,
                             accountId,
-                            newPasswordHash
+                            "Người dùng đã thay đổi mật khẩu của tài khoản cá nhân.",
+                            "Account",
+                            accountId,
+                            "PasswordHash",
+                            null,
+                            null,
+                            null
                     );
 
-            if (!isUpdated) {
-                return ServiceResult.fail(
-                        "Không thể cập nhật mật khẩu."
-                );
+                    conn.commit();
+
+                } catch (SQLException e) {
+                    conn.rollback();
+                    e.printStackTrace();
+
+                    return ServiceResult.fail(
+                            Messages.MSG04_SYSTEM_BUSY
+                    );
+                }
             }
 
-            // B8: Đăng xuất tất cả phiên khác,
-            // giữ lại phiên hiện tại
+// B9: Đăng xuất tất cả phiên khác,
+// giữ lại phiên hiện tại
             SessionRegistryListener
                     .invalidateSessionsOfAccount(
                             accountId,

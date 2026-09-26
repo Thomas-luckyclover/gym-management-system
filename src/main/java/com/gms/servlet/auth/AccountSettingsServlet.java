@@ -15,7 +15,9 @@ import jakarta.servlet.http.HttpServletResponse;
 import jakarta.servlet.http.HttpSession;
 import jakarta.servlet.annotation.MultipartConfig;
 import jakarta.servlet.http.Part;
-
+import com.gms.service.AuditLogService;
+import com.gms.service.ContactChangeService;
+import com.gms.service.ContactChangeService.ContactField;
 import java.io.InputStream;
 import java.nio.file.Path;
 import java.io.IOException;
@@ -43,8 +45,21 @@ public class AccountSettingsServlet extends HttpServlet {
             "dependents";
     private static final String ACTION_UPDATE_AVATAR =
             "updateAvatar";
+    private static final String ACTION_REQUEST_EMAIL_CHANGE =
+            "requestEmailChange";
+
+    private static final String ACTION_REQUEST_PHONE_CHANGE =
+            "requestPhoneChange";
+
+    private static final String ACTION_VERIFY_CONTACT_CHANGE =
+            "verifyContactChange";
     private final AccountSettingsService accountSettingsService =
             new AccountSettingsService();
+    private final ContactChangeService contactChangeService =
+            new ContactChangeService();
+
+    private final AuditLogService auditLogService =
+            new AuditLogService();
 
     @Override
     protected void doGet(
@@ -88,7 +103,35 @@ public class AccountSettingsServlet extends HttpServlet {
 
             return;
         }
+        if (ACTION_REQUEST_EMAIL_CHANGE.equals(action)) {
 
+            handleRequestEmailChange(
+                    request,
+                    response
+            );
+
+            return;
+        }
+
+        if (ACTION_REQUEST_PHONE_CHANGE.equals(action)) {
+
+            handleRequestPhoneChange(
+                    request,
+                    response
+            );
+
+            return;
+        }
+
+        if (ACTION_VERIFY_CONTACT_CHANGE.equals(action)) {
+
+            handleVerifyContactChange(
+                    request,
+                    response
+            );
+
+            return;
+        }
         RequestUtil.setFlashToast(
                 request,
                 "error",
@@ -101,7 +144,522 @@ public class AccountSettingsServlet extends HttpServlet {
                 "/account"
         );
     }
+    /**
+     * Gửi mã xác thực khi Admin yêu cầu đổi email.
+     *
+     * @param request request hiện tại
+     * @param response response hiện tại
+     */
+    private void handleRequestEmailChange(
+            HttpServletRequest request,
+            HttpServletResponse response
+    ) throws ServletException, IOException {
 
+        HttpSession session =
+                request.getSession(false);
+
+        if (session == null) {
+            RequestUtil.redirect(
+                    request,
+                    response,
+                    "/login"
+            );
+
+            return;
+        }
+
+        Integer accountId =
+                (Integer) session.getAttribute(
+                        SessionKey.ACCOUNT_ID
+                );
+
+        if (accountId == null) {
+            RequestUtil.redirect(
+                    request,
+                    response,
+                    "/login"
+            );
+
+            return;
+        }
+
+        String newEmail =
+                RequestUtil.getTrimmedParam(
+                        request,
+                        "newEmail"
+                );
+
+        request.setAttribute(
+                "newEmail",
+                newEmail
+        );
+
+        ServiceResult<Void> result =
+                contactChangeService.requestEmailChange(
+                        accountId,
+                        newEmail
+                );
+
+        if (!result.isSuccess()) {
+
+            request.setAttribute(
+                    "errors",
+                    result.getFieldErrors()
+            );
+
+            request.setAttribute(
+                    "formMessage",
+                    result.getMessage()
+            );
+
+            request.setAttribute(
+                    "activeTab",
+                    TAB_PROFILE
+            );
+
+            renderAccountSettings(
+                    request,
+                    response
+            );
+
+            return;
+        }
+
+        prepareContactVerification(
+                request,
+                ContactField.EMAIL,
+                newEmail,
+                newEmail,
+                result.getMessage()
+        );
+
+        renderAccountSettings(
+                request,
+                response
+        );
+    }
+    /**
+     * Gửi mã xác thực khi Admin yêu cầu đổi số điện thoại.
+     *
+     * @param request request hiện tại
+     * @param response response hiện tại
+     */
+    private void handleRequestPhoneChange(
+            HttpServletRequest request,
+            HttpServletResponse response
+    ) throws ServletException, IOException {
+
+        HttpSession session =
+                request.getSession(false);
+
+        if (session == null) {
+            RequestUtil.redirect(
+                    request,
+                    response,
+                    "/login"
+            );
+
+            return;
+        }
+
+        Integer accountId =
+                (Integer) session.getAttribute(
+                        SessionKey.ACCOUNT_ID
+                );
+
+        String roleValue =
+                (String) session.getAttribute(
+                        SessionKey.ROLE
+                );
+
+        if (accountId == null
+                || roleValue == null) {
+
+            RequestUtil.redirect(
+                    request,
+                    response,
+                    "/login"
+            );
+
+            return;
+        }
+
+        Role role =
+                Role.fromDbValue(
+                        roleValue
+                );
+
+        if (role == null) {
+            response.sendError(
+                    HttpServletResponse.SC_FORBIDDEN,
+                    Messages.MSG07_NO_PERMISSION
+            );
+
+            return;
+        }
+
+        ServiceResult<AccountSettingsView> settingsResult =
+                accountSettingsService.getAccountSettings(
+                        accountId,
+                        role
+                );
+
+        if (!settingsResult.isSuccess()) {
+
+            request.setAttribute(
+                    "pageError",
+                    settingsResult.getMessage()
+            );
+
+            renderAccountSettings(
+                    request,
+                    response
+            );
+
+            return;
+        }
+
+        String newPhone =
+                RequestUtil.getTrimmedParam(
+                        request,
+                        "newPhone"
+                );
+
+        request.setAttribute(
+                "newPhone",
+                newPhone
+        );
+
+        AccountSettingsView settings =
+                settingsResult.getData();
+
+        ServiceResult<Void> result =
+                contactChangeService.requestPhoneChange(
+                        accountId,
+                        settings.getEmail(),
+                        newPhone
+                );
+
+        if (!result.isSuccess()) {
+
+            request.setAttribute(
+                    "errors",
+                    result.getFieldErrors()
+            );
+
+            request.setAttribute(
+                    "formMessage",
+                    result.getMessage()
+            );
+
+            request.setAttribute(
+                    "activeTab",
+                    TAB_PROFILE
+            );
+
+            renderAccountSettings(
+                    request,
+                    response
+            );
+
+            return;
+        }
+
+        prepareContactVerification(
+                request,
+                ContactField.PHONE,
+                settings.getEmail(),
+                newPhone,
+                result.getMessage()
+        );
+
+        renderAccountSettings(
+                request,
+                response
+        );
+    }
+    private void prepareContactVerification(
+            HttpServletRequest request,
+            ContactField field,
+            String verificationEmail,
+            String pendingContactValue,
+            String message
+    ) {
+
+        request.setAttribute(
+                "contactVerificationPending",
+                true
+        );
+
+        request.setAttribute(
+                "contactField",
+                field.name()
+        );
+
+        request.setAttribute(
+                "verificationEmail",
+                verificationEmail
+        );
+
+        request.setAttribute(
+                "pendingContactValue",
+                pendingContactValue
+        );
+
+        request.setAttribute(
+                "verifyTarget",
+                verificationEmail
+        );
+
+        request.setAttribute(
+                "formMessage",
+                message
+        );
+
+        request.setAttribute(
+                "activeTab",
+                TAB_PROFILE
+        );
+    }
+    /**
+     * Xác thực OTP và áp dụng thay đổi Email/SĐT.
+     *
+     * @param request request hiện tại
+     * @param response response hiện tại
+     */
+    private void handleVerifyContactChange(
+            HttpServletRequest request,
+            HttpServletResponse response
+    ) throws ServletException, IOException {
+
+        HttpSession session =
+                request.getSession(false);
+
+        if (session == null) {
+            RequestUtil.redirect(
+                    request,
+                    response,
+                    "/login"
+            );
+
+            return;
+        }
+
+        Integer accountId =
+                (Integer) session.getAttribute(
+                        SessionKey.ACCOUNT_ID
+                );
+
+        String roleValue =
+                (String) session.getAttribute(
+                        SessionKey.ROLE
+                );
+
+        if (accountId == null
+                || roleValue == null) {
+
+            RequestUtil.redirect(
+                    request,
+                    response,
+                    "/login"
+            );
+
+            return;
+        }
+
+        Role role =
+                Role.fromDbValue(
+                        roleValue
+                );
+
+        if (role == null) {
+            response.sendError(
+                    HttpServletResponse.SC_FORBIDDEN,
+                    Messages.MSG07_NO_PERMISSION
+            );
+
+            return;
+        }
+
+        String contactFieldValue =
+                RequestUtil.getTrimmedParam(
+                        request,
+                        "contactField"
+                );
+
+        ContactField contactField = null;
+
+        if (ContactField.EMAIL.name()
+                .equals(contactFieldValue)) {
+
+            contactField =
+                    ContactField.EMAIL;
+
+        } else if (ContactField.PHONE.name()
+                .equals(contactFieldValue)) {
+
+            contactField =
+                    ContactField.PHONE;
+        }
+
+        if (contactField == null) {
+
+            RequestUtil.setFlashToast(
+                    request,
+                    "error",
+                    Messages.MSG04_SYSTEM_BUSY
+            );
+
+            RequestUtil.redirect(
+                    request,
+                    response,
+                    "/account?tab=profile"
+            );
+
+            return;
+        }
+
+        String verificationEmail =
+                RequestUtil.getTrimmedParam(
+                        request,
+                        "verificationEmail"
+                );
+
+        String pendingContactValue =
+                RequestUtil.getTrimmedParam(
+                        request,
+                        "pendingContactValue"
+                );
+
+        String verificationCode =
+                RequestUtil.getTrimmedParam(
+                        request,
+                        "verificationCode"
+                );
+
+        ServiceResult<AccountSettingsView> settingsResult =
+                accountSettingsService.getAccountSettings(
+                        accountId,
+                        role
+                );
+
+        if (!settingsResult.isSuccess()) {
+
+            request.setAttribute(
+                    "pageError",
+                    settingsResult.getMessage()
+            );
+
+            renderAccountSettings(
+                    request,
+                    response
+            );
+
+            return;
+        }
+
+        AccountSettingsView settings =
+                settingsResult.getData();
+
+        String oldValue =
+                contactField == ContactField.EMAIL
+                        ? settings.getEmail()
+                        : settings.getPhone();
+
+        ServiceResult<Void> result =
+                contactChangeService.verifyAndApply(
+                        accountId,
+                        settings.getPersonId(),
+                        contactField,
+                        verificationEmail,
+                        pendingContactValue,
+                        verificationCode,
+                        session.getId()
+                );
+
+        if (!result.isSuccess()) {
+
+            request.setAttribute(
+                    "errors",
+                    result.getFieldErrors()
+            );
+
+            request.setAttribute(
+                    "formMessage",
+                    result.getMessage()
+            );
+
+            prepareContactVerification(
+                    request,
+                    contactField,
+                    verificationEmail,
+                    pendingContactValue,
+                    result.getMessage()
+            );
+
+            renderAccountSettings(
+                    request,
+                    response
+            );
+
+            return;
+        }
+
+        String action;
+        String fieldChanged;
+
+        if (contactField == ContactField.EMAIL) {
+
+            action =
+                    "Đổi email tài khoản cá nhân";
+
+            fieldChanged =
+                    "Email";
+
+        } else {
+
+            action =
+                    "Đổi số điện thoại tài khoản cá nhân";
+
+            fieldChanged =
+                    "Phone";
+        }
+
+        ServiceResult<Void> auditResult =
+                auditLogService.log(
+                        accountId,
+                        action,
+                        "Person",
+                        settings.getPersonId(),
+                        fieldChanged,
+                        oldValue,
+                        pendingContactValue,
+                        null
+                );
+
+        if (!auditResult.isSuccess()) {
+
+            RequestUtil.setFlashToast(
+                    request,
+                    "warning",
+                    "Thông tin đã được cập nhật nhưng chưa ghi được Audit Log."
+            );
+
+        } else {
+
+            RequestUtil.setFlashToast(
+                    request,
+                    "success",
+                    result.getMessage()
+            );
+        }
+
+        RequestUtil.redirect(
+                request,
+                response,
+                "/account?tab=profile"
+        );
+    }
     /**
      * Xử lý đổi mật khẩu.
      *
@@ -214,7 +772,6 @@ public class AccountSettingsServlet extends HttpServlet {
             HttpServletRequest request,
             HttpServletResponse response
     ) throws ServletException, IOException {
-
         HttpSession session =
                 request.getSession(false);
 
@@ -471,7 +1028,10 @@ public class AccountSettingsServlet extends HttpServlet {
                 "currentRole",
                 role
         );
-
+        request.setAttribute(
+                "activeSidebar",
+                "account"
+        );
         RequestUtil.forward(
                 request,
                 response,
