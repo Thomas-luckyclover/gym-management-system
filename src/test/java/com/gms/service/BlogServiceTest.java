@@ -4,6 +4,7 @@ import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertNotNull;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 
+import com.gms.dao.BlogPostDAO;
 import com.gms.entity.BlogPost;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.DisplayName;
@@ -199,5 +200,60 @@ class BlogServiceTest {
         assertEquals("Dinh dưỡng", blogService.getCategoryDisplayName("Nutrition"));
         assertEquals("Tin tức", blogService.getCategoryDisplayName("News"));
         assertEquals("", blogService.getCategoryDisplayName(null));
+    }
+
+    // ===== 5. Phân trang và danh sách bài viết (SRS 2.2.1 / Kịch bản B01, B03, B06, B07) =====
+
+    @Test
+    @DisplayName("getActiveBlogPage trả về MSG01 khi không tìm thấy kết quả")
+    void getActiveBlogPageReturnsMsg01WhenEmpty() throws java.sql.SQLException {
+        BlogPostDAO fakeDao = new BlogPostDAO() {
+            @Override
+            public int countActive(String keyword, String category) {
+                return 0;
+            }
+            @Override
+            public java.util.List<BlogPost> findActivePage(String keyword, String category, int page, int pageSize) {
+                return java.util.Collections.emptyList();
+            }
+        };
+
+        BlogService service = new BlogService(fakeDao);
+        com.gms.dto.ServiceResult<com.gms.dto.PageResult<BlogPost>> result = service.getActiveBlogPage("sqat", null, 1);
+
+        assertTrue(result.isSuccess());
+        assertNotNull(result.getData());
+        assertEquals(0, result.getData().getTotalItems());
+        assertEquals(com.gms.constant.Messages.MSG01_NO_RESULT, result.getMessage());
+    }
+
+    @Test
+    @DisplayName("getActiveBlogPage phân trang chuẩn 6 bài mỗi trang và enrich dữ liệu")
+    void getActiveBlogPageEnrichesPostsAndSetsPageSize() throws java.sql.SQLException {
+        BlogPost postWithoutExcerpt = new BlogPost();
+        postWithoutExcerpt.setCategory("Training");
+        postWithoutExcerpt.setContent("<p>Khởi động 5 phút để bảo vệ khớp gối.</p>");
+
+        BlogPostDAO fakeDao = new BlogPostDAO() {
+            @Override
+            public int countActive(String keyword, String category) {
+                return 14;
+            }
+            @Override
+            public java.util.List<BlogPost> findActivePage(String keyword, String category, int page, int pageSize) {
+                assertEquals(6, pageSize);
+                return java.util.List.of(postWithoutExcerpt);
+            }
+        };
+
+        BlogService service = new BlogService(fakeDao);
+        com.gms.dto.ServiceResult<com.gms.dto.PageResult<BlogPost>> result = service.getActiveBlogPage(null, null, 1);
+
+        assertTrue(result.isSuccess());
+        assertEquals(14, result.getData().getTotalItems());
+        assertEquals(3, result.getData().getTotalPages());
+        assertEquals(1, result.getData().getItems().size());
+        assertEquals("Khởi động 5 phút để bảo vệ khớp gối.", result.getData().getItems().get(0).getExcerpt());
+        assertEquals("/images/blog/default-training.jpg", result.getData().getItems().get(0).getCoverImage());
     }
 }
