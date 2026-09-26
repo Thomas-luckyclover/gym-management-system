@@ -30,9 +30,6 @@
     <div class="header-actions">
       <c:choose>
         <c:when test="${not empty sessionScope.accountId}">
-          <a class="btn btn-ghost btn-sm" href="${ctx}/login">
-            <i class="fa-regular fa-user"></i> <c:out value="${sessionScope.displayName}" />
-          </a>
           <form action="${ctx}/logout" method="post" class="inline-form">
             <button class="btn btn-ghost btn-sm" type="submit">
               <i class="fa-solid fa-arrow-right-from-bracket"></i> Đăng xuất
@@ -61,7 +58,6 @@
     <a href="${ctx}/#faq">Hỏi đáp</a>
     <c:choose>
       <c:when test="${not empty sessionScope.accountId}">
-        <a href="${ctx}/login"><i class="fa-regular fa-user"></i> <c:out value="${sessionScope.displayName}" /></a>
         <form action="${ctx}/logout" method="post">
           <button class="btn btn-ghost btn-sm" type="submit">Đăng xuất</button>
         </form>

@@ -109,6 +109,12 @@ public class LoginServlet extends HttpServlet {
                 request.setAttribute("errorMessage", result.getMessage());
                 request.setAttribute("fieldErrors", result.getFieldErrors());
                 request.setAttribute("loginStep", resolveLoginStep(result.getMessage()));
+
+                Integer lockSecondsLeft = extractLockSecondsLeft(result.getMessage());
+                if (lockSecondsLeft != null) {
+                    request.setAttribute("lockSecondsLeft", lockSecondsLeft);
+                }
+
                 if (RequestUtil.isSafeReturnUrl(returnUrl)) {
                     request.setAttribute("returnUrl", returnUrl);
                 }
@@ -131,5 +137,24 @@ public class LoginServlet extends HttpServlet {
             return "blocked-lock";
         }
         return "form";
+    }
+    private static final java.util.regex.Pattern LOCK_RETRY_PATTERN
+            = java.util.regex.Pattern.compile("Thử lại sau\\s+(\\d+)\\s*phút");
+
+    /**
+     * Lấy số giây còn lại tới khi hết khoá, từ câu thông báo
+     * MSG35_ACCOUNT_TEMP_LOCKED. Trả về null nếu không phải lỗi khoá tài khoản
+     * hoặc không parse được.
+     */
+    private Integer extractLockSecondsLeft(String errorMessage) {
+        if (errorMessage == null) {
+            return null;
+        }
+        java.util.regex.Matcher matcher = LOCK_RETRY_PATTERN.matcher(errorMessage);
+        if (matcher.find()) {
+            int minutes = Integer.parseInt(matcher.group(1));
+            return minutes * 60;
+        }
+        return null;
     }
 }
