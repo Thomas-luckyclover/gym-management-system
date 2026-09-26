@@ -22,6 +22,7 @@ import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.StandardCopyOption;
 import java.util.UUID;
+
 /**
  * Nghiệp vụ Account Settings - UC-04.
  */
@@ -76,8 +77,8 @@ public class AccountSettingsService {
 
             Employee employee = null;
 
-            boolean isCustomer =
-                    sessionRole == Role.CUSTOMER;
+            boolean isCustomer
+                    = sessionRole == Role.CUSTOMER;
 
             if (!isCustomer) {
                 employee = employeeDAO.findByPersonId(
@@ -85,13 +86,13 @@ public class AccountSettingsService {
                 );
             }
 
-            String employeeCode =
-                    employee == null
+            String employeeCode
+                    = employee == null
                             ? null
                             : employee.getEmployeeCode();
 
-            AccountSettingsView view =
-                    new AccountSettingsView(
+            AccountSettingsView view
+                    = new AccountSettingsView(
                             account.getAccountId(),
                             person.getPersonId(),
                             person.getFullName(),
@@ -100,7 +101,13 @@ public class AccountSettingsService {
                             person.getEmail(),
                             person.getAvatar(),
                             sessionRole,
-                            employeeCode
+                            employeeCode,
+                            employee == null ? null : employee.getPosition(),
+                            employee == null ? null : employee.getSpecialty(),
+                            employee == null ? null : employee.getYearsOfExperience(),
+                            employee == null ? null : employee.getHireDate(),
+                            employee == null ? null : employee.getCommissionRate(),
+                            employee == null ? null : employee.getStatus()
                     );
 
             return ServiceResult.ok(view);
@@ -116,13 +123,10 @@ public class AccountSettingsService {
     /**
      * Đổi mật khẩu cho chính tài khoản đang đăng nhập.
      *
-     * Thứ tự kiểm tra:
-     * 1. Mật khẩu hiện tại có được nhập.
-     * 2. Mật khẩu hiện tại phải đúng.
-     * 3. Mật khẩu mới phải đúng định dạng.
-     * 4. Mật khẩu mới phải khác mật khẩu hiện tại.
-     * 5. Xác nhận mật khẩu phải khớp.
-     * 6. Cập nhật mật khẩu và đăng xuất các phiên khác.
+     * Thứ tự kiểm tra: 1. Mật khẩu hiện tại có được nhập. 2. Mật khẩu hiện tại
+     * phải đúng. 3. Mật khẩu mới phải đúng định dạng. 4. Mật khẩu mới phải khác
+     * mật khẩu hiện tại. 5. Xác nhận mật khẩu phải khớp. 6. Cập nhật mật khẩu
+     * và đăng xuất các phiên khác.
      *
      * @param accountId id tài khoản hiện tại
      * @param currentPassword mật khẩu hiện tại
@@ -150,8 +154,8 @@ public class AccountSettingsService {
         }
 
         try {
-            Account account =
-                    accountDAO.findById(accountId);
+            Account account
+                    = accountDAO.findById(accountId);
 
             if (account == null) {
                 return ServiceResult.fail(
@@ -160,8 +164,8 @@ public class AccountSettingsService {
             }
 
             // B2: Kiểm tra mật khẩu hiện tại trước tiên
-            boolean isCurrentPasswordCorrect =
-                    PasswordUtil.checkPassword(
+            boolean isCurrentPasswordCorrect
+                    = PasswordUtil.checkPassword(
                             currentPassword,
                             account.getPasswordHash()
                     );
@@ -184,8 +188,8 @@ public class AccountSettingsService {
                 );
             }
 
-            boolean isNewPasswordValid =
-                    ValidationUtil.isValidPassword(
+            boolean isNewPasswordValid
+                    = ValidationUtil.isValidPassword(
                             newPassword
                     );
 
@@ -197,8 +201,8 @@ public class AccountSettingsService {
             }
 
             // B4: Mật khẩu mới không được giống mật khẩu cũ
-            boolean isSameAsCurrentPassword =
-                    PasswordUtil.checkPassword(
+            boolean isSameAsCurrentPassword
+                    = PasswordUtil.checkPassword(
                             newPassword,
                             account.getPasswordHash()
                     );
@@ -221,8 +225,8 @@ public class AccountSettingsService {
             }
 
             // B6: Xác nhận phải khớp mật khẩu mới
-            boolean isPasswordMatched =
-                    newPassword.equals(
+            boolean isPasswordMatched
+                    = newPassword.equals(
                             confirmPassword
                     );
 
@@ -234,13 +238,13 @@ public class AccountSettingsService {
             }
 
             // B7: Hash mật khẩu mới
-            String newPasswordHash =
-                    PasswordUtil.hashPassword(
+            String newPasswordHash
+                    = PasswordUtil.hashPassword(
                             newPassword
                     );
 
-            boolean isUpdated =
-                    accountDAO.updatePasswordHash(
+            boolean isUpdated
+                    = accountDAO.updatePasswordHash(
                             accountId,
                             newPasswordHash
                     );
@@ -269,11 +273,12 @@ public class AccountSettingsService {
             );
         }
     }
+
     /**
      * Cập nhật avatar cho chính tài khoản đang đăng nhập.
      *
-     * Ảnh hợp lệ phải là JPG hoặc PNG và không vượt quá dung lượng
-     * được quy định bởi ValidationUtil/AppConstants.
+     * Ảnh hợp lệ phải là JPG hoặc PNG và không vượt quá dung lượng được quy
+     * định bởi ValidationUtil/AppConstants.
      *
      * @param accountId id tài khoản hiện tại
      * @param contentType MIME type của file
@@ -290,20 +295,20 @@ public class AccountSettingsService {
             Path uploadDirectory
     ) {
 
-        boolean isValidImage =
-                ValidationUtil.isValidImageFile(
+        boolean isValidImage
+                = ValidationUtil.isValidImageFile(
                         contentType,
                         sizeInBytes
                 );
 
         if (!isValidImage) {
 
-            long maxSizeMb =
-                    AppConstants.IMAGE_MAX_BYTES
-                            / (1024L * 1024L);
+            long maxSizeMb
+                    = AppConstants.IMAGE_MAX_BYTES
+                    / (1024L * 1024L);
 
-            String message =
-                    String.format(
+            String message
+                    = String.format(
                             Messages.MSG20_INVALID_IMAGE,
                             maxSizeMb + " MB"
                     );
@@ -326,8 +331,8 @@ public class AccountSettingsService {
 
         try {
 
-            Account account =
-                    accountDAO.findById(accountId);
+            Account account
+                    = accountDAO.findById(accountId);
 
             if (account == null) {
 
@@ -339,8 +344,8 @@ public class AccountSettingsService {
                 );
             }
 
-            Person person =
-                    personDAO.findById(
+            Person person
+                    = personDAO.findById(
                             account.getPersonId()
                     );
 
@@ -358,30 +363,30 @@ public class AccountSettingsService {
                     uploadDirectory
             );
 
-            String extension =
-                    "image/png".equals(contentType)
-                            ? ".png"
-                            : ".jpg";
+            String extension
+                    = "image/png".equals(contentType)
+                    ? ".png"
+                    : ".jpg";
 
-            String fileName =
-                    "avatar-"
-                            + person.getPersonId()
-                            + "-"
-                            + UUID.randomUUID()
-                            + extension;
+            String fileName
+                    = "avatar-"
+                    + person.getPersonId()
+                    + "-"
+                    + UUID.randomUUID()
+                    + extension;
 
-            newFilePath =
-                    uploadDirectory
+            newFilePath
+                    = uploadDirectory
                             .resolve(fileName)
                             .normalize();
 
-            Path normalizedDirectory =
-                    uploadDirectory
+            Path normalizedDirectory
+                    = uploadDirectory
                             .toAbsolutePath()
                             .normalize();
 
-            Path normalizedFile =
-                    newFilePath
+            Path normalizedFile
+                    = newFilePath
                             .toAbsolutePath()
                             .normalize();
 
@@ -400,12 +405,12 @@ public class AccountSettingsService {
                     StandardCopyOption.REPLACE_EXISTING
             );
 
-            String avatarPath =
-                    "/uploads/avatar/"
-                            + fileName;
+            String avatarPath
+                    = "/uploads/avatar/"
+                    + fileName;
 
-            boolean isUpdated =
-                    personDAO.updateAvatar(
+            boolean isUpdated
+                    = personDAO.updateAvatar(
                             person.getPersonId(),
                             avatarPath
                     );
@@ -450,9 +455,10 @@ public class AccountSettingsService {
             );
         }
     }
+
     /**
-     * Xóa avatar cũ do chức năng Account Settings tạo ra.
-     * Không đụng tới ảnh check-in hay loại ảnh khác.
+     * Xóa avatar cũ do chức năng Account Settings tạo ra. Không đụng tới ảnh
+     * check-in hay loại ảnh khác.
      *
      * @param oldAvatarPath đường dẫn avatar cũ trong DB
      * @param uploadDirectory thư mục avatar vật lý
@@ -468,8 +474,8 @@ public class AccountSettingsService {
             return;
         }
 
-        String avatarPrefix =
-                "/uploads/avatar/";
+        String avatarPrefix
+                = "/uploads/avatar/";
 
         if (!oldAvatarPath.startsWith(
                 avatarPrefix
@@ -477,18 +483,18 @@ public class AccountSettingsService {
             return;
         }
 
-        String oldFileName =
-                oldAvatarPath.substring(
+        String oldFileName
+                = oldAvatarPath.substring(
                         avatarPrefix.length()
                 );
 
-        Path normalizedDirectory =
-                uploadDirectory
+        Path normalizedDirectory
+                = uploadDirectory
                         .toAbsolutePath()
                         .normalize();
 
-        Path oldFile =
-                uploadDirectory
+        Path oldFile
+                = uploadDirectory
                         .resolve(oldFileName)
                         .toAbsolutePath()
                         .normalize();
