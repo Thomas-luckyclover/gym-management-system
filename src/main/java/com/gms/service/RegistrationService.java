@@ -12,11 +12,12 @@ import com.gms.util.DateTimeUtil;
 import com.gms.util.PasswordUtil;
 import com.gms.util.ValidationUtil;
 import java.sql.Connection;
-import java.sql.Date;
 import java.sql.PreparedStatement;
 import java.sql.ResultSet;
 import java.sql.SQLException;
 import java.time.LocalDate;
+import java.util.LinkedHashMap;
+import java.util.Map;
 
 /**
  * Xử lý nghiệp vụ đăng ký tài khoản khách hàng trực tuyến (UC-05, UC-IDENT, UC-Claim).
@@ -34,6 +35,145 @@ public class RegistrationService {
     public RegistrationService(PersonDAO personDAO, CustomerDAO customerDAO) {
         this.personDAO = personDAO;
         this.customerDAO = customerDAO;
+    }
+
+    // ===== 0. Kết quả tra số điện thoại (dùng bởi RegisterServlet step "phone") =====
+
+    /**
+     * Các kết quả có thể khi Servlet tra SĐT bước 1.
+     */
+    public enum PhoneOutcome {
+        /** Số hoàn toàn mới, cho đăng ký bình thường. */
+        NEW_PHONE,
+        /** Hồ sơ Self đang hoạt động đã có tài khoản (CBR-26). */
+        HAS_ACCOUNT,
+        /** Hồ sơ Self chưa có email (CBR-27). */
+        PROFILE_NO_EMAIL,
+        /** Hồ sơ Self có email, khách cần nhập đúng email để kích hoạt (CBR-25 / UC-Claim). */
+        PROFILE_EMAIL_MISMATCH,
+        /** Hồ sơ Self có email, sẵn sàng kích hoạt (UC-Claim). */
+        PROFILE_CAN_CLAIM
+    }
+
+    /** Kết quả trả về từ checkPhone(). */
+    public static class PhoneCheckResult {
+
+        private final PhoneOutcome outcome;
+
+        /** Email đã che — chỉ có giá trị khi outcome = PROFILE_EMAIL_MISMATCH. */
+        private final String maskedEmail;
+
+        public PhoneCheckResult(PhoneOutcome outcome, String maskedEmail) {
+            this.outcome = outcome;
+            this.maskedEmail = maskedEmail;
+        }
+
+        public PhoneOutcome getOutcome() {
+            return outcome;
+        }
+
+        public String getMaskedEmail() {
+            return maskedEmail;
+        }
+    }
+
+    // ===== 1. Tra số điện thoại (bước 1 đăng ký) =====
+
+    /**
+     * Tra SĐT trong DB và trả về kết quả để Servlet chọn màn hiển thị tiếp theo.
+     *
+     * @param phone SĐT đã qua validate định dạng (10 số, bắt đầu 0)
+     * @return PhoneCheckResult chứa outcome và maskedEmail nếu cần
+     */
+    public PhoneCheckResult checkPhone(String phone) {
+        try {
+            Person existingPerson = personDAO.findByPhone(phone);
+
+            // Số chưa có hồ sơ hoặc hồ sơ Inactive (đã nhả) → đăng ký bình thường (CBR-23)
+            if (existingPerson == null) {
+                return new PhoneCheckResult(PhoneOutcome.NEW_PHONE, null);
+            }
+
+            // Hồ sơ đang hoạt động — kiểm tra đã có tài khoản chưa
+            boolean hasAccount = hasAccountByPersonId(existingPerson.getPersonId());
+            if (hasAccount) {
+                return new PhoneCheckResult(PhoneOutcome.HAS_ACCOUNT, null);
+            }
+
+            // Hồ sơ chưa có tài khoản — kiểm tra có email không
+            String existingEmail = existingPerson.getEmail();
+            boolean hasNoEmail = ValidationUtil.isNullOrEmpty(existingEmail);
+            if (hasNoEmail) {
+                return new PhoneCheckResult(PhoneOutcome.PROFILE_NO_EMAIL, null);
+            }
+
+            // Hồ sơ có email → Servlet sẽ hỏi khách nhập email; nếu khớp sẽ kích hoạt (UC-Claim)
+            // Ở đây chỉ báo "có thể claim"; Servlet sẽ cần email khách nhập ở bước form mới biết
+            // khớp hay không — trả PROFILE_CAN_CLAIM (cũng che email sẵn cho màn thông báo sau)
+            return new PhoneCheckResult(PhoneOutcome.PROFILE_CAN_CLAIM, maskEmail(existingEmail));
+
+        } catch (SQLException e) {
+            e.printStackTrace();
+            // Lỗi DB → coi như số mới, để bước form validate lại sau
+            return new PhoneCheckResult(PhoneOutcome.NEW_PHONE, null);
+        }
+    }
+
+    // ===== 2. Validate form trước khi gửi OTP =====
+
+    /**
+     * Kiểm tra dữ liệu form đăng ký trước khi gửi OTP.
+     * Tách riêng khỏi register() để Servlet gọi ở bước form (step "form").
+     *
+     * @param registerMode "new" hoặc "linked" (kích hoạt hồ sơ cũ)
+     * @return ServiceResult.ok nếu hợp lệ; fail kèm thông báo lỗi hoặc fieldErrors nếu không
+     */
+    public ServiceResult<Void> validateRegistrationForm(String fullName, LocalDate dateOfBirth,
+                                                         String phone, String email,
+                                                         String password, String confirmPassword,
+                                                         String registerMode) {
+        // Chuẩn hóa
+        String trimmedFullName = fullName != null ? fullName.trim() : "";
+        String trimmedEmail = email != null ? email.trim() : "";
+        String trimmedPhone = phone != null ? phone.trim() : "";
+
+        // Nhánh UC-Claim: email phải khớp hồ sơ quầy (CBR-25)
+        if ("linked".equals(registerMode)) {
+            try {
+                Person existingPerson = personDAO.findByPhone(trimmedPhone);
+                if (existingPerson != null && existingPerson.getEmail() != null) {
+                    if (!existingPerson.getEmail().equalsIgnoreCase(trimmedEmail)) {
+                        String masked = maskEmail(existingPerson.getEmail());
+                        return ServiceResult.fail("EMAIL_MISMATCH:" + masked);
+                    }
+                }
+            } catch (SQLException e) {
+                e.printStackTrace();
+                return ServiceResult.fail(Messages.MSG04_SYSTEM_BUSY);
+            }
+        }
+
+        // Validate cơ bản toàn bộ các trường theo GBR-17
+        ServiceResult<Void> inputCheck = validateInput(
+                trimmedFullName, dateOfBirth, trimmedPhone, trimmedEmail, password, confirmPassword);
+        if (!inputCheck.isSuccess()) {
+            return inputCheck;
+        }
+
+        // Nhánh đăng ký mới: kiểm tra email chưa được dùng (DBR-23)
+        if (!"linked".equals(registerMode)) {
+            try {
+                boolean isEmailExisted = personDAO.existsByEmail(trimmedEmail);
+                if (isEmailExisted) {
+                    return ServiceResult.failField("email", Messages.MSG12_EMAIL_USED);
+                }
+            } catch (SQLException e) {
+                e.printStackTrace();
+                return ServiceResult.fail(Messages.MSG04_SYSTEM_BUSY);
+            }
+        }
+
+        return ServiceResult.ok(null);
     }
 
     // ===== Nghiệp vụ Đăng ký =====
@@ -189,56 +329,61 @@ public class RegistrationService {
 
     private ServiceResult<Void> validateInput(String fullName, LocalDate dob, String phone,
                                               String email, String password, String confirmPassword) {
+        Map<String, String> errors = new LinkedHashMap<>();
+
         // Họ tên (2-50 ký tự)
-        boolean isValidNameLength = ValidationUtil.isLengthValid(fullName, 2, 50);
-        if (!isValidNameLength) {
-            return ServiceResult.fail(String.format(Messages.MSG09_REQUIRED, "Họ và tên"));
-        }
-        boolean isValidFullName = ValidationUtil.isValidFullName(fullName);
-        if (!isValidFullName) {
-            return ServiceResult.fail(Messages.EXTRA_FULL_NAME_RULE);
+        if (ValidationUtil.isNullOrEmpty(fullName)) {
+            errors.put("fullName", String.format(Messages.MSG09_REQUIRED, "Họ và tên"));
+        } else if (!ValidationUtil.isLengthValid(fullName, 2, 50)) {
+            errors.put("fullName", "Họ và tên phải từ 2 đến 50 ký tự.");
+        } else if (!ValidationUtil.isValidFullName(fullName)) {
+            errors.put("fullName", Messages.EXTRA_FULL_NAME_RULE);
         }
 
         // Ngày sinh
         if (dob == null) {
-            return ServiceResult.fail(String.format(Messages.MSG09_REQUIRED, "Ngày sinh"));
-        }
-        boolean isFutureDob = dob.isAfter(DateTimeUtil.today());
-        if (isFutureDob) {
-            return ServiceResult.fail(Messages.MSG15_DOB_IN_FUTURE);
-        }
-        int age = DateTimeUtil.calculateAge(dob, DateTimeUtil.today());
-        boolean isTooOld = age > 100;
-        if (isTooOld) {
-            return ServiceResult.fail(String.format(Messages.EXTRA_DOB_TOO_OLD, 100));
+            errors.put("dateOfBirth", String.format(Messages.MSG09_REQUIRED, "Ngày sinh"));
+        } else if (dob.isAfter(DateTimeUtil.today())) {
+            errors.put("dateOfBirth", Messages.MSG15_DOB_IN_FUTURE);
+        } else {
+            int age = DateTimeUtil.calculateAge(dob, DateTimeUtil.today());
+            if (age > 100) {
+                errors.put("dateOfBirth", String.format(Messages.EXTRA_DOB_TOO_OLD, 100));
+            }
         }
 
         // Số điện thoại (10 số, bắt đầu bằng 0)
-        boolean isValidPhone = ValidationUtil.isValidPhone(phone);
-        if (!isValidPhone) {
-            return ServiceResult.fail(Messages.MSG13_INVALID_PHONE);
+        if (ValidationUtil.isNullOrEmpty(phone)) {
+            errors.put("phone", String.format(Messages.MSG09_REQUIRED, "Số điện thoại"));
+        } else if (!ValidationUtil.isValidPhone(phone)) {
+            errors.put("phone", Messages.MSG13_INVALID_PHONE);
         }
 
         // Email
-        boolean isValidEmail = ValidationUtil.isValidEmail(email);
-        if (!isValidEmail) {
-            return ServiceResult.fail(Messages.MSG11_INVALID_EMAIL);
-        }
-        boolean isEmailTooLong = email.length() > 100;
-        if (isEmailTooLong) {
-            return ServiceResult.fail(String.format(Messages.MSG10_MAX_LENGTH, 100));
+        if (ValidationUtil.isNullOrEmpty(email)) {
+            errors.put("email", String.format(Messages.MSG09_REQUIRED, "Email"));
+        } else if (!ValidationUtil.isValidEmail(email)) {
+            errors.put("email", Messages.MSG11_INVALID_EMAIL);
+        } else if (email.length() > 100) {
+            errors.put("email", String.format(Messages.MSG10_MAX_LENGTH, 100));
         }
 
         // Mật khẩu (8-64 ký tự, có ít nhất 1 chữ cái và 1 chữ số)
-        boolean isValidPassword = ValidationUtil.isValidPassword(password);
-        if (!isValidPassword) {
-            return ServiceResult.fail(String.format(Messages.EXTRA_PASSWORD_RULE, AppConstants.PASSWORD_MIN_LENGTH, AppConstants.PASSWORD_MAX_LENGTH));
+        if (ValidationUtil.isNullOrEmpty(password)) {
+            errors.put("password", String.format(Messages.MSG09_REQUIRED, "Mật khẩu"));
+        } else if (!ValidationUtil.isValidPassword(password)) {
+            errors.put("password", String.format(Messages.EXTRA_PASSWORD_RULE, AppConstants.PASSWORD_MIN_LENGTH, AppConstants.PASSWORD_MAX_LENGTH));
         }
 
         // Nhập lại mật khẩu
-        boolean isPasswordMatched = password.equals(confirmPassword);
-        if (!isPasswordMatched) {
-            return ServiceResult.fail(Messages.MSG47_PASSWORD_MISMATCH);
+        if (ValidationUtil.isNullOrEmpty(confirmPassword)) {
+            errors.put("confirmPassword", "Vui lòng nhập lại mật khẩu.");
+        } else if (password != null && !password.equals(confirmPassword)) {
+            errors.put("confirmPassword", Messages.MSG47_PASSWORD_MISMATCH);
+        }
+
+        if (!errors.isEmpty()) {
+            return ServiceResult.failFields(errors);
         }
 
         return ServiceResult.ok(null);
