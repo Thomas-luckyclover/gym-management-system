@@ -255,4 +255,47 @@ public class PersonDAO {
                         return stmt.executeUpdate() == 1;
                 }
         }
+
+        /**
+         * Cập nhật email mới sau khi ContactChangeService đã xác thực mã thành công.
+         *
+         * @param personId mã hồ sơ cần đổi email
+         * @param newEmail email mới, đã qua kiểm tra định dạng + trùng lặp ở Service
+         * @return true nếu cập nhật thành công
+         * @throws SQLException khi truy vấn gặp lỗi
+         */
+        public boolean updateEmail(int personId, String newEmail) throws SQLException {
+                String sql = "UPDATE Persons SET Email = ? WHERE PersonId = ?";
+
+                try (Connection conn = DBContext.getConnection();
+                                PreparedStatement stmt = conn.prepareStatement(sql)) {
+
+                        stmt.setString(1, newEmail);
+                        stmt.setInt(2, personId);
+
+                        return stmt.executeUpdate() == 1;
+                }
+        }
+
+        /**
+         * Cập nhật số điện thoại mới sau khi ContactChangeService đã xác thực mã thành công.
+         *
+         * @param personId mã hồ sơ cần đổi số điện thoại
+         * @param newPhone số điện thoại mới, đã qua kiểm tra định dạng + trùng lặp ở Service
+         * @return true nếu cập nhật thành công
+         * @throws SQLException khi truy vấn gặp lỗi
+         */
+        public boolean updatePhone(int personId, String newPhone) throws SQLException {
+                String sql = "UPDATE Persons SET Phone = ? WHERE PersonId = ?";
+
+                try (Connection conn = DBContext.getConnection();
+                                PreparedStatement stmt = conn.prepareStatement(sql)) {
+
+                        stmt.setString(1, newPhone);
+                        stmt.setInt(2, personId);
+
+                        return stmt.executeUpdate() == 1;
+                }
+        }
 }
+
