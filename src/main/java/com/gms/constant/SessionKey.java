@@ -28,6 +28,15 @@ public final class SessionKey {
      */
     public static final String FLASH_TOAST = "flashToast";
 
+    /** Quên mật khẩu bước 1 xong: email đã nhận mã khôi phục (String). */
+    public static final String RECOVERY_EMAIL = "recoveryEmail";
+
+    /** Quên mật khẩu bước 2 xong: AccountId đã xác minh mã (Integer) — chưa có thì không vào được bước 3. */
+    public static final String RECOVERY_ACCOUNT_ID = "recoveryAccountId";
+
+    /** Hạn làm bước 3 = hạn của mã vừa xác minh (LocalDateTime). */
+    public static final String RECOVERY_DEADLINE = "recoveryDeadline";
+
     /** Thời gian sống của session: 2 tiếng không hoạt động (codeImplementationBackend.md Mục 11.1). */
     public static final int SESSION_TIMEOUT_SECONDS = 7200;
 
