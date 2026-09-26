@@ -1,31 +1,8 @@
+// Nút con mắt hiện/ẩn mật khẩu: common.js tự lo qua data-password-toggle
 document.addEventListener("DOMContentLoaded", function () {
-    setupPasswordToggleButtons();
     setupPhoneStep();
     setupInformationStep();
 });
-
-function setupPasswordToggleButtons() {
-    const toggleButtons = document.querySelectorAll(".pw-toggle");
-
-    toggleButtons.forEach(function (button) {
-        button.addEventListener("click", function () {
-            const targetId = button.getAttribute("data-toggle-target");
-            const targetInput = document.getElementById(targetId);
-            const icon = button.querySelector("i");
-
-            if (!targetInput || !icon) {
-                return;
-            }
-
-            const isPassword = targetInput.type === "password";
-
-            targetInput.type = isPassword ? "text" : "password";
-
-            icon.classList.toggle("fa-eye", !isPassword);
-            icon.classList.toggle("fa-eye-slash", isPassword);
-        });
-    });
-}
 
 function setupPhoneStep() {
     const form = document.getElementById("registerPhoneForm");

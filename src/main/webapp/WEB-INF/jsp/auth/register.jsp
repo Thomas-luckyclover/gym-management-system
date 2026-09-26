@@ -11,7 +11,7 @@
     <link rel="stylesheet"
           href="${pageContext.request.contextPath}/css/pages/auth/register.css">
 
-    <script src="${pageContext.request.contextPath}/js/pages/auth/register.js"
+    <script src="${pageContext.request.contextPath}/js/pages/auth/register.js?v=2"
             defer></script>
 </head>
 
@@ -155,7 +155,7 @@
 
                             <button type="button"
                                     class="pw-toggle"
-                                    data-toggle-target="password"
+                                    data-password-toggle="password"
                                     aria-label="Hiện hoặc ẩn mật khẩu">
                                 <i class="fa-solid fa-eye"></i>
                             </button>
@@ -181,7 +181,7 @@
 
                             <button type="button"
                                     class="pw-toggle"
-                                    data-toggle-target="confirmPassword"
+                                    data-password-toggle="confirmPassword"
                                     aria-label="Hiện hoặc ẩn mật khẩu">
                                 <i class="fa-solid fa-eye"></i>
                             </button>

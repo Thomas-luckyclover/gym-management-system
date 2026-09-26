@@ -981,22 +981,15 @@ function handleLeavePageLinkClick(event) {
 // B2: bấm → đổi type password ↔ text, đổi icon mắt mở/mắt gạch, cập nhật aria-label cho trình đọc màn hình
 function bindPasswordToggles() {
     document.addEventListener("click", function (event) {
-        const button = event.target.closest("[data-password-toggle], [data-pw-toggle], [data-toggle-target], .pw-toggle");
+        // Không bắt [data-toggle-target]: thuộc tính đó dành cho nút mở/đóng vùng (menu mobile) — bindToggleButtons()
+        const button = event.target.closest("[data-password-toggle], [data-pw-toggle]");
         if (!button) {
             return;
         }
 
-        const targetId = button.dataset.passwordToggle
-            || button.dataset.pwToggle
-            || button.dataset.toggleTarget
-            || button.getAttribute("data-toggle-target");
-
-        if (!targetId) {
-            return;
-        }
-
+        const targetId = button.dataset.passwordToggle || button.dataset.pwToggle;
         const input = document.getElementById(targetId);
-        if (!input) {
+        if (!(input instanceof HTMLInputElement)) {
             return;
         }
 
