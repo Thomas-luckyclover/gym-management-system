@@ -278,10 +278,12 @@ public class PersonDAO {
         }
 
         /**
-         * Cập nhật số điện thoại mới sau khi ContactChangeService đã xác thực mã thành công.
+         * Cập nhật số điện thoại mới sau khi ContactChangeService đã xác thực mã thành
+         * công.
          *
          * @param personId mã hồ sơ cần đổi số điện thoại
-         * @param newPhone số điện thoại mới, đã qua kiểm tra định dạng + trùng lặp ở Service
+         * @param newPhone số điện thoại mới, đã qua kiểm tra định dạng + trùng lặp ở
+         *                 Service
          * @return true nếu cập nhật thành công
          * @throws SQLException khi truy vấn gặp lỗi
          */
@@ -297,5 +299,5 @@ public class PersonDAO {
                         return stmt.executeUpdate() == 1;
                 }
         }
-}
 
+}
