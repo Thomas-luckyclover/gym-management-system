@@ -1,0 +1,347 @@
+/* =====================================================================
+   error.css — 3 trang lỗi 403/404/500. Lớp 3/3: tokens.css → common.css → error.css
+   Theme: <body class="theme-guest-dark err-body"> (nền đen + vàng chanh).
+   ===================================================================== */
+
+.err-body {
+  min-height: 100vh;
+  margin: 0;
+  overflow-x: hidden;
+  background:
+    radial-gradient(ellipse at 50% 38%, var(--color-primary-tint), transparent 60%),
+    var(--color-bg);
+  color: var(--color-text);
+}
+
+.err {
+  position: relative;
+  min-height: 100vh;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: var(--space-8) var(--layout-gutter);
+}
+
+/* ---------- Khối nội dung ---------- */
+.err-card {
+  position: relative;
+  z-index: 1;
+  width: 100%;
+  min-width: 0;
+  max-width: 560px;
+  text-align: center;
+  animation: err-rise 0.7s ease-out both;
+}
+
+.err-brand {
+  display: inline-flex;
+  align-items: center;
+  gap: var(--space-2);
+  margin-bottom: var(--space-6);
+  color: var(--color-primary);
+  font-family: var(--font-display);
+  font-weight: var(--font-weight-extrabold);
+  letter-spacing: var(--letter-spacing-tight);
+  text-transform: uppercase;
+  text-decoration: none;
+}
+
+.err-brand img {
+  width: 40px;
+  height: 30px;
+  border-radius: var(--radius-xs);
+}
+
+/* Mã lỗi to — số 0 là bánh tạ */
+.err-code {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 0.06em;
+  margin: 0;
+  font-family: var(--font-display);
+  font-size: clamp(5.5rem, 18vw, 9.5rem);
+  font-weight: var(--font-weight-extrabold);
+  line-height: 1;
+  letter-spacing: -0.04em;
+  color: var(--color-text);
+}
+
+.err-plate {
+  width: 0.82em;
+  height: 0.82em;
+  animation: err-spin 9s linear infinite;
+}
+
+.err-barbell {
+  width: 1.9em;
+  height: 0.82em;
+  overflow: visible;
+  transform-origin: 50% 50%;
+  animation: err-wobble 2.6s ease-in-out infinite;
+}
+
+.err-plate circle,
+.err-barbell circle,
+.err-barbell rect,
+.err-plate path,
+.err-plate rect {
+  fill: none;
+  stroke: var(--color-lime);
+  stroke-linecap: round;
+  stroke-linejoin: round;
+}
+
+.err-plate .rim,
+.err-barbell .rim {
+  stroke-width: 8;
+}
+
+.err-plate .ring,
+.err-barbell .ring {
+  stroke-width: 3;
+  opacity: 0.6;
+}
+
+.err-plate .hole,
+.err-barbell .hole,
+.err-barbell .bar {
+  fill: var(--color-lime);
+  stroke: none;
+}
+
+.err-plate .lock {
+  stroke-width: 4;
+}
+
+.err-plate .label,
+.err-barbell .label {
+  fill: var(--color-lime);
+  font-family: var(--font-display);
+  font-size: 11px;
+  font-weight: var(--font-weight-extrabold);
+  letter-spacing: 0.08em;
+  text-anchor: middle;
+}
+
+/* Dòng trạng thái rõ ràng: "404 – Not Found" */
+.err-status {
+  display: inline-block;
+  margin: var(--space-5) 0 var(--space-3);
+  padding: var(--space-1) var(--space-4);
+  border: var(--border-width) solid var(--color-primary-border);
+  border-radius: var(--radius-pill);
+  background: var(--color-primary-tint);
+  color: var(--color-primary);
+  font-family: var(--font-display);
+  font-size: var(--font-size-md);
+  font-weight: var(--font-weight-bold);
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+}
+
+.err-title {
+  margin: 0;
+  font-size: var(--font-size-4xl);
+}
+
+.err-message {
+  max-width: 44ch;
+  margin: var(--space-3) auto var(--space-6);
+  color: var(--color-text-soft);
+  font-size: var(--font-size-lg);
+}
+
+.err-actions {
+  display: flex;
+  flex-wrap: wrap;
+  justify-content: center;
+  gap: var(--space-3);
+}
+
+/* ---------- Hình trang trí nền ---------- */
+.err-art {
+  position: absolute;
+  inset: 0;
+  z-index: 0;
+  overflow: hidden;
+  pointer-events: none;
+}
+
+.err-doodle {
+  position: absolute;
+  fill: none;
+  stroke: var(--color-text-muted);
+  stroke-width: 3;
+  stroke-linecap: round;
+  stroke-linejoin: round;
+  opacity: 0.55;
+}
+
+.err-doodle .err-fill {
+  fill: var(--color-lime);
+  stroke: none;
+}
+
+.err-dumbbell {
+  top: 12%;
+  left: 8%;
+  width: 150px;
+  stroke: var(--color-lime);
+  opacity: 0.7;
+  animation: err-float 5s ease-in-out infinite;
+}
+
+.err-kettlebell {
+  right: 9%;
+  bottom: 12%;
+  width: 96px;
+  transform-origin: 50% 10%;
+  animation: err-swing 3.2s ease-in-out infinite;
+}
+
+.err-kettlebell .err-hint {
+  stroke: var(--color-lime);
+}
+
+.err-flower--big {
+  top: 10%;
+  right: 12%;
+  width: 92px;
+}
+
+.err-flower--big .err-petals {
+  transform-origin: 40px 40px;
+  animation: err-spin 14s linear infinite;
+}
+
+.err-flower--stem {
+  left: 11%;
+  bottom: 9%;
+  width: 62px;
+  transform-origin: 50% 100%;
+  animation: err-sway 4s ease-in-out infinite;
+}
+
+.err-squiggle {
+  left: 50%;
+  bottom: 7%;
+  width: 190px;
+  transform: translateX(-50%);
+  stroke: var(--color-lime);
+  opacity: 0.5;
+}
+
+.err-spiral {
+  top: 44%;
+  left: 5%;
+  width: 70px;
+  opacity: 0.4;
+}
+
+.err-arrow {
+  top: 24%;
+  right: 24%;
+  width: 110px;
+  opacity: 0.45;
+}
+
+/* Nét vẽ tay tự hiện ra */
+.err-draw {
+  stroke-dasharray: 400;
+  stroke-dashoffset: 400;
+  animation: err-draw 2.4s ease-out 0.3s forwards;
+}
+
+.err-draw--late {
+  animation-delay: 2.2s;
+}
+
+.err-sparkle {
+  position: absolute;
+  width: 22px;
+  fill: var(--color-lime);
+  animation: err-twinkle 2.8s ease-in-out infinite;
+}
+
+.err-sparkle--1 { top: 18%; left: 32%; }
+.err-sparkle--2 { top: 70%; right: 28%; width: 16px; animation-delay: 0.9s; }
+.err-sparkle--3 { top: 8%;  left: 58%; width: 14px; animation-delay: 1.6s; }
+.err-sparkle--4 { bottom: 22%; left: 26%; width: 18px; animation-delay: 2.1s; }
+
+.err-dot {
+  position: absolute;
+  width: 8px;
+  height: 8px;
+  border-radius: var(--radius-circle);
+  background: var(--color-text-muted);
+  opacity: 0.5;
+  animation: err-float 6s ease-in-out infinite;
+}
+
+.err-dot--1 { top: 32%; left: 20%; }
+.err-dot--2 { top: 60%; right: 14%; animation-delay: 1.5s; }
+.err-dot--3 { bottom: 30%; left: 40%; background: var(--color-lime); animation-delay: 3s; }
+
+/* ---------- Keyframes ---------- */
+@keyframes err-rise {
+  from { opacity: 0; transform: translateY(16px); }
+  to   { opacity: 1; transform: none; }
+}
+
+@keyframes err-spin {
+  to { transform: rotate(360deg); }
+}
+
+@keyframes err-wobble {
+  0%, 100% { transform: rotate(-6deg) translateY(0); }
+  50%      { transform: rotate(6deg) translateY(-4px); }
+}
+
+@keyframes err-float {
+  0%, 100% { transform: translateY(0) rotate(-4deg); }
+  50%      { transform: translateY(-14px) rotate(4deg); }
+}
+
+@keyframes err-swing {
+  0%, 100% { transform: rotate(-10deg); }
+  50%      { transform: rotate(10deg); }
+}
+
+@keyframes err-sway {
+  0%, 100% { transform: rotate(-6deg); }
+  50%      { transform: rotate(6deg); }
+}
+
+@keyframes err-draw {
+  to { stroke-dashoffset: 0; }
+}
+
+@keyframes err-twinkle {
+  0%, 100% { opacity: 0.2; transform: scale(0.7) rotate(0deg); }
+  50%      { opacity: 1;   transform: scale(1.1) rotate(20deg); }
+}
+
+@media (max-width: 720px) {
+  .err-dumbbell { width: 96px; left: 4%; top: 6%; }
+  .err-kettlebell { width: 64px; right: 4%; bottom: 6%; }
+  .err-flower--big { width: 60px; right: 5%; top: 5%; }
+  .err-flower--stem { width: 44px; left: 5%; bottom: 5%; }
+  .err-arrow,
+  .err-spiral { display: none; }
+  .err-title { font-size: var(--font-size-3xl); }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .err-card,
+  .err-plate,
+  .err-barbell,
+  .err-art *,
+  .err-art .err-petals {
+    animation: none !important;
+  }
+
+  .err-draw {
+    stroke-dashoffset: 0;
+  }
+}
