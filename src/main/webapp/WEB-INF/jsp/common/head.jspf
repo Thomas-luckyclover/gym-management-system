@@ -1,32 +1,33 @@
 <%--
-  head.jspf ? ph?n <head> d�ng chung cho M?I trang. Include ngay trong th? <head> c?a t?ng JSP:
+  head.jspf — phần <head> dùng chung cho MỌI trang. Include ngay trong thẻ <head> của từng JSP:
 
       <head>
         <%@ include file="/WEB-INF/jsp/common/head.jspf" %>
-        <title>??t bu?i l? � Super Gym</title>
+        <title>Đặt buổi lẻ · Super Gym</title>
         <link rel="stylesheet" href="${pageContext.request.contextPath}/css/pages/customer/book-session.css">
         <script src="${pageContext.request.contextPath}/js/pages/customer/book-session.js" defer></script>
       </head>
 
-  Th? t? n?p CSS 3 l?p (kh�ng ??o): tokens.css ? common.css ? CSS ri�ng c?a trang.
-  JS: common.js n?p tr??c, JS ri�ng c?a trang n?p sau (c? 2 ??u defer).
-  M?i JSP v?n ph?i t? khai b�o ? d�ng ??u: <%@ page contentType="text/html; charset=UTF-8" pageEncoding="UTF-8" %>
+  Thứ tự nạp CSS 3 lớp (không đảo): tokens.css → common.css → CSS riêng của trang.
+  JS: common.js nạp trước, JS riêng của trang nạp sau (cả 2 đều defer).
+  Mỗi JSP vẫn phải tự khai báo ở dòng đầu: <%@ page contentType="text/html; charset=UTF-8" pageEncoding="UTF-8" %>
+  Sửa common.css / common.js thì tăng số ?v= bên dưới để trình duyệt không dùng bản cũ trong cache.
 --%>
 <%@ taglib prefix="c" uri="jakarta.tags.core" %>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
-<%-- common.js ??c th? n�y (h�m getContextPath) ?? gh�p URL AJAX ?�ng khi app ch?y d??i /gms --%>
+<%-- common.js đọc thẻ này (hàm getContextPath) để ghép URL AJAX đúng khi app chạy dưới /gms --%>
 <meta name="context-path" content="${pageContext.request.contextPath}">
 
-<%-- Font: Montserrat (ti�u ??, s? li?u) � Inter (n?i dung khu Guest/H?i vi�n/Nh�n vi�n)
-     � Work Sans + Be Vietnam Pro (khu Manager/Admin) ? kh?p token --font-* trong tokens.css --%>
+<%-- Font: Montserrat (tiêu đề, số liệu) · Inter (nội dung khu Guest/Hội viên/Nhân viên)
+     · Work Sans + Be Vietnam Pro (khu Manager/Admin) — khớp token --font-* trong tokens.css --%>
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Montserrat:wght@600;700;800&family=Inter:wght@400;500;600;700&family=Work+Sans:wght@400;500;600;700&family=Be+Vietnam+Pro:wght@600;700&display=swap">
 
-<%-- Icon Font Awesome (c�ng b?n v?i prototype) ? d�ng <i class="fa-solid fa-..."></i> --%>
+<%-- Icon Font Awesome (cùng bản với prototype) — dùng <i class="fa-solid fa-..."></i> --%>
 <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/7.3.1/css/all.min.css">
 
 <link rel="stylesheet" href="${pageContext.request.contextPath}/css/tokens.css">
 <link rel="stylesheet" href="${pageContext.request.contextPath}/css/common.css?v=3">
-<script src="${pageContext.request.contextPath}/js/common.js?v=2" defer></script>
+<script src="${pageContext.request.contextPath}/js/common.js?v=4" defer></script>

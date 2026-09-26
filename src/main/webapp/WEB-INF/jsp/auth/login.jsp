@@ -6,7 +6,7 @@
         <%@ include file="/WEB-INF/jsp/common/head.jspf" %>
         <title>Đăng nhập — Super Gym</title>
         <link rel="stylesheet" href="${pageContext.request.contextPath}/css/pages/auth/login.css?v=6">
-        <script src="${pageContext.request.contextPath}/js/pages/auth/login.js" defer></script>
+        <script src="${pageContext.request.contextPath}/js/pages/auth/login.js?v=2" defer></script>
     </head>
     <%-- Theme tối + kính mờ: khớp prototype dang-nhap.html (body.dark.auth-dark) --%>
     <body class="theme-guest-dark auth-dark">
