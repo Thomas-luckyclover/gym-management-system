@@ -84,6 +84,10 @@
   justify-content: center;
 }
 
+.article-cover-fallback.is-hidden {
+  display: none;
+}
+
 .cover-pattern {
   position: absolute;
   inset: 0;
