@@ -105,6 +105,9 @@ public final class Messages {
     /** CBR-31: link đặt mật khẩu sai, đã dùng hoặc đã hết hạn. */
     public static final String EXTRA_SETUP_LINK_INVALID = "Link đặt mật khẩu không còn hiệu lực. Vui lòng dùng Quên mật khẩu để đặt lại.";
 
+    /** CBR-24: đặt mật khẩu lần đầu qua link email thành công. */
+    public static final String EXTRA_PASSWORD_SET = "Đã đặt mật khẩu. Vui lòng đăng nhập.";
+
     private Messages() {
     }
 }
