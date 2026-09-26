@@ -7,14 +7,43 @@
 <head>
   <%@ include file="/WEB-INF/jsp/common/head.jspf" %>
   <title>403 · Super Gym</title>
+  <link rel="stylesheet" href="${pageContext.request.contextPath}/css/pages/error/error.css?v=2">
 </head>
-<body class="theme-guest">
-  <!-- Khung thông báo lỗi căn giữa màn hình — style ở common.css (.error-page) -->
-  <main class="error-page">
-    <p class="error-page__code">403</p>
-    <h1 class="error-page__title">Không có quyền truy cập</h1>
-    <p class="error-page__message">Bạn không có quyền truy cập chức năng này.</p>
-    <a class="btn btn-primary" href="${pageContext.request.contextPath}/">Về trang chủ</a>
+<body class="theme-guest-dark err-body">
+  <main class="err">
+    <%@ include file="/WEB-INF/jsp/error/error-art.jspf" %>
+
+    <section class="err-card">
+      <a class="err-brand" href="${pageContext.request.contextPath}/">
+        <img src="${pageContext.request.contextPath}/images/logo-mark.png?v=2" alt="" width="40" height="30">
+        Super Gym
+      </a>
+
+      <%-- Số 0 là bánh tạ có ổ khóa ở giữa --%>
+      <p class="err-code" aria-hidden="true">
+        <span>4</span>
+        <svg class="err-plate" viewBox="0 0 100 100">
+          <circle class="rim" cx="50" cy="50" r="44" />
+          <circle class="ring" cx="50" cy="50" r="30" />
+          <path class="lock" d="M42 47 v-6 a8 8 0 0 1 16 0 v6" />
+          <rect class="lock" x="37" y="47" width="26" height="19" rx="4" />
+        </svg>
+        <span>3</span>
+      </p>
+
+      <p class="err-status">403 – Forbidden</p>
+      <h1 class="err-title">Không có quyền truy cập</h1>
+      <p class="err-message">Bạn không có quyền truy cập chức năng này. Hãy đăng nhập đúng tài khoản hoặc quay lại trang trước.</p>
+
+      <div class="err-actions">
+        <a class="btn btn-primary btn-lg" href="${pageContext.request.contextPath}/">
+          <i class="fa-solid fa-house"></i> Về trang chủ
+        </a>
+        <button class="btn btn-ghost btn-lg" type="button" onclick="history.back()">
+          <i class="fa-solid fa-arrow-left"></i> Quay lại
+        </button>
+      </div>
+    </section>
   </main>
 </body>
 </html>

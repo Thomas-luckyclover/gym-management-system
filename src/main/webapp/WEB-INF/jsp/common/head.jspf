@@ -1,32 +1,32 @@
 <%--
-  head.jspf ? ph?n <head> dùng chung cho M?I trang. Include ngay trong th? <head> c?a t?ng JSP:
+  head.jspf ? ph?n <head> dï¿½ng chung cho M?I trang. Include ngay trong th? <head> c?a t?ng JSP:
 
       <head>
         <%@ include file="/WEB-INF/jsp/common/head.jspf" %>
-        <title>??t bu?i l? · Super Gym</title>
+        <title>??t bu?i l? ï¿½ Super Gym</title>
         <link rel="stylesheet" href="${pageContext.request.contextPath}/css/pages/customer/book-session.css">
         <script src="${pageContext.request.contextPath}/js/pages/customer/book-session.js" defer></script>
       </head>
 
-  Th? t? n?p CSS 3 l?p (không ??o): tokens.css ? common.css ? CSS riêng c?a trang.
-  JS: common.js n?p tr??c, JS riêng c?a trang n?p sau (c? 2 ??u defer).
-  M?i JSP v?n ph?i t? khai báo ? dòng ??u: <%@ page contentType="text/html; charset=UTF-8" pageEncoding="UTF-8" %>
+  Th? t? n?p CSS 3 l?p (khï¿½ng ??o): tokens.css ? common.css ? CSS riï¿½ng c?a trang.
+  JS: common.js n?p tr??c, JS riï¿½ng c?a trang n?p sau (c? 2 ??u defer).
+  M?i JSP v?n ph?i t? khai bï¿½o ? dï¿½ng ??u: <%@ page contentType="text/html; charset=UTF-8" pageEncoding="UTF-8" %>
 --%>
 <%@ taglib prefix="c" uri="jakarta.tags.core" %>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
-<%-- common.js ??c th? này (hàm getContextPath) ?? ghép URL AJAX ?úng khi app ch?y d??i /gms --%>
+<%-- common.js ??c th? nï¿½y (hï¿½m getContextPath) ?? ghï¿½p URL AJAX ?ï¿½ng khi app ch?y d??i /gms --%>
 <meta name="context-path" content="${pageContext.request.contextPath}">
 
-<%-- Font: Montserrat (tiêu ??, s? li?u) · Inter (n?i dung khu Guest/H?i viên/Nhân viên)
-     · Work Sans + Be Vietnam Pro (khu Manager/Admin) ? kh?p token --font-* trong tokens.css --%>
+<%-- Font: Montserrat (tiï¿½u ??, s? li?u) ï¿½ Inter (n?i dung khu Guest/H?i viï¿½n/Nhï¿½n viï¿½n)
+     ï¿½ Work Sans + Be Vietnam Pro (khu Manager/Admin) ? kh?p token --font-* trong tokens.css --%>
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Montserrat:wght@600;700;800&family=Inter:wght@400;500;600;700&family=Work+Sans:wght@400;500;600;700&family=Be+Vietnam+Pro:wght@600;700&display=swap">
 
-<%-- Icon Font Awesome (cùng b?n v?i prototype) ? dùng <i class="fa-solid fa-..."></i> --%>
+<%-- Icon Font Awesome (cï¿½ng b?n v?i prototype) ? dï¿½ng <i class="fa-solid fa-..."></i> --%>
 <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/7.3.1/css/all.min.css">
 
 <link rel="stylesheet" href="${pageContext.request.contextPath}/css/tokens.css">
-<link rel="stylesheet" href="${pageContext.request.contextPath}/css/common.css?v=4">
-<script src="${pageContext.request.contextPath}/js/common.js" defer></script>
+<link rel="stylesheet" href="${pageContext.request.contextPath}/css/common.css?v=3">
+<script src="${pageContext.request.contextPath}/js/common.js?v=2" defer></script>

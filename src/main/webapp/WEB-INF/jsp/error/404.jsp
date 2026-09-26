@@ -7,14 +7,42 @@
 <head>
   <%@ include file="/WEB-INF/jsp/common/head.jspf" %>
   <title>404 · Super Gym</title>
+  <link rel="stylesheet" href="${pageContext.request.contextPath}/css/pages/error/error.css?v=2">
 </head>
-<body class="theme-guest">
-  <!-- Khung thông báo lỗi căn giữa màn hình — style ở common.css (.error-page) -->
-  <main class="error-page">
-    <p class="error-page__code">404</p>
-    <h1 class="error-page__title">Không tìm thấy trang</h1>
-    <p class="error-page__message">Trang bạn tìm không tồn tại hoặc đã bị gỡ.</p>
-    <a class="btn btn-primary" href="${pageContext.request.contextPath}/">Về trang chủ</a>
+<body class="theme-guest-dark err-body">
+  <main class="err">
+    <%@ include file="/WEB-INF/jsp/error/error-art.jspf" %>
+
+    <section class="err-card">
+      <a class="err-brand" href="${pageContext.request.contextPath}/">
+        <img src="${pageContext.request.contextPath}/images/logo-mark.png?v=2" alt="" width="40" height="30">
+        Super Gym
+      </a>
+
+      <p class="err-code" aria-hidden="true">
+        <span>4</span>
+        <svg class="err-plate" viewBox="0 0 100 100">
+          <circle class="rim" cx="50" cy="50" r="44" />
+          <circle class="ring" cx="50" cy="50" r="30" />
+          <circle class="hole" cx="50" cy="50" r="9" />
+          <text class="label" x="50" y="22">20KG</text>
+        </svg>
+        <span>4</span>
+      </p>
+
+      <p class="err-status">404 – Not Found</p>
+      <h1 class="err-title">Không tìm thấy trang</h1>
+      <p class="err-message">Trang bạn tìm không tồn tại hoặc đã bị gỡ. Có thể đường dẫn bị gõ sai.</p>
+
+      <div class="err-actions">
+        <a class="btn btn-primary btn-lg" href="${pageContext.request.contextPath}/">
+          <i class="fa-solid fa-house"></i> Về trang chủ
+        </a>
+        <button class="btn btn-ghost btn-lg" type="button" onclick="history.back()">
+          <i class="fa-solid fa-arrow-left"></i> Quay lại
+        </button>
+      </div>
+    </section>
   </main>
 </body>
 </html>
