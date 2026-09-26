@@ -113,6 +113,7 @@ const MESSAGES = {
     MSG27_CONFIRM_DELETE: "Xóa %s? Thao tác này không thể hoàn tác.",
     MSG28_UNSAVED_CHANGES: "Thay đổi của bạn chưa được lưu. Rời trang bây giờ sẽ mất các thay đổi này.",
     MSG39_IDENTIFIER_REQUIRED: "Nhập email hoặc số điện thoại.",
+    MSG44_CODE_EXPIRED: "Mã đã hết hạn. Bấm Gửi lại mã để nhận mã mới.",
     MSG46_PASSWORD_TOO_SHORT: "Mật khẩu phải có ít nhất %d ký tự.",
     MSG47_PASSWORD_MISMATCH: "Mật khẩu xác nhận không khớp.",
     EXTRA_PASSWORD_RULE: "Mật khẩu phải dài %d–%d ký tự, gồm cả chữ và số.",
