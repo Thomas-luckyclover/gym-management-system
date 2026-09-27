@@ -37,7 +37,7 @@ body.auth-dark {
     linear-gradient(180deg, rgba(13, 13, 13, 0.38) 0%, rgba(13, 13, 13, 0.62) 48%, rgba(13, 13, 13, 0.9) 100%);
 }
 
-.auth-shell > * {
+.auth-shell>* {
   position: relative;
   z-index: 1;
 }
@@ -274,6 +274,37 @@ body.auth-dark .btn-outline:hover {
   background: rgba(224, 176, 64, 0.14);
   border-color: rgba(224, 176, 64, 0.32);
   color: var(--color-warning);
+}
+
+/* Khối đồng hồ đếm ngược tài khoản bị tạm khóa */
+.lock-countdown {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: var(--space-2);
+  margin-top: var(--space-4);
+  margin-bottom: var(--space-6);
+  color: var(--color-text-subtle);
+  font-size: var(--font-size-sm);
+  font-weight: var(--font-weight-medium);
+  text-align: center;
+}
+
+.lock-countdown i {
+  color: var(--color-warning);
+  font-size: var(--font-size-sm);
+}
+
+.lock-countdown .countdown-badge,
+.lock-countdown b {
+  font-variant-numeric: tabular-nums;
+  color: var(--color-lime);
+  background: rgba(204, 255, 0, 0.12);
+  border: 1px solid rgba(204, 255, 0, 0.25);
+  padding: 2px 8px;
+  border-radius: var(--radius-xs);
+  font-weight: var(--font-weight-bold);
+  letter-spacing: 0.05em;
 }
 
 .step-panel[hidden] {

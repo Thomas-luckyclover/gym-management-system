@@ -121,15 +121,19 @@ public class PersonDAO {
         }
 
         /**
-         * Tìm Person đang hoạt động (IsReleased = 0) theo số điện thoại.
+         * Tìm Person đang hoạt động (IsReleased = 0) theo số điện thoại,
+         * chỉ trong hồ sơ Self (CBR-28: bỏ qua SĐT giám hộ trên Dependent profile).
          * 
          * @param phone số điện thoại 10 chữ số
          * @return đối tượng Person hoặc null nếu không tìm thấy
          * @throws SQLException khi truy vấn gặp lỗi
          */
         public Person findByPhone(String phone) throws SQLException {
-                String sql = "SELECT PersonId, FullName, DateOfBirth, Phone, Email, Avatar, IsReleased, CreatedAt "
-                                + "FROM Persons WHERE Phone = ? AND IsReleased = 0";
+                String sql = "SELECT p.PersonId, p.FullName, p.DateOfBirth, p.Phone, p.Email, "
+                                + "p.Avatar, p.IsReleased, p.CreatedAt "
+                                + "FROM Persons p "
+                                + "INNER JOIN Customers c ON c.PersonId = p.PersonId "
+                                + "WHERE p.Phone = ? AND p.IsReleased = 0 AND c.CustomerType = 'Self'";
 
                 try (Connection conn = DBContext.getConnection();
                                 PreparedStatement stmt = conn.prepareStatement(sql)) {
@@ -255,4 +259,49 @@ public class PersonDAO {
                         return stmt.executeUpdate() == 1;
                 }
         }
+
+        /**
+         * Cập nhật email mới sau khi ContactChangeService đã xác thực mã thành công.
+         *
+         * @param personId mã hồ sơ cần đổi email
+         * @param newEmail email mới, đã qua kiểm tra định dạng + trùng lặp ở Service
+         * @return true nếu cập nhật thành công
+         * @throws SQLException khi truy vấn gặp lỗi
+         */
+        public boolean updateEmail(int personId, String newEmail) throws SQLException {
+                String sql = "UPDATE Persons SET Email = ? WHERE PersonId = ?";
+
+                try (Connection conn = DBContext.getConnection();
+                                PreparedStatement stmt = conn.prepareStatement(sql)) {
+
+                        stmt.setString(1, newEmail);
+                        stmt.setInt(2, personId);
+
+                        return stmt.executeUpdate() == 1;
+                }
+        }
+
+        /**
+         * Cập nhật số điện thoại mới sau khi ContactChangeService đã xác thực mã thành
+         * công.
+         *
+         * @param personId mã hồ sơ cần đổi số điện thoại
+         * @param newPhone số điện thoại mới, đã qua kiểm tra định dạng + trùng lặp ở
+         *                 Service
+         * @return true nếu cập nhật thành công
+         * @throws SQLException khi truy vấn gặp lỗi
+         */
+        public boolean updatePhone(int personId, String newPhone) throws SQLException {
+                String sql = "UPDATE Persons SET Phone = ? WHERE PersonId = ?";
+
+                try (Connection conn = DBContext.getConnection();
+                                PreparedStatement stmt = conn.prepareStatement(sql)) {
+
+                        stmt.setString(1, newPhone);
+                        stmt.setInt(2, personId);
+
+                        return stmt.executeUpdate() == 1;
+                }
+        }
+
 }

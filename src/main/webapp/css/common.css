@@ -379,6 +379,12 @@ button {
   color: var(--color-text);
 }
 
+/* Tắt nút hiện mật khẩu có sẵn của trình duyệt (Edge/Chromium) — tránh chồng lên .password-toggle của hệ thống */
+input[type="password"]::-ms-reveal,
+input[type="password"]::-ms-clear {
+  display: none;
+}
+
 /* ===== 4. TOAST (GBR-34) ===== */
 
 /* [JS] common.js — getToastContainer() tạo khung này nếu trang chưa có; showToast() thêm toast vào đây */

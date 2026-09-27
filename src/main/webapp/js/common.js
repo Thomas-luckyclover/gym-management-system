@@ -980,30 +980,42 @@ function handleLeavePageLinkClick(event) {
 // B1: tìm mọi nút có data-password-toggle (giá trị = id của ô mật khẩu)
 // B2: bấm → đổi type password ↔ text, đổi icon mắt mở/mắt gạch, cập nhật aria-label cho trình đọc màn hình
 function bindPasswordToggles() {
-    // B1
-    const toggleButtons = document.querySelectorAll("[data-password-toggle]");
+    document.addEventListener("click", function (event) {
+        const button = event.target.closest("[data-password-toggle], [data-pw-toggle], [data-toggle-target], .pw-toggle");
+        if (!button) {
+            return;
+        }
 
-    for (const button of toggleButtons) {
-        // B2
-        button.addEventListener("click", function () {
-            const input = document.getElementById(button.dataset.passwordToggle);
-            if (input === null) {
-                return;
-            }
-            const isHidden = input.type === "password";
-            if (isHidden) {
-                input.type = "text";
-                button.innerHTML = '<i class="fa-solid fa-eye-slash" aria-hidden="true"></i>';
-                button.setAttribute("aria-label", "Ẩn mật khẩu");
-                button.setAttribute("aria-pressed", "true");
-            } else {
-                input.type = "password";
-                button.innerHTML = '<i class="fa-solid fa-eye" aria-hidden="true"></i>';
-                button.setAttribute("aria-label", "Hiện mật khẩu");
-                button.setAttribute("aria-pressed", "false");
-            }
-        });
-    }
+        const targetId = button.dataset.passwordToggle
+            || button.dataset.pwToggle
+            || button.dataset.toggleTarget
+            || button.getAttribute("data-toggle-target");
+
+        if (!targetId) {
+            return;
+        }
+
+        const input = document.getElementById(targetId);
+        if (!input) {
+            return;
+        }
+
+        event.preventDefault();
+
+        const isHidden = input.type === "password";
+        input.type = isHidden ? "text" : "password";
+
+        const icon = button.querySelector("i");
+        if (icon) {
+            icon.className = isHidden ? "fa-solid fa-eye-slash" : "fa-solid fa-eye";
+        } else {
+            button.innerHTML = isHidden
+                ? '<i class="fa-solid fa-eye-slash" aria-hidden="true"></i>'
+                : '<i class="fa-solid fa-eye" aria-hidden="true"></i>';
+        }
+
+        button.setAttribute("aria-label", isHidden ? "Ẩn mật khẩu" : "Hiện mật khẩu");
+    });
 }
 
 // ===== 6. ĐẾM NGƯỢC mm:ss (GBR-27: hạn thanh toán, giữ slot, mã xác thực, khóa tạm) =====
@@ -1747,7 +1759,7 @@ function normalizeSearchText(text) {
     const lowerText = String(text).toLowerCase();
     const withoutD = lowerText.replace(/đ/g, "d");
     const decomposed = withoutD.normalize("NFD");
-    const withoutMarks = decomposed.replace(/[̀-ͯ]/g, "");
+    const withoutMarks = decomposed.replace(/[\u0300-\u036f]/g, "");
     const singleSpaced = withoutMarks.replace(/\s+/g, " ");
     return singleSpaced.trim();
 }
