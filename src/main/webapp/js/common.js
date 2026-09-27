@@ -121,7 +121,9 @@ const MESSAGES = {
     EXTRA_CODE_FORMAT: "Mã xác thực gồm đúng 6 chữ số.",
     EXTRA_DOB_TOO_OLD: "Ngày sinh không hợp lệ (tuổi không quá %d).",
     EXTRA_CODE_RESEND_TOO_SOON: "Vui lòng chờ %d giây nữa rồi bấm Gửi lại mã.",
-    EXTRA_SETUP_LINK_INVALID: "Link đặt mật khẩu không còn hiệu lực. Vui lòng dùng Quên mật khẩu để đặt lại."
+    EXTRA_SETUP_LINK_INVALID: "Link đặt mật khẩu không còn hiệu lực. Vui lòng dùng Quên mật khẩu để đặt lại.",
+    EXTRA_SETUP_LINK_EXPIRED: "Link đặt mật khẩu đã hết hạn. Hãy bấm Gửi mã để nhận mã xác thực qua email và đặt mật khẩu.",
+    EXTRA_SETUP_LINK_USED: "Bạn đã đặt mật khẩu cho tài khoản này. Vui lòng đăng nhập."
 };
 
 // Hộp thoại xác nhận đang mở (chỉ mở 1 cái tại 1 thời điểm)

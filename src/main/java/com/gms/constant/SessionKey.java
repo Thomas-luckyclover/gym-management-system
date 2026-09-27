@@ -37,6 +37,12 @@ public final class SessionKey {
     /** Hạn làm bước 3 = hạn của mã vừa xác minh (LocalDateTime). */
     public static final String RECOVERY_DEADLINE = "recoveryDeadline";
 
+    /**
+     * Email điền sẵn ô bước 1 Quên mật khẩu khi khách mở link đặt mật khẩu đã hết hạn (String).
+     * Dùng 1 lần: ForgotPasswordServlet đọc xong xóa ngay. Truyền qua session để email không nằm trên URL.
+     */
+    public static final String RECOVERY_PREFILL_EMAIL = "recoveryPrefillEmail";
+
     /** Thời gian sống của session: 2 tiếng không hoạt động (codeImplementationBackend.md Mục 11.1). */
     public static final int SESSION_TIMEOUT_SECONDS = 7200;
 

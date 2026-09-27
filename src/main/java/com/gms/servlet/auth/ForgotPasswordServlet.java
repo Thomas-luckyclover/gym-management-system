@@ -20,15 +20,19 @@ import java.time.Duration;
 import java.time.LocalDateTime;
 
 /**
- * Quên mật khẩu (#3 Forgot Password, UC-03) — 1 trang, 3 bước: email → mã → mật khẩu mới.
+ * Trang Quên mật khẩu (màn #3, UC-03) — địa chỉ /forgot-password.
  *
- * Tiến độ lưu trong session (SessionKey.RECOVERY_*), nên không thể nhảy thẳng sang bước sau:
- *   chưa có RECOVERY_EMAIL      → bước "email"
- *   có email, chưa xác minh mã  → bước "code"
- *   đã xác minh (còn hạn)       → bước "reset"
+ * 1 trang nhưng có 3 bước. Bước nào đang hiện là do SESSION quyết định (không phải do URL),
+ * nên khách không thể gõ thẳng URL để nhảy sang bước sau:
+ *   Session chưa có recoveryEmail                → bước "email"  (nhập email)
+ *   Có recoveryEmail, chưa có recoveryAccountId  → bước "code"   (nhập mã 6 số)
+ *   Có recoveryAccountId (còn hạn)               → bước "reset"  (đặt mật khẩu mới)
  *
- * POST theo tham số action: send | resend | verify | reset. Thành công thì redirect (Post/Redirect/Get).
- * GET ?restart=1 → xóa tiến độ, làm lại từ bước nhập email.
+ * Form gửi lên (POST) luôn kèm ô ẩn "action" để biết khách bấm nút nào:
+ *   send = "Gửi mã xác thực" · resend = "Gửi lại mã" · verify = "Xác nhận" (mã) · reset = "Đặt mật khẩu mới"
+ * Làm xong 1 bước thì redirect về GET /forgot-password (mẫu Post/Redirect/Get: bấm F5 không gửi lại form).
+ *
+ * Servlet chỉ điều phối: đọc form → gọi PasswordRecoveryService → chọn trang. Không tự quyết luật nghiệp vụ.
  *
  * @author Le Cong Minh
  */
@@ -42,28 +46,52 @@ public class ForgotPasswordServlet extends HttpServlet {
 
     private final PasswordRecoveryService passwordRecoveryService = new PasswordRecoveryService();
 
+    /**
+     * Mở trang Quên mật khẩu (gõ URL, bấm link "Quên mật khẩu?", hoặc sau mỗi lần redirect).
+     *
+     * @param request  có thể có "?restart=1" (khách bấm "Dùng email khác").
+     * @param response dùng để redirect hoặc trả trang JSP.
+     */
     @Override
     protected void doGet(HttpServletRequest request, HttpServletResponse response)
             throws ServletException, IOException {
         HttpSession session = request.getSession();
 
-        // B1: bấm "Dùng email khác" → làm lại từ đầu
+        // B1: khách bấm "Dùng email khác" (?restart=1) → xóa tiến độ, quay về bước nhập email
         if ("1".equals(request.getParameter("restart"))) {
             clearRecovery(session);
             RequestUtil.redirect(request, response, "/forgot-password");
             return;
         }
 
-        // B2: hiện đúng bước theo tiến độ trong session
+        // B2: khách vừa được chuyển từ link đặt mật khẩu HẾT HẠN sang đây (SetPasswordServlet để email trong session)
+        //     → lấy email đó ra điền sẵn vào ô, rồi XÓA khỏi session ngay (chỉ dùng 1 lần: bấm F5 là ô trống lại).
+        //     Đồng thời bỏ tiến độ cũ để chắc chắn đang ở bước "email".
+        //     KHÔNG tự gửi mã: khách phải tự bấm "Gửi mã" → luật chống gửi liên tục (60 giây, 5 lần/giờ) vẫn áp dụng.
+        String prefillEmail = (String) session.getAttribute(SessionKey.RECOVERY_PREFILL_EMAIL);
+        if (prefillEmail != null) {
+            session.removeAttribute(SessionKey.RECOVERY_PREFILL_EMAIL);
+            clearRecovery(session);
+            request.setAttribute("email", prefillEmail);
+        }
+
+        // B3: hiện đúng bước theo tiến độ đang lưu trong session
         showCurrentStep(request, response, session);
     }
 
+    /**
+     * Nhận form của cả 3 bước. Ô ẩn "action" cho biết khách bấm nút nào.
+     *
+     * @param request  form gửi lên, luôn có ô "action" (send / resend / verify / reset) + các ô của bước đó.
+     * @param response dùng để redirect hoặc trả lại trang kèm lỗi.
+     */
     @Override
     protected void doPost(HttpServletRequest request, HttpServletResponse response)
             throws ServletException, IOException {
         HttpSession session = request.getSession();
         String action = RequestUtil.getTrimmedParam(request, "action");
 
+        // Rẽ theo nút khách bấm; action lạ (bị sửa tay) → quay về trang như GET
         switch (action == null ? "" : action) {
             case "send":
                 handleSend(request, response, session);
@@ -84,30 +112,50 @@ public class ForgotPasswordServlet extends HttpServlet {
 
     // ===== Bước 1: nhập email → gửi mã =====
 
+    /**
+     * Khách bấm "Gửi mã xác thực" ở bước 1.
+     *
+     * @param request  form có ô "email", VD "thao.luong@gmail.com".
+     * @param response redirect sang bước 2 nếu gửi được; không thì trả lại bước 1 kèm lỗi.
+     * @param session  nơi lưu tiến độ — gửi được thì ghi recoveryEmail.
+     */
     private void handleSend(HttpServletRequest request, HttpServletResponse response, HttpSession session)
             throws ServletException, IOException {
+        // B1: đọc ô email, nhờ Service kiểm tra + gửi mã
         String email = RequestUtil.getTrimmedParam(request, "email");
         ServiceResult<Void> result = passwordRecoveryService.requestCode(email);
 
+        // B2: không gửi được → hiện lại bước 1, giữ nguyên chữ khách đã gõ, kèm lỗi
         if (!result.isSuccess()) {
             request.setAttribute("email", email);
             forwardStep(request, response, STEP_EMAIL, result);
             return;
         }
 
-        // Bắt đầu tiến độ mới cho email này
+        // B3: gửi được → xóa tiến độ cũ (nếu có), lưu email này vào session = đang ở bước 2
         clearRecovery(session);
         session.setAttribute(SessionKey.RECOVERY_EMAIL, email);
+
+        // B4: toast "Mã đã được gửi tới …" rồi redirect → GET sẽ hiện bước 2
         RequestUtil.setFlashToast(request, "success", result.getMessage());
         RequestUtil.redirect(request, response, "/forgot-password");
     }
 
     // ===== Bước 2: gửi lại mã / nhập mã =====
 
+    /**
+     * Khách bấm "Gửi lại mã" ở bước 2. Gửi được hay không đều báo bằng toast rồi quay lại bước 2.
+     *
+     * @param request  form chỉ có action=resend (email lấy từ session, không lấy từ form).
+     * @param response luôn redirect về /forgot-password.
+     * @param session  đọc recoveryEmail.
+     */
     private void handleResend(HttpServletRequest request, HttpServletResponse response, HttpSession session)
             throws IOException {
+        // B1: lấy email đang khôi phục từ session. Không có (session hết hạn) → chỉ quay về trang
         String email = (String) session.getAttribute(SessionKey.RECOVERY_EMAIL);
         if (email != null) {
+            // B2: gửi lại mã; thành công → toast xanh MSG45, thất bại (chưa đủ 60 giây, bị khóa...) → toast đỏ
             ServiceResult<Void> result = passwordRecoveryService.requestCode(email);
             String toastType = result.isSuccess() ? "success" : "error";
             String toastMessage = result.isSuccess() ? Messages.MSG45_CODE_RESENT : firstError(result);
@@ -116,23 +164,34 @@ public class ForgotPasswordServlet extends HttpServlet {
         RequestUtil.redirect(request, response, "/forgot-password");
     }
 
+    /**
+     * Khách gõ mã 6 số rồi bấm "Xác nhận" ở bước 2.
+     *
+     * @param request  form có ô "code", VD "246810".
+     * @param response redirect sang bước 3 nếu đúng; không thì trả lại bước 2 kèm lỗi.
+     * @param session  đọc recoveryEmail; mã đúng thì ghi recoveryAccountId + recoveryDeadline.
+     */
     private void handleVerify(HttpServletRequest request, HttpServletResponse response, HttpSession session)
             throws ServletException, IOException {
+        // B1: chưa qua bước 1 (hoặc session hết hạn) → quay về đầu
         String email = (String) session.getAttribute(SessionKey.RECOVERY_EMAIL);
         if (email == null) {
             RequestUtil.redirect(request, response, "/forgot-password");
             return;
         }
 
+        // B2: kiểm tra mã với email TRONG SESSION (không tin email từ form)
         String code = RequestUtil.getTrimmedParam(request, "code");
         ServiceResult<VerificationCode> result = passwordRecoveryService.verifyCode(email, code);
 
+        // B3: sai / hết hạn / bị khóa → hiện lại bước 2 kèm lỗi
         if (!result.isSuccess()) {
             forwardStep(request, response, STEP_CODE, result);
             return;
         }
 
-        // Mã đúng → mở bước 3, hạn làm bước 3 = hạn của mã
+        // B4: đúng mã → ghi vào session "đã xác minh tài khoản X", hạn làm bước 3 = hạn của mã vừa dùng.
+        //     VD mã gửi 10:00 hết hạn 10:15 → phải đặt mật khẩu mới trước 10:15
         VerificationCode usedCode = result.getData();
         session.setAttribute(SessionKey.RECOVERY_ACCOUNT_ID, usedCode.getAccountId());
         session.setAttribute(SessionKey.RECOVERY_DEADLINE, usedCode.getExpiresAt());
@@ -141,13 +200,23 @@ public class ForgotPasswordServlet extends HttpServlet {
 
     // ===== Bước 3: đặt mật khẩu mới =====
 
+    /**
+     * Khách bấm "Đặt mật khẩu mới" ở bước 3.
+     *
+     * @param request  form có ô "password" và "confirmPassword".
+     * @param response thành công → redirect /login; lỗi ô → trả lại bước 3; lỗi khác → về bước 1.
+     * @param session  đọc recoveryAccountId + recoveryDeadline; thành công thì xóa tiến độ.
+     */
     private void handleReset(HttpServletRequest request, HttpServletResponse response, HttpSession session)
             throws ServletException, IOException {
+        // B1: chưa xác minh mã (VD gửi form bằng tay khi mới ở bước 1) → quay về đầu
         Integer accountId = (Integer) session.getAttribute(SessionKey.RECOVERY_ACCOUNT_ID);
         if (accountId == null) {
             RequestUtil.redirect(request, response, "/forgot-password");
             return;
         }
+
+        // B2: quá hạn bước 3 (để trang mở quá lâu) → xóa tiến độ, toast MSG44, làm lại từ đầu
         if (isResetExpired(session)) {
             clearRecovery(session);
             RequestUtil.setFlashToast(request, "error", Messages.MSG44_CODE_EXPIRED);
@@ -155,10 +224,13 @@ public class ForgotPasswordServlet extends HttpServlet {
             return;
         }
 
+        // B3: nhờ Service kiểm tra 2 ô mật khẩu rồi lưu
         String password = request.getParameter("password");
         String confirmPassword = request.getParameter("confirmPassword");
         ServiceResult<Void> result = passwordRecoveryService.resetPassword(accountId, password, confirmPassword);
 
+        // B4: lỗi ô mật khẩu → giữ bước 3 để gõ lại.
+        //     Lỗi khác (tài khoản vừa bị khóa, lỗi hệ thống) → bỏ tiến độ, về bước 1 kèm câu lỗi
         if (!result.isSuccess()) {
             if (result.hasFieldErrors()) {
                 forwardStep(request, response, STEP_RESET, result);
@@ -169,12 +241,15 @@ public class ForgotPasswordServlet extends HttpServlet {
             return;
         }
 
-        // Thành công: service đã đăng xuất mọi phiên của tài khoản — phiên hiện tại có thể đã bị hủy
+        // B5: thành công. Service đã đăng xuất MỌI phiên của tài khoản — nếu khách đang đăng nhập đúng tài khoản
+        //     này trên trình duyệt hiện tại thì session hiện tại cũng đã bị hủy → xóa tiến độ sẽ ném lỗi, bỏ qua
         try {
             clearRecovery(session);
         } catch (IllegalStateException sessionAlreadyInvalidated) {
-            // Người dùng đang đăng nhập đúng tài khoản này trên trình duyệt hiện tại — phiên đã bị hủy, bỏ qua
+            // Session đã bị hủy, không còn gì để xóa
         }
+
+        // B6: toast MSG49 rồi về trang đăng nhập (setFlashToast tự tạo session mới nếu session cũ đã hủy)
         RequestUtil.setFlashToast(request, "success", result.getMessage());
         RequestUtil.redirect(request, response, "/login");
     }
@@ -182,47 +257,72 @@ public class ForgotPasswordServlet extends HttpServlet {
     // ===== Hiển thị =====
 
     /**
-     * Chọn bước theo session rồi forward JSP.
+     * Xác định bước đang ở (theo session) rồi hiện trang.
+     *
+     * @param request  nơi đặt dữ liệu cho JSP.
+     * @param response dùng để trả trang JSP.
+     * @param session  nơi đọc tiến độ.
      */
     private void showCurrentStep(HttpServletRequest request, HttpServletResponse response, HttpSession session)
             throws ServletException, IOException {
+        // B1: đọc bước từ session
         String step = resolveStep(session);
+
+        // B2: đang ở bước 3 mà đã quá hạn → bỏ tiến độ, hiện bước 1 kèm MSG44
         if (STEP_RESET.equals(step) && isResetExpired(session)) {
             clearRecovery(session);
             request.setAttribute("errorMessage", Messages.MSG44_CODE_EXPIRED);
             step = STEP_EMAIL;
         }
+
+        // B3: hiện trang ở bước đó
         forwardStep(request, response, step, null);
     }
 
     /**
-     * Forward JSP ở 1 bước, kèm lỗi (nếu có) và đồng hồ của bước nhập mã.
+     * Đặt đủ dữ liệu cho JSP rồi hiện trang ở 1 bước.
+     *
+     * @param request      nơi đặt dữ liệu: recoveryStep, recoveryEmail, lỗi, đồng hồ, gợi ý số lượt.
+     * @param response     dùng để trả trang JSP.
+     * @param step         bước cần hiện: "email" / "code" / "reset".
+     * @param failedResult kết quả thất bại cần hiện lỗi; truyền null khi chỉ hiện trang, không có lỗi.
      */
     private void forwardStep(HttpServletRequest request, HttpServletResponse response,
             String step, ServiceResult<?> failedResult) throws ServletException, IOException {
         HttpSession session = request.getSession();
         String email = (String) session.getAttribute(SessionKey.RECOVERY_EMAIL);
 
+        // B1: có lỗi → lỗi gắn ô thì hiện dưới ô (fieldErrors), lỗi chung thì hiện khung đỏ trên cùng (errorMessage)
         if (failedResult != null) {
             request.setAttribute("fieldErrors", failedResult.getFieldErrors());
             if (!failedResult.hasFieldErrors()) {
                 request.setAttribute("errorMessage", failedResult.getMessage());
             }
         }
+
+        // B2: riêng bước 2 cần thêm đồng hồ + gợi ý số lượt còn lại
         if (STEP_CODE.equals(step)) {
             setCodeTimers(request, email);
         }
 
+        // B3: cho JSP biết đang ở bước nào, email nào, rồi hiện trang
         request.setAttribute("recoveryStep", step);
         request.setAttribute("recoveryEmail", email);
         RequestUtil.forward(request, response, VIEW);
     }
 
     /**
-     * Tính 2 đồng hồ cho bước nhập mã (GBR-27): số giây còn lại của mã và số giây chờ trước khi được "Gửi lại mã".
-     * Server tính, JSP chỉ hiển thị (không dựa vào đồng hồ máy khách).
+     * Chuẩn bị dữ liệu riêng cho bước 2: 2 đồng hồ đếm ngược (GBR-27).
+     * Số giây do SERVER tính rồi đưa xuống, JS chỉ đếm lùi (không tin đồng hồ máy khách).
+     *
+     * @param request nơi đặt: codeSecondsLeft, resendSecondsLeft.
+     * @param email   email đang khôi phục, VD "thao.luong@gmail.com".
      */
     private void setCodeTimers(HttpServletRequest request, String email) {
+        // B1: tính 2 đồng hồ từ mã gửi gần nhất.
+        //     codeSecondsLeft   = còn bao nhiêu giây mã hết hạn (VD 899 = 14:59)
+        //     resendSecondsLeft = còn bao nhiêu giây mới được bấm "Gửi lại mã" (VD 59)
+        //     Lỗi DB → để 0 (đồng hồ hiện hết hạn), không làm hỏng trang
         long codeSecondsLeft = 0;
         long resendSecondsLeft = 0;
         try {
@@ -242,6 +342,12 @@ public class ForgotPasswordServlet extends HttpServlet {
 
     // ===== Hàm phụ =====
 
+    /**
+     * Đọc session để biết khách đang ở bước nào.
+     *
+     * @param session session của khách.
+     * @return "reset" nếu đã xác minh mã; "code" nếu đã gửi mã; còn lại "email".
+     */
     private String resolveStep(HttpSession session) {
         if (session.getAttribute(SessionKey.RECOVERY_ACCOUNT_ID) != null) {
             return STEP_RESET;
@@ -252,22 +358,45 @@ public class ForgotPasswordServlet extends HttpServlet {
         return STEP_EMAIL;
     }
 
+    /**
+     * Kiểm tra bước 3 đã quá hạn chưa (hạn = hạn của mã đã xác minh).
+     *
+     * @param session session của khách.
+     * @return true nếu không có hạn hoặc bây giờ đã qua hạn; false nếu vẫn còn thời gian.
+     */
     private boolean isResetExpired(HttpSession session) {
         LocalDateTime deadline = (LocalDateTime) session.getAttribute(SessionKey.RECOVERY_DEADLINE);
         return deadline == null || !DateTimeUtil.now().isBefore(deadline);
     }
 
+    /**
+     * Xóa toàn bộ tiến độ Quên mật khẩu trong session (email, tài khoản đã xác minh, hạn bước 3) → về bước 1.
+     *
+     * @param session session của khách.
+     */
     private void clearRecovery(HttpSession session) {
         session.removeAttribute(SessionKey.RECOVERY_EMAIL);
         session.removeAttribute(SessionKey.RECOVERY_ACCOUNT_ID);
         session.removeAttribute(SessionKey.RECOVERY_DEADLINE);
     }
 
+    /**
+     * Số giây từ "bây giờ" tới 1 mốc; đã qua mốc thì trả 0 (không bao giờ âm).
+     *
+     * @param now   giờ hiện tại.
+     * @param until mốc cần tính, VD giờ hết hạn của mã.
+     * @return số giây còn lại, VD 899.
+     */
     private long secondsUntil(LocalDateTime now, LocalDateTime until) {
         return Math.max(0, Duration.between(now, until).getSeconds());
     }
 
-    /** Lỗi chung hoặc lỗi dưới ô đầu tiên — dùng làm nội dung toast. */
+    /**
+     * Lấy 1 câu lỗi để hiện trong toast: ưu tiên lỗi gắn ô đầu tiên, không có thì lấy lỗi chung.
+     *
+     * @param result kết quả thất bại.
+     * @return câu lỗi, VD "Vui lòng chờ 16 giây nữa rồi bấm Gửi lại mã."
+     */
     private String firstError(ServiceResult<?> result) {
         if (result.hasFieldErrors()) {
             return result.getFieldErrors().values().iterator().next();

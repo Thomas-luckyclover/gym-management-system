@@ -30,4 +30,4 @@
 
 <link rel="stylesheet" href="${pageContext.request.contextPath}/css/tokens.css">
 <link rel="stylesheet" href="${pageContext.request.contextPath}/css/common.css?v=3">
-<script src="${pageContext.request.contextPath}/js/common.js?v=4" defer></script>
+<script src="${pageContext.request.contextPath}/js/common.js?v=5" defer></script>

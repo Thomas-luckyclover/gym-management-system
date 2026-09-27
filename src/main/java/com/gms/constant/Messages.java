@@ -108,6 +108,12 @@ public final class Messages {
     /** CBR-24: đặt mật khẩu lần đầu qua link email thành công. */
     public static final String EXTRA_PASSWORD_SET = "Đã đặt mật khẩu. Vui lòng đăng nhập.";
 
+    /** CBR-31: link đặt mật khẩu quá hạn → chuyển sang Quên mật khẩu, email điền sẵn. */
+    public static final String EXTRA_SETUP_LINK_EXPIRED = "Link đặt mật khẩu đã hết hạn. Hãy bấm Gửi mã để nhận mã xác thực qua email và đặt mật khẩu.";
+
+    /** CBR-31: mở lại link đặt mật khẩu đã dùng → về đăng nhập. */
+    public static final String EXTRA_SETUP_LINK_USED = "Bạn đã đặt mật khẩu cho tài khoản này. Vui lòng đăng nhập.";
+
     private Messages() {
     }
 }
