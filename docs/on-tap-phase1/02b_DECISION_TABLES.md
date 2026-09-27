@@ -154,24 +154,20 @@ Mẹo: O3–O6 **cùng 1 câu MSG44** "Mã đã hết hạn. Bấm Gửi lại m
 
 ---
 
-## DT-7 · Đặt mật khẩu qua link `/set-password?token=`
+## DT-7 · Tài khoản chưa có mật khẩu đặt mật khẩu lần đầu (CBR-24, CBR-31) — qua Đăng nhập → Quên mật khẩu
 
-| # | Có token? | Tìm thấy TokenHash? | Link đã dùng? | Link hết hạn? | (POST) mật khẩu hợp lệ + khớp? | TK Active? | **Kết quả** | Ví dụ seed |
-|---|---|---|---|---|---|---|---|---|
-| K1 | **N** | — | — | — | — | — | Ở lại trang: "Link đặt mật khẩu không còn hiệu lực…" + nút Quên MK (không tiết lộ gì thêm) | `/set-password` |
-| K2 | Y | **N** | — | — | — | — | Như K1 | `?token=bia-dai` |
-| K3 | Y | Y | **Y** | — | — | — | → `/login` + toast "Bạn đã đặt mật khẩu cho tài khoản này. Vui lòng đăng nhập." (MSG77_SETUP_LINK_USED) | mở lại link S01 lần 2 |
-| K4 | Y | Y | N | **Y** | — | — | → `/forgot-password`, **ô email điền sẵn** email của link + toast MSG76_SETUP_LINK_EXPIRED. **Không tự gửi mã** (khách tự bấm Gửi mã → CBR-94 vẫn áp dụng) | `?token=setup-khanh-expired-2026` |
-| K5 | Y | Y | N | N | (GET) | — | Hiện form đặt mật khẩu | `?token=setup-nhung-phase1-2026` ⏱ |
-| K6 | Y | Y | N | N | **N** | — | Lỗi dưới ô, giữ form | |
-| K7 | Y | Y | N | N | Y | **N** | **MSG37** | |
-| K8 | Y | Y | N | N | Y | Y | Lưu mật khẩu, `UsedAt = now` → `/login` + "Đã đặt mật khẩu. Vui lòng đăng nhập." | |
+Luồng link `/set-password` **đã bỏ 27/09**. Tài khoản Lễ tân tạo (PasswordHash NULL) đi qua màn Đăng nhập rồi sang Quên mật khẩu.
+
+| # | Khách gõ gì ở ô Email/SĐT (màn Đăng nhập) | Kết quả ở `/login` | Bấm **Đặt mật khẩu** → `/forgot-password` | Ví dụ seed |
+|---|---|---|---|---|
+| K1 | **Email** của tài khoản chưa có MK | **MSG38** + panel "Chưa thể đăng nhập" | Bước 1, **ô email điền sẵn** email vừa gõ (session `RECOVERY_PREFILL_EMAIL`, đọc 1 lần). **Không tự gửi mã** | `khanh.trinh@gmail.com` · `nhung.ho@gmail.com` |
+| K2 | **SĐT** của tài khoản chưa có MK | **MSG38** + panel | Bước 1, **ô email TRỐNG** | `0901234513` (Khánh) |
+| K3 | (tiếp K1/K2) khách bấm Gửi mã → nhập mã → đặt MK | — | Đi đúng DT-5 → DT-4 → DT-6 → `/login` + MSG49 | |
 
 Ghi chú:
-- K3 và K4 áp dụng cho **cả GET lẫn POST** — mở form lúc link còn hạn nhưng bấm Lưu khi đã quá hạn / đã dùng ở tab khác thì vẫn rẽ như trên.
-- "Đã dùng" được xét **trước** "hết hạn": link đã đặt mật khẩu xong thì dù quá hạn vẫn đưa về `/login`, không đưa sang Quên MK.
-- Email điền sẵn đi qua **session** (`SessionKey.RECOVERY_PREFILL_EMAIL`), không đặt lên URL; Quên MK đọc 1 lần rồi xóa (F5 là ô trống lại).
-- CBR-31 chỉ nói "link hết hạn thì dùng Quên mật khẩu", không bắt khách tự bấm → tự chuyển trang là cải tiến trải nghiệm, luật giữ nguyên.
+- K2 cố ý **không** điền email: nếu điền, ai biết SĐT của khách cũng thấy được email gắn với SĐT đó.
+- Email điền sẵn đi qua **session**, không đặt lên URL; F5 lại trang Quên MK là ô trống.
+- Quên mật khẩu không kiểm tra PasswordHash → tài khoản NULL vẫn nhận mã bình thường (F10 trong `docs/phase-1/02_Phase1_Test_Scenarios.md`).
 
 ---
 
@@ -211,7 +207,7 @@ Ghi chú:
 
 ## DT-10 · Mở một URL — AuthFilter + RoleAreaFilter (GBR-10, GBR-31)
 
-| # | URL công khai? (`/`, `/login`, `/register`, `/forgot-password`, `/set-password`, `/css/`, `/js/`, `/images/`, `/blog`…) | Đã đăng nhập? | Request AJAX? | Thuộc khu vai trò (`/admin/*`…`/customer/*`)? | Vai trò khớp khu? | **Kết quả** | Ví dụ |
+| # | URL công khai? (`/`, `/login`, `/register`, `/forgot-password`, `/css/`, `/js/`, `/images/`, `/blog`…) | Đã đăng nhập? | Request AJAX? | Thuộc khu vai trò (`/admin/*`…`/customer/*`)? | Vai trò khớp khu? | **Kết quả** | Ví dụ |
 |---|---|---|---|---|---|---|---|
 | U1 | **Y** | — | — | — | — | Cho qua | `/blog` khi chưa đăng nhập |
 | U2 | N | **N** | **N** | — | — | 302 → `/login?returnUrl=<trang>` (chỉ GET mới nhớ trang) | `/account` |
@@ -249,10 +245,10 @@ Ghi chú:
 
 ## DT-12 · Tổng hợp "ba chiếc khóa" gặp nhau thì sao?
 
-| Tình huống | Đăng nhập | Quên mật khẩu | Link đặt MK |
-|---|---|---|---|
-| Status = **Locked** (Admin khóa) | MSG37 | MSG37 (chặn) | MSG37 |
-| Status = **Inactive** (nghỉ / ngừng) | MSG37 | MSG37 (chặn) | MSG37 |
-| **LockedUntil** > now (khách sai 5 lần) | MSG35 | **Cho phép**, xong tự mở khóa | Cho phép |
-| **VerificationCodes.LockedUntil** > now (sai mã 5 lần / xin 5 lần) | Không ảnh hưởng | MSG61 (không xin/nhập mã được) | Không ảnh hưởng |
-| PasswordHash **NULL** | MSG38 | **Cho phép** (đặt được MK) | Cho phép (mục đích chính) |
+| Tình huống | Đăng nhập | Quên mật khẩu |
+|---|---|---|
+| Status = **Locked** (Admin khóa) | MSG37 | MSG37 (chặn) |
+| Status = **Inactive** (nghỉ / ngừng) | MSG37 | MSG37 (chặn) |
+| **LockedUntil** > now (khách sai 5 lần) | MSG35 | **Cho phép**, xong tự mở khóa |
+| **VerificationCodes.LockedUntil** > now (sai mã 5 lần / xin 5 lần) | Không ảnh hưởng | MSG61 (không xin/nhập mã được) |
+| PasswordHash **NULL** | MSG38 | **Cho phép** (đặt được MK) |

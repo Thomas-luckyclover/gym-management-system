@@ -223,24 +223,20 @@ Các dashboard chưa code → trang **404** là đúng ở thời điểm này (
 | FP-26 | | App Password sai → xin mã | MSG04; `VerificationCodes` **không** có dòng mới | API-03 | |
 | FP-27 | | Sau FP-01 kiểm tra AuditLogs | Luật: có câu "… đặt lại mật khẩu qua email …". ⚠ Code: chưa ghi (TODO) | GBR-07 | |
 
-## 7. ĐẶT MẬT KHẨU QUA LINK — `/set-password` (CBR-24, CBR-31)
+## 7. TÀI KHOẢN CHƯA CÓ MẬT KHẨU — Đăng nhập → Quên mật khẩu (CBR-24, CBR-31)
+
+Luồng link `/set-password` đã bỏ 27/09. ⚠ Gmail thật đang bật: với email seed **dừng ở bước nhập email, KHÔNG bấm Gửi mã**.
 
 | ID | Ưu tiên | Thao tác / Dữ liệu | Kết quả mong đợi | Luật | KQ |
 |---|---|---|---|---|---|
-| SP-01 | 🔥 | Trước khi đặt: đăng nhập `nhung.ho@gmail.com` | MSG38 | MSG38 | |
-| SP-02 | 🔥 ⏱ | `/set-password?token=setup-nhung-phase1-2026` → MK `Nhung2026` ×2 | `/login` + "Đã đặt mật khẩu. Vui lòng đăng nhập."; đăng nhập Nhung được | CBR-24 | |
-| SP-03 | 🔥 | Mở lại đúng link SP-02 | → `/login` + toast "Bạn đã đặt mật khẩu cho tài khoản này. Vui lòng đăng nhập." | CBR-31 | |
-| SP-04 | 🔥 | `?token=setup-khanh-expired-2026` | → `/forgot-password`, ô email = `khanh.trinh@gmail.com`, toast "Link đặt mật khẩu đã hết hạn…", đang ở bước nhập email, **chưa gửi mã** | CBR-31 | ✅ 27/09 |
-| SP-05 | ⭐ | `?token=abc` / không có `token` | Ở lại trang: "Link không còn hiệu lực" + nút Quên MK (không chuyển đi đâu) | Bảo mật | ✅ 27/09 |
-| SP-06 | ⭐ | MK sai luật / nhập lại không khớp | Lỗi dưới ô, **giữ form**, link vẫn dùng được | DBR-02 | |
-| SP-07 | ⭐ | Mở form (GET) khi còn hạn → sửa DB `ExpiresAt` về quá khứ → bấm Lưu | Như SP-04 (server kiểm lại khi POST) | Bảo mật | ✅ 27/09 (POST với link hết hạn) |
-| SP-08 | | Mở form ở 2 tab, tab 1 đặt xong, tab 2 gửi | Tab 2: như SP-03 → `/login` | Dùng 1 lần | |
-| SP-09 | ⭐ | Xem `VerificationCodes.TokenHash` của link | 64 ký tự hex, **khác** token trên URL | Bảo mật | |
-| SP-10 | ⭐ | Nút "Quên mật khẩu" ở SP-05 | Mở `/forgot-password` | CBR-31 | |
-| SP-11 | ⭐ | Sau SP-04 bấm **F5** trang Quên MK | Ô email **trống lại** (email điền sẵn chỉ dùng 1 lần) | Bảo mật | ✅ 27/09 |
-| SP-12 | ⭐ | Sau SP-04 xem thanh địa chỉ | Chỉ `/forgot-password`, **không có email trên URL** | Bảo mật | ✅ 27/09 |
-| SP-13 | | Sau SP-04 bấm **Gửi mã** | Đi tiếp luồng Quên MK bình thường (FP-01…); luật 60 giây / 5 lần áp dụng như thường | CBR-94 | |
-| SP-14 | | Đang dở Quên MK của email A (đã ở bước nhập mã) → mở link hết hạn của email B | Về bước nhập email, ô email = B (tiến độ cũ của A bị bỏ) | UX | |
+| SP-01 | 🔥 | Đăng nhập `khanh.trinh@gmail.com` / bất kỳ | Panel "Chưa thể đăng nhập" + MSG38 "Tài khoản này chưa có mật khẩu. Hãy dùng Quên mật khẩu để đặt mật khẩu." | MSG38, CBR-31 | |
+| SP-02 | 🔥 | Tiếp SP-01, bấm **Đặt mật khẩu** | `/forgot-password` bước 1, ô email = `khanh.trinh@gmail.com`, **chưa gửi mã** | CBR-31 | |
+| SP-03 | 🔥 | Đăng nhập `0901234513` (SĐT Khánh) → **Đặt mật khẩu** | MSG38; sang Quên MK với ô email **TRỐNG** (không lộ email gắn SĐT) | CBR-31, bảo mật | |
+| SP-04 | ⭐ | `nhung.ho@gmail.com` → Đặt mật khẩu | Như SP-02 với email Nhung | CBR-31 | |
+| SP-05 | ⭐ | Sau SP-02 bấm **F5** | Ô email **trống lại** (điền sẵn chỉ 1 lần) | Bảo mật | |
+| SP-06 | ⭐ | Sau SP-02 xem thanh địa chỉ | Chỉ `/forgot-password`, **không có email trên URL** | Bảo mật | |
+| SP-07 | ⭐ | Tài khoản test **của chính bạn** có `PasswordHash` NULL → SP-02 → Gửi mã → nhập mã → đặt MK | `/login` + MSG49; đăng nhập bằng MK mới được | CBR-24, CBR-31 | |
+| SP-08 | ⭐ | Mở `/set-password` hoặc `/set-password?token=abc` | **404** (trang đã bỏ) | — | |
 
 ## 8. CÀI ĐẶT TÀI KHOẢN — `/account` (UC-04)
 

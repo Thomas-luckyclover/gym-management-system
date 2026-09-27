@@ -7,8 +7,8 @@ Bản giải thích bắt buộc theo agents.md Phần 7 mục 6.4. Code nằm �
 ## 1. Email Gateway (SRS API-03) — `EmailGateway.java`
 
 ### Nó làm gì
-Gửi email từ 1 địa chỉ Gmail của nhóm tới khách: mã xác thực 6 số (đăng ký, kích hoạt hồ sơ, quên mật khẩu, đổi email),
-link đặt mật khẩu cho tài khoản Lễ tân tạo, và thông báo cho email cũ khi đổi email. Hệ thống không gửi SMS.
+Gửi email từ 1 địa chỉ Gmail của nhóm tới khách: mã xác thực 6 số (đăng ký, kích hoạt hồ sơ, quên mật khẩu, đổi email)
+và thông báo cho email cũ khi đổi email. Hệ thống không gửi SMS.
 
 ### Luồng dữ liệu
 ```

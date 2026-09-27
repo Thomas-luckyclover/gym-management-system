@@ -60,9 +60,9 @@ Rule: 2.2 (trùng SĐT/email, họ tên, ngày sinh), 2.3 (mã xác thực), 2.7
 
 | Loại | File |
 | :---- | :---- |
-| Dùng chung (làm đầu tiên) | `entity/VerificationCode.java`, `dao/VerificationCodeDAO.java`, `service/VerificationCodeService.java` (`createCode`, `verifyCode`, `canResend`, `createSetupToken`, `findValidToken` dùng `SecureCodeUtil.sha256Hex`); `dao/SystemConfigDAO.java` + `service/SystemConfigService.java` |
+| Dùng chung (làm đầu tiên) | `entity/VerificationCode.java`, `dao/VerificationCodeDAO.java`, `service/VerificationCodeService.java` (`createCode`, `verifyCode`, `canResend`); `dao/SystemConfigDAO.java` + `service/SystemConfigService.java` |
 | Entity/DAO | `entity/Employee.java`, `dao/EmployeeDAO.java` (`findWorkingPts`, `findByPersonId`), `entity/Package.java`, `dao/PackageDAO.java` (`findActiveForHomepage`) |
-| Recover | `servlet/auth/ForgotPasswordServlet.java` (`/forgot-password`), `servlet/auth/SetPasswordServlet.java` (`/set-password`), jsp/css/js cùng tên |
+| Recover | `servlet/auth/ForgotPasswordServlet.java` (`/forgot-password`), jsp/css/js cùng tên |
 | Homepage | `servlet/guest/HomeServlet.java` (`/`), `jsp/guest/home.jsp`, `jsp/common/guest-header.jspf`, `jsp/common/guest-footer.jspf` (trang khách, đăng nhập, đăng ký, blog cùng dùng) |
 | PT | `jsp/auth/account/profile-pt.jspf` (hiện chuyên môn, số năm kinh nghiệm) + `jsp/common/layout-pt.jspf` |
 
