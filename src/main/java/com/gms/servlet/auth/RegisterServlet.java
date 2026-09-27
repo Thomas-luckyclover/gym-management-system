@@ -21,12 +21,21 @@ import java.time.format.DateTimeFormatter;
 /**
  * Controller xử lý luồng đăng ký tài khoản khách hàng (/register).
  *
- * Luồng step:
+ * Luồng step (2 nhánh tách riêng):
+ *
+ *   [Nhánh đăng ký mới]
  *   GET  /register                → step "phone" (bước 1)
  *   POST step=phone               → tra SĐT → chuyển sang step phù hợp
  *   POST step=form                → validate + gửi OTP → chuyển sang step "otp"
  *   POST step=otp                 → xác minh mã → tạo tài khoản → step "success"
  *   POST step=resend              → xin lại mã → forward lại step "otp"
+ *
+ *   [Nhánh Claim — kích hoạt hồ sơ quầy]
+ *   POST step=phone               → tra SĐT → PROFILE_CAN_CLAIM → step "claim-email"
+ *   POST step=claim-email         → so khớp email (CBR-25) → gửi OTP → step "claim-otp"
+ *   POST step=claim-otp           → xác minh mã → step "claim-password"
+ *   POST step=claim-password      → validate password → tạo account → step "success"
+ *   POST step=claim-resend        → xin lại mã → forward lại step "claim-otp"
  */
 @WebServlet("/register")
 public class RegisterServlet extends HttpServlet {
@@ -60,7 +69,7 @@ public class RegisterServlet extends HttpServlet {
         String phone = req.getParameter("phone");
 
         if ("2".equals(stepParam) && ValidationUtil.isValidPhone(phone)) {
-            req.setAttribute("step", "form");
+            req.setAttribute("step", "claim-email");
             req.setAttribute("phone", phone.trim());
         } else {
             req.setAttribute("step", "phone");
@@ -91,6 +100,19 @@ public class RegisterServlet extends HttpServlet {
             case "resend":
                 handleResendStep(req, resp);
                 break;
+            // ===== Nhánh Claim =====
+            case "claim-email":
+                handleClaimEmailStep(req, resp);
+                break;
+            case "claim-otp":
+                handleClaimOtpStep(req, resp);
+                break;
+            case "claim-password":
+                handleClaimPasswordStep(req, resp);
+                break;
+            case "claim-resend":
+                handleClaimResendStep(req, resp);
+                break;
             default:
                 resp.sendRedirect(req.getContextPath() + "/register");
         }
@@ -100,7 +122,7 @@ public class RegisterServlet extends HttpServlet {
 
     /**
      * Tra SĐT trong DB, điều hướng ra đúng nhánh theo kết quả.
-     * Các nhánh có thể: form, blocked-account, blocked-email-mismatch, blocked-no-email.
+     * Các nhánh có thể: form, claim-email, blocked-account, blocked-no-email.
      */
     private void handlePhoneStep(HttpServletRequest req, HttpServletResponse resp)
             throws ServletException, IOException {
@@ -126,29 +148,22 @@ public class RegisterServlet extends HttpServlet {
         // B3: chuyển sang step tương ứng kết quả tra
         switch (checkResult.getOutcome()) {
             case HAS_ACCOUNT:
-                // CBR-26: SĐT đã có tài khoản
+                // CBR-26: SĐT đã có tài khoản → DỪNG NGAY TẠI MÀN 1
                 req.setAttribute("step", "blocked-account");
                 req.setAttribute("phone", trimmedPhone);
                 break;
 
             case PROFILE_NO_EMAIL:
-                // CBR-27: hồ sơ tại quầy chưa có email
+                // CBR-27: hồ sơ tại quầy chưa có email → DỪNG NGAY TẠI MÀN 1
                 req.setAttribute("step", "blocked-no-email");
                 req.setAttribute("phone", trimmedPhone);
                 break;
 
-            case PROFILE_EMAIL_MISMATCH:
-                // CBR-25: hồ sơ có email nhưng cần khớp → hiện email đã che
-                req.setAttribute("step", "blocked-email-mismatch");
+            case PROFILE_CAN_CLAIM:
+                // Hồ sơ có email, khách cần nhập đúng email → vào nhánh CLAIM riêng
+                req.setAttribute("step", "claim-email");
                 req.setAttribute("phone", trimmedPhone);
                 req.setAttribute("maskedEmail", checkResult.getMaskedEmail());
-                break;
-
-            case PROFILE_CAN_CLAIM:
-                // Hồ sơ có email, khách cần nhập đúng email để kích hoạt → vào bước form
-                req.setAttribute("step", "form");
-                req.setAttribute("phone", trimmedPhone);
-                req.setAttribute("registerMode", "linked");
                 break;
 
             default:
@@ -161,10 +176,14 @@ public class RegisterServlet extends HttpServlet {
         req.getRequestDispatcher("/WEB-INF/jsp/auth/register.jsp").forward(req, resp);
     }
 
+    // ========================================================================================
+    // ===== NHÁNH ĐĂNG KÝ MỚI (registerMode = "new") =====
+    // ========================================================================================
+
     // ===== Bước 2: Validate form + Gửi OTP =====
 
     /**
-     * Validate toàn bộ dữ liệu form, nếu hợp lệ gửi OTP rồi chuyển sang step "otp".
+     * Validate toàn bộ dữ liệu form đăng ký mới, nếu hợp lệ gửi OTP rồi chuyển sang step "otp".
      */
     private void handleFormStep(HttpServletRequest req, HttpServletResponse resp)
             throws ServletException, IOException {
@@ -175,7 +194,7 @@ public class RegisterServlet extends HttpServlet {
         String dobString = req.getParameter("dateOfBirth");
         String password = req.getParameter("password");
         String confirmPassword = req.getParameter("confirmPassword");
-        String registerMode = req.getParameter("registerMode");
+        String registerMode = "new";
 
         LocalDate dateOfBirth = DateTimeUtil.parseHtmlDate(dobString);
 
@@ -184,16 +203,6 @@ public class RegisterServlet extends HttpServlet {
                 fullName, dateOfBirth, phone, email, password, confirmPassword, registerMode);
 
         if (!validationResult.isSuccess()) {
-            String msg = validationResult.getMessage();
-            if (msg != null && msg.startsWith("EMAIL_MISMATCH:")) {
-                String maskedEmail = msg.substring("EMAIL_MISMATCH:".length());
-                req.setAttribute("step", "blocked-email-mismatch");
-                req.setAttribute("phone", phone);
-                req.setAttribute("maskedEmail", maskedEmail);
-                req.getRequestDispatcher("/WEB-INF/jsp/auth/register.jsp").forward(req, resp);
-                return;
-            }
-
             req.setAttribute("step", "form");
             req.setAttribute("phone", phone);
             req.setAttribute("email", email);
@@ -207,12 +216,8 @@ public class RegisterServlet extends HttpServlet {
         }
 
         // B2: gửi OTP tới email
-        VerificationCode.Purpose purpose = "linked".equals(registerMode)
-                ? VerificationCode.Purpose.CLAIM
-                : VerificationCode.Purpose.SIGN_UP;
-
         ServiceResult<Void> sendResult =
-                verificationCodeService.sendCode(email.trim(), purpose, null);
+                verificationCodeService.sendCode(email.trim(), VerificationCode.Purpose.SIGN_UP, null);
 
         if (!sendResult.isSuccess()) {
             req.setAttribute("step", "form");
@@ -231,7 +236,7 @@ public class RegisterServlet extends HttpServlet {
                 registerMode, password, null);
     }
 
-    // ===== Bước 3: Xác minh mã OTP =====
+    // ===== Bước 3: Xác minh mã OTP (đăng ký mới) =====
 
     /**
      * Xác minh mã OTP khách gõ. Đúng mã → tạo tài khoản → step "success".
@@ -243,17 +248,13 @@ public class RegisterServlet extends HttpServlet {
         String email = req.getParameter("email");
         String fullName = req.getParameter("fullName");
         String dobString = req.getParameter("dateOfBirth");
-        String registerMode = req.getParameter("registerMode");
+        String registerMode = "new";
         String inputCode = req.getParameter("code");
         String password = req.getParameter("password");
 
-        VerificationCode.Purpose purpose = "linked".equals(registerMode)
-                ? VerificationCode.Purpose.CLAIM
-                : VerificationCode.Purpose.SIGN_UP;
-
         // B1: gọi service xác minh mã
         ServiceResult<VerificationCode> verifyResult =
-                verificationCodeService.verifyCode(email, purpose, inputCode);
+                verificationCodeService.verifyCode(email, VerificationCode.Purpose.SIGN_UP, inputCode);
 
         if (!verifyResult.isSuccess()) {
             // Mã sai hoặc bị khóa → forward lại OTP step, hiện lỗi
@@ -263,7 +264,7 @@ public class RegisterServlet extends HttpServlet {
             return;
         }
 
-        // B2: mã đúng → tạo tài khoản hoặc kích hoạt hồ sơ
+        // B2: mã đúng → tạo tài khoản
         LocalDate dateOfBirth = DateTimeUtil.parseHtmlDate(dobString);
 
         ServiceResult<Void> registerResult = registrationService.register(
@@ -279,11 +280,11 @@ public class RegisterServlet extends HttpServlet {
 
         // B3: thành công → hiện màn success
         req.setAttribute("step", "success");
-        req.setAttribute("registerMode", registerMode != null ? registerMode : "new");
+        req.setAttribute("registerMode", "new");
         req.getRequestDispatcher("/WEB-INF/jsp/auth/register.jsp").forward(req, resp);
     }
 
-    // ===== Xin lại mã OTP =====
+    // ===== Xin lại mã OTP (đăng ký mới) =====
 
     /**
      * Gửi lại mã OTP (khách bấm "Gửi lại mã"). Kiểm tra 60s và 5 lần/giờ trong VerificationCodeService.
@@ -295,16 +296,12 @@ public class RegisterServlet extends HttpServlet {
         String email = req.getParameter("email");
         String fullName = req.getParameter("fullName");
         String dobString = req.getParameter("dateOfBirth");
-        String registerMode = req.getParameter("registerMode");
+        String registerMode = "new";
         String password = req.getParameter("password");
-
-        VerificationCode.Purpose purpose = "linked".equals(registerMode)
-                ? VerificationCode.Purpose.CLAIM
-                : VerificationCode.Purpose.SIGN_UP;
 
         // B1: gửi lại mã — nếu lỗi (quá 60s, quá 5 lần...) trả về lỗi ở OTP step
         ServiceResult<Void> sendResult =
-                verificationCodeService.sendCode(email, purpose, null);
+                verificationCodeService.sendCode(email, VerificationCode.Purpose.SIGN_UP, null);
 
         String errorForOtp = sendResult.isSuccess() ? null : sendResult.getMessage();
         if (sendResult.isSuccess()) {
@@ -314,7 +311,164 @@ public class RegisterServlet extends HttpServlet {
                 registerMode, password, errorForOtp);
     }
 
-    // ===== Hàm hỗ trợ: forward sang màn OTP với đủ attributes =====
+    // ========================================================================================
+    // ===== NHÁNH CLAIM — KÍCH HOẠT HỒ SƠ QUẦY (UC-Claim) =====
+    // ========================================================================================
+
+    // ===== Claim bước 1: Nhập email (chỉ 1 field email) =====
+
+    /**
+     * Khách nhập email → so khớp với hồ sơ (CBR-25).
+     * Khớp → gửi mã xác thực tới email TRÊN HỒ SƠ → chuyển sang claim-otp.
+     */
+    private void handleClaimEmailStep(HttpServletRequest req, HttpServletResponse resp)
+            throws ServletException, IOException {
+
+        String phone = req.getParameter("phone");
+        String email = req.getParameter("email");
+
+        // B1: validate & so khớp email
+        ServiceResult<Void> result = registrationService.validateClaimEmail(phone, email);
+
+        if (!result.isSuccess()) {
+            String msg = result.getMessage();
+            if (msg != null && msg.startsWith("EMAIL_MISMATCH:")) {
+                // Email không khớp → hiện màn blocked-email-mismatch
+                String maskedEmail = msg.substring("EMAIL_MISMATCH:".length());
+                req.setAttribute("step", "blocked-email-mismatch");
+                req.setAttribute("phone", phone);
+                req.setAttribute("maskedEmail", maskedEmail);
+                req.getRequestDispatcher("/WEB-INF/jsp/auth/register.jsp").forward(req, resp);
+                return;
+            }
+
+            // Lỗi validate định dạng email → quay lại claim-email
+            req.setAttribute("step", "claim-email");
+            req.setAttribute("phone", phone);
+            req.setAttribute("email", email);
+            req.setAttribute("errorMessage", result.getMessage());
+            req.setAttribute("fieldErrors", result.getFieldErrors());
+            req.getRequestDispatcher("/WEB-INF/jsp/auth/register.jsp").forward(req, resp);
+            return;
+        }
+
+        // B2: email khớp → gửi mã xác thực tới email TRÊN HỒ SƠ (không phải input)
+        ServiceResult<Void> sendResult =
+                verificationCodeService.sendCode(email.trim(), VerificationCode.Purpose.CLAIM, null);
+
+        if (!sendResult.isSuccess()) {
+            req.setAttribute("step", "claim-email");
+            req.setAttribute("phone", phone);
+            req.setAttribute("email", email);
+            req.setAttribute("errorMessage", sendResult.getMessage());
+            req.getRequestDispatcher("/WEB-INF/jsp/auth/register.jsp").forward(req, resp);
+            return;
+        }
+
+        // B3: gửi xong → hiện màn nhập mã
+        forwardToClaimOtpStep(req, resp, phone, email.trim(), null);
+    }
+
+    // ===== Claim bước 2: Xác minh mã OTP =====
+
+    /**
+     * Xác minh mã OTP. Đúng mã → chuyển sang claim-password để nhập mật khẩu.
+     */
+    private void handleClaimOtpStep(HttpServletRequest req, HttpServletResponse resp)
+            throws ServletException, IOException {
+
+        String phone = req.getParameter("phone");
+        String email = req.getParameter("email");
+        String inputCode = req.getParameter("code");
+
+        // B1: gọi service xác minh mã
+        ServiceResult<VerificationCode> verifyResult =
+                verificationCodeService.verifyCode(email, VerificationCode.Purpose.CLAIM, inputCode);
+
+        if (!verifyResult.isSuccess()) {
+            req.setAttribute("fieldErrors", verifyResult.getFieldErrors());
+            forwardToClaimOtpStep(req, resp, phone, email, verifyResult.getMessage());
+            return;
+        }
+
+        // B2: mã đúng → chuyển sang bước nhập mật khẩu
+        // Lấy thông tin hồ sơ (họ tên, ngày sinh) để hiển thị read-only
+        RegistrationService.PhoneCheckResult checkResult = registrationService.checkPhone(phone);
+        req.setAttribute("step", "claim-password");
+        req.setAttribute("phone", phone);
+        req.setAttribute("email", email);
+        req.getRequestDispatcher("/WEB-INF/jsp/auth/register.jsp").forward(req, resp);
+    }
+
+    // ===== Claim bước 3: Nhập mật khẩu + Tạo account =====
+
+    /**
+     * Validate mật khẩu → tạo account gắn vào hồ sơ có sẵn.
+     * KHÔNG đổi Customer.status (CBR-01).
+     */
+    private void handleClaimPasswordStep(HttpServletRequest req, HttpServletResponse resp)
+            throws ServletException, IOException {
+
+        String phone = req.getParameter("phone");
+        String email = req.getParameter("email");
+        String password = req.getParameter("password");
+        String confirmPassword = req.getParameter("confirmPassword");
+
+        // B1: validate mật khẩu
+        ServiceResult<Void> validateResult =
+                registrationService.validateClaimPassword(password, confirmPassword);
+
+        if (!validateResult.isSuccess()) {
+            req.setAttribute("step", "claim-password");
+            req.setAttribute("phone", phone);
+            req.setAttribute("email", email);
+            req.setAttribute("errorMessage", validateResult.getMessage());
+            req.setAttribute("fieldErrors", validateResult.getFieldErrors());
+            req.getRequestDispatcher("/WEB-INF/jsp/auth/register.jsp").forward(req, resp);
+            return;
+        }
+
+        // B2: tạo account (KHÔNG đổi Customer.status — CBR-01)
+        ServiceResult<Void> claimResult = registrationService.claimAccount(phone, password);
+
+        if (!claimResult.isSuccess()) {
+            req.setAttribute("step", "claim-password");
+            req.setAttribute("phone", phone);
+            req.setAttribute("email", email);
+            req.setAttribute("errorMessage", claimResult.getMessage());
+            req.getRequestDispatcher("/WEB-INF/jsp/auth/register.jsp").forward(req, resp);
+            return;
+        }
+
+        // B3: thành công
+        req.setAttribute("step", "success");
+        req.setAttribute("registerMode", "linked");
+        req.getRequestDispatcher("/WEB-INF/jsp/auth/register.jsp").forward(req, resp);
+    }
+
+    // ===== Claim: Xin lại mã OTP =====
+
+    private void handleClaimResendStep(HttpServletRequest req, HttpServletResponse resp)
+            throws ServletException, IOException {
+
+        String phone = req.getParameter("phone");
+        String email = req.getParameter("email");
+
+        ServiceResult<Void> sendResult =
+                verificationCodeService.sendCode(email, VerificationCode.Purpose.CLAIM, null);
+
+        String errorForOtp = sendResult.isSuccess() ? null : sendResult.getMessage();
+        if (sendResult.isSuccess()) {
+            req.setAttribute("successMessage", "Đã gửi lại mã xác thực tới " + maskEmail(email) + ".");
+        }
+        forwardToClaimOtpStep(req, resp, phone, email, errorForOtp);
+    }
+
+    // ========================================================================================
+    // ===== HÀM HỖ TRỢ =====
+    // ========================================================================================
+
+    // ===== Forward sang màn OTP (đăng ký mới) =====
 
     /**
      * Set attributes và forward vào JSP step "otp".
@@ -341,6 +495,32 @@ public class RegisterServlet extends HttpServlet {
         req.setAttribute("dateOfBirth", dobString);
         req.setAttribute("registerMode", registerMode);
         req.setAttribute("password", password);
+        req.setAttribute("otpExpiresAt", expiresAt.format(ISO_FORMATTER));
+        req.setAttribute("resendUnlockAt", resendUnlockAt.format(ISO_FORMATTER));
+
+        if (errorMessage != null) {
+            req.setAttribute("errorMessage", errorMessage);
+        }
+
+        req.getRequestDispatcher("/WEB-INF/jsp/auth/register.jsp").forward(req, resp);
+    }
+
+    // ===== Forward sang màn OTP (Claim) =====
+
+    /**
+     * Set attributes và forward vào JSP step "claim-otp".
+     */
+    private void forwardToClaimOtpStep(HttpServletRequest req, HttpServletResponse resp,
+                                        String phone, String email, String errorMessage)
+            throws ServletException, IOException {
+
+        LocalDateTime expiresAt = DateTimeUtil.now().plusMinutes(15);
+        LocalDateTime resendUnlockAt = DateTimeUtil.now().plusSeconds(60);
+
+        req.setAttribute("step", "claim-otp");
+        req.setAttribute("phone", phone);
+        req.setAttribute("email", email);
+        req.setAttribute("maskedEmail", maskEmail(email));
         req.setAttribute("otpExpiresAt", expiresAt.format(ISO_FORMATTER));
         req.setAttribute("resendUnlockAt", resendUnlockAt.format(ISO_FORMATTER));
 

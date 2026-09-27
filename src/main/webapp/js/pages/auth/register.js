@@ -9,14 +9,20 @@ document.addEventListener("DOMContentLoaded", function () {
     // B2: gắn validate cho form bước 1 (nhập SĐT)
     setupPhoneStep();
 
-    // B3: gắn validate cho form bước 2 (điền thông tin)
+    // B3: gắn validate cho form bước 2 (điền thông tin — đăng ký mới)
     setupFormStep();
 
-    // B4: khởi tạo countdown OTP nếu đang ở màn OTP
+    // B4: khởi tạo countdown OTP nếu đang ở màn OTP (cả 2 nhánh)
     setupOtpStep();
 
-    // B5: khởi tạo nút Gửi lại mã nếu đang ở màn OTP
+    // B5: khởi tạo nút Gửi lại mã nếu đang ở màn OTP (cả 2 nhánh)
     setupResendButton();
+
+    // B6: gắn validate cho form claim-email (nhánh Claim bước 2c)
+    setupClaimEmailStep();
+
+    // B7: gắn validate cho form claim-password (nhánh Claim bước 4c)
+    setupClaimPasswordStep();
 });
 
 // ===== Bước 1: Validate SĐT trước khi submit =====
@@ -50,7 +56,7 @@ function setupPhoneStep() {
     });
 }
 
-// ===== Bước 2: Validate form điền thông tin =====
+// ===== Bước 2: Validate form điền thông tin (đăng ký mới) =====
 
 // Gắn validate client-side cho tất cả ô nhập ở bước 2
 function setupFormStep() {
@@ -108,6 +114,124 @@ function setupFormStep() {
     });
 }
 
+// ===== Claim bước 2c: Validate form email (chỉ 1 field) =====
+
+function setupClaimEmailStep() {
+    const form = document.getElementById("claimEmailForm");
+
+    if (!form) {
+        return;
+    }
+
+    const emailInput = document.getElementById("claimEmail");
+
+    emailInput.addEventListener("blur", function () {
+        validateClaimEmailField(emailInput);
+    });
+
+    form.addEventListener("submit", function (event) {
+        const isValid = validateClaimEmailField(emailInput);
+        if (!isValid) {
+            event.preventDefault();
+        }
+    });
+}
+
+// Validate email cho nhánh Claim (dùng error element riêng)
+function validateClaimEmailField(input) {
+    const value = input.value.trim();
+
+    if (value === "") {
+        setFieldError(input, "claimEmailError", "Email là bắt buộc.");
+        return false;
+    }
+
+    if (!/^[\w.+-]+@[\w-]+\.[a-zA-Z]{2,}$/.test(value)) {
+        setFieldError(input, "claimEmailError", "Email không đúng định dạng.");
+        return false;
+    }
+
+    if (value.length > 100) {
+        setFieldError(input, "claimEmailError", "Email không được vượt quá 100 ký tự.");
+        return false;
+    }
+
+    setFieldError(input, "claimEmailError", "");
+    return true;
+}
+
+// ===== Claim bước 4c: Validate form đặt mật khẩu =====
+
+function setupClaimPasswordStep() {
+    const form = document.getElementById("claimPasswordForm");
+
+    if (!form) {
+        return;
+    }
+
+    const passwordInput = document.getElementById("claimPassword");
+    const confirmPasswordInput = document.getElementById("claimConfirmPassword");
+
+    passwordInput.addEventListener("blur", function () {
+        validateClaimPasswordField(passwordInput);
+    });
+
+    confirmPasswordInput.addEventListener("blur", function () {
+        validateClaimConfirmPasswordField(passwordInput, confirmPasswordInput);
+    });
+
+    form.addEventListener("submit", function (event) {
+        const isPasswordValid = validateClaimPasswordField(passwordInput);
+        const isConfirmValid = validateClaimConfirmPasswordField(passwordInput, confirmPasswordInput);
+
+        if (!isPasswordValid || !isConfirmValid) {
+            event.preventDefault();
+        }
+    });
+}
+
+function validateClaimPasswordField(input) {
+    const value = input.value;
+
+    if (value === "") {
+        setFieldError(input, "claimPasswordError", "Mật khẩu là bắt buộc.");
+        return false;
+    }
+
+    if (value.length < 8 || value.length > 64) {
+        setFieldError(input, "claimPasswordError", "Mật khẩu phải từ 8 đến 64 ký tự.");
+        return false;
+    }
+
+    const hasLetter = /[a-zA-Z]/.test(value);
+    const hasDigit = /\d/.test(value);
+
+    if (!hasLetter || !hasDigit) {
+        setFieldError(input, "claimPasswordError", "Mật khẩu phải có ít nhất 1 chữ cái và 1 chữ số.");
+        return false;
+    }
+
+    setFieldError(input, "claimPasswordError", "");
+    return true;
+}
+
+function validateClaimConfirmPasswordField(passwordInput, confirmInput) {
+    const confirmValue = confirmInput.value;
+
+    if (confirmValue === "") {
+        setFieldError(confirmInput, "claimConfirmPasswordError", "Vui lòng nhập lại mật khẩu.");
+        return false;
+    }
+
+    if (confirmValue !== passwordInput.value) {
+        setFieldError(confirmInput, "claimConfirmPasswordError", "Mật khẩu xác nhận không khớp.");
+        return false;
+    }
+
+    setFieldError(confirmInput, "claimConfirmPasswordError", "");
+    return true;
+}
+
 // ===== Bước 3: OTP countdown =====
 
 // Khởi tạo đồng hồ đếm ngược thời gian hết hạn mã OTP (15 phút)
@@ -157,8 +281,11 @@ function setupOtpStep() {
 // ===== Nút Gửi lại mã: khóa 60 giây kể từ khi vào trang OTP =====
 
 // Khóa nút "Gửi lại mã" và đếm ngược đến khi được phép bấm lại
+// Hỗ trợ cả 2 nhánh: resendBtn (đăng ký mới) và claimResendBtn (Claim)
 function setupResendButton() {
-    const resendBtn = document.getElementById("resendBtn");
+    // Tìm nút resend trên trang (có thể là 1 trong 2 nhánh)
+    const resendBtn = document.getElementById("resendBtn")
+                   || document.getElementById("claimResendBtn");
 
     if (!resendBtn) {
         return;

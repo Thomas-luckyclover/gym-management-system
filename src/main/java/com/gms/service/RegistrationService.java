@@ -119,14 +119,13 @@ public class RegistrationService {
         }
     }
 
-    // ===== 2. Validate form trước khi gửi OTP =====
+    // ===== 2. Validate form đăng ký MỚI trước khi gửi OTP =====
 
     /**
-     * Kiểm tra dữ liệu form đăng ký trước khi gửi OTP.
-     * Tách riêng khỏi register() để Servlet gọi ở bước form (step "form").
+     * Kiểm tra dữ liệu form đăng ký MỚI trước khi gửi OTP.
+     * Chỉ dùng cho nhánh đăng ký mới (registerMode = "new").
      *
-     * @param registerMode "new" hoặc "linked" (kích hoạt hồ sơ cũ)
-     * @return ServiceResult.ok nếu hợp lệ; fail kèm thông báo lỗi hoặc fieldErrors nếu không
+     * @return ServiceResult.ok nếu hợp lệ; fail kèm fieldErrors nếu không
      */
     public ServiceResult<Void> validateRegistrationForm(String fullName, LocalDate dateOfBirth,
                                                          String phone, String email,
@@ -137,22 +136,6 @@ public class RegistrationService {
         String trimmedEmail = email != null ? email.trim() : "";
         String trimmedPhone = phone != null ? phone.trim() : "";
 
-        // Nhánh UC-Claim: email phải khớp hồ sơ quầy (CBR-25)
-        if ("linked".equals(registerMode)) {
-            try {
-                Person existingPerson = personDAO.findByPhone(trimmedPhone);
-                if (existingPerson != null && existingPerson.getEmail() != null) {
-                    if (!existingPerson.getEmail().equalsIgnoreCase(trimmedEmail)) {
-                        String masked = maskEmail(existingPerson.getEmail());
-                        return ServiceResult.fail("EMAIL_MISMATCH:" + masked);
-                    }
-                }
-            } catch (SQLException e) {
-                e.printStackTrace();
-                return ServiceResult.fail(Messages.MSG04_SYSTEM_BUSY);
-            }
-        }
-
         // Validate cơ bản toàn bộ các trường theo GBR-17
         ServiceResult<Void> inputCheck = validateInput(
                 trimmedFullName, dateOfBirth, trimmedPhone, trimmedEmail, password, confirmPassword);
@@ -160,20 +143,110 @@ public class RegistrationService {
             return inputCheck;
         }
 
-        // Nhánh đăng ký mới: kiểm tra email chưa được dùng (DBR-23)
-        if (!"linked".equals(registerMode)) {
-            try {
-                boolean isEmailExisted = personDAO.existsByEmail(trimmedEmail);
-                if (isEmailExisted) {
-                    return ServiceResult.failField("email", Messages.MSG12_EMAIL_USED);
-                }
-            } catch (SQLException e) {
-                e.printStackTrace();
-                return ServiceResult.fail(Messages.MSG04_SYSTEM_BUSY);
+        // Kiểm tra email chưa được dùng (DBR-23)
+        try {
+            boolean isEmailExisted = personDAO.existsByEmail(trimmedEmail);
+            if (isEmailExisted) {
+                return ServiceResult.failField("email", Messages.MSG12_EMAIL_USED);
             }
+        } catch (SQLException e) {
+            e.printStackTrace();
+            return ServiceResult.fail(Messages.MSG04_SYSTEM_BUSY);
         }
 
         return ServiceResult.ok(null);
+    }
+
+    // ===== 2b. Validate email cho nhánh Claim (UC-Claim) =====
+
+    /**
+     * So khớp email khách nhập với email trên hồ sơ quầy (CBR-25).
+     * Chỉ validate 1 field email — không hỏi họ tên, ngày sinh, mật khẩu.
+     *
+     * @param phone SĐT đã tra ở bước 1
+     * @param email email khách nhập
+     * @return ok nếu khớp; fail kèm "EMAIL_MISMATCH:maskedEmail" nếu không khớp
+     */
+    public ServiceResult<Void> validateClaimEmail(String phone, String email) {
+        String trimmedEmail = email != null ? email.trim() : "";
+        String trimmedPhone = phone != null ? phone.trim() : "";
+
+        // Validate định dạng email
+        if (ValidationUtil.isNullOrEmpty(trimmedEmail)) {
+            return ServiceResult.failField("email", String.format(Messages.MSG09_REQUIRED, "Email"));
+        }
+        if (!ValidationUtil.isValidEmail(trimmedEmail)) {
+            return ServiceResult.failField("email", Messages.MSG11_INVALID_EMAIL);
+        }
+
+        // So khớp với email trên hồ sơ (CBR-25)
+        try {
+            Person existingPerson = personDAO.findByPhone(trimmedPhone);
+            if (existingPerson == null || existingPerson.getEmail() == null) {
+                return ServiceResult.fail(Messages.MSG04_SYSTEM_BUSY);
+            }
+            if (!existingPerson.getEmail().equalsIgnoreCase(trimmedEmail)) {
+                String masked = maskEmail(existingPerson.getEmail());
+                return ServiceResult.fail("EMAIL_MISMATCH:" + masked);
+            }
+        } catch (SQLException e) {
+            e.printStackTrace();
+            return ServiceResult.fail(Messages.MSG04_SYSTEM_BUSY);
+        }
+
+        return ServiceResult.ok(null);
+    }
+
+    // ===== 2c. Validate mật khẩu cho nhánh Claim =====
+
+    /**
+     * Validate mật khẩu cho bước cuối của nhánh Claim (sau khi OTP đã đúng).
+     *
+     * @return ok nếu hợp lệ; fail kèm fieldErrors nếu không
+     */
+    public ServiceResult<Void> validateClaimPassword(String password, String confirmPassword) {
+        Map<String, String> errors = new LinkedHashMap<>();
+
+        if (ValidationUtil.isNullOrEmpty(password)) {
+            errors.put("password", String.format(Messages.MSG09_REQUIRED, "Mật khẩu"));
+        } else if (!ValidationUtil.isValidPassword(password)) {
+            errors.put("password", String.format(Messages.EXTRA_PASSWORD_RULE, AppConstants.PASSWORD_MIN_LENGTH, AppConstants.PASSWORD_MAX_LENGTH));
+        }
+
+        if (ValidationUtil.isNullOrEmpty(confirmPassword)) {
+            errors.put("confirmPassword", "Vui lòng nhập lại mật khẩu.");
+        } else if (password != null && !password.equals(confirmPassword)) {
+            errors.put("confirmPassword", Messages.MSG47_PASSWORD_MISMATCH);
+        }
+
+        if (!errors.isEmpty()) {
+            return ServiceResult.failFields(errors);
+        }
+        return ServiceResult.ok(null);
+    }
+
+    // ===== 2d. Tạo tài khoản cho nhánh Claim (public, Servlet gọi sau OTP đúng) =====
+
+    /**
+     * Tạo tài khoản gắn vào hồ sơ có sẵn (UC-Claim).
+     * KHÔNG đổi Customer.status (CBR-01).
+     *
+     * @param phone    SĐT đã tra ở bước 1
+     * @param password mật khẩu thô
+     * @return ok nếu thành công
+     */
+    public ServiceResult<Void> claimAccount(String phone, String password) {
+        String trimmedPhone = phone != null ? phone.trim() : "";
+        try {
+            Person existingPerson = personDAO.findByPhone(trimmedPhone);
+            if (existingPerson == null) {
+                return ServiceResult.fail(Messages.MSG04_SYSTEM_BUSY);
+            }
+            return claimExistingAccount(existingPerson.getPersonId(), password);
+        } catch (SQLException e) {
+            e.printStackTrace();
+            return ServiceResult.fail(Messages.MSG04_SYSTEM_BUSY);
+        }
     }
 
     // ===== Nghiệp vụ Đăng ký =====
@@ -259,6 +332,7 @@ public class RegistrationService {
 
     /**
      * Tạo tài khoản mới gắn vào Person đã có sẵn tại quầy (UC-Claim).
+     * KHÔNG đổi Customer.status — CBR-01: status chỉ đổi khi khách thanh toán gói.
      */
     private ServiceResult<Void> claimExistingAccount(int personId, String rawPassword) {
         String passwordHash = PasswordUtil.hashPassword(rawPassword);
@@ -267,11 +341,8 @@ public class RegistrationService {
             conn.setAutoCommit(false);
 
             try {
-                // B1: Thêm Account
+                // Chỉ thêm Account, KHÔNG đổi Customer.status (CBR-01)
                 insertAccount(conn, personId, passwordHash);
-
-                // B2: Cập nhật trạng thái Customer thành Active nếu đang là New
-                updateCustomerStatusToActive(conn, personId);
 
                 conn.commit();
                 return ServiceResult.ok(null, Messages.MSG54_ACCOUNT_CREATED);
@@ -410,13 +481,7 @@ public class RegistrationService {
         }
     }
 
-    private void updateCustomerStatusToActive(Connection conn, int personId) throws SQLException {
-        String sql = "UPDATE Customers SET Status = 'Active' WHERE PersonId = ? AND Status = 'New'";
-        try (PreparedStatement stmt = conn.prepareStatement(sql)) {
-            stmt.setInt(1, personId);
-            stmt.executeUpdate();
-        }
-    }
+    // updateCustomerStatusToActive đã bị XOÁ — CBR-01: status Customer không đổi khi claim account
 
     private String maskEmail(String email) {
         if (email == null || !email.contains("@")) {
