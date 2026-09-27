@@ -33,20 +33,25 @@
 
 ## 3. Các dòng cần THÊM vào bảng SRS III.5 (copy vào Drive)
 
+**Đặt vào mục nào:** không tạo mục mới, chèn từng dòng vào mục có sẵn theo **nghĩa** của câu, giữ nguyên số MSG (code đang dùng đúng số này):
+- **5.1 Hệ thống, danh sách, quyền truy cập:** MSG75 (bài viết không còn hiển thị, cùng loại với MSG08 "không tìm thấy").
+- **5.2 Kiểm tra dữ liệu nhập:** MSG66, 67, 68, 69, 74 (sai định dạng theo DBR, cùng loại với MSG09/11/13).
+- **5.4 Sign-in, password, personal account:** MSG70, 71, 72, 73 (cùng chỗ với MSG62–65).
+
 Quy ước placeholder giống các dòng cũ của SRS: `{n}` số, `{min}`/`{max}` giới hạn, `{P-xx}` tham số hệ thống.
 
-| # | Mã | Hiển thị | Ngữ cảnh (màn / khi nào) | Nội dung (VI) | Nội dung (EN) | Hằng trong code |
-|---|---|---|---|---|---|---|
-| 66 | MSG66 | Inline dưới ô Mật khẩu | Đăng ký, Kích hoạt, Quên MK bước 3, Đặt MK qua link, Đổi MK — mật khẩu sai DBR-02 | Mật khẩu phải dài {min}–{max} ký tự, gồm cả chữ và số. | Password must be {min}–{max} characters and contain both letters and digits. | `MSG66_PASSWORD_RULE` |
-| 67 | MSG67 | Inline dưới ô Họ tên | Đăng ký — họ tên có ký tự lạ (DBR-01) | Họ tên chỉ gồm chữ cái, khoảng trắng, dấu nháy đơn hoặc gạch nối. | Full name may contain only letters, spaces, apostrophes or hyphens. | `MSG67_FULL_NAME_RULE` |
-| 68 | MSG68 | Inline dưới ô Mã | Mọi màn nhập mã — không đúng 6 chữ số (DBR-03); **không** tính là 1 lần sai | Mã xác thực gồm đúng 6 chữ số. | The verification code must be exactly 6 digits. | `MSG68_CODE_FORMAT` |
-| 69 | MSG69 | Inline dưới ô Ngày sinh | Đăng ký — tuổi vượt giới hạn (DBR-04) | Ngày sinh không hợp lệ (tuổi không quá {n}). | Invalid date of birth (age must not exceed {n}). | `MSG69_DOB_TOO_OLD` |
-| 70 | MSG70 | Toast lỗi | Bấm Gửi lại mã khi chưa đủ 60 giây (CBR-94) | Vui lòng chờ {n} giây nữa rồi bấm Gửi lại mã. | Please wait {n} more seconds before resending the code. | `MSG70_CODE_RESEND_TOO_SOON` |
-| 71 | MSG71 | Trang lỗi / toast | Mở link đặt mật khẩu đã dùng, hết hạn {P-xx} hoặc sai (CBR-24, CBR-31) | Link đặt mật khẩu không còn hiệu lực. Vui lòng dùng Quên mật khẩu để đặt lại. | This password setup link is no longer valid. Please use Forgot password to reset it. | `MSG71_SETUP_LINK_INVALID` |
-| 72 | MSG72 | Toast thành công (trang Đăng nhập) | Đặt mật khẩu qua link thành công | Đã đặt mật khẩu. Vui lòng đăng nhập. | Your password has been set. Please log in. | `MSG72_PASSWORD_SET` |
-| 73 | MSG73 | Inline dưới ô Mật khẩu hiện tại | Đổi MK (UC-04) — mật khẩu hiện tại sai | Mật khẩu hiện tại không đúng. | The current password is incorrect. | `MSG73_CURRENT_PASSWORD_WRONG` |
-| 74 | MSG74 | Inline dưới ô Họ tên | Đăng ký — độ dài họ tên sai (DBR-01) | Họ và tên phải từ {min} đến {max} ký tự. | Full name must be {min}–{max} characters. | `MSG74_FULL_NAME_LENGTH` |
-| 75 | MSG75 | Toast cảnh báo, về danh sách Blog | Mở bài viết đã ẩn/xóa/không tồn tại (CBR-100) | Bài viết này không còn hiển thị. | This post is no longer available. | `MSG75_POST_UNAVAILABLE` |
+| # | Mã | Mục SRS | Hiển thị | Ngữ cảnh (màn / khi nào) | Nội dung (VI) | Nội dung (EN) | Hằng trong code |
+|---|---|---|---|---|---|---|---|
+| 66 | MSG66 | **5.2** | Inline dưới ô Mật khẩu | Đăng ký, Kích hoạt, Quên MK bước 3, Đặt MK qua link, Đổi MK — mật khẩu sai DBR-02 | Mật khẩu phải dài {min}–{max} ký tự, gồm cả chữ và số. | Password must be {min}–{max} characters and contain both letters and digits. | `MSG66_PASSWORD_RULE` |
+| 67 | MSG67 | **5.2** | Inline dưới ô Họ tên | Đăng ký — họ tên có ký tự lạ (DBR-01) | Họ tên chỉ gồm chữ cái, khoảng trắng, dấu nháy đơn hoặc gạch nối. | Full name may contain only letters, spaces, apostrophes or hyphens. | `MSG67_FULL_NAME_RULE` |
+| 68 | MSG68 | **5.2** | Inline dưới ô Mã | Mọi màn nhập mã — không đúng 6 chữ số (DBR-03); **không** tính là 1 lần sai | Mã xác thực gồm đúng 6 chữ số. | The verification code must be exactly 6 digits. | `MSG68_CODE_FORMAT` |
+| 69 | MSG69 | **5.2** | Inline dưới ô Ngày sinh | Đăng ký — tuổi vượt giới hạn (DBR-04) | Ngày sinh không hợp lệ (tuổi không quá {n}). | Invalid date of birth (age must not exceed {n}). | `MSG69_DOB_TOO_OLD` |
+| 70 | MSG70 | **5.4** | Toast lỗi | Bấm Gửi lại mã khi chưa đủ 60 giây (CBR-94) | Vui lòng chờ {n} giây nữa rồi bấm Gửi lại mã. | Please wait {n} more seconds before resending the code. | `MSG70_CODE_RESEND_TOO_SOON` |
+| 71 | MSG71 | **5.4** | Trang lỗi / toast | Mở link đặt mật khẩu đã dùng, hết hạn {P-xx} hoặc sai (CBR-24, CBR-31) | Link đặt mật khẩu không còn hiệu lực. Vui lòng dùng Quên mật khẩu để đặt lại. | This password setup link is no longer valid. Please use Forgot password to reset it. | `MSG71_SETUP_LINK_INVALID` |
+| 72 | MSG72 | **5.4** | Toast thành công (trang Đăng nhập) | Đặt mật khẩu qua link thành công | Đã đặt mật khẩu. Vui lòng đăng nhập. | Your password has been set. Please log in. | `MSG72_PASSWORD_SET` |
+| 73 | MSG73 | **5.4** | Inline dưới ô Mật khẩu hiện tại | Đổi MK (UC-04) — mật khẩu hiện tại sai | Mật khẩu hiện tại không đúng. | The current password is incorrect. | `MSG73_CURRENT_PASSWORD_WRONG` |
+| 74 | MSG74 | **5.2** | Inline dưới ô Họ tên | Đăng ký — độ dài họ tên sai (DBR-01) | Họ và tên phải từ {min} đến {max} ký tự. | Full name must be {min}–{max} characters. | `MSG74_FULL_NAME_LENGTH` |
+| 75 | MSG75 | **5.1** | Toast cảnh báo, về danh sách Blog | Mở bài viết đã ẩn/xóa/không tồn tại (CBR-100) | Bài viết này không còn hiển thị. | This post is no longer available. | `MSG75_POST_UNAVAILABLE` |
 
 ---
 
