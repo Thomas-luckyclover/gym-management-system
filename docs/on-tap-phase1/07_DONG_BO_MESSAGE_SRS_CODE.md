@@ -38,7 +38,7 @@
 - **5.2 Kiểm tra dữ liệu nhập:** MSG66, 67, 68, 69, 74 (sai định dạng theo DBR, cùng loại với MSG09/11/13).
 - **5.4 Sign-in, password, personal account:** MSG70, 71, 72, 73 (cùng chỗ với MSG62–65).
 
-Quy ước placeholder giống các dòng cũ của SRS: `{n}` số, `{min}`/`{max}` giới hạn, `{P-xx}` tham số hệ thống.
+Quy ước placeholder giống các dòng cũ của SRS: `{n}` số, `{min}`/`{max}` giới hạn, `{P-xx}` = tham số hệ thống trong System Parameters (VD `{P-18}` = số phút khóa).
 
 | # | Mã | Mục SRS | Hiển thị | Ngữ cảnh (màn / khi nào) | Nội dung (VI) | Nội dung (EN) | Hằng trong code |
 |---|---|---|---|---|---|---|---|
@@ -47,7 +47,7 @@ Quy ước placeholder giống các dòng cũ của SRS: `{n}` số, `{min}`/`{m
 | 68 | MSG68 | **5.2** | Inline dưới ô Mã | Mọi màn nhập mã — không đúng 6 chữ số (DBR-03); **không** tính là 1 lần sai | Mã xác thực gồm đúng 6 chữ số. | The verification code must be exactly 6 digits. | `MSG68_CODE_FORMAT` |
 | 69 | MSG69 | **5.2** | Inline dưới ô Ngày sinh | Đăng ký — tuổi vượt giới hạn (DBR-04) | Ngày sinh không hợp lệ (tuổi không quá {n}). | Invalid date of birth (age must not exceed {n}). | `MSG69_DOB_TOO_OLD` |
 | 70 | MSG70 | **5.4** | Toast lỗi | Bấm Gửi lại mã khi chưa đủ 60 giây (CBR-94) | Vui lòng chờ {n} giây nữa rồi bấm Gửi lại mã. | Please wait {n} more seconds before resending the code. | `MSG70_CODE_RESEND_TOO_SOON` |
-| 71 | MSG71 | **5.4** | Trang lỗi / toast | Mở link đặt mật khẩu đã dùng, hết hạn {P-xx} hoặc sai (CBR-24, CBR-31) | Link đặt mật khẩu không còn hiệu lực. Vui lòng dùng Quên mật khẩu để đặt lại. | This password setup link is no longer valid. Please use Forgot password to reset it. | `MSG71_SETUP_LINK_INVALID` |
+| 71 | MSG71 | **5.4** | Trang lỗi / toast | Mở link đặt mật khẩu đã dùng, quá hạn P-15 (15 phút) hoặc sai (CBR-24, CBR-31) | Link đặt mật khẩu không còn hiệu lực. Vui lòng dùng Quên mật khẩu để đặt lại. | This password setup link is no longer valid. Please use Forgot password to reset it. | `MSG71_SETUP_LINK_INVALID` |
 | 72 | MSG72 | **5.4** | Toast thành công (trang Đăng nhập) | Đặt mật khẩu qua link thành công | Đã đặt mật khẩu. Vui lòng đăng nhập. | Your password has been set. Please log in. | `MSG72_PASSWORD_SET` |
 | 73 | MSG73 | **5.4** | Inline dưới ô Mật khẩu hiện tại | Đổi MK (UC-04) — mật khẩu hiện tại sai | Mật khẩu hiện tại không đúng. | The current password is incorrect. | `MSG73_CURRENT_PASSWORD_WRONG` |
 | 74 | MSG74 | **5.2** | Inline dưới ô Họ tên | Đăng ký — độ dài họ tên sai (DBR-01) | Họ và tên phải từ {min} đến {max} ký tự. | Full name must be {min}–{max} characters. | `MSG74_FULL_NAME_LENGTH` |
