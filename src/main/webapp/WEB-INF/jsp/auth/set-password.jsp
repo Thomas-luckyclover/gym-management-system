@@ -12,7 +12,7 @@
   <%@ include file="/WEB-INF/jsp/common/head.jspf" %>
   <title>Đặt mật khẩu — Super Gym</title>
   <link rel="stylesheet" href="${pageContext.request.contextPath}/css/pages/auth/login.css">
-  <link rel="stylesheet" href="${pageContext.request.contextPath}/css/pages/auth/forgot-password.css?v=1">
+  <link rel="stylesheet" href="${pageContext.request.contextPath}/css/pages/auth/forgot-password.css?v=2">
 </head>
 <body class="theme-guest-dark auth-dark">
   <%@ include file="/WEB-INF/jsp/common/flash-toast.jspf" %>
