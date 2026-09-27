@@ -69,7 +69,7 @@ Quy ước placeholder giống các dòng cũ của SRS: `{n}` số, `{min}`/`{m
 
 ## 5. Cách code dùng message (để trả lời khi thầy hỏi)
 
-- **Server:** mọi câu nằm trong `com.gms.constant.Messages`. Câu có số thì dùng `String.format(Messages.MSGxx, …)`. Số lấy từ `AppConstants` hoặc `SystemConfigService` (P-xx), không gõ tay.
+- **Server:** mọi câu nằm trong `com.gms.constant.Messages`. Câu có số thì dùng `String.format(Messages.MSGxx, …)`. Số lấy từ `AppConstants` hoặc `SystemConfigService` (các tham số P-01…P-20), không gõ tay.
 - **Client:** `js/common.js` có object `MESSAGES`. Đây chỉ là **tập con** các câu JS cần để báo lỗi tức thì (MSG09, MSG11, MSG13, MSG47, MSG66–69…). Tên khóa giống hệt bên Java, nên đổi câu thì sửa cả 2 nơi.
 - **Kiểm tra nhanh còn câu viết cứng không:**
   `grep -rn 'fail("' src/main/java` và `grep -rn 'setFlashToast(request, "[a-z]*", "' src/main/java` → không được ra câu tiếng Việt nào.
