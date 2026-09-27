@@ -22,7 +22,7 @@ import java.util.Properties;
  * GMS ──(SMTP, cổng 587, STARTTLS)──> smtp.gmail.com ──> hộp thư người nhận
  *
  * Dùng cho: mã xác thực đăng ký (UC-05), kích hoạt hồ sơ có sẵn (UC-Claim), khôi phục mật khẩu (UC-03),
- * link đặt mật khẩu cho tài khoản Lễ tân tạo tại quầy, báo cho email cũ khi đổi email (UC-04).
+ * báo cho email cũ khi đổi email (UC-04).
  * Hệ thống KHÔNG gửi SMS (GBR-15).
  *
  * ===== CẤU HÌNH (application.properties — không commit) =====
@@ -84,42 +84,6 @@ public class EmailGateway {
                 + "Mã xác thực để " + purpose + " của bạn là: " + code + "\n"
                 + "Mã có hiệu lực trong " + validMinutes + " phút và chỉ dùng được 1 lần.\n\n"
                 + "Nếu bạn không yêu cầu mã này, hãy bỏ qua email. Không chia sẻ mã cho bất kỳ ai.";
-
-        // B4: gửi đi
-        send(toEmail, subject, html, text);
-    }
-
-    /**
-     * Gửi email chứa link đặt mật khẩu lần đầu — cho tài khoản do Lễ tân tạo tại quầy (CBR-24).
-     *
-     * Dùng khi: màn Lễ tân tạo hồ sơ (TV4, chưa làm) sau khi tạo tài khoản chưa có mật khẩu.
-     *
-     * @param toEmail         email khách, VD "nhung.ho@gmail.com".
-     * @param setPasswordLink link đầy đủ chứa token GỐC, VD
-     *                        "http://localhost:9999/gym-management-system/set-password?token=Xy9...".
-     *                        (Database chỉ lưu bản băm của token, token gốc chỉ nằm trong thư này.)
-     * @param validMinutes    link sống bao nhiêu phút (P-15), VD 15.
-     * @throws EmailSendException khi không gửi được — người gọi KHÔNG được tạo tài khoản.
-     */
-    public void sendPasswordSetupLink(String toEmail, String setPasswordLink, int validMinutes)
-            throws EmailSendException {
-        // B1: tiêu đề + link đã escape để đưa vào HTML an toàn
-        String subject = SUBJECT_PREFIX + "Đặt mật khẩu cho tài khoản của bạn";
-        String safeLink = escapeHtml(setPasswordLink);
-
-        // B2: nội dung HTML — nút "Đặt mật khẩu" + link dạng chữ dự phòng khi nút không bấm được
-        String html = "<p>Xin chào,</p>"
-                + "<p>Tài khoản Super Gym của bạn đã được tạo tại quầy. Bấm nút dưới đây để đặt mật khẩu:</p>"
-                + "<p style=\"margin:20px 0\"><a href=\"" + safeLink + "\" style=\"background:#D4FF3F;color:#0D0D0D;"
-                + "padding:12px 22px;border-radius:999px;font-weight:700;text-decoration:none\">Đặt mật khẩu</a></p>"
-                + "<p>Link có hiệu lực trong <b>" + validMinutes + " phút</b> và chỉ dùng được 1 lần.</p>"
-                + "<p style=\"color:#6B6960;word-break:break-all\">Nếu nút không bấm được, mở link sau: " + safeLink + "</p>";
-
-        // B3: bản chữ thường
-        String text = "Xin chào,\n\n"
-                + "Tài khoản Super Gym của bạn đã được tạo tại quầy. Mở link sau để đặt mật khẩu:\n"
-                + setPasswordLink + "\n\n"
-                + "Link có hiệu lực trong " + validMinutes + " phút và chỉ dùng được 1 lần.";
 
         // B4: gửi đi
         send(toEmail, subject, html, text);

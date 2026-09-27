@@ -124,10 +124,7 @@ const MESSAGES = {
     MSG67_FULL_NAME_RULE: "Họ tên chỉ gồm chữ cái, khoảng trắng, dấu nháy đơn hoặc gạch nối.",
     MSG68_CODE_FORMAT: "Mã xác thực gồm đúng 6 chữ số.",
     MSG69_DOB_TOO_OLD: "Ngày sinh không hợp lệ (tuổi không quá %d).",
-    MSG70_CODE_RESEND_TOO_SOON: "Vui lòng chờ %d giây nữa rồi bấm Gửi lại mã.",
-    MSG71_SETUP_LINK_INVALID: "Link đặt mật khẩu không còn hiệu lực. Vui lòng dùng Quên mật khẩu để đặt lại.",
-    MSG76_SETUP_LINK_EXPIRED: "Link đặt mật khẩu đã hết hạn. Hãy bấm Gửi mã để nhận mã xác thực qua email và đặt mật khẩu.",
-    MSG77_SETUP_LINK_USED: "Bạn đã đặt mật khẩu cho tài khoản này. Vui lòng đăng nhập."
+    MSG70_CODE_RESEND_TOO_SOON: "Vui lòng chờ %d giây nữa rồi bấm Gửi lại mã."
 };
 
 // Hộp thoại xác nhận đang mở (chỉ mở 1 cái tại 1 thời điểm)

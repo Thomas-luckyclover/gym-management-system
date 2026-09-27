@@ -5,20 +5,19 @@ import com.gms.constant.Messages;
 import com.gms.dao.AccountDAO;
 import com.gms.dao.VerificationCodeDAO;
 import com.gms.dto.ServiceResult;
-import com.gms.dto.SetupLinkCheck;
 import com.gms.dto.VerificationAttemptInfo;
 import com.gms.entity.Account;
 import com.gms.entity.VerificationCode;
 import com.gms.listener.SessionRegistryListener;
 import com.gms.util.DBContext;
-import com.gms.util.DateTimeUtil;
 import com.gms.util.PasswordUtil;
 import com.gms.util.ValidationUtil;
 import java.sql.Connection;
 import java.sql.SQLException;
 
 /**
- * Nghiệp vụ "Quên mật khẩu" (màn #3, UC-03) và "Đặt mật khẩu qua link email" (CBR-24, CBR-31).
+ * Nghiệp vụ "Quên mật khẩu" (màn #3, UC-03). Đây cũng là cách tài khoản do Lễ tân tạo tại quầy
+ * (chưa có mật khẩu) đặt mật khẩu lần đầu (CBR-24, CBR-31) — không có luồng link riêng.
  *
  * Class này chỉ quyết định ĐƯỢC hay KHÔNG ĐƯỢC. Nó không biết gì về trang web:
  * Servlet gọi vào, nhận ServiceResult, rồi tự chọn trang để hiển thị.
@@ -27,10 +26,6 @@ import java.sql.SQLException;
  *   Bước 1  requestCode(email)                              khách nhập email → gửi mã 6 số về email
  *   Bước 2  verifyCode(email, code)                         khách nhập mã → kiểm tra đúng/sai
  *   Bước 3  resetPassword(accountId, matKhau, nhapLai)      khách đặt mật khẩu mới
- *
- * Đặt mật khẩu qua link (tài khoản do Lễ tân tạo, khách chưa có mật khẩu):
- *   checkSetupLink(token)                                   khách bấm link trong email → link còn dùng được không
- *   setPasswordByLink(token, matKhau, nhapLai)              khách đặt mật khẩu lần đầu
  *
  * Luật gửi mã / nhập mã (chờ 60 giây, sai 5 lần thì khóa 5 phút...) KHÔNG nằm ở đây
  * mà nằm ở VerificationCodeService — class này chỉ gọi sang.
@@ -182,73 +177,6 @@ public class PasswordRecoveryService {
 
             // TODO GBR-07: ghi AuditLog "đặt lại mật khẩu qua email" khi có AuditLogDAO
             return ServiceResult.ok(null, Messages.MSG49_PASSWORD_CHANGED);
-
-        } catch (SQLException e) {
-            e.printStackTrace();
-            return ServiceResult.fail(Messages.MSG04_SYSTEM_BUSY);
-        }
-    }
-
-    // ===== Đặt mật khẩu qua link email =====
-
-    /**
-     * Kiểm tra link đặt mật khẩu khách vừa bấm — và cho biết VÌ SAO nếu link không dùng được.
-     * Hàm chỉ KIỂM TRA, chưa đánh dấu link đã dùng.
-     *
-     * @param token chuỗi sau "?token=" trên link, VD với link "/set-password?token=setup-nhung-phase1-2026"
-     *              thì truyền "setup-nhung-phase1-2026". Có thể rỗng nếu khách xóa mất phần đó.
-     * @return kết quả:
-     *         - Thành công: kèm SetupLinkCheck, trong đó getStatus() là 1 trong 4 giá trị:
-     *             VALID     link còn dùng được → hiện form
-     *             EXPIRED   quá 15 phút chưa dùng → chuyển sang Quên mật khẩu (getLink().getEmail() để điền sẵn)
-     *             USED      đã đặt mật khẩu bằng link này rồi → về trang đăng nhập
-     *             NOT_FOUND link bịa / không có token → báo chung "link không còn hiệu lực"
-     *         - Thất bại: chỉ khi lỗi hệ thống (MSG04).
-     */
-    public ServiceResult<SetupLinkCheck> checkSetupLink(String token) {
-        return verificationCodeService.inspectSetupLink(token);
-    }
-
-    /**
-     * Đặt mật khẩu LẦN ĐẦU cho tài khoản do Lễ tân tạo, bằng link trong email.
-     *
-     * @param token           chuỗi sau "?token=" (form gửi lại qua ô ẩn), VD "setup-nhung-phase1-2026".
-     * @param newPassword     mật khẩu khách chọn, giữ nguyên từng ký tự.
-     * @param confirmPassword ô "Nhập lại mật khẩu", phải giống hệt newPassword.
-     * @return kết quả:
-     *         - Thành công: câu MSG72_PASSWORD_SET "Đã đặt mật khẩu. Vui lòng đăng nhập."
-     *         - Thất bại vì ô mật khẩu: lỗi gắn với ô "password" / "confirmPassword" → giữ form.
-     *         - Thất bại chung: link không còn hiệu lực (MSG71_SETUP_LINK_INVALID), tài khoản bị khóa (MSG37),
-     *           lỗi hệ thống (MSG04).
-     */
-    public ServiceResult<Void> setPasswordByLink(String token, String newPassword, String confirmPassword) {
-        // B1: kiểm tra link LẦN NỮA ở đây, không tin kết quả lúc mở trang
-        //     (khách có thể để trang mở quá 15 phút, hoặc đã dùng link ở tab khác)
-        ServiceResult<VerificationCode> linkResult = verificationCodeService.findValidSetupLink(token);
-        if (!linkResult.isSuccess()) {
-            return ServiceResult.fail(linkResult.getMessage());
-        }
-        VerificationCode setupLink = linkResult.getData();
-
-        // B2: kiểm tra 2 ô mật khẩu
-        ServiceResult<Void> passwordCheck = validateNewPassword(newPassword, confirmPassword);
-        if (passwordCheck != null) {
-            return passwordCheck;
-        }
-
-        try {
-            // B3: link cho biết tài khoản nào (AccountId). Tài khoản đó phải còn hoạt động
-            Integer accountId = setupLink.getAccountId();
-            Account account = accountId == null ? null : accountDAO.findById(accountId);
-            if (account == null || account.getStatus() != Account.Status.ACTIVE) {
-                return ServiceResult.fail(Messages.MSG37_ACCOUNT_INACTIVE);
-            }
-
-            // B4: lưu mật khẩu, rồi ghi "đã dùng" (UsedAt) vào dòng link → mở lại link sẽ không dùng được nữa
-            savePasswordAndUnlock(accountId, newPassword);
-            verificationCodeDAO.markUsed(setupLink.getVerificationCodeId(), DateTimeUtil.now());
-
-            return ServiceResult.ok(null, Messages.MSG72_PASSWORD_SET);
 
         } catch (SQLException e) {
             e.printStackTrace();

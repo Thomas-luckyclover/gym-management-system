@@ -9,6 +9,7 @@ import com.gms.dto.ServiceResult;
 import com.gms.service.AuthService;
 import com.gms.util.JsonUtil;
 import com.gms.util.RequestUtil;
+import com.gms.util.ValidationUtil;
 import jakarta.servlet.ServletException;
 import jakarta.servlet.annotation.WebServlet;
 import jakarta.servlet.http.HttpServlet;
@@ -102,6 +103,15 @@ public class LoginServlet extends HttpServlet {
                 RequestUtil.redirect(request, response, targetUrl);
             }
         } else {
+            // Tài khoản chưa có mật khẩu (MSG38, VD tài khoản Lễ tân tạo tại quầy) → khách bấm "Đặt mật khẩu"
+            // sẽ sang Quên mật khẩu. Để sẵn email trong session để ô email bên đó điền sẵn (ForgotPasswordServlet đọc 1 lần).
+            // CHỈ điền khi khách gõ EMAIL: nếu khách gõ số điện thoại thì không điền, vì điền vào là để lộ
+            // email gắn với số điện thoại đó cho bất kỳ ai biết SĐT.
+            boolean isNoPasswordYet = Messages.MSG38_NO_PASSWORD_YET.equals(result.getMessage());
+            if (isNoPasswordYet && ValidationUtil.isValidEmail(identifier)) {
+                request.getSession().setAttribute(SessionKey.RECOVERY_PREFILL_EMAIL, identifier);
+            }
+
             if (isAjax) {
                 JsonUtil.writeJson(response, JsonResponse.from(result));
             } else {

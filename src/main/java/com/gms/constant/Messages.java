@@ -60,7 +60,7 @@ public final class Messages {
     public static final String MSG35_ACCOUNT_TEMP_LOCKED = "Tài khoản bị khóa %d phút do nhập sai quá nhiều lần. Thử lại sau %s.";
     public static final String MSG36_LOCK_EXPIRED = "Đã hết thời gian khóa. Bạn có thể đăng nhập lại.";
     public static final String MSG37_ACCOUNT_INACTIVE = "Tài khoản này đã ngừng hoạt động. Vui lòng liên hệ quản trị viên.";
-    public static final String MSG38_NO_PASSWORD_YET = "Tài khoản này chưa có mật khẩu. Hãy mở email chúng tôi đã gửi để đặt mật khẩu, sau đó đăng nhập lại.";
+    public static final String MSG38_NO_PASSWORD_YET = "Tài khoản này chưa có mật khẩu. Hãy dùng Quên mật khẩu để đặt mật khẩu.";
     public static final String MSG39_IDENTIFIER_REQUIRED = "Nhập email hoặc số điện thoại.";
     public static final String MSG40_SIGNED_OUT = "Đã đăng xuất.";
     public static final String MSG41_EMAIL_NOT_FOUND = "Không tìm thấy tài khoản nào với email này.";
@@ -92,7 +92,7 @@ public final class Messages {
     public static final String MSG64_CODE_RESENDS_LEFT = "Còn %d lần gửi lại mã trong 60 phút.";
     public static final String MSG65_CODE_RESEND_WILL_LOCK = "Đã hết lượt gửi lại. Gửi thêm sẽ khóa xác thực %d phút.";
 
-    // ===== 5.6 Luật DBR / CBR có nhưng trước đây SRS III.5 chưa có mã (MSG66–MSG77 — đã đề xuất bổ sung vào SRS) =====
+    // ===== 5.6 Luật DBR / CBR có nhưng trước đây SRS III.5 chưa có mã (MSG66–MSG75 — đã đề xuất bổ sung vào SRS) =====
 
     /** DBR-02: mật khẩu phải có cả chữ và số. */
     public static final String MSG66_PASSWORD_RULE = "Mật khẩu phải dài %d–%d ký tự, gồm cả chữ và số.";
@@ -109,12 +109,6 @@ public final class Messages {
     /** CBR-94: bấm "Gửi lại mã" khi chưa đủ 60 giây kể từ lần gửi trước. */
     public static final String MSG70_CODE_RESEND_TOO_SOON = "Vui lòng chờ %d giây nữa rồi bấm Gửi lại mã.";
 
-    /** CBR-31: link đặt mật khẩu sai, đã dùng hoặc đã hết hạn. */
-    public static final String MSG71_SETUP_LINK_INVALID = "Link đặt mật khẩu không còn hiệu lực. Vui lòng dùng Quên mật khẩu để đặt lại.";
-
-    /** CBR-24: đặt mật khẩu lần đầu qua link email thành công. */
-    public static final String MSG72_PASSWORD_SET = "Đã đặt mật khẩu. Vui lòng đăng nhập.";
-
     /** UC-04: đổi mật khẩu nhưng mật khẩu hiện tại nhập sai. */
     public static final String MSG73_CURRENT_PASSWORD_WRONG = "Mật khẩu hiện tại không đúng.";
 
@@ -123,12 +117,6 @@ public final class Messages {
 
     /** CBR-100: bài viết đã gỡ hoặc không tồn tại trên trang công khai. */
     public static final String MSG75_POST_UNAVAILABLE = "Bài viết này không còn hiển thị.";
-
-    /** CBR-31: link đặt mật khẩu quá hạn (chưa dùng) → chuyển sang Quên mật khẩu, email điền sẵn. */
-    public static final String MSG76_SETUP_LINK_EXPIRED = "Link đặt mật khẩu đã hết hạn. Hãy bấm Gửi mã để nhận mã xác thực qua email và đặt mật khẩu.";
-
-    /** CBR-31: mở lại link đặt mật khẩu đã dùng → về đăng nhập. */
-    public static final String MSG77_SETUP_LINK_USED = "Bạn đã đặt mật khẩu cho tài khoản này. Vui lòng đăng nhập.";
 
     private Messages() {
     }

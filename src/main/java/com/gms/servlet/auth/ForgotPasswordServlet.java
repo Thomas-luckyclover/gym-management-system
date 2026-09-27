@@ -65,7 +65,7 @@ public class ForgotPasswordServlet extends HttpServlet {
             return;
         }
 
-        // B2: khách vừa được chuyển từ link đặt mật khẩu HẾT HẠN sang đây (SetPasswordServlet để email trong session)
+        // B2: khách vừa bấm Đặt mật khẩu ở màn Đăng nhập (MSG38, LoginServlet để email trong session)
         //     → lấy email đó ra điền sẵn vào ô, rồi XÓA khỏi session ngay (chỉ dùng 1 lần: bấm F5 là ô trống lại).
         //     Đồng thời bỏ tiến độ cũ để chắc chắn đang ở bước "email".
         //     KHÔNG tự gửi mã: khách phải tự bấm "Gửi mã" → luật chống gửi liên tục (60 giây, 5 lần/giờ) vẫn áp dụng.

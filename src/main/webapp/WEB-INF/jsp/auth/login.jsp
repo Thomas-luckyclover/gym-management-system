@@ -114,7 +114,7 @@
                                     <c:out value="${errorMessage}" />
                                 </c:when>
                                 <c:otherwise>
-                                    Tài khoản chưa có mật khẩu. Vui lòng kiểm tra email để đặt mật khẩu lần đầu.
+                                    Tài khoản chưa có mật khẩu. Hãy dùng Quên mật khẩu để đặt mật khẩu.
                                 </c:otherwise>
                             </c:choose>
                         </span>

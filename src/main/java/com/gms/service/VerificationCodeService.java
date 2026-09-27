@@ -4,7 +4,6 @@ import com.gms.constant.AppConstants;
 import com.gms.constant.Messages;
 import com.gms.dao.VerificationCodeDAO;
 import com.gms.dto.ServiceResult;
-import com.gms.dto.SetupLinkCheck;
 import com.gms.dto.VerificationAttemptInfo;
 import com.gms.entity.VerificationCode;
 import com.gms.integration.EmailGateway;
@@ -17,7 +16,7 @@ import java.time.Duration;
 import java.time.LocalDateTime;
 
 /**
- * "Bộ máy" mã xác thực 6 số (OTP) và link đặt mật khẩu — dùng chung cho Đăng ký, Kích hoạt hồ sơ,
+ * "Bộ máy" mã xác thực 6 số (OTP) — dùng chung cho Đăng ký, Kích hoạt hồ sơ,
  * Quên mật khẩu, Đổi email.
  *
  * Hãy hình dung bảng VerificationCodes là 1 cuốn sổ: mỗi lần gửi mã là 1 dòng mới.
@@ -265,88 +264,7 @@ public class VerificationCodeService {
         }
     }
 
-    // ===== 3. Kiểm tra link đặt mật khẩu =====
-
-    /**
-     * Chốt chặn cuối trước khi lưu mật khẩu bằng link: CHỈ nhận link còn dùng được, mọi trường hợp khác
-     * trả chung 1 câu lỗi. Gọi lại inspectSetupLink bên trong nên không lặp logic.
-     *
-     * Dùng khi: PasswordRecoveryService.setPasswordByLink, ngay trước khi lưu mật khẩu.
-     * (Lúc khách MỞ link thì dùng inspectSetupLink để biết lý do cụ thể.)
-     *
-     * @param token chuỗi sau "?token=" trên link, VD "setup-nhung-phase1-2026".
-     * @return kết quả:
-     *         - Thành công: kèm dòng link (getAccountId() cho biết đặt mật khẩu cho tài khoản nào).
-     *         - Thất bại: link không tìm thấy / đã dùng / hết hạn → MSG71_SETUP_LINK_INVALID; lỗi DB → MSG04.
-     */
-    public ServiceResult<VerificationCode> findValidSetupLink(String token) {
-        // B1: nhờ inspectSetupLink kiểm tra; lỗi DB thì trả nguyên lỗi đó
-        ServiceResult<SetupLinkCheck> result = inspectSetupLink(token);
-        if (!result.isSuccess()) {
-            return ServiceResult.fail(result.getMessage());
-        }
-
-        // B2: chỉ chấp nhận VALID; NOT_FOUND / USED / EXPIRED đều báo chung "link không còn hiệu lực"
-        SetupLinkCheck check = result.getData();
-        if (!check.isValid()) {
-            return ServiceResult.fail(Messages.MSG71_SETUP_LINK_INVALID);
-        }
-        return ServiceResult.ok(check.getLink());
-    }
-
-    /**
-     * Kiểm tra link đặt mật khẩu và cho biết LÝ DO nếu không dùng được, để màn hình xử lý riêng từng trường hợp.
-     * Hàm chỉ KIỂM TRA, không đánh dấu link đã dùng.
-     *
-     * Dùng khi: khách mở /set-password?token=... hoặc bấm Lưu ở form đó.
-     *
-     * VD: "setup-nhung-phase1-2026" còn hạn, chưa dùng → VALID
-     *     "setup-khanh-expired-2026" quá hạn            → EXPIRED
-     *     "abc"                                        → NOT_FOUND
-     *
-     * @param token chuỗi sau "?token=" trên link (có thể rỗng hoặc null nếu khách xóa mất).
-     * @return kết quả:
-     *         - Thành công: kèm SetupLinkCheck với getStatus() = VALID / NOT_FOUND / USED / EXPIRED.
-     *           Với VALID, USED, EXPIRED thì getLink() có dòng link (lấy email, AccountId); NOT_FOUND thì getLink() = null.
-     *         - Thất bại: chỉ khi lỗi DB (MSG04).
-     */
-    public ServiceResult<SetupLinkCheck> inspectSetupLink(String token) {
-        // B1: link không có token → coi như không tìm thấy (không cần hỏi DB)
-        if (ValidationUtil.isNullOrEmpty(token)) {
-            return ServiceResult.ok(new SetupLinkCheck(SetupLinkCheck.Status.NOT_FOUND, null));
-        }
-
-        try {
-            // B2: DB không lưu token gốc mà chỉ lưu bản băm SHA-256 → băm token trên link rồi mới tìm.
-            //     Không có dòng nào khớp → link bịa → NOT_FOUND
-            String tokenHash = SecureCodeUtil.sha256Hex(token.trim());
-            VerificationCode setupLink = verificationCodeDAO.findByTokenHash(tokenHash);
-            if (setupLink == null) {
-                return ServiceResult.ok(new SetupLinkCheck(SetupLinkCheck.Status.NOT_FOUND, null));
-            }
-
-            // B3: đã có giờ dùng (UsedAt) → USED. Xét TRƯỚC hết hạn: link đã đặt mật khẩu xong thì dù
-            //     giờ đã quá 15 phút vẫn tính là "đã dùng" (đưa khách về đăng nhập, không đưa sang Quên mật khẩu)
-            if (setupLink.getUsedAt() != null) {
-                return ServiceResult.ok(new SetupLinkCheck(SetupLinkCheck.Status.USED, setupLink));
-            }
-
-            // B4: chưa dùng nhưng bây giờ đã qua giờ hết hạn → EXPIRED
-            boolean isExpired = !DateTimeUtil.now().isBefore(setupLink.getExpiresAt());
-            if (isExpired) {
-                return ServiceResult.ok(new SetupLinkCheck(SetupLinkCheck.Status.EXPIRED, setupLink));
-            }
-
-            // B5: tìm thấy, chưa dùng, còn hạn → VALID
-            return ServiceResult.ok(new SetupLinkCheck(SetupLinkCheck.Status.VALID, setupLink));
-
-        } catch (SQLException e) {
-            e.printStackTrace();
-            return ServiceResult.fail(Messages.MSG04_SYSTEM_BUSY);
-        }
-    }
-
-    // ===== 4. Hàm phụ =====
+    // ===== 3. Hàm phụ =====
 
     /**
      * Đổi khoảng thời gian từ "bây giờ" tới 1 mốc thành chuỗi "mm:ss" để ghép vào câu MSG61.
