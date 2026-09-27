@@ -38,7 +38,7 @@
 - **5.2 Kiểm tra dữ liệu nhập:** MSG66, 67, 68, 69, 74 (sai định dạng theo DBR, cùng loại với MSG09/11/13).
 - **5.4 Sign-in, password, personal account:** MSG70, 71, 72, 73 (cùng chỗ với MSG62–65).
 
-Quy ước placeholder giống các dòng cũ của SRS: `{n}` số, `{min}`/`{max}` giới hạn, `{P-xx}` = tham số hệ thống trong System Parameters (VD `{P-18}` = số phút khóa).
+Quy ước placeholder giống các dòng cũ của SRS: `{n}` số, `{min}`/`{max}` giới hạn, `{P-15}`, `{P-18}`… = lấy giá trị từ bảng System Parameters (P-15 = 15 phút hiệu lực mã/link, P-18 = 5 phút khóa).
 
 | # | Mã | Mục SRS | Hiển thị | Ngữ cảnh (màn / khi nào) | Nội dung (VI) | Nội dung (EN) | Hằng trong code |
 |---|---|---|---|---|---|---|---|
