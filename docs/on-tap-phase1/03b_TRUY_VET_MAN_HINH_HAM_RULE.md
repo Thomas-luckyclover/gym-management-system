@@ -112,7 +112,7 @@ LoginServlet.doPost
 |---|---|---|---|---|---|---|---|---|---|---|
 | 2.1 | Mở trang | GET `/register` | `doGet` (step 1; hoặc `?step=2&phone=` hợp lệ → step 2) | — | `ValidationUtil.isValidPhone` | — | — | UC-05 | — | #2 bước 1 |
 | 2.2 | Bước 1: nhập SĐT → **Tiếp tục** | POST `step=1` | `handlePhoneStep` | — (chỉ kiểm định dạng) | `ValidationUtil.isValidPhone` | — | DBR-17 | UC-05, UC-IDENT | MSG13 | #2 bước 2 (SĐT chỉ đọc) |
-| 2.3 | Bước 2: nhập email, MK, họ tên, ngày sinh → **Đăng ký** | POST `step=2` | `handleInformationStep` → `DateTimeUtil.parseHtmlDate` | `RegistrationService.register` (mục D) | `PersonDAO.findByPhone/existsByEmail/insert`, `CustomerDAO.generateNextCustomerCode/insert`, SQL Accounts, `PasswordUtil.hashPassword` | Persons, Customers, Accounts | xem D | UC-05, UC-IDENT, UC-Claim | MSG11–15, 47, 51–54, EXTRA_* | ✔ #1 + MSG54 · ✘ #2 bước 2 (giữ dữ liệu) |
+| 2.3 | Bước 2: nhập email, MK, họ tên, ngày sinh → **Đăng ký** | POST `step=2` | `handleInformationStep` → `DateTimeUtil.parseHtmlDate` | `RegistrationService.register` (mục D) | `PersonDAO.findByPhone/existsByEmail/insert`, `CustomerDAO.generateNextCustomerCode/insert`, SQL Accounts, `PasswordUtil.hashPassword` | Persons, Customers, Accounts | xem D | UC-05, UC-IDENT, UC-Claim | MSG11–15, 47, 51–54, MSG66–74 | ✔ #1 + MSG54 · ✘ #2 bước 2 (giữ dữ liệu) |
 | 2.4 | (LUẬT, chưa code) Nhập mã xác thực | POST (bước 3) | — | `VerificationCodeService.verifyCode(SIGN_UP/CLAIM)` | VerificationCodeDAO | VerificationCodes | CBR-20, CBR-94, API-03 | UC-05, UC-Claim | MSG42–45, 61 | #1 |
 | 2.5 | "Đã có tài khoản? Đăng nhập" | GET `/login` | | | | | | | | #1 |
 
@@ -142,6 +142,14 @@ RegisterServlet.handleInformationStep
 
 ---
 
+> **⚠ Cập nhật 27/09:** bảng và chuỗi gọi hàm của Màn #2 ở trên mô tả bản **cũ** (trước commit `6f2511e`). Bản mới của `RegisterServlet` điều phối theo `step`:
+> `phone` → `checkPhone` (MSG51 `blocked-account` / MSG53 `blocked-no-email` / `claim-email` / `form`) ·
+> nhánh mới `form` → `sendCode(SIGN_UP)` → `otp` → `verifyCode` → `register` → `success` ·
+> nhánh Claim `claim-email` (khác email → MSG52) → `sendCode(CLAIM)` → `claim-otp` → `verifyCode` → `claim-password` → `claimAccount` (giữ Customer New) → `success`.
+> Lỗ hổng còn lại: `claim-password` không kiểm tra đã xác minh mã (F23); mật khẩu nằm trong ô ẩn HTML (F24).
+
+---
+
 ## MÀN #3 — FORGOT PASSWORD
 
 **(A) Thẻ màn**
@@ -160,11 +168,11 @@ RegisterServlet.handleInformationStep
 | # | Thao tác | HTTP | Servlet · hàm | Service · hàm | DAO / Util / Integration | Bảng | Rule | UC | Thông báo | Màn tiếp |
 |---|---|---|---|---|---|---|---|---|---|---|
 | 3.1 | Mở trang | GET | `doGet` → `showCurrentStep` → `resolveStep` → `forwardStep` (+ `setCodeTimers`) | `findLatestRecoveryCode` | `VerificationCodeDAO.findLatestByEmailAndPurpose` | VerificationCodes | GBR-27 | UC-03 | (MSG44 nếu quá hạn bước 3) | bước theo session |
-| 3.2 | B1: nhập email → **Gửi mã** | POST `action=send` | `handleSend` → `clearRecovery` | `PasswordRecoveryService.requestCode` → `VerificationCodeService.sendCode` | `AccountDAO.findByEmail`, `SystemConfigService.getInt(P-15/17/18)`, `VerificationCodeDAO.findLockedUntil / findLatest… / countCodesSentSince / lockCode / insert`, `SecureCodeUtil.generateVerificationCode`, **`EmailGateway.sendVerificationCode`** | Accounts, Persons, SystemConfigs, VerificationCodes | BR-03, CBR-96, CBR-94, P-15/17/18, GBR-15, API-03, chốt #2/#3/#4 | UC-03 | MSG09, 11, 41, 37, 42, 61, 04, EXTRA_CODE_RESEND_TOO_SOON | bước 2 (toast MSG42) |
+| 3.2 | B1: nhập email → **Gửi mã** | POST `action=send` | `handleSend` → `clearRecovery` | `PasswordRecoveryService.requestCode` → `VerificationCodeService.sendCode` | `AccountDAO.findByEmail`, `SystemConfigService.getInt(P-15/17/18)`, `VerificationCodeDAO.findLockedUntil / findLatest… / countCodesSentSince / lockCode / insert`, `SecureCodeUtil.generateVerificationCode`, **`EmailGateway.sendVerificationCode`** | Accounts, Persons, SystemConfigs, VerificationCodes | BR-03, CBR-96, CBR-94, P-15/17/18, GBR-15, API-03, chốt #2/#3/#4 | UC-03 | MSG09, 11, 41, 37, 42, 61, 04, MSG70_CODE_RESEND_TOO_SOON | bước 2 (toast MSG42) |
 | 3.3 | B2: **Gửi lại mã** | POST `action=resend` | `handleResend` → `firstError` | `requestCode` (email từ **session**) | như 3.2 | như 3.2 | CBR-94 (60 s, 5 lần/giờ, mã mới hủy mã cũ) | UC-03 | MSG45 / lỗi | bước 2 |
-| 3.4 | B2: nhập mã → **Xác nhận** | POST `action=verify` | `handleVerify` | `PasswordRecoveryService.verifyCode` → `VerificationCodeService.verifyCode` | `ValidationUtil.isValidVerificationCode`, `VerificationCodeDAO.findLockedUntil / findLatest… / increaseFailedAttempts / lockCode / markUsed` | VerificationCodes | DBR-03, BR-04, CBR-94 | UC-03 | EXTRA_CODE_FORMAT, MSG43, 44, 61 | bước 3 (session: accountId, deadline) |
+| 3.4 | B2: nhập mã → **Xác nhận** | POST `action=verify` | `handleVerify` | `PasswordRecoveryService.verifyCode` → `VerificationCodeService.verifyCode` | `ValidationUtil.isValidVerificationCode`, `VerificationCodeDAO.findLockedUntil / findLatest… / increaseFailedAttempts / lockCode / markUsed` | VerificationCodes | DBR-03, BR-04, CBR-94 | UC-03 | MSG68_CODE_FORMAT, MSG43, 44, 61 | bước 3 (session: accountId, deadline) |
 | 3.5 | B2: "Dùng email khác" | GET `?restart=1` | `doGet` → `clearRecovery` | — | — | — | — | UC-03 | — | bước 1 |
-| 3.6 | B3: mật khẩu mới ×2 → **Đổi mật khẩu** | POST `action=reset` | `handleReset` → `isResetExpired` | `PasswordRecoveryService.resetPassword` → `validateNewPassword` → `savePasswordAndUnlock` | `AccountDAO.findById / updatePasswordHash / resetFailedLogin` (1 TX), `PasswordUtil.hashPassword`, **`SessionRegistryListener.invalidateSessionsOfAccount(id, null)`** | Accounts | DBR-02, CBR-93, BR-04, chốt #4, GBR-07 (TODO) | UC-03 | MSG09, EXTRA_PASSWORD_RULE, MSG47, 37, 44, **49** | #1 + MSG49 |
+| 3.6 | B3: mật khẩu mới ×2 → **Đổi mật khẩu** | POST `action=reset` | `handleReset` → `isResetExpired` | `PasswordRecoveryService.resetPassword` → `validateNewPassword` → `savePasswordAndUnlock` | `AccountDAO.findById / updatePasswordHash / resetFailedLogin` (1 TX), `PasswordUtil.hashPassword`, **`SessionRegistryListener.invalidateSessionsOfAccount(id, null)`** | Accounts | DBR-02, CBR-93, BR-04, chốt #4, GBR-07 (TODO) | UC-03 | MSG09, MSG66_PASSWORD_RULE, MSG47, 37, 44, **49** | #1 + MSG49 |
 | 3.7 | "Quay lại đăng nhập" | GET `/login` | | | | | | | | #1 |
 
 **(D)** Chuỗi gọi hàm đầy đủ từng bước: **`03_DEEP_DIVE` Phần 3** (3.3 send · 3.4 resend · 3.5 verify · 3.6 reset).
@@ -182,8 +190,8 @@ RegisterServlet.handleInformationStep
 
 | # | Thao tác | HTTP | Servlet · hàm | Service · hàm | DAO / Util | Bảng | Rule | Thông báo | Màn tiếp |
 |---|---|---|---|---|---|---|---|---|---|
-| 4.1 | Bấm link trong email | GET `?token=` | `doGet` | `checkSetupLink` → `VerificationCodeService.findValidSetupLink` (B1 rỗng · B2 `sha256Hex` + `findByTokenHash` · B3 dùng/hết hạn · B4 ok) | `SecureCodeUtil.sha256Hex`, `VerificationCodeDAO.findByTokenHash` | VerificationCodes | CBR-31, P-15 | EXTRA_SETUP_LINK_INVALID | form / trạng thái link hỏng |
-| 4.2 | Nhập MK ×2 → **Đặt mật khẩu** | POST (token, password, confirmPassword) | `doPost` | `setPasswordByLink` (B1 kiểm lại link · B2 `validateNewPassword` · B3 `findById` Active · B4 `savePasswordAndUnlock` + `markUsed`) | `AccountDAO`, `PasswordUtil`, `VerificationCodeDAO.markUsed` | Accounts, VerificationCodes | CBR-24, CBR-31, DBR-02 | EXTRA_PASSWORD_SET, MSG37, MSG47 | #1 |
+| 4.1 | Bấm link trong email | GET `?token=` | `doGet` | `checkSetupLink` → `VerificationCodeService.findValidSetupLink` (B1 rỗng · B2 `sha256Hex` + `findByTokenHash` · B3 dùng/hết hạn · B4 ok) | `SecureCodeUtil.sha256Hex`, `VerificationCodeDAO.findByTokenHash` | VerificationCodes | CBR-31, P-15 | MSG71_SETUP_LINK_INVALID | form / trạng thái link hỏng |
+| 4.2 | Nhập MK ×2 → **Đặt mật khẩu** | POST (token, password, confirmPassword) | `doPost` | `setPasswordByLink` (B1 kiểm lại link · B2 `validateNewPassword` · B3 `findById` Active · B4 `savePasswordAndUnlock` + `markUsed`) | `AccountDAO`, `PasswordUtil`, `VerificationCodeDAO.markUsed` | Accounts, VerificationCodes | CBR-24, CBR-31, DBR-02 | MSG72_PASSWORD_SET, MSG37, MSG47 | #1 |
 | 4.3 | Link hỏng → **Quên mật khẩu** | GET `/forgot-password` | | | | | CBR-31 | | #3 |
 
 ---
@@ -293,7 +301,7 @@ AccountSettingsServlet.handleChangePassword
 | GBR-10 | Phân quyền | `RoleAreaFilter` + 5 lớp con | 🟡 (thiếu `/staff/*`) |
 | GBR-13 | Server kiểm lại | Mọi Service + `ValidationUtil` | ✅ |
 | GBR-15 | Mã chỉ qua email | `EmailGateway` | ✅ |
-| GBR-27 | Đồng hồ mm:ss | `ForgotPasswordServlet.setCodeTimers` + `forgot-password.js`; login `extractLockSecondsLeft` | 🟡 (login làm tròn phút) |
+| GBR-27 | Đồng hồ mm:ss | `ForgotPasswordServlet.setCodeTimers` + `forgot-password.js`; login `AuthService.formatMinutesSeconds` + `extractLockSecondsLeft` | ✅ |
 | GBR-31 | Quay về đúng màn | `AuthFilter.buildLoginRedirectUrl` + `RequestUtil.isSafeReturnUrl` | ✅ |
 
 ### C. Bảng DB → ai đọc/ghi

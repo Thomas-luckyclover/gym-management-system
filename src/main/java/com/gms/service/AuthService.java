@@ -125,10 +125,8 @@ public class AuthService {
             if (account.getLockedUntil() != null) {
                 if (now.isBefore(account.getLockedUntil())) {
                     long remainingSeconds = Duration.between(now, account.getLockedUntil()).getSeconds();
-                    long remainingMinutes = (remainingSeconds + 59) / 60;
-                    String remainingStr = remainingMinutes + " phút";
-                    return ServiceResult
-                            .fail(String.format(Messages.MSG35_ACCOUNT_TEMP_LOCKED, LOCK_MINUTES, remainingStr));
+                    return ServiceResult.fail(String.format(Messages.MSG35_ACCOUNT_TEMP_LOCKED,
+                            LOCK_MINUTES, formatMinutesSeconds(remainingSeconds)));
                 } else {
                     // Hết hạn khóa tạm -> reset số lần sai (BR-02)
                     accountDAO.resetFailedLogin(conn, account.getAccountId());
@@ -165,7 +163,7 @@ public class AuthService {
                         accountDAO.lockUntil(conn, account.getAccountId(), lockTime);
                         account.setLockedUntil(lockTime);
                         return ServiceResult.fail(String.format(Messages.MSG35_ACCOUNT_TEMP_LOCKED, LOCK_MINUTES,
-                                LOCK_MINUTES + " phút"));
+                                formatMinutesSeconds(LOCK_MINUTES * 60L)));
                     } else {
                         int attemptsLeft = MAX_FAILED_ATTEMPTS - newFailedCount;
                         return ServiceResult
@@ -199,6 +197,11 @@ public class AuthService {
         } catch (SQLException e) {
             return ServiceResult.fail(Messages.MSG04_SYSTEM_BUSY);
         }
+    }
+
+    /** MSG35 hiển thị thời gian còn lại dạng mm:ss (GBR-27), VD 272 giây → "04:32". */
+    private static String formatMinutesSeconds(long totalSeconds) {
+        return String.format("%02d:%02d", totalSeconds / 60, totalSeconds % 60);
     }
 
     // ===== Private Helper đọc thông tin Person & Role=====

@@ -69,7 +69,7 @@ Các dashboard chưa code → trang **404** là đúng ở thời điểm này (
 | LG-12 | 🔥 | Khách sai mật khẩu (đã sai sẵn 2 lần) | `quan.le92@gmail.com` / `sai123456` | "…Bạn còn **2** lần thử."; `FailedLoginCount` 2 → 3 | MSG33, BR-01 | |
 | LG-13 | 🔥 | Khách sai lần thứ 5 (đã sai sẵn 4) | `thao.luong@gmail.com` / sai | MSG35 "Tài khoản bị khóa 5 phút…"; `LockedUntil` = now + 5' | BR-01 | |
 | LG-14 | 🔥 | Ngay sau LG-13 nhập **đúng** mật khẩu | `thao.luong@gmail.com` / `Gms@2026` | Vẫn MSG35 + đồng hồ đếm ngược | BR-01, GBR-27 | |
-| LG-15 | ⭐ ⏱ | Tài khoản đang khóa sẵn | `kim.vo@gmail.com` / `Gms@2026` | MSG35 + panel khóa + đồng hồ. ⚠ Code hiện tại: câu hiện "Thử lại sau **n phút**" (làm tròn lên), không phải mm:ss chính xác | MSG35, GBR-27 | |
+| LG-15 | ⭐ ⏱ | Tài khoản đang khóa sẵn | `kim.vo@gmail.com` / `Gms@2026` | MSG35 "…Thử lại sau **mm:ss**" (VD `04:32`) + panel khóa + đồng hồ chạy lùi đúng từng giây | MSG35, GBR-27 | |
 | LG-16 | 🔥 | Khóa đã hết hạn | `hong.pham@yahoo.com` / `Gms@2026` | Đăng nhập được; `FailedLoginCount = 0`, `LockedUntil = NULL` | BR-02 | |
 | LG-17 | ⭐ | Khóa hết hạn + nhập SAI | `hong.pham@yahoo.com` / sai | Bộ đếm reset về 0 rồi +1 → "còn **4** lần thử" | BR-02 | |
 | LG-18 | 🔥 | Lễ tân sai mật khẩu 6 lần liên tiếp | `tam.le@gms.vn` / sai ×6 | Lần nào cũng MSG34, **không bao giờ khóa**; `FailedLoginCount` không đổi | BR-01 | |
@@ -127,18 +127,18 @@ Các dashboard chưa code → trang **404** là đúng ở thời điểm này (
 | RG-03 | 🔥 | SĐT hợp lệ `0987000001` | Sang bước 2, SĐT hiện chỉ đọc | SRS 1.2.1 | |
 | RG-04 | ⭐ | Bước 2: sửa ô SĐT ẩn thành số sai (DevTools) rồi gửi | MSG13 (server kiểm lại) | GBR-13 | |
 | RG-05 | 🔥 | Họ tên `A` | Lỗi họ tên 2–50 | DBR-01 | |
-| RG-06 | ⭐ | Họ tên `Nguyễn Văn 2` / `@@@` | `EXTRA_FULL_NAME_RULE` | DBR-01 | |
+| RG-06 | ⭐ | Họ tên `Nguyễn Văn 2` / `@@@` | `MSG67_FULL_NAME_RULE` | DBR-01 | |
 | RG-07 | ⭐ | Họ tên `Nguyễn Thị O'Neil-Hà` | Hợp lệ | DBR-01 | |
 | RG-08 | ⭐ | Họ tên 51 ký tự | Lỗi 2–50 | DBR-01 | |
 | RG-09 | 🔥 | Ngày sinh = ngày mai | MSG15 | DBR-04 | |
-| RG-10 | ⭐ | Ngày sinh năm 1900 | `EXTRA_DOB_TOO_OLD` | DBR-04 | |
+| RG-10 | ⭐ | Ngày sinh năm 1900 | `MSG69_DOB_TOO_OLD` | DBR-04 | |
 | RG-11 | ⭐ | Ngày sinh 2018 (8 tuổi) | **Vẫn đăng ký được** | P-05 | |
 | RG-12 | 🔥 | Email `abc@` / `abc.gmail.com` | MSG11 | DBR-18 | |
 | RG-13 | | Email 101 ký tự | MSG11 hoặc MSG10 | DBR-18 | |
-| RG-14 | 🔥 | Mật khẩu `abcdefgh` (không số) | `EXTRA_PASSWORD_RULE` | DBR-02 | |
-| RG-15 | 🔥 | Mật khẩu `12345678` (không chữ) | `EXTRA_PASSWORD_RULE` | DBR-02 | |
-| RG-16 | ⭐ | Mật khẩu `abc123` (6 ký tự) | `EXTRA_PASSWORD_RULE` (SRS 1.2.2 ghi 6–64 nhưng nhóm chốt 8–64) | DBR-02, mâu thuẫn #1 | |
-| RG-17 | ⭐ | Mật khẩu 65 ký tự | `EXTRA_PASSWORD_RULE` | DBR-02 | |
+| RG-14 | 🔥 | Mật khẩu `abcdefgh` (không số) | `MSG66_PASSWORD_RULE` | DBR-02 | |
+| RG-15 | 🔥 | Mật khẩu `12345678` (không chữ) | `MSG66_PASSWORD_RULE` | DBR-02 | |
+| RG-16 | ⭐ | Mật khẩu `abc123` (6 ký tự) | `MSG66_PASSWORD_RULE` (SRS 1.2.2 ghi 6–64 nhưng nhóm chốt 8–64) | DBR-02, mâu thuẫn #1 | |
+| RG-17 | ⭐ | Mật khẩu 65 ký tự | `MSG66_PASSWORD_RULE` | DBR-02 | |
 | RG-18 | ⭐ | Mật khẩu `Mậtkhẩu1` (chữ có dấu + số) | Hợp lệ (`\p{L}` nhận chữ có dấu) | DBR-02 | |
 | RG-19 | 🔥 | Nhập lại khác | MSG47 | — | |
 | RG-20 | ⭐ | Gửi lỗi | Các ô (trừ mật khẩu) **giữ giá trị** | GBR-22 | |
@@ -147,17 +147,19 @@ Các dashboard chưa code → trang **404** là đúng ở thời điểm này (
 
 | ID | Ưu tiên | Dữ liệu | Kết quả mong đợi (LUẬT) | Luật | KQ |
 |---|---|---|---|---|---|
-| RG-21 | 🔥 | `0987000001` + `khach.moi@gmail.com` + thông tin hợp lệ | Gửi mã SignUp (seed `112233` ⏱) → nhập đúng → tạo Person + Customer (Self, **New**, `KH-nnnn`) + Account → `/login` + MSG54. ⚠ Code hiện tại: **tạo ngay, không có bước mã** | UC-05, API-03 | |
-| RG-22 | 🔥 | Như RG-21 nhưng **nhập sai mã** | Không tạo tài khoản. ⚠ Code: BLOCK (chưa có OTP) | UC-05 | |
+| RG-21 | 🔥 | `0987000001` + `khach.moi@gmail.com` + thông tin hợp lệ | Gửi mã SignUp (seed `112233` ⏱) → nhập đúng → tạo Person + Customer (Self, **New**, `KH-nnnn`) + Account → `/login` + MSG54. ✅ Code đã có bước mã (commit `6f2511e`) | UC-05, API-03 | |
+| RG-22 | 🔥 | Như RG-21 nhưng **nhập sai mã** | MSG43, ở lại bước nhập mã, không tạo tài khoản | UC-05 | |
 | RG-23 | 🔥 | `0901234501` (An đã có TK) | MSG51 "…đã có tài khoản. Vui lòng đăng nhập hoặc dùng Quên mật khẩu." | CBR-26 | |
-| RG-24 | 🔥 | `0935000105` + `yen.doan@gmail.com` | Gửi mã **Claim** tới `yen.doan@…` (seed `445566`) → đúng → gắn TK vào hồ sơ **KH-1105** có sẵn, không tạo Person mới. ⚠ Code: gắn ngay **không mã** | CBR-20 | |
-| RG-25 | 🔥 | Như RG-24 nhưng không nhập mã / nhập sai | **Không** được tạo tài khoản. ⚠ Code: **lọt** (lỗ hổng chiếm hồ sơ) | CBR-20 | |
-| RG-26 | ⭐ | Sau RG-24 kiểm tra `Customers.Status` của KH-1105 | Vẫn **New**. ⚠ Code: đổi thành **Active** | DBR-34, CBR-01 | |
+| RG-24 | 🔥 | `0935000105` + `yen.doan@gmail.com` | Gửi mã **Claim** tới `yen.doan@…` (seed `445566`) → đúng → gắn TK vào hồ sơ **KH-1105** có sẵn, không tạo Person mới. Màn hiện hồ sơ readonly (họ tên, ngày sinh) rồi mới đặt mật khẩu | CBR-20 | |
+| RG-25 | 🔥 | Như RG-24 nhưng không nhập mã / nhập sai | **Không** được tạo tài khoản. ✅ qua giao diện; xem thêm RG-32 (đi tắt) | CBR-20 | |
+| RG-26 | ⭐ | Sau RG-24 kiểm tra `Customers.Status` của KH-1105 | Vẫn **New** ✅ (đã bỏ `updateCustomerStatusToActive`) | DBR-34, CBR-01 | |
 | RG-27 | 🔥 | `0935000105` + `yen.khac@gmail.com` | MSG52 với email che `ye***@gmail.com` | CBR-25 | |
 | RG-28 | 🔥 | `0901234505` (hồ sơ không email) | MSG53 mời ra quầy | CBR-27 | |
 | RG-29 | ⭐ | `0901234510` + `lan.dang85@gmail.com` | Nhánh kích hoạt (như RG-24) | CBR-20 | |
 | RG-30 | ⭐ | `0901234512` (SĐT của hồ sơ đã xóa) + email mới | Tạo mới bình thường | CBR-23 | |
 | RG-31 | ⭐ | `0935000999` (chỉ là số giám hộ) + email mới | Tạo mới bình thường | CBR-28 | |
+| RG-32 | 🔥 | Dùng DevTools/Postman POST thẳng `/register` với `step=claim-password`, `phone=0935000105`, mật khẩu hợp lệ — **không** qua bước mã | Phải từ chối (MSG06/MSG44), không tạo tài khoản. ⚠ Code hiện tại: **lọt** (F23) | CBR-20 | |
+| RG-33 | ⭐ | Ở bước nhập mã SignUp, View Source trang | **Không** được thấy mật khẩu vừa nhập. ⚠ Code: có trong `<input type="hidden" name="password">` (F24) | GBR-08 | |
 | RG-32 | 🔥 | SĐT mới + `bich.tran@gmail.com` | MSG12 | DBR-23 | |
 | RG-33 | ⭐ | SĐT mới + `linh.truong93@gmail.com` (email đã nhả) | Dùng được | DBR-28 | |
 | RG-34 | ⭐ | Sau RG-21 đăng nhập bằng TK mới | Đăng nhập được, vào `/customer/dashboard` | — | |
@@ -183,6 +185,11 @@ Các dashboard chưa code → trang **404** là đúng ở thời điểm này (
 | OT-12 | 🔥 | Nhập `12ab56` / `12345` / `1234567` | "Mã xác thực gồm đúng 6 chữ số." (không tính là 1 lần sai) | DBR-03 | |
 | OT-13 | ⭐ | Mã có số 0 đầu (VD `048213`) | Nhập đúng được chấp nhận (không bị mất số 0) | DBR-03 | |
 | OT-14 | ⭐ | Đồng hồ "Mã hết hạn sau mm:ss" | Chạy lùi, tải lại trang vẫn đúng số còn lại (server tính) | GBR-27 | |
+| OT-15 | 🔥 | `an.nguyen95@gmail.com` (chưa xin mã trong giờ) → Gửi mã → vào bước 2 | Dưới ô mã: MSG62 "Bạn còn 5 lần nhập mã." · dưới nút: MSG64 "Còn 3 lần gửi lại mã trong 60 phút." | CBR-94, MSG62/64 | |
+| OT-16 | 🔥 | Tiếp OT-15, nhập sai `000000` liên tục | Số giảm 4 → 3 → 2; còn 1 thì đổi màu + MSG63 "Nhập sai thêm 1 lần… khóa 5 phút."; sai lần 5 → MSG61 và **ẩn** cả 2 dòng gợi ý | CBR-94, MSG63 | |
+| OT-17 | 🔥 ⏱ | Tiếp OT-15 (lần khác), bấm Gửi lại mã mỗi 60 s | "Còn 2" → "Còn 1" → MSG65 "Đã hết lượt gửi lại…"; bấm thêm → MSG61 | CBR-94, MSG65 | |
+| OT-18 | ⭐ | Sau khi nhập sai 2 lần, bấm Gửi lại mã (mã mới) | Dòng nhập quay về "Bạn còn 5 lần nhập mã." (số lần tính theo **từng mã**) | CBR-94 | |
+| OT-19 | ⭐ ⏱ | `binh.ta@gmail.com` (đang khóa) vào bước 2 | Chỉ có MSG61, không có dòng MSG62–65 | CBR-94 | |
 
 ## 6. QUÊN MẬT KHẨU — `/forgot-password` (UC-03)
 
@@ -201,7 +208,7 @@ Các dashboard chưa code → trang **404** là đúng ở thời điểm này (
 | FP-11 | 🔥 | `quynh.cao@gmail.com` nhập `999000` | MSG44 | BR-04 | |
 | FP-12 | 🔥 | Nhập sai mã | MSG43 dưới ô, giữ ở bước 2 | MSG43 | |
 | FP-13 | ⭐ | Dùng lại mã vừa dùng thành công (làm lại luồng cho cùng email, nhập mã cũ) | MSG44 | DBR-03 | |
-| FP-14 | 🔥 | Bước 3 MK `abcdefgh` | `EXTRA_PASSWORD_RULE` | DBR-02 | |
+| FP-14 | 🔥 | Bước 3 MK `abcdefgh` | `MSG66_PASSWORD_RULE` | DBR-02 | |
 | FP-15 | 🔥 | Bước 3 nhập lại không khớp | MSG47 | MSG47 | |
 | FP-16 | ⭐ | Bước 3 để trống | "Mật khẩu mới là bắt buộc." | MSG09 | |
 | FP-17 | 🔥 | Đang đăng nhập An ở trình duyệt B → ở trình duyệt A đặt lại MK của An | Trình duyệt B thao tác tiếp → bị về `/login` | CBR-93 | |

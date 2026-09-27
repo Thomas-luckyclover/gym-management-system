@@ -1,0 +1,84 @@
+# 07 · Đồng bộ System Message giữa SRS III.5 và code
+
+> Mục tiêu: **1 câu thông báo = 1 mã MSG**, có cả trong SRS III.5 lẫn `Messages.java`. Không còn câu viết cứng trong Servlet/Service.
+> Trạng thái 27/09/2026, nhánh `dev_mb1_MinhLC`.
+
+---
+
+## 1. Kết quả đối chiếu (trước khi sửa)
+
+| Chiều lệch | Có những gì | Đã xử lý |
+|---|---|---|
+| SRS có, code **chưa có** | MSG62–65 (số lần nhập / gửi lại mã còn lại) | ✅ Thêm vào `Messages.java` và hiển thị ở `/forgot-password` bước 2 |
+| Code có, SRS **chưa có** | 7 hằng `EXTRA_*` + các câu viết cứng trong `AccountSettingsService`, `RegistrationService`, `RegisterServlet`, `BlogService`, `BlogDetailServlet` | ✅ Gom thành **MSG66–75** (mục 3); câu trùng nghĩa với MSG có sẵn thì dùng lại MSG đó (mục 2) |
+| Cả hai có nhưng **khác định dạng** | MSG35: SRS "Thử lại sau `{mm:ss}`", code "Thử lại sau n phút" | ✅ Code hiện `04:32` (`AuthService.formatMinutesSeconds`) |
+
+---
+
+## 2. Câu viết cứng → dùng lại MSG đã có trong SRS
+
+| Chỗ trong code | Câu cũ (viết cứng) | Giờ dùng |
+|---|---|---|
+| `AccountSettingsService` | "Vui lòng nhập mật khẩu hiện tại." | `MSG09_REQUIRED` + "Mật khẩu hiện tại" |
+| `AccountSettingsService` | "Vui lòng nhập mật khẩu mới." / "…nhập lại mật khẩu mới." | `MSG09_REQUIRED` |
+| `AccountSettingsService` | "Không tìm thấy tài khoản." | `MSG08_NOT_FOUND` + "tài khoản" |
+| `AccountSettingsService` | "Mật khẩu mới phải khác mật khẩu hiện tại." | `MSG48_PASSWORD_SAME_AS_OLD` |
+| `AccountSettingsService` | "Mật khẩu nhập lại không khớp." | `MSG47_PASSWORD_MISMATCH` |
+| `AccountSettingsService` | câu lỗi hệ thống | `MSG04_SYSTEM_BUSY` |
+| `AccountSettingsServlet` | "Đổi mật khẩu thành công." | `MSG49_PASSWORD_CHANGED` |
+| `RegistrationService` (2 chỗ) | "Vui lòng nhập lại mật khẩu." | `MSG09_REQUIRED` + "Nhập lại mật khẩu" |
+| `RegisterServlet` (2 chỗ) | "Đã gửi lại mã xác thực tới …" | `MSG45_CODE_RESENT` |
+
+---
+
+## 3. Các dòng cần THÊM vào bảng SRS III.5 (copy vào Drive)
+
+Quy ước placeholder giống các dòng cũ của SRS: `{n}` số, `{min}`/`{max}` giới hạn, `{P-xx}` tham số hệ thống.
+
+| # | Mã | Hiển thị | Ngữ cảnh (màn / khi nào) | Nội dung (VI) | Nội dung (EN) | Hằng trong code |
+|---|---|---|---|---|---|---|
+| 66 | MSG66 | Inline dưới ô Mật khẩu | Đăng ký, Kích hoạt, Quên MK bước 3, Đặt MK qua link, Đổi MK — mật khẩu sai DBR-02 | Mật khẩu phải dài {min}–{max} ký tự, gồm cả chữ và số. | Password must be {min}–{max} characters and contain both letters and digits. | `MSG66_PASSWORD_RULE` |
+| 67 | MSG67 | Inline dưới ô Họ tên | Đăng ký — họ tên có ký tự lạ (DBR-01) | Họ tên chỉ gồm chữ cái, khoảng trắng, dấu nháy đơn hoặc gạch nối. | Full name may contain only letters, spaces, apostrophes or hyphens. | `MSG67_FULL_NAME_RULE` |
+| 68 | MSG68 | Inline dưới ô Mã | Mọi màn nhập mã — không đúng 6 chữ số (DBR-03); **không** tính là 1 lần sai | Mã xác thực gồm đúng 6 chữ số. | The verification code must be exactly 6 digits. | `MSG68_CODE_FORMAT` |
+| 69 | MSG69 | Inline dưới ô Ngày sinh | Đăng ký — tuổi vượt giới hạn (DBR-04) | Ngày sinh không hợp lệ (tuổi không quá {n}). | Invalid date of birth (age must not exceed {n}). | `MSG69_DOB_TOO_OLD` |
+| 70 | MSG70 | Toast lỗi | Bấm Gửi lại mã khi chưa đủ 60 giây (CBR-94) | Vui lòng chờ {n} giây nữa rồi bấm Gửi lại mã. | Please wait {n} more seconds before resending the code. | `MSG70_CODE_RESEND_TOO_SOON` |
+| 71 | MSG71 | Trang lỗi / toast | Mở link đặt mật khẩu đã dùng, hết hạn {P-xx} hoặc sai (CBR-24, CBR-31) | Link đặt mật khẩu không còn hiệu lực. Vui lòng dùng Quên mật khẩu để đặt lại. | This password setup link is no longer valid. Please use Forgot password to reset it. | `MSG71_SETUP_LINK_INVALID` |
+| 72 | MSG72 | Toast thành công (trang Đăng nhập) | Đặt mật khẩu qua link thành công | Đã đặt mật khẩu. Vui lòng đăng nhập. | Your password has been set. Please log in. | `MSG72_PASSWORD_SET` |
+| 73 | MSG73 | Inline dưới ô Mật khẩu hiện tại | Đổi MK (UC-04) — mật khẩu hiện tại sai | Mật khẩu hiện tại không đúng. | The current password is incorrect. | `MSG73_CURRENT_PASSWORD_WRONG` |
+| 74 | MSG74 | Inline dưới ô Họ tên | Đăng ký — độ dài họ tên sai (DBR-01) | Họ và tên phải từ {min} đến {max} ký tự. | Full name must be {min}–{max} characters. | `MSG74_FULL_NAME_LENGTH` |
+| 75 | MSG75 | Toast cảnh báo, về danh sách Blog | Mở bài viết đã ẩn/xóa/không tồn tại (CBR-100) | Bài viết này không còn hiển thị. | This post is no longer available. | `MSG75_POST_UNAVAILABLE` |
+
+---
+
+## 4. Việc nhỏ cần sửa trong SRS
+
+1. **MSG62–65** trên Drive đang ghi `%d` (cú pháp Java). Đổi thành placeholder của SRS cho thống nhất:
+   - MSG62 "Bạn còn **{n}** lần nhập mã."
+   - MSG63 "Nhập sai thêm 1 lần, xác thực cho email này sẽ bị khóa **{P-18}** phút."
+   - MSG64 "Còn **{n}** lần gửi lại mã trong 60 phút."
+   - MSG65 "Đã hết lượt gửi lại. Gửi thêm sẽ khóa xác thực **{P-18}** phút."
+2. **MSG35** giữ đúng `{mm:ss}`, code đã theo.
+3. Mục 1.3.2 (màn Quên mật khẩu, bước nhập mã): thêm 1 dòng "Dưới ô mã hiện MSG62/MSG63; dưới nút Gửi lại mã hiện MSG64/MSG65; khi email bị khóa chỉ hiện MSG61."
+
+---
+
+## 5. Cách code dùng message (để trả lời khi thầy hỏi)
+
+- **Server:** mọi câu nằm trong `com.gms.constant.Messages`. Câu có số thì dùng `String.format(Messages.MSGxx, …)`. Số lấy từ `AppConstants` hoặc `SystemConfigService` (P-xx), không gõ tay.
+- **Client:** `js/common.js` có object `MESSAGES`. Đây chỉ là **tập con** các câu JS cần để báo lỗi tức thì (MSG09, MSG11, MSG13, MSG47, MSG66–69…). Tên khóa giống hệt bên Java, nên đổi câu thì sửa cả 2 nơi.
+- **Kiểm tra nhanh còn câu viết cứng không:**
+  `grep -rn 'fail("' src/main/java` và `grep -rn 'setFlashToast(request, "[a-z]*", "' src/main/java` → không được ra câu tiếng Việt nào.
+
+## 6. Lưu ý cho cả nhóm
+
+Các hằng `EXTRA_*` **đã đổi tên** thành `MSG66–72`. Nhánh nào còn dùng tên cũ sẽ lỗi biên dịch khi merge. Cách sửa: tìm `EXTRA_` rồi thay theo bảng dưới.
+
+| Tên cũ | Tên mới |
+|---|---|
+| `EXTRA_PASSWORD_RULE` | `MSG66_PASSWORD_RULE` |
+| `EXTRA_FULL_NAME_RULE` | `MSG67_FULL_NAME_RULE` |
+| `EXTRA_CODE_FORMAT` | `MSG68_CODE_FORMAT` |
+| `EXTRA_DOB_TOO_OLD` | `MSG69_DOB_TOO_OLD` |
+| `EXTRA_CODE_RESEND_TOO_SOON` | `MSG70_CODE_RESEND_TOO_SOON` |
+| `EXTRA_SETUP_LINK_INVALID` | `MSG71_SETUP_LINK_INVALID` |
+| `EXTRA_PASSWORD_SET` | `MSG72_PASSWORD_SET` |

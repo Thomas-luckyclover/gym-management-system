@@ -79,26 +79,30 @@
 
 | # | Mức | Vấn đề | Ở đâu | Rủi ro | Cách sửa | Gợi ý người làm |
 |---|---|---|---|---|---|---|
-| F1 | 🔴 Cao | Kích hoạt hồ sơ (Claim) **không cần mã** | `RegistrationService.handleExistingPhone` → `claimExistingAccount` | Ai biết SĐT + email người khác là chiếm hồ sơ + gói tập của họ | Thêm bước OTP (Purpose Claim, gửi tới **email hồ sơ**), lưu "đơn chờ" trong session (MK đã hash), xác nhận mới tạo TK | Hoàng / Minh |
-| F2 | 🔴 Cao | Đăng ký mới **không xác minh email** | `RegistrationService.register` | Tạo TK bằng email người khác; vi phạm UC-05/API-03 | OTP SignUp như F1; kiểm trùng lại lúc xác nhận | Hoàng |
-| F3 | 🟠 | Claim đổi Customer **New → Active** | `updateCustomerStatusToActive` | Sai DBR-34/CBR-01 (Active chỉ khi đã thanh toán) → sai check-in, báo cáo | Bỏ câu UPDATE | Hoàng |
+| F1 | ✅ Đã sửa (`6f2511e`) | Kích hoạt hồ sơ (Claim) **không cần mã** | `RegistrationService.handleExistingPhone` → `claimExistingAccount` | Ai biết SĐT + email người khác là chiếm hồ sơ + gói tập của họ | Thêm bước OTP (Purpose Claim, gửi tới **email hồ sơ**), lưu "đơn chờ" trong session (MK đã hash), xác nhận mới tạo TK | Hoàng / Minh |
+| F2 | ✅ Đã sửa (`6f2511e`) | Đăng ký mới **không xác minh email** | `RegistrationService.register` | Tạo TK bằng email người khác; vi phạm UC-05/API-03 | OTP SignUp như F1; kiểm trùng lại lúc xác nhận | Hoàng |
+| F3 | ✅ Đã sửa (`6f2511e`) | Claim đổi Customer **New → Active** | `updateCustomerStatusToActive` | Sai DBR-34/CBR-01 (Active chỉ khi đã thanh toán) → sai check-in, báo cáo | Bỏ câu UPDATE | Hoàng |
 | F4 | 🟠 | Đổi email/SĐT chưa nối servlet; khi nối phải **lưu giá trị mới chờ xác minh trong session** | `ContactChangeService.verifyAndApply(newValue)` nhận `newValue` từ ngoài | Nếu lấy từ form: xin mã cho email X rồi lưu email Y chưa xác minh | Servlet `/account/update-profile`, `/account/verify-change`; newValue lấy từ session; kiểm trùng lần 2 (CBR-110) | Vũ / Penguin336 |
 | F5 | 🟠 | Tab Hồ sơ của PT, Lễ tân, Khách chưa tích hợp; tab phụ thuộc chưa có dữ liệu | `account-settings.jsp`, `configureRoleView` | Demo #4 thiếu | Include fragment còn lại; query Dependent theo `GuardianPhone/GuardianPhone2` | Vũ |
 | F6 | 🟡 | P-17/P-18 viết cứng ở đăng nhập; `LocalDateTime.now()` thay vì `DateTimeUtil.now()` | `AuthService` | Manager đổi tham số không có tác dụng (GBR-04); server khác múi giờ → khóa lệch giờ | Đọc `SystemConfigService`; dùng `DateTimeUtil.now()` (UTC+7) | Nhân |
-| F7 | 🟡 | Đồng hồ khóa đăng nhập làm tròn phút | `AuthService` B4 + `LoginServlet.extractLockSecondsLeft` | Lệch GBR-27 (mm:ss) | Trả số giây còn lại trong `LoginResult`/attribute thay vì parse câu thông báo | Nhân |
+| F7 | ✅ Đã sửa (MSG35 dạng mm:ss) | Đồng hồ khóa đăng nhập làm tròn phút | `AuthService` B4 + `LoginServlet.extractLockSecondsLeft` | Lệch GBR-27 (mm:ss) | Trả số giây còn lại trong `LoginResult`/attribute thay vì parse câu thông báo | Nhân |
 | F8 | 🟡 | Khác biệt MSG33 vs MSG34 lộ email là **khách có TK** | `AuthService` | Dò được email khách (MSG33 có "còn n lần") | Chấp nhận theo SRS, hoặc khi không tìm thấy TK vẫn trả câu dạng MSG33 | Nhóm chốt |
 | F9 | 🟡 | MSG41 ở Quên MK lộ email có TK | `requestCode` B2 | Dò email | Đã chốt giữ theo luật — nêu được phương án "Nếu email tồn tại, mã đã được gửi" | — |
 | F10 | 🟡 | Chưa có **CSRF token** cho form POST; `/logout` nhận cả GET | Toàn hệ thống | Trang lạ có thể gửi form thay người dùng | Token ngẫu nhiên trong session + hidden input, kiểm ở 1 Filter; `/logout` chỉ POST | Minh |
 | F11 | 🟡 | Chưa có AuditLog (GBR-07, CBR-113) | `PasswordRecoveryService` (TODO), đổi email/SĐT | Không truy vết thao tác nhạy cảm | `AuditLogService.log(accountId, action, entity, field, old, new, reason)`; MK/mã để trống | Minh |
 | F12 | 🟡 | Thiếu filter `/staff/*` | `filter/` | Khu dùng chung chưa phân quyền | `StaffAreaFilter` cho phép PT + Receptionist | Minh |
 | F13 | 🟡 | Avatar: tin `contentType` trình duyệt, 5 MB, chưa kiểm px/cắt; lưu trong `getRealPath` (mất khi redeploy) | `AccountSettingsService.updateAvatar` | File giả ảnh; lệch DBR-65; mất ảnh khi deploy lại | Đọc bằng `ImageIO` (null = không phải ảnh), 2 MB, 200–2000 px, resize 256×256; thư mục upload ngoài webapp (`app.upload-dir`) | Vũ |
-| F14 | 🟡 | Câu thông báo đổi MK viết cứng | `AccountSettingsService.changePassword` | Lệch `Messages` | Dùng MSG47/48/49, EXTRA_PASSWORD_RULE | Vũ |
+| F14 | 🟡 | Câu thông báo đổi MK viết cứng | `AccountSettingsService.changePassword` | Lệch `Messages` | Dùng MSG47/48/49, MSG66_PASSWORD_RULE | Vũ |
 | F15 | 🟢 | `application.properties.example` bị xóa **lần 3** trên develop (commit `83b706b`) | `src/main/resources/` | Người mới không biết cấu hình | Khôi phục + nhắc nhóm không `git add -A` | Minh |
 | F16 | 🟢 | Thiếu khóa `mail.app-password` → 500 thay vì chế độ DEV | `EmailGateway.send` B1 | Khó chịu khi cài máy mới | `AppConfig.get("mail.app-password", "")` | Minh |
 | F17 | 🟢 | Link đặt MK: `markUsed` ngoài transaction | `setPasswordByLink` | 2 tab gửi cùng lúc có thể cùng qua | `UPDATE … WHERE UsedAt IS NULL` trong cùng TX, kiểm số dòng | Minh |
 | F18 | 🟢 | Chưa có rate limit theo IP; chạy HTTP ở local | Hạ tầng | Brute-force nhiều TK; nghe lén khi deploy | Rate limit ở Filter; bật HTTPS + cookie `Secure`, `HttpOnly`, `SameSite` khi deploy | — |
-| F19 | 🟢 | Bước 1 đăng ký chỉ kiểm định dạng SĐT, các nhánh UC-IDENT chạy ở bước 2 | `RegisterServlet.handlePhoneStep` | Khác SRS 1.2.1 (khách nhập hết thông tin mới biết SĐT đã có TK) | Gọi `PersonDAO.findByPhone` ngay ở bước 1 để rẽ nhánh sớm | Hoàng |
+| F19 | ✅ Đã sửa (`checkPhone` ở bước 1) | Bước 1 đăng ký chỉ kiểm định dạng SĐT, các nhánh UC-IDENT chạy ở bước 2 | `RegisterServlet.handlePhoneStep` | Khác SRS 1.2.1 (khách nhập hết thông tin mới biết SĐT đã có TK) | Gọi `PersonDAO.findByPhone` ngay ở bước 1 để rẽ nhánh sớm | Hoàng |
 | F20 | 🟢 | Đầu số nhà mạng P-16 chưa kiểm | `ValidationUtil.hasValidPhonePrefix` chưa được gọi | SĐT `0123…` vẫn hợp lệ | Chốt nơi lưu P-16 rồi gọi | Nhóm |
+| F21 | ✅ Đã làm | Màn nhập mã không cho biết còn mấy lần | `VerificationCodeService.getAttemptInfo` → `ForgotPasswordServlet.setAttemptHints` → JSP | Người dùng bị khóa bất ngờ | Hiện MSG62–65 (đã có trong SRS III.5) | Minh |
+| F22 | ✅ Đã làm | Message code lệch SRS: 7 hằng `EXTRA_*` + nhiều câu viết cứng; MSG35 hiện "n phút" thay vì mm:ss | `Messages.java`, các Service/Servlet | Tài liệu và code không khớp | Đổi thành MSG66–75, bổ sung vào SRS (xem `07_DONG_BO_MESSAGE_SRS_CODE.md`); MSG35 dạng `04:32` | Minh |
+| F23 | 🔴 Cao | Bước `claim-password` **không kiểm tra đã xác minh mã** | `RegisterServlet.handleClaimPasswordStep` lấy `phone` từ ô ẩn rồi gọi `claimAccount` | POST thẳng `step=claim-password` + SĐT người khác là chiếm hồ sơ | Sau `verifyCode` thành công, lưu `claimVerifiedPhone` vào **session**; bước đặt MK chỉ đọc SĐT từ session, dùng xong xóa | Hoàng |
+| F24 | 🟠 | Mật khẩu gốc nằm trong `<input type="hidden" name="password">` ở trang nhập mã SignUp | `register.jsp` (bước `otp`) | Lộ MK qua View Source / cache trình duyệt; client sửa được giữa chừng | Lưu "đơn đăng ký chờ" trong session (MK đã BCrypt) thay vì ô ẩn | Hoàng |
 
 ---
 

@@ -86,10 +86,10 @@ Bước 1: nhập SĐT (10 số, bắt đầu 0) ──► tìm Person đang ho�
 | Mã | Luật | Trạng thái code |
 |---|---|---|
 | UC-05 | Khách tự đăng ký online; SĐT/email kiểm tra trùng | ✅ |
-| SRS 1.2 | **2 bước**: kiểm SĐT → nhập thông tin | 🟡 có 2 bước giao diện, nhưng bước 1 chỉ kiểm **định dạng**; mọi nhánh UC-IDENT chạy ở bước 2 |
-| CBR-20 | Nhánh kích hoạt phải **gửi mã tới email hồ sơ** trước khi gắn tài khoản | 🔴 **đang gắn tài khoản KHÔNG cần mã** → ai biết SĐT + email của người khác là chiếm được hồ sơ |
-| UC-05 / API-03 | Tài khoản mới cũng phải xác minh mã email; **gửi email lỗi → không tạo gì** | 🔴 chưa có bước OTP |
-| DBR-34 / CBR-01 | Hồ sơ mới trạng thái **New**; chỉ thành Active khi **thanh toán gói đầu tiên** | 🟡 tạo mới đúng New; nhưng nhánh Claim đang **đổi New → Active** (sai) |
+| SRS 1.2 | **2 bước**: kiểm SĐT → nhập thông tin; nhánh kích hoạt riêng | ✅ (cập nhật 27/09) bước 1 tra SĐT ngay (`checkPhone`) → `form` / `claim-email` / `blocked-account` / `blocked-no-email` |
+| CBR-20 | Nhánh kích hoạt phải **gửi mã tới email hồ sơ** trước khi gắn tài khoản | 🟡 (27/09) đã có bước `claim-email` → mã Claim → `claim-otp` → `claim-password`. **Nhưng** bước `claim-password` không kiểm tra đã xác minh mã (SĐT/email lấy từ ô ẩn) → POST thẳng `step=claim-password` vẫn chiếm được hồ sơ (F23) |
+| UC-05 / API-03 | Tài khoản mới cũng phải xác minh mã email; **gửi email lỗi → không tạo gì** | 🟡 (27/09) đã có OTP SignUp; nhưng mật khẩu gốc được giữ trong **ô ẩn của HTML** giữa các bước (F24) |
+| DBR-34 / CBR-01 | Hồ sơ mới trạng thái **New**; chỉ thành Active khi **thanh toán gói đầu tiên** | ✅ (27/09) đã bỏ `updateCustomerStatusToActive`; Claim giữ nguyên New |
 | CBR-25/26/27 | 3 nhánh dừng (email khác / đã có TK / không email) | ✅ |
 | CBR-28 | Số giám hộ của Dependent không chặn, không kích hoạt | ✅ (`findByPhone` chỉ xét `Persons.Phone`; Dependent có `Phone` NULL) |
 | CBR-23, DBR-28 | Chỉ khớp hồ sơ Inactive → tạo mới bình thường | ✅ |
@@ -102,6 +102,8 @@ Bước 1: nhập SĐT (10 số, bắt đầu 0) ──► tìm Person đang ho�
 Mẹo nhớ 4 nhánh SĐT trùng: **"Có TK → Đăng nhập · Không email → Ra quầy · Email khác → Che email · Email khớp → Gửi mã"**.
 
 ---
+
+> **Cập nhật 27/09 (commit `6f2511e` của Hoàng):** `RegisterServlet` đã làm theo đúng cây quyết định ở B.1: bước `phone` → (`form` → `otp` → `success`) hoặc (`claim-email` → `claim-otp` → `claim-password` → `success`). Nhánh Claim chỉ hỏi email, sau khi đúng mã mới hiện hồ sơ và cho đặt mật khẩu. Còn 2 lỗi bảo mật cần sửa: **F23** (bỏ qua được bước mã ở nhánh Claim) và **F24** (mật khẩu gốc nằm trong ô ẩn HTML). Chi tiết ở `05`.
 
 ## C. BỘ MÁY MÃ OTP DÙNG CHUNG — `VerificationCodeService` (CBR-94)
 
@@ -119,6 +121,23 @@ Dùng cho 4 mục đích: `SignUp`, `Claim`, `Recovery`, `EmailChange` (+ `Passw
 
 Thứ tự kiểm tra khi **xin mã**: `Đang khóa? → Chưa đủ 60s? → Lần thứ 5/giờ? → Sinh mã → GỬI MAIL → ghi DB`.
 Thứ tự kiểm tra khi **nhập mã**: `Đúng 6 số? → Đang khóa? → Mã mới nhất còn dùng được (chưa dùng / chưa hủy / chưa hết hạn)? → So mã (sai: +1, đủ 5 khóa) → Đúng: đánh dấu UsedAt`.
+
+**Số lần còn lại hiển thị trên màn nhập mã (MSG62–MSG65, đã code ở Quên mật khẩu bước 2 — `VerificationCodeService.getAttemptInfo`):**
+
+| Dòng gợi ý | Công thức | Khi nào đổi sang cảnh báo |
+|---|---|---|
+| MSG62 "Bạn còn N lần nhập mã." (dưới ô mã) | N = P-17 − `FailedAttempts` của mã mới nhất | N = 1 → MSG63 "Nhập sai thêm 1 lần … sẽ bị khóa 5 phút." (màu cảnh báo) |
+| MSG64 "Còn M lần gửi lại mã trong 60 phút." (dưới nút Gửi lại mã) | M = (P-17 − 1) − số mã đã gửi cho email trong 60 phút | M = 0 → MSG65 "Đã hết lượt gửi lại. Gửi thêm sẽ khóa…" |
+| (không hiện gì) | Email đang bị khóa | Chỉ hiện MSG61 |
+
+| Lần nào được tính vào "5 lần/giờ" | Có tính? |
+|---|---|
+| Lần bấm "Gửi mã xác thực" đầu tiên ở bước 1 | ✅ (vì vậy vừa vào bước 2 đã thấy "Còn 3 lần gửi lại") |
+| Mỗi lần "Gửi lại mã" thành công | ✅ |
+| Bấm khi chưa đủ 60 giây · gửi email lỗi (MSG04) | ❌ (không ghi dòng mã nào) |
+| Mã gửi quá 60 phút trước | ❌ (ra khỏi cửa sổ đếm) |
+
+Mỗi **mã** có 5 lần nhập (lần 5 sai mới khóa); mỗi **giờ** có 4 mã (lần xin thứ 5 là khóa) → tối đa khoảng 17 lần đoán/giờ trên 1.000.000 khả năng.
 
 Mẹo nhớ: **"5 – 5 – 15 – 60 – 5/giờ"** = sai 5 lần · khóa 5 phút · sống 15 phút · chờ 60 giây · xin tối đa 4 lần/giờ.
 
@@ -252,11 +271,11 @@ Danh sách hồ sơ `Dependent` có `GuardianPhone` hoặc `GuardianPhone2` = S�
 | Mật khẩu (login) | Bắt buộc, **không kiểm định dạng** — chỉ so hash | MSG09, MSG33/34 | `PasswordUtil.checkPassword` | `required` |
 | SĐT | `^0\d{9}$` + đầu số P-16 (chưa kiểm) | MSG13 · trùng MSG14 | `isValidPhone` | `data-rule="phone"` |
 | Email | `name@domain`, ≤ 100 | MSG11 · trùng MSG12 | `isValidEmail` | `data-rule="email"` |
-| Mật khẩu mới | 8–64, ≥ 1 chữ (`\p{L}`) + ≥ 1 số; khác cũ khi đổi | `EXTRA_PASSWORD_RULE`, MSG48 | `isValidPassword` | `data-rule="password"` |
+| Mật khẩu mới | 8–64, ≥ 1 chữ (`\p{L}`) + ≥ 1 số; khác cũ khi đổi | `MSG66_PASSWORD_RULE`, MSG48 | `isValidPassword` | `data-rule="password"` |
 | Nhập lại mật khẩu | Giống hệt | MSG47 | `equals` | `data-match` |
-| Họ tên | 2–50, chữ có dấu, khoảng trắng, `'`, `-` | `EXTRA_FULL_NAME_RULE` | `isValidFullName` | `data-rule="fullName"` |
-| Ngày sinh | Không tương lai, ≤ 100 tuổi | MSG15, `EXTRA_DOB_TOO_OLD` | Service | `data-rule="dateOfBirth"` |
-| Mã xác thực | `^\d{6}$` | `EXTRA_CODE_FORMAT` | `isValidVerificationCode` | `data-rule="verificationCode"` |
+| Họ tên | 2–50, chữ có dấu, khoảng trắng, `'`, `-` | `MSG67_FULL_NAME_RULE` | `isValidFullName` | `data-rule="fullName"` |
+| Ngày sinh | Không tương lai, ≤ 100 tuổi | MSG15, `MSG69_DOB_TOO_OLD` | Service | `data-rule="dateOfBirth"` |
+| Mã xác thực | `^\d{6}$` | `MSG68_CODE_FORMAT` | `isValidVerificationCode` | `data-rule="verificationCode"` |
 
 Nguyên tắc: **trim** mọi chuỗi trước khi kiểm/lưu — **trừ mật khẩu** (giữ nguyên từng ký tự). Mật khẩu **không bao giờ** in log, gửi email, trả về giao diện.
 
@@ -274,8 +293,8 @@ GBR-01 tiếng Việt, dd/mm/yyyy, HH:mm, UTC+7 · GBR-13 server kiểm lại ·
 |---|---|
 | Đăng nhập | MSG33 (còn n lần) · MSG34 (chung, NV) · MSG35 (khóa tạm) · MSG37 (ngừng hoạt động) · MSG38 (chưa có mật khẩu) · MSG39 (nhập email/SĐT) · MSG40 (đã đăng xuất) |
 | Đăng ký | MSG50 (SĐT hợp lệ) · MSG51 (đã có TK) · MSG52 (email khác, che) · MSG53 (hồ sơ không email) · MSG54 (đã tạo TK) · MSG12/13/14 (trùng/sai) |
-| Mã OTP | MSG42 (đã gửi, hiệu lực n phút) · MSG43 (sai mã) · MSG44 (hết hạn) · MSG45 (đã gửi mã mới) · MSG61 (khóa xác thực) · `EXTRA_CODE_FORMAT` · `EXTRA_CODE_RESEND_TOO_SOON` |
-| Mật khẩu | MSG46 (quá ngắn) · MSG47 (không khớp) · MSG48 (trùng cũ) · MSG49 (đã đổi, đăng xuất phiên) · `EXTRA_PASSWORD_RULE` · `EXTRA_SETUP_LINK_INVALID` · `EXTRA_PASSWORD_SET` |
+| Mã OTP | MSG42 (đã gửi, hiệu lực n phút) · MSG43 (sai mã) · MSG44 (hết hạn) · MSG45 (đã gửi mã mới) · MSG61 (khóa xác thực) · `MSG68_CODE_FORMAT` · `MSG70_CODE_RESEND_TOO_SOON` |
+| Mật khẩu | MSG46 (quá ngắn) · MSG47 (không khớp) · MSG48 (trùng cũ) · MSG49 (đã đổi, đăng xuất phiên) · `MSG66_PASSWORD_RULE` · `MSG71_SETUP_LINK_INVALID` · `MSG72_PASSWORD_SET` |
 | Tài khoản | MSG55 (mã tới email mới) · MSG56 (đã đổi email, báo email cũ) · MSG57 (đã đổi SĐT) · MSG58 (đã đổi ảnh) · MSG59 (đăng xuất thiết bị khác) · MSG60 (do quầy lễ tân cập nhật) |
 | Hệ thống | MSG04 (hệ thống bận) · MSG06 (hết phiên — AJAX 401) · MSG07 (không có quyền — AJAX 403) · MSG09 (%s là bắt buộc) |
 

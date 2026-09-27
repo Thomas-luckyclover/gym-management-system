@@ -210,11 +210,11 @@ public class RegistrationService {
         if (ValidationUtil.isNullOrEmpty(password)) {
             errors.put("password", String.format(Messages.MSG09_REQUIRED, "Mật khẩu"));
         } else if (!ValidationUtil.isValidPassword(password)) {
-            errors.put("password", String.format(Messages.EXTRA_PASSWORD_RULE, AppConstants.PASSWORD_MIN_LENGTH, AppConstants.PASSWORD_MAX_LENGTH));
+            errors.put("password", String.format(Messages.MSG66_PASSWORD_RULE, AppConstants.PASSWORD_MIN_LENGTH, AppConstants.PASSWORD_MAX_LENGTH));
         }
 
         if (ValidationUtil.isNullOrEmpty(confirmPassword)) {
-            errors.put("confirmPassword", "Vui lòng nhập lại mật khẩu.");
+            errors.put("confirmPassword", String.format(Messages.MSG09_REQUIRED, "Nhập lại mật khẩu"));
         } else if (password != null && !password.equals(confirmPassword)) {
             errors.put("confirmPassword", Messages.MSG47_PASSWORD_MISMATCH);
         }
@@ -406,9 +406,10 @@ public class RegistrationService {
         if (ValidationUtil.isNullOrEmpty(fullName)) {
             errors.put("fullName", String.format(Messages.MSG09_REQUIRED, "Họ và tên"));
         } else if (!ValidationUtil.isLengthValid(fullName, 2, 50)) {
-            errors.put("fullName", "Họ và tên phải từ 2 đến 50 ký tự.");
+            errors.put("fullName", String.format(Messages.MSG74_FULL_NAME_LENGTH,
+                    AppConstants.FULL_NAME_MIN_LENGTH, AppConstants.FULL_NAME_MAX_LENGTH));
         } else if (!ValidationUtil.isValidFullName(fullName)) {
-            errors.put("fullName", Messages.EXTRA_FULL_NAME_RULE);
+            errors.put("fullName", Messages.MSG67_FULL_NAME_RULE);
         }
 
         // Ngày sinh
@@ -419,7 +420,7 @@ public class RegistrationService {
         } else {
             int age = DateTimeUtil.calculateAge(dob, DateTimeUtil.today());
             if (age > 100) {
-                errors.put("dateOfBirth", String.format(Messages.EXTRA_DOB_TOO_OLD, 100));
+                errors.put("dateOfBirth", String.format(Messages.MSG69_DOB_TOO_OLD, 100));
             }
         }
 
@@ -443,12 +444,12 @@ public class RegistrationService {
         if (ValidationUtil.isNullOrEmpty(password)) {
             errors.put("password", String.format(Messages.MSG09_REQUIRED, "Mật khẩu"));
         } else if (!ValidationUtil.isValidPassword(password)) {
-            errors.put("password", String.format(Messages.EXTRA_PASSWORD_RULE, AppConstants.PASSWORD_MIN_LENGTH, AppConstants.PASSWORD_MAX_LENGTH));
+            errors.put("password", String.format(Messages.MSG66_PASSWORD_RULE, AppConstants.PASSWORD_MIN_LENGTH, AppConstants.PASSWORD_MAX_LENGTH));
         }
 
         // Nhập lại mật khẩu
         if (ValidationUtil.isNullOrEmpty(confirmPassword)) {
-            errors.put("confirmPassword", "Vui lòng nhập lại mật khẩu.");
+            errors.put("confirmPassword", String.format(Messages.MSG09_REQUIRED, "Nhập lại mật khẩu"));
         } else if (password != null && !password.equals(confirmPassword)) {
             errors.put("confirmPassword", Messages.MSG47_PASSWORD_MISMATCH);
         }

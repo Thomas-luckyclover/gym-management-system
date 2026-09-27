@@ -119,14 +119,14 @@ public class BlogService {
     public ServiceResult<BlogPostDetailView> getActiveBlogDetail(int blogPostId) {
         // B1: kiểm tra ID hợp lệ
         if (blogPostId <= 0) {
-            return ServiceResult.fail("Bài viết này không còn hiển thị.");
+            return ServiceResult.fail(Messages.MSG75_POST_UNAVAILABLE);
         }
 
         try {
             // B2: truy vấn bài viết đang đăng từ cơ sở dữ liệu
             BlogPost post = blogPostDAO.findActiveById(blogPostId);
             if (post == null) {
-                return ServiceResult.fail("Bài viết này không còn hiển thị.");
+                return ServiceResult.fail(Messages.MSG75_POST_UNAVAILABLE);
             }
 
             // B3: bổ sung tóm tắt, ảnh bìa mặc định và tính thời gian đọc
@@ -163,13 +163,13 @@ public class BlogService {
      */
     public ServiceResult<BlogPost> getActiveBlogPostById(int blogPostId) {
         if (blogPostId <= 0) {
-            return ServiceResult.fail("Bài viết này không còn hiển thị.");
+            return ServiceResult.fail(Messages.MSG75_POST_UNAVAILABLE);
         }
 
         try {
             BlogPost post = blogPostDAO.findActiveById(blogPostId);
             if (post == null) {
-                return ServiceResult.fail("Bài viết này không còn hiển thị.");
+                return ServiceResult.fail(Messages.MSG75_POST_UNAVAILABLE);
             }
             enrichPost(post);
             return ServiceResult.ok(post);

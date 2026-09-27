@@ -305,7 +305,7 @@ public class RegisterServlet extends HttpServlet {
 
         String errorForOtp = sendResult.isSuccess() ? null : sendResult.getMessage();
         if (sendResult.isSuccess()) {
-            req.setAttribute("successMessage", "Đã gửi lại mã xác thực tới " + maskEmail(email) + ".");
+            req.setAttribute("successMessage", Messages.MSG45_CODE_RESENT);
         }
         forwardToOtpStep(req, resp, phone, email, fullName, dobString,
                 registerMode, password, errorForOtp);
@@ -459,7 +459,7 @@ public class RegisterServlet extends HttpServlet {
 
         String errorForOtp = sendResult.isSuccess() ? null : sendResult.getMessage();
         if (sendResult.isSuccess()) {
-            req.setAttribute("successMessage", "Đã gửi lại mã xác thực tới " + maskEmail(email) + ".");
+            req.setAttribute("successMessage", Messages.MSG45_CODE_RESENT);
         }
         forwardToClaimOtpStep(req, resp, phone, email, errorForOtp);
     }

@@ -256,7 +256,7 @@ ForgotPasswordServlet.handleSend(request, response, session)
 │           B2  VerificationCodeDAO.findLockedUntil(email, now)  [DB]  SELECT MAX(LockedUntil) WHERE Email=? AND LockedUntil > now
 │               ≠ null → fail(MSG61 "…khóa 5 phút. Thử lại sau mm:ss")      (formatRemainingTime)
 │           B3  latest = VerificationCodeDAO.findLatestByEmailAndPurpose(email, RECOVERY)  [DB] TOP 1 ORDER BY SentAt DESC
-│               now < latest.SentAt + 60s → fail(EXTRA_CODE_RESEND_TOO_SOON "Vui lòng chờ n giây…")
+│               now < latest.SentAt + 60s → fail(MSG70_CODE_RESEND_TOO_SOON "Vui lòng chờ n giây…")
 │           B4  sentCount = VerificationCodeDAO.countCodesSentSince(email, now − 60')  [DB] COUNT(*) WHERE Code IS NOT NULL
 │               sentCount + 1 ≥ 5 → VerificationCodeDAO.lockCode(latest.id, now + 5')  [DB] → fail(MSG61)
 │           B5  code = SecureCodeUtil.generateVerificationCode()   → SecureRandom.nextInt(1_000_000) → "%06d" (giữ số 0 đầu)
@@ -288,7 +288,7 @@ ForgotPasswordServlet.handleVerify
 │ email = session.recoveryEmail  (null → redirect về đầu)
 │ code  = getTrimmedParam("code")
 ├─► PasswordRecoveryService.verifyCode(email, code) ─► VerificationCodeService.verifyCode(email, RECOVERY, code)
-│     B1  !ValidationUtil.isValidVerificationCode(code)  → failField("code", EXTRA_CODE_FORMAT)   (không cần hỏi DB)
+│     B1  !ValidationUtil.isValidVerificationCode(code)  → failField("code", MSG68_CODE_FORMAT)   (không cần hỏi DB)
 │     B2  now, maxAttempts = P-17, lockMinutes = P-18
 │     B3  findLockedUntil(email, now) ≠ null → fail(MSG61)
 │     B4  latest = findLatestByEmailAndPurpose(email, RECOVERY)
@@ -318,7 +318,7 @@ ForgotPasswordServlet.handleReset
 ├─► PasswordRecoveryService.resetPassword(accountId, password, confirmPassword)
 │     B1  validateNewPassword:
 │           trống                         → failField("password", MSG09 "Mật khẩu mới là bắt buộc.")
-│           !isValidPassword (8–64 chữ+số) → failField("password", EXTRA_PASSWORD_RULE)
+│           !isValidPassword (8–64 chữ+số) → failField("password", MSG66_PASSWORD_RULE)
 │           confirm ≠ password            → failField("confirmPassword", MSG47)
 │     B2  AccountDAO.findById(accountId)  [DB]  → null hoặc Status ≠ ACTIVE → fail(MSG37)  (vừa bị Admin khóa giữa chừng)
 │     B3  savePasswordAndUnlock(accountId, password)                 ── 1 TRANSACTION ──
@@ -422,9 +422,9 @@ DB chỉ có **hash** → lộ DB cũng không dựng lại được link. Trong
 SetPasswordServlet.doGet
 │ token = getTrimmedParam("token")
 ├─► PasswordRecoveryService.checkSetupLink(token) ─► VerificationCodeService.findValidSetupLink(token)
-│     B1  token rỗng → fail(EXTRA_SETUP_LINK_INVALID)
+│     B1  token rỗng → fail(MSG71_SETUP_LINK_INVALID)
 │     B2  tokenHash = SecureCodeUtil.sha256Hex(token.trim()) → VerificationCodeDAO.findByTokenHash(tokenHash)  [DB]
-│     B3  không thấy / UsedAt ≠ null / now ≥ ExpiresAt → fail(EXTRA_SETUP_LINK_INVALID)   (cùng 1 câu, không nói lý do cụ thể)
+│     B3  không thấy / UsedAt ≠ null / now ≥ ExpiresAt → fail(MSG71_SETUP_LINK_INVALID)   (cùng 1 câu, không nói lý do cụ thể)
 │     B4  ok(setupLink)  ← CHỈ KIỂM TRA, chưa đánh dấu đã dùng
 ├─ ✔ request.token = token → form đặt mật khẩu
 └─ ✘ request.linkError → "Link không còn hiệu lực" + nút Quên mật khẩu (CBR-31)
@@ -439,7 +439,7 @@ SetPasswordServlet.doPost ─► PasswordRecoveryService.setPasswordByLink(token
 │     B3  accountId = setupLink.AccountId → AccountDAO.findById → Status phải ACTIVE (không → MSG37)
 │     B4  savePasswordAndUnlock(accountId, password)   (transaction như 3.6)
 │         VerificationCodeDAO.markUsed(linkId, now)    → link chết
-│     → ok(null, EXTRA_PASSWORD_SET "Đã đặt mật khẩu. Vui lòng đăng nhập.")
+│     → ok(null, MSG72_PASSWORD_SET "Đã đặt mật khẩu. Vui lòng đăng nhập.")
 ├─ ✔ toast + redirect /login
 ├─ ✘ lỗi dưới ô → giữ form (request.token, fieldErrors)
 └─ ✘ lỗi link/tài khoản → linkError

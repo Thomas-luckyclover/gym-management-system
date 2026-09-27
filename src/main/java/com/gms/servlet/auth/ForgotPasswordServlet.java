@@ -4,6 +4,7 @@ import com.gms.constant.AppConstants;
 import com.gms.constant.Messages;
 import com.gms.constant.SessionKey;
 import com.gms.dto.ServiceResult;
+import com.gms.dto.VerificationAttemptInfo;
 import com.gms.entity.VerificationCode;
 import com.gms.service.PasswordRecoveryService;
 import com.gms.util.DateTimeUtil;
@@ -238,6 +239,34 @@ public class ForgotPasswordServlet extends HttpServlet {
         }
         request.setAttribute("codeSecondsLeft", codeSecondsLeft);
         request.setAttribute("resendSecondsLeft", resendSecondsLeft);
+        setAttemptHints(request, email);
+    }
+
+    /**
+     * Dòng gợi ý số lần còn lại (MSG62–MSG65). Email đang bị khóa thì không hiện — chỉ để MSG61.
+     */
+    private void setAttemptHints(HttpServletRequest request, String email) {
+        ServiceResult<VerificationAttemptInfo> result = passwordRecoveryService.getRecoveryAttemptInfo(email);
+        if (!result.isSuccess() || result.getData().isLocked()) {
+            return;
+        }
+        VerificationAttemptInfo info = result.getData();
+
+        if (info.getAttemptsLeft() > 0) {
+            boolean isLastAttempt = info.getAttemptsLeft() == 1;
+            String attemptHint = isLastAttempt
+                    ? String.format(Messages.MSG63_CODE_LAST_ATTEMPT, info.getLockMinutes())
+                    : String.format(Messages.MSG62_CODE_ATTEMPTS_LEFT, info.getAttemptsLeft());
+            request.setAttribute("attemptHint", attemptHint);
+            request.setAttribute("attemptHintWarn", isLastAttempt);
+        }
+
+        boolean isNoResendLeft = info.getResendsLeft() == 0;
+        String resendHint = isNoResendLeft
+                ? String.format(Messages.MSG65_CODE_RESEND_WILL_LOCK, info.getLockMinutes())
+                : String.format(Messages.MSG64_CODE_RESENDS_LEFT, info.getResendsLeft());
+        request.setAttribute("resendHint", resendHint);
+        request.setAttribute("resendHintWarn", isNoResendLeft);
     }
 
     // ===== Hàm phụ =====

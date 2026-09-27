@@ -15,7 +15,7 @@
   <%@ include file="/WEB-INF/jsp/common/head.jspf" %>
   <title>Quên mật khẩu — Super Gym</title>
   <link rel="stylesheet" href="${pageContext.request.contextPath}/css/pages/auth/login.css">
-  <link rel="stylesheet" href="${pageContext.request.contextPath}/css/pages/auth/forgot-password.css?v=1">
+  <link rel="stylesheet" href="${pageContext.request.contextPath}/css/pages/auth/forgot-password.css?v=2">
   <script src="${pageContext.request.contextPath}/js/pages/auth/forgot-password.js?v=1" defer></script>
 </head>
 <body class="theme-guest-dark auth-dark">
@@ -97,6 +97,10 @@
                      required data-label="Mã xác thực" data-rule="verificationCode" autofocus>
               <span class="field-error" id="codeError"
                     <c:if test="${empty fieldErrors.code}">hidden</c:if>><c:out value="${fieldErrors.code}" /></span>
+              <%-- MSG62 / MSG63: số lần còn nhập mã (Servlet tính, ẩn khi email đang bị khóa) --%>
+              <c:if test="${not empty attemptHint}">
+                <span class="field-hint recovery-hint ${attemptHintWarn ? 'recovery-hint--warn' : ''}"><c:out value="${attemptHint}" /></span>
+              </c:if>
             </label>
             <button class="btn btn-primary btn-block" type="submit">Xác nhận</button>
           </form>
@@ -112,6 +116,10 @@
               <i class="fa-solid fa-pen"></i> Dùng email khác
             </a>
           </div>
+          <%-- MSG64 / MSG65: số lần còn gửi lại mã trong 60 phút --%>
+          <c:if test="${not empty resendHint}">
+            <p class="field-hint recovery-hint ${resendHintWarn ? 'recovery-hint--warn' : ''}"><c:out value="${resendHint}" /></p>
+          </c:if>
         </c:when>
 
         <%-- ================= Bước 3: đặt mật khẩu mới ================= --%>

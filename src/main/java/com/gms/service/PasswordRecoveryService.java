@@ -5,6 +5,7 @@ import com.gms.constant.Messages;
 import com.gms.dao.AccountDAO;
 import com.gms.dao.VerificationCodeDAO;
 import com.gms.dto.ServiceResult;
+import com.gms.dto.VerificationAttemptInfo;
 import com.gms.entity.Account;
 import com.gms.entity.VerificationCode;
 import com.gms.listener.SessionRegistryListener;
@@ -101,6 +102,16 @@ public class PasswordRecoveryService {
         return verificationCodeDAO.findLatestByEmailAndPurpose(email, VerificationCode.Purpose.RECOVERY);
     }
 
+    /**
+     * Số lần còn nhập mã / còn xin mã khôi phục của email — Servlet dùng để hiện MSG62–MSG65 ở bước 2.
+     *
+     * @param email email đang khôi phục
+     * @return thành công kèm số lần còn lại; thất bại MSG04
+     */
+    public ServiceResult<VerificationAttemptInfo> getRecoveryAttemptInfo(String email) {
+        return verificationCodeService.getAttemptInfo(email, VerificationCode.Purpose.RECOVERY);
+    }
+
     // ===== Quên mật khẩu — bước 3: đặt mật khẩu mới =====
 
     /**
@@ -149,7 +160,7 @@ public class PasswordRecoveryService {
      * Kiểm tra link đặt mật khẩu còn dùng được không (chưa đánh dấu đã dùng).
      *
      * @param token token gốc trên URL
-     * @return thành công kèm dòng link; thất bại kèm EXTRA_SETUP_LINK_INVALID
+     * @return thành công kèm dòng link; thất bại kèm MSG71_SETUP_LINK_INVALID
      */
     public ServiceResult<VerificationCode> checkSetupLink(String token) {
         return verificationCodeService.findValidSetupLink(token);
@@ -162,7 +173,7 @@ public class PasswordRecoveryService {
      * @param token token gốc trên URL
      * @param newPassword mật khẩu mới
      * @param confirmPassword nhập lại mật khẩu mới
-     * @return thành công kèm EXTRA_PASSWORD_SET; thất bại kèm lý do
+     * @return thành công kèm MSG72_PASSWORD_SET; thất bại kèm lý do
      */
     public ServiceResult<Void> setPasswordByLink(String token, String newPassword, String confirmPassword) {
         // B1: link phải còn hiệu lực
@@ -190,7 +201,7 @@ public class PasswordRecoveryService {
             savePasswordAndUnlock(accountId, newPassword);
             verificationCodeDAO.markUsed(setupLink.getVerificationCodeId(), DateTimeUtil.now());
 
-            return ServiceResult.ok(null, Messages.EXTRA_PASSWORD_SET);
+            return ServiceResult.ok(null, Messages.MSG72_PASSWORD_SET);
 
         } catch (SQLException e) {
             e.printStackTrace();
@@ -210,7 +221,7 @@ public class PasswordRecoveryService {
             return ServiceResult.failField("password", String.format(Messages.MSG09_REQUIRED, "Mật khẩu mới"));
         }
         if (!ValidationUtil.isValidPassword(newPassword)) {
-            return ServiceResult.failField("password", String.format(Messages.EXTRA_PASSWORD_RULE,
+            return ServiceResult.failField("password", String.format(Messages.MSG66_PASSWORD_RULE,
                     AppConstants.PASSWORD_MIN_LENGTH, AppConstants.PASSWORD_MAX_LENGTH));
         }
         if (confirmPassword == null || !confirmPassword.equals(newPassword)) {

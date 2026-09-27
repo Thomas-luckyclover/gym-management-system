@@ -20,7 +20,7 @@ Mẹo học 1 bảng trong 5 phút: **(1)** đọc tên các cột điều kiệ
 | R3 | Trống mật khẩu | — | — | — | — | — | — | — | **MSG09** "Mật khẩu là bắt buộc." | |
 | R4 | N | **N** | — | — | — | — | — | — | **MSG34** (câu chung — không lộ "không tồn tại") | `khongtontai@gmail.com` · `lan.dang85@gmail.com` (có hồ sơ, không TK) · `tung.mai@gmail.com` (đã nhả) |
 | R5 | N | Y | **N** (Locked/Inactive) | — | — | — | — | — | **MSG37** "…đã ngừng hoạt động…" | `phuc.le@gmail.com` (Admin khóa) · `nam.ho@gms.vn` (nghỉ việc) |
-| R6 | N | Y | Y | **Y** | — | — | — | — | **MSG35** "Tài khoản bị khóa 5 phút… Thử lại sau n phút." (kể cả nhập ĐÚNG mật khẩu) | `kim.vo@gmail.com` ⏱ |
+| R6 | N | Y | Y | **Y** | — | — | — | — | **MSG35** "Tài khoản bị khóa 5 phút… Thử lại sau mm:ss." (kể cả nhập ĐÚNG mật khẩu) | `kim.vo@gmail.com` ⏱ |
 | R7 | N | Y | Y | Hết hạn khóa | … | … | … | … | Tự mở: FailedLoginCount = 0, LockedUntil = NULL → xét tiếp như R8–R13 (BR-02) | `hong.pham@yahoo.com` |
 | R8 | N | Y | Y | N | **N** (hash NULL) | — | — | — | **MSG38** + panel "Đặt mật khẩu" | `khanh.trinh@gmail.com` · `nhung.ho@gmail.com` |
 | R9 | N | Y | Y | N | Y | **Nhân viên** | N | bất kỳ | **MSG34**, không đếm, **không bao giờ khóa** | `tam.le@gms.vn` sai 10 lần |
@@ -58,26 +58,26 @@ Mẹo học 1 bảng trong 5 phút: **(1)** đọc tên các cột điều kiệ
 | # | SĐT khớp hồ sơ **Self đang hoạt động**? | Hồ sơ đó đã có tài khoản? | Hồ sơ có email? | Email nhập **trùng** email hồ sơ? | Email nhập đã thuộc người khác? | **Kết quả theo LUẬT** | **Code hiện tại** | Ví dụ seed |
 |---|---|---|---|---|---|---|---|---|
 | G1 | N (không khớp gì) | — | — | — | **Y** | **MSG12** "Email này đã được dùng…" | ✅ | SĐT mới + `bich.tran@gmail.com` |
-| G2 | N | — | — | — | N | Gửi mã **SignUp** → đúng mã → tạo Person + Customer (Self, **New**, KH-nnnn) + Account → **MSG54** | 🔴 tạo ngay, **không mã** | `0987000001` + `khach.moi@gmail.com` (mã `112233`) |
-| G3 | N (chỉ khớp hồ sơ **đã nhả**) | — | — | — | N | Như G2 (CBR-23, DBR-28) | 🔴 như G2 | `0901234512` |
-| G4 | N (chỉ khớp **số giám hộ** của Dependent) | — | — | — | N | Như G2 (CBR-28) | 🔴 như G2 | `0935000999` |
+| G2 | N | — | — | — | N | Gửi mã **SignUp** → đúng mã → tạo Person + Customer (Self, **New**, KH-nnnn) + Account → **MSG54** | ✅ (commit `6f2511e`: bước `otp`) | `0987000001` + `khach.moi@gmail.com` (mã `112233`) |
+| G3 | N (chỉ khớp hồ sơ **đã nhả**) | — | — | — | N | Như G2 (CBR-23, DBR-28) | ✅ như G2 | `0901234512` |
+| G4 | N (chỉ khớp **số giám hộ** của Dependent) | — | — | — | N | Như G2 (CBR-28) | ✅ như G2 | `0935000999` |
 | G5 | **Y** | **Y** | — | — | — | **MSG51** mời Đăng nhập / Quên mật khẩu (CBR-26) | ✅ | `0901234501` |
 | G6 | Y | N | **N** | — | — | **MSG53** mời ra quầy (CBR-27) | ✅ | `0901234505` |
 | G7 | Y | N | Y | **N** | — | **MSG52** "…email khác (ye***@gmail.com)…" (CBR-25) | ✅ | `0935000105` + email khác |
-| G8 | Y | N | Y | **Y** | — | Gửi mã **Claim** tới **email hồ sơ** → đúng mã + mật khẩu → gắn Account vào hồ sơ cũ, **giữ Status New** (CBR-20) | 🔴 gắn ngay **không mã** + đổi New→Active | `0935000105` + `yen.doan@gmail.com` (mã `445566`) |
+| G8 | Y | N | Y | **Y** | — | Gửi mã **Claim** tới **email hồ sơ** → đúng mã + mật khẩu → gắn Account vào hồ sơ cũ, **giữ Status New** (CBR-20) | 🟡 có mã Claim + giữ New, nhưng POST thẳng `step=claim-password` vẫn lọt (F23) | `0935000105` + `yen.doan@gmail.com` (mã `445566`) |
 
 ### DT-2b · Đăng ký — kiểm tra dữ liệu (chạy TRƯỚC DT-2, theo thứ tự)
 
 | # | Họ tên 2–50 | Họ tên chỉ chữ/space/'/- | Có ngày sinh | Không ở tương lai | ≤ 100 tuổi | SĐT `0`+9 số | Email hợp lệ ≤100 | Mật khẩu 8–64 chữ+số | Nhập lại khớp | **Kết quả** | Ví dụ |
 |---|---|---|---|---|---|---|---|---|---|---|---|
 | V1 | N | — | — | — | — | — | — | — | — | "Họ và tên là bắt buộc." | `A` |
-| V2 | Y | N | — | — | — | — | — | — | — | `EXTRA_FULL_NAME_RULE` | `Nguyễn Văn 2`, `@@@` |
+| V2 | Y | N | — | — | — | — | — | — | — | `MSG67_FULL_NAME_RULE` | `Nguyễn Văn 2`, `@@@` |
 | V3 | Y | Y | N | — | — | — | — | — | — | "Ngày sinh là bắt buộc." | |
 | V4 | Y | Y | Y | N | — | — | — | — | — | **MSG15** | ngày mai |
-| V5 | Y | Y | Y | Y | N | — | — | — | — | `EXTRA_DOB_TOO_OLD` | 1900 |
+| V5 | Y | Y | Y | Y | N | — | — | — | — | `MSG69_DOB_TOO_OLD` | 1900 |
 | V6 | Y | Y | Y | Y | Y | N | — | — | — | **MSG13** | `090123450`, `1901234501`, `09012345ab` |
 | V7 | … | … | … | … | … | Y | N | — | — | **MSG11** | `abc@`, SĐT ở ô email |
-| V8 | … | … | … | … | … | Y | Y | N | — | `EXTRA_PASSWORD_RULE` | `abcdefgh`, `12345678`, `abc123` |
+| V8 | … | … | … | … | … | Y | Y | N | — | `MSG66_PASSWORD_RULE` | `abcdefgh`, `12345678`, `abc123` |
 | V9 | … | … | … | … | … | Y | Y | Y | N | **MSG47** | |
 | V10 | Y | Y | Y | Y | Y | Y | Y | Y | Y | → sang DT-2 | 8 tuổi (2018) vẫn **được** đăng ký |
 
@@ -97,7 +97,7 @@ Mẹo học 1 bảng trong 5 phút: **(1)** đọc tên các cột điều kiệ
 
 | # | Đúng 6 chữ số? | Email đang khóa? | Có mã mới nhất? | Mã đã dùng? | Mã đã bị hủy (sai ≥ 5)? | Mã hết hạn? | Mã khớp? | Lần sai mới ≥ 5? | **Kết quả** | Ví dụ seed |
 |---|---|---|---|---|---|---|---|---|---|---|
-| O1 | **N** | — | — | — | — | — | — | — | `EXTRA_CODE_FORMAT` dưới ô (không hỏi DB) | `12ab`, `12345` |
+| O1 | **N** | — | — | — | — | — | — | — | `MSG68_CODE_FORMAT` dưới ô (không hỏi DB) | `12ab`, `12345` |
 | O2 | Y | **Y** | — | — | — | — | — | — | **MSG61** | `binh.ta@gmail.com` |
 | O3 | Y | N | **N** | — | — | — | — | — | **MSG44** | email chưa từng xin mã |
 | O4 | Y | N | Y | **Y** | — | — | — | — | **MSG44** (mã dùng 1 lần) | nhập lại mã vừa dùng |
@@ -106,6 +106,19 @@ Mẹo học 1 bảng trong 5 phút: **(1)** đọc tên các cột điều kiệ
 | O7 | Y | N | Y | N | N | N | **N** | N | FailedAttempts +1 → **MSG43** | `thao…` + `000000` |
 | O8 | Y | N | Y | N | N | N | N | **Y** | +1, khóa email 5' → **MSG61** | sai lần thứ 5 |
 | O9 | Y | N | Y | N | N | N | **Y** | — | `UsedAt = now` → **thành công** (trả AccountId) | `thao…` + `246810` |
+
+### DT-3/DT-4 bổ sung · Dòng gợi ý "còn mấy lần" trên màn nhập mã (MSG62–65, `getAttemptInfo`)
+
+| # | Email đang khóa? | Lần nhập còn lại N | Lần gửi lại còn lại M | **Dòng dưới ô mã** | **Dòng dưới nút Gửi lại** |
+|---|---|---|---|---|---|
+| H1 | **Y** | — | — | *(ẩn, chỉ MSG61)* | *(ẩn)* |
+| H2 | N | N ≥ 2 | — | **MSG62** "Bạn còn N lần nhập mã." | — |
+| H3 | N | **N = 1** | — | **MSG63** "Nhập sai thêm 1 lần… khóa 5 phút." (màu cảnh báo) | — |
+| H4 | N | N = 0 (mã hết hạn/đã dùng/không có) | — | *(ẩn)* | — |
+| H5 | N | — | M ≥ 1 | — | **MSG64** "Còn M lần gửi lại mã trong 60 phút." |
+| H6 | N | — | **M = 0** | — | **MSG65** "Đã hết lượt gửi lại. Gửi thêm sẽ khóa…" (màu cảnh báo) |
+
+N = 5 − `FailedAttempts` của mã mới nhất · M = 4 − số mã đã gửi trong 60 phút. Ví dụ: vừa xin mã ở bước 1 (1 mã) → "Bạn còn 5 lần nhập mã" + "Còn 3 lần gửi lại mã".
 
 Mẹo: O3–O6 **cùng 1 câu MSG44** "Mã đã hết hạn. Bấm Gửi lại mã" — người dùng chỉ cần biết "mã này không dùng được nữa".
 
@@ -130,7 +143,7 @@ Mẹo: O3–O6 **cùng 1 câu MSG44** "Mã đã hết hạn. Bấm Gửi lại m
 | P1 | **N** (POST thẳng `action=reset`) | — | — | — | — | — | Đưa về bước 1 (chặn nhảy bước) |
 | P2 | Y | **N** | — | — | — | — | Xóa tiến độ, **MSG44**, làm lại |
 | P3 | Y | Y | **Y** | — | — | — | "Mật khẩu mới là bắt buộc." (giữ bước 3) |
-| P4 | Y | Y | N | **N** | — | — | `EXTRA_PASSWORD_RULE` (giữ bước 3) |
+| P4 | Y | Y | N | **N** | — | — | `MSG66_PASSWORD_RULE` (giữ bước 3) |
 | P5 | Y | Y | N | Y | **N** | — | **MSG47** (giữ bước 3) |
 | P6 | Y | Y | N | Y | Y | **N** (vừa bị Admin khóa) | **MSG37**, về bước 1 |
 | P7 | Y | Y | N | Y | Y | Y | Lưu hash + mở khóa tạm (1 transaction) → **đăng xuất MỌI phiên** → `/login` + **MSG49** |

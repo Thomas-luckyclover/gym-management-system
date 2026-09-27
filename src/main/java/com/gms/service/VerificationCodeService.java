@@ -4,6 +4,7 @@ import com.gms.constant.AppConstants;
 import com.gms.constant.Messages;
 import com.gms.dao.VerificationCodeDAO;
 import com.gms.dto.ServiceResult;
+import com.gms.dto.VerificationAttemptInfo;
 import com.gms.entity.VerificationCode;
 import com.gms.integration.EmailGateway;
 import com.gms.integration.EmailSendException;
@@ -77,7 +78,7 @@ public class VerificationCodeService {
                 boolean isTooSoon = now.isBefore(allowedAt);
                 if (isTooSoon) {
                     long secondsLeft = Duration.between(now, allowedAt).getSeconds() + 1;
-                    return ServiceResult.fail(String.format(Messages.EXTRA_CODE_RESEND_TOO_SOON, secondsLeft));
+                    return ServiceResult.fail(String.format(Messages.MSG70_CODE_RESEND_TOO_SOON, secondsLeft));
                 }
             }
 
@@ -131,7 +132,7 @@ public class VerificationCodeService {
      *
      * Dùng khi: khách gõ mã rồi bấm "Xác nhận" (đăng ký, kích hoạt hồ sơ, quên mật khẩu, đổi email).
      * Kiểm tra lần lượt:
-     *   1. Mã gõ vào có đúng 6 chữ số không?                  → sai dạng: báo EXTRA_CODE_FORMAT dưới ô nhập
+     *   1. Mã gõ vào có đúng 6 chữ số không?                  → sai dạng: báo MSG68_CODE_FORMAT dưới ô nhập
      *   2. Email có đang bị khóa không?                        → khóa rồi: báo MSG61
      *   3. Có mã nào còn dùng được không? (chưa hết hạn, chưa dùng, chưa bị hủy) → không: báo MSG44 (bấm Gửi lại mã)
      *   4. Mã gõ vào có khớp không?
@@ -150,7 +151,7 @@ public class VerificationCodeService {
     public ServiceResult<VerificationCode> verifyCode(String email, VerificationCode.Purpose purpose, String inputCode) {
         // B1: kiểm tra dạng mã trước (không cần hỏi DB) — sai thì báo lỗi ngay dưới ô "code"
         if (!ValidationUtil.isValidVerificationCode(inputCode)) {
-            return ServiceResult.failField("code", Messages.EXTRA_CODE_FORMAT);
+            return ServiceResult.failField("code", Messages.MSG68_CODE_FORMAT);
         }
         String trimmedCode = inputCode.trim();
 
@@ -208,6 +209,52 @@ public class VerificationCodeService {
         }
     }
 
+    // ===== 2b. Số lần còn lại (hiển thị MSG62–MSG65) =====
+
+    /**
+     * Cho biết email còn nhập mã được mấy lần và còn xin mã mới được mấy lần — CHỈ ĐỌC sổ, không thay đổi gì.
+     *
+     * Dùng khi: hiện màn nhập mã, để người dùng biết trước khi bị khóa (CBR-94).
+     * Công thức khớp đúng luật trong sendCode / verifyCode:
+     *   - còn nhập được = P-17 − số lần đã sai của mã mới nhất (lần sai thứ P-17 thì khóa)
+     *   - còn xin được  = (P-17 − 1) − số mã đã gửi trong 60 phút (lần xin thứ P-17 thì khóa)
+     *
+     * Ví dụ: vừa gửi 1 mã, chưa nhập sai → còn 5 lần nhập, còn 3 lần xin mã mới.
+     *
+     * @param email email đang nhận mã
+     * @param purpose mục đích của mã
+     * @return thành công kèm số lần còn lại; thất bại MSG04 khi lỗi DB
+     */
+    public ServiceResult<VerificationAttemptInfo> getAttemptInfo(String email, VerificationCode.Purpose purpose) {
+        try {
+            // B1: giờ hiện tại + tham số P-17, P-18
+            LocalDateTime now = DateTimeUtil.now();
+            int maxAttempts = systemConfigService.getInt(SystemConfigService.MAX_FAILED_ATTEMPTS);
+            int lockMinutes = systemConfigService.getInt(SystemConfigService.LOCK_MINUTES);
+
+            // B2: email có đang bị khóa không
+            boolean isLocked = verificationCodeDAO.findLockedUntil(email, now) != null;
+
+            // B3: mã mới nhất còn nhập được mấy lần (chưa có / đã dùng / hết hạn → 0)
+            VerificationCode latestCode = verificationCodeDAO.findLatestByEmailAndPurpose(email, purpose);
+            boolean isCodeUsable = latestCode != null
+                    && latestCode.getUsedAt() == null
+                    && now.isBefore(latestCode.getExpiresAt());
+            int attemptsLeft = isCodeUsable ? Math.max(0, maxAttempts - latestCode.getFailedAttempts()) : 0;
+
+            // B4: còn xin mã mới được mấy lần trong 60 phút
+            LocalDateTime windowStart = now.minusMinutes(AppConstants.CODE_REQUEST_WINDOW_MINUTES);
+            int sentCount = verificationCodeDAO.countCodesSentSince(email, windowStart);
+            int resendsLeft = Math.max(0, (maxAttempts - 1) - sentCount);
+
+            return ServiceResult.ok(new VerificationAttemptInfo(isLocked, attemptsLeft, resendsLeft, lockMinutes));
+
+        } catch (SQLException e) {
+            e.printStackTrace();
+            return ServiceResult.fail(Messages.MSG04_SYSTEM_BUSY);
+        }
+    }
+
     // ===== 3. Kiểm tra link đặt mật khẩu =====
 
     /**
@@ -227,7 +274,7 @@ public class VerificationCodeService {
     public ServiceResult<VerificationCode> findValidSetupLink(String token) {
         // B1: URL không có token → chắc chắn không hợp lệ
         if (ValidationUtil.isNullOrEmpty(token)) {
-            return ServiceResult.fail(Messages.EXTRA_SETUP_LINK_INVALID);
+            return ServiceResult.fail(Messages.MSG71_SETUP_LINK_INVALID);
         }
 
         try {
@@ -239,12 +286,12 @@ public class VerificationCodeService {
             LocalDateTime now = DateTimeUtil.now();
             boolean isNotFound = setupLink == null;
             if (isNotFound) {
-                return ServiceResult.fail(Messages.EXTRA_SETUP_LINK_INVALID);
+                return ServiceResult.fail(Messages.MSG71_SETUP_LINK_INVALID);
             }
             boolean isUsed = setupLink.getUsedAt() != null;
             boolean isExpired = !now.isBefore(setupLink.getExpiresAt());
             if (isUsed || isExpired) {
-                return ServiceResult.fail(Messages.EXTRA_SETUP_LINK_INVALID);
+                return ServiceResult.fail(Messages.MSG71_SETUP_LINK_INVALID);
             }
 
             // B4: link còn dùng được
