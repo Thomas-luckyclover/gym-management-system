@@ -81,7 +81,7 @@ public class VerificationCodeService {
                 boolean isTooSoon = now.isBefore(allowedAt);
                 if (isTooSoon) {
                     long secondsLeft = Duration.between(now, allowedAt).getSeconds() + 1;
-                    return ServiceResult.fail(String.format(Messages.EXTRA_CODE_RESEND_TOO_SOON, secondsLeft));
+                    return ServiceResult.fail(String.format(Messages.MSG70_CODE_RESEND_TOO_SOON, secondsLeft));
                 }
             }
 
@@ -147,7 +147,7 @@ public class VerificationCodeService {
      * @param inputCode chữ khách gõ vào ô mã, VD "246810" (có thể lẫn khoảng trắng 2 đầu).
      * @return kết quả:
      *         - Thành công: kèm dòng mã vừa dùng (có AccountId, ExpiresAt để người gọi làm bước tiếp).
-     *         - Thất bại gắn ô "code": sai định dạng (EXTRA_CODE_FORMAT), sai mã (MSG43),
+     *         - Thất bại gắn ô "code": sai định dạng (MSG68_CODE_FORMAT), sai mã (MSG43),
      *           mã không còn dùng được (MSG44).
      *         - Thất bại chung: email đang khóa / vừa bị khóa do sai lần thứ 5 (MSG61), lỗi DB (MSG04).
      */
@@ -155,7 +155,7 @@ public class VerificationCodeService {
         // B1: kiểm tra dạng mã trước (không cần hỏi DB). Gõ "12ab56" hay "12345" → báo dưới ô,
         //     KHÔNG tính là 1 lần nhập sai
         if (!ValidationUtil.isValidVerificationCode(inputCode)) {
-            return ServiceResult.failField("code", Messages.EXTRA_CODE_FORMAT);
+            return ServiceResult.failField("code", Messages.MSG68_CODE_FORMAT);
         }
         String trimmedCode = inputCode.trim();
 
@@ -277,7 +277,7 @@ public class VerificationCodeService {
      * @param token chuỗi sau "?token=" trên link, VD "setup-nhung-phase1-2026".
      * @return kết quả:
      *         - Thành công: kèm dòng link (getAccountId() cho biết đặt mật khẩu cho tài khoản nào).
-     *         - Thất bại: link không tìm thấy / đã dùng / hết hạn → EXTRA_SETUP_LINK_INVALID; lỗi DB → MSG04.
+     *         - Thất bại: link không tìm thấy / đã dùng / hết hạn → MSG71_SETUP_LINK_INVALID; lỗi DB → MSG04.
      */
     public ServiceResult<VerificationCode> findValidSetupLink(String token) {
         // B1: nhờ inspectSetupLink kiểm tra; lỗi DB thì trả nguyên lỗi đó
@@ -289,7 +289,7 @@ public class VerificationCodeService {
         // B2: chỉ chấp nhận VALID; NOT_FOUND / USED / EXPIRED đều báo chung "link không còn hiệu lực"
         SetupLinkCheck check = result.getData();
         if (!check.isValid()) {
-            return ServiceResult.fail(Messages.EXTRA_SETUP_LINK_INVALID);
+            return ServiceResult.fail(Messages.MSG71_SETUP_LINK_INVALID);
         }
         return ServiceResult.ok(check.getLink());
     }

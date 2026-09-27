@@ -67,7 +67,7 @@
 | **Entity** | `com.gms.entity` | Ánh xạ 1 bảng DB (Account, Person, VerificationCode…) | Logic | `VerificationCode.Purpose` (enum SignUp/Claim/Recovery/EmailChange/PasswordSetup) |
 | **DTO** | `com.gms.dto` | Gói dữ liệu truyền giữa tầng / ra JSP | — | `ServiceResult<T>`, `LoginResult`, `JsonResponse`, `AccountSettingsView` |
 | **Util** | `com.gms.util` | Hàm tiện ích tĩnh, không trạng thái | Nghiệp vụ | `PasswordUtil`, `SecureCodeUtil`, `ValidationUtil`, `RequestUtil`, `DBContext`, `AppConfig`, `DateTimeUtil` |
-| **Constant** | `com.gms.constant` | Hằng: thông báo, key session, vai trò, giới hạn | — | `Messages` (MSG01–61 + EXTRA_*), `SessionKey`, `Role`, `AppConstants` |
+| **Constant** | `com.gms.constant` | Hằng: thông báo, key session, vai trò, giới hạn | — | `Messages` (MSG01–75, khớp SRS III.5), `SessionKey`, `Role`, `AppConstants` |
 | **Listener** | `com.gms.listener` | Nghe sự kiện của Tomcat (session tạo/hủy, gắn attribute) | — | `SessionRegistryListener` |
 | **Integration** | `com.gms.integration` | Nói chuyện với hệ thống ngoài | Nghiệp vụ | `EmailGateway` (+ `EmailSendException`), `VnPayClient` |
 | **Job** | `com.gms.job` | Việc chạy ngầm theo giờ (JOB-01…07) | — | `BackgroundJobScheduler` (`ScheduledExecutorService`) |

@@ -273,6 +273,7 @@ body.auth-dark .btn-primary:hover {
     margin-top: var(--space-0-5);
 }
 
+.phone-chip,
 .register-phone-chip {
     display: inline-flex;
     align-items: center;
@@ -286,12 +287,233 @@ body.auth-dark .btn-primary:hover {
     font-weight: var(--font-weight-bold);
 }
 
+.phone-chip a,
 .register-phone-chip a {
     color: var(--color-lime);
     text-decoration: underline;
     font-weight: var(--font-weight-semibold);
 }
 
+.phone-chip a:hover,
 .register-phone-chip a:hover {
     color: var(--color-lime-hover);
 }
+
+/* ===== Ô nhập mã OTP (6 số, font lớn) ===== */
+.otp-input {
+    letter-spacing: var(--letter-spacing-widest, 0.25em);
+    font-size: var(--font-size-2xl);
+    font-weight: var(--font-weight-bold);
+    text-align: center;
+    font-variant-numeric: tabular-nums;
+}
+
+/* ===== Banner thông báo — success (xanh lá) ===== */
+.msg-banner.success {
+    background: rgba(47, 143, 91, 0.14);
+    border: var(--border-width) solid rgba(47, 143, 91, 0.35);
+    color: #6FCB99;
+    border-radius: var(--radius-md);
+    padding: var(--space-3) var(--space-3-5);
+    font-size: var(--font-size-sm);
+    font-weight: var(--font-weight-semibold);
+    display: flex;
+    gap: var(--space-2-5);
+    align-items: flex-start;
+    margin-bottom: var(--space-4);
+    line-height: var(--line-height-snug);
+}
+
+.msg-banner.success i {
+    margin-top: var(--space-0-5);
+    flex-shrink: 0;
+}
+
+/* ===== Banner thông báo — info (xanh dương) ===== */
+.msg-banner.info {
+    background: rgba(59, 130, 246, 0.12);
+    border: var(--border-width) solid rgba(59, 130, 246, 0.30);
+    color: #93C5FD;
+    border-radius: var(--radius-md);
+    padding: var(--space-3) var(--space-3-5);
+    font-size: var(--font-size-sm);
+    display: flex;
+    gap: var(--space-2-5);
+    align-items: flex-start;
+    margin-bottom: var(--space-4);
+    line-height: var(--line-height-snug);
+}
+
+.msg-banner.info i {
+    margin-top: var(--space-0-5);
+    flex-shrink: 0;
+}
+
+/* ===== Banner thông báo — warning (vàng cam) ===== */
+.msg-banner.warning {
+    background: rgba(245, 158, 11, 0.12);
+    border: var(--border-width) solid rgba(245, 158, 11, 0.32);
+    color: #FCD34D;
+    border-radius: var(--radius-md);
+    padding: var(--space-3) var(--space-3-5);
+    font-size: var(--font-size-sm);
+    display: flex;
+    gap: var(--space-2-5);
+    align-items: flex-start;
+    margin-bottom: var(--space-4);
+    line-height: var(--line-height-snug);
+}
+
+.msg-banner.warning i {
+    margin-top: var(--space-0-5);
+    flex-shrink: 0;
+}
+
+/* ===== Hàng căn giữa (chứa nút Gửi lại mã) ===== */
+.center-row {
+    display: flex;
+    justify-content: center;
+    margin-top: var(--space-3);
+}
+
+/* ===== Nút dạng link (Gửi lại mã) ===== */
+.btn-link {
+    background: none;
+    border: none;
+    color: var(--color-lime);
+    font-size: var(--font-size-sm);
+    font-weight: var(--font-weight-semibold);
+    cursor: pointer;
+    padding: var(--space-1) var(--space-2);
+    border-radius: var(--radius-xs);
+    transition: color var(--duration-base) var(--ease-standard),
+                background var(--duration-base) var(--ease-standard);
+}
+
+.btn-link:hover:not(:disabled) {
+    color: var(--color-lime-hover);
+    background: rgba(212, 255, 63, 0.08);
+}
+
+.btn-link:disabled {
+    color: var(--color-text-soft);
+    cursor: default;
+}
+
+/* ===== Hàng 2 nút cạnh nhau (Đăng nhập / Quên mật khẩu) ===== */
+.btn-row {
+    display: flex;
+    gap: var(--space-3);
+    margin-top: var(--space-4);
+}
+
+.btn-row .btn {
+    flex: 1;
+    justify-content: center;
+}
+
+/* ===== Nút viền outline trên nền tối ===== */
+body.auth-dark .btn-outline {
+    background: transparent;
+    border-color: rgba(255, 255, 255, 0.25);
+    color: var(--color-text);
+    font-weight: var(--font-weight-semibold);
+}
+
+body.auth-dark .btn-outline:hover {
+    background: rgba(255, 255, 255, 0.07);
+    border-color: rgba(255, 255, 255, 0.40);
+}
+
+/* ===== Hộp thông tin địa chỉ / hướng dẫn (màn blocked) ===== */
+.counter-box {
+    display: flex;
+    gap: var(--space-2-5);
+    align-items: flex-start;
+    background: rgba(255, 255, 255, 0.05);
+    border: var(--border-width) solid rgba(255, 255, 255, 0.10);
+    border-radius: var(--radius-md);
+    padding: var(--space-3) var(--space-3-5);
+    font-size: var(--font-size-sm);
+    color: var(--color-text-soft);
+    line-height: var(--line-height-normal);
+    margin-bottom: var(--space-4);
+}
+
+.counter-box i {
+    margin-top: 2px;
+    color: var(--color-lime);
+    flex-shrink: 0;
+}
+
+/* ===== Màn thành công ===== */
+.success-panel {
+    text-align: center;
+    padding: var(--space-2) 0;
+}
+
+.success-icon {
+    font-size: 56px;
+    color: var(--color-lime);
+    margin-bottom: var(--space-4);
+    line-height: 1;
+}
+
+.success-panel h1 {
+    font-family: var(--font-display);
+    font-size: var(--font-size-2xl);
+    font-weight: var(--font-weight-bold);
+    color: var(--color-text-inverse);
+    margin-bottom: var(--space-2);
+}
+
+.success-panel > p {
+    color: var(--color-text-soft);
+    font-size: var(--font-size-md);
+    margin-bottom: var(--space-4);
+    line-height: var(--line-height-normal);
+}
+
+/* Hộp hướng dẫn "Bước tiếp theo" sau khi đăng ký thành công */
+.next-box {
+    background: rgba(255, 255, 255, 0.05);
+    border: var(--border-width) solid rgba(255, 255, 255, 0.10);
+    border-radius: var(--radius-md);
+    padding: var(--space-4);
+    text-align: left;
+    margin-bottom: var(--space-5);
+}
+
+.next-box h4 {
+    font-size: var(--font-size-sm);
+    font-weight: var(--font-weight-bold);
+    color: var(--color-lime);
+    margin-bottom: var(--space-2);
+    text-transform: uppercase;
+    letter-spacing: var(--letter-spacing-wide);
+}
+
+.next-box ul {
+    margin: 0;
+    padding-left: var(--space-4);
+    list-style: disc;
+}
+
+.next-box ul li {
+    font-size: var(--font-size-sm);
+    color: var(--color-text-soft);
+    line-height: var(--line-height-normal);
+    margin-bottom: var(--space-1-5);
+}
+
+.next-box ul li:last-child {
+    margin-bottom: 0;
+}
+
+/* ===== Footer note "© 2026 Super Gym" ===== */
+.auth-foot-note {
+    margin-top: var(--space-5);
+    font-size: var(--font-size-xs);
+    color: rgba(255, 255, 255, 0.25);
+    text-align: center;
+}

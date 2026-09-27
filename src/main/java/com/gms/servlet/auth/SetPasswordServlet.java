@@ -123,17 +123,17 @@ public class SetPasswordServlet extends HttpServlet {
                 // Hết hạn → đặt email của link vào session (KHÔNG đưa lên URL để khỏi nằm trong lịch sử trình duyệt),
                 // trang Quên mật khẩu sẽ lấy ra điền sẵn 1 lần. Kèm toast giải thích lý do chuyển trang
                 request.getSession().setAttribute(SessionKey.RECOVERY_PREFILL_EMAIL, check.getLink().getEmail());
-                RequestUtil.setFlashToast(request, "warning", Messages.EXTRA_SETUP_LINK_EXPIRED);
+                RequestUtil.setFlashToast(request, "warning", Messages.MSG76_SETUP_LINK_EXPIRED);
                 RequestUtil.redirect(request, response, "/forgot-password");
                 return true;
             case USED:
                 // Đã đặt mật khẩu bằng link này rồi → mời đăng nhập
-                RequestUtil.setFlashToast(request, "info", Messages.EXTRA_SETUP_LINK_USED);
+                RequestUtil.setFlashToast(request, "info", Messages.MSG77_SETUP_LINK_USED);
                 RequestUtil.redirect(request, response, "/login");
                 return true;
             default:
                 // NOT_FOUND (link bịa, thiếu token) → báo chung, không cho biết thêm gì
-                request.setAttribute("linkError", Messages.EXTRA_SETUP_LINK_INVALID);
+                request.setAttribute("linkError", Messages.MSG71_SETUP_LINK_INVALID);
                 RequestUtil.forward(request, response, VIEW);
                 return true;
         }

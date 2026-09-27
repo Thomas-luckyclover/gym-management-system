@@ -109,7 +109,7 @@ public class PasswordRecoveryService {
      *         - Thành công: kèm dòng mã vừa dùng. Servlet lấy 2 thứ từ dòng này:
      *           getAccountId() = tài khoản nào được đặt lại mật khẩu,
      *           getExpiresAt() = hạn chót để làm xong bước 3.
-     *         - Thất bại: sai định dạng (EXTRA_CODE_FORMAT), sai mã (MSG43), mã hết hạn (MSG44),
+     *         - Thất bại: sai định dạng (MSG68_CODE_FORMAT), sai mã (MSG43), mã hết hạn (MSG44),
      *           sai lần thứ 5 → bị khóa (MSG61).
      */
     public ServiceResult<VerificationCode> verifyCode(String email, String code) {
@@ -216,9 +216,9 @@ public class PasswordRecoveryService {
      * @param newPassword     mật khẩu khách chọn, giữ nguyên từng ký tự.
      * @param confirmPassword ô "Nhập lại mật khẩu", phải giống hệt newPassword.
      * @return kết quả:
-     *         - Thành công: câu EXTRA_PASSWORD_SET "Đã đặt mật khẩu. Vui lòng đăng nhập."
+     *         - Thành công: câu MSG72_PASSWORD_SET "Đã đặt mật khẩu. Vui lòng đăng nhập."
      *         - Thất bại vì ô mật khẩu: lỗi gắn với ô "password" / "confirmPassword" → giữ form.
-     *         - Thất bại chung: link không còn hiệu lực (EXTRA_SETUP_LINK_INVALID), tài khoản bị khóa (MSG37),
+     *         - Thất bại chung: link không còn hiệu lực (MSG71_SETUP_LINK_INVALID), tài khoản bị khóa (MSG37),
      *           lỗi hệ thống (MSG04).
      */
     public ServiceResult<Void> setPasswordByLink(String token, String newPassword, String confirmPassword) {
@@ -248,7 +248,7 @@ public class PasswordRecoveryService {
             savePasswordAndUnlock(accountId, newPassword);
             verificationCodeDAO.markUsed(setupLink.getVerificationCodeId(), DateTimeUtil.now());
 
-            return ServiceResult.ok(null, Messages.EXTRA_PASSWORD_SET);
+            return ServiceResult.ok(null, Messages.MSG72_PASSWORD_SET);
 
         } catch (SQLException e) {
             e.printStackTrace();
@@ -273,7 +273,7 @@ public class PasswordRecoveryService {
         }
         // Sai luật (VD "abcdefgh" thiếu số, "1234567" quá ngắn) → "Mật khẩu phải dài 8–64 ký tự, gồm cả chữ và số."
         if (!ValidationUtil.isValidPassword(newPassword)) {
-            return ServiceResult.failField("password", String.format(Messages.EXTRA_PASSWORD_RULE,
+            return ServiceResult.failField("password", String.format(Messages.MSG66_PASSWORD_RULE,
                     AppConstants.PASSWORD_MIN_LENGTH, AppConstants.PASSWORD_MAX_LENGTH));
         }
         // Ô nhập lại không giống hệt → "Mật khẩu xác nhận không khớp." dưới ô nhập lại

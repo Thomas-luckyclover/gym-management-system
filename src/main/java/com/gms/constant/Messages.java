@@ -1,7 +1,7 @@
 package com.gms.constant;
 
 /**
- * Toàn bộ thông báo hệ thống theo SRS III.5 "System Messages" (MSG01 … MSG61), đã dịch sang tiếng Việt (GBR-01).
+ * Toàn bộ thông báo hệ thống theo SRS III.5 "System Messages" (MSG01 … MSG75), đã dịch sang tiếng Việt (GBR-01).
  *
  * Cách dùng:
  * - Thông báo không có tham số: dùng thẳng, VD ServiceResult.fail(Messages.MSG04_SYSTEM_BUSY)
@@ -84,39 +84,51 @@ public final class Messages {
     public static final String MSG59_OTHER_DEVICES_SIGNED_OUT = "Đã đăng xuất khỏi tất cả thiết bị khác.";
     public static final String MSG60_UPDATED_BY_FRONT_DESK = "Thông tin này do quầy lễ tân cập nhật. Vui lòng mang giấy tờ tùy thân đến quầy.";
     public static final String MSG61_VERIFICATION_LOCKED = "Thử quá nhiều lần. Xác thực cho email này bị khóa %d phút. Thử lại sau %s.";
+
+    // ===== 5.5 Số lần còn lại khi nhập / gửi lại mã xác thực (CBR-94) =====
+
     public static final String MSG62_CODE_ATTEMPTS_LEFT = "Bạn còn %d lần nhập mã.";
     public static final String MSG63_CODE_LAST_ATTEMPT = "Nhập sai thêm 1 lần, xác thực cho email này sẽ bị khóa %d phút.";
     public static final String MSG64_CODE_RESENDS_LEFT = "Còn %d lần gửi lại mã trong 60 phút.";
     public static final String MSG65_CODE_RESEND_WILL_LOCK = "Đã hết lượt gửi lại. Gửi thêm sẽ khóa xác thực %d phút.";
 
-    // ===== Bổ sung — luật DBR có nhưng SRS III.5 chưa có mã thông báo (chờ nhóm bổ sung mã vào SRS) =====
+    // ===== 5.6 Luật DBR / CBR có nhưng trước đây SRS III.5 chưa có mã (MSG66–MSG77 — đã đề xuất bổ sung vào SRS) =====
 
     /** DBR-02: mật khẩu phải có cả chữ và số. */
-    public static final String EXTRA_PASSWORD_RULE = "Mật khẩu phải dài %d–%d ký tự, gồm cả chữ và số.";
+    public static final String MSG66_PASSWORD_RULE = "Mật khẩu phải dài %d–%d ký tự, gồm cả chữ và số.";
 
     /** DBR-01: họ tên sai ký tự. */
-    public static final String EXTRA_FULL_NAME_RULE = "Họ tên chỉ gồm chữ cái, khoảng trắng, dấu nháy đơn hoặc gạch nối.";
+    public static final String MSG67_FULL_NAME_RULE = "Họ tên chỉ gồm chữ cái, khoảng trắng, dấu nháy đơn hoặc gạch nối.";
 
     /** DBR-03: mã xác thực sai định dạng (khác MSG43 — mã đúng định dạng nhưng sai giá trị). */
-    public static final String EXTRA_CODE_FORMAT = "Mã xác thực gồm đúng 6 chữ số.";
+    public static final String MSG68_CODE_FORMAT = "Mã xác thực gồm đúng 6 chữ số.";
 
     /** DBR-04: tuổi vượt quá 100. */
-    public static final String EXTRA_DOB_TOO_OLD = "Ngày sinh không hợp lệ (tuổi không quá %d).";
+    public static final String MSG69_DOB_TOO_OLD = "Ngày sinh không hợp lệ (tuổi không quá %d).";
 
     /** CBR-94: bấm "Gửi lại mã" khi chưa đủ 60 giây kể từ lần gửi trước. */
-    public static final String EXTRA_CODE_RESEND_TOO_SOON = "Vui lòng chờ %d giây nữa rồi bấm Gửi lại mã.";
+    public static final String MSG70_CODE_RESEND_TOO_SOON = "Vui lòng chờ %d giây nữa rồi bấm Gửi lại mã.";
 
     /** CBR-31: link đặt mật khẩu sai, đã dùng hoặc đã hết hạn. */
-    public static final String EXTRA_SETUP_LINK_INVALID = "Link đặt mật khẩu không còn hiệu lực. Vui lòng dùng Quên mật khẩu để đặt lại.";
+    public static final String MSG71_SETUP_LINK_INVALID = "Link đặt mật khẩu không còn hiệu lực. Vui lòng dùng Quên mật khẩu để đặt lại.";
 
     /** CBR-24: đặt mật khẩu lần đầu qua link email thành công. */
-    public static final String EXTRA_PASSWORD_SET = "Đã đặt mật khẩu. Vui lòng đăng nhập.";
+    public static final String MSG72_PASSWORD_SET = "Đã đặt mật khẩu. Vui lòng đăng nhập.";
 
-    /** CBR-31: link đặt mật khẩu quá hạn → chuyển sang Quên mật khẩu, email điền sẵn. */
-    public static final String EXTRA_SETUP_LINK_EXPIRED = "Link đặt mật khẩu đã hết hạn. Hãy bấm Gửi mã để nhận mã xác thực qua email và đặt mật khẩu.";
+    /** UC-04: đổi mật khẩu nhưng mật khẩu hiện tại nhập sai. */
+    public static final String MSG73_CURRENT_PASSWORD_WRONG = "Mật khẩu hiện tại không đúng.";
+
+    /** DBR-01: họ tên ngoài độ dài cho phép. */
+    public static final String MSG74_FULL_NAME_LENGTH = "Họ và tên phải từ %d đến %d ký tự.";
+
+    /** CBR-100: bài viết đã gỡ hoặc không tồn tại trên trang công khai. */
+    public static final String MSG75_POST_UNAVAILABLE = "Bài viết này không còn hiển thị.";
+
+    /** CBR-31: link đặt mật khẩu quá hạn (chưa dùng) → chuyển sang Quên mật khẩu, email điền sẵn. */
+    public static final String MSG76_SETUP_LINK_EXPIRED = "Link đặt mật khẩu đã hết hạn. Hãy bấm Gửi mã để nhận mã xác thực qua email và đặt mật khẩu.";
 
     /** CBR-31: mở lại link đặt mật khẩu đã dùng → về đăng nhập. */
-    public static final String EXTRA_SETUP_LINK_USED = "Bạn đã đặt mật khẩu cho tài khoản này. Vui lòng đăng nhập.";
+    public static final String MSG77_SETUP_LINK_USED = "Bạn đã đặt mật khẩu cho tài khoản này. Vui lòng đăng nhập.";
 
     private Messages() {
     }

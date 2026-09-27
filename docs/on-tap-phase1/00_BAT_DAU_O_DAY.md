@@ -18,6 +18,7 @@
 | 3b | `03b_TRUY_VET_MAN_HINH_HAM_RULE.md` ⭐ | **Đúng yêu cầu của thầy**: Màn → nút → Servlet → Service (các bước) → DAO → bảng DB → Rule → Use case → màn tiếp theo; + ma trận truy vết ngược Rule→hàm, UC→màn | 2 giờ |
 | 4 | `04_KICH_BAN_TEST_AUTH.md` | ~150 ca test toàn bộ Authentication, có dữ liệu seed + câu SQL kiểm tra | làm tay 3–4 giờ |
 | 5 | `05_HOI_DAP_BAO_VE.md` | Câu hỏi khó giáo viên hay hỏi + câu trả lời mẫu + danh sách lỗ hổng/việc còn thiếu | 2 giờ |
+| 7 | `07_DONG_BO_MESSAGE_SRS_CODE.md` 🆕 | Bảng MSG SRS ↔ code: MSG62–65 đã code, MSG66–77 cần thêm vào SRS, danh sách đổi tên `EXTRA_*` | 20 phút |
 | 6 | `so-do/GMS_Project_Architecture.drawio` + `so-do/GHI_CHU_SO_DO.md` | Sơ đồ kiến trúc kiểu vẽ tay (mở bằng draw.io) + lời thuyết trình từng khối | 1 giờ |
 
 ---

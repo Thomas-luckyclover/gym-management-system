@@ -120,14 +120,14 @@ const MESSAGES = {
     MSG63_CODE_LAST_ATTEMPT: "Nhập sai thêm 1 lần, xác thực cho email này sẽ bị khóa %d phút.",
     MSG64_CODE_RESENDS_LEFT: "Còn %d lần gửi lại mã trong 60 phút.",
     MSG65_CODE_RESEND_WILL_LOCK: "Đã hết lượt gửi lại. Gửi thêm sẽ khóa xác thực %d phút.",
-    EXTRA_PASSWORD_RULE: "Mật khẩu phải dài %d–%d ký tự, gồm cả chữ và số.",
-    EXTRA_FULL_NAME_RULE: "Họ tên chỉ gồm chữ cái, khoảng trắng, dấu nháy đơn hoặc gạch nối.",
-    EXTRA_CODE_FORMAT: "Mã xác thực gồm đúng 6 chữ số.",
-    EXTRA_DOB_TOO_OLD: "Ngày sinh không hợp lệ (tuổi không quá %d).",
-    EXTRA_CODE_RESEND_TOO_SOON: "Vui lòng chờ %d giây nữa rồi bấm Gửi lại mã.",
-    EXTRA_SETUP_LINK_INVALID: "Link đặt mật khẩu không còn hiệu lực. Vui lòng dùng Quên mật khẩu để đặt lại.",
-    EXTRA_SETUP_LINK_EXPIRED: "Link đặt mật khẩu đã hết hạn. Hãy bấm Gửi mã để nhận mã xác thực qua email và đặt mật khẩu.",
-    EXTRA_SETUP_LINK_USED: "Bạn đã đặt mật khẩu cho tài khoản này. Vui lòng đăng nhập."
+    MSG66_PASSWORD_RULE: "Mật khẩu phải dài %d–%d ký tự, gồm cả chữ và số.",
+    MSG67_FULL_NAME_RULE: "Họ tên chỉ gồm chữ cái, khoảng trắng, dấu nháy đơn hoặc gạch nối.",
+    MSG68_CODE_FORMAT: "Mã xác thực gồm đúng 6 chữ số.",
+    MSG69_DOB_TOO_OLD: "Ngày sinh không hợp lệ (tuổi không quá %d).",
+    MSG70_CODE_RESEND_TOO_SOON: "Vui lòng chờ %d giây nữa rồi bấm Gửi lại mã.",
+    MSG71_SETUP_LINK_INVALID: "Link đặt mật khẩu không còn hiệu lực. Vui lòng dùng Quên mật khẩu để đặt lại.",
+    MSG76_SETUP_LINK_EXPIRED: "Link đặt mật khẩu đã hết hạn. Hãy bấm Gửi mã để nhận mã xác thực qua email và đặt mật khẩu.",
+    MSG77_SETUP_LINK_USED: "Bạn đã đặt mật khẩu cho tài khoản này. Vui lòng đăng nhập."
 };
 
 // Hộp thoại xác nhận đang mở (chỉ mở 1 cái tại 1 thời điểm)
@@ -715,16 +715,16 @@ function getRuleErrorMessage(rule, value) {
         return formatMessage(MESSAGES.MSG46_PASSWORD_TOO_SHORT, [PASSWORD_MIN_LENGTH]);
     }
     if (rule === "password" && !isValidPassword(value)) {
-        return formatMessage(MESSAGES.EXTRA_PASSWORD_RULE, [PASSWORD_MIN_LENGTH, PASSWORD_MAX_LENGTH]);
+        return formatMessage(MESSAGES.MSG66_PASSWORD_RULE, [PASSWORD_MIN_LENGTH, PASSWORD_MAX_LENGTH]);
     }
     if (rule === "fullName" && value.length < FULL_NAME_MIN_LENGTH) {
         return formatMessage(MESSAGES.MSG19_TOO_SHORT, [FULL_NAME_MIN_LENGTH]);
     }
     if (rule === "fullName" && !isValidFullName(value)) {
-        return MESSAGES.EXTRA_FULL_NAME_RULE;
+        return MESSAGES.MSG67_FULL_NAME_RULE;
     }
     if (rule === "verificationCode" && !isValidVerificationCode(value)) {
-        return MESSAGES.EXTRA_CODE_FORMAT;
+        return MESSAGES.MSG68_CODE_FORMAT;
     }
     if (rule === "reason") {
         return getReasonErrorMessage(value);
@@ -745,7 +745,7 @@ function getDateOfBirthErrorMessage(isoDate) {
         return MESSAGES.MSG15_DOB_IN_FUTURE;
     }
     if (!isValidDateOfBirth(isoDate)) {
-        return formatMessage(MESSAGES.EXTRA_DOB_TOO_OLD, [MAX_AGE_YEARS]);
+        return formatMessage(MESSAGES.MSG69_DOB_TOO_OLD, [MAX_AGE_YEARS]);
     }
     return "";
 }

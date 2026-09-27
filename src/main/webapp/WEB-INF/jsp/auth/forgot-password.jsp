@@ -97,6 +97,7 @@
                      required data-label="Mã xác thực" data-rule="verificationCode" autofocus>
               <span class="field-error" id="codeError"
                     <c:if test="${empty fieldErrors.code}">hidden</c:if>><c:out value="${fieldErrors.code}" /></span>
+              <%-- MSG62 / MSG63: số lần còn nhập mã (Servlet tính, ẩn khi email đang bị khóa) --%>
               <c:if test="${not empty attemptHint}">
                 <span class="field-hint ${attemptHintWarn ? 'field-hint--warn' : ''}"><c:out value="${attemptHint}" /></span>
               </c:if>
@@ -110,6 +111,7 @@
               <button class="link-btn" type="submit" id="resendBtn" data-resend-seconds="${resendSecondsLeft}">
                 <i class="fa-solid fa-rotate-right"></i> Gửi lại mã<span id="resendWait"></span>
               </button>
+              <%-- MSG64 / MSG65: số lần còn gửi lại mã trong 60 phút --%>
               <c:if test="${not empty resendHint}">
                 <span class="field-hint ${resendHintWarn ? 'field-hint--warn' : ''}"><c:out value="${resendHint}" /></span>
               </c:if>
