@@ -5,6 +5,7 @@ import com.gms.constant.Messages;
 import com.gms.dao.VerificationCodeDAO;
 import com.gms.dto.ServiceResult;
 import com.gms.dto.SetupLinkCheck;
+import com.gms.dto.VerificationAttemptInfo;
 import com.gms.entity.VerificationCode;
 import com.gms.integration.EmailGateway;
 import com.gms.integration.EmailSendException;
@@ -207,6 +208,56 @@ public class VerificationCodeService {
             verificationCodeDAO.markUsed(latestCode.getVerificationCodeId(), now);
             latestCode.setUsedAt(now);
             return ServiceResult.ok(latestCode);
+
+        } catch (SQLException e) {
+            e.printStackTrace();
+            return ServiceResult.fail(Messages.MSG04_SYSTEM_BUSY);
+        }
+    }
+
+    // ===== 2b. Còn bao nhiêu lượt (chỉ đọc, để báo trước — MSG62–MSG65) =====
+
+    /**
+     * Tính khách còn mấy lần nhập sai mã và còn mấy lần bấm "Gửi lại mã" trước khi bị khóa.
+     * Hàm chỉ ĐỌC sổ, không ghi gì — việc khóa thật vẫn do sendCode / verifyCode làm.
+     *
+     * VD (P-17 = 5): thao.luong vừa nhận mã, chưa gõ sai lần nào, trong 60 phút đã có 2 mã được gửi
+     *     → còn 5 - 0 = 5 lần nhập; còn (5 - 1) - 2 = 2 lần gửi lại
+     *
+     * @param email   email đang xác thực, VD "thao.luong@gmail.com".
+     * @param purpose mã loại gì, VD RECOVERY.
+     * @return kết quả:
+     *         - Thành công: kèm VerificationAttemptInfo gồm isLocked() (đang khóa chưa), getAttemptsLeft()
+     *           (còn mấy lần nhập; 0 nếu mã đã dùng / hết hạn / chưa gửi), getResendsLeft() (còn mấy lần gửi lại),
+     *           getLockMinutes() (khóa bao nhiêu phút, để ghép vào câu).
+     *         - Thất bại: chỉ khi lỗi DB (MSG04).
+     */
+    public ServiceResult<VerificationAttemptInfo> getAttemptInfo(String email, VerificationCode.Purpose purpose) {
+        try {
+            // B1: giờ hiện tại + tham số P-17 (mốc 5 lần), P-18 (khóa bao nhiêu phút)
+            LocalDateTime now = DateTimeUtil.now();
+            int maxAttempts = systemConfigService.getInt(SystemConfigService.MAX_FAILED_ATTEMPTS);
+            int lockMinutes = systemConfigService.getInt(SystemConfigService.LOCK_MINUTES);
+
+            // B2: email có đang bị khóa xác thực không
+            boolean isLocked = verificationCodeDAO.findLockedUntil(email, now) != null;
+
+            // B3: còn mấy lần nhập mã = 5 − số lần đã sai của mã gần nhất.
+            //     Mã đã dùng / quá 15 phút / chưa gửi → 0 (không còn gì để nhập)
+            VerificationCode latestCode = verificationCodeDAO.findLatestByEmailAndPurpose(email, purpose);
+            boolean isCodeUsable = latestCode != null
+                    && latestCode.getUsedAt() == null
+                    && now.isBefore(latestCode.getExpiresAt());
+            int attemptsLeft = isCodeUsable ? Math.max(0, maxAttempts - latestCode.getFailedAttempts()) : 0;
+
+            // B4: còn mấy lần gửi lại = 4 − số mã đã gửi trong 60 phút.
+            //     Số 4 = 5 − 1, khớp đúng điều kiện khóa ở sendCode (lần xin thứ 5 mới khóa).
+            //     VD đã gửi 4 mã → còn 0 lần → bấm thêm 1 lần nữa là bị khóa
+            LocalDateTime windowStart = now.minusMinutes(AppConstants.CODE_REQUEST_WINDOW_MINUTES);
+            int sentCount = verificationCodeDAO.countCodesSentSince(email, windowStart);
+            int resendsLeft = Math.max(0, (maxAttempts - 1) - sentCount);
+
+            return ServiceResult.ok(new VerificationAttemptInfo(isLocked, attemptsLeft, resendsLeft, lockMinutes));
 
         } catch (SQLException e) {
             e.printStackTrace();

@@ -6,6 +6,7 @@ import com.gms.dao.AccountDAO;
 import com.gms.dao.VerificationCodeDAO;
 import com.gms.dto.ServiceResult;
 import com.gms.dto.SetupLinkCheck;
+import com.gms.dto.VerificationAttemptInfo;
 import com.gms.entity.Account;
 import com.gms.entity.VerificationCode;
 import com.gms.listener.SessionRegistryListener;
@@ -127,6 +128,20 @@ public class PasswordRecoveryService {
      */
     public VerificationCode findLatestRecoveryCode(String email) throws SQLException {
         return verificationCodeDAO.findLatestByEmailAndPurpose(email, VerificationCode.Purpose.RECOVERY);
+    }
+
+    /**
+     * Cho biết khách còn mấy lần nhập sai mã và còn mấy lần bấm "Gửi lại mã" trước khi bị khóa.
+     * Bước 2 dùng để hiện gợi ý MSG62–MSG65. Hàm chỉ ĐỌC, không làm thay đổi gì.
+     *
+     * @param email email đang khôi phục, VD "thao.luong@gmail.com".
+     * @return kết quả:
+     *         - Thành công: kèm VerificationAttemptInfo (đang khóa chưa, còn mấy lần nhập, còn mấy lần gửi lại,
+     *           khóa bao nhiêu phút).
+     *         - Thất bại: chỉ khi lỗi hệ thống (MSG04) — lúc đó Servlet không hiện gợi ý.
+     */
+    public ServiceResult<VerificationAttemptInfo> getRecoveryAttemptInfo(String email) {
+        return verificationCodeService.getAttemptInfo(email, VerificationCode.Purpose.RECOVERY);
     }
 
     // ===== Quên mật khẩu — Bước 3: đặt mật khẩu mới =====

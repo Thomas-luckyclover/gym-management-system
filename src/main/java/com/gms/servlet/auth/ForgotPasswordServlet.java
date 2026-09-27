@@ -4,6 +4,7 @@ import com.gms.constant.AppConstants;
 import com.gms.constant.Messages;
 import com.gms.constant.SessionKey;
 import com.gms.dto.ServiceResult;
+import com.gms.dto.VerificationAttemptInfo;
 import com.gms.entity.VerificationCode;
 import com.gms.service.PasswordRecoveryService;
 import com.gms.util.DateTimeUtil;
@@ -312,10 +313,10 @@ public class ForgotPasswordServlet extends HttpServlet {
     }
 
     /**
-     * Chuẩn bị dữ liệu riêng cho bước 2: 2 đồng hồ đếm ngược (GBR-27).
+     * Chuẩn bị dữ liệu riêng cho bước 2: 2 đồng hồ đếm ngược (GBR-27) và 2 dòng gợi ý số lượt còn lại (MSG62–MSG65).
      * Số giây do SERVER tính rồi đưa xuống, JS chỉ đếm lùi (không tin đồng hồ máy khách).
      *
-     * @param request nơi đặt: codeSecondsLeft, resendSecondsLeft.
+     * @param request nơi đặt: codeSecondsLeft, resendSecondsLeft, attemptHint(+Warn), resendHint(+Warn).
      * @param email   email đang khôi phục, VD "thao.luong@gmail.com".
      */
     private void setCodeTimers(HttpServletRequest request, String email) {
@@ -338,6 +339,34 @@ public class ForgotPasswordServlet extends HttpServlet {
         }
         request.setAttribute("codeSecondsLeft", codeSecondsLeft);
         request.setAttribute("resendSecondsLeft", resendSecondsLeft);
+
+        // B2: hỏi Service còn mấy lượt. Lỗi hoặc email đang bị khóa → không hiện gợi ý (lúc khóa đã có MSG61)
+        ServiceResult<VerificationAttemptInfo> attemptResult = passwordRecoveryService.getRecoveryAttemptInfo(email);
+        if (!attemptResult.isSuccess() || attemptResult.getData().isLocked()) {
+            return;
+        }
+        VerificationAttemptInfo info = attemptResult.getData();
+
+        // B3: gợi ý dưới ô nhập mã — CHỈ khi mã còn dùng được (còn > 0 lần).
+        //     Mã đã hết hạn thì còn 0 lần: không hiện gì (đồng hồ đã báo "Mã đã hết hạn"), tránh báo nhầm "sắp bị khóa".
+        //     Còn ≥ 2 lần → MSG62 "Bạn còn n lần nhập mã."
+        //     Còn đúng 1 lần → MSG63 "Nhập sai thêm 1 lần … sẽ bị khóa 5 phút." (màu cảnh báo)
+        if (info.getAttemptsLeft() > 0) {
+            boolean isLastAttempt = info.getAttemptsLeft() == 1;
+            request.setAttribute("attemptHint", isLastAttempt
+                    ? String.format(Messages.MSG63_CODE_LAST_ATTEMPT, info.getLockMinutes())
+                    : String.format(Messages.MSG62_CODE_ATTEMPTS_LEFT, info.getAttemptsLeft()));
+            request.setAttribute("attemptHintWarn", isLastAttempt);
+        }
+
+        // B4: gợi ý dưới nút "Gửi lại mã".
+        //     Còn ≥ 1 lần → MSG64 "Còn n lần gửi lại mã trong 60 phút."
+        //     Còn 0 lần   → MSG65 "Đã hết lượt gửi lại. Gửi thêm sẽ khóa…" (màu cảnh báo)
+        boolean isOutOfResends = info.getResendsLeft() == 0;
+        request.setAttribute("resendHint", isOutOfResends
+                ? String.format(Messages.MSG65_CODE_RESEND_WILL_LOCK, info.getLockMinutes())
+                : String.format(Messages.MSG64_CODE_RESENDS_LEFT, info.getResendsLeft()));
+        request.setAttribute("resendHintWarn", isOutOfResends);
     }
 
     // ===== Hàm phụ =====

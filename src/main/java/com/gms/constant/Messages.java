@@ -84,6 +84,10 @@ public final class Messages {
     public static final String MSG59_OTHER_DEVICES_SIGNED_OUT = "Đã đăng xuất khỏi tất cả thiết bị khác.";
     public static final String MSG60_UPDATED_BY_FRONT_DESK = "Thông tin này do quầy lễ tân cập nhật. Vui lòng mang giấy tờ tùy thân đến quầy.";
     public static final String MSG61_VERIFICATION_LOCKED = "Thử quá nhiều lần. Xác thực cho email này bị khóa %d phút. Thử lại sau %s.";
+    public static final String MSG62_CODE_ATTEMPTS_LEFT = "Bạn còn %d lần nhập mã.";
+    public static final String MSG63_CODE_LAST_ATTEMPT = "Nhập sai thêm 1 lần, xác thực cho email này sẽ bị khóa %d phút.";
+    public static final String MSG64_CODE_RESENDS_LEFT = "Còn %d lần gửi lại mã trong 60 phút.";
+    public static final String MSG65_CODE_RESEND_WILL_LOCK = "Đã hết lượt gửi lại. Gửi thêm sẽ khóa xác thực %d phút.";
 
     // ===== Bổ sung — luật DBR có nhưng SRS III.5 chưa có mã thông báo (chờ nhóm bổ sung mã vào SRS) =====
 
