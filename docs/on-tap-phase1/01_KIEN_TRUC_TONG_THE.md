@@ -15,7 +15,7 @@
 |---|---|---|---|---|
 | 1 | Sign In | `/login` | UC-01 (+ UC-02 Logout `/logout`) | Nhân (lenhan24) |
 | 2 | Register Account | `/register` | UC-05, UC-IDENT, UC-Claim | Hoàng (MuscleCodder06) |
-| 3 | Forgot Password | `/forgot-password` (+ `/set-password?token=`) | UC-03 (+ CBR-24, CBR-31) | **Minh (Leader)** |
+| 3 | Forgot Password | `/forgot-password` | UC-03 (+ CBR-24, CBR-31: tài khoản chưa có MK đặt lần đầu ở đây) | **Minh (Leader)** |
 | 4 | Account Settings | `/account` | UC-04 | Vũ (Dang Vu) + Penguin336 |
 | 5 | Home | `/` | UC-06 | Minh |
 | 6–7 | Blog List / Blog Details | `/blog`, `/blog/detail?id=` | UC-06 | TV2 / Penguin336 |
@@ -64,7 +64,7 @@
 | **Controller (Servlet)** | `com.gms.servlet.<vai trò>` | Đọc tham số, lấy dữ liệu session, gọi Service, chọn `forward` JSP hay `redirect` | Viết SQL, viết `if` nghiệp vụ | `LoginServlet`, `ForgotPasswordServlet` |
 | **Service** | `com.gms.service` | **Toàn bộ luật nghiệp vụ + validate server**, mở transaction, gọi DAO/Integration, trả `ServiceResult<T>` | Đụng tới `HttpServletRequest` | `AuthService`, `PasswordRecoveryService`, `VerificationCodeService` |
 | **DAO** | `com.gms.dao` | Đúng 1 việc: chạy SQL bằng `PreparedStatement`, map `ResultSet` → Entity | Quyết định đúng/sai, luật | `AccountDAO`, `VerificationCodeDAO` |
-| **Entity** | `com.gms.entity` | Ánh xạ 1 bảng DB (Account, Person, VerificationCode…) | Logic | `VerificationCode.Purpose` (enum SignUp/Claim/Recovery/EmailChange/PasswordSetup) |
+| **Entity** | `com.gms.entity` | Ánh xạ 1 bảng DB (Account, Person, VerificationCode…) | Logic | `VerificationCode.Purpose` (enum SignUp/Claim/Recovery/EmailChange) |
 | **DTO** | `com.gms.dto` | Gói dữ liệu truyền giữa tầng / ra JSP | — | `ServiceResult<T>`, `LoginResult`, `JsonResponse`, `AccountSettingsView` |
 | **Util** | `com.gms.util` | Hàm tiện ích tĩnh, không trạng thái | Nghiệp vụ | `PasswordUtil`, `SecureCodeUtil`, `ValidationUtil`, `RequestUtil`, `DBContext`, `AppConfig`, `DateTimeUtil` |
 | **Constant** | `com.gms.constant` | Hằng: thông báo, key session, vai trò, giới hạn | — | `Messages` (MSG01–75, khớp SRS III.5), `SessionKey`, `Role`, `AppConstants` |
@@ -124,7 +124,7 @@ Trình duyệt: form login.jsp  →  POST /gms/login  (identifier, password, ret
 ```
 Mọi URL ──► CharacterEncodingFilter (/*)
         ──► AuthFilter (/*)
-              ├ URL công khai?  PUBLIC_EXACT_PATHS  = "", "/", /login, /register, /forgot-password, /set-password, /favicon.ico
+              ├ URL công khai?  PUBLIC_EXACT_PATHS  = "", "/", /login, /register, /forgot-password, /favicon.ico
               │                 PUBLIC_PATH_PREFIXES = /css/, /js/, /images/, /blog, /payment/vnpay-return, /api/v1/commerce/payment/webhook/
               │                 → cho qua
               ├ Đã đăng nhập? (session có "accountId") → cho qua
@@ -194,8 +194,7 @@ SystemConfigs (ConfigKey P-01…P-20, ConfigValue)        AuditLogs (chưa dùng
 | Unique index **có điều kiện** `UX_Persons_Phone_Active ... WHERE IsReleased = 0` | Chỉ cấm trùng giữa các hồ sơ đang hoạt động; tranh chấp đồng thời do DB chặn | DBR-22, GBR-13 |
 | `Accounts.PasswordHash` NULL được | Tài khoản Lễ tân tạo, khách chưa đặt mật khẩu → MSG38 | CBR-31 |
 | `Accounts.Status` (Active/Locked/Inactive) **khác** `Accounts.LockedUntil` | Khóa vĩnh viễn (Admin) ≠ khóa tạm (sai 5 lần) — khóa tạm **không đổi Status** | BR-01, CBR-96 |
-| `VerificationCodes` 1 bảng cho cả **OTP và link** | `CK_VerificationCodes_CodeOrToken`: PasswordSetup → có `TokenHash`, `Code` NULL, bắt buộc `AccountId`; loại khác → có `Code`, `TokenHash` NULL | CBR-94, CBR-31 |
-| `TokenHash CHAR(64)` | SHA-256 hex của token — **không lưu token thật** | Bảo mật |
+| `VerificationCodes` — mã OTP 6 số | Code chỉ dùng loại có `Code`. Phần link (`PasswordSetup`, `TokenHash`, `CK_VerificationCodes_CodeOrToken`) còn trong schema nhưng **không dùng từ 27/09** (nợ kỹ thuật, `docs/notes.md` D6) | CBR-94 |
 
 ---
 

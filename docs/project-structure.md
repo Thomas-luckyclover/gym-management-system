@@ -92,7 +92,6 @@ duyệt `…/review?id=`. Tên JSP kebab-case. Cột "Phụ trách" là gợi ý
 | - | Logout (POST) | `auth.LogoutServlet` | `/logout` | - | UC-02 | TV1 |
 | 2 | Register Account | `auth.RegisterServlet` | `/register` | `auth/register.jsp` | UC-05, UC-Claim, UC-IDENT | TV1 |
 | 3 | Forgot Password | `auth.ForgotPasswordServlet` | `/forgot-password` | `auth/forgot-password.jsp` | UC-03 | TV1 |
-| - | Đặt mật khẩu qua link email | `auth.SetPasswordServlet` | `/set-password` | `auth/set-password.jsp` | MSG38 | TV1 |
 | 4 | Account Settings | `auth.AccountSettingsServlet` | `/account` | `auth/account-settings.jsp` | UC-04, mọi vai trò | TV1 |
 | 5 | Home | `guest.HomeServlet` | `"" (trang gốc)` | `guest/home.jsp` | UC-06 | TV2 |
 | 6 | Blog List | `guest.BlogListServlet` | `/blog` | `guest/blog-list.jsp` | UC-06 | TV2 |

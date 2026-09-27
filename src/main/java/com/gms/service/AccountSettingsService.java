@@ -169,7 +169,7 @@ public class AccountSettingsService {
             if (!isCurrentPasswordCorrect) {
                 return ServiceResult.failField(
                         "currentPassword",
-                        Messages.MSG73_CURRENT_PASSWORD_WRONG
+                        Messages.MSG71_CURRENT_PASSWORD_WRONG
                 );
             }
 

@@ -45,7 +45,8 @@ Mật khẩu **không bao giờ** in ra log, gửi email hay trả về giao di�
 | BR-01 | **Tài khoản khách** sai mật khẩu **5 lần liên tiếp** (P-17) → khóa tạm **5 phút** (P-18). **Tài khoản nhân viên không bao giờ tự khóa** (máy quầy dùng chung). |
 | BR-02 | Hết thời gian khóa → tự mở, bộ đếm về 0. Đăng nhập đúng cũng đưa bộ đếm về 0. |
 | CBR-96 | Tài khoản chỉ bị chặn trong 3 trường hợp: nhân viên đã nghỉ (Inactive), Admin khóa (Locked), khách đang khóa tạm (BR-01). |
-| CBR-31 | Tài khoản Lễ tân tạo tại quầy **chưa có mật khẩu** → không đăng nhập được tới khi khách đặt mật khẩu qua link email (hạn P-15); quá hạn thì dùng Quên mật khẩu. |
+| CBR-24 | Lễ tân tạo hồ sơ cho khách mua gói từ 1 tháng trở lên thì tạo luôn tài khoản đăng nhập bằng email của hồ sơ. Tài khoản tạo ra **chưa có mật khẩu và không gửi email**; khách tự đặt mật khẩu sau qua Quên mật khẩu (CBR-31). |
+| CBR-31 | Tài khoản Lễ tân tạo (CBR-24) **không đăng nhập được** tới khi khách đặt mật khẩu qua **Quên mật khẩu** (UC-03). Trước đó, mọi lần đăng nhập đều báo MSG38 và chỉ sang Quên mật khẩu. |
 | CBR-21 | Hồ sơ Dependent (trẻ em) **không có tài khoản**. |
 | Session | Đăng nhập thành công: lưu `accountId`, `role`, `displayName` vào session, timeout 7200 giây, cập nhật `Accounts.LastLoginAt`. |
 
@@ -104,18 +105,7 @@ Bảng lưu: `VerificationCodes` (Purpose `SignUp` / `Claim` / `Recovery` / `Ema
 | 2. Nhập mã | 6 số, hạn 15 phút (BR-04), các luật mục 2.3. |
 | 3. Đặt mật khẩu mới | 8–64, có chữ + số, nhập lại khớp. Thành công → **đăng xuất mọi phiên** (CBR-93) → MSG49 → về trang đăng nhập. Nếu tài khoản đang khóa tạm → mở khóa, bộ đếm về 0. |
 
-Áp dụng cho mọi vai trò (khách và nhân viên). Tài khoản chưa có mật khẩu (Lễ tân tạo, link đã hết hạn) cũng dùng luồng này (CBR-31).
-
-### 2.4b Đặt mật khẩu qua link — `/set-password?token=...` (CBR-24, CBR-31, MSG38)
-
-Dành cho tài khoản **Lễ tân tạo tại quầy** (khách mua gói từ 1 tháng, có email).
-
-| Bước | Luật |
-|---|---|
-| Tạo link | Lễ tân tạo tài khoản (`PasswordHash` NULL) → `SecureCodeUtil.generateUrlToken()` sinh token → lưu **`SecureCodeUtil.sha256Hex(token)`** vào `VerificationCodes.TokenHash` (Purpose `PasswordSetup`, `Code` NULL, hạn P-15 = 15 phút) → `EmailGateway.sendPasswordSetupLink(...)` gửi link chứa **token gốc**. Gửi lỗi → không tạo tài khoản. |
-| Mở link | Băm token trên URL → tìm dòng `TokenHash` khớp, `Purpose = 'PasswordSetup'`, `UsedAt` NULL, chưa hết hạn. Không có / hết hạn / đã dùng → báo link không còn hiệu lực, hướng dẫn dùng **Quên mật khẩu** (CBR-31). |
-| Đặt mật khẩu | 8–64, có chữ + số, nhập lại khớp → lưu hash BCrypt, ghi `UsedAt` → về trang đăng nhập. |
-| Bảo mật | DB chỉ lưu mã băm, không lưu token; link dùng đúng 1 lần; trang `/set-password` công khai (đã có trong `AuthFilter`). |
+Áp dụng cho mọi vai trò (khách và nhân viên). Tài khoản chưa có mật khẩu (Lễ tân tạo tại quầy) đặt mật khẩu lần đầu bằng chính luồng này (CBR-31). Đăng nhập bằng email gặp MSG38 → bấm "Đặt mật khẩu" → sang đây, ô email điền sẵn; đăng nhập bằng SĐT thì ô email để trống.
 
 ### 2.5 Cài đặt tài khoản — `/account` (UC-04), 3 tab
 
@@ -190,7 +180,7 @@ Thời gian đọc gợi ý: số từ ÷ 200, làm tròn lên, tối thiểu 1 
 | Mã | Ý nghĩa | Giá trị seed | Dùng ở |
 |---|---|---|---|
 | P-05 | Tuổi tối thiểu dùng PT | 10 | Nhãn "dưới 10 tuổi" ở đăng ký, tab Hồ sơ phụ thuộc |
-| P-15 | Hiệu lực mã xác thực / link đặt mật khẩu (phút) | 15 | Mọi mã, link đặt mật khẩu |
+| P-15 | Hiệu lực mã xác thực / mã khôi phục (phút) | 15 | Mọi mã xác thực |
 | P-16 | Đầu số di động hợp lệ | `03,05,07,08,09` | Kiểm tra SĐT (xem mục 7, dòng 6) |
 | P-17 | Số lần sai trước khi khóa tạm | 5 | Đăng nhập khách, nhập mã |
 | P-18 | Thời gian khóa tạm (phút) | 5 | Đăng nhập khách, nhập mã |
@@ -217,7 +207,7 @@ Quy tắc: **không tự viết câu thông báo mới** trong Service/Servlet n
 | Mã khách, loại Self/Dependent, giám hộ, trạng thái | `Customers` | ✅ |
 | Hash mật khẩu, trạng thái, đếm sai, khóa tạm | `Accounts` | ✅ (seed gốc có hash giả → chạy `3_Dev_Passwords.sql`) |
 | Mã xác thực + khóa theo email | `VerificationCodes` | ✅ |
-| **Link đặt mật khẩu** cho tài khoản Lễ tân tạo (CBR-31) | `VerificationCodes` (Purpose `PasswordSetup`, `TokenHash`) | ✅ đã thêm 24/09 (migration 001) |
+| ~~Link đặt mật khẩu~~ cho tài khoản Lễ tân tạo | `VerificationCodes` (Purpose `PasswordSetup`, `TokenHash`) | ⚪ Bỏ luồng từ 27/09 — cột giữ lại, không dùng (xem `docs/notes.md` D6) |
 | Gói, giá, quyền lợi | `Packages` | ✅ |
 | **Chuyên môn, kinh nghiệm PT** ở trang chủ | `Employees.Specialty`, `Employees.YearsOfExperience` | ✅ đã thêm 24/09 (migration 001) |
 | Bài viết, danh mục, tóm tắt, ảnh bìa | `BlogPosts` | ✅ |

@@ -6,7 +6,7 @@
         <%@ include file="/WEB-INF/jsp/common/head.jspf" %>
         <title>Đăng nhập — Super Gym</title>
         <link rel="stylesheet" href="${pageContext.request.contextPath}/css/pages/auth/login.css?v=6">
-        <script src="${pageContext.request.contextPath}/js/pages/auth/login.js" defer></script>
+        <script src="${pageContext.request.contextPath}/js/pages/auth/login.js?v=2" defer></script>
     </head>
     <%-- Theme tối + kính mờ: khớp prototype dang-nhap.html (body.dark.auth-dark) --%>
     <body class="theme-guest-dark auth-dark">
@@ -114,7 +114,7 @@
                                     <c:out value="${errorMessage}" />
                                 </c:when>
                                 <c:otherwise>
-                                    Tài khoản chưa có mật khẩu. Vui lòng kiểm tra email để đặt mật khẩu lần đầu.
+                                    Tài khoản chưa có mật khẩu. Hãy dùng Quên mật khẩu để đặt mật khẩu.
                                 </c:otherwise>
                             </c:choose>
                         </span>

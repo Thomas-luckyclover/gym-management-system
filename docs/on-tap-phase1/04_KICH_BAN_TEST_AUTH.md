@@ -185,11 +185,11 @@ Các dashboard chưa code → trang **404** là đúng ở thời điểm này (
 | OT-12 | 🔥 | Nhập `12ab56` / `12345` / `1234567` | "Mã xác thực gồm đúng 6 chữ số." (không tính là 1 lần sai) | DBR-03 | |
 | OT-13 | ⭐ | Mã có số 0 đầu (VD `048213`) | Nhập đúng được chấp nhận (không bị mất số 0) | DBR-03 | |
 | OT-14 | ⭐ | Đồng hồ "Mã hết hạn sau mm:ss" | Chạy lùi, tải lại trang vẫn đúng số còn lại (server tính) | GBR-27 | |
-| OT-15 | 🔥 | `an.nguyen95@gmail.com` (chưa xin mã trong giờ) → Gửi mã → vào bước 2 | Dưới ô mã: MSG62 "Bạn còn 5 lần nhập mã." · dưới nút: MSG64 "Còn 3 lần gửi lại mã trong 60 phút." | CBR-94, MSG62/64 | |
-| OT-16 | 🔥 | Tiếp OT-15, nhập sai `000000` liên tục | Số giảm 4 → 3 → 2; còn 1 thì đổi màu + MSG63 "Nhập sai thêm 1 lần… khóa 5 phút."; sai lần 5 → MSG61 và **ẩn** cả 2 dòng gợi ý | CBR-94, MSG63 | |
-| OT-17 | 🔥 ⏱ | Tiếp OT-15 (lần khác), bấm Gửi lại mã mỗi 60 s | "Còn 2" → "Còn 1" → MSG65 "Đã hết lượt gửi lại…"; bấm thêm → MSG61 | CBR-94, MSG65 | |
-| OT-18 | ⭐ | Sau khi nhập sai 2 lần, bấm Gửi lại mã (mã mới) | Dòng nhập quay về "Bạn còn 5 lần nhập mã." (số lần tính theo **từng mã**) | CBR-94 | |
-| OT-19 | ⭐ ⏱ | `binh.ta@gmail.com` (đang khóa) vào bước 2 | Chỉ có MSG61, không có dòng MSG62–65 | CBR-94 | |
+| OT-15 | 🔥 | `thao.luong@gmail.com` → Gửi mã → bước 2 | "Bạn còn **5** lần nhập mã." + "Còn **2** lần gửi lại mã trong 60 phút." (1 mã seed + 1 mã vừa gửi = 2 mã) | MSG62, MSG64 | |
+| OT-16 | 🔥 | Nhập sai liên tiếp | Số giảm 5 → 4 → 3 → 2; còn 1 → **MSG63** màu cảnh báo; sai lần 5 → MSG61, **2 dòng gợi ý biến mất** | MSG62, MSG63, CBR-94 | |
+| OT-17 | ⭐ | Gửi lại mã (chờ đủ 60 giây mỗi lần) | Số lần gửi lại giảm; tới 0 → **MSG65** màu cảnh báo; bấm tiếp → MSG61 | MSG64, MSG65, CBR-94 | |
+| OT-18 | ⭐ | `binh.ta@gmail.com` (đang khóa) | Chỉ thấy MSG61, **không** có dòng gợi ý | MSG61 | |
+| OT-19 | ⭐ | Nhập sai 2 lần → Gửi lại mã | Số lần nhập mã quay về **5** (mã mới) | CBR-94 | |
 
 ## 6. QUÊN MẬT KHẨU — `/forgot-password` (UC-03)
 
@@ -223,20 +223,20 @@ Các dashboard chưa code → trang **404** là đúng ở thời điểm này (
 | FP-26 | | App Password sai → xin mã | MSG04; `VerificationCodes` **không** có dòng mới | API-03 | |
 | FP-27 | | Sau FP-01 kiểm tra AuditLogs | Luật: có câu "… đặt lại mật khẩu qua email …". ⚠ Code: chưa ghi (TODO) | GBR-07 | |
 
-## 7. ĐẶT MẬT KHẨU QUA LINK — `/set-password` (CBR-24, CBR-31)
+## 7. TÀI KHOẢN CHƯA CÓ MẬT KHẨU — Đăng nhập → Quên mật khẩu (CBR-24, CBR-31)
+
+Luồng link `/set-password` đã bỏ 27/09. ⚠ Gmail thật đang bật: với email seed **dừng ở bước nhập email, KHÔNG bấm Gửi mã**.
 
 | ID | Ưu tiên | Thao tác / Dữ liệu | Kết quả mong đợi | Luật | KQ |
 |---|---|---|---|---|---|
-| SP-01 | 🔥 | Trước khi đặt: đăng nhập `nhung.ho@gmail.com` | MSG38 | MSG38 | |
-| SP-02 | 🔥 ⏱ | `/set-password?token=setup-nhung-phase1-2026` → MK `Nhung2026` ×2 | `/login` + "Đã đặt mật khẩu. Vui lòng đăng nhập."; đăng nhập Nhung được | CBR-24 | |
-| SP-03 | 🔥 | Mở lại đúng link SP-02 | "Link đặt mật khẩu không còn hiệu lực…" + nút Quên MK | CBR-31 | |
-| SP-04 | 🔥 | `?token=setup-khanh-expired-2026` | Như SP-03 | CBR-31 | |
-| SP-05 | ⭐ | `?token=abc` / không có `token` | Như SP-03 | Bảo mật | |
-| SP-06 | ⭐ | MK sai luật / nhập lại không khớp | Lỗi dưới ô, **giữ form**, link vẫn dùng được | DBR-02 | |
-| SP-07 | ⭐ | Mở form (GET) → đợi link hết hạn → gửi | "Link không còn hiệu lực" (server kiểm lại khi POST) | Bảo mật | |
-| SP-08 | | Mở form ở 2 tab, tab 1 đặt xong, tab 2 gửi | Tab 2: link không còn hiệu lực | Dùng 1 lần | |
-| SP-09 | ⭐ | Xem `VerificationCodes.TokenHash` của link | 64 ký tự hex, **khác** token trên URL | Bảo mật | |
-| SP-10 | ⭐ | Nút "Quên mật khẩu" ở SP-03 | Mở `/forgot-password` | CBR-31 | |
+| SP-01 | 🔥 | Đăng nhập `khanh.trinh@gmail.com` / bất kỳ | Panel "Chưa thể đăng nhập" + MSG38 "Tài khoản này chưa có mật khẩu. Hãy dùng Quên mật khẩu để đặt mật khẩu." | MSG38, CBR-31 | |
+| SP-02 | 🔥 | Tiếp SP-01, bấm **Đặt mật khẩu** | `/forgot-password` bước 1, ô email = `khanh.trinh@gmail.com`, **chưa gửi mã** | CBR-31 | |
+| SP-03 | 🔥 | Đăng nhập `0901234513` (SĐT Khánh) → **Đặt mật khẩu** | MSG38; sang Quên MK với ô email **TRỐNG** (không lộ email gắn SĐT) | CBR-31, bảo mật | |
+| SP-04 | ⭐ | `nhung.ho@gmail.com` → Đặt mật khẩu | Như SP-02 với email Nhung | CBR-31 | |
+| SP-05 | ⭐ | Sau SP-02 bấm **F5** | Ô email **trống lại** (điền sẵn chỉ 1 lần) | Bảo mật | |
+| SP-06 | ⭐ | Sau SP-02 xem thanh địa chỉ | Chỉ `/forgot-password`, **không có email trên URL** | Bảo mật | |
+| SP-07 | ⭐ | Tài khoản test **của chính bạn** có `PasswordHash` NULL → SP-02 → Gửi mã → nhập mã → đặt MK | `/login` + MSG49; đăng nhập bằng MK mới được | CBR-24, CBR-31 | |
+| SP-08 | ⭐ | Mở `/set-password` hoặc `/set-password?token=abc` | **404** (trang đã bỏ) | — | |
 
 ## 8. CÀI ĐẶT TÀI KHOẢN — `/account` (UC-04)
 

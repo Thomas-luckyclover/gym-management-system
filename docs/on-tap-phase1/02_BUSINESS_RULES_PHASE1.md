@@ -32,7 +32,8 @@ Nhập identifier + password
  B3  Status = Inactive | Locked                         → MSG37 "Tài khoản này đã ngừng hoạt động…"
  B4  LockedUntil > bây giờ                              → MSG35 "Tài khoản bị khóa 5 phút… Thử lại sau n phút."
      LockedUntil ≤ bây giờ (hết khóa)                   → reset FailedLoginCount = 0, LockedUntil = NULL (BR-02), đi tiếp
- B5  PasswordHash NULL                                  → MSG38 (panel "Chưa thể đăng nhập" + nút Đặt mật khẩu)
+ B5  PasswordHash NULL                                  → MSG38 (panel "Chưa thể đăng nhập" + nút Đặt mật khẩu → /forgot-password;
+                                                       gõ email → ô email bên đó điền sẵn, gõ SĐT → để trống)
  B6  Xác định vai trò (Employees Working → Admin/Manager/PT/Receptionist; không thì Customer)
  B7  BCrypt sai:  NHÂN VIÊN → MSG34, không đếm, không khóa
                   KHÁCH     → FailedLoginCount + 1 → đủ 5 → LockedUntil = now + 5' → MSG35 · chưa đủ → MSG33 "còn n lần"
@@ -48,7 +49,7 @@ Nhập identifier + password
 | BR-01 | **Khách** sai 5 lần liên tiếp (P-17) → khóa 5 phút (P-18). **Nhân viên không bao giờ tự khóa** (máy quầy dùng chung, khóa nhầm là dừng cả ca) | 🟡 đúng logic, nhưng 5/5 **viết cứng** trong `AuthService` thay vì đọc P-17/P-18 |
 | BR-02 | Hết khóa → tự mở, bộ đếm về 0; đăng nhập đúng cũng về 0 | ✅ |
 | CBR-96 | Tài khoản chỉ bị chặn ở 3 trường hợp: nhân viên nghỉ (Inactive), Admin khóa (Locked), khách khóa tạm (BR-01) | ✅ |
-| CBR-31 | Tài khoản Lễ tân tạo chưa có mật khẩu → không đăng nhập được, phải đặt qua link | ✅ MSG38 |
+| CBR-31 | Tài khoản Lễ tân tạo chưa có mật khẩu → không đăng nhập được, phải đặt qua **Quên mật khẩu** | ✅ MSG38 |
 | CBR-21 / CBR-17 | Dependent / hồ sơ không tài khoản → không đăng nhập | ✅ (không tìm thấy account → MSG34) |
 | DBR-28 | Hồ sơ đã nhả (IsReleased = 1) không đăng nhập được | ✅ `IsReleased = 0` trong SQL |
 | GBR-27 | Khóa tạm hiện đồng hồ **mm:ss** | 🟡 server trả "n phút" (làm tròn lên), JS đếm từ n×60 giây — không chính xác tới giây |
@@ -107,7 +108,7 @@ Mẹo nhớ 4 nhánh SĐT trùng: **"Có TK → Đăng nhập · Không email �
 
 ## C. BỘ MÁY MÃ OTP DÙNG CHUNG — `VerificationCodeService` (CBR-94)
 
-Dùng cho 4 mục đích: `SignUp`, `Claim`, `Recovery`, `EmailChange` (+ `PasswordSetup` là **link**, không phải mã).
+Dùng cho 4 mục đích: `SignUp`, `Claim`, `Recovery`, `EmailChange` (`PasswordSetup` — link đặt mật khẩu cũ — **đã bỏ từ 27/09**, giá trị còn trong CHECK của schema nhưng code không dùng).
 
 | Luật | Giá trị | Nguồn | Trong code |
 |---|---|---|---|
@@ -141,6 +142,15 @@ Mỗi **mã** có 5 lần nhập (lần 5 sai mới khóa); mỗi **giờ** có 
 
 Mẹo nhớ: **"5 – 5 – 15 – 60 – 5/giờ"** = sai 5 lần · khóa 5 phút · sống 15 phút · chờ 60 giây · xin tối đa 4 lần/giờ.
 
+**Báo trước số lượt còn lại (MSG62–MSG65 — SRS bổ sung)** — màn nhập mã (hiện ở `/forgot-password` bước 2) hiện 2 dòng gợi ý
+để người dùng không bị khóa bất ngờ. Chỉ **đọc** sổ mã (`VerificationCodeService.getAttemptInfo`), luật khóa thật vẫn ở `sendCode` / `verifyCode`:
+
+| Gợi ý | Công thức | Câu hiển thị |
+|---|---|---|
+| Còn mấy lần nhập mã | `P-17 − FailedAttempts` của mã mới nhất (0 nếu mã đã dùng / hết hạn) | ≥ 2 → **MSG62** "Bạn còn n lần nhập mã." · còn 1 → **MSG63** "Nhập sai thêm 1 lần, … khóa 5 phút." (màu cảnh báo) |
+| Còn mấy lần gửi lại | `(P-17 − 1) − số mã đã gửi trong 60 phút` (khớp điều kiện khóa `sentCount + 1 ≥ 5`) | ≥ 1 → **MSG64** "Còn n lần gửi lại mã trong 60 phút." · 0 → **MSG65** "Đã hết lượt gửi lại. Gửi thêm sẽ khóa…" (màu cảnh báo) |
+| Đang khóa | — | Ẩn cả 2 dòng, chỉ còn **MSG61** |
+
 ---
 
 ## D. QUÊN MẬT KHẨU `/forgot-password` (UC-03) — 3 bước, 1 trang
@@ -163,7 +173,8 @@ Bước 3  Mật khẩu mới + nhập lại ─► 8–64 chữ+số (DBR-02) �
 | CBR-94 | Luật mã (mục C) | ✅ |
 | CBR-93 | Đổi/đặt lại mật khẩu thành công → đăng xuất **mọi** phiên trước đó | ✅ `invalidateSessionsOfAccount(id, null)` |
 | UC-03 | Áp dụng mọi vai trò (khách + nhân viên) | ✅ |
-| CBR-31 | Tài khoản chưa có mật khẩu (link hết hạn) cũng dùng luồng này | ✅ |
+| CBR-24 | Tài khoản Lễ tân tạo tại quầy **chưa có mật khẩu, không gửi email** — khách tự đặt mật khẩu qua luồng này | 🟡 phía khách ✅ · phía Lễ tân tạo TK ⏳ (TV4) |
+| CBR-31 | Tài khoản chưa có mật khẩu đặt mật khẩu lần đầu bằng luồng này (không còn link riêng). Đăng nhập bằng email gặp MSG38 → bấm Đặt mật khẩu → ô email điền sẵn; bằng SĐT → ô trống (không lộ email gắn SĐT) | ✅ |
 | Chốt #3 | Admin khóa / nhân viên nghỉ → **chặn** (MSG37), khớp màn đăng nhập | ✅ |
 | Chốt #4 | Khách đang khóa tạm 5 phút → **cho** khôi phục; đặt lại xong tự mở khóa | ✅ `resetFailedLogin` |
 | Chốt #2 | Email không tồn tại → MSG41 (chấp nhận rủi ro dò email) | ✅ (ghi nhận rủi ro — 05) |
@@ -171,22 +182,10 @@ Bước 3  Mật khẩu mới + nhập lại ─► 8–64 chữ+số (DBR-02) �
 
 ---
 
-## E. ĐẶT MẬT KHẨU QUA LINK `/set-password?token=…` (CBR-24, CBR-31)
+## E. ~~ĐẶT MẬT KHẨU QUA LINK~~ — ĐÃ BỎ 27/09
 
-```
-[Lễ tân tạo tài khoản tại quầy — TV4, CHƯA CODE]
-  token = SecureCodeUtil.generateUrlToken()   (32 byte ngẫu nhiên → 43 ký tự Base64URL)
-  INSERT VerificationCodes(Purpose=PasswordSetup, TokenHash = sha256Hex(token), Code NULL, ExpiresAt = now + P-15)
-  EmailGateway.sendPasswordSetupLink(email, ".../set-password?token=" + token, 15)
-[Khách mở link]   GET  → băm token → tìm TokenHash → không có / đã dùng / hết hạn → "Link không còn hiệu lực" + nút Quên mật khẩu
-[Khách gửi form]  POST → KIỂM TRA LẠI link → validate mật khẩu → Status Active? → lưu hash + mở khóa → UsedAt = now → /login
-```
-
-| Mã | Luật | Trạng thái |
-|---|---|---|
-| CBR-24 | Khách mua gói ≥ 1 tháng tại quầy → Lễ tân tạo TK bằng email hồ sơ → khách nhận email đặt mật khẩu | 🟡 phía khách ✅ · phía Lễ tân ⏳ (TV4) |
-| CBR-31 | Chưa đặt mật khẩu → không đăng nhập (MSG38); link hết hạn P-15 → dùng Quên mật khẩu | ✅ |
-| Bảo mật | DB chỉ lưu SHA-256; link dùng 1 lần; kiểm tra lại khi POST | ✅ |
+Luồng `/set-password?token=…` đã bị bỏ. Tài khoản Lễ tân tạo (chưa có mật khẩu) đặt mật khẩu lần đầu bằng **Quên mật khẩu** (mục D, CBR-24/31).
+Cột `VerificationCodes.TokenHash` và giá trị `PasswordSetup` vẫn còn trong schema nhưng không dùng (nợ kỹ thuật, `docs/notes.md` D6).
 
 ---
 
@@ -293,8 +292,8 @@ GBR-01 tiếng Việt, dd/mm/yyyy, HH:mm, UTC+7 · GBR-13 server kiểm lại ·
 |---|---|
 | Đăng nhập | MSG33 (còn n lần) · MSG34 (chung, NV) · MSG35 (khóa tạm) · MSG37 (ngừng hoạt động) · MSG38 (chưa có mật khẩu) · MSG39 (nhập email/SĐT) · MSG40 (đã đăng xuất) |
 | Đăng ký | MSG50 (SĐT hợp lệ) · MSG51 (đã có TK) · MSG52 (email khác, che) · MSG53 (hồ sơ không email) · MSG54 (đã tạo TK) · MSG12/13/14 (trùng/sai) |
-| Mã OTP | MSG42 (đã gửi, hiệu lực n phút) · MSG43 (sai mã) · MSG44 (hết hạn) · MSG45 (đã gửi mã mới) · MSG61 (khóa xác thực) · `MSG68_CODE_FORMAT` · `MSG70_CODE_RESEND_TOO_SOON` |
-| Mật khẩu | MSG46 (quá ngắn) · MSG47 (không khớp) · MSG48 (trùng cũ) · MSG49 (đã đổi, đăng xuất phiên) · `MSG66_PASSWORD_RULE` · `MSG71_SETUP_LINK_INVALID` · `MSG72_PASSWORD_SET` |
+| Mã OTP | MSG42 (đã gửi, hiệu lực n phút) · MSG43 (sai mã) · MSG44 (hết hạn) · MSG45 (đã gửi mã mới) · MSG61 (khóa xác thực) · MSG62/63 (còn n lần nhập / lần cuối) · MSG64/65 (còn n lần gửi lại / hết lượt) · `MSG68_CODE_FORMAT` · `MSG70_CODE_RESEND_TOO_SOON` |
+| Mật khẩu | MSG46 (quá ngắn) · MSG47 (không khớp) · MSG48 (trùng cũ) · MSG49 (đã đổi, đăng xuất phiên) · `MSG66_PASSWORD_RULE` · `MSG71_CURRENT_PASSWORD_WRONG` |
 | Tài khoản | MSG55 (mã tới email mới) · MSG56 (đã đổi email, báo email cũ) · MSG57 (đã đổi SĐT) · MSG58 (đã đổi ảnh) · MSG59 (đăng xuất thiết bị khác) · MSG60 (do quầy lễ tân cập nhật) |
 | Hệ thống | MSG04 (hệ thống bận) · MSG06 (hết phiên — AJAX 401) · MSG07 (không có quyền — AJAX 403) · MSG09 (%s là bắt buộc) |
 

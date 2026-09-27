@@ -3,8 +3,9 @@ package com.gms.entity;
 import java.time.LocalDateTime;
 
 /**
- * Entity ánh xạ bảng VerificationCodes — mã 6 số gửi qua email, HOẶC link đặt mật khẩu (Purpose PasswordSetup).
- * Dùng chung cho Đăng ký, Kích hoạt hồ sơ, Quên mật khẩu, Đổi email, Đặt mật khẩu qua link
+ * Entity ánh xạ bảng VerificationCodes — mã 6 số gửi qua email.
+ * Dùng chung cho Đăng ký, Kích hoạt hồ sơ, Quên mật khẩu, Đổi email.
+ * Cột TokenHash (link đặt mật khẩu cũ) không còn dùng từ 27/09, giữ field để khớp schema.
  *
  * @author Le Cong Minh
  */
@@ -117,8 +118,8 @@ public class VerificationCode {
     }
 
     /**
-     * Mục đích của mã xác thực / token link đặt mật khẩu — phân biệt dòng dữ liệu này
-     * phục vụ luồng nào (đăng ký, kích hoạt, quên mật khẩu, đổi email, hay đặt mật khẩu qua link).
+     * Mục đích của mã xác thực — phân biệt dòng dữ liệu này phục vụ luồng nào
+     * (đăng ký, kích hoạt, quên mật khẩu, đổi email).
      * dbValue phải khớp đúng CHECK constraint CK_VerificationCodes_Purpose.
      */
     public enum Purpose {
@@ -126,8 +127,7 @@ public class VerificationCode {
         SIGN_UP("SignUp"),
         CLAIM("Claim"),
         RECOVERY("Recovery"),
-        EMAIL_CHANGE("EmailChange"),
-        PASSWORD_SETUP("PasswordSetup");
+        EMAIL_CHANGE("EmailChange");
 
         private final String dbValue;
 

@@ -309,7 +309,7 @@
 
 
 <script
-    src="${pageContext.request.contextPath}/js/pages/auth/account-settings.js"
+    src="${pageContext.request.contextPath}/js/pages/auth/account-settings.js?v=2"
     defer>
 </script>
 

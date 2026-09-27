@@ -11,7 +11,7 @@
     <link rel="stylesheet"
           href="${pageContext.request.contextPath}/css/pages/auth/register.css">
 
-    <script src="${pageContext.request.contextPath}/js/pages/auth/register.js"
+    <script src="${pageContext.request.contextPath}/js/pages/auth/register.js?v=3"
             defer></script>
 </head>
 

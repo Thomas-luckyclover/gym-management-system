@@ -16,11 +16,9 @@
                  │  "Đăng nhập" → #1        "Đăng ký" → #2        (đã đăng nhập) "Đăng xuất" → POST /logout        │
                  └──────────────────────────────────────────────────────────────────────────────────────────────┘
  #5 Home "/" ──► #1 SIGN IN "/login" ◄───────────────────────────────── toast MSG54 ─── #2 REGISTER "/register"
-                   │  │  │   ▲  ▲                                                        (bước 1 SĐT → bước 2 thông tin)
-                   │  │  │   │  └──── toast MSG49 ──── #3 FORGOT PASSWORD "/forgot-password" (email → mã → mật khẩu mới)
-                   │  │  │   │                               ▲
-                   │  │  │   └─ toast "Đã đặt mật khẩu" ── SET PASSWORD "/set-password?token=" ◄── link trong EMAIL (Lễ tân tạo TK)
-                   │  │  └── "Quên mật khẩu?" / nút ở panel khóa / nút "Đặt mật khẩu" (MSG38) ──► #3
+                   │  │  │   ▲                                                           (bước 1 SĐT → bước 2 thông tin)
+                   │  │  │   └──── toast MSG49 ──── #3 FORGOT PASSWORD "/forgot-password" (email → mã → mật khẩu mới)
+                   │  │  └── "Quên mật khẩu?" / nút ở panel khóa / nút "Đặt mật khẩu" (MSG38, gõ email → điền sẵn) ──► #3
                    │  └───── "Đăng ký" ──► #2
                    ▼ đăng nhập thành công (redirect returnUrl hoặc trang chủ vai trò)
    /admin/dashboard · /manager/dashboard · /pt/dashboard · /receptionist/check-in · /customer/dashboard
@@ -55,7 +53,7 @@
 | 1.1 | Mở trang | GET `/login[?returnUrl=]` | `doGet` | — | `RequestUtil.isSafeReturnUrl` | — | GBR-31 | UC-01 | — | #1 (đã đăng nhập → trang chủ vai trò) |
 | 1.2 | Bấm **Đăng nhập** | POST `/login` (identifier, password, returnUrl) | `doPost` → `resolveLoginStep`, `extractLockSecondsLeft` | `AuthService.login` B1–B8 (mục D) | `AccountDAO.findByEmail/findByPhone/resetFailedLogin/increaseFailedLogin/lockUntil/updateLastLogin`, `PasswordUtil.checkPassword`, `ValidationUtil` | Accounts, Persons, Employees, Customers | BR-01, BR-02, CBR-96, CBR-31, DBR-28 | UC-01 | MSG09, 33, 34, 35, 37, 38, 39 | ✔ trang chủ vai trò · ✘ #1 (panel form / khóa / chưa có MK) |
 | 1.3 | Nút con mắt | (JS) | — | — | `common.js` `data-password-toggle` | — | GBR-30 | UC-01 | — | — |
-| 1.4 | "Quên mật khẩu?" / nút panel khóa / "Đặt mật khẩu" (MSG38) | GET `/forgot-password` | → #3 | | | | CBR-31 | UC-03 | | #3 |
+| 1.4 | "Quên mật khẩu?" / nút panel khóa / "Đặt mật khẩu" (MSG38) | GET `/forgot-password` | → #3 (MSG38 + gõ **email** → `doPost` đã đặt session `RECOVERY_PREFILL_EMAIL`; gõ SĐT → không đặt) | | | | CBR-24, CBR-31 | UC-03 | | #3 (ô email điền sẵn / trống) |
 | 1.5 | "Đăng ký" | GET `/register` | → #2 | | | | | UC-05 | | #2 |
 
 **(D) Chuỗi gọi hàm — POST `/login`**
@@ -179,23 +177,6 @@ RegisterServlet.handleInformationStep
 
 ---
 
-## MÀN (phụ) — SET PASSWORD qua link email
-
-| Mục | Nội dung |
-|---|---|
-| URL | `/set-password?token=` — `SetPasswordServlet` · View `auth/set-password.jsp` |
-| Use case | Phần của **UC-16/UC-20** (Lễ tân tạo TK — CBR-24) và **UC-01** (MSG38), **UC-03** (link hết hạn → Quên MK) |
-| Rule | CBR-24, CBR-31, P-15, DBR-02, GBR-15 |
-| Người code | Minh |
-
-| # | Thao tác | HTTP | Servlet · hàm | Service · hàm | DAO / Util | Bảng | Rule | Thông báo | Màn tiếp |
-|---|---|---|---|---|---|---|---|---|---|
-| 4.1 | Bấm link trong email | GET `?token=` | `doGet` | `checkSetupLink` → `VerificationCodeService.findValidSetupLink` (B1 rỗng · B2 `sha256Hex` + `findByTokenHash` · B3 dùng/hết hạn · B4 ok) | `SecureCodeUtil.sha256Hex`, `VerificationCodeDAO.findByTokenHash` | VerificationCodes | CBR-31, P-15 | MSG71_SETUP_LINK_INVALID | form / trạng thái link hỏng |
-| 4.2 | Nhập MK ×2 → **Đặt mật khẩu** | POST (token, password, confirmPassword) | `doPost` | `setPasswordByLink` (B1 kiểm lại link · B2 `validateNewPassword` · B3 `findById` Active · B4 `savePasswordAndUnlock` + `markUsed`) | `AccountDAO`, `PasswordUtil`, `VerificationCodeDAO.markUsed` | Accounts, VerificationCodes | CBR-24, CBR-31, DBR-02 | MSG72_PASSWORD_SET, MSG37, MSG47 | #1 |
-| 4.3 | Link hỏng → **Quên mật khẩu** | GET `/forgot-password` | | | | | CBR-31 | | #3 |
-
----
-
 ## MÀN #4 — ACCOUNT SETTINGS
 
 **(A) Thẻ màn**
@@ -266,7 +247,7 @@ AccountSettingsServlet.handleChangePassword
 | UC-05 | Register Account | #2 | `RegisterServlet` | `RegistrationService` |
 | UC-IDENT | Check Phone/Email & Identify | #2 bước 1–2 | `RegisterServlet` | `RegistrationService.register` B3–B4 |
 | UC-Claim | Claim Existing Profile | #2 nhánh email khớp | `RegisterServlet` | `RegistrationService.claimExistingAccount` (+ OTP: chưa) |
-| CBR-24 (UC-16/20) | TK Lễ tân tạo → đặt MK | Set password | `SetPasswordServlet` | `PasswordRecoveryService.setPasswordByLink` |
+| CBR-24 (UC-16/20) | TK Lễ tân tạo → đặt MK lần đầu | #1 → #3 | `LoginServlet` (MSG38, điền sẵn email) → `ForgotPasswordServlet` | `PasswordRecoveryService.requestCode` / `verifyCode` / `resetPassword` |
 
 ### B. Rule → Nơi thực thi trong code
 
@@ -280,7 +261,7 @@ AccountSettingsServlet.handleChangePassword
 | CBR-17/18/21 | Hồ sơ ≠ tài khoản; Dependent không TK | Schema + `AccountDAO.findBy*` (JOIN Accounts) | ✅ |
 | CBR-20 | Kích hoạt hồ sơ cần mã tới email hồ sơ | `RegistrationService.handleExistingPhone` | 🔴 thiếu mã |
 | CBR-23 / DBR-28 | Hồ sơ đã nhả không chặn | SQL `IsReleased = 0` trong `PersonDAO`, `AccountDAO` | ✅ |
-| CBR-24 / CBR-31 | Link đặt MK, chưa có MK không đăng nhập | `SetPasswordServlet`, `findValidSetupLink`, `AuthService` B5 | ✅ (phía khách) |
+| CBR-24 / CBR-31 | Chưa có MK không đăng nhập (MSG38), đặt MK qua Quên mật khẩu | `AuthService` B5 · `LoginServlet.doPost` (điền sẵn email) · `ForgotPasswordServlet` | ✅ (phía khách) |
 | CBR-25/26/27 | 3 nhánh dừng đăng ký | `RegistrationService.handleExistingPhone` | ✅ |
 | CBR-28 | Số giám hộ không chặn | `PersonDAO.findByPhone` chỉ xét `Persons.Phone` | ✅ |
 | CBR-29 | Đổi email → báo email cũ + đăng xuất | `ContactChangeService.applyEmailChange` | 🔴 chưa nối |

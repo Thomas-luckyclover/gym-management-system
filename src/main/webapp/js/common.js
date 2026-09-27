@@ -116,12 +116,15 @@ const MESSAGES = {
     MSG44_CODE_EXPIRED: "Mã đã hết hạn. Bấm Gửi lại mã để nhận mã mới.",
     MSG46_PASSWORD_TOO_SHORT: "Mật khẩu phải có ít nhất %d ký tự.",
     MSG47_PASSWORD_MISMATCH: "Mật khẩu xác nhận không khớp.",
+    MSG62_CODE_ATTEMPTS_LEFT: "Bạn còn %d lần nhập mã.",
+    MSG63_CODE_LAST_ATTEMPT: "Nhập sai thêm 1 lần, xác thực cho email này sẽ bị khóa %d phút.",
+    MSG64_CODE_RESENDS_LEFT: "Còn %d lần gửi lại mã trong 60 phút.",
+    MSG65_CODE_RESEND_WILL_LOCK: "Đã hết lượt gửi lại. Gửi thêm sẽ khóa xác thực %d phút.",
     MSG66_PASSWORD_RULE: "Mật khẩu phải dài %d–%d ký tự, gồm cả chữ và số.",
     MSG67_FULL_NAME_RULE: "Họ tên chỉ gồm chữ cái, khoảng trắng, dấu nháy đơn hoặc gạch nối.",
     MSG68_CODE_FORMAT: "Mã xác thực gồm đúng 6 chữ số.",
     MSG69_DOB_TOO_OLD: "Ngày sinh không hợp lệ (tuổi không quá %d).",
-    MSG70_CODE_RESEND_TOO_SOON: "Vui lòng chờ %d giây nữa rồi bấm Gửi lại mã.",
-    MSG71_SETUP_LINK_INVALID: "Link đặt mật khẩu không còn hiệu lực. Vui lòng dùng Quên mật khẩu để đặt lại."
+    MSG70_CODE_RESEND_TOO_SOON: "Vui lòng chờ %d giây nữa rồi bấm Gửi lại mã."
 };
 
 // Hộp thoại xác nhận đang mở (chỉ mở 1 cái tại 1 thời điểm)
@@ -981,22 +984,15 @@ function handleLeavePageLinkClick(event) {
 // B2: bấm → đổi type password ↔ text, đổi icon mắt mở/mắt gạch, cập nhật aria-label cho trình đọc màn hình
 function bindPasswordToggles() {
     document.addEventListener("click", function (event) {
-        const button = event.target.closest("[data-password-toggle], [data-pw-toggle], [data-toggle-target], .pw-toggle");
+        // Không bắt [data-toggle-target]: thuộc tính đó dành cho nút mở/đóng vùng (menu mobile) — bindToggleButtons()
+        const button = event.target.closest("[data-password-toggle], [data-pw-toggle]");
         if (!button) {
             return;
         }
 
-        const targetId = button.dataset.passwordToggle
-            || button.dataset.pwToggle
-            || button.dataset.toggleTarget
-            || button.getAttribute("data-toggle-target");
-
-        if (!targetId) {
-            return;
-        }
-
+        const targetId = button.dataset.passwordToggle || button.dataset.pwToggle;
         const input = document.getElementById(targetId);
-        if (!input) {
+        if (!(input instanceof HTMLInputElement)) {
             return;
         }
 

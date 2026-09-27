@@ -99,7 +99,7 @@
                     <c:if test="${empty fieldErrors.code}">hidden</c:if>><c:out value="${fieldErrors.code}" /></span>
               <%-- MSG62 / MSG63: số lần còn nhập mã (Servlet tính, ẩn khi email đang bị khóa) --%>
               <c:if test="${not empty attemptHint}">
-                <span class="field-hint recovery-hint ${attemptHintWarn ? 'recovery-hint--warn' : ''}"><c:out value="${attemptHint}" /></span>
+                <span class="field-hint ${attemptHintWarn ? 'field-hint--warn' : ''}"><c:out value="${attemptHint}" /></span>
               </c:if>
             </label>
             <button class="btn btn-primary btn-block" type="submit">Xác nhận</button>
@@ -111,15 +111,15 @@
               <button class="link-btn" type="submit" id="resendBtn" data-resend-seconds="${resendSecondsLeft}">
                 <i class="fa-solid fa-rotate-right"></i> Gửi lại mã<span id="resendWait"></span>
               </button>
+              <%-- MSG64 / MSG65: số lần còn gửi lại mã trong 60 phút --%>
+              <c:if test="${not empty resendHint}">
+                <span class="field-hint ${resendHintWarn ? 'field-hint--warn' : ''}"><c:out value="${resendHint}" /></span>
+              </c:if>
             </form>
             <a class="link-btn" href="${ctx}/forgot-password?restart=1">
               <i class="fa-solid fa-pen"></i> Dùng email khác
             </a>
           </div>
-          <%-- MSG64 / MSG65: số lần còn gửi lại mã trong 60 phút --%>
-          <c:if test="${not empty resendHint}">
-            <p class="field-hint recovery-hint ${resendHintWarn ? 'recovery-hint--warn' : ''}"><c:out value="${resendHint}" /></p>
-          </c:if>
         </c:when>
 
         <%-- ================= Bước 3: đặt mật khẩu mới ================= --%>

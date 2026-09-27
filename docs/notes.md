@@ -41,7 +41,7 @@ Theo agents.md Phần 5: **chưa ai sửa schema**. Trước khi sửa: copy sch
 | Orders | `PackageBenefitsSnapshot` | DBR-50 (giá + mô tả + **quyền lợi** copy vào đơn) |
 | ~~Employees~~ ✅ | ~~`Specialty`, `YearsOfExperience`~~ — **đã thêm** (migration 001) | SRS 2.1.1 danh sách PT trang chủ; prototype `kh/dat-buoi-le` lọc theo chuyên môn |
 | ~~Employees~~ ✅ | ~~`ResignationReason`~~ — **đã thêm**, bắt buộc khi Resigned (migration 001) | SRS 5.1.2 "Reason — required" |
-| ~~VerificationCodes~~ ✅ | ~~Purpose `PasswordSetup` + `TokenHash`~~ — **đã thêm**, `Code` cho phép NULL (migration 001) | MSG38, P-15 — tài khoản Lễ tân tạo tại quầy |
+| ~~VerificationCodes~~ ✅ | ~~Purpose `PasswordSetup` + `TokenHash`~~ — **đã thêm**, `Code` cho phép NULL (migration 001) | MSG38, P-15 — tài khoản Lễ tân tạo tại quầy. **Không còn dùng từ 27/09** (xem D6) |
 | ~~LeaveRequests~~ ✅ | ~~`ReminderSentAt`~~ — **đã thêm** (migration 001) | JOB-07 nhắc Manager — không có cột này job chạy mỗi phút sẽ nhắc lặp liên tục |
 
 ### D3. Dữ liệu mẫu lệch luật (sửa trong `2_Seed_Data.sql`, không đụng schema)
@@ -64,6 +64,12 @@ Theo agents.md Phần 5: **chưa ai sửa schema**. Trước khi sửa: copy sch
 - PK `CustomerDeletionRequests.DeletionRequestId` chưa đúng quy tắc `<TênBảngSốÍt>Id` (NamingConvention Mục 2) → `CustomerDeletionRequestId`.
 - Tiền dùng `INT` (tối đa ~2,1 tỷ đ) — đủ cho gym; Java vẫn đọc bằng `long` (`rs.getLong`).
 - `TimeSlots` chỉ chặn trùng giờ bắt đầu; chồng giờ (09:00 và 09:30) phải chặn ở Service (DBR-33).
+
+### D6. Nợ kỹ thuật (giữ trong schema, code không dùng)
+
+| Thành phần | Ghi chú |
+|---|---|
+| VerificationCodes.TokenHash, Purpose 'PasswordSetup', CK_VerificationCodes_CodeOrToken, UX_VerificationCodes_TokenHash | Không còn dùng từ 27/09 (bỏ luồng link đặt mật khẩu, CBR-24/31 chuyển sang Quên mật khẩu). Giữ nguyên để khỏi tạo lại DB; dọn khi chốt schema cuối. |
 
 ## B. Quyết định kỹ thuật đã áp dụng (Leader, 24/09/2026)
 

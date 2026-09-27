@@ -13,12 +13,12 @@
 | 0 | `00_BAT_DAU_O_DAY.md` (file này) | Bức tranh 1 trang + lộ trình 2 ngày | 20 phút |
 | 1 | `01_KIEN_TRUC_TONG_THE.md` | Hệ thống gồm những khối nào, 1 request đi qua đâu, vì sao thiết kế như vậy | 2 giờ |
 | 2 | `02_BUSINESS_RULES_PHASE1.md` | Toàn bộ luật Phase 1 **xếp theo luồng màn hình**, có mẹo nhớ | 3 giờ |
-| 2b | `02b_DECISION_TABLES.md` ⭐ | **12 decision table**: đăng nhập, đăng ký, xin/nhập mã, quên MK, link, đổi MK, đổi email/SĐT, truy cập URL — mỗi dòng 1 trường hợp + ví dụ seed | 2 giờ (học cái này trước nếu đang quá tải) |
-| 3 | `03_DEEP_DIVE_EMAIL_BCRYPT_RECOVERY.md` | Hàm nào gọi hàm nào: Email · BCrypt · Quên mật khẩu · Đặt mật khẩu qua link | 3 giờ |
+| 2b | `02b_DECISION_TABLES.md` ⭐ | **12 decision table**: đăng nhập, đăng ký, xin/nhập mã, quên MK, tài khoản chưa có MK, đổi MK, đổi email/SĐT, truy cập URL — mỗi dòng 1 trường hợp + ví dụ seed | 2 giờ (học cái này trước nếu đang quá tải) |
+| 3 | `03_DEEP_DIVE_EMAIL_BCRYPT_RECOVERY.md` | Hàm nào gọi hàm nào: Email · BCrypt · Quên mật khẩu · Tài khoản chưa có mật khẩu | 3 giờ |
 | 3b | `03b_TRUY_VET_MAN_HINH_HAM_RULE.md` ⭐ | **Đúng yêu cầu của thầy**: Màn → nút → Servlet → Service (các bước) → DAO → bảng DB → Rule → Use case → màn tiếp theo; + ma trận truy vết ngược Rule→hàm, UC→màn | 2 giờ |
 | 4 | `04_KICH_BAN_TEST_AUTH.md` | ~150 ca test toàn bộ Authentication, có dữ liệu seed + câu SQL kiểm tra | làm tay 3–4 giờ |
 | 5 | `05_HOI_DAP_BAO_VE.md` | Câu hỏi khó giáo viên hay hỏi + câu trả lời mẫu + danh sách lỗ hổng/việc còn thiếu | 2 giờ |
-| 7 | `07_DONG_BO_MESSAGE_SRS_CODE.md` 🆕 | Bảng MSG SRS ↔ code: MSG62–65 đã code, MSG66–75 cần thêm vào SRS, danh sách đổi tên `EXTRA_*` | 20 phút |
+| 7 | `07_DONG_BO_MESSAGE_SRS_CODE.md` 🆕 | Bảng MSG SRS ↔ code: MSG62–65 đã code, MSG66–73 cần thêm vào SRS, danh sách đổi tên `EXTRA_*` | 20 phút |
 | 6 | `so-do/GMS_Project_Architecture.drawio` + `so-do/GHI_CHU_SO_DO.md` | Sơ đồ kiến trúc kiểu vẽ tay (mở bằng draw.io) + lời thuyết trình từng khối | 1 giờ |
 
 ---
@@ -55,18 +55,18 @@ Mẹo chống quá tải: khi thấy 1 hàm dài, **chỉ đọc các dòng comm
 
 ```
                 ┌────────────── TRÌNH DUYỆT (JSP đã render + CSS + JS) ──────────────┐
-                │  login.jsp · register.jsp · forgot-password.jsp · set-password.jsp │
+                │  login.jsp · register.jsp · forgot-password.jsp                    │
                 │  account-settings.jsp   ·   common.js (validate, toast, đếm ngược) │
                 └───────────────────────────────┬────────────────────────────────────┘
                                                 │ HTTP (form POST / GET, AJAX JSON)
 ┌───────────────────────────────── TOMCAT 10.1 · JDK 17 · Jakarta EE 10 ───────────────────────────────┐
 │ FILTER  CharacterEncodingFilter (UTF-8) → AuthFilter (đăng nhập chưa?) → RoleAreaFilter (đúng vai?) │
-│ SERVLET LoginServlet · LogoutServlet · RegisterServlet · ForgotPasswordServlet · SetPasswordServlet │
+│ SERVLET LoginServlet · LogoutServlet · RegisterServlet · ForgotPasswordServlet                      │
 │         AccountSettingsServlet         ← "Controller": đọc form, gọi Service, chọn JSP / redirect   │
 │ SERVICE AuthService · RegistrationService · PasswordRecoveryService · VerificationCodeService       │
 │         AccountSettingsService · ContactChangeService · SystemConfigService   ← MỌI LUẬT NẰM Ở ĐÂY  │
 │ DAO     AccountDAO · PersonDAO · CustomerDAO · VerificationCodeDAO · SystemConfigDAO  ← CHỈ SQL      │
-│ UTIL    PasswordUtil (BCrypt) · SecureCodeUtil (SecureRandom, SHA-256) · ValidationUtil · RequestUtil │
+│ UTIL    PasswordUtil (BCrypt) · SecureCodeUtil (SecureRandom) · ValidationUtil · RequestUtil          │
 │ LISTENER SessionRegistryListener (AccountId → các phiên đang mở)                                    │
 │ INTEGRATION EmailGateway ───────── SMTP 587 + STARTTLS ─────────► smtp.gmail.com ──► hộp thư khách   │
 └──────────────────────────────────────────────┬──────────────────────────────────────────────────────┘
@@ -78,7 +78,7 @@ Mẹo chống quá tải: khi thấy 1 hàm dài, **chỉ đọc các dòng comm
 **5 câu nói trong 30 giây với giáo viên:**
 1. GMS là web **MVC nhiều tầng** chạy trên Tomcat: Servlet (Controller) → Service (nghiệp vụ) → DAO (SQL) → SQL Server; JSP là View.
 2. **Mọi luật nằm ở Service**, Servlet chỉ điều phối, DAO chỉ SQL — trả kết quả thống nhất bằng `ServiceResult<T>`.
-3. Bảo mật tài khoản: mật khẩu **BCrypt** (có salt, 2^10 vòng), mã OTP 6 số sinh bằng **SecureRandom**, link đặt mật khẩu chỉ lưu **SHA-256 của token**.
+3. Bảo mật tài khoản: mật khẩu **BCrypt** (có salt, 2^10 vòng), mã OTP 6 số sinh bằng **SecureRandom**. Tài khoản Lễ tân tạo (chưa có mật khẩu) đặt mật khẩu qua **Quên mật khẩu** — không có link riêng.
 4. Chống dò/brute-force: khóa khách sau **5 lần sai / 5 phút**, OTP **hết hạn 15 phút**, sai 5 lần hủy mã + khóa email, gửi lại sau **60 giây**, lần xin thứ 5 trong 1 giờ bị khóa.
 5. Phiên đăng nhập: đổi session id khi login (chống **session fixation**), timeout 2 giờ, đổi mật khẩu → đăng xuất các phiên khác qua **SessionRegistryListener**.
 
@@ -90,7 +90,7 @@ Mẹo chống quá tải: khi thấy 1 hàm dài, **chỉ đọc các dòng comm
 |---|---|---|---|
 | **5 lần** | Sai mật khẩu (khách) / sai mã OTP → khóa | P-17, BR-01, CBR-94 | Login: hằng `MAX_FAILED_ATTEMPTS` (⚠ viết cứng) · OTP: đọc `P-17` |
 | **5 phút** | Thời gian khóa tạm | P-18 | Login: hằng `LOCK_MINUTES` (⚠ viết cứng) · OTP: đọc `P-18` |
-| **15 phút** | Hạn mã OTP và link đặt mật khẩu | P-15, BR-04 | `SystemConfigService.getInt("P-15")` |
+| **15 phút** | Hạn mã OTP / mã khôi phục | P-15, BR-04 | `SystemConfigService.getInt("P-15")` |
 | **60 giây** | Khoảng cách tối thiểu giữa 2 lần xin mã | "Not configurable" | `AppConstants.CODE_RESEND_GAP_SECONDS` |
 | **5 lần / 60 phút** | Lần xin mã thứ 5 trong 1 giờ → khóa 5 phút | CBR-94 | `countCodesSentSince` + `AppConstants.CODE_REQUEST_WINDOW_MINUTES` |
 | **8–64** | Độ dài mật khẩu, có ≥1 chữ + ≥1 số | DBR-02 | `ValidationUtil.isValidPassword` |
@@ -113,7 +113,7 @@ Mẹo chống quá tải: khi thấy 1 hàm dài, **chỉ đọc các dòng comm
 5. Khách đang bị khóa tạm 5 phút có dùng Quên mật khẩu được không? Tài khoản Admin khóa thì sao?
 6. Đăng ký bằng SĐT đã có hồ sơ (chưa có tài khoản) nhưng nhập email khác thì hệ thống báo gì?
 7. Mã OTP sai lần thứ 5 → chuyện gì xảy ra với mã và với email?
-8. Vì sao DB chỉ lưu SHA-256 của token link đặt mật khẩu?
+8. Tài khoản Lễ tân tạo (chưa có mật khẩu) đăng nhập bằng **SĐT** thì vì sao ô email bên Quên mật khẩu để trống?
 9. Đổi mật khẩu trong Cài đặt tài khoản: phiên nào bị đăng xuất, phiên nào giữ lại?
 10. CBR-112 nói gì? Code đã làm chưa?
 

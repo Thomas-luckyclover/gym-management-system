@@ -1,4 +1,4 @@
-# 03 · Đi sâu 4 luồng: Email · BCrypt · Quên mật khẩu · Đặt mật khẩu qua link
+# 03 · Đi sâu 4 luồng: Email · BCrypt · Quên mật khẩu · Tài khoản chưa có mật khẩu
 
 > Cách đọc: mỗi luồng có **(1) bản đồ gọi hàm** (hàm nào → hàm nào), **(2) các bước trong từng hàm** (B1, B2… khớp comment trong code),
 > **(3) dữ liệu DB thay đổi**, **(4) chi tiết "bẫy" giáo viên hay hỏi**. Không cần đọc từng dòng code — nhớ được bản đồ và các bước là đủ review.
@@ -25,7 +25,6 @@ Servlet ──► Service ──► EmailGateway ──SMTP 587/STARTTLS──�
 |---|---|---|
 | `VerificationCodeService.sendCode` | `sendVerificationCode(email, code, 15, "khôi phục mật khẩu")` | Quên mật khẩu, (sắp tới) đăng ký, kích hoạt, đổi email/SĐT |
 | `ContactChangeService.applyEmailChange` | `sendNotice(emailCũ, "Email đăng nhập đã được thay đổi", …)` | Đổi email xong (CBR-29) — chưa nối servlet |
-| (TV4 — chưa code) Lễ tân tạo TK | `sendPasswordSetupLink(email, link, 15)` | CBR-24 |
 
 ## 1.2 Cấu hình (application.properties — gitignore)
 
@@ -42,8 +41,7 @@ App Password: bật **Xác minh 2 bước** cho Gmail → `myaccount.google.com/
 
 ```
 PUBLIC (soạn nội dung)                         PRIVATE (kỹ thuật)
-sendVerificationCode(to, code, minutes, purpose) ─┐
-sendPasswordSetupLink(to, link, minutes)        ──┼─► send(to, subject, html, text)
+sendVerificationCode(to, code, minutes, purpose) ─┬─► send(to, subject, html, text)
 sendNotice(to, subject, plainMessage)           ──┘        ├─► AppConfig.get("mail.username" / "mail.app-password" / "mail.from-name")
                                                            ├─► isMailNotConfigured(appPassword)  ── true ──► System.out "[DEV EMAIL] …" ⟲ return
                                                            ├─► createMailSession(username, appPassword)
@@ -52,7 +50,7 @@ sendNotice(to, subject, plainMessage)           ──┘        ├─► AppCo
                                                            ├─► Transport.send(message)   [MAIL]
                                                            └─ catch MessagingException | UnsupportedEncodingException
                                                                   → printStackTrace → throw new EmailSendException(…)
-escapeHtml(value)  ← mọi chuỗi động (mã, mục đích, link) đều đi qua đây trước khi ghép vào HTML
+escapeHtml(value)  ← mọi chuỗi động (mã, mục đích, nội dung báo) đều đi qua đây trước khi ghép vào HTML
 ```
 
 ## 1.4 Từng hàm làm gì
@@ -63,7 +61,6 @@ escapeHtml(value)  ← mọi chuỗi động (mã, mục đích, link) đều đ
 3. Soạn **bản chữ thường** cùng nội dung.
 4. Gọi `send(...)`.
 
-**`sendPasswordSetupLink(toEmail, link, validMinutes)`** — giống trên, nội dung là nút "Đặt mật khẩu" + link dự phòng dạng chữ.
 **`sendNotice(toEmail, subject, plainMessage)`** — 1 đoạn văn, tự thêm tiền tố `[Super Gym]`.
 
 **`send(toEmail, subject, contentHtml, contentText)`** — trái tim của luồng email:
@@ -134,7 +131,7 @@ hashPassword được gọi bởi:                          checkPassword đư�
   RegistrationService.createNewCustomerTransaction     AuthService.login  (B7)
   RegistrationService.claimExistingAccount             AccountSettingsService.changePassword
   PasswordRecoveryService.savePasswordAndUnlock           ├ B2: mật khẩu hiện tại đúng không
-     (← resetPassword · setPasswordByLink)                └ B4: mật khẩu mới có TRÙNG mật khẩu cũ không (MSG48)
+     (← resetPassword)                                   └ B4: mật khẩu mới có TRÙNG mật khẩu cũ không (MSG48)
   AccountSettingsService.changePassword (B7)
 ```
 
@@ -173,7 +170,7 @@ B3  hash sai định dạng (VD seed giả, tiền tố $2b$ mà jBCrypt 0.4 kh�
 | Rainbow table | Bị (nếu không salt) | Vô dụng (mỗi hash 1 salt riêng) |
 | Nâng độ khó theo thời gian | Không | Tăng cost +1 = chậm **gấp đôi**; hash cũ vẫn kiểm tra được vì cost nằm trong chuỗi |
 
-Còn SHA-256 trong dự án dùng cho **token link** (mục phần 4): token đã là 32 byte ngẫu nhiên (entropy cao, không đoán được) nên chỉ cần băm nhanh để lộ DB không dùng được — khác với mật khẩu người đặt (entropy thấp, dễ đoán) nên phải băm **chậm**.
+Dự án hiện **không** dùng SHA-256 (trước 27/09 dùng để băm token của link đặt mật khẩu — luồng đó đã bỏ).
 
 ## 2.5 Hai kịch bản dùng BCrypt
 
@@ -225,6 +222,7 @@ Còn SHA-256 trong dự án dùng cho **token link** (mục phần 4): token đ�
 ForgotPasswordServlet (@WebServlet("/forgot-password"))
 │
 ├─ doGet ─► [restart=1] clearRecovery → redirect
+│         ├► [session có RECOVERY_PREFILL_EMAIL] lấy ra 1 lần rồi xóa → clearRecovery → request.email (điền sẵn ô, KHÔNG gửi mã)
 │         └► showCurrentStep ─► resolveStep ─► (reset & isResetExpired → clearRecovery, lỗi MSG44)
 │                             └► forwardStep ─► (bước code) setCodeTimers ─► passwordRecoveryService.findLatestRecoveryCode ─► DAO.findLatestByEmailAndPurpose [DB]
 │                                           └► RequestUtil.forward("auth/forgot-password")
@@ -404,48 +402,42 @@ sequenceDiagram
 
 ---
 
-# PHẦN 4 — ĐẶT MẬT KHẨU QUA LINK `/set-password?token=…`
+# PHẦN 4 — TÀI KHOẢN CHƯA CÓ MẬT KHẨU (CBR-24, CBR-31) — ĐI QUA QUÊN MẬT KHẨU
 
-## 4.1 Tạo link (phía Lễ tân — sẽ làm ở TV4, hàm util đã có sẵn)
+Luồng link `/set-password?token=…` **đã bỏ 27/09**. Tài khoản Lễ tân tạo tại quầy có `PasswordHash` NULL, **không gửi email nào**;
+khách tự đặt mật khẩu lần đầu bằng chính luồng Quên mật khẩu (Phần 3).
 
-```
-token     = SecureCodeUtil.generateUrlToken()     B1 32 byte SecureRandom → B2 Base64 URL-safe, bỏ "=" → 43 ký tự
-tokenHash = SecureCodeUtil.sha256Hex(token)       MessageDigest SHA-256 → 64 ký tự hex thường (khớp CHAR(64))
-INSERT VerificationCodes (AccountId, Email, Purpose='PasswordSetup', Code=NULL, TokenHash=tokenHash, SentAt, ExpiresAt=+P-15)
-EmailGateway.sendPasswordSetupLink(email, baseUrl + "/set-password?token=" + token, 15)   ← link chứa token GỐC
-```
-DB chỉ có **hash** → lộ DB cũng không dựng lại được link. Trong email mới có token gốc.
-
-## 4.2 Mở link — GET
+## 4.1 Từ màn Đăng nhập sang Quên mật khẩu
 
 ```
-SetPasswordServlet.doGet
-│ token = getTrimmedParam("token")
-├─► PasswordRecoveryService.checkSetupLink(token) ─► VerificationCodeService.findValidSetupLink(token)
-│     B1  token rỗng → fail(MSG71_SETUP_LINK_INVALID)
-│     B2  tokenHash = SecureCodeUtil.sha256Hex(token.trim()) → VerificationCodeDAO.findByTokenHash(tokenHash)  [DB]
-│     B3  không thấy / UsedAt ≠ null / now ≥ ExpiresAt → fail(MSG71_SETUP_LINK_INVALID)   (cùng 1 câu, không nói lý do cụ thể)
-│     B4  ok(setupLink)  ← CHỈ KIỂM TRA, chưa đánh dấu đã dùng
-├─ ✔ request.token = token → form đặt mật khẩu
-└─ ✘ request.linkError → "Link không còn hiệu lực" + nút Quên mật khẩu (CBR-31)
+LoginServlet.doPost
+│ AuthService.login(identifier, password) ─► B6 PasswordHash NULL → fail(MSG38)
+├─ [MSG38 VÀ identifier là EMAIL] session.RECOVERY_PREFILL_EMAIL = identifier
+├─ [MSG38 VÀ identifier là SĐT]   KHÔNG đặt gì
+└─► login.jsp panel "Chưa thể đăng nhập" + nút "Đặt mật khẩu" → GET /forgot-password
+
+ForgotPasswordServlet.doGet
+├─► prefill = session.RECOVERY_PREFILL_EMAIL → removeAttribute (dùng 1 lần) → clearRecovery → request.email = prefill
+└─► bước 1 (nhập email), ô email điền sẵn — khách tự bấm "Gửi mã" → Phần 3 như mọi tài khoản khác
 ```
 
-## 4.3 Gửi form — POST
+`PasswordRecoveryService.requestCode` **không** kiểm tra `PasswordHash` → tài khoản NULL nhận mã bình thường; bước 3
+`resetPassword` lưu hash BCrypt → từ đây đăng nhập được.
 
-```
-SetPasswordServlet.doPost ─► PasswordRecoveryService.setPasswordByLink(token, password, confirm)
-│     B1  findValidSetupLink(token) LẠI LẦN NỮA   ← không tin kết quả lúc GET (có thể đã hết hạn / đã dùng ở tab khác)
-│     B2  validateNewPassword (8–64 chữ+số, khớp)
-│     B3  accountId = setupLink.AccountId → AccountDAO.findById → Status phải ACTIVE (không → MSG37)
-│     B4  savePasswordAndUnlock(accountId, password)   (transaction như 3.6)
-│         VerificationCodeDAO.markUsed(linkId, now)    → link chết
-│     → ok(null, MSG72_PASSWORD_SET "Đã đặt mật khẩu. Vui lòng đăng nhập.")
-├─ ✔ toast + redirect /login
-├─ ✘ lỗi dưới ô → giữ form (request.token, fieldErrors)
-└─ ✘ lỗi link/tài khoản → linkError
-```
+## 4.2 Vì sao làm thế
 
-Chi tiết tinh: `markUsed` chạy **sau** transaction lưu mật khẩu, không cùng transaction → nếu 2 tab gửi form **cùng lúc tuyệt đối**, cả 2 có thể qua B1. Hậu quả nhỏ (mật khẩu của lần sau đè lần trước). Cải tiến: `UPDATE … SET UsedAt = ? WHERE Id = ? AND UsedAt IS NULL` và kiểm tra số dòng = 1 trong cùng transaction.
+**Vì sao bỏ link?** Link có hạn 15 phút nên khách hay mở trễ → vẫn phải sang Quên mật khẩu; lại cần thêm 1 servlet, 1 trang,
+bảng băm token, email riêng. Dùng chung Quên mật khẩu thì ít code hơn, cùng 1 bộ luật chống spam (CBR-94).
+
+**Vì sao gõ SĐT thì KHÔNG điền sẵn email?** Nếu điền, ai biết SĐT của khách cũng thấy email gắn với SĐT đó.
+Gõ email thì điền lại đúng chữ khách vừa gõ — không lộ thêm gì.
+
+**Vì sao email đi qua session, không qua URL (`/forgot-password?email=…`)?** URL nằm lại trong lịch sử trình duyệt và log
+server. `ForgotPasswordServlet.doGet` đọc `RECOVERY_PREFILL_EMAIL` **1 lần rồi xóa** (F5 là ô trống lại) và chỉ điền sẵn ô —
+**không** đặt `RECOVERY_EMAIL`.
+
+**Vì sao không tự gửi mã?** Nếu tự gửi, ai bấm đăng nhập sai liên tục sẽ làm hệ thống gửi mail liên tục. Để khách tự bấm
+"Gửi mã" thì luật CBR-94 (60 giây / 5 lần mỗi giờ / khóa 5 phút) vẫn áp dụng.
 
 ---
 
@@ -458,17 +450,15 @@ Chi tiết tinh: `markUsed` chạy **sau** transaction lưu mật khẩu, không
 | `verifyCode` | `PasswordRecoveryService` | handleVerify | `VerificationCodeService.verifyCode` | Chuyển tiếp với Purpose RECOVERY |
 | `findLatestRecoveryCode` | `PasswordRecoveryService` | `setCodeTimers` | DAO | Tính đồng hồ |
 | `resetPassword` | `PasswordRecoveryService` | handleReset | `validateNewPassword`, `findById`, `savePasswordAndUnlock`, `SessionRegistryListener` | Đặt mật khẩu mới + đăng xuất mọi phiên |
-| `checkSetupLink` / `setPasswordByLink` | `PasswordRecoveryService` | `SetPasswordServlet` | `findValidSetupLink`, `savePasswordAndUnlock`, `markUsed` | Link đặt mật khẩu |
-| `savePasswordAndUnlock` | `PasswordRecoveryService` (private) | resetPassword, setPasswordByLink | `PasswordUtil.hashPassword`, `AccountDAO.updatePasswordHash` + `resetFailedLogin` | 1 transaction |
+| `savePasswordAndUnlock` | `PasswordRecoveryService` (private) | resetPassword | `PasswordUtil.hashPassword`, `AccountDAO.updatePasswordHash` + `resetFailedLogin` | 1 transaction |
 | `sendCode` | `VerificationCodeService` | requestCode, `ContactChangeService` | DAO ×4, `SecureCodeUtil`, `EmailGateway` | Luật xin mã (CBR-94) |
 | `verifyCode` | `VerificationCodeService` | PasswordRecovery, ContactChange | DAO ×4 | Luật nhập mã (CBR-94) |
-| `findValidSetupLink` | `VerificationCodeService` | checkSetupLink, setPasswordByLink | `sha256Hex`, `findByTokenHash` | Kiểm link |
 | `findLockedUntil` | `VerificationCodeDAO` | sendCode, verifyCode | SQL `MAX(LockedUntil)` | Email có đang khóa? |
 | `findLatestByEmailAndPurpose` | `VerificationCodeDAO` | sendCode, verifyCode, timers | SQL `TOP 1 … ORDER BY SentAt DESC` | Mã mới nhất |
-| `countCodesSentSince` | `VerificationCodeDAO` | sendCode | SQL `COUNT(*) … Code IS NOT NULL` | Đếm lần xin/giờ (không đếm link) |
-| `increaseFailedAttempts` / `lockCode` / `markUsed` | `VerificationCodeDAO` | verifyCode, sendCode, setPasswordByLink | SQL UPDATE | Sửa dòng mã |
+| `countCodesSentSince` | `VerificationCodeDAO` | sendCode | SQL `COUNT(*) … Code IS NOT NULL` | Đếm lần xin/giờ |
+| `increaseFailedAttempts` / `lockCode` / `markUsed` | `VerificationCodeDAO` | verifyCode, sendCode | SQL UPDATE | Sửa dòng mã |
 | `insert` | `VerificationCodeDAO` | sendCode | SQL INSERT 7 cột | Ghi mã mới |
 | `sendVerificationCode` → `send` | `EmailGateway` | sendCode | Jakarta Mail `Transport.send` | Gửi thư |
 | `hashPassword` / `checkPassword` | `PasswordUtil` | các Service | jBCrypt | Mật khẩu |
-| `generateVerificationCode` / `generateUrlToken` / `sha256Hex` | `SecureCodeUtil` | sendCode / (Lễ tân) / findValidSetupLink | `SecureRandom`, `MessageDigest` | Sinh mã, token, băm |
+| `generateVerificationCode` | `SecureCodeUtil` | sendCode | `SecureRandom` | Sinh mã 6 số |
 | `invalidateSessionsOfAccount` | `SessionRegistryListener` | resetPassword, changePassword, applyEmailChange | `HttpSession.invalidate()` | Đăng xuất phiên |
