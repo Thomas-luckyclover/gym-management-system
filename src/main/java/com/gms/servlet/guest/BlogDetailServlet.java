@@ -64,7 +64,7 @@ public class BlogDetailServlet extends HttpServlet {
         // B1: đọc tham số id bài viết từ request (sử dụng RequestUtil)
         int blogPostId = RequestUtil.getIntParam(request, "id", 0);
         if (blogPostId <= 0) {
-            RequestUtil.setFlashToast(request, "warning", Messages.MSG75_POST_UNAVAILABLE);
+            RequestUtil.setFlashToast(request, "warning", Messages.MSG73_POST_UNAVAILABLE);
             RequestUtil.redirect(request, response, "/blog");
             return;
         }

@@ -406,7 +406,7 @@ public class RegistrationService {
         if (ValidationUtil.isNullOrEmpty(fullName)) {
             errors.put("fullName", String.format(Messages.MSG09_REQUIRED, "Họ và tên"));
         } else if (!ValidationUtil.isLengthValid(fullName, 2, 50)) {
-            errors.put("fullName", String.format(Messages.MSG74_FULL_NAME_LENGTH,
+            errors.put("fullName", String.format(Messages.MSG72_FULL_NAME_LENGTH,
                     AppConstants.FULL_NAME_MIN_LENGTH, AppConstants.FULL_NAME_MAX_LENGTH));
         } else if (!ValidationUtil.isValidFullName(fullName)) {
             errors.put("fullName", Messages.MSG67_FULL_NAME_RULE);
