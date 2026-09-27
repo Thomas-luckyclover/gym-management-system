@@ -13,8 +13,7 @@
               thì phải xóa các dòng đó trước.)
    KHÔNG ĐỔI SCHEMA. Chỉ dùng cho database dev/local.
    Mật khẩu mọi tài khoản mới: Gms@2026 (cùng hash với 3_Dev_Passwords.sql).
-   YÊU CẦU schema đã có migration 001 (TokenHash, PasswordSetup) — cài mới từ 1_Init_Schema.sql
-   bản 24/09/2026 là đủ.
+   YÊU CẦU schema cài mới từ 1_Init_Schema.sql bản 24/09/2026 trở đi.
    ============================================================================ */
 
 USE GMS;
@@ -64,8 +63,8 @@ INSERT INTO Persons (PersonId, FullName, DateOfBirth, Phone, Email, Avatar, IsRe
  (110, N'Đinh Văn Khoa'   , '1995-01-15', '0935000110', 'khoa.dinh@gmail.com'  , NULL                        , 0, '2026-08-12 10:00:00'), -- vừa xin mã, chưa đủ 60 giây
  (111, N'Tạ Thanh Bình'   , '1998-11-30', '0935000111', 'binh.ta@gmail.com'    , NULL                        , 0, '2026-08-13 10:00:00'), -- nhập sai mã 5 lần → email bị khóa xác thực
  (112, N'Cao Thị Quỳnh'   , '2000-07-07', '0935000112', 'quynh.cao@gmail.com'  , NULL                        , 0, '2026-08-14 10:00:00'), -- mã khôi phục đã hết hạn
- -- Link đặt mật khẩu (tài khoản Lễ tân tạo tại quầy, CBR-24)
- (113, N'Hồ Thị Nhung'    , '1994-02-02', '0935000113', 'nhung.ho@gmail.com'   , NULL                        , 0, '2026-09-20 09:00:00'); -- Lễ tân vừa tạo tài khoản, link còn hiệu lực
+ -- Tài khoản Lễ tân tạo tại quầy, chưa đặt mật khẩu (CBR-24)
+ (113, N'Hồ Thị Nhung'    , '1994-02-02', '0935000113', 'nhung.ho@gmail.com'   , NULL                        , 0, '2026-09-20 09:00:00'); -- Lễ tân vừa tạo tài khoản, khách chưa đặt mật khẩu
 SET IDENTITY_INSERT Persons OFF;
 GO
 
@@ -111,7 +110,7 @@ INSERT INTO Accounts (AccountId, PersonId, PasswordHash, Status, FailedLoginCoun
  (110, 110, @Hash, 'Active'  , 0, NULL                       , '2026-09-18 08:00:00', '2026-08-12 10:10:00'),
  (111, 111, @Hash, 'Active'  , 0, NULL                       , '2026-09-18 08:00:00', '2026-08-13 10:10:00'),
  (112, 112, @Hash, 'Active'  , 0, NULL                       , '2026-09-18 08:00:00', '2026-08-14 10:10:00'),
- (113, 113, NULL , 'Active'  , 0, NULL                       , NULL                 , '2026-09-20 09:10:00'); -- chưa đặt mật khẩu → MSG38 tới khi dùng link
+ (113, 113, NULL , 'Active'  , 0, NULL                       , NULL                 , '2026-09-20 09:10:00'); -- chưa đặt mật khẩu → MSG38, đặt qua Quên mật khẩu (CBR-31)
 SET IDENTITY_INSERT Accounts OFF;
 
 /* ============================================================================
@@ -140,13 +139,6 @@ INSERT INTO VerificationCodes (VerificationCodeId, AccountId, Email, Purpose, Co
  (110, NULL, 'khach.moi@gmail.com'  , 'SignUp'     , '112233', DATEADD(MINUTE, -1 , @Now), DATEADD(MINUTE, 14, @Now), 0, NULL                     , NULL),
  -- Kích hoạt hồ sơ có sẵn của Yến (Person 105): mã 445566 gửi tới email trên hồ sơ
  (111, NULL, 'yen.doan@gmail.com'   , 'Claim'      , '445566', DATEADD(MINUTE, -1 , @Now), DATEADD(MINUTE, 14, @Now), 0, NULL                     , NULL);
-
--- Link đặt mật khẩu của Nhung (tài khoản 113) còn ~14 phút.
--- Token thật để test: setup-nhung-phase1-2026 → mở /set-password?token=setup-nhung-phase1-2026
--- DB chỉ lưu SHA-256 của token (hex chữ thường), Code để NULL (ràng buộc CK_VerificationCodes_CodeOrToken)
-INSERT INTO VerificationCodes (VerificationCodeId, AccountId, Email, Purpose, Code, TokenHash, SentAt, ExpiresAt, FailedAttempts, LockedUntil, UsedAt) VALUES
- (112, 113 , 'nhung.ho@gmail.com'   , 'PasswordSetup', NULL, 'f33b3f90a86e54ffdb250cb87b3786c9a09ed291abe9f94a62fa395a419c3085',
-  DATEADD(MINUTE, -1, @Now), DATEADD(MINUTE, 14, @Now), 0, NULL, NULL);
 SET IDENTITY_INSERT VerificationCodes OFF;
 GO
 
