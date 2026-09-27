@@ -182,9 +182,13 @@ RegisterServlet.handleInformationStep
 
 | # | Thao tác | HTTP | Servlet · hàm | Service · hàm | DAO / Util | Bảng | Rule | Thông báo | Màn tiếp |
 |---|---|---|---|---|---|---|---|---|---|
-| 4.1 | Bấm link trong email | GET `?token=` | `doGet` | `checkSetupLink` → `VerificationCodeService.findValidSetupLink` (B1 rỗng · B2 `sha256Hex` + `findByTokenHash` · B3 dùng/hết hạn · B4 ok) | `SecureCodeUtil.sha256Hex`, `VerificationCodeDAO.findByTokenHash` | VerificationCodes | CBR-31, P-15 | EXTRA_SETUP_LINK_INVALID | form / trạng thái link hỏng |
+| 4.1 | Bấm link trong email | GET `?token=` | `doGet` → `handleUnusableLink` | `checkSetupLink` → `VerificationCodeService.inspectSetupLink` (B1 rỗng · B2 `sha256Hex` + `findByTokenHash` · B3 đã dùng → hết hạn · B4 VALID) → `SetupLinkCheck` | `SecureCodeUtil.sha256Hex`, `VerificationCodeDAO.findByTokenHash` | VerificationCodes | CBR-31, P-15 | — (VALID) | form đặt mật khẩu |
+| 4.1a | Link **hết hạn** | GET hoặc POST | `handleUnusableLink` (EXPIRED) | (như 4.1) | session `RECOVERY_PREFILL_EMAIL` | VerificationCodes | CBR-31 | EXTRA_SETUP_LINK_EXPIRED | **#3** (ô email điền sẵn, chưa gửi mã) |
+| 4.1b | Link **đã dùng** | GET hoặc POST | `handleUnusableLink` (USED) | (như 4.1) | | VerificationCodes | CBR-31 | EXTRA_SETUP_LINK_USED | **#1** |
+| 4.1c | Link **bịa / không có token** | GET hoặc POST | `handleUnusableLink` (NOT_FOUND) | (như 4.1) | | VerificationCodes | Bảo mật | EXTRA_SETUP_LINK_INVALID | ở lại, trạng thái link hỏng |
 | 4.2 | Nhập MK ×2 → **Đặt mật khẩu** | POST (token, password, confirmPassword) | `doPost` | `setPasswordByLink` (B1 kiểm lại link · B2 `validateNewPassword` · B3 `findById` Active · B4 `savePasswordAndUnlock` + `markUsed`) | `AccountDAO`, `PasswordUtil`, `VerificationCodeDAO.markUsed` | Accounts, VerificationCodes | CBR-24, CBR-31, DBR-02 | EXTRA_PASSWORD_SET, MSG37, MSG47 | #1 |
-| 4.3 | Link hỏng → **Quên mật khẩu** | GET `/forgot-password` | | | | | CBR-31 | | #3 |
+| 4.3 | 4.1c → nút **Quên mật khẩu** | GET `/forgot-password` | | | | | CBR-31 | | #3 |
+| 4.4 | Vào #3 từ 4.1a | GET `/forgot-password` | `ForgotPasswordServlet.doGet` (đọc + xóa `RECOVERY_PREFILL_EMAIL`, bỏ tiến độ cũ, `request.email`) | | | | CBR-31 | toast từ 4.1a | #3 bước 1 |
 
 ---
 
@@ -272,7 +276,7 @@ AccountSettingsServlet.handleChangePassword
 | CBR-17/18/21 | Hồ sơ ≠ tài khoản; Dependent không TK | Schema + `AccountDAO.findBy*` (JOIN Accounts) | ✅ |
 | CBR-20 | Kích hoạt hồ sơ cần mã tới email hồ sơ | `RegistrationService.handleExistingPhone` | 🔴 thiếu mã |
 | CBR-23 / DBR-28 | Hồ sơ đã nhả không chặn | SQL `IsReleased = 0` trong `PersonDAO`, `AccountDAO` | ✅ |
-| CBR-24 / CBR-31 | Link đặt MK, chưa có MK không đăng nhập | `SetPasswordServlet`, `findValidSetupLink`, `AuthService` B5 | ✅ (phía khách) |
+| CBR-24 / CBR-31 | Link đặt MK, chưa có MK không đăng nhập | `SetPasswordServlet` (`handleUnusableLink`), `inspectSetupLink`, `AuthService` B5 | ✅ (phía khách) |
 | CBR-25/26/27 | 3 nhánh dừng đăng ký | `RegistrationService.handleExistingPhone` | ✅ |
 | CBR-28 | Số giám hộ không chặn | `PersonDAO.findByPhone` chỉ xét `Persons.Phone` | ✅ |
 | CBR-29 | Đổi email → báo email cũ + đăng xuất | `ContactChangeService.applyEmailChange` | 🔴 chưa nối |

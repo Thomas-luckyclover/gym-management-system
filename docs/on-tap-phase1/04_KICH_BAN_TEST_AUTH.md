@@ -183,6 +183,11 @@ Các dashboard chưa code → trang **404** là đúng ở thời điểm này (
 | OT-12 | 🔥 | Nhập `12ab56` / `12345` / `1234567` | "Mã xác thực gồm đúng 6 chữ số." (không tính là 1 lần sai) | DBR-03 | |
 | OT-13 | ⭐ | Mã có số 0 đầu (VD `048213`) | Nhập đúng được chấp nhận (không bị mất số 0) | DBR-03 | |
 | OT-14 | ⭐ | Đồng hồ "Mã hết hạn sau mm:ss" | Chạy lùi, tải lại trang vẫn đúng số còn lại (server tính) | GBR-27 | |
+| OT-15 | 🔥 | `thao.luong@gmail.com` → Gửi mã → bước 2 | "Bạn còn **5** lần nhập mã." + "Còn **2** lần gửi lại mã trong 60 phút." (1 mã seed + 1 mã vừa gửi = 2 mã) | MSG62, MSG64 | |
+| OT-16 | 🔥 | Nhập sai liên tiếp | Số giảm 5 → 4 → 3 → 2; còn 1 → **MSG63** màu cảnh báo; sai lần 5 → MSG61, **2 dòng gợi ý biến mất** | MSG62, MSG63, CBR-94 | |
+| OT-17 | ⭐ | Gửi lại mã (chờ đủ 60 giây mỗi lần) | Số lần gửi lại giảm; tới 0 → **MSG65** màu cảnh báo; bấm tiếp → MSG61 | MSG64, MSG65, CBR-94 | |
+| OT-18 | ⭐ | `binh.ta@gmail.com` (đang khóa) | Chỉ thấy MSG61, **không** có dòng gợi ý | MSG61 | |
+| OT-19 | ⭐ | Nhập sai 2 lần → Gửi lại mã | Số lần nhập mã quay về **5** (mã mới) | CBR-94 | |
 
 ## 6. QUÊN MẬT KHẨU — `/forgot-password` (UC-03)
 
@@ -222,14 +227,18 @@ Các dashboard chưa code → trang **404** là đúng ở thời điểm này (
 |---|---|---|---|---|---|
 | SP-01 | 🔥 | Trước khi đặt: đăng nhập `nhung.ho@gmail.com` | MSG38 | MSG38 | |
 | SP-02 | 🔥 ⏱ | `/set-password?token=setup-nhung-phase1-2026` → MK `Nhung2026` ×2 | `/login` + "Đã đặt mật khẩu. Vui lòng đăng nhập."; đăng nhập Nhung được | CBR-24 | |
-| SP-03 | 🔥 | Mở lại đúng link SP-02 | "Link đặt mật khẩu không còn hiệu lực…" + nút Quên MK | CBR-31 | |
-| SP-04 | 🔥 | `?token=setup-khanh-expired-2026` | Như SP-03 | CBR-31 | |
-| SP-05 | ⭐ | `?token=abc` / không có `token` | Như SP-03 | Bảo mật | |
+| SP-03 | 🔥 | Mở lại đúng link SP-02 | → `/login` + toast "Bạn đã đặt mật khẩu cho tài khoản này. Vui lòng đăng nhập." | CBR-31 | |
+| SP-04 | 🔥 | `?token=setup-khanh-expired-2026` | → `/forgot-password`, ô email = `khanh.trinh@gmail.com`, toast "Link đặt mật khẩu đã hết hạn…", đang ở bước nhập email, **chưa gửi mã** | CBR-31 | ✅ 27/09 |
+| SP-05 | ⭐ | `?token=abc` / không có `token` | Ở lại trang: "Link không còn hiệu lực" + nút Quên MK (không chuyển đi đâu) | Bảo mật | ✅ 27/09 |
 | SP-06 | ⭐ | MK sai luật / nhập lại không khớp | Lỗi dưới ô, **giữ form**, link vẫn dùng được | DBR-02 | |
-| SP-07 | ⭐ | Mở form (GET) → đợi link hết hạn → gửi | "Link không còn hiệu lực" (server kiểm lại khi POST) | Bảo mật | |
-| SP-08 | | Mở form ở 2 tab, tab 1 đặt xong, tab 2 gửi | Tab 2: link không còn hiệu lực | Dùng 1 lần | |
+| SP-07 | ⭐ | Mở form (GET) khi còn hạn → sửa DB `ExpiresAt` về quá khứ → bấm Lưu | Như SP-04 (server kiểm lại khi POST) | Bảo mật | ✅ 27/09 (POST với link hết hạn) |
+| SP-08 | | Mở form ở 2 tab, tab 1 đặt xong, tab 2 gửi | Tab 2: như SP-03 → `/login` | Dùng 1 lần | |
 | SP-09 | ⭐ | Xem `VerificationCodes.TokenHash` của link | 64 ký tự hex, **khác** token trên URL | Bảo mật | |
-| SP-10 | ⭐ | Nút "Quên mật khẩu" ở SP-03 | Mở `/forgot-password` | CBR-31 | |
+| SP-10 | ⭐ | Nút "Quên mật khẩu" ở SP-05 | Mở `/forgot-password` | CBR-31 | |
+| SP-11 | ⭐ | Sau SP-04 bấm **F5** trang Quên MK | Ô email **trống lại** (email điền sẵn chỉ dùng 1 lần) | Bảo mật | ✅ 27/09 |
+| SP-12 | ⭐ | Sau SP-04 xem thanh địa chỉ | Chỉ `/forgot-password`, **không có email trên URL** | Bảo mật | ✅ 27/09 |
+| SP-13 | | Sau SP-04 bấm **Gửi mã** | Đi tiếp luồng Quên MK bình thường (FP-01…); luật 60 giây / 5 lần áp dụng như thường | CBR-94 | |
+| SP-14 | | Đang dở Quên MK của email A (đã ở bước nhập mã) → mở link hết hạn của email B | Về bước nhập email, ô email = B (tiến độ cũ của A bị bỏ) | UX | |
 
 ## 8. CÀI ĐẶT TÀI KHOẢN — `/account` (UC-04)
 

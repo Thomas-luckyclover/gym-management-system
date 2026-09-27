@@ -421,20 +421,41 @@ DB chỉ có **hash** → lộ DB cũng không dựng lại được link. Trong
 ```
 SetPasswordServlet.doGet
 │ token = getTrimmedParam("token")
-├─► PasswordRecoveryService.checkSetupLink(token) ─► VerificationCodeService.findValidSetupLink(token)
-│     B1  token rỗng → fail(EXTRA_SETUP_LINK_INVALID)
-│     B2  tokenHash = SecureCodeUtil.sha256Hex(token.trim()) → VerificationCodeDAO.findByTokenHash(tokenHash)  [DB]
-│     B3  không thấy / UsedAt ≠ null / now ≥ ExpiresAt → fail(EXTRA_SETUP_LINK_INVALID)   (cùng 1 câu, không nói lý do cụ thể)
-│     B4  ok(setupLink)  ← CHỈ KIỂM TRA, chưa đánh dấu đã dùng
-├─ ✔ request.token = token → form đặt mật khẩu
-└─ ✘ request.linkError → "Link không còn hiệu lực" + nút Quên mật khẩu (CBR-31)
+├─► handleUnusableLink(token)
+│   └─► PasswordRecoveryService.checkSetupLink(token) ─► VerificationCodeService.inspectSetupLink(token)
+│         B1  token rỗng → NOT_FOUND
+│         B2  tokenHash = SecureCodeUtil.sha256Hex(token.trim()) → VerificationCodeDAO.findByTokenHash(tokenHash)  [DB]
+│             không thấy → NOT_FOUND
+│         B3  UsedAt ≠ null → USED          (xét TRƯỚC hết hạn)
+│             now ≥ ExpiresAt → EXPIRED
+│         B4  VALID                          ← CHỈ KIỂM TRA, chưa đánh dấu đã dùng
+│         (trả ServiceResult<SetupLinkCheck>: status + dòng link có Email/AccountId; fail chỉ khi lỗi DB)
+│   Servlet chỉ RẼ NHÁNH theo status:
+│   ├─ VALID     → đi tiếp
+│   ├─ EXPIRED   → session.RECOVERY_PREFILL_EMAIL = link.Email · toast warning EXTRA_SETUP_LINK_EXPIRED · redirect /forgot-password
+│   ├─ USED      → toast info EXTRA_SETUP_LINK_USED · redirect /login
+│   └─ NOT_FOUND → request.linkError = EXTRA_SETUP_LINK_INVALID → trang "Link không còn hiệu lực" + nút Quên MK
+└─ ✔ request.token = token → form đặt mật khẩu
 ```
+
+**Vì sao hết hạn thì tự chuyển sang Quên MK mà KHÔNG tự gửi mã?** Nếu tự gửi, ai cầm link cũ bấm liên tục sẽ làm
+hệ thống gửi mail liên tục. Để khách tự bấm "Gửi mã" thì luật chống spam CBR-94 (60 giây / 5 lần mỗi giờ / khóa 5 phút)
+vẫn áp dụng bình thường.
+
+**Vì sao email đi qua session, không qua URL (`/forgot-password?email=…`)?** URL nằm lại trong lịch sử trình duyệt và log
+server. `ForgotPasswordServlet.doGet` đọc `RECOVERY_PREFILL_EMAIL` **1 lần rồi xóa**, bỏ tiến độ Quên MK cũ (nếu có) để
+chắc chắn đang ở bước nhập email, và chỉ điền sẵn ô — **không** đặt `RECOVERY_EMAIL` (khách vẫn phải bấm Gửi mã).
+
+**Vì sao link bịa (NOT_FOUND) vẫn chỉ báo chung?** Không biết email là của ai, và không nên cho người đoán link biết
+thêm điều gì. Chỉ link có thật trong sổ mới được tách lý do.
 
 ## 4.3 Gửi form — POST
 
 ```
-SetPasswordServlet.doPost ─► PasswordRecoveryService.setPasswordByLink(token, password, confirm)
-│     B1  findValidSetupLink(token) LẠI LẦN NỮA   ← không tin kết quả lúc GET (có thể đã hết hạn / đã dùng ở tab khác)
+SetPasswordServlet.doPost
+│ handleUnusableLink(token) GIỐNG HỆT GET   ← link hết hạn / đã dùng ở tab khác trong lúc khách đang gõ → rẽ như trên
+└─► PasswordRecoveryService.setPasswordByLink(token, password, confirm)
+│     B1  findValidSetupLink(token) LẠI LẦN NỮA   ← chốt chặn cuối (findValidSetupLink = inspectSetupLink + chỉ nhận VALID)
 │     B2  validateNewPassword (8–64 chữ+số, khớp)
 │     B3  accountId = setupLink.AccountId → AccountDAO.findById → Status phải ACTIVE (không → MSG37)
 │     B4  savePasswordAndUnlock(accountId, password)   (transaction như 3.6)
@@ -458,11 +479,12 @@ Chi tiết tinh: `markUsed` chạy **sau** transaction lưu mật khẩu, không
 | `verifyCode` | `PasswordRecoveryService` | handleVerify | `VerificationCodeService.verifyCode` | Chuyển tiếp với Purpose RECOVERY |
 | `findLatestRecoveryCode` | `PasswordRecoveryService` | `setCodeTimers` | DAO | Tính đồng hồ |
 | `resetPassword` | `PasswordRecoveryService` | handleReset | `validateNewPassword`, `findById`, `savePasswordAndUnlock`, `SessionRegistryListener` | Đặt mật khẩu mới + đăng xuất mọi phiên |
-| `checkSetupLink` / `setPasswordByLink` | `PasswordRecoveryService` | `SetPasswordServlet` | `findValidSetupLink`, `savePasswordAndUnlock`, `markUsed` | Link đặt mật khẩu |
+| `checkSetupLink` / `setPasswordByLink` | `PasswordRecoveryService` | `SetPasswordServlet` | `inspectSetupLink`, `findValidSetupLink`, `savePasswordAndUnlock`, `markUsed` | Link đặt mật khẩu (trả trạng thái VALID/NOT_FOUND/USED/EXPIRED) |
 | `savePasswordAndUnlock` | `PasswordRecoveryService` (private) | resetPassword, setPasswordByLink | `PasswordUtil.hashPassword`, `AccountDAO.updatePasswordHash` + `resetFailedLogin` | 1 transaction |
 | `sendCode` | `VerificationCodeService` | requestCode, `ContactChangeService` | DAO ×4, `SecureCodeUtil`, `EmailGateway` | Luật xin mã (CBR-94) |
 | `verifyCode` | `VerificationCodeService` | PasswordRecovery, ContactChange | DAO ×4 | Luật nhập mã (CBR-94) |
-| `findValidSetupLink` | `VerificationCodeService` | checkSetupLink, setPasswordByLink | `sha256Hex`, `findByTokenHash` | Kiểm link |
+| `inspectSetupLink` | `VerificationCodeService` | checkSetupLink, findValidSetupLink | `sha256Hex`, `findByTokenHash` | Kiểm link, trả lý do (`SetupLinkCheck`) |
+| `findValidSetupLink` | `VerificationCodeService` | setPasswordByLink | `inspectSetupLink` | Chỉ nhận link VALID |
 | `findLockedUntil` | `VerificationCodeDAO` | sendCode, verifyCode | SQL `MAX(LockedUntil)` | Email có đang khóa? |
 | `findLatestByEmailAndPurpose` | `VerificationCodeDAO` | sendCode, verifyCode, timers | SQL `TOP 1 … ORDER BY SentAt DESC` | Mã mới nhất |
 | `countCodesSentSince` | `VerificationCodeDAO` | sendCode | SQL `COUNT(*) … Code IS NOT NULL` | Đếm lần xin/giờ (không đếm link) |
@@ -470,5 +492,5 @@ Chi tiết tinh: `markUsed` chạy **sau** transaction lưu mật khẩu, không
 | `insert` | `VerificationCodeDAO` | sendCode | SQL INSERT 7 cột | Ghi mã mới |
 | `sendVerificationCode` → `send` | `EmailGateway` | sendCode | Jakarta Mail `Transport.send` | Gửi thư |
 | `hashPassword` / `checkPassword` | `PasswordUtil` | các Service | jBCrypt | Mật khẩu |
-| `generateVerificationCode` / `generateUrlToken` / `sha256Hex` | `SecureCodeUtil` | sendCode / (Lễ tân) / findValidSetupLink | `SecureRandom`, `MessageDigest` | Sinh mã, token, băm |
+| `generateVerificationCode` / `generateUrlToken` / `sha256Hex` | `SecureCodeUtil` | sendCode / (Lễ tân) / inspectSetupLink | `SecureRandom`, `MessageDigest` | Sinh mã, token, băm |
 | `invalidateSessionsOfAccount` | `SessionRegistryListener` | resetPassword, changePassword, applyEmailChange | `HttpSession.invalidate()` | Đăng xuất phiên |

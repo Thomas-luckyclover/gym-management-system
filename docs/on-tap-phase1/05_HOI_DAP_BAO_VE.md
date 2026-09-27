@@ -99,6 +99,8 @@
 | F18 | 🟢 | Chưa có rate limit theo IP; chạy HTTP ở local | Hạ tầng | Brute-force nhiều TK; nghe lén khi deploy | Rate limit ở Filter; bật HTTPS + cookie `Secure`, `HttpOnly`, `SameSite` khi deploy | — |
 | F19 | 🟢 | Bước 1 đăng ký chỉ kiểm định dạng SĐT, các nhánh UC-IDENT chạy ở bước 2 | `RegisterServlet.handlePhoneStep` | Khác SRS 1.2.1 (khách nhập hết thông tin mới biết SĐT đã có TK) | Gọi `PersonDAO.findByPhone` ngay ở bước 1 để rẽ nhánh sớm | Hoàng |
 | F20 | 🟢 | Đầu số nhà mạng P-16 chưa kiểm | `ValidationUtil.hasValidPhonePrefix` chưa được gọi | SĐT `0123…` vẫn hợp lệ | Chốt nơi lưu P-16 rồi gọi | Nhóm |
+| F21 | ✅ | ~~Người dùng không biết còn mấy lần nhập / gửi lại mã → bị khóa bất ngờ~~ **Đã xử lý 27/09** | `/forgot-password` bước 2 | — | Hiện MSG62–MSG65 (`VerificationCodeService.getAttemptInfo`, chỉ đọc); luật khóa CBR-94 giữ nguyên. Còn lại: áp dụng cho màn nhập mã Đăng ký / Đổi email khi các màn đó có OTP | Minh |
+| F22 | ✅ | ~~Link đặt MK hết hạn chỉ báo chung, khách phải tự tìm Quên MK~~ **Đã xử lý 27/09** | `SetPasswordServlet` | — | Hết hạn → tự sang Quên MK, email điền sẵn (không tự gửi mã); đã dùng → `/login`; link bịa giữ báo chung | Minh |
 
 ---
 

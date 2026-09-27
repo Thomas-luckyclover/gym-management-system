@@ -85,27 +85,31 @@ Mẹo học 1 bảng trong 5 phút: **(1)** đọc tên các cột điều kiệ
 
 ## DT-3 · Xin mã OTP — `VerificationCodeService.sendCode` (CBR-94) — dùng cho Quên MK, Đăng ký, Kích hoạt, Đổi email
 
-| # | Email đang bị khóa xác thực? | Mã cùng mục đích gửi < 60 giây trước? | Số mã đã gửi trong 60' + 1 ≥ 5? | Gửi email thành công? | **Kết quả** | Ghi DB | Ví dụ seed |
-|---|---|---|---|---|---|---|---|
-| S1 | **Y** | — | — | — | **MSG61** "…khóa 5 phút. Thử lại sau mm:ss" | — | `binh.ta@gmail.com` ⏱ |
-| S2 | N | **Y** | — | — | "Vui lòng chờ **n** giây nữa rồi bấm Gửi lại mã." | — | `khoa.dinh@gmail.com` ⏱ |
-| S3 | N | N | **Y** (đây là lần thứ 5) | — | Khóa email 5 phút → **MSG61** | `LockedUntil` vào dòng mã mới nhất | `manh.ngo@gmail.com` ⏱ |
-| S4 | N | N | N | **N** | **MSG04** "Hệ thống đang bận…" | **Không ghi gì** (gửi trước, ghi sau) | sai App Password |
-| S5 | N | N | N | Y | **MSG42** "Mã đã được gửi tới … hiệu lực 15 phút." (resend: MSG45) | INSERT dòng mã mới → mã cũ mất hiệu lực | `thao.luong@gmail.com` (chờ > 60 s) |
+| # | Email đang bị khóa xác thực? | Mã cùng mục đích gửi < 60 giây trước? | Số mã đã gửi trong 60' + 1 ≥ 5? | Gửi email thành công? | **Kết quả** | Ghi DB | Gợi ý hiển thị (dưới nút Gửi lại mã) | Ví dụ seed |
+|---|---|---|---|---|---|---|---|---|
+| S1 | **Y** | — | — | — | **MSG61** "…khóa 5 phút. Thử lại sau mm:ss" | — | Ẩn | `binh.ta@gmail.com` ⏱ |
+| S2 | N | **Y** | — | — | "Vui lòng chờ **n** giây nữa rồi bấm Gửi lại mã." | — | Giữ như trước khi bấm | `khoa.dinh@gmail.com` ⏱ |
+| S3 | N | N | **Y** (đây là lần thứ 5) | — | Khóa email 5 phút → **MSG61** | `LockedUntil` vào dòng mã mới nhất | Ẩn (đang khóa) | `manh.ngo@gmail.com` ⏱ |
+| S4 | N | N | N | **N** | **MSG04** "Hệ thống đang bận…" | **Không ghi gì** (gửi trước, ghi sau) | Giữ như trước khi bấm | sai App Password |
+| S5 | N | N | N | Y | **MSG42** "Mã đã được gửi tới … hiệu lực 15 phút." (resend: MSG45) | INSERT dòng mã mới → mã cũ mất hiệu lực | Còn ≥ 1 lượt: **MSG64** "Còn n lần gửi lại mã trong 60 phút." · Hết lượt (đã 4 mã/giờ): **MSG65** màu cảnh báo | `thao.luong@gmail.com` (chờ > 60 s) |
+
+Số lượt gửi lại = `(P-17 − 1) − số mã đã gửi trong 60'` → sau lần gửi thứ 4 còn 0 (MSG65); bấm lần thứ 5 mới khóa (S3).
 
 ## DT-4 · Nhập mã OTP — `VerificationCodeService.verifyCode`
 
-| # | Đúng 6 chữ số? | Email đang khóa? | Có mã mới nhất? | Mã đã dùng? | Mã đã bị hủy (sai ≥ 5)? | Mã hết hạn? | Mã khớp? | Lần sai mới ≥ 5? | **Kết quả** | Ví dụ seed |
-|---|---|---|---|---|---|---|---|---|---|---|
-| O1 | **N** | — | — | — | — | — | — | — | `EXTRA_CODE_FORMAT` dưới ô (không hỏi DB) | `12ab`, `12345` |
-| O2 | Y | **Y** | — | — | — | — | — | — | **MSG61** | `binh.ta@gmail.com` |
-| O3 | Y | N | **N** | — | — | — | — | — | **MSG44** | email chưa từng xin mã |
-| O4 | Y | N | Y | **Y** | — | — | — | — | **MSG44** (mã dùng 1 lần) | nhập lại mã vừa dùng |
-| O5 | Y | N | Y | N | **Y** | — | — | — | **MSG44** | |
-| O6 | Y | N | Y | N | N | **Y** | — | — | **MSG44** | `quynh.cao@gmail.com` + `999000` |
-| O7 | Y | N | Y | N | N | N | **N** | N | FailedAttempts +1 → **MSG43** | `thao…` + `000000` |
-| O8 | Y | N | Y | N | N | N | N | **Y** | +1, khóa email 5' → **MSG61** | sai lần thứ 5 |
-| O9 | Y | N | Y | N | N | N | **Y** | — | `UsedAt = now` → **thành công** (trả AccountId) | `thao…` + `246810` |
+| # | Đúng 6 chữ số? | Email đang khóa? | Có mã mới nhất? | Mã đã dùng? | Mã đã bị hủy (sai ≥ 5)? | Mã hết hạn? | Mã khớp? | Lần sai mới ≥ 5? | **Kết quả** | Gợi ý hiển thị (dưới ô nhập mã) | Ví dụ seed |
+|---|---|---|---|---|---|---|---|---|---|---|---|
+| O1 | **N** | — | — | — | — | — | — | — | `EXTRA_CODE_FORMAT` dưới ô (không hỏi DB) | Không đổi (không tính 1 lần sai) | `12ab`, `12345` |
+| O2 | Y | **Y** | — | — | — | — | — | — | **MSG61** | Ẩn | `binh.ta@gmail.com` |
+| O3 | Y | N | **N** | — | — | — | — | — | **MSG44** | — | email chưa từng xin mã |
+| O4 | Y | N | Y | **Y** | — | — | — | — | **MSG44** (mã dùng 1 lần) | — | nhập lại mã vừa dùng |
+| O5 | Y | N | Y | N | **Y** | — | — | — | **MSG44** | — | |
+| O6 | Y | N | Y | N | N | **Y** | — | — | **MSG44** | — | `quynh.cao@gmail.com` + `999000` |
+| O7 | Y | N | Y | N | N | N | **N** | N | FailedAttempts +1 → **MSG43** | Còn ≥ 2: **MSG62** "Bạn còn n lần nhập mã." · còn 1: **MSG63** màu cảnh báo | `thao…` + `000000` |
+| O8 | Y | N | Y | N | N | N | N | **Y** | +1, khóa email 5' → **MSG61** | Ẩn (đang khóa) | sai lần thứ 5 |
+| O9 | Y | N | Y | N | N | N | **Y** | — | `UsedAt = now` → **thành công** (trả AccountId) | — (sang bước 3) | `thao…` + `246810` |
+
+Số lần nhập còn lại = `P-17 − FailedAttempts` của mã mới nhất → mã vừa gửi hiện "Bạn còn 5 lần nhập mã."; gửi lại mã mới thì về lại 5.
 
 Mẹo: O3–O6 **cùng 1 câu MSG44** "Mã đã hết hạn. Bấm Gửi lại mã" — người dùng chỉ cần biết "mã này không dùng được nữa".
 
@@ -141,14 +145,20 @@ Mẹo: O3–O6 **cùng 1 câu MSG44** "Mã đã hết hạn. Bấm Gửi lại m
 
 | # | Có token? | Tìm thấy TokenHash? | Link đã dùng? | Link hết hạn? | (POST) mật khẩu hợp lệ + khớp? | TK Active? | **Kết quả** | Ví dụ seed |
 |---|---|---|---|---|---|---|---|---|
-| K1 | **N** | — | — | — | — | — | "Link đặt mật khẩu không còn hiệu lực…" + nút Quên MK | `/set-password` |
+| K1 | **N** | — | — | — | — | — | Ở lại trang: "Link đặt mật khẩu không còn hiệu lực…" + nút Quên MK (không tiết lộ gì thêm) | `/set-password` |
 | K2 | Y | **N** | — | — | — | — | Như K1 | `?token=bia-dai` |
-| K3 | Y | Y | **Y** | — | — | — | Như K1 | mở lại link S01 lần 2 |
-| K4 | Y | Y | N | **Y** | — | — | Như K1 | `?token=setup-khanh-expired-2026` |
+| K3 | Y | Y | **Y** | — | — | — | → `/login` + toast "Bạn đã đặt mật khẩu cho tài khoản này. Vui lòng đăng nhập." (EXTRA_SETUP_LINK_USED) | mở lại link S01 lần 2 |
+| K4 | Y | Y | N | **Y** | — | — | → `/forgot-password`, **ô email điền sẵn** email của link + toast EXTRA_SETUP_LINK_EXPIRED. **Không tự gửi mã** (khách tự bấm Gửi mã → CBR-94 vẫn áp dụng) | `?token=setup-khanh-expired-2026` |
 | K5 | Y | Y | N | N | (GET) | — | Hiện form đặt mật khẩu | `?token=setup-nhung-phase1-2026` ⏱ |
 | K6 | Y | Y | N | N | **N** | — | Lỗi dưới ô, giữ form | |
 | K7 | Y | Y | N | N | Y | **N** | **MSG37** | |
 | K8 | Y | Y | N | N | Y | Y | Lưu mật khẩu, `UsedAt = now` → `/login` + "Đã đặt mật khẩu. Vui lòng đăng nhập." | |
+
+Ghi chú:
+- K3 và K4 áp dụng cho **cả GET lẫn POST** — mở form lúc link còn hạn nhưng bấm Lưu khi đã quá hạn / đã dùng ở tab khác thì vẫn rẽ như trên.
+- "Đã dùng" được xét **trước** "hết hạn": link đã đặt mật khẩu xong thì dù quá hạn vẫn đưa về `/login`, không đưa sang Quên MK.
+- Email điền sẵn đi qua **session** (`SessionKey.RECOVERY_PREFILL_EMAIL`), không đặt lên URL; Quên MK đọc 1 lần rồi xóa (F5 là ô trống lại).
+- CBR-31 chỉ nói "link hết hạn thì dùng Quên mật khẩu", không bắt khách tự bấm → tự chuyển trang là cải tiến trải nghiệm, luật giữ nguyên.
 
 ---
 

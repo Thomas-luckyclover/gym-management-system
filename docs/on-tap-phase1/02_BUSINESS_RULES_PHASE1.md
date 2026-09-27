@@ -122,6 +122,15 @@ Thứ tự kiểm tra khi **nhập mã**: `Đúng 6 số? → Đang khóa? → M
 
 Mẹo nhớ: **"5 – 5 – 15 – 60 – 5/giờ"** = sai 5 lần · khóa 5 phút · sống 15 phút · chờ 60 giây · xin tối đa 4 lần/giờ.
 
+**Báo trước số lượt còn lại (MSG62–MSG65 — SRS bổ sung)** — màn nhập mã (hiện ở `/forgot-password` bước 2) hiện 2 dòng gợi ý
+để người dùng không bị khóa bất ngờ. Chỉ **đọc** sổ mã (`VerificationCodeService.getAttemptInfo`), luật khóa thật vẫn ở `sendCode` / `verifyCode`:
+
+| Gợi ý | Công thức | Câu hiển thị |
+|---|---|---|
+| Còn mấy lần nhập mã | `P-17 − FailedAttempts` của mã mới nhất (0 nếu mã đã dùng / hết hạn) | ≥ 2 → **MSG62** "Bạn còn n lần nhập mã." · còn 1 → **MSG63** "Nhập sai thêm 1 lần, … khóa 5 phút." (màu cảnh báo) |
+| Còn mấy lần gửi lại | `(P-17 − 1) − số mã đã gửi trong 60 phút` (khớp điều kiện khóa `sentCount + 1 ≥ 5`) | ≥ 1 → **MSG64** "Còn n lần gửi lại mã trong 60 phút." · 0 → **MSG65** "Đã hết lượt gửi lại. Gửi thêm sẽ khóa…" (màu cảnh báo) |
+| Đang khóa | — | Ẩn cả 2 dòng, chỉ còn **MSG61** |
+
 ---
 
 ## D. QUÊN MẬT KHẨU `/forgot-password` (UC-03) — 3 bước, 1 trang
@@ -274,7 +283,7 @@ GBR-01 tiếng Việt, dd/mm/yyyy, HH:mm, UTC+7 · GBR-13 server kiểm lại ·
 |---|---|
 | Đăng nhập | MSG33 (còn n lần) · MSG34 (chung, NV) · MSG35 (khóa tạm) · MSG37 (ngừng hoạt động) · MSG38 (chưa có mật khẩu) · MSG39 (nhập email/SĐT) · MSG40 (đã đăng xuất) |
 | Đăng ký | MSG50 (SĐT hợp lệ) · MSG51 (đã có TK) · MSG52 (email khác, che) · MSG53 (hồ sơ không email) · MSG54 (đã tạo TK) · MSG12/13/14 (trùng/sai) |
-| Mã OTP | MSG42 (đã gửi, hiệu lực n phút) · MSG43 (sai mã) · MSG44 (hết hạn) · MSG45 (đã gửi mã mới) · MSG61 (khóa xác thực) · `EXTRA_CODE_FORMAT` · `EXTRA_CODE_RESEND_TOO_SOON` |
+| Mã OTP | MSG42 (đã gửi, hiệu lực n phút) · MSG43 (sai mã) · MSG44 (hết hạn) · MSG45 (đã gửi mã mới) · MSG61 (khóa xác thực) · MSG62/63 (còn n lần nhập / lần cuối) · MSG64/65 (còn n lần gửi lại / hết lượt) · `EXTRA_CODE_FORMAT` · `EXTRA_CODE_RESEND_TOO_SOON` |
 | Mật khẩu | MSG46 (quá ngắn) · MSG47 (không khớp) · MSG48 (trùng cũ) · MSG49 (đã đổi, đăng xuất phiên) · `EXTRA_PASSWORD_RULE` · `EXTRA_SETUP_LINK_INVALID` · `EXTRA_PASSWORD_SET` |
 | Tài khoản | MSG55 (mã tới email mới) · MSG56 (đã đổi email, báo email cũ) · MSG57 (đã đổi SĐT) · MSG58 (đã đổi ảnh) · MSG59 (đăng xuất thiết bị khác) · MSG60 (do quầy lễ tân cập nhật) |
 | Hệ thống | MSG04 (hệ thống bận) · MSG06 (hết phiên — AJAX 401) · MSG07 (không có quyền — AJAX 403) · MSG09 (%s là bắt buộc) |
