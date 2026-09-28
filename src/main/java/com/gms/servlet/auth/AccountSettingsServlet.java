@@ -238,7 +238,7 @@ public class AccountSettingsServlet extends HttpServlet {
         RequestUtil.setFlashToast(
                 request,
                 "success",
-                "Đổi mật khẩu thành công."
+                Messages.MSG49_PASSWORD_CHANGED
         );
 
         RequestUtil.redirect(

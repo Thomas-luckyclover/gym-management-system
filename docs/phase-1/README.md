@@ -23,7 +23,7 @@ Mật khẩu mọi tài khoản test: **`Gms@2026`**. Tình huống khóa tạm 
 
 ## Dữ liệu `4_Phase1_Seed.sql` phủ những gì
 
-- **Đăng nhập:** link đặt mật khẩu còn hạn / hết hạn, tài khoản bị Admin khóa, đang khóa tạm, đã sai 4 lần (sai thêm 1 là khóa), khóa đã hết hạn, nhân viên sai nhiều lần không bị khóa, tài khoản Inactive, chưa đặt mật khẩu, hồ sơ không có tài khoản, hồ sơ đã xóa (email đã nhả).
+- **Đăng nhập:** tài khoản bị Admin khóa, đang khóa tạm, đã sai 4 lần (sai thêm 1 là khóa), khóa đã hết hạn, nhân viên sai nhiều lần không bị khóa, tài khoản Inactive, chưa đặt mật khẩu, hồ sơ không có tài khoản, hồ sơ đã xóa (email đã nhả).
 - **Đăng ký:** SĐT mới, SĐT đã có tài khoản, hồ sơ có sẵn chờ kích hoạt (đúng/sai email), hồ sơ không email, SĐT của hồ sơ đã xóa, số chỉ là số giám hộ.
 - **Mã xác thực:** còn hiệu lực, hết hạn, sai 5 lần bị khóa, đã xin 4 lần/giờ, vừa xin chưa đủ 60 giây, mã đổi email, mã đăng ký, mã kích hoạt.
 - **Cài đặt tài khoản:** khách có ảnh / không ảnh, 2 hồ sơ phụ thuộc (dưới và trên 10 tuổi, giám hộ chính và giám hộ thứ 2, có gói / chưa gói).

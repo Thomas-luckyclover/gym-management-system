@@ -149,7 +149,7 @@ public class AccountSettingsService {
         )) {
             return ServiceResult.failField(
                     "currentPassword",
-                    "Vui lòng nhập mật khẩu hiện tại."
+                    String.format(Messages.MSG09_REQUIRED, "Mật khẩu hiện tại")
             );
         }
 
@@ -159,7 +159,7 @@ public class AccountSettingsService {
 
             if (account == null) {
                 return ServiceResult.fail(
-                        "Không tìm thấy tài khoản."
+                        String.format(Messages.MSG08_NOT_FOUND, "tài khoản")
                 );
             }
 
@@ -173,7 +173,7 @@ public class AccountSettingsService {
             if (!isCurrentPasswordCorrect) {
                 return ServiceResult.failField(
                         "currentPassword",
-                        "Mật khẩu hiện tại không đúng."
+                        Messages.MSG71_CURRENT_PASSWORD_WRONG
                 );
             }
 
@@ -184,7 +184,7 @@ public class AccountSettingsService {
             )) {
                 return ServiceResult.failField(
                         "newPassword",
-                        "Vui lòng nhập mật khẩu mới."
+                        String.format(Messages.MSG09_REQUIRED, "Mật khẩu mới")
                 );
             }
 
@@ -196,7 +196,8 @@ public class AccountSettingsService {
             if (!isNewPasswordValid) {
                 return ServiceResult.failField(
                         "newPassword",
-                        "Mật khẩu phải từ 8–64 ký tự và có ít nhất 1 chữ cái, 1 chữ số."
+                        String.format(Messages.MSG66_PASSWORD_RULE,
+                                AppConstants.PASSWORD_MIN_LENGTH, AppConstants.PASSWORD_MAX_LENGTH)
                 );
             }
 
@@ -210,7 +211,7 @@ public class AccountSettingsService {
             if (isSameAsCurrentPassword) {
                 return ServiceResult.failField(
                         "newPassword",
-                        "Mật khẩu mới phải khác mật khẩu hiện tại."
+                        Messages.MSG48_PASSWORD_SAME_AS_OLD
                 );
             }
 
@@ -220,7 +221,7 @@ public class AccountSettingsService {
             )) {
                 return ServiceResult.failField(
                         "confirmPassword",
-                        "Vui lòng xác nhận mật khẩu mới."
+                        String.format(Messages.MSG09_REQUIRED, "Nhập lại mật khẩu mới")
                 );
             }
 
@@ -233,7 +234,7 @@ public class AccountSettingsService {
             if (!isPasswordMatched) {
                 return ServiceResult.failField(
                         "confirmPassword",
-                        "Mật khẩu xác nhận không khớp."
+                        Messages.MSG47_PASSWORD_MISMATCH
                 );
             }
 
@@ -251,7 +252,7 @@ public class AccountSettingsService {
 
             if (!isUpdated) {
                 return ServiceResult.fail(
-                        "Không thể cập nhật mật khẩu."
+                        Messages.MSG04_SYSTEM_BUSY
                 );
             }
 

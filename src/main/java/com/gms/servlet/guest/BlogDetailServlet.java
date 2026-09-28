@@ -1,5 +1,6 @@
 package com.gms.servlet.guest;
 
+import com.gms.constant.Messages;
 import com.gms.dto.BlogPostDetailView;
 import com.gms.dto.ServiceResult;
 import com.gms.service.BlogService;
@@ -63,7 +64,7 @@ public class BlogDetailServlet extends HttpServlet {
         // B1: đọc tham số id bài viết từ request (sử dụng RequestUtil)
         int blogPostId = RequestUtil.getIntParam(request, "id", 0);
         if (blogPostId <= 0) {
-            RequestUtil.setFlashToast(request, "warning", "Bài viết này không còn hiển thị.");
+            RequestUtil.setFlashToast(request, "warning", Messages.MSG73_POST_UNAVAILABLE);
             RequestUtil.redirect(request, response, "/blog");
             return;
         }

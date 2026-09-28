@@ -13,6 +13,7 @@ nb-configuration.xml
 .settings/
 .classpath
 .project
+.smarttomcat/
 
 # ===== Hệ điều hành =====
 .DS_Store

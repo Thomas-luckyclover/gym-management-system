@@ -150,6 +150,7 @@ CREATE TABLE Accounts (
 GO
 
 -- VerificationCodes: mã 6 số gửi qua email, HOẶC link đặt mật khẩu (PasswordSetup).
+--   (PasswordSetup/TokenHash: không còn dùng từ 27/09, giữ để tương thích)
 -- Tách bảng vì lúc GỬI mã cho người tự đăng ký thì CHƯA có Account nào để lưu.
 CREATE TABLE VerificationCodes (
     VerificationCodeId INT IDENTITY(1,1) NOT NULL,
