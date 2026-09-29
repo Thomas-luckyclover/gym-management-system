@@ -74,7 +74,7 @@ public class BlogPostDAO {
 
             int paramIndex = 1;
             if (hasKeyword) {
-                String searchPattern = SqlUtil.toContainsPattern(keyword);
+                String searchPattern = buildSearchPattern(keyword);
                 stmt.setString(paramIndex, searchPattern);
                 paramIndex++;
                 stmt.setString(paramIndex, searchPattern);
@@ -149,7 +149,7 @@ public class BlogPostDAO {
 
             int paramIndex = 1;
             if (hasKeyword) {
-                String searchPattern = SqlUtil.toContainsPattern(keyword);
+                String searchPattern = buildSearchPattern(keyword);
                 stmt.setString(paramIndex, searchPattern);
                 paramIndex++;
                 stmt.setString(paramIndex, searchPattern);
@@ -350,5 +350,31 @@ public class BlogPostDAO {
                 status,
                 publishedAt
         );
+    }
+
+    /**
+     * Chuyển từ khóa thành mẫu tìm kiếm SQL Server kết hợp SqlUtil.toContainsPattern
+     * và hỗ trợ không phân biệt d/đ cho tiếng Việt (GBR-19 / Kịch bản B04).
+     *
+     * @param keyword từ khóa người dùng nhập
+     * @return chuỗi mẫu cho toán tử LIKE
+     */
+    private String buildSearchPattern(String keyword) {
+        String basePattern = SqlUtil.toContainsPattern(keyword);
+        if (basePattern == null || "%".equals(basePattern)) {
+            return "%";
+        }
+        // Trong collation Vietnamese_CI_AI của SQL Server, chữ d và đ không bằng nhau.
+        // Dùng wildcard [dđ] để tìm kiếm không dấu (VD: "ngu du giac" khớp "Ngủ đủ giấc").
+        StringBuilder sb = new StringBuilder();
+        for (int i = 0; i < basePattern.length(); i++) {
+            char c = basePattern.charAt(i);
+            if (c == 'd' || c == 'D' || c == 'đ' || c == 'Đ') {
+                sb.append("[dđ]");
+            } else {
+                sb.append(c);
+            }
+        }
+        return sb.toString();
     }
 }

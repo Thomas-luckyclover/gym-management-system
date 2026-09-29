@@ -34,14 +34,14 @@ Trích nguyên văn (tiếng Anh) từ `GMS_Rules_and_Parameters` v24, để dá
 | CBR-20 | If a guest signs up with the phone number of an active self-owned profile that has no account and enters the same email as the profile, the system sends a verification code to that email instead of creating a new profile; after the correct code and a password, the account is attached to the existing profile. | UC-05, UC-Claim |
 | CBR-21 | A Dependent profile has no login account. | UC-04, UC-05 |
 | CBR-23 | If a phone number only matches Inactive profiles, a new profile is created normally. | UC-16, UC-IDENT |
-| CBR-24 | When the Receptionist creates a profile for a customer buying a package of one month or longer, the Receptionist also creates the login account with the profile's email; the customer receives an email to set the password. | UC-16, UC-20 |
+| CBR-24 | When the Receptionist creates a profile for a customer buying a package of one month or longer, the Receptionist also creates the login account with the profile's email. The account is created without a password and no email is sent; the customer sets the password later through Forgot Password (CBR-31). | UC-16, UC-20 |
 | CBR-25 | A guest signing up with the phone number of a self-owned profile that has no account, but with a different email from the one on the profile, cannot activate it. The system says the phone number is registered with another email (masked); the guest uses that email or asks the Receptionist to verify and update it. | UC-05, UC-Claim |
 | CBR-26 | If a guest signs up with the phone number of a profile that already has an account, no new account is created; the system says the number already has an account and points to Sign In / Forgot Password. | UC-03, UC-05 |
 | CBR-27 | A self-owned profile without an email cannot be activated online; the customer goes to the counter so the Receptionist can add the email and create the account (CBR-24). | UC-05, UC-16, UC-Claim |
 | CBR-28 | Duplicate checks during self sign-up only compare against the phone number on Person; guardian numbers recorded on Dependent profiles neither block nor activate anything — the guardian registers as a new customer. | UC-05, UC-IDENT |
 | CBR-29 | When the email of a profile that has an account changes (by the Receptionist or the customer), the system notifies the old email and signs out every session of the account. | UC-04, UC-16 |
 | CBR-30 | In their own account a customer can change only the avatar, email, phone number and password. Full name, date of birth, check-in photo and guardian details are changed by the Receptionist (UC-16), because they are used for check-in verification and the PT age rule. | UC-04, UC-16 |
-| CBR-31 | An account created by the Receptionist (CBR-24) cannot sign in until the customer sets a password through the emailed link; the link expires per P-15, after which the customer uses Forgot Password. | UC-01, UC-03, UC-16 |
+| CBR-31 | An account created by the Receptionist (CBR-24) cannot sign in until the customer sets a password through Forgot Password (UC-03). Until then, every sign-in attempt shows MSG38 and points to Forgot Password. | UC-01, UC-03, UC-16 |
 | CBR-37 | The avatar uploaded by the customer is for display only and is never used for check-in verification. | UC-04, UC-16, UC-19 |
 | CBR-38 | The check-in photo belongs to the customer profile, not to the account. Only the Receptionist can take or retake it; the customer cannot change or delete it, even with an account. | UC-04, UC-16, UC-19 |
 | CBR-91 | A PT can edit only the private notes and workout/meal plans they created; everyone can edit only their own account profile. | UC-04, UC-24, UC-32, UC-33, UC-34, UC-40 |
@@ -87,7 +87,7 @@ Trích nguyên văn (tiếng Anh) từ `GMS_Rules_and_Parameters` v24, để dá
 | ID | Parameter | Used by | Default | Unit | Changed by |
 |---|---|---|---|---|---|
 | P-05 | Minimum age for PT services | CBR-13, CBR-14, CBR-15 | 10 | years | Manager (4.1.2) |
-| P-15 | Validity of verification / recovery codes and password-setup links | BR-04, CBR-31 | 15 | minutes | Manager (4.1.2) |
+| P-15 | Validity of verification / recovery codes | BR-04, CBR-94 | 15 | minutes | Manager (4.1.2) |
 | P-16 | Valid mobile phone prefixes | DBR-17 | Current carrier list | list | Deployment configuration |
 | P-17 | Wrong attempts before a temporary lock (sign-in and verification codes) | BR-01, CBR-94 | 5 | times | Manager (4.1.2) |
 | P-18 | Temporary lock duration (sign-in and verification codes) | BR-01, CBR-94 | 5 | minutes | Manager (4.1.2) |

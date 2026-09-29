@@ -35,16 +35,14 @@ Mã có sẵn trong seed dùng để test thẳng bước nhập mã mà không 
 | L09 | `phuc.le@gmail.com` / `Gms@2026` | "Tài khoản này đã ngừng hoạt động…" (Admin khóa) | MSG37, CBR-96 |
 | L10 | `nam.ho@gms.vn` / `Gms@2026` | Như trên (nhân viên đã nghỉ) | MSG37 |
 | L11 | `tung.mai@gmail.com` / `Gms@2026` | Không đăng nhập được (hồ sơ đã xóa, email đã nhả) | DBR-28 |
-| L12 | `khanh.trinh@gmail.com` / bất kỳ | "Tài khoản này chưa có mật khẩu…" | MSG38, CBR-31 |
+| L12 | `khanh.trinh@gmail.com` / bất kỳ | MSG38 mới "Tài khoản này chưa có mật khẩu. Hãy dùng Quên mật khẩu…" → bấm **Đặt mật khẩu** → sang Quên mật khẩu, email điền sẵn | MSG38, CBR-31 |
 | L13 | `lan.dang85@gmail.com` / bất kỳ | Như sai mật khẩu (hồ sơ có, **không có tài khoản**) | CBR-17 |
 | L14 | `khongtontai@gmail.com` / bất kỳ | Như sai mật khẩu — **không** nói "email không tồn tại" | MSG33 |
 | L15 | `trang.nguyen@gms.vn` (vừa PT vừa khách) | Chờ chốt: hỏi chọn vai trò (notes D1.2) | UC-01 |
 | L16 | Mở `/customer/dashboard` khi chưa đăng nhập → đăng nhập | Quay lại đúng `/customer/dashboard` | GBR-31 |
 | L17 | Khách mở `/manager/dashboard` | Trang 403 | GBR-10 |
-| L18 ⏱ | Mở `/set-password?token=setup-nhung-phase1-2026`, đặt mật khẩu mới | Đặt được → đăng nhập `nhung.ho@gmail.com` bằng mật khẩu vừa đặt | CBR-24 |
-| L19 ⏱ | Mở lại đúng link L18 lần 2 | Link không còn hiệu lực (đã dùng) | CBR-31 |
-| L20 | Mở `/set-password?token=setup-khanh-expired-2026` | Link hết hạn → hướng dẫn dùng Quên mật khẩu | CBR-31 |
-| L21 | `nhung.ho@gmail.com` đăng nhập **trước** khi đặt mật khẩu | "Tài khoản này chưa có mật khẩu…" | MSG38 |
+| L21 | `nhung.ho@gmail.com` / bất kỳ (chưa đặt mật khẩu) | MSG38 mới → bấm **Đặt mật khẩu** → sang Quên mật khẩu, email điền sẵn | MSG38, CBR-31 |
+| L22 | `0901234513` (SĐT của tài khoản 9, Khánh) / bất kỳ | MSG38 → bấm **Đặt mật khẩu** → sang Quên mật khẩu, ô email **TRỐNG** (không lộ email gắn với SĐT) | MSG38, CBR-31 |
 
 ## 3. Đăng ký — `/register`
 

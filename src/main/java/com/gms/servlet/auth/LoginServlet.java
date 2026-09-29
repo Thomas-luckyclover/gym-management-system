@@ -9,6 +9,7 @@ import com.gms.dto.ServiceResult;
 import com.gms.service.AuthService;
 import com.gms.util.JsonUtil;
 import com.gms.util.RequestUtil;
+import com.gms.util.ValidationUtil;
 import jakarta.servlet.ServletException;
 import jakarta.servlet.annotation.WebServlet;
 import jakarta.servlet.http.HttpServlet;
@@ -102,6 +103,15 @@ public class LoginServlet extends HttpServlet {
                 RequestUtil.redirect(request, response, targetUrl);
             }
         } else {
+            // Tài khoản chưa có mật khẩu (MSG38, VD tài khoản Lễ tân tạo tại quầy) → khách bấm "Đặt mật khẩu"
+            // sẽ sang Quên mật khẩu. Để sẵn email trong session để ô email bên đó điền sẵn (ForgotPasswordServlet đọc 1 lần).
+            // CHỈ điền khi khách gõ EMAIL: nếu khách gõ số điện thoại thì không điền, vì điền vào là để lộ
+            // email gắn với số điện thoại đó cho bất kỳ ai biết SĐT.
+            boolean isNoPasswordYet = Messages.MSG38_NO_PASSWORD_YET.equals(result.getMessage());
+            if (isNoPasswordYet && ValidationUtil.isValidEmail(identifier)) {
+                request.getSession().setAttribute(SessionKey.RECOVERY_PREFILL_EMAIL, identifier);
+            }
+
             if (isAjax) {
                 JsonUtil.writeJson(response, JsonResponse.from(result));
             } else {
@@ -139,11 +149,11 @@ public class LoginServlet extends HttpServlet {
         return "form";
     }
     private static final java.util.regex.Pattern LOCK_RETRY_PATTERN
-            = java.util.regex.Pattern.compile("Thử lại sau\\s+(\\d+)\\s*phút");
+            = java.util.regex.Pattern.compile("Thử lại sau\\s+(\\d+):(\\d{2})");
 
     /**
      * Lấy số giây còn lại tới khi hết khoá, từ câu thông báo
-     * MSG35_ACCOUNT_TEMP_LOCKED. Trả về null nếu không phải lỗi khoá tài khoản
+     * MSG35_ACCOUNT_TEMP_LOCKED ("… Thử lại sau mm:ss."). Trả về null nếu không phải lỗi khoá tài khoản
      * hoặc không parse được.
      */
     private Integer extractLockSecondsLeft(String errorMessage) {
@@ -153,7 +163,8 @@ public class LoginServlet extends HttpServlet {
         java.util.regex.Matcher matcher = LOCK_RETRY_PATTERN.matcher(errorMessage);
         if (matcher.find()) {
             int minutes = Integer.parseInt(matcher.group(1));
-            return minutes * 60;
+            int seconds = Integer.parseInt(matcher.group(2));
+            return minutes * 60 + seconds;
         }
         return null;
     }

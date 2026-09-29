@@ -1,7 +1,7 @@
 package com.gms.constant;
 
 /**
- * Toàn bộ thông báo hệ thống theo SRS III.5 "System Messages" (MSG01 … MSG61), đã dịch sang tiếng Việt (GBR-01).
+ * Toàn bộ thông báo hệ thống theo SRS III.5 "System Messages" (MSG01 … MSG73), đã dịch sang tiếng Việt (GBR-01).
  *
  * Cách dùng:
  * - Thông báo không có tham số: dùng thẳng, VD ServiceResult.fail(Messages.MSG04_SYSTEM_BUSY)
@@ -60,7 +60,7 @@ public final class Messages {
     public static final String MSG35_ACCOUNT_TEMP_LOCKED = "Tài khoản bị khóa %d phút do nhập sai quá nhiều lần. Thử lại sau %s.";
     public static final String MSG36_LOCK_EXPIRED = "Đã hết thời gian khóa. Bạn có thể đăng nhập lại.";
     public static final String MSG37_ACCOUNT_INACTIVE = "Tài khoản này đã ngừng hoạt động. Vui lòng liên hệ quản trị viên.";
-    public static final String MSG38_NO_PASSWORD_YET = "Tài khoản này chưa có mật khẩu. Hãy mở email chúng tôi đã gửi để đặt mật khẩu, sau đó đăng nhập lại.";
+    public static final String MSG38_NO_PASSWORD_YET = "Tài khoản này chưa có mật khẩu. Hãy dùng Quên mật khẩu để đặt mật khẩu.";
     public static final String MSG39_IDENTIFIER_REQUIRED = "Nhập email hoặc số điện thoại.";
     public static final String MSG40_SIGNED_OUT = "Đã đăng xuất.";
     public static final String MSG41_EMAIL_NOT_FOUND = "Không tìm thấy tài khoản nào với email này.";
@@ -85,28 +85,38 @@ public final class Messages {
     public static final String MSG60_UPDATED_BY_FRONT_DESK = "Thông tin này do quầy lễ tân cập nhật. Vui lòng mang giấy tờ tùy thân đến quầy.";
     public static final String MSG61_VERIFICATION_LOCKED = "Thử quá nhiều lần. Xác thực cho email này bị khóa %d phút. Thử lại sau %s.";
 
-    // ===== Bổ sung — luật DBR có nhưng SRS III.5 chưa có mã thông báo (chờ nhóm bổ sung mã vào SRS) =====
+    // ===== 5.5 Số lần còn lại khi nhập / gửi lại mã xác thực (CBR-94) =====
+
+    public static final String MSG62_CODE_ATTEMPTS_LEFT = "Bạn còn %d lần nhập mã.";
+    public static final String MSG63_CODE_LAST_ATTEMPT = "Nhập sai thêm 1 lần, xác thực cho email này sẽ bị khóa %d phút.";
+    public static final String MSG64_CODE_RESENDS_LEFT = "Còn %d lần gửi lại mã trong 60 phút.";
+    public static final String MSG65_CODE_RESEND_WILL_LOCK = "Đã hết lượt gửi lại. Gửi thêm sẽ khóa xác thực %d phút.";
+
+    // ===== 5.6 Luật DBR / CBR có nhưng trước đây SRS III.5 chưa có mã (MSG66–MSG73 — đã đề xuất bổ sung vào SRS) =====
 
     /** DBR-02: mật khẩu phải có cả chữ và số. */
-    public static final String EXTRA_PASSWORD_RULE = "Mật khẩu phải dài %d–%d ký tự, gồm cả chữ và số.";
+    public static final String MSG66_PASSWORD_RULE = "Mật khẩu phải dài %d–%d ký tự, gồm cả chữ và số.";
 
     /** DBR-01: họ tên sai ký tự. */
-    public static final String EXTRA_FULL_NAME_RULE = "Họ tên chỉ gồm chữ cái, khoảng trắng, dấu nháy đơn hoặc gạch nối.";
+    public static final String MSG67_FULL_NAME_RULE = "Họ tên chỉ gồm chữ cái, khoảng trắng, dấu nháy đơn hoặc gạch nối.";
 
     /** DBR-03: mã xác thực sai định dạng (khác MSG43 — mã đúng định dạng nhưng sai giá trị). */
-    public static final String EXTRA_CODE_FORMAT = "Mã xác thực gồm đúng 6 chữ số.";
+    public static final String MSG68_CODE_FORMAT = "Mã xác thực gồm đúng 6 chữ số.";
 
     /** DBR-04: tuổi vượt quá 100. */
-    public static final String EXTRA_DOB_TOO_OLD = "Ngày sinh không hợp lệ (tuổi không quá %d).";
+    public static final String MSG69_DOB_TOO_OLD = "Ngày sinh không hợp lệ (tuổi không quá %d).";
 
     /** CBR-94: bấm "Gửi lại mã" khi chưa đủ 60 giây kể từ lần gửi trước. */
-    public static final String EXTRA_CODE_RESEND_TOO_SOON = "Vui lòng chờ %d giây nữa rồi bấm Gửi lại mã.";
+    public static final String MSG70_CODE_RESEND_TOO_SOON = "Vui lòng chờ %d giây nữa rồi bấm Gửi lại mã.";
 
-    /** CBR-31: link đặt mật khẩu sai, đã dùng hoặc đã hết hạn. */
-    public static final String EXTRA_SETUP_LINK_INVALID = "Link đặt mật khẩu không còn hiệu lực. Vui lòng dùng Quên mật khẩu để đặt lại.";
+    /** UC-04: đổi mật khẩu nhưng mật khẩu hiện tại nhập sai. */
+    public static final String MSG71_CURRENT_PASSWORD_WRONG = "Mật khẩu hiện tại không đúng.";
 
-    /** CBR-24: đặt mật khẩu lần đầu qua link email thành công. */
-    public static final String EXTRA_PASSWORD_SET = "Đã đặt mật khẩu. Vui lòng đăng nhập.";
+    /** DBR-01: họ tên ngoài độ dài cho phép. */
+    public static final String MSG72_FULL_NAME_LENGTH = "Họ và tên phải từ %d đến %d ký tự.";
+
+    /** CBR-100: bài viết đã gỡ hoặc không tồn tại trên trang công khai. */
+    public static final String MSG73_POST_UNAVAILABLE = "Bài viết này không còn hiển thị.";
 
     private Messages() {
     }

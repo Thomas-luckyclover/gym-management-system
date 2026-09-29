@@ -9,7 +9,7 @@
   <title><c:out value="${post.title}" /> · Super Gym</title>
   <meta name="description" content="<c:out value='${post.excerpt}' />">
   <link rel="stylesheet" href="${pageContext.request.contextPath}/css/pages/guest/blog-detail.css">
-  <script src="${pageContext.request.contextPath}/js/pages/guest/blog-detail.js" defer></script>
+  <script src="${pageContext.request.contextPath}/js/pages/guest/blog-detail.js?v=2" defer></script>
 </head>
 <body class="theme-guest-dark">
   <%-- Flash Toast thông báo redirect từ server nếu có --%>

@@ -121,15 +121,19 @@ public class PersonDAO {
         }
 
         /**
-         * Tìm Person đang hoạt động (IsReleased = 0) theo số điện thoại.
+         * Tìm Person đang hoạt động (IsReleased = 0) theo số điện thoại,
+         * chỉ trong hồ sơ Self (CBR-28: bỏ qua SĐT giám hộ trên Dependent profile).
          * 
          * @param phone số điện thoại 10 chữ số
          * @return đối tượng Person hoặc null nếu không tìm thấy
          * @throws SQLException khi truy vấn gặp lỗi
          */
         public Person findByPhone(String phone) throws SQLException {
-                String sql = "SELECT PersonId, FullName, DateOfBirth, Phone, Email, Avatar, IsReleased, CreatedAt "
-                                + "FROM Persons WHERE Phone = ? AND IsReleased = 0";
+                String sql = "SELECT p.PersonId, p.FullName, p.DateOfBirth, p.Phone, p.Email, "
+                                + "p.Avatar, p.IsReleased, p.CreatedAt "
+                                + "FROM Persons p "
+                                + "INNER JOIN Customers c ON c.PersonId = p.PersonId "
+                                + "WHERE p.Phone = ? AND p.IsReleased = 0 AND c.CustomerType = 'Self'";
 
                 try (Connection conn = DBContext.getConnection();
                                 PreparedStatement stmt = conn.prepareStatement(sql)) {

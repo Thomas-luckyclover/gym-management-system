@@ -133,11 +133,7 @@ INSERT INTO VerificationCodes (VerificationCodeId, AccountId, Email, Purpose, Co
  (1, 10  , 'ngoc.ly99@gmail.com'   , 'SignUp'       , '481920', NULL, '2026-09-20 21:15:00', '2026-09-20 21:30:00', 0, NULL                 , '2026-09-20 21:18:00'),
  (2, NULL, 'toan.phan@gmail.com'   , 'SignUp'       , '730154', NULL, '2026-09-22 18:50:00', '2026-09-22 19:05:00', 1, NULL                 , NULL),                -- hết hạn, không ai dùng
  (3, 2   , 'bich.tran@gmail.com'   , 'EmailChange'  , '204877', NULL, '2026-09-23 08:40:00', '2026-09-23 08:55:00', 0, NULL                 , NULL),                -- đang còn hiệu lực
- (4, 3   , 'quan.le92@gmail.com'   , 'Recovery'     , '915003', NULL, '2026-09-23 08:20:00', '2026-09-23 08:35:00', 5, '2026-09-23 08:40:00', NULL),                -- sai 5 lần → khóa 5 phút
- -- Link đặt mật khẩu cho tài khoản Lễ tân tạo (khách Khánh, tài khoản 9) — ĐÃ HẾT HẠN → khách phải dùng Quên mật khẩu (CBR-31)
- -- Token thật: setup-khanh-expired-2026 → lưu SHA-256 của nó, không lưu token
- (5, 9   , 'khanh.trinh@gmail.com' , 'PasswordSetup', NULL    , 'ee39e31180528cc12f59f6ef93814f2ac996684b53a18ce2c8c9046348df1b75',
-  '2026-09-01 13:40:00', '2026-09-01 13:55:00', 0, NULL, NULL);
+ (4, 3   , 'quan.le92@gmail.com'   , 'Recovery'     , '915003', NULL, '2026-09-23 08:20:00', '2026-09-23 08:35:00', 5, '2026-09-23 08:40:00', NULL);                -- sai 5 lần → khóa 5 phút
 SET IDENTITY_INSERT VerificationCodes OFF;
 GO
 
@@ -554,7 +550,7 @@ INSERT INTO SystemConfigs (SystemConfigId, ConfigKey, ConfigValue, Description, 
  (12, 'P-12', '15:00'      , N'Giờ chốt nộp đơn nghỉ của ngày hôm trước'                  , '2025-01-10 09:00:00', 2),
  (13, 'P-13', '2'          , N'Số PT tối thiểu còn lại mỗi ca'                            , '2025-01-10 09:00:00', 2),
  (14, 'P-14', '1'          , N'Số lễ tân tối thiểu còn lại mỗi ca'                        , '2025-01-10 09:00:00', 2),
- (15, 'P-15', '15'         , N'Hiệu lực mã xác thực và link đặt mật khẩu (phút)'          , '2025-01-10 09:00:00', 2),
+ (15, 'P-15', '15'         , N'Hiệu lực mã xác thực / mã khôi phục (phút)'               , '2025-01-10 09:00:00', 2),
  (16, 'P-16', '03,05,07,08,09', N'Đầu số di động hợp lệ'                                  , '2025-01-10 09:00:00', 2),
  (17, 'P-17', '5'          , N'Số lần sai trước khi khóa tạm (đăng nhập và mã xác thực)'  , '2025-01-10 09:00:00', 2),
  (18, 'P-18', '5'          , N'Thời gian khóa tạm (phút)'                                 , '2025-01-10 09:00:00', 2),
