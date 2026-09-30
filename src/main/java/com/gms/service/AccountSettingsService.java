@@ -14,6 +14,7 @@ import com.gms.listener.SessionRegistryListener;
 import com.gms.util.PasswordUtil;
 import com.gms.util.ValidationUtil;
 import java.sql.SQLException;
+import java.time.LocalDate;
 import com.gms.constant.AppConstants;
 import com.gms.util.DBContext;
 
@@ -94,6 +95,16 @@ public class AccountSettingsService {
                             ? null
                             : employee.getEmployeeCode();
 
+            LocalDate hireDate =
+                    employee == null
+                            ? null
+                            : employee.getHireDate();
+
+            String employmentStatus =
+                    employee == null || employee.getStatus() == null
+                            ? null
+                            : employee.getStatus().getDbValue();
+
             AccountSettingsView view =
                     new AccountSettingsView(
                             account.getAccountId(),
@@ -104,7 +115,9 @@ public class AccountSettingsService {
                             person.getEmail(),
                             person.getAvatar(),
                             sessionRole,
-                            employeeCode
+                            employeeCode,
+                            hireDate,
+                            employmentStatus
                     );
 
             return ServiceResult.ok(view);

@@ -52,8 +52,9 @@
             </div>
 
             <a
-                href="${pageContext.request.contextPath}/admin/report"
-                class="nav-link"
+                href="${pageContext.request.contextPath}/admin/dashboard"
+                class="nav-link ${activeSidebar eq 'dashboard' ? 'active' : ''}"
+                aria-current="${activeSidebar eq 'dashboard' ? 'page' : 'false'}"
             >
                 <svg viewBox="0 0 24 24" aria-hidden="true">
                     <path d="M4 20V10"></path>
