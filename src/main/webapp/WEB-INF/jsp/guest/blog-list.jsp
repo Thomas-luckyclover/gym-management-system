@@ -76,36 +76,10 @@
 
           <a class="post-card" href="${pageContext.request.contextPath}/blog/detail?id=${post.blogPostId}"
              data-category="${cardCatName}" data-title="<c:out value='${post.title}' />">
-            <div class="post-thumb ${cardToneClass}">
-              <c:if test="${not empty post.coverImage and not post.coverImage.contains('default-')}">
-                <img class="post-thumb-img"
-                     src="${post.coverImage.startsWith('/') ? pageContext.request.contextPath : ''}${post.coverImage}"
-                     alt="<c:out value='${post.title}' />"
-                     onerror="this.style.display='none'; if(this.nextElementSibling){this.nextElementSibling.classList.remove('is-hidden');}">
-              </c:if>
-              <div class="post-thumb-fallback<c:if test="${not empty post.coverImage and not post.coverImage.contains('default-')}"> is-hidden</c:if>">
-                <svg class="cover-pattern" viewBox="0 0 400 200" preserveAspectRatio="xMidYMid slice" aria-hidden="true">
-                  <c:choose>
-                    <c:when test="${post.category eq 'Nutrition' or post.category eq 'Dinh dưỡng'}">
-                      <g fill="none" stroke="rgba(255,255,255,.28)" stroke-width="3">
-                        <circle cx="368" cy="188" r="24"/><circle cx="368" cy="188" r="44"/><circle cx="368" cy="188" r="64"/>
-                      </g>
-                    </c:when>
-                    <c:when test="${post.category eq 'News' or post.category eq 'Tin tức'}">
-                      <circle cx="30" cy="6" r="90" fill="rgba(255,255,255,.16)"/>
-                    </c:when>
-                    <c:otherwise>
-                      <g fill="rgba(255,255,255,.3)">
-                        <circle cx="22" cy="150" r="4"/><circle cx="50" cy="122" r="4"/><circle cx="78" cy="160" r="4"/>
-                        <circle cx="22" cy="180" r="4"/><circle cx="50" cy="180" r="4"/><circle cx="78" cy="190" r="4"/>
-                        <circle cx="106" cy="142" r="4"/><circle cx="6" cy="120" r="4"/><circle cx="106" cy="180" r="4"/>
-                      </g>
-                    </c:otherwise>
-                  </c:choose>
-                </svg>
-                <span class="post-thumb-icon"><i class="fa-solid ${cardIconClass}"></i></span>
-              </div>
-            </div>
+            <c:if test="${not empty post.coverImage}">
+              <img class="post-thumb" loading="lazy" alt="<c:out value='${post.title}' />"
+                   src="${post.coverImage.startsWith('/') ? pageContext.request.contextPath : ''}${post.coverImage}">
+            </c:if>
 
             <div class="post-body">
               <span class="chip ${cardChipClass}"><c:out value="${cardCatName}" /></span>
