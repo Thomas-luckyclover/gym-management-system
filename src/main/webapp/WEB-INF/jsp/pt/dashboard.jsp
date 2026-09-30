@@ -6,7 +6,8 @@
     Topbar       : Tổng quan · Điểm danh hôm nay · avatar PT
     Đầu trang    : lời chào + thời tiết (hiệu ứng CSS theo weather.moodCss) + tóm tắt hôm nay
     Cột chính    : Buổi cần điểm danh (P-07) · Hoa hồng theo kỳ · Buổi sắp tới (lọc ngày) · banner thiếu gói tập
-    Cột phụ      : Khách phụ trách · Dự kiến còn lại tháng này · Tuần này · Lịch rảnh
+    Cột phụ      : Khách phụ trách · Tháng · Tuần · Lịch rảnh — TẤT CẢ theo ngày trong ô "Từ ngày"
+    Thẻ chào luôn theo HÔM NAY; khối Hoa hồng theo "Kỳ" riêng.
   Bộ lọc server (GET): period, date, days. Bộ lọc tại chỗ (JS, không tải lại): tìm khách, gói, trạng thái.
   Dùng được trên điện thoại (GBR-35).
 --%>
@@ -20,7 +21,7 @@
 <head>
   <%@ include file="/WEB-INF/jsp/common/head.jspf" %>
   <title>Tổng quan — Super Gym PT</title>
-  <link rel="stylesheet" href="${ctx}/css/pages/pt/dashboard.css?v=9">
+  <link rel="stylesheet" href="${ctx}/css/pages/pt/dashboard.css?v=10">
   <script src="${ctx}/js/pages/pt/dashboard.js?v=4" defer></script>
 </head>
 <body class="dock theme-staff">
@@ -93,7 +94,7 @@
             <ul class="hero-chips">
               <li><b>${d.todaySessionCount}</b> buổi hôm nay</li>
               <li class="${empty d.attendanceSessions ? '' : 'is-warn'}"><b>${d.attendanceSessions.size()}</b> cần điểm danh</li>
-              <li><b>${d.weekFreeSlots}</b> slot trống tuần này</li>
+              <li><b>${d.todayWeekFreeSlots}</b> slot trống tuần này</li>
             </ul>
           </div>
         </section>
@@ -310,7 +311,7 @@
             </c:if>
           </div>
 
-          <%-- ================= Cột phụ ================= --%>
+          <%-- ================= Cột phụ — mọi ô cùng theo ngày trong ô "Từ ngày" ================= --%>
           <aside class="col-side">
             <%-- Khách phụ trách (GBR-10) — cùng ngày với ô "Từ ngày" --%>
             <div class="kpi-card">
@@ -343,19 +344,34 @@
               <a class="btn btn-ghost btn-sm btn-block" href="${ctx}/pt/clients">Khách của tôi</a>
             </div>
 
+            <%-- Ô Tháng: tháng chứa ngày đang lọc — tách tiền hoa hồng làm 3 phần không trùng nhau --%>
             <div class="side-card">
-              <span class="section-label">Dự kiến còn lại tháng này</span>
-              <h3 class="side-money tabular"><c:out value="${d.expectedAmountText}" /></h3>
-              <div class="side-row"><span>Buổi đã xếp</span><b>${d.expectedSessionCount}</b></div>
-              <p class="muted">Chốt khi buổi hoàn thành hoặc khách vắng.</p>
+              <span class="section-label"><c:out value="${d.monthLabel}" /></span>
+              <div class="side-row side-row--money">
+                <span>Đã chốt <small>${d.monthEarnedCount} buổi</small></span><b><c:out value="${d.monthEarnedText}" /></b>
+              </div>
+              <div class="side-row side-row--money <c:if test="${d.monthPendingCount > 0}">is-pending</c:if>">
+                <span>Chờ chốt <small>${d.monthPendingCount} buổi</small></span><b><c:out value="${d.monthPendingText}" /></b>
+              </div>
+              <div class="side-row side-row--money">
+                <span>Dự kiến <small>${d.monthExpectedCount} buổi</small></span><b><c:out value="${d.monthExpectedText}" /></b>
+              </div>
+              <p class="muted">
+                Chờ chốt = buổi đã qua ngày nhưng chưa điểm danh; sẽ tính khi PT điểm danh hoặc hệ thống tự đóng sau
+                ${d.attendanceWindowHours} giờ. Dự kiến = buổi đã xếp từ hôm nay trở đi.
+              </p>
             </div>
 
+            <%-- Ô Tuần: thứ 2 → chủ nhật của tuần chứa ngày đang lọc --%>
             <div class="side-card">
-              <span class="section-label">Tuần này</span>
+              <span class="section-label"><c:out value="${d.weekLabel}" /></span>
               <div class="side-row"><span>Buổi đã xếp</span><b>${d.weekScheduled}</b></div>
               <div class="side-row"><span>Đã dạy</span><b>${d.weekTaught}</b></div>
               <div class="side-row"><span>Khách vắng</span><b>${d.weekMissed}</b></div>
-              <div class="side-row"><span>Slot còn trống</span><b>${d.weekFreeSlots}</b></div>
+              <div class="side-row"><span>Đã hủy</span><b>${d.weekCancelled}</b></div>
+              <c:if test="${d.weekFreeSlots != null}">
+                <div class="side-row"><span>Slot còn trống</span><b>${d.weekFreeSlots}</b></div>
+              </c:if>
             </div>
 
             <div class="side-card">
