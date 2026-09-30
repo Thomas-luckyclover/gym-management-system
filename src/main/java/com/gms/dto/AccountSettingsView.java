@@ -17,6 +17,8 @@ public class AccountSettingsView {
     private final String avatar;
     private final Role role;
     private final String employeeCode;
+    private final LocalDate hireDate;
+    private final String employmentStatus;
 
     public AccountSettingsView(
             int accountId,
@@ -27,7 +29,10 @@ public class AccountSettingsView {
             String email,
             String avatar,
             Role role,
-            String employeeCode
+            String employeeCode,
+            LocalDate hireDate,
+            String employmentStatus
+
     ) {
 
         this.accountId = accountId;
@@ -39,6 +44,8 @@ public class AccountSettingsView {
         this.avatar = avatar;
         this.role = role;
         this.employeeCode = employeeCode;
+        this.hireDate = hireDate;
+        this.employmentStatus = employmentStatus;
     }
 
     public int getAccountId() {
@@ -75,5 +82,12 @@ public class AccountSettingsView {
 
     public String getEmployeeCode() {
         return employeeCode;
+    }
+    public LocalDate getHireDate() {
+        return hireDate;
+    }
+
+    public String getEmploymentStatus() {
+        return employmentStatus;
     }
 }
