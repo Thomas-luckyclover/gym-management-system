@@ -45,7 +45,8 @@ public class PtSessionView {
      * @param partnerName       người đi kèm (chỉ gói couple), null nếu không có.
      * @param missedReason      lý do vắng (chỉ buổi Missed), null nếu không có.
      * @param missingMembership true khi buổi rơi vào ngày khách KHÔNG có gói tập còn hiệu lực
-     *                          (gói couple: cả 2 người đều không có) — CBR-64, CBR-66.
+     *                          (gói couple: cả 2 người đều không có — CBR-64, CBR-66;
+     *                          buổi lẻ: có gói ngày của chính hôm đó cũng được, không gắn nhãn — CBR-60).
      */
     public PtSessionView(int sessionId, LocalDate slotDate, LocalTime startTime, LocalTime endTime, String status,
             String sourceType, String customerName, String partnerName, String missedReason,

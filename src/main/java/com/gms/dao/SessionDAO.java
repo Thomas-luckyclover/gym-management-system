@@ -23,14 +23,19 @@ import java.util.List;
 public class SessionDAO {
 
     /**
-     * Điều kiện "khách {customerColumn} có gói tập (Membership) còn hiệu lực vào ngày t.SlotDate" (CBR-64, CBR-66):
-     *   - Membership chưa bị hủy, ngày buổi nằm trong [StartDate, EndDate] (EndDate tính cả ngày đó — GBR-03)
-     *   - và ngày đó KHÔNG nằm trong khoảng bảo lưu của gói (bảo lưu = tạm ngừng dùng)
-     * Vé ngày (DayPass) KHÔNG tính — vé ngày không thay được gói tập cho buổi PT.
+     * Điều kiện "khách {customerColumn} được phép tập vào ngày t.SlotDate" (CBR-60, CBR-64, CBR-66):
+     *   - có quyền dùng chưa bị hủy, ngày buổi nằm trong [StartDate, EndDate] (EndDate tính cả ngày đó — GBR-03)
+     *   - loại quyền dùng được chấp nhận:
+     *       · Buổi thuộc gói PT (PTSingle, PTCouple): CHỈ gói tập (Membership) — vé ngày không thay được (CBR-64)
+     *       · Buổi lẻ (SingleSession): gói tập, HOẶC gói ngày (DayPass) của chính hôm đó — khách vãng lai
+     *         mua gói ngày rồi mua buổi lẻ hôm nay tại quầy (CBR-60)
+     *   - và ngày đó KHÔNG nằm trong khoảng bảo lưu của gói (bảo lưu = tạm ngừng dùng; gói ngày không bảo lưu được)
      */
     private static final String HAS_MEMBERSHIP_ON_SLOT_DATE =
             "EXISTS (SELECT 1 FROM Subscriptions m "
-            + "WHERE m.CustomerId = %s AND m.SubscriptionType = 'Membership' AND m.Status <> 'Cancelled' "
+            + "WHERE m.CustomerId = %s AND m.Status <> 'Cancelled' "
+            + "AND (m.SubscriptionType = 'Membership' "
+            + "     OR (sub.SubscriptionType = 'SingleSession' AND m.SubscriptionType = 'DayPass')) "
             + "AND t.SlotDate BETWEEN m.StartDate AND m.EndDate "
             + "AND NOT EXISTS (SELECT 1 FROM FreezeRecords f WHERE f.SubscriptionId = m.SubscriptionId "
             + "AND t.SlotDate BETWEEN f.StartDate AND COALESCE(f.ActualEndDate, f.PlannedEndDate)))";
@@ -41,7 +46,8 @@ public class SessionDAO {
      * Tên khách lấy từ người đứng tên gói; gói couple lấy thêm người đi kèm (Orders.PartnerCustomerId).
      * Không lấy SĐT / email — dashboard chỉ cần tên.
      *
-     * VD findByPt(7, 23/09, 23/09, false) → 1 buổi 10:00–11:30, khách chỉ có vé ngày → missingMembership = true.
+     * VD findByPt(7, 23/09, 23/09, false) → 1 buổi lẻ 10:00–11:30, khách có gói ngày 23/09 → missingMembership = false
+     *    (CBR-60). Nếu đó là buổi của gói PT thì gói ngày không đủ → missingMembership = true (CBR-64).
      *
      * @param ptEmployeeId  EmployeeId của PT đang đăng nhập (chỉ lấy buổi PT này đang giữ — GBR-10).
      * @param fromDate      từ ngày (tính cả).
