@@ -1,6 +1,6 @@
 <%--
   layout-receptionist.jspf — Sidebar dock Lễ tân.
-  Khớp prototype Receptionist, theme-receptionist.
+  Khớp prototype Receptionist, theme-staff.
   Cấu trúc giống layout-manager.jspf.
   Mục chưa có servlet → href="#".
 --%>
