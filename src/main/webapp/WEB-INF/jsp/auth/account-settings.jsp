@@ -45,6 +45,13 @@
 
         </c:when>
 
+        <c:when test="${currentRole.dbValue eq 'PT'}">
+
+            <c:set var="activeNav" value="account" />
+            <%@ include file="/WEB-INF/jsp/common/layout-pt.jspf" %>
+
+        </c:when>
+
         <c:otherwise>
 
             <%-- Layout role khác đang chờ merge từ thành viên phụ trách. --%>
