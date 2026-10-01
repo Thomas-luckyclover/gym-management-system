@@ -325,7 +325,8 @@ public class AccountSettingsServlet extends HttpServlet {
                                 "contactVerificationPending",
                                 true);
 
-                // Receptionist/Manager JSP dùng cờ requireVerification, Admin JSP dùng contactVerificationPending
+                // Receptionist/Manager JSP dùng cờ requireVerification, Admin JSP dùng
+                // contactVerificationPending
                 request.setAttribute(
                                 "requireVerification",
                                 true);
