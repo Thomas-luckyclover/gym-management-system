@@ -1,0 +1,658 @@
+/* ===== Khung Admin + sidebar dùng layout-admin.jspf ===== */
+body.dock {
+    --sidebar-width: var(--layout-sidebar-width);
+}
+
+.dock .app {
+    display: block;
+    min-height: 100vh;
+    background: var(--color-bg);
+}
+
+.dock .dockwrap {
+    position: fixed;
+    z-index: 120;
+    top: 0;
+    bottom: 0;
+    left: 0;
+    width: 0;
+}
+
+.dock .sidebar {
+    position: absolute;
+    top: 0;
+    left: 0;
+    display: flex;
+    flex-direction: column;
+    width: var(--sidebar-width);
+    height: 100vh;
+    padding: var(--space-5) var(--space-4) var(--space-4);
+    overflow-y: auto;
+    background: var(--color-surface-inverse);
+    color: var(--color-text-inverse-soft);
+    transform: translateX(calc(-1 * var(--sidebar-width)));
+    transition: transform var(--duration-slower) var(--ease-standard);
+    box-shadow: var(--shadow-drawer);
+}
+
+.dock .dockwrap:hover .sidebar,
+.dock .dockwrap:focus-within .sidebar,
+.dock .dockwrap.is-open .sidebar {
+    transform: none;
+}
+
+.dock .dock-handle {
+    position: absolute;
+    top: 50%;
+    left: 0;
+    display: grid;
+    place-items: center;
+    width: 28px;
+    height: 72px;
+    border: 0;
+    border-radius: 0 var(--radius-md) var(--radius-md) 0;
+    background: var(--color-primary);
+    color: var(--color-on-primary);
+    cursor: pointer;
+    transform: translateY(-50%);
+    box-shadow: var(--shadow-card);
+    transition: left var(--duration-slower) var(--ease-standard), background var(--duration-fast) var(--ease-standard);
+}
+
+.dock .dockwrap:hover .dock-handle,
+.dock .dockwrap:focus-within .dock-handle,
+.dock .dockwrap.is-open .dock-handle {
+    left: var(--sidebar-width);
+}
+
+.dock .dock-handle:hover {
+    background: var(--color-primary-hover);
+}
+
+.dock .dock-handle svg {
+    width: 12px;
+    height: 12px;
+    fill: none;
+    stroke: currentColor;
+    stroke-width: 2.5;
+    stroke-linecap: round;
+    stroke-linejoin: round;
+    transition: transform var(--duration-slower) var(--ease-standard);
+}
+
+.dock .dockwrap:hover .dock-handle svg,
+.dock .dockwrap.is-open .dock-handle svg {
+    transform: rotate(180deg);
+}
+
+.dock .brand {
+    display: block;
+    padding: var(--space-0) var(--space-2);
+    margin-bottom: var(--space-7);
+}
+
+.dock .brand-name {
+    color: var(--color-surface);
+    font-family: var(--font-display);
+    font-size: var(--font-size-xl);
+    font-weight: var(--font-weight-extrabold);
+    line-height: var(--line-height-tight);
+    letter-spacing: var(--letter-spacing-tight);
+    text-transform: uppercase;
+}
+
+.dock .brand-role {
+    margin-top: var(--space-1);
+    color: var(--color-primary-border);
+    font-size: var(--font-size-xs);
+    font-weight: var(--font-weight-semibold);
+    letter-spacing: var(--letter-spacing-wide);
+    text-transform: uppercase;
+}
+
+.dock .nav {
+    display: flex;
+    flex: none;
+    flex-direction: column;
+    gap: var(--space-1);
+    padding: 0;
+}
+
+.dock .nav-group {
+    margin: var(--space-5) var(--space-2) var(--space-1);
+    color: var(--color-text-muted);
+    font-size: var(--font-size-xs);
+    font-weight: var(--font-weight-medium);
+    letter-spacing: var(--letter-spacing-wide);
+    text-transform: uppercase;
+}
+
+.dock .nav-group:first-child {
+    margin-top: 0;
+}
+
+.dock .nav-link {
+    display: flex;
+    align-items: center;
+    gap: var(--space-2-5);
+    padding: var(--space-2) var(--space-3);
+    border-radius: var(--radius-sm);
+    color: var(--color-text-inverse-soft);
+    text-decoration: none;
+    font-size: var(--font-size-md);
+}
+
+.dock .nav-link svg {
+    width: 18px;
+    height: 18px;
+    flex: none;
+    fill: none;
+    stroke: currentColor;
+    stroke-width: 1.7;
+    stroke-linecap: round;
+    stroke-linejoin: round;
+    opacity: .75;
+}
+
+.dock .nav-link:hover {
+    color: var(--color-surface);
+    background: var(--color-surface-inverse-soft);
+    text-decoration: none;
+}
+
+.dock .nav-link.active,
+.dock .nav-link[aria-current="page"] {
+    background: var(--color-primary);
+    color: var(--color-on-primary);
+    font-weight: var(--font-weight-semibold);
+}
+
+.dock .nav-link.active svg,
+.dock .nav-link[aria-current="page"] svg {
+    opacity: 1;
+}
+
+.dock .side-foot {
+    margin-top: auto;
+    padding-top: var(--space-5);
+    border-top: var(--border-width) solid var(--color-border-inverse);
+}
+
+.dock .logout {
+    display: block;
+    width: 100%;
+    padding: var(--space-2) var(--space-3);
+    border-radius: var(--radius-sm);
+    color: var(--color-text-muted);
+    text-decoration: none;
+}
+
+.dock .logout:hover {
+    color: var(--color-text-inverse);
+    background: var(--color-surface-inverse-soft);
+    text-decoration: none;
+}
+
+/* ===== Topbar và vùng nội dung ===== */
+.dock .main {
+    min-height: 100vh;
+}
+
+.dock .topbar {
+    position: sticky;
+    z-index: 40;
+    top: 0;
+    display: flex;
+    align-items: center;
+    gap: var(--space-4);
+    padding: var(--space-3-5) max(var(--space-8), calc((100% - var(--layout-content-width)) / 2)) var(--space-3-5) max(var(--space-12), calc((100% - var(--layout-content-width)) / 2));
+    border-bottom: var(--border-width) solid var(--color-border);
+    background: var(--color-surface);
+}
+
+.dock .tb-left {
+    min-width: 0;
+}
+
+.dock .tb-title {
+    margin: 0;
+    color: var(--color-text);
+    font-family: var(--font-heading);
+    font-size: var(--font-size-lg);
+    font-weight: var(--font-weight-bold);
+    letter-spacing: var(--letter-spacing-normal);
+    text-transform: uppercase;
+}
+
+.dock .top-right {
+    display: flex;
+    align-items: center;
+    flex: none;
+    gap: var(--space-3-5);
+    margin-left: auto;
+}
+
+.dock .tb-user {
+    display: flex;
+    align-items: center;
+    gap: var(--space-3);
+    padding: var(--space-1-5) var(--space-2) var(--space-1-5) var(--space-4);
+    border-left: var(--border-width) solid var(--color-border);
+    border-radius: var(--radius-sm);
+    color: var(--color-text);
+    text-decoration: none;
+}
+
+.dock .tb-user:hover {
+    background: var(--color-primary-tint);
+    text-decoration: none;
+}
+
+.dock .tb-user .avatar {
+    display: grid;
+    place-items: center;
+    width: calc(var(--space-6) + var(--space-1));
+    height: calc(var(--space-6) + var(--space-1));
+    border-radius: var(--radius-circle);
+    background: var(--color-primary);
+    color: var(--color-on-primary);
+    font-family: var(--font-display);
+    font-size: var(--font-size-sm);
+    font-weight: var(--font-weight-bold);
+}
+
+.dock .tb-user b {
+    display: block;
+    font-size: var(--font-size-sm);
+    font-weight: var(--font-weight-semibold);
+    line-height: var(--line-height-tight);
+}
+
+.dock .tb-user small {
+    color: var(--color-text-soft);
+    font-size: var(--font-size-xs);
+}
+
+.dock .content {
+    width: 100%;
+    padding: var(--space-7) max(var(--space-8), calc((100% - var(--layout-content-width)) / 2)) var(--space-12) max(var(--space-12), calc((100% - var(--layout-content-width)) / 2));
+}
+
+/* ===== Đầu báo cáo và bộ lọc ===== */
+.report-head {
+    display: grid;
+    gap: var(--space-5);
+    margin-bottom: var(--space-6);
+}
+
+.report-title-block h2,
+.section-heading h2,
+.card-heading h3 {
+    margin: 0;
+    color: var(--color-text);
+    font-family: var(--font-heading);
+}
+
+.report-title-block h2,
+.section-heading h2 {
+    font-size: var(--font-size-xl);
+}
+
+.card-heading h3 {
+    font-size: var(--font-size-lg);
+}
+
+.report-title-block p,
+.section-heading p,
+.card-heading p {
+    margin: var(--space-1) 0 0;
+    color: var(--color-text-soft);
+    line-height: var(--line-height-relaxed);
+}
+
+.report-filter {
+    display: grid;
+    grid-template-columns: repeat(2, minmax(0, 1fr)) auto;
+    align-items: end;
+    gap: var(--space-3);
+    padding: var(--space-4);
+    border: var(--border-width) solid var(--color-border);
+    border-radius: var(--radius-md);
+    background: var(--color-surface);
+}
+
+.report-filter-field {
+    display: grid;
+    gap: var(--space-1-5);
+}
+
+.report-filter-field label {
+    color: var(--color-text);
+    font-size: var(--font-size-sm);
+    font-weight: var(--font-weight-semibold);
+}
+
+.report-date-input {
+    width: 100%;
+    height: var(--control-height-md);
+    padding: 0 var(--space-3);
+    border: var(--border-width) solid var(--color-border);
+    border-radius: var(--radius-sm);
+    background: var(--color-surface);
+    color: var(--color-text);
+    box-shadow: none;
+    outline: none;
+}
+
+.report-date-input:hover {
+    border-color: var(--color-border-strong);
+    box-shadow: none;
+}
+
+.report-date-input:focus {
+    border-color: var(--color-primary);
+    box-shadow: none;
+}
+
+.report-filter-actions {
+    display: flex;
+    flex-wrap: wrap;
+    gap: var(--space-2);
+}
+
+.report-filter-actions .btn {
+    min-height: var(--control-height-md);
+}
+
+.report-error {
+    display: flex;
+    align-items: center;
+    gap: var(--space-2);
+    margin-bottom: var(--space-5);
+    padding: var(--space-3) var(--space-4);
+    border: var(--border-width) solid var(--color-danger-border);
+    border-radius: var(--radius-sm);
+    background: var(--color-danger-tint);
+    color: var(--color-danger-ink);
+}
+
+/* ===== Các khối báo cáo ===== */
+.dashboard-section {
+    display: grid;
+    gap: var(--space-5);
+    margin-top: var(--space-7);
+}
+
+.section-heading {
+    display: flex;
+    align-items: flex-start;
+    justify-content: space-between;
+    gap: var(--space-4);
+}
+
+.metric-grid {
+    display: grid;
+    grid-template-columns: repeat(4, minmax(0, 1fr));
+    gap: var(--space-3);
+}
+
+.metric-card,
+.report-card {
+    border: var(--border-width) solid var(--color-border);
+    border-radius: var(--radius-md);
+    background: var(--color-surface);
+}
+
+.metric-card {
+    display: grid;
+    align-content: start;
+    gap: var(--space-2);
+    padding: var(--space-4);
+}
+
+.metric-card-primary {
+    border-color: var(--color-primary-border);
+    background: var(--color-primary-tint);
+}
+
+.metric-label {
+    color: var(--color-text-soft);
+    font-size: var(--font-size-sm);
+    font-weight: var(--font-weight-semibold);
+}
+
+.metric-value {
+    color: var(--color-text);
+    font-family: var(--font-numeric);
+    font-size: var(--font-size-2xl);
+    font-weight: var(--font-weight-bold);
+    line-height: var(--line-height-tight);
+}
+
+.metric-note {
+    color: var(--color-text-soft);
+    font-size: var(--font-size-xs);
+    line-height: var(--line-height-relaxed);
+}
+
+.report-stack,
+.audit-detail-grid {
+    display: grid;
+    gap: var(--space-4);
+}
+
+.report-card {
+    overflow: hidden;
+}
+
+.card-heading {
+    display: flex;
+    align-items: flex-start;
+    justify-content: space-between;
+    gap: var(--space-3);
+    padding: var(--space-4);
+    border-bottom: var(--border-width) solid var(--color-border);
+}
+
+.table-wrap {
+    width: 100%;
+    overflow-x: auto;
+}
+
+.report-table {
+    width: 100%;
+    border-collapse: collapse;
+}
+
+.report-table th,
+.report-table td {
+    padding: var(--space-3) var(--space-4);
+    border-bottom: var(--border-width) solid var(--color-border);
+    text-align: left;
+    vertical-align: top;
+}
+
+.report-table th {
+    background: var(--color-surface-muted);
+    color: var(--color-text-soft);
+    font-size: var(--font-size-xs);
+    font-weight: var(--font-weight-semibold);
+    letter-spacing: var(--letter-spacing-wide);
+    text-transform: uppercase;
+}
+
+.report-table tbody tr:last-child td {
+    border-bottom: 0;
+}
+
+.report-table tbody tr:hover td {
+    background: var(--color-surface-hover);
+}
+
+.number-cell {
+    text-align: right !important;
+    white-space: nowrap;
+}
+
+.tabular {
+    font-family: var(--font-numeric);
+    font-variant-numeric: tabular-nums;
+}
+
+.empty-state {
+    padding: var(--space-6) var(--space-4);
+    color: var(--color-text-soft);
+    text-align: center;
+}
+
+.report-empty {
+    border: var(--border-width) dashed var(--color-border-strong);
+    border-radius: var(--radius-md);
+    background: var(--color-surface-muted);
+}
+
+/* ===== Audit metrics chỉ Admin thấy ===== */
+.audit-section {
+    padding-top: var(--space-2);
+    border-top: var(--border-width-accent) solid var(--color-role-admin);
+}
+
+.audit-heading h2 {
+    display: flex;
+    align-items: center;
+    gap: var(--space-2);
+}
+
+.audit-heading h2 i {
+    color: var(--color-role-admin);
+}
+
+.audit-summary-grid {
+    display: grid;
+    grid-template-columns: repeat(3, minmax(0, 1fr));
+    gap: var(--space-3);
+}
+
+.compact-card {
+    padding-bottom: var(--space-2);
+}
+
+.compact-card .card-heading {
+    border-bottom: 0;
+    padding-bottom: var(--space-2);
+}
+
+.stat-list {
+    margin: 0;
+    padding: 0 var(--space-4) var(--space-3);
+}
+
+.stat-list > div {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: var(--space-3);
+    padding: var(--space-2) 0;
+    border-top: var(--border-width) solid var(--color-border);
+}
+
+.stat-list dt {
+    color: var(--color-text-soft);
+}
+
+.stat-list dd {
+    margin: 0;
+    color: var(--color-text);
+    font-weight: var(--font-weight-bold);
+}
+
+.audit-highlight {
+    background: var(--color-role-admin-tint);
+}
+
+.account-id {
+    display: block;
+    margin-top: var(--space-0-5);
+    color: var(--color-text-muted);
+    font-size: var(--font-size-xs);
+}
+
+/* ===== Responsive ===== */
+@media (max-width: 1000px) {
+    .metric-grid {
+        grid-template-columns: repeat(2, minmax(0, 1fr));
+    }
+
+    .audit-summary-grid {
+        grid-template-columns: 1fr;
+    }
+}
+
+@media (max-width: 720px) {
+    .dock .topbar,
+    .dock .content {
+        padding-right: var(--layout-gutter-mobile);
+        padding-left: calc(var(--layout-gutter-mobile) + var(--space-6));
+    }
+
+    .report-filter {
+        grid-template-columns: 1fr;
+    }
+
+    .report-filter-actions,
+    .report-filter-actions .btn {
+        width: 100%;
+    }
+
+    .section-heading {
+        flex-direction: column;
+    }
+
+    .metric-grid {
+        grid-template-columns: 1fr;
+    }
+}
+.report-date-control {
+    position: relative;
+}
+
+.report-date-control .report-date-input {
+    padding-right: calc(var(--control-height-md) + var(--space-1));
+}
+
+.report-calendar-button {
+    position: absolute;
+    top: 50%;
+    right: var(--space-1);
+    display: grid;
+    place-items: center;
+    width: calc(var(--control-height-md) - var(--space-2));
+    height: calc(var(--control-height-md) - var(--space-2));
+    padding: 0;
+    border: 0;
+    border-radius: var(--radius-sm);
+    background: transparent;
+    color: var(--color-text-soft);
+    cursor: pointer;
+    transform: translateY(-50%);
+}
+
+.report-calendar-button:hover {
+    background: var(--color-primary-tint);
+    color: var(--color-primary);
+}
+
+.report-calendar-button:focus-visible {
+    outline: var(--border-width) solid var(--color-primary);
+    outline-offset: var(--border-width);
+}
+
+.report-native-date {
+    position: absolute;
+    right: 0;
+    bottom: 0;
+    width: var(--space-1);
+    height: var(--space-1);
+    opacity: 0;
+    pointer-events: none;
+}

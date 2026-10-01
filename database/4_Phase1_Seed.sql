@@ -187,12 +187,12 @@ INSERT INTO BlogPosts (BlogPostId, AuthorEmployeeId, Title, Category, Excerpt, C
  (101, 2, N'5 bài khởi động giúp giảm chấn thương trước buổi tập nặng', N'Training',
   N'Bỏ qua khởi động là nguyên nhân phổ biến gây chấn thương vai và gối. Đây là 5 động tác 8 phút nên làm trước mọi buổi tập.',
   N'<h2>Vì sao phải khởi động</h2>' + @LongBody,
-  '/uploads/blog/khoi-dong-giam-chan-thuong.jpg', 'Active', '2026-09-12 08:00:00'), -- bài dài: thời gian đọc > 1 phút
+  '/images/blog/khoi-dong.jpg', 'Active', '2026-09-12 08:00:00'), -- bài dài: thời gian đọc > 1 phút
 
  (102, 2, N'Ăn gì trước và sau buổi tập để tối ưu phục hồi cơ bắp', N'Nutrition',
   N'Thời điểm và loại thực phẩm nạp vào quanh buổi tập ảnh hưởng trực tiếp đến hiệu suất và tốc độ phục hồi.',
   N'<h2>Trước buổi tập</h2><p>Ăn bữa có tinh bột và đạm vừa phải trước 60–90 phút.</p><h2>Sau buổi tập</h2><ul><li><strong>Đạm:</strong> 20–40g</li><li><strong>Tinh bột:</strong> bù năng lượng</li></ul><p>Xem thêm <a href="https://www.who.int">khuyến nghị dinh dưỡng</a>.</p>',
-  '/uploads/blog/an-gi-truoc-sau-buoi-tap.jpg', 'Active', '2026-09-08 08:00:00'), -- nội dung có định dạng
+  '/images/blog/an-gi.jpg', 'Active', '2026-09-08 08:00:00'), -- nội dung có định dạng
 
  (103, 2, N'Super Gym khai trương khu giãn cơ & phục hồi tại chi nhánh trung tâm', N'News',
   N'Khu vực foam roller, máy nén khí phục hồi và ghế massage chính thức mở cửa phục vụ hội viên từ tuần này.',
@@ -202,12 +202,12 @@ INSERT INTO BlogPosts (BlogPostId, AuthorEmployeeId, Title, Category, Excerpt, C
  (104, 2, N'Ngủ đủ giấc quan trọng thế nào với người tập gym?', N'Nutrition',
   N'Tập nặng nhưng ngủ ít có thể khiến mọi nỗ lực trong phòng gym gần như không mang lại hiệu quả.',
   N'<p>Giấc ngủ là lúc cơ thể tiết hormone tăng trưởng và sửa chữa sợi cơ. Người tập nên ngủ 7–9 tiếng mỗi đêm.</p>',
-  '/uploads/blog/ngu-du-giac.jpg', 'Active', '2026-08-02 08:00:00'),
+  '/images/blog/ngu-du-giac.jpg', 'Active', '2026-08-02 08:00:00'),
 
  (105, 2, N'Hướng dẫn chọn gói tập phù hợp với mục tiêu của bạn', N'Training',
   N'Gói 1 tháng hay gói 12 tháng — nên bắt đầu từ đâu tuỳ theo mục tiêu và tần suất tập của bạn.',
   N'<p>Người mới nên thử gói 1 tháng để tạo thói quen, sau đó chuyển sang gói dài hạn để tiết kiệm chi phí.</p>',
-  '/uploads/blog/chon-goi-tap.jpg', 'Active', '2026-07-27 08:00:00'),
+  '/images/blog/chon-goi.jpg', 'Active', '2026-07-27 08:00:00'),
 
  (106, 2, N'Cardio hay tạ nặng trước? Thứ tự nào tối ưu hơn cho mục tiêu giảm mỡ', N'Training',
   N'Thứ tự bài tập trong cùng một buổi ảnh hưởng đến hiệu suất từng phần — dưới đây là cách sắp xếp hợp lý.',
@@ -217,27 +217,27 @@ INSERT INTO BlogPosts (BlogPostId, AuthorEmployeeId, Title, Category, Excerpt, C
  (107, 2, N'Creatine có thực sự cần thiết? Giải đáp từ góc nhìn khoa học', N'Nutrition',
   N'Là một trong những thực phẩm bổ sung được nghiên cứu nhiều nhất, creatine có đáng để bổ sung vào chế độ tập của bạn?',
   N'<p>Creatine monohydrate 3–5g mỗi ngày an toàn với người khỏe mạnh và giúp tăng sức mạnh ở các bài ngắn, nặng.</p>',
-  '/uploads/blog/creatine.jpg', 'Active', '2026-07-14 08:00:00'),
+  '/images/blog/creatine.jpg', 'Active', '2026-07-14 08:00:00'),
 
  (108, 2, N'Super Gym ra mắt ứng dụng đặt lịch PT mới trên điện thoại', N'News',
   N'Hội viên có thể xem khung giờ rảnh của PT, đặt buổi lẻ và theo dõi giáo án ngay trên ứng dụng.',
   N'<p>Ứng dụng hỗ trợ đặt buổi lẻ, xem lịch tập và nhận thông báo khi PT dời lịch.</p>',
-  '/uploads/blog/ung-dung-dat-lich.jpg', 'Active', '2026-07-05 08:00:00'),
+  '/images/blog/app-pt.jpg', 'Active', '2026-07-05 08:00:00'),
 
  (109, 2, N'Tập lưng đúng cách: 4 bài kéo giúp cải thiện tư thế dân văn phòng', N'Training',
   NULL,
   N'<p>Ngồi nhiều khiến vai khòm về trước. Bốn bài kéo gồm lat pulldown, seated row, face pull và band pull-apart giúp cân bằng lại nhóm cơ lưng trên.</p>',
-  '/uploads/blog/tap-lung.jpg', 'Active', '2026-06-28 08:00:00'), -- KHÔNG có tóm tắt → thẻ bài lấy phần đầu nội dung
+  '/images/blog/tap-lung.jpg', 'Active', '2026-06-28 08:00:00'), -- KHÔNG có tóm tắt → thẻ bài lấy phần đầu nội dung
 
  (110, 2, N'Nhịn ăn gián đoạn có phù hợp với người tập gym?', N'Nutrition',
   N'IF giúp một số người kiểm soát calo dễ hơn, nhưng không phải là lựa chọn tối ưu cho mọi mục tiêu tập luyện.',
   N'<p>Nếu mục tiêu là tăng cơ, hãy đảm bảo đủ đạm trong khung giờ ăn và không tập nặng khi đang đói lâu.</p>',
-  '/uploads/blog/nhin-an-gian-doan.jpg', 'Active', '2026-06-20 08:00:00'),
+  '/images/blog/nhin-an.jpg', 'Active', '2026-06-20 08:00:00'),
 
  (111, 2, N'Super Gym mở rộng giờ hoạt động cuối tuần từ tháng sau', N'News',
   N'Từ tháng sau, phòng tập mở cửa sớm hơn vào Thứ 7 và Chủ Nhật để phục vụ nhu cầu tập cuối tuần.',
   N'<p>Giờ mở cửa cuối tuần áp dụng theo lịch mới, hội viên theo dõi thông báo trên trang chủ.</p>',
-  '/uploads/blog/mo-rong-gio.jpg', 'Active', '2026-06-12 08:00:00');
+  '/images/blog/gio-tap.jpg', 'Active', '2026-06-12 08:00:00');
 SET IDENTITY_INSERT BlogPosts OFF;
 GO
 
