@@ -81,7 +81,7 @@
 
     <c:choose>
       <%-- ===== BƯỚC XÁC THỰC MÃ 6 SỐ KHI ĐỔI EMAIL / SĐT (contract Servlet) ===== --%>
-      <c:when test="${not empty requireVerification}">
+      <c:when test="${not empty contactVerificationPending or not empty requireVerification}">
         <div class="msg-banner info" role="status">
           <i class="fa-solid fa-circle-info"></i>
           <div>
@@ -268,7 +268,7 @@
 
   <div class="account-form-actions">
     <c:choose>
-      <c:when test="${not empty requireVerification}">
+      <c:when test="${not empty contactVerificationPending or not empty requireVerification}">
         <a href="${pageContext.request.contextPath}/account?tab=profile" class="btn">
           Hủy
         </a>
