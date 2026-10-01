@@ -1,0 +1,242 @@
+/* manager-dashboard.css — Báo cáo vận hành & doanh thu (#66). Khớp mockup viewReport(); chỉ dùng token trong tokens.css. */
+
+/* ----- bộ lọc: nằm bên phải hàng page-intro ----- */
+.report-filter {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: flex-end;
+    justify-content: flex-end;
+    gap: var(--space-2);
+}
+
+.report-filter .field {
+    margin: 0;
+    gap: 6px;
+}
+
+.report-filter .field-label {
+    font-weight: var(--font-weight-semibold);
+}
+
+.report-filter .btn {
+    min-height: var(--control-height-md);
+}
+
+.report-filter .btn[aria-disabled="true"] {
+    pointer-events: none;
+    opacity: 0.5;
+}
+
+#reportRangeError {
+    display: block;
+    margin-bottom: var(--space-3);
+    text-align: right;
+}
+
+/* ----- thẻ ----- */
+.report-card {
+    background: var(--color-surface);
+    border: var(--border-width) solid var(--color-border);
+    border-radius: var(--radius-md);
+    overflow: hidden;
+    margin-bottom: var(--space-4);
+}
+
+.report-pad {
+    padding: var(--space-5);
+}
+
+.report-card h2 {
+    margin: 0 0 4px;
+    font-family: var(--font-heading);
+    font-size: var(--font-size-base);
+    font-weight: var(--font-weight-semibold);
+}
+
+.report-card-title {
+    margin: 0;
+    padding: var(--space-4) 20px;
+    border-bottom: var(--border-width) solid var(--color-border);
+}
+
+.report-sub {
+    margin: 0 0 var(--space-4);
+    color: var(--color-text-soft);
+    font-size: var(--font-size-sm);
+}
+
+.report-empty {
+    padding: 40px var(--space-4);
+    text-align: center;
+    color: var(--color-text-soft);
+}
+
+/* ----- thẻ tổng quan ----- */
+.report-stats {
+    display: grid;
+    grid-template-columns: repeat(6, minmax(0, 1fr));
+    gap: var(--space-3);
+    margin-bottom: var(--space-4);
+}
+
+.report-stats .stat {
+    margin: 0;
+    padding: var(--space-4);
+}
+
+.stat-label {
+    color: var(--color-text-soft);
+    font-size: var(--font-size-xs);
+    white-space: nowrap;
+}
+
+.stat-value {
+    margin: 6px 0 2px;
+    font-family: var(--font-display);
+    font-size: 1.75rem;
+    font-weight: var(--font-weight-bold);
+    line-height: 1.15;
+    letter-spacing: -0.01em;
+    font-variant-numeric: tabular-nums;
+}
+
+.stat-note {
+    color: var(--color-text-soft);
+    font-size: var(--font-size-xs);
+}
+
+/* ----- biểu đồ cột: --percent (0–100) do server tính theo trục Y; có đường kẻ và nhãn ngày/tháng ----- */
+.chart {
+    padding: var(--space-2) 0 0 44px;
+}
+
+.chart-plot {
+    position: relative;
+    height: 290px;
+}
+
+.grid-line {
+    position: absolute;
+    left: 0;
+    right: 0;
+    bottom: calc(var(--percent) * 1%);
+    border-top: var(--border-width) solid var(--color-border);
+}
+
+.grid-line span {
+    position: absolute;
+    left: -44px;
+    top: -9px;
+    width: 36px;
+    text-align: right;
+    color: var(--color-text-soft);
+    font-size: var(--font-size-xs);
+}
+
+.bars {
+    position: absolute;
+    inset: 0;
+    display: flex;
+    align-items: flex-end;
+}
+
+.bar {
+    flex: 1;
+    height: calc(var(--percent) * 1%);
+    margin: 0 0.9%;
+    border-radius: 3px 3px 0 0;
+    background: #B9C1E6;
+}
+
+.bar.bar-last {
+    background: var(--color-primary);
+}
+
+.x-labels {
+    display: flex;
+    margin-top: var(--space-2);
+    color: var(--color-text-soft);
+    font-size: var(--font-size-xs);
+}
+
+.x-labels span {
+    flex: 1;
+    min-height: 1em;
+    text-align: center;
+    white-space: nowrap;
+}
+
+/* ----- bảng ----- */
+.report-grid {
+    display: grid;
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+    gap: var(--space-4);
+    align-items: start;
+}
+
+.report-grid .report-card {
+    margin-bottom: 0;
+}
+
+.report-table-wrap {
+    overflow-x: auto;
+}
+
+.report-table {
+    width: 100%;
+    border-collapse: collapse;
+}
+
+.report-table th {
+    padding: var(--space-2-5) var(--space-4);
+    text-align: left;
+    white-space: nowrap;
+    border-bottom: var(--border-width) solid var(--color-border);
+    color: var(--color-text-soft);
+    font-size: var(--font-size-2xs);
+    font-weight: var(--font-weight-semibold);
+    text-transform: uppercase;
+    letter-spacing: 0.06em;
+}
+
+.report-table td {
+    padding: var(--space-3) var(--space-4);
+    border-bottom: var(--border-width) solid var(--color-border);
+    vertical-align: middle;
+    white-space: nowrap;
+}
+
+.report-table tbody tr:last-child td {
+    border-bottom: 0;
+}
+
+.report-table .num {
+    text-align: right;
+    font-variant-numeric: tabular-nums;
+}
+
+.report-table .muted,
+.muted {
+    color: var(--color-text-soft);
+}
+
+.report-foot {
+    margin: 0;
+    padding: var(--space-3) var(--space-4);
+    border-top: var(--border-width) solid var(--color-border);
+    color: var(--color-text-soft);
+    font-size: var(--font-size-xs);
+}
+
+@media (max-width: 1100px) {
+    .report-stats { grid-template-columns: repeat(3, minmax(0, 1fr)); }
+}
+
+@media (max-width: 900px) {
+    .report-grid { grid-template-columns: 1fr; }
+}
+
+@media (max-width: 560px) {
+    .report-stats { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+    .report-filter { justify-content: flex-start; }
+}
