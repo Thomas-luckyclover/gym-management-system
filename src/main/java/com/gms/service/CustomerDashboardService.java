@@ -28,11 +28,11 @@ import java.util.List;
  * tự đóng buổi là việc của JOB-01…04, không tự tính lại ở đây.
  *
  * Bố cục theo "05_Dashboard_Rules.md" mục 1:
- *   - Thông tin hồ sơ (tên, avatar, mã khách, trạng thái)
- *   - Được vào phòng tập không (canUseGym — DBR-47, DBR-48, CBR-58)
- *   - Gói tập đang dùng / chưa bắt đầu (kèm số buổi PT nếu có — [CHỐT-D2])
- *   - Buổi PT sắp tới (5 buổi Scheduled gần nhất — [CHỐT-D3])
- *   - Banner cảnh báo (5 loại — [CHỐT-D1])
+ * - Thông tin hồ sơ (tên, avatar, mã khách, trạng thái)
+ * - Được vào phòng tập không (canUseGym — DBR-47, DBR-48, CBR-58)
+ * - Gói tập đang dùng / chưa bắt đầu (kèm số buổi PT nếu có — [CHỐT-D2])
+ * - Buổi PT sắp tới (5 buổi Scheduled gần nhất — [CHỐT-D3])
+ * - Banner cảnh báo (5 loại — [CHỐT-D1])
  *
  * @author Nguyen Tuan Minh
  */
@@ -50,14 +50,6 @@ public class CustomerDashboardService {
     private final CustomerDashboardDAO dashboardDAO = new CustomerDashboardDAO();
     private final SystemConfigService systemConfigService = new SystemConfigService();
 
-    /**
-     * Lấy toàn bộ dữ liệu dashboard của khách đang đăng nhập.
-     *
-     * @param accountId AccountId lấy từ session (GBR-10: khách chỉ xem dữ liệu của chính mình).
-     * @return kết quả:
-     *         - Thành công: kèm CustomerDashboardView đầy đủ.
-     *         - Thất bại: tài khoản không phải Customer (MSG07), lỗi DB (MSG04).
-     */
     public ServiceResult<CustomerDashboardView> getDashboard(int accountId) {
         try {
             // B1: xác thực tài khoản là Customer đang hoạt động (GBR-10)
@@ -75,7 +67,7 @@ public class CustomerDashboardService {
             int customerId = customer.getCustomerId();
             LocalDateTime now = DateTimeUtil.now();
 
-            // B2: kiểm tra quyền vào phòng tập hôm nay (DBR-47, DBR-48, CBR-58)
+            // B2: kiểm tra quyền vào phòng tập hôm nay
             boolean canUseGym = dashboardDAO.canUseGymToday(customerId);
 
             // B3: danh sách gói tập đang dùng / chưa bắt đầu + gói đôi là partner
@@ -83,10 +75,10 @@ public class CustomerDashboardService {
             List<SubscriptionRow> partnerSubs = dashboardDAO.findPartnerSubscriptions(customerId);
             subscriptions.addAll(partnerSubs);
 
-            // B4: buổi PT sắp tới ([CHỐT-D3]: 5 buổi Scheduled gần nhất)
+            // B4: buổi PT sắp tới
             List<UpcomingSessionRow> upcomingSessions = dashboardDAO.findUpcomingSessions(customerId, now);
 
-            // B5: banner cảnh báo ([CHỐT-D1])
+            // B5: banner cảnh báo
             List<BannerItem> banners = buildBanners(customer, subscriptions, customerId, now);
 
             // B6: gom view
@@ -113,16 +105,6 @@ public class CustomerDashboardService {
 
     // ===== Banner cảnh báo ([CHỐT-D1]) =====
 
-    /**
-     * Xây dựng danh sách banner theo 5 loại đã chốt (05_Dashboard_Rules.md mục 6, D1).
-     * Thứ tự: đỏ (danger) trước, vàng (warning) sau.
-     *
-     * @param customer      hồ sơ khách hàng (lấy trạng thái).
-     * @param subscriptions danh sách gói đang dùng / chưa bắt đầu (đã gộp cả partner).
-     * @param customerId    CustomerId dùng để đếm buổi thiếu Membership.
-     * @param now           thời điểm hiện tại.
-     * @return danh sách banner, có thể rỗng nếu không có cảnh báo nào.
-     */
     private List<BannerItem> buildBanners(Customer customer, List<SubscriptionRow> subscriptions,
             int customerId, LocalDateTime now) throws SQLException {
 
@@ -149,7 +131,8 @@ public class CustomerDashboardService {
             dangerBanners.add(new BannerItem("danger", message, "MISSING_MEMBERSHIP"));
         }
 
-        // Banner 4 (vàng): gói tập sắp hết hạn (≤ P-21 ngày), không hiện nếu đã có gói nối tiếp (DBR-52)
+        // Banner 4 (vàng): gói tập sắp hết hạn (≤ P-21 ngày), không hiện nếu đã có gói
+        // nối tiếp (DBR-52)
         buildExpiringSoonBanner(subscriptions, now.toLocalDate(), warningBanners);
 
         // Banner 5 (vàng): đơn Pending chờ thanh toán (GBR-27)
@@ -166,11 +149,6 @@ public class CustomerDashboardService {
         return banners;
     }
 
-    /**
-     * Tìm khoảng bảo lưu từ danh sách gói Frozen để hiện trên banner.
-     * @param subscriptions danh sách gói đang dùng.
-     * @return nội dung banner bảo lưu.
-     */
     private String buildFreezeMessage(List<SubscriptionRow> subscriptions) {
         for (SubscriptionRow sub : subscriptions) {
             boolean hasFreezeInfo = "Frozen".equals(sub.getStatus()) && sub.getFreezeEnd() != null;
@@ -181,14 +159,6 @@ public class CustomerDashboardService {
         return "Gói tập đang bảo lưu";
     }
 
-    /**
-     * Thêm banner "sắp hết hạn" cho gói Membership/DayPass còn ≤ P-21 ngày.
-     * Không hiện nếu khách đã mua gói nối tiếp (DBR-52, 05_Dashboard_Rules.md mục 6 cuối).
-     *
-     * @param subscriptions  danh sách gói đang dùng / chưa bắt đầu.
-     * @param today          ngày hôm nay.
-     * @param warningBanners danh sách banner vàng để thêm vào.
-     */
     private void buildExpiringSoonBanner(List<SubscriptionRow> subscriptions, LocalDate today,
             List<BannerItem> warningBanners) throws SQLException {
 
