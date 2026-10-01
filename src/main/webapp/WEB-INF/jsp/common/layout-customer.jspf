@@ -1,0 +1,80 @@
+<%@ page contentType="text/html; charset=UTF-8" pageEncoding="UTF-8" %>
+<%@ taglib prefix="c" uri="jakarta.tags.core" %>
+
+<div class="cust-dock" id="custDock">
+    <aside class="cust-sidebar">
+        <a class="cust-brand" href="${pageContext.request.contextPath}/customer/dashboard">
+            <b>Super Gym</b><span>Khu vực hội viên</span>
+        </a>
+
+        <nav class="cust-nav" aria-label="Điều hướng chính">
+            <h4>Tổng quan</h4>
+            <a href="${pageContext.request.contextPath}/customer/dashboard"
+               class="<c:if test="${activeSidebar == 'dashboard'}">active</c:if>"
+               <c:if test="${activeSidebar == 'dashboard'}">aria-current="page"</c:if>>
+                <i class="fa-solid fa-gauge-high"></i>Trang cá nhân
+            </a>
+
+            <h4>Gói tập</h4>
+            <a href="${pageContext.request.contextPath}/customer/packages/purchase"
+               class="<c:if test="${activeSidebar == 'buy-package'}">active</c:if>"
+               <c:if test="${activeSidebar == 'buy-package'}">aria-current="page"</c:if>>
+                <i class="fa-solid fa-cart-shopping"></i>Mua gói
+            </a>
+            <a href="${pageContext.request.contextPath}/customer/transactions"
+               class="<c:if test="${activeSidebar == 'transactions'}">active</c:if>"
+               <c:if test="${activeSidebar == 'transactions'}">aria-current="page"</c:if>>
+                <i class="fa-solid fa-receipt"></i>Lịch sử giao dịch
+            </a>
+
+            <h4>Lịch tập</h4>
+            <a href="${pageContext.request.contextPath}/customer/schedule"
+               class="<c:if test="${activeSidebar == 'schedule'}">active</c:if>"
+               <c:if test="${activeSidebar == 'schedule'}">aria-current="page"</c:if>>
+                <i class="fa-solid fa-calendar-check"></i>Lịch của tôi
+            </a>
+            <a href="${pageContext.request.contextPath}/customer/pt-sessions"
+               class="<c:if test="${activeSidebar == 'pt-sessions'}">active</c:if>"
+               <c:if test="${activeSidebar == 'pt-sessions'}">aria-current="page"</c:if>>
+                <i class="fa-solid fa-user-check"></i>Buổi PT của tôi
+            </a>
+            <a href="${pageContext.request.contextPath}/customer/book-session"
+               class="<c:if test="${activeSidebar == 'book-session'}">active</c:if>"
+               <c:if test="${activeSidebar == 'book-session'}">aria-current="page"</c:if>>
+                <i class="fa-solid fa-calendar-plus"></i>Đặt buổi lẻ
+            </a>
+            <a href="${pageContext.request.contextPath}/customer/training-plans"
+               class="<c:if test="${activeSidebar == 'training-plans'}">active</c:if>"
+               <c:if test="${activeSidebar == 'training-plans'}">aria-current="page"</c:if>>
+                <i class="fa-solid fa-clipboard-list"></i>Giáo án của tôi
+            </a>
+
+            <h4>Tài khoản</h4>
+            <a href="${pageContext.request.contextPath}/account"
+               class="<c:if test="${activeSidebar == 'account'}">active</c:if>"
+               <c:if test="${activeSidebar == 'account'}">aria-current="page"</c:if>>
+                <i class="fa-solid fa-user-gear"></i>Cài đặt tài khoản
+            </a>
+
+            <h4>Hòm thư</h4>
+            <a href="${pageContext.request.contextPath}/customer/feedback"
+               class="<c:if test="${activeSidebar == 'feedback'}">active</c:if>"
+               <c:if test="${activeSidebar == 'feedback'}">aria-current="page"</c:if>>
+                <i class="fa-solid fa-inbox"></i>Hòm thư góp ý
+            </a>
+        </nav>
+
+        <div class="cust-sidebar-foot">
+            <form action="${pageContext.request.contextPath}/logout" method="post">
+                <button type="submit" class="logout">
+                    <i class="fa-solid fa-arrow-right-from-bracket"></i> Đăng xuất
+                </button>
+            </form>
+        </div>
+    </aside>
+
+    <button class="cust-handle" type="button" id="dockHandle"
+            aria-label="Mở menu điều hướng" aria-expanded="false" aria-controls="custDock">
+        <i class="fa-solid fa-chevron-right"></i>
+    </button>
+</div>
