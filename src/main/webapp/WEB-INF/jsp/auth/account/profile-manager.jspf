@@ -2,6 +2,7 @@
   profile-manager.jspf — Cài đặt tài khoản Quản lý.
   CBR-108: thông tin nhân sự READ-ONLY (Admin sửa qua UC-07); tự sửa được: ảnh, email, SĐT, mật khẩu.
   CBR-110/111: đổi email → mã gửi email MỚI; đổi SĐT → mã gửi email HIỆN TẠI.
+  Contract form theo AccountSettingsServlet: newEmail / newPhone, bước mã gửi kèm contactField, verificationEmail, pendingContactValue.
   Dữ liệu: accountSettings (AccountSettingsView) do AccountSettingsServlet set.
 --%>
 <%@ page pageEncoding="UTF-8" %>
@@ -74,12 +75,10 @@
             <input type="text" value="<c:out value='${gms:formatDate(accountSettings.dateOfBirth)}' />" readonly>
           </div>
         </c:if>
-        <c:if test="${not empty accountSettings.position}">
-          <div class="field">
-            <label class="field-label">Chức vụ</label>
-            <input type="text" value="<c:out value='${accountSettings.position.displayName}' />" readonly>
-          </div>
-        </c:if>
+        <div class="field">
+          <label class="field-label">Chức vụ</label>
+          <input type="text" value="<c:out value='${accountSettings.role.displayName}' />" readonly>
+        </div>
         <c:if test="${not empty accountSettings.hireDate}">
           <div class="field">
             <label class="field-label">Ngày vào làm</label>
@@ -108,11 +107,11 @@
         <input type="hidden" name="action" value="requestEmailChange">
         <div class="field">
           <label class="field-label" for="profileEmail">Email</label>
-          <input id="profileEmail" name="email" type="email" maxlength="100"
+          <input id="profileEmail" name="newEmail" type="email" maxlength="100"
                  data-rule="email" data-label="Email"
-                 value="<c:out value='${accountSettings.email}' />" required>
-          <c:if test="${not empty errors.email}">
-            <span class="field-error"><c:out value="${errors.email}" /></span>
+                 value="<c:out value='${not empty pendingContactValue and contactField eq "EMAIL" ? pendingContactValue : accountSettings.email}' />" required>
+          <c:if test="${not empty errors.newEmail or not empty errors.email}">
+            <span class="field-error"><c:out value="${not empty errors.newEmail ? errors.newEmail : errors.email}" /></span>
           </c:if>
         </div>
         <div class="account-form-actions">
@@ -127,11 +126,11 @@
         <input type="hidden" name="action" value="requestPhoneChange">
         <div class="field">
           <label class="field-label" for="profilePhone">Số điện thoại</label>
-          <input id="profilePhone" name="phone" type="tel" maxlength="10"
+          <input id="profilePhone" name="newPhone" type="tel" maxlength="10"
                  inputmode="numeric" data-rule="phone" data-label="Số điện thoại"
-                 value="<c:out value='${accountSettings.phone}' />" required>
-          <c:if test="${not empty errors.phone}">
-            <span class="field-error"><c:out value="${errors.phone}" /></span>
+                 value="<c:out value='${not empty pendingContactValue and contactField eq "PHONE" ? pendingContactValue : accountSettings.phone}' />" required>
+          <c:if test="${not empty errors.newPhone or not empty errors.phone}">
+            <span class="field-error"><c:out value="${not empty errors.newPhone ? errors.newPhone : errors.phone}" /></span>
           </c:if>
         </div>
         <div class="account-form-actions">
@@ -145,6 +144,9 @@
               action="${pageContext.request.contextPath}/account"
               class="stack" novalidate data-validate>
           <input type="hidden" name="action" value="verifyContactChange">
+          <input type="hidden" name="contactField" value="<c:out value='${contactField}' />">
+          <input type="hidden" name="verificationEmail" value="<c:out value='${verificationEmail}' />">
+          <input type="hidden" name="pendingContactValue" value="<c:out value='${pendingContactValue}' />">
           <div class="msg-banner info" role="status">
             <i class="fa-solid fa-circle-info"></i>
             <div>
@@ -156,8 +158,8 @@
             <input id="verificationCode" name="verificationCode" class="input"
                    type="text" maxlength="6" inputmode="numeric"
                    data-rule="verificationCode" data-label="Mã xác thực" required>
-            <c:if test="${not empty errors.code}">
-              <span class="field-error"><c:out value="${errors.code}" /></span>
+            <c:if test="${not empty errors.code or not empty errors.verificationCode}">
+              <span class="field-error"><c:out value="${not empty errors.code ? errors.code : errors.verificationCode}" /></span>
             </c:if>
           </div>
           <div class="account-form-actions">

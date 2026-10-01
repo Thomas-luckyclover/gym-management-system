@@ -1,187 +1,480 @@
 package com.gms.dao;
 
-import com.gms.dto.ReportView;
+import com.gms.util.DBContext;
+
 import java.sql.Connection;
 import java.sql.Date;
 import java.sql.PreparedStatement;
 import java.sql.ResultSet;
 import java.sql.SQLException;
-import java.sql.Timestamp;
 import java.time.LocalDate;
-import java.time.LocalDateTime;
 import java.util.ArrayList;
 import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
 
 /**
- * Truy vấn tổng hợp cho Báo cáo vận hành & doanh thu (SRS 12.1.1, UC-46). Chỉ ĐỌC, không sửa dữ liệu.
- *
- * Mọi method nhận cùng 1 Connection để các con số thuộc cùng một "ảnh chụp".
- * Khoảng thời gian dùng dạng nửa mở: [start, endExclusive) với endExclusive = ngày kết thúc + 1 ngày 00:00.
- * Tiền dùng CAST AS BIGINT vì cột INT có thể tràn khi cộng nhiều đơn.
- *
- * Quy tắc tính (đã chốt với nhóm):
- *   - Doanh thu (DBR-56): Transactions.Status = 'Success', đơn không Cancelled, theo Transactions.CompletedAt.
- *   - VAT: cộng Orders.VatAmount của các đơn đó (DBR-57).
- *   - Hoa hồng: cộng Sessions.CommissionAmount đã chốt lúc đơn Paid (DBR-58), buổi Completed/Missed/Cancelled,
- *     đơn không Cancelled, theo ngày của TimeSlots.SlotDate, tính cho PT DẠY buổi (Sessions.PtEmployeeId).
- *   - Lượt check-in: CheckIns.CheckedInAt; vé 1 ngày là tập con (Subscriptions.SubscriptionType = 'DayPass').
+ * Data Access Object cho báo cáo tổng hợp của Manager và Admin.
+ * Chỉ chứa truy vấn SQL, không chứa logic nghiệp vụ hoặc xử lý hiển thị.
  */
 public class ReportDAO {
 
-    // Điều kiện chung của "giao dịch tính vào doanh thu"
-    private static final String REVENUE_FROM_WHERE =
-            " FROM Transactions t JOIN Orders o ON o.OrderId = t.OrderId "
-            + "JOIN Packages p ON p.PackageId = o.PackageId "
-            + "WHERE t.Status = 'Success' AND o.Status <> 'Cancelled' "
-            + "AND t.CompletedAt >= ? AND t.CompletedAt < ? ";
-
     /**
-     * Tổng doanh thu và tổng VAT trong khoảng.
+     * Đếm tổng lượt check-in trong khoảng ngày được chọn.
      *
-     * @return mảng {doanh thu, VAT}
+     * @param fromDate ngày bắt đầu, tính cả ngày này
+     * @param toDate ngày kết thúc, tính cả ngày này
+     * @return tổng số lượt check-in
+     * @throws SQLException khi truy vấn database lỗi
      */
-    public long[] sumRevenueAndVat(Connection conn, LocalDateTime start, LocalDateTime endExclusive)
-            throws SQLException {
-        String sql = "SELECT COALESCE(SUM(CAST(t.Amount AS BIGINT)), 0), COALESCE(SUM(CAST(o.VatAmount AS BIGINT)), 0)"
-                + REVENUE_FROM_WHERE;
-        try (PreparedStatement stmt = conn.prepareStatement(sql)) {
-            stmt.setTimestamp(1, Timestamp.valueOf(start));
-            stmt.setTimestamp(2, Timestamp.valueOf(endExclusive));
-            try (ResultSet rs = stmt.executeQuery()) {
-                rs.next();
-                return new long[] {rs.getLong(1), rs.getLong(2)};
-            }
-        }
-    }
+    public int countCheckIns(LocalDate fromDate, LocalDate toDate) throws SQLException {
+        String sql = """
+                SELECT COUNT(*) AS Total
+                FROM CheckIns
+                WHERE CheckedInAt >= ?
+                  AND CheckedInAt < DATEADD(DAY, 1, ?)
+                """;
 
-    /** Doanh thu, số đơn và VAT theo từng gói (mọi đơn đều thuộc một gói, kể cả vé 1 ngày). */
-    public List<ReportView.PackageRow> findRevenueByPackage(Connection conn, LocalDateTime start,
-            LocalDateTime endExclusive) throws SQLException {
-        String sql = "SELECT p.PackageId, p.PackageName, p.PackageType, COUNT(*), "
-                + "SUM(CAST(t.Amount AS BIGINT)), SUM(CAST(o.VatAmount AS BIGINT))"
-                + REVENUE_FROM_WHERE
-                + "GROUP BY p.PackageId, p.PackageName, p.PackageType "
-                + "ORDER BY SUM(CAST(t.Amount AS BIGINT)) DESC";
-        List<ReportView.PackageRow> rows = new ArrayList<>();
-        try (PreparedStatement stmt = conn.prepareStatement(sql)) {
-            stmt.setTimestamp(1, Timestamp.valueOf(start));
-            stmt.setTimestamp(2, Timestamp.valueOf(endExclusive));
+        try (Connection conn = DBContext.getConnection();
+             PreparedStatement stmt = conn.prepareStatement(sql)) {
+            stmt.setDate(1, Date.valueOf(fromDate));
+            stmt.setDate(2, Date.valueOf(toDate));
+
             try (ResultSet rs = stmt.executeQuery()) {
-                while (rs.next()) {
-                    rows.add(new ReportView.PackageRow(rs.getInt(1), rs.getString(2), rs.getString(3),
-                            rs.getLong(4), rs.getLong(5), rs.getLong(6)));
+                if (rs.next()) {
+                    return rs.getInt("Total");
                 }
             }
         }
-        return rows;
-    }
 
-    /** Doanh thu từng ngày (chỉ những ngày có phát sinh; ngày trống Service tự điền 0). */
-    public Map<LocalDate, Long> findDailyRevenue(Connection conn, LocalDateTime start, LocalDateTime endExclusive)
-            throws SQLException {
-        String sql = "SELECT CAST(t.CompletedAt AS DATE), SUM(CAST(t.Amount AS BIGINT))"
-                + REVENUE_FROM_WHERE
-                + "GROUP BY CAST(t.CompletedAt AS DATE)";
-        Map<LocalDate, Long> daily = new LinkedHashMap<>();
-        try (PreparedStatement stmt = conn.prepareStatement(sql)) {
-            stmt.setTimestamp(1, Timestamp.valueOf(start));
-            stmt.setTimestamp(2, Timestamp.valueOf(endExclusive));
-            try (ResultSet rs = stmt.executeQuery()) {
-                while (rs.next()) {
-                    daily.put(rs.getDate(1).toLocalDate(), rs.getLong(2));
-                }
-            }
-        }
-        return daily;
+        return 0;
     }
 
     /**
-     * Số lượt check-in trong khoảng.
+     * Tính tổng doanh thu từ giao dịch Success của đơn chưa bị hủy.
+     * Doanh thu được lọc theo thời điểm giao dịch hoàn tất.
      *
-     * @return mảng {tổng lượt, lượt bằng vé 1 ngày}
+     * @param fromDate ngày bắt đầu, tính cả ngày này
+     * @param toDate ngày kết thúc, tính cả ngày này
+     * @return tổng doanh thu VND
+     * @throws SQLException khi truy vấn database lỗi
      */
-    public long[] countCheckIns(Connection conn, LocalDateTime start, LocalDateTime endExclusive)
-            throws SQLException {
-        String sql = "SELECT COUNT(*), COALESCE(SUM(CASE WHEN s.SubscriptionType = 'DayPass' THEN 1 ELSE 0 END), 0) "
-                + "FROM CheckIns c JOIN Subscriptions s ON s.SubscriptionId = c.SubscriptionId "
-                + "WHERE c.CheckedInAt >= ? AND c.CheckedInAt < ?";
-        try (PreparedStatement stmt = conn.prepareStatement(sql)) {
-            stmt.setTimestamp(1, Timestamp.valueOf(start));
-            stmt.setTimestamp(2, Timestamp.valueOf(endExclusive));
-            try (ResultSet rs = stmt.executeQuery()) {
-                rs.next();
-                return new long[] {rs.getLong(1), rs.getLong(2)};
-            }
-        }
-    }
+    public long sumRevenue(LocalDate fromDate, LocalDate toDate) throws SQLException {
+        String sql = """
+                SELECT COALESCE(SUM(CAST(t.Amount AS BIGINT)), 0) AS TotalRevenue
+                FROM Transactions t
+                JOIN Orders o
+                    ON t.OrderId = o.OrderId
+                WHERE t.Status = 'Success'
+                  AND o.Status <> 'Cancelled'
+                  AND t.CompletedAt >= ?
+                  AND t.CompletedAt < DATEADD(DAY, 1, ?)
+                """;
 
-    /**
-     * Hoa hồng từng PT theo NGÀY DIỄN RA BUỔI (CHỐT-D4). Tính buổi Completed, Missed, và Cancelled do
-     * PT hủy / khách hủy (CBR-80…82). Buổi hủy do phòng đóng cửa hoặc gói PT hết hạn (ResolutionType NULL)
-     * KHÔNG tính. Hoa hồng tính cho PT đang giữ buổi (Sessions.PtEmployeeId).
-     */
-    public List<ReportView.PtRow> findPtCommission(Connection conn, LocalDate from, LocalDate to)
-            throws SQLException {
-        String sql = "SELECT e.EmployeeId, pe.FullName, e.CommissionRate, "
-                + "SUM(CASE WHEN se.Status = 'Completed' THEN 1 ELSE 0 END), "
-                + "SUM(CASE WHEN se.Status = 'Missed' THEN 1 ELSE 0 END), "
-                + "SUM(CASE WHEN se.Status = 'Cancelled' THEN 1 ELSE 0 END), "
-                + "SUM(CAST(se.CommissionAmount AS BIGINT)) "
-                + "FROM Sessions se "
-                + "JOIN TimeSlots ts ON ts.TimeSlotId = se.TimeSlotId "
-                + "JOIN Employees e ON e.EmployeeId = se.PtEmployeeId "
-                + "JOIN Persons pe ON pe.PersonId = e.PersonId "
-                + "WHERE (se.Status IN ('Completed', 'Missed') "
-                + "       OR (se.Status = 'Cancelled' AND se.ResolutionType IN ('Cancel', 'CustomerRequest'))) "
-                + "AND ts.SlotDate >= ? AND ts.SlotDate <= ? "
-                + "GROUP BY e.EmployeeId, pe.FullName, e.CommissionRate "
-                + "ORDER BY SUM(CAST(se.CommissionAmount AS BIGINT)) DESC";
-        List<ReportView.PtRow> rows = new ArrayList<>();
-        try (PreparedStatement stmt = conn.prepareStatement(sql)) {
-            stmt.setDate(1, Date.valueOf(from));
-            stmt.setDate(2, Date.valueOf(to));
+        try (Connection conn = DBContext.getConnection();
+             PreparedStatement stmt = conn.prepareStatement(sql)) {
+            stmt.setDate(1, Date.valueOf(fromDate));
+            stmt.setDate(2, Date.valueOf(toDate));
+
             try (ResultSet rs = stmt.executeQuery()) {
-                while (rs.next()) {
-                    rows.add(new ReportView.PtRow(rs.getInt(1), rs.getString(2), rs.getInt(3),
-                            rs.getLong(4), rs.getLong(5), rs.getLong(6), rs.getLong(7)));
+                if (rs.next()) {
+                    return rs.getLong("TotalRevenue");
                 }
             }
         }
-        return rows;
+
+        return 0L;
     }
 
-    /** Số khách đang Active (ảnh chụp lúc xem, không phụ thuộc khoảng ngày). */
-    public int countActiveMembers(Connection conn) throws SQLException {
-        return queryCount(conn, "SELECT COUNT(*) FROM Customers WHERE Status = 'Active' AND DeletedAt IS NULL");
-    }
-
-    /** Số gói tập (Membership) đang Active — không gồm vé 1 ngày và gói PT. */
-    public int countRunningPackages(Connection conn) throws SQLException {
-        return queryCount(conn,
-                "SELECT COUNT(*) FROM Subscriptions WHERE SubscriptionType = 'Membership' AND Status = 'Active'");
-    }
-
-    /** Số khách mới trong khoảng: đã rời trạng thái New (đã có gói) và JoinedAt nằm trong khoảng. */
-    public int countNewMembers(Connection conn, LocalDateTime start, LocalDateTime endExclusive)
+    /**
+     * Lấy doanh thu theo từng gói, gồm tổng doanh thu và phần VAT đã chốt trên đơn.
+     *
+     * @param fromDate ngày bắt đầu, tính cả ngày này
+     * @param toDate ngày kết thúc, tính cả ngày này
+     * @return danh sách doanh thu theo gói
+     * @throws SQLException khi truy vấn database lỗi
+     */
+    public List<Map<String, Object>> findRevenueByPackage(LocalDate fromDate, LocalDate toDate)
             throws SQLException {
-        String sql = "SELECT COUNT(*) FROM Customers WHERE Status <> 'New' AND JoinedAt >= ? AND JoinedAt < ?";
-        try (PreparedStatement stmt = conn.prepareStatement(sql)) {
-            stmt.setTimestamp(1, Timestamp.valueOf(start));
-            stmt.setTimestamp(2, Timestamp.valueOf(endExclusive));
+        String sql = """
+                SELECT
+                    o.PackageNameSnapshot,
+                    p.PackageType,
+                    COUNT(t.TransactionId) AS TransactionCount,
+                    SUM(CAST(t.Amount AS BIGINT)) AS Revenue,
+                    SUM(CAST(o.VatAmount AS BIGINT)) AS VatAmount
+                FROM Transactions t
+                JOIN Orders o
+                    ON t.OrderId = o.OrderId
+                JOIN Packages p
+                    ON o.PackageId = p.PackageId
+                WHERE t.Status = 'Success'
+                  AND o.Status <> 'Cancelled'
+                  AND t.CompletedAt >= ?
+                  AND t.CompletedAt < DATEADD(DAY, 1, ?)
+                GROUP BY o.PackageNameSnapshot, p.PackageType
+                ORDER BY Revenue DESC, o.PackageNameSnapshot
+                """;
+
+        List<Map<String, Object>> revenueByPackage = new ArrayList<>();
+
+        try (Connection conn = DBContext.getConnection();
+             PreparedStatement stmt = conn.prepareStatement(sql)) {
+            stmt.setDate(1, Date.valueOf(fromDate));
+            stmt.setDate(2, Date.valueOf(toDate));
+
             try (ResultSet rs = stmt.executeQuery()) {
-                rs.next();
-                return rs.getInt(1);
+                while (rs.next()) {
+                    Map<String, Object> row = new LinkedHashMap<>();
+                    row.put("packageName", rs.getString("PackageNameSnapshot"));
+                    row.put("packageType", rs.getString("PackageType"));
+                    row.put("transactionCount", rs.getInt("TransactionCount"));
+                    row.put("revenue", rs.getLong("Revenue"));
+                    row.put("vatAmount", rs.getLong("VatAmount"));
+                    revenueByPackage.add(row);
+                }
             }
         }
+
+        return revenueByPackage;
     }
 
-    private int queryCount(Connection conn, String sql) throws SQLException {
-        try (PreparedStatement stmt = conn.prepareStatement(sql);
-                ResultSet rs = stmt.executeQuery()) {
-            rs.next();
-            return rs.getInt(1);
+    /**
+     * Tổng hợp số lượt và doanh thu vé ngày trong khoảng báo cáo.
+     *
+     * @param fromDate ngày bắt đầu, tính cả ngày này
+     * @param toDate ngày kết thúc, tính cả ngày này
+     * @return map gồm count, revenue và vatAmount
+     * @throws SQLException khi truy vấn database lỗi
+     */
+    public Map<String, Object> getDayPassSummary(LocalDate fromDate, LocalDate toDate)
+            throws SQLException {
+        String sql = """
+                SELECT
+                    COUNT(t.TransactionId) AS TotalCount,
+                    COALESCE(SUM(CAST(t.Amount AS BIGINT)), 0) AS Revenue
+                FROM Transactions t
+                JOIN Orders o
+                    ON t.OrderId = o.OrderId
+                JOIN Packages p
+                    ON o.PackageId = p.PackageId
+                WHERE t.Status = 'Success'
+                  AND o.Status <> 'Cancelled'
+                  AND p.PackageType = 'DayPass'
+                  AND t.CompletedAt >= ?
+                  AND t.CompletedAt < DATEADD(DAY, 1, ?)
+                """;
+
+        Map<String, Object> summary = new LinkedHashMap<>();
+        summary.put("count", 0);
+        summary.put("revenue", 0L);
+
+        try (Connection conn = DBContext.getConnection();
+             PreparedStatement stmt = conn.prepareStatement(sql)) {
+            stmt.setDate(1, Date.valueOf(fromDate));
+            stmt.setDate(2, Date.valueOf(toDate));
+
+            try (ResultSet rs = stmt.executeQuery()) {
+                if (rs.next()) {
+                    summary.put("count", rs.getInt("TotalCount"));
+                    summary.put("revenue", rs.getLong("Revenue"));
+                }
+            }
         }
+
+        return summary;
+    }
+
+    /**
+     * Tổng hợp hoa hồng theo từng PT theo ngày diễn ra buổi tập.
+     * Chỉ tính các trạng thái được rule báo cáo cho phép.
+     *
+     * @param fromDate ngày bắt đầu, tính cả ngày này
+     * @param toDate ngày kết thúc, tính cả ngày này
+     * @return danh sách hoa hồng theo PT
+     * @throws SQLException khi truy vấn database lỗi
+     */
+    public List<Map<String, Object>> findPtCommissionSummary(LocalDate fromDate, LocalDate toDate)
+            throws SQLException {
+        String sql = """
+                SELECT
+                    e.EmployeeCode,
+                    p.FullName,
+                    COUNT(s.SessionId) AS SessionCount,
+                    COALESCE(SUM(CAST(s.CommissionAmount AS BIGINT)), 0) AS CommissionAmount
+                FROM Sessions s
+                JOIN TimeSlots ts
+                    ON s.TimeSlotId = ts.TimeSlotId
+                JOIN Employees e
+                    ON s.PtEmployeeId = e.EmployeeId
+                JOIN Persons p
+                    ON e.PersonId = p.PersonId
+                WHERE ts.SlotDate BETWEEN ? AND ?
+                  AND (
+                        s.Status IN ('Completed', 'Missed')
+                        OR (
+                            s.Status = 'Cancelled'
+                            AND s.ResolutionType IN ('Cancel', 'CustomerRequest')
+                        )
+                      )
+                GROUP BY e.EmployeeCode, p.FullName
+                ORDER BY CommissionAmount DESC, p.FullName
+                """;
+
+        List<Map<String, Object>> ptCommissions = new ArrayList<>();
+
+        try (Connection conn = DBContext.getConnection();
+             PreparedStatement stmt = conn.prepareStatement(sql)) {
+            stmt.setDate(1, Date.valueOf(fromDate));
+            stmt.setDate(2, Date.valueOf(toDate));
+
+            try (ResultSet rs = stmt.executeQuery()) {
+                while (rs.next()) {
+                    Map<String, Object> row = new LinkedHashMap<>();
+                    row.put("employeeCode", rs.getString("EmployeeCode"));
+                    row.put("fullName", rs.getString("FullName"));
+                    row.put("sessionCount", rs.getInt("SessionCount"));
+                    row.put("commissionAmount", rs.getLong("CommissionAmount"));
+                    ptCommissions.add(row);
+                }
+            }
+        }
+
+        return ptCommissions;
+    }
+
+    /**
+     * Đếm ba loại hoạt động đăng nhập được chốt cho Admin Dashboard.
+     *
+     * @param fromDate ngày bắt đầu, tính cả ngày này
+     * @param toDate ngày kết thúc, tính cả ngày này
+     * @return map Action và số lần xuất hiện
+     * @throws SQLException khi truy vấn database lỗi
+     */
+    public Map<String, Integer> countLoginAuditActions(LocalDate fromDate, LocalDate toDate)
+            throws SQLException {
+        String sql = """
+                SELECT Action, COUNT(*) AS Total
+                FROM AuditLogs
+                WHERE CreatedAt >= ?
+                  AND CreatedAt < DATEADD(DAY, 1, ?)
+                  AND Action IN ('SignIn', 'SignInFailed', 'AccountLocked')
+                GROUP BY Action
+                """;
+
+        Map<String, Integer> loginActions = new LinkedHashMap<>();
+        loginActions.put("SignIn", 0);
+        loginActions.put("SignInFailed", 0);
+        loginActions.put("AccountLocked", 0);
+
+        try (Connection conn = DBContext.getConnection();
+             PreparedStatement stmt = conn.prepareStatement(sql)) {
+            stmt.setDate(1, Date.valueOf(fromDate));
+            stmt.setDate(2, Date.valueOf(toDate));
+
+            try (ResultSet rs = stmt.executeQuery()) {
+                while (rs.next()) {
+                    loginActions.put(rs.getString("Action"), rs.getInt("Total"));
+                }
+            }
+        }
+
+        return loginActions;
+    }
+
+    /**
+     * Đếm số tài khoản bị khóa trong kỳ từ lịch sử Audit Log.
+     * Bao gồm khóa tạm do đăng nhập sai và khóa trực tiếp bởi Admin.
+     *
+     * @param fromDate ngày bắt đầu, tính cả ngày này
+     * @param toDate ngày kết thúc, tính cả ngày này
+     * @return số tài khoản khác nhau bị khóa trong kỳ
+     * @throws SQLException khi truy vấn database lỗi
+     */
+    public int countLockedAccounts(LocalDate fromDate, LocalDate toDate) throws SQLException {
+        String sql = """
+                SELECT COUNT(DISTINCT COALESCE(EntityId, AccountId)) AS Total
+                FROM AuditLogs
+                WHERE CreatedAt >= ?
+                  AND CreatedAt < DATEADD(DAY, 1, ?)
+                  AND (
+                        Action = 'AccountLocked'
+                        OR (
+                            EntityName IN ('Account', 'Accounts')
+                            AND FieldChanged = 'Status'
+                            AND NewValue = 'Locked'
+                        )
+                      )
+                """;
+
+        try (Connection conn = DBContext.getConnection();
+             PreparedStatement stmt = conn.prepareStatement(sql)) {
+            stmt.setDate(1, Date.valueOf(fromDate));
+            stmt.setDate(2, Date.valueOf(toDate));
+
+            try (ResultSet rs = stmt.executeQuery()) {
+                if (rs.next()) {
+                    return rs.getInt("Total");
+                }
+            }
+        }
+
+        return 0;
+    }
+
+    /**
+     * Đếm Audit Log tác động tới Account trong kỳ.
+     * Chấp nhận cả tên EntityName hiện hành "Account" và dữ liệu seed cũ "Accounts".
+     *
+     * @param fromDate ngày bắt đầu, tính cả ngày này
+     * @param toDate ngày kết thúc, tính cả ngày này
+     * @return số bản ghi Audit Log của Account
+     * @throws SQLException khi truy vấn database lỗi
+     */
+    public int countAccountAuditChanges(LocalDate fromDate, LocalDate toDate) throws SQLException {
+        String sql = """
+                SELECT COUNT(*) AS Total
+                FROM AuditLogs
+                WHERE CreatedAt >= ?
+                  AND CreatedAt < DATEADD(DAY, 1, ?)
+                  AND EntityName IN ('Account', 'Accounts')
+                """;
+
+        try (Connection conn = DBContext.getConnection();
+             PreparedStatement stmt = conn.prepareStatement(sql)) {
+            stmt.setDate(1, Date.valueOf(fromDate));
+            stmt.setDate(2, Date.valueOf(toDate));
+
+            try (ResultSet rs = stmt.executeQuery()) {
+                if (rs.next()) {
+                    return rs.getInt("Total");
+                }
+            }
+        }
+
+        return 0;
+    }
+
+    /**
+     * Nhóm các thao tác nhạy cảm theo Action theo GBR-07.
+     * Chỉ gồm: đổi giá, thao tác tài khoản, xóa, duyệt và từ chối.
+     *
+     * @param fromDate ngày bắt đầu, tính cả ngày này
+     * @param toDate ngày kết thúc, tính cả ngày này
+     * @return map Action và số lần xuất hiện
+     * @throws SQLException khi truy vấn database lỗi
+     */
+    public Map<String, Integer> countSensitiveAuditLogsByAction(
+            LocalDate fromDate,
+            LocalDate toDate
+    ) throws SQLException {
+        String sql = """
+                SELECT Action, COUNT(*) AS Total
+                FROM AuditLogs
+                WHERE CreatedAt >= ?
+                  AND CreatedAt < DATEADD(DAY, 1, ?)
+                  AND (
+                        FieldChanged = 'Price'
+                        OR EntityName IN ('Account', 'Accounts')
+                        OR (
+                            EntityName IN ('Person', 'Persons')
+                            AND FieldChanged IN ('Email', 'Phone')
+                        )
+                        OR Action LIKE N'%tài khoản%'
+                        OR Action LIKE N'%xóa%'
+                        OR Action LIKE N'%duyệt%'
+                        OR Action LIKE N'%từ chối%'
+                      )
+                GROUP BY Action
+                ORDER BY Total DESC, Action
+                """;
+
+        Map<String, Integer> auditLogsByAction = new LinkedHashMap<>();
+
+        try (Connection conn = DBContext.getConnection();
+             PreparedStatement stmt = conn.prepareStatement(sql)) {
+            stmt.setDate(1, Date.valueOf(fromDate));
+            stmt.setDate(2, Date.valueOf(toDate));
+
+            try (ResultSet rs = stmt.executeQuery()) {
+                while (rs.next()) {
+                    auditLogsByAction.put(rs.getString("Action"), rs.getInt("Total"));
+                }
+            }
+        }
+
+        return auditLogsByAction;
+    }
+
+    /**
+     * Nhóm cùng tập thao tác nhạy cảm GBR-07 theo người thực hiện.
+     * AccountId null được hiển thị là Hệ thống.
+     *
+     * @param fromDate ngày bắt đầu, tính cả ngày này
+     * @param toDate ngày kết thúc, tính cả ngày này
+     * @return danh sách người thực hiện và số thao tác nhạy cảm
+     * @throws SQLException khi truy vấn database lỗi
+     */
+    public List<Map<String, Object>> findSensitiveAuditActors(
+            LocalDate fromDate,
+            LocalDate toDate
+    ) throws SQLException {
+        String sql = """
+                SELECT
+                    al.AccountId,
+                    COALESCE(p.FullName, N'Hệ thống') AS ActorName,
+                    COALESCE(
+                        e.Position,
+                        CASE WHEN c.CustomerId IS NOT NULL THEN 'Customer' ELSE 'System' END
+                    ) AS ActorRole,
+                    COUNT(*) AS Total
+                FROM AuditLogs al
+                LEFT JOIN Accounts a
+                    ON al.AccountId = a.AccountId
+                LEFT JOIN Persons p
+                    ON a.PersonId = p.PersonId
+                LEFT JOIN Employees e
+                    ON p.PersonId = e.PersonId
+                LEFT JOIN Customers c
+                    ON p.PersonId = c.PersonId
+                WHERE al.CreatedAt >= ?
+                  AND al.CreatedAt < DATEADD(DAY, 1, ?)
+                  AND (
+                        al.FieldChanged = 'Price'
+                        OR al.EntityName IN ('Account', 'Accounts')
+                        OR (
+                            al.EntityName IN ('Person', 'Persons')
+                            AND al.FieldChanged IN ('Email', 'Phone')
+                        )
+                        OR al.Action LIKE N'%tài khoản%'
+                        OR al.Action LIKE N'%xóa%'
+                        OR al.Action LIKE N'%duyệt%'
+                        OR al.Action LIKE N'%từ chối%'
+                      )
+                GROUP BY al.AccountId, p.FullName, e.Position, c.CustomerId
+                ORDER BY Total DESC, ActorName
+                """;
+
+        List<Map<String, Object>> auditActors = new ArrayList<>();
+
+        try (Connection conn = DBContext.getConnection();
+             PreparedStatement stmt = conn.prepareStatement(sql)) {
+            stmt.setDate(1, Date.valueOf(fromDate));
+            stmt.setDate(2, Date.valueOf(toDate));
+
+            try (ResultSet rs = stmt.executeQuery()) {
+                while (rs.next()) {
+                    Map<String, Object> row = new LinkedHashMap<>();
+                    Object accountId = rs.getObject("AccountId");
+                    row.put("accountId", accountId);
+                    row.put("actorName", rs.getString("ActorName"));
+                    row.put("actorRole", rs.getString("ActorRole"));
+                    row.put("total", rs.getInt("Total"));
+                    auditActors.add(row);
+                }
+            }
+        }
+
+        return auditActors;
     }
 }

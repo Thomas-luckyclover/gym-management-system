@@ -73,119 +73,234 @@
           <label class="field-label">Mã nhân viên</label>
           <input type="text" value="<c:out value='${accountSettings.employeeCode}' />" readonly>
         </div>
-        <c:if test="${not empty accountSettings.position}">
-          <div class="field">
-            <label class="field-label">Chức vụ</label>
-            <input type="text" value="<c:out value='${accountSettings.position.displayName}' />" readonly>
-          </div>
-        </c:if>
-        <c:if test="${not empty accountSettings.hireDate}">
-          <div class="field">
-            <label class="field-label">Ngày vào làm</label>
-            <input type="text" value="<c:out value='${gms:formatDate(accountSettings.hireDate)}' />" readonly>
-          </div>
-        </c:if>
-        <c:if test="${not empty accountSettings.employmentStatus}">
-          <div class="field">
-            <label class="field-label">Trạng thái làm việc</label>
-            <input type="text" value="<c:out value='${accountSettings.employmentStatus}' />" readonly>
-          </div>
-        </c:if>
-      </div>
+        <h2>Hồ sơ</h2>
 
-      <%-- Email — form riêng, action requestEmailChange (CBR-110: mã gửi tới email MỚI) --%>
-      <form id="emailForm"
-            method="post"
-            action="${pageContext.request.contextPath}/account"
-            class="stack"
-            novalidate
-            data-validate>
-        <input type="hidden" name="action" value="requestEmailChange">
-        <div class="field">
-          <label class="field-label" for="profileEmail">Email</label>
-          <input id="profileEmail"
-                 name="email"
-                 type="email"
-                 maxlength="100"
-                 data-rule="email"
-                 data-label="Email"
-                 value="<c:out value='${accountSettings.email}' />"
-                 required>
-          <c:if test="${not empty errors.email}">
-            <span class="field-error"><c:out value="${errors.email}" /></span>
-          </c:if>
-        </div>
-        <div class="account-form-actions">
-          <button class="btn btn-primary" type="submit">Đổi email</button>
-        </div>
-      </form>
+        <p class="account-subtitle">
+            Bạn có thể thay đổi email và số điện thoại.
+            Các thông tin nhân sự khác chỉ được xem.
+        </p>
 
-      <%-- SĐT — form riêng, action requestPhoneChange (CBR-110: mã gửi tới email HIỆN TẠI) --%>
-      <form id="phoneForm"
-            method="post"
-            action="${pageContext.request.contextPath}/account"
-            class="stack"
-            novalidate
-            data-validate>
-        <input type="hidden" name="action" value="requestPhoneChange">
-        <div class="field">
-          <label class="field-label" for="profilePhone">Số điện thoại</label>
-          <input id="profilePhone"
-                 name="phone"
-                 type="tel"
-                 maxlength="10"
-                 inputmode="numeric"
-                 data-rule="phone"
-                 data-label="Số điện thoại"
-                 value="<c:out value='${accountSettings.phone}' />"
-                 required>
-          <c:if test="${not empty errors.phone}">
-            <span class="field-error"><c:out value="${errors.phone}" /></span>
-          </c:if>
-        </div>
-        <div class="account-form-actions">
-          <button class="btn btn-primary" type="submit">Đổi số điện thoại</button>
-        </div>
-      </form>
-
-      <%-- Bước nhập mã khi đổi email/SĐT — hiện khi Servlet set requireVerification --%>
-      <c:if test="${not empty requireVerification}">
-        <form id="verifyForm"
-              method="post"
-              action="${pageContext.request.contextPath}/account"
-              class="stack"
-              novalidate
-              data-validate>
-          <input type="hidden" name="action" value="verifyContactChange">
-          <div class="msg-banner info" role="status">
-            <i class="fa-solid fa-circle-info"></i>
-            <div>
-              <b>Nhập mã đã gửi tới <c:out value="${verifyTarget}" /></b>
-              Mã có hiệu lực trong 15 phút.
+        <c:if test="${not empty formMessage}">
+            <div class="msg-banner">
+                <c:out value="${formMessage}" />
             </div>
-          </div>
-          <div class="field">
-            <label class="field-label" for="verificationCode">Mã xác thực</label>
-            <input id="verificationCode"
-                   name="verificationCode"
-                   class="input"
-                   type="text"
-                   maxlength="6"
-                   inputmode="numeric"
-                   data-rule="verificationCode"
-                   data-label="Mã xác thực">
-            <c:if test="${not empty errors.code}">
-              <span class="field-error"><c:out value="${errors.code}" /></span>
-            </c:if>
-          </div>
-          <div class="account-form-actions">
-            <button class="btn btn-primary" type="submit">Xác nhận mã</button>
-          </div>
-        </form>
-      </c:if>
-    </div>
-  </section>
+        </c:if>
 
-  <%-- Cột phải: đổi mật khẩu — form dùng chung tab-password (action=changePassword) --%>
-  <%@ include file="/WEB-INF/jsp/auth/account/tab-password.jspf" %>
-</div>
+        <div class="account-form-grid">
+
+            <div class="field account-field-full">
+
+                <label
+                    class="field-label"
+                    for="profileName"
+                >
+                    Họ và tên
+                </label>
+
+                <input
+                    id="profileName"
+                    type="text"
+                    value="<c:out value='${accountSettings.fullName}' />"
+                    readonly
+                >
+
+            </div>
+
+
+            <%-- ================= EMAIL ================= --%>
+
+            <form
+                method="post"
+                action="${pageContext.request.contextPath}/account"
+                class="field"
+                data-validate
+            >
+
+                <input
+                    type="hidden"
+                    name="action"
+                    value="requestEmailChange"
+                >
+
+                <label
+                    class="field-label"
+                    for="profileEmail"
+                >
+                    Email
+                </label>
+
+                <input
+                    id="profileEmail"
+                    name="newEmail"
+                    type="email"
+                    maxlength="100"
+                    data-rule="email"
+                    data-label="Email"
+                    value="<c:out value='${not empty newEmail ? newEmail : accountSettings.email}' />"
+                    required
+                >
+
+                <c:if test="${not empty errors.email}">
+                    <span class="field-error">
+                        <c:out value="${errors.email}" />
+                    </span>
+                </c:if>
+
+                <span class="field-hint">
+                    Mã xác thực sẽ được gửi tới email mới.
+                </span>
+
+                <button
+                    type="submit"
+                    class="btn btn-primary"
+                >
+                    Đổi email
+                </button>
+
+            </form>
+
+
+            <%-- ================= PHONE ================= --%>
+
+            <form
+                method="post"
+                action="${pageContext.request.contextPath}/account"
+                class="field"
+                data-validate
+            >
+
+                <input
+                    type="hidden"
+                    name="action"
+                    value="requestPhoneChange"
+                >
+
+                <label
+                    class="field-label"
+                    for="profilePhone"
+                >
+                    Số điện thoại
+                </label>
+
+                <input
+                    id="profilePhone"
+                    name="newPhone"
+                    type="tel"
+                    maxlength="10"
+                    inputmode="numeric"
+                    data-rule="phone"
+                    data-label="Số điện thoại"
+                    value="<c:out value='${not empty newPhone ? newPhone : accountSettings.phone}' />"
+                    required
+                >
+
+                <c:if test="${not empty errors.phone}">
+                    <span class="field-error">
+                        <c:out value="${errors.phone}" />
+                    </span>
+                </c:if>
+
+                <span class="field-hint">
+                    Mã xác thực sẽ được gửi tới email hiện tại.
+                </span>
+
+                <button
+                    type="submit"
+                    class="btn btn-primary"
+                >
+                    Đổi số điện thoại
+                </button>
+
+            </form>
+
+        </div>
+
+
+        <%-- ================= VERIFY OTP ================= --%>
+
+        <c:if test="${contactVerificationPending}">
+
+            <div class="msg-banner">
+
+                Mã xác thực đã được gửi tới&nbsp;
+
+                <strong>
+                    <c:out value="${verifyTarget}" />
+                </strong>
+
+            </div>
+
+            <form
+                method="post"
+                action="${pageContext.request.contextPath}/account"
+                data-validate
+            >
+
+                <input
+                    type="hidden"
+                    name="action"
+                    value="verifyContactChange"
+                >
+
+                <input
+                    type="hidden"
+                    name="contactField"
+                    value="<c:out value='${contactField}' />"
+                >
+
+                <input
+                    type="hidden"
+                    name="verificationEmail"
+                    value="<c:out value='${verificationEmail}' />"
+                >
+
+                <input
+                    type="hidden"
+                    name="pendingContactValue"
+                    value="<c:out value='${pendingContactValue}' />"
+                >
+
+                <div class="field">
+
+                    <label
+                        class="field-label"
+                        for="verificationCode"
+                    >
+                        Mã xác thực
+                    </label>
+
+                    <input
+                        id="verificationCode"
+                        name="verificationCode"
+                        type="text"
+                        maxlength="6"
+                        inputmode="numeric"
+                        data-rule="verificationCode"
+                        data-label="Mã xác thực"
+                        required
+                    >
+
+                    <c:if test="${not empty errors.code}">
+                        <span class="field-error">
+                            <c:out value="${errors.code}" />
+                        </span>
+                    </c:if>
+
+                </div>
+
+                <div class="account-form-actions">
+
+                    <button
+                        type="submit"
+                        class="btn btn-primary"
+                    >
+                        Xác nhận thay đổi
+                    </button>
+
+                </div>
+
+            </form>
+
+        </c:if>
+
+</section>

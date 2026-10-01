@@ -501,10 +501,10 @@ GO
    ============================================================================ */
 SET IDENTITY_INSERT BlogPosts ON;
 INSERT INTO BlogPosts (BlogPostId, AuthorEmployeeId, Title, Category, Excerpt, Content, CoverImage, Status, PublishedAt) VALUES
- (1, 2, N'Ba lỗi squat phổ biến'        , N'Training' , N'Squat sai tư thế dễ gây đau gối và lưng dưới.', N'Lỗi 1: gối đổ vào trong...', '/uploads/blog/squat.jpg'   , 'Active'  , '2026-09-01 10:00:00'),
- (2, 2, N'Protein bao nhiêu là đủ?'     , N'Nutrition', N'Người tập tạ cần bao nhiêu gram protein mỗi ngày.', N'Khuyến nghị 1.6–2.2g/kg...', '/uploads/blog/protein.jpg', 'Active'  , '2026-09-08 10:00:00'),
- (3, 2, N'Lịch nghỉ lễ Quốc khánh'      , N'News'     , N'Phòng gym nghỉ ngày 02/09.'                    , N'Phòng gym nghỉ cả ngày 02/09...', NULL                  , 'Active'  , '2026-08-25 09:00:00'),
- (4, 2, N'Khuyến mãi tháng 6 (đã kết thúc)', N'News'  , N'Chương trình đã kết thúc.'                     , N'Nội dung khuyến mãi cũ...', NULL                        , 'Inactive', '2026-06-01 09:00:00');
+ (1, 2, N'Ba lỗi squat phổ biến'        , N'Training' , N'Squat sai tư thế dễ gây đau gối và lưng dưới.', N'Lỗi 1: gối đổ vào trong...', '/images/blog/squat.jpg'   , 'Active'  , '2026-09-01 10:00:00'),
+ (2, 2, N'Protein bao nhiêu là đủ?'     , N'Nutrition', N'Người tập tạ cần bao nhiêu gram protein mỗi ngày.', N'Khuyến nghị 1.6–2.2g/kg...', '/images/blog/protein.jpg' , 'Active'  , '2026-09-08 10:00:00'),
+ (3, 2, N'Lịch nghỉ lễ Quốc khánh'      , N'News'     , N'Phòng gym nghỉ ngày 02/09.'                    , N'Phòng gym nghỉ cả ngày 02/09...', '/images/blog/news.jpg'   , 'Active'  , '2026-08-25 09:00:00'),
+ (4, 2, N'Khuyến mãi tháng 6 (đã kết thúc)', N'News'  , N'Chương trình đã kết thúc.'                     , N'Nội dung khuyến mãi cũ...', '/images/blog/promo.jpg'  , 'Inactive', '2026-06-01 09:00:00');
 SET IDENTITY_INSERT BlogPosts OFF;
 GO
 

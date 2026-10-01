@@ -44,6 +44,16 @@
             <%@ include file="/WEB-INF/jsp/common/layout-manager.jspf" %>
 
         </c:when>
+        <c:when test="${currentRole.dbValue eq 'Receptionist'}">
+            <%@ include file="/WEB-INF/jsp/common/layout-receptionist.jspf" %>
+        </c:when>
+
+        <c:when test="${currentRole.dbValue eq 'PT'}">
+
+            <c:set var="activeNav" value="account" />
+            <%@ include file="/WEB-INF/jsp/common/layout-pt.jspf" %>
+
+        </c:when>
 
         <c:otherwise>
 
@@ -232,7 +242,9 @@
                                     <%@ include file="/WEB-INF/jsp/auth/account/profile-admin.jspf" %>
 
                                 </c:when>
-
+                                <c:when test="${currentRole.dbValue eq 'Receptionist'}">
+                                    <%@ include file="/WEB-INF/jsp/auth/account/profile-receptionist.jspf" %>
+                                </c:when>
 
                                 <%-- Các role khác chờ merge profile JSPF --%>
 

@@ -527,8 +527,9 @@
 
 .post-thumb {
   width: 100%;
-  aspect-ratio: 2 / 1;
+  height: 200px;
   object-fit: cover;
+  object-position: center;
   background: var(--color-surface-muted);
 }
 

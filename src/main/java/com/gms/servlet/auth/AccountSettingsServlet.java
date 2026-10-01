@@ -16,7 +16,9 @@ import jakarta.servlet.http.HttpServletResponse;
 import jakarta.servlet.http.HttpSession;
 import jakarta.servlet.annotation.MultipartConfig;
 import jakarta.servlet.http.Part;
-
+import com.gms.service.AuditLogService;
+import com.gms.service.ContactChangeService;
+import com.gms.service.ContactChangeService.ContactField;
 import java.io.InputStream;
 import java.nio.file.Path;
 import java.io.IOException;
@@ -28,1098 +30,963 @@ import java.io.IOException;
 @MultipartConfig
 public class AccountSettingsServlet extends HttpServlet {
 
-    private static final String VIEW_NAME =
-            "auth/account-settings";
+        private static final String VIEW_NAME = "auth/account-settings";
 
-    private static final String ACTION_CHANGE_PASSWORD =
-            "changePassword";
+        private static final String ACTION_CHANGE_PASSWORD = "changePassword";
 
-    private static final String TAB_PROFILE =
-            "profile";
+        private static final String TAB_PROFILE = "profile";
 
-    private static final String TAB_PASSWORD =
-            "password";
+        private static final String TAB_PASSWORD = "password";
 
-    private static final String TAB_DEPENDENTS =
-            "dependents";
-    private static final String ACTION_UPDATE_AVATAR =
-            "updateAvatar";
+        private static final String TAB_DEPENDENTS = "dependents";
+        private static final String ACTION_UPDATE_AVATAR = "updateAvatar";
+        private static final String ACTION_REQUEST_EMAIL_CHANGE = "requestEmailChange";
 
-    // ===== MỚI — action đổi Email/SĐT (CBR-110, CBR-111) =====
-    private static final String ACTION_REQUEST_EMAIL_CHANGE =
-            "requestEmailChange";
-    private static final String ACTION_REQUEST_PHONE_CHANGE =
-            "requestPhoneChange";
-    private static final String ACTION_VERIFY_CONTACT_CHANGE =
-            "verifyContactChange";
-    private static final String SESSION_PENDING_FIELD =
-            "pendingContactField";
-    private static final String SESSION_PENDING_VALUE =
-            "pendingContactValue";
+        private static final String ACTION_REQUEST_PHONE_CHANGE = "requestPhoneChange";
 
-    private final AccountSettingsService accountSettingsService =
-            new AccountSettingsService();
-    private final ContactChangeService contactChangeService =
-            new ContactChangeService();
+        private static final String ACTION_VERIFY_CONTACT_CHANGE = "verifyContactChange";
+        private final AccountSettingsService accountSettingsService = new AccountSettingsService();
+        private final ContactChangeService contactChangeService = new ContactChangeService();
 
-    @Override
-    protected void doGet(
-            HttpServletRequest request,
-            HttpServletResponse response
-    ) throws ServletException, IOException {
+        private final AuditLogService auditLogService = new AuditLogService();
 
-        renderAccountSettings(
-                request,
-                response
-        );
-    }
+        @Override
+        protected void doGet(
+                        HttpServletRequest request,
+                        HttpServletResponse response) throws ServletException, IOException {
 
-    @Override
-    protected void doPost(
-            HttpServletRequest request,
-            HttpServletResponse response
-    ) throws ServletException, IOException {
-
-        String action =
-                RequestUtil.getTrimmedParam(
-                        request,
-                        "action"
-                );
-
-        if (ACTION_CHANGE_PASSWORD.equals(action)) {
-
-            handleChangePassword(
-                    request,
-                    response
-            );
-
-            return;
-        }
-        if (ACTION_UPDATE_AVATAR.equals(action)) {
-
-            handleUpdateAvatar(
-                    request,
-                    response
-            );
-
-            return;
-        }
-        if (ACTION_REQUEST_EMAIL_CHANGE.equals(action)) {
-
-            handleRequestEmailChange(
-                    request,
-                    response
-            );
-
-            return;
-        }
-        if (ACTION_REQUEST_PHONE_CHANGE.equals(action)) {
-
-            handleRequestPhoneChange(
-                    request,
-                    response
-            );
-
-            return;
-        }
-        if (ACTION_VERIFY_CONTACT_CHANGE.equals(action)) {
-
-            handleVerifyContactChange(
-                    request,
-                    response
-            );
-
-            return;
+                renderAccountSettings(
+                                request,
+                                response);
         }
 
-        RequestUtil.setFlashToast(
-                request,
-                "error",
-                Messages.MSG04_SYSTEM_BUSY
-        );
+        @Override
+        protected void doPost(
+                        HttpServletRequest request,
+                        HttpServletResponse response) throws ServletException, IOException {
 
-        RequestUtil.redirect(
-                request,
-                response,
-                "/account"
-        );
-    }
+                String action = RequestUtil.getTrimmedParam(
+                                request,
+                                "action");
 
-    /**
-     * Xử lý đổi mật khẩu.
-     *
-     * @param request  request hiện tại
-     * @param response response hiện tại
-     */
-    private void handleChangePassword(
-            HttpServletRequest request,
-            HttpServletResponse response
-    ) throws ServletException, IOException {
+                if (ACTION_CHANGE_PASSWORD.equals(action)) {
 
-        HttpSession session =
-                request.getSession(false);
+                        handleChangePassword(
+                                        request,
+                                        response);
 
-        if (session == null) {
+                        return;
+                }
+                if (ACTION_UPDATE_AVATAR.equals(action)) {
 
-            RequestUtil.redirect(
-                    request,
-                    response,
-                    "/login"
-            );
+                        handleUpdateAvatar(
+                                        request,
+                                        response);
 
-            return;
+                        return;
+                }
+                if (ACTION_REQUEST_EMAIL_CHANGE.equals(action)) {
+
+                        handleRequestEmailChange(
+                                        request,
+                                        response);
+
+                        return;
+                }
+
+                if (ACTION_REQUEST_PHONE_CHANGE.equals(action)) {
+
+                        handleRequestPhoneChange(
+                                        request,
+                                        response);
+
+                        return;
+                }
+
+                if (ACTION_VERIFY_CONTACT_CHANGE.equals(action)) {
+
+                        handleVerifyContactChange(
+                                        request,
+                                        response);
+
+                        return;
+                }
+                RequestUtil.setFlashToast(
+                                request,
+                                "error",
+                                Messages.MSG04_SYSTEM_BUSY);
+
+                RequestUtil.redirect(
+                                request,
+                                response,
+                                "/account");
         }
 
-        Integer accountId =
-                (Integer) session.getAttribute(
-                        SessionKey.ACCOUNT_ID
-                );
+        /**
+         * Gửi mã xác thực khi Admin yêu cầu đổi email.
+         *
+         * @param request  request hiện tại
+         * @param response response hiện tại
+         */
+        private void handleRequestEmailChange(
+                        HttpServletRequest request,
+                        HttpServletResponse response) throws ServletException, IOException {
 
-        if (accountId == null) {
+                HttpSession session = request.getSession(false);
 
-            RequestUtil.redirect(
-                    request,
-                    response,
-                    "/login"
-            );
+                if (session == null) {
+                        RequestUtil.redirect(
+                                        request,
+                                        response,
+                                        "/login");
 
-            return;
-        }
+                        return;
+                }
 
-        String currentPassword =
-                request.getParameter(
-                        "currentPassword"
-                );
+                Integer accountId = (Integer) session.getAttribute(
+                                SessionKey.ACCOUNT_ID);
 
-        String newPassword =
-                request.getParameter(
-                        "newPassword"
-                );
+                if (accountId == null) {
+                        RequestUtil.redirect(
+                                        request,
+                                        response,
+                                        "/login");
 
-        String confirmPassword =
-                request.getParameter(
-                        "confirmPassword"
-                );
+                        return;
+                }
 
-        ServiceResult<Void> result =
-                accountSettingsService.changePassword(
-                        accountId,
-                        currentPassword,
-                        newPassword,
-                        confirmPassword,
-                        session.getId()
-                );
-
-        if (!result.isSuccess()) {
-
-            request.setAttribute(
-                    "errors",
-                    result.getFieldErrors()
-            );
-
-            request.setAttribute(
-                    "formMessage",
-                    result.getMessage()
-            );
-
-            request.setAttribute(
-                    "activeTab",
-                    TAB_PASSWORD
-            );
-
-            renderAccountSettings(
-                    request,
-                    response
-            );
-
-            return;
-        }
-
-        RequestUtil.setFlashToast(
-                request,
-                "success",
-                Messages.MSG49_PASSWORD_CHANGED
-        );
-
-        RequestUtil.redirect(
-                request,
-                response,
-                "/account?tab=password"
-        );
-    }
-    /**
-     * Xử lý upload và cập nhật avatar.
-     *
-     * @param request request hiện tại
-     * @param response response hiện tại
-     */
-    private void handleUpdateAvatar(
-            HttpServletRequest request,
-            HttpServletResponse response
-    ) throws ServletException, IOException {
-
-        HttpSession session =
-                request.getSession(false);
-
-        if (session == null) {
-
-            RequestUtil.redirect(
-                    request,
-                    response,
-                    "/login"
-            );
-
-            return;
-        }
-
-        Integer accountId =
-                (Integer) session.getAttribute(
-                        SessionKey.ACCOUNT_ID
-                );
-
-        if (accountId == null) {
-
-            RequestUtil.redirect(
-                    request,
-                    response,
-                    "/login"
-            );
-
-            return;
-        }
-
-        Part avatarPart =
-                request.getPart(
-                        "avatarFile"
-                );
-
-        if (avatarPart == null
-                || avatarPart.getSize() == 0) {
-
-            request.setAttribute(
-                    "avatarError",
-                    String.format(
-                            Messages.MSG09_REQUIRED,
-                            "Ảnh đại diện"
-                    )
-            );
-
-            request.setAttribute(
-                    "activeTab",
-                    TAB_PROFILE
-            );
-
-            renderAccountSettings(
-                    request,
-                    response
-            );
-
-            return;
-        }
-
-        String uploadDirectoryValue =
-                getServletContext()
-                        .getRealPath(
-                                "/uploads/avatar"
-                        );
-
-        if (uploadDirectoryValue == null) {
-
-            request.setAttribute(
-                    "avatarError",
-                    Messages.MSG04_SYSTEM_BUSY
-            );
-
-            request.setAttribute(
-                    "activeTab",
-                    TAB_PROFILE
-            );
-
-            renderAccountSettings(
-                    request,
-                    response
-            );
-
-            return;
-        }
-
-        Path uploadDirectory =
-                Path.of(
-                        uploadDirectoryValue
-                );
-
-        ServiceResult<Void> result;
-
-        try (InputStream inputStream =
-                     avatarPart.getInputStream()) {
-
-            result =
-                    accountSettingsService.updateAvatar(
-                            accountId,
-                            avatarPart.getContentType(),
-                            avatarPart.getSize(),
-                            inputStream,
-                            uploadDirectory
-                    );
-        }
-
-        if (!result.isSuccess()) {
-
-            request.setAttribute(
-                    "avatarError",
-                    result.getMessage()
-            );
-
-            if (result.getFieldErrors() != null
-                    && result.getFieldErrors()
-                    .get("avatarFile") != null) {
+                String newEmail = RequestUtil.getTrimmedParam(
+                                request,
+                                "newEmail");
 
                 request.setAttribute(
-                        "avatarError",
-                        result.getFieldErrors()
-                                .get("avatarFile")
-                );
-            }
+                                "newEmail",
+                                newEmail);
 
-            request.setAttribute(
-                    "activeTab",
-                    TAB_PROFILE
-            );
-
-            renderAccountSettings(
-                    request,
-                    response
-            );
-
-            return;
-        }
-
-        RequestUtil.setFlashToast(
-                request,
-                "success",
-                Messages.MSG58_AVATAR_CHANGED
-        );
-
-        RequestUtil.redirect(
-                request,
-                response,
-                "/account?tab=profile"
-        );
-    }
-
-    /**
-     * Xử lý yêu cầu đổi email — gửi mã xác thực tới email MỚI (CBR-110).
-     *
-     * @param request  request hiện tại
-     * @param response response hiện tại
-     */
-    private void handleRequestEmailChange(
-            HttpServletRequest request,
-            HttpServletResponse response
-    ) throws ServletException, IOException {
-
-        HttpSession session =
-                request.getSession(false);
-
-        if (session == null) {
-
-            RequestUtil.redirect(
-                    request,
-                    response,
-                    "/login"
-            );
-
-            return;
-        }
-
-        Integer accountId =
-                (Integer) session.getAttribute(
-                        SessionKey.ACCOUNT_ID
-                );
-
-        if (accountId == null) {
-
-            RequestUtil.redirect(
-                    request,
-                    response,
-                    "/login"
-            );
-
-            return;
-        }
-
-        String newEmail =
-                RequestUtil.getTrimmedParam(
-                        request,
-                        "email"
-                );
-
-        ServiceResult<Void> result =
-                contactChangeService.requestEmailChange(
-                        accountId,
-                        newEmail
-                );
-
-        if (!result.isSuccess()) {
-
-            request.setAttribute(
-                    "errors",
-                    result.getFieldErrors()
-            );
-
-            request.setAttribute(
-                    "formMessage",
-                    result.getMessage()
-            );
-
-            request.setAttribute(
-                    "activeTab",
-                    TAB_PROFILE
-            );
-
-            renderAccountSettings(
-                    request,
-                    response
-            );
-
-            return;
-        }
-
-        // B1: lưu tạm field đang đổi + giá trị mới vào session,
-        // để bước xác thực mã (handleVerifyContactChange) dùng lại
-        session.setAttribute(
-                SESSION_PENDING_FIELD,
-                "EMAIL"
-        );
-
-        session.setAttribute(
-                SESSION_PENDING_VALUE,
-                newEmail
-        );
-
-        request.setAttribute(
-                "requireVerification",
-                true
-        );
-
-        request.setAttribute(
-                "verifyTarget",
-                newEmail
-        );
-
-        request.setAttribute(
-                "activeTab",
-                TAB_PROFILE
-        );
-
-        renderAccountSettings(
-                request,
-                response
-        );
-    }
-
-    /**
-     * Xử lý yêu cầu đổi số điện thoại — gửi mã xác thực tới email HIỆN TẠI (CBR-110).
-     *
-     * @param request  request hiện tại
-     * @param response response hiện tại
-     */
-    private void handleRequestPhoneChange(
-            HttpServletRequest request,
-            HttpServletResponse response
-    ) throws ServletException, IOException {
-
-        HttpSession session =
-                request.getSession(false);
-
-        if (session == null) {
-
-            RequestUtil.redirect(
-                    request,
-                    response,
-                    "/login"
-            );
-
-            return;
-        }
-
-        Integer accountId =
-                (Integer) session.getAttribute(
-                        SessionKey.ACCOUNT_ID
-                );
-
-        String roleValue =
-                (String) session.getAttribute(
-                        SessionKey.ROLE
-                );
-
-        if (accountId == null
-                || roleValue == null) {
-
-            RequestUtil.redirect(
-                    request,
-                    response,
-                    "/login"
-            );
-
-            return;
-        }
-
-        // B1: session không lưu email — lấy email hiện tại qua Service (đã có sẵn)
-        Role role =
-                Role.fromDbValue(roleValue);
-
-        ServiceResult<AccountSettingsView> currentResult =
-                accountSettingsService.getAccountSettings(
-                        accountId,
-                        role
-                );
-
-        if (!currentResult.isSuccess()) {
-
-            RequestUtil.setFlashToast(
-                    request,
-                    "error",
-                    currentResult.getMessage()
-            );
-
-            RequestUtil.redirect(
-                    request,
-                    response,
-                    "/account"
-            );
-
-            return;
-        }
-
-        String currentEmail =
-                currentResult.getData().getEmail();
-
-        String newPhone =
-                RequestUtil.getTrimmedParam(
-                        request,
-                        "phone"
-                );
-
-        ServiceResult<Void> result =
-                contactChangeService.requestPhoneChange(
-                        accountId,
-                        currentEmail,
-                        newPhone
-                );
-
-        if (!result.isSuccess()) {
-
-            request.setAttribute(
-                    "errors",
-                    result.getFieldErrors()
-            );
-
-            request.setAttribute(
-                    "formMessage",
-                    result.getMessage()
-            );
-
-            request.setAttribute(
-                    "activeTab",
-                    TAB_PROFILE
-            );
-
-            renderAccountSettings(
-                    request,
-                    response
-            );
-
-            return;
-        }
-
-        session.setAttribute(
-                SESSION_PENDING_FIELD,
-                "PHONE"
-        );
-
-        session.setAttribute(
-                SESSION_PENDING_VALUE,
-                newPhone
-        );
-
-        request.setAttribute(
-                "requireVerification",
-                true
-        );
-
-        request.setAttribute(
-                "verifyTarget",
-                currentEmail
-        );
-
-        request.setAttribute(
-                "activeTab",
-                TAB_PROFILE
-        );
-
-        renderAccountSettings(
-                request,
-                response
-        );
-    }
-
-    /**
-     * Xác thực mã và áp dụng thay đổi Email/SĐT (CBR-110, CBR-111).
-     *
-     * @param request  request hiện tại
-     * @param response response hiện tại
-     */
-    private void handleVerifyContactChange(
-            HttpServletRequest request,
-            HttpServletResponse response
-    ) throws ServletException, IOException {
-
-        HttpSession session =
-                request.getSession(false);
-
-        if (session == null) {
-
-            RequestUtil.redirect(
-                    request,
-                    response,
-                    "/login"
-            );
-
-            return;
-        }
-
-        Integer accountId =
-                (Integer) session.getAttribute(
-                        SessionKey.ACCOUNT_ID
-                );
-
-        String roleValue =
-                (String) session.getAttribute(
-                        SessionKey.ROLE
-                );
-
-        if (accountId == null
-                || roleValue == null) {
-
-            RequestUtil.redirect(
-                    request,
-                    response,
-                    "/login"
-            );
-
-            return;
-        }
-
-        String fieldName =
-                (String) session.getAttribute(
-                        SESSION_PENDING_FIELD
-                );
-
-        String newValue =
-                (String) session.getAttribute(
-                        SESSION_PENDING_VALUE
-                );
-
-        if (fieldName == null
-                || newValue == null) {
-
-            RequestUtil.redirect(
-                    request,
-                    response,
-                    "/account"
-            );
-
-            return;
-        }
-
-        String code =
-                RequestUtil.getTrimmedParam(
-                        request,
-                        "verificationCode"
-                );
-
-        // B1: lấy personId + email hiện tại qua Service (session không lưu 2 giá trị này)
-        Role role =
-                Role.fromDbValue(roleValue);
-
-        ServiceResult<AccountSettingsView> currentResult =
-                accountSettingsService.getAccountSettings(
-                        accountId,
-                        role
-                );
-
-        if (!currentResult.isSuccess()) {
-
-            RequestUtil.setFlashToast(
-                    request,
-                    "error",
-                    currentResult.getMessage()
-            );
-
-            RequestUtil.redirect(
-                    request,
-                    response,
-                    "/account"
-            );
-
-            return;
-        }
-
-        int personId =
-                currentResult.getData().getPersonId();
-
-        String currentEmail =
-                currentResult.getData().getEmail();
-
-        ContactChangeService.ContactField field =
-                "EMAIL".equals(fieldName)
-                        ? ContactChangeService.ContactField.EMAIL
-                        : ContactChangeService.ContactField.PHONE;
-
-        // B2: email nhận mã — email MỚI (nếu đang đổi email) hoặc email HIỆN TẠI (nếu đang đổi SĐT)
-        String verificationEmail =
-                field == ContactChangeService.ContactField.EMAIL
-                        ? newValue
-                        : currentEmail;
-
-        ServiceResult<Void> result =
-                contactChangeService.verifyAndApply(
-                        accountId,
-                        personId,
-                        field,
-                        verificationEmail,
-                        newValue,
-                        code,
-                        session.getId()
-                );
-
-        if (!result.isSuccess()) {
-
-            request.setAttribute(
-                    "errors",
-                    result.getFieldErrors()
-            );
-
-            request.setAttribute(
-                    "formMessage",
-                    result.getMessage()
-            );
-
-            request.setAttribute(
-                    "requireVerification",
-                    true
-            );
-
-            request.setAttribute(
-                    "verifyTarget",
-                    verificationEmail
-            );
-
-            request.setAttribute(
-                    "activeTab",
-                    TAB_PROFILE
-            );
-
-            renderAccountSettings(
-                    request,
-                    response
-            );
-
-            return;
-        }
-
-        // B3: xong việc — dọn session tạm
-        session.removeAttribute(
-                SESSION_PENDING_FIELD
-        );
-
-        session.removeAttribute(
-                SESSION_PENDING_VALUE
-        );
-
-        RequestUtil.setFlashToast(
-                request,
-                "success",
-                result.getMessage()
-        );
-
-        RequestUtil.redirect(
-                request,
-                response,
-                "/account?tab=profile"
-        );
-    }
-
-    /**
-     * Tải dữ liệu và hiển thị Account Settings.
-     *
-     * @param request  request hiện tại
-     * @param response response hiện tại
-     */
-    private void renderAccountSettings(
-            HttpServletRequest request,
-            HttpServletResponse response
-    ) throws ServletException, IOException {
-
-        HttpSession session =
-                request.getSession(false);
-
-        if (session == null) {
-
-            RequestUtil.redirect(
-                    request,
-                    response,
-                    "/login"
-            );
-
-            return;
-        }
-
-        Integer accountId =
-                (Integer) session.getAttribute(
-                        SessionKey.ACCOUNT_ID
-                );
-
-        String roleValue =
-                (String) session.getAttribute(
-                        SessionKey.ROLE
-                );
-
-        if (accountId == null
-                || roleValue == null) {
-
-            RequestUtil.redirect(
-                    request,
-                    response,
-                    "/login"
-            );
-
-            return;
-        }
-
-        Role role =
-                Role.fromDbValue(roleValue);
-
-        if (role == null) {
-
-            response.sendError(
-                    HttpServletResponse.SC_FORBIDDEN,
-                    Messages.MSG07_NO_PERMISSION
-            );
-
-            return;
-        }
-
-        configureRoleView(
-                request,
-                role
-        );
-
-        String activeTab =
-                resolveActiveTab(
-                        request,
-                        role
-                );
-
-        request.setAttribute(
-                "activeTab",
-                activeTab
-        );
-
-        ServiceResult<AccountSettingsView> result =
-                accountSettingsService
-                        .getAccountSettings(
+                ServiceResult<Void> result = contactChangeService.requestEmailChange(
                                 accountId,
-                                role
-                        );
+                                newEmail);
 
-        if (!result.isSuccess()) {
+                if (!result.isSuccess()) {
 
-            request.setAttribute(
-                    "pageError",
-                    result.getMessage()
-            );
+                        request.setAttribute(
+                                        "errors",
+                                        result.getFieldErrors());
 
-            RequestUtil.forward(
-                    request,
-                    response,
-                    VIEW_NAME
-            );
+                        request.setAttribute(
+                                        "formMessage",
+                                        result.getMessage());
 
-            return;
+                        request.setAttribute(
+                                        "activeTab",
+                                        TAB_PROFILE);
+
+                        renderAccountSettings(
+                                        request,
+                                        response);
+
+                        return;
+                }
+
+                prepareContactVerification(
+                                request,
+                                ContactField.EMAIL,
+                                newEmail,
+                                newEmail,
+                                result.getMessage());
+
+                renderAccountSettings(
+                                request,
+                                response);
         }
 
-        request.setAttribute(
-                "accountSettings",
-                result.getData()
-        );
+        /**
+         * Gửi mã xác thực khi Admin yêu cầu đổi số điện thoại.
+         *
+         * @param request  request hiện tại
+         * @param response response hiện tại
+         */
+        private void handleRequestPhoneChange(
+                        HttpServletRequest request,
+                        HttpServletResponse response) throws ServletException, IOException {
 
-        request.setAttribute(
-                "currentRole",
-                role
-        );
+                HttpSession session = request.getSession(false);
 
-        RequestUtil.forward(
-                request,
-                response,
-                VIEW_NAME
-        );
-    }
+                if (session == null) {
+                        RequestUtil.redirect(
+                                        request,
+                                        response,
+                                        "/login");
 
-    /**
-     * Chọn layout, profile và theme tương ứng với vai trò.
-     *
-     * @param request request hiện tại
-     * @param role    vai trò hiện tại
-     */
-    private void configureRoleView(
-            HttpServletRequest request,
-            Role role
-    ) {
+                        return;
+                }
 
-        String layoutFragment;
-        String profileFragment;
-        String themeClass;
+                Integer accountId = (Integer) session.getAttribute(
+                                SessionKey.ACCOUNT_ID);
 
-        switch (role) {
+                String roleValue = (String) session.getAttribute(
+                                SessionKey.ROLE);
 
-            case ADMIN:
+                if (accountId == null
+                                || roleValue == null) {
 
-                layoutFragment =
-                        "/WEB-INF/jsp/common/layout-admin.jspf";
+                        RequestUtil.redirect(
+                                        request,
+                                        response,
+                                        "/login");
 
-                profileFragment =
-                        "/WEB-INF/jsp/auth/account/profile-admin.jspf";
+                        return;
+                }
 
-                themeClass =
-                        "theme-admin";
+                Role role = Role.fromDbValue(
+                                roleValue);
 
-                break;
+                if (role == null) {
+                        response.sendError(
+                                        HttpServletResponse.SC_FORBIDDEN,
+                                        Messages.MSG07_NO_PERMISSION);
 
-            case MANAGER:
+                        return;
+                }
 
-                layoutFragment =
-                        "/WEB-INF/jsp/common/layout-manager.jspf";
+                ServiceResult<AccountSettingsView> settingsResult = accountSettingsService.getAccountSettings(
+                                accountId,
+                                role);
 
-                profileFragment =
-                        "/WEB-INF/jsp/auth/account/profile-manager.jspf";
+                if (!settingsResult.isSuccess()) {
 
-                themeClass =
-                        "theme-manager";
+                        request.setAttribute(
+                                        "pageError",
+                                        settingsResult.getMessage());
 
-                break;
+                        renderAccountSettings(
+                                        request,
+                                        response);
 
-            case PT:
+                        return;
+                }
 
-                layoutFragment =
-                        "/WEB-INF/jsp/common/layout-pt.jspf";
+                String newPhone = RequestUtil.getTrimmedParam(
+                                request,
+                                "newPhone");
 
-                profileFragment =
-                        "/WEB-INF/jsp/auth/account/profile-pt.jspf";
+                request.setAttribute(
+                                "newPhone",
+                                newPhone);
 
-                themeClass =
-                        "theme-pt";
+                AccountSettingsView settings = settingsResult.getData();
 
-                break;
+                ServiceResult<Void> result = contactChangeService.requestPhoneChange(
+                                accountId,
+                                settings.getEmail(),
+                                newPhone);
 
-            case RECEPTIONIST:
+                if (!result.isSuccess()) {
 
-                layoutFragment =
-                        "/WEB-INF/jsp/common/layout-receptionist.jspf";
+                        request.setAttribute(
+                                        "errors",
+                                        result.getFieldErrors());
 
-                profileFragment =
-                        "/WEB-INF/jsp/auth/account/profile-receptionist.jspf";
+                        request.setAttribute(
+                                        "formMessage",
+                                        result.getMessage());
 
-                themeClass =
-                        "theme-receptionist";
+                        request.setAttribute(
+                                        "activeTab",
+                                        TAB_PROFILE);
 
-                break;
+                        renderAccountSettings(
+                                        request,
+                                        response);
 
-            case CUSTOMER:
+                        return;
+                }
 
-                layoutFragment =
-                        "/WEB-INF/jsp/common/layout-customer.jspf";
+                prepareContactVerification(
+                                request,
+                                ContactField.PHONE,
+                                settings.getEmail(),
+                                newPhone,
+                                result.getMessage());
 
-                profileFragment =
-                        "/WEB-INF/jsp/auth/account/profile-customer.jspf";
-
-                themeClass =
-                        "theme-customer";
-
-                break;
-
-            default:
-
-                throw new IllegalStateException(
-                        "Vai trò Account Settings không hợp lệ."
-                );
+                renderAccountSettings(
+                                request,
+                                response);
         }
 
-        request.setAttribute(
-                "layoutFragment",
-                layoutFragment
-        );
+        private void prepareContactVerification(
+                        HttpServletRequest request,
+                        ContactField field,
+                        String verificationEmail,
+                        String pendingContactValue,
+                        String message) {
 
-        request.setAttribute(
-                "profileFragment",
-                profileFragment
-        );
+                request.setAttribute(
+                                "contactVerificationPending",
+                                true);
 
-        request.setAttribute(
-                "themeClass",
-                themeClass
-        );
+                // Receptionist/Manager JSP dùng cờ requireVerification, Admin JSP dùng contactVerificationPending
+                request.setAttribute(
+                                "requireVerification",
+                                true);
 
-        request.setAttribute(
-                "hasDependentsTab",
-                role == Role.CUSTOMER
-        );
-    }
+                request.setAttribute(
+                                "contactField",
+                                field.name());
 
-    /**
-     * Xác định tab đang được mở.
-     *
-     * @param request request hiện tại
-     * @param role    vai trò hiện tại
-     * @return tên tab hợp lệ
-     */
-    private String resolveActiveTab(
-            HttpServletRequest request,
-            Role role
-    ) {
+                request.setAttribute(
+                                "verificationEmail",
+                                verificationEmail);
 
-        Object forcedTab =
-                request.getAttribute(
-                        "activeTab"
-                );
+                request.setAttribute(
+                                "pendingContactValue",
+                                pendingContactValue);
 
-        if (forcedTab instanceof String) {
+                request.setAttribute(
+                                "verifyTarget",
+                                verificationEmail);
 
-            return (String) forcedTab;
+                request.setAttribute(
+                                "formMessage",
+                                message);
+
+                request.setAttribute(
+                                "activeTab",
+                                TAB_PROFILE);
         }
 
-        String requestedTab =
-                RequestUtil.getTrimmedParam(
-                        request,
-                        "tab"
-                );
+        /**
+         * Xác thực OTP và áp dụng thay đổi Email/SĐT.
+         *
+         * @param request  request hiện tại
+         * @param response response hiện tại
+         */
+        private void handleVerifyContactChange(
+                        HttpServletRequest request,
+                        HttpServletResponse response) throws ServletException, IOException {
 
-        if (TAB_PASSWORD.equals(
-                requestedTab
-        )) {
+                HttpSession session = request.getSession(false);
 
-            return TAB_PASSWORD;
+                if (session == null) {
+                        RequestUtil.redirect(
+                                        request,
+                                        response,
+                                        "/login");
+
+                        return;
+                }
+
+                Integer accountId = (Integer) session.getAttribute(
+                                SessionKey.ACCOUNT_ID);
+
+                String roleValue = (String) session.getAttribute(
+                                SessionKey.ROLE);
+
+                if (accountId == null
+                                || roleValue == null) {
+
+                        RequestUtil.redirect(
+                                        request,
+                                        response,
+                                        "/login");
+
+                        return;
+                }
+
+                Role role = Role.fromDbValue(
+                                roleValue);
+
+                if (role == null) {
+                        response.sendError(
+                                        HttpServletResponse.SC_FORBIDDEN,
+                                        Messages.MSG07_NO_PERMISSION);
+
+                        return;
+                }
+
+                String contactFieldValue = RequestUtil.getTrimmedParam(
+                                request,
+                                "contactField");
+
+                ContactField contactField = null;
+
+                if (ContactField.EMAIL.name()
+                                .equals(contactFieldValue)) {
+
+                        contactField = ContactField.EMAIL;
+
+                } else if (ContactField.PHONE.name()
+                                .equals(contactFieldValue)) {
+
+                        contactField = ContactField.PHONE;
+                }
+
+                if (contactField == null) {
+
+                        RequestUtil.setFlashToast(
+                                        request,
+                                        "error",
+                                        Messages.MSG04_SYSTEM_BUSY);
+
+                        RequestUtil.redirect(
+                                        request,
+                                        response,
+                                        "/account?tab=profile");
+
+                        return;
+                }
+
+                String verificationEmail = RequestUtil.getTrimmedParam(
+                                request,
+                                "verificationEmail");
+
+                String pendingContactValue = RequestUtil.getTrimmedParam(
+                                request,
+                                "pendingContactValue");
+
+                String verificationCode = RequestUtil.getTrimmedParam(
+                                request,
+                                "verificationCode");
+
+                ServiceResult<AccountSettingsView> settingsResult = accountSettingsService.getAccountSettings(
+                                accountId,
+                                role);
+
+                if (!settingsResult.isSuccess()) {
+
+                        request.setAttribute(
+                                        "pageError",
+                                        settingsResult.getMessage());
+
+                        renderAccountSettings(
+                                        request,
+                                        response);
+
+                        return;
+                }
+
+                AccountSettingsView settings = settingsResult.getData();
+
+                String oldValue = contactField == ContactField.EMAIL
+                                ? settings.getEmail()
+                                : settings.getPhone();
+
+                ServiceResult<Void> result = contactChangeService.verifyAndApply(
+                                accountId,
+                                settings.getPersonId(),
+                                contactField,
+                                verificationEmail,
+                                pendingContactValue,
+                                verificationCode,
+                                session.getId());
+
+                if (!result.isSuccess()) {
+
+                        request.setAttribute(
+                                        "errors",
+                                        result.getFieldErrors());
+
+                        request.setAttribute(
+                                        "formMessage",
+                                        result.getMessage());
+
+                        prepareContactVerification(
+                                        request,
+                                        contactField,
+                                        verificationEmail,
+                                        pendingContactValue,
+                                        result.getMessage());
+
+                        renderAccountSettings(
+                                        request,
+                                        response);
+
+                        return;
+                }
+
+                String action;
+                String fieldChanged;
+
+                if (contactField == ContactField.EMAIL) {
+
+                        action = "Đổi email tài khoản cá nhân";
+
+                        fieldChanged = "Email";
+
+                } else {
+
+                        action = "Đổi số điện thoại tài khoản cá nhân";
+
+                        fieldChanged = "Phone";
+                }
+
+                ServiceResult<Void> auditResult = auditLogService.log(
+                                accountId,
+                                action,
+                                "Person",
+                                settings.getPersonId(),
+                                fieldChanged,
+                                oldValue,
+                                pendingContactValue,
+                                null);
+
+                if (!auditResult.isSuccess()) {
+
+                        RequestUtil.setFlashToast(
+                                        request,
+                                        "warning",
+                                        "Thông tin đã được cập nhật nhưng chưa ghi được Audit Log.");
+
+                } else {
+
+                        RequestUtil.setFlashToast(
+                                        request,
+                                        "success",
+                                        result.getMessage());
+                }
+
+                RequestUtil.redirect(
+                                request,
+                                response,
+                                "/account?tab=profile");
         }
 
-        if (TAB_DEPENDENTS.equals(
-                requestedTab
-        )
-                && role == Role.CUSTOMER) {
+        /**
+         * Xử lý đổi mật khẩu.
+         *
+         * @param request  request hiện tại
+         * @param response response hiện tại
+         */
+        private void handleChangePassword(
+                        HttpServletRequest request,
+                        HttpServletResponse response) throws ServletException, IOException {
 
-            return TAB_DEPENDENTS;
+                HttpSession session = request.getSession(false);
+
+                if (session == null) {
+
+                        RequestUtil.redirect(
+                                        request,
+                                        response,
+                                        "/login");
+
+                        return;
+                }
+
+                Integer accountId = (Integer) session.getAttribute(
+                                SessionKey.ACCOUNT_ID);
+
+                if (accountId == null) {
+
+                        RequestUtil.redirect(
+                                        request,
+                                        response,
+                                        "/login");
+
+                        return;
+                }
+
+                String currentPassword = request.getParameter(
+                                "currentPassword");
+
+                String newPassword = request.getParameter(
+                                "newPassword");
+
+                String confirmPassword = request.getParameter(
+                                "confirmPassword");
+
+                ServiceResult<Void> result = accountSettingsService.changePassword(
+                                accountId,
+                                currentPassword,
+                                newPassword,
+                                confirmPassword,
+                                session.getId());
+
+                if (!result.isSuccess()) {
+
+                        request.setAttribute(
+                                        "errors",
+                                        result.getFieldErrors());
+
+                        request.setAttribute(
+                                        "formMessage",
+                                        result.getMessage());
+
+                        request.setAttribute(
+                                        "activeTab",
+                                        TAB_PASSWORD);
+
+                        renderAccountSettings(
+                                        request,
+                                        response);
+
+                        return;
+                }
+
+                RequestUtil.setFlashToast(
+                                request,
+                                "success",
+                                Messages.MSG49_PASSWORD_CHANGED);
+
+                RequestUtil.redirect(
+                                request,
+                                response,
+                                "/account?tab=password");
         }
 
-        return TAB_PROFILE;
-    }
+        /**
+         * Xử lý upload và cập nhật avatar.
+         *
+         * @param request  request hiện tại
+         * @param response response hiện tại
+         */
+        private void handleUpdateAvatar(
+                        HttpServletRequest request,
+                        HttpServletResponse response) throws ServletException, IOException {
+                HttpSession session = request.getSession(false);
+
+                if (session == null) {
+
+                        RequestUtil.redirect(
+                                        request,
+                                        response,
+                                        "/login");
+
+                        return;
+                }
+
+                Integer accountId = (Integer) session.getAttribute(
+                                SessionKey.ACCOUNT_ID);
+
+                if (accountId == null) {
+
+                        RequestUtil.redirect(
+                                        request,
+                                        response,
+                                        "/login");
+
+                        return;
+                }
+
+                Part avatarPart = request.getPart(
+                                "avatarFile");
+
+                if (avatarPart == null
+                                || avatarPart.getSize() == 0) {
+
+                        request.setAttribute(
+                                        "avatarError",
+                                        String.format(
+                                                        Messages.MSG09_REQUIRED,
+                                                        "Ảnh đại diện"));
+
+                        request.setAttribute(
+                                        "activeTab",
+                                        TAB_PROFILE);
+
+                        renderAccountSettings(
+                                        request,
+                                        response);
+
+                        return;
+                }
+
+                String uploadDirectoryValue = getServletContext()
+                                .getRealPath(
+                                                "/uploads/avatar");
+
+                if (uploadDirectoryValue == null) {
+
+                        request.setAttribute(
+                                        "avatarError",
+                                        Messages.MSG04_SYSTEM_BUSY);
+
+                        request.setAttribute(
+                                        "activeTab",
+                                        TAB_PROFILE);
+
+                        renderAccountSettings(
+                                        request,
+                                        response);
+
+                        return;
+                }
+
+                Path uploadDirectory = Path.of(
+                                uploadDirectoryValue);
+
+                ServiceResult<Void> result;
+
+                try (InputStream inputStream = avatarPart.getInputStream()) {
+
+                        result = accountSettingsService.updateAvatar(
+                                        accountId,
+                                        avatarPart.getContentType(),
+                                        avatarPart.getSize(),
+                                        inputStream,
+                                        uploadDirectory);
+                }
+
+                if (!result.isSuccess()) {
+
+                        request.setAttribute(
+                                        "avatarError",
+                                        result.getMessage());
+
+                        if (result.getFieldErrors() != null
+                                        && result.getFieldErrors()
+                                                        .get("avatarFile") != null) {
+
+                                request.setAttribute(
+                                                "avatarError",
+                                                result.getFieldErrors()
+                                                                .get("avatarFile"));
+                        }
+
+                        request.setAttribute(
+                                        "activeTab",
+                                        TAB_PROFILE);
+
+                        renderAccountSettings(
+                                        request,
+                                        response);
+
+                        return;
+                }
+
+                RequestUtil.setFlashToast(
+                                request,
+                                "success",
+                                Messages.MSG58_AVATAR_CHANGED);
+
+                RequestUtil.redirect(
+                                request,
+                                response,
+                                "/account?tab=profile");
+        }
+
+        /**
+         * Tải dữ liệu và hiển thị Account Settings.
+         *
+         * @param request  request hiện tại
+         * @param response response hiện tại
+         */
+        private void renderAccountSettings(
+                        HttpServletRequest request,
+                        HttpServletResponse response) throws ServletException, IOException {
+
+                HttpSession session = request.getSession(false);
+
+                if (session == null) {
+
+                        RequestUtil.redirect(
+                                        request,
+                                        response,
+                                        "/login");
+
+                        return;
+                }
+
+                Integer accountId = (Integer) session.getAttribute(
+                                SessionKey.ACCOUNT_ID);
+
+                String roleValue = (String) session.getAttribute(
+                                SessionKey.ROLE);
+
+                if (accountId == null
+                                || roleValue == null) {
+
+                        RequestUtil.redirect(
+                                        request,
+                                        response,
+                                        "/login");
+
+                        return;
+                }
+
+                Role role = Role.fromDbValue(roleValue);
+
+                if (role == null) {
+
+                        response.sendError(
+                                        HttpServletResponse.SC_FORBIDDEN,
+                                        Messages.MSG07_NO_PERMISSION);
+
+                        return;
+                }
+
+                configureRoleView(
+                                request,
+                                role);
+
+                String activeTab = resolveActiveTab(
+                                request,
+                                role);
+
+                request.setAttribute(
+                                "activeTab",
+                                activeTab);
+
+                ServiceResult<AccountSettingsView> result = accountSettingsService
+                                .getAccountSettings(
+                                                accountId,
+                                                role);
+
+                if (!result.isSuccess()) {
+
+                        request.setAttribute(
+                                        "pageError",
+                                        result.getMessage());
+
+                        RequestUtil.forward(
+                                        request,
+                                        response,
+                                        VIEW_NAME);
+
+                        return;
+                }
+
+                request.setAttribute(
+                                "accountSettings",
+                                result.getData());
+
+                request.setAttribute(
+                                "currentRole",
+                                role);
+                request.setAttribute(
+                                "activeSidebar",
+                                "account");
+                RequestUtil.forward(
+                                request,
+                                response,
+                                VIEW_NAME);
+        }
+
+        /**
+         * Chọn layout, profile và theme tương ứng với vai trò.
+         *
+         * @param request request hiện tại
+         * @param role    vai trò hiện tại
+         */
+        private void configureRoleView(
+                        HttpServletRequest request,
+                        Role role) {
+
+                String layoutFragment;
+                String profileFragment;
+                String themeClass;
+
+                switch (role) {
+
+                        case ADMIN:
+
+                                layoutFragment = "/WEB-INF/jsp/common/layout-admin.jspf";
+
+                                profileFragment = "/WEB-INF/jsp/auth/account/profile-admin.jspf";
+
+                                themeClass = "theme-admin";
+
+                                break;
+
+                        case MANAGER:
+
+                                layoutFragment = "/WEB-INF/jsp/common/layout-manager.jspf";
+
+                                profileFragment = "/WEB-INF/jsp/auth/account/profile-manager.jspf";
+
+                                themeClass = "theme-manager";
+
+                                break;
+
+                        case PT:
+
+                                layoutFragment = "/WEB-INF/jsp/common/layout-pt.jspf";
+
+                                profileFragment = "/WEB-INF/jsp/auth/account/profile-pt.jspf";
+
+                                themeClass = "theme-pt";
+
+                                break;
+
+                        case RECEPTIONIST:
+
+                                layoutFragment = "/WEB-INF/jsp/common/layout-receptionist.jspf";
+
+                                profileFragment = "/WEB-INF/jsp/auth/account/profile-receptionist.jspf";
+
+                                themeClass = "theme-receptionist";
+
+                                break;
+
+                        case CUSTOMER:
+
+                                layoutFragment = "/WEB-INF/jsp/common/layout-customer.jspf";
+
+                                profileFragment = "/WEB-INF/jsp/auth/account/profile-customer.jspf";
+
+                                themeClass = "theme-customer";
+
+                                break;
+
+                        default:
+
+                                throw new IllegalStateException(
+                                                "Vai trò Account Settings không hợp lệ.");
+                }
+
+                request.setAttribute(
+                                "layoutFragment",
+                                layoutFragment);
+
+                request.setAttribute(
+                                "profileFragment",
+                                profileFragment);
+
+                request.setAttribute(
+                                "themeClass",
+                                themeClass);
+
+                request.setAttribute(
+                                "hasDependentsTab",
+                                role == Role.CUSTOMER);
+        }
+
+        /**
+         * Xác định tab đang được mở.
+         *
+         * @param request request hiện tại
+         * @param role    vai trò hiện tại
+         * @return tên tab hợp lệ
+         */
+        private String resolveActiveTab(
+                        HttpServletRequest request,
+                        Role role) {
+
+                Object forcedTab = request.getAttribute(
+                                "activeTab");
+
+                if (forcedTab instanceof String) {
+
+                        return (String) forcedTab;
+                }
+
+                String requestedTab = RequestUtil.getTrimmedParam(
+                                request,
+                                "tab");
+
+                if (TAB_PASSWORD.equals(
+                                requestedTab)) {
+
+                        return TAB_PASSWORD;
+                }
+
+                if (TAB_DEPENDENTS.equals(
+                                requestedTab)
+                                && role == Role.CUSTOMER) {
+
+                        return TAB_DEPENDENTS;
+                }
+
+                return TAB_PROFILE;
+        }
 }

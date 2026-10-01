@@ -169,21 +169,13 @@
   border-color: var(--color-primary-border, rgba(212, 255, 63, 0.38));
 }
 
-/* Ảnh bìa / Thumbnail thẻ bài viết */
+/* Ảnh bìa / Thumbnail thẻ bài viết (đồng bộ theo home.css) */
 .post-thumb {
-  height: 142px;
-  position: relative;
-  overflow: hidden;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  color: rgba(255, 255, 255, 0.92);
-}
-
-.post-thumb-img {
   width: 100%;
-  height: 100%;
+  height: 200px;
   object-fit: cover;
+  object-position: center;
+  background: var(--color-surface-muted, #1F1E1B);
   display: block;
 }
 

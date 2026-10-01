@@ -14,8 +14,11 @@ import com.gms.listener.SessionRegistryListener;
 import com.gms.util.PasswordUtil;
 import com.gms.util.ValidationUtil;
 import java.sql.SQLException;
+import java.time.LocalDate;
 import com.gms.constant.AppConstants;
+import com.gms.util.DBContext;
 
+import java.sql.Connection;
 import java.io.IOException;
 import java.io.InputStream;
 import java.nio.file.Files;
@@ -28,493 +31,452 @@ import java.util.UUID;
  */
 public class AccountSettingsService {
 
-    private final AccountDAO accountDAO;
-    private final PersonDAO personDAO;
-    private final EmployeeDAO employeeDAO;
+        private final AccountDAO accountDAO;
+        private final PersonDAO personDAO;
+        private final EmployeeDAO employeeDAO;
+        private final AuditLogService auditLogService;
 
-    public AccountSettingsService() {
-        accountDAO = new AccountDAO();
-        personDAO = new PersonDAO();
-        employeeDAO = new EmployeeDAO();
-    }
-
-    /**
-     * Lấy thông tin tài khoản và hồ sơ của người dùng hiện tại.
-     *
-     * @param accountId id tài khoản đang đăng nhập
-     * @param sessionRole vai trò lưu trong session
-     * @return dữ liệu Account Settings
-     */
-    public ServiceResult<AccountSettingsView> getAccountSettings(
-            int accountId,
-            Role sessionRole
-    ) {
-
-        try {
-            Account account = accountDAO.findById(accountId);
-
-            if (account == null) {
-                String message = String.format(
-                        Messages.MSG08_NOT_FOUND,
-                        "tài khoản"
-                );
-
-                return ServiceResult.fail(message);
-            }
-
-            Person person = personDAO.findById(
-                    account.getPersonId()
-            );
-
-            if (person == null) {
-                String message = String.format(
-                        Messages.MSG08_NOT_FOUND,
-                        "hồ sơ"
-                );
-
-                return ServiceResult.fail(message);
-            }
-
-            Employee employee = null;
-
-            boolean isCustomer
-                    = sessionRole == Role.CUSTOMER;
-
-            if (!isCustomer) {
-                employee = employeeDAO.findByPersonId(
-                        person.getPersonId()
-                );
-            }
-
-            String employeeCode
-                    = employee == null
-                            ? null
-                            : employee.getEmployeeCode();
-
-            AccountSettingsView view
-                    = new AccountSettingsView(
-                            account.getAccountId(),
-                            person.getPersonId(),
-                            person.getFullName(),
-                            person.getDateOfBirth(),
-                            person.getPhone(),
-                            person.getEmail(),
-                            person.getAvatar(),
-                            sessionRole,
-                            employeeCode,
-                            employee == null ? null : employee.getPosition(),
-                            employee == null ? null : employee.getSpecialty(),
-                            employee == null ? null : employee.getYearsOfExperience(),
-                            employee == null ? null : employee.getHireDate(),
-                            employee == null ? null : employee.getCommissionRate(),
-                            employee == null ? null : employee.getStatus()
-                    );
-
-            return ServiceResult.ok(view);
-
-        } catch (SQLException e) {
-            e.printStackTrace();
-            return ServiceResult.fail(
-                    Messages.MSG04_SYSTEM_BUSY
-            );
-        }
-    }
-
-    /**
-     * Đổi mật khẩu cho chính tài khoản đang đăng nhập.
-     *
-     * Thứ tự kiểm tra: 1. Mật khẩu hiện tại có được nhập. 2. Mật khẩu hiện tại
-     * phải đúng. 3. Mật khẩu mới phải đúng định dạng. 4. Mật khẩu mới phải khác
-     * mật khẩu hiện tại. 5. Xác nhận mật khẩu phải khớp. 6. Cập nhật mật khẩu
-     * và đăng xuất các phiên khác.
-     *
-     * @param accountId id tài khoản hiện tại
-     * @param currentPassword mật khẩu hiện tại
-     * @param newPassword mật khẩu mới
-     * @param confirmPassword xác nhận mật khẩu mới
-     * @param currentSessionId id phiên hiện tại cần giữ lại
-     * @return kết quả đổi mật khẩu
-     */
-    public ServiceResult<Void> changePassword(
-            int accountId,
-            String currentPassword,
-            String newPassword,
-            String confirmPassword,
-            String currentSessionId
-    ) {
-
-        // B1: Bắt buộc nhập mật khẩu hiện tại
-        if (ValidationUtil.isNullOrEmpty(
-                currentPassword
-        )) {
-            return ServiceResult.failField(
-                    "currentPassword",
-                    String.format(Messages.MSG09_REQUIRED, "Mật khẩu hiện tại")
-            );
+        public AccountSettingsService() {
+                accountDAO = new AccountDAO();
+                personDAO = new PersonDAO();
+                employeeDAO = new EmployeeDAO();
+                auditLogService = new AuditLogService();
         }
 
-        try {
-            Account account
-                    = accountDAO.findById(accountId);
+        /**
+         * Lấy thông tin tài khoản và hồ sơ của người dùng hiện tại.
+         *
+         * @param accountId   id tài khoản đang đăng nhập
+         * @param sessionRole vai trò lưu trong session
+         * @return dữ liệu Account Settings
+         */
+        public ServiceResult<AccountSettingsView> getAccountSettings(
+                        int accountId,
+                        Role sessionRole) {
 
-            if (account == null) {
-                return ServiceResult.fail(
-                        String.format(Messages.MSG08_NOT_FOUND, "tài khoản")
-                );
-            }
+                try {
+                        Account account = accountDAO.findById(accountId);
 
-            // B2: Kiểm tra mật khẩu hiện tại trước tiên
-            boolean isCurrentPasswordCorrect
-                    = PasswordUtil.checkPassword(
-                            currentPassword,
-                            account.getPasswordHash()
-                    );
+                        if (account == null) {
+                                String message = String.format(
+                                                Messages.MSG08_NOT_FOUND,
+                                                "tài khoản");
 
-            if (!isCurrentPasswordCorrect) {
-                return ServiceResult.failField(
-                        "currentPassword",
-                        Messages.MSG71_CURRENT_PASSWORD_WRONG
-                );
-            }
+                                return ServiceResult.fail(message);
+                        }
 
-            // B3: Chỉ kiểm tra mật khẩu mới
-            // sau khi mật khẩu hiện tại đã đúng
-            if (ValidationUtil.isNullOrEmpty(
-                    newPassword
-            )) {
-                return ServiceResult.failField(
-                        "newPassword",
-                        String.format(Messages.MSG09_REQUIRED, "Mật khẩu mới")
-                );
-            }
+                        Person person = personDAO.findById(
+                                        account.getPersonId());
 
-            boolean isNewPasswordValid
-                    = ValidationUtil.isValidPassword(
-                            newPassword
-                    );
+                        if (person == null) {
+                                String message = String.format(
+                                                Messages.MSG08_NOT_FOUND,
+                                                "hồ sơ");
 
-            if (!isNewPasswordValid) {
-                return ServiceResult.failField(
-                        "newPassword",
-                        String.format(Messages.MSG66_PASSWORD_RULE,
-                                AppConstants.PASSWORD_MIN_LENGTH, AppConstants.PASSWORD_MAX_LENGTH)
-                );
-            }
+                                return ServiceResult.fail(message);
+                        }
 
-            // B4: Mật khẩu mới không được giống mật khẩu cũ
-            boolean isSameAsCurrentPassword
-                    = PasswordUtil.checkPassword(
-                            newPassword,
-                            account.getPasswordHash()
-                    );
+                        Employee employee = null;
 
-            if (isSameAsCurrentPassword) {
-                return ServiceResult.failField(
-                        "newPassword",
-                        Messages.MSG48_PASSWORD_SAME_AS_OLD
-                );
-            }
+                        boolean isCustomer = sessionRole == Role.CUSTOMER;
 
-            // B5: Bắt buộc nhập xác nhận mật khẩu
-            if (ValidationUtil.isNullOrEmpty(
-                    confirmPassword
-            )) {
-                return ServiceResult.failField(
-                        "confirmPassword",
-                        String.format(Messages.MSG09_REQUIRED, "Nhập lại mật khẩu mới")
-                );
-            }
+                        if (!isCustomer) {
+                                employee = employeeDAO.findByPersonId(
+                                                person.getPersonId());
+                        }
 
-            // B6: Xác nhận phải khớp mật khẩu mới
-            boolean isPasswordMatched
-                    = newPassword.equals(
-                            confirmPassword
-                    );
+                        String employeeCode = employee == null
+                                        ? null
+                                        : employee.getEmployeeCode();
 
-            if (!isPasswordMatched) {
-                return ServiceResult.failField(
-                        "confirmPassword",
-                        Messages.MSG47_PASSWORD_MISMATCH
-                );
-            }
+                        LocalDate hireDate = employee == null
+                                        ? null
+                                        : employee.getHireDate();
 
-            // B7: Hash mật khẩu mới
-            String newPasswordHash
-                    = PasswordUtil.hashPassword(
-                            newPassword
-                    );
+                        String employmentStatus = employee == null || employee.getStatus() == null
+                                        ? null
+                                        : employee.getStatus().getDbValue();
 
-            boolean isUpdated
-                    = accountDAO.updatePasswordHash(
-                            accountId,
-                            newPasswordHash
-                    );
+                        AccountSettingsView view = new AccountSettingsView(
+                                        account.getAccountId(),
+                                        person.getPersonId(),
+                                        person.getFullName(),
+                                        person.getDateOfBirth(),
+                                        person.getPhone(),
+                                        person.getEmail(),
+                                        person.getAvatar(),
+                                        sessionRole,
+                                        employeeCode,
+                                        hireDate,
+                                        employmentStatus);
 
-            if (!isUpdated) {
-                return ServiceResult.fail(
-                        Messages.MSG04_SYSTEM_BUSY
-                );
-            }
+                        return ServiceResult.ok(view);
 
-            // B8: Đăng xuất tất cả phiên khác,
-            // giữ lại phiên hiện tại
-            SessionRegistryListener
-                    .invalidateSessionsOfAccount(
-                            accountId,
-                            currentSessionId
-                    );
-
-            return ServiceResult.ok(null);
-
-        } catch (SQLException e) {
-            e.printStackTrace();
-
-            return ServiceResult.fail(
-                    Messages.MSG04_SYSTEM_BUSY
-            );
-        }
-    }
-
-    /**
-     * Cập nhật avatar cho chính tài khoản đang đăng nhập.
-     *
-     * Ảnh hợp lệ phải là JPG hoặc PNG và không vượt quá dung lượng được quy
-     * định bởi ValidationUtil/AppConstants.
-     *
-     * @param accountId id tài khoản hiện tại
-     * @param contentType MIME type của file
-     * @param sizeInBytes kích thước file
-     * @param inputStream dữ liệu ảnh
-     * @param uploadDirectory thư mục lưu avatar vật lý
-     * @return kết quả cập nhật
-     */
-    public ServiceResult<Void> updateAvatar(
-            int accountId,
-            String contentType,
-            long sizeInBytes,
-            InputStream inputStream,
-            Path uploadDirectory
-    ) {
-
-        boolean isValidImage
-                = ValidationUtil.isValidImageFile(
-                        contentType,
-                        sizeInBytes
-                );
-
-        if (!isValidImage) {
-
-            long maxSizeMb
-                    = AppConstants.IMAGE_MAX_BYTES
-                    / (1024L * 1024L);
-
-            String message
-                    = String.format(
-                            Messages.MSG20_INVALID_IMAGE,
-                            maxSizeMb + " MB"
-                    );
-
-            return ServiceResult.failField(
-                    "avatarFile",
-                    message
-            );
+                } catch (SQLException e) {
+                        e.printStackTrace();
+                        return ServiceResult.fail(
+                                        Messages.MSG04_SYSTEM_BUSY);
+                }
         }
 
-        if (inputStream == null
-                || uploadDirectory == null) {
+        /**
+         * Đổi mật khẩu cho chính tài khoản đang đăng nhập.
+         *
+         * Thứ tự kiểm tra: 1. Mật khẩu hiện tại có được nhập. 2. Mật khẩu hiện tại
+         * phải đúng. 3. Mật khẩu mới phải đúng định dạng. 4. Mật khẩu mới phải khác
+         * mật khẩu hiện tại. 5. Xác nhận mật khẩu phải khớp. 6. Cập nhật mật khẩu
+         * và đăng xuất các phiên khác.
+         *
+         * @param accountId        id tài khoản hiện tại
+         * @param currentPassword  mật khẩu hiện tại
+         * @param newPassword      mật khẩu mới
+         * @param confirmPassword  xác nhận mật khẩu mới
+         * @param currentSessionId id phiên hiện tại cần giữ lại
+         * @return kết quả đổi mật khẩu
+         */
+        public ServiceResult<Void> changePassword(
+                        int accountId,
+                        String currentPassword,
+                        String newPassword,
+                        String confirmPassword,
+                        String currentSessionId) {
 
-            return ServiceResult.fail(
-                    Messages.MSG04_SYSTEM_BUSY
-            );
+                // B1: Bắt buộc nhập mật khẩu hiện tại
+                if (ValidationUtil.isNullOrEmpty(
+                                currentPassword)) {
+                        return ServiceResult.failField(
+                                        "currentPassword",
+                                        String.format(Messages.MSG09_REQUIRED, "Mật khẩu hiện tại"));
+                }
+
+                try {
+                        Account account = accountDAO.findById(accountId);
+
+                        if (account == null) {
+                                return ServiceResult.fail(
+                                                String.format(Messages.MSG08_NOT_FOUND, "tài khoản"));
+                        }
+
+                        // B2: Kiểm tra mật khẩu hiện tại trước tiên
+                        boolean isCurrentPasswordCorrect = PasswordUtil.checkPassword(
+                                        currentPassword,
+                                        account.getPasswordHash());
+
+                        if (!isCurrentPasswordCorrect) {
+                                return ServiceResult.failField(
+                                                "currentPassword",
+                                                Messages.MSG71_CURRENT_PASSWORD_WRONG);
+                        }
+
+                        // B3: Chỉ kiểm tra mật khẩu mới
+                        // sau khi mật khẩu hiện tại đã đúng
+                        if (ValidationUtil.isNullOrEmpty(
+                                        newPassword)) {
+                                return ServiceResult.failField(
+                                                "newPassword",
+                                                String.format(Messages.MSG09_REQUIRED, "Mật khẩu mới"));
+                        }
+
+                        boolean isNewPasswordValid = ValidationUtil.isValidPassword(
+                                        newPassword);
+
+                        if (!isNewPasswordValid) {
+                                return ServiceResult.failField(
+                                                "newPassword",
+                                                String.format(Messages.MSG66_PASSWORD_RULE,
+                                                                AppConstants.PASSWORD_MIN_LENGTH,
+                                                                AppConstants.PASSWORD_MAX_LENGTH));
+                        }
+
+                        // B4: Mật khẩu mới không được giống mật khẩu cũ
+                        boolean isSameAsCurrentPassword = PasswordUtil.checkPassword(
+                                        newPassword,
+                                        account.getPasswordHash());
+
+                        if (isSameAsCurrentPassword) {
+                                return ServiceResult.failField(
+                                                "newPassword",
+                                                Messages.MSG48_PASSWORD_SAME_AS_OLD);
+                        }
+
+                        // B5: Bắt buộc nhập xác nhận mật khẩu
+                        if (ValidationUtil.isNullOrEmpty(
+                                        confirmPassword)) {
+                                return ServiceResult.failField(
+                                                "confirmPassword",
+                                                String.format(Messages.MSG09_REQUIRED, "Nhập lại mật khẩu mới"));
+                        }
+
+                        // B6: Xác nhận phải khớp mật khẩu mới
+                        boolean isPasswordMatched = newPassword.equals(
+                                        confirmPassword);
+
+                        if (!isPasswordMatched) {
+                                return ServiceResult.failField(
+                                                "confirmPassword",
+                                                Messages.MSG47_PASSWORD_MISMATCH);
+                        }
+
+                        // B7: Hash mật khẩu mới
+                        String newPasswordHash = PasswordUtil.hashPassword(
+                                        newPassword);
+
+                        // B8: Cập nhật mật khẩu và ghi AuditLog
+                        // trong cùng một transaction
+                        try (Connection conn = DBContext.getConnection()) {
+
+                                conn.setAutoCommit(false);
+
+                                try {
+                                        boolean isUpdated = accountDAO.updatePasswordHash(
+                                                        conn,
+                                                        accountId,
+                                                        newPasswordHash);
+
+                                        if (!isUpdated) {
+                                                conn.rollback();
+
+                                                return ServiceResult.fail(
+                                                                Messages.MSG04_SYSTEM_BUSY);
+                                        }
+
+                                        auditLogService.logInTransaction(
+                                                        conn,
+                                                        accountId,
+                                                        "Người dùng đã thay đổi mật khẩu của tài khoản cá nhân.",
+                                                        "Account",
+                                                        accountId,
+                                                        "PasswordHash",
+                                                        null,
+                                                        null,
+                                                        null);
+
+                                        conn.commit();
+
+                                } catch (SQLException e) {
+                                        conn.rollback();
+                                        e.printStackTrace();
+
+                                        return ServiceResult.fail(
+                                                        Messages.MSG04_SYSTEM_BUSY);
+                                }
+                        }
+
+                        // B9: Đăng xuất tất cả phiên khác,
+                        // giữ lại phiên hiện tại
+                        SessionRegistryListener
+                                        .invalidateSessionsOfAccount(
+                                                        accountId,
+                                                        currentSessionId);
+
+                        return ServiceResult.ok(null);
+
+                } catch (SQLException e) {
+                        e.printStackTrace();
+
+                        return ServiceResult.fail(
+                                        Messages.MSG04_SYSTEM_BUSY);
+                }
         }
 
-        Path newFilePath = null;
+        /**
+         * Cập nhật avatar cho chính tài khoản đang đăng nhập.
+         *
+         * Ảnh hợp lệ phải là JPG hoặc PNG và không vượt quá dung lượng được quy
+         * định bởi ValidationUtil/AppConstants.
+         *
+         * @param accountId       id tài khoản hiện tại
+         * @param contentType     MIME type của file
+         * @param sizeInBytes     kích thước file
+         * @param inputStream     dữ liệu ảnh
+         * @param uploadDirectory thư mục lưu avatar vật lý
+         * @return kết quả cập nhật
+         */
+        public ServiceResult<Void> updateAvatar(
+                        int accountId,
+                        String contentType,
+                        long sizeInBytes,
+                        InputStream inputStream,
+                        Path uploadDirectory) {
 
-        try {
+                boolean isValidImage = ValidationUtil.isValidImageFile(
+                                contentType,
+                                sizeInBytes);
 
-            Account account
-                    = accountDAO.findById(accountId);
+                if (!isValidImage) {
 
-            if (account == null) {
+                        long maxSizeMb = AppConstants.IMAGE_MAX_BYTES
+                                        / (1024L * 1024L);
 
-                return ServiceResult.fail(
-                        String.format(
-                                Messages.MSG08_NOT_FOUND,
-                                "tài khoản"
-                        )
-                );
-            }
+                        String message = String.format(
+                                        Messages.MSG20_INVALID_IMAGE,
+                                        maxSizeMb + " MB");
 
-            Person person
-                    = personDAO.findById(
-                            account.getPersonId()
-                    );
+                        return ServiceResult.failField(
+                                        "avatarFile",
+                                        message);
+                }
 
-            if (person == null) {
+                if (inputStream == null
+                                || uploadDirectory == null) {
 
-                return ServiceResult.fail(
-                        String.format(
-                                Messages.MSG08_NOT_FOUND,
-                                "hồ sơ"
-                        )
-                );
-            }
+                        return ServiceResult.fail(
+                                        Messages.MSG04_SYSTEM_BUSY);
+                }
 
-            Files.createDirectories(
-                    uploadDirectory
-            );
-
-            String extension
-                    = "image/png".equals(contentType)
-                    ? ".png"
-                    : ".jpg";
-
-            String fileName
-                    = "avatar-"
-                    + person.getPersonId()
-                    + "-"
-                    + UUID.randomUUID()
-                    + extension;
-
-            newFilePath
-                    = uploadDirectory
-                            .resolve(fileName)
-                            .normalize();
-
-            Path normalizedDirectory
-                    = uploadDirectory
-                            .toAbsolutePath()
-                            .normalize();
-
-            Path normalizedFile
-                    = newFilePath
-                            .toAbsolutePath()
-                            .normalize();
-
-            if (!normalizedFile.startsWith(
-                    normalizedDirectory
-            )) {
-
-                return ServiceResult.fail(
-                        Messages.MSG04_SYSTEM_BUSY
-                );
-            }
-
-            Files.copy(
-                    inputStream,
-                    newFilePath,
-                    StandardCopyOption.REPLACE_EXISTING
-            );
-
-            String avatarPath
-                    = "/uploads/avatar/"
-                    + fileName;
-
-            boolean isUpdated
-                    = personDAO.updateAvatar(
-                            person.getPersonId(),
-                            avatarPath
-                    );
-
-            if (!isUpdated) {
-
-                Files.deleteIfExists(
-                        newFilePath
-                );
-
-                return ServiceResult.fail(
-                        Messages.MSG04_SYSTEM_BUSY
-                );
-            }
-
-            deleteOldAvatarFile(
-                    person.getAvatar(),
-                    uploadDirectory
-            );
-
-            return ServiceResult.ok(null);
-
-        } catch (SQLException | IOException e) {
-
-            if (newFilePath != null) {
+                Path newFilePath = null;
 
                 try {
 
-                    Files.deleteIfExists(
-                            newFilePath
-                    );
+                        Account account = accountDAO.findById(accountId);
+
+                        if (account == null) {
+
+                                return ServiceResult.fail(
+                                                String.format(
+                                                                Messages.MSG08_NOT_FOUND,
+                                                                "tài khoản"));
+                        }
+
+                        Person person = personDAO.findById(
+                                        account.getPersonId());
+
+                        if (person == null) {
+
+                                return ServiceResult.fail(
+                                                String.format(
+                                                                Messages.MSG08_NOT_FOUND,
+                                                                "hồ sơ"));
+                        }
+
+                        Files.createDirectories(
+                                        uploadDirectory);
+
+                        String extension = "image/png".equals(contentType)
+                                        ? ".png"
+                                        : ".jpg";
+
+                        String fileName = "avatar-"
+                                        + person.getPersonId()
+                                        + "-"
+                                        + UUID.randomUUID()
+                                        + extension;
+
+                        newFilePath = uploadDirectory
+                                        .resolve(fileName)
+                                        .normalize();
+
+                        Path normalizedDirectory = uploadDirectory
+                                        .toAbsolutePath()
+                                        .normalize();
+
+                        Path normalizedFile = newFilePath
+                                        .toAbsolutePath()
+                                        .normalize();
+
+                        if (!normalizedFile.startsWith(
+                                        normalizedDirectory)) {
+
+                                return ServiceResult.fail(
+                                                Messages.MSG04_SYSTEM_BUSY);
+                        }
+
+                        Files.copy(
+                                        inputStream,
+                                        newFilePath,
+                                        StandardCopyOption.REPLACE_EXISTING);
+
+                        String avatarPath = "/uploads/avatar/"
+                                        + fileName;
+
+                        boolean isUpdated = personDAO.updateAvatar(
+                                        person.getPersonId(),
+                                        avatarPath);
+
+                        if (!isUpdated) {
+
+                                Files.deleteIfExists(
+                                                newFilePath);
+
+                                return ServiceResult.fail(
+                                                Messages.MSG04_SYSTEM_BUSY);
+                        }
+
+                        deleteOldAvatarFile(
+                                        person.getAvatar(),
+                                        uploadDirectory);
+
+                        return ServiceResult.ok(null);
+
+                } catch (SQLException | IOException e) {
+
+                        if (newFilePath != null) {
+
+                                try {
+
+                                        Files.deleteIfExists(
+                                                        newFilePath);
+
+                                } catch (IOException ignored) {
+                                        // Không làm thay đổi kết quả lỗi chính.
+                                }
+                        }
+
+                        e.printStackTrace();
+
+                        return ServiceResult.fail(
+                                        Messages.MSG04_SYSTEM_BUSY);
+                }
+        }
+
+        /**
+         * Xóa avatar cũ do chức năng Account Settings tạo ra. Không đụng tới ảnh
+         * check-in hay loại ảnh khác.
+         *
+         * @param oldAvatarPath   đường dẫn avatar cũ trong DB
+         * @param uploadDirectory thư mục avatar vật lý
+         */
+        private void deleteOldAvatarFile(
+                        String oldAvatarPath,
+                        Path uploadDirectory) {
+
+                if (ValidationUtil.isNullOrEmpty(
+                                oldAvatarPath)) {
+                        return;
+                }
+
+                String avatarPrefix = "/uploads/avatar/";
+
+                if (!oldAvatarPath.startsWith(
+                                avatarPrefix)) {
+                        return;
+                }
+
+                String oldFileName = oldAvatarPath.substring(
+                                avatarPrefix.length());
+
+                Path normalizedDirectory = uploadDirectory
+                                .toAbsolutePath()
+                                .normalize();
+
+                Path oldFile = uploadDirectory
+                                .resolve(oldFileName)
+                                .toAbsolutePath()
+                                .normalize();
+
+                if (!oldFile.startsWith(
+                                normalizedDirectory)) {
+                        return;
+                }
+
+                try {
+
+                        Files.deleteIfExists(
+                                        oldFile);
 
                 } catch (IOException ignored) {
-                    // Không làm thay đổi kết quả lỗi chính.
+                        // Avatar mới đã cập nhật thành công;
+                        // lỗi cleanup file cũ không làm rollback nghiệp vụ.
                 }
-            }
-
-            e.printStackTrace();
-
-            return ServiceResult.fail(
-                    Messages.MSG04_SYSTEM_BUSY
-            );
         }
-    }
-
-    /**
-     * Xóa avatar cũ do chức năng Account Settings tạo ra. Không đụng tới ảnh
-     * check-in hay loại ảnh khác.
-     *
-     * @param oldAvatarPath đường dẫn avatar cũ trong DB
-     * @param uploadDirectory thư mục avatar vật lý
-     */
-    private void deleteOldAvatarFile(
-            String oldAvatarPath,
-            Path uploadDirectory
-    ) {
-
-        if (ValidationUtil.isNullOrEmpty(
-                oldAvatarPath
-        )) {
-            return;
-        }
-
-        String avatarPrefix
-                = "/uploads/avatar/";
-
-        if (!oldAvatarPath.startsWith(
-                avatarPrefix
-        )) {
-            return;
-        }
-
-        String oldFileName
-                = oldAvatarPath.substring(
-                        avatarPrefix.length()
-                );
-
-        Path normalizedDirectory
-                = uploadDirectory
-                        .toAbsolutePath()
-                        .normalize();
-
-        Path oldFile
-                = uploadDirectory
-                        .resolve(oldFileName)
-                        .toAbsolutePath()
-                        .normalize();
-
-        if (!oldFile.startsWith(
-                normalizedDirectory
-        )) {
-            return;
-        }
-
-        try {
-
-            Files.deleteIfExists(
-                    oldFile
-            );
-
-        } catch (IOException ignored) {
-            // Avatar mới đã cập nhật thành công;
-            // lỗi cleanup file cũ không làm rollback nghiệp vụ.
-        }
-    }
 }

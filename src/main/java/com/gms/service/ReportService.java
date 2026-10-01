@@ -1,7 +1,7 @@
 package com.gms.service;
 
 import com.gms.constant.Messages;
-import com.gms.dao.ReportDAO;
+import com.gms.dao.ManagerReportDAO;
 import com.gms.dto.ReportView;
 import com.gms.dto.ServiceResult;
 import com.gms.util.DBContext;
@@ -23,7 +23,7 @@ import java.util.TreeMap;
  *
  * Luồng getReport:
  *   B1: kiểm tra From/To (cả hai bắt buộc, From ≤ To, không giới hạn độ dài — MSG16)
- *   B2: mở 1 Connection, chạy các truy vấn của ReportDAO (cùng "ảnh chụp")
+ *   B2: mở 1 Connection, chạy các truy vấn của ManagerReportDAO (cùng "ảnh chụp")
  *   B3: dựng biểu đồ: ≤ 62 ngày → cột theo ngày; dài hơn → gộp cột theo tháng (khoảng ngày không giới hạn)
  *   B4: trả ReportView; lỗi DB → MSG04
  *
@@ -43,7 +43,7 @@ public class ReportService {
     private static final DateTimeFormatter FULL_DATE_TIME = DateTimeFormatter.ofPattern("dd/MM/yyyy HH:mm");
     private static final String DAY_PASS = "DayPass";
 
-    private final ReportDAO reportDAO = new ReportDAO();
+    private final ManagerReportDAO managerReportDAO = new ManagerReportDAO();
 
     /**
      * Dựng báo cáo cho khoảng ngày [from, to] (tính cả hai đầu).
@@ -66,11 +66,11 @@ public class ReportService {
         try (Connection conn = DBContext.getConnection()) {
             ReportView view = new ReportView(from, to, DateTimeUtil.now());
 
-            long[] revenueAndVat = reportDAO.sumRevenueAndVat(conn, start, endExclusive);
+            long[] revenueAndVat = managerReportDAO.sumRevenueAndVat(conn, start, endExclusive);
             view.setTotalRevenue(revenueAndVat[0]);
             view.setTotalVat(revenueAndVat[1]);
 
-            List<ReportView.PackageRow> packages = reportDAO.findRevenueByPackage(conn, start, endExclusive);
+            List<ReportView.PackageRow> packages = managerReportDAO.findRevenueByPackage(conn, start, endExclusive);
             view.setPackages(packages);
             long dayPassRevenue = 0;
             for (ReportView.PackageRow row : packages) {
@@ -80,11 +80,11 @@ public class ReportService {
             }
             view.setDayPassRevenue(dayPassRevenue);
 
-            long[] checkIns = reportDAO.countCheckIns(conn, start, endExclusive);
+            long[] checkIns = managerReportDAO.countCheckIns(conn, start, endExclusive);
             view.setCheckInCount(checkIns[0]);
             view.setDayPassVisits(checkIns[1]);
 
-            List<ReportView.PtRow> ptRows = reportDAO.findPtCommission(conn, from, to);
+            List<ReportView.PtRow> ptRows = managerReportDAO.findPtCommission(conn, from, to);
             view.setPtRows(ptRows);
             long totalCommission = 0;
             for (ReportView.PtRow row : ptRows) {
@@ -92,12 +92,12 @@ public class ReportService {
             }
             view.setTotalCommission(totalCommission);
 
-            view.setActiveMembers(reportDAO.countActiveMembers(conn));
-            view.setRunningPackages(reportDAO.countRunningPackages(conn));
-            view.setNewMembers(reportDAO.countNewMembers(conn, start, endExclusive));
+            view.setActiveMembers(managerReportDAO.countActiveMembers(conn));
+            view.setRunningPackages(managerReportDAO.countRunningPackages(conn));
+            view.setNewMembers(managerReportDAO.countNewMembers(conn, start, endExclusive));
 
             // B3
-            buildChart(view, reportDAO.findDailyRevenue(conn, start, endExclusive));
+            buildChart(view, managerReportDAO.findDailyRevenue(conn, start, endExclusive));
 
             // B4
             return ServiceResult.ok(view);

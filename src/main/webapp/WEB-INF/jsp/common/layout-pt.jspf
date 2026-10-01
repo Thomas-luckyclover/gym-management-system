@@ -1,0 +1,74 @@
+<%--
+  layout-pt.jspf — Sidebar dock khu Huấn luyện viên (/pt/*).
+  Khớp prototype pt/trang-chu.html (menu: Hôm nay · Lịch dạy · Khách phụ trách · Cá nhân).
+  Cùng cấu trúc class với layout-manager.jspf (dockwrap / sidebar / nav-link / dock-handle)
+  để trang dùng chung như Cài đặt tài khoản include được luôn.
+  Trang include file này đặt request attribute "activeNav" để tô mục đang mở, VD "dashboard".
+  Các trang PT khác (điểm danh, lịch rảnh...) chưa làm → bấm vào sẽ ra 404 cho tới khi có Servlet.
+--%>
+<%@ page pageEncoding="UTF-8" %>
+<%@ taglib prefix="c" uri="jakarta.tags.core" %>
+
+<div class="dockwrap" id="dock">
+  <aside class="sidebar">
+    <div class="brand">
+      <div class="brand-name">Super Gym</div>
+      <div class="brand-role">Huấn luyện viên</div>
+    </div>
+
+    <nav class="nav" aria-label="Điều hướng chính">
+      <div class="nav-group">Hôm nay</div>
+      <a href="${pageContext.request.contextPath}/pt/dashboard"
+         class="nav-link<c:if test="${activeNav == 'dashboard'}"> active</c:if>"
+         <c:if test="${activeNav == 'dashboard'}">aria-current="page"</c:if>>
+        <i class="fa-solid fa-gauge-high" aria-hidden="true"></i><span>Tổng quan</span>
+      </a>
+      <a href="${pageContext.request.contextPath}/pt/sessions/attendance"
+         class="nav-link<c:if test="${activeNav == 'attendance'}"> active</c:if>"
+         <c:if test="${activeNav == 'attendance'}">aria-current="page"</c:if>>
+        <i class="fa-solid fa-clipboard-check" aria-hidden="true"></i><span>Điểm danh</span>
+      </a>
+
+      <div class="nav-group">Lịch dạy</div>
+      <a href="${pageContext.request.contextPath}/pt/time-slots"
+         class="nav-link<c:if test="${activeNav == 'time-slots'}"> active</c:if>"
+         <c:if test="${activeNav == 'time-slots'}">aria-current="page"</c:if>>
+        <i class="fa-solid fa-calendar-days" aria-hidden="true"></i><span>Lịch rảnh</span>
+      </a>
+
+      <div class="nav-group">Khách phụ trách</div>
+      <a href="${pageContext.request.contextPath}/pt/clients"
+         class="nav-link<c:if test="${activeNav == 'clients'}"> active</c:if>"
+         <c:if test="${activeNav == 'clients'}">aria-current="page"</c:if>>
+        <i class="fa-solid fa-user-group" aria-hidden="true"></i><span>Khách của tôi</span>
+      </a>
+
+      <div class="nav-group">Cá nhân</div>
+      <a href="${pageContext.request.contextPath}/pt/leave-requests"
+         class="nav-link<c:if test="${activeNav == 'leaves'}"> active</c:if>"
+         <c:if test="${activeNav == 'leaves'}">aria-current="page"</c:if>>
+        <i class="fa-solid fa-plane-departure" aria-hidden="true"></i><span>Nghỉ phép</span>
+      </a>
+      <a href="${pageContext.request.contextPath}/account"
+         class="nav-link<c:if test="${activeNav == 'account'}"> active</c:if>"
+         <c:if test="${activeNav == 'account'}">aria-current="page"</c:if>>
+        <i class="fa-solid fa-user-gear" aria-hidden="true"></i><span>Cài đặt tài khoản</span>
+      </a>
+    </nav>
+
+    <div class="side-foot">
+      <a href="${pageContext.request.contextPath}/logout" class="logout">
+        <i class="fa-solid fa-arrow-right-from-bracket" aria-hidden="true"></i> Đăng xuất
+      </a>
+    </div>
+  </aside>
+
+  <button class="dock-handle"
+          id="dockHandle"
+          type="button"
+          aria-label="Mở menu điều hướng"
+          aria-expanded="false"
+          aria-controls="dock">
+    <i class="fa-solid fa-chevron-right" aria-hidden="true"></i>
+  </button>
+</div>
