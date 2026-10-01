@@ -150,7 +150,13 @@
           <div class="msg-banner info" role="status">
             <i class="fa-solid fa-circle-info"></i>
             <div>
-              <b>Nhập mã đã gửi tới <c:out value="${verifyTarget}" /></b>
+              <div><b>Nhập mã đã gửi tới <c:out value="${verifyTarget}" /></b></div>
+              <div class="account-countdown-wrap">
+                <i class="fa-regular fa-clock"></i>
+                <span>Mã có hiệu lực trong:</span>
+                <strong id="codeExpirationTimer" class="countdown-badge tabular"
+                        data-countdown-seconds="${not empty codeSecondsLeft ? codeSecondsLeft : 900}">15:00</strong>
+              </div>
             </div>
           </div>
           <div class="field">
