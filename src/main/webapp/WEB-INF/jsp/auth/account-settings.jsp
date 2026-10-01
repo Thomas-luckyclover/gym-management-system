@@ -56,6 +56,7 @@
         </c:when>
 
         <c:when test="${currentRole.dbValue eq 'Customer'}">
+            <c:set var="activeSidebar" value="account" />
             <%@ include file="/WEB-INF/jsp/common/layout-customer.jspf" %>
         </c:when>
 
@@ -294,21 +295,7 @@
 
                         <c:when test="${activeTab eq 'dependents' and hasDependentsTab}">
 
-                            <section class="account-card">
-
-                                <div class="account-card-body">
-
-                                    <h2>
-                                        Hồ sơ phụ thuộc
-                                    </h2>
-
-                                    <p class="account-subtitle">
-                                        Nội dung hồ sơ phụ thuộc đang chờ tích hợp từ Customer Account Settings.
-                                    </p>
-
-                                </div>
-
-                            </section>
+                            <%@ include file="/WEB-INF/jsp/auth/account/tab-dependents.jspf" %>
 
                         </c:when>
 

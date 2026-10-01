@@ -109,6 +109,7 @@
         <c:if test="${not empty avatarError}">
           <span class="field-error" style="display: block; margin-top: var(--space-2);"><c:out value="${avatarError}" /></span>
         </c:if>
+        <span id="avatarClientError" class="field-error is-hidden" style="display: block; margin-top: var(--space-2);"></span>
       </div>
     </div>
 

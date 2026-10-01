@@ -1,39 +1,66 @@
-<%@ page contentType="text/html; charset=UTF-8" pageEncoding="UTF-8" %>
+<%@ page pageEncoding="UTF-8" %>
 <%@ taglib prefix="c" uri="jakarta.tags.core" %>
 
-<section class="panel">
-    <div class="panel-head"><h2>Hồ sơ phụ thuộc</h2></div>
+<section class="account-card">
+    <div class="account-card-body">
+        <h2>Hồ sơ phụ thuộc</h2>
+        <p class="account-subtitle">Danh sách hồ sơ trẻ em mà bạn là người giám hộ. Mọi thay đổi về hồ sơ con vui lòng liên hệ quầy Lễ tân.</p>
+    </div>
 
     <c:choose>
         <c:when test="${not empty dependents}">
-            <div class="data-list">
+            <ul class="dep-list">
                 <c:forEach var="dep" items="${dependents}">
-                    <div class="data-row">
-                        <div class="row-main">
-                            <div class="row-title">
+                    <li class="dep-item">
+                        <div class="dep-avatar">
+                            <c:choose>
+                                <c:when test="${not empty dep.fullName}">
+                                    <c:out value="${dep.fullName.substring(0, 1)}" />
+                                </c:when>
+                                <c:otherwise>?</c:otherwise>
+                            </c:choose>
+                        </div>
+                        <div class="dep-info">
+                            <div class="dep-name">
                                 <c:out value="${dep.fullName}" />
-                                <span class="badge badge-muted"><c:out value="${dep.ageLabel}" /></span>
+                                <c:if test="${dep.underTen}">
+                                    <span class="dep-badge">Dưới 10 tuổi · Không đặt PT</span>
+                                </c:if>
                             </div>
-                            <div class="row-meta">
-                                <span><i class="fa-solid fa-id-card"></i> <c:out value="${dep.customerCode}" /></span>
-                                <c:if test="${not empty dep.activePackageLabel}">
-                                    <span><i class="fa-solid fa-dumbbell"></i> <c:out value="${dep.activePackageLabel}" /></span>
-                                </c:if>
-                                <c:if test="${empty dep.activePackageLabel}">
-                                    <span class="muted"><i class="fa-solid fa-dumbbell"></i> Chưa có gói hiệu lực</span>
-                                </c:if>
+                            <div class="dep-meta">
+                                <span>
+                                    <i class="fa-solid fa-id-card"></i>
+                                    <c:out value="${dep.customerCode}" default="—" />
+                                </span>
+                                <span>
+                                    <i class="fa-solid fa-cake-candles"></i>
+                                    <c:out value="${dep.ageLabel}" default="—" />
+                                </span>
+                                <c:choose>
+                                    <c:when test="${not empty dep.activePackageLabel}">
+                                        <span class="dep-pkg dep-pkg--active">
+                                            <i class="fa-solid fa-dumbbell"></i>
+                                            <c:out value="${dep.activePackageLabel}" />
+                                        </span>
+                                    </c:when>
+                                    <c:otherwise>
+                                        <span class="dep-pkg dep-pkg--none">
+                                            <i class="fa-solid fa-dumbbell"></i>
+                                            Chưa có gói hiệu lực
+                                        </span>
+                                    </c:otherwise>
+                                </c:choose>
                             </div>
                         </div>
-                    </div>
+                    </li>
                 </c:forEach>
-            </div>
-            <p class="muted">Dưới 10 tuổi không đặt được buổi PT. Mọi thay đổi về lịch liên hệ trực tiếp PT phụ trách.</p>
+            </ul>
         </c:when>
         <c:otherwise>
-            <div class="empty-state">
-                <i class="fa-solid fa-user-group"></i>
+            <div class="dep-empty">
+                <i class="fa-solid fa-user-group dep-empty-icon"></i>
                 <p>Bạn chưa có hồ sơ phụ thuộc nào.</p>
-                <p class="muted">Đăng ký hồ sơ phụ thuộc (con dưới 18 tuổi) tại quầy Lễ tân.</p>
+                <p class="account-subtitle" style="margin-bottom: 0;">Đăng ký hồ sơ phụ thuộc (con dưới 18 tuổi) tại quầy Lễ tân.</p>
             </div>
         </c:otherwise>
     </c:choose>
