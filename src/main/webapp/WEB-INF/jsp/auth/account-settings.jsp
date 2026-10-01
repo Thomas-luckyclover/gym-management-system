@@ -1,5 +1,6 @@
 <%@ page contentType="text/html;charset=UTF-8" pageEncoding="UTF-8" %>
 <%@ taglib prefix="c" uri="jakarta.tags.core" %>
+<%@ taglib prefix="gms" uri="/WEB-INF/gms-functions.tld" %>
 
 <!DOCTYPE html>
 <html lang="vi">
@@ -17,7 +18,7 @@
 
 </head>
 
-<body class="dock ${themeClass}">
+<body class="dock ${themeClass} ${currentRole.dbValue eq 'Receptionist' ? 'theme-staff' : ''}">
 
 <%@ include file="/WEB-INF/jsp/common/flash-toast.jspf" %>
 
@@ -42,6 +43,12 @@
         <c:when test="${currentRole.dbValue eq 'Manager'}">
 
             <%@ include file="/WEB-INF/jsp/common/layout-manager.jspf" %>
+
+        </c:when>
+
+        <c:when test="${currentRole.dbValue eq 'Receptionist'}">
+
+            <%@ include file="/WEB-INF/jsp/common/layout-receptionist.jspf" %>
 
         </c:when>
 
@@ -230,6 +237,14 @@
                                 <c:when test="${currentRole.dbValue eq 'Admin'}">
 
                                     <%@ include file="/WEB-INF/jsp/auth/account/profile-admin.jspf" %>
+
+                                </c:when>
+
+                                <%-- Receptionist: phần Hoàng phụ trách --%>
+
+                                <c:when test="${currentRole.dbValue eq 'Receptionist'}">
+
+                                    <%@ include file="/WEB-INF/jsp/auth/account/profile-receptionist.jspf" %>
 
                                 </c:when>
 

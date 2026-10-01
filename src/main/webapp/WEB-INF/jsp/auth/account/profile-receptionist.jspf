@@ -16,7 +16,7 @@
 <%@ taglib prefix="gms" uri="/WEB-INF/gms-functions.tld" %>
 
 <c:set var="userInitial" value="LT" />
-<c:if test="${not empty accountSettings.fullName}">
+<c:if test="${not empty accountSettings and not empty accountSettings.fullName}">
   <c:set var="userInitial" value="${accountSettings.fullName.substring(0, 1)}" />
 </c:if>
 
@@ -27,7 +27,7 @@
     <div class="account-avatar-section">
       <div class="account-avatar-preview">
         <c:choose>
-          <c:when test="${not empty accountSettings.avatar}">
+          <c:when test="${not empty accountSettings and not empty accountSettings.avatar}">
             <img id="avatarPreview"
                  class="account-avatar-image"
                  src="${pageContext.request.contextPath}${accountSettings.avatar}"
@@ -49,7 +49,7 @@
       </div>
 
       <div class="account-avatar-info">
-        <strong><c:out value="${accountSettings.fullName}" /></strong>
+        <strong><c:out value="${not empty accountSettings ? accountSettings.fullName : ''}" /></strong>
         <span>Ảnh đại diện tài khoản</span>
       </div>
 
@@ -104,9 +104,9 @@
               novalidate
               data-validate>
           <input type="hidden" name="action" value="verifyContactChange">
-          <input type="hidden" name="contactField" value="<c:out value='${contactField}' />">
-          <input type="hidden" name="verificationEmail" value="<c:out value='${verificationEmail}' />">
-          <input type="hidden" name="pendingContactValue" value="<c:out value='${pendingContactValue}' />">
+          <input type="hidden" name="contactField" value="${contactField}">
+          <input type="hidden" name="verificationEmail" value="${verificationEmail}">
+          <input type="hidden" name="pendingContactValue" value="${pendingContactValue}">
 
           <div class="field">
             <label class="field-label" for="verificationCode">
@@ -133,6 +133,45 @@
 
       <%-- ===== MÀN HÌNH HỒ SƠ BÌNH THƯỜNG (khi chưa bấm đổi thông tin) ===== --%>
       <c:otherwise>
+        <%-- Chuẩn bị các biến an toàn để hiển thị (không gọi getter không tồn tại trên AccountSettingsView) --%>
+        <c:set var="valFullName" value="${not empty accountSettings ? accountSettings.fullName : ''}" />
+        <c:set var="valDob" value="" />
+        <c:if test="${not empty accountSettings and not empty accountSettings.dateOfBirth}">
+          <c:set var="valDob" value="${gms:formatDate(accountSettings.dateOfBirth)}" />
+        </c:if>
+        <c:set var="valEmpCode" value="${not empty accountSettings ? accountSettings.employeeCode : ''}" />
+
+        <c:set var="valPosition" value="Lễ tân" />
+        <c:if test="${not empty currentRole and not empty currentRole.displayName}">
+          <c:set var="valPosition" value="${currentRole.displayName}" />
+        </c:if>
+        <c:if test="${not empty position}">
+          <c:set var="valPosition" value="${position}" />
+        </c:if>
+
+        <c:set var="valHireDate" value="—" />
+        <c:if test="${not empty hireDate}">
+          <c:set var="valHireDate" value="${gms:formatDate(hireDate)}" />
+        </c:if>
+
+        <c:set var="valWorkStatus" value="Đang làm việc" />
+        <c:if test="${not empty employmentStatus}">
+          <c:set var="valWorkStatus" value="${employmentStatus}" />
+        </c:if>
+        <c:if test="${empty employmentStatus and not empty status}">
+          <c:set var="valWorkStatus" value="${status}" />
+        </c:if>
+
+        <c:set var="valEmail" value="${not empty accountSettings ? accountSettings.email : ''}" />
+        <c:if test="${not empty pendingContactValue and contactField eq 'EMAIL'}">
+          <c:set var="valEmail" value="${pendingContactValue}" />
+        </c:if>
+
+        <c:set var="valPhone" value="${not empty accountSettings ? accountSettings.phone : ''}" />
+        <c:if test="${not empty pendingContactValue and contactField eq 'PHONE'}">
+          <c:set var="valPhone" value="${pendingContactValue}" />
+        </c:if>
+
         <div class="account-form-grid">
           <%-- ===== TRƯỜNG CHỈ XEM (CBR-108, MSG60 — do Quản lý cập nhật) ===== --%>
 
@@ -141,7 +180,7 @@
             <label class="field-label" for="profileFullName">Họ và tên</label>
             <input id="profileFullName"
                    type="text"
-                   value="<c:out value='${accountSettings.fullName}' />"
+                   value="<c:out value='${valFullName}' />"
                    readonly>
             <span class="field-hint">Thông tin do Quản lý cập nhật.</span>
           </div>
@@ -151,7 +190,7 @@
             <label class="field-label" for="profileDob">Ngày sinh</label>
             <input id="profileDob"
                    type="text"
-                   value="<c:out value='${gms:formatDate(accountSettings.dateOfBirth)}' />"
+                   value="<c:out value='${valDob}' />"
                    readonly>
             <span class="field-hint">Thông tin do Quản lý cập nhật.</span>
           </div>
@@ -161,7 +200,7 @@
             <label class="field-label" for="profileEmployeeCode">Mã nhân viên</label>
             <input id="profileEmployeeCode"
                    type="text"
-                   value="<c:out value='${accountSettings.employeeCode}' />"
+                   value="<c:out value='${valEmpCode}' />"
                    readonly>
             <span class="field-hint">Mã nhân viên do hệ thống sinh, không thể thay đổi.</span>
           </div>
@@ -171,7 +210,7 @@
             <label class="field-label" for="profilePosition">Vị trí</label>
             <input id="profilePosition"
                    type="text"
-                   value="<c:out value='${not empty position ? position : (not empty currentRole.displayName ? currentRole.displayName : \"Lễ tân\")}' />"
+                   value="<c:out value='${valPosition}' />"
                    readonly>
             <span class="field-hint">Thông tin do Quản lý cập nhật.</span>
           </div>
@@ -181,7 +220,7 @@
             <label class="field-label" for="profileHireDate">Ngày vào làm</label>
             <input id="profileHireDate"
                    type="text"
-                   value="<c:choose><c:when test='${not empty accountSettings.hireDate}'><c:out value='${gms:formatDate(accountSettings.hireDate)}' /></c:when><c:when test='${not empty hireDate}'><c:out value='${gms:formatDate(hireDate)}' /></c:when><c:otherwise>—</c:otherwise></c:choose>"
+                   value="<c:out value='${valHireDate}' />"
                    readonly>
             <span class="field-hint">Thông tin do Quản lý cập nhật.</span>
           </div>
@@ -191,7 +230,7 @@
             <label class="field-label" for="profileWorkStatus">Trạng thái làm việc</label>
             <input id="profileWorkStatus"
                    type="text"
-                   value="<c:choose><c:when test='${not empty accountSettings.employmentStatus.dbValue}'><c:out value='${accountSettings.employmentStatus.dbValue}' /></c:when><c:when test='${not empty accountSettings.employmentStatus}'><c:out value='${accountSettings.employmentStatus}' /></c:when><c:when test='${not empty employmentStatus}'><c:out value='${employmentStatus}' /></c:when><c:when test='${not empty status}'><c:out value='${status}' /></c:when><c:when test='${not empty accountSettings.status}'><c:out value='${accountSettings.status}' /></c:when><c:otherwise>Đang làm việc</c:otherwise></c:choose>"
+                   value="<c:out value='${valWorkStatus}' />"
                    readonly>
             <span class="field-hint">Thông tin do Quản lý cập nhật.</span>
           </div>
@@ -217,7 +256,7 @@
                    maxlength="100"
                    data-rule="email"
                    data-label="Email mới"
-                   value="<c:out value='${not empty pendingContactValue and contactField eq \"EMAIL\" ? pendingContactValue : accountSettings.email}' />"
+                   value="<c:out value='${valEmail}' />"
                    required>
             <span class="field-hint">
               Đổi email cần mã OTP gửi tới email mới. Đổi xong sẽ đăng xuất mọi phiên.
@@ -249,7 +288,7 @@
                    inputmode="numeric"
                    data-rule="phone"
                    data-label="Số điện thoại mới"
-                   value="<c:out value='${not empty pendingContactValue and contactField eq \"PHONE\" ? pendingContactValue : accountSettings.phone}' />"
+                   value="<c:out value='${valPhone}' />"
                    required>
             <span class="field-hint">
               Đổi số điện thoại cần mã OTP gửi tới email hiện tại.
