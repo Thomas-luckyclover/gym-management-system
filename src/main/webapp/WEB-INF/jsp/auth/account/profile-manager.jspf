@@ -1,6 +1,5 @@
 <%--
   profile-manager.jspf — Cài đặt tài khoản Quản lý.
-  Khớp prototype Manager viewSettings(): 2 cột Hồ sơ + Đổi mật khẩu.
   CBR-108: thông tin nhân sự READ-ONLY (Admin sửa qua UC-07); tự sửa được: ảnh, email, SĐT, mật khẩu.
   CBR-110/111: đổi email → mã gửi email MỚI; đổi SĐT → mã gửi email HIỆN TẠI.
   Dữ liệu: accountSettings (AccountSettingsView) do AccountSettingsServlet set.
@@ -20,7 +19,6 @@
   <section class="account-card">
     <div class="account-card-body">
       <h2>Hồ sơ</h2>
-      <p class="account-subtitle">Ảnh đại diện, email và số điện thoại</p>
 
       <%-- Ảnh đại diện: JS tự kiểm tra rồi submit khi chọn file --%>
       <div class="account-avatar-section">
@@ -53,7 +51,6 @@
                  data-max-bytes="2097152"
                  class="account-avatar-input">
           <label for="avatarFile" class="btn btn-sm">Đổi ảnh</label>
-          <span class="field-hint">JPG/PNG, tối đa 2 MB</span>
         </form>
         <span id="avatarClientError" class="field-error is-hidden" role="alert"></span>
         <c:if test="${not empty avatarError}">
@@ -71,6 +68,12 @@
           <label class="field-label">Mã nhân viên</label>
           <input type="text" value="<c:out value='${accountSettings.employeeCode}' />" readonly>
         </div>
+        <c:if test="${not empty accountSettings.dateOfBirth}">
+          <div class="field">
+            <label class="field-label">Ngày sinh</label>
+            <input type="text" value="<c:out value='${gms:formatDate(accountSettings.dateOfBirth)}' />" readonly>
+          </div>
+        </c:if>
         <c:if test="${not empty accountSettings.position}">
           <div class="field">
             <label class="field-label">Chức vụ</label>
@@ -146,7 +149,6 @@
             <i class="fa-solid fa-circle-info"></i>
             <div>
               <b>Nhập mã đã gửi tới <c:out value="${verifyTarget}" /></b>
-              Mã có hiệu lực trong 15 phút.
             </div>
           </div>
           <div class="field">

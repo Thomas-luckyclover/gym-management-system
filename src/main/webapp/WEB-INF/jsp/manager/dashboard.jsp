@@ -96,10 +96,10 @@
 
             <%-- ===== 6 thẻ tổng quan ===== --%>
             <section class="report-stats" aria-label="Tổng quan">
-                <div class="report-card stat"><div class="stat-label">Doanh thu</div><div class="stat-value"><c:out value="${report.totalRevenueText}" /></div><div class="stat-note">Đã gồm VAT</div></div>
+                <div class="report-card stat"><div class="stat-label">Doanh thu</div><div class="stat-value" title="${gms:formatMoney(report.totalRevenue)}"><c:out value="${report.totalRevenueText}" /></div><div class="stat-note">Đã gồm VAT</div></div>
                 <div class="report-card stat"><div class="stat-label">Hội viên đang hoạt động</div><div class="stat-value">${report.activeMembers}</div><div class="stat-note">+${report.newMembers} hội viên mới</div></div>
                 <div class="report-card stat"><div class="stat-label">Gói đang chạy</div><div class="stat-value">${report.runningPackages}</div><div class="stat-note">Gói tập, không gồm vé ngày</div></div>
-                <div class="report-card stat"><div class="stat-label">Hoa hồng PT</div><div class="stat-value"><c:out value="${report.totalCommissionText}" /></div><div class="stat-note">Theo % riêng từng PT</div></div>
+                <div class="report-card stat"><div class="stat-label">Hoa hồng PT</div><div class="stat-value" title="${gms:formatMoney(report.totalCommission)}"><c:out value="${report.totalCommissionText}" /></div><div class="stat-note">Theo % riêng từng PT</div></div>
                 <div class="report-card stat"><div class="stat-label">Vé 1 ngày</div><div class="stat-value">${report.dayPassVisits}</div><div class="stat-note">lượt · <c:out value="${report.dayPassRevenueText}" /> doanh thu</div></div>
                 <div class="report-card stat"><div class="stat-label">Lượt check-in</div><div class="stat-value">${report.checkInCount}</div><div class="stat-note">Gồm cả vé 1 ngày</div></div>
             </section>

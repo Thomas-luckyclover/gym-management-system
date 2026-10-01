@@ -71,7 +71,7 @@ public final class Messages {
     public static final String MSG46_PASSWORD_TOO_SHORT = "Mật khẩu phải có ít nhất %d ký tự.";
     public static final String MSG47_PASSWORD_MISMATCH = "Mật khẩu xác nhận không khớp.";
     public static final String MSG48_PASSWORD_SAME_AS_OLD = "Mật khẩu mới phải khác mật khẩu hiện tại.";
-    public static final String MSG49_PASSWORD_CHANGED = "Đã đổi mật khẩu. Tất cả phiên đăng nhập trước đó đã bị đăng xuất.";
+    public static final String MSG49_PASSWORD_CHANGED = "Đã đổi mật khẩu. Các thiết bị khác đã bị đăng xuất.";
     public static final String MSG50_PHONE_ACCEPTED = "Số điện thoại hợp lệ. Vui lòng điền thông tin đăng ký.";
     public static final String MSG51_PHONE_HAS_ACCOUNT = "Số điện thoại này đã có tài khoản. Vui lòng đăng nhập hoặc dùng Quên mật khẩu.";
     public static final String MSG52_PHONE_DIFFERENT_EMAIL = "Số điện thoại này đã đăng ký với email khác (%s). Hãy dùng email đó, hoặc đến quầy lễ tân để cập nhật.";

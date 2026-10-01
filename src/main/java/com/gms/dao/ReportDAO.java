@@ -117,7 +117,11 @@ public class ReportDAO {
         }
     }
 
-    /** Hoa hồng từng PT: số buổi Hoàn thành / Vắng / Hủy và tổng hoa hồng đã chốt. */
+    /**
+     * Hoa hồng từng PT theo NGÀY DIỄN RA BUỔI (CHỐT-D4). Tính buổi Completed, Missed, và Cancelled do
+     * PT hủy / khách hủy (CBR-80…82). Buổi hủy do phòng đóng cửa hoặc gói PT hết hạn (ResolutionType NULL)
+     * KHÔNG tính. Hoa hồng tính cho PT đang giữ buổi (Sessions.PtEmployeeId).
+     */
     public List<ReportView.PtRow> findPtCommission(Connection conn, LocalDate from, LocalDate to)
             throws SQLException {
         String sql = "SELECT e.EmployeeId, pe.FullName, e.CommissionRate, "
@@ -127,11 +131,10 @@ public class ReportDAO {
                 + "SUM(CAST(se.CommissionAmount AS BIGINT)) "
                 + "FROM Sessions se "
                 + "JOIN TimeSlots ts ON ts.TimeSlotId = se.TimeSlotId "
-                + "JOIN Subscriptions sub ON sub.SubscriptionId = se.SubscriptionId "
-                + "JOIN Orders o ON o.OrderId = sub.OrderId "
                 + "JOIN Employees e ON e.EmployeeId = se.PtEmployeeId "
                 + "JOIN Persons pe ON pe.PersonId = e.PersonId "
-                + "WHERE se.Status IN ('Completed', 'Missed', 'Cancelled') AND o.Status <> 'Cancelled' "
+                + "WHERE (se.Status IN ('Completed', 'Missed') "
+                + "       OR (se.Status = 'Cancelled' AND se.ResolutionType IN ('Cancel', 'CustomerRequest'))) "
                 + "AND ts.SlotDate >= ? AND ts.SlotDate <= ? "
                 + "GROUP BY e.EmployeeId, pe.FullName, e.CommissionRate "
                 + "ORDER BY SUM(CAST(se.CommissionAmount AS BIGINT)) DESC";
