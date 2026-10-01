@@ -17,7 +17,7 @@
     <nav class="nav" aria-label="Điều hướng chính">
       <%-- Nhóm: Tại quầy --%>
       <div class="nav-group">Tại quầy</div>
-      <a href="#"
+      <a href="${pageContext.request.contextPath}/receptionist/check-in"
          class="nav-link<c:if test="${activeNav == 'checkin'}"> active</c:if>"
          <c:if test="${activeNav == 'checkin'}">aria-current="page"</c:if>>
         <svg viewBox="0 0 24 24" aria-hidden="true">
