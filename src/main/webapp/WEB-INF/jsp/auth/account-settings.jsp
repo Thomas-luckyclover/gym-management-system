@@ -55,6 +55,10 @@
 
         </c:when>
 
+        <c:when test="${currentRole.dbValue eq 'Customer'}">
+            <%@ include file="/WEB-INF/jsp/common/layout-customer.jspf" %>
+        </c:when>
+
         <c:otherwise>
 
             <%-- Layout role khác đang chờ merge từ thành viên phụ trách. --%>
@@ -244,6 +248,10 @@
                                 </c:when>
                                 <c:when test="${currentRole.dbValue eq 'Receptionist'}">
                                     <%@ include file="/WEB-INF/jsp/auth/account/profile-receptionist.jspf" %>
+                                </c:when>
+
+                                <c:when test="${currentRole.dbValue eq 'Customer'}">
+                                    <%@ include file="/WEB-INF/jsp/auth/account/profile-customer.jspf" %>
                                 </c:when>
 
                                 <%-- Các role khác chờ merge profile JSPF --%>
