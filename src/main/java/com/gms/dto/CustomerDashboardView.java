@@ -16,26 +16,11 @@ import java.util.List;
 public class CustomerDashboardView {
 
     // ===== Thông tin hồ sơ =====
-
-    /** Tên đầy đủ của khách. */
     private final String fullName;
-
-    /** Avatar path; null = hiển thị chữ cái đầu. */
     private final String avatar;
-
-    /** Mã hội viên (VD: KH-1001). */
     private final String customerCode;
-
-    /** Trạng thái hồ sơ: New / Active / Frozen / Expired (DBR-34, DBR-35). */
     private final String customerStatus;
 
-    // ===== Gói tập & quyền vào gym =====
-
-    /**
-     * Khách có thể vào phòng tập hôm nay không.
-     * canUseGym = đang có Membership hoặc DayPass còn hiệu lực (DBR-47, DBR-48, CBR-58).
-     * Gói PT không cho vào phòng tập.
-     */
     private final boolean canUseGym;
 
     /** Danh sách gói tập/PT đang có hiệu lực hoặc chưa bắt đầu. */
@@ -82,49 +67,22 @@ public class CustomerDashboardView {
     public List<UpcomingSessionRow> getUpcomingSessions() { return upcomingSessions; }
     public List<BannerItem> getBanners() { return banners; }
 
-    // =========================================================
-    // Inner classes
-    // =========================================================
-
-    /**
-     * Một dòng gói đang dùng / gói nối tiếp chưa bắt đầu (DBR-52).
-     */
     public static class SubscriptionRow {
 
         private final int subscriptionId;
-
-        /** Membership / PTSingle / PTCouple / DayPass / SingleSession */
         private final String subscriptionType;
-
-        /** Tên gói (VD: "Gói 3 tháng"). */
         private final String packageName;
-
-        /** Ngày bắt đầu hiệu lực. */
         private final LocalDate startDate;
-
-        /** Ngày cuối còn dùng được (tính cả ngày đó — GBR-03). */
         private final LocalDate endDate;
-
-        /** Active / Frozen / Expired / Pending (chưa bắt đầu) */
         private final String status;
 
         // --- Chỉ có với gói PT (DBR-53, [CHỐT-D2]) ---
-
-        /** Tổng buổi được sinh lúc đơn Paid. Null nếu không phải gói PT. */
         private final Integer totalSessions;
-
-        /** Số buổi Scheduled còn lại. Null nếu không phải gói PT. */
         private final Integer remainingSessions;
-
-        /** Số buổi đã dùng (Completed + Missed). Null nếu không phải gói PT. */
         private final Integer usedSessions;
 
         // --- Bảo lưu nếu Frozen (DBR-51) ---
-
-        /** Ngày bắt đầu bảo lưu; null nếu không phải Frozen. */
         private final LocalDate freezeStart;
-
-        /** Ngày kết thúc bảo lưu (dự kiến); null nếu không phải Frozen. */
         private final LocalDate freezeEnd;
 
         public SubscriptionRow(
@@ -191,11 +149,6 @@ public class CustomerDashboardView {
 
         /** Tên gói (VD: "Gói PT cá nhân 10 buổi"). */
         private final String packageName;
-
-        /**
-         * Buổi rơi vào ngày không có Membership còn hiệu lực (CBR-66).
-         * Nếu true → hiện nhãn cảnh báo + nút gia hạn.
-         */
         private final boolean missingMembership;
 
         public UpcomingSessionRow(
@@ -230,13 +183,8 @@ public class CustomerDashboardView {
      * Màu: "danger" (đỏ) hoặc "warning" (vàng) theo GBR-28.
      */
     public static class BannerItem {
-
-        /** "danger" hoặc "warning". */
         private final String level;
-
-        /** Nội dung hiển thị trên banner. */
         private final String message;
-
         /** Loại banner: FROZEN / EXPIRED / EXPIRING / MISSING_MEMBERSHIP / PENDING_ORDER. */
         private final String type;
 
