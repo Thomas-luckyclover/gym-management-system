@@ -6,6 +6,7 @@ import com.gms.constant.SessionKey;
 import com.gms.dto.AccountSettingsView;
 import com.gms.dto.ServiceResult;
 import com.gms.service.AccountSettingsService;
+import com.gms.service.ContactChangeService;
 import com.gms.util.RequestUtil;
 import jakarta.servlet.ServletException;
 import jakarta.servlet.annotation.WebServlet;
@@ -43,8 +44,16 @@ public class AccountSettingsServlet extends HttpServlet {
             "dependents";
     private static final String ACTION_UPDATE_AVATAR =
             "updateAvatar";
+    private static final String ACTION_REQUEST_EMAIL_CHANGE =
+            "requestEmailChange";
+    private static final String ACTION_REQUEST_PHONE_CHANGE =
+            "requestPhoneChange";
+    private static final String ACTION_VERIFY_CONTACT_CHANGE =
+            "verifyContactChange";
     private final AccountSettingsService accountSettingsService =
             new AccountSettingsService();
+    private final ContactChangeService contactChangeService =
+            new ContactChangeService();
 
     @Override
     protected void doGet(
@@ -82,6 +91,36 @@ public class AccountSettingsServlet extends HttpServlet {
         if (ACTION_UPDATE_AVATAR.equals(action)) {
 
             handleUpdateAvatar(
+                    request,
+                    response
+            );
+
+            return;
+        }
+
+        if (ACTION_REQUEST_EMAIL_CHANGE.equals(action)) {
+
+            handleRequestEmailChange(
+                    request,
+                    response
+            );
+
+            return;
+        }
+
+        if (ACTION_REQUEST_PHONE_CHANGE.equals(action)) {
+
+            handleRequestPhoneChange(
+                    request,
+                    response
+            );
+
+            return;
+        }
+
+        if (ACTION_VERIFY_CONTACT_CHANGE.equals(action)) {
+
+            handleVerifyContactChange(
                     request,
                     response
             );
@@ -362,6 +401,159 @@ public class AccountSettingsServlet extends HttpServlet {
                 response,
                 "/account?tab=profile"
         );
+    }
+
+    /**
+     * Xử lý gửi mã xác thực đổi email.
+     */
+    private void handleRequestEmailChange(
+            HttpServletRequest request,
+            HttpServletResponse response
+    ) throws ServletException, IOException {
+
+        HttpSession session = request.getSession(false);
+        if (session == null) {
+            RequestUtil.redirect(request, response, "/login");
+            return;
+        }
+
+        Integer accountId = (Integer) session.getAttribute(SessionKey.ACCOUNT_ID);
+        if (accountId == null) {
+            RequestUtil.redirect(request, response, "/login");
+            return;
+        }
+
+        String newEmail = RequestUtil.getTrimmedParam(request, "newEmail");
+        ServiceResult<Void> result = contactChangeService.requestEmailChange(accountId, newEmail);
+
+        if (!result.isSuccess()) {
+            request.setAttribute("errors", result.getFieldErrors());
+            request.setAttribute("formMessage", result.getMessage());
+            request.setAttribute("activeTab", TAB_PROFILE);
+            request.setAttribute("pendingContactValue", newEmail);
+            request.setAttribute("contactField", "EMAIL");
+            renderAccountSettings(request, response);
+            return;
+        }
+
+        request.setAttribute("contactVerificationPending", true);
+        request.setAttribute("contactField", "EMAIL");
+        request.setAttribute("verificationEmail", newEmail);
+        request.setAttribute("pendingContactValue", newEmail);
+        request.setAttribute("activeTab", TAB_PROFILE);
+        RequestUtil.setFlashToast(request, "info", result.getMessage());
+        renderAccountSettings(request, response);
+    }
+
+    /**
+     * Xử lý gửi mã xác thực đổi số điện thoại.
+     */
+    private void handleRequestPhoneChange(
+            HttpServletRequest request,
+            HttpServletResponse response
+    ) throws ServletException, IOException {
+
+        HttpSession session = request.getSession(false);
+        if (session == null) {
+            RequestUtil.redirect(request, response, "/login");
+            return;
+        }
+
+        Integer accountId = (Integer) session.getAttribute(SessionKey.ACCOUNT_ID);
+        if (accountId == null) {
+            RequestUtil.redirect(request, response, "/login");
+            return;
+        }
+
+        String roleValue = (String) session.getAttribute(SessionKey.ROLE);
+        Role role = Role.fromDbValue(roleValue);
+        ServiceResult<AccountSettingsView> viewResult = accountSettingsService.getAccountSettings(accountId, role);
+        String currentEmail = (viewResult.isSuccess() && viewResult.getData() != null)
+                ? viewResult.getData().getEmail()
+                : null;
+
+        String newPhone = RequestUtil.getTrimmedParam(request, "newPhone");
+        ServiceResult<Void> result = contactChangeService.requestPhoneChange(accountId, currentEmail, newPhone);
+
+        if (!result.isSuccess()) {
+            request.setAttribute("errors", result.getFieldErrors());
+            request.setAttribute("formMessage", result.getMessage());
+            request.setAttribute("activeTab", TAB_PROFILE);
+            request.setAttribute("pendingContactValue", newPhone);
+            request.setAttribute("contactField", "PHONE");
+            renderAccountSettings(request, response);
+            return;
+        }
+
+        request.setAttribute("contactVerificationPending", true);
+        request.setAttribute("contactField", "PHONE");
+        request.setAttribute("verificationEmail", currentEmail);
+        request.setAttribute("pendingContactValue", newPhone);
+        request.setAttribute("activeTab", TAB_PROFILE);
+        RequestUtil.setFlashToast(request, "info", result.getMessage());
+        renderAccountSettings(request, response);
+    }
+
+    /**
+     * Xử lý xác thực OTP và cập nhật email hoặc số điện thoại.
+     */
+    private void handleVerifyContactChange(
+            HttpServletRequest request,
+            HttpServletResponse response
+    ) throws ServletException, IOException {
+
+        HttpSession session = request.getSession(false);
+        if (session == null) {
+            RequestUtil.redirect(request, response, "/login");
+            return;
+        }
+
+        Integer accountId = (Integer) session.getAttribute(SessionKey.ACCOUNT_ID);
+        if (accountId == null) {
+            RequestUtil.redirect(request, response, "/login");
+            return;
+        }
+
+        String contactFieldStr = RequestUtil.getTrimmedParam(request, "contactField");
+        String verificationEmail = RequestUtil.getTrimmedParam(request, "verificationEmail");
+        String pendingContactValue = RequestUtil.getTrimmedParam(request, "pendingContactValue");
+        String verificationCode = RequestUtil.getTrimmedParam(request, "verificationCode");
+
+        ContactChangeService.ContactField contactField = "EMAIL".equalsIgnoreCase(contactFieldStr)
+                ? ContactChangeService.ContactField.EMAIL
+                : ContactChangeService.ContactField.PHONE;
+
+        String roleValue = (String) session.getAttribute(SessionKey.ROLE);
+        Role role = Role.fromDbValue(roleValue);
+        ServiceResult<AccountSettingsView> viewResult = accountSettingsService.getAccountSettings(accountId, role);
+        int personId = (viewResult.isSuccess() && viewResult.getData() != null)
+                ? viewResult.getData().getPersonId()
+                : 0;
+
+        ServiceResult<Void> result = contactChangeService.verifyAndApply(
+                accountId,
+                personId,
+                contactField,
+                verificationEmail,
+                pendingContactValue,
+                verificationCode,
+                session.getId()
+        );
+
+        if (!result.isSuccess()) {
+            request.setAttribute("errors", result.getFieldErrors());
+            request.setAttribute("formMessage", result.getMessage());
+            request.setAttribute("contactVerificationPending", true);
+            request.setAttribute("contactField", contactFieldStr);
+            request.setAttribute("verificationEmail", verificationEmail);
+            request.setAttribute("pendingContactValue", pendingContactValue);
+            request.setAttribute("activeTab", TAB_PROFILE);
+            renderAccountSettings(request, response);
+            return;
+        }
+
+        RequestUtil.setFlashToast(request, "success", result.getMessage());
+        RequestUtil.redirect(request, response, "/account?tab=profile");
     }
     /**
      * Tải dữ liệu và hiển thị Account Settings.
