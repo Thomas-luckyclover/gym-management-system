@@ -122,7 +122,7 @@ public class VerificationCodeService {
             return ServiceResult.ok(null, String.format(Messages.MSG42_CODE_SENT, email, validMinutes));
 
         } catch (EmailSendException e) {
-            // Gửi mail lỗi (sai App Password, mất mạng...) — lỗi thật EmailGateway đã in ra console
+            // Gửi mail lỗi (sai App Password, mất mạng...) — lỗi thật EmailGateway đã in ra console 
             return ServiceResult.fail(Messages.MSG04_SYSTEM_BUSY);
         } catch (SQLException e) {
             e.printStackTrace();

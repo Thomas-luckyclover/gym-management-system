@@ -24,7 +24,9 @@ import java.nio.file.Path;
 import java.io.IOException;
 
 /**
- * Controller cho Account Settings dùng chung mọi vai trò.
+ * Servlet Cài đặt tài khoản dùng chung mọi vai trò (URL /account).
+ *
+ * <p>Cho phép đổi mật khẩu, cập nhật avatar, đổi email/SĐT (kèm xác thực OTP); tab khác nhau theo vai trò.</p>
  */
 @WebServlet("/account")
 @MultipartConfig
@@ -50,6 +52,9 @@ public class AccountSettingsServlet extends HttpServlet {
 
         private final AuditLogService auditLogService = new AuditLogService();
 
+        /**
+         * GET /account — hiển thị trang Account Settings ở tab hiện tại (profile / password / dependents).
+         */
         @Override
         protected void doGet(
                         HttpServletRequest request,
@@ -60,6 +65,10 @@ public class AccountSettingsServlet extends HttpServlet {
                                 response);
         }
 
+        /**
+         * POST /account — nhận form theo action: changePassword / updateAvatar / requestEmailChange /
+         * requestPhoneChange / verifyContactChange; action lạ thì báo lỗi và redirect.
+         */
         @Override
         protected void doPost(
                         HttpServletRequest request,

@@ -36,23 +36,29 @@ import java.util.Map;
 import java.util.Set;
 
 /**
- * Gom dữ liệu cho PT Dashboard (#49, UC-32) — màn đầu tiên PT thấy sau khi đăng nhập. Chỉ đọc, không sửa dữ liệu.
+ * Gom dữ liệu cho màn đầu tiên PT thấy sau khi đăng nhập (dashboard — chỉ đọc, không sửa dữ liệu).
  *
- * Bố cục theo prototype pt/trang-chu.html; nghiệp vụ theo SRS 9.1.2 và "05_Dashboard_Rules.md":
+ * <p>Bố cục theo prototype {@code pt/trang-chu.html}; nghiệp vụ theo SRS 9.1.2 và {@code 05_Dashboard_Rules.md}.</p>
  *
- *   Khối                    Nguồn dữ liệu                                    Rule
- *   ----------------------- ------------------------------------------------ ---------------------------------
- *   Lời chào + thời tiết    WeatherService (API ngoài, lỗi thì ẩn)           (thêm, không thuộc SRS)
- *   Buổi cần điểm danh      Scheduled, đã tới giờ bắt đầu, ≤ P-07 giờ sau    BR-54, P-07
- *   Hoa hồng theo kỳ        Sessions.CommissionAmount của PT đang giữ buổi   DBR-58, CBR-80/81/82, CBR-55/57
- *   Buổi sắp tới            lọc từ ngày (bắt buộc, mặc định hôm nay)         SRS 9.1.2, GBR-01, DBR-37
- *   Nhãn/banner thiếu gói   buổi rơi vào ngày khách không có Membership      CBR-64, CBR-66
- *   Khách phụ trách         khách có gói PT với PT này vào ngày đang lọc     GBR-10
- *   Tuần / Tháng (cột phụ)  tuần + tháng chứa ngày đang lọc: đã chốt /       CBR-80/81/82, CBR-42
- *                           chờ chốt / dự kiến, đếm trạng thái, slot Free
- *   Tóm tắt hôm nay         luôn theo hôm nay (thẻ chào)                     —
+ * <p>Các phần dữ liệu cung cấp cho JSP:</p>
+ * <ul>
+ *   <li>Đầu trang — mã NV, họ tên, chữ viết tắt avatar, tỷ lệ hoa hồng, lời chào theo giờ, ngày hôm nay, thời tiết.</li>
+ *   <li>Hoa hồng theo kỳ — chọn tháng/quý, bảng nguồn buổi, tổng tiền, số buổi, đếm trạng thái, biểu đồ cột.</li>
+ *   <li>Buổi sắp tới — danh sách buổi trong khoảng "Từ ngày" đến "Từ ngày + rangeDays".</li>
+ *   <li>Buổi cần điểm danh — buổi Scheduled đang nằm trong cửa sổ điểm danh (BR-54, P-07).</li>
+ *   <li>Banner thiếu gói tập — đếm khách có buổi rơi vào ngày không có Membership (CBR-66).</li>
+ *   <li>Tóm tắt hôm nay — số buổi hôm nay, số slot trống tới Chủ nhật (luôn là hôm nay).</li>
+ *   <li>Cột phụ — khách phụ trách vào ngày đang lọc, ô Tuần và ô Tháng neo theo ngày đang lọc.</li>
+ * </ul>
  *
- * Dashboard CHỈ ĐỌC trạng thái trong DB (GBR-14): buổi quá cửa sổ điểm danh là việc JOB-04, không tự đổi ở đây.
+ * <p>Ràng buộc nghiệp vụ chính:</p>
+ * <ul>
+ *   <li>BR-54 / P-07: buổi cần điểm danh = đã tới giờ bắt đầu và chưa quá {@code attendanceWindowHours} giờ sau khi kết thúc.</li>
+ *   <li>DBR-58, CBR-55/57/80/81/82: tiền hoa hồng lấy trực tiếp từ {@code Sessions.CommissionAmount} của buổi ĐƯỢC TÍNH.</li>
+ *   <li>GBR-01, GBR-10: lọc buổi theo PT đang làm việc, theo ngày diễn ra buổi.</li>
+ *   <li>GBR-14: dashboard chỉ đọc — buổi quá cửa sổ là việc JOB-04, không tự đổi trạng thái ở đây.</li>
+ *   <li>CBR-64/CBR-66: banner thiếu gói quét các buổi Scheduled trong 30 ngày tới.</li>
+ * </ul>
  *
  * @author Le Cong Minh
  */
@@ -62,7 +68,7 @@ public class PtDashboardService {
     private static final List<Integer> RANGE_OPTIONS = List.of(1, 3, 7, 30);
     private static final int DEFAULT_RANGE_DAYS = 7;
 
-    /** Banner "khách thiếu gói tập" xét các buổi Scheduled trong 30 ngày tới. */
+    /** Banner "khách thiếu gói tập" xét các buổi Scheduled trong 30 ngày tới (CBR-66). */
     private static final int MISSING_MEMBERSHIP_LOOKAHEAD_DAYS = 30;
 
     /** Gói PT hết hạn trong 7 ngày thì coi là "sắp hết hạn". */
@@ -86,19 +92,12 @@ public class PtDashboardService {
     private final SystemConfigService systemConfigService = new SystemConfigService();
     private final WeatherService weatherService = new WeatherService();
 
+    // ===== Entry point: lấy toàn bộ dashboard =====
+
     /**
      * Lấy toàn bộ dữ liệu dashboard của PT đang đăng nhập.
-     *
-     * @param accountId   AccountId lấy từ SESSION (không lấy từ URL — PT không xem được dashboard người khác).
-     * @param periodParam kỳ hoa hồng: "yyyy-MM" (VD "2026-08") hoặc "yyyy-Qn" (VD "2026-Q3");
-     *                    không nằm trong danh sách được chọn → tháng này.
-     * @param dateParam   "Từ ngày" của khối Buổi sắp tới, dạng yyyy-MM-dd:
-     *                    null (chưa lọc) → hôm nay · rỗng (xóa trống ô) → hôm nay + lỗi MSG09 · sai → hôm nay.
-     * @param rangeDays   số ngày tính từ "Từ ngày": 1 / 3 / 7 / 30; giá trị khác → 7.
-     * @param weatherDemo tên kiểu trời muốn xem thử ("rain", "storm"...); rỗng hoặc sai → thời tiết thật.
-     * @return kết quả:
-     *         - Thành công: kèm PtDashboardView.
-     *         - Thất bại: tài khoản không phải PT đang làm (MSG07), lỗi DB (MSG04).
+     * Tài khoản phải là PT đang làm việc (GBR-10); không hợp lệ thì trả MSG07. Lỗi DB trả MSG04.
+     * Điền lần lượt: đầu trang → hoa hồng theo kỳ → buổi sắp tới theo bộ lọc ngày → điểm danh + banner thiếu gói → tóm tắt hôm nay → cột phụ (khách/tuần/tháng) neo theo "Từ ngày".
      */
     public ServiceResult<PtDashboardView> getDashboard(int accountId, String periodParam, String dateParam,
             int rangeDays, String weatherDemo) {
@@ -191,10 +190,9 @@ public class PtDashboardService {
     // ===== Hoa hồng =====
 
     /**
-     * Điền khối Hoa hồng cho kỳ đã chọn.
-     *
-     * Kỳ = 1 tháng hoặc 1 quý. Chỉ cộng buổi ĐƯỢC TÍNH hoa hồng (xem isCommissionable). Lọc theo NGÀY DIỄN RA
-     * BUỔI (CHỐT-D4). Số tiền là CommissionAmount đã chốt trên từng buổi (DBR-58), không tính lại.
+     * Điền khối Hoa hồng cho kỳ đã chọn (1 tháng hoặc 1 quý).
+     * Chỉ cộng buổi ĐƯỢC TÍNH hoa hồng (xem {@link #isCommissionable}); lọc theo NGÀY DIỄN RA BUỔI (CHỐT-D4).
+     * Số tiền lấy từ {@code CommissionAmount} đã chốt trên từng buổi (DBR-58), không tính lại.
      */
     private void fillCommission(PtDashboardView view, int ptId, String periodParam, LocalDate today)
             throws SQLException {
@@ -291,15 +289,9 @@ public class PtDashboardService {
     }
 
     /**
-     * Buổi có được tính hoa hồng cho PT không ("05_Dashboard_Rules.md" mục 3.2):
-     *   - Completed (đã dạy), Missed (khách vắng, kể cả do bảo lưu — CBR-68) → TÍNH (CBR-80)
-     *   - Cancelled với CancelType ByPt / ByCustomer → TÍNH (CBR-81, CBR-82)
-     *   - Cancelled với CancelType GymClosed / PackageExpired → KHÔNG tính (CBR-57, CBR-55)
-     *   - Scheduled → chưa diễn ra, chưa tính
-     *
-     * @param status         Sessions.Status.
-     * @param cancelType     Sessions.CancelType, có thể null.
-     * @return true nếu buổi được cộng vào hoa hồng.
+     * Buổi có được tính hoa hồng cho PT không (theo "05_Dashboard_Rules.md" mục 3.2).
+     * Completed / Missed → TÍNH (CBR-80). Cancelled với ByPt / ByCustomer → TÍNH (CBR-81, CBR-82).
+     * Cancelled với GymClosed / PackageExpired → KHÔNG tính (CBR-57, CBR-55). Scheduled → chưa tính.
      */
     static boolean isCommissionable(String status, String cancelType) {
         if ("Completed".equals(status) || "Missed".equals(status)) {
@@ -365,9 +357,9 @@ public class PtDashboardService {
     // ===== Buổi cần điểm danh + banner thiếu gói tập =====
 
     /**
-     * Từ danh sách buổi Scheduled quanh hôm nay, tách ra:
-     *   - buổi cần điểm danh: đã tới giờ bắt đầu, chưa quá windowHours giờ sau khi kết thúc (BR-54, P-07)
-     *   - banner: bao nhiêu KHÁCH có buổi từ hôm nay trở đi rơi vào ngày không có gói tập (CBR-66), buổi gần nhất ngày nào
+     * Tách từ danh sách buổi Scheduled quanh hôm nay ra: buổi cần điểm danh (BR-54, P-07) và banner thiếu gói (CBR-66).
+     * Điểm danh = đã tới giờ bắt đầu và chưa quá windowHours giờ sau khi kết thúc.
+     * Banner đếm số khách có buổi từ hôm nay trở đi rơi vào ngày không có Membership, kèm ngày gần nhất.
      */
     private void fillAttendanceAndMissingMembership(PtDashboardView view, List<PtSessionView> scheduled,
             LocalDateTime now, int windowHours) {
@@ -437,15 +429,9 @@ public class PtDashboardService {
 
     /**
      * Ô "Tuần" và ô "Tháng" của cột phụ — xét theo ngày anchor (ô "Từ ngày"), không theo hôm nay.
-     *
      * Tuần = thứ 2 → chủ nhật chứa anchor: đếm buổi theo trạng thái + slot còn trống.
-     * Tháng = tháng chứa anchor, chia tiền hoa hồng làm 3 phần không trùng nhau:
-     *   - Đã chốt  : buổi được tính hoa hồng (isCommissionable — Completed, Missed, hủy có tính)
-     *   - Chờ chốt : buổi Scheduled mà NGÀY ĐÃ QUA (chưa điểm danh; PT điểm danh hoặc JOB-04 tự đóng sẽ chốt)
-     *   - Dự kiến  : buổi Scheduled từ hôm nay trở đi
+     * Tháng = tháng chứa anchor, chia tiền hoa hồng làm 3 phần: đã chốt (isCommissionable), chờ chốt (Scheduled đã qua), dự kiến (Scheduled từ hôm nay trở đi).
      * VD David, anchor 23/09 (hôm nay 30/09) → Tháng 09/2026: đã chốt 0đ, chờ chốt 270.000đ (1 buổi), dự kiến 0đ.
-     *
-     * Đọc DB 1 lần cho khoảng ngày bao cả tuần lẫn tháng rồi tự lọc.
      */
     private void fillWeekAndMonth(PtDashboardView view, int ptId, LocalDate anchor, LocalDate today)
             throws SQLException {

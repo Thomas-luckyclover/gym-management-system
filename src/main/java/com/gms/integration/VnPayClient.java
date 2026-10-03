@@ -17,24 +17,9 @@ import javax.crypto.Mac;
 import javax.crypto.spec.SecretKeySpec;
 
 /**
- * Cổng thanh toán VNPay (phiên bản API 2.1.0) — SRS 6.1 (API-01) và 6.2 (API-02), actor "VNPAY Payment Gateway".
- *
- * ===== TỔNG QUAN LUỒNG THANH TOÁN ONLINE =====
- * B1. Khách bấm "Thanh toán" → Service tạo Transaction (Pending) → gọi buildPaymentUrl(...) ở class này
- * B2. Servlet redirect trình duyệt sang URL VNPay vừa tạo → khách quét QR / nhập thẻ trên trang VNPay
- * B3. VNPay gọi NGẦM về server (IPN, server-to-server): POST/GET /api/v1/commerce/payment/webhook/vnpay
- *     → verifySignature(...) → Service cập nhật Transaction/Order → trả JSON {"RspCode":"00",...} cho VNPay
- *     ĐÂY LÀ NƠI DUY NHẤT được đánh dấu đơn đã thanh toán (SRS 6.2).
- * B4. VNPay chuyển trình duyệt khách về /payment/vnpay-return → CHỈ hiển thị kết quả, KHÔNG cập nhật đơn
- *     (SRS 6.1: "that page is display only and never marks an order as paid"), vì người dùng có thể tự sửa URL này.
- *
- * ===== BẢO MẬT: CHỮ KÝ HMAC-SHA512 =====
- * Mọi tham số gửi đi và nhận về đều kèm vnp_SecureHash = HMAC-SHA512(hashSecret, chuỗi tham số đã sắp xếp).
- * Không khớp chữ ký = dữ liệu bị giả mạo → từ chối (RspCode 97).
- *
- * ===== CẤU HÌNH (application.properties) =====
- * vnpay.tmn-code, vnpay.hash-secret (VNPay gửi qua email khi đăng ký sandbox), vnpay.pay-url, vnpay.return-url.
- * Chi tiết đăng ký sandbox: docs/integration-guide.md mục VNPay.
+ * Cổng thanh toán VNPay (API 2.1.0).
+ * Tạo URL thanh toán có chữ ký HMAC-SHA512, kiểm tra chữ ký kết quả VNPay trả về (IPN và return URL).
+ * Chỉ IPN mới đánh dấu đơn đã thanh toán; return URL chỉ hiển thị kết quả.
  */
 public class VnPayClient {
 
@@ -69,16 +54,8 @@ public class VnPayClient {
     // ===== API-01: tạo URL thanh toán =====
 
     /**
-     * Tạo URL thanh toán đã ký để redirect khách sang VNPay.
-     *
-     * @param txnRef mã tham chiếu DUY NHẤT cho từng lần thanh toán (SRS: mã đơn + số lần thử, VD "DH20260001A2").
-     *               VNPay từ chối mã trùng, nên thanh toán lại phải có mã mới.
-     * @param amountVnd số tiền (VND, số nguyên) — lấy từ Transaction.Amount, không lấy từ request của khách
-     * @param orderInfo mô tả đơn, sẽ tự bỏ dấu tiếng Việt (VNPay chỉ nhận ký tự ASCII)
-     * @param clientIp IP của khách (RequestUtil.getClientIp)
-     * @param createdAt thời điểm tạo giao dịch (DateTimeUtil.now())
-     * @param expireAt hạn của link — ≤ hạn thanh toán của đơn (P-09), mặc định createdAt + 5 phút
-     * @return URL đầy đủ để response.sendRedirect(...)
+     * Tạo URL thanh toán đã ký HMAC-SHA512, dùng để redirect khách sang VNPay.
+     * Mỗi lần thanh toán phải có txnRef mới (VNPay từ chối mã trùng).
      */
     public String buildPaymentUrl(String txnRef, long amountVnd, String orderInfo, String clientIp,
             LocalDateTime createdAt, LocalDateTime expireAt) {
@@ -118,9 +95,7 @@ public class VnPayClient {
     // ===== API-02 + trang return: kiểm tra dữ liệu VNPay gửi về =====
 
     /**
-     * Lấy toàn bộ tham số vnp_* từ request (IPN hoặc return URL) thành Map.
-     * @param request request VNPay gửi tới
-     * @return map tên tham số → giá trị (đã được Tomcat giải mã URL)
+     * Lấy các tham số vnp_* từ request (IPN hoặc return URL) thành map.
      */
     public Map<String, String> extractVnpParams(HttpServletRequest request) {
         Map<String, String> params = new TreeMap<>();
@@ -137,9 +112,7 @@ public class VnPayClient {
     }
 
     /**
-     * Kiểm tra chữ ký dữ liệu VNPay gửi về có hợp lệ không (chống giả mạo kết quả thanh toán).
-     * @param vnpParams toàn bộ tham số vnp_* nhận được (từ extractVnpParams)
-     * @return true nếu chữ ký khớp
+     * Kiểm tra chữ ký VNPay gửi về có hợp lệ không — chống giả mạo kết quả thanh toán.
      */
     public boolean verifySignature(Map<String, String> vnpParams) {
         // B1: lấy chữ ký VNPay gửi kèm
@@ -165,9 +138,8 @@ public class VnPayClient {
     }
 
     /**
-     * Giao dịch có thành công không — chỉ gọi SAU KHI verifySignature trả true.
-     * @param vnpParams tham số VNPay gửi về
-     * @return true nếu vnp_ResponseCode = "00" và vnp_TransactionStatus = "00"
+     * Giao dịch thành công không — chỉ gọi sau khi verifySignature trả true.
+     * Thành công khi cả vnp_ResponseCode và vnp_TransactionStatus đều = "00".
      */
     public boolean isPaymentSuccess(Map<String, String> vnpParams) {
         String responseCode = vnpParams.get("vnp_ResponseCode");
@@ -178,9 +150,8 @@ public class VnPayClient {
     }
 
     /**
-     * Đọc số tiền VNPay báo về, đổi từ "xu" về VND để so với Transaction.Amount (SRS 6.2: lệch tiền → không ghi nhận Paid).
-     * @param vnpParams tham số VNPay gửi về
-     * @return số tiền VND, hoặc -1 nếu thiếu/sai định dạng
+     * Đọc số tiền VNPay báo về (đổi từ "xu" về VND) để so với Transaction.Amount.
+     * Trả -1 nếu thiếu hoặc sai định dạng.
      */
     public long getAmountVnd(Map<String, String> vnpParams) {
         String amountValue = vnpParams.get("vnp_Amount");
@@ -193,11 +164,7 @@ public class VnPayClient {
     }
 
     /**
-     * Tạo chuỗi JSON trả lời IPN cho VNPay, VD {"RspCode":"00","Message":"Confirm Success"}.
-     * Servlet IPN ghi chuỗi này ra response với Content-Type application/json.
-     * @param rspCode một trong các hằng IPN_* của class này
-     * @param message mô tả ngắn bằng tiếng Anh (VNPay chỉ ghi log)
-     * @return chuỗi JSON
+     * Tạo JSON trả lời IPN cho VNPay, VD {"RspCode":"00","Message":"Confirm Success"}.
      */
     public String buildIpnResponse(String rspCode, String message) {
         return "{\"RspCode\":\"" + rspCode + "\",\"Message\":\"" + message + "\"}";

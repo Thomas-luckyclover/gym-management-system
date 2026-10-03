@@ -17,12 +17,20 @@ import java.util.ArrayList;
 import java.util.List;
 import java.util.StringJoiner;
 
-/** Màn chọn / đổi vai trò khi tài khoản có từ 2 vai trò (UC-01, CBR-113). */
+/**
+ * Servlet màn chọn / đổi vai trò cho tài khoản có từ 2 vai trò trở lên (URL /select-role).
+ *
+ * <p>GET: hiện danh sách vai trò đang active của tài khoản.</p>
+ * <p>POST: khách chọn vai trò để dùng, lưu vào session và chuyển về trang chính.</p>
+ */
 @WebServlet("/select-role")
 public class SelectRoleServlet extends HttpServlet {
 
     private final AuthService authService = new AuthService();
 
+    /**
+     * GET /select-role — nạp lại vai trò active từ DB; 1 vai trò thì chuyển thẳng về trang chính, nhiều vai trò thì hiện màn chọn.
+     */
     @Override
     protected void doGet(HttpServletRequest request, HttpServletResponse response)
             throws ServletException, IOException {
@@ -58,6 +66,9 @@ public class SelectRoleServlet extends HttpServlet {
         RequestUtil.forward(request, response, "auth/select-role");
     }
 
+    /**
+     * POST /select-role — nhận vai trò khách chọn, xác minh thuộc tài khoản rồi lưu session và chuyển về trang chính của vai trò.
+     */
     @Override
     protected void doPost(HttpServletRequest request, HttpServletResponse response)
             throws ServletException, IOException {

@@ -9,22 +9,20 @@ import java.time.LocalDateTime;
  */
 public class BlogPost {
 
-    /**
-     * Trạng thái bài viết theo constraint CK_BlogPosts_Status: Active (đang đăng) | Inactive (gỡ xuống/nháp).
-     */
+    // Enum trạng thái bài viết
     public enum Status {
+        // Bài viết đang đăng
         Active,
+        // Bài viết đã gỡ hoặc nháp
         Inactive;
 
-        /**
-         * Chuyển chuỗi từ database hoặc request thành enum Status.
-         * @param value giá trị chuỗi (Active / Inactive)
-         * @return enum Status tương ứng, mặc định Inactive nếu null hoặc không khớp
-         */
+        // Chuyển chuỗi thành enum Status, mặc định Inactive nếu không khớp
         public static Status fromString(String value) {
+            // null hoặc rỗng thì trả về Inactive
             if (value == null || value.trim().isEmpty()) {
                 return Inactive;
             }
+            // Duyệt các giá trị enum để tìm khớp
             for (Status item : values()) {
                 if (item.name().equalsIgnoreCase(value.trim())) {
                     return item;
@@ -47,62 +45,27 @@ public class BlogPost {
     private Status status;
     private LocalDateTime publishedAt;
 
-    /**
-     * Constructor mặc định khi khởi tạo bài viết mới chưa có ID.
-     */
+    // Constructor mặc định cho bài viết mới chưa có ID
     public BlogPost() {
         this.blogPostId = 0;
         this.status = Status.Inactive;
     }
 
-    /**
-     * Constructor tạo bài viết mới để thêm vào database (chưa có BlogPostId).
-     * @param authorEmployeeId ID nhân viên tác giả (Manager)
-     * @param title tiêu đề bài viết
-     * @param category chuyên mục (Training, Nutrition, News)
-     * @param excerpt tóm tắt ngắn
-     * @param content nội dung chi tiết
-     * @param coverImage đường dẫn ảnh đại diện
-     * @param status trạng thái (Active / Inactive)
-     * @param publishedAt thời điểm đăng bài
-     */
+    // Constructor tạo bài viết mới (chưa có BlogPostId)
     public BlogPost(int authorEmployeeId, String title, String category,
                     String excerpt, String content, String coverImage,
                     Status status, LocalDateTime publishedAt) {
         this(0, authorEmployeeId, null, title, category, excerpt, content, coverImage, status, publishedAt);
     }
 
-    /**
-     * Constructor đầy đủ khi đọc từ database.
-     * @param blogPostId ID bài viết
-     * @param authorEmployeeId ID nhân viên tác giả
-     * @param title tiêu đề bài viết
-     * @param category chuyên mục
-     * @param excerpt tóm tắt ngắn
-     * @param content nội dung chi tiết
-     * @param coverImage ảnh đại diện
-     * @param status trạng thái
-     * @param publishedAt thời điểm đăng bài
-     */
+    // Constructor đầy đủ khi đọc từ DB
     public BlogPost(int blogPostId, int authorEmployeeId, String title, String category,
                     String excerpt, String content, String coverImage,
                     Status status, LocalDateTime publishedAt) {
         this(blogPostId, authorEmployeeId, null, title, category, excerpt, content, coverImage, status, publishedAt);
     }
 
-    /**
-     * Constructor đầy đủ kèm tên tác giả khi JOIN bảng Employees và Persons.
-     * @param blogPostId ID bài viết
-     * @param authorEmployeeId ID nhân viên tác giả
-     * @param authorName họ tên tác giả hiển thị
-     * @param title tiêu đề bài viết
-     * @param category chuyên mục
-     * @param excerpt tóm tắt ngắn
-     * @param content nội dung chi tiết
-     * @param coverImage ảnh đại diện
-     * @param status trạng thái
-     * @param publishedAt thời điểm đăng bài
-     */
+    // Constructor đầy đủ kèm tên tác giả (sau khi JOIN Employees/Persons)
     public BlogPost(int blogPostId, int authorEmployeeId, String authorName, String title,
                     String category, String excerpt, String content, String coverImage,
                     Status status, LocalDateTime publishedAt) {
@@ -120,90 +83,112 @@ public class BlogPost {
 
     // ===== Getter & Setter (Setter chỉ gán thuần, không validate) =====
 
+    // Lấy blogPostId (bất biến)
     public int getBlogPostId() {
         return blogPostId;
     }
 
+    // Lấy authorEmployeeId
     public int getAuthorEmployeeId() {
         return authorEmployeeId;
     }
 
+    // Gán authorEmployeeId
     public void setAuthorEmployeeId(int authorEmployeeId) {
         this.authorEmployeeId = authorEmployeeId;
     }
 
+    // Lấy tên tác giả
     public String getAuthorName() {
         return authorName;
     }
 
+    // Gán tên tác giả
     public void setAuthorName(String authorName) {
         this.authorName = authorName;
     }
 
+    // Lấy tiêu đề
     public String getTitle() {
         return title;
     }
 
+    // Gán tiêu đề
     public void setTitle(String title) {
         this.title = title;
     }
 
+    // Lấy chuyên mục
     public String getCategory() {
         return category;
     }
 
+    // Gán chuyên mục
     public void setCategory(String category) {
         this.category = category;
     }
 
+    // Lấy tóm tắt ngắn
     public String getExcerpt() {
         return excerpt;
     }
 
+    // Gán tóm tắt ngắn
     public void setExcerpt(String excerpt) {
         this.excerpt = excerpt;
     }
 
+    // Lấy nội dung chi tiết
     public String getContent() {
         return content;
     }
 
+    // Gán nội dung chi tiết
     public void setContent(String content) {
         this.content = content;
     }
 
+    // Lấy đường dẫn ảnh đại diện
     public String getCoverImage() {
         return coverImage;
     }
 
+    // Gán đường dẫn ảnh đại diện
     public void setCoverImage(String coverImage) {
         this.coverImage = coverImage;
     }
 
+    // Lấy trạng thái bài viết
     public Status getStatus() {
         return status;
     }
 
+    // Gán trạng thái bài viết
     public void setStatus(Status status) {
         this.status = status;
     }
 
+    // Gán trạng thái từ chuỗi (chuyển qua Status.fromString)
     public void setStatus(String statusStr) {
         this.status = Status.fromString(statusStr);
     }
 
+    // Kiểm tra bài viết đang Active hay không
     public boolean isActive() {
         return this.status == Status.Active;
     }
 
+    // Lấy thời điểm đăng bài
     public LocalDateTime getPublishedAt() {
         return publishedAt;
     }
 
+    // Gán thời điểm đăng bài
     public void setPublishedAt(LocalDateTime publishedAt) {
         this.publishedAt = publishedAt;
     }
 
+    // Chuỗi mô tả bài viết cho debug/log
     @Override
     public String toString() {
         return "BlogPost{"

@@ -18,7 +18,9 @@ import java.util.List;
 import java.util.Map;
 
 /**
- * Controller cho Admin Dashboard — báo cáo vận hành, doanh thu và audit metrics (UC-47).
+ * Servlet Dashboard Admin (URL /admin/dashboard) — báo cáo vận hành, doanh thu, hoa hồng PT và audit.
+ *
+ * <p>Theo khoảng ngày được chọn; có thể xuất CSV cùng bộ lọc đang xem.</p>
  */
 @WebServlet("/admin/dashboard")
 public class AdminDashboardServlet extends HttpServlet {
@@ -29,12 +31,7 @@ public class AdminDashboardServlet extends HttpServlet {
     private final SystemReportService systemReportService = new SystemReportService();
 
     /**
-     * Hiển thị hoặc xuất CSV Admin Dashboard theo khoảng ngày được chọn.
-     *
-     * @param request request hiện tại
-     * @param response response hiện tại
-     * @throws ServletException khi forward JSP lỗi
-     * @throws IOException khi xử lý response lỗi
+     * GET /admin/dashboard — hiện dashboard theo khoảng ngày; action=exportCsv thì xuất CSV.
      */
     @Override
     protected void doGet(
