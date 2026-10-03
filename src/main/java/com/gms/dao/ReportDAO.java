@@ -214,7 +214,7 @@ public class ReportDAO {
                         s.Status IN ('Completed', 'Missed')
                         OR (
                             s.Status = 'Cancelled'
-                            AND s.ResolutionType IN ('Cancel', 'CustomerRequest')
+                            AND s.CancelType IN ('ByPt', 'ByCustomer')
                         )
                       )
                 GROUP BY e.EmployeeCode, p.FullName

@@ -29,7 +29,6 @@ public class HomeService {
     private static final String BADGE_POPULAR = "Phổ biến nhất";
     private static final String BADGE_BEST_SAVING = "Tiết kiệm nhất";
     private static final int LATEST_POST_LIMIT = 3;
-    private static final int DAYS_PER_MONTH = 30;
 
     private final PackageDAO packageDAO = new PackageDAO();
     private final EmployeeDAO employeeDAO = new EmployeeDAO();
@@ -165,13 +164,9 @@ public class HomeService {
     }
 
     /**
-     * Đổi số ngày ra số tháng (làm tròn): 30 → 1, 90 → 3, 365 → 12; gói ngày (1) và buổi lẻ (null) → 0.
+     * Số tháng của gói (DBR-19); gói ngày và buổi lẻ → 0.
      */
     private int toMonths(Package pkg) {
-        Integer days = pkg.getDurationDays();
-        if (days == null) {
-            return 0;
-        }
-        return (int) Math.round((double) days / DAYS_PER_MONTH);
+        return pkg.getDurationMonths();
     }
 }

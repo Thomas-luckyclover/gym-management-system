@@ -9,7 +9,7 @@ import java.util.List;
  * Bố cục theo prototype pt/trang-chu.html, nghiệp vụ theo SRS 9.1.2 + "05_Dashboard_Rules.md":
  *   Đầu trang   : lời chào + thời tiết + tóm tắt hôm nay
  *   Cột chính   : Buổi cần điểm danh (P-07) · Hoa hồng theo kỳ · Buổi sắp tới (lọc ngày) · Banner khách thiếu gói tập
- *   Cột phụ     : Khách phụ trách · Dự kiến còn lại tháng này · Tuần này · Lịch rảnh
+ *   Cột phụ     : Khách phụ trách · Tháng · Tuần · Lịch rảnh — tất cả theo ngày trong ô "Từ ngày"
  *
  * @author Le Cong Minh
  */
@@ -44,6 +44,7 @@ public class PtDashboardView {
     private String todayLabel;
     private WeatherView weather;
     private int todaySessionCount;
+    private int todayWeekFreeSlots;
 
     // ===== Buổi cần điểm danh =====
     private int attendanceWindowHours;
@@ -75,15 +76,22 @@ public class PtDashboardView {
     private int missingMembershipCustomerCount;
     private String missingMembershipFirstDate;
 
-    // ===== Cột phụ =====
+    // ===== Cột phụ (theo ngày đang lọc) =====
     private List<PtClientView> clients;
     private int clientsEndingSoon;
-    private int expectedSessionCount;
-    private long expectedAmount;
+    private String weekLabel;
     private int weekScheduled;
     private int weekTaught;
     private int weekMissed;
-    private int weekFreeSlots;
+    private int weekCancelled;
+    private Integer weekFreeSlots;
+    private String monthLabel;
+    private int monthEarnedCount;
+    private long monthEarnedAmount;
+    private int monthPendingCount;
+    private long monthPendingAmount;
+    private int monthExpectedCount;
+    private long monthExpectedAmount;
 
     // ---------- Đầu trang ----------
 
@@ -156,6 +164,15 @@ public class PtDashboardView {
 
     public void setTodaySessionCount(int todaySessionCount) {
         this.todaySessionCount = todaySessionCount;
+    }
+
+    /** @return slot trống từ hôm nay tới Chủ nhật tuần này — chip trên thẻ chào (luôn theo hôm nay). */
+    public int getTodayWeekFreeSlots() {
+        return todayWeekFreeSlots;
+    }
+
+    public void setTodayWeekFreeSlots(int todayWeekFreeSlots) {
+        this.todayWeekFreeSlots = todayWeekFreeSlots;
     }
 
     // ---------- Buổi cần điểm danh ----------
@@ -384,26 +401,15 @@ public class PtDashboardView {
         this.clientsEndingSoon = clientsEndingSoon;
     }
 
-    /** @return số buổi Scheduled từ hôm nay tới hết tháng. */
-    public int getExpectedSessionCount() {
-        return expectedSessionCount;
+    // ---------- Ô "Tuần" (tuần chứa ngày đang lọc) ----------
+
+    /** @return VD "Tuần này · 28/09 – 04/10" hoặc "Tuần 21/09 – 27/09". */
+    public String getWeekLabel() {
+        return weekLabel;
     }
 
-    public void setExpectedSessionCount(int expectedSessionCount) {
-        this.expectedSessionCount = expectedSessionCount;
-    }
-
-    public long getExpectedAmount() {
-        return expectedAmount;
-    }
-
-    public void setExpectedAmount(long expectedAmount) {
-        this.expectedAmount = expectedAmount;
-    }
-
-    /** @return hoa hồng dự kiến còn lại tháng này, VD "560.000đ". */
-    public String getExpectedAmountText() {
-        return MoneyUtil.formatMoney(expectedAmount);
+    public void setWeekLabel(String weekLabel) {
+        this.weekLabel = weekLabel;
     }
 
     public int getWeekScheduled() {
@@ -430,12 +436,85 @@ public class PtDashboardView {
         this.weekMissed = weekMissed;
     }
 
-    /** @return slot Free từ hôm nay tới Chủ nhật. */
-    public int getWeekFreeSlots() {
+    public int getWeekCancelled() {
+        return weekCancelled;
+    }
+
+    public void setWeekCancelled(int weekCancelled) {
+        this.weekCancelled = weekCancelled;
+    }
+
+    /** @return slot Free trong tuần, tính từ hôm nay trở đi; null nếu tuần đã qua (JSP ẩn dòng). */
+    public Integer getWeekFreeSlots() {
         return weekFreeSlots;
     }
 
-    public void setWeekFreeSlots(int weekFreeSlots) {
+    public void setWeekFreeSlots(Integer weekFreeSlots) {
         this.weekFreeSlots = weekFreeSlots;
+    }
+
+    // ---------- Ô "Tháng" (tháng chứa ngày đang lọc) ----------
+
+    /** @return VD "Tháng này · 09/2026" hoặc "Tháng 08/2026". */
+    public String getMonthLabel() {
+        return monthLabel;
+    }
+
+    public void setMonthLabel(String monthLabel) {
+        this.monthLabel = monthLabel;
+    }
+
+    /** @return số buổi đã được tính hoa hồng trong tháng. */
+    public int getMonthEarnedCount() {
+        return monthEarnedCount;
+    }
+
+    public void setMonthEarnedCount(int monthEarnedCount) {
+        this.monthEarnedCount = monthEarnedCount;
+    }
+
+    public void setMonthEarnedAmount(long monthEarnedAmount) {
+        this.monthEarnedAmount = monthEarnedAmount;
+    }
+
+    /** @return hoa hồng đã chốt, VD "1.120.000đ". */
+    public String getMonthEarnedText() {
+        return MoneyUtil.formatMoney(monthEarnedAmount);
+    }
+
+    /** @return số buổi đã qua ngày nhưng vẫn Scheduled (chờ điểm danh / JOB-04). */
+    public int getMonthPendingCount() {
+        return monthPendingCount;
+    }
+
+    public void setMonthPendingCount(int monthPendingCount) {
+        this.monthPendingCount = monthPendingCount;
+    }
+
+    public void setMonthPendingAmount(long monthPendingAmount) {
+        this.monthPendingAmount = monthPendingAmount;
+    }
+
+    /** @return hoa hồng chờ chốt, VD "270.000đ". */
+    public String getMonthPendingText() {
+        return MoneyUtil.formatMoney(monthPendingAmount);
+    }
+
+    /** @return số buổi Scheduled từ hôm nay trở đi trong tháng. */
+    public int getMonthExpectedCount() {
+        return monthExpectedCount;
+    }
+
+    public void setMonthExpectedCount(int monthExpectedCount) {
+        this.monthExpectedCount = monthExpectedCount;
+    }
+
+    public void setMonthExpectedAmount(long monthExpectedAmount) {
+        this.monthExpectedAmount = monthExpectedAmount;
+    }
+
+    /** @return hoa hồng dự kiến, VD "560.000đ". */
+    public String getMonthExpectedText() {
+        return MoneyUtil.formatMoney(monthExpectedAmount);
     }
 }

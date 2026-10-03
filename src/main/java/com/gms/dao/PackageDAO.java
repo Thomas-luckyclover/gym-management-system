@@ -38,10 +38,10 @@ public class PackageDAO {
     public List<Package> findActiveForHomepage() throws SQLException {
         // B1: lấy gói đang bán, sắp theo thời hạn rồi theo giá
         String sql = "SELECT PackageId, PackageName, Description, Benefits, PackageType, "
-                + "DurationDays, EstimatedSessionCount, Price, IsActive, CreatedAt "
+                + "DurationUnit, DurationValue, EstimatedSessionCount, Price, IsActive, CreatedAt "
                 + "FROM Packages "
                 + "WHERE IsActive = 1 "
-                + "ORDER BY DurationDays, Price";
+                + "ORDER BY CASE DurationUnit WHEN 'Day' THEN 0 WHEN 'Month' THEN 1 ELSE -1 END, DurationValue, Price";
 
         List<Package> packages = new ArrayList<>();
 
@@ -62,7 +62,7 @@ public class PackageDAO {
     // ===== Hàm phụ =====
 
     /**
-     * Chép 1 dòng kết quả SELECT thành object Package (dòng phải có đủ 10 cột như câu SELECT ở trên).
+     * Chép 1 dòng kết quả SELECT thành object Package (dòng phải có đủ 11 cột như câu SELECT ở trên).
      */
     private Package mapResultSetToPackage(ResultSet rs) throws SQLException {
         // B1: Id là final → chỉ gán được qua constructor
@@ -73,7 +73,8 @@ public class PackageDAO {
         pkg.setDescription(rs.getString("Description"));
         pkg.setBenefits(rs.getString("Benefits"));
         pkg.setPackageType(Package.Type.fromDbValue(rs.getString("PackageType")));
-        pkg.setDurationDays(getNullableInteger(rs, "DurationDays"));
+        pkg.setDurationUnit(rs.getString("DurationUnit"));
+        pkg.setDurationValue(getNullableInteger(rs, "DurationValue"));
         pkg.setEstimatedSessionCount(getNullableInteger(rs, "EstimatedSessionCount"));
         pkg.setPrice(rs.getInt("Price"));
         pkg.setActive(rs.getBoolean("IsActive"));

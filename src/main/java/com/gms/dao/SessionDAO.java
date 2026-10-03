@@ -118,7 +118,7 @@ public class SessionDAO {
      */
     public List<SessionStatRow> findStatRows(int ptEmployeeId, LocalDate fromDate, LocalDate toDate)
             throws SQLException {
-        String sql = "SELECT t.SlotDate, s.Status, s.ResolutionType, sub.SubscriptionType, s.CommissionAmount "
+        String sql = "SELECT t.SlotDate, s.Status, s.CancelType, sub.SubscriptionType, s.CommissionAmount "
                 + "FROM Sessions s "
                 + "JOIN TimeSlots t ON t.TimeSlotId = s.TimeSlotId "
                 + "JOIN Subscriptions sub ON sub.SubscriptionId = s.SubscriptionId "
@@ -136,7 +136,7 @@ public class SessionDAO {
                     rows.add(new SessionStatRow(
                             rs.getDate("SlotDate").toLocalDate(),
                             rs.getString("Status"),
-                            rs.getString("ResolutionType"),
+                            rs.getString("CancelType"),
                             rs.getString("SubscriptionType"),
                             rs.getLong("CommissionAmount")));
                 }

@@ -188,6 +188,11 @@ public class AccountSettingsServlet extends HttpServlet {
                         return;
                 }
 
+                rememberPendingContact(
+                                session,
+                                ContactField.EMAIL,
+                                newEmail,
+                                newEmail);
                 prepareContactVerification(
                                 request,
                                 ContactField.EMAIL,
@@ -302,6 +307,11 @@ public class AccountSettingsServlet extends HttpServlet {
                         return;
                 }
 
+                rememberPendingContact(
+                                session,
+                                ContactField.PHONE,
+                                settings.getEmail(),
+                                newPhone);
                 prepareContactVerification(
                                 request,
                                 ContactField.PHONE,
@@ -312,6 +322,23 @@ public class AccountSettingsServlet extends HttpServlet {
                 renderAccountSettings(
                                 request,
                                 response);
+        }
+
+        /** Lưu thay đổi email/SĐT đang chờ mã ở phía server (CBR-110, GBR-13). */
+        private void rememberPendingContact(
+                        HttpSession session,
+                        ContactField field,
+                        String verificationEmail,
+                        String newValue) {
+                session.setAttribute(SessionKey.PENDING_CONTACT_FIELD, field);
+                session.setAttribute(SessionKey.PENDING_CONTACT_VERIFY_EMAIL, verificationEmail);
+                session.setAttribute(SessionKey.PENDING_CONTACT_VALUE, newValue);
+        }
+
+        private void clearPendingContact(HttpSession session) {
+                session.removeAttribute(SessionKey.PENDING_CONTACT_FIELD);
+                session.removeAttribute(SessionKey.PENDING_CONTACT_VERIFY_EMAIL);
+                session.removeAttribute(SessionKey.PENDING_CONTACT_VALUE);
         }
 
         private void prepareContactVerification(
@@ -404,46 +431,26 @@ public class AccountSettingsServlet extends HttpServlet {
                         return;
                 }
 
-                String contactFieldValue = RequestUtil.getTrimmedParam(
-                                request,
-                                "contactField");
-
-                ContactField contactField = null;
-
-                if (ContactField.EMAIL.name()
-                                .equals(contactFieldValue)) {
-
-                        contactField = ContactField.EMAIL;
-
-                } else if (ContactField.PHONE.name()
-                                .equals(contactFieldValue)) {
-
-                        contactField = ContactField.PHONE;
-                }
-
-                if (contactField == null) {
-
+                // B1: lấy giá trị chờ đổi từ session, không lấy từ form (CBR-110, GBR-13)
+                ContactField contactField = (ContactField) session.getAttribute(
+                                SessionKey.PENDING_CONTACT_FIELD);
+                String verificationEmail = (String) session.getAttribute(
+                                SessionKey.PENDING_CONTACT_VERIFY_EMAIL);
+                String pendingContactValue = (String) session.getAttribute(
+                                SessionKey.PENDING_CONTACT_VALUE);
+                if (contactField == null
+                                || verificationEmail == null
+                                || pendingContactValue == null) {
                         RequestUtil.setFlashToast(
                                         request,
                                         "error",
                                         Messages.MSG04_SYSTEM_BUSY);
-
                         RequestUtil.redirect(
                                         request,
                                         response,
                                         "/account?tab=profile");
-
                         return;
                 }
-
-                String verificationEmail = RequestUtil.getTrimmedParam(
-                                request,
-                                "verificationEmail");
-
-                String pendingContactValue = RequestUtil.getTrimmedParam(
-                                request,
-                                "pendingContactValue");
-
                 String verificationCode = RequestUtil.getTrimmedParam(
                                 request,
                                 "verificationCode");
@@ -503,6 +510,8 @@ public class AccountSettingsServlet extends HttpServlet {
 
                         return;
                 }
+
+                clearPendingContact(session);
 
                 String action;
                 String fieldChanged;
