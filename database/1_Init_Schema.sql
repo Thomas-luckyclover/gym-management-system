@@ -62,7 +62,7 @@ GO
 -- Customers: vai trò KHÁCH của một Person
 CREATE TABLE Customers (
     CustomerId           INT IDENTITY(1,1) NOT NULL,
-    PersonId             INT           NOT NULL,   -- 1 Person có tối đa 1 hồ sơ khách
+    PersonId             INT           NOT NULL,   -- 1 Person có tối đa 1 hồ sơ khách CHƯA Inactive (DBR-65)
     CustomerCode         VARCHAR(12)   NOT NULL,   -- KH-nnnn, hệ thống sinh, không bao giờ đổi
     CheckInPhoto         NVARCHAR(255) NULL,       -- Lễ tân chụp tại quầy, dùng đối chiếu khi check-in
     CustomerType         VARCHAR(10)   NOT NULL,   -- Self | Dependent (không đổi được sau khi tạo)
@@ -75,7 +75,6 @@ CREATE TABLE Customers (
     DeletedAt            DATETIME2(0)  NULL,       -- xóa mềm: chỉ set giờ, không xóa dòng
 
     CONSTRAINT PK_Customers PRIMARY KEY (CustomerId),
-    CONSTRAINT UQ_Customers_PersonId     UNIQUE (PersonId),
     CONSTRAINT UQ_Customers_CustomerCode UNIQUE (CustomerCode),
     CONSTRAINT FK_Customers_Persons FOREIGN KEY (PersonId) REFERENCES Persons(PersonId),
     CONSTRAINT CK_Customers_Code CHECK (CustomerCode LIKE 'KH-[0-9][0-9][0-9][0-9]'),
@@ -97,7 +96,7 @@ GO
 -- Employees: vai trò NHÂN VIÊN của một Person
 CREATE TABLE Employees (
     EmployeeId     INT IDENTITY(1,1) NOT NULL,
-    PersonId       INT          NOT NULL,   -- 1 Person có tối đa 1 hồ sơ nhân viên
+    PersonId       INT          NOT NULL,   -- 1 Person có tối đa 1 hồ sơ nhân viên đang Working (DBR-65)
     EmployeeCode   VARCHAR(12)  NOT NULL,   -- NV-nnnn
     Position       VARCHAR(15)  NOT NULL,   -- Admin | Manager | PT | Receptionist
     HireDate       DATE         NOT NULL,
@@ -109,7 +108,6 @@ CREATE TABLE Employees (
     ResignationReason NVARCHAR(500) NULL,   -- bắt buộc khi Resigned (SRS 5.1.2, GBR-09: lý do lưu cùng bản ghi)
 
     CONSTRAINT PK_Employees PRIMARY KEY (EmployeeId),
-    CONSTRAINT UQ_Employees_PersonId     UNIQUE (PersonId),
     CONSTRAINT UQ_Employees_EmployeeCode UNIQUE (EmployeeCode),
     CONSTRAINT FK_Employees_Persons FOREIGN KEY (PersonId) REFERENCES Persons(PersonId),
     CONSTRAINT CK_Employees_Code CHECK (EmployeeCode LIKE 'NV-[0-9][0-9][0-9][0-9]'),
@@ -130,7 +128,15 @@ CREATE TABLE Employees (
 );
 GO
 
--- Accounts: thông tin đăng nhập, gắn đúng 1 Person. Nhiều người KHÔNG có tài khoản
+-- DBR-65: mỗi Person tối đa 1 hồ sơ khách chưa Inactive và 1 hồ sơ nhân viên đang Working.
+-- Dùng filtered unique index (thay cho UNIQUE(PersonId)) để hồ sơ cũ đã Inactive/Resigned không chặn
+-- việc tạo hồ sơ mới trên cùng Person (VD nhân viên bị xóa hồ sơ khách, sau quay lại tập — CBR-114).
+CREATE UNIQUE INDEX UX_Customers_PersonId_Active ON Customers(PersonId) WHERE Status <> 'Inactive';
+CREATE UNIQUE INDEX UX_Employees_PersonId_Working ON Employees(PersonId) WHERE Status = 'Working';
+GO
+
+-- Accounts: thông tin đăng nhập, gắn đúng 1 Person. 1 tài khoản phục vụ MỌI vai trò chưa Inactive
+-- của Person (DBR-65, CBR-113): người vừa là PT vừa là khách dùng 1 tài khoản, đăng nhập xong chọn vai trò. Nhiều người KHÔNG có tài khoản
 -- (khách vãng lai, hồ sơ Dependent) nên tách bảng thay vì gộp vào Persons.
 CREATE TABLE Accounts (
     AccountId        INT IDENTITY(1,1) NOT NULL,

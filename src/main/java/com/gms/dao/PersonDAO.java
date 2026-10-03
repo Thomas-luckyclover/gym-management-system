@@ -121,8 +121,12 @@ public class PersonDAO {
         }
 
         /**
-         * Tìm Person đang hoạt động (IsReleased = 0) theo số điện thoại,
-         * chỉ trong hồ sơ Self (CBR-28: bỏ qua SĐT giám hộ trên Dependent profile).
+         * Tìm Person đang hoạt động (IsReleased = 0) theo số điện thoại — BẤT KỂ là khách hay nhân viên
+         * (DBR-22: SĐT duy nhất giữa mọi Person còn hoạt động).
+         * SĐT giám hộ nằm ở bảng Customers, không nằm trên Person, nên tự động không bị so (CBR-28).
+         *
+         * Lỗi cũ: JOIN Customers ... CustomerType = 'Self' → SĐT của nhân viên (chưa có hồ sơ khách)
+         * bị coi là số mới → INSERT Person trùng số → vỡ UX_Persons_Phone_Active → báo "Hệ thống bận".
          * 
          * @param phone số điện thoại 10 chữ số
          * @return đối tượng Person hoặc null nếu không tìm thấy
@@ -132,8 +136,7 @@ public class PersonDAO {
                 String sql = "SELECT p.PersonId, p.FullName, p.DateOfBirth, p.Phone, p.Email, "
                                 + "p.Avatar, p.IsReleased, p.CreatedAt "
                                 + "FROM Persons p "
-                                + "INNER JOIN Customers c ON c.PersonId = p.PersonId "
-                                + "WHERE p.Phone = ? AND p.IsReleased = 0 AND c.CustomerType = 'Self'";
+                                + "WHERE p.Phone = ? AND p.IsReleased = 0";
 
                 try (Connection conn = DBContext.getConnection();
                                 PreparedStatement stmt = conn.prepareStatement(sql)) {

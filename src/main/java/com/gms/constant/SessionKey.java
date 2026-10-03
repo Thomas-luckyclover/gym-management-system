@@ -17,6 +17,22 @@ public final class SessionKey {
     public static final String ROLE = "role";
 
     /**
+     * Các vai trò tài khoản đang phục vụ (String, VD "PT,Customer") — CBR-113.
+     * Có từ 2 vai trò trở lên mà ROLE còn trống → AuthFilter đưa về /select-role.
+     * Menu tài khoản đọc key này để hiện nút "Đổi vai trò".
+     */
+    public static final String AVAILABLE_ROLES = "availableRoles";
+
+    /**
+     * Thay đổi email / SĐT đang chờ nhập mã (Account Settings, CBR-110).
+     * Lưu ở SERVER khi gửi mã; lúc xác minh chỉ đọc từ đây, KHÔNG đọc từ form (GBR-13),
+     * để không ai xin mã cho giá trị A rồi gửi kèm giá trị B.
+     */
+    public static final String PENDING_CONTACT_FIELD = "pendingContactField";
+    public static final String PENDING_CONTACT_VALUE = "pendingContactValue";
+    public static final String PENDING_CONTACT_VERIFY_EMAIL = "pendingContactVerifyEmail";
+
+    /**
      * Tên hiển thị trên header/sidebar. Không nhạy cảm, lưu để khỏi query DB ở mỗi trang.
      * Khi user đổi tên (Lễ tân sửa hồ sơ) thì lần đăng nhập sau mới cập nhật — chấp nhận được.
      */

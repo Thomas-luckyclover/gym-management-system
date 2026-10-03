@@ -133,7 +133,21 @@ public class ContactChangeService {
                     : ServiceResult.fail(verifyResult.getMessage());
         }
 
-        // B2: mã hợp lệ, tiến hành cập nhật vào database
+        // B2: mã hợp lệ → kiểm tra trùng LẦN 2 ngay trước khi lưu (CBR-110): trong 15 phút chờ mã,
+        //     người khác có thể đã lấy email / SĐT này. Không kiểm tra thì vỡ unique index → "Hệ thống bận".
+        try {
+            if (field == ContactField.EMAIL && personDAO.existsByEmail(newValue)) {
+                return ServiceResult.failField("email", Messages.MSG12_EMAIL_USED);
+            }
+            if (field == ContactField.PHONE && personDAO.existsByPhone(newValue)) {
+                return ServiceResult.failField("phone", Messages.MSG14_PHONE_USED);
+            }
+        } catch (SQLException e) {
+            e.printStackTrace();
+            return ServiceResult.fail(Messages.MSG04_SYSTEM_BUSY);
+        }
+
+        // B3: tiến hành cập nhật vào database (email/SĐT nằm trên Person → áp cho mọi vai trò, DBR-65)
         try {
             if (field == ContactField.EMAIL) {
                 return applyEmailChange(accountId, personId, newValue, currentSessionId);

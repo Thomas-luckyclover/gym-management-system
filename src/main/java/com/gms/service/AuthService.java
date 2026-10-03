@@ -16,7 +16,9 @@ import java.sql.ResultSet;
 import java.sql.SQLException;
 import java.time.Duration;
 import java.time.LocalDateTime;
+import java.util.ArrayList;
 import java.util.LinkedHashMap;
+import java.util.List;
 import java.util.Map;
 
 /**
@@ -59,6 +61,9 @@ public class AuthService {
      * Minh LC.
      */
     private static final int LOCK_MINUTES = 5;
+
+    /** Màn chọn vai trò khi tài khoản có từ 2 vai trò (CBR-113). */
+    public static final String SELECT_ROLE_PATH = "/select-role";
 
     private final AccountDAO accountDAO;
 
@@ -140,10 +145,17 @@ public class AuthService {
                 return ServiceResult.fail(Messages.MSG38_NO_PASSWORD_YET);
             }
 
-            // Lấy thông tin cá nhân & vai trò
+            // Lấy thông tin cá nhân & MỌI vai trò chưa Inactive của Person (DBR-65)
             PersonProfile profile = fetchPersonProfile(conn, account.getPersonId());
-            Role role = profile.role != null ? profile.role : Role.CUSTOMER;
-            boolean isStaff = (role != Role.CUSTOMER);
+
+            // Không còn vai trò nào (khách đã xóa hồ sơ + không còn làm nhân viên) → chặn như Inactive (CBR-86, CBR-96).
+            // Trước đây code tự gán CUSTOMER khi không tìm thấy vai trò → nhân viên nghỉ việc vào được khu khách.
+            if (profile.roles.isEmpty()) {
+                return ServiceResult.fail(Messages.MSG37_ACCOUNT_INACTIVE);
+            }
+
+            // BR-01: tài khoản có BẤT KỲ vai trò nhân viên nào thì không bao giờ tự khóa
+            boolean isStaff = profile.hasStaffRole();
 
             // B7: Kiểm tra mật khẩu
             boolean isPasswordMatched = PasswordUtil.checkPassword(password, account.getPasswordHash());
@@ -182,6 +194,11 @@ public class AuthService {
             accountDAO.updateLastLogin(conn, account.getAccountId(), now);
             account.setLastLoginAt(now);
 
+            // CBR-113: 1 vai trò → vào thẳng; từ 2 vai trò → role = null, Servlet chuyển sang /select-role
+            boolean isSingleRole = profile.roles.size() == 1;
+            Role role = isSingleRole ? profile.roles.get(0) : null;
+            String redirectUrl = isSingleRole ? role.getHomePath() : SELECT_ROLE_PATH;
+
             LoginResult loginResult = new LoginResult(
                     account.getAccountId(),
                     account.getPersonId(),
@@ -190,7 +207,8 @@ public class AuthService {
                     profile.phone,
                     profile.avatar,
                     role,
-                    role.getHomePath());
+                    redirectUrl,
+                    profile.roles);
 
             return ServiceResult.ok(loginResult);
 
@@ -211,28 +229,43 @@ public class AuthService {
         final String email;
         final String phone;
         final String avatar;
-        final Role role;
+        /** Vai trò nhân viên (nếu có) đứng trước, Customer đứng sau. Rỗng = không còn vai trò nào. */
+        final List<Role> roles;
 
-        PersonProfile(String fullName, String email, String phone, String avatar, Role role) {
+        PersonProfile(String fullName, String email, String phone, String avatar, List<Role> roles) {
             this.fullName = fullName != null ? fullName : "";
             this.email = email != null ? email : "";
             this.phone = phone != null ? phone : "";
             this.avatar = avatar;
-            this.role = role;
+            this.roles = roles;
+        }
+
+        boolean hasStaffRole() {
+            for (Role r : roles) {
+                if (r != Role.CUSTOMER) {
+                    return true;
+                }
+            }
+            return false;
         }
     }
 
+    /**
+     * Đọc Person + các vai trò CÒN HIỆU LỰC:
+     * - nhân viên: Employees.Status = 'Working' (Resigned coi như Inactive — DBR-65)
+     * - khách   : Customers.Status <> 'Inactive'
+     */
     private PersonProfile fetchPersonProfile(Connection conn, int personId) throws SQLException {
         if (conn == null) {
-            return new PersonProfile("", "", "", null, Role.CUSTOMER);
+            return new PersonProfile("", "", "", null, List.of(Role.CUSTOMER));
         }
         String sql = """
                 SELECT p.FullName, p.Email, p.Phone, p.Avatar,
-                       e.Position AS EmployeePosition,
-                       c.CustomerId
+                       (SELECT TOP 1 e.Position FROM Employees e
+                         WHERE e.PersonId = p.PersonId AND e.Status = 'Working') AS StaffPosition,
+                       (SELECT TOP 1 c.CustomerId FROM Customers c
+                         WHERE c.PersonId = p.PersonId AND c.Status <> 'Inactive') AS ActiveCustomerId
                 FROM Persons p
-                LEFT JOIN Employees e ON e.PersonId = p.PersonId AND e.Status = 'Working'
-                LEFT JOIN Customers c ON c.PersonId = p.PersonId
                 WHERE p.PersonId = ?
                 """;
 
@@ -240,21 +273,36 @@ public class AuthService {
             stmt.setInt(1, personId);
             try (ResultSet rs = stmt.executeQuery()) {
                 if (rs.next()) {
-                    String fullName = rs.getString("FullName");
-                    String email = rs.getString("Email");
-                    String phone = rs.getString("Phone");
-                    String avatar = rs.getString("Avatar");
-                    String position = rs.getString("EmployeePosition");
-
-                    Role role = Role.fromDbValue(position);
-                    if (role == null && rs.getObject("CustomerId") != null) {
-                        role = Role.CUSTOMER;
+                    List<Role> roles = new ArrayList<>();
+                    Role staffRole = Role.fromDbValue(rs.getString("StaffPosition"));
+                    if (staffRole != null && staffRole != Role.CUSTOMER) {
+                        roles.add(staffRole);
                     }
-
-                    return new PersonProfile(fullName, email, phone, avatar, role);
+                    if (rs.getObject("ActiveCustomerId") != null) {
+                        roles.add(Role.CUSTOMER);
+                    }
+                    return new PersonProfile(rs.getString("FullName"), rs.getString("Email"),
+                            rs.getString("Phone"), rs.getString("Avatar"), roles);
                 }
             }
         }
-        return new PersonProfile("", "", "", null, Role.CUSTOMER);
+        return new PersonProfile("", "", "", null, List.of());
+    }
+
+    /**
+     * Lấy lại danh sách vai trò còn hiệu lực của 1 tài khoản — dùng cho màn chọn / đổi vai trò (CBR-113),
+     * để server tự kiểm tra vai trò người dùng chọn, không tin danh sách lưu sẵn (GBR-13).
+     */
+    public List<Role> findActiveRoles(int accountId) {
+        try (Connection conn = getConnection()) {
+            Account account = accountDAO.findById(conn, accountId);
+            if (account == null || account.getStatus() != Account.Status.ACTIVE) {
+                return List.of();
+            }
+            return fetchPersonProfile(conn, account.getPersonId()).roles;
+        } catch (SQLException e) {
+            e.printStackTrace();
+            return List.of();
+        }
     }
 }

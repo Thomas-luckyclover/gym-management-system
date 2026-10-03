@@ -41,7 +41,7 @@ Mật khẩu **không bao giờ** in ra log, gửi email hay trả về giao di�
 | Mã | Luật |
 |---|---|
 | UC-01 | Đăng nhập bằng **email hoặc số điện thoại** + mật khẩu, vào đúng khu của vai trò (`Role.getHomePath()`) hoặc quay lại `returnUrl` (GBR-31). |
-| UC-01 | Nếu 1 số điện thoại vừa là khách vừa là nhân viên → **chỉ được đăng nhập bằng email** (xem mục 7, dòng 4). |
+| CBR-113 | 1 người vừa là khách vừa là nhân viên có **1 tài khoản**; đăng nhập bằng email hoặc SĐT đều được, xong thì **chọn vai trò** (`/select-role`); đổi vai trò trên menu, không cần đăng nhập lại. |
 | BR-01 | **Tài khoản khách** sai mật khẩu **5 lần liên tiếp** (P-17) → khóa tạm **5 phút** (P-18). **Tài khoản nhân viên không bao giờ tự khóa** (máy quầy dùng chung). |
 | BR-02 | Hết thời gian khóa → tự mở, bộ đếm về 0. Đăng nhập đúng cũng đưa bộ đếm về 0. |
 | CBR-96 | Tài khoản chỉ bị chặn trong 3 trường hợp: nhân viên đã nghỉ (Inactive), Admin khóa (Locked), khách đang khóa tạm (BR-01). |
@@ -223,7 +223,7 @@ Quy tắc: **không tự viết câu thông báo mới** trong Service/Servlet n
 | 1 | Độ dài mật khẩu đăng ký | SRS 1.2.2: 6–64 | DBR-02, SRS 1.3.3, 1.4.2, prototype: 8–64 có chữ + số | **8–64 có chữ + số** |
 | 2 | Số bước đăng ký | SRS 1.2: 2 bước (kiểm SĐT → nhập thông tin) | Prototype: gộp 1 form | Làm 1 form như prototype nhưng **server vẫn chạy đủ nhánh UC-IDENT** (mục 2.2) trước khi gửi mã |
 | 3 | Dung lượng ảnh đại diện | SRS 1.4.1: 2 MB | DBR-08: 5 MB | **2 MB** cho avatar (chặt hơn, riêng màn này), 5 MB cho ảnh khác |
-| 4 | 1 người vừa khách vừa nhân viên | SRS 3.2: tài khoản thuộc khách **hoặc** nhân viên; UC-01: trùng SĐT phải dùng email | DB: 1 Person = 1 Account cho cả 2 vai trò (Person 22) | Đăng nhập xong nếu Person có cả 2 hồ sơ → hỏi chọn vai trò (chờ chốt, notes D1.2) |
+| 4 | 1 người vừa khách vừa nhân viên | SRS 3.2: tài khoản thuộc khách **hoặc** nhân viên; UC-01: trùng SĐT phải dùng email | DB: 1 Person = 1 Account cho cả 2 vai trò (Person 22) | ✅ Đã chốt v25: 1 tài khoản, chọn vai trò (CBR-113, DBR-65) |
 | 5 | Mã khách ví dụ | SRS 1.4.3: `SG-0242` | DBR-09, DB: `KH-nnnn` | **KH-nnnn** |
 | 6 | Đầu số điện thoại | P-16 là "cấu hình triển khai" (SRS) | Seed lưu `03,05,07,08,09` (2 số) trong SystemConfigs; `application.properties` mẫu lưu 3 số | Chốt 1 nơi; tạm kiểm tra đúng 10 số bắt đầu 0 |
 | 7 | Giờ mở cửa | Prototype trang chủ: 06:00–22:00 | Seed P-19: 05:30–22:00 | **Theo DB** |

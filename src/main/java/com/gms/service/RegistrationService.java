@@ -94,10 +94,17 @@ public class RegistrationService {
                 return new PhoneCheckResult(PhoneOutcome.NEW_PHONE, null);
             }
 
-            // Hồ sơ đang hoạt động — kiểm tra đã có tài khoản chưa
+            // Person đang hoạt động — đã có tài khoản (khách HOẶC nhân viên) → dừng, mời đăng nhập (CBR-26).
+            // Nhân viên muốn tập thì ra quầy để Lễ tân gắn hồ sơ khách (CBR-19, CBR-114) — không bao giờ online.
             boolean hasAccount = hasAccountByPersonId(existingPerson.getPersonId());
             if (hasAccount) {
                 return new PhoneCheckResult(PhoneOutcome.HAS_ACCOUNT, null);
+            }
+
+            // Phòng thủ: Person còn hoạt động nhưng không có hồ sơ khách Self còn hiệu lực để kích hoạt
+            // → không gắn gì online, mời ra quầy (CBR-114)
+            if (!hasActiveSelfProfile(existingPerson.getPersonId())) {
+                return new PhoneCheckResult(PhoneOutcome.PROFILE_NO_EMAIL, null);
             }
 
             // Hồ sơ chưa có tài khoản — kiểm tra có email không
@@ -312,6 +319,11 @@ public class RegistrationService {
             return ServiceResult.fail(Messages.MSG51_PHONE_HAS_ACCOUNT);
         }
 
+        // Không có hồ sơ khách Self còn hiệu lực → không gắn online (CBR-114), mời ra quầy
+        if (!hasActiveSelfProfile(existingPerson.getPersonId())) {
+            return ServiceResult.fail(Messages.MSG53_PROFILE_NO_EMAIL);
+        }
+
         // Kiểm tra hồ sơ có email không
         String existingEmail = existingPerson.getEmail();
         boolean hasNoEmail = ValidationUtil.isNullOrEmpty(existingEmail);
@@ -463,6 +475,18 @@ public class RegistrationService {
 
     private boolean hasAccountByPersonId(int personId) throws SQLException {
         String sql = "SELECT 1 FROM Accounts WHERE PersonId = ?";
+        try (Connection conn = DBContext.getConnection();
+             PreparedStatement stmt = conn.prepareStatement(sql)) {
+            stmt.setInt(1, personId);
+            try (ResultSet rs = stmt.executeQuery()) {
+                return rs.next();
+            }
+        }
+    }
+
+    /** Person có hồ sơ khách Self chưa Inactive không (DBR-65) — điều kiện để kích hoạt online (CBR-20). */
+    private boolean hasActiveSelfProfile(int personId) throws SQLException {
+        String sql = "SELECT 1 FROM Customers WHERE PersonId = ? AND CustomerType = 'Self' AND Status <> 'Inactive'";
         try (Connection conn = DBContext.getConnection();
              PreparedStatement stmt = conn.prepareStatement(sql)) {
             stmt.setInt(1, personId);
