@@ -54,10 +54,11 @@ class PtDashboardServiceTest {
 
     @Test
     void cancelledEarnsOnlyWhenPtCancelledWithRefundOrCustomerCancelled() {
-        assertTrue(PtDashboardService.isCommissionable("Cancelled", "Cancel"));
-        assertTrue(PtDashboardService.isCommissionable("Cancelled", "CustomerRequest"));
-        // Phòng đóng cửa (CBR-57) / gói PT hết hạn (CBR-55): không có 2 ResolutionType trên → không tính
-        assertFalse(PtDashboardService.isCommissionable("Cancelled", null));
+        assertTrue(PtDashboardService.isCommissionable("Cancelled", "ByPt"));
+        assertTrue(PtDashboardService.isCommissionable("Cancelled", "ByCustomer"));
+        // Phòng đóng cửa (CBR-57) / gói PT hết hạn (CBR-55): CancelType GymClosed / PackageExpired → không tính
+        assertFalse(PtDashboardService.isCommissionable("Cancelled", "GymClosed"));
+        assertFalse(PtDashboardService.isCommissionable("Cancelled", "PackageExpired"));
     }
 
     @Test

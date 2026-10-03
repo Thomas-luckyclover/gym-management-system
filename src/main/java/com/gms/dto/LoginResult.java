@@ -2,6 +2,9 @@ package com.gms.dto;
 
 import com.gms.constant.Role;
 
+import java.util.Collections;
+import java.util.List;
+
 /**
  * DTO chứa thông tin trả về sau khi đăng nhập thành công.
  *
@@ -23,9 +26,17 @@ public class LoginResult {
     private final String avatar;
     private final Role role;
     private final String redirectUrl;
+    /** Vai trò còn hiệu lực của tài khoản (DBR-65). */
+    private final List<Role> availableRoles;
 
     public LoginResult(int accountId, int personId, String fullName, String email,
             String phone, String avatar, Role role, String redirectUrl) {
+        this(accountId, personId, fullName, email, phone, avatar, role, redirectUrl,
+                role == null ? Collections.emptyList() : List.of(role));
+    }
+
+    public LoginResult(int accountId, int personId, String fullName, String email,
+            String phone, String avatar, Role role, String redirectUrl, List<Role> availableRoles) {
         this.accountId = accountId;
         this.personId = personId;
         this.fullName = fullName;
@@ -34,6 +45,7 @@ public class LoginResult {
         this.avatar = avatar;
         this.role = role;
         this.redirectUrl = redirectUrl;
+        this.availableRoles = List.copyOf(availableRoles);
     }
 
     public int getAccountId() {
@@ -70,5 +82,14 @@ public class LoginResult {
      */
     public String getRedirectUrl() {
         return redirectUrl;
+    }
+
+    public List<Role> getAvailableRoles() {
+        return availableRoles;
+    }
+
+    /** Có từ 2 vai trò trở lên (CBR-113). */
+    public boolean isRoleChoiceRequired() {
+        return availableRoles.size() > 1;
     }
 }

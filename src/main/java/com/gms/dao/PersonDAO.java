@@ -121,8 +121,7 @@ public class PersonDAO {
         }
 
         /**
-         * Tìm Person đang hoạt động (IsReleased = 0) theo số điện thoại,
-         * chỉ trong hồ sơ Self (CBR-28: bỏ qua SĐT giám hộ trên Dependent profile).
+         * Tìm Person còn hoạt động theo SĐT, khách hay nhân viên đều tính (DBR-22, CBR-28).
          * 
          * @param phone số điện thoại 10 chữ số
          * @return đối tượng Person hoặc null nếu không tìm thấy
@@ -132,8 +131,7 @@ public class PersonDAO {
                 String sql = "SELECT p.PersonId, p.FullName, p.DateOfBirth, p.Phone, p.Email, "
                                 + "p.Avatar, p.IsReleased, p.CreatedAt "
                                 + "FROM Persons p "
-                                + "INNER JOIN Customers c ON c.PersonId = p.PersonId "
-                                + "WHERE p.Phone = ? AND p.IsReleased = 0 AND c.CustomerType = 'Self'";
+                                + "WHERE p.Phone = ? AND p.IsReleased = 0";
 
                 try (Connection conn = DBContext.getConnection();
                                 PreparedStatement stmt = conn.prepareStatement(sql)) {

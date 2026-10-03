@@ -107,7 +107,9 @@ public class CustomerDAO {
     public Customer findByPersonId(int personId) throws SQLException {
         String sql = "SELECT CustomerId, PersonId, CustomerCode, CheckInPhoto, CustomerType, "
                 + "GuardianName, GuardianRelationship, GuardianPhone, GuardianPhone2, Status, JoinedAt, DeletedAt "
-                + "FROM Customers WHERE PersonId = ?";
+                + "FROM Customers WHERE PersonId = ? "
+                // ưu tiên hồ sơ còn hiệu lực, mới nhất (DBR-65)
+                + "ORDER BY CASE WHEN Status = 'Inactive' THEN 1 ELSE 0 END, CustomerId DESC";
 
         try (Connection conn = DBContext.getConnection();
              PreparedStatement stmt = conn.prepareStatement(sql)) {

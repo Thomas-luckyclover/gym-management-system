@@ -48,7 +48,9 @@ import java.util.Set;
  *   Buổi sắp tới            lọc từ ngày (bắt buộc, mặc định hôm nay)         SRS 9.1.2, GBR-01, DBR-37
  *   Nhãn/banner thiếu gói   buổi rơi vào ngày khách không có Membership      CBR-64, CBR-66
  *   Khách phụ trách         khách có gói PT với PT này vào ngày đang lọc     GBR-10
- *   Dự kiến / Tuần này      Scheduled, Completed, Missed, slot Free          —
+ *   Tuần / Tháng (cột phụ)  tuần + tháng chứa ngày đang lọc: đã chốt /       CBR-80/81/82, CBR-42
+ *                           chờ chốt / dự kiến, đếm trạng thái, slot Free
+ *   Tóm tắt hôm nay         luôn theo hôm nay (thẻ chào)                     —
  *
  * Dashboard CHỈ ĐỌC trạng thái trong DB (GBR-14): buổi quá cửa sổ điểm danh là việc JOB-04, không tự đổi ở đây.
  *
@@ -151,9 +153,13 @@ public class PtDashboardService {
                     today.minusDays(windowHours / 24 + 1), today.plusDays(MISSING_MEMBERSHIP_LOOKAHEAD_DAYS - 1), true);
             fillAttendanceAndMissingMembership(view, scheduled, now, windowHours);
 
-            // B6: cột phụ — khách phụ trách (theo ngày đang lọc), dự kiến tháng này, tuần này
+            // B6: tóm tắt HÔM NAY trên thẻ chào (luôn là hôm nay, không theo ô lọc)
+            fillToday(view, ptId, today);
+
+            // B7: cột phụ — TẤT CẢ theo NGÀY ĐANG LỌC (ô "Từ ngày") để cùng 1 mốc với khối Buổi sắp tới:
+            //     khách phụ trách vào ngày đó, tuần chứa ngày đó, tháng chứa ngày đó
             fillClients(view, ptId, fromDate);
-            fillMonthAndWeek(view, ptId, today);
+            fillWeekAndMonth(view, ptId, fromDate, today);
 
             return ServiceResult.ok(view);
 
@@ -231,7 +237,7 @@ public class PtDashboardService {
         int cancelledPaid = 0;
         int cancelledUnpaid = 0;
         for (SessionStatRow row : sessionDAO.findStatRows(ptId, fromDate, toDate)) {
-            boolean isCommissionable = isCommissionable(row.getStatus(), row.getResolutionType());
+            boolean isCommissionable = isCommissionable(row.getStatus(), row.getCancelType());
             if ("Completed".equals(row.getStatus())) {
                 completed++;
             } else if ("Missed".equals(row.getStatus())) {
@@ -287,20 +293,20 @@ public class PtDashboardService {
     /**
      * Buổi có được tính hoa hồng cho PT không ("05_Dashboard_Rules.md" mục 3.2):
      *   - Completed (đã dạy), Missed (khách vắng, kể cả do bảo lưu — CBR-68) → TÍNH (CBR-80)
-     *   - Cancelled do PT hủy đã trả tiền mặt (ResolutionType Cancel) hoặc khách hủy (CustomerRequest) → TÍNH (CBR-81, CBR-82)
-     *   - Cancelled do phòng đóng cửa (CBR-57) hoặc gói PT hết hạn (CBR-55) — không có 2 ResolutionType trên → KHÔNG tính
+     *   - Cancelled với CancelType ByPt / ByCustomer → TÍNH (CBR-81, CBR-82)
+     *   - Cancelled với CancelType GymClosed / PackageExpired → KHÔNG tính (CBR-57, CBR-55)
      *   - Scheduled → chưa diễn ra, chưa tính
      *
      * @param status         Sessions.Status.
-     * @param resolutionType Sessions.ResolutionType, có thể null.
+     * @param cancelType     Sessions.CancelType, có thể null.
      * @return true nếu buổi được cộng vào hoa hồng.
      */
-    static boolean isCommissionable(String status, String resolutionType) {
+    static boolean isCommissionable(String status, String cancelType) {
         if ("Completed".equals(status) || "Missed".equals(status)) {
             return true;
         }
         return "Cancelled".equals(status)
-                && ("Cancel".equals(resolutionType) || "CustomerRequest".equals(resolutionType));
+                && ("ByPt".equals(cancelType) || "ByCustomer".equals(cancelType));
     }
 
     /** Tháng này + 2 tháng trước + quý này + quý trước, VD: 09/2026, 08/2026, 07/2026, Quý III/2026, Quý II/2026. */
@@ -421,49 +427,105 @@ public class PtDashboardService {
     }
 
     /**
-     * Dự kiến còn lại tháng này (Scheduled từ hôm nay tới cuối tháng) và Tuần này (thứ 2 → chủ nhật).
-     * Đọc DB 1 lần cho khoảng ngày bao cả 2 khối rồi tự lọc.
+     * Tóm tắt HÔM NAY cho thẻ chào: số buổi hôm nay (mọi trạng thái) và số slot trống từ hôm nay tới Chủ nhật.
      */
-    private void fillMonthAndWeek(PtDashboardView view, int ptId, LocalDate today) throws SQLException {
-        LocalDate weekStart = today.with(TemporalAdjusters.previousOrSame(DayOfWeek.MONDAY));
-        LocalDate weekEnd = weekStart.plusDays(6);
-        LocalDate monthEnd = YearMonth.from(today).atEndOfMonth();
-        LocalDate readTo = monthEnd.isAfter(weekEnd) ? monthEnd : weekEnd;
+    private void fillToday(PtDashboardView view, int ptId, LocalDate today) throws SQLException {
+        LocalDate thisSunday = today.with(TemporalAdjusters.nextOrSame(DayOfWeek.SUNDAY));
+        view.setTodaySessionCount(sessionDAO.findStatRows(ptId, today, today).size());
+        view.setTodayWeekFreeSlots(timeSlotDAO.countFreeSlots(ptId, today, thisSunday));
+    }
 
-        int expectedCount = 0;
-        long expectedAmount = 0;
+    /**
+     * Ô "Tuần" và ô "Tháng" của cột phụ — xét theo ngày anchor (ô "Từ ngày"), không theo hôm nay.
+     *
+     * Tuần = thứ 2 → chủ nhật chứa anchor: đếm buổi theo trạng thái + slot còn trống.
+     * Tháng = tháng chứa anchor, chia tiền hoa hồng làm 3 phần không trùng nhau:
+     *   - Đã chốt  : buổi được tính hoa hồng (isCommissionable — Completed, Missed, hủy có tính)
+     *   - Chờ chốt : buổi Scheduled mà NGÀY ĐÃ QUA (chưa điểm danh; PT điểm danh hoặc JOB-04 tự đóng sẽ chốt)
+     *   - Dự kiến  : buổi Scheduled từ hôm nay trở đi
+     * VD David, anchor 23/09 (hôm nay 30/09) → Tháng 09/2026: đã chốt 0đ, chờ chốt 270.000đ (1 buổi), dự kiến 0đ.
+     *
+     * Đọc DB 1 lần cho khoảng ngày bao cả tuần lẫn tháng rồi tự lọc.
+     */
+    private void fillWeekAndMonth(PtDashboardView view, int ptId, LocalDate anchor, LocalDate today)
+            throws SQLException {
+        // B1: khoảng ngày của tuần và tháng chứa anchor
+        LocalDate weekStart = anchor.with(TemporalAdjusters.previousOrSame(DayOfWeek.MONDAY));
+        LocalDate weekEnd = weekStart.plusDays(6);
+        YearMonth month = YearMonth.from(anchor);
+        LocalDate monthStart = month.atDay(1);
+        LocalDate monthEnd = month.atEndOfMonth();
+        LocalDate readFrom = weekStart.isBefore(monthStart) ? weekStart : monthStart;
+        LocalDate readTo = weekEnd.isAfter(monthEnd) ? weekEnd : monthEnd;
+
+        // B2: cộng / đếm từng buổi vào tuần và tháng
         int weekScheduled = 0;
         int weekTaught = 0;
         int weekMissed = 0;
-        int todayCount = 0;
-        for (SessionStatRow row : sessionDAO.findStatRows(ptId, weekStart, readTo)) {
+        int weekCancelled = 0;
+        int earnedCount = 0;
+        long earnedAmount = 0;
+        int pendingCount = 0;
+        long pendingAmount = 0;
+        int expectedCount = 0;
+        long expectedAmount = 0;
+        for (SessionStatRow row : sessionDAO.findStatRows(ptId, readFrom, readTo)) {
             LocalDate date = row.getSlotDate();
-            boolean isScheduled = "Scheduled".equals(row.getStatus());
-            if (isScheduled && !date.isBefore(today) && !date.isAfter(monthEnd)) {
+            String status = row.getStatus();
+
+            boolean isInWeek = !date.isBefore(weekStart) && !date.isAfter(weekEnd);
+            if (isInWeek) {
+                switch (status) {
+                    case "Completed":
+                        weekTaught++;
+                        break;
+                    case "Missed":
+                        weekMissed++;
+                        break;
+                    case "Cancelled":
+                        weekCancelled++;
+                        break;
+                    default:
+                        weekScheduled++;
+                        break;
+                }
+            }
+
+            boolean isInMonth = !date.isBefore(monthStart) && !date.isAfter(monthEnd);
+            if (!isInMonth) {
+                continue;
+            }
+            if (isCommissionable(status, row.getCancelType())) {
+                earnedCount++;
+                earnedAmount += row.getCommissionAmount();
+            } else if ("Scheduled".equals(status) && date.isBefore(today)) {
+                pendingCount++;
+                pendingAmount += row.getCommissionAmount();
+            } else if ("Scheduled".equals(status)) {
                 expectedCount++;
                 expectedAmount += row.getCommissionAmount();
             }
-            if (!date.isAfter(weekEnd)) {
-                if (isScheduled) {
-                    weekScheduled++;
-                } else if ("Completed".equals(row.getStatus())) {
-                    weekTaught++;
-                } else if ("Missed".equals(row.getStatus())) {
-                    weekMissed++;
-                }
-            }
-            if (date.equals(today)) {
-                todayCount++;
-            }
         }
-        view.setExpectedSessionCount(expectedCount);
-        view.setExpectedAmount(expectedAmount);
+
+        // B3: nhãn ghi rõ tuần nào, tháng nào — "Tuần này · 28/09 – 04/10" hoặc "Tuần 21/09 – 27/09"
+        boolean isThisWeek = !today.isBefore(weekStart) && !today.isAfter(weekEnd);
+        view.setWeekLabel((isThisWeek ? "Tuần này · " : "Tuần ")
+                + weekStart.format(DAY_MONTH) + " – " + weekEnd.format(DAY_MONTH));
         view.setWeekScheduled(weekScheduled);
         view.setWeekTaught(weekTaught);
         view.setWeekMissed(weekMissed);
-        view.setTodaySessionCount(todayCount);
-        // Slot trống chỉ tính từ hôm nay — slot của ngày đã qua không còn đặt được
-        view.setWeekFreeSlots(timeSlotDAO.countFreeSlots(ptId, today, weekEnd));
+        view.setWeekCancelled(weekCancelled);
+        // Slot trống chỉ tính từ hôm nay trở đi (slot ngày đã qua không còn đặt được); tuần đã qua → null, JSP ẩn dòng
+        view.setWeekFreeSlots(weekEnd.isBefore(today) ? null
+                : timeSlotDAO.countFreeSlots(ptId, weekStart.isAfter(today) ? weekStart : today, weekEnd));
+
+        view.setMonthLabel((month.equals(YearMonth.from(today)) ? "Tháng này · " : "Tháng ") + month.format(MONTH_YEAR));
+        view.setMonthEarnedCount(earnedCount);
+        view.setMonthEarnedAmount(earnedAmount);
+        view.setMonthPendingCount(pendingCount);
+        view.setMonthPendingAmount(pendingAmount);
+        view.setMonthExpectedCount(expectedCount);
+        view.setMonthExpectedAmount(expectedAmount);
     }
 
     // ===== Hàm phụ =====

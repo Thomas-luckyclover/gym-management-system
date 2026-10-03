@@ -17,7 +17,6 @@ public class VerificationCode {
     private String email;
     private Purpose purpose;
     private String code;
-    private String tokenHash;
     private LocalDateTime sentAt;
     private LocalDateTime expiresAt;
     private int failedAttempts;
@@ -69,14 +68,6 @@ public class VerificationCode {
         this.code = code;
     }
 
-    public String getTokenHash() {
-        return tokenHash;
-    }
-
-    public void setTokenHash(String tokenHash) {
-        this.tokenHash = tokenHash;
-    }
-
     public LocalDateTime getSentAt() {
         return sentAt;
     }
@@ -119,7 +110,7 @@ public class VerificationCode {
 
     /**
      * Mục đích của mã xác thực — phân biệt dòng dữ liệu này phục vụ luồng nào
-     * (đăng ký, kích hoạt, quên mật khẩu, đổi email).
+     * (đăng ký, kích hoạt, quên mật khẩu, đổi email, đổi SĐT).
      * dbValue phải khớp đúng CHECK constraint CK_VerificationCodes_Purpose.
      */
     public enum Purpose {
@@ -127,7 +118,8 @@ public class VerificationCode {
         SIGN_UP("SignUp"),
         CLAIM("Claim"),
         RECOVERY("Recovery"),
-        EMAIL_CHANGE("EmailChange");
+        EMAIL_CHANGE("EmailChange"),
+        PHONE_CHANGE("PhoneChange");
 
         private final String dbValue;
 

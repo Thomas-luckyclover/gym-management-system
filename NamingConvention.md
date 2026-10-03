@@ -31,6 +31,106 @@
 | Khóa chính | `<TenBang(so it)>Id` | `UserId`, `OrderId` |
 | Khóa ngoại | trùng tên cột khóa chính ở bảng gốc | `OrderDetails.OrderId` tham chiếu `Orders.OrderId` |
 | Stored Procedure | tiền tố `sp_`, PascalCase | `sp_GetUserById` |
+| Constraint / index | `PK_`, `FK_`, `UQ_`, `CK_`, `DF_`, `IX_`, `UX_` (unique filtered) + `<Bảng>_<Cột/ý nghĩa>` | `CK_Sessions_CancelType`, `UX_Persons_Phone_Active` |
+| Giá trị liệt kê | Tiếng Anh PascalCase, xem mục 2b | `PtTransfer` |
+
+## 2b. Enum / giá trị liệt kê: DB ↔ Java ↔ JSP/JS phải khớp 1–1 (BẮT BUỘC)
+
+Lỗi hay gặp nhất của nhóm: DB lưu `Working`, Java so `"WORKING"`; enum này dùng `name()`, enum kia dùng `dbValue`; JSP gõ tay `'Active'`.
+Từ v25 chỉ còn **1 cách duy nhất**:
+
+| Tầng | Quy tắc | Ví dụ |
+|---|---|---|
+| **DB** | Lưu **tiếng Anh PascalCase**, đúng danh sách ở bảng dưới (cũng là CHECK constraint trong `1_Init_Schema.sql`). Hiển thị tiếng Việt là việc của View (GBR-01). | `'PtTransfer'`, `'NoCheckIn'` |
+| **Java enum** | Hằng số `UPPER_SNAKE_CASE` + **chuỗi DB đi kèm**: `PT_TRANSFER("PtTransfer")`. Bắt buộc có `getDbValue()` và `static fromDbValue(String)` (không khớp → `null`, **không** tự trả giá trị mặc định). Có thêm `getDisplayName()` khi cần chữ tiếng Việt. | xem mẫu bên dưới |
+| **Vị trí enum** | Lồng trong Entity của bảng (`Session.Status`, `Session.CancelType`). Dùng chung nhiều bảng thì đặt ở `constant/` (VD `Role`). | |
+| **Đọc DB** | `X.fromDbValue(rs.getString("Status"))` | |
+| **Ghi DB / tham số SQL** | `stmt.setString(i, x.getDbValue())`. **Cấm** `name()`, `toString()`, `ordinal()`. | |
+| **Chuỗi trong câu SQL** | Ưu tiên tham số `?` + `getDbValue()`. Nếu buộc phải viết thẳng (`WHERE Status = 'Scheduled'`) thì chữ phải **trùng từng ký tự** với bảng dưới. | |
+| **So sánh trong Java** | So enum với enum (`status == Session.Status.MISSED`), **cấm** so chuỗi `"Missed".equals(...)`. | |
+| **JSP** | Không gõ tay giá trị DB. Dùng getter boolean (`${s.missed}`) hoặc `${s.status.dbValue}`; chữ tiếng Việt lấy từ `getDisplayName()`. | |
+| **JS / JSON** | Gửi và nhận đúng `dbValue`. | `{"status":"Scheduled"}` |
+
+```java
+public enum CancelType {
+    BY_PT("ByPt", "PT hủy"),
+    BY_CUSTOMER("ByCustomer", "Khách hủy"),
+    GYM_CLOSED("GymClosed", "Phòng tập nghỉ"),
+    PACKAGE_EXPIRED("PackageExpired", "Gói PT hết hạn");
+
+    private final String dbValue;
+    private final String displayName;
+
+    CancelType(String dbValue, String displayName) {
+        this.dbValue = dbValue;
+        this.displayName = displayName;
+    }
+
+    public String getDbValue() {
+        return dbValue;
+    }
+
+    public String getDisplayName() {
+        return displayName;
+    }
+
+    public static CancelType fromDbValue(String value) {
+        for (CancelType item : values()) {
+            if (item.dbValue.equals(value)) {
+                return item;
+            }
+        }
+        return null;
+    }
+}
+```
+
+### Danh sách giá trị chuẩn (sinh từ CHECK trong `database/1_Init_Schema.sql` v25)
+
+| Bảng.Cột | Giá trị DB (đúng từng ký tự) |
+|---|---|
+| `Customers.CustomerType` | `Self`, `Dependent` |
+| `Customers.Status` | `New`, `Active`, `Frozen`, `Expired`, `Inactive` |
+| `Employees.Position` | `Admin`, `Manager`, `PT`, `Receptionist` |
+| `Employees.Status` | `Working`, `Resigned` |
+| `Accounts.Status` | `Active`, `Locked`, `Inactive` |
+| `VerificationCodes.Purpose` | `SignUp`, `Claim`, `Recovery`, `EmailChange`, `PhoneChange` |
+| `Packages.PackageType` | `Membership`, `DayPass`, `PTSingle`, `PTCouple`, `SingleSession` |
+| `Vouchers.DiscountType` | `Percent`, `Amount` |
+| `Vouchers.ApplicableScope` | `MembershipAndDayPass`, `MembershipOnly` |
+| `Shifts.ShiftType` | `Morning`, `Afternoon` |
+| `Shifts.Status` | `NotOpened`, `Open`, `Closed` |
+| `Orders.Channel` | `Counter`, `Online` |
+| `Orders.Status` | `Pending`, `Paid`, `Cancelled` |
+| `Transactions.PaymentMethod` | `Cash`, `Transfer`, `OnlineGateway` |
+| `Transactions.Status` | `Pending`, `Success`, `Failed`, `Expired` |
+| `Subscriptions.SubscriptionType` | `Membership`, `DayPass`, `PTSingle`, `PTCouple`, `SingleSession` |
+| `Subscriptions.Status` | `Active`, `Frozen`, `Used`, `Expired`, `Completed`, `Cancelled` |
+| `CustomerDeletionRequests.Status` | `Pending`, `Approved`, `Rejected` |
+| `TimeSlots.Status` | `Free`, `Held`, `Booked`, `Withdrawn` |
+| `Sessions.Status` | `Scheduled`, `Completed`, `Missed`, `Cancelled` |
+| `Sessions.MissedReason` | `NoCheckIn`, `NoMembership`, `MembershipFrozen`, `MarkedAbsent` |
+| `Sessions.CancelType` | `ByPt`, `ByCustomer`, `GymClosed`, `PackageExpired` |
+| `SessionMoveLogs.MoveType` | `CustomerSwap`, `PtOnBehalfSwap`, `PtReschedule`, `PtTransfer` |
+| `LeaveRequests.LeaveType` | `Annual`, `Sick`, `Unpaid` |
+| `LeaveRequests.ShiftType` | `Morning`, `Afternoon`, `FullDay` |
+| `LeaveRequests.Status` | `Pending`, `Approved`, `Rejected` |
+| `Facilities.Category` | `Cardio`, `FreeWeights`, `Machines`, `Amenities` |
+| `Facilities.Status` | `Available`, `UnderMaintenance`, `Retired` |
+| `MaintenanceRequests.Priority` | `Urgent`, `Normal`, `Low` |
+| `MaintenanceRequests.Status` | `Open`, `InProgress`, `Rejected`, `Closed` |
+| `StaffAttendances.ShiftType` | `Morning`, `Afternoon` |
+| `StaffAttendances.Status` | `Present`, `Late`, `Absent`, `OnLeave` |
+| `TrainingPlans.PlanType` | `Workout`, `Meal` |
+| `BlogPosts.Category` | `Training`, `Nutrition`, `News` |
+| `BlogPosts.Status` | `Active`, `Inactive` |
+| `Notifications.Audience` | `AllCustomers`, `ActiveMembers`, `PTs`, `Receptionists`, `AllStaff`, `Individual` |
+| `Orders.CancelType` | `PaymentTimeout`, `ReplacedByNewOrder`, `InvalidPayment`, `CancelledByReceptionist` |
+| `Packages.DurationUnit` | `Day`, `Month` |
+| `AuditLogs.ActingRole` | `Admin`, `Manager`, `PT`, `Receptionist`, `Customer` (= `Role.getDbValue()`) |
+
+Thêm hoặc đổi giá trị = sửa schema (quy trình `agents.md` Phần 5) **và** cập nhật bảng này **và** enum Java trong cùng 1 commit.
+Enum đang lệch cần sửa: `BlogPost.Status` đang khai báo `Active`/`Inactive` (dùng `name()`), phải đổi về mẫu ở trên (`ACTIVE("Active")`).
 
 ## 3. JavaScript — Frontend
 

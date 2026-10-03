@@ -63,7 +63,7 @@ Bảng đầy đủ "file nào đặt ở đâu" + 67 màn → Servlet → URL �
              └── auth/ guest/ customer/ pt/ receptionist/ staff/ manager/ admin/
   ```
   `<vai-trò>` dùng đúng 1 bộ tên ở mọi nơi (package Servlet, thư mục JSP, CSS, JS). VD màn Đặt buổi lẻ: `servlet/customer/BookSingleSessionServlet.java` → `jsp/customer/book-session.jsp` → `css/pages/customer/book-session.css` → `js/pages/customer/book-session.js`.
-- **Cấu hình theo máy:** `src/main/resources/application.properties` (copy từ `.example`, không commit) — chỉ chứa thông tin triển khai (DB, SMTP, VNPay). Tham số nghiệp vụ P-01…P-20 nằm trong bảng SystemConfig.
+- **Cấu hình theo máy:** `src/main/resources/application.properties` (copy từ `.example`, không commit) — chỉ chứa thông tin triển khai (DB, SMTP, VNPay). Tham số nghiệp vụ P-01…P-21 nằm trong bảng SystemConfigs.
 - **Xếp đúng chỗ:** mỗi class/file phải nằm đúng package/thư mục theo vai trò của nó (Phần 8 sẽ nhắc lại nguyên tắc này) — không tiện đâu để đó, không để Entity lẫn trong `servlet/`, không để ảnh lẫn trong `css/`.
 
 ## Phần 3: Tài Liệu Tham Chiếu Bắt Buộc
@@ -73,7 +73,9 @@ Khi thực hiện bất kỳ nhiệm vụ nào, AI phải đối chiếu và bá
 - **SRS (Software Requirements Specification):** xây dựng **trước khi code**. Là nguồn chuẩn cho yêu cầu nghiệp vụ, use case, luồng chức năng, ràng buộc phi chức năng.
 - **SDS (Software Design Specification):** xây dựng **song song với quá trình code**. Mô tả thiết kế kỹ thuật: class diagram, sequence diagram, database schema, kiến trúc chi tiết.
 - **File notes (`docs/notes.md`):** ghi chú phát sinh trong quá trình làm việc, dùng để trace lại các quyết định, thay đổi thực tế so với thiết kế ban đầu. Mục A của file liệt kê các mâu thuẫn tài liệu **đang chờ nhóm chốt** — code phần liên quan phải kiểm tra mục này trước.
-- **Rule & tham số SRS:** `GMS_Rules_and_Parameters` (GBR, CBR, DBR, BR, P-01…P-20) — khi code nghiệp vụ phải dẫn đúng mã luật (VD comment `// CBR-70`) để trace.
+- **Rule & tham số SRS:** `GMS_Rules_and_Parameters` **v25** (GBR, CBR, DBR, BR, P-01…P-21) — khi code nghiệp vụ phải dẫn đúng mã luật (VD `// B2: hủy đơn quá hạn (CBR-70)`) để trace.
+- **Hồ sơ module `docs/handoff/`:** mỗi module có file liệt kê file cần sửa, rule gắn từng bước, luồng B1…Bn và case test trong seed — **đọc file module trước khi code module đó**.
+- **Database:** `database/1_Init_Schema.sql` (schema v25), `database/2_Seed_Data.sql` (sinh từ `database/tools/seeddata.py`), danh mục case + tài khoản test `docs/database/SEED_CASES.md`, thay đổi schema `docs/database/SCHEMA_CHANGES_v25.md`.
 - **Tài liệu dự án khác:** `docs/project-structure.md` (vị trí file, bảng màn hình), `docs/team-plan.md` (phân công, Git, checklist review), `docs/integration-guide.md` (VNPay/Email), `docs/frontend-shared-usage.md` (tokens/common).
 - **`NamingConvention.md`:** quy tắc đặt tên biến/class/method/bảng/cột — file riêng, bắt buộc tuân thủ khi đặt tên.
 - **`codeImplementationBackend.md`:** quy tắc viết code Backend (Java: Entity/DAO/Service/Servlet/Utility) — comment, thụt lề, code style, tối ưu, cấu trúc setter... — file riêng, bắt buộc tuân thủ khi implement.
@@ -228,7 +230,9 @@ refactor: Extract ValidationUtil from Servlet into util package
 - Mật khẩu luôn BCrypt.
 - Phát hiện mâu thuẫn giữa SRS/SDS/notes/chat → nêu rõ, không tự quyết.
 - **Sửa database giữa chừng (siêu quan trọng):** phát hiện vấn đề thật sự đáng lo + đã trace đủ SRS/SDS/code → báo ngay cho user, nhắc copy schema/database vào Notion trước, đề xuất phương án, chờ cả nhóm bàn bạc thống nhất rồi mỗi người mới tự sửa database local — **không tự sửa schema/code ngay lúc phát hiện**.
-- Đặt tên theo `NamingConvention.md`.
+- Đặt tên theo `NamingConvention.md`; enum DB ↔ Java theo mục 2b.
+- **Comment chỉ là khung** (`codeImplementationBackend.md` Mục 1): Javadoc 1 câu, `// ===== nhóm =====`, `// Bn: …` 1 dòng; cấm kể lịch sử, ví dụ, giải thích cú pháp.
+- **Code theo đợt (Phần 14):** không bao giờ sinh nguyên tính năng / nguyên file trong 1 lần.
 - Khi viết/sửa code thực tế (comment, thụt lề, code style, tối ưu ở đâu/dễ hiểu ở đâu): bắt buộc tuân thủ `codeImplementationBackend.md` (Backend) / `codeImplementationFrontend.md` (Frontend) — không tự suy diễn cách trình bày khác.
 - Pháp lý & API/Integration: bắt buộc bám sát SRS; nếu SRS thiếu → đề xuất phương án chuẩn nhất + thảo luận với user trước khi code; API/Integration xong phải có bản giải thích cho user + comment chi tiết trong code (ngoại lệ so với quy tắc comment thông thường).
 - Khi làm API/Integration mà thiếu key/tài khoản/quyền/tài liệu bên thứ 3: báo ngay, cụ thể (thiếu gì — vì sao cần — lấy ở đâu — mức độ gấp), không tự lách qua hay đoán đại.
@@ -256,18 +260,57 @@ Trước khi viết bất kỳ hàm tiện ích nào, AI **bắt buộc** kiểm
 | Đăng xuất mọi thiết bị | `SessionRegistryListener.invalidateSessionsOfAccount` | — |
 | Toast, hộp xác nhận, đếm ngược, tab, nút con mắt, cảnh báo chưa lưu | — | `showToast`, `openConfirmDialog` / `data-confirm-message`, `data-countdown-seconds`, `bindTabs`, `data-password-toggle`, `data-unsaved-warning` |
 
-**File dùng chung chỉ Leader sửa:** `pom.xml`, `agents.md`, `tokens.css`, `common.css`, `common.js`, `util/*`, `filter/*`, `constant/*`, `dto/*`, `web.xml`, `jsp/common/*`, `database/01_schema.sql`. Khi hỗ trợ thành viên khác mà cần sửa các file này, AI phải **nói rõ đây là file dùng chung** và đề xuất báo Leader thay vì sửa thẳng.
+**File dùng chung chỉ Leader sửa:** `pom.xml`, `agents.md`, `tokens.css`, `common.css`, `common.js`, `util/*`, `filter/*`, `constant/*`, `dto/*`, `web.xml`, `jsp/common/*`, `database/1_Init_Schema.sql`, `database/tools/*`. Khi hỗ trợ thành viên khác mà cần sửa các file này, AI phải **nói rõ đây là file dùng chung** và đề xuất báo Leader thay vì sửa thẳng.
 
 ## Phần 13: Quy Ước Kỹ Thuật Đã Chốt
 
-- **Session:** chỉ lưu `SessionKey.ACCOUNT_ID`, `SessionKey.ROLE` (giá trị `Role.getDbValue()`), `SessionKey.DISPLAY_NAME`; timeout `SessionKey.SESSION_TIMEOUT_SECONDS` (7200). Không tự gõ chuỗi tên attribute.
+- **Session:** chỉ lưu `SessionKey.ACCOUNT_ID`, `SessionKey.ROLE` (vai trò ĐANG DÙNG, giá trị `Role.getDbValue()`), `SessionKey.AVAILABLE_ROLES`, `SessionKey.DISPLAY_NAME`, và 3 key `PENDING_CONTACT_*` khi đổi email/SĐT; timeout `SessionKey.SESSION_TIMEOUT_SECONDS` (7200). Không tự gõ chuỗi tên attribute.
+- **1 người nhiều vai trò (DBR-65, CBR-113):** 1 Person = 1 tài khoản; ≥ 2 vai trò → `/select-role`. Mọi phân quyền theo `SessionKey.ROLE`, **không** theo việc Person có hồ sơ gì. Nhân viên không được thao tác trên hồ sơ khách của chính mình → gọi `SelfServiceGuard` (CBR-115).
 - **Filter:** không gọi `request.getParameter()` trong Filter (để UTF-8 luôn được đặt trước). Filter vai trò tự kiểm tra cả đăng nhập vì `@WebFilter` không đảm bảo thứ tự.
 - **Post/Redirect/Get:** POST thành công → `RequestUtil.setFlashToast(...)` + `RequestUtil.redirect(...)`; POST lỗi → set lại dữ liệu đã nhập + `errors` (map từ `result.getFieldErrors()`) vào request rồi forward lại form (GBR-22 giữ dữ liệu người dùng).
 - **AJAX:** Servlet trả đúng khuôn `JsonResponse` (`success`, `message`, `data`, `errors`); dữ liệu gửi lên dạng form nên Servlet đọc bằng `getParameter()`; có upload file thì Servlet thêm `@MultipartConfig`.
-- **Tham số nghiệp vụ P-01…P-20:** luôn đọc qua `SystemConfigService`, không hard-code số (20 phút, 5 lần, 15:00, 70%...). Đơn hàng lưu bản sao giá trị tại thời điểm tạo (GBR-04, DBR-50).
+- **Tham số nghiệp vụ P-01…P-21:** luôn đọc qua `SystemConfigService`, không hard-code số (20 phút, 5 lần, 15:00, 70%...). Đơn hàng lưu bản sao giá trị tại thời điểm tạo (GBR-04, DBR-50).
 - **Tiền:** Java `long` (đọc bằng `rs.getLong`), SQL theo schema hiện tại là `INT`; không dùng `double`/`float`.
 - **Ngày giờ:** Java `LocalDate`/`LocalTime`/`LocalDateTime`, SQL `DATE`/`TIME`/`DATETIME2`; JSON gửi dạng ISO, trình duyệt tự định dạng.
-- **Trạng thái:** lưu tiếng Anh đúng như SRS (`Pending`, `Paid`, `Cancelled`...), hiển thị tiếng Việt; màu badge theo GBR-28 (`badge-success/warning/danger/neutral`).
-- **Mọi thao tác nhạy cảm** (đổi giá, thao tác tài khoản, xóa, duyệt/từ chối) gọi `AuditLogService` (GBR-07, GBR-08); thao tác tiêu cực bắt buộc lý do 5–500 ký tự (GBR-09).
+- **Trạng thái / giá trị liệt kê:** theo đúng `NamingConvention.md` mục 2b (enum `UPPER_SNAKE("DbValue")` + `fromDbValue`, cấm `name()`, cấm so chuỗi). Bảng giá trị chuẩn nằm ở đó. Hiển thị tiếng Việt; màu badge theo GBR-28 (`badge-success/warning/danger/neutral`).
+- **Mọi thao tác nhạy cảm** (đổi giá, thao tác tài khoản, xóa, duyệt/từ chối) gọi `AuditLogService` (GBR-07, GBR-08), ghi kèm vai trò đang dùng (`ActingRole` — CBR-112); thao tác tiêu cực bắt buộc lý do 5–500 ký tự (GBR-09).
 - **Job chạy ngầm:** chỉ gọi Service, chọn bản ghi theo trạng thái, mỗi bản ghi 1 transaction, ghi AuditLog với người thực hiện = System (SRS 5.0).
+
+## Phần 14: Code Theo Đợt Như Người Thật (Wave Coding) — BẮT BUỘC
+
+**Vì sao:** sinh nguyên file / nguyên tính năng một lần thì người học không theo kịp, không kiểm soát được, review rất khó, sai một chỗ là sai dây chuyền.
+AI phải code giống một lập trình viên thật: **dựng khung khắp các file trước, rồi đi qua lại giữa các file, mỗi lần vài dòng, đợt nào cũng compile được.**
+
+### 14.1. Trước khi viết dòng code đầu tiên
+1. Đọc `docs/handoff/<module>.md` (nếu có) và các rule liên quan.
+2. In **bảng kế hoạch**: file nào (tạo mới / sửa), method nào, rule nào, chia sẵn thành các đợt. Chờ user gõ **"ok"** hoặc **"tiếp"**.
+
+### 14.2. Các đợt (hết mỗi đợt dừng lại, user gõ "tiếp" mới làm đợt sau)
+
+| Đợt | Làm gì | Giới hạn |
+|---|---|---|
+| **0 — Khung** | Tạo / mở mọi file cần đụng: class, chữ ký method (thân `throw new UnsupportedOperationException("TODO")`), Javadoc 1 câu, các dòng `// B1: … // B2: …` theo luồng trong handoff. **Chưa viết logic.** Phải compile được. | Mỗi method chỉ chữ ký + khung bước |
+| **1 — DAO** | Điền **từng câu SQL**, mỗi lượt 1 method. | ≤ 40 dòng / file / lượt |
+| **2 — Service** | Điền từng bước `Bn` theo thứ tự; cần DAO chưa có thì quay lại DAO viết đúng method đó rồi quay về. | ≤ 40 dòng / file / lượt |
+| **3 — Servlet** | doGet / doPost nối Service ↔ JSP, PRG, AJAX. | |
+| **4 — JSP / JS / CSS** | Khối giao diện theo thứ tự trên → dưới của màn. | |
+| **5 — Kiểm** | Chạy theo case trong `docs/database/SEED_CASES.md` + JUnit cho Service; liệt kê case đã thử. | |
+
+### 14.3. Trong mỗi lượt
+- **Viết chỗ gọi trước, rồi mới viết hàm được gọi** (lần theo luồng như người thật). Nhảy giữa các file, không viết trọn 1 file rồi mới sang file khác.
+- Hết lượt: liệt kê ngắn **file + method đã đụng + rule đã áp**, nhắc compile. Không dán lại cả file nếu chỉ sửa vài dòng.
+- Không trộn: vừa đổi tên hàng loạt vừa thêm logic mới trong cùng lượt.
+- Gặp mâu thuẫn rule / DB → dừng theo Phần 4 / Phần 5, không tự đoán.
+- User gõ **"làm hết luôn"** thì được gộp các đợt còn lại của **đúng module đó**, nhưng câu trả lời vẫn giữ thứ tự Đợt 0 → 5.
+
+### 14.4. Commit gợi ý
+Mỗi đợt 1 commit (`feat(<module>): đợt 1 DAO ...`) để dễ quay lại.
+
+## Phần 15: Quyết Định Đã Chốt v25 (03/10/2026)
+
+- Mô hình danh tính: 1 Person = 1 SĐT + 1 email + 1 tài khoản; Customer / Employee là vai trò; ≥ 2 vai trò → chọn vai trò (DBR-65, CBR-113).
+- Đăng ký online bằng SĐT đã có tài khoản (kể cả nhân viên) → chỉ báo "đã có tài khoản"; gắn vai trò mới vào Person cũ chỉ làm tại quầy / Admin (CBR-26, CBR-114).
+- Chỉ Admin đổi vị trí nhân viên và khóa / mở tài khoản (CBR-109).
+- Tài khoản Lễ tân tạo không có mật khẩu, không gửi link; khách đặt qua Quên mật khẩu (CBR-24, CBR-31).
+- Schema v25 + seed v25 thay toàn bộ dữ liệu cũ (`docs/database/`).
 

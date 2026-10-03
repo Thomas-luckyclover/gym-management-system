@@ -16,6 +16,14 @@ public final class SessionKey {
     /** Vai trò, lưu Role.getDbValue() (VD "Manager") — Filter phân quyền đọc key này. */
     public static final String ROLE = "role";
 
+    /** Các vai trò của tài khoản, dạng "PT,Customer" (CBR-113). */
+    public static final String AVAILABLE_ROLES = "availableRoles";
+
+    /** Thay đổi email / SĐT đang chờ mã, lưu phía server (CBR-110). */
+    public static final String PENDING_CONTACT_FIELD = "pendingContactField";
+    public static final String PENDING_CONTACT_VALUE = "pendingContactValue";
+    public static final String PENDING_CONTACT_VERIFY_EMAIL = "pendingContactVerifyEmail";
+
     /**
      * Tên hiển thị trên header/sidebar. Không nhạy cảm, lưu để khỏi query DB ở mỗi trang.
      * Khi user đổi tên (Lễ tân sửa hồ sơ) thì lần đăng nhập sau mới cập nhật — chấp nhận được.

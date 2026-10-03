@@ -1403,3 +1403,16 @@ body.dock {
     display: none !important;
   }
 }
+
+/* ===== 6. Ô THÁNG — dòng tiền (Đã chốt / Chờ chốt / Dự kiến) ===== */
+
+.side-row--money small {
+  margin-left: var(--space-1);
+  color: var(--color-text-muted);
+  font-size: 0.72rem;
+}
+
+/* Có buổi chờ chốt → tô vàng (GBR-28: vàng = chờ) để PT biết còn buổi chưa điểm danh */
+.side-row--money.is-pending b {
+  color: var(--color-warning-ink);
+}

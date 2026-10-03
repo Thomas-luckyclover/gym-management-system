@@ -2,7 +2,6 @@ package com.gms.dao;
 
 import com.gms.constant.Role;
 import com.gms.dto.PTCardView;
-import com.gms.dto.PTCardView;
 import com.gms.entity.Employee;
 import com.gms.util.DBContext;
 import java.sql.Connection;
@@ -29,7 +28,9 @@ public class EmployeeDAO {
                 + "YearsOfExperience, Status, DeletedAt, "
                 + "ResignationReason "
                 + "FROM Employees "
-                + "WHERE PersonId = ?";
+                + "WHERE PersonId = ? "
+                // ưu tiên dòng đang Working, mới nhất (DBR-65)
+                + "ORDER BY CASE WHEN Status = 'Working' THEN 0 ELSE 1 END, EmployeeId DESC";
 
         try (Connection connection = DBContext.getConnection();
                 PreparedStatement statement

@@ -55,7 +55,7 @@ public class LoginServlet extends HttpServlet {
         if (session != null && session.getAttribute(SessionKey.ACCOUNT_ID) != null) {
             String roleStr = (String) session.getAttribute(SessionKey.ROLE);
             Role role = Role.fromDbValue(roleStr);
-            String homePath = role != null ? role.getHomePath() : "/";
+            String homePath = role != null ? role.getHomePath() : AuthService.SELECT_ROLE_PATH;
             RequestUtil.redirect(request, response, homePath);
             return;
         }
@@ -89,13 +89,23 @@ public class LoginServlet extends HttpServlet {
             }
             HttpSession newSession = request.getSession(true);
             newSession.setAttribute(SessionKey.ACCOUNT_ID, loginResult.getAccountId());
-            newSession.setAttribute(SessionKey.ROLE, loginResult.getRole().getDbValue());
+            newSession.setAttribute(SessionKey.AVAILABLE_ROLES, SelectRoleServlet.joinRoles(loginResult.getAvailableRoles()));
             newSession.setAttribute(SessionKey.DISPLAY_NAME, loginResult.getFullName());
             newSession.setMaxInactiveInterval(SessionKey.SESSION_TIMEOUT_SECONDS);
 
-            String targetUrl = RequestUtil.isSafeReturnUrl(returnUrl)
-                    ? returnUrl
-                    : loginResult.getRedirectUrl();
+            String targetUrl;
+            if (loginResult.isRoleChoiceRequired()) {
+                // B5: ≥ 2 vai trò → chưa đặt ROLE, sang màn chọn vai trò (CBR-113)
+                targetUrl = AuthService.SELECT_ROLE_PATH;
+                if (RequestUtil.isSafeReturnUrl(returnUrl)) {
+                    targetUrl += "?returnUrl=" + java.net.URLEncoder.encode(returnUrl, java.nio.charset.StandardCharsets.UTF_8);
+                }
+            } else {
+                newSession.setAttribute(SessionKey.ROLE, loginResult.getRole().getDbValue());
+                targetUrl = RequestUtil.isSafeReturnUrl(returnUrl)
+                        ? returnUrl
+                        : loginResult.getRedirectUrl();
+            }
 
             if (isAjax) {
                 JsonUtil.writeJson(response, JsonResponse.from(result));
