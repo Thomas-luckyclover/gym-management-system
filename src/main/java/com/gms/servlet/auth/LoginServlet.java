@@ -95,7 +95,7 @@ public class LoginServlet extends HttpServlet {
 
             String targetUrl;
             if (loginResult.isRoleChoiceRequired()) {
-                // CBR-113: tài khoản có từ 2 vai trò → CHƯA đặt ROLE, bắt chọn vai trò trước (AuthFilter chặn mọi trang khác)
+                // B5: ≥ 2 vai trò → chưa đặt ROLE, sang màn chọn vai trò (CBR-113)
                 targetUrl = AuthService.SELECT_ROLE_PATH;
                 if (RequestUtil.isSafeReturnUrl(returnUrl)) {
                     targetUrl += "?returnUrl=" + java.net.URLEncoder.encode(returnUrl, java.nio.charset.StandardCharsets.UTF_8);

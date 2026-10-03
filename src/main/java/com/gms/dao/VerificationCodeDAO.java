@@ -46,9 +46,9 @@ public class VerificationCodeDAO {
      * @throws SQLException lỗi kết nối hoặc lỗi câu SQL
      */
     public void insert(VerificationCode verificationCode) throws SQLException {
-        // B1: câu SQL ghi 7 cột, mỗi dấu ? là 1 chỗ trống sẽ điền giá trị ở B3
-        String sql = "INSERT INTO VerificationCodes (AccountId, Email, Purpose, Code, TokenHash, SentAt, ExpiresAt) "
-                + "VALUES (?, ?, ?, ?, ?, ?, ?)";
+        // B1: câu SQL ghi 6 cột, mỗi dấu ? là 1 chỗ trống sẽ điền giá trị ở B3
+        String sql = "INSERT INTO VerificationCodes (AccountId, Email, Purpose, Code, SentAt, ExpiresAt) "
+                + "VALUES (?, ?, ?, ?, ?, ?)";
 
         // B2: mở kết nối tới DB (tự đóng khi ra khỏi try)
         try (Connection conn = DBContext.getConnection();
@@ -62,14 +62,13 @@ public class VerificationCodeDAO {
                 stmt.setInt(1, verificationCode.getAccountId());
             }
 
-            // B4: điền dấu ? số 2 → 7 (giờ phải đổi LocalDateTime → Timestamp vì JDBC chỉ
+            // B4: điền dấu ? số 2 → 6 (giờ phải đổi LocalDateTime → Timestamp vì JDBC chỉ
             // nhận Timestamp)
             stmt.setString(2, verificationCode.getEmail());
             stmt.setString(3, verificationCode.getPurpose().getDbValue());
             stmt.setString(4, verificationCode.getCode());
-            stmt.setString(5, verificationCode.getTokenHash());
-            stmt.setTimestamp(6, Timestamp.valueOf(verificationCode.getSentAt()));
-            stmt.setTimestamp(7, Timestamp.valueOf(verificationCode.getExpiresAt()));
+            stmt.setTimestamp(5, Timestamp.valueOf(verificationCode.getSentAt()));
+            stmt.setTimestamp(6, Timestamp.valueOf(verificationCode.getExpiresAt()));
 
             // B5: chạy câu INSERT → sổ có thêm 1 dòng
             stmt.executeUpdate();
@@ -100,7 +99,7 @@ public class VerificationCodeDAO {
             throws SQLException {
         // B1: lọc theo email + mục đích, xếp giờ gửi mới nhất lên đầu, lấy đúng 1 dòng
         // đầu (TOP 1)
-        String sql = "SELECT TOP 1 VerificationCodeId, AccountId, Email, Purpose, Code, TokenHash, "
+        String sql = "SELECT TOP 1 VerificationCodeId, AccountId, Email, Purpose, Code, "
                 + "SentAt, ExpiresAt, FailedAttempts, LockedUntil, UsedAt "
                 + "FROM VerificationCodes "
                 + "WHERE Email = ? AND Purpose = ? "
@@ -302,7 +301,6 @@ public class VerificationCodeDAO {
         verificationCode.setEmail(rs.getString("Email"));
         verificationCode.setPurpose(VerificationCode.Purpose.fromDbValue(rs.getString("Purpose")));
         verificationCode.setCode(rs.getString("Code"));
-        verificationCode.setTokenHash(rs.getString("TokenHash"));
         verificationCode.setFailedAttempts(rs.getInt("FailedAttempts"));
 
         // B4: chép các ô giờ (đổi Timestamp của JDBC → LocalDateTime của dự án)

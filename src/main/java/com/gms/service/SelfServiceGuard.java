@@ -7,31 +7,14 @@ import java.sql.PreparedStatement;
 import java.sql.ResultSet;
 import java.sql.SQLException;
 
-/**
- * CBR-115 — nhân viên KHÔNG được tự xử lý hồ sơ khách của chính mình.
- *
- * <p>Ví dụ: Kiều Trang (Person 22) là PT và cũng là khách. Khi đang ở vai trò PT,
- * cô không được điểm danh, ghi chú, lập giáo án cho chính hồ sơ khách của mình; khi là Lễ tân
- * (giả sử) thì không được bán gói, áp voucher, bảo lưu, sửa/xóa hồ sơ của chính mình.
- * Người khác có quyền làm thay.</p>
- *
- * <p>Cách dùng ở các UC sau (UC-16, 17, 18, 20, 21, 23, 31, 33, 34, 35, 37) — gọi ở Service, TRƯỚC khi ghi DB:</p>
- * <pre>
- *   if (selfServiceGuard.isOwnCustomerProfile(staffAccountId, customerId)) {
- *       return ServiceResult.fail(Messages.MSG07_NO_PERMISSION);
- *   }
- * </pre>
- * Với buổi PT: so customerId của buổi với hồ sơ khách của PT phụ trách bằng
- * {@link #isSamePerson(int, int)} (employeeId, customerId).
- */
+/** Chặn nhân viên thao tác trên hồ sơ khách của chính mình (CBR-115). */
 public class SelfServiceGuard {
 
     /**
-     * Tài khoản nhân viên đang thao tác và hồ sơ khách có cùng 1 Person không.
-     *
-     * @param staffAccountId AccountId trong session (đang ở vai trò nhân viên)
-     * @param customerId     hồ sơ khách bị tác động
-     * @return true nếu là chính mình → phải chặn
+     * Tài khoản nhân viên và hồ sơ khách có cùng Person không.
+     * @param staffAccountId tài khoản đang thao tác
+     * @param customerId hồ sơ khách bị tác động
+     * @return true nếu là chính mình
      */
     public boolean isOwnCustomerProfile(int staffAccountId, int customerId) throws SQLException {
         String sql = """
@@ -44,8 +27,10 @@ public class SelfServiceGuard {
     }
 
     /**
-     * PT (employeeId) và khách (customerId) có phải cùng 1 Person không — dùng cho đặt buổi,
-     * điểm danh, ghi chú, giáo án (CBR-115, CBR-59).
+     * PT và khách có cùng Person không (CBR-59, CBR-115).
+     * @param employeeId PT
+     * @param customerId khách
+     * @return true nếu là cùng một người
      */
     public boolean isSamePerson(int employeeId, int customerId) throws SQLException {
         String sql = """

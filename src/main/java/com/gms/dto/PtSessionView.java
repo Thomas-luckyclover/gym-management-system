@@ -100,6 +100,25 @@ public class PtSessionView {
         return missedReason;
     }
 
+    /** Lý do vắng hiển thị tiếng Việt (DB lưu mã tiếng Anh — GBR-01). */
+    public String getMissedReasonText() {
+        if (missedReason == null) {
+            return null;
+        }
+        switch (missedReason) {
+            case "NoCheckIn":
+                return "Khách không check-in";
+            case "NoMembership":
+                return "Không có gói tập";
+            case "MembershipFrozen":
+                return "Gói tập đang bảo lưu";
+            case "MarkedAbsent":
+                return "PT xác nhận vắng";
+            default:
+                return missedReason;
+        }
+    }
+
     /** @return true → JSP tô nổi bật buổi + nhãn "Chưa có gói tập" để PT nhắc khách gia hạn. */
     public boolean isMissingMembership() {
         return missingMembership;

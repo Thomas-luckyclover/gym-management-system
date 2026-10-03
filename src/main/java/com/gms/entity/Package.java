@@ -23,7 +23,8 @@ public class Package {
     private String description;
     private String benefits;
     private Type packageType;
-    private Integer durationDays;
+    private String durationUnit;
+    private Integer durationValue;
     private Integer estimatedSessionCount;
     private int price;
     private boolean active;
@@ -101,13 +102,28 @@ public class Package {
         this.packageType = packageType;
     }
 
-    /** Số ngày hiệu lực; null với buổi PT lẻ (SingleSession). */
-    public Integer getDurationDays() {
-        return durationDays;
+    /** Đơn vị thời hạn: Day | Month (DBR-19); null với buổi PT lẻ. */
+    public String getDurationUnit() {
+        return durationUnit;
     }
 
-    public void setDurationDays(Integer durationDays) {
-        this.durationDays = durationDays;
+    public void setDurationUnit(String durationUnit) {
+        this.durationUnit = durationUnit;
+    }
+
+    /** Số ngày / số tháng theo DurationUnit; null với buổi PT lẻ. */
+    public Integer getDurationValue() {
+        return durationValue;
+    }
+
+    public void setDurationValue(Integer durationValue) {
+        this.durationValue = durationValue;
+    }
+
+    /** Số tháng của gói; gói ngày và buổi lẻ trả 0. */
+    public int getDurationMonths() {
+        boolean isMonthly = "Month".equals(durationUnit) && durationValue != null;
+        return isMonthly ? durationValue : 0;
     }
 
     /** Số buổi ƯỚC TÍNH, chỉ gói PT mới có; null với gói tập. */

@@ -69,7 +69,7 @@ public class AuthFilter implements Filter {
         HttpSession session = httpRequest.getSession(false);
         boolean isLoggedIn = session != null && session.getAttribute(SessionKey.ACCOUNT_ID) != null;
         if (isLoggedIn) {
-            // B2b: tài khoản nhiều vai trò mà CHƯA chọn vai trò → chỉ được vào màn chọn vai trò / đăng xuất (CBR-113)
+            // B2b: chưa chọn vai trò → chỉ vào /select-role, /logout (CBR-113)
             boolean isRoleChosen = session.getAttribute(SessionKey.ROLE) != null;
             boolean isRoleChoicePath = "/select-role".equals(path) || "/logout".equals(path);
             if (!isRoleChosen && !isRoleChoicePath) {

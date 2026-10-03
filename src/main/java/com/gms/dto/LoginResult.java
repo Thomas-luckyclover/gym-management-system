@@ -26,10 +26,7 @@ public class LoginResult {
     private final String avatar;
     private final Role role;
     private final String redirectUrl;
-    /**
-     * Mọi vai trò chưa Inactive mà tài khoản đang phục vụ (DBR-65), VD [PT, CUSTOMER].
-     * Có từ 2 vai trò trở lên thì {@link #role} = null và người dùng phải chọn vai trò (CBR-113).
-     */
+    /** Vai trò còn hiệu lực của tài khoản (DBR-65). */
     private final List<Role> availableRoles;
 
     public LoginResult(int accountId, int personId, String fullName, String email,
@@ -91,7 +88,7 @@ public class LoginResult {
         return availableRoles;
     }
 
-    /** true khi tài khoản có từ 2 vai trò trở lên → phải qua màn chọn vai trò (CBR-113). */
+    /** Có từ 2 vai trò trở lên (CBR-113). */
     public boolean isRoleChoiceRequired() {
         return availableRoles.size() > 1;
     }

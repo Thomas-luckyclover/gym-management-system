@@ -94,15 +94,13 @@ public class RegistrationService {
                 return new PhoneCheckResult(PhoneOutcome.NEW_PHONE, null);
             }
 
-            // Person đang hoạt động — đã có tài khoản (khách HOẶC nhân viên) → dừng, mời đăng nhập (CBR-26).
-            // Nhân viên muốn tập thì ra quầy để Lễ tân gắn hồ sơ khách (CBR-19, CBR-114) — không bao giờ online.
+            // B2: SĐT đã có tài khoản, kể cả nhân viên → mời đăng nhập (CBR-26)
             boolean hasAccount = hasAccountByPersonId(existingPerson.getPersonId());
             if (hasAccount) {
                 return new PhoneCheckResult(PhoneOutcome.HAS_ACCOUNT, null);
             }
 
-            // Phòng thủ: Person còn hoạt động nhưng không có hồ sơ khách Self còn hiệu lực để kích hoạt
-            // → không gắn gì online, mời ra quầy (CBR-114)
+            // B3: không có hồ sơ Self còn hiệu lực → mời ra quầy (CBR-114)
             if (!hasActiveSelfProfile(existingPerson.getPersonId())) {
                 return new PhoneCheckResult(PhoneOutcome.PROFILE_NO_EMAIL, null);
             }
@@ -319,7 +317,7 @@ public class RegistrationService {
             return ServiceResult.fail(Messages.MSG51_PHONE_HAS_ACCOUNT);
         }
 
-        // Không có hồ sơ khách Self còn hiệu lực → không gắn online (CBR-114), mời ra quầy
+        // B1b: không có hồ sơ Self còn hiệu lực → mời ra quầy (CBR-114)
         if (!hasActiveSelfProfile(existingPerson.getPersonId())) {
             return ServiceResult.fail(Messages.MSG53_PROFILE_NO_EMAIL);
         }
@@ -484,7 +482,7 @@ public class RegistrationService {
         }
     }
 
-    /** Person có hồ sơ khách Self chưa Inactive không (DBR-65) — điều kiện để kích hoạt online (CBR-20). */
+    /** Person có hồ sơ khách Self còn hiệu lực không (CBR-20). */
     private boolean hasActiveSelfProfile(int personId) throws SQLException {
         String sql = "SELECT 1 FROM Customers WHERE PersonId = ? AND CustomerType = 'Self' AND Status <> 'Inactive'";
         try (Connection conn = DBContext.getConnection();

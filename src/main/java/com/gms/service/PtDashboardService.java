@@ -237,7 +237,7 @@ public class PtDashboardService {
         int cancelledPaid = 0;
         int cancelledUnpaid = 0;
         for (SessionStatRow row : sessionDAO.findStatRows(ptId, fromDate, toDate)) {
-            boolean isCommissionable = isCommissionable(row.getStatus(), row.getResolutionType());
+            boolean isCommissionable = isCommissionable(row.getStatus(), row.getCancelType());
             if ("Completed".equals(row.getStatus())) {
                 completed++;
             } else if ("Missed".equals(row.getStatus())) {
@@ -293,20 +293,20 @@ public class PtDashboardService {
     /**
      * Buổi có được tính hoa hồng cho PT không ("05_Dashboard_Rules.md" mục 3.2):
      *   - Completed (đã dạy), Missed (khách vắng, kể cả do bảo lưu — CBR-68) → TÍNH (CBR-80)
-     *   - Cancelled do PT hủy đã trả tiền mặt (ResolutionType Cancel) hoặc khách hủy (CustomerRequest) → TÍNH (CBR-81, CBR-82)
-     *   - Cancelled do phòng đóng cửa (CBR-57) hoặc gói PT hết hạn (CBR-55) — không có 2 ResolutionType trên → KHÔNG tính
+     *   - Cancelled với CancelType ByPt / ByCustomer → TÍNH (CBR-81, CBR-82)
+     *   - Cancelled với CancelType GymClosed / PackageExpired → KHÔNG tính (CBR-57, CBR-55)
      *   - Scheduled → chưa diễn ra, chưa tính
      *
      * @param status         Sessions.Status.
-     * @param resolutionType Sessions.ResolutionType, có thể null.
+     * @param cancelType     Sessions.CancelType, có thể null.
      * @return true nếu buổi được cộng vào hoa hồng.
      */
-    static boolean isCommissionable(String status, String resolutionType) {
+    static boolean isCommissionable(String status, String cancelType) {
         if ("Completed".equals(status) || "Missed".equals(status)) {
             return true;
         }
         return "Cancelled".equals(status)
-                && ("Cancel".equals(resolutionType) || "CustomerRequest".equals(resolutionType));
+                && ("ByPt".equals(cancelType) || "ByCustomer".equals(cancelType));
     }
 
     /** Tháng này + 2 tháng trước + quý này + quý trước, VD: 09/2026, 08/2026, 07/2026, Quý III/2026, Quý II/2026. */
@@ -495,7 +495,7 @@ public class PtDashboardService {
             if (!isInMonth) {
                 continue;
             }
-            if (isCommissionable(status, row.getResolutionType())) {
+            if (isCommissionable(status, row.getCancelType())) {
                 earnedCount++;
                 earnedAmount += row.getCommissionAmount();
             } else if ("Scheduled".equals(status) && date.isBefore(today)) {

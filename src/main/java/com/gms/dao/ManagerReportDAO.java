@@ -119,7 +119,7 @@ public class ManagerReportDAO {
 
     /**
      * Hoa hồng từng PT theo NGÀY DIỄN RA BUỔI (CHỐT-D4). Tính buổi Completed, Missed, và Cancelled do
-     * PT hủy / khách hủy (CBR-80…82). Buổi hủy do phòng đóng cửa hoặc gói PT hết hạn (ResolutionType NULL)
+     * PT hủy / khách hủy (CBR-80…82). Buổi hủy do phòng đóng cửa hoặc gói PT hết hạn (CancelType GymClosed / PackageExpired)
      * KHÔNG tính. Hoa hồng tính cho PT đang giữ buổi (Sessions.PtEmployeeId).
      */
     public List<ReportView.PtRow> findPtCommission(Connection conn, LocalDate from, LocalDate to)
@@ -134,7 +134,7 @@ public class ManagerReportDAO {
                 + "JOIN Employees e ON e.EmployeeId = se.PtEmployeeId "
                 + "JOIN Persons pe ON pe.PersonId = e.PersonId "
                 + "WHERE (se.Status IN ('Completed', 'Missed') "
-                + "       OR (se.Status = 'Cancelled' AND se.ResolutionType IN ('Cancel', 'CustomerRequest'))) "
+                + "       OR (se.Status = 'Cancelled' AND se.CancelType IN ('ByPt', 'ByCustomer'))) "
                 + "AND ts.SlotDate >= ? AND ts.SlotDate <= ? "
                 + "GROUP BY e.EmployeeId, pe.FullName, e.CommissionRate "
                 + "ORDER BY SUM(CAST(se.CommissionAmount AS BIGINT)) DESC";

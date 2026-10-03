@@ -62,7 +62,7 @@ public class AuthService {
      */
     private static final int LOCK_MINUTES = 5;
 
-    /** Màn chọn vai trò khi tài khoản có từ 2 vai trò (CBR-113). */
+    /** Màn chọn vai trò (CBR-113). */
     public static final String SELECT_ROLE_PATH = "/select-role";
 
     private final AccountDAO accountDAO;
@@ -145,16 +145,15 @@ public class AuthService {
                 return ServiceResult.fail(Messages.MSG38_NO_PASSWORD_YET);
             }
 
-            // Lấy thông tin cá nhân & MỌI vai trò chưa Inactive của Person (DBR-65)
+            // B6a: lấy mọi vai trò còn hiệu lực của Person (DBR-65)
             PersonProfile profile = fetchPersonProfile(conn, account.getPersonId());
 
-            // Không còn vai trò nào (khách đã xóa hồ sơ + không còn làm nhân viên) → chặn như Inactive (CBR-86, CBR-96).
-            // Trước đây code tự gán CUSTOMER khi không tìm thấy vai trò → nhân viên nghỉ việc vào được khu khách.
+            // B6b: không còn vai trò nào → chặn như Inactive (CBR-86)
             if (profile.roles.isEmpty()) {
                 return ServiceResult.fail(Messages.MSG37_ACCOUNT_INACTIVE);
             }
 
-            // BR-01: tài khoản có BẤT KỲ vai trò nhân viên nào thì không bao giờ tự khóa
+            // B6c: có vai trò nhân viên thì không tự khóa (BR-01)
             boolean isStaff = profile.hasStaffRole();
 
             // B7: Kiểm tra mật khẩu
@@ -194,7 +193,7 @@ public class AuthService {
             accountDAO.updateLastLogin(conn, account.getAccountId(), now);
             account.setLastLoginAt(now);
 
-            // CBR-113: 1 vai trò → vào thẳng; từ 2 vai trò → role = null, Servlet chuyển sang /select-role
+            // B9: 1 vai trò vào thẳng, ≥ 2 vai trò chọn vai trò (CBR-113)
             boolean isSingleRole = profile.roles.size() == 1;
             Role role = isSingleRole ? profile.roles.get(0) : null;
             String redirectUrl = isSingleRole ? role.getHomePath() : SELECT_ROLE_PATH;
@@ -229,7 +228,6 @@ public class AuthService {
         final String email;
         final String phone;
         final String avatar;
-        /** Vai trò nhân viên (nếu có) đứng trước, Customer đứng sau. Rỗng = không còn vai trò nào. */
         final List<Role> roles;
 
         PersonProfile(String fullName, String email, String phone, String avatar, List<Role> roles) {
@@ -250,11 +248,7 @@ public class AuthService {
         }
     }
 
-    /**
-     * Đọc Person + các vai trò CÒN HIỆU LỰC:
-     * - nhân viên: Employees.Status = 'Working' (Resigned coi như Inactive — DBR-65)
-     * - khách   : Customers.Status <> 'Inactive'
-     */
+    /** Đọc Person và các vai trò còn hiệu lực (DBR-65). */
     private PersonProfile fetchPersonProfile(Connection conn, int personId) throws SQLException {
         if (conn == null) {
             return new PersonProfile("", "", "", null, List.of(Role.CUSTOMER));
@@ -290,8 +284,9 @@ public class AuthService {
     }
 
     /**
-     * Lấy lại danh sách vai trò còn hiệu lực của 1 tài khoản — dùng cho màn chọn / đổi vai trò (CBR-113),
-     * để server tự kiểm tra vai trò người dùng chọn, không tin danh sách lưu sẵn (GBR-13).
+     * Lấy vai trò còn hiệu lực của tài khoản cho màn chọn vai trò (CBR-113).
+     * @param accountId tài khoản đang đăng nhập
+     * @return danh sách vai trò, rỗng nếu tài khoản không còn hoạt động
      */
     public List<Role> findActiveRoles(int accountId) {
         try (Connection conn = getConnection()) {

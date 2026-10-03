@@ -29,7 +29,7 @@ public class EmployeeDAO {
                 + "ResignationReason "
                 + "FROM Employees "
                 + "WHERE PersonId = ? "
-                // DBR-65: nghỉ việc rồi được tuyển lại → có 2 dòng; ưu tiên dòng đang làm (Working), mới nhất
+                // ưu tiên dòng đang Working, mới nhất (DBR-65)
                 + "ORDER BY CASE WHEN Status = 'Working' THEN 0 ELSE 1 END, EmployeeId DESC";
 
         try (Connection connection = DBContext.getConnection();

@@ -287,7 +287,7 @@
                         <span><i class="fa-solid fa-user" aria-hidden="true"></i> <c:out value="${s.customerName}" /><c:if test="${not empty s.partnerName}"> &amp; <c:out value="${s.partnerName}" /></c:if></span>
                         <span><i class="fa-solid fa-layer-group" aria-hidden="true"></i> <c:out value="${s.packageLabel}" /></span>
                         <c:if test="${not empty s.missedReason}">
-                          <span><i class="fa-solid fa-circle-info" aria-hidden="true"></i> <c:out value="${s.missedReason}" /></span>
+                          <span><i class="fa-solid fa-circle-info" aria-hidden="true"></i> <c:out value="${s.missedReasonText}" /></span>
                         </c:if>
                       </div>
                     </div>

@@ -3,6 +3,20 @@
 Theo agents.md Phần 3, 4, 7.3: mọi chỗ SRS/SDS/prototype/chat nói khác nhau được ghi ở đây, kèm trạng thái.
 Khi nhóm chốt xong 1 mục → đổi trạng thái thành **ĐÃ CHỐT**, ghi ngày + phương án, và sửa lại tài liệu gốc cho khớp.
 
+## ✅ v25 (03/10/2026): đã chốt và xử lý
+
+- **D1.2:** 1 Person = 1 tài khoản, chọn vai trò.
+- **D1.3:** thời hạn gói theo `DurationUnit` / `DurationValue`.
+- **D2:** thêm cột cho Orders, MaintenanceRequests, Notifications.
+- **D3:** seed viết lại toàn bộ, tính theo mốc và giờ chạy.
+- **D5:** đổi tên PK.
+- **D6:** bỏ TokenHash / PasswordSetup.
+- **A3:** link thanh toán 5 phút, không cấu hình.
+- **A9:** múi giờ `Asia/Ho_Chi_Minh`.
+
+Xem `docs/database/SCHEMA_CHANGES_v25.md`.
+**Còn chờ nhóm chốt:** rule nghỉ phép của Manager (UC-15).
+
 ## A. Mâu thuẫn đang CHỜ NHÓM CHỐT (phát hiện 24/09/2026)
 
 | # | Chủ đề | Nguồn 1 | Nguồn 2 | Đề xuất | Tạm thời trong code |

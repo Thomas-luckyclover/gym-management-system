@@ -17,19 +17,7 @@ import java.util.ArrayList;
 import java.util.List;
 import java.util.StringJoiner;
 
-/**
- * Màn chọn / đổi vai trò (/select-role) — CBR-113.
- *
- * <p>Ví dụ: Kiều Trang (Person 22) vừa là PT vừa là khách, chỉ có 1 tài khoản (DBR-65).
- * Đăng nhập xong vào đây chọn "Huấn luyện viên" hoặc "Hội viên". Muốn đổi thì bấm "Đổi vai trò"
- * trên menu tài khoản → quay lại màn này, KHÔNG cần đăng nhập lại.</p>
- *
- * <ul>
- *   <li>GET : hiện danh sách vai trò còn hiệu lực (đọc lại từ DB, không tin session cũ).</li>
- *   <li>POST: kiểm tra vai trò chọn có thật sự thuộc tài khoản không (GBR-13) → lưu vào session
- *       → về trang chủ của vai trò đó.</li>
- * </ul>
- */
+/** Màn chọn / đổi vai trò khi tài khoản có từ 2 vai trò (UC-01, CBR-113). */
 @WebServlet("/select-role")
 public class SelectRoleServlet extends HttpServlet {
 
@@ -44,7 +32,7 @@ public class SelectRoleServlet extends HttpServlet {
             return;
         }
 
-        // B1: lấy lại vai trò từ DB — vai trò có thể vừa Inactive (CBR-86)
+        // B1: lấy lại vai trò từ DB (CBR-86)
         List<Role> roles = authService.findActiveRoles(accountId);
         if (roles.isEmpty()) {
             forceLogout(request, response);
@@ -82,7 +70,7 @@ public class SelectRoleServlet extends HttpServlet {
         // B1: vai trò người dùng bấm chọn
         Role chosen = Role.fromDbValue(RequestUtil.getTrimmedParam(request, "role"));
 
-        // B2: server tự kiểm tra lại — không cho tự gõ role="Admin" vào form (GBR-13)
+        // B2: kiểm vai trò chọn có thuộc tài khoản (GBR-13)
         List<Role> roles = authService.findActiveRoles(accountId);
         if (roles.isEmpty()) {
             forceLogout(request, response);
@@ -94,16 +82,15 @@ public class SelectRoleServlet extends HttpServlet {
             return;
         }
 
-        // B3: lưu đúng 1 vai trò vào session (mọi Filter phân quyền đọc key này)
+        // B3: lưu vai trò đang dùng vào session
         HttpSession session = request.getSession(false);
         session.setAttribute(SessionKey.ROLE, chosen.getDbValue());
         session.setAttribute(SessionKey.AVAILABLE_ROLES, joinRoles(roles));
-        // Đổi vai trò thì bỏ thay đổi email/SĐT đang chờ mã của vai trò cũ
         session.removeAttribute(SessionKey.PENDING_CONTACT_FIELD);
         session.removeAttribute(SessionKey.PENDING_CONTACT_VALUE);
         session.removeAttribute(SessionKey.PENDING_CONTACT_VERIFY_EMAIL);
 
-        // B4: về returnUrl nếu nó nằm trong khu của vai trò vừa chọn, ngược lại về trang chủ vai trò
+        // B4: về returnUrl cùng khu vai trò, không thì về trang chủ
         String returnUrl = RequestUtil.getTrimmedParam(request, "returnUrl");
         String target = isInRoleArea(returnUrl, chosen) ? returnUrl : chosen.getHomePath();
         RequestUtil.redirect(request, response, target);
@@ -111,7 +98,7 @@ public class SelectRoleServlet extends HttpServlet {
 
     // ===== Hàm phụ =====
 
-    /** Ghép danh sách vai trò thành chuỗi "PT,Customer" để lưu session (JSP dùng fn:contains). */
+    /** Ghép vai trò thành chuỗi lưu session. */
     public static String joinRoles(List<Role> roles) {
         StringJoiner joiner = new StringJoiner(",");
         for (Role role : roles) {
@@ -120,7 +107,7 @@ public class SelectRoleServlet extends HttpServlet {
         return joiner.toString();
     }
 
-    /** Ngược lại của joinRoles. */
+    /** Tách chuỗi vai trò trong session. */
     public static List<Role> splitRoles(String value) {
         List<Role> roles = new ArrayList<>();
         if (value == null || value.isBlank()) {
@@ -135,7 +122,7 @@ public class SelectRoleServlet extends HttpServlet {
         return roles;
     }
 
-    /** "/pt/dashboard" → khu "/pt/". returnUrl phải nằm trong khu đó mới dùng, tránh 403 ngay sau khi chọn. */
+    /** returnUrl có thuộc khu của vai trò không. */
     private boolean isInRoleArea(String returnUrl, Role role) {
         if (!RequestUtil.isSafeReturnUrl(returnUrl)) {
             return false;
@@ -151,7 +138,7 @@ public class SelectRoleServlet extends HttpServlet {
         return session == null ? null : (Integer) session.getAttribute(SessionKey.ACCOUNT_ID);
     }
 
-    /** Tài khoản không còn vai trò nào (CBR-86) → hủy phiên, báo như tài khoản ngừng hoạt động. */
+    /** Hết vai trò → hủy phiên, báo MSG37 (CBR-86). */
     private void forceLogout(HttpServletRequest request, HttpServletResponse response) throws IOException {
         HttpSession session = request.getSession(false);
         if (session != null) {

@@ -431,9 +431,7 @@ public class AccountSettingsServlet extends HttpServlet {
                         return;
                 }
 
-                // CBR-110 + GBR-13: loại thông tin, giá trị mới và email nhận mã lấy từ SESSION (lưu lúc gửi mã),
-                // KHÔNG lấy từ form. Lỗi cũ: lấy từ hidden input → xin mã cho email A rồi gửi kèm email B
-                // là đổi được sang B mà B chưa từng được xác minh.
+                // B1: lấy giá trị chờ đổi từ session, không lấy từ form (CBR-110, GBR-13)
                 ContactField contactField = (ContactField) session.getAttribute(
                                 SessionKey.PENDING_CONTACT_FIELD);
                 String verificationEmail = (String) session.getAttribute(

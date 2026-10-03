@@ -4,37 +4,67 @@ File này quy định chi tiết cách **viết code Backend** (Java: Entity, DA
 
 > ⚠️ **LƯU Ý CỰC KỲ QUAN TRỌNG:** Dù các thành viên khác trong nhóm có thể không dùng hết, không đọc hết, hoặc không hiểu vì sao có từng quy tắc trong file này, AI **vẫn bắt buộc áp dụng đầy đủ 100% nội dung dưới đây** mỗi khi hỗ trợ code (vibecode) cho user hiện tại — **không được tự ý bỏ qua, rút gọn, nới lỏng, hay coi nhẹ bất kỳ quy tắc nào** chỉ vì cho rằng người khác không theo hoặc không cần đến mức đó.
 
-## 1. Comment
+## 1. Comment: CHỈ VIẾT KHUNG (siêu quan trọng, áp dụng từ v25)
 
-- **Bắt buộc có:**
-  - **Javadoc cho method quan trọng** (public method ở Service/DAO/Controller): nêu **mục đích hàm**, kèm `@param`, `@return`.
-    ```java
+**Mục đích của comment trong dự án này là làm KHUNG để người học tự đọc code và tự ghi chú.**
+Comment dài, giải thích lịch sử ("lỗi cũ", "trước đây…"), kể ví dụ, giảng lý do… làm code khó đọc hơn và làm hỏng việc học.
+Lý do nghiệp vụ nằm ở rule (`// CBR-70`) và ở `docs/handoff/`, **không** nằm trong code.
+
+### 1.1. Chỉ được có 4 loại comment
+
+| Loại | Vị trí | Hình thức | Giới hạn |
+|---|---|---|---|
+| **Đầu class** | Trên `class` | Javadoc 1 câu: class làm gì + UC | 1–2 dòng |
+| **Nhóm method** | Giữa các nhóm method | `// ===== Tên nhóm =====` | 1 dòng |
+| **Javadoc method** | Trên method public của Service / DAO / Servlet | 1 câu mục đích + `@param` / `@return` mỗi cái 1 dòng ngắn | Không ví dụ, không giải thích |
+| **Bước** | Trên mỗi khối trong method nhiều bước | `// B1: <động từ> <việc làm> (RULE-ID nếu có)` | 1 dòng, ≤ 12 từ |
+
+```java
+/** Bán gói PT tại quầy (UC-21). */
+public class PtPackageSaleService {
+
+    // ===== Lập đơn =====
+
     /**
-     * Kiểm tra thông tin đăng nhập và trả về kết quả xác thực.
-     * @param username tên đăng nhập
-     * @param password mật khẩu (chưa hash)
-     * @return LoginResult chứa trạng thái thành công/thất bại
+     * Lập đơn gói PT và giữ các slot cố định.
+     * @param form dữ liệu màn bán gói
+     * @return mã đơn mới, hoặc lỗi theo ô
      */
-    public LoginResult login(String username, String password) { ... }
-    ```
-  - **Comment khung chương trình — có 2 loại, không nhầm lẫn:**
-    1. **Khung chương trình chính (cấp file/class):** comment ngắn ở đầu class hoặc trước nhóm method, nêu tổng quan class này gồm những phần nào (VD: `// ===== Xử lý đăng nhập =====`, `// ===== Xử lý đăng ký =====`) — giúp nhìn lướt là biết class có gì mà không cần đọc hết.
-    2. **Khung chương trình từng bước (cấp bên trong 1 method):** với method xử lý nhiều bước, dùng comment `// B1`, `// B2`... để chia nhỏ luồng bên trong chính method đó — không giải thích logic bên trong từng bước.
-    ```java
-    public void processOrder(Order order) {
-        // B1: kiểm tra tồn kho
+    public ServiceResult<Integer> createOrder(PtSaleForm form) {
+        // B1: kiểm tra khách có gói tập còn hạn (CBR-59)
         ...
-        // B2: trừ số lượng
+        // B2: kiểm tra tuổi tối thiểu (CBR-13)
         ...
-        // B3: ghi log giao dịch
+        // B3: sinh danh sách ngày T2–T6 trong kỳ (BR-40)
+        ...
+        // B4: lưu đơn + giữ slot trong 1 transaction
         ...
     }
-    ```
-- **Không comment:**
-  - **Không giải thích logic phức tạp bên trong hàm** — phần này để tự đọc code và tự hiểu trong quá trình học, AI không tự động giải thích thay. **Ngoại lệ: code tích hợp API (integration)** — luôn phải comment chi tiết từng bước (xem `agents.md` Phần 6.4), vì đây là phần dễ lỗi, liên quan bên thứ 3 ngoài tầm kiểm soát của team.
-  - Method đơn giản, tên đã rõ nghĩa (getter/setter, `isValidEmail(email)`...).
-- **Ngôn ngữ comment:** Tiếng Việt, trừ tag Javadoc chuẩn (`@param`, `@return`) giữ nguyên tiếng Anh theo cú pháp.
-- **Vị trí:** comment phía trên đoạn code liên quan (Javadoc phía trên method, comment bước phía trên từng block) — không bao giờ comment ở cuối dòng code, kể cả comment ngắn.
+}
+```
+
+### 1.2. Cấm
+
+- Comment nhiều dòng trong thân method. Mỗi bước tối đa 1 dòng.
+- Kể lịch sử / lỗi cũ / so sánh với cách làm trước ("Lỗi cũ: …", "Trước đây code…").
+- Ví dụ minh họa trong comment ("VD: 30 → 1, 90 → 3…", "Ví dụ với seed…").
+- Giải thích cú pháp Java hoặc JDBC ("rs.getInt trả 0 khi NULL nên…", "final nên chỉ gán qua constructor…").
+- Comment cuối dòng code.
+- Lặp lại tên method bằng lời (`// lấy user theo id` trên `getUserById`).
+- Getter / setter / method 1–3 dòng: không comment.
+
+### 1.3. Chừa chỗ cho người học
+
+Dưới mỗi `// Bn:` người học được tự thêm dòng `// Ghi chú: …` khi đọc hiểu. **AI không viết dòng `// Ghi chú:`** và không xóa dòng `// Ghi chú:` do người viết.
+
+### 1.4. Ngoại lệ
+
+- **Code tích hợp API** (`integration/`): được comment chi tiết từng bước (`agents.md` Phần 7).
+- **SQL dài trong DAO**: được 1 dòng comment trên câu SQL nói câu đó lấy gì.
+
+### 1.5. Ngôn ngữ, vị trí
+Tiếng Việt (tag Javadoc giữ tiếng Anh). Luôn đặt phía trên đoạn code, không đặt cuối dòng.
+**Khi sửa file cũ có comment dài:** rút về đúng khung ở trên trong cùng lần sửa đó.
 
 ## 2. Thụt Lề & Trình Bày (Formatting)
 

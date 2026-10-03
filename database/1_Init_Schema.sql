@@ -1,22 +1,19 @@
 /* ============================================================================
    GMS — Gym Management System
-   FILE   : 1_Init_Schema.sql
-   MỤC ĐÍCH: Tạo toàn bộ schema cho SQL Server, chuẩn 3NF, bám sát ERD v25
-             (30 bảng nghiệp vụ, 7 cluster A–G).
-   CẬP NHẬT 24/09/2026 (Leader chốt, xem migrations/001): Employees thêm Specialty,
-             YearsOfExperience, ResignationReason · VerificationCodes thêm PasswordSetup
-             + TokenHash (Code cho phép NULL) · LeaveRequests thêm ReminderSentAt.
-   QUY ƯỚC: - Tên bảng: PascalCase, số nhiều           (Customers, Orders)
-            - Tên cột : PascalCase                     (CustomerCode, CreatedAt)
-            - Khóa chính: <TênBảngSốÍt>Id              (CustomerId, OrderId)
-            - Khóa ngoại: trùng tên cột PK bảng gốc, thêm tiền tố vai trò nếu
-              một bảng trỏ nhiều lần tới cùng bảng cha (HolderCustomerId…)
-            - Mọi CHECK/DEFAULT đều bám Business Rule, chặn dữ liệu rác từ DB
-            - DEFAULT khai báo NGAY TRONG định nghĩa cột:
-                Col TYPE NOT NULL CONSTRAINT DF_Bang_Cot DEFAULT (giá_trị)
-              (cú pháp "CONSTRAINT ... DEFAULT ... FOR Cot" chỉ dùng được trong
-               ALTER TABLE, KHÔNG dùng được bên trong CREATE TABLE)
-   THỨ TỰ : Tạo bảng cha trước, bảng con sau. Index gom ở cuối mỗi cluster.
+   FILE    : 1_Init_Schema.sql  ·  bản v25 (03/10/2026)
+   MỤC ĐÍCH: Tạo toàn bộ schema SQL Server, chuẩn 3NF, khớp bộ rule v25
+             (GBR / CBR / DBR / BR / P-01…P-21). 30 bảng, 7 cluster A–G.
+   CHẠY    : Trên SQL Server 2019+. Muốn làm lại từ đầu: chạy 0_Reset_Database.sql trước.
+             Thứ tự: 0_Reset_Database.sql → 1_Init_Schema.sql → 2_Seed_Data.sql
+   ĐÃ GỘP  : migrations/001 (chuyên môn PT, lý do nghỉ việc, nhắc duyệt nghỉ phép)
+             migrations/002 (DBR-65: 1 Person tối đa 1 hồ sơ khách + 1 hồ sơ NV còn hiệu lực)
+             và toàn bộ thay đổi v25 — xem docs/database/SCHEMA_CHANGES_v25.md.
+   QUY ƯỚC : - Tên bảng PascalCase số nhiều; cột PascalCase; PK = <TênBảngSốÍt>Id
+             - Giá trị liệt kê lưu tiếng Anh, giao diện hiển thị tiếng Việt (GBR-01)
+             - Mọi CHECK/DEFAULT bám rule; rule cần đọc nhiều bảng thì kiểm ở Service (GBR-13)
+             - DEFAULT khai báo trong định nghĩa cột: Col TYPE NOT NULL CONSTRAINT DF_x DEFAULT (v)
+             - RowVer ROWVERSION ở các bảng có màn sửa: lưu khi bản ghi đã đổi thì từ chối (GBR-32)
+             - Không xóa vật lý bản ghi nghiệp vụ; "xóa" = chuyển trạng thái (GBR-05)
    ============================================================================ */
 
 IF DB_ID('GMS') IS NULL
@@ -26,35 +23,39 @@ GO
 USE GMS;
 GO
 
+SET ANSI_NULLS ON;
+SET QUOTED_IDENTIFIER ON;   -- bắt buộc để tạo filtered index (sqlcmd mặc định OFF)
+GO
+
 /* ============================================================================
    CLUSTER A — DANH TÍNH & CON NGƯỜI
-   Person là con người thật; Customer và Employee là HAI VAI TRÒ của người đó.
-   Account là thông tin đăng nhập, gắn đúng 1 Person (không phải ai cũng có).
+   Person = con người thật (họ tên, ngày sinh, SĐT, email, avatar).
+   Customer và Employee = HAI VAI TRÒ của Person (DBR-65).
+   Account = 1 tài khoản đăng nhập / Person, dùng cho MỌI vai trò chưa Inactive;
+   người có ≥ 2 vai trò chọn vai trò sau khi đăng nhập (CBR-113).
    ============================================================================ */
 
--- Persons: phần chung của cả khách và nhân viên (họ tên, ngày sinh, liên hệ)
+-- Persons: phần chung của khách và nhân viên
 CREATE TABLE Persons (
-    PersonId        INT IDENTITY(1,1) NOT NULL,
-    FullName        NVARCHAR(50)  NOT NULL,   -- 2–50 ký tự, cho phép dấu tiếng Việt
-    DateOfBirth     DATE          NOT NULL,   -- dùng để kiểm tra tuổi tối thiểu dịch vụ PT (P-05)
-    Phone           VARCHAR(10)   NULL,       -- NULL với hồ sơ Dependent (dùng số giám hộ)
-    Email           VARCHAR(100)  NULL,       -- bắt buộc với người có tài khoản
-    Avatar          NVARCHAR(255) NULL,       -- chỉ để hiển thị, KHÔNG dùng xác minh danh tính
-    IsReleased      BIT           NOT NULL CONSTRAINT DF_Persons_IsReleased DEFAULT (0),   -- 1 = mọi vai trò đã Inactive → nhả SĐT/email cho người khác
-    CreatedAt       DATETIME2(0)  NOT NULL CONSTRAINT DF_Persons_CreatedAt  DEFAULT (SYSDATETIME()),
+    PersonId    INT IDENTITY(1,1) NOT NULL,
+    FullName    NVARCHAR(50)  NOT NULL,   -- DBR-01: 2–50 ký tự, chữ có dấu, khoảng trắng, ' và -
+    DateOfBirth DATE          NOT NULL,   -- DBR-04; dùng cho tuổi tối thiểu PT (P-05)
+    Phone       VARCHAR(10)   NULL,       -- DBR-22: bắt buộc trừ hồ sơ Dependent (DBR-24, DBR-49)
+    Email       VARCHAR(100)  NULL,       -- DBR-23: bắt buộc khi có tài khoản
+    Avatar      NVARCHAR(255) NULL,       -- DBR-64: chỉ hiển thị, không dùng check-in (CBR-37)
+    IsReleased  BIT           NOT NULL CONSTRAINT DF_Persons_IsReleased DEFAULT (0), -- 1 = mọi vai trò Inactive → nhả SĐT + email (DBR-28)
+    CreatedAt   DATETIME2(0)  NOT NULL CONSTRAINT DF_Persons_CreatedAt  DEFAULT (SYSDATETIME()),
+    RowVer      ROWVERSION,
 
     CONSTRAINT PK_Persons PRIMARY KEY (PersonId),
-    -- SĐT Việt Nam: đúng 10 số, bắt đầu bằng 0
-    CONSTRAINT CK_Persons_Phone  CHECK (Phone IS NULL OR (LEN(Phone) = 10 AND Phone LIKE '0[0-9][0-9][0-9][0-9][0-9][0-9][0-9][0-9][0-9]')),
-    CONSTRAINT CK_Persons_Email  CHECK (Email IS NULL OR Email LIKE '%_@_%._%'),
+    CONSTRAINT CK_Persons_Phone    CHECK (Phone IS NULL OR Phone LIKE '0[0-9][0-9][0-9][0-9][0-9][0-9][0-9][0-9][0-9]'), -- DBR-17 (đầu số nhà mạng: P-16, kiểm ở Service)
+    CONSTRAINT CK_Persons_Email    CHECK (Email IS NULL OR Email LIKE '%_@_%._%'),   -- DBR-18
     CONSTRAINT CK_Persons_FullName CHECK (LEN(LTRIM(RTRIM(FullName))) >= 2),
-    CONSTRAINT CK_Persons_Dob    CHECK (DateOfBirth < CAST(SYSDATETIME() AS DATE)
-                                        AND DATEDIFF(YEAR, DateOfBirth, SYSDATETIME()) <= 100)
+    CONSTRAINT CK_Persons_Dob      CHECK (DateOfBirth >= '1900-01-01')               -- "không ở tương lai, ≤ 100 tuổi" phụ thuộc ngày hiện tại → kiểm ở Service
 );
 GO
 
--- Duy nhất SĐT / email nhưng CHỈ giữa những người chưa bị nhả (IsReleased = 0).
--- Dùng filtered unique index vì hồ sơ đã xóa phải trả lại SĐT/email cho người khác dùng.
+-- DBR-22, DBR-23: SĐT / email duy nhất giữa các Person CÒN HOẠT ĐỘNG (chưa nhả)
 CREATE UNIQUE INDEX UX_Persons_Phone_Active ON Persons(Phone) WHERE Phone IS NOT NULL AND IsReleased = 0;
 CREATE UNIQUE INDEX UX_Persons_Email_Active ON Persons(Email) WHERE Email IS NOT NULL AND IsReleased = 0;
 GO
@@ -62,31 +63,38 @@ GO
 -- Customers: vai trò KHÁCH của một Person
 CREATE TABLE Customers (
     CustomerId           INT IDENTITY(1,1) NOT NULL,
-    PersonId             INT           NOT NULL,   -- 1 Person có tối đa 1 hồ sơ khách CHƯA Inactive (DBR-65)
-    CustomerCode         VARCHAR(12)   NOT NULL,   -- KH-nnnn, hệ thống sinh, không bao giờ đổi
-    CheckInPhoto         NVARCHAR(255) NULL,       -- Lễ tân chụp tại quầy, dùng đối chiếu khi check-in
-    CustomerType         VARCHAR(10)   NOT NULL,   -- Self | Dependent (không đổi được sau khi tạo)
-    GuardianName         NVARCHAR(50)  NULL,       -- 4 cột giám hộ chỉ dùng cho hồ sơ Dependent
+    PersonId             INT           NOT NULL,
+    CustomerCode         VARCHAR(12)   NOT NULL,   -- KH-nnnn, hệ thống sinh, không bao giờ đổi (DBR-09)
+    CheckInPhoto         NVARCHAR(255) NULL,       -- Lễ tân chụp tại quầy (CBR-35, CBR-38)
+    CustomerType         VARCHAR(10)   NOT NULL,   -- Self | Dependent — không đổi được sau khi tạo (BR-18)
+    GuardianName         NVARCHAR(50)  NULL,       -- 4 cột giám hộ: CHỈ hồ sơ Dependent (DBR-25)
     GuardianRelationship NVARCHAR(30)  NULL,
-    GuardianPhone        VARCHAR(10)   NULL,       -- được phép trùng nhau (anh em chung số bố mẹ)
+    GuardianPhone        VARCHAR(10)   NULL,       -- được trùng giữa các hồ sơ (anh em chung số bố mẹ — DBR-24)
     GuardianPhone2       VARCHAR(10)   NULL,
-    Status               VARCHAR(10)   NOT NULL CONSTRAINT DF_Customers_Status   DEFAULT ('New'),   -- New → Active → Frozen/Expired → Inactive
+    Status               VARCHAR(10)   NOT NULL CONSTRAINT DF_Customers_Status   DEFAULT ('New'), -- DBR-34
     JoinedAt             DATETIME2(0)  NOT NULL CONSTRAINT DF_Customers_JoinedAt DEFAULT (SYSDATETIME()),
-    DeletedAt            DATETIME2(0)  NULL,       -- xóa mềm: chỉ set giờ, không xóa dòng
+    DeletedAt            DATETIME2(0)  NULL,       -- xóa mềm (GBR-05)
+    RowVer               ROWVERSION,
 
     CONSTRAINT PK_Customers PRIMARY KEY (CustomerId),
     CONSTRAINT UQ_Customers_CustomerCode UNIQUE (CustomerCode),
     CONSTRAINT FK_Customers_Persons FOREIGN KEY (PersonId) REFERENCES Persons(PersonId),
-    CONSTRAINT CK_Customers_Code CHECK (CustomerCode LIKE 'KH-[0-9][0-9][0-9][0-9]'),
+    CONSTRAINT CK_Customers_Code   CHECK (CustomerCode LIKE 'KH-[0-9][0-9][0-9][0-9]'),
     CONSTRAINT CK_Customers_Type   CHECK (CustomerType IN ('Self','Dependent')),
     CONSTRAINT CK_Customers_Status CHECK (Status IN ('New','Active','Frozen','Expired','Inactive')),
-    -- Hồ sơ Dependent bắt buộc có người giám hộ (tên + quan hệ + ít nhất 1 số)
+    -- Self: không có giám hộ. Dependent: bắt buộc tên + quan hệ + ít nhất 1 số (DBR-25)
     CONSTRAINT CK_Customers_Guardian CHECK (
-        (CustomerType = 'Self')
+        (CustomerType = 'Self' AND GuardianName IS NULL AND GuardianRelationship IS NULL
+            AND GuardianPhone IS NULL AND GuardianPhone2 IS NULL)
         OR (CustomerType = 'Dependent' AND GuardianName IS NOT NULL
             AND GuardianRelationship IS NOT NULL AND GuardianPhone IS NOT NULL)
     ),
-    -- Hồ sơ Inactive bắt buộc có thời điểm xóa, và ngược lại
+    CONSTRAINT CK_Customers_GuardianPhone CHECK (
+        (GuardianPhone  IS NULL OR GuardianPhone  LIKE '0[0-9][0-9][0-9][0-9][0-9][0-9][0-9][0-9][0-9]')
+        AND (GuardianPhone2 IS NULL OR GuardianPhone2 LIKE '0[0-9][0-9][0-9][0-9][0-9][0-9][0-9][0-9][0-9]')
+        AND (GuardianPhone2 IS NULL OR GuardianPhone2 <> GuardianPhone)
+    ),
+    -- Inactive là trạng thái cuối, bắt buộc có thời điểm xóa (DBR-35)
     CONSTRAINT CK_Customers_Deleted CHECK (
         (Status = 'Inactive' AND DeletedAt IS NOT NULL) OR (Status <> 'Inactive' AND DeletedAt IS NULL)
     )
@@ -95,56 +103,54 @@ GO
 
 -- Employees: vai trò NHÂN VIÊN của một Person
 CREATE TABLE Employees (
-    EmployeeId     INT IDENTITY(1,1) NOT NULL,
-    PersonId       INT          NOT NULL,   -- 1 Person có tối đa 1 hồ sơ nhân viên đang Working (DBR-65)
-    EmployeeCode   VARCHAR(12)  NOT NULL,   -- NV-nnnn
-    Position       VARCHAR(15)  NOT NULL,   -- Admin | Manager | PT | Receptionist
-    HireDate       DATE         NOT NULL,
-    CommissionRate TINYINT      NULL,       -- % hoa hồng, CHỈ PT mới có giá trị
-    Specialty         NVARCHAR(100) NULL,   -- chuyên môn PT, hiện ở trang chủ + lọc khi đặt buổi lẻ (SRS 2.1.1); chỉ PT có
-    YearsOfExperience TINYINT       NULL,   -- số năm kinh nghiệm PT, chỉ để quảng bá trên trang chủ (SRS 2.1.1)
-    Status         VARCHAR(10)  NOT NULL CONSTRAINT DF_Employees_Status DEFAULT ('Working'),   -- Working | Resigned
-    DeletedAt      DATETIME2(0) NULL,       -- thời điểm nghỉ việc
-    ResignationReason NVARCHAR(500) NULL,   -- bắt buộc khi Resigned (SRS 5.1.2, GBR-09: lý do lưu cùng bản ghi)
+    EmployeeId        INT IDENTITY(1,1) NOT NULL,
+    PersonId          INT           NOT NULL,
+    EmployeeCode      VARCHAR(12)   NOT NULL,   -- NV-nnnn (DBR-09)
+    Position          VARCHAR(15)   NOT NULL,   -- Admin | Manager | PT | Receptionist — chỉ Admin đổi (CBR-109)
+    HireDate          DATE          NOT NULL,
+    CommissionRate    TINYINT       NULL,       -- % hoa hồng, CHỈ PT (DBR-07)
+    Specialty         NVARCHAR(100) NULL,       -- chỉ PT, hiện trang chủ
+    YearsOfExperience TINYINT       NULL,       -- chỉ PT
+    Status            VARCHAR(10)   NOT NULL CONSTRAINT DF_Employees_Status DEFAULT ('Working'), -- Working | Resigned (Resigned = Inactive — DBR-65)
+    DeletedAt         DATETIME2(0)  NULL,       -- thời điểm nghỉ việc
+    ResignationReason NVARCHAR(500) NULL,       -- GBR-09
+    RowVer            ROWVERSION,
 
     CONSTRAINT PK_Employees PRIMARY KEY (EmployeeId),
     CONSTRAINT UQ_Employees_EmployeeCode UNIQUE (EmployeeCode),
     CONSTRAINT FK_Employees_Persons FOREIGN KEY (PersonId) REFERENCES Persons(PersonId),
-    CONSTRAINT CK_Employees_Code CHECK (EmployeeCode LIKE 'NV-[0-9][0-9][0-9][0-9]'),
+    CONSTRAINT CK_Employees_Code     CHECK (EmployeeCode LIKE 'NV-[0-9][0-9][0-9][0-9]'),
     CONSTRAINT CK_Employees_Position CHECK (Position IN ('Admin','Manager','PT','Receptionist')),
     CONSTRAINT CK_Employees_Status   CHECK (Status IN ('Working','Resigned')),
     CONSTRAINT CK_Employees_Rate     CHECK (CommissionRate IS NULL OR CommissionRate BETWEEN 0 AND 100),
-    -- Chỉ PT mới có tỷ lệ hoa hồng; vị trí khác phải để NULL
     CONSTRAINT CK_Employees_RateByPosition CHECK (
         (Position = 'PT' AND CommissionRate IS NOT NULL) OR (Position <> 'PT' AND CommissionRate IS NULL)
     ),
-    -- Chuyên môn và kinh nghiệm chỉ dành cho PT
-    CONSTRAINT CK_Employees_PtProfile CHECK (Position = 'PT' OR (Specialty IS NULL AND YearsOfExperience IS NULL)),
+    CONSTRAINT CK_Employees_PtProfile  CHECK (Position = 'PT' OR (Specialty IS NULL AND YearsOfExperience IS NULL)),
     CONSTRAINT CK_Employees_Experience CHECK (YearsOfExperience IS NULL OR YearsOfExperience <= 60),
-    -- Nghỉ việc bắt buộc có lý do 5–500 ký tự (GBR-09, DBR-05)
+    -- Resigned: bắt buộc thời điểm + lý do 5–500 ký tự; Working: không có
     CONSTRAINT CK_Employees_Resignation CHECK (
-        Status <> 'Resigned' OR (ResignationReason IS NOT NULL AND LEN(LTRIM(RTRIM(ResignationReason))) >= 5)
+        (Status = 'Resigned' AND DeletedAt IS NOT NULL AND ResignationReason IS NOT NULL
+            AND LEN(LTRIM(RTRIM(ResignationReason))) >= 5)
+        OR (Status = 'Working' AND DeletedAt IS NULL AND ResignationReason IS NULL)
     )
 );
 GO
 
 -- DBR-65: mỗi Person tối đa 1 hồ sơ khách chưa Inactive và 1 hồ sơ nhân viên đang Working.
--- Dùng filtered unique index (thay cho UNIQUE(PersonId)) để hồ sơ cũ đã Inactive/Resigned không chặn
--- việc tạo hồ sơ mới trên cùng Person (VD nhân viên bị xóa hồ sơ khách, sau quay lại tập — CBR-114).
-CREATE UNIQUE INDEX UX_Customers_PersonId_Active ON Customers(PersonId) WHERE Status <> 'Inactive';
+-- Hồ sơ cũ Inactive / Resigned không chặn tạo hồ sơ mới trên cùng Person (CBR-114).
+CREATE UNIQUE INDEX UX_Customers_PersonId_Active  ON Customers(PersonId) WHERE Status <> 'Inactive';
 CREATE UNIQUE INDEX UX_Employees_PersonId_Working ON Employees(PersonId) WHERE Status = 'Working';
 GO
 
--- Accounts: thông tin đăng nhập, gắn đúng 1 Person. 1 tài khoản phục vụ MỌI vai trò chưa Inactive
--- của Person (DBR-65, CBR-113): người vừa là PT vừa là khách dùng 1 tài khoản, đăng nhập xong chọn vai trò. Nhiều người KHÔNG có tài khoản
--- (khách vãng lai, hồ sơ Dependent) nên tách bảng thay vì gộp vào Persons.
+-- Accounts: 1 tài khoản / Person, phục vụ mọi vai trò chưa Inactive (DBR-65, CBR-113)
 CREATE TABLE Accounts (
     AccountId        INT IDENTITY(1,1) NOT NULL,
     PersonId         INT           NOT NULL,
-    PasswordHash     VARCHAR(255)  NULL,      -- NULL = tài khoản Lễ tân tạo, khách chưa đặt mật khẩu
-    Status           VARCHAR(10)   NOT NULL CONSTRAINT DF_Accounts_Status    DEFAULT ('Active'),   -- Active | Locked (Admin khóa) | Inactive
-    FailedLoginCount TINYINT       NOT NULL CONSTRAINT DF_Accounts_Failed    DEFAULT (0),          -- đếm số lần sai liên tiếp, đủ P-17 thì khóa tạm
-    LockedUntil      DATETIME2(0)  NULL,      -- khóa TẠM do sai mật khẩu, KHÔNG đổi cột Status
+    PasswordHash     VARCHAR(255)  NULL,      -- NULL = Lễ tân tạo, khách chưa đặt mật khẩu (CBR-24, CBR-31)
+    Status           VARCHAR(10)   NOT NULL CONSTRAINT DF_Accounts_Status    DEFAULT ('Active'), -- Active | Locked (Admin khóa) | Inactive (mọi vai trò Inactive — CBR-86, cuối)
+    FailedLoginCount TINYINT       NOT NULL CONSTRAINT DF_Accounts_Failed    DEFAULT (0),        -- BR-01, BR-02
+    LockedUntil      DATETIME2(0)  NULL,      -- khóa TẠM do sai mật khẩu, không đổi Status
     LastLoginAt      DATETIME2(0)  NULL,
     CreatedAt        DATETIME2(0)  NOT NULL CONSTRAINT DF_Accounts_CreatedAt DEFAULT (SYSDATETIME()),
 
@@ -155,176 +161,177 @@ CREATE TABLE Accounts (
 );
 GO
 
--- VerificationCodes: mã 6 số gửi qua email, HOẶC link đặt mật khẩu (PasswordSetup).
---   (PasswordSetup/TokenHash: không còn dùng từ 27/09, giữ để tương thích)
--- Tách bảng vì lúc GỬI mã cho người tự đăng ký thì CHƯA có Account nào để lưu.
+-- VerificationCodes: mã 6 số gửi qua email (GBR-15). Tách bảng vì lúc đăng ký CHƯA có Account.
+-- v25: bỏ PasswordSetup + TokenHash (luồng link đã bỏ — CBR-31); thêm PhoneChange (CBR-110).
 CREATE TABLE VerificationCodes (
     VerificationCodeId INT IDENTITY(1,1) NOT NULL,
-    AccountId          INT          NULL,   -- NULL khi đăng ký mới (chưa có tài khoản)
-    Email              VARCHAR(100) NOT NULL,
-    Purpose            VARCHAR(15)  NOT NULL, -- SignUp | Claim | Recovery | EmailChange | PasswordSetup
-    Code               CHAR(6)      NULL,     -- mã 6 số; NULL với PasswordSetup (dùng link)
-    TokenHash          CHAR(64)     NULL,     -- SHA-256 (hex thường) của token trong link đặt mật khẩu; KHÔNG lưu token thật
+    AccountId          INT          NULL,     -- NULL khi đăng ký / kích hoạt (chưa có tài khoản)
+    Email              VARCHAR(100) NOT NULL, -- email NHẬN mã
+    Purpose            VARCHAR(15)  NOT NULL, -- SignUp | Claim | Recovery | EmailChange | PhoneChange
+    Code               CHAR(6)      NOT NULL, -- DBR-03
     SentAt             DATETIME2(0) NOT NULL,
-    ExpiresAt          DATETIME2(0) NOT NULL, -- SentAt + P-15 (mặc định 15 phút)
-    FailedAttempts     TINYINT      NOT NULL CONSTRAINT DF_VerificationCodes_Failed DEFAULT (0), -- sai đủ P-17 lần thì hủy mã + khóa email P-18 phút
+    ExpiresAt          DATETIME2(0) NOT NULL, -- SentAt + P-15
+    FailedAttempts     TINYINT      NOT NULL CONSTRAINT DF_VerificationCodes_Failed DEFAULT (0), -- CBR-94: đủ P-17 → hủy mã + khóa P-18
     LockedUntil        DATETIME2(0) NULL,
     UsedAt             DATETIME2(0) NULL,
 
     CONSTRAINT PK_VerificationCodes PRIMARY KEY (VerificationCodeId),
     CONSTRAINT FK_VerificationCodes_Accounts FOREIGN KEY (AccountId) REFERENCES Accounts(AccountId),
-    CONSTRAINT CK_VerificationCodes_Purpose CHECK (Purpose IN ('SignUp','Claim','Recovery','EmailChange','PasswordSetup')),
-    CONSTRAINT CK_VerificationCodes_Code    CHECK (Code NOT LIKE '%[^0-9]%'),
+    CONSTRAINT CK_VerificationCodes_Purpose CHECK (Purpose IN ('SignUp','Claim','Recovery','EmailChange','PhoneChange')),
+    CONSTRAINT CK_VerificationCodes_Code    CHECK (Code LIKE '[0-9][0-9][0-9][0-9][0-9][0-9]'),
     CONSTRAINT CK_VerificationCodes_Expiry  CHECK (ExpiresAt > SentAt),
-    -- PasswordSetup (link cho tài khoản Lễ tân tạo — CBR-24, CBR-31) dùng token và phải gắn tài khoản;
-    -- các mục đích khác dùng mã 6 số
-    CONSTRAINT CK_VerificationCodes_CodeOrToken CHECK (
-        (Purpose = 'PasswordSetup' AND TokenHash IS NOT NULL AND Code IS NULL AND AccountId IS NOT NULL)
-        OR (Purpose <> 'PasswordSetup' AND Code IS NOT NULL AND TokenHash IS NULL)
+    -- Mã cho tài khoản đã có thì phải gắn tài khoản
+    CONSTRAINT CK_VerificationCodes_Account CHECK (
+        (Purpose IN ('Recovery','EmailChange','PhoneChange') AND AccountId IS NOT NULL)
+        OR (Purpose IN ('SignUp','Claim') AND AccountId IS NULL)
     )
 );
 GO
 
--- Mở link đặt mật khẩu: tra đúng 1 dòng theo mã băm của token
-CREATE UNIQUE INDEX UX_VerificationCodes_TokenHash ON VerificationCodes(TokenHash) WHERE TokenHash IS NOT NULL;
-GO
-
 -- Index cluster A
--- Màn Lễ tân tra khách bằng SĐT ở mọi luồng (check-in, bán hàng, tạo hồ sơ) → cột lọc nóng nhất
-CREATE INDEX IX_Persons_Phone ON Persons(Phone);
--- Đăng nhập tra theo email; đăng ký tra trùng email
-CREATE INDEX IX_Persons_Email ON Persons(Email);
--- Màn danh sách khách của Lễ tân lọc theo trạng thái hồ sơ
+CREATE INDEX IX_Persons_Phone ON Persons(Phone);                       -- Lễ tân tra SĐT ở mọi luồng
+CREATE INDEX IX_Persons_Email ON Persons(Email);                       -- đăng nhập / tra trùng email
 CREATE INDEX IX_Customers_Status ON Customers(Status);
--- Danh sách nhân viên lọc theo vị trí + tình trạng làm việc (màn Staff List)
+CREATE INDEX IX_Customers_GuardianPhone ON Customers(GuardianPhone) WHERE GuardianPhone IS NOT NULL; -- tra hồ sơ Dependent theo số giám hộ (CBR-33)
 CREATE INDEX IX_Employees_PositionStatus ON Employees(Position, Status);
--- Job mở khóa tài khoản hết hạn quét theo LockedUntil
 CREATE INDEX IX_Accounts_LockedUntil ON Accounts(LockedUntil) WHERE LockedUntil IS NOT NULL;
--- Tra mã mới nhất theo email + mục đích khi người dùng nhập mã
 CREATE INDEX IX_VerificationCodes_EmailPurpose ON VerificationCodes(Email, Purpose, SentAt DESC);
 GO
 
 /* ============================================================================
    CLUSTER B — BÁN HÀNG, THANH TOÁN, QUYỀN DÙNG
-   Chuỗi tiền: Packages → Orders → Transactions → (Paid) → Subscriptions
+   Packages → Orders → Transactions → (Paid) → Subscriptions
    ============================================================================ */
 
--- Packages: danh mục gói bán ra. Gói PT bán theo KỲ HẠN, số buổi chỉ là ước tính.
+-- Packages: danh mục gói. Thời hạn lưu theo ĐƠN VỊ (ngày / tháng) vì GBR-03 tính theo tháng lịch:
+-- 31/01 + 1 tháng = 28/02 (hoặc 29/02), không phải +30 ngày.
 CREATE TABLE Packages (
     PackageId             INT IDENTITY(1,1) NOT NULL,
-    PackageName           NVARCHAR(100) NOT NULL,
-    Description           NVARCHAR(500) NULL,
-    Benefits              NVARCHAR(1000) NULL,  -- mỗi dòng 1 quyền lợi, hiển thị dạng gạch đầu dòng
-    PackageType           VARCHAR(15)   NOT NULL, -- Membership | DayPass | PTSingle | PTCouple | SingleSession
-    DurationDays          SMALLINT      NULL,     -- thời hạn; DayPass = 1; SingleSession = NULL
-    EstimatedSessionCount TINYINT       NULL,     -- CHỈ ước tính cho gói PT, không phải hạn mức
-    Price                 INT           NOT NULL, -- VND, đã gồm VAT
-    IsActive              BIT           NOT NULL CONSTRAINT DF_Packages_IsActive  DEFAULT (1),
-    CreatedAt             DATETIME2(0)  NOT NULL CONSTRAINT DF_Packages_CreatedAt DEFAULT (SYSDATETIME()),
+    PackageName           NVARCHAR(100)  NOT NULL, -- DBR-11: 3–100 ký tự, duy nhất giữa gói đang bán
+    Description           NVARCHAR(500)  NULL,
+    Benefits              NVARCHAR(1000) NULL,     -- DBR-15: tối đa 10 dòng, mỗi dòng 3–100 ký tự (kiểm ở Service)
+    PackageType           VARCHAR(15)    NOT NULL, -- Membership | DayPass | PTSingle | PTCouple | SingleSession
+    DurationUnit          VARCHAR(5)     NULL,     -- Day | Month (DBR-19)
+    DurationValue         TINYINT        NULL,     -- gói ngày = 1 Day; gói tập: tháng theo P-04; gói PT: tháng theo P-21
+    EstimatedSessionCount TINYINT        NULL,     -- CHỈ để hiển thị "khoảng n buổi" cho gói PT (DBR-53)
+    Price                 INT            NOT NULL, -- VND, đã gồm VAT (GBR-02)
+    IsActive              BIT            NOT NULL CONSTRAINT DF_Packages_IsActive  DEFAULT (1), -- 0 = ngừng bán (CBR-97)
+    CreatedAt             DATETIME2(0)   NOT NULL CONSTRAINT DF_Packages_CreatedAt DEFAULT (SYSDATETIME()),
+    RowVer                ROWVERSION,
 
     CONSTRAINT PK_Packages PRIMARY KEY (PackageId),
-    CONSTRAINT UQ_Packages_Name UNIQUE (PackageName),
     CONSTRAINT CK_Packages_Type  CHECK (PackageType IN ('Membership','DayPass','PTSingle','PTCouple','SingleSession')),
-    CONSTRAINT CK_Packages_Name CHECK (LEN(LTRIM(RTRIM(PackageName))) >= 3),
+    CONSTRAINT CK_Packages_Name  CHECK (LEN(LTRIM(RTRIM(PackageName))) >= 3),
     CONSTRAINT CK_Packages_Price CHECK (Price > 0),
-    -- Gói PT bắt buộc có số buổi ước tính để tính giá trị buổi; gói tập thì không
-    CONSTRAINT CK_Packages_EstSession CHECK (
-        (PackageType IN ('PTSingle','PTCouple','SingleSession') AND EstimatedSessionCount > 0)
-        OR (PackageType IN ('Membership','DayPass') AND EstimatedSessionCount IS NULL)
-    ),
-    -- Gói có thời hạn thì DurationDays > 0; buổi lẻ không có thời hạn
     CONSTRAINT CK_Packages_Duration CHECK (
-        (PackageType = 'SingleSession' AND DurationDays IS NULL)
-        OR (PackageType <> 'SingleSession' AND DurationDays > 0)
+        (PackageType = 'DayPass'       AND DurationUnit IS NOT NULL AND DurationValue IS NOT NULL AND DurationUnit = 'Day' AND DurationValue = 1)
+        OR (PackageType = 'Membership' AND DurationUnit IS NOT NULL AND DurationValue IS NOT NULL AND DurationUnit = 'Month' AND DurationValue BETWEEN 1 AND 36)
+        OR (PackageType IN ('PTSingle','PTCouple') AND DurationUnit IS NOT NULL AND DurationValue IS NOT NULL AND DurationUnit = 'Month' AND DurationValue BETWEEN 1 AND 12)
+        OR (PackageType = 'SingleSession' AND DurationUnit IS NULL AND DurationValue IS NULL)
+    ),
+    CONSTRAINT CK_Packages_EstSession CHECK (
+        (PackageType IN ('PTSingle','PTCouple') AND EstimatedSessionCount IS NOT NULL AND EstimatedSessionCount > 0)
+        OR (PackageType NOT IN ('PTSingle','PTCouple') AND EstimatedSessionCount IS NULL)
     )
 );
 GO
 
--- Vouchers: mã giảm giá. KHÔNG bao giờ áp cho gói PT và buổi lẻ.
+-- DBR-11: tên chỉ cần duy nhất giữa các gói ĐANG BÁN — gói đã ngừng có thể trùng tên gói mới
+CREATE UNIQUE INDEX UX_Packages_Name_Active ON Packages(PackageName) WHERE IsActive = 1;
+GO
+
+-- Vouchers: mã giảm giá — KHÔNG áp cho gói PT và buổi lẻ (CBR-76)
 CREATE TABLE Vouchers (
     VoucherId           INT IDENTITY(1,1) NOT NULL,
-    VoucherCode         VARCHAR(20)  NOT NULL,
+    VoucherCode         VARCHAR(20)  NOT NULL, -- DBR-10
     DiscountType        VARCHAR(10)  NOT NULL, -- Percent | Amount
     DiscountValue       INT          NOT NULL,
     StartDate           DATE         NOT NULL,
-    EndDate             DATE         NOT NULL,
-    MaxUsage            INT          NOT NULL, -- tổng lượt dùng của cả voucher
-    MaxUsagePerCustomer TINYINT      NULL,     -- NULL = không giới hạn theo khách
-    UsedCount           INT          NOT NULL CONSTRAINT DF_Vouchers_UsedCount     DEFAULT (0), -- +1 khi áp, -1 khi gỡ hoặc đơn bị hủy
-    MinOrderValue       INT          NOT NULL CONSTRAINT DF_Vouchers_MinOrderValue DEFAULT (0), -- so với giá TRƯỚC giảm
-    ApplicableScope     VARCHAR(25)  NOT NULL, -- MembershipAndDayPass | MembershipOnly
-    IsActive            BIT          NOT NULL CONSTRAINT DF_Vouchers_IsActive      DEFAULT (1),
+    EndDate             DATE         NOT NULL, -- ngày cuối còn dùng (GBR-03)
+    MaxUsage            INT          NOT NULL, -- tổng lượt
+    MaxUsagePerCustomer TINYINT      NULL,     -- NULL = không giới hạn (CBR-74)
+    UsedCount           INT          NOT NULL CONSTRAINT DF_Vouchers_UsedCount     DEFAULT (0), -- BR-43 → 45
+    MinOrderValue       INT          NOT NULL CONSTRAINT DF_Vouchers_MinOrderValue DEFAULT (0), -- so với giá TRƯỚC giảm (CBR-73)
+    ApplicableScope     VARCHAR(25)  NOT NULL CONSTRAINT DF_Vouchers_Scope         DEFAULT ('MembershipAndDayPass'), -- CBR-76
+    IsActive            BIT          NOT NULL CONSTRAINT DF_Vouchers_IsActive      DEFAULT (1), -- dùng rồi chỉ tắt, không xóa (CBR-98)
+    CreatedAt           DATETIME2(0) NOT NULL CONSTRAINT DF_Vouchers_CreatedAt     DEFAULT (SYSDATETIME()),
+    RowVer              ROWVERSION,
 
     CONSTRAINT PK_Vouchers PRIMARY KEY (VoucherId),
     CONSTRAINT UQ_Vouchers_Code UNIQUE (VoucherCode),
-    CONSTRAINT CK_Vouchers_Code  CHECK (LEN(VoucherCode) BETWEEN 4 AND 20 AND VoucherCode NOT LIKE '%[^A-Z0-9]%'),
+    CONSTRAINT CK_Vouchers_Code     CHECK (LEN(VoucherCode) BETWEEN 4 AND 20 AND VoucherCode NOT LIKE '%[^A-Z0-9]%'),
     CONSTRAINT CK_Vouchers_MaxUsage CHECK (MaxUsage > 0 AND (MaxUsagePerCustomer IS NULL OR MaxUsagePerCustomer > 0)),
-    CONSTRAINT CK_Vouchers_Type  CHECK (DiscountType IN ('Percent','Amount')),
-    CONSTRAINT CK_Vouchers_Scope CHECK (ApplicableScope IN ('MembershipAndDayPass','MembershipOnly')),
-    CONSTRAINT CK_Vouchers_Dates CHECK (EndDate >= StartDate),
-    CONSTRAINT CK_Vouchers_Used  CHECK (UsedCount >= 0 AND UsedCount <= MaxUsage),
-    -- Giảm theo % thì 1–100; giảm số tiền thì > 0
-    CONSTRAINT CK_Vouchers_Value CHECK (
+    CONSTRAINT CK_Vouchers_Type     CHECK (DiscountType IN ('Percent','Amount')),
+    CONSTRAINT CK_Vouchers_Scope    CHECK (ApplicableScope IN ('MembershipAndDayPass','MembershipOnly')),
+    CONSTRAINT CK_Vouchers_Dates    CHECK (EndDate >= StartDate),
+    CONSTRAINT CK_Vouchers_Used     CHECK (UsedCount >= 0 AND UsedCount <= MaxUsage), -- DBR-14
+    CONSTRAINT CK_Vouchers_MinOrder CHECK (MinOrderValue >= 0),
+    CONSTRAINT CK_Vouchers_Value    CHECK (
         (DiscountType = 'Percent' AND DiscountValue BETWEEN 1 AND 100)
         OR (DiscountType = 'Amount' AND DiscountValue > 0)
     )
 );
 GO
 
--- Shifts: 2 ca mỗi ngày mở cửa, sinh tự động từ giờ mở cửa. Dùng để đối soát tiền mặt.
+-- Shifts: 2 ca / ngày mở cửa, sinh tự động (CBR-104). Đối soát tiền mặt (BR-46, DBR-55).
 CREATE TABLE Shifts (
     ShiftId            INT IDENTITY(1,1) NOT NULL,
     WorkDate           DATE          NOT NULL,
     ShiftType          VARCHAR(10)   NOT NULL, -- Morning | Afternoon
-    OpenedByEmployeeId INT           NULL,     -- Lễ tân mở ca
+    OpenedByEmployeeId INT           NULL,
     ClosedByEmployeeId INT           NULL,
     Status             VARCHAR(10)   NOT NULL CONSTRAINT DF_Shifts_Status DEFAULT ('NotOpened'), -- NotOpened | Open | Closed
     OpenedAt           DATETIME2(0)  NULL,
     ClosedAt           DATETIME2(0)  NULL,
-    ExpectedCash       INT           NULL,     -- tổng giao dịch tiền mặt Success của ca
-    CountedCash        INT           NULL,     -- tiền đếm thực tế khi chốt ca
-    VarianceReason     NVARCHAR(500) NULL,     -- bắt buộc khi đếm lệch với kỳ vọng
+    ExpectedCash       INT           NULL,     -- DBR-55, chốt lúc đóng ca
+    CountedCash        INT           NULL,
+    VarianceReason     NVARCHAR(500) NULL,     -- bắt buộc khi lệch (BR-46)
 
     CONSTRAINT PK_Shifts PRIMARY KEY (ShiftId),
-    CONSTRAINT UQ_Shifts_DateType UNIQUE (WorkDate, ShiftType), -- mỗi ngày đúng 2 ca
+    CONSTRAINT UQ_Shifts_DateType UNIQUE (WorkDate, ShiftType),
     CONSTRAINT FK_Shifts_OpenedBy FOREIGN KEY (OpenedByEmployeeId) REFERENCES Employees(EmployeeId),
     CONSTRAINT FK_Shifts_ClosedBy FOREIGN KEY (ClosedByEmployeeId) REFERENCES Employees(EmployeeId),
     CONSTRAINT CK_Shifts_Type   CHECK (ShiftType IN ('Morning','Afternoon')),
     CONSTRAINT CK_Shifts_Status CHECK (Status IN ('NotOpened','Open','Closed')),
-    -- Ca đã chốt bắt buộc có tiền đếm; lệch tiền thì bắt buộc có lý do
+    CONSTRAINT CK_Shifts_Opened CHECK (
+        (Status = 'NotOpened' AND OpenedByEmployeeId IS NULL AND OpenedAt IS NULL)
+        OR (Status <> 'NotOpened' AND OpenedByEmployeeId IS NOT NULL AND OpenedAt IS NOT NULL)
+    ),
     CONSTRAINT CK_Shifts_Closed CHECK (
-        Status <> 'Closed'
-        OR (CountedCash IS NOT NULL AND ClosedAt IS NOT NULL AND ClosedByEmployeeId IS NOT NULL
-            AND (CountedCash = ExpectedCash OR VarianceReason IS NOT NULL))
-    )
+        (Status = 'Closed' AND ClosedByEmployeeId IS NOT NULL AND ClosedAt IS NOT NULL
+            AND ExpectedCash IS NOT NULL AND CountedCash IS NOT NULL
+            AND (CountedCash = ExpectedCash OR (VarianceReason IS NOT NULL AND LEN(LTRIM(RTRIM(VarianceReason))) >= 5)))
+        OR (Status <> 'Closed' AND ClosedByEmployeeId IS NULL AND ClosedAt IS NULL AND CountedCash IS NULL)
+    ),
+    CONSTRAINT CK_Shifts_Cash CHECK ((ExpectedCash IS NULL OR ExpectedCash >= 0) AND (CountedCash IS NULL OR CountedCash >= 0))
 );
 GO
 
--- Orders: một lần mua một gói. Snapshot giá/mô tả/VAT tại thời điểm mua để
--- việc đổi giá trong danh mục về sau KHÔNG làm sai đơn cũ.
+-- Orders: 1 lần mua 1 gói. Snapshot giá / mô tả / quyền lợi / VAT lúc mua (DBR-50, DBR-57, CBR-09).
 CREATE TABLE Orders (
     OrderId                    INT IDENTITY(1,1) NOT NULL,
-    OrderCode                  VARCHAR(20)   NOT NULL,  -- DH-yyyy-nnnn
-    HolderCustomerId           INT           NOT NULL,  -- người đứng tên mua
-    PartnerCustomerId          INT           NULL,      -- người đi kèm, chỉ gói couple
-    PackageId                  INT           NOT NULL,
-    VoucherId                  INT           NULL,      -- tối đa 1 voucher mỗi đơn
-    CreatedByEmployeeId        INT           NULL,      -- NULL với đơn online
-    ShiftId                    INT           NULL,      -- đơn tại quầy thuộc ca nào
-    Channel                    VARCHAR(10)   NOT NULL,  -- Counter | Online
-    PackageNameSnapshot        NVARCHAR(100) NOT NULL,
-    PackageDescriptionSnapshot NVARCHAR(500) NULL,
-    UnitPriceSnapshot          INT           NOT NULL,  -- giá tại thời điểm mua, đã gồm VAT
-    DiscountAmount             INT           NOT NULL CONSTRAINT DF_Orders_Discount  DEFAULT (0),
-    VatRateSnapshot            TINYINT       NOT NULL,  -- % VAT tại thời điểm mua
-    VatAmount                  INT           NOT NULL,  -- phần VAT nằm TRONG số phải trả
-    Status                     VARCHAR(10)   NOT NULL CONSTRAINT DF_Orders_Status    DEFAULT ('Pending'), -- Pending | Paid | Cancelled
-    PaymentDueAt               DATETIME2(0)  NULL,      -- hạn thanh toán, đồng thời là hạn giữ slot
-    CreatedAt                  DATETIME2(0)  NOT NULL CONSTRAINT DF_Orders_CreatedAt DEFAULT (SYSDATETIME()),
-    PaidAt                     DATETIME2(0)  NULL,
-    CancelType                 VARCHAR(25)   NULL,      -- PaymentTimeout | ReplacedByNewOrder | InvalidPayment | CancelledByReceptionist
-    CancelledAt                DATETIME2(0)  NULL,
-    CancelReason               NVARCHAR(500) NULL,
+    OrderCode                  VARCHAR(20)    NOT NULL,  -- DH-yyyy-nnnn
+    HolderCustomerId           INT            NOT NULL,  -- người đứng tên
+    PartnerCustomerId          INT            NULL,      -- người đi kèm, CHỈ gói couple
+    PackageId                  INT            NOT NULL,
+    VoucherId                  INT            NULL,      -- tối đa 1 voucher (BR-42)
+    CreatedByEmployeeId        INT            NULL,      -- NULL với đơn online
+    ShiftId                    INT            NULL,      -- đơn tại quầy thuộc ca nào (CBR-105)
+    Channel                    VARCHAR(10)    NOT NULL,  -- Counter | Online
+    PackageNameSnapshot        NVARCHAR(100)  NOT NULL,
+    PackageDescriptionSnapshot NVARCHAR(500)  NULL,
+    PackageBenefitsSnapshot    NVARCHAR(1000) NULL,      -- v25: DBR-50 chép cả quyền lợi
+    UnitPriceSnapshot          INT            NOT NULL,  -- giá lúc mua, đã gồm VAT
+    DiscountAmount             INT            NOT NULL CONSTRAINT DF_Orders_Discount  DEFAULT (0),
+    VatRateSnapshot            TINYINT        NOT NULL,  -- P-10 lúc mua
+    VatAmount                  INT            NOT NULL,  -- DBR-57: (giá − giảm) × VAT ÷ (100 + VAT), làm tròn đồng
+    Status                     VARCHAR(10)    NOT NULL CONSTRAINT DF_Orders_Status    DEFAULT ('Pending'), -- DBR-39, DBR-40
+    PaymentDueAt               DATETIME2(0)   NULL,      -- online: CreatedAt + P-09, cũng là hạn giữ slot (CBR-40). Tại quầy: NULL
+    CreatedAt                  DATETIME2(0)   NOT NULL CONSTRAINT DF_Orders_CreatedAt DEFAULT (SYSDATETIME()),
+    PaidAt                     DATETIME2(0)   NULL,
+    CancelType                 VARCHAR(25)    NULL,      -- DBR-43
+    CancelledAt                DATETIME2(0)   NULL,
+    CancelReason               NVARCHAR(500)  NULL,
 
     CONSTRAINT PK_Orders PRIMARY KEY (OrderId),
     CONSTRAINT UQ_Orders_OrderCode UNIQUE (OrderCode),
@@ -334,72 +341,112 @@ CREATE TABLE Orders (
     CONSTRAINT FK_Orders_Vouchers  FOREIGN KEY (VoucherId)           REFERENCES Vouchers(VoucherId),
     CONSTRAINT FK_Orders_CreatedBy FOREIGN KEY (CreatedByEmployeeId) REFERENCES Employees(EmployeeId),
     CONSTRAINT FK_Orders_Shifts    FOREIGN KEY (ShiftId)             REFERENCES Shifts(ShiftId),
-    CONSTRAINT CK_Orders_Channel CHECK (Channel IN ('Counter','Online')),
-    CONSTRAINT CK_Orders_Status  CHECK (Status IN ('Pending','Paid','Cancelled')),
+    CONSTRAINT CK_Orders_Code      CHECK (OrderCode LIKE 'DH-[0-9][0-9][0-9][0-9]-[0-9][0-9][0-9][0-9]'),
+    CONSTRAINT CK_Orders_Channel   CHECK (Channel IN ('Counter','Online')),
+    CONSTRAINT CK_Orders_Status    CHECK (Status IN ('Pending','Paid','Cancelled')),
     CONSTRAINT CK_Orders_CancelType CHECK (CancelType IS NULL OR CancelType IN
         ('PaymentTimeout','ReplacedByNewOrder','InvalidPayment','CancelledByReceptionist')),
-    CONSTRAINT CK_Orders_Code  CHECK (OrderCode LIKE 'DH-[0-9][0-9][0-9][0-9]-[0-9][0-9][0-9][0-9]'),
-    CONSTRAINT CK_Orders_Price CHECK (UnitPriceSnapshot > 0),
-    CONSTRAINT CK_Orders_Vat   CHECK (VatRateSnapshot BETWEEN 0 AND 20 AND VatAmount >= 0),
-    CONSTRAINT CK_Orders_Discount CHECK (DiscountAmount >= 0 AND DiscountAmount <= UnitPriceSnapshot),
-    CONSTRAINT CK_Orders_Partner  CHECK (PartnerCustomerId IS NULL OR PartnerCustomerId <> HolderCustomerId),
-    -- Đơn tại quầy luôn có người lập và thuộc một ca; đơn online thì không
-    CONSTRAINT CK_Orders_CounterFields CHECK (
-        (Channel = 'Counter' AND CreatedByEmployeeId IS NOT NULL AND ShiftId IS NOT NULL)
-        OR (Channel = 'Online' AND CreatedByEmployeeId IS NULL AND ShiftId IS NULL)
+    CONSTRAINT CK_Orders_Price     CHECK (UnitPriceSnapshot > 0),
+    CONSTRAINT CK_Orders_Vat       CHECK (VatRateSnapshot BETWEEN 0 AND 20 AND VatAmount >= 0),
+    CONSTRAINT CK_Orders_Discount  CHECK (DiscountAmount >= 0 AND DiscountAmount <= UnitPriceSnapshot), -- DBR-06
+    CONSTRAINT CK_Orders_VoucherDiscount CHECK (VoucherId IS NOT NULL OR DiscountAmount = 0),         -- chỉ voucher mới giảm giá
+    CONSTRAINT CK_Orders_Partner   CHECK (PartnerCustomerId IS NULL OR PartnerCustomerId <> HolderCustomerId),
+    -- Tại quầy: có người lập + ca, không có hạn online. Online: ngược lại, bắt buộc có hạn (CBR-70)
+    CONSTRAINT CK_Orders_ChannelFields CHECK (
+        (Channel = 'Counter' AND CreatedByEmployeeId IS NOT NULL AND ShiftId IS NOT NULL AND PaymentDueAt IS NULL)
+        OR (Channel = 'Online' AND CreatedByEmployeeId IS NULL AND ShiftId IS NULL AND PaymentDueAt IS NOT NULL)
     ),
-    -- Đơn đã hủy bắt buộc ghi loại hủy và thời điểm hủy
     CONSTRAINT CK_Orders_Cancelled CHECK (
         (Status = 'Cancelled' AND CancelType IS NOT NULL AND CancelledAt IS NOT NULL)
-        OR (Status <> 'Cancelled' AND CancelType IS NULL AND CancelledAt IS NULL)
+        OR (Status <> 'Cancelled' AND CancelType IS NULL AND CancelledAt IS NULL AND CancelReason IS NULL)
     ),
-    CONSTRAINT CK_Orders_Paid CHECK ((Status = 'Paid' AND PaidAt IS NOT NULL) OR (Status <> 'Paid' AND PaidAt IS NULL))
+    -- Lễ tân hủy phải ghi lý do ≥ 5 ký tự (GBR-09); chỉ đơn tại quầy (CBR-11, CBR-78)
+    CONSTRAINT CK_Orders_ReceptionistCancel CHECK (
+        CancelType IS NULL OR CancelType <> 'CancelledByReceptionist'
+        OR (Channel = 'Counter' AND CancelReason IS NOT NULL AND LEN(LTRIM(RTRIM(CancelReason))) >= 5)
+    ),
+    -- Hủy loại "quá hạn" / "bị thay thế" chỉ có ở đơn online (CBR-70, CBR-71)
+    CONSTRAINT CK_Orders_OnlineCancel CHECK (
+        CancelType IS NULL OR CancelType NOT IN ('PaymentTimeout','ReplacedByNewOrder') OR Channel = 'Online'
+    ),
+    -- Paid → Cancelled chỉ theo CBR-11, nên đơn đã hủy vẫn có thể có PaidAt
+    CONSTRAINT CK_Orders_Paid CHECK (
+        (Status = 'Paid' AND PaidAt IS NOT NULL)
+        OR (Status = 'Pending' AND PaidAt IS NULL)
+        OR (Status = 'Cancelled' AND (PaidAt IS NULL OR CancelType = 'CancelledByReceptionist'))
+    )
 );
 GO
 
--- Transactions: MỖI LẦN THỬ thanh toán là 1 dòng. Một đơn online có thể thử
--- nhiều lần (lỗi, hết hạn link) nên tách khỏi Orders.
+-- Transactions: MỖI LẦN THỬ thanh toán là 1 dòng (DBR-41, DBR-42)
 CREATE TABLE Transactions (
-    TransactionId    INT IDENTITY(1,1) NOT NULL,
-    OrderId          INT           NOT NULL,
-    Amount           INT           NOT NULL,  -- snapshot số phải trả tại lúc tạo giao dịch
-    PaymentMethod    VARCHAR(15)   NOT NULL,  -- Cash | Transfer | OnlineGateway
-    GatewayReference VARCHAR(50)   NULL,      -- mã tham chiếu VNPay, mỗi lần thử một mã
-    Status           VARCHAR(10)   NOT NULL CONSTRAINT DF_Transactions_Status      DEFAULT ('Pending'), -- Pending | Success | Failed | Expired
-    FailureReason    NVARCHAR(255) NULL,
-    NeedsRefund      BIT           NOT NULL CONSTRAINT DF_Transactions_NeedsRefund DEFAULT (0),         -- tiền về khi đơn đã hủy/sai số tiền → Manager hoàn tay
-    CreatedAt        DATETIME2(0)  NOT NULL CONSTRAINT DF_Transactions_CreatedAt   DEFAULT (SYSDATETIME()),
-    ExpiresAt        DATETIME2(0)  NULL,      -- hạn của link thanh toán (5 phút), không vượt hạn đơn
-    CompletedAt      DATETIME2(0)  NULL,
+    TransactionId        INT IDENTITY(1,1) NOT NULL,
+    OrderId              INT           NOT NULL,
+    Amount               INT           NOT NULL,  -- số phải trả lúc tạo giao dịch
+    PaymentMethod        VARCHAR(15)   NOT NULL,  -- Cash | Transfer | OnlineGateway
+    GatewayReference     VARCHAR(50)   NULL,      -- mã VNPay / mã chuyển khoản
+    ReceivedByEmployeeId INT           NULL,      -- v25: Lễ tân nhận tiền / xác nhận chuyển khoản (CBR-77)
+    Status               VARCHAR(10)   NOT NULL CONSTRAINT DF_Transactions_Status      DEFAULT ('Pending'),
+    FailureReason        NVARCHAR(255) NULL,
+    NeedsRefund          BIT           NOT NULL CONSTRAINT DF_Transactions_NeedsRefund DEFAULT (0), -- CBR-72 → danh sách hoàn tiền của Manager
+    RefundedAt           DATETIME2(0)  NULL,      -- v25: Manager đánh dấu đã hoàn ngoài hệ thống (BR-47)
+    RefundedByEmployeeId INT           NULL,
+    RefundNote           NVARCHAR(500) NULL,
+    CreatedAt            DATETIME2(0)  NOT NULL CONSTRAINT DF_Transactions_CreatedAt   DEFAULT (SYSDATETIME()),
+    ExpiresAt            DATETIME2(0)  NULL,      -- hạn link thanh toán (5 phút, không vượt hạn đơn)
+    CompletedAt          DATETIME2(0)  NULL,
 
     CONSTRAINT PK_Transactions PRIMARY KEY (TransactionId),
-    CONSTRAINT FK_Transactions_Orders FOREIGN KEY (OrderId) REFERENCES Orders(OrderId),
+    CONSTRAINT FK_Transactions_Orders     FOREIGN KEY (OrderId)              REFERENCES Orders(OrderId),
+    CONSTRAINT FK_Transactions_Receiver   FOREIGN KEY (ReceivedByEmployeeId) REFERENCES Employees(EmployeeId),
+    CONSTRAINT FK_Transactions_Refunder   FOREIGN KEY (RefundedByEmployeeId) REFERENCES Employees(EmployeeId),
     CONSTRAINT CK_Transactions_Method CHECK (PaymentMethod IN ('Cash','Transfer','OnlineGateway')),
     CONSTRAINT CK_Transactions_Status CHECK (Status IN ('Pending','Success','Failed','Expired')),
-    CONSTRAINT CK_Transactions_Amount CHECK (Amount > 0)
+    CONSTRAINT CK_Transactions_Amount CHECK (Amount > 0),
+    -- Tiền mặt / chuyển khoản tại quầy thành công phải có người nhận; cổng online thì không
+    CONSTRAINT CK_Transactions_Receiver CHECK (
+        (PaymentMethod = 'OnlineGateway' AND ReceivedByEmployeeId IS NULL)
+        OR (PaymentMethod <> 'OnlineGateway' AND (Status <> 'Success' OR ReceivedByEmployeeId IS NOT NULL))
+    ),
+    CONSTRAINT CK_Transactions_Online CHECK (PaymentMethod <> 'OnlineGateway' OR ExpiresAt IS NOT NULL),
+    CONSTRAINT CK_Transactions_Completed CHECK (
+        (Status IN ('Success','Failed') AND CompletedAt IS NOT NULL) OR (Status IN ('Pending','Expired') AND CompletedAt IS NULL)
+    ),
+    -- Chỉ giao dịch Success mới cần hoàn; đã hoàn thì phải có người + thời điểm
+    CONSTRAINT CK_Transactions_Refund CHECK (
+        (NeedsRefund = 0 AND RefundedAt IS NULL AND RefundedByEmployeeId IS NULL AND RefundNote IS NULL)
+        OR (NeedsRefund = 1 AND Status = 'Success'
+            AND ((RefundedAt IS NULL AND RefundedByEmployeeId IS NULL)
+                 OR (RefundedAt IS NOT NULL AND RefundedByEmployeeId IS NOT NULL)))
+    )
 );
 GO
 
--- Mỗi đơn tối đa 1 giao dịch Success và tối đa 1 giao dịch Pending tại một thời điểm.
--- Dùng filtered unique index để DB tự chặn, không phụ thuộc code.
+-- DBR-42: mỗi đơn tối đa 1 giao dịch Success và 1 giao dịch Pending
 CREATE UNIQUE INDEX UX_Transactions_OneSuccessPerOrder ON Transactions(OrderId) WHERE Status = 'Success';
 CREATE UNIQUE INDEX UX_Transactions_OnePendingPerOrder ON Transactions(OrderId) WHERE Status = 'Pending';
 GO
 
--- Subscriptions: QUYỀN DÙNG sinh ra khi đơn được thanh toán. Đây mới là thứ
--- check-in và buổi tập tiêu thụ, không phải Orders.
+-- Subscriptions: QUYỀN DÙNG sinh khi đơn Paid. Check-in và buổi tập tiêu thụ cái này, không phải Orders.
+--   Membership   : Active | Frozen | Expired | Cancelled   (StartDate có thể ở tương lai — DBR-52)
+--   DayPass      : Active | Used | Expired | Cancelled
+--   PTSingle/Couple: Active | Expired | Cancelled          (CBR-55)
+--   SingleSession: Active | Completed | Expired | Cancelled
 CREATE TABLE Subscriptions (
     SubscriptionId        INT IDENTITY(1,1) NOT NULL,
-    OrderId               INT          NOT NULL,  -- 1 đơn sinh tối đa 1 quyền dùng
-    CustomerId            INT          NOT NULL,  -- người đứng tên
-    SubscriptionType      VARCHAR(15)  NOT NULL,  -- Membership | DayPass | PTSingle | PTCouple | SingleSession
-    PtEmployeeId          INT          NULL,      -- PT phụ trách, chỉ gói PT mới có
+    OrderId               INT          NOT NULL,
+    CustomerId            INT          NOT NULL,  -- người đứng tên (couple: người đi kèm nằm ở Orders.PartnerCustomerId)
+    SubscriptionType      VARCHAR(15)  NOT NULL,
+    PtEmployeeId          INT          NULL,      -- PT phụ trách, chỉ gói PT / buổi lẻ
     StartDate             DATE         NOT NULL,
-    EndDate               DATE         NOT NULL,  -- NGÀY CUỐI CÙNG còn dùng được (tính cả ngày này)
-    GeneratedSessionCount TINYINT      NULL,      -- số buổi thực sinh, CHỐT khi đơn Paid
-    SwapsUsed             TINYINT      NOT NULL CONSTRAINT DF_Subscriptions_Swaps  DEFAULT (0),        -- đã swap mấy lần, trần là P-08
-    FreezeUsed            TINYINT      NOT NULL CONSTRAINT DF_Subscriptions_Freeze DEFAULT (0),        -- đã bảo lưu mấy lần, trần là P-01
-    Status                VARCHAR(10)  NOT NULL CONSTRAINT DF_Subscriptions_Status DEFAULT ('Active'), -- Active | Frozen | Used | Expired | Completed | Cancelled
+    EndDate               DATE         NOT NULL,  -- NGÀY CUỐI còn dùng (GBR-03)
+    FixedStartTime        TIME(0)      NULL,      -- v25: khung giờ cố định của gói PT (CBR-43, CBR-52)
+    GeneratedSessionCount TINYINT      NULL,      -- số buổi thực sinh, chốt khi Paid (BR-40, DBR-53)
+    SwapsUsed             TINYINT      NOT NULL CONSTRAINT DF_Subscriptions_Swaps  DEFAULT (0),
+    MaxSwapsSnapshot      TINYINT      NULL,      -- v25: P-08 lúc bán — đổi P-08 không áp ngược (GBR-04)
+    FreezeUsed            TINYINT      NOT NULL CONSTRAINT DF_Subscriptions_Freeze DEFAULT (0),
+    MaxFreezesSnapshot    TINYINT      NULL,      -- v25: P-01 lúc bán (GBR-04)
+    Status                VARCHAR(10)  NOT NULL CONSTRAINT DF_Subscriptions_Status DEFAULT ('Active'),
 
     CONSTRAINT PK_Subscriptions PRIMARY KEY (SubscriptionId),
     CONSTRAINT UQ_Subscriptions_OrderId UNIQUE (OrderId),
@@ -408,23 +455,45 @@ CREATE TABLE Subscriptions (
     CONSTRAINT FK_Subscriptions_Pt        FOREIGN KEY (PtEmployeeId) REFERENCES Employees(EmployeeId),
     CONSTRAINT CK_Subscriptions_Type   CHECK (SubscriptionType IN ('Membership','DayPass','PTSingle','PTCouple','SingleSession')),
     CONSTRAINT CK_Subscriptions_Status CHECK (Status IN ('Active','Frozen','Used','Expired','Completed','Cancelled')),
-    CONSTRAINT CK_Subscriptions_Dates  CHECK (EndDate >= StartDate),
-    -- Gói PT bắt buộc có PT phụ trách; gói tập / gói ngày thì không
+    CONSTRAINT CK_Subscriptions_StatusByType CHECK (
+        (Status IN ('Active','Expired','Cancelled'))
+        OR (Status = 'Frozen'    AND SubscriptionType = 'Membership')      -- BR-21
+        OR (Status = 'Used'      AND SubscriptionType = 'DayPass')         -- BR-29
+        OR (Status = 'Completed' AND SubscriptionType = 'SingleSession')
+    ),
+    CONSTRAINT CK_Subscriptions_Dates CHECK (EndDate >= StartDate),
+    CONSTRAINT CK_Subscriptions_OneDay CHECK (SubscriptionType NOT IN ('DayPass','SingleSession') OR EndDate = StartDate),
     CONSTRAINT CK_Subscriptions_Pt CHECK (
         (SubscriptionType IN ('PTSingle','PTCouple','SingleSession') AND PtEmployeeId IS NOT NULL)
         OR (SubscriptionType IN ('Membership','DayPass') AND PtEmployeeId IS NULL)
+    ),
+    -- Gói PT: có khung giờ cố định, trần swap, số buổi. Buổi lẻ: đúng 1 buổi. Gói tập: trần bảo lưu.
+    CONSTRAINT CK_Subscriptions_PtFields CHECK (
+        (SubscriptionType IN ('PTSingle','PTCouple') AND FixedStartTime IS NOT NULL
+            AND MaxSwapsSnapshot IS NOT NULL AND GeneratedSessionCount IS NOT NULL)
+        OR (SubscriptionType = 'SingleSession' AND FixedStartTime IS NULL AND MaxSwapsSnapshot IS NULL
+            AND GeneratedSessionCount IS NOT NULL AND GeneratedSessionCount = 1)
+        OR (SubscriptionType IN ('Membership','DayPass') AND FixedStartTime IS NULL AND MaxSwapsSnapshot IS NULL
+            AND GeneratedSessionCount IS NULL)
+    ),
+    CONSTRAINT CK_Subscriptions_Freeze CHECK (
+        (SubscriptionType = 'Membership' AND MaxFreezesSnapshot IS NOT NULL AND FreezeUsed <= MaxFreezesSnapshot)
+        OR (SubscriptionType <> 'Membership' AND MaxFreezesSnapshot IS NULL AND FreezeUsed = 0)
+    ),
+    CONSTRAINT CK_Subscriptions_Swaps CHECK (
+        SwapsUsed = 0 OR (MaxSwapsSnapshot IS NOT NULL AND SwapsUsed <= MaxSwapsSnapshot)    -- BR-73, BR-74
     )
 );
 GO
 
--- FreezeRecords: mỗi lần bảo lưu gói tập. Chỉ gói Membership mới bảo lưu được.
+-- FreezeRecords: mỗi lần bảo lưu gói tập (UC-18)
 CREATE TABLE FreezeRecords (
     FreezeRecordId      INT IDENTITY(1,1) NOT NULL,
     SubscriptionId      INT           NOT NULL,
-    HandledByEmployeeId INT           NOT NULL,  -- Lễ tân xử lý
-    StartDate           DATE          NOT NULL,
-    PlannedEndDate      DATE          NOT NULL,  -- tối đa P-02 ngày
-    ActualEndDate       DATE          NULL,      -- NULL = đang bảo lưu; set khi mở lại hoặc hủy sớm
+    HandledByEmployeeId INT           NOT NULL,
+    StartDate           DATE          NOT NULL,  -- sớm nhất là ngày mai (DBR-13)
+    PlannedEndDate      DATE          NOT NULL,  -- tối đa P-02 và số ngày gói còn lại
+    ActualEndDate       DATE          NULL,      -- NULL = đang bảo lưu; < PlannedEndDate = hủy sớm (BR-26)
     Reason              NVARCHAR(500) NOT NULL,
     CreatedAt           DATETIME2(0)  NOT NULL CONSTRAINT DF_FreezeRecords_CreatedAt DEFAULT (SYSDATETIME()),
 
@@ -433,17 +502,21 @@ CREATE TABLE FreezeRecords (
     CONSTRAINT FK_FreezeRecords_Employees     FOREIGN KEY (HandledByEmployeeId) REFERENCES Employees(EmployeeId),
     CONSTRAINT CK_FreezeRecords_Reason CHECK (LEN(LTRIM(RTRIM(Reason))) >= 5),
     CONSTRAINT CK_FreezeRecords_Dates  CHECK (PlannedEndDate >= StartDate),
-    CONSTRAINT CK_FreezeRecords_Actual CHECK (ActualEndDate IS NULL OR ActualEndDate >= StartDate)
+    CONSTRAINT CK_FreezeRecords_Actual CHECK (ActualEndDate IS NULL OR (ActualEndDate >= StartDate AND ActualEndDate <= PlannedEndDate))
 );
 GO
 
--- CheckIns: mỗi lượt khách vào phòng tập. Gắn với Subscription để biết vào bằng gói nào.
+-- Mỗi gói tối đa 1 lần bảo lưu đang chạy
+CREATE UNIQUE INDEX UX_FreezeRecords_OneOpen ON FreezeRecords(SubscriptionId) WHERE ActualEndDate IS NULL;
+GO
+
+-- CheckIns: mỗi lượt khách vào phòng tập — chỉ bằng gói tập hoặc gói ngày (CBR-58)
 CREATE TABLE CheckIns (
     CheckInId            INT IDENTITY(1,1) NOT NULL,
-    SubscriptionId       INT          NOT NULL, -- chỉ gói tập / gói ngày mới sinh check-in
-    VerifiedByEmployeeId INT          NOT NULL, -- Lễ tân đối chiếu ảnh và xác nhận
+    SubscriptionId       INT          NOT NULL,
+    VerifiedByEmployeeId INT          NOT NULL,
     CheckedInAt          DATETIME2(0) NOT NULL CONSTRAINT DF_CheckIns_CheckedInAt   DEFAULT (SYSDATETIME()),
-    PhotoVerified        BIT          NOT NULL CONSTRAINT DF_CheckIns_PhotoVerified DEFAULT (0), -- 0 với gói ngày (không cần ảnh)
+    PhotoVerified        BIT          NOT NULL CONSTRAINT DF_CheckIns_PhotoVerified DEFAULT (0), -- 0 với gói ngày (BR-30)
 
     CONSTRAINT PK_CheckIns PRIMARY KEY (CheckInId),
     CONSTRAINT FK_CheckIns_Subscriptions FOREIGN KEY (SubscriptionId)       REFERENCES Subscriptions(SubscriptionId),
@@ -451,99 +524,100 @@ CREATE TABLE CheckIns (
 );
 GO
 
--- CustomerDeletionRequests: yêu cầu xóa hồ sơ khách. Còn gói đang chạy thì phải chờ Manager duyệt.
-CREATE TABLE CustomerDeletionRequests (
-    DeletionRequestId      INT IDENTITY(1,1) NOT NULL,
-    CustomerId             INT           NOT NULL,
-    RequestedByEmployeeId  INT           NOT NULL, -- Lễ tân gửi yêu cầu
-    ReviewedByEmployeeId   INT           NULL,     -- Manager duyệt / từ chối
-    Reason                 NVARCHAR(500) NOT NULL,
-    Status                 VARCHAR(10)   NOT NULL CONSTRAINT DF_DeletionRequests_Status      DEFAULT ('Pending'), -- Pending | Approved | Rejected
-    RejectReason           NVARCHAR(500) NULL,
-    RequestedAt            DATETIME2(0)  NOT NULL CONSTRAINT DF_DeletionRequests_RequestedAt DEFAULT (SYSDATETIME()),
-    ReviewedAt             DATETIME2(0)  NULL,
+-- Gói ngày chỉ 1 lượt (CBR-36): mỗi Subscription gói ngày có tối đa 1 check-in → kiểm ở Service
+-- (filtered index không đọc được loại gói ở bảng khác).
 
-    CONSTRAINT PK_CustomerDeletionRequests PRIMARY KEY (DeletionRequestId),
-    CONSTRAINT FK_DeletionRequests_Customers  FOREIGN KEY (CustomerId)            REFERENCES Customers(CustomerId),
-    CONSTRAINT FK_DeletionRequests_Requester  FOREIGN KEY (RequestedByEmployeeId) REFERENCES Employees(EmployeeId),
-    CONSTRAINT FK_DeletionRequests_Reviewer   FOREIGN KEY (ReviewedByEmployeeId)  REFERENCES Employees(EmployeeId),
+-- CustomerDeletionRequests: yêu cầu xóa hồ sơ còn gói → chờ Manager duyệt (CBR-16, BR-16)
+CREATE TABLE CustomerDeletionRequests (
+    CustomerDeletionRequestId INT IDENTITY(1,1) NOT NULL,
+    CustomerId                INT           NOT NULL,
+    RequestedByEmployeeId     INT           NOT NULL,
+    ReviewedByEmployeeId      INT           NULL,
+    Reason                    NVARCHAR(500) NOT NULL,  -- BR-17
+    Status                    VARCHAR(10)   NOT NULL CONSTRAINT DF_DeletionRequests_Status      DEFAULT ('Pending'),
+    RejectReason              NVARCHAR(500) NULL,
+    RequestedAt               DATETIME2(0)  NOT NULL CONSTRAINT DF_DeletionRequests_RequestedAt DEFAULT (SYSDATETIME()),
+    ReviewedAt                DATETIME2(0)  NULL,
+
+    CONSTRAINT PK_CustomerDeletionRequests PRIMARY KEY (CustomerDeletionRequestId),
+    CONSTRAINT FK_DeletionRequests_Customers FOREIGN KEY (CustomerId)            REFERENCES Customers(CustomerId),
+    CONSTRAINT FK_DeletionRequests_Requester FOREIGN KEY (RequestedByEmployeeId) REFERENCES Employees(EmployeeId),
+    CONSTRAINT FK_DeletionRequests_Reviewer  FOREIGN KEY (ReviewedByEmployeeId)  REFERENCES Employees(EmployeeId),
     CONSTRAINT CK_DeletionRequests_Reason CHECK (LEN(LTRIM(RTRIM(Reason))) >= 5),
     CONSTRAINT CK_DeletionRequests_Status CHECK (Status IN ('Pending','Approved','Rejected')),
-    -- Từ chối bắt buộc có lý do (luật chung: mọi hành động tiêu cực phải có lý do)
-    CONSTRAINT CK_DeletionRequests_Reject CHECK (Status <> 'Rejected' OR RejectReason IS NOT NULL)
+    CONSTRAINT CK_DeletionRequests_Review CHECK (
+        (Status = 'Pending' AND ReviewedByEmployeeId IS NULL AND ReviewedAt IS NULL AND RejectReason IS NULL)
+        OR (Status = 'Approved' AND ReviewedByEmployeeId IS NOT NULL AND ReviewedAt IS NOT NULL AND RejectReason IS NULL)
+        OR (Status = 'Rejected' AND ReviewedByEmployeeId IS NOT NULL AND ReviewedAt IS NOT NULL
+            AND RejectReason IS NOT NULL AND LEN(LTRIM(RTRIM(RejectReason))) >= 5)
+    )
 );
 GO
 
+-- Mỗi hồ sơ tối đa 1 yêu cầu xóa đang chờ
+CREATE UNIQUE INDEX UX_DeletionRequests_OnePending ON CustomerDeletionRequests(CustomerId) WHERE Status = 'Pending';
+GO
+
 -- Index cluster B
--- Job hủy đơn quá hạn quét đơn online đang Pending theo hạn thanh toán → chạy mỗi phút
-CREATE INDEX IX_Orders_StatusDue ON Orders(Status, PaymentDueAt) WHERE Status = 'Pending';
--- Màn lịch sử giao dịch của khách lọc theo người mua, sắp xếp mới nhất trước
-CREATE INDEX IX_Orders_Holder ON Orders(HolderCustomerId, CreatedAt DESC);
--- Chốt ca cần liệt kê đơn của ca đó và chặn khi còn đơn Pending
-CREATE INDEX IX_Orders_Shift ON Orders(ShiftId) WHERE ShiftId IS NOT NULL;
--- Danh sách giao dịch cần hoàn tiền tay của Manager
-CREATE INDEX IX_Transactions_NeedsRefund ON Transactions(NeedsRefund, CreatedAt DESC) WHERE NeedsRefund = 1;
--- Check-in tra nhanh gói còn hiệu lực của khách theo ngày
+CREATE INDEX IX_Orders_StatusDue ON Orders(Status, PaymentDueAt) WHERE Status = 'Pending'; -- job hủy đơn quá hạn (CBR-70)
+CREATE INDEX IX_Orders_Holder    ON Orders(HolderCustomerId, CreatedAt DESC);
+CREATE INDEX IX_Orders_Partner   ON Orders(PartnerCustomerId) WHERE PartnerCustomerId IS NOT NULL;
+CREATE INDEX IX_Orders_Shift     ON Orders(ShiftId) WHERE ShiftId IS NOT NULL;              -- chốt ca (CBR-78)
+CREATE INDEX IX_Transactions_RefundOpen ON Transactions(CreatedAt DESC) WHERE NeedsRefund = 1 AND RefundedAt IS NULL; -- danh sách cần hoàn (BR-47)
 CREATE INDEX IX_Subscriptions_CustomerStatus ON Subscriptions(CustomerId, Status, EndDate);
--- Job hết hạn gói quét theo ngày kết thúc
-CREATE INDEX IX_Subscriptions_EndDate ON Subscriptions(EndDate, Status);
--- Job mở lại bảo lưu quét các bản ghi chưa có ngày kết thúc thực tế
-CREATE INDEX IX_FreezeRecords_Open ON FreezeRecords(PlannedEndDate) WHERE ActualEndDate IS NULL;
--- Báo cáo lượt check-in theo khoảng ngày
+CREATE INDEX IX_Subscriptions_EndDate ON Subscriptions(EndDate, Status);                    -- job hết hạn gói (GBR-14)
+CREATE INDEX IX_FreezeRecords_Open ON FreezeRecords(PlannedEndDate) WHERE ActualEndDate IS NULL; -- job mở lại bảo lưu
 CREATE INDEX IX_CheckIns_CheckedInAt ON CheckIns(CheckedInAt);
--- Hàng chờ duyệt xóa hồ sơ của Manager
+CREATE INDEX IX_CheckIns_Subscription ON CheckIns(SubscriptionId, CheckedInAt);
 CREATE INDEX IX_DeletionRequests_Status ON CustomerDeletionRequests(Status, RequestedAt);
 GO
 
 /* ============================================================================
    CLUSTER C — LỊCH PT & BUỔI TẬP
-   TimeSlot có 3 trạng thái Free → Held → Booked; Held xảy ra NGAY khi lập đơn.
+   TimeSlot: Free → Held (lập đơn) → Booked (Paid); hủy đơn → Free (DBR-36).
    ============================================================================ */
 
 CREATE TABLE TimeSlots (
     TimeSlotId    INT IDENTITY(1,1) NOT NULL,
-    PtEmployeeId  INT          NOT NULL,  -- PT công bố khung giờ rảnh này
+    PtEmployeeId  INT          NOT NULL,
     SlotDate      DATE         NOT NULL,
-    StartTime     TIME(0)      NOT NULL,  -- giờ bắt đầu theo lưới 15 phút
-    EndTime       TIME(0)      NOT NULL,  -- luôn = StartTime + 90 phút (P-06)
-    Status        VARCHAR(10)  NOT NULL CONSTRAINT DF_TimeSlots_Status    DEFAULT ('Free'), -- Free | Held | Booked
-    HeldByOrderId INT          NULL,      -- đơn đang giữ chỗ (chỉ khi Status = Held)
-    HoldExpiresAt DATETIME2(0) NULL,      -- = hạn thanh toán của đơn giữ chỗ
+    StartTime     TIME(0)      NOT NULL,  -- lưới 15 phút (DBR-12)
+    EndTime       TIME(0)      NOT NULL,  -- = StartTime + P-06 phút, tính ở Service (v25: không ghi cứng 90 trong CHECK)
+    Status        VARCHAR(10)  NOT NULL CONSTRAINT DF_TimeSlots_Status    DEFAULT ('Free'), -- Free | Held | Booked | Withdrawn
+    HeldByOrderId INT          NULL,      -- đơn đang giữ (chỉ khi Held)
+    HoldExpiresAt DATETIME2(0) NULL,      -- = hạn đơn online (CBR-40). Đơn tại quầy: NULL, giữ tới khi trả tiền / hủy (CBR-78)
     CreatedAt     DATETIME2(0) NOT NULL CONSTRAINT DF_TimeSlots_CreatedAt DEFAULT (SYSDATETIME()),
 
     CONSTRAINT PK_TimeSlots PRIMARY KEY (TimeSlotId),
-    -- Một PT không thể có 2 khung giờ trùng giờ bắt đầu trong cùng ngày
     CONSTRAINT UQ_TimeSlots_PtDateStart UNIQUE (PtEmployeeId, SlotDate, StartTime),
     CONSTRAINT FK_TimeSlots_Employees FOREIGN KEY (PtEmployeeId)  REFERENCES Employees(EmployeeId),
     CONSTRAINT FK_TimeSlots_Orders    FOREIGN KEY (HeldByOrderId) REFERENCES Orders(OrderId),
-    CONSTRAINT CK_TimeSlots_Status CHECK (Status IN ('Free','Held','Booked')),
-    CONSTRAINT CK_TimeSlots_Grid     CHECK (DATEPART(MINUTE, StartTime) IN (0,15,30,45) AND DATEPART(SECOND, StartTime) = 0),
-    CONSTRAINT CK_TimeSlots_Duration CHECK (DATEDIFF(MINUTE, StartTime, EndTime) = 90),
+    CONSTRAINT CK_TimeSlots_Status CHECK (Status IN ('Free','Held','Booked','Withdrawn')), -- Withdrawn = PT gỡ slot trống (GBR-05)
+    CONSTRAINT CK_TimeSlots_Grid   CHECK (DATEPART(MINUTE, StartTime) IN (0,15,30,45) AND DATEPART(SECOND, StartTime) = 0),
     CONSTRAINT CK_TimeSlots_Time   CHECK (EndTime > StartTime),
-    -- Chỉ slot đang Held mới được gắn đơn giữ chỗ và hạn giữ
     CONSTRAINT CK_TimeSlots_Hold CHECK (
-        (Status = 'Held' AND HeldByOrderId IS NOT NULL AND HoldExpiresAt IS NOT NULL)
+        (Status = 'Held' AND HeldByOrderId IS NOT NULL)
         OR (Status <> 'Held' AND HeldByOrderId IS NULL AND HoldExpiresAt IS NULL)
     )
 );
 GO
 
 CREATE TABLE Sessions (
-    SessionId             INT IDENTITY(1,1) NOT NULL,
-    SubscriptionId        INT           NOT NULL, -- buổi sinh ra từ gói nào
-    TimeSlotId            INT           NOT NULL, -- đang chiếm khung giờ nào
-    PtEmployeeId          INT           NOT NULL, -- PT DẠY buổi này; đổi khi chuyển PT → hoa hồng đi theo
-    Status                VARCHAR(10)   NOT NULL CONSTRAINT DF_Sessions_Status       DEFAULT ('Scheduled'), -- Scheduled | Completed | Missed | Cancelled
-    SessionValue          INT           NOT NULL, -- (giá − giảm) / số buổi thực sinh, chốt khi Paid
-    CommissionAmount      INT           NOT NULL, -- tỷ lệ hoa hồng PT × SessionValue
-    AttendanceMarkedAt    DATETIME2(0)  NULL,
-    IsAutoClosed          BIT           NOT NULL CONSTRAINT DF_Sessions_AutoClosed   DEFAULT (0), -- 1 = job tự đóng sau cửa sổ điểm danh (P-07)
-    MissedReason          NVARCHAR(255) NULL,     -- no check-in | no membership | membership frozen
-    CancelReason          NVARCHAR(500) NULL,
-    CancelledAt           DATETIME2(0)  NULL,
-    CancelledByAccountId  INT           NULL,     -- tài khoản bấm hủy (khách tự hủy)
-    RefundAgreed          BIT           NOT NULL CONSTRAINT DF_Sessions_RefundAgreed DEFAULT (0), -- PT hủy: khách đã đồng ý nhận tiền mặt
-    ResolutionType        VARCHAR(20)   NULL,     -- Reschedule | Transfer | Cancel | CustomerRequest
+    SessionId            INT IDENTITY(1,1) NOT NULL,
+    SubscriptionId       INT           NOT NULL,
+    TimeSlotId           INT           NOT NULL,
+    PtEmployeeId         INT           NOT NULL, -- PT DẠY buổi này; đổi khi chuyển PT → hoa hồng theo PT mới (BR-68)
+    Status               VARCHAR(10)   NOT NULL CONSTRAINT DF_Sessions_Status       DEFAULT ('Scheduled'), -- DBR-37
+    SessionValue         INT           NOT NULL, -- DBR-59, chốt khi Paid
+    CommissionAmount     INT           NOT NULL, -- DBR-58 = tỷ lệ PT dạy × SessionValue
+    AttendanceMarkedAt   DATETIME2(0)  NULL,
+    IsAutoClosed         BIT           NOT NULL CONSTRAINT DF_Sessions_AutoClosed   DEFAULT (0), -- job đóng sau cửa sổ P-07 (CBR-42)
+    MissedReason         VARCHAR(20)   NULL,     -- v25 mã tiếng Anh (GBR-01): NoCheckIn | NoMembership | MembershipFrozen | MarkedAbsent
+    CancelType           VARCHAR(20)   NULL,     -- v25: ByPt (BR-66) | ByCustomer (BR-79) | GymClosed (CBR-57) | PackageExpired (CBR-55)
+    CancelReason         NVARCHAR(500) NULL,
+    CancelledAt          DATETIME2(0)  NULL,
+    CancelledByAccountId INT           NULL,     -- tài khoản bấm hủy (PT hoặc khách)
+    RefundAgreed         BIT           NOT NULL CONSTRAINT DF_Sessions_RefundAgreed DEFAULT (0), -- BR-66: khách đồng ý nhận tiền mặt
 
     CONSTRAINT PK_Sessions PRIMARY KEY (SessionId),
     CONSTRAINT FK_Sessions_Subscriptions FOREIGN KEY (SubscriptionId)       REFERENCES Subscriptions(SubscriptionId),
@@ -551,48 +625,74 @@ CREATE TABLE Sessions (
     CONSTRAINT FK_Sessions_Employees     FOREIGN KEY (PtEmployeeId)         REFERENCES Employees(EmployeeId),
     CONSTRAINT FK_Sessions_Accounts      FOREIGN KEY (CancelledByAccountId) REFERENCES Accounts(AccountId),
     CONSTRAINT CK_Sessions_Status     CHECK (Status IN ('Scheduled','Completed','Missed','Cancelled')),
-    CONSTRAINT CK_Sessions_Resolution CHECK (ResolutionType IS NULL OR ResolutionType IN ('Reschedule','Transfer','Cancel','CustomerRequest')),
-    CONSTRAINT CK_Sessions_Value      CHECK (SessionValue >= 0 AND CommissionAmount >= 0),
-    -- Buổi bị hủy bắt buộc có lý do và thời điểm hủy
-    CONSTRAINT CK_Sessions_Cancelled CHECK (
-        (Status = 'Cancelled' AND CancelReason IS NOT NULL AND CancelledAt IS NOT NULL)
-        OR (Status <> 'Cancelled')
+    CONSTRAINT CK_Sessions_Value      CHECK (SessionValue >= 0 AND CommissionAmount >= 0 AND CommissionAmount <= SessionValue),
+    CONSTRAINT CK_Sessions_MissedReason CHECK (
+        (Status = 'Missed' AND MissedReason IS NOT NULL AND MissedReason IN ('NoCheckIn','NoMembership','MembershipFrozen','MarkedAbsent'))
+        OR (Status <> 'Missed' AND MissedReason IS NULL)
     ),
-    CONSTRAINT CK_Sessions_Missed CHECK (Status <> 'Missed' OR MissedReason IS NOT NULL)
+    CONSTRAINT CK_Sessions_Cancel CHECK (
+        (Status = 'Cancelled' AND CancelType IS NOT NULL AND CancelType IN ('ByPt','ByCustomer','GymClosed','PackageExpired') AND CancelledAt IS NOT NULL)
+        OR (Status <> 'Cancelled' AND CancelType IS NULL AND CancelledAt IS NULL AND CancelReason IS NULL
+            AND CancelledByAccountId IS NULL AND RefundAgreed = 0)
+    ),
+    -- BR-66: PT hủy phải có lý do + tick "khách đồng ý nhận tiền mặt"
+    CONSTRAINT CK_Sessions_PtCancel CHECK (
+        CancelType IS NULL OR CancelType <> 'ByPt'
+        OR (RefundAgreed = 1 AND CancelReason IS NOT NULL AND LEN(LTRIM(RTRIM(CancelReason))) >= 5 AND CancelledByAccountId IS NOT NULL)
+    ),
+    CONSTRAINT CK_Sessions_CustomerCancel CHECK (
+        CancelType IS NULL OR CancelType <> 'ByCustomer' OR (CancelledByAccountId IS NOT NULL AND RefundAgreed = 0)
+    ),
+    CONSTRAINT CK_Sessions_SystemCancel CHECK (
+        CancelType IS NULL OR CancelType NOT IN ('GymClosed','PackageExpired') OR (CancelledByAccountId IS NULL AND RefundAgreed = 0)
+    ),
+    CONSTRAINT CK_Sessions_Attendance CHECK (Status <> 'Scheduled' OR (AttendanceMarkedAt IS NULL AND IsAutoClosed = 0))
 );
 GO
 
--- Một khung giờ chỉ được có TỐI ĐA 1 buổi còn hiệu lực. Buổi đã hủy hoặc đã
--- Missed thì slot được nhả, nên slot có thể xuất hiện lại ở buổi khác về sau.
+-- DBR-32: mỗi slot tối đa 1 buổi đang Scheduled (buổi Missed / Cancelled đã nhả slot)
 CREATE UNIQUE INDEX UX_Sessions_OneActivePerSlot ON Sessions(TimeSlotId) WHERE Status = 'Scheduled';
 GO
 
-CREATE TABLE SessionSwapLogs (
-    SessionSwapLogId       INT IDENTITY(1,1) NOT NULL,
-    SessionId              INT          NOT NULL,
-    OldTimeSlotId          INT          NOT NULL,
-    NewTimeSlotId          INT          NOT NULL,
-    RequestedByAccountId   INT          NULL,   -- NULL khi PT đổi hộ khách không có tài khoản
-    SwappedAt              DATETIME2(0) NOT NULL CONSTRAINT DF_SwapLogs_SwappedAt DEFAULT (SYSDATETIME()),
+-- SessionMoveLogs (v25, thay SessionSwapLogs): MỌI lần dời buổi, để giữ lịch sử PT cũ / slot cũ
+--   CustomerSwap   : khách tự swap (UC-38) — tính vào P-08
+--   PtOnBehalfSwap : PT dời theo yêu cầu khách không có tài khoản (BR-62) — tính vào P-08
+--   PtReschedule   : PT bận, dời sang slot khác của chính mình (BR-64) — không tính
+--   PtTransfer     : chuyển sang PT khác (BR-65, BR-68) — không tính
+CREATE TABLE SessionMoveLogs (
+    SessionMoveLogId     INT IDENTITY(1,1) NOT NULL,
+    SessionId            INT           NOT NULL,
+    MoveType             VARCHAR(15)   NOT NULL,
+    OldTimeSlotId        INT           NOT NULL,
+    NewTimeSlotId        INT           NOT NULL,
+    OldPtEmployeeId      INT           NOT NULL,
+    NewPtEmployeeId      INT           NOT NULL,
+    RequestedByAccountId INT           NOT NULL, -- khách (CustomerSwap) hoặc PT thao tác
+    Reason               NVARCHAR(500) NULL,
+    MovedAt              DATETIME2(0)  NOT NULL CONSTRAINT DF_MoveLogs_MovedAt DEFAULT (SYSDATETIME()),
 
-    CONSTRAINT PK_SessionSwapLogs PRIMARY KEY (SessionSwapLogId),
-    CONSTRAINT FK_SwapLogs_Sessions  FOREIGN KEY (SessionId)            REFERENCES Sessions(SessionId),
-    CONSTRAINT FK_SwapLogs_OldSlot   FOREIGN KEY (OldTimeSlotId)        REFERENCES TimeSlots(TimeSlotId),
-    CONSTRAINT FK_SwapLogs_NewSlot   FOREIGN KEY (NewTimeSlotId)        REFERENCES TimeSlots(TimeSlotId),
-    CONSTRAINT FK_SwapLogs_Accounts  FOREIGN KEY (RequestedByAccountId) REFERENCES Accounts(AccountId),
-    CONSTRAINT CK_SwapLogs_Slots CHECK (OldTimeSlotId <> NewTimeSlotId)
+    CONSTRAINT PK_SessionMoveLogs PRIMARY KEY (SessionMoveLogId),
+    CONSTRAINT FK_MoveLogs_Sessions FOREIGN KEY (SessionId)            REFERENCES Sessions(SessionId),
+    CONSTRAINT FK_MoveLogs_OldSlot  FOREIGN KEY (OldTimeSlotId)        REFERENCES TimeSlots(TimeSlotId),
+    CONSTRAINT FK_MoveLogs_NewSlot  FOREIGN KEY (NewTimeSlotId)        REFERENCES TimeSlots(TimeSlotId),
+    CONSTRAINT FK_MoveLogs_OldPt    FOREIGN KEY (OldPtEmployeeId)      REFERENCES Employees(EmployeeId),
+    CONSTRAINT FK_MoveLogs_NewPt    FOREIGN KEY (NewPtEmployeeId)      REFERENCES Employees(EmployeeId),
+    CONSTRAINT FK_MoveLogs_Accounts FOREIGN KEY (RequestedByAccountId) REFERENCES Accounts(AccountId),
+    CONSTRAINT CK_MoveLogs_Type  CHECK (MoveType IN ('CustomerSwap','PtOnBehalfSwap','PtReschedule','PtTransfer')),
+    CONSTRAINT CK_MoveLogs_Slots CHECK (OldTimeSlotId <> NewTimeSlotId),
+    CONSTRAINT CK_MoveLogs_Pt CHECK (
+        (MoveType = 'PtTransfer' AND NewPtEmployeeId <> OldPtEmployeeId)
+        OR (MoveType <> 'PtTransfer' AND NewPtEmployeeId = OldPtEmployeeId)
+    )
 );
 GO
 
 -- Index cluster C
--- Màn đặt buổi và bán gói PT luôn hỏi: PT này ngày này còn slot Free nào
 CREATE INDEX IX_TimeSlots_PtDateStatus ON TimeSlots(PtEmployeeId, SlotDate, Status);
--- Job nhả slot quá hạn giữ chỗ quét theo HoldExpiresAt
-CREATE INDEX IX_TimeSlots_HoldExpires ON TimeSlots(HoldExpiresAt) WHERE Status = 'Held';
--- Màn điểm danh của PT lọc buổi theo PT + trạng thái
-CREATE INDEX IX_Sessions_PtStatus ON Sessions(PtEmployeeId, Status);
--- Màn lịch của khách liệt kê buổi theo gói
-CREATE INDEX IX_Sessions_Subscription ON Sessions(SubscriptionId, Status);
+CREATE INDEX IX_TimeSlots_HoldExpires  ON TimeSlots(HoldExpiresAt) WHERE Status = 'Held';
+CREATE INDEX IX_Sessions_PtStatus      ON Sessions(PtEmployeeId, Status);
+CREATE INDEX IX_Sessions_Subscription  ON Sessions(SubscriptionId, Status);
+CREATE INDEX IX_MoveLogs_Session       ON SessionMoveLogs(SessionId, MovedAt);
 GO
 
 /* ============================================================================
@@ -601,17 +701,17 @@ GO
 
 CREATE TABLE LeaveRequests (
     LeaveRequestId       INT IDENTITY(1,1) NOT NULL,
-    EmployeeId           INT           NOT NULL, -- người nộp đơn (PT hoặc Lễ tân)
-    ReviewedByEmployeeId INT           NULL,     -- Manager duyệt; NULL khi hệ thống tự từ chối
+    EmployeeId           INT           NOT NULL,
+    ReviewedByEmployeeId INT           NULL,     -- NULL khi hệ thống tự từ chối (CBR-85)
     LeaveType            VARCHAR(10)   NOT NULL, -- Annual | Sick | Unpaid
     LeaveDate            DATE          NOT NULL,
     ShiftType            VARCHAR(10)   NOT NULL, -- Morning | Afternoon | FullDay
     Reason               NVARCHAR(500) NOT NULL,
-    Status               VARCHAR(10)   NOT NULL CONSTRAINT DF_LeaveRequests_Status      DEFAULT ('Pending'), -- Pending | Approved | Rejected
+    Status               VARCHAR(10)   NOT NULL CONSTRAINT DF_LeaveRequests_Status      DEFAULT ('Pending'), -- DBR-44
     RejectReason         NVARCHAR(500) NULL,
-    SubmittedAt          DATETIME2(0)  NOT NULL CONSTRAINT DF_LeaveRequests_SubmittedAt DEFAULT (SYSDATETIME()), -- phải trước giờ chốt nộp (P-12) của ngày hôm trước
+    SubmittedAt          DATETIME2(0)  NOT NULL CONSTRAINT DF_LeaveRequests_SubmittedAt DEFAULT (SYSDATETIME()), -- trước P-12 ngày hôm trước (CBR-84)
     ReviewedAt           DATETIME2(0)  NULL,
-    ReminderSentAt       DATETIME2(0)  NULL,     -- JOB-07 đã nhắc Manager lúc nào; NULL = chưa nhắc → job chỉ nhắc đúng 1 lần
+    ReminderSentAt       DATETIME2(0)  NULL,     -- job nhắc Manager đúng 1 lần
 
     CONSTRAINT PK_LeaveRequests PRIMARY KEY (LeaveRequestId),
     CONSTRAINT FK_LeaveRequests_Employee FOREIGN KEY (EmployeeId)           REFERENCES Employees(EmployeeId),
@@ -620,60 +720,88 @@ CREATE TABLE LeaveRequests (
     CONSTRAINT CK_LeaveRequests_Shift  CHECK (ShiftType IN ('Morning','Afternoon','FullDay')),
     CONSTRAINT CK_LeaveRequests_Reason CHECK (LEN(LTRIM(RTRIM(Reason))) >= 5),
     CONSTRAINT CK_LeaveRequests_Status CHECK (Status IN ('Pending','Approved','Rejected')),
-    CONSTRAINT CK_LeaveRequests_Reject CHECK (Status <> 'Rejected' OR RejectReason IS NOT NULL)
+    CONSTRAINT CK_LeaveRequests_Review CHECK (
+        (Status = 'Pending'  AND ReviewedByEmployeeId IS NULL AND ReviewedAt IS NULL AND RejectReason IS NULL)
+        OR (Status = 'Approved' AND ReviewedByEmployeeId IS NOT NULL AND ReviewedAt IS NOT NULL AND RejectReason IS NULL)
+        OR (Status = 'Rejected' AND ReviewedAt IS NOT NULL AND RejectReason IS NOT NULL AND LEN(LTRIM(RTRIM(RejectReason))) >= 5)
+    ),
+    CONSTRAINT CK_LeaveRequests_Submit CHECK (CAST(SubmittedAt AS DATE) < LeaveDate)
 );
+GO
+
+-- Mỗi nhân viên tối đa 1 đơn chưa bị từ chối cho cùng ngày + ca
+CREATE UNIQUE INDEX UX_LeaveRequests_OnePerShift ON LeaveRequests(EmployeeId, LeaveDate, ShiftType) WHERE Status <> 'Rejected';
 GO
 
 CREATE TABLE Facilities (
     FacilityId   INT IDENTITY(1,1) NOT NULL,
     FacilityName NVARCHAR(100) NOT NULL,
-    Category     NVARCHAR(50)  NOT NULL,  -- Cardio | FreeWeights | Machines | Amenities
+    Category     VARCHAR(15)   NOT NULL,  -- Cardio | FreeWeights | Machines | Amenities
     Location     NVARCHAR(100) NULL,
-    Quantity     SMALLINT      NOT NULL CONSTRAINT DF_Facilities_Quantity DEFAULT (1),
-    Status       VARCHAR(20)   NOT NULL CONSTRAINT DF_Facilities_Status   DEFAULT ('Available'), -- Available | UnderMaintenance | Retired
+    Quantity     SMALLINT      NOT NULL CONSTRAINT DF_Facilities_Quantity DEFAULT (1), -- DBR-14
+    Status       VARCHAR(20)   NOT NULL CONSTRAINT DF_Facilities_Status   DEFAULT ('Available'), -- Available | UnderMaintenance | Retired (= đã xóa, GBR-05)
+    RowVer       ROWVERSION,
 
     CONSTRAINT PK_Facilities PRIMARY KEY (FacilityId),
     CONSTRAINT CK_Facilities_Quantity CHECK (Quantity >= 1),
-    CONSTRAINT CK_Facilities_Name CHECK (LEN(LTRIM(RTRIM(FacilityName))) >= 3),
+    CONSTRAINT CK_Facilities_Name     CHECK (LEN(LTRIM(RTRIM(FacilityName))) >= 3),
+    CONSTRAINT CK_Facilities_Category CHECK (Category IN ('Cardio','FreeWeights','Machines','Amenities')),
     CONSTRAINT CK_Facilities_Status   CHECK (Status IN ('Available','UnderMaintenance','Retired'))
 );
 GO
 
+-- MaintenanceRequests: Open → InProgress → Closed, hoặc Open → Rejected (DBR-46)
 CREATE TABLE MaintenanceRequests (
-    MaintenanceRequestId  INT IDENTITY(1,1) NOT NULL,
-    FacilityId            INT           NOT NULL,
-    ReportedByEmployeeId  INT           NOT NULL, -- Lễ tân báo hỏng
-    ReviewedByEmployeeId  INT           NULL,     -- Manager duyệt / từ chối
-    ClosedByEmployeeId    INT           NULL,     -- Lễ tân đóng sau khi kiểm tra đã sửa xong
-    Description           NVARCHAR(500) NOT NULL,
-    Status                VARCHAR(12)   NOT NULL CONSTRAINT DF_Maintenance_Status     DEFAULT ('Open'), -- Open → InProgress → Closed, hoặc Open → Rejected
-    RejectReason          NVARCHAR(500) NULL,
-    ReportedAt            DATETIME2(0)  NOT NULL CONSTRAINT DF_Maintenance_ReportedAt DEFAULT (SYSDATETIME()),
-    ReviewedAt            DATETIME2(0)  NULL,
-    ClosedAt              DATETIME2(0)  NULL,
+    MaintenanceRequestId INT IDENTITY(1,1) NOT NULL,
+    RequestCode          VARCHAR(12)   NOT NULL,  -- v25: BT-nnnn (SRS 8.2.1)
+    FacilityId           INT           NOT NULL,
+    ReportedByEmployeeId INT           NOT NULL,  -- Lễ tân báo hỏng
+    ReviewedByEmployeeId INT           NULL,      -- Manager duyệt / từ chối (BR-49)
+    ClosedByEmployeeId   INT           NULL,      -- Lễ tân đóng (BR-48)
+    Priority             VARCHAR(10)   NOT NULL CONSTRAINT DF_Maintenance_Priority   DEFAULT ('Normal'), -- v25: Urgent | Normal | Low
+    WarningTagPlaced     BIT           NOT NULL CONSTRAINT DF_Maintenance_WarningTag DEFAULT (0),        -- v25: đã treo biển cảnh báo
+    Description          NVARCHAR(500) NOT NULL,  -- DBR-15: 10–500
+    Status               VARCHAR(12)   NOT NULL CONSTRAINT DF_Maintenance_Status     DEFAULT ('Open'),
+    SetUnderMaintenance  BIT           NULL,      -- v25: Manager có chuyển thiết bị sang Under maintenance không (CBR-101)
+    RejectReason         NVARCHAR(500) NULL,
+    AcceptanceNote       NVARCHAR(500) NULL,      -- v25: ghi chú nghiệm thu khi đóng
+    ReportedAt           DATETIME2(0)  NOT NULL CONSTRAINT DF_Maintenance_ReportedAt DEFAULT (SYSDATETIME()),
+    ReviewedAt           DATETIME2(0)  NULL,
+    ClosedAt             DATETIME2(0)  NULL,
 
     CONSTRAINT PK_MaintenanceRequests PRIMARY KEY (MaintenanceRequestId),
+    CONSTRAINT UQ_MaintenanceRequests_Code UNIQUE (RequestCode),
     CONSTRAINT FK_Maintenance_Facilities FOREIGN KEY (FacilityId)           REFERENCES Facilities(FacilityId),
     CONSTRAINT FK_Maintenance_Reporter   FOREIGN KEY (ReportedByEmployeeId) REFERENCES Employees(EmployeeId),
     CONSTRAINT FK_Maintenance_Reviewer   FOREIGN KEY (ReviewedByEmployeeId) REFERENCES Employees(EmployeeId),
     CONSTRAINT FK_Maintenance_Closer     FOREIGN KEY (ClosedByEmployeeId)   REFERENCES Employees(EmployeeId),
-    CONSTRAINT CK_Maintenance_Description CHECK (LEN(LTRIM(RTRIM(Description))) >= 10),
-    CONSTRAINT CK_Maintenance_Status CHECK (Status IN ('Open','InProgress','Rejected','Closed')),
-    CONSTRAINT CK_Maintenance_Reject CHECK (Status <> 'Rejected' OR RejectReason IS NOT NULL),
-    CONSTRAINT CK_Maintenance_Closed CHECK (Status <> 'Closed' OR (ClosedByEmployeeId IS NOT NULL AND ClosedAt IS NOT NULL))
+    CONSTRAINT CK_Maintenance_Code        CHECK (RequestCode LIKE 'BT-[0-9][0-9][0-9][0-9]'),
+    CONSTRAINT CK_Maintenance_Priority    CHECK (Priority IN ('Urgent','Normal','Low')),
+    CONSTRAINT CK_Maintenance_Description CHECK (LEN(LTRIM(RTRIM(Description))) BETWEEN 10 AND 500),
+    CONSTRAINT CK_Maintenance_Status      CHECK (Status IN ('Open','InProgress','Rejected','Closed')),
+    CONSTRAINT CK_Maintenance_Flow CHECK (
+        (Status = 'Open' AND ReviewedByEmployeeId IS NULL AND ReviewedAt IS NULL AND SetUnderMaintenance IS NULL
+            AND ClosedByEmployeeId IS NULL AND RejectReason IS NULL)
+        OR (Status = 'InProgress' AND ReviewedByEmployeeId IS NOT NULL AND ReviewedAt IS NOT NULL
+            AND SetUnderMaintenance IS NOT NULL AND ClosedByEmployeeId IS NULL AND RejectReason IS NULL)
+        OR (Status = 'Rejected' AND ReviewedByEmployeeId IS NOT NULL AND ReviewedAt IS NOT NULL
+            AND SetUnderMaintenance IS NULL AND ClosedByEmployeeId IS NULL AND RejectReason IS NOT NULL AND LEN(LTRIM(RTRIM(RejectReason))) >= 5)
+        OR (Status = 'Closed' AND ReviewedByEmployeeId IS NOT NULL AND ReviewedAt IS NOT NULL
+            AND SetUnderMaintenance IS NOT NULL AND ClosedByEmployeeId IS NOT NULL AND ClosedAt IS NOT NULL
+            AND RejectReason IS NULL)
+    ),
+    CONSTRAINT CK_Maintenance_ClosedAt CHECK (Status = 'Closed' OR ClosedAt IS NULL)
 );
 GO
 
--- StaffAttendances: chấm công nhân viên. CHƯA làm ở phiên bản này (limitation),
--- mô hình hóa sẵn để sau này thêm mà không phải sửa bảng cũ.
--- Cố ý TÁCH khỏi CheckIns vì check-in khách gắn với gói tập, chấm công gắn với ca làm.
+-- StaffAttendances: chấm công — CHƯA làm ở phiên bản này, mô hình hóa sẵn (DBR-63)
 CREATE TABLE StaffAttendances (
     StaffAttendanceId INT IDENTITY(1,1) NOT NULL,
     EmployeeId        INT           NOT NULL,
     WorkDate          DATE          NOT NULL,
-    ShiftType         VARCHAR(10)   NOT NULL, -- Morning | Afternoon
+    ShiftType         VARCHAR(10)   NOT NULL,
     CheckInAt         DATETIME2(0)  NULL,
-    CheckInPhoto      NVARCHAR(255) NULL,     -- ảnh chụp lúc vào ca, KHÔNG dùng cho check-in hội viên
+    CheckInPhoto      NVARCHAR(255) NULL,     -- KHÔNG dùng cho check-in hội viên
     CheckOutAt        DATETIME2(0)  NULL,
     Status            VARCHAR(10)   NOT NULL, -- Present | Late | Absent | OnLeave
     Note              NVARCHAR(255) NULL,
@@ -688,13 +816,10 @@ CREATE TABLE StaffAttendances (
 GO
 
 -- Index cluster D
--- Hàng chờ duyệt của Manager, và job tự từ chối đơn quá hạn duyệt
-CREATE INDEX IX_LeaveRequests_StatusDate ON LeaveRequests(Status, LeaveDate);
--- Kiểm tra định biên: đếm người đã được duyệt nghỉ theo ngày + ca
-CREATE INDEX IX_LeaveRequests_DateShift ON LeaveRequests(LeaveDate, ShiftType, Status);
--- Hàng chờ duyệt bảo trì của Manager
-CREATE INDEX IX_Maintenance_Status ON MaintenanceRequests(Status, ReportedAt);
--- Bảng lương / báo cáo công theo tháng của từng nhân viên
+CREATE INDEX IX_LeaveRequests_StatusDate ON LeaveRequests(Status, LeaveDate);        -- hàng chờ duyệt + job tự từ chối
+CREATE INDEX IX_LeaveRequests_DateShift  ON LeaveRequests(LeaveDate, ShiftType, Status); -- định biên (DBR-60)
+CREATE INDEX IX_Maintenance_Status       ON MaintenanceRequests(Status, ReportedAt);
+CREATE INDEX IX_Maintenance_Facility     ON MaintenanceRequests(FacilityId, Status);  -- CBR-99, CBR-102
 CREATE INDEX IX_StaffAttendances_EmpDate ON StaffAttendances(EmployeeId, WorkDate);
 GO
 
@@ -704,42 +829,54 @@ GO
 
 CREATE TABLE PrivateNotes (
     PrivateNoteId INT IDENTITY(1,1) NOT NULL,
-    PtEmployeeId  INT            NOT NULL,
+    PtEmployeeId  INT            NOT NULL,  -- chỉ PT viết mới thấy (CBR-92)
     CustomerId    INT            NOT NULL,
-    Content       NVARCHAR(2000) NOT NULL,
+    Content       NVARCHAR(2000) NOT NULL,  -- DBR-15: 1–2000
+    CreatedAt     DATETIME2(0)   NOT NULL CONSTRAINT DF_PrivateNotes_CreatedAt DEFAULT (SYSDATETIME()),
     UpdatedAt     DATETIME2(0)   NOT NULL CONSTRAINT DF_PrivateNotes_UpdatedAt DEFAULT (SYSDATETIME()),
-    DeletedAt     DATETIME2(0)   NULL,   -- xóa mềm: ẩn vĩnh viễn, PT viết được bản mới
+    DeletedAt     DATETIME2(0)   NULL,      -- BR-59 xóa mềm
+    RowVer        ROWVERSION,
 
     CONSTRAINT PK_PrivateNotes PRIMARY KEY (PrivateNoteId),
     CONSTRAINT FK_PrivateNotes_Employees FOREIGN KEY (PtEmployeeId) REFERENCES Employees(EmployeeId),
-    CONSTRAINT FK_PrivateNotes_Customers FOREIGN KEY (CustomerId)   REFERENCES Customers(CustomerId)
+    CONSTRAINT FK_PrivateNotes_Customers FOREIGN KEY (CustomerId)   REFERENCES Customers(CustomerId),
+    CONSTRAINT CK_PrivateNotes_Content CHECK (LEN(LTRIM(RTRIM(Content))) >= 1)
 );
 GO
 
--- Mỗi cặp (PT, khách) chỉ có TỐI ĐA 1 ghi chú đang dùng; bản đã xóa không tính
-CREATE UNIQUE INDEX UX_PrivateNotes_ActivePerPair ON PrivateNotes(PtEmployeeId, CustomerId) WHERE DeletedAt IS NULL;
+CREATE UNIQUE INDEX UX_PrivateNotes_ActivePerPair ON PrivateNotes(PtEmployeeId, CustomerId) WHERE DeletedAt IS NULL; -- DBR-61
 GO
 
+-- TrainingPlans: bản NHÁP (Title/Content) tách khỏi bản ĐÃ XUẤT BẢN (Published*) — BR-60:
+-- PT sửa nháp thoải mái, khách vẫn thấy bản xuất bản gần nhất cho tới khi PT xuất bản lại.
 CREATE TABLE TrainingPlans (
-    TrainingPlanId INT IDENTITY(1,1) NOT NULL,
-    PtEmployeeId   INT             NOT NULL,
-    CustomerId     INT             NOT NULL,
-    PlanType       VARCHAR(10)     NOT NULL, -- Workout | Meal
-    Title          NVARCHAR(200)   NOT NULL,
-    Content        NVARCHAR(MAX)   NOT NULL,
-    IsPublished    BIT             NOT NULL CONSTRAINT DF_TrainingPlans_IsPublished DEFAULT (0), -- khách chỉ thấy bản đã xuất bản
-    UpdatedAt      DATETIME2(0)    NOT NULL CONSTRAINT DF_TrainingPlans_UpdatedAt   DEFAULT (SYSDATETIME()),
-    DeletedAt      DATETIME2(0)    NULL,
+    TrainingPlanId   INT IDENTITY(1,1) NOT NULL,
+    PtEmployeeId     INT            NOT NULL,
+    CustomerId       INT            NOT NULL,
+    PlanType         VARCHAR(10)    NOT NULL, -- Workout | Meal
+    Title            NVARCHAR(200)  NOT NULL,
+    Content          NVARCHAR(MAX)  NOT NULL, -- DBR-15: ≤ 10 000 ký tự
+    PublishedTitle   NVARCHAR(200)  NULL,
+    PublishedContent NVARCHAR(MAX)  NULL,
+    PublishedAt      DATETIME2(0)   NULL,     -- NULL = chưa xuất bản lần nào, khách chưa thấy
+    CreatedAt        DATETIME2(0)   NOT NULL CONSTRAINT DF_TrainingPlans_CreatedAt DEFAULT (SYSDATETIME()),
+    UpdatedAt        DATETIME2(0)   NOT NULL CONSTRAINT DF_TrainingPlans_UpdatedAt DEFAULT (SYSDATETIME()),
+    DeletedAt        DATETIME2(0)   NULL,     -- BR-61: xóa → khách mất ngay
+    RowVer           ROWVERSION,
 
     CONSTRAINT PK_TrainingPlans PRIMARY KEY (TrainingPlanId),
     CONSTRAINT FK_TrainingPlans_Employees FOREIGN KEY (PtEmployeeId) REFERENCES Employees(EmployeeId),
     CONSTRAINT FK_TrainingPlans_Customers FOREIGN KEY (CustomerId)   REFERENCES Customers(CustomerId),
-    CONSTRAINT CK_TrainingPlans_Type CHECK (PlanType IN ('Workout','Meal'))
+    CONSTRAINT CK_TrainingPlans_Type    CHECK (PlanType IN ('Workout','Meal')),
+    CONSTRAINT CK_TrainingPlans_Length  CHECK (LEN(Content) <= 10000 AND (PublishedContent IS NULL OR LEN(PublishedContent) <= 10000)),
+    CONSTRAINT CK_TrainingPlans_Published CHECK (
+        (PublishedAt IS NULL AND PublishedTitle IS NULL AND PublishedContent IS NULL)
+        OR (PublishedAt IS NOT NULL AND PublishedTitle IS NOT NULL AND PublishedContent IS NOT NULL)
+    )
 );
 GO
 
--- Mỗi bộ (PT, khách, loại) chỉ có tối đa 1 bản đang dùng
-CREATE UNIQUE INDEX UX_TrainingPlans_ActivePerTriple ON TrainingPlans(PtEmployeeId, CustomerId, PlanType) WHERE DeletedAt IS NULL;
+CREATE UNIQUE INDEX UX_TrainingPlans_ActivePerTriple ON TrainingPlans(PtEmployeeId, CustomerId, PlanType) WHERE DeletedAt IS NULL; -- DBR-62
 GO
 
 /* ============================================================================
@@ -749,60 +886,72 @@ GO
 CREATE TABLE Feedbacks (
     FeedbackId       INT IDENTITY(1,1) NOT NULL,
     CustomerId       INT            NOT NULL,
-    Content          NVARCHAR(1000) NOT NULL,
+    Content          NVARCHAR(1000) NOT NULL,  -- DBR-15: 10–1000
     SubmittedAt      DATETIME2(0)   NOT NULL CONSTRAINT DF_Feedbacks_SubmittedAt DEFAULT (SYSDATETIME()),
-    IsRead           BIT            NOT NULL CONSTRAINT DF_Feedbacks_IsRead      DEFAULT (0), -- chỉ Manager đọc được
+    IsRead           BIT            NOT NULL CONSTRAINT DF_Feedbacks_IsRead      DEFAULT (0), -- CBR-107
     ReadAt           DATETIME2(0)   NULL,
-    ReadByEmployeeId INT            NULL,
+    ReadByEmployeeId INT            NULL,      -- chỉ Manager (CBR-106)
 
     CONSTRAINT PK_Feedbacks PRIMARY KEY (FeedbackId),
     CONSTRAINT FK_Feedbacks_Customers FOREIGN KEY (CustomerId)       REFERENCES Customers(CustomerId),
     CONSTRAINT FK_Feedbacks_Employees FOREIGN KEY (ReadByEmployeeId) REFERENCES Employees(EmployeeId),
     CONSTRAINT CK_Feedbacks_Content CHECK (LEN(LTRIM(RTRIM(Content))) BETWEEN 10 AND 1000),
-    CONSTRAINT CK_Feedbacks_Read CHECK ((IsRead = 1 AND ReadAt IS NOT NULL) OR (IsRead = 0 AND ReadAt IS NULL))
+    CONSTRAINT CK_Feedbacks_Read CHECK (
+        (IsRead = 1 AND ReadAt IS NOT NULL AND ReadByEmployeeId IS NOT NULL)
+        OR (IsRead = 0 AND ReadAt IS NULL AND ReadByEmployeeId IS NULL)
+    )
 );
 GO
 
 CREATE TABLE BlogPosts (
     BlogPostId       INT IDENTITY(1,1) NOT NULL,
-    AuthorEmployeeId INT            NOT NULL, -- Manager viết
-    Title            NVARCHAR(200)  NOT NULL,
-    Category         NVARCHAR(30)   NOT NULL, -- Training | Nutrition | News
-    Excerpt          NVARCHAR(300)  NULL,
-    Content          NVARCHAR(MAX)  NOT NULL,
-    CoverImage       NVARCHAR(255)  NULL,
-    Status           VARCHAR(10)    NOT NULL CONSTRAINT DF_BlogPosts_Status DEFAULT ('Inactive'), -- Active (hiện trên web) | Inactive (gỡ xuống)
+    AuthorEmployeeId INT            NOT NULL,
+    Title            NVARCHAR(200)  NOT NULL, -- DBR-15: 5–200
+    Category         VARCHAR(15)    NOT NULL, -- Training | Nutrition | News
+    Excerpt          NVARCHAR(300)  NULL,     -- NULL → thẻ bài lấy phần đầu nội dung
+    Content          NVARCHAR(MAX)  NOT NULL, -- DBR-15: ≤ 20 000
+    CoverImage       NVARCHAR(255)  NULL,     -- NULL → ảnh mặc định theo danh mục
+    Status           VARCHAR(10)    NOT NULL CONSTRAINT DF_BlogPosts_Status    DEFAULT ('Inactive'), -- Active | Inactive (CBR-100)
     PublishedAt      DATETIME2(0)   NULL,
+    CreatedAt        DATETIME2(0)   NOT NULL CONSTRAINT DF_BlogPosts_CreatedAt DEFAULT (SYSDATETIME()),
+    UpdatedAt        DATETIME2(0)   NOT NULL CONSTRAINT DF_BlogPosts_UpdatedAt DEFAULT (SYSDATETIME()),
+    RowVer           ROWVERSION,
 
     CONSTRAINT PK_BlogPosts PRIMARY KEY (BlogPostId),
     CONSTRAINT FK_BlogPosts_Employees FOREIGN KEY (AuthorEmployeeId) REFERENCES Employees(EmployeeId),
-    CONSTRAINT CK_BlogPosts_Title CHECK (LEN(LTRIM(RTRIM(Title))) >= 5),
-    CONSTRAINT CK_BlogPosts_Status CHECK (Status IN ('Active','Inactive')),
+    CONSTRAINT CK_BlogPosts_Title    CHECK (LEN(LTRIM(RTRIM(Title))) BETWEEN 5 AND 200),
+    CONSTRAINT CK_BlogPosts_Category CHECK (Category IN ('Training','Nutrition','News')),
+    CONSTRAINT CK_BlogPosts_Content  CHECK (LEN(Content) <= 20000),
+    CONSTRAINT CK_BlogPosts_Status   CHECK (Status IN ('Active','Inactive')),
     CONSTRAINT CK_BlogPosts_Published CHECK (Status <> 'Active' OR PublishedAt IS NOT NULL)
 );
 GO
 
+-- Notifications (v25): đối tượng nhận theo SRS 11.2.1 + gửi hẹn giờ
 CREATE TABLE Notifications (
-    NotificationId    INT IDENTITY(1,1) NOT NULL,
-    SentByEmployeeId  INT           NULL,     -- NULL = hệ thống tự gửi
-    Title             NVARCHAR(100) NOT NULL,
-    Content           NVARCHAR(500) NOT NULL,
-    TargetType        VARCHAR(10)   NOT NULL, -- All | Role | Customer
-    SentAt            DATETIME2(0)  NOT NULL CONSTRAINT DF_Notifications_SentAt DEFAULT (SYSDATETIME()),
+    NotificationId   INT IDENTITY(1,1) NOT NULL,
+    SentByEmployeeId INT           NULL,      -- NULL = hệ thống tự gửi (CBR-46, CBR-57, CBR-85)
+    Title            NVARCHAR(100) NOT NULL,  -- DBR-15: 5–100
+    Content          NVARCHAR(500) NOT NULL,  -- DBR-15: 10–500
+    Audience         VARCHAR(15)   NOT NULL,  -- AllCustomers | ActiveMembers | PTs | Receptionists | AllStaff | Individual
+    ScheduledAt      DATETIME2(0)  NULL,      -- hẹn giờ gửi; NULL = gửi ngay
+    SentAt           DATETIME2(0)  NULL,      -- NULL = chưa tới giờ gửi
+    CreatedAt        DATETIME2(0)  NOT NULL CONSTRAINT DF_Notifications_CreatedAt DEFAULT (SYSDATETIME()),
 
     CONSTRAINT PK_Notifications PRIMARY KEY (NotificationId),
     CONSTRAINT FK_Notifications_Employees FOREIGN KEY (SentByEmployeeId) REFERENCES Employees(EmployeeId),
-    CONSTRAINT CK_Notifications_Text CHECK (LEN(LTRIM(RTRIM(Title))) >= 5 AND LEN(LTRIM(RTRIM(Content))) >= 10),
-    CONSTRAINT CK_Notifications_Target CHECK (TargetType IN ('All','Role','Customer'))
+    CONSTRAINT CK_Notifications_Text CHECK (LEN(LTRIM(RTRIM(Title))) BETWEEN 5 AND 100 AND LEN(LTRIM(RTRIM(Content))) BETWEEN 10 AND 500),
+    CONSTRAINT CK_Notifications_Audience CHECK (Audience IN ('AllCustomers','ActiveMembers','PTs','Receptionists','AllStaff','Individual')),
+    CONSTRAINT CK_Notifications_When CHECK (SentAt IS NOT NULL OR ScheduledAt IS NOT NULL),
+    CONSTRAINT CK_Notifications_System CHECK (SentByEmployeeId IS NOT NULL OR Audience = 'Individual')
 );
 GO
 
--- NotificationRecipients: giải quan hệ nhiều–nhiều giữa Notification và Account,
--- đồng thời lưu trạng thái đã đọc của từng người.
+-- Chỉ người CÓ tài khoản mới nhận (GBR-15); trạng thái đã đọc từng người (GBR-34)
 CREATE TABLE NotificationRecipients (
     NotificationRecipientId INT IDENTITY(1,1) NOT NULL,
     NotificationId          INT          NOT NULL,
-    AccountId               INT          NOT NULL, -- chỉ người CÓ tài khoản mới nhận được
+    AccountId               INT          NOT NULL,
     ReadAt                  DATETIME2(0) NULL,
 
     CONSTRAINT PK_NotificationRecipients PRIMARY KEY (NotificationRecipientId),
@@ -813,11 +962,9 @@ CREATE TABLE NotificationRecipients (
 GO
 
 -- Index cluster F
--- Màn Feedback List của Manager mặc định lọc "chưa đọc", sắp xếp mới nhất trước
 CREATE INDEX IX_Feedbacks_IsRead ON Feedbacks(IsRead, SubmittedAt DESC);
--- Trang blog công khai chỉ lấy bài Active, mới nhất trước
 CREATE INDEX IX_BlogPosts_StatusPublished ON BlogPosts(Status, PublishedAt DESC);
--- Chuông thông báo đếm số chưa đọc của từng tài khoản
+CREATE INDEX IX_Notifications_Scheduled ON Notifications(ScheduledAt) WHERE SentAt IS NULL; -- job gửi hẹn giờ
 CREATE INDEX IX_NotifRecipients_AccountUnread ON NotificationRecipients(AccountId) WHERE ReadAt IS NULL;
 GO
 
@@ -825,36 +972,37 @@ GO
    CLUSTER G — CẤU HÌNH & LƯU VẾT
    ============================================================================ */
 
--- SystemConfigs: nơi lưu 20 tham số P-01…P-20 dưới dạng key–value
+-- SystemConfigs: P-01…P-21 dạng key–value (GBR-04)
 CREATE TABLE SystemConfigs (
     SystemConfigId      INT IDENTITY(1,1) NOT NULL,
-    ConfigKey           VARCHAR(50)   NOT NULL,  -- P-01, P-02, ... P-20
+    ConfigKey           VARCHAR(10)   NOT NULL,  -- P-01 … P-21
     ConfigValue         NVARCHAR(200) NOT NULL,
-    Description         NVARCHAR(255) NOT NULL,  -- giải thích tham số dùng ở đâu
+    Description         NVARCHAR(255) NOT NULL,
     UpdatedAt           DATETIME2(0)  NOT NULL CONSTRAINT DF_SystemConfigs_UpdatedAt DEFAULT (SYSDATETIME()),
     UpdatedByEmployeeId INT           NULL,
+    RowVer              ROWVERSION,
 
     CONSTRAINT PK_SystemConfigs PRIMARY KEY (SystemConfigId),
     CONSTRAINT UQ_SystemConfigs_Key UNIQUE (ConfigKey),
-    CONSTRAINT FK_SystemConfigs_Employees FOREIGN KEY (UpdatedByEmployeeId) REFERENCES Employees(EmployeeId)
+    CONSTRAINT FK_SystemConfigs_Employees FOREIGN KEY (UpdatedByEmployeeId) REFERENCES Employees(EmployeeId),
+    CONSTRAINT CK_SystemConfigs_Key CHECK (ConfigKey LIKE 'P-[0-9][0-9]')
 );
 GO
 
--- OperatingHourExceptions: ngày có giờ mở cửa khác mặc định, hoặc nghỉ cả ngày.
--- Ngày nghỉ ở đây khiến hệ thống KHÔNG sinh buổi PT vào ngày đó.
+-- OperatingHourExceptions: ngày giờ mở cửa khác mặc định hoặc nghỉ cả ngày (BR-12, CBR-56, CBR-57)
 CREATE TABLE OperatingHourExceptions (
     OperatingHourExceptionId INT IDENTITY(1,1) NOT NULL,
-    ApplyDate                DATE          NOT NULL,
+    ApplyDate                DATE          NOT NULL,  -- hôm nay trở đi lúc khai báo (DBR-12)
     OpenTime                 TIME(0)       NULL,
     CloseTime                TIME(0)       NULL,
-    IsClosedAllDay           BIT           NOT NULL CONSTRAINT DF_OperatingHourExceptions_Closed DEFAULT (0),
+    IsClosedAllDay           BIT           NOT NULL CONSTRAINT DF_OperatingHourExceptions_Closed    DEFAULT (0),
     Note                     NVARCHAR(200) NULL,
     SetByEmployeeId          INT           NOT NULL,
+    CreatedAt                DATETIME2(0)  NOT NULL CONSTRAINT DF_OperatingHourExceptions_CreatedAt DEFAULT (SYSDATETIME()),
 
     CONSTRAINT PK_OperatingHourExceptions PRIMARY KEY (OperatingHourExceptionId),
-    CONSTRAINT UQ_OperatingHourExceptions_Date UNIQUE (ApplyDate), -- mỗi ngày tối đa 1 ngoại lệ
+    CONSTRAINT UQ_OperatingHourExceptions_Date UNIQUE (ApplyDate),
     CONSTRAINT FK_OperatingHourExceptions_Employees FOREIGN KEY (SetByEmployeeId) REFERENCES Employees(EmployeeId),
-    -- Nghỉ cả ngày thì bỏ trống giờ; mở cửa thì phải có đủ giờ và giờ đóng sau giờ mở
     CONSTRAINT CK_OperatingHourExceptions_Time CHECK (
         (IsClosedAllDay = 1 AND OpenTime IS NULL AND CloseTime IS NULL)
         OR (IsClosedAllDay = 0 AND OpenTime IS NOT NULL AND CloseTime IS NOT NULL AND CloseTime > OpenTime)
@@ -862,30 +1010,32 @@ CREATE TABLE OperatingHourExceptions (
 );
 GO
 
--- AuditLogs: chỉ ghi thêm, không bao giờ sửa hay xóa. Chỉ Admin xem được.
+-- AuditLogs: chỉ ghi thêm, không sửa / xóa; chỉ Admin xem (CBR-103, GBR-07, GBR-08)
 CREATE TABLE AuditLogs (
     AuditLogId   INT IDENTITY(1,1) NOT NULL,
-    AccountId    INT           NULL,      -- NULL = hành động do hệ thống (job) thực hiện
-    Action       NVARCHAR(100) NOT NULL,
-    EntityName   NVARCHAR(50)  NOT NULL,
-    EntityId     INT           NULL,
-    FieldChanged NVARCHAR(50)  NULL,
-    OldValue     NVARCHAR(255) NULL,
-    NewValue     NVARCHAR(255) NULL,
-    Reason       NVARCHAR(500) NULL,      -- bắt buộc với hành động từ chối / hủy / xóa
-    CreatedAt    DATETIME2(0)  NOT NULL CONSTRAINT DF_AuditLogs_CreatedAt DEFAULT (SYSDATETIME()),
+    AccountId    INT            NULL,      -- NULL = hệ thống (job)
+    ActingRole   VARCHAR(15)    NULL,      -- v25: vai trò đang dùng khi thao tác (CBR-112, CBR-113)
+    Action       NVARCHAR(100)  NOT NULL,
+    EntityName   NVARCHAR(50)   NOT NULL,
+    EntityId     INT            NULL,
+    FieldChanged NVARCHAR(50)   NULL,
+    OldValue     NVARCHAR(1000) NULL,      -- KHÔNG BAO GIỜ ghi mật khẩu / mã xác thực (DBR-02)
+    NewValue     NVARCHAR(1000) NULL,
+    Reason       NVARCHAR(500)  NULL,      -- bắt buộc với từ chối / hủy / xóa / mở khóa (GBR-09, BR-10)
+    CreatedAt    DATETIME2(0)   NOT NULL CONSTRAINT DF_AuditLogs_CreatedAt DEFAULT (SYSDATETIME()),
 
     CONSTRAINT PK_AuditLogs PRIMARY KEY (AuditLogId),
-    CONSTRAINT FK_AuditLogs_Accounts FOREIGN KEY (AccountId) REFERENCES Accounts(AccountId)
+    CONSTRAINT FK_AuditLogs_Accounts FOREIGN KEY (AccountId) REFERENCES Accounts(AccountId),
+    CONSTRAINT CK_AuditLogs_Role CHECK (ActingRole IS NULL OR ActingRole IN ('Admin','Manager','PT','Receptionist','Customer')),
+    CONSTRAINT CK_AuditLogs_System CHECK (AccountId IS NOT NULL OR ActingRole IS NULL)
 );
 GO
 
 -- Index cluster G
--- Màn Audit Log lọc theo khoảng ngày (mặc định tháng hiện tại), mới nhất trước
 CREATE INDEX IX_AuditLogs_CreatedAt ON AuditLogs(CreatedAt DESC);
--- Lọc theo loại đối tượng bị tác động (Account, Customer, Package...)
-CREATE INDEX IX_AuditLogs_Entity ON AuditLogs(EntityName, EntityId);
+CREATE INDEX IX_AuditLogs_Entity    ON AuditLogs(EntityName, EntityId);
+CREATE INDEX IX_AuditLogs_Account   ON AuditLogs(AccountId, CreatedAt DESC);
 GO
 
-PRINT N'>>> Tạo schema GMS thành công: 30 bảng nghiệp vụ.';
+PRINT N'>>> Tạo schema GMS v25 thành công: 30 bảng nghiệp vụ.';
 GO

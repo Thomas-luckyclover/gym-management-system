@@ -121,12 +121,7 @@ public class PersonDAO {
         }
 
         /**
-         * Tìm Person đang hoạt động (IsReleased = 0) theo số điện thoại — BẤT KỂ là khách hay nhân viên
-         * (DBR-22: SĐT duy nhất giữa mọi Person còn hoạt động).
-         * SĐT giám hộ nằm ở bảng Customers, không nằm trên Person, nên tự động không bị so (CBR-28).
-         *
-         * Lỗi cũ: JOIN Customers ... CustomerType = 'Self' → SĐT của nhân viên (chưa có hồ sơ khách)
-         * bị coi là số mới → INSERT Person trùng số → vỡ UX_Persons_Phone_Active → báo "Hệ thống bận".
+         * Tìm Person còn hoạt động theo SĐT, khách hay nhân viên đều tính (DBR-22, CBR-28).
          * 
          * @param phone số điện thoại 10 chữ số
          * @return đối tượng Person hoặc null nếu không tìm thấy

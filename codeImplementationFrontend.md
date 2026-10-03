@@ -7,7 +7,7 @@ File này quy định chi tiết cách viết **Frontend** (JSP hiển thị, HT
 ## 1. JSP — Rõ Ràng Tối Đa + Chống XSS
 
 - **Viết rõ ràng hết mức có thể** — ưu tiên JSTL (`<c:if>`, `<c:forEach>`, `<c:choose>`), hạn chế tối đa scriptlet `<% %>`; không viết business logic/query trong JSP.
-- **Comment nhiều** — mỗi block JSTL, mỗi phần hiển thị quan trọng đều nên có `<%-- --%>` giải thích đang hiển thị gì, lấy dữ liệu từ đâu (biến nào Servlet đã set vào `request`/`session`).
+- **Comment khung** — mỗi khối lớn 1 dòng `<%-- ===== Khối … (biến request: x, y) ===== --%>` (Mục 2).
 
 ### Chống XSS — bắt buộc, không được bỏ qua
 
@@ -23,21 +23,17 @@ File này quy định chi tiết cách viết **Frontend** (JSP hiển thị, HT
 
 - **Trường hợp CÓ dùng AJAX** (JS nhận dữ liệu JSON rồi tự chèn vào DOM): `c:out` không áp dụng được (vì không qua JSP nữa) — bắt buộc **escape dữ liệu trong JS** trước khi chèn vào HTML bằng hàm `escapeHtml()` (xem Mục 5 — Bảo Mật Trong JS).
 
-## 2. Comment
+## 2. Comment: chỉ viết khung (giống Backend Mục 1, áp dụng từ v25)
 
-- **Bắt buộc có, và với JS thì cần chi tiết hơn hẳn Backend** (xem thêm nguyên tắc riêng ở Mục 4):
-  - **Khung chương trình chính (cấp file JS/CSS):** comment nhóm các phần trong file.
-    ```js
-    // ===== Xử lý validate form =====
-    ...
-    // ===== Xử lý gọi AJAX =====
-    ...
-    ```
-  - **Khung chương trình từng bước (bên trong 1 hàm xử lý nhiều bước):** `// B1`, `// B2`...
-- **JSP:** comment JSTL/HTML phức tạp (`<!-- -->` cho HTML thường, `<%-- --%>` cho phần JSP/JSTL) — càng nhiều block điều kiện lồng nhau càng cần comment rõ.
-- **CSS:** comment ngắn gọn, đơn giản — không cần dài dòng, chỉ cần đủ hiểu section này style cho phần nào (xem Mục 6).
-- **Ngôn ngữ comment:** Tiếng Việt.
-- **Vị trí:** phía trên đoạn code liên quan, không comment cuối dòng.
+- **JS:**
+  - Đầu file có `// ===== Tên nhóm =====` cho từng nhóm hàm.
+  - Mỗi hàm xử lý nhiều bước dùng `// B1: …`, `// B2: …`, mỗi bước 1 dòng, ≤ 12 từ, có mã rule nếu là luật nghiệp vụ (`// B2: chặn chọn T7/CN (BR-36)`).
+  - Hàm ngắn không comment.
+- **JSP:** 1 dòng `<%-- ===== Khối … ===== --%>` trên mỗi khối lớn của trang (header form, bảng, panel). Không giải thích JSTL.
+- **CSS:** 1 dòng `/* ===== Khối … ===== */` cho mỗi section.
+- **Cấm:** comment nhiều dòng, kể lịch sử / lỗi cũ, ví dụ minh họa, giải thích cú pháp, comment cuối dòng.
+- **Chừa chỗ học:** người học tự thêm `// Ghi chú: …` dưới bước; AI không tự viết và không xóa các dòng này.
+- **Ngôn ngữ:** Tiếng Việt. **Vị trí:** phía trên đoạn code.
 
 ## 3. Thụt Lề & Trình Bày (Formatting)
 
@@ -57,26 +53,15 @@ File này quy định chi tiết cách viết **Frontend** (JSP hiển thị, HT
 **Đây là phần quan trọng và khó nhất — nguyên tắc bao trùm: miễn chạy đúng, không chậm, hoàn thành đúng mục đích là đạt — không cần tối ưu bất kỳ điều gì, không dùng logic nâng cao/lạ, không viết "khôn" để giảm số dòng.**
 
 - **Không dùng:** arrow function lồng nhau phức tạp, destructuring nhiều tầng, spread/rest operator nếu không thật cần thiết, method chaining dài (`.filter().map().reduce()` nối liền nhau), regex phức tạp khó đọc, IIFE, closure nâng cao — nếu 1 đoạn code có cách viết "ngắn gọn nhưng khó hiểu" và cách viết "dài hơn nhưng rõ ràng", **luôn chọn cách dài hơn nhưng rõ ràng**.
-- **Comment bắt buộc theo 2 loại, tùy nội dung hàm:**
-
-  **a) Logic liên quan Backend** (gọi AJAX, xử lý response từ server, gửi dữ liệu lên server): comment kiểu như Java — nêu rõ mục đích hàm, input/output, giống tinh thần Javadoc dù không bắt buộc đúng format `@param`.
+- **Comment: chỉ khung (Mục 2).** Hàm gọi server: 1 dòng mục đích trên hàm. Hàm nhiều bước: `// Bn:` mỗi bước 1 dòng.
   ```js
-  // Gửi thông tin đăng nhập lên server qua AJAX, nhận về kết quả thành công/thất bại
-  // Input: username, password (lấy từ 2 ô input trên form)
-  // Output: cập nhật giao diện theo kết quả trả về (chuyển trang hoặc hiện lỗi)
+  // Gửi đăng nhập lên server, hiện lỗi hoặc chuyển trang
   function submitLogin(username, password) {
+      // B1: kiểm tra 2 ô không trống
       ...
-  }
-  ```
-
-  **b) Logic thuần Frontend** (đổ dữ liệu vào input/dropdown/popup, xử lý hiển thị): comment giải thích **luồng/tuần tự các bước**, và **dữ liệu lấy từ trường nào** (tên field/database liên quan) để đổ vào phần tử nào.
-  ```js
-  // Đổ danh sách lớp vào dropdown "class-select"
-  // Luồng xử lý:
-  // B1: gọi AJAX tới /api/classes lấy danh sách lớp
-  // B2: dữ liệu trả về gồm ClassId, ClassName (lấy từ bảng Classes trong database)
-  // B3: duyệt danh sách, tạo từng <option> (value = ClassId, text = ClassName), thêm vào dropdown
-  function loadClassDropdown() {
+      // B2: gọi postData('/login')
+      ...
+      // B3: lỗi → hiện dưới ô; thành công → chuyển trang
       ...
   }
   ```
@@ -204,7 +189,7 @@ studentNameCell.textContent = student.name;  // an toàn, không cần escapeHtm
 ## 11. Lưu Ý Cuối
 
 - **JSP:** rõ ràng tối đa, comment nhiều, bắt buộc `<c:out>` chống XSS khi không dùng AJAX.
-- **JS (quan trọng nhất):** không cần tối ưu, không dùng logic nâng cao/lạ — miễn chạy đúng, không chậm là đạt; comment kiểu Java cho logic liên quan Backend, giải thích flow + nguồn dữ liệu cho logic Frontend; escape dữ liệu (`escapeHtml()`/`textContent`) khi chèn vào DOM qua AJAX.
+- **JS (quan trọng nhất):** không cần tối ưu, không dùng logic nâng cao/lạ — miễn chạy đúng, không chậm là đạt; comment chỉ là khung `// Bn:` 1 dòng (Mục 2); escape dữ liệu (`escapeHtml()`/`textContent`) khi chèn vào DOM qua AJAX.
 - **DOM:** không method chaining dài, không làm tắt, mỗi hàm 1 việc, comment rõ đang thao tác phần tử nào.
 - **CSS:** comment ngắn gọn; id/class liên quan JS phải rõ ràng + ghi chú file JS **và tên hàm** đang dùng đến, hàm đó thao tác DOM ra sao; gợi ý animation cho phần tĩnh (chỉ đề xuất, không tự code); phải đẹp, đảm bảo UX/UI.
 - **HTML:** rõ ràng, có comment, id/class đặt tên rõ nghĩa, ghi chú file JS + hàm nếu có JS thao tác DOM lên phần tử đó.
