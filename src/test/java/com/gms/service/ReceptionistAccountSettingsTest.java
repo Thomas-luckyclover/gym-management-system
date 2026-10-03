@@ -82,7 +82,9 @@ class ReceptionistAccountSettingsTest {
                 "tam.le@gms.vn",
                 null,
                 Role.RECEPTIONIST,
-                "NV-0003"
+                "NV-0003",
+                hireDate,
+                "Working"
         );
 
         assertEquals("Lê Thị Thanh Tâm", view.getFullName());
