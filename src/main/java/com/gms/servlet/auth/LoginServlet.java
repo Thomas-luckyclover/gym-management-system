@@ -149,21 +149,25 @@ public class LoginServlet extends HttpServlet {
         if (Messages.MSG38_NO_PASSWORD_YET.equals(errorMessage)) {
             return "blocked-no-password";
         }
-        if (errorMessage != null && errorMessage.startsWith("Tài khoản bị khóa")) {
+        if (errorMessage != null && errorMessage.startsWith(LOCK_MESSAGE_PREFIX)) {
             return "blocked-lock";
         }
         return "form";
     }
+
+    /** Phần đầu cố định của MSG35 (trước %d), lấy từ Messages để không phụ thuộc ngôn ngữ câu thông báo. */
+    private static final String LOCK_MESSAGE_PREFIX = Messages.MSG35_ACCOUNT_TEMP_LOCKED
+            .substring(0, Messages.MSG35_ACCOUNT_TEMP_LOCKED.indexOf('%'));
+
+    /** Thời gian còn lại dạng mm:ss ở cuối MSG35. */
     private static final java.util.regex.Pattern LOCK_RETRY_PATTERN
-            = java.util.regex.Pattern.compile("Thử lại sau\\s+(\\d+):(\\d{2})");
+            = java.util.regex.Pattern.compile("(\\d+):(\\d{2})");
 
     /**
-     * Lấy số giây còn lại tới khi hết khoá, từ câu thông báo
-     * MSG35_ACCOUNT_TEMP_LOCKED ("… Thử lại sau mm:ss."). Trả về null nếu không phải lỗi khoá tài khoản
-     * hoặc không parse được.
+     * Lấy số giây còn lại tới khi hết khóa từ câu MSG35 (phần mm:ss); null nếu không phải câu khóa tạm.
      */
     private Integer extractLockSecondsLeft(String errorMessage) {
-        if (errorMessage == null) {
+        if (errorMessage == null || !errorMessage.startsWith(LOCK_MESSAGE_PREFIX)) {
             return null;
         }
         java.util.regex.Matcher matcher = LOCK_RETRY_PATTERN.matcher(errorMessage);
