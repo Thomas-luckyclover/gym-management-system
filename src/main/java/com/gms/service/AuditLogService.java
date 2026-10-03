@@ -21,17 +21,8 @@ public class AuditLogService {
     }
 
     /**
-     * Ghi một thao tác nhạy cảm vào AuditLog.
-     *
-     * @param accountId tài khoản thực hiện, null nếu do hệ thống
-     * @param action mô tả thao tác dạng câu đọc được
-     * @param entityName tên đối tượng bị tác động
-     * @param entityId id đối tượng bị tác động
-     * @param fieldChanged trường bị thay đổi
-     * @param oldValue giá trị cũ
-     * @param newValue giá trị mới
-     * @param reason lý do nếu có
-     * @return kết quả ghi nhật ký
+     * Ghi một thao tác nhạy cảm vào bảng AuditLog (mở transaction riêng).
+     * Các trường password / code / token sẽ tự được che, không lưu giá trị thật.
      */
     public ServiceResult<Void> log(
             Integer accountId,

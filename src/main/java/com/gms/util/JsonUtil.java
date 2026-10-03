@@ -15,10 +15,8 @@ import java.time.LocalDateTime;
 import java.time.LocalTime;
 
 /**
- * Ghi JSON trả về cho các Servlet AJAX, dùng Gson.
- *
- * Ngày giờ gửi xuống trình duyệt ở dạng ISO ("2026-09-24", "14:30", "2026-09-24T14:30:00"),
- * js/common.js tự đổi sang dd/mm/yyyy khi hiển thị (formatDate, formatDateTime).
+ * Ghi JSON trả về cho Servlet AJAX, dùng Gson.
+ * Ngày giờ gửi xuống ở dạng ISO (yyyy-MM-dd, HH:mm), js/common.js tự đổi sang dd/mm/yyyy khi hiển thị.
  */
 public final class JsonUtil {
 
@@ -38,20 +36,13 @@ public final class JsonUtil {
 
     /**
      * Ghi JsonResponse ra response với mã HTTP 200.
-     * @param response HttpServletResponse của Servlet
-     * @param body nội dung JSON chuẩn
-     * @throws IOException lỗi ghi response
      */
     public static void writeJson(HttpServletResponse response, JsonResponse body) throws IOException {
         writeJson(response, HttpServletResponse.SC_OK, body);
     }
 
     /**
-     * Ghi JsonResponse ra response với mã HTTP tùy chọn (401 hết phiên, 403 không có quyền...).
-     * @param response HttpServletResponse
-     * @param httpStatus mã HTTP
-     * @param body nội dung JSON chuẩn
-     * @throws IOException lỗi ghi response
+     * Ghi JsonResponse ra response với mã HTTP tuỳ chọn (401 hết phiên, 403 không có quyền...).
      */
     public static void writeJson(HttpServletResponse response, int httpStatus, JsonResponse body) throws IOException {
         response.setStatus(httpStatus);
@@ -64,8 +55,6 @@ public final class JsonUtil {
 
     /**
      * Đổi object bất kỳ thành chuỗi JSON (VD nhúng dữ liệu ban đầu vào thuộc tính data-* của JSP).
-     * @param value object cần đổi
-     * @return chuỗi JSON
      */
     public static String toJson(Object value) {
         return GSON.toJson(value);
@@ -73,9 +62,6 @@ public final class JsonUtil {
 
     /**
      * Đọc chuỗi JSON (body AJAX gửi lên) thành object Java.
-     * @param json chuỗi JSON
-     * @param type class đích
-     * @return object Java
      */
     public static <T> T fromJson(String json, Class<T> type) {
         return GSON.fromJson(json, type);

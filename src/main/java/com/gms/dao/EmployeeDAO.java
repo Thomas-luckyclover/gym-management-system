@@ -19,6 +19,9 @@ public class EmployeeDAO {
     /** Giá trị cột Sessions.Status của buổi đã dạy xong (chưa có entity Session nên tạm để hằng ở đây). */
     private static final String SESSION_STATUS_COMPLETED = "Completed";
 
+    /**
+     * Tìm Employee theo PersonId, ưu tiên dòng đang Working.
+     */
     public Employee findByPersonId(int personId)
             throws SQLException {
 

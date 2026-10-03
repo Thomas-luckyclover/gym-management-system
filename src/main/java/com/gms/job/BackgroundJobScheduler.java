@@ -14,16 +14,9 @@ import java.util.concurrent.ScheduledExecutorService;
 import java.util.concurrent.TimeUnit;
 
 /**
- * Khởi động/dừng toàn bộ job chạy ngầm cùng vòng đời của ứng dụng trên Tomcat.
- * Không cần thư viện ngoài (Quartz...) — dùng ScheduledExecutorService có sẵn trong JDK.
- *
- * Lịch chạy theo SRS 5.3 / 5.0:
- * - Job hằng ngày: 00:05 giờ Việt Nam, chạy NỐI TIẾP JOB-01 → 02 → 03 → 04 (JOB-01 phải cộng ngày bảo lưu trước khi JOB-02 xét hết hạn).
- *   Lỗi kết nối DB → thử lại tối đa 3 lần, mỗi lần cách 5 phút, sau đó ghi lỗi nghiêm trọng và chờ lượt ngày mai.
- * - Job mỗi phút: JOB-05, 06, 07. Lỗi thì không thử lại riêng — lượt 1 phút sau chính là lần thử lại.
- * - Không chạy chồng: dùng scheduleWithFixedDelay nên lượt sau chỉ bắt đầu khi lượt trước đã xong.
- *
- * Thêm job mới: tạo class implements BackgroundJob, rồi thêm vào DAILY_JOBS hoặc MINUTE_JOBS bên dưới.
+ * Khởi động/dừng các job chạy ngầm theo vòng đời Tomcat (dùng ScheduledExecutorService của JDK, không cần Quartz).
+ * Job hằng ngày chạy lúc 00:05 giờ VN (nối tiếp: cộng bảo lưu → hết hạn → auto close); job mỗi phút chạy độc lập.
+ * Thêm job: tạo class implements BackgroundJob rồi thêm vào DAILY_JOBS hoặc MINUTE_JOBS.
  */
 @WebListener
 public class BackgroundJobScheduler implements ServletContextListener {

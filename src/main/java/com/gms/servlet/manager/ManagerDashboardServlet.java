@@ -22,13 +22,9 @@ import java.nio.charset.StandardCharsets;
 import java.time.LocalDate;
 
 /**
- * Báo cáo vận hành & doanh thu (#66, UC-46, SRS 12.1.1). Chỉ Manager (ManagerAreaFilter đã chặn).
+ * Servlet Báo cáo vận hành & doanh thu của Manager (URL /manager/dashboard).
  *
- * GET /manager/dashboard?from=yyyy-MM-dd&to=yyyy-MM-dd          → hiện báo cáo
- * GET /manager/dashboard?action=export&from=..&to=..            → tải file CSV của báo cáo đó
- *
- * Báo cáo là "ảnh chụp" lúc xem: ReportView vừa hiện được giữ trong session để nút Xuất CSV xuất đúng
- * số đang trên màn hình (không truy vấn lại). Nếu session không còn ảnh chụp khớp khoảng ngày thì dựng lại.
+ * <p>GET không action: hiện báo cáo theo khoảng ngày; GET ?action=export: tải CSV của báo cáo đó.</p>
  */
 @WebServlet("/manager/dashboard")
 public class ManagerDashboardServlet extends HttpServlet {
@@ -39,6 +35,9 @@ public class ManagerDashboardServlet extends HttpServlet {
     private final ReportService reportService = new ReportService();
     private final AccountSettingsService accountSettingsService = new AccountSettingsService();
 
+    /**
+     * GET /manager/dashboard — hiện báo cáo theo khoảng ngày; ?action=export thì tải CSV.
+     */
     @Override
     protected void doGet(HttpServletRequest request, HttpServletResponse response)
             throws ServletException, IOException {

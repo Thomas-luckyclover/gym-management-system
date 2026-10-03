@@ -16,31 +16,8 @@ import java.util.Date;
 import java.util.Properties;
 
 /**
- * Cổng gửi email — SRS 6.3 "Email Delivery (API-03)", actor "Email Gateway" trên Context Diagram.
- *
- * ===== TỔNG QUAN LUỒNG =====
- * GMS ──(SMTP, cổng 587, STARTTLS)──> smtp.gmail.com ──> hộp thư người nhận
- *
- * Dùng cho: mã xác thực đăng ký (UC-05), kích hoạt hồ sơ có sẵn (UC-Claim), khôi phục mật khẩu (UC-03),
- * báo cho email cũ khi đổi email (UC-04).
- * Hệ thống KHÔNG gửi SMS (GBR-15).
- *
- * ===== CẤU HÌNH (application.properties — không commit) =====
- * mail.smtp.host, mail.smtp.port, mail.username (địa chỉ Gmail gửi đi), mail.app-password (App Password 16 ký tự),
- * mail.from-name (tên hiển thị người gửi).
- * App Password KHÔNG phải mật khẩu Gmail thường — xem docs/integration-guide.md mục Email.
- * Máy chưa điền App Password (còn "xxxx…") → chế độ dev: in email ra console Tomcat thay vì gửi.
- *
- * ===== CÁCH TỔ CHỨC =====
- * 1. Các email nghiệp vụ (public): chỉ soạn nội dung — 1 bản HTML + 1 bản chữ thường.
- * 2. Khung chung: bọc nội dung HTML trong giao diện Super Gym (logo chữ, chân thư).
- * 3. Phần kỹ thuật SMTP: đọc cấu hình, tạo phiên, gửi thư 2 phần (multipart/alternative — ít bị vào Spam hơn).
- *
- * ===== XỬ LÝ LỖI =====
- * Mọi lỗi gửi được gói thành EmailSendException (checked) để Service bắt buộc xử lý.
- * Service phải gửi email TRƯỚC khi commit dữ liệu (VD tạo tài khoản), gửi lỗi thì rollback.
- *
- * Được gọi từ Service, không gọi thẳng từ Servlet (agents.md 6.2 — tách logic tích hợp khỏi nghiệp vụ).
+ * Cổng gửi email qua Gmail SMTP (cổng 587, STARTTLS).
+ * Dùng cho mã xác thực, thông báo đổi email, khôi phục mật khẩu. Nếu chưa cấu hình App Password thì in ra console (chế độ dev).
  */
 public class EmailGateway {
 
@@ -52,17 +29,7 @@ public class EmailGateway {
     // ===== 1. Các email nghiệp vụ =====
 
     /**
-     * Gửi email chứa mã xác thực 6 số.
-     *
-     * Dùng khi: VerificationCodeService.sendCode (đăng ký, kích hoạt hồ sơ, quên mật khẩu, đổi email).
-     * Hàm không trả gì: chạy hết là gửi xong; gửi lỗi thì ném EmailSendException.
-     *
-     * @param toEmail      email người nhận, VD "thao.luong@gmail.com".
-     * @param code         mã 6 số đã sinh sẵn, VD "246810".
-     * @param validMinutes mã sống bao nhiêu phút (P-15), VD 15 → trong thư ghi "hiệu lực trong 15 phút".
-     * @param purpose      mã dùng để làm gì, dạng cụm chữ tiếng Việt, VD "khôi phục mật khẩu"
-     *                     → tiêu đề thư: "[Super Gym] Mã xác thực khôi phục mật khẩu".
-     * @throws EmailSendException khi không gửi được (sai App Password, mất mạng, Gmail không phản hồi sau 10 giây).
+     * Gửi email chứa mã xác thực 6 số (dùng cho đăng ký, khôi phục mật khẩu, đổi email...).
      */
     public void sendVerificationCode(String toEmail, String code, int validMinutes, String purpose)
             throws EmailSendException {
@@ -90,14 +57,7 @@ public class EmailGateway {
     }
 
     /**
-     * Gửi 1 thông báo ngắn 1 đoạn văn.
-     *
-     * Dùng khi: báo cho email CŨ biết email đăng nhập vừa bị đổi (UC-04, CBR-29).
-     *
-     * @param toEmail      email người nhận, VD email cũ "an.nguyen95@gmail.com".
-     * @param subject      tiêu đề KHÔNG kèm "[Super Gym]" (hàm tự thêm), VD "Email đăng nhập đã thay đổi".
-     * @param plainMessage nội dung 1 đoạn chữ thường, VD "Email đăng nhập của bạn vừa được đổi sang …".
-     * @throws EmailSendException khi không gửi được.
+     * Gửi thông báo ngắn 1 đoạn (VD báo cho email cũ khi bị đổi).
      */
     public void sendNotice(String toEmail, String subject, String plainMessage) throws EmailSendException {
         // Nội dung HTML chỉ là 1 đoạn <p>, đã escape; bản chữ thường giữ nguyên
@@ -178,7 +138,8 @@ public class EmailGateway {
 
         } catch (MessagingException | UnsupportedEncodingException e) {
             // B7: in lỗi thật cho dev xem, rồi ném EmailSendException để Service quyết định báo gì với khách
-            e.printStackTrace();
+            e.printStackTrace(); // B7: in lỗi thật cho dev xem, rồi ném EmailSendException để Service quyết định báo gì với khách
+
             throw new EmailSendException("Gửi email tới " + toEmail + " thất bại", e);
         }
     }

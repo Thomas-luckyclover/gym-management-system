@@ -41,7 +41,7 @@ public class AccountSettingsService {
                 personDAO = new PersonDAO();
                 employeeDAO = new EmployeeDAO();
                 auditLogService = new AuditLogService();
-        }
+    }
 
         /**
          * Lấy thông tin tài khoản và hồ sơ của người dùng hiện tại.

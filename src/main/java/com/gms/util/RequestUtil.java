@@ -29,10 +29,7 @@ public final class RequestUtil {
     // ===== Đọc tham số =====
 
     /**
-     * Đọc tham số dạng chuỗi, đã trim (GBR-19: từ khóa luôn được trim).
-     * @param request request hiện tại
-     * @param name tên tham số
-     * @return chuỗi đã trim, hoặc null nếu không gửi lên
+     * Đọc tham số dạng chuỗi (đã trim). Trả null nếu không gửi lên.
      */
     public static String getTrimmedParam(HttpServletRequest request, String name) {
         String value = request.getParameter(name);
@@ -43,11 +40,7 @@ public final class RequestUtil {
     }
 
     /**
-     * Đọc tham số dạng số nguyên, sai định dạng thì dùng giá trị mặc định.
-     * @param request request hiện tại
-     * @param name tên tham số
-     * @param defaultValue giá trị khi thiếu/sai
-     * @return số nguyên
+     * Đọc tham số dạng số nguyên. Sai/không có thì trả defaultValue.
      */
     public static int getIntParam(HttpServletRequest request, String name, int defaultValue) {
         String value = request.getParameter(name);
@@ -60,10 +53,7 @@ public final class RequestUtil {
     // ===== Điều hướng =====
 
     /**
-     * Forward tới JSP trong WEB-INF/jsp.
-     * @param request request hiện tại
-     * @param response response hiện tại
-     * @param viewName đường dẫn tương đối, không đuôi .jsp — VD "customer/dashboard"
+     * Forward tới JSP trong WEB-INF/jsp (đường dẫn không kèm đuôi .jsp).
      */
     public static void forward(HttpServletRequest request, HttpServletResponse response, String viewName)
             throws ServletException, IOException {
@@ -72,10 +62,7 @@ public final class RequestUtil {
     }
 
     /**
-     * Redirect tới 1 đường dẫn trong ứng dụng (tự gắn context path ở đầu).
-     * @param request request hiện tại
-     * @param response response hiện tại
-     * @param path đường dẫn tính từ context path — VD "/customer/dashboard"
+     * Redirect tới đường dẫn trong ứng dụng (hàm tự gắn context path).
      */
     public static void redirect(HttpServletRequest request, HttpServletResponse response, String path)
             throws IOException {
@@ -85,10 +72,7 @@ public final class RequestUtil {
     // ===== Toast qua redirect (Post/Redirect/Get) =====
 
     /**
-     * Gắn toast để trang KẾ TIẾP (sau redirect) hiển thị — JSP include common/flash-toast.jspf sẽ hiện rồi xóa.
-     * @param request request hiện tại
-     * @param type "success" | "info" | "warning" | "error"
-     * @param message nội dung thông báo
+     * Gắn toast để trang KẾ TIẾP (sau redirect) hiển thị rồi tự xoá.
      */
     public static void setFlashToast(HttpServletRequest request, String type, String message) {
         Map<String, String> toast = new LinkedHashMap<>();
@@ -102,8 +86,6 @@ public final class RequestUtil {
 
     /**
      * Request có phải gọi bằng AJAX (qua js/common.js) không — Filter dùng để trả JSON 401/403 thay vì redirect.
-     * @param request request hiện tại
-     * @return true nếu là AJAX
      */
     public static boolean isAjaxRequest(HttpServletRequest request) {
         String headerValue = request.getHeader(AJAX_HEADER);
@@ -111,9 +93,7 @@ public final class RequestUtil {
     }
 
     /**
-     * Đường dẫn request tính từ context path, VD "/customer/dashboard".
-     * @param request request hiện tại
-     * @return đường dẫn không gồm context path
+     * Đường dẫn request tính từ context path (không gồm context path).
      */
     public static String getPathWithinApp(HttpServletRequest request) {
         String uri = request.getRequestURI();
@@ -122,10 +102,7 @@ public final class RequestUtil {
     }
 
     /**
-     * GBR-31: kiểm tra returnUrl an toàn trước khi redirect về sau đăng nhập — chỉ cho phép đường dẫn nội bộ,
-     * chặn kiểu "https://trang-lua-dao.com" hoặc "//trang-lua-dao.com" (lỗ hổng Open Redirect).
-     * @param returnUrl giá trị lấy từ tham số returnUrl
-     * @return true nếu là đường dẫn nội bộ hợp lệ, VD "/customer/bookings?page=2"
+     * Kiểm tra returnUrl có phải đường dẫn nội bộ an toàn không (chặn open redirect tới trang lừa đảo).
      */
     public static boolean isSafeReturnUrl(String returnUrl) {
         if (ValidationUtil.isNullOrEmpty(returnUrl)) {
@@ -138,10 +115,8 @@ public final class RequestUtil {
     }
 
     /**
-     * Lấy IP thật của người dùng — VNPay bắt buộc gửi vnp_IpAddr.
-     * Nếu chạy sau proxy (ngrok khi test IPN) thì IP thật nằm ở header X-Forwarded-For.
-     * @param request request hiện tại
-     * @return địa chỉ IP
+     * Lấy IP thật của người dùng (VNPay bắt buộc gửi vnp_IpAddr).
+     * Nếu chạy sau proxy thì IP nằm ở header X-Forwarded-For.
      */
     public static String getClientIp(HttpServletRequest request) {
         String forwardedFor = request.getHeader("X-Forwarded-For");

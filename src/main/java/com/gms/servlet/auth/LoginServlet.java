@@ -20,20 +20,10 @@ import jakarta.servlet.http.HttpSession;
 import java.io.IOException;
 
 /**
- * Servlet đăng nhập hệ thống (#1 Sign In, /login).
+ * Servlet xử lý đăng nhập hệ thống (URL /login).
  *
- * <p>
- * Quy trình:
- * </p>
- * <ul>
- * <li>doGet: Nếu đã đăng nhập -> chuyển về trang chính của vai trò. Nếu chưa ->
- * hiển thị form đăng nhập.</li>
- * <li>doPost: Đọc tham số identifier & password -> gọi AuthService.login.</li>
- * <li>Thành công: đổi session id (chống Session Fixation), lưu accountId, role,
- * displayName, set timeout 7200s -> redirect.</li>
- * <li>Thất bại: nếu AJAX -> trả JsonResponse.from(result); nếu Form submit ->
- * set attribute & forward lại JSP.</li>
- * </ul>
+ * <p>doGet: nếu đã đăng nhập chuyển về trang chủ của vai trò; nếu chưa thì hiện form đăng nhập.</p>
+ * <p>doPost: xác thực tài khoản; thành công thì tạo session mới, lưu vai trò và chuyển trang, thất bại thì trả lại form kèm lỗi.</p>
  */
 @WebServlet("/login")
 public class LoginServlet extends HttpServlet {
@@ -48,6 +38,9 @@ public class LoginServlet extends HttpServlet {
         this.authService = authService;
     }
 
+    /**
+     * GET /login — mở form đăng nhập; nếu đã đăng nhập thì chuyển về trang chính của vai trò hiện tại.
+     */
     @Override
     protected void doGet(HttpServletRequest request, HttpServletResponse response)
             throws ServletException, IOException {
@@ -68,6 +61,9 @@ public class LoginServlet extends HttpServlet {
         RequestUtil.forward(request, response, "auth/login");
     }
 
+    /**
+     * POST /login — xác thực identifier + password. Thành công thì chuyển trang, thất bại thì báo lỗi lại form.
+     */
     @Override
     protected void doPost(HttpServletRequest request, HttpServletResponse response)
             throws ServletException, IOException {

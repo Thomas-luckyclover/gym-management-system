@@ -12,18 +12,20 @@ import jakarta.servlet.http.HttpServletResponse;
 import java.io.IOException;
 
 /**
- * Trang chủ (#5 Home, UC-06). Công khai — AuthFilter đã cho "" và "/" đi qua.
+ * Servlet xử lý trang chủ công khai (URL "" — root context, GET /).
  *
- * @WebServlet("") = đúng địa chỉ gốc của web, VD http://localhost:8080/
- * (KHÔNG dùng "/" — "/" sẽ nuốt cả file css/js/ảnh)
- *
- * @author Le Cong Minh
+ * <p>Nạp dữ liệu tổng quan (gói tập, huấn luyện viên, blog nổi bật…) rồi forward sang JSP /WEB-INF/views/guest/home.jsp.</p>
  */
 @WebServlet("")
 public class HomeServlet extends HttpServlet {
 
     private final HomeService homeService = new HomeService();
 
+    // ===== GET: Trang chủ =====
+
+    /**
+     * GET / — mở trang chủ; gọi HomeService lấy dữ liệu, lỗi Service thì trả 500.
+     */
     @Override
     protected void doGet(HttpServletRequest request, HttpServletResponse response)
             throws ServletException, IOException {

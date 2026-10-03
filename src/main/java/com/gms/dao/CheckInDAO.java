@@ -55,6 +55,9 @@ public class CheckInDAO {
 
     // ===== Ghi nhận lượt Check-in =====
 
+    /**
+     * Ghi một lượt check-in mới dùng Connection có sẵn (dùng trong transaction).
+     */
     public int insertCheckIn(Connection conn, CheckIn checkIn) throws SQLException {
         String sql = "INSERT INTO CheckIns (SubscriptionId, VerifiedByEmployeeId, CheckedInAt, PhotoVerified) "
                 + "VALUES (?, ?, ?, ?)";
@@ -82,6 +85,9 @@ public class CheckInDAO {
         throw new SQLException("Thêm CheckIn thất bại, không nhận được CheckInId");
     }
 
+    /**
+     * Ghi một lượt check-in mới bằng Connection riêng.
+     */
     public int insertCheckIn(CheckIn checkIn) throws SQLException {
         try (Connection conn = DBContext.getConnection()) {
             return insertCheckIn(conn, checkIn);
@@ -99,6 +105,9 @@ public class CheckInDAO {
         }
     }
 
+    /**
+     * Đánh dấu vé ngày đã sử dụng, dùng Connection riêng.
+     */
     public void markSubscriptionUsed(int subscriptionId) throws SQLException {
         try (Connection conn = DBContext.getConnection()) {
             markSubscriptionUsed(conn, subscriptionId);
@@ -107,6 +116,9 @@ public class CheckInDAO {
 
     // ===== Tra cứu thông tin hồ sơ cho Check-in =====
 
+    /**
+     * Tra cứu Customer theo mã KH hoặc số điện thoại (Lễ tân dùng mã QR / nhập SĐT).
+     */
     public CustomerLookupInfo findCustomerByKeyword(String keyword) throws SQLException {
         String sql = "SELECT cust.CustomerId, cust.PersonId, cust.CustomerCode, cust.CheckInPhoto, "
                 + "cust.CustomerType, cust.Status AS CustomerStatus, p.FullName, p.Phone, p.Avatar "
@@ -139,6 +151,9 @@ public class CheckInDAO {
         return null;
     }
 
+    /**
+     * Kiểm tra Customer có yêu cầu xóa hồ sơ đang chờ duyệt không (chặn check-in nếu đang chờ xóa).
+     */
     public boolean hasPendingDeletionRequest(int customerId) throws SQLException {
         String sql = "SELECT COUNT(*) FROM CustomerDeletionRequests WHERE CustomerId = ? AND Status = 'Pending'";
         try (Connection conn = DBContext.getConnection();
@@ -153,6 +168,9 @@ public class CheckInDAO {
         return false;
     }
 
+    /**
+     * Lấy danh sách gói/quyền dùng của 1 Customer, xếp Active trước rồi đến Frozen, các trạng thái khác cuối.
+     */
     public List<CustomerSubscriptionInfo> findSubscriptionsByCustomerId(int customerId) throws SQLException {
         String sql = "SELECT s.SubscriptionId, s.OrderId, s.CustomerId, s.SubscriptionType, s.PtEmployeeId, "
                 + "s.StartDate, s.EndDate, s.GeneratedSessionCount, s.Status, "
@@ -198,6 +216,9 @@ public class CheckInDAO {
         return list;
     }
 
+    /**
+     * Lấy ngày dự kiến kết thúc bảo lưu gần nhất (còn hiệu lực) của 1 Subscription, phục vụ cảnh báo "đang bảo lưu đến ngày X".
+     */
     public LocalDate getPlannedFreezeEndDate(int subscriptionId) throws SQLException {
         String sql = "SELECT TOP 1 PlannedEndDate FROM FreezeRecords "
                 + "WHERE SubscriptionId = ? AND ActualEndDate IS NULL "
@@ -217,6 +238,9 @@ public class CheckInDAO {
         return null;
     }
 
+    /**
+     * Kiểm tra vé ngày đã được dùng trong hôm nay chưa (chặn check-in trùng vé 1 ngày).
+     */
     public boolean isDayPassUsedToday(int subscriptionId) throws SQLException {
         String sql = "SELECT COUNT(*) FROM CheckIns "
                 + "WHERE SubscriptionId = ? AND CAST(CheckedInAt AS DATE) = CAST(SYSDATETIME() AS DATE)";
@@ -234,6 +258,9 @@ public class CheckInDAO {
         return false;
     }
 
+    /**
+     * Cập nhật ảnh xác minh check-in cho Customer (lưu đường dẫn ảnh mới nhất).
+     */
     public boolean updateCheckInPhoto(int customerId, String photoPath) throws SQLException {
         String sql = "UPDATE Customers SET CheckInPhoto = ? WHERE CustomerId = ?";
         try (Connection conn = DBContext.getConnection();
@@ -246,6 +273,9 @@ public class CheckInDAO {
 
     // ===== Lịch sử Check-in ca này / hôm nay =====
 
+    /**
+     * Lấy danh sách các lượt check-in trong ngày hôm nay (phục vụ panel "Lễ tân" theo dõi ca làm việc).
+     */
     public List<CheckInLogItem> findTodayCheckIns(int limit) throws SQLException {
         String sql = "SELECT TOP (?) c.CheckInId, c.CheckedInAt, p.FullName, cust.CustomerCode, pkg.PackageName, c.PhotoVerified "
                 + "FROM CheckIns c "

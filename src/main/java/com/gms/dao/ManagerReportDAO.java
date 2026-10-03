@@ -38,9 +38,7 @@ public class ManagerReportDAO {
             + "AND t.CompletedAt >= ? AND t.CompletedAt < ? ";
 
     /**
-     * Tổng doanh thu và tổng VAT trong khoảng.
-     *
-     * @return mảng {doanh thu, VAT}
+     * Tổng doanh thu và tổng VAT trong khoảng (chỉ tính giao dịch Success của đơn không Cancelled).
      */
     public long[] sumRevenueAndVat(Connection conn, LocalDateTime start, LocalDateTime endExclusive)
             throws SQLException {
