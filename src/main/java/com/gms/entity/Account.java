@@ -47,17 +47,13 @@ public class Account {
         }
 
         /**
-         * Chuyển giá trị chuỗi từ DB thành enum Status.
-         * 
-         * @param dbValue giá trị trong DB (VD "Active")
-         * @return Status tương ứng, hoặc null nếu không khớp
+         * Chuyển chuỗi trong DB thành enum Status.
+         * @param dbValue giá trị cột Status
+         * @return Status khớp đúng từng ký tự, hoặc null nếu không khớp
          */
         public static Status fromDbValue(String dbValue) {
-            if (dbValue == null) {
-                return null;
-            }
             for (Status status : values()) {
-                if (status.dbValue.equalsIgnoreCase(dbValue)) {
+                if (status.dbValue.equals(dbValue)) {
                     return status;
                 }
             }
