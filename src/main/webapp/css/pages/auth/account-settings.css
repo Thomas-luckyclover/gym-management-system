@@ -585,6 +585,30 @@ body.dock {
 }
 
 /* =========================
+   COUNTDOWN TIMER
+   ========================= */
+
+.account-countdown-wrap {
+    display: inline-flex;
+    align-items: center;
+    gap: var(--space-2);
+    margin-top: var(--space-2);
+    font-size: var(--font-size-sm);
+    color: var(--color-text-subtle);
+}
+
+.account-countdown-wrap .countdown-badge {
+    font-variant-numeric: tabular-nums;
+    font-weight: var(--font-weight-bold);
+    color: var(--color-warning-dark, #b45309);
+    background: var(--color-warning-tint, rgba(245, 158, 11, 0.12));
+    border: 1px solid var(--color-warning-border, rgba(245, 158, 11, 0.3));
+    padding: 2px 8px;
+    border-radius: var(--radius-xs, 4px);
+    letter-spacing: 0.05em;
+}
+
+/* =========================
    TAB: HỒ SƠ PHỤ THUỘC
    ========================= */
 
@@ -688,4 +712,4 @@ body.dock {
     margin: 0;
     font-weight: var(--font-weight-medium);
     color: var(--color-text);
-}
+}

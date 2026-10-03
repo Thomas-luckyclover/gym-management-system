@@ -19,9 +19,14 @@ import jakarta.servlet.http.Part;
 import com.gms.service.AuditLogService;
 import com.gms.service.ContactChangeService;
 import com.gms.service.ContactChangeService.ContactField;
+import com.gms.dao.VerificationCodeDAO;
+import com.gms.entity.VerificationCode;
+import com.gms.util.DateTimeUtil;
 import java.io.InputStream;
 import java.nio.file.Path;
 import java.io.IOException;
+import java.time.Duration;
+import java.time.LocalDateTime;
 
 /**
  * Controller cho Account Settings dùng chung mọi vai trò.
@@ -49,6 +54,7 @@ public class AccountSettingsServlet extends HttpServlet {
         private final ContactChangeService contactChangeService = new ContactChangeService();
 
         private final AuditLogService auditLogService = new AuditLogService();
+        private final VerificationCodeDAO verificationCodeDAO = new VerificationCodeDAO();
 
         @Override
         protected void doGet(
@@ -352,7 +358,8 @@ public class AccountSettingsServlet extends HttpServlet {
                                 "contactVerificationPending",
                                 true);
 
-                // Receptionist/Manager JSP dùng cờ requireVerification, Admin JSP dùng contactVerificationPending
+                // Receptionist/Manager JSP dùng cờ requireVerification, Admin JSP dùng
+                // contactVerificationPending
                 request.setAttribute(
                                 "requireVerification",
                                 true);
@@ -376,6 +383,22 @@ public class AccountSettingsServlet extends HttpServlet {
                 request.setAttribute(
                                 "formMessage",
                                 message);
+
+                long codeSecondsLeft = 900;
+                try {
+                        VerificationCode latestCode = verificationCodeDAO.findLatestByEmailAndPurpose(
+                                        verificationEmail,
+                                        VerificationCode.Purpose.EMAIL_CHANGE);
+                        if (latestCode != null && latestCode.getExpiresAt() != null) {
+                                LocalDateTime now = DateTimeUtil.now();
+                                codeSecondsLeft = Math.max(0, Duration.between(now, latestCode.getExpiresAt()).getSeconds());
+                        }
+                } catch (Exception ignored) {
+                }
+
+                request.setAttribute(
+                                "codeSecondsLeft",
+                                codeSecondsLeft);
 
                 request.setAttribute(
                                 "activeTab",
