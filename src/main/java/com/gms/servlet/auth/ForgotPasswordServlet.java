@@ -58,14 +58,14 @@ public class ForgotPasswordServlet extends HttpServlet {
             throws ServletException, IOException {
         HttpSession session = request.getSession();
 
-        // B1: khách bấm "Dùng email khác" (?restart=1) → xóa tiến độ, quay về bước nhập email
+        // TH1: khách bấm "Dùng email khác" (?restart=1) → xóa tiến độ, quay về bước nhập email
         if ("1".equals(request.getParameter("restart"))) {
             clearRecovery(session);
             RequestUtil.redirect(request, response, "/forgot-password");
             return;
         }
 
-        // B2: khách vừa bấm Đặt mật khẩu ở màn Đăng nhập (MSG38, LoginServlet để email trong session)
+        // TH2: khách vừa bấm Đặt mật khẩu ở màn Đăng nhập (MSG38, LoginServlet để email trong session)
         //     → lấy email đó ra điền sẵn vào ô, rồi XÓA khỏi session ngay (chỉ dùng 1 lần: bấm F5 là ô trống lại).
         //     Đồng thời bỏ tiến độ cũ để chắc chắn đang ở bước "email".
         //     KHÔNG tự gửi mã: khách phải tự bấm "Gửi mã" → luật chống gửi liên tục (60 giây, 5 lần/giờ) vẫn áp dụng.
