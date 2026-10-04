@@ -1,6 +1,7 @@
 package com.gms.service;
 
 import com.gms.constant.Messages;
+import com.gms.constant.Role;
 import com.gms.dao.AuditLogDAO;
 import com.gms.dto.ServiceResult;
 import com.gms.entity.AuditLog;
@@ -75,6 +76,70 @@ public class AuditLogService {
                     Messages.MSG04_SYSTEM_BUSY
             );
         }
+    }
+
+    /**
+     * Ghi một thao tác nhạy cảm kèm vai trò đang dùng (CBR-112).
+     *
+     * @param accountId tài khoản thực hiện
+     * @param actingRole vai trò đang dùng khi thao tác
+     * @param action mô tả thao tác dạng câu đọc được
+     * @param entityName tên đối tượng bị tác động
+     * @param entityId id đối tượng bị tác động
+     * @param fieldChanged trường bị thay đổi
+     * @param oldValue giá trị cũ
+     * @param newValue giá trị mới
+     * @param reason lý do nếu có
+     * @return kết quả ghi nhật ký
+     */
+    public ServiceResult<Void> log(
+            Integer accountId,
+            Role actingRole,
+            String action,
+            String entityName,
+            Integer entityId,
+            String fieldChanged,
+            String oldValue,
+            String newValue,
+            String reason
+    ) {
+
+        // B1: tạo AuditLog có actingRole (CBR-112)
+        // B2: ghi qua AuditLogDAO
+        throw new UnsupportedOperationException("TODO");
+    }
+
+    /**
+     * Ghi AuditLog kèm vai trò đang dùng trong transaction đang có.
+     *
+     * @param conn connection của transaction hiện tại
+     * @param accountId tài khoản thực hiện
+     * @param actingRole vai trò đang dùng khi thao tác
+     * @param action mô tả thao tác
+     * @param entityName tên đối tượng
+     * @param entityId id đối tượng
+     * @param fieldChanged trường bị thay đổi
+     * @param oldValue giá trị cũ
+     * @param newValue giá trị mới
+     * @param reason lý do nếu có
+     * @throws SQLException khi không ghi được AuditLog
+     */
+    void logInTransaction(
+            Connection conn,
+            Integer accountId,
+            Role actingRole,
+            String action,
+            String entityName,
+            Integer entityId,
+            String fieldChanged,
+            String oldValue,
+            String newValue,
+            String reason
+    ) throws SQLException {
+
+        // B1: tạo AuditLog có actingRole (CBR-112)
+        // B2: ghi qua AuditLogDAO cùng connection
+        throw new UnsupportedOperationException("TODO");
     }
 
     /**

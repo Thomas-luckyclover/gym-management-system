@@ -1,5 +1,6 @@
 package com.gms.dao;
 
+import com.gms.dto.DependentCustomerRow;
 import com.gms.entity.Customer;
 import com.gms.util.DBContext;
 import java.sql.Connection;
@@ -8,6 +9,7 @@ import java.sql.ResultSet;
 import java.sql.SQLException;
 import java.sql.Statement;
 import java.sql.Timestamp;
+import java.util.List;
 
 /**
  * Xử lý truy vấn dữ liệu bảng Customers.
@@ -122,6 +124,22 @@ public class CustomerDAO {
             }
         }
         return null;
+    }
+
+    // ===== Hồ sơ phụ thuộc (CBR-33) =====
+
+    /**
+     * Lấy các hồ sơ Dependent theo SĐT người giám hộ.
+     * @param guardianPhone SĐT giám hộ chính hoặc giám hộ thứ 2
+     * @return danh sách dòng dữ liệu thô, rỗng nếu không có hồ sơ nào
+     * @throws SQLException khi truy vấn gặp lỗi
+     */
+    public List<DependentCustomerRow> findDependentsByGuardianPhone(String guardianPhone) throws SQLException {
+        // B1: chọn Dependent có GuardianPhone hoặc GuardianPhone2 khớp (CBR-33)
+        // B2: loại hồ sơ Inactive
+        // B3: ghép gói còn hiệu lực mới nhất
+        // B4: ánh xạ từng dòng sang DependentCustomerRow
+        throw new UnsupportedOperationException("TODO");
     }
 
     // ===== Sinh mã khách hàng tự động (DBR-09) =====

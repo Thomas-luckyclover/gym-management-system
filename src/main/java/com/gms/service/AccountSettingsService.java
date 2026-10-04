@@ -6,6 +6,7 @@ import com.gms.dao.AccountDAO;
 import com.gms.dao.EmployeeDAO;
 import com.gms.dao.PersonDAO;
 import com.gms.dto.AccountSettingsView;
+import com.gms.dto.DependentCustomerView;
 import com.gms.dto.ServiceResult;
 import com.gms.entity.Account;
 import com.gms.entity.Employee;
@@ -24,6 +25,7 @@ import java.io.InputStream;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.StandardCopyOption;
+import java.util.List;
 import java.util.UUID;
 
 /**
@@ -117,6 +119,25 @@ public class AccountSettingsService {
                         return ServiceResult.fail(
                                         Messages.MSG04_SYSTEM_BUSY);
                 }
+        }
+
+        /**
+         * Lấy danh sách hồ sơ phụ thuộc mà người dùng đang là giám hộ.
+         *
+         * @param accountId   id tài khoản đang đăng nhập
+         * @param sessionRole vai trò đang dùng trong session
+         * @return danh sách hồ sơ phụ thuộc, rỗng nếu không phải Customer
+         */
+        public ServiceResult<List<DependentCustomerView>> getDependents(
+                        int accountId,
+                        Role sessionRole) {
+
+                // B1: chỉ vai trò Customer được xem (CBR-112)
+                // B2: lấy SĐT người giám hộ từ Person
+                // B3: gọi CustomerDAO tìm Dependent theo SĐT (CBR-33)
+                // B4: đọc ngưỡng tuổi P-05 từ SystemConfigService
+                // B5: dựng DependentCustomerView cho từng hồ sơ
+                throw new UnsupportedOperationException("TODO");
         }
 
         /**
