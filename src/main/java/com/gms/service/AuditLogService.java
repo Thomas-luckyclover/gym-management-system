@@ -104,9 +104,38 @@ public class AuditLogService {
             String reason
     ) {
 
-        // B1: tạo AuditLog có actingRole (CBR-112)
-        // B2: ghi qua AuditLogDAO
-        throw new UnsupportedOperationException("TODO");
+        try {
+            AuditLog auditLog =
+                    createAuditLog(
+                            accountId,
+                            actingRole,
+                            action,
+                            entityName,
+                            entityId,
+                            fieldChanged,
+                            oldValue,
+                            newValue,
+                            reason
+                    );
+
+            boolean isInserted =
+                    auditLogDAO.insert(auditLog);
+
+            if (!isInserted) {
+                return ServiceResult.fail(
+                        Messages.MSG04_SYSTEM_BUSY
+                );
+            }
+
+            return ServiceResult.ok(null);
+
+        } catch (SQLException e) {
+            e.printStackTrace();
+
+            return ServiceResult.fail(
+                    Messages.MSG04_SYSTEM_BUSY
+            );
+        }
     }
 
     /**
@@ -137,9 +166,30 @@ public class AuditLogService {
             String reason
     ) throws SQLException {
 
-        // B1: tạo AuditLog có actingRole (CBR-112)
-        // B2: ghi qua AuditLogDAO cùng connection
-        throw new UnsupportedOperationException("TODO");
+        AuditLog auditLog =
+                createAuditLog(
+                        accountId,
+                        actingRole,
+                        action,
+                        entityName,
+                        entityId,
+                        fieldChanged,
+                        oldValue,
+                        newValue,
+                        reason
+                );
+
+        boolean isInserted =
+                auditLogDAO.insert(
+                        conn,
+                        auditLog
+                );
+
+        if (!isInserted) {
+            throw new SQLException(
+                    "Không thể ghi AuditLog."
+            );
+        }
     }
 
     /**
@@ -204,6 +254,34 @@ public class AuditLogService {
             String reason
     ) {
 
+        return createAuditLog(
+                accountId,
+                null,
+                action,
+                entityName,
+                entityId,
+                fieldChanged,
+                oldValue,
+                newValue,
+                reason
+        );
+    }
+
+    /**
+     * Tạo AuditLog entity kèm actingRole, ẩn giá trị nhạy cảm.
+     */
+    private AuditLog createAuditLog(
+            Integer accountId,
+            Role actingRole,
+            String action,
+            String entityName,
+            Integer entityId,
+            String fieldChanged,
+            String oldValue,
+            String newValue,
+            String reason
+    ) {
+
         String safeOldValue = oldValue;
         String safeNewValue = newValue;
 
@@ -214,6 +292,7 @@ public class AuditLogService {
 
         return new AuditLog(
                 accountId,
+                actingRole,
                 action,
                 entityName,
                 entityId,
