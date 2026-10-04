@@ -1,5 +1,6 @@
 package com.gms.entity;
 
+import com.gms.constant.Role;
 import java.time.LocalDateTime;
 
 /**
@@ -9,6 +10,7 @@ public class AuditLog {
 
     private final int auditLogId;
     private final Integer accountId;
+    private final Role actingRole;
     private final String action;
     private final String entityName;
     private final Integer entityId;
@@ -17,6 +19,32 @@ public class AuditLog {
     private final String newValue;
     private final String reason;
     private final LocalDateTime createdAt;
+
+    public AuditLog(
+            int auditLogId,
+            Integer accountId,
+            Role actingRole,
+            String action,
+            String entityName,
+            Integer entityId,
+            String fieldChanged,
+            String oldValue,
+            String newValue,
+            String reason,
+            LocalDateTime createdAt
+    ) {
+        this.auditLogId = auditLogId;
+        this.accountId = accountId;
+        this.actingRole = actingRole;
+        this.action = action;
+        this.entityName = entityName;
+        this.entityId = entityId;
+        this.fieldChanged = fieldChanged;
+        this.oldValue = oldValue;
+        this.newValue = newValue;
+        this.reason = reason;
+        this.createdAt = createdAt;
+    }
 
     public AuditLog(
             int auditLogId,
@@ -30,16 +58,45 @@ public class AuditLog {
             String reason,
             LocalDateTime createdAt
     ) {
-        this.auditLogId = auditLogId;
-        this.accountId = accountId;
-        this.action = action;
-        this.entityName = entityName;
-        this.entityId = entityId;
-        this.fieldChanged = fieldChanged;
-        this.oldValue = oldValue;
-        this.newValue = newValue;
-        this.reason = reason;
-        this.createdAt = createdAt;
+        this(
+                auditLogId,
+                accountId,
+                null,
+                action,
+                entityName,
+                entityId,
+                fieldChanged,
+                oldValue,
+                newValue,
+                reason,
+                createdAt
+        );
+    }
+
+    public AuditLog(
+            Integer accountId,
+            Role actingRole,
+            String action,
+            String entityName,
+            Integer entityId,
+            String fieldChanged,
+            String oldValue,
+            String newValue,
+            String reason
+    ) {
+        this(
+                0,
+                accountId,
+                actingRole,
+                action,
+                entityName,
+                entityId,
+                fieldChanged,
+                oldValue,
+                newValue,
+                reason,
+                null
+        );
     }
 
     public AuditLog(
@@ -55,6 +112,7 @@ public class AuditLog {
         this(
                 0,
                 accountId,
+                null,
                 action,
                 entityName,
                 entityId,
@@ -72,6 +130,10 @@ public class AuditLog {
 
     public Integer getAccountId() {
         return accountId;
+    }
+
+    public Role getActingRole() {
+        return actingRole;
     }
 
     public String getAction() {
