@@ -1,8 +1,10 @@
 package com.gms.dto;
 
+import com.gms.util.DateTimeUtil;
 import java.time.LocalDate;
 import java.time.LocalDateTime;
 import java.time.LocalTime;
+import java.time.temporal.ChronoUnit;
 import java.util.List;
 
 /**
@@ -66,6 +68,62 @@ public class CustomerDashboardView {
     public List<SubscriptionRow> getSubscriptions() { return subscriptions; }
     public List<UpcomingSessionRow> getUpcomingSessions() { return upcomingSessions; }
     public List<BannerItem> getBanners() { return banners; }
+
+    // ===== Helper methods cho JSP =====
+
+    /**
+     * Lấy 2 ký tự đầu để hiện avatar khi không có ảnh.
+     * Tên Việt: lấy chữ cái đầu của họ (phần đầu) và tên (phần cuối).
+     * VD: "Nguyễn Minh An" → "NA".
+     */
+    public String getInitials() {
+        if (fullName == null || fullName.isBlank()) return "?";
+        String[] parts = fullName.trim().split("\\s+");
+        if (parts.length == 1) {
+            return parts[0].substring(0, 1).toUpperCase();
+        }
+        return (parts[0].substring(0, 1) + parts[parts.length - 1].substring(0, 1)).toUpperCase();
+    }
+
+    /**
+     * Trạng thái hồ sơ hiển thị tiếng Việt (GBR-01: trạng thái lưu tiếng Anh, hiển thị tiếng Việt).
+     */
+    public String getCustomerStatusLabel() {
+        if (customerStatus == null) return "";
+        switch (customerStatus) {
+            case "New":     return "Mới";
+            case "Active":  return "Đang hoạt động";
+            case "Frozen":  return "Đang bảo lưu";
+            case "Expired": return "Hết hạn";
+            default:        return customerStatus;
+        }
+    }
+
+    /**
+     * Tìm gói Membership (hoặc DayPass) đang Active để hiện trên Hero card.
+     * @return gói tập chính đang active, hoặc null nếu không có.
+     */
+    public SubscriptionRow getActiveMembership() {
+        if (subscriptions == null) return null;
+        for (SubscriptionRow sub : subscriptions) {
+            if (!sub.isPtPackage() && "Active".equals(sub.getStatus())) {
+                return sub;
+            }
+        }
+        return null;
+    }
+
+    /**
+     * Kiểm tra khách có banner nào loại "danger" (đỏ) không — dùng để tô viền hero card.
+     */
+    public boolean hasAnyDangerBanner() {
+        if (banners == null) return false;
+        for (BannerItem b : banners) {
+            if ("danger".equals(b.getLevel())) return true;
+        }
+        return false;
+    }
+
 
     public static class SubscriptionRow {
 
@@ -132,7 +190,49 @@ public class CustomerDashboardView {
 
         /** Gói chưa bắt đầu (nối tiếp, DBR-52): startDate > today. */
         public boolean isPending() {
-            return startDate != null && startDate.isAfter(LocalDate.now());
+            return startDate != null && startDate.isAfter(DateTimeUtil.today());
+        }
+
+        /**
+         * Số ngày còn lại tính từ hôm nay đến ngày kết thúc (GBR-03: endDate là ngày cuối còn dùng).
+         * Trả về 0 nếu đã hết hạn hoặc thông tin thiếu.
+         */
+        public long getDaysRemaining() {
+            if (endDate == null) return 0;
+            long days = ChronoUnit.DAYS.between(DateTimeUtil.today(), endDate);
+            return Math.max(days, 0);
+        }
+
+        /**
+         * Nhãn loại gói tiếng Việt (GBR-01).
+         */
+        public String getSubscriptionTypeLabel() {
+            if (subscriptionType == null) return "";
+            switch (subscriptionType) {
+                case "Membership":    return "Gói tập";
+                case "DayPass":       return "Vé ngày";
+                case "PTSingle":      return "Gói PT cá nhân";
+                case "PTCouple":      return "Gói PT đôi";
+                case "SingleSession": return "Buổi lẻ";
+                default:              return subscriptionType;
+            }
+        }
+
+        /**
+         * Nhãn trạng thái gói tiếng Việt (GBR-01).
+         */
+        public String getStatusLabel() {
+            if (status == null) return "";
+            switch (status) {
+                case "Active":    return "Đang dùng";
+                case "Frozen":    return "Đang bảo lưu";
+                case "Pending":   return "Chưa bắt đầu";
+                case "Expired":   return "Hết hạn";
+                case "Cancelled": return "Đã hủy";
+                case "Used":      return "Đã dùng";
+                case "Completed": return "Hoàn thành";
+                default:          return status;
+            }
         }
     }
 
