@@ -4,6 +4,7 @@ import com.gms.constant.Messages;
 import com.gms.constant.Role;
 import com.gms.constant.SessionKey;
 import com.gms.dto.AccountSettingsView;
+import com.gms.dto.DependentCustomerView;
 import com.gms.dto.ServiceResult;
 import com.gms.service.AccountSettingsService;
 import com.gms.service.ContactChangeService;
@@ -881,6 +882,24 @@ public class AccountSettingsServlet extends HttpServlet {
                 request.setAttribute(
                                 "accountSettings",
                                 result.getData());
+
+                // Tải danh sách Dependent khi tab là dependents
+                if (TAB_DEPENDENTS.equals(activeTab)) {
+
+                        ServiceResult<java.util.List<DependentCustomerView>>
+                                        depResult =
+                                                        accountSettingsService
+                                                                        .getDependents(
+                                                                                        accountId,
+                                                                                        role);
+
+                        if (depResult.isSuccess()) {
+
+                                request.setAttribute(
+                                                "dependents",
+                                                depResult.getData());
+                        }
+                }
 
                 request.setAttribute(
                                 "currentRole",
