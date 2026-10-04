@@ -3,12 +3,16 @@ package com.gms.dao;
 import com.gms.dto.DependentCustomerRow;
 import com.gms.entity.Customer;
 import com.gms.util.DBContext;
+import com.gms.util.DateTimeUtil;
 import java.sql.Connection;
+import java.sql.Date;
 import java.sql.PreparedStatement;
 import java.sql.ResultSet;
 import java.sql.SQLException;
 import java.sql.Statement;
 import java.sql.Timestamp;
+import java.time.LocalDate;
+import java.util.ArrayList;
 import java.util.List;
 
 /**
@@ -135,11 +139,37 @@ public class CustomerDAO {
      * @throws SQLException khi truy vấn gặp lỗi
      */
     public List<DependentCustomerRow> findDependentsByGuardianPhone(String guardianPhone) throws SQLException {
-        // B1: chọn Dependent có GuardianPhone hoặc GuardianPhone2 khớp (CBR-33)
-        // B2: loại hồ sơ Inactive
-        // B3: ghép gói còn hiệu lực mới nhất
-        // B4: ánh xạ từng dòng sang DependentCustomerRow
-        throw new UnsupportedOperationException("TODO");
+        // B1: dựng SQL Dependent kèm gói tập còn hiệu lực (CBR-33)
+        List<DependentCustomerRow> rows = new ArrayList<>();
+
+        String sql = "SELECT c.CustomerCode, p.FullName, p.DateOfBirth, s.PackageName, s.EndDate "
+                + "FROM Customers c JOIN Persons p ON p.PersonId = c.PersonId "
+                + "OUTER APPLY (SELECT TOP 1 o.PackageNameSnapshot AS PackageName, sub.EndDate "
+                + "FROM Subscriptions sub JOIN Orders o ON o.OrderId = sub.OrderId "
+                + "WHERE sub.CustomerId = c.CustomerId AND sub.SubscriptionType = 'Membership' "
+                + "AND sub.Status IN ('Active', 'Frozen') AND sub.EndDate >= ? "
+                + "ORDER BY sub.EndDate DESC) s "
+                + "WHERE c.CustomerType = 'Dependent' AND c.Status <> 'Inactive' "
+                + "AND (c.GuardianPhone = ? OR c.GuardianPhone2 = ?) "
+                + "ORDER BY c.CustomerId";
+
+        // B2: mở kết nối, gán ngày hôm nay và SĐT giám hộ
+        try (Connection conn = DBContext.getConnection();
+             PreparedStatement stmt = conn.prepareStatement(sql)) {
+            stmt.setDate(1, Date.valueOf(DateTimeUtil.today()));
+            stmt.setString(2, guardianPhone);
+            stmt.setString(3, guardianPhone);
+
+            // B3: ánh xạ từng dòng sang DependentCustomerRow
+            try (ResultSet rs = stmt.executeQuery()) {
+                while (rs.next()) {
+                    rows.add(mapResultSetToDependentRow(rs));
+                }
+            }
+        }
+
+        // B4: trả danh sách, rỗng nếu không có hồ sơ phụ thuộc
+        return rows;
     }
 
     // ===== Sinh mã khách hàng tự động (DBR-09) =====
@@ -165,6 +195,23 @@ public class CustomerDAO {
     }
 
     // ===== Hàm hỗ trợ ánh xạ =====
+
+    private DependentCustomerRow mapResultSetToDependentRow(ResultSet rs) throws SQLException {
+        LocalDate dateOfBirth = rs.getDate("DateOfBirth").toLocalDate();
+
+        LocalDate packageEndDate = null;
+        Date endDate = rs.getDate("EndDate");
+        if (endDate != null) {
+            packageEndDate = endDate.toLocalDate();
+        }
+
+        return new DependentCustomerRow(
+                rs.getString("FullName"),
+                rs.getString("CustomerCode"),
+                dateOfBirth,
+                rs.getString("PackageName"),
+                packageEndDate);
+    }
 
     private Customer mapResultSetToCustomer(ResultSet rs) throws SQLException {
         Customer customer = new Customer();
