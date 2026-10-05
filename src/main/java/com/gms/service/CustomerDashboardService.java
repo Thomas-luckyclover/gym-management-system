@@ -100,6 +100,9 @@ public class CustomerDashboardService {
         } catch (SQLException e) {
             e.printStackTrace();
             return ServiceResult.fail(Messages.MSG04_SYSTEM_BUSY);
+        } catch (Exception e) {
+            e.printStackTrace();
+            return ServiceResult.fail(Messages.MSG04_SYSTEM_BUSY);
         }
     }
 
@@ -162,12 +165,12 @@ public class CustomerDashboardService {
     private void buildExpiringSoonBanner(List<SubscriptionRow> subscriptions, LocalDate today,
             List<BannerItem> warningBanners) throws SQLException {
 
-        // B1: đọc P-21, nếu chưa seed thì dùng mặc định 7 ngày
+        // B1: đọc P-21, nếu chưa seed hoặc lỗi đọc thì dùng mặc định 7 ngày
         int expiringSoonDays = DEFAULT_EXPIRING_SOON_DAYS;
         try {
             expiringSoonDays = systemConfigService.getInt(EXPIRING_SOON_DAYS_KEY);
-        } catch (IllegalStateException e) {
-            // P-21 chưa có trong SystemConfigs — dùng mặc định
+        } catch (Exception e) {
+            // P-21 chưa có trong SystemConfigs hoặc lỗi đọc — dùng mặc định 7 ngày
         }
 
         // B2: kiểm tra có gói nối tiếp (chưa bắt đầu) không

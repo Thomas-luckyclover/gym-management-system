@@ -20,7 +20,7 @@ import java.io.IOException;
  * Phân quyền vai trò Customer do CustomerAreaFilter đảm nhiệm (GBR-10); ở đây
  * chỉ kiểm tra lại session để không phụ thuộc hoàn toàn vào filter (GBR-13).
  */
-@WebServlet("/customer/dashboard")
+@WebServlet(urlPatterns = {"/customer/dashboard", "/customer/trang-ca-nhan"})
 public class CustomerDashboardServlet extends HttpServlet {
 
     private static final String VIEW_NAME = "customer/dashboard";
@@ -49,7 +49,7 @@ public class CustomerDashboardServlet extends HttpServlet {
         }
 
         request.setAttribute("activeSidebar", "dashboard");
-        request.setAttribute("themeClass", "theme-customer");
+        request.setAttribute("themeClass", "theme-member");
         RequestUtil.forward(request, response, VIEW_NAME);
     }
 }

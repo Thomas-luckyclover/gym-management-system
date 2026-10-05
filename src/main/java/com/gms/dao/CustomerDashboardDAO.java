@@ -43,12 +43,14 @@ public class CustomerDashboardDAO {
                 + "WHERE CustomerId = ? "
                 + "AND Status = 'Active' "
                 + "AND SubscriptionType IN ('Membership', 'DayPass') "
-                + "AND ? BETWEEN StartDate AND EndDate";
+                + "AND StartDate <= ? AND EndDate >= ?";
 
         try (Connection conn = DBContext.getConnection();
                 PreparedStatement stmt = conn.prepareStatement(sql)) {
             stmt.setInt(1, customerId);
-            stmt.setDate(2, Date.valueOf(DateTimeUtil.today()));
+            Date today = Date.valueOf(DateTimeUtil.today());
+            stmt.setDate(2, today);
+            stmt.setDate(3, today);
             try (ResultSet rs = stmt.executeQuery()) {
                 return rs.next() && rs.getInt(1) > 0;
             }
@@ -77,47 +79,50 @@ public class CustomerDashboardDAO {
      * @throws SQLException lỗi kết nối hoặc lỗi câu SQL.
      */
     public List<SubscriptionRow> findActiveSubscriptions(int customerId) throws SQLException {
-        // Câu SQL chính: người đứng tên gói
-        // Subscriptions không có PackageId — lấy tên gói qua Orders.PackageNameSnapshot
-        String sql = "SELECT sub.SubscriptionId, sub.SubscriptionType, o.PackageNameSnapshot AS PackageName, "
-                + "sub.StartDate, sub.EndDate, sub.Status, sub.GeneratedSessionCount, "
-                + "("
-                + "  SELECT COUNT(*) FROM Sessions s2 "
-                + "  WHERE s2.SubscriptionId = sub.SubscriptionId "
-                + "  AND s2.Status = 'Scheduled'"
-                + ") AS RemainingSessions, "
-                + "("
-                + "  SELECT COUNT(*) FROM Sessions s3 "
-                + "  WHERE s3.SubscriptionId = sub.SubscriptionId "
-                + "  AND s3.Status IN ('Completed', 'Missed')"
-                + ") AS UsedSessions, "
-                + "fr.StartDate AS FreezeStart, COALESCE(fr.ActualEndDate, fr.PlannedEndDate) AS FreezeEnd "
-                + "FROM Subscriptions sub "
-                + "JOIN Orders o ON o.OrderId = sub.OrderId "
-                + "LEFT JOIN FreezeRecords fr ON fr.SubscriptionId = sub.SubscriptionId "
-                + "  AND fr.ActualEndDate IS NULL "
-                + "WHERE sub.CustomerId = ? "
-                + "AND sub.Status IN ('Active', 'Frozen') "
-                + "AND sub.StartDate <= ? " // đã bắt đầu
-                + "UNION ALL "
-                // Gói nối tiếp chưa bắt đầu (DBR-52): StartDate > hôm nay
-                + "SELECT sub2.SubscriptionId, sub2.SubscriptionType, o2.PackageNameSnapshot AS PackageName, "
-                + "sub2.StartDate, sub2.EndDate, 'Pending' AS Status, sub2.GeneratedSessionCount, "
-                + "("
-                + "  SELECT COUNT(*) FROM Sessions s4 "
-                + "  WHERE s4.SubscriptionId = sub2.SubscriptionId "
-                + "  AND s4.Status = 'Scheduled'"
-                + ") AS RemainingSessions, "
-                + "0 AS UsedSessions, "
-                + "NULL AS FreezeStart, NULL AS FreezeEnd "
-                + "FROM Subscriptions sub2 "
-                + "JOIN Orders o2 ON o2.OrderId = sub2.OrderId "
-                + "WHERE sub2.CustomerId = ? "
-                + "AND sub2.Status = 'Active' "
-                + "AND sub2.StartDate > ? " // chưa bắt đầu
-                + "ORDER BY "
-                + "CASE WHEN Status = 'Pending' THEN 1 ELSE 0 END, "
-                + "EndDate";
+        String sql = "SELECT subCombined.SubscriptionId, subCombined.SubscriptionType, subCombined.PackageName, "
+                + "subCombined.StartDate, subCombined.EndDate, subCombined.Status, subCombined.GeneratedSessionCount, "
+                + "subCombined.RemainingSessions, subCombined.UsedSessions, "
+                + "subCombined.FreezeStart, subCombined.FreezeEnd "
+                + "FROM ("
+                + "  SELECT sub.SubscriptionId, sub.SubscriptionType, o.PackageNameSnapshot AS PackageName, "
+                + "  sub.StartDate, sub.EndDate, sub.Status, sub.GeneratedSessionCount, "
+                + "  ("
+                + "    SELECT COUNT(*) FROM Sessions s2 "
+                + "    WHERE s2.SubscriptionId = sub.SubscriptionId "
+                + "    AND s2.Status = 'Scheduled'"
+                + "  ) AS RemainingSessions, "
+                + "  ("
+                + "    SELECT COUNT(*) FROM Sessions s3 "
+                + "    WHERE s3.SubscriptionId = sub.SubscriptionId "
+                + "    AND s3.Status IN ('Completed', 'Missed')"
+                + "  ) AS UsedSessions, "
+                + "  fr.StartDate AS FreezeStart, COALESCE(fr.ActualEndDate, fr.PlannedEndDate) AS FreezeEnd, "
+                + "  0 AS SortPriority "
+                + "  FROM Subscriptions sub "
+                + "  JOIN Orders o ON o.OrderId = sub.OrderId "
+                + "  LEFT JOIN FreezeRecords fr ON fr.SubscriptionId = sub.SubscriptionId "
+                + "    AND fr.ActualEndDate IS NULL "
+                + "  WHERE sub.CustomerId = ? "
+                + "  AND sub.Status IN ('Active', 'Frozen') "
+                + "  AND sub.StartDate <= ? "
+                + "  UNION ALL "
+                + "  SELECT sub2.SubscriptionId, sub2.SubscriptionType, o2.PackageNameSnapshot AS PackageName, "
+                + "  sub2.StartDate, sub2.EndDate, 'Pending' AS Status, sub2.GeneratedSessionCount, "
+                + "  ("
+                + "    SELECT COUNT(*) FROM Sessions s4 "
+                + "    WHERE s4.SubscriptionId = sub2.SubscriptionId "
+                + "    AND s4.Status = 'Scheduled'"
+                + "  ) AS RemainingSessions, "
+                + "  0 AS UsedSessions, "
+                + "  NULL AS FreezeStart, NULL AS FreezeEnd, "
+                + "  1 AS SortPriority "
+                + "  FROM Subscriptions sub2 "
+                + "  JOIN Orders o2 ON o2.OrderId = sub2.OrderId "
+                + "  WHERE sub2.CustomerId = ? "
+                + "  AND sub2.Status = 'Active' "
+                + "  AND sub2.StartDate > ? "
+                + ") AS subCombined "
+                + "ORDER BY subCombined.SortPriority, subCombined.EndDate";
 
         LocalDate today = DateTimeUtil.today();
         List<SubscriptionRow> rows = new ArrayList<>();
@@ -197,9 +202,9 @@ public class CustomerDashboardDAO {
                             rs.getDate("StartDate").toLocalDate(),
                             rs.getDate("EndDate").toLocalDate(),
                             rs.getString("Status"),
-                            rs.getInt("GeneratedSessionCount"),
-                            rs.getInt("RemainingSessions"),
-                            rs.getInt("UsedSessions"),
+                            rs.getObject("GeneratedSessionCount") != null ? rs.getInt("GeneratedSessionCount") : null,
+                            rs.getObject("RemainingSessions") != null ? rs.getInt("RemainingSessions") : null,
+                            rs.getObject("UsedSessions") != null ? rs.getInt("UsedSessions") : null,
                             null, null));
                 }
             }
@@ -238,7 +243,7 @@ public class CustomerDashboardDAO {
                 + "JOIN Employees e ON e.EmployeeId = s.PtEmployeeId "
                 + "JOIN Persons ep ON ep.PersonId = e.PersonId "
                 + "WHERE s.Status = 'Scheduled' "
-                + "AND (t.SlotDate > ? OR (t.SlotDate = ? AND t.StartTime > ?)) "
+                + "AND (t.SlotDate > ? OR (t.SlotDate = ? AND t.StartTime > CAST(? AS TIME))) "
                 + "AND ("
                 + "  sub.CustomerId = ? " // người đứng tên
                 + "  OR o.PartnerCustomerId = ? " // người đi kèm (gói đôi)
@@ -247,13 +252,12 @@ public class CustomerDashboardDAO {
 
         List<UpcomingSessionRow> rows = new ArrayList<>();
         Date today = Date.valueOf(now.toLocalDate());
-        java.sql.Time nowTime = java.sql.Time.valueOf(now.toLocalTime());
 
         try (Connection conn = DBContext.getConnection();
                 PreparedStatement stmt = conn.prepareStatement(sql)) {
             stmt.setDate(1, today);
             stmt.setDate(2, today);
-            stmt.setTime(3, nowTime);
+            stmt.setObject(3, now.toLocalTime());
             stmt.setInt(4, customerId);
             stmt.setInt(5, customerId);
 
