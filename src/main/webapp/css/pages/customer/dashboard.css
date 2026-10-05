@@ -1,0 +1,73 @@
+/* Customer Dashboard (#48) — màu trạng thái theo GBR-28: xanh = ok, vàng = chờ, đỏ = lỗi, xám = hết hạn */
+
+.dash-banner {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    padding: 12px 16px;
+    margin-bottom: 12px;
+    border-radius: 12px;
+    border: 1px solid transparent;
+    font-size: 14px;
+}
+.dash-banner > span { flex: 1; }
+.dash-banner--danger  { background: #fdecec; border-color: #f5b5b5; color: #8f1d1d; }
+.dash-banner--warning { background: #fff6e0; border-color: #f2d58a; color: #7a5600; }
+
+.dash-hero {
+    display: flex;
+    flex-wrap: wrap;
+    justify-content: space-between;
+    align-items: center;
+    gap: 20px;
+    padding: 24px;
+    margin-bottom: 20px;
+    border-radius: 16px;
+    background: linear-gradient(135deg, #1f2937, #374151);
+    color: #fff;
+    box-shadow: 0 8px 24px rgba(0, 0, 0, .12);
+}
+.dash-hero--ok { border-left: 6px solid #22c55e; }
+.dash-hero--no { border-left: 6px solid #ef4444; }
+.dash-hero h2 { margin: 6px 0 10px; font-size: 24px; }
+.dash-hero-code { font-size: 13px; opacity: .8; }
+.dash-hero-gym { display: flex; flex-direction: column; align-items: flex-end; gap: 4px; text-align: right; }
+.dash-hero-gym i { font-size: 32px; }
+.dash-hero--ok .dash-hero-gym i { color: #4ade80; }
+.dash-hero--no .dash-hero-gym i { color: #f87171; }
+.dash-hero-gym small { opacity: .8; }
+
+.dash-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(320px, 1fr));
+    gap: 20px;
+}
+.dash-card {
+    padding: 20px;
+    border-radius: 16px;
+    background: #fff;
+    border: 1px solid #e5e7eb;
+    box-shadow: 0 2px 8px rgba(0, 0, 0, .04);
+}
+.dash-card h3 { margin: 0 0 14px; font-size: 16px; }
+.dash-empty { color: #6b7280; margin: 0; }
+
+.dash-list { list-style: none; margin: 0; padding: 0; display: flex; flex-direction: column; gap: 12px; }
+.dash-item { padding: 12px; border-radius: 12px; background: #f9fafb; border: 1px solid #eef0f3; }
+.dash-item-head { display: flex; justify-content: space-between; align-items: center; gap: 8px; margin-bottom: 4px; }
+.dash-item small { color: #6b7280; }
+
+.dash-chip { display: inline-block; padding: 2px 10px; border-radius: 999px; font-size: 12px; font-weight: 600; white-space: nowrap; }
+.dash-chip--ok    { background: #dcfce7; color: #166534; }
+.dash-chip--warn  { background: #fef3c7; color: #92400e; }
+.dash-chip--bad   { background: #fee2e2; color: #991b1b; }
+.dash-chip--muted { background: #e5e7eb; color: #4b5563; }
+
+.dash-quota { margin-top: 8px; font-size: 13px; }
+.dash-bar { height: 6px; margin-top: 4px; border-radius: 999px; background: #e5e7eb; overflow: hidden; }
+.dash-bar span { display: block; height: 100%; background: #22c55e; }
+
+@media (max-width: 640px) {
+    .dash-hero-gym { align-items: flex-start; text-align: left; }
+    .dash-banner { flex-wrap: wrap; }
+}

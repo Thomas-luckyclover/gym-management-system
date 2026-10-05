@@ -48,7 +48,8 @@ public class CustomerDashboardServlet extends HttpServlet {
             request.setAttribute("dashboard", result.getData());
         }
 
-        request.setAttribute("pageTitle", "Trang chủ hội viên");
+        request.setAttribute("activeSidebar", "dashboard");
+        request.setAttribute("themeClass", "theme-customer");
         RequestUtil.forward(request, response, VIEW_NAME);
     }
 }
