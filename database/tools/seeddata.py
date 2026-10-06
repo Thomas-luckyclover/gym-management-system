@@ -1,5 +1,5 @@
 # -*- coding: utf-8 -*-
-"""Dữ liệu seed GMS v25 — chạy: python3 seeddata.py  → in ra 2_Seed_Data.sql"""
+"""Dữ liệu seed GMS v26 — chạy: python3 seeddata.py  → in ra 2_Seed_Data.sql"""
 import sys
 from seedgen import *
 import seedgen as G
@@ -228,7 +228,7 @@ o = order(3, PKG['m1'], dt_(2026, 7, 1, 18, 55), 'Counter')
 subscription(o, d_(2026, 7, 1))
 o = order(3, PKG['pt1'], dt_(2026, 7, 3, 9, 0), 'Counter', method='Transfer')
 pt_package(o, 5, d_(2026, 7, 6), (7, 0), events={d_(2026, 8, 6): ('cancel', 'PackageExpired', 'Gói PT hết hạn, buổi còn lại chưa diễn ra (CBR-55)'),
-                                              d_(2026, 7, 15): ('missed', 'MarkedAbsent')},
+                                              d_(2026, 7, 15): ('missed', 'NoCheckIn')},
            note='gói PT đã hết; 03–05/08 Missed vì hết gói tập (CBR-64)')
 
 # ---- Hồng (4): gói 6 tháng (đã ngừng bán) đang bảo lưu, gói PT 2 tháng với David
@@ -249,7 +249,7 @@ subscription(o, d_(2026, 9, 4), note='hết 04/10 trước gói PT → buổi sa
 o = order(6, PKG['pt2'], dt_(2026, 9, 4, 9, 0), 'Counter', method='Transfer')
 pt_package(o, 5, d_(2026, 9, 7), (18, 0), events={
     d_(2026, 9, 11): ('move', 'CustomerSwap', d_(2026, 9, 12), (9, 0), None, None),
-    d_(2026, 9, 16): ('missed', 'MarkedAbsent'),
+    d_(2026, 9, 16): ('missed', 'NoCheckIn'),
     d_(2026, 9, 22): ('cancel', 'ByCustomer', 'Khách bận đột xuất'),
     d_(2026, 9, 29): ('move', 'PtTransfer', d_(2026, 9, 29), (18, 0), 13, 'PT Sơn ốm, khách chọn PT Long'),
 }, note='swap 1/3; 1 buổi chuyển PT → hoa hồng cho PT mới (BR-68)')
@@ -261,7 +261,7 @@ o = order(8, PKG['m1'], dt_(2026, 8, 20, 17, 50), 'Counter')
 subscription(o, d_(2026, 8, 20), note='hết 20/09 → Expired nhưng vẫn còn buổi couple (CBR-63, CBR-67)')
 o = order(7, PKG['c2'], dt_(2026, 8, 21, 9, 0), 'Counter', partner=8, method='Transfer')
 pt_package(o, 6, d_(2026, 8, 24), (19, 30), events={
-    d_(2026, 9, 10): ('missed', 'MarkedAbsent'),
+    d_(2026, 9, 10): ('missed', 'NoCheckIn'),
     d_(2026, 9, 15): ('move', 'PtReschedule', d_(2026, 9, 16), (6, 0), None, 'PT bận họp chuyên môn'),
     d_(2026, 9, 21): ('cancel', 'ByPt', 'PT bận việc gia đình, khách đồng ý nhận lại tiền mặt'),
 }, note='couple: chung hạn mức; 02/09 nghỉ lễ khai báo trước → không sinh buổi')
@@ -541,7 +541,7 @@ for c in DB['Customers']:
     cover = any(s['StartDate'] <= SEED <= s['EndDate'] for s in mem if s['SubscriptionType'] == 'Membership')
     c['Status'] = 'Frozen' if frozen else ('Active' if cover else 'Expired')
 for s in DB['Subscriptions']:
-    if isinstance(s['EndDate'], Live) or s['Status'] in ('Frozen', 'Cancelled', 'Used', 'Completed'):
+    if isinstance(s['EndDate'], Live) or s['Status'] in ('Frozen', 'Cancelled', 'Used'):
         continue
     if s['SubscriptionType'] in ('Membership', 'PTSingle', 'PTCouple', 'DayPass', 'SingleSession') and s['EndDate'] < SEED:
         s['Status'] = 'Expired'
@@ -682,7 +682,23 @@ for cid in BULK[:8]:
                                 'Nhạc trong phòng hơi to vào buổi tối.', 'Huấn luyện viên rất tận tâm, rất hài lòng.',
                                 'Mong có thêm khu giãn cơ riêng.']), dt_(2026, 9, rng.randint(1, 30), 20, 0), None if rng.random() < 0.5 else dt_(2026, 10, 1, 9, 0)))
 for c, txt, at, rd in FB:
-    add('Feedbacks', dict(CustomerId=c, Content=txt, SubmittedAt=at, IsRead=1 if rd else 0, ReadAt=rd, ReadByEmployeeId=2 if rd else None))
+    add('Feedbacks', dict(CustomerId=c, Content=txt, SubmittedAt=at, IsRead=1 if rd else 0, ReadAt=rd, ReadByEmployeeId=2 if rd else None,
+                         RatedPtEmployeeId=None, Rating=None, RatingMonth=None, UpdatedAt=None))
+
+# DBR-66/67: PT 5 đủ ba khách, PT 6 chưa đủ; mỗi khách có buổi tháng 09.
+RATINGS = [
+    (1, 5, 1, 'PT hướng dẫn chưa rõ, tôi mong được hỗ trợ kỹ hơn.', 0, 0),
+    (2, 5, 2, 'Tôi muốn PT giải thích bài tập kỹ hơn trước khi tập.', 10, 1),
+    (6, 5, 5, 'Tôi sửa đánh giá: PT đã hỗ trợ tốt hơn buổi trước.', 20, 0),
+    (7, 6, 4, 'PT hướng dẫn dễ hiểu và quan tâm tới người tập.', 30, 0),
+    (201, 6, 5, 'PT hỗ trợ tốt và điều chỉnh bài tập phù hợp.', 40, 0),
+]
+for customer, pt, rating, content, minute, read in RATINGS:
+    add('Feedbacks', dict(CustomerId=customer, Content=content, SubmittedAt=dt_(2026, 9, 30, 10, minute),
+                         IsRead=read, ReadAt=dt_(2026, 9, 30, 11) if read else None,
+                         ReadByEmployeeId=2 if read else None, RatedPtEmployeeId=pt,
+                         Rating=rating, RatingMonth=d_(2026, 9, 1),
+                         UpdatedAt=dt_(2026, 9, 30, 12) if customer == 6 else None))
 
 LONG = ''.join(['<p>Mỗi buổi tập nên bắt đầu bằng 5–10 phút làm nóng toàn thân, sau đó là các động tác khởi động riêng cho nhóm cơ sắp tập. Tăng dần biên độ và tốc độ, không kéo giãn tĩnh quá lâu trước khi nâng tạ nặng.</p>'] * 20)
 BLOGS = [
@@ -753,7 +769,6 @@ CFG = [('P-01', '1', 'Số lần bảo lưu tối đa mỗi gói tập (lần)')
        ('P-04', '1D,1M,3M,9M,12M', 'Thời hạn gói tập: D = ngày, M = tháng'),
        ('P-05', '10', 'Tuổi tối thiểu dùng dịch vụ PT'),
        ('P-06', '90', 'Độ dài một buổi PT (phút)'),
-       ('P-07', '24', 'Cửa sổ điểm danh sau khi buổi kết thúc (giờ)'),
        ('P-08', '3', 'Số lần swap tối đa mỗi gói PT'),
        ('P-09', '20', 'Hạn thanh toán đơn online = thời gian giữ slot (phút)'),
        ('P-10', '10', 'Thuế VAT (%) đã nằm trong giá bán'),
@@ -767,9 +782,12 @@ CFG = [('P-01', '1', 'Số lần bảo lưu tối đa mỗi gói tập (lần)')
        ('P-18', '5', 'Thời gian khóa tạm (phút)'),
        ('P-19', '05:30-22:00', 'Giờ mở cửa mặc định hằng ngày'),
        ('P-20', '20:00', 'Giờ chốt duyệt đơn nghỉ (ngày hôm trước)'),
-       ('P-21', '1M,2M,3M', 'Thời hạn gói PT (tháng) — DBR-19')]
+       ('P-21', '1M,2M,3M', 'Thời hạn gói PT (tháng) — DBR-19'),
+       ('P-22', '3', "Minimum customers to show a PT's average rating (DBR-69)")]
 for k, v, d in CFG:
-    add('SystemConfigs', dict(ConfigKey=k, ConfigValue=v, Description=d, UpdatedAt=dt_(2026, 9, 1, 9, 0), UpdatedByEmployeeId=2))
+    add('SystemConfigs', dict(ConfigKey=k, ConfigValue=v, Description=d,
+                             UpdatedAt=dt_(2026, 10, 6, 9) if k == 'P-22' else dt_(2026, 9, 1, 9),
+                             UpdatedByEmployeeId=2), rid=int(k[2:]))
 
 OHE = [(d_(2026, 9, 2), None, None, 1, 'Nghỉ lễ Quốc khánh'),
        (d_(2026, 9, 18), None, None, 1, 'Sự cố điện, nghỉ cả ngày'),
