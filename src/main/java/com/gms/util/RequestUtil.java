@@ -96,7 +96,7 @@ public final class RequestUtil {
         toast.put("message", message);
         HttpSession session = request.getSession();
         session.setAttribute(SessionKey.FLASH_TOAST, toast);
-    }
+    } 
 
     // ===== Nhận diện request =====
 
