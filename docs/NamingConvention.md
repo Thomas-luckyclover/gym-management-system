@@ -14,13 +14,56 @@
 | Method | camelCase, động từ đầu tiên | `getUserById()`, `calculateTotal()` |
 | Biến (variable) | camelCase | `userName`, `totalPrice` |
 | Hằng số (constant) | UPPER_SNAKE_CASE | `MAX_LOGIN_ATTEMPT`, `DEFAULT_PAGE_SIZE` |
-| Package | chữ thường, không dấu gạch | `com.project.dao`, `com.project.service` |
+| Package | chữ thường, không dấu gạch | `com.gms.dao`, `com.gms.service` |
 | Boolean method/biến | tiền tố `is`/`has`/`can` | `isActive`, `hasPermission()` |
 | File JSP | kebab-case hoặc camelCase, mô tả rõ chức năng | `login.jsp`, `order-detail.jsp` |
 
 **Lưu ý riêng cho MVC:**
 - Class Model (entity) đặt tên số ít, khớp tên bảng: bảng `Orders` → class `Order`.
 - Service layer: hậu tố `Service` — `OrderService`.
+
+## 1b. Đặt tên theo ý nghĩa trong luồng đang làm
+
+Tên cần giúp người đọc biết biến chứa gì, thuộc đối tượng nào và dùng ở bước nào. Viết đúng camelCase chưa đủ: `data`, `item`, `id`, `list` vẫn khó hiểu nếu không có ngữ cảnh.
+
+| Dữ liệu | Tên nên dùng | Ý nghĩa |
+|---|---|---|
+| Mã tài khoản trong session | `accountId` | Khác `personId`, `employeeId` và `customerId` |
+| PT đang phụ trách buổi | `ptEmployeeId` | Đọc từ `Sessions.PtEmployeeId`, không mặc định là PT của gói |
+| Ngày hiện tại theo giờ VN | `today` | Kiểu `LocalDate`, lấy một lần cho mỗi lần xử lý |
+| Có phải ngày hôm nay không | `isToday` | Kiểu `boolean`, tính bằng `slotDate.equals(today)` |
+| Danh sách buổi DAO trả về | `sessions` | `List<PtSessionView>`, mỗi phần tử là một buổi |
+| Các buổi được chọn cho một ngày | `sessionsOfDay` | Vẫn là các `PtSessionView` do DAO tạo |
+| Lịch Service đã gom theo ngày | `scheduleDays` | `List<PtScheduleDayView>`, mỗi phần tử là một ngày |
+| Ngày bắt đầu/kết thúc phạm vi | `fromDate`, `toDate` | Comment nói rõ có tính cả ngày biên không |
+
+**Boolean:** dùng tiền tố `is`, `has`, `can`, `should` theo ý nghĩa: `isToday`, `hasMembership`, `canReschedule`. Không dùng `today` cho boolean khi trong cùng luồng đã có `today` là một ngày.
+
+**Getter và JSP:** tên thuộc tính JSP theo getter JavaBean, không theo tên field trực tiếp:
+
+```java
+private final boolean isToday;
+
+public boolean isToday() {
+    return isToday;
+}
+```
+
+JSP đọc `${day.today}`. Getter `getSlotDate()` tương ứng `${day.slotDate}`. Đổi field thành `isToday` không có nghĩa phải đổi EL thành `${day.isToday}`.
+
+**DTO:** tên nói rõ một object chứa gì; nơi tạo được ghi trong Javadoc, không suy đoán chỉ từ hậu tố `View`:
+
+- `PtSessionView`: một buổi, DAO tạo từ kết quả truy vấn.
+- `PtScheduleDayView`: một ngày và các buổi của ngày, Service tạo từ `List<PtSessionView>`.
+- Chỉ tạo DTO khi có nhu cầu cụ thể; không tạo toàn bộ Entity/DTO của module trước.
+
+**Hàm:** nêu hành động và kết quả: DAO `findSessions(...)`, Service `getSchedule(accountId)`, helper `buildDayLabel(...)`. Các tên này là ví dụ theo PTDashboard, không ép module khác dùng cùng tên.
+
+**Điểm nối frontend:** request attribute `scheduleDays` ở Servlet phải khớp `${scheduleDays}` trong JSP. `activeNav` là mục menu đang chọn, layout dùng chung đọc nó. CSS `.pt-schedule` mô tả khối lịch; `data-session-id` mang mã buổi cho JS, không phải nội dung in cho người dùng.
+
+Tên cột SQL giữ đúng schema; alias dùng theo ý nghĩa kết quả, ví dụ `CustomerName`, `PartnerName`. Có thể dùng alias SQL ngắn `s`, `t`, `sub` khi phần JOIN thể hiện rõ bảng tương ứng; biến Java nên viết rõ `statement`, `resultSet`, `session`.
+
+Khi đổi tên, kiểm tra tất cả chỗ gọi, constructor, getter, JSP EL, request attribute và JS/CSS liên quan. Không đổi tên hàng loạt ở module khác chỉ để đồng bộ hình thức.
 
 ## 2. Database — SQL Server (tham chiếu nhanh)
 
@@ -85,7 +128,7 @@ public enum CancelType {
 }
 ```
 
-### Danh sách giá trị chuẩn (sinh từ CHECK trong `database/1_Init_Schema.sql` v25)
+### Danh sách giá trị chuẩn (sinh từ CHECK trong `database/1_Init_Schema.sql` v26)
 
 | Bảng.Cột | Giá trị DB (đúng từng ký tự) |
 |---|---|
@@ -105,11 +148,11 @@ public enum CancelType {
 | `Transactions.PaymentMethod` | `Cash`, `Transfer`, `OnlineGateway` |
 | `Transactions.Status` | `Pending`, `Success`, `Failed`, `Expired` |
 | `Subscriptions.SubscriptionType` | `Membership`, `DayPass`, `PTSingle`, `PTCouple`, `SingleSession` |
-| `Subscriptions.Status` | `Active`, `Frozen`, `Used`, `Expired`, `Completed`, `Cancelled` |
+| `Subscriptions.Status` | `Active`, `Frozen`, `Used`, `Expired`, `Cancelled` |
 | `CustomerDeletionRequests.Status` | `Pending`, `Approved`, `Rejected` |
 | `TimeSlots.Status` | `Free`, `Held`, `Booked`, `Withdrawn` |
-| `Sessions.Status` | `Scheduled`, `Completed`, `Missed`, `Cancelled` |
-| `Sessions.MissedReason` | `NoCheckIn`, `NoMembership`, `MembershipFrozen`, `MarkedAbsent` |
+| `Sessions.Status` | `Scheduled`, `CheckedIn`, `Missed`, `Cancelled` |
+| `Sessions.MissedReason` | `NoCheckIn`, `NoMembership`, `MembershipFrozen` |
 | `Sessions.CancelType` | `ByPt`, `ByCustomer`, `GymClosed`, `PackageExpired` |
 | `SessionMoveLogs.MoveType` | `CustomerSwap`, `PtOnBehalfSwap`, `PtReschedule`, `PtTransfer` |
 | `LeaveRequests.LeaveType` | `Annual`, `Sick`, `Unpaid` |
@@ -130,7 +173,7 @@ public enum CancelType {
 | `AuditLogs.ActingRole` | `Admin`, `Manager`, `PT`, `Receptionist`, `Customer` (= `Role.getDbValue()`) |
 
 Thêm hoặc đổi giá trị = sửa schema (quy trình `agents.md` Phần 5) **và** cập nhật bảng này **và** enum Java trong cùng 1 commit.
-Enum đang lệch cần sửa: `BlogPost.Status` đang khai báo `Active`/`Inactive` (dùng `name()`), phải đổi về mẫu ở trên (`ACTIVE("Active")`).
+Khi rà enum, đối chiếu code và CHECK của schema hiện tại; không dựa vào nhận xét về phiên bản cũ. Nếu cột bắt buộc mà `fromDbValue()` trả null, DAO báo lỗi để Service xử lý; cột được phép NULL phải được xét riêng.
 
 ## 3. JavaScript — Frontend
 

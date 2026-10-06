@@ -1,6 +1,6 @@
 # AGENTS.md — Bối Cảnh Dự Án & Quy Tắc Làm Việc Cho AI
 
-Tài liệu này đặt ở thư mục gốc (root) của dự án, để AI đọc và nắm bối cảnh trước khi hỗ trợ code, tránh phải giải thích lại từ đầu mỗi lần prompt.
+Tài liệu ở `docs/agents.md`, dùng cho cả AI và thành viên nhóm. Đọc cùng `docs/NamingConvention.md`, `docs/codeImplementationBackend.md`, `docs/codeImplementationFrontend.md` trước khi code. Mục tiêu: mỗi người theo được luồng dữ liệu, hiểu code mình viết và giải thích được kết quả trên màn hình.
 
 > ⚠️ **LƯU Ý CỰC KỲ QUAN TRỌNG:** Dù các thành viên khác trong nhóm có thể không dùng hết, không đọc hết, hoặc không hiểu vì sao có từng quy tắc trong file này, AI **vẫn bắt buộc áp dụng đầy đủ 100% nội dung dưới đây** mỗi khi hỗ trợ code (vibecode) cho user hiện tại — **không được tự ý bỏ qua, rút gọn, nới lỏng, hay coi nhẹ bất kỳ quy tắc nào** chỉ vì cho rằng người khác không theo hoặc không cần đến mức đó.
 
@@ -20,7 +20,7 @@ Tài liệu này đặt ở thư mục gốc (root) của dự án, để AI đ�
   Job chạy ngầm dùng `ScheduledExecutorService` của JDK — không thêm Quartz.
 - **Database:** SQL / **SQL Server**. Mọi câu truy vấn, tối ưu hóa, thiết kế bảng đều phải tuân theo chuẩn cú pháp T-SQL của SQL Server.
 - **Frontend:** JavaScript, CSS — giữ nguyên theo cấu trúc hiện tại của dự án. **Toàn bộ CSS bắt buộc dùng Design Tokens từ `tokens.css` (CSS Variables), cấm hard-code màu/spacing/font/radius/shadow trực tiếp** — chi tiết đầy đủ ở `frontend-design-pipeline-SWP391-v4.md` (Nguyên tắc nền, mục 9-10) và `shared-library-guide.md`.
-  - File thực tế trong repo: `webapp/css/tokens.css` (lớp 1) → `webapp/css/common.css` (lớp 2) → `webapp/css/pages/<vai-trò>/<màn>.css` (lớp 3); JS dùng chung `webapp/js/common.js`. Cách dùng: `docs/frontend-shared-usage.md`.
+  - File thực tế trong repo: `src/main/webapp/css/tokens.css` (lớp 1) → `src/main/webapp/css/common.css` (lớp 2) → `src/main/webapp/css/pages/<vai-trò>/<màn>.css` (lớp 3); JS dùng chung `src/main/webapp/js/common.js`. Cách dùng: `docs/frontend-shared-usage.md`.
   - Theme theo vai trò gắn bằng 1 class trên `<body>`: `theme-guest`, `theme-guest-dark`, `theme-member`, `theme-staff`, `theme-manager`, `theme-admin`. Không tự định nghĩa lại màu vai trò trong CSS trang.
   - Mọi trang include `WEB-INF/jsp/common/head.jspf` (trong `<head>`) và `WEB-INF/jsp/common/flash-toast.jspf` (đầu `<body>`).
 - **Bảo mật:** Mật khẩu người dùng bắt buộc phải hash bằng **BCrypt** trước khi lưu vào database. Tuyệt đối không lưu plaintext, không dùng MD5/SHA thường (không có salt) để thay thế.
@@ -32,7 +32,7 @@ Bảng đầy đủ "file nào đặt ở đâu" + 67 màn → Servlet → URL �
 - **Chia package rõ ràng theo layer**, không gộp chung, không đặt sai chỗ:
   ```
   src/main/java/com/gms/
-   ├── constant/     → Role, SessionKey, Messages (MSG01…61), AppConstants — hằng số dùng chung
+   ├── constant/     → Role, SessionKey, Messages (các mã MSG hiện có), AppConstants — hằng số dùng chung
    ├── entity/       → các class Entity (POJO ánh xạ bảng DB)
    ├── dao/          → các class DAO (CRUD, truy vấn SQL Server)
    ├── dto/          → ServiceResult, PageResult, JsonResponse, view object gộp nhiều bảng cho 1 màn
@@ -48,7 +48,7 @@ Bảng đầy đủ "file nào đặt ở đâu" + 67 màn → Servlet → URL �
   `auth` (đăng nhập, đăng ký, tài khoản — mọi vai trò) · `guest` (trang chủ, blog) · `customer` (`/customer/*`) · `pt` (`/pt/*`) · `receptionist` (`/receptionist/*`) · `staff` (màn PT + Lễ tân dùng chung, 1 Servlet khai báo 2 URL) · `manager` (`/manager/*`) · `admin` (`/admin/*`) · `payment` (VNPay IPN + trang kết quả).
   Các layer khác (`entity`, `dao`, `service`) để **phẳng**, không chia package con.
 - **Không chia package quá sâu/quá nhỏ** kiểu tách vụn từng chức năng thành 1 package riêng (VD: không cần `service/user/login/`, `service/user/register/` tách lẻ) — mức chia hợp lý là theo **layer** là đủ cho quy mô dự án này.
-- **Tài nguyên tĩnh (ảnh, css, js) không nằm trong package Java** — đặt trong `webapp/`, tách theo loại, rồi theo vai trò:
+- **Tài nguyên tĩnh (ảnh, css, js) không nằm trong package Java** — đặt trong `src/main/webapp/`, tách theo loại, rồi theo vai trò:
   ```
   src/main/webapp/
    ├── css/tokens.css, css/common.css, css/pages/<vai-trò>/<màn>.css
@@ -63,7 +63,7 @@ Bảng đầy đủ "file nào đặt ở đâu" + 67 màn → Servlet → URL �
              └── auth/ guest/ customer/ pt/ receptionist/ staff/ manager/ admin/
   ```
   `<vai-trò>` dùng đúng 1 bộ tên ở mọi nơi (package Servlet, thư mục JSP, CSS, JS). VD màn Đặt buổi lẻ: `servlet/customer/BookSingleSessionServlet.java` → `jsp/customer/book-session.jsp` → `css/pages/customer/book-session.css` → `js/pages/customer/book-session.js`.
-- **Cấu hình theo máy:** `src/main/resources/application.properties` (copy từ `.example`, không commit) — chỉ chứa thông tin triển khai (DB, SMTP, VNPay). Tham số nghiệp vụ P-01…P-21 nằm trong bảng SystemConfigs.
+- **Cấu hình theo máy:** `src/main/resources/application.properties` (copy từ `.example`, không commit) — chỉ chứa thông tin triển khai (DB, SMTP, VNPay). Tham số nghiệp vụ còn hiệu lực nằm trong SystemConfigs (v26 có P-22; P-07 đã bỏ).
 - **Xếp đúng chỗ:** mỗi class/file phải nằm đúng package/thư mục theo vai trò của nó (Phần 8 sẽ nhắc lại nguyên tắc này) — không tiện đâu để đó, không để Entity lẫn trong `servlet/`, không để ảnh lẫn trong `css/`.
 
 ## Phần 3: Tài Liệu Tham Chiếu Bắt Buộc
@@ -73,13 +73,13 @@ Khi thực hiện bất kỳ nhiệm vụ nào, AI phải đối chiếu và bá
 - **SRS (Software Requirements Specification):** xây dựng **trước khi code**. Là nguồn chuẩn cho yêu cầu nghiệp vụ, use case, luồng chức năng, ràng buộc phi chức năng.
 - **SDS (Software Design Specification):** xây dựng **song song với quá trình code**. Mô tả thiết kế kỹ thuật: class diagram, sequence diagram, database schema, kiến trúc chi tiết.
 - **File notes (`docs/notes.md`):** ghi chú phát sinh trong quá trình làm việc, dùng để trace lại các quyết định, thay đổi thực tế so với thiết kế ban đầu. Mục A của file liệt kê các mâu thuẫn tài liệu **đang chờ nhóm chốt** — code phần liên quan phải kiểm tra mục này trước.
-- **Rule & tham số SRS:** `GMS_Rules_and_Parameters` **v25** (GBR, CBR, DBR, BR, P-01…P-21) — khi code nghiệp vụ phải dẫn đúng mã luật (VD `// B2: hủy đơn quá hạn (CBR-70)`) để trace.
-- **Hồ sơ module `docs/handoff/`:** mỗi module có file liệt kê file cần sửa, rule gắn từng bước, luồng B1…Bn và case test trong seed — **đọc file module trước khi code module đó**.
-- **Database:** `database/1_Init_Schema.sql` (schema v25), `database/2_Seed_Data.sql` (sinh từ `database/tools/seeddata.py`), danh mục case + tài khoản test `docs/database/SEED_CASES.md`, thay đổi schema `docs/database/SCHEMA_CHANGES_v25.md`.
-- **Tài liệu dự án khác:** `docs/project-structure.md` (vị trí file, bảng màn hình), `docs/team-plan.md` (phân công, Git, checklist review), `docs/integration-guide.md` (VNPay/Email), `docs/frontend-shared-usage.md` (tokens/common).
-- **`NamingConvention.md`:** quy tắc đặt tên biến/class/method/bảng/cột — file riêng, bắt buộc tuân thủ khi đặt tên.
-- **`codeImplementationBackend.md`:** quy tắc viết code Backend (Java: Entity/DAO/Service/Servlet/Utility) — comment, thụt lề, code style, tối ưu, cấu trúc setter... — file riêng, bắt buộc tuân thủ khi implement.
-- **`codeImplementationFrontend.md`:** quy tắc viết code Frontend (JSP/HTML/CSS/JavaScript) — file riêng, bắt buộc tuân thủ khi implement phần hiển thị/tương tác.
+- **Rule & tham số SRS:** đối chiếu tài liệu luật và quyết định mới trong chat. Bản v25 là nguồn nền; schema hiện tại là v26, đã bỏ P-07 và thêm P-22. Dẫn mã luật đã xác minh, không dùng phiên bản cũ để ghi đè quyết định mới.
+- **Hồ sơ module `docs/handoff/`:** nếu có, đọc file, rule và case test trước khi code. Nếu tài liệu đã chuyển/xóa thì tìm vị trí mới; không tự đoán quyết định nghiệp vụ còn thiếu.
+- **Database:** `database/1_Init_Schema.sql` (schema v26), `database/2_Seed_Data.sql` (sinh từ `database/tools/seeddata.py`), danh mục case + tài khoản test `docs/database/SEED_CASES.md`, thay đổi schema `docs/database/SCHEMA_CHANGES_v25.md`.
+- **Tài liệu dự án khác:** `docs/project-structure.md` (vị trí file), `docs/integration-guide.md` (tích hợp), `docs/frontend-shared-usage.md` (base frontend). Tra tài liệu phân công/Git đang tồn tại; không coi `docs/team-plan.md` đã xóa ở develop là nguồn hiện tại.
+- **`docs/NamingConvention.md`:** quy tắc đặt tên biến/class/method/bảng/cột — file riêng, bắt buộc tuân thủ khi đặt tên.
+- **`docs/codeImplementationBackend.md`:** quy tắc viết code Backend (Java: Entity/DAO/Service/Servlet/Utility) — comment, thụt lề, code style, tối ưu, cấu trúc setter... — file riêng, bắt buộc tuân thủ khi implement.
+- **`docs/codeImplementationFrontend.md`:** quy tắc viết code Frontend (JSP/HTML/CSS/JavaScript) — file riêng, bắt buộc tuân thủ khi implement phần hiển thị/tương tác.
 
 AI **bắt buộc** dựa vào các nguồn trên để trace và thực hiện nhiệm vụ, không tự suy diễn ngoài phạm vi tài liệu khi chưa được xác nhận.
 
@@ -90,9 +90,9 @@ Trong quá trình code, nếu phát hiện SRS, SDS, hoặc file notes có đo�
 - Mâu thuẫn với yêu cầu mới nhất trong chat
 
 thì AI **không được tự ý chọn một bên rồi âm thầm làm theo**. AI phải:
-1. Nêu rõ mâu thuẫn cụ thể — trích dẫn đoạn nào ở tài liệu nào nói gì.
-2. Đề xuất hướng xử lý hợp lý.
-3. Chờ user xác nhận trước khi code tiếp phần liên quan.
+1. Nêu rõ mâu thuẫn cụ thể — tài liệu nào nói gì, quyết định chat nào đã thay đổi.
+2. Nếu chat đã chốt rõ phương án thì áp dụng theo Phần 6; cập nhật tài liệu trong phạm vi được giao, không xin xác nhận lại.
+3. Nếu chưa có quyết định rõ, đề xuất phương án và chờ xác nhận phần liên quan. Vẫn làm phần độc lập đã rõ.
 
 ## Phần 5: Sửa Đổi Database Trong Quá Trình Làm (Siêu Quan Trọng)
 
@@ -130,7 +130,7 @@ Khi có xung đột thông tin, đối chiếu theo thứ tự ưu tiên giảm 
 
 - Mọi điểm tích hợp API (gọi API bên thứ 3, expose API cho hệ thống khác, tích hợp thanh toán, gửi email/SMS...) phải:
   - **Tổ chức rõ ràng:** tách riêng logic gọi API ra khỏi Service nghiệp vụ thông thường (VD: package/class riêng như `integration/PaymentGatewayClient.java`), không viết lẫn vào Service xử lý nghiệp vụ khác.
-  - **Code dễ hiểu:** đặt tên rõ mục đích, tách từng bước gọi API (chuẩn bị request → gửi → xử lý response → xử lý lỗi) theo đúng khung chương trình từng bước đã quy định trong `codeImplementationBackend.md`.
+  - **Code dễ hiểu:** đặt tên rõ mục đích, tách từng bước gọi API (chuẩn bị request → gửi → xử lý response → xử lý lỗi) theo đúng khung chương trình từng bước đã quy định trong `docs/codeImplementationBackend.md`.
   - **Bám sát đúng SRS** về: endpoint, định dạng request/response, cơ chế xác thực (API key, OAuth...), luồng xử lý lỗi — không tự chế định dạng khác với SRS.
 
 ### 6.3. Khi SRS chưa có hoặc còn thiếu (trường hợp code trước, viết SRS sau)
@@ -144,7 +144,7 @@ Nếu đến lúc cần làm phần pháp lý hoặc API/Integration mà **SRS c
 ### 6.4. Sau khi hoàn thành API/Integration — bắt buộc bàn giao 2 thứ
 
 1. **Bản giải thích cho user** (ngôn ngữ dễ hiểu, không thuần kỹ thuật): API này làm gì, gọi ra sao, luồng dữ liệu đi thế nào, các trường hợp lỗi xử lý ra sao.
-2. **Comment chi tiết trong code** tại phần API/Integration — đây là **ngoại lệ** so với quy tắc "không giải thích logic phức tạp" ở `codeImplementationBackend.md` Mục 1: phần tích hợp API luôn cần comment giải thích rõ từng bước xử lý, vì đây là phần dễ lỗi, khó debug, và thường liên quan đến bên thứ 3 ngoài tầm kiểm soát của team.
+2. **Comment chi tiết trong code** về chuẩn bị request, gửi, đọc response và xử lý lỗi. Tuân thủ quy tắc comment dễ hiểu ở `docs/codeImplementationBackend.md` Mục 1; giải thích thêm các điểm phụ thuộc bên thứ ba khi cần.
 
 ### 6.5. Khi AI cần user hỗ trợ trong lúc làm API/Integration — báo ngay, gấp, cụ thể
 
@@ -166,12 +166,12 @@ Vì user chưa có kinh nghiệm về API, nên **AI không được tự âm th
 
 - Tuân thủ mô hình MVC nghiêm ngặt (xem Phần 1).
 - Đặt file/class đúng package theo layer, đúng cấu trúc đã quy định ở Phần 2 — không đặt sai chỗ, không gộp lẫn giữa các layer.
-- Đặt tên biến, class, method, bảng/cột database theo đúng `NamingConvention.md`.
+- Đặt tên biến, class, method, bảng/cột database theo đúng `docs/NamingConvention.md`.
 - Mật khẩu luôn hash bằng BCrypt trước khi lưu DB.
 - Câu lệnh SQL viết đúng chuẩn cú pháp SQL Server (T-SQL).
 - Khi sửa/thêm chức năng, kiểm tra chức năng đó có được mô tả trong SRS/SDS không — nếu có sai khác, áp dụng Phần 4.
 - Nếu phát hiện database cần sửa (sau khi đã trace đủ SRS/SDS/code): **không tự sửa ngay** — báo user theo đúng quy trình Phần 5.
-- Khi viết code (comment, format, style, tối ưu): tuân thủ đúng `codeImplementationBackend.md` (Backend) / `codeImplementationFrontend.md` (Frontend), không tự ý áp dụng style khác.
+- Khi viết code (comment, format, style, tối ưu): tuân thủ đúng `docs/codeImplementationBackend.md` (Backend) / `docs/codeImplementationFrontend.md` (Frontend), không tự ý áp dụng style khác.
 
 ## Phần 9: Quy Trình AI Tự Xử Lý Yêu Cầu (Internal Task Framework)
 
@@ -190,7 +190,7 @@ Trước khi code, AI tự rà: có mâu thuẫn giữa SRS/SDS/notes/chat khôn
 Nếu SRS/SDS/codebase đã có mẫu tương tự (class, DAO, API response...), AI bám theo mẫu đó để đồng bộ, thay vì tự sáng tạo cấu trúc mới không cần thiết.
 
 ### Bước 5: Tự rà lại ràng buộc cốt lõi trước khi đưa kết quả
-Trước khi trả lời/code xong, AI tự kiểm tra lại: đúng mô hình MVC chưa, đúng `NamingConvention.md`, `codeImplementationBackend.md`/`codeImplementationFrontend.md` chưa, có bỏ sót mâu thuẫn nào cần báo không — rồi mới đưa ra kết quả cuối.
+Trước khi trả lời/code xong, AI tự kiểm tra lại: đúng mô hình MVC chưa, đúng `docs/NamingConvention.md`, `docs/codeImplementationBackend.md`/`docs/codeImplementationFrontend.md` chưa, có bỏ sót mâu thuẫn nào cần báo không — rồi mới đưa ra kết quả cuối.
 
 ## Phần 10: Quy Ước Commit Message (Git)
 
@@ -226,14 +226,14 @@ refactor: Extract ValidationUtil from Servlet into util package
 
 - Chat với user > SRS > SDS/File notes > Nguồn khác.
 - Mô hình MVC nghiêm ngặt, JSP/Servlet, Maven (pom.xml), SQL Server.
-- Package chia rõ theo layer (entity/dao/service/servlet/util), không quá sâu/vụn, tài nguyên tĩnh (ảnh/css/js) đặt đúng chỗ trong `webapp/`.
+- Package chia rõ theo layer (entity/dao/service/servlet/util), không quá sâu/vụn, tài nguyên tĩnh (ảnh/css/js) đặt đúng chỗ trong `src/main/webapp/`.
 - Mật khẩu luôn BCrypt.
 - Phát hiện mâu thuẫn giữa SRS/SDS/notes/chat → nêu rõ, không tự quyết.
 - **Sửa database giữa chừng (siêu quan trọng):** phát hiện vấn đề thật sự đáng lo + đã trace đủ SRS/SDS/code → báo ngay cho user, nhắc copy schema/database vào Notion trước, đề xuất phương án, chờ cả nhóm bàn bạc thống nhất rồi mỗi người mới tự sửa database local — **không tự sửa schema/code ngay lúc phát hiện**.
-- Đặt tên theo `NamingConvention.md`; enum DB ↔ Java theo mục 2b.
-- **Comment chỉ là khung** (`codeImplementationBackend.md` Mục 1): Javadoc 1 câu, `// ===== nhóm =====`, `// Bn: …` 1 dòng; cấm kể lịch sử, ví dụ, giải thích cú pháp.
-- **Code theo đợt (Phần 14):** không bao giờ sinh nguyên tính năng / nguyên file trong 1 lần.
-- Khi viết/sửa code thực tế (comment, thụt lề, code style, tối ưu ở đâu/dễ hiểu ở đâu): bắt buộc tuân thủ `codeImplementationBackend.md` (Backend) / `codeImplementationFrontend.md` (Frontend) — không tự suy diễn cách trình bày khác.
+- Đặt tên theo `docs/NamingConvention.md`; enum DB ↔ Java theo mục 2b.
+- **Comment dễ hiểu** (`docs/codeImplementationBackend.md` Mục 1): nêu nguồn, phép tính, nơi hiển thị của field; mục đích hàm; B1/B2 và B1.1/B1.2 cho khối khó. Getter/setter được giải thích ngắn, ví dụ dùng dữ liệu GMS.
+- **Code theo đợt (Phần 14):** hoàn thành một bước có thể review; một file nhỏ có thể viết trọn. Khi đang hướng dẫn từng phần, không tự làm hết module trong một lượt.
+- Khi viết/sửa code thực tế (comment, thụt lề, code style, tối ưu ở đâu/dễ hiểu ở đâu): bắt buộc tuân thủ `docs/codeImplementationBackend.md` (Backend) / `docs/codeImplementationFrontend.md` (Frontend) — không tự suy diễn cách trình bày khác.
 - Pháp lý & API/Integration: bắt buộc bám sát SRS; nếu SRS thiếu → đề xuất phương án chuẩn nhất + thảo luận với user trước khi code; API/Integration xong phải có bản giải thích cho user + comment chi tiết trong code (ngoại lệ so với quy tắc comment thông thường).
 - Khi làm API/Integration mà thiếu key/tài khoản/quyền/tài liệu bên thứ 3: báo ngay, cụ thể (thiếu gì — vì sao cần — lấy ở đâu — mức độ gấp), không tự lách qua hay đoán đại.
 - User gõ "tôi muốn commit" → soát nội dung từ lần "tôi muốn commit" gần nhất đến hiện tại, viết commit message dạng `<loại>: <mô tả ngắn gọn>` (feat/fix/refactor/style/docs/test/chore), tách nhiều commit nếu có nhiều loại thay đổi khác nhau.
@@ -260,7 +260,7 @@ Trước khi viết bất kỳ hàm tiện ích nào, AI **bắt buộc** kiểm
 | Đăng xuất mọi thiết bị | `SessionRegistryListener.invalidateSessionsOfAccount` | — |
 | Toast, hộp xác nhận, đếm ngược, tab, nút con mắt, cảnh báo chưa lưu | — | `showToast`, `openConfirmDialog` / `data-confirm-message`, `data-countdown-seconds`, `bindTabs`, `data-password-toggle`, `data-unsaved-warning` |
 
-**File dùng chung chỉ Leader sửa:** `pom.xml`, `agents.md`, `tokens.css`, `common.css`, `common.js`, `util/*`, `filter/*`, `constant/*`, `dto/*`, `web.xml`, `jsp/common/*`, `database/1_Init_Schema.sql`, `database/tools/*`. Khi hỗ trợ thành viên khác mà cần sửa các file này, AI phải **nói rõ đây là file dùng chung** và đề xuất báo Leader thay vì sửa thẳng.
+**Phân biệt file dùng chung và file riêng module:** `pom.xml`, bốn file quy tắc trong `docs/`, `tokens.css`, `common.css`, `common.js`, util/filter/constant dùng chung, `web.xml`, layout chung và schema/tools DB thuộc phần nhóm phải phối hợp qua Leader. DTO không mặc nhiên là base: DTO chỉ dùng ở một màn có thể sửa trong module đó. Trước khi xóa/sửa file, tìm chỗ dùng ở các màn khác. Thành viên chưa được giao sửa base thì báo Leader; khi Leader/user đã cho phép rõ phạm vi thì thực hiện, không hỏi lại cùng một việc.
 
 ## Phần 13: Quy Ước Kỹ Thuật Đã Chốt
 
@@ -269,48 +269,75 @@ Trước khi viết bất kỳ hàm tiện ích nào, AI **bắt buộc** kiểm
 - **Filter:** không gọi `request.getParameter()` trong Filter (để UTF-8 luôn được đặt trước). Filter vai trò tự kiểm tra cả đăng nhập vì `@WebFilter` không đảm bảo thứ tự.
 - **Post/Redirect/Get:** POST thành công → `RequestUtil.setFlashToast(...)` + `RequestUtil.redirect(...)`; POST lỗi → set lại dữ liệu đã nhập + `errors` (map từ `result.getFieldErrors()`) vào request rồi forward lại form (GBR-22 giữ dữ liệu người dùng).
 - **AJAX:** Servlet trả đúng khuôn `JsonResponse` (`success`, `message`, `data`, `errors`); dữ liệu gửi lên dạng form nên Servlet đọc bằng `getParameter()`; có upload file thì Servlet thêm `@MultipartConfig`.
-- **Tham số nghiệp vụ P-01…P-21:** luôn đọc qua `SystemConfigService`, không hard-code số (20 phút, 5 lần, 15:00, 70%...). Đơn hàng lưu bản sao giá trị tại thời điểm tạo (GBR-04, DBR-50).
+- **Tham số nghiệp vụ còn hiệu lực:** luôn đọc qua `SystemConfigService`, không hard-code số (20 phút, 5 lần, 15:00, 70%...). Đơn hàng lưu bản sao giá trị tại thời điểm tạo (GBR-04, DBR-50).
 - **Tiền:** Java `long` (đọc bằng `rs.getLong`), SQL theo schema hiện tại là `INT`; không dùng `double`/`float`.
 - **Ngày giờ:** Java `LocalDate`/`LocalTime`/`LocalDateTime`, SQL `DATE`/`TIME`/`DATETIME2`; JSON gửi dạng ISO, trình duyệt tự định dạng.
-- **Trạng thái / giá trị liệt kê:** theo đúng `NamingConvention.md` mục 2b (enum `UPPER_SNAKE("DbValue")` + `fromDbValue`, cấm `name()`, cấm so chuỗi). Bảng giá trị chuẩn nằm ở đó. Hiển thị tiếng Việt; màu badge theo GBR-28 (`badge-success/warning/danger/neutral`).
+- **Trạng thái / giá trị liệt kê:** theo đúng `docs/NamingConvention.md` mục 2b (enum `UPPER_SNAKE("DbValue")` + `fromDbValue`, cấm `name()`, cấm so chuỗi). Bảng giá trị chuẩn nằm ở đó. Hiển thị tiếng Việt; màu badge theo GBR-28 (`badge-success/warning/danger/neutral`).
 - **Mọi thao tác nhạy cảm** (đổi giá, thao tác tài khoản, xóa, duyệt/từ chối) gọi `AuditLogService` (GBR-07, GBR-08), ghi kèm vai trò đang dùng (`ActingRole` — CBR-112); thao tác tiêu cực bắt buộc lý do 5–500 ký tự (GBR-09).
 - **Job chạy ngầm:** chỉ gọi Service, chọn bản ghi theo trạng thái, mỗi bản ghi 1 transaction, ghi AuditLog với người thực hiện = System (SRS 5.0).
 
-## Phần 14: Code Theo Đợt Như Người Thật (Wave Coding) — BẮT BUỘC
+## Phần 14: Làm từng phần để cả nhóm theo được luồng code
 
-**Vì sao:** sinh nguyên file / nguyên tính năng một lần thì người học không theo kịp, không kiểm soát được, review rất khó, sai một chỗ là sai dây chuyền.
-AI phải code giống một lập trình viên thật: **dựng khung khắp các file trước, rồi đi qua lại giữa các file, mỗi lần vài dòng, đợt nào cũng compile được.**
+### 14.1. Chốt màn hình và giá trị chức năng trước
 
-### 14.1. Trước khi viết dòng code đầu tiên
-1. Đọc `docs/handoff/<module>.md` (nếu có) và các rule liên quan.
-2. In **bảng kế hoạch**: file nào (tạo mới / sửa), method nào, rule nào, chia sẵn thành các đợt. Chờ user gõ **"ok"** hoặc **"tiếp"**.
+1. Đọc yêu cầu mới nhất, quy tắc nghiệp vụ, schema và code có sẵn. Đường dẫn tài liệu đã đổi thì tìm bằng rg; handoff không có thì đối chiếu SRS/notes/code và nói rõ nguồn đã dùng.
+2. Chốt các khối hiển thị, dữ liệu, bộ lọc, thao tác và tình huống lỗi/rỗng. Mỗi khối phải giúp người dùng xem hoặc quyết định việc cụ thể; không thêm số liệu/hiệu ứng chỉ để đủ màn.
+3. Nêu bảng việc: file, hàm, đầu vào, kết quả và kiểm tra cần làm. Khi user đã nói “viết đi” trong phạm vi rõ thì làm bước đó, không hỏi lại.
+4. Phần nghiệp vụ chưa rõ thì hỏi và dừng phần phụ thuộc; vẫn làm phần độc lập đã rõ. Yêu cầu chat rõ ràng ghi đè quy tắc cũ theo Phần 6, không xin xác nhận lại quyết định đã chốt.
 
-### 14.2. Các đợt (hết mỗi đợt dừng lại, user gõ "tiếp" mới làm đợt sau)
+### 14.2. Hai luồng cần phân biệt
 
-| Đợt | Làm gì | Giới hạn |
+**Luồng chạy:** request → Servlet → Service → DAO → DB; kết quả đi ngược lại qua DTO → JSP/JSON. JS chỉ điều khiển giao diện/gửi request; quyền và nghiệp vụ kiểm lại ở backend.
+
+**Thứ tự viết code:** có thể dựng Servlet/JSP/CSS/JS khung trước để thấy bố cục. Khi nối dữ liệu, hoàn thành từng khối theo DTO đầu vào → DAO → DTO kết quả nếu cần → Service → nối Servlet → render JSP/JS → kiểm tra.
+
+Không làm hết Entity/DAO của cả dự án trước. Không bắt buộc tạo mọi file từ đầu hoặc đặt UnsupportedOperationException trên đường request đang dùng. Khung chưa có dữ liệu phải được báo rõ, không gọi là chức năng hoàn thiện.
+
+### 14.3. Ví dụ một khối Lịch 7 ngày
+
+| Đợt | File/chức năng | Điều người học cần hiểu |
 |---|---|---|
-| **0 — Khung** | Tạo / mở mọi file cần đụng: class, chữ ký method (thân `throw new UnsupportedOperationException("TODO")`), Javadoc 1 câu, các dòng `// B1: … // B2: …` theo luồng trong handoff. **Chưa viết logic.** Phải compile được. | Mỗi method chỉ chữ ký + khung bước |
-| **1 — DAO** | Điền **từng câu SQL**, mỗi lượt 1 method. | ≤ 40 dòng / file / lượt |
-| **2 — Service** | Điền từng bước `Bn` theo thứ tự; cần DAO chưa có thì quay lại DAO viết đúng method đó rồi quay về. | ≤ 40 dòng / file / lượt |
-| **3 — Servlet** | doGet / doPost nối Service ↔ JSP, PRG, AJAX. | |
-| **4 — JSP / JS / CSS** | Khối giao diện theo thứ tự trên → dưới của màn. | |
-| **5 — Kiểm** | Chạy theo case trong `docs/database/SEED_CASES.md` + JUnit cho Service; liệt kê case đã thử. | |
+| 0. Phác thảo | Chốt lịch, cảnh báo, thống kê và thao tác | Giá trị của từng khối và quy tắc cần đối chiếu |
+| 1. Khung màn | Servlet → JSP → CSS → JS, từng phần | URL, forward, layout include, modal chỉ mở/đóng |
+| 2. DTO DAO | `PtSessionView` | Một buổi; từng field đọc cột nào, in ở đâu |
+| 3. DAO | `PtDashboardDAO.findSessions(...)` | JOIN lấy gì, WHERE lọc ai, từng dòng tạo DTO |
+| 4. DTO Service | `PtScheduleDayView` | Một ngày; field tính từ ngày hiện tại hay DTO buổi nào |
+| 5. Service | `getSchedule(accountId)` | Account → Employee → DAO; vòng for tạo 7 nhóm ngày |
+| 6. Nối màn | Servlet nhận ServiceResult, JSP render lịch | attribute khớp EL; thành công/rỗng/lỗi phân biệt |
+| 7. Kiểm tra | Test nghiệp vụ và xem trên Tomcat | Dữ liệu đúng, đủ 7 ngày, quyền đúng, ngày không có buổi |
 
-### 14.3. Trong mỗi lượt
-- **Viết chỗ gọi trước, rồi mới viết hàm được gọi** (lần theo luồng như người thật). Nhảy giữa các file, không viết trọn 1 file rồi mới sang file khác.
-- Hết lượt: liệt kê ngắn **file + method đã đụng + rule đã áp**, nhắc compile. Không dán lại cả file nếu chỉ sửa vài dòng.
-- Không trộn: vừa đổi tên hàng loạt vừa thêm logic mới trong cùng lượt.
-- Gặp mâu thuẫn rule / DB → dừng theo Phần 4 / Phần 5, không tự đoán.
-- User gõ **"làm hết luôn"** thì được gộp các đợt còn lại của **đúng module đó**, nhưng câu trả lời vẫn giữ thứ tự Đợt 0 → 5.
+Đây là mẫu chia việc, không ép mọi chức năng có đủ bảy đợt. Có thể tạo DTO Service trước DAO nếu đã chốt dữ liệu; phải nói rõ ai tạo object và nguồn field.
 
-### 14.4. Commit gợi ý
-Mỗi đợt 1 commit (`feat(<module>): đợt 1 DAO ...`) để dễ quay lại.
+### 14.4. Comment và cách giải thích mỗi đợt
 
-## Phần 15: Quyết Định Đã Chốt v25 (03/10/2026)
+- Mỗi DTO nêu khối màn hình, nơi tạo, input và nơi dùng. Comment field có nguồn/phép tính, ý nghĩa, cách hiển thị hoặc mục đích ẩn.
+- Dùng tên theo context: `accountId` khác `employeeId`; `today` là LocalDate, `isToday` là boolean; `sessionsOfDay` khác `scheduleDays`.
+- Hàm có Javadoc input/output, code đi theo B1/B2; khối khó có bước con B4.1/B4.2. Không viết comment chung chung khiến người đọc phải đoán.
+- DAO mới đọc ResultSet tại vòng while rồi tạo DTO; không tách mapResultSet mặc định. Service ưu tiên vòng for và helper có mục đích rõ.
+- Khi bàn giao, chỉ ra đoạn set/constructor tiêu biểu và ví dụ màn hình; giải thích input của hàm khác các field của DTO kết quả.
+- Không thêm file phụ/abstraction chỉ để đủ kiến trúc; giải thích nhu cầu của DTO/helper mới trước hoặc cùng lúc tạo.
+
+### 14.5. Kiểm tra, tiến độ và Git
+
+- Một đợt có thể hoàn thành một file/hàm nhỏ; không giới hạn cứng 40 dòng làm code bị cắt dang dở. Phần lớn chia theo chức năng để người học review được.
+- Khi người dùng yêu cầu đi từng phần, xong đợt thì báo kết quả và bước kế tiếp, chờ họ tiếp tục. Nếu đã yêu cầu làm hết module thì làm đầy đủ phạm vi, không lặp lại yêu cầu xác nhận.
+- Báo file thêm/sửa/xóa, hàm, nguồn dữ liệu, kiểm tra đã chạy và phần chưa nối. Ví dụ minh họa khác dữ liệu thực tế; chỉ nói test/build pass khi có kết quả.
+- Compile Java không chứng minh JSP chạy. Package WAR không chứng minh Tomcat đã redeploy. Báo riêng compile, SQL kiểm tra biên dịch, test, build WAR và chạy trên trình duyệt.
+- Có 404 sau thêm Servlet thì kiểm tra context path, class/JSP trong bản deploy, redeploy/restart; không mở trực tiếp JSP trong WEB-INF.
+- Test theo rủi ro: quyền, điều kiện nghiệp vụ, ngày biên, kết quả rỗng, lỗi DB, transaction và request đua khi liên quan. Sửa chỉ comment/docs/thụt lề không cần thêm test hình thức.
+- Không xóa base đang được màn khác dùng. Không sửa ghi chú người dùng ngoài phạm vi.
+- Commit nhỏ, message mô tả kết quả. Chỉ stage file thuộc yêu cầu; không dùng git add . khi có công việc khác đang dở. Push/merge đúng nhánh được chỉ định, không force push hoặc sửa lịch sử.
+
+### 14.6. Quy tắc dùng chung cho thành viên mới
+
+Trước mỗi khối, viết bốn dòng: **khối nào → cần dữ liệu gì → ai tạo/ai dùng → kiểm tra bằng gì**. Sau mỗi khối, phải lần theo được một dữ liệu từ cột DB tới dòng hiển thị; dữ liệu tính toán chỉ được nguồn field và phép tính. Đây là tiêu chí dễ hiểu, không phải số lượng comment hay số lượng file.
+
+## Phần 15: Quyết định nền v25 và cập nhật v26
 
 - Mô hình danh tính: 1 Person = 1 SĐT + 1 email + 1 tài khoản; Customer / Employee là vai trò; ≥ 2 vai trò → chọn vai trò (DBR-65, CBR-113).
 - Đăng ký online bằng SĐT đã có tài khoản (kể cả nhân viên) → chỉ báo "đã có tài khoản"; gắn vai trò mới vào Person cũ chỉ làm tại quầy / Admin (CBR-26, CBR-114).
 - Chỉ Admin đổi vị trí nhân viên và khóa / mở tài khoản (CBR-109).
 - Tài khoản Lễ tân tạo không có mật khẩu, không gửi link; khách đặt qua Quên mật khẩu (CBR-24, CBR-31).
-- Schema v25 + seed v25 thay toàn bộ dữ liệu cũ (`docs/database/`).
-
+- Schema/seed hiện tại là v26 trong `database/`. Tài liệu thay đổi v25 trong `docs/database/` là lịch sử, không thay thế schema đang dùng.
+- Sessions dùng CheckedIn thay Completed; không còn MissedReason MarkedAbsent. Subscriptions dùng Used cho gói ngày/buổi lẻ khi phù hợp; P-07 đã bỏ, P-22 là ngưỡng số khách để hiển thị rating PT.
+- Chỉ JOB-04 và nghiệp vụ freeze ghi Sessions.Status sang CheckedIn/Missed; PTDashboard đọc kết quả, không thêm điểm danh thủ công.
