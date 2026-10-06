@@ -1,19 +1,13 @@
 package com.gms.dto;
 
 import java.time.LocalDate;
+import java.time.LocalTime;
 
-/**
- * 1 buổi PT ở dạng "số liệu thô" để tính thống kê trên PT Dashboard (hoa hồng, biểu đồ, tuần này, dự kiến tháng).
- * Chỉ có đúng các cột cần để cộng / đếm — không có tên khách.
- *
- * Ai tạo: SessionDAO.findStatRows.
- * Ai dùng: PtDashboardService (quyết định buổi nào được tính hoa hồng — rule nằm ở Service, không nằm ở DAO).
- *
- * @author Le Cong Minh
- */
+/** Số liệu buổi PT và giờ kết thúc cho dashboard. */
 public class SessionStatRow {
 
     private final LocalDate slotDate;
+    private final LocalTime endTime;
     private final String status;
     private final String cancelType;
     private final String sourceType;
@@ -21,15 +15,16 @@ public class SessionStatRow {
 
     /**
      * @param slotDate         ngày diễn ra buổi.
-     * @param status           Scheduled | Completed | Missed | Cancelled.
+     * @param status           Scheduled | CheckedIn | Missed | Cancelled.
      * @param cancelType   cách xử lý khi PT không dạy được / khách hủy: Reschedule | Transfer | Cancel |
      *                         CustomerRequest; null nếu không có.
      * @param sourceType       loại gói sinh ra buổi: PTSingle | PTCouple | SingleSession.
      * @param commissionAmount hoa hồng đã chốt trên buổi (VND) — DBR-58.
      */
-    public SessionStatRow(LocalDate slotDate, String status, String cancelType, String sourceType,
+    public SessionStatRow(LocalDate slotDate, LocalTime endTime, String status, String cancelType, String sourceType,
             long commissionAmount) {
         this.slotDate = slotDate;
+        this.endTime = endTime;
         this.status = status;
         this.cancelType = cancelType;
         this.sourceType = sourceType;
@@ -38,6 +33,10 @@ public class SessionStatRow {
 
     public LocalDate getSlotDate() {
         return slotDate;
+    }
+
+    public LocalTime getEndTime() {
+        return endTime;
     }
 
     public String getStatus() {

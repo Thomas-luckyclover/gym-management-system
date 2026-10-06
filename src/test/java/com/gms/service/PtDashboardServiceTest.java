@@ -8,47 +8,48 @@ import java.time.LocalDateTime;
 import java.time.LocalTime;
 import org.junit.jupiter.api.Test;
 
-/**
- * Kiểm tra 2 luật thuần của PT Dashboard — không cần DB:
- *   - Cửa sổ điểm danh (BR-54, P-07 = 24 giờ). Buổi mẫu 29/09 18:00–19:30 → điểm danh được tới 30/09 19:30.
- *   - Buổi nào được tính hoa hồng ("05_Dashboard_Rules.md" mục 3.2, CBR-80/81/82, CBR-55/57).
- */
+/** Kiểm tra buổi chờ chốt và điều kiện hoa hồng PT. */
 class PtDashboardServiceTest {
 
     private static final LocalDate DAY = LocalDate.of(2026, 9, 29);
     private static final LocalTime START = LocalTime.of(18, 0);
     private static final LocalTime END = LocalTime.of(19, 30);
-    private static final int WINDOW_HOURS = 24;
 
     private boolean isOpenAt(LocalDateTime now) {
-        return PtDashboardService.isAttendanceOpen(DAY, START, END, now, WINDOW_HOURS);
+        return PtDashboardService.isAwaitingClosure(DAY, END, now);
     }
 
     @Test
-    void notOpenBeforeSessionStarts() {
+    void notPendingBeforeSessionStarts() {
         assertFalse(isOpenAt(LocalDateTime.of(2026, 9, 29, 17, 59)));
     }
 
     @Test
-    void openFromStartTimeInclusive() {
-        assertTrue(isOpenAt(LocalDateTime.of(2026, 9, 29, 18, 0)));
-        assertTrue(isOpenAt(LocalDateTime.of(2026, 9, 29, 19, 0)));
+    void notPendingDuringSession() {
+        assertFalse(isOpenAt(LocalDateTime.of(2026, 9, 29, 18, 0)));
+        assertFalse(isOpenAt(LocalDateTime.of(2026, 9, 29, 19, 0)));
     }
 
     @Test
-    void stillOpenUntilWindowHoursAfterEnd() {
+    void pendingAfterEndAndNextDay() {
         assertTrue(isOpenAt(LocalDateTime.of(2026, 9, 30, 10, 0)));
         assertTrue(isOpenAt(LocalDateTime.of(2026, 9, 30, 19, 30)));
     }
 
     @Test
-    void closedAfterWindow() {
-        assertFalse(isOpenAt(LocalDateTime.of(2026, 9, 30, 19, 31)));
+    void stillPendingUntilJobCloses() {
+        assertTrue(isOpenAt(LocalDateTime.of(2026, 9, 30, 19, 31)));
     }
 
     @Test
-    void completedAndMissedAlwaysEarnCommission() {
-        assertTrue(PtDashboardService.isCommissionable("Completed", null));
+    void exactEndStillExpected() {
+        assertFalse(isOpenAt(DAY.atTime(END)));
+        assertTrue(isOpenAt(DAY.atTime(END).plusSeconds(1)));
+    }
+
+    @Test
+    void checkedInAndMissedAlwaysEarnCommission() {
+        assertTrue(PtDashboardService.isCommissionable("CheckedIn", null));
         assertTrue(PtDashboardService.isCommissionable("Missed", null));
     }
 

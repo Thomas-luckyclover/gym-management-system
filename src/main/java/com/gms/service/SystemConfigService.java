@@ -6,16 +6,10 @@ import java.sql.SQLException;
 import java.util.ArrayList;
 import java.util.List;
 
-/**
- * Đọc tham số nghiệp vụ P-01…P-20 từ bảng SystemConfigs (agents.md Phần 13).
- * Mọi nơi cần tham số này phải gọi qua Service này, không hard-code số.
- * Đây là 20 giá trị default theo luật nghiệp vụ hiện tại, Manager có thể sửa trên màn hình cấu hình.
- *
- * @author Le Cong Minh
- */
+/** Đọc tham số nghiệp vụ v26 từ bảng SystemConfigs. */
 public class SystemConfigService {
 
-    // ===== Mã tham số P-01...P-20 =====
+    // ===== Mã tham số P-01...P-22 =====
 
     // P-01: Số lần bảo lưu tối đa cho mỗi gói tập
     public static final String MAX_FREEZE_COUNT = "P-01";
@@ -34,9 +28,6 @@ public class SystemConfigService {
 
     // P-06: Độ dài một buổi PT (phút)
     public static final String SESSION_DURATION_MINUTES = "P-06";
-
-    // P-07: Cửa sổ điểm danh sau khi buổi kết thúc (giờ)
-    public static final String ATTENDANCE_WINDOW_HOURS = "P-07";
 
     // P-08: Số lần Swap (đổi buổi) tối đa mỗi gói PT
     public static final String MAX_SWAP_COUNT = "P-08";
@@ -78,6 +69,9 @@ public class SystemConfigService {
     public static final String LEAVE_APPROVED_DEADLINE = "P-20";
     // P-21: Thời hạn gói PT, VD "1M,2M,3M"
     public static final String PT_PACKAGE_DURATIONS = "P-21";
+
+    // P-22: Số khách tối thiểu để hiện điểm PT (DBR-69)
+    public static final String MIN_PT_RATING_CUSTOMERS = "P-22";
 
     // DAO dùng chung
     private final SystemConfigDAO systemConfigDAO = new SystemConfigDAO();
