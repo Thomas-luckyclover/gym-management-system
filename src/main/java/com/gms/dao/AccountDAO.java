@@ -11,28 +11,16 @@ import java.sql.Timestamp;
 import java.time.LocalDateTime;
 
 /**
- * Data Access Object (DAO) cho bảng Accounts.
- * Thao tác trực tiếp với cơ sở dữ liệu SQL Server, không chứa logic nghiệp vụ.
- *
- * <p>
- * Quy tắc:
- * </p>
- * <ul>
- * <li>Sử dụng PreparedStatement, không nối chuỗi SQL.</li>
- * <li>Khai báo throws SQLException để tầng Service xử lý.</li>
- * <li>Hỗ trợ phương thức nhận Connection từ ngoài để phục vụ Transaction.</li>
- * </ul>
+ * Truy vấn bảng Accounts (đăng nhập, quên mật khẩu, đổi mật khẩu).
  */
 public class AccountDAO {
 
-    // ===== 1. TÌM KIẾM =====
+    // ===== Tìm tài khoản =====
 
     /**
-     * Tìm tài khoản theo Email của người dùng (JOIN với bảng Persons).
-     * 
-     * @param email Email đăng ký của tài khoản
-     * @return Account tương ứng hoặc null nếu không tìm thấy
-     * @throws SQLException khi có lỗi kết nối hoặc truy vấn SQL
+     * Tìm tài khoản theo email của Person còn hoạt động.
+     * @param email email đăng nhập
+     * @return Account, hoặc null nếu không có
      */
     public Account findByEmail(String email) throws SQLException {
         try (Connection conn = DBContext.getConnection()) {
@@ -41,7 +29,7 @@ public class AccountDAO {
     }
 
     /**
-     * Tìm tài khoản theo Email dùng Connection có sẵn (dùng trong Transaction).
+     * Tìm tài khoản theo email, dùng Connection có sẵn.
      */
     public Account findByEmail(Connection conn, String email) throws SQLException {
         String sql = """
@@ -63,11 +51,9 @@ public class AccountDAO {
     }
 
     /**
-     * Tìm tài khoản theo Số điện thoại của người dùng (JOIN với bảng Persons).
-     * 
-     * @param phone Số điện thoại đăng ký
-     * @return Account tương ứng hoặc null nếu không tìm thấy
-     * @throws SQLException khi có lỗi kết nối hoặc truy vấn SQL
+     * Tìm tài khoản theo SĐT của Person còn hoạt động.
+     * @param phone số điện thoại đăng nhập
+     * @return Account, hoặc null nếu không có
      */
     public Account findByPhone(String phone) throws SQLException {
         try (Connection conn = DBContext.getConnection()) {
@@ -76,8 +62,7 @@ public class AccountDAO {
     }
 
     /**
-     * Tìm tài khoản theo Số điện thoại dùng Connection có sẵn (dùng trong
-     * Transaction).
+     * Tìm tài khoản theo SĐT, dùng Connection có sẵn.
      */
     public Account findByPhone(Connection conn, String phone) throws SQLException {
         String sql = """
@@ -99,11 +84,9 @@ public class AccountDAO {
     }
 
     /**
-     * Tìm tài khoản theo AccountId (khóa chính).
-     * 
-     * @param accountId ID của tài khoản
-     * @return Account tương ứng hoặc null nếu không tìm thấy
-     * @throws SQLException khi có lỗi kết nối hoặc truy vấn SQL
+     * Tìm tài khoản theo khóa chính.
+     * @param accountId id tài khoản
+     * @return Account, hoặc null nếu không có
      */
     public Account findById(int accountId) throws SQLException {
         try (Connection conn = DBContext.getConnection()) {
@@ -112,7 +95,7 @@ public class AccountDAO {
     }
 
     /**
-     * Tìm tài khoản theo AccountId dùng Connection có sẵn (dùng trong Transaction).
+     * Tìm tài khoản theo khóa chính, dùng Connection có sẵn.
      */
     public Account findById(Connection conn, int accountId) throws SQLException {
         String sql = """
@@ -132,15 +115,13 @@ public class AccountDAO {
         return null;
     }
 
-    // ===== 2. CẬP NHẬT MẬT KHẨU & ĐĂNG NHẬP =====
+    // ===== Mật khẩu và đăng nhập =====
 
     /**
-     * Cập nhật mật khẩu mới (đã hash BCrypt) cho tài khoản.
-     * 
-     * @param accountId       ID của tài khoản cần đổi mật khẩu
-     * @param newPasswordHash Chuỗi hash mật khẩu mới
-     * @return true nếu cập nhật thành công, false nếu không tìm thấy accountId
-     * @throws SQLException khi có lỗi SQL
+     * Ghi mật khẩu mới (đã băm BCrypt).
+     * @param accountId id tài khoản
+     * @param newPasswordHash chuỗi BCrypt
+     * @return true nếu có dòng được cập nhật
      */
     public boolean updatePasswordHash(int accountId, String newPasswordHash) throws SQLException {
         try (Connection conn = DBContext.getConnection()) {
@@ -149,7 +130,7 @@ public class AccountDAO {
     }
 
     /**
-     * Cập nhật mật khẩu mới dùng Connection có sẵn.
+     * Ghi mật khẩu mới, dùng Connection có sẵn.
      */
     public boolean updatePasswordHash(Connection conn, int accountId, String newPasswordHash) throws SQLException {
         String sql = """
@@ -166,11 +147,9 @@ public class AccountDAO {
     }
 
     /**
-     * Tăng số lần đăng nhập sai liên tiếp lên 1 (phục vụ BR-01).
-     * 
-     * @param accountId ID tài khoản nhập sai mật khẩu
-     * @return true nếu cập nhật thành công
-     * @throws SQLException khi có lỗi SQL
+     * Tăng số lần đăng nhập sai thêm 1 (BR-01).
+     * @param accountId id tài khoản
+     * @return true nếu có dòng được cập nhật
      */
     public boolean increaseFailedLogin(int accountId) throws SQLException {
         try (Connection conn = DBContext.getConnection()) {
@@ -179,7 +158,7 @@ public class AccountDAO {
     }
 
     /**
-     * Tăng số lần đăng nhập sai liên tiếp dùng Connection có sẵn.
+     * Tăng số lần đăng nhập sai, dùng Connection có sẵn.
      */
     public boolean increaseFailedLogin(Connection conn, int accountId) throws SQLException {
         String sql = """
@@ -195,12 +174,9 @@ public class AccountDAO {
     }
 
     /**
-     * Đặt lại số lần đăng nhập sai về 0 và xóa thời điểm khóa tạm (khi đăng nhập
-     * thành công hoặc hết hạn khóa theo BR-02).
-     * 
-     * @param accountId ID tài khoản cần reset
-     * @return true nếu cập nhật thành công
-     * @throws SQLException khi có lỗi SQL
+     * Đưa số lần sai về 0 và bỏ khóa tạm (BR-02).
+     * @param accountId id tài khoản
+     * @return true nếu có dòng được cập nhật
      */
     public boolean resetFailedLogin(int accountId) throws SQLException {
         try (Connection conn = DBContext.getConnection()) {
@@ -209,7 +185,7 @@ public class AccountDAO {
     }
 
     /**
-     * Đặt lại số lần đăng nhập sai dùng Connection có sẵn.
+     * Đưa số lần sai về 0, dùng Connection có sẵn.
      */
     public boolean resetFailedLogin(Connection conn, int accountId) throws SQLException {
         String sql = """
@@ -226,14 +202,10 @@ public class AccountDAO {
     }
 
     /**
-     * Đặt thời gian khóa tạm thời cho tài khoản do nhập sai quá số lần quy định
-     * (BR-01, P-17, P-18).
-     * Lưu ý: Không thay đổi cột Status (LockedUntil chỉ dùng cho khóa tạm).
-     * 
-     * @param accountId   ID tài khoản bị khóa
-     * @param lockedUntil Thời điểm kết thúc khóa tạm
-     * @return true nếu cập nhật thành công
-     * @throws SQLException khi có lỗi SQL
+     * Khóa tạm tài khoản tới một thời điểm, không đổi Status (BR-01).
+     * @param accountId id tài khoản
+     * @param lockedUntil thời điểm hết khóa
+     * @return true nếu có dòng được cập nhật
      */
     public boolean lockUntil(int accountId, LocalDateTime lockedUntil) throws SQLException {
         try (Connection conn = DBContext.getConnection()) {
@@ -242,7 +214,7 @@ public class AccountDAO {
     }
 
     /**
-     * Đặt thời gian khóa tạm thời dùng Connection có sẵn.
+     * Khóa tạm tài khoản, dùng Connection có sẵn.
      */
     public boolean lockUntil(Connection conn, int accountId, LocalDateTime lockedUntil) throws SQLException {
         String sql = """
@@ -259,13 +231,10 @@ public class AccountDAO {
     }
 
     /**
-     * Cập nhật thời điểm đăng nhập gần nhất (LastLoginAt) khi người dùng đăng nhập
-     * thành công.
-     * 
-     * @param accountId   ID tài khoản đăng nhập
-     * @param lastLoginAt Thời điểm đăng nhập
-     * @return true nếu cập nhật thành công
-     * @throws SQLException khi có lỗi SQL
+     * Ghi thời điểm đăng nhập thành công gần nhất.
+     * @param accountId id tài khoản
+     * @param lastLoginAt thời điểm đăng nhập
+     * @return true nếu có dòng được cập nhật
      */
     public boolean updateLastLogin(int accountId, LocalDateTime lastLoginAt) throws SQLException {
         try (Connection conn = DBContext.getConnection()) {
@@ -274,7 +243,7 @@ public class AccountDAO {
     }
 
     /**
-     * Cập nhật thời điểm đăng nhập gần nhất dùng Connection có sẵn.
+     * Ghi thời điểm đăng nhập, dùng Connection có sẵn.
      */
     public boolean updateLastLogin(Connection conn, int accountId, LocalDateTime lastLoginAt) throws SQLException {
         String sql = """
@@ -290,10 +259,10 @@ public class AccountDAO {
         }
     }
 
-    // ===== 3. MAP RESULTSET =====
+    // ===== Map ResultSet =====
 
     /**
-     * Map dữ liệu từ 1 dòng của ResultSet sang đối tượng Account.
+     * Chuyển 1 dòng ResultSet thành Account.
      */
     private Account mapResultSetToAccount(ResultSet rs) throws SQLException {
         int accountId = rs.getInt("AccountId");

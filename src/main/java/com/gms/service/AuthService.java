@@ -7,6 +7,7 @@ import com.gms.dto.LoginResult;
 import com.gms.dto.ServiceResult;
 import com.gms.entity.Account;
 import com.gms.util.DBContext;
+import com.gms.util.DateTimeUtil;
 import com.gms.util.PasswordUtil;
 import com.gms.util.ValidationUtil;
 
@@ -22,57 +23,27 @@ import java.util.List;
 import java.util.Map;
 
 /**
- * Service xử lý nghiệp vụ Xác thực & Tài khoản (Phase 1, SRS #1 Sign In).
- *
- * <p>
- * Quy tắc Đăng nhập (B1 – B8 theo quy tắc Phase 1 Mục 2.1):
- * </p>
- * <ul>
- * <li>B1 & B2: Kiểm tra dữ liệu nhập (identifier, password).</li>
- * <li>B3: Tìm tài khoản theo Email hoặc SĐT (Person JOIN Accounts).</li>
- * <li>B4: Kiểm tra trạng thái Inactive hoặc Admin khóa (Account.Status !=
- * ACTIVE).</li>
- * <li>B5: Kiểm tra thời gian khóa tạm thời (LockedUntil). Hết hạn -> tự reset
- * (BR-02).</li>
- * <li>B6: Kiểm tra tài khoản chưa có mật khẩu (PasswordHash IS NULL).</li>
- * <li>B7: Kiểm tra mật khẩu (Phân biệt Staff vs Customer cho đếm sai/khóa
- * tạm).</li>
- * <li>B8: Đăng nhập thành công -> Reset failed counter, update
- * LastLoginAt.</li>
- * </ul>
- *
- * <p>
- * LƯU Ý: Các thông số cấu hình P-17 (MAX_FAILED_ATTEMPTS = 5) và P-18
- * (LOCK_MINUTES = 5)
- * hiện đang dùng hằng số tạm thời, sẽ được nâng cấp đọc qua SystemConfigService
- * khi có API từ Minh LC.
- * </p>
+ * Nghiệp vụ đăng nhập và lấy vai trò của tài khoản (màn #1 Sign In, CBR-113).
  */
 public class AuthService {
-
-    /**
-     * P-17: Số lần nhập sai tối đa trước khi khóa tạm. Tạm dùng hằng số, chờ
-     * SystemConfigService từ Minh LC.
-     */
-    private static final int MAX_FAILED_ATTEMPTS = 5;
-
-    /**
-     * P-18: Thời gian khóa tạm (phút). Tạm dùng hằng số, chờ SystemConfigService từ
-     * Minh LC.
-     */
-    private static final int LOCK_MINUTES = 5;
 
     /** Màn chọn vai trò (CBR-113). */
     public static final String SELECT_ROLE_PATH = "/select-role";
 
     private final AccountDAO accountDAO;
+    private final SystemConfigService systemConfigService;
 
     public AuthService() {
-        this(new AccountDAO());
+        this(new AccountDAO(), new SystemConfigService());
     }
 
     public AuthService(AccountDAO accountDAO) {
+        this(accountDAO, new SystemConfigService());
+    }
+
+    public AuthService(AccountDAO accountDAO, SystemConfigService systemConfigService) {
         this.accountDAO = accountDAO;
+        this.systemConfigService = systemConfigService;
     }
 
     protected Connection getConnection() throws SQLException {
@@ -124,14 +95,18 @@ public class AuthService {
                 return ServiceResult.fail(Messages.MSG37_ACCOUNT_INACTIVE);
             }
 
-            LocalDateTime now = LocalDateTime.now();
+            LocalDateTime now = DateTimeUtil.now();
 
-            // B5: Kiểm tra khóa tạm thời do nhập sai quá số lần (LockedUntil)
+            // B5: đọc P-17, P-18 từ SystemConfigs (agents.md Phần 13)
+            int maxFailedAttempts = systemConfigService.getInt(SystemConfigService.MAX_FAILED_ATTEMPTS);
+            int lockMinutes = systemConfigService.getInt(SystemConfigService.LOCK_MINUTES);
+
+            // B5a: Kiểm tra khóa tạm thời do nhập sai quá số lần (LockedUntil)
             if (account.getLockedUntil() != null) {
                 if (now.isBefore(account.getLockedUntil())) {
                     long remainingSeconds = Duration.between(now, account.getLockedUntil()).getSeconds();
                     return ServiceResult.fail(String.format(Messages.MSG35_ACCOUNT_TEMP_LOCKED,
-                            LOCK_MINUTES, formatMinutesSeconds(remainingSeconds)));
+                            lockMinutes, formatMinutesSeconds(remainingSeconds)));
                 } else {
                     // Hết hạn khóa tạm -> reset số lần sai (BR-02)
                     accountDAO.resetFailedLogin(conn, account.getAccountId());
@@ -169,14 +144,14 @@ public class AuthService {
                     int newFailedCount = account.getFailedLoginCount() + 1;
                     account.setFailedLoginCount(newFailedCount);
 
-                    if (newFailedCount >= MAX_FAILED_ATTEMPTS) {
-                        LocalDateTime lockTime = now.plusMinutes(LOCK_MINUTES);
+                    if (newFailedCount >= maxFailedAttempts) {
+                        LocalDateTime lockTime = now.plusMinutes(lockMinutes);
                         accountDAO.lockUntil(conn, account.getAccountId(), lockTime);
                         account.setLockedUntil(lockTime);
-                        return ServiceResult.fail(String.format(Messages.MSG35_ACCOUNT_TEMP_LOCKED, LOCK_MINUTES,
-                                formatMinutesSeconds(LOCK_MINUTES * 60L)));
+                        return ServiceResult.fail(String.format(Messages.MSG35_ACCOUNT_TEMP_LOCKED, lockMinutes,
+                                formatMinutesSeconds(lockMinutes * 60L)));
                     } else {
-                        int attemptsLeft = MAX_FAILED_ATTEMPTS - newFailedCount;
+                        int attemptsLeft = maxFailedAttempts - newFailedCount;
                         return ServiceResult
                                 .fail(String.format(Messages.MSG33_WRONG_CREDENTIALS_ATTEMPTS_LEFT, attemptsLeft));
                     }

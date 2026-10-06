@@ -9,12 +9,8 @@ import java.time.format.DateTimeFormatter;
 import java.time.format.DateTimeParseException;
 
 /**
- * Xử lý ngày giờ theo GBR-01: hiển thị dd/MM/yyyy, giờ 24h HH:mm, mọi thời điểm theo múi giờ phòng gym (UTC+7).
- *
- * Quy tắc cho cả nhóm:
- * - Lấy "bây giờ"/"hôm nay" LUÔN qua DateTimeUtil.now() / today() — cấm LocalDate.now() trực tiếp
- *   (server Tomcat có thể đặt múi giờ khác, sẽ lệch ngày lúc 0h–7h sáng).
- * - Trong JSP dùng hàm EL: ${gms:formatDate(order.createdAt)} (khai báo ở WEB-INF/gms-functions.tld).
+ * Xử lý ngày giờ theo múi giờ phòng gym (UTC+7): định dạng dd/MM/yyyy, giờ 24h HH:mm.
+ * Quy tắc nhóm: luôn lấy "bây giờ"/"hôm nay" qua now()/today() chứ không gọi LocalDate.now() trực tiếp — server có thể đặt múi giờ khác và lệch ngày lúc 0–7h sáng.
  */
 public final class DateTimeUtil {
 
@@ -34,14 +30,14 @@ public final class DateTimeUtil {
     // ===== Thời điểm hiện tại =====
 
     /**
-     * @return ngày hôm nay theo giờ Việt Nam
+     * Ngày hôm nay theo giờ Việt Nam.
      */
     public static LocalDate today() {
         return LocalDate.now(GYM_ZONE);
     }
 
     /**
-     * @return thời điểm hiện tại theo giờ Việt Nam
+     * Thời điểm hiện tại theo giờ Việt Nam.
      */
     public static LocalDateTime now() {
         return LocalDateTime.now(GYM_ZONE);
@@ -50,8 +46,7 @@ public final class DateTimeUtil {
     // ===== Hiển thị (Java → chuỗi) =====
 
     /**
-     * @param date ngày cần hiển thị
-     * @return chuỗi dd/MM/yyyy, hoặc chuỗi rỗng nếu null
+     * Định dạng ngày thành chuỗi dd/MM/yyyy (trả chuỗi rỗng nếu null).
      */
     public static String formatDate(LocalDate date) {
         if (date == null) {
@@ -61,8 +56,7 @@ public final class DateTimeUtil {
     }
 
     /**
-     * @param time giờ cần hiển thị
-     * @return chuỗi HH:mm, hoặc chuỗi rỗng nếu null
+     * Định dạng giờ thành chuỗi HH:mm (trả chuỗi rỗng nếu null).
      */
     public static String formatTime(LocalTime time) {
         if (time == null) {
@@ -72,8 +66,7 @@ public final class DateTimeUtil {
     }
 
     /**
-     * @param dateTime thời điểm cần hiển thị
-     * @return chuỗi dd/MM/yyyy HH:mm, hoặc chuỗi rỗng nếu null
+     * Định dạng ngày giờ thành chuỗi dd/MM/yyyy HH:mm (trả chuỗi rỗng nếu null).
      */
     public static String formatDateTime(LocalDateTime dateTime) {
         if (dateTime == null) {
@@ -85,9 +78,7 @@ public final class DateTimeUtil {
     // ===== Đọc từ request (chuỗi → Java) =====
 
     /**
-     * Đọc ngày từ ô input type="date" (yyyy-MM-dd).
-     * @param value chuỗi request gửi lên
-     * @return LocalDate, hoặc null nếu rỗng/sai định dạng (Service coi null là "chưa nhập/không hợp lệ")
+     * Đọc ngày từ ô input type="date" (yyyy-MM-dd). Trả null nếu rỗng/sai định dạng.
      */
     public static LocalDate parseHtmlDate(String value) {
         if (ValidationUtil.isNullOrEmpty(value)) {
@@ -101,9 +92,7 @@ public final class DateTimeUtil {
     }
 
     /**
-     * Đọc ngày người dùng gõ tay dạng dd/MM/yyyy.
-     * @param value chuỗi dd/MM/yyyy
-     * @return LocalDate, hoặc null nếu rỗng/sai định dạng
+     * Đọc ngày người dùng gõ tay dạng dd/MM/yyyy. Trả null nếu rỗng/sai định dạng.
      */
     public static LocalDate parseDisplayDate(String value) {
         if (ValidationUtil.isNullOrEmpty(value)) {
@@ -117,9 +106,7 @@ public final class DateTimeUtil {
     }
 
     /**
-     * Đọc giờ từ ô input type="time" (HH:mm).
-     * @param value chuỗi HH:mm
-     * @return LocalTime, hoặc null nếu rỗng/sai định dạng
+     * Đọc giờ từ ô input type="time" (HH:mm). Trả null nếu rỗng/sai định dạng.
      */
     public static LocalTime parseTime(String value) {
         if (ValidationUtil.isNullOrEmpty(value)) {
@@ -135,22 +122,15 @@ public final class DateTimeUtil {
     // ===== Tính toán theo luật nghiệp vụ =====
 
     /**
-     * GBR-03 (ngày kết thúc tính cả ngày cuối): gói 1 tháng bắt đầu 05/09 kết thúc 05/10.
-     * Nếu tháng đích không có ngày đó (bắt đầu 31/01) thì lấy ngày cuối tháng đích (28 hoặc 29/02) —
-     * LocalDate.plusMonths tự làm đúng việc này.
-     * @param startDate ngày bắt đầu gói
-     * @param months số tháng của gói
-     * @return ngày kết thúc (vẫn dùng được trọn ngày này)
+     * Tính ngày kết thúc gói theo số tháng (cộng cả ngày cuối).
+     * Nếu tháng đích không có ngày đó (bắt đầu 31/01) thì lấy ngày cuối tháng đích.
      */
     public static LocalDate calculateEndDateByMonths(LocalDate startDate, int months) {
         return startDate.plusMonths(months);
     }
 
     /**
-     * Tính tuổi tròn tại 1 ngày — dùng kiểm tra mốc 10 tuổi khi bán/đặt PT (P-05, CBR-13…15).
-     * @param dateOfBirth ngày sinh
-     * @param atDate ngày tính tuổi (thường là today())
-     * @return số tuổi tròn
+     * Tính tuổi tròn tại 1 ngày (dùng kiểm tra mốc tuổi tối thiểu khi đặt PT).
      */
     public static int calculateAge(LocalDate dateOfBirth, LocalDate atDate) {
         return Period.between(dateOfBirth, atDate).getYears();

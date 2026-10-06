@@ -14,21 +14,8 @@ import java.time.Duration;
 import java.util.Locale;
 
 /**
- * Cổng lấy dự báo thời tiết — API Open-Meteo (https://open-meteo.com), miễn phí, KHÔNG cần API key.
- *
- * ===== TỔNG QUAN LUỒNG =====
- * GMS ──(HTTPS GET)──> api.open-meteo.com/v1/forecast?latitude=..&longitude=.. ──> JSON
- * Chỉ đọc 2 khối trong JSON trả về:
- *   "current" : nhiệt độ, cảm nhận, độ ẩm, mã thời tiết lúc này, ngày/đêm
- *   "daily"   : mã thời tiết cả ngày, nhiệt độ cao/thấp nhất, khả năng mưa cao nhất (mảng 1 phần tử = hôm nay)
- *
- * ===== VÌ SAO TIMEOUT NGẮN =====
- * Gọi API mất ~1–2 giây. Thời tiết chỉ là phần phụ của PT Dashboard, nên chờ tối đa 3 giây rồi bỏ;
- * WeatherService còn cache kết quả 30 phút để phần lớn lần mở trang không phải gọi API.
- *
- * Được gọi từ Service (WeatherService), không gọi thẳng từ Servlet (agents.md 6.2).
- *
- * @author Le Cong Minh
+ * Cổng gọi Open-Meteo (miễn phí, không cần API key) để lấy thời tiết hôm nay.
+ * Timeout 3 giây; WeatherService cache 30 phút nên phần lớn lần mở trang không phải gọi API.
  */
 public class WeatherClient {
 
@@ -43,12 +30,8 @@ public class WeatherClient {
             .build();
 
     /**
-     * Lấy thời tiết hôm nay tại 1 địa điểm.
-     *
-     * @param latitude  vĩ độ, VD 21.0285 (Hà Nội).
-     * @param longitude kinh độ, VD 105.8542 (Hà Nội).
-     * @return số liệu thô của hôm nay (xem WeatherForecast).
-     * @throws WeatherUnavailableException khi mất mạng, quá 3 giây, API trả mã lỗi hoặc JSON sai dạng.
+     * Lấy thời tiết hôm nay tại 1 toạ độ.
+     * Lỗi (mất mạng, quá 3 giây, JSON sai) ném WeatherUnavailableException.
      */
     public WeatherForecast fetchToday(double latitude, double longitude) throws WeatherUnavailableException {
         // B1: ghép URL — Locale.ROOT để số thập phân luôn dùng dấu chấm (21.0285, không phải 21,0285)
