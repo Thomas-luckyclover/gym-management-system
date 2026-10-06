@@ -8,7 +8,7 @@ import java.util.List;
  *
  * Bố cục theo prototype pt/trang-chu.html, nghiệp vụ theo SRS 9.1.2 + "05_Dashboard_Rules.md":
  *   Đầu trang   : lời chào + thời tiết + tóm tắt hôm nay
- *   Cột chính   : Buổi cần điểm danh (P-07) · Hoa hồng theo kỳ · Buổi sắp tới (lọc ngày) · Banner khách thiếu gói tập
+ *   Cột chính   : Buổi chờ hệ thống chốt · Hoa hồng theo kỳ · Buổi sắp tới (lọc ngày) · Banner khách thiếu gói tập
  *   Cột phụ     : Khách phụ trách · Tháng · Tuần · Lịch rảnh — tất cả theo ngày trong ô "Từ ngày"
  *
  * @author Le Cong Minh
@@ -46,9 +46,8 @@ public class PtDashboardView {
     private int todaySessionCount;
     private int todayWeekFreeSlots;
 
-    // ===== Buổi cần điểm danh =====
-    private int attendanceWindowHours;
-    private List<PtSessionView> attendanceSessions;
+    // ===== Buổi chờ hệ thống chốt =====
+    private List<PtSessionView> pendingClosureSessions;
 
     // ===== Hoa hồng theo kỳ =====
     private String periodValue;
@@ -175,24 +174,15 @@ public class PtDashboardView {
         this.todayWeekFreeSlots = todayWeekFreeSlots;
     }
 
-    // ---------- Buổi cần điểm danh ----------
+    // ---------- Buổi chờ hệ thống chốt ----------
 
-    /** @return P-07 (giờ), VD 24. */
-    public int getAttendanceWindowHours() {
-        return attendanceWindowHours;
+    /** @return buổi Scheduled đã hết giờ, chờ JOB-04. */
+    public List<PtSessionView> getPendingClosureSessions() {
+        return pendingClosureSessions;
     }
 
-    public void setAttendanceWindowHours(int attendanceWindowHours) {
-        this.attendanceWindowHours = attendanceWindowHours;
-    }
-
-    /** @return buổi Scheduled đã tới giờ bắt đầu và còn trong cửa sổ điểm danh (BR-54). */
-    public List<PtSessionView> getAttendanceSessions() {
-        return attendanceSessions;
-    }
-
-    public void setAttendanceSessions(List<PtSessionView> attendanceSessions) {
-        this.attendanceSessions = attendanceSessions;
+    public void setPendingClosureSessions(List<PtSessionView> pendingClosureSessions) {
+        this.pendingClosureSessions = pendingClosureSessions;
     }
 
     // ---------- Hoa hồng ----------

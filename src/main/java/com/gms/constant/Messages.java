@@ -214,6 +214,12 @@ public final class Messages {
     /** BR-54, BR-69, BR-70: thao tác ngoài khung giờ cho phép. */
     public static final String MSG105_ACTION_OUTSIDE_WINDOW = "This action is outside the allowed time window.";
 
+    /** CBR-116: PT chưa có buổi đã chốt của khách trong tháng. */
+    public static final String MSG106_PT_RATING_NOT_ELIGIBLE = "You cannot rate this PT without a CheckedIn or Missed session this month.";
+
+    /** DBR-67: chấm lại cùng PT cùng tháng. */
+    public static final String MSG107_PT_RATING_UPDATED = "Your PT rating has been updated.";
+
     private Messages() {
     }
-}
+}

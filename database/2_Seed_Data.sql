@@ -1,6 +1,7 @@
 /* ============================================================================
-   GMS — FILE: 2_Seed_Data.sql  ·  v25
+   GMS — FILE: 2_Seed_Data.sql  ·  v26
    SINH TỰ ĐỘNG bởi database/tools/seeddata.py — muốn sửa dữ liệu thì sửa file .py rồi sinh lại.
+   v26    : CheckedIn/Used, tự chốt JOB-04, đánh giá PT theo tháng, P-22 thay P-07.
    CHẠY   : 0_Reset_Database.sql → 1_Init_Schema.sql → 2_Seed_Data.sql (database rỗng).
    MỐC    : lịch sử cố định quanh Thứ Bảy 03/10/2026 (tháng 6 → tháng 11/2026).
             Dữ liệu "sống" (mã xác thực, khóa tạm 5 phút, đơn online còn hạn, slot đang giữ,
@@ -115,7 +116,7 @@ INSERT INTO Persons (PersonId, FullName, DateOfBirth, Phone, Email, Avatar, IsRe
 SET IDENTITY_INSERT Persons OFF;
 
 /* ============================================================================
-   Employees — 15 dòng. 
+   Employees — 15 dòng.
    ============================================================================ */
 SET IDENTITY_INSERT Employees ON;
 INSERT INTO Employees (EmployeeId, PersonId, EmployeeCode, Position, HireDate, CommissionRate, Specialty, YearsOfExperience, Status, DeletedAt, ResignationReason) VALUES
@@ -137,7 +138,7 @@ INSERT INTO Employees (EmployeeId, PersonId, EmployeeCode, Position, HireDate, C
 SET IDENTITY_INSERT Employees OFF;
 
 /* ============================================================================
-   Customers — 74 dòng. 
+   Customers — 74 dòng.
    ============================================================================ */
 SET IDENTITY_INSERT Customers ON;
 INSERT INTO Customers (CustomerId, PersonId, CustomerCode, CheckInPhoto, CustomerType, GuardianName, GuardianRelationship, GuardianPhone, GuardianPhone2, Status, JoinedAt, DeletedAt) VALUES
@@ -293,7 +294,7 @@ INSERT INTO Accounts (AccountId, PersonId, PasswordHash, Status, FailedLoginCoun
 SET IDENTITY_INSERT Accounts OFF;
 
 /* ============================================================================
-   VerificationCodes — 15 dòng. 
+   VerificationCodes — 15 dòng.
    ============================================================================ */
 SET IDENTITY_INSERT VerificationCodes ON;
 INSERT INTO VerificationCodes (VerificationCodeId, AccountId, Email, Purpose, Code, SentAt, ExpiresAt, FailedAttempts, LockedUntil, UsedAt) VALUES
@@ -315,7 +316,7 @@ INSERT INTO VerificationCodes (VerificationCodeId, AccountId, Email, Purpose, Co
 SET IDENTITY_INSERT VerificationCodes OFF;
 
 /* ============================================================================
-   Packages — 13 dòng. 
+   Packages — 13 dòng.
    ============================================================================ */
 SET IDENTITY_INSERT Packages ON;
 INSERT INTO Packages (PackageId, PackageName, Description, Benefits, PackageType, DurationUnit, DurationValue, EstimatedSessionCount, Price, IsActive, CreatedAt) VALUES
@@ -358,7 +359,7 @@ Giáo án riêng cho từng người', 'PTCouple', 'Month', 2, 43, 24900000, 1, 
 SET IDENTITY_INSERT Packages OFF;
 
 /* ============================================================================
-   Vouchers — 6 dòng. 
+   Vouchers — 6 dòng.
    ============================================================================ */
 SET IDENTITY_INSERT Vouchers ON;
 INSERT INTO Vouchers (VoucherId, VoucherCode, DiscountType, DiscountValue, StartDate, EndDate, MaxUsage, MaxUsagePerCustomer, UsedCount, MinOrderValue, ApplicableScope, IsActive, CreatedAt) VALUES
@@ -530,7 +531,7 @@ INSERT INTO Shifts (ShiftId, WorkDate, ShiftType, OpenedByEmployeeId, ClosedByEm
 SET IDENTITY_INSERT Shifts OFF;
 
 /* ============================================================================
-   Orders — 156 dòng. 
+   Orders — 156 dòng.
    ============================================================================ */
 SET IDENTITY_INSERT Orders ON;
 INSERT INTO Orders (OrderId, OrderCode, HolderCustomerId, PartnerCustomerId, PackageId, VoucherId, CreatedByEmployeeId, ShiftId, Channel, PackageNameSnapshot, PackageDescriptionSnapshot, PackageBenefitsSnapshot, UnitPriceSnapshot, DiscountAmount, VatRateSnapshot, VatAmount, Status, PaymentDueAt, CreatedAt, PaidAt, CancelType, CancelledAt, CancelReason) VALUES
@@ -928,7 +929,7 @@ Miễn phí nước uống', 799000, 0, 10, 72636, 'Cancelled', '2026-07-18 09:2
 SET IDENTITY_INSERT Orders OFF;
 
 /* ============================================================================
-   Transactions — 156 dòng. 
+   Transactions — 156 dòng.
    ============================================================================ */
 SET IDENTITY_INSERT Transactions ON;
 INSERT INTO Transactions (TransactionId, OrderId, Amount, PaymentMethod, GatewayReference, ReceivedByEmployeeId, Status, FailureReason, NeedsRefund, RefundedAt, RefundedByEmployeeId, RefundNote, CreatedAt, ExpiresAt, CompletedAt) VALUES
@@ -1091,15 +1092,15 @@ INSERT INTO Transactions (TransactionId, OrderId, Amount, PaymentMethod, Gateway
 SET IDENTITY_INSERT Transactions OFF;
 
 /* ============================================================================
-   Subscriptions — 149 dòng. 
+   Subscriptions — 149 dòng.
    ============================================================================ */
 SET IDENTITY_INSERT Subscriptions ON;
 INSERT INTO Subscriptions (SubscriptionId, OrderId, CustomerId, SubscriptionType, PtEmployeeId, StartDate, EndDate, FixedStartTime, GeneratedSessionCount, SwapsUsed, MaxSwapsSnapshot, FreezeUsed, MaxFreezesSnapshot, Status) VALUES
  (1, 1, 1, 'Membership', NULL, '2026-07-06', '2026-10-15', NULL, NULL, 0, NULL, 1, 1, 'Active'), -- bảo lưu 03/08 → hủy sớm 12/08: hạn +9 ngày (DBR-51)
  (2, 2, 1, 'Membership', NULL, '2026-10-16', '2027-07-16', NULL, NULL, 0, NULL, 0, 1, 'Active'), -- gia hạn trước: bắt đầu ngay sau gói cũ (DBR-52)
- (3, 3, 1, 'SingleSession', 5, '2026-09-26', '2026-09-26', NULL, 1, 0, NULL, 0, NULL, 'Completed'),
+ (3, 3, 1, 'SingleSession', 5, '2026-09-26', '2026-09-26', NULL, 1, 0, NULL, 0, NULL, 'Used'),
  (4, 6, 2, 'Membership', NULL, '2026-09-03', '2026-10-03', NULL, NULL, 0, NULL, 0, 1, 'Active'), -- hết hạn đúng 03/10/2026
- (5, 8, 2, 'SingleSession', 5, '2026-09-26', '2026-09-26', NULL, 1, 0, NULL, 0, NULL, 'Completed'),
+ (5, 8, 2, 'SingleSession', 5, '2026-09-26', '2026-09-26', NULL, 1, 0, NULL, 0, NULL, 'Used'),
  (6, 9, 3, 'Membership', NULL, '2026-07-01', '2026-08-01', NULL, NULL, 0, NULL, 0, 1, 'Expired'),
  (7, 10, 3, 'PTSingle', 5, '2026-07-06', '2026-08-06', '07:00:00', 24, 0, 3, 0, NULL, 'Expired'), -- gói PT đã hết; 03–05/08 Missed vì hết gói tập (CBR-64)
  (8, 11, 4, 'Membership', NULL, '2026-07-29', '2027-01-29', NULL, NULL, 0, NULL, 1, 1, 'Frozen'), -- đang bảo lưu, hết lượt bảo lưu (BR-24)
@@ -1226,28 +1227,28 @@ INSERT INTO Subscriptions (SubscriptionId, OrderId, CustomerId, SubscriptionType
  (129, 135, 210, 'DayPass', NULL, '2026-10-01', '2026-10-01', NULL, NULL, 0, NULL, 0, NULL, 'Used'),
  (130, 136, 230, 'DayPass', NULL, '2026-10-02', '2026-10-02', NULL, NULL, 0, NULL, 0, NULL, 'Used'),
  (131, 137, 220, 'DayPass', NULL, '2026-10-02', '2026-10-02', NULL, NULL, 0, NULL, 0, NULL, 'Used'),
- (132, 138, 201, 'SingleSession', 6, '2026-09-23', '2026-09-23', NULL, 1, 0, NULL, 0, NULL, 'Completed'),
- (133, 139, 203, 'SingleSession', 7, '2026-09-05', '2026-09-05', NULL, 1, 0, NULL, 0, NULL, 'Completed'),
- (134, 140, 204, 'SingleSession', 13, '2026-09-12', '2026-09-12', NULL, 1, 0, NULL, 0, NULL, 'Completed'),
- (135, 141, 205, 'SingleSession', 7, '2026-09-27', '2026-09-27', NULL, 1, 0, NULL, 0, NULL, 'Completed'),
- (136, 142, 206, 'SingleSession', 6, '2026-09-14', '2026-09-14', NULL, 1, 0, NULL, 0, NULL, 'Completed'),
+ (132, 138, 201, 'SingleSession', 6, '2026-09-23', '2026-09-23', NULL, 1, 0, NULL, 0, NULL, 'Used'),
+ (133, 139, 203, 'SingleSession', 7, '2026-09-05', '2026-09-05', NULL, 1, 0, NULL, 0, NULL, 'Used'),
+ (134, 140, 204, 'SingleSession', 13, '2026-09-12', '2026-09-12', NULL, 1, 0, NULL, 0, NULL, 'Used'),
+ (135, 141, 205, 'SingleSession', 7, '2026-09-27', '2026-09-27', NULL, 1, 0, NULL, 0, NULL, 'Used'),
+ (136, 142, 206, 'SingleSession', 6, '2026-09-14', '2026-09-14', NULL, 1, 0, NULL, 0, NULL, 'Used'),
  (137, 143, 207, 'SingleSession', 6, '2026-09-29', '2026-09-29', NULL, 1, 0, NULL, 0, NULL, 'Expired'),
- (138, 144, 208, 'SingleSession', 13, '2026-09-20', '2026-09-20', NULL, 1, 0, NULL, 0, NULL, 'Completed'),
- (139, 145, 209, 'SingleSession', 7, '2026-09-17', '2026-09-17', NULL, 1, 0, NULL, 0, NULL, 'Completed'),
- (140, 146, 211, 'SingleSession', 13, '2026-09-27', '2026-09-27', NULL, 1, 0, NULL, 0, NULL, 'Completed'),
- (141, 147, 212, 'SingleSession', 13, '2026-09-21', '2026-09-21', NULL, 1, 0, NULL, 0, NULL, 'Completed'),
- (142, 148, 213, 'SingleSession', 5, '2026-09-05', '2026-09-05', NULL, 1, 0, NULL, 0, NULL, 'Completed'),
+ (138, 144, 208, 'SingleSession', 13, '2026-09-20', '2026-09-20', NULL, 1, 0, NULL, 0, NULL, 'Used'),
+ (139, 145, 209, 'SingleSession', 7, '2026-09-17', '2026-09-17', NULL, 1, 0, NULL, 0, NULL, 'Used'),
+ (140, 146, 211, 'SingleSession', 13, '2026-09-27', '2026-09-27', NULL, 1, 0, NULL, 0, NULL, 'Used'),
+ (141, 147, 212, 'SingleSession', 13, '2026-09-21', '2026-09-21', NULL, 1, 0, NULL, 0, NULL, 'Used'),
+ (142, 148, 213, 'SingleSession', 5, '2026-09-05', '2026-09-05', NULL, 1, 0, NULL, 0, NULL, 'Used'),
  (143, 149, 214, 'SingleSession', 5, '2026-09-30', '2026-09-30', NULL, 1, 0, NULL, 0, NULL, 'Expired'),
- (144, 150, 215, 'SingleSession', 6, '2026-09-23', '2026-09-23', NULL, 1, 0, NULL, 0, NULL, 'Completed'),
- (145, 151, 216, 'SingleSession', 7, '2026-09-11', '2026-09-11', NULL, 1, 0, NULL, 0, NULL, 'Completed'),
- (146, 152, 219, 'SingleSession', 5, '2026-09-24', '2026-09-24', NULL, 1, 0, NULL, 0, NULL, 'Completed'),
- (147, 153, 221, 'SingleSession', 7, '2026-09-25', '2026-09-25', NULL, 1, 0, NULL, 0, NULL, 'Completed'),
- (148, 154, 222, 'SingleSession', 5, '2026-09-29', '2026-09-29', NULL, 1, 0, NULL, 0, NULL, 'Completed'),
- (149, 155, 224, 'SingleSession', 6, '2026-09-11', '2026-09-11', NULL, 1, 0, NULL, 0, NULL, 'Completed');
+ (144, 150, 215, 'SingleSession', 6, '2026-09-23', '2026-09-23', NULL, 1, 0, NULL, 0, NULL, 'Used'),
+ (145, 151, 216, 'SingleSession', 7, '2026-09-11', '2026-09-11', NULL, 1, 0, NULL, 0, NULL, 'Used'),
+ (146, 152, 219, 'SingleSession', 5, '2026-09-24', '2026-09-24', NULL, 1, 0, NULL, 0, NULL, 'Used'),
+ (147, 153, 221, 'SingleSession', 7, '2026-09-25', '2026-09-25', NULL, 1, 0, NULL, 0, NULL, 'Used'),
+ (148, 154, 222, 'SingleSession', 5, '2026-09-29', '2026-09-29', NULL, 1, 0, NULL, 0, NULL, 'Used'),
+ (149, 155, 224, 'SingleSession', 6, '2026-09-11', '2026-09-11', NULL, 1, 0, NULL, 0, NULL, 'Used');
 SET IDENTITY_INSERT Subscriptions OFF;
 
 /* ============================================================================
-   FreezeRecords — 2 dòng. 
+   FreezeRecords — 2 dòng.
    ============================================================================ */
 SET IDENTITY_INSERT FreezeRecords ON;
 INSERT INTO FreezeRecords (FreezeRecordId, SubscriptionId, HandledByEmployeeId, StartDate, PlannedEndDate, ActualEndDate, Reason, CreatedAt) VALUES
@@ -1256,7 +1257,7 @@ INSERT INTO FreezeRecords (FreezeRecordId, SubscriptionId, HandledByEmployeeId, 
 SET IDENTITY_INSERT FreezeRecords OFF;
 
 /* ============================================================================
-   CheckIns — 815 dòng. 
+   CheckIns — 815 dòng.
    ============================================================================ */
 SET IDENTITY_INSERT CheckIns ON;
 INSERT INTO CheckIns (CheckInId, SubscriptionId, VerifiedByEmployeeId, CheckedInAt, PhotoVerified) VALUES
@@ -2080,7 +2081,7 @@ INSERT INTO CheckIns (CheckInId, SubscriptionId, VerifiedByEmployeeId, CheckedIn
 SET IDENTITY_INSERT CheckIns OFF;
 
 /* ============================================================================
-   CustomerDeletionRequests — 4 dòng. 
+   CustomerDeletionRequests — 4 dòng.
    ============================================================================ */
 SET IDENTITY_INSERT CustomerDeletionRequests ON;
 INSERT INTO CustomerDeletionRequests (CustomerDeletionRequestId, CustomerId, RequestedByEmployeeId, ReviewedByEmployeeId, Reason, Status, RejectReason, RequestedAt, ReviewedAt) VALUES
@@ -2100,16 +2101,16 @@ INSERT INTO TimeSlots (TimeSlotId, PtEmployeeId, SlotDate, StartTime, EndTime, S
  (3, 7, DATEADD(DAY, 1, @Today), '14:00:00', '15:30:00', 'Held', 5, DATEADD(MINUTE, 18, @Now), DATEADD(MINUTE, -4320, @Now)),
  (4, 5, '2026-09-26', '10:30:00', '12:00:00', 'Booked', NULL, NULL, '2026-09-22 19:00:00'),
  (5, 5, '2026-07-06', '07:00:00', '08:30:00', 'Booked', NULL, NULL, '2026-06-26 21:00:00'),
- (6, 5, '2026-07-07', '07:00:00', '08:30:00', 'Booked', NULL, NULL, '2026-06-27 21:00:00'),
+ (6, 5, '2026-07-07', '07:00:00', '08:30:00', 'Free', NULL, NULL, '2026-06-27 21:00:00'),
  (7, 5, '2026-07-08', '07:00:00', '08:30:00', 'Booked', NULL, NULL, '2026-06-28 21:00:00'),
  (8, 5, '2026-07-09', '07:00:00', '08:30:00', 'Booked', NULL, NULL, '2026-06-29 21:00:00'),
  (9, 5, '2026-07-10', '07:00:00', '08:30:00', 'Booked', NULL, NULL, '2026-06-30 21:00:00'),
  (10, 5, '2026-07-13', '07:00:00', '08:30:00', 'Booked', NULL, NULL, '2026-07-03 21:00:00'),
  (11, 5, '2026-07-14', '07:00:00', '08:30:00', 'Booked', NULL, NULL, '2026-07-04 21:00:00'),
- (12, 5, '2026-07-15', '07:00:00', '08:30:00', 'Booked', NULL, NULL, '2026-07-05 21:00:00'),
+ (12, 5, '2026-07-15', '07:00:00', '08:30:00', 'Free', NULL, NULL, '2026-07-05 21:00:00'),
  (13, 5, '2026-07-16', '07:00:00', '08:30:00', 'Booked', NULL, NULL, '2026-07-06 21:00:00'),
  (14, 5, '2026-07-17', '07:00:00', '08:30:00', 'Booked', NULL, NULL, '2026-07-07 21:00:00'),
- (15, 5, '2026-07-20', '07:00:00', '08:30:00', 'Booked', NULL, NULL, '2026-07-10 21:00:00'),
+ (15, 5, '2026-07-20', '07:00:00', '08:30:00', 'Free', NULL, NULL, '2026-07-10 21:00:00'),
  (16, 5, '2026-07-21', '07:00:00', '08:30:00', 'Booked', NULL, NULL, '2026-07-11 21:00:00'),
  (17, 5, '2026-07-22', '07:00:00', '08:30:00', 'Booked', NULL, NULL, '2026-07-12 21:00:00'),
  (18, 5, '2026-07-23', '07:00:00', '08:30:00', 'Booked', NULL, NULL, '2026-07-13 21:00:00'),
@@ -2119,9 +2120,9 @@ INSERT INTO TimeSlots (TimeSlotId, PtEmployeeId, SlotDate, StartTime, EndTime, S
  (22, 5, '2026-07-29', '07:00:00', '08:30:00', 'Booked', NULL, NULL, '2026-07-19 21:00:00'),
  (23, 5, '2026-07-30', '07:00:00', '08:30:00', 'Booked', NULL, NULL, '2026-07-20 21:00:00'),
  (24, 5, '2026-07-31', '07:00:00', '08:30:00', 'Booked', NULL, NULL, '2026-07-21 21:00:00'),
- (25, 5, '2026-08-03', '07:00:00', '08:30:00', 'Booked', NULL, NULL, '2026-07-24 21:00:00'),
- (26, 5, '2026-08-04', '07:00:00', '08:30:00', 'Booked', NULL, NULL, '2026-07-25 21:00:00'),
- (27, 5, '2026-08-05', '07:00:00', '08:30:00', 'Booked', NULL, NULL, '2026-07-26 21:00:00'),
+ (25, 5, '2026-08-03', '07:00:00', '08:30:00', 'Free', NULL, NULL, '2026-07-24 21:00:00'),
+ (26, 5, '2026-08-04', '07:00:00', '08:30:00', 'Free', NULL, NULL, '2026-07-25 21:00:00'),
+ (27, 5, '2026-08-05', '07:00:00', '08:30:00', 'Free', NULL, NULL, '2026-07-26 21:00:00'),
  (28, 5, '2026-08-06', '07:00:00', '08:30:00', 'Free', NULL, NULL, '2026-07-27 21:00:00'),
  (29, 7, '2026-09-07', '17:00:00', '18:30:00', 'Booked', NULL, NULL, '2026-08-28 21:00:00'),
  (30, 7, '2026-09-08', '17:00:00', '18:30:00', 'Booked', NULL, NULL, '2026-08-29 21:00:00'),
@@ -2129,7 +2130,7 @@ INSERT INTO TimeSlots (TimeSlotId, PtEmployeeId, SlotDate, StartTime, EndTime, S
  (32, 7, '2026-09-10', '17:00:00', '18:30:00', 'Booked', NULL, NULL, '2026-08-31 21:00:00'),
  (33, 7, '2026-09-11', '17:00:00', '18:30:00', 'Booked', NULL, NULL, '2026-09-01 21:00:00'),
  (34, 7, '2026-09-14', '17:00:00', '18:30:00', 'Booked', NULL, NULL, '2026-09-04 21:00:00'),
- (35, 7, '2026-09-15', '17:00:00', '18:30:00', 'Booked', NULL, NULL, '2026-09-05 21:00:00'),
+ (35, 7, '2026-09-15', '17:00:00', '18:30:00', 'Free', NULL, NULL, '2026-09-05 21:00:00'),
  (36, 7, '2026-09-16', '17:00:00', '18:30:00', 'Booked', NULL, NULL, '2026-09-06 21:00:00'),
  (37, 7, '2026-09-17', '17:00:00', '18:30:00', 'Booked', NULL, NULL, '2026-09-07 21:00:00'),
  (38, 7, '2026-09-18', '17:00:00', '18:30:00', 'Free', NULL, NULL, '2026-09-08 21:00:00'),
@@ -2168,26 +2169,26 @@ INSERT INTO TimeSlots (TimeSlotId, PtEmployeeId, SlotDate, StartTime, EndTime, S
  (71, 7, '2026-11-05', '17:00:00', '18:30:00', 'Booked', NULL, NULL, '2026-10-26 21:00:00'),
  (72, 7, '2026-11-06', '17:00:00', '18:30:00', 'Booked', NULL, NULL, '2026-10-27 21:00:00'),
  (73, 5, '2026-09-07', '18:00:00', '19:30:00', 'Booked', NULL, NULL, '2026-08-28 21:00:00'),
- (74, 5, '2026-09-08', '18:00:00', '19:30:00', 'Booked', NULL, NULL, '2026-08-29 21:00:00'),
+ (74, 5, '2026-09-08', '18:00:00', '19:30:00', 'Free', NULL, NULL, '2026-08-29 21:00:00'),
  (75, 5, '2026-09-09', '18:00:00', '19:30:00', 'Booked', NULL, NULL, '2026-08-30 21:00:00'),
  (76, 5, '2026-09-10', '18:00:00', '19:30:00', 'Booked', NULL, NULL, '2026-08-31 21:00:00'),
  (77, 5, '2026-09-11', '18:00:00', '19:30:00', 'Free', NULL, NULL, '2026-09-01 21:00:00'),
  (78, 5, '2026-09-12', '09:00:00', '10:30:00', 'Booked', NULL, NULL, '2026-09-02 21:00:00'),
- (79, 5, '2026-09-14', '18:00:00', '19:30:00', 'Booked', NULL, NULL, '2026-09-04 21:00:00'),
+ (79, 5, '2026-09-14', '18:00:00', '19:30:00', 'Free', NULL, NULL, '2026-09-04 21:00:00'),
  (80, 5, '2026-09-15', '18:00:00', '19:30:00', 'Booked', NULL, NULL, '2026-09-05 21:00:00'),
- (81, 5, '2026-09-16', '18:00:00', '19:30:00', 'Booked', NULL, NULL, '2026-09-06 21:00:00'),
+ (81, 5, '2026-09-16', '18:00:00', '19:30:00', 'Free', NULL, NULL, '2026-09-06 21:00:00'),
  (82, 5, '2026-09-17', '18:00:00', '19:30:00', 'Booked', NULL, NULL, '2026-09-07 21:00:00'),
  (83, 5, '2026-09-18', '18:00:00', '19:30:00', 'Free', NULL, NULL, '2026-09-08 21:00:00'),
  (84, 5, '2026-09-21', '18:00:00', '19:30:00', 'Booked', NULL, NULL, '2026-09-11 21:00:00'),
  (85, 5, '2026-09-22', '18:00:00', '19:30:00', 'Free', NULL, NULL, '2026-09-12 21:00:00'),
  (86, 5, '2026-09-23', '18:00:00', '19:30:00', 'Booked', NULL, NULL, '2026-09-13 21:00:00'),
- (87, 5, '2026-09-24', '18:00:00', '19:30:00', 'Booked', NULL, NULL, '2026-09-14 21:00:00'),
+ (87, 5, '2026-09-24', '18:00:00', '19:30:00', 'Free', NULL, NULL, '2026-09-14 21:00:00'),
  (88, 5, '2026-09-25', '18:00:00', '19:30:00', 'Booked', NULL, NULL, '2026-09-15 21:00:00'),
  (89, 5, '2026-09-28', '18:00:00', '19:30:00', 'Booked', NULL, NULL, '2026-09-18 21:00:00'),
  (90, 5, '2026-09-29', '18:00:00', '19:30:00', 'Free', NULL, NULL, '2026-09-19 21:00:00'),
  (91, 13, '2026-09-29', '18:00:00', '19:30:00', 'Booked', NULL, NULL, '2026-09-19 21:00:00'),
  (92, 5, '2026-09-30', '18:00:00', '19:30:00', 'Booked', NULL, NULL, '2026-09-20 21:00:00'),
- (93, 5, '2026-10-01', '18:00:00', '19:30:00', 'Booked', NULL, NULL, '2026-09-21 21:00:00'),
+ (93, 5, '2026-10-01', '18:00:00', '19:30:00', 'Free', NULL, NULL, '2026-09-21 21:00:00'),
  (94, 5, '2026-10-02', '18:00:00', '19:30:00', 'Booked', NULL, NULL, '2026-09-22 21:00:00'),
  (95, 5, '2026-10-05', '18:00:00', '19:30:00', 'Booked', NULL, NULL, '2026-09-25 21:00:00'),
  (96, 5, '2026-10-06', '18:00:00', '19:30:00', 'Booked', NULL, NULL, '2026-09-26 21:00:00'),
@@ -2214,18 +2215,18 @@ INSERT INTO TimeSlots (TimeSlotId, PtEmployeeId, SlotDate, StartTime, EndTime, S
  (117, 5, '2026-11-05', '18:00:00', '19:30:00', 'Booked', NULL, NULL, '2026-10-26 21:00:00'),
  (118, 5, '2026-11-06', '18:00:00', '19:30:00', 'Booked', NULL, NULL, '2026-10-27 21:00:00'),
  (119, 6, '2026-08-24', '19:30:00', '21:00:00', 'Booked', NULL, NULL, '2026-08-14 21:00:00'),
- (120, 6, '2026-08-25', '19:30:00', '21:00:00', 'Booked', NULL, NULL, '2026-08-15 21:00:00'),
+ (120, 6, '2026-08-25', '19:30:00', '21:00:00', 'Free', NULL, NULL, '2026-08-15 21:00:00'),
  (121, 6, '2026-08-26', '19:30:00', '21:00:00', 'Booked', NULL, NULL, '2026-08-16 21:00:00'),
- (122, 6, '2026-08-27', '19:30:00', '21:00:00', 'Booked', NULL, NULL, '2026-08-17 21:00:00'),
+ (122, 6, '2026-08-27', '19:30:00', '21:00:00', 'Free', NULL, NULL, '2026-08-17 21:00:00'),
  (123, 6, '2026-08-28', '19:30:00', '21:00:00', 'Booked', NULL, NULL, '2026-08-18 21:00:00'),
  (124, 6, '2026-08-31', '19:30:00', '21:00:00', 'Booked', NULL, NULL, '2026-08-21 21:00:00'),
  (125, 6, '2026-09-01', '19:30:00', '21:00:00', 'Booked', NULL, NULL, '2026-08-22 21:00:00'),
- (126, 6, '2026-09-03', '19:30:00', '21:00:00', 'Booked', NULL, NULL, '2026-08-24 21:00:00'),
+ (126, 6, '2026-09-03', '19:30:00', '21:00:00', 'Free', NULL, NULL, '2026-08-24 21:00:00'),
  (127, 6, '2026-09-04', '19:30:00', '21:00:00', 'Booked', NULL, NULL, '2026-08-25 21:00:00'),
  (128, 6, '2026-09-07', '19:30:00', '21:00:00', 'Booked', NULL, NULL, '2026-08-28 21:00:00'),
  (129, 6, '2026-09-08', '19:30:00', '21:00:00', 'Booked', NULL, NULL, '2026-08-29 21:00:00'),
  (130, 6, '2026-09-09', '19:30:00', '21:00:00', 'Booked', NULL, NULL, '2026-08-30 21:00:00'),
- (131, 6, '2026-09-10', '19:30:00', '21:00:00', 'Booked', NULL, NULL, '2026-08-31 21:00:00'),
+ (131, 6, '2026-09-10', '19:30:00', '21:00:00', 'Free', NULL, NULL, '2026-08-31 21:00:00'),
  (132, 6, '2026-09-11', '19:30:00', '21:00:00', 'Booked', NULL, NULL, '2026-09-01 21:00:00'),
  (133, 6, '2026-09-14', '19:30:00', '21:00:00', 'Booked', NULL, NULL, '2026-09-04 21:00:00'),
  (134, 6, '2026-09-15', '19:30:00', '21:00:00', 'Free', NULL, NULL, '2026-09-05 21:00:00'),
@@ -2235,7 +2236,7 @@ INSERT INTO TimeSlots (TimeSlotId, PtEmployeeId, SlotDate, StartTime, EndTime, S
  (138, 6, '2026-09-18', '19:30:00', '21:00:00', 'Free', NULL, NULL, '2026-09-08 21:00:00'),
  (139, 6, '2026-09-21', '19:30:00', '21:00:00', 'Free', NULL, NULL, '2026-09-11 21:00:00'),
  (140, 6, '2026-09-22', '19:30:00', '21:00:00', 'Booked', NULL, NULL, '2026-09-12 21:00:00'),
- (141, 6, '2026-09-23', '19:30:00', '21:00:00', 'Booked', NULL, NULL, '2026-09-13 21:00:00'),
+ (141, 6, '2026-09-23', '19:30:00', '21:00:00', 'Free', NULL, NULL, '2026-09-13 21:00:00'),
  (142, 6, '2026-09-24', '19:30:00', '21:00:00', 'Booked', NULL, NULL, '2026-09-14 21:00:00'),
  (143, 6, '2026-09-25', '19:30:00', '21:00:00', 'Booked', NULL, NULL, '2026-09-15 21:00:00'),
  (144, 6, '2026-09-28', '19:30:00', '21:00:00', 'Booked', NULL, NULL, '2026-09-18 21:00:00'),
@@ -2260,7 +2261,7 @@ INSERT INTO TimeSlots (TimeSlotId, PtEmployeeId, SlotDate, StartTime, EndTime, S
  (163, 6, '2026-10-23', '19:30:00', '21:00:00', 'Booked', NULL, NULL, '2026-10-13 21:00:00'),
  (164, 7, '2026-09-14', '12:00:00', '13:30:00', 'Booked', NULL, NULL, '2026-09-04 21:00:00'),
  (165, 7, '2026-09-15', '12:00:00', '13:30:00', 'Booked', NULL, NULL, '2026-09-05 21:00:00'),
- (166, 7, '2026-09-16', '12:00:00', '13:30:00', 'Booked', NULL, NULL, '2026-09-06 21:00:00'),
+ (166, 7, '2026-09-16', '12:00:00', '13:30:00', 'Free', NULL, NULL, '2026-09-06 21:00:00'),
  (167, 7, '2026-09-17', '12:00:00', '13:30:00', 'Booked', NULL, NULL, '2026-09-07 21:00:00'),
  (168, 7, '2026-09-21', '12:00:00', '13:30:00', 'Booked', NULL, NULL, '2026-09-11 21:00:00'),
  (169, 7, '2026-09-22', '12:00:00', '13:30:00', 'Booked', NULL, NULL, '2026-09-12 21:00:00'),
@@ -2268,7 +2269,7 @@ INSERT INTO TimeSlots (TimeSlotId, PtEmployeeId, SlotDate, StartTime, EndTime, S
  (171, 7, '2026-09-24', '12:00:00', '13:30:00', 'Booked', NULL, NULL, '2026-09-14 21:00:00'),
  (172, 7, '2026-09-25', '12:00:00', '13:30:00', 'Booked', NULL, NULL, '2026-09-15 21:00:00'),
  (173, 7, '2026-09-28', '12:00:00', '13:30:00', 'Booked', NULL, NULL, '2026-09-18 21:00:00'),
- (174, 7, '2026-09-29', '12:00:00', '13:30:00', 'Booked', NULL, NULL, '2026-09-19 21:00:00'),
+ (174, 7, '2026-09-29', '12:00:00', '13:30:00', 'Free', NULL, NULL, '2026-09-19 21:00:00'),
  (175, 7, '2026-09-30', '12:00:00', '13:30:00', 'Booked', NULL, NULL, '2026-09-20 21:00:00'),
  (176, 7, '2026-10-01', '12:00:00', '13:30:00', 'Booked', NULL, NULL, '2026-09-21 21:00:00'),
  (177, 7, '2026-10-02', '12:00:00', '13:30:00', 'Booked', NULL, NULL, '2026-09-22 21:00:00'),
@@ -2289,10 +2290,10 @@ INSERT INTO TimeSlots (TimeSlotId, PtEmployeeId, SlotDate, StartTime, EndTime, S
  (192, 5, '2026-09-23', '06:30:00', '08:00:00', 'Booked', NULL, NULL, '2026-09-13 21:00:00'),
  (193, 5, '2026-09-24', '06:30:00', '08:00:00', 'Free', NULL, NULL, '2026-09-14 21:00:00'),
  (194, 5, '2026-09-25', '20:00:00', '21:30:00', 'Booked', NULL, NULL, '2026-09-15 21:00:00'),
- (195, 5, '2026-09-25', '06:30:00', '08:00:00', 'Booked', NULL, NULL, '2026-09-15 21:00:00'),
- (196, 5, '2026-09-28', '06:30:00', '08:00:00', 'Booked', NULL, NULL, '2026-09-18 21:00:00'),
+ (195, 5, '2026-09-25', '06:30:00', '08:00:00', 'Free', NULL, NULL, '2026-09-15 21:00:00'),
+ (196, 5, '2026-09-28', '06:30:00', '08:00:00', 'Free', NULL, NULL, '2026-09-18 21:00:00'),
  (197, 5, '2026-09-29', '06:30:00', '08:00:00', 'Booked', NULL, NULL, '2026-09-19 21:00:00'),
- (198, 5, '2026-09-30', '06:30:00', '08:00:00', 'Booked', NULL, NULL, '2026-09-20 21:00:00'),
+ (198, 5, '2026-09-30', '06:30:00', '08:00:00', 'Free', NULL, NULL, '2026-09-20 21:00:00'),
  (199, 5, '2026-10-01', '06:30:00', '08:00:00', 'Booked', NULL, NULL, '2026-09-21 21:00:00'),
  (200, 5, '2026-10-02', '06:30:00', '08:00:00', 'Booked', NULL, NULL, '2026-09-22 21:00:00'),
  (201, 5, '2026-10-05', '06:30:00', '08:00:00', 'Booked', NULL, NULL, '2026-09-25 21:00:00'),
@@ -2327,11 +2328,11 @@ INSERT INTO TimeSlots (TimeSlotId, PtEmployeeId, SlotDate, StartTime, EndTime, S
  (230, 13, '2026-10-19', '07:30:00', '09:00:00', 'Booked', NULL, NULL, '2026-10-09 21:00:00'),
  (231, 13, '2026-10-21', '07:30:00', '09:00:00', 'Booked', NULL, NULL, '2026-10-11 21:00:00'),
  (232, 6, '2026-09-21', '06:00:00', '07:30:00', 'Booked', NULL, NULL, '2026-09-11 21:00:00'),
- (233, 6, '2026-09-22', '06:00:00', '07:30:00', 'Booked', NULL, NULL, '2026-09-12 21:00:00'),
+ (233, 6, '2026-09-22', '06:00:00', '07:30:00', 'Free', NULL, NULL, '2026-09-12 21:00:00'),
  (234, 6, '2026-09-23', '06:00:00', '07:30:00', 'Booked', NULL, NULL, '2026-09-13 21:00:00'),
  (235, 6, '2026-09-24', '06:00:00', '07:30:00', 'Booked', NULL, NULL, '2026-09-14 21:00:00'),
  (236, 6, '2026-09-25', '06:00:00', '07:30:00', 'Booked', NULL, NULL, '2026-09-15 21:00:00'),
- (237, 6, '2026-09-28', '06:00:00', '07:30:00', 'Booked', NULL, NULL, '2026-09-18 21:00:00'),
+ (237, 6, '2026-09-28', '06:00:00', '07:30:00', 'Free', NULL, NULL, '2026-09-18 21:00:00'),
  (238, 6, '2026-09-29', '06:00:00', '07:30:00', 'Booked', NULL, NULL, '2026-09-19 21:00:00'),
  (239, 6, '2026-09-30', '06:00:00', '07:30:00', 'Booked', NULL, NULL, '2026-09-20 21:00:00'),
  (240, 6, '2026-10-01', '06:00:00', '07:30:00', 'Booked', NULL, NULL, '2026-09-21 21:00:00'),
@@ -2396,16 +2397,16 @@ INSERT INTO TimeSlots (TimeSlotId, PtEmployeeId, SlotDate, StartTime, EndTime, S
  (299, 14, '2026-09-15', '10:00:00', '11:30:00', 'Booked', NULL, NULL, '2026-09-05 21:00:00'),
  (300, 14, '2026-09-16', '10:00:00', '11:30:00', 'Booked', NULL, NULL, '2026-09-06 21:00:00'),
  (301, 14, '2026-09-17', '10:00:00', '11:30:00', 'Booked', NULL, NULL, '2026-09-07 21:00:00'),
- (302, 14, '2026-09-21', '10:00:00', '11:30:00', 'Booked', NULL, NULL, '2026-09-11 21:00:00'),
- (303, 14, '2026-09-22', '10:00:00', '11:30:00', 'Booked', NULL, NULL, '2026-09-12 21:00:00'),
- (304, 14, '2026-09-23', '10:00:00', '11:30:00', 'Booked', NULL, NULL, '2026-09-13 21:00:00'),
- (305, 14, '2026-09-24', '10:00:00', '11:30:00', 'Booked', NULL, NULL, '2026-09-14 21:00:00'),
- (306, 14, '2026-09-25', '10:00:00', '11:30:00', 'Booked', NULL, NULL, '2026-09-15 21:00:00'),
- (307, 14, '2026-09-28', '10:00:00', '11:30:00', 'Booked', NULL, NULL, '2026-09-18 21:00:00'),
- (308, 14, '2026-09-29', '10:00:00', '11:30:00', 'Booked', NULL, NULL, '2026-09-19 21:00:00'),
- (309, 14, '2026-09-30', '10:00:00', '11:30:00', 'Booked', NULL, NULL, '2026-09-20 21:00:00'),
- (310, 14, '2026-10-01', '10:00:00', '11:30:00', 'Booked', NULL, NULL, '2026-09-21 21:00:00'),
- (311, 14, '2026-10-02', '10:00:00', '11:30:00', 'Booked', NULL, NULL, '2026-09-22 21:00:00'),
+ (302, 14, '2026-09-21', '10:00:00', '11:30:00', 'Free', NULL, NULL, '2026-09-11 21:00:00'),
+ (303, 14, '2026-09-22', '10:00:00', '11:30:00', 'Free', NULL, NULL, '2026-09-12 21:00:00'),
+ (304, 14, '2026-09-23', '10:00:00', '11:30:00', 'Free', NULL, NULL, '2026-09-13 21:00:00'),
+ (305, 14, '2026-09-24', '10:00:00', '11:30:00', 'Free', NULL, NULL, '2026-09-14 21:00:00'),
+ (306, 14, '2026-09-25', '10:00:00', '11:30:00', 'Free', NULL, NULL, '2026-09-15 21:00:00'),
+ (307, 14, '2026-09-28', '10:00:00', '11:30:00', 'Free', NULL, NULL, '2026-09-18 21:00:00'),
+ (308, 14, '2026-09-29', '10:00:00', '11:30:00', 'Free', NULL, NULL, '2026-09-19 21:00:00'),
+ (309, 14, '2026-09-30', '10:00:00', '11:30:00', 'Free', NULL, NULL, '2026-09-20 21:00:00'),
+ (310, 14, '2026-10-01', '10:00:00', '11:30:00', 'Free', NULL, NULL, '2026-09-21 21:00:00'),
+ (311, 14, '2026-10-02', '10:00:00', '11:30:00', 'Free', NULL, NULL, '2026-09-22 21:00:00'),
  (312, 14, '2026-10-05', '10:00:00', '11:30:00', 'Booked', NULL, NULL, '2026-09-25 21:00:00'),
  (313, 14, '2026-10-06', '10:00:00', '11:30:00', 'Booked', NULL, NULL, '2026-09-26 21:00:00'),
  (314, 14, '2026-10-07', '10:00:00', '11:30:00', 'Booked', NULL, NULL, '2026-09-27 21:00:00'),
@@ -2442,13 +2443,13 @@ INSERT INTO TimeSlots (TimeSlotId, PtEmployeeId, SlotDate, StartTime, EndTime, S
  (345, 13, '2026-09-12', '08:30:00', '10:00:00', 'Booked', NULL, NULL, '2026-09-09 21:00:00'),
  (346, 7, '2026-09-27', '10:00:00', '11:30:00', 'Booked', NULL, NULL, '2026-09-24 21:00:00'),
  (347, 6, '2026-09-14', '07:00:00', '08:30:00', 'Booked', NULL, NULL, '2026-09-11 06:00:00'),
- (348, 6, '2026-09-29', '08:30:00', '10:00:00', 'Booked', NULL, NULL, '2026-09-25 21:00:00'),
+ (348, 6, '2026-09-29', '08:30:00', '10:00:00', 'Free', NULL, NULL, '2026-09-25 21:00:00'),
  (349, 13, '2026-09-20', '15:30:00', '17:00:00', 'Booked', NULL, NULL, '2026-09-16 21:00:00'),
  (350, 7, '2026-09-17', '14:00:00', '15:30:00', 'Booked', NULL, NULL, '2026-09-12 21:00:00'),
  (351, 13, '2026-09-27', '08:30:00', '10:00:00', 'Booked', NULL, NULL, '2026-09-24 21:00:00'),
  (352, 13, '2026-09-21', '15:30:00', '17:00:00', 'Booked', NULL, NULL, '2026-09-18 14:00:00'),
  (353, 5, '2026-09-05', '08:30:00', '10:00:00', 'Booked', NULL, NULL, '2026-09-01 21:00:00'),
- (354, 5, '2026-09-30', '08:30:00', '10:00:00', 'Booked', NULL, NULL, '2026-09-25 21:00:00'),
+ (354, 5, '2026-09-30', '08:30:00', '10:00:00', 'Free', NULL, NULL, '2026-09-25 21:00:00'),
  (355, 6, '2026-09-23', '16:00:00', '17:30:00', 'Booked', NULL, NULL, '2026-09-18 21:00:00'),
  (356, 7, '2026-09-11', '07:00:00', '08:30:00', 'Booked', NULL, NULL, '2026-09-05 21:00:00'),
  (357, 5, '2026-09-24', '16:00:00', '17:30:00', 'Booked', NULL, NULL, '2026-09-21 21:00:00'),
@@ -3008,68 +3009,68 @@ SET IDENTITY_INSERT TimeSlots OFF;
    ============================================================================ */
 SET IDENTITY_INSERT Sessions ON;
 INSERT INTO Sessions (SessionId, SubscriptionId, TimeSlotId, PtEmployeeId, Status, SessionValue, CommissionAmount, AttendanceMarkedAt, IsAutoClosed, MissedReason, CancelType, CancelReason, CancelledAt, CancelledByAccountId, RefundAgreed) VALUES
- (1, 3, 1, 5, 'Completed', 450000, 315000, '2026-09-26 10:25:00', 0, NULL, NULL, NULL, NULL, NULL, 0),
- (2, 5, 4, 5, 'Completed', 450000, 315000, '2026-09-26 11:55:00', 0, NULL, NULL, NULL, NULL, NULL, 0),
- (3, 7, 5, 5, 'Completed', 366667, 256667, '2026-07-06 08:25:00', 0, NULL, NULL, NULL, NULL, NULL, 0),
- (4, 7, 6, 5, 'Missed', 366667, 256667, NULL, 1, 'NoCheckIn', NULL, NULL, NULL, NULL, 0),
- (5, 7, 7, 5, 'Completed', 366667, 256667, NULL, 1, NULL, NULL, NULL, NULL, NULL, 0),
- (6, 7, 8, 5, 'Completed', 366667, 256667, '2026-07-09 08:25:00', 0, NULL, NULL, NULL, NULL, NULL, 0),
- (7, 7, 9, 5, 'Completed', 366667, 256667, NULL, 1, NULL, NULL, NULL, NULL, NULL, 0),
- (8, 7, 10, 5, 'Completed', 366667, 256667, NULL, 1, NULL, NULL, NULL, NULL, NULL, 0),
- (9, 7, 11, 5, 'Completed', 366667, 256667, '2026-07-14 08:25:00', 0, NULL, NULL, NULL, NULL, NULL, 0),
- (10, 7, 12, 5, 'Missed', 366667, 256667, '2026-07-15 07:15:00', 0, 'MarkedAbsent', NULL, NULL, NULL, NULL, 0),
- (11, 7, 13, 5, 'Completed', 366667, 256667, NULL, 1, NULL, NULL, NULL, NULL, NULL, 0),
- (12, 7, 14, 5, 'Completed', 366667, 256667, NULL, 1, NULL, NULL, NULL, NULL, NULL, 0),
- (13, 7, 15, 5, 'Missed', 366667, 256667, NULL, 1, 'NoCheckIn', NULL, NULL, NULL, NULL, 0),
- (14, 7, 16, 5, 'Completed', 366667, 256667, '2026-07-21 08:25:00', 0, NULL, NULL, NULL, NULL, NULL, 0),
- (15, 7, 17, 5, 'Completed', 366667, 256667, '2026-07-22 08:25:00', 0, NULL, NULL, NULL, NULL, NULL, 0),
- (16, 7, 18, 5, 'Completed', 366667, 256667, NULL, 1, NULL, NULL, NULL, NULL, NULL, 0),
- (17, 7, 19, 5, 'Completed', 366667, 256667, '2026-07-24 08:25:00', 0, NULL, NULL, NULL, NULL, NULL, 0),
- (18, 7, 20, 5, 'Completed', 366667, 256667, '2026-07-27 08:25:00', 0, NULL, NULL, NULL, NULL, NULL, 0),
- (19, 7, 21, 5, 'Completed', 366667, 256667, '2026-07-28 08:25:00', 0, NULL, NULL, NULL, NULL, NULL, 0),
- (20, 7, 22, 5, 'Completed', 366667, 256667, NULL, 1, NULL, NULL, NULL, NULL, NULL, 0),
- (21, 7, 23, 5, 'Completed', 366667, 256667, NULL, 1, NULL, NULL, NULL, NULL, NULL, 0),
- (22, 7, 24, 5, 'Completed', 366667, 256667, NULL, 1, NULL, NULL, NULL, NULL, NULL, 0),
- (23, 7, 25, 5, 'Missed', 366667, 256667, NULL, 1, 'NoMembership', NULL, NULL, NULL, NULL, 0),
- (24, 7, 26, 5, 'Missed', 366667, 256667, NULL, 1, 'NoMembership', NULL, NULL, NULL, NULL, 0),
- (25, 7, 27, 5, 'Missed', 366667, 256667, NULL, 1, 'NoMembership', NULL, NULL, NULL, NULL, 0),
+ (1, 3, 1, 5, 'CheckedIn', 450000, 315000, '2026-09-27 00:05:00', 1, NULL, NULL, NULL, NULL, NULL, 0),
+ (2, 5, 4, 5, 'CheckedIn', 450000, 315000, '2026-09-27 00:05:00', 1, NULL, NULL, NULL, NULL, NULL, 0),
+ (3, 7, 5, 5, 'CheckedIn', 366667, 256667, '2026-07-07 00:05:00', 1, NULL, NULL, NULL, NULL, NULL, 0),
+ (4, 7, 6, 5, 'Missed', 366667, 256667, '2026-07-08 00:05:00', 1, 'NoCheckIn', NULL, NULL, NULL, NULL, 0),
+ (5, 7, 7, 5, 'CheckedIn', 366667, 256667, '2026-07-09 00:05:00', 1, NULL, NULL, NULL, NULL, NULL, 0),
+ (6, 7, 8, 5, 'CheckedIn', 366667, 256667, '2026-07-10 00:05:00', 1, NULL, NULL, NULL, NULL, NULL, 0),
+ (7, 7, 9, 5, 'CheckedIn', 366667, 256667, '2026-07-11 00:05:00', 1, NULL, NULL, NULL, NULL, NULL, 0),
+ (8, 7, 10, 5, 'CheckedIn', 366667, 256667, '2026-07-14 00:05:00', 1, NULL, NULL, NULL, NULL, NULL, 0),
+ (9, 7, 11, 5, 'CheckedIn', 366667, 256667, '2026-07-15 00:05:00', 1, NULL, NULL, NULL, NULL, NULL, 0),
+ (10, 7, 12, 5, 'Missed', 366667, 256667, '2026-07-16 00:05:00', 1, 'NoCheckIn', NULL, NULL, NULL, NULL, 0),
+ (11, 7, 13, 5, 'CheckedIn', 366667, 256667, '2026-07-17 00:05:00', 1, NULL, NULL, NULL, NULL, NULL, 0),
+ (12, 7, 14, 5, 'CheckedIn', 366667, 256667, '2026-07-18 00:05:00', 1, NULL, NULL, NULL, NULL, NULL, 0),
+ (13, 7, 15, 5, 'Missed', 366667, 256667, '2026-07-21 00:05:00', 1, 'NoCheckIn', NULL, NULL, NULL, NULL, 0),
+ (14, 7, 16, 5, 'CheckedIn', 366667, 256667, '2026-07-22 00:05:00', 1, NULL, NULL, NULL, NULL, NULL, 0),
+ (15, 7, 17, 5, 'CheckedIn', 366667, 256667, '2026-07-23 00:05:00', 1, NULL, NULL, NULL, NULL, NULL, 0),
+ (16, 7, 18, 5, 'CheckedIn', 366667, 256667, '2026-07-24 00:05:00', 1, NULL, NULL, NULL, NULL, NULL, 0),
+ (17, 7, 19, 5, 'CheckedIn', 366667, 256667, '2026-07-25 00:05:00', 1, NULL, NULL, NULL, NULL, NULL, 0),
+ (18, 7, 20, 5, 'CheckedIn', 366667, 256667, '2026-07-28 00:05:00', 1, NULL, NULL, NULL, NULL, NULL, 0),
+ (19, 7, 21, 5, 'CheckedIn', 366667, 256667, '2026-07-29 00:05:00', 1, NULL, NULL, NULL, NULL, NULL, 0),
+ (20, 7, 22, 5, 'CheckedIn', 366667, 256667, '2026-07-30 00:05:00', 1, NULL, NULL, NULL, NULL, NULL, 0),
+ (21, 7, 23, 5, 'CheckedIn', 366667, 256667, '2026-07-31 00:05:00', 1, NULL, NULL, NULL, NULL, NULL, 0),
+ (22, 7, 24, 5, 'CheckedIn', 366667, 256667, '2026-08-01 00:05:00', 1, NULL, NULL, NULL, NULL, NULL, 0),
+ (23, 7, 25, 5, 'Missed', 366667, 256667, '2026-08-04 00:05:00', 1, 'NoMembership', NULL, NULL, NULL, NULL, 0),
+ (24, 7, 26, 5, 'Missed', 366667, 256667, '2026-08-05 00:05:00', 1, 'NoMembership', NULL, NULL, NULL, NULL, 0),
+ (25, 7, 27, 5, 'Missed', 366667, 256667, '2026-08-06 00:05:00', 1, 'NoMembership', NULL, NULL, NULL, NULL, 0),
  (26, 7, 28, 5, 'Cancelled', 366667, 256667, NULL, 0, NULL, 'PackageExpired', N'Gói PT hết hạn, buổi còn lại chưa diễn ra (CBR-55)', '2026-08-07 00:05:00', NULL, 0),
- (27, 9, 29, 7, 'Completed', 375000, 225000, '2026-09-07 18:25:00', 0, NULL, NULL, NULL, NULL, NULL, 0),
- (28, 9, 30, 7, 'Completed', 375000, 225000, '2026-09-08 18:25:00', 0, NULL, NULL, NULL, NULL, NULL, 0),
- (29, 9, 31, 7, 'Completed', 375000, 225000, '2026-09-09 18:25:00', 0, NULL, NULL, NULL, NULL, NULL, 0),
- (30, 9, 32, 7, 'Completed', 375000, 225000, '2026-09-10 18:25:00', 0, NULL, NULL, NULL, NULL, NULL, 0),
- (31, 9, 33, 7, 'Completed', 375000, 225000, NULL, 1, NULL, NULL, NULL, NULL, NULL, 0),
- (32, 9, 34, 7, 'Completed', 375000, 225000, NULL, 1, NULL, NULL, NULL, NULL, NULL, 0),
- (33, 9, 35, 7, 'Missed', 375000, 225000, NULL, 1, 'NoCheckIn', NULL, NULL, NULL, NULL, 0),
- (34, 9, 36, 7, 'Completed', 375000, 225000, NULL, 1, NULL, NULL, NULL, NULL, NULL, 0),
- (35, 9, 37, 7, 'Completed', 375000, 225000, '2026-09-17 18:25:00', 0, NULL, NULL, NULL, NULL, NULL, 0),
+ (27, 9, 29, 7, 'CheckedIn', 375000, 225000, '2026-09-08 00:05:00', 1, NULL, NULL, NULL, NULL, NULL, 0),
+ (28, 9, 30, 7, 'CheckedIn', 375000, 225000, '2026-09-09 00:05:00', 1, NULL, NULL, NULL, NULL, NULL, 0),
+ (29, 9, 31, 7, 'CheckedIn', 375000, 225000, '2026-09-10 00:05:00', 1, NULL, NULL, NULL, NULL, NULL, 0),
+ (30, 9, 32, 7, 'CheckedIn', 375000, 225000, '2026-09-11 00:05:00', 1, NULL, NULL, NULL, NULL, NULL, 0),
+ (31, 9, 33, 7, 'CheckedIn', 375000, 225000, '2026-09-12 00:05:00', 1, NULL, NULL, NULL, NULL, NULL, 0),
+ (32, 9, 34, 7, 'CheckedIn', 375000, 225000, '2026-09-15 00:05:00', 1, NULL, NULL, NULL, NULL, NULL, 0),
+ (33, 9, 35, 7, 'Missed', 375000, 225000, '2026-09-16 00:05:00', 1, 'NoCheckIn', NULL, NULL, NULL, NULL, 0),
+ (34, 9, 36, 7, 'CheckedIn', 375000, 225000, '2026-09-17 00:05:00', 1, NULL, NULL, NULL, NULL, NULL, 0),
+ (35, 9, 37, 7, 'CheckedIn', 375000, 225000, '2026-09-18 00:05:00', 1, NULL, NULL, NULL, NULL, NULL, 0),
  (36, 9, 38, 7, 'Cancelled', 375000, 225000, NULL, 0, NULL, 'GymClosed', N'Phòng tập nghỉ cả ngày theo lịch Manager khai báo sau khi bán gói', '2026-09-10 09:00:00', NULL, 0),
- (37, 9, 39, 7, 'Completed', 375000, 225000, '2026-09-21 18:25:00', 0, NULL, NULL, NULL, NULL, NULL, 0),
- (38, 9, 40, 7, 'Completed', 375000, 225000, '2026-09-22 18:25:00', 0, NULL, NULL, NULL, NULL, NULL, 0),
- (39, 9, 41, 7, 'Completed', 375000, 225000, '2026-09-23 18:25:00', 0, NULL, NULL, NULL, NULL, NULL, 0),
- (40, 9, 42, 7, 'Completed', 375000, 225000, NULL, 1, NULL, NULL, NULL, NULL, NULL, 0),
- (41, 9, 43, 7, 'Completed', 375000, 225000, '2026-09-25 18:25:00', 0, NULL, NULL, NULL, NULL, NULL, 0),
- (42, 9, 44, 7, 'Missed', 375000, 225000, NULL, 0, 'MembershipFrozen', NULL, NULL, NULL, NULL, 0),
- (43, 9, 45, 7, 'Missed', 375000, 225000, NULL, 0, 'MembershipFrozen', NULL, NULL, NULL, NULL, 0),
- (44, 9, 46, 7, 'Missed', 375000, 225000, NULL, 0, 'MembershipFrozen', NULL, NULL, NULL, NULL, 0),
- (45, 9, 47, 7, 'Missed', 375000, 225000, NULL, 0, 'MembershipFrozen', NULL, NULL, NULL, NULL, 0),
- (46, 9, 48, 7, 'Missed', 375000, 225000, NULL, 0, 'MembershipFrozen', NULL, NULL, NULL, NULL, 0),
- (47, 9, 49, 7, 'Missed', 375000, 225000, NULL, 0, 'MembershipFrozen', NULL, NULL, NULL, NULL, 0),
- (48, 9, 50, 7, 'Missed', 375000, 225000, NULL, 0, 'MembershipFrozen', NULL, NULL, NULL, NULL, 0),
- (49, 9, 51, 7, 'Missed', 375000, 225000, NULL, 0, 'MembershipFrozen', NULL, NULL, NULL, NULL, 0),
- (50, 9, 52, 7, 'Missed', 375000, 225000, NULL, 0, 'MembershipFrozen', NULL, NULL, NULL, NULL, 0),
- (51, 9, 53, 7, 'Missed', 375000, 225000, NULL, 0, 'MembershipFrozen', NULL, NULL, NULL, NULL, 0),
- (52, 9, 54, 7, 'Missed', 375000, 225000, NULL, 0, 'MembershipFrozen', NULL, NULL, NULL, NULL, 0),
- (53, 9, 55, 7, 'Missed', 375000, 225000, NULL, 0, 'MembershipFrozen', NULL, NULL, NULL, NULL, 0),
- (54, 9, 56, 7, 'Missed', 375000, 225000, NULL, 0, 'MembershipFrozen', NULL, NULL, NULL, NULL, 0),
- (55, 9, 57, 7, 'Missed', 375000, 225000, NULL, 0, 'MembershipFrozen', NULL, NULL, NULL, NULL, 0),
- (56, 9, 58, 7, 'Missed', 375000, 225000, NULL, 0, 'MembershipFrozen', NULL, NULL, NULL, NULL, 0),
- (57, 9, 59, 7, 'Missed', 375000, 225000, NULL, 0, 'MembershipFrozen', NULL, NULL, NULL, NULL, 0),
- (58, 9, 60, 7, 'Missed', 375000, 225000, NULL, 0, 'MembershipFrozen', NULL, NULL, NULL, NULL, 0),
- (59, 9, 61, 7, 'Missed', 375000, 225000, NULL, 0, 'MembershipFrozen', NULL, NULL, NULL, NULL, 0),
- (60, 9, 62, 7, 'Missed', 375000, 225000, NULL, 0, 'MembershipFrozen', NULL, NULL, NULL, NULL, 0),
- (61, 9, 63, 7, 'Missed', 375000, 225000, NULL, 0, 'MembershipFrozen', NULL, NULL, NULL, NULL, 0),
- (62, 9, 64, 7, 'Missed', 375000, 225000, NULL, 0, 'MembershipFrozen', NULL, NULL, NULL, NULL, 0),
+ (37, 9, 39, 7, 'CheckedIn', 375000, 225000, '2026-09-22 00:05:00', 1, NULL, NULL, NULL, NULL, NULL, 0),
+ (38, 9, 40, 7, 'CheckedIn', 375000, 225000, '2026-09-23 00:05:00', 1, NULL, NULL, NULL, NULL, NULL, 0),
+ (39, 9, 41, 7, 'CheckedIn', 375000, 225000, '2026-09-24 00:05:00', 1, NULL, NULL, NULL, NULL, NULL, 0),
+ (40, 9, 42, 7, 'CheckedIn', 375000, 225000, '2026-09-25 00:05:00', 1, NULL, NULL, NULL, NULL, NULL, 0),
+ (41, 9, 43, 7, 'CheckedIn', 375000, 225000, '2026-09-26 00:05:00', 1, NULL, NULL, NULL, NULL, NULL, 0),
+ (42, 9, 44, 7, 'Missed', 375000, 225000, '2026-09-29 00:05:00', 1, 'MembershipFrozen', NULL, NULL, NULL, NULL, 0),
+ (43, 9, 45, 7, 'Missed', 375000, 225000, '2026-09-30 00:05:00', 1, 'MembershipFrozen', NULL, NULL, NULL, NULL, 0),
+ (44, 9, 46, 7, 'Missed', 375000, 225000, '2026-10-01 00:05:00', 1, 'MembershipFrozen', NULL, NULL, NULL, NULL, 0),
+ (45, 9, 47, 7, 'Missed', 375000, 225000, '2026-10-02 00:05:00', 1, 'MembershipFrozen', NULL, NULL, NULL, NULL, 0),
+ (46, 9, 48, 7, 'Missed', 375000, 225000, '2026-10-03 00:05:00', 1, 'MembershipFrozen', NULL, NULL, NULL, NULL, 0),
+ (47, 9, 49, 7, 'Missed', 375000, 225000, '2026-10-06 00:05:00', 1, 'MembershipFrozen', NULL, NULL, NULL, NULL, 0),
+ (48, 9, 50, 7, 'Missed', 375000, 225000, '2026-10-07 00:05:00', 1, 'MembershipFrozen', NULL, NULL, NULL, NULL, 0),
+ (49, 9, 51, 7, 'Missed', 375000, 225000, '2026-10-08 00:05:00', 1, 'MembershipFrozen', NULL, NULL, NULL, NULL, 0),
+ (50, 9, 52, 7, 'Missed', 375000, 225000, '2026-10-09 00:05:00', 1, 'MembershipFrozen', NULL, NULL, NULL, NULL, 0),
+ (51, 9, 53, 7, 'Missed', 375000, 225000, '2026-10-10 00:05:00', 1, 'MembershipFrozen', NULL, NULL, NULL, NULL, 0),
+ (52, 9, 54, 7, 'Missed', 375000, 225000, '2026-10-13 00:05:00', 1, 'MembershipFrozen', NULL, NULL, NULL, NULL, 0),
+ (53, 9, 55, 7, 'Missed', 375000, 225000, '2026-10-14 00:05:00', 1, 'MembershipFrozen', NULL, NULL, NULL, NULL, 0),
+ (54, 9, 56, 7, 'Missed', 375000, 225000, '2026-10-15 00:05:00', 1, 'MembershipFrozen', NULL, NULL, NULL, NULL, 0),
+ (55, 9, 57, 7, 'Missed', 375000, 225000, '2026-10-16 00:05:00', 1, 'MembershipFrozen', NULL, NULL, NULL, NULL, 0),
+ (56, 9, 58, 7, 'Missed', 375000, 225000, '2026-10-17 00:05:00', 1, 'MembershipFrozen', NULL, NULL, NULL, NULL, 0),
+ (57, 9, 59, 7, 'Missed', 375000, 225000, '2026-10-20 00:05:00', 1, 'MembershipFrozen', NULL, NULL, NULL, NULL, 0),
+ (58, 9, 60, 7, 'Missed', 375000, 225000, '2026-10-22 00:05:00', 1, 'MembershipFrozen', NULL, NULL, NULL, NULL, 0),
+ (59, 9, 61, 7, 'Missed', 375000, 225000, '2026-10-23 00:05:00', 1, 'MembershipFrozen', NULL, NULL, NULL, NULL, 0),
+ (60, 9, 62, 7, 'Missed', 375000, 225000, '2026-10-24 00:05:00', 1, 'MembershipFrozen', NULL, NULL, NULL, NULL, 0),
+ (61, 9, 63, 7, 'Missed', 375000, 225000, '2026-10-27 00:05:00', 1, 'MembershipFrozen', NULL, NULL, NULL, NULL, 0),
+ (62, 9, 64, 7, 'Missed', 375000, 225000, '2026-10-28 00:05:00', 1, 'MembershipFrozen', NULL, NULL, NULL, NULL, 0),
  (63, 9, 65, 7, 'Scheduled', 375000, 225000, NULL, 0, NULL, NULL, NULL, NULL, NULL, 0),
  (64, 9, 66, 7, 'Scheduled', 375000, 225000, NULL, 0, NULL, NULL, NULL, NULL, NULL, 0),
  (65, 9, 67, 7, 'Scheduled', 375000, 225000, NULL, 0, NULL, NULL, NULL, NULL, NULL, 0),
@@ -3078,26 +3079,26 @@ INSERT INTO Sessions (SessionId, SubscriptionId, TimeSlotId, PtEmployeeId, Statu
  (68, 9, 70, 7, 'Scheduled', 375000, 225000, NULL, 0, NULL, NULL, NULL, NULL, NULL, 0),
  (69, 9, 71, 7, 'Scheduled', 375000, 225000, NULL, 0, NULL, NULL, NULL, NULL, NULL, 0),
  (70, 9, 72, 7, 'Scheduled', 375000, 225000, NULL, 0, NULL, NULL, NULL, NULL, NULL, 0),
- (71, 11, 73, 5, 'Completed', 375000, 262500, '2026-09-07 19:25:00', 0, NULL, NULL, NULL, NULL, NULL, 0),
- (72, 11, 74, 5, 'Missed', 375000, 262500, NULL, 1, 'NoCheckIn', NULL, NULL, NULL, NULL, 0),
- (73, 11, 75, 5, 'Completed', 375000, 262500, NULL, 1, NULL, NULL, NULL, NULL, NULL, 0),
- (74, 11, 76, 5, 'Completed', 375000, 262500, NULL, 1, NULL, NULL, NULL, NULL, NULL, 0),
- (75, 11, 78, 5, 'Completed', 375000, 262500, NULL, 1, NULL, NULL, NULL, NULL, NULL, 0),
- (76, 11, 79, 5, 'Missed', 375000, 262500, NULL, 1, 'NoCheckIn', NULL, NULL, NULL, NULL, 0),
- (77, 11, 80, 5, 'Completed', 375000, 262500, '2026-09-15 19:25:00', 0, NULL, NULL, NULL, NULL, NULL, 0),
- (78, 11, 81, 5, 'Missed', 375000, 262500, '2026-09-16 18:15:00', 0, 'MarkedAbsent', NULL, NULL, NULL, NULL, 0),
- (79, 11, 82, 5, 'Completed', 375000, 262500, '2026-09-17 19:25:00', 0, NULL, NULL, NULL, NULL, NULL, 0),
+ (71, 11, 73, 5, 'CheckedIn', 375000, 262500, '2026-09-08 00:05:00', 1, NULL, NULL, NULL, NULL, NULL, 0),
+ (72, 11, 74, 5, 'Missed', 375000, 262500, '2026-09-09 00:05:00', 1, 'NoCheckIn', NULL, NULL, NULL, NULL, 0),
+ (73, 11, 75, 5, 'CheckedIn', 375000, 262500, '2026-09-10 00:05:00', 1, NULL, NULL, NULL, NULL, NULL, 0),
+ (74, 11, 76, 5, 'CheckedIn', 375000, 262500, '2026-09-11 00:05:00', 1, NULL, NULL, NULL, NULL, NULL, 0),
+ (75, 11, 78, 5, 'CheckedIn', 375000, 262500, '2026-09-13 00:05:00', 1, NULL, NULL, NULL, NULL, NULL, 0),
+ (76, 11, 79, 5, 'Missed', 375000, 262500, '2026-09-15 00:05:00', 1, 'NoCheckIn', NULL, NULL, NULL, NULL, 0),
+ (77, 11, 80, 5, 'CheckedIn', 375000, 262500, '2026-09-16 00:05:00', 1, NULL, NULL, NULL, NULL, NULL, 0),
+ (78, 11, 81, 5, 'Missed', 375000, 262500, '2026-09-17 00:05:00', 1, 'NoCheckIn', NULL, NULL, NULL, NULL, 0),
+ (79, 11, 82, 5, 'CheckedIn', 375000, 262500, '2026-09-18 00:05:00', 1, NULL, NULL, NULL, NULL, NULL, 0),
  (80, 11, 83, 5, 'Cancelled', 375000, 262500, NULL, 0, NULL, 'GymClosed', N'Phòng tập nghỉ cả ngày theo lịch Manager khai báo sau khi bán gói', '2026-09-10 09:00:00', NULL, 0),
- (81, 11, 84, 5, 'Completed', 375000, 262500, '2026-09-21 19:25:00', 0, NULL, NULL, NULL, NULL, NULL, 0),
+ (81, 11, 84, 5, 'CheckedIn', 375000, 262500, '2026-09-22 00:05:00', 1, NULL, NULL, NULL, NULL, NULL, 0),
  (82, 11, 85, 5, 'Cancelled', 375000, 262500, NULL, 0, NULL, 'ByCustomer', N'Khách bận đột xuất', '2026-09-21 22:00:00', 5, 0),
- (83, 11, 86, 5, 'Completed', 375000, 262500, '2026-09-23 19:25:00', 0, NULL, NULL, NULL, NULL, NULL, 0),
- (84, 11, 87, 5, 'Missed', 375000, 262500, NULL, 1, 'NoCheckIn', NULL, NULL, NULL, NULL, 0),
- (85, 11, 88, 5, 'Completed', 375000, 262500, '2026-09-25 19:25:00', 0, NULL, NULL, NULL, NULL, NULL, 0),
- (86, 11, 89, 5, 'Completed', 375000, 262500, NULL, 1, NULL, NULL, NULL, NULL, NULL, 0),
- (87, 11, 91, 13, 'Completed', 375000, 225000, '2026-09-29 19:25:00', 0, NULL, NULL, NULL, NULL, NULL, 0),
- (88, 11, 92, 5, 'Completed', 375000, 262500, NULL, 1, NULL, NULL, NULL, NULL, NULL, 0),
- (89, 11, 93, 5, 'Missed', 375000, 262500, NULL, 1, 'NoCheckIn', NULL, NULL, NULL, NULL, 0),
- (90, 11, 94, 5, 'Completed', 375000, 262500, '2026-10-02 19:25:00', 0, NULL, NULL, NULL, NULL, NULL, 0),
+ (83, 11, 86, 5, 'CheckedIn', 375000, 262500, '2026-09-24 00:05:00', 1, NULL, NULL, NULL, NULL, NULL, 0),
+ (84, 11, 87, 5, 'Missed', 375000, 262500, '2026-09-25 00:05:00', 1, 'NoCheckIn', NULL, NULL, NULL, NULL, 0),
+ (85, 11, 88, 5, 'CheckedIn', 375000, 262500, '2026-09-26 00:05:00', 1, NULL, NULL, NULL, NULL, NULL, 0),
+ (86, 11, 89, 5, 'CheckedIn', 375000, 262500, '2026-09-29 00:05:00', 1, NULL, NULL, NULL, NULL, NULL, 0),
+ (87, 11, 91, 13, 'CheckedIn', 375000, 225000, '2026-09-30 00:05:00', 1, NULL, NULL, NULL, NULL, NULL, 0),
+ (88, 11, 92, 5, 'CheckedIn', 375000, 262500, '2026-10-01 00:05:00', 1, NULL, NULL, NULL, NULL, NULL, 0),
+ (89, 11, 93, 5, 'Missed', 375000, 262500, '2026-10-02 00:05:00', 1, 'NoCheckIn', NULL, NULL, NULL, NULL, 0),
+ (90, 11, 94, 5, 'CheckedIn', 375000, 262500, '2026-10-03 00:05:00', 1, NULL, NULL, NULL, NULL, NULL, 0),
  (91, 11, 95, 5, 'Scheduled', 375000, 262500, NULL, 0, NULL, NULL, NULL, NULL, NULL, 0),
  (92, 11, 96, 5, 'Scheduled', 375000, 262500, NULL, 0, NULL, NULL, NULL, NULL, NULL, 0),
  (93, 11, 97, 5, 'Scheduled', 375000, 262500, NULL, 0, NULL, NULL, NULL, NULL, NULL, 0),
@@ -3122,35 +3123,35 @@ INSERT INTO Sessions (SessionId, SubscriptionId, TimeSlotId, PtEmployeeId, Statu
  (112, 11, 116, 5, 'Scheduled', 375000, 262500, NULL, 0, NULL, NULL, NULL, NULL, NULL, 0),
  (113, 11, 117, 5, 'Scheduled', 375000, 262500, NULL, 0, NULL, NULL, NULL, NULL, NULL, 0),
  (114, 11, 118, 5, 'Scheduled', 375000, 262500, NULL, 0, NULL, NULL, NULL, NULL, NULL, 0),
- (115, 14, 119, 6, 'Completed', 565909, 367841, NULL, 1, NULL, NULL, NULL, NULL, NULL, 0),
- (116, 14, 120, 6, 'Missed', 565909, 367841, NULL, 1, 'NoCheckIn', NULL, NULL, NULL, NULL, 0),
- (117, 14, 121, 6, 'Completed', 565909, 367841, NULL, 1, NULL, NULL, NULL, NULL, NULL, 0),
- (118, 14, 122, 6, 'Missed', 565909, 367841, NULL, 1, 'NoCheckIn', NULL, NULL, NULL, NULL, 0),
- (119, 14, 123, 6, 'Completed', 565909, 367841, '2026-08-28 20:55:00', 0, NULL, NULL, NULL, NULL, NULL, 0),
- (120, 14, 124, 6, 'Completed', 565909, 367841, '2026-08-31 20:55:00', 0, NULL, NULL, NULL, NULL, NULL, 0),
- (121, 14, 125, 6, 'Completed', 565909, 367841, '2026-09-01 20:55:00', 0, NULL, NULL, NULL, NULL, NULL, 0),
- (122, 14, 126, 6, 'Missed', 565909, 367841, NULL, 1, 'NoCheckIn', NULL, NULL, NULL, NULL, 0),
- (123, 14, 127, 6, 'Completed', 565909, 367841, '2026-09-04 20:55:00', 0, NULL, NULL, NULL, NULL, NULL, 0),
- (124, 14, 128, 6, 'Completed', 565909, 367841, '2026-09-07 20:55:00', 0, NULL, NULL, NULL, NULL, NULL, 0),
- (125, 14, 129, 6, 'Completed', 565909, 367841, '2026-09-08 20:55:00', 0, NULL, NULL, NULL, NULL, NULL, 0),
- (126, 14, 130, 6, 'Completed', 565909, 367841, '2026-09-09 20:55:00', 0, NULL, NULL, NULL, NULL, NULL, 0),
- (127, 14, 131, 6, 'Missed', 565909, 367841, '2026-09-10 19:45:00', 0, 'MarkedAbsent', NULL, NULL, NULL, NULL, 0),
- (128, 14, 132, 6, 'Completed', 565909, 367841, '2026-09-11 20:55:00', 0, NULL, NULL, NULL, NULL, NULL, 0),
- (129, 14, 133, 6, 'Completed', 565909, 367841, '2026-09-14 20:55:00', 0, NULL, NULL, NULL, NULL, NULL, 0),
- (130, 14, 135, 6, 'Completed', 565909, 367841, '2026-09-16 07:25:00', 0, NULL, NULL, NULL, NULL, NULL, 0),
- (131, 14, 136, 6, 'Completed', 565909, 367841, '2026-09-16 20:55:00', 0, NULL, NULL, NULL, NULL, NULL, 0),
- (132, 14, 137, 6, 'Completed', 565909, 367841, '2026-09-17 20:55:00', 0, NULL, NULL, NULL, NULL, NULL, 0),
+ (115, 14, 119, 6, 'CheckedIn', 565909, 367841, '2026-08-25 00:05:00', 1, NULL, NULL, NULL, NULL, NULL, 0),
+ (116, 14, 120, 6, 'Missed', 565909, 367841, '2026-08-26 00:05:00', 1, 'NoCheckIn', NULL, NULL, NULL, NULL, 0),
+ (117, 14, 121, 6, 'CheckedIn', 565909, 367841, '2026-08-27 00:05:00', 1, NULL, NULL, NULL, NULL, NULL, 0),
+ (118, 14, 122, 6, 'Missed', 565909, 367841, '2026-08-28 00:05:00', 1, 'NoCheckIn', NULL, NULL, NULL, NULL, 0),
+ (119, 14, 123, 6, 'CheckedIn', 565909, 367841, '2026-08-29 00:05:00', 1, NULL, NULL, NULL, NULL, NULL, 0),
+ (120, 14, 124, 6, 'CheckedIn', 565909, 367841, '2026-09-01 00:05:00', 1, NULL, NULL, NULL, NULL, NULL, 0),
+ (121, 14, 125, 6, 'CheckedIn', 565909, 367841, '2026-09-02 00:05:00', 1, NULL, NULL, NULL, NULL, NULL, 0),
+ (122, 14, 126, 6, 'Missed', 565909, 367841, '2026-09-04 00:05:00', 1, 'NoCheckIn', NULL, NULL, NULL, NULL, 0),
+ (123, 14, 127, 6, 'CheckedIn', 565909, 367841, '2026-09-05 00:05:00', 1, NULL, NULL, NULL, NULL, NULL, 0),
+ (124, 14, 128, 6, 'CheckedIn', 565909, 367841, '2026-09-08 00:05:00', 1, NULL, NULL, NULL, NULL, NULL, 0),
+ (125, 14, 129, 6, 'CheckedIn', 565909, 367841, '2026-09-09 00:05:00', 1, NULL, NULL, NULL, NULL, NULL, 0),
+ (126, 14, 130, 6, 'CheckedIn', 565909, 367841, '2026-09-10 00:05:00', 1, NULL, NULL, NULL, NULL, NULL, 0),
+ (127, 14, 131, 6, 'Missed', 565909, 367841, '2026-09-11 00:05:00', 1, 'NoCheckIn', NULL, NULL, NULL, NULL, 0),
+ (128, 14, 132, 6, 'CheckedIn', 565909, 367841, '2026-09-12 00:05:00', 1, NULL, NULL, NULL, NULL, NULL, 0),
+ (129, 14, 133, 6, 'CheckedIn', 565909, 367841, '2026-09-15 00:05:00', 1, NULL, NULL, NULL, NULL, NULL, 0),
+ (130, 14, 135, 6, 'CheckedIn', 565909, 367841, '2026-09-17 00:05:00', 1, NULL, NULL, NULL, NULL, NULL, 0),
+ (131, 14, 136, 6, 'CheckedIn', 565909, 367841, '2026-09-17 00:05:00', 1, NULL, NULL, NULL, NULL, NULL, 0),
+ (132, 14, 137, 6, 'CheckedIn', 565909, 367841, '2026-09-18 00:05:00', 1, NULL, NULL, NULL, NULL, NULL, 0),
  (133, 14, 138, 6, 'Cancelled', 565909, 367841, NULL, 0, NULL, 'GymClosed', N'Phòng tập nghỉ cả ngày theo lịch Manager khai báo sau khi bán gói', '2026-09-10 09:00:00', NULL, 0),
  (134, 14, 139, 6, 'Cancelled', 565909, 367841, NULL, 0, NULL, 'ByPt', N'PT bận việc gia đình, khách đồng ý nhận lại tiền mặt', '2026-09-20 23:30:00', 16, 1),
- (135, 14, 140, 6, 'Completed', 565909, 367841, NULL, 1, NULL, NULL, NULL, NULL, NULL, 0),
- (136, 14, 141, 6, 'Missed', 565909, 367841, NULL, 1, 'NoCheckIn', NULL, NULL, NULL, NULL, 0),
- (137, 14, 142, 6, 'Completed', 565909, 367841, NULL, 1, NULL, NULL, NULL, NULL, NULL, 0),
- (138, 14, 143, 6, 'Completed', 565909, 367841, '2026-09-25 20:55:00', 0, NULL, NULL, NULL, NULL, NULL, 0),
- (139, 14, 144, 6, 'Completed', 565909, 367841, '2026-09-28 20:55:00', 0, NULL, NULL, NULL, NULL, NULL, 0),
- (140, 14, 145, 6, 'Completed', 565909, 367841, '2026-09-29 20:55:00', 0, NULL, NULL, NULL, NULL, NULL, 0),
- (141, 14, 146, 6, 'Completed', 565909, 367841, '2026-09-30 20:55:00', 0, NULL, NULL, NULL, NULL, NULL, 0),
- (142, 14, 147, 6, 'Completed', 565909, 367841, '2026-10-01 20:55:00', 0, NULL, NULL, NULL, NULL, NULL, 0),
- (143, 14, 148, 6, 'Completed', 565909, 367841, '2026-10-02 20:55:00', 0, NULL, NULL, NULL, NULL, NULL, 0),
+ (135, 14, 140, 6, 'CheckedIn', 565909, 367841, '2026-09-23 00:05:00', 1, NULL, NULL, NULL, NULL, NULL, 0),
+ (136, 14, 141, 6, 'Missed', 565909, 367841, '2026-09-24 00:05:00', 1, 'NoCheckIn', NULL, NULL, NULL, NULL, 0),
+ (137, 14, 142, 6, 'CheckedIn', 565909, 367841, '2026-09-25 00:05:00', 1, NULL, NULL, NULL, NULL, NULL, 0),
+ (138, 14, 143, 6, 'CheckedIn', 565909, 367841, '2026-09-26 00:05:00', 1, NULL, NULL, NULL, NULL, NULL, 0),
+ (139, 14, 144, 6, 'CheckedIn', 565909, 367841, '2026-09-29 00:05:00', 1, NULL, NULL, NULL, NULL, NULL, 0),
+ (140, 14, 145, 6, 'CheckedIn', 565909, 367841, '2026-09-30 00:05:00', 1, NULL, NULL, NULL, NULL, NULL, 0),
+ (141, 14, 146, 6, 'CheckedIn', 565909, 367841, '2026-10-01 00:05:00', 1, NULL, NULL, NULL, NULL, NULL, 0),
+ (142, 14, 147, 6, 'CheckedIn', 565909, 367841, '2026-10-02 00:05:00', 1, NULL, NULL, NULL, NULL, NULL, 0),
+ (143, 14, 148, 6, 'CheckedIn', 565909, 367841, '2026-10-03 00:05:00', 1, NULL, NULL, NULL, NULL, NULL, 0),
  (144, 14, 149, 6, 'Scheduled', 565909, 367841, NULL, 0, NULL, NULL, NULL, NULL, NULL, 0),
  (145, 14, 150, 6, 'Scheduled', 565909, 367841, NULL, 0, NULL, NULL, NULL, NULL, NULL, 0),
  (146, 14, 151, 6, 'Scheduled', 565909, 367841, NULL, 0, NULL, NULL, NULL, NULL, NULL, 0),
@@ -3166,20 +3167,20 @@ INSERT INTO Sessions (SessionId, SubscriptionId, TimeSlotId, PtEmployeeId, Statu
  (156, 14, 161, 6, 'Scheduled', 565909, 367841, NULL, 0, NULL, NULL, NULL, NULL, NULL, 0),
  (157, 14, 162, 6, 'Scheduled', 565909, 367841, NULL, 0, NULL, NULL, NULL, NULL, NULL, 0),
  (158, 14, 163, 6, 'Scheduled', 565909, 367841, NULL, 0, NULL, NULL, NULL, NULL, NULL, 0),
- (159, 20, 164, 7, 'Completed', 400000, 240000, NULL, 1, NULL, NULL, NULL, NULL, NULL, 0),
- (160, 20, 165, 7, 'Completed', 400000, 240000, NULL, 1, NULL, NULL, NULL, NULL, NULL, 0),
- (161, 20, 166, 7, 'Missed', 400000, 240000, NULL, 1, 'NoCheckIn', NULL, NULL, NULL, NULL, 0),
- (162, 20, 167, 7, 'Completed', 400000, 240000, NULL, 1, NULL, NULL, NULL, NULL, NULL, 0),
- (163, 20, 168, 7, 'Completed', 400000, 240000, NULL, 1, NULL, NULL, NULL, NULL, NULL, 0),
- (164, 20, 169, 7, 'Completed', 400000, 240000, '2026-09-22 13:25:00', 0, NULL, NULL, NULL, NULL, NULL, 0),
- (165, 20, 170, 7, 'Completed', 400000, 240000, '2026-09-23 13:25:00', 0, NULL, NULL, NULL, NULL, NULL, 0),
- (166, 20, 171, 7, 'Completed', 400000, 240000, '2026-09-24 13:25:00', 0, NULL, NULL, NULL, NULL, NULL, 0),
- (167, 20, 172, 7, 'Completed', 400000, 240000, '2026-09-25 13:25:00', 0, NULL, NULL, NULL, NULL, NULL, 0),
- (168, 20, 173, 7, 'Completed', 400000, 240000, '2026-09-28 13:25:00', 0, NULL, NULL, NULL, NULL, NULL, 0),
- (169, 20, 174, 7, 'Missed', 400000, 240000, NULL, 1, 'NoCheckIn', NULL, NULL, NULL, NULL, 0),
- (170, 20, 175, 7, 'Completed', 400000, 240000, NULL, 1, NULL, NULL, NULL, NULL, NULL, 0),
- (171, 20, 176, 7, 'Completed', 400000, 240000, NULL, 1, NULL, NULL, NULL, NULL, NULL, 0),
- (172, 20, 177, 7, 'Completed', 400000, 240000, NULL, 1, NULL, NULL, NULL, NULL, NULL, 0),
+ (159, 20, 164, 7, 'CheckedIn', 400000, 240000, '2026-09-15 00:05:00', 1, NULL, NULL, NULL, NULL, NULL, 0),
+ (160, 20, 165, 7, 'CheckedIn', 400000, 240000, '2026-09-16 00:05:00', 1, NULL, NULL, NULL, NULL, NULL, 0),
+ (161, 20, 166, 7, 'Missed', 400000, 240000, '2026-09-17 00:05:00', 1, 'NoCheckIn', NULL, NULL, NULL, NULL, 0),
+ (162, 20, 167, 7, 'CheckedIn', 400000, 240000, '2026-09-18 00:05:00', 1, NULL, NULL, NULL, NULL, NULL, 0),
+ (163, 20, 168, 7, 'CheckedIn', 400000, 240000, '2026-09-22 00:05:00', 1, NULL, NULL, NULL, NULL, NULL, 0),
+ (164, 20, 169, 7, 'CheckedIn', 400000, 240000, '2026-09-23 00:05:00', 1, NULL, NULL, NULL, NULL, NULL, 0),
+ (165, 20, 170, 7, 'CheckedIn', 400000, 240000, '2026-09-24 00:05:00', 1, NULL, NULL, NULL, NULL, NULL, 0),
+ (166, 20, 171, 7, 'CheckedIn', 400000, 240000, '2026-09-25 00:05:00', 1, NULL, NULL, NULL, NULL, NULL, 0),
+ (167, 20, 172, 7, 'CheckedIn', 400000, 240000, '2026-09-26 00:05:00', 1, NULL, NULL, NULL, NULL, NULL, 0),
+ (168, 20, 173, 7, 'CheckedIn', 400000, 240000, '2026-09-29 00:05:00', 1, NULL, NULL, NULL, NULL, NULL, 0),
+ (169, 20, 174, 7, 'Missed', 400000, 240000, '2026-09-30 00:05:00', 1, 'NoCheckIn', NULL, NULL, NULL, NULL, 0),
+ (170, 20, 175, 7, 'CheckedIn', 400000, 240000, '2026-10-01 00:05:00', 1, NULL, NULL, NULL, NULL, NULL, 0),
+ (171, 20, 176, 7, 'CheckedIn', 400000, 240000, '2026-10-02 00:05:00', 1, NULL, NULL, NULL, NULL, NULL, 0),
+ (172, 20, 177, 7, 'CheckedIn', 400000, 240000, '2026-10-03 00:05:00', 1, NULL, NULL, NULL, NULL, NULL, 0),
  (173, 20, 178, 7, 'Scheduled', 400000, 240000, NULL, 0, NULL, NULL, NULL, NULL, NULL, 0),
  (174, 20, 179, 7, 'Scheduled', 400000, 240000, NULL, 0, NULL, NULL, NULL, NULL, NULL, 0),
  (175, 20, 180, 7, 'Scheduled', 400000, 240000, NULL, 0, NULL, NULL, NULL, NULL, NULL, 0),
@@ -3188,20 +3189,20 @@ INSERT INTO Sessions (SessionId, SubscriptionId, TimeSlotId, PtEmployeeId, Statu
  (178, 20, 183, 7, 'Scheduled', 400000, 240000, NULL, 0, NULL, NULL, NULL, NULL, NULL, 0),
  (179, 20, 184, 7, 'Scheduled', 400000, 240000, NULL, 0, NULL, NULL, NULL, NULL, NULL, 0),
  (180, 20, 185, 7, 'Scheduled', 400000, 240000, NULL, 0, NULL, NULL, NULL, NULL, NULL, 0),
- (181, 25, 186, 5, 'Completed', 400000, 280000, '2026-09-14 07:55:00', 0, NULL, NULL, NULL, NULL, NULL, 0),
- (182, 25, 187, 5, 'Completed', 400000, 280000, NULL, 1, NULL, NULL, NULL, NULL, NULL, 0),
- (183, 25, 188, 5, 'Completed', 400000, 280000, '2026-09-16 07:55:00', 0, NULL, NULL, NULL, NULL, NULL, 0),
- (184, 25, 189, 5, 'Completed', 400000, 280000, '2026-09-17 07:55:00', 0, NULL, NULL, NULL, NULL, NULL, 0),
- (185, 25, 190, 5, 'Completed', 400000, 280000, NULL, 1, NULL, NULL, NULL, NULL, NULL, 0),
- (186, 25, 191, 5, 'Completed', 400000, 280000, NULL, 1, NULL, NULL, NULL, NULL, NULL, 0),
- (187, 25, 192, 5, 'Completed', 400000, 280000, NULL, 1, NULL, NULL, NULL, NULL, NULL, 0),
- (188, 25, 194, 5, 'Completed', 400000, 280000, '2026-09-25 21:25:00', 0, NULL, NULL, NULL, NULL, NULL, 0),
- (189, 25, 195, 5, 'Missed', 400000, 280000, NULL, 1, 'NoCheckIn', NULL, NULL, NULL, NULL, 0),
- (190, 25, 196, 5, 'Missed', 400000, 280000, NULL, 1, 'NoCheckIn', NULL, NULL, NULL, NULL, 0),
- (191, 25, 197, 5, 'Completed', 400000, 280000, NULL, 1, NULL, NULL, NULL, NULL, NULL, 0),
- (192, 25, 198, 5, 'Missed', 400000, 280000, NULL, 1, 'NoCheckIn', NULL, NULL, NULL, NULL, 0),
- (193, 25, 199, 5, 'Completed', 400000, 280000, '2026-10-01 07:55:00', 0, NULL, NULL, NULL, NULL, NULL, 0),
- (194, 25, 200, 5, 'Completed', 400000, 280000, '2026-10-02 07:55:00', 0, NULL, NULL, NULL, NULL, NULL, 0),
+ (181, 25, 186, 5, 'CheckedIn', 400000, 280000, '2026-09-15 00:05:00', 1, NULL, NULL, NULL, NULL, NULL, 0),
+ (182, 25, 187, 5, 'CheckedIn', 400000, 280000, '2026-09-16 00:05:00', 1, NULL, NULL, NULL, NULL, NULL, 0),
+ (183, 25, 188, 5, 'CheckedIn', 400000, 280000, '2026-09-17 00:05:00', 1, NULL, NULL, NULL, NULL, NULL, 0),
+ (184, 25, 189, 5, 'CheckedIn', 400000, 280000, '2026-09-18 00:05:00', 1, NULL, NULL, NULL, NULL, NULL, 0),
+ (185, 25, 190, 5, 'CheckedIn', 400000, 280000, '2026-09-22 00:05:00', 1, NULL, NULL, NULL, NULL, NULL, 0),
+ (186, 25, 191, 5, 'CheckedIn', 400000, 280000, '2026-09-23 00:05:00', 1, NULL, NULL, NULL, NULL, NULL, 0),
+ (187, 25, 192, 5, 'CheckedIn', 400000, 280000, '2026-09-24 00:05:00', 1, NULL, NULL, NULL, NULL, NULL, 0),
+ (188, 25, 194, 5, 'CheckedIn', 400000, 280000, '2026-09-26 00:05:00', 1, NULL, NULL, NULL, NULL, NULL, 0),
+ (189, 25, 195, 5, 'Missed', 400000, 280000, '2026-09-26 00:05:00', 1, 'NoCheckIn', NULL, NULL, NULL, NULL, 0),
+ (190, 25, 196, 5, 'Missed', 400000, 280000, '2026-09-29 00:05:00', 1, 'NoCheckIn', NULL, NULL, NULL, NULL, 0),
+ (191, 25, 197, 5, 'CheckedIn', 400000, 280000, '2026-09-30 00:05:00', 1, NULL, NULL, NULL, NULL, NULL, 0),
+ (192, 25, 198, 5, 'Missed', 400000, 280000, '2026-10-01 00:05:00', 1, 'NoCheckIn', NULL, NULL, NULL, NULL, 0),
+ (193, 25, 199, 5, 'CheckedIn', 400000, 280000, '2026-10-02 00:05:00', 1, NULL, NULL, NULL, NULL, NULL, 0),
+ (194, 25, 200, 5, 'CheckedIn', 400000, 280000, '2026-10-03 00:05:00', 1, NULL, NULL, NULL, NULL, NULL, 0),
  (195, 25, 201, 5, 'Scheduled', 400000, 280000, NULL, 0, NULL, NULL, NULL, NULL, NULL, 0),
  (196, 25, 202, 5, 'Scheduled', 400000, 280000, NULL, 0, NULL, NULL, NULL, NULL, NULL, 0),
  (197, 25, 203, 5, 'Scheduled', 400000, 280000, NULL, 0, NULL, NULL, NULL, NULL, NULL, 0),
@@ -3211,16 +3212,16 @@ INSERT INTO Sessions (SessionId, SubscriptionId, TimeSlotId, PtEmployeeId, Statu
  (201, 25, 207, 5, 'Scheduled', 400000, 280000, NULL, 0, NULL, NULL, NULL, NULL, NULL, 0),
  (202, 25, 208, 5, 'Scheduled', 400000, 280000, NULL, 0, NULL, NULL, NULL, NULL, NULL, 0),
  (203, 29, 209, 7, 'Scheduled', 450000, 270000, NULL, 0, NULL, NULL, NULL, NULL, NULL, 0),
- (204, 80, 210, 13, 'Completed', 400000, 240000, '2026-09-21 08:55:00', 0, NULL, NULL, NULL, NULL, NULL, 0),
- (205, 80, 211, 13, 'Completed', 400000, 240000, NULL, 1, NULL, NULL, NULL, NULL, NULL, 0),
- (206, 80, 212, 13, 'Completed', 400000, 240000, '2026-09-23 08:55:00', 0, NULL, NULL, NULL, NULL, NULL, 0),
- (207, 80, 213, 13, 'Completed', 400000, 240000, '2026-09-24 08:55:00', 0, NULL, NULL, NULL, NULL, NULL, 0),
- (208, 80, 214, 13, 'Completed', 400000, 240000, '2026-09-25 08:55:00', 0, NULL, NULL, NULL, NULL, NULL, 0),
- (209, 80, 215, 13, 'Completed', 400000, 240000, NULL, 1, NULL, NULL, NULL, NULL, NULL, 0),
- (210, 80, 216, 13, 'Completed', 400000, 240000, '2026-09-29 08:55:00', 0, NULL, NULL, NULL, NULL, NULL, 0),
- (211, 80, 217, 13, 'Completed', 400000, 240000, NULL, 1, NULL, NULL, NULL, NULL, NULL, 0),
- (212, 80, 218, 13, 'Completed', 400000, 240000, '2026-10-01 08:55:00', 0, NULL, NULL, NULL, NULL, NULL, 0),
- (213, 80, 219, 13, 'Completed', 400000, 240000, '2026-10-02 08:55:00', 0, NULL, NULL, NULL, NULL, NULL, 0),
+ (204, 80, 210, 13, 'CheckedIn', 400000, 240000, '2026-09-22 00:05:00', 1, NULL, NULL, NULL, NULL, NULL, 0),
+ (205, 80, 211, 13, 'CheckedIn', 400000, 240000, '2026-09-23 00:05:00', 1, NULL, NULL, NULL, NULL, NULL, 0),
+ (206, 80, 212, 13, 'CheckedIn', 400000, 240000, '2026-09-24 00:05:00', 1, NULL, NULL, NULL, NULL, NULL, 0),
+ (207, 80, 213, 13, 'CheckedIn', 400000, 240000, '2026-09-25 00:05:00', 1, NULL, NULL, NULL, NULL, NULL, 0),
+ (208, 80, 214, 13, 'CheckedIn', 400000, 240000, '2026-09-26 00:05:00', 1, NULL, NULL, NULL, NULL, NULL, 0),
+ (209, 80, 215, 13, 'CheckedIn', 400000, 240000, '2026-09-29 00:05:00', 1, NULL, NULL, NULL, NULL, NULL, 0),
+ (210, 80, 216, 13, 'CheckedIn', 400000, 240000, '2026-09-30 00:05:00', 1, NULL, NULL, NULL, NULL, NULL, 0),
+ (211, 80, 217, 13, 'CheckedIn', 400000, 240000, '2026-10-01 00:05:00', 1, NULL, NULL, NULL, NULL, NULL, 0),
+ (212, 80, 218, 13, 'CheckedIn', 400000, 240000, '2026-10-02 00:05:00', 1, NULL, NULL, NULL, NULL, NULL, 0),
+ (213, 80, 219, 13, 'CheckedIn', 400000, 240000, '2026-10-03 00:05:00', 1, NULL, NULL, NULL, NULL, NULL, 0),
  (214, 80, 220, 13, 'Scheduled', 400000, 240000, NULL, 0, NULL, NULL, NULL, NULL, NULL, 0),
  (215, 80, 221, 13, 'Scheduled', 400000, 240000, NULL, 0, NULL, NULL, NULL, NULL, NULL, 0),
  (216, 80, 222, 13, 'Scheduled', 400000, 240000, NULL, 0, NULL, NULL, NULL, NULL, NULL, 0),
@@ -3233,16 +3234,16 @@ INSERT INTO Sessions (SessionId, SubscriptionId, TimeSlotId, PtEmployeeId, Statu
  (223, 80, 229, 13, 'Scheduled', 400000, 240000, NULL, 0, NULL, NULL, NULL, NULL, NULL, 0),
  (224, 80, 230, 13, 'Scheduled', 400000, 240000, NULL, 0, NULL, NULL, NULL, NULL, NULL, 0),
  (225, 80, 231, 13, 'Scheduled', 400000, 240000, NULL, 0, NULL, NULL, NULL, NULL, NULL, 0),
- (226, 81, 232, 6, 'Completed', 400000, 260000, '2026-09-21 07:25:00', 0, NULL, NULL, NULL, NULL, NULL, 0),
- (227, 81, 233, 6, 'Missed', 400000, 260000, NULL, 1, 'NoCheckIn', NULL, NULL, NULL, NULL, 0),
- (228, 81, 234, 6, 'Completed', 400000, 260000, NULL, 1, NULL, NULL, NULL, NULL, NULL, 0),
- (229, 81, 235, 6, 'Completed', 400000, 260000, '2026-09-24 07:25:00', 0, NULL, NULL, NULL, NULL, NULL, 0),
- (230, 81, 236, 6, 'Completed', 400000, 260000, NULL, 1, NULL, NULL, NULL, NULL, NULL, 0),
- (231, 81, 237, 6, 'Missed', 400000, 260000, NULL, 1, 'NoCheckIn', NULL, NULL, NULL, NULL, 0),
- (232, 81, 238, 6, 'Completed', 400000, 260000, NULL, 1, NULL, NULL, NULL, NULL, NULL, 0),
- (233, 81, 239, 6, 'Completed', 400000, 260000, NULL, 1, NULL, NULL, NULL, NULL, NULL, 0),
- (234, 81, 240, 6, 'Completed', 400000, 260000, '2026-10-01 07:25:00', 0, NULL, NULL, NULL, NULL, NULL, 0),
- (235, 81, 241, 6, 'Completed', 400000, 260000, '2026-10-02 07:25:00', 0, NULL, NULL, NULL, NULL, NULL, 0),
+ (226, 81, 232, 6, 'CheckedIn', 400000, 260000, '2026-09-22 00:05:00', 1, NULL, NULL, NULL, NULL, NULL, 0),
+ (227, 81, 233, 6, 'Missed', 400000, 260000, '2026-09-23 00:05:00', 1, 'NoCheckIn', NULL, NULL, NULL, NULL, 0),
+ (228, 81, 234, 6, 'CheckedIn', 400000, 260000, '2026-09-24 00:05:00', 1, NULL, NULL, NULL, NULL, NULL, 0),
+ (229, 81, 235, 6, 'CheckedIn', 400000, 260000, '2026-09-25 00:05:00', 1, NULL, NULL, NULL, NULL, NULL, 0),
+ (230, 81, 236, 6, 'CheckedIn', 400000, 260000, '2026-09-26 00:05:00', 1, NULL, NULL, NULL, NULL, NULL, 0),
+ (231, 81, 237, 6, 'Missed', 400000, 260000, '2026-09-29 00:05:00', 1, 'NoCheckIn', NULL, NULL, NULL, NULL, 0),
+ (232, 81, 238, 6, 'CheckedIn', 400000, 260000, '2026-09-30 00:05:00', 1, NULL, NULL, NULL, NULL, NULL, 0),
+ (233, 81, 239, 6, 'CheckedIn', 400000, 260000, '2026-10-01 00:05:00', 1, NULL, NULL, NULL, NULL, NULL, 0),
+ (234, 81, 240, 6, 'CheckedIn', 400000, 260000, '2026-10-02 00:05:00', 1, NULL, NULL, NULL, NULL, NULL, 0),
+ (235, 81, 241, 6, 'CheckedIn', 400000, 260000, '2026-10-03 00:05:00', 1, NULL, NULL, NULL, NULL, NULL, 0),
  (236, 81, 242, 6, 'Scheduled', 400000, 260000, NULL, 0, NULL, NULL, NULL, NULL, NULL, 0),
  (237, 81, 243, 6, 'Scheduled', 400000, 260000, NULL, 0, NULL, NULL, NULL, NULL, NULL, 0),
  (238, 81, 244, 6, 'Scheduled', 400000, 260000, NULL, 0, NULL, NULL, NULL, NULL, NULL, 0),
@@ -3255,11 +3256,11 @@ INSERT INTO Sessions (SessionId, SubscriptionId, TimeSlotId, PtEmployeeId, Statu
  (245, 81, 251, 6, 'Scheduled', 400000, 260000, NULL, 0, NULL, NULL, NULL, NULL, NULL, 0),
  (246, 81, 252, 6, 'Scheduled', 400000, 260000, NULL, 0, NULL, NULL, NULL, NULL, NULL, 0),
  (247, 81, 253, 6, 'Scheduled', 400000, 260000, NULL, 0, NULL, NULL, NULL, NULL, NULL, 0),
- (248, 82, 254, 5, 'Completed', 375000, 262500, NULL, 1, NULL, NULL, NULL, NULL, NULL, 0),
- (249, 82, 255, 5, 'Completed', 375000, 262500, NULL, 1, NULL, NULL, NULL, NULL, NULL, 0),
- (250, 82, 256, 5, 'Completed', 375000, 262500, NULL, 1, NULL, NULL, NULL, NULL, NULL, 0),
- (251, 82, 257, 5, 'Completed', 375000, 262500, NULL, 1, NULL, NULL, NULL, NULL, NULL, 0),
- (252, 82, 258, 5, 'Completed', 375000, 262500, '2026-10-02 16:25:00', 0, NULL, NULL, NULL, NULL, NULL, 0),
+ (248, 82, 254, 5, 'CheckedIn', 375000, 262500, '2026-09-29 00:05:00', 1, NULL, NULL, NULL, NULL, NULL, 0),
+ (249, 82, 255, 5, 'CheckedIn', 375000, 262500, '2026-09-30 00:05:00', 1, NULL, NULL, NULL, NULL, NULL, 0),
+ (250, 82, 256, 5, 'CheckedIn', 375000, 262500, '2026-10-01 00:05:00', 1, NULL, NULL, NULL, NULL, NULL, 0),
+ (251, 82, 257, 5, 'CheckedIn', 375000, 262500, '2026-10-02 00:05:00', 1, NULL, NULL, NULL, NULL, NULL, 0),
+ (252, 82, 258, 5, 'CheckedIn', 375000, 262500, '2026-10-03 00:05:00', 1, NULL, NULL, NULL, NULL, NULL, 0),
  (253, 82, 259, 5, 'Scheduled', 375000, 262500, NULL, 0, NULL, NULL, NULL, NULL, NULL, 0),
  (254, 82, 260, 5, 'Scheduled', 375000, 262500, NULL, 0, NULL, NULL, NULL, NULL, NULL, 0),
  (255, 82, 261, 5, 'Scheduled', 375000, 262500, NULL, 0, NULL, NULL, NULL, NULL, NULL, 0),
@@ -3299,20 +3300,20 @@ INSERT INTO Sessions (SessionId, SubscriptionId, TimeSlotId, PtEmployeeId, Statu
  (289, 82, 295, 5, 'Scheduled', 375000, 262500, NULL, 0, NULL, NULL, NULL, NULL, NULL, 0),
  (290, 82, 296, 5, 'Scheduled', 375000, 262500, NULL, 0, NULL, NULL, NULL, NULL, NULL, 0),
  (291, 82, 297, 5, 'Scheduled', 375000, 262500, NULL, 0, NULL, NULL, NULL, NULL, NULL, 0),
- (292, 83, 298, 14, 'Completed', 400000, 240000, '2026-09-14 11:25:00', 0, NULL, NULL, NULL, NULL, NULL, 0),
- (293, 83, 299, 14, 'Completed', 400000, 240000, NULL, 1, NULL, NULL, NULL, NULL, NULL, 0),
- (294, 83, 300, 14, 'Completed', 400000, 240000, '2026-09-16 11:25:00', 0, NULL, NULL, NULL, NULL, NULL, 0),
- (295, 83, 301, 14, 'Completed', 400000, 240000, NULL, 1, NULL, NULL, NULL, NULL, NULL, 0),
- (296, 83, 302, 14, 'Missed', 400000, 240000, NULL, 1, 'NoMembership', NULL, NULL, NULL, NULL, 0),
- (297, 83, 303, 14, 'Missed', 400000, 240000, NULL, 1, 'NoMembership', NULL, NULL, NULL, NULL, 0),
- (298, 83, 304, 14, 'Missed', 400000, 240000, NULL, 1, 'NoMembership', NULL, NULL, NULL, NULL, 0),
- (299, 83, 305, 14, 'Missed', 400000, 240000, NULL, 1, 'NoMembership', NULL, NULL, NULL, NULL, 0),
- (300, 83, 306, 14, 'Missed', 400000, 240000, NULL, 1, 'NoMembership', NULL, NULL, NULL, NULL, 0),
- (301, 83, 307, 14, 'Missed', 400000, 240000, NULL, 1, 'NoMembership', NULL, NULL, NULL, NULL, 0),
- (302, 83, 308, 14, 'Missed', 400000, 240000, NULL, 1, 'NoMembership', NULL, NULL, NULL, NULL, 0),
- (303, 83, 309, 14, 'Missed', 400000, 240000, NULL, 1, 'NoMembership', NULL, NULL, NULL, NULL, 0),
- (304, 83, 310, 14, 'Missed', 400000, 240000, NULL, 1, 'NoMembership', NULL, NULL, NULL, NULL, 0),
- (305, 83, 311, 14, 'Missed', 400000, 240000, NULL, 1, 'NoMembership', NULL, NULL, NULL, NULL, 0),
+ (292, 83, 298, 14, 'CheckedIn', 400000, 240000, '2026-09-15 00:05:00', 1, NULL, NULL, NULL, NULL, NULL, 0),
+ (293, 83, 299, 14, 'CheckedIn', 400000, 240000, '2026-09-16 00:05:00', 1, NULL, NULL, NULL, NULL, NULL, 0),
+ (294, 83, 300, 14, 'CheckedIn', 400000, 240000, '2026-09-17 00:05:00', 1, NULL, NULL, NULL, NULL, NULL, 0),
+ (295, 83, 301, 14, 'CheckedIn', 400000, 240000, '2026-09-18 00:05:00', 1, NULL, NULL, NULL, NULL, NULL, 0),
+ (296, 83, 302, 14, 'Missed', 400000, 240000, '2026-09-22 00:05:00', 1, 'NoMembership', NULL, NULL, NULL, NULL, 0),
+ (297, 83, 303, 14, 'Missed', 400000, 240000, '2026-09-23 00:05:00', 1, 'NoMembership', NULL, NULL, NULL, NULL, 0),
+ (298, 83, 304, 14, 'Missed', 400000, 240000, '2026-09-24 00:05:00', 1, 'NoMembership', NULL, NULL, NULL, NULL, 0),
+ (299, 83, 305, 14, 'Missed', 400000, 240000, '2026-09-25 00:05:00', 1, 'NoMembership', NULL, NULL, NULL, NULL, 0),
+ (300, 83, 306, 14, 'Missed', 400000, 240000, '2026-09-26 00:05:00', 1, 'NoMembership', NULL, NULL, NULL, NULL, 0),
+ (301, 83, 307, 14, 'Missed', 400000, 240000, '2026-09-29 00:05:00', 1, 'NoMembership', NULL, NULL, NULL, NULL, 0),
+ (302, 83, 308, 14, 'Missed', 400000, 240000, '2026-09-30 00:05:00', 1, 'NoMembership', NULL, NULL, NULL, NULL, 0),
+ (303, 83, 309, 14, 'Missed', 400000, 240000, '2026-10-01 00:05:00', 1, 'NoMembership', NULL, NULL, NULL, NULL, 0),
+ (304, 83, 310, 14, 'Missed', 400000, 240000, '2026-10-02 00:05:00', 1, 'NoMembership', NULL, NULL, NULL, NULL, 0),
+ (305, 83, 311, 14, 'Missed', 400000, 240000, '2026-10-03 00:05:00', 1, 'NoMembership', NULL, NULL, NULL, NULL, 0),
  (306, 83, 312, 14, 'Scheduled', 400000, 240000, NULL, 0, NULL, NULL, NULL, NULL, NULL, 0),
  (307, 83, 313, 14, 'Scheduled', 400000, 240000, NULL, 0, NULL, NULL, NULL, NULL, NULL, 0),
  (308, 83, 314, 14, 'Scheduled', 400000, 240000, NULL, 0, NULL, NULL, NULL, NULL, NULL, 0),
@@ -3344,28 +3345,28 @@ INSERT INTO Sessions (SessionId, SubscriptionId, TimeSlotId, PtEmployeeId, Statu
  (334, 84, 340, 7, 'Scheduled', 382609, 229565, NULL, 0, NULL, NULL, NULL, NULL, NULL, 0),
  (335, 84, 341, 7, 'Scheduled', 382609, 229565, NULL, 0, NULL, NULL, NULL, NULL, NULL, 0),
  (336, 84, 342, 7, 'Scheduled', 382609, 229565, NULL, 0, NULL, NULL, NULL, NULL, NULL, 0),
- (337, 132, 343, 6, 'Completed', 450000, 292500, '2026-09-23 09:55:00', 0, NULL, NULL, NULL, NULL, NULL, 0),
- (338, 133, 344, 7, 'Completed', 450000, 270000, '2026-09-05 15:25:00', 0, NULL, NULL, NULL, NULL, NULL, 0),
- (339, 134, 345, 13, 'Completed', 450000, 270000, '2026-09-12 09:55:00', 0, NULL, NULL, NULL, NULL, NULL, 0),
- (340, 135, 346, 7, 'Completed', 450000, 270000, '2026-09-27 11:25:00', 0, NULL, NULL, NULL, NULL, NULL, 0),
- (341, 136, 347, 6, 'Completed', 450000, 292500, '2026-09-14 08:25:00', 0, NULL, NULL, NULL, NULL, NULL, 0),
- (342, 137, 348, 6, 'Missed', 450000, 292500, NULL, 1, 'NoCheckIn', NULL, NULL, NULL, NULL, 0),
- (343, 138, 349, 13, 'Completed', 450000, 270000, '2026-09-20 16:55:00', 0, NULL, NULL, NULL, NULL, NULL, 0),
- (344, 139, 350, 7, 'Completed', 450000, 270000, '2026-09-17 15:25:00', 0, NULL, NULL, NULL, NULL, NULL, 0),
- (345, 140, 351, 13, 'Completed', 450000, 270000, '2026-09-27 09:55:00', 0, NULL, NULL, NULL, NULL, NULL, 0),
- (346, 141, 352, 13, 'Completed', 450000, 270000, '2026-09-21 16:55:00', 0, NULL, NULL, NULL, NULL, NULL, 0),
- (347, 142, 353, 5, 'Completed', 450000, 315000, '2026-09-05 09:55:00', 0, NULL, NULL, NULL, NULL, NULL, 0),
- (348, 143, 354, 5, 'Missed', 450000, 315000, NULL, 1, 'NoCheckIn', NULL, NULL, NULL, NULL, 0),
- (349, 144, 355, 6, 'Completed', 450000, 292500, '2026-09-23 17:25:00', 0, NULL, NULL, NULL, NULL, NULL, 0),
- (350, 145, 356, 7, 'Completed', 450000, 270000, '2026-09-11 08:25:00', 0, NULL, NULL, NULL, NULL, NULL, 0),
- (351, 146, 357, 5, 'Completed', 450000, 315000, '2026-09-24 17:25:00', 0, NULL, NULL, NULL, NULL, NULL, 0),
- (352, 147, 358, 7, 'Completed', 450000, 270000, '2026-09-25 09:55:00', 0, NULL, NULL, NULL, NULL, NULL, 0),
- (353, 148, 359, 5, 'Completed', 450000, 315000, '2026-09-29 09:55:00', 0, NULL, NULL, NULL, NULL, NULL, 0),
- (354, 149, 360, 6, 'Completed', 450000, 292500, '2026-09-11 11:25:00', 0, NULL, NULL, NULL, NULL, NULL, 0);
+ (337, 132, 343, 6, 'CheckedIn', 450000, 292500, '2026-09-24 00:05:00', 1, NULL, NULL, NULL, NULL, NULL, 0),
+ (338, 133, 344, 7, 'CheckedIn', 450000, 270000, '2026-09-06 00:05:00', 1, NULL, NULL, NULL, NULL, NULL, 0),
+ (339, 134, 345, 13, 'CheckedIn', 450000, 270000, '2026-09-13 00:05:00', 1, NULL, NULL, NULL, NULL, NULL, 0),
+ (340, 135, 346, 7, 'CheckedIn', 450000, 270000, '2026-09-28 00:05:00', 1, NULL, NULL, NULL, NULL, NULL, 0),
+ (341, 136, 347, 6, 'CheckedIn', 450000, 292500, '2026-09-15 00:05:00', 1, NULL, NULL, NULL, NULL, NULL, 0),
+ (342, 137, 348, 6, 'Missed', 450000, 292500, '2026-09-30 00:05:00', 1, 'NoCheckIn', NULL, NULL, NULL, NULL, 0),
+ (343, 138, 349, 13, 'CheckedIn', 450000, 270000, '2026-09-21 00:05:00', 1, NULL, NULL, NULL, NULL, NULL, 0),
+ (344, 139, 350, 7, 'CheckedIn', 450000, 270000, '2026-09-18 00:05:00', 1, NULL, NULL, NULL, NULL, NULL, 0),
+ (345, 140, 351, 13, 'CheckedIn', 450000, 270000, '2026-09-28 00:05:00', 1, NULL, NULL, NULL, NULL, NULL, 0),
+ (346, 141, 352, 13, 'CheckedIn', 450000, 270000, '2026-09-22 00:05:00', 1, NULL, NULL, NULL, NULL, NULL, 0),
+ (347, 142, 353, 5, 'CheckedIn', 450000, 315000, '2026-09-06 00:05:00', 1, NULL, NULL, NULL, NULL, NULL, 0),
+ (348, 143, 354, 5, 'Missed', 450000, 315000, '2026-10-01 00:05:00', 1, 'NoCheckIn', NULL, NULL, NULL, NULL, 0),
+ (349, 144, 355, 6, 'CheckedIn', 450000, 292500, '2026-09-24 00:05:00', 1, NULL, NULL, NULL, NULL, NULL, 0),
+ (350, 145, 356, 7, 'CheckedIn', 450000, 270000, '2026-09-12 00:05:00', 1, NULL, NULL, NULL, NULL, NULL, 0),
+ (351, 146, 357, 5, 'CheckedIn', 450000, 315000, '2026-09-25 00:05:00', 1, NULL, NULL, NULL, NULL, NULL, 0),
+ (352, 147, 358, 7, 'CheckedIn', 450000, 270000, '2026-09-26 00:05:00', 1, NULL, NULL, NULL, NULL, NULL, 0),
+ (353, 148, 359, 5, 'CheckedIn', 450000, 315000, '2026-09-30 00:05:00', 1, NULL, NULL, NULL, NULL, NULL, 0),
+ (354, 149, 360, 6, 'CheckedIn', 450000, 292500, '2026-09-12 00:05:00', 1, NULL, NULL, NULL, NULL, NULL, 0);
 SET IDENTITY_INSERT Sessions OFF;
 
 /* ============================================================================
-   SessionMoveLogs — 4 dòng. 
+   SessionMoveLogs — 4 dòng.
    ============================================================================ */
 SET IDENTITY_INSERT SessionMoveLogs ON;
 INSERT INTO SessionMoveLogs (SessionMoveLogId, SessionId, MoveType, OldTimeSlotId, NewTimeSlotId, OldPtEmployeeId, NewPtEmployeeId, RequestedByAccountId, Reason, MovedAt) VALUES
@@ -3376,7 +3377,7 @@ INSERT INTO SessionMoveLogs (SessionMoveLogId, SessionId, MoveType, OldTimeSlotI
 SET IDENTITY_INSERT SessionMoveLogs OFF;
 
 /* ============================================================================
-   LeaveRequests — 7 dòng. 
+   LeaveRequests — 7 dòng.
    ============================================================================ */
 SET IDENTITY_INSERT LeaveRequests ON;
 INSERT INTO LeaveRequests (LeaveRequestId, EmployeeId, ReviewedByEmployeeId, LeaveType, LeaveDate, ShiftType, Reason, Status, RejectReason, SubmittedAt, ReviewedAt, ReminderSentAt) VALUES
@@ -3390,7 +3391,7 @@ INSERT INTO LeaveRequests (LeaveRequestId, EmployeeId, ReviewedByEmployeeId, Lea
 SET IDENTITY_INSERT LeaveRequests OFF;
 
 /* ============================================================================
-   Facilities — 10 dòng. 
+   Facilities — 10 dòng.
    ============================================================================ */
 SET IDENTITY_INSERT Facilities ON;
 INSERT INTO Facilities (FacilityId, FacilityName, Category, Location, Quantity, Status) VALUES
@@ -3407,7 +3408,7 @@ INSERT INTO Facilities (FacilityId, FacilityName, Category, Location, Quantity, 
 SET IDENTITY_INSERT Facilities OFF;
 
 /* ============================================================================
-   MaintenanceRequests — 7 dòng. 
+   MaintenanceRequests — 7 dòng.
    ============================================================================ */
 SET IDENTITY_INSERT MaintenanceRequests ON;
 INSERT INTO MaintenanceRequests (MaintenanceRequestId, RequestCode, FacilityId, ReportedByEmployeeId, ReviewedByEmployeeId, ClosedByEmployeeId, Priority, WarningTagPlaced, Description, Status, SetUnderMaintenance, RejectReason, AcceptanceNote, ReportedAt, ReviewedAt, ClosedAt) VALUES
@@ -3421,7 +3422,7 @@ INSERT INTO MaintenanceRequests (MaintenanceRequestId, RequestCode, FacilityId, 
 SET IDENTITY_INSERT MaintenanceRequests OFF;
 
 /* ============================================================================
-   StaffAttendances — 6 dòng. 
+   StaffAttendances — 6 dòng.
    ============================================================================ */
 SET IDENTITY_INSERT StaffAttendances ON;
 INSERT INTO StaffAttendances (StaffAttendanceId, EmployeeId, WorkDate, ShiftType, CheckInAt, CheckInPhoto, CheckOutAt, Status, Note) VALUES
@@ -3434,7 +3435,7 @@ INSERT INTO StaffAttendances (StaffAttendanceId, EmployeeId, WorkDate, ShiftType
 SET IDENTITY_INSERT StaffAttendances OFF;
 
 /* ============================================================================
-   PrivateNotes — 7 dòng. 
+   PrivateNotes — 7 dòng.
    ============================================================================ */
 SET IDENTITY_INSERT PrivateNotes ON;
 INSERT INTO PrivateNotes (PrivateNoteId, PtEmployeeId, CustomerId, Content, CreatedAt, UpdatedAt, DeletedAt) VALUES
@@ -3448,7 +3449,7 @@ INSERT INTO PrivateNotes (PrivateNoteId, PtEmployeeId, CustomerId, Content, Crea
 SET IDENTITY_INSERT PrivateNotes OFF;
 
 /* ============================================================================
-   TrainingPlans — 7 dòng. 
+   TrainingPlans — 7 dòng.
    ============================================================================ */
 SET IDENTITY_INSERT TrainingPlans ON;
 INSERT INTO TrainingPlans (TrainingPlanId, PtEmployeeId, CustomerId, PlanType, Title, Content, PublishedTitle, PublishedContent, PublishedAt, CreatedAt, UpdatedAt, DeletedAt) VALUES
@@ -3465,28 +3466,33 @@ Bữa trưa: ức gà + cơm gạo lứt.', NULL, NULL, NULL, '2026-09-07 20:00:
 SET IDENTITY_INSERT TrainingPlans OFF;
 
 /* ============================================================================
-   Feedbacks — 14 dòng. 
+   Feedbacks — 19 dòng.
    ============================================================================ */
 SET IDENTITY_INSERT Feedbacks ON;
-INSERT INTO Feedbacks (FeedbackId, CustomerId, Content, SubmittedAt, IsRead, ReadAt, ReadByEmployeeId) VALUES
- (1, 1, N'Phòng tắm hết nước nóng vào buổi tối, mong phòng gym kiểm tra.', '2026-10-02 21:10:00', 0, NULL, NULL),
- (2, 2, N'Nhân viên lễ tân rất nhiệt tình, cảm ơn phòng gym.', '2026-09-21 19:00:00', 1, '2026-09-22 09:00:00', 2),
- (3, 6, N'Đề xuất mở thêm lớp yoga buổi sáng.', '2026-09-20 07:30:00', 1, '2026-09-20 15:00:00', 2),
- (4, 11, 'The air conditioning in the weights area is too cold in the morning.', '2026-09-19 08:15:00', 0, NULL, NULL),
- (5, 7, N'Máy chạy số 3 chạy giật, đã báo lễ tân nhưng ghi nhận lại cho chắc.', '2026-09-09 20:00:00', 1, '2026-09-10 08:30:00', 2),
- (6, 17, N'Khu tạ tự do hơi chật vào giờ cao điểm 18h–20h.', '2026-09-28 20:30:00', 0, NULL, NULL),
- (7, 201, N'Nhạc trong phòng hơi to vào buổi tối.', '2026-09-03 20:00:00', 1, '2026-10-01 09:00:00', 2),
- (8, 202, N'Huấn luyện viên rất tận tâm, rất hài lòng.', '2026-09-25 20:00:00', 0, NULL, NULL),
- (9, 203, N'Tủ khóa hay bị kẹt, nhờ kiểm tra giúp.', '2026-09-01 20:00:00', 1, '2026-10-01 09:00:00', 2),
- (10, 204, N'Tủ khóa hay bị kẹt, nhờ kiểm tra giúp.', '2026-09-05 20:00:00', 0, NULL, NULL),
- (11, 205, N'Huấn luyện viên rất tận tâm, rất hài lòng.', '2026-09-02 20:00:00', 1, '2026-10-01 09:00:00', 2),
- (12, 206, N'Huấn luyện viên rất tận tâm, rất hài lòng.', '2026-09-27 20:00:00', 0, NULL, NULL),
- (13, 207, N'Huấn luyện viên rất tận tâm, rất hài lòng.', '2026-09-09 20:00:00', 0, NULL, NULL),
- (14, 208, N'Mong có thêm khu giãn cơ riêng.', '2026-09-23 20:00:00', 1, '2026-10-01 09:00:00', 2);
+INSERT INTO Feedbacks (FeedbackId, CustomerId, Content, SubmittedAt, IsRead, ReadAt, ReadByEmployeeId, RatedPtEmployeeId, Rating, RatingMonth, UpdatedAt) VALUES
+ (1, 1, N'Phòng tắm hết nước nóng vào buổi tối, mong phòng gym kiểm tra.', '2026-10-02 21:10:00', 0, NULL, NULL, NULL, NULL, NULL, NULL),
+ (2, 2, N'Nhân viên lễ tân rất nhiệt tình, cảm ơn phòng gym.', '2026-09-21 19:00:00', 1, '2026-09-22 09:00:00', 2, NULL, NULL, NULL, NULL),
+ (3, 6, N'Đề xuất mở thêm lớp yoga buổi sáng.', '2026-09-20 07:30:00', 1, '2026-09-20 15:00:00', 2, NULL, NULL, NULL, NULL),
+ (4, 11, 'The air conditioning in the weights area is too cold in the morning.', '2026-09-19 08:15:00', 0, NULL, NULL, NULL, NULL, NULL, NULL),
+ (5, 7, N'Máy chạy số 3 chạy giật, đã báo lễ tân nhưng ghi nhận lại cho chắc.', '2026-09-09 20:00:00', 1, '2026-09-10 08:30:00', 2, NULL, NULL, NULL, NULL),
+ (6, 17, N'Khu tạ tự do hơi chật vào giờ cao điểm 18h–20h.', '2026-09-28 20:30:00', 0, NULL, NULL, NULL, NULL, NULL, NULL),
+ (7, 201, N'Nhạc trong phòng hơi to vào buổi tối.', '2026-09-03 20:00:00', 1, '2026-10-01 09:00:00', 2, NULL, NULL, NULL, NULL),
+ (8, 202, N'Huấn luyện viên rất tận tâm, rất hài lòng.', '2026-09-25 20:00:00', 0, NULL, NULL, NULL, NULL, NULL, NULL),
+ (9, 203, N'Tủ khóa hay bị kẹt, nhờ kiểm tra giúp.', '2026-09-01 20:00:00', 1, '2026-10-01 09:00:00', 2, NULL, NULL, NULL, NULL),
+ (10, 204, N'Tủ khóa hay bị kẹt, nhờ kiểm tra giúp.', '2026-09-05 20:00:00', 0, NULL, NULL, NULL, NULL, NULL, NULL),
+ (11, 205, N'Huấn luyện viên rất tận tâm, rất hài lòng.', '2026-09-02 20:00:00', 1, '2026-10-01 09:00:00', 2, NULL, NULL, NULL, NULL),
+ (12, 206, N'Huấn luyện viên rất tận tâm, rất hài lòng.', '2026-09-27 20:00:00', 0, NULL, NULL, NULL, NULL, NULL, NULL),
+ (13, 207, N'Huấn luyện viên rất tận tâm, rất hài lòng.', '2026-09-09 20:00:00', 0, NULL, NULL, NULL, NULL, NULL, NULL),
+ (14, 208, N'Mong có thêm khu giãn cơ riêng.', '2026-09-23 20:00:00', 1, '2026-10-01 09:00:00', 2, NULL, NULL, NULL, NULL),
+ (15, 1, N'PT hướng dẫn chưa rõ, tôi mong được hỗ trợ kỹ hơn.', '2026-09-30 10:00:00', 0, NULL, NULL, 5, 1, '2026-09-01', NULL),
+ (16, 2, N'Tôi muốn PT giải thích bài tập kỹ hơn trước khi tập.', '2026-09-30 10:10:00', 1, '2026-09-30 11:00:00', 2, 5, 2, '2026-09-01', NULL),
+ (17, 6, N'Tôi sửa đánh giá: PT đã hỗ trợ tốt hơn buổi trước.', '2026-09-30 10:20:00', 0, NULL, NULL, 5, 5, '2026-09-01', '2026-09-30 12:00:00'),
+ (18, 7, N'PT hướng dẫn dễ hiểu và quan tâm tới người tập.', '2026-09-30 10:30:00', 0, NULL, NULL, 6, 4, '2026-09-01', NULL),
+ (19, 201, N'PT hỗ trợ tốt và điều chỉnh bài tập phù hợp.', '2026-09-30 10:40:00', 0, NULL, NULL, 6, 5, '2026-09-01', NULL);
 SET IDENTITY_INSERT Feedbacks OFF;
 
 /* ============================================================================
-   BlogPosts — 16 dòng. 
+   BlogPosts — 16 dòng.
    ============================================================================ */
 SET IDENTITY_INSERT BlogPosts ON;
 INSERT INTO BlogPosts (BlogPostId, AuthorEmployeeId, Title, Category, Excerpt, Content, CoverImage, Status, PublishedAt, CreatedAt, UpdatedAt) VALUES
@@ -3509,7 +3515,7 @@ INSERT INTO BlogPosts (BlogPostId, AuthorEmployeeId, Title, Category, Excerpt, C
 SET IDENTITY_INSERT BlogPosts OFF;
 
 /* ============================================================================
-   Notifications — 9 dòng. 
+   Notifications — 9 dòng.
    ============================================================================ */
 SET IDENTITY_INSERT Notifications ON;
 INSERT INTO Notifications (NotificationId, SentByEmployeeId, Title, Content, Audience, ScheduledAt, SentAt, CreatedAt) VALUES
@@ -3525,7 +3531,7 @@ INSERT INTO Notifications (NotificationId, SentByEmployeeId, Title, Content, Aud
 SET IDENTITY_INSERT Notifications OFF;
 
 /* ============================================================================
-   NotificationRecipients — 85 dòng. 
+   NotificationRecipients — 85 dòng.
    ============================================================================ */
 SET IDENTITY_INSERT NotificationRecipients ON;
 INSERT INTO NotificationRecipients (NotificationRecipientId, NotificationId, AccountId, ReadAt) VALUES
@@ -3617,7 +3623,7 @@ INSERT INTO NotificationRecipients (NotificationRecipientId, NotificationId, Acc
 SET IDENTITY_INSERT NotificationRecipients OFF;
 
 /* ============================================================================
-   SystemConfigs — 21 dòng. 
+   SystemConfigs — 21 dòng.
    ============================================================================ */
 SET IDENTITY_INSERT SystemConfigs ON;
 INSERT INTO SystemConfigs (SystemConfigId, ConfigKey, ConfigValue, Description, UpdatedAt, UpdatedByEmployeeId) VALUES
@@ -3627,7 +3633,6 @@ INSERT INTO SystemConfigs (SystemConfigId, ConfigKey, ConfigValue, Description, 
  (4, 'P-04', '1D,1M,3M,9M,12M', N'Thời hạn gói tập: D = ngày, M = tháng', '2026-09-01 09:00:00', 2),
  (5, 'P-05', '10', N'Tuổi tối thiểu dùng dịch vụ PT', '2026-09-01 09:00:00', 2),
  (6, 'P-06', '90', N'Độ dài một buổi PT (phút)', '2026-09-01 09:00:00', 2),
- (7, 'P-07', '24', N'Cửa sổ điểm danh sau khi buổi kết thúc (giờ)', '2026-09-01 09:00:00', 2),
  (8, 'P-08', '3', N'Số lần swap tối đa mỗi gói PT', '2026-09-01 09:00:00', 2),
  (9, 'P-09', '20', N'Hạn thanh toán đơn online = thời gian giữ slot (phút)', '2026-09-01 09:00:00', 2),
  (10, 'P-10', '10', N'Thuế VAT (%) đã nằm trong giá bán', '2026-09-01 09:00:00', 2),
@@ -3641,11 +3646,12 @@ INSERT INTO SystemConfigs (SystemConfigId, ConfigKey, ConfigValue, Description, 
  (18, 'P-18', '5', N'Thời gian khóa tạm (phút)', '2026-09-01 09:00:00', 2),
  (19, 'P-19', '05:30-22:00', N'Giờ mở cửa mặc định hằng ngày', '2026-09-01 09:00:00', 2),
  (20, 'P-20', '20:00', N'Giờ chốt duyệt đơn nghỉ (ngày hôm trước)', '2026-09-01 09:00:00', 2),
- (21, 'P-21', '1M,2M,3M', N'Thời hạn gói PT (tháng) — DBR-19', '2026-09-01 09:00:00', 2);
+ (21, 'P-21', '1M,2M,3M', N'Thời hạn gói PT (tháng) — DBR-19', '2026-09-01 09:00:00', 2),
+ (22, 'P-22', '3', 'Minimum customers to show a PT''s average rating (DBR-69)', '2026-10-06 09:00:00', 2);
 SET IDENTITY_INSERT SystemConfigs OFF;
 
 /* ============================================================================
-   OperatingHourExceptions — 5 dòng. 
+   OperatingHourExceptions — 5 dòng.
    ============================================================================ */
 SET IDENTITY_INSERT OperatingHourExceptions ON;
 INSERT INTO OperatingHourExceptions (OperatingHourExceptionId, ApplyDate, OpenTime, CloseTime, IsClosedAllDay, Note, SetByEmployeeId, CreatedAt) VALUES
@@ -3657,7 +3663,7 @@ INSERT INTO OperatingHourExceptions (OperatingHourExceptionId, ApplyDate, OpenTi
 SET IDENTITY_INSERT OperatingHourExceptions OFF;
 
 /* ============================================================================
-   AuditLogs — 18 dòng. 
+   AuditLogs — 18 dòng.
    ============================================================================ */
 SET IDENTITY_INSERT AuditLogs ON;
 INSERT INTO AuditLogs (AuditLogId, AccountId, ActingRole, Action, EntityName, EntityId, FieldChanged, OldValue, NewValue, Reason, CreatedAt) VALUES
@@ -3684,7 +3690,7 @@ SET IDENTITY_INSERT AuditLogs OFF;
 COMMIT TRANSACTION;
 GO
 
-PRINT N'>>> Nạp seed GMS v25 thành công.';
+PRINT N'>>> Nạp seed GMS v26 thành công.';
 SELECT t.name AS TableName, SUM(p.rows) AS [Rows] FROM sys.tables t
 JOIN sys.partitions p ON p.object_id = t.object_id AND p.index_id IN (0, 1)
 GROUP BY t.name ORDER BY t.name;

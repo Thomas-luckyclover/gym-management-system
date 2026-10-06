@@ -3,9 +3,9 @@
   Dữ liệu: PtDashboardServlet → request attribute "dashboard" (PtDashboardView).
 
   Bố cục theo prototype pt/trang-chu.html, nghiệp vụ theo SRS 9.1.2 + docs rule 05_Dashboard_Rules.md:
-    Topbar       : Tổng quan · Điểm danh hôm nay · avatar PT
+    Topbar       : Tổng quan · Buổi chờ chốt · avatar PT
     Đầu trang    : lời chào + thời tiết (hiệu ứng CSS theo weather.moodCss) + tóm tắt hôm nay
-    Cột chính    : Buổi cần điểm danh (P-07) · Hoa hồng theo kỳ · Buổi sắp tới (lọc ngày) · banner thiếu gói tập
+    Cột chính    : Buổi chờ hệ thống chốt (JOB-04) · Hoa hồng theo kỳ · Buổi sắp tới (lọc ngày) · banner thiếu gói tập
     Cột phụ      : Khách phụ trách · Tháng · Tuần · Lịch rảnh — TẤT CẢ theo ngày trong ô "Từ ngày"
     Thẻ chào luôn theo HÔM NAY; khối Hoa hồng theo "Kỳ" riêng.
   Bộ lọc server (GET): period, date, days. Bộ lọc tại chỗ (JS, không tải lại): tìm khách, gói, trạng thái.
@@ -35,7 +35,7 @@
       <header class="pt-topbar">
         <h1>Tổng quan</h1>
         <div class="pt-topbar-actions">
-          <a class="btn btn-primary btn-sm" href="${ctx}/pt/sessions/attendance">Điểm danh hôm nay</a>
+          <a class="btn btn-primary btn-sm" href="#pending-closure">Buổi chờ chốt</a>
           <a class="pt-user" href="${ctx}/account" title="Cài đặt tài khoản">
             <span class="pt-avatar"><c:out value="${d.initials}" /></span>
             <span class="pt-user-text">
@@ -93,7 +93,7 @@
             <%-- Tóm tắt hôm nay --%>
             <ul class="hero-chips">
               <li><b>${d.todaySessionCount}</b> buổi hôm nay</li>
-              <li class="${empty d.attendanceSessions ? '' : 'is-warn'}"><b>${d.attendanceSessions.size()}</b> cần điểm danh</li>
+              <li class="${empty d.pendingClosureSessions ? '' : 'is-warn'}"><b>${d.pendingClosureSessions.size()}</b> chờ chốt</li>
               <li><b>${d.todayWeekFreeSlots}</b> slot trống tuần này</li>
             </ul>
           </div>
@@ -101,24 +101,23 @@
 
         <div class="split">
           <div class="col-main">
-            <%-- ================= Buổi cần điểm danh (SRS 9.1.2 · BR-54 · P-07) ================= --%>
-            <section class="panel panel--attention">
+            <%-- ================= Buổi chờ hệ thống chốt (JOB-04) ================= --%>
+            <section id="pending-closure" class="panel panel--attention">
               <div class="panel-head">
                 <div>
-                  <h2><i class="fa-solid fa-clipboard-check" aria-hidden="true"></i> Buổi cần điểm danh</h2>
-                  <p>Điểm danh được từ giờ bắt đầu tới ${d.attendanceWindowHours} giờ sau khi buổi kết thúc.</p>
+                  <h2><i class="fa-solid fa-clipboard-check" aria-hidden="true"></i> Buổi chờ hệ thống chốt</h2>
+                  <p>Hệ thống chốt lúc 00:05 hôm sau dựa trên check-in tại gym.</p>
                 </div>
-                <a class="btn btn-ghost btn-sm" href="${ctx}/pt/sessions/attendance">Mở điểm danh <i class="fa-solid fa-arrow-right" aria-hidden="true"></i></a>
+
               </div>
               <c:choose>
-                <c:when test="${empty d.attendanceSessions}">
-                  <p class="ok-line"><i class="fa-solid fa-circle-check" aria-hidden="true"></i> Không có buổi nào đang chờ điểm danh.</p>
+                <c:when test="${empty d.pendingClosureSessions}">
+                  <p class="ok-line"><i class="fa-solid fa-circle-check" aria-hidden="true"></i> Không có buổi nào đang chờ hệ thống chốt.</p>
                 </c:when>
                 <c:otherwise>
                   <div class="data-list">
-                    <c:forEach var="s" items="${d.attendanceSessions}">
-                      <a class="data-row<c:if test="${s.missingMembership}"> is-alert</c:if>"
-                         href="${ctx}/pt/sessions/attendance?sessionId=${s.sessionId}">
+                    <c:forEach var="s" items="${d.pendingClosureSessions}">
+                      <div class="data-row<c:if test="${s.missingMembership}"> is-alert</c:if>">
                         <div class="row-main">
                           <div class="row-title">
                             <c:out value="${s.dayLabel}" /> · <span class="tabular"><c:out value="${s.timeRange}" /></span>
@@ -131,8 +130,8 @@
                             <span><i class="fa-solid fa-layer-group" aria-hidden="true"></i> <c:out value="${s.packageLabel}" /></span>
                           </div>
                         </div>
-                        <span class="btn btn-primary btn-sm">Điểm danh</span>
-                      </a>
+                        <span class="badge badge-warning">Chờ chốt</span>
+                      </div>
                     </c:forEach>
                   </div>
                 </c:otherwise>
@@ -163,7 +162,7 @@
                 <div>
                   <div class="kpi-value kpi-value--xl tabular"><c:out value="${d.commissionTotalText}" /></div>
                   <ul class="stat-chips">
-                    <li class="stat-ok"><b>${d.completedCount}</b> hoàn thành</li>
+                    <li class="stat-ok"><b>${d.completedCount}</b> đã check-in</li>
                     <li class="stat-bad"><b>${d.missedCount}</b> khách vắng</li>
                     <li class="stat-bad"><b>${d.cancelledPaidCount}</b> hủy vẫn tính</li>
                     <c:if test="${d.cancelledUnpaidCount > 0}">
@@ -222,7 +221,7 @@
                   <h2>Buổi sắp tới</h2>
                   <p>Từ <c:out value="${d.fromDateLabel}" /><c:if test="${d.rangeDays > 1}">, ${d.rangeDays} ngày</c:if> · ${d.upcomingSessions.size()} buổi</p>
                 </div>
-                <a class="btn btn-ghost btn-sm" href="${ctx}/pt/sessions/attendance">Mở điểm danh <i class="fa-solid fa-arrow-right" aria-hidden="true"></i></a>
+
               </div>
 
               <%-- Ngày + khoảng gửi lên server; Tìm khách / Gói / Trạng thái lọc ngay trên trang (dashboard.js) --%>
@@ -261,7 +260,7 @@
                 <select id="upStatus">
                   <option value="all">Tất cả</option>
                   <option value="Scheduled">Đã xếp</option>
-                  <option value="Completed">Hoàn thành</option>
+                  <option value="CheckedIn">Đã check-in</option>
                   <option value="Missed">Vắng</option>
                   <option value="Cancelled">Đã hủy</option>
                 </select>
@@ -357,8 +356,8 @@
                 <span>Dự kiến <small>${d.monthExpectedCount} buổi</small></span><b><c:out value="${d.monthExpectedText}" /></b>
               </div>
               <p class="muted">
-                Chờ chốt = buổi đã qua ngày nhưng chưa điểm danh; sẽ tính khi PT điểm danh hoặc hệ thống tự đóng sau
-                ${d.attendanceWindowHours} giờ. Dự kiến = buổi đã xếp từ hôm nay trở đi.
+                Chờ chốt = buổi đã hết giờ và còn Scheduled. Hệ thống chốt lúc 00:05 hôm sau.
+                Dự kiến = buổi Scheduled chưa hết giờ.
               </p>
             </div>
 
