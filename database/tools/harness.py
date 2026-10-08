@@ -44,6 +44,7 @@ def connect():
     con.create_function('like', 3, tsql_like)
     con.create_function('LEN', 1, tsql_len)
     con.create_function('DATEPART_', 2, datepart_)
+    con.create_function('DAY', 1, lambda v: None if v is None else datepart_('DAY', v))
     con.execute('PRAGMA foreign_keys = ON')
     return con
 
@@ -55,6 +56,7 @@ def batches(sql):
             yield b
 
 def to_sqlite(stmt):
+    stmt = re.sub(r"\s+INCLUDE\s*\([^)]*\)", "", stmt, flags=re.I)
     out = []
     for e in sqlglot.parse(stmt, read='tsql'):
         if e is None: continue

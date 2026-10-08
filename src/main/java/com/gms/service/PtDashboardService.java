@@ -35,34 +35,14 @@ import java.util.List;
 import java.util.Map;
 import java.util.Set;
 
-/**
- * Gom dữ liệu cho PT Dashboard (#49, UC-32) — màn đầu tiên PT thấy sau khi đăng nhập. Chỉ đọc, không sửa dữ liệu.
- *
- * Bố cục theo prototype pt/trang-chu.html; nghiệp vụ theo SRS 9.1.2 và "05_Dashboard_Rules.md":
- *
- *   Khối                    Nguồn dữ liệu                                    Rule
- *   ----------------------- ------------------------------------------------ ---------------------------------
- *   Lời chào + thời tiết    WeatherService (API ngoài, lỗi thì ẩn)           (thêm, không thuộc SRS)
- *   Buổi cần điểm danh      Scheduled, đã tới giờ bắt đầu, ≤ P-07 giờ sau    BR-54, P-07
- *   Hoa hồng theo kỳ        Sessions.CommissionAmount của PT đang giữ buổi   DBR-58, CBR-80/81/82, CBR-55/57
- *   Buổi sắp tới            lọc từ ngày (bắt buộc, mặc định hôm nay)         SRS 9.1.2, GBR-01, DBR-37
- *   Nhãn/banner thiếu gói   buổi rơi vào ngày khách không có Membership      CBR-64, CBR-66
- *   Khách phụ trách         khách có gói PT với PT này vào ngày đang lọc     GBR-10
- *   Tuần / Tháng (cột phụ)  tuần + tháng chứa ngày đang lọc: đã chốt /       CBR-80/81/82, CBR-42
- *                           chờ chốt / dự kiến, đếm trạng thái, slot Free
- *   Tóm tắt hôm nay         luôn theo hôm nay (thẻ chào)                     —
- *
- * Dashboard CHỈ ĐỌC trạng thái trong DB (GBR-14): buổi quá cửa sổ điểm danh là việc JOB-04, không tự đổi ở đây.
- *
- * @author Le Cong Minh
- */
+/** Gom dữ liệu dashboard PT, chỉ đọc trạng thái JOB-04. */
 public class PtDashboardService {
 
     /** Các lựa chọn "Trong ..." của khối Buổi sắp tới (1 = chỉ ngày đã chọn); mặc định 7 như prototype. */
     private static final List<Integer> RANGE_OPTIONS = List.of(1, 3, 7, 30);
     private static final int DEFAULT_RANGE_DAYS = 7;
 
-    /** Banner "khách thiếu gói tập" xét các buổi Scheduled trong 30 ngày tới. */
+    /** Banner "khách thiếu gói tập" xét các buổi Scheduled trong 30 ngày tới (CBR-66). */
     private static final int MISSING_MEMBERSHIP_LOOKAHEAD_DAYS = 30;
 
     /** Gói PT hết hạn trong 7 ngày thì coi là "sắp hết hạn". */
@@ -83,22 +63,14 @@ public class PtDashboardService {
     private final SessionDAO sessionDAO = new SessionDAO();
     private final SubscriptionDAO subscriptionDAO = new SubscriptionDAO();
     private final TimeSlotDAO timeSlotDAO = new TimeSlotDAO();
-    private final SystemConfigService systemConfigService = new SystemConfigService();
     private final WeatherService weatherService = new WeatherService();
+
+    // ===== Entry point: lấy toàn bộ dashboard =====
 
     /**
      * Lấy toàn bộ dữ liệu dashboard của PT đang đăng nhập.
-     *
-     * @param accountId   AccountId lấy từ SESSION (không lấy từ URL — PT không xem được dashboard người khác).
-     * @param periodParam kỳ hoa hồng: "yyyy-MM" (VD "2026-08") hoặc "yyyy-Qn" (VD "2026-Q3");
-     *                    không nằm trong danh sách được chọn → tháng này.
-     * @param dateParam   "Từ ngày" của khối Buổi sắp tới, dạng yyyy-MM-dd:
-     *                    null (chưa lọc) → hôm nay · rỗng (xóa trống ô) → hôm nay + lỗi MSG09 · sai → hôm nay.
-     * @param rangeDays   số ngày tính từ "Từ ngày": 1 / 3 / 7 / 30; giá trị khác → 7.
-     * @param weatherDemo tên kiểu trời muốn xem thử ("rain", "storm"...); rỗng hoặc sai → thời tiết thật.
-     * @return kết quả:
-     *         - Thành công: kèm PtDashboardView.
-     *         - Thất bại: tài khoản không phải PT đang làm (MSG07), lỗi DB (MSG04).
+     * Tài khoản phải là PT đang làm việc (GBR-10); không hợp lệ thì trả MSG07. Lỗi DB trả MSG04.
+     * Điền lần lượt: đầu trang → hoa hồng theo kỳ → buổi sắp tới theo bộ lọc ngày → điểm danh + banner thiếu gói → tóm tắt hôm nay → cột phụ (khách/tuần/tháng) neo theo "Từ ngày".
      */
     public ServiceResult<PtDashboardView> getDashboard(int accountId, String periodParam, String dateParam,
             int rangeDays, String weatherDemo) {
@@ -146,12 +118,10 @@ public class PtDashboardService {
             }
             view.setUpcomingSessions(upcoming);
 
-            // B5: buổi cần điểm danh + banner thiếu gói tập — chung 1 lần đọc các buổi Scheduled quanh hôm nay
-            int windowHours = systemConfigService.getInt(SystemConfigService.ATTENDANCE_WINDOW_HOURS);
-            view.setAttendanceWindowHours(windowHours);
+            // B5: đọc buổi chờ chốt và banner thiếu gói (JOB-04)
             List<PtSessionView> scheduled = sessionDAO.findByPt(ptId,
-                    today.minusDays(windowHours / 24 + 1), today.plusDays(MISSING_MEMBERSHIP_LOOKAHEAD_DAYS - 1), true);
-            fillAttendanceAndMissingMembership(view, scheduled, now, windowHours);
+                    LocalDate.of(1900, 1, 1), today.plusDays(MISSING_MEMBERSHIP_LOOKAHEAD_DAYS - 1), true);
+            fillPendingAndMissingMembership(view, scheduled, now);
 
             // B6: tóm tắt HÔM NAY trên thẻ chào (luôn là hôm nay, không theo ô lọc)
             fillToday(view, ptId, today);
@@ -191,10 +161,9 @@ public class PtDashboardService {
     // ===== Hoa hồng =====
 
     /**
-     * Điền khối Hoa hồng cho kỳ đã chọn.
-     *
-     * Kỳ = 1 tháng hoặc 1 quý. Chỉ cộng buổi ĐƯỢC TÍNH hoa hồng (xem isCommissionable). Lọc theo NGÀY DIỄN RA
-     * BUỔI (CHỐT-D4). Số tiền là CommissionAmount đã chốt trên từng buổi (DBR-58), không tính lại.
+     * Điền khối Hoa hồng cho kỳ đã chọn (1 tháng hoặc 1 quý).
+     * Chỉ cộng buổi ĐƯỢC TÍNH hoa hồng (xem {@link #isCommissionable}); lọc theo NGÀY DIỄN RA BUỔI (CHỐT-D4).
+     * Số tiền lấy từ {@code CommissionAmount} đã chốt trên từng buổi (DBR-58), không tính lại.
      */
     private void fillCommission(PtDashboardView view, int ptId, String periodParam, LocalDate today)
             throws SQLException {
@@ -238,7 +207,7 @@ public class PtDashboardService {
         int cancelledUnpaid = 0;
         for (SessionStatRow row : sessionDAO.findStatRows(ptId, fromDate, toDate)) {
             boolean isCommissionable = isCommissionable(row.getStatus(), row.getCancelType());
-            if ("Completed".equals(row.getStatus())) {
+            if ("CheckedIn".equals(row.getStatus())) {
                 completed++;
             } else if ("Missed".equals(row.getStatus())) {
                 missed++;
@@ -291,18 +260,12 @@ public class PtDashboardService {
     }
 
     /**
-     * Buổi có được tính hoa hồng cho PT không ("05_Dashboard_Rules.md" mục 3.2):
-     *   - Completed (đã dạy), Missed (khách vắng, kể cả do bảo lưu — CBR-68) → TÍNH (CBR-80)
-     *   - Cancelled với CancelType ByPt / ByCustomer → TÍNH (CBR-81, CBR-82)
-     *   - Cancelled với CancelType GymClosed / PackageExpired → KHÔNG tính (CBR-57, CBR-55)
-     *   - Scheduled → chưa diễn ra, chưa tính
-     *
-     * @param status         Sessions.Status.
-     * @param cancelType     Sessions.CancelType, có thể null.
-     * @return true nếu buổi được cộng vào hoa hồng.
+     * Buổi có được tính hoa hồng cho PT không (theo "05_Dashboard_Rules.md" mục 3.2).
+     * CheckedIn / Missed → TÍNH (CBR-80). Cancelled với ByPt / ByCustomer → TÍNH (CBR-81, CBR-82).
+     * Cancelled với GymClosed / PackageExpired → KHÔNG tính (CBR-57, CBR-55). Scheduled → chưa tính.
      */
     static boolean isCommissionable(String status, String cancelType) {
-        if ("Completed".equals(status) || "Missed".equals(status)) {
+        if ("CheckedIn".equals(status) || "Missed".equals(status)) {
             return true;
         }
         return "Cancelled".equals(status)
@@ -362,27 +325,21 @@ public class PtDashboardService {
         }
     }
 
-    // ===== Buổi cần điểm danh + banner thiếu gói tập =====
+    // ===== Buổi chờ chốt + banner thiếu gói tập =====
 
-    /**
-     * Từ danh sách buổi Scheduled quanh hôm nay, tách ra:
-     *   - buổi cần điểm danh: đã tới giờ bắt đầu, chưa quá windowHours giờ sau khi kết thúc (BR-54, P-07)
-     *   - banner: bao nhiêu KHÁCH có buổi từ hôm nay trở đi rơi vào ngày không có gói tập (CBR-66), buổi gần nhất ngày nào
-     */
-    private void fillAttendanceAndMissingMembership(PtDashboardView view, List<PtSessionView> scheduled,
-            LocalDateTime now, int windowHours) {
+    /** Lọc buổi đã hết giờ và khách thiếu gói sắp tới. */
+    private void fillPendingAndMissingMembership(PtDashboardView view, List<PtSessionView> scheduled,
+            LocalDateTime now) {
         LocalDate today = now.toLocalDate();
-        List<PtSessionView> attendance = new ArrayList<>();
+        List<PtSessionView> pending = new ArrayList<>();
         Set<String> missingCustomers = new LinkedHashSet<>();
         LocalDate firstMissingDate = null;
-
         for (PtSessionView session : scheduled) {
-            if (isAttendanceOpen(session.getSlotDate(), session.getStartTime(), session.getEndTime(), now, windowHours)) {
+            if (isAwaitingClosure(session.getSlotDate(), session.getEndTime(), now)) {
                 labelSession(session, today);
-                attendance.add(session);
+                pending.add(session);
             }
-            boolean isUpcomingMissing = session.isMissingMembership() && !session.getSlotDate().isBefore(today);
-            if (isUpcomingMissing) {
+            if (session.isMissingMembership() && !session.getSlotDate().isBefore(today)) {
                 missingCustomers.add(session.getCustomerName()
                         + (session.getPartnerName() == null ? "" : " & " + session.getPartnerName()));
                 if (firstMissingDate == null) {
@@ -390,20 +347,14 @@ public class PtDashboardService {
                 }
             }
         }
-        view.setAttendanceSessions(attendance);
+        view.setPendingClosureSessions(pending);
         view.setMissingMembershipCustomerCount(missingCustomers.size());
         view.setMissingMembershipFirstDate(firstMissingDate == null ? null : firstMissingDate.format(DAY_MONTH));
     }
 
-    /**
-     * Buổi có đang trong cửa sổ điểm danh không: giờ bắt đầu ≤ bây giờ ≤ giờ kết thúc + windowHours (BR-54, P-07).
-     * Tách riêng (không đụng DB) để unit test được các mốc biên.
-     */
-    static boolean isAttendanceOpen(LocalDate date, LocalTime startTime, LocalTime endTime,
-            LocalDateTime now, int windowHours) {
-        LocalDateTime startAt = LocalDateTime.of(date, startTime);
-        LocalDateTime deadline = LocalDateTime.of(date, endTime).plusHours(windowHours);
-        return !now.isBefore(startAt) && !now.isAfter(deadline);
+    /** Buổi Scheduled hết giờ đang chờ hệ thống chốt. */
+    static boolean isAwaitingClosure(LocalDate date, LocalTime endTime, LocalDateTime now) {
+        return date.atTime(endTime).isBefore(now);
     }
 
     // ===== Cột phụ =====
@@ -437,15 +388,9 @@ public class PtDashboardService {
 
     /**
      * Ô "Tuần" và ô "Tháng" của cột phụ — xét theo ngày anchor (ô "Từ ngày"), không theo hôm nay.
-     *
      * Tuần = thứ 2 → chủ nhật chứa anchor: đếm buổi theo trạng thái + slot còn trống.
-     * Tháng = tháng chứa anchor, chia tiền hoa hồng làm 3 phần không trùng nhau:
-     *   - Đã chốt  : buổi được tính hoa hồng (isCommissionable — Completed, Missed, hủy có tính)
-     *   - Chờ chốt : buổi Scheduled mà NGÀY ĐÃ QUA (chưa điểm danh; PT điểm danh hoặc JOB-04 tự đóng sẽ chốt)
-     *   - Dự kiến  : buổi Scheduled từ hôm nay trở đi
+     * Tháng = tháng chứa anchor, chia tiền hoa hồng làm 3 phần: đã chốt (isCommissionable), chờ chốt (Scheduled đã qua), dự kiến (Scheduled từ hôm nay trở đi).
      * VD David, anchor 23/09 (hôm nay 30/09) → Tháng 09/2026: đã chốt 0đ, chờ chốt 270.000đ (1 buổi), dự kiến 0đ.
-     *
-     * Đọc DB 1 lần cho khoảng ngày bao cả tuần lẫn tháng rồi tự lọc.
      */
     private void fillWeekAndMonth(PtDashboardView view, int ptId, LocalDate anchor, LocalDate today)
             throws SQLException {
@@ -476,7 +421,7 @@ public class PtDashboardService {
             boolean isInWeek = !date.isBefore(weekStart) && !date.isAfter(weekEnd);
             if (isInWeek) {
                 switch (status) {
-                    case "Completed":
+                    case "CheckedIn":
                         weekTaught++;
                         break;
                     case "Missed":
@@ -498,7 +443,7 @@ public class PtDashboardService {
             if (isCommissionable(status, row.getCancelType())) {
                 earnedCount++;
                 earnedAmount += row.getCommissionAmount();
-            } else if ("Scheduled".equals(status) && date.isBefore(today)) {
+            } else if ("Scheduled".equals(status) && isAwaitingClosure(date, row.getEndTime(), DateTimeUtil.now())) {
                 pendingCount++;
                 pendingAmount += row.getCommissionAmount();
             } else if ("Scheduled".equals(status)) {
@@ -550,8 +495,8 @@ public class PtDashboardService {
 
         // GBR-01: trạng thái lưu tiếng Anh, hiện tiếng Việt. GBR-28: vàng = chờ, xanh = thành công, đỏ = hủy / thất bại
         switch (session.getStatus()) {
-            case "Completed":
-                session.setStatusLabel("Hoàn thành");
+            case "CheckedIn":
+                session.setStatusLabel("Đã check-in");
                 session.setStatusBadge("badge-success");
                 break;
             case "Missed":

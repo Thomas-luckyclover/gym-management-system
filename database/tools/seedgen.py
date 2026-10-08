@@ -1,5 +1,5 @@
 # -*- coding: utf-8 -*-
-"""Sinh 2_Seed_Data.sql cho GMS v25.
+"""Sinh 2_Seed_Data.sql cho GMS v26.
 
 - Lịch sử cố định quanh MỐC = Thứ Bảy 03/10/2026 (tháng 6 → tháng 11/2026).
 - Dữ liệu "sống" (mã xác thực, khóa tạm, đơn online đang chờ, ca đang mở, gói ngày hôm nay)
@@ -381,6 +381,13 @@ def session(sub_id, slot_id, pt, status, value, **kw):
              MissedReason=None, CancelType=None, CancelReason=None, CancelledAt=None,
              CancelledByAccountId=None, RefundAgreed=0)
     r.update(kw)
+    if status in ('CheckedIn', 'Missed'):
+        day = get('TimeSlots', slot_id)['SlotDate']
+        r['AttendanceMarkedAt'] = datetime.combine(day + timedelta(days=1), time(0, 5))
+        r['IsAutoClosed'] = 1
+    if status == 'Missed' and not any(s['TimeSlotId'] == slot_id and s['Status'] in ('Scheduled', 'CheckedIn')
+                                      for s in DB['Sessions']):
+        get('TimeSlots', slot_id)['Status'] = 'Free'
     return add('Sessions', r)
 
 
@@ -452,8 +459,7 @@ def pt_package(oid, pt, start, fixed, events=None, freeze=None, holder_checkin_r
         if ev and ev[0] == 'missed':
             sl = slot(pt, d, fixed, 'Booked')
             session(sid, sl, pt, 'Missed', value, MissedReason=ev[1],
-                    AttendanceMarkedAt=at + timedelta(minutes=15) if ev[1] == 'MarkedAbsent' else None,
-                    IsAutoClosed=0 if ev[1] == 'MarkedAbsent' else 1)
+                    IsAutoClosed=1)
             continue
         sl_status = 'Booked'
         if freeze and freeze[0] <= d <= freeze[1]:
@@ -482,8 +488,8 @@ def _session_status(sid, sl, pt, value, d, at, end_at, holder, partner, freeze, 
     for c in valid[:1] if rng.random() < 0.5 else valid:
         checkin(c, at - timedelta(minutes=20))
     if rng.random() < 0.6:
-        return session(sid, sl, pt, 'Completed', value, AttendanceMarkedAt=end_at - timedelta(minutes=5))
-    return session(sid, sl, pt, 'Completed', value, IsAutoClosed=1)
+        return session(sid, sl, pt, 'CheckedIn', value, AttendanceMarkedAt=end_at - timedelta(minutes=5))
+    return session(sid, sl, pt, 'CheckedIn', value, IsAutoClosed=1)
 
 
 def single_session(cid, pt, d, start, channel, created, status=None, note=None):
@@ -501,8 +507,8 @@ def single_session(cid, pt, d, start, channel, created, status=None, note=None):
         get('Subscriptions', sid)['Status'] = 'Expired'
     else:
         checkin(cid, at - timedelta(minutes=15))
-        session(sid, sl, pt, 'Completed', o['_payable'], AttendanceMarkedAt=at + timedelta(minutes=85))
-        get('Subscriptions', sid)['Status'] = 'Completed'
+        session(sid, sl, pt, 'CheckedIn', o['_payable'], AttendanceMarkedAt=at + timedelta(minutes=85))
+        get('Subscriptions', sid)['Status'] = 'Used'
     return sid
 
 
@@ -544,7 +550,7 @@ def render(now=None, header=''):
             continue
         cols = [c for c in rows[0].keys() if not c.startswith('_')]
         out.append('/* ' + '=' * 76)
-        out.append(f'   {t} — {len(rows)} dòng. {SECTION.get(t, "")}')
+        out.append(f'   {t} — {len(rows)} dòng. {SECTION.get(t, "")}'.rstrip())
         out.append('   ' + '=' * 76 + ' */')
         out.append(f'SET IDENTITY_INSERT {t} ON;')
         for i in range(0, len(rows), 400):
@@ -558,7 +564,7 @@ def render(now=None, header=''):
         out.append(f'SET IDENTITY_INSERT {t} OFF;')
         out.append('')
     if now is None:
-        out += ['COMMIT TRANSACTION;', 'GO', '', "PRINT N'>>> Nạp seed GMS v25 thành công.';",
+        out += ['COMMIT TRANSACTION;', 'GO', '', "PRINT N'>>> Nạp seed GMS v26 thành công.';",
                 'SELECT t.name AS TableName, SUM(p.rows) AS [Rows] FROM sys.tables t',
                 'JOIN sys.partitions p ON p.object_id = t.object_id AND p.index_id IN (0, 1)',
                 'GROUP BY t.name ORDER BY t.name;', 'GO', '']

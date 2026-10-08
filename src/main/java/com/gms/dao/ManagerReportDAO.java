@@ -14,20 +14,7 @@ import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
 
-/**
- * Truy vấn tổng hợp cho Báo cáo vận hành & doanh thu (SRS 12.1.1, UC-46). Chỉ ĐỌC, không sửa dữ liệu.
- *
- * Mọi method nhận cùng 1 Connection để các con số thuộc cùng một "ảnh chụp".
- * Khoảng thời gian dùng dạng nửa mở: [start, endExclusive) với endExclusive = ngày kết thúc + 1 ngày 00:00.
- * Tiền dùng CAST AS BIGINT vì cột INT có thể tràn khi cộng nhiều đơn.
- *
- * Quy tắc tính (đã chốt với nhóm):
- *   - Doanh thu (DBR-56): Transactions.Status = 'Success', đơn không Cancelled, theo Transactions.CompletedAt.
- *   - VAT: cộng Orders.VatAmount của các đơn đó (DBR-57).
- *   - Hoa hồng: cộng Sessions.CommissionAmount đã chốt lúc đơn Paid (DBR-58), buổi Completed/Missed/Cancelled,
- *     đơn không Cancelled, theo ngày của TimeSlots.SlotDate, tính cho PT DẠY buổi (Sessions.PtEmployeeId).
- *   - Lượt check-in: CheckIns.CheckedInAt; vé 1 ngày là tập con (Subscriptions.SubscriptionType = 'DayPass').
- */
+/** Truy vấn báo cáo doanh thu và hoa hồng cho quản lý. */
 public class ManagerReportDAO {
 
     // Điều kiện chung của "giao dịch tính vào doanh thu"
@@ -38,9 +25,7 @@ public class ManagerReportDAO {
             + "AND t.CompletedAt >= ? AND t.CompletedAt < ? ";
 
     /**
-     * Tổng doanh thu và tổng VAT trong khoảng.
-     *
-     * @return mảng {doanh thu, VAT}
+     * Tổng doanh thu và tổng VAT trong khoảng (chỉ tính giao dịch Success của đơn không Cancelled).
      */
     public long[] sumRevenueAndVat(Connection conn, LocalDateTime start, LocalDateTime endExclusive)
             throws SQLException {
@@ -118,14 +103,14 @@ public class ManagerReportDAO {
     }
 
     /**
-     * Hoa hồng từng PT theo NGÀY DIỄN RA BUỔI (CHỐT-D4). Tính buổi Completed, Missed, và Cancelled do
+     * Hoa hồng từng PT theo NGÀY DIỄN RA BUỔI (CHỐT-D4). Tính buổi CheckedIn, Missed, và Cancelled do
      * PT hủy / khách hủy (CBR-80…82). Buổi hủy do phòng đóng cửa hoặc gói PT hết hạn (CancelType GymClosed / PackageExpired)
      * KHÔNG tính. Hoa hồng tính cho PT đang giữ buổi (Sessions.PtEmployeeId).
      */
     public List<ReportView.PtRow> findPtCommission(Connection conn, LocalDate from, LocalDate to)
             throws SQLException {
         String sql = "SELECT e.EmployeeId, pe.FullName, e.CommissionRate, "
-                + "SUM(CASE WHEN se.Status = 'Completed' THEN 1 ELSE 0 END), "
+                + "SUM(CASE WHEN se.Status = 'CheckedIn' THEN 1 ELSE 0 END), "
                 + "SUM(CASE WHEN se.Status = 'Missed' THEN 1 ELSE 0 END), "
                 + "SUM(CASE WHEN se.Status = 'Cancelled' THEN 1 ELSE 0 END), "
                 + "SUM(CAST(se.CommissionAmount AS BIGINT)) "
@@ -133,7 +118,7 @@ public class ManagerReportDAO {
                 + "JOIN TimeSlots ts ON ts.TimeSlotId = se.TimeSlotId "
                 + "JOIN Employees e ON e.EmployeeId = se.PtEmployeeId "
                 + "JOIN Persons pe ON pe.PersonId = e.PersonId "
-                + "WHERE (se.Status IN ('Completed', 'Missed') "
+                + "WHERE (se.Status IN ('CheckedIn', 'Missed') "
                 + "       OR (se.Status = 'Cancelled' AND se.CancelType IN ('ByPt', 'ByCustomer'))) "
                 + "AND ts.SlotDate >= ? AND ts.SlotDate <= ? "
                 + "GROUP BY e.EmployeeId, pe.FullName, e.CommissionRate "

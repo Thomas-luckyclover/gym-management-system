@@ -31,7 +31,7 @@ public class PtClientView {
      * @param customerCode mã khách, VD "KH-1007".
      * @param sourceType   loại gói PT: PTSingle | PTCouple | SingleSession.
      * @param endDate      ngày cuối gói PT còn dùng được (GBR-03).
-     * @param status       Subscriptions.Status (xem ngày cũ có thể là Expired / Completed).
+     * @param status       Subscriptions.Status (xem ngày cũ có thể là Expired / CheckedIn).
      * @param partner      true nếu khách là người đi kèm trong gói couple (không đứng tên).
      */
     public PtClientView(String fullName, String customerCode, String sourceType, LocalDate endDate,

@@ -29,7 +29,7 @@ public class SystemConfigDAO {
                 + "FROM SystemConfigs "
                 + "WHERE ConfigKey = ?";
 
-        
+
         // Cả Connection, PreparedStatement, ResultSet đều mở trong try(...) - try - cacth - resource => tự động đóng khi xong, không cần gọi hàm close()
         try (Connection conn = DBContext.getConnection();
                 PreparedStatement stmt = conn.prepareStatement(sql)) {

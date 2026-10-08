@@ -11,11 +11,9 @@ import jakarta.servlet.http.HttpServletRequest;
 import java.io.IOException;
 
 /**
- * Ép UTF-8 cho mọi request/response để form gửi tiếng Việt có dấu không bị lỗi font ("Nguyá»…n").
+ * Filter ép encoding UTF-8 cho mọi request/response (mapping /*) để form tiếng Việt có dấu không bị lỗi font.
  *
- * Vì sao không cần lo thứ tự chạy giữa các Filter (@WebFilter không đảm bảo thứ tự):
- * encoding chỉ cần được đặt TRƯỚC lần đọc tham số đầu tiên, mà không Filter nào của dự án gọi getParameter()
- * — chỉ Servlet đọc, và Servlet luôn chạy sau tất cả Filter. Vì vậy quy ước: Filter KHÔNG được gọi getParameter().
+ * <p>Với tài nguyên tĩnh (css/js/images) thì KHÔNG set charset response, tránh Tomcat đọc lại file theo bảng mã máy.</p>
  */
 @WebFilter("/*")
 public class CharacterEncodingFilter implements Filter {
@@ -24,6 +22,9 @@ public class CharacterEncodingFilter implements Filter {
 
     private static final String[] STATIC_PATH_PREFIXES = {"/css/", "/js/", "/images/"};
 
+    /**
+     * Đặt encoding request là UTF-8, đặt encoding response là UTF-8 (trừ file tĩnh) rồi cho request đi tiếp.
+     */
     @Override
     public void doFilter(ServletRequest request, ServletResponse response, FilterChain chain)
             throws IOException, ServletException {

@@ -607,3 +607,109 @@ body.dock {
     border-radius: var(--radius-xs, 4px);
     letter-spacing: 0.05em;
 }
+
+/* =========================
+   TAB: HỒ SƠ PHỤ THUỘC
+   ========================= */
+
+.dep-list {
+    list-style: none;
+    margin: 0;
+    padding: 0;
+    border-top: var(--border-width) solid var(--color-border);
+}
+
+.dep-item {
+    display: flex;
+    align-items: center;
+    gap: var(--space-3-5);
+    padding: var(--space-4) var(--space-5);
+    border-bottom: var(--border-width) solid var(--color-border);
+    transition: background var(--duration-fast) var(--ease-standard);
+}
+
+.dep-item:hover {
+    background: var(--color-bg);
+}
+
+.dep-avatar {
+    flex: none;
+    display: grid;
+    place-items: center;
+    width: 44px;
+    height: 44px;
+    border-radius: var(--radius-circle);
+    background: var(--color-primary-tint);
+    color: var(--color-primary);
+    font-family: var(--font-display);
+    font-weight: var(--font-weight-bold);
+    font-size: var(--font-size-lg);
+}
+
+.dep-info {
+    display: flex;
+    flex-direction: column;
+    gap: var(--space-1);
+    min-width: 0;
+}
+
+.dep-name {
+    display: flex;
+    align-items: center;
+    flex-wrap: wrap;
+    gap: var(--space-2);
+    font-weight: var(--font-weight-semibold);
+    color: var(--color-text);
+}
+
+.dep-badge {
+    padding: 2px var(--space-2);
+    border-radius: var(--radius-sm);
+    background: var(--color-warning-tint);
+    color: var(--color-warning);
+    font-size: var(--font-size-xs);
+    font-weight: var(--font-weight-medium);
+}
+
+.dep-meta {
+    display: flex;
+    flex-wrap: wrap;
+    gap: var(--space-3-5);
+    color: var(--color-text-soft);
+    font-size: var(--font-size-sm);
+}
+
+.dep-meta i {
+    margin-right: var(--space-1);
+    opacity: .7;
+}
+
+.dep-pkg--active {
+    color: var(--color-success);
+}
+
+.dep-pkg--none {
+    color: var(--color-text-muted);
+}
+
+.dep-empty {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: var(--space-2);
+    padding: var(--space-10) var(--space-5);
+    text-align: center;
+    color: var(--color-text-soft);
+}
+
+.dep-empty-icon {
+    font-size: 2rem;
+    color: var(--color-text-muted);
+    margin-bottom: var(--space-2);
+}
+
+.dep-empty p {
+    margin: 0;
+    font-weight: var(--font-weight-medium);
+    color: var(--color-text);
+}

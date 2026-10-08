@@ -41,9 +41,9 @@ public class AuditLogDAO {
 
         String sql =
                 "INSERT INTO AuditLogs "
-                        + "(AccountId, Action, EntityName, EntityId, "
+                        + "(AccountId, ActingRole, Action, EntityName, EntityId, "
                         + "FieldChanged, OldValue, NewValue, Reason) "
-                        + "VALUES (?, ?, ?, ?, ?, ?, ?, ?)";
+                        + "VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)";
 
         try (PreparedStatement stmt =
                      conn.prepareStatement(sql)) {
@@ -54,19 +54,25 @@ public class AuditLogDAO {
                 stmt.setInt(1, auditLog.getAccountId());
             }
 
-            stmt.setString(2, auditLog.getAction());
-            stmt.setString(3, auditLog.getEntityName());
-
-            if (auditLog.getEntityId() == null) {
-                stmt.setNull(4, Types.INTEGER);
+            if (auditLog.getActingRole() == null) {
+                stmt.setNull(2, Types.VARCHAR);
             } else {
-                stmt.setInt(4, auditLog.getEntityId());
+                stmt.setString(2, auditLog.getActingRole().getDbValue());
             }
 
-            stmt.setString(5, auditLog.getFieldChanged());
-            stmt.setString(6, auditLog.getOldValue());
-            stmt.setString(7, auditLog.getNewValue());
-            stmt.setString(8, auditLog.getReason());
+            stmt.setString(3, auditLog.getAction());
+            stmt.setString(4, auditLog.getEntityName());
+
+            if (auditLog.getEntityId() == null) {
+                stmt.setNull(5, Types.INTEGER);
+            } else {
+                stmt.setInt(5, auditLog.getEntityId());
+            }
+
+            stmt.setString(6, auditLog.getFieldChanged());
+            stmt.setString(7, auditLog.getOldValue());
+            stmt.setString(8, auditLog.getNewValue());
+            stmt.setString(9, auditLog.getReason());
 
             return stmt.executeUpdate() == 1;
         }

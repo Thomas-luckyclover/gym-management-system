@@ -12,50 +12,19 @@ import java.time.LocalDate;
 import java.util.ArrayList;
 import java.util.List;
 
-/**
- * Truy vấn bảng Sessions (buổi PT) — phần đọc dùng cho PT Dashboard.
- *
- * Ngày của buổi nằm ở TimeSlots.SlotDate (buổi chiếm khung giờ nào), nên câu SQL JOIN TimeSlots.
- * DAO chỉ ĐỌC trạng thái đang lưu (GBR-14: đổi trạng thái là việc của điểm danh / JOB-04), không tự tính lại.
- *
- * @author Le Cong Minh
- */
+/** Đọc buổi PT và số liệu theo ngày cho dashboard. */
 public class SessionDAO {
 
-    /**
-     * Điều kiện "khách {customerColumn} được phép tập vào ngày t.SlotDate" (CBR-60, CBR-64, CBR-66):
-     *   - có quyền dùng chưa bị hủy, ngày buổi nằm trong [StartDate, EndDate] (EndDate tính cả ngày đó — GBR-03)
-     *   - loại quyền dùng được chấp nhận:
-     *       · Buổi thuộc gói PT (PTSingle, PTCouple): CHỈ gói tập (Membership) — vé ngày không thay được (CBR-64)
-     *       · Buổi lẻ (SingleSession): gói tập, HOẶC gói ngày (DayPass) của chính hôm đó — khách vãng lai
-     *         mua gói ngày rồi mua buổi lẻ hôm nay tại quầy (CBR-60)
-     *   - và ngày đó KHÔNG nằm trong khoảng bảo lưu của gói (bảo lưu = tạm ngừng dùng; gói ngày không bảo lưu được)
-     */
+    /** Membership hợp lệ và không có kỳ bảo lưu bao phủ ngày buổi. */
     private static final String HAS_MEMBERSHIP_ON_SLOT_DATE =
             "EXISTS (SELECT 1 FROM Subscriptions m "
-            + "WHERE m.CustomerId = %s AND m.Status <> 'Cancelled' "
-            + "AND (m.SubscriptionType = 'Membership' "
-            + "     OR (sub.SubscriptionType = 'SingleSession' AND m.SubscriptionType = 'DayPass')) "
+            + "WHERE m.CustomerId = %s AND m.Status IN ('Active','Frozen') "
+            + "AND m.SubscriptionType = 'Membership' "
             + "AND t.SlotDate BETWEEN m.StartDate AND m.EndDate "
             + "AND NOT EXISTS (SELECT 1 FROM FreezeRecords f WHERE f.SubscriptionId = m.SubscriptionId "
             + "AND t.SlotDate BETWEEN f.StartDate AND COALESCE(f.ActualEndDate, f.PlannedEndDate)))";
 
-    /**
-     * Lấy các buổi của 1 PT trong 1 khoảng ngày, sớm nhất lên đầu.
-     *
-     * Tên khách lấy từ người đứng tên gói; gói couple lấy thêm người đi kèm (Orders.PartnerCustomerId).
-     * Không lấy SĐT / email — dashboard chỉ cần tên.
-     *
-     * VD findByPt(7, 23/09, 23/09, false) → 1 buổi lẻ 10:00–11:30, khách có gói ngày 23/09 → missingMembership = false
-     *    (CBR-60). Nếu đó là buổi của gói PT thì gói ngày không đủ → missingMembership = true (CBR-64).
-     *
-     * @param ptEmployeeId  EmployeeId của PT đang đăng nhập (chỉ lấy buổi PT này đang giữ — GBR-10).
-     * @param fromDate      từ ngày (tính cả).
-     * @param toDate        tới ngày (tính cả).
-     * @param scheduledOnly true = chỉ lấy buổi Scheduled (dùng cho khối Buổi cần điểm danh); false = mọi trạng thái.
-     * @return danh sách buổi; list rỗng nếu không có buổi nào.
-     * @throws SQLException lỗi kết nối hoặc lỗi câu SQL.
-     */
+    /** Đọc các buổi PT trong khoảng ngày và tình trạng membership. */
     public List<PtSessionView> findByPt(int ptEmployeeId, LocalDate fromDate, LocalDate toDate, boolean scheduledOnly)
             throws SQLException {
         // Gói couple: buổi "không diễn ra" chỉ khi CẢ HAI người đều không có gói tập (CBR-64).
@@ -104,21 +73,10 @@ public class SessionDAO {
         return sessions;
     }
 
-    /**
-     * Lấy số liệu thô của mọi buổi PT trong 1 khoảng ngày — để Service tự cộng hoa hồng, vẽ biểu đồ, đếm tuần này.
-     * DAO KHÔNG lọc "buổi nào được tính hoa hồng": luật đó (CBR-80…82, CBR-55, CBR-57) nằm ở PtDashboardService.
-     *
-     * VD findStatRows(5, 01/09, 30/09) → 6 dòng: 3 Completed, 1 Missed, 2 Scheduled (mỗi dòng 280.000đ hoa hồng).
-     *
-     * @param ptEmployeeId PT đang giữ buổi (chuyển PT thì hoa hồng theo PT mới — Sessions.PtEmployeeId).
-     * @param fromDate     từ ngày (tính cả).
-     * @param toDate       tới ngày (tính cả).
-     * @return danh sách buổi; list rỗng nếu không có buổi nào.
-     * @throws SQLException lỗi kết nối hoặc lỗi câu SQL.
-     */
+    /** Đọc trạng thái và hoa hồng buổi PT trong khoảng ngày. */
     public List<SessionStatRow> findStatRows(int ptEmployeeId, LocalDate fromDate, LocalDate toDate)
             throws SQLException {
-        String sql = "SELECT t.SlotDate, s.Status, s.CancelType, sub.SubscriptionType, s.CommissionAmount "
+        String sql = "SELECT t.SlotDate, t.EndTime, s.Status, s.CancelType, sub.SubscriptionType, s.CommissionAmount "
                 + "FROM Sessions s "
                 + "JOIN TimeSlots t ON t.TimeSlotId = s.TimeSlotId "
                 + "JOIN Subscriptions sub ON sub.SubscriptionId = s.SubscriptionId "
@@ -135,6 +93,7 @@ public class SessionDAO {
                 while (rs.next()) {
                     rows.add(new SessionStatRow(
                             rs.getDate("SlotDate").toLocalDate(),
+                            rs.getTime("EndTime").toLocalTime(),
                             rs.getString("Status"),
                             rs.getString("CancelType"),
                             rs.getString("SubscriptionType"),

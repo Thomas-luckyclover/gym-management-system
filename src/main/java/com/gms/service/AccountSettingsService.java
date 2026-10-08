@@ -3,14 +3,18 @@ package com.gms.service;
 import com.gms.constant.Messages;
 import com.gms.constant.Role;
 import com.gms.dao.AccountDAO;
+import com.gms.dao.CustomerDAO;
 import com.gms.dao.EmployeeDAO;
 import com.gms.dao.PersonDAO;
 import com.gms.dto.AccountSettingsView;
+import com.gms.dto.DependentCustomerRow;
+import com.gms.dto.DependentCustomerView;
 import com.gms.dto.ServiceResult;
 import com.gms.entity.Account;
 import com.gms.entity.Employee;
 import com.gms.entity.Person;
 import com.gms.listener.SessionRegistryListener;
+import com.gms.util.DateTimeUtil;
 import com.gms.util.PasswordUtil;
 import com.gms.util.ValidationUtil;
 import java.sql.SQLException;
@@ -24,6 +28,8 @@ import java.io.InputStream;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.StandardCopyOption;
+import java.util.ArrayList;
+import java.util.List;
 import java.util.UUID;
 
 /**
@@ -32,15 +38,19 @@ import java.util.UUID;
 public class AccountSettingsService {
 
         private final AccountDAO accountDAO;
+        private final CustomerDAO customerDAO;
         private final PersonDAO personDAO;
         private final EmployeeDAO employeeDAO;
         private final AuditLogService auditLogService;
+        private final SystemConfigService systemConfigService;
 
         public AccountSettingsService() {
                 accountDAO = new AccountDAO();
+                customerDAO = new CustomerDAO();
                 personDAO = new PersonDAO();
                 employeeDAO = new EmployeeDAO();
                 auditLogService = new AuditLogService();
+                systemConfigService = new SystemConfigService();
         }
 
         /**
@@ -117,6 +127,149 @@ public class AccountSettingsService {
                         return ServiceResult.fail(
                                         Messages.MSG04_SYSTEM_BUSY);
                 }
+        }
+
+        /**
+         * Lấy danh sách hồ sơ phụ thuộc mà người dùng đang là giám hộ.
+         *
+         * @param accountId   id tài khoản đang đăng nhập
+         * @param sessionRole vai trò đang dùng trong session
+         * @return danh sách hồ sơ phụ thuộc, rỗng nếu không phải Customer
+         */
+        public ServiceResult<List<DependentCustomerView>> getDependents(
+                        int accountId,
+                        Role sessionRole) {
+
+                // B1: chỉ vai trò Customer được xem (CBR-112)
+                if (sessionRole != Role.CUSTOMER) {
+                        return ServiceResult.ok(
+                                        new ArrayList<>());
+                }
+
+                try {
+                        // B2: lấy SĐT người giám hộ từ Person
+                        Account account =
+                                        accountDAO.findById(accountId);
+
+                        if (account == null) {
+                                return ServiceResult.fail(
+                                                String.format(
+                                                                Messages.MSG08_NOT_FOUND,
+                                                                "tài khoản"));
+                        }
+
+                        Person person =
+                                        personDAO.findById(
+                                                        account.getPersonId());
+
+                        if (person == null) {
+                                return ServiceResult.fail(
+                                                String.format(
+                                                                Messages.MSG08_NOT_FOUND,
+                                                                "hồ sơ"));
+                        }
+
+                        String guardianPhone = person.getPhone();
+
+                        if (ValidationUtil.isNullOrEmpty(
+                                        guardianPhone)) {
+                                return ServiceResult.ok(
+                                                new ArrayList<>());
+                        }
+
+                        // B3: gọi CustomerDAO tìm Dependent
+                        //     theo SĐT (CBR-33)
+                        List<DependentCustomerRow> rows =
+                                        customerDAO
+                                                        .findDependentsByGuardianPhone(
+                                                                        guardianPhone);
+
+                        // B4: đọc ngưỡng tuổi P-05
+                        //     từ SystemConfigService
+                        int minAgeForPt = systemConfigService.getInt(
+                                        SystemConfigService.MIN_AGE_FOR_PT);
+
+                        LocalDate today = DateTimeUtil.today();
+
+                        // B5: dựng DependentCustomerView
+                        //     cho từng hồ sơ
+                        List<DependentCustomerView> views =
+                                        new ArrayList<>();
+
+                        for (DependentCustomerRow row : rows) {
+                                views.add(
+                                                buildDependentView(
+                                                                row,
+                                                                today,
+                                                                minAgeForPt));
+                        }
+
+                        return ServiceResult.ok(views);
+
+                } catch (SQLException e) {
+                        e.printStackTrace();
+
+                        return ServiceResult.fail(
+                                        Messages.MSG04_SYSTEM_BUSY);
+                }
+        }
+
+        /**
+         * Map DependentCustomerRow thô thành DependentCustomerView
+         * để hiển thị trên UI.
+         *
+         * @param row         dữ liệu thô từ DAO
+         * @param today       ngày hiện tại (theo múi giờ gym)
+         * @param minAgeForPt ngưỡng tuổi P-05 từ SystemConfig
+         * @return view hiển thị cho JSP
+         */
+        private DependentCustomerView buildDependentView(
+                        DependentCustomerRow row,
+                        LocalDate today,
+                        int minAgeForPt) {
+
+                int age = DateTimeUtil.calculateAge(
+                                row.getDateOfBirth(), today);
+
+                String ageLabel = age + " tuổi";
+
+                boolean underTen = age < minAgeForPt;
+
+                String activePackageLabel =
+                                buildPackageLabel(
+                                                row.getPackageName(),
+                                                row.getPackageEndDate());
+
+                return new DependentCustomerView(
+                                row.getFullName(),
+                                row.getCustomerCode(),
+                                ageLabel,
+                                underTen,
+                                activePackageLabel);
+        }
+
+        /**
+         * Tạo nhãn hiển thị gói tập hiện tại của Dependent.
+         *
+         * @param packageName    tên gói, null nếu không có
+         * @param packageEndDate ngày hết hạn gói, null nếu không có
+         * @return nhãn hiển thị, VD: "Gói Bạc (đến 05/10/2026)"
+         *         hoặc "Chưa có gói tập"
+         */
+        private String buildPackageLabel(
+                        String packageName,
+                        LocalDate packageEndDate) {
+
+                if (ValidationUtil.isNullOrEmpty(packageName)
+                                || packageEndDate == null) {
+                        return "Chưa có gói tập";
+                }
+
+                return packageName
+                                + " (đến "
+                                + DateTimeUtil.formatDate(
+                                                packageEndDate)
+                                + ")";
         }
 
         /**

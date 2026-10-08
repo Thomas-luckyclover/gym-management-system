@@ -1,10 +1,11 @@
 /* ============================================================================
    GMS — Gym Management System
-   FILE    : 1_Init_Schema.sql  ·  bản v25 (03/10/2026)
-   MỤC ĐÍCH: Tạo toàn bộ schema SQL Server, chuẩn 3NF, khớp bộ rule v25
-             (GBR / CBR / DBR / BR / P-01…P-21). 30 bảng, 7 cluster A–G.
+   FILE    : 1_Init_Schema.sql  ·  bản v26 (06/10/2026)
+   MỤC ĐÍCH: Tạo toàn bộ schema SQL Server, chuẩn 3NF, khớp thay đổi nghiệp vụ v26
+             (GBR / CBR / DBR / BR / P-01…P-22). 30 bảng, 7 cluster A–G.
    CHẠY    : Trên SQL Server 2019+. Muốn làm lại từ đầu: chạy 0_Reset_Database.sql trước.
              Thứ tự: 0_Reset_Database.sql → 1_Init_Schema.sql → 2_Seed_Data.sql
+   v26    : JOB-04 chốt tự động, CheckedIn/Used, đánh giá PT theo tháng (DBR-66/67).
    ĐÃ GỘP  : migrations/001 (chuyên môn PT, lý do nghỉ việc, nhắc duyệt nghỉ phép)
              migrations/002 (DBR-65: 1 Person tối đa 1 hồ sơ khách + 1 hồ sơ NV còn hiệu lực)
              và toàn bộ thay đổi v25 — xem docs/database/SCHEMA_CHANGES_v25.md.
@@ -431,7 +432,7 @@ GO
 --   Membership   : Active | Frozen | Expired | Cancelled   (StartDate có thể ở tương lai — DBR-52)
 --   DayPass      : Active | Used | Expired | Cancelled
 --   PTSingle/Couple: Active | Expired | Cancelled          (CBR-55)
---   SingleSession: Active | Completed | Expired | Cancelled
+--   SingleSession: Active | Used | Expired | Cancelled
 CREATE TABLE Subscriptions (
     SubscriptionId        INT IDENTITY(1,1) NOT NULL,
     OrderId               INT          NOT NULL,
@@ -454,12 +455,11 @@ CREATE TABLE Subscriptions (
     CONSTRAINT FK_Subscriptions_Customers FOREIGN KEY (CustomerId)   REFERENCES Customers(CustomerId),
     CONSTRAINT FK_Subscriptions_Pt        FOREIGN KEY (PtEmployeeId) REFERENCES Employees(EmployeeId),
     CONSTRAINT CK_Subscriptions_Type   CHECK (SubscriptionType IN ('Membership','DayPass','PTSingle','PTCouple','SingleSession')),
-    CONSTRAINT CK_Subscriptions_Status CHECK (Status IN ('Active','Frozen','Used','Expired','Completed','Cancelled')),
+    CONSTRAINT CK_Subscriptions_Status CHECK (Status IN ('Active','Frozen','Used','Expired','Cancelled')),
     CONSTRAINT CK_Subscriptions_StatusByType CHECK (
         (Status IN ('Active','Expired','Cancelled'))
         OR (Status = 'Frozen'    AND SubscriptionType = 'Membership')      -- BR-21
-        OR (Status = 'Used'      AND SubscriptionType = 'DayPass')         -- BR-29
-        OR (Status = 'Completed' AND SubscriptionType = 'SingleSession')
+        OR (Status = 'Used' AND SubscriptionType IN ('DayPass','SingleSession')) -- BR-29
     ),
     CONSTRAINT CK_Subscriptions_Dates CHECK (EndDate >= StartDate),
     CONSTRAINT CK_Subscriptions_OneDay CHECK (SubscriptionType NOT IN ('DayPass','SingleSession') OR EndDate = StartDate),
@@ -602,6 +602,9 @@ CREATE TABLE TimeSlots (
 );
 GO
 
+CREATE INDEX IX_TimeSlots_SlotDate ON TimeSlots(SlotDate) INCLUDE (PtEmployeeId);
+GO
+
 CREATE TABLE Sessions (
     SessionId            INT IDENTITY(1,1) NOT NULL,
     SubscriptionId       INT           NOT NULL,
@@ -610,9 +613,9 @@ CREATE TABLE Sessions (
     Status               VARCHAR(10)   NOT NULL CONSTRAINT DF_Sessions_Status       DEFAULT ('Scheduled'), -- DBR-37
     SessionValue         INT           NOT NULL, -- DBR-59, chốt khi Paid
     CommissionAmount     INT           NOT NULL, -- DBR-58 = tỷ lệ PT dạy × SessionValue
-    AttendanceMarkedAt   DATETIME2(0)  NULL,
-    IsAutoClosed         BIT           NOT NULL CONSTRAINT DF_Sessions_AutoClosed   DEFAULT (0), -- job đóng sau cửa sổ P-07 (CBR-42)
-    MissedReason         VARCHAR(20)   NULL,     -- v25 mã tiếng Anh (GBR-01): NoCheckIn | NoMembership | MembershipFrozen | MarkedAbsent
+    AttendanceMarkedAt   DATETIME2(0)  NULL,     -- JOB-04 ghi lúc 00:05 hôm sau
+    IsAutoClosed         BIT           NOT NULL CONSTRAINT DF_Sessions_AutoClosed   DEFAULT (0), -- JOB-04 ghi lúc 00:05 hôm sau, không còn PT điểm danh
+    MissedReason         VARCHAR(20)   NULL,     -- v26 mã tiếng Anh (GBR-01): NoCheckIn | NoMembership | MembershipFrozen
     CancelType           VARCHAR(20)   NULL,     -- v25: ByPt (BR-66) | ByCustomer (BR-79) | GymClosed (CBR-57) | PackageExpired (CBR-55)
     CancelReason         NVARCHAR(500) NULL,
     CancelledAt          DATETIME2(0)  NULL,
@@ -624,10 +627,10 @@ CREATE TABLE Sessions (
     CONSTRAINT FK_Sessions_TimeSlots     FOREIGN KEY (TimeSlotId)           REFERENCES TimeSlots(TimeSlotId),
     CONSTRAINT FK_Sessions_Employees     FOREIGN KEY (PtEmployeeId)         REFERENCES Employees(EmployeeId),
     CONSTRAINT FK_Sessions_Accounts      FOREIGN KEY (CancelledByAccountId) REFERENCES Accounts(AccountId),
-    CONSTRAINT CK_Sessions_Status     CHECK (Status IN ('Scheduled','Completed','Missed','Cancelled')),
+    CONSTRAINT CK_Sessions_Status     CHECK (Status IN ('Scheduled','CheckedIn','Missed','Cancelled')),
     CONSTRAINT CK_Sessions_Value      CHECK (SessionValue >= 0 AND CommissionAmount >= 0 AND CommissionAmount <= SessionValue),
     CONSTRAINT CK_Sessions_MissedReason CHECK (
-        (Status = 'Missed' AND MissedReason IS NOT NULL AND MissedReason IN ('NoCheckIn','NoMembership','MembershipFrozen','MarkedAbsent'))
+        (Status = 'Missed' AND MissedReason IS NOT NULL AND MissedReason IN ('NoCheckIn','NoMembership','MembershipFrozen'))
         OR (Status <> 'Missed' AND MissedReason IS NULL)
     ),
     CONSTRAINT CK_Sessions_Cancel CHECK (
@@ -652,6 +655,9 @@ GO
 
 -- DBR-32: mỗi slot tối đa 1 buổi đang Scheduled (buổi Missed / Cancelled đã nhả slot)
 CREATE UNIQUE INDEX UX_Sessions_OneActivePerSlot ON Sessions(TimeSlotId) WHERE Status = 'Scheduled';
+GO
+
+CREATE INDEX IX_Sessions_Scheduled ON Sessions(TimeSlotId) INCLUDE (SubscriptionId, PtEmployeeId) WHERE Status = 'Scheduled';
 GO
 
 -- SessionMoveLogs (v25, thay SessionSwapLogs): MỌI lần dời buổi, để giữ lịch sử PT cũ / slot cũ
@@ -892,15 +898,30 @@ CREATE TABLE Feedbacks (
     ReadAt           DATETIME2(0)   NULL,
     ReadByEmployeeId INT            NULL,      -- chỉ Manager (CBR-106)
 
+    RatedPtEmployeeId INT          NULL,      -- DBR-66: ba cột đánh giá cùng NULL hoặc cùng có giá trị
+    Rating           TINYINT       NULL,      -- 1–5 sao
+    RatingMonth      DATE          NULL,      -- ngày 1 tháng theo giờ VN (DBR-67)
+    UpdatedAt        DATETIME2(0)  NULL,      -- khác NULL khi sửa phiếu
+
     CONSTRAINT PK_Feedbacks PRIMARY KEY (FeedbackId),
     CONSTRAINT FK_Feedbacks_Customers FOREIGN KEY (CustomerId)       REFERENCES Customers(CustomerId),
     CONSTRAINT FK_Feedbacks_Employees FOREIGN KEY (ReadByEmployeeId) REFERENCES Employees(EmployeeId),
+    CONSTRAINT FK_Feedbacks_RatedPt FOREIGN KEY (RatedPtEmployeeId) REFERENCES Employees(EmployeeId),
+    CONSTRAINT CK_Feedbacks_Rating CHECK (
+        (RatedPtEmployeeId IS NULL AND Rating IS NULL AND RatingMonth IS NULL)
+        OR (RatedPtEmployeeId IS NOT NULL AND Rating IS NOT NULL AND Rating BETWEEN 1 AND 5
+            AND RatingMonth IS NOT NULL AND DAY(RatingMonth) = 1)
+    ),
     CONSTRAINT CK_Feedbacks_Content CHECK (LEN(LTRIM(RTRIM(Content))) BETWEEN 10 AND 1000),
     CONSTRAINT CK_Feedbacks_Read CHECK (
         (IsRead = 1 AND ReadAt IS NOT NULL AND ReadByEmployeeId IS NOT NULL)
         OR (IsRead = 0 AND ReadAt IS NULL AND ReadByEmployeeId IS NULL)
     )
 );
+GO
+
+CREATE UNIQUE INDEX UX_Feedbacks_RatingPerMonth ON Feedbacks(CustomerId, RatedPtEmployeeId, RatingMonth) WHERE RatedPtEmployeeId IS NOT NULL;
+CREATE INDEX IX_Feedbacks_RatedPt ON Feedbacks(RatedPtEmployeeId, RatingMonth) INCLUDE (Rating, CustomerId, UpdatedAt, SubmittedAt) WHERE RatedPtEmployeeId IS NOT NULL;
 GO
 
 CREATE TABLE BlogPosts (
@@ -972,10 +993,10 @@ GO
    CLUSTER G — CẤU HÌNH & LƯU VẾT
    ============================================================================ */
 
--- SystemConfigs: P-01…P-21 dạng key–value (GBR-04)
+-- SystemConfigs: P-01…P-22 dạng key–value (GBR-04)
 CREATE TABLE SystemConfigs (
     SystemConfigId      INT IDENTITY(1,1) NOT NULL,
-    ConfigKey           VARCHAR(10)   NOT NULL,  -- P-01 … P-21
+    ConfigKey           VARCHAR(10)   NOT NULL,  -- P-01 … P-22
     ConfigValue         NVARCHAR(200) NOT NULL,
     Description         NVARCHAR(255) NOT NULL,
     UpdatedAt           DATETIME2(0)  NOT NULL CONSTRAINT DF_SystemConfigs_UpdatedAt DEFAULT (SYSDATETIME()),
@@ -1037,5 +1058,5 @@ CREATE INDEX IX_AuditLogs_Entity    ON AuditLogs(EntityName, EntityId);
 CREATE INDEX IX_AuditLogs_Account   ON AuditLogs(AccountId, CreatedAt DESC);
 GO
 
-PRINT N'>>> Tạo schema GMS v25 thành công: 30 bảng nghiệp vụ.';
+PRINT N'>>> Tạo schema GMS v26 thành công: 30 bảng nghiệp vụ.';
 GO

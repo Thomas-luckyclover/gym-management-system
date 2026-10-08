@@ -15,43 +15,26 @@ import java.io.IOException;
 import java.util.Collections;
 
 /**
- * Controller xử lý màn hình Blog List (Màn SRS #6 / UC-06).
+ * Servlet danh sách Blog công khai (URL /blog).
  *
- * <p>Tiếp nhận request GET /blog?q=...&category=...&page=..., gọi BlogService để truy vấn
- * danh sách bài viết đang đăng có phân trang (6 bài/trang) và lọc theo chuyên mục/từ khóa.</p>
- *
- * <p>Quy tắc nghiệp vụ & phân quyền (Phase 1 Rules / CBR-100 / Kịch bản B01-B07, B11):</p>
- * <ul>
- *   <li>Trang công khai cho Guest và mọi vai trò, không yêu cầu đăng nhập (GBR-10).</li>
- *   <li>Chỉ hiển thị bài viết đang hoạt động (IsActive = 1).</li>
- *   <li>6 bài viết mỗi trang, sắp xếp mới nhất lên trước.</li>
- *   <li>Tìm kiếm theo từ khóa trong tiêu đề hoặc tóm tắt (không phân biệt hoa thường và dấu).</li>
- *   <li>Lọc 1 chuyên mục: Tất cả / Tập luyện / Dinh dưỡng / Tin tức (kết hợp AND với từ khóa).</li>
- *   <li>Đổi từ khóa hoặc chuyên mục thì đặt lại về trang 1.</li>
- *   <li>Nếu không có kết quả phù hợp thì hiện thông báo MSG01.</li>
- * </ul>
+ * <p>Hỗ trợ ?q= từ khóa, ?category= chuyên mục, ?page số trang; 6 bài/trang, chỉ bài đang đăng.</p>
  */
 @WebServlet("/blog")
 public class BlogListServlet extends HttpServlet {
 
     private final BlogService blogService;
 
-    /**
-     * Constructor mặc định khởi tạo BlogService.
-     */
     public BlogListServlet() {
         this(new BlogService());
     }
 
-    /**
-     * Constructor phục vụ dependency injection khi kiểm thử.
-     *
-     * @param blogService đối tượng BlogService
-     */
     public BlogListServlet(BlogService blogService) {
         this.blogService = blogService;
     }
 
+    /**
+     * GET /blog — hiện danh sách bài viết theo từ khóa/chuyên mục/trang; mặc định trang 1, sắp xếp mới nhất.
+     */
     @Override
     protected void doGet(HttpServletRequest request, HttpServletResponse response)
             throws ServletException, IOException {

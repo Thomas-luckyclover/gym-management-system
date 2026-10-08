@@ -55,6 +55,11 @@
 
         </c:when>
 
+        <c:when test="${currentRole.dbValue eq 'Customer'}">
+            <c:set var="activeSidebar" value="account" />
+            <%@ include file="/WEB-INF/jsp/common/layout-customer.jspf" %>
+        </c:when>
+
         <c:otherwise>
 
             <%-- Layout role khác đang chờ merge từ thành viên phụ trách. --%>
@@ -246,6 +251,10 @@
                                     <%@ include file="/WEB-INF/jsp/auth/account/profile-receptionist.jspf" %>
                                 </c:when>
 
+                                <c:when test="${currentRole.dbValue eq 'Customer'}">
+                                    <%@ include file="/WEB-INF/jsp/auth/account/profile-customer.jspf" %>
+                                </c:when>
+
                                 <%-- Các role khác chờ merge profile JSPF --%>
 
                                 <c:otherwise>
@@ -286,21 +295,7 @@
 
                         <c:when test="${activeTab eq 'dependents' and hasDependentsTab}">
 
-                            <section class="account-card">
-
-                                <div class="account-card-body">
-
-                                    <h2>
-                                        Hồ sơ phụ thuộc
-                                    </h2>
-
-                                    <p class="account-subtitle">
-                                        Nội dung hồ sơ phụ thuộc đang chờ tích hợp từ Customer Account Settings.
-                                    </p>
-
-                                </div>
-
-                            </section>
+                            <%@ include file="/WEB-INF/jsp/auth/account/tab-dependents.jspf" %>
 
                         </c:when>
 

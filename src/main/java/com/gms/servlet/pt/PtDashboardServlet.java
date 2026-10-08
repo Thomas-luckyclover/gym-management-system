@@ -15,17 +15,9 @@ import jakarta.servlet.http.HttpSession;
 import java.io.IOException;
 
 /**
- * PT Dashboard (#49, UC-32) — /pt/dashboard, màn đầu tiên PT thấy sau khi đăng nhập. Chỉ xem, không sửa dữ liệu.
+ * Servlet Dashboard PT (URL /pt/dashboard) — màn đầu sau đăng nhập.
  *
- * PtAreaFilter đã chặn người không phải PT trước khi tới đây. Servlet chỉ đọc bộ lọc trên URL,
- * gọi PtDashboardService rồi đưa dữ liệu cho JSP.
- *
- * VD URL: /pt/dashboard                              → hoa hồng tháng này, buổi 7 ngày tới tính từ hôm nay
- *         /pt/dashboard?period=2026-Q3               → hoa hồng quý III/2026
- *         /pt/dashboard?date=2026-09-23&days=1       → chỉ các buổi của ngày 23/09/2026
- *         /pt/dashboard?weatherDemo=rain             → xem thử hiệu ứng mưa (storm / rain / hot / cloudy / sunny / night)
- *
- * @author Le Cong Minh
+ * <p>Hỗ trợ bộ lọc: period (yyyy-MM / yyyy-Qn), date, days, weatherDemo; chỉ xem, không sửa dữ liệu.</p>
  */
 @WebServlet("/pt/dashboard")
 public class PtDashboardServlet extends HttpServlet {
@@ -35,10 +27,7 @@ public class PtDashboardServlet extends HttpServlet {
     private final PtDashboardService ptDashboardService = new PtDashboardService();
 
     /**
-     * Mở dashboard.
-     *
-     * @param request  có thể có "period" (yyyy-MM / yyyy-Qn), "date" (yyyy-MM-dd), "days" (1 / 3 / 7 / 30), "weatherDemo".
-     * @param response trang dashboard, hoặc 403 / 500 khi Service báo lỗi.
+     * GET /pt/dashboard — nạp dữ liệu dashboard của PT đang đăng nhập rồi trả về JSP.
      */
     @Override
     protected void doGet(HttpServletRequest request, HttpServletResponse response)

@@ -4,67 +4,70 @@ File này quy định chi tiết cách **viết code Backend** (Java: Entity, DA
 
 > ⚠️ **LƯU Ý CỰC KỲ QUAN TRỌNG:** Dù các thành viên khác trong nhóm có thể không dùng hết, không đọc hết, hoặc không hiểu vì sao có từng quy tắc trong file này, AI **vẫn bắt buộc áp dụng đầy đủ 100% nội dung dưới đây** mỗi khi hỗ trợ code (vibecode) cho user hiện tại — **không được tự ý bỏ qua, rút gọn, nới lỏng, hay coi nhẹ bất kỳ quy tắc nào** chỉ vì cho rằng người khác không theo hoặc không cần đến mức đó.
 
-## 1. Comment: CHỈ VIẾT KHUNG (siêu quan trọng, áp dụng từ v25)
+## 1. Comment để hiểu dữ liệu và các bước xử lý
 
-**Mục đích của comment trong dự án này là làm KHUNG để người học tự đọc code và tự ghi chú.**
-Comment dài, giải thích lịch sử ("lỗi cũ", "trước đây…"), kể ví dụ, giảng lý do… làm code khó đọc hơn và làm hỏng việc học.
-Lý do nghiệp vụ nằm ở rule (`// CBR-70`) và ở `docs/handoff/`, **không** nằm trong code.
+Comment cần trả lời điều người đọc khó suy ra từ tên biến: dữ liệu từ đâu, vì sao chọn điều kiện này, kết quả dùng ở khối nào. Viết tiếng Việt trực tiếp; không kể lịch sử trao đổi, không dùng câu chung chung như “xử lý logic” hoặc “đảm bảo hoạt động”.
 
-### 1.1. Chỉ được có 4 loại comment
+### 1.1. Đầu class và mục đích hàm
 
-| Loại | Vị trí | Hình thức | Giới hạn |
-|---|---|---|---|
-| **Đầu class** | Trên `class` | Javadoc 1 câu: class làm gì + UC | 1–2 dòng |
-| **Nhóm method** | Giữa các nhóm method | `// ===== Tên nhóm =====` | 1 dòng |
-| **Javadoc method** | Trên method public của Service / DAO / Servlet | 1 câu mục đích + `@param` / `@return` mỗi cái 1 dòng ngắn | Không ví dụ, không giải thích |
-| **Bước** | Trên mỗi khối trong method nhiều bước | `// B1: <động từ> <việc làm> (RULE-ID nếu có)` | 1 dòng, ≤ 12 từ |
+- Class: nói nó làm gì trong module. DTO cần thêm ai tạo, nhận dữ liệu từ đâu và ai dùng.
+- Hàm: nói input, output và trường hợp rỗng/lỗi bằng Javadoc. Giải thích tham số là mã tài khoản hay mã nhân viên, ngày biên có được tính không.
+- Không dùng tên rule thay cho lời giải thích. Gắn rule khi đã đối chiếu, không tự đoán mã rule.
 
 ```java
-/** Bán gói PT tại quầy (UC-21). */
-public class PtPackageSaleService {
+/**
+ * Lấy lịch của PT từ hôm nay đến hôm nay + 6 ngày.
+ * @param accountId mã tài khoản từ session, không lấy từ request parameter
+ * @return danh sách nhóm ngày do Service tạo, hoặc thông báo lỗi
+ */
+```
 
-    // ===== Lập đơn =====
+### 1.2. Comment trước field và getter/setter
 
-    /**
-     * Lập đơn gói PT và giữ các slot cố định.
-     * @param form dữ liệu màn bán gói
-     * @return mã đơn mới, hoặc lỗi theo ô
-     */
-    public ServiceResult<Integer> createOrder(PtSaleForm form) {
-        // B1: kiểm tra khách có gói tập còn hạn (CBR-59)
-        ...
-        // B2: kiểm tra tuổi tối thiểu (CBR-13)
-        ...
-        // B3: sinh danh sách ngày T2–T6 trong kỳ (BR-40)
-        ...
-        // B4: lưu đơn + giữ slot trong 1 transaction
-        ...
+Mỗi field DTO mới phải nêu đủ ba ý: **nguồn hoặc phép tính → ý nghĩa → cách hiển thị/sử dụng**. Một ý mỗi dòng ngắn; không ép giới hạn số từ nếu làm mất ý nghĩa.
+
+```java
+// DAO: TimeSlots.StartTime, giờ bắt đầu buổi.
+// JSP hiện HH:mm, ví dụ 17:00, ở dòng thời gian trong Lịch 7 ngày.
+private final LocalTime startTime;
+
+// Service: tính bằng slotDate.equals(today), today lấy từ DateTimeUtil.today().
+// JSP dùng để tô nổi bật ngày hôm nay; không in true/false ra trang.
+private final boolean isToday;
+
+// DAO: Sessions.SessionId, mã buổi dạng số nguyên.
+// Không in thành chữ; gắn vào nút Xử lý để xác định buổi.
+private final int sessionId;
+```
+
+Với field nhận từ DTO khác, nêu cụ thể DTO và getter được dùng. Ví dụ `sessionsOfDay` được chọn từ `List<PtSessionView>` bằng `session.getSlotDate().equals(slotDate)`.
+
+Getter/setter có comment ngắn về ý nghĩa hoặc nơi dùng, không chỉ viết “lấy giá trị”/“gán giá trị”. Có thể ghi chú ngắn cạnh field DAO/Service dependency. Setter chỉ gán, không validate; DTO chỉ đọc dùng constructor + `final` + getter, không tạo setter cho đủ bộ. Không sửa comment người học tự thêm nếu chưa được yêu cầu.
+
+### 1.3. Bước xử lý trong hàm
+
+- Dùng `B1`, `B2`, `B3` theo thứ tự thực thi.
+- Khối khó chia `B3.1`, `B3.2` ngay trong bước B3. Không chia bước nhỏ cho từng phép gán đơn giản.
+- Comment nói hành động và dữ liệu cụ thể: “chọn các buổi có ngày trùng slotDate”, thay vì “gom dữ liệu phù hợp”.
+- Các dòng `this.field = value`, `setAttribute(...)`, `statement.setX(...)` được chia thành nhóm rõ mục đích.
+
+```java
+// B4.2: chọn các buổi có ngày trùng slotDate.
+List<PtSessionView> sessionsOfDay = new ArrayList<>();
+for (PtSessionView session : sessions) {
+    if (session.getSlotDate().equals(slotDate)) {
+        sessionsOfDay.add(session);
     }
 }
 ```
 
-### 1.2. Cấm
+### 1.4. Giải thích khi bàn giao một đợt
 
-- Comment nhiều dòng trong thân method. Mỗi bước tối đa 1 dòng.
-- Kể lịch sử / lỗi cũ / so sánh với cách làm trước ("Lỗi cũ: …", "Trước đây code…").
-- Ví dụ minh họa trong comment ("VD: 30 → 1, 90 → 3…", "Ví dụ với seed…").
-- Giải thích cú pháp Java hoặc JDBC ("rs.getInt trả 0 khi NULL nên…", "final nên chỉ gán qua constructor…").
-- Comment cuối dòng code.
-- Lặp lại tên method bằng lời (`// lấy user theo id` trên `getUserById`).
-- Getter / setter / method 1–3 dòng: không comment.
+Trong câu trả lời, đưa một block code tiêu biểu và ví dụ dữ liệu/kết quả trên màn hình khi có ý nghĩa. Nói rõ DTO nào do DAO tạo, DTO nào do Service tạo, field nào không hiển thị. Ví dụ phải được ghi là minh họa nếu chưa chạy với dữ liệu thật.
 
-### 1.3. Chừa chỗ cho người học
+Giải thích ngắn các API người học chưa quen khi dùng lần đầu. Ví dụ `List.copyOf(sessions)` tạo danh sách chỉ đọc riêng, không sao chép từng object bên trong; danh sách gốc thêm/xóa không làm đổi danh sách DTO. Nó không chấp nhận danh sách hoặc phần tử null.
 
-Dưới mỗi `// Bn:` người học được tự thêm dòng `// Ghi chú: …` khi đọc hiểu. **AI không viết dòng `// Ghi chú:`** và không xóa dòng `// Ghi chú:` do người viết.
-
-### 1.4. Ngoại lệ
-
-- **Code tích hợp API** (`integration/`): được comment chi tiết từng bước (`agents.md` Phần 7).
-- **SQL dài trong DAO**: được 1 dòng comment trên câu SQL nói câu đó lấy gì.
-
-### 1.5. Ngôn ngữ, vị trí
-Tiếng Việt (tag Javadoc giữ tiếng Anh). Luôn đặt phía trên đoạn code, không đặt cuối dòng.
-**Khi sửa file cũ có comment dài:** rút về đúng khung ở trên trong cùng lần sửa đó.
+Comment không biến thành bài giảng cú pháp dài. Khi người học chưa hiểu, viết lại bằng ví dụ thuộc module đang làm và chỉnh comment trong phạm vi họ yêu cầu. Phần tích hợp API vẫn cần giải thích rõ request, response và lỗi theo từng bước.
 
 ## 2. Thụt Lề & Trình Bày (Formatting)
 
@@ -81,7 +84,7 @@ public void checkLogin(String user) {
 | Ngôn ngữ | Thụt lề | Dấu ngoặc `{}` |
 |---|---|---|
 | Java | 4 spaces | K&R (mở ngoặc cùng dòng) |
-| JSP | 4 spaces cho block `<% %>`, 2 spaces cho HTML/JSP tag thường | theo Java bên trong scriptlet |
+| JSP/HTML | 4 spaces mỗi cấp, tách thẻ lồng nhau xuống dòng | theo Java bên trong scriptlet nếu bắt buộc dùng |
 | JavaScript | 4 spaces | K&R (mở ngoặc cùng dòng) |
 | CSS | 2 spaces | mỗi thuộc tính 1 dòng |
 | SQL | mệnh đề (`SELECT`, `FROM`, `WHERE`, `JOIN`) xuống dòng riêng, viết hoa keyword | — |
@@ -165,7 +168,7 @@ public class LoginServlet extends HttpServlet {
 
 ```
 src/
- └── com/project/
+ └── main/java/com/gms/
       ├── entity/
       ├── dao/
       ├── service/
@@ -271,26 +274,76 @@ Setter trong Entity **không validate, không tự revert, không print lỗi** 
 
 **Entity — setter thuần, không validate:**
 ```java
-public void setMath(double math) {
-    this.math = math;
+public void setCommissionRate(Integer commissionRate) {
+    this.commissionRate = commissionRate;
 }
 ```
 
 **Service — nơi validate thật sự, trả lỗi rõ ràng thay vì im lặng revert:**
 ```java
-public ServiceResult<Student> updateMathScore(Student student, double math) {
-    if (!ValidationUtil.isInRange(math, 0, 10)) {
-        return ServiceResult.fail("Điểm Toán phải từ 0 đến 10, giá trị không hợp lệ đã bị từ chối");
+public ServiceResult<Employee> updateCommissionRate(Employee employee, int commissionRate) {
+    // B1: kiểm tra tỷ lệ trước khi gán vào hồ sơ.
+    if (commissionRate < 0 || commissionRate > 100) {
+        return ServiceResult.fail("Tỷ lệ hoa hồng phải từ 0 đến 100");
     }
-    student.setMath(math);
-    return ServiceResult.ok(student);
+    // B2: gán giá trị hợp lệ vào Entity.
+    employee.setCommissionRate(commissionRate);
+    return ServiceResult.ok(employee);
 }
 ```
+
+Ví dụ trên chỉ minh họa Service kiểm tra rồi gọi setter, chưa bao gồm quyền, lưu DAO, transaction và AuditLog của một nghiệp vụ cập nhật hoàn chỉnh.
 
 **Field bất biến (VD: ID auto-increment):** không viết setter, khai báo `final` — loại bỏ hẳn khả năng thay đổi sau khi tạo, thay vì validate trong setter.
 ```java
 private final String id;   // không setter
 ```
+
+## 7b. Luồng Entity → DTO của DAO → DTO của Service
+
+Entity mô tả dữ liệu của một bảng; DTO mô tả dữ liệu cần trao đổi hoặc hiển thị. Không bắt buộc tạo Entity cho mọi bảng JOIN. DTO là khuôn; object được tạo khi gọi constructor hoặc gán dữ liệu, không tự đọc DB.
+
+| Thành phần | Trách nhiệm | Ví dụ lịch PT |
+|---|---|---|
+| Entity có sẵn | Xác định tài khoản/nhân viên, dùng lại enum | `Account`, `Employee`, `Session.Status` |
+| DTO do DAO tạo | Nhận dữ liệu từ một dòng truy vấn | `PtSessionView`: mã, giờ, tên khách, trạng thái |
+| DTO do Service tạo | Gom/tính từ Entity hoặc DTO đầu vào | `PtScheduleDayView`: ngày, nhãn, isToday, các buổi |
+| Servlet | Nhận kết quả Service, đặt request attribute | `scheduleDays`, `scheduleError` |
+| JSP | Lặp dữ liệu, định dạng ngày/giờ, xuất an toàn | Nhóm ngày rồi các buổi của ngày |
+
+Hai kiểu tạo DTO này là các cách dùng phổ biến, không phải hai loại bắt buộc. Service có thể bổ sung một DTO có sẵn nếu thiết kế cần, nhưng comment phải chỉ rõ field nào do ai chịu trách nhiệm. Tránh trộn field đọc DB với field tính toán mà không giải thích.
+
+Đầu mỗi DTO nêu khối màn hình, nơi tạo và nguồn đầu vào. DAO đọc dữ liệu → Service gom dữ liệu → Servlet chuyển dữ liệu → JSP hiển thị. Việc `getSchedule(accountId)` chỉ nhận một tham số không mâu thuẫn với DTO có bốn field: accountId dùng tìm PT; Service tự tính bốn giá trị để gọi constructor DTO.
+
+### DAO: đọc rõ từng cột tại nơi dùng
+
+Với code mới đang hướng dẫn nhóm, đọc từng biến trong `while (resultSet.next())`, chuyển enum, rồi gọi constructor DTO. Không tách `mapResultSet`/`mapRow` làm người học phải nhảy sang hàm khác. Giữ mapper dùng chung đã có ở module khác; không tự xóa hoặc sửa hàng loạt.
+
+```java
+while (resultSet.next()) {
+    // B3.1: đọc mã buổi và tên khách từ dòng hiện tại.
+    int sessionId = resultSet.getInt("SessionId");
+    String customerName = resultSet.getString("CustomerName");
+    // Các cột còn lại đọc rõ từng biến trước khi tạo DTO.
+}
+```
+
+SQL có SELECT rõ cột, JOIN rõ nguồn tên khách, WHERE giới hạn đúng người/phạm vi, ORDER BY ổn định. Dùng PreparedStatement, truyền từng tham số theo vị trí. Ví dụ nghiệp vụ buổi PT phải lọc PT đang dạy theo `Sessions.PtEmployeeId`, không thay bằng PT mặc định của subscription.
+
+### Service: dữ liệu đầu vào và kết quả phải nhìn ra được
+
+Ưu tiên vòng `for`, biến trung gian có tên đúng ý nghĩa, `switch` dễ theo dõi. Chưa dùng stream/groupingBy, lambda lồng nhau hoặc generic helper khi vòng lặp đơn giản đã đủ. Helper chỉ tách khi có mục đích riêng rõ ràng, ví dụ `buildDayLabel(...)`.
+
+Ngày hiện tại lấy một lần bằng `DateTimeUtil.today()` rồi dùng nhất quán trong lần xử lý. Không lấy lại ở mỗi vòng lặp. Tiền, nhãn, trạng thái, quyền thao tác được tính ở đúng tầng Service; JSP chỉ định dạng/hiển thị.
+
+### Servlet: nói rõ tên dữ liệu chuyển sang JSP
+
+```java
+// B3: chuyển lịch đã gom theo ngày sang JSP.
+request.setAttribute("scheduleDays", result.getData());
+```
+
+JSP đọc `${scheduleDays}`. Nếu result thất bại, Servlet truyền `result.getMessage()` ở một attribute lỗi riêng; không giả lập danh sách rỗng hoặc số 0. AccountId lấy từ `SessionKey.ACCOUNT_ID`; không tin EmployeeId/PTId do trình duyệt gửi lên để quyết định quyền.
 
 ## 8. Nguyên Tắc Tối Quan Trọng: Code Phải Viết Từ Trên Xuống Dưới
 
@@ -311,7 +364,7 @@ private final String id;   // không setter
 <project xmlns="http://maven.apache.org/POM/4.0.0" ...>
     <modelVersion>4.0.0</modelVersion>
 
-    <groupId>com.project</groupId>
+    <groupId>com.gms</groupId>
     <artifactId>student-management</artifactId>
     <version>1.0-SNAPSHOT</version>
     <packaging>war</packaging>
@@ -388,10 +441,10 @@ private final String id;   // không setter
 - **DAO:** không tự `catch` — `throw SQLException` lên trên, để Service quyết định xử lý.
   ```java
   // DAO — không catch, throw thẳng lên
-  public User findByUsername(String username) throws SQLException {
+  public Integer findAccountIdByPersonId(int personId) throws SQLException {
       ...
       if (rs.next()) {
-          return mapResultSetToUser(rs);
+          return rs.getInt("AccountId");
       }
       return null; // null ở đây CHỈ nghĩa "không tìm thấy" — không lẫn với lỗi kỹ thuật
   }
@@ -413,7 +466,8 @@ private final String id;   // không setter
       }
   }
   ```
-- **Servlet:** không tự try-catch riêng — Service đã xử lý xong, Servlet chỉ check `result.isSuccess()`.
+- **Servlet:** kiểm tra `result.isSuccess()` vì Service đã xử lý lỗi DB. `ServletException`/`IOException` của forward hoặc response vẫn theo hợp đồng Servlet; không nuốt lỗi rồi báo thành công.
+- **Quy ước null:** DAO tìm một bản ghi trả null khi không thấy; DAO tìm nhiều trả danh sách rỗng. Lỗi kỹ thuật ném SQLException. Constructor DTO tạo object; field tùy chọn có thể null. `ServiceResult.fail(...)` có data null và phải kiểm tra success trước khi dùng data.
 
 ## 11. Session & Cookie (Bắt Buộc Có)
 
@@ -601,7 +655,7 @@ for (int i = 0; i < students.size(); i++) {
 
 ## 15. Lưu Ý Cuối
 
-- **Comment:** Javadoc (mục đích + `@param`/`@return`) cho method quan trọng; **2 loại khung chương trình** — (1) khung chương trình chính ở cấp file/class (comment tổng quan các nhóm method), (2) khung chương trình từng bước bên trong 1 method (`// B1`, `// B2`...) — không giải thích logic phức tạp bên trong.
+- **Comment:** mục đích hàm, nguồn/phép tính và nơi hiển thị của field; B1/B2 và bước con cho phần khó. Getter/setter được giải thích ngắn. Dùng ví dụ GMS để người đọc hiểu kết quả (Mục 1).
 - **Format:** K&R, 4 spaces, không tab.
 - **Style:** theo Mục 3, luôn PreparedStatement cho SQL Server; màn hình AJAX/REST API vẫn bám sát toàn bộ quy tắc, chỉ khác cách Controller trả dữ liệu.
 - **Coding cơ bản:** 1 dòng = 1 logic, không gộp điều kiện/thao tác.
@@ -612,7 +666,7 @@ for (int i = 0; i < students.size(); i++) {
 - **Servlet mapping:** bắt buộc `@WebServlet("/duong-dan")` ngay trên class — **cấm tạo `web.xml`** để mapping servlet/filter dưới mọi hình thức. **Ngoại lệ duy nhất:** `web.xml` được phép tồn tại chỉ để khai báo `<error-page>` (404/500) — không chứa `<servlet>`/`<filter>` nào.
 - **pom.xml:** chỉ thêm dependency thật sự cần, luôn ghi version cụ thể (không dùng `LATEST`), `packaging` là `war`, `scope: provided` cho Servlet API.
 - **Exception:** DAO throw lên, không tự catch; Service bắt cụ thể (`SQLException`), log lỗi thật bằng `e.printStackTrace()`, trả message an toàn cho user qua `ServiceResult.fail()`.
-- **Session/Cookie (bắt buộc):** chỉ lưu `userId`/`role` vào session, timeout **7200 giây (2 tiếng)** trừ SRS yêu cầu khác, logout dùng `session.invalidate()`; Remember Me (cookie token dài hạn) chỉ làm nếu SRS yêu cầu, không tự ý thêm.
+- **Session/Cookie (bắt buộc):** dùng các key tối thiểu trong `SessionKey`, không lưu cả Entity có dữ liệu nhạy cảm vào session, timeout **7200 giây (2 tiếng)** trừ SRS yêu cầu khác, logout dùng `session.invalidate()`; Remember Me (cookie token dài hạn) chỉ làm nếu SRS yêu cầu, không tự ý thêm.
 - **Authorization:** `AuthFilter` (`@WebFilter("/*")`) check đăng nhập, filter riêng theo role (VD: `@WebFilter("/admin/*")`) check quyền — không dùng `web.xml`.
 - **Transaction:** mở ở Service (`conn.setAutoCommit(false)`), DAO nhận `Connection` truyền vào để dùng chung 1 transaction, `commit()`/`rollback()` đúng chỗ.
 - **Pagination:** phân trang ở SQL Server (`OFFSET/FETCH`), STT tính theo vị trí trang hiện tại — không lấy từ cột cố định trong DB, tránh STT bị đảo lộn khi sort.

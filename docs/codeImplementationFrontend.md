@@ -23,17 +23,51 @@ File này quy định chi tiết cách viết **Frontend** (JSP hiển thị, HT
 
 - **Trường hợp CÓ dùng AJAX** (JS nhận dữ liệu JSON rồi tự chèn vào DOM): `c:out` không áp dụng được (vì không qua JSP nữa) — bắt buộc **escape dữ liệu trong JS** trước khi chèn vào HTML bằng hàm `escapeHtml()` (xem Mục 5 — Bảo Mật Trong JS).
 
-## 2. Comment: chỉ viết khung (giống Backend Mục 1, áp dụng từ v25)
+## 2. Comment và dữ liệu phải khớp màn hình
 
-- **JS:**
-  - Đầu file có `// ===== Tên nhóm =====` cho từng nhóm hàm.
-  - Mỗi hàm xử lý nhiều bước dùng `// B1: …`, `// B2: …`, mỗi bước 1 dòng, ≤ 12 từ, có mã rule nếu là luật nghiệp vụ (`// B2: chặn chọn T7/CN (BR-36)`).
-  - Hàm ngắn không comment.
-- **JSP:** 1 dòng `<%-- ===== Khối … ===== --%>` trên mỗi khối lớn của trang (header form, bảng, panel). Không giải thích JSTL.
-- **CSS:** 1 dòng `/* ===== Khối … ===== */` cho mỗi section.
-- **Cấm:** comment nhiều dòng, kể lịch sử / lỗi cũ, ví dụ minh họa, giải thích cú pháp, comment cuối dòng.
-- **Chừa chỗ học:** người học tự thêm `// Ghi chú: …` dưới bước; AI không tự viết và không xóa các dòng này.
-- **Ngôn ngữ:** Tiếng Việt. **Vị trí:** phía trên đoạn code.
+- **JSP:** mỗi khối lớn có comment tên khối và request attribute/DTO được dùng. Không chỉ viết “hiển thị dữ liệu”; nêu “Lịch 7 ngày: scheduleDays do Service tạo”.
+- **JS:** comment đầu nhóm hàm, mục đích hàm và các bước B1/B2; phần khó chia B1.1/B1.2. Ghi rõ DOM id/class/data attribute đang nối với JSP.
+- **CSS:** comment theo khối màn hình; selector có JS dùng phải chỉ rõ điểm nối. Style riêng có phạm vi của trang, tránh ảnh hưởng màn khác.
+- Cho phép giải thích ngắn hoặc ví dụ khi giúp hiểu luồng. Không viết comment dài kể lịch sử chat hoặc mô tả lại từng cú pháp.
+- Giữ ghi chú người học đã viết; khi chưa hiểu, sửa lời giải thích bằng dữ liệu cụ thể của module.
+
+### 2.1. Hợp đồng Servlet → JSP → JS
+
+Trước khi render một khối, nêu rõ attribute, kiểu và ai tạo. Ví dụ:
+
+| Attribute/field | Nguồn | Cách dùng |
+|---|---|---|
+| `scheduleDays` | Service tạo `List<PtScheduleDayView>`, Servlet đặt vào request | JSP lặp từng nhóm ngày |
+| `day.sessions` | Service gom các `PtSessionView` do DAO tạo | JSP lặp các buổi trong ngày |
+| `day.today` | Getter `isToday()` của DTO ngày | Chọn class để tô nổi bật, không in boolean |
+| `session.slotDate` | DAO đọc ngày buổi | `gms:formatDate`, dạng dd/MM/yyyy |
+| `session.startTime` | DAO đọc giờ bắt đầu | `gms:formatTime`, dạng HH:mm |
+| `session.sessionId` | DAO đọc mã buổi | `data-session-id` trên nút Xử lý, không in thành chữ |
+| `activeNav` | Servlet chọn mục menu | Layout include đọc để thêm class active |
+
+```jsp
+<%-- ===== Lịch 7 ngày (scheduleDays: List<PtScheduleDayView>) ===== --%>
+<c:forEach var="day" items="${scheduleDays}">
+    <h3><c:out value="${day.dayLabel}" /> · <c:out value="${gms:formatDate(day.slotDate)}" /></h3>
+    <c:forEach var="session" items="${day.sessions}">
+        <p><c:out value="${gms:formatTime(session.startTime)}" /> · <c:out value="${session.customerName}" /></p>
+    </c:forEach>
+</c:forEach>
+```
+
+Ví dụ trên chỉ minh họa điểm nối, chưa bao gồm các trạng thái rỗng/lỗi của khối hoàn chỉnh. Định dạng LocalDate/LocalTime bằng hàm gms; không truyền thẳng vào fmt:formatDate. Tên và mô tả dùng c:out; dữ liệu động trong thuộc tính HTML cũng phải escape đúng ngữ cảnh.
+
+### 2.2. Khung, rỗng, lỗi là ba tình huống khác nhau
+
+- Khung chưa nối Service: nói rõ trong báo cáo; không dùng số giả hoặc thông báo khẳng định không có lịch thật.
+- Service đọc thành công nhưng danh sách ngày rỗng buổi: hiện “Không có buổi trong ngày”.
+- Service thất bại: hiện thông báo lỗi thân thiện; không biến thành “Không có buổi”.
+- JS gọi AJAX: có trạng thái đang tải, thành công, rỗng và thất bại; không báo thành công trước phản hồi backend.
+- Thao tác mới chỉ dựng modal: khóa nút chưa có backend và báo rõ mức hoàn thiện trong báo cáo. Có dữ liệu quyền thì hiện lý do khóa cụ thể; backend vẫn kiểm tra lại quyền và trạng thái khi ghi.
+
+### 2.3. Modal và bàn phím
+
+Modal cần tiêu đề, nút đóng, hỗ trợ Escape và trả focus về nút mở. Không đặt hai nút “Bỏ qua”/“Đóng” nếu cùng tác dụng. Có thể dùng dialog native hoặc thành phần chung phù hợp; không ép modal nghiệp vụ nhiều lựa chọn vào hộp xác nhận đơn giản.
 
 ## 3. Thụt Lề & Trình Bày (Formatting)
 
@@ -41,7 +75,7 @@ File này quy định chi tiết cách viết **Frontend** (JSP hiển thị, HT
 |---|---|---|
 | JavaScript | 4 spaces | K&R (mở ngoặc cùng dòng) |
 | CSS | 2 spaces | mỗi thuộc tính 1 dòng, dấu `;` cuối mỗi dòng |
-| JSP/HTML (tag thường) | 2 spaces | — |
+| JSP/HTML (tag thường) | 4 spaces mỗi cấp; tách thẻ lồng nhau xuống dòng | — |
 | JSP (block `<% %>`, JSTL) | 4 spaces (theo cú pháp Java bên trong) | theo Java |
 
 - Luôn có 1 dòng trống giữa các hàm JS, giữa các khối CSS lớn (theo section/component).
@@ -53,7 +87,7 @@ File này quy định chi tiết cách viết **Frontend** (JSP hiển thị, HT
 **Đây là phần quan trọng và khó nhất — nguyên tắc bao trùm: miễn chạy đúng, không chậm, hoàn thành đúng mục đích là đạt — không cần tối ưu bất kỳ điều gì, không dùng logic nâng cao/lạ, không viết "khôn" để giảm số dòng.**
 
 - **Không dùng:** arrow function lồng nhau phức tạp, destructuring nhiều tầng, spread/rest operator nếu không thật cần thiết, method chaining dài (`.filter().map().reduce()` nối liền nhau), regex phức tạp khó đọc, IIFE, closure nâng cao — nếu 1 đoạn code có cách viết "ngắn gọn nhưng khó hiểu" và cách viết "dài hơn nhưng rõ ràng", **luôn chọn cách dài hơn nhưng rõ ràng**.
-- **Comment: chỉ khung (Mục 2).** Hàm gọi server: 1 dòng mục đích trên hàm. Hàm nhiều bước: `// Bn:` mỗi bước 1 dòng.
+- **Comment theo Mục 2:** nêu mục đích hàm gọi server, dữ liệu nhận/trả và các bước B1/B2. Khối khó có bước con; giải thích ngắn điểm nối với JSP khi cần.
   ```js
   // Gửi đăng nhập lên server, hiện lỗi hoặc chuyển trang
   function submitLogin(username, password) {
@@ -188,11 +222,11 @@ studentNameCell.textContent = student.name;  // an toàn, không cần escapeHtm
 
 ## 11. Lưu Ý Cuối
 
-- **JSP:** rõ ràng tối đa, comment nhiều, bắt buộc `<c:out>` chống XSS khi không dùng AJAX.
-- **JS (quan trọng nhất):** không cần tối ưu, không dùng logic nâng cao/lạ — miễn chạy đúng, không chậm là đạt; comment chỉ là khung `// Bn:` 1 dòng (Mục 2); escape dữ liệu (`escapeHtml()`/`textContent`) khi chèn vào DOM qua AJAX.
+- **JSP:** comment đủ để biết DTO/attribute và khối màn hình; dùng `<c:out>` cho dữ liệu động từ người dùng; không đặt nghiệp vụ trong View.
+- **JS (quan trọng nhất):** không cần tối ưu, không dùng logic nâng cao/lạ — miễn chạy đúng, không chậm là đạt; comment các bước `// Bn:`, chia bước con khi cần và giải thích ngắn điểm nối dữ liệu (Mục 2); escape dữ liệu (`escapeHtml()`/`textContent`) khi chèn vào DOM qua AJAX.
 - **DOM:** không method chaining dài, không làm tắt, mỗi hàm 1 việc, comment rõ đang thao tác phần tử nào.
 - **CSS:** comment ngắn gọn; id/class liên quan JS phải rõ ràng + ghi chú file JS **và tên hàm** đang dùng đến, hàm đó thao tác DOM ra sao; gợi ý animation cho phần tĩnh (chỉ đề xuất, không tự code); phải đẹp, đảm bảo UX/UI.
 - **HTML:** rõ ràng, có comment, id/class đặt tên rõ nghĩa, ghi chú file JS + hàm nếu có JS thao tác DOM lên phần tử đó.
-- Format: 4 spaces cho JS, 2 spaces cho CSS/HTML/JSP tag thường, K&R.
+- Format: 4 spaces cho JS và HTML/JSP, 2 spaces cho CSS, K&R.
 - Coding cơ bản: 1 dòng = 1 logic.
 - Thứ tự code: từ trên xuống theo luồng chạy thực tế, chỉ constant ở đầu file.

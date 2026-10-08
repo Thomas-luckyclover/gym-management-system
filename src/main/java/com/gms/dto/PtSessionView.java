@@ -39,7 +39,7 @@ public class PtSessionView {
      * @param slotDate          ngày dạy.
      * @param startTime         giờ bắt đầu, VD 19:30.
      * @param endTime           giờ kết thúc, VD 21:00.
-     * @param status            Sessions.Status (tiếng Anh, lưu trong DB): Scheduled | Completed | Missed | Cancelled.
+     * @param status            Sessions.Status (tiếng Anh, lưu trong DB): Scheduled | CheckedIn | Missed | Cancelled.
      * @param sourceType        Subscriptions.SubscriptionType: PTSingle | PTCouple | SingleSession.
      * @param customerName      khách đứng tên gói.
      * @param partnerName       người đi kèm (chỉ gói couple), null nếu không có.
@@ -112,8 +112,6 @@ public class PtSessionView {
                 return "Không có gói tập";
             case "MembershipFrozen":
                 return "Gói tập đang bảo lưu";
-            case "MarkedAbsent":
-                return "PT xác nhận vắng";
             default:
                 return missedReason;
         }

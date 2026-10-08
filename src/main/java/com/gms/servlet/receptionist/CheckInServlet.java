@@ -26,8 +26,10 @@ import java.util.List;
 import java.util.UUID;
 
 /**
- * Controller màn hình Check-in hội viên tại quầy Lễ tân (#33, UC-19).
- * URL: /receptionist/check-in
+ * Servlet màn hình Check-in hội viên tại quầy Lễ tân (URL /receptionist/check-in).
+ *
+ * <p>GET: tra cứu hội viên (mã/tên/SĐT) và xem danh sách lượt vào ca hôm nay.</p>
+ * <p>POST: xác nhận cho hội viên vào tập hoặc lưu ảnh check-in chụp tại quầy.</p>
  */
 @WebServlet("/receptionist/check-in")
 @MultipartConfig(
@@ -66,6 +68,9 @@ public class CheckInServlet extends HttpServlet {
         RequestUtil.forward(request, response, VIEW_NAME);
     }
 
+    /**
+     * POST /receptionist/check-in — xác nhận cho hội viên vào tập hoặc lưu ảnh check-in (theo action).
+     */
     @Override
     protected void doPost(HttpServletRequest request, HttpServletResponse response)
             throws ServletException, IOException {

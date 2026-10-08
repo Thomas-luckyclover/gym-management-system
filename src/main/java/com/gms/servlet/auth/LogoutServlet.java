@@ -14,24 +14,25 @@ import jakarta.servlet.http.HttpSession;
 import java.io.IOException;
 
 /**
- * Servlet đăng xuất hệ thống (/logout).
+ * Servlet đăng xuất hệ thống (URL /logout).
  *
- * <p>Quy trình:</p>
- * <ul>
- *   <li>Hủy phiên đăng nhập HttpSession hiện tại (invalidate).</li>
- *   <li>Gắn thông báo toast MSG40_SIGNED_OUT ("Đã đăng xuất.") sang lần redirect tiếp theo.</li>
- *   <li>Chuyển hướng về trang đăng nhập (/login).</li>
- * </ul>
+ * <p>Hủy session hiện tại rồi chuyển về /login, kèm thông báo toast "Đã đăng xuất".</p>
  */
 @WebServlet("/logout")
 public class LogoutServlet extends HttpServlet {
 
+    /**
+     * GET /logout — đăng xuất (vì link/button đăng xuất thường là GET).
+     */
     @Override
     protected void doGet(HttpServletRequest request, HttpServletResponse response)
             throws ServletException, IOException {
         processLogout(request, response);
     }
 
+    /**
+     * POST /logout — đăng xuất từ form/nút bấm.
+     */
     @Override
     protected void doPost(HttpServletRequest request, HttpServletResponse response)
             throws ServletException, IOException {

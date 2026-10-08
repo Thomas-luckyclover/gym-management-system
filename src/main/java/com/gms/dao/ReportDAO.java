@@ -211,7 +211,7 @@ public class ReportDAO {
                     ON e.PersonId = p.PersonId
                 WHERE ts.SlotDate BETWEEN ? AND ?
                   AND (
-                        s.Status IN ('Completed', 'Missed')
+                        s.Status IN ('CheckedIn', 'Missed')
                         OR (
                             s.Status = 'Cancelled'
                             AND s.CancelType IN ('ByPt', 'ByCustomer')
