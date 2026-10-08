@@ -12,7 +12,6 @@ import org.junit.jupiter.api.Test;
 class PtDashboardServiceTest {
 
     private static final LocalDate DAY = LocalDate.of(2026, 9, 29);
-    private static final LocalTime START = LocalTime.of(18, 0);
     private static final LocalTime END = LocalTime.of(19, 30);
 
     private boolean isOpenAt(LocalDateTime now) {

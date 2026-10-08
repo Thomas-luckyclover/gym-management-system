@@ -400,6 +400,10 @@
   justify-content: center;
 }
 
+.post-thumb-fallback.is-hidden {
+  display: none;
+}
+
 .post-thumb-icon i,
 .post-thumb-icon svg {
   font-size: 1.8rem;

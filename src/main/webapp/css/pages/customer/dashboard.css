@@ -606,6 +606,7 @@ body.dock {
 .kpi-bar i {
   display: block;
   height: 100%;
+  width: var(--progress, 0%);
   background: var(--color-primary);
   border-radius: 99px;
 }
