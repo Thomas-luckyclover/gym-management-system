@@ -24,7 +24,7 @@ public class PTCardView {
      * @param fullName họ tên (bảng Persons)
      * @param specialty chuyên môn; có thể null nếu Manager chưa nhập
      * @param yearsOfExperience số năm kinh nghiệm; có thể null nếu Manager chưa nhập
-     * @param completedSessionCount số buổi PT đã dạy xong (Sessions.Status = 'Completed')
+     * @param completedSessionCount số buổi PT đã dạy xong (Sessions.Status = 'CheckedIn')
      */
     public PTCardView(int employeeId, String fullName, String specialty,
             Integer yearsOfExperience, int completedSessionCount) {

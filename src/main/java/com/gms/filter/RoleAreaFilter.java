@@ -17,17 +17,10 @@ import jakarta.servlet.http.HttpSession;
 import java.io.IOException;
 
 /**
- * Khung chung cho các Filter phân quyền theo khu vực URL (codeImplementationBackend.md Mục 12.2).
- * Mỗi khu vực có 1 Filter con riêng (không gộp nhiều role vào 1 Filter bằng if-else dài):
+ * Khung chung cho các Filter phân quyền theo khu vực URL (ví dụ /customer/*, /manager/*, /admin/*…).
  *
- *   /customer/*      → CustomerAreaFilter
- *   /pt/*            → PtAreaFilter
- *   /receptionist/*  → ReceptionistAreaFilter
- *   /manager/*       → ManagerAreaFilter
- *   /admin/*         → AdminAreaFilter
- *
- * Filter này TỰ kiểm tra cả việc đã đăng nhập chưa, nên không phụ thuộc thứ tự chạy với AuthFilter
- * (@WebFilter không đảm bảo thứ tự).
+ * <p>Mỗi khu vực có 1 Filter con riêng (CustomerAreaFilter, ManagerAreaFilter, AdminAreaFilter…) khai báo vai trò được phép.</p>
+ * <p>Filter này tự kiểm tra cả đăng nhập, không phụ thuộc thứ tự chạy với AuthFilter.</p>
  */
 public abstract class RoleAreaFilter implements Filter {
 
@@ -37,6 +30,9 @@ public abstract class RoleAreaFilter implements Filter {
      */
     protected abstract Role getAllowedRole();
 
+    /**
+     * Lọc request: chưa đăng nhập → nhờ AuthFilter xử lý; sai vai trò → 403; đúng vai trò → cho qua.
+     */
     @Override
     public void doFilter(ServletRequest request, ServletResponse response, FilterChain chain)
             throws IOException, ServletException {

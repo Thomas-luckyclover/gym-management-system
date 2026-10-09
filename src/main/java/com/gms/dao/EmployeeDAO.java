@@ -2,7 +2,6 @@ package com.gms.dao;
 
 import com.gms.constant.Role;
 import com.gms.dto.PTCardView;
-import com.gms.dto.PTCardView;
 import com.gms.entity.Employee;
 import com.gms.util.DBContext;
 import java.sql.Connection;
@@ -12,14 +11,15 @@ import java.sql.SQLException;
 import java.util.ArrayList;
 import java.util.List;
 
-/**
- * Truy vấn bảng Employees.
- */
+/** Truy vấn nhân viên và thống kê buổi PT. */
 public class EmployeeDAO {
 
     /** Giá trị cột Sessions.Status của buổi đã dạy xong (chưa có entity Session nên tạm để hằng ở đây). */
-    private static final String SESSION_STATUS_COMPLETED = "Completed";
+    private static final String SESSION_STATUS_COMPLETED = "CheckedIn";
 
+    /**
+     * Tìm Employee theo PersonId, ưu tiên dòng đang Working.
+     */
     public Employee findByPersonId(int personId)
             throws SQLException {
 
@@ -29,7 +29,9 @@ public class EmployeeDAO {
                 + "YearsOfExperience, Status, DeletedAt, "
                 + "ResignationReason "
                 + "FROM Employees "
-                + "WHERE PersonId = ?";
+                + "WHERE PersonId = ? "
+                // ưu tiên dòng đang Working, mới nhất (DBR-65)
+                + "ORDER BY CASE WHEN Status = 'Working' THEN 0 ELSE 1 END, EmployeeId DESC";
 
         try (Connection connection = DBContext.getConnection();
                 PreparedStatement statement
@@ -66,10 +68,10 @@ public class EmployeeDAO {
         // B1: câu SQL nối 3 bảng
         //   - Employees  : lọc PT đang làm, lấy chuyên môn + kinh nghiệm
         //   - Persons    : lấy họ tên (Employees không có cột họ tên)
-        //   - Sessions   : đếm số buổi Completed của từng PT
+        //   - Sessions   : đếm số buổi CheckedIn của từng PT
         // Dùng LEFT JOIN cho Sessions: PT mới chưa dạy buổi nào vẫn phải hiện (đếm ra 0).
         //   Nếu dùng JOIN thường, PT chưa có buổi nào sẽ BIẾN MẤT khỏi kết quả.
-        // Điều kiện s.Status = 'Completed' đặt ở ON, KHÔNG đặt ở WHERE:
+        // Điều kiện s.Status = 'CheckedIn' đặt ở ON, KHÔNG đặt ở WHERE:
         //   đặt ở WHERE thì dòng PT không có buổi (s.Status = NULL) bị loại → LEFT JOIN thành JOIN thường.
         String sql = "SELECT e.EmployeeId, p.FullName, e.Specialty, e.YearsOfExperience, "
                 + "COUNT(s.SessionId) AS CompletedSessionCount "

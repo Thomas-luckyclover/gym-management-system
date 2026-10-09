@@ -94,10 +94,15 @@ public class RegistrationService {
                 return new PhoneCheckResult(PhoneOutcome.NEW_PHONE, null);
             }
 
-            // Hồ sơ đang hoạt động — kiểm tra đã có tài khoản chưa
+            // B2: SĐT đã có tài khoản, kể cả nhân viên → mời đăng nhập (CBR-26)
             boolean hasAccount = hasAccountByPersonId(existingPerson.getPersonId());
             if (hasAccount) {
                 return new PhoneCheckResult(PhoneOutcome.HAS_ACCOUNT, null);
+            }
+
+            // B3: không có hồ sơ Self còn hiệu lực → mời ra quầy (CBR-114)
+            if (!hasActiveSelfProfile(existingPerson.getPersonId())) {
+                return new PhoneCheckResult(PhoneOutcome.PROFILE_NO_EMAIL, null);
             }
 
             // Hồ sơ chưa có tài khoản — kiểm tra có email không
@@ -312,6 +317,11 @@ public class RegistrationService {
             return ServiceResult.fail(Messages.MSG51_PHONE_HAS_ACCOUNT);
         }
 
+        // B1b: không có hồ sơ Self còn hiệu lực → mời ra quầy (CBR-114)
+        if (!hasActiveSelfProfile(existingPerson.getPersonId())) {
+            return ServiceResult.fail(Messages.MSG53_PROFILE_NO_EMAIL);
+        }
+
         // Kiểm tra hồ sơ có email không
         String existingEmail = existingPerson.getEmail();
         boolean hasNoEmail = ValidationUtil.isNullOrEmpty(existingEmail);
@@ -463,6 +473,18 @@ public class RegistrationService {
 
     private boolean hasAccountByPersonId(int personId) throws SQLException {
         String sql = "SELECT 1 FROM Accounts WHERE PersonId = ?";
+        try (Connection conn = DBContext.getConnection();
+             PreparedStatement stmt = conn.prepareStatement(sql)) {
+            stmt.setInt(1, personId);
+            try (ResultSet rs = stmt.executeQuery()) {
+                return rs.next();
+            }
+        }
+    }
+
+    /** Person có hồ sơ khách Self còn hiệu lực không (CBR-20). */
+    private boolean hasActiveSelfProfile(int personId) throws SQLException {
+        String sql = "SELECT 1 FROM Customers WHERE PersonId = ? AND CustomerType = 'Self' AND Status <> 'Inactive'";
         try (Connection conn = DBContext.getConnection();
              PreparedStatement stmt = conn.prepareStatement(sql)) {
             stmt.setInt(1, personId);

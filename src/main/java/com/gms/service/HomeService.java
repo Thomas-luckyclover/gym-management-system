@@ -13,14 +13,11 @@ import java.util.ArrayList;
 import java.util.List;
 
 /**
- * Gom dữ liệu cho trang chủ (luật 2.6, kịch bản test H01–H07).
+ * Service cung cấp dữ liệu cho trang chủ khách vãng lai (luật 2.6, kịch bản test H01–H07).
  *
- * Trang chủ có 5 khối lấy từ DB:
- *   Số PT + danh sách PT → EmployeeDAO.findWorkingPts()
- *   Bảng giá gói tập     → PackageDAO + tính giá/tháng, % tiết kiệm, nhãn
- *   Bảng giá PT          → PackageDAO
- *   Giờ mở cửa           → tham số P-19
- *   3 bài viết mới       → BlogService.getLatestPosts(3)
+ * <p>Các nhóm dữ liệu: gói tập nổi bật (gym), gói PT, danh sách PT đang làm, giờ mở cửa và 3 bài blog mới nhất.</p>
+ *
+ * <p>Bộ lọc áp dụng: chỉ lấy gói đang bán qua PackageDAO.findActiveForHomepage(), tách nhóm theo packageType (PT / hội viên), gắn nhãn "Phổ biến nhất" và "Tiết kiệm nhất" cho gói hội viên; blog lấy 3 bài mới nhất (LATEST_POST_LIMIT).</p>
  *
  * @author Le Cong Minh
  */
@@ -29,17 +26,17 @@ public class HomeService {
     private static final String BADGE_POPULAR = "Phổ biến nhất";
     private static final String BADGE_BEST_SAVING = "Tiết kiệm nhất";
     private static final int LATEST_POST_LIMIT = 3;
-    private static final int DAYS_PER_MONTH = 30;
 
     private final PackageDAO packageDAO = new PackageDAO();
     private final EmployeeDAO employeeDAO = new EmployeeDAO();
     private final SystemConfigService systemConfigService = new SystemConfigService();
     private final BlogService blogService = new BlogService();
 
+    // ===== Truy vấn trang chủ =====
+
     /**
-     * Lấy toàn bộ dữ liệu trang chủ trong 1 lần gọi.
-     *
-     * @return thành công kèm HomePageView; thất bại (lỗi DB) kèm MSG04
+     * Gom 5 khối dữ liệu trang chủ trong 1 lần gọi: gói tập (kèm giá/tháng, % tiết kiệm, nhãn), gói PT, PT đang làm, giờ mở cửa và 3 bài blog mới nhất.
+     * Lỗi ở blog chỉ ẩn khối blog, không làm hỏng cả trang; lỗi DB khác trả về MSG04.
      */
     public ServiceResult<HomePageView> getHomePage() {
         try {
@@ -87,8 +84,10 @@ public class HomeService {
         }
     }
 
+    // ===== Build thẻ gói tập (gym) =====
+
     /**
-     * Tạo thẻ giá cho gói tập: tính giá/tháng, % tiết kiệm so với gói 1 tháng, rồi gắn nhãn.
+     * Tạo danh sách thẻ giá cho gói tập: tính giá/tháng, % tiết kiệm so với gói 1 tháng, rồi gắn nhãn "Phổ biến nhất" / "Tiết kiệm nhất".
      *
      * Ví dụ seed (gói 1 tháng = 799.000):
      *   Gói Ngày     → không tính gì
@@ -137,9 +136,10 @@ public class HomeService {
         return cards;
     }
 
+    // ===== Gắn nhãn cho gói hội viên =====
+
     /**
-     * "Tiết kiệm nhất" = gói có % tiết kiệm cao nhất.
-     * "Phổ biến nhất"  = gói tháng dài thứ 2 (list đã sắp ngắn → dài); trùng gói "Tiết kiệm nhất" thì bỏ.
+     * Gán nhãn cho các gói hội viên: "Tiết kiệm nhất" = gói có % tiết kiệm cao nhất, "Phổ biến nhất" = gói tháng dài thứ 2 (list đã sắp ngắn → dài); trùng thì bỏ.
      * Nhóm muốn đổi tiêu chí (VD đếm gói bán chạy) → chỉ sửa hàm này.
      */
     private void assignBadges(List<PackageCardView> membershipCards) {
@@ -164,14 +164,12 @@ public class HomeService {
         }
     }
 
+    // ===== Hỗ trợ chuyển đổi thời hạn =====
+
     /**
-     * Đổi số ngày ra số tháng (làm tròn): 30 → 1, 90 → 3, 365 → 12; gói ngày (1) và buổi lẻ (null) → 0.
+     * Số tháng của gói (DBR-19); gói ngày và buổi lẻ → 0.
      */
     private int toMonths(Package pkg) {
-        Integer days = pkg.getDurationDays();
-        if (days == null) {
-            return 0;
-        }
-        return (int) Math.round((double) days / DAYS_PER_MONTH);
+        return pkg.getDurationMonths();
     }
 }

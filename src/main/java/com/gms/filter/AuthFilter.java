@@ -21,12 +21,10 @@ import java.util.List;
 import java.util.Set;
 
 /**
- * Kiểm tra ĐÃ ĐĂNG NHẬP CHƯA cho toàn site (codeImplementationBackend.md Mục 12.1).
- * Phân quyền theo vai trò nằm ở các Filter riêng (CustomerAreaFilter, ManagerAreaFilter...).
+ * Filter kiểm tra đăng nhập áp dụng cho toàn site (mapping /*).
  *
- * Chưa đăng nhập:
- * - Request thường → redirect /login?returnUrl=... để đăng nhập xong quay lại đúng trang (GBR-31)
- * - Request AJAX   → trả JSON 401, js/common.js hiện hộp thoại MSG06 rồi chuyển trang đăng nhập
+ * <p>URL công khai (trang chủ, login, blog, tài nguyên tĩnh, callback VNPay) thì cho qua; còn lại phải có session hợp lệ.</p>
+ * <p>Chưa đăng nhập: GET thường → redirect /login?returnUrl=..., AJAX → trả JSON 401. Phân quyền vai trò do các Filter con xử lý.</p>
  */
 @WebFilter("/*")
 public class AuthFilter implements Filter {
@@ -51,6 +49,9 @@ public class AuthFilter implements Filter {
             "/api/v1/commerce/payment/webhook/"
     );
 
+    /**
+     * Áp dụng logic đăng nhập: URL công khai → qua; đã đăng nhập → qua; còn lại redirect login hoặc trả 401 JSON.
+     */
     @Override
     public void doFilter(ServletRequest request, ServletResponse response, FilterChain chain)
             throws IOException, ServletException {
@@ -69,6 +70,18 @@ public class AuthFilter implements Filter {
         HttpSession session = httpRequest.getSession(false);
         boolean isLoggedIn = session != null && session.getAttribute(SessionKey.ACCOUNT_ID) != null;
         if (isLoggedIn) {
+            // B2b: chưa chọn vai trò → chỉ vào /select-role, /logout (CBR-113)
+            boolean isRoleChosen = session.getAttribute(SessionKey.ROLE) != null;
+            boolean isRoleChoicePath = "/select-role".equals(path) || "/logout".equals(path);
+            if (!isRoleChosen && !isRoleChoicePath) {
+                if (RequestUtil.isAjaxRequest(httpRequest)) {
+                    JsonResponse body = JsonResponse.error(Messages.MSG07_NO_PERMISSION);
+                    JsonUtil.writeJson(httpResponse, HttpServletResponse.SC_FORBIDDEN, body);
+                    return;
+                }
+                httpResponse.sendRedirect(httpRequest.getContextPath() + "/select-role");
+                return;
+            }
             chain.doFilter(request, response);
             return;
         }
@@ -85,6 +98,7 @@ public class AuthFilter implements Filter {
         httpResponse.sendRedirect(loginUrl);
     }
 
+    /** URL đường dẫn có thuộc danh sách công khai không (khớp chính xác hoặc khớp tiền tố). */
     private boolean isPublicPath(String path) {
         if (PUBLIC_EXACT_PATHS.contains(path)) {
             return true;

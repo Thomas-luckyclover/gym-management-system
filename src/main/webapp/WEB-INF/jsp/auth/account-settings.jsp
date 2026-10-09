@@ -1,6 +1,5 @@
 <%@ page contentType="text/html;charset=UTF-8" pageEncoding="UTF-8" %>
 <%@ taglib prefix="c" uri="jakarta.tags.core" %>
-<%@ taglib prefix="gms" uri="/WEB-INF/gms-functions.tld" %>
 
 <!DOCTYPE html>
 <html lang="vi">
@@ -18,7 +17,7 @@
 
 </head>
 
-<body class="dock ${themeClass} ${currentRole.dbValue eq 'Receptionist' ? 'theme-staff' : ''}">
+<body class="dock ${themeClass}">
 
 <%@ include file="/WEB-INF/jsp/common/flash-toast.jspf" %>
 
@@ -45,11 +44,20 @@
             <%@ include file="/WEB-INF/jsp/common/layout-manager.jspf" %>
 
         </c:when>
-
         <c:when test="${currentRole.dbValue eq 'Receptionist'}">
-
             <%@ include file="/WEB-INF/jsp/common/layout-receptionist.jspf" %>
+        </c:when>
 
+        <c:when test="${currentRole.dbValue eq 'PT'}">
+
+            <c:set var="activeNav" value="account" />
+            <%@ include file="/WEB-INF/jsp/common/layout-pt.jspf" %>
+
+        </c:when>
+
+        <c:when test="${currentRole.dbValue eq 'Customer'}">
+            <c:set var="activeSidebar" value="account" />
+            <%@ include file="/WEB-INF/jsp/common/layout-customer.jspf" %>
         </c:when>
 
         <c:otherwise>
@@ -142,14 +150,7 @@
             <div class="page-intro">
 
                 <p>
-                    <c:choose>
-                        <c:when test="${currentRole.dbValue eq 'Manager'}">
-                            Hồ sơ đăng nhập của bạn. Đổi email hoặc SĐT phải xác thực bằng mã gửi tới email mới.
-                        </c:when>
-                        <c:otherwise>
-                            Hồ sơ và mật khẩu của chính bạn.
-                        </c:otherwise>
-                    </c:choose>
+                    Hồ sơ và mật khẩu của chính bạn.
                 </p>
 
             </div>
@@ -170,12 +171,7 @@
 
             <c:if test="${empty pageError}">
 
-                <%-- Manager: 2 cột Hồ sơ + Mật khẩu như prototype, không dùng tab --%>
-                <c:if test="${currentRole.dbValue eq 'Manager'}">
-                    <%@ include file="/WEB-INF/jsp/auth/account/profile-manager.jspf" %>
-                </c:if>
-
-                <c:if test="${currentRole.dbValue ne 'Manager'}">
+                <%-- Mọi vai trò sử dụng chung hệ thống tab; hồ sơ hiển thị theo vai trò. --%>
 
                 <%-- ================= TAB ================= --%>
 
@@ -239,15 +235,19 @@
                                     <%@ include file="/WEB-INF/jsp/auth/account/profile-admin.jspf" %>
 
                                 </c:when>
-
-                                <%-- Receptionist: phần Hoàng phụ trách --%>
-
+                                <c:when test="${currentRole.dbValue eq 'Manager'}">
+                                    <%@ include file="/WEB-INF/jsp/auth/account/profile-manager.jspf" %>
+                                </c:when>
+                                <c:when test="${currentRole.dbValue eq 'PT'}">
+                                    <%@ include file="/WEB-INF/jsp/auth/account/profile-pt.jspf" %>
+                                </c:when>
                                 <c:when test="${currentRole.dbValue eq 'Receptionist'}">
-
                                     <%@ include file="/WEB-INF/jsp/auth/account/profile-receptionist.jspf" %>
-
                                 </c:when>
 
+                                <c:when test="${currentRole.dbValue eq 'Customer'}">
+                                    <%@ include file="/WEB-INF/jsp/auth/account/profile-customer.jspf" %>
+                                </c:when>
 
                                 <%-- Các role khác chờ merge profile JSPF --%>
 
@@ -289,21 +289,7 @@
 
                         <c:when test="${activeTab eq 'dependents' and hasDependentsTab}">
 
-                            <section class="account-card">
-
-                                <div class="account-card-body">
-
-                                    <h2>
-                                        Hồ sơ phụ thuộc
-                                    </h2>
-
-                                    <p class="account-subtitle">
-                                        Nội dung hồ sơ phụ thuộc đang chờ tích hợp từ Customer Account Settings.
-                                    </p>
-
-                                </div>
-
-                            </section>
+                            <%@ include file="/WEB-INF/jsp/auth/account/tab-dependents.jspf" %>
 
                         </c:when>
 
@@ -311,8 +297,6 @@
                     </c:choose>
 
                 </div>
-
-                </c:if>
 
             </c:if>
 

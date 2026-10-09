@@ -12,15 +12,17 @@ import java.time.LocalDateTime;
 
 /**
  * DAO cho bảng VerificationCodes — coi bảng này như "cuốn sổ ghi mã OTP".
- * Mỗi lần gửi mã cho ai, ta ghi 1 dòng: gửi cho email nào, mã gì, gửi lúc nào, hết hạn lúc nào,
+ * Mỗi lần gửi mã cho ai, ta ghi 1 dòng: gửi cho email nào, mã gì, gửi lúc nào,
+ * hết hạn lúc nào,
  * đã gõ sai mấy lần, có bị khóa không, đã dùng chưa.
  *
  * File này có 3 nhóm hàm:
- * 1. Ghi dòng mới  : insert
- * 2. Hỏi sổ        : findLatestByEmailAndPurpose, findLockedUntil, countCodesSentSince
- * 3. Sửa dòng cũ   : increaseFailedAttempts, lockCode, markUsed
+ * 1. Ghi dòng mới : insert
+ * 2. Hỏi sổ : findLatestByEmailAndPurpose, findLockedUntil, countCodesSentSince
+ * 3. Sửa dòng cũ : increaseFailedAttempts, lockCode, markUsed
  *
- * DAO chỉ đọc/ghi sổ, KHÔNG quyết định gì (mã đúng hay sai, còn hạn không, có phải khóa không).
+ * DAO chỉ đọc/ghi sổ, KHÔNG quyết định gì (mã đúng hay sai, còn hạn không, có
+ * phải khóa không).
  * Những quyết định đó nằm ở VerificationCodeService.
  *
  * @author Le Cong Minh
@@ -34,36 +36,39 @@ public class VerificationCodeDAO {
      *
      * Dùng khi: khách bấm "Gửi mã" (đăng ký, quên mật khẩu, đổi email...).
      * Ví dụ: gửi mã 246810 cho thao@gmail.com lúc 10:00
-     *        → sổ có thêm dòng: thao@gmail.com | Recovery | 246810 | gửi 10:00 | hết hạn 10:15
+     * → sổ có thêm dòng: thao@gmail.com | Recovery | 246810 | gửi 10:00 | hết hạn
+     * 10:15
      *
-     * Không cần truyền Id, số lần sai, giờ khóa, giờ dùng — DB tự điền (Id tự tăng, sai = 0, còn lại để trống).
+     * Không cần truyền Id, số lần sai, giờ khóa, giờ dùng — DB tự điền (Id tự tăng,
+     * sai = 0, còn lại để trống).
      *
      * @param verificationCode object chứa email, mục đích, mã, giờ gửi, giờ hết hạn
      * @throws SQLException lỗi kết nối hoặc lỗi câu SQL
      */
     public void insert(VerificationCode verificationCode) throws SQLException {
-        // B1: câu SQL ghi 7 cột, mỗi dấu ? là 1 chỗ trống sẽ điền giá trị ở B3
-        String sql = "INSERT INTO VerificationCodes (AccountId, Email, Purpose, Code, TokenHash, SentAt, ExpiresAt) "
-                + "VALUES (?, ?, ?, ?, ?, ?, ?)";
+        // B1: câu SQL ghi 6 cột, mỗi dấu ? là 1 chỗ trống sẽ điền giá trị ở B3
+        String sql = "INSERT INTO VerificationCodes (AccountId, Email, Purpose, Code, SentAt, ExpiresAt) "
+                + "VALUES (?, ?, ?, ?, ?, ?)";
 
         // B2: mở kết nối tới DB (tự đóng khi ra khỏi try)
         try (Connection conn = DBContext.getConnection();
                 PreparedStatement stmt = conn.prepareStatement(sql)) {
 
-            // B3: điền dấu ? số 1 — AccountId. Khách đang đăng ký thì chưa có tài khoản → ghi NULL
+            // B3: điền dấu ? số 1 — AccountId. Khách đang đăng ký thì chưa có tài khoản →
+            // ghi NULL
             if (verificationCode.getAccountId() == null) {
                 stmt.setNull(1, Types.INTEGER);
             } else {
                 stmt.setInt(1, verificationCode.getAccountId());
             }
 
-            // B4: điền dấu ? số 2 → 7 (giờ phải đổi LocalDateTime → Timestamp vì JDBC chỉ nhận Timestamp)
+            // B4: điền dấu ? số 2 → 6 (giờ phải đổi LocalDateTime → Timestamp vì JDBC chỉ
+            // nhận Timestamp)
             stmt.setString(2, verificationCode.getEmail());
             stmt.setString(3, verificationCode.getPurpose().getDbValue());
             stmt.setString(4, verificationCode.getCode());
-            stmt.setString(5, verificationCode.getTokenHash());
-            stmt.setTimestamp(6, Timestamp.valueOf(verificationCode.getSentAt()));
-            stmt.setTimestamp(7, Timestamp.valueOf(verificationCode.getExpiresAt()));
+            stmt.setTimestamp(5, Timestamp.valueOf(verificationCode.getSentAt()));
+            stmt.setTimestamp(6, Timestamp.valueOf(verificationCode.getExpiresAt()));
 
             // B5: chạy câu INSERT → sổ có thêm 1 dòng
             stmt.executeUpdate();
@@ -77,18 +82,24 @@ public class VerificationCodeDAO {
      * Chỉ mã mới nhất mới được dùng — mã cũ hơn coi như bỏ.
      *
      * Dùng khi (Service gọi ở 2 chỗ):
-     * - Khách gõ mã → lấy dòng này ra, so mã khách gõ với cột Code, xem ExpiresAt còn hạn không.
-     * - Khách bấm "Gửi lại mã" → lấy SentAt ra, xem đã đủ 60 giây kể từ lần gửi trước chưa.
-     * Ví dụ: thao@gmail.com có 3 mã Recovery gửi lúc 9:00, 9:30, 10:00 → trả về dòng 10:00.
+     * - Khách gõ mã → lấy dòng này ra, so mã khách gõ với cột Code, xem ExpiresAt
+     * còn hạn không.
+     * - Khách bấm "Gửi lại mã" → lấy SentAt ra, xem đã đủ 60 giây kể từ lần gửi
+     * trước chưa.
+     * Ví dụ: thao@gmail.com có 3 mã Recovery gửi lúc 9:00, 9:30, 10:00 → trả về
+     * dòng 10:00.
      *
-     * @param email email nhận mã
+     * @param email   email nhận mã
      * @param purpose mục đích: SIGN_UP, CLAIM, RECOVERY, EMAIL_CHANGE
-     * @return dòng mới nhất (đủ 11 cột), hoặc null nếu email này chưa từng được gửi mã cho mục đích này
+     * @return dòng mới nhất (đủ 11 cột), hoặc null nếu email này chưa từng được gửi
+     *         mã cho mục đích này
      * @throws SQLException lỗi kết nối hoặc lỗi câu SQL
      */
-    public VerificationCode findLatestByEmailAndPurpose(String email, VerificationCode.Purpose purpose) throws SQLException {
-        // B1: lọc theo email + mục đích, xếp giờ gửi mới nhất lên đầu, lấy đúng 1 dòng đầu (TOP 1)
-        String sql = "SELECT TOP 1 VerificationCodeId, AccountId, Email, Purpose, Code, TokenHash, "
+    public VerificationCode findLatestByEmailAndPurpose(String email, VerificationCode.Purpose purpose)
+            throws SQLException {
+        // B1: lọc theo email + mục đích, xếp giờ gửi mới nhất lên đầu, lấy đúng 1 dòng
+        // đầu (TOP 1)
+        String sql = "SELECT TOP 1 VerificationCodeId, AccountId, Email, Purpose, Code, "
                 + "SentAt, ExpiresAt, FailedAttempts, LockedUntil, UsedAt "
                 + "FROM VerificationCodes "
                 + "WHERE Email = ? AND Purpose = ? "
@@ -102,7 +113,8 @@ public class VerificationCodeDAO {
             stmt.setString(1, email);
             stmt.setString(2, purpose.getDbValue());
 
-            // B4: chạy câu SELECT. Có dòng → chép thành object VerificationCode; không có → null
+            // B4: chạy câu SELECT. Có dòng → chép thành object VerificationCode; không có →
+            // null
             try (ResultSet rs = stmt.executeQuery()) {
                 if (rs.next()) {
                     return mapResultSetToVerificationCode(rs);
@@ -116,17 +128,20 @@ public class VerificationCodeDAO {
      * Hỏi: email này có đang bị khóa xác thực không? Nếu có thì khóa tới mấy giờ?
      * (CBR-94: gõ sai mã 5 lần, hoặc xin mã lần thứ 5 trong 1 giờ → khóa 5 phút.)
      *
-     * Dùng khi: TRƯỚC khi cho khách gõ mã hoặc xin mã mới — đang bị khóa thì chặn luôn (MSG61).
-     * Ví dụ: bây giờ 10:07, sổ có dòng khóa tới 10:10 → trả về 10:10 (còn khóa 3 phút).
-     *        bây giờ 10:12, khóa tới 10:10 đã qua → trả về null (hết khóa).
+     * Dùng khi: TRƯỚC khi cho khách gõ mã hoặc xin mã mới — đang bị khóa thì chặn
+     * luôn (MSG61).
+     * Ví dụ: bây giờ 10:07, sổ có dòng khóa tới 10:10 → trả về 10:10 (còn khóa 3
+     * phút).
+     * bây giờ 10:12, khóa tới 10:10 đã qua → trả về null (hết khóa).
      *
      * @param email email cần kiểm tra
-     * @param now giờ hiện tại, lấy bằng DateTimeUtil.now()
+     * @param now   giờ hiện tại, lấy bằng DateTimeUtil.now()
      * @return giờ hết khóa, hoặc null nếu email không bị khóa
      * @throws SQLException lỗi kết nối hoặc lỗi câu SQL
      */
     public LocalDateTime findLockedUntil(String email, LocalDateTime now) throws SQLException {
-        // B1: trong các dòng của email này, lấy giờ khóa xa nhất mà vẫn còn sau "bây giờ"
+        // B1: trong các dòng của email này, lấy giờ khóa xa nhất mà vẫn còn sau "bây
+        // giờ"
         String sql = "SELECT MAX(LockedUntil) AS LockedUntil "
                 + "FROM VerificationCodes "
                 + "WHERE Email = ? AND LockedUntil > ?";
@@ -151,9 +166,12 @@ public class VerificationCodeDAO {
      * Đếm: kể từ 1 mốc giờ đến giờ, email này đã xin mã bao nhiêu lần?
      * (CBR-94: xin lần thứ 5 trong vòng 1 giờ → khóa 5 phút.)
      *
-     * Dùng khi: khách bấm "Gửi mã" — Service truyền mốc = 1 tiếng trước, nếu đã đủ 4 lần thì lần này bị khóa.
-     * Ví dụ: bây giờ 10:20, mốc 9:20; email đã xin lúc 10:00, 10:05, 10:10, 10:15 → trả về 4.
-     * Chỉ đếm mã 6 số (Code có giá trị) — bỏ qua các dòng link đặt mật khẩu cũ (PasswordSetup, không còn dùng).
+     * Dùng khi: khách bấm "Gửi mã" — Service truyền mốc = 1 tiếng trước, nếu đã đủ
+     * 4 lần thì lần này bị khóa.
+     * Ví dụ: bây giờ 10:20, mốc 9:20; email đã xin lúc 10:00, 10:05, 10:10, 10:15 →
+     * trả về 4.
+     * Chỉ đếm mã 6 số (Code có giá trị) — bỏ qua các dòng link đặt mật khẩu cũ
+     * (PasswordSetup, không còn dùng).
      *
      * @param email email nhận mã
      * @param since mốc bắt đầu đếm, VD 1 tiếng trước
@@ -187,7 +205,8 @@ public class VerificationCodeDAO {
     /**
      * Cộng thêm 1 vào số lần gõ sai của 1 mã.
      *
-     * Dùng khi: khách gõ mã sai. Ví dụ: dòng 120 đang sai 1 lần → sau khi gọi thành 2 lần.
+     * Dùng khi: khách gõ mã sai. Ví dụ: dòng 120 đang sai 1 lần → sau khi gọi thành
+     * 2 lần.
      * Service tự tính: nếu đây là lần sai thứ 5 thì gọi thêm lockCode để khóa.
      *
      * @param verificationCodeId Id của dòng mã (lấy từ findLatestByEmailAndPurpose)
@@ -215,7 +234,7 @@ public class VerificationCodeDAO {
      * Sau đó findLockedUntil sẽ trả về 10:10 cho tới khi qua giờ đó.
      *
      * @param verificationCodeId Id của dòng mã cần ghi khóa
-     * @param lockedUntil giờ hết khóa = giờ hiện tại + số phút khóa (P-18)
+     * @param lockedUntil        giờ hết khóa = giờ hiện tại + số phút khóa (P-18)
      * @throws SQLException lỗi kết nối hoặc lỗi câu SQL
      */
     public void lockCode(int verificationCodeId, LocalDateTime lockedUntil) throws SQLException {
@@ -234,13 +253,15 @@ public class VerificationCodeDAO {
     }
 
     /**
-     * Đánh dấu 1 mã là "đã dùng" → không dùng lại được nữa (DBR-03: mỗi mã dùng 1 lần).
+     * Đánh dấu 1 mã là "đã dùng" → không dùng lại được nữa (DBR-03: mỗi mã dùng 1
+     * lần).
      *
      * Dùng khi: khách gõ ĐÚNG mã.
-     * Ví dụ: khách gõ đúng lúc 10:03 → ghi UsedAt = 10:03. Lần sau Service thấy UsedAt có giá trị → từ chối.
+     * Ví dụ: khách gõ đúng lúc 10:03 → ghi UsedAt = 10:03. Lần sau Service thấy
+     * UsedAt có giá trị → từ chối.
      *
      * @param verificationCodeId Id của dòng mã
-     * @param usedAt giờ dùng, lấy bằng DateTimeUtil.now()
+     * @param usedAt             giờ dùng, lấy bằng DateTimeUtil.now()
      * @throws SQLException lỗi kết nối hoặc lỗi câu SQL
      */
     public void markUsed(int verificationCodeId, LocalDateTime usedAt) throws SQLException {
@@ -261,7 +282,8 @@ public class VerificationCodeDAO {
     // ===== 4. Hàm phụ: chép 1 dòng trong DB thành object Java =====
 
     /**
-     * Đọc 11 ô của dòng mà ResultSet đang đứng, chép từng ô vào 1 object VerificationCode.
+     * Đọc 11 ô của dòng mà ResultSet đang đứng, chép từng ô vào 1 object
+     * VerificationCode.
      * Được findLatestByEmailAndPurpose gọi.
      */
     private VerificationCode mapResultSetToVerificationCode(ResultSet rs) throws SQLException {
@@ -279,7 +301,6 @@ public class VerificationCodeDAO {
         verificationCode.setEmail(rs.getString("Email"));
         verificationCode.setPurpose(VerificationCode.Purpose.fromDbValue(rs.getString("Purpose")));
         verificationCode.setCode(rs.getString("Code"));
-        verificationCode.setTokenHash(rs.getString("TokenHash"));
         verificationCode.setFailedAttempts(rs.getInt("FailedAttempts"));
 
         // B4: chép các ô giờ (đổi Timestamp của JDBC → LocalDateTime của dự án)
@@ -292,7 +313,8 @@ public class VerificationCodeDAO {
 
     /**
      * Đổi kiểu giờ Timestamp (JDBC trả về) sang LocalDateTime (dự án dùng).
-     * Ô giờ trong DB có thể trống (VD UsedAt khi mã chưa dùng) → trả null, tránh lỗi khi gọi toLocalDateTime() lên null.
+     * Ô giờ trong DB có thể trống (VD UsedAt khi mã chưa dùng) → trả null, tránh
+     * lỗi khi gọi toLocalDateTime() lên null.
      */
     private LocalDateTime toLocalDateTime(Timestamp timestamp) {
         if (timestamp == null) {

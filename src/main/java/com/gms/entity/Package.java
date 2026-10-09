@@ -23,7 +23,8 @@ public class Package {
     private String description;
     private String benefits;
     private Type packageType;
-    private Integer durationDays;
+    private String durationUnit;
+    private Integer durationValue;
     private Integer estimatedSessionCount;
     private int price;
     private boolean active;
@@ -35,55 +36,56 @@ public class Package {
      *
      * @param packageId id định danh (khóa chính, bất biến); truyền 0 khi tạo gói mới chưa lưu DB
      */
+    // Constructor chỉ nhận packageId (final), các trường khác gán bằng setter
     public Package(int packageId) {
         this.packageId = packageId;
     }
 
     // ===== Getter/Setter =====
 
+    // Lấy packageId (bất biến)
     public int getPackageId() {
         return packageId;
     }
 
+    // Lấy tên gói
     public String getPackageName() {
         return packageName;
     }
 
+    // Gán tên gói
     public void setPackageName(String packageName) {
         this.packageName = packageName;
     }
 
+    // Lấy mô tả
     public String getDescription() {
         return description;
     }
 
+    // Gán mô tả
     public void setDescription(String description) {
         this.description = description;
     }
 
-    /** Chuỗi gốc trong DB — mỗi dòng 1 quyền lợi, ngăn cách bằng xuống dòng. */
+    // Lấy chuỗi quyền lợi thô
     public String getBenefits() {
         return benefits;
     }
 
+    // Gán chuỗi quyền lợi thô
     public void setBenefits(String benefits) {
         this.benefits = benefits;
     }
 
-    /**
-     * Tách cột Benefits thành từng dòng để JSP hiện gạch đầu dòng.
-     *
-     * Ví dụ: "Tập không giới hạn giờ\nMiễn phí nước uống" → ["Tập không giới hạn giờ", "Miễn phí nước uống"]
-     * Trong JSP: <c:forEach var="line" items="${pkg.benefitLines}">
-     *
-     * @return danh sách quyền lợi, bỏ dòng trống; list rỗng nếu cột Benefits trống
-     */
+    // Tách chuỗi benefits thành danh sách dòng để JSP hiển thị
     public List<String> getBenefitLines() {
         List<String> lines = new ArrayList<>();
         if (benefits == null) {
             return lines;
         }
-        // \\r?\\n: chấp nhận cả xuống dòng kiểu Windows (\r\n) lẫn Linux (\n)
+
+        // Duyệt từng dòng sau khi split, bỏ qua dòng trống
         for (String line : benefits.split("\\r?\\n")) {
             String trimmedLine = line.trim();
             if (!trimmedLine.isEmpty()) {
@@ -93,67 +95,90 @@ public class Package {
         return lines;
     }
 
+    // Lấy loại gói
     public Type getPackageType() {
         return packageType;
     }
 
+    // Gán loại gói
     public void setPackageType(Type packageType) {
         this.packageType = packageType;
     }
 
-    /** Số ngày hiệu lực; null với buổi PT lẻ (SingleSession). */
-    public Integer getDurationDays() {
-        return durationDays;
+    // Lấy đơn vị thời hạn (Day/Month)
+    public String getDurationUnit() {
+        return durationUnit;
     }
 
-    public void setDurationDays(Integer durationDays) {
-        this.durationDays = durationDays;
+    // Gán đơn vị thời hạn
+    public void setDurationUnit(String durationUnit) {
+        this.durationUnit = durationUnit;
     }
 
-    /** Số buổi ƯỚC TÍNH, chỉ gói PT mới có; null với gói tập. */
+    // Lấy giá trị thời hạn
+    public Integer getDurationValue() {
+        return durationValue;
+    }
+
+    // Gán giá trị thời hạn
+    public void setDurationValue(Integer durationValue) {
+        this.durationValue = durationValue;
+    }
+
+    // Tính số tháng của gói (0 nếu không phải gói tháng)
+    public int getDurationMonths() {
+        boolean isMonthly = "Month".equals(durationUnit) && durationValue != null;
+        return isMonthly ? durationValue : 0;
+    }
+
+    // Lấy số buổi ước tính của gói PT
     public Integer getEstimatedSessionCount() {
         return estimatedSessionCount;
     }
 
+    // Gán số buổi ước tính
     public void setEstimatedSessionCount(Integer estimatedSessionCount) {
         this.estimatedSessionCount = estimatedSessionCount;
     }
 
-    /** Giá VND, đã gồm VAT. */
+    // Lấy giá VND
     public int getPrice() {
         return price;
     }
 
+    // Gán giá VND
     public void setPrice(int price) {
         this.price = price;
     }
 
-    /** true = đang bán (IsActive = 1). JSP đọc bằng ${pkg.active}. */
+    // Kiểm tra đang bán hay không
     public boolean isActive() {
         return active;
     }
 
+    // Gán trạng thái đang bán
     public void setActive(boolean active) {
         this.active = active;
     }
 
+    // Lấy thời điểm tạo gói
     public LocalDateTime getCreatedAt() {
         return createdAt;
     }
 
+    // Gán thời điểm tạo gói
     public void setCreatedAt(LocalDateTime createdAt) {
         this.createdAt = createdAt;
     }
 
+    // Chuỗi mô tả ngắn gọn cho debug/log
     @Override
     public String toString() {
         return "Package{packageId=" + packageId + ", packageName=" + packageName
                 + ", packageType=" + packageType + ", price=" + price + "}";
     }
 
-    /**
-     * Loại gói — khớp constraint CK_Packages_Type trong DB.
-     */
+    // Loại gói — enum khớp constraint DB
     public enum Type {
 
         MEMBERSHIP("Membership"),
@@ -164,22 +189,22 @@ public class Package {
 
         private final String dbValue;
 
+        // Gán giá trị DB cho enum
         Type(String dbValue) {
             this.dbValue = dbValue;
         }
 
+        // Lấy giá trị chuỗi trong DB
         public String getDbValue() {
             return dbValue;
         }
 
-        /**
-         * Gói có kèm huấn luyện viên không?
-         * Trang chủ dùng để chia 2 bảng giá: gói tập (Membership, DayPass) và gói PT (3 loại còn lại).
-         */
+        // Kiểm tra gói có kèm PT hay không
         public boolean isPtService() {
             return this == PT_SINGLE || this == PT_COUPLE || this == SINGLE_SESSION;
         }
 
+        // Chuyển chuỗi DB sang enum Type
         public static Type fromDbValue(String dbValue) {
             if (dbValue == null) {
                 return null;

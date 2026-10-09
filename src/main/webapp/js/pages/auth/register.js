@@ -285,7 +285,7 @@ function setupOtpStep() {
 function setupResendButton() {
     // Tìm nút resend trên trang (có thể là 1 trong 2 nhánh)
     const resendBtn = document.getElementById("resendBtn")
-                   || document.getElementById("claimResendBtn");
+        || document.getElementById("claimResendBtn");
 
     if (!resendBtn) {
         return;

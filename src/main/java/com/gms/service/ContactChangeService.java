@@ -98,7 +98,7 @@ public class ContactChangeService {
 
             // B3: gửi mã xác thực tới email hiện tại
             return verificationCodeService.sendCode(
-                    currentEmail.trim(), VerificationCode.Purpose.EMAIL_CHANGE, accountId);
+                    currentEmail.trim(), VerificationCode.Purpose.PHONE_CHANGE, accountId);
 
         } catch (SQLException e) {
             e.printStackTrace();
@@ -125,7 +125,7 @@ public class ContactChangeService {
 
         // B1: xác thực mã OTP qua VerificationCodeService
         ServiceResult<VerificationCode> verifyResult = verificationCodeService.verifyCode(
-                verificationEmail, VerificationCode.Purpose.EMAIL_CHANGE, code);
+                verificationEmail, toPurpose(field), code);
 
         if (!verifyResult.isSuccess()) {
             return verifyResult.hasFieldErrors()
@@ -133,7 +133,20 @@ public class ContactChangeService {
                     : ServiceResult.fail(verifyResult.getMessage());
         }
 
-        // B2: mã hợp lệ, tiến hành cập nhật vào database
+        // B2: kiểm trùng lần 2 trước khi lưu (CBR-110)
+        try {
+            if (field == ContactField.EMAIL && personDAO.existsByEmail(newValue)) {
+                return ServiceResult.failField("email", Messages.MSG12_EMAIL_USED);
+            }
+            if (field == ContactField.PHONE && personDAO.existsByPhone(newValue)) {
+                return ServiceResult.failField("phone", Messages.MSG14_PHONE_USED);
+            }
+        } catch (SQLException e) {
+            e.printStackTrace();
+            return ServiceResult.fail(Messages.MSG04_SYSTEM_BUSY);
+        }
+
+        // B3: lưu lên Person, áp cho mọi vai trò (DBR-65)
         try {
             if (field == ContactField.EMAIL) {
                 return applyEmailChange(accountId, personId, newValue, currentSessionId);
@@ -196,5 +209,13 @@ public class ContactChangeService {
     private ServiceResult<Void> applyPhoneChange(int personId, String newPhone) throws SQLException {
         personDAO.updatePhone(personId, newPhone);
         return ServiceResult.ok(null, Messages.MSG57_PHONE_CHANGED);
+    }
+
+    /** Mỗi loại thay đổi dùng 1 mục đích mã riêng (CBR-110). */
+    private VerificationCode.Purpose toPurpose(ContactField field) {
+        if (field == ContactField.EMAIL) {
+            return VerificationCode.Purpose.EMAIL_CHANGE;
+        }
+        return VerificationCode.Purpose.PHONE_CHANGE;
     }
 }

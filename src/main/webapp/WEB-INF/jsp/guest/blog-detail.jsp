@@ -56,7 +56,7 @@
                  alt="<c:out value='${post.title}' />"
                  onerror="this.style.display='none'; if(this.nextElementSibling){this.nextElementSibling.style.display='flex';}">
           </c:if>
-          <div class="article-cover-fallback" style="${not empty post.coverImage ? 'display:none;' : 'display:flex;'}">
+          <div class="article-cover-fallback ${not empty post.coverImage ? 'is-hidden' : ''}">
             <svg class="cover-pattern" viewBox="0 0 400 200" preserveAspectRatio="xMidYMid slice" aria-hidden="true">
               <g fill="rgba(255,255,255,.3)">
                 <circle cx="22" cy="150" r="4"/><circle cx="50" cy="122" r="4"/><circle cx="78" cy="160" r="4"/>
@@ -151,7 +151,7 @@
                          alt="<c:out value='${related.title}' />"
                          onerror="this.style.display='none'; if(this.nextElementSibling){this.nextElementSibling.style.display='flex';}">
                   </c:if>
-                  <div class="post-thumb-fallback" style="${not empty related.coverImage ? 'display:none;' : 'display:flex;'}">
+                  <div class="post-thumb-fallback ${not empty related.coverImage ? 'is-hidden' : ''}">
                     <svg class="cover-pattern" viewBox="0 0 400 200" preserveAspectRatio="xMidYMid slice" aria-hidden="true">
                       <g fill="rgba(255,255,255,.3)">
                         <circle cx="22" cy="150" r="4"/><circle cx="50" cy="122" r="4"/><circle cx="78" cy="160" r="4"/>

@@ -6,27 +6,21 @@ import java.sql.SQLException;
 import java.util.ArrayList;
 import java.util.List;
 
-/**
- * Đọc tham số nghiệp vụ P-01…P-20 từ bảng SystemConfigs (agents.md Phần 13).
- * Mọi nơi cần tham số này phải gọi qua Service này, không hard-code số.
- * Đây là 20 giá trị default theo luật nghiệp vụ hiện tại, Manager có thể sửa trên màn hình cấu hình.
- *
- * @author Le Cong Minh
- */
+/** Đọc tham số nghiệp vụ v26 từ bảng SystemConfigs. */
 public class SystemConfigService {
 
-    // ===== Mã tham số P-01...P-20 =====
+    // ===== Mã tham số P-01...P-22 =====
 
     // P-01: Số lần bảo lưu tối đa cho mỗi gói tập
     public static final String MAX_FREEZE_COUNT = "P-01";
 
-    // P-02: Số ngày bảo lưu tối đa mỗi lần
-    public static final String MAX_FREEZE_DAYS = "P-02";
+    // P-02: Số tháng bảo lưu tối đa mỗi lần
+    public static final String MAX_FREEZE_MONTHS = "P-02";
 
     // P-03: Phí bảo lưu (VND), 0 = miễn phí
     public static final String FREEZE_FEE = "P-03";
 
-    // P-04: Danh sách thời hạn gói tập (ngày), phân tách bởi dấu phẩy
+    // P-04: Thời hạn gói tập, VD "1D,1M,3M,9M,12M" (D = ngày, M = tháng)
     public static final String PACKAGE_DURATIONS = "P-04";
 
     // P-05: Tuổi tối thiểu được dùng dịch vụ PT
@@ -34,9 +28,6 @@ public class SystemConfigService {
 
     // P-06: Độ dài một buổi PT (phút)
     public static final String SESSION_DURATION_MINUTES = "P-06";
-
-    // P-07: Cửa sổ điểm danh sau khi buổi kết thúc (giờ)
-    public static final String ATTENDANCE_WINDOW_HOURS = "P-07";
 
     // P-08: Số lần Swap (đổi buổi) tối đa mỗi gói PT
     public static final String MAX_SWAP_COUNT = "P-08";
@@ -59,7 +50,7 @@ public class SystemConfigService {
     // P-14: Số lễ tân tối thiểu còn lại của mỗi ca
     public static final String MIN_RECEPTIONIST_PER_SHIFT = "P-14";
 
-    // P-15: Hiệu lực mã xác thực và link đặt mật khẩu (phút)
+    // P-15: Hiệu lực mã xác thực / mã khôi phục (phút)
     public static final String VERIFICATION_VALID_MINUTES = "P-15";
 
     // P-16: Đầu số di động hợp lệ, phân tách bởi dấu phẩy
@@ -76,6 +67,11 @@ public class SystemConfigService {
 
     // P-20: Giờ chốt duyệt đơn nghỉ của ngày hôm trước (HH:mm)
     public static final String LEAVE_APPROVED_DEADLINE = "P-20";
+    // P-21: Thời hạn gói PT, VD "1M,2M,3M"
+    public static final String PT_PACKAGE_DURATIONS = "P-21";
+
+    // P-22: Số khách tối thiểu để hiện điểm PT (DBR-69)
+    public static final String MIN_PT_RATING_CUSTOMERS = "P-22";
 
     // DAO dùng chung
     private final SystemConfigDAO systemConfigDAO = new SystemConfigDAO();

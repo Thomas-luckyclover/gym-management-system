@@ -6,7 +6,6 @@ import com.gms.entity.VerificationCode;
 import com.gms.service.RegistrationService;
 import com.gms.service.VerificationCodeService;
 import com.gms.util.DateTimeUtil;
-import com.gms.util.RequestUtil;
 import com.gms.util.ValidationUtil;
 import jakarta.servlet.ServletException;
 import jakarta.servlet.annotation.WebServlet;
@@ -19,23 +18,9 @@ import java.time.LocalDateTime;
 import java.time.format.DateTimeFormatter;
 
 /**
- * Controller xử lý luồng đăng ký tài khoản khách hàng (/register).
+ * Servlet xử lý luồng đăng ký tài khoản khách hàng (URL /register).
  *
- * Luồng step (2 nhánh tách riêng):
- *
- *   [Nhánh đăng ký mới]
- *   GET  /register                → step "phone" (bước 1)
- *   POST step=phone               → tra SĐT → chuyển sang step phù hợp
- *   POST step=form                → validate + gửi OTP → chuyển sang step "otp"
- *   POST step=otp                 → xác minh mã → tạo tài khoản → step "success"
- *   POST step=resend              → xin lại mã → forward lại step "otp"
- *
- *   [Nhánh Claim — kích hoạt hồ sơ quầy]
- *   POST step=phone               → tra SĐT → PROFILE_CAN_CLAIM → step "claim-email"
- *   POST step=claim-email         → so khớp email (CBR-25) → gửi OTP → step "claim-otp"
- *   POST step=claim-otp           → xác minh mã → step "claim-password"
- *   POST step=claim-password      → validate password → tạo account → step "success"
- *   POST step=claim-resend        → xin lại mã → forward lại step "claim-otp"
+ * <p>Hỗ trợ 2 nhánh: đăng ký mới hoặc kích hoạt (claim) hồ sơ có sẵn ở quầy. Điều phối theo ô hidden "step".</p>
  */
 @WebServlet("/register")
 public class RegisterServlet extends HttpServlet {
@@ -60,6 +45,9 @@ public class RegisterServlet extends HttpServlet {
 
     // ===== GET: Hiển thị bước 1 (nhập SĐT) =====
 
+    /**
+     * GET /register — hiện bước 1 (nhập SĐT). Nếu có ?step=2&phone=... thì chuyển thẳng sang bước claim-email.
+     */
     @Override
     protected void doGet(HttpServletRequest req, HttpServletResponse resp)
             throws ServletException, IOException {
@@ -80,6 +68,9 @@ public class RegisterServlet extends HttpServlet {
 
     // ===== POST: Điều phối theo giá trị hidden field "step" =====
 
+    /**
+     * POST /register — điều phối sang handler tương ứng với step mà form gửi lên (phone/form/otp/resend/claim-*).
+     */
     @Override
     protected void doPost(HttpServletRequest req, HttpServletResponse resp)
             throws ServletException, IOException {
@@ -392,8 +383,6 @@ public class RegisterServlet extends HttpServlet {
         }
 
         // B2: mã đúng → chuyển sang bước nhập mật khẩu
-        // Lấy thông tin hồ sơ (họ tên, ngày sinh) để hiển thị read-only
-        RegistrationService.PhoneCheckResult checkResult = registrationService.checkPhone(phone);
         req.setAttribute("step", "claim-password");
         req.setAttribute("phone", phone);
         req.setAttribute("email", email);

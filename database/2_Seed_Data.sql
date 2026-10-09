@@ -1,625 +1,3697 @@
 /* ============================================================================
-   GMS — Gym Management System
-   FILE   : 2_Seed_Data.sql
-   MỤC ĐÍCH: Nạp dữ liệu mẫu bám sát nghiệp vụ, phủ MỌI trạng thái và các luồng
-             lỗi để team test được toàn bộ logic mà không phải tự tạo tay.
-   MỐC THỜI GIAN GIẢ ĐỊNH: hôm nay là 23/09/2026 (thứ Tư).
-   THỨ TỰ : Bảng cha trước, bảng con sau. Dùng IDENTITY_INSERT để ID cố định,
-            nhờ vậy khóa ngoại trong file này luôn khớp và dễ đọc khi debug.
-   LƯU Ý  : Chạy file này SAU 1_Init_Schema.sql, trên database rỗng.
-   CẬP NHẬT 24/09/2026: thêm chuyên môn/kinh nghiệm PT, lý do nghỉ việc, link đặt mật khẩu
-            (VerificationCodes 5), thời điểm nhắc duyệt nghỉ phép — khớp migrations/001.
+   GMS — FILE: 2_Seed_Data.sql  ·  v26
+   SINH TỰ ĐỘNG bởi database/tools/seeddata.py — muốn sửa dữ liệu thì sửa file .py rồi sinh lại.
+   v26    : CheckedIn/Used, tự chốt JOB-04, đánh giá PT theo tháng, P-22 thay P-07.
+   CHẠY   : 0_Reset_Database.sql → 1_Init_Schema.sql → 2_Seed_Data.sql (database rỗng).
+   MỐC    : lịch sử cố định quanh Thứ Bảy 03/10/2026 (tháng 6 → tháng 11/2026).
+            Dữ liệu "sống" (mã xác thực, khóa tạm 5 phút, đơn online còn hạn, slot đang giữ,
+            ca sáng đang mở, gói ngày + buổi lẻ hôm nay) tính theo GIỜ CHẠY SCRIPT (@Now, @Today)
+            → chạy lại file lúc nào cũng test được các luồng đó.
+   MẬT KHẨU: mọi tài khoản = Gms@2026 (trừ tài khoản chưa đặt mật khẩu).
+   DANH MỤC CASE + TÀI KHOẢN TEST: docs/database/SEED_CASES.md
    ============================================================================ */
 
 USE GMS;
 GO
 
+SET ANSI_NULLS ON;
+SET QUOTED_IDENTIFIER ON;  -- bắt buộc khi ghi vào bảng có filtered index
 SET NOCOUNT ON;
-GO
+SET XACT_ABORT ON;
+BEGIN TRANSACTION;
+
+-- Giờ chạy script: mọi dữ liệu "sống" tính theo 2 biến này
+DECLARE @Now   DATETIME2(0) = CAST(SYSDATETIME() AS DATETIME2(0));
+DECLARE @Today DATE         = CAST(@Now AS DATE);
 
 /* ============================================================================
-   1. PERSONS — 24 người: 16 khách, 8 nhân viên (2 người nước ngoài ≈ 8%)
-   Person 22 (PT Kiều Trang) vừa là nhân viên vừa là khách → minh họa 2 vai trò.
-   Person 9 (bé Gia Bảo) không có SĐT riêng → hồ sơ Dependent.
-   Person 12 đã bị xóa hồ sơ nên IsReleased = 1: SĐT và email được nhả ra.
+   Persons — 84 dòng. ID 1–32 dàn nhân vật chính; 101–113 test xác thực; 201–240 khách thường.
    ============================================================================ */
 SET IDENTITY_INSERT Persons ON;
 INSERT INTO Persons (PersonId, FullName, DateOfBirth, Phone, Email, Avatar, IsReleased, CreatedAt) VALUES
- (1 , N'Nguyễn Văn An'        , '1995-03-12', '0901234501', 'an.nguyen95@gmail.com'      , NULL, 0, '2026-06-28 09:10:00'),
- (2 , N'Trần Thị Bích'        , '1998-07-24', '0901234502', 'bich.tran@gmail.com'        , NULL, 0, '2026-08-30 20:05:00'),
- (3 , N'Lê Minh Quân'         , '1992-11-05', '0901234503', 'quan.le92@gmail.com'        , NULL, 0, '2026-06-09 18:40:00'),
- (4 , N'Phạm Thị Hồng'        , '1990-01-30', '0901234504', 'hong.pham@yahoo.com'        , NULL, 0, '2026-07-29 10:15:00'),
- (5 , N'Hoàng Văn Dũng'       , '2000-05-18', '0901234505', NULL                         , NULL, 0, '2026-09-23 07:45:00'),
- (6 , N'Đỗ Thị Mai'           , '1997-09-09', '0901234506', 'mai.do97@gmail.com'         , NULL, 0, '2026-09-05 08:30:00'),
- (7 , N'Vũ Quốc Hưng'         , '1994-02-14', '0901234507', 'hung.vu@gmail.com'          , NULL, 0, '2026-08-20 17:20:00'),
- (8 , N'Bùi Thị Thu Hà'       , '1996-12-01', '0901234508', 'ha.bui96@gmail.com'         , NULL, 0, '2026-08-20 17:25:00'),
- (9 , N'Ngô Gia Bảo'          , '2017-04-22', NULL        , NULL                         , NULL, 0, '2026-09-02 15:00:00'),
- (10, N'Đặng Thị Lan'         , '1985-08-08', '0901234510', 'lan.dang85@gmail.com'       , NULL, 0, '2026-09-02 15:05:00'),
- (11, N'Michael Johnson'      , '1989-06-17', '0901234511', 'michael.johnson@outlook.com', NULL, 0, '2026-07-15 11:00:00'),
- (12, N'Trương Mỹ Linh'       , '1993-10-11', '0901234512', 'linh.truong93@gmail.com'    , NULL, 1, '2026-03-01 09:00:00'),
- (13, N'Trịnh Văn Khánh'      , '1991-04-03', '0901234513', 'khanh.trinh@gmail.com'      , NULL, 0, '2026-09-01 13:30:00'),
- (14, N'Lý Thị Ngọc'          , '1999-01-25', '0901234514', 'ngoc.ly99@gmail.com'        , NULL, 0, '2026-09-20 21:10:00'),
- (15, N'Phan Văn Toàn'        , '2001-07-07', '0901234515', 'toan.phan@gmail.com'        , NULL, 0, '2026-09-22 19:00:00'),
- (16, N'Nguyễn Thị Hạnh'      , '1993-03-19', '0901234516', NULL                         , NULL, 0, '2026-09-23 08:05:00'),
- -- Nhân viên
- (17, N'Nguyễn Hải Đăng'      , '1988-05-20', '0912000001', 'dang.nguyen@gms.vn'         , NULL, 0, '2025-01-05 08:00:00'),
- (18, N'Trần Quốc Việt'       , '1986-09-14', '0912000002', 'viet.tran@gms.vn'           , NULL, 0, '2025-01-05 08:00:00'),
- (19, N'Lê Thị Thanh Tâm'     , '1997-02-02', '0912000003', 'tam.le@gms.vn'              , NULL, 0, '2025-02-10 08:00:00'),
- (20, N'Phạm Văn Lâm'         , '1996-11-28', '0912000004', 'lam.pham@gms.vn'            , NULL, 0, '2025-06-01 08:00:00'),
- (21, N'Đinh Công Sơn'        , '1994-08-16', '0912000005', 'son.dinh@gms.vn'            , NULL, 0, '2025-03-15 08:00:00'),
- (22, N'Nguyễn Thị Kiều Trang', '1995-12-09', '0912000006', 'trang.nguyen@gms.vn'        , NULL, 0, '2025-04-01 08:00:00'),
- (23, N'David Miller'         , '1990-03-27', '0912000007', 'david.miller@gms.vn'        , NULL, 0, '2025-09-01 08:00:00'),
- (24, N'Hồ Văn Nam'           , '1992-06-30', '0912000008', 'nam.ho@gms.vn'              , NULL, 0, '2025-05-01 08:00:00');
+ (1, N'Nguyễn Văn An', '1995-03-12', '0901234501', 'an.nguyen95@gmail.com', NULL, 0, '2026-07-06 09:10:00'), -- khách chính: gia hạn trước, bảo lưu cũ, giám hộ 2 bé
+ (2, N'Trần Thị Bích', '1998-07-24', '0901234502', 'bich.tran@gmail.com', NULL, 0, '2026-09-03 20:05:00'), -- gói hết hạn đúng ngày mốc, đơn cần hoàn tiền
+ (3, N'Lê Minh Quân', '1992-11-05', '0901234503', 'quan.le92@gmail.com', NULL, 0, '2026-07-01 18:40:00'), -- Expired, gói PT đã hết
+ (4, N'Phạm Thị Hồng', '1990-01-30', '0901234504', 'hong.pham@yahoo.com', NULL, 0, '2026-07-29 10:15:00'), -- Frozen, buổi PT bị Missed do bảo lưu
+ (5, N'Hoàng Văn Dũng', '2000-05-18', '0901234505', NULL, NULL, 0, '2026-10-01 07:45:00'), -- khách vãng lai, gói ngày đã dùng hôm nay
+ (6, N'Đỗ Thị Mai', '1997-09-09', '0901234506', 'mai.do97@gmail.com', NULL, 0, '2026-09-04 08:30:00'), -- gói PT 2 tháng: swap, hủy, chuyển PT
+ (7, N'Vũ Quốc Hưng', '1994-02-14', '0901234507', 'hung.vu@gmail.com', NULL, 0, '2026-08-20 17:20:00'), -- gói couple — người đứng tên
+ (8, N'Bùi Thị Thu Hà', '1996-12-01', '0901234508', 'ha.bui96@gmail.com', NULL, 0, '2026-08-20 17:25:00'), -- gói couple — người đi kèm, gói tập đã hết
+ (9, N'Ngô Gia Bảo', '2017-04-22', NULL, NULL, NULL, 0, '2026-09-03 15:00:00'), -- Dependent 9 tuổi
+ (10, N'Đặng Thị Lan', '1985-08-08', '0901234510', 'lan.dang85@gmail.com', NULL, 0, '2026-09-03 15:05:00'), -- giám hộ của Gia Bảo, hồ sơ chưa có tài khoản
+ (11, 'Michael Johnson', '1989-06-17', '0901234511', 'michael.johnson@outlook.com', NULL, 0, '2026-07-15 11:00:00'), -- khách nước ngoài, gói 12 tháng giá cũ
+ (12, N'Trương Mỹ Linh', '1993-10-11', '0901234512', 'linh.truong93@gmail.com', NULL, 1, '2026-03-01 09:00:00'), -- đã xóa hồ sơ → nhả SĐT + email
+ (13, N'Trịnh Văn Khánh', '1991-04-03', '0901234513', 'khanh.trinh@gmail.com', NULL, 0, '2026-09-21 09:50:00'), -- TK Lễ tân tạo, chưa có mật khẩu; đang chờ duyệt xóa
+ (14, N'Lý Thị Ngọc', '1999-01-25', '0901234514', 'ngoc.ly99@gmail.com', NULL, 0, '2026-09-20 21:10:00'), -- đơn online quá hạn + đơn online đang chờ
+ (15, N'Phan Văn Toàn', '2001-07-07', '0901234515', 'toan.phan@gmail.com', NULL, 0, '2026-09-22 19:00:00'), -- đơn tại quầy đang Pending trong ca đang mở
+ (16, N'Nguyễn Thị Hạnh', '1993-03-19', '0901234516', NULL, NULL, 0, '2026-10-01 08:05:00'), -- vãng lai: gói ngày + buổi PT lẻ hôm nay
+ (17, N'Nguyễn Hải Đăng', '1988-05-20', '0912000001', 'dang.nguyen@gms.vn', NULL, 0, '2025-01-05 08:00:00'), -- Admin đang hoạt động duy nhất (BR-07)
+ (18, N'Trần Quốc Việt', '1986-09-14', '0912000002', 'viet.tran@gms.vn', NULL, 0, '2025-01-05 08:00:00'), -- Manager
+ (19, N'Lê Thị Thanh Tâm', '1997-02-02', '0912000003', 'tam.le@gms.vn', NULL, 0, '2025-02-10 08:00:00'), -- Lễ tân ca sáng
+ (20, N'Phạm Văn Lâm', '1996-11-28', '0912000004', 'lam.pham@gms.vn', NULL, 0, '2025-06-01 08:00:00'), -- Lễ tân ca chiều
+ (21, N'Đinh Công Sơn', '1994-08-16', '0912000005', 'son.dinh@gms.vn', NULL, 0, '2025-03-15 08:00:00'), -- PT
+ (22, N'Nguyễn Thị Kiều Trang', '1995-12-09', '0912000006', 'trang.nguyen@gms.vn', NULL, 0, '2025-04-01 08:00:00'), -- PT + KHÁCH: 1 tài khoản, chọn vai trò (CBR-113)
+ (23, 'David Miller', '1990-03-27', '0912000007', 'david.miller@gms.vn', NULL, 0, '2025-09-01 08:00:00'), -- PT nước ngoài
+ (24, N'Hồ Văn Nam', '1992-06-30', '0912000008', 'nam.ho@gms.vn', NULL, 1, '2025-05-01 08:00:00'), -- PT đã nghỉ, không còn vai trò nào → nhả SĐT/email
+ (25, N'Hoàng Thu Phương', '1999-04-04', '0912000009', 'phuong.hoang@gms.vn', NULL, 0, '2025-11-01 08:00:00'), -- LỄ TÂN + KHÁCH (CBR-115)
+ (26, N'Đặng Quốc Bảo', '1991-01-09', '0912000010', 'bao.dang@gmail.com', NULL, 0, '2025-02-01 08:00:00'), -- PT đã nghỉ nhưng VẪN là khách → TK chỉ còn vai trò Khách (CBR-86)
+ (27, N'Mai Thị Hoa', '1998-08-18', '0912000011', 'hoa.mai@gms.vn', NULL, 0, '2026-01-10 08:00:00'), -- Lễ tân, hồ sơ khách đã xóa → TK chỉ còn vai trò Lễ tân
+ (28, N'Lý Hoàng Long', '1993-05-05', '0912000012', 'long.ly@gms.vn', NULL, 0, '2025-03-01 08:00:00'), -- PT nghỉ rồi được tuyển lại (2 dòng Employees)
+ (30, N'Phan Thanh Tú', '1995-10-10', '0912000014', 'tu.phan@gms.vn', NULL, 0, '2026-02-01 08:00:00'), -- PT bị Admin khóa tài khoản
+ (31, N'Bùi Đức Anh', '1984-12-24', '0912000015', 'anh.bui@gms.vn', NULL, 1, '2025-01-02 08:00:00'), -- Admin cũ đã nghỉ
+ (32, N'Đỗ Văn Lực', '1987-06-12', '0901234532', NULL, NULL, 0, '2026-09-01 07:55:00'), -- khách KHÔNG tài khoản có gói PT → PT đổi lịch hộ (BR-62)
+ (101, N'Lê Hoàng Phúc', '1994-04-18', '0935000101', 'phuc.le@gmail.com', NULL, 0, '2026-08-01 10:00:00'), -- Admin khóa → MSG37
+ (102, N'Võ Thị Kim', '1999-10-02', '0935000102', 'kim.vo@gmail.com', '/uploads/avatar/p-102.jpg', 0, '2026-08-05 10:00:00'), -- đang khóa tạm 5 phút → MSG35
+ (103, N'Nguyễn Gia Huy', '2018-05-10', NULL, NULL, NULL, 0, '2026-09-01 13:50:00'), -- Dependent 8 tuổi (< P-05) có gói tập
+ (104, N'Nguyễn Minh Châu', '2012-02-14', NULL, NULL, NULL, 0, '2026-09-01 13:52:00'), -- Dependent 14 tuổi, An là giám hộ thứ 2
+ (105, N'Đoàn Thị Yến', '1996-06-06', '0935000105', 'yen.doan@gmail.com', NULL, 0, '2026-09-12 16:00:00'), -- hồ sơ quầy có email, chưa có TK → kích hoạt online (CBR-20)
+ (106, N'Kiều Bảo Ngọc', '2019-08-20', NULL, NULL, NULL, 0, '2026-09-10 09:00:00'), -- Dependent, số giám hộ không thuộc ai
+ (107, N'Mai Thanh Tùng', '1990-12-12', '0935000107', 'tung.mai@gmail.com', NULL, 1, '2026-05-01 10:00:00'), -- hồ sơ đã xóa → SĐT/email đã nhả
+ (108, N'Lương Thu Thảo', '1997-03-21', '0935000108', 'thao.luong@gmail.com', NULL, 0, '2026-08-10 10:00:00'), -- mã khôi phục còn hiệu lực; đã sai MK 4 lần
+ (109, N'Ngô Đức Mạnh', '1993-09-09', '0935000109', 'manh.ngo@gmail.com', NULL, 0, '2026-08-11 10:00:00'), -- đã xin 4 mã trong 1 giờ
+ (110, N'Đinh Văn Khoa', '1995-01-15', '0935000110', 'khoa.dinh@gmail.com', NULL, 0, '2026-08-12 10:00:00'), -- vừa xin mã < 60 giây
+ (111, N'Tạ Thanh Bình', '1998-11-30', '0935000111', 'binh.ta@gmail.com', NULL, 0, '2026-08-13 10:00:00'), -- sai mã 5 lần → email bị khóa xác thực
+ (112, N'Cao Thị Quỳnh', '2000-07-07', '0935000112', 'quynh.cao@gmail.com', NULL, 0, '2026-08-14 10:00:00'), -- mã khôi phục đã hết hạn
+ (113, N'Hồ Thị Nhung', '1994-02-02', '0935000113', 'nhung.ho@gmail.com', NULL, 0, '2026-09-20 09:00:00'), -- TK Lễ tân vừa tạo, chưa đặt MK
+ (201, N'Bùi Quốc Yến', '1994-07-11', '0907007437', 'yen.bui201@gmail.com', NULL, 0, '2026-09-07 10:05:00'),
+ (202, N'Nguyễn Đức Long', '1978-12-04', '0917007474', 'long.nguyen202@gmail.com', NULL, 0, '2026-06-26 17:34:00'),
+ (203, N'Phạm Thị Bình', '1997-10-21', '0937007511', 'binh.pham203@gmail.com', NULL, 0, '2026-06-17 16:55:00'),
+ (204, N'Nguyễn Hữu Thảo', '2001-07-13', '0977007548', 'thao.nguyen204@gmail.com', NULL, 0, '2026-06-17 14:04:00'),
+ (205, N'Ngô Gia Hương', '1986-09-01', '0987007585', 'huong.ngo205@gmail.com', NULL, 0, '2026-09-08 10:08:00'),
+ (206, N'Hồ Quốc Lan', '1976-01-09', '0327007622', NULL, NULL, 0, '2026-06-19 11:53:00'),
+ (207, N'Lý Hữu Khoa', '1980-03-18', '0357007659', 'khoa.ly207@gmail.com', NULL, 0, '2026-07-11 10:21:00'),
+ (208, N'Võ Ngọc Tuấn', '1978-11-27', '0707007696', 'tuan.vo208@gmail.com', NULL, 0, '2026-08-06 13:25:00'),
+ (209, N'Vũ Thu Bình', '1984-12-28', '0777007733', 'binh.vu209@gmail.com', NULL, 0, '2026-06-29 19:35:00'),
+ (210, N'Đỗ Thanh Tâm', '1996-04-12', '0817007770', 'tam.do210@gmail.com', NULL, 0, '2026-09-15 12:42:00'),
+ (211, N'Dương Gia Phong', '1994-04-06', '0857007807', 'phong.duong211@gmail.com', NULL, 0, '2026-08-10 16:05:00'),
+ (212, N'Hoàng Thu Anh', '2001-01-21', '0867007844', NULL, NULL, 0, '2026-07-16 16:55:00'),
+ (213, N'Huỳnh Thị Linh', '1991-03-23', '0967007881', 'linh.huynh213@gmail.com', NULL, 0, '2026-07-18 17:19:00'),
+ (214, N'Nguyễn Đức Hiếu', '1994-10-02', '0907007918', 'hieu.nguyen214@gmail.com', NULL, 0, '2026-09-17 19:52:00'),
+ (215, N'Hồ Đức Sơn', '1985-09-04', '0917007955', 'son.ho215@gmail.com', NULL, 0, '2026-09-12 18:59:00'),
+ (216, N'Hoàng Xuân Nam', '1991-05-02', '0937007992', 'nam.hoang216@gmail.com', NULL, 0, '2026-07-13 17:20:00'),
+ (217, 'Phan Minh Linh', '1993-06-05', '0977008029', 'linh.phan217@gmail.com', NULL, 0, '2026-07-08 17:14:00'),
+ (218, N'Phan Xuân Tuấn', '2005-07-12', '0987008066', NULL, NULL, 0, '2026-06-02 18:20:00'),
+ (219, N'Huỳnh Xuân Sơn', '1995-09-05', '0327008103', 'son.huynh219@gmail.com', NULL, 0, '2026-06-04 11:03:00'),
+ (220, N'Nguyễn Thị Sơn', '1975-06-03', '0357008140', 'son.nguyen220@gmail.com', NULL, 0, '2026-08-25 18:58:00'),
+ (221, N'Đặng Thanh Tâm', '1990-03-04', '0707008177', 'tam.dang221@gmail.com', NULL, 0, '2026-06-20 18:13:00'),
+ (222, N'Lý Thị Thắng', '1999-05-20', '0777008214', 'thang.ly222@gmail.com', NULL, 0, '2026-09-16 09:14:00'),
+ (223, N'Phạm Ngọc Quang', '1990-06-22', '0817008251', 'quang.pham223@gmail.com', NULL, 0, '2026-08-03 10:03:00'),
+ (224, N'Đỗ Thị Châu', '2006-05-09', '0857008288', NULL, NULL, 0, '2026-09-08 09:29:00'),
+ (225, N'Vũ Minh Long', '1996-06-24', '0867008325', 'long.vu225@gmail.com', NULL, 0, '2026-07-26 16:38:00'),
+ (226, N'Hồ Ngọc Hải', '1989-12-12', '0967008362', 'hai.ho226@gmail.com', NULL, 0, '2026-06-26 15:54:00'),
+ (227, N'Ngô Hoài Nam', '2003-12-19', '0907008399', 'nam.ngo227@gmail.com', NULL, 0, '2026-06-28 10:38:00'),
+ (228, N'Ngô Quốc Long', '1995-05-27', '0917008436', 'long.ngo228@gmail.com', NULL, 0, '2026-09-15 10:00:00'),
+ (229, N'Võ Minh Tâm', '1989-06-05', '0937008473', 'tam.vo229@gmail.com', NULL, 0, '2026-08-20 12:34:00'),
+ (230, N'Phạm Quốc Linh', '2000-07-01', '0977008510', NULL, NULL, 0, '2026-08-13 15:49:00'),
+ (231, N'Bùi Gia Nga', '2006-11-28', '0987008547', 'nga.bui231@gmail.com', NULL, 0, '2026-07-14 09:37:00'),
+ (232, N'Phan Hữu My', '1978-07-24', '0327008584', 'my.phan232@gmail.com', NULL, 0, '2026-08-22 13:38:00'),
+ (233, N'Nguyễn Quốc Tâm', '1983-06-19', '0357008621', 'tam.nguyen233@gmail.com', NULL, 0, '2026-08-29 12:18:00'),
+ (234, N'Ngô Thu Thắng', '1975-01-25', '0707008658', 'thang.ngo234@gmail.com', NULL, 0, '2026-08-01 13:46:00'),
+ (235, N'Phạm Gia Thắng', '1976-04-26', '0777008695', 'thang.pham235@gmail.com', NULL, 0, '2026-07-05 13:34:00'),
+ (236, N'Phan Đức Hùng', '1984-06-08', '0817008732', NULL, NULL, 0, '2026-06-02 09:37:00'),
+ (237, N'Dương Thanh Trung', '1994-02-19', '0857008769', 'trung.duong237@gmail.com', NULL, 0, '2026-08-26 10:54:00'),
+ (238, N'Võ Hữu Bình', '1989-08-22', '0867008806', 'binh.vo238@gmail.com', NULL, 0, '2026-06-24 17:23:00'),
+ (239, N'Bùi Ngọc Long', '1991-08-11', '0967008843', 'long.bui239@gmail.com', NULL, 0, '2026-08-17 16:11:00'),
+ (240, N'Trần Gia Quang', '2005-06-09', '0907008880', 'quang.tran240@gmail.com', NULL, 0, '2026-06-18 08:22:00');
 SET IDENTITY_INSERT Persons OFF;
-GO
 
 /* ============================================================================
-   2. CUSTOMERS — 17 hồ sơ khách, phủ đủ 5 trạng thái
-   CustomerId 9 là hồ sơ Dependent (trẻ em, dùng số của mẹ là Person 10).
-   CustomerId 17 là PT Kiều Trang trong vai trò khách.
-   ============================================================================ */
-SET IDENTITY_INSERT Customers ON;
-INSERT INTO Customers (CustomerId, PersonId, CustomerCode, CheckInPhoto, CustomerType,
-                       GuardianName, GuardianRelationship, GuardianPhone, GuardianPhone2, Status, JoinedAt, DeletedAt) VALUES
- (1 , 1 , 'KH-1001', '/uploads/checkin/kh-1001.jpg', 'Self'     , NULL, NULL, NULL, NULL, 'Active'  , '2026-06-28 09:15:00', NULL),
- (2 , 2 , 'KH-1002', '/uploads/checkin/kh-1002.jpg', 'Self'     , NULL, NULL, NULL, NULL, 'Active'  , '2026-08-30 20:10:00', NULL),
- (3 , 3 , 'KH-1003', '/uploads/checkin/kh-1003.jpg', 'Self'     , NULL, NULL, NULL, NULL, 'Expired' , '2026-06-09 18:45:00', NULL),
- (4 , 4 , 'KH-1004', '/uploads/checkin/kh-1004.jpg', 'Self'     , NULL, NULL, NULL, NULL, 'Frozen'  , '2026-07-29 10:20:00', NULL),
- (5 , 5 , 'KH-1005', NULL                          , 'Self'     , NULL, NULL, NULL, NULL, 'Active'  , '2026-09-23 07:50:00', NULL), -- khách vãng lai mua gói ngày, chưa có ảnh
- (6 , 6 , 'KH-1006', '/uploads/checkin/kh-1006.jpg', 'Self'     , NULL, NULL, NULL, NULL, 'Active'  , '2026-09-05 08:35:00', NULL),
- (7 , 7 , 'KH-1007', '/uploads/checkin/kh-1007.jpg', 'Self'     , NULL, NULL, NULL, NULL, 'Active'  , '2026-08-20 17:30:00', NULL),
- (8 , 8 , 'KH-1008', '/uploads/checkin/kh-1008.jpg', 'Self'     , NULL, NULL, NULL, NULL, 'Active'  , '2026-08-20 17:35:00', NULL),
- (9 , 9 , 'KH-1009', '/uploads/checkin/kh-1009.jpg', 'Dependent', N'Đặng Thị Lan', N'Mẹ', '0901234510', '0901234507', 'Active', '2026-09-02 15:10:00', NULL),
- (10, 10, 'KH-1010', '/uploads/checkin/kh-1010.jpg', 'Self'     , NULL, NULL, NULL, NULL, 'Active'  , '2026-09-02 15:15:00', NULL),
- (11, 11, 'KH-1011', '/uploads/checkin/kh-1011.jpg', 'Self'     , NULL, NULL, NULL, NULL, 'Active'  , '2026-07-15 11:05:00', NULL),
- (12, 12, 'KH-1012', '/uploads/checkin/kh-1012.jpg', 'Self'     , NULL, NULL, NULL, NULL, 'Inactive', '2026-03-01 09:05:00', '2026-09-15 16:00:00'), -- đã xóa mềm
- (13, 13, 'KH-1013', '/uploads/checkin/kh-1013.jpg', 'Self'     , NULL, NULL, NULL, NULL, 'Active'  , '2026-09-01 13:35:00', NULL), -- đang có yêu cầu xóa chờ duyệt
- (14, 14, 'KH-1014', NULL                          , 'Self'     , NULL, NULL, NULL, NULL, 'Active'  , '2026-09-20 21:15:00', NULL),
- (15, 15, 'KH-1015', NULL                          , 'Self'     , NULL, NULL, NULL, NULL, 'New'     , '2026-09-22 19:05:00', NULL), -- đăng ký nhưng chưa mua gì
- (16, 16, 'KH-1016', NULL                          , 'Self'     , NULL, NULL, NULL, NULL, 'Active'  , '2026-09-23 08:10:00', NULL),
- (17, 22, 'KH-1017', '/uploads/checkin/kh-1017.jpg', 'Self'     , NULL, NULL, NULL, NULL, 'New'     , '2026-09-10 12:00:00', NULL); -- PT Kiều Trang trong vai trò khách
-SET IDENTITY_INSERT Customers OFF;
-GO
-
-/* ============================================================================
-   3. EMPLOYEES — 8 nhân viên, đủ 4 vị trí, có 1 người đã nghỉ việc
+   Employees — 15 dòng.
    ============================================================================ */
 SET IDENTITY_INSERT Employees ON;
-INSERT INTO Employees (EmployeeId, PersonId, EmployeeCode, Position, HireDate, CommissionRate,
-                       Specialty, YearsOfExperience, Status, DeletedAt, ResignationReason) VALUES
- (1, 17, 'NV-0001', 'Admin'       , '2025-01-05', NULL, NULL                             , NULL, 'Working' , NULL, NULL),
- (2, 18, 'NV-0002', 'Manager'     , '2025-01-05', NULL, NULL                             , NULL, 'Working' , NULL, NULL),
- (3, 19, 'NV-0003', 'Receptionist', '2025-02-10', NULL, NULL                             , NULL, 'Working' , NULL, NULL),
- (4, 20, 'NV-0004', 'Receptionist', '2025-06-01', NULL, NULL                             , NULL, 'Working' , NULL, NULL),
- (5, 21, 'NV-0005', 'PT'          , '2025-03-15', 70  , N'Strength & Conditioning'       , 8   , 'Working' , NULL, NULL),
- (6, 22, 'NV-0006', 'PT'          , '2025-04-01', 65  , N'Giảm mỡ · Thể hình nữ'         , 6   , 'Working' , NULL, NULL),
- (7, 23, 'NV-0007', 'PT'          , '2025-09-01', 60  , N'Tăng cơ · Powerlifting'        , 9   , 'Working' , NULL, NULL),
- (8, 24, 'NV-0008', 'PT'          , '2025-05-01', 70  , N'Yoga & Phục hồi chấn thương'   , 5   , 'Resigned', '2026-08-31 18:00:00',
-  N'Chuyển về quê làm việc, đã bàn giao khách cho PT khác'); -- đã nghỉ việc, giữ lịch sử
+INSERT INTO Employees (EmployeeId, PersonId, EmployeeCode, Position, HireDate, CommissionRate, Specialty, YearsOfExperience, Status, DeletedAt, ResignationReason) VALUES
+ (1, 17, 'NV-0001', 'Admin', '2025-01-05', NULL, NULL, NULL, 'Working', NULL, NULL),
+ (2, 18, 'NV-0002', 'Manager', '2025-01-05', NULL, NULL, NULL, 'Working', NULL, NULL),
+ (3, 19, 'NV-0003', 'Receptionist', '2025-02-10', NULL, NULL, NULL, 'Working', NULL, NULL),
+ (4, 20, 'NV-0004', 'Receptionist', '2025-06-01', NULL, NULL, NULL, 'Working', NULL, NULL),
+ (5, 21, 'NV-0005', 'PT', '2025-03-15', 70, 'Strength & Conditioning', 8, 'Working', NULL, NULL),
+ (6, 22, 'NV-0006', 'PT', '2025-04-01', 65, N'Giảm mỡ · Thể hình nữ', 6, 'Working', NULL, NULL),
+ (7, 23, 'NV-0007', 'PT', '2025-09-01', 60, N'Tăng cơ · Powerlifting', 9, 'Working', NULL, NULL),
+ (8, 24, 'NV-0008', 'PT', '2025-05-01', 70, N'Yoga & Phục hồi chấn thương', 5, 'Resigned', '2026-08-31 18:00:00', N'Chuyển về quê làm việc, đã bàn giao khách'),
+ (9, 25, 'NV-0009', 'Receptionist', '2025-11-01', NULL, NULL, NULL, 'Working', NULL, NULL),
+ (10, 26, 'NV-0010', 'PT', '2025-02-01', 65, N'Boxing · Cardio', 4, 'Resigned', '2026-06-30 18:00:00', N'Nghỉ để tự mở lớp, vẫn tập tại gym với tư cách khách'),
+ (11, 27, 'NV-0011', 'Receptionist', '2026-01-10', NULL, NULL, NULL, 'Working', NULL, NULL),
+ (12, 28, 'NV-0012', 'PT', '2025-03-01', 60, 'Calisthenics', 3, 'Resigned', '2025-12-31 18:00:00', N'Đi du học 6 tháng'),
+ (13, 28, 'NV-0013', 'PT', '2026-08-15', 60, N'Calisthenics · Mobility', 4, 'Working', NULL, NULL), -- tuyển lại trên CÙNG Person 28 (DBR-65)
+ (14, 30, 'NV-0014', 'PT', '2026-02-01', 60, 'Functional Training', 3, 'Working', NULL, NULL),
+ (15, 31, 'NV-0015', 'Admin', '2025-01-02', NULL, NULL, NULL, 'Resigned', '2026-05-31 18:00:00', N'Chuyển công tác sang chi nhánh khác');
 SET IDENTITY_INSERT Employees OFF;
-GO
 
 /* ============================================================================
-   4. ACCOUNTS — 18 tài khoản, phủ đủ 3 trạng thái + khóa tạm + chưa đặt mật khẩu
+   Customers — 74 dòng.
+   ============================================================================ */
+SET IDENTITY_INSERT Customers ON;
+INSERT INTO Customers (CustomerId, PersonId, CustomerCode, CheckInPhoto, CustomerType, GuardianName, GuardianRelationship, GuardianPhone, GuardianPhone2, Status, JoinedAt, DeletedAt) VALUES
+ (1, 1, 'KH-1001', '/uploads/checkin/kh-1001.jpg', 'Self', NULL, NULL, NULL, NULL, 'Active', '2026-07-06 09:15:00', NULL),
+ (2, 2, 'KH-1002', '/uploads/checkin/kh-1002.jpg', 'Self', NULL, NULL, NULL, NULL, 'Active', '2026-09-03 20:10:00', NULL),
+ (3, 3, 'KH-1003', '/uploads/checkin/kh-1003.jpg', 'Self', NULL, NULL, NULL, NULL, 'Expired', '2026-07-01 18:45:00', NULL),
+ (4, 4, 'KH-1004', '/uploads/checkin/kh-1004.jpg', 'Self', NULL, NULL, NULL, NULL, 'Frozen', '2026-07-29 10:20:00', NULL),
+ (5, 5, 'KH-1005', NULL, 'Self', NULL, NULL, NULL, NULL, 'Active', '2026-10-01 07:50:00', NULL), -- không ảnh: chỉ mua gói ngày (BR-30)
+ (6, 6, 'KH-1006', '/uploads/checkin/kh-1006.jpg', 'Self', NULL, NULL, NULL, NULL, 'Active', '2026-09-04 08:35:00', NULL),
+ (7, 7, 'KH-1007', '/uploads/checkin/kh-1007.jpg', 'Self', NULL, NULL, NULL, NULL, 'Active', '2026-08-20 17:30:00', NULL),
+ (8, 8, 'KH-1008', '/uploads/checkin/kh-1008.jpg', 'Self', NULL, NULL, NULL, NULL, 'Expired', '2026-08-20 17:35:00', NULL),
+ (9, 9, 'KH-1009', '/uploads/checkin/kh-1009.jpg', 'Dependent', N'Đặng Thị Lan', N'Mẹ', '0901234510', '0901234507', 'Active', '2026-09-03 15:10:00', NULL),
+ (10, 10, 'KH-1010', NULL, 'Self', NULL, NULL, NULL, NULL, 'New', '2026-09-03 15:15:00', NULL),
+ (11, 11, 'KH-1011', '/uploads/checkin/kh-1011.jpg', 'Self', NULL, NULL, NULL, NULL, 'Active', '2026-07-15 11:05:00', NULL),
+ (12, 12, 'KH-1012', '/uploads/checkin/kh-1012.jpg', 'Self', NULL, NULL, NULL, NULL, 'Inactive', '2026-03-01 09:05:00', '2026-09-15 16:00:00'),
+ (13, 13, 'KH-1013', '/uploads/checkin/kh-1013.jpg', 'Self', NULL, NULL, NULL, NULL, 'Active', '2026-09-21 09:55:00', NULL),
+ (14, 14, 'KH-1014', NULL, 'Self', NULL, NULL, NULL, NULL, 'New', '2026-09-20 21:15:00', NULL),
+ (15, 15, 'KH-1015', NULL, 'Self', NULL, NULL, NULL, NULL, 'New', '2026-10-01 09:00:00', NULL),
+ (16, 16, 'KH-1016', NULL, 'Self', NULL, NULL, NULL, NULL, 'Active', '2026-10-01 08:10:00', NULL),
+ (17, 22, 'KH-1017', '/uploads/checkin/kh-1017.jpg', 'Self', NULL, NULL, NULL, NULL, 'Active', '2026-09-10 17:50:00', NULL), -- PT Kiều Trang trong vai trò khách
+ (18, 25, 'KH-1018', '/uploads/checkin/kh-1018.jpg', 'Self', NULL, NULL, NULL, NULL, 'Active', '2026-09-15 07:00:00', NULL), -- Lễ tân Phương trong vai trò khách
+ (19, 26, 'KH-1019', '/uploads/checkin/kh-1019.jpg', 'Self', NULL, NULL, NULL, NULL, 'Active', '2026-08-01 08:00:00', NULL), -- PT cũ, nay chỉ là khách
+ (20, 27, 'KH-1020', '/uploads/checkin/kh-1020.jpg', 'Self', NULL, NULL, NULL, NULL, 'Inactive', '2026-07-01 08:00:00', '2026-09-05 15:00:00'), -- hồ sơ khách của Lễ tân Hoa đã xóa
+ (21, 32, 'KH-1021', '/uploads/checkin/kh-1021.jpg', 'Self', NULL, NULL, NULL, NULL, 'Active', '2026-09-01 08:00:00', NULL),
+ (101, 101, 'KH-1101', NULL, 'Self', NULL, NULL, NULL, NULL, 'New', '2026-08-01 10:05:00', NULL),
+ (102, 102, 'KH-1102', NULL, 'Self', NULL, NULL, NULL, NULL, 'New', '2026-08-05 10:05:00', NULL),
+ (103, 103, 'KH-1103', '/uploads/checkin/kh-1103.jpg', 'Dependent', N'Nguyễn Văn An', N'Bố', '0901234501', NULL, 'Active', '2026-09-01 13:55:00', NULL),
+ (104, 104, 'KH-1104', NULL, 'Dependent', N'Trần Thị Hoa', N'Mẹ', '0909111222', '0901234501', 'New', '2026-09-01 13:57:00', NULL),
+ (105, 105, 'KH-1105', '/uploads/checkin/kh-1105.jpg', 'Self', NULL, NULL, NULL, NULL, 'New', '2026-09-12 16:05:00', NULL),
+ (106, 106, 'KH-1106', NULL, 'Dependent', N'Kiều Văn Hải', N'Bố', '0935000999', NULL, 'New', '2026-09-10 09:05:00', NULL),
+ (107, 107, 'KH-1107', NULL, 'Self', NULL, NULL, NULL, NULL, 'Inactive', '2026-05-01 10:05:00', '2026-09-01 09:00:00'),
+ (108, 108, 'KH-1108', NULL, 'Self', NULL, NULL, NULL, NULL, 'New', '2026-08-10 10:05:00', NULL),
+ (109, 109, 'KH-1109', NULL, 'Self', NULL, NULL, NULL, NULL, 'New', '2026-08-11 10:05:00', NULL),
+ (110, 110, 'KH-1110', NULL, 'Self', NULL, NULL, NULL, NULL, 'New', '2026-08-12 10:05:00', NULL),
+ (111, 111, 'KH-1111', NULL, 'Self', NULL, NULL, NULL, NULL, 'New', '2026-08-13 10:05:00', NULL),
+ (112, 112, 'KH-1112', NULL, 'Self', NULL, NULL, NULL, NULL, 'New', '2026-08-14 10:05:00', NULL),
+ (113, 113, 'KH-1113', '/uploads/checkin/kh-1113.jpg', 'Self', NULL, NULL, NULL, NULL, 'New', '2026-09-20 09:05:00', NULL),
+ (201, 201, 'KH-2001', '/uploads/checkin/kh-2001.jpg', 'Self', NULL, NULL, NULL, NULL, 'Active', '2026-09-07 10:10:00', NULL),
+ (202, 202, 'KH-2002', '/uploads/checkin/kh-2002.jpg', 'Self', NULL, NULL, NULL, NULL, 'Expired', '2026-06-26 17:39:00', NULL),
+ (203, 203, 'KH-2003', '/uploads/checkin/kh-2003.jpg', 'Self', NULL, NULL, NULL, NULL, 'Active', '2026-06-17 17:00:00', NULL),
+ (204, 204, 'KH-2004', '/uploads/checkin/kh-2004.jpg', 'Self', NULL, NULL, NULL, NULL, 'Expired', '2026-06-17 14:09:00', NULL),
+ (205, 205, 'KH-2005', '/uploads/checkin/kh-2005.jpg', 'Self', NULL, NULL, NULL, NULL, 'Active', '2026-09-08 10:13:00', NULL),
+ (206, 206, 'KH-2006', '/uploads/checkin/kh-2006.jpg', 'Self', NULL, NULL, NULL, NULL, 'Active', '2026-06-19 11:58:00', NULL),
+ (207, 207, 'KH-2007', '/uploads/checkin/kh-2007.jpg', 'Self', NULL, NULL, NULL, NULL, 'Active', '2026-07-11 10:26:00', NULL),
+ (208, 208, 'KH-2008', '/uploads/checkin/kh-2008.jpg', 'Self', NULL, NULL, NULL, NULL, 'Active', '2026-08-06 13:30:00', NULL),
+ (209, 209, 'KH-2009', '/uploads/checkin/kh-2009.jpg', 'Self', NULL, NULL, NULL, NULL, 'Expired', '2026-06-29 19:40:00', NULL),
+ (210, 210, 'KH-2010', '/uploads/checkin/kh-2010.jpg', 'Self', NULL, NULL, NULL, NULL, 'Expired', '2026-09-15 12:47:00', NULL),
+ (211, 211, 'KH-2011', '/uploads/checkin/kh-2011.jpg', 'Self', NULL, NULL, NULL, NULL, 'Active', '2026-08-10 16:10:00', NULL),
+ (212, 212, 'KH-2012', '/uploads/checkin/kh-2012.jpg', 'Self', NULL, NULL, NULL, NULL, 'Active', '2026-07-16 17:00:00', NULL),
+ (213, 213, 'KH-2013', '/uploads/checkin/kh-2013.jpg', 'Self', NULL, NULL, NULL, NULL, 'Active', '2026-07-18 17:24:00', NULL),
+ (214, 214, 'KH-2014', '/uploads/checkin/kh-2014.jpg', 'Self', NULL, NULL, NULL, NULL, 'Active', '2026-09-17 19:57:00', NULL),
+ (215, 215, 'KH-2015', '/uploads/checkin/kh-2015.jpg', 'Self', NULL, NULL, NULL, NULL, 'Active', '2026-09-12 19:04:00', NULL),
+ (216, 216, 'KH-2016', '/uploads/checkin/kh-2016.jpg', 'Self', NULL, NULL, NULL, NULL, 'Active', '2026-07-13 17:25:00', NULL),
+ (217, 217, 'KH-2017', '/uploads/checkin/kh-2017.jpg', 'Self', NULL, NULL, NULL, NULL, 'Expired', '2026-07-08 17:19:00', NULL),
+ (218, 218, 'KH-2018', '/uploads/checkin/kh-2018.jpg', 'Self', NULL, NULL, NULL, NULL, 'Expired', '2026-06-02 18:25:00', NULL),
+ (219, 219, 'KH-2019', '/uploads/checkin/kh-2019.jpg', 'Self', NULL, NULL, NULL, NULL, 'Active', '2026-06-04 11:08:00', NULL),
+ (220, 220, 'KH-2020', '/uploads/checkin/kh-2020.jpg', 'Self', NULL, NULL, NULL, NULL, 'Expired', '2026-08-25 19:03:00', NULL),
+ (221, 221, 'KH-2021', '/uploads/checkin/kh-2021.jpg', 'Self', NULL, NULL, NULL, NULL, 'Active', '2026-06-20 18:18:00', NULL),
+ (222, 222, 'KH-2022', '/uploads/checkin/kh-2022.jpg', 'Self', NULL, NULL, NULL, NULL, 'Active', '2026-09-16 09:19:00', NULL),
+ (223, 223, 'KH-2023', '/uploads/checkin/kh-2023.jpg', 'Self', NULL, NULL, NULL, NULL, 'Expired', '2026-08-03 10:08:00', NULL),
+ (224, 224, 'KH-2024', '/uploads/checkin/kh-2024.jpg', 'Self', NULL, NULL, NULL, NULL, 'Active', '2026-09-08 09:34:00', NULL),
+ (225, 225, 'KH-2025', '/uploads/checkin/kh-2025.jpg', 'Self', NULL, NULL, NULL, NULL, 'Active', '2026-07-26 16:43:00', NULL),
+ (226, 226, 'KH-2026', '/uploads/checkin/kh-2026.jpg', 'Self', NULL, NULL, NULL, NULL, 'Expired', '2026-06-26 15:59:00', NULL),
+ (227, 227, 'KH-2027', '/uploads/checkin/kh-2027.jpg', 'Self', NULL, NULL, NULL, NULL, 'Expired', '2026-06-28 10:43:00', NULL),
+ (228, 228, 'KH-2028', '/uploads/checkin/kh-2028.jpg', 'Self', NULL, NULL, NULL, NULL, 'Active', '2026-09-15 10:05:00', NULL),
+ (229, 229, 'KH-2029', '/uploads/checkin/kh-2029.jpg', 'Self', NULL, NULL, NULL, NULL, 'Active', '2026-08-20 12:39:00', NULL),
+ (230, 230, 'KH-2030', '/uploads/checkin/kh-2030.jpg', 'Self', NULL, NULL, NULL, NULL, 'Expired', '2026-08-13 15:54:00', NULL),
+ (231, 231, 'KH-2031', '/uploads/checkin/kh-2031.jpg', 'Self', NULL, NULL, NULL, NULL, 'Active', '2026-07-14 09:42:00', NULL),
+ (232, 232, 'KH-2032', '/uploads/checkin/kh-2032.jpg', 'Self', NULL, NULL, NULL, NULL, 'Active', '2026-08-22 13:43:00', NULL),
+ (233, 233, 'KH-2033', '/uploads/checkin/kh-2033.jpg', 'Self', NULL, NULL, NULL, NULL, 'Active', '2026-08-29 12:23:00', NULL),
+ (234, 234, 'KH-2034', '/uploads/checkin/kh-2034.jpg', 'Self', NULL, NULL, NULL, NULL, 'Active', '2026-08-01 13:51:00', NULL),
+ (235, 235, 'KH-2035', '/uploads/checkin/kh-2035.jpg', 'Self', NULL, NULL, NULL, NULL, 'Expired', '2026-07-05 13:39:00', NULL),
+ (236, 236, 'KH-2036', '/uploads/checkin/kh-2036.jpg', 'Self', NULL, NULL, NULL, NULL, 'Active', '2026-06-02 09:42:00', NULL),
+ (237, 237, 'KH-2037', '/uploads/checkin/kh-2037.jpg', 'Self', NULL, NULL, NULL, NULL, 'Active', '2026-08-26 10:59:00', NULL),
+ (238, 238, 'KH-2038', '/uploads/checkin/kh-2038.jpg', 'Self', NULL, NULL, NULL, NULL, 'Active', '2026-06-24 17:28:00', NULL),
+ (239, 239, 'KH-2039', '/uploads/checkin/kh-2039.jpg', 'Self', NULL, NULL, NULL, NULL, 'Active', '2026-08-17 16:16:00', NULL),
+ (240, 240, 'KH-2040', '/uploads/checkin/kh-2040.jpg', 'Self', NULL, NULL, NULL, NULL, 'Expired', '2026-06-18 08:27:00', NULL);
+SET IDENTITY_INSERT Customers OFF;
+
+/* ============================================================================
+   Accounts — 68 dòng. Mật khẩu chung Gms@2026 (trừ TK chưa đặt MK).
    ============================================================================ */
 SET IDENTITY_INSERT Accounts ON;
 INSERT INTO Accounts (AccountId, PersonId, PasswordHash, Status, FailedLoginCount, LockedUntil, LastLoginAt, CreatedAt) VALUES
- (1 , 1 , '$2a$10$hashAn0000000000000000000000000000000000000000000000', 'Active'  , 0, NULL                 , '2026-09-22 18:30:00', '2026-06-28 09:20:00'),
- (2 , 2 , '$2a$10$hashBich000000000000000000000000000000000000000000000', 'Active'  , 0, NULL                 , '2026-09-23 07:10:00', '2026-08-30 20:15:00'),
- (3 , 3 , '$2a$10$hashQuan000000000000000000000000000000000000000000000', 'Active'  , 2, NULL                 , '2026-09-18 19:00:00', '2026-06-09 18:50:00'), -- đang sai 2 lần, chưa bị khóa
- (4 , 4 , '$2a$10$hashHong000000000000000000000000000000000000000000000', 'Active'  , 5, '2026-09-23 09:05:00', '2026-09-21 08:00:00', '2026-07-29 10:25:00'), -- KHÓA TẠM do sai 5 lần
- (5 , 6 , '$2a$10$hashMai0000000000000000000000000000000000000000000000', 'Active'  , 0, NULL                 , '2026-09-22 20:00:00', '2026-09-05 08:40:00'),
- (6 , 7 , '$2a$10$hashHung000000000000000000000000000000000000000000000', 'Active'  , 0, NULL                 , '2026-09-21 07:30:00', '2026-08-20 17:40:00'),
- (7 , 8 , '$2a$10$hashHaBui00000000000000000000000000000000000000000000', 'Active'  , 0, NULL                 , '2026-09-20 17:45:00', '2026-08-20 17:45:00'),
- (8 , 11, '$2a$10$hashMichael000000000000000000000000000000000000000000', 'Active'  , 0, NULL                 , '2026-09-19 12:00:00', '2026-07-15 11:10:00'),
- (9 , 13, NULL                                                          , 'Active'  , 0, NULL                 , NULL                 , '2026-09-01 13:40:00'), -- Lễ tân tạo, khách CHƯA đặt mật khẩu
- (10, 14, '$2a$10$hashNgoc000000000000000000000000000000000000000000000', 'Active'  , 0, NULL                 , '2026-09-23 08:50:00', '2026-09-20 21:20:00'),
- (11, 17, '$2a$10$hashAdmin00000000000000000000000000000000000000000000', 'Active'  , 0, NULL                 , '2026-09-23 07:00:00', '2025-01-05 08:05:00'),
- (12, 18, '$2a$10$hashManager000000000000000000000000000000000000000000', 'Active'  , 0, NULL                 , '2026-09-23 07:20:00', '2025-01-05 08:05:00'),
- (13, 19, '$2a$10$hashTam0000000000000000000000000000000000000000000000', 'Active'  , 3, NULL                 , '2026-09-23 05:35:00', '2025-02-10 08:05:00'), -- nhân viên KHÔNG bao giờ bị tự khóa
- (14, 20, '$2a$10$hashLam0000000000000000000000000000000000000000000000', 'Active'  , 0, NULL                 , '2026-09-22 13:40:00', '2025-06-01 08:05:00'),
- (15, 21, '$2a$10$hashSon0000000000000000000000000000000000000000000000', 'Active'  , 0, NULL                 , '2026-09-23 06:05:00', '2025-03-15 08:05:00'),
- (16, 22, '$2a$10$hashTrang00000000000000000000000000000000000000000000', 'Active'  , 0, NULL                 , '2026-09-23 06:10:00', '2025-04-01 08:05:00'), -- 1 tài khoản cho cả 2 vai trò
- (17, 23, '$2a$10$hashDavid00000000000000000000000000000000000000000000', 'Active'  , 0, NULL                 , '2026-09-22 16:00:00', '2025-09-01 08:05:00'),
- (18, 24, '$2a$10$hashNam0000000000000000000000000000000000000000000000', 'Inactive', 0, NULL                 , '2026-08-31 17:50:00', '2025-05-01 08:05:00'); -- nghỉ việc → khóa vĩnh viễn
+ (1, 1, '$2a$10$o22fNyHpwvbuAj8q.LKCI.KMakVydfKblTjnBh7rgiUTrt55ZnXmu', 'Active', 0, NULL, '2026-10-02 18:30:00', '2026-07-06 09:20:00'),
+ (2, 2, '$2a$10$o22fNyHpwvbuAj8q.LKCI.KMakVydfKblTjnBh7rgiUTrt55ZnXmu', 'Active', 0, NULL, '2026-10-03 07:10:00', '2026-09-03 20:15:00'),
+ (3, 3, '$2a$10$o22fNyHpwvbuAj8q.LKCI.KMakVydfKblTjnBh7rgiUTrt55ZnXmu', 'Active', 2, NULL, '2026-09-18 19:00:00', '2026-07-01 18:50:00'), -- đang sai 2 lần, chưa khóa
+ (4, 4, '$2a$10$o22fNyHpwvbuAj8q.LKCI.KMakVydfKblTjnBh7rgiUTrt55ZnXmu', 'Active', 5, '2026-09-23 09:05:00', '2026-09-21 08:00:00', '2026-07-29 10:25:00'), -- khóa tạm ĐÃ HẾT → đăng nhập đúng sẽ reset (BR-02)
+ (5, 6, '$2a$10$o22fNyHpwvbuAj8q.LKCI.KMakVydfKblTjnBh7rgiUTrt55ZnXmu', 'Active', 0, NULL, '2026-10-02 20:00:00', '2026-09-04 08:40:00'),
+ (6, 7, '$2a$10$o22fNyHpwvbuAj8q.LKCI.KMakVydfKblTjnBh7rgiUTrt55ZnXmu', 'Active', 0, NULL, '2026-10-01 07:30:00', '2026-08-20 17:40:00'),
+ (7, 8, '$2a$10$o22fNyHpwvbuAj8q.LKCI.KMakVydfKblTjnBh7rgiUTrt55ZnXmu', 'Active', 0, NULL, '2026-09-30 17:45:00', '2026-08-20 17:45:00'),
+ (8, 11, '$2a$10$o22fNyHpwvbuAj8q.LKCI.KMakVydfKblTjnBh7rgiUTrt55ZnXmu', 'Active', 0, NULL, '2026-09-29 12:00:00', '2026-07-15 11:10:00'),
+ (9, 13, NULL, 'Active', 0, NULL, NULL, '2026-09-21 10:00:00'), -- Lễ tân tạo (CBR-24) → MSG38, đặt MK qua Quên mật khẩu
+ (10, 14, '$2a$10$o22fNyHpwvbuAj8q.LKCI.KMakVydfKblTjnBh7rgiUTrt55ZnXmu', 'Active', 0, NULL, '2026-10-03 08:50:00', '2026-09-20 21:20:00'),
+ (11, 17, '$2a$10$o22fNyHpwvbuAj8q.LKCI.KMakVydfKblTjnBh7rgiUTrt55ZnXmu', 'Active', 0, NULL, '2026-10-03 07:00:00', '2025-01-05 08:05:00'),
+ (12, 18, '$2a$10$o22fNyHpwvbuAj8q.LKCI.KMakVydfKblTjnBh7rgiUTrt55ZnXmu', 'Active', 0, NULL, '2026-10-03 07:20:00', '2025-01-05 08:05:00'),
+ (13, 19, '$2a$10$o22fNyHpwvbuAj8q.LKCI.KMakVydfKblTjnBh7rgiUTrt55ZnXmu', 'Active', 3, NULL, '2026-10-03 05:35:00', '2025-02-10 08:05:00'), -- nhân viên sai 3 lần, KHÔNG bao giờ tự khóa (BR-01)
+ (14, 20, '$2a$10$o22fNyHpwvbuAj8q.LKCI.KMakVydfKblTjnBh7rgiUTrt55ZnXmu', 'Active', 0, NULL, '2026-10-02 13:40:00', '2025-06-01 08:05:00'),
+ (15, 21, '$2a$10$o22fNyHpwvbuAj8q.LKCI.KMakVydfKblTjnBh7rgiUTrt55ZnXmu', 'Active', 0, NULL, '2026-10-03 06:05:00', '2025-03-15 08:05:00'),
+ (16, 22, '$2a$10$o22fNyHpwvbuAj8q.LKCI.KMakVydfKblTjnBh7rgiUTrt55ZnXmu', 'Active', 0, NULL, '2026-10-03 06:10:00', '2025-04-01 08:05:00'), -- PT + Khách → màn chọn vai trò
+ (17, 23, '$2a$10$o22fNyHpwvbuAj8q.LKCI.KMakVydfKblTjnBh7rgiUTrt55ZnXmu', 'Active', 0, NULL, '2026-10-02 16:00:00', '2025-09-01 08:05:00'),
+ (18, 24, '$2a$10$o22fNyHpwvbuAj8q.LKCI.KMakVydfKblTjnBh7rgiUTrt55ZnXmu', 'Inactive', 0, NULL, '2026-08-31 17:50:00', '2025-05-01 08:05:00'), -- nghỉ việc, hết vai trò → Inactive
+ (19, 25, '$2a$10$o22fNyHpwvbuAj8q.LKCI.KMakVydfKblTjnBh7rgiUTrt55ZnXmu', 'Active', 0, NULL, '2026-10-03 05:25:00', '2025-11-01 08:05:00'), -- Lễ tân + Khách → màn chọn vai trò
+ (20, 26, '$2a$10$o22fNyHpwvbuAj8q.LKCI.KMakVydfKblTjnBh7rgiUTrt55ZnXmu', 'Active', 0, NULL, '2026-10-01 18:00:00', '2025-02-01 08:05:00'), -- PT đã nghỉ, vẫn là khách → TK Active, chỉ vai trò Khách
+ (21, 27, '$2a$10$o22fNyHpwvbuAj8q.LKCI.KMakVydfKblTjnBh7rgiUTrt55ZnXmu', 'Active', 0, NULL, '2026-10-03 13:00:00', '2026-01-10 08:05:00'), -- hồ sơ khách đã xóa, vẫn là Lễ tân
+ (22, 28, '$2a$10$o22fNyHpwvbuAj8q.LKCI.KMakVydfKblTjnBh7rgiUTrt55ZnXmu', 'Active', 0, NULL, '2026-10-02 09:00:00', '2025-03-01 08:05:00'), -- 1 TK xuyên 2 lần làm việc
+ (23, 30, '$2a$10$o22fNyHpwvbuAj8q.LKCI.KMakVydfKblTjnBh7rgiUTrt55ZnXmu', 'Locked', 0, NULL, '2026-09-24 09:00:00', '2026-02-01 08:05:00'), -- Admin khóa → MSG37
+ (24, 31, '$2a$10$o22fNyHpwvbuAj8q.LKCI.KMakVydfKblTjnBh7rgiUTrt55ZnXmu', 'Inactive', 0, NULL, '2026-05-31 17:00:00', '2025-01-02 08:05:00'),
+ (101, 101, '$2a$10$o22fNyHpwvbuAj8q.LKCI.KMakVydfKblTjnBh7rgiUTrt55ZnXmu', 'Locked', 0, NULL, '2026-09-10 20:00:00', '2026-08-01 10:10:00'), -- Admin khóa → MSG37
+ (102, 102, '$2a$10$o22fNyHpwvbuAj8q.LKCI.KMakVydfKblTjnBh7rgiUTrt55ZnXmu', 'Active', 5, DATEADD(MINUTE, 5, @Now), '2026-09-20 08:00:00', '2026-08-05 10:10:00'), -- khóa tạm 5 phút tính từ lúc chạy script
+ (107, 107, '$2a$10$o22fNyHpwvbuAj8q.LKCI.KMakVydfKblTjnBh7rgiUTrt55ZnXmu', 'Inactive', 0, NULL, '2026-08-30 18:00:00', '2026-05-01 10:10:00'),
+ (108, 108, '$2a$10$o22fNyHpwvbuAj8q.LKCI.KMakVydfKblTjnBh7rgiUTrt55ZnXmu', 'Active', 4, NULL, '2026-09-18 08:00:00', '2026-08-10 10:10:00'), -- sai thêm 1 lần là bị khóa tạm
+ (109, 109, '$2a$10$o22fNyHpwvbuAj8q.LKCI.KMakVydfKblTjnBh7rgiUTrt55ZnXmu', 'Active', 0, NULL, '2026-09-18 08:00:00', '2026-08-11 10:10:00'),
+ (110, 110, '$2a$10$o22fNyHpwvbuAj8q.LKCI.KMakVydfKblTjnBh7rgiUTrt55ZnXmu', 'Active', 0, NULL, '2026-09-18 08:00:00', '2026-08-12 10:10:00'),
+ (111, 111, '$2a$10$o22fNyHpwvbuAj8q.LKCI.KMakVydfKblTjnBh7rgiUTrt55ZnXmu', 'Active', 0, NULL, '2026-09-18 08:00:00', '2026-08-13 10:10:00'),
+ (112, 112, '$2a$10$o22fNyHpwvbuAj8q.LKCI.KMakVydfKblTjnBh7rgiUTrt55ZnXmu', 'Active', 0, NULL, '2026-09-18 08:00:00', '2026-08-14 10:10:00'),
+ (113, 113, NULL, 'Active', 0, NULL, NULL, '2026-09-20 09:10:00'), -- Lễ tân tạo, chưa đặt MK → MSG38
+ (25, 15, NULL, 'Active', 0, NULL, NULL, DATEADD(MINUTE, 540, CAST(@Today AS DATETIME2(0)))), -- Lễ tân tạo khi bán gói 1 tháng (CBR-24)
+ (201, 201, '$2a$10$o22fNyHpwvbuAj8q.LKCI.KMakVydfKblTjnBh7rgiUTrt55ZnXmu', 'Active', 0, NULL, '2026-10-15 10:05:00', '2026-09-07 10:13:00'),
+ (202, 202, '$2a$10$o22fNyHpwvbuAj8q.LKCI.KMakVydfKblTjnBh7rgiUTrt55ZnXmu', 'Active', 0, NULL, '2026-07-07 17:34:00', '2026-06-26 17:42:00'),
+ (203, 203, '$2a$10$o22fNyHpwvbuAj8q.LKCI.KMakVydfKblTjnBh7rgiUTrt55ZnXmu', 'Active', 0, NULL, '2026-07-07 16:55:00', '2026-06-17 17:03:00'),
+ (204, 204, '$2a$10$o22fNyHpwvbuAj8q.LKCI.KMakVydfKblTjnBh7rgiUTrt55ZnXmu', 'Active', 0, NULL, '2026-07-03 14:04:00', '2026-06-17 14:12:00'),
+ (205, 205, '$2a$10$o22fNyHpwvbuAj8q.LKCI.KMakVydfKblTjnBh7rgiUTrt55ZnXmu', 'Active', 0, NULL, '2026-10-13 10:08:00', '2026-09-08 10:16:00'),
+ (207, 207, '$2a$10$o22fNyHpwvbuAj8q.LKCI.KMakVydfKblTjnBh7rgiUTrt55ZnXmu', 'Active', 0, NULL, '2026-07-14 10:21:00', '2026-07-11 10:29:00'),
+ (208, 208, '$2a$10$o22fNyHpwvbuAj8q.LKCI.KMakVydfKblTjnBh7rgiUTrt55ZnXmu', 'Active', 0, NULL, '2026-08-07 13:25:00', '2026-08-06 13:33:00'),
+ (209, 209, '$2a$10$o22fNyHpwvbuAj8q.LKCI.KMakVydfKblTjnBh7rgiUTrt55ZnXmu', 'Active', 0, NULL, '2026-07-25 19:35:00', '2026-06-29 19:43:00'),
+ (210, 210, '$2a$10$o22fNyHpwvbuAj8q.LKCI.KMakVydfKblTjnBh7rgiUTrt55ZnXmu', 'Active', 0, NULL, '2026-10-08 12:42:00', '2026-09-15 12:50:00'),
+ (211, 211, '$2a$10$o22fNyHpwvbuAj8q.LKCI.KMakVydfKblTjnBh7rgiUTrt55ZnXmu', 'Active', 0, NULL, '2026-09-06 16:05:00', '2026-08-10 16:13:00'),
+ (213, 213, '$2a$10$o22fNyHpwvbuAj8q.LKCI.KMakVydfKblTjnBh7rgiUTrt55ZnXmu', 'Active', 0, NULL, '2026-07-25 17:19:00', '2026-07-18 17:27:00'),
+ (214, 214, '$2a$10$o22fNyHpwvbuAj8q.LKCI.KMakVydfKblTjnBh7rgiUTrt55ZnXmu', 'Active', 0, NULL, '2026-10-13 19:52:00', '2026-09-17 20:00:00'),
+ (215, 215, '$2a$10$o22fNyHpwvbuAj8q.LKCI.KMakVydfKblTjnBh7rgiUTrt55ZnXmu', 'Active', 0, NULL, '2026-09-18 18:59:00', '2026-09-12 19:07:00'),
+ (216, 216, '$2a$10$o22fNyHpwvbuAj8q.LKCI.KMakVydfKblTjnBh7rgiUTrt55ZnXmu', 'Active', 0, NULL, '2026-08-20 17:20:00', '2026-07-13 17:28:00'),
+ (217, 217, '$2a$10$o22fNyHpwvbuAj8q.LKCI.KMakVydfKblTjnBh7rgiUTrt55ZnXmu', 'Active', 0, NULL, '2026-08-02 17:14:00', '2026-07-08 17:22:00'),
+ (219, 219, '$2a$10$o22fNyHpwvbuAj8q.LKCI.KMakVydfKblTjnBh7rgiUTrt55ZnXmu', 'Active', 0, NULL, '2026-06-15 11:03:00', '2026-06-04 11:11:00'),
+ (220, 220, '$2a$10$o22fNyHpwvbuAj8q.LKCI.KMakVydfKblTjnBh7rgiUTrt55ZnXmu', 'Active', 0, NULL, '2026-09-18 18:58:00', '2026-08-25 19:06:00'),
+ (221, 221, '$2a$10$o22fNyHpwvbuAj8q.LKCI.KMakVydfKblTjnBh7rgiUTrt55ZnXmu', 'Active', 0, NULL, '2026-07-11 18:13:00', '2026-06-20 18:21:00'),
+ (222, 222, '$2a$10$o22fNyHpwvbuAj8q.LKCI.KMakVydfKblTjnBh7rgiUTrt55ZnXmu', 'Active', 0, NULL, '2026-10-06 09:14:00', '2026-09-16 09:22:00'),
+ (223, 223, '$2a$10$o22fNyHpwvbuAj8q.LKCI.KMakVydfKblTjnBh7rgiUTrt55ZnXmu', 'Active', 0, NULL, '2026-09-02 10:03:00', '2026-08-03 10:11:00'),
+ (225, 225, '$2a$10$o22fNyHpwvbuAj8q.LKCI.KMakVydfKblTjnBh7rgiUTrt55ZnXmu', 'Active', 0, NULL, '2026-08-27 16:38:00', '2026-07-26 16:46:00'),
+ (226, 226, '$2a$10$o22fNyHpwvbuAj8q.LKCI.KMakVydfKblTjnBh7rgiUTrt55ZnXmu', 'Active', 0, NULL, '2026-07-19 15:54:00', '2026-06-26 16:02:00'),
+ (227, 227, '$2a$10$o22fNyHpwvbuAj8q.LKCI.KMakVydfKblTjnBh7rgiUTrt55ZnXmu', 'Active', 0, NULL, '2026-07-07 10:38:00', '2026-06-28 10:46:00'),
+ (228, 228, '$2a$10$o22fNyHpwvbuAj8q.LKCI.KMakVydfKblTjnBh7rgiUTrt55ZnXmu', 'Active', 0, NULL, '2026-10-14 10:00:00', '2026-09-15 10:08:00'),
+ (229, 229, '$2a$10$o22fNyHpwvbuAj8q.LKCI.KMakVydfKblTjnBh7rgiUTrt55ZnXmu', 'Active', 0, NULL, '2026-09-25 12:34:00', '2026-08-20 12:42:00'),
+ (231, 231, '$2a$10$o22fNyHpwvbuAj8q.LKCI.KMakVydfKblTjnBh7rgiUTrt55ZnXmu', 'Active', 0, NULL, '2026-08-18 09:37:00', '2026-07-14 09:45:00'),
+ (232, 232, '$2a$10$o22fNyHpwvbuAj8q.LKCI.KMakVydfKblTjnBh7rgiUTrt55ZnXmu', 'Active', 0, NULL, '2026-09-03 13:38:00', '2026-08-22 13:46:00'),
+ (233, 233, '$2a$10$o22fNyHpwvbuAj8q.LKCI.KMakVydfKblTjnBh7rgiUTrt55ZnXmu', 'Active', 0, NULL, '2026-10-08 12:18:00', '2026-08-29 12:26:00'),
+ (234, 234, '$2a$10$o22fNyHpwvbuAj8q.LKCI.KMakVydfKblTjnBh7rgiUTrt55ZnXmu', 'Active', 0, NULL, '2026-08-16 13:46:00', '2026-08-01 13:54:00'),
+ (235, 235, '$2a$10$o22fNyHpwvbuAj8q.LKCI.KMakVydfKblTjnBh7rgiUTrt55ZnXmu', 'Active', 0, NULL, '2026-08-04 13:34:00', '2026-07-05 13:42:00'),
+ (237, 237, '$2a$10$o22fNyHpwvbuAj8q.LKCI.KMakVydfKblTjnBh7rgiUTrt55ZnXmu', 'Active', 0, NULL, '2026-09-22 10:54:00', '2026-08-26 11:02:00'),
+ (238, 238, '$2a$10$o22fNyHpwvbuAj8q.LKCI.KMakVydfKblTjnBh7rgiUTrt55ZnXmu', 'Active', 0, NULL, '2026-07-16 17:23:00', '2026-06-24 17:31:00'),
+ (239, 239, '$2a$10$o22fNyHpwvbuAj8q.LKCI.KMakVydfKblTjnBh7rgiUTrt55ZnXmu', 'Active', 0, NULL, '2026-09-03 16:11:00', '2026-08-17 16:19:00'),
+ (240, 240, '$2a$10$o22fNyHpwvbuAj8q.LKCI.KMakVydfKblTjnBh7rgiUTrt55ZnXmu', 'Active', 0, NULL, '2026-07-18 08:22:00', '2026-06-18 08:30:00');
 SET IDENTITY_INSERT Accounts OFF;
-GO
 
 /* ============================================================================
-   5. VERIFICATION CODES — phủ 4 tình huống: đã dùng, hết hạn, còn hiệu lực, bị khóa
+   VerificationCodes — 15 dòng.
    ============================================================================ */
 SET IDENTITY_INSERT VerificationCodes ON;
-INSERT INTO VerificationCodes (VerificationCodeId, AccountId, Email, Purpose, Code, TokenHash, SentAt, ExpiresAt, FailedAttempts, LockedUntil, UsedAt) VALUES
- (1, 10  , 'ngoc.ly99@gmail.com'   , 'SignUp'       , '481920', NULL, '2026-09-20 21:15:00', '2026-09-20 21:30:00', 0, NULL                 , '2026-09-20 21:18:00'),
- (2, NULL, 'toan.phan@gmail.com'   , 'SignUp'       , '730154', NULL, '2026-09-22 18:50:00', '2026-09-22 19:05:00', 1, NULL                 , NULL),                -- hết hạn, không ai dùng
- (3, 2   , 'bich.tran@gmail.com'   , 'EmailChange'  , '204877', NULL, '2026-09-23 08:40:00', '2026-09-23 08:55:00', 0, NULL                 , NULL),                -- đang còn hiệu lực
- (4, 3   , 'quan.le92@gmail.com'   , 'Recovery'     , '915003', NULL, '2026-09-23 08:20:00', '2026-09-23 08:35:00', 5, '2026-09-23 08:40:00', NULL);                -- sai 5 lần → khóa 5 phút
+INSERT INTO VerificationCodes (VerificationCodeId, AccountId, Email, Purpose, Code, SentAt, ExpiresAt, FailedAttempts, LockedUntil, UsedAt) VALUES
+ (1, 10, 'ngoc.ly99@gmail.com', 'Recovery', '481920', '2026-09-21 21:15:00', '2026-09-21 21:30:00', 0, NULL, '2026-09-21 21:18:00'),
+ (2, NULL, 'toan.phan@gmail.com', 'SignUp', '730154', '2026-09-22 18:50:00', '2026-09-22 19:05:00', 1, NULL, NULL), -- đăng ký bỏ dở, mã hết hạn
+ (3, 3, 'quan.le92@gmail.com', 'Recovery', '915003', '2026-09-23 08:20:00', '2026-09-23 08:35:00', 5, '2026-09-23 08:40:00', NULL),
+ (4, 108, 'thao.luong@gmail.com', 'Recovery', '246810', DATEADD(MINUTE, -2, @Now), DATEADD(MINUTE, 13, @Now), 0, NULL, NULL), -- nhập 246810 là đúng
+ (5, 109, 'manh.ngo@gmail.com', 'Recovery', '100001', DATEADD(MINUTE, -50, @Now), DATEADD(MINUTE, -35, @Now), 0, NULL, NULL),
+ (6, 109, 'manh.ngo@gmail.com', 'Recovery', '100002', DATEADD(MINUTE, -40, @Now), DATEADD(MINUTE, -25, @Now), 0, NULL, NULL),
+ (7, 109, 'manh.ngo@gmail.com', 'Recovery', '100003', DATEADD(MINUTE, -30, @Now), DATEADD(MINUTE, -15, @Now), 0, NULL, NULL),
+ (8, 109, 'manh.ngo@gmail.com', 'Recovery', '100004', DATEADD(MINUTE, -5, @Now), DATEADD(MINUTE, 10, @Now), 0, NULL, NULL), -- 4 mã trong 1 giờ → lần 5 bị khóa (CBR-94)
+ (9, 110, 'khoa.dinh@gmail.com', 'Recovery', '555111', @Now, DATEADD(MINUTE, 15, @Now), 0, NULL, NULL), -- vừa gửi → phải chờ 60 giây
+ (10, 111, 'binh.ta@gmail.com', 'Recovery', '777222', DATEADD(MINUTE, -3, @Now), DATEADD(MINUTE, 12, @Now), 5, DATEADD(MINUTE, 5, @Now), NULL), -- sai 5 lần → khóa 5 phút
+ (11, 112, 'quynh.cao@gmail.com', 'Recovery', '999000', DATEADD(MINUTE, -30, @Now), DATEADD(MINUTE, -15, @Now), 0, NULL, NULL), -- đã hết hạn → MSG44
+ (12, 1, 'an.nguyen.moi@gmail.com', 'EmailChange', '135790', DATEADD(MINUTE, -1, @Now), DATEADD(MINUTE, 14, @Now), 0, NULL, NULL), -- An đổi email, mã 135790
+ (13, 15, 'son.dinh@gms.vn', 'PhoneChange', '864200', DATEADD(MINUTE, -1, @Now), DATEADD(MINUTE, 14, @Now), 0, NULL, NULL), -- PT Sơn đổi SĐT: mã gửi về email HIỆN TẠI (CBR-110)
+ (14, NULL, 'khach.moi@gmail.com', 'SignUp', '112233', DATEADD(MINUTE, -1, @Now), DATEADD(MINUTE, 14, @Now), 0, NULL, NULL), -- đăng ký mới, mã 112233
+ (15, NULL, 'yen.doan@gmail.com', 'Claim', '445566', DATEADD(MINUTE, -1, @Now), DATEADD(MINUTE, 14, @Now), 0, NULL, NULL); -- kích hoạt hồ sơ Yến, mã 445566
 SET IDENTITY_INSERT VerificationCodes OFF;
-GO
 
 /* ============================================================================
-   6. PACKAGES — 8 gói: 4 gói tập, 1 gói ngày, 2 gói PT theo kỳ hạn, 1 buổi lẻ
-   Gói 5 để Inactive: ngừng bán nhưng đơn cũ vẫn chạy bình thường.
+   Packages — 13 dòng.
    ============================================================================ */
 SET IDENTITY_INSERT Packages ON;
-INSERT INTO Packages (PackageId, PackageName, Description, Benefits, PackageType, DurationDays, EstimatedSessionCount, Price, IsActive, CreatedAt) VALUES
- (1, N'Gói Ngày'          , N'Vé vào tập một lượt trong ngày.'          , N'Vào tập 1 lượt trong ngày' + CHAR(10) + N'Dùng đủ thiết bị khu chung', 'DayPass'      , 1  , NULL, 120000 , 1, '2025-01-10 09:00:00'),
- (2, N'Gói 1 Tháng'       , N'Bắt đầu xây thói quen tập luyện.'         , N'Tập không giới hạn giờ' + CHAR(10) + N'Miễn phí nước uống'           , 'Membership'   , 30 , NULL, 799000 , 1, '2025-01-10 09:00:00'),
- (3, N'Gói 3 Tháng'       , N'Đủ thời gian thấy chuyển biến thể lực.'   , N'Tập không giới hạn giờ' + CHAR(10) + N'Miễn phí nước uống' + CHAR(10) + N'Tặng 1 buổi đo InBody', 'Membership', 90 , NULL, 2190000, 1, '2025-01-10 09:00:00'),
- (4, N'Gói 6 Tháng'       , N'Cân bằng giữa cam kết và chi phí.'        , N'Tập không giới hạn giờ' + CHAR(10) + N'Tặng 2 buổi đo InBody'         , 'Membership'   , 180, NULL, 3990000, 1, '2025-01-10 09:00:00'),
- (5, N'Gói 12 Tháng'      , N'Mức giá tốt nhất cho người tập lâu dài.'  , N'Tập không giới hạn giờ' + CHAR(10) + N'Tặng 4 buổi đo InBody'         , 'Membership'   , 365, NULL, 6990000, 0, '2025-01-10 09:00:00'), -- ngừng bán
- (6, N'Gói PT 1 Tháng'    , N'Gói PT theo kỳ hạn, tập T2–T6.'           , N'Huấn luyện viên riêng' + CHAR(10) + N'Giáo án và thực đơn cá nhân hóa', 'PTSingle'    , 30 , 22  , 8800000, 1, '2025-02-01 09:00:00'),
- (7, N'Gói PT Couple 1 Tháng', N'Hai người tập chung một huấn luyện viên.', N'Chung hạn mức buổi cho 2 người' + CHAR(10) + N'Giáo án riêng cho từng người', 'PTCouple', 30 , 22  , 13200000, 1, '2025-02-01 09:00:00'),
- (8, N'Buổi PT Lẻ'        , N'Một buổi tập cùng huấn luyện viên.'       , N'Không ràng buộc kỳ hạn'                                              , 'SingleSession', NULL, 1  , 450000 , 1, '2025-02-01 09:00:00');
+INSERT INTO Packages (PackageId, PackageName, Description, Benefits, PackageType, DurationUnit, DurationValue, EstimatedSessionCount, Price, IsActive, CreatedAt) VALUES
+ (1, N'Gói Ngày', N'Vé vào tập một lượt trong ngày.', N'Vào tập 1 lượt trong ngày
+Dùng đủ thiết bị khu chung', 'DayPass', 'Day', 1, NULL, 120000, 1, '2025-01-10 09:00:00'),
+ (2, N'Gói 1 Tháng', N'Bắt đầu xây thói quen tập luyện.', N'Tập không giới hạn giờ mở cửa
+Dùng đủ thiết bị khu cardio và khu tạ
+Miễn phí nước uống', 'Membership', 'Month', 1, NULL, 799000, 1, '2025-01-10 09:00:00'),
+ (3, N'Gói 3 Tháng', N'Đủ thời gian thấy chuyển biến thể lực.', N'Tập không giới hạn giờ mở cửa
+Dùng đủ thiết bị khu cardio và khu tạ
+Miễn phí nước uống
+Tặng 1 buổi đo InBody', 'Membership', 'Month', 3, NULL, 2190000, 1, '2025-01-10 09:00:00'),
+ (4, N'Gói 9 Tháng', N'Cam kết dài hạn, giá tốt.', N'Tập không giới hạn giờ mở cửa
+Dùng đủ thiết bị khu cardio và khu tạ
+Miễn phí nước uống
+Tặng 3 buổi đo InBody', 'Membership', 'Month', 9, NULL, 5490000, 1, '2025-01-10 09:00:00'),
+ (5, N'Gói 12 Tháng', N'Mức giá tốt nhất cho người tập lâu dài.', N'Tập không giới hạn giờ mở cửa
+Dùng đủ thiết bị khu cardio và khu tạ
+Miễn phí nước uống
+Tặng 4 buổi đo InBody', 'Membership', 'Month', 12, NULL, 6990000, 1, '2025-01-10 09:00:00'),
+ (6, N'Gói 12 Tháng', N'Bảng giá cũ — đã thay bằng gói 12 tháng mới.', N'Tập không giới hạn giờ mở cửa
+Dùng đủ thiết bị khu cardio và khu tạ
+Miễn phí nước uống', 'Membership', 'Month', 12, NULL, 6490000, 0, '2025-01-10 09:00:00'),
+ (7, N'Gói 6 Tháng', N'Đã ngừng bán (P-04 không còn 6 tháng).', N'Tập không giới hạn giờ mở cửa
+Dùng đủ thiết bị khu cardio và khu tạ
+Miễn phí nước uống', 'Membership', 'Month', 6, NULL, 3990000, 0, '2025-01-10 09:00:00'),
+ (8, N'Gói PT 1 Tháng', N'Gói PT theo kỳ hạn, tập T2–T6 một khung giờ cố định.', N'Huấn luyện viên riêng
+Giáo án và thực đơn cá nhân hóa', 'PTSingle', 'Month', 1, 22, 8800000, 1, '2025-01-10 09:00:00'),
+ (9, N'Gói PT 2 Tháng', N'Gói PT theo kỳ hạn 2 tháng.', N'Huấn luyện viên riêng
+Giáo án và thực đơn cá nhân hóa
+Đo InBody mỗi 2 tuần', 'PTSingle', 'Month', 2, 43, 16500000, 1, '2025-01-10 09:00:00'),
+ (10, N'Gói PT 3 Tháng', N'Gói PT theo kỳ hạn 3 tháng.', N'Huấn luyện viên riêng
+Giáo án và thực đơn cá nhân hóa
+Đo InBody mỗi 2 tuần', 'PTSingle', 'Month', 3, 65, 23900000, 1, '2025-01-10 09:00:00'),
+ (11, N'Gói PT Couple 1 Tháng', N'Hai người tập chung một huấn luyện viên.', N'Chung hạn mức buổi cho 2 người
+Giáo án riêng cho từng người', 'PTCouple', 'Month', 1, 22, 13200000, 1, '2025-01-10 09:00:00'),
+ (12, N'Gói PT Couple 2 Tháng', N'Hai người tập chung 2 tháng.', N'Chung hạn mức buổi cho 2 người
+Giáo án riêng cho từng người', 'PTCouple', 'Month', 2, 43, 24900000, 1, '2025-01-10 09:00:00'),
+ (13, N'Buổi PT Lẻ', N'Một buổi tập cùng huấn luyện viên.', N'Không ràng buộc kỳ hạn', 'SingleSession', NULL, NULL, NULL, 450000, 1, '2025-01-10 09:00:00');
 SET IDENTITY_INSERT Packages OFF;
-GO
 
 /* ============================================================================
-   7. VOUCHERS — 4 mã: đang chạy, đã hết hạn, đã dùng hết lượt, đã tắt
+   Vouchers — 6 dòng.
    ============================================================================ */
 SET IDENTITY_INSERT Vouchers ON;
-INSERT INTO Vouchers (VoucherId, VoucherCode, DiscountType, DiscountValue, StartDate, EndDate,
-                      MaxUsage, MaxUsagePerCustomer, UsedCount, MinOrderValue, ApplicableScope, IsActive) VALUES
- (1, 'WELCOME10'  , 'Percent', 10    , '2026-09-01', '2026-12-31', 100, 1   , 1  , 500000 , 'MembershipAndDayPass', 1),
- (2, 'SUMMER200K' , 'Amount' , 200000, '2026-06-01', '2026-08-31', 50 , 1   , 43 , 2000000, 'MembershipOnly'      , 1), -- đã hết hạn theo ngày
- (3, 'FULLBOOKED' , 'Amount' , 100000, '2026-09-01', '2026-10-31', 10 , 1   , 10 , 700000 , 'MembershipOnly'      , 1), -- hết lượt
- (4, 'OLDCAMPAIGN', 'Percent', 15    , '2026-01-01', '2026-03-31', 200, NULL, 87 , 0      , 'MembershipAndDayPass', 0); -- đã tắt
+INSERT INTO Vouchers (VoucherId, VoucherCode, DiscountType, DiscountValue, StartDate, EndDate, MaxUsage, MaxUsagePerCustomer, UsedCount, MinOrderValue, ApplicableScope, IsActive, CreatedAt) VALUES
+ (1, 'WELCOME10', 'Percent', 10, '2026-09-01', '2026-12-31', 100, 1, 3, 500000, 'MembershipAndDayPass', 1, '2026-08-27 09:00:00'), -- đang chạy
+ (2, 'SUMMER200K', 'Amount', 200000, '2026-06-01', '2026-08-31', 50, 1, 1, 2000000, 'MembershipOnly', 1, '2026-05-27 09:00:00'), -- đã hết hạn
+ (3, 'FULLBOOKED', 'Amount', 100000, '2026-08-15', '2026-10-31', 2, 1, 2, 700000, 'MembershipOnly', 1, '2026-08-10 09:00:00'), -- đã dùng hết lượt
+ (4, 'OLDCAMPAIGN', 'Percent', 15, '2026-01-01', '2026-03-31', 200, NULL, 1, 0, 'MembershipAndDayPass', 0, '2025-12-27 09:00:00'), -- đã tắt, đã dùng → chỉ tắt không xóa (CBR-98)
+ (5, 'TET2027', 'Percent', 20, '2027-01-20', '2027-02-28', 50, 1, 0, 0, 'MembershipAndDayPass', 1, '2027-01-15 09:00:00'), -- chưa tới ngày bắt đầu, chưa ai dùng
+ (6, 'DAYPASS20K', 'Amount', 20000, '2026-09-01', '2026-12-31', 500, NULL, 18, 100000, 'MembershipAndDayPass', 1, '2026-08-27 09:00:00'); -- dùng nhiều lần / khách (không giới hạn)
 SET IDENTITY_INSERT Vouchers OFF;
-GO
 
 /* ============================================================================
-   8. SHIFTS — 6 ca: đã chốt cân bằng, đã chốt lệch tiền, đang mở, chưa mở
+   Shifts — 152 dòng. Đủ 2 ca mỗi ngày mở cửa 01/09–02/10 + ca hôm nay (sống).
    ============================================================================ */
 SET IDENTITY_INSERT Shifts ON;
 INSERT INTO Shifts (ShiftId, WorkDate, ShiftType, OpenedByEmployeeId, ClosedByEmployeeId, Status, OpenedAt, ClosedAt, ExpectedCash, CountedCash, VarianceReason) VALUES
- (1, '2026-09-21', 'Morning'  , 3, 3, 'Closed'   , '2026-09-21 05:30:00', '2026-09-21 13:00:00', 0      , 0      , NULL),
- (2, '2026-09-21', 'Afternoon', 4, 4, 'Closed'   , '2026-09-21 13:00:00', '2026-09-21 22:00:00', 0      , 50000  , N'Thừa 50.000đ chưa rõ nguồn, đã lập biên bản bàn giao'),
- (3, '2026-09-22', 'Morning'  , 3, 3, 'Closed'   , '2026-09-22 05:30:00', '2026-09-22 13:00:00', 0      , 0      , NULL),
- (4, '2026-09-22', 'Afternoon', 4, 4, 'Closed'   , '2026-09-22 13:00:00', '2026-09-22 22:00:00', 0      , 0      , NULL),
- (5, '2026-09-23', 'Morning'  , 3, NULL, 'Open'  , '2026-09-23 05:30:00', NULL, NULL, NULL, NULL), -- ca đang mở, còn 1 đơn Pending nên chưa chốt được
- (6, '2026-09-23', 'Afternoon', NULL, NULL, 'NotOpened', NULL, NULL, NULL, NULL, NULL),
- -- Ca lịch sử, giữ lại để các đơn tại quầy trong quá khứ luôn thuộc về một ca
- (7 , '2026-06-28', 'Morning'  , 3, 3, 'Closed', '2026-06-28 05:30:00', '2026-06-28 13:00:00', 2190000, 2190000, NULL),
- (8 , '2026-06-09', 'Afternoon', 4, 4, 'Closed', '2026-06-09 13:00:00', '2026-06-09 22:00:00', 799000 , 799000 , NULL),
- (9 , '2026-07-29', 'Morning'  , 4, 4, 'Closed', '2026-07-29 05:30:00', '2026-07-29 13:00:00', 0      , 0      , NULL),
- (10, '2026-09-05', 'Morning'  , 3, 3, 'Closed', '2026-09-05 05:30:00', '2026-09-05 13:00:00', 799000 , 799000 , NULL),
- (11, '2026-08-20', 'Afternoon', 4, 4, 'Closed', '2026-08-20 13:00:00', '2026-08-20 22:00:00', 4380000, 4380000, NULL),
- (12, '2026-08-21', 'Morning'  , 4, 4, 'Closed', '2026-08-21 05:30:00', '2026-08-21 13:00:00', 0      , 0      , NULL),
- (13, '2026-09-01', 'Afternoon', 3, 3, 'Closed', '2026-09-01 13:00:00', '2026-09-01 22:00:00', 799000 , 799000 , NULL),
- (14, '2026-03-01', 'Morning'  , 4, 4, 'Closed', '2026-03-01 05:30:00', '2026-03-01 13:00:00', 799000 , 799000 , NULL);
+ (1, @Today, 'Morning', 3, NULL, 'Open', DATEADD(MINUTE, 330, CAST(@Today AS DATETIME2(0))), NULL, NULL, NULL, NULL), -- ca sáng HÔM NAY đang mở (còn 1 đơn Pending → chưa chốt được)
+ (2, @Today, 'Afternoon', NULL, NULL, 'NotOpened', NULL, NULL, NULL, NULL, NULL), -- ca chiều hôm nay chưa mở
+ (3, '2026-07-06', 'Morning', 3, 3, 'Closed', '2026-07-06 05:30:00', '2026-07-06 13:00:00', 2190000, 2190000, NULL),
+ (4, '2026-09-26', 'Morning', 3, 3, 'Closed', '2026-09-26 05:30:00', '2026-09-26 13:00:00', 0, 0, NULL),
+ (5, '2026-07-01', 'Afternoon', 4, 4, 'Closed', '2026-07-01 13:00:00', '2026-07-01 22:00:00', 799000, 799000, NULL),
+ (6, '2026-07-03', 'Morning', 3, 3, 'Closed', '2026-07-03 05:30:00', '2026-07-03 13:00:00', 0, 0, NULL),
+ (7, '2026-07-08', 'Morning', 3, 3, 'Closed', '2026-07-08 05:30:00', '2026-07-08 13:00:00', 0, 0, NULL),
+ (8, '2026-07-09', 'Morning', 3, 3, 'Closed', '2026-07-09 05:30:00', '2026-07-09 13:00:00', 0, 0, NULL),
+ (9, '2026-07-10', 'Morning', 3, 3, 'Closed', '2026-07-10 05:30:00', '2026-07-10 13:00:00', 0, 0, NULL),
+ (10, '2026-07-13', 'Morning', 3, 3, 'Closed', '2026-07-13 05:30:00', '2026-07-13 13:00:00', 0, 0, NULL),
+ (11, '2026-07-14', 'Morning', 3, 3, 'Closed', '2026-07-14 05:30:00', '2026-07-14 13:00:00', 2190000, 2190000, NULL),
+ (12, '2026-07-16', 'Morning', 3, 3, 'Closed', '2026-07-16 05:30:00', '2026-07-16 13:00:00', 0, 0, NULL),
+ (13, '2026-07-17', 'Morning', 3, 3, 'Closed', '2026-07-17 05:30:00', '2026-07-17 13:00:00', 0, 0, NULL),
+ (14, '2026-07-21', 'Morning', 3, 3, 'Closed', '2026-07-21 05:30:00', '2026-07-21 13:00:00', 0, 0, NULL),
+ (15, '2026-07-22', 'Morning', 3, 3, 'Closed', '2026-07-22 05:30:00', '2026-07-22 13:00:00', 0, 0, NULL),
+ (16, '2026-07-23', 'Morning', 3, 3, 'Closed', '2026-07-23 05:30:00', '2026-07-23 13:00:00', 0, 0, NULL),
+ (17, '2026-07-24', 'Morning', 3, 3, 'Closed', '2026-07-24 05:30:00', '2026-07-24 13:00:00', 0, 0, NULL),
+ (18, '2026-07-27', 'Morning', 3, 3, 'Closed', '2026-07-27 05:30:00', '2026-07-27 13:00:00', 0, 0, NULL),
+ (19, '2026-07-28', 'Morning', 3, 3, 'Closed', '2026-07-28 05:30:00', '2026-07-28 13:00:00', 0, 0, NULL),
+ (20, '2026-07-29', 'Morning', 3, 3, 'Closed', '2026-07-29 05:30:00', '2026-07-29 13:00:00', 0, 0, NULL),
+ (21, '2026-07-30', 'Morning', 3, 3, 'Closed', '2026-07-30 05:30:00', '2026-07-30 13:00:00', 0, 0, NULL),
+ (22, '2026-07-31', 'Morning', 3, 3, 'Closed', '2026-07-31 05:30:00', '2026-07-31 13:00:00', 0, 0, NULL),
+ (23, '2026-09-04', 'Morning', 3, 3, 'Closed', '2026-09-04 05:30:00', '2026-09-04 13:00:00', 819000, 819000, NULL),
+ (24, '2026-09-07', 'Afternoon', 4, 4, 'Closed', '2026-09-07 13:00:00', '2026-09-07 22:00:00', 0, 0, NULL),
+ (25, '2026-09-08', 'Afternoon', 4, 4, 'Closed', '2026-09-08 13:00:00', '2026-09-08 22:00:00', 100000, 100000, NULL),
+ (26, '2026-09-09', 'Afternoon', 4, 4, 'Closed', '2026-09-09 13:00:00', '2026-09-09 22:00:00', 0, 0, NULL),
+ (27, '2026-09-10', 'Afternoon', 4, 4, 'Closed', '2026-09-10 13:00:00', '2026-09-10 22:00:00', 2310000, 2310000, NULL),
+ (28, '2026-09-11', 'Afternoon', 4, 4, 'Closed', '2026-09-11 13:00:00', '2026-09-11 22:00:00', 0, 0, NULL),
+ (29, '2026-09-14', 'Afternoon', 4, 4, 'Closed', '2026-09-14 13:00:00', '2026-09-14 22:00:00', 0, 0, NULL),
+ (30, '2026-09-16', 'Afternoon', 4, 4, 'Closed', '2026-09-16 13:00:00', '2026-09-16 22:00:00', 799000, 849000, N'Thừa 50.000đ chưa rõ nguồn, đã lập biên bản bàn giao'), -- chốt ca lệch tiền (BR-46)
+ (31, '2026-09-17', 'Afternoon', 4, 4, 'Closed', '2026-09-17 13:00:00', '2026-09-17 22:00:00', 3788000, 3788000, NULL),
+ (32, '2026-09-21', 'Afternoon', 4, 4, 'Closed', '2026-09-21 13:00:00', '2026-09-21 22:00:00', 450000, 450000, NULL),
+ (33, '2026-09-22', 'Afternoon', 4, 4, 'Closed', '2026-09-22 13:00:00', '2026-09-22 22:00:00', 0, 0, NULL),
+ (34, '2026-09-23', 'Afternoon', 4, 4, 'Closed', '2026-09-23 13:00:00', '2026-09-23 22:00:00', 0, 0, NULL),
+ (35, '2026-09-24', 'Afternoon', 4, 4, 'Closed', '2026-09-24 13:00:00', '2026-09-24 22:00:00', 120000, 120000, NULL),
+ (36, '2026-09-25', 'Afternoon', 4, 4, 'Closed', '2026-09-25 13:00:00', '2026-09-25 22:00:00', 100000, 100000, NULL),
+ (37, '2026-09-12', 'Morning', 3, 3, 'Closed', '2026-09-12 05:30:00', '2026-09-12 13:00:00', 0, 0, NULL),
+ (38, '2026-09-15', 'Afternoon', 4, 4, 'Closed', '2026-09-15 13:00:00', '2026-09-15 22:00:00', 0, 0, NULL),
+ (39, '2026-09-28', 'Afternoon', 4, 4, 'Closed', '2026-09-28 13:00:00', '2026-09-28 22:00:00', 120000, 120000, NULL),
+ (40, '2026-09-29', 'Afternoon', 4, 4, 'Closed', '2026-09-29 13:00:00', '2026-09-29 22:00:00', 2310000, 2310000, NULL),
+ (41, '2026-09-30', 'Afternoon', 4, 4, 'Closed', '2026-09-30 13:00:00', '2026-09-30 22:00:00', 0, 0, NULL),
+ (42, '2026-10-02', 'Afternoon', 4, 4, 'Closed', '2026-10-02 13:00:00', '2026-10-02 22:00:00', 0, 0, NULL),
+ (43, '2026-08-20', 'Afternoon', 4, 4, 'Closed', '2026-08-20 13:00:00', '2026-08-20 22:00:00', 2889000, 2889000, NULL),
+ (44, '2026-08-21', 'Morning', 3, 3, 'Closed', '2026-08-21 05:30:00', '2026-08-21 13:00:00', 0, 0, NULL),
+ (45, '2026-08-24', 'Afternoon', 4, 4, 'Closed', '2026-08-24 13:00:00', '2026-08-24 22:00:00', 0, 0, NULL),
+ (46, '2026-08-26', 'Afternoon', 4, 4, 'Closed', '2026-08-26 13:00:00', '2026-08-26 22:00:00', 0, 0, NULL),
+ (47, '2026-08-28', 'Afternoon', 4, 4, 'Closed', '2026-08-28 13:00:00', '2026-08-28 22:00:00', 0, 0, NULL),
+ (48, '2026-08-31', 'Afternoon', 4, 4, 'Closed', '2026-08-31 13:00:00', '2026-08-31 22:00:00', 0, 0, NULL),
+ (49, '2026-09-01', 'Afternoon', 4, 4, 'Closed', '2026-09-01 13:00:00', '2026-09-01 22:00:00', 100000, 100000, NULL),
+ (50, '2026-09-04', 'Afternoon', 4, 4, 'Closed', '2026-09-04 13:00:00', '2026-09-04 22:00:00', 120000, 120000, NULL),
+ (51, '2026-09-16', 'Morning', 3, 3, 'Closed', '2026-09-16 05:30:00', '2026-09-16 13:00:00', 799000, 779000, N'Thiếu 20.000đ do thối nhầm cho khách, lễ tân tự bù'), -- chốt ca lệch tiền (BR-46)
+ (52, '2026-10-01', 'Afternoon', 4, 4, 'Closed', '2026-10-01 13:00:00', '2026-10-01 22:00:00', 100000, 100000, NULL),
+ (53, '2026-09-03', 'Afternoon', 4, 4, 'Closed', '2026-09-03 13:00:00', '2026-09-03 22:00:00', 2190000, 2190000, NULL),
+ (54, '2026-03-01', 'Morning', 9, 9, 'Closed', '2026-03-01 05:30:00', '2026-03-01 13:00:00', 679150, 679150, NULL),
+ (55, '2026-09-21', 'Morning', 3, 3, 'Closed', '2026-09-21 05:30:00', '2026-09-21 13:00:00', 919000, 919000, NULL),
+ (56, '2026-09-11', 'Morning', 3, 3, 'Closed', '2026-09-11 05:30:00', '2026-09-11 13:00:00', 9370000, 9370000, NULL),
+ (57, '2026-09-14', 'Morning', 3, 3, 'Closed', '2026-09-14 05:30:00', '2026-09-14 13:00:00', 450000, 450000, NULL),
+ (58, '2026-09-15', 'Morning', 3, 3, 'Closed', '2026-09-15 05:30:00', '2026-09-15 13:00:00', 1039000, 1039000, NULL),
+ (59, '2026-09-17', 'Morning', 3, 3, 'Closed', '2026-09-17 05:30:00', '2026-09-17 13:00:00', 0, 0, NULL),
+ (60, '2026-09-22', 'Morning', 3, 3, 'Closed', '2026-09-22 05:30:00', '2026-09-22 13:00:00', 200000, 200000, NULL),
+ (61, '2026-09-23', 'Morning', 3, 3, 'Closed', '2026-09-23 05:30:00', '2026-09-23 13:00:00', 120000, 120000, NULL),
+ (62, '2026-09-24', 'Morning', 3, 3, 'Closed', '2026-09-24 05:30:00', '2026-09-24 13:00:00', 0, 0, NULL),
+ (63, '2026-09-25', 'Morning', 3, 3, 'Closed', '2026-09-25 05:30:00', '2026-09-25 13:00:00', 100000, 100000, NULL),
+ (64, '2026-09-28', 'Morning', 3, 3, 'Closed', '2026-09-28 05:30:00', '2026-09-28 13:00:00', 120000, 120000, NULL),
+ (65, '2026-09-30', 'Morning', 3, 3, 'Closed', '2026-09-30 05:30:00', '2026-09-30 13:00:00', 0, 0, NULL),
+ (66, '2026-10-01', 'Morning', 3, 3, 'Closed', '2026-10-01 05:30:00', '2026-10-01 13:00:00', 0, 0, NULL),
+ (67, '2026-10-02', 'Morning', 3, 3, 'Closed', '2026-10-02 05:30:00', '2026-10-02 13:00:00', 0, 0, NULL),
+ (68, '2026-08-01', 'Morning', 3, 3, 'Closed', '2026-08-01 05:30:00', '2026-08-01 13:00:00', 2190000, 2190000, NULL),
+ (69, '2026-07-01', 'Morning', 3, 3, 'Closed', '2026-07-01 05:30:00', '2026-07-01 13:00:00', 799000, 799000, NULL),
+ (70, '2026-09-01', 'Morning', 3, 3, 'Closed', '2026-09-01 05:30:00', '2026-09-01 13:00:00', 2190000, 2190000, NULL),
+ (71, '2026-09-29', 'Morning', 3, 3, 'Closed', '2026-09-29 05:30:00', '2026-09-29 13:00:00', 0, 0, NULL),
+ (72, '2026-06-17', 'Afternoon', 4, 4, 'Closed', '2026-06-17 13:00:00', '2026-06-17 22:00:00', 2190000, 2190000, NULL),
+ (73, '2026-09-08', 'Morning', 3, 3, 'Closed', '2026-09-08 05:30:00', '2026-09-08 13:00:00', 9300000, 9300000, NULL),
+ (74, '2026-06-19', 'Morning', 3, 3, 'Closed', '2026-06-19 05:30:00', '2026-06-19 13:00:00', 5490000, 5490000, NULL),
+ (75, '2026-06-29', 'Afternoon', 4, 4, 'Closed', '2026-06-29 13:00:00', '2026-06-29 22:00:00', 2190000, 2190000, NULL),
+ (76, '2026-07-16', 'Afternoon', 4, 4, 'Closed', '2026-07-16 13:00:00', '2026-07-16 22:00:00', 2190000, 2190000, NULL),
+ (77, '2026-09-12', 'Afternoon', 11, 11, 'Closed', '2026-09-12 13:00:00', '2026-09-12 22:00:00', 899000, 899000, NULL),
+ (78, '2026-07-13', 'Afternoon', 4, 4, 'Closed', '2026-07-13 13:00:00', '2026-07-13 22:00:00', 799000, 799000, NULL),
+ (79, '2026-08-09', 'Afternoon', 4, 4, 'Closed', '2026-08-09 13:00:00', '2026-08-09 22:00:00', 2190000, 2190000, NULL),
+ (80, '2026-07-08', 'Afternoon', 4, 4, 'Closed', '2026-07-08 13:00:00', '2026-07-08 22:00:00', 799000, 799000, NULL),
+ (81, '2026-08-04', 'Afternoon', 4, 4, 'Closed', '2026-08-04 13:00:00', '2026-08-04 22:00:00', 799000, 799000, NULL),
+ (82, '2026-06-02', 'Afternoon', 4, 4, 'Closed', '2026-06-02 13:00:00', '2026-06-02 22:00:00', 799000, 799000, NULL),
+ (83, '2026-08-25', 'Afternoon', 4, 4, 'Closed', '2026-08-25 13:00:00', '2026-08-25 22:00:00', 120000, 120000, NULL),
+ (84, '2026-06-26', 'Afternoon', 4, 4, 'Closed', '2026-06-26 13:00:00', '2026-06-26 22:00:00', 799000, 799000, NULL),
+ (85, '2026-07-23', 'Afternoon', 4, 4, 'Closed', '2026-07-23 13:00:00', '2026-07-23 22:00:00', 799000, 799000, NULL),
+ (86, '2026-06-28', 'Morning', 9, 9, 'Closed', '2026-06-28 05:30:00', '2026-06-28 13:00:00', 799000, 799000, NULL),
+ (87, '2026-08-20', 'Morning', 3, 3, 'Closed', '2026-08-20 05:30:00', '2026-08-20 13:00:00', 5490000, 5490000, NULL),
+ (88, '2026-08-13', 'Morning', 3, 3, 'Closed', '2026-08-13 05:30:00', '2026-08-13 13:00:00', 120000, 120000, NULL),
+ (89, '2026-08-01', 'Afternoon', 11, 11, 'Closed', '2026-08-01 13:00:00', '2026-08-01 22:00:00', 5490000, 5490000, NULL),
+ (90, '2026-08-03', 'Morning', 3, 3, 'Closed', '2026-08-03 05:30:00', '2026-08-03 13:00:00', 799000, 799000, NULL),
+ (91, '2026-06-02', 'Morning', 3, 3, 'Closed', '2026-06-02 05:30:00', '2026-06-02 13:00:00', 6990000, 6990000, NULL),
+ (92, '2026-08-26', 'Morning', 3, 3, 'Closed', '2026-08-26 05:30:00', '2026-08-26 13:00:00', 2190000, 2190000, NULL),
+ (93, '2026-06-18', 'Afternoon', 4, 4, 'Closed', '2026-06-18 13:00:00', '2026-06-18 22:00:00', 120000, 120000, NULL),
+ (94, '2026-09-03', 'Morning', 3, 3, 'Closed', '2026-09-03 05:30:00', '2026-09-03 13:00:00', 120000, 120000, NULL),
+ (95, '2026-09-05', 'Morning', 3, 3, 'Closed', '2026-09-05 05:30:00', '2026-09-05 13:00:00', 0, 0, NULL),
+ (96, '2026-09-06', 'Morning', 9, 9, 'Closed', '2026-09-06 05:30:00', '2026-09-06 13:00:00', 240000, 240000, NULL),
+ (97, '2026-09-06', 'Afternoon', 4, 4, 'Closed', '2026-09-06 13:00:00', '2026-09-06 22:00:00', 100000, 100000, NULL),
+ (98, '2026-09-07', 'Morning', 3, 3, 'Closed', '2026-09-07 05:30:00', '2026-09-07 13:00:00', 120000, 120000, NULL),
+ (99, '2026-09-09', 'Morning', 3, 3, 'Closed', '2026-09-09 05:30:00', '2026-09-09 13:00:00', 0, 0, NULL),
+ (100, '2026-09-13', 'Afternoon', 4, 4, 'Closed', '2026-09-13 13:00:00', '2026-09-13 22:00:00', 120000, 120000, NULL),
+ (101, '2026-09-19', 'Afternoon', 11, 11, 'Closed', '2026-09-19 13:00:00', '2026-09-19 22:00:00', 0, 0, NULL),
+ (102, '2026-09-19', 'Morning', 3, 3, 'Closed', '2026-09-19 05:30:00', '2026-09-19 13:00:00', 120000, 120000, NULL),
+ (103, '2026-09-20', 'Morning', 9, 9, 'Closed', '2026-09-20 05:30:00', '2026-09-20 13:00:00', 120000, 120000, NULL),
+ (104, '2026-09-26', 'Afternoon', 11, 11, 'Closed', '2026-09-26 13:00:00', '2026-09-26 22:00:00', 120000, 120000, NULL),
+ (105, '2026-09-27', 'Afternoon', 4, 4, 'Closed', '2026-09-27 13:00:00', '2026-09-27 22:00:00', 0, 0, NULL),
+ (106, '2026-08-02', 'Morning', 9, 9, 'Closed', '2026-08-02 05:30:00', '2026-08-02 13:00:00', 0, 0, NULL),
+ (107, '2026-08-02', 'Afternoon', 4, 4, 'Closed', '2026-08-02 13:00:00', '2026-08-02 22:00:00', 0, 0, NULL),
+ (108, '2026-08-03', 'Afternoon', 4, 4, 'Closed', '2026-08-03 13:00:00', '2026-08-03 22:00:00', 0, 0, NULL),
+ (109, '2026-08-04', 'Morning', 3, 3, 'Closed', '2026-08-04 05:30:00', '2026-08-04 13:00:00', 0, 0, NULL),
+ (110, '2026-08-05', 'Morning', 3, 3, 'Closed', '2026-08-05 05:30:00', '2026-08-05 13:00:00', 0, 0, NULL),
+ (111, '2026-08-05', 'Afternoon', 4, 4, 'Closed', '2026-08-05 13:00:00', '2026-08-05 22:00:00', 0, 0, NULL),
+ (112, '2026-08-06', 'Afternoon', 4, 4, 'Closed', '2026-08-06 13:00:00', '2026-08-06 22:00:00', 0, 0, NULL),
+ (113, '2026-08-06', 'Morning', 3, 3, 'Closed', '2026-08-06 05:30:00', '2026-08-06 13:00:00', 0, 0, NULL),
+ (114, '2026-08-07', 'Morning', 3, 3, 'Closed', '2026-08-07 05:30:00', '2026-08-07 13:00:00', 0, 0, NULL),
+ (115, '2026-08-07', 'Afternoon', 4, 4, 'Closed', '2026-08-07 13:00:00', '2026-08-07 22:00:00', 0, 0, NULL),
+ (116, '2026-08-08', 'Afternoon', 11, 11, 'Closed', '2026-08-08 13:00:00', '2026-08-08 22:00:00', 0, 0, NULL),
+ (117, '2026-08-09', 'Morning', 9, 9, 'Closed', '2026-08-09 05:30:00', '2026-08-09 13:00:00', 0, 0, NULL),
+ (118, '2026-08-11', 'Morning', 3, 3, 'Closed', '2026-08-11 05:30:00', '2026-08-11 13:00:00', 0, 0, NULL),
+ (119, '2026-08-11', 'Afternoon', 4, 4, 'Closed', '2026-08-11 13:00:00', '2026-08-11 22:00:00', 0, 0, NULL),
+ (120, '2026-08-12', 'Afternoon', 4, 4, 'Closed', '2026-08-12 13:00:00', '2026-08-12 22:00:00', 0, 0, NULL),
+ (121, '2026-08-12', 'Morning', 3, 3, 'Closed', '2026-08-12 05:30:00', '2026-08-12 13:00:00', 0, 0, NULL),
+ (122, '2026-08-13', 'Afternoon', 4, 4, 'Closed', '2026-08-13 13:00:00', '2026-08-13 22:00:00', 0, 0, NULL),
+ (123, '2026-08-14', 'Morning', 3, 3, 'Closed', '2026-08-14 05:30:00', '2026-08-14 13:00:00', 0, 0, NULL),
+ (124, '2026-08-14', 'Afternoon', 4, 4, 'Closed', '2026-08-14 13:00:00', '2026-08-14 22:00:00', 0, 0, NULL),
+ (125, '2026-08-15', 'Afternoon', 11, 11, 'Closed', '2026-08-15 13:00:00', '2026-08-15 22:00:00', 0, 0, NULL),
+ (126, '2026-08-15', 'Morning', 3, 3, 'Closed', '2026-08-15 05:30:00', '2026-08-15 13:00:00', 0, 0, NULL),
+ (127, '2026-08-16', 'Morning', 9, 9, 'Closed', '2026-08-16 05:30:00', '2026-08-16 13:00:00', 0, 0, NULL),
+ (128, '2026-08-16', 'Afternoon', 4, 4, 'Closed', '2026-08-16 13:00:00', '2026-08-16 22:00:00', 0, 0, NULL),
+ (129, '2026-08-17', 'Afternoon', 4, 4, 'Closed', '2026-08-17 13:00:00', '2026-08-17 22:00:00', 0, 0, NULL),
+ (130, '2026-08-17', 'Morning', 3, 3, 'Closed', '2026-08-17 05:30:00', '2026-08-17 13:00:00', 0, 0, NULL),
+ (131, '2026-08-18', 'Afternoon', 4, 4, 'Closed', '2026-08-18 13:00:00', '2026-08-18 22:00:00', 0, 0, NULL),
+ (132, '2026-08-18', 'Morning', 3, 3, 'Closed', '2026-08-18 05:30:00', '2026-08-18 13:00:00', 0, 0, NULL),
+ (133, '2026-08-19', 'Afternoon', 4, 4, 'Closed', '2026-08-19 13:00:00', '2026-08-19 22:00:00', 0, 0, NULL),
+ (134, '2026-08-19', 'Morning', 3, 3, 'Closed', '2026-08-19 05:30:00', '2026-08-19 13:00:00', 0, 0, NULL),
+ (135, '2026-08-21', 'Afternoon', 4, 4, 'Closed', '2026-08-21 13:00:00', '2026-08-21 22:00:00', 0, 0, NULL),
+ (136, '2026-08-22', 'Morning', 3, 3, 'Closed', '2026-08-22 05:30:00', '2026-08-22 13:00:00', 0, 0, NULL),
+ (137, '2026-08-22', 'Afternoon', 11, 11, 'Closed', '2026-08-22 13:00:00', '2026-08-22 22:00:00', 0, 0, NULL),
+ (138, '2026-08-23', 'Morning', 9, 9, 'Closed', '2026-08-23 05:30:00', '2026-08-23 13:00:00', 0, 0, NULL),
+ (139, '2026-08-23', 'Afternoon', 4, 4, 'Closed', '2026-08-23 13:00:00', '2026-08-23 22:00:00', 0, 0, NULL),
+ (140, '2026-08-24', 'Morning', 3, 3, 'Closed', '2026-08-24 05:30:00', '2026-08-24 13:00:00', 0, 0, NULL),
+ (141, '2026-08-25', 'Morning', 3, 3, 'Closed', '2026-08-25 05:30:00', '2026-08-25 13:00:00', 0, 0, NULL),
+ (142, '2026-08-27', 'Afternoon', 4, 4, 'Closed', '2026-08-27 13:00:00', '2026-08-27 22:00:00', 0, 0, NULL),
+ (143, '2026-08-27', 'Morning', 3, 3, 'Closed', '2026-08-27 05:30:00', '2026-08-27 13:00:00', 0, 0, NULL),
+ (144, '2026-08-28', 'Morning', 3, 3, 'Closed', '2026-08-28 05:30:00', '2026-08-28 13:00:00', 0, 0, NULL),
+ (145, '2026-08-29', 'Morning', 3, 3, 'Closed', '2026-08-29 05:30:00', '2026-08-29 13:00:00', 0, 0, NULL),
+ (146, '2026-08-29', 'Afternoon', 11, 11, 'Closed', '2026-08-29 13:00:00', '2026-08-29 22:00:00', 0, 0, NULL),
+ (147, '2026-08-31', 'Morning', 3, 3, 'Closed', '2026-08-31 05:30:00', '2026-08-31 13:00:00', 0, 0, NULL),
+ (148, '2026-09-05', 'Afternoon', 11, 11, 'Closed', '2026-09-05 13:00:00', '2026-09-05 22:00:00', 0, 0, NULL),
+ (149, '2026-09-10', 'Morning', 3, 3, 'Closed', '2026-09-10 05:30:00', '2026-09-10 13:00:00', 0, 0, NULL),
+ (150, '2026-09-13', 'Morning', 9, 9, 'Closed', '2026-09-13 05:30:00', '2026-09-13 13:00:00', 0, 0, NULL),
+ (151, '2026-09-20', 'Afternoon', 4, 4, 'Closed', '2026-09-20 13:00:00', '2026-09-20 22:00:00', 0, 0, NULL),
+ (152, '2026-09-27', 'Morning', 9, 9, 'Closed', '2026-09-27 05:30:00', '2026-09-27 13:00:00', 0, 0, NULL);
 SET IDENTITY_INSERT Shifts OFF;
-GO
 
 /* ============================================================================
-   9. ORDERS — 20 đơn, phủ: tại quầy / online, Paid / Pending / 4 loại hủy
-   VAT 10% đã nằm TRONG giá; VatAmount = phải trả × 10 ÷ 110.
+   Orders — 156 dòng.
    ============================================================================ */
 SET IDENTITY_INSERT Orders ON;
-INSERT INTO Orders (OrderId, OrderCode, HolderCustomerId, PartnerCustomerId, PackageId, VoucherId,
-                    CreatedByEmployeeId, ShiftId, Channel, PackageNameSnapshot, PackageDescriptionSnapshot,
-                    UnitPriceSnapshot, DiscountAmount, VatRateSnapshot, VatAmount, Status,
-                    PaymentDueAt, CreatedAt, PaidAt, CancelType, CancelledAt, CancelReason) VALUES
- -- Gói tập bán tại quầy, đã thanh toán
- (1 , 'DH-2026-0001', 1 , NULL, 3, NULL, 3, 7, 'Counter', N'Gói 3 Tháng', N'Đủ thời gian thấy chuyển biến thể lực.', 2190000, 0     , 10, 199091, 'Paid', NULL, '2026-06-28 09:25:00', '2026-06-28 09:30:00', NULL, NULL, NULL),
- -- Gói tập mua online có voucher 10%
- (2 , 'DH-2026-0002', 2 , NULL, 2, 1   , NULL, NULL, 'Online', N'Gói 1 Tháng', N'Bắt đầu xây thói quen tập luyện.', 799000 , 79900 , 10, 65373 , 'Paid', '2026-08-31 20:40:00', '2026-08-31 20:20:00', '2026-08-31 20:31:00', NULL, NULL, NULL),
- (3 , 'DH-2026-0003', 3 , NULL, 2, NULL, 3, 8, 'Counter', N'Gói 1 Tháng', N'Bắt đầu xây thói quen tập luyện.', 799000 , 0     , 10, 72636 , 'Paid', NULL, '2026-06-09 18:55:00', '2026-06-09 19:00:00', NULL, NULL, NULL),
- (4 , 'DH-2026-0004', 4 , NULL, 4, NULL, 4, 9, 'Counter', N'Gói 6 Tháng', N'Cân bằng giữa cam kết và chi phí.', 3990000, 0     , 10, 362727, 'Paid', NULL, '2026-07-29 10:30:00', '2026-07-29 10:35:00', NULL, NULL, NULL),
- -- Khách vãng lai mua gói ngày
- (5 , 'DH-2026-0005', 5 , NULL, 1, NULL, 3, 5, 'Counter', N'Gói Ngày', N'Vé vào tập một lượt trong ngày.', 120000 , 0     , 10, 10909 , 'Paid', NULL, '2026-09-23 07:50:00', '2026-09-23 07:52:00', NULL, NULL, NULL),
- -- Nền gói tập cho khách mua gói PT
- (6 , 'DH-2026-0006', 6 , NULL, 2, NULL, 3, 10, 'Counter', N'Gói 1 Tháng', N'Bắt đầu xây thói quen tập luyện.', 799000 , 0     , 10, 72636 , 'Paid', NULL, '2026-09-05 08:40:00', '2026-09-05 08:45:00', NULL, NULL, NULL),
- -- Gói PT đơn, bán tại quầy, tiền mặt
- (7 , 'DH-2026-0007', 6 , NULL, 6, NULL, 3, 10, 'Counter', N'Gói PT 1 Tháng', N'Gói PT theo kỳ hạn, tập T2–T6.', 8800000, 0     , 10, 800000, 'Paid', NULL, '2026-09-05 09:00:00', '2026-09-05 09:20:00', NULL, NULL, NULL),
- (8 , 'DH-2026-0008', 7 , NULL, 3, NULL, 4, 11, 'Counter', N'Gói 3 Tháng', N'Đủ thời gian thấy chuyển biến thể lực.', 2190000, 0, 10, 199091, 'Paid', NULL, '2026-08-20 17:40:00', '2026-08-20 17:45:00', NULL, NULL, NULL),
- (9 , 'DH-2026-0009', 8 , NULL, 3, NULL, 4, 11, 'Counter', N'Gói 3 Tháng', N'Đủ thời gian thấy chuyển biến thể lực.', 2190000, 0, 10, 199091, 'Paid', NULL, '2026-08-20 17:50:00', '2026-08-20 17:55:00', NULL, NULL, NULL),
- -- Gói PT couple: 1 người đứng tên, 1 người đi kèm
- (10, 'DH-2026-0010', 7 , 8   , 7, NULL, 4, 12, 'Counter', N'Gói PT Couple 1 Tháng', N'Hai người tập chung một huấn luyện viên.', 13200000, 0, 10, 1200000, 'Paid', NULL, '2026-08-21 09:00:00', '2026-08-21 09:25:00', NULL, NULL, NULL),
- -- Khách nước ngoài mua gói 12 tháng online (gói nay đã ngừng bán nhưng đơn cũ vẫn chạy)
- (11, 'DH-2026-0011', 11, NULL, 5, NULL, NULL, NULL, 'Online', N'Gói 12 Tháng', N'Mức giá tốt nhất cho người tập lâu dài.', 6990000, 0, 10, 635455, 'Paid', '2026-07-15 11:25:00', '2026-07-15 11:05:00', '2026-07-15 11:12:00', NULL, NULL, NULL),
- -- Đơn online đang chờ thanh toán, còn hạn
- (12, 'DH-2026-0012', 14, NULL, 2, NULL, NULL, NULL, 'Online', N'Gói 1 Tháng', N'Bắt đầu xây thói quen tập luyện.', 799000, 0, 10, 72636, 'Pending', '2026-09-23 09:15:00', '2026-09-23 08:55:00', NULL, NULL, NULL, NULL),
- -- Hủy do quá hạn thanh toán
- (13, 'DH-2026-0013', 14, NULL, 2, NULL, NULL, NULL, 'Online', N'Gói 1 Tháng', N'Bắt đầu xây thói quen tập luyện.', 799000, 0, 10, 72636, 'Cancelled', '2026-09-20 21:45:00', '2026-09-20 21:25:00', NULL, 'PaymentTimeout', '2026-09-20 21:45:00', N'Quá hạn thanh toán 20 phút'),
- -- Tiền về sau khi đơn đã hủy → giao dịch bị gắn cờ hoàn tiền tay
- (14, 'DH-2026-0014', 2 , NULL, 4, NULL, NULL, NULL, 'Online', N'Gói 6 Tháng', N'Cân bằng giữa cam kết và chi phí.', 3990000, 0, 10, 362727, 'Cancelled', '2026-09-19 10:20:00', '2026-09-19 10:00:00', NULL, 'InvalidPayment', '2026-09-19 10:21:00', N'Tiền về sau khi đơn đã hết hạn thanh toán'),
- -- Khách đang có yêu cầu xóa hồ sơ chờ duyệt
- (15, 'DH-2026-0015', 13, NULL, 2, NULL, 3, 13, 'Counter', N'Gói 1 Tháng', N'Bắt đầu xây thói quen tập luyện.', 799000, 0, 10, 72636, 'Paid', NULL, '2026-09-01 13:40:00', '2026-09-01 13:45:00', NULL, NULL, NULL),
- -- Khách vãng lai mua gói ngày rồi mua luôn buổi PT lẻ trong ngày
- (16, 'DH-2026-0016', 16, NULL, 1, NULL, 3, 5, 'Counter', N'Gói Ngày', N'Vé vào tập một lượt trong ngày.', 120000, 0, 10, 10909, 'Paid', NULL, '2026-09-23 08:10:00', '2026-09-23 08:12:00', NULL, NULL, NULL),
- (17, 'DH-2026-0017', 16, NULL, 8, NULL, 3, 5, 'Counter', N'Buổi PT Lẻ', N'Một buổi tập cùng huấn luyện viên.', 450000, 0, 10, 40909, 'Paid', NULL, '2026-09-23 08:15:00', '2026-09-23 08:18:00', NULL, NULL, NULL),
- -- Đơn cũ của khách đã bị xóa hồ sơ
- (18, 'DH-2026-0018', 12, NULL, 2, NULL, 4, 14, 'Counter', N'Gói 1 Tháng', N'Bắt đầu xây thói quen tập luyện.', 799000, 0, 10, 72636, 'Paid', NULL, '2026-03-01 09:10:00', '2026-03-01 09:15:00', NULL, NULL, NULL),
- -- Đơn tại quầy đang Pending trong ca đang mở → chặn chốt ca
- (19, 'DH-2026-0019', 15, NULL, 2, NULL, 3, 5, 'Counter', N'Gói 1 Tháng', N'Bắt đầu xây thói quen tập luyện.', 799000, 0, 10, 72636, 'Pending', '2026-09-23 09:20:00', '2026-09-23 09:00:00', NULL, NULL, NULL, NULL),
- -- Đơn buổi lẻ online đang giữ chỗ một khung giờ
- (20, 'DH-2026-0020', 14, NULL, 8, NULL, NULL, NULL, 'Online', N'Buổi PT Lẻ', N'Một buổi tập cùng huấn luyện viên.', 450000, 0, 10, 40909, 'Pending', '2026-09-23 09:18:00', '2026-09-23 08:58:00', NULL, NULL, NULL, NULL);
+INSERT INTO Orders (OrderId, OrderCode, HolderCustomerId, PartnerCustomerId, PackageId, VoucherId, CreatedByEmployeeId, ShiftId, Channel, PackageNameSnapshot, PackageDescriptionSnapshot, PackageBenefitsSnapshot, UnitPriceSnapshot, DiscountAmount, VatRateSnapshot, VatAmount, Status, PaymentDueAt, CreatedAt, PaidAt, CancelType, CancelledAt, CancelReason) VALUES
+ (1, 'DH-2026-0001', 1, NULL, 3, NULL, 3, 3, 'Counter', N'Gói 3 Tháng', N'Đủ thời gian thấy chuyển biến thể lực.', N'Tập không giới hạn giờ mở cửa
+Dùng đủ thiết bị khu cardio và khu tạ
+Miễn phí nước uống
+Tặng 1 buổi đo InBody', 2190000, 0, 10, 199091, 'Paid', NULL, '2026-07-06 09:25:00', '2026-07-06 09:27:00', NULL, NULL, NULL),
+ (2, 'DH-2026-0002', 1, NULL, 4, 1, NULL, NULL, 'Online', N'Gói 9 Tháng', N'Cam kết dài hạn, giá tốt.', N'Tập không giới hạn giờ mở cửa
+Dùng đủ thiết bị khu cardio và khu tạ
+Miễn phí nước uống
+Tặng 3 buổi đo InBody', 5490000, 549000, 10, 449182, 'Paid', '2026-09-20 20:30:00', '2026-09-20 20:10:00', '2026-09-20 20:12:00', NULL, NULL, NULL),
+ (3, 'DH-2026-0003', 1, NULL, 13, NULL, NULL, NULL, 'Online', N'Buổi PT Lẻ', N'Một buổi tập cùng huấn luyện viên.', N'Không ràng buộc kỳ hạn', 450000, 0, 10, 40909, 'Paid', '2026-09-24 21:20:00', '2026-09-24 21:00:00', '2026-09-24 21:02:00', NULL, NULL, NULL),
+ (4, 'DH-2026-0004', 1, NULL, 13, NULL, NULL, NULL, 'Online', N'Buổi PT Lẻ', N'Một buổi tập cùng huấn luyện viên.', N'Không ràng buộc kỳ hạn', 450000, 0, 10, 40909, 'Cancelled', DATEADD(MINUTE, 10, @Now), DATEADD(MINUTE, -10, @Now), NULL, 'ReplacedByNewOrder', DATEADD(MINUTE, -2, @Now), NULL), -- bị thay bằng đơn mới (CBR-41, CBR-71)
+ (5, 'DH-2026-0005', 1, NULL, 13, NULL, NULL, NULL, 'Online', N'Buổi PT Lẻ', N'Một buổi tập cùng huấn luyện viên.', N'Không ràng buộc kỳ hạn', 450000, 0, 10, 40909, 'Pending', DATEADD(MINUTE, 18, @Now), DATEADD(MINUTE, -2, @Now), NULL, NULL, NULL, NULL), -- đang giữ slot ngày mai 14:00 (CBR-53)
+ (6, 'DH-2026-0006', 2, NULL, 2, 1, NULL, NULL, 'Online', N'Gói 1 Tháng', N'Bắt đầu xây thói quen tập luyện.', N'Tập không giới hạn giờ mở cửa
+Dùng đủ thiết bị khu cardio và khu tạ
+Miễn phí nước uống', 799000, 79900, 10, 65373, 'Paid', '2026-09-03 20:40:00', '2026-09-03 20:20:00', '2026-09-03 20:22:00', NULL, NULL, NULL),
+ (7, 'DH-2026-0007', 2, NULL, 3, NULL, NULL, NULL, 'Online', N'Gói 3 Tháng', N'Đủ thời gian thấy chuyển biến thể lực.', N'Tập không giới hạn giờ mở cửa
+Dùng đủ thiết bị khu cardio và khu tạ
+Miễn phí nước uống
+Tặng 1 buổi đo InBody', 2190000, 0, 10, 199091, 'Cancelled', '2026-09-19 10:20:00', '2026-09-19 10:00:00', NULL, 'InvalidPayment', '2026-09-19 10:26:00', N'Tiền về sau khi đơn đã hết hạn thanh toán'), -- giao dịch Success nhưng đơn đã hủy → Manager hoàn tay (CBR-72, BR-47)
+ (8, 'DH-2026-0008', 2, NULL, 13, NULL, NULL, NULL, 'Online', N'Buổi PT Lẻ', N'Một buổi tập cùng huấn luyện viên.', N'Không ràng buộc kỳ hạn', 450000, 0, 10, 40909, 'Paid', '2026-09-25 19:20:00', '2026-09-25 19:00:00', '2026-09-25 19:02:00', NULL, NULL, NULL),
+ (9, 'DH-2026-0009', 3, NULL, 2, NULL, 4, 5, 'Counter', N'Gói 1 Tháng', N'Bắt đầu xây thói quen tập luyện.', N'Tập không giới hạn giờ mở cửa
+Dùng đủ thiết bị khu cardio và khu tạ
+Miễn phí nước uống', 799000, 0, 10, 72636, 'Paid', NULL, '2026-07-01 18:55:00', '2026-07-01 18:57:00', NULL, NULL, NULL),
+ (10, 'DH-2026-0010', 3, NULL, 8, NULL, 3, 6, 'Counter', N'Gói PT 1 Tháng', N'Gói PT theo kỳ hạn, tập T2–T6 một khung giờ cố định.', N'Huấn luyện viên riêng
+Giáo án và thực đơn cá nhân hóa', 8800000, 0, 10, 800000, 'Paid', NULL, '2026-07-03 09:00:00', '2026-07-03 09:02:00', NULL, NULL, NULL),
+ (11, 'DH-2026-0011', 4, NULL, 7, NULL, 3, 20, 'Counter', N'Gói 6 Tháng', N'Đã ngừng bán (P-04 không còn 6 tháng).', N'Tập không giới hạn giờ mở cửa
+Dùng đủ thiết bị khu cardio và khu tạ
+Miễn phí nước uống', 3990000, 0, 10, 362727, 'Paid', NULL, '2026-07-29 10:30:00', '2026-07-29 10:32:00', NULL, NULL, NULL),
+ (12, 'DH-2026-0012', 4, NULL, 9, NULL, 3, 23, 'Counter', N'Gói PT 2 Tháng', N'Gói PT theo kỳ hạn 2 tháng.', N'Huấn luyện viên riêng
+Giáo án và thực đơn cá nhân hóa
+Đo InBody mỗi 2 tuần', 16500000, 0, 10, 1500000, 'Paid', NULL, '2026-09-04 10:00:00', '2026-09-04 10:02:00', NULL, NULL, NULL),
+ (13, 'DH-2026-0013', 6, NULL, 2, 3, 3, 23, 'Counter', N'Gói 1 Tháng', N'Bắt đầu xây thói quen tập luyện.', N'Tập không giới hạn giờ mở cửa
+Dùng đủ thiết bị khu cardio và khu tạ
+Miễn phí nước uống', 799000, 100000, 10, 63545, 'Paid', NULL, '2026-09-04 08:40:00', '2026-09-04 08:42:00', NULL, NULL, NULL),
+ (14, 'DH-2026-0014', 6, NULL, 9, NULL, 3, 23, 'Counter', N'Gói PT 2 Tháng', N'Gói PT theo kỳ hạn 2 tháng.', N'Huấn luyện viên riêng
+Giáo án và thực đơn cá nhân hóa
+Đo InBody mỗi 2 tuần', 16500000, 0, 10, 1500000, 'Paid', NULL, '2026-09-04 09:00:00', '2026-09-04 09:02:00', NULL, NULL, NULL),
+ (15, 'DH-2026-0015', 7, NULL, 3, 3, 4, 43, 'Counter', N'Gói 3 Tháng', N'Đủ thời gian thấy chuyển biến thể lực.', N'Tập không giới hạn giờ mở cửa
+Dùng đủ thiết bị khu cardio và khu tạ
+Miễn phí nước uống
+Tặng 1 buổi đo InBody', 2190000, 100000, 10, 190000, 'Paid', NULL, '2026-08-20 17:40:00', '2026-08-20 17:42:00', NULL, NULL, NULL),
+ (16, 'DH-2026-0016', 8, NULL, 2, NULL, 4, 43, 'Counter', N'Gói 1 Tháng', N'Bắt đầu xây thói quen tập luyện.', N'Tập không giới hạn giờ mở cửa
+Dùng đủ thiết bị khu cardio và khu tạ
+Miễn phí nước uống', 799000, 0, 10, 72636, 'Paid', NULL, '2026-08-20 17:50:00', '2026-08-20 17:52:00', NULL, NULL, NULL),
+ (17, 'DH-2026-0017', 7, 8, 12, NULL, 3, 44, 'Counter', N'Gói PT Couple 2 Tháng', N'Hai người tập chung 2 tháng.', N'Chung hạn mức buổi cho 2 người
+Giáo án riêng cho từng người', 24900000, 0, 10, 2263636, 'Paid', NULL, '2026-08-21 09:00:00', '2026-08-21 09:02:00', NULL, NULL, NULL),
+ (18, 'DH-2026-0018', 9, NULL, 3, NULL, 4, 53, 'Counter', N'Gói 3 Tháng', N'Đủ thời gian thấy chuyển biến thể lực.', N'Tập không giới hạn giờ mở cửa
+Dùng đủ thiết bị khu cardio và khu tạ
+Miễn phí nước uống
+Tặng 1 buổi đo InBody', 2190000, 0, 10, 199091, 'Paid', NULL, '2026-09-03 15:20:00', '2026-09-03 15:22:00', NULL, NULL, NULL),
+ (19, 'DH-2026-0019', 11, NULL, 6, 2, NULL, NULL, 'Online', N'Gói 12 Tháng', N'Bảng giá cũ — đã thay bằng gói 12 tháng mới.', N'Tập không giới hạn giờ mở cửa
+Dùng đủ thiết bị khu cardio và khu tạ
+Miễn phí nước uống', 6490000, 200000, 10, 571818, 'Paid', '2026-07-15 11:25:00', '2026-07-15 11:05:00', '2026-07-15 11:07:00', NULL, NULL, NULL),
+ (20, 'DH-2026-0020', 12, NULL, 2, 4, 9, 54, 'Counter', N'Gói 1 Tháng', N'Bắt đầu xây thói quen tập luyện.', N'Tập không giới hạn giờ mở cửa
+Dùng đủ thiết bị khu cardio và khu tạ
+Miễn phí nước uống', 799000, 119850, 10, 61741, 'Paid', NULL, '2026-03-01 09:10:00', '2026-03-01 09:12:00', NULL, NULL, NULL),
+ (21, 'DH-2026-0021', 13, NULL, 2, NULL, 3, 55, 'Counter', N'Gói 1 Tháng', N'Bắt đầu xây thói quen tập luyện.', N'Tập không giới hạn giờ mở cửa
+Dùng đủ thiết bị khu cardio và khu tạ
+Miễn phí nước uống', 799000, 0, 10, 72636, 'Paid', NULL, '2026-09-21 10:00:00', '2026-09-21 10:02:00', NULL, NULL, NULL),
+ (22, 'DH-2026-0022', 14, NULL, 2, 1, NULL, NULL, 'Online', N'Gói 1 Tháng', N'Bắt đầu xây thói quen tập luyện.', N'Tập không giới hạn giờ mở cửa
+Dùng đủ thiết bị khu cardio và khu tạ
+Miễn phí nước uống', 799000, 79900, 10, 65373, 'Cancelled', '2026-09-20 21:45:00', '2026-09-20 21:25:00', NULL, 'PaymentTimeout', '2026-09-20 21:45:00', N'Quá hạn thanh toán 20 phút'),
+ (23, 'DH-2026-0023', 14, NULL, 2, NULL, NULL, NULL, 'Online', N'Gói 1 Tháng', N'Bắt đầu xây thói quen tập luyện.', N'Tập không giới hạn giờ mở cửa
+Dùng đủ thiết bị khu cardio và khu tạ
+Miễn phí nước uống', 799000, 0, 10, 72636, 'Pending', DATEADD(MINUTE, 17, @Now), DATEADD(MINUTE, -3, @Now), NULL, NULL, NULL, NULL), -- đơn online còn hạn ~17 phút
+ (24, 'DH-2026-0024', 17, NULL, 3, NULL, 4, 27, 'Counter', N'Gói 3 Tháng', N'Đủ thời gian thấy chuyển biến thể lực.', N'Tập không giới hạn giờ mở cửa
+Dùng đủ thiết bị khu cardio và khu tạ
+Miễn phí nước uống
+Tặng 1 buổi đo InBody', 2190000, 0, 10, 199091, 'Paid', NULL, '2026-09-10 18:00:00', '2026-09-10 18:02:00', NULL, NULL, NULL),
+ (25, 'DH-2026-0025', 17, NULL, 8, NULL, 3, 56, 'Counter', N'Gói PT 1 Tháng', N'Gói PT theo kỳ hạn, tập T2–T6 một khung giờ cố định.', N'Huấn luyện viên riêng
+Giáo án và thực đơn cá nhân hóa', 8800000, 0, 10, 800000, 'Paid', NULL, '2026-09-11 11:00:00', '2026-09-11 11:02:00', NULL, NULL, NULL),
+ (26, 'DH-2026-0026', 18, NULL, 2, NULL, 3, 58, 'Counter', N'Gói 1 Tháng', N'Bắt đầu xây thói quen tập luyện.', N'Tập không giới hạn giờ mở cửa
+Dùng đủ thiết bị khu cardio và khu tạ
+Miễn phí nước uống', 799000, 0, 10, 72636, 'Paid', NULL, '2026-09-15 07:10:00', '2026-09-15 07:12:00', NULL, NULL, NULL),
+ (27, 'DH-2026-0027', 19, NULL, 3, NULL, 3, 68, 'Counter', N'Gói 3 Tháng', N'Đủ thời gian thấy chuyển biến thể lực.', N'Tập không giới hạn giờ mở cửa
+Dùng đủ thiết bị khu cardio và khu tạ
+Miễn phí nước uống
+Tặng 1 buổi đo InBody', 2190000, 0, 10, 199091, 'Paid', NULL, '2026-08-01 08:10:00', '2026-08-01 08:12:00', NULL, NULL, NULL),
+ (28, 'DH-2026-0028', 20, NULL, 2, NULL, 3, 69, 'Counter', N'Gói 1 Tháng', N'Bắt đầu xây thói quen tập luyện.', N'Tập không giới hạn giờ mở cửa
+Dùng đủ thiết bị khu cardio và khu tạ
+Miễn phí nước uống', 799000, 0, 10, 72636, 'Paid', NULL, '2026-07-01 08:10:00', '2026-07-01 08:12:00', NULL, NULL, NULL),
+ (29, 'DH-2026-0029', 21, NULL, 3, NULL, 3, 70, 'Counter', N'Gói 3 Tháng', N'Đủ thời gian thấy chuyển biến thể lực.', N'Tập không giới hạn giờ mở cửa
+Dùng đủ thiết bị khu cardio và khu tạ
+Miễn phí nước uống
+Tặng 1 buổi đo InBody', 2190000, 0, 10, 199091, 'Paid', NULL, '2026-09-01 08:05:00', '2026-09-01 08:07:00', NULL, NULL, NULL),
+ (30, 'DH-2026-0030', 21, NULL, 8, NULL, 3, 56, 'Counter', N'Gói PT 1 Tháng', N'Gói PT theo kỳ hạn, tập T2–T6 một khung giờ cố định.', N'Huấn luyện viên riêng
+Giáo án và thực đơn cá nhân hóa', 8800000, 0, 10, 800000, 'Paid', NULL, '2026-09-11 07:30:00', '2026-09-11 07:32:00', NULL, NULL, NULL),
+ (31, 'DH-2026-0031', 103, NULL, 3, NULL, 4, 49, 'Counter', N'Gói 3 Tháng', N'Đủ thời gian thấy chuyển biến thể lực.', N'Tập không giới hạn giờ mở cửa
+Dùng đủ thiết bị khu cardio và khu tạ
+Miễn phí nước uống
+Tặng 1 buổi đo InBody', 2190000, 0, 10, 199091, 'Paid', NULL, '2026-09-01 14:00:00', '2026-09-01 14:02:00', NULL, NULL, NULL),
+ (32, 'DH-2026-0032', 5, NULL, 1, 6, 3, 1, 'Counter', N'Gói Ngày', N'Vé vào tập một lượt trong ngày.', N'Vào tập 1 lượt trong ngày
+Dùng đủ thiết bị khu chung', 120000, 20000, 10, 9091, 'Paid', NULL, DATEADD(MINUTE, 470, CAST(@Today AS DATETIME2(0))), DATEADD(MINUTE, 472, CAST(@Today AS DATETIME2(0))), NULL, NULL, NULL),
+ (33, 'DH-2026-0033', 16, NULL, 1, NULL, 3, 1, 'Counter', N'Gói Ngày', N'Vé vào tập một lượt trong ngày.', N'Vào tập 1 lượt trong ngày
+Dùng đủ thiết bị khu chung', 120000, 0, 10, 10909, 'Paid', NULL, DATEADD(MINUTE, 490, CAST(@Today AS DATETIME2(0))), DATEADD(MINUTE, 492, CAST(@Today AS DATETIME2(0))), NULL, NULL, NULL),
+ (34, 'DH-2026-0034', 16, NULL, 13, NULL, 3, 1, 'Counter', N'Buổi PT Lẻ', N'Một buổi tập cùng huấn luyện viên.', N'Không ràng buộc kỳ hạn', 450000, 0, 10, 40909, 'Paid', NULL, DATEADD(MINUTE, 495, CAST(@Today AS DATETIME2(0))), DATEADD(MINUTE, 497, CAST(@Today AS DATETIME2(0))), NULL, NULL, NULL), -- bán buổi lẻ hôm nay tại quầy (CBR-54)
+ (35, 'DH-2026-0035', 15, NULL, 2, NULL, 3, 1, 'Counter', N'Gói 1 Tháng', N'Bắt đầu xây thói quen tập luyện.', N'Tập không giới hạn giờ mở cửa
+Dùng đủ thiết bị khu cardio và khu tạ
+Miễn phí nước uống', 799000, 0, 10, 72636, 'Pending', NULL, DATEADD(MINUTE, 540, CAST(@Today AS DATETIME2(0))), NULL, NULL, NULL, NULL), -- chưa thu tiền → chặn chốt ca (CBR-78)
+ (36, 'DH-2026-0036', 10, NULL, 1, NULL, 3, 1, 'Counter', N'Gói Ngày', N'Vé vào tập một lượt trong ngày.', N'Vào tập 1 lượt trong ngày
+Dùng đủ thiết bị khu chung', 120000, 0, 10, 10909, 'Cancelled', NULL, DATEADD(MINUTE, 400, CAST(@Today AS DATETIME2(0))), DATEADD(MINUTE, 402, CAST(@Today AS DATETIME2(0))), 'CancelledByReceptionist', DATEADD(MINUTE, 415, CAST(@Today AS DATETIME2(0))), N'Khách đổi ý, đã hoàn tiền mặt tại quầy'), -- Paid → Cancelled trong cùng ca (CBR-11)
+ (37, 'DH-2026-0037', 201, NULL, 2, NULL, NULL, NULL, 'Online', N'Gói 1 Tháng', N'Bắt đầu xây thói quen tập luyện.', N'Tập không giới hạn giờ mở cửa
+Dùng đủ thiết bị khu cardio và khu tạ
+Miễn phí nước uống', 799000, 0, 10, 72636, 'Paid', '2026-09-07 10:40:00', '2026-09-07 10:20:00', '2026-09-07 10:22:00', NULL, NULL, NULL),
+ (38, 'DH-2026-0038', 202, NULL, 2, NULL, NULL, NULL, 'Online', N'Gói 1 Tháng', N'Bắt đầu xây thói quen tập luyện.', N'Tập không giới hạn giờ mở cửa
+Dùng đủ thiết bị khu cardio và khu tạ
+Miễn phí nước uống', 799000, 0, 10, 72636, 'Paid', '2026-06-26 18:09:00', '2026-06-26 17:49:00', '2026-06-26 17:51:00', NULL, NULL, NULL),
+ (39, 'DH-2026-0039', 203, NULL, 3, NULL, 4, 72, 'Counter', N'Gói 3 Tháng', N'Đủ thời gian thấy chuyển biến thể lực.', N'Tập không giới hạn giờ mở cửa
+Dùng đủ thiết bị khu cardio và khu tạ
+Miễn phí nước uống
+Tặng 1 buổi đo InBody', 2190000, 0, 10, 199091, 'Paid', NULL, '2026-06-17 17:10:00', '2026-06-17 17:12:00', NULL, NULL, NULL),
+ (40, 'DH-2026-0040', 203, NULL, 3, NULL, 4, 31, 'Counter', N'Gói 3 Tháng', N'Đủ thời gian thấy chuyển biến thể lực.', N'Tập không giới hạn giờ mở cửa
+Dùng đủ thiết bị khu cardio và khu tạ
+Miễn phí nước uống
+Tặng 1 buổi đo InBody', 2190000, 0, 10, 199091, 'Paid', NULL, '2026-09-17 13:20:00', '2026-09-17 13:22:00', NULL, NULL, NULL),
+ (41, 'DH-2026-0041', 204, NULL, 3, NULL, NULL, NULL, 'Online', N'Gói 3 Tháng', N'Đủ thời gian thấy chuyển biến thể lực.', N'Tập không giới hạn giờ mở cửa
+Dùng đủ thiết bị khu cardio và khu tạ
+Miễn phí nước uống
+Tặng 1 buổi đo InBody', 2190000, 0, 10, 199091, 'Paid', '2026-06-17 14:39:00', '2026-06-17 14:19:00', '2026-06-17 14:21:00', NULL, NULL, NULL),
+ (42, 'DH-2026-0042', 205, NULL, 3, NULL, 3, 73, 'Counter', N'Gói 3 Tháng', N'Đủ thời gian thấy chuyển biến thể lực.', N'Tập không giới hạn giờ mở cửa
+Dùng đủ thiết bị khu cardio và khu tạ
+Miễn phí nước uống
+Tặng 1 buổi đo InBody', 2190000, 0, 10, 199091, 'Paid', NULL, '2026-09-08 10:23:00', '2026-09-08 10:25:00', NULL, NULL, NULL),
+ (43, 'DH-2026-0043', 206, NULL, 4, NULL, 3, 74, 'Counter', N'Gói 9 Tháng', N'Cam kết dài hạn, giá tốt.', N'Tập không giới hạn giờ mở cửa
+Dùng đủ thiết bị khu cardio và khu tạ
+Miễn phí nước uống
+Tặng 3 buổi đo InBody', 5490000, 0, 10, 499091, 'Paid', NULL, '2026-06-19 12:08:00', '2026-06-19 12:10:00', NULL, NULL, NULL),
+ (44, 'DH-2026-0044', 207, NULL, 5, NULL, NULL, NULL, 'Online', N'Gói 12 Tháng', N'Mức giá tốt nhất cho người tập lâu dài.', N'Tập không giới hạn giờ mở cửa
+Dùng đủ thiết bị khu cardio và khu tạ
+Miễn phí nước uống
+Tặng 4 buổi đo InBody', 6990000, 0, 10, 635455, 'Paid', '2026-07-11 10:56:00', '2026-07-11 10:36:00', '2026-07-11 10:38:00', NULL, NULL, NULL),
+ (45, 'DH-2026-0045', 208, NULL, 4, NULL, NULL, NULL, 'Online', N'Gói 9 Tháng', N'Cam kết dài hạn, giá tốt.', N'Tập không giới hạn giờ mở cửa
+Dùng đủ thiết bị khu cardio và khu tạ
+Miễn phí nước uống
+Tặng 3 buổi đo InBody', 5490000, 0, 10, 499091, 'Paid', '2026-08-06 14:00:00', '2026-08-06 13:40:00', '2026-08-06 13:42:00', NULL, NULL, NULL),
+ (46, 'DH-2026-0046', 209, NULL, 3, NULL, 4, 75, 'Counter', N'Gói 3 Tháng', N'Đủ thời gian thấy chuyển biến thể lực.', N'Tập không giới hạn giờ mở cửa
+Dùng đủ thiết bị khu cardio và khu tạ
+Miễn phí nước uống
+Tặng 1 buổi đo InBody', 2190000, 0, 10, 199091, 'Paid', NULL, '2026-06-29 19:50:00', '2026-06-29 19:52:00', NULL, NULL, NULL),
+ (47, 'DH-2026-0047', 210, NULL, 1, NULL, 3, 58, 'Counter', N'Gói Ngày', N'Vé vào tập một lượt trong ngày.', N'Vào tập 1 lượt trong ngày
+Dùng đủ thiết bị khu chung', 120000, 0, 10, 10909, 'Paid', NULL, '2026-09-15 12:40:00', '2026-09-15 12:42:00', NULL, NULL, NULL),
+ (48, 'DH-2026-0048', 210, NULL, 1, NULL, 3, 64, 'Counter', N'Gói Ngày', N'Vé vào tập một lượt trong ngày.', N'Vào tập 1 lượt trong ngày
+Dùng đủ thiết bị khu chung', 120000, 0, 10, 10909, 'Paid', NULL, '2026-09-28 09:10:00', '2026-09-28 09:12:00', NULL, NULL, NULL),
+ (49, 'DH-2026-0049', 211, NULL, 3, NULL, NULL, NULL, 'Online', N'Gói 3 Tháng', N'Đủ thời gian thấy chuyển biến thể lực.', N'Tập không giới hạn giờ mở cửa
+Dùng đủ thiết bị khu cardio và khu tạ
+Miễn phí nước uống
+Tặng 1 buổi đo InBody', 2190000, 0, 10, 199091, 'Paid', '2026-08-10 16:40:00', '2026-08-10 16:20:00', '2026-08-10 16:22:00', NULL, NULL, NULL),
+ (50, 'DH-2026-0050', 212, NULL, 3, NULL, 4, 76, 'Counter', N'Gói 3 Tháng', N'Đủ thời gian thấy chuyển biến thể lực.', N'Tập không giới hạn giờ mở cửa
+Dùng đủ thiết bị khu cardio và khu tạ
+Miễn phí nước uống
+Tặng 1 buổi đo InBody', 2190000, 0, 10, 199091, 'Paid', NULL, '2026-07-16 17:10:00', '2026-07-16 17:12:00', NULL, NULL, NULL),
+ (51, 'DH-2026-0051', 213, NULL, 4, NULL, NULL, NULL, 'Online', N'Gói 9 Tháng', N'Cam kết dài hạn, giá tốt.', N'Tập không giới hạn giờ mở cửa
+Dùng đủ thiết bị khu cardio và khu tạ
+Miễn phí nước uống
+Tặng 3 buổi đo InBody', 5490000, 0, 10, 499091, 'Paid', '2026-07-18 17:54:00', '2026-07-18 17:34:00', '2026-07-18 17:36:00', NULL, NULL, NULL),
+ (52, 'DH-2026-0052', 214, NULL, 2, NULL, 4, 31, 'Counter', N'Gói 1 Tháng', N'Bắt đầu xây thói quen tập luyện.', N'Tập không giới hạn giờ mở cửa
+Dùng đủ thiết bị khu cardio và khu tạ
+Miễn phí nước uống', 799000, 0, 10, 72636, 'Paid', NULL, '2026-09-17 20:07:00', '2026-09-17 20:09:00', NULL, NULL, NULL),
+ (53, 'DH-2026-0053', 215, NULL, 2, NULL, 11, 77, 'Counter', N'Gói 1 Tháng', N'Bắt đầu xây thói quen tập luyện.', N'Tập không giới hạn giờ mở cửa
+Dùng đủ thiết bị khu cardio và khu tạ
+Miễn phí nước uống', 799000, 0, 10, 72636, 'Paid', NULL, '2026-09-12 19:14:00', '2026-09-12 19:16:00', NULL, NULL, NULL),
+ (54, 'DH-2026-0054', 216, NULL, 2, NULL, 4, 78, 'Counter', N'Gói 1 Tháng', N'Bắt đầu xây thói quen tập luyện.', N'Tập không giới hạn giờ mở cửa
+Dùng đủ thiết bị khu cardio và khu tạ
+Miễn phí nước uống', 799000, 0, 10, 72636, 'Paid', NULL, '2026-07-13 17:35:00', '2026-07-13 17:37:00', NULL, NULL, NULL),
+ (55, 'DH-2026-0055', 216, NULL, 3, NULL, 4, 79, 'Counter', N'Gói 3 Tháng', N'Đủ thời gian thấy chuyển biến thể lực.', N'Tập không giới hạn giờ mở cửa
+Dùng đủ thiết bị khu cardio và khu tạ
+Miễn phí nước uống
+Tặng 1 buổi đo InBody', 2190000, 0, 10, 199091, 'Paid', NULL, '2026-08-09 20:40:00', '2026-08-09 20:42:00', NULL, NULL, NULL),
+ (56, 'DH-2026-0056', 217, NULL, 2, NULL, 4, 80, 'Counter', N'Gói 1 Tháng', N'Bắt đầu xây thói quen tập luyện.', N'Tập không giới hạn giờ mở cửa
+Dùng đủ thiết bị khu cardio và khu tạ
+Miễn phí nước uống', 799000, 0, 10, 72636, 'Paid', NULL, '2026-07-08 17:29:00', '2026-07-08 17:31:00', NULL, NULL, NULL),
+ (57, 'DH-2026-0057', 217, NULL, 2, NULL, 4, 81, 'Counter', N'Gói 1 Tháng', N'Bắt đầu xây thói quen tập luyện.', N'Tập không giới hạn giờ mở cửa
+Dùng đủ thiết bị khu cardio và khu tạ
+Miễn phí nước uống', 799000, 0, 10, 72636, 'Paid', NULL, '2026-08-04 13:00:00', '2026-08-04 13:02:00', NULL, NULL, NULL),
+ (58, 'DH-2026-0058', 218, NULL, 2, NULL, 4, 82, 'Counter', N'Gói 1 Tháng', N'Bắt đầu xây thói quen tập luyện.', N'Tập không giới hạn giờ mở cửa
+Dùng đủ thiết bị khu cardio và khu tạ
+Miễn phí nước uống', 799000, 0, 10, 72636, 'Paid', NULL, '2026-06-02 18:35:00', '2026-06-02 18:37:00', NULL, NULL, NULL),
+ (59, 'DH-2026-0059', 219, NULL, 4, NULL, NULL, NULL, 'Online', N'Gói 9 Tháng', N'Cam kết dài hạn, giá tốt.', N'Tập không giới hạn giờ mở cửa
+Dùng đủ thiết bị khu cardio và khu tạ
+Miễn phí nước uống
+Tặng 3 buổi đo InBody', 5490000, 0, 10, 499091, 'Paid', '2026-06-04 11:38:00', '2026-06-04 11:18:00', '2026-06-04 11:20:00', NULL, NULL, NULL),
+ (60, 'DH-2026-0060', 220, NULL, 1, NULL, 4, 83, 'Counter', N'Gói Ngày', N'Vé vào tập một lượt trong ngày.', N'Vào tập 1 lượt trong ngày
+Dùng đủ thiết bị khu chung', 120000, 0, 10, 10909, 'Paid', NULL, '2026-08-25 16:30:00', '2026-08-25 16:32:00', NULL, NULL, NULL),
+ (61, 'DH-2026-0061', 221, NULL, 4, NULL, NULL, NULL, 'Online', N'Gói 9 Tháng', N'Cam kết dài hạn, giá tốt.', N'Tập không giới hạn giờ mở cửa
+Dùng đủ thiết bị khu cardio và khu tạ
+Miễn phí nước uống
+Tặng 3 buổi đo InBody', 5490000, 0, 10, 499091, 'Paid', '2026-06-20 18:48:00', '2026-06-20 18:28:00', '2026-06-20 18:30:00', NULL, NULL, NULL),
+ (62, 'DH-2026-0062', 222, NULL, 2, NULL, 3, 51, 'Counter', N'Gói 1 Tháng', N'Bắt đầu xây thói quen tập luyện.', N'Tập không giới hạn giờ mở cửa
+Dùng đủ thiết bị khu cardio và khu tạ
+Miễn phí nước uống', 799000, 0, 10, 72636, 'Paid', NULL, '2026-09-16 09:29:00', '2026-09-16 09:31:00', NULL, NULL, NULL),
+ (63, 'DH-2026-0063', 223, NULL, 2, NULL, NULL, NULL, 'Online', N'Gói 1 Tháng', N'Bắt đầu xây thói quen tập luyện.', N'Tập không giới hạn giờ mở cửa
+Dùng đủ thiết bị khu cardio và khu tạ
+Miễn phí nước uống', 799000, 0, 10, 72636, 'Paid', '2026-08-03 10:38:00', '2026-08-03 10:18:00', '2026-08-03 10:20:00', NULL, NULL, NULL),
+ (64, 'DH-2026-0064', 224, NULL, 5, NULL, 3, 73, 'Counter', N'Gói 12 Tháng', N'Mức giá tốt nhất cho người tập lâu dài.', N'Tập không giới hạn giờ mở cửa
+Dùng đủ thiết bị khu cardio và khu tạ
+Miễn phí nước uống
+Tặng 4 buổi đo InBody', 6990000, 0, 10, 635455, 'Paid', NULL, '2026-09-08 09:44:00', '2026-09-08 09:46:00', NULL, NULL, NULL),
+ (65, 'DH-2026-0065', 225, NULL, 4, NULL, NULL, NULL, 'Online', N'Gói 9 Tháng', N'Cam kết dài hạn, giá tốt.', N'Tập không giới hạn giờ mở cửa
+Dùng đủ thiết bị khu cardio và khu tạ
+Miễn phí nước uống
+Tặng 3 buổi đo InBody', 5490000, 0, 10, 499091, 'Paid', '2026-07-26 17:13:00', '2026-07-26 16:53:00', '2026-07-26 16:55:00', NULL, NULL, NULL),
+ (66, 'DH-2026-0066', 226, NULL, 2, NULL, 4, 84, 'Counter', N'Gói 1 Tháng', N'Bắt đầu xây thói quen tập luyện.', N'Tập không giới hạn giờ mở cửa
+Dùng đủ thiết bị khu cardio và khu tạ
+Miễn phí nước uống', 799000, 0, 10, 72636, 'Paid', NULL, '2026-06-26 16:09:00', '2026-06-26 16:11:00', NULL, NULL, NULL),
+ (67, 'DH-2026-0067', 226, NULL, 2, NULL, 4, 85, 'Counter', N'Gói 1 Tháng', N'Bắt đầu xây thói quen tập luyện.', N'Tập không giới hạn giờ mở cửa
+Dùng đủ thiết bị khu cardio và khu tạ
+Miễn phí nước uống', 799000, 0, 10, 72636, 'Paid', NULL, '2026-07-23 20:30:00', '2026-07-23 20:32:00', NULL, NULL, NULL),
+ (68, 'DH-2026-0068', 227, NULL, 2, NULL, 9, 86, 'Counter', N'Gói 1 Tháng', N'Bắt đầu xây thói quen tập luyện.', N'Tập không giới hạn giờ mở cửa
+Dùng đủ thiết bị khu cardio và khu tạ
+Miễn phí nước uống', 799000, 0, 10, 72636, 'Paid', NULL, '2026-06-28 10:53:00', '2026-06-28 10:55:00', NULL, NULL, NULL),
+ (69, 'DH-2026-0069', 228, NULL, 2, 1, NULL, NULL, 'Online', N'Gói 1 Tháng', N'Bắt đầu xây thói quen tập luyện.', N'Tập không giới hạn giờ mở cửa
+Dùng đủ thiết bị khu cardio và khu tạ
+Miễn phí nước uống', 799000, 79900, 10, 65373, 'Paid', '2026-09-15 10:35:00', '2026-09-15 10:15:00', '2026-09-15 10:17:00', NULL, NULL, NULL),
+ (70, 'DH-2026-0070', 229, NULL, 4, NULL, 3, 87, 'Counter', N'Gói 9 Tháng', N'Cam kết dài hạn, giá tốt.', N'Tập không giới hạn giờ mở cửa
+Dùng đủ thiết bị khu cardio và khu tạ
+Miễn phí nước uống
+Tặng 3 buổi đo InBody', 5490000, 0, 10, 499091, 'Paid', NULL, '2026-08-20 12:49:00', '2026-08-20 12:51:00', NULL, NULL, NULL),
+ (71, 'DH-2026-0071', 230, NULL, 1, NULL, 3, 88, 'Counter', N'Gói Ngày', N'Vé vào tập một lượt trong ngày.', N'Vào tập 1 lượt trong ngày
+Dùng đủ thiết bị khu chung', 120000, 0, 10, 10909, 'Paid', NULL, '2026-08-13 09:20:00', '2026-08-13 09:22:00', NULL, NULL, NULL),
+ (72, 'DH-2026-0072', 231, NULL, 3, NULL, 3, 11, 'Counter', N'Gói 3 Tháng', N'Đủ thời gian thấy chuyển biến thể lực.', N'Tập không giới hạn giờ mở cửa
+Dùng đủ thiết bị khu cardio và khu tạ
+Miễn phí nước uống
+Tặng 1 buổi đo InBody', 2190000, 0, 10, 199091, 'Paid', NULL, '2026-07-14 09:52:00', '2026-07-14 09:54:00', NULL, NULL, NULL),
+ (73, 'DH-2026-0073', 232, NULL, 2, NULL, NULL, NULL, 'Online', N'Gói 1 Tháng', N'Bắt đầu xây thói quen tập luyện.', N'Tập không giới hạn giờ mở cửa
+Dùng đủ thiết bị khu cardio và khu tạ
+Miễn phí nước uống', 799000, 0, 10, 72636, 'Paid', '2026-08-22 14:13:00', '2026-08-22 13:53:00', '2026-08-22 13:55:00', NULL, NULL, NULL),
+ (74, 'DH-2026-0074', 232, NULL, 2, NULL, 4, 31, 'Counter', N'Gói 1 Tháng', N'Bắt đầu xây thói quen tập luyện.', N'Tập không giới hạn giờ mở cửa
+Dùng đủ thiết bị khu cardio và khu tạ
+Miễn phí nước uống', 799000, 0, 10, 72636, 'Paid', NULL, '2026-09-17 19:20:00', '2026-09-17 19:22:00', NULL, NULL, NULL),
+ (75, 'DH-2026-0075', 233, NULL, 2, NULL, NULL, NULL, 'Online', N'Gói 1 Tháng', N'Bắt đầu xây thói quen tập luyện.', N'Tập không giới hạn giờ mở cửa
+Dùng đủ thiết bị khu cardio và khu tạ
+Miễn phí nước uống', 799000, 0, 10, 72636, 'Paid', '2026-08-29 12:53:00', '2026-08-29 12:33:00', '2026-08-29 12:35:00', NULL, NULL, NULL),
+ (76, 'DH-2026-0076', 233, NULL, 3, NULL, 4, 40, 'Counter', N'Gói 3 Tháng', N'Đủ thời gian thấy chuyển biến thể lực.', N'Tập không giới hạn giờ mở cửa
+Dùng đủ thiết bị khu cardio và khu tạ
+Miễn phí nước uống
+Tặng 1 buổi đo InBody', 2190000, 0, 10, 199091, 'Paid', NULL, '2026-09-29 18:50:00', '2026-09-29 18:52:00', NULL, NULL, NULL),
+ (77, 'DH-2026-0077', 234, NULL, 4, NULL, 11, 89, 'Counter', N'Gói 9 Tháng', N'Cam kết dài hạn, giá tốt.', N'Tập không giới hạn giờ mở cửa
+Dùng đủ thiết bị khu cardio và khu tạ
+Miễn phí nước uống
+Tặng 3 buổi đo InBody', 5490000, 0, 10, 499091, 'Paid', NULL, '2026-08-01 14:01:00', '2026-08-01 14:03:00', NULL, NULL, NULL),
+ (78, 'DH-2026-0078', 235, NULL, 2, NULL, NULL, NULL, 'Online', N'Gói 1 Tháng', N'Bắt đầu xây thói quen tập luyện.', N'Tập không giới hạn giờ mở cửa
+Dùng đủ thiết bị khu cardio và khu tạ
+Miễn phí nước uống', 799000, 0, 10, 72636, 'Paid', '2026-07-05 14:09:00', '2026-07-05 13:49:00', '2026-07-05 13:51:00', NULL, NULL, NULL),
+ (79, 'DH-2026-0079', 235, NULL, 2, NULL, 3, 90, 'Counter', N'Gói 1 Tháng', N'Bắt đầu xây thói quen tập luyện.', N'Tập không giới hạn giờ mở cửa
+Dùng đủ thiết bị khu cardio và khu tạ
+Miễn phí nước uống', 799000, 0, 10, 72636, 'Paid', NULL, '2026-08-03 06:50:00', '2026-08-03 06:52:00', NULL, NULL, NULL),
+ (80, 'DH-2026-0080', 236, NULL, 5, NULL, 3, 91, 'Counter', N'Gói 12 Tháng', N'Mức giá tốt nhất cho người tập lâu dài.', N'Tập không giới hạn giờ mở cửa
+Dùng đủ thiết bị khu cardio và khu tạ
+Miễn phí nước uống
+Tặng 4 buổi đo InBody', 6990000, 0, 10, 635455, 'Paid', NULL, '2026-06-02 09:52:00', '2026-06-02 09:54:00', NULL, NULL, NULL),
+ (81, 'DH-2026-0081', 237, NULL, 3, NULL, 3, 92, 'Counter', N'Gói 3 Tháng', N'Đủ thời gian thấy chuyển biến thể lực.', N'Tập không giới hạn giờ mở cửa
+Dùng đủ thiết bị khu cardio và khu tạ
+Miễn phí nước uống
+Tặng 1 buổi đo InBody', 2190000, 0, 10, 199091, 'Paid', NULL, '2026-08-26 11:09:00', '2026-08-26 11:11:00', NULL, NULL, NULL),
+ (82, 'DH-2026-0082', 238, NULL, 5, NULL, NULL, NULL, 'Online', N'Gói 12 Tháng', N'Mức giá tốt nhất cho người tập lâu dài.', N'Tập không giới hạn giờ mở cửa
+Dùng đủ thiết bị khu cardio và khu tạ
+Miễn phí nước uống
+Tặng 4 buổi đo InBody', 6990000, 0, 10, 635455, 'Paid', '2026-06-24 17:58:00', '2026-06-24 17:38:00', '2026-06-24 17:40:00', NULL, NULL, NULL),
+ (83, 'DH-2026-0083', 239, NULL, 2, NULL, NULL, NULL, 'Online', N'Gói 1 Tháng', N'Bắt đầu xây thói quen tập luyện.', N'Tập không giới hạn giờ mở cửa
+Dùng đủ thiết bị khu cardio và khu tạ
+Miễn phí nước uống', 799000, 0, 10, 72636, 'Paid', '2026-08-17 16:46:00', '2026-08-17 16:26:00', '2026-08-17 16:28:00', NULL, NULL, NULL),
+ (84, 'DH-2026-0084', 239, NULL, 2, NULL, 4, 30, 'Counter', N'Gói 1 Tháng', N'Bắt đầu xây thói quen tập luyện.', N'Tập không giới hạn giờ mở cửa
+Dùng đủ thiết bị khu cardio và khu tạ
+Miễn phí nước uống', 799000, 0, 10, 72636, 'Paid', NULL, '2026-09-16 13:10:00', '2026-09-16 13:12:00', NULL, NULL, NULL),
+ (85, 'DH-2026-0085', 240, NULL, 1, NULL, 4, 93, 'Counter', N'Gói Ngày', N'Vé vào tập một lượt trong ngày.', N'Vào tập 1 lượt trong ngày
+Dùng đủ thiết bị khu chung', 120000, 0, 10, 10909, 'Paid', NULL, '2026-06-18 13:40:00', '2026-06-18 13:42:00', NULL, NULL, NULL),
+ (86, 'DH-2026-0086', 201, NULL, 8, NULL, 3, 59, 'Counter', N'Gói PT 1 Tháng', N'Gói PT theo kỳ hạn, tập T2–T6 một khung giờ cố định.', N'Huấn luyện viên riêng
+Giáo án và thực đơn cá nhân hóa', 8800000, 0, 10, 800000, 'Paid', NULL, '2026-09-17 10:30:00', '2026-09-17 10:32:00', NULL, NULL, NULL),
+ (87, 'DH-2026-0087', 203, NULL, 8, NULL, 3, 59, 'Counter', N'Gói PT 1 Tháng', N'Gói PT theo kỳ hạn, tập T2–T6 một khung giờ cố định.', N'Huấn luyện viên riêng
+Giáo án và thực đơn cá nhân hóa', 8800000, 0, 10, 800000, 'Paid', NULL, '2026-09-17 10:30:00', '2026-09-17 10:32:00', NULL, NULL, NULL),
+ (88, 'DH-2026-0088', 205, NULL, 9, NULL, 3, 63, 'Counter', N'Gói PT 2 Tháng', N'Gói PT theo kỳ hạn 2 tháng.', N'Huấn luyện viên riêng
+Giáo án và thực đơn cá nhân hóa
+Đo InBody mỗi 2 tuần', 16500000, 0, 10, 1500000, 'Paid', NULL, '2026-09-25 10:30:00', '2026-09-25 10:32:00', NULL, NULL, NULL),
+ (89, 'DH-2026-0089', 204, NULL, 8, NULL, 3, 56, 'Counter', N'Gói PT 1 Tháng', N'Gói PT theo kỳ hạn, tập T2–T6 một khung giờ cố định.', N'Huấn luyện viên riêng
+Giáo án và thực đơn cá nhân hóa', 8800000, 0, 10, 800000, 'Paid', NULL, '2026-09-11 10:30:00', '2026-09-11 10:32:00', NULL, NULL, NULL),
+ (90, 'DH-2026-0090', 206, NULL, 8, NULL, 3, 67, 'Counter', N'Gói PT 1 Tháng', N'Gói PT theo kỳ hạn, tập T2–T6 một khung giờ cố định.', N'Huấn luyện viên riêng
+Giáo án và thực đơn cá nhân hóa', 8800000, 0, 10, 800000, 'Paid', NULL, '2026-10-02 10:30:00', '2026-10-02 10:32:00', NULL, NULL, NULL),
+ (91, 'DH-2026-0091', 220, NULL, 1, 6, 4, 49, 'Counter', N'Gói Ngày', N'Vé vào tập một lượt trong ngày.', N'Vào tập 1 lượt trong ngày
+Dùng đủ thiết bị khu chung', 120000, 20000, 10, 9091, 'Paid', NULL, '2026-09-01 13:05:00', '2026-09-01 13:07:00', NULL, NULL, NULL),
+ (92, 'DH-2026-0092', 220, NULL, 1, 6, 4, 53, 'Counter', N'Gói Ngày', N'Vé vào tập một lượt trong ngày.', N'Vào tập 1 lượt trong ngày
+Dùng đủ thiết bị khu chung', 120000, 20000, 10, 9091, 'Paid', NULL, '2026-09-03 16:25:00', '2026-09-03 16:27:00', NULL, NULL, NULL),
+ (93, 'DH-2026-0093', 210, NULL, 1, NULL, 3, 94, 'Counter', N'Gói Ngày', N'Vé vào tập một lượt trong ngày.', N'Vào tập 1 lượt trong ngày
+Dùng đủ thiết bị khu chung', 120000, 0, 10, 10909, 'Paid', NULL, '2026-09-03 08:05:00', '2026-09-03 08:07:00', NULL, NULL, NULL),
+ (94, 'DH-2026-0094', 240, NULL, 1, NULL, 4, 50, 'Counter', N'Gói Ngày', N'Vé vào tập một lượt trong ngày.', N'Vào tập 1 lượt trong ngày
+Dùng đủ thiết bị khu chung', 120000, 0, 10, 10909, 'Paid', NULL, '2026-09-04 16:25:00', '2026-09-04 16:27:00', NULL, NULL, NULL),
+ (95, 'DH-2026-0095', 230, NULL, 1, NULL, 3, 23, 'Counter', N'Gói Ngày', N'Vé vào tập một lượt trong ngày.', N'Vào tập 1 lượt trong ngày
+Dùng đủ thiết bị khu chung', 120000, 0, 10, 10909, 'Paid', NULL, '2026-09-04 07:45:00', '2026-09-04 07:47:00', NULL, NULL, NULL),
+ (96, 'DH-2026-0096', 210, NULL, 1, NULL, 3, 95, 'Counter', N'Gói Ngày', N'Vé vào tập một lượt trong ngày.', N'Vào tập 1 lượt trong ngày
+Dùng đủ thiết bị khu chung', 120000, 0, 10, 10909, 'Paid', NULL, '2026-09-05 12:05:00', '2026-09-05 12:07:00', NULL, NULL, NULL),
+ (97, 'DH-2026-0097', 220, NULL, 1, NULL, 9, 96, 'Counter', N'Gói Ngày', N'Vé vào tập một lượt trong ngày.', N'Vào tập 1 lượt trong ngày
+Dùng đủ thiết bị khu chung', 120000, 0, 10, 10909, 'Paid', NULL, '2026-09-06 10:45:00', '2026-09-06 10:47:00', NULL, NULL, NULL),
+ (98, 'DH-2026-0098', 230, NULL, 1, 6, 4, 97, 'Counter', N'Gói Ngày', N'Vé vào tập một lượt trong ngày.', N'Vào tập 1 lượt trong ngày
+Dùng đủ thiết bị khu chung', 120000, 20000, 10, 9091, 'Paid', NULL, '2026-09-06 20:45:00', '2026-09-06 20:47:00', NULL, NULL, NULL),
+ (99, 'DH-2026-0099', 210, NULL, 1, NULL, 9, 96, 'Counter', N'Gói Ngày', N'Vé vào tập một lượt trong ngày.', N'Vào tập 1 lượt trong ngày
+Dùng đủ thiết bị khu chung', 120000, 0, 10, 10909, 'Paid', NULL, '2026-09-06 09:45:00', '2026-09-06 09:47:00', NULL, NULL, NULL),
+ (100, 'DH-2026-0100', 240, NULL, 1, 6, 3, 98, 'Counter', N'Gói Ngày', N'Vé vào tập một lượt trong ngày.', N'Vào tập 1 lượt trong ngày
+Dùng đủ thiết bị khu chung', 120000, 20000, 10, 9091, 'Paid', NULL, '2026-09-07 07:05:00', '2026-09-07 07:07:00', NULL, NULL, NULL),
+ (101, 'DH-2026-0101', 230, NULL, 1, NULL, 3, 98, 'Counter', N'Gói Ngày', N'Vé vào tập một lượt trong ngày.', N'Vào tập 1 lượt trong ngày
+Dùng đủ thiết bị khu chung', 120000, 0, 10, 10909, 'Paid', NULL, '2026-09-07 08:25:00', '2026-09-07 08:27:00', NULL, NULL, NULL),
+ (102, 'DH-2026-0102', 230, NULL, 1, NULL, 3, 73, 'Counter', N'Gói Ngày', N'Vé vào tập một lượt trong ngày.', N'Vào tập 1 lượt trong ngày
+Dùng đủ thiết bị khu chung', 120000, 0, 10, 10909, 'Paid', NULL, '2026-09-08 08:25:00', '2026-09-08 08:27:00', NULL, NULL, NULL),
+ (103, 'DH-2026-0103', 240, NULL, 1, 6, 4, 25, 'Counter', N'Gói Ngày', N'Vé vào tập một lượt trong ngày.', N'Vào tập 1 lượt trong ngày
+Dùng đủ thiết bị khu chung', 120000, 20000, 10, 9091, 'Paid', NULL, '2026-09-08 15:05:00', '2026-09-08 15:07:00', NULL, NULL, NULL),
+ (104, 'DH-2026-0104', 240, NULL, 1, NULL, 3, 99, 'Counter', N'Gói Ngày', N'Vé vào tập một lượt trong ngày.', N'Vào tập 1 lượt trong ngày
+Dùng đủ thiết bị khu chung', 120000, 0, 10, 10909, 'Paid', NULL, '2026-09-09 10:25:00', '2026-09-09 10:27:00', NULL, NULL, NULL),
+ (105, 'DH-2026-0105', 230, NULL, 1, NULL, 4, 27, 'Counter', N'Gói Ngày', N'Vé vào tập một lượt trong ngày.', N'Vào tập 1 lượt trong ngày
+Dùng đủ thiết bị khu chung', 120000, 0, 10, 10909, 'Paid', NULL, '2026-09-10 13:45:00', '2026-09-10 13:47:00', NULL, NULL, NULL),
+ (106, 'DH-2026-0106', 220, NULL, 1, NULL, 3, 56, 'Counter', N'Gói Ngày', N'Vé vào tập một lượt trong ngày.', N'Vào tập 1 lượt trong ngày
+Dùng đủ thiết bị khu chung', 120000, 0, 10, 10909, 'Paid', NULL, '2026-09-11 07:45:00', '2026-09-11 07:47:00', NULL, NULL, NULL),
+ (107, 'DH-2026-0107', 230, NULL, 1, 6, 11, 77, 'Counter', N'Gói Ngày', N'Vé vào tập một lượt trong ngày.', N'Vào tập 1 lượt trong ngày
+Dùng đủ thiết bị khu chung', 120000, 20000, 10, 9091, 'Paid', NULL, '2026-09-12 17:25:00', '2026-09-12 17:27:00', NULL, NULL, NULL),
+ (108, 'DH-2026-0108', 220, NULL, 1, 6, 11, 77, 'Counter', N'Gói Ngày', N'Vé vào tập một lượt trong ngày.', N'Vào tập 1 lượt trong ngày
+Dùng đủ thiết bị khu chung', 120000, 20000, 10, 9091, 'Paid', NULL, '2026-09-12 18:05:00', '2026-09-12 18:07:00', NULL, NULL, NULL),
+ (109, 'DH-2026-0109', 230, NULL, 1, NULL, 4, 100, 'Counter', N'Gói Ngày', N'Vé vào tập một lượt trong ngày.', N'Vào tập 1 lượt trong ngày
+Dùng đủ thiết bị khu chung', 120000, 0, 10, 10909, 'Paid', NULL, '2026-09-13 16:45:00', '2026-09-13 16:47:00', NULL, NULL, NULL),
+ (110, 'DH-2026-0110', 240, NULL, 1, NULL, 4, 100, 'Counter', N'Gói Ngày', N'Vé vào tập một lượt trong ngày.', N'Vào tập 1 lượt trong ngày
+Dùng đủ thiết bị khu chung', 120000, 0, 10, 10909, 'Paid', NULL, '2026-09-13 17:25:00', '2026-09-13 17:27:00', NULL, NULL, NULL),
+ (111, 'DH-2026-0111', 220, NULL, 1, 6, 4, 29, 'Counter', N'Gói Ngày', N'Vé vào tập một lượt trong ngày.', N'Vào tập 1 lượt trong ngày
+Dùng đủ thiết bị khu chung', 120000, 20000, 10, 9091, 'Paid', NULL, '2026-09-14 14:25:00', '2026-09-14 14:27:00', NULL, NULL, NULL),
+ (112, 'DH-2026-0112', 230, NULL, 1, NULL, 3, 58, 'Counter', N'Gói Ngày', N'Vé vào tập một lượt trong ngày.', N'Vào tập 1 lượt trong ngày
+Dùng đủ thiết bị khu chung', 120000, 0, 10, 10909, 'Paid', NULL, '2026-09-15 08:25:00', '2026-09-15 08:27:00', NULL, NULL, NULL),
+ (113, 'DH-2026-0113', 240, NULL, 1, NULL, 4, 30, 'Counter', N'Gói Ngày', N'Vé vào tập một lượt trong ngày.', N'Vào tập 1 lượt trong ngày
+Dùng đủ thiết bị khu chung', 120000, 0, 10, 10909, 'Paid', NULL, '2026-09-16 16:25:00', '2026-09-16 16:27:00', NULL, NULL, NULL),
+ (114, 'DH-2026-0114', 230, NULL, 1, NULL, 4, 30, 'Counter', N'Gói Ngày', N'Vé vào tập một lượt trong ngày.', N'Vào tập 1 lượt trong ngày
+Dùng đủ thiết bị khu chung', 120000, 0, 10, 10909, 'Paid', NULL, '2026-09-16 17:05:00', '2026-09-16 17:07:00', NULL, NULL, NULL),
+ (115, 'DH-2026-0115', 230, NULL, 1, 6, 4, 31, 'Counter', N'Gói Ngày', N'Vé vào tập một lượt trong ngày.', N'Vào tập 1 lượt trong ngày
+Dùng đủ thiết bị khu chung', 120000, 20000, 10, 9091, 'Paid', NULL, '2026-09-17 19:25:00', '2026-09-17 19:27:00', NULL, NULL, NULL),
+ (116, 'DH-2026-0116', 230, NULL, 1, NULL, 11, 101, 'Counter', N'Gói Ngày', N'Vé vào tập một lượt trong ngày.', N'Vào tập 1 lượt trong ngày
+Dùng đủ thiết bị khu chung', 120000, 0, 10, 10909, 'Paid', NULL, '2026-09-19 19:25:00', '2026-09-19 19:27:00', NULL, NULL, NULL),
+ (117, 'DH-2026-0117', 220, NULL, 1, NULL, 3, 102, 'Counter', N'Gói Ngày', N'Vé vào tập một lượt trong ngày.', N'Vào tập 1 lượt trong ngày
+Dùng đủ thiết bị khu chung', 120000, 0, 10, 10909, 'Paid', NULL, '2026-09-19 06:25:00', '2026-09-19 06:27:00', NULL, NULL, NULL),
+ (118, 'DH-2026-0118', 240, NULL, 1, NULL, 9, 103, 'Counter', N'Gói Ngày', N'Vé vào tập một lượt trong ngày.', N'Vào tập 1 lượt trong ngày
+Dùng đủ thiết bị khu chung', 120000, 0, 10, 10909, 'Paid', NULL, '2026-09-20 11:45:00', '2026-09-20 11:47:00', NULL, NULL, NULL),
+ (119, 'DH-2026-0119', 220, NULL, 1, NULL, 3, 55, 'Counter', N'Gói Ngày', N'Vé vào tập một lượt trong ngày.', N'Vào tập 1 lượt trong ngày
+Dùng đủ thiết bị khu chung', 120000, 0, 10, 10909, 'Paid', NULL, '2026-09-21 09:05:00', '2026-09-21 09:07:00', NULL, NULL, NULL),
+ (120, 'DH-2026-0120', 220, NULL, 1, 6, 3, 60, 'Counter', N'Gói Ngày', N'Vé vào tập một lượt trong ngày.', N'Vào tập 1 lượt trong ngày
+Dùng đủ thiết bị khu chung', 120000, 20000, 10, 9091, 'Paid', NULL, '2026-09-22 12:45:00', '2026-09-22 12:47:00', NULL, NULL, NULL),
+ (121, 'DH-2026-0121', 210, NULL, 1, 6, 3, 60, 'Counter', N'Gói Ngày', N'Vé vào tập một lượt trong ngày.', N'Vào tập 1 lượt trong ngày
+Dùng đủ thiết bị khu chung', 120000, 20000, 10, 9091, 'Paid', NULL, '2026-09-22 07:05:00', '2026-09-22 07:07:00', NULL, NULL, NULL),
+ (122, 'DH-2026-0122', 230, NULL, 1, NULL, 4, 34, 'Counter', N'Gói Ngày', N'Vé vào tập một lượt trong ngày.', N'Vào tập 1 lượt trong ngày
+Dùng đủ thiết bị khu chung', 120000, 0, 10, 10909, 'Paid', NULL, '2026-09-23 16:45:00', '2026-09-23 16:47:00', NULL, NULL, NULL),
+ (123, 'DH-2026-0123', 210, NULL, 1, NULL, 3, 61, 'Counter', N'Gói Ngày', N'Vé vào tập một lượt trong ngày.', N'Vào tập 1 lượt trong ngày
+Dùng đủ thiết bị khu chung', 120000, 0, 10, 10909, 'Paid', NULL, '2026-09-23 12:05:00', '2026-09-23 12:07:00', NULL, NULL, NULL),
+ (124, 'DH-2026-0124', 210, NULL, 1, NULL, 4, 35, 'Counter', N'Gói Ngày', N'Vé vào tập một lượt trong ngày.', N'Vào tập 1 lượt trong ngày
+Dùng đủ thiết bị khu chung', 120000, 0, 10, 10909, 'Paid', NULL, '2026-09-24 18:25:00', '2026-09-24 18:27:00', NULL, NULL, NULL),
+ (125, 'DH-2026-0125', 240, NULL, 1, 6, 3, 63, 'Counter', N'Gói Ngày', N'Vé vào tập một lượt trong ngày.', N'Vào tập 1 lượt trong ngày
+Dùng đủ thiết bị khu chung', 120000, 20000, 10, 9091, 'Paid', NULL, '2026-09-25 07:45:00', '2026-09-25 07:47:00', NULL, NULL, NULL),
+ (126, 'DH-2026-0126', 230, NULL, 1, 6, 4, 36, 'Counter', N'Gói Ngày', N'Vé vào tập một lượt trong ngày.', N'Vào tập 1 lượt trong ngày
+Dùng đủ thiết bị khu chung', 120000, 20000, 10, 9091, 'Paid', NULL, '2026-09-25 15:05:00', '2026-09-25 15:07:00', NULL, NULL, NULL),
+ (127, 'DH-2026-0127', 220, NULL, 1, NULL, 11, 104, 'Counter', N'Gói Ngày', N'Vé vào tập một lượt trong ngày.', N'Vào tập 1 lượt trong ngày
+Dùng đủ thiết bị khu chung', 120000, 0, 10, 10909, 'Paid', NULL, '2026-09-26 13:25:00', '2026-09-26 13:27:00', NULL, NULL, NULL),
+ (128, 'DH-2026-0128', 240, NULL, 1, 6, 4, 105, 'Counter', N'Gói Ngày', N'Vé vào tập một lượt trong ngày.', N'Vào tập 1 lượt trong ngày
+Dùng đủ thiết bị khu chung', 120000, 20000, 10, 9091, 'Paid', NULL, '2026-09-27 18:05:00', '2026-09-27 18:07:00', NULL, NULL, NULL),
+ (129, 'DH-2026-0129', 240, NULL, 1, NULL, 4, 39, 'Counter', N'Gói Ngày', N'Vé vào tập một lượt trong ngày.', N'Vào tập 1 lượt trong ngày
+Dùng đủ thiết bị khu chung', 120000, 0, 10, 10909, 'Paid', NULL, '2026-09-28 13:05:00', '2026-09-28 13:07:00', NULL, NULL, NULL),
+ (130, 'DH-2026-0130', 210, NULL, 1, 6, 3, 71, 'Counter', N'Gói Ngày', N'Vé vào tập một lượt trong ngày.', N'Vào tập 1 lượt trong ngày
+Dùng đủ thiết bị khu chung', 120000, 20000, 10, 9091, 'Paid', NULL, '2026-09-29 06:25:00', '2026-09-29 06:27:00', NULL, NULL, NULL),
+ (131, 'DH-2026-0131', 230, NULL, 1, NULL, 4, 40, 'Counter', N'Gói Ngày', N'Vé vào tập một lượt trong ngày.', N'Vào tập 1 lượt trong ngày
+Dùng đủ thiết bị khu chung', 120000, 0, 10, 10909, 'Paid', NULL, '2026-09-29 17:45:00', '2026-09-29 17:47:00', NULL, NULL, NULL),
+ (132, 'DH-2026-0132', 230, NULL, 1, NULL, 3, 65, 'Counter', N'Gói Ngày', N'Vé vào tập một lượt trong ngày.', N'Vào tập 1 lượt trong ngày
+Dùng đủ thiết bị khu chung', 120000, 0, 10, 10909, 'Paid', NULL, '2026-09-30 08:05:00', '2026-09-30 08:07:00', NULL, NULL, NULL),
+ (133, 'DH-2026-0133', 230, NULL, 1, NULL, 3, 66, 'Counter', N'Gói Ngày', N'Vé vào tập một lượt trong ngày.', N'Vào tập 1 lượt trong ngày
+Dùng đủ thiết bị khu chung', 120000, 0, 10, 10909, 'Paid', NULL, '2026-10-01 10:25:00', '2026-10-01 10:27:00', NULL, NULL, NULL),
+ (134, 'DH-2026-0134', 220, NULL, 1, NULL, 3, 66, 'Counter', N'Gói Ngày', N'Vé vào tập một lượt trong ngày.', N'Vào tập 1 lượt trong ngày
+Dùng đủ thiết bị khu chung', 120000, 0, 10, 10909, 'Paid', NULL, '2026-10-01 11:05:00', '2026-10-01 11:07:00', NULL, NULL, NULL),
+ (135, 'DH-2026-0135', 210, NULL, 1, 6, 4, 52, 'Counter', N'Gói Ngày', N'Vé vào tập một lượt trong ngày.', N'Vào tập 1 lượt trong ngày
+Dùng đủ thiết bị khu chung', 120000, 20000, 10, 9091, 'Paid', NULL, '2026-10-01 15:45:00', '2026-10-01 15:47:00', NULL, NULL, NULL),
+ (136, 'DH-2026-0136', 230, NULL, 1, NULL, 3, 67, 'Counter', N'Gói Ngày', N'Vé vào tập một lượt trong ngày.', N'Vào tập 1 lượt trong ngày
+Dùng đủ thiết bị khu chung', 120000, 0, 10, 10909, 'Paid', NULL, '2026-10-02 09:45:00', '2026-10-02 09:47:00', NULL, NULL, NULL),
+ (137, 'DH-2026-0137', 220, NULL, 1, 6, 4, 42, 'Counter', N'Gói Ngày', N'Vé vào tập một lượt trong ngày.', N'Vào tập 1 lượt trong ngày
+Dùng đủ thiết bị khu chung', 120000, 20000, 10, 9091, 'Paid', NULL, '2026-10-02 14:25:00', '2026-10-02 14:27:00', NULL, NULL, NULL),
+ (138, 'DH-2026-0138', 201, NULL, 13, NULL, NULL, NULL, 'Online', N'Buổi PT Lẻ', N'Một buổi tập cùng huấn luyện viên.', N'Không ràng buộc kỳ hạn', 450000, 0, 10, 40909, 'Paid', '2026-09-23 21:20:00', '2026-09-23 21:00:00', '2026-09-23 21:02:00', NULL, NULL, NULL),
+ (139, 'DH-2026-0139', 203, NULL, 13, NULL, NULL, NULL, 'Online', N'Buổi PT Lẻ', N'Một buổi tập cùng huấn luyện viên.', N'Không ràng buộc kỳ hạn', 450000, 0, 10, 40909, 'Paid', '2026-09-05 21:20:00', '2026-09-05 21:00:00', '2026-09-05 21:02:00', NULL, NULL, NULL),
+ (140, 'DH-2026-0140', 204, NULL, 13, NULL, NULL, NULL, 'Online', N'Buổi PT Lẻ', N'Một buổi tập cùng huấn luyện viên.', N'Không ràng buộc kỳ hạn', 450000, 0, 10, 40909, 'Paid', '2026-09-12 21:20:00', '2026-09-12 21:00:00', '2026-09-12 21:02:00', NULL, NULL, NULL),
+ (141, 'DH-2026-0141', 205, NULL, 13, NULL, NULL, NULL, 'Online', N'Buổi PT Lẻ', N'Một buổi tập cùng huấn luyện viên.', N'Không ràng buộc kỳ hạn', 450000, 0, 10, 40909, 'Paid', '2026-09-27 21:20:00', '2026-09-27 21:00:00', '2026-09-27 21:02:00', NULL, NULL, NULL),
+ (142, 'DH-2026-0142', 206, NULL, 13, NULL, 3, 57, 'Counter', N'Buổi PT Lẻ', N'Một buổi tập cùng huấn luyện viên.', N'Không ràng buộc kỳ hạn', 450000, 0, 10, 40909, 'Paid', NULL, '2026-09-14 06:00:00', '2026-09-14 06:02:00', NULL, NULL, NULL),
+ (143, 'DH-2026-0143', 207, NULL, 13, NULL, NULL, NULL, 'Online', N'Buổi PT Lẻ', N'Một buổi tập cùng huấn luyện viên.', N'Không ràng buộc kỳ hạn', 450000, 0, 10, 40909, 'Paid', '2026-09-28 21:20:00', '2026-09-28 21:00:00', '2026-09-28 21:02:00', NULL, NULL, NULL),
+ (144, 'DH-2026-0144', 208, NULL, 13, NULL, NULL, NULL, 'Online', N'Buổi PT Lẻ', N'Một buổi tập cùng huấn luyện viên.', N'Không ràng buộc kỳ hạn', 450000, 0, 10, 40909, 'Paid', '2026-09-19 21:20:00', '2026-09-19 21:00:00', '2026-09-19 21:02:00', NULL, NULL, NULL),
+ (145, 'DH-2026-0145', 209, NULL, 13, NULL, NULL, NULL, 'Online', N'Buổi PT Lẻ', N'Một buổi tập cùng huấn luyện viên.', N'Không ràng buộc kỳ hạn', 450000, 0, 10, 40909, 'Paid', '2026-09-15 21:20:00', '2026-09-15 21:00:00', '2026-09-15 21:02:00', NULL, NULL, NULL),
+ (146, 'DH-2026-0146', 211, NULL, 13, NULL, NULL, NULL, 'Online', N'Buổi PT Lẻ', N'Một buổi tập cùng huấn luyện viên.', N'Không ràng buộc kỳ hạn', 450000, 0, 10, 40909, 'Paid', '2026-09-27 21:20:00', '2026-09-27 21:00:00', '2026-09-27 21:02:00', NULL, NULL, NULL),
+ (147, 'DH-2026-0147', 212, NULL, 13, NULL, 4, 32, 'Counter', N'Buổi PT Lẻ', N'Một buổi tập cùng huấn luyện viên.', N'Không ràng buộc kỳ hạn', 450000, 0, 10, 40909, 'Paid', NULL, '2026-09-21 14:00:00', '2026-09-21 14:02:00', NULL, NULL, NULL),
+ (148, 'DH-2026-0148', 213, NULL, 13, NULL, NULL, NULL, 'Online', N'Buổi PT Lẻ', N'Một buổi tập cùng huấn luyện viên.', N'Không ràng buộc kỳ hạn', 450000, 0, 10, 40909, 'Paid', '2026-09-04 21:20:00', '2026-09-04 21:00:00', '2026-09-04 21:02:00', NULL, NULL, NULL),
+ (149, 'DH-2026-0149', 214, NULL, 13, NULL, NULL, NULL, 'Online', N'Buổi PT Lẻ', N'Một buổi tập cùng huấn luyện viên.', N'Không ràng buộc kỳ hạn', 450000, 0, 10, 40909, 'Paid', '2026-09-28 21:20:00', '2026-09-28 21:00:00', '2026-09-28 21:02:00', NULL, NULL, NULL),
+ (150, 'DH-2026-0150', 215, NULL, 13, NULL, NULL, NULL, 'Online', N'Buổi PT Lẻ', N'Một buổi tập cùng huấn luyện viên.', N'Không ràng buộc kỳ hạn', 450000, 0, 10, 40909, 'Paid', '2026-09-21 21:20:00', '2026-09-21 21:00:00', '2026-09-21 21:02:00', NULL, NULL, NULL),
+ (151, 'DH-2026-0151', 216, NULL, 13, NULL, NULL, NULL, 'Online', N'Buổi PT Lẻ', N'Một buổi tập cùng huấn luyện viên.', N'Không ràng buộc kỳ hạn', 450000, 0, 10, 40909, 'Paid', '2026-09-08 21:20:00', '2026-09-08 21:00:00', '2026-09-08 21:02:00', NULL, NULL, NULL),
+ (152, 'DH-2026-0152', 219, NULL, 13, NULL, NULL, NULL, 'Online', N'Buổi PT Lẻ', N'Một buổi tập cùng huấn luyện viên.', N'Không ràng buộc kỳ hạn', 450000, 0, 10, 40909, 'Paid', '2026-09-24 21:20:00', '2026-09-24 21:00:00', '2026-09-24 21:02:00', NULL, NULL, NULL),
+ (153, 'DH-2026-0153', 221, NULL, 13, NULL, NULL, NULL, 'Online', N'Buổi PT Lẻ', N'Một buổi tập cùng huấn luyện viên.', N'Không ràng buộc kỳ hạn', 450000, 0, 10, 40909, 'Paid', '2026-09-25 21:20:00', '2026-09-25 21:00:00', '2026-09-25 21:02:00', NULL, NULL, NULL),
+ (154, 'DH-2026-0154', 222, NULL, 13, NULL, NULL, NULL, 'Online', N'Buổi PT Lẻ', N'Một buổi tập cùng huấn luyện viên.', N'Không ràng buộc kỳ hạn', 450000, 0, 10, 40909, 'Paid', '2026-09-29 21:20:00', '2026-09-29 21:00:00', '2026-09-29 21:02:00', NULL, NULL, NULL),
+ (155, 'DH-2026-0155', 224, NULL, 13, NULL, 3, 56, 'Counter', N'Buổi PT Lẻ', N'Một buổi tập cùng huấn luyện viên.', N'Không ràng buộc kỳ hạn', 450000, 0, 10, 40909, 'Paid', NULL, '2026-09-11 09:00:00', '2026-09-11 09:02:00', NULL, NULL, NULL),
+ (156, 'DH-2026-0156', 19, NULL, 2, NULL, NULL, NULL, 'Online', N'Gói 1 Tháng', N'Bắt đầu xây thói quen tập luyện.', N'Tập không giới hạn giờ mở cửa
+Dùng đủ thiết bị khu cardio và khu tạ
+Miễn phí nước uống', 799000, 0, 10, 72636, 'Cancelled', '2026-07-18 09:20:00', '2026-07-18 09:00:00', NULL, 'InvalidPayment', '2026-07-18 09:21:00', N'Số tiền chuyển không khớp số phải trả'); -- đã hoàn xong
 SET IDENTITY_INSERT Orders OFF;
-GO
 
 /* ============================================================================
-   10. TRANSACTIONS — mỗi lần THỬ thanh toán là 1 dòng
-   Đơn 2 có 1 lần Failed rồi mới Success → minh họa luồng thanh toán lại.
+   Transactions — 156 dòng.
    ============================================================================ */
 SET IDENTITY_INSERT Transactions ON;
-INSERT INTO Transactions (TransactionId, OrderId, Amount, PaymentMethod, GatewayReference, Status, FailureReason, NeedsRefund, CreatedAt, ExpiresAt, CompletedAt) VALUES
- (1 , 1 , 2190000, 'Cash'         , NULL              , 'Success', NULL                        , 0, '2026-06-28 09:30:00', NULL                 , '2026-06-28 09:30:00'),
- (2 , 2 , 719100 , 'OnlineGateway', 'VNP-20260831-001', 'Failed' , N'Thẻ bị từ chối'           , 0, '2026-08-31 20:22:00', '2026-08-31 20:27:00', '2026-08-31 20:24:00'),
- (3 , 2 , 719100 , 'OnlineGateway', 'VNP-20260831-002', 'Success', NULL                        , 0, '2026-08-31 20:28:00', '2026-08-31 20:33:00', '2026-08-31 20:31:00'),
- (4 , 3 , 799000 , 'Cash'         , NULL              , 'Success', NULL                        , 0, '2026-06-09 19:00:00', NULL                 , '2026-06-09 19:00:00'),
- (5 , 4 , 3990000, 'Transfer'     , 'BANK-20260729-77', 'Success', NULL                        , 0, '2026-07-29 10:35:00', NULL                 , '2026-07-29 10:35:00'),
- (6 , 5 , 120000 , 'Cash'         , NULL              , 'Success', NULL                        , 0, '2026-09-23 07:52:00', NULL                 , '2026-09-23 07:52:00'),
- (7 , 6 , 799000 , 'Cash'         , NULL              , 'Success', NULL                        , 0, '2026-09-05 08:45:00', NULL                 , '2026-09-05 08:45:00'),
- (8 , 7 , 8800000, 'Transfer'     , 'BANK-20260905-12', 'Success', NULL                        , 0, '2026-09-05 09:20:00', NULL                 , '2026-09-05 09:20:00'),
- (9 , 8 , 2190000, 'Cash'         , NULL              , 'Success', NULL                        , 0, '2026-08-20 17:45:00', NULL                 , '2026-08-20 17:45:00'),
- (10, 9 , 2190000, 'Cash'         , NULL              , 'Success', NULL                        , 0, '2026-08-20 17:55:00', NULL                 , '2026-08-20 17:55:00'),
- (11, 10, 13200000,'Transfer'     , 'BANK-20260821-05', 'Success', NULL                        , 0, '2026-08-21 09:25:00', NULL                 , '2026-08-21 09:25:00'),
- (12, 11, 6990000, 'OnlineGateway', 'VNP-20260715-018', 'Success', NULL                        , 0, '2026-07-15 11:07:00', '2026-07-15 11:12:00', '2026-07-15 11:12:00'),
- (13, 12, 799000 , 'OnlineGateway', 'VNP-20260923-101', 'Pending', NULL                        , 0, '2026-09-23 09:05:00', '2026-09-23 09:10:00', NULL),
- (14, 13, 799000 , 'OnlineGateway', 'VNP-20260920-088', 'Expired', N'Hết hạn link thanh toán'  , 0, '2026-09-20 21:30:00', '2026-09-20 21:35:00', NULL),
- (15, 14, 3990000, 'OnlineGateway', 'VNP-20260919-044', 'Success', NULL                        , 1, '2026-09-19 10:15:00', '2026-09-19 10:20:00', '2026-09-19 10:22:00'), -- tiền về muộn → cần hoàn tay
- (16, 15, 799000 , 'Cash'         , NULL              , 'Success', NULL                        , 0, '2026-09-01 13:45:00', NULL                 , '2026-09-01 13:45:00'),
- (17, 16, 120000 , 'Cash'         , NULL              , 'Success', NULL                        , 0, '2026-09-23 08:12:00', NULL                 , '2026-09-23 08:12:00'),
- (18, 17, 450000 , 'Cash'         , NULL              , 'Success', NULL                        , 0, '2026-09-23 08:18:00', NULL                 , '2026-09-23 08:18:00'),
- (19, 18, 799000 , 'Cash'         , NULL              , 'Success', NULL                        , 0, '2026-03-01 09:15:00', NULL                 , '2026-03-01 09:15:00'),
- (20, 20, 450000 , 'OnlineGateway', 'VNP-20260923-102', 'Pending', NULL                        , 0, '2026-09-23 09:00:00', '2026-09-23 09:05:00', NULL);
+INSERT INTO Transactions (TransactionId, OrderId, Amount, PaymentMethod, GatewayReference, ReceivedByEmployeeId, Status, FailureReason, NeedsRefund, RefundedAt, RefundedByEmployeeId, RefundNote, CreatedAt, ExpiresAt, CompletedAt) VALUES
+ (1, 1, 2190000, 'Cash', NULL, 3, 'Success', NULL, 0, NULL, NULL, NULL, '2026-07-06 09:27:00', NULL, '2026-07-06 09:27:00'),
+ (2, 2, 4941000, 'OnlineGateway', 'VNP-00002-2', NULL, 'Success', NULL, 0, NULL, NULL, NULL, '2026-09-20 20:11:00', '2026-09-20 20:16:00', '2026-09-20 20:12:00'),
+ (3, 3, 450000, 'OnlineGateway', 'VNP-00003-2', NULL, 'Success', NULL, 0, NULL, NULL, NULL, '2026-09-24 21:01:00', '2026-09-24 21:06:00', '2026-09-24 21:02:00'),
+ (4, 5, 450000, 'OnlineGateway', 'VNP-00005-2', NULL, 'Pending', NULL, 0, NULL, NULL, NULL, DATEADD(MINUTE, -1, @Now), DATEADD(MINUTE, 4, @Now), NULL),
+ (5, 6, 719100, 'OnlineGateway', 'VNP-00006-1', NULL, 'Failed', N'Thẻ bị từ chối', 0, NULL, NULL, NULL, '2026-09-03 20:21:00', '2026-09-03 20:26:00', '2026-09-03 20:22:00'),
+ (6, 6, 719100, 'OnlineGateway', 'VNP-00006-2', NULL, 'Success', NULL, 0, NULL, NULL, NULL, '2026-09-03 20:23:00', '2026-09-03 20:28:00', '2026-09-03 20:24:00'),
+ (7, 7, 2190000, 'OnlineGateway', 'VNP-00007-2', NULL, 'Success', NULL, 1, NULL, NULL, NULL, '2026-09-19 10:26:00', '2026-09-19 10:06:00', '2026-09-19 10:27:00'),
+ (8, 8, 450000, 'OnlineGateway', 'VNP-00008-2', NULL, 'Success', NULL, 0, NULL, NULL, NULL, '2026-09-25 19:01:00', '2026-09-25 19:06:00', '2026-09-25 19:02:00'),
+ (9, 9, 799000, 'Cash', NULL, 4, 'Success', NULL, 0, NULL, NULL, NULL, '2026-07-01 18:57:00', NULL, '2026-07-01 18:57:00'),
+ (10, 10, 8800000, 'Transfer', 'BANK-20260703-010', 3, 'Success', NULL, 0, NULL, NULL, NULL, '2026-07-03 09:02:00', NULL, '2026-07-03 09:02:00'),
+ (11, 11, 3990000, 'Transfer', 'BANK-20260729-011', 3, 'Success', NULL, 0, NULL, NULL, NULL, '2026-07-29 10:32:00', NULL, '2026-07-29 10:32:00'),
+ (12, 12, 16500000, 'Transfer', 'BANK-20260904-012', 3, 'Success', NULL, 0, NULL, NULL, NULL, '2026-09-04 10:02:00', NULL, '2026-09-04 10:02:00'),
+ (13, 13, 699000, 'Cash', NULL, 3, 'Success', NULL, 0, NULL, NULL, NULL, '2026-09-04 08:42:00', NULL, '2026-09-04 08:42:00'),
+ (14, 14, 16500000, 'Transfer', 'BANK-20260904-014', 3, 'Success', NULL, 0, NULL, NULL, NULL, '2026-09-04 09:02:00', NULL, '2026-09-04 09:02:00'),
+ (15, 15, 2090000, 'Cash', NULL, 4, 'Success', NULL, 0, NULL, NULL, NULL, '2026-08-20 17:42:00', NULL, '2026-08-20 17:42:00'),
+ (16, 16, 799000, 'Cash', NULL, 4, 'Success', NULL, 0, NULL, NULL, NULL, '2026-08-20 17:52:00', NULL, '2026-08-20 17:52:00'),
+ (17, 17, 24900000, 'Transfer', 'BANK-20260821-017', 3, 'Success', NULL, 0, NULL, NULL, NULL, '2026-08-21 09:02:00', NULL, '2026-08-21 09:02:00'),
+ (18, 18, 2190000, 'Cash', NULL, 4, 'Success', NULL, 0, NULL, NULL, NULL, '2026-09-03 15:22:00', NULL, '2026-09-03 15:22:00'),
+ (19, 19, 6290000, 'OnlineGateway', 'VNP-00019-2', NULL, 'Success', NULL, 0, NULL, NULL, NULL, '2026-07-15 11:06:00', '2026-07-15 11:11:00', '2026-07-15 11:07:00'),
+ (20, 20, 679150, 'Cash', NULL, 9, 'Success', NULL, 0, NULL, NULL, NULL, '2026-03-01 09:12:00', NULL, '2026-03-01 09:12:00'),
+ (21, 21, 799000, 'Cash', NULL, 3, 'Success', NULL, 0, NULL, NULL, NULL, '2026-09-21 10:02:00', NULL, '2026-09-21 10:02:00'),
+ (22, 22, 719100, 'OnlineGateway', 'VNP-00022-2', NULL, 'Expired', NULL, 0, NULL, NULL, NULL, '2026-09-20 21:26:00', '2026-09-20 21:31:00', NULL),
+ (23, 23, 799000, 'OnlineGateway', 'VNP-00023-2', NULL, 'Pending', NULL, 0, NULL, NULL, NULL, DATEADD(MINUTE, -2, @Now), DATEADD(MINUTE, 3, @Now), NULL),
+ (24, 24, 2190000, 'Cash', NULL, 4, 'Success', NULL, 0, NULL, NULL, NULL, '2026-09-10 18:02:00', NULL, '2026-09-10 18:02:00'),
+ (25, 25, 8800000, 'Transfer', 'BANK-20260911-025', 3, 'Success', NULL, 0, NULL, NULL, NULL, '2026-09-11 11:02:00', NULL, '2026-09-11 11:02:00'),
+ (26, 26, 799000, 'Cash', NULL, 3, 'Success', NULL, 0, NULL, NULL, NULL, '2026-09-15 07:12:00', NULL, '2026-09-15 07:12:00'),
+ (27, 27, 2190000, 'Cash', NULL, 3, 'Success', NULL, 0, NULL, NULL, NULL, '2026-08-01 08:12:00', NULL, '2026-08-01 08:12:00'),
+ (28, 28, 799000, 'Cash', NULL, 3, 'Success', NULL, 0, NULL, NULL, NULL, '2026-07-01 08:12:00', NULL, '2026-07-01 08:12:00'),
+ (29, 29, 2190000, 'Cash', NULL, 3, 'Success', NULL, 0, NULL, NULL, NULL, '2026-09-01 08:07:00', NULL, '2026-09-01 08:07:00'),
+ (30, 30, 8800000, 'Cash', NULL, 3, 'Success', NULL, 0, NULL, NULL, NULL, '2026-09-11 07:32:00', NULL, '2026-09-11 07:32:00'),
+ (31, 31, 2190000, 'Transfer', 'BANK-20260901-031', 4, 'Success', NULL, 0, NULL, NULL, NULL, '2026-09-01 14:02:00', NULL, '2026-09-01 14:02:00'),
+ (32, 32, 100000, 'Cash', NULL, 3, 'Success', NULL, 0, NULL, NULL, NULL, DATEADD(MINUTE, 472, CAST(@Today AS DATETIME2(0))), NULL, DATEADD(MINUTE, 472, CAST(@Today AS DATETIME2(0)))),
+ (33, 33, 120000, 'Cash', NULL, 3, 'Success', NULL, 0, NULL, NULL, NULL, DATEADD(MINUTE, 492, CAST(@Today AS DATETIME2(0))), NULL, DATEADD(MINUTE, 492, CAST(@Today AS DATETIME2(0)))),
+ (34, 34, 450000, 'Cash', NULL, 3, 'Success', NULL, 0, NULL, NULL, NULL, DATEADD(MINUTE, 497, CAST(@Today AS DATETIME2(0))), NULL, DATEADD(MINUTE, 497, CAST(@Today AS DATETIME2(0)))),
+ (35, 36, 120000, 'Cash', NULL, 3, 'Success', NULL, 0, NULL, NULL, NULL, DATEADD(MINUTE, 402, CAST(@Today AS DATETIME2(0))), NULL, DATEADD(MINUTE, 402, CAST(@Today AS DATETIME2(0)))),
+ (36, 37, 799000, 'OnlineGateway', 'VNP-00037-2', NULL, 'Success', NULL, 0, NULL, NULL, NULL, '2026-09-07 10:21:00', '2026-09-07 10:26:00', '2026-09-07 10:22:00'),
+ (37, 38, 799000, 'OnlineGateway', 'VNP-00038-1', NULL, 'Failed', N'Thẻ bị từ chối', 0, NULL, NULL, NULL, '2026-06-26 17:50:00', '2026-06-26 17:55:00', '2026-06-26 17:51:00'),
+ (38, 38, 799000, 'OnlineGateway', 'VNP-00038-2', NULL, 'Success', NULL, 0, NULL, NULL, NULL, '2026-06-26 17:52:00', '2026-06-26 17:57:00', '2026-06-26 17:53:00'),
+ (39, 39, 2190000, 'Cash', NULL, 4, 'Success', NULL, 0, NULL, NULL, NULL, '2026-06-17 17:12:00', NULL, '2026-06-17 17:12:00'),
+ (40, 40, 2190000, 'Cash', NULL, 4, 'Success', NULL, 0, NULL, NULL, NULL, '2026-09-17 13:22:00', NULL, '2026-09-17 13:22:00'),
+ (41, 41, 2190000, 'OnlineGateway', 'VNP-00041-2', NULL, 'Success', NULL, 0, NULL, NULL, NULL, '2026-06-17 14:20:00', '2026-06-17 14:25:00', '2026-06-17 14:21:00'),
+ (42, 42, 2190000, 'Cash', NULL, 3, 'Success', NULL, 0, NULL, NULL, NULL, '2026-09-08 10:25:00', NULL, '2026-09-08 10:25:00'),
+ (43, 43, 5490000, 'Cash', NULL, 3, 'Success', NULL, 0, NULL, NULL, NULL, '2026-06-19 12:10:00', NULL, '2026-06-19 12:10:00'),
+ (44, 44, 6990000, 'OnlineGateway', 'VNP-00044-2', NULL, 'Success', NULL, 0, NULL, NULL, NULL, '2026-07-11 10:37:00', '2026-07-11 10:42:00', '2026-07-11 10:38:00'),
+ (45, 45, 5490000, 'OnlineGateway', 'VNP-00045-2', NULL, 'Success', NULL, 0, NULL, NULL, NULL, '2026-08-06 13:41:00', '2026-08-06 13:46:00', '2026-08-06 13:42:00'),
+ (46, 46, 2190000, 'Cash', NULL, 4, 'Success', NULL, 0, NULL, NULL, NULL, '2026-06-29 19:52:00', NULL, '2026-06-29 19:52:00'),
+ (47, 47, 120000, 'Cash', NULL, 3, 'Success', NULL, 0, NULL, NULL, NULL, '2026-09-15 12:42:00', NULL, '2026-09-15 12:42:00'),
+ (48, 48, 120000, 'Cash', NULL, 3, 'Success', NULL, 0, NULL, NULL, NULL, '2026-09-28 09:12:00', NULL, '2026-09-28 09:12:00'),
+ (49, 49, 2190000, 'OnlineGateway', 'VNP-00049-2', NULL, 'Success', NULL, 0, NULL, NULL, NULL, '2026-08-10 16:21:00', '2026-08-10 16:26:00', '2026-08-10 16:22:00'),
+ (50, 50, 2190000, 'Cash', NULL, 4, 'Success', NULL, 0, NULL, NULL, NULL, '2026-07-16 17:12:00', NULL, '2026-07-16 17:12:00'),
+ (51, 51, 5490000, 'OnlineGateway', 'VNP-00051-2', NULL, 'Success', NULL, 0, NULL, NULL, NULL, '2026-07-18 17:35:00', '2026-07-18 17:40:00', '2026-07-18 17:36:00'),
+ (52, 52, 799000, 'Cash', NULL, 4, 'Success', NULL, 0, NULL, NULL, NULL, '2026-09-17 20:09:00', NULL, '2026-09-17 20:09:00'),
+ (53, 53, 799000, 'Cash', NULL, 11, 'Success', NULL, 0, NULL, NULL, NULL, '2026-09-12 19:16:00', NULL, '2026-09-12 19:16:00'),
+ (54, 54, 799000, 'Cash', NULL, 4, 'Success', NULL, 0, NULL, NULL, NULL, '2026-07-13 17:37:00', NULL, '2026-07-13 17:37:00'),
+ (55, 55, 2190000, 'Cash', NULL, 4, 'Success', NULL, 0, NULL, NULL, NULL, '2026-08-09 20:42:00', NULL, '2026-08-09 20:42:00'),
+ (56, 56, 799000, 'Cash', NULL, 4, 'Success', NULL, 0, NULL, NULL, NULL, '2026-07-08 17:31:00', NULL, '2026-07-08 17:31:00'),
+ (57, 57, 799000, 'Cash', NULL, 4, 'Success', NULL, 0, NULL, NULL, NULL, '2026-08-04 13:02:00', NULL, '2026-08-04 13:02:00'),
+ (58, 58, 799000, 'Cash', NULL, 4, 'Success', NULL, 0, NULL, NULL, NULL, '2026-06-02 18:37:00', NULL, '2026-06-02 18:37:00'),
+ (59, 59, 5490000, 'OnlineGateway', 'VNP-00059-2', NULL, 'Success', NULL, 0, NULL, NULL, NULL, '2026-06-04 11:19:00', '2026-06-04 11:24:00', '2026-06-04 11:20:00'),
+ (60, 60, 120000, 'Cash', NULL, 4, 'Success', NULL, 0, NULL, NULL, NULL, '2026-08-25 16:32:00', NULL, '2026-08-25 16:32:00'),
+ (61, 61, 5490000, 'OnlineGateway', 'VNP-00061-2', NULL, 'Success', NULL, 0, NULL, NULL, NULL, '2026-06-20 18:29:00', '2026-06-20 18:34:00', '2026-06-20 18:30:00'),
+ (62, 62, 799000, 'Cash', NULL, 3, 'Success', NULL, 0, NULL, NULL, NULL, '2026-09-16 09:31:00', NULL, '2026-09-16 09:31:00'),
+ (63, 63, 799000, 'OnlineGateway', 'VNP-00063-2', NULL, 'Success', NULL, 0, NULL, NULL, NULL, '2026-08-03 10:19:00', '2026-08-03 10:24:00', '2026-08-03 10:20:00'),
+ (64, 64, 6990000, 'Cash', NULL, 3, 'Success', NULL, 0, NULL, NULL, NULL, '2026-09-08 09:46:00', NULL, '2026-09-08 09:46:00'),
+ (65, 65, 5490000, 'OnlineGateway', 'VNP-00065-2', NULL, 'Success', NULL, 0, NULL, NULL, NULL, '2026-07-26 16:54:00', '2026-07-26 16:59:00', '2026-07-26 16:55:00'),
+ (66, 66, 799000, 'Cash', NULL, 4, 'Success', NULL, 0, NULL, NULL, NULL, '2026-06-26 16:11:00', NULL, '2026-06-26 16:11:00'),
+ (67, 67, 799000, 'Cash', NULL, 4, 'Success', NULL, 0, NULL, NULL, NULL, '2026-07-23 20:32:00', NULL, '2026-07-23 20:32:00'),
+ (68, 68, 799000, 'Cash', NULL, 9, 'Success', NULL, 0, NULL, NULL, NULL, '2026-06-28 10:55:00', NULL, '2026-06-28 10:55:00'),
+ (69, 69, 719100, 'OnlineGateway', 'VNP-00069-2', NULL, 'Success', NULL, 0, NULL, NULL, NULL, '2026-09-15 10:16:00', '2026-09-15 10:21:00', '2026-09-15 10:17:00'),
+ (70, 70, 5490000, 'Cash', NULL, 3, 'Success', NULL, 0, NULL, NULL, NULL, '2026-08-20 12:51:00', NULL, '2026-08-20 12:51:00'),
+ (71, 71, 120000, 'Cash', NULL, 3, 'Success', NULL, 0, NULL, NULL, NULL, '2026-08-13 09:22:00', NULL, '2026-08-13 09:22:00'),
+ (72, 72, 2190000, 'Cash', NULL, 3, 'Success', NULL, 0, NULL, NULL, NULL, '2026-07-14 09:54:00', NULL, '2026-07-14 09:54:00'),
+ (73, 73, 799000, 'OnlineGateway', 'VNP-00073-2', NULL, 'Success', NULL, 0, NULL, NULL, NULL, '2026-08-22 13:54:00', '2026-08-22 13:59:00', '2026-08-22 13:55:00'),
+ (74, 74, 799000, 'Cash', NULL, 4, 'Success', NULL, 0, NULL, NULL, NULL, '2026-09-17 19:22:00', NULL, '2026-09-17 19:22:00'),
+ (75, 75, 799000, 'OnlineGateway', 'VNP-00075-2', NULL, 'Success', NULL, 0, NULL, NULL, NULL, '2026-08-29 12:34:00', '2026-08-29 12:39:00', '2026-08-29 12:35:00'),
+ (76, 76, 2190000, 'Cash', NULL, 4, 'Success', NULL, 0, NULL, NULL, NULL, '2026-09-29 18:52:00', NULL, '2026-09-29 18:52:00'),
+ (77, 77, 5490000, 'Cash', NULL, 11, 'Success', NULL, 0, NULL, NULL, NULL, '2026-08-01 14:03:00', NULL, '2026-08-01 14:03:00'),
+ (78, 78, 799000, 'OnlineGateway', 'VNP-00078-2', NULL, 'Success', NULL, 0, NULL, NULL, NULL, '2026-07-05 13:50:00', '2026-07-05 13:55:00', '2026-07-05 13:51:00'),
+ (79, 79, 799000, 'Cash', NULL, 3, 'Success', NULL, 0, NULL, NULL, NULL, '2026-08-03 06:52:00', NULL, '2026-08-03 06:52:00'),
+ (80, 80, 6990000, 'Cash', NULL, 3, 'Success', NULL, 0, NULL, NULL, NULL, '2026-06-02 09:54:00', NULL, '2026-06-02 09:54:00'),
+ (81, 81, 2190000, 'Cash', NULL, 3, 'Success', NULL, 0, NULL, NULL, NULL, '2026-08-26 11:11:00', NULL, '2026-08-26 11:11:00'),
+ (82, 82, 6990000, 'OnlineGateway', 'VNP-00082-2', NULL, 'Success', NULL, 0, NULL, NULL, NULL, '2026-06-24 17:39:00', '2026-06-24 17:44:00', '2026-06-24 17:40:00'),
+ (83, 83, 799000, 'OnlineGateway', 'VNP-00083-2', NULL, 'Success', NULL, 0, NULL, NULL, NULL, '2026-08-17 16:27:00', '2026-08-17 16:32:00', '2026-08-17 16:28:00'),
+ (84, 84, 799000, 'Cash', NULL, 4, 'Success', NULL, 0, NULL, NULL, NULL, '2026-09-16 13:12:00', NULL, '2026-09-16 13:12:00'),
+ (85, 85, 120000, 'Cash', NULL, 4, 'Success', NULL, 0, NULL, NULL, NULL, '2026-06-18 13:42:00', NULL, '2026-06-18 13:42:00'),
+ (86, 86, 8800000, 'Transfer', 'BANK-20260917-086', 3, 'Success', NULL, 0, NULL, NULL, NULL, '2026-09-17 10:32:00', NULL, '2026-09-17 10:32:00'),
+ (87, 87, 8800000, 'Transfer', 'BANK-20260917-087', 3, 'Success', NULL, 0, NULL, NULL, NULL, '2026-09-17 10:32:00', NULL, '2026-09-17 10:32:00'),
+ (88, 88, 16500000, 'Transfer', 'BANK-20260925-088', 3, 'Success', NULL, 0, NULL, NULL, NULL, '2026-09-25 10:32:00', NULL, '2026-09-25 10:32:00'),
+ (89, 89, 8800000, 'Transfer', 'BANK-20260911-089', 3, 'Success', NULL, 0, NULL, NULL, NULL, '2026-09-11 10:32:00', NULL, '2026-09-11 10:32:00'),
+ (90, 90, 8800000, 'Transfer', 'BANK-20261002-090', 3, 'Success', NULL, 0, NULL, NULL, NULL, '2026-10-02 10:32:00', NULL, '2026-10-02 10:32:00'),
+ (91, 91, 100000, 'Cash', NULL, 4, 'Success', NULL, 0, NULL, NULL, NULL, '2026-09-01 13:07:00', NULL, '2026-09-01 13:07:00'),
+ (92, 92, 100000, 'Transfer', 'BANK-20260903-092', 4, 'Success', NULL, 0, NULL, NULL, NULL, '2026-09-03 16:27:00', NULL, '2026-09-03 16:27:00'),
+ (93, 93, 120000, 'Cash', NULL, 3, 'Success', NULL, 0, NULL, NULL, NULL, '2026-09-03 08:07:00', NULL, '2026-09-03 08:07:00'),
+ (94, 94, 120000, 'Cash', NULL, 4, 'Success', NULL, 0, NULL, NULL, NULL, '2026-09-04 16:27:00', NULL, '2026-09-04 16:27:00'),
+ (95, 95, 120000, 'Cash', NULL, 3, 'Success', NULL, 0, NULL, NULL, NULL, '2026-09-04 07:47:00', NULL, '2026-09-04 07:47:00'),
+ (96, 96, 120000, 'Transfer', 'BANK-20260905-096', 3, 'Success', NULL, 0, NULL, NULL, NULL, '2026-09-05 12:07:00', NULL, '2026-09-05 12:07:00'),
+ (97, 97, 120000, 'Cash', NULL, 9, 'Success', NULL, 0, NULL, NULL, NULL, '2026-09-06 10:47:00', NULL, '2026-09-06 10:47:00'),
+ (98, 98, 100000, 'Cash', NULL, 4, 'Success', NULL, 0, NULL, NULL, NULL, '2026-09-06 20:47:00', NULL, '2026-09-06 20:47:00'),
+ (99, 99, 120000, 'Cash', NULL, 9, 'Success', NULL, 0, NULL, NULL, NULL, '2026-09-06 09:47:00', NULL, '2026-09-06 09:47:00'),
+ (100, 100, 100000, 'Transfer', 'BANK-20260907-100', 3, 'Success', NULL, 0, NULL, NULL, NULL, '2026-09-07 07:07:00', NULL, '2026-09-07 07:07:00'),
+ (101, 101, 120000, 'Cash', NULL, 3, 'Success', NULL, 0, NULL, NULL, NULL, '2026-09-07 08:27:00', NULL, '2026-09-07 08:27:00'),
+ (102, 102, 120000, 'Cash', NULL, 3, 'Success', NULL, 0, NULL, NULL, NULL, '2026-09-08 08:27:00', NULL, '2026-09-08 08:27:00'),
+ (103, 103, 100000, 'Cash', NULL, 4, 'Success', NULL, 0, NULL, NULL, NULL, '2026-09-08 15:07:00', NULL, '2026-09-08 15:07:00'),
+ (104, 104, 120000, 'Transfer', 'BANK-20260909-104', 3, 'Success', NULL, 0, NULL, NULL, NULL, '2026-09-09 10:27:00', NULL, '2026-09-09 10:27:00'),
+ (105, 105, 120000, 'Cash', NULL, 4, 'Success', NULL, 0, NULL, NULL, NULL, '2026-09-10 13:47:00', NULL, '2026-09-10 13:47:00'),
+ (106, 106, 120000, 'Cash', NULL, 3, 'Success', NULL, 0, NULL, NULL, NULL, '2026-09-11 07:47:00', NULL, '2026-09-11 07:47:00'),
+ (107, 107, 100000, 'Transfer', 'BANK-20260912-107', 11, 'Success', NULL, 0, NULL, NULL, NULL, '2026-09-12 17:27:00', NULL, '2026-09-12 17:27:00'),
+ (108, 108, 100000, 'Cash', NULL, 11, 'Success', NULL, 0, NULL, NULL, NULL, '2026-09-12 18:07:00', NULL, '2026-09-12 18:07:00'),
+ (109, 109, 120000, 'Transfer', 'BANK-20260913-109', 4, 'Success', NULL, 0, NULL, NULL, NULL, '2026-09-13 16:47:00', NULL, '2026-09-13 16:47:00'),
+ (110, 110, 120000, 'Cash', NULL, 4, 'Success', NULL, 0, NULL, NULL, NULL, '2026-09-13 17:27:00', NULL, '2026-09-13 17:27:00'),
+ (111, 111, 100000, 'Transfer', 'BANK-20260914-111', 4, 'Success', NULL, 0, NULL, NULL, NULL, '2026-09-14 14:27:00', NULL, '2026-09-14 14:27:00'),
+ (112, 112, 120000, 'Cash', NULL, 3, 'Success', NULL, 0, NULL, NULL, NULL, '2026-09-15 08:27:00', NULL, '2026-09-15 08:27:00'),
+ (113, 113, 120000, 'Transfer', 'BANK-20260916-113', 4, 'Success', NULL, 0, NULL, NULL, NULL, '2026-09-16 16:27:00', NULL, '2026-09-16 16:27:00'),
+ (114, 114, 120000, 'Transfer', 'BANK-20260916-114', 4, 'Success', NULL, 0, NULL, NULL, NULL, '2026-09-16 17:07:00', NULL, '2026-09-16 17:07:00'),
+ (115, 115, 100000, 'Transfer', 'BANK-20260917-115', 4, 'Success', NULL, 0, NULL, NULL, NULL, '2026-09-17 19:27:00', NULL, '2026-09-17 19:27:00'),
+ (116, 116, 120000, 'Transfer', 'BANK-20260919-116', 11, 'Success', NULL, 0, NULL, NULL, NULL, '2026-09-19 19:27:00', NULL, '2026-09-19 19:27:00'),
+ (117, 117, 120000, 'Cash', NULL, 3, 'Success', NULL, 0, NULL, NULL, NULL, '2026-09-19 06:27:00', NULL, '2026-09-19 06:27:00'),
+ (118, 118, 120000, 'Cash', NULL, 9, 'Success', NULL, 0, NULL, NULL, NULL, '2026-09-20 11:47:00', NULL, '2026-09-20 11:47:00'),
+ (119, 119, 120000, 'Cash', NULL, 3, 'Success', NULL, 0, NULL, NULL, NULL, '2026-09-21 09:07:00', NULL, '2026-09-21 09:07:00'),
+ (120, 120, 100000, 'Cash', NULL, 3, 'Success', NULL, 0, NULL, NULL, NULL, '2026-09-22 12:47:00', NULL, '2026-09-22 12:47:00'),
+ (121, 121, 100000, 'Cash', NULL, 3, 'Success', NULL, 0, NULL, NULL, NULL, '2026-09-22 07:07:00', NULL, '2026-09-22 07:07:00'),
+ (122, 122, 120000, 'Transfer', 'BANK-20260923-122', 4, 'Success', NULL, 0, NULL, NULL, NULL, '2026-09-23 16:47:00', NULL, '2026-09-23 16:47:00'),
+ (123, 123, 120000, 'Cash', NULL, 3, 'Success', NULL, 0, NULL, NULL, NULL, '2026-09-23 12:07:00', NULL, '2026-09-23 12:07:00'),
+ (124, 124, 120000, 'Cash', NULL, 4, 'Success', NULL, 0, NULL, NULL, NULL, '2026-09-24 18:27:00', NULL, '2026-09-24 18:27:00'),
+ (125, 125, 100000, 'Cash', NULL, 3, 'Success', NULL, 0, NULL, NULL, NULL, '2026-09-25 07:47:00', NULL, '2026-09-25 07:47:00'),
+ (126, 126, 100000, 'Cash', NULL, 4, 'Success', NULL, 0, NULL, NULL, NULL, '2026-09-25 15:07:00', NULL, '2026-09-25 15:07:00'),
+ (127, 127, 120000, 'Cash', NULL, 11, 'Success', NULL, 0, NULL, NULL, NULL, '2026-09-26 13:27:00', NULL, '2026-09-26 13:27:00'),
+ (128, 128, 100000, 'Transfer', 'BANK-20260927-128', 4, 'Success', NULL, 0, NULL, NULL, NULL, '2026-09-27 18:07:00', NULL, '2026-09-27 18:07:00'),
+ (129, 129, 120000, 'Cash', NULL, 4, 'Success', NULL, 0, NULL, NULL, NULL, '2026-09-28 13:07:00', NULL, '2026-09-28 13:07:00'),
+ (130, 130, 100000, 'Transfer', 'BANK-20260929-130', 3, 'Success', NULL, 0, NULL, NULL, NULL, '2026-09-29 06:27:00', NULL, '2026-09-29 06:27:00'),
+ (131, 131, 120000, 'Cash', NULL, 4, 'Success', NULL, 0, NULL, NULL, NULL, '2026-09-29 17:47:00', NULL, '2026-09-29 17:47:00'),
+ (132, 132, 120000, 'Transfer', 'BANK-20260930-132', 3, 'Success', NULL, 0, NULL, NULL, NULL, '2026-09-30 08:07:00', NULL, '2026-09-30 08:07:00'),
+ (133, 133, 120000, 'Transfer', 'BANK-20261001-133', 3, 'Success', NULL, 0, NULL, NULL, NULL, '2026-10-01 10:27:00', NULL, '2026-10-01 10:27:00'),
+ (134, 134, 120000, 'Transfer', 'BANK-20261001-134', 3, 'Success', NULL, 0, NULL, NULL, NULL, '2026-10-01 11:07:00', NULL, '2026-10-01 11:07:00'),
+ (135, 135, 100000, 'Cash', NULL, 4, 'Success', NULL, 0, NULL, NULL, NULL, '2026-10-01 15:47:00', NULL, '2026-10-01 15:47:00'),
+ (136, 136, 120000, 'Transfer', 'BANK-20261002-136', 3, 'Success', NULL, 0, NULL, NULL, NULL, '2026-10-02 09:47:00', NULL, '2026-10-02 09:47:00'),
+ (137, 137, 100000, 'Transfer', 'BANK-20261002-137', 4, 'Success', NULL, 0, NULL, NULL, NULL, '2026-10-02 14:27:00', NULL, '2026-10-02 14:27:00'),
+ (138, 138, 450000, 'OnlineGateway', 'VNP-00138-2', NULL, 'Success', NULL, 0, NULL, NULL, NULL, '2026-09-23 21:01:00', '2026-09-23 21:06:00', '2026-09-23 21:02:00'),
+ (139, 139, 450000, 'OnlineGateway', 'VNP-00139-2', NULL, 'Success', NULL, 0, NULL, NULL, NULL, '2026-09-05 21:01:00', '2026-09-05 21:06:00', '2026-09-05 21:02:00'),
+ (140, 140, 450000, 'OnlineGateway', 'VNP-00140-2', NULL, 'Success', NULL, 0, NULL, NULL, NULL, '2026-09-12 21:01:00', '2026-09-12 21:06:00', '2026-09-12 21:02:00'),
+ (141, 141, 450000, 'OnlineGateway', 'VNP-00141-2', NULL, 'Success', NULL, 0, NULL, NULL, NULL, '2026-09-27 21:01:00', '2026-09-27 21:06:00', '2026-09-27 21:02:00'),
+ (142, 142, 450000, 'Cash', NULL, 3, 'Success', NULL, 0, NULL, NULL, NULL, '2026-09-14 06:02:00', NULL, '2026-09-14 06:02:00'),
+ (143, 143, 450000, 'OnlineGateway', 'VNP-00143-2', NULL, 'Success', NULL, 0, NULL, NULL, NULL, '2026-09-28 21:01:00', '2026-09-28 21:06:00', '2026-09-28 21:02:00'),
+ (144, 144, 450000, 'OnlineGateway', 'VNP-00144-2', NULL, 'Success', NULL, 0, NULL, NULL, NULL, '2026-09-19 21:01:00', '2026-09-19 21:06:00', '2026-09-19 21:02:00'),
+ (145, 145, 450000, 'OnlineGateway', 'VNP-00145-2', NULL, 'Success', NULL, 0, NULL, NULL, NULL, '2026-09-15 21:01:00', '2026-09-15 21:06:00', '2026-09-15 21:02:00'),
+ (146, 146, 450000, 'OnlineGateway', 'VNP-00146-2', NULL, 'Success', NULL, 0, NULL, NULL, NULL, '2026-09-27 21:01:00', '2026-09-27 21:06:00', '2026-09-27 21:02:00'),
+ (147, 147, 450000, 'Cash', NULL, 4, 'Success', NULL, 0, NULL, NULL, NULL, '2026-09-21 14:02:00', NULL, '2026-09-21 14:02:00'),
+ (148, 148, 450000, 'OnlineGateway', 'VNP-00148-2', NULL, 'Success', NULL, 0, NULL, NULL, NULL, '2026-09-04 21:01:00', '2026-09-04 21:06:00', '2026-09-04 21:02:00'),
+ (149, 149, 450000, 'OnlineGateway', 'VNP-00149-2', NULL, 'Success', NULL, 0, NULL, NULL, NULL, '2026-09-28 21:01:00', '2026-09-28 21:06:00', '2026-09-28 21:02:00'),
+ (150, 150, 450000, 'OnlineGateway', 'VNP-00150-2', NULL, 'Success', NULL, 0, NULL, NULL, NULL, '2026-09-21 21:01:00', '2026-09-21 21:06:00', '2026-09-21 21:02:00'),
+ (151, 151, 450000, 'OnlineGateway', 'VNP-00151-2', NULL, 'Success', NULL, 0, NULL, NULL, NULL, '2026-09-08 21:01:00', '2026-09-08 21:06:00', '2026-09-08 21:02:00'),
+ (152, 152, 450000, 'OnlineGateway', 'VNP-00152-2', NULL, 'Success', NULL, 0, NULL, NULL, NULL, '2026-09-24 21:01:00', '2026-09-24 21:06:00', '2026-09-24 21:02:00'),
+ (153, 153, 450000, 'OnlineGateway', 'VNP-00153-2', NULL, 'Success', NULL, 0, NULL, NULL, NULL, '2026-09-25 21:01:00', '2026-09-25 21:06:00', '2026-09-25 21:02:00'),
+ (154, 154, 450000, 'OnlineGateway', 'VNP-00154-2', NULL, 'Success', NULL, 0, NULL, NULL, NULL, '2026-09-29 21:01:00', '2026-09-29 21:06:00', '2026-09-29 21:02:00'),
+ (155, 155, 450000, 'Cash', NULL, 3, 'Success', NULL, 0, NULL, NULL, NULL, '2026-09-11 09:02:00', NULL, '2026-09-11 09:02:00'),
+ (156, 156, 799000, 'OnlineGateway', 'VNP-00156-2', NULL, 'Success', NULL, 1, '2026-07-20 10:00:00', 2, N'Đã chuyển khoản hoàn cho khách', '2026-07-18 09:26:00', '2026-07-18 09:06:00', '2026-07-18 09:27:00');
 SET IDENTITY_INSERT Transactions OFF;
-GO
 
 /* ============================================================================
-   11. SUBSCRIPTIONS — quyền dùng sinh ra khi đơn Paid
-   EndDate là NGÀY CUỐI CÙNG còn dùng được (tính cả ngày đó).
+   Subscriptions — 149 dòng.
    ============================================================================ */
 SET IDENTITY_INSERT Subscriptions ON;
-INSERT INTO Subscriptions (SubscriptionId, OrderId, CustomerId, SubscriptionType, PtEmployeeId,
-                           StartDate, EndDate, GeneratedSessionCount, SwapsUsed, FreezeUsed, Status) VALUES
- (1 , 1 , 1 , 'Membership'   , NULL, '2026-06-28', '2026-10-07', NULL, 0, 1, 'Active'),  -- đã bảo lưu 9 ngày, hạn được cộng thêm
- (2 , 2 , 2 , 'Membership'   , NULL, '2026-08-31', '2026-09-30', NULL, 0, 0, 'Active'),
- (3 , 3 , 3 , 'Membership'   , NULL, '2026-06-09', '2026-07-09', NULL, 0, 0, 'Expired'), -- khách thành Expired
- (4 , 4 , 4 , 'Membership'   , NULL, '2026-07-29', '2027-01-25', NULL, 0, 1, 'Frozen'),  -- đang bảo lưu, hạn đã cộng thêm
- (5 , 5 , 5 , 'DayPass'      , NULL, '2026-09-23', '2026-09-23', NULL, 0, 0, 'Used'),    -- đã check-in nên tiêu thụ xong
- (6 , 6 , 6 , 'Membership'   , NULL, '2026-09-05', '2026-10-05', NULL, 0, 0, 'Active'),
- (7 , 7 , 6 , 'PTSingle'     , 5   , '2026-09-07', '2026-10-07', 22  , 1, 0, 'Active'),  -- gói PT theo kỳ hạn, đã swap 1 lần
- (8 , 8 , 7 , 'Membership'   , NULL, '2026-08-20', '2026-11-20', NULL, 0, 0, 'Active'),
- (9 , 9 , 8 , 'Membership'   , NULL, '2026-08-20', '2026-11-20', NULL, 0, 0, 'Active'),
- (10, 10, 7 , 'PTCouple'     , 6   , '2026-08-24', '2026-09-23', 22  , 0, 0, 'Active'),  -- hôm nay là ngày cuối
- (11, 11, 11, 'Membership'   , NULL, '2026-07-15', '2027-07-14', NULL, 0, 0, 'Active'),
- (12, 15, 13, 'Membership'   , NULL, '2026-09-01', '2026-10-01', NULL, 0, 0, 'Active'),
- (13, 16, 16, 'DayPass'      , NULL, '2026-09-23', '2026-09-23', NULL, 0, 0, 'Active'),  -- chưa check-in
- (14, 17, 16, 'SingleSession', 7   , '2026-09-23', '2026-09-23', 1   , 0, 0, 'Active'),
- (15, 18, 12, 'Membership'   , NULL, '2026-03-01', '2026-03-31', NULL, 0, 0, 'Expired');
+INSERT INTO Subscriptions (SubscriptionId, OrderId, CustomerId, SubscriptionType, PtEmployeeId, StartDate, EndDate, FixedStartTime, GeneratedSessionCount, SwapsUsed, MaxSwapsSnapshot, FreezeUsed, MaxFreezesSnapshot, Status) VALUES
+ (1, 1, 1, 'Membership', NULL, '2026-07-06', '2026-10-15', NULL, NULL, 0, NULL, 1, 1, 'Active'), -- bảo lưu 03/08 → hủy sớm 12/08: hạn +9 ngày (DBR-51)
+ (2, 2, 1, 'Membership', NULL, '2026-10-16', '2027-07-16', NULL, NULL, 0, NULL, 0, 1, 'Active'), -- gia hạn trước: bắt đầu ngay sau gói cũ (DBR-52)
+ (3, 3, 1, 'SingleSession', 5, '2026-09-26', '2026-09-26', NULL, 1, 0, NULL, 0, NULL, 'Used'),
+ (4, 6, 2, 'Membership', NULL, '2026-09-03', '2026-10-03', NULL, NULL, 0, NULL, 0, 1, 'Active'), -- hết hạn đúng 03/10/2026
+ (5, 8, 2, 'SingleSession', 5, '2026-09-26', '2026-09-26', NULL, 1, 0, NULL, 0, NULL, 'Used'),
+ (6, 9, 3, 'Membership', NULL, '2026-07-01', '2026-08-01', NULL, NULL, 0, NULL, 0, 1, 'Expired'),
+ (7, 10, 3, 'PTSingle', 5, '2026-07-06', '2026-08-06', '07:00:00', 24, 0, 3, 0, NULL, 'Expired'), -- gói PT đã hết; 03–05/08 Missed vì hết gói tập (CBR-64)
+ (8, 11, 4, 'Membership', NULL, '2026-07-29', '2027-01-29', NULL, NULL, 0, NULL, 1, 1, 'Frozen'), -- đang bảo lưu, hết lượt bảo lưu (BR-24)
+ (9, 12, 4, 'PTSingle', 7, '2026-09-07', '2026-11-07', '17:00:00', 44, 0, 3, 0, NULL, 'Active'),
+ (10, 13, 6, 'Membership', NULL, '2026-09-04', '2026-10-04', NULL, NULL, 0, NULL, 0, 1, 'Active'), -- hết 04/10 trước gói PT → buổi sau đó gắn nhãn "Không có gói tập" (CBR-66)
+ (11, 14, 6, 'PTSingle', 5, '2026-09-07', '2026-11-07', '18:00:00', 44, 1, 3, 0, NULL, 'Active'), -- swap 1/3; 1 buổi chuyển PT → hoa hồng cho PT mới (BR-68)
+ (12, 15, 7, 'Membership', NULL, '2026-08-20', '2026-11-20', NULL, NULL, 0, NULL, 0, 1, 'Active'),
+ (13, 16, 8, 'Membership', NULL, '2026-08-20', '2026-09-20', NULL, NULL, 0, NULL, 0, 1, 'Expired'), -- hết 20/09 → Expired nhưng vẫn còn buổi couple (CBR-63, CBR-67)
+ (14, 17, 7, 'PTCouple', 6, '2026-08-24', '2026-10-24', '19:30:00', 44, 0, 3, 0, NULL, 'Active'), -- couple: chung hạn mức; 02/09 nghỉ lễ khai báo trước → không sinh buổi
+ (15, 18, 9, 'Membership', NULL, '2026-09-03', '2026-12-03', NULL, NULL, 0, NULL, 0, 1, 'Active'),
+ (16, 19, 11, 'Membership', NULL, '2026-07-15', '2027-07-15', NULL, NULL, 0, NULL, 0, 1, 'Active'),
+ (17, 20, 12, 'Membership', NULL, '2026-03-01', '2026-04-01', NULL, NULL, 0, NULL, 0, 1, 'Expired'),
+ (18, 21, 13, 'Membership', NULL, '2026-09-21', '2026-10-21', NULL, NULL, 0, NULL, 0, 1, 'Active'),
+ (19, 24, 17, 'Membership', NULL, '2026-09-10', '2026-12-10', NULL, NULL, 0, NULL, 0, 1, 'Active'),
+ (20, 25, 17, 'PTSingle', 7, '2026-09-14', '2026-10-14', '12:00:00', 22, 0, 3, 0, NULL, 'Active'), -- 18/09 nghỉ khai báo TRƯỚC khi bán → không sinh buổi
+ (21, 26, 18, 'Membership', NULL, '2026-09-15', '2026-10-15', NULL, NULL, 0, NULL, 0, 1, 'Active'),
+ (22, 27, 19, 'Membership', NULL, '2026-08-01', '2026-11-01', NULL, NULL, 0, NULL, 0, 1, 'Active'),
+ (23, 28, 20, 'Membership', NULL, '2026-07-01', '2026-08-01', NULL, NULL, 0, NULL, 0, 1, 'Expired'),
+ (24, 29, 21, 'Membership', NULL, '2026-09-01', '2026-12-01', NULL, NULL, 0, NULL, 0, 1, 'Active'),
+ (25, 30, 21, 'PTSingle', 5, '2026-09-14', '2026-10-14', '06:30:00', 22, 1, 3, 0, NULL, 'Active'),
+ (26, 31, 103, 'Membership', NULL, '2026-09-01', '2026-12-01', NULL, NULL, 0, NULL, 0, 1, 'Active'),
+ (27, 32, 5, 'DayPass', NULL, @Today, @Today, NULL, NULL, 0, NULL, 0, NULL, 'Used'), -- đã check-in → hết hiệu lực (BR-29)
+ (28, 33, 16, 'DayPass', NULL, @Today, @Today, NULL, NULL, 0, NULL, 0, NULL, 'Active'), -- gói ngày chưa check-in
+ (29, 34, 16, 'SingleSession', 7, @Today, @Today, NULL, 1, 0, NULL, 0, NULL, 'Active'),
+ (30, 36, 10, 'DayPass', NULL, @Today, @Today, NULL, NULL, 0, NULL, 0, NULL, 'Cancelled'),
+ (31, 37, 201, 'Membership', NULL, '2026-09-07', '2026-10-07', NULL, NULL, 0, NULL, 0, 1, 'Active'),
+ (32, 38, 202, 'Membership', NULL, '2026-06-26', '2026-07-26', NULL, NULL, 0, NULL, 0, 1, 'Expired'),
+ (33, 39, 203, 'Membership', NULL, '2026-06-17', '2026-09-17', NULL, NULL, 0, NULL, 0, 1, 'Expired'),
+ (34, 40, 203, 'Membership', NULL, '2026-09-18', '2026-12-18', NULL, NULL, 0, NULL, 0, 1, 'Active'), -- gia hạn nối tiếp (DBR-52)
+ (35, 41, 204, 'Membership', NULL, '2026-06-17', '2026-09-17', NULL, NULL, 0, NULL, 0, 1, 'Expired'),
+ (36, 42, 205, 'Membership', NULL, '2026-09-08', '2026-12-08', NULL, NULL, 0, NULL, 0, 1, 'Active'),
+ (37, 43, 206, 'Membership', NULL, '2026-06-19', '2027-03-19', NULL, NULL, 0, NULL, 0, 1, 'Active'),
+ (38, 44, 207, 'Membership', NULL, '2026-07-11', '2027-07-11', NULL, NULL, 0, NULL, 0, 1, 'Active'),
+ (39, 45, 208, 'Membership', NULL, '2026-08-06', '2027-05-06', NULL, NULL, 0, NULL, 0, 1, 'Active'),
+ (40, 46, 209, 'Membership', NULL, '2026-06-29', '2026-09-29', NULL, NULL, 0, NULL, 0, 1, 'Expired'),
+ (41, 47, 210, 'DayPass', NULL, '2026-09-15', '2026-09-15', NULL, NULL, 0, NULL, 0, NULL, 'Used'),
+ (42, 48, 210, 'DayPass', NULL, '2026-09-28', '2026-09-28', NULL, NULL, 0, NULL, 0, NULL, 'Used'),
+ (43, 49, 211, 'Membership', NULL, '2026-08-10', '2026-11-10', NULL, NULL, 0, NULL, 0, 1, 'Active'),
+ (44, 50, 212, 'Membership', NULL, '2026-07-16', '2026-10-16', NULL, NULL, 0, NULL, 0, 1, 'Active'),
+ (45, 51, 213, 'Membership', NULL, '2026-07-18', '2027-04-18', NULL, NULL, 0, NULL, 0, 1, 'Active'),
+ (46, 52, 214, 'Membership', NULL, '2026-09-17', '2026-10-17', NULL, NULL, 0, NULL, 0, 1, 'Active'),
+ (47, 53, 215, 'Membership', NULL, '2026-09-12', '2026-10-12', NULL, NULL, 0, NULL, 0, 1, 'Active'),
+ (48, 54, 216, 'Membership', NULL, '2026-07-13', '2026-08-13', NULL, NULL, 0, NULL, 0, 1, 'Expired'),
+ (49, 55, 216, 'Membership', NULL, '2026-08-14', '2026-11-14', NULL, NULL, 0, NULL, 0, 1, 'Active'), -- gia hạn nối tiếp (DBR-52)
+ (50, 56, 217, 'Membership', NULL, '2026-07-08', '2026-08-08', NULL, NULL, 0, NULL, 0, 1, 'Expired'),
+ (51, 57, 217, 'Membership', NULL, '2026-08-09', '2026-09-09', NULL, NULL, 0, NULL, 0, 1, 'Expired'), -- gia hạn nối tiếp (DBR-52)
+ (52, 58, 218, 'Membership', NULL, '2026-06-02', '2026-07-02', NULL, NULL, 0, NULL, 0, 1, 'Expired'),
+ (53, 59, 219, 'Membership', NULL, '2026-06-04', '2027-03-04', NULL, NULL, 0, NULL, 0, 1, 'Active'),
+ (54, 60, 220, 'DayPass', NULL, '2026-08-25', '2026-08-25', NULL, NULL, 0, NULL, 0, NULL, 'Used'),
+ (55, 61, 221, 'Membership', NULL, '2026-06-20', '2027-03-20', NULL, NULL, 0, NULL, 0, 1, 'Active'),
+ (56, 62, 222, 'Membership', NULL, '2026-09-16', '2026-10-16', NULL, NULL, 0, NULL, 0, 1, 'Active'),
+ (57, 63, 223, 'Membership', NULL, '2026-08-03', '2026-09-03', NULL, NULL, 0, NULL, 0, 1, 'Expired'),
+ (58, 64, 224, 'Membership', NULL, '2026-09-08', '2027-09-08', NULL, NULL, 0, NULL, 0, 1, 'Active'),
+ (59, 65, 225, 'Membership', NULL, '2026-07-26', '2027-04-26', NULL, NULL, 0, NULL, 0, 1, 'Active'),
+ (60, 66, 226, 'Membership', NULL, '2026-06-26', '2026-07-26', NULL, NULL, 0, NULL, 0, 1, 'Expired'),
+ (61, 67, 226, 'Membership', NULL, '2026-07-27', '2026-08-27', NULL, NULL, 0, NULL, 0, 1, 'Expired'), -- gia hạn nối tiếp (DBR-52)
+ (62, 68, 227, 'Membership', NULL, '2026-06-28', '2026-07-28', NULL, NULL, 0, NULL, 0, 1, 'Expired'),
+ (63, 69, 228, 'Membership', NULL, '2026-09-15', '2026-10-15', NULL, NULL, 0, NULL, 0, 1, 'Active'),
+ (64, 70, 229, 'Membership', NULL, '2026-08-20', '2027-05-20', NULL, NULL, 0, NULL, 0, 1, 'Active'),
+ (65, 71, 230, 'DayPass', NULL, '2026-08-13', '2026-08-13', NULL, NULL, 0, NULL, 0, NULL, 'Used'),
+ (66, 72, 231, 'Membership', NULL, '2026-07-14', '2026-10-14', NULL, NULL, 0, NULL, 0, 1, 'Active'),
+ (67, 73, 232, 'Membership', NULL, '2026-08-22', '2026-09-22', NULL, NULL, 0, NULL, 0, 1, 'Expired'),
+ (68, 74, 232, 'Membership', NULL, '2026-09-23', '2026-10-23', NULL, NULL, 0, NULL, 0, 1, 'Active'), -- gia hạn nối tiếp (DBR-52)
+ (69, 75, 233, 'Membership', NULL, '2026-08-29', '2026-09-29', NULL, NULL, 0, NULL, 0, 1, 'Expired'),
+ (70, 76, 233, 'Membership', NULL, '2026-09-30', '2026-12-30', NULL, NULL, 0, NULL, 0, 1, 'Active'), -- gia hạn nối tiếp (DBR-52)
+ (71, 77, 234, 'Membership', NULL, '2026-08-01', '2027-05-01', NULL, NULL, 0, NULL, 0, 1, 'Active'),
+ (72, 78, 235, 'Membership', NULL, '2026-07-05', '2026-08-05', NULL, NULL, 0, NULL, 0, 1, 'Expired'),
+ (73, 79, 235, 'Membership', NULL, '2026-08-06', '2026-09-06', NULL, NULL, 0, NULL, 0, 1, 'Expired'), -- gia hạn nối tiếp (DBR-52)
+ (74, 80, 236, 'Membership', NULL, '2026-06-02', '2027-06-02', NULL, NULL, 0, NULL, 0, 1, 'Active'),
+ (75, 81, 237, 'Membership', NULL, '2026-08-26', '2026-11-26', NULL, NULL, 0, NULL, 0, 1, 'Active'),
+ (76, 82, 238, 'Membership', NULL, '2026-06-24', '2027-06-24', NULL, NULL, 0, NULL, 0, 1, 'Active'),
+ (77, 83, 239, 'Membership', NULL, '2026-08-17', '2026-09-17', NULL, NULL, 0, NULL, 0, 1, 'Expired'),
+ (78, 84, 239, 'Membership', NULL, '2026-09-18', '2026-10-18', NULL, NULL, 0, NULL, 0, 1, 'Active'), -- gia hạn nối tiếp (DBR-52)
+ (79, 85, 240, 'DayPass', NULL, '2026-06-18', '2026-06-18', NULL, NULL, 0, NULL, 0, NULL, 'Used'),
+ (80, 86, 201, 'PTSingle', 13, '2026-09-21', '2026-10-21', '07:30:00', 22, 0, 3, 0, NULL, 'Active'), -- khách thường mua gói PT
+ (81, 87, 203, 'PTSingle', 6, '2026-09-21', '2026-10-21', '06:00:00', 22, 0, 3, 0, NULL, 'Active'), -- khách thường mua gói PT
+ (82, 88, 205, 'PTSingle', 5, '2026-09-28', '2026-11-28', '15:00:00', 44, 0, 3, 0, NULL, 'Active'), -- khách thường mua gói PT
+ (83, 89, 204, 'PTSingle', 14, '2026-09-14', '2026-10-14', '10:00:00', 22, 0, 3, 0, NULL, 'Active'), -- khách thường mua gói PT
+ (84, 90, 206, 'PTSingle', 7, '2026-10-05', '2026-11-05', '19:00:00', 23, 0, 3, 0, NULL, 'Active'), -- khách thường mua gói PT
+ (85, 91, 220, 'DayPass', NULL, '2026-09-01', '2026-09-01', NULL, NULL, 0, NULL, 0, NULL, 'Used'),
+ (86, 92, 220, 'DayPass', NULL, '2026-09-03', '2026-09-03', NULL, NULL, 0, NULL, 0, NULL, 'Used'),
+ (87, 93, 210, 'DayPass', NULL, '2026-09-03', '2026-09-03', NULL, NULL, 0, NULL, 0, NULL, 'Used'),
+ (88, 94, 240, 'DayPass', NULL, '2026-09-04', '2026-09-04', NULL, NULL, 0, NULL, 0, NULL, 'Used'),
+ (89, 95, 230, 'DayPass', NULL, '2026-09-04', '2026-09-04', NULL, NULL, 0, NULL, 0, NULL, 'Used'),
+ (90, 96, 210, 'DayPass', NULL, '2026-09-05', '2026-09-05', NULL, NULL, 0, NULL, 0, NULL, 'Used'),
+ (91, 97, 220, 'DayPass', NULL, '2026-09-06', '2026-09-06', NULL, NULL, 0, NULL, 0, NULL, 'Used'),
+ (92, 98, 230, 'DayPass', NULL, '2026-09-06', '2026-09-06', NULL, NULL, 0, NULL, 0, NULL, 'Used'),
+ (93, 99, 210, 'DayPass', NULL, '2026-09-06', '2026-09-06', NULL, NULL, 0, NULL, 0, NULL, 'Used'),
+ (94, 100, 240, 'DayPass', NULL, '2026-09-07', '2026-09-07', NULL, NULL, 0, NULL, 0, NULL, 'Used'),
+ (95, 101, 230, 'DayPass', NULL, '2026-09-07', '2026-09-07', NULL, NULL, 0, NULL, 0, NULL, 'Used'),
+ (96, 102, 230, 'DayPass', NULL, '2026-09-08', '2026-09-08', NULL, NULL, 0, NULL, 0, NULL, 'Used'),
+ (97, 103, 240, 'DayPass', NULL, '2026-09-08', '2026-09-08', NULL, NULL, 0, NULL, 0, NULL, 'Used'),
+ (98, 104, 240, 'DayPass', NULL, '2026-09-09', '2026-09-09', NULL, NULL, 0, NULL, 0, NULL, 'Used'),
+ (99, 105, 230, 'DayPass', NULL, '2026-09-10', '2026-09-10', NULL, NULL, 0, NULL, 0, NULL, 'Used'),
+ (100, 106, 220, 'DayPass', NULL, '2026-09-11', '2026-09-11', NULL, NULL, 0, NULL, 0, NULL, 'Used'),
+ (101, 107, 230, 'DayPass', NULL, '2026-09-12', '2026-09-12', NULL, NULL, 0, NULL, 0, NULL, 'Used'),
+ (102, 108, 220, 'DayPass', NULL, '2026-09-12', '2026-09-12', NULL, NULL, 0, NULL, 0, NULL, 'Used'),
+ (103, 109, 230, 'DayPass', NULL, '2026-09-13', '2026-09-13', NULL, NULL, 0, NULL, 0, NULL, 'Used'),
+ (104, 110, 240, 'DayPass', NULL, '2026-09-13', '2026-09-13', NULL, NULL, 0, NULL, 0, NULL, 'Used'),
+ (105, 111, 220, 'DayPass', NULL, '2026-09-14', '2026-09-14', NULL, NULL, 0, NULL, 0, NULL, 'Used'),
+ (106, 112, 230, 'DayPass', NULL, '2026-09-15', '2026-09-15', NULL, NULL, 0, NULL, 0, NULL, 'Used'),
+ (107, 113, 240, 'DayPass', NULL, '2026-09-16', '2026-09-16', NULL, NULL, 0, NULL, 0, NULL, 'Used'),
+ (108, 114, 230, 'DayPass', NULL, '2026-09-16', '2026-09-16', NULL, NULL, 0, NULL, 0, NULL, 'Used'),
+ (109, 115, 230, 'DayPass', NULL, '2026-09-17', '2026-09-17', NULL, NULL, 0, NULL, 0, NULL, 'Used'),
+ (110, 116, 230, 'DayPass', NULL, '2026-09-19', '2026-09-19', NULL, NULL, 0, NULL, 0, NULL, 'Used'),
+ (111, 117, 220, 'DayPass', NULL, '2026-09-19', '2026-09-19', NULL, NULL, 0, NULL, 0, NULL, 'Used'),
+ (112, 118, 240, 'DayPass', NULL, '2026-09-20', '2026-09-20', NULL, NULL, 0, NULL, 0, NULL, 'Used'),
+ (113, 119, 220, 'DayPass', NULL, '2026-09-21', '2026-09-21', NULL, NULL, 0, NULL, 0, NULL, 'Used'),
+ (114, 120, 220, 'DayPass', NULL, '2026-09-22', '2026-09-22', NULL, NULL, 0, NULL, 0, NULL, 'Used'),
+ (115, 121, 210, 'DayPass', NULL, '2026-09-22', '2026-09-22', NULL, NULL, 0, NULL, 0, NULL, 'Used'),
+ (116, 122, 230, 'DayPass', NULL, '2026-09-23', '2026-09-23', NULL, NULL, 0, NULL, 0, NULL, 'Used'),
+ (117, 123, 210, 'DayPass', NULL, '2026-09-23', '2026-09-23', NULL, NULL, 0, NULL, 0, NULL, 'Used'),
+ (118, 124, 210, 'DayPass', NULL, '2026-09-24', '2026-09-24', NULL, NULL, 0, NULL, 0, NULL, 'Used'),
+ (119, 125, 240, 'DayPass', NULL, '2026-09-25', '2026-09-25', NULL, NULL, 0, NULL, 0, NULL, 'Used'),
+ (120, 126, 230, 'DayPass', NULL, '2026-09-25', '2026-09-25', NULL, NULL, 0, NULL, 0, NULL, 'Used'),
+ (121, 127, 220, 'DayPass', NULL, '2026-09-26', '2026-09-26', NULL, NULL, 0, NULL, 0, NULL, 'Used'),
+ (122, 128, 240, 'DayPass', NULL, '2026-09-27', '2026-09-27', NULL, NULL, 0, NULL, 0, NULL, 'Used'),
+ (123, 129, 240, 'DayPass', NULL, '2026-09-28', '2026-09-28', NULL, NULL, 0, NULL, 0, NULL, 'Used'),
+ (124, 130, 210, 'DayPass', NULL, '2026-09-29', '2026-09-29', NULL, NULL, 0, NULL, 0, NULL, 'Used'),
+ (125, 131, 230, 'DayPass', NULL, '2026-09-29', '2026-09-29', NULL, NULL, 0, NULL, 0, NULL, 'Used'),
+ (126, 132, 230, 'DayPass', NULL, '2026-09-30', '2026-09-30', NULL, NULL, 0, NULL, 0, NULL, 'Used'),
+ (127, 133, 230, 'DayPass', NULL, '2026-10-01', '2026-10-01', NULL, NULL, 0, NULL, 0, NULL, 'Used'),
+ (128, 134, 220, 'DayPass', NULL, '2026-10-01', '2026-10-01', NULL, NULL, 0, NULL, 0, NULL, 'Used'),
+ (129, 135, 210, 'DayPass', NULL, '2026-10-01', '2026-10-01', NULL, NULL, 0, NULL, 0, NULL, 'Used'),
+ (130, 136, 230, 'DayPass', NULL, '2026-10-02', '2026-10-02', NULL, NULL, 0, NULL, 0, NULL, 'Used'),
+ (131, 137, 220, 'DayPass', NULL, '2026-10-02', '2026-10-02', NULL, NULL, 0, NULL, 0, NULL, 'Used'),
+ (132, 138, 201, 'SingleSession', 6, '2026-09-23', '2026-09-23', NULL, 1, 0, NULL, 0, NULL, 'Used'),
+ (133, 139, 203, 'SingleSession', 7, '2026-09-05', '2026-09-05', NULL, 1, 0, NULL, 0, NULL, 'Used'),
+ (134, 140, 204, 'SingleSession', 13, '2026-09-12', '2026-09-12', NULL, 1, 0, NULL, 0, NULL, 'Used'),
+ (135, 141, 205, 'SingleSession', 7, '2026-09-27', '2026-09-27', NULL, 1, 0, NULL, 0, NULL, 'Used'),
+ (136, 142, 206, 'SingleSession', 6, '2026-09-14', '2026-09-14', NULL, 1, 0, NULL, 0, NULL, 'Used'),
+ (137, 143, 207, 'SingleSession', 6, '2026-09-29', '2026-09-29', NULL, 1, 0, NULL, 0, NULL, 'Expired'),
+ (138, 144, 208, 'SingleSession', 13, '2026-09-20', '2026-09-20', NULL, 1, 0, NULL, 0, NULL, 'Used'),
+ (139, 145, 209, 'SingleSession', 7, '2026-09-17', '2026-09-17', NULL, 1, 0, NULL, 0, NULL, 'Used'),
+ (140, 146, 211, 'SingleSession', 13, '2026-09-27', '2026-09-27', NULL, 1, 0, NULL, 0, NULL, 'Used'),
+ (141, 147, 212, 'SingleSession', 13, '2026-09-21', '2026-09-21', NULL, 1, 0, NULL, 0, NULL, 'Used'),
+ (142, 148, 213, 'SingleSession', 5, '2026-09-05', '2026-09-05', NULL, 1, 0, NULL, 0, NULL, 'Used'),
+ (143, 149, 214, 'SingleSession', 5, '2026-09-30', '2026-09-30', NULL, 1, 0, NULL, 0, NULL, 'Expired'),
+ (144, 150, 215, 'SingleSession', 6, '2026-09-23', '2026-09-23', NULL, 1, 0, NULL, 0, NULL, 'Used'),
+ (145, 151, 216, 'SingleSession', 7, '2026-09-11', '2026-09-11', NULL, 1, 0, NULL, 0, NULL, 'Used'),
+ (146, 152, 219, 'SingleSession', 5, '2026-09-24', '2026-09-24', NULL, 1, 0, NULL, 0, NULL, 'Used'),
+ (147, 153, 221, 'SingleSession', 7, '2026-09-25', '2026-09-25', NULL, 1, 0, NULL, 0, NULL, 'Used'),
+ (148, 154, 222, 'SingleSession', 5, '2026-09-29', '2026-09-29', NULL, 1, 0, NULL, 0, NULL, 'Used'),
+ (149, 155, 224, 'SingleSession', 6, '2026-09-11', '2026-09-11', NULL, 1, 0, NULL, 0, NULL, 'Used');
 SET IDENTITY_INSERT Subscriptions OFF;
-GO
 
 /* ============================================================================
-   12. FREEZE RECORDS — 1 lần đang bảo lưu, 1 lần đã kết thúc sớm
+   FreezeRecords — 2 dòng.
    ============================================================================ */
 SET IDENTITY_INSERT FreezeRecords ON;
 INSERT INTO FreezeRecords (FreezeRecordId, SubscriptionId, HandledByEmployeeId, StartDate, PlannedEndDate, ActualEndDate, Reason, CreatedAt) VALUES
- (1, 4, 3, '2026-09-15', '2026-10-14', NULL        , N'Khách đi công tác nước ngoài 1 tháng', '2026-09-14 16:30:00'), -- đang bảo lưu
- (2, 1, 4, '2026-08-01', '2026-08-31', '2026-08-10', N'Khách bị chấn thương gối'            , '2026-07-31 11:00:00'); -- hủy sớm: chỉ cộng 9 ngày thực tế
+ (1, 1, 4, '2026-08-03', '2026-09-02', '2026-08-12', N'Khách bị chấn thương gối, đã có giấy khám', '2026-08-02 16:00:00'), -- hủy bảo lưu sớm (BR-26)
+ (2, 8, 3, '2026-09-28', '2026-10-27', NULL, N'Khách đi công tác nước ngoài 1 tháng', '2026-09-27 10:30:00'); -- đang bảo lưu → buổi PT trong kỳ thành Missed (CBR-62)
 SET IDENTITY_INSERT FreezeRecords OFF;
-GO
 
 /* ============================================================================
-   13. CHECK-INS — gói tập vào nhiều lượt/ngày được; gói ngày chỉ 1 lượt
+   CheckIns — 815 dòng.
    ============================================================================ */
 SET IDENTITY_INSERT CheckIns ON;
 INSERT INTO CheckIns (CheckInId, SubscriptionId, VerifiedByEmployeeId, CheckedInAt, PhotoVerified) VALUES
- (1 , 1 , 3, '2026-09-21 06:15:00', 1),
- (2 , 1 , 4, '2026-09-21 18:40:00', 1), -- cùng ngày vào lần 2: hợp lệ với gói tập
- (3 , 1 , 3, '2026-09-23 06:05:00', 1),
- (4 , 2 , 3, '2026-09-22 07:10:00', 1),
- (5 , 2 , 3, '2026-09-23 07:05:00', 1),
- (6 , 5 , 3, '2026-09-23 07:55:00', 0), -- gói ngày: không cần ảnh, dùng xong hết hiệu lực
- (7 , 6 , 3, '2026-09-21 08:00:00', 1),
- (8 , 6 , 4, '2026-09-22 17:30:00', 1),
- (9 , 8 , 4, '2026-09-22 18:00:00', 1),
- (10, 9 , 4, '2026-09-22 18:02:00', 1),
- (11, 11, 3, '2026-09-19 12:30:00', 1);
+ (1, 1, 3, '2026-09-26 08:45:00', 1),
+ (2, 4, 3, '2026-09-26 10:15:00', 1),
+ (3, 6, 3, '2026-07-06 06:40:00', 1),
+ (4, 6, 3, '2026-07-08 06:40:00', 1),
+ (5, 6, 3, '2026-07-09 06:40:00', 1),
+ (6, 6, 3, '2026-07-10 06:40:00', 1),
+ (7, 6, 3, '2026-07-13 06:40:00', 1),
+ (8, 6, 3, '2026-07-14 06:40:00', 1),
+ (9, 6, 3, '2026-07-16 06:40:00', 1),
+ (10, 6, 3, '2026-07-17 06:40:00', 1),
+ (11, 6, 3, '2026-07-21 06:40:00', 1),
+ (12, 6, 3, '2026-07-22 06:40:00', 1),
+ (13, 6, 3, '2026-07-23 06:40:00', 1),
+ (14, 6, 3, '2026-07-24 06:40:00', 1),
+ (15, 6, 3, '2026-07-27 06:40:00', 1),
+ (16, 6, 3, '2026-07-28 06:40:00', 1),
+ (17, 6, 3, '2026-07-29 06:40:00', 1),
+ (18, 6, 3, '2026-07-30 06:40:00', 1),
+ (19, 6, 3, '2026-07-31 06:40:00', 1),
+ (20, 8, 4, '2026-09-07 16:40:00', 1),
+ (21, 8, 4, '2026-09-08 16:40:00', 1),
+ (22, 8, 4, '2026-09-09 16:40:00', 1),
+ (23, 8, 4, '2026-09-10 16:40:00', 1),
+ (24, 8, 4, '2026-09-11 16:40:00', 1),
+ (25, 8, 4, '2026-09-14 16:40:00', 1),
+ (26, 8, 4, '2026-09-16 16:40:00', 1),
+ (27, 8, 4, '2026-09-17 16:40:00', 1),
+ (28, 8, 4, '2026-09-21 16:40:00', 1),
+ (29, 8, 4, '2026-09-22 16:40:00', 1),
+ (30, 8, 4, '2026-09-23 16:40:00', 1),
+ (31, 8, 4, '2026-09-24 16:40:00', 1),
+ (32, 8, 4, '2026-09-25 16:40:00', 1),
+ (33, 10, 4, '2026-09-07 17:40:00', 1),
+ (34, 10, 4, '2026-09-09 17:40:00', 1),
+ (35, 10, 4, '2026-09-10 17:40:00', 1),
+ (36, 10, 3, '2026-09-12 08:40:00', 1),
+ (37, 10, 4, '2026-09-15 17:40:00', 1),
+ (38, 10, 4, '2026-09-17 17:40:00', 1),
+ (39, 10, 4, '2026-09-21 17:40:00', 1),
+ (40, 10, 4, '2026-09-23 17:40:00', 1),
+ (41, 10, 4, '2026-09-25 17:40:00', 1),
+ (42, 10, 4, '2026-09-28 17:40:00', 1),
+ (43, 10, 4, '2026-09-29 17:40:00', 1),
+ (44, 10, 4, '2026-09-30 17:40:00', 1),
+ (45, 10, 4, '2026-10-02 17:40:00', 1),
+ (46, 12, 4, '2026-08-24 19:10:00', 1),
+ (47, 13, 4, '2026-08-24 19:10:00', 1),
+ (48, 12, 4, '2026-08-26 19:10:00', 1),
+ (49, 12, 4, '2026-08-28 19:10:00', 1),
+ (50, 13, 4, '2026-08-28 19:10:00', 1),
+ (51, 12, 4, '2026-08-31 19:10:00', 1),
+ (52, 13, 4, '2026-08-31 19:10:00', 1),
+ (53, 12, 4, '2026-09-01 19:10:00', 1),
+ (54, 12, 4, '2026-09-04 19:10:00', 1),
+ (55, 12, 4, '2026-09-07 19:10:00', 1),
+ (56, 12, 4, '2026-09-08 19:10:00', 1),
+ (57, 12, 4, '2026-09-09 19:10:00', 1),
+ (58, 13, 4, '2026-09-09 19:10:00', 1),
+ (59, 12, 4, '2026-09-11 19:10:00', 1),
+ (60, 12, 4, '2026-09-14 19:10:00', 1),
+ (61, 12, 3, '2026-09-16 05:40:00', 1),
+ (62, 12, 4, '2026-09-16 19:10:00', 1),
+ (63, 13, 4, '2026-09-16 19:10:00', 1),
+ (64, 12, 4, '2026-09-17 19:10:00', 1),
+ (65, 13, 4, '2026-09-17 19:10:00', 1),
+ (66, 12, 4, '2026-09-22 19:10:00', 1),
+ (67, 12, 4, '2026-09-24 19:10:00', 1),
+ (68, 12, 4, '2026-09-25 19:10:00', 1),
+ (69, 12, 4, '2026-09-28 19:10:00', 1),
+ (70, 12, 4, '2026-09-29 19:10:00', 1),
+ (71, 12, 4, '2026-09-30 19:10:00', 1),
+ (72, 12, 4, '2026-10-01 19:10:00', 1),
+ (73, 12, 4, '2026-10-02 19:10:00', 1),
+ (74, 19, 3, '2026-09-14 11:40:00', 1),
+ (75, 19, 3, '2026-09-15 11:40:00', 1),
+ (76, 19, 3, '2026-09-17 11:40:00', 1),
+ (77, 19, 3, '2026-09-21 11:40:00', 1),
+ (78, 19, 3, '2026-09-22 11:40:00', 1),
+ (79, 19, 3, '2026-09-23 11:40:00', 1),
+ (80, 19, 3, '2026-09-24 11:40:00', 1),
+ (81, 19, 3, '2026-09-25 11:40:00', 1),
+ (82, 19, 3, '2026-09-28 11:40:00', 1),
+ (83, 19, 3, '2026-09-30 11:40:00', 1),
+ (84, 19, 3, '2026-10-01 11:40:00', 1),
+ (85, 19, 3, '2026-10-02 11:40:00', 1),
+ (86, 24, 3, '2026-09-14 06:10:00', 1),
+ (87, 24, 3, '2026-09-15 06:10:00', 1),
+ (88, 24, 3, '2026-09-16 06:10:00', 1),
+ (89, 24, 3, '2026-09-17 06:10:00', 1),
+ (90, 24, 3, '2026-09-21 06:10:00', 1),
+ (91, 24, 3, '2026-09-22 06:10:00', 1),
+ (92, 24, 3, '2026-09-23 06:10:00', 1),
+ (93, 24, 4, '2026-09-25 19:40:00', 1),
+ (94, 24, 3, '2026-09-29 06:10:00', 1),
+ (95, 24, 3, '2026-10-01 06:10:00', 1),
+ (96, 24, 3, '2026-10-02 06:10:00', 1),
+ (97, 27, 3, DATEADD(MINUTE, 475, CAST(@Today AS DATETIME2(0))), 0),
+ (98, 41, 3, '2026-09-15 12:43:00', 0),
+ (99, 42, 3, '2026-09-28 09:13:00', 0),
+ (100, 54, 4, '2026-08-25 16:33:00', 0),
+ (101, 65, 3, '2026-08-13 09:23:00', 0),
+ (102, 79, 4, '2026-06-18 13:43:00', 0),
+ (103, 31, 3, '2026-09-21 07:10:00', 1),
+ (104, 31, 3, '2026-09-22 07:10:00', 1),
+ (105, 31, 3, '2026-09-23 07:10:00', 1),
+ (106, 31, 3, '2026-09-24 07:10:00', 1),
+ (107, 31, 3, '2026-09-25 07:10:00', 1),
+ (108, 31, 3, '2026-09-28 07:10:00', 1),
+ (109, 31, 3, '2026-09-29 07:10:00', 1),
+ (110, 31, 3, '2026-09-30 07:10:00', 1),
+ (111, 31, 3, '2026-10-01 07:10:00', 1),
+ (112, 31, 3, '2026-10-02 07:10:00', 1),
+ (113, 34, 3, '2026-09-21 05:40:00', 1),
+ (114, 34, 3, '2026-09-23 05:40:00', 1),
+ (115, 34, 3, '2026-09-24 05:40:00', 1),
+ (116, 34, 3, '2026-09-25 05:40:00', 1),
+ (117, 34, 3, '2026-09-29 05:40:00', 1),
+ (118, 34, 3, '2026-09-30 05:40:00', 1),
+ (119, 34, 3, '2026-10-01 05:40:00', 1),
+ (120, 34, 3, '2026-10-02 05:40:00', 1),
+ (121, 36, 4, '2026-09-28 14:40:00', 1),
+ (122, 36, 4, '2026-09-29 14:40:00', 1),
+ (123, 36, 4, '2026-09-30 14:40:00', 1),
+ (124, 36, 4, '2026-10-01 14:40:00', 1),
+ (125, 36, 4, '2026-10-02 14:40:00', 1),
+ (126, 35, 3, '2026-09-14 09:40:00', 1),
+ (127, 35, 3, '2026-09-15 09:40:00', 1),
+ (128, 35, 3, '2026-09-16 09:40:00', 1),
+ (129, 35, 3, '2026-09-17 09:40:00', 1),
+ (130, 85, 4, '2026-09-01 13:09:00', 0),
+ (131, 86, 4, '2026-09-03 16:29:00', 0),
+ (132, 87, 3, '2026-09-03 08:09:00', 0),
+ (133, 88, 4, '2026-09-04 16:29:00', 0),
+ (134, 89, 3, '2026-09-04 07:49:00', 0),
+ (135, 90, 3, '2026-09-05 12:09:00', 0),
+ (136, 91, 9, '2026-09-06 10:49:00', 0),
+ (137, 92, 4, '2026-09-06 20:49:00', 0),
+ (138, 93, 9, '2026-09-06 09:49:00', 0),
+ (139, 94, 3, '2026-09-07 07:09:00', 0),
+ (140, 95, 3, '2026-09-07 08:29:00', 0),
+ (141, 96, 3, '2026-09-08 08:29:00', 0),
+ (142, 97, 4, '2026-09-08 15:09:00', 0),
+ (143, 98, 3, '2026-09-09 10:29:00', 0),
+ (144, 99, 4, '2026-09-10 13:49:00', 0),
+ (145, 100, 3, '2026-09-11 07:49:00', 0),
+ (146, 101, 11, '2026-09-12 17:29:00', 0),
+ (147, 102, 11, '2026-09-12 18:09:00', 0),
+ (148, 103, 4, '2026-09-13 16:49:00', 0),
+ (149, 104, 4, '2026-09-13 17:29:00', 0),
+ (150, 105, 4, '2026-09-14 14:29:00', 0),
+ (151, 106, 3, '2026-09-15 08:29:00', 0),
+ (152, 107, 4, '2026-09-16 16:29:00', 0),
+ (153, 108, 4, '2026-09-16 17:09:00', 0),
+ (154, 109, 4, '2026-09-17 19:29:00', 0),
+ (155, 110, 11, '2026-09-19 19:29:00', 0),
+ (156, 111, 3, '2026-09-19 06:29:00', 0),
+ (157, 112, 9, '2026-09-20 11:49:00', 0),
+ (158, 113, 3, '2026-09-21 09:09:00', 0),
+ (159, 114, 3, '2026-09-22 12:49:00', 0),
+ (160, 115, 3, '2026-09-22 07:09:00', 0),
+ (161, 116, 4, '2026-09-23 16:49:00', 0),
+ (162, 117, 3, '2026-09-23 12:09:00', 0),
+ (163, 118, 4, '2026-09-24 18:29:00', 0),
+ (164, 119, 3, '2026-09-25 07:49:00', 0),
+ (165, 120, 4, '2026-09-25 15:09:00', 0),
+ (166, 121, 11, '2026-09-26 13:29:00', 0),
+ (167, 122, 4, '2026-09-27 18:09:00', 0),
+ (168, 123, 4, '2026-09-28 13:09:00', 0),
+ (169, 124, 3, '2026-09-29 06:29:00', 0),
+ (170, 125, 4, '2026-09-29 17:49:00', 0),
+ (171, 126, 3, '2026-09-30 08:09:00', 0),
+ (172, 127, 3, '2026-10-01 10:29:00', 0),
+ (173, 128, 3, '2026-10-01 11:09:00', 0),
+ (174, 129, 4, '2026-10-01 15:49:00', 0),
+ (175, 130, 3, '2026-10-02 09:49:00', 0),
+ (176, 131, 4, '2026-10-02 14:29:00', 0),
+ (177, 40, 9, '2026-08-02 11:45:00', 1),
+ (178, 53, 9, '2026-08-02 11:45:00', 1),
+ (179, 66, 9, '2026-08-02 12:45:00', 1),
+ (180, 71, 9, '2026-08-02 06:30:00', 1),
+ (181, 76, 4, '2026-08-02 18:30:00', 1),
+ (182, 38, 3, '2026-08-03 09:15:00', 1),
+ (183, 40, 3, '2026-08-03 11:45:00', 1),
+ (184, 44, 4, '2026-08-03 15:00:00', 1),
+ (185, 48, 3, '2026-08-03 12:15:00', 1),
+ (186, 50, 3, '2026-08-03 07:00:00', 1),
+ (187, 55, 4, '2026-08-03 15:45:00', 1),
+ (188, 57, 4, '2026-08-03 13:00:00', 1),
+ (189, 16, 3, '2026-08-03 10:15:00', 1),
+ (190, 40, 4, '2026-08-04 15:45:00', 1),
+ (191, 72, 3, '2026-08-04 11:15:00', 1),
+ (192, 16, 3, '2026-08-04 07:15:00', 1),
+ (193, 33, 3, '2026-08-05 12:00:00', 1),
+ (194, 37, 4, '2026-08-05 15:00:00', 1),
+ (195, 45, 4, '2026-08-05 14:00:00', 1),
+ (196, 50, 3, '2026-08-05 09:45:00', 1),
+ (197, 59, 3, '2026-08-05 09:30:00', 1),
+ (198, 59, 4, '2026-08-06 13:45:00', 1),
+ (199, 74, 4, '2026-08-06 16:45:00', 1),
+ (200, 76, 3, '2026-08-06 11:30:00', 1),
+ (201, 48, 3, '2026-08-07 11:15:00', 1),
+ (202, 50, 4, '2026-08-07 19:30:00', 1),
+ (203, 53, 4, '2026-08-07 13:45:00', 1),
+ (204, 61, 4, '2026-08-07 19:45:00', 1),
+ (205, 40, 11, '2026-08-08 16:00:00', 1),
+ (206, 48, 11, '2026-08-08 15:00:00', 1),
+ (207, 57, 11, '2026-08-08 20:30:00', 1),
+ (208, 22, 11, '2026-08-08 17:45:00', 1),
+ (209, 57, 9, '2026-08-09 12:30:00', 1),
+ (210, 35, 3, '2026-08-11 12:45:00', 1),
+ (211, 39, 4, '2026-08-11 16:30:00', 1),
+ (212, 40, 3, '2026-08-11 06:15:00', 1),
+ (213, 33, 4, '2026-08-12 18:30:00', 1),
+ (214, 37, 3, '2026-08-12 07:30:00', 1),
+ (215, 40, 4, '2026-08-12 14:00:00', 1),
+ (216, 43, 4, '2026-08-12 20:00:00', 1),
+ (217, 45, 3, '2026-08-12 11:15:00', 1),
+ (218, 48, 4, '2026-08-12 13:00:00', 1),
+ (219, 55, 4, '2026-08-12 18:00:00', 1),
+ (220, 61, 3, '2026-08-12 09:15:00', 1),
+ (221, 66, 4, '2026-08-12 13:00:00', 1),
+ (222, 22, 3, '2026-08-12 12:45:00', 1),
+ (223, 39, 3, '2026-08-13 06:15:00', 1),
+ (224, 40, 4, '2026-08-13 14:15:00', 1),
+ (225, 44, 3, '2026-08-13 10:00:00', 1),
+ (226, 48, 3, '2026-08-13 06:30:00', 1),
+ (227, 51, 3, '2026-08-13 09:45:00', 1),
+ (228, 73, 4, '2026-08-13 20:15:00', 1),
+ (229, 76, 4, '2026-08-13 17:00:00', 1),
+ (230, 35, 3, '2026-08-14 11:45:00', 1),
+ (231, 38, 4, '2026-08-14 17:15:00', 1),
+ (232, 43, 4, '2026-08-14 20:15:00', 1),
+ (233, 45, 3, '2026-08-14 08:45:00', 1),
+ (234, 51, 3, '2026-08-14 12:00:00', 1),
+ (235, 57, 4, '2026-08-14 15:00:00', 1),
+ (236, 16, 3, '2026-08-14 12:15:00', 1),
+ (237, 1, 3, '2026-08-14 06:10:00', 1),
+ (238, 1, 4, '2026-08-14 18:40:00', 1),
+ (239, 33, 11, '2026-08-15 13:45:00', 1),
+ (240, 45, 3, '2026-08-15 10:00:00', 1),
+ (241, 57, 3, '2026-08-15 10:15:00', 1),
+ (242, 74, 3, '2026-08-15 06:15:00', 1),
+ (243, 76, 11, '2026-08-15 17:15:00', 1),
+ (244, 33, 9, '2026-08-16 10:15:00', 1),
+ (245, 40, 4, '2026-08-16 20:30:00', 1),
+ (246, 43, 9, '2026-08-16 06:00:00', 1),
+ (247, 73, 4, '2026-08-16 19:15:00', 1),
+ (248, 38, 4, '2026-08-17 13:45:00', 1),
+ (249, 43, 4, '2026-08-17 17:45:00', 1),
+ (250, 45, 3, '2026-08-17 09:30:00', 1),
+ (251, 53, 3, '2026-08-17 08:15:00', 1),
+ (252, 16, 3, '2026-08-17 09:30:00', 1),
+ (253, 22, 4, '2026-08-17 17:00:00', 1),
+ (254, 44, 4, '2026-08-18 16:00:00', 1),
+ (255, 45, 4, '2026-08-18 20:30:00', 1),
+ (256, 53, 3, '2026-08-18 11:30:00', 1),
+ (257, 55, 4, '2026-08-18 19:45:00', 1),
+ (258, 59, 3, '2026-08-18 07:30:00', 1),
+ (259, 66, 3, '2026-08-18 07:00:00', 1),
+ (260, 74, 3, '2026-08-18 08:30:00', 1),
+ (261, 76, 3, '2026-08-18 07:30:00', 1),
+ (262, 1, 4, '2026-08-18 17:00:00', 1),
+ (263, 16, 4, '2026-08-18 14:15:00', 1),
+ (264, 35, 4, '2026-08-19 14:15:00', 1),
+ (265, 40, 3, '2026-08-19 09:45:00', 1),
+ (266, 44, 3, '2026-08-19 09:30:00', 1),
+ (267, 53, 3, '2026-08-19 08:15:00', 1),
+ (268, 77, 4, '2026-08-19 17:00:00', 1),
+ (269, 38, 3, '2026-08-20 08:45:00', 1),
+ (270, 43, 4, '2026-08-20 17:15:00', 1),
+ (271, 59, 4, '2026-08-20 19:45:00', 1),
+ (272, 61, 4, '2026-08-20 15:15:00', 1),
+ (273, 66, 3, '2026-08-20 11:30:00', 1),
+ (274, 71, 4, '2026-08-20 15:45:00', 1),
+ (275, 77, 3, '2026-08-20 12:30:00', 1),
+ (276, 39, 4, '2026-08-21 18:45:00', 1),
+ (277, 55, 3, '2026-08-21 12:15:00', 1),
+ (278, 71, 3, '2026-08-21 11:45:00', 1),
+ (279, 12, 4, '2026-08-21 14:15:00', 1),
+ (280, 13, 4, '2026-08-21 20:15:00', 1),
+ (281, 22, 3, '2026-08-21 08:00:00', 1),
+ (282, 1, 3, '2026-08-21 06:10:00', 1),
+ (283, 1, 4, '2026-08-21 18:40:00', 1),
+ (284, 45, 3, '2026-08-22 06:45:00', 1),
+ (285, 51, 3, '2026-08-22 08:15:00', 1),
+ (286, 53, 3, '2026-08-22 06:45:00', 1),
+ (287, 55, 3, '2026-08-22 07:45:00', 1),
+ (288, 59, 11, '2026-08-22 15:30:00', 1),
+ (289, 67, 3, '2026-08-22 12:15:00', 1),
+ (290, 74, 11, '2026-08-22 13:45:00', 1),
+ (291, 16, 11, '2026-08-22 17:45:00', 1),
+ (292, 35, 9, '2026-08-23 10:00:00', 1),
+ (293, 59, 4, '2026-08-23 20:00:00', 1),
+ (294, 66, 4, '2026-08-23 17:45:00', 1),
+ (295, 74, 4, '2026-08-23 20:15:00', 1),
+ (296, 77, 4, '2026-08-23 14:15:00', 1),
+ (297, 12, 4, '2026-08-23 20:30:00', 1),
+ (298, 33, 4, '2026-08-24 16:15:00', 1),
+ (299, 40, 3, '2026-08-24 10:15:00', 1),
+ (300, 59, 4, '2026-08-24 19:00:00', 1),
+ (301, 67, 4, '2026-08-24 19:00:00', 1),
+ (302, 71, 3, '2026-08-24 11:30:00', 1),
+ (303, 22, 4, '2026-08-24 13:30:00', 1),
+ (304, 40, 4, '2026-08-25 18:15:00', 1),
+ (305, 43, 4, '2026-08-25 18:30:00', 1),
+ (306, 74, 3, '2026-08-25 06:00:00', 1),
+ (307, 33, 3, '2026-08-26 07:30:00', 1),
+ (308, 44, 3, '2026-08-26 08:30:00', 1),
+ (309, 51, 4, '2026-08-26 16:15:00', 1),
+ (310, 73, 3, '2026-08-26 10:15:00', 1),
+ (311, 37, 4, '2026-08-27 13:30:00', 1),
+ (312, 40, 4, '2026-08-27 15:30:00', 1),
+ (313, 59, 3, '2026-08-27 11:15:00', 1),
+ (314, 67, 4, '2026-08-27 14:45:00', 1),
+ (315, 16, 4, '2026-08-27 16:45:00', 1),
+ (316, 35, 3, '2026-08-28 10:15:00', 1),
+ (317, 40, 3, '2026-08-28 10:15:00', 1),
+ (318, 64, 3, '2026-08-28 06:30:00', 1),
+ (319, 1, 3, '2026-08-28 06:10:00', 1),
+ (320, 1, 4, '2026-08-28 18:40:00', 1),
+ (321, 35, 3, '2026-08-29 10:15:00', 1),
+ (322, 45, 3, '2026-08-29 06:45:00', 1),
+ (323, 55, 11, '2026-08-29 13:15:00', 1),
+ (324, 67, 3, '2026-08-29 08:00:00', 1),
+ (325, 74, 3, '2026-08-29 11:00:00', 1),
+ (326, 51, 3, '2026-08-31 09:15:00', 1),
+ (327, 53, 4, '2026-08-31 15:00:00', 1),
+ (328, 71, 4, '2026-08-31 19:45:00', 1),
+ (329, 12, 4, '2026-08-31 19:45:00', 1),
+ (330, 33, 4, '2026-09-01 17:15:00', 1),
+ (331, 35, 3, '2026-09-01 07:45:00', 1),
+ (332, 38, 4, '2026-09-01 18:00:00', 1),
+ (333, 40, 3, '2026-09-01 11:00:00', 1),
+ (334, 43, 4, '2026-09-01 15:15:00', 1),
+ (335, 49, 3, '2026-09-01 12:45:00', 1),
+ (336, 59, 4, '2026-09-01 13:15:00', 1),
+ (337, 64, 3, '2026-09-01 07:15:00', 1),
+ (338, 67, 3, '2026-09-01 08:45:00', 1),
+ (339, 71, 4, '2026-09-01 17:45:00', 1),
+ (340, 73, 4, '2026-09-01 19:00:00', 1),
+ (341, 74, 4, '2026-09-01 19:00:00', 1),
+ (342, 77, 3, '2026-09-01 08:30:00', 1),
+ (343, 13, 3, '2026-09-01 07:30:00', 1),
+ (344, 22, 4, '2026-09-01 15:00:00', 1),
+ (345, 37, 3, '2026-09-03 10:30:00', 1),
+ (346, 39, 4, '2026-09-03 18:30:00', 1),
+ (347, 40, 4, '2026-09-03 18:30:00', 1),
+ (348, 45, 4, '2026-09-03 16:45:00', 1),
+ (349, 49, 3, '2026-09-03 08:30:00', 1),
+ (350, 53, 4, '2026-09-03 18:30:00', 1),
+ (351, 64, 4, '2026-09-03 16:45:00', 1),
+ (352, 66, 4, '2026-09-03 20:30:00', 1),
+ (353, 69, 4, '2026-09-03 20:00:00', 1),
+ (354, 71, 4, '2026-09-03 18:00:00', 1),
+ (355, 73, 4, '2026-09-03 17:30:00', 1),
+ (356, 74, 4, '2026-09-03 19:45:00', 1),
+ (357, 75, 4, '2026-09-03 15:30:00', 1),
+ (358, 77, 3, '2026-09-03 07:15:00', 1),
+ (359, 1, 4, '2026-09-03 19:00:00', 1),
+ (360, 12, 3, '2026-09-03 12:30:00', 1),
+ (361, 22, 3, '2026-09-03 08:15:00', 1),
+ (362, 35, 4, '2026-09-04 20:15:00', 1),
+ (363, 37, 4, '2026-09-04 17:30:00', 1),
+ (364, 38, 4, '2026-09-04 18:00:00', 1),
+ (365, 43, 4, '2026-09-04 14:30:00', 1),
+ (366, 44, 4, '2026-09-04 18:30:00', 1),
+ (367, 55, 4, '2026-09-04 15:15:00', 1),
+ (368, 59, 4, '2026-09-04 13:30:00', 1),
+ (369, 64, 4, '2026-09-04 19:30:00', 1),
+ (370, 66, 4, '2026-09-04 19:15:00', 1),
+ (371, 69, 3, '2026-09-04 10:30:00', 1),
+ (372, 73, 4, '2026-09-04 20:30:00', 1),
+ (373, 1, 4, '2026-09-04 15:15:00', 1),
+ (374, 16, 3, '2026-09-04 12:00:00', 1),
+ (375, 33, 3, '2026-09-05 09:45:00', 1),
+ (376, 35, 11, '2026-09-05 19:45:00', 1),
+ (377, 38, 11, '2026-09-05 14:45:00', 1),
+ (378, 39, 11, '2026-09-05 17:00:00', 1),
+ (379, 53, 3, '2026-09-05 11:15:00', 1),
+ (380, 66, 3, '2026-09-05 11:45:00', 1),
+ (381, 67, 3, '2026-09-05 09:45:00', 1),
+ (382, 69, 11, '2026-09-05 17:45:00', 1),
+ (383, 71, 11, '2026-09-05 14:00:00', 1),
+ (384, 77, 3, '2026-09-05 12:30:00', 1),
+ (385, 4, 11, '2026-09-05 13:30:00', 1),
+ (386, 15, 3, '2026-09-05 09:00:00', 1),
+ (387, 16, 11, '2026-09-05 17:00:00', 1),
+ (388, 26, 11, '2026-09-05 16:15:00', 1),
+ (389, 33, 9, '2026-09-06 07:30:00', 1),
+ (390, 35, 9, '2026-09-06 07:45:00', 1),
+ (391, 38, 9, '2026-09-06 12:45:00', 1),
+ (392, 40, 4, '2026-09-06 18:15:00', 1),
+ (393, 44, 4, '2026-09-06 14:00:00', 1),
+ (394, 51, 4, '2026-09-06 18:15:00', 1),
+ (395, 69, 9, '2026-09-06 07:15:00', 1),
+ (396, 77, 9, '2026-09-06 12:45:00', 1),
+ (397, 10, 9, '2026-09-06 10:45:00', 1),
+ (398, 15, 9, '2026-09-06 12:00:00', 1),
+ (399, 26, 4, '2026-09-06 20:30:00', 1),
+ (400, 33, 3, '2026-09-07 11:45:00', 1);
+INSERT INTO CheckIns (CheckInId, SubscriptionId, VerifiedByEmployeeId, CheckedInAt, PhotoVerified) VALUES
+ (401, 37, 3, '2026-09-07 08:45:00', 1),
+ (402, 39, 4, '2026-09-07 13:30:00', 1),
+ (403, 40, 4, '2026-09-07 13:30:00', 1),
+ (404, 43, 3, '2026-09-07 10:45:00', 1),
+ (405, 45, 4, '2026-09-07 16:15:00', 1),
+ (406, 66, 4, '2026-09-07 19:30:00', 1),
+ (407, 67, 3, '2026-09-07 07:00:00', 1),
+ (408, 69, 4, '2026-09-07 14:15:00', 1),
+ (409, 71, 4, '2026-09-07 13:15:00', 1),
+ (410, 75, 3, '2026-09-07 06:30:00', 1),
+ (411, 77, 3, '2026-09-07 08:00:00', 1),
+ (412, 10, 4, '2026-09-07 14:30:00', 1),
+ (413, 12, 4, '2026-09-07 16:15:00', 1),
+ (414, 16, 3, '2026-09-07 09:45:00', 1),
+ (415, 24, 4, '2026-09-07 18:15:00', 1),
+ (416, 1, 3, '2026-09-07 06:10:00', 1),
+ (417, 1, 4, '2026-09-07 18:40:00', 1),
+ (418, 35, 4, '2026-09-08 16:30:00', 1),
+ (419, 38, 4, '2026-09-08 13:30:00', 1),
+ (420, 40, 3, '2026-09-08 12:00:00', 1),
+ (421, 43, 3, '2026-09-08 07:15:00', 1),
+ (422, 44, 4, '2026-09-08 19:15:00', 1),
+ (423, 74, 3, '2026-09-08 12:30:00', 1),
+ (424, 10, 4, '2026-09-08 19:15:00', 1),
+ (425, 33, 3, '2026-09-09 11:00:00', 1),
+ (426, 35, 4, '2026-09-09 13:00:00', 1),
+ (427, 51, 3, '2026-09-09 11:00:00', 1),
+ (428, 53, 4, '2026-09-09 15:45:00', 1),
+ (429, 59, 3, '2026-09-09 08:30:00', 1),
+ (430, 64, 4, '2026-09-09 15:45:00', 1),
+ (431, 66, 3, '2026-09-09 12:15:00', 1),
+ (432, 71, 3, '2026-09-09 07:00:00', 1),
+ (433, 74, 3, '2026-09-09 06:45:00', 1),
+ (434, 4, 4, '2026-09-09 18:45:00', 1),
+ (435, 16, 3, '2026-09-09 12:15:00', 1),
+ (436, 22, 3, '2026-09-09 08:00:00', 1),
+ (437, 31, 4, '2026-09-10 14:45:00', 1),
+ (438, 33, 4, '2026-09-10 17:30:00', 1),
+ (439, 43, 3, '2026-09-10 11:15:00', 1),
+ (440, 44, 4, '2026-09-10 16:30:00', 1),
+ (441, 58, 4, '2026-09-10 20:45:00', 1),
+ (442, 64, 3, '2026-09-10 09:30:00', 1),
+ (443, 66, 3, '2026-09-10 07:45:00', 1),
+ (444, 67, 3, '2026-09-10 07:45:00', 1),
+ (445, 71, 4, '2026-09-10 15:30:00', 1),
+ (446, 76, 4, '2026-09-10 17:45:00', 1),
+ (447, 1, 3, '2026-09-10 06:30:00', 1),
+ (448, 10, 4, '2026-09-10 20:30:00', 1),
+ (449, 13, 4, '2026-09-10 14:45:00', 1),
+ (450, 15, 3, '2026-09-10 06:00:00', 1),
+ (451, 16, 3, '2026-09-10 08:45:00', 1),
+ (452, 31, 3, '2026-09-11 10:45:00', 1),
+ (453, 35, 3, '2026-09-11 07:00:00', 1),
+ (454, 37, 3, '2026-09-11 09:15:00', 1),
+ (455, 38, 4, '2026-09-11 17:15:00', 1),
+ (456, 39, 3, '2026-09-11 11:30:00', 1),
+ (457, 45, 4, '2026-09-11 20:15:00', 1),
+ (458, 67, 4, '2026-09-11 17:30:00', 1),
+ (459, 69, 4, '2026-09-11 19:15:00', 1),
+ (460, 71, 4, '2026-09-11 20:00:00', 1),
+ (461, 76, 4, '2026-09-11 18:30:00', 1),
+ (462, 1, 3, '2026-09-11 12:00:00', 1),
+ (463, 4, 3, '2026-09-11 07:15:00', 1),
+ (464, 10, 4, '2026-09-11 16:00:00', 1),
+ (465, 16, 3, '2026-09-11 06:30:00', 1),
+ (466, 35, 11, '2026-09-12 19:00:00', 1),
+ (467, 38, 3, '2026-09-12 10:45:00', 1),
+ (468, 39, 3, '2026-09-12 12:00:00', 1),
+ (469, 40, 11, '2026-09-12 20:45:00', 1),
+ (470, 43, 3, '2026-09-12 08:30:00', 1),
+ (471, 45, 11, '2026-09-12 16:00:00', 1),
+ (472, 47, 11, '2026-09-12 17:45:00', 1),
+ (473, 55, 3, '2026-09-12 09:15:00', 1),
+ (474, 59, 11, '2026-09-12 16:15:00', 1),
+ (475, 67, 11, '2026-09-12 18:15:00', 1),
+ (476, 69, 11, '2026-09-12 15:15:00', 1),
+ (477, 74, 3, '2026-09-12 06:15:00', 1),
+ (478, 77, 3, '2026-09-12 10:30:00', 1),
+ (479, 1, 3, '2026-09-12 07:30:00', 1),
+ (480, 4, 11, '2026-09-12 18:15:00', 1),
+ (481, 10, 11, '2026-09-12 13:45:00', 1),
+ (482, 12, 3, '2026-09-12 06:15:00', 1),
+ (483, 31, 4, '2026-09-13 15:30:00', 1),
+ (484, 33, 4, '2026-09-13 15:30:00', 1),
+ (485, 35, 9, '2026-09-13 07:00:00', 1),
+ (486, 40, 4, '2026-09-13 16:30:00', 1),
+ (487, 43, 9, '2026-09-13 07:30:00', 1),
+ (488, 47, 9, '2026-09-13 12:00:00', 1),
+ (489, 49, 9, '2026-09-13 08:00:00', 1),
+ (490, 66, 9, '2026-09-13 11:30:00', 1),
+ (491, 75, 4, '2026-09-13 19:00:00', 1),
+ (492, 77, 4, '2026-09-13 20:30:00', 1),
+ (493, 1, 4, '2026-09-13 15:30:00', 1),
+ (494, 10, 4, '2026-09-13 16:00:00', 1),
+ (495, 15, 9, '2026-09-13 10:45:00', 1),
+ (496, 24, 4, '2026-09-13 19:30:00', 1),
+ (497, 33, 4, '2026-09-14 17:00:00', 1),
+ (498, 36, 4, '2026-09-14 16:15:00', 1),
+ (499, 37, 4, '2026-09-14 17:00:00', 1),
+ (500, 38, 3, '2026-09-14 07:45:00', 1),
+ (501, 39, 3, '2026-09-14 06:00:00', 1),
+ (502, 40, 3, '2026-09-14 10:45:00', 1),
+ (503, 44, 4, '2026-09-14 20:15:00', 1),
+ (504, 45, 4, '2026-09-14 18:45:00', 1),
+ (505, 49, 3, '2026-09-14 08:30:00', 1),
+ (506, 58, 3, '2026-09-14 09:15:00', 1),
+ (507, 64, 4, '2026-09-14 16:00:00', 1),
+ (508, 66, 3, '2026-09-14 07:00:00', 1),
+ (509, 74, 3, '2026-09-14 06:00:00', 1),
+ (510, 77, 3, '2026-09-14 09:45:00', 1),
+ (511, 10, 3, '2026-09-14 07:45:00', 1),
+ (512, 12, 4, '2026-09-14 13:00:00', 1),
+ (513, 15, 3, '2026-09-14 10:30:00', 1),
+ (514, 22, 4, '2026-09-14 19:00:00', 1),
+ (515, 24, 3, '2026-09-14 08:15:00', 1),
+ (516, 1, 3, '2026-09-14 06:10:00', 1),
+ (517, 1, 4, '2026-09-14 18:40:00', 1),
+ (518, 33, 4, '2026-09-15 15:00:00', 1),
+ (519, 35, 4, '2026-09-15 16:15:00', 1),
+ (520, 38, 4, '2026-09-15 14:00:00', 1),
+ (521, 53, 3, '2026-09-15 08:30:00', 1),
+ (522, 59, 3, '2026-09-15 11:45:00', 1),
+ (523, 67, 3, '2026-09-15 07:45:00', 1),
+ (524, 74, 3, '2026-09-15 08:00:00', 1),
+ (525, 10, 4, '2026-09-15 13:30:00', 1),
+ (526, 15, 3, '2026-09-15 06:00:00', 1),
+ (527, 21, 3, '2026-09-15 09:30:00', 1),
+ (528, 22, 4, '2026-09-15 15:15:00', 1),
+ (529, 24, 4, '2026-09-15 15:45:00', 1),
+ (530, 31, 4, '2026-09-16 13:45:00', 1),
+ (531, 33, 4, '2026-09-16 15:30:00', 1),
+ (532, 35, 3, '2026-09-16 06:30:00', 1),
+ (533, 36, 4, '2026-09-16 17:15:00', 1),
+ (534, 38, 3, '2026-09-16 12:30:00', 1),
+ (535, 43, 4, '2026-09-16 17:30:00', 1),
+ (536, 45, 3, '2026-09-16 11:00:00', 1),
+ (537, 47, 4, '2026-09-16 20:00:00', 1),
+ (538, 53, 4, '2026-09-16 19:45:00', 1),
+ (539, 58, 4, '2026-09-16 19:45:00', 1),
+ (540, 63, 3, '2026-09-16 11:30:00', 1),
+ (541, 66, 3, '2026-09-16 12:30:00', 1),
+ (542, 74, 3, '2026-09-16 06:30:00', 1),
+ (543, 75, 4, '2026-09-16 18:00:00', 1),
+ (544, 77, 3, '2026-09-16 11:00:00', 1),
+ (545, 1, 3, '2026-09-16 08:45:00', 1),
+ (546, 4, 3, '2026-09-16 07:45:00', 1),
+ (547, 10, 3, '2026-09-16 09:45:00', 1),
+ (548, 16, 3, '2026-09-16 12:30:00', 1),
+ (549, 21, 3, '2026-09-16 12:30:00', 1),
+ (550, 26, 4, '2026-09-16 19:15:00', 1),
+ (551, 33, 4, '2026-09-17 19:30:00', 1),
+ (552, 37, 4, '2026-09-17 19:30:00', 1),
+ (553, 44, 4, '2026-09-17 13:15:00', 1),
+ (554, 53, 4, '2026-09-17 13:30:00', 1),
+ (555, 56, 3, '2026-09-17 06:30:00', 1),
+ (556, 58, 4, '2026-09-17 15:00:00', 1),
+ (557, 63, 4, '2026-09-17 14:30:00', 1),
+ (558, 64, 3, '2026-09-17 08:15:00', 1),
+ (559, 67, 3, '2026-09-17 09:30:00', 1),
+ (560, 76, 4, '2026-09-17 20:45:00', 1),
+ (561, 1, 3, '2026-09-17 06:30:00', 1),
+ (562, 4, 3, '2026-09-17 07:45:00', 1),
+ (563, 21, 4, '2026-09-17 20:45:00', 1),
+ (564, 24, 4, '2026-09-17 20:30:00', 1),
+ (565, 31, 3, '2026-09-19 10:15:00', 1),
+ (566, 44, 11, '2026-09-19 15:45:00', 1),
+ (567, 45, 3, '2026-09-19 10:45:00', 1),
+ (568, 46, 3, '2026-09-19 06:30:00', 1),
+ (569, 47, 3, '2026-09-19 10:30:00', 1),
+ (570, 55, 3, '2026-09-19 08:15:00', 1),
+ (571, 56, 11, '2026-09-19 17:45:00', 1),
+ (572, 58, 11, '2026-09-19 16:15:00', 1),
+ (573, 59, 11, '2026-09-19 15:45:00', 1),
+ (574, 76, 3, '2026-09-19 09:30:00', 1),
+ (575, 1, 11, '2026-09-19 18:45:00', 1),
+ (576, 4, 11, '2026-09-19 17:45:00', 1),
+ (577, 13, 3, '2026-09-19 12:30:00', 1),
+ (578, 15, 3, '2026-09-19 09:30:00', 1),
+ (579, 19, 3, '2026-09-19 11:15:00', 1),
+ (580, 24, 11, '2026-09-19 14:00:00', 1),
+ (581, 26, 11, '2026-09-19 20:45:00', 1),
+ (582, 34, 4, '2026-09-20 13:00:00', 1),
+ (583, 37, 9, '2026-09-20 06:30:00', 1),
+ (584, 40, 9, '2026-09-20 06:00:00', 1),
+ (585, 45, 4, '2026-09-20 20:15:00', 1),
+ (586, 47, 4, '2026-09-20 15:15:00', 1),
+ (587, 53, 4, '2026-09-20 14:00:00', 1),
+ (588, 55, 9, '2026-09-20 11:45:00', 1),
+ (589, 58, 4, '2026-09-20 20:45:00', 1),
+ (590, 59, 4, '2026-09-20 20:00:00', 1),
+ (591, 71, 4, '2026-09-20 14:30:00', 1),
+ (592, 74, 4, '2026-09-20 17:00:00', 1),
+ (593, 75, 9, '2026-09-20 09:00:00', 1),
+ (594, 76, 9, '2026-09-20 10:30:00', 1),
+ (595, 78, 9, '2026-09-20 08:00:00', 1),
+ (596, 12, 9, '2026-09-20 11:30:00', 1),
+ (597, 13, 4, '2026-09-20 15:15:00', 1),
+ (598, 16, 4, '2026-09-20 16:00:00', 1),
+ (599, 19, 4, '2026-09-20 14:45:00', 1),
+ (600, 24, 9, '2026-09-20 07:15:00', 1),
+ (601, 26, 4, '2026-09-20 16:30:00', 1),
+ (602, 44, 4, '2026-09-21 18:45:00', 1),
+ (603, 63, 3, '2026-09-21 12:00:00', 1),
+ (604, 64, 4, '2026-09-21 13:30:00', 1),
+ (605, 74, 3, '2026-09-21 06:30:00', 1),
+ (606, 75, 3, '2026-09-21 11:45:00', 1),
+ (607, 1, 4, '2026-09-21 16:45:00', 1),
+ (608, 4, 3, '2026-09-21 11:45:00', 1),
+ (609, 10, 3, '2026-09-21 10:00:00', 1),
+ (610, 12, 4, '2026-09-21 13:30:00', 1),
+ (611, 15, 3, '2026-09-21 07:15:00', 1),
+ (612, 19, 3, '2026-09-21 12:45:00', 1),
+ (613, 21, 3, '2026-09-21 06:00:00', 1),
+ (614, 1, 3, '2026-09-21 06:10:00', 1),
+ (615, 1, 4, '2026-09-21 18:40:00', 1),
+ (616, 36, 4, '2026-09-22 16:15:00', 1),
+ (617, 37, 4, '2026-09-22 19:00:00', 1),
+ (618, 38, 4, '2026-09-22 13:30:00', 1),
+ (619, 39, 4, '2026-09-22 14:00:00', 1),
+ (620, 40, 4, '2026-09-22 19:45:00', 1),
+ (621, 43, 4, '2026-09-22 15:15:00', 1),
+ (622, 44, 3, '2026-09-22 07:00:00', 1),
+ (623, 45, 4, '2026-09-22 20:15:00', 1),
+ (624, 47, 3, '2026-09-22 08:45:00', 1),
+ (625, 49, 4, '2026-09-22 19:30:00', 1),
+ (626, 56, 4, '2026-09-22 15:45:00', 1),
+ (627, 66, 4, '2026-09-22 18:45:00', 1),
+ (628, 67, 4, '2026-09-22 17:45:00', 1),
+ (629, 69, 4, '2026-09-22 13:30:00', 1),
+ (630, 71, 3, '2026-09-22 06:00:00', 1),
+ (631, 10, 4, '2026-09-22 19:15:00', 1),
+ (632, 12, 3, '2026-09-22 07:00:00', 1),
+ (633, 15, 3, '2026-09-22 07:45:00', 1),
+ (634, 22, 4, '2026-09-22 19:30:00', 1),
+ (635, 31, 3, '2026-09-23 12:45:00', 1),
+ (636, 36, 4, '2026-09-23 15:30:00', 1),
+ (637, 37, 4, '2026-09-23 20:15:00', 1),
+ (638, 38, 3, '2026-09-23 08:15:00', 1),
+ (639, 39, 3, '2026-09-23 06:30:00', 1),
+ (640, 40, 4, '2026-09-23 14:45:00', 1),
+ (641, 44, 4, '2026-09-23 15:15:00', 1),
+ (642, 49, 3, '2026-09-23 07:15:00', 1),
+ (643, 63, 4, '2026-09-23 13:45:00', 1),
+ (644, 69, 4, '2026-09-23 18:30:00', 1),
+ (645, 71, 4, '2026-09-23 17:15:00', 1),
+ (646, 75, 4, '2026-09-23 13:00:00', 1),
+ (647, 4, 4, '2026-09-23 14:30:00', 1),
+ (648, 19, 4, '2026-09-23 14:45:00', 1),
+ (649, 21, 4, '2026-09-23 14:00:00', 1),
+ (650, 31, 3, '2026-09-24 08:15:00', 1),
+ (651, 34, 4, '2026-09-24 20:30:00', 1),
+ (652, 36, 3, '2026-09-24 12:30:00', 1),
+ (653, 38, 3, '2026-09-24 09:30:00', 1),
+ (654, 39, 3, '2026-09-24 11:15:00', 1),
+ (655, 40, 3, '2026-09-24 08:00:00', 1),
+ (656, 43, 4, '2026-09-24 17:30:00', 1),
+ (657, 45, 4, '2026-09-24 15:30:00', 1),
+ (658, 46, 4, '2026-09-24 17:00:00', 1),
+ (659, 49, 4, '2026-09-24 18:45:00', 1),
+ (660, 53, 4, '2026-09-24 19:15:00', 1),
+ (661, 58, 4, '2026-09-24 16:15:00', 1),
+ (662, 64, 4, '2026-09-24 13:30:00', 1),
+ (663, 69, 3, '2026-09-24 07:15:00', 1),
+ (664, 71, 3, '2026-09-24 08:15:00', 1),
+ (665, 74, 4, '2026-09-24 14:30:00', 1),
+ (666, 76, 4, '2026-09-24 18:15:00', 1),
+ (667, 78, 4, '2026-09-24 20:45:00', 1),
+ (668, 4, 3, '2026-09-24 09:00:00', 1),
+ (669, 12, 3, '2026-09-24 06:30:00', 1),
+ (670, 15, 3, '2026-09-24 10:45:00', 1),
+ (671, 19, 3, '2026-09-24 10:15:00', 1),
+ (672, 21, 4, '2026-09-24 16:15:00', 1),
+ (673, 31, 3, '2026-09-25 12:30:00', 1),
+ (674, 37, 4, '2026-09-25 17:15:00', 1),
+ (675, 39, 3, '2026-09-25 12:30:00', 1),
+ (676, 45, 4, '2026-09-25 14:45:00', 1),
+ (677, 47, 4, '2026-09-25 19:30:00', 1),
+ (678, 49, 3, '2026-09-25 10:00:00', 1),
+ (679, 55, 3, '2026-09-25 06:45:00', 1),
+ (680, 56, 3, '2026-09-25 08:45:00', 1),
+ (681, 63, 3, '2026-09-25 09:00:00', 1),
+ (682, 74, 4, '2026-09-25 18:30:00', 1),
+ (683, 75, 4, '2026-09-25 18:45:00', 1),
+ (684, 76, 3, '2026-09-25 07:15:00', 1),
+ (685, 78, 3, '2026-09-25 07:00:00', 1),
+ (686, 4, 4, '2026-09-25 15:30:00', 1),
+ (687, 18, 3, '2026-09-25 07:45:00', 1),
+ (688, 19, 3, '2026-09-25 09:15:00', 1),
+ (689, 21, 4, '2026-09-25 14:45:00', 1),
+ (690, 24, 3, '2026-09-25 08:30:00', 1),
+ (691, 26, 3, '2026-09-25 12:30:00', 1),
+ (692, 34, 3, '2026-09-26 06:30:00', 1),
+ (693, 36, 11, '2026-09-26 19:45:00', 1),
+ (694, 37, 3, '2026-09-26 06:00:00', 1),
+ (695, 38, 11, '2026-09-26 17:00:00', 1),
+ (696, 39, 3, '2026-09-26 08:15:00', 1),
+ (697, 40, 3, '2026-09-26 11:00:00', 1),
+ (698, 43, 11, '2026-09-26 20:45:00', 1),
+ (699, 45, 3, '2026-09-26 08:45:00', 1),
+ (700, 47, 3, '2026-09-26 09:45:00', 1),
+ (701, 69, 11, '2026-09-26 20:30:00', 1),
+ (702, 71, 11, '2026-09-26 13:45:00', 1),
+ (703, 78, 11, '2026-09-26 16:45:00', 1),
+ (704, 1, 11, '2026-09-26 13:15:00', 1),
+ (705, 19, 3, '2026-09-26 09:30:00', 1),
+ (706, 22, 11, '2026-09-26 14:00:00', 1),
+ (707, 24, 11, '2026-09-26 17:15:00', 1),
+ (708, 31, 4, '2026-09-27 18:00:00', 1),
+ (709, 40, 9, '2026-09-27 10:30:00', 1),
+ (710, 44, 9, '2026-09-27 08:30:00', 1),
+ (711, 47, 9, '2026-09-27 10:30:00', 1),
+ (712, 58, 4, '2026-09-27 13:15:00', 1),
+ (713, 59, 4, '2026-09-27 13:00:00', 1),
+ (714, 63, 4, '2026-09-27 16:15:00', 1),
+ (715, 75, 4, '2026-09-27 18:00:00', 1),
+ (716, 10, 9, '2026-09-27 11:30:00', 1),
+ (717, 24, 9, '2026-09-27 10:15:00', 1),
+ (718, 31, 4, '2026-09-28 14:45:00', 1),
+ (719, 34, 3, '2026-09-28 07:30:00', 1),
+ (720, 39, 4, '2026-09-28 18:15:00', 1),
+ (721, 44, 4, '2026-09-28 18:15:00', 1),
+ (722, 45, 3, '2026-09-28 07:00:00', 1),
+ (723, 46, 3, '2026-09-28 08:30:00', 1),
+ (724, 58, 4, '2026-09-28 14:15:00', 1),
+ (725, 63, 3, '2026-09-28 11:30:00', 1),
+ (726, 75, 3, '2026-09-28 07:30:00', 1),
+ (727, 78, 3, '2026-09-28 11:15:00', 1),
+ (728, 1, 4, '2026-09-28 18:15:00', 1),
+ (729, 10, 4, '2026-09-28 14:30:00', 1),
+ (730, 21, 4, '2026-09-28 15:00:00', 1),
+ (731, 22, 4, '2026-09-28 14:00:00', 1),
+ (732, 26, 4, '2026-09-28 15:00:00', 1),
+ (733, 1, 3, '2026-09-28 06:10:00', 1),
+ (734, 1, 4, '2026-09-28 18:40:00', 1),
+ (735, 39, 3, '2026-09-29 08:30:00', 1),
+ (736, 40, 3, '2026-09-29 12:30:00', 1),
+ (737, 44, 3, '2026-09-29 11:30:00', 1),
+ (738, 45, 4, '2026-09-29 16:45:00', 1),
+ (739, 46, 4, '2026-09-29 18:45:00', 1),
+ (740, 56, 4, '2026-09-29 15:15:00', 1),
+ (741, 59, 4, '2026-09-29 15:15:00', 1),
+ (742, 69, 4, '2026-09-29 20:30:00', 1),
+ (743, 71, 4, '2026-09-29 20:15:00', 1),
+ (744, 75, 3, '2026-09-29 12:30:00', 1),
+ (745, 78, 4, '2026-09-29 17:30:00', 1),
+ (746, 1, 4, '2026-09-29 20:45:00', 1),
+ (747, 4, 3, '2026-09-29 09:15:00', 1),
+ (748, 12, 4, '2026-09-29 16:00:00', 1),
+ (749, 16, 3, '2026-09-29 08:00:00', 1),
+ (750, 18, 3, '2026-09-29 08:45:00', 1),
+ (751, 21, 3, '2026-09-29 10:45:00', 1),
+ (752, 24, 3, '2026-09-29 10:15:00', 1),
+ (753, 26, 3, '2026-09-29 06:15:00', 1),
+ (754, 39, 4, '2026-09-30 19:45:00', 1),
+ (755, 43, 3, '2026-09-30 06:00:00', 1),
+ (756, 46, 3, '2026-09-30 11:30:00', 1),
+ (757, 63, 4, '2026-09-30 16:45:00', 1),
+ (758, 64, 4, '2026-09-30 14:45:00', 1),
+ (759, 66, 3, '2026-09-30 08:30:00', 1),
+ (760, 68, 4, '2026-09-30 17:45:00', 1),
+ (761, 70, 3, '2026-09-30 06:15:00', 1),
+ (762, 75, 3, '2026-09-30 09:00:00', 1),
+ (763, 76, 4, '2026-09-30 15:00:00', 1),
+ (764, 78, 3, '2026-09-30 07:45:00', 1),
+ (765, 1, 4, '2026-09-30 19:00:00', 1),
+ (766, 4, 4, '2026-09-30 19:15:00', 1),
+ (767, 10, 4, '2026-09-30 19:15:00', 1),
+ (768, 12, 4, '2026-09-30 15:45:00', 1),
+ (769, 16, 4, '2026-09-30 14:30:00', 1),
+ (770, 22, 4, '2026-09-30 20:45:00', 1),
+ (771, 24, 3, '2026-09-30 11:45:00', 1),
+ (772, 34, 4, '2026-10-01 14:30:00', 1),
+ (773, 37, 4, '2026-10-01 17:00:00', 1),
+ (774, 38, 4, '2026-10-01 18:30:00', 1),
+ (775, 45, 3, '2026-10-01 06:45:00', 1),
+ (776, 47, 4, '2026-10-01 20:15:00', 1),
+ (777, 49, 3, '2026-10-01 11:30:00', 1),
+ (778, 59, 3, '2026-10-01 10:00:00', 1),
+ (779, 63, 4, '2026-10-01 13:15:00', 1),
+ (780, 70, 3, '2026-10-01 06:15:00', 1),
+ (781, 71, 4, '2026-10-01 19:30:00', 1),
+ (782, 1, 3, '2026-10-01 07:15:00', 1),
+ (783, 12, 4, '2026-10-01 18:00:00', 1),
+ (784, 16, 3, '2026-10-01 06:00:00', 1),
+ (785, 19, 3, '2026-10-01 07:45:00', 1),
+ (786, 31, 3, '2026-10-02 07:30:00', 1),
+ (787, 34, 3, '2026-10-02 10:15:00', 1),
+ (788, 36, 3, '2026-10-02 08:45:00', 1),
+ (789, 38, 3, '2026-10-02 12:15:00', 1),
+ (790, 43, 4, '2026-10-02 17:15:00', 1),
+ (791, 56, 3, '2026-10-02 11:45:00', 1),
+ (792, 66, 4, '2026-10-02 20:45:00', 1),
+ (793, 75, 4, '2026-10-02 17:15:00', 1),
+ (794, 76, 4, '2026-10-02 16:00:00', 1),
+ (795, 78, 4, '2026-10-02 13:45:00', 1),
+ (796, 1, 4, '2026-10-02 20:45:00', 1),
+ (797, 4, 4, '2026-10-02 20:15:00', 1),
+ (798, 19, 3, '2026-10-02 07:45:00', 1),
+ (799, 24, 4, '2026-10-02 13:30:00', 1),
+ (800, 31, 3, '2026-09-23 08:15:00', 1);
+INSERT INTO CheckIns (CheckInId, SubscriptionId, VerifiedByEmployeeId, CheckedInAt, PhotoVerified) VALUES
+ (801, 33, 11, '2026-09-05 13:45:00', 1),
+ (802, 35, 3, '2026-09-12 08:15:00', 1),
+ (803, 36, 9, '2026-09-27 09:45:00', 1),
+ (804, 37, 3, '2026-09-14 06:45:00', 1),
+ (805, 39, 4, '2026-09-20 15:15:00', 1),
+ (806, 40, 4, '2026-09-17 13:45:00', 1),
+ (807, 43, 9, '2026-09-27 08:15:00', 1),
+ (808, 44, 4, '2026-09-21 15:15:00', 1),
+ (809, 45, 3, '2026-09-05 08:15:00', 1),
+ (810, 47, 4, '2026-09-23 15:45:00', 1),
+ (811, 49, 3, '2026-09-11 06:45:00', 1),
+ (812, 53, 4, '2026-09-24 15:45:00', 1),
+ (813, 55, 3, '2026-09-25 08:15:00', 1),
+ (814, 56, 3, '2026-09-29 08:15:00', 1),
+ (815, 58, 3, '2026-09-11 09:45:00', 1);
 SET IDENTITY_INSERT CheckIns OFF;
-GO
 
 /* ============================================================================
-   14. CUSTOMER DELETION REQUESTS — đủ 3 trạng thái
+   CustomerDeletionRequests — 4 dòng.
    ============================================================================ */
 SET IDENTITY_INSERT CustomerDeletionRequests ON;
-INSERT INTO CustomerDeletionRequests (DeletionRequestId, CustomerId, RequestedByEmployeeId, ReviewedByEmployeeId,
-                                      Reason, Status, RejectReason, RequestedAt, ReviewedAt) VALUES
- (1, 13, 3, NULL, N'Khách yêu cầu xóa toàn bộ dữ liệu cá nhân', 'Pending' , NULL, '2026-09-22 15:00:00', NULL),
- (2, 12, 4, 2   , N'Khách chuyển vào Nam, không tập nữa'      , 'Approved', NULL, '2026-09-14 10:00:00', '2026-09-15 16:00:00'),
- (3, 1 , 3, 2   , N'Khách nhờ xóa hộ qua điện thoại'          , 'Rejected', N'Chưa xác minh được danh tính người yêu cầu, mời khách tới quầy', '2026-09-10 09:00:00', '2026-09-10 14:20:00');
+INSERT INTO CustomerDeletionRequests (CustomerDeletionRequestId, CustomerId, RequestedByEmployeeId, ReviewedByEmployeeId, Reason, Status, RejectReason, RequestedAt, ReviewedAt) VALUES
+ (1, 13, 3, NULL, N'Khách yêu cầu xóa toàn bộ dữ liệu cá nhân', 'Pending', NULL, '2026-09-29 15:00:00', NULL), -- còn gói đang chạy → chờ Manager (CBR-16)
+ (2, 12, 4, 2, N'Khách chuyển vào Nam, không tập nữa', 'Approved', NULL, '2026-09-14 10:00:00', '2026-09-15 16:00:00'),
+ (3, 1, 3, 2, N'Khách nhờ xóa hộ qua điện thoại', 'Rejected', N'Chưa xác minh được danh tính người yêu cầu, mời khách tới quầy', '2026-09-10 09:00:00', '2026-09-10 14:20:00'),
+ (4, 20, 3, 2, N'Lễ tân Hoa xin xóa hồ sơ khách của mình', 'Approved', NULL, '2026-09-04 10:00:00', '2026-09-05 15:00:00'); -- xóa hồ sơ khách nhưng vẫn là nhân viên (CBR-86)
 SET IDENTITY_INSERT CustomerDeletionRequests OFF;
-GO
 
 /* ============================================================================
-   15. TIME SLOTS — khung giờ PT công bố. Mỗi slot dài 90 phút.
-   Phủ đủ 3 trạng thái: Free (còn trống), Held (đang giữ chỗ), Booked (đã có buổi).
+   TimeSlots — 904 dòng. Lịch PT: slot đã đặt + slot trống công bố dày 05/10–31/10 (có cuối tuần).
    ============================================================================ */
 SET IDENTITY_INSERT TimeSlots ON;
 INSERT INTO TimeSlots (TimeSlotId, PtEmployeeId, SlotDate, StartTime, EndTime, Status, HeldByOrderId, HoldExpiresAt, CreatedAt) VALUES
- -- PT Sơn (Emp 5) — khung 18:00 cố định của gói PT khách Đỗ Thị Mai
- (1 , 5, '2026-09-07', '18:00', '19:30', 'Booked', NULL, NULL, '2026-09-01 20:00:00'),
- (2 , 5, '2026-09-08', '18:00', '19:30', 'Booked', NULL, NULL, '2026-09-01 20:00:00'),
- (3 , 5, '2026-09-09', '18:00', '19:30', 'Free'  , NULL, NULL, '2026-09-01 20:00:00'), -- buổi đã bị hủy nên slot trả về Free
- (4 , 5, '2026-09-10', '18:00', '19:30', 'Booked', NULL, NULL, '2026-09-01 20:00:00'),
- (5 , 5, '2026-09-11', '18:00', '19:30', 'Free'  , NULL, NULL, '2026-09-01 20:00:00'), -- buổi đã swap sang T7 nên slot trống lại
- (6 , 5, '2026-09-12', '09:00', '10:30', 'Booked', NULL, NULL, '2026-09-01 20:00:00'), -- slot T7 nhận buổi swap
- (7 , 5, '2026-09-24', '18:00', '19:30', 'Booked', NULL, NULL, '2026-09-01 20:00:00'),
- (8 , 5, '2026-09-25', '18:00', '19:30', 'Booked', NULL, NULL, '2026-09-01 20:00:00'),
- (9 , 5, '2026-09-23', '06:00', '07:30', 'Free'  , NULL, NULL, '2026-09-15 20:00:00'),
- -- PT Kiều Trang (Emp 6) — gói couple khung 19:30
- (10, 6, '2026-09-21', '19:30', '21:00', 'Booked', NULL, NULL, '2026-08-15 10:00:00'),
- (11, 6, '2026-09-22', '19:30', '21:00', 'Booked', NULL, NULL, '2026-08-15 10:00:00'),
- (12, 6, '2026-09-23', '19:30', '21:00', 'Booked', NULL, NULL, '2026-08-15 10:00:00'),
- (13, 6, '2026-09-24', '19:30', '21:00', 'Free'  , NULL, NULL, '2026-08-15 10:00:00'),
- -- PT David (Emp 7) — buổi lẻ hôm nay và slot đang bị giữ chỗ bởi đơn online
- (14, 7, '2026-09-23', '10:00', '11:30', 'Booked', NULL, NULL, '2026-09-18 09:00:00'),
- (15, 7, '2026-09-23', '14:00', '15:30', 'Held'  , 20  , '2026-09-23 09:18:00', '2026-09-18 09:00:00'), -- giữ chỗ cho đơn 20 đang chờ thanh toán
- (16, 7, '2026-09-24', '10:00', '11:30', 'Free'  , NULL, NULL, '2026-09-18 09:00:00'),
- (17, 7, '2026-09-25', '10:00', '11:30', 'Free'  , NULL, NULL, '2026-09-18 09:00:00'),
- -- PT đã nghỉ việc (Emp 8) — slot cũ giữ lại cho lịch sử
- (18, 8, '2026-08-20', '17:00', '18:30', 'Free'  , NULL, NULL, '2026-08-01 08:00:00');
+ (1, 5, '2026-09-26', '09:00:00', '10:30:00', 'Booked', NULL, NULL, '2026-09-21 21:00:00'),
+ (2, 7, DATEADD(DAY, 1, @Today), '15:30:00', '17:00:00', 'Free', NULL, NULL, DATEADD(MINUTE, -4320, @Now)),
+ (3, 7, DATEADD(DAY, 1, @Today), '14:00:00', '15:30:00', 'Held', 5, DATEADD(MINUTE, 18, @Now), DATEADD(MINUTE, -4320, @Now)),
+ (4, 5, '2026-09-26', '10:30:00', '12:00:00', 'Booked', NULL, NULL, '2026-09-22 19:00:00'),
+ (5, 5, '2026-07-06', '07:00:00', '08:30:00', 'Booked', NULL, NULL, '2026-06-26 21:00:00'),
+ (6, 5, '2026-07-07', '07:00:00', '08:30:00', 'Free', NULL, NULL, '2026-06-27 21:00:00'),
+ (7, 5, '2026-07-08', '07:00:00', '08:30:00', 'Booked', NULL, NULL, '2026-06-28 21:00:00'),
+ (8, 5, '2026-07-09', '07:00:00', '08:30:00', 'Booked', NULL, NULL, '2026-06-29 21:00:00'),
+ (9, 5, '2026-07-10', '07:00:00', '08:30:00', 'Booked', NULL, NULL, '2026-06-30 21:00:00'),
+ (10, 5, '2026-07-13', '07:00:00', '08:30:00', 'Booked', NULL, NULL, '2026-07-03 21:00:00'),
+ (11, 5, '2026-07-14', '07:00:00', '08:30:00', 'Booked', NULL, NULL, '2026-07-04 21:00:00'),
+ (12, 5, '2026-07-15', '07:00:00', '08:30:00', 'Free', NULL, NULL, '2026-07-05 21:00:00'),
+ (13, 5, '2026-07-16', '07:00:00', '08:30:00', 'Booked', NULL, NULL, '2026-07-06 21:00:00'),
+ (14, 5, '2026-07-17', '07:00:00', '08:30:00', 'Booked', NULL, NULL, '2026-07-07 21:00:00'),
+ (15, 5, '2026-07-20', '07:00:00', '08:30:00', 'Free', NULL, NULL, '2026-07-10 21:00:00'),
+ (16, 5, '2026-07-21', '07:00:00', '08:30:00', 'Booked', NULL, NULL, '2026-07-11 21:00:00'),
+ (17, 5, '2026-07-22', '07:00:00', '08:30:00', 'Booked', NULL, NULL, '2026-07-12 21:00:00'),
+ (18, 5, '2026-07-23', '07:00:00', '08:30:00', 'Booked', NULL, NULL, '2026-07-13 21:00:00'),
+ (19, 5, '2026-07-24', '07:00:00', '08:30:00', 'Booked', NULL, NULL, '2026-07-14 21:00:00'),
+ (20, 5, '2026-07-27', '07:00:00', '08:30:00', 'Booked', NULL, NULL, '2026-07-17 21:00:00'),
+ (21, 5, '2026-07-28', '07:00:00', '08:30:00', 'Booked', NULL, NULL, '2026-07-18 21:00:00'),
+ (22, 5, '2026-07-29', '07:00:00', '08:30:00', 'Booked', NULL, NULL, '2026-07-19 21:00:00'),
+ (23, 5, '2026-07-30', '07:00:00', '08:30:00', 'Booked', NULL, NULL, '2026-07-20 21:00:00'),
+ (24, 5, '2026-07-31', '07:00:00', '08:30:00', 'Booked', NULL, NULL, '2026-07-21 21:00:00'),
+ (25, 5, '2026-08-03', '07:00:00', '08:30:00', 'Free', NULL, NULL, '2026-07-24 21:00:00'),
+ (26, 5, '2026-08-04', '07:00:00', '08:30:00', 'Free', NULL, NULL, '2026-07-25 21:00:00'),
+ (27, 5, '2026-08-05', '07:00:00', '08:30:00', 'Free', NULL, NULL, '2026-07-26 21:00:00'),
+ (28, 5, '2026-08-06', '07:00:00', '08:30:00', 'Free', NULL, NULL, '2026-07-27 21:00:00'),
+ (29, 7, '2026-09-07', '17:00:00', '18:30:00', 'Booked', NULL, NULL, '2026-08-28 21:00:00'),
+ (30, 7, '2026-09-08', '17:00:00', '18:30:00', 'Booked', NULL, NULL, '2026-08-29 21:00:00'),
+ (31, 7, '2026-09-09', '17:00:00', '18:30:00', 'Booked', NULL, NULL, '2026-08-30 21:00:00'),
+ (32, 7, '2026-09-10', '17:00:00', '18:30:00', 'Booked', NULL, NULL, '2026-08-31 21:00:00'),
+ (33, 7, '2026-09-11', '17:00:00', '18:30:00', 'Booked', NULL, NULL, '2026-09-01 21:00:00'),
+ (34, 7, '2026-09-14', '17:00:00', '18:30:00', 'Booked', NULL, NULL, '2026-09-04 21:00:00'),
+ (35, 7, '2026-09-15', '17:00:00', '18:30:00', 'Free', NULL, NULL, '2026-09-05 21:00:00'),
+ (36, 7, '2026-09-16', '17:00:00', '18:30:00', 'Booked', NULL, NULL, '2026-09-06 21:00:00'),
+ (37, 7, '2026-09-17', '17:00:00', '18:30:00', 'Booked', NULL, NULL, '2026-09-07 21:00:00'),
+ (38, 7, '2026-09-18', '17:00:00', '18:30:00', 'Free', NULL, NULL, '2026-09-08 21:00:00'),
+ (39, 7, '2026-09-21', '17:00:00', '18:30:00', 'Booked', NULL, NULL, '2026-09-11 21:00:00'),
+ (40, 7, '2026-09-22', '17:00:00', '18:30:00', 'Booked', NULL, NULL, '2026-09-12 21:00:00'),
+ (41, 7, '2026-09-23', '17:00:00', '18:30:00', 'Booked', NULL, NULL, '2026-09-13 21:00:00'),
+ (42, 7, '2026-09-24', '17:00:00', '18:30:00', 'Booked', NULL, NULL, '2026-09-14 21:00:00'),
+ (43, 7, '2026-09-25', '17:00:00', '18:30:00', 'Booked', NULL, NULL, '2026-09-15 21:00:00'),
+ (44, 7, '2026-09-28', '17:00:00', '18:30:00', 'Free', NULL, NULL, '2026-09-18 21:00:00'),
+ (45, 7, '2026-09-29', '17:00:00', '18:30:00', 'Free', NULL, NULL, '2026-09-19 21:00:00'),
+ (46, 7, '2026-09-30', '17:00:00', '18:30:00', 'Free', NULL, NULL, '2026-09-20 21:00:00'),
+ (47, 7, '2026-10-01', '17:00:00', '18:30:00', 'Free', NULL, NULL, '2026-09-21 21:00:00'),
+ (48, 7, '2026-10-02', '17:00:00', '18:30:00', 'Free', NULL, NULL, '2026-09-22 21:00:00'),
+ (49, 7, '2026-10-05', '17:00:00', '18:30:00', 'Free', NULL, NULL, '2026-09-25 21:00:00'),
+ (50, 7, '2026-10-06', '17:00:00', '18:30:00', 'Free', NULL, NULL, '2026-09-26 21:00:00'),
+ (51, 7, '2026-10-07', '17:00:00', '18:30:00', 'Free', NULL, NULL, '2026-09-27 21:00:00'),
+ (52, 7, '2026-10-08', '17:00:00', '18:30:00', 'Free', NULL, NULL, '2026-09-28 21:00:00'),
+ (53, 7, '2026-10-09', '17:00:00', '18:30:00', 'Free', NULL, NULL, '2026-09-29 21:00:00'),
+ (54, 7, '2026-10-12', '17:00:00', '18:30:00', 'Free', NULL, NULL, '2026-10-02 21:00:00'),
+ (55, 7, '2026-10-13', '17:00:00', '18:30:00', 'Free', NULL, NULL, '2026-10-03 21:00:00'),
+ (56, 7, '2026-10-14', '17:00:00', '18:30:00', 'Free', NULL, NULL, '2026-10-04 21:00:00'),
+ (57, 7, '2026-10-15', '17:00:00', '18:30:00', 'Free', NULL, NULL, '2026-10-05 21:00:00'),
+ (58, 7, '2026-10-16', '17:00:00', '18:30:00', 'Free', NULL, NULL, '2026-10-06 21:00:00'),
+ (59, 7, '2026-10-19', '17:00:00', '18:30:00', 'Free', NULL, NULL, '2026-10-09 21:00:00'),
+ (60, 7, '2026-10-21', '17:00:00', '18:30:00', 'Free', NULL, NULL, '2026-10-11 21:00:00'),
+ (61, 7, '2026-10-22', '17:00:00', '18:30:00', 'Free', NULL, NULL, '2026-10-12 21:00:00'),
+ (62, 7, '2026-10-23', '17:00:00', '18:30:00', 'Free', NULL, NULL, '2026-10-13 21:00:00'),
+ (63, 7, '2026-10-26', '17:00:00', '18:30:00', 'Free', NULL, NULL, '2026-10-16 21:00:00'),
+ (64, 7, '2026-10-27', '17:00:00', '18:30:00', 'Free', NULL, NULL, '2026-10-17 21:00:00'),
+ (65, 7, '2026-10-28', '17:00:00', '18:30:00', 'Booked', NULL, NULL, '2026-10-18 21:00:00'),
+ (66, 7, '2026-10-29', '17:00:00', '18:30:00', 'Booked', NULL, NULL, '2026-10-19 21:00:00'),
+ (67, 7, '2026-10-30', '17:00:00', '18:30:00', 'Booked', NULL, NULL, '2026-10-20 21:00:00'),
+ (68, 7, '2026-11-02', '17:00:00', '18:30:00', 'Booked', NULL, NULL, '2026-10-23 21:00:00'),
+ (69, 7, '2026-11-03', '17:00:00', '18:30:00', 'Booked', NULL, NULL, '2026-10-24 21:00:00'),
+ (70, 7, '2026-11-04', '17:00:00', '18:30:00', 'Booked', NULL, NULL, '2026-10-25 21:00:00'),
+ (71, 7, '2026-11-05', '17:00:00', '18:30:00', 'Booked', NULL, NULL, '2026-10-26 21:00:00'),
+ (72, 7, '2026-11-06', '17:00:00', '18:30:00', 'Booked', NULL, NULL, '2026-10-27 21:00:00'),
+ (73, 5, '2026-09-07', '18:00:00', '19:30:00', 'Booked', NULL, NULL, '2026-08-28 21:00:00'),
+ (74, 5, '2026-09-08', '18:00:00', '19:30:00', 'Free', NULL, NULL, '2026-08-29 21:00:00'),
+ (75, 5, '2026-09-09', '18:00:00', '19:30:00', 'Booked', NULL, NULL, '2026-08-30 21:00:00'),
+ (76, 5, '2026-09-10', '18:00:00', '19:30:00', 'Booked', NULL, NULL, '2026-08-31 21:00:00'),
+ (77, 5, '2026-09-11', '18:00:00', '19:30:00', 'Free', NULL, NULL, '2026-09-01 21:00:00'),
+ (78, 5, '2026-09-12', '09:00:00', '10:30:00', 'Booked', NULL, NULL, '2026-09-02 21:00:00'),
+ (79, 5, '2026-09-14', '18:00:00', '19:30:00', 'Free', NULL, NULL, '2026-09-04 21:00:00'),
+ (80, 5, '2026-09-15', '18:00:00', '19:30:00', 'Booked', NULL, NULL, '2026-09-05 21:00:00'),
+ (81, 5, '2026-09-16', '18:00:00', '19:30:00', 'Free', NULL, NULL, '2026-09-06 21:00:00'),
+ (82, 5, '2026-09-17', '18:00:00', '19:30:00', 'Booked', NULL, NULL, '2026-09-07 21:00:00'),
+ (83, 5, '2026-09-18', '18:00:00', '19:30:00', 'Free', NULL, NULL, '2026-09-08 21:00:00'),
+ (84, 5, '2026-09-21', '18:00:00', '19:30:00', 'Booked', NULL, NULL, '2026-09-11 21:00:00'),
+ (85, 5, '2026-09-22', '18:00:00', '19:30:00', 'Free', NULL, NULL, '2026-09-12 21:00:00'),
+ (86, 5, '2026-09-23', '18:00:00', '19:30:00', 'Booked', NULL, NULL, '2026-09-13 21:00:00'),
+ (87, 5, '2026-09-24', '18:00:00', '19:30:00', 'Free', NULL, NULL, '2026-09-14 21:00:00'),
+ (88, 5, '2026-09-25', '18:00:00', '19:30:00', 'Booked', NULL, NULL, '2026-09-15 21:00:00'),
+ (89, 5, '2026-09-28', '18:00:00', '19:30:00', 'Booked', NULL, NULL, '2026-09-18 21:00:00'),
+ (90, 5, '2026-09-29', '18:00:00', '19:30:00', 'Free', NULL, NULL, '2026-09-19 21:00:00'),
+ (91, 13, '2026-09-29', '18:00:00', '19:30:00', 'Booked', NULL, NULL, '2026-09-19 21:00:00'),
+ (92, 5, '2026-09-30', '18:00:00', '19:30:00', 'Booked', NULL, NULL, '2026-09-20 21:00:00'),
+ (93, 5, '2026-10-01', '18:00:00', '19:30:00', 'Free', NULL, NULL, '2026-09-21 21:00:00'),
+ (94, 5, '2026-10-02', '18:00:00', '19:30:00', 'Booked', NULL, NULL, '2026-09-22 21:00:00'),
+ (95, 5, '2026-10-05', '18:00:00', '19:30:00', 'Booked', NULL, NULL, '2026-09-25 21:00:00'),
+ (96, 5, '2026-10-06', '18:00:00', '19:30:00', 'Booked', NULL, NULL, '2026-09-26 21:00:00'),
+ (97, 5, '2026-10-07', '18:00:00', '19:30:00', 'Booked', NULL, NULL, '2026-09-27 21:00:00'),
+ (98, 5, '2026-10-08', '18:00:00', '19:30:00', 'Booked', NULL, NULL, '2026-09-28 21:00:00'),
+ (99, 5, '2026-10-09', '18:00:00', '19:30:00', 'Booked', NULL, NULL, '2026-09-29 21:00:00'),
+ (100, 5, '2026-10-12', '18:00:00', '19:30:00', 'Booked', NULL, NULL, '2026-10-02 21:00:00'),
+ (101, 5, '2026-10-13', '18:00:00', '19:30:00', 'Booked', NULL, NULL, '2026-10-03 21:00:00'),
+ (102, 5, '2026-10-14', '18:00:00', '19:30:00', 'Booked', NULL, NULL, '2026-10-04 21:00:00'),
+ (103, 5, '2026-10-15', '18:00:00', '19:30:00', 'Booked', NULL, NULL, '2026-10-05 21:00:00'),
+ (104, 5, '2026-10-16', '18:00:00', '19:30:00', 'Booked', NULL, NULL, '2026-10-06 21:00:00'),
+ (105, 5, '2026-10-19', '18:00:00', '19:30:00', 'Booked', NULL, NULL, '2026-10-09 21:00:00'),
+ (106, 5, '2026-10-21', '18:00:00', '19:30:00', 'Booked', NULL, NULL, '2026-10-11 21:00:00'),
+ (107, 5, '2026-10-22', '18:00:00', '19:30:00', 'Booked', NULL, NULL, '2026-10-12 21:00:00'),
+ (108, 5, '2026-10-23', '18:00:00', '19:30:00', 'Booked', NULL, NULL, '2026-10-13 21:00:00'),
+ (109, 5, '2026-10-26', '18:00:00', '19:30:00', 'Booked', NULL, NULL, '2026-10-16 21:00:00'),
+ (110, 5, '2026-10-27', '18:00:00', '19:30:00', 'Booked', NULL, NULL, '2026-10-17 21:00:00'),
+ (111, 5, '2026-10-28', '18:00:00', '19:30:00', 'Booked', NULL, NULL, '2026-10-18 21:00:00'),
+ (112, 5, '2026-10-29', '18:00:00', '19:30:00', 'Booked', NULL, NULL, '2026-10-19 21:00:00'),
+ (113, 5, '2026-10-30', '18:00:00', '19:30:00', 'Booked', NULL, NULL, '2026-10-20 21:00:00'),
+ (114, 5, '2026-11-02', '18:00:00', '19:30:00', 'Booked', NULL, NULL, '2026-10-23 21:00:00'),
+ (115, 5, '2026-11-03', '18:00:00', '19:30:00', 'Booked', NULL, NULL, '2026-10-24 21:00:00'),
+ (116, 5, '2026-11-04', '18:00:00', '19:30:00', 'Booked', NULL, NULL, '2026-10-25 21:00:00'),
+ (117, 5, '2026-11-05', '18:00:00', '19:30:00', 'Booked', NULL, NULL, '2026-10-26 21:00:00'),
+ (118, 5, '2026-11-06', '18:00:00', '19:30:00', 'Booked', NULL, NULL, '2026-10-27 21:00:00'),
+ (119, 6, '2026-08-24', '19:30:00', '21:00:00', 'Booked', NULL, NULL, '2026-08-14 21:00:00'),
+ (120, 6, '2026-08-25', '19:30:00', '21:00:00', 'Free', NULL, NULL, '2026-08-15 21:00:00'),
+ (121, 6, '2026-08-26', '19:30:00', '21:00:00', 'Booked', NULL, NULL, '2026-08-16 21:00:00'),
+ (122, 6, '2026-08-27', '19:30:00', '21:00:00', 'Free', NULL, NULL, '2026-08-17 21:00:00'),
+ (123, 6, '2026-08-28', '19:30:00', '21:00:00', 'Booked', NULL, NULL, '2026-08-18 21:00:00'),
+ (124, 6, '2026-08-31', '19:30:00', '21:00:00', 'Booked', NULL, NULL, '2026-08-21 21:00:00'),
+ (125, 6, '2026-09-01', '19:30:00', '21:00:00', 'Booked', NULL, NULL, '2026-08-22 21:00:00'),
+ (126, 6, '2026-09-03', '19:30:00', '21:00:00', 'Free', NULL, NULL, '2026-08-24 21:00:00'),
+ (127, 6, '2026-09-04', '19:30:00', '21:00:00', 'Booked', NULL, NULL, '2026-08-25 21:00:00'),
+ (128, 6, '2026-09-07', '19:30:00', '21:00:00', 'Booked', NULL, NULL, '2026-08-28 21:00:00'),
+ (129, 6, '2026-09-08', '19:30:00', '21:00:00', 'Booked', NULL, NULL, '2026-08-29 21:00:00'),
+ (130, 6, '2026-09-09', '19:30:00', '21:00:00', 'Booked', NULL, NULL, '2026-08-30 21:00:00'),
+ (131, 6, '2026-09-10', '19:30:00', '21:00:00', 'Free', NULL, NULL, '2026-08-31 21:00:00'),
+ (132, 6, '2026-09-11', '19:30:00', '21:00:00', 'Booked', NULL, NULL, '2026-09-01 21:00:00'),
+ (133, 6, '2026-09-14', '19:30:00', '21:00:00', 'Booked', NULL, NULL, '2026-09-04 21:00:00'),
+ (134, 6, '2026-09-15', '19:30:00', '21:00:00', 'Free', NULL, NULL, '2026-09-05 21:00:00'),
+ (135, 6, '2026-09-16', '06:00:00', '07:30:00', 'Booked', NULL, NULL, '2026-09-06 21:00:00'),
+ (136, 6, '2026-09-16', '19:30:00', '21:00:00', 'Booked', NULL, NULL, '2026-09-06 21:00:00'),
+ (137, 6, '2026-09-17', '19:30:00', '21:00:00', 'Booked', NULL, NULL, '2026-09-07 21:00:00'),
+ (138, 6, '2026-09-18', '19:30:00', '21:00:00', 'Free', NULL, NULL, '2026-09-08 21:00:00'),
+ (139, 6, '2026-09-21', '19:30:00', '21:00:00', 'Free', NULL, NULL, '2026-09-11 21:00:00'),
+ (140, 6, '2026-09-22', '19:30:00', '21:00:00', 'Booked', NULL, NULL, '2026-09-12 21:00:00'),
+ (141, 6, '2026-09-23', '19:30:00', '21:00:00', 'Free', NULL, NULL, '2026-09-13 21:00:00'),
+ (142, 6, '2026-09-24', '19:30:00', '21:00:00', 'Booked', NULL, NULL, '2026-09-14 21:00:00'),
+ (143, 6, '2026-09-25', '19:30:00', '21:00:00', 'Booked', NULL, NULL, '2026-09-15 21:00:00'),
+ (144, 6, '2026-09-28', '19:30:00', '21:00:00', 'Booked', NULL, NULL, '2026-09-18 21:00:00'),
+ (145, 6, '2026-09-29', '19:30:00', '21:00:00', 'Booked', NULL, NULL, '2026-09-19 21:00:00'),
+ (146, 6, '2026-09-30', '19:30:00', '21:00:00', 'Booked', NULL, NULL, '2026-09-20 21:00:00'),
+ (147, 6, '2026-10-01', '19:30:00', '21:00:00', 'Booked', NULL, NULL, '2026-09-21 21:00:00'),
+ (148, 6, '2026-10-02', '19:30:00', '21:00:00', 'Booked', NULL, NULL, '2026-09-22 21:00:00'),
+ (149, 6, '2026-10-05', '19:30:00', '21:00:00', 'Booked', NULL, NULL, '2026-09-25 21:00:00'),
+ (150, 6, '2026-10-06', '19:30:00', '21:00:00', 'Booked', NULL, NULL, '2026-09-26 21:00:00'),
+ (151, 6, '2026-10-07', '19:30:00', '21:00:00', 'Booked', NULL, NULL, '2026-09-27 21:00:00'),
+ (152, 6, '2026-10-08', '19:30:00', '21:00:00', 'Booked', NULL, NULL, '2026-09-28 21:00:00'),
+ (153, 6, '2026-10-09', '19:30:00', '21:00:00', 'Booked', NULL, NULL, '2026-09-29 21:00:00'),
+ (154, 6, '2026-10-12', '19:30:00', '21:00:00', 'Booked', NULL, NULL, '2026-10-02 21:00:00'),
+ (155, 6, '2026-10-13', '19:30:00', '21:00:00', 'Booked', NULL, NULL, '2026-10-03 21:00:00'),
+ (156, 6, '2026-10-14', '19:30:00', '21:00:00', 'Booked', NULL, NULL, '2026-10-04 21:00:00'),
+ (157, 6, '2026-10-15', '19:30:00', '21:00:00', 'Booked', NULL, NULL, '2026-10-05 21:00:00'),
+ (158, 6, '2026-10-16', '19:30:00', '21:00:00', 'Booked', NULL, NULL, '2026-10-06 21:00:00'),
+ (159, 6, '2026-10-19', '19:30:00', '21:00:00', 'Booked', NULL, NULL, '2026-10-09 21:00:00'),
+ (160, 6, '2026-10-20', '19:30:00', '21:00:00', 'Free', NULL, NULL, '2026-10-10 21:00:00'),
+ (161, 6, '2026-10-21', '19:30:00', '21:00:00', 'Booked', NULL, NULL, '2026-10-11 21:00:00'),
+ (162, 6, '2026-10-22', '19:30:00', '21:00:00', 'Booked', NULL, NULL, '2026-10-12 21:00:00'),
+ (163, 6, '2026-10-23', '19:30:00', '21:00:00', 'Booked', NULL, NULL, '2026-10-13 21:00:00'),
+ (164, 7, '2026-09-14', '12:00:00', '13:30:00', 'Booked', NULL, NULL, '2026-09-04 21:00:00'),
+ (165, 7, '2026-09-15', '12:00:00', '13:30:00', 'Booked', NULL, NULL, '2026-09-05 21:00:00'),
+ (166, 7, '2026-09-16', '12:00:00', '13:30:00', 'Free', NULL, NULL, '2026-09-06 21:00:00'),
+ (167, 7, '2026-09-17', '12:00:00', '13:30:00', 'Booked', NULL, NULL, '2026-09-07 21:00:00'),
+ (168, 7, '2026-09-21', '12:00:00', '13:30:00', 'Booked', NULL, NULL, '2026-09-11 21:00:00'),
+ (169, 7, '2026-09-22', '12:00:00', '13:30:00', 'Booked', NULL, NULL, '2026-09-12 21:00:00'),
+ (170, 7, '2026-09-23', '12:00:00', '13:30:00', 'Booked', NULL, NULL, '2026-09-13 21:00:00'),
+ (171, 7, '2026-09-24', '12:00:00', '13:30:00', 'Booked', NULL, NULL, '2026-09-14 21:00:00'),
+ (172, 7, '2026-09-25', '12:00:00', '13:30:00', 'Booked', NULL, NULL, '2026-09-15 21:00:00'),
+ (173, 7, '2026-09-28', '12:00:00', '13:30:00', 'Booked', NULL, NULL, '2026-09-18 21:00:00'),
+ (174, 7, '2026-09-29', '12:00:00', '13:30:00', 'Free', NULL, NULL, '2026-09-19 21:00:00'),
+ (175, 7, '2026-09-30', '12:00:00', '13:30:00', 'Booked', NULL, NULL, '2026-09-20 21:00:00'),
+ (176, 7, '2026-10-01', '12:00:00', '13:30:00', 'Booked', NULL, NULL, '2026-09-21 21:00:00'),
+ (177, 7, '2026-10-02', '12:00:00', '13:30:00', 'Booked', NULL, NULL, '2026-09-22 21:00:00'),
+ (178, 7, '2026-10-05', '12:00:00', '13:30:00', 'Booked', NULL, NULL, '2026-09-25 21:00:00'),
+ (179, 7, '2026-10-06', '12:00:00', '13:30:00', 'Booked', NULL, NULL, '2026-09-26 21:00:00'),
+ (180, 7, '2026-10-07', '12:00:00', '13:30:00', 'Booked', NULL, NULL, '2026-09-27 21:00:00'),
+ (181, 7, '2026-10-08', '12:00:00', '13:30:00', 'Booked', NULL, NULL, '2026-09-28 21:00:00'),
+ (182, 7, '2026-10-09', '12:00:00', '13:30:00', 'Booked', NULL, NULL, '2026-09-29 21:00:00'),
+ (183, 7, '2026-10-12', '12:00:00', '13:30:00', 'Booked', NULL, NULL, '2026-10-02 21:00:00'),
+ (184, 7, '2026-10-13', '12:00:00', '13:30:00', 'Booked', NULL, NULL, '2026-10-03 21:00:00'),
+ (185, 7, '2026-10-14', '12:00:00', '13:30:00', 'Booked', NULL, NULL, '2026-10-04 21:00:00'),
+ (186, 5, '2026-09-14', '06:30:00', '08:00:00', 'Booked', NULL, NULL, '2026-09-04 21:00:00'),
+ (187, 5, '2026-09-15', '06:30:00', '08:00:00', 'Booked', NULL, NULL, '2026-09-05 21:00:00'),
+ (188, 5, '2026-09-16', '06:30:00', '08:00:00', 'Booked', NULL, NULL, '2026-09-06 21:00:00'),
+ (189, 5, '2026-09-17', '06:30:00', '08:00:00', 'Booked', NULL, NULL, '2026-09-07 21:00:00'),
+ (190, 5, '2026-09-21', '06:30:00', '08:00:00', 'Booked', NULL, NULL, '2026-09-11 21:00:00'),
+ (191, 5, '2026-09-22', '06:30:00', '08:00:00', 'Booked', NULL, NULL, '2026-09-12 21:00:00'),
+ (192, 5, '2026-09-23', '06:30:00', '08:00:00', 'Booked', NULL, NULL, '2026-09-13 21:00:00'),
+ (193, 5, '2026-09-24', '06:30:00', '08:00:00', 'Free', NULL, NULL, '2026-09-14 21:00:00'),
+ (194, 5, '2026-09-25', '20:00:00', '21:30:00', 'Booked', NULL, NULL, '2026-09-15 21:00:00'),
+ (195, 5, '2026-09-25', '06:30:00', '08:00:00', 'Free', NULL, NULL, '2026-09-15 21:00:00'),
+ (196, 5, '2026-09-28', '06:30:00', '08:00:00', 'Free', NULL, NULL, '2026-09-18 21:00:00'),
+ (197, 5, '2026-09-29', '06:30:00', '08:00:00', 'Booked', NULL, NULL, '2026-09-19 21:00:00'),
+ (198, 5, '2026-09-30', '06:30:00', '08:00:00', 'Free', NULL, NULL, '2026-09-20 21:00:00'),
+ (199, 5, '2026-10-01', '06:30:00', '08:00:00', 'Booked', NULL, NULL, '2026-09-21 21:00:00'),
+ (200, 5, '2026-10-02', '06:30:00', '08:00:00', 'Booked', NULL, NULL, '2026-09-22 21:00:00'),
+ (201, 5, '2026-10-05', '06:30:00', '08:00:00', 'Booked', NULL, NULL, '2026-09-25 21:00:00'),
+ (202, 5, '2026-10-06', '06:30:00', '08:00:00', 'Booked', NULL, NULL, '2026-09-26 21:00:00'),
+ (203, 5, '2026-10-07', '06:30:00', '08:00:00', 'Booked', NULL, NULL, '2026-09-27 21:00:00'),
+ (204, 5, '2026-10-08', '06:30:00', '08:00:00', 'Booked', NULL, NULL, '2026-09-28 21:00:00'),
+ (205, 5, '2026-10-09', '06:30:00', '08:00:00', 'Booked', NULL, NULL, '2026-09-29 21:00:00'),
+ (206, 5, '2026-10-12', '06:30:00', '08:00:00', 'Booked', NULL, NULL, '2026-10-02 21:00:00'),
+ (207, 5, '2026-10-13', '06:30:00', '08:00:00', 'Booked', NULL, NULL, '2026-10-03 21:00:00'),
+ (208, 5, '2026-10-14', '06:30:00', '08:00:00', 'Booked', NULL, NULL, '2026-10-04 21:00:00'),
+ (209, 7, @Today, '20:00:00', '21:30:00', 'Booked', NULL, NULL, DATEADD(MINUTE, -4320, @Now)),
+ (210, 13, '2026-09-21', '07:30:00', '09:00:00', 'Booked', NULL, NULL, '2026-09-11 21:00:00'),
+ (211, 13, '2026-09-22', '07:30:00', '09:00:00', 'Booked', NULL, NULL, '2026-09-12 21:00:00'),
+ (212, 13, '2026-09-23', '07:30:00', '09:00:00', 'Booked', NULL, NULL, '2026-09-13 21:00:00'),
+ (213, 13, '2026-09-24', '07:30:00', '09:00:00', 'Booked', NULL, NULL, '2026-09-14 21:00:00'),
+ (214, 13, '2026-09-25', '07:30:00', '09:00:00', 'Booked', NULL, NULL, '2026-09-15 21:00:00'),
+ (215, 13, '2026-09-28', '07:30:00', '09:00:00', 'Booked', NULL, NULL, '2026-09-18 21:00:00'),
+ (216, 13, '2026-09-29', '07:30:00', '09:00:00', 'Booked', NULL, NULL, '2026-09-19 21:00:00'),
+ (217, 13, '2026-09-30', '07:30:00', '09:00:00', 'Booked', NULL, NULL, '2026-09-20 21:00:00'),
+ (218, 13, '2026-10-01', '07:30:00', '09:00:00', 'Booked', NULL, NULL, '2026-09-21 21:00:00'),
+ (219, 13, '2026-10-02', '07:30:00', '09:00:00', 'Booked', NULL, NULL, '2026-09-22 21:00:00'),
+ (220, 13, '2026-10-05', '07:30:00', '09:00:00', 'Booked', NULL, NULL, '2026-09-25 21:00:00'),
+ (221, 13, '2026-10-06', '07:30:00', '09:00:00', 'Booked', NULL, NULL, '2026-09-26 21:00:00'),
+ (222, 13, '2026-10-07', '07:30:00', '09:00:00', 'Booked', NULL, NULL, '2026-09-27 21:00:00'),
+ (223, 13, '2026-10-08', '07:30:00', '09:00:00', 'Booked', NULL, NULL, '2026-09-28 21:00:00'),
+ (224, 13, '2026-10-09', '07:30:00', '09:00:00', 'Booked', NULL, NULL, '2026-09-29 21:00:00'),
+ (225, 13, '2026-10-12', '07:30:00', '09:00:00', 'Booked', NULL, NULL, '2026-10-02 21:00:00'),
+ (226, 13, '2026-10-13', '07:30:00', '09:00:00', 'Booked', NULL, NULL, '2026-10-03 21:00:00'),
+ (227, 13, '2026-10-14', '07:30:00', '09:00:00', 'Booked', NULL, NULL, '2026-10-04 21:00:00'),
+ (228, 13, '2026-10-15', '07:30:00', '09:00:00', 'Booked', NULL, NULL, '2026-10-05 21:00:00'),
+ (229, 13, '2026-10-16', '07:30:00', '09:00:00', 'Booked', NULL, NULL, '2026-10-06 21:00:00'),
+ (230, 13, '2026-10-19', '07:30:00', '09:00:00', 'Booked', NULL, NULL, '2026-10-09 21:00:00'),
+ (231, 13, '2026-10-21', '07:30:00', '09:00:00', 'Booked', NULL, NULL, '2026-10-11 21:00:00'),
+ (232, 6, '2026-09-21', '06:00:00', '07:30:00', 'Booked', NULL, NULL, '2026-09-11 21:00:00'),
+ (233, 6, '2026-09-22', '06:00:00', '07:30:00', 'Free', NULL, NULL, '2026-09-12 21:00:00'),
+ (234, 6, '2026-09-23', '06:00:00', '07:30:00', 'Booked', NULL, NULL, '2026-09-13 21:00:00'),
+ (235, 6, '2026-09-24', '06:00:00', '07:30:00', 'Booked', NULL, NULL, '2026-09-14 21:00:00'),
+ (236, 6, '2026-09-25', '06:00:00', '07:30:00', 'Booked', NULL, NULL, '2026-09-15 21:00:00'),
+ (237, 6, '2026-09-28', '06:00:00', '07:30:00', 'Free', NULL, NULL, '2026-09-18 21:00:00'),
+ (238, 6, '2026-09-29', '06:00:00', '07:30:00', 'Booked', NULL, NULL, '2026-09-19 21:00:00'),
+ (239, 6, '2026-09-30', '06:00:00', '07:30:00', 'Booked', NULL, NULL, '2026-09-20 21:00:00'),
+ (240, 6, '2026-10-01', '06:00:00', '07:30:00', 'Booked', NULL, NULL, '2026-09-21 21:00:00'),
+ (241, 6, '2026-10-02', '06:00:00', '07:30:00', 'Booked', NULL, NULL, '2026-09-22 21:00:00'),
+ (242, 6, '2026-10-05', '06:00:00', '07:30:00', 'Booked', NULL, NULL, '2026-09-25 21:00:00'),
+ (243, 6, '2026-10-06', '06:00:00', '07:30:00', 'Booked', NULL, NULL, '2026-09-26 21:00:00'),
+ (244, 6, '2026-10-07', '06:00:00', '07:30:00', 'Booked', NULL, NULL, '2026-09-27 21:00:00'),
+ (245, 6, '2026-10-08', '06:00:00', '07:30:00', 'Booked', NULL, NULL, '2026-09-28 21:00:00'),
+ (246, 6, '2026-10-09', '06:00:00', '07:30:00', 'Booked', NULL, NULL, '2026-09-29 21:00:00'),
+ (247, 6, '2026-10-12', '06:00:00', '07:30:00', 'Booked', NULL, NULL, '2026-10-02 21:00:00'),
+ (248, 6, '2026-10-13', '06:00:00', '07:30:00', 'Booked', NULL, NULL, '2026-10-03 21:00:00'),
+ (249, 6, '2026-10-14', '06:00:00', '07:30:00', 'Booked', NULL, NULL, '2026-10-04 21:00:00'),
+ (250, 6, '2026-10-15', '06:00:00', '07:30:00', 'Booked', NULL, NULL, '2026-10-05 21:00:00'),
+ (251, 6, '2026-10-16', '06:00:00', '07:30:00', 'Booked', NULL, NULL, '2026-10-06 21:00:00'),
+ (252, 6, '2026-10-19', '06:00:00', '07:30:00', 'Booked', NULL, NULL, '2026-10-09 21:00:00'),
+ (253, 6, '2026-10-21', '06:00:00', '07:30:00', 'Booked', NULL, NULL, '2026-10-11 21:00:00'),
+ (254, 5, '2026-09-28', '15:00:00', '16:30:00', 'Booked', NULL, NULL, '2026-09-18 21:00:00'),
+ (255, 5, '2026-09-29', '15:00:00', '16:30:00', 'Booked', NULL, NULL, '2026-09-19 21:00:00'),
+ (256, 5, '2026-09-30', '15:00:00', '16:30:00', 'Booked', NULL, NULL, '2026-09-20 21:00:00'),
+ (257, 5, '2026-10-01', '15:00:00', '16:30:00', 'Booked', NULL, NULL, '2026-09-21 21:00:00'),
+ (258, 5, '2026-10-02', '15:00:00', '16:30:00', 'Booked', NULL, NULL, '2026-09-22 21:00:00'),
+ (259, 5, '2026-10-05', '15:00:00', '16:30:00', 'Booked', NULL, NULL, '2026-09-25 21:00:00'),
+ (260, 5, '2026-10-06', '15:00:00', '16:30:00', 'Booked', NULL, NULL, '2026-09-26 21:00:00'),
+ (261, 5, '2026-10-07', '15:00:00', '16:30:00', 'Booked', NULL, NULL, '2026-09-27 21:00:00'),
+ (262, 5, '2026-10-08', '15:00:00', '16:30:00', 'Booked', NULL, NULL, '2026-09-28 21:00:00'),
+ (263, 5, '2026-10-09', '15:00:00', '16:30:00', 'Booked', NULL, NULL, '2026-09-29 21:00:00'),
+ (264, 5, '2026-10-12', '15:00:00', '16:30:00', 'Booked', NULL, NULL, '2026-10-02 21:00:00'),
+ (265, 5, '2026-10-13', '15:00:00', '16:30:00', 'Booked', NULL, NULL, '2026-10-03 21:00:00'),
+ (266, 5, '2026-10-14', '15:00:00', '16:30:00', 'Booked', NULL, NULL, '2026-10-04 21:00:00'),
+ (267, 5, '2026-10-15', '15:00:00', '16:30:00', 'Booked', NULL, NULL, '2026-10-05 21:00:00'),
+ (268, 5, '2026-10-16', '15:00:00', '16:30:00', 'Booked', NULL, NULL, '2026-10-06 21:00:00'),
+ (269, 5, '2026-10-19', '15:00:00', '16:30:00', 'Booked', NULL, NULL, '2026-10-09 21:00:00'),
+ (270, 5, '2026-10-21', '15:00:00', '16:30:00', 'Booked', NULL, NULL, '2026-10-11 21:00:00'),
+ (271, 5, '2026-10-22', '15:00:00', '16:30:00', 'Booked', NULL, NULL, '2026-10-12 21:00:00'),
+ (272, 5, '2026-10-23', '15:00:00', '16:30:00', 'Booked', NULL, NULL, '2026-10-13 21:00:00'),
+ (273, 5, '2026-10-26', '15:00:00', '16:30:00', 'Booked', NULL, NULL, '2026-10-16 21:00:00'),
+ (274, 5, '2026-10-27', '15:00:00', '16:30:00', 'Booked', NULL, NULL, '2026-10-17 21:00:00'),
+ (275, 5, '2026-10-28', '15:00:00', '16:30:00', 'Booked', NULL, NULL, '2026-10-18 21:00:00'),
+ (276, 5, '2026-10-29', '15:00:00', '16:30:00', 'Booked', NULL, NULL, '2026-10-19 21:00:00'),
+ (277, 5, '2026-10-30', '15:00:00', '16:30:00', 'Booked', NULL, NULL, '2026-10-20 21:00:00'),
+ (278, 5, '2026-11-02', '15:00:00', '16:30:00', 'Booked', NULL, NULL, '2026-10-23 21:00:00'),
+ (279, 5, '2026-11-03', '15:00:00', '16:30:00', 'Booked', NULL, NULL, '2026-10-24 21:00:00'),
+ (280, 5, '2026-11-04', '15:00:00', '16:30:00', 'Booked', NULL, NULL, '2026-10-25 21:00:00'),
+ (281, 5, '2026-11-05', '15:00:00', '16:30:00', 'Booked', NULL, NULL, '2026-10-26 21:00:00'),
+ (282, 5, '2026-11-06', '15:00:00', '16:30:00', 'Booked', NULL, NULL, '2026-10-27 21:00:00'),
+ (283, 5, '2026-11-09', '15:00:00', '16:30:00', 'Booked', NULL, NULL, '2026-10-30 21:00:00'),
+ (284, 5, '2026-11-10', '15:00:00', '16:30:00', 'Booked', NULL, NULL, '2026-10-31 21:00:00'),
+ (285, 5, '2026-11-11', '15:00:00', '16:30:00', 'Booked', NULL, NULL, '2026-11-01 21:00:00'),
+ (286, 5, '2026-11-12', '15:00:00', '16:30:00', 'Booked', NULL, NULL, '2026-11-02 21:00:00'),
+ (287, 5, '2026-11-13', '15:00:00', '16:30:00', 'Booked', NULL, NULL, '2026-11-03 21:00:00'),
+ (288, 5, '2026-11-16', '15:00:00', '16:30:00', 'Booked', NULL, NULL, '2026-11-06 21:00:00'),
+ (289, 5, '2026-11-17', '15:00:00', '16:30:00', 'Booked', NULL, NULL, '2026-11-07 21:00:00'),
+ (290, 5, '2026-11-18', '15:00:00', '16:30:00', 'Booked', NULL, NULL, '2026-11-08 21:00:00'),
+ (291, 5, '2026-11-19', '15:00:00', '16:30:00', 'Booked', NULL, NULL, '2026-11-09 21:00:00'),
+ (292, 5, '2026-11-20', '15:00:00', '16:30:00', 'Booked', NULL, NULL, '2026-11-10 21:00:00'),
+ (293, 5, '2026-11-23', '15:00:00', '16:30:00', 'Booked', NULL, NULL, '2026-11-13 21:00:00'),
+ (294, 5, '2026-11-24', '15:00:00', '16:30:00', 'Booked', NULL, NULL, '2026-11-14 21:00:00'),
+ (295, 5, '2026-11-25', '15:00:00', '16:30:00', 'Booked', NULL, NULL, '2026-11-15 21:00:00'),
+ (296, 5, '2026-11-26', '15:00:00', '16:30:00', 'Booked', NULL, NULL, '2026-11-16 21:00:00'),
+ (297, 5, '2026-11-27', '15:00:00', '16:30:00', 'Booked', NULL, NULL, '2026-11-17 21:00:00'),
+ (298, 14, '2026-09-14', '10:00:00', '11:30:00', 'Booked', NULL, NULL, '2026-09-04 21:00:00'),
+ (299, 14, '2026-09-15', '10:00:00', '11:30:00', 'Booked', NULL, NULL, '2026-09-05 21:00:00'),
+ (300, 14, '2026-09-16', '10:00:00', '11:30:00', 'Booked', NULL, NULL, '2026-09-06 21:00:00'),
+ (301, 14, '2026-09-17', '10:00:00', '11:30:00', 'Booked', NULL, NULL, '2026-09-07 21:00:00'),
+ (302, 14, '2026-09-21', '10:00:00', '11:30:00', 'Free', NULL, NULL, '2026-09-11 21:00:00'),
+ (303, 14, '2026-09-22', '10:00:00', '11:30:00', 'Free', NULL, NULL, '2026-09-12 21:00:00'),
+ (304, 14, '2026-09-23', '10:00:00', '11:30:00', 'Free', NULL, NULL, '2026-09-13 21:00:00'),
+ (305, 14, '2026-09-24', '10:00:00', '11:30:00', 'Free', NULL, NULL, '2026-09-14 21:00:00'),
+ (306, 14, '2026-09-25', '10:00:00', '11:30:00', 'Free', NULL, NULL, '2026-09-15 21:00:00'),
+ (307, 14, '2026-09-28', '10:00:00', '11:30:00', 'Free', NULL, NULL, '2026-09-18 21:00:00'),
+ (308, 14, '2026-09-29', '10:00:00', '11:30:00', 'Free', NULL, NULL, '2026-09-19 21:00:00'),
+ (309, 14, '2026-09-30', '10:00:00', '11:30:00', 'Free', NULL, NULL, '2026-09-20 21:00:00'),
+ (310, 14, '2026-10-01', '10:00:00', '11:30:00', 'Free', NULL, NULL, '2026-09-21 21:00:00'),
+ (311, 14, '2026-10-02', '10:00:00', '11:30:00', 'Free', NULL, NULL, '2026-09-22 21:00:00'),
+ (312, 14, '2026-10-05', '10:00:00', '11:30:00', 'Booked', NULL, NULL, '2026-09-25 21:00:00'),
+ (313, 14, '2026-10-06', '10:00:00', '11:30:00', 'Booked', NULL, NULL, '2026-09-26 21:00:00'),
+ (314, 14, '2026-10-07', '10:00:00', '11:30:00', 'Booked', NULL, NULL, '2026-09-27 21:00:00'),
+ (315, 14, '2026-10-08', '10:00:00', '11:30:00', 'Booked', NULL, NULL, '2026-09-28 21:00:00'),
+ (316, 14, '2026-10-09', '10:00:00', '11:30:00', 'Booked', NULL, NULL, '2026-09-29 21:00:00'),
+ (317, 14, '2026-10-12', '10:00:00', '11:30:00', 'Booked', NULL, NULL, '2026-10-02 21:00:00'),
+ (318, 14, '2026-10-13', '10:00:00', '11:30:00', 'Booked', NULL, NULL, '2026-10-03 21:00:00'),
+ (319, 14, '2026-10-14', '10:00:00', '11:30:00', 'Booked', NULL, NULL, '2026-10-04 21:00:00'),
+ (320, 7, '2026-10-05', '19:00:00', '20:30:00', 'Booked', NULL, NULL, '2026-09-25 21:00:00'),
+ (321, 7, '2026-10-06', '19:00:00', '20:30:00', 'Booked', NULL, NULL, '2026-09-26 21:00:00'),
+ (322, 7, '2026-10-07', '19:00:00', '20:30:00', 'Booked', NULL, NULL, '2026-09-27 21:00:00'),
+ (323, 7, '2026-10-08', '19:00:00', '20:30:00', 'Booked', NULL, NULL, '2026-09-28 21:00:00'),
+ (324, 7, '2026-10-09', '19:00:00', '20:30:00', 'Booked', NULL, NULL, '2026-09-29 21:00:00'),
+ (325, 7, '2026-10-12', '19:00:00', '20:30:00', 'Booked', NULL, NULL, '2026-10-02 21:00:00'),
+ (326, 7, '2026-10-13', '19:00:00', '20:30:00', 'Booked', NULL, NULL, '2026-10-03 21:00:00'),
+ (327, 7, '2026-10-14', '19:00:00', '20:30:00', 'Booked', NULL, NULL, '2026-10-04 21:00:00'),
+ (328, 7, '2026-10-15', '19:00:00', '20:30:00', 'Booked', NULL, NULL, '2026-10-05 21:00:00'),
+ (329, 7, '2026-10-16', '19:00:00', '20:30:00', 'Booked', NULL, NULL, '2026-10-06 21:00:00'),
+ (330, 7, '2026-10-19', '19:00:00', '20:30:00', 'Booked', NULL, NULL, '2026-10-09 21:00:00'),
+ (331, 7, '2026-10-21', '19:00:00', '20:30:00', 'Booked', NULL, NULL, '2026-10-11 21:00:00'),
+ (332, 7, '2026-10-22', '19:00:00', '20:30:00', 'Booked', NULL, NULL, '2026-10-12 21:00:00'),
+ (333, 7, '2026-10-23', '19:00:00', '20:30:00', 'Booked', NULL, NULL, '2026-10-13 21:00:00'),
+ (334, 7, '2026-10-26', '19:00:00', '20:30:00', 'Booked', NULL, NULL, '2026-10-16 21:00:00'),
+ (335, 7, '2026-10-27', '19:00:00', '20:30:00', 'Booked', NULL, NULL, '2026-10-17 21:00:00'),
+ (336, 7, '2026-10-28', '19:00:00', '20:30:00', 'Booked', NULL, NULL, '2026-10-18 21:00:00'),
+ (337, 7, '2026-10-29', '19:00:00', '20:30:00', 'Booked', NULL, NULL, '2026-10-19 21:00:00'),
+ (338, 7, '2026-10-30', '19:00:00', '20:30:00', 'Booked', NULL, NULL, '2026-10-20 21:00:00'),
+ (339, 7, '2026-11-02', '19:00:00', '20:30:00', 'Booked', NULL, NULL, '2026-10-23 21:00:00'),
+ (340, 7, '2026-11-03', '19:00:00', '20:30:00', 'Booked', NULL, NULL, '2026-10-24 21:00:00'),
+ (341, 7, '2026-11-04', '19:00:00', '20:30:00', 'Booked', NULL, NULL, '2026-10-25 21:00:00'),
+ (342, 7, '2026-11-05', '19:00:00', '20:30:00', 'Booked', NULL, NULL, '2026-10-26 21:00:00'),
+ (343, 6, '2026-09-23', '08:30:00', '10:00:00', 'Booked', NULL, NULL, '2026-09-20 21:00:00'),
+ (344, 7, '2026-09-05', '14:00:00', '15:30:00', 'Booked', NULL, NULL, '2026-09-02 21:00:00'),
+ (345, 13, '2026-09-12', '08:30:00', '10:00:00', 'Booked', NULL, NULL, '2026-09-09 21:00:00'),
+ (346, 7, '2026-09-27', '10:00:00', '11:30:00', 'Booked', NULL, NULL, '2026-09-24 21:00:00'),
+ (347, 6, '2026-09-14', '07:00:00', '08:30:00', 'Booked', NULL, NULL, '2026-09-11 06:00:00'),
+ (348, 6, '2026-09-29', '08:30:00', '10:00:00', 'Free', NULL, NULL, '2026-09-25 21:00:00'),
+ (349, 13, '2026-09-20', '15:30:00', '17:00:00', 'Booked', NULL, NULL, '2026-09-16 21:00:00'),
+ (350, 7, '2026-09-17', '14:00:00', '15:30:00', 'Booked', NULL, NULL, '2026-09-12 21:00:00'),
+ (351, 13, '2026-09-27', '08:30:00', '10:00:00', 'Booked', NULL, NULL, '2026-09-24 21:00:00'),
+ (352, 13, '2026-09-21', '15:30:00', '17:00:00', 'Booked', NULL, NULL, '2026-09-18 14:00:00'),
+ (353, 5, '2026-09-05', '08:30:00', '10:00:00', 'Booked', NULL, NULL, '2026-09-01 21:00:00'),
+ (354, 5, '2026-09-30', '08:30:00', '10:00:00', 'Free', NULL, NULL, '2026-09-25 21:00:00'),
+ (355, 6, '2026-09-23', '16:00:00', '17:30:00', 'Booked', NULL, NULL, '2026-09-18 21:00:00'),
+ (356, 7, '2026-09-11', '07:00:00', '08:30:00', 'Booked', NULL, NULL, '2026-09-05 21:00:00'),
+ (357, 5, '2026-09-24', '16:00:00', '17:30:00', 'Booked', NULL, NULL, '2026-09-21 21:00:00'),
+ (358, 7, '2026-09-25', '08:30:00', '10:00:00', 'Booked', NULL, NULL, '2026-09-22 21:00:00'),
+ (359, 5, '2026-09-29', '08:30:00', '10:00:00', 'Booked', NULL, NULL, '2026-09-26 21:00:00'),
+ (360, 6, '2026-09-11', '10:00:00', '11:30:00', 'Booked', NULL, NULL, '2026-09-08 09:00:00'),
+ (361, 5, '2026-10-05', '08:00:00', '09:30:00', 'Free', NULL, NULL, '2026-10-01 21:00:00'),
+ (362, 5, '2026-10-05', '09:30:00', '11:00:00', 'Free', NULL, NULL, '2026-10-01 21:00:00'),
+ (363, 5, '2026-10-05', '11:00:00', '12:30:00', 'Free', NULL, NULL, '2026-10-01 21:00:00'),
+ (364, 5, '2026-10-05', '20:00:00', '21:30:00', 'Free', NULL, NULL, '2026-10-01 21:00:00'),
+ (365, 6, '2026-10-05', '08:00:00', '09:30:00', 'Free', NULL, NULL, '2026-10-01 21:00:00'),
+ (366, 6, '2026-10-05', '09:30:00', '11:00:00', 'Free', NULL, NULL, '2026-10-01 21:00:00'),
+ (367, 6, '2026-10-05', '14:00:00', '15:30:00', 'Free', NULL, NULL, '2026-10-01 21:00:00'),
+ (368, 6, '2026-10-05', '16:00:00', '17:30:00', 'Free', NULL, NULL, '2026-10-01 21:00:00'),
+ (369, 6, '2026-10-05', '17:30:00', '19:00:00', 'Free', NULL, NULL, '2026-10-01 21:00:00'),
+ (370, 7, '2026-10-05', '07:00:00', '08:30:00', 'Free', NULL, NULL, '2026-10-01 21:00:00'),
+ (371, 7, '2026-10-05', '08:30:00', '10:00:00', 'Free', NULL, NULL, '2026-10-01 21:00:00'),
+ (372, 7, '2026-10-05', '10:00:00', '11:30:00', 'Free', NULL, NULL, '2026-10-01 21:00:00'),
+ (373, 13, '2026-10-05', '06:00:00', '07:30:00', 'Free', NULL, NULL, '2026-10-01 21:00:00'),
+ (374, 13, '2026-10-05', '09:00:00', '10:30:00', 'Free', NULL, NULL, '2026-10-01 21:00:00'),
+ (375, 13, '2026-10-05', '16:00:00', '17:30:00', 'Free', NULL, NULL, '2026-10-01 21:00:00'),
+ (376, 13, '2026-10-05', '17:30:00', '19:00:00', 'Free', NULL, NULL, '2026-10-01 21:00:00'),
+ (377, 13, '2026-10-05', '19:00:00', '20:30:00', 'Free', NULL, NULL, '2026-10-01 21:00:00'),
+ (378, 14, '2026-10-05', '15:00:00', '16:30:00', 'Free', NULL, NULL, '2026-10-01 21:00:00'),
+ (379, 5, '2026-10-06', '08:00:00', '09:30:00', 'Free', NULL, NULL, '2026-10-01 21:00:00'),
+ (380, 5, '2026-10-06', '09:30:00', '11:00:00', 'Free', NULL, NULL, '2026-10-01 21:00:00'),
+ (381, 5, '2026-10-06', '11:00:00', '12:30:00', 'Free', NULL, NULL, '2026-10-01 21:00:00'),
+ (382, 5, '2026-10-06', '20:00:00', '21:30:00', 'Free', NULL, NULL, '2026-10-01 21:00:00'),
+ (383, 6, '2026-10-06', '08:00:00', '09:30:00', 'Free', NULL, NULL, '2026-10-01 21:00:00'),
+ (384, 6, '2026-10-06', '09:30:00', '11:00:00', 'Free', NULL, NULL, '2026-10-01 21:00:00'),
+ (385, 6, '2026-10-06', '14:00:00', '15:30:00', 'Free', NULL, NULL, '2026-10-01 21:00:00'),
+ (386, 6, '2026-10-06', '16:00:00', '17:30:00', 'Free', NULL, NULL, '2026-10-01 21:00:00'),
+ (387, 6, '2026-10-06', '17:30:00', '19:00:00', 'Free', NULL, NULL, '2026-10-01 21:00:00'),
+ (388, 7, '2026-10-06', '07:00:00', '08:30:00', 'Free', NULL, NULL, '2026-10-01 21:00:00'),
+ (389, 7, '2026-10-06', '08:30:00', '10:00:00', 'Free', NULL, NULL, '2026-10-01 21:00:00'),
+ (390, 7, '2026-10-06', '10:00:00', '11:30:00', 'Free', NULL, NULL, '2026-10-01 21:00:00'),
+ (391, 13, '2026-10-06', '06:00:00', '07:30:00', 'Free', NULL, NULL, '2026-10-01 21:00:00'),
+ (392, 13, '2026-10-06', '09:00:00', '10:30:00', 'Free', NULL, NULL, '2026-10-01 21:00:00'),
+ (393, 13, '2026-10-06', '16:00:00', '17:30:00', 'Free', NULL, NULL, '2026-10-01 21:00:00'),
+ (394, 13, '2026-10-06', '17:30:00', '19:00:00', 'Free', NULL, NULL, '2026-10-01 21:00:00'),
+ (395, 13, '2026-10-06', '19:00:00', '20:30:00', 'Free', NULL, NULL, '2026-10-01 21:00:00'),
+ (396, 14, '2026-10-06', '15:00:00', '16:30:00', 'Free', NULL, NULL, '2026-10-01 21:00:00'),
+ (397, 5, '2026-10-07', '08:00:00', '09:30:00', 'Free', NULL, NULL, '2026-10-01 21:00:00'),
+ (398, 5, '2026-10-07', '09:30:00', '11:00:00', 'Free', NULL, NULL, '2026-10-01 21:00:00'),
+ (399, 5, '2026-10-07', '11:00:00', '12:30:00', 'Free', NULL, NULL, '2026-10-01 21:00:00'),
+ (400, 5, '2026-10-07', '20:00:00', '21:30:00', 'Free', NULL, NULL, '2026-10-01 21:00:00');
+INSERT INTO TimeSlots (TimeSlotId, PtEmployeeId, SlotDate, StartTime, EndTime, Status, HeldByOrderId, HoldExpiresAt, CreatedAt) VALUES
+ (401, 6, '2026-10-07', '08:00:00', '09:30:00', 'Free', NULL, NULL, '2026-10-01 21:00:00'),
+ (402, 6, '2026-10-07', '09:30:00', '11:00:00', 'Free', NULL, NULL, '2026-10-01 21:00:00'),
+ (403, 6, '2026-10-07', '14:00:00', '15:30:00', 'Free', NULL, NULL, '2026-10-01 21:00:00'),
+ (404, 6, '2026-10-07', '16:00:00', '17:30:00', 'Free', NULL, NULL, '2026-10-01 21:00:00'),
+ (405, 6, '2026-10-07', '17:30:00', '19:00:00', 'Free', NULL, NULL, '2026-10-01 21:00:00'),
+ (406, 7, '2026-10-07', '07:00:00', '08:30:00', 'Free', NULL, NULL, '2026-10-01 21:00:00'),
+ (407, 7, '2026-10-07', '08:30:00', '10:00:00', 'Free', NULL, NULL, '2026-10-01 21:00:00'),
+ (408, 7, '2026-10-07', '10:00:00', '11:30:00', 'Free', NULL, NULL, '2026-10-01 21:00:00'),
+ (409, 13, '2026-10-07', '06:00:00', '07:30:00', 'Free', NULL, NULL, '2026-10-01 21:00:00'),
+ (410, 13, '2026-10-07', '09:00:00', '10:30:00', 'Free', NULL, NULL, '2026-10-01 21:00:00'),
+ (411, 13, '2026-10-07', '16:00:00', '17:30:00', 'Free', NULL, NULL, '2026-10-01 21:00:00'),
+ (412, 13, '2026-10-07', '17:30:00', '19:00:00', 'Free', NULL, NULL, '2026-10-01 21:00:00'),
+ (413, 13, '2026-10-07', '19:00:00', '20:30:00', 'Free', NULL, NULL, '2026-10-01 21:00:00'),
+ (414, 14, '2026-10-07', '15:00:00', '16:30:00', 'Free', NULL, NULL, '2026-10-01 21:00:00'),
+ (415, 5, '2026-10-08', '08:00:00', '09:30:00', 'Free', NULL, NULL, '2026-10-01 21:00:00'),
+ (416, 5, '2026-10-08', '09:30:00', '11:00:00', 'Free', NULL, NULL, '2026-10-01 21:00:00'),
+ (417, 5, '2026-10-08', '11:00:00', '12:30:00', 'Free', NULL, NULL, '2026-10-01 21:00:00'),
+ (418, 5, '2026-10-08', '20:00:00', '21:30:00', 'Free', NULL, NULL, '2026-10-01 21:00:00'),
+ (419, 6, '2026-10-08', '08:00:00', '09:30:00', 'Free', NULL, NULL, '2026-10-01 21:00:00'),
+ (420, 6, '2026-10-08', '09:30:00', '11:00:00', 'Free', NULL, NULL, '2026-10-01 21:00:00'),
+ (421, 6, '2026-10-08', '14:00:00', '15:30:00', 'Free', NULL, NULL, '2026-10-01 21:00:00'),
+ (422, 6, '2026-10-08', '16:00:00', '17:30:00', 'Free', NULL, NULL, '2026-10-01 21:00:00'),
+ (423, 6, '2026-10-08', '17:30:00', '19:00:00', 'Free', NULL, NULL, '2026-10-01 21:00:00'),
+ (424, 7, '2026-10-08', '07:00:00', '08:30:00', 'Free', NULL, NULL, '2026-10-01 21:00:00'),
+ (425, 7, '2026-10-08', '08:30:00', '10:00:00', 'Free', NULL, NULL, '2026-10-01 21:00:00'),
+ (426, 7, '2026-10-08', '10:00:00', '11:30:00', 'Free', NULL, NULL, '2026-10-01 21:00:00'),
+ (427, 13, '2026-10-08', '06:00:00', '07:30:00', 'Free', NULL, NULL, '2026-10-01 21:00:00'),
+ (428, 13, '2026-10-08', '09:00:00', '10:30:00', 'Free', NULL, NULL, '2026-10-01 21:00:00'),
+ (429, 13, '2026-10-08', '16:00:00', '17:30:00', 'Free', NULL, NULL, '2026-10-01 21:00:00'),
+ (430, 13, '2026-10-08', '17:30:00', '19:00:00', 'Free', NULL, NULL, '2026-10-01 21:00:00'),
+ (431, 13, '2026-10-08', '19:00:00', '20:30:00', 'Free', NULL, NULL, '2026-10-01 21:00:00'),
+ (432, 14, '2026-10-08', '15:00:00', '16:30:00', 'Free', NULL, NULL, '2026-10-01 21:00:00'),
+ (433, 5, '2026-10-09', '08:00:00', '09:30:00', 'Free', NULL, NULL, '2026-10-01 21:00:00'),
+ (434, 5, '2026-10-09', '09:30:00', '11:00:00', 'Free', NULL, NULL, '2026-10-01 21:00:00'),
+ (435, 5, '2026-10-09', '11:00:00', '12:30:00', 'Free', NULL, NULL, '2026-10-01 21:00:00'),
+ (436, 5, '2026-10-09', '20:00:00', '21:30:00', 'Free', NULL, NULL, '2026-10-01 21:00:00'),
+ (437, 6, '2026-10-09', '08:00:00', '09:30:00', 'Free', NULL, NULL, '2026-10-01 21:00:00'),
+ (438, 6, '2026-10-09', '09:30:00', '11:00:00', 'Free', NULL, NULL, '2026-10-01 21:00:00'),
+ (439, 6, '2026-10-09', '14:00:00', '15:30:00', 'Free', NULL, NULL, '2026-10-01 21:00:00'),
+ (440, 6, '2026-10-09', '16:00:00', '17:30:00', 'Free', NULL, NULL, '2026-10-01 21:00:00'),
+ (441, 6, '2026-10-09', '17:30:00', '19:00:00', 'Free', NULL, NULL, '2026-10-01 21:00:00'),
+ (442, 7, '2026-10-09', '07:00:00', '08:30:00', 'Free', NULL, NULL, '2026-10-01 21:00:00'),
+ (443, 7, '2026-10-09', '08:30:00', '10:00:00', 'Free', NULL, NULL, '2026-10-01 21:00:00'),
+ (444, 7, '2026-10-09', '10:00:00', '11:30:00', 'Free', NULL, NULL, '2026-10-01 21:00:00'),
+ (445, 13, '2026-10-09', '06:00:00', '07:30:00', 'Free', NULL, NULL, '2026-10-01 21:00:00'),
+ (446, 13, '2026-10-09', '09:00:00', '10:30:00', 'Free', NULL, NULL, '2026-10-01 21:00:00'),
+ (447, 13, '2026-10-09', '16:00:00', '17:30:00', 'Free', NULL, NULL, '2026-10-01 21:00:00'),
+ (448, 13, '2026-10-09', '17:30:00', '19:00:00', 'Free', NULL, NULL, '2026-10-01 21:00:00'),
+ (449, 13, '2026-10-09', '19:00:00', '20:30:00', 'Free', NULL, NULL, '2026-10-01 21:00:00'),
+ (450, 14, '2026-10-09', '15:00:00', '16:30:00', 'Free', NULL, NULL, '2026-10-01 21:00:00'),
+ (451, 5, '2026-10-10', '08:00:00', '09:30:00', 'Free', NULL, NULL, '2026-10-01 21:00:00'),
+ (452, 5, '2026-10-10', '09:30:00', '11:00:00', 'Free', NULL, NULL, '2026-10-01 21:00:00'),
+ (453, 5, '2026-10-10', '11:00:00', '12:30:00', 'Free', NULL, NULL, '2026-10-01 21:00:00'),
+ (454, 5, '2026-10-10', '15:00:00', '16:30:00', 'Free', NULL, NULL, '2026-10-01 21:00:00'),
+ (455, 5, '2026-10-10', '20:00:00', '21:30:00', 'Free', NULL, NULL, '2026-10-01 21:00:00'),
+ (456, 6, '2026-10-10', '08:00:00', '09:30:00', 'Free', NULL, NULL, '2026-10-01 21:00:00'),
+ (457, 6, '2026-10-10', '09:30:00', '11:00:00', 'Free', NULL, NULL, '2026-10-01 21:00:00'),
+ (458, 6, '2026-10-10', '14:00:00', '15:30:00', 'Free', NULL, NULL, '2026-10-01 21:00:00'),
+ (459, 6, '2026-10-10', '16:00:00', '17:30:00', 'Free', NULL, NULL, '2026-10-01 21:00:00'),
+ (460, 6, '2026-10-10', '17:30:00', '19:00:00', 'Free', NULL, NULL, '2026-10-01 21:00:00'),
+ (461, 7, '2026-10-10', '07:00:00', '08:30:00', 'Free', NULL, NULL, '2026-10-01 21:00:00'),
+ (462, 7, '2026-10-10', '08:30:00', '10:00:00', 'Free', NULL, NULL, '2026-10-01 21:00:00'),
+ (463, 7, '2026-10-10', '10:00:00', '11:30:00', 'Free', NULL, NULL, '2026-10-01 21:00:00'),
+ (464, 13, '2026-10-10', '06:00:00', '07:30:00', 'Free', NULL, NULL, '2026-10-01 21:00:00'),
+ (465, 13, '2026-10-10', '07:30:00', '09:00:00', 'Free', NULL, NULL, '2026-10-01 21:00:00'),
+ (466, 13, '2026-10-10', '09:00:00', '10:30:00', 'Free', NULL, NULL, '2026-10-01 21:00:00'),
+ (467, 13, '2026-10-10', '16:00:00', '17:30:00', 'Free', NULL, NULL, '2026-10-01 21:00:00'),
+ (468, 13, '2026-10-10', '17:30:00', '19:00:00', 'Free', NULL, NULL, '2026-10-01 21:00:00'),
+ (469, 13, '2026-10-10', '19:00:00', '20:30:00', 'Free', NULL, NULL, '2026-10-01 21:00:00'),
+ (470, 14, '2026-10-10', '10:00:00', '11:30:00', 'Free', NULL, NULL, '2026-10-01 21:00:00'),
+ (471, 14, '2026-10-10', '15:00:00', '16:30:00', 'Free', NULL, NULL, '2026-10-01 21:00:00'),
+ (472, 5, '2026-10-11', '08:00:00', '09:30:00', 'Free', NULL, NULL, '2026-10-01 21:00:00'),
+ (473, 5, '2026-10-11', '09:30:00', '11:00:00', 'Free', NULL, NULL, '2026-10-01 21:00:00'),
+ (474, 5, '2026-10-11', '11:00:00', '12:30:00', 'Free', NULL, NULL, '2026-10-01 21:00:00'),
+ (475, 5, '2026-10-11', '15:00:00', '16:30:00', 'Free', NULL, NULL, '2026-10-01 21:00:00'),
+ (476, 6, '2026-10-11', '08:00:00', '09:30:00', 'Free', NULL, NULL, '2026-10-01 21:00:00'),
+ (477, 6, '2026-10-11', '09:30:00', '11:00:00', 'Free', NULL, NULL, '2026-10-01 21:00:00'),
+ (478, 6, '2026-10-11', '14:00:00', '15:30:00', 'Free', NULL, NULL, '2026-10-01 21:00:00'),
+ (479, 6, '2026-10-11', '16:00:00', '17:30:00', 'Free', NULL, NULL, '2026-10-01 21:00:00'),
+ (480, 7, '2026-10-11', '07:00:00', '08:30:00', 'Free', NULL, NULL, '2026-10-01 21:00:00'),
+ (481, 7, '2026-10-11', '08:30:00', '10:00:00', 'Free', NULL, NULL, '2026-10-01 21:00:00'),
+ (482, 7, '2026-10-11', '10:00:00', '11:30:00', 'Free', NULL, NULL, '2026-10-01 21:00:00'),
+ (483, 13, '2026-10-11', '07:30:00', '09:00:00', 'Free', NULL, NULL, '2026-10-01 21:00:00'),
+ (484, 13, '2026-10-11', '09:00:00', '10:30:00', 'Free', NULL, NULL, '2026-10-01 21:00:00'),
+ (485, 13, '2026-10-11', '16:00:00', '17:30:00', 'Free', NULL, NULL, '2026-10-01 21:00:00'),
+ (486, 14, '2026-10-11', '10:00:00', '11:30:00', 'Free', NULL, NULL, '2026-10-01 21:00:00'),
+ (487, 14, '2026-10-11', '15:00:00', '16:30:00', 'Free', NULL, NULL, '2026-10-01 21:00:00'),
+ (488, 5, '2026-10-12', '08:00:00', '09:30:00', 'Free', NULL, NULL, '2026-10-01 21:00:00'),
+ (489, 5, '2026-10-12', '09:30:00', '11:00:00', 'Free', NULL, NULL, '2026-10-01 21:00:00'),
+ (490, 5, '2026-10-12', '11:00:00', '12:30:00', 'Free', NULL, NULL, '2026-10-01 21:00:00'),
+ (491, 5, '2026-10-12', '20:00:00', '21:30:00', 'Free', NULL, NULL, '2026-10-01 21:00:00'),
+ (492, 6, '2026-10-12', '08:00:00', '09:30:00', 'Free', NULL, NULL, '2026-10-01 21:00:00'),
+ (493, 6, '2026-10-12', '09:30:00', '11:00:00', 'Free', NULL, NULL, '2026-10-01 21:00:00'),
+ (494, 6, '2026-10-12', '14:00:00', '15:30:00', 'Free', NULL, NULL, '2026-10-01 21:00:00'),
+ (495, 6, '2026-10-12', '16:00:00', '17:30:00', 'Free', NULL, NULL, '2026-10-01 21:00:00'),
+ (496, 6, '2026-10-12', '17:30:00', '19:00:00', 'Free', NULL, NULL, '2026-10-01 21:00:00'),
+ (497, 7, '2026-10-12', '07:00:00', '08:30:00', 'Free', NULL, NULL, '2026-10-01 21:00:00'),
+ (498, 7, '2026-10-12', '08:30:00', '10:00:00', 'Free', NULL, NULL, '2026-10-01 21:00:00'),
+ (499, 7, '2026-10-12', '10:00:00', '11:30:00', 'Free', NULL, NULL, '2026-10-01 21:00:00'),
+ (500, 13, '2026-10-12', '06:00:00', '07:30:00', 'Free', NULL, NULL, '2026-10-01 21:00:00'),
+ (501, 13, '2026-10-12', '09:00:00', '10:30:00', 'Free', NULL, NULL, '2026-10-01 21:00:00'),
+ (502, 13, '2026-10-12', '16:00:00', '17:30:00', 'Free', NULL, NULL, '2026-10-01 21:00:00'),
+ (503, 13, '2026-10-12', '17:30:00', '19:00:00', 'Free', NULL, NULL, '2026-10-01 21:00:00'),
+ (504, 13, '2026-10-12', '19:00:00', '20:30:00', 'Free', NULL, NULL, '2026-10-01 21:00:00'),
+ (505, 14, '2026-10-12', '15:00:00', '16:30:00', 'Free', NULL, NULL, '2026-10-01 21:00:00'),
+ (506, 5, '2026-10-13', '08:00:00', '09:30:00', 'Free', NULL, NULL, '2026-10-01 21:00:00'),
+ (507, 5, '2026-10-13', '09:30:00', '11:00:00', 'Free', NULL, NULL, '2026-10-01 21:00:00'),
+ (508, 5, '2026-10-13', '11:00:00', '12:30:00', 'Free', NULL, NULL, '2026-10-01 21:00:00'),
+ (509, 5, '2026-10-13', '20:00:00', '21:30:00', 'Free', NULL, NULL, '2026-10-01 21:00:00'),
+ (510, 6, '2026-10-13', '08:00:00', '09:30:00', 'Free', NULL, NULL, '2026-10-01 21:00:00'),
+ (511, 6, '2026-10-13', '09:30:00', '11:00:00', 'Free', NULL, NULL, '2026-10-01 21:00:00'),
+ (512, 6, '2026-10-13', '14:00:00', '15:30:00', 'Free', NULL, NULL, '2026-10-01 21:00:00'),
+ (513, 6, '2026-10-13', '16:00:00', '17:30:00', 'Free', NULL, NULL, '2026-10-01 21:00:00'),
+ (514, 6, '2026-10-13', '17:30:00', '19:00:00', 'Free', NULL, NULL, '2026-10-01 21:00:00'),
+ (515, 7, '2026-10-13', '07:00:00', '08:30:00', 'Free', NULL, NULL, '2026-10-01 21:00:00'),
+ (516, 7, '2026-10-13', '08:30:00', '10:00:00', 'Free', NULL, NULL, '2026-10-01 21:00:00'),
+ (517, 7, '2026-10-13', '10:00:00', '11:30:00', 'Free', NULL, NULL, '2026-10-01 21:00:00'),
+ (518, 13, '2026-10-13', '06:00:00', '07:30:00', 'Free', NULL, NULL, '2026-10-01 21:00:00'),
+ (519, 13, '2026-10-13', '09:00:00', '10:30:00', 'Free', NULL, NULL, '2026-10-01 21:00:00'),
+ (520, 13, '2026-10-13', '16:00:00', '17:30:00', 'Free', NULL, NULL, '2026-10-01 21:00:00'),
+ (521, 13, '2026-10-13', '17:30:00', '19:00:00', 'Free', NULL, NULL, '2026-10-01 21:00:00'),
+ (522, 13, '2026-10-13', '19:00:00', '20:30:00', 'Free', NULL, NULL, '2026-10-01 21:00:00'),
+ (523, 14, '2026-10-13', '15:00:00', '16:30:00', 'Free', NULL, NULL, '2026-10-01 21:00:00'),
+ (524, 5, '2026-10-14', '08:00:00', '09:30:00', 'Free', NULL, NULL, '2026-10-01 21:00:00'),
+ (525, 5, '2026-10-14', '09:30:00', '11:00:00', 'Free', NULL, NULL, '2026-10-01 21:00:00'),
+ (526, 5, '2026-10-14', '11:00:00', '12:30:00', 'Free', NULL, NULL, '2026-10-01 21:00:00'),
+ (527, 5, '2026-10-14', '20:00:00', '21:30:00', 'Free', NULL, NULL, '2026-10-01 21:00:00'),
+ (528, 6, '2026-10-14', '08:00:00', '09:30:00', 'Free', NULL, NULL, '2026-10-01 21:00:00'),
+ (529, 6, '2026-10-14', '09:30:00', '11:00:00', 'Free', NULL, NULL, '2026-10-01 21:00:00'),
+ (530, 6, '2026-10-14', '14:00:00', '15:30:00', 'Free', NULL, NULL, '2026-10-01 21:00:00'),
+ (531, 6, '2026-10-14', '16:00:00', '17:30:00', 'Free', NULL, NULL, '2026-10-01 21:00:00'),
+ (532, 6, '2026-10-14', '17:30:00', '19:00:00', 'Free', NULL, NULL, '2026-10-01 21:00:00'),
+ (533, 7, '2026-10-14', '07:00:00', '08:30:00', 'Free', NULL, NULL, '2026-10-01 21:00:00'),
+ (534, 7, '2026-10-14', '08:30:00', '10:00:00', 'Free', NULL, NULL, '2026-10-01 21:00:00'),
+ (535, 7, '2026-10-14', '10:00:00', '11:30:00', 'Free', NULL, NULL, '2026-10-01 21:00:00'),
+ (536, 13, '2026-10-14', '06:00:00', '07:30:00', 'Free', NULL, NULL, '2026-10-01 21:00:00'),
+ (537, 13, '2026-10-14', '09:00:00', '10:30:00', 'Free', NULL, NULL, '2026-10-01 21:00:00'),
+ (538, 13, '2026-10-14', '16:00:00', '17:30:00', 'Free', NULL, NULL, '2026-10-01 21:00:00'),
+ (539, 13, '2026-10-14', '17:30:00', '19:00:00', 'Free', NULL, NULL, '2026-10-01 21:00:00'),
+ (540, 13, '2026-10-14', '19:00:00', '20:30:00', 'Free', NULL, NULL, '2026-10-01 21:00:00'),
+ (541, 14, '2026-10-14', '15:00:00', '16:30:00', 'Free', NULL, NULL, '2026-10-01 21:00:00'),
+ (542, 5, '2026-10-15', '08:00:00', '09:30:00', 'Free', NULL, NULL, '2026-10-01 21:00:00'),
+ (543, 5, '2026-10-15', '09:30:00', '11:00:00', 'Free', NULL, NULL, '2026-10-01 21:00:00'),
+ (544, 5, '2026-10-15', '11:00:00', '12:30:00', 'Free', NULL, NULL, '2026-10-01 21:00:00'),
+ (545, 5, '2026-10-15', '20:00:00', '21:30:00', 'Free', NULL, NULL, '2026-10-01 21:00:00'),
+ (546, 6, '2026-10-15', '08:00:00', '09:30:00', 'Free', NULL, NULL, '2026-10-01 21:00:00'),
+ (547, 6, '2026-10-15', '09:30:00', '11:00:00', 'Free', NULL, NULL, '2026-10-01 21:00:00'),
+ (548, 6, '2026-10-15', '14:00:00', '15:30:00', 'Free', NULL, NULL, '2026-10-01 21:00:00'),
+ (549, 6, '2026-10-15', '16:00:00', '17:30:00', 'Free', NULL, NULL, '2026-10-01 21:00:00'),
+ (550, 6, '2026-10-15', '17:30:00', '19:00:00', 'Free', NULL, NULL, '2026-10-01 21:00:00'),
+ (551, 7, '2026-10-15', '07:00:00', '08:30:00', 'Free', NULL, NULL, '2026-10-01 21:00:00'),
+ (552, 7, '2026-10-15', '08:30:00', '10:00:00', 'Free', NULL, NULL, '2026-10-01 21:00:00'),
+ (553, 7, '2026-10-15', '10:00:00', '11:30:00', 'Free', NULL, NULL, '2026-10-01 21:00:00'),
+ (554, 13, '2026-10-15', '06:00:00', '07:30:00', 'Free', NULL, NULL, '2026-10-01 21:00:00'),
+ (555, 13, '2026-10-15', '09:00:00', '10:30:00', 'Free', NULL, NULL, '2026-10-01 21:00:00'),
+ (556, 13, '2026-10-15', '16:00:00', '17:30:00', 'Free', NULL, NULL, '2026-10-01 21:00:00'),
+ (557, 13, '2026-10-15', '17:30:00', '19:00:00', 'Free', NULL, NULL, '2026-10-01 21:00:00'),
+ (558, 13, '2026-10-15', '19:00:00', '20:30:00', 'Free', NULL, NULL, '2026-10-01 21:00:00'),
+ (559, 14, '2026-10-15', '10:00:00', '11:30:00', 'Free', NULL, NULL, '2026-10-01 21:00:00'),
+ (560, 14, '2026-10-15', '15:00:00', '16:30:00', 'Free', NULL, NULL, '2026-10-01 21:00:00'),
+ (561, 5, '2026-10-16', '08:00:00', '09:30:00', 'Free', NULL, NULL, '2026-10-01 21:00:00'),
+ (562, 5, '2026-10-16', '09:30:00', '11:00:00', 'Free', NULL, NULL, '2026-10-01 21:00:00'),
+ (563, 5, '2026-10-16', '11:00:00', '12:30:00', 'Free', NULL, NULL, '2026-10-01 21:00:00'),
+ (564, 5, '2026-10-16', '20:00:00', '21:30:00', 'Free', NULL, NULL, '2026-10-01 21:00:00'),
+ (565, 6, '2026-10-16', '08:00:00', '09:30:00', 'Free', NULL, NULL, '2026-10-01 21:00:00'),
+ (566, 6, '2026-10-16', '09:30:00', '11:00:00', 'Free', NULL, NULL, '2026-10-01 21:00:00'),
+ (567, 6, '2026-10-16', '14:00:00', '15:30:00', 'Free', NULL, NULL, '2026-10-01 21:00:00'),
+ (568, 6, '2026-10-16', '16:00:00', '17:30:00', 'Free', NULL, NULL, '2026-10-01 21:00:00'),
+ (569, 6, '2026-10-16', '17:30:00', '19:00:00', 'Free', NULL, NULL, '2026-10-01 21:00:00'),
+ (570, 7, '2026-10-16', '07:00:00', '08:30:00', 'Free', NULL, NULL, '2026-10-01 21:00:00'),
+ (571, 7, '2026-10-16', '08:30:00', '10:00:00', 'Free', NULL, NULL, '2026-10-01 21:00:00'),
+ (572, 7, '2026-10-16', '10:00:00', '11:30:00', 'Free', NULL, NULL, '2026-10-01 21:00:00'),
+ (573, 13, '2026-10-16', '06:00:00', '07:30:00', 'Free', NULL, NULL, '2026-10-01 21:00:00'),
+ (574, 13, '2026-10-16', '09:00:00', '10:30:00', 'Free', NULL, NULL, '2026-10-01 21:00:00'),
+ (575, 13, '2026-10-16', '16:00:00', '17:30:00', 'Free', NULL, NULL, '2026-10-01 21:00:00'),
+ (576, 13, '2026-10-16', '17:30:00', '19:00:00', 'Free', NULL, NULL, '2026-10-01 21:00:00'),
+ (577, 13, '2026-10-16', '19:00:00', '20:30:00', 'Free', NULL, NULL, '2026-10-01 21:00:00'),
+ (578, 14, '2026-10-16', '10:00:00', '11:30:00', 'Free', NULL, NULL, '2026-10-01 21:00:00'),
+ (579, 14, '2026-10-16', '15:00:00', '16:30:00', 'Free', NULL, NULL, '2026-10-01 21:00:00'),
+ (580, 5, '2026-10-17', '08:00:00', '09:30:00', 'Free', NULL, NULL, '2026-10-01 21:00:00'),
+ (581, 5, '2026-10-17', '09:30:00', '11:00:00', 'Free', NULL, NULL, '2026-10-01 21:00:00'),
+ (582, 5, '2026-10-17', '11:00:00', '12:30:00', 'Free', NULL, NULL, '2026-10-01 21:00:00'),
+ (583, 5, '2026-10-17', '15:00:00', '16:30:00', 'Free', NULL, NULL, '2026-10-01 21:00:00'),
+ (584, 5, '2026-10-17', '20:00:00', '21:30:00', 'Free', NULL, NULL, '2026-10-01 21:00:00'),
+ (585, 6, '2026-10-17', '08:00:00', '09:30:00', 'Free', NULL, NULL, '2026-10-01 21:00:00'),
+ (586, 6, '2026-10-17', '09:30:00', '11:00:00', 'Free', NULL, NULL, '2026-10-01 21:00:00'),
+ (587, 6, '2026-10-17', '14:00:00', '15:30:00', 'Free', NULL, NULL, '2026-10-01 21:00:00'),
+ (588, 6, '2026-10-17', '16:00:00', '17:30:00', 'Free', NULL, NULL, '2026-10-01 21:00:00'),
+ (589, 6, '2026-10-17', '17:30:00', '19:00:00', 'Free', NULL, NULL, '2026-10-01 21:00:00'),
+ (590, 7, '2026-10-17', '07:00:00', '08:30:00', 'Free', NULL, NULL, '2026-10-01 21:00:00'),
+ (591, 7, '2026-10-17', '08:30:00', '10:00:00', 'Free', NULL, NULL, '2026-10-01 21:00:00'),
+ (592, 7, '2026-10-17', '10:00:00', '11:30:00', 'Free', NULL, NULL, '2026-10-01 21:00:00'),
+ (593, 13, '2026-10-17', '06:00:00', '07:30:00', 'Free', NULL, NULL, '2026-10-01 21:00:00'),
+ (594, 13, '2026-10-17', '07:30:00', '09:00:00', 'Free', NULL, NULL, '2026-10-01 21:00:00'),
+ (595, 13, '2026-10-17', '09:00:00', '10:30:00', 'Free', NULL, NULL, '2026-10-01 21:00:00'),
+ (596, 13, '2026-10-17', '16:00:00', '17:30:00', 'Free', NULL, NULL, '2026-10-01 21:00:00'),
+ (597, 13, '2026-10-17', '17:30:00', '19:00:00', 'Free', NULL, NULL, '2026-10-01 21:00:00'),
+ (598, 13, '2026-10-17', '19:00:00', '20:30:00', 'Free', NULL, NULL, '2026-10-01 21:00:00'),
+ (599, 14, '2026-10-17', '10:00:00', '11:30:00', 'Free', NULL, NULL, '2026-10-01 21:00:00'),
+ (600, 14, '2026-10-17', '15:00:00', '16:30:00', 'Free', NULL, NULL, '2026-10-01 21:00:00'),
+ (601, 5, '2026-10-18', '08:00:00', '09:30:00', 'Free', NULL, NULL, '2026-10-01 21:00:00'),
+ (602, 5, '2026-10-18', '09:30:00', '11:00:00', 'Free', NULL, NULL, '2026-10-01 21:00:00'),
+ (603, 5, '2026-10-18', '11:00:00', '12:30:00', 'Free', NULL, NULL, '2026-10-01 21:00:00'),
+ (604, 5, '2026-10-18', '15:00:00', '16:30:00', 'Free', NULL, NULL, '2026-10-01 21:00:00'),
+ (605, 5, '2026-10-18', '20:00:00', '21:30:00', 'Free', NULL, NULL, '2026-10-01 21:00:00'),
+ (606, 6, '2026-10-18', '08:00:00', '09:30:00', 'Free', NULL, NULL, '2026-10-01 21:00:00'),
+ (607, 6, '2026-10-18', '09:30:00', '11:00:00', 'Free', NULL, NULL, '2026-10-01 21:00:00'),
+ (608, 6, '2026-10-18', '14:00:00', '15:30:00', 'Free', NULL, NULL, '2026-10-01 21:00:00'),
+ (609, 6, '2026-10-18', '16:00:00', '17:30:00', 'Free', NULL, NULL, '2026-10-01 21:00:00'),
+ (610, 6, '2026-10-18', '17:30:00', '19:00:00', 'Free', NULL, NULL, '2026-10-01 21:00:00'),
+ (611, 7, '2026-10-18', '07:00:00', '08:30:00', 'Free', NULL, NULL, '2026-10-01 21:00:00'),
+ (612, 7, '2026-10-18', '08:30:00', '10:00:00', 'Free', NULL, NULL, '2026-10-01 21:00:00'),
+ (613, 7, '2026-10-18', '10:00:00', '11:30:00', 'Free', NULL, NULL, '2026-10-01 21:00:00'),
+ (614, 13, '2026-10-18', '06:00:00', '07:30:00', 'Free', NULL, NULL, '2026-10-01 21:00:00'),
+ (615, 13, '2026-10-18', '07:30:00', '09:00:00', 'Free', NULL, NULL, '2026-10-01 21:00:00'),
+ (616, 13, '2026-10-18', '09:00:00', '10:30:00', 'Free', NULL, NULL, '2026-10-01 21:00:00'),
+ (617, 13, '2026-10-18', '16:00:00', '17:30:00', 'Free', NULL, NULL, '2026-10-01 21:00:00'),
+ (618, 13, '2026-10-18', '17:30:00', '19:00:00', 'Free', NULL, NULL, '2026-10-01 21:00:00'),
+ (619, 13, '2026-10-18', '19:00:00', '20:30:00', 'Free', NULL, NULL, '2026-10-01 21:00:00'),
+ (620, 14, '2026-10-18', '10:00:00', '11:30:00', 'Free', NULL, NULL, '2026-10-01 21:00:00'),
+ (621, 14, '2026-10-18', '15:00:00', '16:30:00', 'Free', NULL, NULL, '2026-10-01 21:00:00'),
+ (622, 5, '2026-10-19', '08:00:00', '09:30:00', 'Free', NULL, NULL, '2026-10-01 21:00:00'),
+ (623, 5, '2026-10-19', '09:30:00', '11:00:00', 'Free', NULL, NULL, '2026-10-01 21:00:00'),
+ (624, 5, '2026-10-19', '11:00:00', '12:30:00', 'Free', NULL, NULL, '2026-10-01 21:00:00'),
+ (625, 5, '2026-10-19', '20:00:00', '21:30:00', 'Free', NULL, NULL, '2026-10-01 21:00:00'),
+ (626, 6, '2026-10-19', '08:00:00', '09:30:00', 'Free', NULL, NULL, '2026-10-01 21:00:00'),
+ (627, 6, '2026-10-19', '09:30:00', '11:00:00', 'Free', NULL, NULL, '2026-10-01 21:00:00'),
+ (628, 6, '2026-10-19', '14:00:00', '15:30:00', 'Free', NULL, NULL, '2026-10-01 21:00:00'),
+ (629, 6, '2026-10-19', '16:00:00', '17:30:00', 'Free', NULL, NULL, '2026-10-01 21:00:00'),
+ (630, 6, '2026-10-19', '17:30:00', '19:00:00', 'Free', NULL, NULL, '2026-10-01 21:00:00'),
+ (631, 7, '2026-10-19', '07:00:00', '08:30:00', 'Free', NULL, NULL, '2026-10-01 21:00:00'),
+ (632, 7, '2026-10-19', '08:30:00', '10:00:00', 'Free', NULL, NULL, '2026-10-01 21:00:00'),
+ (633, 7, '2026-10-19', '10:00:00', '11:30:00', 'Free', NULL, NULL, '2026-10-01 21:00:00'),
+ (634, 13, '2026-10-19', '06:00:00', '07:30:00', 'Free', NULL, NULL, '2026-10-01 21:00:00'),
+ (635, 13, '2026-10-19', '09:00:00', '10:30:00', 'Free', NULL, NULL, '2026-10-01 21:00:00'),
+ (636, 13, '2026-10-19', '16:00:00', '17:30:00', 'Free', NULL, NULL, '2026-10-01 21:00:00'),
+ (637, 13, '2026-10-19', '17:30:00', '19:00:00', 'Free', NULL, NULL, '2026-10-01 21:00:00'),
+ (638, 13, '2026-10-19', '19:00:00', '20:30:00', 'Free', NULL, NULL, '2026-10-01 21:00:00'),
+ (639, 14, '2026-10-19', '10:00:00', '11:30:00', 'Free', NULL, NULL, '2026-10-01 21:00:00'),
+ (640, 14, '2026-10-19', '15:00:00', '16:30:00', 'Free', NULL, NULL, '2026-10-01 21:00:00'),
+ (641, 5, '2026-10-21', '08:00:00', '09:30:00', 'Free', NULL, NULL, '2026-10-01 21:00:00'),
+ (642, 5, '2026-10-21', '09:30:00', '11:00:00', 'Free', NULL, NULL, '2026-10-01 21:00:00'),
+ (643, 5, '2026-10-21', '11:00:00', '12:30:00', 'Free', NULL, NULL, '2026-10-01 21:00:00'),
+ (644, 5, '2026-10-21', '20:00:00', '21:30:00', 'Free', NULL, NULL, '2026-10-01 21:00:00'),
+ (645, 6, '2026-10-21', '08:00:00', '09:30:00', 'Free', NULL, NULL, '2026-10-01 21:00:00'),
+ (646, 6, '2026-10-21', '09:30:00', '11:00:00', 'Free', NULL, NULL, '2026-10-01 21:00:00'),
+ (647, 6, '2026-10-21', '14:00:00', '15:30:00', 'Free', NULL, NULL, '2026-10-01 21:00:00'),
+ (648, 6, '2026-10-21', '16:00:00', '17:30:00', 'Free', NULL, NULL, '2026-10-01 21:00:00'),
+ (649, 6, '2026-10-21', '17:30:00', '19:00:00', 'Free', NULL, NULL, '2026-10-01 21:00:00'),
+ (650, 7, '2026-10-21', '07:00:00', '08:30:00', 'Free', NULL, NULL, '2026-10-01 21:00:00'),
+ (651, 7, '2026-10-21', '08:30:00', '10:00:00', 'Free', NULL, NULL, '2026-10-01 21:00:00'),
+ (652, 7, '2026-10-21', '10:00:00', '11:30:00', 'Free', NULL, NULL, '2026-10-01 21:00:00'),
+ (653, 13, '2026-10-21', '06:00:00', '07:30:00', 'Free', NULL, NULL, '2026-10-01 21:00:00'),
+ (654, 13, '2026-10-21', '09:00:00', '10:30:00', 'Free', NULL, NULL, '2026-10-01 21:00:00'),
+ (655, 13, '2026-10-21', '16:00:00', '17:30:00', 'Free', NULL, NULL, '2026-10-01 21:00:00'),
+ (656, 13, '2026-10-21', '17:30:00', '19:00:00', 'Free', NULL, NULL, '2026-10-01 21:00:00'),
+ (657, 13, '2026-10-21', '19:00:00', '20:30:00', 'Free', NULL, NULL, '2026-10-01 21:00:00'),
+ (658, 14, '2026-10-21', '10:00:00', '11:30:00', 'Free', NULL, NULL, '2026-10-01 21:00:00'),
+ (659, 14, '2026-10-21', '15:00:00', '16:30:00', 'Free', NULL, NULL, '2026-10-01 21:00:00'),
+ (660, 5, '2026-10-22', '08:00:00', '09:30:00', 'Free', NULL, NULL, '2026-10-01 21:00:00'),
+ (661, 5, '2026-10-22', '09:30:00', '11:00:00', 'Free', NULL, NULL, '2026-10-01 21:00:00'),
+ (662, 5, '2026-10-22', '11:00:00', '12:30:00', 'Free', NULL, NULL, '2026-10-01 21:00:00'),
+ (663, 5, '2026-10-22', '20:00:00', '21:30:00', 'Free', NULL, NULL, '2026-10-01 21:00:00'),
+ (664, 6, '2026-10-22', '08:00:00', '09:30:00', 'Free', NULL, NULL, '2026-10-01 21:00:00'),
+ (665, 6, '2026-10-22', '09:30:00', '11:00:00', 'Free', NULL, NULL, '2026-10-01 21:00:00'),
+ (666, 6, '2026-10-22', '14:00:00', '15:30:00', 'Free', NULL, NULL, '2026-10-01 21:00:00'),
+ (667, 6, '2026-10-22', '16:00:00', '17:30:00', 'Free', NULL, NULL, '2026-10-01 21:00:00'),
+ (668, 6, '2026-10-22', '17:30:00', '19:00:00', 'Free', NULL, NULL, '2026-10-01 21:00:00'),
+ (669, 7, '2026-10-22', '07:00:00', '08:30:00', 'Free', NULL, NULL, '2026-10-01 21:00:00'),
+ (670, 7, '2026-10-22', '08:30:00', '10:00:00', 'Free', NULL, NULL, '2026-10-01 21:00:00'),
+ (671, 7, '2026-10-22', '10:00:00', '11:30:00', 'Free', NULL, NULL, '2026-10-01 21:00:00'),
+ (672, 13, '2026-10-22', '06:00:00', '07:30:00', 'Free', NULL, NULL, '2026-10-01 21:00:00'),
+ (673, 13, '2026-10-22', '07:30:00', '09:00:00', 'Free', NULL, NULL, '2026-10-01 21:00:00'),
+ (674, 13, '2026-10-22', '09:00:00', '10:30:00', 'Free', NULL, NULL, '2026-10-01 21:00:00'),
+ (675, 13, '2026-10-22', '16:00:00', '17:30:00', 'Free', NULL, NULL, '2026-10-01 21:00:00'),
+ (676, 13, '2026-10-22', '17:30:00', '19:00:00', 'Free', NULL, NULL, '2026-10-01 21:00:00'),
+ (677, 13, '2026-10-22', '19:00:00', '20:30:00', 'Free', NULL, NULL, '2026-10-01 21:00:00'),
+ (678, 14, '2026-10-22', '10:00:00', '11:30:00', 'Free', NULL, NULL, '2026-10-01 21:00:00'),
+ (679, 14, '2026-10-22', '15:00:00', '16:30:00', 'Free', NULL, NULL, '2026-10-01 21:00:00'),
+ (680, 5, '2026-10-23', '08:00:00', '09:30:00', 'Free', NULL, NULL, '2026-10-01 21:00:00'),
+ (681, 5, '2026-10-23', '09:30:00', '11:00:00', 'Free', NULL, NULL, '2026-10-01 21:00:00'),
+ (682, 5, '2026-10-23', '11:00:00', '12:30:00', 'Free', NULL, NULL, '2026-10-01 21:00:00'),
+ (683, 5, '2026-10-23', '20:00:00', '21:30:00', 'Free', NULL, NULL, '2026-10-01 21:00:00'),
+ (684, 6, '2026-10-23', '08:00:00', '09:30:00', 'Free', NULL, NULL, '2026-10-01 21:00:00'),
+ (685, 6, '2026-10-23', '09:30:00', '11:00:00', 'Free', NULL, NULL, '2026-10-01 21:00:00'),
+ (686, 6, '2026-10-23', '14:00:00', '15:30:00', 'Free', NULL, NULL, '2026-10-01 21:00:00'),
+ (687, 6, '2026-10-23', '16:00:00', '17:30:00', 'Free', NULL, NULL, '2026-10-01 21:00:00'),
+ (688, 6, '2026-10-23', '17:30:00', '19:00:00', 'Free', NULL, NULL, '2026-10-01 21:00:00'),
+ (689, 7, '2026-10-23', '07:00:00', '08:30:00', 'Free', NULL, NULL, '2026-10-01 21:00:00'),
+ (690, 7, '2026-10-23', '08:30:00', '10:00:00', 'Free', NULL, NULL, '2026-10-01 21:00:00'),
+ (691, 7, '2026-10-23', '10:00:00', '11:30:00', 'Free', NULL, NULL, '2026-10-01 21:00:00'),
+ (692, 13, '2026-10-23', '06:00:00', '07:30:00', 'Free', NULL, NULL, '2026-10-01 21:00:00'),
+ (693, 13, '2026-10-23', '07:30:00', '09:00:00', 'Free', NULL, NULL, '2026-10-01 21:00:00'),
+ (694, 13, '2026-10-23', '09:00:00', '10:30:00', 'Free', NULL, NULL, '2026-10-01 21:00:00'),
+ (695, 13, '2026-10-23', '16:00:00', '17:30:00', 'Free', NULL, NULL, '2026-10-01 21:00:00'),
+ (696, 13, '2026-10-23', '17:30:00', '19:00:00', 'Free', NULL, NULL, '2026-10-01 21:00:00'),
+ (697, 13, '2026-10-23', '19:00:00', '20:30:00', 'Free', NULL, NULL, '2026-10-01 21:00:00'),
+ (698, 14, '2026-10-23', '10:00:00', '11:30:00', 'Free', NULL, NULL, '2026-10-01 21:00:00'),
+ (699, 14, '2026-10-23', '15:00:00', '16:30:00', 'Free', NULL, NULL, '2026-10-01 21:00:00'),
+ (700, 5, '2026-10-24', '08:00:00', '09:30:00', 'Free', NULL, NULL, '2026-10-01 21:00:00'),
+ (701, 5, '2026-10-24', '09:30:00', '11:00:00', 'Free', NULL, NULL, '2026-10-01 21:00:00'),
+ (702, 5, '2026-10-24', '11:00:00', '12:30:00', 'Free', NULL, NULL, '2026-10-01 21:00:00'),
+ (703, 5, '2026-10-24', '15:00:00', '16:30:00', 'Free', NULL, NULL, '2026-10-01 21:00:00'),
+ (704, 5, '2026-10-24', '20:00:00', '21:30:00', 'Free', NULL, NULL, '2026-10-01 21:00:00'),
+ (705, 6, '2026-10-24', '08:00:00', '09:30:00', 'Free', NULL, NULL, '2026-10-01 21:00:00'),
+ (706, 6, '2026-10-24', '09:30:00', '11:00:00', 'Free', NULL, NULL, '2026-10-01 21:00:00'),
+ (707, 6, '2026-10-24', '14:00:00', '15:30:00', 'Free', NULL, NULL, '2026-10-01 21:00:00'),
+ (708, 6, '2026-10-24', '16:00:00', '17:30:00', 'Free', NULL, NULL, '2026-10-01 21:00:00'),
+ (709, 6, '2026-10-24', '17:30:00', '19:00:00', 'Free', NULL, NULL, '2026-10-01 21:00:00'),
+ (710, 7, '2026-10-24', '07:00:00', '08:30:00', 'Free', NULL, NULL, '2026-10-01 21:00:00'),
+ (711, 7, '2026-10-24', '08:30:00', '10:00:00', 'Free', NULL, NULL, '2026-10-01 21:00:00'),
+ (712, 7, '2026-10-24', '10:00:00', '11:30:00', 'Free', NULL, NULL, '2026-10-01 21:00:00'),
+ (713, 13, '2026-10-24', '06:00:00', '07:30:00', 'Free', NULL, NULL, '2026-10-01 21:00:00'),
+ (714, 13, '2026-10-24', '07:30:00', '09:00:00', 'Free', NULL, NULL, '2026-10-01 21:00:00'),
+ (715, 13, '2026-10-24', '09:00:00', '10:30:00', 'Free', NULL, NULL, '2026-10-01 21:00:00'),
+ (716, 13, '2026-10-24', '16:00:00', '17:30:00', 'Free', NULL, NULL, '2026-10-01 21:00:00'),
+ (717, 13, '2026-10-24', '17:30:00', '19:00:00', 'Free', NULL, NULL, '2026-10-01 21:00:00'),
+ (718, 13, '2026-10-24', '19:00:00', '20:30:00', 'Free', NULL, NULL, '2026-10-01 21:00:00'),
+ (719, 14, '2026-10-24', '10:00:00', '11:30:00', 'Free', NULL, NULL, '2026-10-01 21:00:00'),
+ (720, 14, '2026-10-24', '15:00:00', '16:30:00', 'Free', NULL, NULL, '2026-10-01 21:00:00'),
+ (721, 5, '2026-10-25', '08:00:00', '09:30:00', 'Free', NULL, NULL, '2026-10-01 21:00:00'),
+ (722, 5, '2026-10-25', '09:30:00', '11:00:00', 'Free', NULL, NULL, '2026-10-01 21:00:00'),
+ (723, 5, '2026-10-25', '11:00:00', '12:30:00', 'Free', NULL, NULL, '2026-10-01 21:00:00'),
+ (724, 5, '2026-10-25', '15:00:00', '16:30:00', 'Free', NULL, NULL, '2026-10-01 21:00:00'),
+ (725, 5, '2026-10-25', '20:00:00', '21:30:00', 'Free', NULL, NULL, '2026-10-01 21:00:00'),
+ (726, 6, '2026-10-25', '08:00:00', '09:30:00', 'Free', NULL, NULL, '2026-10-01 21:00:00'),
+ (727, 6, '2026-10-25', '09:30:00', '11:00:00', 'Free', NULL, NULL, '2026-10-01 21:00:00'),
+ (728, 6, '2026-10-25', '14:00:00', '15:30:00', 'Free', NULL, NULL, '2026-10-01 21:00:00'),
+ (729, 6, '2026-10-25', '16:00:00', '17:30:00', 'Free', NULL, NULL, '2026-10-01 21:00:00'),
+ (730, 6, '2026-10-25', '17:30:00', '19:00:00', 'Free', NULL, NULL, '2026-10-01 21:00:00'),
+ (731, 7, '2026-10-25', '07:00:00', '08:30:00', 'Free', NULL, NULL, '2026-10-01 21:00:00'),
+ (732, 7, '2026-10-25', '08:30:00', '10:00:00', 'Free', NULL, NULL, '2026-10-01 21:00:00'),
+ (733, 7, '2026-10-25', '10:00:00', '11:30:00', 'Free', NULL, NULL, '2026-10-01 21:00:00'),
+ (734, 13, '2026-10-25', '06:00:00', '07:30:00', 'Free', NULL, NULL, '2026-10-01 21:00:00'),
+ (735, 13, '2026-10-25', '07:30:00', '09:00:00', 'Free', NULL, NULL, '2026-10-01 21:00:00'),
+ (736, 13, '2026-10-25', '09:00:00', '10:30:00', 'Free', NULL, NULL, '2026-10-01 21:00:00'),
+ (737, 13, '2026-10-25', '16:00:00', '17:30:00', 'Free', NULL, NULL, '2026-10-01 21:00:00'),
+ (738, 13, '2026-10-25', '17:30:00', '19:00:00', 'Free', NULL, NULL, '2026-10-01 21:00:00'),
+ (739, 13, '2026-10-25', '19:00:00', '20:30:00', 'Free', NULL, NULL, '2026-10-01 21:00:00'),
+ (740, 14, '2026-10-25', '10:00:00', '11:30:00', 'Free', NULL, NULL, '2026-10-01 21:00:00'),
+ (741, 14, '2026-10-25', '15:00:00', '16:30:00', 'Free', NULL, NULL, '2026-10-01 21:00:00'),
+ (742, 5, '2026-10-26', '08:00:00', '09:30:00', 'Free', NULL, NULL, '2026-10-01 21:00:00'),
+ (743, 5, '2026-10-26', '09:30:00', '11:00:00', 'Free', NULL, NULL, '2026-10-01 21:00:00'),
+ (744, 5, '2026-10-26', '11:00:00', '12:30:00', 'Free', NULL, NULL, '2026-10-01 21:00:00'),
+ (745, 5, '2026-10-26', '20:00:00', '21:30:00', 'Free', NULL, NULL, '2026-10-01 21:00:00'),
+ (746, 6, '2026-10-26', '08:00:00', '09:30:00', 'Free', NULL, NULL, '2026-10-01 21:00:00'),
+ (747, 6, '2026-10-26', '09:30:00', '11:00:00', 'Free', NULL, NULL, '2026-10-01 21:00:00'),
+ (748, 6, '2026-10-26', '14:00:00', '15:30:00', 'Free', NULL, NULL, '2026-10-01 21:00:00'),
+ (749, 6, '2026-10-26', '16:00:00', '17:30:00', 'Free', NULL, NULL, '2026-10-01 21:00:00'),
+ (750, 6, '2026-10-26', '17:30:00', '19:00:00', 'Free', NULL, NULL, '2026-10-01 21:00:00'),
+ (751, 7, '2026-10-26', '07:00:00', '08:30:00', 'Free', NULL, NULL, '2026-10-01 21:00:00'),
+ (752, 7, '2026-10-26', '08:30:00', '10:00:00', 'Free', NULL, NULL, '2026-10-01 21:00:00'),
+ (753, 7, '2026-10-26', '10:00:00', '11:30:00', 'Free', NULL, NULL, '2026-10-01 21:00:00'),
+ (754, 13, '2026-10-26', '06:00:00', '07:30:00', 'Free', NULL, NULL, '2026-10-01 21:00:00'),
+ (755, 13, '2026-10-26', '07:30:00', '09:00:00', 'Free', NULL, NULL, '2026-10-01 21:00:00'),
+ (756, 13, '2026-10-26', '09:00:00', '10:30:00', 'Free', NULL, NULL, '2026-10-01 21:00:00'),
+ (757, 13, '2026-10-26', '16:00:00', '17:30:00', 'Free', NULL, NULL, '2026-10-01 21:00:00'),
+ (758, 13, '2026-10-26', '17:30:00', '19:00:00', 'Free', NULL, NULL, '2026-10-01 21:00:00'),
+ (759, 13, '2026-10-26', '19:00:00', '20:30:00', 'Free', NULL, NULL, '2026-10-01 21:00:00'),
+ (760, 14, '2026-10-26', '10:00:00', '11:30:00', 'Free', NULL, NULL, '2026-10-01 21:00:00'),
+ (761, 14, '2026-10-26', '15:00:00', '16:30:00', 'Free', NULL, NULL, '2026-10-01 21:00:00'),
+ (762, 5, '2026-10-27', '08:00:00', '09:30:00', 'Free', NULL, NULL, '2026-10-01 21:00:00'),
+ (763, 5, '2026-10-27', '09:30:00', '11:00:00', 'Free', NULL, NULL, '2026-10-01 21:00:00'),
+ (764, 5, '2026-10-27', '11:00:00', '12:30:00', 'Free', NULL, NULL, '2026-10-01 21:00:00'),
+ (765, 5, '2026-10-27', '20:00:00', '21:30:00', 'Free', NULL, NULL, '2026-10-01 21:00:00'),
+ (766, 6, '2026-10-27', '08:00:00', '09:30:00', 'Free', NULL, NULL, '2026-10-01 21:00:00'),
+ (767, 6, '2026-10-27', '09:30:00', '11:00:00', 'Free', NULL, NULL, '2026-10-01 21:00:00'),
+ (768, 6, '2026-10-27', '14:00:00', '15:30:00', 'Free', NULL, NULL, '2026-10-01 21:00:00'),
+ (769, 6, '2026-10-27', '16:00:00', '17:30:00', 'Free', NULL, NULL, '2026-10-01 21:00:00'),
+ (770, 6, '2026-10-27', '17:30:00', '19:00:00', 'Free', NULL, NULL, '2026-10-01 21:00:00'),
+ (771, 7, '2026-10-27', '07:00:00', '08:30:00', 'Free', NULL, NULL, '2026-10-01 21:00:00'),
+ (772, 7, '2026-10-27', '08:30:00', '10:00:00', 'Free', NULL, NULL, '2026-10-01 21:00:00'),
+ (773, 7, '2026-10-27', '10:00:00', '11:30:00', 'Free', NULL, NULL, '2026-10-01 21:00:00'),
+ (774, 13, '2026-10-27', '06:00:00', '07:30:00', 'Free', NULL, NULL, '2026-10-01 21:00:00'),
+ (775, 13, '2026-10-27', '07:30:00', '09:00:00', 'Free', NULL, NULL, '2026-10-01 21:00:00'),
+ (776, 13, '2026-10-27', '09:00:00', '10:30:00', 'Free', NULL, NULL, '2026-10-01 21:00:00'),
+ (777, 13, '2026-10-27', '16:00:00', '17:30:00', 'Free', NULL, NULL, '2026-10-01 21:00:00'),
+ (778, 13, '2026-10-27', '17:30:00', '19:00:00', 'Free', NULL, NULL, '2026-10-01 21:00:00'),
+ (779, 13, '2026-10-27', '19:00:00', '20:30:00', 'Free', NULL, NULL, '2026-10-01 21:00:00'),
+ (780, 14, '2026-10-27', '10:00:00', '11:30:00', 'Free', NULL, NULL, '2026-10-01 21:00:00'),
+ (781, 14, '2026-10-27', '15:00:00', '16:30:00', 'Free', NULL, NULL, '2026-10-01 21:00:00'),
+ (782, 5, '2026-10-28', '08:00:00', '09:30:00', 'Free', NULL, NULL, '2026-10-01 21:00:00'),
+ (783, 5, '2026-10-28', '09:30:00', '11:00:00', 'Free', NULL, NULL, '2026-10-01 21:00:00'),
+ (784, 5, '2026-10-28', '11:00:00', '12:30:00', 'Free', NULL, NULL, '2026-10-01 21:00:00'),
+ (785, 5, '2026-10-28', '20:00:00', '21:30:00', 'Free', NULL, NULL, '2026-10-01 21:00:00'),
+ (786, 6, '2026-10-28', '08:00:00', '09:30:00', 'Free', NULL, NULL, '2026-10-01 21:00:00'),
+ (787, 6, '2026-10-28', '09:30:00', '11:00:00', 'Free', NULL, NULL, '2026-10-01 21:00:00'),
+ (788, 6, '2026-10-28', '14:00:00', '15:30:00', 'Free', NULL, NULL, '2026-10-01 21:00:00'),
+ (789, 6, '2026-10-28', '16:00:00', '17:30:00', 'Free', NULL, NULL, '2026-10-01 21:00:00'),
+ (790, 6, '2026-10-28', '17:30:00', '19:00:00', 'Free', NULL, NULL, '2026-10-01 21:00:00'),
+ (791, 7, '2026-10-28', '07:00:00', '08:30:00', 'Free', NULL, NULL, '2026-10-01 21:00:00'),
+ (792, 7, '2026-10-28', '08:30:00', '10:00:00', 'Free', NULL, NULL, '2026-10-01 21:00:00'),
+ (793, 7, '2026-10-28', '10:00:00', '11:30:00', 'Free', NULL, NULL, '2026-10-01 21:00:00'),
+ (794, 13, '2026-10-28', '06:00:00', '07:30:00', 'Free', NULL, NULL, '2026-10-01 21:00:00'),
+ (795, 13, '2026-10-28', '07:30:00', '09:00:00', 'Free', NULL, NULL, '2026-10-01 21:00:00'),
+ (796, 13, '2026-10-28', '09:00:00', '10:30:00', 'Free', NULL, NULL, '2026-10-01 21:00:00'),
+ (797, 13, '2026-10-28', '16:00:00', '17:30:00', 'Free', NULL, NULL, '2026-10-01 21:00:00'),
+ (798, 13, '2026-10-28', '17:30:00', '19:00:00', 'Free', NULL, NULL, '2026-10-01 21:00:00'),
+ (799, 13, '2026-10-28', '19:00:00', '20:30:00', 'Free', NULL, NULL, '2026-10-01 21:00:00'),
+ (800, 14, '2026-10-28', '10:00:00', '11:30:00', 'Free', NULL, NULL, '2026-10-01 21:00:00');
+INSERT INTO TimeSlots (TimeSlotId, PtEmployeeId, SlotDate, StartTime, EndTime, Status, HeldByOrderId, HoldExpiresAt, CreatedAt) VALUES
+ (801, 14, '2026-10-28', '15:00:00', '16:30:00', 'Free', NULL, NULL, '2026-10-01 21:00:00'),
+ (802, 5, '2026-10-29', '08:00:00', '09:30:00', 'Free', NULL, NULL, '2026-10-01 21:00:00'),
+ (803, 5, '2026-10-29', '09:30:00', '11:00:00', 'Free', NULL, NULL, '2026-10-01 21:00:00'),
+ (804, 5, '2026-10-29', '11:00:00', '12:30:00', 'Free', NULL, NULL, '2026-10-01 21:00:00'),
+ (805, 5, '2026-10-29', '20:00:00', '21:30:00', 'Free', NULL, NULL, '2026-10-01 21:00:00'),
+ (806, 6, '2026-10-29', '08:00:00', '09:30:00', 'Free', NULL, NULL, '2026-10-01 21:00:00'),
+ (807, 6, '2026-10-29', '09:30:00', '11:00:00', 'Free', NULL, NULL, '2026-10-01 21:00:00'),
+ (808, 6, '2026-10-29', '14:00:00', '15:30:00', 'Free', NULL, NULL, '2026-10-01 21:00:00'),
+ (809, 6, '2026-10-29', '16:00:00', '17:30:00', 'Free', NULL, NULL, '2026-10-01 21:00:00'),
+ (810, 6, '2026-10-29', '17:30:00', '19:00:00', 'Free', NULL, NULL, '2026-10-01 21:00:00'),
+ (811, 7, '2026-10-29', '07:00:00', '08:30:00', 'Free', NULL, NULL, '2026-10-01 21:00:00'),
+ (812, 7, '2026-10-29', '08:30:00', '10:00:00', 'Free', NULL, NULL, '2026-10-01 21:00:00'),
+ (813, 7, '2026-10-29', '10:00:00', '11:30:00', 'Free', NULL, NULL, '2026-10-01 21:00:00'),
+ (814, 13, '2026-10-29', '06:00:00', '07:30:00', 'Free', NULL, NULL, '2026-10-01 21:00:00'),
+ (815, 13, '2026-10-29', '07:30:00', '09:00:00', 'Free', NULL, NULL, '2026-10-01 21:00:00'),
+ (816, 13, '2026-10-29', '09:00:00', '10:30:00', 'Free', NULL, NULL, '2026-10-01 21:00:00'),
+ (817, 13, '2026-10-29', '16:00:00', '17:30:00', 'Free', NULL, NULL, '2026-10-01 21:00:00'),
+ (818, 13, '2026-10-29', '17:30:00', '19:00:00', 'Free', NULL, NULL, '2026-10-01 21:00:00'),
+ (819, 13, '2026-10-29', '19:00:00', '20:30:00', 'Free', NULL, NULL, '2026-10-01 21:00:00'),
+ (820, 14, '2026-10-29', '10:00:00', '11:30:00', 'Free', NULL, NULL, '2026-10-01 21:00:00'),
+ (821, 14, '2026-10-29', '15:00:00', '16:30:00', 'Free', NULL, NULL, '2026-10-01 21:00:00'),
+ (822, 5, '2026-10-30', '08:00:00', '09:30:00', 'Free', NULL, NULL, '2026-10-01 21:00:00'),
+ (823, 5, '2026-10-30', '09:30:00', '11:00:00', 'Free', NULL, NULL, '2026-10-01 21:00:00'),
+ (824, 5, '2026-10-30', '11:00:00', '12:30:00', 'Free', NULL, NULL, '2026-10-01 21:00:00'),
+ (825, 5, '2026-10-30', '20:00:00', '21:30:00', 'Free', NULL, NULL, '2026-10-01 21:00:00'),
+ (826, 6, '2026-10-30', '08:00:00', '09:30:00', 'Free', NULL, NULL, '2026-10-01 21:00:00'),
+ (827, 6, '2026-10-30', '09:30:00', '11:00:00', 'Free', NULL, NULL, '2026-10-01 21:00:00'),
+ (828, 6, '2026-10-30', '14:00:00', '15:30:00', 'Free', NULL, NULL, '2026-10-01 21:00:00'),
+ (829, 6, '2026-10-30', '16:00:00', '17:30:00', 'Free', NULL, NULL, '2026-10-01 21:00:00'),
+ (830, 6, '2026-10-30', '17:30:00', '19:00:00', 'Free', NULL, NULL, '2026-10-01 21:00:00'),
+ (831, 7, '2026-10-30', '07:00:00', '08:30:00', 'Free', NULL, NULL, '2026-10-01 21:00:00'),
+ (832, 7, '2026-10-30', '08:30:00', '10:00:00', 'Free', NULL, NULL, '2026-10-01 21:00:00'),
+ (833, 7, '2026-10-30', '10:00:00', '11:30:00', 'Free', NULL, NULL, '2026-10-01 21:00:00'),
+ (834, 13, '2026-10-30', '06:00:00', '07:30:00', 'Free', NULL, NULL, '2026-10-01 21:00:00'),
+ (835, 13, '2026-10-30', '07:30:00', '09:00:00', 'Free', NULL, NULL, '2026-10-01 21:00:00'),
+ (836, 13, '2026-10-30', '09:00:00', '10:30:00', 'Free', NULL, NULL, '2026-10-01 21:00:00'),
+ (837, 13, '2026-10-30', '16:00:00', '17:30:00', 'Free', NULL, NULL, '2026-10-01 21:00:00'),
+ (838, 13, '2026-10-30', '17:30:00', '19:00:00', 'Free', NULL, NULL, '2026-10-01 21:00:00'),
+ (839, 13, '2026-10-30', '19:00:00', '20:30:00', 'Free', NULL, NULL, '2026-10-01 21:00:00'),
+ (840, 14, '2026-10-30', '10:00:00', '11:30:00', 'Free', NULL, NULL, '2026-10-01 21:00:00'),
+ (841, 14, '2026-10-30', '15:00:00', '16:30:00', 'Free', NULL, NULL, '2026-10-01 21:00:00'),
+ (842, 5, '2026-10-31', '08:00:00', '09:30:00', 'Free', NULL, NULL, '2026-10-01 21:00:00'),
+ (843, 5, '2026-10-31', '09:30:00', '11:00:00', 'Free', NULL, NULL, '2026-10-01 21:00:00'),
+ (844, 5, '2026-10-31', '11:00:00', '12:30:00', 'Free', NULL, NULL, '2026-10-01 21:00:00'),
+ (845, 5, '2026-10-31', '15:00:00', '16:30:00', 'Free', NULL, NULL, '2026-10-01 21:00:00'),
+ (846, 5, '2026-10-31', '20:00:00', '21:30:00', 'Free', NULL, NULL, '2026-10-01 21:00:00'),
+ (847, 6, '2026-10-31', '08:00:00', '09:30:00', 'Free', NULL, NULL, '2026-10-01 21:00:00'),
+ (848, 6, '2026-10-31', '09:30:00', '11:00:00', 'Free', NULL, NULL, '2026-10-01 21:00:00'),
+ (849, 6, '2026-10-31', '14:00:00', '15:30:00', 'Free', NULL, NULL, '2026-10-01 21:00:00'),
+ (850, 6, '2026-10-31', '16:00:00', '17:30:00', 'Free', NULL, NULL, '2026-10-01 21:00:00'),
+ (851, 6, '2026-10-31', '17:30:00', '19:00:00', 'Free', NULL, NULL, '2026-10-01 21:00:00'),
+ (852, 7, '2026-10-31', '07:00:00', '08:30:00', 'Free', NULL, NULL, '2026-10-01 21:00:00'),
+ (853, 7, '2026-10-31', '08:30:00', '10:00:00', 'Free', NULL, NULL, '2026-10-01 21:00:00'),
+ (854, 7, '2026-10-31', '10:00:00', '11:30:00', 'Free', NULL, NULL, '2026-10-01 21:00:00'),
+ (855, 13, '2026-10-31', '06:00:00', '07:30:00', 'Free', NULL, NULL, '2026-10-01 21:00:00'),
+ (856, 13, '2026-10-31', '07:30:00', '09:00:00', 'Free', NULL, NULL, '2026-10-01 21:00:00'),
+ (857, 13, '2026-10-31', '09:00:00', '10:30:00', 'Free', NULL, NULL, '2026-10-01 21:00:00'),
+ (858, 13, '2026-10-31', '16:00:00', '17:30:00', 'Free', NULL, NULL, '2026-10-01 21:00:00'),
+ (859, 13, '2026-10-31', '17:30:00', '19:00:00', 'Free', NULL, NULL, '2026-10-01 21:00:00'),
+ (860, 13, '2026-10-31', '19:00:00', '20:30:00', 'Free', NULL, NULL, '2026-10-01 21:00:00'),
+ (861, 14, '2026-10-31', '10:00:00', '11:30:00', 'Free', NULL, NULL, '2026-10-01 21:00:00'),
+ (862, 14, '2026-10-31', '15:00:00', '16:30:00', 'Free', NULL, NULL, '2026-10-01 21:00:00'),
+ (863, 5, '2026-09-04', '09:30:00', '11:00:00', 'Free', NULL, NULL, '2026-08-25 21:00:00'),
+ (864, 6, '2026-09-04', '09:30:00', '11:00:00', 'Free', NULL, NULL, '2026-08-25 21:00:00'),
+ (865, 13, '2026-09-04', '16:00:00', '17:30:00', 'Free', NULL, NULL, '2026-08-25 21:00:00'),
+ (866, 6, '2026-09-05', '09:30:00', '11:00:00', 'Free', NULL, NULL, '2026-08-26 21:00:00'),
+ (867, 13, '2026-09-05', '16:00:00', '17:30:00', 'Free', NULL, NULL, '2026-08-26 21:00:00'),
+ (868, 5, '2026-09-07', '09:30:00', '11:00:00', 'Free', NULL, NULL, '2026-08-28 21:00:00'),
+ (869, 6, '2026-09-07', '09:30:00', '11:00:00', 'Free', NULL, NULL, '2026-08-28 21:00:00'),
+ (870, 13, '2026-09-07', '16:00:00', '17:30:00', 'Free', NULL, NULL, '2026-08-28 21:00:00'),
+ (871, 5, '2026-09-09', '09:30:00', '11:00:00', 'Free', NULL, NULL, '2026-08-30 21:00:00'),
+ (872, 6, '2026-09-09', '09:30:00', '11:00:00', 'Free', NULL, NULL, '2026-08-30 21:00:00'),
+ (873, 13, '2026-09-09', '16:00:00', '17:30:00', 'Free', NULL, NULL, '2026-08-30 21:00:00'),
+ (874, 5, '2026-09-11', '09:30:00', '11:00:00', 'Free', NULL, NULL, '2026-09-01 21:00:00'),
+ (875, 13, '2026-09-11', '16:00:00', '17:30:00', 'Free', NULL, NULL, '2026-09-01 21:00:00'),
+ (876, 6, '2026-09-12', '09:30:00', '11:00:00', 'Free', NULL, NULL, '2026-09-02 21:00:00'),
+ (877, 13, '2026-09-12', '16:00:00', '17:30:00', 'Free', NULL, NULL, '2026-09-02 21:00:00'),
+ (878, 5, '2026-09-14', '09:30:00', '11:00:00', 'Free', NULL, NULL, '2026-09-04 21:00:00'),
+ (879, 6, '2026-09-14', '09:30:00', '11:00:00', 'Free', NULL, NULL, '2026-09-04 21:00:00'),
+ (880, 13, '2026-09-14', '16:00:00', '17:30:00', 'Free', NULL, NULL, '2026-09-04 21:00:00'),
+ (881, 5, '2026-09-16', '09:30:00', '11:00:00', 'Free', NULL, NULL, '2026-09-06 21:00:00'),
+ (882, 6, '2026-09-16', '09:30:00', '11:00:00', 'Free', NULL, NULL, '2026-09-06 21:00:00'),
+ (883, 13, '2026-09-16', '16:00:00', '17:30:00', 'Free', NULL, NULL, '2026-09-06 21:00:00'),
+ (884, 6, '2026-09-19', '09:30:00', '11:00:00', 'Free', NULL, NULL, '2026-09-09 21:00:00'),
+ (885, 13, '2026-09-19', '16:00:00', '17:30:00', 'Free', NULL, NULL, '2026-09-09 21:00:00'),
+ (886, 5, '2026-09-21', '09:30:00', '11:00:00', 'Free', NULL, NULL, '2026-09-11 21:00:00'),
+ (887, 6, '2026-09-21', '09:30:00', '11:00:00', 'Free', NULL, NULL, '2026-09-11 21:00:00'),
+ (888, 5, '2026-09-23', '09:30:00', '11:00:00', 'Free', NULL, NULL, '2026-09-13 21:00:00'),
+ (889, 13, '2026-09-23', '16:00:00', '17:30:00', 'Free', NULL, NULL, '2026-09-13 21:00:00'),
+ (890, 5, '2026-09-25', '09:30:00', '11:00:00', 'Free', NULL, NULL, '2026-09-15 21:00:00'),
+ (891, 6, '2026-09-25', '09:30:00', '11:00:00', 'Free', NULL, NULL, '2026-09-15 21:00:00'),
+ (892, 13, '2026-09-25', '16:00:00', '17:30:00', 'Free', NULL, NULL, '2026-09-15 21:00:00'),
+ (893, 6, '2026-09-26', '09:30:00', '11:00:00', 'Free', NULL, NULL, '2026-09-16 21:00:00'),
+ (894, 13, '2026-09-26', '16:00:00', '17:30:00', 'Free', NULL, NULL, '2026-09-16 21:00:00'),
+ (895, 5, '2026-09-28', '09:30:00', '11:00:00', 'Free', NULL, NULL, '2026-09-18 21:00:00'),
+ (896, 6, '2026-09-28', '09:30:00', '11:00:00', 'Free', NULL, NULL, '2026-09-18 21:00:00'),
+ (897, 13, '2026-09-28', '16:00:00', '17:30:00', 'Free', NULL, NULL, '2026-09-18 21:00:00'),
+ (898, 6, '2026-09-30', '09:30:00', '11:00:00', 'Free', NULL, NULL, '2026-09-20 21:00:00'),
+ (899, 13, '2026-09-30', '16:00:00', '17:30:00', 'Free', NULL, NULL, '2026-09-20 21:00:00'),
+ (900, 5, '2026-10-02', '09:30:00', '11:00:00', 'Free', NULL, NULL, '2026-09-22 21:00:00'),
+ (901, 6, '2026-10-02', '09:30:00', '11:00:00', 'Free', NULL, NULL, '2026-09-22 21:00:00'),
+ (902, 13, '2026-10-02', '16:00:00', '17:30:00', 'Free', NULL, NULL, '2026-09-22 21:00:00'),
+ (903, 5, '2026-10-09', '13:00:00', '14:30:00', 'Withdrawn', NULL, NULL, '2026-10-01 21:00:00'),
+ (904, 8, '2026-08-20', '17:00:00', '18:30:00', 'Free', NULL, NULL, '2026-08-01 08:00:00');
 SET IDENTITY_INSERT TimeSlots OFF;
-GO
 
 /* ============================================================================
-   16. SESSIONS — phủ đủ 4 trạng thái và mọi lý do Missed
-   Giá trị buổi gói PT đơn : 8.800.000 / 22 = 400.000 → hoa hồng 70% = 280.000
-   Giá trị buổi gói couple : 13.200.000 / 22 = 600.000 → hoa hồng 65% = 390.000
-   Buổi lẻ                 : 450.000 → hoa hồng 60% = 270.000
+   Sessions — 354 dòng. Trước 05/10 đã có kết quả; từ 05/10 Scheduled.
    ============================================================================ */
 SET IDENTITY_INSERT Sessions ON;
-INSERT INTO Sessions (SessionId, SubscriptionId, TimeSlotId, PtEmployeeId, Status, SessionValue, CommissionAmount,
-                      AttendanceMarkedAt, IsAutoClosed, MissedReason, CancelReason, CancelledAt, CancelledByAccountId,
-                      RefundAgreed, ResolutionType) VALUES
- -- Gói PT đơn của khách Đỗ Thị Mai (Sub 7)
- (1, 7 , 1 , 5, 'Completed', 400000, 280000, '2026-09-07 19:35:00', 0, NULL, NULL, NULL, NULL, 0, NULL),
- (2, 7 , 2 , 5, 'Completed', 400000, 280000, NULL                 , 1, NULL, NULL, NULL, NULL, 0, NULL), -- job tự đóng vì khách đã check-in
- (3, 7 , 4 , 5, 'Missed'   , 400000, 280000, NULL                 , 1, N'Khách không check-in trong ngày tập', NULL, NULL, NULL, 0, NULL),
- (4, 7 , 6 , 5, 'Completed', 400000, 280000, '2026-09-12 10:35:00', 0, NULL, NULL, NULL, NULL, 0, NULL), -- buổi đã swap sang Thứ 7
- (5, 7 , 7 , 5, 'Scheduled', 400000, 280000, NULL                 , 0, NULL, NULL, NULL, NULL, 0, NULL),
- (6, 7 , 8 , 5, 'Scheduled', 400000, 280000, NULL                 , 0, NULL, NULL, NULL, NULL, 0, NULL),
- -- Gói couple (Sub 10): PT hủy 1 buổi và đã trả tiền mặt cho khách ngoài hệ thống
- (7, 10, 10, 6, 'Completed', 600000, 390000, '2026-09-21 21:05:00', 0, NULL, NULL, NULL, NULL, 0, NULL),
- (8, 10, 11, 6, 'Cancelled', 600000, 390000, NULL                 , 0, NULL, N'PT bận việc gia đình, đã hoàn tiền mặt cho khách', '2026-09-20 15:00:00', NULL, 1, 'Cancel'),
- (9, 10, 12, 6, 'Scheduled', 600000, 390000, NULL                 , 0, NULL, NULL, NULL, NULL, 0, NULL),
- -- Buổi lẻ hôm nay của khách vãng lai (Sub 14)
- (10, 14, 14, 7, 'Scheduled', 450000, 270000, NULL, 0, NULL, NULL, NULL, NULL, 0, NULL);
+INSERT INTO Sessions (SessionId, SubscriptionId, TimeSlotId, PtEmployeeId, Status, SessionValue, CommissionAmount, AttendanceMarkedAt, IsAutoClosed, MissedReason, CancelType, CancelReason, CancelledAt, CancelledByAccountId, RefundAgreed) VALUES
+ (1, 3, 1, 5, 'CheckedIn', 450000, 315000, '2026-09-27 00:05:00', 1, NULL, NULL, NULL, NULL, NULL, 0),
+ (2, 5, 4, 5, 'CheckedIn', 450000, 315000, '2026-09-27 00:05:00', 1, NULL, NULL, NULL, NULL, NULL, 0),
+ (3, 7, 5, 5, 'CheckedIn', 366667, 256667, '2026-07-07 00:05:00', 1, NULL, NULL, NULL, NULL, NULL, 0),
+ (4, 7, 6, 5, 'Missed', 366667, 256667, '2026-07-08 00:05:00', 1, 'NoCheckIn', NULL, NULL, NULL, NULL, 0),
+ (5, 7, 7, 5, 'CheckedIn', 366667, 256667, '2026-07-09 00:05:00', 1, NULL, NULL, NULL, NULL, NULL, 0),
+ (6, 7, 8, 5, 'CheckedIn', 366667, 256667, '2026-07-10 00:05:00', 1, NULL, NULL, NULL, NULL, NULL, 0),
+ (7, 7, 9, 5, 'CheckedIn', 366667, 256667, '2026-07-11 00:05:00', 1, NULL, NULL, NULL, NULL, NULL, 0),
+ (8, 7, 10, 5, 'CheckedIn', 366667, 256667, '2026-07-14 00:05:00', 1, NULL, NULL, NULL, NULL, NULL, 0),
+ (9, 7, 11, 5, 'CheckedIn', 366667, 256667, '2026-07-15 00:05:00', 1, NULL, NULL, NULL, NULL, NULL, 0),
+ (10, 7, 12, 5, 'Missed', 366667, 256667, '2026-07-16 00:05:00', 1, 'NoCheckIn', NULL, NULL, NULL, NULL, 0),
+ (11, 7, 13, 5, 'CheckedIn', 366667, 256667, '2026-07-17 00:05:00', 1, NULL, NULL, NULL, NULL, NULL, 0),
+ (12, 7, 14, 5, 'CheckedIn', 366667, 256667, '2026-07-18 00:05:00', 1, NULL, NULL, NULL, NULL, NULL, 0),
+ (13, 7, 15, 5, 'Missed', 366667, 256667, '2026-07-21 00:05:00', 1, 'NoCheckIn', NULL, NULL, NULL, NULL, 0),
+ (14, 7, 16, 5, 'CheckedIn', 366667, 256667, '2026-07-22 00:05:00', 1, NULL, NULL, NULL, NULL, NULL, 0),
+ (15, 7, 17, 5, 'CheckedIn', 366667, 256667, '2026-07-23 00:05:00', 1, NULL, NULL, NULL, NULL, NULL, 0),
+ (16, 7, 18, 5, 'CheckedIn', 366667, 256667, '2026-07-24 00:05:00', 1, NULL, NULL, NULL, NULL, NULL, 0),
+ (17, 7, 19, 5, 'CheckedIn', 366667, 256667, '2026-07-25 00:05:00', 1, NULL, NULL, NULL, NULL, NULL, 0),
+ (18, 7, 20, 5, 'CheckedIn', 366667, 256667, '2026-07-28 00:05:00', 1, NULL, NULL, NULL, NULL, NULL, 0),
+ (19, 7, 21, 5, 'CheckedIn', 366667, 256667, '2026-07-29 00:05:00', 1, NULL, NULL, NULL, NULL, NULL, 0),
+ (20, 7, 22, 5, 'CheckedIn', 366667, 256667, '2026-07-30 00:05:00', 1, NULL, NULL, NULL, NULL, NULL, 0),
+ (21, 7, 23, 5, 'CheckedIn', 366667, 256667, '2026-07-31 00:05:00', 1, NULL, NULL, NULL, NULL, NULL, 0),
+ (22, 7, 24, 5, 'CheckedIn', 366667, 256667, '2026-08-01 00:05:00', 1, NULL, NULL, NULL, NULL, NULL, 0),
+ (23, 7, 25, 5, 'Missed', 366667, 256667, '2026-08-04 00:05:00', 1, 'NoMembership', NULL, NULL, NULL, NULL, 0),
+ (24, 7, 26, 5, 'Missed', 366667, 256667, '2026-08-05 00:05:00', 1, 'NoMembership', NULL, NULL, NULL, NULL, 0),
+ (25, 7, 27, 5, 'Missed', 366667, 256667, '2026-08-06 00:05:00', 1, 'NoMembership', NULL, NULL, NULL, NULL, 0),
+ (26, 7, 28, 5, 'Cancelled', 366667, 256667, NULL, 0, NULL, 'PackageExpired', N'Gói PT hết hạn, buổi còn lại chưa diễn ra (CBR-55)', '2026-08-07 00:05:00', NULL, 0),
+ (27, 9, 29, 7, 'CheckedIn', 375000, 225000, '2026-09-08 00:05:00', 1, NULL, NULL, NULL, NULL, NULL, 0),
+ (28, 9, 30, 7, 'CheckedIn', 375000, 225000, '2026-09-09 00:05:00', 1, NULL, NULL, NULL, NULL, NULL, 0),
+ (29, 9, 31, 7, 'CheckedIn', 375000, 225000, '2026-09-10 00:05:00', 1, NULL, NULL, NULL, NULL, NULL, 0),
+ (30, 9, 32, 7, 'CheckedIn', 375000, 225000, '2026-09-11 00:05:00', 1, NULL, NULL, NULL, NULL, NULL, 0),
+ (31, 9, 33, 7, 'CheckedIn', 375000, 225000, '2026-09-12 00:05:00', 1, NULL, NULL, NULL, NULL, NULL, 0),
+ (32, 9, 34, 7, 'CheckedIn', 375000, 225000, '2026-09-15 00:05:00', 1, NULL, NULL, NULL, NULL, NULL, 0),
+ (33, 9, 35, 7, 'Missed', 375000, 225000, '2026-09-16 00:05:00', 1, 'NoCheckIn', NULL, NULL, NULL, NULL, 0),
+ (34, 9, 36, 7, 'CheckedIn', 375000, 225000, '2026-09-17 00:05:00', 1, NULL, NULL, NULL, NULL, NULL, 0),
+ (35, 9, 37, 7, 'CheckedIn', 375000, 225000, '2026-09-18 00:05:00', 1, NULL, NULL, NULL, NULL, NULL, 0),
+ (36, 9, 38, 7, 'Cancelled', 375000, 225000, NULL, 0, NULL, 'GymClosed', N'Phòng tập nghỉ cả ngày theo lịch Manager khai báo sau khi bán gói', '2026-09-10 09:00:00', NULL, 0),
+ (37, 9, 39, 7, 'CheckedIn', 375000, 225000, '2026-09-22 00:05:00', 1, NULL, NULL, NULL, NULL, NULL, 0),
+ (38, 9, 40, 7, 'CheckedIn', 375000, 225000, '2026-09-23 00:05:00', 1, NULL, NULL, NULL, NULL, NULL, 0),
+ (39, 9, 41, 7, 'CheckedIn', 375000, 225000, '2026-09-24 00:05:00', 1, NULL, NULL, NULL, NULL, NULL, 0),
+ (40, 9, 42, 7, 'CheckedIn', 375000, 225000, '2026-09-25 00:05:00', 1, NULL, NULL, NULL, NULL, NULL, 0),
+ (41, 9, 43, 7, 'CheckedIn', 375000, 225000, '2026-09-26 00:05:00', 1, NULL, NULL, NULL, NULL, NULL, 0),
+ (42, 9, 44, 7, 'Missed', 375000, 225000, '2026-09-29 00:05:00', 1, 'MembershipFrozen', NULL, NULL, NULL, NULL, 0),
+ (43, 9, 45, 7, 'Missed', 375000, 225000, '2026-09-30 00:05:00', 1, 'MembershipFrozen', NULL, NULL, NULL, NULL, 0),
+ (44, 9, 46, 7, 'Missed', 375000, 225000, '2026-10-01 00:05:00', 1, 'MembershipFrozen', NULL, NULL, NULL, NULL, 0),
+ (45, 9, 47, 7, 'Missed', 375000, 225000, '2026-10-02 00:05:00', 1, 'MembershipFrozen', NULL, NULL, NULL, NULL, 0),
+ (46, 9, 48, 7, 'Missed', 375000, 225000, '2026-10-03 00:05:00', 1, 'MembershipFrozen', NULL, NULL, NULL, NULL, 0),
+ (47, 9, 49, 7, 'Missed', 375000, 225000, '2026-10-06 00:05:00', 1, 'MembershipFrozen', NULL, NULL, NULL, NULL, 0),
+ (48, 9, 50, 7, 'Missed', 375000, 225000, '2026-10-07 00:05:00', 1, 'MembershipFrozen', NULL, NULL, NULL, NULL, 0),
+ (49, 9, 51, 7, 'Missed', 375000, 225000, '2026-10-08 00:05:00', 1, 'MembershipFrozen', NULL, NULL, NULL, NULL, 0),
+ (50, 9, 52, 7, 'Missed', 375000, 225000, '2026-10-09 00:05:00', 1, 'MembershipFrozen', NULL, NULL, NULL, NULL, 0),
+ (51, 9, 53, 7, 'Missed', 375000, 225000, '2026-10-10 00:05:00', 1, 'MembershipFrozen', NULL, NULL, NULL, NULL, 0),
+ (52, 9, 54, 7, 'Missed', 375000, 225000, '2026-10-13 00:05:00', 1, 'MembershipFrozen', NULL, NULL, NULL, NULL, 0),
+ (53, 9, 55, 7, 'Missed', 375000, 225000, '2026-10-14 00:05:00', 1, 'MembershipFrozen', NULL, NULL, NULL, NULL, 0),
+ (54, 9, 56, 7, 'Missed', 375000, 225000, '2026-10-15 00:05:00', 1, 'MembershipFrozen', NULL, NULL, NULL, NULL, 0),
+ (55, 9, 57, 7, 'Missed', 375000, 225000, '2026-10-16 00:05:00', 1, 'MembershipFrozen', NULL, NULL, NULL, NULL, 0),
+ (56, 9, 58, 7, 'Missed', 375000, 225000, '2026-10-17 00:05:00', 1, 'MembershipFrozen', NULL, NULL, NULL, NULL, 0),
+ (57, 9, 59, 7, 'Missed', 375000, 225000, '2026-10-20 00:05:00', 1, 'MembershipFrozen', NULL, NULL, NULL, NULL, 0),
+ (58, 9, 60, 7, 'Missed', 375000, 225000, '2026-10-22 00:05:00', 1, 'MembershipFrozen', NULL, NULL, NULL, NULL, 0),
+ (59, 9, 61, 7, 'Missed', 375000, 225000, '2026-10-23 00:05:00', 1, 'MembershipFrozen', NULL, NULL, NULL, NULL, 0),
+ (60, 9, 62, 7, 'Missed', 375000, 225000, '2026-10-24 00:05:00', 1, 'MembershipFrozen', NULL, NULL, NULL, NULL, 0),
+ (61, 9, 63, 7, 'Missed', 375000, 225000, '2026-10-27 00:05:00', 1, 'MembershipFrozen', NULL, NULL, NULL, NULL, 0),
+ (62, 9, 64, 7, 'Missed', 375000, 225000, '2026-10-28 00:05:00', 1, 'MembershipFrozen', NULL, NULL, NULL, NULL, 0),
+ (63, 9, 65, 7, 'Scheduled', 375000, 225000, NULL, 0, NULL, NULL, NULL, NULL, NULL, 0),
+ (64, 9, 66, 7, 'Scheduled', 375000, 225000, NULL, 0, NULL, NULL, NULL, NULL, NULL, 0),
+ (65, 9, 67, 7, 'Scheduled', 375000, 225000, NULL, 0, NULL, NULL, NULL, NULL, NULL, 0),
+ (66, 9, 68, 7, 'Scheduled', 375000, 225000, NULL, 0, NULL, NULL, NULL, NULL, NULL, 0),
+ (67, 9, 69, 7, 'Scheduled', 375000, 225000, NULL, 0, NULL, NULL, NULL, NULL, NULL, 0),
+ (68, 9, 70, 7, 'Scheduled', 375000, 225000, NULL, 0, NULL, NULL, NULL, NULL, NULL, 0),
+ (69, 9, 71, 7, 'Scheduled', 375000, 225000, NULL, 0, NULL, NULL, NULL, NULL, NULL, 0),
+ (70, 9, 72, 7, 'Scheduled', 375000, 225000, NULL, 0, NULL, NULL, NULL, NULL, NULL, 0),
+ (71, 11, 73, 5, 'CheckedIn', 375000, 262500, '2026-09-08 00:05:00', 1, NULL, NULL, NULL, NULL, NULL, 0),
+ (72, 11, 74, 5, 'Missed', 375000, 262500, '2026-09-09 00:05:00', 1, 'NoCheckIn', NULL, NULL, NULL, NULL, 0),
+ (73, 11, 75, 5, 'CheckedIn', 375000, 262500, '2026-09-10 00:05:00', 1, NULL, NULL, NULL, NULL, NULL, 0),
+ (74, 11, 76, 5, 'CheckedIn', 375000, 262500, '2026-09-11 00:05:00', 1, NULL, NULL, NULL, NULL, NULL, 0),
+ (75, 11, 78, 5, 'CheckedIn', 375000, 262500, '2026-09-13 00:05:00', 1, NULL, NULL, NULL, NULL, NULL, 0),
+ (76, 11, 79, 5, 'Missed', 375000, 262500, '2026-09-15 00:05:00', 1, 'NoCheckIn', NULL, NULL, NULL, NULL, 0),
+ (77, 11, 80, 5, 'CheckedIn', 375000, 262500, '2026-09-16 00:05:00', 1, NULL, NULL, NULL, NULL, NULL, 0),
+ (78, 11, 81, 5, 'Missed', 375000, 262500, '2026-09-17 00:05:00', 1, 'NoCheckIn', NULL, NULL, NULL, NULL, 0),
+ (79, 11, 82, 5, 'CheckedIn', 375000, 262500, '2026-09-18 00:05:00', 1, NULL, NULL, NULL, NULL, NULL, 0),
+ (80, 11, 83, 5, 'Cancelled', 375000, 262500, NULL, 0, NULL, 'GymClosed', N'Phòng tập nghỉ cả ngày theo lịch Manager khai báo sau khi bán gói', '2026-09-10 09:00:00', NULL, 0),
+ (81, 11, 84, 5, 'CheckedIn', 375000, 262500, '2026-09-22 00:05:00', 1, NULL, NULL, NULL, NULL, NULL, 0),
+ (82, 11, 85, 5, 'Cancelled', 375000, 262500, NULL, 0, NULL, 'ByCustomer', N'Khách bận đột xuất', '2026-09-21 22:00:00', 5, 0),
+ (83, 11, 86, 5, 'CheckedIn', 375000, 262500, '2026-09-24 00:05:00', 1, NULL, NULL, NULL, NULL, NULL, 0),
+ (84, 11, 87, 5, 'Missed', 375000, 262500, '2026-09-25 00:05:00', 1, 'NoCheckIn', NULL, NULL, NULL, NULL, 0),
+ (85, 11, 88, 5, 'CheckedIn', 375000, 262500, '2026-09-26 00:05:00', 1, NULL, NULL, NULL, NULL, NULL, 0),
+ (86, 11, 89, 5, 'CheckedIn', 375000, 262500, '2026-09-29 00:05:00', 1, NULL, NULL, NULL, NULL, NULL, 0),
+ (87, 11, 91, 13, 'CheckedIn', 375000, 225000, '2026-09-30 00:05:00', 1, NULL, NULL, NULL, NULL, NULL, 0),
+ (88, 11, 92, 5, 'CheckedIn', 375000, 262500, '2026-10-01 00:05:00', 1, NULL, NULL, NULL, NULL, NULL, 0),
+ (89, 11, 93, 5, 'Missed', 375000, 262500, '2026-10-02 00:05:00', 1, 'NoCheckIn', NULL, NULL, NULL, NULL, 0),
+ (90, 11, 94, 5, 'CheckedIn', 375000, 262500, '2026-10-03 00:05:00', 1, NULL, NULL, NULL, NULL, NULL, 0),
+ (91, 11, 95, 5, 'Scheduled', 375000, 262500, NULL, 0, NULL, NULL, NULL, NULL, NULL, 0),
+ (92, 11, 96, 5, 'Scheduled', 375000, 262500, NULL, 0, NULL, NULL, NULL, NULL, NULL, 0),
+ (93, 11, 97, 5, 'Scheduled', 375000, 262500, NULL, 0, NULL, NULL, NULL, NULL, NULL, 0),
+ (94, 11, 98, 5, 'Scheduled', 375000, 262500, NULL, 0, NULL, NULL, NULL, NULL, NULL, 0),
+ (95, 11, 99, 5, 'Scheduled', 375000, 262500, NULL, 0, NULL, NULL, NULL, NULL, NULL, 0),
+ (96, 11, 100, 5, 'Scheduled', 375000, 262500, NULL, 0, NULL, NULL, NULL, NULL, NULL, 0),
+ (97, 11, 101, 5, 'Scheduled', 375000, 262500, NULL, 0, NULL, NULL, NULL, NULL, NULL, 0),
+ (98, 11, 102, 5, 'Scheduled', 375000, 262500, NULL, 0, NULL, NULL, NULL, NULL, NULL, 0),
+ (99, 11, 103, 5, 'Scheduled', 375000, 262500, NULL, 0, NULL, NULL, NULL, NULL, NULL, 0),
+ (100, 11, 104, 5, 'Scheduled', 375000, 262500, NULL, 0, NULL, NULL, NULL, NULL, NULL, 0),
+ (101, 11, 105, 5, 'Scheduled', 375000, 262500, NULL, 0, NULL, NULL, NULL, NULL, NULL, 0),
+ (102, 11, 106, 5, 'Scheduled', 375000, 262500, NULL, 0, NULL, NULL, NULL, NULL, NULL, 0),
+ (103, 11, 107, 5, 'Scheduled', 375000, 262500, NULL, 0, NULL, NULL, NULL, NULL, NULL, 0),
+ (104, 11, 108, 5, 'Scheduled', 375000, 262500, NULL, 0, NULL, NULL, NULL, NULL, NULL, 0),
+ (105, 11, 109, 5, 'Scheduled', 375000, 262500, NULL, 0, NULL, NULL, NULL, NULL, NULL, 0),
+ (106, 11, 110, 5, 'Scheduled', 375000, 262500, NULL, 0, NULL, NULL, NULL, NULL, NULL, 0),
+ (107, 11, 111, 5, 'Scheduled', 375000, 262500, NULL, 0, NULL, NULL, NULL, NULL, NULL, 0),
+ (108, 11, 112, 5, 'Scheduled', 375000, 262500, NULL, 0, NULL, NULL, NULL, NULL, NULL, 0),
+ (109, 11, 113, 5, 'Scheduled', 375000, 262500, NULL, 0, NULL, NULL, NULL, NULL, NULL, 0),
+ (110, 11, 114, 5, 'Scheduled', 375000, 262500, NULL, 0, NULL, NULL, NULL, NULL, NULL, 0),
+ (111, 11, 115, 5, 'Scheduled', 375000, 262500, NULL, 0, NULL, NULL, NULL, NULL, NULL, 0),
+ (112, 11, 116, 5, 'Scheduled', 375000, 262500, NULL, 0, NULL, NULL, NULL, NULL, NULL, 0),
+ (113, 11, 117, 5, 'Scheduled', 375000, 262500, NULL, 0, NULL, NULL, NULL, NULL, NULL, 0),
+ (114, 11, 118, 5, 'Scheduled', 375000, 262500, NULL, 0, NULL, NULL, NULL, NULL, NULL, 0),
+ (115, 14, 119, 6, 'CheckedIn', 565909, 367841, '2026-08-25 00:05:00', 1, NULL, NULL, NULL, NULL, NULL, 0),
+ (116, 14, 120, 6, 'Missed', 565909, 367841, '2026-08-26 00:05:00', 1, 'NoCheckIn', NULL, NULL, NULL, NULL, 0),
+ (117, 14, 121, 6, 'CheckedIn', 565909, 367841, '2026-08-27 00:05:00', 1, NULL, NULL, NULL, NULL, NULL, 0),
+ (118, 14, 122, 6, 'Missed', 565909, 367841, '2026-08-28 00:05:00', 1, 'NoCheckIn', NULL, NULL, NULL, NULL, 0),
+ (119, 14, 123, 6, 'CheckedIn', 565909, 367841, '2026-08-29 00:05:00', 1, NULL, NULL, NULL, NULL, NULL, 0),
+ (120, 14, 124, 6, 'CheckedIn', 565909, 367841, '2026-09-01 00:05:00', 1, NULL, NULL, NULL, NULL, NULL, 0),
+ (121, 14, 125, 6, 'CheckedIn', 565909, 367841, '2026-09-02 00:05:00', 1, NULL, NULL, NULL, NULL, NULL, 0),
+ (122, 14, 126, 6, 'Missed', 565909, 367841, '2026-09-04 00:05:00', 1, 'NoCheckIn', NULL, NULL, NULL, NULL, 0),
+ (123, 14, 127, 6, 'CheckedIn', 565909, 367841, '2026-09-05 00:05:00', 1, NULL, NULL, NULL, NULL, NULL, 0),
+ (124, 14, 128, 6, 'CheckedIn', 565909, 367841, '2026-09-08 00:05:00', 1, NULL, NULL, NULL, NULL, NULL, 0),
+ (125, 14, 129, 6, 'CheckedIn', 565909, 367841, '2026-09-09 00:05:00', 1, NULL, NULL, NULL, NULL, NULL, 0),
+ (126, 14, 130, 6, 'CheckedIn', 565909, 367841, '2026-09-10 00:05:00', 1, NULL, NULL, NULL, NULL, NULL, 0),
+ (127, 14, 131, 6, 'Missed', 565909, 367841, '2026-09-11 00:05:00', 1, 'NoCheckIn', NULL, NULL, NULL, NULL, 0),
+ (128, 14, 132, 6, 'CheckedIn', 565909, 367841, '2026-09-12 00:05:00', 1, NULL, NULL, NULL, NULL, NULL, 0),
+ (129, 14, 133, 6, 'CheckedIn', 565909, 367841, '2026-09-15 00:05:00', 1, NULL, NULL, NULL, NULL, NULL, 0),
+ (130, 14, 135, 6, 'CheckedIn', 565909, 367841, '2026-09-17 00:05:00', 1, NULL, NULL, NULL, NULL, NULL, 0),
+ (131, 14, 136, 6, 'CheckedIn', 565909, 367841, '2026-09-17 00:05:00', 1, NULL, NULL, NULL, NULL, NULL, 0),
+ (132, 14, 137, 6, 'CheckedIn', 565909, 367841, '2026-09-18 00:05:00', 1, NULL, NULL, NULL, NULL, NULL, 0),
+ (133, 14, 138, 6, 'Cancelled', 565909, 367841, NULL, 0, NULL, 'GymClosed', N'Phòng tập nghỉ cả ngày theo lịch Manager khai báo sau khi bán gói', '2026-09-10 09:00:00', NULL, 0),
+ (134, 14, 139, 6, 'Cancelled', 565909, 367841, NULL, 0, NULL, 'ByPt', N'PT bận việc gia đình, khách đồng ý nhận lại tiền mặt', '2026-09-20 23:30:00', 16, 1),
+ (135, 14, 140, 6, 'CheckedIn', 565909, 367841, '2026-09-23 00:05:00', 1, NULL, NULL, NULL, NULL, NULL, 0),
+ (136, 14, 141, 6, 'Missed', 565909, 367841, '2026-09-24 00:05:00', 1, 'NoCheckIn', NULL, NULL, NULL, NULL, 0),
+ (137, 14, 142, 6, 'CheckedIn', 565909, 367841, '2026-09-25 00:05:00', 1, NULL, NULL, NULL, NULL, NULL, 0),
+ (138, 14, 143, 6, 'CheckedIn', 565909, 367841, '2026-09-26 00:05:00', 1, NULL, NULL, NULL, NULL, NULL, 0),
+ (139, 14, 144, 6, 'CheckedIn', 565909, 367841, '2026-09-29 00:05:00', 1, NULL, NULL, NULL, NULL, NULL, 0),
+ (140, 14, 145, 6, 'CheckedIn', 565909, 367841, '2026-09-30 00:05:00', 1, NULL, NULL, NULL, NULL, NULL, 0),
+ (141, 14, 146, 6, 'CheckedIn', 565909, 367841, '2026-10-01 00:05:00', 1, NULL, NULL, NULL, NULL, NULL, 0),
+ (142, 14, 147, 6, 'CheckedIn', 565909, 367841, '2026-10-02 00:05:00', 1, NULL, NULL, NULL, NULL, NULL, 0),
+ (143, 14, 148, 6, 'CheckedIn', 565909, 367841, '2026-10-03 00:05:00', 1, NULL, NULL, NULL, NULL, NULL, 0),
+ (144, 14, 149, 6, 'Scheduled', 565909, 367841, NULL, 0, NULL, NULL, NULL, NULL, NULL, 0),
+ (145, 14, 150, 6, 'Scheduled', 565909, 367841, NULL, 0, NULL, NULL, NULL, NULL, NULL, 0),
+ (146, 14, 151, 6, 'Scheduled', 565909, 367841, NULL, 0, NULL, NULL, NULL, NULL, NULL, 0),
+ (147, 14, 152, 6, 'Scheduled', 565909, 367841, NULL, 0, NULL, NULL, NULL, NULL, NULL, 0),
+ (148, 14, 153, 6, 'Scheduled', 565909, 367841, NULL, 0, NULL, NULL, NULL, NULL, NULL, 0),
+ (149, 14, 154, 6, 'Scheduled', 565909, 367841, NULL, 0, NULL, NULL, NULL, NULL, NULL, 0),
+ (150, 14, 155, 6, 'Scheduled', 565909, 367841, NULL, 0, NULL, NULL, NULL, NULL, NULL, 0),
+ (151, 14, 156, 6, 'Scheduled', 565909, 367841, NULL, 0, NULL, NULL, NULL, NULL, NULL, 0),
+ (152, 14, 157, 6, 'Scheduled', 565909, 367841, NULL, 0, NULL, NULL, NULL, NULL, NULL, 0),
+ (153, 14, 158, 6, 'Scheduled', 565909, 367841, NULL, 0, NULL, NULL, NULL, NULL, NULL, 0),
+ (154, 14, 159, 6, 'Scheduled', 565909, 367841, NULL, 0, NULL, NULL, NULL, NULL, NULL, 0),
+ (155, 14, 160, 6, 'Cancelled', 565909, 367841, NULL, 0, NULL, 'GymClosed', N'Phòng tập nghỉ cả ngày theo lịch Manager khai báo sau khi bán gói', '2026-08-25 09:00:00', NULL, 0),
+ (156, 14, 161, 6, 'Scheduled', 565909, 367841, NULL, 0, NULL, NULL, NULL, NULL, NULL, 0),
+ (157, 14, 162, 6, 'Scheduled', 565909, 367841, NULL, 0, NULL, NULL, NULL, NULL, NULL, 0),
+ (158, 14, 163, 6, 'Scheduled', 565909, 367841, NULL, 0, NULL, NULL, NULL, NULL, NULL, 0),
+ (159, 20, 164, 7, 'CheckedIn', 400000, 240000, '2026-09-15 00:05:00', 1, NULL, NULL, NULL, NULL, NULL, 0),
+ (160, 20, 165, 7, 'CheckedIn', 400000, 240000, '2026-09-16 00:05:00', 1, NULL, NULL, NULL, NULL, NULL, 0),
+ (161, 20, 166, 7, 'Missed', 400000, 240000, '2026-09-17 00:05:00', 1, 'NoCheckIn', NULL, NULL, NULL, NULL, 0),
+ (162, 20, 167, 7, 'CheckedIn', 400000, 240000, '2026-09-18 00:05:00', 1, NULL, NULL, NULL, NULL, NULL, 0),
+ (163, 20, 168, 7, 'CheckedIn', 400000, 240000, '2026-09-22 00:05:00', 1, NULL, NULL, NULL, NULL, NULL, 0),
+ (164, 20, 169, 7, 'CheckedIn', 400000, 240000, '2026-09-23 00:05:00', 1, NULL, NULL, NULL, NULL, NULL, 0),
+ (165, 20, 170, 7, 'CheckedIn', 400000, 240000, '2026-09-24 00:05:00', 1, NULL, NULL, NULL, NULL, NULL, 0),
+ (166, 20, 171, 7, 'CheckedIn', 400000, 240000, '2026-09-25 00:05:00', 1, NULL, NULL, NULL, NULL, NULL, 0),
+ (167, 20, 172, 7, 'CheckedIn', 400000, 240000, '2026-09-26 00:05:00', 1, NULL, NULL, NULL, NULL, NULL, 0),
+ (168, 20, 173, 7, 'CheckedIn', 400000, 240000, '2026-09-29 00:05:00', 1, NULL, NULL, NULL, NULL, NULL, 0),
+ (169, 20, 174, 7, 'Missed', 400000, 240000, '2026-09-30 00:05:00', 1, 'NoCheckIn', NULL, NULL, NULL, NULL, 0),
+ (170, 20, 175, 7, 'CheckedIn', 400000, 240000, '2026-10-01 00:05:00', 1, NULL, NULL, NULL, NULL, NULL, 0),
+ (171, 20, 176, 7, 'CheckedIn', 400000, 240000, '2026-10-02 00:05:00', 1, NULL, NULL, NULL, NULL, NULL, 0),
+ (172, 20, 177, 7, 'CheckedIn', 400000, 240000, '2026-10-03 00:05:00', 1, NULL, NULL, NULL, NULL, NULL, 0),
+ (173, 20, 178, 7, 'Scheduled', 400000, 240000, NULL, 0, NULL, NULL, NULL, NULL, NULL, 0),
+ (174, 20, 179, 7, 'Scheduled', 400000, 240000, NULL, 0, NULL, NULL, NULL, NULL, NULL, 0),
+ (175, 20, 180, 7, 'Scheduled', 400000, 240000, NULL, 0, NULL, NULL, NULL, NULL, NULL, 0),
+ (176, 20, 181, 7, 'Scheduled', 400000, 240000, NULL, 0, NULL, NULL, NULL, NULL, NULL, 0),
+ (177, 20, 182, 7, 'Scheduled', 400000, 240000, NULL, 0, NULL, NULL, NULL, NULL, NULL, 0),
+ (178, 20, 183, 7, 'Scheduled', 400000, 240000, NULL, 0, NULL, NULL, NULL, NULL, NULL, 0),
+ (179, 20, 184, 7, 'Scheduled', 400000, 240000, NULL, 0, NULL, NULL, NULL, NULL, NULL, 0),
+ (180, 20, 185, 7, 'Scheduled', 400000, 240000, NULL, 0, NULL, NULL, NULL, NULL, NULL, 0),
+ (181, 25, 186, 5, 'CheckedIn', 400000, 280000, '2026-09-15 00:05:00', 1, NULL, NULL, NULL, NULL, NULL, 0),
+ (182, 25, 187, 5, 'CheckedIn', 400000, 280000, '2026-09-16 00:05:00', 1, NULL, NULL, NULL, NULL, NULL, 0),
+ (183, 25, 188, 5, 'CheckedIn', 400000, 280000, '2026-09-17 00:05:00', 1, NULL, NULL, NULL, NULL, NULL, 0),
+ (184, 25, 189, 5, 'CheckedIn', 400000, 280000, '2026-09-18 00:05:00', 1, NULL, NULL, NULL, NULL, NULL, 0),
+ (185, 25, 190, 5, 'CheckedIn', 400000, 280000, '2026-09-22 00:05:00', 1, NULL, NULL, NULL, NULL, NULL, 0),
+ (186, 25, 191, 5, 'CheckedIn', 400000, 280000, '2026-09-23 00:05:00', 1, NULL, NULL, NULL, NULL, NULL, 0),
+ (187, 25, 192, 5, 'CheckedIn', 400000, 280000, '2026-09-24 00:05:00', 1, NULL, NULL, NULL, NULL, NULL, 0),
+ (188, 25, 194, 5, 'CheckedIn', 400000, 280000, '2026-09-26 00:05:00', 1, NULL, NULL, NULL, NULL, NULL, 0),
+ (189, 25, 195, 5, 'Missed', 400000, 280000, '2026-09-26 00:05:00', 1, 'NoCheckIn', NULL, NULL, NULL, NULL, 0),
+ (190, 25, 196, 5, 'Missed', 400000, 280000, '2026-09-29 00:05:00', 1, 'NoCheckIn', NULL, NULL, NULL, NULL, 0),
+ (191, 25, 197, 5, 'CheckedIn', 400000, 280000, '2026-09-30 00:05:00', 1, NULL, NULL, NULL, NULL, NULL, 0),
+ (192, 25, 198, 5, 'Missed', 400000, 280000, '2026-10-01 00:05:00', 1, 'NoCheckIn', NULL, NULL, NULL, NULL, 0),
+ (193, 25, 199, 5, 'CheckedIn', 400000, 280000, '2026-10-02 00:05:00', 1, NULL, NULL, NULL, NULL, NULL, 0),
+ (194, 25, 200, 5, 'CheckedIn', 400000, 280000, '2026-10-03 00:05:00', 1, NULL, NULL, NULL, NULL, NULL, 0),
+ (195, 25, 201, 5, 'Scheduled', 400000, 280000, NULL, 0, NULL, NULL, NULL, NULL, NULL, 0),
+ (196, 25, 202, 5, 'Scheduled', 400000, 280000, NULL, 0, NULL, NULL, NULL, NULL, NULL, 0),
+ (197, 25, 203, 5, 'Scheduled', 400000, 280000, NULL, 0, NULL, NULL, NULL, NULL, NULL, 0),
+ (198, 25, 204, 5, 'Scheduled', 400000, 280000, NULL, 0, NULL, NULL, NULL, NULL, NULL, 0),
+ (199, 25, 205, 5, 'Scheduled', 400000, 280000, NULL, 0, NULL, NULL, NULL, NULL, NULL, 0),
+ (200, 25, 206, 5, 'Scheduled', 400000, 280000, NULL, 0, NULL, NULL, NULL, NULL, NULL, 0),
+ (201, 25, 207, 5, 'Scheduled', 400000, 280000, NULL, 0, NULL, NULL, NULL, NULL, NULL, 0),
+ (202, 25, 208, 5, 'Scheduled', 400000, 280000, NULL, 0, NULL, NULL, NULL, NULL, NULL, 0),
+ (203, 29, 209, 7, 'Scheduled', 450000, 270000, NULL, 0, NULL, NULL, NULL, NULL, NULL, 0),
+ (204, 80, 210, 13, 'CheckedIn', 400000, 240000, '2026-09-22 00:05:00', 1, NULL, NULL, NULL, NULL, NULL, 0),
+ (205, 80, 211, 13, 'CheckedIn', 400000, 240000, '2026-09-23 00:05:00', 1, NULL, NULL, NULL, NULL, NULL, 0),
+ (206, 80, 212, 13, 'CheckedIn', 400000, 240000, '2026-09-24 00:05:00', 1, NULL, NULL, NULL, NULL, NULL, 0),
+ (207, 80, 213, 13, 'CheckedIn', 400000, 240000, '2026-09-25 00:05:00', 1, NULL, NULL, NULL, NULL, NULL, 0),
+ (208, 80, 214, 13, 'CheckedIn', 400000, 240000, '2026-09-26 00:05:00', 1, NULL, NULL, NULL, NULL, NULL, 0),
+ (209, 80, 215, 13, 'CheckedIn', 400000, 240000, '2026-09-29 00:05:00', 1, NULL, NULL, NULL, NULL, NULL, 0),
+ (210, 80, 216, 13, 'CheckedIn', 400000, 240000, '2026-09-30 00:05:00', 1, NULL, NULL, NULL, NULL, NULL, 0),
+ (211, 80, 217, 13, 'CheckedIn', 400000, 240000, '2026-10-01 00:05:00', 1, NULL, NULL, NULL, NULL, NULL, 0),
+ (212, 80, 218, 13, 'CheckedIn', 400000, 240000, '2026-10-02 00:05:00', 1, NULL, NULL, NULL, NULL, NULL, 0),
+ (213, 80, 219, 13, 'CheckedIn', 400000, 240000, '2026-10-03 00:05:00', 1, NULL, NULL, NULL, NULL, NULL, 0),
+ (214, 80, 220, 13, 'Scheduled', 400000, 240000, NULL, 0, NULL, NULL, NULL, NULL, NULL, 0),
+ (215, 80, 221, 13, 'Scheduled', 400000, 240000, NULL, 0, NULL, NULL, NULL, NULL, NULL, 0),
+ (216, 80, 222, 13, 'Scheduled', 400000, 240000, NULL, 0, NULL, NULL, NULL, NULL, NULL, 0),
+ (217, 80, 223, 13, 'Scheduled', 400000, 240000, NULL, 0, NULL, NULL, NULL, NULL, NULL, 0),
+ (218, 80, 224, 13, 'Scheduled', 400000, 240000, NULL, 0, NULL, NULL, NULL, NULL, NULL, 0),
+ (219, 80, 225, 13, 'Scheduled', 400000, 240000, NULL, 0, NULL, NULL, NULL, NULL, NULL, 0),
+ (220, 80, 226, 13, 'Scheduled', 400000, 240000, NULL, 0, NULL, NULL, NULL, NULL, NULL, 0),
+ (221, 80, 227, 13, 'Scheduled', 400000, 240000, NULL, 0, NULL, NULL, NULL, NULL, NULL, 0),
+ (222, 80, 228, 13, 'Scheduled', 400000, 240000, NULL, 0, NULL, NULL, NULL, NULL, NULL, 0),
+ (223, 80, 229, 13, 'Scheduled', 400000, 240000, NULL, 0, NULL, NULL, NULL, NULL, NULL, 0),
+ (224, 80, 230, 13, 'Scheduled', 400000, 240000, NULL, 0, NULL, NULL, NULL, NULL, NULL, 0),
+ (225, 80, 231, 13, 'Scheduled', 400000, 240000, NULL, 0, NULL, NULL, NULL, NULL, NULL, 0),
+ (226, 81, 232, 6, 'CheckedIn', 400000, 260000, '2026-09-22 00:05:00', 1, NULL, NULL, NULL, NULL, NULL, 0),
+ (227, 81, 233, 6, 'Missed', 400000, 260000, '2026-09-23 00:05:00', 1, 'NoCheckIn', NULL, NULL, NULL, NULL, 0),
+ (228, 81, 234, 6, 'CheckedIn', 400000, 260000, '2026-09-24 00:05:00', 1, NULL, NULL, NULL, NULL, NULL, 0),
+ (229, 81, 235, 6, 'CheckedIn', 400000, 260000, '2026-09-25 00:05:00', 1, NULL, NULL, NULL, NULL, NULL, 0),
+ (230, 81, 236, 6, 'CheckedIn', 400000, 260000, '2026-09-26 00:05:00', 1, NULL, NULL, NULL, NULL, NULL, 0),
+ (231, 81, 237, 6, 'Missed', 400000, 260000, '2026-09-29 00:05:00', 1, 'NoCheckIn', NULL, NULL, NULL, NULL, 0),
+ (232, 81, 238, 6, 'CheckedIn', 400000, 260000, '2026-09-30 00:05:00', 1, NULL, NULL, NULL, NULL, NULL, 0),
+ (233, 81, 239, 6, 'CheckedIn', 400000, 260000, '2026-10-01 00:05:00', 1, NULL, NULL, NULL, NULL, NULL, 0),
+ (234, 81, 240, 6, 'CheckedIn', 400000, 260000, '2026-10-02 00:05:00', 1, NULL, NULL, NULL, NULL, NULL, 0),
+ (235, 81, 241, 6, 'CheckedIn', 400000, 260000, '2026-10-03 00:05:00', 1, NULL, NULL, NULL, NULL, NULL, 0),
+ (236, 81, 242, 6, 'Scheduled', 400000, 260000, NULL, 0, NULL, NULL, NULL, NULL, NULL, 0),
+ (237, 81, 243, 6, 'Scheduled', 400000, 260000, NULL, 0, NULL, NULL, NULL, NULL, NULL, 0),
+ (238, 81, 244, 6, 'Scheduled', 400000, 260000, NULL, 0, NULL, NULL, NULL, NULL, NULL, 0),
+ (239, 81, 245, 6, 'Scheduled', 400000, 260000, NULL, 0, NULL, NULL, NULL, NULL, NULL, 0),
+ (240, 81, 246, 6, 'Scheduled', 400000, 260000, NULL, 0, NULL, NULL, NULL, NULL, NULL, 0),
+ (241, 81, 247, 6, 'Scheduled', 400000, 260000, NULL, 0, NULL, NULL, NULL, NULL, NULL, 0),
+ (242, 81, 248, 6, 'Scheduled', 400000, 260000, NULL, 0, NULL, NULL, NULL, NULL, NULL, 0),
+ (243, 81, 249, 6, 'Scheduled', 400000, 260000, NULL, 0, NULL, NULL, NULL, NULL, NULL, 0),
+ (244, 81, 250, 6, 'Scheduled', 400000, 260000, NULL, 0, NULL, NULL, NULL, NULL, NULL, 0),
+ (245, 81, 251, 6, 'Scheduled', 400000, 260000, NULL, 0, NULL, NULL, NULL, NULL, NULL, 0),
+ (246, 81, 252, 6, 'Scheduled', 400000, 260000, NULL, 0, NULL, NULL, NULL, NULL, NULL, 0),
+ (247, 81, 253, 6, 'Scheduled', 400000, 260000, NULL, 0, NULL, NULL, NULL, NULL, NULL, 0),
+ (248, 82, 254, 5, 'CheckedIn', 375000, 262500, '2026-09-29 00:05:00', 1, NULL, NULL, NULL, NULL, NULL, 0),
+ (249, 82, 255, 5, 'CheckedIn', 375000, 262500, '2026-09-30 00:05:00', 1, NULL, NULL, NULL, NULL, NULL, 0),
+ (250, 82, 256, 5, 'CheckedIn', 375000, 262500, '2026-10-01 00:05:00', 1, NULL, NULL, NULL, NULL, NULL, 0),
+ (251, 82, 257, 5, 'CheckedIn', 375000, 262500, '2026-10-02 00:05:00', 1, NULL, NULL, NULL, NULL, NULL, 0),
+ (252, 82, 258, 5, 'CheckedIn', 375000, 262500, '2026-10-03 00:05:00', 1, NULL, NULL, NULL, NULL, NULL, 0),
+ (253, 82, 259, 5, 'Scheduled', 375000, 262500, NULL, 0, NULL, NULL, NULL, NULL, NULL, 0),
+ (254, 82, 260, 5, 'Scheduled', 375000, 262500, NULL, 0, NULL, NULL, NULL, NULL, NULL, 0),
+ (255, 82, 261, 5, 'Scheduled', 375000, 262500, NULL, 0, NULL, NULL, NULL, NULL, NULL, 0),
+ (256, 82, 262, 5, 'Scheduled', 375000, 262500, NULL, 0, NULL, NULL, NULL, NULL, NULL, 0),
+ (257, 82, 263, 5, 'Scheduled', 375000, 262500, NULL, 0, NULL, NULL, NULL, NULL, NULL, 0),
+ (258, 82, 264, 5, 'Scheduled', 375000, 262500, NULL, 0, NULL, NULL, NULL, NULL, NULL, 0),
+ (259, 82, 265, 5, 'Scheduled', 375000, 262500, NULL, 0, NULL, NULL, NULL, NULL, NULL, 0),
+ (260, 82, 266, 5, 'Scheduled', 375000, 262500, NULL, 0, NULL, NULL, NULL, NULL, NULL, 0),
+ (261, 82, 267, 5, 'Scheduled', 375000, 262500, NULL, 0, NULL, NULL, NULL, NULL, NULL, 0),
+ (262, 82, 268, 5, 'Scheduled', 375000, 262500, NULL, 0, NULL, NULL, NULL, NULL, NULL, 0),
+ (263, 82, 269, 5, 'Scheduled', 375000, 262500, NULL, 0, NULL, NULL, NULL, NULL, NULL, 0),
+ (264, 82, 270, 5, 'Scheduled', 375000, 262500, NULL, 0, NULL, NULL, NULL, NULL, NULL, 0),
+ (265, 82, 271, 5, 'Scheduled', 375000, 262500, NULL, 0, NULL, NULL, NULL, NULL, NULL, 0),
+ (266, 82, 272, 5, 'Scheduled', 375000, 262500, NULL, 0, NULL, NULL, NULL, NULL, NULL, 0),
+ (267, 82, 273, 5, 'Scheduled', 375000, 262500, NULL, 0, NULL, NULL, NULL, NULL, NULL, 0),
+ (268, 82, 274, 5, 'Scheduled', 375000, 262500, NULL, 0, NULL, NULL, NULL, NULL, NULL, 0),
+ (269, 82, 275, 5, 'Scheduled', 375000, 262500, NULL, 0, NULL, NULL, NULL, NULL, NULL, 0),
+ (270, 82, 276, 5, 'Scheduled', 375000, 262500, NULL, 0, NULL, NULL, NULL, NULL, NULL, 0),
+ (271, 82, 277, 5, 'Scheduled', 375000, 262500, NULL, 0, NULL, NULL, NULL, NULL, NULL, 0),
+ (272, 82, 278, 5, 'Scheduled', 375000, 262500, NULL, 0, NULL, NULL, NULL, NULL, NULL, 0),
+ (273, 82, 279, 5, 'Scheduled', 375000, 262500, NULL, 0, NULL, NULL, NULL, NULL, NULL, 0),
+ (274, 82, 280, 5, 'Scheduled', 375000, 262500, NULL, 0, NULL, NULL, NULL, NULL, NULL, 0),
+ (275, 82, 281, 5, 'Scheduled', 375000, 262500, NULL, 0, NULL, NULL, NULL, NULL, NULL, 0),
+ (276, 82, 282, 5, 'Scheduled', 375000, 262500, NULL, 0, NULL, NULL, NULL, NULL, NULL, 0),
+ (277, 82, 283, 5, 'Scheduled', 375000, 262500, NULL, 0, NULL, NULL, NULL, NULL, NULL, 0),
+ (278, 82, 284, 5, 'Scheduled', 375000, 262500, NULL, 0, NULL, NULL, NULL, NULL, NULL, 0),
+ (279, 82, 285, 5, 'Scheduled', 375000, 262500, NULL, 0, NULL, NULL, NULL, NULL, NULL, 0),
+ (280, 82, 286, 5, 'Scheduled', 375000, 262500, NULL, 0, NULL, NULL, NULL, NULL, NULL, 0),
+ (281, 82, 287, 5, 'Scheduled', 375000, 262500, NULL, 0, NULL, NULL, NULL, NULL, NULL, 0),
+ (282, 82, 288, 5, 'Scheduled', 375000, 262500, NULL, 0, NULL, NULL, NULL, NULL, NULL, 0),
+ (283, 82, 289, 5, 'Scheduled', 375000, 262500, NULL, 0, NULL, NULL, NULL, NULL, NULL, 0),
+ (284, 82, 290, 5, 'Scheduled', 375000, 262500, NULL, 0, NULL, NULL, NULL, NULL, NULL, 0),
+ (285, 82, 291, 5, 'Scheduled', 375000, 262500, NULL, 0, NULL, NULL, NULL, NULL, NULL, 0),
+ (286, 82, 292, 5, 'Scheduled', 375000, 262500, NULL, 0, NULL, NULL, NULL, NULL, NULL, 0),
+ (287, 82, 293, 5, 'Scheduled', 375000, 262500, NULL, 0, NULL, NULL, NULL, NULL, NULL, 0),
+ (288, 82, 294, 5, 'Scheduled', 375000, 262500, NULL, 0, NULL, NULL, NULL, NULL, NULL, 0),
+ (289, 82, 295, 5, 'Scheduled', 375000, 262500, NULL, 0, NULL, NULL, NULL, NULL, NULL, 0),
+ (290, 82, 296, 5, 'Scheduled', 375000, 262500, NULL, 0, NULL, NULL, NULL, NULL, NULL, 0),
+ (291, 82, 297, 5, 'Scheduled', 375000, 262500, NULL, 0, NULL, NULL, NULL, NULL, NULL, 0),
+ (292, 83, 298, 14, 'CheckedIn', 400000, 240000, '2026-09-15 00:05:00', 1, NULL, NULL, NULL, NULL, NULL, 0),
+ (293, 83, 299, 14, 'CheckedIn', 400000, 240000, '2026-09-16 00:05:00', 1, NULL, NULL, NULL, NULL, NULL, 0),
+ (294, 83, 300, 14, 'CheckedIn', 400000, 240000, '2026-09-17 00:05:00', 1, NULL, NULL, NULL, NULL, NULL, 0),
+ (295, 83, 301, 14, 'CheckedIn', 400000, 240000, '2026-09-18 00:05:00', 1, NULL, NULL, NULL, NULL, NULL, 0),
+ (296, 83, 302, 14, 'Missed', 400000, 240000, '2026-09-22 00:05:00', 1, 'NoMembership', NULL, NULL, NULL, NULL, 0),
+ (297, 83, 303, 14, 'Missed', 400000, 240000, '2026-09-23 00:05:00', 1, 'NoMembership', NULL, NULL, NULL, NULL, 0),
+ (298, 83, 304, 14, 'Missed', 400000, 240000, '2026-09-24 00:05:00', 1, 'NoMembership', NULL, NULL, NULL, NULL, 0),
+ (299, 83, 305, 14, 'Missed', 400000, 240000, '2026-09-25 00:05:00', 1, 'NoMembership', NULL, NULL, NULL, NULL, 0),
+ (300, 83, 306, 14, 'Missed', 400000, 240000, '2026-09-26 00:05:00', 1, 'NoMembership', NULL, NULL, NULL, NULL, 0),
+ (301, 83, 307, 14, 'Missed', 400000, 240000, '2026-09-29 00:05:00', 1, 'NoMembership', NULL, NULL, NULL, NULL, 0),
+ (302, 83, 308, 14, 'Missed', 400000, 240000, '2026-09-30 00:05:00', 1, 'NoMembership', NULL, NULL, NULL, NULL, 0),
+ (303, 83, 309, 14, 'Missed', 400000, 240000, '2026-10-01 00:05:00', 1, 'NoMembership', NULL, NULL, NULL, NULL, 0),
+ (304, 83, 310, 14, 'Missed', 400000, 240000, '2026-10-02 00:05:00', 1, 'NoMembership', NULL, NULL, NULL, NULL, 0),
+ (305, 83, 311, 14, 'Missed', 400000, 240000, '2026-10-03 00:05:00', 1, 'NoMembership', NULL, NULL, NULL, NULL, 0),
+ (306, 83, 312, 14, 'Scheduled', 400000, 240000, NULL, 0, NULL, NULL, NULL, NULL, NULL, 0),
+ (307, 83, 313, 14, 'Scheduled', 400000, 240000, NULL, 0, NULL, NULL, NULL, NULL, NULL, 0),
+ (308, 83, 314, 14, 'Scheduled', 400000, 240000, NULL, 0, NULL, NULL, NULL, NULL, NULL, 0),
+ (309, 83, 315, 14, 'Scheduled', 400000, 240000, NULL, 0, NULL, NULL, NULL, NULL, NULL, 0),
+ (310, 83, 316, 14, 'Scheduled', 400000, 240000, NULL, 0, NULL, NULL, NULL, NULL, NULL, 0),
+ (311, 83, 317, 14, 'Scheduled', 400000, 240000, NULL, 0, NULL, NULL, NULL, NULL, NULL, 0),
+ (312, 83, 318, 14, 'Scheduled', 400000, 240000, NULL, 0, NULL, NULL, NULL, NULL, NULL, 0),
+ (313, 83, 319, 14, 'Scheduled', 400000, 240000, NULL, 0, NULL, NULL, NULL, NULL, NULL, 0),
+ (314, 84, 320, 7, 'Scheduled', 382609, 229565, NULL, 0, NULL, NULL, NULL, NULL, NULL, 0),
+ (315, 84, 321, 7, 'Scheduled', 382609, 229565, NULL, 0, NULL, NULL, NULL, NULL, NULL, 0),
+ (316, 84, 322, 7, 'Scheduled', 382609, 229565, NULL, 0, NULL, NULL, NULL, NULL, NULL, 0),
+ (317, 84, 323, 7, 'Scheduled', 382609, 229565, NULL, 0, NULL, NULL, NULL, NULL, NULL, 0),
+ (318, 84, 324, 7, 'Scheduled', 382609, 229565, NULL, 0, NULL, NULL, NULL, NULL, NULL, 0),
+ (319, 84, 325, 7, 'Scheduled', 382609, 229565, NULL, 0, NULL, NULL, NULL, NULL, NULL, 0),
+ (320, 84, 326, 7, 'Scheduled', 382609, 229565, NULL, 0, NULL, NULL, NULL, NULL, NULL, 0),
+ (321, 84, 327, 7, 'Scheduled', 382609, 229565, NULL, 0, NULL, NULL, NULL, NULL, NULL, 0),
+ (322, 84, 328, 7, 'Scheduled', 382609, 229565, NULL, 0, NULL, NULL, NULL, NULL, NULL, 0),
+ (323, 84, 329, 7, 'Scheduled', 382609, 229565, NULL, 0, NULL, NULL, NULL, NULL, NULL, 0),
+ (324, 84, 330, 7, 'Scheduled', 382609, 229565, NULL, 0, NULL, NULL, NULL, NULL, NULL, 0),
+ (325, 84, 331, 7, 'Scheduled', 382609, 229565, NULL, 0, NULL, NULL, NULL, NULL, NULL, 0),
+ (326, 84, 332, 7, 'Scheduled', 382609, 229565, NULL, 0, NULL, NULL, NULL, NULL, NULL, 0),
+ (327, 84, 333, 7, 'Scheduled', 382609, 229565, NULL, 0, NULL, NULL, NULL, NULL, NULL, 0),
+ (328, 84, 334, 7, 'Scheduled', 382609, 229565, NULL, 0, NULL, NULL, NULL, NULL, NULL, 0),
+ (329, 84, 335, 7, 'Scheduled', 382609, 229565, NULL, 0, NULL, NULL, NULL, NULL, NULL, 0),
+ (330, 84, 336, 7, 'Scheduled', 382609, 229565, NULL, 0, NULL, NULL, NULL, NULL, NULL, 0),
+ (331, 84, 337, 7, 'Scheduled', 382609, 229565, NULL, 0, NULL, NULL, NULL, NULL, NULL, 0),
+ (332, 84, 338, 7, 'Scheduled', 382609, 229565, NULL, 0, NULL, NULL, NULL, NULL, NULL, 0),
+ (333, 84, 339, 7, 'Scheduled', 382609, 229565, NULL, 0, NULL, NULL, NULL, NULL, NULL, 0),
+ (334, 84, 340, 7, 'Scheduled', 382609, 229565, NULL, 0, NULL, NULL, NULL, NULL, NULL, 0),
+ (335, 84, 341, 7, 'Scheduled', 382609, 229565, NULL, 0, NULL, NULL, NULL, NULL, NULL, 0),
+ (336, 84, 342, 7, 'Scheduled', 382609, 229565, NULL, 0, NULL, NULL, NULL, NULL, NULL, 0),
+ (337, 132, 343, 6, 'CheckedIn', 450000, 292500, '2026-09-24 00:05:00', 1, NULL, NULL, NULL, NULL, NULL, 0),
+ (338, 133, 344, 7, 'CheckedIn', 450000, 270000, '2026-09-06 00:05:00', 1, NULL, NULL, NULL, NULL, NULL, 0),
+ (339, 134, 345, 13, 'CheckedIn', 450000, 270000, '2026-09-13 00:05:00', 1, NULL, NULL, NULL, NULL, NULL, 0),
+ (340, 135, 346, 7, 'CheckedIn', 450000, 270000, '2026-09-28 00:05:00', 1, NULL, NULL, NULL, NULL, NULL, 0),
+ (341, 136, 347, 6, 'CheckedIn', 450000, 292500, '2026-09-15 00:05:00', 1, NULL, NULL, NULL, NULL, NULL, 0),
+ (342, 137, 348, 6, 'Missed', 450000, 292500, '2026-09-30 00:05:00', 1, 'NoCheckIn', NULL, NULL, NULL, NULL, 0),
+ (343, 138, 349, 13, 'CheckedIn', 450000, 270000, '2026-09-21 00:05:00', 1, NULL, NULL, NULL, NULL, NULL, 0),
+ (344, 139, 350, 7, 'CheckedIn', 450000, 270000, '2026-09-18 00:05:00', 1, NULL, NULL, NULL, NULL, NULL, 0),
+ (345, 140, 351, 13, 'CheckedIn', 450000, 270000, '2026-09-28 00:05:00', 1, NULL, NULL, NULL, NULL, NULL, 0),
+ (346, 141, 352, 13, 'CheckedIn', 450000, 270000, '2026-09-22 00:05:00', 1, NULL, NULL, NULL, NULL, NULL, 0),
+ (347, 142, 353, 5, 'CheckedIn', 450000, 315000, '2026-09-06 00:05:00', 1, NULL, NULL, NULL, NULL, NULL, 0),
+ (348, 143, 354, 5, 'Missed', 450000, 315000, '2026-10-01 00:05:00', 1, 'NoCheckIn', NULL, NULL, NULL, NULL, 0),
+ (349, 144, 355, 6, 'CheckedIn', 450000, 292500, '2026-09-24 00:05:00', 1, NULL, NULL, NULL, NULL, NULL, 0),
+ (350, 145, 356, 7, 'CheckedIn', 450000, 270000, '2026-09-12 00:05:00', 1, NULL, NULL, NULL, NULL, NULL, 0),
+ (351, 146, 357, 5, 'CheckedIn', 450000, 315000, '2026-09-25 00:05:00', 1, NULL, NULL, NULL, NULL, NULL, 0),
+ (352, 147, 358, 7, 'CheckedIn', 450000, 270000, '2026-09-26 00:05:00', 1, NULL, NULL, NULL, NULL, NULL, 0),
+ (353, 148, 359, 5, 'CheckedIn', 450000, 315000, '2026-09-30 00:05:00', 1, NULL, NULL, NULL, NULL, NULL, 0),
+ (354, 149, 360, 6, 'CheckedIn', 450000, 292500, '2026-09-12 00:05:00', 1, NULL, NULL, NULL, NULL, NULL, 0);
 SET IDENTITY_INSERT Sessions OFF;
-GO
-
--- Buổi bị hủy ở trên vẫn để slot 11 là Booked cho đúng lịch sử? Không: slot đã nhả.
-UPDATE TimeSlots SET Status = 'Free' WHERE TimeSlotId = 11;  -- buổi 8 bị PT hủy → khung giờ trả về Free
-GO
 
 /* ============================================================================
-   17. SESSION SWAP LOGS — khách đổi buổi sang cuối tuần
+   SessionMoveLogs — 4 dòng.
    ============================================================================ */
-SET IDENTITY_INSERT SessionSwapLogs ON;
-INSERT INTO SessionSwapLogs (SessionSwapLogId, SessionId, OldTimeSlotId, NewTimeSlotId, RequestedByAccountId, SwappedAt) VALUES
- (1, 4, 5, 6, 5, '2026-09-10 21:00:00'); -- khách Đỗ Thị Mai (Account 5) đổi buổi T6 sang T7
-SET IDENTITY_INSERT SessionSwapLogs OFF;
-GO
+SET IDENTITY_INSERT SessionMoveLogs ON;
+INSERT INTO SessionMoveLogs (SessionMoveLogId, SessionId, MoveType, OldTimeSlotId, NewTimeSlotId, OldPtEmployeeId, NewPtEmployeeId, RequestedByAccountId, Reason, MovedAt) VALUES
+ (1, 75, 'CustomerSwap', 77, 78, 5, 5, 5, NULL, '2026-09-09 20:15:00'),
+ (2, 87, 'PtTransfer', 90, 91, 5, 13, 15, N'PT Sơn ốm, khách chọn PT Long', '2026-09-27 20:15:00'),
+ (3, 130, 'PtReschedule', 134, 135, 6, 6, 16, N'PT bận họp chuyên môn', '2026-09-13 20:15:00'),
+ (4, 188, 'PtOnBehalfSwap', 193, 194, 5, 5, 15, N'Khách gọi điện nhờ PT dời buổi', '2026-09-22 20:15:00');
+SET IDENTITY_INSERT SessionMoveLogs OFF;
 
 /* ============================================================================
-   18. LEAVE REQUESTS — đủ 3 trạng thái, có cả đơn bị hệ thống tự từ chối
+   LeaveRequests — 7 dòng.
    ============================================================================ */
 SET IDENTITY_INSERT LeaveRequests ON;
-INSERT INTO LeaveRequests (LeaveRequestId, EmployeeId, ReviewedByEmployeeId, LeaveType, LeaveDate, ShiftType,
-                           Reason, Status, RejectReason, SubmittedAt, ReviewedAt, ReminderSentAt) VALUES
- (1, 5, 2   , 'Annual', '2026-09-18', 'Morning'  , N'Về quê giỗ ông'                 , 'Approved', NULL, '2026-09-17 10:00:00', '2026-09-17 15:30:00', NULL),
- (2, 6, NULL, 'Sick'  , '2026-09-26', 'FullDay'  , N'Bị cúm, có giấy khám'           , 'Pending' , NULL, '2026-09-23 08:00:00', NULL                 , NULL), -- chưa nhắc: JOB-07 sẽ nhắc 1 lần trước 20:00 ngày 25/09
- (3, 7, 2   , 'Unpaid', '2026-09-20', 'Afternoon', N'Có việc cá nhân'                , 'Rejected', N'Ca chiều chỉ còn 2 PT, duyệt sẽ thiếu người', '2026-09-19 09:00:00', '2026-09-19 17:00:00', NULL),
- (4, 4, NULL, 'Annual', '2026-09-16', 'Morning'  , N'Đưa con đi khám'                , 'Rejected', N'Quá hạn duyệt', '2026-09-15 14:00:00', '2026-09-15 20:00:00', '2026-09-15 19:00:00'), -- đã nhắc lúc 19:00 nhưng Manager không duyệt → hệ thống tự từ chối
- (5, 3, 2   , 'Annual', '2026-09-30', 'Afternoon', N'Đi đám cưới bạn'                , 'Approved', NULL, '2026-09-22 09:30:00', '2026-09-22 11:00:00', NULL);
+INSERT INTO LeaveRequests (LeaveRequestId, EmployeeId, ReviewedByEmployeeId, LeaveType, LeaveDate, ShiftType, Reason, Status, RejectReason, SubmittedAt, ReviewedAt, ReminderSentAt) VALUES
+ (1, 5, 2, 'Annual', '2026-09-19', 'Morning', N'Về quê giỗ ông', 'Approved', NULL, '2026-09-17 10:00:00', '2026-09-17 15:30:00', NULL),
+ (2, 7, 2, 'Unpaid', '2026-09-19', 'Afternoon', N'Có việc cá nhân', 'Rejected', N'Ca chiều chỉ còn 2 PT, duyệt sẽ thiếu người (CBR-88)', '2026-09-18 09:00:00', '2026-09-18 17:00:00', NULL),
+ (3, 4, NULL, 'Annual', '2026-09-16', 'Morning', N'Đưa con đi khám', 'Rejected', N'Quá hạn duyệt', '2026-09-15 14:00:00', '2026-09-15 20:00:00', '2026-09-15 19:00:00'),
+ (4, 3, 2, 'Annual', '2026-10-14', 'Afternoon', N'Đi đám cưới bạn', 'Approved', NULL, '2026-10-01 09:30:00', '2026-10-01 11:00:00', NULL),
+ (5, 6, NULL, 'Sick', '2026-10-10', 'FullDay', N'Lịch tái khám định kỳ', 'Pending', NULL, '2026-10-02 08:00:00', NULL, NULL),
+ (6, 13, NULL, 'Annual', '2026-10-12', 'Morning', N'Thi chứng chỉ huấn luyện', 'Pending', NULL, '2026-10-02 14:00:00', NULL, NULL),
+ (7, 9, 2, 'Sick', '2026-09-24', 'FullDay', N'Sốt cao, có giấy khám', 'Approved', NULL, '2026-09-23 11:00:00', '2026-09-23 16:00:00', NULL);
 SET IDENTITY_INSERT LeaveRequests OFF;
-GO
 
 /* ============================================================================
-   19. FACILITIES — đủ 3 tình trạng thiết bị
+   Facilities — 10 dòng.
    ============================================================================ */
 SET IDENTITY_INSERT Facilities ON;
 INSERT INTO Facilities (FacilityId, FacilityName, Category, Location, Quantity, Status) VALUES
- (1, N'Máy chạy bộ Technogym'   , N'Cardio'      , N'Khu cardio tầng 1', 8 , 'Available'),
- (2, N'Xe đạp tập'              , N'Cardio'      , N'Khu cardio tầng 1', 6 , 'Available'),
- (3, N'Giàn tạ đa năng'         , N'Machines'    , N'Khu tạ tầng 2'    , 3 , 'Available'),
- (4, N'Bộ tạ đơn 2–40kg'        , N'FreeWeights' , N'Khu tạ tầng 2'    , 20, 'Available'),
- (5, N'Máy ép ngực'             , N'Machines'    , N'Khu tạ tầng 2'    , 2 , 'UnderMaintenance'), -- đang có yêu cầu sửa
- (6, N'Ghế đẩy vai'             , N'Machines'    , N'Khu tạ tầng 2'    , 2 , 'Available'),
- (7, N'Tủ khóa cá nhân'         , N'Amenities'   , N'Phòng thay đồ'    , 60, 'Available'),
- (8, N'Máy leo cầu thang cũ'    , N'Cardio'      , N'Kho'              , 1 , 'Retired');
+ (1, N'Máy chạy bộ Technogym', 'Cardio', N'Khu cardio tầng 1', 8, 'Available'),
+ (2, N'Xe đạp tập', 'Cardio', N'Khu cardio tầng 1', 6, 'Available'),
+ (3, N'Giàn tạ đa năng', 'Machines', N'Khu tạ tầng 2', 3, 'Available'),
+ (4, N'Bộ tạ đơn 2–40kg', 'FreeWeights', N'Khu tạ tầng 2', 20, 'Available'),
+ (5, N'Máy ép ngực', 'Machines', N'Khu tạ tầng 2', 2, 'UnderMaintenance'),
+ (6, N'Ghế đẩy vai', 'Machines', N'Khu tạ tầng 2', 2, 'Available'),
+ (7, N'Tủ khóa cá nhân', 'Amenities', N'Phòng thay đồ', 60, 'Available'),
+ (8, N'Máy leo cầu thang cũ', 'Cardio', 'Kho', 1, 'Retired'),
+ (9, N'Máy kéo cáp', 'Machines', N'Khu tạ tầng 2', 2, 'Available'),
+ (10, N'Thảm yoga', 'Amenities', N'Phòng tập nhóm', 30, 'Available');
 SET IDENTITY_INSERT Facilities OFF;
-GO
 
 /* ============================================================================
-   20. MAINTENANCE REQUESTS — đủ 4 trạng thái
+   MaintenanceRequests — 7 dòng.
    ============================================================================ */
 SET IDENTITY_INSERT MaintenanceRequests ON;
-INSERT INTO MaintenanceRequests (MaintenanceRequestId, FacilityId, ReportedByEmployeeId, ReviewedByEmployeeId, ClosedByEmployeeId,
-                                 Description, Status, RejectReason, ReportedAt, ReviewedAt, ClosedAt) VALUES
- (1, 5, 3, 2   , NULL, N'Máy ép ngực kêu to khi đẩy, nghi hỏng bạc đạn', 'InProgress', NULL, '2026-09-20 09:00:00', '2026-09-20 11:00:00', NULL),
- (2, 1, 4, 2   , 3   , N'Máy chạy số 3 bị giật khi tăng tốc'           , 'Closed'    , NULL, '2026-09-10 08:00:00', '2026-09-10 10:00:00', '2026-09-14 16:00:00'),
- (3, 4, 3, 2   , NULL, N'Xin mua thêm tạ đơn 45kg'                     , 'Rejected'  , N'Ngoài phạm vi bảo trì, chuyển sang kế hoạch mua sắm quý sau', '2026-09-12 14:00:00', '2026-09-12 17:30:00', NULL),
- (4, 2, 3, NULL, NULL, N'Xe đạp số 2 kẹt bàn đạp'                      , 'Open'      , NULL, '2026-09-23 08:30:00', NULL, NULL),
- (5, 7, 4, NULL, NULL, N'Tủ khóa số 12 hỏng chốt'                      , 'Open'      , NULL, '2026-09-22 20:00:00', NULL, NULL);
+INSERT INTO MaintenanceRequests (MaintenanceRequestId, RequestCode, FacilityId, ReportedByEmployeeId, ReviewedByEmployeeId, ClosedByEmployeeId, Priority, WarningTagPlaced, Description, Status, SetUnderMaintenance, RejectReason, AcceptanceNote, ReportedAt, ReviewedAt, ClosedAt) VALUES
+ (1, 'BT-0001', 5, 3, 2, NULL, 'Urgent', 1, N'Máy ép ngực kêu to khi đẩy, nghi hỏng bạc đạn', 'InProgress', 1, NULL, NULL, '2026-09-20 09:00:00', '2026-09-20 11:00:00', NULL), -- thiết bị chuyển Under maintenance (CBR-101)
+ (2, 'BT-0002', 1, 4, 2, 3, 'Normal', 1, N'Máy chạy số 3 bị giật khi tăng tốc', 'Closed', 1, NULL, N'Đã thay dây curoa, chạy thử 30 phút ổn định', '2026-09-10 08:00:00', '2026-09-10 10:00:00', '2026-09-14 16:00:00'),
+ (3, 'BT-0003', 4, 3, 2, NULL, 'Low', 0, N'Xin mua thêm tạ đơn 45kg cho khu tạ', 'Rejected', NULL, N'Ngoài phạm vi bảo trì, chuyển sang kế hoạch mua sắm quý sau', NULL, '2026-09-12 14:00:00', '2026-09-12 17:30:00', NULL),
+ (4, 'BT-0004', 2, 3, NULL, NULL, 'Normal', 1, N'Xe đạp số 2 kẹt bàn đạp, không xoay được', 'Open', NULL, NULL, NULL, '2026-10-02 08:30:00', NULL, NULL),
+ (5, 'BT-0005', 7, 4, NULL, NULL, 'Low', 0, N'Tủ khóa số 12 hỏng chốt, không khóa được', 'Open', NULL, NULL, NULL, '2026-10-01 20:00:00', NULL, NULL),
+ (6, 'BT-0006', 9, 9, 2, NULL, 'Normal', 1, N'Dây cáp máy kéo bị sờn ở đầu nối', 'InProgress', 0, NULL, NULL, '2026-09-29 19:00:00', '2026-09-30 09:00:00', NULL), -- duyệt nhưng KHÔNG chuyển Under maintenance (CBR-101 bỏ tick)
+ (7, 'BT-0007', 10, 11, 2, 11, 'Low', 0, N'Thảm yoga số 4 bị rách góc', 'Closed', 0, NULL, N'Đã thay thảm mới', '2026-09-05 18:00:00', '2026-09-06 09:00:00', '2026-09-08 15:00:00');
 SET IDENTITY_INSERT MaintenanceRequests OFF;
-GO
 
 /* ============================================================================
-   21. STAFF ATTENDANCES — chấm công (mô hình hóa sẵn, phiên bản này chưa dùng)
+   StaffAttendances — 6 dòng.
    ============================================================================ */
 SET IDENTITY_INSERT StaffAttendances ON;
 INSERT INTO StaffAttendances (StaffAttendanceId, EmployeeId, WorkDate, ShiftType, CheckInAt, CheckInPhoto, CheckOutAt, Status, Note) VALUES
- (1, 3, '2026-09-22', 'Morning'  , '2026-09-22 05:25:00', '/uploads/attendance/nv-0003-0922.jpg', '2026-09-22 13:05:00', 'Present', NULL),
- (2, 4, '2026-09-22', 'Afternoon', '2026-09-22 13:15:00', '/uploads/attendance/nv-0004-0922.jpg', '2026-09-22 22:05:00', 'Late'   , N'Đi muộn 15 phút do tắc đường'),
- (3, 5, '2026-09-22', 'Afternoon', '2026-09-22 13:00:00', '/uploads/attendance/nv-0005-0922.jpg', '2026-09-22 21:30:00', 'Present', NULL),
- (4, 6, '2026-09-22', 'Afternoon', '2026-09-22 12:55:00', '/uploads/attendance/nv-0006-0922.jpg', '2026-09-22 21:35:00', 'Present', NULL),
- (5, 5, '2026-09-18', 'Morning'  , NULL                 , NULL                                  , NULL                 , 'OnLeave', N'Nghỉ phép đã được duyệt'),
- (6, 3, '2026-09-23', 'Morning'  , '2026-09-23 05:28:00', '/uploads/attendance/nv-0003-0923.jpg', NULL                 , 'Present', N'Đang trong ca');
+ (1, 3, '2026-10-02', 'Morning', '2026-10-02 05:25:00', '/uploads/attendance/nv-0003-1002.jpg', '2026-10-02 13:05:00', 'Present', NULL),
+ (2, 4, '2026-10-02', 'Afternoon', '2026-10-02 13:15:00', '/uploads/attendance/nv-0004-1002.jpg', '2026-10-02 22:05:00', 'Late', N'Đi muộn 15 phút do tắc đường'),
+ (3, 5, '2026-10-02', 'Afternoon', '2026-10-02 13:00:00', '/uploads/attendance/nv-0005-1002.jpg', '2026-10-02 21:30:00', 'Present', NULL),
+ (4, 6, '2026-10-02', 'Afternoon', '2026-10-02 12:55:00', '/uploads/attendance/nv-0006-1002.jpg', '2026-10-02 21:35:00', 'Present', NULL),
+ (5, 5, '2026-09-19', 'Morning', NULL, NULL, NULL, 'OnLeave', N'Nghỉ phép đã được duyệt'),
+ (6, 9, '2026-09-24', 'Morning', NULL, NULL, NULL, 'OnLeave', N'Nghỉ ốm đã được duyệt');
 SET IDENTITY_INSERT StaffAttendances OFF;
-GO
 
 /* ============================================================================
-   22. PRIVATE NOTES — mỗi cặp (PT, khách) tối đa 1 ghi chú đang dùng
+   PrivateNotes — 7 dòng.
    ============================================================================ */
 SET IDENTITY_INSERT PrivateNotes ON;
-INSERT INTO PrivateNotes (PrivateNoteId, PtEmployeeId, CustomerId, Content, UpdatedAt, DeletedAt) VALUES
- (1, 5, 6, N'Khách đau vai phải, tránh bài đẩy vai qua đầu. Ưu tiên tập chân và lưng.', '2026-09-08 20:00:00', NULL),
- (2, 6, 7, N'Khách tiến bộ nhanh, có thể tăng tạ 5kg mỗi 2 tuần.'                      , '2026-09-15 21:30:00', NULL),
- (3, 6, 8, N'Ghi chú cũ đã lỗi thời, viết lại sau.'                                    , '2026-08-25 21:00:00', '2026-09-01 09:00:00'); -- đã xóa mềm → PT viết được bản mới
+INSERT INTO PrivateNotes (PrivateNoteId, PtEmployeeId, CustomerId, Content, CreatedAt, UpdatedAt, DeletedAt) VALUES
+ (1, 5, 6, N'Ghi chú cũ: chưa đo InBody.', '2026-09-04 20:00:00', '2026-09-07 20:00:00', '2026-09-08 09:00:00'), -- đã xóa → viết được bản mới (BR-59)
+ (2, 5, 6, N'Khách đau vai phải, tránh bài đẩy vai qua đầu. Ưu tiên tập chân và lưng.', '2026-09-05 20:00:00', '2026-09-08 20:00:00', NULL),
+ (3, 6, 7, N'Khách tiến bộ nhanh, có thể tăng tạ 5kg mỗi 2 tuần.', '2026-09-12 21:30:00', '2026-09-15 21:30:00', NULL),
+ (4, 6, 8, N'Ghi chú cũ đã lỗi thời, viết lại sau.', '2026-08-22 21:00:00', '2026-08-25 21:00:00', '2026-09-01 09:00:00'),
+ (5, 7, 17, N'Khách là PT của phòng, tập nặng được, chú ý cổ tay trái.', '2026-09-13 13:30:00', '2026-09-16 13:30:00', NULL), -- David ghi chú về Kiều Trang — Trang (PT) không thấy (CBR-92)
+ (6, 7, 4, N'Khách đang bảo lưu, khi quay lại giảm tạ 20% tuần đầu.', '2026-09-24 18:00:00', '2026-09-27 18:00:00', NULL),
+ (7, 5, 21, N'Khách không dùng smartphone, liên hệ qua số điện thoại.', '2026-09-11 08:00:00', '2026-09-14 08:00:00', NULL);
 SET IDENTITY_INSERT PrivateNotes OFF;
-GO
 
 /* ============================================================================
-   23. TRAINING PLANS — có bản đã xuất bản, bản nháp và bản đã xóa
+   TrainingPlans — 7 dòng.
    ============================================================================ */
 SET IDENTITY_INSERT TrainingPlans ON;
-INSERT INTO TrainingPlans (TrainingPlanId, PtEmployeeId, CustomerId, PlanType, Title, Content, IsPublished, UpdatedAt, DeletedAt) VALUES
- (1, 5, 6, 'Workout', N'Giáo án 4 tuần — tăng cơ nền', N'Tuần 1: full body 3 buổi. Tuần 2–4: đẩy/kéo/chân.', 1, '2026-09-08 21:00:00', NULL),
- (2, 5, 6, 'Meal'   , N'Thực đơn 4 tuần — thâm hụt nhẹ', N'Bữa sáng: yến mạch + trứng. Bữa trưa: ức gà + cơm gạo lứt.', 0, '2026-09-09 21:00:00', NULL), -- nháp, khách chưa thấy
- (3, 6, 7, 'Workout', N'Giáo án couple — 6 tuần'      , N'Tập theo cặp, luân phiên đẩy và kéo.'            , 1, '2026-08-26 20:00:00', NULL),
- (4, 6, 8, 'Workout', N'Giáo án cũ'                   , N'Nội dung cũ, đã thay bằng bản mới.'              , 0, '2026-08-20 20:00:00', '2026-08-26 19:00:00');
+INSERT INTO TrainingPlans (TrainingPlanId, PtEmployeeId, CustomerId, PlanType, Title, Content, PublishedTitle, PublishedContent, PublishedAt, CreatedAt, UpdatedAt, DeletedAt) VALUES
+ (1, 5, 6, 'Workout', N'Giáo án 8 tuần — tăng cơ nền (bản sửa)', N'Tuần 1–2: full body 3 buổi.
+Tuần 3–8: đẩy/kéo/chân, thêm 1 buổi cardio nhẹ.', N'Giáo án 8 tuần — tăng cơ nền', N'Tuần 1–2: full body 3 buổi.
+Tuần 3–8: đẩy/kéo/chân.', '2026-09-08 21:00:00', '2026-09-07 20:00:00', '2026-09-20 21:00:00', NULL), -- nháp mới hơn bản đã xuất bản → khách vẫn thấy bản cũ (BR-60)
+ (2, 5, 6, 'Meal', N'Thực đơn thâm hụt nhẹ', N'Bữa sáng: yến mạch + trứng.
+Bữa trưa: ức gà + cơm gạo lứt.', NULL, NULL, NULL, '2026-09-07 20:00:00', '2026-09-20 21:00:00', NULL), -- chưa xuất bản → khách chưa thấy
+ (3, 6, 7, 'Workout', N'Giáo án couple — 8 tuần', N'Tập theo cặp, luân phiên đẩy và kéo.', N'Giáo án couple — 8 tuần', N'Tập theo cặp, luân phiên đẩy và kéo.', '2026-08-26 20:00:00', '2026-09-07 20:00:00', '2026-09-20 21:00:00', NULL),
+ (4, 6, 8, 'Workout', N'Giáo án cũ', N'Nội dung cũ, đã thay bằng bản mới.', N'Giáo án cũ', N'Nội dung cũ, đã thay bằng bản mới.', '2026-08-20 20:00:00', '2026-09-07 20:00:00', '2026-09-20 21:00:00', '2026-08-26 19:00:00'), -- đã xóa → khách mất ngay (BR-61)
+ (5, 6, 8, 'Workout', N'Giáo án couple — người đi kèm', N'Giảm khối lượng 20% so với người đứng tên.', N'Giáo án couple — người đi kèm', N'Giảm khối lượng 20% so với người đứng tên.', '2026-08-27 20:00:00', '2026-09-07 20:00:00', '2026-09-20 21:00:00', NULL),
+ (6, 7, 4, 'Meal', N'Thực đơn tăng cơ', N'Ăn 5 bữa/ngày, mỗi bữa 25–30g đạm.', N'Thực đơn tăng cơ', N'Ăn 5 bữa/ngày, mỗi bữa 25–30g đạm.', '2026-09-10 20:00:00', '2026-09-07 20:00:00', '2026-09-20 21:00:00', NULL),
+ (7, 7, 17, 'Workout', N'Giáo án powerlifting 4 tuần', N'Squat – Bench – Deadlift, 4 buổi/tuần.', N'Giáo án powerlifting 4 tuần', N'Squat – Bench – Deadlift, 4 buổi/tuần.', '2026-09-15 20:00:00', '2026-09-07 20:00:00', '2026-09-20 21:00:00', NULL);
 SET IDENTITY_INSERT TrainingPlans OFF;
-GO
 
 /* ============================================================================
-   24. FEEDBACKS — chưa đọc và đã đọc
+   Feedbacks — 19 dòng.
    ============================================================================ */
 SET IDENTITY_INSERT Feedbacks ON;
-INSERT INTO Feedbacks (FeedbackId, CustomerId, Content, SubmittedAt, IsRead, ReadAt, ReadByEmployeeId) VALUES
- (1, 1 , N'Phòng tắm hết nước nóng vào buổi tối, mong phòng gym kiểm tra.'          , '2026-09-22 21:10:00', 0, NULL                 , NULL),
- (2, 2 , N'Nhân viên lễ tân rất nhiệt tình, cảm ơn phòng gym.'                      , '2026-09-21 19:00:00', 1, '2026-09-22 09:00:00', 2),
- (3, 6 , N'Đề xuất mở thêm lớp yoga buổi sáng.'                                     , '2026-09-20 07:30:00', 1, '2026-09-20 15:00:00', 2),
- (4, 11, N'The air conditioning in the weights area is too cold in the morning.'    , '2026-09-19 08:15:00', 0, NULL                 , NULL),
- (5, 7 , N'Máy chạy số 3 chạy giật, đã báo lễ tân nhưng ghi nhận lại cho chắc.'     , '2026-09-09 20:00:00', 1, '2026-09-10 08:30:00', 2);
+INSERT INTO Feedbacks (FeedbackId, CustomerId, Content, SubmittedAt, IsRead, ReadAt, ReadByEmployeeId, RatedPtEmployeeId, Rating, RatingMonth, UpdatedAt) VALUES
+ (1, 1, N'Phòng tắm hết nước nóng vào buổi tối, mong phòng gym kiểm tra.', '2026-10-02 21:10:00', 0, NULL, NULL, NULL, NULL, NULL, NULL),
+ (2, 2, N'Nhân viên lễ tân rất nhiệt tình, cảm ơn phòng gym.', '2026-09-21 19:00:00', 1, '2026-09-22 09:00:00', 2, NULL, NULL, NULL, NULL),
+ (3, 6, N'Đề xuất mở thêm lớp yoga buổi sáng.', '2026-09-20 07:30:00', 1, '2026-09-20 15:00:00', 2, NULL, NULL, NULL, NULL),
+ (4, 11, 'The air conditioning in the weights area is too cold in the morning.', '2026-09-19 08:15:00', 0, NULL, NULL, NULL, NULL, NULL, NULL),
+ (5, 7, N'Máy chạy số 3 chạy giật, đã báo lễ tân nhưng ghi nhận lại cho chắc.', '2026-09-09 20:00:00', 1, '2026-09-10 08:30:00', 2, NULL, NULL, NULL, NULL),
+ (6, 17, N'Khu tạ tự do hơi chật vào giờ cao điểm 18h–20h.', '2026-09-28 20:30:00', 0, NULL, NULL, NULL, NULL, NULL, NULL),
+ (7, 201, N'Nhạc trong phòng hơi to vào buổi tối.', '2026-09-03 20:00:00', 1, '2026-10-01 09:00:00', 2, NULL, NULL, NULL, NULL),
+ (8, 202, N'Huấn luyện viên rất tận tâm, rất hài lòng.', '2026-09-25 20:00:00', 0, NULL, NULL, NULL, NULL, NULL, NULL),
+ (9, 203, N'Tủ khóa hay bị kẹt, nhờ kiểm tra giúp.', '2026-09-01 20:00:00', 1, '2026-10-01 09:00:00', 2, NULL, NULL, NULL, NULL),
+ (10, 204, N'Tủ khóa hay bị kẹt, nhờ kiểm tra giúp.', '2026-09-05 20:00:00', 0, NULL, NULL, NULL, NULL, NULL, NULL),
+ (11, 205, N'Huấn luyện viên rất tận tâm, rất hài lòng.', '2026-09-02 20:00:00', 1, '2026-10-01 09:00:00', 2, NULL, NULL, NULL, NULL),
+ (12, 206, N'Huấn luyện viên rất tận tâm, rất hài lòng.', '2026-09-27 20:00:00', 0, NULL, NULL, NULL, NULL, NULL, NULL),
+ (13, 207, N'Huấn luyện viên rất tận tâm, rất hài lòng.', '2026-09-09 20:00:00', 0, NULL, NULL, NULL, NULL, NULL, NULL),
+ (14, 208, N'Mong có thêm khu giãn cơ riêng.', '2026-09-23 20:00:00', 1, '2026-10-01 09:00:00', 2, NULL, NULL, NULL, NULL),
+ (15, 1, N'PT hướng dẫn chưa rõ, tôi mong được hỗ trợ kỹ hơn.', '2026-09-30 10:00:00', 0, NULL, NULL, 5, 1, '2026-09-01', NULL),
+ (16, 2, N'Tôi muốn PT giải thích bài tập kỹ hơn trước khi tập.', '2026-09-30 10:10:00', 1, '2026-09-30 11:00:00', 2, 5, 2, '2026-09-01', NULL),
+ (17, 6, N'Tôi sửa đánh giá: PT đã hỗ trợ tốt hơn buổi trước.', '2026-09-30 10:20:00', 0, NULL, NULL, 5, 5, '2026-09-01', '2026-09-30 12:00:00'),
+ (18, 7, N'PT hướng dẫn dễ hiểu và quan tâm tới người tập.', '2026-09-30 10:30:00', 0, NULL, NULL, 6, 4, '2026-09-01', NULL),
+ (19, 201, N'PT hỗ trợ tốt và điều chỉnh bài tập phù hợp.', '2026-09-30 10:40:00', 0, NULL, NULL, 6, 5, '2026-09-01', NULL);
 SET IDENTITY_INSERT Feedbacks OFF;
-GO
 
 /* ============================================================================
-   25. BLOG POSTS — 3 bài đang hiện trên web, 1 bài đã gỡ xuống
+   BlogPosts — 16 dòng.
    ============================================================================ */
 SET IDENTITY_INSERT BlogPosts ON;
-INSERT INTO BlogPosts (BlogPostId, AuthorEmployeeId, Title, Category, Excerpt, Content, CoverImage, Status, PublishedAt) VALUES
- (1, 2, N'Ba lỗi squat phổ biến'        , N'Training' , N'Squat sai tư thế dễ gây đau gối và lưng dưới.', N'Lỗi 1: gối đổ vào trong...', '/uploads/blog/squat.jpg'   , 'Active'  , '2026-09-01 10:00:00'),
- (2, 2, N'Protein bao nhiêu là đủ?'     , N'Nutrition', N'Người tập tạ cần bao nhiêu gram protein mỗi ngày.', N'Khuyến nghị 1.6–2.2g/kg...', '/uploads/blog/protein.jpg', 'Active'  , '2026-09-08 10:00:00'),
- (3, 2, N'Lịch nghỉ lễ Quốc khánh'      , N'News'     , N'Phòng gym nghỉ ngày 02/09.'                    , N'Phòng gym nghỉ cả ngày 02/09...', NULL                  , 'Active'  , '2026-08-25 09:00:00'),
- (4, 2, N'Khuyến mãi tháng 6 (đã kết thúc)', N'News'  , N'Chương trình đã kết thúc.'                     , N'Nội dung khuyến mãi cũ...', NULL                        , 'Inactive', '2026-06-01 09:00:00');
+INSERT INTO BlogPosts (BlogPostId, AuthorEmployeeId, Title, Category, Excerpt, Content, CoverImage, Status, PublishedAt, CreatedAt, UpdatedAt) VALUES
+ (1, 2, N'Ba lỗi squat phổ biến', 'Training', N'Squat sai tư thế dễ gây đau gối và lưng dưới.', N'<p>Lỗi 1: gối đổ vào trong. Lỗi 2: gót chân nhấc khỏi sàn. Lỗi 3: lưng cong khi xuống thấp.</p>', '/images/blog/squat.jpg', 'Active', '2026-09-01 10:00:00', '2026-08-31 10:00:00', '2026-08-31 10:00:00'),
+ (2, 2, N'Protein bao nhiêu là đủ?', 'Nutrition', N'Người tập tạ cần bao nhiêu gram protein mỗi ngày.', N'<p>Khuyến nghị 1.6–2.2g/kg cân nặng mỗi ngày.</p>', '/images/blog/protein.jpg', 'Active', '2026-09-08 10:00:00', '2026-09-07 10:00:00', '2026-09-07 10:00:00'),
+ (3, 2, N'Lịch nghỉ lễ Quốc khánh', 'News', N'Phòng gym nghỉ ngày 02/09.', N'<p>Phòng gym nghỉ cả ngày 02/09, mở lại bình thường từ 03/09.</p>', '/images/blog/news.jpg', 'Active', '2026-08-25 09:00:00', '2026-08-24 09:00:00', '2026-08-24 09:00:00'),
+ (4, 2, N'Khuyến mãi tháng 6 (đã kết thúc)', 'News', N'Chương trình đã kết thúc.', N'<p>Nội dung khuyến mãi cũ.</p>', '/images/blog/promo.jpg', 'Inactive', '2026-06-01 09:00:00', '2026-05-31 09:00:00', '2026-05-31 09:00:00'),
+ (5, 2, N'5 bài khởi động giúp giảm chấn thương trước buổi tập nặng', 'Training', N'Bỏ qua khởi động là nguyên nhân phổ biến gây chấn thương vai và gối.', N'<h2>Vì sao phải khởi động</h2><p>Mỗi buổi tập nên bắt đầu bằng 5–10 phút làm nóng toàn thân, sau đó là các động tác khởi động riêng cho nhóm cơ sắp tập. Tăng dần biên độ và tốc độ, không kéo giãn tĩnh quá lâu trước khi nâng tạ nặng.</p><p>Mỗi buổi tập nên bắt đầu bằng 5–10 phút làm nóng toàn thân, sau đó là các động tác khởi động riêng cho nhóm cơ sắp tập. Tăng dần biên độ và tốc độ, không kéo giãn tĩnh quá lâu trước khi nâng tạ nặng.</p><p>Mỗi buổi tập nên bắt đầu bằng 5–10 phút làm nóng toàn thân, sau đó là các động tác khởi động riêng cho nhóm cơ sắp tập. Tăng dần biên độ và tốc độ, không kéo giãn tĩnh quá lâu trước khi nâng tạ nặng.</p><p>Mỗi buổi tập nên bắt đầu bằng 5–10 phút làm nóng toàn thân, sau đó là các động tác khởi động riêng cho nhóm cơ sắp tập. Tăng dần biên độ và tốc độ, không kéo giãn tĩnh quá lâu trước khi nâng tạ nặng.</p><p>Mỗi buổi tập nên bắt đầu bằng 5–10 phút làm nóng toàn thân, sau đó là các động tác khởi động riêng cho nhóm cơ sắp tập. Tăng dần biên độ và tốc độ, không kéo giãn tĩnh quá lâu trước khi nâng tạ nặng.</p><p>Mỗi buổi tập nên bắt đầu bằng 5–10 phút làm nóng toàn thân, sau đó là các động tác khởi động riêng cho nhóm cơ sắp tập. Tăng dần biên độ và tốc độ, không kéo giãn tĩnh quá lâu trước khi nâng tạ nặng.</p><p>Mỗi buổi tập nên bắt đầu bằng 5–10 phút làm nóng toàn thân, sau đó là các động tác khởi động riêng cho nhóm cơ sắp tập. Tăng dần biên độ và tốc độ, không kéo giãn tĩnh quá lâu trước khi nâng tạ nặng.</p><p>Mỗi buổi tập nên bắt đầu bằng 5–10 phút làm nóng toàn thân, sau đó là các động tác khởi động riêng cho nhóm cơ sắp tập. Tăng dần biên độ và tốc độ, không kéo giãn tĩnh quá lâu trước khi nâng tạ nặng.</p><p>Mỗi buổi tập nên bắt đầu bằng 5–10 phút làm nóng toàn thân, sau đó là các động tác khởi động riêng cho nhóm cơ sắp tập. Tăng dần biên độ và tốc độ, không kéo giãn tĩnh quá lâu trước khi nâng tạ nặng.</p><p>Mỗi buổi tập nên bắt đầu bằng 5–10 phút làm nóng toàn thân, sau đó là các động tác khởi động riêng cho nhóm cơ sắp tập. Tăng dần biên độ và tốc độ, không kéo giãn tĩnh quá lâu trước khi nâng tạ nặng.</p><p>Mỗi buổi tập nên bắt đầu bằng 5–10 phút làm nóng toàn thân, sau đó là các động tác khởi động riêng cho nhóm cơ sắp tập. Tăng dần biên độ và tốc độ, không kéo giãn tĩnh quá lâu trước khi nâng tạ nặng.</p><p>Mỗi buổi tập nên bắt đầu bằng 5–10 phút làm nóng toàn thân, sau đó là các động tác khởi động riêng cho nhóm cơ sắp tập. Tăng dần biên độ và tốc độ, không kéo giãn tĩnh quá lâu trước khi nâng tạ nặng.</p><p>Mỗi buổi tập nên bắt đầu bằng 5–10 phút làm nóng toàn thân, sau đó là các động tác khởi động riêng cho nhóm cơ sắp tập. Tăng dần biên độ và tốc độ, không kéo giãn tĩnh quá lâu trước khi nâng tạ nặng.</p><p>Mỗi buổi tập nên bắt đầu bằng 5–10 phút làm nóng toàn thân, sau đó là các động tác khởi động riêng cho nhóm cơ sắp tập. Tăng dần biên độ và tốc độ, không kéo giãn tĩnh quá lâu trước khi nâng tạ nặng.</p><p>Mỗi buổi tập nên bắt đầu bằng 5–10 phút làm nóng toàn thân, sau đó là các động tác khởi động riêng cho nhóm cơ sắp tập. Tăng dần biên độ và tốc độ, không kéo giãn tĩnh quá lâu trước khi nâng tạ nặng.</p><p>Mỗi buổi tập nên bắt đầu bằng 5–10 phút làm nóng toàn thân, sau đó là các động tác khởi động riêng cho nhóm cơ sắp tập. Tăng dần biên độ và tốc độ, không kéo giãn tĩnh quá lâu trước khi nâng tạ nặng.</p><p>Mỗi buổi tập nên bắt đầu bằng 5–10 phút làm nóng toàn thân, sau đó là các động tác khởi động riêng cho nhóm cơ sắp tập. Tăng dần biên độ và tốc độ, không kéo giãn tĩnh quá lâu trước khi nâng tạ nặng.</p><p>Mỗi buổi tập nên bắt đầu bằng 5–10 phút làm nóng toàn thân, sau đó là các động tác khởi động riêng cho nhóm cơ sắp tập. Tăng dần biên độ và tốc độ, không kéo giãn tĩnh quá lâu trước khi nâng tạ nặng.</p><p>Mỗi buổi tập nên bắt đầu bằng 5–10 phút làm nóng toàn thân, sau đó là các động tác khởi động riêng cho nhóm cơ sắp tập. Tăng dần biên độ và tốc độ, không kéo giãn tĩnh quá lâu trước khi nâng tạ nặng.</p><p>Mỗi buổi tập nên bắt đầu bằng 5–10 phút làm nóng toàn thân, sau đó là các động tác khởi động riêng cho nhóm cơ sắp tập. Tăng dần biên độ và tốc độ, không kéo giãn tĩnh quá lâu trước khi nâng tạ nặng.</p>', '/images/blog/khoi-dong.jpg', 'Active', '2026-09-12 08:00:00', '2026-09-11 08:00:00', '2026-09-11 08:00:00'),
+ (6, 2, N'Ăn gì trước và sau buổi tập để tối ưu phục hồi cơ bắp', 'Nutrition', N'Thời điểm và loại thực phẩm nạp vào quanh buổi tập ảnh hưởng trực tiếp đến hiệu suất.', N'<h2>Trước buổi tập</h2><p>Ăn bữa có tinh bột và đạm vừa phải trước 60–90 phút.</p><h2>Sau buổi tập</h2><ul><li><strong>Đạm:</strong> 20–40g</li><li><strong>Tinh bột:</strong> bù năng lượng</li></ul>', '/images/blog/an-gi.jpg', 'Active', '2026-09-08 08:00:00', '2026-09-07 08:00:00', '2026-09-07 08:00:00'),
+ (7, 2, N'Super Gym khai trương khu giãn cơ & phục hồi', 'News', N'Khu foam roller và ghế massage chính thức mở cửa từ tuần này.', N'<p>Khu giãn cơ mở cửa từ 06:00 đến 22:00, miễn phí cho hội viên.</p>', NULL, 'Active', '2026-09-02 08:00:00', '2026-09-01 08:00:00', '2026-09-01 08:00:00'),
+ (8, 2, N'Ngủ đủ giấc quan trọng thế nào với người tập gym?', 'Nutrition', N'Tập nặng nhưng ngủ ít có thể khiến mọi nỗ lực gần như không hiệu quả.', N'<p>Người tập nên ngủ 7–9 tiếng mỗi đêm.</p>', '/images/blog/ngu-du-giac.jpg', 'Active', '2026-08-02 08:00:00', '2026-08-01 08:00:00', '2026-08-01 08:00:00'),
+ (9, 2, N'Hướng dẫn chọn gói tập phù hợp với mục tiêu của bạn', 'Training', N'Gói 1 tháng hay gói 12 tháng — nên bắt đầu từ đâu.', N'<p>Người mới nên thử gói 1 tháng để tạo thói quen.</p>', '/images/blog/chon-goi.jpg', 'Active', '2026-07-27 08:00:00', '2026-07-26 08:00:00', '2026-07-26 08:00:00'),
+ (10, 2, N'Cardio hay tạ nặng trước? Thứ tự tối ưu cho mục tiêu giảm mỡ', 'Training', N'Thứ tự bài tập ảnh hưởng đến hiệu suất từng phần.', N'<p>Ưu tiên bài tạ khi còn sung sức.</p>', NULL, 'Active', '2026-07-20 08:00:00', '2026-07-19 08:00:00', '2026-07-19 08:00:00'),
+ (11, 2, N'Creatine có thực sự cần thiết?', 'Nutrition', N'Creatine có đáng để bổ sung vào chế độ tập của bạn?', N'<p>Creatine monohydrate 3–5g mỗi ngày an toàn với người khỏe mạnh.</p>', '/images/blog/creatine.jpg', 'Active', '2026-07-14 08:00:00', '2026-07-13 08:00:00', '2026-07-13 08:00:00'),
+ (12, 2, N'Super Gym ra mắt ứng dụng đặt lịch PT mới', 'News', N'Xem khung giờ rảnh của PT, đặt buổi lẻ ngay trên điện thoại.', N'<p>Ứng dụng hỗ trợ đặt buổi lẻ, xem lịch tập.</p>', '/images/blog/app-pt.jpg', 'Active', '2026-07-05 08:00:00', '2026-07-04 08:00:00', '2026-07-04 08:00:00'),
+ (13, 2, N'Tập lưng đúng cách: 4 bài kéo cho dân văn phòng', 'Training', NULL, N'<p>Lat pulldown, seated row, face pull và band pull-apart giúp cân bằng nhóm cơ lưng trên.</p>', '/images/blog/tap-lung.jpg', 'Active', '2026-06-28 08:00:00', '2026-06-27 08:00:00', '2026-06-27 08:00:00'),
+ (14, 2, N'Nhịn ăn gián đoạn có phù hợp với người tập gym?', 'Nutrition', N'IF giúp một số người kiểm soát calo dễ hơn.', N'<p>Nếu mục tiêu là tăng cơ, hãy đảm bảo đủ đạm.</p>', '/images/blog/nhin-an.jpg', 'Active', '2026-06-20 08:00:00', '2026-06-19 08:00:00', '2026-06-19 08:00:00'),
+ (15, 2, N'Super Gym mở rộng giờ hoạt động cuối tuần', 'News', N'Phòng tập mở cửa sớm hơn vào Thứ 7 và Chủ Nhật.', N'<p>Giờ mở cửa cuối tuần áp dụng theo lịch mới.</p>', '/images/blog/gio-tap.jpg', 'Active', '2026-06-12 08:00:00', '2026-06-11 08:00:00', '2026-06-11 08:00:00'),
+ (16, 2, N'Bài nháp: lịch tập Tết 2027', 'News', N'Đang soạn.', N'<p>Nội dung đang soạn.</p>', NULL, 'Inactive', NULL, '2026-09-30 09:00:00', '2026-09-30 09:00:00');
 SET IDENTITY_INSERT BlogPosts OFF;
-GO
 
 /* ============================================================================
-   26. NOTIFICATIONS + RECIPIENTS — chỉ người CÓ tài khoản mới nhận được
+   Notifications — 9 dòng.
    ============================================================================ */
 SET IDENTITY_INSERT Notifications ON;
-INSERT INTO Notifications (NotificationId, SentByEmployeeId, Title, Content, TargetType, SentAt) VALUES
- (1, 2   , N'Lịch nghỉ lễ'          , N'Phòng gym nghỉ cả ngày 02/09, mong khách sắp xếp lịch tập.', 'All'     , '2026-08-25 09:05:00'),
- (2, 2   , N'Họp nhân sự cuối tháng', N'Toàn bộ PT và lễ tân họp lúc 21:30 ngày 30/09.'            , 'Role'    , '2026-09-22 10:00:00'),
- (3, NULL, N'Buổi tập bị dời'       , N'Buổi PT ngày 22/09 đã được dời theo thỏa thuận với PT.'     , 'Customer', '2026-09-20 15:01:00'); -- hệ thống tự gửi
+INSERT INTO Notifications (NotificationId, SentByEmployeeId, Title, Content, Audience, ScheduledAt, SentAt, CreatedAt) VALUES
+ (1, 2, N'Lịch nghỉ ngày 20/10', N'Phòng tập nghỉ cả ngày 20/10/2026 để bảo trì điện toàn tòa nhà.', 'AllCustomers', NULL, '2026-08-25 09:05:00', '2026-08-25 08:35:00'),
+ (2, 2, N'Họp nhân sự cuối tháng', N'Toàn bộ PT và lễ tân họp lúc 21:30 ngày 30/09.', 'AllStaff', NULL, '2026-09-22 10:00:00', '2026-09-22 09:30:00'),
+ (3, 2, N'Cập nhật mẫu giáo án', N'PT dùng mẫu giáo án mới từ tuần sau, xem file trong nhóm.', 'PTs', NULL, '2026-10-01 10:00:00', '2026-10-01 09:30:00'),
+ (4, 2, N'Quy trình đối soát ca', N'Lễ tân nhớ ghi lý do khi tiền đếm lệch với hệ thống.', 'Receptionists', NULL, '2026-09-30 09:00:00', '2026-09-30 08:30:00'),
+ (5, 2, N'Ưu đãi gia hạn tháng 10', N'Hội viên gia hạn trong tháng 10 nhận thêm 1 buổi đo InBody.', 'ActiveMembers', '2026-10-10 08:00:00', NULL, '2026-10-10 07:30:00'), -- hẹn giờ, chưa gửi
+ (6, NULL, N'Buổi tập bị hủy do phòng tập nghỉ', N'Buổi PT ngày 18/09 bị hủy vì phòng tập nghỉ cả ngày, không trừ buổi (CBR-57).', 'Individual', NULL, '2026-09-10 09:01:00', '2026-09-10 08:31:00'),
+ (7, NULL, N'Buổi tập đã chuyển PT', N'Buổi PT ngày 29/09 lúc 18:00 chuyển sang PT Lý Hoàng Long (CBR-46).', 'Individual', NULL, '2026-09-27 20:16:00', '2026-09-27 19:46:00'),
+ (8, NULL, N'Đơn nghỉ bị từ chối', N'Đơn nghỉ ngày 16/09 bị từ chối do quá hạn duyệt (CBR-85).', 'Individual', NULL, '2026-09-15 20:00:00', '2026-09-15 19:30:00'),
+ (9, NULL, N'Buổi tập đã được dời', N'Buổi PT ngày 15/09 dời sang 06:00 ngày 16/09 (BR-64).', 'Individual', NULL, '2026-09-13 20:16:00', '2026-09-13 19:46:00');
 SET IDENTITY_INSERT Notifications OFF;
-GO
-
-SET IDENTITY_INSERT NotificationRecipients ON;
-INSERT INTO NotificationRecipients (NotificationRecipientId, NotificationId, AccountId, ReadAt) VALUES
- (1, 1, 1 , '2026-08-25 19:00:00'),
- (2, 1, 2 , NULL),
- (3, 1, 8 , '2026-08-26 07:30:00'),
- (4, 2, 15, '2026-09-22 12:00:00'),
- (5, 2, 16, NULL),
- (6, 3, 6 , '2026-09-20 16:00:00'),
- (7, 3, 7 , NULL);
-SET IDENTITY_INSERT NotificationRecipients OFF;
-GO
 
 /* ============================================================================
-   27. SYSTEM CONFIGS — 20 tham số P-01…P-20 với giá trị mặc định đã chốt
+   NotificationRecipients — 85 dòng.
+   ============================================================================ */
+SET IDENTITY_INSERT NotificationRecipients ON;
+INSERT INTO NotificationRecipients (NotificationRecipientId, NotificationId, AccountId, ReadAt) VALUES
+ (1, 1, 1, '2026-08-25 12:05:00'),
+ (2, 1, 2, '2026-08-25 12:05:00'),
+ (3, 1, 3, NULL),
+ (4, 1, 4, '2026-08-25 12:05:00'),
+ (5, 1, 5, '2026-08-25 12:05:00'),
+ (6, 1, 6, '2026-08-25 12:05:00'),
+ (7, 1, 7, '2026-08-25 12:05:00'),
+ (8, 1, 8, '2026-08-25 12:05:00'),
+ (9, 1, 9, '2026-08-25 12:05:00'),
+ (10, 1, 10, NULL),
+ (11, 1, 16, NULL),
+ (12, 1, 19, '2026-08-25 12:05:00'),
+ (13, 1, 20, '2026-08-25 12:05:00'),
+ (14, 1, 102, '2026-08-25 12:05:00'),
+ (15, 1, 108, NULL),
+ (16, 1, 109, '2026-08-25 12:05:00'),
+ (17, 1, 110, '2026-08-25 12:05:00'),
+ (18, 1, 111, NULL),
+ (19, 1, 112, NULL),
+ (20, 1, 113, '2026-08-25 12:05:00'),
+ (21, 1, 25, '2026-08-25 12:05:00'),
+ (22, 1, 201, NULL),
+ (23, 1, 202, '2026-08-25 12:05:00'),
+ (24, 1, 203, NULL),
+ (25, 1, 204, '2026-08-25 12:05:00'),
+ (26, 1, 205, '2026-08-25 12:05:00'),
+ (27, 1, 207, NULL),
+ (28, 1, 208, '2026-08-25 12:05:00'),
+ (29, 1, 209, '2026-08-25 12:05:00'),
+ (30, 1, 210, '2026-08-25 12:05:00'),
+ (31, 1, 211, '2026-08-25 12:05:00'),
+ (32, 1, 213, NULL),
+ (33, 1, 214, '2026-08-25 12:05:00'),
+ (34, 1, 215, '2026-08-25 12:05:00'),
+ (35, 1, 216, NULL),
+ (36, 1, 217, NULL),
+ (37, 1, 219, '2026-08-25 12:05:00'),
+ (38, 1, 220, NULL),
+ (39, 1, 221, '2026-08-25 12:05:00'),
+ (40, 1, 222, '2026-08-25 12:05:00'),
+ (41, 1, 223, '2026-08-25 12:05:00'),
+ (42, 1, 225, '2026-08-25 12:05:00'),
+ (43, 1, 226, NULL),
+ (44, 1, 227, NULL),
+ (45, 1, 228, '2026-08-25 12:05:00'),
+ (46, 1, 229, '2026-08-25 12:05:00'),
+ (47, 1, 231, NULL),
+ (48, 1, 232, NULL),
+ (49, 1, 233, '2026-08-25 12:05:00'),
+ (50, 1, 234, '2026-08-25 12:05:00'),
+ (51, 1, 235, NULL),
+ (52, 1, 237, '2026-08-25 12:05:00'),
+ (53, 1, 238, '2026-08-25 12:05:00'),
+ (54, 1, 239, '2026-08-25 12:05:00'),
+ (55, 1, 240, NULL),
+ (56, 2, 11, '2026-09-22 13:00:00'),
+ (57, 2, 12, '2026-09-22 13:00:00'),
+ (58, 2, 13, '2026-09-22 13:00:00'),
+ (59, 2, 14, '2026-09-22 13:00:00'),
+ (60, 2, 15, '2026-09-22 13:00:00'),
+ (61, 2, 16, '2026-09-22 13:00:00'),
+ (62, 2, 17, '2026-09-22 13:00:00'),
+ (63, 2, 19, NULL),
+ (64, 2, 21, '2026-09-22 13:00:00'),
+ (65, 2, 22, NULL),
+ (66, 3, 15, NULL),
+ (67, 3, 16, NULL),
+ (68, 3, 17, '2026-10-01 13:00:00'),
+ (69, 3, 22, NULL),
+ (70, 4, 13, '2026-09-30 12:00:00'),
+ (71, 4, 14, '2026-09-30 12:00:00'),
+ (72, 4, 19, '2026-09-30 12:00:00'),
+ (73, 4, 21, '2026-09-30 12:00:00'),
+ (74, 6, 4, '2026-09-10 12:01:00'),
+ (75, 6, 5, NULL),
+ (76, 6, 6, NULL),
+ (77, 6, 7, NULL),
+ (78, 6, 15, '2026-09-10 12:01:00'),
+ (79, 6, 16, '2026-09-10 12:01:00'),
+ (80, 6, 17, '2026-09-10 12:01:00'),
+ (81, 7, 5, '2026-09-27 23:16:00'),
+ (82, 7, 22, '2026-09-27 23:16:00'),
+ (83, 8, 14, NULL),
+ (84, 9, 6, NULL),
+ (85, 9, 7, '2026-09-13 23:16:00');
+SET IDENTITY_INSERT NotificationRecipients OFF;
+
+/* ============================================================================
+   SystemConfigs — 21 dòng.
    ============================================================================ */
 SET IDENTITY_INSERT SystemConfigs ON;
 INSERT INTO SystemConfigs (SystemConfigId, ConfigKey, ConfigValue, Description, UpdatedAt, UpdatedByEmployeeId) VALUES
- (1 , 'P-01', '1'          , N'Số lần bảo lưu tối đa cho mỗi gói tập'                     , '2025-01-10 09:00:00', 2),
- (2 , 'P-02', '30'         , N'Số ngày bảo lưu tối đa mỗi lần'                            , '2025-01-10 09:00:00', 2),
- (3 , 'P-03', '0'          , N'Phí bảo lưu (VND), 0 = miễn phí'                           , '2025-01-10 09:00:00', 2),
- (4 , 'P-04', '1,30,90,180,365', N'Danh sách thời hạn gói tập (ngày)'                     , '2025-01-10 09:00:00', 2),
- (5 , 'P-05', '10'         , N'Tuổi tối thiểu được dùng dịch vụ PT'                       , '2025-01-10 09:00:00', 2),
- (6 , 'P-06', '90'         , N'Độ dài một buổi PT (phút)'                                 , '2025-01-10 09:00:00', 2),
- (7 , 'P-07', '24'         , N'Cửa sổ điểm danh sau khi buổi kết thúc (giờ)'              , '2025-01-10 09:00:00', 2),
- (8 , 'P-08', '3'          , N'Số lần swap tối đa mỗi gói PT'                             , '2025-01-10 09:00:00', 2),
- (9 , 'P-09', '20'         , N'Hạn thanh toán đơn online, cũng là thời gian giữ slot (phút)', '2025-01-10 09:00:00', 2),
- (10, 'P-10', '10'         , N'Thuế VAT (%) đã nằm trong giá bán'                         , '2025-01-10 09:00:00', 2),
- (11, 'P-11', '70'         , N'Tỷ lệ hoa hồng mặc định cho PT mới (%)'                    , '2025-01-10 09:00:00', 2),
- (12, 'P-12', '15:00'      , N'Giờ chốt nộp đơn nghỉ của ngày hôm trước'                  , '2025-01-10 09:00:00', 2),
- (13, 'P-13', '2'          , N'Số PT tối thiểu còn lại mỗi ca'                            , '2025-01-10 09:00:00', 2),
- (14, 'P-14', '1'          , N'Số lễ tân tối thiểu còn lại mỗi ca'                        , '2025-01-10 09:00:00', 2),
- (15, 'P-15', '15'         , N'Hiệu lực mã xác thực / mã khôi phục (phút)'               , '2025-01-10 09:00:00', 2),
- (16, 'P-16', '03,05,07,08,09', N'Đầu số di động hợp lệ'                                  , '2025-01-10 09:00:00', 2),
- (17, 'P-17', '5'          , N'Số lần sai trước khi khóa tạm (đăng nhập và mã xác thực)'  , '2025-01-10 09:00:00', 2),
- (18, 'P-18', '5'          , N'Thời gian khóa tạm (phút)'                                 , '2025-01-10 09:00:00', 2),
- (19, 'P-19', '05:30-22:00', N'Giờ mở cửa mặc định hằng ngày'                             , '2025-01-10 09:00:00', 2),
- (20, 'P-20', '20:00'      , N'Giờ chốt duyệt đơn nghỉ của ngày hôm trước'                , '2025-01-10 09:00:00', 2);
+ (1, 'P-01', '1', N'Số lần bảo lưu tối đa mỗi gói tập (lần)', '2026-09-01 09:00:00', 2),
+ (2, 'P-02', '1', N'Thời gian bảo lưu tối đa mỗi lần (tháng)', '2026-09-01 09:00:00', 2),
+ (3, 'P-03', '0', N'Phí bảo lưu (VND), 0 = miễn phí', '2026-09-01 09:00:00', 2),
+ (4, 'P-04', '1D,1M,3M,9M,12M', N'Thời hạn gói tập: D = ngày, M = tháng', '2026-09-01 09:00:00', 2),
+ (5, 'P-05', '10', N'Tuổi tối thiểu dùng dịch vụ PT', '2026-09-01 09:00:00', 2),
+ (6, 'P-06', '90', N'Độ dài một buổi PT (phút)', '2026-09-01 09:00:00', 2),
+ (8, 'P-08', '3', N'Số lần swap tối đa mỗi gói PT', '2026-09-01 09:00:00', 2),
+ (9, 'P-09', '20', N'Hạn thanh toán đơn online = thời gian giữ slot (phút)', '2026-09-01 09:00:00', 2),
+ (10, 'P-10', '10', N'Thuế VAT (%) đã nằm trong giá bán', '2026-09-01 09:00:00', 2),
+ (11, 'P-11', '70', N'Tỷ lệ hoa hồng mặc định cho PT mới (%)', '2026-09-01 09:00:00', 2),
+ (12, 'P-12', '15:00', N'Giờ chốt nộp đơn nghỉ (ngày hôm trước)', '2026-09-01 09:00:00', 2),
+ (13, 'P-13', '2', N'Số PT tối thiểu còn lại mỗi ca', '2026-09-01 09:00:00', 2),
+ (14, 'P-14', '1', N'Số lễ tân tối thiểu còn lại mỗi ca', '2026-09-01 09:00:00', 2),
+ (15, 'P-15', '15', N'Hiệu lực mã xác thực / mã khôi phục (phút)', '2026-09-01 09:00:00', 2),
+ (16, 'P-16', '032,033,034,035,036,037,038,039,052,056,058,059,070,076,077,078,079,081,082,083,084,085,086,088,089,090,091,092,093,094,096,097,098,099', N'Đầu số di động hợp lệ (cấu hình triển khai, Manager không sửa)', '2026-09-01 09:00:00', 2),
+ (17, 'P-17', '5', N'Số lần sai trước khi khóa tạm (đăng nhập và mã xác thực)', '2026-09-01 09:00:00', 2),
+ (18, 'P-18', '5', N'Thời gian khóa tạm (phút)', '2026-09-01 09:00:00', 2),
+ (19, 'P-19', '05:30-22:00', N'Giờ mở cửa mặc định hằng ngày', '2026-09-01 09:00:00', 2),
+ (20, 'P-20', '20:00', N'Giờ chốt duyệt đơn nghỉ (ngày hôm trước)', '2026-09-01 09:00:00', 2),
+ (21, 'P-21', '1M,2M,3M', N'Thời hạn gói PT (tháng) — DBR-19', '2026-09-01 09:00:00', 2),
+ (22, 'P-22', '3', 'Minimum customers to show a PT''s average rating (DBR-69)', '2026-10-06 09:00:00', 2);
 SET IDENTITY_INSERT SystemConfigs OFF;
-GO
 
 /* ============================================================================
-   28. OPERATING HOUR EXCEPTIONS — ngày nghỉ và ngày mở cửa khác thường
-   Ngày nghỉ khiến hệ thống KHÔNG sinh buổi PT vào ngày đó.
+   OperatingHourExceptions — 5 dòng.
    ============================================================================ */
 SET IDENTITY_INSERT OperatingHourExceptions ON;
-INSERT INTO OperatingHourExceptions (OperatingHourExceptionId, ApplyDate, OpenTime, CloseTime, IsClosedAllDay, Note, SetByEmployeeId) VALUES
- (1, '2026-09-02', NULL   , NULL   , 1, N'Nghỉ lễ Quốc khánh'              , 2),
- (2, '2026-09-27', '07:00', '18:00', 0, N'Bảo trì hệ thống điện, mở muộn'  , 2),
- (3, '2027-01-28', NULL   , NULL   , 1, N'Nghỉ Tết Nguyên đán'             , 2);
+INSERT INTO OperatingHourExceptions (OperatingHourExceptionId, ApplyDate, OpenTime, CloseTime, IsClosedAllDay, Note, SetByEmployeeId, CreatedAt) VALUES
+ (1, '2026-09-02', NULL, NULL, 1, N'Nghỉ lễ Quốc khánh', 2, '2026-08-20 10:00:00'),
+ (2, '2026-09-18', NULL, NULL, 1, N'Sự cố điện, nghỉ cả ngày', 2, '2026-09-10 09:00:00'),
+ (3, '2026-10-11', '07:00:00', '18:00:00', 0, N'Chủ nhật bảo trì hệ thống nước, mở muộn đóng sớm', 2, '2026-09-28 09:00:00'),
+ (4, '2026-10-20', NULL, NULL, 1, N'Bảo trì điện toàn tòa nhà', 2, '2026-08-25 09:00:00'),
+ (5, '2027-02-06', NULL, NULL, 1, N'Nghỉ Tết Nguyên đán', 2, '2026-09-30 09:00:00');
 SET IDENTITY_INSERT OperatingHourExceptions OFF;
-GO
 
 /* ============================================================================
-   29. AUDIT LOGS — hành động nhạy cảm, viết thành câu đọc được
-   AccountId NULL = do hệ thống (job) thực hiện.
+   AuditLogs — 18 dòng.
    ============================================================================ */
 SET IDENTITY_INSERT AuditLogs ON;
-INSERT INTO AuditLogs (AuditLogId, AccountId, Action, EntityName, EntityId, FieldChanged, OldValue, NewValue, Reason, CreatedAt) VALUES
- (1, 12  , N'Đổi giá gói dịch vụ'        , 'Packages'                , 2 , 'Price'      , '749000'   , '799000'   , N'Điều chỉnh giá theo bảng giá quý IV', '2026-09-01 09:30:00'),
- (2, 13  , N'Đổi số điện thoại khách'    , 'Persons'                 , 3 , 'Phone'      , '0901234599', '0901234503', N'Khách đổi số, đã đối chiếu ảnh check-in', '2026-09-05 10:15:00'),
- (3, 12  , N'Từ chối đơn nghỉ phép'      , 'LeaveRequests'           , 3 , 'Status'     , 'Pending'  , 'Rejected' , N'Ca chiều chỉ còn 2 PT, duyệt sẽ thiếu người', '2026-09-19 17:00:00'),
- (4, NULL, N'Tự từ chối đơn nghỉ quá hạn', 'LeaveRequests'           , 4 , 'Status'     , 'Pending'  , 'Rejected' , N'Quá hạn duyệt 20:00 ngày hôm trước', '2026-09-15 20:00:00'),
- (5, 12  , N'Duyệt xóa hồ sơ khách'      , 'Customers'               , 12, 'Status'     , 'Active'   , 'Inactive' , N'Khách chuyển vào Nam, không tập nữa', '2026-09-15 16:00:00'),
- (6, NULL, N'Hủy đơn quá hạn thanh toán' , 'Orders'                  , 13, 'Status'     , 'Pending'  , 'Cancelled', N'Quá hạn thanh toán 20 phút', '2026-09-20 21:45:00'),
- (7, 11  , N'Vô hiệu hóa tài khoản'      , 'Accounts'                , 18, 'Status'     , 'Active'   , 'Inactive' , N'Nhân viên nghỉ việc từ 31/08/2026', '2026-08-31 18:00:00'),
- (8, 13  , N'Bảo lưu gói tập'            , 'Subscriptions'           , 4 , 'Status'     , 'Active'   , 'Frozen'   , N'Khách đi công tác nước ngoài 1 tháng', '2026-09-14 16:30:00');
+INSERT INTO AuditLogs (AuditLogId, AccountId, ActingRole, Action, EntityName, EntityId, FieldChanged, OldValue, NewValue, Reason, CreatedAt) VALUES
+ (1, 12, 'Manager', N'Đổi giá gói dịch vụ', 'Packages', 2, 'Price', '749000', '799000', N'Điều chỉnh giá theo bảng giá quý IV', '2026-09-01 09:30:00'),
+ (2, 12, 'Manager', N'Ngừng bán gói', 'Packages', 7, 'IsActive', '1', '0', N'P-04 bỏ thời hạn 6 tháng', '2026-09-01 09:35:00'),
+ (3, 13, 'Receptionist', N'Đổi số điện thoại khách tại quầy', 'Persons', 3, 'Phone', '0901234599', '0901234503', N'Khách đổi số, đã đối chiếu ảnh check-in', '2026-09-05 10:15:00'),
+ (4, 12, 'Manager', N'Từ chối đơn nghỉ phép', 'LeaveRequests', 2, 'Status', 'Pending', 'Rejected', N'Ca chiều chỉ còn 2 PT, duyệt sẽ thiếu người', '2026-09-18 17:00:00'),
+ (5, NULL, NULL, N'Tự từ chối đơn nghỉ quá hạn', 'LeaveRequests', 3, 'Status', 'Pending', 'Rejected', N'Quá hạn duyệt 20:00 ngày hôm trước', '2026-09-15 20:00:00'),
+ (6, 12, 'Manager', N'Duyệt xóa hồ sơ khách', 'Customers', 12, 'Status', 'Active', 'Inactive', N'Khách chuyển vào Nam, không tập nữa', '2026-09-15 16:00:00'),
+ (7, NULL, NULL, N'Hủy đơn quá hạn thanh toán', 'Orders', NULL, 'Status', 'Pending', 'Cancelled', N'Quá hạn thanh toán 20 phút', '2026-09-20 21:45:00'),
+ (8, 12, 'Manager', N'Cho nhân viên nghỉ việc', 'Employees', 8, 'Status', 'Working', 'Resigned', N'Nhân viên nghỉ việc từ 31/08/2026', '2026-08-31 18:00:00'),
+ (9, NULL, NULL, N'Vô hiệu hóa tài khoản vì không còn vai trò', 'Accounts', 18, 'Status', 'Active', 'Inactive', 'CBR-86', '2026-08-31 18:00:00'),
+ (10, 13, 'Receptionist', N'Bảo lưu gói tập', 'Subscriptions', NULL, 'Status', 'Active', 'Frozen', N'Khách đi công tác nước ngoài 1 tháng', '2026-09-27 10:30:00'),
+ (11, 11, 'Admin', N'Khóa tài khoản', 'Accounts', 23, 'Status', 'Active', 'Locked', N'PT vi phạm nội quy, tạm khóa chờ xử lý', '2026-09-25 09:00:00'),
+ (12, 11, 'Admin', N'Khóa tài khoản', 'Accounts', 101, 'Status', 'Active', 'Locked', N'Khách dùng chung tài khoản cho người khác', '2026-09-10 20:05:00'),
+ (13, 11, 'Admin', N'Mở khóa tạm sớm', 'Accounts', 3, 'LockedUntil', '2026-09-18 19:05', NULL, N'Khách gọi tổng đài xác minh danh tính', '2026-09-18 19:01:00'),
+ (14, 16, 'Customer', N'Đổi mật khẩu', 'Accounts', 16, 'PasswordHash', NULL, NULL, NULL, '2026-09-12 21:00:00'),
+ (15, 19, 'Customer', N'Đổi email', 'Persons', 25, 'Email', 'phuong.hoang99@gmail.com', 'phuong.hoang@gms.vn', NULL, '2026-09-16 07:00:00'),
+ (16, 12, 'Manager', N'Đổi họ tên nhân viên', 'Persons', 28, 'FullName', N'Lý Hoàng Lâm', N'Lý Hoàng Long', N'Sai chính tả khi nhập hồ sơ', '2026-08-16 09:00:00'),
+ (17, 12, 'Manager', N'Đánh dấu đã hoàn tiền', 'Transactions', NULL, 'RefundedAt', NULL, '2026-07-20', N'Đã chuyển khoản hoàn cho khách', '2026-07-20 10:00:00'),
+ (18, 12, 'Manager', N'Đổi tham số hệ thống', 'SystemConfigs', 2, 'ConfigValue', '30', '1', N'P-02 đổi đơn vị sang tháng', '2026-09-01 09:00:00');
 SET IDENTITY_INSERT AuditLogs OFF;
+
+COMMIT TRANSACTION;
 GO
 
-/* ============================================================================
-   KIỂM TRA NHANH SAU KHI NẠP
-   ============================================================================ */
-PRINT N'>>> Nạp dữ liệu mẫu thành công. Số dòng theo bảng:';
-SELECT 'Persons' AS TableName, COUNT(*) AS Rows FROM Persons
-UNION ALL SELECT 'Customers'               , COUNT(*) FROM Customers
-UNION ALL SELECT 'Employees'               , COUNT(*) FROM Employees
-UNION ALL SELECT 'Accounts'                , COUNT(*) FROM Accounts
-UNION ALL SELECT 'VerificationCodes'       , COUNT(*) FROM VerificationCodes
-UNION ALL SELECT 'Packages'                , COUNT(*) FROM Packages
-UNION ALL SELECT 'Vouchers'                , COUNT(*) FROM Vouchers
-UNION ALL SELECT 'Shifts'                  , COUNT(*) FROM Shifts
-UNION ALL SELECT 'Orders'                  , COUNT(*) FROM Orders
-UNION ALL SELECT 'Transactions'            , COUNT(*) FROM Transactions
-UNION ALL SELECT 'Subscriptions'           , COUNT(*) FROM Subscriptions
-UNION ALL SELECT 'FreezeRecords'           , COUNT(*) FROM FreezeRecords
-UNION ALL SELECT 'CheckIns'                , COUNT(*) FROM CheckIns
-UNION ALL SELECT 'CustomerDeletionRequests', COUNT(*) FROM CustomerDeletionRequests
-UNION ALL SELECT 'TimeSlots'               , COUNT(*) FROM TimeSlots
-UNION ALL SELECT 'Sessions'                , COUNT(*) FROM Sessions
-UNION ALL SELECT 'SessionSwapLogs'         , COUNT(*) FROM SessionSwapLogs
-UNION ALL SELECT 'LeaveRequests'           , COUNT(*) FROM LeaveRequests
-UNION ALL SELECT 'Facilities'              , COUNT(*) FROM Facilities
-UNION ALL SELECT 'MaintenanceRequests'     , COUNT(*) FROM MaintenanceRequests
-UNION ALL SELECT 'StaffAttendances'        , COUNT(*) FROM StaffAttendances
-UNION ALL SELECT 'PrivateNotes'            , COUNT(*) FROM PrivateNotes
-UNION ALL SELECT 'TrainingPlans'           , COUNT(*) FROM TrainingPlans
-UNION ALL SELECT 'Feedbacks'               , COUNT(*) FROM Feedbacks
-UNION ALL SELECT 'BlogPosts'               , COUNT(*) FROM BlogPosts
-UNION ALL SELECT 'Notifications'           , COUNT(*) FROM Notifications
-UNION ALL SELECT 'NotificationRecipients'  , COUNT(*) FROM NotificationRecipients
-UNION ALL SELECT 'SystemConfigs'           , COUNT(*) FROM SystemConfigs
-UNION ALL SELECT 'OperatingHourExceptions' , COUNT(*) FROM OperatingHourExceptions
-UNION ALL SELECT 'AuditLogs'               , COUNT(*) FROM AuditLogs;
+PRINT N'>>> Nạp seed GMS v26 thành công.';
+SELECT t.name AS TableName, SUM(p.rows) AS [Rows] FROM sys.tables t
+JOIN sys.partitions p ON p.object_id = t.object_id AND p.index_id IN (0, 1)
+GROUP BY t.name ORDER BY t.name;
 GO

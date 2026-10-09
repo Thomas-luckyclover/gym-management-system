@@ -3,6 +3,20 @@
 Theo agents.md Phần 3, 4, 7.3: mọi chỗ SRS/SDS/prototype/chat nói khác nhau được ghi ở đây, kèm trạng thái.
 Khi nhóm chốt xong 1 mục → đổi trạng thái thành **ĐÃ CHỐT**, ghi ngày + phương án, và sửa lại tài liệu gốc cho khớp.
 
+## ✅ v25 (03/10/2026): đã chốt và xử lý
+
+- **D1.2:** 1 Person = 1 tài khoản, chọn vai trò.
+- **D1.3:** thời hạn gói theo `DurationUnit` / `DurationValue`.
+- **D2:** thêm cột cho Orders, MaintenanceRequests, Notifications.
+- **D3:** seed viết lại toàn bộ, tính theo mốc và giờ chạy.
+- **D5:** đổi tên PK.
+- **D6:** bỏ TokenHash / PasswordSetup.
+- **A3:** link thanh toán 5 phút, không cấu hình.
+- **A9:** múi giờ `Asia/Ho_Chi_Minh`.
+
+Xem `docs/database/SCHEMA_CHANGES_v25.md`.
+**Còn chờ nhóm chốt:** rule nghỉ phép của Manager (UC-15).
+
 ## A. Mâu thuẫn đang CHỜ NHÓM CHỐT (phát hiện 24/09/2026)
 
 | # | Chủ đề | Nguồn 1 | Nguồn 2 | Đề xuất | Tạm thời trong code |
@@ -27,7 +41,7 @@ Theo agents.md Phần 5: **chưa ai sửa schema**. Trước khi sửa: copy sch
 | # | Vấn đề | Căn cứ | Đề xuất |
 |---|---|---|---|
 | D1.1 | Hash mật khẩu trong seed là chuỗi giả → không đăng nhập được | codeImplementationBackend Mục 11, BCrypt | **Đã có** `database/3_Dev_Passwords.sql` (chỉ đổi dữ liệu mẫu, mật khẩu `Gms@2026`) |
-| D1.2 | 1 Account gắn 1 Person, nên người vừa là PT vừa là khách (Person 22) dùng **1 tài khoản cho 2 vai trò** | SRS 3.2 Account: "Customer **hoặc** Employee (never both)"; session hiện lưu 1 vai trò | Chọn 1: (a) giữ DB, màn đăng nhập hỏi "vào với vai trò nào" khi Person có cả 2 hồ sơ; (b) tách tài khoản theo vai trò. Em nghiêng (a) — khớp DBR-30 |
+| D1.2 | ✅ **ĐÃ CHỐT 03/10/2026 (rule v25)** — phương án (a): 1 Person = 1 SĐT, 1 email, 1 tài khoản cho mọi vai trò chưa Inactive (DBR-65). Có ≥ 2 vai trò → đăng nhập xong chọn vai trò, đổi vai trò không cần đăng nhập lại (CBR-113, `/select-role`). Nhân viên không tự xử lý hồ sơ khách của mình (CBR-115, `SelfServiceGuard`). Schema chỉ đổi UNIQUE(PersonId) của Customers/Employees thành filtered (migration 002) | SRS 3.2 sửa câu "never both" | Đã code |
 | D1.3 | Thời hạn gói lưu bằng **ngày** (`DurationDays` 30/90/180/365) | GBR-03 + DBR-19 tính theo **tháng** (05/09 → 05/10; 31/01 → 28/02) | Đổi sang `DurationValue` + `DurationUnit` (Day/Month), hoặc `DurationMonths` + DayPass riêng |
 
 ### D2. Thiếu cột so với SRS/prototype

@@ -37,6 +37,7 @@ public class PasswordRecoveryService {
     private final AccountDAO accountDAO = new AccountDAO();
     private final VerificationCodeDAO verificationCodeDAO = new VerificationCodeDAO();
     private final VerificationCodeService verificationCodeService = new VerificationCodeService();
+    private final AuditLogService auditLogService = new AuditLogService();
 
     // ===== Quên mật khẩu — Bước 1: nhập email, gửi mã =====
 
@@ -175,7 +176,6 @@ public class PasswordRecoveryService {
             //     Truyền null = không chừa phiên nào (khác với đổi mật khẩu trong /account là chừa phiên hiện tại)
             SessionRegistryListener.invalidateSessionsOfAccount(accountId, null);
 
-            // TODO GBR-07: ghi AuditLog "đặt lại mật khẩu qua email" khi có AuditLogDAO
             return ServiceResult.ok(null, Messages.MSG49_PASSWORD_CHANGED);
 
         } catch (SQLException e) {
@@ -212,7 +212,7 @@ public class PasswordRecoveryService {
     }
 
     /**
-     * Lưu mật khẩu mới và mở khóa tạm cho 1 tài khoản — 2 việc làm chung 1 transaction:
+     * Lưu mật khẩu mới, mở khóa tạm và ghi AuditLog cho 1 tài khoản — làm chung 1 transaction:
      * cùng thành công, hoặc lỗi giữa chừng thì cùng hủy (không bao giờ có chuyện đổi được mật khẩu mà vẫn bị khóa).
      *
      * @param accountId   Id tài khoản cần đổi mật khẩu.
@@ -224,20 +224,26 @@ public class PasswordRecoveryService {
         String newHash = PasswordUtil.hashPassword(newPassword);
 
         try (Connection conn = DBContext.getConnection()) {
-            // B2: tắt tự lưu → 2 câu UPDATE dưới đây chỉ có hiệu lực khi gọi commit()
+            // B2: tắt tự lưu → các câu SQL dưới đây chỉ có hiệu lực khi gọi commit()
             conn.setAutoCommit(false);
             try {
                 // B3: ghi mật khẩu mới, rồi đưa bộ đếm sai về 0 + xóa giờ khóa tạm
                 accountDAO.updatePasswordHash(conn, accountId, newHash);
                 accountDAO.resetFailedLogin(conn, accountId);
 
-                // B4: cả 2 câu đều chạy được → lưu thật
+                // B3a: ghi nhật ký đặt lại mật khẩu, không lưu giá trị (GBR-07, DBR-02)
+                auditLogService.logInTransaction(conn, accountId, "Đặt lại mật khẩu qua email",
+                        "Account", accountId, "PasswordHash", null, null, null);
+
+                // B4: cả 3 câu đều chạy được → lưu thật
                 conn.commit();
             } catch (SQLException e) {
-                // Lỗi ở giữa → hủy cả 2 câu, database trở về như trước khi gọi hàm
+                // Lỗi ở giữa → hủy hết, database trở về như trước khi gọi hàm
                 conn.rollback();
                 throw e;
             }
         }
     }
 }
+
+
