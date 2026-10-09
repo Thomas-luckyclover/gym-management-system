@@ -45,7 +45,7 @@ public class PtScheduleDayView {
 
     /**
      * Nhận thông tin ngày và danh sách buổi đã được Service gom nhóm.
-     * 
+     *
      * @param slotDate ngày của nhóm trong lịch
      * @param dayLabel nhãn “Hôm nay” hoặc tên thứ do Service chọn
      * @param today    có phải ngày hiện tại theo giờ VN không
