@@ -1,0 +1,242 @@
+/* ===== Khung chính ===== */
+
+.maintenance-panel {
+    margin-bottom: var(--space-6);
+}
+
+.maintenance-panel .panel-head {
+    margin-bottom: var(--space-5);
+}
+
+.maintenance-panel .panel-head h2 {
+    margin: 0;
+}
+
+.maintenance-panel .panel-head p {
+    margin: var(--space-1) 0 0;
+    color: var(--color-text-soft);
+}
+
+
+/* ===== Form tạo yêu cầu ===== */
+
+.maintenance-form-grid {
+    display: grid;
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+    gap: var(--space-4);
+}
+
+.maintenance-panel textarea {
+    width: 100%;
+    resize: vertical;
+}
+
+.maintenance-check {
+    display: flex;
+    align-items: flex-start;
+    gap: var(--space-3);
+    padding: var(--space-4);
+    margin: var(--space-4) 0;
+    border: var(--border-width) solid var(--color-border);
+    border-radius: var(--radius-md);
+    background: var(--color-surface);
+    cursor: pointer;
+}
+
+.maintenance-check span {
+    display: flex;
+    flex-direction: column;
+    gap: var(--space-1);
+}
+
+.maintenance-check small {
+    color: var(--color-text-soft);
+}
+
+
+/* ===== Bộ lọc ===== */
+
+.maintenance-filter {
+    display: grid;
+    grid-template-columns: minmax(240px, 1fr) 180px 90px auto auto;
+    gap: var(--space-3);
+    margin-bottom: var(--space-5);
+}
+
+
+/* ===== Danh sách ===== */
+
+.maintenance-list {
+    display: flex;
+    flex-direction: column;
+    gap: var(--space-3);
+}
+
+.maintenance-card {
+    display: grid;
+    grid-template-columns: minmax(0, 1fr) 320px;
+    gap: var(--space-5);
+    padding: var(--space-5);
+    border: var(--border-width) solid var(--color-border);
+    border-radius: var(--radius-lg);
+    background: var(--color-surface);
+}
+
+.maintenance-card-head {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: var(--space-3);
+}
+
+.maintenance-meta {
+    display: flex;
+    flex-wrap: wrap;
+    gap: var(--space-3);
+    margin-top: var(--space-2);
+    color: var(--color-text-soft);
+    font-size: var(--font-size-sm);
+}
+
+.maintenance-description {
+    margin: var(--space-3) 0;
+    line-height: var(--line-height-relaxed);
+}
+
+.maintenance-progress {
+    color: var(--color-text-soft);
+    font-size: var(--font-size-sm);
+}
+
+.maintenance-close-form {
+    display: flex;
+    flex-direction: column;
+    gap: var(--space-2);
+}
+
+.maintenance-close-form textarea {
+    min-height: 90px;
+}
+
+.maintenance-empty {
+    padding: var(--space-8);
+    text-align: center;
+    color: var(--color-text-muted);
+}
+
+.maintenance-pager {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: var(--space-4);
+    margin-top: var(--space-6);
+}
+
+
+/* ===== Responsive ===== */
+
+@media (max-width: 900px) {
+    .maintenance-form-grid {
+        grid-template-columns: 1fr;
+    }
+
+    .maintenance-filter {
+        grid-template-columns: 1fr;
+    }
+
+    .maintenance-card {
+        grid-template-columns: 1fr;
+    }
+}
+/* ===== Thông báo ===== */
+
+.alert-banner {
+    display: flex;
+    align-items: flex-start;
+    gap: var(--space-3);
+    padding: var(--space-4);
+    margin-bottom: var(--space-4);
+    border: var(--border-width) solid var(--color-border);
+    border-radius: var(--radius-md);
+}
+
+.alert-banner.danger {
+    background: var(--color-danger-tint);
+    border-color: var(--color-danger-border);
+    color: var(--color-danger-ink);
+}
+/* =========================================================
+   BF-06 UI clarity
+   ========================================================= */
+
+.maintenance-panel {
+    padding: var(--space-5);
+    border: var(--border-width) solid var(--color-border-strong);
+    border-radius: var(--radius-lg);
+    background: var(--color-surface);
+    box-shadow: var(--shadow-card);
+}
+
+.maintenance-panel .panel-head {
+    padding-bottom: var(--space-4);
+    border-bottom: var(--border-width) solid var(--color-border);
+}
+
+.maintenance-form-grid .field,
+.maintenance-panel > form > .field {
+    padding: var(--space-4);
+    border: var(--border-width) solid var(--color-border);
+    border-radius: var(--radius-md);
+    background: var(--color-bg);
+}
+
+.maintenance-form-grid .field select,
+.maintenance-panel > form > .field textarea {
+    margin-top: var(--space-2);
+    background: var(--color-surface);
+}
+
+.maintenance-check {
+    border-color: var(--color-border-strong);
+    box-shadow: var(--shadow-card);
+}
+
+.maintenance-filter {
+    padding: var(--space-4);
+    border: var(--border-width) solid var(--color-border);
+    border-radius: var(--radius-md);
+    background: var(--color-bg);
+}
+
+.maintenance-list {
+    gap: var(--space-4);
+}
+
+.maintenance-card {
+    border-color: var(--color-border-strong);
+    box-shadow: var(--shadow-card);
+}
+
+.maintenance-card-main {
+    min-width: 0;
+}
+
+.maintenance-description {
+    padding: var(--space-3);
+    border: var(--border-width) solid var(--color-border);
+    border-radius: var(--radius-md);
+    background: var(--color-bg);
+}
+
+.maintenance-progress {
+    padding: var(--space-3);
+    border-left: var(--border-width-accent) solid var(--color-primary);
+    background: var(--color-primary-tint);
+}
+
+.maintenance-close-form {
+    padding: var(--space-4);
+    border: var(--border-width) solid var(--color-border);
+    border-radius: var(--radius-md);
+    background: var(--color-bg);
+}
