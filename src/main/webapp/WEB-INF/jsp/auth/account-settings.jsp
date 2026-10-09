@@ -150,14 +150,7 @@
             <div class="page-intro">
 
                 <p>
-                    <c:choose>
-                        <c:when test="${currentRole.dbValue eq 'Manager'}">
-                            Hồ sơ đăng nhập của bạn. Đổi email hoặc SĐT phải xác thực bằng mã gửi tới email mới.
-                        </c:when>
-                        <c:otherwise>
-                            Hồ sơ và mật khẩu của chính bạn.
-                        </c:otherwise>
-                    </c:choose>
+                    Hồ sơ và mật khẩu của chính bạn.
                 </p>
 
             </div>
@@ -178,12 +171,7 @@
 
             <c:if test="${empty pageError}">
 
-                <%-- Manager: 2 cột Hồ sơ + Mật khẩu như prototype, không dùng tab --%>
-                <c:if test="${currentRole.dbValue eq 'Manager'}">
-                    <%@ include file="/WEB-INF/jsp/auth/account/profile-manager.jspf" %>
-                </c:if>
-
-                <c:if test="${currentRole.dbValue ne 'Manager'}">
+                <%-- Mọi vai trò sử dụng chung hệ thống tab; hồ sơ hiển thị theo vai trò. --%>
 
                 <%-- ================= TAB ================= --%>
 
@@ -247,6 +235,12 @@
                                     <%@ include file="/WEB-INF/jsp/auth/account/profile-admin.jspf" %>
 
                                 </c:when>
+                                <c:when test="${currentRole.dbValue eq 'Manager'}">
+                                    <%@ include file="/WEB-INF/jsp/auth/account/profile-manager.jspf" %>
+                                </c:when>
+                                <c:when test="${currentRole.dbValue eq 'PT'}">
+                                    <%@ include file="/WEB-INF/jsp/auth/account/profile-pt.jspf" %>
+                                </c:when>
                                 <c:when test="${currentRole.dbValue eq 'Receptionist'}">
                                     <%@ include file="/WEB-INF/jsp/auth/account/profile-receptionist.jspf" %>
                                 </c:when>
@@ -303,8 +297,6 @@
                     </c:choose>
 
                 </div>
-
-                </c:if>
 
             </c:if>
 

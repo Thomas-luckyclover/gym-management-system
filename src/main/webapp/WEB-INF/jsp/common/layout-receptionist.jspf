@@ -86,7 +86,7 @@
         </svg>
         <span>Danh mục thiết bị</span>
       </a>
-      <a href="#"
+      <a href="${pageContext.request.contextPath}/receptionist/maintenance-requests"
          class="nav-link<c:if test="${activeNav == 'maintenance'}"> active</c:if>"
          <c:if test="${activeNav == 'maintenance'}">aria-current="page"</c:if>>
         <svg viewBox="0 0 24 24" aria-hidden="true">
