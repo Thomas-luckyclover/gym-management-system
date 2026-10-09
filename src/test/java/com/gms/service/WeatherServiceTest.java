@@ -1,67 +1,163 @@
 package com.gms.service;
 
-import static org.junit.jupiter.api.Assertions.assertEquals;
-import static org.junit.jupiter.api.Assertions.assertTrue;
-
 import com.gms.dto.WeatherForecast;
 import com.gms.dto.WeatherView;
+import com.gms.integration.WeatherClient;
+import com.gms.integration.WeatherUnavailableException;
+import java.time.LocalDateTime;
+import java.util.concurrent.atomic.AtomicReference;
 import org.junit.jupiter.api.Test;
+import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertNotNull;
+import static org.junit.jupiter.api.Assertions.assertNull;
 
-/**
- * Kiểm tra WeatherService.toView chọn đúng kiểu hiệu ứng + câu nhắc — không gọi API, không cần mạng.
- * Thứ tự ưu tiên: giông → mưa → nắng nóng → nhiều mây → đêm quang → nắng đẹp.
- */
+/** Kiểm tra thứ tự lời nhắc và cache mà không cần kết nối Open-Meteo. */
 class WeatherServiceTest {
 
-    private final WeatherService weatherService = new WeatherService();
-
-    /** Tạo số liệu thô nhanh: chỉ quan tâm mã thời tiết, nhiệt độ, khả năng mưa, ngày/đêm. */
-    private WeatherForecast forecast(int currentCode, int dailyCode, double max, double feelsLike,
-            int rainChance, boolean day) {
-        return new WeatherForecast(30, feelsLike, 70, currentCode, dailyCode, max, 25, rainChance, day);
+    private WeatherForecast forecast(int currentCode, int dailyCode, double maxTemperature,
+            double feelsLikeTemperature, int rainChance, boolean isDay) {
+        return new WeatherForecast(29.4, feelsLikeTemperature, 72, currentCode, isDay,
+                dailyCode, maxTemperature, 25.4, rainChance);
     }
 
     @Test
-    void stormInDailyForecastWinsOverEverythingElse() {
-        // Lúc này trời quang nhưng trong ngày có giông (96) → vẫn phải nhắc mang ô
-        WeatherView view = weatherService.toView(forecast(0, 96, 36, 41, 99, true), "Hà Nội");
-        assertEquals(WeatherView.Mood.STORM, view.getMood());
-        assertTrue(view.getAdvice().contains("mang ô"));
+    void choosesWeatherByBusinessPriority() {
+        WeatherService service = new WeatherService(
+                new FakeWeatherClient(forecast(0, 0, 31, 32, 0, true)),
+                () -> LocalDateTime.of(2026, 10, 9, 9, 0), "Hà Nội", "21.0285", "105.8542");
+
+        assertEquals(WeatherView.Mood.STORM,
+                service.toView(forecast(3, 95, 36, 40, 90, true), "Hà Nội").getMood());
+        assertEquals(WeatherView.Mood.RAIN,
+                service.toView(forecast(3, 3, 36, 40, 80, true), "Hà Nội").getMood());
+        assertEquals(WeatherView.Mood.HOT,
+                service.toView(forecast(0, 0, 35, 34, 0, true), "Hà Nội").getMood());
+        assertEquals(WeatherView.Mood.CLOUDY,
+                service.toView(forecast(3, 3, 32, 34, 0, true), "Hà Nội").getMood());
+        assertEquals(WeatherView.Mood.NIGHT,
+                service.toView(forecast(0, 0, 32, 34, 0, false), "Hà Nội").getMood());
+        assertEquals(WeatherView.Mood.SUNNY,
+                service.toView(forecast(0, 0, 32, 34, 0, true), "Hà Nội").getMood());
+        assertEquals(WeatherView.Mood.SUNNY,
+                service.toView(forecast(1, 1, 32, 34, 0, true), "Hà Nội").getMood());
     }
 
     @Test
-    void highRainChanceMeansRainEvenIfSkyIsClearNow() {
-        WeatherView view = weatherService.toView(forecast(1, 3, 31, 34, 80, true), "Hà Nội");
-        assertEquals(WeatherView.Mood.RAIN, view.getMood());
-        assertEquals("Hôm nay có thể mưa (80%)", view.getTitle());
+    void mapsSnowWindAndHeatWithoutTreatingWeatherCodeAsTemperature() {
+        WeatherService service = new WeatherService(
+                new FakeWeatherClient(forecast(0, 0, 31, 32, 0, true)),
+                () -> LocalDateTime.of(2026, 10, 9, 9, 0), "Hà Nội", "21.0285", "105.8542");
+
+        WeatherView snow = service.toView(forecast(71, 71, 0, 0, 0, true), "Hà Nội");
+        assertEquals(WeatherView.Mood.SNOW, snow.getMood());
+        assertEquals("Tuyết nhẹ", snow.getConditionLabel());
+
+        WeatherForecast windy = new WeatherForecast(29, 32, 60, 0, true,
+                40, 0, 31, 25, 0);
+        assertEquals(WeatherView.Mood.WIND, service.toView(windy, "Hà Nội").getMood());
+
+        WeatherView hot = service.toView(forecast(0, 0, 35, 34, 0, true), "Hà Nội");
+        assertEquals(WeatherView.Mood.HOT, hot.getMood());
+        assertEquals("hot", hot.getWeatherType());
+        assertEquals("Nắng nóng gay gắt",
+                service.toView(forecast(0, 0, 38, 42, 0, true), "Hà Nội").getTitle());
+        assertEquals("Đêm nay nhiều mây",
+                service.toView(forecast(3, 3, 32, 34, 0, false), "Hà Nội").getTitle());
     }
 
     @Test
-    void rainingNowShowsRainingTitle() {
-        WeatherView view = weatherService.toView(forecast(61, 61, 29, 32, 90, true), "Hà Nội");
-        assertEquals(WeatherView.Mood.RAIN, view.getMood());
-        assertEquals("Trời đang mưa", view.getTitle());
-        assertEquals("Mưa nhỏ", view.getConditionLabel());
+    void rainEffectRequiresMoreThanFiftyPercent() {
+        WeatherService service = new WeatherService(
+                new FakeWeatherClient(forecast(0, 0, 31, 32, 0, true)),
+                () -> LocalDateTime.of(2026, 10, 9, 9, 0), "Hà Nội", "21.0285", "105.8542");
+
+        // Dự báo mưa đúng 50% chưa bật mưa; 51% bật. Đang mưa thực tế là trường hợp riêng.
+        assertEquals("sunny", service.toView(forecast(0, 61, 32, 34, 50, true), "Hà Nội").getWeatherType());
+        assertEquals("rain", service.toView(forecast(0, 0, 32, 34, 51, true), "Hà Nội").getWeatherType());
+        assertEquals("rain", service.toView(forecast(61, 61, 32, 34, 20, true), "Hà Nội").getWeatherType());
     }
 
     @Test
-    void hotWhenMaxAtLeast35OrFeelsLikeAtLeast39() {
-        assertEquals(WeatherView.Mood.HOT, weatherService.toView(forecast(0, 0, 35, 36, 1, true), "HN").getMood());
-        assertEquals(WeatherView.Mood.HOT, weatherService.toView(forecast(0, 0, 33, 39, 1, true), "HN").getMood());
+    void previewUsesFixedTypesWithoutCallingApi() {
+        FakeWeatherClient client = new FakeWeatherClient(forecast(0, 0, 31, 32, 0, true));
+        WeatherService service = new WeatherService(client,
+                () -> LocalDateTime.of(2026, 10, 9, 9, 0), "Hà Nội", "21.0285", "105.8542");
+
+        for (String type : new String[] {"sunny", "cloudy", "rain", "storm", "snow", "wind", "night", "hot"}) {
+            assertEquals(type, service.getPreview(type).getWeatherType());
+        }
+        assertEquals("hot", service.getPreview("extreme_hot").getWeatherType());
+        assertNull(service.getPreview("unknown"));
+        assertEquals(0, client.calls);
     }
 
     @Test
-    void cloudySunnyAndNight() {
-        assertEquals(WeatherView.Mood.CLOUDY, weatherService.toView(forecast(2, 2, 30, 32, 10, true), "HN").getMood());
-        assertEquals(WeatherView.Mood.SUNNY, weatherService.toView(forecast(0, 0, 30, 32, 10, true), "HN").getMood());
-        assertEquals(WeatherView.Mood.NIGHT, weatherService.toView(forecast(0, 0, 30, 32, 10, false), "HN").getMood());
+    void reusesSuccessForThirtyMinutesButNotAfterMidnight() {
+        AtomicReference<LocalDateTime> now = new AtomicReference<>(LocalDateTime.of(2026, 10, 9, 23, 55));
+        FakeWeatherClient client = new FakeWeatherClient(forecast(0, 0, 31, 32, 0, true));
+        WeatherService service = new WeatherService(client, now::get, "Hà Nội", "21.0285", "105.8542");
+
+        assertNotNull(service.getTodayWeather());
+        now.set(LocalDateTime.of(2026, 10, 9, 23, 59));
+        assertNotNull(service.getTodayWeather());
+        assertEquals(1, client.calls);
+
+        now.set(LocalDateTime.of(2026, 10, 10, 0, 1));
+        assertNotNull(service.getTodayWeather());
+        assertEquals(2, client.calls);
     }
 
     @Test
-    void numbersAreRoundedForDisplay() {
-        WeatherView view = weatherService.toView(new WeatherForecast(33.6, 40.5, 56, 0, 0, 34.4, 26.9, 1, true), "HN");
-        assertEquals(34, view.getTemperature());
-        assertEquals(41, view.getFeelsLike());
-        assertEquals("hot", view.getMoodCss());
+    void callsApiAgainWhenThirtyMinuteCacheExpires() {
+        AtomicReference<LocalDateTime> now = new AtomicReference<>(LocalDateTime.of(2026, 10, 9, 9, 0));
+        FakeWeatherClient client = new FakeWeatherClient(forecast(0, 0, 31, 32, 0, true));
+        WeatherService service = new WeatherService(client, now::get, "Hà Nội", "21.0285", "105.8542");
+
+        service.getTodayWeather();
+        now.set(LocalDateTime.of(2026, 10, 9, 9, 29));
+        service.getTodayWeather();
+        assertEquals(1, client.calls);
+
+        now.set(LocalDateTime.of(2026, 10, 9, 9, 30));
+        service.getTodayWeather();
+        assertEquals(2, client.calls);
+    }
+
+    @Test
+    void retriesFiveMinutesAfterFailure() {
+        AtomicReference<LocalDateTime> now = new AtomicReference<>(LocalDateTime.of(2026, 10, 9, 9, 0));
+        FakeWeatherClient client = new FakeWeatherClient(forecast(0, 0, 31, 32, 0, true));
+        client.failuresRemaining = 1;
+        WeatherService service = new WeatherService(client, now::get, "Hà Nội", "21.0285", "105.8542");
+
+        assertNull(service.getTodayWeather());
+        now.set(LocalDateTime.of(2026, 10, 9, 9, 4));
+        assertNull(service.getTodayWeather());
+        assertEquals(1, client.calls);
+
+        now.set(LocalDateTime.of(2026, 10, 9, 9, 5));
+        assertNotNull(service.getTodayWeather());
+        assertEquals(2, client.calls);
+    }
+
+    /** Thay API thật bằng dữ liệu cố định để test thời gian cache. */
+    private static class FakeWeatherClient extends WeatherClient {
+        private final WeatherForecast forecast;
+        private int calls;
+        private int failuresRemaining;
+
+        FakeWeatherClient(WeatherForecast forecast) {
+            this.forecast = forecast;
+        }
+
+        @Override
+        public WeatherForecast fetchToday(double latitude, double longitude) throws WeatherUnavailableException {
+            calls++;
+            if (failuresRemaining > 0) {
+                failuresRemaining--;
+                throw new WeatherUnavailableException("API không phản hồi.", null);
+            }
+            return forecast;
+        }
     }
 }

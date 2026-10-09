@@ -194,6 +194,164 @@ body.dock {
   color: #fff;
 }
 
+/* Customer dùng cùng bảng màu xanh xám của PT; nghiệp vụ và bố cục cũ giữ nguyên. */
+.customer-dashboard-page {
+  --pt-sky-top: #DBE6E7;
+  --pt-sky-bottom: #9BB2B7;
+  --pt-hero-end: #BBD2D4;
+  --pt-hero-text: #203D45;
+  --pt-hero-muted: #49656B;
+  --pt-awning-one: #45646C;
+  --pt-awning-rail: #304C55;
+  --pt-awning-light: #D8AA3D;
+  --pt-weather-border: rgba(255, 255, 255, .7);
+  --pt-card-shadow: 0 10px 28px -18px rgba(40, 49, 39, .27), 0 2px 8px rgba(40, 49, 39, .06);
+  background:
+    radial-gradient(circle at 82% 8%, color-mix(in srgb, var(--pt-awning-light) 12%, transparent), transparent 30%),
+    linear-gradient(155deg, var(--pt-sky-top), var(--pt-sky-bottom));
+  background-attachment: fixed;
+}
+.customer-dashboard-page::before {
+  content: "";
+  position: fixed;
+  z-index: 0;
+  inset: 0;
+  pointer-events: none;
+  opacity: .28;
+  background: radial-gradient(circle, color-mix(in srgb, var(--pt-hero-text) 10%, transparent) 1px, transparent 1px) 0 0 / 24px 24px;
+}
+.customer-dashboard-page .app { position: relative; z-index: 1; }
+.customer-dashboard-page.weather-sunny,
+.customer-dashboard-page.weather-cloudy { --pt-sky-top: #EEF1EF; --pt-sky-bottom: #CEDBD8; --pt-hero-end: #D2E0DC; --pt-awning-one: #5C7771; --pt-awning-rail: #405C57; }
+.customer-dashboard-page.weather-hot { --pt-sky-top: #FFEACF; --pt-sky-bottom: #F0B78D; --pt-hero-end: #F6C5A3; --pt-hero-text: #4E2D24; --pt-awning-one: #A45335; --pt-awning-rail: #7D3D29; }
+.customer-dashboard-page.weather-night { --pt-sky-top: #243450; --pt-sky-bottom: #0E1628; --pt-hero-end: #152443; --pt-hero-text: #F5F7FC; --pt-hero-muted: #D6E1F1; --pt-awning-one: #152440; --pt-awning-rail: #0B1830; }
+.customer-dashboard-page.weather-storm { --pt-sky-top: #5B6A72; --pt-sky-bottom: #29343C; --pt-hero-end: #1D333F; --pt-hero-text: #F5FAFA; --pt-hero-muted: #D5E6E7; --pt-awning-one: #203640; --pt-awning-rail: #152B35; }
+.customer-dashboard-page .sidebar {
+  background: linear-gradient(165deg, var(--pt-awning-one), var(--pt-awning-rail) 86%);
+  color: var(--color-text-inverse-soft);
+}
+.customer-dashboard-page .nav-link.active,
+.customer-dashboard-page .nav-link[aria-current="page"] {
+  background: color-mix(in srgb, var(--pt-awning-light) 18%, transparent);
+  box-shadow: inset 3px 0 var(--pt-awning-light);
+}
+.customer-dashboard-page .dock-handle { background: var(--pt-awning-one); }
+.customer-dashboard-page .dock-handle:hover { background: var(--pt-awning-rail); }
+.customer-dashboard-page .topbar {
+  background: color-mix(in srgb, var(--color-surface) 76%, transparent);
+  border-bottom-color: color-mix(in srgb, var(--pt-hero-text) 16%, transparent);
+  backdrop-filter: blur(14px) saturate(1.08);
+  -webkit-backdrop-filter: blur(14px) saturate(1.08);
+}
+.customer-dashboard-page .content { max-width: var(--layout-content-width); }
+
+/* Thẻ thời tiết Customer: dùng chung số liệu API, có hiệu ứng nhẹ theo weather-* class. */
+.customer-weather {
+  position: relative;
+  isolation: isolate;
+  overflow: hidden;
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) auto;
+  gap: var(--space-3) var(--space-5);
+  align-items: center;
+  padding: var(--space-5);
+  border: var(--border-width) solid color-mix(in srgb, var(--color-primary) 28%, var(--pt-weather-border));
+  border-radius: var(--radius-lg);
+  background: color-mix(in srgb, var(--pt-hero-end) 74%, var(--color-surface));
+  color: var(--pt-hero-text);
+  box-shadow: var(--pt-card-shadow);
+  backdrop-filter: blur(16px) saturate(1.08);
+  -webkit-backdrop-filter: blur(16px) saturate(1.08);
+  animation: customer-weather-enter 650ms var(--ease-out) both;
+}
+.customer-weather::before {
+  content: "";
+  position: absolute;
+  z-index: -1;
+  inset: -55% -12% -55% 56%;
+  background: repeating-conic-gradient(from 0deg, color-mix(in srgb, var(--pt-awning-light) 11%, transparent) 0 12deg, transparent 12deg 30deg);
+  animation: customer-weather-turn 55s linear infinite;
+}
+.weather-rain .customer-weather::before,
+.weather-storm .customer-weather::before {
+  inset: -100% 0;
+  background: repeating-linear-gradient(105deg, transparent 0 32px, rgba(255,255,255,.38) 34px 35px, transparent 37px 68px);
+  background-size: 76px 130px;
+  animation: customer-weather-rain 1.8s linear infinite;
+}
+.weather-night .customer-weather::before {
+  inset: 0;
+  background: radial-gradient(circle, rgba(255,247,206,.75) 0 1px, transparent 2px) 0 0 / 48px 42px;
+  animation: customer-weather-stars 4s ease-in-out infinite alternate;
+}
+.customer-dashboard-page.weather-cloudy::after,
+.customer-dashboard-page.weather-rain::after,
+.customer-dashboard-page.weather-storm::after {
+  content: "";
+  position: fixed;
+  z-index: 0;
+  inset: -20%;
+  pointer-events: none;
+  opacity: .22;
+  background: radial-gradient(ellipse at 24% 25%, rgba(255,255,255,.5) 0 9%, transparent 26%), radial-gradient(ellipse at 72% 42%, rgba(255,255,255,.36) 0 11%, transparent 30%);
+  filter: blur(18px);
+  animation: customer-cloud-drift 28s ease-in-out infinite alternate;
+}
+.customer-dashboard-page.weather-rain::after,
+.customer-dashboard-page.weather-storm::after {
+  opacity: .16;
+  filter: none;
+  background: repeating-linear-gradient(105deg, transparent 0 44px, rgba(255,255,255,.52) 45px 47px, transparent 48px 90px);
+  animation: customer-rain-fall 1.9s linear infinite;
+}
+.customer-dashboard-page.weather-storm::after { opacity: .28; animation-duration: 1s; }
+.customer-dashboard-page.weather-sunny::after,
+.customer-dashboard-page.weather-hot::after {
+  content: "";
+  position: fixed;
+  z-index: 0;
+  top: -35%;
+  right: -18%;
+  width: 72vw;
+  aspect-ratio: 1;
+  pointer-events: none;
+  background: repeating-conic-gradient(from 0deg, rgba(216,170,61,.11) 0 12deg, transparent 12deg 30deg);
+  -webkit-mask: radial-gradient(circle, transparent 20%, black 50%, transparent 72%);
+  mask: radial-gradient(circle, transparent 20%, black 50%, transparent 72%);
+  animation: customer-sun-turn 65s linear infinite;
+}
+.customer-weather__copy { min-width: 0; }
+.customer-weather__eyebrow { display: flex; flex-wrap: wrap; align-items: center; gap: var(--space-2); color: var(--pt-hero-text); font-weight: var(--font-weight-semibold); }
+.customer-weather__preview { padding: var(--space-0-5) var(--space-2); border-radius: var(--radius-pill); background: var(--color-warning-tint); color: var(--color-warning-ink); font-size: var(--font-size-xs); }
+.customer-weather__condition, .customer-weather__advice { margin: var(--space-1) 0 0; color: var(--pt-hero-text); }
+.customer-weather__advice { font-size: var(--font-size-sm); }
+.customer-weather__temperature { color: var(--color-primary-hover); font-family: var(--font-display); font-size: clamp(2.5rem, 5vw, 4rem); line-height: 1; font-variant-numeric: tabular-nums; }
+.customer-weather__details { grid-column: 1 / -1; display: grid; grid-template-columns: repeat(5, minmax(0, 1fr)); gap: var(--space-3); margin: 0; padding-top: var(--space-3); border-top: var(--border-width) solid color-mix(in srgb, var(--pt-hero-text) 18%, transparent); }
+.customer-weather__details dt { color: var(--pt-hero-muted); font-size: var(--font-size-xs); }
+.customer-weather__details dd { margin: var(--space-1) 0 0; color: var(--pt-hero-text); font-weight: var(--font-weight-semibold); font-variant-numeric: tabular-nums; }
+@keyframes customer-weather-turn { to { transform: rotate(360deg); } }
+@keyframes customer-weather-rain { to { transform: translateY(130px); } }
+@keyframes customer-weather-stars { to { opacity: .35; } }
+@keyframes customer-weather-enter { from { opacity: 0; transform: translateY(14px); } to { opacity: 1; transform: none; } }
+@keyframes customer-cloud-drift { to { transform: translateX(8%) scale(1.05); } }
+@keyframes customer-rain-fall { to { transform: translateY(160px); } }
+@keyframes customer-sun-turn { to { transform: rotate(360deg); } }
+
+@media (max-width: 720px) {
+  .customer-weather { grid-template-columns: minmax(0, 1fr) auto; padding: var(--space-4); }
+  .customer-weather__details { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+}
+@media (prefers-reduced-motion: reduce) {
+  .customer-weather,
+  .customer-weather::before,
+  .customer-dashboard-page::after,
+  .customer-dashboard-page.weather-cloudy::after,
+  .customer-dashboard-page.weather-rain::after,
+  .customer-dashboard-page.weather-storm::after,
+  .customer-dashboard-page.weather-sunny::after,
+  .customer-dashboard-page.weather-hot::after { animation: none; }
+}
+
 /* ===== 2. TOPBAR ===== */
 .dock .main {
   display: flex;

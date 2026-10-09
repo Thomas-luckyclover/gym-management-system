@@ -10,10 +10,13 @@
 <head>
     <%@ include file="/WEB-INF/jsp/common/head.jspf" %>
     <title>Trang cá nhân · Super Gym</title>
-    <link rel="stylesheet" href="${pageContext.request.contextPath}/css/pages/customer/dashboard.css">
+    <link rel="stylesheet" href="${pageContext.request.contextPath}/css/base.css?v=4">
+    <link rel="stylesheet" href="${pageContext.request.contextPath}/css/awning.css?v=2">
+    <link rel="stylesheet" href="${pageContext.request.contextPath}/css/weather.css?v=2">
+    <link rel="stylesheet" href="${pageContext.request.contextPath}/css/pages/customer/dashboard.css?v=4">
 </head>
 
-<body class="dock ${themeClass}">
+<body class="dock ${themeClass} weather-${weatherType}">
 
 <%@ include file="/WEB-INF/jsp/common/flash-toast.jspf" %>
 
@@ -57,6 +60,27 @@
             </c:if>
 
             <c:if test="${not empty dashboard}">
+                <%-- Khối thời tiết dùng cùng WeatherService/API với PT Dashboard; các khối Customer bên dưới giữ nguyên. --%>
+                <c:if test="${not empty weather}">
+                    <section class="customer-weather" aria-label="Thời tiết hôm nay tại phòng gym">
+                        <div class="customer-weather__copy">
+                            <div class="customer-weather__eyebrow">
+                                <span><c:out value="${weather.cityName}" /> · <c:out value="${weather.title}" /></span>
+                                <c:if test="${weatherPreview}"><span class="customer-weather__preview">Xem trước</span></c:if>
+                            </div>
+                            <p class="customer-weather__condition">Hiện tại: <c:out value="${weather.conditionLabel}" /></p>
+                            <p class="customer-weather__advice"><c:out value="${weather.advice}" /></p>
+                        </div>
+                        <strong class="customer-weather__temperature"><c:out value="${weather.temperature}" />°</strong>
+                        <dl class="customer-weather__details">
+                            <div><dt>Cảm giác</dt><dd><c:out value="${weather.feelsLikeTemperature}" />°</dd></div>
+                            <div><dt>Thấp / cao</dt><dd><c:out value="${weather.minTemperature}" />° / <c:out value="${weather.maxTemperature}" />°</dd></div>
+                            <div><dt>Độ ẩm</dt><dd><c:out value="${weather.humidityPercent}" />%</dd></div>
+                            <div><dt>Gió</dt><dd><c:out value="${weather.windSpeedKmh}" /> km/h</dd></div>
+                            <div><dt>Khả năng mưa</dt><dd><c:out value="${weather.rainProbabilityPercent}" />%</dd></div>
+                        </dl>
+                    </section>
+                </c:if>
                 <div class="split">
                     <div class="col-main">
 

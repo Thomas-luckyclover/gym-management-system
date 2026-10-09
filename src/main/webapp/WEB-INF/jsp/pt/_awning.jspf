@@ -1,0 +1,17 @@
+<%@ page pageEncoding="UTF-8" %>
+<%-- Bạt và lớp hiệu ứng chỉ dùng ở PT Dashboard. dashboard.js thêm hạt vào pt-weather-effects. --%>
+<div class="pt-weather-effects" aria-hidden="true"></div>
+<div class="pt-awning" aria-hidden="true">
+    <div class="pt-awning__fabric">
+        <%-- Mỗi flap có mép cong riêng; CSS ẩn bớt flap khi màn hình hẹp. --%>
+        <c:forEach var="flapIndex" begin="0" end="15">
+            <span class="pt-awning__flap" style="--flap-index: ${flapIndex}"></span>
+        </c:forEach>
+    </div>
+    <div class="pt-awning__stitch"></div>
+    <div class="pt-awning__lights">
+        <c:forEach var="lightIndex" begin="0" end="15">
+            <span class="pt-awning__light" style="--light-index: ${lightIndex}"></span>
+        </c:forEach>
+    </div>
+</div>
