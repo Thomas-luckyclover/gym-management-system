@@ -13,8 +13,17 @@
 <head>
   <%@ include file="/WEB-INF/jsp/common/head.jspf" %>
   <title>Check-in hội viên · Super Gym Lễ tân</title>
-  <link rel="stylesheet" href="${pageContext.request.contextPath}/css/pages/receptionist/check-in.css">
-  <script src="${pageContext.request.contextPath}/js/pages/receptionist/check-in.js" defer></script>
+  <link rel="stylesheet"
+        href="${pageContext.request.contextPath}/css/pages/receptionist/check-in.css">
+
+  <link rel="stylesheet"
+        href="${pageContext.request.contextPath}/css/pages/auth/notification-bell.css">
+
+  <script src="${pageContext.request.contextPath}/js/pages/receptionist/check-in.js"
+          defer></script>
+
+  <script src="${pageContext.request.contextPath}/js/pages/auth/notification-bell.js"
+          defer></script>
 </head>
 <body class="dock theme-staff">
   <%@ include file="/WEB-INF/jsp/common/flash-toast.jspf" %>
@@ -28,6 +37,9 @@
           <h1 class="tb-title">Check-in hội viên</h1>
         </div>
         <div class="top-right">
+
+          <%@ include file="/WEB-INF/jsp/common/notification-bell.jspf" %>
+
           <span class="badge badge-ok">
             <i class="fa-solid fa-circle-check"></i> Ca làm việc đang mở
           </span>
