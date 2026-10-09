@@ -220,8 +220,7 @@ public class CustomerDashboardDAO {
             throws SQLException {
 
         // Điều kiện khách có Membership / DayPass (nếu SingleSession) ngày đó,
-        // không trong khoảng bảo lưu — tái dụng logic từ
-        // SessionDAO.HAS_MEMBERSHIP_ON_SLOT_DATE
+        // không trong khoảng bảo lưu.
         String hasMembership = "EXISTS (SELECT 1 FROM Subscriptions m "
                 + "WHERE m.CustomerId = sub.CustomerId "
                 + "AND m.Status <> 'Cancelled' "
