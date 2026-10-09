@@ -14,7 +14,7 @@
   <c:set var="managerInitial" value="${accountSettings.fullName.substring(0, 1)}" />
 </c:if>
 
-<div class="account-settings-grid">
+<div class="account-manager-profile">
 
   <%-- ===== Cột trái: hồ sơ ===== --%>
   <section class="account-card">
@@ -178,6 +178,4 @@
     </div>
   </section>
 
-  <%-- ===== Cột phải: đổi mật khẩu (action=changePassword) ===== --%>
-  <%@ include file="/WEB-INF/jsp/auth/account/tab-password.jspf" %>
 </div>
