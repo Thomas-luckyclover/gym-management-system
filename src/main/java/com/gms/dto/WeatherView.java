@@ -1,22 +1,17 @@
 package com.gms.dto;
 
 /**
- * Thẻ thời tiết trên PT Dashboard — đã có sẵn câu chữ, JSP chỉ việc in ra.
- *
- * Ai tạo: WeatherService.getTodayWeather (từ WeatherForecast thô).
- * Ai dùng: pt/dashboard.jsp. Trường mood quyết định hiệu ứng CSS (mưa rơi, nắng xoay, sét lóe...).
- *
- * VD Hà Nội trưa nắng: mood "hot", conditionLabel "Trời quang", title "Nắng nóng 35°C",
- *     advice "Uống đủ nước và nhắc khách mang bình nước...", temperature 34, feelsLike 41, rainChance 1
- *
- * @author Le Cong Minh
+ * Một thẻ thời tiết đã có sẵn câu chữ để PT Dashboard hiển thị.
+ * WeatherService sẽ tạo DTO này từ WeatherForecast; JSP chỉ đọc, không xét mã thời tiết.
  */
 public class WeatherView {
 
-    /** Kiểu hiệu ứng, cũng là hậu tố class CSS "weather--{mood}". */
+    /** Kiểu thời tiết để JSP gắn class CSS; tên CSS chỉ lấy từ các giá trị cố định này. */
     public enum Mood {
         STORM("storm"),
         RAIN("rain"),
+        SNOW("snow"),
+        WIND("wind"),
         HOT("hot"),
         CLOUDY("cloudy"),
         SUNNY("sunny"),
@@ -28,41 +23,53 @@ public class WeatherView {
             this.cssName = cssName;
         }
 
+        /** @return hậu tố class CSS, ví dụ RAIN thành weather--rain */
         public String getCssName() {
             return cssName;
         }
     }
 
+    // WeatherService chọn từ mã thời tiết/nhiệt độ trong WeatherForecast; JSP dùng để chọn màu thẻ.
     private final Mood mood;
-    private final String cityName;
-    private final String conditionLabel;
-    private final String title;
-    private final String advice;
-    private final String iconClass;
-    private final int temperature;
-    private final int feelsLike;
-    private final int maxTemperature;
-    private final int minTemperature;
-    private final int rainChance;
-    private final int humidity;
 
-    /**
-     * @param mood           kiểu hiệu ứng (STORM / RAIN / HOT / CLOUDY / SUNNY / NIGHT).
-     * @param cityName       tên nơi xem thời tiết, VD "Hà Nội".
-     * @param conditionLabel tình trạng lúc này bằng chữ, VD "Mưa giông".
-     * @param title          câu to trên thẻ, VD "Hôm nay có mưa giông".
-     * @param advice         lời nhắc cho PT, VD "Nhớ mang ô và áo mưa...".
-     * @param iconClass      icon Font Awesome, VD "fa-cloud-bolt".
-     * @param temperature    nhiệt độ lúc này, đã làm tròn (°C).
-     * @param feelsLike      nhiệt độ cảm nhận, đã làm tròn (°C).
-     * @param maxTemperature cao nhất hôm nay (°C).
-     * @param minTemperature thấp nhất hôm nay (°C).
-     * @param rainChance     khả năng mưa cao nhất hôm nay (%).
-     * @param humidity       độ ẩm lúc này (%).
-     */
-    public WeatherView(Mood mood, String cityName, String conditionLabel, String title, String advice,
-            String iconClass, int temperature, int feelsLike, int maxTemperature, int minTemperature,
-            int rainChance, int humidity) {
+    // WeatherService đọc cấu hình địa điểm của gym; JSP in cạnh tình trạng trời, ví dụ "Hà Nội".
+    private final String cityName;
+
+    // WeatherService đổi WeatherForecast.currentWeatherCode thành chữ; JSP in "Nhiều mây".
+    private final String conditionLabel;
+
+    // WeatherService chọn thông điệp chính; JSP in "Hôm nay có thể mưa".
+    private final String title;
+
+    // WeatherService chọn lời nhắc phù hợp cho PT; JSP in thành một dòng dưới tiêu đề.
+    private final String advice;
+
+    // WeatherService chọn tên icon Font Awesome theo mood; JSP gắn vào biểu tượng thời tiết.
+    private final String iconClass;
+
+    // WeatherService làm tròn WeatherForecast.currentTemperature; JSP in lớn, ví dụ "29°".
+    private final int temperature;
+
+    // Các số từ WeatherForecast do Service làm tròn; null ở constructor cũ dùng bởi các màn/test khác.
+    private final Integer feelsLikeTemperature;
+    private final Integer humidityPercent;
+    private final Integer windSpeedKmh;
+    private final Integer minTemperature;
+    private final Integer maxTemperature;
+    private final Integer rainProbabilityPercent;
+
+    /** Giữ constructor cũ cho nơi chỉ cần dòng thời tiết ngắn. */
+    public WeatherView(Mood mood, String cityName, String conditionLabel, String title,
+            String advice, String iconClass, int temperature) {
+        this(mood, cityName, conditionLabel, title, advice, iconClass, temperature,
+                null, null, null, null, null, null);
+    }
+
+    /** Service truyền thêm các số đo để PT Dashboard hiện bảng chi tiết. */
+    public WeatherView(Mood mood, String cityName, String conditionLabel, String title,
+            String advice, String iconClass, int temperature, Integer feelsLikeTemperature,
+            Integer humidityPercent, Integer windSpeedKmh, Integer minTemperature,
+            Integer maxTemperature, Integer rainProbabilityPercent) {
         this.mood = mood;
         this.cityName = cityName;
         this.conditionLabel = conditionLabel;
@@ -70,63 +77,74 @@ public class WeatherView {
         this.advice = advice;
         this.iconClass = iconClass;
         this.temperature = temperature;
-        this.feelsLike = feelsLike;
-        this.maxTemperature = maxTemperature;
+        this.feelsLikeTemperature = feelsLikeTemperature;
+        this.humidityPercent = humidityPercent;
+        this.windSpeedKmh = windSpeedKmh;
         this.minTemperature = minTemperature;
-        this.rainChance = rainChance;
-        this.humidity = humidity;
+        this.maxTemperature = maxTemperature;
+        this.rainProbabilityPercent = rainProbabilityPercent;
     }
 
+    /** @return mood để Service hoặc test kiểm tra kiểu thời tiết đã chọn */
     public Mood getMood() {
         return mood;
     }
 
-    /** @return tên class CSS của hiệu ứng, VD "rain" → JSP ghép thành "weather--rain". */
+    /** @return hậu tố CSS để JSP gắn class weather--{moodCss} */
     public String getMoodCss() {
         return mood.getCssName();
     }
 
+    /** CSS dùng cùng mood mà Service chọn; nắng nóng có bảng màu cam riêng. */
+    public String getWeatherType() {
+        return mood.getCssName();
+    }
+
+    /** @return tên địa điểm JSP in cạnh tình trạng thời tiết */
     public String getCityName() {
         return cityName;
     }
 
+    /** @return chữ mô tả thời tiết hiện tại */
     public String getConditionLabel() {
         return conditionLabel;
     }
 
+    /** @return tiêu đề chính trên thẻ thời tiết */
     public String getTitle() {
         return title;
     }
 
+    /** @return lời nhắc ngắn cho PT */
     public String getAdvice() {
         return advice;
     }
 
+    /** @return tên icon Font Awesome do Service chọn, không lấy trực tiếp từ API */
     public String getIconClass() {
         return iconClass;
     }
 
+    /** @return nhiệt độ hiện tại đã làm tròn để JSP in cùng ký hiệu độ */
     public int getTemperature() {
         return temperature;
     }
 
-    public int getFeelsLike() {
-        return feelsLike;
-    }
+    /** @return current.apparent_temperature đã làm tròn, °C */
+    public Integer getFeelsLikeTemperature() { return feelsLikeTemperature; }
 
-    public int getMaxTemperature() {
-        return maxTemperature;
-    }
+    /** @return current.relative_humidity_2m, % */
+    public Integer getHumidityPercent() { return humidityPercent; }
 
-    public int getMinTemperature() {
-        return minTemperature;
-    }
+    /** @return current.wind_speed_10m đã làm tròn, km/h */
+    public Integer getWindSpeedKmh() { return windSpeedKmh; }
 
-    public int getRainChance() {
-        return rainChance;
-    }
+    /** @return daily.temperature_2m_min[0] đã làm tròn, °C */
+    public Integer getMinTemperature() { return minTemperature; }
 
-    public int getHumidity() {
-        return humidity;
-    }
+    /** @return daily.temperature_2m_max[0] đã làm tròn, °C */
+    public Integer getMaxTemperature() { return maxTemperature; }
+
+    /** @return daily.precipitation_probability_max[0], % */
+    public Integer getRainProbabilityPercent() { return rainProbabilityPercent; }
 }

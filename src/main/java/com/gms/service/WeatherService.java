@@ -6,216 +6,232 @@ import com.gms.integration.WeatherClient;
 import com.gms.integration.WeatherUnavailableException;
 import com.gms.util.AppConfig;
 import com.gms.util.DateTimeUtil;
+import java.time.LocalDate;
 import java.time.LocalDateTime;
+import java.util.function.Supplier;
+import java.util.logging.Level;
+import java.util.logging.Logger;
 
 /**
- * Thời tiết hôm nay cho PT Dashboard: lấy số liệu từ WeatherClient rồi đổi thành câu nhắc
- * ("Hôm nay có mưa, nhớ mang ô"...) và chọn kiểu hiệu ứng CSS.
- *
- * ===== CACHE =====
- * Thời tiết không đổi từng giây, và gọi API mất ~1–2 giây, nên kết quả được giữ trong RAM 30 phút,
- * dùng chung cho mọi PT. Gọi lỗi thì nhớ "đang lỗi" 5 phút để không bắt mỗi lần mở trang chờ 3 giây.
- *
- * ===== CHẾ ĐỘ DEMO =====
- * demoWeather(mood) trả thẻ thời tiết mẫu cho 1 kiểu trời, không gọi API — để xem đủ các hiệu ứng CSS
- * khi thuyết trình (PT Dashboard mở với ?weatherDemo=rain / storm / hot / cloudy / sunny / night).
- *
- * ===== ĐỊA ĐIỂM =====
- * Mặc định Hà Nội. Muốn đổi thì thêm vào application.properties (không bắt buộc):
- *   weather.city=Hà Nội · weather.latitude=21.0285 · weather.longitude=105.8542
- *
- * @author Le Cong Minh
+ * Lấy thời tiết ở vị trí phòng gym và chuẩn bị một thẻ ngắn cho PT Dashboard.
+ * Dùng chung kết quả thành công 30 phút; nếu API lỗi thì 5 phút sau mới thử lại.
  */
 public class WeatherService {
 
-    private static final String DEFAULT_CITY = "Hà Nội";
-    private static final String DEFAULT_LATITUDE = "21.0285";
-    private static final String DEFAULT_LONGITUDE = "105.8542";
-
-    private static final int CACHE_MINUTES = 30;
+    private static final Logger LOGGER = Logger.getLogger(WeatherService.class.getName());
+    private static final int SUCCESS_CACHE_MINUTES = 30;
     private static final int FAILURE_RETRY_MINUTES = 5;
-
-    /** Ngưỡng "nắng nóng": cao nhất trong ngày ≥ 35°C hoặc cảm nhận lúc này ≥ 39°C. */
+    private static final int RAIN_CHANCE_THRESHOLD = 50;
     private static final int HOT_MAX_TEMPERATURE = 35;
-    private static final int HOT_FEELS_LIKE = 39;
+    private static final int HOT_FEELS_LIKE_TEMPERATURE = 39;
+    private static final int EXTREME_HOT_MAX_TEMPERATURE = 38;
+    private static final int EXTREME_HOT_FEELS_LIKE_TEMPERATURE = 42;
+    private static final int STRONG_WIND_KMH = 35;
 
-    /** Khả năng mưa từ 60% trở lên thì coi như hôm nay có mưa, dù lúc này trời chưa mưa. */
-    private static final int RAIN_CHANCE_THRESHOLD = 60;
+    private final WeatherClient weatherClient;
+    private final Supplier<LocalDateTime> currentTime;
+    private final String cityName;
+    private final String latitudeText;
+    private final String longitudeText;
 
-    // Kết quả đã lấy lần trước, dùng chung cho mọi request (volatile để các luồng Tomcat thấy giá trị mới ngay)
-    private static volatile WeatherView cachedView;
-    private static volatile LocalDateTime cachedUntil;
+    // Một instance Service được Servlet dùng chung cho các request PT.
+    // cachedView = null và cachedUntil còn hạn nghĩa là API vừa lỗi, chưa nên gọi lại.
+    private WeatherView cachedView;
+    private LocalDate cachedDate;
+    private LocalDateTime cachedUntil;
 
-    private final WeatherClient weatherClient = new WeatherClient();
+    public WeatherService() {
+        this(new WeatherClient(), DateTimeUtil::now,
+                AppConfig.get("weather.city", "Hà Nội"),
+                AppConfig.get("weather.latitude", "21.0285"),
+                AppConfig.get("weather.longitude", "105.8542"));
+    }
 
-    /**
-     * Lấy thẻ thời tiết hôm nay.
-     *
-     * @return WeatherView có sẵn câu chữ; trả null khi không lấy được thời tiết
-     *         → JSP ẩn thẻ thời tiết, phần còn lại của dashboard vẫn hiện bình thường.
-     */
-    public WeatherView getTodayWeather() {
-        // B1: còn trong hạn cache (kể cả cache "đang lỗi") → trả luôn, không gọi API
-        LocalDateTime now = DateTimeUtil.now();
-        if (cachedUntil != null && now.isBefore(cachedUntil)) {
-            return cachedView;
-        }
-
-        // B2: hết hạn → gọi API. synchronized để 10 PT mở trang cùng lúc thì chỉ 1 người phải chờ gọi API
-        synchronized (WeatherService.class) {
-            // Kiểm tra lại: có thể luồng khác vừa gọi xong trong lúc mình đứng chờ
-            if (cachedUntil != null && now.isBefore(cachedUntil)) {
-                return cachedView;
-            }
-            try {
-                double latitude = Double.parseDouble(AppConfig.get("weather.latitude", DEFAULT_LATITUDE));
-                double longitude = Double.parseDouble(AppConfig.get("weather.longitude", DEFAULT_LONGITUDE));
-                String city = AppConfig.get("weather.city", DEFAULT_CITY);
-
-                WeatherForecast forecast = weatherClient.fetchToday(latitude, longitude);
-                cachedView = toView(forecast, city);
-                cachedUntil = now.plusMinutes(CACHE_MINUTES);
-
-            } catch (WeatherUnavailableException | NumberFormatException e) {
-                // Lỗi → in ra console cho dev, nhớ "không có thời tiết" 5 phút rồi mới thử lại
-                System.err.println("[WEATHER] " + e.getMessage());
-                cachedView = null;
-                cachedUntil = now.plusMinutes(FAILURE_RETRY_MINUTES);
-            }
-            return cachedView;
-        }
+    /** Nhận client, thời gian và vị trí riêng để kiểm tra cache mà không gọi API thật. */
+    WeatherService(WeatherClient weatherClient, Supplier<LocalDateTime> currentTime,
+            String cityName, String latitudeText, String longitudeText) {
+        this.weatherClient = weatherClient;
+        this.currentTime = currentTime;
+        this.cityName = cityName;
+        this.latitudeText = latitudeText;
+        this.longitudeText = longitudeText;
     }
 
     /**
-     * Thẻ thời tiết MẪU cho 1 kiểu trời — không gọi API, chỉ dùng để xem trước hiệu ứng.
-     *
-     * @param moodName tên kiểu trời không phân biệt hoa thường: "storm", "rain", "hot", "cloudy", "sunny", "night".
-     * @return thẻ thời tiết mẫu; null nếu tên không khớp kiểu nào (người gọi dùng thời tiết thật).
+     * Trả thẻ thời tiết hôm nay tại gym, hoặc null để JSP ẩn thẻ khi API không dùng được.
+     * synchronized: nhiều PT mở trang cùng lúc chỉ một request gọi Open-Meteo khi cache hết hạn.
      */
-    public WeatherView demoWeather(String moodName) {
-        if (moodName == null) {
+    public synchronized WeatherView getTodayWeather() {
+        LocalDateTime now = currentTime.get();
+
+        // B1: dùng lại kết quả trong ngày; không giữ thời tiết hôm qua qua mốc nửa đêm.
+        if (cachedDate != null && cachedDate.equals(now.toLocalDate())
+                && cachedUntil != null && now.isBefore(cachedUntil)) {
+            return cachedView;
+        }
+
+        try {
+            // B2: vị trí lấy từ cấu hình máy; WeatherClient gửi GET và đọc JSON thành Forecast.
+            double latitude = Double.parseDouble(latitudeText);
+            double longitude = Double.parseDouble(longitudeText);
+            WeatherForecast forecast = weatherClient.fetchToday(latitude, longitude);
+
+            // B3: đổi dữ liệu API thành chữ/kiểu thẻ; giữ 30 phút cho các PT khác.
+            cachedView = toView(forecast, cityName);
+            cachedDate = now.toLocalDate();
+            cachedUntil = now.plusMinutes(SUCCESS_CACHE_MINUTES);
+        } catch (WeatherUnavailableException | NumberFormatException exception) {
+            // B4: log nguyên nhân kỹ thuật; trả null và đợi 5 phút trước lần thử tiếp theo.
+            LOGGER.log(Level.WARNING, "Không lấy được thời tiết cho PT Dashboard.", exception);
+            cachedView = null;
+            cachedDate = now.toLocalDate();
+            cachedUntil = now.plusMinutes(FAILURE_RETRY_MINUTES);
+        }
+        return cachedView;
+    }
+
+    /** Dữ liệu cố định để thử ?weather=rain; không gọi API và không ghi vào cache thật. */
+    public WeatherView getPreview(String weatherType) {
+        if (weatherType == null) {
             return null;
         }
-        WeatherForecast sample;
-        switch (moodName.trim().toLowerCase()) {
-            case "storm":
-                sample = new WeatherForecast(27, 31, 90, 95, 96, 30, 24, 95, true);
-                break;
-            case "rain":
-                sample = new WeatherForecast(26, 29, 92, 63, 63, 29, 24, 90, true);
-                break;
-            case "hot":
-                sample = new WeatherForecast(37, 43, 50, 0, 0, 38, 28, 0, true);
-                break;
-            case "cloudy":
-                sample = new WeatherForecast(29, 31, 70, 3, 3, 31, 25, 20, true);
-                break;
+        switch (weatherType) {
             case "sunny":
-                sample = new WeatherForecast(30, 32, 60, 0, 0, 31, 24, 5, true);
-                break;
+                return new WeatherView(WeatherView.Mood.SUNNY, cityName, "Trời quang",
+                        "Trời quang", "Một ngày đẹp để giữ nhịp tập luyện.", "fa-sun", 32,
+                        35, 55, 9, 26, 33, 5);
+            case "cloudy":
+                return new WeatherView(WeatherView.Mood.CLOUDY, cityName, "Nhiều mây",
+                        "Trời nhiều mây", "Chuẩn bị buổi tập như kế hoạch.", "fa-cloud-sun", 27,
+                        29, 68, 12, 24, 30, 30);
+            case "rain":
+                return new WeatherView(WeatherView.Mood.RAIN, cityName, "Mưa vừa",
+                        "Trời đang mưa", "Nhắc khách mang ô và chú ý sàn ướt.", "fa-cloud-showers-heavy", 26,
+                        28, 88, 18, 24, 29, 85);
+            case "storm":
+                return new WeatherView(WeatherView.Mood.STORM, cityName, "Giông",
+                        "Trời đang có giông", "Nhắc khách đi lại cẩn thận.", "fa-cloud-bolt", 25,
+                        27, 91, 36, 23, 28, 95);
+            case "snow":
+                return new WeatherView(WeatherView.Mood.SNOW, cityName, "Tuyết nhẹ",
+                        "Trời đang có tuyết", "Chú ý đường trơn trước giờ tập.", "fa-snowflake", 0,
+                        -3, 80, 11, -4, 2, 70);
+            case "wind":
+                return new WeatherView(WeatherView.Mood.WIND, cityName, "Gió mạnh",
+                        "Hôm nay gió mạnh", "Nhắc khách đi lại cẩn thận.", "fa-wind", 28,
+                        29, 62, 38, 25, 31, 15);
             case "night":
-                sample = new WeatherForecast(26, 27, 75, 0, 0, 31, 24, 5, false);
-                break;
+                return new WeatherView(WeatherView.Mood.NIGHT, cityName, "Trời quang",
+                        "Tối nay trời quang", "Chuẩn bị dụng cụ trước giờ hẹn.", "fa-moon", 24,
+                        25, 73, 7, 22, 30, 10);
+            case "hot":
+                return new WeatherView(WeatherView.Mood.HOT, cityName, "Nắng nóng",
+                        "Hôm nay nắng nóng", "Nhắc khách uống nước và nghỉ đủ giữa các hiệp.", "fa-temperature-high", 36,
+                        40, 58, 9, 29, 37, 5);
+            case "extreme_hot":
+                return new WeatherView(WeatherView.Mood.HOT, cityName, "Nắng gắt",
+                        "Nắng nóng gay gắt", "Nhắc khách uống đủ nước và giảm cường độ tập khi cần.", "fa-temperature-high", 40,
+                        44, 55, 9, 31, 41, 5);
             default:
                 return null;
         }
-        return toView(sample, AppConfig.get("weather.city", DEFAULT_CITY) + " (demo)");
     }
 
     /**
-     * Đổi số liệu thô thành thẻ thời tiết có câu nhắc. Xét theo thứ tự ưu tiên:
-     * giông → mưa → nắng nóng → nhiều mây → đêm trời quang → nắng đẹp.
-     *
-     * @param forecast số liệu thô hôm nay.
-     * @param city     tên nơi xem thời tiết, VD "Hà Nội".
-     * @return thẻ thời tiết.
+     * Chọn một kiểu thời tiết và câu nhắc từ WeatherForecast.
+     * Mã WMO và số đo chọn câu mô tả/lời nhắc.
+     * Ưu tiên giông/tuyết, mưa, gió mạnh; sau đó xét đêm, nóng, mây và trời quang.
+     * Dự báo mưa chỉ bật hiệu ứng khi trên 50%; đang mưa thực tế vẫn dùng hiệu ứng mưa.
      */
     WeatherView toView(WeatherForecast forecast, String city) {
-        int temperature = (int) Math.round(forecast.getTemperature());
-        int feelsLike = (int) Math.round(forecast.getFeelsLike());
-        int maxTemperature = (int) Math.round(forecast.getMaxTemperature());
-        int minTemperature = (int) Math.round(forecast.getMinTemperature());
-        int rainChance = forecast.getRainChance();
-        String conditionLabel = describeCode(forecast.getCurrentCode());
+        int temperature = (int) Math.round(forecast.getCurrentTemperature());
+        int maxTemperature = (int) Math.round(forecast.getDailyMaxTemperature());
+        int minTemperature = (int) Math.round(forecast.getDailyMinTemperature());
+        int feelsLikeTemperature = (int) Math.round(forecast.getFeelsLikeTemperature());
+        int windSpeedKmh = (int) Math.round(forecast.getCurrentWindSpeed());
+        int currentCode = forecast.getCurrentWeatherCode();
+        int dailyCode = forecast.getDailyWeatherCode();
 
-        WeatherView.Mood mood;
         String title;
         String advice;
-        String icon;
+        String iconClass;
+        WeatherView.Mood mood;
 
-        // B1: có giông lúc này hoặc trong ngày (mã 95–99) → nguy hiểm nhất, xét trước
-        if (isStormCode(forecast.getCurrentCode()) || isStormCode(forecast.getDailyCode())) {
+        if (isStormCode(currentCode) || isStormCode(dailyCode)) {
             mood = WeatherView.Mood.STORM;
-            title = "Hôm nay có mưa giông";
-            advice = "Nhớ mang ô và áo mưa. Khách có thể đến trễ — nhắn xác nhận trước buổi tập nhé.";
-            icon = "fa-cloud-bolt";
-
-        // B2: đang mưa, cả ngày có mưa, hoặc khả năng mưa cao
-        } else if (isRainCode(forecast.getCurrentCode()) || isRainCode(forecast.getDailyCode())
-                || rainChance >= RAIN_CHANCE_THRESHOLD) {
+            title = isStormCode(currentCode) ? "Trời đang có giông" : "Hôm nay có thể có giông";
+            advice = "Nhắc khách đi lại cẩn thận trước giờ tập.";
+            iconClass = "fa-cloud-bolt";
+        } else if (isSnowCode(currentCode) || isSnowCode(dailyCode)) {
+            mood = WeatherView.Mood.SNOW;
+            title = isSnowCode(currentCode) ? "Trời đang có tuyết" : "Hôm nay có thể có tuyết";
+            advice = "Nhắc khách chú ý đường trơn trước giờ tập.";
+            iconClass = "fa-snowflake";
+        } else if (isRainCode(currentCode)
+                || forecast.getDailyMaxRainProbabilityPercent() > RAIN_CHANCE_THRESHOLD) {
             mood = WeatherView.Mood.RAIN;
-            title = isRainCode(forecast.getCurrentCode())
-                    ? "Trời đang mưa"
-                    : "Hôm nay có thể mưa (" + rainChance + "%)";
-            advice = "Nhớ mang ô! Sàn gần cửa dễ trơn — nhắc khách lau giày trước khi vào khu tập.";
-            icon = "fa-cloud-showers-heavy";
-
-        // B3: nắng nóng
-        } else if (maxTemperature >= HOT_MAX_TEMPERATURE || feelsLike >= HOT_FEELS_LIKE) {
-            mood = WeatherView.Mood.HOT;
-            title = "Nắng nóng " + maxTemperature + "°C";
-            advice = "Uống đủ nước, nhắc khách mang bình nước và cho nghỉ giữa hiệp lâu hơn một chút.";
-            icon = "fa-temperature-high";
-
-        // B4: nhiều mây / sương mù
-        } else if (isCloudyCode(forecast.getCurrentCode())) {
-            mood = WeatherView.Mood.CLOUDY;
-            title = "Trời nhiều mây, dễ chịu";
-            advice = "Thời tiết mát mẻ — hợp cho các buổi tập cường độ cao.";
-            icon = "fa-cloud-sun";
-
-        // B5: trời quang ban đêm
+            title = isRainCode(currentCode) ? "Trời đang mưa" : "Hôm nay có thể mưa";
+            advice = "Nhắc khách mang ô và để ý sàn ướt khi vào phòng tập.";
+            iconClass = "fa-cloud-showers-heavy";
+        } else if (forecast.getCurrentWindSpeed() >= STRONG_WIND_KMH) {
+            mood = WeatherView.Mood.WIND;
+            title = "Hôm nay gió mạnh";
+            advice = "Nhắc khách đi lại cẩn thận trên đường tới phòng tập.";
+            iconClass = "fa-wind";
         } else if (!forecast.isDay()) {
             mood = WeatherView.Mood.NIGHT;
-            title = "Tối nay trời quang";
-            advice = "Giờ cao điểm buổi tối — chuẩn bị dụng cụ sớm để buổi tập không bị trễ.";
-            icon = "fa-moon";
-
-        // B6: còn lại = nắng đẹp
+            title = isCloudyCode(currentCode) ? "Đêm nay nhiều mây" : "Tối nay trời quang";
+            advice = "Chuẩn bị dụng cụ trước giờ hẹn để buổi tập bắt đầu đúng giờ.";
+            iconClass = "fa-moon";
+        } else if (maxTemperature >= HOT_MAX_TEMPERATURE
+                || feelsLikeTemperature >= HOT_FEELS_LIKE_TEMPERATURE) {
+            mood = WeatherView.Mood.HOT;
+            boolean extremeHeat = maxTemperature >= EXTREME_HOT_MAX_TEMPERATURE
+                    || feelsLikeTemperature >= EXTREME_HOT_FEELS_LIKE_TEMPERATURE;
+            title = extremeHeat ? "Nắng nóng gay gắt" : "Hôm nay nắng nóng";
+            advice = extremeHeat
+                    ? "Nhắc khách uống đủ nước và giảm cường độ tập khi cần."
+                    : "Nhắc khách uống nước và nghỉ đủ giữa các hiệp.";
+            iconClass = "fa-temperature-high";
+        } else if (isCloudyCode(currentCode)) {
+            mood = WeatherView.Mood.CLOUDY;
+            title = "Trời nhiều mây";
+            advice = "Thời tiết dễ chịu, chuẩn bị buổi tập như kế hoạch.";
+            iconClass = "fa-cloud-sun";
         } else {
             mood = WeatherView.Mood.SUNNY;
-            title = "Trời nắng đẹp";
-            advice = "Ngày đẹp để tập. Ra ngoài giữa trưa thì nhớ kem chống nắng nhé.";
-            icon = "fa-sun";
+            title = "Trời quang";
+            advice = "Duy trì lịch tập như kế hoạch hôm nay.";
+            iconClass = "fa-sun";
         }
 
-        return new WeatherView(mood, city, conditionLabel, title, advice, icon,
-                temperature, feelsLike, maxTemperature, minTemperature, rainChance, forecast.getHumidity());
+        return new WeatherView(mood, city, describeCode(currentCode), title,
+                advice, iconClass, temperature, feelsLikeTemperature,
+                forecast.getCurrentHumidityPercent(), windSpeedKmh, minTemperature,
+                maxTemperature, forecast.getDailyMaxRainProbabilityPercent());
     }
 
-    // ===== Hàm phụ: đọc mã thời tiết WMO (Open-Meteo dùng bảng mã chuẩn của Tổ chức Khí tượng Thế giới) =====
-
-    /** Mã 95, 96, 99 = dông (có thể kèm mưa đá). */
+    /** Mã 95–99 mô tả giông, có thể kèm mưa đá. */
     private boolean isStormCode(int code) {
-        return code >= 95;
+        return code >= 95 && code <= 99;
     }
 
-    /** Mã 51–67 = mưa phùn / mưa, 80–82 = mưa rào. */
+    /** Mã mưa phùn, mưa thường và mưa rào của Open-Meteo. */
     private boolean isRainCode(int code) {
         return (code >= 51 && code <= 67) || (code >= 80 && code <= 82);
     }
 
-    /** Mã 1–3 = ít mây tới nhiều mây, 45 và 48 = sương mù. */
-    private boolean isCloudyCode(int code) {
-        return (code >= 1 && code <= 3) || code == 45 || code == 48;
+    /** Mã tuyết rơi, hạt tuyết hoặc tuyết rào trong bảng WMO của Open-Meteo. */
+    private boolean isSnowCode(int code) {
+        return (code >= 71 && code <= 77) || code == 85 || code == 86;
     }
 
-    /**
-     * Đổi mã WMO thành chữ tiếng Việt.
-     *
-     * @param code mã thời tiết, VD 61.
-     * @return VD "Mưa nhỏ".
-     */
+    /** Mã ít/nhiều mây hoặc sương mù. */
+    private boolean isCloudyCode(int code) {
+        return (code >= 2 && code <= 3) || code == 45 || code == 48;
+    }
+
+    /** Đổi mã thời tiết hiện tại thành chữ ngắn để JSP in cạnh tên thành phố. */
     private String describeCode(int code) {
         switch (code) {
             case 0:
@@ -246,17 +262,29 @@ public class WeatherService {
             case 80:
                 return "Mưa rào nhẹ";
             case 81:
-                return "Mưa rào";
+                return "Mưa rào vừa";
             case 82:
-                return "Mưa rào rất to";
+                return "Mưa rào mạnh";
+            case 71:
+                return "Tuyết nhẹ";
+            case 73:
+                return "Tuyết vừa";
+            case 75:
+                return "Tuyết dày";
+            case 77:
+                return "Hạt tuyết";
+            case 85:
+                return "Tuyết rào nhẹ";
+            case 86:
+                return "Tuyết rào mạnh";
             case 95:
-                return "Dông";
+            case 97:
+                return "Giông";
             case 96:
             case 99:
-                return "Dông kèm mưa đá";
+                return "Giông kèm mưa đá";
             default:
-                // 71–77, 85–86 là tuyết — Việt Nam gần như không gặp
-                return (code >= 71 && code <= 86) ? "Có tuyết" : "Thời tiết thay đổi";
+                return "Thời tiết thay đổi";
         }
     }
 }
