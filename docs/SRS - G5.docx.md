@@ -32,7 +32,7 @@
 
 [2.7 Member Deletion Approval (BF-07)	13](#2.7-member-deletion-approval-\(bf-07\))
 
-[2.8 PT-handled Session Rescheduling & Cancellation (BF-08)	13](#2.8-pt-handled-session-rescheduling-&-cancellation-\(bf-08\))
+[2.8 PT Package Session (BF-08)	13](#2.8-pt-handled-session-rescheduling-&-cancellation-\(bf-08\))
 
 [2.9 Membership Freeze & Auto-Resume (BF-09)	16](#2.9-membership-freeze-&-auto-resume-\(bf-09\))
 
@@ -396,22 +396,85 @@ The profile becomes Inactive with a deletion time (soft delete, GBR-05); orders,
 
 ![][image9]
 
-### **2.8 PT-handled Session Rescheduling & Cancellation (BF-08)** {#2.8-pt-handled-session-rescheduling-&-cancellation-(bf-08)}
+### **2.8 PT Package Session (BF-08)** {#2.8-pt-handled-session-rescheduling-&-cancellation-(bf-08)}
 
-**Trigger**: The PT cannot teach a Scheduled session that has not started yet. After agreeing on the handling with the customer outside the system (by phone), the PT opens the session handling screen and selects the session. A dependent customer without an account can also ask the PT to change the schedule.
+**Trigger**: A PT package order (single or couple) becomes Paid and its sessions are generated as Scheduled (CBR-50). This workflow covers the lifecycle of package sessions; SingleSession purchasing is covered by BF-01.
 
-**Trigger**: The PT cannot teach a Scheduled session that has not started yet. After agreeing on the handling with the customer outside the system, the PT opens the session handling screen and selects the session. For a Dependent customer without an account, the PT handles the schedule change on the customer's behalf after verifying the guardian's phone number.
+**Main flow**:
 
-**End conditions**:
+1. The Receptionist sells the PT package (UC-21). On successful payment, the system generates one Scheduled session for every Monday-to-Friday within the package term (BR-40).
+2. On the session day, the customer checks in at the counter; the Receptionist records the gym visit (UC-19).
+3. The PT teaches without entering attendance or absence data in the system.
+4. In the daily job chain beginning at 00:05 the next day, JOB-04 processes sessions still Scheduled with a session date before today. It checks gym access and the check-in history for the session date, then sets CheckedIn when the customer qualifies. For a couple package, one member with valid gym access and a check-in is sufficient.
 
-1. **Session Handled**: The PT completes one of the four handling options, and the customer is notified (both members for a couple package).  
-   * **Reschedule**: the session moves to another free slot of the same PT and stays Scheduled. No session is deducted and no swap is counted.  
-   * **Transfer PT**: the session moves to the new PT, the session value is unchanged, and the commission belongs to the new PT. The new PT is notified as well.  
-   * **Cancel**: the session is Cancelled but is still deducted and the PT still earns the commission. No refund transaction is created, and the PT refunds the customer in cash outside the system.  
-   * On-behalf swap: for a customer without an account (BR-62), the session moves to another published free slot of the same PT on any weekday within the package term and counts toward the package swap limit (P-08 copied to the subscription at sale). Action Denied also when the package has used all its swaps (BR-73).  
-2. **Action Denied**: The system blocks the action and nothing changes. This happens when the session is no longer Scheduled or has already started (the PT is told to report to the Manager), or when a Dependent customer has already used all 3 swaps of the package.
+**Alternative flows**:
 
-![][image10]
+- **A1 — Customer absent**: No eligible customer checked in on the session date. JOB-04 sets Missed with MissedReason = NoCheckIn.
+- **A2 — PT handles the session before its start**: After agreeing outside the system, the PT reschedules, transfers or cancels the session, or changes the schedule on behalf of a customer without an account (UC-35). The four options are detailed below. A move returns the session to Scheduled; it is later closed through the main flow or another final-state branch.
+- **A3 — Customer swaps**: The customer swaps an eligible package session to a published free weekend slot (UC-38), subject to the package's remaining swap allowance, target-date eligibility and self-service booking window. The session remains Scheduled.
+- **A4 — Customer cancels**: The session becomes Cancelled with CancelType = ByCustomer, remains deducted and is not refunded (UC-39, BR-79).
+
+**Exceptions**:
+
+- **E1 — No gym access**: JOB-04 sets Missed / NoMembership if the customer, or both members of a couple package, has no eligible gym access on that date (CBR-64). For this implementation, valid Membership or DayPass counts as gym access, as subsequently agreed in the project discussion.
+- **E2 — Membership frozen**: Saving a freeze marks affected Scheduled sessions Missed / MembershipFrozen (CBR-62). A couple session stays Scheduled if the other member remains eligible (CBR-67). These final sessions are not processed again by JOB-04.
+- **E3 — PT package expired**: JOB-02 cancels remaining Scheduled sessions with CancelType = PackageExpired (CBR-55).
+
+**End condition**: Each session ultimately becomes CheckedIn, Missed or Cancelled. These states are final (DBR-38); a successful reschedule or transfer is an intermediate step, not the end of BF-08.
+
+**Known limitation**: CheckedIn means the customer visited the gym on the session date. It does not prove that the customer trained with the PT. A customer who checked in but skipped PT can still be classified as CheckedIn.
+
+**A2 detail — PT session handling (UC-35)**:
+
+The PT cannot teach and agrees on a handling option with the customer outside the system (BR-63), or a customer without an account asks for a change (BR-62). For a Dependent profile, the PT verifies the guardian's phone number before proceeding.
+
+**Common eligibility**: Only the PT assigned to the selected session may act. The session must still be Scheduled and its start time must be in the future (BR-69, BR-70). The system checks these conditions again when saving; opening the screen does not reserve the right to change the session.
+
+**Handling steps**:
+
+1. The PT selects a session and one of the four options below.
+2. The system checks the PT's authority, session status and start time, then validates the selected option and its required data.
+3. For a move, the target slot must be free, belong to the selected PT and lie within the package term. The target date must satisfy CBR-61: the customer, or at least one member of a couple package, has valid membership on that date. Customer self-service restrictions must not be applied to PT rescheduling or transfer (CBR-39, CBR-45).
+4. The system saves the session change, affected slot states, move history and any swap counter change together. If a condition fails or the target slot is no longer available, nothing is changed.
+5. After successful handling, the customer is notified; both members are notified for a couple package where they have accounts. A transfer also notifies the receiving PT. A Dependent profile has no in-system notification channel.
+
+| Option | Result | Swap allowance / money |
+| :---- | :---- | :---- |
+| Reschedule because the PT is unavailable | Move to another free slot of the same PT; remain Scheduled. Record SessionMoveLogs.MoveType = PtReschedule. | No session is deducted and SwapsUsed is unchanged (BR-64). |
+| Transfer PT | Move to a free slot of another PT available at the session time; remain Scheduled. Record MoveType = PtTransfer. | No session is deducted; SwapsUsed is unchanged. Keep the session value; commission belongs to the receiving PT. No additional charge or refund (BR-65, BR-68). |
+| Cancel by PT | Require a reason and confirmation that the customer agreed to a cash refund. Set Cancelled with CancelType = ByPt and release the future slot. | The session remains deducted and commission is still earned. The PT returns cash outside the system; no refund transaction is created (BR-66, BR-67, BR-71). |
+| Change at the request of a customer without an account | Verify the requester; move to another published free slot of the same PT within the package term. Remain Scheduled and record MoveType = PtOnBehalfSwap. | Increase SwapsUsed by one. Require SwapsUsed < MaxSwapsSnapshot, copied from P-08 at sale (default 3). SingleSession cannot use this option. Unlike customer self-service, this option is not limited to weekend slots or the current/next week (BR-62, BR-73, BR-74). |
+
+**A2 outcomes**:
+
+1. **Session Handled**: One option is saved successfully with the corresponding slot, history, counter and notification updates above. A move returns to Scheduled; cancellation ends the session.
+2. **Action Denied**: Nothing changes when the actor is not the assigned PT, the session is no longer Scheduled or has started, requester verification fails, required data is missing, the target is invalid/unavailable, or the on-behalf swap is ineligible or has reached its package limit. A session that has already started must be reported to the Manager outside this flow; the Manager does not perform these actions on the PT's behalf (BR-69, BR-70).
+3. **Abandoned**: The PT closes the form without saving; nothing changes.
+
+```mermaid
+flowchart TD
+    P[PT package order Paid] ==> S[Generate Scheduled sessions]
+    S ==> D[Session day: customer checks in at counter]
+    D ==> J[JOB-04 after the session date]
+    J ==> V{Eligible gym access and same-day check-in?}
+    V ==>|Yes: one eligible member suffices for a couple| C[CheckedIn]
+    V -->|Eligible access but no check-in| M[Missed / NoCheckIn]
+    V -->|No eligible access| N[Missed / NoMembership]
+    S --> A2[A2: PT handles session before start]
+    A2 -->|Valid reschedule, transfer or on-behalf swap| S
+    A2 -->|Valid PT cancellation| X[Cancelled / ByPt]
+    A2 -->|Validation fails| R[No changes: keep existing session]
+    S --> A3[A3: valid customer swap]
+    A3 --> S
+    S --> A4[A4: customer cancellation]
+    A4 --> Y[Cancelled / ByCustomer]
+    S --> E2[E2: freeze applies and no eligible partner]
+    E2 --> F[Missed / MembershipFrozen]
+    S --> E3[E3: package expires / JOB-02]
+    E3 --> E[Cancelled / PackageExpired]
+```
+
+**Implementation status (09/10/2026)**: JOB-04 is implemented through AutoCloseUnmarkedSessionsJob, AutoCloseSessionService and AutoCloseSessionDAO; it provides the automatic closure in the main flow and A1/E1. The PT Dashboard's four disabled session-option buttons are only the entry-point placeholder for A2; saving those actions is not implemented yet. BF-09 freeze handling and JOB-02 package expiry provide the related exception branches. Their presence in this workflow diagram is not a claim that every branch has been implemented or verified.
 
 ### **2.9 Membership Freeze & Auto-Resume (BF-09)** {#2.9-membership-freeze-&-auto-resume-(bf-09)}
 
