@@ -235,8 +235,9 @@
                                 <div class="side-card">
                                     <span class="section-label"><c:out value="${s.packageName}" /></span>
                                     <h3>Còn ${s.remainingSessions != null ? s.remainingSessions : 0} buổi</h3>
+                                    <c:set var="ptProgressPercent" value="${s.totalSessions != null && s.totalSessions > 0 ? (s.remainingSessions * 100 / s.totalSessions) : 0}" />
                                     <div class="kpi-bar muted">
-                                        <i style="width: ${s.totalSessions != null && s.totalSessions > 0 ? (s.remainingSessions * 100 / s.totalSessions) : 0}%"></i>
+                                        <i style="--progress: ${ptProgressPercent}%;"></i>
                                     </div>
                                     <div class="side-row"><span>Tổng số buổi</span><b>${s.totalSessions != null ? s.totalSessions : 0} buổi</b></div>
                                     <div class="side-row"><span>Đã dùng</span><b>${s.usedSessions != null ? s.usedSessions : 0} buổi</b></div>
