@@ -616,7 +616,7 @@ CREATE TABLE Sessions (
     AttendanceMarkedAt   DATETIME2(0)  NULL,     -- JOB-04 ghi lúc 00:05 hôm sau
     IsAutoClosed         BIT           NOT NULL CONSTRAINT DF_Sessions_AutoClosed   DEFAULT (0), -- JOB-04 ghi lúc 00:05 hôm sau, không còn PT điểm danh
     MissedReason         VARCHAR(20)   NULL,     -- v26 mã tiếng Anh (GBR-01): NoCheckIn | NoMembership | MembershipFrozen
-    CancelType           VARCHAR(20)   NULL,     -- v25: ByPt (BR-66) | ByCustomer (BR-79) | GymClosed (CBR-57) | PackageExpired (CBR-55)
+    CancelType           VARCHAR(20)   NULL,     -- ByPt (BR-66) | ByCustomer (BR-79) | GymClosed (JOB-04: ngày nghỉ đã qua, chưa dời; notes 10/10) | PackageExpired (CBR-55)
     CancelReason         NVARCHAR(500) NULL,
     CancelledAt          DATETIME2(0)  NULL,
     CancelledByAccountId INT           NULL,     -- tài khoản bấm hủy (PT hoặc khách)
@@ -1010,7 +1010,8 @@ CREATE TABLE SystemConfigs (
 );
 GO
 
--- OperatingHourExceptions: ngày giờ mở cửa khác mặc định hoặc nghỉ cả ngày (BR-12, CBR-56, CBR-57)
+-- OperatingHourExceptions: Manager khai báo giờ khác mặc định/nghỉ cả ngày (BR-12).
+-- Quyết định 10/10: gói PT vẫn sinh buổi ngày nghỉ để PT dời; buổi lẻ không được đặt ngày nghỉ.
 CREATE TABLE OperatingHourExceptions (
     OperatingHourExceptionId INT IDENTITY(1,1) NOT NULL,
     ApplyDate                DATE          NOT NULL,  -- hôm nay trở đi lúc khai báo (DBR-12)
