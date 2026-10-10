@@ -4,6 +4,8 @@ import com.gms.constant.SessionKey;
 import com.gms.dto.CustomerDashboardView;
 import com.gms.dto.ServiceResult;
 import com.gms.service.CustomerDashboardService;
+import com.gms.dto.WeatherView;
+import com.gms.service.WeatherService;
 import com.gms.util.RequestUtil;
 import jakarta.servlet.ServletException;
 import jakarta.servlet.annotation.WebServlet;
@@ -26,6 +28,7 @@ public class CustomerDashboardServlet extends HttpServlet {
     private static final String VIEW_NAME = "customer/dashboard";
 
     private final CustomerDashboardService dashboardService = new CustomerDashboardService();
+    private final WeatherService weatherService = new WeatherService();
 
     @Override
     protected void doGet(HttpServletRequest request, HttpServletResponse response)
@@ -49,7 +52,18 @@ public class CustomerDashboardServlet extends HttpServlet {
         }
 
         request.setAttribute("activeSidebar", "dashboard");
-        request.setAttribute("themeClass", "theme-member");
+        request.setAttribute("themeClass", "theme-pt customer-dashboard-page");
+
+        // Thời tiết là khối phụ; lỗi API không được làm hỏng dashboard khách hàng.
+        String previewType = request.getParameter("weather");
+        WeatherView weather = weatherService.getPreview(previewType);
+        boolean weatherPreview = weather != null;
+        if (!weatherPreview) {
+            weather = weatherService.getTodayWeather();
+        }
+        request.setAttribute("weather", weather);
+        request.setAttribute("weatherPreview", weatherPreview);
+        request.setAttribute("weatherType", weather == null ? "sunny" : weather.getWeatherType());
         RequestUtil.forward(request, response, VIEW_NAME);
     }
 }

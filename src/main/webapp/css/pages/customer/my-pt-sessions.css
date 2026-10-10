@@ -1,0 +1,104 @@
+/* =====================================================================
+   My PT Sessions — Customer Zone, dùng chung token với PT Dashboard
+   ===================================================================== */
+.my-pt-sessions-page .tb-subtitle {
+  margin: 0.35rem 0 0;
+  color: var(--color-text-soft);
+  font-size: var(--font-size-sm);
+}
+
+.my-pt-sessions {
+  display: grid;
+  gap: var(--space-5);
+}
+
+/* Card, border và shadow giữ cùng nhịp với các khối dashboard. */
+.my-pt-sessions__intro,
+.my-pt-sessions__panel {
+  border: 1px solid color-mix(in srgb, var(--color-primary) 18%, var(--color-border));
+  border-radius: var(--radius-lg);
+  background: color-mix(in srgb, var(--color-surface) 88%, transparent);
+  box-shadow: var(--shadow-card);
+}
+
+.my-pt-sessions__intro {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: var(--space-5);
+  padding: clamp(1.25rem, 3vw, 2rem);
+}
+
+.my-pt-sessions__intro-copy {
+  min-width: 0;
+}
+
+.my-pt-sessions__intro h2 {
+  margin: 0.25rem 0 0;
+  color: var(--color-text);
+  font-size: clamp(1.65rem, 3vw, 2.35rem);
+}
+
+.my-pt-sessions__intro p {
+  margin: 0.6rem 0 0;
+  color: var(--color-text-soft);
+}
+
+.my-pt-sessions__panel {
+  padding: clamp(1.1rem, 2vw, 1.5rem);
+}
+
+.my-pt-sessions__panel .panel-head {
+  align-items: flex-start;
+  margin-bottom: var(--space-4);
+}
+
+.my-pt-sessions__panel .panel-head h2 {
+  margin: 0.25rem 0 0;
+}
+
+/* Empty state sẽ được thay bằng danh sách card ở bước Service/DAO. */
+.my-pt-sessions__empty {
+  display: grid;
+  justify-items: center;
+  gap: 0.45rem;
+  min-height: 16rem;
+  padding: 3rem 1.25rem;
+  border: 1px dashed color-mix(in srgb, var(--color-primary) 28%, var(--color-border));
+  border-radius: var(--radius-md);
+  background: color-mix(in srgb, var(--color-surface-soft) 64%, transparent);
+  color: var(--color-text-soft);
+  text-align: center;
+}
+
+.my-pt-sessions__empty-icon {
+  display: grid;
+  place-items: center;
+  width: 3.25rem;
+  height: 3.25rem;
+  margin-bottom: 0.5rem;
+  border-radius: 50%;
+  background: color-mix(in srgb, var(--color-primary) 14%, var(--color-surface));
+  color: var(--color-primary);
+  font-size: 1.3rem;
+}
+
+.my-pt-sessions__empty h3,
+.my-pt-sessions__empty p {
+  margin: 0;
+}
+
+.my-pt-sessions__empty .btn {
+  margin-top: 0.75rem;
+}
+
+@media (max-width: 700px) {
+  .my-pt-sessions__intro {
+    align-items: flex-start;
+    flex-direction: column;
+  }
+
+  .my-pt-sessions__intro .btn {
+    width: 100%;
+  }
+}

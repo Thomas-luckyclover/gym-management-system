@@ -1,85 +1,120 @@
 package com.gms.dto;
 
 /**
- * Số liệu thời tiết THÔ của hôm nay, đọc từ API Open-Meteo — chưa có câu chữ gì.
- *
- * Ai tạo: WeatherClient.fetchToday.
- * Ai dùng: WeatherService đổi các con số này thành câu nhắc cho PT (WeatherView).
- *
- * VD Hà Nội trưa 30/09: temperature 33.9, feelsLike 40.9, humidity 56, currentCode 0 (trời quang),
- *     dailyCode 0, maxTemperature 34.5, minTemperature 26.9, rainChance 1, day = true
- *
- * @author Le Cong Minh
+ * Số liệu thô của hôm nay từ Open-Meteo, chưa có câu chữ để hiện trên PT Dashboard.
+ * WeatherClient sẽ tạo DTO này khi đọc JSON; WeatherService dùng nó để tạo WeatherView.
  */
 public class WeatherForecast {
 
-    private final double temperature;
-    private final double feelsLike;
-    private final int humidity;
-    private final int currentCode;
-    private final int dailyCode;
-    private final double maxTemperature;
-    private final double minTemperature;
-    private final int rainChance;
-    private final boolean day;
+    // ===== current: tình trạng ở thời điểm API cập nhật =====
+
+    // current.temperature_2m (°C); Service làm tròn để hiện nhiệt độ hiện tại.
+    private final double currentTemperature;
+
+    // current.apparent_temperature (°C); Service dùng cho dòng "Cảm giác như ...".
+    private final double feelsLikeTemperature;
+
+    // current.relative_humidity_2m (%); Service đưa vào thông tin độ ẩm nếu cần hiện.
+    private final int currentHumidityPercent;
+
+    // current.weather_code; Service đổi mã WMO thành chữ, ví dụ 3 là "Nhiều mây".
+    private final int currentWeatherCode;
+
+    // current.is_day: API trả 1 ban ngày, 0 ban đêm; Service chọn giao diện phù hợp.
+    private final boolean isDay;
+
+    // current.wind_speed_10m (km/h); Service dùng để nhận biết ngày gió mạnh.
+    private final double currentWindSpeed;
+
+    // ===== daily[0]: dự báo cho ngày hôm nay theo giờ Việt Nam =====
+
+    // daily.weather_code[0]; Service dùng để nhận biết mưa/giông trong ngày.
+    private final int dailyWeatherCode;
+
+    // daily.temperature_2m_max[0] (°C); Service làm tròn để hiện nhiệt độ cao nhất.
+    private final double dailyMaxTemperature;
+
+    // daily.temperature_2m_min[0] (°C); Service làm tròn để hiện nhiệt độ thấp nhất.
+    private final double dailyMinTemperature;
+
+    // daily.precipitation_probability_max[0] (%); Service dùng cho lời nhắc khả năng mưa.
+    private final int dailyMaxRainProbabilityPercent;
 
     /**
-     * @param temperature    nhiệt độ hiện tại (°C), VD 33.9.
-     * @param feelsLike      nhiệt độ cảm nhận (°C) — tính cả độ ẩm, VD 40.9.
-     * @param humidity       độ ẩm hiện tại (%), VD 56.
-     * @param currentCode    mã thời tiết WMO lúc này, VD 0 = trời quang, 61 = mưa, 95 = giông.
-     * @param dailyCode      mã thời tiết WMO "xấu nhất" trong cả ngày hôm nay.
-     * @param maxTemperature nhiệt độ cao nhất hôm nay (°C).
-     * @param minTemperature nhiệt độ thấp nhất hôm nay (°C).
-     * @param rainChance     khả năng mưa cao nhất trong ngày (%), VD 99.
-     * @param day            true nếu đang là ban ngày ở địa điểm đó.
+     * Giữ đúng các số đọc từ JSON; DTO không gọi API và không tự chọn câu hiển thị.
      */
-    public WeatherForecast(double temperature, double feelsLike, int humidity, int currentCode, int dailyCode,
-            double maxTemperature, double minTemperature, int rainChance, boolean day) {
-        this.temperature = temperature;
-        this.feelsLike = feelsLike;
-        this.humidity = humidity;
-        this.currentCode = currentCode;
-        this.dailyCode = dailyCode;
-        this.maxTemperature = maxTemperature;
-        this.minTemperature = minTemperature;
-        this.rainChance = rainChance;
-        this.day = day;
+    public WeatherForecast(double currentTemperature, double feelsLikeTemperature,
+            int currentHumidityPercent, int currentWeatherCode, boolean isDay,
+            int dailyWeatherCode, double dailyMaxTemperature, double dailyMinTemperature,
+            int dailyMaxRainProbabilityPercent) {
+        this(currentTemperature, feelsLikeTemperature, currentHumidityPercent, currentWeatherCode,
+                isDay, 0, dailyWeatherCode, dailyMaxTemperature, dailyMinTemperature,
+                dailyMaxRainProbabilityPercent);
     }
 
-    public double getTemperature() {
-        return temperature;
+    public WeatherForecast(double currentTemperature, double feelsLikeTemperature,
+            int currentHumidityPercent, int currentWeatherCode, boolean isDay,
+            double currentWindSpeed, int dailyWeatherCode, double dailyMaxTemperature,
+            double dailyMinTemperature, int dailyMaxRainProbabilityPercent) {
+        this.currentTemperature = currentTemperature;
+        this.feelsLikeTemperature = feelsLikeTemperature;
+        this.currentHumidityPercent = currentHumidityPercent;
+        this.currentWeatherCode = currentWeatherCode;
+        this.isDay = isDay;
+        this.currentWindSpeed = currentWindSpeed;
+        this.dailyWeatherCode = dailyWeatherCode;
+        this.dailyMaxTemperature = dailyMaxTemperature;
+        this.dailyMinTemperature = dailyMinTemperature;
+        this.dailyMaxRainProbabilityPercent = dailyMaxRainProbabilityPercent;
     }
 
-    public double getFeelsLike() {
-        return feelsLike;
+    /** @return nhiệt độ hiện tại để Service làm tròn cho thẻ thời tiết */
+    public double getCurrentTemperature() {
+        return currentTemperature;
     }
 
-    public int getHumidity() {
-        return humidity;
+    /** @return nhiệt độ cảm nhận hiện tại để Service chọn dòng mô tả */
+    public double getFeelsLikeTemperature() {
+        return feelsLikeTemperature;
     }
 
-    public int getCurrentCode() {
-        return currentCode;
+    /** @return độ ẩm hiện tại, tính bằng phần trăm */
+    public int getCurrentHumidityPercent() {
+        return currentHumidityPercent;
     }
 
-    public int getDailyCode() {
-        return dailyCode;
+    /** @return mã WMO lúc này để Service đổi thành chữ tiếng Việt */
+    public int getCurrentWeatherCode() {
+        return currentWeatherCode;
     }
 
-    public double getMaxTemperature() {
-        return maxTemperature;
-    }
-
-    public double getMinTemperature() {
-        return minTemperature;
-    }
-
-    public int getRainChance() {
-        return rainChance;
-    }
-
+    /** @return true khi API báo đang là ban ngày tại phòng gym */
     public boolean isDay() {
-        return day;
+        return isDay;
+    }
+
+    /** @return tốc độ gió hiện tại, km/h */
+    public double getCurrentWindSpeed() {
+        return currentWindSpeed;
+    }
+
+    /** @return mã WMO của cả ngày để Service nhận biết thời tiết sắp tới */
+    public int getDailyWeatherCode() {
+        return dailyWeatherCode;
+    }
+
+    /** @return nhiệt độ cao nhất hôm nay, tính bằng °C */
+    public double getDailyMaxTemperature() {
+        return dailyMaxTemperature;
+    }
+
+    /** @return nhiệt độ thấp nhất hôm nay, tính bằng °C */
+    public double getDailyMinTemperature() {
+        return dailyMinTemperature;
+    }
+
+    /** @return xác suất mưa cao nhất được dự báo trong ngày, tính bằng phần trăm */
+    public int getDailyMaxRainProbabilityPercent() {
+        return dailyMaxRainProbabilityPercent;
     }
 }

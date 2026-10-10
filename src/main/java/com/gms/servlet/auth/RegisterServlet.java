@@ -6,7 +6,6 @@ import com.gms.entity.VerificationCode;
 import com.gms.service.RegistrationService;
 import com.gms.service.VerificationCodeService;
 import com.gms.util.DateTimeUtil;
-import com.gms.util.RequestUtil;
 import com.gms.util.ValidationUtil;
 import jakarta.servlet.ServletException;
 import jakarta.servlet.annotation.WebServlet;
@@ -384,8 +383,6 @@ public class RegisterServlet extends HttpServlet {
         }
 
         // B2: mã đúng → chuyển sang bước nhập mật khẩu
-        // Lấy thông tin hồ sơ (họ tên, ngày sinh) để hiển thị read-only
-        RegistrationService.PhoneCheckResult checkResult = registrationService.checkPhone(phone);
         req.setAttribute("step", "claim-password");
         req.setAttribute("phone", phone);
         req.setAttribute("email", email);

@@ -1,0 +1,21 @@
+<%@ page pageEncoding="UTF-8" %>
+<%-- Servlet: pageTitle, today, ptEmployeeCode; session: displayName. Bạt nằm phía trên header. --%>
+<header class="topbar">
+    <div class="tb-left">
+        <h1 class="tb-title"><c:out value="${pageTitle}" /></h1>
+        <p class="pt-header-date"><c:out value="${gms:formatDate(today)}" /></p>
+    </div>
+    <a class="tb-user" href="${pageContext.request.contextPath}/account">
+        <span class="pt-user-avatar">
+            <i class="fa-solid fa-user" aria-hidden="true"></i>
+            <span class="pt-user-online" aria-hidden="true"></span>
+        </span>
+        <span class="pt-user-details">
+            <strong><c:out value="${sessionScope.displayName}" default="Huấn luyện viên" /></strong>
+            <c:if test="${not empty ptEmployeeCode}">
+                <%-- Employees.EmployeeCode, ví dụ NV-0005; không phải AccountId. --%>
+                <small class="pt-user-code" title="M&#227; nh&#226;n vi&#234;n"><c:out value="${ptEmployeeCode}" /></small>
+            </c:if>
+        </span>
+    </a>
+</header>
