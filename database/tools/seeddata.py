@@ -252,7 +252,7 @@ pt_package(o, 5, d_(2026, 9, 7), (18, 0), events={
     d_(2026, 9, 16): ('missed', 'NoCheckIn'),
     d_(2026, 9, 22): ('cancel', 'ByCustomer', 'Khách bận đột xuất'),
     d_(2026, 9, 29): ('move', 'PtTransfer', d_(2026, 9, 29), (18, 0), 13, 'PT Sơn ốm, khách chọn PT Long'),
-}, note='swap 1/3; 1 buổi chuyển PT → hoa hồng cho PT mới (BR-68)')
+}, note='swap 1/6 (gói 2 tháng × 3); 1 buổi chuyển PT → hoa hồng cho PT mới (BR-68)')
 
 # ---- Hưng (7) + Hà (8): gói couple 2 tháng với PT Trang
 o = order(7, PKG['m3'], dt_(2026, 8, 20, 17, 40), 'Counter', voucher=3)
@@ -769,7 +769,7 @@ CFG = [('P-01', '1', 'Số lần bảo lưu tối đa mỗi gói tập (lần)')
        ('P-04', '1D,1M,3M,9M,12M', 'Thời hạn gói tập: D = ngày, M = tháng'),
        ('P-05', '10', 'Tuổi tối thiểu dùng dịch vụ PT'),
        ('P-06', '90', 'Độ dài một buổi PT (phút)'),
-       ('P-08', '3', 'Số lần swap tối đa mỗi gói PT'),
+       ('P-08', '3', 'Số lượt đổi buổi mỗi tháng của gói PT (hạn mức gói = P-08 × số tháng)'),
        ('P-09', '20', 'Hạn thanh toán đơn online = thời gian giữ slot (phút)'),
        ('P-10', '10', 'Thuế VAT (%) đã nằm trong giá bán'),
        ('P-11', '70', 'Tỷ lệ hoa hồng mặc định cho PT mới (%)'),

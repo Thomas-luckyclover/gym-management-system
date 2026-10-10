@@ -19,7 +19,7 @@ import java.time.LocalTime;
  * (gói PT cá nhân), PTCouple (gói PT cặp đôi), SingleSession (buổi PT lẻ).</li>
  * <li>Vòng đời trạng thái: Active, Frozen (chỉ Membership), Used (chỉ
  * DayPass/SingleSession), Expired, Cancelled (CBR-55).</li>
- * <li>Snapshot thông số lúc bán: MaxSwapsSnapshot (P-08), MaxFreezesSnapshot
+ * <li>Snapshot thông số lúc bán: MaxSwapsSnapshot (P-08 × số tháng gói PT), MaxFreezesSnapshot
  * (P-01) để không bị ảnh hưởng nếu Manager đổi cấu hình sau này (GBR-04).</li>
  * </ul>
  *
@@ -69,7 +69,7 @@ public class Subscription {
     /** Số lần đổi lịch buổi tập đã sử dụng (mặc định 0). */
     private int swapsUsed;
 
-    /** Hạn mức số lần đổi lịch tối đa chụp tại thời điểm bán (P-08). */
+    /** Hạn mức số lần đổi lịch tối đa chụp tại thời điểm bán = P-08 × số tháng của gói PT. */
     private Integer maxSwapsSnapshot;
 
     /** Số lần bảo lưu thẻ đã sử dụng (mặc định 0, chỉ áp dụng cho Membership). */

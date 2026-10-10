@@ -29,7 +29,9 @@ public class SystemConfigService {
     // P-06: Độ dài một buổi PT (phút)
     public static final String SESSION_DURATION_MINUTES = "P-06";
 
-    // P-08: Số lần Swap (đổi buổi) tối đa mỗi gói PT
+    // P-08: Số lượt Swap (đổi buổi) cho MỖI THÁNG của gói PT.
+    // Hạn mức của một gói = P-08 × số tháng của gói, chốt vào Subscriptions.MaxSwapsSnapshot lúc bán
+    // (mặc định 3 → gói 1/2/3 tháng được 3/6/9 lượt).
     public static final String MAX_SWAP_COUNT = "P-08";
 
     // P-09: Hạn thanh toán đơn online, cũng là thời gian giữ slot đặt (phút)

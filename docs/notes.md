@@ -3,6 +3,18 @@
 Theo agents.md Phần 3, 4, 7.3: mọi chỗ SRS/SDS/prototype/chat nói khác nhau được ghi ở đây, kèm trạng thái.
 Khi nhóm chốt xong 1 mục → đổi trạng thái thành **ĐÃ CHỐT**, ghi ngày + phương án, và sửa lại tài liệu gốc cho khớp.
 
+## Hạn mức đổi buổi gói PT theo tháng (10/10/2026, ĐÃ CHỐT trong chat)
+
+- P-08 đổi nghĩa: **số lượt đổi buổi cho mỗi tháng của gói PT**, mặc định 3. Hạn mức một gói = P-08 × số tháng của gói → gói 1/2/3 tháng được 3/6/9 lượt. Buổi lẻ vẫn không được đổi (BR-74).
+- Schema không đổi: `Subscriptions.MaxSwapsSnapshot` đã lưu hạn mức riêng từng gói, chốt lúc bán (GBR-04), TINYINT đủ chứa. Service bán gói PT (UC-21) phải ghi `MaxSwapsSnapshot = P-08 × Packages.DurationValue` (gói PT luôn tính theo tháng, P-21); màn đổi buổi so `SwapsUsed` với `MaxSwapsSnapshot`, không đọc thẳng P-08.
+- Đã sửa: `seedgen.py` (hằng `SWAPS_PER_MONTH`), mô tả P-08 trong `seeddata.py`, comment cột trong `1_Init_Schema.sql`, comment `SystemConfigService.MAX_SWAP_COUNT` và `Subscription`. Sinh lại `2_Seed_Data.sql`; runtest, negtest, bizcheck đều qua.
+- Cần sửa SRS: BR-73 ("at most P-08 swaps per package") và mô tả P-08 ở III.4.
+
+## Seed bảo lưu theo quyết định 09/10 (10/10/2026)
+
+- `seedgen.py` trước đây chốt sẵn mọi buổi trong kỳ bảo lưu thành `Missed/MembershipFrozen` và nhả slot, kể cả buổi tương lai. Đã sửa: buổi chưa tới ngày giữ `Scheduled`, slot `Booked`; chỉ buổi đã qua ngày mới là `Missed/MembershipFrozen` (như JOB-04 chốt). Cập nhật `docs/database/SEED_CASES.md`.
+- Còn để ngỏ (chưa sửa): 9 buổi `Missed/NoCheckIn` mà cùng ngày khách có check-in vào gym (check-in ngẫu nhiên trùng ngày); seed vẫn nhả slot về `Free` cho mọi buổi `Missed`, trong khi mục JOB-04 ghi JOB-04 không giải phóng slot.
+
 ## BF-08 — kiểm tra và cập nhật Main Business Flow (09/10/2026)
 
 - Căn cứ bản “Sửa SRS: Báo vắng & Đánh giá PT” ngày 06/10/2026 do user gửi lại, BF-08 đã mở rộng thành **PT Package Session**, không còn chỉ là PT xử lý buổi. Mục 2.8 và sơ đồ Mermaid hiện mô tả toàn bộ vòng đời: sinh Scheduled → check-in → JOB-04 chốt; xử lý buổi chỉ là A2.
