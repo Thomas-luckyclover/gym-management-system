@@ -113,9 +113,9 @@ voucher(5, 'TET2027', 'Percent', 20, d_(2027, 1, 20), d_(2027, 2, 28), 50, 1, 0,
 voucher(6, 'DAYPASS20K', 'Amount', 20000, d_(2026, 9, 1), d_(2026, 12, 31), 500, None, 100000, 'MembershipAndDayPass', note='dùng nhiều lần / khách (không giới hạn)')
 
 # Ngày gym nghỉ: ngày → thời điểm Manager khai báo
-G.CLOSED.update({d_(2026, 9, 2): dt_(2026, 8, 20, 10, 0),      # khai báo TRƯỚC khi bán các gói PT → không sinh buổi
-                 d_(2026, 9, 18): dt_(2026, 9, 10, 9, 0),      # khai báo SAU khi bán → buổi Cancelled GymClosed
-                 d_(2026, 10, 20): dt_(2026, 8, 25, 9, 0),     # tương lai, khai báo trước → không sinh buổi
+G.CLOSED.update({d_(2026, 9, 2): dt_(2026, 8, 20, 10, 0),      # gói PT vẫn sinh buổi; đã qua ngày → GymClosed nếu chưa dời
+                 d_(2026, 9, 18): dt_(2026, 9, 10, 9, 0),      # đã qua ngày, chưa dời → JOB-04 chốt GymClosed
+                 d_(2026, 10, 20): dt_(2026, 8, 25, 9, 0),     # tương lai → Scheduled để PT chủ động dời
                  d_(2027, 2, 6): dt_(2026, 9, 30, 9, 0)})      # Tết
 
 # ============================================================ 4. KHÁCH (hồ sơ)

@@ -3,6 +3,19 @@
 Theo agents.md Phần 3, 4, 7.3: mọi chỗ SRS/SDS/prototype/chat nói khác nhau được ghi ở đây, kèm trạng thái.
 Khi nhóm chốt xong 1 mục → đổi trạng thái thành **ĐÃ CHỐT**, ghi ngày + phương án, và sửa lại tài liệu gốc cho khớp.
 
+## Ngày phòng nghỉ: PT dời buổi thay vì không sinh buổi (10/10/2026, ĐÃ CHỐT trong chat)
+
+- Quyết định này thay thế hướng bù buổi/ngày nghỉ trước đó và CBR-56 cũ: bán gói PT vẫn sinh đủ buổi cho mọi ngày T2–T6 trong kỳ, kể cả ngày phòng nghỉ đã khai báo. `GeneratedSessionCount` không loại ngày nghỉ.
+- Manager khai báo ngày phòng nghỉ ở `OperatingHourExceptions.IsClosedAllDay = 1`. Trước ngày nghỉ, PT và khách thống nhất rồi PT dời chính buổi đó qua UC-35 / `PtReschedule` (BR-64): không trừ buổi, không tăng `SwapsUsed`, giữ tổng quota. Chọn slot khác của chính PT trong hạn gói, kể cả T7/CN hoặc giờ khác trong ngày; slot đích phải hợp lệ và không rơi vào thời gian phòng đóng cửa. Không dùng CustomerSwap vì sẽ tiêu P-08.
+- PT Dashboard, khối Cần chú ý: cần thêm cảnh báo “Buổi rơi vào ngày phòng nghỉ, cần dời”.
+- Lưới an toàn: buổi còn Scheduled khi ngày phòng nghỉ đã qua được JOB-04 chốt `Cancelled / GymClosed`; xét TRƯỚC quyền vào gym và check-in. Không trừ buổi, không tính hoa hồng. Buổi ngày nghỉ tương lai vẫn Scheduled để PT dời, không hủy trước ngày.
+- Buổi lẻ (SingleSession) không được đặt vào ngày phòng nghỉ.
+- Không cần đổi cấu trúc DB: đã có OperatingHourExceptions, Sessions.CancelType = GymClosed và SessionMoveLogs.MoveType = PtReschedule. Giữ ràng buộc hủy hệ thống không có CancelledByAccountId, không RefundAgreed. Không tạo thêm buổi/quota tự động hoặc tự gia hạn.
+- Đã sửa seed trong lần này: `seedgen.py` sinh đủ ngày T2–T6; ngày nghỉ quá khứ chưa dời mô phỏng JOB-04 với GymClosed lúc 00:05 ngày hôm sau; ngày nghỉ tương lai giữ Scheduled/Booked. Gói Mai 07/09–07/11 có 45 buổi, ngày 20/10 giữ Scheduled. Thêm kiểm tra ngày nghỉ cho hàm sinh buổi lẻ; cập nhật comment schema và sinh lại `2_Seed_Data.sql`.
+- Cần sửa tiếp code runtime: JOB-04 (đọc lịch nghỉ và ưu tiên GymClosed), cảnh báo PT Dashboard, kiểm tra ngày nghỉ khi đặt buổi lẻ và rà luồng bán gói/dời buổi theo chính sách mới. Seed đã đổi không có nghĩa runtime đã hỗ trợ.
+- Cần sửa SRS/SDS: BR-40, CBR-56, CBR-57, BF-08/UC liên quan và bổ sung rule đặt buổi lẻ; bỏ mô tả không sinh buổi ngày nghỉ. Rà ý nghĩa “không trừ buổi” trong số liệu/quota và cách xử lý quyền lợi nếu buổi bị lưới an toàn hủy khi chưa dời; chưa tự triển khai phục hồi hoặc bù/gia hạn sau hủy.
+- Chưa chạy schema/seed lên SQL Server đang dùng. Muốn nạp bộ seed mới, nhóm chạy lại bộ 3 file SQL theo quy trình reset dữ liệu của dự án; thao tác này cần chủ động vì thay dữ liệu test hiện tại.
+
 ## Hạn mức đổi buổi gói PT theo tháng (10/10/2026, ĐÃ CHỐT trong chat)
 
 - P-08 đổi nghĩa: **số lượt đổi buổi cho mỗi tháng của gói PT**, mặc định 3. Hạn mức một gói = P-08 × số tháng của gói → gói 1/2/3 tháng được 3/6/9 lượt. Buổi lẻ vẫn không được đổi (BR-74).

@@ -399,7 +399,7 @@ def session(sub_id, slot_id, pt, status, value, **kw):
 
 
 def pt_package(oid, pt, start, fixed, events=None, freeze=None, holder_checkin_rate=0.85, note=None):
-    """Sinh gói PT theo kỳ hạn (BR-40): mỗi T2–T6 trong kỳ, bỏ ngày nghỉ khai báo TRƯỚC khi bán (CBR-56).
+    """Sinh gói PT đủ mọi T2–T6 trong kỳ, kể cả ngày phòng nghỉ (quyết định 10/10/2026).
     events: {date: ('cancel', type, reason) | ('missed', reason) | ('move', movetype, new_date, new_time, new_pt, reason)}"""
     events = events or {}
     o = get('Orders', oid)
@@ -415,7 +415,7 @@ def pt_package(oid, pt, start, fixed, events=None, freeze=None, holder_checkin_r
     dates = []
     d = start
     while d <= end:
-        if d.weekday() < 5 and not (d in CLOSED and CLOSED[d] < sold):
+        if d.weekday() < 5:
             dates.append(d)
         d += timedelta(days=1)
     sub['GeneratedSessionCount'] = len(dates)
@@ -445,11 +445,14 @@ def pt_package(oid, pt, start, fixed, events=None, freeze=None, holder_checkin_r
                                         RequestedByAccountId=requester, Reason=reason,
                                         MovedAt=datetime.combine(min(d, nd) - timedelta(days=2), time(20, 15))))
             continue
-        if d in CLOSED and CLOSED[d] >= sold:
-            sl = slot(pt, d, fixed, 'Free')
+        # Ngày nghỉ tương lai giữ Scheduled để PT dời; ngày đã qua mô phỏng JOB-04.
+        # Xét trước quyền vào gym/check-in; không nhả slot quá khứ, không tăng SwapsUsed.
+        if d in CLOSED and d < FUTURE_FROM:
+            sl = slot(pt, d, fixed, 'Booked')
             session(sid, sl, pt, 'Cancelled', value, CancelType='GymClosed',
-                    CancelReason='Phòng tập nghỉ cả ngày theo lịch Manager khai báo sau khi bán gói',
-                    CancelledAt=CLOSED[d])
+                    CancelReason='Phòng tập nghỉ cả ngày, buổi chưa được PT dời trước ngày nghỉ',
+                    CancelledAt=datetime.combine(d + timedelta(days=1), time(0, 5)),
+                    IsAutoClosed=1)
             continue
         if ev and ev[0] == 'cancel':
             _, ctype, reason = ev
@@ -502,6 +505,7 @@ def _session_status(sid, sl, pt, value, d, at, end_at, holder, partner, freeze, 
 
 def single_session(cid, pt, d, start, channel, created, status=None, note=None):
     """Buổi lẻ (CBR-53/54): online thì đặt trong tuần (CBR-39), tại quầy thì đúng hôm nay."""
+    assert d not in CLOSED, 'Buổi lẻ không đặt vào ngày phòng nghỉ (quyết định 10/10/2026)'
     assert membership_valid(cid, d, allow_daypass=True), 'CBR-60'
     oid = order(cid, PKG['single'], created, channel, note=note)
     sid = subscription(oid, d, pt=pt)
