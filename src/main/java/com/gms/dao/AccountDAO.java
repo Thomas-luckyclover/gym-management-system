@@ -147,6 +147,37 @@ public class AccountDAO {
     }
 
     /**
+     * Ghi mật khẩu mới kèm kiểm tra hash cũ để chống ghi đè đồng thời (Optimistic Concurrency Control - TC-17C).
+     * @param accountId id tài khoản
+     * @param newPasswordHash chuỗi hash mới
+     * @param oldPasswordHash chuỗi hash cũ đã kiểm tra
+     * @return true nếu có dòng được cập nhật
+     */
+    public boolean updatePasswordHash(int accountId, String newPasswordHash, String oldPasswordHash) throws SQLException {
+        try (Connection conn = DBContext.getConnection()) {
+            return updatePasswordHash(conn, accountId, newPasswordHash, oldPasswordHash);
+        }
+    }
+
+    /**
+     * Ghi mật khẩu mới kèm kiểm tra hash cũ, dùng Connection có sẵn trong transaction (TC-17C).
+     */
+    public boolean updatePasswordHash(Connection conn, int accountId, String newPasswordHash, String oldPasswordHash) throws SQLException {
+        String sql = """
+                UPDATE Accounts
+                SET PasswordHash = ?
+                WHERE AccountId = ? AND PasswordHash = ?
+                """;
+
+        try (PreparedStatement stmt = conn.prepareStatement(sql)) {
+            stmt.setString(1, newPasswordHash);
+            stmt.setInt(2, accountId);
+            stmt.setString(3, oldPasswordHash);
+            return stmt.executeUpdate() > 0;
+        }
+    }
+
+    /**
      * Tăng số lần đăng nhập sai thêm 1 (BR-01).
      * @param accountId id tài khoản
      * @return true nếu có dòng được cập nhật
