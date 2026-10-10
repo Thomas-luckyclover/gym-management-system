@@ -15,6 +15,7 @@ FUTURE_FROM = date(2026, 10, 5)     # buổi PT từ ngày này trở đi = Sche
 HASH = '$2a$10$o22fNyHpwvbuAj8q.LKCI.KMakVydfKblTjnBh7rgiUTrt55ZnXmu'  # Gms@2026
 VAT = 10
 SESSION_MIN = 90
+SWAPS_PER_MONTH = 3                 # P-08: lượt đổi buổi cho MỖI THÁNG của gói PT (gói 1/2/3 tháng → 3/6/9 lượt)
 rng = random.Random(2026)
 
 
@@ -284,10 +285,16 @@ def subscription(oid, start, status=None, pt=None, fixed=None, end=None, note=No
     pkg = get('Packages', o['PackageId'])
     t = pkg['PackageType']
     end = end or (start if t == 'SingleSession' else end_of(start, pkg))
+    # Hạn mức đổi buổi chốt lúc bán = P-08 × số tháng của gói PT (BR-73, GBR-04).
+    # Gói PT luôn tính theo tháng (P-21); buổi lẻ không được đổi (BR-74) nên để NULL.
+    max_swaps = None
+    if t in ('PTSingle', 'PTCouple'):
+        assert pkg['DurationUnit'] == 'Month', 'Gói PT phải tính theo tháng (P-21)'
+        max_swaps = SWAPS_PER_MONTH * pkg['DurationValue']
     r = dict(OrderId=oid, CustomerId=o['HolderCustomerId'], SubscriptionType=t, PtEmployeeId=pt,
              StartDate=start, EndDate=end, FixedStartTime=fixed,
              GeneratedSessionCount=1 if t == 'SingleSession' else None, SwapsUsed=0,
-             MaxSwapsSnapshot=3 if t in ('PTSingle', 'PTCouple') else None, FreezeUsed=0,
+             MaxSwapsSnapshot=max_swaps, FreezeUsed=0,
              MaxFreezesSnapshot=1 if t == 'Membership' else None, Status=status or 'Active')
     return add('Subscriptions', r, note)
 
@@ -461,10 +468,9 @@ def pt_package(oid, pt, start, fixed, events=None, freeze=None, holder_checkin_r
             session(sid, sl, pt, 'Missed', value, MissedReason=ev[1],
                     IsAutoClosed=1)
             continue
-        sl_status = 'Booked'
-        if freeze and freeze[0] <= d <= freeze[1]:
-            sl_status = 'Free'
-        sl = slot(pt, d, fixed, sl_status)
+        # Quyết định 09/10/2026: bảo lưu không chốt sẵn buổi tương lai, slot vẫn Booked.
+        # Buổi trong bảo lưu đã qua ngày sẽ được session() chuyển Missed (và nhả slot như mọi buổi Missed).
+        sl = slot(pt, d, fixed, 'Booked')
         _session_status(sid, sl, pt, value, d, at, end_at, holder, partner, freeze, holder_checkin_rate)
     sub['SwapsUsed'] = swaps
     sub['Status'] = 'Expired' if end < SEED else 'Active'
@@ -473,13 +479,15 @@ def pt_package(oid, pt, start, fixed, events=None, freeze=None, holder_checkin_r
 
 def _session_status(sid, sl, pt, value, d, at, end_at, holder, partner, freeze, rate):
     people = [holder] + ([partner] if partner else [])
+    # Buổi chưa tới ngày luôn Scheduled, kể cả khi nằm trong kỳ bảo lưu (quyết định 09/10/2026).
+    if d >= FUTURE_FROM:
+        return session(sid, sl, pt, 'Scheduled', value)
+    # Buổi đã qua ngày trong kỳ bảo lưu: JOB-04 chốt MembershipFrozen lúc 00:05 hôm sau.
+    # Gói đôi: người còn lại vẫn dùng được gym thì xét tiếp như buổi thường (CBR-67).
     if freeze and freeze[0] <= d <= freeze[1]:
         others_ok = partner and membership_valid(partner, d)
         if not others_ok:
-            return session(sid, sl, pt, 'Missed', value, MissedReason='MembershipFrozen', IsAutoClosed=0,
-                           AttendanceMarkedAt=None)
-    if d >= FUTURE_FROM:
-        return session(sid, sl, pt, 'Scheduled', value)
+            return session(sid, sl, pt, 'Missed', value, MissedReason='MembershipFrozen')
     valid = [c for c in people if membership_valid(c, d)]
     if not valid:
         return session(sid, sl, pt, 'Missed', value, MissedReason='NoMembership', IsAutoClosed=1)

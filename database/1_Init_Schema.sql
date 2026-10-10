@@ -444,7 +444,7 @@ CREATE TABLE Subscriptions (
     FixedStartTime        TIME(0)      NULL,      -- v25: khung giờ cố định của gói PT (CBR-43, CBR-52)
     GeneratedSessionCount TINYINT      NULL,      -- số buổi thực sinh, chốt khi Paid (BR-40, DBR-53)
     SwapsUsed             TINYINT      NOT NULL CONSTRAINT DF_Subscriptions_Swaps  DEFAULT (0),
-    MaxSwapsSnapshot      TINYINT      NULL,      -- v25: P-08 lúc bán — đổi P-08 không áp ngược (GBR-04)
+    MaxSwapsSnapshot      TINYINT      NULL,      -- hạn mức đổi buổi = P-08 × số tháng của gói, chốt lúc bán — đổi P-08 không áp ngược (BR-73, GBR-04)
     FreezeUsed            TINYINT      NOT NULL CONSTRAINT DF_Subscriptions_Freeze DEFAULT (0),
     MaxFreezesSnapshot    TINYINT      NULL,      -- v25: P-01 lúc bán (GBR-04)
     Status                VARCHAR(10)  NOT NULL CONSTRAINT DF_Subscriptions_Status DEFAULT ('Active'),
