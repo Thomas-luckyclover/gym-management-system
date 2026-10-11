@@ -1,0 +1,870 @@
+@charset "UTF-8";
+/* =====================================================================
+   about.css — Trang Về chúng tôi (/about) · phong cách cyberpunk neon
+   Bảng màu riêng của trang (chỉ trang này): hồng neon + cyan trên nền xanh đêm/tím.
+   JS: js/pages/guest/about.js (vòng card, đếm số, nghiêng, minigame)
+   ===================================================================== */
+
+.about-page {
+  /* Neon chính = vàng chanh của trang chủ (#D4FF3F), phụ = cyan; hồng chỉ dùng cho mặt trời */
+  --cy-lime: #D4FF3F;
+  --cy-magenta: #FF3DCB;
+  --cy-cyan: #5CF6FF;
+  --cy-amber: #FFB547;
+  --cy-ink: #F4F1FF;
+  --cy-soft: #B9B3D6;
+  --cy-bg-1: #0B0F1C;
+  --cy-bg-2: #060709;
+  --cy-glass: rgba(24, 30, 48, 0.86);
+  --cy-glass-2: rgba(10, 13, 22, 0.9);
+  --cy-line: rgba(92, 246, 255, 0.32);
+  --cy-glow-m: 0 0 18px rgba(212, 255, 63, 0.55);
+  --cy-glow-c: 0 0 18px rgba(92, 246, 255, 0.5);
+  --cy-ring-radius: 520px;
+  --cy-card-w: 250px;
+  --cy-card-h: 330px;
+  background: radial-gradient(ellipse 120% 80% at 50% 0%, #141C33 0%, var(--cy-bg-1) 45%, var(--cy-bg-2) 100%);
+  color: var(--cy-ink);
+}
+
+.cy-main {
+  position: relative;
+  z-index: 1;
+  overflow-x: clip;
+}
+
+/* ===== Nền: mặt trời synthwave + lưới chạy về chân trời + vạch quét ===== */
+.cy-backdrop {
+  position: fixed;
+  inset: 0;
+  z-index: 0;
+  overflow: hidden;
+  pointer-events: none;
+}
+
+.cy-sun {
+  position: absolute;
+  left: 50%;
+  bottom: 34vh;
+  width: 46vmin;
+  aspect-ratio: 1;
+  border-radius: 50%;
+  transform: translateX(-50%);
+  background:
+    repeating-linear-gradient(180deg, transparent 0 58%, var(--cy-bg-1) 58% 61%, transparent 61% 66%, var(--cy-bg-1) 66% 70%, transparent 70% 76%, var(--cy-bg-1) 76% 81%, transparent 81%),
+    linear-gradient(180deg, var(--cy-lime) 0%, var(--cy-amber) 48%, var(--cy-magenta) 100%);
+  filter: drop-shadow(0 0 40px rgba(212, 255, 63, 0.35)) drop-shadow(0 0 70px rgba(255, 61, 203, 0.25));
+  opacity: 0.55;
+}
+
+.cy-grid {
+  position: absolute;
+  left: -50%;
+  right: -50%;
+  bottom: -10vh;
+  height: 55vh;
+  transform: perspective(420px) rotateX(62deg);
+  transform-origin: 50% 0%;
+  background:
+    linear-gradient(var(--cy-lime) 2px, transparent 2px) 0 0 / 100% 60px,
+    linear-gradient(90deg, rgba(92, 246, 255, 0.7) 2px, transparent 2px) 0 0 / 80px 100%;
+  mask: linear-gradient(180deg, transparent 0%, #000 30%, #000 100%);
+  opacity: 0.35;
+  animation: cy-grid-run 2.4s linear infinite;
+}
+
+.cy-scan {
+  position: absolute;
+  inset: 0;
+  background: repeating-linear-gradient(180deg, rgba(255, 255, 255, 0.025) 0 1px, transparent 1px 3px);
+}
+
+@keyframes cy-grid-run {
+  to { background-position: 0 60px, 0 0; }
+}
+
+/* ===== Chữ chung ===== */
+.cy-section {
+  position: relative;
+  width: min(1180px, calc(100% - 32px));
+  margin: 0 auto;
+  padding: 96px 0;
+}
+
+.cy-h2 {
+  margin: 0 0 12px;
+  font-family: var(--font-heading);
+  font-size: clamp(1.9rem, 4vw, 3rem);
+  font-weight: 900;
+  letter-spacing: -0.02em;
+  line-height: 1.08;
+  color: var(--cy-ink);
+}
+
+.cy-h2 em {
+  font-style: normal;
+  color: var(--cy-cyan);
+  text-shadow: var(--cy-glow-c);
+}
+
+.cy-lead {
+  max-width: 62ch;
+  margin: 0 0 40px;
+  color: var(--cy-soft);
+  font-size: 1.02rem;
+}
+
+.cy-lead kbd {
+  padding: 1px 7px;
+  border: 1px solid var(--cy-line);
+  border-radius: 4px;
+  background: rgba(92, 246, 255, 0.08);
+  color: var(--cy-cyan);
+  font-family: var(--font-heading);
+  font-size: 0.85em;
+}
+
+/* ===== 1. Hero: biển neon ===== */
+.cy-hero {
+  display: grid;
+  place-items: center;
+  align-content: center;
+  gap: 40px;
+  min-height: calc(100vh - 72px);
+  padding: 64px 16px 96px;
+}
+
+.cy-sign {
+  position: relative;
+  width: min(1000px, 100%);
+  padding: 72px clamp(24px, 6vw, 88px) 56px;
+  border: 1px solid var(--cy-line);
+  border-radius: 18px;
+  background:
+    repeating-linear-gradient(180deg, rgba(92, 246, 255, 0.05) 0 1px, transparent 1px 7px),
+    linear-gradient(160deg, rgba(28, 36, 64, 0.62), rgba(10, 12, 22, 0.7));
+  box-shadow: 0 0 0 1px rgba(212, 255, 63, 0.12), 0 30px 80px -30px rgba(0, 0, 0, 0.7), inset 0 0 60px rgba(92, 246, 255, 0.06);
+  text-align: center;
+  transform-style: preserve-3d;
+  transition: transform 0.25s ease-out;
+}
+
+.cy-title {
+  position: relative;
+  margin: 0;
+  font-family: var(--font-heading);
+  font-size: clamp(2.6rem, 9.4vw, 7.2rem);
+  font-weight: 900;
+  letter-spacing: 0.04em;
+  line-height: 1;
+  white-space: nowrap;
+  /* Chữ tách hai màu hồng / cyan như biển neon */
+  background: linear-gradient(180deg, var(--cy-lime) 0 53%, var(--cy-cyan) 53% 100%);
+  -webkit-background-clip: text;
+  background-clip: text;
+  color: transparent;
+  filter: drop-shadow(0 0 14px rgba(212, 255, 63, 0.55)) drop-shadow(0 0 30px rgba(92, 246, 255, 0.3));
+}
+
+/* Ngôi sao giữa chữ: SVG (không phải ký tự) để không bị background-clip:text cắt sai chỗ */
+.cy-title-star {
+  display: inline-block;
+  width: 0.5em;
+  height: 0.5em;
+  margin: 0 0.1em;
+  vertical-align: 0.2em;
+  fill: #FFFFFF;
+  filter: drop-shadow(0 0 10px rgba(255, 255, 255, 0.8));
+  animation: cy-spin-star 6s linear infinite;
+}
+
+/* Nhiễu sóng: 2 lớp chữ lệch màu chớp lên vài lần mỗi chu kỳ */
+.cy-title::before,
+.cy-title::after {
+  content: attr(data-text);
+  position: absolute;
+  inset: 0;
+  opacity: 0;
+  pointer-events: none;
+}
+
+.cy-title::before {
+  background: linear-gradient(var(--cy-cyan), var(--cy-cyan));
+  -webkit-background-clip: text;
+  background-clip: text;
+  animation: cy-glitch-a 5s steps(1) infinite;
+}
+
+.cy-title::after {
+  background: linear-gradient(var(--cy-lime), var(--cy-lime));
+  -webkit-background-clip: text;
+  background-clip: text;
+  animation: cy-glitch-b 5s steps(1) infinite;
+}
+
+@keyframes cy-glitch-a {
+  0%, 89%, 100% { opacity: 0; transform: none; clip-path: inset(0); }
+  90% { opacity: 0.85; transform: translate(-6px, 2px); clip-path: inset(10% 0 55% 0); }
+  92% { opacity: 0.85; transform: translate(5px, -2px); clip-path: inset(60% 0 8% 0); }
+  94% { opacity: 0; }
+}
+
+@keyframes cy-glitch-b {
+  0%, 90%, 100% { opacity: 0; transform: none; clip-path: inset(0); }
+  91% { opacity: 0.8; transform: translate(6px, -1px); clip-path: inset(40% 0 30% 0); }
+  93% { opacity: 0.8; transform: translate(-4px, 3px); clip-path: inset(5% 0 70% 0); }
+  95% { opacity: 0; }
+}
+
+@keyframes cy-spin-star {
+  to { transform: rotate(360deg); }
+}
+
+.cy-sub {
+  max-width: 44ch;
+  margin: 28px auto 0;
+  color: var(--cy-ink);
+  font-size: clamp(1rem, 1.6vw, 1.2rem);
+  font-weight: 500;
+}
+
+.cy-meta {
+  margin: 14px 0 0;
+  color: var(--cy-cyan);
+  font-family: var(--font-heading);
+  font-size: 0.8rem;
+  font-weight: 700;
+  letter-spacing: 0.3em;
+  text-shadow: var(--cy-glow-c);
+}
+
+/* Trang trí 4 góc biển */
+.cy-deco {
+  position: absolute;
+  width: 34px;
+  height: 34px;
+  animation: cy-float 4s ease-in-out infinite alternate;
+}
+
+.cy-deco--star { top: 28px; left: 32px; fill: var(--cy-lime); filter: drop-shadow(var(--cy-glow-m)); }
+.cy-deco--spark { top: 28px; right: 36px; fill: var(--cy-cyan); filter: drop-shadow(var(--cy-glow-c)); animation-delay: -1.5s; }
+.cy-deco--bolt { bottom: 30px; left: 44px; fill: var(--cy-amber); filter: drop-shadow(0 0 12px rgba(255, 181, 71, 0.7)); animation-delay: -0.8s; }
+.cy-deco--arrows { bottom: 34px; right: 40px; width: 64px; fill: var(--cy-cyan); filter: drop-shadow(var(--cy-glow-c)); animation-delay: -2.2s; }
+
+@keyframes cy-float {
+  from { transform: translateY(0) rotate(0deg); }
+  to { transform: translateY(-8px) rotate(8deg); }
+}
+
+.cy-scroll {
+  color: var(--cy-soft);
+  font-size: 0.85rem;
+  letter-spacing: 0.2em;
+  text-transform: uppercase;
+  text-decoration: none;
+  animation: cy-bounce 2s ease-in-out infinite;
+}
+
+.cy-scroll:hover { color: var(--cy-cyan); }
+
+@keyframes cy-bounce {
+  50% { transform: translateY(6px); }
+}
+
+/* ===== 2. Vòng card danh ngôn xoay 3D ===== */
+.cy-ring-stage {
+  position: relative;
+  height: calc(var(--cy-card-h) + 140px);
+  perspective: 1600px;
+  cursor: grab;
+  touch-action: pan-y;
+  user-select: none;
+}
+
+.cy-ring-stage.is-dragging { cursor: grabbing; }
+
+.cy-ring {
+  position: absolute;
+  left: 50%;
+  top: 50%;
+  width: 0;
+  height: 0;
+  transform-style: preserve-3d;
+  transform: translateZ(calc(-1 * var(--cy-ring-radius))) rotateX(-6deg) rotateY(var(--ry, 0deg));
+}
+
+.cy-card {
+  position: absolute;
+  left: calc(var(--cy-card-w) / -2);
+  top: calc(var(--cy-card-h) / -2);
+  display: flex;
+  flex-direction: column;
+  width: var(--cy-card-w);
+  height: var(--cy-card-h);
+  padding: 26px 22px 22px;
+  border: 1px solid var(--cy-line);
+  border-radius: 22px;
+  background: linear-gradient(165deg, var(--cy-glass) 0%, var(--cy-glass-2) 100%);
+  box-shadow: 0 0 24px rgba(212, 255, 63, 0.16), inset 0 0 40px rgba(92, 246, 255, 0.07);
+  transform: rotateY(calc(var(--i) * 360deg / var(--n))) translateZ(var(--cy-ring-radius));
+  transition: box-shadow 0.3s ease, border-color 0.3s ease;
+}
+
+/* Mặt sau thẻ hiện chữ ngược như kính (giống ảnh tham khảo) */
+.cy-card::after {
+  content: "";
+  position: absolute;
+  inset: auto 18px 18px;
+  height: 46px;
+  border-radius: 12px;
+  background: radial-gradient(ellipse at 50% 100%, rgba(92, 246, 255, 0.35), transparent 70%);
+  pointer-events: none;
+}
+
+.cy-card.is-front {
+  border-color: rgba(92, 246, 255, 0.75);
+  box-shadow: 0 0 40px rgba(92, 246, 255, 0.35), 0 0 80px rgba(212, 255, 63, 0.2), inset 0 0 40px rgba(92, 246, 255, 0.12);
+}
+
+.cy-tag {
+  align-self: flex-end;
+  padding: 4px 14px;
+  border: 2px solid var(--cy-lime);
+  border-radius: 999px;
+  color: var(--cy-lime);
+  font-family: var(--font-heading);
+  font-size: 1.05rem;
+  font-weight: 700;
+  letter-spacing: 0.1em;
+  text-shadow: var(--cy-glow-m);
+  box-shadow: var(--cy-glow-m);
+}
+
+.cy-card blockquote {
+  margin: auto 0 0;
+  font-family: var(--font-heading);
+  font-size: 1.22rem;
+  font-weight: 800;
+  line-height: 1.3;
+  color: var(--cy-ink);
+}
+
+.cy-card cite {
+  margin-top: 14px;
+  color: var(--cy-cyan);
+  font-size: 0.78rem;
+  font-style: normal;
+  font-weight: 600;
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+}
+
+.cy-ring-controls {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 20px;
+  margin-top: 8px;
+}
+
+.cy-btn-icon {
+  width: 46px;
+  height: 46px;
+  border: 1px solid var(--cy-line);
+  border-radius: 50%;
+  background: rgba(92, 246, 255, 0.06);
+  color: var(--cy-cyan);
+  font-size: 1.6rem;
+  line-height: 1;
+  cursor: pointer;
+  transition: background 0.2s ease, box-shadow 0.2s ease;
+}
+
+.cy-btn-icon:hover,
+.cy-btn-icon:focus-visible {
+  background: rgba(92, 246, 255, 0.18);
+  box-shadow: var(--cy-glow-c);
+  outline: none;
+}
+
+.cy-ring-count {
+  min-width: 90px;
+  color: var(--cy-soft);
+  font-family: var(--font-heading);
+  font-weight: 700;
+  letter-spacing: 0.15em;
+  text-align: center;
+}
+
+/* ===== 3. Chỉ số ===== */
+.cy-stats {
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  gap: 18px;
+}
+
+.cy-stat {
+  position: relative;
+  padding: 28px 26px;
+  border: 1px solid var(--cy-line);
+  border-radius: 16px;
+  background: linear-gradient(160deg, rgba(40, 30, 92, 0.5), rgba(14, 22, 58, 0.55));
+  transition: transform 0.25s ease-out, box-shadow 0.3s ease;
+}
+
+.cy-stat:hover {
+  box-shadow: 0 0 30px rgba(92, 246, 255, 0.2);
+}
+
+.cy-stat b {
+  display: block;
+  font-family: var(--font-heading);
+  font-size: clamp(2.2rem, 4.6vw, 3.4rem);
+  font-weight: 900;
+  line-height: 1;
+  background: linear-gradient(180deg, var(--cy-lime) 0 52%, var(--cy-cyan) 52%);
+  -webkit-background-clip: text;
+  background-clip: text;
+  color: transparent;
+  font-variant-numeric: tabular-nums;
+}
+
+.cy-stat span {
+  display: block;
+  margin-top: 10px;
+  color: var(--cy-soft);
+}
+
+/* ===== 4. Câu chuyện + cột mốc + ảnh ===== */
+.cy-story {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) minmax(0, 1fr);
+  gap: 56px;
+  align-items: center;
+}
+
+.cy-story-copy p {
+  color: var(--cy-soft);
+  line-height: 1.7;
+}
+
+.cy-story-copy p b {
+  color: var(--cy-cyan);
+}
+
+.cy-timeline {
+  position: relative;
+  display: grid;
+  gap: 18px;
+  margin: 32px 0 0;
+  padding: 0 0 0 28px;
+  list-style: none;
+}
+
+.cy-timeline::before {
+  content: "";
+  position: absolute;
+  left: 7px;
+  top: 6px;
+  bottom: 6px;
+  width: 2px;
+  background: linear-gradient(var(--cy-lime), var(--cy-cyan));
+  box-shadow: var(--cy-glow-m);
+}
+
+.cy-timeline li {
+  position: relative;
+  display: grid;
+  grid-template-columns: 64px 1fr;
+  gap: 12px;
+  align-items: baseline;
+}
+
+.cy-timeline li::before {
+  content: "";
+  position: absolute;
+  left: -27px;
+  top: 6px;
+  width: 12px;
+  height: 12px;
+  border: 2px solid var(--cy-cyan);
+  border-radius: 50%;
+  background: var(--cy-bg-1);
+  box-shadow: var(--cy-glow-c);
+}
+
+.cy-timeline b {
+  color: var(--cy-lime);
+  font-family: var(--font-heading);
+  font-weight: 900;
+  text-shadow: var(--cy-glow-m);
+}
+
+.cy-timeline span {
+  color: var(--cy-ink);
+}
+
+.cy-gallery {
+  position: relative;
+  height: 520px;
+}
+
+.cy-photo {
+  position: absolute;
+  margin: 0;
+  overflow: hidden;
+  border: 2px solid var(--cy-line);
+  border-radius: 18px;
+  box-shadow: 0 0 30px rgba(92, 246, 255, 0.2), 0 30px 60px -20px rgba(0, 0, 0, 0.7);
+  transition: transform 0.3s ease-out, box-shadow 0.3s ease;
+}
+
+.cy-photo img {
+  display: block;
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  filter: saturate(1.15) contrast(1.05);
+}
+
+/* Phủ màu neon hai tông lên ảnh */
+.cy-photo::after {
+  content: "";
+  position: absolute;
+  inset: 0;
+  background: linear-gradient(160deg, rgba(212, 255, 63, 0.35), rgba(92, 246, 255, 0.2));
+  mix-blend-mode: color;
+  pointer-events: none;
+}
+
+.cy-photo figcaption {
+  position: absolute;
+  left: 14px;
+  bottom: 12px;
+  z-index: 1;
+  padding: 3px 10px;
+  border: 1px solid var(--cy-lime);
+  border-radius: 999px;
+  background: rgba(11, 16, 48, 0.75);
+  color: var(--cy-lime);
+  font-family: var(--font-heading);
+  font-size: 0.75rem;
+  font-weight: 700;
+  letter-spacing: 0.12em;
+}
+
+.cy-photo--a { left: 0; top: 0; width: 62%; height: 58%; --rot: -3deg; }
+.cy-photo--b { right: 0; top: 18%; width: 52%; height: 50%; --rot: 4deg; }
+.cy-photo--c { left: 14%; bottom: 0; width: 56%; height: 42%; --rot: -1deg; }
+
+.cy-photo:hover {
+  z-index: 2;
+  box-shadow: 0 0 40px rgba(212, 255, 63, 0.4), 0 30px 60px -20px rgba(0, 0, 0, 0.7);
+}
+
+/* ===== 5. Minigame ===== */
+.cy-game {
+  position: relative;
+  height: 300px;
+  overflow: hidden;
+  border: 1px solid var(--cy-line);
+  border-radius: 20px;
+  background:
+    linear-gradient(180deg, rgba(9, 13, 40, 0.92), rgba(23, 10, 51, 0.96)),
+    repeating-linear-gradient(90deg, rgba(92, 246, 255, 0.06) 0 1px, transparent 1px 40px);
+  box-shadow: inset 0 0 60px rgba(92, 246, 255, 0.08), 0 0 40px rgba(212, 255, 63, 0.12);
+  cursor: pointer;
+  outline: none;
+}
+
+.cy-game:focus-visible {
+  box-shadow: 0 0 0 2px var(--cy-cyan), inset 0 0 60px rgba(92, 246, 255, 0.08);
+}
+
+.cy-game-hud {
+  position: absolute;
+  top: 16px;
+  left: 20px;
+  right: 20px;
+  z-index: 3;
+  display: flex;
+  justify-content: space-between;
+  color: var(--cy-soft);
+  font-family: var(--font-heading);
+  font-size: 0.78rem;
+  font-weight: 700;
+  letter-spacing: 0.15em;
+}
+
+.cy-game-hud b {
+  margin-left: 8px;
+  color: var(--cy-cyan);
+  font-size: 1.15rem;
+  text-shadow: var(--cy-glow-c);
+  font-variant-numeric: tabular-nums;
+}
+
+.cy-game-floor {
+  position: absolute;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  height: 56px;
+  border-top: 2px solid var(--cy-lime);
+  box-shadow: 0 -2px 18px rgba(212, 255, 63, 0.5);
+  background: repeating-linear-gradient(90deg, rgba(92, 246, 255, 0.25) 0 2px, transparent 2px 48px);
+}
+
+.cy-game.is-running .cy-game-floor {
+  animation: cy-floor-run 0.6s linear infinite;
+}
+
+@keyframes cy-floor-run {
+  to { background-position: -48px 0; }
+}
+
+.cy-mochi {
+  position: absolute;
+  left: 9%;
+  bottom: 54px;
+  z-index: 2;
+  width: 112px;
+  height: auto;
+  overflow: visible;
+  filter: drop-shadow(0 0 10px rgba(214, 245, 91, 0.55)) drop-shadow(0 0 22px rgba(92, 246, 255, 0.3));
+  transform: translateY(calc(-1 * var(--jump, 0px)));
+}
+
+.cy-game.is-running .cy-mochi-feet {
+  transform-box: fill-box;
+  transform-origin: 50% 0%;
+  animation: cy-feet 0.25s steps(2) infinite;
+}
+
+@keyframes cy-feet {
+  50% { transform: translateY(-6px); }
+}
+
+.cy-obstacles {
+  position: absolute;
+  inset: 0;
+  z-index: 1;
+}
+
+.cy-food {
+  position: absolute;
+  bottom: 56px;
+  width: 52px;
+  height: 52px;
+  filter: drop-shadow(0 0 10px rgba(212, 255, 63, 0.55));
+}
+
+.cy-game-overlay {
+  position: absolute;
+  inset: 0;
+  z-index: 4;
+  display: grid;
+  place-content: center;
+  justify-items: center;
+  gap: 16px;
+  background: rgba(11, 16, 48, 0.6);
+  backdrop-filter: blur(3px);
+  text-align: center;
+}
+
+.cy-game-msg {
+  margin: 0;
+  font-family: var(--font-heading);
+  font-size: clamp(1.6rem, 3.4vw, 2.4rem);
+  font-weight: 900;
+  background: linear-gradient(180deg, var(--cy-lime) 0 52%, var(--cy-cyan) 52%);
+  -webkit-background-clip: text;
+  background-clip: text;
+  color: transparent;
+}
+
+/* ===== 6. Kêu gọi ===== */
+.cy-cta {
+  text-align: center;
+}
+
+.cy-cta .cy-lead {
+  margin-inline: auto;
+}
+
+.cy-cta-row {
+  display: flex;
+  justify-content: center;
+  flex-wrap: wrap;
+  gap: 14px;
+}
+
+/* Nghiêng 3D theo con trỏ (data-cy-tilt, JS ghi --rx/--ry) */
+[data-cy-tilt] {
+  transform: perspective(900px) rotateX(var(--rx, 0deg)) rotateY(var(--ry-tilt, 0deg)) rotate(var(--rot, 0deg));
+}
+
+/* Hiện dần khi cuộn tới */
+.cy-section.js-reveal {
+  opacity: 0;
+  transform: translateY(40px);
+  transition: opacity 0.8s ease, transform 0.8s cubic-bezier(0.16, 1, 0.3, 1);
+}
+
+.cy-section.js-reveal.is-in {
+  opacity: 1;
+  transform: none;
+}
+
+/* ===== Responsive ===== */
+@media (max-width: 900px) {
+  .about-page {
+    --cy-ring-radius: 330px;
+    --cy-card-w: 200px;
+    --cy-card-h: 270px;
+  }
+
+  .cy-stats { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+  .cy-story { grid-template-columns: 1fr; }
+  .cy-gallery { height: 420px; }
+  .cy-card blockquote { font-size: 1.02rem; }
+}
+
+@media (max-width: 560px) {
+  .about-page {
+    --cy-ring-radius: 250px;
+    --cy-card-w: 170px;
+    --cy-card-h: 240px;
+  }
+
+  .cy-section { padding: 64px 0; }
+  .cy-stats { grid-template-columns: 1fr; }
+  .cy-deco { width: 22px; height: 22px; }
+  .cy-deco--arrows { width: 40px; }
+  .cy-game { height: 260px; }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .about-page *,
+  .about-page *::before,
+  .about-page *::after {
+    animation: none !important;
+    transition: none !important;
+  }
+
+  .cy-section.js-reveal {
+    opacity: 1;
+    transform: none;
+  }
+}
+
+/* ===== 3. Giá trị cốt lõi (thay khối con số — trang tĩnh, không chứa số cấu hình) ===== */
+.cy-values {
+  display: grid;
+  grid-template-columns: repeat(4, minmax(0, 1fr));
+  gap: 18px;
+}
+
+.cy-value {
+  padding: 28px 24px;
+  border: 1px solid var(--cy-line);
+  border-radius: 16px;
+  background: linear-gradient(160deg, var(--cy-glass), var(--cy-glass-2));
+  transition: transform 0.25s ease-out, box-shadow 0.3s ease, border-color 0.3s ease;
+}
+
+.cy-value:hover {
+  border-color: var(--cy-lime);
+  box-shadow: 0 0 30px rgba(212, 255, 63, 0.18);
+}
+
+.cy-value-ico {
+  width: 40px;
+  height: 40px;
+  fill: none;
+  stroke: var(--cy-lime);
+  stroke-width: 1.8;
+  stroke-linecap: round;
+  stroke-linejoin: round;
+  filter: drop-shadow(0 0 8px rgba(212, 255, 63, 0.6));
+}
+
+.cy-value h3 {
+  margin: 18px 0 8px;
+  font-family: var(--font-heading);
+  font-size: 1.15rem;
+  font-weight: 800;
+  color: var(--cy-ink);
+}
+
+.cy-value p {
+  margin: 0;
+  color: var(--cy-soft);
+  line-height: 1.6;
+}
+
+@media (max-width: 1080px) {
+  .cy-values { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+}
+
+@media (max-width: 560px) {
+  .cy-values { grid-template-columns: 1fr; }
+}
+
+/* ===== Quả tạ neon trong hero (thay subtitle) ===== */
+.cy-dumbbell {
+  display: block;
+  width: min(260px, 50%);
+  height: auto;
+  margin: 34px auto 0;
+  overflow: visible;
+  filter: drop-shadow(0 0 12px rgba(212, 255, 63, 0.55)) drop-shadow(0 0 26px rgba(92, 246, 255, 0.25));
+  animation: cy-lift 2.4s cubic-bezier(0.45, 0, 0.55, 1) infinite;
+}
+
+.cy-db-bar {
+  fill: var(--cy-cyan);
+}
+
+.cy-db-grip {
+  fill: var(--cy-bg-1);
+  stroke: var(--cy-cyan);
+  stroke-width: 2;
+}
+
+.cy-db-plate {
+  fill: rgba(212, 255, 63, 0.12);
+  stroke: var(--cy-lime);
+  stroke-width: 3;
+}
+
+.cy-db-plate--big {
+  fill: rgba(212, 255, 63, 0.2);
+}
+
+/* Nâng lên (nhanh) – giữ – hạ xuống (chậm), hơi nghiêng như tay thật */
+@keyframes cy-lift {
+  0%, 100% { transform: translateY(10px) rotate(-2deg); }
+  35% { transform: translateY(-14px) rotate(1.5deg); }
+  55% { transform: translateY(-14px) rotate(1.5deg); }
+}
+
+.cy-game-hint {
+  margin: 0;
+  color: var(--cy-soft);
+  font-size: 0.9rem;
+}
+
+.cy-game-hint kbd {
+  padding: 1px 7px;
+  border: 1px solid var(--cy-line);
+  border-radius: 4px;
+  background: rgba(92, 246, 255, 0.08);
+  color: var(--cy-cyan);
+  font-family: var(--font-heading);
+  font-size: 0.85em;
+}
+
+.cy-h2 {
+  margin-bottom: 40px;
+}

@@ -67,13 +67,13 @@ class FeedbackServiceTest {
 
     @Test void ptWithoutRatingRejectedWithMsg21() {
         FakeDAO dao=new FakeDAO();
-        assertEquals("Please select rating.",service(dao).save(1,5,null,CONTENT).getMessage());
+        assertEquals(String.format(Messages.MSG21_SELECT_REQUIRED,"rating"),service(dao).save(1,5,null,CONTENT).getMessage());
         assertEquals(0,dao.calls);
     }
 
     @Test void ratingWithoutPtRejectedWithMsg21() {
         FakeDAO dao=new FakeDAO();
-        assertEquals("Please select PT.",service(dao).save(1,null,4,CONTENT).getMessage());
+        assertEquals(String.format(Messages.MSG21_SELECT_REQUIRED,"PT"),service(dao).save(1,null,4,CONTENT).getMessage());
         assertEquals(0,dao.calls);
     }
 

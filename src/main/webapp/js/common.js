@@ -16,7 +16,7 @@
 //   6.  Đếm ngược (GBR-27) .......... startCountdown, stopCountdown, bindCountdowns
 //   7.  Danh sách (GBR-18, 20, 21) .. changeUrlParams, bindPageSizeSelects, bindClearFiltersButtons,
 //                                     bindAutoSubmitSelects, renderEmptyState
-//   8.  Tab & vùng bật/tắt .......... bindTabs, bindToggleButtons
+//   8.  Tab & vùng bật/tắt .......... bindTabs, bindToggleButtons, bindCollapseGroups
 //   9.  AJAX ........................ sendAjaxRequest, getJson, postData, submitFormAjax
 //   10. Định dạng (GBR-01, 29) ...... formatMoney, formatDate, formatTime, formatDateTime, formatCountdown,
 //                                     maskEmail, formatPhoneDisplay
@@ -45,6 +45,7 @@
 //   select[data-auto-submit]               đổi lựa chọn là gửi form lọc — bindAutoSubmitSelects()
 //   [role="tablist"] [data-tab] + [data-tab-panel]   tab — bindTabs()
 //   [data-toggle-target="idVùng"]          nút mở/đóng 1 vùng (menu mobile, sidebar) — bindToggleButtons()
+//   [data-collapse-group]                  nhóm rèm <details data-collapse-item> + nút Mở tất cả / Thu gọn — bindCollapseGroups()
 // =====================================================================
 
 // ===== Hằng số =====
@@ -90,111 +91,216 @@ const AJAX_HEADER_VALUE = "XMLHttpRequest";
 // Câu thông báo — bản sao của constant/Messages.java (SRS III.5). Sửa câu chữ thì sửa cả 2 nơi.
 // %s / %d được thay bằng formatMessage(mẫu, [giá trị...])
 const MESSAGES = {
-    MSG01_NO_RESULT: "No results found. Try different keywords or clear some filters.",
-    MSG02_EMPTY_LIST: "No %s yet.",
-    MSG03_NO_DATA_IN_RANGE: "No data in the selected time range.",
-    MSG04_SYSTEM_BUSY: "The system is busy. Please try again in a few minutes.",
-    MSG05_CONNECTION_LOST: "Connection lost. Check your network and try again.",
-    MSG06_SESSION_EXPIRED: "Your session has expired. Please sign in again.",
-    MSG07_NO_PERMISSION: "You do not have permission to access this function.",
-    MSG08_NOT_FOUND: "This %s could not be found.",
-    MSG09_REQUIRED: "%s is required.",
-    MSG10_MAX_LENGTH: "Exceed max length of %d.",
-    MSG11_INVALID_EMAIL: "Invalid email format.",
-    MSG12_EMAIL_USED: "This email is already used by another account.",
-    MSG13_INVALID_PHONE: "Phone number must be 10 digits, start with 0 and use a valid Vietnamese carrier prefix.",
-    MSG14_PHONE_USED: "This phone number already belongs to another profile.",
-    MSG15_DOB_IN_FUTURE: "Date of birth cannot be in the future.",
-    MSG16_DATE_RANGE_REVERSED: "The start date must be on or before the end date.",
-    MSG17_POSITIVE_NUMBER: "Enter a number greater than 0.",
-    MSG18_DATE_TOO_EARLY: "Only dates from %s onwards can be selected.",
-    MSG19_TOO_SHORT: "Be more specific, at least %d characters.",
-    MSG20_INVALID_IMAGE: "Only JPG or PNG images up to %s are accepted.",
-    MSG21_SELECT_REQUIRED: "Please select %s.",
-    MSG22_CONCURRENT_EDIT: "This record was just updated by someone else. Reload before saving.",
-    MSG23_SAVED: "Changes saved.",
-    MSG24_NOTHING_TO_SAVE: "There is nothing to save.",
-    MSG25_CREATED: "%s added.",
-    MSG26_DELETED: "%s deleted.",
-    MSG27_CONFIRM_DELETE: "Delete %s? This action cannot be undone.",
-    MSG28_UNSAVED_CHANGES: "Your changes have not been saved. Leaving now will discard them.",
-    MSG29_STILL_REFERENCED: "Cannot delete: %s still refers to it. Deactivate it instead.",
-    MSG30_DEACTIVATED: "%s deactivated.",
-    MSG31_REACTIVATED: "%s reactivated.",
-    MSG32_EXPORTED: "%s downloaded.",
-    MSG33_WRONG_CREDENTIALS_ATTEMPTS_LEFT: "Incorrect email, phone number or password. You have %d attempts left.",
-    MSG34_WRONG_CREDENTIALS_STAFF: "Incorrect email, phone number or password. Please check again.",
-    MSG35_ACCOUNT_TEMP_LOCKED: "Account locked for %d minutes after too many failed attempts. Try again in %s.",
-    MSG36_LOCK_EXPIRED: "The lock has expired. You can sign in again.",
-    MSG37_ACCOUNT_INACTIVE: "This account cannot be used to sign in. Please contact an administrator.",
-    MSG38_NO_PASSWORD_YET: "This account has no password yet. Please use Forgot password to set your password",
-    MSG39_IDENTIFIER_REQUIRED: "Enter your email or phone number.",
-    MSG40_SIGNED_OUT: "Signed out.",
-    MSG41_EMAIL_NOT_FOUND: "No account found with this email.",
-    MSG42_CODE_SENT: "A code has been sent to %s. It is valid for %d minutes.",
-    MSG43_WRONG_CODE: "Incorrect code. Check again or press Resend code.",
-    MSG44_CODE_EXPIRED: "This code has expired. Press Resend code to get a new one.",
-    MSG45_CODE_RESENT: "A new verification code has been sent.",
-    MSG46_PASSWORD_TOO_SHORT: "Password must be at least %d characters.",
-    MSG47_PASSWORD_MISMATCH: "The passwords do not match.",
-    MSG48_PASSWORD_SAME_AS_OLD: "The new password must differ from the current one.",
-    MSG49_PASSWORD_CHANGED: "Password changed. All your other sessions have been signed out.",
-    MSG50_PHONE_ACCEPTED: "Phone number accepted. Please fill in your registration details.",
-    MSG51_PHONE_HAS_ACCOUNT: "This phone number already has an account. Please sign in or use Forgot password.",
-    MSG52_PHONE_DIFFERENT_EMAIL: "This phone number is registered with a different email (%s). Use that email, or visit the front desk to have it updated.",
-    MSG53_PROFILE_NO_EMAIL: "Your profile has no email on file, so it cannot be activated online. Please visit the front desk to add one.",
-    MSG54_ACCOUNT_CREATED: "Your account has been created. Please sign in.",
-    MSG55_EMAIL_CHANGE_CODE_SENT: "A verification code has been sent to the new email address.",
-    MSG56_EMAIL_CHANGED: "Sign-in email updated. We notified the old address and signed out your other sessions.",
-    MSG57_PHONE_CHANGED: "Phone number updated.",
-    MSG58_AVATAR_CHANGED: "Profile picture updated.",
-    MSG59_OTHER_DEVICES_SIGNED_OUT: "All other devices have been signed out.",
-    MSG60_UPDATED_BY_FRONT_DESK: "This information is updated by the front desk. Please bring your ID to the counter.",
-    MSG61_VERIFICATION_LOCKED: "Too many attempts. Verification for this email is locked for %d minutes. Try again in %s.",
-    MSG62_CODE_ATTEMPTS_LEFT: "You have %d attempt(s) left to enter the code.",
-    MSG63_CODE_LAST_ATTEMPT: "One more wrong entry will lock verification for this email for %d minutes.",
-    MSG64_CODE_RESENDS_LEFT: "You can request %d more code(s) within 60 minutes.",
-    MSG65_CODE_RESEND_WILL_LOCK: "No code requests left. Requesting another code will lock verification for %d minutes.",
-    MSG66_PASSWORD_RULE: "Password must be %d–%d characters and contain both letters and digits.",
-    MSG67_FULL_NAME_RULE: "Full name may contain only letters, spaces, apostrophes or hyphens.",
-    MSG68_CODE_FORMAT: "The verification code must be exactly 6 digits.",
-    MSG69_DOB_TOO_OLD: "Invalid date of birth (age must not exceed %d).",
-    MSG70_CODE_RESEND_TOO_SOON: "Please wait %d more seconds before resending the code.",
-    MSG71_CURRENT_PASSWORD_WRONG: "The current password is incorrect.",
-    MSG72_FULL_NAME_LENGTH: "Full name must be %d–%d characters.",
-    MSG73_POST_UNAVAILABLE: "This post is no longer available.",
-    MSG74_CHOOSE_ROLE: "Choose the role you want to work in.",
-    MSG75_ROLE_SWITCHED: "You are now working as %s.",
-    MSG76_STAFF_OWN_CUSTOMER_PROFILE: "You cannot perform this action on your own customer profile. Please ask another colleague.",
-    MSG77_LEAVE_SUBMISSION_DEADLINE: "Submission deadline passed. Leave on %s had to be submitted before %s on the previous day.",
-    MSG78_LEAVE_BLOCKED_BY_SESSIONS: "You still have %d scheduled session(s) in this period. Reschedule, transfer or cancel them before submitting the request.",
-    MSG79_LEAVE_BREAKS_MIN_STAFFING: "Cannot approve: the %s shift on %s would have fewer than %d %s(s) on duty.",
-    MSG80_LEAVE_AUTO_REJECTED: "Your leave request for %s was rejected: Approval deadline passed.",
-    MSG81_PT_REQUIRES_MEMBERSHIP: "%s needs a valid membership package before a PT package can be sold.",
-    MSG82_PT_MIN_AGE: "PT services are available only to customers aged %d or older.",
-    MSG83_CHECKIN_NO_PACKAGE: "Check-in refused: the customer has no valid membership package or day pass today.",
-    MSG84_DAY_PASS_USED: "This day pass has already been used.",
-    MSG85_VOUCHER_INVALID: "This voucher cannot be applied: %s.",
-    MSG86_VOUCHER_PAYMENT_PENDING: "The voucher cannot be changed while a payment is in progress.",
-    MSG87_CLOSE_SHIFT_PENDING_ORDERS: "Cannot close the shift: %d counter order(s) are still Pending.",
-    MSG88_LAST_ACTIVE_ADMIN: "This is the last active Admin account. It cannot be locked, demoted or set to Resigned.",
-    MSG89_POSITION_CHANGE_UNFINISHED: "The position cannot be changed while unfinished work remains: %s.",
-    MSG90_SWAP_LIMIT_REACHED: "This PT package has already used all %d swaps.",
-    MSG91_SESSION_CANNOT_CHANGE: "This session has already started or is no longer scheduled, so it cannot be changed.",
-    MSG92_NO_MEMBERSHIP_ON_DATE: "The customer has no valid membership package on %s. Please choose another date.",
-    MSG93_UPDATED_BY_MANAGER: "This information is updated by the Manager.",
-    MSG94_ONLY_ADMIN_CAN_CHANGE: "Only the Admin can change this information.",
-    MSG95_PASSWORD_RESET_COMPLETED: "Your password has been reset and all sessions have been signed out. Please sign in.",
-    MSG96_DELETION_REQUEST_SENT: "Deletion request sent to the Manager for approval.",
-    MSG97_CANCEL_ORDER_OUTSIDE_SHIFT: "This order can only be cancelled during the open shift that created it.",
-    MSG98_ONLINE_ORDER_DEADLINE_PASSED: "The payment deadline has passed and the order was cancelled. Please create a new order.",
-    MSG99_FREEZE_REFUSED: "This package cannot be frozen: %s.",
-    MSG100_FREEZE_LIMIT: "A freeze can last at most %d month(s) and must end by %s.",
-    MSG101_PROFILE_PENDING_DELETION: "This profile already has a pending deletion request.",
-    MSG102_STAFF_ALREADY_EXISTS: "This person already has an active staff record.",
-    MSG103_SLOT_ALREADY_TAKEN: "This slot has just been taken. Please choose another slot.",
-    MSG104_SLOT_OVERLAPS: "This slot overlaps an existing slot (%s–%s).",
-    MSG105_ACTION_OUTSIDE_WINDOW: "This action is outside the allowed time window."
+    // EN: No results found. Try different keywords or clear some filters.
+    MSG01_NO_RESULT: "Không tìm thấy kết quả. Hãy thử từ khóa khác hoặc bỏ bớt bộ lọc.",
+    // EN: No %s yet.
+    MSG02_EMPTY_LIST: "Chưa có %s.",
+    // EN: No data in the selected time range.
+    MSG03_NO_DATA_IN_RANGE: "Không có dữ liệu trong khoảng thời gian đã chọn.",
+    // EN: The system is busy. Please try again in a few minutes.
+    MSG04_SYSTEM_BUSY: "Hệ thống đang bận. Vui lòng thử lại sau ít phút.",
+    // EN: Connection lost. Check your network and try again.
+    MSG05_CONNECTION_LOST: "Mất kết nối. Hãy kiểm tra mạng và thử lại.",
+    // EN: Your session has expired. Please sign in again.
+    MSG06_SESSION_EXPIRED: "Phiên đăng nhập đã hết hạn. Vui lòng đăng nhập lại.",
+    // EN: You do not have permission to access this function.
+    MSG07_NO_PERMISSION: "Bạn không có quyền truy cập chức năng này.",
+    // EN: This %s could not be found.
+    MSG08_NOT_FOUND: "Không tìm thấy %s.",
+    // EN: %s is required.
+    MSG09_REQUIRED: "%s là bắt buộc.",
+    // EN: Exceed max length of %d.
+    MSG10_MAX_LENGTH: "Vượt quá độ dài tối đa %d ký tự.",
+    // EN: Invalid email format.
+    MSG11_INVALID_EMAIL: "Email không đúng định dạng.",
+    // EN: This email is already used by another account.
+    MSG12_EMAIL_USED: "Email này đã được tài khoản khác sử dụng.",
+    // EN: Phone number must be 10 digits, start with 0 and use a valid Vietnamese carrier prefix.
+    MSG13_INVALID_PHONE: "Số điện thoại phải gồm 10 chữ số, bắt đầu bằng 0 và có đầu số nhà mạng Việt Nam hợp lệ.",
+    // EN: This phone number already belongs to another profile.
+    MSG14_PHONE_USED: "Số điện thoại này đã thuộc về một hồ sơ khác.",
+    // EN: Date of birth cannot be in the future.
+    MSG15_DOB_IN_FUTURE: "Ngày sinh không được ở tương lai.",
+    // EN: The start date must be on or before the end date.
+    MSG16_DATE_RANGE_REVERSED: "Ngày bắt đầu phải trước hoặc bằng ngày kết thúc.",
+    // EN: Enter a number greater than 0.
+    MSG17_POSITIVE_NUMBER: "Nhập một số lớn hơn 0.",
+    // EN: Only dates from %s onwards can be selected.
+    MSG18_DATE_TOO_EARLY: "Chỉ được chọn ngày từ %s trở đi.",
+    // EN: Be more specific, at least %d characters.
+    MSG19_TOO_SHORT: "Vui lòng ghi cụ thể hơn, tối thiểu %d ký tự.",
+    // EN: Only JPG or PNG images up to %s are accepted.
+    MSG20_INVALID_IMAGE: "Chỉ chấp nhận ảnh JPG hoặc PNG, tối đa %s.",
+    // EN: Please select %s.
+    MSG21_SELECT_REQUIRED: "Vui lòng chọn %s.",
+    // EN: This record was just updated by someone else. Reload before saving.
+    MSG22_CONCURRENT_EDIT: "Bản ghi này vừa được người khác cập nhật. Hãy tải lại trước khi lưu.",
+    // EN: Changes saved.
+    MSG23_SAVED: "Đã lưu thay đổi.",
+    // EN: There is nothing to save.
+    MSG24_NOTHING_TO_SAVE: "Không có thay đổi nào để lưu.",
+    // EN: %s added.
+    MSG25_CREATED: "Đã thêm %s.",
+    // EN: %s deleted.
+    MSG26_DELETED: "Đã xóa %s.",
+    // EN: Delete %s? This action cannot be undone.
+    MSG27_CONFIRM_DELETE: "Xóa %s? Thao tác này không thể hoàn tác.",
+    // EN: Your changes have not been saved. Leaving now will discard them.
+    MSG28_UNSAVED_CHANGES: "Thay đổi của bạn chưa được lưu. Rời trang lúc này sẽ mất các thay đổi.",
+    // EN: Cannot delete: %s still refers to it. Deactivate it instead.
+    MSG29_STILL_REFERENCED: "Không thể xóa: %s vẫn đang tham chiếu tới mục này. Hãy ngừng hoạt động thay vì xóa.",
+    // EN: %s deactivated.
+    MSG30_DEACTIVATED: "Đã ngừng hoạt động %s.",
+    // EN: %s reactivated.
+    MSG31_REACTIVATED: "Đã kích hoạt lại %s.",
+    // EN: %s downloaded.
+    MSG32_EXPORTED: "Đã tải xuống %s.",
+    // EN: Incorrect email, phone number or password. You have %d attempts left.
+    MSG33_WRONG_CREDENTIALS_ATTEMPTS_LEFT: "Email, số điện thoại hoặc mật khẩu không đúng. Bạn còn %d lần thử.",
+    // EN: Incorrect email, phone number or password. Please check again.
+    MSG34_WRONG_CREDENTIALS_STAFF: "Email, số điện thoại hoặc mật khẩu không đúng. Vui lòng kiểm tra lại.",
+    // EN: Account locked for %d minutes after too many failed attempts. Try again in %s.
+    MSG35_ACCOUNT_TEMP_LOCKED: "Tài khoản bị khóa %d phút do nhập sai quá nhiều lần. Thử lại sau %s.",
+    // EN: The lock has expired. You can sign in again.
+    MSG36_LOCK_EXPIRED: "Đã hết thời gian khóa. Bạn có thể đăng nhập lại.",
+    // EN: This account cannot be used to sign in. Please contact an administrator.
+    MSG37_ACCOUNT_INACTIVE: "Tài khoản này không thể đăng nhập. Vui lòng liên hệ quản trị viên.",
+    // EN: This account has no password yet. Please use Forgot password to set your password
+    MSG38_NO_PASSWORD_YET: "Tài khoản này chưa có mật khẩu. Vui lòng dùng Quên mật khẩu để đặt mật khẩu.",
+    // EN: Enter your email or phone number.
+    MSG39_IDENTIFIER_REQUIRED: "Nhập email hoặc số điện thoại của bạn.",
+    // EN: Signed out.
+    MSG40_SIGNED_OUT: "Đã đăng xuất.",
+    // EN: No account found with this email.
+    MSG41_EMAIL_NOT_FOUND: "Không tìm thấy tài khoản với email này.",
+    // EN: A code has been sent to %s. It is valid for %d minutes.
+    MSG42_CODE_SENT: "Mã đã được gửi tới %s. Mã có hiệu lực trong %d phút.",
+    // EN: Incorrect code. Check again or press Resend code.
+    MSG43_WRONG_CODE: "Mã không đúng. Hãy kiểm tra lại hoặc bấm Gửi lại mã.",
+    // EN: This code has expired. Press Resend code to get a new one.
+    MSG44_CODE_EXPIRED: "Mã đã hết hạn. Bấm Gửi lại mã để nhận mã mới.",
+    // EN: A new verification code has been sent.
+    MSG45_CODE_RESENT: "Đã gửi mã xác thực mới.",
+    // EN: Password must be at least %d characters.
+    MSG46_PASSWORD_TOO_SHORT: "Mật khẩu phải có ít nhất %d ký tự.",
+    // EN: The passwords do not match.
+    MSG47_PASSWORD_MISMATCH: "Mật khẩu nhập lại không khớp.",
+    // EN: The new password must differ from the current one.
+    MSG48_PASSWORD_SAME_AS_OLD: "Mật khẩu mới phải khác mật khẩu hiện tại.",
+    // EN: Password changed. All your other sessions have been signed out.
+    MSG49_PASSWORD_CHANGED: "Đã đổi mật khẩu. Các phiên đăng nhập khác của bạn đã bị đăng xuất.",
+    // EN: Phone number accepted. Please fill in your registration details.
+    MSG50_PHONE_ACCEPTED: "Số điện thoại hợp lệ. Vui lòng điền thông tin đăng ký.",
+    // EN: This phone number already has an account. Please sign in or use Forgot password.
+    MSG51_PHONE_HAS_ACCOUNT: "Số điện thoại này đã có tài khoản. Vui lòng đăng nhập hoặc dùng Quên mật khẩu.",
+    // EN: This phone number is registered with a different email (%s). Use that email, or visit the front desk to have it updated.
+    MSG52_PHONE_DIFFERENT_EMAIL: "Số điện thoại này đã đăng ký với email khác (%s). Hãy dùng email đó, hoặc đến quầy lễ tân để cập nhật.",
+    // EN: Your profile has no email on file, so it cannot be activated online. Please visit the front desk to add one.
+    MSG53_PROFILE_NO_EMAIL: "Hồ sơ của bạn chưa có email nên không thể kích hoạt trực tuyến. Vui lòng đến quầy lễ tân để bổ sung.",
+    // EN: Your account has been created. Please sign in.
+    MSG54_ACCOUNT_CREATED: "Đã tạo tài khoản. Vui lòng đăng nhập.",
+    // EN: A verification code has been sent to the new email address.
+    MSG55_EMAIL_CHANGE_CODE_SENT: "Mã xác thực đã được gửi tới địa chỉ email mới.",
+    // EN: Sign-in email updated. We notified the old address and signed out your other sessions.
+    MSG56_EMAIL_CHANGED: "Đã cập nhật email đăng nhập. Chúng tôi đã thông báo tới email cũ và đăng xuất các phiên khác của bạn.",
+    // EN: Phone number updated.
+    MSG57_PHONE_CHANGED: "Đã cập nhật số điện thoại.",
+    // EN: Profile picture updated.
+    MSG58_AVATAR_CHANGED: "Đã cập nhật ảnh đại diện.",
+    // EN: All other devices have been signed out.
+    MSG59_OTHER_DEVICES_SIGNED_OUT: "Đã đăng xuất khỏi tất cả thiết bị khác.",
+    // EN: This information is updated by the front desk. Please bring your ID to the counter.
+    MSG60_UPDATED_BY_FRONT_DESK: "Thông tin này do lễ tân cập nhật. Vui lòng mang giấy tờ tùy thân đến quầy.",
+    // EN: Too many attempts. Verification for this email is locked for %d minutes. Try again in %s.
+    MSG61_VERIFICATION_LOCKED: "Thử quá nhiều lần. Xác thực cho email này bị khóa %d phút. Thử lại sau %s.",
+    // EN: You have %d attempt(s) left to enter the code.
+    MSG62_CODE_ATTEMPTS_LEFT: "Bạn còn %d lần nhập mã.",
+    // EN: One more wrong entry will lock verification for this email for %d minutes.
+    MSG63_CODE_LAST_ATTEMPT: "Nhập sai thêm một lần nữa sẽ khóa xác thực cho email này trong %d phút.",
+    // EN: You can request %d more code(s) within 60 minutes.
+    MSG64_CODE_RESENDS_LEFT: "Bạn còn có thể yêu cầu %d mã nữa trong 60 phút.",
+    // EN: No code requests left. Requesting another code will lock verification for %d minutes.
+    MSG65_CODE_RESEND_WILL_LOCK: "Đã hết lượt yêu cầu mã. Yêu cầu thêm sẽ khóa xác thực trong %d phút.",
+    // EN: Password must be %d–%d characters and contain both letters and digits.
+    MSG66_PASSWORD_RULE: "Mật khẩu phải dài %d–%d ký tự và có cả chữ lẫn số.",
+    // EN: Full name may contain only letters, spaces, apostrophes or hyphens.
+    MSG67_FULL_NAME_RULE: "Họ tên chỉ được chứa chữ cái, khoảng trắng, dấu nháy đơn hoặc dấu gạch nối.",
+    // EN: The verification code must be exactly 6 digits.
+    MSG68_CODE_FORMAT: "Mã xác thực phải gồm đúng 6 chữ số.",
+    // EN: Invalid date of birth (age must not exceed %d).
+    MSG69_DOB_TOO_OLD: "Ngày sinh không hợp lệ (tuổi không được vượt quá %d).",
+    // EN: Please wait %d more seconds before resending the code.
+    MSG70_CODE_RESEND_TOO_SOON: "Vui lòng chờ thêm %d giây trước khi gửi lại mã.",
+    // EN: The current password is incorrect.
+    MSG71_CURRENT_PASSWORD_WRONG: "Mật khẩu hiện tại không đúng.",
+    // EN: Full name must be %d–%d characters.
+    MSG72_FULL_NAME_LENGTH: "Họ tên phải dài %d–%d ký tự.",
+    // EN: This post is no longer available.
+    MSG73_POST_UNAVAILABLE: "Bài viết này không còn khả dụng.",
+    // EN: Choose the role you want to work in.
+    MSG74_CHOOSE_ROLE: "Chọn vai trò bạn muốn làm việc.",
+    // EN: You are now working as %s.
+    MSG75_ROLE_SWITCHED: "Bạn đang làm việc với vai trò %s.",
+    // EN: You cannot perform this action on your own customer profile. Please ask another colleague.
+    MSG76_STAFF_OWN_CUSTOMER_PROFILE: "Bạn không thể thao tác trên hồ sơ khách hàng của chính mình. Vui lòng nhờ đồng nghiệp khác.",
+    // EN: Submission deadline passed. Leave on %s had to be submitted before %s on the previous day.
+    MSG77_LEAVE_SUBMISSION_DEADLINE: "Đã quá hạn nộp. Đơn nghỉ ngày %s phải nộp trước %s của ngày hôm trước.",
+    // EN: You still have %d scheduled session(s) in this period. Reschedule, transfer or cancel them before submitting the request.
+    MSG78_LEAVE_BLOCKED_BY_SESSIONS: "Bạn vẫn còn %d buổi đã xếp lịch trong khoảng này. Hãy dời, chuyển hoặc hủy các buổi đó trước khi gửi đơn.",
+    // EN: Cannot approve: the %s shift on %s would have fewer than %d %s(s) on duty.
+    MSG79_LEAVE_BREAKS_MIN_STAFFING: "Không thể duyệt: ca %s ngày %s sẽ có ít hơn %d %s trực.",
+    // EN: Your leave request for %s was rejected: Approval deadline passed.
+    MSG80_LEAVE_AUTO_REJECTED: "Đơn nghỉ phép ngày %s của bạn đã bị từ chối: quá hạn duyệt.",
+    // EN: %s needs a valid membership package before a PT package can be sold.
+    MSG81_PT_REQUIRES_MEMBERSHIP: "%s cần có gói hội viên còn hiệu lực trước khi mua gói PT.",
+    // EN: PT services are available only to customers aged %d or older.
+    MSG82_PT_MIN_AGE: "Dịch vụ PT chỉ dành cho khách từ %d tuổi trở lên.",
+    // EN: Check-in refused: the customer has no valid membership package or day pass today.
+    MSG83_CHECKIN_NO_PACKAGE: "Từ chối check-in: hôm nay khách không có gói hội viên hoặc vé ngày hợp lệ.",
+    // EN: This day pass has already been used.
+    MSG84_DAY_PASS_USED: "Vé ngày này đã được sử dụng.",
+    // EN: This voucher cannot be applied: %s.
+    MSG85_VOUCHER_INVALID: "Không thể áp dụng voucher này: %s.",
+    // EN: The voucher cannot be changed while a payment is in progress.
+    MSG86_VOUCHER_PAYMENT_PENDING: "Không thể đổi voucher khi đang xử lý thanh toán.",
+    // EN: Cannot close the shift: %d counter order(s) are still Pending.
+    MSG87_CLOSE_SHIFT_PENDING_ORDERS: "Không thể đóng ca: còn %d đơn tại quầy đang chờ thanh toán.",
+    // EN: This is the last active Admin account. It cannot be locked, demoted or set to Resigned.
+    MSG88_LAST_ACTIVE_ADMIN: "Đây là tài khoản Admin hoạt động cuối cùng. Không thể khóa, hạ quyền hoặc chuyển sang Đã nghỉ việc.",
+    // EN: The position cannot be changed while unfinished work remains: %s.
+    MSG89_POSITION_CHANGE_UNFINISHED: "Không thể đổi vị trí khi còn công việc chưa hoàn thành: %s.",
+    // EN: This PT package has already used all %d swaps.
+    MSG90_SWAP_LIMIT_REACHED: "Gói PT này đã dùng hết %d lượt đổi.",
+    // EN: This session has already started or is no longer scheduled, so it cannot be changed.
+    MSG91_SESSION_CANNOT_CHANGE: "Buổi tập đã bắt đầu hoặc không còn ở trạng thái đã xếp lịch, nên không thể thay đổi.",
+    // EN: The customer has no valid membership package on %s. Please choose another date.
+    MSG92_NO_MEMBERSHIP_ON_DATE: "Khách không có gói hội viên hợp lệ vào ngày %s. Vui lòng chọn ngày khác.",
+    // EN: This information is updated by the Manager.
+    MSG93_UPDATED_BY_MANAGER: "Thông tin này do Quản lý cập nhật.",
+    // EN: Only the Admin can change this information.
+    MSG94_ONLY_ADMIN_CAN_CHANGE: "Chỉ Admin mới có thể thay đổi thông tin này.",
+    // EN: Your password has been reset and all sessions have been signed out. Please sign in.
+    MSG95_PASSWORD_RESET_COMPLETED: "Đã đặt lại mật khẩu và đăng xuất mọi phiên. Vui lòng đăng nhập.",
+    // EN: Deletion request sent to the Manager for approval.
+    MSG96_DELETION_REQUEST_SENT: "Đã gửi yêu cầu xóa tới Quản lý để duyệt.",
+    // EN: This order can only be cancelled during the open shift that created it.
+    MSG97_CANCEL_ORDER_OUTSIDE_SHIFT: "Chỉ có thể hủy đơn này trong ca đang mở đã tạo đơn.",
+    // EN: The payment deadline has passed and the order was cancelled. Please create a new order.
+    MSG98_ONLINE_ORDER_DEADLINE_PASSED: "Đã quá hạn thanh toán và đơn đã bị hủy. Vui lòng tạo đơn mới.",
+    // EN: This package cannot be frozen: %s.
+    MSG99_FREEZE_REFUSED: "Không thể bảo lưu gói này: %s.",
+    // EN: A freeze can last at most %d month(s) and must end by %s.
+    MSG100_FREEZE_LIMIT: "Bảo lưu tối đa %d tháng và phải kết thúc trước ngày %s.",
+    // EN: This profile already has a pending deletion request.
+    MSG101_PROFILE_PENDING_DELETION: "Hồ sơ này đã có yêu cầu xóa đang chờ duyệt.",
+    // EN: This person already has an active staff record.
+    MSG102_STAFF_ALREADY_EXISTS: "Người này đã có hồ sơ nhân viên đang hoạt động.",
+    // EN: This slot has just been taken. Please choose another slot.
+    MSG103_SLOT_ALREADY_TAKEN: "Khung giờ này vừa được người khác chọn. Vui lòng chọn khung giờ khác.",
+    // EN: This slot overlaps an existing slot (%s–%s).
+    MSG104_SLOT_OVERLAPS: "Khung giờ này trùng với khung giờ đã có (%s–%s).",
+    // EN: This action is outside the allowed time window.
+    MSG105_ACTION_OUTSIDE_WINDOW: "Thao tác này nằm ngoài khung thời gian cho phép."
 };
 
 // Hộp thoại xác nhận đang mở (chỉ mở 1 cái tại 1 thời điểm)
@@ -219,6 +325,7 @@ function initCommon() {
     bindPasswordToggles();
     bindTabs();
     bindToggleButtons();
+    bindCollapseGroups();
     bindConfirmButtons();
     bindCountdowns();
 
@@ -1307,6 +1414,53 @@ function bindToggleButtons() {
     }
 }
 
+// Gắn nút Mở tất cả / Thu gọn cho một nhóm rèm <details> (VD: lịch theo ngày) — initCommon tự gọi
+// VD HTML:
+//   <div data-collapse-group>
+//     <div data-collapse-controls hidden>
+//       <button type="button" data-collapse-expand>Mở tất cả</button>
+//       <button type="button" data-collapse-reset>Thu gọn</button>
+//     </div>
+//     <details data-collapse-item data-default-open open>Hôm nay…</details>
+//     <details data-collapse-item>Ngày khác…</details>
+//   </div>
+// data-default-open đánh dấu rèm mở khi vào trang (VD hôm nay); Thu gọn quay về đúng trạng thái đó.
+// Mỗi rèm vẫn tự mở/đóng bằng <details>, tắt JS vẫn dùng được; JS chỉ thêm hai nút cho cả nhóm.
+// Luồng xử lý:
+// B1: với mỗi nhóm, lấy các rèm; nhóm chỉ có 1 rèm thì không cần hai nút
+// B2: hiện thanh nút; Mở tất cả mở mọi rèm, Thu gọn chỉ giữ rèm có data-default-open
+function bindCollapseGroups() {
+    const groups = document.querySelectorAll("[data-collapse-group]");
+
+    for (const group of groups) {
+        // B1
+        const items = group.querySelectorAll("details[data-collapse-item]");
+        const controls = group.querySelector("[data-collapse-controls]");
+        if (controls === null || items.length < 2) {
+            continue;
+        }
+
+        // B2
+        controls.hidden = false;
+        const expandButton = controls.querySelector("[data-collapse-expand]");
+        const resetButton = controls.querySelector("[data-collapse-reset]");
+        if (expandButton !== null) {
+            expandButton.addEventListener("click", function () {
+                for (const item of items) {
+                    item.open = true;
+                }
+            });
+        }
+        if (resetButton !== null) {
+            resetButton.addEventListener("click", function () {
+                for (const item of items) {
+                    item.open = item.hasAttribute("data-default-open");
+                }
+            });
+        }
+    }
+}
+
 // ===== 9. AJAX — gọi Servlet không tải lại trang =====
 // Servlet AJAX luôn trả khuôn JSON chuẩn (dto/JsonResponse.java):
 //   { "success": true|false, "message": "...", "data": {...}, "errors": { "tênÔ": "câu lỗi" } }
@@ -1830,9 +1984,207 @@ function normalizeSearchText(text) {
     return singleSpaced.trim();
 }
 
-// Bạt dùng chung: dashboard có .pt-awning thì cuốn khi đi xuống, thả khi đi lên.
+// =====================================================================
+// HIỆU ỨNG GIAO DIỆN KHU NỘI BỘ (body.dock) — CSS ở common.css mục 12
+// Mọi hiệu ứng tự tắt khi người dùng bật "Reduce motion".
+// =====================================================================
+
+function prefersReducedMotion() {
+    return window.matchMedia("(prefers-reduced-motion: reduce)").matches;
+}
+
+// Sidebar dock: bấm tay nắm để ghim mở, Escape để đóng; quầng sáng theo con trỏ.
+// DOM: #dock (layout-<vai-trò>.jspf), #dockHandle, .sidebar
+function initDock() {
+    const dock = document.getElementById("dock");
+    const dockHandle = document.getElementById("dockHandle");
+    if (!dock || !dockHandle) {
+        return;
+    }
+
+    // B1: bấm tay nắm → bật/tắt trạng thái ghim
+    function setDockOpen(isOpen) {
+        dock.classList.toggle("is-open", isOpen);
+        dockHandle.setAttribute("aria-expanded", String(isOpen));
+        dockHandle.setAttribute("aria-label", isOpen ? "Đóng menu điều hướng" : "Mở menu điều hướng");
+    }
+
+    dockHandle.addEventListener("click", function () {
+        setDockOpen(!dock.classList.contains("is-open"));
+    });
+
+    // B2: Escape đóng menu và trả focus về tay nắm
+    document.addEventListener("keydown", function (event) {
+        if (event.key === "Escape" && dock.classList.contains("is-open")) {
+            setDockOpen(false);
+            dockHandle.focus();
+        }
+    });
+
+    // B3: quầng sáng — ghi tọa độ con trỏ (px trong sidebar) vào --mx/--my
+    const sidebar = dock.querySelector(".sidebar");
+    if (sidebar) {
+        sidebar.addEventListener("pointermove", function (event) {
+            const rect = sidebar.getBoundingClientRect();
+            sidebar.style.setProperty("--mx", (event.clientX - rect.left) + "px");
+            sidebar.style.setProperty("--my", (event.clientY - rect.top + sidebar.scrollTop) + "px");
+        });
+    }
+}
+
+// Số lật kiểu bảng điểm: chỉ lật ký tự khác giá trị cũ, hàng đơn vị lật trước.
+// Dùng: <span data-flip>1.248</span>; đổi giá trị bằng setFlipValue(el, "1.252").
+function setFlipValue(element, text) {
+    const oldText = element.dataset.flipValue || "";
+    element.dataset.flipValue = text;
+    element.setAttribute("aria-label", text);
+    element.textContent = "";
+
+    for (let i = 0; i < text.length; i++) {
+        const span = document.createElement("span");
+        span.className = "flip-char";
+        span.setAttribute("aria-hidden", "true");
+        span.textContent = text.charAt(i);
+        // Ký tự không phải số (., đ, %, khoảng trắng) không đóng ô lật
+        if (!/[0-9]/.test(text.charAt(i))) {
+            span.classList.add("is-symbol");
+        }
+
+        // So từ bên phải để số có độ dài khác nhau vẫn khớp hàng
+        const oldChar = oldText.charAt(oldText.length - text.length + i);
+        if (oldText !== "" && oldChar !== text.charAt(i) && !prefersReducedMotion()) {
+            span.classList.add("is-flipping");
+            span.style.animationDelay = ((text.length - i) * 35) + "ms";
+        }
+        element.appendChild(span);
+    }
+}
+
+// Khi tải trang: hiện toàn số 0 rồi lật sang giá trị thật, từng ô lần lượt như bảng giờ tàu
+function initFlipNumbers() {
+    const items = document.querySelectorAll(".dock [data-flip]");
+    for (let i = 0; i < items.length; i++) {
+        const finalText = items[i].textContent.trim();
+        if (prefersReducedMotion()) {
+            setFlipValue(items[i], finalText);
+            continue;
+        }
+        setFlipValue(items[i], finalText.replace(/[0-9]/g, "0"));
+        setTimeout(function () {
+            setFlipValue(items[i], finalText);
+        }, 250 + i * 120);
+    }
+}
+
+// Đếm số từ 0 khi tải trang. Giá trị thật nằm sẵn trong HTML (tắt JS vẫn đúng).
+// Dùng: <b data-count>1.248</b> — giữ nguyên dấu chấm/phẩy kiểu Việt Nam.
+function initCountUp() {
+    if (prefersReducedMotion()) {
+        return;
+    }
+    const items = document.querySelectorAll(".dock [data-count]");
+    for (let i = 0; i < items.length; i++) {
+        animateCount(items[i]);
+    }
+}
+
+function animateCount(element) {
+    const original = element.textContent.trim();
+    // B1: tách phần số (bỏ dấu chấm nghìn, đổi phẩy thập phân) và phần chữ đi kèm
+    const match = original.match(/^([\d.]+)(,(\d+))?(.*)$/);
+    if (!match) {
+        return;
+    }
+    const integerPart = Number(match[1].replace(/\./g, ""));
+    const decimals = match[3] ? match[3].length : 0;
+    const target = integerPart + (decimals > 0 ? Number("0." + match[3]) : 0);
+    const suffix = match[4] || "";
+    if (!Number.isFinite(target) || target === 0) {
+        return;
+    }
+
+    // B2: chạy từ 0 tới đích trong 800ms, chậm dần ở cuối
+    element.setAttribute("aria-label", original);
+    const start = performance.now();
+    function draw(now) {
+        const progress = Math.min((now - start) / 800, 1);
+        const eased = 1 - Math.pow(1 - progress, 3);
+        const value = target * eased;
+        element.textContent = value.toLocaleString("vi-VN", {
+            minimumFractionDigits: decimals,
+            maximumFractionDigits: decimals
+        }) + suffix;
+        if (progress < 1) {
+            requestAnimationFrame(draw);
+        } else {
+            element.textContent = original;
+        }
+    }
+    requestAnimationFrame(draw);
+}
+
+// Nghiêng 3D nhẹ theo con trỏ (chỉ chuột, không áp cho cảm ứng).
+// Dùng: <div class="card" data-tilt>...</div>
+function initTilt() {
+    if (prefersReducedMotion() || !window.matchMedia("(hover: hover)").matches) {
+        return;
+    }
+    const cards = document.querySelectorAll(".dock [data-tilt]");
+    for (let i = 0; i < cards.length; i++) {
+        attachTilt(cards[i]);
+    }
+}
+
+function attachTilt(card) {
+    card.addEventListener("pointermove", function (event) {
+        const rect = card.getBoundingClientRect();
+        const x = (event.clientX - rect.left) / rect.width;
+        const y = (event.clientY - rect.top) / rect.height;
+        // x,y trong [0,1] → góc trong [-4°, 4°]
+        card.style.setProperty("--tilt-y", ((x - 0.5) * 8).toFixed(2) + "deg");
+        card.style.setProperty("--tilt-x", ((0.5 - y) * 8).toFixed(2) + "deg");
+        card.style.setProperty("--sx", (x * 100).toFixed(1) + "%");
+        card.style.setProperty("--sy", (y * 100).toFixed(1) + "%");
+        card.classList.add("is-tilting");
+    });
+    card.addEventListener("pointerleave", function () {
+        card.style.setProperty("--tilt-x", "0deg");
+        card.style.setProperty("--tilt-y", "0deg");
+        card.classList.remove("is-tilting");
+    });
+}
+
+// Hiện dần các khối [data-reveal] theo thứ tự, mỗi khối cách nhau 70ms.
+function initReveal() {
+    const blocks = document.querySelectorAll(".dock [data-reveal]");
+    if (blocks.length === 0 || prefersReducedMotion()) {
+        return;
+    }
+    document.body.classList.add("has-reveal");
+    requestAnimationFrame(function () {
+        for (let i = 0; i < blocks.length; i++) {
+            setTimeout(function () {
+                blocks[i].classList.add("is-revealed");
+            }, 60 + i * 70);
+        }
+    });
+}
+
 document.addEventListener("DOMContentLoaded", function () {
-    const page = document.querySelector(".pt-dashboard-page");
+    if (!document.body.classList.contains("dock")) {
+        return;
+    }
+    initDock();
+    initFlipNumbers();
+    initCountUp();
+    initTilt();
+    initReveal();
+});
+
+// Bạt dùng chung PT/Customer Dashboard: cuốn lên khi cuộn xuống, thả xuống khi cuộn lên.
+// DOM: .pt-awning (pt/_awning.jspf); CSS: awning.css + base.css đọc class is-retracted trên <body>.
+document.addEventListener("DOMContentLoaded", function () {
+    const page = document.querySelector(".pt-dashboard-page, .customer-weather-page");
     const awning = document.querySelector(".pt-awning");
     if (!page || !awning) {
         return;
@@ -1855,4 +2207,26 @@ document.addEventListener("DOMContentLoaded", function () {
             window.requestAnimationFrame(updateAwning);
         }
     }, {passive: true});
+});
+
+// Nhiệt độ đã có sẵn trong HTML; JS chỉ cho số chạy nhanh khi không bật Reduce motion.
+document.addEventListener("DOMContentLoaded", function () {
+    const temperature = document.querySelector("[data-weather-temperature]");
+    if (!temperature || window.matchMedia("(prefers-reduced-motion: reduce)").matches) {
+        return;
+    }
+    const target = Number(temperature.dataset.weatherTemperature);
+    if (!Number.isFinite(target)) {
+        return;
+    }
+    temperature.setAttribute("aria-label", target + " độ C");
+    const start = performance.now();
+    function drawTemperature(now) {
+        const progress = Math.min((now - start) / 700, 1);
+        temperature.textContent = Math.round(target * progress) + "°";
+        if (progress < 1) {
+            requestAnimationFrame(drawTemperature);
+        }
+    }
+    requestAnimationFrame(drawTemperature);
 });

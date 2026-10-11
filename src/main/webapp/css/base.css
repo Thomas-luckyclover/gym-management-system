@@ -2,7 +2,7 @@
 /* base.css — Bố cục trang và vị trí topbar cho PT Dashboard.
    Thẻ người dùng (user badge) nằm riêng trong dashboard.css để tránh xung đột. */
 
-.pt-dashboard-page {
+:is(.pt-dashboard-page, .customer-weather-page) {
   --awning-h: var(--space-12);
   --pt-awning-height: var(--awning-h);
   --pt-header-h: var(--space-12);
@@ -12,17 +12,17 @@
   scrollbar-gutter: stable;
 }
 
-.pt-dashboard-page .app {
+:is(.pt-dashboard-page, .customer-weather-page) .app {
   position: relative;
   background: transparent;
 }
 
-.pt-dashboard-page .main {
+:is(.pt-dashboard-page, .customer-weather-page) .main {
   padding-top: 0;
 }
 
 /* Bình thường header sticky dưới bạt. Khi bạt thu, ::before giữ chỗ của header fixed. */
-.pt-dashboard-page .topbar {
+:is(.pt-dashboard-page, .customer-weather-page) .topbar {
   top: var(--awning-h);
   height: var(--pt-header-h);
   box-sizing: border-box;
@@ -38,12 +38,12 @@
   -webkit-backdrop-filter: blur(6px) saturate(1.04);
   transition: top 500ms cubic-bezier(.21, 1.3, .41, 1), box-shadow 500ms var(--ease-out);
 }
-.pt-dashboard-page.is-retracted .main::before {
+:is(.pt-dashboard-page, .customer-weather-page).is-retracted .main::before {
   content: "";
   display: block;
   height: var(--pt-header-h);
 }
-.pt-dashboard-page.is-retracted .topbar {
+:is(.pt-dashboard-page, .customer-weather-page).is-retracted .topbar {
   position: fixed;
   top: var(--space-1-5);
   right: 0;
@@ -51,15 +51,9 @@
   width: 100%;
   box-shadow: var(--pt-card-shadow);
 }
-.pt-dashboard-page .content > section { scroll-margin-top: calc(var(--pt-header-h) + var(--space-3)); }
-.pt-dashboard-page.weather-night .topbar .tb-title,
-.pt-dashboard-page.weather-storm .topbar .tb-title,
-.pt-dashboard-page.weather-night .topbar .pt-header-date,
-.pt-dashboard-page.weather-storm .topbar .pt-header-date,
-.pt-dashboard-page.weather-night .topbar .tb-user,
-.pt-dashboard-page.weather-storm .topbar .tb-user { color: #F6FAFC; }
+:is(.pt-dashboard-page, .customer-weather-page) .content > section { scroll-margin-top: calc(var(--pt-header-h) + var(--space-3)); }
 /* Rail mỏng vẫn ở mép trên khi bạt đã cuốn khỏi màn hình. */
-.pt-dashboard-page::before {
+:is(.pt-dashboard-page, .customer-weather-page)::before {
   content: "";
   position: fixed;
   z-index: var(--z-header);
@@ -70,18 +64,18 @@
   pointer-events: none;
   transition: opacity var(--duration-slow);
 }
-.pt-dashboard-page.is-retracted::before {
+:is(.pt-dashboard-page, .customer-weather-page).is-retracted::before {
   opacity: 1;
 }
 
 @media (max-width: 640px) {
-  .pt-dashboard-page {
+  :is(.pt-dashboard-page, .customer-weather-page) {
     --awning-h: var(--space-10);
     --pt-header-h: var(--space-10);
   }
-  .pt-dashboard-page .topbar { padding-inline: var(--layout-gutter-mobile); }
+  :is(.pt-dashboard-page, .customer-weather-page) .topbar { padding-inline: var(--layout-gutter-mobile); }
 }
 @media (prefers-reduced-motion: reduce) {
-  .pt-dashboard-page .topbar,
-  .pt-dashboard-page::before { transition: none; }
+  :is(.pt-dashboard-page, .customer-weather-page) .topbar,
+  :is(.pt-dashboard-page, .customer-weather-page)::before { transition: none; }
 }

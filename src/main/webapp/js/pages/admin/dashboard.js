@@ -1,45 +1,10 @@
 // ===== Khởi tạo trang Admin Dashboard =====
 
 document.addEventListener("DOMContentLoaded", function () {
-    initializeAdminSidebar();
+    // Sidebar dock mở/đóng đã chuyển sang common.js (initDock) — dùng chung mọi khu
     initializeAdminAvatar();
     initializeReportDateValidation();
 });
-
-// ===== Điều khiển sidebar Admin =====
-
-/**
- * Gắn sự kiện mở/đóng sidebar Admin.
- * Input: #dock và #dockHandle từ layout-admin.jspf.
- * Output: cập nhật class is-open và thuộc tính aria của nút điều khiển.
- */
-function initializeAdminSidebar() {
-    const dock = document.getElementById("dock");
-    const dockHandle = document.getElementById("dockHandle");
-
-    if (!dock || !dockHandle) {
-        return;
-    }
-
-    dockHandle.addEventListener("click", function () {
-        const isOpen = dock.classList.toggle("is-open");
-        dockHandle.setAttribute("aria-expanded", String(isOpen));
-        dockHandle.setAttribute(
-            "aria-label",
-            isOpen ? "Đóng menu điều hướng" : "Mở menu điều hướng"
-        );
-    });
-
-    document.addEventListener("keydown", function (event) {
-        if (event.key !== "Escape" || !dock.classList.contains("is-open")) {
-            return;
-        }
-
-        dock.classList.remove("is-open");
-        dockHandle.setAttribute("aria-expanded", "false");
-        dockHandle.setAttribute("aria-label", "Mở menu điều hướng");
-    });
-}
 
 // ===== Avatar trên topbar =====
 

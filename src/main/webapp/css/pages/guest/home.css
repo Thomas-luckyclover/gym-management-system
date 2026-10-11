@@ -581,8 +581,230 @@
 }
 
 .cta-band h2 {
-  margin-bottom: var(--space-5);
+  margin-bottom: var(--space-3);
   font-size: var(--font-size-4xl);
+}
+
+/* Chữ bên trái, linh vật Pumpy bên phải */
+.cta-inner {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) minmax(0, 1.1fr);
+  align-items: center;
+  gap: var(--space-8);
+  text-align: left;
+}
+
+.cta-lead {
+  max-width: 42ch;
+  margin: 0 0 var(--space-5);
+  color: var(--color-text-soft);
+}
+
+/* ---------- Linh vật Pumpy (guest/_mascot.jspf + js/pages/guest/home.js) ---------- */
+.mascot-stage {
+  position: relative;
+  justify-self: end;
+  width: min(100%, 520px);
+}
+
+/* Quầng đèn sân khấu phía sau: tách viền đen của Pumpy và tạ khỏi nền đen */
+.mascot-stage::before {
+  content: "";
+  position: absolute;
+  inset: -12% -8% -4%;
+  z-index: -1;
+  background:
+    radial-gradient(ellipse 46% 52% at 30% 58%, rgba(214, 245, 91, 0.2), transparent 70%),
+    radial-gradient(ellipse 40% 40% at 76% 64%, rgba(255, 255, 255, 0.08), transparent 70%);
+  pointer-events: none;
+}
+
+.mascot-stage {
+  isolation: isolate;
+}
+
+.mascot-hit {
+  display: block;
+  width: 100%;
+  padding: 0;
+  border: 0;
+  background: none;
+  cursor: pointer;
+  -webkit-tap-highlight-color: transparent;
+}
+
+.mascot-hit:focus-visible {
+  outline: var(--focus-outline-width) solid var(--color-primary);
+  outline-offset: var(--space-2);
+  border-radius: var(--radius-md);
+}
+
+.mascot-svg {
+  display: block;
+  width: 100%;
+  height: auto;
+  overflow: visible;
+}
+
+.mochi-lbl {
+  font-family: "Montserrat", "Inter", "Arial Black", Arial, sans-serif;
+  font-weight: 900;
+  font-size: 12px;
+}
+
+/* Thở + chớp mắt (giữ từ SVG gốc) */
+.mochi {
+  transform-box: fill-box;
+  transform-origin: 50% 100%;
+  animation: mochi-breathe 4s ease-in-out infinite;
+}
+
+.mochi .bl {
+  transform-box: fill-box;
+  transform-origin: 50% 50%;
+  animation: mochi-blink 6s infinite;
+}
+
+/* Mắt nhìn theo con trỏ: JS ghi --ex/--ey (đơn vị SVG, tối đa ±5) */
+.mochi-eyes {
+  transform: translate(var(--ex, 0px), var(--ey, 0px));
+  transition: transform 0.18s ease-out;
+}
+
+.mochi-jump,
+.mochi-drop {
+  transform-box: fill-box;
+  transform-origin: 50% 100%;
+}
+
+/* Trạng thái chờ: chỉ ẩn khi JS đã chạy (.js-mascot), tắt JS vẫn thấy linh vật */
+.mascot-stage.js-mascot:not(.is-visible) .mochi-jump {
+  opacity: 0;
+  transform: translateY(60px) scale(0.8);
+}
+
+.mascot-stage.js-mascot:not(.is-visible) .mochi-drop {
+  opacity: 0;
+  transform: translateY(-180px);
+}
+
+.mascot-stage.is-visible .mochi-jump {
+  animation: mochi-pop 0.75s cubic-bezier(0.34, 1.56, 0.64, 1) both;
+}
+
+.mascot-stage.is-visible .mochi-drop--1 {
+  animation: mochi-fall 0.6s cubic-bezier(0.5, 0, 0.75, 0) 0.35s both, mochi-land 0.35s ease-out 0.95s;
+}
+
+.mascot-stage.is-visible .mochi-drop--2 {
+  animation: mochi-fall 0.6s cubic-bezier(0.5, 0, 0.75, 0) 0.6s both, mochi-land 0.35s ease-out 1.2s;
+}
+
+/* Rê chuột: lắc nhẹ cho biết bấm được */
+.mascot-hit:hover .mochi {
+  animation: mochi-wiggle 0.6s ease-in-out infinite alternate;
+}
+
+/* Bấm: nhảy lên rồi đáp, nén khi chạm đất */
+.mascot-stage.is-jumping .mochi-jump {
+  animation: mochi-hop 0.7s cubic-bezier(0.3, 0.7, 0.4, 1) both;
+}
+
+.mascot-stage.is-jumping .mochi-shadow {
+  transform-box: fill-box;
+  transform-origin: 50% 50%;
+  animation: mochi-shadow 0.7s ease-in-out both;
+}
+
+/* Bong bóng thoại */
+.mascot-bubble {
+  position: absolute;
+  top: -2%;
+  left: 2%;
+  z-index: 1;
+  margin: 0;
+  padding: var(--space-2) var(--space-3-5);
+  border: 3px solid #141414;
+  border-radius: var(--radius-md);
+  background: var(--color-primary);
+  color: #141414;
+  font-family: var(--font-heading);
+  font-weight: var(--font-weight-extrabold);
+  font-size: var(--font-size-md);
+  white-space: nowrap;
+  pointer-events: none;
+  opacity: 0;
+  transform: translateY(var(--space-2)) scale(0.9);
+  transition: opacity 0.2s ease, transform 0.25s cubic-bezier(0.34, 1.56, 0.64, 1);
+}
+
+.mascot-bubble::after {
+  content: "";
+  position: absolute;
+  left: 30%;
+  bottom: -11px;
+  width: 16px;
+  height: 16px;
+  border-right: 3px solid #141414;
+  border-bottom: 3px solid #141414;
+  background: var(--color-primary);
+  transform: rotate(45deg);
+}
+
+.mascot-bubble.is-on {
+  opacity: 1;
+  transform: none;
+}
+
+@keyframes mochi-breathe { 0%, 100% { transform: scale(1, 1); } 50% { transform: scale(1.015, 0.985); } }
+@keyframes mochi-blink { 0%, 92%, 96%, 100% { transform: scaleY(1); } 94% { transform: scaleY(0.1); } }
+@keyframes mochi-wiggle { from { transform: rotate(-2deg) scale(1.02, 0.98); } to { transform: rotate(2deg) scale(0.98, 1.02); } }
+@keyframes mochi-pop {
+  0% { opacity: 0; transform: translateY(60px) scale(0.8); }
+  60% { opacity: 1; transform: translateY(-14px) scale(1.04, 0.96); }
+  80% { transform: translateY(0) scale(0.97, 1.03); }
+  100% { opacity: 1; transform: translateY(0) scale(1); }
+}
+@keyframes mochi-fall { from { opacity: 0; transform: translateY(-180px); } to { opacity: 1; transform: translateY(0); } }
+@keyframes mochi-land { 0% { transform: scale(1.06, 0.92); } 100% { transform: scale(1, 1); } }
+@keyframes mochi-hop {
+  0% { transform: translateY(0) scale(1.06, 0.92); }
+  35% { transform: translateY(-70px) scale(0.95, 1.06); }
+  70% { transform: translateY(0) scale(1.08, 0.9); }
+  100% { transform: translateY(0) scale(1); }
+}
+@keyframes mochi-shadow { 35% { transform: scale(0.6); opacity: 0.08; } 100% { transform: scale(1); } }
+
+@media (max-width: 860px) {
+  .cta-inner {
+    grid-template-columns: 1fr;
+    text-align: center;
+  }
+
+  .cta-lead {
+    margin-inline: auto;
+  }
+
+  .mascot-stage {
+    justify-self: center;
+    width: min(100%, 420px);
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .mochi,
+  .mochi .bl,
+  .mascot-stage .mochi-jump,
+  .mascot-stage .mochi-drop,
+  .mascot-stage .mochi-shadow {
+    animation: none !important;
+  }
+
+  .mascot-stage.js-mascot .mochi-jump,
+  .mascot-stage.js-mascot .mochi-drop {
+    opacity: 1;
+    transform: none;
+  }
 }
 
 @media (max-width: 600px) {
