@@ -25,15 +25,22 @@ import java.util.Set;
 /**
  * Service cho màn Mua gói của Customer (SRS 7.1.1, UC-22).
  *
- * <p>Việc chính: lấy mọi gói đang bán, dựng thẻ giá (giá/tháng, giá gốc + số tiền tiết kiệm, nhãn Tiết kiệm hơn / Mới ra mắt), cho biết gói nào
- * khách tự mua online được (Membership, DayPass) và gói nào chỉ mua tại quầy (PT), rồi lọc theo ô tìm kiếm +
- * loại gói và sắp xếp.</p>
+ * <p>
+ * Việc chính: lấy mọi gói đang bán, dựng thẻ giá (giá/tháng, giá gốc + số tiền
+ * tiết kiệm, nhãn Tiết kiệm hơn / Mới ra mắt), cho biết gói nào khách tự mua
+ * online được (Membership, DayPass) và gói nào chỉ mua tại quầy (PT), rồi lọc
+ * theo ô tìm kiếm, loại gói, khoảng giá, thời hạn (tháng), hình thức mua và
+ * sắp xếp.</p>
  *
- * <p>Vì sao tải hết gói rồi mới lọc: % tiết kiệm và nhãn "Tiết kiệm hơn" phải so với giá gói 1 tháng.
- * Nếu lọc trước, khách gõ "6 tháng" sẽ làm mất gói 1 tháng và nhãn tính sai.</p>
+ * <p>
+ * Vì sao tải hết gói rồi mới lọc: % tiết kiệm và nhãn "Tiết kiệm hơn" phải so
+ * với giá gói 1 tháng. Nếu lọc trước, khách gõ "6 tháng" sẽ làm mất gói 1 tháng
+ * và nhãn tính sai.</p>
  *
- * <p>Phần dựng thẻ giá (buildGymCards, assignBadges) là bản sao từ HomeService để không sửa file của module khác.
- * Khi nhóm đồng ý, tách chung một chỗ để homepage và màn này cùng gọi.</p>
+ * <p>
+ * Phần dựng thẻ giá (buildGymCards, assignBadges) là bản sao từ HomeService để
+ * không sửa file của module khác. Khi nhóm đồng ý, tách chung một chỗ để
+ * homepage và màn này cùng gọi.</p>
  *
  * @author ALOHA
  */
@@ -55,25 +62,43 @@ public class PackageSelectionService {
     public static final String BUY_ONLINE = "online";
     public static final String BUY_COUNTER = "counter";
 
-    /** SRS 7.1.1: ô tìm kiếm tối đa 100 ký tự. */
+    /**
+     * SRS 7.1.1: ô tìm kiếm tối đa 100 ký tự.
+     */
     private static final int KEYWORD_MAX_LENGTH = 100;
 
-    /** Số thẻ gói mỗi trang: 8 = 2 hàng × 4 cột trên màn rộng. */
+    /**
+     * Số thẻ gói mỗi trang: 8 = 2 hàng × 4 cột trên màn rộng.
+     */
     public static final int PAGE_SIZE = 8;
 
-    /** SRS 7.1.1: chỉ hiện % tiết kiệm với gói từ 3 tháng trở lên. */
+    /**
+     * SRS 7.1.1: chỉ hiện % tiết kiệm với gói từ 3 tháng trở lên.
+     */
     private static final int MIN_MONTHS_FOR_SAVING_PERCENT = 3;
 
-    /** Chỉ dùng để so thứ tự thời hạn khi sắp xếp (1 tháng ≈ 30 ngày), không dùng để tính ngày hết hạn. */
+    /**
+     * Chỉ dùng để so thứ tự thời hạn khi sắp xếp (1 tháng ≈ 30 ngày), không
+     * dùng để tính ngày hết hạn.
+     */
     private static final int DAYS_PER_MONTH_FOR_SORTING = 30;
 
-    private static final String BADGE_BEST_SAVING = "Tiết kiệm hơn";
+    /**
+     * Nhãn của gói có tiết kiệm so với mua từng tháng (savingPercent khác null).
+     */
+    private static final String BADGE_SAVING = "Tiết kiệm hơn";
     private static final String BADGE_NEW = "Mới ra mắt";
 
-    /** Gói tạo trong vòng số ngày này được gắn nhãn "Mới ra mắt" (nếu chưa có nhãn Tiết kiệm hơn). */
+    /**
+     * Gói tạo trong vòng số ngày này được gắn nhãn "Mới ra mắt" (nếu chưa có
+     * nhãn Tiết kiệm hơn).
+     */
     private static final int NEW_PACKAGE_DAYS = 30;
 
-    /** Ảnh gói đặt trong webapp/images/packages/, tên file theo quy ước ở resolveImagePath. */
+    /**
+     * Ảnh gói đặt trong webapp/images/packages/, tên file theo quy ước ở
+     * resolveImagePath.
+     */
     private static final String IMAGE_DIRECTORY_URL = "/images/packages/";
     private static final String DEFAULT_IMAGE_KEY = "default";
     private static final String[] IMAGE_EXTENSIONS = {"jpg", "png", "webp", "svg"};
@@ -82,12 +107,14 @@ public class PackageSelectionService {
     private final SystemConfigService systemConfigService = new SystemConfigService();
 
     // ===== Truy vấn màn Mua gói =====
-
     /**
-     * Lấy dữ liệu màn Mua gói: thẻ gói đã lọc + sắp xếp + cắt trang, cùng dữ liệu cột bộ lọc.
+     * Lấy dữ liệu màn Mua gói: thẻ gói đã lọc + sắp xếp + cắt trang, cùng dữ
+     * liệu cột bộ lọc.
      *
-     * @param criteria giá trị tìm kiếm / lọc / sắp xếp khách gửi lên (chưa kiểm tra)
-     * @param imageFileNames tên các file đang có trong images/packages (VD "membership.svg"); null nếu không đọc được
+     * @param criteria giá trị tìm kiếm / lọc / sắp xếp khách gửi lên (chưa kiểm
+     * tra)
+     * @param imageFileNames tên các file đang có trong images/packages (VD
+     * "membership.svg"); null nếu không đọc được
      * @return dữ liệu màn hình, hoặc MSG04 khi lỗi DB / thiếu tham số cấu hình
      */
     public ServiceResult<PackageSelectionView> getPackageSelection(PackageSearchCriteria criteria,
@@ -114,8 +141,9 @@ public class PackageSelectionService {
     }
 
     /**
-     * Gói này khách có tự mua online được không (UC-22: chỉ gói tập và vé ngày; PT bán ở quầy).
-     * Hàm tạo đơn sau này phải gọi lại hàm này ở server, không chỉ dựa vào việc ẩn nút trên giao diện.
+     * Gói này khách có tự mua online được không (UC-22: chỉ gói tập và vé ngày;
+     * PT bán ở quầy). Hàm tạo đơn sau này phải gọi lại hàm này ở server, không
+     * chỉ dựa vào việc ẩn nút trên giao diện.
      *
      * @param packageType loại gói (có thể null)
      * @return true nếu là Membership hoặc DayPass
@@ -127,15 +155,16 @@ public class PackageSelectionService {
     }
 
     // ===== Dựng danh sách thẻ (không đụng DB nên test được) =====
-
     /**
-     * Dựng toàn bộ dữ liệu màn từ danh sách gói đã đọc sẵn.
-     * Tách riêng khỏi getPackageSelection để kiểm thử không cần kết nối DB.
+     * Dựng toàn bộ dữ liệu màn từ danh sách gói đã đọc sẵn. Tách riêng khỏi
+     * getPackageSelection để kiểm thử không cần kết nối DB.
      *
-     * <p>Mọi giá trị khách gửi lên được chuẩn hóa chứ không báo lỗi (bộ lọc là URL GET, ai cũng sửa tay được):
-     * từ khóa cắt 100 ký tự; loại gói / sắp xếp lạ về mặc định; giá không phải số bị bỏ qua, nằm ngoài khoảng
-     * thật thì ép vào khoảng, min lớn hơn max thì đổi chỗ; thời hạn không có trong dữ liệu bị bỏ qua;
-     * trang sai ép về trang hợp lệ.</p>
+     * <p>
+     * Mọi giá trị khách gửi lên được chuẩn hóa chứ không báo lỗi (bộ lọc là URL
+     * GET, ai cũng sửa tay được): từ khóa cắt 100 ký tự; loại gói / sắp xếp lạ
+     * về mặc định; giá không phải số bị bỏ qua, nằm ngoài khoảng thật thì ép
+     * vào khoảng, min lớn hơn max thì đổi chỗ; thời hạn không có trong dữ liệu
+     * bị bỏ qua; trang sai ép về trang hợp lệ.</p>
      */
     PackageSelectionView buildSelection(List<Package> activePackages, PackageSearchCriteria criteria,
             int paymentDueMinutes, String openingHours, Set<String> imageFileNames) {
@@ -166,7 +195,7 @@ public class PackageSelectionService {
             cardsByPackageId.put(pkg.getPackageId(), ptCard);
         }
 
-        // B3b: gói mới tạo (chưa có nhãn Tiết kiệm hơn) được gắn "Mới ra mắt"
+        // B3b: gói tạo trong NEW_PACKAGE_DAYS ngày gần đây và chưa có nhãn Tiết kiệm hơn thì gắn "Mới ra mắt"
         LocalDateTime now = LocalDateTime.now();
         for (PackageCardView card : cardsByPackageId.values()) {
             if (card.getBadge() == null && isNewPackage(card.getPkg(), now)) {
@@ -235,9 +264,11 @@ public class PackageSelectionService {
     }
 
     // ===== Cột bộ lọc: query từ dữ liệu thật =====
-
-    /** Thời hạn của 1 lựa chọn lọc, gom từ các gói đang bán. */
+    /**
+     * Thời hạn của 1 lựa chọn lọc, gom từ các gói đang bán.
+     */
     private static class DurationFacet {
+
         private final String key;
         private final String label;
         private final int sortDays;
@@ -250,10 +281,13 @@ public class PackageSelectionService {
         }
     }
 
-    /** Điền dữ liệu cột bộ lọc (số lượng, thời hạn, khoảng giá, chip đang bật) vào view. */
+    /**
+     * Điền dữ liệu cột bộ lọc (số lượng, thời hạn, khoảng giá, chip đang bật)
+     * vào view.
+     */
     private void fillFilterPanel(PackageSelectionView view, List<PackageOptionView> allOptions,
             PackageSearchCriteria criteria, String safeTypeFilter) {
-        // B1: đếm theo loại, hình thức mua; tìm giá thấp nhất / cao nhất; gom thời hạn
+        // B1: đếm theo loại, hình thức mua; tìm giá thấp nhất / cao nhất; gom thời hạn (chỉ gói tính theo tháng)
         int gymCount = 0;
         int dayPassCount = 0;
         int ptCount = 0;
@@ -278,13 +312,16 @@ public class PackageSelectionService {
             minBound = Math.min(minBound, pkg.getPrice());
             maxBound = Math.max(maxBound, pkg.getPrice());
 
-            String durationKey = buildDurationKey(pkg);
-            DurationFacet facet = facetsByKey.get(durationKey);
-            if (facet == null) {
-                facet = new DurationFacet(durationKey, option.getDurationLabel(), getDurationDaysForSorting(pkg));
-                facetsByKey.put(durationKey, facet);
+            // Vé ngày và buổi lẻ không có số tháng nên không vào bộ lọc Thời hạn (đã có ở bộ lọc Loại gói)
+            if (isMonthBased(pkg)) {
+                String durationKey = buildDurationKey(pkg);
+                DurationFacet facet = facetsByKey.get(durationKey);
+                if (facet == null) {
+                    facet = new DurationFacet(durationKey, option.getDurationLabel(), getDurationDaysForSorting(pkg));
+                    facetsByKey.put(durationKey, facet);
+                }
+                facet.count++;
             }
-            facet.count++;
         }
         if (allOptions.isEmpty()) {
             minBound = 0;
@@ -355,21 +392,48 @@ public class PackageSelectionService {
         view.setChips(chips);
     }
 
+    /**
+     * Ép số vào khoảng [low, high].
+     *
+     * @param value giá trị cần ép
+     * @param low cận dưới (tính cả biên)
+     * @param high cận trên (tính cả biên)
+     * @return value nếu nằm trong khoảng, ngược lại là biên gần nhất
+     */
     private static int clamp(int value, int low, int high) {
         return Math.max(low, Math.min(value, high));
     }
 
-    /** Mã thời hạn gửi lên URL: month-3, day-1 hoặc session (buổi lẻ). */
+    /**
+     * Gói có thời hạn tính theo tháng không: gói tập và gói PT có, vé ngày và
+     * buổi PT lẻ không.
+     *
+     * @param pkg gói cần kiểm tra
+     * @return true nếu là Membership, PT_SINGLE hoặc PT_COUPLE
+     */
+    private boolean isMonthBased(Package pkg) {
+        Package.Type packageType = pkg.getPackageType();
+        boolean isMembership = packageType == Package.Type.MEMBERSHIP;
+        boolean isPtByMonth = packageType == Package.Type.PT_SINGLE || packageType == Package.Type.PT_COUPLE;
+        return isMembership || isPtByMonth;
+    }
+
+    /**
+     * Mã thời hạn gửi lên URL, chỉ dùng cho gói tính theo tháng.
+     *
+     * @param pkg gói tính theo tháng (isMonthBased = true)
+     * @return "month-" + số tháng, ví dụ Gói 3 Tháng → "month-3"
+     */
     private String buildDurationKey(Package pkg) {
-        if (pkg.getPackageType() == Package.Type.SINGLE_SESSION) {
-            return "session";
-        }
-        if (pkg.getPackageType() == Package.Type.DAY_PASS) {
-            return "day-1";
-        }
         return "month-" + pkg.getDurationMonths();
     }
 
+    /**
+     * Tên hiển thị của loại gói đang lọc, dùng cho chip "đang lọc".
+     *
+     * @param typeFilter đã chuẩn hóa, khác "all"
+     * @return "Gói tập", "Vé ngày" hoặc "Gói PT"
+     */
     private String buildTypeFilterLabel(String typeFilter) {
         if (TYPE_GYM.equals(typeFilter)) {
             return "Gói tập";
@@ -381,8 +445,10 @@ public class PackageSelectionService {
     }
 
     // ===== Chuẩn hóa đầu vào =====
-
-    /** Từ khóa: null → rỗng, bỏ khoảng trắng đầu cuối, cắt tối đa 100 ký tự (SRS 7.1.1). */
+    /**
+     * Từ khóa: null → rỗng, bỏ khoảng trắng đầu cuối, cắt tối đa 100 ký tự (SRS
+     * 7.1.1).
+     */
     private String normalizeKeyword(String keyword) {
         if (keyword == null) {
             return "";
@@ -394,7 +460,9 @@ public class PackageSelectionService {
         return trimmedKeyword;
     }
 
-    /** Loại gói: giá trị không nằm trong 4 giá trị hợp lệ thì về mặc định "all". */
+    /**
+     * Loại gói: giá trị không nằm trong 4 giá trị hợp lệ thì về mặc định "all".
+     */
     private String normalizeTypeFilter(String typeFilter) {
         boolean isGym = TYPE_GYM.equals(typeFilter);
         boolean isDayPass = TYPE_DAY_PASS.equals(typeFilter);
@@ -405,7 +473,9 @@ public class PackageSelectionService {
         return TYPE_ALL;
     }
 
-    /** Kiểu sắp xếp: giá trị lạ thì về mặc định "default" (Mặc định). */
+    /**
+     * Kiểu sắp xếp: giá trị lạ thì về mặc định "default" (Mặc định).
+     */
     private String normalizeSortKey(String sortKey) {
         boolean isSaving = SORT_SAVING.equals(sortKey);
         boolean isPriceAscending = SORT_PRICE_ASC.equals(sortKey);
@@ -417,9 +487,10 @@ public class PackageSelectionService {
     }
 
     /**
-     * Chuyển chữ thành dạng so sánh không phân biệt hoa thường và dấu tiếng Việt (GBR-19):
-     * "Gói 3 Tháng" và "goi 3 thang" cho cùng kết quả "goi 3 thang".
-     * Chữ "đ" không tách dấu được bằng Normalizer nên đổi riêng thành "d".
+     * Chuyển chữ thành dạng so sánh không phân biệt hoa thường và dấu tiếng
+     * Việt (GBR-19): "Gói 3 Tháng" và "goi 3 thang" cho cùng kết quả "goi 3
+     * thang". Chữ "đ" không tách dấu được bằng Normalizer nên đổi riêng thành
+     * "d".
      */
     static String normalizeSearchText(String text) {
         if (text == null) {
@@ -433,8 +504,10 @@ public class PackageSelectionService {
     }
 
     // ===== Lọc =====
-
-    /** Gói có thuộc loại đang lọc không: gym = Membership, day-pass = DayPass, pt = mọi gói PT và buổi lẻ. */
+    /**
+     * Gói có thuộc loại đang lọc không: gym = Membership, day-pass = DayPass,
+     * pt = mọi gói PT và buổi lẻ.
+     */
     private boolean matchesTypeFilter(Package pkg, String typeFilter) {
         Package.Type packageType = pkg.getPackageType();
         if (TYPE_GYM.equals(typeFilter)) {
@@ -449,7 +522,10 @@ public class PackageSelectionService {
         return true;
     }
 
-    /** Tên gói có chứa từ khóa (đã chuẩn hóa) không; từ khóa rỗng thì khớp tất cả. */
+    /**
+     * Tên gói có chứa từ khóa (đã chuẩn hóa) không; từ khóa rỗng thì khớp tất
+     * cả.
+     */
     private boolean matchesKeyword(Package pkg, String normalizedKeyword) {
         if (normalizedKeyword.isEmpty()) {
             return true;
@@ -458,15 +534,24 @@ public class PackageSelectionService {
         return normalizedName.contains(normalizedKeyword);
     }
 
-    /** Gói có thuộc 1 trong các thời hạn đang tick không; chưa tick gì thì khớp tất cả. */
+    /**
+     * Gói có thuộc 1 trong các thời hạn đang tick không; chưa tick gì thì khớp
+     * tất cả. Khi đã tick, vé ngày và buổi lẻ bị loại vì không có số tháng.
+     */
     private boolean matchesDuration(Package pkg, Set<String> selectedDurationKeys) {
         if (selectedDurationKeys.isEmpty()) {
             return true;
         }
+        if (!isMonthBased(pkg)) {
+            return false;
+        }
         return selectedDurationKeys.contains(buildDurationKey(pkg));
     }
 
-    /** Hình thức mua: chỉ tick "online" → gói online được; chỉ tick "tại quầy" → gói không mua online được. */
+    /**
+     * Hình thức mua: chỉ tick "online" → gói online được; chỉ tick "tại quầy" →
+     * gói không mua online được.
+     */
     private boolean matchesBuyChannel(PackageOptionView option, boolean buyOnline, boolean buyCounterOnly) {
         if (buyOnline) {
             return option.isPurchasableOnline();
@@ -478,7 +563,13 @@ public class PackageSelectionService {
     }
 
     // ===== Sắp xếp =====
-
+    /**
+     * Sắp xếp tại chỗ theo kiểu khách chọn; sortKey đã chuẩn hóa nên nhánh
+     * cuối là Mặc định.
+     *
+     * @param options danh sách thẻ đã lọc
+     * @param sortKey SORT_PRICE_ASC, SORT_PRICE_DESC, SORT_SAVING hoặc SORT_DEFAULT
+     */
     private void sortOptions(List<PackageOptionView> options, String sortKey) {
         if (SORT_PRICE_ASC.equals(sortKey)) {
             options.sort(PackageSelectionService::compareByPriceAscending);
@@ -492,9 +583,10 @@ public class PackageSelectionService {
     }
 
     /**
-     * Mặc định: gói mua được online trước, gói chỉ mua tại quầy (PT) sau. Trong nhóm online:
-     * "Tiết kiệm hơn" → "Mới ra mắt" → gói tập → vé ngày. Trong nhóm PT: "Mới ra mắt" trước.
-     * Cùng hạng thì thời hạn ngắn → dài, bằng nhau thì gói rẻ trước.
+     * Mặc định: gói mua được online trước, gói chỉ mua tại quầy (PT) sau. Trong
+     * nhóm online: "Tiết kiệm hơn" → "Mới ra mắt" → gói tập → vé ngày. Trong
+     * nhóm PT: "Mới ra mắt" trước. Cùng hạng thì thời hạn ngắn → dài, bằng nhau
+     * thì gói rẻ trước.
      */
     private static int compareByDefaultOrder(PackageOptionView first, PackageOptionView second) {
         int firstRank = getDefaultRank(first);
@@ -505,11 +597,18 @@ public class PackageSelectionService {
         return compareByDuration(first, second);
     }
 
+    /**
+     * Hạng của 1 thẻ trong thứ tự Mặc định, số nhỏ đứng trước.
+     *
+     * @param option thẻ cần xếp hạng
+     * @return 0 Tiết kiệm hơn, 1 online mới ra mắt, 2 gói tập, 3 vé ngày,
+     * 4 PT mới ra mắt, 5 PT còn lại
+     */
     private static int getDefaultRank(PackageOptionView option) {
         String badge = option.getCard().getBadge();
         boolean isNew = BADGE_NEW.equals(badge);
         if (option.isPurchasableOnline()) {
-            if (BADGE_BEST_SAVING.equals(badge)) {
+            if (BADGE_SAVING.equals(badge)) {
                 return 0;
             }
             if (isNew) {
@@ -521,7 +620,10 @@ public class PackageSelectionService {
         return isNew ? 4 : 5;
     }
 
-    /** % tiết kiệm cao → thấp; gói chưa có % xuống cuối; bằng nhau thì theo thời hạn. */
+    /**
+     * % tiết kiệm cao → thấp; gói chưa có % xuống cuối; bằng nhau thì theo thời
+     * hạn.
+     */
     private static int compareBySaving(PackageOptionView first, PackageOptionView second) {
         int firstSaving = first.getCard().getSavingPercent() == null ? -1 : first.getCard().getSavingPercent();
         int secondSaving = second.getCard().getSavingPercent() == null ? -1 : second.getCard().getSavingPercent();
@@ -531,7 +633,10 @@ public class PackageSelectionService {
         return compareByDuration(first, second);
     }
 
-    /** Thời hạn ngắn → dài; cùng thời hạn thì gói rẻ đứng trước (cùng luật thứ tự với trang chủ, luật 2.6). */
+    /**
+     * Thời hạn ngắn → dài; cùng thời hạn thì gói rẻ đứng trước (cùng luật thứ
+     * tự với trang chủ, luật 2.6).
+     */
     private static int compareByDuration(PackageOptionView first, PackageOptionView second) {
         int firstDays = getDurationDaysForSorting(first.getCard().getPkg());
         int secondDays = getDurationDaysForSorting(second.getCard().getPkg());
@@ -541,7 +646,9 @@ public class PackageSelectionService {
         return Integer.compare(first.getCard().getPkg().getPrice(), second.getCard().getPkg().getPrice());
     }
 
-    /** Giá thấp → cao; bằng giá thì theo thời hạn. */
+    /**
+     * Giá thấp → cao; bằng giá thì theo thời hạn.
+     */
     private static int compareByPriceAscending(PackageOptionView first, PackageOptionView second) {
         int firstPrice = first.getCard().getPkg().getPrice();
         int secondPrice = second.getCard().getPkg().getPrice();
@@ -551,7 +658,9 @@ public class PackageSelectionService {
         return compareByDuration(first, second);
     }
 
-    /** Giá cao → thấp; bằng giá thì theo thời hạn. */
+    /**
+     * Giá cao → thấp; bằng giá thì theo thời hạn.
+     */
     private static int compareByPriceDescending(PackageOptionView first, PackageOptionView second) {
         int firstPrice = first.getCard().getPkg().getPrice();
         int secondPrice = second.getCard().getPkg().getPrice();
@@ -561,7 +670,10 @@ public class PackageSelectionService {
         return compareByDuration(first, second);
     }
 
-    /** Quy thời hạn ra số ngày chỉ để so thứ tự: buổi lẻ (không thời hạn) = 0 nên đứng đầu, như PackageDAO. */
+    /**
+     * Quy thời hạn ra số ngày chỉ để so thứ tự: buổi lẻ (không thời hạn) = 0
+     * nên đứng đầu, như PackageDAO.
+     */
     private static int getDurationDaysForSorting(Package pkg) {
         Integer durationValue = pkg.getDurationValue();
         if (durationValue == null) {
@@ -574,13 +686,14 @@ public class PackageSelectionService {
     }
 
     // ===== Dựng thẻ giá gói tập (sao chép từ HomeService.buildGymCards) =====
-
     /**
-     * Tạo thẻ cho gói tập: giá/tháng, % tiết kiệm so với gói 1 tháng, rồi gắn nhãn.
-     * Khác HomeService ở một điểm: % tiết kiệm chỉ tính cho gói từ 3 tháng (SRS 7.1.1).
+     * Tạo thẻ cho gói tập: giá/tháng, % tiết kiệm so với gói 1 tháng, rồi gắn
+     * nhãn. Khác HomeService ở một điểm: % tiết kiệm chỉ tính cho gói từ 3
+     * tháng (SRS 7.1.1).
      *
-     * Ví dụ seed (gói 1 tháng = 799.000): Gói 3 Tháng 2.190.000 → 730.000/tháng, tiết kiệm 9%;
-     * Gói 6 Tháng 3.990.000 → 665.000/tháng, tiết kiệm 17%.
+     * Ví dụ seed (gói 1 tháng = 799.000): Gói 3 Tháng 2.190.000 →
+     * 730.000/tháng, tiết kiệm 9%; Gói 6 Tháng 3.990.000 → 665.000/tháng, tiết
+     * kiệm 17%.
      */
     private List<PackageCardView> buildGymCards(List<Package> gymPackages, Map<Integer, Long> originalPrices) {
         // B1: tìm giá gói 1 tháng làm mốc; không có gói 1 tháng thì không tính % tiết kiệm
@@ -623,31 +736,31 @@ public class PackageSelectionService {
             }
         }
 
-        // B3: gắn nhãn "Tiết kiệm hơn" cho đúng 1 gói hội viên
+        // B3: gắn nhãn "Tiết kiệm hơn" cho mọi gói hội viên có tiết kiệm
         assignBadges(membershipCards);
         return cards;
     }
 
     /**
-     * "Tiết kiệm hơn" = gói có % tiết kiệm cao nhất (chỉ 1 gói). Không còn nhãn "Phổ biến nhất" / "Dùng thử":
-     * hệ thống chưa có số liệu bán hàng để chứng minh "phổ biến".
+     * Gắn nhãn "Tiết kiệm hơn" cho gói hội viên có savingPercent khác null
+     * (rẻ hơn mua từng tháng). Gói 1 tháng và gói không tiết kiệm giữ nhãn
+     * null.
+     *
+     * @param membershipCards thẻ các gói Membership, đã tính savingPercent
      */
     private void assignBadges(List<PackageCardView> membershipCards) {
-        PackageCardView bestSaving = null;
         for (PackageCardView card : membershipCards) {
-            Integer saving = card.getSavingPercent();
-            boolean hasSaving = saving != null;
-            boolean isBetter = hasSaving && (bestSaving == null || saving > bestSaving.getSavingPercent());
-            if (isBetter) {
-                bestSaving = card;
+            boolean hasSaving = card.getSavingPercent() != null;
+            if (hasSaving) {
+                card.setBadge(BADGE_SAVING);
             }
-        }
-        if (bestSaving != null) {
-            bestSaving.setBadge(BADGE_BEST_SAVING);
         }
     }
 
-    /** Gói tạo trong vòng NEW_PACKAGE_DAYS ngày gần đây (chưa có ngày tạo thì không tính là mới). */
+    /**
+     * Gói tạo trong vòng NEW_PACKAGE_DAYS ngày gần đây (chưa có ngày tạo thì
+     * không tính là mới).
+     */
     private boolean isNewPackage(Package pkg, LocalDateTime now) {
         LocalDateTime createdAt = pkg.getCreatedAt();
         if (createdAt == null) {
@@ -657,7 +770,17 @@ public class PackageSelectionService {
     }
 
     // ===== Thông tin mua online / tại quầy của 1 thẻ =====
-
+    /**
+     * Gói thẻ giá thành 1 thẻ hiển thị: kênh mua, nhãn chữ, câu hướng dẫn,
+     * ảnh, giá gốc và số tiền tiết kiệm.
+     *
+     * @param card thẻ giá đã có badge
+     * @param originalPrice giá nếu mua từng tháng; null nếu gói không tiết kiệm
+     * @param paymentDueMinutes số phút giữ đơn, tham số P-09
+     * @param openingHours giờ mở cửa đã định dạng, null nếu chưa cấu hình
+     * @param imageFileNames tên file có trong images/packages, null nếu không đọc được
+     * @return thẻ để JSP in ra; savedAmount = originalPrice - giá bán, null khi originalPrice null
+     */
     private PackageOptionView buildOption(PackageCardView card, Long originalPrice, int paymentDueMinutes,
             String openingHours, Set<String> imageFileNames) {
         Package pkg = card.getPkg();
@@ -676,6 +799,12 @@ public class PackageSelectionService {
                 durationLabel, channelLabel, purchaseHint, imagePath);
     }
 
+    /**
+     * Tên loại gói in trên thẻ.
+     *
+     * @param packageType loại gói
+     * @return "Gói tập", "Vé ngày", "Gói PT", "Gói PT đôi" hoặc "Buổi PT lẻ"
+     */
     private String buildTypeLabel(Package.Type packageType) {
         switch (packageType) {
             case MEMBERSHIP:
@@ -693,6 +822,12 @@ public class PackageSelectionService {
         }
     }
 
+    /**
+     * Thời hạn in trên thẻ, ví dụ Gói 3 Tháng → "3 tháng", Gói Ngày → "1 ngày".
+     *
+     * @param pkg gói cần in thời hạn
+     * @return "n tháng", "1 ngày" hoặc "1 buổi"
+     */
     private String buildDurationLabel(Package pkg) {
         switch (pkg.getPackageType()) {
             case MEMBERSHIP:
@@ -708,7 +843,10 @@ public class PackageSelectionService {
         }
     }
 
-    /** Câu ngắn cố định trên thẻ: điện thoại không có hover nên thông tin kênh mua không chỉ nằm trong tooltip. */
+    /**
+     * Câu ngắn cố định trên thẻ: điện thoại không có hover nên thông tin kênh
+     * mua không chỉ nằm trong tooltip.
+     */
     private String buildChannelLabel(Package.Type packageType) {
         if (isOnlinePurchasable(packageType)) {
             return "Thanh toán trực tuyến hoặc tại quầy";
@@ -720,8 +858,9 @@ public class PackageSelectionService {
     }
 
     /**
-     * Câu giải thích đầy đủ cách mua (tooltip của nút và đoạn hướng dẫn trong popup).
-     * paymentDueMinutes lấy từ tham số P-09, openingHours từ P-19; không viết cứng số trong chữ.
+     * Câu giải thích đầy đủ cách mua (tooltip của nút và đoạn hướng dẫn trong
+     * popup). paymentDueMinutes lấy từ tham số P-09, openingHours từ P-19;
+     * không viết cứng số trong chữ.
      */
     private String buildPurchaseHint(Package.Type packageType, int paymentDueMinutes, String openingHours) {
         if (isOnlinePurchasable(packageType)) {
@@ -740,17 +879,19 @@ public class PackageSelectionService {
     }
 
     // ===== Ảnh gói theo quy ước tên file (không cần cột ảnh trong database) =====
-
     /**
-     * Chọn ảnh cho gói theo quy ước tên file trong images/packages/, thử từ cụ thể đến chung:
-     *   Gói 3 tháng → membership-3m → membership → default
-     *   PT đôi 1 tháng → pt-couple-1m → pt-couple → default
-     *   Vé ngày → day-pass → default; buổi PT lẻ → single-session → default
-     * Mỗi tên thử lần lượt các đuôi jpg, png, webp, svg. Thêm file đúng tên là gói đó có ảnh riêng, không phải sửa code.
+     * Chọn ảnh cho gói theo quy ước tên file trong images/packages/, thử từ cụ
+     * thể đến chung: Gói 3 tháng → membership-3m → membership → default PT đôi
+     * 1 tháng → pt-couple-1m → pt-couple → default Vé ngày → day-pass →
+     * default; buổi PT lẻ → single-session → default Mỗi tên thử lần lượt các
+     * đuôi jpg, png, webp, svg. Thêm file đúng tên là gói đó có ảnh riêng,
+     * không phải sửa code.
      *
      * @param pkg gói cần chọn ảnh
-     * @param imageFileNames tên file đang có trong thư mục ảnh (null nếu không đọc được)
-     * @return đường dẫn ảnh tính từ context path, hoặc null nếu không có file nào phù hợp
+     * @param imageFileNames tên file đang có trong thư mục ảnh (null nếu không
+     * đọc được)
+     * @return đường dẫn ảnh tính từ context path, hoặc null nếu không có file
+     * nào phù hợp
      */
     private String resolveImagePath(Package pkg, Set<String> imageFileNames) {
         if (imageFileNames == null) {
@@ -779,6 +920,12 @@ public class PackageSelectionService {
         return null;
     }
 
+    /**
+     * Tiền tố tên file ảnh theo loại gói, ví dụ MEMBERSHIP → "membership".
+     *
+     * @param packageType loại gói
+     * @return tiền tố tên file, hoặc "default" khi không nhận ra loại
+     */
     private String buildImageTypeKey(Package.Type packageType) {
         switch (packageType) {
             case MEMBERSHIP:
@@ -797,8 +944,10 @@ public class PackageSelectionService {
     }
 
     // ===== Hỗ trợ =====
-
-    /** Giờ mở cửa "05:30-22:00" → "05:30 – 22:00" (cùng cách hiển thị với trang chủ); null giữ nguyên. */
+    /**
+     * Giờ mở cửa "05:30-22:00" → "05:30 – 22:00" (cùng cách hiển thị với trang
+     * chủ); null giữ nguyên.
+     */
     private String formatOpeningHours(String openingHours) {
         if (openingHours == null) {
             return null;
