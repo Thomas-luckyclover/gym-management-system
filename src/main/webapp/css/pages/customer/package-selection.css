@@ -390,8 +390,8 @@
 
 /* ---------- Lưới thẻ gói (kiểu banner: dải nhãn → banner tiêu đề → chân thẻ giá + nút) ---------- */
 .package-selection {
-  /* Chữ tiêu đề banner dạng condensed in hoa (font Oswald nạp ở JSP); thiếu font thì dùng font display của dự án */
-  --font-banner: "Oswald", "Arial Narrow", var(--font-display);
+  /* Chữ banner dùng font display của khu (Montserrat), cùng các trang customer khác */
+  --font-banner: var(--font-display);
   /* Màu phụ suy ra từ màu chính để thẻ đổi theo theme, không ghi cứng mã màu */
   --package-gold-bright: color-mix(in srgb, var(--color-warning) 78%, #FFFFFF);
   --package-gold-light: color-mix(in srgb, var(--color-primary) 38%, #FFFFFF);
@@ -449,7 +449,7 @@
   content: "";
   position: absolute;
   inset: 0;
-  background: linear-gradient(180deg, transparent 20%, color-mix(in srgb, var(--package-brown-ink) 70%, transparent));
+  background: linear-gradient(180deg, transparent 20%, color-mix(in srgb, #000 62%, transparent));
 }
 
 .package-card__banner > *:not(.package-card__bg):not(.package-card__sash) {
@@ -457,41 +457,41 @@
   z-index: 1;
 }
 
-/* Dải chéo nhãn ở góc trên phải banner (banner có overflow hidden nên phần thừa tự bị cắt) */
+/* Dải chéo nhãn ở góc trên phải banner: "Tiết kiệm hơn" xanh lá than, "Mới ra mắt" đỏ đô (banner có overflow hidden nên phần thừa tự bị cắt) */
 .package-card__sash {
   position: absolute;
-  top: 26px;
-  right: -46px;
+  top: 28px;
+  right: -58px;
   z-index: 2;
-  width: 190px;
+  width: 220px;
   padding: var(--space-1-5) 0;
   transform: rotate(45deg);
   text-align: center;
-  font-family: var(--font-banner);
+  font-family: var(--font-body);
   font-size: var(--font-size-sm);
   font-weight: var(--font-weight-bold);
-  letter-spacing: var(--letter-spacing-widest);
+  letter-spacing: 0.06em;
   text-transform: uppercase;
-  box-shadow: 0 3px 8px color-mix(in srgb, var(--package-brown-ink) 45%, transparent);
+  box-shadow: 0 3px 8px rgba(0, 0, 0, 0.45);
 }
 
 .package-card__sash.is-saving {
-  background: linear-gradient(#FFD65C, #F2B318);
-  color: #3B2A06;
-  box-shadow: 0 0 0 2px #FFFFFF, 0 4px 10px rgba(0, 0, 0, 0.35);
+  background: linear-gradient(#1D4A37, #0F2B20);
+  color: #FFFFFF;
+  box-shadow: 0 3px 8px rgba(0, 0, 0, 0.5);
 }
 
 .package-card__sash.is-new {
-  background: linear-gradient(#FF6B5E, #D92F23);
+  background: linear-gradient(#9B2A43, #661629);
   color: #FFFFFF;
-  box-shadow: 0 0 0 2px #FFFFFF, 0 4px 10px rgba(0, 0, 0, 0.35);
+  box-shadow: 0 3px 8px rgba(0, 0, 0, 0.45);
 }
 
 .package-card__brand {
   font-family: var(--font-banner);
   font-size: var(--font-size-xs);
   font-weight: var(--font-weight-semibold);
-  letter-spacing: 0.28em;
+  letter-spacing: 0.12em;
   opacity: 0.9;
 }
 
@@ -499,10 +499,9 @@
   margin: 0;
   color: inherit;
   font-family: var(--font-banner);
-  font-size: clamp(2rem, 3.2vw, 2.7rem);
+  font-size: clamp(1.5rem, 2.4vw, 2rem);
   font-weight: var(--font-weight-bold);
-  line-height: 1.04;
-  text-transform: uppercase;
+  line-height: 1.15;
   text-shadow: 0 2px 0 color-mix(in srgb, var(--package-brown-ink) 40%, transparent);
 }
 
@@ -517,7 +516,7 @@
 .package-card__foot {
   display: grid;
   flex: 1;
-  grid-template-columns: minmax(0, 1fr) auto;
+  grid-template-columns: minmax(0, 1fr);
   gap: var(--space-3);
   align-items: center;
   padding: var(--space-4) var(--space-4) var(--space-4) var(--space-4);
@@ -594,8 +593,12 @@
 
 .package-card__actions {
   display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
   gap: var(--space-2);
-  min-width: 140px;
+}
+
+.package-card__actions--single {
+  grid-template-columns: minmax(0, 1fr);
 }
 
 .package-card__actions form {
@@ -608,19 +611,17 @@
   padding: var(--space-3) var(--space-3);
   border: 0;
   border-radius: var(--radius-xs);
-  font-family: var(--font-banner);
+  font-family: var(--font-body);
   font-size: var(--font-size-md);
   font-weight: var(--font-weight-semibold);
-  letter-spacing: 0.05em;
-  text-transform: uppercase;
   cursor: pointer;
 }
 
-/* Nút Mua ngay: nút duy nhất sáng màu trong vùng trắng nên là điểm hút mắt đầu tiên */
+/* Nút Mua ngay: vàng sáng, viền đáy đậm — nút duy nhất sáng màu trong vùng trắng nên là điểm hút mắt đầu tiên */
 .package-card__buy {
-  background: linear-gradient(var(--package-gold-bright), var(--color-warning));
-  color: var(--package-brown-ink);
-  box-shadow: var(--shadow-button-primary);
+  background: linear-gradient(#F7C948, #E0A01C);
+  color: #2A1D04;
+  box-shadow: 0 2px 0 #B8800F, 0 6px 12px rgba(224, 160, 28, 0.35);
 }
 
 .package-card__buy:hover {

@@ -8,13 +8,8 @@
     <head>
         <%@ include file="/WEB-INF/jsp/common/head.jspf" %>
         <title>Mua gói · Super Gym</title>
-        <link rel="stylesheet" href="${pageContext.request.contextPath}/css/base.css?v=4">
-        <link rel="stylesheet" href="${pageContext.request.contextPath}/css/awning.css?v=2">
-        <link rel="stylesheet" href="${pageContext.request.contextPath}/css/weather.css?v=2">
-        <link rel="stylesheet" href="${pageContext.request.contextPath}/css/pages/customer/dashboard.css?v=4">
-        <%-- Oswald: font condensed cho chữ tiêu đề banner và giá trên thẻ gói (chỉ dùng ở màn này) --%>
-        <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Oswald:wght@600;700&display=swap">
-        <link rel="stylesheet" href="${pageContext.request.contextPath}/css/pages/customer/package-selection.css?v=3">
+        <link rel="stylesheet" href="${pageContext.request.contextPath}/css/pages/customer/dashboard.css?v=7">
+        <link rel="stylesheet" href="${pageContext.request.contextPath}/css/pages/customer/package-selection.css?v=7">
         <script src="${pageContext.request.contextPath}/js/pages/customer/package-selection.js?v=2" defer></script>
     </head>
 
