@@ -12,7 +12,7 @@
 
     <link
         rel="stylesheet"
-        href="${pageContext.request.contextPath}/css/pages/auth/account-settings.css"
+        href="${pageContext.request.contextPath}/css/pages/auth/account-settings.css?v=2"
     >
 
 </head>
@@ -253,7 +253,7 @@
 
                                 <c:otherwise>
 
-                                    <section class="account-card">
+                                    <section class="account-card" data-reveal>
 
                                         <div class="account-card-body">
 

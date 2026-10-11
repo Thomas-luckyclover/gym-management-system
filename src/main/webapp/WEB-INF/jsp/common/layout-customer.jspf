@@ -4,8 +4,11 @@
 <div class="dockwrap" id="dock">
     <aside class="sidebar">
         <a class="brand" href="${pageContext.request.contextPath}/customer/dashboard" style="text-decoration: none;">
-            <div class="brand-name">Super Gym</div>
-            <div class="brand-role">Khu vực hội viên</div>
+            <span class="brand-mark"><img src="${pageContext.request.contextPath}/images/logo-mark.png" alt=""></span>
+            <div class="brand-text">
+              <div class="brand-name">Super Gym</div>
+              <div class="brand-role">Khu vực hội viên</div>
+            </div>
         </a>
 
         <nav class="nav" aria-label="Điều hướng chính">
@@ -29,15 +32,10 @@
             </a>
 
             <div class="nav-group">Lịch tập</div>
-            <a href="${pageContext.request.contextPath}/customer/schedule"
-               class="nav-link <c:if test="${activeSidebar == 'schedule'}">active</c:if>"
-               <c:if test="${activeSidebar == 'schedule'}">aria-current="page"</c:if>>
-                <i class="fa-solid fa-calendar-check" style="width: 18px; text-align: center;"></i> Lịch của tôi
-            </a>
             <a href="${pageContext.request.contextPath}/customer/pt-sessions"
                class="nav-link <c:if test="${activeSidebar == 'pt-sessions'}">active</c:if>"
                <c:if test="${activeSidebar == 'pt-sessions'}">aria-current="page"</c:if>>
-                <i class="fa-solid fa-user-check" style="width: 18px; text-align: center;"></i> Buổi PT của tôi
+                <i class="fa-solid fa-calendar-check" style="width: 18px; text-align: center;"></i> Lịch tập của tôi
             </a>
             <a href="${pageContext.request.contextPath}/customer/book-session"
                class="nav-link <c:if test="${activeSidebar == 'book-session'}">active</c:if>"

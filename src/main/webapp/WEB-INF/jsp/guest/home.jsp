@@ -10,7 +10,8 @@
 <head>
   <%@ include file="/WEB-INF/jsp/common/head.jspf" %>
   <title>Super Gym · Tập đúng cách, đo được tiến bộ</title>
-  <link rel="stylesheet" href="${pageContext.request.contextPath}/css/pages/guest/home.css?v=2">
+  <link rel="stylesheet" href="${pageContext.request.contextPath}/css/pages/guest/home.css?v=4">
+  <script src="${pageContext.request.contextPath}/js/pages/guest/home.js?v=2" defer></script>
 </head>
 <body class="theme-guest-dark">
   <%@ include file="/WEB-INF/jsp/common/flash-toast.jspf" %>
@@ -296,9 +297,14 @@
 
     <%-- ============================ KÊU GỌI ĐĂNG KÝ ============================ --%>
     <section class="cta-band">
-      <div class="wrap">
-        <h2>Sẵn sàng cho <em>buổi tập đầu tiên?</em></h2>
-        <a class="btn btn-primary btn-lg" href="${ctx}/register">Đăng ký ngay <i class="fa-solid fa-arrow-right"></i></a>
+      <div class="wrap cta-inner">
+        <div class="cta-copy">
+          <h2>Sẵn sàng cho <em>buổi tập đầu tiên?</em></h2>
+          <p class="cta-lead">Pumpy đã khởi động xong rồi. Tạo tài khoản để chọn gói và bắt đầu cùng Super Gym.</p>
+          <a class="btn btn-primary btn-lg" href="${ctx}/register">Đăng ký ngay <i class="fa-solid fa-arrow-right"></i></a>
+        </div>
+        <%-- Linh vật Pumpy ngồi cạnh tạ — trang trí + tương tác vui (bấm để nhảy) --%>
+        <%@ include file="/WEB-INF/jsp/guest/_mascot.jspf" %>
       </div>
     </section>
   </main>

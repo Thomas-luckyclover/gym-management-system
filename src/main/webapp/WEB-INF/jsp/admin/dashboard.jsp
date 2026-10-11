@@ -6,7 +6,7 @@
 <head>
   <%@ include file="/WEB-INF/jsp/common/head.jspf" %>
   <title>Báo cáo vận hành hệ thống · Super Gym</title>
-  <link rel="stylesheet" href="${pageContext.request.contextPath}/css/pages/admin/dashboard.css">
+  <link rel="stylesheet" href="${pageContext.request.contextPath}/css/pages/admin/dashboard.css?v=3">
   <script src="${pageContext.request.contextPath}/js/pages/admin/dashboard.js" defer></script>
 </head>
 <body class="dock theme-admin">
@@ -41,7 +41,7 @@
 
       <main class="content">
         <%-- UC-47: cả hai ngày bắt buộc, mặc định ngày 1 tháng hiện tại tới hôm nay. --%>
-        <section class="report-head" aria-labelledby="reportTitle">
+        <section class="report-head" aria-labelledby="reportTitle" data-reveal>
           <div class="report-title-block">
             <h2 id="reportTitle">Báo cáo vận hành</h2>
             <p>Doanh thu, check-in, hoa hồng PT và chỉ số audit theo khoảng ngày đã chọn.</p>
@@ -152,7 +152,7 @@
           </c:if>
 
           <%-- Toàn bộ số liệu vận hành/doanh thu mà Admin kế thừa từ báo cáo Manager. --%>
-          <section class="dashboard-section" aria-labelledby="operationTitle">
+          <section class="dashboard-section" aria-labelledby="operationTitle" data-reveal>
             <div class="section-heading">
               <div>
                 <h2 id="operationTitle">Vận hành &amp; doanh thu</h2>
@@ -163,29 +163,25 @@
             <div class="metric-grid">
               <article class="metric-card metric-card-primary">
                 <span class="metric-label">Tổng doanh thu</span>
-                <strong class="metric-value tabular">
-                  <c:out value="${gms:formatMoney(dashboard.totalRevenue)}" />
-                </strong>
+                <strong class="metric-value tabular is-flap" data-flip><c:out value="${gms:formatMoney(dashboard.totalRevenue)}" /></strong>
                 <span class="metric-note">Đã gồm VAT theo giá trị lưu trên từng đơn.</span>
               </article>
 
               <article class="metric-card">
                 <span class="metric-label">Lượt check-in</span>
-                <strong class="metric-value tabular"><c:out value="${dashboard.checkInCount}" /></strong>
+                <strong class="metric-value tabular is-flap" data-flip><c:out value="${dashboard.checkInCount}" /></strong>
                 <span class="metric-note">Tổng lượt trong khoảng ngày đã chọn.</span>
               </article>
 
               <article class="metric-card">
                 <span class="metric-label">Lượt vé ngày</span>
-                <strong class="metric-value tabular"><c:out value="${dashboard.dayPassSummary.count}" /></strong>
+                <strong class="metric-value tabular is-flap" data-flip><c:out value="${dashboard.dayPassSummary.count}" /></strong>
                 <span class="metric-note">Giao dịch vé ngày thành công.</span>
               </article>
 
               <article class="metric-card">
                 <span class="metric-label">Doanh thu vé ngày</span>
-                <strong class="metric-value tabular">
-                  <c:out value="${gms:formatMoney(dashboard.dayPassSummary.revenue)}" />
-                </strong>
+                <strong class="metric-value tabular is-flap" data-flip><c:out value="${gms:formatMoney(dashboard.dayPassSummary.revenue)}" /></strong>
                 <span class="metric-note">Giao dịch vé ngày thành công trong kỳ.</span>
               </article>
             </div>
@@ -271,7 +267,7 @@
           </section>
 
           <%-- Audit ở Dashboard chỉ là metrics tổng hợp; tra cứu log chi tiết nằm ở UC-08. --%>
-          <section class="dashboard-section audit-section" aria-labelledby="auditTitle">
+          <section class="dashboard-section audit-section" aria-labelledby="auditTitle" data-reveal>
             <div class="section-heading audit-heading">
               <div>
                 <h2 id="auditTitle">
@@ -312,13 +308,13 @@
 
               <article class="metric-card audit-highlight">
                 <span class="metric-label">Tài khoản bị khóa</span>
-                <strong class="metric-value tabular"><c:out value="${dashboard.lockedAccountCount}" /></strong>
+                <strong class="metric-value tabular is-flap" data-flip><c:out value="${dashboard.lockedAccountCount}" /></strong>
                 <span class="metric-note">Gồm khóa tạm do sai mật khẩu và tài khoản bị Admin khóa trong kỳ.</span>
               </article>
 
               <article class="metric-card audit-highlight">
                 <span class="metric-label">Thay đổi tài khoản</span>
-                <strong class="metric-value tabular"><c:out value="${dashboard.accountAuditChangeCount}" /></strong>
+                <strong class="metric-value tabular is-flap" data-flip><c:out value="${dashboard.accountAuditChangeCount}" /></strong>
                 <span class="metric-note">Audit Log có EntityName = Account.</span>
               </article>
             </div>

@@ -15,6 +15,12 @@
     <div>
       <div class="footer-brand">Super Gym</div>
       <p class="footer-tag">Theo dõi tiến độ, đặt lịch PT và quản lý gói tập trong một tài khoản duy nhất.</p>
+      <%-- Biểu tượng mạng xã hội tĩnh, chưa gắn liên kết. --%>
+      <div class="footer-socials" role="group" aria-label="Mạng xã hội">
+        <span role="img" aria-label="Instagram" title="Instagram"><i class="fa-brands fa-instagram" aria-hidden="true"></i></span>
+        <span role="img" aria-label="Facebook" title="Facebook"><i class="fa-brands fa-facebook-f" aria-hidden="true"></i></span>
+        <span role="img" aria-label="TikTok" title="TikTok"><i class="fa-brands fa-tiktok" aria-hidden="true"></i></span>
+      </div>
     </div>
     <div class="footer-col">
       <h4>Khám phá</h4>
@@ -30,7 +36,7 @@
     </div>
     <div class="footer-col">
       <h4>Liên hệ</h4>
-      <p><i class="fa-solid fa-location-dot"></i> 12 Nguyễn Huệ, Q.1, TP.HCM</p>
+      <p><i class="fa-solid fa-location-dot"></i> 25 Cầu Giấy, Hà Nội</p>
       <c:if test="${not empty openingHours}">
         <p><i class="fa-solid fa-clock"></i> <c:out value="${openingHours}" /> mỗi ngày</p>
       </c:if>

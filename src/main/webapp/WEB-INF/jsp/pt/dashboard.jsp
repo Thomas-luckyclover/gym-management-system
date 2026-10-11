@@ -13,16 +13,19 @@
 <head>
     <%@ include file="/WEB-INF/jsp/common/head.jspf" %>
     <title><c:out value="${pageTitle}" /> · GMS</title>
-    <link rel="stylesheet" href="${pageContext.request.contextPath}/css/pages/auth/account-settings.css">
-    <link rel="stylesheet" href="${pageContext.request.contextPath}/css/base.css?v=4">
-    <link rel="stylesheet" href="${pageContext.request.contextPath}/css/awning.css?v=2">
-    <link rel="stylesheet" href="${pageContext.request.contextPath}/css/weather.css?v=2">
-    <link rel="stylesheet" href="${pageContext.request.contextPath}/css/pages/pt/dashboard.css?v=26">
-    <script src="${pageContext.request.contextPath}/js/pages/pt/dashboard.js?v=6" defer></script>
+    <link rel="stylesheet" href="${pageContext.request.contextPath}/css/pages/auth/account-settings.css?v=2">
+    <link rel="stylesheet" href="${pageContext.request.contextPath}/css/base.css?v=8">
+    <link rel="stylesheet" href="${pageContext.request.contextPath}/css/awning.css?v=4">
+    <link rel="stylesheet" href="${pageContext.request.contextPath}/css/pages/pt/dashboard.css?v=31">
+    <script src="${pageContext.request.contextPath}/js/pages/pt/dashboard.js?v=7" defer></script>
+    <link rel="stylesheet" href="${pageContext.request.contextPath}/css/dashboard-weather.css?v=9">
+    <link rel="stylesheet" href="${pageContext.request.contextPath}/css/weather-scene.css?v=4">
+    <script src="${pageContext.request.contextPath}/js/weather-scene.js?v=4" defer></script>
 </head>
 <%-- weatherType do Servlet kiểm tra: sunny/cloudy/rain/storm/snow/wind/night/hot. --%>
 <body class="dock theme-pt pt-dashboard-page weather-${weatherType}">
     <%@ include file="/WEB-INF/jsp/common/flash-toast.jspf" %>
+    <%@ include file="/WEB-INF/jsp/common/weather-scene.jspf" %>
     <%@ include file="/WEB-INF/jsp/pt/_awning.jspf" %>
 
     <div class="app">
@@ -32,39 +35,12 @@
 
             <main class="content pt-dashboard">
                 <%-- Lời chào lấy tên từ session; weather do WeatherService tạo. API lỗi thì ẩn thẻ. --%>
-                <section class="pt-welcome ${empty weather ? 'is-weather-unavailable' : ''}" aria-labelledby="welcome-title">
-                    <span class="pt-welcome__ambient" aria-hidden="true"></span>
-                    <div class="pt-welcome__copy">
-                        <h2 id="welcome-title">Chào, <span class="pt-welcome__name"><c:out value="${sessionScope.displayName}" default="bạn" /></span></h2>
-                    </div>
-                    <c:if test="${not empty weather}">
-                        <div class="pt-weather" aria-label="Thời tiết hôm nay tại phòng gym">
-                            <div class="pt-weather__content">
-                                <div class="pt-weather__eyebrow">
-                                    <span><c:out value="${weather.cityName}" /> · <c:out value="${weather.title}" /></span>
-                                    <c:if test="${weatherPreview}"><span class="pt-weather__preview">Xem trước</span></c:if>
-                                </div>
-                                <p class="pt-weather__condition">Hiện tại: <c:out value="${weather.conditionLabel}" /></p>
-                            </div>
-                            <%-- Giá trị thật giữ trong HTML; dashboard.js chỉ tạo hiệu ứng đếm, tắt JS vẫn thấy nhiệt độ. --%>
-                            <strong class="pt-weather__temperature" data-weather-temperature="${weather.temperature}"><c:out value="${weather.temperature}" />°</strong>
-                            <%-- Các số dưới đây đi từ WeatherForecast qua WeatherService sang WeatherView; mã WMO chỉ dùng để chọn câu chữ. --%>
-                            <c:if test="${weather.feelsLikeTemperature != null}">
-                                <dl class="pt-weather__details">
-                                    <div><dt>Cảm giác</dt><dd><c:out value="${weather.feelsLikeTemperature}" />°</dd></div>
-                                    <div><dt>Thấp / cao</dt><dd><c:out value="${weather.minTemperature}" />° / <c:out value="${weather.maxTemperature}" />°</dd></div>
-                                    <div><dt>Độ ẩm</dt><dd><c:out value="${weather.humidityPercent}" />%</dd></div>
-                                    <div><dt>Gió</dt><dd><c:out value="${weather.windSpeedKmh}" /> km/h</dd></div>
-                                    <div><dt>Khả năng mưa</dt><dd><c:out value="${weather.rainProbabilityPercent}" />%</dd></div>
-                                </dl>
-                            </c:if>
-                            <p class="pt-weather__advice"><c:out value="${weather.advice}" /></p>
-                        </div>
-                    </c:if>
-                </section>
+                <c:set var="weatherGreetingName" value="${sessionScope.displayName}" />
+                <c:set var="weatherAudience" value="pt" />
+                <%@ include file="/WEB-INF/jsp/common/dashboard-weather.jspf" %>
 
                 <%-- attentionItems: Service gom khách + gói + loại vấn đề, giữ buổi gần nhất. --%>
-                <section class="pt-alerts" aria-labelledby="alerts-title">
+                <section class="pt-alerts" aria-labelledby="alerts-title" data-reveal>
                     <div class="pt-section-heading">
                         <h2 id="alerts-title">Cần chú ý</h2>
                         <span class="pt-info">
@@ -115,7 +91,7 @@
                 </section>
 
                 <%-- commissionSummary: DAO cộng số/tiền đã lưu, Service tính năm tỷ lệ. --%>
-                <section class="pt-summary" aria-labelledby="summary-title">
+                <section class="pt-summary" aria-labelledby="summary-title" data-reveal>
                     <div class="pt-section-heading">
                         <h2 id="summary-title">Kết quả tháng và hoa hồng</h2>
                         <span class="pt-info">
@@ -146,11 +122,11 @@
                                     <c:otherwise>
                                         <%-- Mỗi tỷ lệ có cùng mẫu số resolvedSessionCount, gồm cả buổi hủy. --%>
                                         <dl class="pt-summary-stats">
-                                            <div class="pt-summary-stat"><dt>Có check-in</dt><dd><strong><c:out value="${commissionSummary.checkedInCount}" /> buổi</strong><span><fmt:formatNumber value="${commissionSummary.checkedInRatePercent}" maxFractionDigits="2" />%</span></dd></div>
-                                            <div class="pt-summary-stat"><dt>Không check-in</dt><dd><strong><c:out value="${commissionSummary.noCheckInCount}" /> buổi</strong><span><fmt:formatNumber value="${commissionSummary.noCheckInRatePercent}" maxFractionDigits="2" />%</span></dd></div>
-                                            <div class="pt-summary-stat"><dt>Thiếu quyền vào gym</dt><dd><strong><c:out value="${commissionSummary.noMembershipCount}" /> buổi</strong><span><fmt:formatNumber value="${commissionSummary.noMembershipRatePercent}" maxFractionDigits="2" />%</span></dd></div>
-                                            <div class="pt-summary-stat"><dt>Đang bảo lưu</dt><dd><strong><c:out value="${commissionSummary.membershipFrozenCount}" /> buổi</strong><span><fmt:formatNumber value="${commissionSummary.membershipFrozenRatePercent}" maxFractionDigits="2" />%</span></dd></div>
-                                            <div class="pt-summary-stat"><dt>Đã hủy</dt><dd><strong><c:out value="${commissionSummary.cancelledCount}" /> buổi</strong><span><fmt:formatNumber value="${commissionSummary.cancelledRatePercent}" maxFractionDigits="2" />%</span></dd></div>
+                                            <div class="pt-summary-stat" data-tilt><dt>Có check-in</dt><dd><strong><c:out value="${commissionSummary.checkedInCount}" /> buổi</strong><span><fmt:formatNumber value="${commissionSummary.checkedInRatePercent}" maxFractionDigits="2" />%</span></dd></div>
+                                            <div class="pt-summary-stat" data-tilt><dt>Không check-in</dt><dd><strong><c:out value="${commissionSummary.noCheckInCount}" /> buổi</strong><span><fmt:formatNumber value="${commissionSummary.noCheckInRatePercent}" maxFractionDigits="2" />%</span></dd></div>
+                                            <div class="pt-summary-stat" data-tilt><dt>Thiếu quyền vào gym</dt><dd><strong><c:out value="${commissionSummary.noMembershipCount}" /> buổi</strong><span><fmt:formatNumber value="${commissionSummary.noMembershipRatePercent}" maxFractionDigits="2" />%</span></dd></div>
+                                            <div class="pt-summary-stat" data-tilt><dt>Đang bảo lưu</dt><dd><strong><c:out value="${commissionSummary.membershipFrozenCount}" /> buổi</strong><span><fmt:formatNumber value="${commissionSummary.membershipFrozenRatePercent}" maxFractionDigits="2" />%</span></dd></div>
+                                            <div class="pt-summary-stat" data-tilt><dt>Đã hủy</dt><dd><strong><c:out value="${commissionSummary.cancelledCount}" /> buổi</strong><span><fmt:formatNumber value="${commissionSummary.cancelledRatePercent}" maxFractionDigits="2" />%</span></dd></div>
                                         </dl>
                                     </c:otherwise>
                                 </c:choose>
@@ -174,7 +150,7 @@
                 </section>
                 <div class="pt-dashboard-columns">
                     <%-- scheduleDays: Service tạo đủ bảy ngày; day.sessions là buổi DAO đọc, Service bổ sung nhãn. --%>
-                    <section class="pt-schedule" aria-labelledby="schedule-title">
+                    <section class="pt-schedule" aria-labelledby="schedule-title" data-reveal>
                         <div class="pt-section-heading">
                             <h2 id="schedule-title">Lịch 7 ngày</h2>
                             <span class="pt-info">
@@ -253,7 +229,7 @@
 
                     <aside class="pt-dashboard-side" aria-label="Khách phụ trách và đánh giá">
                         <%-- assignedPackages: DAO trả từng gói/buổi lẻ, Service thêm nhãn loại. --%>
-                        <section class="pt-clients" aria-labelledby="clients-title">
+                        <section class="pt-clients" aria-labelledby="clients-title" data-reveal>
                             <div class="pt-section-heading">
                                 <h2 id="clients-title">Khách phụ trách</h2>
                                 <span class="pt-info">
@@ -290,7 +266,7 @@
                         </section>
 
                         <%-- ptRating: Service chỉ hiện điểm khi đủ số khách theo P-22. --%>
-                        <section class="pt-rating" aria-labelledby="rating-title">
+                        <section class="pt-rating" aria-labelledby="rating-title" data-reveal>
                             <div class="pt-section-heading">
                                 <h2 id="rating-title">Đánh giá PT</h2>
                                 <span class="pt-info">
@@ -317,16 +293,11 @@
                                 </c:otherwise>
                             </c:choose>
                         </section>
-                        <%-- Đặt ngay dưới Đánh giá PT, trong cột phải của dashboard. --%>
+                        <%-- SVG mới gồm minh họa và lời thoại, đặt dưới Đánh giá PT trong cột phải. --%>
                         <div class="pt-dashboard-doodles">
-                            <img class="pt-dashboard-doodles__kid"
-                                 src="${pageContext.request.contextPath}/images/pt/doodle-kid-umbrella.svg"
-                                 alt="Cậu bé cầm ô" loading="lazy" decoding="async" />
-                            <div class="pt-dashboard-doodles__trainer">
-                                <p class="pt-dashboard-doodles__speech">Chúc bạn một ngày thật năng suất!</p>
-                                <img src="${pageContext.request.contextPath}/images/pt/doodle-gym-guy.svg"
-                                     alt="Thanh niên đang tập tạ" loading="lazy" decoding="async" />
-                            </div>
+                            <img src="${pageContext.request.contextPath}/images/svg/pt-dashboard-doodles.svg"
+                                 alt="Minh họa động viên huấn luyện viên" width="620" height="320"
+                                 loading="lazy" decoding="async" />
                         </div>
                     </aside>
                 </div>

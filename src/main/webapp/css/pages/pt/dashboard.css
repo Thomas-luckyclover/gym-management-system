@@ -7,83 +7,15 @@
   padding: var(--space-6) var(--layout-gutter) var(--space-10);
   display: grid; gap: var(--space-5);
 }
-.pt-dashboard-page .tb-left p { margin: var(--space-1) 0 0; color: var(--color-text-soft); font-size: var(--font-size-sm); }
+.pt-dashboard-page .tb-left p { margin: var(--space-1) 0 0; color: var(--color-text); font-size: var(--font-size-sm); font-weight: var(--font-weight-semibold); font-variant-numeric: tabular-nums; }
 
-/* Sidebar dùng cùng tông bạt của từng thời tiết; chỉ áp dụng trên Dashboard PT. */
-.pt-dashboard-page .sidebar {
-  --pt-nav-text: #F6FAFC;
-  --pt-nav-muted: color-mix(in srgb, var(--pt-nav-text) 78%, var(--pt-awning-rail));
-  background: linear-gradient(165deg, var(--pt-awning-one), var(--pt-awning-rail) 85%);
-  color: var(--pt-nav-text);
-  border-right: var(--border-width) solid color-mix(in srgb, var(--pt-nav-text) 18%, transparent);
-}
-.pt-dashboard-page .sidebar .brand-name { color: var(--pt-nav-text); }
-.pt-dashboard-page .sidebar .brand-role,
-.pt-dashboard-page .sidebar .nav-group,
-.pt-dashboard-page .sidebar .logout { color: var(--pt-nav-muted); }
-.pt-dashboard-page .sidebar .nav-link { color: var(--pt-nav-text); }
-.pt-dashboard-page .sidebar .nav-link:hover,
-.pt-dashboard-page .sidebar .logout:hover {
-  color: var(--pt-nav-text);
-  background: color-mix(in srgb, var(--pt-nav-text) 10%, transparent);
-}
-.pt-dashboard-page .sidebar .nav-link.active,
-.pt-dashboard-page .sidebar .nav-link[aria-current="page"] {
-  color: var(--pt-nav-text);
-  background: color-mix(in srgb, var(--pt-nav-text) 16%, transparent);
-  box-shadow: inset 3px 0 var(--pt-awning-light);
-}
-.pt-dashboard-page .sidebar .nav-link:focus-visible,
-.pt-dashboard-page .sidebar .logout:focus-visible {
-  outline: 2px solid var(--pt-nav-text);
-  outline-offset: 2px;
-}
-.pt-dashboard-page .sidebar .side-foot { border-top-color: color-mix(in srgb, var(--pt-nav-text) 20%, transparent); }
-.pt-dashboard-page .dock-handle { background: var(--pt-awning-one); color: #F6FAFC; }
-.pt-dashboard-page .dock-handle:hover { background: var(--pt-awning-rail); }
 
 /* Thẻ thời tiết: số đo chính nổi bật, các thông số phụ cùng một nhóm. */
-.pt-weather {
-  display: grid; grid-template-columns: minmax(0, 1fr) auto;
-  align-items: center; gap: var(--space-4);
-  padding: var(--space-5); border: var(--border-width) solid var(--color-primary-border);
-  border-radius: var(--radius-md);
-  background: linear-gradient(115deg, var(--color-primary-tint), var(--color-surface));
-}
-.pt-weather__content { min-width: 0; }
-.pt-weather__eyebrow {
-  display: flex; align-items: center; gap: var(--space-2);
-  color: var(--color-text-soft); font-size: var(--font-size-sm);
-}
-.pt-weather__preview { padding: var(--space-0-5) var(--space-2); border-radius: var(--radius-pill); background: var(--color-warning-tint); color: var(--color-warning-ink); font-size: var(--font-size-xs); }
-.pt-weather__content p { margin: 0; color: var(--color-text-soft); }
-.pt-weather__temperature {
-  color: var(--color-primary-hover); font-family: var(--font-display);
-  font-size: var(--font-size-4xl); font-variant-numeric: var(--font-numeric);
-}
-
 /* Tên PT và mã nhân viên trên header. */
-.pt-dashboard-page .tb-user {
-  min-width: 0; max-width: 100%; margin-left: auto;
-  padding: var(--space-2) var(--space-4); gap: var(--space-3);
-  border: var(--border-width) solid color-mix(in srgb, var(--color-surface) 24%, transparent);
-  border-radius: var(--radius-pill);
-  background: linear-gradient(135deg,
-    color-mix(in srgb, var(--color-surface) 10%, transparent),
-    color-mix(in srgb, var(--pt-sky-top) 7%, transparent));
-  box-shadow: 0 5px 18px -15px rgba(26, 56, 62, .45);
-  backdrop-filter: blur(6px) saturate(1.04);
-  -webkit-backdrop-filter: blur(6px) saturate(1.04);
-  transition: transform var(--duration-slow), box-shadow var(--duration-slow);
-}
-.pt-dashboard-page .tb-user:hover {
-  transform: translateY(-2px);
-  box-shadow: 0 10px 22px -16px rgba(26, 56, 62, .55);
-  background: color-mix(in srgb, var(--color-surface) 14%, transparent);
-}
+/* Cụm tài khoản dùng kiểu chung ở common.css (.dock .tb-user) */
 .pt-user-avatar {
   position: relative; flex: none; display: grid; place-items: center;
-  width: var(--avatar-size-md); height: var(--avatar-size-md);
+  width: calc(var(--avatar-size-sm) + var(--space-2)); height: calc(var(--avatar-size-sm) + var(--space-2));
   border: var(--border-width-thick) solid var(--color-surface);
   border-radius: var(--radius-circle); outline: var(--border-width) solid var(--color-primary-border);
   background: linear-gradient(145deg, var(--color-primary), var(--color-primary-hover));
@@ -274,171 +206,6 @@
   .pt-dashboard-page .tb-user, .pt-user-avatar, .pt-info-popover { transition: none; }
 }
 
-/* Hero và thẻ thời tiết: một điểm nhấn trên trang, không thêm số liệu giả. */
-.pt-dashboard-page .pt-welcome {
-  position: relative;
-  isolation: isolate;
-  overflow: hidden;
-  grid-template-columns: minmax(0, 1fr) minmax(335px, .85fr);
-  align-items: center;
-  min-height: 190px;
-  gap: var(--space-5);
-  padding: var(--space-6);
-  border-color: color-mix(in srgb, var(--color-primary) 23%, transparent);
-  border-radius: var(--radius-lg);
-  background: linear-gradient(130deg, var(--pt-hero-start), var(--pt-hero-end));
-  color: var(--pt-hero-text);
-  box-shadow: var(--pt-card-shadow);
-  animation: pt-hero-enter 650ms var(--ease-out) both;
-}
-.pt-welcome::before {
-  content: "";
-  position: absolute;
-  z-index: 0;
-  top: -45%; left: -15%;
-  width: 60%; aspect-ratio: 1;
-  border-radius: var(--radius-circle);
-  background: radial-gradient(circle, var(--pt-hero-blob), transparent 65%);
-  animation: pt-hero-blob 12s ease-in-out infinite alternate;
-}
-.pt-welcome::after {
-  content: "";
-  position: absolute;
-  z-index: 0;
-  inset: 0;
-  opacity: .42;
-  background: radial-gradient(circle, color-mix(in srgb, var(--pt-hero-text) 12%, transparent) var(--border-width), transparent var(--border-width)) 0 0 / var(--space-5) var(--space-5);
-  -webkit-mask: linear-gradient(to right, transparent, black);
-  mask: linear-gradient(to right, transparent, black);
-}
-.pt-welcome__copy { position: relative; z-index: 2; min-width: 0; }
-.pt-welcome__copy h2 {
-  margin: 0;
-  color: var(--pt-hero-text);
-  font-family: var(--font-heading);
-  font-size: clamp(1.8rem, 2.5vw, 2.5rem);
-  line-height: var(--line-height-tight);
-  letter-spacing: -.025em;
-  overflow-wrap: normal;
-}
-.pt-welcome__name {
-  color: var(--pt-hero-text);
-  font-weight: 700;
-}
-.pt-welcome.is-weather-unavailable { grid-template-columns: minmax(0, 1fr); min-height: 150px; }
-
-/* Chuyển động thời tiết chỉ nằm trong khung chào, dưới chữ và thẻ dữ liệu. */
-.pt-welcome__ambient { position: absolute; z-index: 1; inset: 0; overflow: hidden; pointer-events: none; }
-.pt-welcome__ambient::before, .pt-welcome__ambient::after { content: ""; position: absolute; inset: -35%; opacity: .55; }
-.weather-sunny .pt-welcome__ambient::before,
-.weather-hot .pt-welcome__ambient::before {
-  inset: -75% -35% -75% 30%;
-  background: repeating-conic-gradient(from 0deg, rgba(255, 226, 139, .17) 0deg 13deg, transparent 13deg 29deg);
-  animation: pt-hero-sun 40s linear infinite;
-}
-.weather-sunny .pt-welcome__ambient::after,
-.weather-hot .pt-welcome__ambient::after {
-  inset: -45% -15% -45% 50%;
-  background: radial-gradient(circle, rgba(255, 231, 154, .46), transparent 60%);
-  animation: pt-hero-glow 7s ease-in-out infinite alternate;
-}
-.weather-hot .pt-welcome__ambient::after { background: radial-gradient(circle, rgba(255, 139, 80, .40), transparent 60%); }
-.weather-cloudy .pt-welcome__ambient::before,
-.weather-cloudy .pt-welcome__ambient::after {
-  inset: 10% -35%;
-  background: radial-gradient(ellipse at 25% 55%, rgba(255, 255, 255, .65) 0 14%, transparent 34%),
-              radial-gradient(ellipse at 68% 40%, rgba(255, 255, 255, .5) 0 16%, transparent 36%);
-  animation: pt-hero-cloud 15s ease-in-out infinite alternate;
-}
-.weather-cloudy .pt-welcome__ambient::after { opacity: .32; animation-duration: 23s; animation-direction: alternate-reverse; }
-.weather-rain .pt-welcome__ambient::before,
-.weather-storm .pt-welcome__ambient::before {
-  inset: -100% 0;
-  opacity: .36;
-  background: repeating-linear-gradient(105deg, transparent 0 34px, rgba(255, 255, 255, .68) 35px 36px, transparent 37px 66px);
-  background-size: 78px 140px;
-  animation: pt-hero-rain 1.5s linear infinite;
-}
-.weather-storm .pt-welcome__ambient::before { opacity: .48; animation-duration: .8s; }
-.weather-storm .pt-welcome__ambient::after {
-  inset: 0; opacity: 0; background: rgba(239, 249, 255, .45);
-  animation: pt-hero-lightning 8s linear infinite;
-}
-.weather-snow .pt-welcome__ambient::before,
-.weather-snow .pt-welcome__ambient::after {
-  inset: -100% 0;
-  background: radial-gradient(circle, rgba(255,255,255,.9) 0 2px, transparent 3px) 0 0 / 62px 75px,
-              radial-gradient(circle, rgba(255,255,255,.7) 0 1px, transparent 2px) 23px 30px / 42px 52px;
-  animation: pt-hero-snow 13s linear infinite;
-}
-.weather-snow .pt-welcome__ambient::after { opacity: .38; animation-duration: 19s; }
-.weather-wind .pt-welcome__ambient::before,
-.weather-wind .pt-welcome__ambient::after {
-  inset: 0 -50%;
-  background: repeating-linear-gradient(0deg, transparent 0 26px, rgba(255,255,255,.4) 27px 28px, transparent 29px 54px);
-  -webkit-mask: linear-gradient(90deg, transparent 3%, black 45%, transparent 95%);
-  mask: linear-gradient(90deg, transparent 3%, black 45%, transparent 95%);
-  animation: pt-hero-wind 5s linear infinite;
-}
-.weather-wind .pt-welcome__ambient::after { opacity: .25; animation-duration: 8s; }
-.weather-night .pt-welcome__ambient::before,
-.weather-night .pt-welcome__ambient::after {
-  inset: 0;
-  background: radial-gradient(circle, rgba(255,247,206,.9) 0 1px, transparent 2px) 0 0 / 53px 43px,
-              radial-gradient(circle, rgba(255,247,206,.55) 0 1px, transparent 2px) 22px 14px / 79px 67px;
-  animation: pt-hero-stars 4s ease-in-out infinite alternate;
-}
-.weather-night .pt-welcome__ambient::after { opacity: .25; animation-delay: -2s; }
-
-.pt-dashboard-page .pt-weather {
-  position: relative;
-  z-index: 2;
-  display: grid;
-  grid-template-columns: minmax(0, 1fr) auto;
-  gap: var(--space-3) var(--space-4);
-  align-items: center;
-  padding: var(--space-5);
-  border: var(--border-width) solid color-mix(in srgb, var(--color-primary) 34%, var(--pt-weather-border));
-  border-radius: var(--radius-lg);
-  background: color-mix(in srgb, var(--pt-hero-end) 79%, var(--color-primary));
-  color: var(--pt-hero-text);
-  box-shadow: var(--pt-card-shadow);
-  backdrop-filter: blur(18px);
-  -webkit-backdrop-filter: blur(18px);
-  animation: pt-weather-enter 680ms var(--ease-out) 190ms both;
-}
-.pt-weather__content { min-width: 0; }
-.pt-weather__eyebrow { flex-wrap: wrap; color: var(--pt-hero-text); font-size: var(--font-size-sm); font-weight: var(--font-weight-semibold); }
-.pt-weather__content .pt-weather__condition { margin: var(--space-1) 0 0; color: var(--pt-hero-text); font-size: var(--font-size-sm); }
-.pt-weather__temperature {
-  grid-column: 2;
-  color: var(--color-primary);
-  font-size: clamp(2rem, 3.4vw, 3rem);
-  line-height: var(--line-height-none);
-}
-.weather-night .pt-weather__temperature, .weather-storm .pt-weather__temperature {
-  color: var(--color-primary-border);
-}
-.pt-weather__details {
-  grid-column: 1 / -1;
-  display: grid;
-  grid-template-columns: repeat(3, minmax(0, 1fr));
-  gap: var(--space-2);
-  margin: 0;
-  padding-top: var(--space-3);
-  border-top: var(--border-width) solid color-mix(in srgb, var(--pt-hero-text) 20%, transparent);
-}
-.pt-weather__details > div { min-width: 0; }
-.pt-weather__details dt { color: var(--pt-hero-muted); font-size: max(13px, .8125rem); line-height: 1.5; }
-.pt-weather__details dd { margin: var(--space-1) 0 0; color: var(--pt-hero-text); font-size: var(--font-size-base); font-weight: var(--font-weight-semibold); font-variant-numeric: tabular-nums; }
-.pt-dashboard-page .pt-weather__advice {
-  grid-column: 1 / -1;
-  margin: 0;
-  color: var(--pt-hero-text);
-  font-size: var(--font-size-sm);
-  line-height: var(--line-height-normal);
-}
-
 /* Các card dưới hero cùng đọc token màu thời tiết; item có độ nổi vừa phải. */
 .pt-dashboard-page .pt-alerts,
 .pt-dashboard-page .pt-schedule,
@@ -452,64 +219,24 @@
   border-left: var(--border-width-accent) solid var(--color-primary-border);
   transition: transform var(--duration-slow) var(--ease-out), box-shadow var(--duration-slow) var(--ease-out);
 }
-/* Doodle dưới khối đánh giá: thoại ở trong luồng, luôn cách đầu nhân vật 45px. */
+/* SVG dưới khối đánh giá: giữ tỉ lệ gốc, lời thoại và animation nằm trong file SVG. */
 .pt-dashboard-doodles {
-  display: grid;
-  grid-template-columns: minmax(0, .9fr) minmax(0, 1.1fr);
-  align-items: end;
-  gap: var(--space-2);
   min-width: 0;
   width: 100%;
-  max-width: 440px;
+  max-width: calc(var(--space-8) * 13);
   margin-inline: auto;
   padding: var(--space-2) var(--space-2) var(--space-4);
 }
 .pt-dashboard-doodles img {
   display: block;
   width: 100%;
-  height: clamp(150px, 18vw, 220px);
-  object-fit: contain;
-  object-position: bottom;
+  height: auto;
   user-select: none;
-}
-.pt-dashboard-doodles__trainer {
-  display: grid;
-  justify-items: center;
-  gap: 45px;
-  min-width: 0;
-}
-.pt-dashboard-doodles__speech {
-  width: 100%;
-  max-width: 210px;
-  box-sizing: border-box;
-  margin: 0;
-  padding: var(--space-2);
-  border: var(--border-width) solid rgba(255, 255, 255, .62);
-  border-radius: var(--radius-md);
-  background: rgba(32, 62, 71, .82);
-  color: #fff;
-  font-size: max(13px, .8125rem);
-  line-height: var(--line-height-normal);
-  text-align: center;
-  box-shadow: 0 7px 18px -12px rgba(26, 56, 62, .5);
-  backdrop-filter: blur(8px);
-  -webkit-backdrop-filter: blur(8px);
-}
-.pt-dashboard-doodles__speech::after {
-  display: none;
 }
 .pt-attention-item { border-left-color: var(--color-warning); }
 .pt-attention-item:hover, .pt-client-item:hover, .pt-schedule-session:hover {
   box-shadow: var(--pt-card-shadow);
 }
-/* Mưa nền nhẹ hơn mưa trong hero để không tranh sự chú ý với dữ liệu. */
-.pt-dashboard-page.weather-rain .pt-weather-effects { opacity: .45; }
-.pt-dashboard-page.weather-storm .pt-weather-effects { opacity: .65; }
-/* Header kính trong vẫn cần chữ sáng khi nền thời tiết chuyển sang tối. */
-.pt-dashboard-page.weather-night .topbar,
-.pt-dashboard-page.weather-storm .topbar { color: var(--pt-hero-text); }
-.pt-dashboard-page.weather-night .tb-left p,
-.pt-dashboard-page.weather-storm .tb-left p { color: var(--pt-hero-muted); }
 .pt-person-avatar {
   flex: none;
   display: grid; place-items: center;
@@ -535,18 +262,7 @@
   outline: var(--focus-outline-width) solid var(--color-primary);
   outline-offset: var(--focus-outline-offset);
 }
-@keyframes pt-hero-enter { from { opacity: 0; transform: translateY(var(--space-5)); } to { opacity: 1; transform: none; } }
-@keyframes pt-weather-enter { from { opacity: 0; transform: translateX(var(--space-5)); } to { opacity: 1; transform: none; } }
 @keyframes pt-fade-up { from { opacity: 0; transform: translateY(var(--space-3)); } to { opacity: 1; transform: none; } }
-@keyframes pt-hero-blob { to { transform: translate(12%, 7%) scale(1.12); } }
-@keyframes pt-hero-sun { to { transform: rotate(360deg); } }
-@keyframes pt-hero-glow { to { opacity: .9; transform: scale(1.15); } }
-@keyframes pt-hero-cloud { to { transform: translateX(16%); } }
-@keyframes pt-hero-rain { to { transform: translateY(140px); } }
-@keyframes pt-hero-lightning { 0%, 91%, 93%, 100% { opacity: 0; } 92%, 94% { opacity: .7; } }
-@keyframes pt-hero-snow { to { transform: translateY(50%); } }
-@keyframes pt-hero-wind { to { transform: translateX(30%); } }
-@keyframes pt-hero-stars { to { opacity: .3; } }
 
 @media (max-width: 1080px) {
   .pt-dashboard-page .pt-welcome { grid-template-columns: minmax(0, 1fr); min-height: 0; }
@@ -560,7 +276,6 @@
   .pt-weather__details { grid-template-columns: repeat(2, minmax(0, 1fr)); }
   .pt-attention-heading { flex-wrap: wrap; }
   .pt-session-main { flex-wrap: wrap; row-gap: var(--space-1); }
-  .pt-dashboard-doodles { gap: var(--space-3); }
 }
 @media (prefers-reduced-motion: reduce) {
   .pt-welcome, .pt-welcome::before, .pt-welcome__ambient::before,
