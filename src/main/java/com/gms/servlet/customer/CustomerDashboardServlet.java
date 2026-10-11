@@ -27,6 +27,9 @@ public class CustomerDashboardServlet extends HttpServlet {
 
     private static final String VIEW_NAME = "customer/dashboard";
 
+    /** Cờ trong session: màn chuỗi đã hiện trong lần đăng nhập này. */
+    private static final String STREAK_INTRO_SHOWN = "streakIntroShown";
+
     private final CustomerDashboardService dashboardService = new CustomerDashboardService();
     private final WeatherService weatherService = new WeatherService();
 
@@ -49,6 +52,15 @@ public class CustomerDashboardServlet extends HttpServlet {
             request.setAttribute("dashboardError", result.getMessage());
         } else {
             request.setAttribute("dashboard", result.getData());
+
+            // Service quyết định chuỗi có đủ dài không; Servlet chỉ giữ việc "một lần mỗi lần đăng nhập"
+            // (đăng xuất thì session mất, cờ mất theo).
+            boolean eligible = result.getData().getAttendance().isStreakIntroEligible();
+            boolean notShownYet = session.getAttribute(STREAK_INTRO_SHOWN) == null;
+            if (eligible && notShownYet) {
+                request.setAttribute("showStreakIntro", true);
+                session.setAttribute(STREAK_INTRO_SHOWN, Boolean.TRUE);
+            }
         }
 
         request.setAttribute("activeSidebar", "dashboard");

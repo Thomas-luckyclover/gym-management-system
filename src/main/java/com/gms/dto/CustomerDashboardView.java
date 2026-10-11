@@ -2,6 +2,7 @@ package com.gms.dto;
 
 import com.gms.util.DateTimeUtil;
 import java.time.LocalDate;
+import java.time.LocalDateTime;
 import java.time.LocalTime;
 import java.time.temporal.ChronoUnit;
 import java.util.List;
@@ -35,6 +36,15 @@ public class CustomerDashboardView {
 
     private final List<BannerItem> banners;
 
+    // ===== Chuyên cần (mở rộng ngoài SRS, tính trong CustomerDashboardService) =====
+
+    private final AttendanceView attendance;
+
+    // ===== Thông báo cho chuông (Notifications + NotificationRecipients) =====
+
+    private final List<NotificationRow> notifications;
+    private final int unreadNotificationCount;
+
     // ===== Constructor =====
 
     public CustomerDashboardView(
@@ -45,7 +55,10 @@ public class CustomerDashboardView {
             boolean canUseGym,
             List<SubscriptionRow> subscriptions,
             List<UpcomingSessionRow> upcomingSessions,
-            List<BannerItem> banners) {
+            List<BannerItem> banners,
+            AttendanceView attendance,
+            List<NotificationRow> notifications,
+            int unreadNotificationCount) {
 
         this.fullName = fullName;
         this.avatar = avatar;
@@ -55,6 +68,9 @@ public class CustomerDashboardView {
         this.subscriptions = subscriptions;
         this.upcomingSessions = upcomingSessions;
         this.banners = banners;
+        this.attendance = attendance;
+        this.notifications = notifications;
+        this.unreadNotificationCount = unreadNotificationCount;
     }
 
     // ===== Getters =====
@@ -67,6 +83,9 @@ public class CustomerDashboardView {
     public List<SubscriptionRow> getSubscriptions() { return subscriptions; }
     public List<UpcomingSessionRow> getUpcomingSessions() { return upcomingSessions; }
     public List<BannerItem> getBanners() { return banners; }
+    public AttendanceView getAttendance() { return attendance; }
+    public List<NotificationRow> getNotifications() { return notifications; }
+    public int getUnreadNotificationCount() { return unreadNotificationCount; }
 
     // ===== Helper methods cho JSP =====
 
@@ -110,6 +129,42 @@ public class CustomerDashboardView {
             }
         }
         return null;
+    }
+
+    /**
+     * Gói tập nối tiếp (DBR-52): Membership/DayPass có ngày bắt đầu sau hôm nay.
+     * @return gói nối tiếp sớm nhất, hoặc null nếu chưa gia hạn.
+     */
+    public SubscriptionRow getNextMembership() {
+        if (subscriptions == null) return null;
+        for (SubscriptionRow sub : subscriptions) {
+            if (!sub.isPtPackage() && sub.isPending()) {
+                return sub;
+            }
+        }
+        return null;
+    }
+
+    /** Gói PT đang dùng đầu tiên (Active), hoặc null. */
+    public SubscriptionRow getActivePtPackage() {
+        if (subscriptions == null) return null;
+        for (SubscriptionRow sub : subscriptions) {
+            if (sub.isPtPackage() && "Active".equals(sub.getStatus())) {
+                return sub;
+            }
+        }
+        return null;
+    }
+
+    /** Buổi PT sắp tới gần nhất, hoặc null. */
+    public UpcomingSessionRow getNextSession() {
+        return upcomingSessions == null || upcomingSessions.isEmpty() ? null : upcomingSessions.get(0);
+    }
+
+    /** Số hiện trên chuông: cảnh báo đang có + thông báo chưa đọc. */
+    public int getBellCount() {
+        int banner = banners == null ? 0 : banners.size();
+        return banner + unreadNotificationCount;
     }
 
     /**
@@ -202,6 +257,30 @@ public class CustomerDashboardView {
             return Math.max(days, 0);
         }
 
+        /** Tổng số ngày của gói (tính cả ngày đầu và ngày cuối, GBR-03). */
+        public long getTotalDays() {
+            if (startDate == null || endDate == null) return 0;
+            return ChronoUnit.DAYS.between(startDate, endDate) + 1;
+        }
+
+        /**
+         * Phần trăm thời hạn đã dùng, 0..100, cho thanh tiến độ.
+         * Gói chưa bắt đầu trả về 0; gói đã quá hạn trả về 100.
+         */
+        public int getElapsedPercent() {
+            long total = getTotalDays();
+            if (total <= 0) return 0;
+            long used = ChronoUnit.DAYS.between(startDate, DateTimeUtil.today()) + 1;
+            long clamped = Math.max(0, Math.min(total, used));
+            return (int) Math.round(clamped * 100.0 / total);
+        }
+
+        /** Phần trăm buổi PT đã tập (đã dùng / tổng), 0..100. */
+        public int getUsedPercent() {
+            if (totalSessions == null || totalSessions <= 0 || usedSessions == null) return 0;
+            return (int) Math.min(100, Math.round(usedSessions * 100.0 / totalSessions));
+        }
+
         /**
          * Nhãn loại gói tiếng Việt (GBR-01).
          */
@@ -275,6 +354,34 @@ public class CustomerDashboardView {
         public String getPtName() { return ptName; }
         public String getPackageName() { return packageName; }
         public boolean isMissingMembership() { return missingMembership; }
+
+        /** Thứ trong tuần, viết hoa: "THỨ TƯ", "CHỦ NHẬT". */
+        public String getWeekdayLabel() {
+            if (slotDate == null) return "";
+            switch (slotDate.getDayOfWeek()) {
+                case MONDAY:    return "THỨ HAI";
+                case TUESDAY:   return "THỨ BA";
+                case WEDNESDAY: return "THỨ TƯ";
+                case THURSDAY:  return "THỨ NĂM";
+                case FRIDAY:    return "THỨ SÁU";
+                case SATURDAY:  return "THỨ BẢY";
+                default:        return "CHỦ NHẬT";
+            }
+        }
+
+        /** Ngày trong tháng, VD 14. */
+        public int getDayOfMonth() {
+            return slotDate == null ? 0 : slotDate.getDayOfMonth();
+        }
+
+        /** "Hôm nay", "Ngày mai" hoặc "Còn N ngày". */
+        public String getRelativeLabel() {
+            if (slotDate == null) return "";
+            long days = ChronoUnit.DAYS.between(DateTimeUtil.today(), slotDate);
+            if (days <= 0) return "Hôm nay";
+            if (days == 1) return "Ngày mai";
+            return "Còn " + days + " ngày";
+        }
     }
 
     /**
@@ -296,5 +403,98 @@ public class CustomerDashboardView {
         public String getLevel() { return level; }
         public String getMessage() { return message; }
         public String getType() { return type; }
+    }
+
+    /**
+     * Chuyên cần của tháng hiện tại (mở rộng ngoài SRS).
+     * Mọi con số do CustomerDashboardService tính sẵn; JSP chỉ in ra.
+     */
+    public static class AttendanceView {
+        private final int streakDays;
+        private final int recordStreak;
+        private final int daysToBeatRecord;
+        private final int thisMonthCount;
+        private final int lastMonthCount;
+        private final boolean checkedInToday;
+        /** Service đặt true khi chuỗi đủ dài để chào bằng màn "chuỗi tập"; Servlet chỉ thêm điều kiện "một lần mỗi lần đăng nhập". */
+        private final boolean streakIntroEligible;
+        private final String monthLabel;
+        private final int leadingBlanks;
+        private final List<CalendarCell> cells;
+
+        public AttendanceView(int streakDays, int recordStreak, int daysToBeatRecord,
+                int thisMonthCount, int lastMonthCount, boolean checkedInToday,
+                boolean streakIntroEligible, String monthLabel, int leadingBlanks, List<CalendarCell> cells) {
+            this.streakDays = streakDays;
+            this.recordStreak = recordStreak;
+            this.daysToBeatRecord = daysToBeatRecord;
+            this.thisMonthCount = thisMonthCount;
+            this.lastMonthCount = lastMonthCount;
+            this.checkedInToday = checkedInToday;
+            this.streakIntroEligible = streakIntroEligible;
+            this.monthLabel = monthLabel;
+            this.leadingBlanks = leadingBlanks;
+            this.cells = cells;
+        }
+
+        public int getStreakDays() { return streakDays; }
+        public int getRecordStreak() { return recordStreak; }
+        public int getDaysToBeatRecord() { return daysToBeatRecord; }
+        public int getThisMonthCount() { return thisMonthCount; }
+        public int getLastMonthCount() { return lastMonthCount; }
+        public boolean isCheckedInToday() { return checkedInToday; }
+        public boolean isStreakIntroEligible() { return streakIntroEligible; }
+        public String getMonthLabel() { return monthLabel; }
+        public int getLeadingBlanks() { return leadingBlanks; }
+        public List<CalendarCell> getCells() { return cells; }
+
+        /** Đang giữ kỷ lục: chuỗi hiện tại bằng kỷ lục và > 0. */
+        public boolean isRecordHolder() { return streakDays > 0 && daysToBeatRecord == 0; }
+    }
+
+    /**
+     * Một ô ngày trong lịch tháng.
+     * state: checked (đã check-in) | closed (phòng đóng cửa / bảo lưu) | missed | future.
+     */
+    public static class CalendarCell {
+        private final int day;
+        private final String state;
+        private final boolean today;
+
+        public CalendarCell(int day, String state, boolean today) {
+            this.day = day;
+            this.state = state;
+            this.today = today;
+        }
+
+        public int getDay() { return day; }
+        public String getState() { return state; }
+        public boolean isToday() { return today; }
+    }
+
+    /**
+     * Một thông báo trong chuông (bảng Notifications, GBR-34: có trạng thái đã đọc).
+     */
+    public static class NotificationRow {
+        private final int notificationId;
+        private final String title;
+        private final String content;
+        private final LocalDateTime sentAt;
+        private final boolean read;
+
+        public NotificationRow(int notificationId, String title, String content,
+                LocalDateTime sentAt, boolean read) {
+            this.notificationId = notificationId;
+            this.title = title;
+            this.content = content;
+            this.sentAt = sentAt;
+            this.read = read;
+        }
+
+        public int getNotificationId() { return notificationId; }
+        public String getTitle() { return title; }
+        public String getContent() { return content; }
+        public LocalDateTime getSentAt() { return sentAt; }
+        public boolean isRead() { return read; }
     }
 }

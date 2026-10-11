@@ -1,5 +1,6 @@
 package com.gms.dao;
 
+import com.gms.dto.CustomerDashboardView.NotificationRow;
 import com.gms.dto.CustomerDashboardView.SubscriptionRow;
 import com.gms.dto.CustomerDashboardView.UpcomingSessionRow;
 import com.gms.util.DBContext;
@@ -12,7 +13,9 @@ import java.sql.SQLException;
 import java.time.LocalDate;
 import java.time.LocalDateTime;
 import java.util.ArrayList;
+import java.util.HashSet;
 import java.util.List;
+import java.util.Set;
 
 /**
  * Truy vấn dữ liệu cho Customer Dashboard (UC-41, SRS 9.1.1).
@@ -336,5 +339,136 @@ public class CustomerDashboardDAO {
             }
         }
         return null;
+    }
+
+    // =========================================================
+    // 7. Chuyên cần: ngày check-in, ngày đóng cửa, ngày bảo lưu
+    // =========================================================
+
+    /**
+     * Mọi ngày khách có check-in, từ trước đến giờ (mỗi ngày chỉ tính một lần).
+     * CheckIns chỉ gắn với SubscriptionId nên phải JOIN sang Subscriptions để biết khách.
+     * Gói đôi: chỉ tính người đứng tên, vì check-in ghi trên gói của người đó.
+     */
+    public Set<LocalDate> findCheckInDays(int customerId) throws SQLException {
+        String sql = "SELECT DISTINCT CAST(c.CheckedInAt AS DATE) AS CheckInDay "
+                + "FROM CheckIns c "
+                + "JOIN Subscriptions sub ON sub.SubscriptionId = c.SubscriptionId "
+                + "WHERE sub.CustomerId = ?";
+
+        Set<LocalDate> days = new HashSet<>();
+        try (Connection conn = DBContext.getConnection();
+                PreparedStatement stmt = conn.prepareStatement(sql)) {
+            stmt.setInt(1, customerId);
+            try (ResultSet rs = stmt.executeQuery()) {
+                while (rs.next()) {
+                    days.add(rs.getDate("CheckInDay").toLocalDate());
+                }
+            }
+        }
+        return days;
+    }
+
+    /**
+     * Ngày phòng tập nghỉ cả ngày trong khoảng [from, to] (BR-12).
+     * Những ngày này không làm đứt chuỗi tập.
+     */
+    public Set<LocalDate> findClosedDays(LocalDate from, LocalDate to) throws SQLException {
+        String sql = "SELECT ApplyDate FROM OperatingHourExceptions "
+                + "WHERE IsClosedAllDay = 1 AND ApplyDate BETWEEN ? AND ?";
+
+        Set<LocalDate> days = new HashSet<>();
+        try (Connection conn = DBContext.getConnection();
+                PreparedStatement stmt = conn.prepareStatement(sql)) {
+            stmt.setDate(1, Date.valueOf(from));
+            stmt.setDate(2, Date.valueOf(to));
+            try (ResultSet rs = stmt.executeQuery()) {
+                while (rs.next()) {
+                    days.add(rs.getDate("ApplyDate").toLocalDate());
+                }
+            }
+        }
+        return days;
+    }
+
+    /**
+     * Ngày khách đang bảo lưu trong khoảng [from, to] (DBR-51).
+     * Mỗi dòng FreezeRecords là một khoảng ngày; hàm trải ra từng ngày rồi cắt theo [from, to].
+     */
+    public Set<LocalDate> findFrozenDays(int customerId, LocalDate from, LocalDate to)
+            throws SQLException {
+
+        String sql = "SELECT f.StartDate, COALESCE(f.ActualEndDate, f.PlannedEndDate) AS EndDate "
+                + "FROM FreezeRecords f "
+                + "JOIN Subscriptions sub ON sub.SubscriptionId = f.SubscriptionId "
+                + "WHERE sub.CustomerId = ?";
+
+        Set<LocalDate> days = new HashSet<>();
+        try (Connection conn = DBContext.getConnection();
+                PreparedStatement stmt = conn.prepareStatement(sql)) {
+            stmt.setInt(1, customerId);
+            try (ResultSet rs = stmt.executeQuery()) {
+                while (rs.next()) {
+                    LocalDate start = rs.getDate("StartDate").toLocalDate();
+                    LocalDate end = rs.getDate("EndDate").toLocalDate();
+                    LocalDate d = start.isBefore(from) ? from : start;
+                    LocalDate last = end.isAfter(to) ? to : end;
+                    while (!d.isAfter(last)) {
+                        days.add(d);
+                        d = d.plusDays(1);
+                    }
+                }
+            }
+        }
+        return days;
+    }
+
+    // =========================================================
+    // 8. Thông báo cho chuông (GBR-34: trạng thái đã đọc từng người)
+    // =========================================================
+
+    /** Các thông báo đã gửi gần nhất của tài khoản, mới nhất trước. */
+    public List<NotificationRow> findRecentNotifications(int accountId, int limit)
+            throws SQLException {
+
+        String sql = "SELECT TOP (?) n.NotificationId, n.Title, n.Content, n.SentAt, nr.ReadAt "
+                + "FROM NotificationRecipients nr "
+                + "JOIN Notifications n ON n.NotificationId = nr.NotificationId "
+                + "WHERE nr.AccountId = ? AND n.SentAt IS NOT NULL "
+                + "ORDER BY n.SentAt DESC";
+
+        List<NotificationRow> rows = new ArrayList<>();
+        try (Connection conn = DBContext.getConnection();
+                PreparedStatement stmt = conn.prepareStatement(sql)) {
+            stmt.setInt(1, limit);
+            stmt.setInt(2, accountId);
+            try (ResultSet rs = stmt.executeQuery()) {
+                while (rs.next()) {
+                    java.sql.Timestamp sent = rs.getTimestamp("SentAt");
+                    rows.add(new NotificationRow(
+                            rs.getInt("NotificationId"),
+                            rs.getString("Title"),
+                            rs.getString("Content"),
+                            sent != null ? sent.toLocalDateTime() : null,
+                            rs.getTimestamp("ReadAt") != null));
+                }
+            }
+        }
+        return rows;
+    }
+
+    /** Số thông báo đã gửi mà tài khoản chưa đọc. */
+    public int countUnreadNotifications(int accountId) throws SQLException {
+        String sql = "SELECT COUNT(*) FROM NotificationRecipients nr "
+                + "JOIN Notifications n ON n.NotificationId = nr.NotificationId "
+                + "WHERE nr.AccountId = ? AND nr.ReadAt IS NULL AND n.SentAt IS NOT NULL";
+
+        try (Connection conn = DBContext.getConnection();
+                PreparedStatement stmt = conn.prepareStatement(sql)) {
+            stmt.setInt(1, accountId);
+            try (ResultSet rs = stmt.executeQuery()) {
+                return rs.next() ? rs.getInt(1) : 0;
+            }
+        }
     }
 }
