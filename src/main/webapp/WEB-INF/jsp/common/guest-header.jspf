@@ -25,6 +25,7 @@
       <a href="${ctx}/#doi-ngu">Huấn luyện viên</a>
       <a href="${ctx}/blog" ${activeNav == 'blog' ? 'aria-current="page"' : ''}>Blog</a>
       <a href="${ctx}/#faq">Hỏi đáp</a>
+      <a href="${ctx}/about" ${activeNav == 'about' ? 'aria-current="page"' : ''}>Về chúng tôi</a>
     </nav>
 
     <div class="header-actions">
@@ -56,6 +57,7 @@
     <a href="${ctx}/#doi-ngu">Huấn luyện viên</a>
     <a href="${ctx}/blog">Blog</a>
     <a href="${ctx}/#faq">Hỏi đáp</a>
+    <a href="${ctx}/about">Về chúng tôi</a>
     <c:choose>
       <c:when test="${not empty sessionScope.accountId}">
         <form action="${ctx}/logout" method="post">

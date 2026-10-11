@@ -36,6 +36,7 @@ public class AuthFilter implements Filter {
             "/login",
             "/register",
             "/forgot-password",
+            "/about",
             "/favicon.ico"
     );
 
