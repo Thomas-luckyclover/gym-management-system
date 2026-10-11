@@ -1,0 +1,869 @@
+/* =====================================================================
+   Package Selection — màn Mua gói của Customer (SRS 7.1.1)
+   Chỉ dùng token trong tokens.css. Hook JS (package-selection.js):
+   [data-dialog-target], [data-dialog-close], input[name="type"] trong #packageFilterForm.
+   ===================================================================== */
+.package-selection-page .tb-subtitle {
+  margin: 0.35rem 0 0;
+  color: var(--color-text-soft);
+  font-size: var(--font-size-sm);
+}
+
+.package-selection {
+  display: grid;
+  gap: var(--space-6);
+  /* Căn giữa khối nội dung: .customer-dashboard-page .content chỉ đặt max-width nên mặc định bị lệch trái. */
+  margin-inline: auto;
+}
+
+/* Khoảng cách dọc đã do gap của lưới quyết định; bỏ margin-top mà .dock .content > * + * chèn thêm. */
+.dock .package-selection > * + * {
+  margin-top: 0;
+}
+
+/* ---------- Khu 1: thanh tìm kiếm + sắp xếp ---------- */
+.package-toolbar {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: var(--space-3);
+  padding: var(--space-3);
+  border: var(--border-width) solid var(--color-border);
+  border-radius: var(--radius-md);
+  background: var(--color-surface);
+  box-shadow: var(--shadow-card);
+}
+
+.package-toolbar__search {
+  position: relative;
+  flex: 1 1 260px;
+}
+
+.package-toolbar__search i {
+  position: absolute;
+  top: 50%;
+  left: var(--space-3);
+  transform: translateY(-50%);
+  color: var(--color-text-muted);
+}
+
+.package-toolbar__search input,
+.package-toolbar__sort select {
+  width: 100%;
+  padding: var(--space-2-5) var(--space-3);
+  border: var(--border-width) solid var(--color-border-strong);
+  border-radius: var(--radius-sm);
+  background: var(--color-surface);
+  color: var(--color-text);
+  font-size: var(--font-size-md);
+}
+
+.package-toolbar__search input {
+  padding-left: var(--space-8);
+}
+
+.package-toolbar__sort {
+  display: flex;
+  align-items: center;
+  gap: var(--space-2);
+  color: var(--color-text-soft);
+  font-size: var(--font-size-sm);
+}
+
+.package-toolbar__sort select {
+  width: auto;
+}
+
+.package-toolbar .btn,
+.package-card .btn,
+.package-filters .btn,
+.package-dialog .btn {
+  border-radius: var(--radius-sm);
+}
+
+/* Nút mở bộ lọc chỉ có trên điện thoại */
+.package-toolbar__toggle {
+  display: none;
+}
+
+/* ---------- Bố cục 2 cột: cột lọc + kết quả ---------- */
+.package-body {
+  display: grid;
+  grid-template-columns: 290px minmax(0, 1fr);
+  gap: var(--space-6);
+  align-items: start;
+}
+
+/* ---------- Khu 2: cột bộ lọc ---------- */
+.package-filters {
+  position: sticky;
+  top: calc(var(--space-10) + var(--space-5));
+  padding: var(--space-5);
+  border: var(--border-width) solid var(--color-border);
+  border-radius: var(--radius-md);
+  background: var(--color-surface);
+  box-shadow: var(--shadow-card);
+}
+
+.package-filters__head {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding-bottom: var(--space-4);
+  border-bottom: var(--border-width) solid var(--color-border);
+  font-size: var(--font-size-lg);
+}
+
+.package-filters__clear {
+  border: 0;
+  background: none;
+  color: var(--color-primary-hover);
+  font-size: var(--font-size-sm);
+  cursor: pointer;
+}
+
+/* Mỗi nhóm lọc cách nhau bằng đường kẻ mảnh cho dịu mắt. */
+.filter-group {
+  display: grid;
+  gap: var(--space-1);
+  margin: 0;
+  padding: var(--space-4) 0;
+  border: 0;
+  border-bottom: var(--border-width) solid var(--color-border);
+}
+
+.filter-group:last-child {
+  padding-bottom: 0;
+  border-bottom: 0;
+}
+
+.filter-group legend {
+  float: left;
+  width: 100%;
+  margin-bottom: var(--space-2);
+  padding: 0;
+  color: var(--color-text-muted);
+  font-size: var(--font-size-xs);
+  font-weight: var(--font-weight-bold);
+  letter-spacing: var(--letter-spacing-wide);
+  text-transform: uppercase;
+}
+
+.filter-group legend + * {
+  clear: both;
+}
+
+/* Lựa chọn lọc: mỗi hàng có ô chọn thật (tròn cho loại gói, vuông cho các nhóm còn lại), cả hàng là vùng bấm. */
+.filter-chip {
+  position: relative;
+  cursor: pointer;
+}
+
+.filter-chip input {
+  position: absolute;
+  opacity: 0;
+  inset: 0;
+  cursor: pointer;
+}
+
+.filter-chip span {
+  display: flex;
+  align-items: center;
+  gap: var(--space-3);
+  padding: var(--space-2) var(--space-3);
+  border-radius: var(--radius-sm);
+  color: var(--color-text);
+  font-size: var(--font-size-sm);
+  font-weight: var(--font-weight-medium);
+  white-space: nowrap; /* nhãn lọc luôn 1 dòng */
+  transition: background var(--duration-base) var(--ease-standard);
+}
+
+.filter-chip span::before {
+  content: "";
+  flex: 0 0 18px;
+  width: 18px;
+  height: 18px;
+  box-sizing: border-box;
+  border: var(--border-width-thick) solid var(--color-border-strong);
+  border-radius: var(--radius-xs);
+  background: var(--color-surface);
+}
+
+.filter-chip input[type="radio"] + span::before {
+  border-radius: var(--radius-circle);
+}
+
+.filter-chip small {
+  margin-left: auto;
+  color: var(--color-text-muted);
+  font-size: var(--font-size-xs);
+  font-weight: var(--font-weight-regular);
+}
+
+.filter-chip:hover span {
+  background: var(--color-surface-hover);
+}
+
+.filter-chip input:checked + span {
+  font-weight: var(--font-weight-semibold);
+}
+
+.filter-chip input:checked + span::before {
+  border-color: var(--color-primary);
+  background: var(--color-primary);
+}
+
+/* Dấu tick (SVG nhúng, không phụ thuộc icon font) */
+.filter-chip input[type="checkbox"]:checked + span::before {
+  background: var(--color-primary) url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 16 16'%3E%3Cpath d='M3.5 8.5l3 3 6-6.5' fill='none' stroke='white' stroke-width='2.2' stroke-linecap='round' stroke-linejoin='round'/%3E%3C/svg%3E") center / 12px no-repeat;
+}
+
+.filter-chip input[type="radio"]:checked + span::before {
+  background: radial-gradient(circle, var(--color-surface) 0 3px, var(--color-primary) 3.5px);
+}
+
+.filter-chip input:focus-visible + span {
+  outline: var(--focus-outline-width) solid var(--color-primary);
+  outline-offset: var(--focus-outline-offset);
+}
+
+/* ---------- Khoảng giá: 2 thanh kéo chồng lên nhau trên 1 đường ray ---------- */
+#priceFilter {
+  display: grid;
+}
+
+.price-range {
+  position: relative;
+  height: var(--space-5);
+  margin: 0 var(--space-2);
+}
+
+.price-range::before {
+  content: "";
+  position: absolute;
+  top: 50%;
+  left: 0;
+  right: 0;
+  height: var(--space-1);
+  transform: translateY(-50%);
+  border-radius: var(--radius-xs);
+  background: var(--color-border);
+}
+
+.price-range__slider {
+  position: absolute;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: var(--space-5);
+  margin: 0;
+  background: none;
+  pointer-events: none;
+  -webkit-appearance: none;
+  appearance: none;
+}
+
+.price-range__slider::-webkit-slider-thumb {
+  width: var(--space-4-5);
+  height: var(--space-4-5);
+  border: var(--border-width-accent) solid var(--color-primary);
+  border-radius: var(--radius-circle);
+  background: var(--color-surface);
+  box-shadow: var(--shadow-card);
+  pointer-events: auto;
+  cursor: pointer;
+  -webkit-appearance: none;
+  appearance: none;
+}
+
+.price-range__slider::-moz-range-thumb {
+  width: var(--space-4);
+  height: var(--space-4);
+  border: var(--border-width-accent) solid var(--color-primary);
+  border-radius: var(--radius-circle);
+  background: var(--color-surface);
+  box-shadow: var(--shadow-card);
+  pointer-events: auto;
+  cursor: pointer;
+}
+
+.price-range__slider::-webkit-slider-runnable-track,
+.price-range__slider::-moz-range-track {
+  background: none;
+}
+
+.price-range__fill {
+  position: absolute;
+  top: 50%;
+  height: var(--space-1);
+  transform: translateY(-50%);
+  border-radius: var(--radius-xs);
+  background: var(--color-primary);
+  pointer-events: none;
+}
+
+.price-inputs {
+  display: flex;
+  align-items: center;
+  gap: var(--space-2);
+  margin: var(--space-2) 0;
+  color: var(--color-text-muted);
+}
+
+/* Ô giá có hậu tố "đ" vẽ bằng CSS (ô vẫn là type=number nên chỉ nhận số). */
+.price-field {
+  position: relative;
+  flex: 1;
+  min-width: 0;
+}
+
+.price-field::after {
+  content: "đ";
+  position: absolute;
+  top: 50%;
+  right: var(--space-2);
+  transform: translateY(-50%);
+  color: var(--color-text-muted);
+  font-size: var(--font-size-xs);
+  pointer-events: none;
+}
+
+.price-field input {
+  width: 100%;
+  min-width: 0;
+  padding: var(--space-2) var(--space-5) var(--space-2) var(--space-2);
+  border: var(--border-width) solid var(--color-border-strong);
+  border-radius: var(--radius-sm);
+  background: var(--color-surface);
+  color: var(--color-text);
+  font-size: var(--font-size-xs);
+  font-variant-numeric: var(--font-numeric);
+  text-align: right;
+  -moz-appearance: textfield;
+  appearance: textfield;
+}
+
+.price-field input::-webkit-outer-spin-button,
+.price-field input::-webkit-inner-spin-button {
+  margin: 0;
+  -webkit-appearance: none;
+}
+
+/* ---------- Khu 3: kết quả ---------- */
+.package-results {
+  display: grid;
+  gap: var(--space-5);
+  min-width: 0;
+}
+
+.package-chips {
+  display: flex;
+  flex-wrap: wrap;
+  gap: var(--space-2);
+}
+
+.package-chip-active {
+  display: inline-flex;
+  align-items: center;
+  gap: var(--space-2);
+  padding: var(--space-1-5) var(--space-3);
+  border: var(--border-width) solid var(--color-primary-border);
+  border-radius: var(--radius-sm);
+  background: var(--color-primary-tint);
+  color: var(--color-primary-hover);
+  font-size: var(--font-size-sm);
+  font-weight: var(--font-weight-semibold);
+  cursor: pointer;
+}
+
+.package-count {
+  margin: 0;
+  color: var(--color-text-soft);
+  font-size: var(--font-size-sm);
+}
+
+.package-empty {
+  padding: var(--space-8) var(--space-4);
+  text-align: center;
+}
+
+/* ---------- Lưới thẻ gói (kiểu banner: dải nhãn → banner tiêu đề → chân thẻ giá + nút) ---------- */
+.package-selection {
+  /* Chữ tiêu đề banner dạng condensed in hoa (font Oswald nạp ở JSP); thiếu font thì dùng font display của dự án */
+  --font-banner: "Oswald", "Arial Narrow", var(--font-display);
+  /* Màu phụ suy ra từ màu chính để thẻ đổi theo theme, không ghi cứng mã màu */
+  --package-gold-bright: color-mix(in srgb, var(--color-warning) 78%, #FFFFFF);
+  --package-gold-light: color-mix(in srgb, var(--color-primary) 38%, #FFFFFF);
+  --package-brown-deep: color-mix(in srgb, var(--color-primary) 32%, #000000);
+  --package-brown-ink: color-mix(in srgb, var(--color-primary) 22%, #000000);
+}
+
+.package-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(300px, 1fr));
+  max-width: 100%;
+  gap: var(--space-5);
+}
+
+.package-card {
+  display: flex;
+  flex-direction: column;
+  border-radius: var(--radius-lg);
+  background: var(--color-surface);
+  box-shadow: var(--shadow-card);
+  transition: transform var(--duration-slow) var(--ease-standard),
+    box-shadow var(--duration-slow) var(--ease-standard);
+}
+
+.package-card:hover {
+  transform: translateY(calc(-1 * var(--space-1)));
+  box-shadow: var(--shadow-pop);
+}
+
+.package-card__banner {
+  position: relative;
+  display: flex;
+  flex-direction: column;
+  justify-content: flex-end;
+  gap: var(--space-2);
+  min-height: 176px;
+  padding: var(--space-5);
+  border-radius: var(--radius-lg) var(--radius-lg) 0 0;
+  overflow: hidden;
+  color: var(--color-on-primary);
+  background: radial-gradient(120% 90% at 15% 85%, var(--package-gold-bright) 0, var(--color-primary) 38%, var(--package-brown-deep) 100%);
+}
+
+
+/* Ảnh gói (hoặc ảnh nền mặc định) nằm dưới chữ; lớp phủ tối ở dưới để chữ luôn đọc được */
+.package-card__bg {
+  position: absolute;
+  inset: 0;
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+}
+
+.package-card__banner::after {
+  content: "";
+  position: absolute;
+  inset: 0;
+  background: linear-gradient(180deg, transparent 20%, color-mix(in srgb, var(--package-brown-ink) 70%, transparent));
+}
+
+.package-card__banner > *:not(.package-card__bg):not(.package-card__sash) {
+  position: relative;
+  z-index: 1;
+}
+
+/* Dải chéo nhãn ở góc trên phải banner (banner có overflow hidden nên phần thừa tự bị cắt) */
+.package-card__sash {
+  position: absolute;
+  top: 26px;
+  right: -46px;
+  z-index: 2;
+  width: 190px;
+  padding: var(--space-1-5) 0;
+  transform: rotate(45deg);
+  text-align: center;
+  font-family: var(--font-banner);
+  font-size: var(--font-size-sm);
+  font-weight: var(--font-weight-bold);
+  letter-spacing: var(--letter-spacing-widest);
+  text-transform: uppercase;
+  box-shadow: 0 3px 8px color-mix(in srgb, var(--package-brown-ink) 45%, transparent);
+}
+
+.package-card__sash.is-saving {
+  background: linear-gradient(#FFD65C, #F2B318);
+  color: #3B2A06;
+  box-shadow: 0 0 0 2px #FFFFFF, 0 4px 10px rgba(0, 0, 0, 0.35);
+}
+
+.package-card__sash.is-new {
+  background: linear-gradient(#FF6B5E, #D92F23);
+  color: #FFFFFF;
+  box-shadow: 0 0 0 2px #FFFFFF, 0 4px 10px rgba(0, 0, 0, 0.35);
+}
+
+.package-card__brand {
+  font-family: var(--font-banner);
+  font-size: var(--font-size-xs);
+  font-weight: var(--font-weight-semibold);
+  letter-spacing: 0.28em;
+  opacity: 0.9;
+}
+
+.package-card__headline {
+  margin: 0;
+  color: inherit;
+  font-family: var(--font-banner);
+  font-size: clamp(2rem, 3.2vw, 2.7rem);
+  font-weight: var(--font-weight-bold);
+  line-height: 1.04;
+  text-transform: uppercase;
+  text-shadow: 0 2px 0 color-mix(in srgb, var(--package-brown-ink) 40%, transparent);
+}
+
+.package-card__kind {
+  color: var(--package-gold-light);
+  font-family: var(--font-banner);
+  font-size: var(--font-size-md);
+  font-weight: var(--font-weight-semibold);
+  letter-spacing: var(--letter-spacing-wide);
+}
+
+.package-card__foot {
+  display: grid;
+  flex: 1;
+  grid-template-columns: minmax(0, 1fr) auto;
+  gap: var(--space-3);
+  align-items: center;
+  padding: var(--space-4) var(--space-4) var(--space-4) var(--space-4);
+}
+
+.package-card__info {
+  display: grid;
+  gap: var(--space-1);
+  min-width: 0;
+}
+
+.package-card__type {
+  color: var(--color-text-muted);
+  font-size: var(--font-size-xs);
+  font-weight: var(--font-weight-semibold);
+  letter-spacing: var(--letter-spacing-wide);
+  text-transform: uppercase;
+}
+
+.package-card__name {
+  margin: 0;
+  font-size: var(--font-size-base);
+  font-weight: var(--font-weight-medium);
+}
+
+.package-card__was {
+  color: var(--color-text-muted);
+  font-size: var(--font-size-sm);
+}
+
+.package-card__price {
+  color: var(--color-primary);
+  font-family: var(--font-banner);
+  font-size: var(--font-size-2xl);
+  font-weight: var(--font-weight-bold);
+  font-variant-numeric: var(--font-numeric);
+  white-space: nowrap;
+}
+
+.package-card__price small {
+  color: var(--color-text-soft);
+  font-family: var(--font-body);
+  font-size: var(--font-size-sm);
+  font-weight: var(--font-weight-regular);
+}
+
+.package-card__sub {
+  color: var(--color-text-soft);
+  font-size: var(--font-size-sm);
+}
+
+/* Số tiền tiết kiệm: màu xanh lá (khác vàng của thương hiệu) để mắt bắt ngay */
+.package-card__deal {
+  display: inline-flex;
+  align-items: center;
+  align-self: start;
+  justify-self: start;
+  gap: var(--space-2);
+  margin-top: var(--space-1);
+  padding: var(--space-1) var(--space-2);
+  border-radius: var(--radius-sm);
+  background: var(--color-success-tint);
+  color: var(--color-success-ink);
+  font-size: var(--font-size-sm);
+  font-weight: var(--font-weight-bold);
+}
+
+.package-card__deal b {
+  padding: 2px var(--space-1-5);
+  border-radius: var(--radius-xs);
+  background: var(--color-success-ink);
+  color: var(--color-on-primary);
+}
+
+.package-card__actions {
+  display: grid;
+  gap: var(--space-2);
+  min-width: 140px;
+}
+
+.package-card__actions form {
+  display: grid;
+}
+
+.package-card__buy,
+.package-card__detail {
+  width: 100%;
+  padding: var(--space-3) var(--space-3);
+  border: 0;
+  border-radius: var(--radius-xs);
+  font-family: var(--font-banner);
+  font-size: var(--font-size-md);
+  font-weight: var(--font-weight-semibold);
+  letter-spacing: 0.05em;
+  text-transform: uppercase;
+  cursor: pointer;
+}
+
+/* Nút Mua ngay: nút duy nhất sáng màu trong vùng trắng nên là điểm hút mắt đầu tiên */
+.package-card__buy {
+  background: linear-gradient(var(--package-gold-bright), var(--color-warning));
+  color: var(--package-brown-ink);
+  box-shadow: var(--shadow-button-primary);
+}
+
+.package-card__buy:hover {
+  filter: brightness(1.06);
+}
+
+.package-card__detail {
+  background: var(--color-surface);
+  color: var(--color-primary);
+  box-shadow: inset 0 0 0 2px var(--color-primary);
+}
+
+.package-card__detail:hover {
+  background: var(--color-primary-tint);
+}
+
+/* Gói chỉ mua tại quầy: Xem chi tiết là nút duy nhất nên đặc, màu tối */
+.package-card__detail.is-solid {
+  background: var(--color-surface-inverse);
+  color: var(--color-text-inverse);
+  box-shadow: none;
+}
+
+.package-card__detail.is-solid:hover {
+  background: var(--color-surface-inverse-soft);
+}
+
+.package-card__buy:focus-visible,
+.package-card__detail:focus-visible {
+  outline: 2px solid var(--color-primary);
+  outline-offset: 2px;
+}
+
+/* ---------- Tooltip khi hover / focus nút ---------- */
+.package-tip {
+  position: relative;
+}
+
+.package-tip__bubble {
+  position: absolute;
+  bottom: calc(100% + var(--space-2));
+  left: 50%;
+  width: max-content;
+  max-width: 100%;
+  transform: translateX(-50%);
+  text-align: center;
+  z-index: var(--z-dropdown);
+  padding: var(--space-2-5) var(--space-3);
+  border-radius: var(--radius-sm);
+  background: var(--color-surface-inverse);
+  color: var(--color-text-inverse);
+  font-size: var(--font-size-xs);
+  line-height: var(--line-height-snug);
+  box-shadow: var(--shadow-pop);
+  opacity: 0;
+  visibility: hidden;
+  pointer-events: none;
+  transition: opacity var(--duration-base) var(--ease-standard);
+}
+
+.package-tip:hover .package-tip__bubble,
+.package-tip:focus-within .package-tip__bubble {
+  opacity: 1;
+  visibility: visible;
+}
+
+/* ---------- Popup chi tiết ---------- */
+.package-dialog {
+  width: min(560px, calc(100vw - var(--space-6)));
+  max-height: calc(100vh - var(--space-6));
+  padding: 0;
+  border: 0;
+  border-radius: var(--radius-md);
+  background: var(--color-surface);
+  color: var(--color-text);
+  box-shadow: var(--shadow-float);
+  z-index: var(--z-modal);
+}
+
+.package-dialog::backdrop {
+  background: var(--color-overlay);
+}
+
+.package-dialog__header {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: var(--space-3);
+  padding: var(--space-4) var(--space-5);
+  border-bottom: var(--border-width) solid var(--color-border);
+}
+
+.package-dialog__header h2 {
+  margin: var(--space-1) 0 0;
+  font-size: var(--font-size-xl);
+}
+
+.package-dialog__close {
+  border: 0;
+  background: none;
+  color: var(--color-text-soft);
+  font-size: var(--font-size-lg);
+  cursor: pointer;
+}
+
+.package-dialog__body {
+  display: grid;
+  gap: var(--space-3);
+  padding: var(--space-4) var(--space-5);
+}
+
+.package-dialog__body h3 {
+  margin: var(--space-2) 0 0;
+  font-size: var(--font-size-md);
+}
+
+.package-dialog__image {
+  width: 100%;
+  aspect-ratio: 16 / 9;
+  object-fit: cover;
+  border-radius: var(--radius-md);
+}
+
+.package-dialog__note {
+  margin: 0;
+  color: var(--color-text-soft);
+  font-size: var(--font-size-sm);
+}
+
+.package-dialog__benefits {
+  display: grid;
+  gap: var(--space-1-5);
+  margin: 0;
+  padding: 0;
+  list-style: none;
+  font-size: var(--font-size-sm);
+}
+
+.package-dialog__benefits i {
+  color: var(--color-success);
+}
+
+.package-dialog__howto {
+  padding: var(--space-3);
+  border-radius: var(--radius-md);
+  background: var(--color-primary-tint);
+  font-size: var(--font-size-sm);
+}
+
+.package-dialog__howto p {
+  margin: var(--space-1) 0 0;
+}
+
+.package-dialog__footer {
+  display: flex;
+  justify-content: flex-end;
+  padding: var(--space-4) var(--space-5);
+  border-top: var(--border-width) solid var(--color-border);
+}
+
+
+/* ---------- Giảm chuyển động ---------- */
+@media (prefers-reduced-motion: reduce) {
+  .package-card {
+    transition: none;
+  }
+
+  .package-card:hover {
+    transform: none;
+  }
+}
+
+/* ---------- Phân trang ---------- */
+.package-pager {
+  display: flex;
+  flex-wrap: wrap;
+  justify-content: center;
+  gap: var(--space-2);
+  margin-top: var(--space-2);
+}
+
+.package-pager__item {
+  display: inline-grid;
+  min-width: 40px;
+  height: 40px;
+  place-items: center;
+  border: var(--border-width) solid var(--color-border-strong);
+  border-radius: var(--radius-sm);
+  background: var(--color-surface);
+  color: var(--color-text);
+  font-size: var(--font-size-sm);
+  font-weight: var(--font-weight-semibold);
+  text-decoration: none;
+}
+
+a.package-pager__item:hover {
+  background: var(--color-primary-tint);
+  border-color: var(--color-primary);
+}
+
+.package-pager__item.is-current {
+  border-color: var(--color-primary);
+  background: var(--color-primary);
+  color: var(--color-on-primary);
+}
+
+.package-pager__item.is-disabled {
+  color: var(--color-text-disabled);
+}
+
+/* ---------- Điện thoại: cột lọc thu vào nút "Bộ lọc" ---------- */
+@media (max-width: 900px) {
+  .package-body {
+    grid-template-columns: minmax(0, 1fr);
+  }
+
+  .package-toolbar__toggle {
+    display: inline-flex;
+    align-items: center;
+    gap: var(--space-2);
+  }
+
+  .package-filters {
+    position: static;
+    display: none;
+  }
+
+  .package-filters.is-open {
+    display: grid;
+  }
+}
+
+/* Màn hẹp: chân thẻ xếp dọc, nút trải hết chiều ngang */
+@media (max-width: 480px) {
+  .package-card__foot {
+    grid-template-columns: minmax(0, 1fr);
+  }
+
+  .package-card__actions {
+    grid-template-columns: 1fr 1fr;
+  }
+
+  .package-card__actions--single {
+    grid-template-columns: 1fr;
+  }
+}
