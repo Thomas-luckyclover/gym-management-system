@@ -670,8 +670,8 @@
                                                                 <div class="counter-box">
                                                                     <i class="fa-solid fa-location-dot"></i>
                                                                     <span>
-                                                                        <strong>Quầy Lễ tân:</strong> 12 Nguyễn Huệ,
-                                                                        Q.1, TP.HCM — mở cửa 06:00 – 22:00 mỗi ngày.
+                                                                        <strong>Quầy Lễ tân:</strong> 25 Cầu Giấy,
+                                                                        Hà Nội — mở cửa 06:00 – 22:00 mỗi ngày.
                                                                         Mang theo giấy tờ tuỳ thân để Lễ tân đối chiếu
                                                                         hồ sơ.
                                                                     </span>
@@ -714,8 +714,8 @@
                                                                     <div class="counter-box">
                                                                         <i class="fa-solid fa-location-dot"></i>
                                                                         <span>
-                                                                            <strong>Quầy Lễ tân:</strong> 12 Nguyễn Huệ,
-                                                                            Q.1, TP.HCM — mở cửa 06:00 – 22:00 mỗi ngày.
+                                                                            <strong>Quầy Lễ tân:</strong> 25 Cầu Giấy,
+                                                                            Hà Nội — mở cửa 06:00 – 22:00 mỗi ngày.
                                                                             Mang theo giấy tờ tuỳ thân để Lễ tân đối
                                                                             chiếu hồ sơ.
                                                                         </span>

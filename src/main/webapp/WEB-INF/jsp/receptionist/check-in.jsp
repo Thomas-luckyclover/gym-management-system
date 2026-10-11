@@ -13,7 +13,7 @@
 <head>
   <%@ include file="/WEB-INF/jsp/common/head.jspf" %>
   <title>Check-in hội viên · Super Gym Lễ tân</title>
-  <link rel="stylesheet" href="${pageContext.request.contextPath}/css/pages/receptionist/check-in.css">
+  <link rel="stylesheet" href="${pageContext.request.contextPath}/css/pages/receptionist/check-in.css?v=2">
   <script src="${pageContext.request.contextPath}/js/pages/receptionist/check-in.js" defer></script>
 </head>
 <body class="dock theme-staff">
@@ -46,7 +46,7 @@
           <div class="col-main">
 
             <%-- Khung tìm kiếm hội viên --%>
-            <section class="panel">
+            <section class="panel" data-reveal>
               <div class="panel-head">
                 <div>
                   <h2>Tìm khách</h2>
@@ -80,7 +80,7 @@
               <c:choose>
                 <%-- Trường hợp không tìm thấy hồ sơ --%>
                 <c:when test="${lookupResult.decision.name() eq 'NOT_FOUND'}">
-                  <section class="panel ci-card">
+                  <section class="panel ci-card" data-reveal>
                     <div class="alert-banner danger">
                       <i class="fa-solid fa-circle-xmark"></i>
                       <span><b>Không tìm thấy hồ sơ.</b> <c:out value="${lookupResult.message}" /></span>
@@ -95,7 +95,7 @@
 
                 <%-- Trường hợp tìm thấy hội viên --%>
                 <c:otherwise>
-                  <section class="panel ci-card">
+                  <section class="panel ci-card" data-reveal>
                     <div class="ci-top">
                       <%-- Ảnh check-in --%>
                       <div class="ci-photo<c:if test='${empty lookupResult.checkInPhoto}'> is-empty</c:if>" data-ci-face>

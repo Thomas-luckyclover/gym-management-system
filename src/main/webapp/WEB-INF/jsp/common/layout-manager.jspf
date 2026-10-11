@@ -8,8 +8,11 @@
 <div class="dockwrap" id="dock">
   <aside class="sidebar">
     <div class="brand">
-      <div class="brand-name">Super Gym</div>
-      <div class="brand-role">Khu vực quản lý</div>
+      <span class="brand-mark"><img src="${pageContext.request.contextPath}/images/logo-mark.png" alt=""></span>
+      <div class="brand-text">
+        <div class="brand-name">Super Gym</div>
+        <div class="brand-role">Khu vực quản lý</div>
+      </div>
     </div>
 
     <nav class="nav" aria-label="Điều hướng chính">
