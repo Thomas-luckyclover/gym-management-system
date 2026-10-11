@@ -1,10 +1,16 @@
 package com.gms.servlet.pt;
 
-import com.gms.constant.Messages;
 import com.gms.constant.SessionKey;
-import com.gms.dto.PtDashboardView;
+import com.gms.dto.PtAssignedPackageView;
+import com.gms.dto.PtAttentionView;
+import com.gms.dto.PtCommissionSummaryView;
+import com.gms.dto.PtRatingView;
+import com.gms.dto.PtScheduleDayView;
 import com.gms.dto.ServiceResult;
+import com.gms.dto.WeatherView;
 import com.gms.service.PtDashboardService;
+import com.gms.service.WeatherService;
+import com.gms.util.DateTimeUtil;
 import com.gms.util.RequestUtil;
 import jakarta.servlet.ServletException;
 import jakarta.servlet.annotation.WebServlet;
@@ -13,49 +19,146 @@ import jakarta.servlet.http.HttpServletRequest;
 import jakarta.servlet.http.HttpServletResponse;
 import jakarta.servlet.http.HttpSession;
 import java.io.IOException;
+import java.util.List;
 
-/**
- * Servlet Dashboard PT (URL /pt/dashboard) — màn đầu sau đăng nhập.
- *
- * <p>Hỗ trợ bộ lọc: period (yyyy-MM / yyyy-Qn), date, days, weatherDemo; chỉ xem, không sửa dữ liệu.</p>
- */
+/** Điều phối trang tổng quan của PT (UC-32). */
 @WebServlet("/pt/dashboard")
 public class PtDashboardServlet extends HttpServlet {
 
-    private static final String VIEW = "pt/dashboard";
+    private static final String VIEW = "pt/dashboard"; // JSP đích, RequestUtil tự thêm đường dẫn và đuôi .jsp.
 
-    private final PtDashboardService ptDashboardService = new PtDashboardService();
+    private final PtDashboardService dashboardService = new PtDashboardService(); // Service trả dữ liệu cho từng khối dashboard.
+    private final WeatherService weatherService = new WeatherService(); // Một instance giữ cache dùng chung giữa các request.
 
     /**
-     * GET /pt/dashboard — nạp dữ liệu dashboard của PT đang đăng nhập rồi trả về JSP.
+     * Lấy lịch, cảnh báo, khách phụ trách và kết quả tháng qua Service rồi chuyển sang JSP.
+     * PtAreaFilter kiểm tra vai trò PT; mỗi khối có attribute dữ liệu và lỗi riêng.
+     * @param request yêu cầu mở trang của PT đang đăng nhập
+     * @param response phản hồi trả về trình duyệt
+     * @throws ServletException khi không chuyển được yêu cầu tới JSP
+     * @throws IOException khi không gửi được phản hồi
      */
     @Override
     protected void doGet(HttpServletRequest request, HttpServletResponse response)
             throws ServletException, IOException {
-        // B1: PT nào đang xem → lấy từ SESSION, không bao giờ lấy từ URL (GBR-10)
-        HttpSession session = request.getSession(false);
-        int accountId = (Integer) session.getAttribute(SessionKey.ACCOUNT_ID);
-
-        // B2: đọc bộ lọc. Không gửi "date" → null (Service dùng hôm nay); gửi rỗng → Service báo lỗi ô bắt buộc.
-        //     Giá trị sai thì Service tự về mặc định (tháng này, hôm nay, 7 ngày)
-        String period = RequestUtil.getTrimmedParam(request, "period");
-        String date = RequestUtil.getTrimmedParam(request, "date");
-        int days = RequestUtil.getIntParam(request, "days", 7);
-        String weatherDemo = RequestUtil.getTrimmedParam(request, "weatherDemo");
-
-        // B3: gom dữ liệu. Không phải PT đang làm → 403; lỗi DB → 500
-        ServiceResult<PtDashboardView> result = ptDashboardService.getDashboard(accountId, period, date, days, weatherDemo);
-        if (!result.isSuccess()) {
-            boolean isNoPermission = Messages.MSG07_NO_PERMISSION.equals(result.getMessage());
-            response.sendError(isNoPermission
-                    ? HttpServletResponse.SC_FORBIDDEN
-                    : HttpServletResponse.SC_INTERNAL_SERVER_ERROR);
+        // B1: lấy mã tài khoản từ session, không đọc từ URL.
+        HttpSession session = request.getSession(false);  // false = nếu ko có => null, ko tạo mới
+        Integer accountId = null; // Integer có thể null, int thì không
+        if (session != null) {
+            accountId = (Integer) session.getAttribute(SessionKey.ACCOUNT_ID);
+        }
+        if (accountId == null) {
+            RequestUtil.redirect(request, response, "/login?returnUrl=/pt/dashboard");
             return;
         }
 
-        // B4: đưa dữ liệu cho JSP. activeNav để menu tô đúng mục "Tổng quan"
-        request.setAttribute("dashboard", result.getData());
+        // EmployeeDAO đọc Employees.EmployeeCode qua Service; JSP hiện dưới tên PT ở đầu trang.
+        ServiceResult<String> employeeCodeResult = dashboardService.getPtEmployeeCode(accountId);
+        if (employeeCodeResult.isSuccess()) {
+            request.setAttribute("ptEmployeeCode", employeeCodeResult.getData());
+        }
+
+        // B2: gọi Service lấy lịch 7 ngày của tài khoản này.
+        ServiceResult<List<PtScheduleDayView>> scheduleResult = dashboardService.getSchedule(accountId);
+
+        // B3: chuyển lịch hoặc thông báo lỗi sang JSP.
+        if (scheduleResult.isSuccess()) {
+            // B3.1: JSP đọc scheduleDays để lặp ngày rồi từng buổi.
+            request.setAttribute("scheduleDays", scheduleResult.getData());
+        } else {
+            // B3.2: JSP đọc scheduleError; không coi lỗi là không có lịch.
+            request.setAttribute("scheduleError", scheduleResult.getMessage());
+        }
+
+        // B4: gọi Service lấy các cảnh báo cho buổi tập trong 14 ngày của tài khoản này.
+        // attentionResult chứa List<PtAttentionView> do Service tạo, hoặc thông báo lỗi.
+        ServiceResult<List<PtAttentionView>> attentionResult = dashboardService.getAttentionItems(accountId);
+
+        // B5: chuyển danh sách cảnh báo hoặc lỗi của khối Cần chú ý sang JSP.
+        if (attentionResult.isSuccess()) {
+            // B5.1: JSP sẽ lặp attentionItems; mỗi PtAttentionView hiện thành một dòng cảnh báo.
+            // Ví dụ: Nguyễn Văn A — Cần membership — Cần membership hợp lệ cho buổi ngày 12/10/2026.
+            // Danh sách rỗng nghĩa là không có cảnh báo trong phạm vi 14 ngày.
+            request.setAttribute("attentionItems", attentionResult.getData());
+        } else {
+            // B5.2: JSP sẽ hiện attentionError; lỗi lấy dữ liệu không có nghĩa là không có cảnh báo.
+            request.setAttribute("attentionError", attentionResult.getMessage());
+        }
+
+        // B6: gọi Service lấy đầy đủ gói PT Active và buổi lẻ sắp dạy của tài khoản này.
+        // assignedPackagesResult chứa DTO do DAO tạo, đã được Service bổ sung nhãn loại gói.
+        ServiceResult<List<PtAssignedPackageView>> assignedPackagesResult =
+                dashboardService.getAssignedPackages(accountId);
+
+        // B7: chuyển danh sách hoặc lỗi của riêng khối Khách phụ trách sang JSP.
+        if (assignedPackagesResult.isSuccess()) {
+            // B7.1: JSP sẽ lặp assignedPackages; mỗi DTO hiện một gói PT hoặc một buổi lẻ.
+            // Ví dụ: Nguyễn Văn A — PT cá nhân — Gói PT đến 25/10/2026 — Còn 6 buổi trong lịch.
+            // Một khách có hai gói phù hợp thì có hai dòng; list rỗng nghĩa là không có gói/buổi phù hợp.
+            request.setAttribute("assignedPackages", assignedPackagesResult.getData());
+        } else {
+            // B7.2: JSP sẽ hiện assignedPackagesError; không biến lỗi lấy dữ liệu thành danh sách rỗng.
+            request.setAttribute("assignedPackagesError", assignedPackagesResult.getMessage());
+        }
+
+        // B8: lấy một DTO tổng hợp tháng; DAO điền số/tiền, Service tính tỷ lệ.
+        ServiceResult<PtCommissionSummaryView> commissionResult =
+                dashboardService.getCommissionSummary(accountId);
+
+        // B9: JSP dùng commissionSummary cho ba nhóm; lỗi đọc nằm ở attribute riêng.
+        if (commissionResult.isSuccess()) {
+            request.setAttribute("commissionSummary", commissionResult.getData());
+        } else {
+            request.setAttribute("commissionSummaryError", commissionResult.getMessage());
+        }
+
+        // B10: Service chỉ trả điểm tổng hợp tháng của PT hiện tại; chưa đủ P-22 thì điểm bị ẩn.
+        ServiceResult<PtRatingView> ratingResult = dashboardService.getRating(accountId);
+        if (ratingResult.isSuccess()) {
+            request.setAttribute("ptRating", ratingResult.getData());
+        } else {
+            request.setAttribute("ptRatingError", ratingResult.getMessage());
+        }
+
+        // Thời tiết là dữ liệu phụ: API lỗi vẫn mở dashboard; nền dùng sunny, thẻ ẩn.
+        String previewType = request.getParameter("weather");
+        WeatherView weather = weatherService.getPreview(previewType);
+        boolean weatherPreview = weather != null;
+        if (!weatherPreview) {
+            weather = weatherService.getTodayWeather();
+        }
+        request.setAttribute("weather", weather);
+        request.setAttribute("weatherType", resolveWeatherType(weatherPreview ? previewType : null, weather));
+        request.setAttribute("weatherPreview", weatherPreview);
+
+        // B11: chọn mục Tổng quan, đặt tiêu đề và ngày hiện tại.
         request.setAttribute("activeNav", "dashboard");
+        request.setAttribute("pageTitle", "Tổng quan PT");
+        request.setAttribute("today", DateTimeUtil.today());
+
+        // B12: mở JSP sau khi đã đặt dữ liệu hoặc lỗi riêng của từng khối.
         RequestUtil.forward(request, response, VIEW);
+    }
+
+    /** Chỉ nhận các tên CSS cố định, tránh đưa chuỗi tùy ý từ URL vào class HTML. */
+    static String resolveWeatherType(String previewType, WeatherView weather) {
+        if (previewType != null) {
+            switch (previewType) {
+                case "sunny":
+                case "cloudy":
+                case "rain":
+                case "storm":
+                case "snow":
+                case "wind":
+                case "night":
+                case "hot":
+                    return previewType;
+                case "extreme_hot":
+                    return "hot";
+                default:
+                    break;
+            }
+        }
+        return weather == null ? "sunny" : weather.getWeatherType();
     }
 }

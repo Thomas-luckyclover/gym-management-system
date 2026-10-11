@@ -3,7 +3,6 @@
  *
  * <p>Servlet dự kiến (nguồn: SRS 5.1 Screen List — bảng đầy đủ ở docs/project-structure.md):</p>
  * <pre>
- * PtDashboardServlet               /pt/dashboard                                        #49  PT Dashboard                       TV5
  * TimeSlotListServlet              /pt/time-slots                                       #54  Available Time Slots               TV5
  * TimeSlotAddServlet               /pt/time-slots/add                                   #55  Add Time Slot                      TV5
  * SessionAttendanceServlet         /pt/sessions/attendance                              #56  Session Attendance                 TV5

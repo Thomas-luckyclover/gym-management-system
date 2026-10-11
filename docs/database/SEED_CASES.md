@@ -1,5 +1,12 @@
 # Seed v25: danh mục case + tài khoản test
 
+## Ngày phòng nghỉ — cập nhật 10/10/2026
+
+- Gói PT sinh đủ mọi ngày T2–T6 trong kỳ, kể cả ngày phòng nghỉ đã khai báo. PT cần dời buổi qua `PtReschedule`, không tiêu lượt swap.
+- Mai KH-1006: gói 07/09–07/11/2026 có **45 buổi**; ngày **20/10/2026 giữ Scheduled**, slot Booked để thử cảnh báo và dời buổi.
+- Ngày nghỉ đã qua mốc lịch sử của seed mà buổi chưa dời: `Cancelled / GymClosed` lúc 00:05 ngày hôm sau, không có người hủy, không hoàn tiền và không tính hoa hồng. Ngày nghỉ tương lai không hủy sẵn.
+- Buổi lẻ không được sinh vào ngày phòng nghỉ. Seed mô phỏng chính sách mới; JOB-04 và cảnh báo runtime còn cần sửa theo `docs/notes.md`.
+
 ## Cách chạy (SSMS hoặc sqlcmd)
 
 1. Chạy `database/0_Reset_Database.sql` để xóa DB cũ (nhớ tắt Tomcat trước).
@@ -129,9 +136,9 @@ Ngoài ra còn **40 khách thường** (PersonId 201–240, mã KH-2001…KH-204
 ### PT / lịch / buổi tập (UC-21, 30→39)
 | Gói | PT | Case |
 |---|---|---|
-| Mai: PT 2 tháng 18:00 | Sơn | Swap sang T7 12/09 (1/3 lượt); vắng (PT bấm Absent); khách tự hủy 22/09; chuyển sang PT Long 29/09 (hoa hồng theo PT mới); 18/09 bị hủy vì phòng nghỉ khai báo SAU khi bán |
-| Hưng + Hà: couple 2 tháng 19:30 | Trang | PT hủy có hoàn tiền mặt (BR-66); PT dời lịch (BR-64); 02/09 nghỉ lễ khai báo TRƯỚC → không sinh buổi |
-| Hồng: PT 2 tháng 17:00 | David | Bảo lưu → mọi buổi 28/09–27/10 Missed `MembershipFrozen` + slot về Free (CBR-62, CBR-68) |
+| Mai: PT 2 tháng 18:00 | Sơn | Swap sang T7 12/09 (1/6 lượt — gói 2 tháng × 3, P-08); vắng (PT bấm Absent); khách tự hủy 22/09; chuyển sang PT Long 29/09 (hoa hồng theo PT mới); 18/09 bị hủy vì phòng nghỉ khai báo SAU khi bán |
+| Hưng + Hà: couple 2 tháng 19:30 | Trang | PT hủy có hoàn tiền mặt (BR-66); PT dời lịch (BR-64); 02/09 nghỉ lễ vẫn sinh buổi; chưa dời và đã qua ngày → GymClosed |
+| Hồng: PT 2 tháng 17:00 | David | Bảo lưu 28/09–27/10: buổi đã qua ngày → JOB-04 chốt Missed `MembershipFrozen`; buổi chưa tới ngày giữ `Scheduled`, slot `Booked` (quyết định 09/10/2026) |
 | Quân: PT 1 tháng 07:00 (T7–T8) | Sơn | Missed `NoMembership` sau khi gói tập hết; buổi ngày cuối Cancelled `PackageExpired` (CBR-55) |
 | Trang (khách): PT 1 tháng 12:00 | David | PT là khách của PT khác (CBR-59, CBR-115) |
 | Lực: PT 1 tháng 06:30 | Sơn | Khách không tài khoản, PT dời hộ (`PtOnBehalfSwap`, BR-62) |

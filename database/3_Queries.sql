@@ -2,9 +2,9 @@
    GMS — 3_Queries.sql · v26 (06/10/2026) · SQL Server 2019+
    Chạy 0 → 1 → 2 trước. File 3 gồm các khối độc lập, ngăn bằng GO.
    A: Kiểm tra sau khi dựng DB (chỉ SELECT và test luôn ROLLBACK).
-   B1…B7: Truy vấn nghiệp vụ. Đổi @param ở đầu đúng khối cần dùng.
+   B2…B7: Truy vấn nghiệp vụ. Đổi @param ở đầu đúng khối cần dùng.
    C: Dọn P-07 trên DB cũ sau khi code đã bỏ tham số này.
-   Các lệnh ghi B1/B4/C mặc định tắt bằng cờ; chỉ bật khối muốn chạy.
+   Các lệnh ghi B4/C mặc định tắt bằng cờ; chỉ bật khối muốn chạy.
    Ngày nghiệp vụ = UTC+7; timestamp ghi theo SYSDATETIME() như yêu cầu.
    ============================================================================ */
 USE GMS;
@@ -72,135 +72,7 @@ GO
 /* ============================================================================
    B. TRUY VẤN NGHIỆP VỤ CHO ỨNG DỤNG
    ============================================================================ */
--- B1. JOB-04: xem trước và chốt từng buổi quá ngày VN.
--- @ExecuteJob=0: chỉ xem; =1: chạy UPDATE. Mỗi buổi 1 transaction, lỗi riêng.
-DECLARE @ExecuteJob BIT=0;
-DECLARE @Today DATE=CAST(DATEADD(HOUR,7,SYSUTCDATETIME()) AS DATE);
-SELECT s.SessionId,s.TimeSlotId,sub.SubscriptionId,t.SlotDate,
-       CASE WHEN f.Unavailable=1 THEN 'Missed'
-            WHEN f.HasCheckIn=1 THEN 'CheckedIn' ELSE 'Missed' END AS NewStatus,
-       CASE WHEN f.Unavailable=1 AND f.HasFrozen=1 THEN 'MembershipFrozen'
-            WHEN f.Unavailable=1 THEN 'NoMembership'
-            WHEN f.HasCheckIn=1 THEN NULL ELSE 'NoCheckIn' END AS NewMissedReason
-FROM Sessions s
-JOIN TimeSlots t ON t.TimeSlotId=s.TimeSlotId
-JOIN Subscriptions sub ON sub.SubscriptionId=s.SubscriptionId
-JOIN Orders o ON o.OrderId=sub.OrderId
-CROSS APPLY (
-    SELECT CASE WHEN EXISTS(SELECT 1 FROM Subscriptions m JOIN FreezeRecords fr ON fr.SubscriptionId=m.SubscriptionId
-                       WHERE m.CustomerId=sub.CustomerId AND m.SubscriptionType='Membership'
-                         AND t.SlotDate BETWEEN fr.StartDate AND COALESCE(fr.ActualEndDate,fr.PlannedEndDate)) THEN 1 ELSE 0 END AS HolderFrozen,
-           CASE WHEN EXISTS(SELECT 1 FROM Subscriptions m WHERE m.CustomerId=sub.CustomerId
-                       AND m.SubscriptionType='Membership' AND m.Status IN ('Active','Frozen')
-                       AND t.SlotDate BETWEEN m.StartDate AND m.EndDate) THEN 1 ELSE 0 END AS HolderMembership,
-           CASE WHEN EXISTS(SELECT 1 FROM Subscriptions m JOIN FreezeRecords fr ON fr.SubscriptionId=m.SubscriptionId
-                       WHERE m.CustomerId=o.PartnerCustomerId AND m.SubscriptionType='Membership'
-                         AND t.SlotDate BETWEEN fr.StartDate AND COALESCE(fr.ActualEndDate,fr.PlannedEndDate)) THEN 1 ELSE 0 END AS PartnerFrozen,
-           CASE WHEN EXISTS(SELECT 1 FROM Subscriptions m WHERE m.CustomerId=o.PartnerCustomerId
-                       AND m.SubscriptionType='Membership' AND m.Status IN ('Active','Frozen')
-                       AND t.SlotDate BETWEEN m.StartDate AND m.EndDate) THEN 1 ELSE 0 END AS PartnerMembership
-) m
-CROSS APPLY (
-    SELECT CASE WHEN (m.HolderFrozen=1 OR m.HolderMembership=0)
-                     AND (sub.SubscriptionType<>'PTCouple' OR m.PartnerFrozen=1 OR m.PartnerMembership=0)
-                THEN 1 ELSE 0 END AS Unavailable,
-           CASE WHEN m.HolderFrozen=1 OR (sub.SubscriptionType='PTCouple' AND m.PartnerFrozen=1) THEN 1 ELSE 0 END AS HasFrozen,
-           CASE WHEN EXISTS(SELECT 1 FROM CheckIns ci JOIN Subscriptions gym ON gym.SubscriptionId=ci.SubscriptionId
-                       WHERE gym.SubscriptionType IN ('Membership','DayPass')
-                         AND (gym.CustomerId=sub.CustomerId OR (sub.SubscriptionType='PTCouple' AND gym.CustomerId=o.PartnerCustomerId))
-                         AND ci.CheckedInAt>=CAST(t.SlotDate AS DATETIME2)
-                         AND ci.CheckedInAt<DATEADD(DAY,1,CAST(t.SlotDate AS DATETIME2))) THEN 1 ELSE 0 END AS HasCheckIn
-) f
-WHERE s.Status='Scheduled' AND t.SlotDate<@Today
-ORDER BY s.SessionId;
-
-IF @ExecuteJob=1
-BEGIN
-    DECLARE @SessionId INT, @TimeSlotId INT, @NewStatus VARCHAR(10), @NewReason VARCHAR(20);
-    DECLARE ClosingSessions CURSOR LOCAL FAST_FORWARD FOR
-        SELECT s.SessionId FROM Sessions s JOIN TimeSlots t ON t.TimeSlotId=s.TimeSlotId
-        WHERE s.Status='Scheduled' AND t.SlotDate<@Today ORDER BY s.SessionId;
-    OPEN ClosingSessions;
-    FETCH NEXT FROM ClosingSessions INTO @SessionId;
-    WHILE @@FETCH_STATUS=0
-    BEGIN
-        BEGIN TRY
-            BEGIN TRANSACTION;
-            SET @NewStatus=NULL;
-            SET @NewReason=NULL;
-SELECT @TimeSlotId=s.TimeSlotId, @NewStatus=
-       CASE WHEN f.Unavailable=1 THEN 'Missed'
-            WHEN f.HasCheckIn=1 THEN 'CheckedIn' ELSE 'Missed' END , @NewReason=
-       CASE WHEN f.Unavailable=1 AND f.HasFrozen=1 THEN 'MembershipFrozen'
-            WHEN f.Unavailable=1 THEN 'NoMembership'
-            WHEN f.HasCheckIn=1 THEN NULL ELSE 'NoCheckIn' END
-FROM Sessions s WITH (UPDLOCK,HOLDLOCK)
-JOIN TimeSlots t ON t.TimeSlotId=s.TimeSlotId
-JOIN Subscriptions sub ON sub.SubscriptionId=s.SubscriptionId
-JOIN Orders o ON o.OrderId=sub.OrderId
-CROSS APPLY (
-    SELECT CASE WHEN EXISTS(SELECT 1 FROM Subscriptions m JOIN FreezeRecords fr ON fr.SubscriptionId=m.SubscriptionId
-                       WHERE m.CustomerId=sub.CustomerId AND m.SubscriptionType='Membership'
-                         AND t.SlotDate BETWEEN fr.StartDate AND COALESCE(fr.ActualEndDate,fr.PlannedEndDate)) THEN 1 ELSE 0 END AS HolderFrozen,
-           CASE WHEN EXISTS(SELECT 1 FROM Subscriptions m WHERE m.CustomerId=sub.CustomerId
-                       AND m.SubscriptionType='Membership' AND m.Status IN ('Active','Frozen')
-                       AND t.SlotDate BETWEEN m.StartDate AND m.EndDate) THEN 1 ELSE 0 END AS HolderMembership,
-           CASE WHEN EXISTS(SELECT 1 FROM Subscriptions m JOIN FreezeRecords fr ON fr.SubscriptionId=m.SubscriptionId
-                       WHERE m.CustomerId=o.PartnerCustomerId AND m.SubscriptionType='Membership'
-                         AND t.SlotDate BETWEEN fr.StartDate AND COALESCE(fr.ActualEndDate,fr.PlannedEndDate)) THEN 1 ELSE 0 END AS PartnerFrozen,
-           CASE WHEN EXISTS(SELECT 1 FROM Subscriptions m WHERE m.CustomerId=o.PartnerCustomerId
-                       AND m.SubscriptionType='Membership' AND m.Status IN ('Active','Frozen')
-                       AND t.SlotDate BETWEEN m.StartDate AND m.EndDate) THEN 1 ELSE 0 END AS PartnerMembership
-) m
-CROSS APPLY (
-    SELECT CASE WHEN (m.HolderFrozen=1 OR m.HolderMembership=0)
-                     AND (sub.SubscriptionType<>'PTCouple' OR m.PartnerFrozen=1 OR m.PartnerMembership=0)
-                THEN 1 ELSE 0 END AS Unavailable,
-           CASE WHEN m.HolderFrozen=1 OR (sub.SubscriptionType='PTCouple' AND m.PartnerFrozen=1) THEN 1 ELSE 0 END AS HasFrozen,
-           CASE WHEN EXISTS(SELECT 1 FROM CheckIns ci JOIN Subscriptions gym ON gym.SubscriptionId=ci.SubscriptionId
-                       WHERE gym.SubscriptionType IN ('Membership','DayPass')
-                         AND (gym.CustomerId=sub.CustomerId OR (sub.SubscriptionType='PTCouple' AND gym.CustomerId=o.PartnerCustomerId))
-                         AND ci.CheckedInAt>=CAST(t.SlotDate AS DATETIME2)
-                         AND ci.CheckedInAt<DATEADD(DAY,1,CAST(t.SlotDate AS DATETIME2))) THEN 1 ELSE 0 END AS HasCheckIn
-) f
-WHERE s.Status='Scheduled' AND t.SlotDate<@Today AND s.SessionId=@SessionId;
-            IF @NewStatus IS NOT NULL
-            BEGIN
-                UPDATE Sessions
-                SET Status=@NewStatus,MissedReason=@NewReason,IsAutoClosed=1,AttendanceMarkedAt=SYSDATETIME()
-                WHERE SessionId=@SessionId AND Status='Scheduled';
-                IF @@ROWCOUNT=1
-                BEGIN
-                    IF @NewStatus='Missed'
-                        UPDATE TimeSlots SET Status='Free',HeldByOrderId=NULL,HoldExpiresAt=NULL
-                        WHERE TimeSlotId=@TimeSlotId AND Status='Booked'
-                          AND NOT EXISTS(SELECT 1 FROM Sessions WHERE TimeSlotId=@TimeSlotId AND Status IN ('Scheduled','CheckedIn'));
-                    INSERT INTO AuditLogs(AccountId,ActingRole,Action,EntityName,EntityId,FieldChanged,OldValue,NewValue,Reason)
-                    VALUES(NULL,NULL,N'JOB-04',N'Sessions',@SessionId,N'Status',N'Scheduled',@NewStatus,@NewReason);
-                END;
-            END;
-            COMMIT TRANSACTION;
-        END TRY
-        BEGIN CATCH
-            IF XACT_STATE()<>0 ROLLBACK TRANSACTION;
-            PRINT N'JOB-04 lỗi buổi '+CAST(@SessionId AS NVARCHAR(20))+N': '+ERROR_MESSAGE();
-        END CATCH;
-        FETCH NEXT FROM ClosingSessions INTO @SessionId;
-    END;
-    CLOSE ClosingSessions;
-    DEALLOCATE ClosingSessions;
-END;
-GO
-
--- B1b. QUY ƯỚC ĐỀ XUẤT, SRS CHƯA QUY ĐỊNH: SingleSession → Used sau CheckedIn/Missed.
--- Câu này độc lập và mặc định tắt; JOB-04 Java chưa áp dụng quy ước này.
-DECLARE @ApplyProposedSingleSessionUsed BIT=0;
-IF @ApplyProposedSingleSessionUsed=1
-    UPDATE sub SET Status='Used'
-    FROM Subscriptions sub
-    WHERE sub.SubscriptionType='SingleSession' AND sub.Status='Active'
-      AND EXISTS(SELECT 1 FROM Sessions s WHERE s.SubscriptionId=sub.SubscriptionId AND s.Status IN ('CheckedIn','Missed'));
-GO
+-- B1. Phần chốt buổi PT đang được viết lại; chưa có câu lệnh thực thi ở đây.
 
 -- B2. Báo cáo hoa hồng PT theo ngày buổi; @ToDate tính cả ngày cuối.
 -- Số vắng chỉ NoCheckIn; Missed khác và hủy tách riêng. Hoa hồng dùng bản chốt.

@@ -1,68 +1,102 @@
 package com.gms.service;
 
-import static org.junit.jupiter.api.Assertions.assertFalse;
-import static org.junit.jupiter.api.Assertions.assertTrue;
-
-import java.time.LocalDate;
+import com.gms.dto.PtSessionView;
+import com.gms.entity.Package;
+import com.gms.entity.Session;
+import java.sql.SQLException;
 import java.time.LocalDateTime;
-import java.time.LocalTime;
+import org.junit.jupiter.params.ParameterizedTest;
+import org.junit.jupiter.params.provider.CsvSource;
 import org.junit.jupiter.api.Test;
+import static org.junit.jupiter.api.Assertions.*;
 
-/** Kiểm tra buổi chờ chốt và điều kiện hoa hồng PT. */
+/** Kiểm tra điều kiện mở hộp và nhãn buổi trước khi Servlet chuyển lịch sang JSP. */
 class PtDashboardServiceTest {
 
-    private static final LocalDate DAY = LocalDate.of(2026, 9, 29);
-    private static final LocalTime END = LocalTime.of(19, 30);
+    private final PtDashboardService service = new PtDashboardService();
+    private static final LocalDateTime NOW = LocalDateTime.of(2026, 10, 7, 17, 0);
 
-    private boolean isOpenAt(LocalDateTime now) {
-        return PtDashboardService.isAwaitingClosure(DAY, END, now);
+    @ParameterizedTest
+    @CsvSource({
+        "SCHEDULED, 2026-10-07T17:01, true",
+        "SCHEDULED, 2026-10-08T08:00, true",
+        "SCHEDULED, 2026-10-07T17:00, false",
+        "SCHEDULED, 2026-10-07T16:59, false",
+        "SCHEDULED, 2026-10-06T18:00, false",
+        "CHECKED_IN, 2026-10-08T08:00, false",
+        "MISSED, 2026-10-08T08:00, false",
+        "CANCELLED, 2026-10-08T08:00, false"
+    })
+    void opensDialogOnlyForScheduledSessionBeforeStart(Session.Status status,
+            LocalDateTime startsAt, boolean expected) throws SQLException {
+        PtSessionView session = createSession(Package.Type.PT_SINGLE, status, null, startsAt);
+
+        service.prepareSessionDisplay(session, NOW);
+
+        assertEquals(expected, session.isCanOpenActions());
+        assertEquals(status, session.getStatus(), "Chuẩn bị màn hình không được đổi trạng thái gốc");
+    }
+
+    @ParameterizedTest
+    @CsvSource({
+        "SCHEDULED, Đã lên lịch, badge-warning",
+        "CHECKED_IN, Đã check-in, badge-success",
+        "MISSED, Vắng, badge-danger",
+        "CANCELLED, Đã hủy, badge-neutral"
+    })
+    void displaysVietnameseStatusWithExistingBadge(Session.Status status,
+            String label, String badgeClass) throws SQLException {
+        PtSessionView session = createSession(Package.Type.PT_SINGLE, status, null, NOW);
+
+        service.prepareSessionDisplay(session, NOW);
+
+        assertEquals(label, session.getStatusLabel());
+        assertEquals(badgeClass, session.getStatusBadgeClass());
+    }
+
+    @ParameterizedTest
+    @CsvSource({
+        "PT_SINGLE, PT cá nhân",
+        "PT_COUPLE, PT đôi",
+        "SINGLE_SESSION, Buổi lẻ"
+    })
+    void displaysSubscriptionType(Package.Type type, String label) throws SQLException {
+        PtSessionView session = createSession(type, Session.Status.SCHEDULED, null, NOW);
+
+        service.prepareSessionDisplay(session, NOW);
+
+        assertEquals(label, session.getSubscriptionTypeLabel());
+    }
+
+    @ParameterizedTest
+    @CsvSource({
+        "NO_CHECK_IN, Khách không check-in",
+        "NO_MEMBERSHIP, Không có membership hợp lệ",
+        "MEMBERSHIP_FROZEN, Membership đang bảo lưu"
+    })
+    void displaysMissedReasonOnlyOnMissedSession(Session.MissedReason reason,
+            String label) throws SQLException {
+        PtSessionView session = createSession(Package.Type.PT_COUPLE, Session.Status.MISSED, reason, NOW);
+        service.prepareSessionDisplay(session, NOW);
+        assertEquals(label, session.getMissedReasonLabel());
+
+        PtSessionView scheduled = createSession(Package.Type.PT_COUPLE, Session.Status.SCHEDULED, reason, NOW);
+        service.prepareSessionDisplay(scheduled, NOW);
+        assertNull(scheduled.getMissedReasonLabel());
     }
 
     @Test
-    void notPendingBeforeSessionStarts() {
-        assertFalse(isOpenAt(LocalDateTime.of(2026, 9, 29, 17, 59)));
+    void rejectsNonPtSubscriptionRatherThanRenderingWrongLabel() {
+        PtSessionView session = createSession(Package.Type.MEMBERSHIP, Session.Status.SCHEDULED, null, NOW);
+
+        assertThrows(SQLException.class, () -> service.prepareSessionDisplay(session, NOW));
     }
 
-    @Test
-    void notPendingDuringSession() {
-        assertFalse(isOpenAt(LocalDateTime.of(2026, 9, 29, 18, 0)));
-        assertFalse(isOpenAt(LocalDateTime.of(2026, 9, 29, 19, 0)));
-    }
-
-    @Test
-    void pendingAfterEndAndNextDay() {
-        assertTrue(isOpenAt(LocalDateTime.of(2026, 9, 30, 10, 0)));
-        assertTrue(isOpenAt(LocalDateTime.of(2026, 9, 30, 19, 30)));
-    }
-
-    @Test
-    void stillPendingUntilJobCloses() {
-        assertTrue(isOpenAt(LocalDateTime.of(2026, 9, 30, 19, 31)));
-    }
-
-    @Test
-    void exactEndStillExpected() {
-        assertFalse(isOpenAt(DAY.atTime(END)));
-        assertTrue(isOpenAt(DAY.atTime(END).plusSeconds(1)));
-    }
-
-    @Test
-    void checkedInAndMissedAlwaysEarnCommission() {
-        assertTrue(PtDashboardService.isCommissionable("CheckedIn", null));
-        assertTrue(PtDashboardService.isCommissionable("Missed", null));
-    }
-
-    @Test
-    void cancelledEarnsOnlyWhenPtCancelledWithRefundOrCustomerCancelled() {
-        assertTrue(PtDashboardService.isCommissionable("Cancelled", "ByPt"));
-        assertTrue(PtDashboardService.isCommissionable("Cancelled", "ByCustomer"));
-        // Phòng đóng cửa (CBR-57) / gói PT hết hạn (CBR-55): CancelType GymClosed / PackageExpired → không tính
-        assertFalse(PtDashboardService.isCommissionable("Cancelled", "GymClosed"));
-        assertFalse(PtDashboardService.isCommissionable("Cancelled", "PackageExpired"));
-    }
-
-    @Test
-    void scheduledNotYetCounted() {
-        assertFalse(PtDashboardService.isCommissionable("Scheduled", null));
+    /** Tạo một buổi mẫu; thời điểm kiểm tra cố định để test không phụ thuộc giờ chạy. */
+    private PtSessionView createSession(Package.Type type, Session.Status status,
+            Session.MissedReason reason, LocalDateTime startsAt) {
+        return new PtSessionView(10, startsAt.toLocalDate(), startsAt.toLocalTime(),
+                startsAt.plusMinutes(90).toLocalTime(), "Vũ Hoài Nam",
+                type == Package.Type.PT_COUPLE ? "Đỗ Lan Chi" : null, type, status, reason);
     }
 }

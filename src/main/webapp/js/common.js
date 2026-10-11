@@ -1829,3 +1829,30 @@ function normalizeSearchText(text) {
     const singleSpaced = withoutMarks.replace(/\s+/g, " ");
     return singleSpaced.trim();
 }
+
+// Bạt dùng chung: dashboard có .pt-awning thì cuốn khi đi xuống, thả khi đi lên.
+document.addEventListener("DOMContentLoaded", function () {
+    const page = document.querySelector(".pt-dashboard-page");
+    const awning = document.querySelector(".pt-awning");
+    if (!page || !awning) {
+        return;
+    }
+    let lastScrollY = window.scrollY;
+    let frameQueued = false;
+    function updateAwning() {
+        const currentScrollY = window.scrollY;
+        if (currentScrollY <= 80 || currentScrollY < lastScrollY) {
+            page.classList.remove("is-retracted");
+        } else if (currentScrollY > lastScrollY) {
+            page.classList.add("is-retracted");
+        }
+        lastScrollY = currentScrollY;
+        frameQueued = false;
+    }
+    window.addEventListener("scroll", function () {
+        if (!frameQueued) {
+            frameQueued = true;
+            window.requestAnimationFrame(updateAwning);
+        }
+    }, {passive: true});
+});

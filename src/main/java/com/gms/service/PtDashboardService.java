@@ -4,546 +4,646 @@ import com.gms.constant.Messages;
 import com.gms.constant.Role;
 import com.gms.dao.AccountDAO;
 import com.gms.dao.EmployeeDAO;
-import com.gms.dao.PersonDAO;
-import com.gms.dao.SessionDAO;
-import com.gms.dao.SubscriptionDAO;
-import com.gms.dao.TimeSlotDAO;
-import com.gms.dto.ChartBar;
-import com.gms.dto.CommissionLine;
-import com.gms.dto.PtClientView;
-import com.gms.dto.PtDashboardView;
+import com.gms.dao.PtDashboardDAO;
+import com.gms.dto.PtAssignedPackageView;
+import com.gms.dto.PtAttentionView;
+import com.gms.dto.PtClientPackageView;
+import com.gms.dto.PtCommissionSummaryView;
+import com.gms.dto.PtRatingView;
+import com.gms.dto.PtScheduleDayView;
 import com.gms.dto.PtSessionView;
 import com.gms.dto.ServiceResult;
-import com.gms.dto.SessionStatRow;
-import com.gms.dto.WeatherView;
 import com.gms.entity.Account;
 import com.gms.entity.Employee;
-import com.gms.entity.Person;
+import com.gms.entity.Package;
+import com.gms.entity.Session;
 import com.gms.util.DateTimeUtil;
+import java.math.BigDecimal;
+import java.math.RoundingMode;
 import java.sql.SQLException;
-import java.time.DayOfWeek;
 import java.time.LocalDate;
 import java.time.LocalDateTime;
-import java.time.LocalTime;
-import java.time.YearMonth;
-import java.time.format.DateTimeFormatter;
-import java.time.temporal.TemporalAdjusters;
 import java.util.ArrayList;
-import java.util.LinkedHashMap;
-import java.util.LinkedHashSet;
 import java.util.List;
-import java.util.Map;
-import java.util.Set;
 
-/** Gom dữ liệu dashboard PT, chỉ đọc trạng thái JOB-04. */
+/** Kiểm tra quyền và chuẩn bị dữ liệu các khối trên dashboard PT (UC-32). */
 public class PtDashboardService {
 
-    /** Các lựa chọn "Trong ..." của khối Buổi sắp tới (1 = chỉ ngày đã chọn); mặc định 7 như prototype. */
-    private static final List<Integer> RANGE_OPTIONS = List.of(1, 3, 7, 30);
-    private static final int DEFAULT_RANGE_DAYS = 7;
+    private static final int SCHEDULE_DAYS = 7; // Số ngày hiển thị đã chốt cho dashboard.
+    private static final int ATTENTION_DAYS = 14; // Phạm vi cảnh báo membership/bảo lưu, tính cả hôm nay.
 
-    /** Banner "khách thiếu gói tập" xét các buổi Scheduled trong 30 ngày tới (CBR-66). */
-    private static final int MISSING_MEMBERSHIP_LOOKAHEAD_DAYS = 30;
+    private final AccountDAO accountDAO = new AccountDAO(); // Đọc tài khoản và PersonId.
+    private final EmployeeDAO employeeDAO = new EmployeeDAO(); // Tìm hồ sơ PT từ PersonId.
+    private final PtDashboardDAO dashboardDAO = new PtDashboardDAO(); // Đọc lịch và dữ liệu gói của khách.
+    private final SystemConfigService systemConfigService = new SystemConfigService(); // Đọc P-22 trước khi hiện điểm.
 
-    /** Gói PT hết hạn trong 7 ngày thì coi là "sắp hết hạn". */
-    private static final int ENDING_SOON_DAYS = 7;
-
-    /** Số tháng gần nhất cho chọn ở ô "Kỳ" (tháng này + 2 tháng trước), cộng thêm quý này và quý trước. */
-    private static final int MONTH_OPTION_COUNT = 3;
-
-    private static final String[] ROMAN_QUARTERS = {"I", "II", "III", "IV"};
-
-    private static final DateTimeFormatter DAY_MONTH = DateTimeFormatter.ofPattern("dd/MM");
-    private static final DateTimeFormatter MONTH_YEAR = DateTimeFormatter.ofPattern("MM/yyyy");
-    private static final DateTimeFormatter MONTH_ONLY = DateTimeFormatter.ofPattern("MM");
-
-    private final AccountDAO accountDAO = new AccountDAO();
-    private final EmployeeDAO employeeDAO = new EmployeeDAO();
-    private final PersonDAO personDAO = new PersonDAO();
-    private final SessionDAO sessionDAO = new SessionDAO();
-    private final SubscriptionDAO subscriptionDAO = new SubscriptionDAO();
-    private final TimeSlotDAO timeSlotDAO = new TimeSlotDAO();
-    private final WeatherService weatherService = new WeatherService();
-
-    // ===== Entry point: lấy toàn bộ dashboard =====
-
-    /**
-     * Lấy toàn bộ dữ liệu dashboard của PT đang đăng nhập.
-     * Tài khoản phải là PT đang làm việc (GBR-10); không hợp lệ thì trả MSG07. Lỗi DB trả MSG04.
-     * Điền lần lượt: đầu trang → hoa hồng theo kỳ → buổi sắp tới theo bộ lọc ngày → điểm danh + banner thiếu gói → tóm tắt hôm nay → cột phụ (khách/tuần/tháng) neo theo "Từ ngày".
-     */
-    public ServiceResult<PtDashboardView> getDashboard(int accountId, String periodParam, String dateParam,
-            int rangeDays, String weatherDemo) {
+    /** Lấy Employees.EmployeeCode của PT đang đăng nhập để hiện cạnh tên ở đầu trang. */
+    public ServiceResult<String> getPtEmployeeCode(int accountId) {
         try {
-            // B1: tài khoản phải là PT đang làm việc (GBR-10). Lấy luôn hồ sơ Person để có họ tên
             Account account = accountDAO.findById(accountId);
-            Employee employee = account == null ? null : employeeDAO.findByPersonId(account.getPersonId());
-            boolean isWorkingPt = employee != null
-                    && employee.getPosition() == Role.PT
-                    && employee.getStatus() == Employee.Status.WORKING;
-            if (!isWorkingPt) {
+            if (account == null || account.getStatus() != Account.Status.ACTIVE) {
                 return ServiceResult.fail(Messages.MSG07_NO_PERMISSION);
             }
-            Person person = personDAO.findById(account.getPersonId());
-            int ptId = employee.getEmployeeId();
-            LocalDateTime now = DateTimeUtil.now();
-            LocalDate today = now.toLocalDate();
 
-            // B2: đầu trang — tên, lời chào, thời tiết
-            PtDashboardView view = new PtDashboardView();
-            fillHeader(view, employee, person, now);
-            WeatherView demo = weatherService.demoWeather(weatherDemo);
-            view.setWeather(demo != null ? demo : weatherService.getTodayWeather());
-
-            // B3: hoa hồng theo kỳ đã chọn (bảng theo nguồn buổi, thống kê trạng thái, biểu đồ)
-            fillCommission(view, ptId, periodParam, today);
-
-            // B4: buổi sắp tới theo bộ lọc ngày (bắt buộc, mặc định hôm nay — server kiểm lại, GBR-13)
-            LocalDate fromDate = DateTimeUtil.parseHtmlDate(dateParam);
-            if (fromDate == null) {
-                fromDate = today;
-                if (dateParam != null && dateParam.isEmpty()) {
-                    view.setDateError(String.format(Messages.MSG09_REQUIRED, "Ngày"));
-                }
+            Employee employee = employeeDAO.findByPersonId(account.getPersonId());
+            if (employee == null || employee.getPosition() != Role.PT
+                    || employee.getStatus() != Employee.Status.WORKING) {
+                return ServiceResult.fail(Messages.MSG07_NO_PERMISSION);
             }
-            int days = RANGE_OPTIONS.contains(rangeDays) ? rangeDays : DEFAULT_RANGE_DAYS;
-            view.setFromDateValue(fromDate.toString());
-            view.setFromToday(fromDate.equals(today));
-            view.setFromDateLabel((fromDate.equals(today) ? "Hôm nay" : dayOfWeekLabel(fromDate.getDayOfWeek()))
-                    + ", " + DateTimeUtil.formatDate(fromDate));
-            view.setRangeDays(days);
-            List<PtSessionView> upcoming = sessionDAO.findByPt(ptId, fromDate, fromDate.plusDays(days - 1), false);
-            for (PtSessionView session : upcoming) {
-                labelSession(session, today);
-            }
-            view.setUpcomingSessions(upcoming);
 
-            // B5: đọc buổi chờ chốt và banner thiếu gói (JOB-04)
-            List<PtSessionView> scheduled = sessionDAO.findByPt(ptId,
-                    LocalDate.of(1900, 1, 1), today.plusDays(MISSING_MEMBERSHIP_LOOKAHEAD_DAYS - 1), true);
-            fillPendingAndMissingMembership(view, scheduled, now);
-
-            // B6: tóm tắt HÔM NAY trên thẻ chào (luôn là hôm nay, không theo ô lọc)
-            fillToday(view, ptId, today);
-
-            // B7: cột phụ — TẤT CẢ theo NGÀY ĐANG LỌC (ô "Từ ngày") để cùng 1 mốc với khối Buổi sắp tới:
-            //     khách phụ trách vào ngày đó, tuần chứa ngày đó, tháng chứa ngày đó
-            fillClients(view, ptId, fromDate);
-            fillWeekAndMonth(view, ptId, fromDate, today);
-
-            return ServiceResult.ok(view);
-
-        } catch (SQLException e) {
-            e.printStackTrace();
+            return ServiceResult.ok(employee.getEmployeeCode());
+        } catch (SQLException exception) {
+            exception.printStackTrace();
             return ServiceResult.fail(Messages.MSG04_SYSTEM_BUSY);
         }
     }
 
-    // ===== Đầu trang =====
-
-    /** Điền mã NV, họ tên, chữ viết tắt avatar, tỷ lệ hoa hồng, lời chào, ngày hôm nay. */
-    private void fillHeader(PtDashboardView view, Employee employee, Person person, LocalDateTime now) {
-        String fullName = person == null ? "" : person.getFullName().trim();
-        String[] words = fullName.split("\\s+");
-        String firstWord = words[0];
-        String lastWord = words[words.length - 1];
-
-        view.setEmployeeCode(employee.getEmployeeCode());
-        view.setCommissionRate(employee.getCommissionRate() == null ? 0 : employee.getCommissionRate());
-        view.setFullName(fullName);
-        // Avatar = chữ đầu của chữ đầu tiên + chữ đầu của chữ cuối: "Đinh Công Sơn" → "ĐS", "David Miller" → "DM"
-        view.setInitials(fullName.isEmpty() ? "PT"
-                : (firstWord.substring(0, 1) + (words.length > 1 ? lastWord.substring(0, 1) : "")).toUpperCase());
-        view.setGreeting(buildGreeting(now.toLocalTime()));
-        view.setTodayLabel(dayOfWeekLabel(now.getDayOfWeek()) + ", " + DateTimeUtil.formatDate(now.toLocalDate()));
-    }
-
-    // ===== Hoa hồng =====
+    // =====================================================================
+    // 1. LỊCH 7 NGÀY: hàm lấy lịch và các hàm phụ của lịch nằm cùng nhóm.
+    // =====================================================================
 
     /**
-     * Điền khối Hoa hồng cho kỳ đã chọn (1 tháng hoặc 1 quý).
-     * Chỉ cộng buổi ĐƯỢC TÍNH hoa hồng (xem {@link #isCommissionable}); lọc theo NGÀY DIỄN RA BUỔI (CHỐT-D4).
-     * Số tiền lấy từ {@code CommissionAmount} đã chốt trên từng buổi (DBR-58), không tính lại.
+     * Lấy lịch của PT đang đăng nhập và tạo đủ 7 nhóm ngày, bắt đầu từ hôm nay.
+     * @param accountId mã tài khoản từ session, không lấy từ tham số trình duyệt
+     * @return các PtScheduleDayView do Service tạo, hoặc thông báo lỗi
      */
-    private void fillCommission(PtDashboardView view, int ptId, String periodParam, LocalDate today)
-            throws SQLException {
-        // B1: danh sách kỳ cho chọn + kỳ đang xem (không hợp lệ → tháng này)
-        List<PtDashboardView.PeriodOption> options = buildPeriodOptions(today);
-        view.setPeriodOptions(options);
-        String periodValue = options.get(0).getValue();
-        for (PtDashboardView.PeriodOption option : options) {
-            if (option.getValue().equals(periodParam)) {
-                periodValue = periodParam;
+    public ServiceResult<List<PtScheduleDayView>> getSchedule(int accountId) {
+        try {
+            // B1: kiểm tra tài khoản còn hoạt động và có tồn tại (GBR-10).
+            // truyền vào accountId lấy từ session sau bước login
+            Account account = accountDAO.findById(accountId);
+            if (account == null || account.getStatus() != Account.Status.ACTIVE) {
+                return ServiceResult.fail(Messages.MSG07_NO_PERMISSION);
             }
-        }
-        view.setPeriodValue(periodValue);
 
-        // B2: đổi kỳ ra khoảng ngày
-        boolean isQuarter = periodValue.contains("Q");
-        LocalDate fromDate;
-        LocalDate toDate;
-        if (isQuarter) {
-            int year = Integer.parseInt(periodValue.substring(0, 4));
-            int quarter = Integer.parseInt(periodValue.substring(6));
-            fromDate = LocalDate.of(year, (quarter - 1) * 3 + 1, 1);
-            toDate = YearMonth.from(fromDate.plusMonths(2)).atEndOfMonth();
-        } else {
-            YearMonth month = YearMonth.parse(periodValue);
-            fromDate = month.atDay(1);
-            toDate = month.atEndOfMonth();
-        }
+            // B2: tìm đúng hồ sơ PT đang làm việc (GBR-10).
+            // PT chỉ xem được Dashboard của mình, và trạng thái = đang làm việc
+            Employee employee = employeeDAO.findByPersonId(account.getPersonId());
+            if (employee == null || employee.getPosition() != Role.PT
+                    || employee.getStatus() != Employee.Status.WORKING) {
+                return ServiceResult.fail(Messages.MSG07_NO_PERMISSION);
+            }
 
-        // B3: cộng từng buổi. Bảng theo nguồn buổi giữ thứ tự cố định để dễ so giữa các kỳ
-        Map<String, CommissionLine> lines = new LinkedHashMap<>();
-        lines.put("PTSingle", new CommissionLine(sourceTypeLabel("PTSingle")));
-        lines.put("PTCouple", new CommissionLine(sourceTypeLabel("PTCouple")));
-        lines.put("SingleSession", new CommissionLine(sourceTypeLabel("SingleSession")));
-        List<ChartBar> bars = buildChartBars(fromDate, toDate, isQuarter);
+            // B3: lấy lịch từ hôm nay đến hôm nay + 6 ngày.
+            LocalDateTime now = DateTimeUtil.now();
+            LocalDate today = now.toLocalDate();
+            LocalDate toDate = today.plusDays(SCHEDULE_DAYS - 1);
+            List<PtSessionView> sessions = dashboardDAO.findSessions(
+                    employee.getEmployeeId(), today, toDate);
 
-        long total = 0;
-        int completed = 0;
-        int missed = 0;
-        int cancelledPaid = 0;
-        int cancelledUnpaid = 0;
-        for (SessionStatRow row : sessionDAO.findStatRows(ptId, fromDate, toDate)) {
-            boolean isCommissionable = isCommissionable(row.getStatus(), row.getCancelType());
-            if ("CheckedIn".equals(row.getStatus())) {
-                completed++;
-            } else if ("Missed".equals(row.getStatus())) {
-                missed++;
-            } else if ("Cancelled".equals(row.getStatus())) {
-                if (isCommissionable) {
-                    cancelledPaid++;
-                } else {
-                    cancelledUnpaid++;
+            // B3.1: bổ sung chữ tiếng Việt và điều kiện mở hộp cho từng DTO do DAO tạo.
+            // Lấy now một lần để các buổi được xét cùng thời điểm, kể cả lúc qua nửa đêm.
+            for (PtSessionView session : sessions) {
+                prepareSessionDisplay(session, now);
+            }
+
+            // B4: tạo từng nhóm ngày và chọn các buổi của ngày đó.
+            List<PtScheduleDayView> scheduleDays = new ArrayList<>();
+            for (int i = 0; i < SCHEDULE_DAYS; i++) { // Vòng lặp ngoài - SlotDate trong tuần
+                // B4.1: xác định ngày, nhãn và dấu hiệu hôm nay.
+                LocalDate slotDate = today.plusDays(i); // ngày tháng năm
+                String dayLabel = buildDayLabel(slotDate, today); // thứ/ Hôm nay
+                boolean isToday = slotDate.equals(today);
+
+                // B4.2: chọn các DTO buổi có ngày trùng slotDate.
+                // Tạo các buổi trong ngày = slotDate - Vòng lặp trong
+                List<PtSessionView> sessionsOfDay = new ArrayList<>();
+                for (PtSessionView session : sessions) {
+                    if (session.getSlotDate().equals(slotDate)) {
+                        sessionsOfDay.add(session);
+                    }
                 }
-            }
-            if (!isCommissionable) {
-                continue;
-            }
-            lines.get(row.getSourceType()).add(row.getCommissionAmount());
-            bars.get(chartIndex(row.getSlotDate(), fromDate, isQuarter)).add(row.getCommissionAmount());
-            total += row.getCommissionAmount();
-        }
 
-        // B4: chỉ giữ nguồn có buổi; tính chiều cao cột biểu đồ
-        List<CommissionLine> nonEmptyLines = new ArrayList<>();
-        int sessionCount = 0;
-        for (CommissionLine line : lines.values()) {
-            if (line.getSessionCount() > 0) {
-                nonEmptyLines.add(line);
-                sessionCount += line.getSessionCount();
+                // B4.3: tạo DTO ngày, kể cả khi danh sách buổi rỗng.
+                PtScheduleDayView scheduleDay = new PtScheduleDayView(
+                        slotDate, dayLabel, isToday, sessionsOfDay);
+                scheduleDays.add(scheduleDay);
             }
-        }
-        scaleChartBars(bars);
 
-        view.setCommissionLines(nonEmptyLines);
-        view.setCommissionTotal(total);
-        view.setCommissionSessionCount(sessionCount);
-        view.setCompletedCount(completed);
-        view.setMissedCount(missed);
-        view.setCancelledPaidCount(cancelledPaid);
-        view.setCancelledUnpaidCount(cancelledUnpaid);
-        view.setChartTitle(isQuarter ? "Theo tháng" : "Theo tuần");
-        view.setChartBars(bars);
-
-        // B5: dòng ghi chú dưới tiêu đề, giống prototype ("Tính tới hết 20/09 · 28 buổi đã dạy")
-        boolean isCurrent = !today.isBefore(fromDate) && !today.isAfter(toDate);
-        String prefix;
-        if (isQuarter) {
-            prefix = "Tháng " + fromDate.format(MONTH_ONLY) + " – " + toDate.format(MONTH_ONLY)
-                    + (isCurrent ? ", tính tới hết " + today.format(DAY_MONTH) : "");
-        } else {
-            prefix = isCurrent ? "Tính tới hết " + today.format(DAY_MONTH) : "Đã chốt";
+            // B5: trả lịch đã gom để Servlet chuyển sang JSP.
+            return ServiceResult.ok(scheduleDays);
+        } catch (SQLException exception) {
+            // B6: ghi lỗi kỹ thuật, trả thông báo thân thiện.
+            exception.printStackTrace();
+            return ServiceResult.fail(Messages.MSG04_SYSTEM_BUSY);
         }
-        view.setPeriodNote(prefix + " · " + sessionCount + " buổi tính hoa hồng");
     }
 
     /**
-     * Buổi có được tính hoa hồng cho PT không (theo "05_Dashboard_Rules.md" mục 3.2).
-     * CheckedIn / Missed → TÍNH (CBR-80). Cancelled với ByPt / ByCustomer → TÍNH (CBR-81, CBR-82).
-     * Cancelled với GymClosed / PackageExpired → KHÔNG tính (CBR-57, CBR-55). Scheduled → chưa tính.
+     * Bổ sung phần hiển thị vào PtSessionView do DAO tạo, không thay đổi dữ liệu gốc.
+     * @param session một buổi DAO đọc từ DB
+     * @param now thời điểm hiện tại theo giờ VN, lấy một lần trong getSchedule
      */
-    static boolean isCommissionable(String status, String cancelType) {
-        if ("CheckedIn".equals(status) || "Missed".equals(status)) {
-            return true;
-        }
-        return "Cancelled".equals(status)
-                && ("ByPt".equals(cancelType) || "ByCustomer".equals(cancelType));
-    }
-
-    /** Tháng này + 2 tháng trước + quý này + quý trước, VD: 09/2026, 08/2026, 07/2026, Quý III/2026, Quý II/2026. */
-    private List<PtDashboardView.PeriodOption> buildPeriodOptions(LocalDate today) {
-        List<PtDashboardView.PeriodOption> options = new ArrayList<>();
-        YearMonth thisMonth = YearMonth.from(today);
-        for (int i = 0; i < MONTH_OPTION_COUNT; i++) {
-            YearMonth month = thisMonth.minusMonths(i);
-            options.add(new PtDashboardView.PeriodOption(month.toString(), "Tháng " + month.format(MONTH_YEAR)));
-        }
-        LocalDate quarterStart = today.withDayOfMonth(1).withMonth((today.getMonthValue() - 1) / 3 * 3 + 1);
-        for (int i = 0; i < 2; i++) {
-            LocalDate start = quarterStart.minusMonths(3L * i);
-            int quarter = (start.getMonthValue() - 1) / 3 + 1;
-            options.add(new PtDashboardView.PeriodOption(start.getYear() + "-Q" + quarter,
-                    "Quý " + ROMAN_QUARTERS[quarter - 1] + "/" + start.getYear()));
-        }
-        return options;
-    }
-
-    /** Các cột biểu đồ rỗng: kỳ tháng → cột theo tuần (01–07, 08–14, 15–21, 22–28, 29–cuối); kỳ quý → 3 cột tháng. */
-    private List<ChartBar> buildChartBars(LocalDate fromDate, LocalDate toDate, boolean isQuarter) {
-        List<ChartBar> bars = new ArrayList<>();
-        if (isQuarter) {
-            for (int i = 0; i < 3; i++) {
-                bars.add(new ChartBar("T" + fromDate.plusMonths(i).format(MONTH_ONLY)));
-            }
-            return bars;
-        }
-        for (int startDay = 1; startDay <= toDate.getDayOfMonth(); startDay += 7) {
-            int endDay = Math.min(startDay + 6, toDate.getDayOfMonth());
-            bars.add(new ChartBar(String.format("%02d–%02d", startDay, endDay)));
-        }
-        return bars;
-    }
-
-    /** Buổi ngày date rơi vào cột thứ mấy của biểu đồ. */
-    private int chartIndex(LocalDate date, LocalDate fromDate, boolean isQuarter) {
-        return isQuarter
-                ? date.getMonthValue() - fromDate.getMonthValue()
-                : (date.getDayOfMonth() - 1) / 7;
-    }
-
-    /** Chiều cao cột = % so với cột cao nhất; cột có tiền mà quá thấp thì vẫn cao tối thiểu 6% để nhìn thấy. */
-    private void scaleChartBars(List<ChartBar> bars) {
-        long max = 0;
-        for (ChartBar bar : bars) {
-            max = Math.max(max, bar.getAmount());
-        }
-        for (ChartBar bar : bars) {
-            int percent = max == 0 ? 0 : (int) Math.round(bar.getAmount() * 100.0 / max);
-            bar.setHeightPercent(bar.getAmount() > 0 ? Math.max(percent, 6) : 0);
-        }
-    }
-
-    // ===== Buổi chờ chốt + banner thiếu gói tập =====
-
-    /** Lọc buổi đã hết giờ và khách thiếu gói sắp tới. */
-    private void fillPendingAndMissingMembership(PtDashboardView view, List<PtSessionView> scheduled,
-            LocalDateTime now) {
-        LocalDate today = now.toLocalDate();
-        List<PtSessionView> pending = new ArrayList<>();
-        Set<String> missingCustomers = new LinkedHashSet<>();
-        LocalDate firstMissingDate = null;
-        for (PtSessionView session : scheduled) {
-            if (isAwaitingClosure(session.getSlotDate(), session.getEndTime(), now)) {
-                labelSession(session, today);
-                pending.add(session);
-            }
-            if (session.isMissingMembership() && !session.getSlotDate().isBefore(today)) {
-                missingCustomers.add(session.getCustomerName()
-                        + (session.getPartnerName() == null ? "" : " & " + session.getPartnerName()));
-                if (firstMissingDate == null) {
-                    firstMissingDate = session.getSlotDate();
-                }
-            }
-        }
-        view.setPendingClosureSessions(pending);
-        view.setMissingMembershipCustomerCount(missingCustomers.size());
-        view.setMissingMembershipFirstDate(firstMissingDate == null ? null : firstMissingDate.format(DAY_MONTH));
-    }
-
-    /** Buổi Scheduled hết giờ đang chờ hệ thống chốt. */
-    static boolean isAwaitingClosure(LocalDate date, LocalTime endTime, LocalDateTime now) {
-        return date.atTime(endTime).isBefore(now);
-    }
-
-    // ===== Cột phụ =====
-
-    /** Khách phụ trách vào ngày onDate + đánh dấu ai sắp hết gói (≤ 7 ngày). */
-    private void fillClients(PtDashboardView view, int ptId, LocalDate onDate) throws SQLException {
-        List<PtClientView> clients = subscriptionDAO.findClientsOfPt(ptId, onDate);
-        int endingSoon = 0;
-        for (PtClientView client : clients) {
-            client.setPackageLabel(sourceTypeLabel(client.getSourceType()));
-            client.setEndDateText(DateTimeUtil.formatDate(client.getEndDate()));
-            client.setFrozen("Frozen".equals(client.getStatus()));
-            boolean isEndingSoon = !client.getEndDate().isAfter(onDate.plusDays(ENDING_SOON_DAYS));
-            client.setEndingSoon(isEndingSoon);
-            if (isEndingSoon) {
-                endingSoon++;
-            }
-        }
-        view.setClients(clients);
-        view.setClientsEndingSoon(endingSoon);
-    }
-
-    /**
-     * Tóm tắt HÔM NAY cho thẻ chào: số buổi hôm nay (mọi trạng thái) và số slot trống từ hôm nay tới Chủ nhật.
-     */
-    private void fillToday(PtDashboardView view, int ptId, LocalDate today) throws SQLException {
-        LocalDate thisSunday = today.with(TemporalAdjusters.nextOrSame(DayOfWeek.SUNDAY));
-        view.setTodaySessionCount(sessionDAO.findStatRows(ptId, today, today).size());
-        view.setTodayWeekFreeSlots(timeSlotDAO.countFreeSlots(ptId, today, thisSunday));
-    }
-
-    /**
-     * Ô "Tuần" và ô "Tháng" của cột phụ — xét theo ngày anchor (ô "Từ ngày"), không theo hôm nay.
-     * Tuần = thứ 2 → chủ nhật chứa anchor: đếm buổi theo trạng thái + slot còn trống.
-     * Tháng = tháng chứa anchor, chia tiền hoa hồng làm 3 phần: đã chốt (isCommissionable), chờ chốt (Scheduled đã qua), dự kiến (Scheduled từ hôm nay trở đi).
-     * VD David, anchor 23/09 (hôm nay 30/09) → Tháng 09/2026: đã chốt 0đ, chờ chốt 270.000đ (1 buổi), dự kiến 0đ.
-     */
-    private void fillWeekAndMonth(PtDashboardView view, int ptId, LocalDate anchor, LocalDate today)
-            throws SQLException {
-        // B1: khoảng ngày của tuần và tháng chứa anchor
-        LocalDate weekStart = anchor.with(TemporalAdjusters.previousOrSame(DayOfWeek.MONDAY));
-        LocalDate weekEnd = weekStart.plusDays(6);
-        YearMonth month = YearMonth.from(anchor);
-        LocalDate monthStart = month.atDay(1);
-        LocalDate monthEnd = month.atEndOfMonth();
-        LocalDate readFrom = weekStart.isBefore(monthStart) ? weekStart : monthStart;
-        LocalDate readTo = weekEnd.isAfter(monthEnd) ? weekEnd : monthEnd;
-
-        // B2: cộng / đếm từng buổi vào tuần và tháng
-        int weekScheduled = 0;
-        int weekTaught = 0;
-        int weekMissed = 0;
-        int weekCancelled = 0;
-        int earnedCount = 0;
-        long earnedAmount = 0;
-        int pendingCount = 0;
-        long pendingAmount = 0;
-        int expectedCount = 0;
-        long expectedAmount = 0;
-        for (SessionStatRow row : sessionDAO.findStatRows(ptId, readFrom, readTo)) {
-            LocalDate date = row.getSlotDate();
-            String status = row.getStatus();
-
-            boolean isInWeek = !date.isBefore(weekStart) && !date.isAfter(weekEnd);
-            if (isInWeek) {
-                switch (status) {
-                    case "CheckedIn":
-                        weekTaught++;
-                        break;
-                    case "Missed":
-                        weekMissed++;
-                        break;
-                    case "Cancelled":
-                        weekCancelled++;
-                        break;
-                    default:
-                        weekScheduled++;
-                        break;
-                }
-            }
-
-            boolean isInMonth = !date.isBefore(monthStart) && !date.isAfter(monthEnd);
-            if (!isInMonth) {
-                continue;
-            }
-            if (isCommissionable(status, row.getCancelType())) {
-                earnedCount++;
-                earnedAmount += row.getCommissionAmount();
-            } else if ("Scheduled".equals(status) && isAwaitingClosure(date, row.getEndTime(), DateTimeUtil.now())) {
-                pendingCount++;
-                pendingAmount += row.getCommissionAmount();
-            } else if ("Scheduled".equals(status)) {
-                expectedCount++;
-                expectedAmount += row.getCommissionAmount();
-            }
-        }
-
-        // B3: nhãn ghi rõ tuần nào, tháng nào — "Tuần này · 28/09 – 04/10" hoặc "Tuần 21/09 – 27/09"
-        boolean isThisWeek = !today.isBefore(weekStart) && !today.isAfter(weekEnd);
-        view.setWeekLabel((isThisWeek ? "Tuần này · " : "Tuần ")
-                + weekStart.format(DAY_MONTH) + " – " + weekEnd.format(DAY_MONTH));
-        view.setWeekScheduled(weekScheduled);
-        view.setWeekTaught(weekTaught);
-        view.setWeekMissed(weekMissed);
-        view.setWeekCancelled(weekCancelled);
-        // Slot trống chỉ tính từ hôm nay trở đi (slot ngày đã qua không còn đặt được); tuần đã qua → null, JSP ẩn dòng
-        view.setWeekFreeSlots(weekEnd.isBefore(today) ? null
-                : timeSlotDAO.countFreeSlots(ptId, weekStart.isAfter(today) ? weekStart : today, weekEnd));
-
-        view.setMonthLabel((month.equals(YearMonth.from(today)) ? "Tháng này · " : "Tháng ") + month.format(MONTH_YEAR));
-        view.setMonthEarnedCount(earnedCount);
-        view.setMonthEarnedAmount(earnedAmount);
-        view.setMonthPendingCount(pendingCount);
-        view.setMonthPendingAmount(pendingAmount);
-        view.setMonthExpectedCount(expectedCount);
-        view.setMonthExpectedAmount(expectedAmount);
-    }
-
-    // ===== Hàm phụ =====
-
-    /** Gắn nhãn ngày, giờ, tên gói, trạng thái tiếng Việt + màu badge cho 1 buổi. */
-    private void labelSession(PtSessionView session, LocalDate today) {
-        LocalDate date = session.getSlotDate();
-        String dayLabel;
-        if (date.equals(today)) {
-            dayLabel = "Hôm nay";
-        } else if (date.equals(today.plusDays(1))) {
-            dayLabel = "Mai";
-        } else if (date.equals(today.minusDays(1))) {
-            dayLabel = "Hôm qua";
-        } else {
-            dayLabel = date.format(DAY_MONTH);
-        }
-        session.setDayLabel(dayLabel);
-        session.setTimeRange(DateTimeUtil.formatTime(session.getStartTime())
-                + " – " + DateTimeUtil.formatTime(session.getEndTime()));
-        session.setPackageLabel(sourceTypeLabel(session.getSourceType()));
-
-        // GBR-01: trạng thái lưu tiếng Anh, hiện tiếng Việt. GBR-28: vàng = chờ, xanh = thành công, đỏ = hủy / thất bại
-        switch (session.getStatus()) {
-            case "CheckedIn":
-                session.setStatusLabel("Đã check-in");
-                session.setStatusBadge("badge-success");
+    void prepareSessionDisplay(PtSessionView session, LocalDateTime now) throws SQLException {
+        // B1: lấy loại gói gốc để chọn chữ hiện dưới tên khách.
+        switch (session.getSubscriptionType()) {
+            case PT_SINGLE:
+                session.setSubscriptionTypeLabel("PT cá nhân");
                 break;
-            case "Missed":
-                session.setStatusLabel("Vắng");
-                session.setStatusBadge("badge-danger");
+            case PT_COUPLE:
+                session.setSubscriptionTypeLabel("PT đôi");
                 break;
-            case "Cancelled":
-                session.setStatusLabel("Đã hủy");
-                session.setStatusBadge("badge-danger");
+            case SINGLE_SESSION:
+                session.setSubscriptionTypeLabel("Buổi lẻ");
                 break;
             default:
-                session.setStatusLabel("Đã xếp");
-                session.setStatusBadge("badge-warning");
+                throw new SQLException("Loại gói không hợp lệ cho buổi PT, SessionId=" + session.getSessionId());
+        }
+
+        // B2: lấy trạng thái gốc để chọn chữ và màu badge; không ghi lại Sessions.Status.
+        switch (session.getStatus()) {
+            case SCHEDULED:
+                session.setStatusLabel("Đã lên lịch");
+                session.setStatusBadgeClass("badge-warning");
+                break;
+            case CHECKED_IN:
+                session.setStatusLabel("Đã check-in");
+                session.setStatusBadgeClass("badge-success");
+                break;
+            case MISSED:
+                session.setStatusLabel("Vắng");
+                session.setStatusBadgeClass("badge-danger");
+                break;
+            case CANCELLED:
+                session.setStatusLabel("Đã hủy");
+                session.setStatusBadgeClass("badge-neutral");
                 break;
         }
+
+        // B3: chỉ hiện lý do trên buổi vắng; buổi khác không có dòng lý do.
+        session.setMissedReasonLabel(null);
+        if (session.getStatus() == Session.Status.MISSED && session.getMissedReason() != null) {
+            switch (session.getMissedReason()) {
+                case NO_CHECK_IN:
+                    session.setMissedReasonLabel("Khách không check-in");
+                    break;
+                case NO_MEMBERSHIP:
+                    session.setMissedReasonLabel("Không có membership hợp lệ");
+                    break;
+                case MEMBERSHIP_FROZEN:
+                    session.setMissedReasonLabel("Membership đang bảo lưu");
+                    break;
+            }
+        }
+
+        // B4: chỉ mở hộp với buổi còn Scheduled và chưa đến giờ bắt đầu (BR-69).
+        // Các nút trong hộp vẫn khóa cho đến khi có Service xử lý từng nghiệp vụ.
+        LocalDateTime startsAt = LocalDateTime.of(session.getSlotDate(), session.getStartTime());
+        boolean canOpenActions = session.getStatus() == Session.Status.SCHEDULED
+                && startsAt.isAfter(now); // Giờ bắt đầu nằm sau thời điểm hiện tại → buổi chưa bắt đầu.
+        session.setCanOpenActions(canOpenActions);
     }
 
-    /** Đổi loại gói của buổi PT sang tên hiển thị (khớp cột "Nguồn buổi" của prototype). */
-    private String sourceTypeLabel(String sourceType) {
-        if ("PTSingle".equals(sourceType)) {
-            return "Gói PT cá nhân";
+    /** Chọn nhãn ngày để JSP hiện “Hôm nay” hoặc tên thứ tiếng Việt. */
+    private String buildDayLabel(LocalDate slotDate, LocalDate today) {
+        // B1: ưu tiên nhãn hôm nay cho ngày đầu lịch.
+        if (slotDate.equals(today)) {
+            return "Hôm nay";
         }
-        if ("PTCouple".equals(sourceType)) {
-            return "Gói PT Couple";
+
+        // B2: đổi thứ của slotDate thành nhãn tiếng Việt.
+        switch (slotDate.getDayOfWeek()) {
+            case MONDAY:
+                return "Thứ Hai";
+            case TUESDAY:
+                return "Thứ Ba";
+            case WEDNESDAY:
+                return "Thứ Tư";
+            case THURSDAY:
+                return "Thứ Năm";
+            case FRIDAY:
+                return "Thứ Sáu";
+            case SATURDAY:
+                return "Thứ Bảy";
+            default:
+                return "Chủ Nhật";
         }
-        if ("SingleSession".equals(sourceType)) {
-            return "Buổi lẻ khách tự đặt";
-        }
-        return sourceType;
     }
 
-    /** Lời chào theo giờ: trước 11h sáng, trước 14h trưa, trước 18h chiều, còn lại tối. */
-    private String buildGreeting(LocalTime now) {
-        if (now.isBefore(LocalTime.of(11, 0))) {
-            return "Chào buổi sáng";
+
+    // =====================================================================
+    // 2. CẦN CHÚ Ý: hàm lấy cảnh báo và các hàm phụ nằm ngay bên dưới.
+    // =====================================================================
+    // Luồng gọi: getAttentionItems -> buildAttentionItems -> selectAttentionPackages.
+    // Sau khi chọn dữ liệu: buildAttentionItems gọi buildAttentionItem cho từng dòng.
+    // Riêng gói đôi: buildAttentionItem gọi findPartnerPackage để kiểm tra người còn lại.
+
+    /**
+     * Hàm chính, Servlet gọi: kiểm tra quyền PT, gọi DAO lấy dữ liệu 14 ngày,
+     * rồi gọi buildAttentionItems và bọc danh sách cảnh báo trong ServiceResult.
+     * Không tạo từng DTO ở đây; phần tạo một DTO nằm trong buildAttentionItem.
+     * Chỉ xử lý membership và bảo lưu; ngưỡng cảnh báo gói PT sắp hết chưa được chốt.
+     * @param accountId mã tài khoản từ session, không lấy mã PT từ trình duyệt
+     * @return danh sách PtAttentionView do Service tạo; rỗng nếu không có vấn đề
+     */
+    public ServiceResult<List<PtAttentionView>> getAttentionItems(int accountId) {
+        try {
+            // B1: kiểm tra tài khoản còn hoạt động.
+            Account account = accountDAO.findById(accountId);
+            if (account == null || account.getStatus() != Account.Status.ACTIVE) {
+                return ServiceResult.fail(Messages.MSG07_NO_PERMISSION);
+            }
+
+            // B2: tìm hồ sơ PT đang làm việc của chính tài khoản này.
+            Employee employee = employeeDAO.findByPersonId(account.getPersonId());
+            if (employee == null || employee.getPosition() != Role.PT
+                    || employee.getStatus() != Employee.Status.WORKING) {
+                return ServiceResult.fail(Messages.MSG07_NO_PERMISSION);
+            }
+
+            // B3: lấy một thời điểm giờ VN và đọc dữ liệu từ hôm nay đến hôm nay + 13 ngày.
+            LocalDateTime now = DateTimeUtil.now();
+            LocalDate today = now.toLocalDate();
+            LocalDate toDate = today.plusDays(ATTENTION_DAYS - 1);
+            // Lấy cả dòng hợp lệ + dòng không hợp lệ
+            List<PtClientPackageView> clientPackages = dashboardDAO.findClientPackages(
+                    employee.getEmployeeId(), today, toDate, now);
+
+            // B4: gom các ngày cùng vấn đề, rồi tạo DTO có field hiển thị trực tiếp.
+            List<PtAttentionView> attentionItems = buildAttentionItems(clientPackages, today);
+            return ServiceResult.ok(attentionItems);
+        } catch (SQLException exception) {
+            // B5: lỗi đọc dữ liệu được báo riêng, không trả danh sách rỗng giả là không có cảnh báo.
+            exception.printStackTrace();
+            return ServiceResult.fail(Messages.MSG04_SYSTEM_BUSY);
         }
-        if (now.isBefore(LocalTime.of(14, 0))) {
-            return "Chào buổi trưa";
-        }
-        if (now.isBefore(LocalTime.of(18, 0))) {
-            return "Chào buổi chiều";
-        }
-        return "Chào buổi tối";
     }
 
-    /** VD MONDAY → "Thứ 2", SUNDAY → "Chủ nhật". */
-    private String dayOfWeekLabel(DayOfWeek dayOfWeek) {
-        return dayOfWeek == DayOfWeek.SUNDAY ? "Chủ nhật" : "Thứ " + (dayOfWeek.getValue() + 1);
+    /**
+     * getAttentionItems gọi hàm này để chuyển list dữ liệu DAO thành list cảnh báo Service.
+     * Gọi selectAttentionPackages để bỏ khách không có vấn đề và gom ngày trùng vấn đề.
+     * Sau đó gọi buildAttentionItem cho từng dòng đã chọn, thêm DTO vào attentionItems.
+     * @param clientPackages các DTO dữ liệu gốc do PtDashboardDAO.findClientPackages tạo
+     * @param today ngày hiện tại theo giờ VN để phân biệt đã hết hạn với thiếu gói cho ngày tập
+     * @return danh sách cảnh báo, không chứa dòng cho khách dùng được gym vào ngày tập
+     * @throws SQLException nếu thiếu dữ liệu người còn lại của gói đôi
+     */
+    List<PtAttentionView> buildAttentionItems(List<PtClientPackageView> clientPackages,
+            LocalDate today) throws SQLException {
+        // B1: chọn một DTO gốc cho mỗi vấn đề, giữ buổi gần nhất thay vì tạo dòng cho mọi buổi.
+        // attentionPackages = Bỏ các khách dùng được gym + gom các khách cùng 1 loại vấn đề + giữ dòng có ngày tập sắp tới sớm nhất
+        List<PtClientPackageView> attentionPackages = selectAttentionPackages(clientPackages);
+
+        // B2: chuyển từng DTO được chọn thành một dòng cảnh báo.
+        List<PtAttentionView> attentionItems = new ArrayList<>();
+        for (PtClientPackageView clientPackage : attentionPackages) {
+            // buildAttentionItem = Nhận một DTO gốc đã được chọn => Copy các field cần hiển thị + Tạo nhãn và lời nhắc, xét thêm người còn lại nếu là PT đôi
+            PtAttentionView attentionItem = buildAttentionItem(clientPackage, clientPackages, today);
+            attentionItems.add(attentionItem);
+        }
+        return attentionItems;
+    }
+
+    /**
+     * buildAttentionItems gọi hàm này để chọn dữ liệu cần cảnh báo, chưa tạo PtAttentionView.
+     * Bỏ khách đủ membership và không bảo lưu; giữ ngày gần nhất theo khách + gói + loại vấn đề.
+     * Ví dụ 5 ngày thiếu membership cùng khách/gói chỉ giữ 1 PtClientPackageView của ngày gần nhất.
+     * @param clientPackages toàn bộ dữ liệu DAO, gồm cả khách không có vấn đề
+     * @return list DTO gốc đã chọn; rỗng nếu không cần cảnh báo
+     */
+    private List<PtClientPackageView> selectAttentionPackages(List<PtClientPackageView> clientPackages) {
+        List<PtClientPackageView> attentionPackages = new ArrayList<>();
+        for (PtClientPackageView clientPackage : clientPackages) {
+            // B1: đủ membership và không bảo lưu thì không cần cảnh báo.
+            // Bỏ qua cảnh báo, ko quan tâm nhóm này
+            if (clientPackage.isHasMembershipOnSessionDate() && !clientPackage.isFrozenOnSessionDate()) {
+                continue;
+            }
+
+
+            // Nhóm cần hiển thị lên
+            // B2: tìm vấn đề đã chọn của cùng khách và cùng gói. => gom nhóm
+            // frozen = true là cảnh báo bảo lưu; false ở đây là cảnh báo thiếu membership (đã bỏ khách đủ gói ở B1).
+            int existingIndex = -1;
+            for (int i = 0; i < attentionPackages.size(); i++) {
+                PtClientPackageView existingPackage = attentionPackages.get(i);
+                if (existingPackage.getCustomerId() == clientPackage.getCustomerId()
+                        && existingPackage.getPtSubscriptionId() == clientPackage.getPtSubscriptionId()
+                        && existingPackage.isFrozenOnSessionDate() == clientPackage.isFrozenOnSessionDate()) {
+                    existingIndex = i;
+                    break;
+                }
+            }
+
+            // B3: mỗi khách + gói PT + loại vấn đề chỉ giữ một dòng cảnh báo.
+            // Khác khách, khác gói hoặc khác loại vấn đề thì vẫn thêm một dòng riêng.
+            // existingIndex là vị trí dòng đã tìm được ở B2; -1 nghĩa là chưa tìm thấy.
+            if (existingIndex == -1) {
+                // B3.1: chưa có dòng cùng cả ba thông tin trên, thêm DTO đang xét vào danh sách.
+                attentionPackages.add(clientPackage);
+            } else {
+                // B3.2: đã có dòng trùng, lấy DTO đang giữ tại vị trí existingIndex để so ngày tập.
+                PtClientPackageView existingPackage = attentionPackages.get(existingIndex);
+                // DTO đang xét có ngày tập sớm hơn thì dùng nó làm cảnh báo cần xử lý trước.
+                // Ví dụ đang giữ 15/10, gặp 12/10 thì thay; gặp 18/10 thì giữ nguyên 15/10.
+                if (clientPackage.getSessionDate().isBefore(existingPackage.getSessionDate())) {
+                    // set thay DTO tại vị trí cũ, không thêm dòng; số dòng cảnh báo vẫn giữ nguyên.
+                    attentionPackages.set(existingIndex, clientPackage);
+                }
+            }
+        }
+        return attentionPackages;
+    }
+
+    /**
+     * buildAttentionItems gọi hàm này để tạo đúng một PtAttentionView từ một dòng dữ liệu đã chọn.
+     * Chuẩn bị tiêu đề, lời nhắc, nhãn loại gói và tình trạng membership; chép các giá trị cần hiện.
+     * Nếu là gói đôi, gọi findPartnerPackage trên list DAO đầy đủ để giải thích người còn lại.
+     * @param clientPackage dữ liệu của khách/gói/ngày được chọn cho cảnh báo
+     * @param clientPackages list DAO đầy đủ, giữ cả người có membership hợp lệ để xét gói đôi
+     * @param today ngày hiện tại giờ VN để chọn nhãn đã hết hạn hay không bao phủ ngày tập
+     * @return một DTO có field trực tiếp để JSP hiển thị
+     * @throws SQLException nếu thiếu dữ liệu người còn lại của gói đôi
+     */
+    private PtAttentionView buildAttentionItem(PtClientPackageView clientPackage,
+            List<PtClientPackageView> clientPackages, LocalDate today) throws SQLException {
+        // B1: chọn tiêu đề/lời nhắc. Ngày tập lấy từ getSessionDate(), in dd/MM/yyyy.
+        String sessionDateText = DateTimeUtil.formatDate(clientPackage.getSessionDate());
+        String attentionTitle;
+        String attentionMessage;
+        if (clientPackage.isFrozenOnSessionDate()) {
+            attentionTitle = "Membership đang bảo lưu";
+            attentionMessage = "Buổi ngày " + sessionDateText + " nằm trong kỳ bảo lưu của khách.";
+        } else {
+            attentionTitle = "Cần membership";
+            attentionMessage = "Cần membership hợp lệ cho buổi ngày " + sessionDateText + ".";
+        }
+
+        // B2: chọn nhãn loại gói; gói đôi phải đọc người còn lại tại đúng ngày tập này.
+        String ptSubscriptionTypeLabel = "PT cá nhân";
+        if (clientPackage.getPtSubscriptionType() == Package.Type.PT_COUPLE) {
+            ptSubscriptionTypeLabel = "PT đôi";
+            PtClientPackageView partner = findPartnerPackage(clientPackage, clientPackages);
+            if (partner == null) {
+                throw new SQLException("Thiếu dữ liệu người còn lại của gói đôi, SubscriptionId="
+                        + clientPackage.getPtSubscriptionId());
+            }
+
+            boolean partnerCanUseGym = partner.isHasMembershipOnSessionDate()
+                    && !partner.isFrozenOnSessionDate();
+            if (partnerCanUseGym) {
+                attentionMessage += " " + partner.getCustomerName()
+                        + " vẫn dùng được gym vào ngày này.";
+            } else {
+                attentionMessage += " " + partner.getCustomerName()
+                        + " cũng không dùng được gym vào ngày này; cả hai cần được kiểm tra trước buổi tập.";
+            }
+        }
+
+        // B3: ưu tiên bảo lưu; nếu thiếu gói thì dùng hạn membership và today để giải thích.
+        String membershipStatusLabel;
+        if (clientPackage.isFrozenOnSessionDate()) {
+            membershipStatusLabel = "Đang bảo lưu";
+        } else if (clientPackage.getMembershipEndDate() == null) {
+            membershipStatusLabel = "Chưa có membership phù hợp";
+        } else if (clientPackage.getMembershipEndDate().isBefore(today)) {
+            membershipStatusLabel = "Đã hết hạn";
+        } else {
+            membershipStatusLabel = "Không bao phủ ngày tập";
+        }
+
+        // B4: chép các giá trị cần hiện; không chuyển mã khách/gói hoặc hai boolean sang DTO hiển thị.
+        // JSP sẽ đọc trực tiếp item.customerName, item.ptEndDate, item.attentionTitle...
+        return new PtAttentionView(
+                clientPackage.getCustomerName(), clientPackage.getPtEndDate(),
+                clientPackage.getScheduledSessionCount(), clientPackage.getSessionDate(),
+                clientPackage.getMembershipEndDate(), clientPackage.getFreezeEndDate(),
+                ptSubscriptionTypeLabel, membershipStatusLabel, attentionTitle, attentionMessage);
+    }
+
+    /**
+     * buildAttentionItem chỉ gọi hàm này khi đang tạo cảnh báo cho gói đôi.
+     * Tìm dữ liệu người còn lại theo cùng mã gói PT + ngày tập, khác customerId; không tìm theo tên.
+     * Không tạo DTO cảnh báo; trả DTO gốc để hàm gọi xét người còn lại có dùng được gym không.
+     * @param clientPackage dữ liệu của người đang được cảnh báo
+     * @param clientPackages list DAO đầy đủ, chưa bỏ người có membership hợp lệ
+     * @return dữ liệu người còn lại; null nếu thiếu, hàm gọi sẽ báo lỗi thay vì tự đoán
+     */
+    private PtClientPackageView findPartnerPackage(PtClientPackageView clientPackage,
+            List<PtClientPackageView> clientPackages) {
+        for (PtClientPackageView otherCustomer : clientPackages) {
+            if (otherCustomer.getPtSubscriptionId() == clientPackage.getPtSubscriptionId()
+                    && otherCustomer.getSessionDate().equals(clientPackage.getSessionDate())
+                    && otherCustomer.getCustomerId() != clientPackage.getCustomerId()) {
+                return otherCustomer;
+            }
+        }
+        return null;
+    }
+
+
+    // =====================================================================
+    // 3. KHÁCH PHỤ TRÁCH: một DTO cho mỗi gói PT/buổi lẻ, chỉ bổ sung nhãn.
+    // =====================================================================
+
+    /**
+     * Servlet gọi hàm này để lấy đầy đủ danh sách gói PT/buổi lẻ của PT đang đăng nhập.
+     * DAO đã chọn gói phù hợp và tạo PtAssignedPackageView; Service bổ sung nhãn vào chính DTO đó.
+     * Không gom theo ngày, không gom nhiều gói của cùng khách thành một dòng, không tạo DTO thứ hai.
+     * @param accountId mã tài khoản lấy từ session đăng nhập, không phải mã nhân viên PT
+     * @return danh sách DTO đã có nhãn; rỗng nếu không có gói phù hợp, hoặc kết quả lỗi
+     */
+    public ServiceResult<List<PtAssignedPackageView>> getAssignedPackages(int accountId) {
+        try {
+            // B1: kiểm tra tài khoản tồn tại và còn hoạt động.
+            Account account = accountDAO.findById(accountId);
+            if (account == null || account.getStatus() != Account.Status.ACTIVE) {
+                return ServiceResult.fail(Messages.MSG07_NO_PERMISSION);
+            }
+
+            // B2: từ PersonId của tài khoản, tìm hồ sơ PT đang làm việc.
+            // EmployeeId tìm được ở đây mới là mã PT dùng để lọc dữ liệu trong DAO.
+            Employee employee = employeeDAO.findByPersonId(account.getPersonId());
+            if (employee == null || employee.getPosition() != Role.PT
+                    || employee.getStatus() != Employee.Status.WORKING) {
+                return ServiceResult.fail(Messages.MSG07_NO_PERMISSION);
+            }
+
+            // B3: lấy thời điểm giờ VN một lần, gọi DAO lấy các DTO đã điền năm field gốc.
+            // Gói cá nhân/đôi theo PT trên gói; buổi lẻ theo PT thực tế của buổi chưa bắt đầu.
+            LocalDateTime now = DateTimeUtil.now();
+            List<PtAssignedPackageView> assignedPackages = dashboardDAO.findAssignedPackages(
+                    employee.getEmployeeId(), now);
+
+            // B4: lặp từng DTO DAO đã tạo, đổi loại gói thành nhãn rồi gán vào chính DTO đó.
+            // Chỉ bổ sung ptSubscriptionTypeLabel; tên, hạn gói và số buổi vẫn giữ nguyên dữ liệu DAO.
+            for (PtAssignedPackageView assignedPackage : assignedPackages) {
+                switch (assignedPackage.getPtSubscriptionType()) {
+                    case PT_SINGLE:
+                        assignedPackage.setPtSubscriptionTypeLabel("PT cá nhân");
+                        break;
+                    case PT_COUPLE:
+                        assignedPackage.setPtSubscriptionTypeLabel("PT đôi");
+                        break;
+                    case SINGLE_SESSION:
+                        assignedPackage.setPtSubscriptionTypeLabel("Buổi lẻ");
+                        break;
+                    default:
+                        throw new SQLException("Loại gói không hợp lệ trong Khách phụ trách");
+                }
+            }
+
+            // B5: trả danh sách đã có nhãn để Servlet truyền sang JSP bằng assignedPackages.
+            // Nếu DAO trả list rỗng, vẫn là thành công; JSP sẽ hiện thông báo không có gói phù hợp.
+            return ServiceResult.ok(assignedPackages);
+        } catch (SQLException exception) {
+            // B6: ghi lỗi kỹ thuật; Servlet nhận thông báo an toàn cho assignedPackagesError.
+            exception.printStackTrace();
+            return ServiceResult.fail(Messages.MSG04_SYSTEM_BUSY);
+        }
+    }
+
+
+    // =====================================================================
+    // 4. KẾT QUẢ THÁNG VÀ HOA HỒNG: DAO lấy số/tiền, Service tính tỷ lệ.
+    // =====================================================================
+
+    /**
+     * Servlet gọi hàm này để lấy kết quả tháng của PT đang đăng nhập.
+     * @param accountId mã tài khoản từ session; không dùng làm PtEmployeeId trong SQL
+     * @return một PtCommissionSummaryView đã có số buổi, tiền và tỷ lệ; hoặc thông báo lỗi
+     */
+    public ServiceResult<PtCommissionSummaryView> getCommissionSummary(int accountId) {
+        try {
+            // B1: tài khoản phải còn hoạt động.
+            Account account = accountDAO.findById(accountId);
+            if (account == null || account.getStatus() != Account.Status.ACTIVE) {
+                return ServiceResult.fail(Messages.MSG07_NO_PERMISSION);
+            }
+
+            // B2: tìm EmployeeId của chính PT đang làm việc để DAO chỉ lấy buổi của PT này.
+            Employee employee = employeeDAO.findByPersonId(account.getPersonId());
+            if (employee == null || employee.getPosition() != Role.PT
+                    || employee.getStatus() != Employee.Status.WORKING) {
+                return ServiceResult.fail(Messages.MSG07_NO_PERMISSION);
+            }
+
+            // B3: dùng cùng một now giờ VN để chọn tháng và chia buổi chờ chốt/dự kiến.
+            LocalDateTime now = DateTimeUtil.now();
+            LocalDate monthStart = now.toLocalDate().withDayOfMonth(1);
+            LocalDate nextMonthStart = monthStart.plusMonths(1);
+
+            // B4: DAO đếm buổi, cộng Sessions.CommissionAmount và tạo DTO có 10 số gốc.
+            PtCommissionSummaryView summary = dashboardDAO.findCommissionSummary(
+                    employee.getEmployeeId(), monthStart, nextMonthStart, now);
+
+            // B5: thêm tỷ lệ hoa hồng hiện tại từ Employees; không tính lại tiền từng buổi.
+            summary.setCommissionRate(employee.getCommissionRate());
+
+            // B6: Service điền mẫu số và tỷ lệ buổi; Servlet truyền DTO sang JSP.
+            prepareCommissionSummary(summary);
+            return ServiceResult.ok(summary);
+        } catch (SQLException exception) {
+            exception.printStackTrace();
+            return ServiceResult.fail(Messages.MSG04_SYSTEM_BUSY);
+        }
+    }
+
+    /** Tính năm tỷ lệ từ số buổi DAO trả về; Cancelled cũng thuộc mẫu số. */
+    void prepareCommissionSummary(PtCommissionSummaryView summary) {
+        int resolvedSessionCount = summary.getCheckedInCount()
+                + summary.getNoCheckInCount()
+                + summary.getNoMembershipCount()
+                + summary.getMembershipFrozenCount()
+                + summary.getCancelledCount();
+
+        // Không có buổi đã chốt: mẫu số là 0, các tỷ lệ hiển thị đều là 0%.
+        if (resolvedSessionCount == 0) {
+            summary.setResolvedStatistics(0, 0, 0, 0, 0, 0);
+            return;
+        }
+
+        // Mỗi loại chia cho cùng ResolvedTotal, làm tròn đến hai chữ số thập phân.
+        summary.setResolvedStatistics(
+                resolvedSessionCount,
+                calculateRatePercent(summary.getCheckedInCount(), resolvedSessionCount),
+                calculateRatePercent(summary.getNoCheckInCount(), resolvedSessionCount),
+                calculateRatePercent(summary.getNoMembershipCount(), resolvedSessionCount),
+                calculateRatePercent(summary.getMembershipFrozenCount(), resolvedSessionCount),
+                calculateRatePercent(summary.getCancelledCount(), resolvedSessionCount));
+    }
+
+    /** Ví dụ 8/14 buổi: 8 * 100 / 14 = 57,142...%, làm tròn thành 57,14%. */
+    private double calculateRatePercent(int sessionCount, int resolvedSessionCount) {
+        double ratePercent = sessionCount * 100.0 / resolvedSessionCount;
+        return Math.round(ratePercent * 100.0) / 100.0;
+    }
+
+    // =====================================================================
+    // 5. ĐÁNH GIÁ PT: tổng hợp tháng hiện tại, chỉ hiện điểm khi đủ khách P-22.
+    // =====================================================================
+
+    /** Servlet gọi để lấy điểm tháng này của đúng PT đang đăng nhập. */
+    public ServiceResult<PtRatingView> getRating(int accountId) {
+        try {
+            // B1: không lấy PtEmployeeId từ URL; tìm qua tài khoản và hồ sơ PT còn làm việc.
+            Account account = accountDAO.findById(accountId);
+            if (account == null || account.getStatus() != Account.Status.ACTIVE) {
+                return ServiceResult.fail(Messages.MSG07_NO_PERMISSION);
+            }
+            Employee employee = employeeDAO.findByPersonId(account.getPersonId());
+            if (employee == null || employee.getPosition() != Role.PT
+                    || employee.getStatus() != Employee.Status.WORKING) {
+                return ServiceResult.fail(Messages.MSG07_NO_PERMISSION);
+            }
+
+            // B2: RatingMonth là ngày 1 của tháng hiện tại theo giờ VN.
+            LocalDate ratingMonth = DateTimeUtil.today().withDayOfMonth(1);
+            PtRatingView rating = dashboardDAO.findRatingForMonth(employee.getEmployeeId(), ratingMonth);
+
+            // B3: P-22 là số khách tối thiểu. Service ẩn điểm nếu chưa đủ người chấm.
+            int minimumCustomers = systemConfigService.getInt(SystemConfigService.MIN_PT_RATING_CUSTOMERS);
+            prepareRating(rating, minimumCustomers);
+            return ServiceResult.ok(rating);
+        } catch (SQLException | IllegalStateException exception) {
+            exception.printStackTrace();
+            return ServiceResult.fail(Messages.MSG04_SYSTEM_BUSY);
+        }
+    }
+
+    /**
+     * Đổi hai số DAO trả thành điểm và lời nhắn cho JSP.
+     * Điểm chỉ được tính sau khi số khách đạt P-22; không trả tên hay nội dung phiếu cho PT.
+     */
+    void prepareRating(PtRatingView rating, int minimumCustomers) {
+        if (minimumCustomers < 1) {
+            throw new IllegalStateException("P-22 phải lớn hơn 0.");
+        }
+
+        int customerCount = rating.getRatingCustomerCount();
+        if (customerCount == 0) {
+            rating.setDisplay(false, null, "Chưa có đánh giá trong tháng này.");
+            return;
+        }
+        if (customerCount < minimumCustomers) {
+            rating.setDisplay(false, null, "Chưa đủ đánh giá để hiện điểm tháng này.");
+            return;
+        }
+
+        // Điểm hiện = tổng sao / số khách; cắt ở hai chữ số để 4,999 không hiện thành 5,00.
+        BigDecimal average = BigDecimal.valueOf(rating.getRatingTotal())
+                .divide(BigDecimal.valueOf(customerCount), 2, RoundingMode.DOWN);
+        rating.setDisplay(true, average,
+                buildRatingMessage(average, rating.getRatingTotal() == 5L * customerCount));
+    }
+
+    /** Chọn một trong sáu câu theo điểm hiện; 5 tuyệt đối nghĩa là mọi khách đều chấm 5. */
+    private String buildRatingMessage(BigDecimal average, boolean perfectFive) {
+        if (perfectFive) {
+            return "5 sao trọn vẹn! Vui một nhịp thôi, rồi tiếp tục giữ phong độ nhé.";
+        }
+        if (average.compareTo(BigDecimal.valueOf(4)) > 0) {
+            return "Điểm rất tốt! Cứ giữ sự chỉn chu; đừng để sự chủ quan vào tập thay mình.";
+        }
+        if (average.compareTo(BigDecimal.valueOf(3)) > 0) {
+            return "Đang vào guồng rồi. Chăm thêm những chi tiết nhỏ, khách sẽ cảm nhận được.";
+        }
+        if (average.compareTo(BigDecimal.valueOf(2)) > 0) {
+            return "Đường tiến bộ đâu phải lúc nào cũng thẳng. Lắng nghe, chỉnh từng buổi rồi đi tiếp nhé.";
+        }
+        if (average.compareTo(BigDecimal.ONE) > 0) {
+            return "Hơi hụt nhịp, nhưng chưa hết set. Chỉnh cách hướng dẫn từ góp ý của khách nhé.";
+        }
+        return "Điểm chưa như mong muốn. Đừng nản; mỗi buổi là một cơ hội lấy lại niềm tin.";
     }
 }
