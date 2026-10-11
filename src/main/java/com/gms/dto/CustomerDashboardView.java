@@ -5,6 +5,7 @@ import java.time.LocalDate;
 import java.time.LocalDateTime;
 import java.time.LocalTime;
 import java.time.temporal.ChronoUnit;
+import java.util.ArrayList;
 import java.util.List;
 
 /**
@@ -45,6 +46,10 @@ public class CustomerDashboardView {
     private final List<NotificationRow> notifications;
     private final int unreadNotificationCount;
 
+    // ===== Trạng thái thẻ gói tập: ACTIVE | EXPIRING | FROZEN | EXPIRED | NONE (do Service tính) =====
+
+    private final String membershipCardState;
+
     // ===== Constructor =====
 
     public CustomerDashboardView(
@@ -58,7 +63,8 @@ public class CustomerDashboardView {
             List<BannerItem> banners,
             AttendanceView attendance,
             List<NotificationRow> notifications,
-            int unreadNotificationCount) {
+            int unreadNotificationCount,
+            String membershipCardState) {
 
         this.fullName = fullName;
         this.avatar = avatar;
@@ -71,6 +77,7 @@ public class CustomerDashboardView {
         this.attendance = attendance;
         this.notifications = notifications;
         this.unreadNotificationCount = unreadNotificationCount;
+        this.membershipCardState = membershipCardState;
     }
 
     // ===== Getters =====
@@ -86,6 +93,7 @@ public class CustomerDashboardView {
     public AttendanceView getAttendance() { return attendance; }
     public List<NotificationRow> getNotifications() { return notifications; }
     public int getUnreadNotificationCount() { return unreadNotificationCount; }
+    public String getMembershipCardState() { return membershipCardState; }
 
     // ===== Helper methods cho JSP =====
 
@@ -145,6 +153,59 @@ public class CustomerDashboardView {
         return null;
     }
 
+    /**
+     * Gói tập đang chạy: Active hoặc Frozen và đã bắt đầu (không tính gói nối tiếp, không tính PT).
+     * Thẻ gói tập dùng gói này làm gói "đang dùng".
+     * @return gói tập hiện tại, hoặc null nếu không có.
+     */
+    public SubscriptionRow getCurrentMembership() {
+        if (subscriptions == null) return null;
+        for (SubscriptionRow sub : subscriptions) {
+            boolean running = "Active".equals(sub.getStatus()) || "Frozen".equals(sub.getStatus());
+            if (!sub.isPtPackage() && running) {
+                return sub;
+            }
+        }
+        return null;
+    }
+
+    /** Gói tập Expired gần nhất (chỉ có khi khách không còn gói nào chạy), hoặc null. */
+    public SubscriptionRow getExpiredMembership() {
+        if (subscriptions == null) return null;
+        for (SubscriptionRow sub : subscriptions) {
+            if (!sub.isPtPackage() && "Expired".equals(sub.getStatus())) {
+                return sub;
+            }
+        }
+        return null;
+    }
+
+    /**
+     * Các gói hiện trong khung "Chi tiết gói": gói đang dùng (hoặc gói đã hết hạn) trước,
+     * gói kế tiếp sau. Mỗi gói một tab.
+     */
+    public List<SubscriptionRow> getPlanDetails() {
+        List<SubscriptionRow> details = new ArrayList<>();
+        SubscriptionRow base = getCurrentMembership() != null ? getCurrentMembership() : getExpiredMembership();
+        if (base != null) {
+            details.add(base);
+        }
+        if (getNextMembership() != null) {
+            details.add(getNextMembership());
+        }
+        return details;
+    }
+
+    /** Có gói PT (đang dùng hoặc sắp bắt đầu) hoặc buổi PT sắp tới không; không có thì dashboard dàn một cột. */
+    public boolean isShowPtArea() {
+        if (upcomingSessions != null && !upcomingSessions.isEmpty()) return true;
+        if (subscriptions == null) return false;
+        for (SubscriptionRow sub : subscriptions) {
+            if (sub.isPtPackage()) return true;
+        }
+        return false;
+    }
+
     /** Gói PT đang dùng đầu tiên (Active), hoặc null. */
     public SubscriptionRow getActivePtPackage() {
         if (subscriptions == null) return null;
@@ -197,6 +258,18 @@ public class CustomerDashboardView {
         private final LocalDate freezeStart;
         private final LocalDate freezeEnd;
 
+        // --- Thông tin đơn lúc mua, hiện trong khung "Chi tiết gói" (DBR-50: chép mô tả và quyền lợi lúc bán) ---
+        private final String orderCode;
+        private final String packageDescription;
+        private final String packageBenefits;
+
+        /** PT phụ trách, chỉ có với gói PT. */
+        private final String ptName;
+
+        /** Số lần bảo lưu đã dùng và hạn mức lúc bán (chỉ gói tập; hạn mức có thể null). */
+        private final Integer freezeUsed;
+        private final Integer maxFreezes;
+
         public SubscriptionRow(
                 int subscriptionId,
                 String subscriptionType,
@@ -208,7 +281,13 @@ public class CustomerDashboardView {
                 Integer remainingSessions,
                 Integer usedSessions,
                 LocalDate freezeStart,
-                LocalDate freezeEnd) {
+                LocalDate freezeEnd,
+                String orderCode,
+                String packageDescription,
+                String packageBenefits,
+                String ptName,
+                Integer freezeUsed,
+                Integer maxFreezes) {
 
             this.subscriptionId = subscriptionId;
             this.subscriptionType = subscriptionType;
@@ -221,6 +300,12 @@ public class CustomerDashboardView {
             this.usedSessions = usedSessions;
             this.freezeStart = freezeStart;
             this.freezeEnd = freezeEnd;
+            this.orderCode = orderCode;
+            this.packageDescription = packageDescription;
+            this.packageBenefits = packageBenefits;
+            this.ptName = ptName;
+            this.freezeUsed = freezeUsed;
+            this.maxFreezes = maxFreezes;
         }
 
         public int getSubscriptionId() { return subscriptionId; }
@@ -234,6 +319,72 @@ public class CustomerDashboardView {
         public Integer getUsedSessions() { return usedSessions; }
         public LocalDate getFreezeStart() { return freezeStart; }
         public LocalDate getFreezeEnd() { return freezeEnd; }
+        public String getOrderCode() { return orderCode; }
+        public String getPackageDescription() { return packageDescription; }
+        public String getPtName() { return ptName; }
+        public Integer getFreezeUsed() { return freezeUsed; }
+        public Integer getMaxFreezes() { return maxFreezes; }
+
+        /**
+         * Quyền lợi lúc bán tách thành từng dòng (lưu một chuỗi, mỗi dòng một quyền lợi, DBR-15).
+         * @return danh sách dòng không rỗng; list rỗng nếu gói không có quyền lợi.
+         */
+        public List<String> getBenefitLines() {
+            List<String> lines = new ArrayList<>();
+            if (packageBenefits == null) return lines;
+            for (String line : packageBenefits.split("\\r?\\n")) {
+                if (!line.isBlank()) {
+                    lines.add(line.trim());
+                }
+            }
+            return lines;
+        }
+
+        /** "Thứ Năm" cho ngày kết thúc, để thẻ gói ghi "Hết hạn Thứ Năm 15/10/2026". */
+        public String getEndWeekdayLabel() {
+            return endDate == null ? "" : weekdayName(endDate);
+        }
+
+        /** "20/10" cho ngày bắt đầu, hiện làm số lớn trên thẻ gói PT sắp bắt đầu. */
+        public String getStartDayMonthLabel() {
+            return startDate == null ? "" : String.format("%02d/%02d", startDate.getDayOfMonth(), startDate.getMonthValue());
+        }
+
+        /** "Thứ Ba" cho ngày bắt đầu (gói PT sắp bắt đầu). */
+        public String getStartWeekdayLabel() {
+            return startDate == null ? "" : weekdayName(startDate);
+        }
+
+        /** Số ngày từ hôm nay đến ngày bắt đầu; 0 nếu đã bắt đầu. */
+        public long getDaysUntilStart() {
+            if (startDate == null) return 0;
+            return Math.max(ChronoUnit.DAYS.between(DateTimeUtil.today(), startDate), 0);
+        }
+
+        /** Số ngày đã qua kể từ ngày hết hạn (gói Expired); 0 nếu chưa quá hạn. */
+        public long getDaysSinceEnd() {
+            if (endDate == null) return 0;
+            return Math.max(ChronoUnit.DAYS.between(endDate, DateTimeUtil.today()), 0);
+        }
+
+        /** Số ngày đã dùng, tính cả hôm nay, không vượt tổng thời hạn. */
+        public long getDaysUsed() {
+            if (startDate == null) return 0;
+            long used = ChronoUnit.DAYS.between(startDate, DateTimeUtil.today()) + 1;
+            return Math.max(0, Math.min(getTotalDays(), used));
+        }
+
+        private static String weekdayName(LocalDate date) {
+            switch (date.getDayOfWeek()) {
+                case MONDAY:    return "Thứ Hai";
+                case TUESDAY:   return "Thứ Ba";
+                case WEDNESDAY: return "Thứ Tư";
+                case THURSDAY:  return "Thứ Năm";
+                case FRIDAY:    return "Thứ Sáu";
+                case SATURDAY:  return "Thứ Bảy";
+                default:        return "Chủ Nhật";
+            }
+        }
 
         /** Gói PT (PTSingle / PTCouple / SingleSession). */
         public boolean isPtPackage() {

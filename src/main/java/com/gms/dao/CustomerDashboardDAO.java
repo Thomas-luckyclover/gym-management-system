@@ -85,7 +85,9 @@ public class CustomerDashboardDAO {
         String sql = "SELECT subCombined.SubscriptionId, subCombined.SubscriptionType, subCombined.PackageName, "
                 + "subCombined.StartDate, subCombined.EndDate, subCombined.Status, subCombined.GeneratedSessionCount, "
                 + "subCombined.RemainingSessions, subCombined.UsedSessions, "
-                + "subCombined.FreezeStart, subCombined.FreezeEnd "
+                + "subCombined.FreezeStart, subCombined.FreezeEnd, "
+                + "subCombined.OrderCode, subCombined.PackageDescription, subCombined.PackageBenefits, "
+                + "subCombined.PtName, subCombined.FreezeUsed, subCombined.MaxFreezes "
                 + "FROM ("
                 + "  SELECT sub.SubscriptionId, sub.SubscriptionType, o.PackageNameSnapshot AS PackageName, "
                 + "  sub.StartDate, sub.EndDate, sub.Status, sub.GeneratedSessionCount, "
@@ -100,9 +102,14 @@ public class CustomerDashboardDAO {
                 + "    AND s3.Status IN ('CheckedIn', 'Missed')"
                 + "  ) AS UsedSessions, "
                 + "  fr.StartDate AS FreezeStart, COALESCE(fr.ActualEndDate, fr.PlannedEndDate) AS FreezeEnd, "
+                + "  o.OrderCode, o.PackageDescriptionSnapshot AS PackageDescription, "
+                + "  o.PackageBenefitsSnapshot AS PackageBenefits, ptp.FullName AS PtName, "
+                + "  sub.FreezeUsed, sub.MaxFreezesSnapshot AS MaxFreezes, "
                 + "  0 AS SortPriority "
                 + "  FROM Subscriptions sub "
                 + "  JOIN Orders o ON o.OrderId = sub.OrderId "
+                + "  LEFT JOIN Employees pte ON pte.EmployeeId = sub.PtEmployeeId "
+                + "  LEFT JOIN Persons ptp ON ptp.PersonId = pte.PersonId "
                 + "  LEFT JOIN FreezeRecords fr ON fr.SubscriptionId = sub.SubscriptionId "
                 + "    AND fr.ActualEndDate IS NULL "
                 + "  WHERE sub.CustomerId = ? "
@@ -118,9 +125,14 @@ public class CustomerDashboardDAO {
                 + "  ) AS RemainingSessions, "
                 + "  0 AS UsedSessions, "
                 + "  NULL AS FreezeStart, NULL AS FreezeEnd, "
+                + "  o2.OrderCode, o2.PackageDescriptionSnapshot AS PackageDescription, "
+                + "  o2.PackageBenefitsSnapshot AS PackageBenefits, ptp2.FullName AS PtName, "
+                + "  sub2.FreezeUsed, sub2.MaxFreezesSnapshot AS MaxFreezes, "
                 + "  1 AS SortPriority "
                 + "  FROM Subscriptions sub2 "
                 + "  JOIN Orders o2 ON o2.OrderId = sub2.OrderId "
+                + "  LEFT JOIN Employees pte2 ON pte2.EmployeeId = sub2.PtEmployeeId "
+                + "  LEFT JOIN Persons ptp2 ON ptp2.PersonId = pte2.PersonId "
                 + "  WHERE sub2.CustomerId = ? "
                 + "  AND sub2.Status = 'Active' "
                 + "  AND sub2.StartDate > ? "
@@ -139,30 +151,7 @@ public class CustomerDashboardDAO {
 
             try (ResultSet rs = stmt.executeQuery()) {
                 while (rs.next()) {
-                    String subType = rs.getString("SubscriptionType");
-                    boolean isPt = "PTSingle".equals(subType)
-                            || "PTCouple".equals(subType)
-                            || "SingleSession".equals(subType);
-
-                    Integer totalSessions = isPt ? rs.getInt("GeneratedSessionCount") : null;
-                    Integer remaining = isPt ? rs.getInt("RemainingSessions") : null;
-                    Integer used = isPt ? rs.getInt("UsedSessions") : null;
-
-                    Date fsDate = rs.getDate("FreezeStart");
-                    Date feDate = rs.getDate("FreezeEnd");
-
-                    rows.add(new SubscriptionRow(
-                            rs.getInt("SubscriptionId"),
-                            subType,
-                            rs.getString("PackageName"),
-                            rs.getDate("StartDate").toLocalDate(),
-                            rs.getDate("EndDate").toLocalDate(),
-                            rs.getString("Status"),
-                            totalSessions,
-                            remaining,
-                            used,
-                            fsDate != null ? fsDate.toLocalDate() : null,
-                            feDate != null ? feDate.toLocalDate() : null));
+                    rows.add(mapSubscriptionRow(rs));
                 }
             }
         }
@@ -185,9 +174,15 @@ public class CustomerDashboardDAO {
                 + "  SELECT COUNT(*) FROM Sessions s3 "
                 + "  WHERE s3.SubscriptionId = sub.SubscriptionId "
                 + "  AND s3.Status IN ('CheckedIn', 'Missed')"
-                + ") AS UsedSessions "
+                + ") AS UsedSessions, "
+                + "NULL AS FreezeStart, NULL AS FreezeEnd, "
+                + "o.OrderCode, o.PackageDescriptionSnapshot AS PackageDescription, "
+                + "o.PackageBenefitsSnapshot AS PackageBenefits, ptp.FullName AS PtName, "
+                + "sub.FreezeUsed, sub.MaxFreezesSnapshot AS MaxFreezes "
                 + "FROM Subscriptions sub "
                 + "JOIN Orders o ON o.OrderId = sub.OrderId "
+                + "LEFT JOIN Employees pte ON pte.EmployeeId = sub.PtEmployeeId "
+                + "LEFT JOIN Persons ptp ON ptp.PersonId = pte.PersonId "
                 + "WHERE o.PartnerCustomerId = ? "
                 + "AND sub.Status IN ('Active', 'Frozen') "
                 + "ORDER BY sub.EndDate";
@@ -198,21 +193,88 @@ public class CustomerDashboardDAO {
             stmt.setInt(1, customerId);
             try (ResultSet rs = stmt.executeQuery()) {
                 while (rs.next()) {
-                    rows.add(new SubscriptionRow(
-                            rs.getInt("SubscriptionId"),
-                            rs.getString("SubscriptionType"),
-                            rs.getString("PackageName"),
-                            rs.getDate("StartDate").toLocalDate(),
-                            rs.getDate("EndDate").toLocalDate(),
-                            rs.getString("Status"),
-                            rs.getObject("GeneratedSessionCount") != null ? rs.getInt("GeneratedSessionCount") : null,
-                            rs.getObject("RemainingSessions") != null ? rs.getInt("RemainingSessions") : null,
-                            rs.getObject("UsedSessions") != null ? rs.getInt("UsedSessions") : null,
-                            null, null));
+                    rows.add(mapSubscriptionRow(rs));
                 }
             }
         }
         return rows;
+    }
+
+    // =========================================================
+    // 3b. Gói tập Expired gần nhất (thẻ gói hiện "Đã hết hạn N ngày trước")
+    // =========================================================
+
+    /**
+     * Lấy gói tập (Membership) đã hết hạn gần nhất của khách.
+     * Chỉ dùng khi khách không còn gói tập nào đang chạy, để thẻ gói báo "Đã hết hạn".
+     *
+     * @param customerId CustomerId của khách đang đăng nhập.
+     * @return gói Expired có EndDate muộn nhất, hoặc null nếu chưa từng có.
+     * @throws SQLException lỗi kết nối hoặc lỗi câu SQL.
+     */
+    public SubscriptionRow findLatestExpiredMembership(int customerId) throws SQLException {
+        String sql = "SELECT TOP 1 sub.SubscriptionId, sub.SubscriptionType, o.PackageNameSnapshot AS PackageName, "
+                + "sub.StartDate, sub.EndDate, sub.Status, sub.GeneratedSessionCount, "
+                + "0 AS RemainingSessions, 0 AS UsedSessions, "
+                + "NULL AS FreezeStart, NULL AS FreezeEnd, "
+                + "o.OrderCode, o.PackageDescriptionSnapshot AS PackageDescription, "
+                + "o.PackageBenefitsSnapshot AS PackageBenefits, NULL AS PtName, "
+                + "sub.FreezeUsed, sub.MaxFreezesSnapshot AS MaxFreezes "
+                + "FROM Subscriptions sub "
+                + "JOIN Orders o ON o.OrderId = sub.OrderId "
+                + "WHERE sub.CustomerId = ? "
+                + "AND sub.SubscriptionType = 'Membership' "
+                + "AND sub.Status = 'Expired' "
+                + "ORDER BY sub.EndDate DESC";
+
+        try (Connection conn = DBContext.getConnection();
+                PreparedStatement stmt = conn.prepareStatement(sql)) {
+            stmt.setInt(1, customerId);
+            try (ResultSet rs = stmt.executeQuery()) {
+                return rs.next() ? mapSubscriptionRow(rs) : null;
+            }
+        }
+    }
+
+    /**
+     * Đọc một dòng kết quả (đủ cột như findActiveSubscriptions) thành SubscriptionRow.
+     * Dùng chung cho 3 truy vấn gói để không lặp code đọc cột.
+     */
+    private SubscriptionRow mapSubscriptionRow(ResultSet rs) throws SQLException {
+        String subType = rs.getString("SubscriptionType");
+        boolean isPt = "PTSingle".equals(subType)
+                || "PTCouple".equals(subType)
+                || "SingleSession".equals(subType);
+
+        Integer totalSessions = isPt ? rs.getInt("GeneratedSessionCount") : null;
+        Integer remaining = isPt ? rs.getInt("RemainingSessions") : null;
+        Integer used = isPt ? rs.getInt("UsedSessions") : null;
+
+        Date fsDate = rs.getDate("FreezeStart");
+        Date feDate = rs.getDate("FreezeEnd");
+
+        // MaxFreezesSnapshot chỉ có với gói tập; getInt trả 0 khi NULL nên phải kiểm wasNull
+        int maxFreezeValue = rs.getInt("MaxFreezes");
+        Integer maxFreezes = rs.wasNull() ? null : maxFreezeValue;
+
+        return new SubscriptionRow(
+                rs.getInt("SubscriptionId"),
+                subType,
+                rs.getString("PackageName"),
+                rs.getDate("StartDate").toLocalDate(),
+                rs.getDate("EndDate").toLocalDate(),
+                rs.getString("Status"),
+                totalSessions,
+                remaining,
+                used,
+                fsDate != null ? fsDate.toLocalDate() : null,
+                feDate != null ? feDate.toLocalDate() : null,
+                rs.getString("OrderCode"),
+                rs.getString("PackageDescription"),
+                rs.getString("PackageBenefits"),
+                rs.getString("PtName"),
+                isPt ? null : rs.getInt("FreezeUsed"),
+                isPt ? null : maxFreezes);
     }
 
     // =========================================================

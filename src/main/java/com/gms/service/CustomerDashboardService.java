@@ -54,6 +54,13 @@ public class CustomerDashboardService {
     /** Chuỗi từ mức này trở lên thì được chào bằng màn "chuỗi tập" sau khi đăng nhập (mở rộng ngoài SRS). */
     private static final int STREAK_INTRO_MIN_DAYS = 3;
 
+    /** Trạng thái thẻ gói tập trên dashboard (JSP chọn kiểu hiển thị theo giá trị này). */
+    private static final String CARD_ACTIVE = "ACTIVE";
+    private static final String CARD_EXPIRING = "EXPIRING";
+    private static final String CARD_FROZEN = "FROZEN";
+    private static final String CARD_EXPIRED = "EXPIRED";
+    private static final String CARD_NONE = "NONE";
+
     /** Số thông báo gần nhất hiện trong chuông. */
     private static final int NOTIFICATION_LIMIT = 5;
 
@@ -88,6 +95,22 @@ public class CustomerDashboardService {
             List<SubscriptionRow> partnerSubs = dashboardDAO.findPartnerSubscriptions(customerId);
             subscriptions.addAll(partnerSubs);
 
+            // B3b: không còn gói tập nào chạy thì lấy gói Expired gần nhất để thẻ gói báo "Đã hết hạn"
+            boolean hasRunningMembership = false;
+            for (SubscriptionRow sub : subscriptions) {
+                boolean running = "Active".equals(sub.getStatus()) || "Frozen".equals(sub.getStatus());
+                if (!sub.isPtPackage() && running) {
+                    hasRunningMembership = true;
+                    break;
+                }
+            }
+            if (!hasRunningMembership) {
+                SubscriptionRow expired = dashboardDAO.findLatestExpiredMembership(customerId);
+                if (expired != null) {
+                    subscriptions.add(expired);
+                }
+            }
+
             // B4: buổi PT sắp tới
             List<UpcomingSessionRow> upcomingSessions = dashboardDAO.findUpcomingSessions(customerId, now);
 
@@ -107,7 +130,10 @@ public class CustomerDashboardService {
                 e.printStackTrace();
             }
 
-            // B8: gom view
+            // B8: trạng thái thẻ gói tập
+            String membershipCardState = buildMembershipCardState(subscriptions, now.toLocalDate());
+
+            // B9: gom view
             String fullName = person != null ? person.getFullName() : "";
             String avatar = person != null ? person.getAvatar() : null;
 
@@ -122,7 +148,8 @@ public class CustomerDashboardService {
                     banners,
                     attendance,
                     notifications,
-                    unreadCount);
+                    unreadCount,
+                    membershipCardState);
 
             return ServiceResult.ok(view);
 
@@ -132,6 +159,60 @@ public class CustomerDashboardService {
         } catch (Exception e) {
             e.printStackTrace();
             return ServiceResult.fail(Messages.MSG04_SYSTEM_BUSY);
+        }
+    }
+
+    // ===== Trạng thái thẻ gói tập =====
+
+    /**
+     * Quyết định thẻ gói tập hiện kiểu nào. Dashboard chỉ đọc trạng thái đã lưu (GBR-14).
+     *
+     * - FROZEN: gói tập đang bảo lưu.
+     * - EXPIRING: gói Active còn không quá P-21 ngày và chưa có gói nối tiếp (DBR-52), nút Gia hạn nổi.
+     * - ACTIVE: gói Active còn dài hạn, hoặc đã có gói nối tiếp.
+     * - EXPIRED: không còn gói chạy nhưng từng có gói đã hết hạn.
+     * - NONE: chưa từng có gói tập.
+     *
+     * @param subscriptions danh sách gói của khách (gồm cả gói nối tiếp và gói Expired gần nhất).
+     * @param today         ngày hôm nay.
+     * @return một trong các hằng CARD_*.
+     */
+    private String buildMembershipCardState(List<SubscriptionRow> subscriptions, LocalDate today) {
+        boolean hasNext = false;
+        boolean hasExpired = false;
+        SubscriptionRow current = null;
+
+        for (SubscriptionRow sub : subscriptions) {
+            if (sub.isPtPackage()) {
+                continue;
+            }
+            if (sub.isPending()) {
+                hasNext = true;
+            } else if ("Active".equals(sub.getStatus()) || "Frozen".equals(sub.getStatus())) {
+                current = sub;
+            } else if ("Expired".equals(sub.getStatus())) {
+                hasExpired = true;
+            }
+        }
+
+        if (current == null) {
+            return hasExpired ? CARD_EXPIRED : CARD_NONE;
+        }
+        if ("Frozen".equals(current.getStatus())) {
+            return CARD_FROZEN;
+        }
+
+        long daysLeft = ChronoUnit.DAYS.between(today, current.getEndDate());
+        boolean expiringSoon = daysLeft <= readExpiringSoonDays();
+        return expiringSoon && !hasNext ? CARD_EXPIRING : CARD_ACTIVE;
+    }
+
+    /** Đọc P-21 (số ngày coi là "sắp hết hạn"); chưa có hoặc lỗi đọc thì dùng mặc định 7 ngày. */
+    private int readExpiringSoonDays() {
+        try {
+            return systemConfigService.getInt(EXPIRING_SOON_DAYS_KEY);
+        } catch (Exception e) {
+            return DEFAULT_EXPIRING_SOON_DAYS;
         }
     }
 
@@ -356,12 +437,7 @@ public class CustomerDashboardService {
             List<BannerItem> warningBanners) throws SQLException {
 
         // B1: đọc P-21, nếu chưa seed hoặc lỗi đọc thì dùng mặc định 7 ngày
-        int expiringSoonDays = DEFAULT_EXPIRING_SOON_DAYS;
-        try {
-            expiringSoonDays = systemConfigService.getInt(EXPIRING_SOON_DAYS_KEY);
-        } catch (Exception e) {
-            // P-21 chưa có trong SystemConfigs hoặc lỗi đọc — dùng mặc định 7 ngày
-        }
+        int expiringSoonDays = readExpiringSoonDays();
 
         // B2: kiểm tra có gói nối tiếp (chưa bắt đầu) không
         boolean hasQueuedSub = false;

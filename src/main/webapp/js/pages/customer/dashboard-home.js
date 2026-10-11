@@ -1,5 +1,5 @@
 /**
- * Customer Dashboard: chuông thông báo và hiệu ứng đếm số chuỗi tập.
+ * Customer Dashboard: chuông thông báo, khung chi tiết gói và hiệu ứng đếm số chuỗi tập.
  * Không phụ thuộc thư viện; trang vẫn dùng được khi file này lỗi.
  */
 (function () {
@@ -28,6 +28,70 @@
         setOpen(false);
         btn.focus();
       }
+    });
+  }
+
+  // ===== Khung chi tiết gói: bấm thẻ gói / "Chi tiết gói" / dòng "Gói kế tiếp" để mở =====
+  var modal = document.querySelector('[data-plan-modal]');
+  if (modal) {
+    var box = modal.querySelector('.cd-modal__box');
+    var tabs = modal.querySelectorAll('[data-plan-tab]');
+    var panels = modal.querySelectorAll('[data-plan-panel]');
+    var opener = null;
+
+    // Chọn tab; khung chỉ có 1 gói thì không có tab, hiện panel đầu tiên
+    var showTab = function (key) {
+      var found = false;
+      panels.forEach(function (p) {
+        var on = p.getAttribute('data-plan-panel') === key;
+        p.classList.toggle('is-on', on);
+        if (on) found = true;
+      });
+      if (!found && panels.length) panels[0].classList.add('is-on');
+      tabs.forEach(function (t) {
+        t.classList.toggle('is-on', t.getAttribute('data-plan-tab') === key);
+        t.setAttribute('aria-selected', t.getAttribute('data-plan-tab') === key ? 'true' : 'false');
+      });
+    };
+
+    var openModal = function (key, from) {
+      opener = from || null;
+      showTab(key);
+      modal.hidden = false;
+      document.body.classList.add('cd-modal-open');
+      box.focus();
+    };
+    var closeModal = function () {
+      modal.hidden = true;
+      document.body.classList.remove('cd-modal-open');
+      if (opener) opener.focus();
+    };
+
+    document.querySelectorAll('[data-plan-open]').forEach(function (el) {
+      el.addEventListener('click', function (e) {
+        e.stopPropagation(); // không cho sự kiện bấm cả thẻ chạy thêm lần nữa
+        openModal(el.getAttribute('data-plan-open'), el);
+      });
+    });
+    // Bấm vào chỗ trống của thẻ gói cũng mở tab "Gói đang dùng"; link và nút Gia hạn giữ nguyên chức năng
+    var card = document.querySelector('[data-plan-card="open"]');
+    if (card) {
+      card.addEventListener('click', function (e) {
+        if (e.target.closest('a, button')) return;
+        openModal('cur', card);
+      });
+    }
+    tabs.forEach(function (t) {
+      t.addEventListener('click', function () { showTab(t.getAttribute('data-plan-tab')); });
+    });
+    modal.querySelectorAll('[data-plan-close]').forEach(function (el) {
+      el.addEventListener('click', closeModal);
+    });
+    modal.addEventListener('click', function (e) {
+      if (e.target === modal) closeModal(); // bấm nền tối
+    });
+    document.addEventListener('keydown', function (e) {
+      if (e.key === 'Escape' && !modal.hidden) closeModal();
     });
   }
 
