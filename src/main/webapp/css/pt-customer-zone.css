@@ -12,3 +12,49 @@ body .app,
 body .main {
   background: transparent !important;
 }
+
+/* Sidebar khu hội viên: nền than cố định + mục đang chọn màu vàng, không đổi theo thời tiết.
+   Giới hạn trong .customer-dashboard-page để không ảnh hưởng PT. */
+body.dock.customer-dashboard-page {
+  --dock-bg: #15181B;
+  --customer-nav-accent: #F2B318;
+}
+
+body.dock.customer-dashboard-page .sidebar::before {
+  background: radial-gradient(
+    var(--dock-glow-size) circle at var(--mx, 50%) var(--my, -30%),
+    rgba(255, 255, 255, 0.07),
+    transparent 70%
+  );
+}
+
+body.dock.customer-dashboard-page .nav-link.active,
+body.dock.customer-dashboard-page .nav-link[aria-current="page"] {
+  background: rgba(242, 179, 24, 0.14);
+  color: #FFFFFF;
+  box-shadow: inset 3px 0 0 var(--customer-nav-accent);
+}
+
+body.dock.customer-dashboard-page .nav-link.active i,
+body.dock.customer-dashboard-page .nav-link[aria-current="page"] i {
+  color: var(--customer-nav-accent);
+}
+
+body.dock.customer-dashboard-page .dock-handle {
+  background: var(--dock-bg);
+}
+
+/* Trang customer (trừ dashboard): tông than + vàng, nền xám trung tính.
+   Dashboard giữ màu theo thời tiết nên bị loại bằng :not(.customer-weather-page). */
+body.dock.customer-dashboard-page:not(.customer-weather-page) {
+  --color-primary: #9A6A12;
+  --color-primary-hover: #7D550D;
+  --color-primary-tint: #FBF1DC;
+  --color-primary-border: #E8CF9B;
+  --color-on-primary: #FFFFFF;
+  --color-accent-ink: #4A3208;
+  --color-bg: #ECEBE7;
+  --zone-sky-top: #F4F3F0;
+  --zone-sky-bottom: #E1DFD9;
+  --zone-sky-dot: rgba(154, 106, 18, 0.07);
+}

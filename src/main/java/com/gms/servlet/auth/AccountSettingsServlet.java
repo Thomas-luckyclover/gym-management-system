@@ -1016,7 +1016,7 @@ public class AccountSettingsServlet extends HttpServlet {
 
                                 profileFragment = "/WEB-INF/jsp/auth/account/profile-customer.jspf";
 
-                                themeClass = "theme-customer";
+                                themeClass = "theme-pt customer-dashboard-page account-page";
 
                                 break;
 
