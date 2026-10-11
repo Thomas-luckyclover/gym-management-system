@@ -1,6 +1,5 @@
 <%@ page pageEncoding="UTF-8" %>
-<%-- Bạt và lớp hiệu ứng chỉ dùng ở PT Dashboard. dashboard.js thêm hạt vào pt-weather-effects. --%>
-<div class="pt-weather-effects" aria-hidden="true"></div>
+<%-- Bạt dùng chung PT/Customer Dashboard; weather-scene.js vẽ hạt, common.js điều khiển cuộn. --%>
 <div class="pt-awning" aria-hidden="true">
     <div class="pt-awning__fabric">
         <%-- Mỗi flap có mép cong riêng; CSS ẩn bớt flap khi màn hình hẹp. --%>

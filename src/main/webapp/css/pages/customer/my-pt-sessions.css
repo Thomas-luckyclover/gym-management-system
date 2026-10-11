@@ -1,104 +1,457 @@
-/* =====================================================================
-   My PT Sessions — Customer Zone, dùng chung token với PT Dashboard
-   ===================================================================== */
-.my-pt-sessions-page .tb-subtitle {
-  margin: 0.35rem 0 0;
+/* ===== Khung trang: dùng token màu và layout Customer Dashboard ===== */
+.my-pt-sessions {
+  display: grid;
+  gap: var(--space-5);
+  min-width: 0;
+}
+
+.my-pt-panel {
+  min-width: 0;
+  padding: var(--space-5);
+  border: var(--border-width) solid var(--color-border);
+  border-radius: var(--radius-lg);
+  background: var(--color-surface);
+  box-shadow: var(--shadow-card);
+}
+
+.my-pt-heading {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  flex-wrap: wrap;
+  gap: var(--space-3);
+  margin-bottom: var(--space-4);
+}
+
+.my-pt-heading h2 {
+  margin: 0;
+  font-size: var(--font-size-xl);
+  color: var(--color-text);
+}
+
+.my-pt-caption {
+  margin: var(--space-1) 0 0;
   color: var(--color-text-soft);
   font-size: var(--font-size-sm);
 }
 
-.my-pt-sessions {
-  display: grid;
-  gap: var(--space-5);
-}
-
-/* Card, border và shadow giữ cùng nhịp với các khối dashboard. */
-.my-pt-sessions__intro,
-.my-pt-sessions__panel {
-  border: 1px solid color-mix(in srgb, var(--color-primary) 18%, var(--color-border));
-  border-radius: var(--radius-lg);
-  background: color-mix(in srgb, var(--color-surface) 88%, transparent);
-  box-shadow: var(--shadow-card);
-}
-
-.my-pt-sessions__intro {
+/* ===== Gói PT của bạn: thẻ dữ liệu thật, dùng màu chung của Customer Zone ===== */
+.my-pt-title-with-hint {
   display: flex;
   align-items: center;
-  justify-content: space-between;
-  gap: var(--space-5);
-  padding: clamp(1.25rem, 3vw, 2rem);
+  gap: var(--space-3);
 }
 
-.my-pt-sessions__intro-copy {
+.my-pt-package-list {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: var(--space-4);
+}
+
+.my-pt-package-card {
   min-width: 0;
+  padding: var(--space-5);
+  border: var(--border-width) solid var(--color-primary-border);
+  border-radius: var(--radius-md);
+  background: var(--color-surface-muted);
 }
 
-.my-pt-sessions__intro h2 {
-  margin: 0.25rem 0 0;
-  color: var(--color-text);
-  font-size: clamp(1.65rem, 3vw, 2.35rem);
+.my-pt-package-card:only-child {
+  grid-column: 1 / -1;
 }
 
-.my-pt-sessions__intro p {
-  margin: 0.6rem 0 0;
-  color: var(--color-text-soft);
-}
-
-.my-pt-sessions__panel {
-  padding: clamp(1.1rem, 2vw, 1.5rem);
-}
-
-.my-pt-sessions__panel .panel-head {
+.my-pt-package-heading {
+  display: flex;
   align-items: flex-start;
+  justify-content: space-between;
+  flex-wrap: wrap;
+  gap: var(--space-3);
   margin-bottom: var(--space-4);
 }
 
-.my-pt-sessions__panel .panel-head h2 {
-  margin: 0.25rem 0 0;
+.my-pt-package-heading h3 {
+  margin: 0;
+  color: var(--color-text);
+  font-size: var(--font-size-lg);
+  overflow-wrap: anywhere;
 }
 
-/* Empty state sẽ được thay bằng danh sách card ở bước Service/DAO. */
-.my-pt-sessions__empty {
-  display: grid;
-  justify-items: center;
-  gap: 0.45rem;
-  min-height: 16rem;
-  padding: 3rem 1.25rem;
-  border: 1px dashed color-mix(in srgb, var(--color-primary) 28%, var(--color-border));
-  border-radius: var(--radius-md);
-  background: color-mix(in srgb, var(--color-surface-soft) 64%, transparent);
-  color: var(--color-text-soft);
-  text-align: center;
-}
-
-.my-pt-sessions__empty-icon {
-  display: grid;
-  place-items: center;
-  width: 3.25rem;
-  height: 3.25rem;
-  margin-bottom: 0.5rem;
-  border-radius: 50%;
-  background: color-mix(in srgb, var(--color-primary) 14%, var(--color-surface));
+.my-pt-package-type {
+  padding: var(--space-1) var(--space-3);
+  border-radius: var(--radius-sm);
+  background: var(--color-primary-tint);
   color: var(--color-primary);
-  font-size: 1.3rem;
+  font-size: var(--font-size-sm);
+  font-weight: var(--font-weight-semibold);
 }
 
-.my-pt-sessions__empty h3,
-.my-pt-sessions__empty p {
+.my-pt-package-details,
+.my-pt-package-stats {
+  display: grid;
+  gap: var(--space-4);
   margin: 0;
 }
 
-.my-pt-sessions__empty .btn {
-  margin-top: 0.75rem;
+.my-pt-package-details {
+  grid-template-columns: repeat(3, minmax(0, 1fr));
 }
 
-@media (max-width: 700px) {
-  .my-pt-sessions__intro {
-    align-items: flex-start;
-    flex-direction: column;
-  }
+.my-pt-package-details-couple {
+  grid-template-columns: repeat(4, minmax(0, 1fr));
+}
 
-  .my-pt-sessions__intro .btn {
-    width: 100%;
-  }
+/* Khi có nhiều gói, mỗi thẻ hẹp hơn nên thông tin chia hai cột. */
+.my-pt-package-card:not(:only-child) .my-pt-package-details {
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+}
+
+.my-pt-package-stats {
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  margin-top: var(--space-4);
+  padding-top: var(--space-4);
+  border-top: var(--border-width) solid var(--color-border);
+}
+
+.my-pt-package-stats > div {
+  min-width: 0;
+  padding: var(--space-3);
+  border-radius: var(--radius-sm);
+  background: var(--color-surface);
+}
+
+.my-pt-package-details dt,
+.my-pt-package-stats dt {
+  color: var(--color-text-soft);
+  font-size: var(--font-size-sm);
+}
+
+.my-pt-package-details dd,
+.my-pt-package-stats dd {
+  margin: var(--space-1) 0 0;
+  color: var(--color-text);
+  font-weight: var(--font-weight-semibold);
+  overflow-wrap: anywhere;
+}
+
+.my-pt-package-stats dd {
+  color: var(--color-primary);
+  font-size: var(--font-size-xl);
+}
+
+.my-pt-package-error {
+  margin: 0;
+  color: var(--color-danger);
+}
+
+/* ===== Một buổi (dùng chung sắp tới và lịch sử): giờ và PT thực tế từ DTO ===== */
+.my-pt-session {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) minmax(0, 3fr);
+  gap: var(--space-5);
+  min-width: 0;
+  padding: var(--space-4);
+  border: var(--border-width) solid var(--color-border);
+  border-radius: var(--radius-md);
+  background: var(--color-surface-muted);
+}
+
+.my-pt-session-time,
+.my-pt-session-content {
+  min-width: 0;
+}
+
+.my-pt-session-hours {
+  margin: 0;
+  color: var(--color-primary);
+  font-size: var(--font-size-lg);
+  font-weight: var(--font-weight-bold);
+  font-variant-numeric: tabular-nums;
+}
+
+.my-pt-session-heading {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  flex-wrap: wrap;
+  gap: var(--space-2);
+}
+
+.my-pt-session-heading h3 {
+  margin: 0;
+  color: var(--color-text);
+  font-size: var(--font-size-lg);
+  overflow-wrap: anywhere;
+}
+
+.my-pt-session-content p {
+  overflow-wrap: anywhere;
+}
+
+.my-pt-session-warning {
+  margin: var(--space-3) 0 0;
+  padding: var(--space-2) var(--space-3);
+  border-left: var(--border-width-accent) solid var(--color-warning);
+  border-radius: var(--radius-sm);
+  background: var(--color-warning-tint);
+  color: var(--color-warning-ink);
+  font-size: var(--font-size-sm);
+  line-height: var(--line-height-normal);
+}
+
+/* ===== Nhóm ngày: luôn hiện đầy đủ các buổi, không thu gọn ===== */
+.my-pt-days {
+  display: grid;
+  gap: var(--space-3);
+}
+
+.my-pt-day {
+  padding: var(--space-3);
+  border: var(--border-width) solid var(--color-border);
+  border-radius: var(--radius-xs);
+  background: var(--color-surface-muted);
+}
+
+.my-pt-day.is-today {
+  border-color: var(--color-primary-border);
+  background: var(--color-primary-tint);
+}
+
+.my-pt-day-heading {
+  display: flex;
+  align-items: center;
+  gap: var(--space-3);
+  min-height: var(--space-8);
+}
+
+.my-pt-day-label {
+  min-width: 0;
+  color: var(--color-text);
+  font-weight: var(--font-weight-semibold);
+}
+
+.my-pt-day-count {
+  margin-left: auto;
+  white-space: nowrap;
+  color: var(--color-text-soft);
+  font-size: var(--font-size-sm);
+}
+
+.my-pt-day-sessions {
+  display: grid;
+  gap: var(--space-3);
+  margin-top: var(--space-3);
+}
+
+/* Mỗi buổi nền trắng để tách khỏi nền nhóm ngày. */
+.my-pt-day .my-pt-session {
+  background: var(--color-surface);
+}
+
+/* ===== Lịch sử buổi tập: badge chung (common.css) + ghi chú ===== */
+.my-pt-session-status {
+  display: flex;
+  align-items: center;
+  gap: var(--space-2);
+}
+
+.my-pt-session-note {
+  margin: var(--space-2) 0 0;
+  color: var(--color-text);
+  font-size: var(--font-size-sm);
+  line-height: var(--line-height-normal);
+}
+
+/* ===== Bộ lọc chung: 3 ô (Loại buổi, Từ ngày, Đến ngày) + nút trên cùng một hàng ===== */
+.my-pt-filters {
+  display: grid;
+  grid-template-columns: repeat(4, minmax(0, 1fr));
+  gap: var(--space-4);
+  min-width: 0;
+  margin: 0;
+  padding: 0;
+  border: 0;
+}
+
+.my-pt-filters label {
+  display: grid;
+  gap: var(--space-2);
+  min-width: 0;
+  color: var(--color-text);
+  font-size: var(--font-size-sm);
+  font-weight: var(--font-weight-semibold);
+}
+
+.my-pt-filters input,
+.my-pt-filters select {
+  width: 100%;
+  min-width: 0;
+  padding: var(--space-3);
+  border: var(--border-width) solid var(--color-primary-border);
+  border-radius: var(--radius-sm);
+  background: var(--color-surface);
+  color: var(--color-text);
+  font: inherit;
+}
+
+/* Ô có lỗi từ server (filterErrors): viền đỏ như .field .invalid của common.css. */
+.my-pt-filters .invalid {
+  border-color: var(--color-danger);
+}
+
+/* Lỗi chữ đỏ dưới ô dùng .field-error chung; chỉ bỏ đậm kế thừa từ label. */
+.my-pt-filters .field-error {
+  font-weight: var(--font-weight-regular);
+}
+
+/* Nút nằm cột thứ tư, căn đáy cho thẳng hàng với ô nhập. */
+.my-pt-filter-actions {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: flex-end;
+  align-self: start;
+  gap: var(--space-2);
+  padding-top: calc(var(--font-size-sm) * 1.5 + var(--space-2));
+}
+
+/* Bộ lọc sai nên chưa áp dụng: báo một dòng phía trên form. */
+.my-pt-filter-alert {
+  margin: 0 0 var(--space-4);
+  padding: var(--space-2) var(--space-3);
+  border-left: var(--border-width-accent) solid var(--color-danger);
+  border-radius: var(--radius-sm);
+  background: var(--color-danger-tint);
+  color: var(--color-danger-ink);
+  font-size: var(--font-size-sm);
+}
+
+/* ===== Trạng thái riêng của Lịch sử: dải link, lựa chọn đang áp dụng có aria-current ===== */
+.my-pt-status-tabs {
+  display: flex;
+  flex-wrap: wrap;
+  gap: var(--space-2);
+  margin-bottom: var(--space-4);
+}
+
+.my-pt-status-tab {
+  padding: var(--space-1) var(--space-3);
+  border: var(--border-width) solid var(--color-border);
+  border-radius: var(--radius-pill);
+  background: var(--color-surface);
+  color: var(--color-text-soft);
+  font-size: var(--font-size-sm);
+  text-decoration: none;
+  white-space: nowrap;
+}
+
+.my-pt-status-tab:hover {
+  border-color: var(--color-primary-border);
+  color: var(--color-text);
+}
+
+.my-pt-status-tab[aria-current="true"] {
+  border-color: var(--color-primary-border);
+  background: var(--color-primary-tint);
+  color: var(--color-primary-hover);
+  font-weight: var(--font-weight-semibold);
+}
+
+.my-pt-status-tab:focus-visible {
+  outline: var(--border-width-accent) solid var(--color-primary);
+  outline-offset: var(--space-1);
+}
+
+.my-pt-status-error {
+  margin: calc(-1 * var(--space-2)) 0 var(--space-4);
+}
+
+/* ===== Khung dữ liệu: không giả lập trạng thái rỗng của khách ===== */
+.my-pt-placeholder {
+  padding: var(--space-5);
+  border: var(--border-width) dashed var(--color-primary-border);
+  border-radius: var(--radius-md);
+  background: var(--color-surface-muted);
+}
+
+.my-pt-placeholder p {
+  margin: 0 0 var(--space-2);
+  color: var(--color-text);
+  font-weight: var(--font-weight-semibold);
+}
+
+.my-pt-placeholder span {
+  color: var(--color-text-soft);
+  font-size: var(--font-size-sm);
+  line-height: var(--line-height-normal);
+}
+
+/* ===== Hint: mở bằng hover hoặc focus, không cần JavaScript ===== */
+.my-pt-info { position: relative; display: inline-flex; }
+.my-pt-info button {
+  display: grid;
+  place-items: center;
+  width: var(--space-6);
+  height: var(--space-6);
+  border: var(--border-width) solid var(--color-border-strong);
+  border-radius: var(--radius-circle);
+  background: var(--color-surface);
+  color: var(--color-primary-hover);
+  font: inherit;
+  font-weight: var(--font-weight-semibold);
+  cursor: help;
+}
+.my-pt-info button:hover,
+.my-pt-info button:focus-visible {
+  background: var(--color-primary-tint);
+}
+.my-pt-info [role="tooltip"] {
+  position: absolute;
+  top: calc(100% + var(--space-2));
+  right: 0;
+  width: min(calc(var(--space-8) * 6), 70vw);
+  padding: var(--space-3);
+  border: var(--border-width) solid var(--color-primary-border);
+  border-radius: var(--radius-sm);
+  background: var(--color-surface);
+  box-shadow: var(--shadow-pop);
+  color: var(--color-text);
+  font-size: var(--font-size-sm);
+  font-weight: var(--font-weight-regular);
+  line-height: var(--line-height-normal);
+  opacity: 0;
+  visibility: hidden;
+  transform: translateY(calc(-1 * var(--space-1)));
+  transition: opacity var(--duration-slow), transform var(--duration-slow), visibility var(--duration-slow);
+  z-index: var(--z-tooltip, 100);
+}
+.my-pt-info:hover [role="tooltip"],
+.my-pt-info:focus-within [role="tooltip"] { opacity: 1; visibility: visible; transform: none; }
+.my-pt-info button:focus-visible,
+.my-pt-filters input:focus-visible,
+.my-pt-filters select:focus-visible { outline: var(--border-width-accent) solid var(--color-primary); outline-offset: var(--space-1); }
+.my-pt-visually-hidden {
+  position: absolute;
+  width: 1px;
+  height: 1px;
+  overflow: hidden;
+  clip-path: inset(50%);
+  white-space: nowrap;
+}
+
+/* ===== Mobile: filter xuống hai cột rồi một cột ===== */
+@media (max-width: 900px) {
+  .my-pt-package-list { grid-template-columns: minmax(0, 1fr); }
+  .my-pt-package-details-couple { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+  .my-pt-filters { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+  /* Hàng nút xuống dòng riêng, không cần đệm để căn đáy với ô nhập. */
+  .my-pt-filter-actions { grid-column: 1 / -1; padding-top: 0; }
+}
+@media (max-width: 540px) {
+  .my-pt-session { grid-template-columns: minmax(0, 1fr); gap: var(--space-3); }
+  .my-pt-package-card { padding: var(--space-4); }
+  .my-pt-package-details,
+  .my-pt-package-card:not(:only-child) .my-pt-package-details { grid-template-columns: minmax(0, 1fr); }
+  .my-pt-package-stats { gap: var(--space-2); }
+  .my-pt-package-stats > div { padding: var(--space-2); }
+  .my-pt-panel { padding: var(--space-4); }
+  .my-pt-filters { grid-template-columns: minmax(0, 1fr); }
 }

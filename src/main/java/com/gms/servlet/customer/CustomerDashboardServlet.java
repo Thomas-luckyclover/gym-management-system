@@ -52,7 +52,7 @@ public class CustomerDashboardServlet extends HttpServlet {
         }
 
         request.setAttribute("activeSidebar", "dashboard");
-        request.setAttribute("themeClass", "theme-pt customer-dashboard-page");
+        request.setAttribute("themeClass", "theme-pt customer-dashboard-page customer-weather-page");
 
         // Thời tiết là khối phụ; lỗi API không được làm hỏng dashboard khách hàng.
         String previewType = request.getParameter("weather");
