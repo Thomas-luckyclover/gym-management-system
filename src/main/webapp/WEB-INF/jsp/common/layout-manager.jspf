@@ -146,7 +146,7 @@
           <path d="M6 16V11a6 6 0 0 1 12 0v5l2 2H4z"></path>
           <path d="M10 20a2 2 0 0 0 4 0"></path>
         </svg>
-        <span>Thông báo</span>
+        <span>Gửi thông báo</span>
       </a>
       <a href="${pageContext.request.contextPath}/manager/dashboard"
          class="nav-link<c:if test="${activeNav == 'report'}"> active</c:if>"

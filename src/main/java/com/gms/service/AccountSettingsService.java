@@ -278,7 +278,7 @@ public class AccountSettingsService {
          * Thứ tự kiểm tra: 1. Mật khẩu hiện tại có được nhập. 2. Mật khẩu hiện tại
          * phải đúng. 3. Mật khẩu mới phải đúng định dạng. 4. Mật khẩu mới phải khác
          * mật khẩu hiện tại. 5. Xác nhận mật khẩu phải khớp. 6. Cập nhật mật khẩu
-         * và đăng xuất các phiên khác.
+         * với kiểm soát tương tranh (Optimistic Locking - TC-17C) và đăng xuất các phiên khác.
          *
          * @param accountId        id tài khoản hiện tại
          * @param currentPassword  mật khẩu hiện tại
@@ -386,13 +386,14 @@ public class AccountSettingsService {
                                         boolean isUpdated = accountDAO.updatePasswordHash(
                                                 conn,
                                                 accountId,
-                                                newPasswordHash);
+                                                newPasswordHash,
+                                                account.getPasswordHash());
 
                                         if (!isUpdated) {
                                                 conn.rollback();
 
                                                 return ServiceResult.fail(
-                                                        Messages.MSG04_SYSTEM_BUSY);
+                                                        Messages.MSG22_CONCURRENT_EDIT);
                                         }
                                         auditLogService.logInTransaction(
                                                 conn,

@@ -6,8 +6,11 @@ import jakarta.servlet.http.HttpServletRequest;
 import jakarta.servlet.http.HttpServletResponse;
 import jakarta.servlet.http.HttpSession;
 import java.io.IOException;
+import java.nio.charset.StandardCharsets;
+import java.security.MessageDigest;
 import java.util.LinkedHashMap;
 import java.util.Map;
+import java.util.UUID;
 
 /**
  * Các thao tác lặp lại ở Servlet/Filter: đọc tham số, forward/redirect, toast qua redirect, nhận diện AJAX.
@@ -125,5 +128,52 @@ public final class RequestUtil {
         }
         String[] ipList = forwardedFor.split(",");
         return ipList[0].trim();
+    }
+
+    // ===== CSRF Token (TC-17A) =====
+
+    /**
+     * Lấy hoặc sinh mới CSRF token ngẫu nhiên gắn với session hiện tại.
+     * @param session session của người dùng
+     * @return chuỗi token ngẫu nhiên, hoặc null nếu session null
+     */
+    public static String getOrCreateCsrfToken(HttpSession session) {
+        if (session == null) {
+            return null;
+        }
+        String token = (String) session.getAttribute(SessionKey.CSRF_TOKEN);
+        if (token == null || token.isBlank()) {
+            token = UUID.randomUUID().toString();
+            session.setAttribute(SessionKey.CSRF_TOKEN, token);
+        }
+        return token;
+    }
+
+    /**
+     * Kiểm tra CSRF token gửi lên từ request có khớp với token trong session không.
+     * Sử dụng so sánh an toàn tránh timing attack.
+     * @param request request gửi lên từ form
+     * @return true nếu token hợp lệ và khớp với session
+     */
+    public static boolean isValidCsrfToken(HttpServletRequest request) {
+        if (request == null) {
+            return false;
+        }
+        HttpSession session = request.getSession(false);
+        if (session == null) {
+            return false;
+        }
+        String sessionToken = (String) session.getAttribute(SessionKey.CSRF_TOKEN);
+        if (sessionToken == null || sessionToken.isBlank()) {
+            return false;
+        }
+        String requestToken = request.getParameter("csrfToken");
+        if (requestToken == null || requestToken.isBlank()) {
+            return false;
+        }
+        return MessageDigest.isEqual(
+                sessionToken.getBytes(StandardCharsets.UTF_8),
+                requestToken.getBytes(StandardCharsets.UTF_8)
+        );
     }
 }

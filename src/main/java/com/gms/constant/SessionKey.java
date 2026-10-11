@@ -36,6 +36,9 @@ public final class SessionKey {
      */
     public static final String FLASH_TOAST = "flashToast";
 
+    /** CSRF token gắn với session để chống tấn công Cross-Site Request Forgery (TC-17A). */
+    public static final String CSRF_TOKEN = "csrfToken";
+
     /** Quên mật khẩu bước 1 xong: email đã nhận mã khôi phục (String). */
     public static final String RECOVERY_EMAIL = "recoveryEmail";
 

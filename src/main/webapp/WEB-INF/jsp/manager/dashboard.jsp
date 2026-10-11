@@ -13,6 +13,9 @@
     <title>Báo cáo vận hành &amp; doanh thu - GMS</title>
     <%-- Khung dock/sidebar/topbar dùng chung ở common.css (mục 11) --%>
     <link rel="stylesheet" href="${pageContext.request.contextPath}/css/pages/manager/manager-dashboard.css?v=3">
+    <link rel="stylesheet" href="${pageContext.request.contextPath}/css/pages/auth/notification-bell.css">
+
+    <script src="${pageContext.request.contextPath}/js/pages/auth/notification-bell.js" defer></script>
 </head>
 <body class="dock ${themeClass}">
 
@@ -28,24 +31,56 @@
             </div>
 
             <%-- Khối người dùng: giống topbar của Account Settings --%>
-            <c:if test="${not empty accountSettings}">
-                <div class="top-right">
-                    <a class="tb-user" href="${pageContext.request.contextPath}/account" title="Cài đặt tài khoản">
+            <%-- Chuông thông báo + tài khoản --%>
+            <div class="top-right">
+
+                <%@ include file="/WEB-INF/jsp/common/notification-bell.jspf" %>
+
+
+                <c:if test="${not empty accountSettings}">
+
+                    <a class="tb-user"
+                       href="${pageContext.request.contextPath}/account"
+                       title="Cài đặt tài khoản">
+
                         <c:choose>
+
                             <c:when test="${not empty accountSettings.avatar}">
-                                <img class="avatar" src="${pageContext.request.contextPath}${accountSettings.avatar}" alt="Ảnh đại diện">
+
+                                <img class="avatar"
+                                     src="${pageContext.request.contextPath}${accountSettings.avatar}"
+                                     alt="Ảnh đại diện">
+
                             </c:when>
+
                             <c:otherwise>
-                                <span class="avatar"><c:out value="${accountSettings.fullName.substring(0, 1)}" /></span>
+
+                                <span class="avatar">
+                                    <c:out value="${accountSettings.fullName.substring(0, 1)}" />
+                                </span>
+
                             </c:otherwise>
+
                         </c:choose>
+
+
                         <span class="tb-user-text">
-                            <b><c:out value="${accountSettings.fullName}" /></b>
-                            <small><c:out value="${currentRole.displayName}" /></small>
+
+                            <b>
+                                <c:out value="${accountSettings.fullName}" />
+                            </b>
+
+                            <small>
+                                <c:out value="${currentRole.displayName}" />
+                            </small>
+
                         </span>
+
                     </a>
-                </div>
-            </c:if>
+
+                </c:if>
+
+            </div>
         </header>
 
         <main class="content">

@@ -627,6 +627,24 @@ public class AccountSettingsServlet extends HttpServlet {
                         return;
                 }
 
+                // B0: Kiểm tra CSRF token trước khi xử lý đổi mật khẩu (TC-17A)
+                if (!RequestUtil.isValidCsrfToken(request)) {
+
+                        request.setAttribute(
+                                "formMessage",
+                                Messages.MSG07_NO_PERMISSION);
+
+                        request.setAttribute(
+                                "activeTab",
+                                TAB_PASSWORD);
+
+                        renderAccountSettings(
+                                request,
+                                response);
+
+                        return;
+                }
+
                 String currentPassword = request.getParameter(
                         "currentPassword");
 
@@ -866,6 +884,10 @@ public class AccountSettingsServlet extends HttpServlet {
 
                         return;
                 }
+
+                // Đảm bảo session có CSRF token cho các form (TC-17A)
+                RequestUtil.getOrCreateCsrfToken(
+                        session);
 
                 configureRoleView(
                         request,
