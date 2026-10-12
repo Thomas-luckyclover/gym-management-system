@@ -1,4 +1,5 @@
 <%@ page contentType="text/html; charset=UTF-8" pageEncoding="UTF-8" isErrorPage="true" %>
+<%@ taglib prefix="c" uri="jakarta.tags.core" %>
 <%--
   Trang lỗi 404 — khai báo trong WEB-INF/web.xml. Không in chi tiết lỗi kỹ thuật ra màn hình (bảo mật).
 --%>
@@ -7,7 +8,7 @@
 <head>
   <%@ include file="/WEB-INF/jsp/common/head.jspf" %>
   <title>404 · Super Gym</title>
-  <link rel="stylesheet" href="${pageContext.request.contextPath}/css/pages/error/error.css?v=2">
+  <link rel="stylesheet" href="${pageContext.request.contextPath}/css/pages/error/error.css?v=4">
 </head>
 <body class="theme-guest-dark err-body">
   <main class="err">
@@ -29,6 +30,10 @@
         </svg>
         <span>4</span>
       </p>
+
+      <%-- Pumpy theo loại lỗi --%>
+      <c:set var="pumpyMood" value="lost" />
+      <%@ include file="/WEB-INF/jsp/error/pumpy.jspf" %>
 
       <p class="err-status">404 – Not Found</p>
       <h1 class="err-title">Không tìm thấy trang</h1>

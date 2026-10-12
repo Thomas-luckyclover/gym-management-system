@@ -1044,27 +1044,61 @@ function bindFormValidation(form) {
 
 // ----- 4.3 Nút đang xử lý (GBR-22: khóa nút gửi trong lúc chờ server) -----
 
+// Hình loading của nút: Pumpy dồn hết sức đẩy cả quả tạ (2 đầu) to hơn người, tạ không nhúc nhích.
+// SVG tĩnh (không chứa dữ liệu người dùng); CSS ở common.css mục "Loading Pumpy đẩy tạ".
+const PUMPY_PUSH_SVG =
+    '<svg class="btn-pumpy" viewBox="0 0 100 35" aria-hidden="true" focusable="false">'
+    + '<g class="bp-dust"><circle cx="5" cy="31" r="1.6"/><circle cx="2" cy="29" r="1.1"/></g>'
+    + '<g class="bp-db">'
+    + '<rect x="51" y="15" width="28" height="5" rx="1.5" fill="#9AA7B0" stroke="#141414" stroke-width="1.4"/>'
+    + '<rect x="46" y="4" width="6" height="27" rx="2" fill="#4A5F6A" stroke="#141414" stroke-width="1.4"/>'
+    + '<rect x="78" y="4" width="6" height="27" rx="2" fill="#4A5F6A" stroke="#141414" stroke-width="1.4"/>'
+    + '<rect x="33" y="1" width="13" height="33" rx="3" fill="#4A5F6A" stroke="#141414" stroke-width="1.6"/>'
+    + '<rect x="84" y="1" width="13" height="33" rx="3" fill="#4A5F6A" stroke="#141414" stroke-width="1.6"/>'
+    + '<rect x="38" y="5" width="2.2" height="25" rx="1" fill="#D6F55B"/>'
+    + '<rect x="89.5" y="5" width="2.2" height="25" rx="1" fill="#D6F55B"/>'
+    + '</g>'
+    + '<g class="bp-pumpy">'
+    + '<g class="bp-foot bp-foot--back"><ellipse cx="11" cy="31" rx="4" ry="2.4" fill="#D6F55B" stroke="#141414" stroke-width="1.4"/></g>'
+    + '<path d="M9 12 L9.5 5 L14 9 Z M27 11 L25.5 4.5 L21.5 8.5 Z" fill="#D6F55B" stroke="#141414" stroke-width="1.3" stroke-linejoin="round"/>'
+    + '<ellipse cx="18" cy="19" rx="11" ry="10" fill="#D6F55B" stroke="#141414" stroke-width="1.6"/>'
+    + '<path d="M27 15 L33.5 14 M27.5 21 L33.5 21" stroke="#141414" stroke-width="3.6" stroke-linecap="round"/>'
+    + '<path d="M27 15 L33.5 14 M27.5 21 L33.5 21" stroke="#D6F55B" stroke-width="1.8" stroke-linecap="round"/>'
+    + '<path d="M17 15 L19.5 16.5 L17 18 M24.5 15 L22 16.5 L24.5 18" fill="none" stroke="#141414" stroke-width="1.3" stroke-linecap="round" stroke-linejoin="round"/>'
+    + '<path d="M18.5 22 H24" stroke="#141414" stroke-width="1.6" stroke-linecap="round"/>'
+    + '<g class="bp-foot bp-foot--front"><ellipse cx="20" cy="31" rx="4" ry="2.4" fill="#D6F55B" stroke="#141414" stroke-width="1.4"/></g>'
+    + '</g>'
+    + '<g class="bp-sweat"><path d="M9 7 q-2 -3 0 -5 q2 2 0 5z"/><path d="M5 12 q-2 -2.5 0 -4.5 q2 2 0 4.5z"/></g>'
+    + '</svg>';
+
 // Bật/tắt trạng thái "đang xử lý" cho 1 nút
 // Luồng xử lý:
-// B1 (bật): nhớ chữ gốc vào data-original-text, khóa nút, đổi chữ thành "Đang xử lý…", thêm class is-loading (CSS vẽ vòng xoay)
-// B2 (tắt): trả lại chữ gốc, mở khóa nút
+// B1 (bật): nhớ nội dung gốc của nút (cả icon), khóa nút, thay bằng Pumpy đẩy tạ + "Đang xử lý…", thêm class is-loading
+// B2 (tắt): trả lại nội dung gốc, mở khóa nút
+const buttonOriginalHtml = new WeakMap();
+
 function setButtonLoading(button, isLoading) {
     if (isLoading) {
-        // B1
-        if (button.dataset.originalText === undefined) {
-            button.dataset.originalText = button.textContent.trim();
+        // B1: đang loading rồi thì thôi (tránh 2 nơi cùng bật)
+        if (button.classList.contains("is-loading")) {
+            return;
         }
+        buttonOriginalHtml.set(button, button.innerHTML);
         button.disabled = true;
         button.classList.add("is-loading");
         button.setAttribute("aria-busy", "true");
-        button.textContent = "Đang xử lý…";
+        // B1.1: hình Pumpy (chuỗi tĩnh) rồi chữ thường qua textContent
+        button.innerHTML = PUMPY_PUSH_SVG;
+        const label = document.createElement("span");
+        label.textContent = "Đang xử lý…";
+        button.appendChild(label);
         return;
     }
 
     // B2
-    if (button.dataset.originalText !== undefined) {
-        button.textContent = button.dataset.originalText;
-        delete button.dataset.originalText;
+    if (buttonOriginalHtml.has(button)) {
+        button.innerHTML = buttonOriginalHtml.get(button);
+        buttonOriginalHtml.delete(button);
     }
     button.disabled = false;
     button.classList.remove("is-loading");
@@ -2006,11 +2040,21 @@ function initDock() {
     function setDockOpen(isOpen) {
         dock.classList.toggle("is-open", isOpen);
         dockHandle.setAttribute("aria-expanded", String(isOpen));
-        dockHandle.setAttribute("aria-label", isOpen ? "Đóng menu điều hướng" : "Mở menu điều hướng");
+        dockHandle.setAttribute("aria-label", isOpen ? "Bỏ ghim menu điều hướng" : "Ghim mở menu điều hướng");
+        dockHandle.setAttribute("title", isOpen ? "Bỏ ghim menu" : "Ghim mở menu");
     }
 
     dockHandle.addEventListener("click", function () {
         setDockOpen(!dock.classList.contains("is-open"));
+    });
+    setDockOpen(dock.classList.contains("is-open"));
+
+    // Click ngoài chỉ bỏ focus ở chế độ tự đóng; menu đã ghim vẫn mở.
+    document.addEventListener("pointerdown", function (event) {
+        if (!dock.classList.contains("is-open") && !dock.contains(event.target)
+                && dock.contains(document.activeElement)) {
+            document.activeElement.blur();
+        }
     });
 
     // B2: Escape đóng menu và trả focus về tay nắm
@@ -2024,6 +2068,17 @@ function initDock() {
     // B3: quầng sáng — ghi tọa độ con trỏ (px trong sidebar) vào --mx/--my
     const sidebar = dock.querySelector(".sidebar");
     if (sidebar) {
+        // Chặn cuộn nối sang trang ở hai đầu menu, kể cả menu ngắn không tràn.
+        sidebar.addEventListener("wheel", function (event) {
+            if (event.ctrlKey || event.deltaY === 0) {
+                return;
+            }
+            const atTop = sidebar.scrollTop <= 0;
+            const atBottom = sidebar.scrollTop + sidebar.clientHeight >= sidebar.scrollHeight - 1;
+            if ((event.deltaY < 0 && atTop) || (event.deltaY > 0 && atBottom)) {
+                event.preventDefault();
+            }
+        }, { passive: false });
         sidebar.addEventListener("pointermove", function (event) {
             const rect = sidebar.getBoundingClientRect();
             sidebar.style.setProperty("--mx", (event.clientX - rect.left) + "px");
@@ -2175,11 +2230,23 @@ document.addEventListener("DOMContentLoaded", function () {
         return;
     }
     initDock();
+    initAccountAvatarStatus();
     initFlipNumbers();
     initCountUp();
     initTilt();
     initReveal();
 });
+
+// Một lớp bọc chung cho cả ảnh và chữ viết tắt; chấm trạng thái không bị ảnh cắt.
+function initAccountAvatarStatus() {
+    document.querySelectorAll(".dock .tb-user .avatar").forEach(function (avatar) {
+        if (avatar.parentElement.classList.contains("tb-avatar")) { return; }
+        const wrapper = document.createElement("span");
+        wrapper.className = "tb-avatar";
+        avatar.before(wrapper);
+        wrapper.appendChild(avatar);
+    });
+}
 
 // Bạt dùng chung PT/Customer Dashboard: cuốn lên khi cuộn xuống, thả xuống khi cuộn lên.
 // DOM: .pt-awning (pt/_awning.jspf); CSS: awning.css + base.css đọc class is-retracted trên <body>.
@@ -2229,4 +2296,274 @@ document.addEventListener("DOMContentLoaded", function () {
         }
     }
     requestAnimationFrame(drawTemperature);
+});
+
+// Thoại truyện tranh: một runner nói mỗi lượt, không lặp cho tới hết bộ câu.
+document.addEventListener("DOMContentLoaded", function () {
+    const track = document.querySelector(".wx-run");
+    if (!track) { return; }
+    const runners = Array.from(track.querySelectorAll(".wx-runner"));
+    if (!runners.length) { return; }
+    const lines = [
+        ["en", "Chasing my dreams. They run suspiciously fast."],
+        ["vi", "Tôi hối hận vì không tập gym đều… *thở dốc*"],
+        ["en", "My pace? Emotionally unavailable."],
+        ["vi", "Chạy vì đam mê. Đam mê ăn tối."],
+        ["vi", "Phổi tôi vừa gửi đơn nghỉ việc."],
+        ["en", "Chasing your dreams, one breath at a time."],
+        ["vi", "Tôi ổn. Đó là tiếng quạt, không phải tiếng thở."],
+        ["en", "Cardio today. Stairs still win tomorrow."],
+        ["vi", "Ai bảo chạy bộ chữa lành? Chân tôi đang tổn thương."],
+        ["en", "Running from my problems. They bought a bike."],
+        ["vi", "Một vòng nữa thôi. Câu nói dối từ vòng thứ ba."],
+        ["vi", "Đừng bỏ cuộc! Bỏ tốc độ thôi cũng được."],
+        ["en", "Dream big. Start slow. Keep moving."],
+        ["vi", "Tập hôm nay để mai đứng dậy có âm thanh."],
+        ["en", "Leg day called. I declined."],
+        ["vi", "Tôi đến vì sức khỏe. Ở lại vì chưa thở nổi."],
+        ["en", "Personal best: showing up."],
+        ["vi", "Cơ bụng đang ở chế độ ẩn danh."],
+        ["en", "No finish line for becoming yourself."],
+        ["vi", "Chậm cũng được. Miễn đừng quay về giường."],
+        ["en", "My legs have left the group chat."],
+        ["vi", "Hôm qua: mai tập. Hôm nay: quả báo."],
+        ["en", "Sweat now. Brag later."],
+        ["vi", "Đường còn dài. Pin xã hội còn 2%."],
+        ["en", "I thought this was a warm-up. Send help."],
+        ["vi", "Đích đến là phiên bản tốt hơn. Và một tô phở."]
+    ];
+    let remaining = [];
+    let timer;
+    let animation;
+    const bubble = document.createElement("span");
+    bubble.className = "wx-run__speech";
+    bubble.hidden = true;
+    track.appendChild(bubble);
+
+    function hide() {
+        bubble.hidden = true;
+        cancelAnimationFrame(animation);
+    }
+    function schedule(delay) {
+        clearTimeout(timer);
+        timer = setTimeout(show, delay);
+    }
+    function show() {
+        const bounds = track.getBoundingClientRect();
+        if (document.hidden || bounds.bottom <= 0 || bounds.top >= window.innerHeight) {
+            schedule(15000);
+            return;
+        }
+        const candidates = runners.filter(function (runner) {
+            const rect = runner.getBoundingClientRect();
+            return rect.left > bounds.left + bounds.width * 0.15
+                && rect.right < bounds.right - bounds.width * 0.15;
+        });
+        if (!candidates.length) { schedule(3000); return; }
+        if (!remaining.length) { remaining = lines.slice(); }
+        const line = remaining.splice(Math.floor(Math.random() * remaining.length), 1)[0];
+        const speaker = candidates[Math.floor(Math.random() * candidates.length)];
+        bubble.textContent = line[1];
+        bubble.lang = line[0];
+        bubble.hidden = false;
+        const end = performance.now() + 7500;
+        function follow(now) {
+            const area = track.getBoundingClientRect();
+            const runner = speaker.getBoundingClientRect();
+            if (now >= end || document.hidden || runner.left >= area.right - 12 || runner.right <= area.left + 12) {
+                hide();
+                schedule(120000 + Math.random() * 60000);
+                return;
+            }
+            const headX = runner.left - area.left + runner.width * 0.54;
+            const left = Math.max(8, Math.min(headX - bubble.offsetWidth / 2, area.width - bubble.offsetWidth - 8));
+            bubble.style.left = left + "px";
+            bubble.style.top = Math.max(8, runner.top - area.top + runner.height * 0.12 - bubble.offsetHeight - 12) + "px";
+            bubble.style.setProperty("--speech-tail", Math.max(12, Math.min(headX - left, bubble.offsetWidth - 22)) + "px");
+            animation = requestAnimationFrame(follow);
+        }
+        animation = requestAnimationFrame(follow);
+    }
+    document.addEventListener("visibilitychange", function () {
+        if (document.hidden) { hide(); clearTimeout(timer); }
+        else { schedule(120000 + Math.random() * 60000); }
+    });
+    // Cho thấy lượt đầu sớm; các lượt sau cách nhau 2–3 phút.
+    schedule(8000);
+});
+
+
+// =====================================================================
+// TÌM NHANH (Ctrl/⌘ + K) — khu nội bộ. Danh sách màn lấy từ menu sidebar (.nav-link) của khu đang mở,
+// nên mỗi vai trò tự có đúng các màn của mình. Gõ để lọc (không dấu), ↑/↓ chọn, Enter mở, Esc đóng.
+// CSS: common.css mục "Tìm nhanh". Dùng <dialog> gốc của trình duyệt (bẫy focus + Esc sẵn có).
+// =====================================================================
+document.addEventListener("DOMContentLoaded", function () {
+    if (!document.body.classList.contains("dock")) {
+        return;
+    }
+    const links = document.querySelectorAll(".dock .sidebar .nav-link[href]");
+    const items = [];
+    for (let i = 0; i < links.length; i++) {
+        const href = links[i].getAttribute("href");
+        const label = links[i].textContent.trim();
+        // Bỏ mục chưa có màn (href="#") và mục trống
+        if (href && href !== "#" && label) {
+            items.push({ label: label, href: href, key: normalizeSearchText(label) });
+        }
+    }
+    if (items.length === 0) {
+        return;
+    }
+
+    // B1: dựng hộp thoại một lần
+    const dialog = document.createElement("dialog");
+    dialog.className = "cmdk";
+    dialog.setAttribute("aria-label", "Tìm nhanh màn hình");
+    dialog.innerHTML =
+        '<div class="cmdk-box">'
+        + '<input class="cmdk-input" type="search" placeholder="Tìm màn hình… (ví dụ: lich, voucher)" aria-label="Tìm màn hình" autocomplete="off">'
+        + '<ul class="cmdk-list" role="listbox"></ul>'
+        + '<p class="cmdk-foot"><kbd>↑</kbd><kbd>↓</kbd> chọn · <kbd>Enter</kbd> mở · <kbd>Esc</kbd> đóng</p>'
+        + '</div>';
+    document.body.appendChild(dialog);
+    const input = dialog.querySelector(".cmdk-input");
+    const list = dialog.querySelector(".cmdk-list");
+    let matches = items;
+    let active = 0;
+
+    // B2: vẽ danh sách theo từ khóa
+    function render() {
+        const query = normalizeSearchText(input.value.trim());
+        matches = [];
+        for (let i = 0; i < items.length; i++) {
+            if (query === "" || items[i].key.indexOf(query) !== -1) {
+                matches.push(items[i]);
+            }
+        }
+        if (active >= matches.length) {
+            active = 0;
+        }
+        list.textContent = "";
+        if (matches.length === 0) {
+            const empty = document.createElement("li");
+            empty.className = "cmdk-empty";
+            empty.textContent = "Không có màn nào khớp.";
+            list.appendChild(empty);
+            return;
+        }
+        for (let i = 0; i < matches.length; i++) {
+            const li = document.createElement("li");
+            li.className = "cmdk-item" + (i === active ? " is-active" : "");
+            li.setAttribute("role", "option");
+            li.setAttribute("aria-selected", i === active ? "true" : "false");
+            li.textContent = matches[i].label;
+            li.dataset.index = String(i);
+            list.appendChild(li);
+        }
+    }
+
+    function open() {
+        input.value = "";
+        active = 0;
+        render();
+        dialog.showModal();
+        input.focus();
+    }
+
+    function go(index) {
+        if (matches[index]) {
+            window.location.href = matches[index].href;
+        }
+    }
+
+    // B3: phím tắt mở hộp
+    document.addEventListener("keydown", function (event) {
+        if ((event.ctrlKey || event.metaKey) && event.key.toLowerCase() === "k") {
+            event.preventDefault();
+            if (dialog.open) {
+                dialog.close();
+            } else {
+                open();
+            }
+        }
+    });
+
+    input.addEventListener("input", function () {
+        active = 0;
+        render();
+    });
+
+    // B4: điều hướng bằng bàn phím trong hộp
+    input.addEventListener("keydown", function (event) {
+        if (event.key === "ArrowDown") {
+            event.preventDefault();
+            active = (active + 1) % Math.max(matches.length, 1);
+            render();
+        } else if (event.key === "ArrowUp") {
+            event.preventDefault();
+            active = (active - 1 + matches.length) % Math.max(matches.length, 1);
+            render();
+        } else if (event.key === "Enter") {
+            event.preventDefault();
+            go(active);
+        }
+    });
+
+    list.addEventListener("click", function (event) {
+        const item = event.target.closest(".cmdk-item");
+        if (item) {
+            go(Number(item.dataset.index));
+        }
+    });
+
+    // Bấm ra ngoài hộp (vùng nền) thì đóng
+    dialog.addEventListener("click", function (event) {
+        if (event.target === dialog) {
+            dialog.close();
+        }
+    });
+});
+
+
+// =====================================================================
+// LOADING PUMPY CHO MỌI NÚT GỬI FORM — cả trang khách, đăng nhập và khu nội bộ.
+// Form nào gửi thật về server (không bị chặn) thì nút vừa bấm hiện Pumpy đẩy tạ cho tới khi trang mới tải xong.
+// Bỏ qua: form bị chặn gửi (sai dữ liệu, AJAX tự lo), nút không phải .btn (link-btn), nút có data-no-loading,
+// form mở tab mới (target="_blank").
+// =====================================================================
+document.addEventListener("submit", function (event) {
+    // B1: form đã bị chặn (kiểm tra sai / AJAX) → không làm gì
+    if (event.defaultPrevented) {
+        return;
+    }
+    const form = event.target;
+    if (form.getAttribute("target") === "_blank") {
+        return;
+    }
+
+    // B2: tìm nút vừa bấm; gửi bằng Enter thì lấy nút submit đầu tiên của form
+    let button = event.submitter;
+    if (button === null || button === undefined) {
+        button = form.querySelector('button[type="submit"], button:not([type])');
+    }
+    if (button === null || !button.classList.contains("btn") || button.hasAttribute("data-no-loading")) {
+        return;
+    }
+
+    // B3: bật sau 1 nhịp để trình duyệt kịp gửi name/value của nút (nút disabled sẽ không được gửi)
+    setTimeout(function () {
+        setButtonLoading(button, true);
+    }, 0);
+});
+
+// Bấm Quay lại (trình duyệt lấy trang từ bộ nhớ đệm) → trả các nút đang loading về bình thường
+window.addEventListener("pageshow", function (event) {
+    if (!event.persisted) {
+        return;
+    }
+    const buttons = document.querySelectorAll(".btn.is-loading");
+    for (let i = 0; i < buttons.length; i++) {
+        setButtonLoading(buttons[i], false);
+    }
 });

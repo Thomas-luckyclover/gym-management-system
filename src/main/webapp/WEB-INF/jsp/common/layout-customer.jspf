@@ -12,6 +12,9 @@
         </a>
 
         <nav class="nav" aria-label="Điều hướng chính">
+            <a href="${pageContext.request.contextPath}/" class="nav-link">
+                <i class="fa-solid fa-house" aria-hidden="true"></i> Về trang chủ
+            </a>
             <div class="nav-group">Tổng quan</div>
             <a href="${pageContext.request.contextPath}/customer/dashboard"
                class="nav-link <c:if test="${activeSidebar == 'dashboard'}">active</c:if>"
