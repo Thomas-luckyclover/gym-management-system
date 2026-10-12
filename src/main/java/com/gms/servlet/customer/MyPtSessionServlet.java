@@ -5,6 +5,7 @@ import com.gms.dto.CustomerDashboardView;
 import com.gms.dto.MyPtHistorySessionView;
 import com.gms.dto.MyPtPackageView;
 import com.gms.dto.MyPtSessionFilter;
+import com.gms.dto.MyPtSessionPage;
 import com.gms.dto.MyPtUpcomingSessionView;
 import com.gms.dto.ServiceResult;
 import com.gms.service.CustomerDashboardService;
@@ -86,31 +87,31 @@ public class MyPtSessionServlet extends HttpServlet {
         request.setAttribute("sessionFilter", filter);
 
         // B3.2: mỗi khối có số trang riêng; Service đổi chuỗi URL thành số nguyên dương.
-        // Mới chuẩn bị tham số: các bước DAO/Service tiếp theo mới lấy 8 ngày của trang này.
+        // Service giới hạn số trang theo dữ liệu sau lọc và lấy tối đa 8 ngày có buổi.
         int upcomingPageNumber = sessionService.parsePageNumber(request.getParameter("upcomingPage"));
         int historyPageNumber = sessionService.parsePageNumber(request.getParameter("historyPage"));
         request.setAttribute("upcomingPageNumber", upcomingPageNumber);
         request.setAttribute("historyPageNumber", historyPageNumber);
 
         // B4: lấy Scheduled chưa kết thúc; Service bổ sung cảnh báo và nhãn Đang diễn ra.
-        ServiceResult<List<MyPtUpcomingSessionView>> upcomingResult =
-                sessionService.getUpcomingSessions(accountId, filter, now);
+        ServiceResult<MyPtSessionPage<MyPtUpcomingSessionView>> upcomingResult =
+                sessionService.getUpcomingSessionsPage(accountId, filter, now, upcomingPageNumber);
         if (upcomingResult.isSuccess()) {
             // Gom theo ngày để JSP hiển thị đầy đủ buổi; thứ tự ngày gần nhất trước.
-            request.setAttribute("upcomingDays", MyPtSessionService.groupBySlotDate(
-                    upcomingResult.getData(), MyPtUpcomingSessionView::getSlotDate));
+            request.setAttribute("upcomingDays", upcomingResult.getData().getDays());
+            request.setAttribute("upcomingPage", upcomingResult.getData());
         } else {
             request.setAttribute("upcomingSessionsError", upcomingResult.getMessage());
         }
 
         // B5: lấy lịch sử gồm CheckedIn, Missed, Cancelled và Scheduled đã qua giờ kết thúc.
         // Chỉ đọc kết quả đã lưu; Service gắn nhãn, giải thích, hint cho từng dòng.
-        ServiceResult<List<MyPtHistorySessionView>> historyResult =
-                sessionService.getHistorySessions(accountId, filter, now);
+        ServiceResult<MyPtSessionPage<MyPtHistorySessionView>> historyResult =
+                sessionService.getHistorySessionsPage(accountId, filter, now, historyPageNumber);
         if (historyResult.isSuccess()) {
             // Rỗng vẫn là tải thành công; gom theo ngày, ngày mới nhất trước như thứ tự DAO.
-            request.setAttribute("historyDays", MyPtSessionService.groupBySlotDate(
-                    historyResult.getData(), MyPtHistorySessionView::getSlotDate));
+            request.setAttribute("historyDays", historyResult.getData().getDays());
+            request.setAttribute("historyPage", historyResult.getData());
         } else {
             // Lỗi tải tách khỏi trường hợp rỗng, không thay bằng danh sách rỗng.
             request.setAttribute("historySessionsError", historyResult.getMessage());
