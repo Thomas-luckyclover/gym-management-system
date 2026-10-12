@@ -18,7 +18,7 @@
     <link rel="stylesheet" href="${pageContext.request.contextPath}/css/awning.css?v=4">
     <link rel="stylesheet" href="${pageContext.request.contextPath}/css/pages/pt/dashboard.css?v=34">
     <script src="${pageContext.request.contextPath}/js/pages/pt/dashboard.js?v=7" defer></script>
-    <link rel="stylesheet" href="${pageContext.request.contextPath}/css/dashboard-weather.css?v=9">
+    <link rel="stylesheet" href="${pageContext.request.contextPath}/css/dashboard-weather.css?v=10">
     <link rel="stylesheet" href="${pageContext.request.contextPath}/css/weather-scene.css?v=4">
     <script src="${pageContext.request.contextPath}/js/weather-scene.js?v=4" defer></script>
 </head>

@@ -678,12 +678,15 @@
   display: block;
   top: calc(var(--i) * 11% + 6%);
   left: calc(var(--i) * 13% + 4%);
-  width: calc(var(--space-2-5) + (var(--i) % 3) * 4px);
+  /* CSS không có phép chia lấy dư (%): cỡ sao xoay vòng 3 mức bằng nth-child bên dưới */
+  width: var(--space-2-5);
   aspect-ratio: 1;
   background: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 20 20'%3E%3Cpath d='M10 0 L11.6 8.4 L20 10 L11.6 11.6 L10 20 L8.4 11.6 L0 10 L8.4 8.4 Z' fill='white'/%3E%3C/svg%3E") center / contain no-repeat;
   animation: fx-twinkle calc(1.8s + var(--i) * 0.2s) ease-in-out infinite alternate;
   animation-delay: calc(var(--i) * -0.35s);
 }
+.weather-night .wx-card__fx i:nth-child(3n + 2) { width: calc(var(--space-2-5) + 4px); }
+.weather-night .wx-card__fx i:nth-child(3n) { width: calc(var(--space-2-5) + 8px); }
 
 /* Nhiều mây / gió: vệt gió mảnh trôi ngang */
 :is(.weather-cloudy, .weather-wind) .wx-card__fx i {
