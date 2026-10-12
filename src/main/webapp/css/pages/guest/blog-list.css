@@ -105,7 +105,7 @@
   background: #161514;
   color: var(--color-text-soft, #A09C93);
   font-weight: 500;
-  font-size: 0.8rem;
+  font-size: 0.8125rem;
   cursor: pointer;
   transition: all var(--duration-fast, 0.15s);
   user-select: none;
@@ -124,7 +124,7 @@
 }
 
 .result-count {
-  font-size: 0.8rem;
+  font-size: 0.8125rem;
   color: var(--color-text-soft, #A09C93);
   min-height: 1.2em;
 }
@@ -237,7 +237,7 @@
 .chip {
   display: inline-flex;
   width: fit-content;
-  font-size: 0.66rem;
+  font-size: 0.8125rem;
   font-weight: 800;
   text-transform: uppercase;
   letter-spacing: 0.05em;
@@ -288,7 +288,7 @@
 }
 
 .post-meta {
-  font-size: 0.75rem;
+  font-size: 0.8125rem;
   color: var(--color-text-muted, #79766F);
   display: flex;
   align-items: center;
@@ -298,7 +298,7 @@
 
 .post-meta i,
 .post-meta svg {
-  font-size: 0.75rem;
+  font-size: 0.8125rem;
   width: 12px;
   height: 12px;
 }
@@ -381,5 +381,5 @@
 
 .page-btn i,
 .page-btn svg {
-  font-size: 0.75rem;
+  font-size: 0.8125rem;
 }

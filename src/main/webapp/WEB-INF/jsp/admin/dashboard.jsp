@@ -6,7 +6,7 @@
 <head>
   <%@ include file="/WEB-INF/jsp/common/head.jspf" %>
   <title>Báo cáo vận hành hệ thống · Super Gym</title>
-  <link rel="stylesheet" href="${pageContext.request.contextPath}/css/pages/admin/dashboard.css?v=3">
+  <link rel="stylesheet" href="${pageContext.request.contextPath}/css/pages/admin/dashboard.css?v=4">
   <script src="${pageContext.request.contextPath}/js/pages/admin/dashboard.js" defer></script>
 </head>
 <body class="dock theme-admin">

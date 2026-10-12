@@ -8,7 +8,7 @@
   <%@ include file="/WEB-INF/jsp/common/head.jspf" %>
   <title>Blog — Super Gym</title>
   <meta name="description" content="Kiến thức tập luyện, dinh dưỡng và tin tức phòng gym, cập nhật mỗi tuần từ đội ngũ huấn luyện viên.">
-  <link rel="stylesheet" href="${pageContext.request.contextPath}/css/pages/guest/blog-list.css">
+  <link rel="stylesheet" href="${pageContext.request.contextPath}/css/pages/guest/blog-list.css?v=2">
   <script src="${pageContext.request.contextPath}/js/pages/guest/blog-list.js" defer></script>
 </head>
 <body class="theme-guest-dark">

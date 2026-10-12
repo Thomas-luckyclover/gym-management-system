@@ -10,7 +10,7 @@
 <head>
   <%@ include file="/WEB-INF/jsp/common/head.jspf" %>
   <title>Super Gym · Tập đúng cách, đo được tiến bộ</title>
-  <link rel="stylesheet" href="${pageContext.request.contextPath}/css/pages/guest/home.css?v=4">
+  <link rel="stylesheet" href="${pageContext.request.contextPath}/css/pages/guest/home.css?v=6">
   <script src="${pageContext.request.contextPath}/js/pages/guest/home.js?v=2" defer></script>
 </head>
 <body class="theme-guest-dark">

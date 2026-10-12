@@ -11,7 +11,7 @@
 <head>
   <%@ include file="/WEB-INF/jsp/common/head.jspf" %>
   <title>Về chúng tôi · Super Gym</title>
-  <link rel="stylesheet" href="${pageContext.request.contextPath}/css/pages/guest/about.css?v=4">
+  <link rel="stylesheet" href="${pageContext.request.contextPath}/css/pages/guest/about.css?v=5">
   <script src="${pageContext.request.contextPath}/js/pages/guest/about.js?v=3" defer></script>
 </head>
 <body class="theme-guest-dark about-page">

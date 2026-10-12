@@ -16,6 +16,11 @@
         <%-- Đường chạy marathon: trang trí, rê chuột để cả nhóm chạy nhanh hơn --%>
         <div class="wx-run" aria-hidden="true">
             <div class="wx-run__sky"></div>
+            <%-- Lớp xa → gần: khán đài, đèn pha quét, biển cây số lướt qua, vệt tốc độ --%>
+            <div class="wx-run__stadium"></div>
+            <div class="wx-run__beams"><span></span><span></span></div>
+            <div class="wx-run__signs"><span>5K</span><span>10K</span><span>21K</span><span>42K</span></div>
+            <div class="wx-run__speed"><i></i><i></i><i></i><i></i><i></i></div>
             <%-- 4 runner marathon (kiểu ekiden Nhật) ở 4 làn xa → gần; màu áo theo --doodle-1..4 --%>
             <div class="wx-runners">
                 <c:forEach var="runnerIndex" begin="1" end="4">

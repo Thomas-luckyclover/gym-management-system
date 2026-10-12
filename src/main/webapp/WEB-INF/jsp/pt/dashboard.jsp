@@ -16,7 +16,7 @@
     <link rel="stylesheet" href="${pageContext.request.contextPath}/css/pages/auth/account-settings.css?v=2">
     <link rel="stylesheet" href="${pageContext.request.contextPath}/css/base.css?v=8">
     <link rel="stylesheet" href="${pageContext.request.contextPath}/css/awning.css?v=4">
-    <link rel="stylesheet" href="${pageContext.request.contextPath}/css/pages/pt/dashboard.css?v=31">
+    <link rel="stylesheet" href="${pageContext.request.contextPath}/css/pages/pt/dashboard.css?v=34">
     <script src="${pageContext.request.contextPath}/js/pages/pt/dashboard.js?v=7" defer></script>
     <link rel="stylesheet" href="${pageContext.request.contextPath}/css/dashboard-weather.css?v=9">
     <link rel="stylesheet" href="${pageContext.request.contextPath}/css/weather-scene.css?v=4">
@@ -39,116 +39,6 @@
                 <c:set var="weatherAudience" value="pt" />
                 <%@ include file="/WEB-INF/jsp/common/dashboard-weather.jspf" %>
 
-                <%-- attentionItems: Service gom khách + gói + loại vấn đề, giữ buổi gần nhất. --%>
-                <section class="pt-alerts" aria-labelledby="alerts-title" data-reveal>
-                    <div class="pt-section-heading">
-                        <h2 id="alerts-title">Cần chú ý</h2>
-                        <span class="pt-info">
-                            <button type="button" class="pt-info-trigger" aria-label="Giải thích mục Cần chú ý" aria-describedby="alerts-help"><span aria-hidden="true">i</span></button>
-                            <span id="alerts-help" class="pt-info-popover" role="tooltip">Kiểm tra membership hoặc bảo lưu cho các buổi trong 14 ngày tới.</span>
-                        </span>
-                    </div>
-                    <c:choose>
-                        <c:when test="${not empty attentionError}">
-                            <p class="pt-block-error" role="alert"><c:out value="${attentionError}" /></p>
-                        </c:when>
-                        <c:when test="${attentionItems == null}">
-                            <p class="empty-state">Chưa tải được cảnh báo.</p>
-                        </c:when>
-                        <c:when test="${empty attentionItems}">
-                            <p class="empty-state">Không có khách cần kiểm tra cho các buổi trong 14 ngày tới.</p>
-                        </c:when>
-                        <c:otherwise>
-                            <div class="pt-attention-list">
-                                <c:forEach var="item" items="${attentionItems}">
-                                    <article class="pt-attention-item">
-                                        <div class="pt-attention-heading">
-                                            <%-- item.customerName copy từ DAO; attentionTitle do Service chọn. --%>
-                                            <span class="pt-person-avatar" aria-hidden="true"><c:out value="${fn:substring(item.customerName, 0, 1)}" /></span>
-                                            <h3><c:out value="${item.customerName}" /></h3>
-                                            <span class="badge badge-warning"><c:out value="${item.attentionTitle}" /></span>
-                                        </div>
-                                        <p class="pt-attention-message"><c:out value="${item.attentionMessage}" /></p>
-                                        <div class="pt-attention-package">
-                                            <p class="pt-attention-group-title">Gói PT · <strong><c:out value="${item.ptSubscriptionTypeLabel}" /></strong></p>
-                                            <p>Gói PT đến <c:out value="${gms:formatDate(item.ptEndDate)}" /></p>
-                                            <p><c:out value="${item.scheduledSessionCount}" /> buổi đã xếp lịch</p>
-                                        </div>
-                                        <div class="pt-attention-membership">
-                                            <p class="pt-attention-group-title">Membership · <strong><c:out value="${item.membershipStatusLabel}" /></strong></p>
-                                            <c:if test="${not empty item.membershipEndDate}">
-                                                <p>Hạn membership: <c:out value="${gms:formatDate(item.membershipEndDate)}" /></p>
-                                            </c:if>
-                                            <c:if test="${not empty item.freezeEndDate}">
-                                                <p>Bảo lưu đến <c:out value="${gms:formatDate(item.freezeEndDate)}" /></p>
-                                            </c:if>
-                                        </div>
-                                    </article>
-                                </c:forEach>
-                            </div>
-                        </c:otherwise>
-                    </c:choose>
-                </section>
-
-                <%-- commissionSummary: DAO cộng số/tiền đã lưu, Service tính năm tỷ lệ. --%>
-                <section class="pt-summary" aria-labelledby="summary-title" data-reveal>
-                    <div class="pt-section-heading">
-                        <h2 id="summary-title">Kết quả tháng và hoa hồng</h2>
-                        <span class="pt-info">
-                            <button type="button" class="pt-info-trigger" aria-label="Giải thích kết quả tháng" aria-describedby="summary-help"><span aria-hidden="true">i</span></button>
-                            <span id="summary-help" class="pt-info-popover" role="tooltip">Số liệu theo ngày tập trong tháng này. Tỷ lệ tính trên các buổi đã có kết quả, kể cả buổi hủy.</span>
-                        </span>
-                    </div>
-                    <c:choose>
-                        <c:when test="${not empty commissionSummaryError}">
-                            <p class="pt-block-error" role="alert"><c:out value="${commissionSummaryError}" /></p>
-                        </c:when>
-                        <c:when test="${commissionSummary == null}">
-                            <p class="empty-state">Chưa tải được kết quả tháng.</p>
-                        </c:when>
-                        <c:otherwise>
-                            <c:if test="${commissionSummary.commissionRate != null}">
-                                <p class="pt-commission-rate">Tỷ lệ hoa hồng hiện tại: <strong><c:out value="${commissionSummary.commissionRate}" />%</strong></p>
-                            </c:if>
-                            <div class="pt-summary-group pt-summary-finalized">
-                                <div class="pt-summary-group-heading">
-                                    <div><h3>Đã chốt</h3><p><c:out value="${commissionSummary.resolvedSessionCount}" /> buổi đã có kết quả</p></div>
-                                    <div class="pt-summary-money"><span>Hoa hồng đã chốt</span><strong><c:out value="${gms:formatMoney(commissionSummary.finalizedCommissionAmount)}" /></strong></div>
-                                </div>
-                                <c:choose>
-                                    <c:when test="${commissionSummary.resolvedSessionCount == 0}">
-                                        <p class="pt-summary-note">Chưa có buổi nào được chốt trong tháng này.</p>
-                                    </c:when>
-                                    <c:otherwise>
-                                        <%-- Mỗi tỷ lệ có cùng mẫu số resolvedSessionCount, gồm cả buổi hủy. --%>
-                                        <dl class="pt-summary-stats">
-                                            <div class="pt-summary-stat" data-tilt><dt>Có check-in</dt><dd><strong><c:out value="${commissionSummary.checkedInCount}" /> buổi</strong><span><fmt:formatNumber value="${commissionSummary.checkedInRatePercent}" maxFractionDigits="2" />%</span></dd></div>
-                                            <div class="pt-summary-stat" data-tilt><dt>Không check-in</dt><dd><strong><c:out value="${commissionSummary.noCheckInCount}" /> buổi</strong><span><fmt:formatNumber value="${commissionSummary.noCheckInRatePercent}" maxFractionDigits="2" />%</span></dd></div>
-                                            <div class="pt-summary-stat" data-tilt><dt>Thiếu quyền vào gym</dt><dd><strong><c:out value="${commissionSummary.noMembershipCount}" /> buổi</strong><span><fmt:formatNumber value="${commissionSummary.noMembershipRatePercent}" maxFractionDigits="2" />%</span></dd></div>
-                                            <div class="pt-summary-stat" data-tilt><dt>Đang bảo lưu</dt><dd><strong><c:out value="${commissionSummary.membershipFrozenCount}" /> buổi</strong><span><fmt:formatNumber value="${commissionSummary.membershipFrozenRatePercent}" maxFractionDigits="2" />%</span></dd></div>
-                                            <div class="pt-summary-stat" data-tilt><dt>Đã hủy</dt><dd><strong><c:out value="${commissionSummary.cancelledCount}" /> buổi</strong><span><fmt:formatNumber value="${commissionSummary.cancelledRatePercent}" maxFractionDigits="2" />%</span></dd></div>
-                                        </dl>
-                                    </c:otherwise>
-                                </c:choose>
-                            </div>
-                            <div class="pt-summary-group pt-summary-pending">
-                                <div class="pt-summary-group-heading">
-                                    <div><h3>Chờ hệ thống chốt</h3><p>Buổi đã kết thúc, đang chờ kết quả</p></div>
-                                    <p class="pt-summary-count"><strong><c:out value="${commissionSummary.pendingSessionCount}" /></strong> buổi</p>
-                                </div>
-                                <p class="pt-summary-money-line">Hoa hồng đang chờ <strong><c:out value="${gms:formatMoney(commissionSummary.pendingCommissionAmount)}" /></strong></p>
-                            </div>
-                            <div class="pt-summary-group pt-summary-projected">
-                                <div class="pt-summary-group-heading">
-                                    <div><h3>Dự kiến</h3><p>Buổi chưa kết thúc trong tháng</p></div>
-                                    <p class="pt-summary-count"><strong><c:out value="${commissionSummary.projectedSessionCount}" /></strong> buổi</p>
-                                </div>
-                                <p class="pt-summary-money-line">Hoa hồng dự kiến <strong><c:out value="${gms:formatMoney(commissionSummary.projectedCommissionAmount)}" /></strong></p>
-                            </div>
-                        </c:otherwise>
-                    </c:choose>
-                </section>
-                <div class="pt-dashboard-columns">
                     <%-- scheduleDays: Service tạo đủ bảy ngày; day.sessions là buổi DAO đọc, Service bổ sung nhãn. --%>
                     <section class="pt-schedule" aria-labelledby="schedule-title" data-reveal>
                         <div class="pt-section-heading">
@@ -227,6 +117,57 @@
                         </c:choose>
                     </section>
 
+
+                <%-- attentionItems: Service gom khách + gói + loại vấn đề, giữ buổi gần nhất. --%>
+                <section class="pt-alerts" aria-labelledby="alerts-title" data-reveal>
+                    <div class="pt-section-heading">
+                        <h2 id="alerts-title">Cần chú ý</h2>
+                        <span class="pt-info">
+                            <button type="button" class="pt-info-trigger" aria-label="Giải thích mục Cần chú ý" aria-describedby="alerts-help"><span aria-hidden="true">i</span></button>
+                            <span id="alerts-help" class="pt-info-popover" role="tooltip">Kiểm tra membership hoặc bảo lưu cho các buổi trong 14 ngày tới.</span>
+                        </span>
+                    </div>
+                    <c:choose>
+                        <c:when test="${not empty attentionError}">
+                            <p class="pt-block-error" role="alert"><c:out value="${attentionError}" /></p>
+                        </c:when>
+                        <c:when test="${attentionItems == null}">
+                            <p class="empty-state">Chưa tải được cảnh báo.</p>
+                        </c:when>
+                        <c:when test="${empty attentionItems}">
+                            <p class="empty-state">Không có khách cần kiểm tra cho các buổi trong 14 ngày tới.</p>
+                        </c:when>
+                        <c:otherwise>
+                            <div class="pt-attention-list">
+                                <c:forEach var="item" items="${attentionItems}">
+                                    <article class="pt-attention-item">
+                                        <div class="pt-attention-heading">
+                                            <%-- item.customerName copy từ DAO; attentionTitle do Service chọn. --%>
+                                            <h3><c:out value="${item.customerName}" /></h3>
+                                            <span class="badge badge-warning"><c:out value="${item.attentionTitle}" /></span>
+                                        </div>
+                                        <p class="pt-attention-message"><c:out value="${item.attentionMessage}" /></p>
+                                        <div class="pt-attention-package">
+                                            <p class="pt-attention-group-title">Gói PT · <strong><c:out value="${item.ptSubscriptionTypeLabel}" /></strong></p>
+                                            <p>Gói PT đến <c:out value="${gms:formatDate(item.ptEndDate)}" /></p>
+                                            <p><c:out value="${item.scheduledSessionCount}" /> buổi đã xếp lịch</p>
+                                        </div>
+                                        <div class="pt-attention-membership">
+                                            <p class="pt-attention-group-title">Membership · <strong><c:out value="${item.membershipStatusLabel}" /></strong></p>
+                                            <c:if test="${not empty item.membershipEndDate}">
+                                                <p>Hạn membership: <c:out value="${gms:formatDate(item.membershipEndDate)}" /></p>
+                                            </c:if>
+                                            <c:if test="${not empty item.freezeEndDate}">
+                                                <p>Bảo lưu đến <c:out value="${gms:formatDate(item.freezeEndDate)}" /></p>
+                                            </c:if>
+                                        </div>
+                                    </article>
+                                </c:forEach>
+                            </div>
+                        </c:otherwise>
+                    </c:choose>
+                </section>
+
                     <aside class="pt-dashboard-side" aria-label="Khách phụ trách và đánh giá">
                         <%-- assignedPackages: DAO trả từng gói/buổi lẻ, Service thêm nhãn loại. --%>
                         <section class="pt-clients" aria-labelledby="clients-title" data-reveal>
@@ -251,7 +192,6 @@
                                     <div class="pt-client-list">
                                         <c:forEach var="assignedPackage" items="${assignedPackages}">
                                             <article class="pt-client-item">
-                                                <span class="pt-person-avatar" aria-hidden="true"><c:out value="${fn:substring(assignedPackage.customerName, 0, 1)}" /></span>
                                                 <h3><c:out value="${assignedPackage.customerName}" /><c:if test="${not empty assignedPackage.partnerName}"> &amp; <c:out value="${assignedPackage.partnerName}" /></c:if></h3>
                                                 <p class="pt-client-type"><c:out value="${assignedPackage.ptSubscriptionTypeLabel}" /></p>
                                                 <div class="pt-client-meta">
@@ -293,14 +233,73 @@
                                 </c:otherwise>
                             </c:choose>
                         </section>
-                        <%-- SVG mới gồm minh họa và lời thoại, đặt dưới Đánh giá PT trong cột phải. --%>
+                        <%-- Minh họa cùng hàng với khách phụ trách và đánh giá trên màn hình rộng. --%>
                         <div class="pt-dashboard-doodles">
                             <img src="${pageContext.request.contextPath}/images/svg/pt-dashboard-doodles.svg"
                                  alt="Minh họa động viên huấn luyện viên" width="620" height="320"
                                  loading="lazy" decoding="async" />
                         </div>
                     </aside>
-                </div>
+
+                <%-- commissionSummary: DAO cộng số/tiền đã lưu, Service tính năm tỷ lệ. --%>
+                <section class="pt-summary" aria-labelledby="summary-title" data-reveal>
+                    <div class="pt-section-heading">
+                        <h2 id="summary-title">Kết quả tháng và hoa hồng</h2>
+                        <span class="pt-info">
+                            <button type="button" class="pt-info-trigger" aria-label="Giải thích kết quả tháng" aria-describedby="summary-help"><span aria-hidden="true">i</span></button>
+                            <span id="summary-help" class="pt-info-popover" role="tooltip">Số liệu theo ngày tập trong tháng này. Tỷ lệ tính trên các buổi đã có kết quả, kể cả buổi hủy.</span>
+                        </span>
+                    </div>
+                    <c:choose>
+                        <c:when test="${not empty commissionSummaryError}">
+                            <p class="pt-block-error" role="alert"><c:out value="${commissionSummaryError}" /></p>
+                        </c:when>
+                        <c:when test="${commissionSummary == null}">
+                            <p class="empty-state">Chưa tải được kết quả tháng.</p>
+                        </c:when>
+                        <c:otherwise>
+                            <c:if test="${commissionSummary.commissionRate != null}">
+                                <p class="pt-commission-rate">Tỷ lệ hoa hồng hiện tại: <strong><c:out value="${commissionSummary.commissionRate}" />%</strong></p>
+                            </c:if>
+                            <div class="pt-summary-group pt-summary-finalized">
+                                <div class="pt-summary-group-heading">
+                                    <div><h3>Đã chốt</h3><p><c:out value="${commissionSummary.resolvedSessionCount}" /> buổi đã có kết quả</p></div>
+                                    <div class="pt-summary-money"><span>Hoa hồng đã chốt</span><strong><c:out value="${gms:formatMoney(commissionSummary.finalizedCommissionAmount)}" /></strong></div>
+                                </div>
+                                <c:choose>
+                                    <c:when test="${commissionSummary.resolvedSessionCount == 0}">
+                                        <p class="pt-summary-note">Chưa có buổi nào được chốt trong tháng này.</p>
+                                    </c:when>
+                                    <c:otherwise>
+                                        <%-- Mỗi tỷ lệ có cùng mẫu số resolvedSessionCount, gồm cả buổi hủy. --%>
+                                        <dl class="pt-summary-stats">
+                                            <div class="pt-summary-stat" data-tilt><dt>Có check-in</dt><dd><strong><c:out value="${commissionSummary.checkedInCount}" /> buổi</strong><span><fmt:formatNumber value="${commissionSummary.checkedInRatePercent}" maxFractionDigits="2" />%</span></dd></div>
+                                            <div class="pt-summary-stat" data-tilt><dt>Không check-in</dt><dd><strong><c:out value="${commissionSummary.noCheckInCount}" /> buổi</strong><span><fmt:formatNumber value="${commissionSummary.noCheckInRatePercent}" maxFractionDigits="2" />%</span></dd></div>
+                                            <div class="pt-summary-stat" data-tilt><dt>Thiếu quyền vào gym</dt><dd><strong><c:out value="${commissionSummary.noMembershipCount}" /> buổi</strong><span><fmt:formatNumber value="${commissionSummary.noMembershipRatePercent}" maxFractionDigits="2" />%</span></dd></div>
+                                            <div class="pt-summary-stat" data-tilt><dt>Đang bảo lưu</dt><dd><strong><c:out value="${commissionSummary.membershipFrozenCount}" /> buổi</strong><span><fmt:formatNumber value="${commissionSummary.membershipFrozenRatePercent}" maxFractionDigits="2" />%</span></dd></div>
+                                            <div class="pt-summary-stat" data-tilt><dt>Đã hủy</dt><dd><strong><c:out value="${commissionSummary.cancelledCount}" /> buổi</strong><span><fmt:formatNumber value="${commissionSummary.cancelledRatePercent}" maxFractionDigits="2" />%</span></dd></div>
+                                        </dl>
+                                    </c:otherwise>
+                                </c:choose>
+                            </div>
+                            <div class="pt-summary-group pt-summary-pending">
+                                <div class="pt-summary-group-heading">
+                                    <div><h3>Chờ hệ thống chốt</h3><p>Buổi đã kết thúc, đang chờ kết quả</p></div>
+                                    <p class="pt-summary-count"><strong><c:out value="${commissionSummary.pendingSessionCount}" /></strong> buổi</p>
+                                </div>
+                                <p class="pt-summary-money-line">Hoa hồng đang chờ <strong><c:out value="${gms:formatMoney(commissionSummary.pendingCommissionAmount)}" /></strong></p>
+                            </div>
+                            <div class="pt-summary-group pt-summary-projected">
+                                <div class="pt-summary-group-heading">
+                                    <div><h3>Dự kiến</h3><p>Buổi chưa kết thúc trong tháng</p></div>
+                                    <p class="pt-summary-count"><strong><c:out value="${commissionSummary.projectedSessionCount}" /></strong> buổi</p>
+                                </div>
+                                <p class="pt-summary-money-line">Hoa hồng dự kiến <strong><c:out value="${gms:formatMoney(commissionSummary.projectedCommissionAmount)}" /></strong></p>
+                            </div>
+                        </c:otherwise>
+                    </c:choose>
+                </section>
+
 
             </main>
         </div>

@@ -12,7 +12,7 @@
     <title>Trang cá nhân · Super Gym</title>
     <link rel="stylesheet" href="${pageContext.request.contextPath}/css/base.css?v=8">
     <link rel="stylesheet" href="${pageContext.request.contextPath}/css/awning.css?v=4">
-    <link rel="stylesheet" href="${pageContext.request.contextPath}/css/pages/customer/dashboard.css?v=7">
+    <link rel="stylesheet" href="${pageContext.request.contextPath}/css/pages/customer/dashboard.css?v=8">
     <link rel="stylesheet" href="${pageContext.request.contextPath}/css/dashboard-weather.css?v=9">
     <link rel="stylesheet" href="${pageContext.request.contextPath}/css/weather-scene.css?v=4">
     <script src="${pageContext.request.contextPath}/js/weather-scene.js?v=4" defer></script>

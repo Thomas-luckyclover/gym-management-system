@@ -143,7 +143,7 @@
 }
 
 .hv-label {
-  font-size: 0.66rem;
+  font-size: 0.8125rem;
   letter-spacing: 0.14em;
   text-transform: uppercase;
   color: var(--color-text-muted);
@@ -155,7 +155,7 @@
   background: rgba(47, 143, 91, 0.2);
   border: var(--border-width) solid rgba(47, 143, 91, 0.45);
   color: #6FCB99;
-  font-size: 0.64rem;
+  font-size: 0.8125rem;
   font-weight: var(--font-weight-extrabold);
   letter-spacing: 0.06em;
   text-transform: uppercase;
@@ -179,7 +179,7 @@
 .hv-row {
   display: flex;
   justify-content: space-between;
-  font-size: 0.76rem;
+  font-size: 0.8125rem;
   color: var(--color-text-inverse-soft);
 }
 
@@ -241,7 +241,7 @@
 }
 
 .hv-checkin span {
-  font-size: 0.74rem;
+  font-size: 0.8125rem;
   color: var(--color-text-soft);
 }
 
@@ -260,7 +260,7 @@
 }
 
 .hv-session-head span {
-  font-size: 0.66rem;
+  font-size: 0.8125rem;
   letter-spacing: 0.12em;
   text-transform: uppercase;
   color: var(--color-text-soft);
@@ -271,7 +271,7 @@
   border-radius: var(--radius-pill);
   background: #F1F0EA;
   color: #3A3832;
-  font-size: 0.7rem;
+  font-size: 0.8125rem;
 }
 
 .hv-session-row {
@@ -301,7 +301,7 @@
 }
 
 .hv-session-row span {
-  font-size: 0.74rem;
+  font-size: 0.8125rem;
   color: var(--color-text-soft);
 }
 
@@ -328,7 +328,7 @@
   display: flex;
   justify-content: space-between;
   margin-top: 6px;
-  font-size: 0.7rem;
+  font-size: 0.8125rem;
   color: var(--color-text-soft);
 }
 
@@ -575,6 +575,8 @@
 
 /* ---------- Kêu gọi đăng ký ---------- */
 .cta-band {
+  /* Quầng sáng sau Pumpy lấn ra mép phải → cắt phần thừa theo chiều ngang, tránh thanh cuộn ngang */
+  overflow-x: clip;
   padding-block: var(--space-10);
   text-align: center;
   background: radial-gradient(ellipse at 50% 100%, var(--color-primary-tint), transparent 70%);
@@ -649,7 +651,7 @@
 .mochi-lbl {
   font-family: "Montserrat", "Inter", "Arial Black", Arial, sans-serif;
   font-weight: 900;
-  font-size: 12px;
+  font-size: 13px;
 }
 
 /* Thở + chớp mắt (giữ từ SVG gốc) */
