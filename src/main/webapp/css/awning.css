@@ -1,6 +1,10 @@
 @charset "UTF-8";
 /* Bạt PT Dashboard: mỗi sọc là một flap, màu lấy từ tokens.css theo weather-*. */
 .pt-awning {
+  --fabric-lift: 12deg;
+  --fabric-skew: 1.2deg;
+  --fabric-rise: -5px;
+  --fabric-period: 6.8s;
   position: fixed;
   z-index: var(--z-header);
   inset: 0 0 auto;
@@ -26,6 +30,7 @@
   box-shadow: 0 var(--space-1) var(--space-2) color-mix(in srgb, var(--pt-awning-rail) 30%, transparent);
 }
 .pt-awning__fabric {
+  perspective: 650px;
   display: grid;
   grid-template-columns: repeat(16, minmax(0, 1fr));
   height: calc(100% - var(--space-2));
@@ -43,7 +48,7 @@
     var(--pt-awning-one);
   transform-origin: top center;
   box-shadow: inset calc(-1 * var(--border-width)) 0 color-mix(in srgb, var(--pt-awning-rail) 14%, transparent);
-  animation: pt-flap-wave 5.8s ease-in-out calc(var(--flap-index) * -110ms) infinite;
+  animation: pt-flap-wave var(--fabric-period) ease-in-out calc(var(--flap-index) * -260ms) infinite;
 }
 .pt-awning__flap:nth-child(even) {
   background:
@@ -92,6 +97,9 @@
 }
 .weather-wind .pt-awning { animation-duration: 750ms, 3s; }
 .weather-storm .pt-awning { animation-duration: 750ms, 2s; }
+.weather-rain .pt-awning { --fabric-lift: 16deg; --fabric-skew: 1.6deg; --fabric-rise: -6px; --fabric-period: 5.8s; }
+.weather-wind .pt-awning { --fabric-lift: 22deg; --fabric-skew: 2deg; --fabric-rise: -8px; --fabric-period: 4.8s; }
+.weather-storm .pt-awning { --fabric-lift: 28deg; --fabric-skew: 2.6deg; --fabric-rise: -10px; --fabric-period: 3.8s; }
 
 @keyframes pt-awning-enter {
   from { transform: perspective(900px) rotateX(-24deg); opacity: 0; }
@@ -103,8 +111,10 @@
   50% { transform: perspective(900px) rotateX(1.2deg); }
 }
 @keyframes pt-flap-wave {
-  0%, 100% { transform: rotateX(0); }
-  50% { transform: rotateX(2.5deg) translateY(var(--space-0-5)); }
+  0%, 100% { transform: rotateX(0) skewX(0); }
+  30% { transform: rotateX(var(--fabric-lift)) skewX(var(--fabric-skew)) translateY(var(--fabric-rise)); }
+  55% { transform: rotateX(calc(var(--fabric-lift) * 0.35)) skewX(calc(var(--fabric-skew) * -0.4)); }
+  75% { transform: rotateX(calc(var(--fabric-lift) * 0.7)) skewX(calc(var(--fabric-skew) * -0.7)) translateY(calc(var(--fabric-rise) * 0.5)); }
 }
 @keyframes pt-light-twinkle {
   0%, 100% { opacity: .68; }

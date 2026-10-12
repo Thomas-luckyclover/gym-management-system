@@ -97,8 +97,9 @@ body.dock:is(.pt-dashboard-page, .customer-dashboard-page) {
     radial-gradient(circle at 78% 84%, rgba(255, 170, 110, 0.5) 0 2.5%, transparent 6%),
     radial-gradient(circle at 90% 68%, rgba(255, 230, 170, 0.45) 0 3%, transparent 7%),
     radial-gradient(circle at 35% 58%, rgba(255, 150, 200, 0.3) 0 4%, transparent 9%);
-  filter: blur(var(--space-3));
-  animation: scene-bokeh 12s ease-in-out infinite alternate;
+  filter: blur(var(--space-6));
+  opacity: 0.65;
+  animation: scene-bokeh 28s ease-in-out infinite alternate;
 }
 
 .weather-storm .weather-scene__far::before {
@@ -160,13 +161,25 @@ body.dock:is(.pt-dashboard-page, .customer-dashboard-page) {
 }
 
 .weather-scene.is-flashing .weather-scene__flash {
-  animation: scene-flash 0.55s ease-out;
+  animation: scene-flash 2.4s ease-in-out;
 }
 
 @keyframes scene-breathe { to { transform: scale(1.08); } }
 @keyframes scene-drift { from { translate: 0 0; } to { translate: 120vw 0; } }
 @keyframes scene-heat { from { transform: scaleY(1) skewX(0deg); opacity: 0.7; } to { transform: scaleY(1.12) skewX(2deg); opacity: 1; } }
-@keyframes scene-flash { 0% { opacity: 0.9; } 15% { opacity: 0.1; } 30% { opacity: 0.7; } 100% { opacity: 0; } }
+@keyframes scene-flash { 0%, 100% { opacity: 0; } 25% { opacity: 0.2; } 55% { opacity: 0.045; } }
+
+.weather-storm .weather-scene__flash::before {
+  content: "";
+  position: absolute;
+  top: 3%;
+  right: 12%;
+  width: 9vmin;
+  height: 36vmin;
+  background: #DFEDFF;
+  clip-path: polygon(65% 0, 29% 43%, 54% 42%, 12% 100%, 86% 32%, 59% 34%, 100% 0);
+}
+.weather-storm .weather-scene__cloud { animation-duration: 32s; }
 
 /* =====================================================================
    CẢNH RIÊNG TỪNG KIỂU THỜI TIẾT (tầng xa ::after, tầng gần ::before)
@@ -229,8 +242,19 @@ body.dock:is(.pt-dashboard-page, .customer-dashboard-page) {
     linear-gradient(rgba(10, 12, 30, 0.75), rgba(10, 12, 30, 0.75)) 72% 100% / 10% 58% no-repeat,
     linear-gradient(rgba(10, 12, 30, 0.7), rgba(10, 12, 30, 0.7)) 86% 100% / 6% 84% no-repeat,
     linear-gradient(rgba(10, 12, 30, 0.75), rgba(10, 12, 30, 0.75)) 97% 100% / 7% 66% no-repeat;
-  filter: blur(var(--space-1-5));
-  opacity: 0.55;
+  filter: blur(var(--space-4));
+  opacity: 0.35;
+}
+
+/* Lớp hơi nước chỉ phủ cảnh; nội dung ứng dụng nằm ở tầng riêng phía trên. */
+:is(.weather-rain, .weather-storm) .weather-scene__near::after {
+  content: "";
+  position: absolute;
+  inset: 0;
+  background:
+    radial-gradient(ellipse at 15% 20%, rgba(163, 188, 205, 0.14), transparent 55%),
+    radial-gradient(ellipse at 85% 65%, rgba(133, 164, 184, 0.12), transparent 60%),
+    linear-gradient(180deg, rgba(121, 150, 171, 0.06), rgba(19, 33, 48, 0.16));
 }
 
 .weather-storm .weather-scene__far::after {

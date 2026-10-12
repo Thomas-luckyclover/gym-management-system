@@ -11,7 +11,7 @@
 <head>
   <%@ include file="/WEB-INF/jsp/common/head.jspf" %>
   <title>Về chúng tôi · Super Gym</title>
-  <link rel="stylesheet" href="${pageContext.request.contextPath}/css/pages/guest/about.css?v=4">
+  <link rel="stylesheet" href="${pageContext.request.contextPath}/css/pages/guest/about.css?v=5">
   <script src="${pageContext.request.contextPath}/js/pages/guest/about.js?v=3" defer></script>
 </head>
 <body class="theme-guest-dark about-page">
@@ -143,6 +143,8 @@
             <rect x="88" y="190" width="124" height="34" rx="10" fill="#0B1030" stroke="#5CF6FF" stroke-width="4"/>
             <rect x="98" y="198" width="44" height="6" rx="3" fill="#5CF6FF" opacity=".8"/>
             <ellipse cx="150" cy="282" rx="50" ry="40" fill="#F1FFB8"/>
+            <%-- Xoắn ốc bụng: đường gốc của Pumpy (giống pumpy-mail-hint.jspf) --%>
+            <path transform="translate(150 286) scale(0.8) translate(-150 -280)" d="M150.0 278.0 L150.3 278.2 L150.4 278.5 L150.5 278.9 L150.5 279.3 L150.4 279.7 L150.2 280.1 L149.9 280.5 L149.4 280.8 L148.9 281.0 L148.3 281.1 L147.7 281.1 L147.0 281.0 L146.3 280.7 L145.7 280.3 L145.0 279.8 L144.5 279.1 L144.0 278.3 L143.7 277.4 L143.5 276.4 L143.5 275.3 L143.7 274.2 L144.0 273.1 L144.5 272.0 L145.3 271.0 L146.2 270.1 L147.3 269.3 L148.5 268.6 L149.9 268.1 L151.4 267.9 L153.0 267.9 L154.6 268.1 L156.2 268.6 L157.7 269.3 L159.2 270.3 L160.5 271.5 L161.6 273.0 L162.6 274.7 L163.3 276.5 L163.7 278.5 L163.8 280.5 L163.7 282.6 L163.1 284.7 L162.3 286.8 L161.1 288.8 L159.7 290.5 L157.9 292.1 L155.9 293.5 L153.6 294.5 L151.2 295.2 L148.7 295.5 L146.0 295.5 L143.4 295.1 L140.8 294.2 L138.3 293.0 L136.0 291.4 L133.9 289.4 L132.1 287.0 L130.6 284.4 L129.6 281.6 L128.9 278.6 L128.7 275.5 L128.9 272.3 L129.7 269.1 L130.9 266.1 L132.6 263.2 L134.7 260.5 L137.2 258.2 L140.1 256.2 L143.3 254.7 L146.7 253.6 L150.3 253.0 L154.0 253.0 L157.8 253.5 L161.4 254.6 L164.9 256.2 L168.2 258.4 L171.1 261.0 L173.7 264.1 L175.8 267.6 L177.4 271.4 L178.4 275.4 L178.8 279.6 L178.6 283.9 L177.8 288.1 L176.3 292.2 L174.2 296.1 L171.6 299.7 L168.4 302.9 L164.7 305.6 L160.6 307.8" fill="none" stroke="#141414" stroke-width="7"/>
             <path d="M132 244 L141 251 L150 244 L159 251 L168 244" fill="none" stroke="#141414" stroke-width="4"/>
             <g class="cy-mochi-feet"><circle cx="106" cy="334" r="22" fill="#D6F55B" stroke="#141414" stroke-width="6"/><circle cx="194" cy="334" r="22" fill="#D6F55B" stroke="#141414" stroke-width="6"/></g>
           </g>

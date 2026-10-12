@@ -9,7 +9,7 @@
 
                 <title>Tạo tài khoản — Super Gym</title>
 
-                <link rel="stylesheet" href="${pageContext.request.contextPath}/css/pages/auth/register.css">
+                <link rel="stylesheet" href="${pageContext.request.contextPath}/css/pages/auth/register.css?v=2">
 
                 <script src="${pageContext.request.contextPath}/js/pages/auth/register.js?v=3" defer></script>
         </head>
@@ -354,6 +354,8 @@
                                                             <i class="fa-solid fa-arrow-left"></i> Dùng số khác
                                                         </a>
                                                     </p>
+                                                    <%-- Hộp gợi ý khi chưa nhận được mail (Pumpy) --%>
+                                                    <%@ include file="/WEB-INF/jsp/common/pumpy-mail-hint.jspf" %>
                                         </c:if>
 
                                         <%--====================CLAIM: BƯỚC 2c — Nhập email (chỉ 1
@@ -516,6 +518,8 @@
                                                             <i class="fa-solid fa-arrow-left"></i> Dùng số khác
                                                         </a>
                                                     </p>
+                                                    <%-- Hộp gợi ý khi chưa nhận được mail (Pumpy) --%>
+                                                    <%@ include file="/WEB-INF/jsp/common/pumpy-mail-hint.jspf" %>
                                                 </c:if>
 
                                                 <%--====================CLAIM: BƯỚC 4c — Đặt mật

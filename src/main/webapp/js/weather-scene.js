@@ -41,10 +41,10 @@ document.addEventListener("DOMContentLoaded", function () {
     // Mỗi kiểu: số hạt trên 100.000 px², kiểu vẽ, tốc độ (px/giây)
     function getMoodSettings(name) {
         if (name === "rain") {
-            return { density: 11, kind: "drop", speed: 900, slant: 0.18, length: 18 };
+            return { density: 7, kind: "drop", speed: 210, slant: 0.08, length: 8 };
         }
         if (name === "storm") {
-            return { density: 17, kind: "drop", speed: 1250, slant: 0.32, length: 24 };
+            return { density: 15, kind: "drop", speed: 380, slant: 0.3, length: 13 };
         }
         if (name === "snow") {
             return { density: 9, kind: "flake", speed: 55, slant: 0, length: 0 };
@@ -101,8 +101,9 @@ document.addEventListener("DOMContentLoaded", function () {
         particle.pushX *= 0.92;
 
         if (settings.kind === "drop") {
+            const gust = mood === "storm" ? 1 + 0.5 * Math.sin(lastTime / 2100) : 1;
             particle.y += settings.speed * particle.z * seconds;
-            particle.x += settings.speed * settings.slant * particle.z * seconds + particle.pushX;
+            particle.x += settings.speed * settings.slant * gust * particle.z * seconds + particle.pushX;
         } else if (settings.kind === "flake") {
             particle.y += settings.speed * particle.z * seconds;
             particle.x += Math.sin(particle.phase + particle.y / 60) * 0.6 + particle.pushX;
@@ -135,10 +136,12 @@ document.addEventListener("DOMContentLoaded", function () {
     function draw(particle) {
         context.globalAlpha = 0.35 + particle.z * 0.6;
         if (settings.kind === "drop") {
-            context.lineWidth = particle.z * 1.6;
+            context.globalAlpha = (mood === "storm" ? 0.16 : 0.1) + particle.z * 0.16;
+            context.lineWidth = particle.z * (mood === "storm" ? 1.7 : 1.1);
             context.beginPath();
             context.moveTo(particle.x, particle.y);
-            context.lineTo(particle.x - settings.slant * settings.length, particle.y - settings.length * particle.z);
+            const slant = settings.slant * (mood === "storm" ? 1 + 0.5 * Math.sin(lastTime / 2100) : 1);
+            context.lineTo(particle.x - slant * settings.length * particle.z, particle.y - settings.length * particle.z);
             context.stroke();
         } else if (settings.kind === "streak") {
             context.lineWidth = particle.z * 1.4;
@@ -244,7 +247,7 @@ document.addEventListener("DOMContentLoaded", function () {
         if (mood !== "rain" && mood !== "storm") {
             return;
         }
-        const count = Math.min(Math.round(width * height / 26000), 70);
+        const count = Math.min(Math.round(width * height / 18000), 90);
         for (let i = 0; i < count; i++) {
             glassDrops.push({ x: Math.random() * width, y: Math.random() * height, r: 1.5 + Math.random() * 3.5, speed: 0 });
         }
@@ -254,12 +257,12 @@ document.addEventListener("DOMContentLoaded", function () {
         for (let i = 0; i < glassDrops.length; i++) {
             const drop = glassDrops[i];
             // Giọt to dễ trượt hơn
-            if (drop.speed === 0 && drop.r > 3.2 && Math.random() < seconds * 0.15) {
-                drop.speed = 60 + Math.random() * 120;
+            if (drop.speed === 0 && drop.r > 3.2 && Math.random() < seconds * 0.06) {
+                drop.speed = (mood === "storm" ? 22 : 12) + Math.random() * 24;
             }
             if (drop.speed > 0) {
                 drop.y += drop.speed * seconds;
-                context.globalAlpha = 0.18;
+                context.globalAlpha = 0.08;
                 context.lineWidth = drop.r * 0.9;
                 context.beginPath();
                 context.moveTo(drop.x, drop.y - drop.r * 6);
@@ -271,15 +274,24 @@ document.addEventListener("DOMContentLoaded", function () {
                     drop.speed = 0;
                 }
             }
-            // Thân giọt + chấm sáng phản chiếu
-            context.globalAlpha = 0.16;
+            // Viền khúc xạ và lòng trong, thay cho chấm trắng đặc.
+            context.save();
+            context.globalAlpha = 1;
+            const water = context.createRadialGradient(drop.x - drop.r * 0.3, drop.y - drop.r * 0.4, 0, drop.x, drop.y, drop.r * 1.25);
+            water.addColorStop(0, "rgba(222,241,251,0.26)");
+            water.addColorStop(0.3, "rgba(167,204,225,0.04)");
+            water.addColorStop(0.75, "rgba(12,28,43,0.12)");
+            water.addColorStop(1, "rgba(193,224,242,0.2)");
+            context.fillStyle = water;
             context.beginPath();
-            context.arc(drop.x, drop.y, drop.r, 0, Math.PI * 2);
+            context.ellipse(drop.x, drop.y, drop.r * 0.8, drop.r * 1.2, -0.12, 0, Math.PI * 2);
             context.fill();
-            context.globalAlpha = 0.45;
+            context.strokeStyle = "rgba(218,239,252,0.32)";
+            context.lineWidth = 0.65;
             context.beginPath();
-            context.arc(drop.x - drop.r * 0.35, drop.y - drop.r * 0.35, drop.r * 0.3, 0, Math.PI * 2);
-            context.fill();
+            context.ellipse(drop.x, drop.y, drop.r * 0.65, drop.r, -0.12, Math.PI, Math.PI * 1.55);
+            context.stroke();
+            context.restore();
         }
     }
 
@@ -318,11 +330,64 @@ document.addEventListener("DOMContentLoaded", function () {
         }
     }
 
-    // Chớp: ngẫu nhiên 6–14 giây một lần khi giông
+    // Sấm tổng hợp âm trầm; chỉ bật âm thanh khi người dùng chọn.
+    let thunderAudio = null;
+    let thunderEnabled = false;
+    const soundHost = document.querySelector(".wx-card__top");
+    if (mood === "storm" && soundHost && !reduceMotion && (window.AudioContext || window.webkitAudioContext)) {
+        const soundButton = document.createElement("button");
+        soundButton.type = "button";
+        soundButton.className = "wx-storm-sound";
+        soundButton.textContent = "Bật tiếng sấm";
+        soundButton.setAttribute("aria-pressed", "false");
+        soundButton.addEventListener("click", function (event) {
+            event.stopPropagation();
+            thunderEnabled = !thunderEnabled;
+            if (thunderEnabled) {
+                thunderAudio = thunderAudio || new (window.AudioContext || window.webkitAudioContext)();
+                thunderAudio.resume().catch(function () {});
+            } else if (thunderAudio) {
+                thunderAudio.suspend().catch(function () {});
+            }
+            soundButton.setAttribute("aria-pressed", String(thunderEnabled));
+            soundButton.textContent = thunderEnabled ? "Tắt tiếng sấm" : "Bật tiếng sấm";
+        });
+        soundHost.appendChild(soundButton);
+    }
+
+    function playThunder() {
+        if (!thunderEnabled || !thunderAudio || document.hidden) { return; }
+        const audio = thunderAudio;
+        const buffer = audio.createBuffer(1, audio.sampleRate * 3, audio.sampleRate);
+        const samples = buffer.getChannelData(0);
+        let rumble = 0;
+        for (let i = 0; i < samples.length; i++) {
+            rumble = (rumble + (Math.random() * 2 - 1) * 0.025) / 1.025;
+            samples[i] = rumble * 5;
+        }
+        const source = audio.createBufferSource();
+        source.buffer = buffer;
+        const filter = audio.createBiquadFilter();
+        filter.type = "lowpass";
+        filter.frequency.value = 240;
+        const gain = audio.createGain();
+        const start = audio.currentTime + 0.55;
+        gain.gain.setValueAtTime(0, audio.currentTime);
+        gain.gain.linearRampToValueAtTime(0.28, start + 0.25);
+        gain.gain.exponentialRampToValueAtTime(0.001, start + 3);
+        source.connect(filter).connect(gain).connect(audio.destination);
+        source.start(start);
+        source.stop(start + 3);
+        source.onended = function () { source.disconnect(); filter.disconnect(); gain.disconnect(); };
+    }
+
+    // Chớp xa, không nhấp nháy gắt trên nội dung.
     function flash() {
+        if (reduceMotion || document.hidden) { return; }
         scene.classList.remove("is-flashing");
         void scene.offsetWidth;
         scene.classList.add("is-flashing");
+        playThunder();
     }
 
     function scheduleLightning() {
@@ -334,7 +399,7 @@ document.addEventListener("DOMContentLoaded", function () {
                 flash();
             }
             scheduleLightning();
-        }, 6000 + Math.random() * 8000);
+        }, 10000 + Math.random() * 10000);
     }
 
     // B4: vòng lặp vẽ
@@ -369,6 +434,7 @@ document.addEventListener("DOMContentLoaded", function () {
             draw(particles[i]);
         }
         drawConstellations(0);
+        updateGlassDrops(0);
         return;
     }
 

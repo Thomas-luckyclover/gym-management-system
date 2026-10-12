@@ -32,10 +32,15 @@
       <c:choose>
         <c:when test="${not empty sessionScope.accountId}">
           <form action="${ctx}/logout" method="post" class="inline-form">
-            <button class="btn btn-ghost btn-sm" type="submit">
-              <i class="fa-solid fa-arrow-right-from-bracket"></i> Đăng xuất
+            <button class="btn btn-ghost btn-sm guest-logout" type="submit" title="Đăng xuất" aria-label="Đăng xuất">
+              <i class="fa-solid fa-arrow-right-from-bracket guest-logout-icon" aria-hidden="true"></i><span class="guest-logout-text">Đăng xuất</span>
             </button>
           </form>
+          <a class="guest-account" href="${ctx}/login" aria-label="Mở khu vực tài khoản">
+            <span class="guest-account__avatar" aria-hidden="true"><i class="fa-solid fa-user"></i></span>
+            <span class="guest-account__text"><strong><c:out value="${sessionScope.displayName}" default="Tài khoản của tôi" /></strong><small>Khu vực ${sessionScope.role eq 'Customer' ? 'hội viên' : 'tài khoản'}</small></span>
+            <i class="fa-solid fa-chevron-right guest-account__arrow" aria-hidden="true"></i>
+          </a>
         </c:when>
         <c:otherwise>
           <a class="btn btn-ghost btn-sm" href="${ctx}/login">Đăng nhập</a>
@@ -60,6 +65,10 @@
     <a href="${ctx}/about">Về chúng tôi</a>
     <c:choose>
       <c:when test="${not empty sessionScope.accountId}">
+        <a class="guest-account" href="${ctx}/login">
+          <span class="guest-account__avatar" aria-hidden="true"><i class="fa-solid fa-user"></i></span>
+          <span class="guest-account__text"><strong><c:out value="${sessionScope.displayName}" default="Tài khoản của tôi" /></strong><small>Về khu vực tài khoản</small></span>
+        </a>
         <form action="${ctx}/logout" method="post">
           <button class="btn btn-ghost btn-sm" type="submit">Đăng xuất</button>
         </form>

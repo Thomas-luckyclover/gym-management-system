@@ -1,4 +1,5 @@
 <%@ page contentType="text/html; charset=UTF-8" pageEncoding="UTF-8" isErrorPage="true" %>
+<%@ taglib prefix="c" uri="jakarta.tags.core" %>
 <%--
   Trang lỗi 403 — khai báo trong WEB-INF/web.xml. Không in chi tiết lỗi kỹ thuật ra màn hình (bảo mật).
 --%>
@@ -7,7 +8,7 @@
 <head>
   <%@ include file="/WEB-INF/jsp/common/head.jspf" %>
   <title>403 · Super Gym</title>
-  <link rel="stylesheet" href="${pageContext.request.contextPath}/css/pages/error/error.css?v=2">
+  <link rel="stylesheet" href="${pageContext.request.contextPath}/css/pages/error/error.css?v=4">
 </head>
 <body class="theme-guest-dark err-body">
   <main class="err">
@@ -30,6 +31,10 @@
         </svg>
         <span>3</span>
       </p>
+
+      <%-- Pumpy theo loại lỗi --%>
+      <c:set var="pumpyMood" value="stop" />
+      <%@ include file="/WEB-INF/jsp/error/pumpy.jspf" %>
 
       <p class="err-status">403 – Forbidden</p>
       <h1 class="err-title">Không có quyền truy cập</h1>

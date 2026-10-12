@@ -40,3 +40,8 @@ Mọi hiệu ứng tự tắt khi người dùng bật "Reduce motion".
 
 ## Trạng thái bắt buộc mỗi khối
 Đang tải (skeleton), rỗng (câu nói rõ không có gì), lỗi (thông báo thân thiện, không biến thành "rỗng"), chưa hoàn thiện (khóa nút + lý do). Badge trạng thái theo GBR-28.
+
+## Khuôn mẫu cho màn mới (bắt buộc dùng)
+Sao chép từ `src/main/webapp/WEB-INF/jsp/_templates/`: `list.jsp` (lọc + bảng + phân trang), `detail.jsp` (thông tin + hành động), `form.jsp` (thêm/sửa).
+Khung CSS dùng chung ở `common.css` mục 15 (`gms-page`, `gms-panel`, `gms-toolbar`, `gms-table`, `gms-pagination`, `gms-detail`, `gms-form`).
+Có sẵn: trạng thái lỗi ≠ rỗng (rỗng tự có Pumpy), `data-reveal`, kiểm tra form, nút submit hiện Pumpy đẩy tạ, `Ctrl+K` tìm nhanh màn.

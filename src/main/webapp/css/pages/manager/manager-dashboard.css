@@ -92,30 +92,32 @@
   font-weight: var(--font-weight-medium);
 }
 
-/* ===== Bảng điểm 6 chỉ số ===== */
+/* ===== Bảng điểm 6 chỉ số =====
+   Flex xuống hàng: ô rộng tối thiểu 180px (đủ 6 ô một hàng ở màn 1280), không đủ chỗ thì tự xuống hàng
+   và các ô hàng dưới giãn ra lấp kín. Vạch chia là khe 1px để lộ nền vạch, đúng ở mọi cách xếp hàng. */
 .report-stats.scoreboard {
-  display: grid;
-  grid-template-columns: repeat(6, minmax(0, 1fr));
+  display: flex;
+  flex-wrap: wrap;
+  gap: var(--border-width);
   overflow: hidden;
   border-radius: var(--radius-md);
-  background: var(--color-board);
+  background: var(--color-board-line);
   box-shadow: var(--shadow-lift);
 }
 
 .scoreboard .stat {
+  flex: 1 1 180px;
   min-width: 0;
-  padding: var(--space-4-5) var(--space-5) var(--space-4);
+  padding: var(--space-4-5) var(--space-4) var(--space-4);
   border: 0;
-  border-right: var(--border-width) solid var(--color-board-line);
   border-radius: 0;
-  background: transparent;
+  background: var(--color-board);
   box-shadow: none;
   color: var(--color-board-text);
+  /* Cỡ số co theo bề rộng ô (đơn vị cqi bên dưới) */
+  container-type: inline-size;
 }
 
-.scoreboard .stat:last-child {
-  border-right: 0;
-}
 
 .scoreboard .stat.is-lead {
   background: var(--color-primary);
@@ -123,6 +125,8 @@
 }
 
 .scoreboard .stat-label {
+  /* Chừa sẵn 2 dòng: nhãn dài xuống dòng thì số của mọi ô vẫn thẳng một hàng */
+  min-height: 2lh;
   font-size: var(--font-size-sm);
   font-weight: var(--font-weight-semibold);
   color: var(--color-board-soft);
@@ -136,7 +140,8 @@
 .scoreboard .stat-value {
   margin-top: var(--space-1-5);
   font-family: var(--font-heading);
-  font-size: var(--font-size-4xl);
+  /* 11cqi: số tiền dài nhất (9 chữ số + dấu chấm + đ) vẫn vừa ô 200px, không bị cắt */
+  font-size: clamp(var(--font-size-base), 11cqi, var(--font-size-4xl));
   font-weight: var(--font-weight-extrabold);
   letter-spacing: var(--letter-spacing-tight);
   line-height: var(--line-height-none);
@@ -236,7 +241,9 @@
 .x-labels span {
   flex: 1;
   min-width: var(--space-1);
-  overflow: hidden;
+  /* Nhãn đã được lọc thưa từ Servlet: cho tràn sang ô trống bên cạnh, không cắt */
+  overflow: visible;
+  white-space: nowrap;
   text-align: center;
   font-size: var(--font-size-xs);
   color: var(--color-text-muted);
@@ -379,20 +386,6 @@
 }
 
 /* ===== Responsive ===== */
-@media (max-width: 1280px) {
-  .report-stats.scoreboard {
-    grid-template-columns: repeat(3, minmax(0, 1fr));
-  }
-
-  .scoreboard .stat:nth-child(3) {
-    border-right: 0;
-  }
-
-  .scoreboard .stat:nth-child(-n + 3) {
-    border-bottom: var(--border-width) solid var(--color-board-line);
-  }
-}
-
 @media (max-width: 1080px) {
   .report-grid {
     grid-template-columns: minmax(0, 1fr);
@@ -400,24 +393,8 @@
 }
 
 @media (max-width: 640px) {
-  .report-stats.scoreboard {
-    grid-template-columns: repeat(2, minmax(0, 1fr));
-  }
-
   .scoreboard .stat {
-    border-bottom: var(--border-width) solid var(--color-board-line);
-  }
-
-  .scoreboard .stat:nth-child(3) {
-    border-right: var(--border-width) solid var(--color-board-line);
-  }
-
-  .scoreboard .stat:nth-child(2n) {
-    border-right: 0;
-  }
-
-  .scoreboard .stat-value {
-    font-size: var(--font-size-2xl);
+    flex-basis: 150px;
   }
 
   .report-filter,

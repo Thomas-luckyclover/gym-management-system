@@ -232,7 +232,7 @@
   margin: 14px 0 0;
   color: var(--cy-cyan);
   font-family: var(--font-heading);
-  font-size: 0.8rem;
+  font-size: 0.8125rem;
   font-weight: 700;
   letter-spacing: 0.3em;
   text-shadow: var(--cy-glow-c);
@@ -352,7 +352,7 @@
 .cy-card cite {
   margin-top: 14px;
   color: var(--cy-cyan);
-  font-size: 0.78rem;
+  font-size: 0.8125rem;
   font-style: normal;
   font-weight: 600;
   letter-spacing: 0.06em;
@@ -548,7 +548,7 @@
   background: rgba(11, 16, 48, 0.75);
   color: var(--cy-lime);
   font-family: var(--font-heading);
-  font-size: 0.75rem;
+  font-size: 0.8125rem;
   font-weight: 700;
   letter-spacing: 0.12em;
 }
@@ -591,7 +591,7 @@
   justify-content: space-between;
   color: var(--cy-soft);
   font-family: var(--font-heading);
-  font-size: 0.78rem;
+  font-size: 0.8125rem;
   font-weight: 700;
   letter-spacing: 0.15em;
 }

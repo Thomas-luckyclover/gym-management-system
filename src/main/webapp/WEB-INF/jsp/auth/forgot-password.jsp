@@ -15,7 +15,7 @@
   <%@ include file="/WEB-INF/jsp/common/head.jspf" %>
   <title>Quên mật khẩu — Super Gym</title>
   <link rel="stylesheet" href="${pageContext.request.contextPath}/css/pages/auth/login.css">
-  <link rel="stylesheet" href="${pageContext.request.contextPath}/css/pages/auth/forgot-password.css?v=2">
+  <link rel="stylesheet" href="${pageContext.request.contextPath}/css/pages/auth/forgot-password.css?v=6">
   <script src="${pageContext.request.contextPath}/js/pages/auth/forgot-password.js?v=1" defer></script>
 </head>
 <body class="theme-guest-dark auth-dark">
@@ -120,6 +120,9 @@
               <i class="fa-solid fa-pen"></i> Dùng email khác
             </a>
           </div>
+
+          <%-- Hộp gợi ý khi chưa nhận được mail (Pumpy) --%>
+          <%@ include file="/WEB-INF/jsp/common/pumpy-mail-hint.jspf" %>
         </c:when>
 
         <%-- ================= Bước 3: đặt mật khẩu mới ================= --%>

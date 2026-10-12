@@ -92,7 +92,7 @@
 }
 
 .status-hero .status-meta span {
-  font-size: 0.72rem;
+  font-size: 0.8125rem;
   text-transform: uppercase;
   letter-spacing: 0.06em;
   color: var(--color-board-soft);
@@ -298,7 +298,7 @@
 
 .section-label {
   font-family: var(--font-body);
-  font-size: 0.7rem;
+  font-size: 0.8125rem;
   font-weight: 600;
   text-transform: uppercase;
   letter-spacing: 0.1em;
@@ -331,7 +331,7 @@
   align-items: center;
   gap: var(--space-1);
   width: fit-content;
-  font-size: 0.75rem;
+  font-size: 0.8125rem;
   font-weight: 600;
   padding: 3px 10px;
   border-radius: 999px;

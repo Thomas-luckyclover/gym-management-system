@@ -83,18 +83,18 @@
   --font-numeric: tabular-nums;
 
   /* Cỡ chữ (1rem = 16px) */
-  /* 11px — tag spec, nhãn siêu nhỏ */
-  --font-size-2xs: 0.6875rem;
-  /* 12px — chú thích, header bảng, badge */
-  --font-size-xs: 0.75rem;
-  /* 13px — lỗi dưới ô nhập, nút nhỏ, breadcrumb */
-  --font-size-sm: 0.8125rem;
-  /* 14px — nội dung phụ, nội dung chính khu Manager/Admin */
-  --font-size-md: 0.875rem;
-  /* 15px — nội dung chính khu Guest/Hội viên/Nhân viên */
-  --font-size-base: 0.9375rem;
-  /* 17px — tiêu đề card, đoạn dẫn */
-  --font-size-lg: 1.0625rem;
+  /* Sàn chữ 13px: không dùng chữ nhỏ hơn (đọc được khi chiếu máy chiếu). 2xs giữ tên cho code cũ, bằng xs */
+  --font-size-2xs: 0.8125rem;
+  /* 13px — chú thích, header bảng, badge */
+  --font-size-xs: 0.8125rem;
+  /* 14px — lỗi dưới ô nhập, nút nhỏ, breadcrumb, nội dung phụ */
+  --font-size-sm: 0.875rem;
+  /* 15px — nội dung phụ dài, nội dung bảng khu Manager/Admin */
+  --font-size-md: 0.9375rem;
+  /* 16px — nội dung chính mọi khu */
+  --font-size-base: 1rem;
+  /* 18px — tiêu đề card, đoạn dẫn */
+  --font-size-lg: 1.125rem;
   /* 20px — tiêu đề khối nhỏ */
   --font-size-xl: 1.25rem;
   /* 24px — tiêu đề trang */
@@ -211,8 +211,9 @@
      - Vàng chanh (lime) chỉ dùng trên nền đen, hoặc làm mảng nhỏ đi với chữ đen; không bao giờ làm màu chữ trên nền trắng. */
 
   /* Màu thương hiệu của theme */
-  --color-primary: #A9762C;
-  --color-primary-hover: #8F6121;
+  /* Vàng nâu đậm hơn để chữ màu chủ đạo đạt 4.5:1 trên nền trắng/kem */
+  --color-primary: #906425;
+  --color-primary-hover: #7A5520;
   --color-primary-tint: #F6EFE2;
   --color-primary-border: #D9C4A0;
   /* chữ/icon đặt trên nền primary */
@@ -239,7 +240,7 @@
   /* Chữ */
   --color-text: #23221F;
   --color-text-soft: #6B6960;
-  --color-text-muted: #8F8B81;
+  --color-text-muted: #706C65;
   --color-text-disabled: #B8B4AA;
   --color-text-inverse: #F3F1EC;
   --color-text-inverse-soft: #C9C5BC;
@@ -321,7 +322,7 @@
 
 /* Guest nền sáng — chính là giá trị mặc định ở :root, khai báo để JSP ghi rõ theme đang dùng */
 .theme-guest {
-  --color-primary: #A9762C;
+  --color-primary: #906425;
 }
 
 /* Guest nền đen · Vàng chanh — trang chủ và blog */
@@ -338,7 +339,7 @@
   --color-surface-hover: #181716;
   --color-text: #F3F1EC;
   --color-text-soft: #A09C93;
-  --color-text-muted: #79766F;
+  --color-text-muted: #828079;
   --color-border: rgba(255, 255, 255, 0.11);
   --color-border-strong: rgba(255, 255, 255, 0.2);
   --color-link: var(--color-lime);
@@ -444,6 +445,23 @@
   --layout-sidebar-width: 256px;
   --layout-content-width: 1320px;
 
+  /* Khối chào + thẻ thời tiết (dashboard-weather.css) */
+  --wx-white: #FFFFFF;
+  --wx-star: #DDEBFF;
+  --wx-speech-ink: #172333;
+  --wx-black: #000;
+  --wx-speech-bg: #FFF7E6;
+  --wx-bolt: #FDE047;
+  --wx-hero-text: #F5F7FC;
+  --wx-sign-text: #F1F7FC;
+  --wx-hero-soft: #BFCBDD;
+  --wx-sign-pole: #8298AB;
+  --wx-stadium-line: #25394D;
+  --wx-stadium: #192839;
+  --wx-sign-bg: #193448;
+  --wx-hero-bg: #10151D;
+  --wx-hero-bg-deep: #050608;
+
   /* Bí danh cho tên biến các màn cũ đang gọi */
   --color-text-subtle: var(--color-text-muted);
   --color-warning-dark: var(--color-warning-ink);
@@ -538,7 +556,7 @@
 }
 
 :is(.pt-dashboard-page, .customer-dashboard-page).weather-sunny {
-  --color-primary: #B45309;
+  --color-primary: #A94E08;
   --color-primary-hover: #92420A;
   --color-primary-tint: #FEF3E2;
   --color-primary-border: #F5D29A;
@@ -554,7 +572,7 @@
 }
 
 :is(.pt-dashboard-page, .customer-dashboard-page).weather-hot {
-  --color-primary: #C2410C;
+  --color-primary: #B13B0B;
   --color-primary-hover: #9A3412;
   --color-primary-tint: #FFEDE3;
   --color-primary-border: #F6C3A6;
@@ -585,7 +603,7 @@
 }
 
 :is(.pt-dashboard-page, .customer-dashboard-page).weather-rain {
-  --color-primary: #0F6A80;
+  --color-primary: #0E657A;
   --color-primary-hover: #0B5466;
   --color-primary-tint: #E0F0F3;
   --color-primary-border: #A9D2DC;
@@ -638,7 +656,7 @@
 }
 
 :is(.pt-dashboard-page, .customer-dashboard-page).weather-wind {
-  --color-primary: #0F766E;
+  --color-primary: #0F726B;
   --color-primary-hover: #0B5D57;
   --color-primary-tint: #E1F3F1;
   --color-primary-border: #A7D8D2;

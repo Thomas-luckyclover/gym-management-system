@@ -234,15 +234,116 @@ button {
   gap: var(--space-2-5);
 }
 
-/* [JS] common.js — setButtonLoading() thêm/xóa class này khi đang chờ server (GBR-22), vẽ vòng xoay trước chữ */
-.btn.is-loading::before {
-  content: "";
-  width: var(--icon-size-sm);
-  height: var(--icon-size-sm);
-  border: var(--border-width-thick) solid currentColor;
-  border-right-color: transparent;
-  border-radius: var(--radius-circle);
-  animation: spin var(--duration-spin) linear infinite;
+/* [JS] common.js — setButtonLoading() thêm/xóa class này khi đang chờ server (GBR-22).
+   Loading Pumpy đẩy tạ: Pumpy dồn hết sức đẩy quả tạ to hơn người, chân cào đất, mồ hôi văng,
+   còn quả tạ gần như đứng yên — "chẳng xi nhê gì". */
+.btn.is-loading {
+  gap: var(--space-2);
+  opacity: 1;
+  cursor: progress;
+}
+
+/* Cỡ theo chữ của nút (em) để nút nhỏ/lớn đều cân; vẫn nằm gọn trong chiều cao nút */
+.btn .btn-pumpy {
+  width: 5em;
+  height: 1.75em;
+  margin-block: -0.35em;
+  flex: none;
+  overflow: visible;
+}
+
+/* Nút nền vàng chanh (trang khách / đăng nhập): Pumpy cũng màu chanh nên đặt lên "sân" đen cho nổi */
+:is(.theme-guest, .theme-guest-dark) .btn-primary .btn-pumpy {
+  box-sizing: content-box;
+  padding: 0.2em 0.6em;
+  border-radius: var(--radius-pill);
+  background: var(--color-lime-ink);
+}
+
+/* Thân: nghiêng về phía tạ + rung vì gồng hết sức */
+.btn-pumpy .bp-pumpy {
+  transform-box: view-box;
+  transform-origin: 18px 32px;
+  animation: bp-strain 0.22s steps(2) infinite;
+}
+
+/* Hai chân cào đất xen kẽ */
+.btn-pumpy .bp-foot {
+  animation: bp-scrabble 0.28s ease-in-out infinite;
+}
+
+.btn-pumpy .bp-foot--front {
+  animation-delay: -0.14s;
+}
+
+/* Quả tạ: chỉ rung nhẹ đúng 1px, không hề dịch chuyển */
+.btn-pumpy .bp-db {
+  animation: bp-unmoved 1.6s steps(1) infinite;
+}
+
+/* Mồ hôi văng ngược ra sau */
+.btn-pumpy .bp-sweat path {
+  fill: #7FD3FF;
+  stroke: #141414;
+  stroke-width: 0.6;
+  opacity: 0;
+  animation: bp-sweat 0.9s ease-out infinite;
+}
+
+.btn-pumpy .bp-sweat path:nth-child(2) {
+  animation-delay: 0.45s;
+}
+
+/* Bụi dưới gót */
+.btn-pumpy .bp-dust circle {
+  fill: currentColor;
+  opacity: 0;
+  animation: bp-dust 0.56s ease-out infinite;
+}
+
+.btn-pumpy .bp-dust circle:nth-child(2) {
+  animation-delay: 0.28s;
+}
+
+@keyframes bp-strain {
+  0% { transform: rotate(14deg) translateX(-0.4px); }
+  100% { transform: rotate(14deg) translateX(0.4px); }
+}
+
+@keyframes bp-scrabble {
+  0%, 100% { transform: translateX(0); }
+  50% { transform: translateX(-3px); }
+}
+
+@keyframes bp-unmoved {
+  0%, 92%, 100% { transform: translateX(0); }
+  94% { transform: translateX(0.6px); }
+  96% { transform: translateX(-0.4px); }
+}
+
+@keyframes bp-sweat {
+  0% { opacity: 0; transform: translate(0, 0); }
+  20% { opacity: 1; }
+  100% { opacity: 0; transform: translate(-6px, -5px); }
+}
+
+@keyframes bp-dust {
+  0% { opacity: 0.6; transform: translate(0, 0) scale(0.6); }
+  100% { opacity: 0; transform: translate(-5px, -2px) scale(1.3); }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .btn-pumpy * {
+    animation: none !important;
+  }
+
+  .btn-pumpy .bp-pumpy {
+    transform: rotate(14deg);
+  }
+
+  .btn-pumpy .bp-sweat path {
+    opacity: 1;
+  }
 }
 
 @keyframes spin {
@@ -460,6 +561,14 @@ input[type="password"]::-ms-clear {
   border-left-color: var(--color-info);
 }
 
+.theme-guest-dark .toast-info {
+  border-left-color: var(--color-lime);
+}
+
+.theme-guest-dark .toast-info .toast-icon {
+  color: var(--color-lime);
+}
+
 .toast-info .toast-icon {
   color: var(--color-info);
 }
@@ -617,6 +726,28 @@ input[type="password"]::-ms-clear {
   text-align: center;
 }
 
+/* Trạng thái rỗng khu nội bộ: Pumpy ngồi ngơ ngác cạnh quả tạ nhỏ (chỉ CSS, không cần sửa JSP) */
+.dock .empty-state::before {
+  content: "";
+  display: block;
+  width: calc(var(--space-12) * 1.6);
+  height: calc(var(--space-12) * 1.2);
+  margin: 0 auto var(--space-3);
+  background: url("data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 124 92'><ellipse cx='60' cy='87' rx='44' ry='3.5' fill='%23000' opacity='.12'/><g transform='translate(96 70)'><rect x='4' y='6' width='14' height='3' rx='1' fill='%239AA7B0' stroke='%23141414' stroke-width='1.2'/><rect x='0' y='0' width='5' height='15' rx='1.5' fill='%234A5F6A' stroke='%23141414' stroke-width='1.4'/><rect x='17' y='0' width='5' height='15' rx='1.5' fill='%234A5F6A' stroke='%23141414' stroke-width='1.4'/></g><path d='M30 40 L31 19 L45 30Z M86 40 L85 19 L71 30Z' fill='%23D6F55B' stroke='%23141414' stroke-width='3' stroke-linejoin='round'/><path d='M22 62 C22 38 38 26 58 26 C78 26 94 38 94 62 C94 78 79 86 58 86 C37 86 22 78 22 62Z' fill='%23D6F55B' stroke='%23141414' stroke-width='3'/><path d='M30 46 Q34 36 44 31' fill='none' stroke='%23fff' stroke-width='3.5' stroke-linecap='round' opacity='.7'/><ellipse cx='58' cy='69' rx='18' ry='12' fill='%23F1FFB8'/><path transform='translate(58 73) scale(0.26) translate(-150 -280)' d='M150.0 278.0 L150.3 278.2 L150.4 278.5 L150.5 278.9 L150.5 279.3 L150.4 279.7 L150.2 280.1 L149.9 280.5 L149.4 280.8 L148.9 281.0 L148.3 281.1 L147.7 281.1 L147.0 281.0 L146.3 280.7 L145.7 280.3 L145.0 279.8 L144.5 279.1 L144.0 278.3 L143.7 277.4 L143.5 276.4 L143.5 275.3 L143.7 274.2 L144.0 273.1 L144.5 272.0 L145.3 271.0 L146.2 270.1 L147.3 269.3 L148.5 268.6 L149.9 268.1 L151.4 267.9 L153.0 267.9 L154.6 268.1 L156.2 268.6 L157.7 269.3 L159.2 270.3 L160.5 271.5 L161.6 273.0 L162.6 274.7 L163.3 276.5 L163.7 278.5 L163.8 280.5 L163.7 282.6 L163.1 284.7 L162.3 286.8 L161.1 288.8 L159.7 290.5 L157.9 292.1 L155.9 293.5 L153.6 294.5 L151.2 295.2 L148.7 295.5 L146.0 295.5 L143.4 295.1 L140.8 294.2 L138.3 293.0 L136.0 291.4 L133.9 289.4 L132.1 287.0 L130.6 284.4 L129.6 281.6 L128.9 278.6 L128.7 275.5 L128.9 272.3 L129.7 269.1 L130.9 266.1 L132.6 263.2 L134.7 260.5 L137.2 258.2 L140.1 256.2 L143.3 254.7 L146.7 253.6 L150.3 253.0 L154.0 253.0 L157.8 253.5 L161.4 254.6 L164.9 256.2 L168.2 258.4 L171.1 261.0 L173.7 264.1 L175.8 267.6 L177.4 271.4 L178.4 275.4 L178.8 279.6 L178.6 283.9 L177.8 288.1 L176.3 292.2 L174.2 296.1 L171.6 299.7 L168.4 302.9 L164.7 305.6 L160.6 307.8' fill='none' stroke='%23141414' stroke-width='7'/><circle cx='49' cy='50' r='3.6' fill='%23141414'/><circle cx='69' cy='50' r='3.6' fill='%23141414'/><circle cx='50.2' cy='48.6' r='1.2' fill='%23fff'/><circle cx='70.2' cy='48.6' r='1.2' fill='%23fff'/><circle cx='59' cy='59' r='2.6' fill='none' stroke='%23141414' stroke-width='2'/><ellipse cx='42' cy='85' rx='9' ry='5' fill='%23D6F55B' stroke='%23141414' stroke-width='2.5'/><ellipse cx='74' cy='85' rx='9' ry='5' fill='%23D6F55B' stroke='%23141414' stroke-width='2.5'/><text x='96' y='30' font-family='Montserrat,Arial,sans-serif' font-weight='900' font-size='24' fill='%23D6F55B' stroke='%23141414' stroke-width='2' paint-order='stroke'>?</text></svg>") center / contain no-repeat;
+  animation: empty-pumpy-bob 3.2s ease-in-out infinite;
+}
+
+@keyframes empty-pumpy-bob {
+  0%, 100% { transform: translateY(0) rotate(0deg); }
+  50% { transform: translateY(calc(-1 * var(--space-1))) rotate(-2deg); }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .dock .empty-state::before {
+    animation: none;
+  }
+}
+
 /* ===== 9. TRANG LỖI 403/404/500 (WEB-INF/jsp/error) ===== */
 
 .error-page {
@@ -667,10 +798,13 @@ input[type="password"]::-ms-clear {
   display: flex;
   align-items: center;
   justify-content: space-between;
-  gap: var(--space-4);
+  /* Khoảng thở giữa logo – menu – cụm tài khoản (trước 16px nên chữ dính nhau) */
+  gap: var(--space-8);
 }
 
 .brand {
+  /* Không cho logo bị ép co lại, tránh menu đè lên chữ SUPER GYM */
+  flex: none;
   display: flex;
   align-items: center;
   gap: var(--space-2);
@@ -696,7 +830,8 @@ input[type="password"]::-ms-clear {
 
 .nav-links {
   display: flex;
-  gap: var(--space-4);
+  gap: var(--space-5);
+  margin-inline: auto;
 }
 
 .nav-links a {
@@ -711,6 +846,38 @@ input[type="password"]::-ms-clear {
 .nav-links a[aria-current="page"] {
   color: var(--color-primary);
 }
+
+.guest-account {
+  display: inline-flex;
+  align-items: center;
+  gap: var(--space-2);
+  min-width: 0;
+  max-width: 32ch;
+  padding: var(--space-1-5) var(--space-3) var(--space-1-5) var(--space-1-5);
+  border: var(--border-width) solid color-mix(in srgb, var(--color-primary) 38%, #242824);
+  border-radius: var(--radius-pill);
+  background: #111410;
+  color: #F1F6E7;
+  text-decoration: none;
+  transition: border-color var(--duration-fast) var(--ease-standard);
+}
+.guest-account:hover { border-color: var(--color-primary); color: #FFFFFF; }
+.guest-account:focus-visible { outline: var(--focus-outline-width) solid var(--color-primary); outline-offset: var(--focus-outline-offset); }
+.guest-account__avatar {
+  display: grid;
+  place-items: center;
+  flex: none;
+  width: var(--avatar-size-sm);
+  height: var(--avatar-size-sm);
+  border-radius: var(--radius-circle);
+  background: var(--color-primary);
+  color: var(--color-on-primary);
+}
+.guest-account__text { min-width: 0; }
+.guest-account__text strong { display: block; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; font-size: var(--font-size-sm); }
+.guest-account__text small { display: block; color: #B6C1A7; font-size: var(--font-size-xs); }
+.guest-account__arrow { color: var(--color-primary); font-size: var(--font-size-xs); }
+.guest-logout-icon { transform: scaleX(-1); }
 
 .header-actions {
   display: flex;
@@ -828,10 +995,26 @@ input[type="password"]::-ms-clear {
   font-size: var(--font-size-xs);
 }
 
-/* 7 mục menu không đủ chỗ dưới 1080px → chuyển sang nút hamburger (menu mobile) */
-@media (max-width: 1080px) {
+/* Đã đăng nhập: khung header rộng cố định nên luôn thu gọn cụm tài khoản (Đăng xuất chỉ còn icon có tooltip,
+   bỏ dòng "Khu vực…") để menu 7 mục có chỗ. Menu mobile vẫn hiện đủ chữ. */
+.header-actions .guest-logout-text,
+.header-actions .guest-account__text small {
+  display: none;
+}
+
+.header-actions .guest-logout {
+  padding-inline: var(--space-2-5);
+}
+
+/* 7 mục menu + cụm tài khoản không đủ chỗ dưới 1280px → chuyển sang nút hamburger (menu mobile) */
+@media (max-width: 1279px) {
   .nav-links {
     display: none;
+  }
+
+  /* Menu ẩn → đẩy cụm tài khoản sát nút hamburger thay vì nằm giữa */
+  .header-actions {
+    margin-left: auto;
   }
 
   .hamburger {
@@ -915,6 +1098,8 @@ body.dock ::-webkit-scrollbar-thumb {
   overflow-x: hidden;
   overflow-y: auto;
   background: var(--dock-bg);
+  overscroll-behavior-y: contain;
+  height: 100dvh;
   color: var(--dock-text);
   transform: translateX(-100%);
   transition: transform var(--duration-slower) var(--ease-out-expo);
@@ -1009,9 +1194,8 @@ body.dock ::-webkit-scrollbar-thumb {
   transition: transform var(--duration-slower) var(--ease-out-expo);
 }
 
-.dock .dockwrap:hover .dock-handle svg,
-.dock .dockwrap:focus-within .dock-handle svg,
-.dock .dockwrap.is-open .dock-handle svg {
+.dock .dockwrap.is-open .dock-handle svg,
+.dock .dockwrap.is-open .dock-handle i {
   transform: rotate(180deg);
 }
 
@@ -1066,7 +1250,11 @@ body.dock ::-webkit-scrollbar-thumb {
   gap: var(--space-0-5);
   align-content: start;
   flex: 1;
+  flex-shrink: 0;
 }
+
+.dock .sidebar > .brand,
+.dock .sidebar > .side-foot { flex-shrink: 0; }
 
 .dock .nav-group {
   margin: var(--space-4) var(--space-2) var(--space-1);
@@ -1235,9 +1423,9 @@ body.dock ::-webkit-scrollbar-thumb {
   align-items: center;
   gap: var(--space-2-5);
   padding: var(--space-1) var(--space-3) var(--space-1) var(--space-1);
-  border: var(--border-width) solid var(--color-border);
+  border: var(--border-width) solid color-mix(in srgb, var(--color-primary) 24%, var(--color-border));
   border-radius: var(--radius-pill);
-  background: var(--color-surface);
+  background: linear-gradient(135deg, color-mix(in srgb, var(--color-primary) 15%, var(--color-surface)), color-mix(in srgb, var(--color-primary) 7%, var(--color-surface)));
   color: var(--color-text);
   text-decoration: none;
   transition: border-color var(--duration-fast) var(--ease-standard), box-shadow var(--duration-fast) var(--ease-standard);
@@ -1246,6 +1434,11 @@ body.dock ::-webkit-scrollbar-thumb {
 .dock .tb-user:hover {
   border-color: var(--color-primary-border);
   box-shadow: var(--shadow-card);
+}
+
+.dock .tb-user:focus-visible {
+  outline: var(--focus-outline-width) solid var(--color-primary);
+  outline-offset: var(--focus-outline-offset);
 }
 
 .dock .tb-user .avatar {
@@ -1262,6 +1455,41 @@ body.dock ::-webkit-scrollbar-thumb {
   font-size: var(--font-size-sm);
   font-weight: var(--font-weight-bold);
   object-fit: cover;
+}
+
+.dock .tb-avatar {
+  position: relative;
+  display: inline-flex;
+  flex: none;
+  border-radius: var(--radius-circle);
+  transition: transform var(--duration-slow) var(--ease-standard);
+}
+.dock .tb-avatar::after {
+  content: "";
+  position: absolute;
+  right: 0;
+  bottom: 0;
+  width: var(--space-3);
+  height: var(--space-3);
+  border: var(--border-width-thick) solid var(--color-surface);
+  border-radius: var(--radius-circle);
+  background: var(--color-success);
+  animation: account-status-pulse 3s ease-in-out infinite;
+}
+.dock .tb-user .avatar {
+  border: var(--border-width-thick) solid var(--color-surface);
+  outline: var(--border-width) solid var(--color-primary-border);
+}
+.dock .tb-user:hover .tb-avatar,
+.dock .tb-user:focus-visible .tb-avatar { transform: scale(1.05) rotate(-5deg); }
+@keyframes account-status-pulse {
+  50% { box-shadow: 0 0 0 var(--space-1) var(--color-success-tint); }
+}
+@media (prefers-reduced-motion: reduce) {
+  .dock .tb-avatar { transition: none; }
+  .dock .tb-avatar::after { animation: none; }
+  .dock .tb-user:hover .tb-avatar,
+  .dock .tb-user:focus-visible .tb-avatar { transform: none; }
 }
 
 .dock .tb-user b,
@@ -1504,4 +1732,390 @@ body.dock ::-webkit-scrollbar-thumb {
     opacity: 1;
     transform: none;
   }
+}
+
+/* =====================================================================
+   13. HỘP GỢI Ý PUMPY (common/pumpy-mail-hint.jspf) — bước nhập mã của
+       Quên mật khẩu và Đăng ký: Pumpy tựa tạ + bong bóng hướng dẫn
+   ===================================================================== */
+/* Truyện tranh: bong bóng thoại ở góc trên bên trái, Pumpy ngồi bên phải phía dưới */
+.pumpy-hint {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) minmax(150px, 36%);
+  align-items: end;
+  gap: 0;
+  margin-top: var(--space-6);
+  padding-top: var(--space-5);
+  border-top: var(--border-width) dashed var(--color-border);
+}
+
+/* Phóng to và lấn sang trái dưới bong bóng: đầu Pumpy nằm ngay dưới đuôi thoại */
+.pumpy-lazy {
+  position: relative;
+  z-index: 2; /* ló đầu ra trước góc bong bóng như nhân vật truyện tranh */
+  display: block;
+  width: 150%;
+  height: auto;
+  margin-left: -46%;
+  overflow: visible;
+}
+
+.pumpy-bubble {
+  z-index: 1;
+}
+
+/* Thở chậm như đang ngủ gật */
+.pumpy-lazy__body {
+  transform-box: fill-box;
+  transform-origin: 50% 100%;
+  animation: pumpy-snooze 3.6s ease-in-out infinite;
+}
+
+/* z z z bay lên rồi mờ dần, lần lượt từng chữ */
+.pumpy-lazy__z text {
+  animation: pumpy-z 3s ease-in-out infinite;
+  opacity: 0;
+}
+
+.pumpy-lazy__z text:nth-child(2) { animation-delay: 0.6s; }
+.pumpy-lazy__z text:nth-child(3) { animation-delay: 1.2s; }
+
+@keyframes pumpy-snooze {
+  0%, 100% { transform: scale(1, 1); }
+  50% { transform: scale(1.025, 0.97); }
+}
+
+@keyframes pumpy-z {
+  0% { opacity: 0; transform: translate(0, 6px); }
+  30% { opacity: 1; }
+  100% { opacity: 0; transform: translate(6px, -10px); }
+}
+
+/* Bong bóng thoại: đuôi chỉ về Pumpy bên trái */
+.pumpy-bubble {
+  position: relative;
+  align-self: start;
+  margin-bottom: var(--space-12);
+  padding: var(--space-3-5) var(--space-4);
+  border: var(--border-width-thick) solid var(--color-primary);
+  border-radius: calc(var(--radius-lg) * 1.6);
+  background: var(--color-surface);
+  box-shadow: var(--space-1) var(--space-1) 0 color-mix(in srgb, var(--color-primary) 35%, transparent);
+}
+
+/* Đuôi bong bóng kiểu truyện tranh: từ góc dưới phải chỉ xéo xuống đầu Pumpy */
+.pumpy-bubble::before,
+.pumpy-bubble::after {
+  content: "";
+  position: absolute;
+  right: var(--space-10);
+  bottom: calc(-1 * var(--space-6));
+  width: 0;
+  height: 0;
+  border-style: solid;
+  border-width: var(--space-6) 0 0 var(--space-6);
+  border-color: var(--color-primary) transparent transparent transparent;
+  transform: skewX(-25deg);
+}
+
+.pumpy-bubble::after {
+  right: calc(var(--space-10) + 3px);
+  bottom: calc(-1 * var(--space-6) + 5px);
+  border-width: calc(var(--space-6) - 5px) 0 0 calc(var(--space-6) - 5px);
+  border-color: var(--color-surface) transparent transparent transparent;
+}
+
+.pumpy-bubble__title {
+  margin: 0 0 var(--space-2);
+  color: var(--color-primary);
+  font-family: var(--font-heading);
+  font-size: var(--font-size-md);
+  font-weight: var(--font-weight-extrabold);
+}
+
+.pumpy-steps {
+  display: grid;
+  gap: var(--space-1-5);
+  margin: 0;
+  padding-left: var(--space-4-5);
+  color: var(--color-text-soft);
+  font-size: var(--font-size-sm);
+  line-height: var(--line-height-snug);
+}
+
+.pumpy-steps li::marker {
+  color: var(--color-primary);
+  font-family: var(--font-heading);
+  font-weight: var(--font-weight-bold);
+}
+
+.pumpy-steps b {
+  color: var(--color-text);
+}
+
+@media (max-width: 480px) {
+  .pumpy-hint {
+    grid-template-columns: minmax(0, 1fr) 120px;
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .pumpy-lazy__body,
+  .pumpy-lazy__z text {
+    animation: none;
+  }
+
+  .pumpy-lazy__z text {
+    opacity: 1;
+  }
+}
+
+
+/* =====================================================================
+   14. TÌM NHANH (Ctrl/⌘ + K) — [JS] common.js mục "Tìm nhanh"
+   ===================================================================== */
+.cmdk {
+  width: min(560px, calc(100% - var(--space-8)));
+  margin: 12vh auto auto;
+  padding: 0;
+  border: var(--border-width) solid var(--dock-line, var(--color-border));
+  border-radius: var(--radius-md);
+  background: var(--dock-bg, var(--color-surface-inverse));
+  color: var(--dock-text, var(--color-text-inverse));
+  box-shadow: var(--shadow-pop);
+}
+
+.cmdk::backdrop {
+  background: rgba(8, 10, 14, 0.55);
+  backdrop-filter: blur(3px);
+}
+
+.cmdk-input {
+  width: 100%;
+  padding: var(--space-4) var(--space-4-5);
+  border: 0;
+  border-bottom: var(--border-width) solid var(--dock-line, var(--color-border));
+  background: transparent;
+  color: inherit;
+  font: inherit;
+  font-size: var(--font-size-lg);
+  outline: none;
+}
+
+.cmdk-input::placeholder {
+  color: var(--dock-muted, var(--color-text-muted));
+}
+
+.cmdk-list {
+  max-height: 50vh;
+  margin: 0;
+  padding: var(--space-2);
+  overflow-y: auto;
+  list-style: none;
+}
+
+.cmdk-item {
+  padding: var(--space-2-5) var(--space-3);
+  border-radius: var(--radius-sm);
+  font-weight: var(--font-weight-medium);
+  cursor: pointer;
+}
+
+.cmdk-item:hover {
+  background: var(--dock-hover, var(--color-surface-hover));
+}
+
+.cmdk-item.is-active {
+  background: var(--color-primary);
+  color: var(--color-on-primary);
+}
+
+.cmdk-empty {
+  padding: var(--space-4);
+  color: var(--dock-muted, var(--color-text-muted));
+  text-align: center;
+}
+
+.cmdk-foot {
+  margin: 0;
+  padding: var(--space-2) var(--space-4);
+  border-top: var(--border-width) solid var(--dock-line, var(--color-border));
+  color: var(--dock-muted, var(--color-text-muted));
+  font-size: var(--font-size-xs);
+}
+
+.cmdk-foot kbd {
+  margin: 0 var(--space-0-5);
+  padding: 0 var(--space-1-5);
+  border: var(--border-width) solid var(--dock-line, var(--color-border));
+  border-radius: var(--radius-sm);
+  font-family: var(--font-heading);
+}
+
+
+/* =====================================================================
+   15. KHUNG MÀN DÙNG CHUNG (WEB-INF/jsp/_templates) — danh sách · chi tiết · form
+   Nhóm sao chép template rồi chỉ điền dữ liệu; không viết lại CSS khung trong file trang.
+   ===================================================================== */
+.dock .gms-page {
+  display: grid;
+  gap: var(--space-5);
+  align-content: start;
+}
+
+.dock .gms-panel {
+  min-width: 0;
+  border: var(--border-width) solid var(--color-border);
+  border-radius: var(--radius-md);
+  background: var(--color-surface);
+  box-shadow: var(--shadow-card);
+}
+
+.dock .gms-panel-head {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  justify-content: space-between;
+  gap: var(--space-3);
+  padding: var(--space-4) var(--space-5);
+  border-bottom: var(--border-width) solid var(--color-border);
+}
+
+.dock .gms-panel-head h2 {
+  margin: 0;
+  font-family: var(--font-heading);
+  font-size: var(--font-size-lg);
+  font-weight: var(--font-weight-bold);
+}
+
+.dock .gms-panel-body {
+  padding: var(--space-5);
+}
+
+/* Thanh lọc: ô tìm + chọn trạng thái + nút */
+.dock .gms-toolbar {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: flex-end;
+  gap: var(--space-3);
+}
+
+.dock .gms-toolbar .field {
+  margin: 0;
+  min-width: calc(var(--space-12) * 3);
+}
+
+/* Bảng dữ liệu */
+.dock .gms-table-wrap {
+  overflow-x: auto;
+}
+
+.dock .gms-table {
+  width: 100%;
+  border-collapse: collapse;
+  font-size: var(--font-size-md);
+}
+
+.dock .gms-table th {
+  padding: var(--space-2-5) var(--space-4);
+  border-bottom: var(--border-width) solid var(--color-border-strong);
+  background: var(--color-surface-muted);
+  color: var(--color-text-soft);
+  font-size: var(--font-size-xs);
+  font-weight: var(--font-weight-bold);
+  text-align: left;
+  white-space: nowrap;
+}
+
+.dock .gms-table td {
+  padding: var(--space-3) var(--space-4);
+  border-bottom: var(--border-width) solid var(--color-border);
+  vertical-align: middle;
+}
+
+.dock .gms-table tbody tr:hover {
+  background: var(--color-primary-tint);
+}
+
+.dock .gms-table .num {
+  text-align: right;
+  font-variant-numeric: tabular-nums;
+}
+
+.dock .gms-table .actions {
+  text-align: right;
+  white-space: nowrap;
+}
+
+/* Phân trang */
+.dock .gms-pagination {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  justify-content: space-between;
+  gap: var(--space-3);
+  padding: var(--space-3) var(--space-5);
+  color: var(--color-text-soft);
+  font-size: var(--font-size-sm);
+}
+
+/* Chi tiết: cặp nhãn – giá trị */
+.dock .gms-detail {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(calc(var(--space-12) * 3.5), 1fr));
+  gap: var(--space-4) var(--space-6);
+  margin: 0;
+}
+
+.dock .gms-detail dt {
+  color: var(--color-text-muted);
+  font-size: var(--font-size-xs);
+  font-weight: var(--font-weight-semibold);
+}
+
+.dock .gms-detail dd {
+  margin: var(--space-1) 0 0;
+  font-weight: var(--font-weight-semibold);
+}
+
+/* Form: 2 cột trên màn rộng, hàng nút ở cuối */
+.dock .gms-form {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: var(--space-4) var(--space-5);
+}
+
+.dock .gms-form .is-full {
+  grid-column: 1 / -1;
+}
+
+.dock .gms-form-actions {
+  grid-column: 1 / -1;
+  display: flex;
+  justify-content: flex-end;
+  gap: var(--space-3);
+  padding-top: var(--space-4);
+  border-top: var(--border-width) solid var(--color-border);
+}
+
+@media (max-width: 720px) {
+  .dock .gms-form {
+    grid-template-columns: 1fr;
+  }
+
+  .dock .gms-form-actions {
+    flex-direction: column-reverse;
+  }
+}
+
+/* Lỗi chung của form/màn (không gắn với ô nào) */
+.dock .gms-alert {
+  grid-column: 1 / -1;
+  margin-bottom: var(--space-4);
+  padding: var(--space-3) var(--space-4);
+  border: var(--border-width) solid var(--color-danger-border);
+  border-radius: var(--radius-sm);
+  background: var(--color-danger-tint);
+  color: var(--color-danger-ink);
+  font-weight: var(--font-weight-medium);
 }

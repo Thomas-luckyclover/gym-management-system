@@ -11,8 +11,8 @@
 <head>
     <%@ include file="/WEB-INF/jsp/common/head.jspf" %>
     <title>Lịch tập của tôi · Super Gym</title>
-    <link rel="stylesheet" href="${pageContext.request.contextPath}/css/pages/customer/dashboard.css?v=7">
-    <link rel="stylesheet" href="${pageContext.request.contextPath}/css/pages/customer/my-pt-sessions.css?v=12">
+    <link rel="stylesheet" href="${pageContext.request.contextPath}/css/pages/customer/dashboard.css?v=8">
+    <link rel="stylesheet" href="${pageContext.request.contextPath}/css/pages/customer/my-pt-sessions.css?v=13">
 </head>
 <body class="dock ${themeClass}">
 <%@ include file="/WEB-INF/jsp/common/flash-toast.jspf" %>
@@ -260,6 +260,43 @@
                         </div>
                     </c:otherwise>
                 </c:choose>
+
+                <%-- Phân trang theo ngày; giữ bộ lọc và số trang của khối còn lại. --%>
+                <c:if test="${not empty upcomingPage and upcomingPage.totalPages gt 1}">
+                    <nav class="my-pt-pagination" aria-label="Phân trang Lịch tập sắp tới">
+                        <span>Trang ${upcomingPage.currentPage} / ${upcomingPage.totalPages} · ${upcomingPage.totalDays} ngày có buổi</span>
+                        <div class="my-pt-pagination-actions">
+                            <c:choose>
+                                <c:when test="${upcomingPage.currentPage gt 1}">
+                                    <c:url var="upcomingPrevUrl" value="/customer/pt-sessions">
+                                        <c:if test="${not empty param.type}"><c:param name="type" value="${param.type}" /></c:if>
+                                        <c:if test="${not empty param.dateFrom}"><c:param name="dateFrom" value="${param.dateFrom}" /></c:if>
+                                        <c:if test="${not empty param.dateTo}"><c:param name="dateTo" value="${param.dateTo}" /></c:if>
+                                        <c:if test="${not empty param.historyStatus}"><c:param name="historyStatus" value="${param.historyStatus}" /></c:if>
+                                        <c:param name="upcomingPage" value="${upcomingPage.currentPage - 1}" />
+                                        <c:param name="historyPage" value="${not empty historyPage ? historyPage.currentPage : 1}" />
+                                    </c:url>
+                                    <a class="btn btn-outline btn-sm" href="${fn:escapeXml(upcomingPrevUrl)}#pending-title">Trước</a>
+                                </c:when>
+                                <c:otherwise><span class="btn btn-outline btn-sm" aria-disabled="true">Trước</span></c:otherwise>
+                            </c:choose>
+                            <c:choose>
+                                <c:when test="${upcomingPage.currentPage lt upcomingPage.totalPages}">
+                                    <c:url var="upcomingNextUrl" value="/customer/pt-sessions">
+                                        <c:if test="${not empty param.type}"><c:param name="type" value="${param.type}" /></c:if>
+                                        <c:if test="${not empty param.dateFrom}"><c:param name="dateFrom" value="${param.dateFrom}" /></c:if>
+                                        <c:if test="${not empty param.dateTo}"><c:param name="dateTo" value="${param.dateTo}" /></c:if>
+                                        <c:if test="${not empty param.historyStatus}"><c:param name="historyStatus" value="${param.historyStatus}" /></c:if>
+                                        <c:param name="upcomingPage" value="${upcomingPage.currentPage + 1}" />
+                                        <c:param name="historyPage" value="${not empty historyPage ? historyPage.currentPage : 1}" />
+                                    </c:url>
+                                    <a class="btn btn-outline btn-sm" href="${fn:escapeXml(upcomingNextUrl)}#pending-title">Sau</a>
+                                </c:when>
+                                <c:otherwise><span class="btn btn-outline btn-sm" aria-disabled="true">Sau</span></c:otherwise>
+                            </c:choose>
+                        </div>
+                    </nav>
+                </c:if>
             </section>
 
             <%-- ===== Lịch sử buổi tập (historyDays: Map ngày → List<MyPtHistorySessionView>, historySessionsError) ===== --%>
@@ -291,6 +328,7 @@
                                 ? empty sessionFilter.historyStatus
                                 : sessionFilter.historyStatus.urlValue eq optionValue}" />
                         <c:url var="optionUrl" value="/customer/pt-sessions">
+                            <c:param name="upcomingPage" value="${not empty upcomingPage ? upcomingPage.currentPage : 1}" />
                             <c:if test="${not empty param.type}"><c:param name="type" value="${param.type}" /></c:if>
                             <c:if test="${not empty param.dateFrom}"><c:param name="dateFrom" value="${param.dateFrom}" /></c:if>
                             <c:if test="${not empty param.dateTo}"><c:param name="dateTo" value="${param.dateTo}" /></c:if>
@@ -373,6 +411,43 @@
                         </div>
                     </c:otherwise>
                 </c:choose>
+
+                <%-- Phân trang theo ngày; giữ bộ lọc và số trang của khối còn lại. --%>
+                <c:if test="${not empty historyPage and historyPage.totalPages gt 1}">
+                    <nav class="my-pt-pagination" aria-label="Phân trang Lịch sử buổi tập">
+                        <span>Trang ${historyPage.currentPage} / ${historyPage.totalPages} · ${historyPage.totalDays} ngày có buổi</span>
+                        <div class="my-pt-pagination-actions">
+                            <c:choose>
+                                <c:when test="${historyPage.currentPage gt 1}">
+                                    <c:url var="historyPrevUrl" value="/customer/pt-sessions">
+                                        <c:if test="${not empty param.type}"><c:param name="type" value="${param.type}" /></c:if>
+                                        <c:if test="${not empty param.dateFrom}"><c:param name="dateFrom" value="${param.dateFrom}" /></c:if>
+                                        <c:if test="${not empty param.dateTo}"><c:param name="dateTo" value="${param.dateTo}" /></c:if>
+                                        <c:if test="${not empty param.historyStatus}"><c:param name="historyStatus" value="${param.historyStatus}" /></c:if>
+                                        <c:param name="historyPage" value="${historyPage.currentPage - 1}" />
+                                        <c:param name="upcomingPage" value="${not empty upcomingPage ? upcomingPage.currentPage : 1}" />
+                                    </c:url>
+                                    <a class="btn btn-outline btn-sm" href="${fn:escapeXml(historyPrevUrl)}#history-title">Trước</a>
+                                </c:when>
+                                <c:otherwise><span class="btn btn-outline btn-sm" aria-disabled="true">Trước</span></c:otherwise>
+                            </c:choose>
+                            <c:choose>
+                                <c:when test="${historyPage.currentPage lt historyPage.totalPages}">
+                                    <c:url var="historyNextUrl" value="/customer/pt-sessions">
+                                        <c:if test="${not empty param.type}"><c:param name="type" value="${param.type}" /></c:if>
+                                        <c:if test="${not empty param.dateFrom}"><c:param name="dateFrom" value="${param.dateFrom}" /></c:if>
+                                        <c:if test="${not empty param.dateTo}"><c:param name="dateTo" value="${param.dateTo}" /></c:if>
+                                        <c:if test="${not empty param.historyStatus}"><c:param name="historyStatus" value="${param.historyStatus}" /></c:if>
+                                        <c:param name="historyPage" value="${historyPage.currentPage + 1}" />
+                                        <c:param name="upcomingPage" value="${not empty upcomingPage ? upcomingPage.currentPage : 1}" />
+                                    </c:url>
+                                    <a class="btn btn-outline btn-sm" href="${fn:escapeXml(historyNextUrl)}#history-title">Sau</a>
+                                </c:when>
+                                <c:otherwise><span class="btn btn-outline btn-sm" aria-disabled="true">Sau</span></c:otherwise>
+                            </c:choose>
+                        </div>
+                    </nav>
+                </c:if>
             </section>
         </main>
     </div>
