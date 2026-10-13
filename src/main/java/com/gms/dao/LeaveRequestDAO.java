@@ -475,6 +475,39 @@ public class LeaveRequestDAO {
         return list;
     }
 
+    /**
+     * Lấy các đơn còn Pending của một ngày nghỉ mà chưa từng được nhắc Manager (JOB-07, bước nhắc).
+     *
+     * @param leaveDate ngày nghỉ cần xét, Service truyền vào là ngày mai
+     * @return danh sách đơn có ReminderSentAt = NULL, xếp theo giờ nộp; rỗng nếu không có
+     * @throws SQLException lỗi kết nối hoặc truy vấn DB
+     */
+    public List<LeaveRequest> findPendingNeedingReminder(LocalDate leaveDate) throws SQLException {
+        // B1: chỉ lấy đơn Pending chưa nhắc, để mỗi đơn chỉ được nhắc đúng một lần
+        String sql = SELECT_COLUMNS
+                + "WHERE LeaveDate = ? "
+                + "AND Status = 'Pending' "
+                + "AND ReminderSentAt IS NULL "
+                + "ORDER BY SubmittedAt ASC";
+
+        List<LeaveRequest> list = new ArrayList<>();
+
+        // B2: thực thi và map từng dòng kết quả
+        try (Connection connection = DBContext.getConnection();
+                PreparedStatement statement = connection.prepareStatement(sql)) {
+
+            statement.setDate(1, java.sql.Date.valueOf(leaveDate));
+
+            try (ResultSet resultSet = statement.executeQuery()) {
+                while (resultSet.next()) {
+                    list.add(mapResultSetToLeaveRequest(resultSet));
+                }
+            }
+        }
+
+        return list;
+    }
+
     // ===== Map ResultSet → Entity =====
 
     /** Đổi 1 dòng ResultSet thành LeaveRequest; cột nullable được đọc riêng để không mất NULL. */
