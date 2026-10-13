@@ -25,7 +25,7 @@
 
   <div class="auth-shell">
     <div class="auth-top">
-      <a class="auth-brand" href="${ctx}/"><img src="${ctx}/images/logo.png?v=3" alt="Super Gym" width="52" height="52"></a>
+      <a class="auth-brand" href="${ctx}/" aria-label="Super Gym — Trang chủ"><span class="auth-brand__wordmark">SUPER GYM</span></a>
       <a class="auth-back" href="${ctx}/login">
         <i class="fa-solid fa-arrow-left"></i> Về đăng nhập
       </a>

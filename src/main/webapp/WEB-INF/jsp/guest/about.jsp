@@ -13,7 +13,7 @@
   <%@ include file="/WEB-INF/jsp/common/head.jspf" %>
   <title>Về chúng tôi · Super Gym</title>
   <link rel="stylesheet" href="${pageContext.request.contextPath}/css/pages/guest/about.css?v=20261013c">
-  <script src="${pageContext.request.contextPath}/js/pages/guest/about-sun.js?v=1" defer></script>
+  <script src="${pageContext.request.contextPath}/js/pages/guest/about-sun.js?v=2" defer></script>
 </head>
 <body class="theme-guest-dark about-page">
   <%@ include file="/WEB-INF/jsp/common/flash-toast.jspf" %>

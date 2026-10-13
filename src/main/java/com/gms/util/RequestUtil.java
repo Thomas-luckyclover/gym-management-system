@@ -53,6 +53,28 @@ public final class RequestUtil {
         return Integer.parseInt(value.trim());
     }
 
+    /**
+     * Đọc tham số dạng số nguyên dương. Trả null nếu rỗng/sai/không dương.
+     * Khác getIntParam: phân biệt được "không có tham số" với "tham số sai/≤ 0"
+     * — servlet dùng khi cần fail thân thiện thay vì lặng lẽ dùng default.
+     *
+     * @param request request gửi lên
+     * @param name    tên tham số
+     * @return số nguyên dương, hoặc null nếu thiếu/sai/không dương
+     */
+    public static Integer getPositiveIntParam(HttpServletRequest request, String name) {
+        String value = request.getParameter(name);
+        if (ValidationUtil.isNullOrEmpty(value)) {
+            return null;
+        }
+        try {
+            int parsed = Integer.parseInt(value.trim());
+            return parsed > 0 ? parsed : null;
+        } catch (NumberFormatException ex) {
+            return null;
+        }
+    }
+
     // ===== Điều hướng =====
 
     /**

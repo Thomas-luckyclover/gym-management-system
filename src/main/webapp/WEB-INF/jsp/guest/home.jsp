@@ -14,7 +14,7 @@
   <%@ include file="/WEB-INF/jsp/common/head.jspf" %>
   <title>Super Gym · Mạnh hơn mỗi ngày</title>
   <meta name="description" content="Super Gym — chọn gói tập, đặt lịch huấn luyện viên và theo dõi hành trình tập luyện của bạn.">
-  <link rel="stylesheet" href="${pageContext.request.contextPath}/css/pages/guest/home.css?v=20261013i">
+  <link rel="stylesheet" href="${pageContext.request.contextPath}/css/pages/guest/home.css?v=20261013j">
   <link rel="stylesheet" href="${pageContext.request.contextPath}/css/pages/guest/mascot.css?v=20261013c">
   <script src="${pageContext.request.contextPath}/js/pages/guest/home-motion.js?v=20261013c" defer></script>
   <script src="${pageContext.request.contextPath}/js/pages/guest/home.js?v=2" defer></script>
@@ -136,7 +136,7 @@
           </c:otherwise>
         </c:choose>
 
-        <%-- Gói PT: dạng bảng gọn trong cùng khối đại dương --%>
+        <%-- Gói PT: card cùng hệ với gói tập, tự căn giữa khi số gói lẻ --%>
         <c:if test="${not empty home.ptPackages}">
           <div class="cine-pt" id="pt-pricing">
             <h3 class="cine-h3">Tập cùng chuyên gia</h3>
@@ -145,7 +145,7 @@
               <c:forEach var="card" items="${home.ptPackages}">
                 <c:set var="isSingleSession" value="${card.pkg.packageType == 'SINGLE_SESSION'}" />
                 <c:set var="isCouple" value="${card.pkg.packageType == 'PT_COUPLE'}" />
-                <li class="cine-pt__row" data-fade>
+                <li class="cine-pt__row ${isSingleSession ? 'is-bookable' : ''}" data-fade>
                   <div>
                     <h4><c:out value="${card.pkg.packageName}" /></h4>
                     <p>${isCouple ? '2 người' : '1 người'} · <c:choose><c:when test="${isSingleSession}">mỗi buổi</c:when><c:otherwise>${card.months} tháng</c:otherwise></c:choose></p>

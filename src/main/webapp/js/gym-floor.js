@@ -254,6 +254,7 @@
         rig.shadow.setAttribute("cy", FLOOR_Y + 1);
         rig.shadow.setAttribute("rx", 21);
         rig.shadow.setAttribute("ry", 2.6);
+
     }
 
     function setCircle(node, center, radius) {
@@ -393,7 +394,7 @@
             },
             pose: function (phase) {
                 const press = swing01(phase);
-                const hand = [lerp(67, 62, press), lerp(45, 9, press)];
+                const hand = [lerp(67, 62, press), lerp(37, 18, press)];
                 return {
                     hip: [59, 76 + 1.5 * Math.sin(phase * 2 * Math.PI)],
                     torso: 2,
@@ -410,8 +411,8 @@
                     torso: 2 + breath,
                     frontFoot: [62, FLOOR_Y],
                     backFoot: [56, FLOOR_Y],
-                    frontHand: [64, 98],
-                    backHand: [61, 99],
+                    frontHand: [65, 63],
+                    backHand: [62, 64],
                     elbowBend: 1
                 };
             },
@@ -561,67 +562,20 @@
         }
 
 
-        // B4: thoại truyện tranh — cứ 12 giây một người nói một câu, hiện 3 giây, không lặp tới khi hết danh sách.
-        //     Câu chữ hiển thị (tiếng Việt / tiếng Anh tùy câu); chú thích tiếng Anh ở trên mỗi câu.
+        // B4: khẩu lệnh ngắn theo nhịp tập, không dùng khẩu hiệu của thương hiệu khác.
         const SPEECH_EVERY = 12000;
         const SPEECH_FOR = 3000;
         const speechLines = [
-            // Nike slogan: "Just do it!"
-            "Just do it!",
-            // "I train for passion. My passion is dinner."
-            "Tập vì đam mê. Đam mê ăn tối.",
-            // "No pain, no gain!"
-            "No pain, no gain!",
-            // "Just one more rep... (a lie)"
-            "Thêm một rep nữa thôi… (nói dối đấy)",
-            // "Leg day? No escaping it today."
-            "Leg day à? Hôm nay hết đường trốn.",
-            // "Sweat today, six-pack tomorrow."
-            "Mồ hôi hôm nay, sáu múi ngày mai.",
-            // Ronnie Coleman: "Light weight, baby!"
-            "Light weight, baby!",
-            // "Legs on fire, mind still chill."
-            "Đùi đang cháy, đầu vẫn chill.",
-            // "Abs loading... 12%"
-            "Cơ bụng đang tải… 12%",
-            // "Breathe in... breathe out... keep going."
-            "Hít vào… thở ra… tập tiếp.",
-            // "Yesterday I said tomorrow. Today is tomorrow."
-            "Hôm qua hẹn mai tập. Hôm nay là mai rồi.",
-            // "The weight is not heavy, I am just not used to it."
-            "Tạ không nặng, chỉ là chưa quen.",
-            // "Good form first, heavy weight later."
-            "Form chuẩn trước, tạ nặng sau.",
-            // "Only 30 seconds of rest, okay?"
-            "Nghỉ 30 giây thôi đấy nhé.",
-            // "Who took my 10 kg dumbbell?"
-            "Ai cầm nhầm cục tạ 10kg của tôi?",
-            // Ronnie Coleman: "Yeah buddy!"
-            "Yeah buddy!",
-            // "Had water yet? Go drink."
-            "Uống nước chưa? Uống đi.",
-            // "What should I eat after the gym?"
-            "Tập xong ăn gì đây ta?",
-            // "Cardio today, stairs win tomorrow."
-            "Cardio hôm nay, mai leo cầu thang vẫn thua.",
-            // "One more rep!"
-            "One more rep!",
-            // "Shed sweat, not excuses."
-            "Đổ mồ hôi, đừng đổ lỗi.",
-            // "20 push-ups, 0 drama."
-            "Hít đất 20 cái, hít drama 0 cái.",
-            // "Trust the process."
-            "Trust the process.",
-            // "The mirror says: keep going."
-            "Gương bảo: tập tiếp đi.",
-            // "Stretching counts as training, right?"
-            "Giãn cơ cũng tính là tập mà, đúng không?",
-            // "Tomorrow my legs will file a complaint."
-            "Mai chân tôi sẽ gửi đơn khiếu nại.",
-            // "Light weights only; the deadline pressure is the heavy part."
-            "Tạ nhẹ thôi, áp lực deadline mới nặng.",
-            // "Coach is watching, smile!"
-            "PT đang nhìn kìa, cười lên!"
+            "Giữ nhịp. Giữ form.",
+            "Tập chắc từng rep.",
+            "Đẩy hết nhịp này!",
+            "Kiểm soát nhịp thở.",
+            "Vai vững. Lưng thẳng.",
+            "Thêm một rep chuẩn.",
+            "Chân bám sàn. Mắt nhìn trước.",
+            "Nâng có kiểm soát.",
+            "Nghỉ đủ rồi tiếp tục.",
+            "Lực đến từ kỹ thuật."
         ];
         const bubble = document.createElement("span");
         bubble.className = "wx-gym__speech";
@@ -706,8 +660,10 @@
             }
         }
 
-        scene.addEventListener("mouseenter", function () { speed = 1.5; });
-        scene.addEventListener("mouseleave", function () { speed = 1; });
+        // Cảnh không bắt pointer để nút tạm dừng luôn dùng được; panel cha điều khiển nhịp hover.
+        const panel = scene.closest(".wx-gym-panel") || scene;
+        panel.addEventListener("mouseenter", function () { speed = 1.35; });
+        panel.addEventListener("mouseleave", function () { speed = 1; });
         document.addEventListener("visibilitychange", function () {
             last = 0;
             schedule();

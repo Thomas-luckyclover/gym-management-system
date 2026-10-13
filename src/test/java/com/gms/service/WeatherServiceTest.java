@@ -140,6 +140,51 @@ class WeatherServiceTest {
         assertEquals(2, client.calls);
     }
 
+    @Test
+    void retainsLastSuccessWithTimestampWhileRetryingAnApiFailure() {
+        LocalDateTime firstFetch = LocalDateTime.of(2026, 10, 9, 9, 0);
+        AtomicReference<LocalDateTime> now = new AtomicReference<>(firstFetch);
+        FakeWeatherClient client = new FakeWeatherClient(forecast(0, 0, 31, 32, 0, true));
+        WeatherService service = new WeatherService(client, now::get, "Hà Nội", "21.0285", "105.8542");
+
+        WeatherView first = service.getTodayWeather();
+        assertEquals(firstFetch, first.getUpdatedAt());
+        assertEquals(false, first.isStale());
+
+        client.failuresRemaining = 1;
+        now.set(firstFetch.plusMinutes(30));
+        WeatherView stale = service.getTodayWeather();
+        assertNotNull(stale);
+        assertEquals(first.getTemperature(), stale.getTemperature());
+        assertEquals(firstFetch, stale.getUpdatedAt());
+        assertEquals(true, stale.isStale());
+
+        now.set(firstFetch.plusMinutes(34));
+        assertEquals(true, service.getTodayWeather().isStale());
+        assertEquals(2, client.calls);
+
+        now.set(firstFetch.plusMinutes(35));
+        WeatherView refreshed = service.getTodayWeather();
+        assertEquals(false, refreshed.isStale());
+        assertEquals(now.get(), refreshed.getUpdatedAt());
+        assertEquals(3, client.calls);
+    }
+
+    @Test
+    void neverShowsYesterdayAsTodayIfMidnightRetryFails() {
+        AtomicReference<LocalDateTime> now = new AtomicReference<>(LocalDateTime.of(2026, 10, 9, 23, 55));
+        FakeWeatherClient client = new FakeWeatherClient(forecast(0, 0, 31, 32, 0, true));
+        WeatherService service = new WeatherService(client, now::get, "Hà Nội", "21.0285", "105.8542");
+
+        assertNotNull(service.getTodayWeather());
+        client.failuresRemaining = 1;
+        now.set(LocalDateTime.of(2026, 10, 10, 0, 1));
+        assertNull(service.getTodayWeather());
+        now.set(LocalDateTime.of(2026, 10, 10, 0, 4));
+        assertNull(service.getTodayWeather());
+        assertEquals(2, client.calls);
+    }
+
     /** Thay API thật bằng dữ liệu cố định để test thời gian cache. */
     private static class FakeWeatherClient extends WeatherClient {
         private final WeatherForecast forecast;

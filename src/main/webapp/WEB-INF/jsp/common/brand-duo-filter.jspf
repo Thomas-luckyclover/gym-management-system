@@ -11,4 +11,4 @@
     </feComponentTransfer>
   </filter>
 </svg>
-<style>.duo > img { filter: url(#gms-duo); } a:is(:hover, :focus-visible) .duo > img, .duo:hover > img { filter: none; }</style>
+<style>.duo > img, .post-thumb { filter: url(#gms-duo); transition: filter .4s; } a:is(:hover, :focus-visible) :is(.duo > img, .post-thumb), .duo:hover > img { filter: none; }</style>

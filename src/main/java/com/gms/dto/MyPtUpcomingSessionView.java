@@ -25,6 +25,9 @@ public class MyPtUpcomingSessionView {
     private final LocalDate slotDate;
     private final LocalTime startTime;
     private final LocalTime endTime;
+    // Thời hạn của lần mua gói, không phải ngày của buổi tập.
+    private LocalDate packageStartDate;
+    private LocalDate packageEndDate;
     // DAO dùng EXISTS theo ngày tập: Service xét Membership/DayPass/bảo lưu như JOB-04.
     // Các cờ không in trực tiếp; Service chuyển thành cảnh báo dễ hiểu.
     private final boolean holderHasMembership;
@@ -78,6 +81,20 @@ public class MyPtUpcomingSessionView {
     /** Mã gói để nối bộ lọc sau này. */
     public int getSubscriptionId() {
         return subscriptionId;
+    }
+
+    public LocalDate getPackageStartDate() {
+        return packageStartDate;
+    }
+
+    public LocalDate getPackageEndDate() {
+        return packageEndDate;
+    }
+
+    /** DAO điền thời hạn gốc từ Subscriptions; buổi lẻ không có thời hạn gói. */
+    public void setPackageTerm(LocalDate packageStartDate, LocalDate packageEndDate) {
+        this.packageStartDate = packageStartDate;
+        this.packageEndDate = packageEndDate;
     }
 
     /** Khách đứng tên, dùng xác định người đang xem. */

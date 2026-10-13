@@ -13,10 +13,10 @@
     <%@ include file="/WEB-INF/jsp/common/head.jspf" %>
     <title>Lịch tập của tôi · Super Gym</title>
     <link rel="stylesheet" href="${pageContext.request.contextPath}/css/pages/customer/dashboard.css?v=20261013c">
-    <link rel="stylesheet" href="${pageContext.request.contextPath}/css/pages/customer/my-pt-sessions.css?v=17">
-    <script src="${pageContext.request.contextPath}/js/pages/customer/my-pt-sessions.js?v=1" defer></script>
+    <link rel="stylesheet" href="${pageContext.request.contextPath}/css/pages/customer/my-pt-sessions.css?v=20">
+    <script src="${pageContext.request.contextPath}/js/pages/customer/my-pt-sessions.js?v=2" defer></script>
 </head>
-<body class="dock ${themeClass}">
+<body class="dock my-pt-sessions-page ${themeClass}">
 <%@ include file="/WEB-INF/jsp/common/flash-toast.jspf" %>
 
 <div class="app">
@@ -57,7 +57,7 @@
             </nav>
 
             <%-- ===== Bộ lọc chung (sessionFilter: filter đang áp dụng; filterErrors: lỗi từng ô; filterNotApplied) =====
-                 Chỉ gồm Loại buổi, Từ ngày, Đến ngày; áp dụng cho cả Sắp tới và Lịch sử.
+                 Gói PT, Loại buổi, Từ ngày, Đến ngày áp dụng cho cả Sắp tới và Lịch sử.
                  Giá trị trong ô lấy từ ${param.*} (khách đã nhập, kể cả khi sai) để khách sửa tiếp. --%>
             <section class="my-pt-panel my-pt-filter-panel" aria-labelledby="filters-title">
                 <div class="my-pt-heading">
@@ -71,6 +71,23 @@
                     <input type="hidden" name="view" value="${activeSessionView}">
                     <fieldset class="my-pt-filters">
                         <legend class="my-pt-visually-hidden">Điều kiện lọc lịch tập</legend>
+                        <%-- Mã option là SubscriptionId; nhãn dùng tên lúc mua, PT phụ trách và thời hạn. --%>
+                        <label class="my-pt-package-filter">Gói PT
+                            <select name="subscriptionId" class="${not empty filterErrors.subscriptionId ? 'invalid' : ''}"
+                                    <c:if test="${not empty filterErrors.subscriptionId}">aria-invalid="true" aria-describedby="subscriptionIdError"</c:if>
+                                    <c:if test="${not empty ptPackageOptionsError}">disabled</c:if>>
+                                <option value="">Tất cả gói</option>
+                                <c:forEach var="packageOption" items="${ptPackageOptions}">
+                                    <option value="${packageOption.subscriptionId}" ${sessionFilter.subscriptionId eq packageOption.subscriptionId ? 'selected' : ''}><c:out value="${packageOption.packageName}" /> · <c:out value="${packageOption.ptName}" /> · <c:out value="${gms:formatDate(packageOption.startDate)}" />–<c:out value="${gms:formatDate(packageOption.endDate)}" /> · Gói #<c:out value="${packageOption.subscriptionId}" /></option>
+                                </c:forEach>
+                            </select>
+                            <c:if test="${not empty filterErrors.subscriptionId}">
+                                <span id="subscriptionIdError" class="field-error"><c:out value="${filterErrors.subscriptionId}" /></span>
+                            </c:if>
+                            <c:if test="${not empty ptPackageOptionsError}">
+                                <span class="field-error"><c:out value="${ptPackageOptionsError}" /></span>
+                            </c:if>
+                        </label>
                         <%-- 2. Loại buổi: value là mã DB, Service chỉ nhận 3 loại này. --%>
                         <label>Loại buổi
                             <select name="type" class="${not empty filterErrors.type ? 'invalid' : ''}"
@@ -155,10 +172,15 @@
                                     </div>
                                     <div class="my-pt-day-sessions">
                                         <%-- 3. Service chỉ trả Scheduled chưa kết thúc; JSP không tự tính giờ/quyền vào gym. --%>
+                                        <%-- Mỗi ptSession là một buổi; sessionId xác định buổi, inProgress cho biết buổi đã bắt đầu. --%>
                                         <c:forEach var="ptSession" items="${day.value}">
                                             <article class="my-pt-session">
                                                 <div class="my-pt-session-time">
                                                     <p class="my-pt-session-hours"><span><c:out value="${gms:formatTime(ptSession.startTime)}" /></span><span class="my-pt-time-separator" aria-hidden="true">–</span><span><c:out value="${gms:formatTime(ptSession.endTime)}" /></span></p>
+                                                    <button type="button" class="my-pt-cancel-button" data-cancel-session-id="${ptSession.sessionId}">
+                                                        <i class="fa-solid fa-xmark" aria-hidden="true"></i>
+                                                        Hủy buổi
+                                                    </button>
                                     </div>
                                     <div class="my-pt-session-content">
                                         <div class="my-pt-session-heading">
@@ -169,6 +191,9 @@
                                             </c:if>
                                         </div>
                                         <p class="my-pt-caption"><c:out value="${ptSession.packageName}" /> · <c:out value="${ptSession.subscriptionTypeLabel}" /></p>
+                                        <c:if test="${not empty ptSession.packageStartDate}">
+                                            <p class="my-pt-caption my-pt-package-term">Thời hạn gói: <c:out value="${gms:formatDate(ptSession.packageStartDate)}" />–<c:out value="${gms:formatDate(ptSession.packageEndDate)}" /> · Gói #<c:out value="${ptSession.subscriptionId}" /></p>
+                                        </c:if>
                                         <c:if test="${not empty ptSession.partnerName}">
                                             <p class="my-pt-caption">Tập cùng: <c:out value="${ptSession.partnerName}" /></p>
                                         </c:if>
@@ -176,7 +201,6 @@
                                         <c:if test="${not empty ptSession.warning}">
                                             <p class="my-pt-session-warning"><c:out value="${ptSession.warning}" /></p>
                                         </c:if>
-                                        <%-- Chưa nối backend đổi/hủy nên không hiện nút thao tác giả. --%>
                                     </div>
                                 </article>
                             </c:forEach>
@@ -196,6 +220,7 @@
                                 <c:when test="${upcomingPage.currentPage gt 1}">
                                     <c:url var="upcomingPrevUrl" value="/customer/pt-sessions">
                                         <c:if test="${not empty param.type}"><c:param name="type" value="${param.type}" /></c:if>
+                                        <c:if test="${not empty param.subscriptionId}"><c:param name="subscriptionId" value="${param.subscriptionId}" /></c:if>
                                         <c:if test="${not empty param.dateFrom}"><c:param name="dateFrom" value="${param.dateFrom}" /></c:if>
                                         <c:if test="${not empty param.dateTo}"><c:param name="dateTo" value="${param.dateTo}" /></c:if>
                                         <c:if test="${not empty param.historyStatus}"><c:param name="historyStatus" value="${param.historyStatus}" /></c:if>
@@ -210,6 +235,7 @@
                                 <c:when test="${upcomingPage.currentPage lt upcomingPage.totalPages}">
                                     <c:url var="upcomingNextUrl" value="/customer/pt-sessions">
                                         <c:if test="${not empty param.type}"><c:param name="type" value="${param.type}" /></c:if>
+                                        <c:if test="${not empty param.subscriptionId}"><c:param name="subscriptionId" value="${param.subscriptionId}" /></c:if>
                                         <c:if test="${not empty param.dateFrom}"><c:param name="dateFrom" value="${param.dateFrom}" /></c:if>
                                         <c:if test="${not empty param.dateTo}"><c:param name="dateTo" value="${param.dateTo}" /></c:if>
                                         <c:if test="${not empty param.historyStatus}"><c:param name="historyStatus" value="${param.historyStatus}" /></c:if>
@@ -254,6 +280,7 @@
                             <c:param name="view" value="history" />
                             <c:param name="upcomingPage" value="${not empty upcomingPage ? upcomingPage.currentPage : 1}" />
                             <c:if test="${not empty param.type}"><c:param name="type" value="${param.type}" /></c:if>
+                            <c:if test="${not empty param.subscriptionId}"><c:param name="subscriptionId" value="${param.subscriptionId}" /></c:if>
                             <c:if test="${not empty param.dateFrom}"><c:param name="dateFrom" value="${param.dateFrom}" /></c:if>
                             <c:if test="${not empty param.dateTo}"><c:param name="dateTo" value="${param.dateTo}" /></c:if>
                             <c:if test="${not empty optionValue}"><c:param name="historyStatus" value="${optionValue}" /></c:if>
@@ -315,6 +342,9 @@
                                             </div>
                                         </div>
                                         <p class="my-pt-caption"><c:out value="${historySession.packageName}" /> · <c:out value="${historySession.subscriptionTypeLabel}" /></p>
+                                        <c:if test="${not empty historySession.packageStartDate}">
+                                            <p class="my-pt-caption my-pt-package-term">Thời hạn gói: <c:out value="${gms:formatDate(historySession.packageStartDate)}" />–<c:out value="${gms:formatDate(historySession.packageEndDate)}" /> · Gói #<c:out value="${historySession.subscriptionId}" /></p>
+                                        </c:if>
                                         <c:if test="${not empty historySession.partnerName}">
                                             <p class="my-pt-caption">Tập cùng: <c:out value="${historySession.partnerName}" /></p>
                                         </c:if>
@@ -322,9 +352,12 @@
                                         <c:if test="${not empty historySession.explanation}">
                                             <p class="my-pt-session-note"><c:out value="${historySession.explanation}" /></p>
                                         </c:if>
-                                        <%-- Lý do hủy PT đã chọn, in nguyên văn khi có. --%>
+                                        <c:if test="${not empty historySession.cancelledAt}">
+                                            <p class="my-pt-session-note">Thời điểm hủy: <c:out value="${gms:formatDateTime(historySession.cancelledAt)}" /></p>
+                                        </c:if>
+                                        <%-- Lý do đã lưu lúc hủy, in nguyên văn khi có. --%>
                                         <c:if test="${not empty historySession.cancelReason}">
-                                            <p class="my-pt-session-note">Lý do: <c:out value="${historySession.cancelReason}" /></p>
+                                            <p class="my-pt-session-note">Lý do đã ghi nhận: <c:out value="${historySession.cancelReason}" /></p>
                                         </c:if>
                                     </div>
                                 </article>
@@ -345,6 +378,7 @@
                                 <c:when test="${historyPage.currentPage gt 1}">
                                     <c:url var="historyPrevUrl" value="/customer/pt-sessions">
                                         <c:if test="${not empty param.type}"><c:param name="type" value="${param.type}" /></c:if>
+                                        <c:if test="${not empty param.subscriptionId}"><c:param name="subscriptionId" value="${param.subscriptionId}" /></c:if>
                                         <c:if test="${not empty param.dateFrom}"><c:param name="dateFrom" value="${param.dateFrom}" /></c:if>
                                         <c:if test="${not empty param.dateTo}"><c:param name="dateTo" value="${param.dateTo}" /></c:if>
                                         <c:if test="${not empty param.historyStatus}"><c:param name="historyStatus" value="${param.historyStatus}" /></c:if>
@@ -359,6 +393,7 @@
                                 <c:when test="${historyPage.currentPage lt historyPage.totalPages}">
                                     <c:url var="historyNextUrl" value="/customer/pt-sessions">
                                         <c:if test="${not empty param.type}"><c:param name="type" value="${param.type}" /></c:if>
+                                        <c:if test="${not empty param.subscriptionId}"><c:param name="subscriptionId" value="${param.subscriptionId}" /></c:if>
                                         <c:if test="${not empty param.dateFrom}"><c:param name="dateFrom" value="${param.dateFrom}" /></c:if>
                                         <c:if test="${not empty param.dateTo}"><c:param name="dateTo" value="${param.dateTo}" /></c:if>
                                         <c:if test="${not empty param.historyStatus}"><c:param name="historyStatus" value="${param.historyStatus}" /></c:if>
@@ -381,7 +416,7 @@
                         <%-- Giải thích chỉ hiện khi hover/focus nút i, cùng cách dùng với PT Dashboard. --%>
                         <details class="my-pt-info"><summary aria-label="Giải thích thông tin gói PT"><svg viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="currentColor" stroke-width="1.8" aria-hidden="true"><circle cx="12" cy="12" r="9"/><path d="M12 11v6m0-10v1"/></svg></summary><div class="my-pt-help">
                                 <strong>Tổng số buổi:</strong> số buổi được tạo khi thanh toán gói.<br>
-                                <strong>Buổi chưa chốt:</strong> gồm buổi sắp tới và buổi đang chờ kết quả.<br>
+                                <strong>Buổi sắp tới:</strong> buổi còn trong lịch và chưa bắt đầu; không gồm buổi đang diễn ra, chờ kết quả hoặc đã hủy.<br>
                                 <strong>Lượt đổi còn lại:</strong> theo giới hạn lúc mua gói. Với gói đôi, hai thành viên dùng chung số buổi và lượt đổi.
                             </div></details>
                     </div>
@@ -431,15 +466,15 @@
                                         </div>
                                     </dl>
 
-                                    <%-- Tổng buổi sinh lúc Paid; chưa chốt là COUNT Scheduled, không phải tổng trừ đã tập. --%>
+                                    <%-- Tổng buổi sinh lúc Paid; sắp tới chỉ đếm Scheduled chưa đến giờ bắt đầu. --%>
                                     <dl class="my-pt-package-stats">
                                         <div>
                                             <dt>Tổng số buổi</dt>
                                             <dd><c:out value="${ptPackage.generatedSessionCount}" /></dd>
                                         </div>
                                         <div>
-                                            <dt>Buổi chưa chốt</dt>
-                                            <dd><c:out value="${ptPackage.scheduledSessionCount}" /></dd>
+                                            <dt>Buổi sắp tới</dt>
+                                            <dd><c:out value="${ptPackage.upcomingSessionCount}" /></dd>
                                         </div>
                                         <div>
                                             <dt>Lượt đổi còn lại</dt>

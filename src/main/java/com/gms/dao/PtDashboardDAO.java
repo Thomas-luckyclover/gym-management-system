@@ -50,7 +50,7 @@ public class PtDashboardDAO {
                 LEFT JOIN Persons pp ON pp.PersonId = pc.PersonId
                 WHERE s.PtEmployeeId = ?
                   AND t.SlotDate BETWEEN ? AND ?
-                ORDER BY t.SlotDate, t.StartTime, s.SessionId
+                ORDER BY t.SlotDate DESC, t.StartTime, s.SessionId DESC
                 """;
 
         List<PtSessionView> sessions = new ArrayList<>();

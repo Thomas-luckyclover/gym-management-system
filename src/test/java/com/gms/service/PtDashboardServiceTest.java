@@ -24,7 +24,6 @@ class PtDashboardServiceTest {
         "SCHEDULED, 2026-10-07T16:59, false",
         "SCHEDULED, 2026-10-06T18:00, false",
         "CHECKED_IN, 2026-10-08T08:00, false",
-        "MISSED, 2026-10-08T08:00, false",
         "CANCELLED, 2026-10-08T08:00, false"
     })
     void opensDialogOnlyForScheduledSessionBeforeStart(Session.Status status,
@@ -41,7 +40,6 @@ class PtDashboardServiceTest {
     @CsvSource({
         "SCHEDULED, Đã lên lịch, badge-warning",
         "CHECKED_IN, Đã check-in, badge-success",
-        "MISSED, Vắng, badge-danger",
         "CANCELLED, Đã hủy, badge-neutral"
     })
     void displaysVietnameseStatusWithExistingBadge(Session.Status status,
@@ -76,13 +74,23 @@ class PtDashboardServiceTest {
     })
     void displaysMissedReasonOnlyOnMissedSession(Session.MissedReason reason,
             String label) throws SQLException {
-        PtSessionView session = createSession(Package.Type.PT_COUPLE, Session.Status.MISSED, reason, NOW);
+        PtSessionView session = createSession(Package.Type.PT_COUPLE, Session.Status.MISSED, reason, NOW.minusDays(1));
         service.prepareSessionDisplay(session, NOW);
         assertEquals(label, session.getMissedReasonLabel());
 
         PtSessionView scheduled = createSession(Package.Type.PT_COUPLE, Session.Status.SCHEDULED, reason, NOW);
         service.prepareSessionDisplay(scheduled, NOW);
         assertNull(scheduled.getMissedReasonLabel());
+    }
+
+    @ParameterizedTest
+    @CsvSource({"2026-10-07T08:00", "2026-10-08T08:00"})
+    void rejectsMissedSessionBeforeItsDayHasPassed(LocalDateTime startsAt) {
+        PtSessionView session = createSession(Package.Type.PT_SINGLE,
+                Session.Status.MISSED, Session.MissedReason.NO_CHECK_IN, startsAt);
+
+        assertThrows(SQLException.class, () -> service.prepareSessionDisplay(session, NOW));
+        assertEquals(Session.Status.MISSED, session.getStatus());
     }
 
     @Test

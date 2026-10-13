@@ -9,6 +9,7 @@ import com.gms.dto.MyPtPackageView;
 import com.gms.dto.MyPtSessionFilter;
 import com.gms.dto.MyPtSessionPage;
 import com.gms.dto.MyPtUpcomingSessionView;
+import com.gms.dto.PtSessionCancelInfo;
 import com.gms.dto.ServiceResult;
 import com.gms.entity.Account;
 import com.gms.entity.Customer;
@@ -47,6 +48,15 @@ public class MyPtSessionService {
      * @return danh sách gói (có thể rỗng), hoặc thông báo lỗi quyền/truy vấn
      */
     public ServiceResult<List<MyPtPackageView>> getPtPackages(int accountId) {
+        return getPtPackages(accountId, true);
+    }
+
+    /** Gói đã thanh toán, kể cả gói cũ, để lọc lịch sử; quyền xem như danh sách đang dùng. */
+    public ServiceResult<List<MyPtPackageView>> getPtPackageOptions(int accountId) {
+        return getPtPackages(accountId, false);
+    }
+
+    private ServiceResult<List<MyPtPackageView>> getPtPackages(int accountId, boolean activeOnly) {
         try {
             // B1: kiểm tra tài khoản tồn tại và còn hoạt động (GBR-10).
             Account account = accountDAO.findById(accountId);
@@ -65,7 +75,10 @@ public class MyPtSessionService {
             // B3: lấy gói đã mua có Subscriptions.Status = Active mà khách đứng tên/đi cùng (DBR-54).
             // Không xét Packages.Status: ngừng bán danh mục không làm mất gói khách đã mua.
             // Đọc trạng thái Subscription đang lưu; không tự hết hạn gói hay chốt buổi thay job.
-            List<MyPtPackageView> ptPackages = sessionDAO.findActivePtPackages(customerId);
+            LocalDateTime now = DateTimeUtil.now();
+            List<MyPtPackageView> ptPackages = activeOnly
+                    ? sessionDAO.findActivePtPackages(customerId, now)
+                    : sessionDAO.findPtPackageOptions(customerId, now);
 
             // B4: điền dữ liệu hiển thị vào từng DTO do DAO tạo.
             for (MyPtPackageView ptPackage : ptPackages) {
@@ -156,7 +169,7 @@ public class MyPtSessionService {
         // B1: nhãn Hôm nay/Đang diễn ra dùng cùng thời điểm với điều kiện truy vấn.
         LocalDateTime startsAt = session.getSlotDate().atTime(session.getStartTime());
         session.setToday(session.getSlotDate().equals(now.toLocalDate()));
-        session.setInProgress(!startsAt.isAfter(now));
+        session.setInProgress(!startsAt.isAfter(now)); // so giờ bắt đầu với giờ hiện tại để xem buổi tập đã diễn ra chưa
         String subscriptionTypeLabel = switch (session.getSubscriptionType()) {
             case PT_SINGLE -> "PT cá nhân";
             case PT_COUPLE -> "PT đôi";
@@ -331,8 +344,8 @@ public class MyPtSessionService {
         return switch (cancelType) {
             case BY_PT -> "PT đã hủy buổi này.";
             case BY_CUSTOMER -> isCouple
-                    ? "Một trong hai thành viên đã hủy buổi này. Buổi này vẫn bị trừ khỏi gói và không được hoàn tiền."
-                    : "Bạn đã hủy buổi này. Buổi này vẫn bị trừ khỏi gói và không được hoàn tiền.";
+                    ? "Buổi được hủy theo yêu cầu của một thành viên. Gói vẫn bị trừ một buổi và không hoàn tiền."
+                    : "Buổi được hủy theo yêu cầu của bạn. Gói vẫn bị trừ một buổi và không hoàn tiền.";
             case GYM_CLOSED -> "Phòng tập đóng cửa vào ngày này nên buổi bị hủy.";
             case PACKAGE_EXPIRED -> "Gói PT đã hết hạn nên buổi chưa tập bị hủy.";
         };
@@ -379,6 +392,12 @@ public class MyPtSessionService {
      */
     public ServiceResult<MyPtSessionFilter> parseFilter(String type, String dateFrom, String dateTo,
             String historyStatus) {
+        return parseFilter(type, dateFrom, dateTo, historyStatus, null, null);
+    }
+
+    /** Khi đã tải lựa chọn, từ chối mã không thuộc danh sách gói khách được xem. */
+    public ServiceResult<MyPtSessionFilter> parseFilter(String type, String dateFrom, String dateTo,
+            String historyStatus, String subscriptionIdValue, List<MyPtPackageView> packageOptions) {
         // LinkedHashMap giữ thứ tự ô trên form khi hiện lỗi.
         Map<String, String> fieldErrors = new LinkedHashMap<>();
 
@@ -419,11 +438,36 @@ public class MyPtSessionService {
             }
         }
 
-        // B5: có lỗi thì không tạo filter, tránh áp dụng một phần điều kiện.
+        // B5: mã gói chỉ nhận số nguyên dương, không ghép chuỗi người dùng vào SQL.
+        Integer subscriptionId = null;
+        if (!ValidationUtil.isNullOrEmpty(subscriptionIdValue)) {
+            try {
+                subscriptionId = Integer.valueOf(subscriptionIdValue.trim());
+                if (subscriptionId <= 0) {
+                    fieldErrors.put("subscriptionId", Messages.MSG108_INVALID_OPTION);
+                } else if (packageOptions != null) {
+                    boolean isOwnedPackage = false;
+                    for (MyPtPackageView option : packageOptions) {
+                        if (option.getSubscriptionId() == subscriptionId) {
+                            isOwnedPackage = true;
+                            break;
+                        }
+                    }
+                    if (!isOwnedPackage) {
+                        fieldErrors.put("subscriptionId", Messages.MSG108_INVALID_OPTION);
+                    }
+                }
+            } catch (NumberFormatException exception) {
+                fieldErrors.put("subscriptionId", Messages.MSG108_INVALID_OPTION);
+            }
+        }
+
+        // B6: có lỗi thì không tạo filter, tránh áp dụng một phần điều kiện.
         if (!fieldErrors.isEmpty()) {
             return ServiceResult.failFields(fieldErrors);
         }
-        return ServiceResult.ok(new MyPtSessionFilter(subscriptionType, fromDate, toDate, status));
+        return ServiceResult.ok(new MyPtSessionFilter(subscriptionType, fromDate, toDate, status,
+                subscriptionId));
     }
 
     // =====================================================================
@@ -551,6 +595,82 @@ public class MyPtSessionService {
             return pageNumber;
         } catch (NumberFormatException exception) {
             return 1;
+        }
+    }
+
+    /**
+     * Hủy buổi tập PT do khách đăng nhập yêu cầu (BR-79: khách tự hủy vẫn tiêu buổi, không hoàn).
+     * <p>Quy trình:
+     * <ol>
+     *   <li>Kiểm tra tài khoản còn hoạt động, khách có hồ sơ (GBR-10).</li>
+     *   <li>Đọc buổi + slot + gói qua DAO; phân biệt 404 (không thấy) với 403 (không phải của tôi).</li>
+     *   <li>Chỉ cho hủy khi Status = Scheduled và buổi chưa kết thúc (MSG91).</li>
+     *   <li>Gói PT phải còn Active; nếu Expired/Cancelled thì JOB-02 xử lý (MSG105).</li>
+     *   <li>Gọi DAO UPDATE; nếu không update được 1 dòng → có người vừa đổi → MSG22.</li>
+     * </ol>
+     * Mọi thông báo lỗi dùng Messages, không để lộ chi tiết kỹ thuật.
+     *
+     * @param accountId tài khoản từ session, dùng để tìm customerId
+     * @param sessionId buổi cần hủy
+     * @return ServiceResult thành công (data = null) hoặc thất bại có message
+     */
+    public ServiceResult<Void> cancelPtSession(int accountId, int sessionId) {
+        try {
+            // B1: xác thực tài khoản + tìm customerId.
+            Account account = accountDAO.findById(accountId);
+            if (account == null || account.getStatus() != Account.Status.ACTIVE) {
+                return ServiceResult.fail(Messages.MSG07_NO_PERMISSION);
+            }
+            Customer customer = customerDAO.findByPersonId(account.getPersonId());
+            if (customer == null || customer.getDeletedAt() != null) {
+                return ServiceResult.fail(Messages.MSG07_NO_PERMISSION);
+            }
+            int customerId = customer.getCustomerId();
+
+            // B2: đọc buổi + slot + gói để xác định quyền, thời điểm, trạng thái.
+            PtSessionCancelInfo info = sessionDAO.findSessionForCancel(sessionId);
+            if (info == null) {
+                // Không lộ sự tồn tại của buổi lạ: cùng message với "buổi không phải của tôi".
+                return ServiceResult.fail(Messages.MSG07_NO_PERMISSION);
+            }
+            // B2.1: buổi thuộc khách đăng nhập?
+            //    Gói đôi: người đứng tên hoặc người đi cùng đều được hủy buổi của mình.
+            //    Gói cá nhân / buổi lẻ: chỉ người đứng tên.
+            boolean isHolder = info.getCustomerId() == customerId;
+            boolean isPartner = info.getPartnerCustomerId() != null
+                    && info.getPartnerCustomerId() == customerId;
+            if (!isHolder && !isPartner) {
+                return ServiceResult.fail(Messages.MSG07_NO_PERMISSION);
+            }
+
+            // B3: chỉ cho hủy khi buổi đang Scheduled. CheckedIn/Missed/Cancelled thì báo lỗi chung.
+            if (!"Scheduled".equals(info.getSessionStatus())) {
+                return ServiceResult.fail(Messages.MSG91_SESSION_CANNOT_CHANGE);
+            }
+
+            // B4: gói phải còn Active. Nếu Expired/Cancelled thì không cho khách hủy;
+            //     buổi sẽ do JOB-02 chốt với CancelType = PackageExpired (CBR-55).
+            if (!"Active".equals(info.getSubscriptionStatus())) {
+                return ServiceResult.fail(Messages.MSG105_ACTION_OUTSIDE_WINDOW);
+            }
+
+            // B5: khách được hủy trước khi buổi kết thúc, kể cả khi buổi đang diễn ra.
+            LocalDateTime endsAt = info.getSlotDate().atTime(info.getEndTime());
+            LocalDateTime now = DateTimeUtil.now();
+            if (!now.isBefore(endsAt)) {
+                return ServiceResult.fail(Messages.MSG91_SESSION_CANNOT_CHANGE);
+            }
+
+            // B6: UPDATE buổi với điều kiện Status = 'Scheduled' (chống double-submit).
+            boolean updated = sessionDAO.cancelSessionByCustomer(sessionId, accountId);
+            if (!updated) {
+                // Có người vừa đổi trạng thái giữa lúc ta đọc và ghi.
+                return ServiceResult.fail(Messages.MSG22_CONCURRENT_EDIT);
+            }
+            return ServiceResult.ok(null, Messages.MSG110_SESSION_CANCELLED);
+        } catch (SQLException exception) {
+            exception.printStackTrace();
+            return ServiceResult.fail(Messages.MSG04_SYSTEM_BUSY);
         }
     }
 }
