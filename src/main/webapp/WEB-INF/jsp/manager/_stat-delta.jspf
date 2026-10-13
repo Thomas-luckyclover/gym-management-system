@@ -1,0 +1,13 @@
+<%@ page pageEncoding="UTF-8" %>
+<%-- Dòng so sánh với kỳ trước dưới ô bảng điểm. Trang gọi đặt biến delta (Integer % hoặc null) trước khi include.
+     Dữ liệu: reportDeltas do ManagerDashboardServlet.buildDeltas() tính. --%>
+<c:if test="${not empty reportDeltas}">
+<div class="stat-delta ${empty delta ? 'is-flat' : (delta gt 0 ? 'is-up' : (delta lt 0 ? 'is-down' : 'is-flat'))}">
+    <c:choose>
+        <c:when test="${empty delta}">Kỳ trước chưa có dữ liệu</c:when>
+        <c:when test="${delta gt 0}"><i class="fa-solid fa-arrow-trend-up" aria-hidden="true"></i> Tăng ${delta}% so với kỳ trước</c:when>
+        <c:when test="${delta lt 0}"><i class="fa-solid fa-arrow-trend-down" aria-hidden="true"></i> Giảm ${-delta}% so với kỳ trước</c:when>
+        <c:otherwise>Bằng kỳ trước</c:otherwise>
+    </c:choose>
+</div>
+</c:if>

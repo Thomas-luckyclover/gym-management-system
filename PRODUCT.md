@@ -10,7 +10,7 @@ web
 
 Super Gym là một phòng gym giả lập, làm cho đồ án môn SWP391 (nhóm G5). Hệ thống phải được thiết kế như một sản phẩm thật dành cho phòng gym ở Việt Nam. Người đánh giá trực tiếp là giảng viên và hội đồng, xem bản demo trên laptop hoặc máy chiếu.
 
-Phạm vi redesign là khu nội bộ, gồm mọi khu cần đăng nhập. Mỗi vai trò làm một việc riêng:
+Khu nội bộ gồm mọi khu cần đăng nhập. Mỗi vai trò làm một việc riêng:
 
 - **Customer (hội viên):** mua gói tập trực tuyến, đặt, đổi hoặc hủy buổi PT, theo dõi lịch tập, trạng thái gói và lịch sử giao dịch, xem giáo án và thực đơn, gửi góp ý.
 - **PT (huấn luyện viên):** đăng lịch rảnh, theo dõi lịch dạy và khách được giao, đánh dấu khách vắng, đổi, chuyển hoặc hủy buổi, ghi chú riêng về khách, soạn giáo án và thực đơn, gửi đơn nghỉ phép.
@@ -18,7 +18,7 @@ Phạm vi redesign là khu nội bộ, gồm mọi khu cần đăng nhập. Mỗ
 - **Manager (quản lý):** cấu hình tham số và giờ mở cửa, quản lý danh mục gói và voucher, quản lý hồ sơ nhân sự, danh mục cơ sở vật chất và bài blog. Duyệt các yêu cầu xóa khách, nghỉ phép và bảo trì. Xem giao dịch toàn hệ thống, đọc góp ý, gửi thông báo, xem dashboard tổng hợp.
 - **Admin (quản trị):** tạo và quản lý tài khoản nội bộ, xem nhật ký kiểm toán (audit log) và báo cáo vận hành.
 
-Trang công khai cho khách chưa có tài khoản (Guest: trang chủ, blog, đăng nhập/đăng ký) **không** nằm trong phạm vi redesign lần này.
+Cập nhật theo yêu cầu ngày 13/10/2026: phạm vi gồm cả khu công khai (homepage, giới thiệu, blog, đăng nhập/đăng ký) và khu nội bộ. Homepage phục vụ lựa chọn dịch vụ và đăng ký; khu nội bộ ưu tiên hoàn thành tác vụ, giảm rối và trang trí.
 
 ## Product Purpose
 
@@ -38,7 +38,7 @@ Thành công nghĩa là mỗi vai trò làm xong việc của mình nhanh, khôn
 ## Capabilities and Constraints
 
 - **Stack cố định:** Java 17, Jakarta Servlet 6, JSP 3.1/JSTL 3, Tomcat 10.1, SQL Server. Frontend là HTML/CSS/JS thuần, không framework và không có bước build cho frontend.
-- **CSS ba lớp:** `tokens.css` → `common.css` → `css/pages/<vai-trò>/<màn>.css`. Mọi CSS chỉ được dùng `var(--...)` từ `tokens.css`; cấm hard-code màu, px, font, radius hay shadow. Chỉ Leader sửa `tokens.css`.
+- **CSS ba lớp:** `tokens.css` → `common.css` → `brand-system.css` → `css/pages/<vai-trò>/<màn>.css`. Mọi CSS chỉ được dùng `var(--...)` từ `tokens.css`; cấm hard-code màu, px, font, radius hay shadow. Chỉ Leader sửa `tokens.css`.
 - **Theme theo vai trò** gắn bằng class trên `<body>`: `theme-member`, `theme-staff`, `theme-manager`, `theme-admin` (cùng `theme-guest`/`theme-guest-dark` cho khu công khai). Bản redesign phải giữ được việc mỗi vai trò nhìn ra là một khu riêng.
 - Thư viện dùng chung có sẵn: `common.js` (toast, hộp xác nhận, kiểm tra form, AJAX, đếm ngược, định dạng tiền và ngày, phân trang), `head.jspf`, `flash-toast.jspf`, và các layout `layout-<vai-trò>.jspf`.
 - Quy tắc code frontend nằm ở `docs/codeImplementationFrontend.md`: chống XSS bằng `c:out`/`escapeHtml`, phân biệt rõ trạng thái khung, rỗng, lỗi và đang tải, modal hỗ trợ Escape và trả focus, JS viết rõ ràng, không dùng cú pháp "khôn".
@@ -47,9 +47,11 @@ Thành công nghĩa là mỗi vai trò làm xong việc của mình nhanh, khôn
 
 ## Brand Commitments
 
-- Giữ tên **Super Gym** và logo hiện có: `src/main/webapp/images/logo.png` và `src/main/webapp/images/logo-mark.png`.
+- Giữ tên **Super Gym**. Logo ngày 13/10/2026: biểu tượng S hai đường cong đối hướng ember/aqua, wordmark Barlow SemiBold chuyển thành path SVG tại `src/main/webapp/images/brand/supergym-*.svg`.
 - Giữ được sự phân biệt trực quan giữa các vai trò.
-- Giữ bộ font cũ: Montserrat cho tiêu đề và số liệu, Inter cho nội dung. Người dùng đã chốt ngày 12/10/2026, không đổi sang font khác.
+- Yêu cầu mới ngày 13/10/2026 cho phép đổi font để khắc phục chữ dính nhau: Be Vietnam Pro cho nội dung/điều khiển, Barlow Condensed cho tiêu đề chiến dịch. Không tracking âm, không ép ngang chữ, chừa khoảng cho dấu tiếng Việt.
+- Homepage cân bằng sắc độ khoảng 65% cam cháy pha đỏ than và 35% aqua sâu trong các vùng màu thương hiệu; đây là tỷ trọng art direction, không phải phép đo từng pixel ảnh.
+- Pumpy giữ hình dáng, thân aqua đậm hơn: mọi xoáy bụng aqua/xanh; tạ trắng lõi cam, tạ đen lõi aqua. Giữ animation của Pumpy, sân gym và thời tiết theo yêu cầu, có tạm dừng và giảm chuyển động. Sidebar dạng mũi tên thu gọn, active bạc. Ảnh cùng trang không lặp lại thành nhiều khối nội dung.
 
 ## Evidence on Hand
 

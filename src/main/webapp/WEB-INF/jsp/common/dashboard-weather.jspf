@@ -2,69 +2,60 @@
 <%-- ===== Khối chào + thời tiết (PT Dashboard, Customer Dashboard) =====
      Biến request: weather (WeatherView, có thể null khi API lỗi), weatherType (sunny/cloudy/rain/storm/snow/wind/night/hot),
      weatherPreview (đang xem thử ?weather=), weatherGreetingName (tên), weatherAudience ("customer" | "pt").
-     Bên trái: lời chào + người chạy trên đường chạy (trang trí, aria-hidden). Bên phải: thẻ thời tiết nghiêng 3D. --%>
+     Lời chào + phòng tập chuyển động; thời tiết thật có hiệu ứng riêng trong thẻ, có nút tạm dừng. --%>
 <section class="wx-hero ${empty weather ? 'is-weather-unavailable' : ''}" aria-labelledby="welcome-title" data-reveal>
     <div class="wx-greet">
         <h2 id="welcome-title">Chào, <span class="wx-name"><c:out value="${weatherGreetingName}" default="bạn" /></span></h2>
-        <p class="wx-lead">
-            <c:choose>
-                <c:when test="${weatherAudience eq 'customer'}">Mỗi buổi tập là thêm một đoạn đường về đích. Cùng xem hôm nay có gì nhé.</c:when>
-                <c:otherwise>Lịch dạy, khách cần chú ý và hoa hồng của bạn đều ở bên dưới.</c:otherwise>
-            </c:choose>
-        </p>
 
-        <%-- Đường chạy marathon: trang trí, rê chuột để cả nhóm chạy nhanh hơn --%>
-        <div class="wx-run" aria-hidden="true">
-            <div class="wx-run__sky"></div>
-            <%-- Lớp xa → gần: khán đài, đèn pha quét, biển cây số lướt qua, vệt tốc độ --%>
-            <div class="wx-run__stadium"></div>
-            <div class="wx-run__beams"><span></span><span></span></div>
-            <div class="wx-run__signs"><span>5K</span><span>10K</span><span>21K</span><span>42K</span></div>
-            <div class="wx-run__speed"><i></i><i></i><i></i><i></i><i></i></div>
-            <%-- 4 runner marathon (kiểu ekiden Nhật) ở 4 làn xa → gần; màu áo theo --doodle-1..4 --%>
-            <div class="wx-runners">
-                <c:forEach var="runnerIndex" begin="1" end="4">
-                    <%-- Runner ekiden: khăn hachimaki, dải tasuki chéo; hông (50,70), vai (51,42). Người hơi đổ về trước 4°. --%>
-                    <svg class="wx-runner wx-runner--${runnerIndex}" viewBox="0 0 100 130">
-                        <ellipse class="wx-runner__shadow" cx="52" cy="125" rx="20" ry="3"></ellipse>
-                        <g class="wx-runner__body">
-                            <g transform="rotate(4 50 70)">
-                                <g class="wx-limb wx-arm wx-arm--back"><path d="M0 0 L1 14 L12 9"></path></g>
-                                <g class="wx-limb wx-leg wx-leg--back"><path d="M0 0 L0 26"></path><g class="wx-shin"><path d="M0 26 L0 49"></path><path class="wx-shoe" d="M-3 49 L8 49"></path></g></g>
-                                <path class="wx-shorts" d="M43 64 L58 64 L59 76 L51 75 L50.5 71 L49.5 75 L42 76 Z"></path>
-                                <path class="wx-shirt" d="M45 37 Q51.5 33 58 37 L57 66 Q51 69 44 66 Z"></path>
-                                <path class="wx-sash" d="M46 38 L56.5 64"></path>
-                                <rect class="wx-bib" x="47" y="46" width="8" height="6" rx="0.8"></rect>
-                                <circle class="wx-head" cx="54" cy="25" r="9"></circle>
-                                <path class="wx-hair" d="M45.5 23 Q46 14 55 15 Q63 16 63 23 Q57 19 51 20.5 Q47.5 21.5 45.5 23 Z"></path>
-                                <path class="wx-band" d="M45.5 23.5 Q54 19.5 62.8 23.5"></path>
-                                <path class="wx-band-tail" d="M46 23.5 Q41 22 37 19 M46 24 Q41 26 38 29"></path>
-                                <circle class="wx-eye" cx="58.5" cy="26" r="1.1"></circle>
-                                <g class="wx-limb wx-leg wx-leg--front"><path d="M0 0 L0 26"></path><g class="wx-shin"><path d="M0 26 L0 49"></path><path class="wx-shoe" d="M-3 49 L8 49"></path></g></g>
-                                <g class="wx-limb wx-arm wx-arm--front"><path d="M0 0 L1 14 L12 9"></path></g>
-                            </g>
-                        </g>
+        <%-- Phòng tập trang trí: gym-floor.js vẽ từng người; nút điều khiển nằm ngoài aria-hidden. --%>
+        <div class="wx-gym-panel">
+            <button class="dashboard-motion-toggle" type="button" data-dashboard-motion-toggle aria-pressed="false" aria-label="Tạm dừng hiệu ứng">
+                <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M8 5v14M16 5v14"></path></svg>
+                <span>Tạm dừng hiệu ứng</span>
+            </button>
+            <div class="wx-gym" aria-hidden="true" data-gym>
+                <div class="wx-gym__sky"></div>
+                <div class="wx-gym__window"></div>
+                <div class="wx-gym__wall">
+                    <svg class="wx-gym__rack" viewBox="0 0 400 60" preserveAspectRatio="xMidYMax meet">
+                        <rect class="rack-frame" x="8" y="30" width="196" height="5"></rect>
+                        <rect class="rack-frame" x="8" y="48" width="196" height="5"></rect>
+                        <rect class="rack-frame" x="10" y="30" width="5" height="30"></rect>
+                        <rect class="rack-frame" x="197" y="30" width="5" height="30"></rect>
+                        <c:forEach var="bellIndex" begin="0" end="7">
+                            <g transform="translate(${20 + bellIndex * 23} 22)"><rect class="rack-bell" x="0" y="0" width="6" height="8"></rect><rect class="rack-bar" x="6" y="3" width="8" height="2"></rect><rect class="rack-bell" x="14" y="0" width="6" height="8"></rect></g>
+                            <g transform="translate(${21 + bellIndex * 23} 40)"><rect class="rack-bell" x="0" y="0" width="5" height="7"></rect><rect class="rack-bar" x="5" y="2.5" width="8" height="2"></rect><rect class="rack-bell" x="13" y="0" width="5" height="7"></rect></g>
+                        </c:forEach>
+                        <rect class="rack-frame" x="300" y="14" width="4" height="46"></rect>
+                        <rect class="rack-frame" x="288" y="56" width="28" height="4"></rect>
+                        <circle class="rack-plate" cx="302" cy="24" r="12"></circle>
+                        <circle class="rack-plate" cx="302" cy="44" r="15"></circle>
+                        <rect class="rack-frame" x="352" y="0" width="5" height="60"></rect>
+                        <rect class="rack-frame" x="392" y="0" width="5" height="60"></rect>
+                        <rect class="rack-frame" x="352" y="4" width="45" height="4"></rect>
                     </svg>
-                </c:forEach>
-            </div>
-            <div class="wx-run__track">
-                <span class="wx-run__lanes"></span>
-                <span class="wx-run__marks"></span>
+                </div>
+                <div class="wx-gym__floor"></div>
+                <div class="wx-gym__crew">
+                    <div class="wx-athlete wx-athlete--squat" data-athlete="squat" data-hair="ponytail"><svg viewBox="0 0 120 130"></svg><span class="wx-athlete__rep"></span></div>
+                    <div class="wx-athlete wx-athlete--swing" data-athlete="swing" data-hair="buzz"><svg viewBox="0 0 120 130"></svg><span class="wx-athlete__rep"></span></div>
+                    <div class="wx-athlete wx-athlete--press" data-athlete="press" data-hair="bun"><svg viewBox="0 0 120 130"></svg><span class="wx-athlete__rep"></span></div>
+                    <div class="wx-athlete wx-athlete--ropes" data-athlete="ropes" data-hair="cap"><svg viewBox="0 0 170 130"></svg><span class="wx-athlete__rep"></span></div>
+                </div>
             </div>
         </div>
     </div>
 
     <c:if test="${not empty weather}">
         <div class="wx-card" data-tilt aria-label="Thời tiết hôm nay tại phòng gym">
-            <%-- Lớp hiệu ứng trong thẻ (mưa/tuyết/nắng/sao theo weatherType) — nằm sâu phía sau, nghiêng thẻ thấy lệch 3D --%>
-            <div class="wx-card__fx" aria-hidden="true"><c:forEach var="fxIndex" begin="0" end="15"><i style="--i: ${fxIndex}"></i></c:forEach></div>
+            <div class="wx-card__fx" aria-hidden="true"><canvas class="wx-card__canvas"></canvas></div>
             <div class="wx-card__top">
                 <div>
                     <p class="wx-card__place">
-                        <c:out value="${weather.cityName}" /> · <c:out value="${weather.title}" />
+                        <c:out value="${weather.cityName}" />
                         <c:if test="${weatherPreview}"><span class="wx-card__preview">Xem trước</span></c:if>
                     </p>
-                    <p class="wx-card__condition">Hiện tại: <c:out value="${weather.conditionLabel}" /></p>
+                    <p class="wx-card__condition"><c:out value="${weather.conditionLabel}" /></p>
                 </div>
                 <%-- Icon động theo weatherType (giá trị cố định từ enum WeatherView.Mood) --%>
                 <span class="wx-icon wx-icon--${weatherType}" aria-hidden="true">
@@ -81,37 +72,60 @@
                 </span>
             </div>
 
-            <%-- Giá trị thật giữ trong HTML; common.js chỉ tạo hiệu ứng đếm, tắt JS vẫn thấy nhiệt độ. --%>
-            <strong class="wx-card__temp" data-weather-temperature="${weather.temperature}"><c:out value="${weather.temperature}" />°</strong>
+            <%-- Giá trị thật hiện nguyên vẹn; không đếm từ 0 khi mở bảng điều hành. --%>
+            <strong class="wx-card__temp" aria-label="${weather.temperature} độ C"><c:out value="${weather.temperature}" />°</strong>
 
-            <c:if test="${weather.feelsLikeTemperature != null}">
-                <dl class="wx-card__details">
-                    <div><dt>Cảm giác</dt><dd><c:out value="${weather.feelsLikeTemperature}" />°</dd></div>
-                    <div><dt>Thấp / cao</dt><dd><c:out value="${weather.minTemperature}" />° / <c:out value="${weather.maxTemperature}" />°</dd></div>
-                    <div><dt>Độ ẩm</dt><dd><c:out value="${weather.humidityPercent}" />%</dd></div>
-                    <div><dt>Gió</dt><dd><c:out value="${weather.windSpeedKmh}" /> km/h</dd></div>
-                    <div><dt>Khả năng mưa</dt><dd><c:out value="${weather.rainProbabilityPercent}" />%</dd></div>
-                </dl>
-            </c:if>
+            <details class="wx-card__more">
+                <summary>Chi tiết thời tiết</summary>
+                <c:if test="${weather.feelsLikeTemperature != null}">
+                    <dl class="wx-card__details">
+                        <div><dt>Cảm giác</dt><dd><c:out value="${weather.feelsLikeTemperature}" />°</dd></div>
+                        <div><dt>Thấp / cao</dt><dd><c:out value="${weather.minTemperature}" />° / <c:out value="${weather.maxTemperature}" />°</dd></div>
+                        <div><dt>Độ ẩm</dt><dd><c:out value="${weather.humidityPercent}" />%</dd></div>
+                        <div><dt>Gió</dt><dd><c:out value="${weather.windSpeedKmh}" /> km/h</dd></div>
+                        <div><dt>Khả năng mưa</dt><dd><c:out value="${weather.rainProbabilityPercent}" />%</dd></div>
+                    </dl>
+                </c:if>
 
-            <%-- Chỉ đổi câu chữ theo người đọc; dùng nguyên trạng thái thời tiết từ Service. --%>
-            <p class="wx-card__advice">
-                <c:choose>
-                    <c:when test="${weatherAudience eq 'customer'}">
-                        <c:choose>
-                            <c:when test="${weatherType eq 'rain'}">Mang theo ô hoặc áo mưa, cẩn thận sàn trơn khi đến phòng tập nhé.</c:when>
-                            <c:when test="${weatherType eq 'storm'}">Có giông bão, hãy ưu tiên an toàn và theo dõi thời tiết trước khi đến phòng tập.</c:when>
-                            <c:when test="${weatherType eq 'hot'}">Trời nóng, nhớ mang nước và dành thời gian nghỉ giữa các hiệp tập nhé.</c:when>
-                            <c:when test="${weatherType eq 'sunny'}">Trời nắng, nhớ mang nước và tránh nắng trên đường đến phòng tập nhé.</c:when>
-                            <c:when test="${weatherType eq 'wind'}">Gió mạnh, chú ý an toàn trên đường đến phòng tập nhé.</c:when>
-                            <c:when test="${weatherType eq 'snow'}">Trời lạnh, mặc đủ ấm và khởi động kỹ trước khi tập nhé.</c:when>
-                            <c:when test="${weatherType eq 'night'}">Tập vừa sức và dành thời gian nghỉ ngơi sau buổi tập tối nhé.</c:when>
-                            <c:otherwise>Thời tiết dễ chịu, chúc bạn có một buổi tập thật tốt.</c:otherwise>
-                        </c:choose>
-                    </c:when>
-                    <c:otherwise><c:out value="${weather.advice}" /></c:otherwise>
-                </c:choose>
-            </p>
+                <%-- Chỉ đổi câu chữ theo người đọc; dùng nguyên trạng thái thời tiết từ Service. --%>
+                <p class="wx-card__advice">
+                    <c:choose>
+                        <c:when test="${weatherAudience eq 'customer'}">
+                            <c:choose>
+                                <c:when test="${weatherType eq 'rain'}">Mang theo ô hoặc áo mưa, cẩn thận sàn trơn khi đến phòng tập nhé.</c:when>
+                                <c:when test="${weatherType eq 'storm'}">Có giông bão, hãy ưu tiên an toàn và theo dõi thời tiết trước khi đến phòng tập.</c:when>
+                                <c:when test="${weatherType eq 'hot'}">Trời nóng, nhớ mang nước và dành thời gian nghỉ giữa các hiệp tập nhé.</c:when>
+                                <c:when test="${weatherType eq 'sunny'}">Trời nắng, nhớ mang nước và tránh nắng trên đường đến phòng tập nhé.</c:when>
+                                <c:when test="${weatherType eq 'wind'}">Gió mạnh, chú ý an toàn trên đường đến phòng tập nhé.</c:when>
+                                <c:when test="${weatherType eq 'snow'}">Trời lạnh, mặc đủ ấm và khởi động kỹ trước khi tập nhé.</c:when>
+                                <c:when test="${weatherType eq 'night'}">Tập vừa sức và dành thời gian nghỉ ngơi sau buổi tập tối nhé.</c:when>
+                                <c:otherwise>Thời tiết dễ chịu, chúc bạn có một buổi tập thật tốt.</c:otherwise>
+                            </c:choose>
+                        </c:when>
+                        <c:otherwise><c:out value="${weather.advice}" /></c:otherwise>
+                    </c:choose>
+                </p>
+            </details>
+        </div>
+    </c:if>
+
+    <%-- Dịch vụ thời tiết tạm lỗi (Service trả null): vẫn giữ thẻ để bố cục không vỡ, nói rõ khi nào có lại --%>
+    <c:if test="${empty weather}">
+        <div class="wx-card wx-card--offline" role="status">
+            <div class="wx-card__top">
+                <div>
+                    <p class="wx-card__place">Thời tiết hôm nay</p>
+                    <p class="wx-card__condition">Chưa cập nhật được</p>
+                </div>
+                <span class="wx-icon wx-icon--cloudy" aria-hidden="true">
+                    <svg viewBox="0 0 64 64"><path class="wx-icon__cloud" d="M18 44h28a10 10 0 0 0 0-20 14 14 0 0 0-27-3A11 11 0 0 0 18 44z"></path></svg>
+                </span>
+            </div>
+            <strong class="wx-card__temp">--°</strong>
+            <p class="wx-card__advice">Nguồn dữ liệu thời tiết đang bận. Trang sẽ tự lấy lại sau ít phút, bạn cứ dùng các mục bên dưới bình thường.</p>
         </div>
     </c:if>
 </section>
+
+<script src="${pageContext.request.contextPath}/js/gym-floor.js?v=20261013c" defer></script>
+<script src="${pageContext.request.contextPath}/js/weather-card.js?v=20261013g" defer></script>

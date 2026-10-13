@@ -1,16 +1,10 @@
 <%@ page pageEncoding="UTF-8" %>
-<%-- Bạt dùng chung PT/Customer Dashboard; weather-scene.js vẽ hạt, common.js điều khiển cuộn. --%>
-<div class="pt-awning" aria-hidden="true">
-    <div class="pt-awning__fabric">
-        <%-- Mỗi flap có mép cong riêng; CSS ẩn bớt flap khi màn hình hẹp. --%>
-        <c:forEach var="flapIndex" begin="0" end="15">
-            <span class="pt-awning__flap" style="--flap-index: ${flapIndex}"></span>
-        </c:forEach>
-    </div>
-    <div class="pt-awning__stitch"></div>
-    <div class="pt-awning__lights">
-        <c:forEach var="lightIndex" begin="0" end="15">
-            <span class="pt-awning__light" style="--light-index: ${lightIndex}"></span>
-        </c:forEach>
-    </div>
+<%-- Bảng LED phòng tập đầu trang PT/Customer Dashboard (thay dải đèn treo cũ; giữ class .pt-awning cho JS thu/thả khi cuộn).
+     Như đồng hồ LED treo tường phòng gym: giờ thật ở giữa (common.js cập nhật mỗi giây),
+     bên phải là mẹo tập / câu động lực đổi luân phiên. CSS: awning.css --%>
+<div class="pt-awning gym-board">
+    <span class="gym-board__brand">SUPER GYM</span>
+    <span class="gym-board__clock" data-gym-clock aria-label="Giờ hiện tại">--<i>:</i>--</span>
+    <%-- Mẹo tập / câu động lực đổi mỗi 8 giây (common.js "Bảng LED"); câu đầu có sẵn để tắt JS vẫn thấy --%>
+    <span class="gym-board__tip" data-gym-tip aria-live="off">Khởi động 5–10 phút trước khi vào mức tạ nặng.</span>
 </div>

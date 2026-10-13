@@ -43,14 +43,13 @@
         </div>
       </header>
 
-      <main class="content">
+      <main class="content" id="main-content" tabindex="-1">
 
         <%-- ===== Form gửi yêu cầu ===== --%>
         <section class="panel maintenance-panel">
           <div class="panel-head">
             <div>
               <h2>Gửi yêu cầu mới</h2>
-              <p>Báo thiết bị hoặc cơ sở vật chất cần được kiểm tra và sửa chữa.</p>
             </div>
           </div>
 
@@ -153,7 +152,6 @@
           <div class="panel-head">
             <div>
               <h2>Yêu cầu bảo trì</h2>
-              <p>Yêu cầu do bạn tạo và các yêu cầu đang chờ nghiệm thu.</p>
             </div>
           </div>
 

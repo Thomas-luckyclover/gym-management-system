@@ -1,385 +1,381 @@
-/* =====================================================================
-   blog-list.css — CSS riêng cho màn hình Danh sách Blog (SRS #6 / UC-06)
-   Lớp 3/3 của CSS: tokens.css → common.css → css/pages/guest/blog-list.css
-   Đồng bộ 100% với Prototype blog.html và style.css (theme-guest-dark)
-   ===================================================================== */
-
-/* ============================ BỐ CỤC CHÍNH ============================ */
-.main-content {
-  min-height: calc(100vh - 350px);
+/* Journal: tỷ lệ ảnh tự nhiên, chữ đọc rõ và bộ lọc có khoảng chạm đủ rộng.
+   blog-list.js dùng #blogSearchForm, #chipFilter, #blogGrid và #blogPagination. */
+.journal-page {
+  background: var(--brand-warm-surface);
+  color: var(--brand-paper);
+  font-family: var(--font-body);
+  scrollbar-color: var(--brand-ember) var(--brand-ink);
 }
 
-.wrap {
-  max-width: var(--layout-container-max, 1180px);
-  margin: 0 auto;
-  padding-inline: var(--space-5, 24px);
+.journal-page ::selection {
+  background: var(--brand-aqua);
+  color: var(--brand-ink);
 }
 
-@media (max-width: 640px) {
-  .wrap {
-    padding-inline: var(--space-4, 16px);
-  }
+.journal-page .main-content {
+  min-height: 65vh;
+  padding-bottom: var(--brand-section-space);
 }
 
-/* ============================ TIÊU ĐỀ TRANG ============================ */
-.page-head {
-  padding-block: var(--space-8, 48px) var(--space-2, 8px);
+.journal-page .wrap {
+  width: min(var(--brand-content-width), calc(100% - var(--layout-gutter) * 2));
+  margin-inline: auto;
+  padding-inline: 0;
 }
 
-.page-head h1 {
-  font-family: var(--font-heading, var(--font-display, 'Montserrat', sans-serif));
-  font-size: clamp(1.7rem, 3.4vw, 2.2rem);
-  font-weight: 800;
-  color: #FFFFFF;
+.journal-page .page-head {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  align-items: end;
+  gap: var(--space-8);
+  padding-block: var(--space-12) var(--space-8);
+  border-bottom: var(--border-width) solid var(--brand-line);
+}
+
+.journal-page .page-head h1 {
   margin: 0;
-  letter-spacing: -0.02em;
+  font-family: var(--font-cinematic);
+  font-size: var(--brand-heading-size);
+  line-height: var(--line-height-tight);
+  font-weight: var(--font-weight-bold);
+  letter-spacing: var(--letter-spacing-normal);
+  text-transform: uppercase;
+  text-wrap: balance;
 }
 
-.page-head p {
-  color: var(--color-text-soft, #A09C93);
-  margin-top: 12px;
-  max-width: 54ch;
-  font-size: 0.95rem;
-  line-height: 1.6;
+.journal-page .page-head h1 em {
+  color: var(--brand-ember);
+  font-style: normal;
 }
 
-/* ============================ THANH CÔNG CỤ LỌC & TÌM KIẾM ============================ */
-.blog-controls {
+.journal-page .page-head p {
+  max-width: var(--layout-auth-card-width);
+  margin: 0;
+  color: var(--brand-muted);
+  font-size: var(--font-size-base);
+  line-height: var(--line-height-relaxed);
+}
+
+.journal-page .blog-controls {
   display: flex;
-  flex-direction: column;
-  gap: var(--space-4, 16px);
-  margin: var(--space-6, 32px) 0 var(--space-8, 48px);
+  flex-wrap: wrap;
+  gap: var(--space-4);
+  align-items: center;
+  margin-block: var(--space-6) var(--space-8);
 }
 
-.search-input-wrap {
+.journal-page .search-input-wrap {
   position: relative;
-  max-width: 420px;
-  width: 100%;
+  flex: 1;
+  min-width: 0;
   margin: 0;
 }
 
-.search-input-wrap i,
-.search-input-wrap svg {
+.journal-page .search-input-wrap > svg {
   position: absolute;
-  left: 15px;
+  left: var(--space-4);
   top: 50%;
   transform: translateY(-50%);
-  color: var(--color-text-muted, #79766F);
-  font-size: 0.88rem;
+  color: var(--brand-muted);
   pointer-events: none;
 }
-
-#blogSearch {
+/* #blogSearch lu par blog-list.js: URL q conserve la recherche. */
+.journal-page #blogSearch {
   width: 100%;
-  padding: 11px 14px 11px 40px;
-  border-radius: 999px;
-  border: 1px solid var(--color-border, rgba(255, 255, 255, 0.11));
-  background: #161514;
-  color: var(--color-text, #F3F1EC);
-  font-size: 0.88rem;
-  outline: none;
-  transition: border-color var(--duration-fast, 0.15s), box-shadow var(--duration-fast, 0.15s);
-  box-sizing: border-box;
+  min-height: var(--control-height-lg);
+  padding: var(--space-3) var(--space-4) var(--space-3) var(--space-8);
+  background: var(--brand-ink);
+  color: var(--brand-paper);
+  border: var(--border-width) solid var(--brand-line);
+  border-radius: var(--radius-xs);
+  font-family: var(--font-body);
+  font-size: var(--font-size-base);
 }
 
-#blogSearch::placeholder {
-  color: var(--color-text-muted, #79766F);
+.journal-page #blogSearch::placeholder {
+  color: var(--brand-muted);
 }
 
-#blogSearch:focus {
-  border-color: var(--color-primary, #D4FF3F);
-  box-shadow: 0 0 0 1px rgba(212, 255, 63, 0.35);
+.journal-page #blogSearch:focus-visible {
+  outline: var(--focus-outline-width) solid var(--brand-aqua);
+  outline-offset: var(--focus-outline-offset);
 }
 
-/* Bộ lọc danh mục theo nút dạng chip */
-.chip-filter {
+.journal-page .chip-filter {
   display: flex;
-  gap: 8px;
   flex-wrap: wrap;
+  gap: var(--space-2);
 }
 
-.chip-filter button {
-  padding: var(--space-2, 8px) var(--space-4, 16px);
-  border-radius: 999px;
-  border: 1px solid var(--color-border, rgba(255, 255, 255, 0.11));
-  background: #161514;
-  color: var(--color-text-soft, #A09C93);
-  font-weight: 500;
-  font-size: 0.8125rem;
+.journal-page .chip-filter button {
+  min-height: var(--control-height-lg);
+  padding: var(--space-2) var(--space-4);
+  border: var(--border-width) solid var(--brand-line);
+  border-radius: var(--radius-xs);
+  background: transparent;
+  color: var(--brand-muted);
+  font-family: var(--font-body);
+  font-size: var(--font-size-sm);
   cursor: pointer;
-  transition: all var(--duration-fast, 0.15s);
-  user-select: none;
+  transition: color var(--duration-slow), border-color var(--duration-slow), background var(--duration-slow);
 }
 
-.chip-filter button:hover {
-  border-color: var(--color-primary-border, rgba(212, 255, 63, 0.38));
-  color: var(--color-text, #F3F1EC);
+.journal-page .chip-filter button:hover {
+  color: var(--brand-paper);
+  border-color: var(--brand-paper);
 }
 
-.chip-filter button.active {
-  background: var(--color-primary, #D4FF3F);
-  border-color: var(--color-primary, #D4FF3F);
-  color: var(--color-on-primary, #0D0D0D);
-  font-weight: 700;
+.journal-page .chip-filter button.active {
+  background: var(--brand-ember);
+  color: var(--brand-ink);
+  border-color: var(--brand-ember);
+  font-weight: var(--font-weight-bold);
 }
 
-.result-count {
-  font-size: 0.8125rem;
-  color: var(--color-text-soft, #A09C93);
-  min-height: 1.2em;
+.journal-page .result-count {
+  width: 100%;
+  color: var(--brand-muted);
+  font-size: var(--font-size-xs);
 }
 
-/* ============================ LƯỚI BÀI VIẾT (POST GRID) ============================ */
-.post-grid {
+.journal-page .post-grid {
   display: grid;
-  grid-template-columns: repeat(3, 1fr);
-  gap: var(--space-5, 24px);
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  gap: var(--space-10) var(--space-6);
 }
 
-@media (max-width: 900px) {
-  .post-grid {
-    grid-template-columns: repeat(2, 1fr);
-  }
-}
-
-@media (max-width: 600px) {
-  .post-grid {
-    grid-template-columns: 1fr;
-  }
-}
-
-/* Thẻ bài viết (Post Card) */
-.post-card {
-  background: #161514;
-  border: 1px solid var(--color-border, rgba(255, 255, 255, 0.11));
-  border-radius: var(--radius-lg, 18px);
-  overflow: hidden;
-  box-shadow: var(--shadow-card, 0 1px 2px rgba(0,0,0,.08));
-  cursor: pointer;
-  transition: transform var(--duration-fast, 0.15s), box-shadow var(--duration-fast, 0.15s), border-color var(--duration-fast, 0.15s);
+.journal-page .post-card {
   display: flex;
   flex-direction: column;
+  min-width: 0;
+  color: var(--brand-paper);
   text-decoration: none;
-  color: inherit;
+  background: transparent;
+  border: 0;
+  border-radius: 0;
+  box-shadow: none;
 }
 
-.post-card:hover {
-  transform: translateY(-3px);
-  box-shadow: var(--shadow-pop, 0 20px 48px -20px rgba(0,0,0,.5));
-  border-color: var(--color-primary-border, rgba(212, 255, 63, 0.38));
-}
-
-/* Ảnh bìa / Thumbnail thẻ bài viết (đồng bộ theo home.css) */
-.post-thumb {
-  width: 100%;
-  height: 200px;
-  object-fit: cover;
-  object-position: center;
-  background: var(--color-surface-muted, #1F1E1B);
+.journal-page .post-thumb {
+  position: relative;
   display: block;
+  width: 100%;
+  height: auto;
+  aspect-ratio: 3 / 2;
+  object-fit: cover;
+  overflow: hidden;
+  background: var(--brand-ocean-deep);
 }
 
-.post-thumb-fallback {
+.journal-page .post-thumb-img {
+  display: block;
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+}
+
+.journal-page .post-thumb-fallback {
   position: absolute;
   inset: 0;
   display: flex;
   align-items: center;
   justify-content: center;
+  color: var(--brand-aqua);
 }
 
-.post-thumb-fallback.is-hidden {
+.journal-page .post-thumb-fallback.is-hidden {
   display: none;
 }
 
-.cover-pattern {
+.journal-page .cover-pattern {
   position: absolute;
   inset: 0;
   width: 100%;
   height: 100%;
 }
 
-.post-thumb-icon {
+.journal-page .post-thumb-icon {
   position: relative;
-  z-index: 1;
-  display: flex;
+  font-size: var(--font-size-3xl);
 }
 
-.post-thumb-icon i,
-.post-thumb-icon svg {
-  font-size: 1.8rem;
-  width: 30px;
-  height: 30px;
-}
-
-/* Gradient nền theo chuyên mục */
-.tone-amber {
-  background: linear-gradient(135deg, #A9762C, #6E4A17);
-}
-
-.tone-green {
-  background: linear-gradient(135deg, #2F8F5B, #1F6B41);
-}
-
-.tone-blue {
-  background: linear-gradient(135deg, #2E6FBA, #1F4F8A);
-}
-
-/* Thân bài viết */
-.post-body {
-  padding: 17px 18px 19px;
+.journal-page .post-body {
   display: flex;
   flex-direction: column;
-  gap: 9px;
-  flex-grow: 1;
+  gap: var(--space-3);
+  flex: 1;
+  padding: var(--space-5) 0 0;
 }
 
-/* Chip chuyên mục */
-.chip {
+.journal-page .chip {
   display: inline-flex;
   width: fit-content;
-  font-size: 0.8125rem;
-  font-weight: 800;
-  text-transform: uppercase;
-  letter-spacing: 0.05em;
-  padding: 4px 10px;
-  border-radius: 999px;
+  padding: 0;
+  color: var(--brand-ember);
+  font-size: var(--font-size-xs);
+  font-weight: var(--font-weight-semibold);
+  line-height: var(--line-height-normal);
 }
 
-.chip-tap-luyen {
-  background: var(--color-primary-tint, rgba(212, 255, 63, 0.12));
-  color: #D4FF3F;
+.journal-page .chip-dinh-duong {
+  color: var(--brand-aqua);
 }
 
-.chip-dinh-duong {
-  background: rgba(47, 143, 91, 0.2);
-  color: #52CF8B;
+.journal-page .chip-tin-tuc {
+  color: var(--brand-paper);
 }
 
-.chip-tin-tuc {
-  background: rgba(46, 111, 186, 0.2);
-  color: #6EA9F7;
-}
-
-.post-body h3 {
-  font-family: var(--font-heading, var(--font-display, 'Montserrat', sans-serif));
-  font-size: 1rem;
-  line-height: 1.35;
-  font-weight: 700;
-  color: #FFFFFF;
+.journal-page .post-body h3 {
   margin: 0;
-  display: -webkit-box;
-  -webkit-line-clamp: 2;
-  line-clamp: 2;
-  -webkit-box-orient: vertical;
-  overflow: hidden;
+  font-family: var(--font-body);
+  font-size: var(--font-size-xl);
+  font-weight: var(--font-weight-semibold);
+  line-height: var(--line-height-normal);
+  letter-spacing: var(--letter-spacing-normal);
+  text-wrap: balance;
 }
 
-.post-excerpt {
-  color: var(--color-text-soft, #A09C93);
-  font-size: 0.83rem;
-  line-height: 1.5;
+.journal-page .post-card:hover h3 {
+  color: var(--brand-ember);
+}
+
+.journal-page .post-card:hover {
+  text-decoration: none;
+}
+
+.journal-page .post-excerpt {
   margin: 0;
-  flex-grow: 1;
-  display: -webkit-box;
-  -webkit-line-clamp: 3;
-  line-clamp: 3;
-  -webkit-box-orient: vertical;
-  overflow: hidden;
+  font-size: var(--font-size-sm);
+  color: var(--brand-muted);
+  line-height: var(--line-height-relaxed);
 }
 
-.post-meta {
-  font-size: 0.8125rem;
-  color: var(--color-text-muted, #79766F);
+.journal-page .post-meta {
   display: flex;
   align-items: center;
-  gap: 6px;
+  gap: var(--space-2);
+  color: var(--brand-muted);
+  font-size: var(--font-size-xs);
   margin-top: auto;
+  padding-top: var(--space-3);
 }
 
-.post-meta i,
-.post-meta svg {
-  font-size: 0.8125rem;
-  width: 12px;
-  height: 12px;
+.journal-page .post-meta svg {
+  flex-shrink: 0;
 }
 
-/* ============================ TRẠNG THÁI RỖNG (EMPTY STATE) ============================ */
-.empty-state {
+.journal-page .empty-state {
   grid-column: 1 / -1;
+  padding: var(--space-12) var(--space-5);
+  border: var(--border-width) dashed var(--brand-line);
+  color: var(--brand-muted);
   text-align: center;
-  padding: 60px 20px;
-  color: var(--color-text-soft, #A09C93);
-  background: #161514;
-  border: 1px dashed var(--color-border, rgba(255, 255, 255, 0.11));
-  border-radius: var(--radius-lg, 18px);
 }
 
-.empty-icon {
-  margin: 0 auto 14px;
-  color: var(--color-text-muted, #79766F);
+.journal-page .empty-state[hidden] {
+  display: none;
 }
 
-.empty-icon i,
-.empty-icon svg {
-  font-size: 2.2rem;
-  width: 36px;
-  height: 36px;
+.journal-page .empty-state p {
+  margin: var(--space-4) 0 0;
+  line-height: var(--line-height-relaxed);
 }
 
-.empty-state p {
-  margin: 0;
-  line-height: 1.6;
-  font-size: 0.9rem;
+.journal-page .empty-state b {
+  color: var(--brand-paper);
 }
 
-.empty-state b {
-  color: #FFFFFF;
+.journal-page .empty-icon {
+  font-size: var(--font-size-3xl);
+  color: var(--brand-aqua);
 }
 
-/* ============================ PHÂN TRANG (PAGINATION) ============================ */
-.pagination {
+.journal-page .pagination {
   display: flex;
+  flex-wrap: wrap;
   justify-content: center;
-  gap: 6px;
-  margin-top: 38px;
-  margin-bottom: var(--space-10, 64px);
+  gap: var(--space-2);
+  margin-top: var(--space-12);
 }
 
-.page-btn {
-  min-width: 36px;
-  height: 36px;
-  border-radius: var(--radius-sm, 8px);
-  border: 1px solid var(--color-border, rgba(255, 255, 255, 0.11));
-  background: #161514;
-  color: var(--color-text, #F3F1EC);
-  font-weight: 700;
-  font-size: 0.85rem;
-  display: inline-flex;
-  align-items: center;
-  justify-content: center;
-  padding: 0 10px;
+.journal-page .page-btn {
+  min-width: var(--control-height-lg);
+  min-height: var(--control-height-lg);
+  padding: var(--space-2);
+  border: var(--border-width) solid var(--brand-line);
+  border-radius: var(--radius-xs);
+  background: transparent;
+  color: var(--brand-paper);
+  font-family: var(--font-body);
+  font-size: var(--font-size-sm);
   cursor: pointer;
-  transition: all var(--duration-fast, 0.15s);
-  user-select: none;
 }
 
-.page-btn:hover:not(:disabled) {
-  border-color: var(--color-primary-border, rgba(212, 255, 63, 0.38));
-  color: #FFFFFF;
+.journal-page .page-btn.active {
+  background: var(--brand-ember);
+  color: var(--brand-ink);
+  border-color: var(--brand-ember);
 }
 
-.page-btn.active {
-  background: var(--color-primary, #D4FF3F);
-  border-color: var(--color-primary, #D4FF3F);
-  color: var(--color-on-primary, #0D0D0D);
+.journal-page .page-btn:hover:not(:disabled) {
+  border-color: var(--brand-ember);
 }
 
-.page-btn:disabled {
-  opacity: 0.35;
+.journal-page .page-btn:disabled {
+  opacity: var(--opacity-disabled);
   cursor: not-allowed;
 }
 
-.page-btn i,
-.page-btn svg {
-  font-size: 0.8125rem;
+.journal-page .page-btn:focus-visible, .journal-page .chip-filter button:focus-visible, .journal-page .post-card:focus-visible {
+  outline: var(--focus-outline-width) solid var(--brand-aqua);
+  outline-offset: var(--focus-outline-offset);
+}
+
+.journal-page .tone-amber {
+  background: var(--brand-warm-surface);
+}
+
+.journal-page .tone-green, .journal-page .tone-blue {
+  background: var(--brand-ocean-deep);
+}
+
+@media (max-width: 1000px) {
+  .journal-page .post-grid {
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+}
+
+.journal-page .search-input-wrap {
+  flex-basis: 100%;
+}
+}
+@media (max-width: 640px) {
+  .journal-page .wrap {
+  width: calc(100% - var(--layout-gutter-mobile) * 2);
+}
+
+.journal-page .page-head, .journal-page .post-grid {
+  grid-template-columns: minmax(0, 1fr);
+}
+
+.journal-page .page-head {
+  padding-top: var(--space-8);
+  gap: var(--space-5);
+}
+
+.journal-page .chip-filter button {
+  padding-inline: var(--space-3);
+}
+
+.journal-page .post-body h3 {
+  font-size: var(--font-size-lg);
+}
+
+.journal-page .main-content {
+  padding-bottom: var(--space-10);
+}
+}
+@media (prefers-reduced-motion: reduce) {
+  .journal-page .chip-filter button {
+  transition: none;
+}
 }

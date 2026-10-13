@@ -1,17 +1,130 @@
-/* ===== Khung trang: dùng token màu và layout Customer Dashboard ===== */
+/* Lịch PT: ba vùng tác vụ, filter chung, danh sách buổi nhóm theo ngày.
+my-pt-sessions.js dùng [data-session-view], [data-session-panel], #sessionFilterForm. */
 .my-pt-sessions {
-  display: grid;
-  gap: var(--space-5);
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-6);
   min-width: 0;
+  font-family: var(--font-body);
+}
+
+/* Chỉ ép tông tối khi người dùng chưa bật nền sáng (công tắc topbar) */
+html:not([data-theme="light"]) body.my-pt-sessions-page {
+  color-scheme: dark;
+  --color-bg: #04151F;
+  --color-surface: #09232F;
+  --color-surface-muted: #0C2C39;
+  --color-surface-hover: #0C2C39;
+  --color-text: #EAF4F6;
+  --color-text-soft: #A9C3CC;
+  --color-text-muted: #86A4AE;
+  --color-border: rgba(234, 244, 246, 0.09);
+  --color-border-strong: rgba(234, 244, 246, 0.2);
+  --color-primary: var(--brand-sunset);
+  --color-primary-tint: rgba(242, 92, 27, 0.16);
+  --color-primary-border: rgba(255, 122, 61, 0.45);
+  --color-danger-tint: rgba(255, 99, 115, 0.14);
+  --color-danger-border: rgba(255, 154, 165, 0.38);
+  --color-danger-ink: #FFA3AD;
+  --color-warning-tint: rgba(245, 183, 64, 0.14);
+  --color-warning-border: rgba(248, 207, 122, 0.38);
+  --color-warning-ink: #F8CF7A;
+  --pt-bg: #04151F;
+  --pt-panel: #09232F;
+  --pt-panel-2: #0C2C39;
+  --pt-line: rgba(234, 244, 246, 0.09);
+  --pt-line-strong: rgba(234, 244, 246, 0.2);
+  --pt-text: #EAF4F6;
+  --pt-soft: #A9C3CC;
+  --pt-muted: #86A4AE;
+  --pt-lagoon-text: var(--brand-aqua);
+  --pt-ember-text: var(--brand-sunset-hi);
+}
+
+body.my-pt-sessions-page .topbar {
+  background: color-mix(in srgb, var(--pt-bg) 88%, transparent);
+  border-bottom-color: var(--pt-line);
+  color: var(--pt-text);
+}
+
+body.my-pt-sessions-page .tb-title { color: var(--pt-text); }
+body.my-pt-sessions-page .tb-user { border-color: var(--pt-line-strong); background: var(--pt-panel); color: var(--pt-text); }
+body.my-pt-sessions-page .tb-user-text span { color: var(--pt-muted); }
+
+.my-pt-page-heading {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  gap: var(--space-5);
+}
+
+.my-pt-page-heading p {
+  max-width: var(--layout-text-max-width);
+  margin: 0;
+  font-size: var(--font-size-base);
+  line-height: var(--line-height-normal);
+  color: var(--color-text-soft);
+}
+
+.my-pt-page-heading .btn {
+  flex-shrink: 0;
+  min-height: var(--control-height-lg);
+  gap: var(--space-2);
+}
+
+.my-pt-view-tabs {
+  display: flex;
+  gap: var(--space-2);
+  overflow-x: auto;
+  border-bottom: var(--border-width) solid var(--color-border);
+  scrollbar-width: thin;
+}
+
+.my-pt-view-tabs[hidden], .my-pt-sessions [data-session-panel][hidden], .my-pt-filter-panel[hidden] {
+  display: none;
+}
+
+.my-pt-view-tabs button {
+  position: relative;
+  min-height: calc(var(--control-height-lg) + var(--space-2));
+  padding: var(--space-3) var(--space-1);
+  border: 0;
+  background: transparent;
+  color: var(--color-text-soft);
+  font-family: var(--font-body);
+  font-size: var(--font-size-base);
+  font-weight: var(--font-weight-medium);
+  white-space: nowrap;
+  cursor: pointer;
+}
+
+.my-pt-view-tabs button::after {
+  content: "";
+  position: absolute;
+  inset: auto 0 0;
+  height: var(--border-width-thick);
+  background: transparent;
+}
+
+.my-pt-view-tabs button:hover {
+  color: var(--color-text);
+}
+
+.my-pt-view-tabs button[aria-selected="true"] {
+  color: var(--color-text);
+  font-weight: var(--font-weight-bold);
+}
+
+.my-pt-view-tabs button[aria-selected="true"]::after {
+  background: var(--color-primary);
 }
 
 .my-pt-panel {
   min-width: 0;
-  padding: var(--space-5);
-  border: var(--border-width) solid var(--color-border);
-  border-radius: var(--radius-lg);
-  background: var(--color-surface);
-  box-shadow: var(--shadow-card);
+  padding: 0;
+  border: 0;
+  background: transparent;
+  box-shadow: none;
 }
 
 .my-pt-heading {
@@ -20,40 +133,325 @@
   justify-content: space-between;
   flex-wrap: wrap;
   gap: var(--space-3);
-  margin-bottom: var(--space-4);
+  margin-bottom: var(--space-5);
 }
 
 .my-pt-heading h2 {
   margin: 0;
+  font-family: var(--font-body);
   font-size: var(--font-size-xl);
+  font-weight: var(--font-weight-semibold);
+  line-height: var(--line-height-normal);
   color: var(--color-text);
+}
+
+.my-pt-title-with-hint {
+  display: flex;
+  align-items: center;
+  gap: var(--space-2);
+  min-width: 0;
 }
 
 .my-pt-caption {
   margin: var(--space-1) 0 0;
   color: var(--color-text-soft);
   font-size: var(--font-size-sm);
+  line-height: var(--line-height-normal);
 }
 
-/* ===== Gói PT của bạn: thẻ dữ liệu thật, dùng màu chung của Customer Zone ===== */
-.my-pt-title-with-hint {
+/* Bộ lọc gọn: nhãn luôn hiện, thao tác tách rõ, lỗi đặt cạnh ô nhập. */
+.my-pt-filter-panel {
+  padding: var(--space-5);
+  border: var(--border-width) solid var(--color-border);
+  border-radius: var(--radius-sm);
+  background: var(--color-surface);
+}
+
+.my-pt-filter-panel .my-pt-heading {
+  margin-bottom: var(--space-4);
+}
+
+.my-pt-filter-panel .my-pt-heading h2 {
+  font-size: var(--font-size-base);
+}
+
+.my-pt-filter-panel .my-pt-heading > .my-pt-caption {
+  margin: 0;
+  font-size: var(--font-size-xs);
+}
+
+.my-pt-filters {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) minmax(0, 1fr) minmax(0, 1fr) auto;
+  align-items: end;
+  gap: var(--space-4);
+  margin: 0;
+  padding: 0;
+  border: 0;
+  min-width: 0;
+}
+
+.my-pt-filters label {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-2);
+  min-width: 0;
+  color: var(--color-text-soft);
+  font-size: var(--font-size-sm);
+  font-weight: var(--font-weight-medium);
+}
+
+.my-pt-filters input, .my-pt-filters select {
+  width: 100%;
+  min-width: 0;
+  min-height: var(--control-height-lg);
+  padding: var(--space-2) var(--space-3);
+  border: var(--border-width) solid var(--color-border-strong);
+  border-radius: var(--radius-xs);
+  background: var(--color-surface-muted);
+  color: var(--color-text);
+  font-family: var(--font-body);
+  font-size: var(--font-size-sm);
+}
+
+.my-pt-filters .invalid {
+  border-color: var(--color-danger);
+}
+
+.my-pt-filters .field-error {
+  font-weight: var(--font-weight-regular);
+}
+
+.my-pt-filter-actions {
+  display: flex;
+  gap: var(--space-2);
+  flex-wrap: wrap;
+  padding-top: 0;
+  align-self: end;
+}
+
+.my-pt-filter-actions .btn {
+  min-height: var(--control-height-lg);
+}
+
+.my-pt-filter-alert, .my-pt-package-error {
+  margin: 0 0 var(--space-4);
+  padding: var(--space-3) var(--space-4);
+  border: var(--border-width) solid var(--color-danger-border);
+  border-radius: var(--radius-xs);
+  color: var(--color-danger-ink);
+  background: var(--color-danger-tint);
+  font-size: var(--font-size-sm);
+  line-height: var(--line-height-normal);
+}
+
+/* Ngày tổ chức danh sách; mỗi buổi là một hàng, không dùng thẻ lồng thẻ. */
+.my-pt-days {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-7);
+}
+
+.my-pt-day {
+  min-width: 0;
+}
+
+.my-pt-day-heading {
   display: flex;
   align-items: center;
   gap: var(--space-3);
+  margin-bottom: var(--space-3);
 }
 
+.my-pt-day-label {
+  min-width: 0;
+  font-size: var(--font-size-sm);
+  font-weight: var(--font-weight-semibold);
+  color: var(--color-text);
+}
+
+.my-pt-day-count {
+  color: var(--color-text-muted);
+  font-size: var(--font-size-xs);
+  white-space: nowrap;
+}
+
+.my-pt-day.is-today .my-pt-day-label {
+  color: var(--pt-lagoon-text);
+}
+
+.my-pt-day-sessions {
+  border: var(--border-width) solid var(--color-border);
+  border-radius: var(--radius-sm);
+  background: var(--color-surface);
+}
+
+.my-pt-session {
+  display: grid;
+  grid-template-columns: minmax(120px, calc(var(--space-12) * 2)) minmax(0, 1fr);
+  gap: var(--space-5);
+  padding: var(--space-5);
+  border-bottom: var(--border-width) solid var(--color-border);
+  min-width: 0;
+}
+
+.my-pt-session:last-child {
+  border-bottom: 0;
+}
+
+.my-pt-session-time, .my-pt-session-content {
+  min-width: 0;
+}
+
+.my-pt-session-hours {
+  display: flex;
+  align-items: center;
+  gap: var(--space-1);
+  flex-wrap: wrap;
+  margin: 0;
+  color: var(--pt-lagoon-text);
+  font-family: var(--font-body);
+  font-size: var(--font-size-lg);
+  font-weight: var(--font-weight-semibold);
+  line-height: var(--line-height-normal);
+  font-variant-numeric: tabular-nums;
+}
+
+.my-pt-time-separator {
+  color: var(--color-text-muted);
+}
+
+.my-pt-session-content {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) auto;
+  gap: var(--space-2) var(--space-4);
+  align-items: start;
+}
+
+.my-pt-session-heading {
+  display: contents;
+}
+
+.my-pt-session-heading h3 {
+  grid-column: 1;
+  margin: 0;
+  color: var(--color-text);
+  font-family: var(--font-body);
+  font-size: var(--font-size-base);
+  font-weight: var(--font-weight-semibold);
+  line-height: var(--line-height-normal);
+  overflow-wrap: anywhere;
+}
+
+.my-pt-session-heading > .my-pt-package-type, .my-pt-session-status {
+  grid-column: 2;
+  grid-row: 1 / 3;
+  justify-self: end;
+}
+
+.my-pt-session-content > .my-pt-caption {
+  grid-column: 1;
+  margin: 0;
+  overflow-wrap: anywhere;
+}
+
+.my-pt-session-warning {
+  grid-column: 1 / -1;
+  margin: var(--space-3) 0 0;
+  padding: var(--space-3) var(--space-4);
+  border: var(--border-width) solid var(--color-warning-border);
+  border-radius: var(--radius-xs);
+  color: var(--color-warning-ink);
+  background: var(--color-warning-tint);
+  font-size: var(--font-size-sm);
+  line-height: var(--line-height-normal);
+}
+
+.my-pt-session-note {
+  grid-column: 1 / -1;
+  margin: var(--space-2) 0 0;
+  font-size: var(--font-size-sm);
+  color: var(--color-text-soft);
+  line-height: var(--line-height-relaxed);
+  overflow-wrap: anywhere;
+}
+
+.my-pt-session-status {
+  display: flex;
+  align-items: center;
+  gap: var(--space-2);
+}
+
+.my-pt-session-status .badge {
+  white-space: normal;
+  text-align: center;
+  max-width: var(--layout-auth-card-width);
+}
+
+.my-pt-package-type {
+  display: inline-flex;
+  padding: var(--space-1) var(--space-2);
+  background: var(--color-primary-tint);
+  border: var(--border-width) solid var(--color-primary-border);
+  border-radius: var(--radius-xs);
+  color: var(--color-text);
+  font-size: var(--font-size-xs);
+  font-weight: var(--font-weight-medium);
+  line-height: var(--line-height-normal);
+}
+
+/* Lịch sử: bộ trạng thái GET giữ nguyên URL và dữ liệu lọc thật. */
+.my-pt-status-tabs {
+  display: flex;
+  gap: var(--space-2);
+  flex-wrap: wrap;
+  margin-bottom: var(--space-6);
+}
+
+.my-pt-status-tab {
+  display: inline-flex;
+  align-items: center;
+  min-height: var(--control-height-lg);
+  padding: var(--space-2) var(--space-4);
+  border: var(--border-width) solid var(--color-border);
+  border-radius: var(--radius-xs);
+  background: var(--color-surface);
+  color: var(--color-text-soft);
+  font-size: var(--font-size-sm);
+  line-height: var(--line-height-normal);
+  text-decoration: none;
+}
+
+.my-pt-status-tab:hover {
+  color: var(--color-text);
+  border-color: var(--color-border-strong);
+  text-decoration: none;
+}
+
+.my-pt-status-tab[aria-current="true"] {
+  color: var(--color-text);
+  background: var(--color-primary-tint);
+  border-color: var(--color-primary-border);
+  font-weight: var(--font-weight-semibold);
+}
+
+.my-pt-status-error {
+  margin: 0 0 var(--space-4);
+}
+
+/* Gói: dữ liệu và hạn sử dụng trước; thống kê dùng hàng số gọn. */
 .my-pt-package-list {
   display: grid;
   grid-template-columns: repeat(2, minmax(0, 1fr));
-  gap: var(--space-4);
+  gap: var(--space-5);
 }
 
 .my-pt-package-card {
   min-width: 0;
-  padding: var(--space-5);
-  border: var(--border-width) solid var(--color-primary-border);
-  border-radius: var(--radius-md);
-  background: var(--color-surface-muted);
+  padding: var(--space-6);
+  border: var(--border-width) solid var(--color-border);
+  border-radius: var(--radius-sm);
+  background: var(--color-surface);
 }
 
 .my-pt-package-card:only-child {
@@ -66,397 +464,259 @@
   justify-content: space-between;
   flex-wrap: wrap;
   gap: var(--space-3);
-  margin-bottom: var(--space-4);
+  margin-bottom: var(--space-6);
 }
 
 .my-pt-package-heading h3 {
   margin: 0;
   color: var(--color-text);
+  font-family: var(--font-body);
   font-size: var(--font-size-lg);
+  line-height: var(--line-height-snug);
+  font-weight: var(--font-weight-semibold);
   overflow-wrap: anywhere;
 }
 
-.my-pt-package-type {
-  padding: var(--space-1) var(--space-3);
-  border-radius: var(--radius-sm);
-  background: var(--color-primary-tint);
-  color: var(--color-primary);
-  font-size: var(--font-size-sm);
-  font-weight: var(--font-weight-semibold);
-}
-
-.my-pt-package-details,
-.my-pt-package-stats {
-  display: grid;
-  gap: var(--space-4);
-  margin: 0;
-}
-
 .my-pt-package-details {
+  display: grid;
   grid-template-columns: repeat(3, minmax(0, 1fr));
+  gap: var(--space-5);
+  margin: 0;
 }
 
 .my-pt-package-details-couple {
   grid-template-columns: repeat(4, minmax(0, 1fr));
 }
 
-/* Khi có nhiều gói, mỗi thẻ hẹp hơn nên thông tin chia hai cột. */
 .my-pt-package-card:not(:only-child) .my-pt-package-details {
   grid-template-columns: repeat(2, minmax(0, 1fr));
 }
 
+.my-pt-package-details dt, .my-pt-package-stats dt {
+  color: var(--color-text-soft);
+  font-size: var(--font-size-sm);
+  line-height: var(--line-height-normal);
+}
+
+.my-pt-package-details dd {
+  margin: var(--space-2) 0 0;
+  color: var(--color-text);
+  font-size: var(--font-size-base);
+  font-weight: var(--font-weight-medium);
+  overflow-wrap: anywhere;
+}
+
 .my-pt-package-stats {
+  display: grid;
   grid-template-columns: repeat(3, minmax(0, 1fr));
-  margin-top: var(--space-4);
-  padding-top: var(--space-4);
+  gap: var(--space-5);
+  margin: var(--space-6) 0 0;
+  padding-top: var(--space-5);
   border-top: var(--border-width) solid var(--color-border);
 }
 
-.my-pt-package-stats > div {
-  min-width: 0;
-  padding: var(--space-3);
-  border-radius: var(--radius-sm);
-  background: var(--color-surface);
-}
-
-.my-pt-package-details dt,
-.my-pt-package-stats dt {
-  color: var(--color-text-soft);
-  font-size: var(--font-size-sm);
-}
-
-.my-pt-package-details dd,
 .my-pt-package-stats dd {
-  margin: var(--space-1) 0 0;
-  color: var(--color-text);
+  margin: var(--space-2) 0 0;
+  color: var(--pt-lagoon-text);
+  font-family: var(--font-body);
+  font-size: var(--font-size-2xl);
   font-weight: var(--font-weight-semibold);
-  overflow-wrap: anywhere;
-}
-
-.my-pt-package-stats dd {
-  color: var(--color-primary);
-  font-size: var(--font-size-xl);
-}
-
-.my-pt-package-error {
-  margin: 0;
-  color: var(--color-danger);
-}
-
-/* ===== Một buổi (dùng chung sắp tới và lịch sử): giờ và PT thực tế từ DTO ===== */
-.my-pt-session {
-  display: grid;
-  grid-template-columns: minmax(0, 1fr) minmax(0, 3fr);
-  gap: var(--space-5);
-  min-width: 0;
-  padding: var(--space-4);
-  border: var(--border-width) solid var(--color-border);
-  border-radius: var(--radius-md);
-  background: var(--color-surface-muted);
-}
-
-.my-pt-session-time,
-.my-pt-session-content {
-  min-width: 0;
-}
-
-.my-pt-session-hours {
-  margin: 0;
-  color: var(--color-primary);
-  font-size: var(--font-size-lg);
-  font-weight: var(--font-weight-bold);
   font-variant-numeric: tabular-nums;
 }
 
-.my-pt-session-heading {
-  display: flex;
-  align-items: center;
-  justify-content: space-between;
-  flex-wrap: wrap;
-  gap: var(--space-2);
-}
-
-.my-pt-session-heading h3 {
-  margin: 0;
-  color: var(--color-text);
-  font-size: var(--font-size-lg);
-  overflow-wrap: anywhere;
-}
-
-.my-pt-session-content p {
-  overflow-wrap: anywhere;
-}
-
-.my-pt-session-warning {
-  margin: var(--space-3) 0 0;
-  padding: var(--space-2) var(--space-3);
-  border-left: var(--border-width-accent) solid var(--color-warning);
-  border-radius: var(--radius-sm);
-  background: var(--color-warning-tint);
-  color: var(--color-warning-ink);
-  font-size: var(--font-size-sm);
-  line-height: var(--line-height-normal);
-}
-
-/* ===== Nhóm ngày: luôn hiện đầy đủ các buổi, không thu gọn ===== */
-.my-pt-days {
-  display: grid;
-  gap: var(--space-3);
-}
-
-.my-pt-day {
-  padding: var(--space-3);
-  border: var(--border-width) solid var(--color-border);
-  border-radius: var(--radius-xs);
-  background: var(--color-surface-muted);
-}
-
-.my-pt-day.is-today {
-  border-color: var(--color-primary-border);
-  background: var(--color-primary-tint);
-}
-
-.my-pt-day-heading {
-  display: flex;
-  align-items: center;
-  gap: var(--space-3);
-  min-height: var(--space-8);
-}
-
-.my-pt-day-label {
-  min-width: 0;
-  color: var(--color-text);
-  font-weight: var(--font-weight-semibold);
-}
-
-.my-pt-day-count {
-  margin-left: auto;
-  white-space: nowrap;
-  color: var(--color-text-soft);
-  font-size: var(--font-size-sm);
-}
-
-.my-pt-day-sessions {
-  display: grid;
-  gap: var(--space-3);
-  margin-top: var(--space-3);
-}
-
-/* Mỗi buổi nền trắng để tách khỏi nền nhóm ngày. */
-.my-pt-day .my-pt-session {
-  background: var(--color-surface);
-}
-
-/* ===== Lịch sử buổi tập: badge chung (common.css) + ghi chú ===== */
-.my-pt-session-status {
-  display: flex;
-  align-items: center;
-  gap: var(--space-2);
-}
-
-.my-pt-session-note {
-  margin: var(--space-2) 0 0;
-  color: var(--color-text);
-  font-size: var(--font-size-sm);
-  line-height: var(--line-height-normal);
-}
-
-/* ===== Bộ lọc chung: 3 ô (Loại buổi, Từ ngày, Đến ngày) + nút trên cùng một hàng ===== */
-.my-pt-filters {
-  display: grid;
-  grid-template-columns: repeat(4, minmax(0, 1fr));
-  gap: var(--space-4);
-  min-width: 0;
-  margin: 0;
-  padding: 0;
-  border: 0;
-}
-
-.my-pt-filters label {
-  display: grid;
-  gap: var(--space-2);
-  min-width: 0;
-  color: var(--color-text);
-  font-size: var(--font-size-sm);
-  font-weight: var(--font-weight-semibold);
-}
-
-.my-pt-filters input,
-.my-pt-filters select {
-  width: 100%;
-  min-width: 0;
-  padding: var(--space-3);
-  border: var(--border-width) solid var(--color-primary-border);
-  border-radius: var(--radius-sm);
-  background: var(--color-surface);
-  color: var(--color-text);
-  font: inherit;
-}
-
-/* Ô có lỗi từ server (filterErrors): viền đỏ như .field .invalid của common.css. */
-.my-pt-filters .invalid {
-  border-color: var(--color-danger);
-}
-
-/* Lỗi chữ đỏ dưới ô dùng .field-error chung; chỉ bỏ đậm kế thừa từ label. */
-.my-pt-filters .field-error {
-  font-weight: var(--font-weight-regular);
-}
-
-/* Nút nằm cột thứ tư, căn đáy cho thẳng hàng với ô nhập. */
-.my-pt-filter-actions {
-  display: flex;
-  flex-wrap: wrap;
-  align-items: flex-end;
-  align-self: start;
-  gap: var(--space-2);
-  padding-top: calc(var(--font-size-sm) * 1.5 + var(--space-2));
-}
-
-/* Bộ lọc sai nên chưa áp dụng: báo một dòng phía trên form. */
-.my-pt-filter-alert {
-  margin: 0 0 var(--space-4);
-  padding: var(--space-2) var(--space-3);
-  border-left: var(--border-width-accent) solid var(--color-danger);
-  border-radius: var(--radius-sm);
-  background: var(--color-danger-tint);
-  color: var(--color-danger-ink);
-  font-size: var(--font-size-sm);
-}
-
-/* ===== Trạng thái riêng của Lịch sử: dải link, lựa chọn đang áp dụng có aria-current ===== */
-.my-pt-status-tabs {
-  display: flex;
-  flex-wrap: wrap;
-  gap: var(--space-2);
-  margin-bottom: var(--space-4);
-}
-
-.my-pt-status-tab {
-  padding: var(--space-1) var(--space-3);
-  border: var(--border-width) solid var(--color-border);
-  border-radius: var(--radius-pill);
-  background: var(--color-surface);
-  color: var(--color-text-soft);
-  font-size: var(--font-size-sm);
-  text-decoration: none;
-  white-space: nowrap;
-}
-
-.my-pt-status-tab:hover {
-  border-color: var(--color-primary-border);
-  color: var(--color-text);
-}
-
-.my-pt-status-tab[aria-current="true"] {
-  border-color: var(--color-primary-border);
-  background: var(--color-primary-tint);
-  color: var(--color-primary-hover);
-  font-weight: var(--font-weight-semibold);
-}
-
-.my-pt-status-tab:focus-visible {
-  outline: var(--border-width-accent) solid var(--color-primary);
-  outline-offset: var(--space-1);
-}
-
-.my-pt-status-error {
-  margin: calc(-1 * var(--space-2)) 0 var(--space-4);
-}
-
-/* ===== Khung dữ liệu: không giả lập trạng thái rỗng của khách ===== */
 .my-pt-placeholder {
-  padding: var(--space-5);
-  border: var(--border-width) dashed var(--color-primary-border);
-  border-radius: var(--radius-md);
-  background: var(--color-surface-muted);
+  padding: var(--space-8) var(--space-5);
+  border: var(--border-width) dashed var(--color-border-strong);
+  border-radius: var(--radius-sm);
+  background: var(--color-surface);
+  text-align: center;
 }
 
 .my-pt-placeholder p {
   margin: 0 0 var(--space-2);
   color: var(--color-text);
+  font-size: var(--font-size-base);
   font-weight: var(--font-weight-semibold);
 }
 
 .my-pt-placeholder span {
   color: var(--color-text-soft);
   font-size: var(--font-size-sm);
-  line-height: var(--line-height-normal);
+  line-height: var(--line-height-relaxed);
 }
 
-/* ===== Hint: mở bằng hover hoặc focus, không cần JavaScript ===== */
-.my-pt-info { position: relative; display: inline-flex; }
-.my-pt-info button {
+/* Giải thích native: mở bằng chạm hoặc Enter, hỗ trợ Escape trong JS. */
+.my-pt-info {
+  position: relative;
+  display: inline-block;
+}
+
+.my-pt-info summary {
   display: grid;
   place-items: center;
-  width: var(--space-6);
-  height: var(--space-6);
-  border: var(--border-width) solid var(--color-border-strong);
-  border-radius: var(--radius-circle);
-  background: var(--color-surface);
-  color: var(--color-primary-hover);
-  font: inherit;
-  font-weight: var(--font-weight-semibold);
-  cursor: help;
+  min-width: var(--control-height-lg);
+  min-height: var(--control-height-lg);
+  color: var(--color-text-muted);
+  cursor: pointer;
+  list-style: none;
 }
-.my-pt-info button:hover,
-.my-pt-info button:focus-visible {
-  background: var(--color-primary-tint);
+
+.my-pt-info summary::-webkit-details-marker {
+  display: none;
 }
-.my-pt-info [role="tooltip"] {
+
+.my-pt-info summary:hover {
+  color: var(--color-text);
+}
+
+.my-pt-info[open] summary {
+  color: var(--pt-lagoon-text);
+}
+
+.my-pt-help {
   position: absolute;
-  top: calc(100% + var(--space-2));
-  right: 0;
-  width: min(calc(var(--space-8) * 6), 70vw);
-  padding: var(--space-3);
-  border: var(--border-width) solid var(--color-primary-border);
+  top: 100%;
+  left: 0;
+  width: min(var(--layout-auth-card-width), 70vw);
+  padding: var(--space-4);
+  border: var(--border-width) solid var(--color-border-strong);
   border-radius: var(--radius-sm);
   background: var(--color-surface);
-  box-shadow: var(--shadow-pop);
   color: var(--color-text);
   font-size: var(--font-size-sm);
   font-weight: var(--font-weight-regular);
-  line-height: var(--line-height-normal);
-  opacity: 0;
-  visibility: hidden;
-  transform: translateY(calc(-1 * var(--space-1)));
-  transition: opacity var(--duration-slow), transform var(--duration-slow), visibility var(--duration-slow);
-  z-index: var(--z-tooltip, 100);
+  line-height: var(--line-height-relaxed);
+  box-shadow: var(--shadow-pop);
+  z-index: var(--z-dropdown);
 }
-.my-pt-info:hover [role="tooltip"],
-.my-pt-info:focus-within [role="tooltip"] { opacity: 1; visibility: visible; transform: none; }
-.my-pt-info button:focus-visible,
-.my-pt-filters input:focus-visible,
-.my-pt-filters select:focus-visible { outline: var(--border-width-accent) solid var(--color-primary); outline-offset: var(--space-1); }
+
+.my-pt-pagination {
+  display: flex;
+  flex-wrap: wrap;
+  justify-content: space-between;
+  align-items: center;
+  gap: var(--space-4);
+  margin-top: var(--space-6);
+  padding-top: var(--space-5);
+  border-top: var(--border-width) solid var(--color-border);
+  color: var(--color-text-soft);
+  font-size: var(--font-size-sm);
+}
+
+.my-pt-pagination-actions {
+  display: flex;
+  gap: var(--space-2);
+}
+
+.my-pt-pagination .btn {
+  min-height: var(--control-height-lg);
+}
+
+.my-pt-pagination [aria-disabled="true"] {
+  opacity: var(--opacity-disabled);
+  cursor: default;
+}
+
+.my-pt-view-tabs button:focus-visible, .my-pt-info summary:focus-visible, .my-pt-filters input:focus-visible, .my-pt-filters select:focus-visible, .my-pt-status-tab:focus-visible {
+  outline: var(--focus-outline-width) solid var(--color-primary);
+  outline-offset: var(--focus-outline-offset);
+}
+
 .my-pt-visually-hidden {
   position: absolute;
-  width: 1px;
-  height: 1px;
+  width: var(--border-width);
+  height: var(--border-width);
   overflow: hidden;
   clip-path: inset(50%);
   white-space: nowrap;
 }
 
-/* ===== Mobile: filter xuống hai cột rồi một cột ===== */
-@media (max-width: 900px) {
-  .my-pt-package-list { grid-template-columns: minmax(0, 1fr); }
-  .my-pt-package-details-couple { grid-template-columns: repeat(2, minmax(0, 1fr)); }
-  .my-pt-filters { grid-template-columns: repeat(2, minmax(0, 1fr)); }
-  /* Hàng nút xuống dòng riêng, không cần đệm để căn đáy với ô nhập. */
-  .my-pt-filter-actions { grid-column: 1 / -1; padding-top: 0; }
+@media (max-width: 1000px) {
+  .my-pt-filters {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+
+  .my-pt-filter-actions {
+    grid-column: 1 / -1;
+    padding-top: 0;
+  }
+
+  .my-pt-package-list {
+    grid-template-columns: minmax(0, 1fr);
+  }
 }
-@media (max-width: 540px) {
-  .my-pt-session { grid-template-columns: minmax(0, 1fr); gap: var(--space-3); }
-  .my-pt-package-card { padding: var(--space-4); }
-  .my-pt-package-details,
-  .my-pt-package-card:not(:only-child) .my-pt-package-details { grid-template-columns: minmax(0, 1fr); }
-  .my-pt-package-stats { gap: var(--space-2); }
-  .my-pt-package-stats > div { padding: var(--space-2); }
-  .my-pt-panel { padding: var(--space-4); }
-  .my-pt-filters { grid-template-columns: minmax(0, 1fr); }
+@media (max-width: 900px) {
+  body.my-pt-sessions-page .content {
+    width: 100%;
+    padding-inline: calc(var(--layout-gutter-mobile) + var(--dock-handle-width));
+  }
 }
 
-/* Hai khối chuyển trang độc lập; tự xuống hàng trên màn hình hẹp. */
-.my-pt-pagination { display: flex; flex-wrap: wrap; align-items: center; justify-content: space-between; gap: var(--space-3); margin-top: var(--space-5); padding-top: var(--space-4); border-top: var(--border-width) solid var(--color-border); color: var(--color-text-soft); font-size: var(--font-size-sm); }
-.my-pt-pagination-actions { display: flex; gap: var(--space-2); }
-.my-pt-pagination [aria-disabled="true"] { opacity: var(--opacity-disabled); cursor: default; }
+@media (max-width: 700px) {
+  .my-pt-page-heading {
+    align-items: flex-start;
+    flex-direction: column;
+    gap: var(--space-4);
+  }
+
+  .my-pt-view-tabs {
+    gap: var(--space-4);
+  }
+
+  .my-pt-view-tabs button {
+    font-size: var(--font-size-sm);
+  }
+
+  .my-pt-filter-panel {
+    padding: var(--space-4);
+  }
+
+  .my-pt-filters {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+
+  .my-pt-filters label:first-of-type {
+    grid-column: 1 / -1;
+  }
+
+  .my-pt-session {
+    grid-template-columns: minmax(0, 1fr);
+    gap: var(--space-3);
+    padding: var(--space-4);
+  }
+
+  .my-pt-session-content {
+    grid-template-columns: minmax(0, 1fr);
+    gap: var(--space-2);
+  }
+
+  .my-pt-session-heading > .my-pt-package-type, .my-pt-session-status {
+    grid-column: 1;
+    grid-row: auto;
+    justify-self: start;
+  }
+
+  .my-pt-package-details, .my-pt-package-details-couple {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+
+  .my-pt-package-card {
+    padding: var(--space-5);
+  }
+
+  .my-pt-package-stats {
+    gap: var(--space-3);
+  }
+
+  .my-pt-package-stats dt {
+    font-size: var(--font-size-xs);
+  }
+
+  .my-pt-help {
+    position: fixed;
+    top: auto;
+    bottom: var(--space-6);
+    left: var(--layout-gutter-mobile);
+    width: calc(100vw - var(--layout-gutter-mobile) * 2);
+  }
+}

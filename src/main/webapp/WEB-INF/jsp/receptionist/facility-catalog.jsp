@@ -66,7 +66,7 @@
 
     </header>
 
-    <main class="content">
+    <main class="content" id="main-content" tabindex="-1">
 
       <section class="facility-panel">
 

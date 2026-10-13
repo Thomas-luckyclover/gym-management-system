@@ -7,10 +7,11 @@
 <%@ page pageEncoding="UTF-8" %>
 <%@ taglib prefix="c" uri="jakarta.tags.core" %>
 
+<a class="skip-link" href="#main-content">Bỏ qua menu, đến nội dung</a>
 <div class="dockwrap" id="dock">
   <aside class="sidebar">
     <div class="brand">
-      <span class="brand-mark"><img src="${pageContext.request.contextPath}/images/logo-mark.png" alt=""></span>
+      <span class="brand-mark"><img src="${pageContext.request.contextPath}/images/brand/supergym-mark.svg?v=2" alt="" width="40" height="40"></span>
       <div class="brand-text">
         <div class="brand-name">Super Gym</div>
         <div class="brand-role">Lễ tân</div>
@@ -138,6 +139,7 @@
       <a href="${pageContext.request.contextPath}/logout" class="logout">Đăng xuất</a>
     </div>
   </aside>
+  <button class="dock-backdrop" type="button" tabindex="-1" aria-hidden="true"></button>
 
   <button class="dock-handle"
           id="dockHandle"
@@ -145,8 +147,6 @@
           aria-label="Mở menu điều hướng"
           aria-expanded="false"
           aria-controls="dock">
-    <svg viewBox="0 0 24 24" aria-hidden="true">
-      <path d="m9 6 6 6-6 6"></path>
-    </svg>
+    <svg viewBox="0 0 24 24" aria-hidden="true"><path d="m9 6 6 6-6 6"></path></svg>
   </button>
 </div>

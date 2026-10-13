@@ -14,18 +14,18 @@
 <head>
   <%@ include file="/WEB-INF/jsp/common/head.jspf" %>
   <title>Quên mật khẩu — Super Gym</title>
-  <link rel="stylesheet" href="${pageContext.request.contextPath}/css/pages/auth/login.css">
+  <link rel="stylesheet" href="${pageContext.request.contextPath}/css/pages/auth/login.css?v=3">
   <link rel="stylesheet" href="${pageContext.request.contextPath}/css/pages/auth/forgot-password.css?v=6">
   <script src="${pageContext.request.contextPath}/js/pages/auth/forgot-password.js?v=1" defer></script>
 </head>
-<body class="theme-guest-dark auth-dark">
+<body class="theme-guest-dark auth-dark auth-page-forgot">
   <%@ include file="/WEB-INF/jsp/common/flash-toast.jspf" %>
   <c:set var="ctx" value="${pageContext.request.contextPath}" />
   <c:set var="step" value="${empty recoveryStep ? 'email' : recoveryStep}" />
 
   <div class="auth-shell">
     <div class="auth-top">
-      <a class="auth-brand" href="${ctx}/">Super Gym</a>
+      <a class="auth-brand" href="${ctx}/"><img src="${pageContext.request.contextPath}/images/brand/supergym-wordmark.svg?v=2" alt="Super Gym" width="180" height="44"></a>
       <a class="auth-back" href="${ctx}/login">
         <i class="fa-solid fa-arrow-left"></i> Về đăng nhập
       </a>

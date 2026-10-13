@@ -137,7 +137,7 @@
     min-width: 0;
     padding: var(--space-4-5) var(--space-5);
     background: var(--color-board);
-    color: var(--color-board-text);
+    color: var(--color-text);
     /* Cỡ số co theo bề rộng ô (đơn vị cqi) */
     container-type: inline-size;
 }
@@ -150,7 +150,7 @@
 }
 
 .metric-label {
-    color: var(--color-board-soft);
+    color: var(--color-text-muted);
     font-size: var(--font-size-sm);
     font-weight: var(--font-weight-semibold);
 }
@@ -161,11 +161,11 @@
 }
 
 .metric-value {
-    color: var(--color-board-text);
+    color: var(--color-text);
     font-family: var(--font-heading);
     font-variant-numeric: tabular-nums;
     /* 10cqi: "999.999.999 ₫" vẫn vừa ô 200px, không bị cắt */
-    font-size: clamp(var(--font-size-lg), 10cqi, var(--font-size-3xl));
+    font-size: clamp(var(--font-size-lg), 11cqi, 3.25rem);
     font-weight: var(--font-weight-extrabold);
     letter-spacing: var(--letter-spacing-tight);
     line-height: var(--line-height-tight);
@@ -173,7 +173,7 @@
 }
 
 .metric-note {
-    color: var(--color-board-soft);
+    color: var(--color-text-muted);
     font-size: var(--font-size-xs);
     line-height: var(--line-height-relaxed);
 }
@@ -396,4 +396,19 @@
     height: var(--space-1);
     opacity: 0;
     pointer-events: none;
+}
+
+/* Bộ lọc dùng được bằng bàn phím; chỉ số đồng nhất với báo cáo quản lý. */
+.report-date-input:focus-visible {
+  outline: var(--focus-outline-width) solid var(--brand-aqua);
+  outline-offset: var(--focus-outline-offset);
+}
+.dock .metric-grid { display: grid; grid-template-columns: repeat(4, minmax(0, 1fr)); }
+.dock .metric-card { padding: var(--space-5); }
+.dock .metric-value { font-size: var(--font-size-2xl); }
+@media (max-width: 1279px) {
+  .dock .metric-grid { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+}
+@media (max-width: 480px) {
+  .dock .metric-grid { grid-template-columns: minmax(0, 1fr); }
 }
