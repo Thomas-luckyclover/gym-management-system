@@ -1,5 +1,6 @@
 package com.gms.job;
 
+import com.gms.service.LeaveRequestService;
 import java.sql.SQLException;
 
 /**
@@ -9,9 +10,14 @@ import java.sql.SQLException;
  * Luật: trước mốc P-20 (20:00 ngày trước ngày nghỉ) nhắc Manager; quá mốc mà đơn còn Pending → Rejected và báo cho nhân viên.
  *
  * Người phụ trách gợi ý: TV3 (xem docs/team-plan.md).
- * TODO: gọi Service tương ứng trong run(); job KHÔNG tự viết SQL.
  */
 public class AutoRejectOverdueLeaveRequestsJob implements BackgroundJob {
+
+    private final LeaveRequestService leaveRequestService;
+
+    public AutoRejectOverdueLeaveRequestsJob() {
+        this.leaveRequestService = new LeaveRequestService();
+    }
 
     @Override
     public String getName() {
@@ -20,6 +26,6 @@ public class AutoRejectOverdueLeaveRequestsJob implements BackgroundJob {
 
     @Override
     public void run() throws SQLException {
-        // TODO(JOB-07): gọi Service xử lý, VD: new XxxService().runJob();
+        leaveRequestService.processJob07();
     }
 }
