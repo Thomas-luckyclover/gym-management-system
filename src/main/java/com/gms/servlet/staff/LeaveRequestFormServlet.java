@@ -1,11 +1,16 @@
 package com.gms.servlet.staff;
 
+import com.gms.constant.SessionKey;
+import com.gms.dto.ServiceResult;
+import com.gms.dto.StaffLeaveFormView;
 import com.gms.service.LeaveRequestService;
+import com.gms.util.RequestUtil;
 import jakarta.servlet.ServletException;
 import jakarta.servlet.annotation.WebServlet;
 import jakarta.servlet.http.HttpServlet;
 import jakarta.servlet.http.HttpServletRequest;
 import jakarta.servlet.http.HttpServletResponse;
+import jakarta.servlet.http.HttpSession;
 
 import java.io.IOException;
 
@@ -30,7 +35,28 @@ public class LeaveRequestFormServlet extends HttpServlet {
             HttpServletRequest request,
             HttpServletResponse response
     ) throws ServletException, IOException {
-        // TODO: xử lý doGet ở commit kế tiếp
+        // B1: lấy accountId từ session đăng nhập
+        HttpSession session = request.getSession(false);
+        Integer accountId = session == null
+                ? null
+                : (Integer) session.getAttribute(SessionKey.ACCOUNT_ID);
+
+        if (accountId == null) {
+            RequestUtil.redirect(request, response, "/login");
+            return;
+        }
+
+        // B2: gọi Service lấy dữ liệu khởi tạo cho form nộp đơn
+        ServiceResult<StaffLeaveFormView> result = leaveRequestService.getStaffLeaveForm(accountId);
+
+        // B3: chuyển dữ liệu sang JSP
+        if (!result.isSuccess()) {
+            request.setAttribute("formError", result.getMessage());
+        } else {
+            request.setAttribute("formView", result.getData());
+        }
+
+        RequestUtil.forward(request, response, "staff/leave-request-form");
     }
 
     @Override
