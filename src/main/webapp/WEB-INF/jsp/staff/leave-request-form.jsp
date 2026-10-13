@@ -245,5 +245,7 @@
       </main>
     </div>
   </div>
+
+  <script src="${pageContext.request.contextPath}/js/pages/staff/leave-request-form.js"></script>
 </body>
 </html>
