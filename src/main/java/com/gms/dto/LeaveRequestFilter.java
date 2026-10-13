@@ -22,4 +22,12 @@ public class LeaveRequestFilter {
         this.status = status;
         this.keyword = keyword;
     }
+
+    public LeaveRequest.Status getStatus() {
+        return status;
+    }
+
+    public String getKeyword() {
+        return keyword;
+    }
 }
