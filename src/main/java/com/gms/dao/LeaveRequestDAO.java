@@ -355,6 +355,30 @@ public class LeaveRequestDAO {
     }
 
     /**
+     * Hệ thống tự động từ chối đơn nghỉ phép quá hạn duyệt (JOB-07, CBR-85).
+     * ReviewedByEmployeeId được để NULL để thể hiện hệ thống tự từ chối.
+     *
+     * @param leaveRequestId mã đơn
+     * @param reason lý do từ chối ("Quá hạn duyệt")
+     * @throws SQLException lỗi kết nối hoặc truy vấn DB
+     */
+    public void autoReject(int leaveRequestId, String reason) throws SQLException {
+        String sql = "UPDATE LeaveRequests "
+                + "SET Status = 'Rejected', "
+                + "ReviewedByEmployeeId = NULL, "
+                + "ReviewedAt = SYSDATETIME(), "
+                + "RejectReason = ? "
+                + "WHERE LeaveRequestId = ? AND Status = 'Pending'";
+
+        try (Connection connection = DBContext.getConnection();
+                PreparedStatement statement = connection.prepareStatement(sql)) {
+            statement.setString(1, reason);
+            statement.setInt(2, leaveRequestId);
+            statement.executeUpdate();
+        }
+    }
+
+    /**
      * Thêm mới một đơn xin nghỉ phép vào database.
      *
      * @param leaveRequest entity đơn xin nghỉ
