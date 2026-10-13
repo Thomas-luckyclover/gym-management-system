@@ -443,6 +443,104 @@ public class LeaveRequestService {
         }
     }
 
+    /**
+     * Nhân viên nộp đơn xin nghỉ phép (màn #25, UC-14).
+     * Kiểm tra: hạn chốt nộp P-12 (CBR-84), trùng lịch nghỉ, và buổi dạy Scheduled của PT (CBR-83).
+     *
+     * @param accountId AccountId của nhân viên từ session
+     * @param leaveType loại nghỉ (Annual, Sick, Unpaid)
+     * @param leaveDate ngày nghỉ (phải > hôm nay)
+     * @param shiftType ca nghỉ (Morning, Afternoon, FullDay)
+     * @param reason lý do nghỉ (5–500 ký tự)
+     * @return mã đơn mới tạo (LeaveRequestId), hoặc thông báo lỗi cụ thể
+     */
+    public ServiceResult<Integer> submitLeaveRequest(
+            int accountId,
+            LeaveRequest.LeaveType leaveType,
+            LocalDate leaveDate,
+            LeaveRequest.ShiftType shiftType,
+            String reason) {
+
+        // B1: validate dữ liệu đầu vào cơ bản
+        if (leaveType == null) {
+            return ServiceResult.failField("leaveType", "Vui lòng chọn loại nghỉ.");
+        }
+        if (shiftType == null) {
+            return ServiceResult.failField("shiftType", "Vui lòng chọn ca nghỉ.");
+        }
+        if (leaveDate == null) {
+            return ServiceResult.failField("leaveDate", "Vui lòng chọn ngày nghỉ.");
+        }
+
+        LocalDate today = DateTimeUtil.today();
+        if (!leaveDate.isAfter(today)) {
+            return ServiceResult.failField("leaveDate", "Ngày nghỉ phải sau ngày hôm nay.");
+        }
+
+        if (!ValidationUtil.isLengthValid(reason, 5, 500)) {
+            return ServiceResult.failField("reason", "Lý do nghỉ phải từ 5 đến 500 ký tự.");
+        }
+
+        try {
+            // B2: tìm thông tin nhân viên theo tài khoản
+            Employee employee = findEmployeeForAccount(accountId);
+            if (employee == null) {
+                return ServiceResult.fail(
+                        String.format(Messages.MSG08_NOT_FOUND, "nhân viên"));
+            }
+
+            // B3: kiểm tra hạn chốt nộp đơn P-12 (CBR-84: mặc định 15:00 ngày liền trước ngày nghỉ)
+            LocalTime submissionCutoff = LocalTime.parse(
+                    systemConfigService.getString(
+                            SystemConfigService.LEAVE_SUBMIT_DEADLINE));
+            LocalDateTime deadline = leaveDate.minusDays(1).atTime(submissionCutoff);
+            LocalDateTime now = DateTimeUtil.now();
+
+            if (now.isAfter(deadline)) {
+                return ServiceResult.fail(
+                        "Đã quá hạn nộp đơn cho ngày này. Nghỉ đột xuất vui lòng báo trực tiếp Quản lý.");
+            }
+
+            // B4: kiểm tra trùng đơn nghỉ Pending hoặc Approved (cùng ca hoặc bao phủ FullDay)
+            boolean hasConflict = leaveRequestDAO.hasConflictingLeave(
+                    employee.getEmployeeId(), leaveDate, shiftType.getDbValue());
+            if (hasConflict) {
+                return ServiceResult.fail(
+                        "Bạn đã có đơn nghỉ trùng ngày và ca này đang chờ duyệt hoặc đã được duyệt.");
+            }
+
+            // B5: đối với PT, kiểm tra buổi dạy Scheduled trong ngày và ca xin nghỉ (CBR-83)
+            boolean isPt = Role.PT == employee.getPosition();
+            if (isPt) {
+                int clashCount = leaveRequestDAO.countScheduledSessions(
+                        employee.getEmployeeId(), leaveDate, shiftType.getDbValue());
+                if (clashCount > 0) {
+                    return ServiceResult.fail(
+                            "Bạn còn " + clashCount + " buổi dạy đã xếp trong khoảng nghỉ này. Vui lòng xử lý các buổi dạy trước khi nộp đơn.");
+                }
+            }
+
+            // B6: tạo entity và lưu đơn mới vào DB
+            LeaveRequest request = new LeaveRequest();
+            request.setEmployeeId(employee.getEmployeeId());
+            request.setLeaveType(leaveType);
+            request.setLeaveDate(leaveDate);
+            request.setShiftType(shiftType);
+            request.setReason(reason.trim());
+
+            int newLeaveRequestId = leaveRequestDAO.insert(request);
+            if (newLeaveRequestId <= 0) {
+                return ServiceResult.fail(Messages.MSG04_SYSTEM_BUSY);
+            }
+
+            return ServiceResult.ok(newLeaveRequestId);
+
+        } catch (SQLException e) {
+            e.printStackTrace();
+            return ServiceResult.fail(Messages.MSG04_SYSTEM_BUSY);
+        }
+    }
+
     /** Tìm Employee đang Working theo AccountId (Manager duyệt đơn). */
     private Employee findEmployeeForAccount(int accountId) throws SQLException {
         com.gms.entity.Account account = accountDAO.findById(accountId);
