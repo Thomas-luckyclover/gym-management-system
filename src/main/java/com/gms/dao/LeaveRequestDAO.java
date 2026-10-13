@@ -508,6 +508,25 @@ public class LeaveRequestDAO {
         return list;
     }
 
+    /**
+     * Đánh dấu đơn đã được gửi thông báo nhắc Manager (JOB-07).
+     *
+     * @param leaveRequestId mã đơn xin nghỉ
+     * @throws SQLException lỗi kết nối hoặc truy vấn DB
+     */
+    public void markReminded(int leaveRequestId) throws SQLException {
+        String sql = "UPDATE LeaveRequests "
+                + "SET ReminderSentAt = SYSDATETIME() "
+                + "WHERE LeaveRequestId = ? AND ReminderSentAt IS NULL";
+
+        try (Connection connection = DBContext.getConnection();
+                PreparedStatement statement = connection.prepareStatement(sql)) {
+
+            statement.setInt(1, leaveRequestId);
+            statement.executeUpdate();
+        }
+    }
+
     // ===== Map ResultSet → Entity =====
 
     /** Đổi 1 dòng ResultSet thành LeaveRequest; cột nullable được đọc riêng để không mất NULL. */
