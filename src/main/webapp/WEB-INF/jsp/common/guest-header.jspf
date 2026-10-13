@@ -11,20 +11,18 @@
   (Hội viên → /customer/dashboard, PT → /pt/dashboard...), nên header không cần biết vai trò.
 --%>
 <c:set var="ctx" value="${pageContext.request.contextPath}" />
+<a class="skip-link" href="#main-content">Đến nội dung chính</a>
 <header class="site-header">
   <div class="header-inner">
-    <a class="brand" href="${ctx}/">
-      <img class="brand-logo" src="${ctx}/images/logo-mark.png?v=2" alt="" width="72" height="54">
-      <span class="brand-mark">Super Gym</span>
+    <a class="brand" href="${ctx}/" aria-label="Super Gym — Trang chủ" translate="no">
+      <img class="brand-wordmark" src="${ctx}/images/brand/supergym-wordmark.svg?v=2" alt="Super Gym" width="192" height="48">
     </a>
 
     <nav class="nav-links" aria-label="Menu chính">
-      <a href="${ctx}/" ${activeNav == 'home' ? 'aria-current="page"' : ''}>Trang chủ</a>
       <a href="${ctx}/#dich-vu">Dịch vụ</a>
       <a href="${ctx}/#pricing">Bảng giá</a>
-      <a href="${ctx}/#doi-ngu">Huấn luyện viên</a>
+      <a href="${ctx}/#doi-ngu">Đội ngũ</a>
       <a href="${ctx}/blog" ${activeNav == 'blog' ? 'aria-current="page"' : ''}>Blog</a>
-      <a href="${ctx}/#faq">Hỏi đáp</a>
       <a href="${ctx}/about" ${activeNav == 'about' ? 'aria-current="page"' : ''}>Về chúng tôi</a>
     </nav>
 
@@ -32,10 +30,15 @@
       <c:choose>
         <c:when test="${not empty sessionScope.accountId}">
           <form action="${ctx}/logout" method="post" class="inline-form">
-            <button class="btn btn-ghost btn-sm" type="submit">
-              <i class="fa-solid fa-arrow-right-from-bracket"></i> Đăng xuất
+            <button class="btn btn-ghost btn-sm guest-logout" type="submit" title="Đăng xuất" aria-label="Đăng xuất">
+              <i class="fa-solid fa-arrow-right-from-bracket guest-logout-icon" aria-hidden="true"></i><span class="guest-logout-text">Đăng xuất</span>
             </button>
           </form>
+          <a class="guest-account" href="${ctx}/login" aria-label="Mở khu vực tài khoản">
+            <span class="guest-account__avatar" aria-hidden="true"><i class="fa-solid fa-user"></i></span>
+            <span class="guest-account__text"><strong><c:out value="${sessionScope.displayName}" default="Tài khoản của tôi" /></strong><small>Khu vực ${sessionScope.role eq 'Customer' ? 'hội viên' : 'tài khoản'}</small></span>
+            <i class="fa-solid fa-chevron-right guest-account__arrow" aria-hidden="true"></i>
+          </a>
         </c:when>
         <c:otherwise>
           <a class="btn btn-ghost btn-sm" href="${ctx}/login">Đăng nhập</a>
@@ -47,12 +50,13 @@
     <%-- common.js tự bắt [data-toggle-target] để mở/đóng menu mobile --%>
     <button class="hamburger" type="button" data-toggle-target="mobileNav"
             aria-label="Mở menu" aria-expanded="false" aria-controls="mobileNav">
-      <i class="fa-solid fa-bars"></i>
+      <svg viewBox="0 0 24 24" width="24" height="24" fill="none" stroke="currentColor" stroke-width="1.8" aria-hidden="true"><path d="M4 7h16M4 12h16M4 17h16"/></svg>
     </button>
   </div>
 
   <div class="mobile-nav" id="mobileNav" hidden>
     <a href="${ctx}/">Trang chủ</a>
+    <a href="${ctx}/#dich-vu">Dịch vụ</a>
     <a href="${ctx}/#pricing">Bảng giá</a>
     <a href="${ctx}/#doi-ngu">Huấn luyện viên</a>
     <a href="${ctx}/blog">Blog</a>
@@ -60,6 +64,10 @@
     <a href="${ctx}/about">Về chúng tôi</a>
     <c:choose>
       <c:when test="${not empty sessionScope.accountId}">
+        <a class="guest-account" href="${ctx}/login">
+          <span class="guest-account__avatar" aria-hidden="true"><i class="fa-solid fa-user"></i></span>
+          <span class="guest-account__text"><strong><c:out value="${sessionScope.displayName}" default="Tài khoản của tôi" /></strong><small>Về khu vực tài khoản</small></span>
+        </a>
         <form action="${ctx}/logout" method="post">
           <button class="btn btn-ghost btn-sm" type="submit">Đăng xuất</button>
         </form>

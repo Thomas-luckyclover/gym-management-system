@@ -13,8 +13,10 @@
 <head>
   <%@ include file="/WEB-INF/jsp/common/head.jspf" %>
   <title>Check-in hội viên · Super Gym Lễ tân</title>
-  <link rel="stylesheet" href="${pageContext.request.contextPath}/css/pages/receptionist/check-in.css?v=2">
+  <link rel="stylesheet" href="${pageContext.request.contextPath}/css/pages/receptionist/check-in.css?v=20261013c">
+  <link rel="stylesheet" href="${pageContext.request.contextPath}/css/pages/auth/notification-bell.css">
   <script src="${pageContext.request.contextPath}/js/pages/receptionist/check-in.js" defer></script>
+  <script src="${pageContext.request.contextPath}/js/pages/auth/notification-bell.js" defer></script>
 </head>
 <body class="dock theme-staff">
   <%@ include file="/WEB-INF/jsp/common/flash-toast.jspf" %>
@@ -28,6 +30,9 @@
           <h1 class="tb-title">Check-in hội viên</h1>
         </div>
         <div class="top-right">
+
+          <%@ include file="/WEB-INF/jsp/common/notification-bell.jspf" %>
+
           <span class="badge badge-ok">
             <i class="fa-solid fa-circle-check"></i> Ca làm việc đang mở
           </span>
@@ -41,7 +46,7 @@
         </div>
       </header>
 
-      <main class="content">
+      <main class="content" id="main-content" tabindex="-1">
         <div class="split">
           <div class="col-main">
 
@@ -58,7 +63,9 @@
                   <i class="fa-solid fa-magnifying-glass"></i>
                   <input id="ciq" name="q" type="search" value="<c:out value='${query}' />"
                          placeholder="KH-1001 hoặc 0902345678" autocomplete="off"
-                         aria-label="Mã khách hoặc số điện thoại" required>
+                         aria-label="Mã khách hoặc số điện thoại" required
+                         <%-- Lễ tân gõ ngay không cần chuột; khi đã tìm ra người được vào thì con trỏ nhảy sang nút Xác nhận --%>
+                         <c:if test="${not lookupResult.canCheckIn}">autofocus</c:if>>
                 </div>
                 <button class="btn btn-primary" type="submit">Tìm</button>
                 <c:if test="${not empty query}">
@@ -197,7 +204,8 @@
                           <input type="hidden" name="subscriptionId" value="${lookupResult.subscriptionId}">
                           <input type="hidden" name="customerName" value="<c:out value='${lookupResult.fullName}' />">
                           <input type="hidden" name="photoVerified" value="true">
-                          <button class="btn btn-primary" type="submit" data-ci-go>
+                          <%-- autofocus: gõ mã → Enter (tìm) → Enter (vào tập) --%>
+                          <button class="btn btn-primary" type="submit" data-ci-go autofocus>
                             <i class="fa-solid fa-door-open"></i> Xác nhận vào tập
                           </button>
                         </form>
@@ -246,8 +254,9 @@
               </div>
             </div>
 
-            <div class="side-card">
-              <span class="section-label">Mã thử nhanh</span>
+            <%-- Mã thử chỉ dùng khi demo: gập sẵn để lễ tân không bấm nhầm khi làm thật --%>
+            <details class="side-card ci-demo">
+              <summary class="section-label">Mã thử (demo)</summary>
               <div class="try-list">
                 <button class="btn-try" type="button" data-try="KH-1001">
                   <span class="tabular">KH-1001</span><span>Hợp lệ</span>
@@ -280,7 +289,7 @@
                   <span class="tabular">0999999999</span><span>Không tồn tại</span>
                 </button>
               </div>
-            </div>
+            </details>
           </aside>
         </div>
       </main>

@@ -9,7 +9,7 @@
 
                 <title>Tạo tài khoản — Super Gym</title>
 
-                <link rel="stylesheet" href="${pageContext.request.contextPath}/css/pages/auth/register.css">
+                <link rel="stylesheet" href="${pageContext.request.contextPath}/css/pages/auth/register.css?v=2">
 
                 <script src="${pageContext.request.contextPath}/js/pages/auth/register.js?v=3" defer></script>
         </head>
@@ -23,12 +23,12 @@
             email nhập sai (CBR-25) "blocked-no-email" → Hồ sơ cũ chưa có email (CBR-27) [Kết quả] "success" → Đăng ký /
             kích hoạt hồ sơ thành công --%>
 
-            <body class="theme-guest-dark auth-dark">
+            <body class="theme-guest-dark auth-dark auth-page-register">
                 <%@ include file="/WEB-INF/jsp/common/flash-toast.jspf" %>
 
                     <div class="auth-shell">
                         <div class="auth-top">
-                            <a class="auth-brand" href="${pageContext.request.contextPath}/">Super Gym</a>
+                            <a class="auth-brand" href="${pageContext.request.contextPath}/"><img src="${pageContext.request.contextPath}/images/brand/supergym-wordmark.svg?v=2" alt="Super Gym" width="180" height="44"></a>
 
                             <a class="auth-back" href="${pageContext.request.contextPath}/">
                                 <i class="fa-solid fa-arrow-left"></i>
@@ -354,6 +354,8 @@
                                                             <i class="fa-solid fa-arrow-left"></i> Dùng số khác
                                                         </a>
                                                     </p>
+                                                    <%-- Hộp gợi ý khi chưa nhận được mail (Pumpy) --%>
+                                                    <%@ include file="/WEB-INF/jsp/common/pumpy-mail-hint.jspf" %>
                                         </c:if>
 
                                         <%--====================CLAIM: BƯỚC 2c — Nhập email (chỉ 1
@@ -516,6 +518,8 @@
                                                             <i class="fa-solid fa-arrow-left"></i> Dùng số khác
                                                         </a>
                                                     </p>
+                                                    <%-- Hộp gợi ý khi chưa nhận được mail (Pumpy) --%>
+                                                    <%@ include file="/WEB-INF/jsp/common/pumpy-mail-hint.jspf" %>
                                                 </c:if>
 
                                                 <%--====================CLAIM: BƯỚC 4c — Đặt mật

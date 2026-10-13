@@ -1044,27 +1044,63 @@ function bindFormValidation(form) {
 
 // ----- 4.3 Nút đang xử lý (GBR-22: khóa nút gửi trong lúc chờ server) -----
 
+// Hình loading của nút: Pumpy aqua, bụng kem và xoáy xanh, đẩy quả tạ to hơn người.
+// SVG tĩnh (không chứa dữ liệu người dùng); CSS ở common.css mục "Loading Pumpy đẩy tạ".
+const PUMPY_PUSH_SVG =
+    '<svg class="btn-pumpy" viewBox="0 0 100 35" aria-hidden="true" focusable="false">'
+    + '<g class="bp-dust"><circle cx="5" cy="31" r="1.6"/><circle cx="2" cy="29" r="1.1"/></g>'
+    + '<g class="bp-db">'
+    + '<rect x="51" y="15" width="28" height="5" rx="1.5" fill="#FFFFFF" stroke="#141414" stroke-width="1.4"/>'
+    + '<rect x="46" y="4" width="6" height="27" rx="2" fill="#141414" stroke="#141414" stroke-width="1.4"/>'
+    + '<rect x="78" y="4" width="6" height="27" rx="2" fill="#141414" stroke="#141414" stroke-width="1.4"/>'
+    + '<rect x="33" y="1" width="13" height="33" rx="3" fill="#141414" stroke="#141414" stroke-width="1.6"/>'
+    + '<rect x="84" y="1" width="13" height="33" rx="3" fill="#141414" stroke="#141414" stroke-width="1.6"/>'
+    + '<rect x="38" y="5" width="2.2" height="25" rx="1" fill="#18B8C0"/>'
+    + '<rect x="89.5" y="5" width="2.2" height="25" rx="1" fill="#18B8C0"/>'
+    + '</g>'
+    + '<g class="bp-pumpy">'
+    + '<g class="bp-foot bp-foot--back"><ellipse cx="11" cy="31" rx="4" ry="2.4" fill="#18B8C0" stroke="#141414" stroke-width="1.4"/></g>'
+    + '<path d="M9 12 L9.5 5 L14 9 Z M27 11 L25.5 4.5 L21.5 8.5 Z" fill="#18B8C0" stroke="#141414" stroke-width="1.3" stroke-linejoin="round"/>'
+    + '<ellipse cx="18" cy="19" rx="11" ry="10" fill="#18B8C0" stroke="#141414" stroke-width="1.6"/>'
+    + '<path d="M27 15 L33.5 14 M27.5 21 L33.5 21" stroke="#141414" stroke-width="3.6" stroke-linecap="round"/>'
+    + '<path d="M27 15 L33.5 14 M27.5 21 L33.5 21" stroke="#18B8C0" stroke-width="1.8" stroke-linecap="round"/>'
+    + '<path d="M17 15 L19.5 16.5 L17 18 M24.5 15 L22 16.5 L24.5 18" fill="none" stroke="#141414" stroke-width="1.3" stroke-linecap="round" stroke-linejoin="round"/>'
+    + '<path d="M18.5 22 H24" stroke="#141414" stroke-width="1.6" stroke-linecap="round"/>'
+    + '<ellipse cx="18" cy="26" rx="4" ry="3.4" fill="#F2FBF8"/>'
+    + '<path d="M17.4 25.6 a1 1 0 1 1 1 1 a2 2 0 1 1 -2 -2" fill="none" stroke="#087A80" stroke-width="0.8" stroke-linecap="round"/>'
+    + '<g class="bp-foot bp-foot--front"><ellipse cx="20" cy="31" rx="4" ry="2.4" fill="#18B8C0" stroke="#141414" stroke-width="1.4"/></g>'
+    + '</g>'
+    + '<g class="bp-sweat"><path d="M9 7 q-2 -3 0 -5 q2 2 0 5z"/><path d="M5 12 q-2 -2.5 0 -4.5 q2 2 0 4.5z"/></g>'
+    + '</svg>';
+
 // Bật/tắt trạng thái "đang xử lý" cho 1 nút
 // Luồng xử lý:
-// B1 (bật): nhớ chữ gốc vào data-original-text, khóa nút, đổi chữ thành "Đang xử lý…", thêm class is-loading (CSS vẽ vòng xoay)
-// B2 (tắt): trả lại chữ gốc, mở khóa nút
+// B1 (bật): nhớ nội dung gốc của nút (cả icon), khóa nút, thay bằng Pumpy đẩy tạ + "Đang xử lý…", thêm class is-loading
+// B2 (tắt): trả lại nội dung gốc, mở khóa nút
+const buttonOriginalHtml = new WeakMap();
+
 function setButtonLoading(button, isLoading) {
     if (isLoading) {
-        // B1
-        if (button.dataset.originalText === undefined) {
-            button.dataset.originalText = button.textContent.trim();
+        // B1: đang loading rồi thì thôi (tránh 2 nơi cùng bật)
+        if (button.classList.contains("is-loading")) {
+            return;
         }
+        buttonOriginalHtml.set(button, button.innerHTML);
         button.disabled = true;
         button.classList.add("is-loading");
         button.setAttribute("aria-busy", "true");
-        button.textContent = "Đang xử lý…";
+        // B1.1: hình Pumpy (chuỗi tĩnh) rồi chữ thường qua textContent
+        button.innerHTML = PUMPY_PUSH_SVG;
+        const label = document.createElement("span");
+        label.textContent = "Đang xử lý…";
+        button.appendChild(label);
         return;
     }
 
     // B2
-    if (button.dataset.originalText !== undefined) {
-        button.textContent = button.dataset.originalText;
-        delete button.dataset.originalText;
+    if (buttonOriginalHtml.has(button)) {
+        button.innerHTML = buttonOriginalHtml.get(button);
+        buttonOriginalHtml.delete(button);
     }
     button.disabled = false;
     button.classList.remove("is-loading");
@@ -1410,7 +1446,29 @@ function bindToggleButtons() {
                 isOpen = !target.hidden;
             }
             button.setAttribute("aria-expanded", String(isOpen));
+            if (target.id === "mobileNav") {
+                button.setAttribute("aria-label", isOpen ? "Đóng menu" : "Mở menu");
+            }
         });
+        if (button.dataset.toggleTarget === "mobileNav") {
+            const mobileNav = document.getElementById("mobileNav");
+            if (!mobileNav) { continue; }
+            function closeGuestMenu() {
+                mobileNav.hidden = true;
+                button.setAttribute("aria-expanded", "false");
+                button.setAttribute("aria-label", "Mở menu");
+            }
+            mobileNav.addEventListener("click", function (event) {
+                if (event.target.closest("a[href]")) { closeGuestMenu(); }
+            });
+            document.addEventListener("keydown", function (event) {
+                if (event.key === "Escape" && !mobileNav.hidden) {
+                    closeGuestMenu();
+                    button.focus();
+                }
+            });
+            window.matchMedia("(max-width: 1080px)").addEventListener("change", closeGuestMenu);
+        }
     }
 }
 
@@ -1993,7 +2051,7 @@ function prefersReducedMotion() {
     return window.matchMedia("(prefers-reduced-motion: reduce)").matches;
 }
 
-// Sidebar dock: bấm tay nắm để ghim mở, Escape để đóng; quầng sáng theo con trỏ.
+// Sidebar thu gọn ở mọi màn hình; mở bằng tay nắm, đóng bằng Escape hoặc nền ngoài.
 // DOM: #dock (layout-<vai-trò>.jspf), #dockHandle, .sidebar
 function initDock() {
     const dock = document.getElementById("dock");
@@ -2002,15 +2060,42 @@ function initDock() {
         return;
     }
 
-    // B1: bấm tay nắm → bật/tắt trạng thái ghim
+    const sidebar = dock.querySelector(".sidebar");
+    const backdrop = dock.querySelector(".dock-backdrop");
+    const main = document.querySelector(".dock .main");
+
+    // B1: đồng bộ trạng thái mở, inert và aria; nội dung không bị menu che khi menu đóng.
     function setDockOpen(isOpen) {
         dock.classList.toggle("is-open", isOpen);
+        document.body.classList.toggle("nav-open", isOpen);
         dockHandle.setAttribute("aria-expanded", String(isOpen));
         dockHandle.setAttribute("aria-label", isOpen ? "Đóng menu điều hướng" : "Mở menu điều hướng");
+        dockHandle.setAttribute("title", isOpen ? "Đóng menu" : "Mở menu");
+        if (sidebar) {
+            sidebar.inert = !isOpen;
+        }
+        if (main) {
+            main.inert = isOpen;
+        }
     }
 
     dockHandle.addEventListener("click", function () {
         setDockOpen(!dock.classList.contains("is-open"));
+    });
+    setDockOpen(false);
+    if (backdrop) {
+        backdrop.addEventListener("click", function () {
+            setDockOpen(false);
+            dockHandle.focus();
+        });
+    }
+
+    // Click ngoài đóng menu ở mọi kích thước màn hình.
+    document.addEventListener("pointerdown", function (event) {
+        if (dock.classList.contains("is-open") && !dock.contains(event.target)) {
+            setDockOpen(false);
+            dockHandle.focus();
+        }
     });
 
     // B2: Escape đóng menu và trả focus về tay nắm
@@ -2021,10 +2106,44 @@ function initDock() {
         }
     });
 
-    // B3: quầng sáng — ghi tọa độ con trỏ (px trong sidebar) vào --mx/--my
-    const sidebar = dock.querySelector(".sidebar");
+    // B3: giữ focus trong menu đang mở, kết thúc bằng tay nắm đóng menu.
+    dock.addEventListener("keydown", function (event) {
+        if (!dock.classList.contains("is-open") || event.key !== "Tab") {
+            return;
+        }
+        const focusable = dock.querySelectorAll('a[href], button:not([disabled]):not([tabindex="-1"]), input:not([disabled])');
+        const first = focusable[0];
+        const last = focusable[focusable.length - 1];
+        if (event.shiftKey && document.activeElement === first) {
+            event.preventDefault();
+            last.focus();
+        } else if (!event.shiftKey && document.activeElement === last) {
+            event.preventDefault();
+            first.focus();
+        }
+    });
     if (sidebar) {
+        sidebar.addEventListener("click", function (event) {
+            if (event.target.closest("a[href]")) {
+                setDockOpen(false);
+            }
+        });
+        // Chặn cuộn nối sang trang ở hai đầu menu, kể cả menu ngắn không tràn.
+        sidebar.addEventListener("wheel", function (event) {
+            if (event.ctrlKey || event.deltaY === 0) {
+                return;
+            }
+            const atTop = sidebar.scrollTop <= 0;
+            const atBottom = sidebar.scrollTop + sidebar.clientHeight >= sidebar.scrollHeight - 1;
+            if ((event.deltaY < 0 && atTop) || (event.deltaY > 0 && atBottom)) {
+                event.preventDefault();
+            }
+        }, { passive: false });
+        // B4: ánh sáng nhẹ đi theo con trỏ trên nền menu, không thay đổi bố cục.
         sidebar.addEventListener("pointermove", function (event) {
+            if (prefersReducedMotion()) {
+                return;
+            }
             const rect = sidebar.getBoundingClientRect();
             sidebar.style.setProperty("--mx", (event.clientX - rect.left) + "px");
             sidebar.style.setProperty("--my", (event.clientY - rect.top + sidebar.scrollTop) + "px");
@@ -2060,7 +2179,7 @@ function setFlipValue(element, text) {
     }
 }
 
-// Khi tải trang: hiện toàn số 0 rồi lật sang giá trị thật, từng ô lần lượt như bảng giờ tàu
+// Khi tải trang: lật nhẹ các chữ số thật, không hiển thị số liệu giả trong lúc chờ.
 function initFlipNumbers() {
     const items = document.querySelectorAll(".dock [data-flip]");
     for (let i = 0; i < items.length; i++) {
@@ -2069,10 +2188,12 @@ function initFlipNumbers() {
             setFlipValue(items[i], finalText);
             continue;
         }
-        setFlipValue(items[i], finalText.replace(/[0-9]/g, "0"));
-        setTimeout(function () {
-            setFlipValue(items[i], finalText);
-        }, 250 + i * 120);
+        setFlipValue(items[i], finalText);
+        const digits = items[i].querySelectorAll(".flip-char:not(.is-symbol)");
+        for (let j = 0; j < digits.length; j++) {
+            digits[j].classList.add("is-flipping");
+            digits[j].style.animationDelay = Math.min(i * 45 + j * 20, 350) + "ms";
+        }
     }
 }
 
@@ -2175,11 +2296,50 @@ document.addEventListener("DOMContentLoaded", function () {
         return;
     }
     initDock();
+    initAccountAvatarStatus();
     initFlipNumbers();
     initCountUp();
     initTilt();
     initReveal();
+    initDashboardMotionToggle();
 });
+
+// Nút trong .wx-gym-panel tạm dừng gym/canvas/icon; hai script cảnh đọc lớp trên body.
+function initDashboardMotionToggle() {
+    const button = document.querySelector("[data-dashboard-motion-toggle]");
+    if (!button) {
+        return;
+    }
+    const label = button.querySelector("span");
+    const icon = button.querySelector("path");
+    if (prefersReducedMotion()) {
+        document.body.classList.add("dashboard-motion-paused");
+        button.setAttribute("aria-pressed", "true");
+        button.setAttribute("aria-label", "Hiệu ứng đã tắt theo tùy chọn giảm chuyển động");
+        button.disabled = true;
+        label.textContent = "Hiệu ứng đã tắt";
+        return;
+    }
+    button.addEventListener("click", function () {
+        const paused = document.body.classList.toggle("dashboard-motion-paused");
+        button.setAttribute("aria-pressed", String(paused));
+        label.textContent = paused ? "Tiếp tục hiệu ứng" : "Tạm dừng hiệu ứng";
+        button.setAttribute("aria-label", label.textContent);
+        icon.setAttribute("d", paused ? "m8 5 11 7-11 7z" : "M8 5v14M16 5v14");
+        document.dispatchEvent(new Event("dashboardmotionchange"));
+    });
+}
+
+// Một lớp bọc chung cho cả ảnh và chữ viết tắt; chấm trạng thái không bị ảnh cắt.
+function initAccountAvatarStatus() {
+    document.querySelectorAll(".dock .tb-user .avatar").forEach(function (avatar) {
+        if (avatar.parentElement.classList.contains("tb-avatar")) { return; }
+        const wrapper = document.createElement("span");
+        wrapper.className = "tb-avatar";
+        avatar.before(wrapper);
+        wrapper.appendChild(avatar);
+    });
+}
 
 // Bạt dùng chung PT/Customer Dashboard: cuốn lên khi cuộn xuống, thả xuống khi cuộn lên.
 // DOM: .pt-awning (pt/_awning.jspf); CSS: awning.css + base.css đọc class is-retracted trên <body>.
@@ -2209,6 +2369,57 @@ document.addEventListener("DOMContentLoaded", function () {
     }, {passive: true});
 });
 
+// Đồng hồ LED trên bảng phòng tập (pt/_awning.jspf): giờ:phút theo máy, cập nhật mỗi giây
+document.addEventListener("DOMContentLoaded", function () {
+    const clock = document.querySelector("[data-gym-clock]");
+    if (!clock) {
+        return;
+    }
+    const parts = clock.childNodes;
+    function update() {
+        const now = new Date();
+        const hours = String(now.getHours()).padStart(2, "0");
+        const minutes = String(now.getMinutes()).padStart(2, "0");
+        parts[0].nodeValue = hours;
+        parts[2].nodeValue = minutes;
+        clock.setAttribute("aria-label", "Bây giờ là " + hours + " giờ " + minutes);
+    }
+    update();
+    setInterval(update, 1000);
+
+    // Mẹo tập / câu động lực trên bảng LED: đổi mỗi 8 giây, mờ dần khi chuyển câu
+    const tip = document.querySelector("[data-gym-tip]");
+    if (!tip || window.matchMedia("(prefers-reduced-motion: reduce)").matches) {
+        return;
+    }
+    const tips = [
+        "Khởi động 5–10 phút trước khi vào mức tạ nặng.",
+        "Uống khoảng 500 ml nước trước buổi tập 1–2 tiếng.",
+        "Form chuẩn trước, tăng tạ sau.",
+        "Nghỉ 60–90 giây giữa các hiệp để tăng cơ.",
+        "Ngủ đủ 7–8 tiếng: cơ bắp lớn lên khi bạn nghỉ.",
+        "Ăn đủ đạm: khoảng 1,6 g mỗi kg cân nặng mỗi ngày.",
+        "Tăng tạ từ từ, khoảng 5–10% mỗi tuần.",
+        "Giãn cơ 5 phút sau buổi tập để đỡ đau mỏi.",
+        "Kỷ luật đưa bạn đi xa hơn cảm hứng.",
+        "Mỗi buổi tập là một bước gần hơn tới mục tiêu.",
+        "Không cần hoàn hảo, chỉ cần đều đặn.",
+        "Thở ra khi đẩy hoặc kéo tạ, hít vào khi hạ tạ."
+    ];
+    let tipIndex = 0;
+    setInterval(function () {
+        if (document.hidden) {
+            return;
+        }
+        tip.classList.add("is-fading");
+        setTimeout(function () {
+            tipIndex = (tipIndex + 1) % tips.length;
+            tip.textContent = tips[tipIndex];
+            tip.classList.remove("is-fading");
+        }, 400);
+    }, 8000);
+});
+
 // Nhiệt độ đã có sẵn trong HTML; JS chỉ cho số chạy nhanh khi không bật Reduce motion.
 document.addEventListener("DOMContentLoaded", function () {
     const temperature = document.querySelector("[data-weather-temperature]");
@@ -2229,4 +2440,311 @@ document.addEventListener("DOMContentLoaded", function () {
         }
     }
     requestAnimationFrame(drawTemperature);
+});
+
+// =====================================================================
+// TÌM NHANH (Ctrl/⌘ + K) — khu nội bộ. Danh sách màn lấy từ menu sidebar (.nav-link) của khu đang mở,
+// nên mỗi vai trò tự có đúng các màn của mình. Gõ để lọc (không dấu), ↑/↓ chọn, Enter mở, Esc đóng.
+// CSS: common.css mục "Tìm nhanh". Dùng <dialog> gốc của trình duyệt (bẫy focus + Esc sẵn có).
+// =====================================================================
+document.addEventListener("DOMContentLoaded", function () {
+    if (!document.body.classList.contains("dock")) {
+        return;
+    }
+    const links = document.querySelectorAll(".dock .sidebar .nav-link[href]");
+    const items = [];
+    for (let i = 0; i < links.length; i++) {
+        const href = links[i].getAttribute("href");
+        const label = links[i].textContent.trim();
+        // Bỏ mục chưa có màn (href="#") và mục trống
+        if (href && href !== "#" && label) {
+            items.push({ label: label, href: href, key: normalizeSearchText(label) });
+        }
+    }
+    if (items.length === 0) {
+        return;
+    }
+
+    // B1: dựng hộp thoại một lần
+    const dialog = document.createElement("dialog");
+    dialog.className = "cmdk";
+    dialog.setAttribute("aria-label", "Tìm nhanh màn hình");
+    dialog.innerHTML =
+        '<div class="cmdk-box">'
+        + '<input class="cmdk-input" type="search" placeholder="Tìm màn hình… (ví dụ: lich, voucher)" aria-label="Tìm màn hình" autocomplete="off">'
+        + '<ul class="cmdk-list" role="listbox"></ul>'
+        + '<p class="cmdk-foot"><kbd>↑</kbd><kbd>↓</kbd> chọn · <kbd>Enter</kbd> mở · <kbd>Esc</kbd> đóng</p>'
+        + '</div>';
+    document.body.appendChild(dialog);
+    const input = dialog.querySelector(".cmdk-input");
+    const list = dialog.querySelector(".cmdk-list");
+    let matches = items;
+    let active = 0;
+
+    // B2: vẽ danh sách theo từ khóa
+    function render() {
+        const query = normalizeSearchText(input.value.trim());
+        matches = [];
+        for (let i = 0; i < items.length; i++) {
+            if (query === "" || items[i].key.indexOf(query) !== -1) {
+                matches.push(items[i]);
+            }
+        }
+        if (active >= matches.length) {
+            active = 0;
+        }
+        list.textContent = "";
+        if (matches.length === 0) {
+            const empty = document.createElement("li");
+            empty.className = "cmdk-empty";
+            empty.textContent = "Không có màn nào khớp.";
+            list.appendChild(empty);
+            return;
+        }
+        for (let i = 0; i < matches.length; i++) {
+            const li = document.createElement("li");
+            li.className = "cmdk-item" + (i === active ? " is-active" : "");
+            li.setAttribute("role", "option");
+            li.setAttribute("aria-selected", i === active ? "true" : "false");
+            li.textContent = matches[i].label;
+            li.dataset.index = String(i);
+            list.appendChild(li);
+        }
+    }
+
+    function open() {
+        input.value = "";
+        active = 0;
+        render();
+        dialog.showModal();
+        input.focus();
+    }
+
+    function go(index) {
+        if (matches[index]) {
+            window.location.href = matches[index].href;
+        }
+    }
+
+    // B3: phím tắt mở hộp
+    document.addEventListener("keydown", function (event) {
+        if ((event.ctrlKey || event.metaKey) && event.key.toLowerCase() === "k") {
+            event.preventDefault();
+            if (dialog.open) {
+                dialog.close();
+            } else {
+                open();
+            }
+        }
+    });
+
+    input.addEventListener("input", function () {
+        active = 0;
+        render();
+    });
+
+    // B4: điều hướng bằng bàn phím trong hộp
+    input.addEventListener("keydown", function (event) {
+        if (event.key === "ArrowDown") {
+            event.preventDefault();
+            active = (active + 1) % Math.max(matches.length, 1);
+            render();
+        } else if (event.key === "ArrowUp") {
+            event.preventDefault();
+            active = (active - 1 + matches.length) % Math.max(matches.length, 1);
+            render();
+        } else if (event.key === "Enter") {
+            event.preventDefault();
+            go(active);
+        }
+    });
+
+    list.addEventListener("click", function (event) {
+        const item = event.target.closest(".cmdk-item");
+        if (item) {
+            go(Number(item.dataset.index));
+        }
+    });
+
+    // Bấm ra ngoài hộp (vùng nền) thì đóng
+    dialog.addEventListener("click", function (event) {
+        if (event.target === dialog) {
+            dialog.close();
+        }
+    });
+});
+
+
+// =====================================================================
+// LOADING PUMPY CHO MỌI NÚT GỬI FORM — cả trang khách, đăng nhập và khu nội bộ.
+// Form nào gửi thật về server (không bị chặn) thì nút vừa bấm hiện Pumpy đẩy tạ cho tới khi trang mới tải xong.
+// Bỏ qua: form bị chặn gửi (sai dữ liệu, AJAX tự lo), nút không phải .btn (link-btn), nút có data-no-loading,
+// form mở tab mới (target="_blank").
+// =====================================================================
+document.addEventListener("submit", function (event) {
+    // B1: form đã bị chặn (kiểm tra sai / AJAX) → không làm gì
+    if (event.defaultPrevented) {
+        return;
+    }
+    const form = event.target;
+    if (form.getAttribute("target") === "_blank") {
+        return;
+    }
+
+    // B2: tìm nút vừa bấm; gửi bằng Enter thì lấy nút submit đầu tiên của form
+    let button = event.submitter;
+    if (button === null || button === undefined) {
+        button = form.querySelector('button[type="submit"], button:not([type])');
+    }
+    if (button === null || !button.classList.contains("btn") || button.hasAttribute("data-no-loading")) {
+        return;
+    }
+
+    // B3: bật sau 1 nhịp để trình duyệt kịp gửi name/value của nút (nút disabled sẽ không được gửi)
+    setTimeout(function () {
+        setButtonLoading(button, true);
+    }, 0);
+});
+
+// Bấm Quay lại (trình duyệt lấy trang từ bộ nhớ đệm) → trả các nút đang loading về bình thường
+window.addEventListener("pageshow", function (event) {
+    if (!event.persisted) {
+        return;
+    }
+    const buttons = document.querySelectorAll(".btn.is-loading");
+    for (let i = 0; i < buttons.length; i++) {
+        setButtonLoading(buttons[i], false);
+    }
+});
+
+
+// =====================================================================
+// CHỌN NHANH KHOẢNG NGÀY — [data-range-presets data-from="#id" data-to="#id"], nút [data-range="7|30|month"]
+// Điền "Từ ngày / Đến ngày" rồi gửi form luôn, đỡ phải chọn lịch 2 lần.
+// =====================================================================
+document.addEventListener("click", function (event) {
+    const chip = event.target.closest("[data-range-presets] [data-range]");
+    if (!chip) {
+        return;
+    }
+    const group = chip.closest("[data-range-presets]");
+    const fromInput = document.querySelector(group.dataset.from);
+    const toInput = document.querySelector(group.dataset.to);
+    if (!fromInput || !toInput) {
+        return;
+    }
+    // B1: tính khoảng ngày theo giờ máy
+    const today = new Date();
+    let start = new Date(today);
+    if (chip.dataset.range === "month") {
+        start = new Date(today.getFullYear(), today.getMonth(), 1);
+    } else {
+        start.setDate(today.getDate() - Number(chip.dataset.range) + 1);
+    }
+    function iso(date) {
+        return date.getFullYear() + "-" + String(date.getMonth() + 1).padStart(2, "0") + "-" + String(date.getDate()).padStart(2, "0");
+    }
+    // B2: điền và gửi form (vẫn qua kiểm tra form + loading Pumpy như bấm nút Xem)
+    fromInput.value = iso(start);
+    toInput.value = iso(today);
+    if (fromInput.form && fromInput.form.requestSubmit) {
+        fromInput.form.requestSubmit();
+    }
+});
+
+
+// =====================================================================
+// LỊCH DẠY PT: đánh dấu buổi "Đang diễn ra" và buổi sắp tới "Còn N phút" (trong 60 phút)
+// Đọc data-start / data-end (yyyy-MM-ddTHH:mm) trên .pt-schedule-session; cập nhật mỗi 30 giây.
+// =====================================================================
+document.addEventListener("DOMContentLoaded", function () {
+    const sessions = document.querySelectorAll(".pt-schedule-session[data-start]");
+    if (!sessions.length) {
+        return;
+    }
+    function update() {
+        const now = Date.now();
+        for (let i = 0; i < sessions.length; i++) {
+            const item = sessions[i];
+            const start = new Date(item.dataset.start).getTime();
+            const end = new Date(item.dataset.end).getTime();
+            let label = "";
+            if (now >= start && now < end) {
+                label = "Đang diễn ra";
+            } else if (start > now && start - now <= 60 * 60 * 1000) {
+                label = "Còn " + Math.ceil((start - now) / 60000) + " phút";
+            }
+            item.classList.toggle("is-live", label === "Đang diễn ra");
+            let badge = item.querySelector(".pt-session-when");
+            if (!label) {
+                if (badge) {
+                    badge.remove();
+                }
+                continue;
+            }
+            if (!badge) {
+                badge = document.createElement("span");
+                badge.className = "pt-session-when";
+                item.querySelector(".pt-session-time").appendChild(badge); // nằm trong ô giờ, không chiếm một cột của lưới
+            }
+            badge.textContent = label;
+        }
+    }
+    update();
+    setInterval(update, 30000);
+});
+
+
+// =====================================================================
+// GIAO DIỆN SÁNG / TỐI — nút [data-theme-toggle]. Lưu lựa chọn vào localStorage "gms-theme";
+// head.jspf đọc lại trước khi vẽ trang nên không bị nháy. Mặc định: tối.
+// =====================================================================
+document.addEventListener("DOMContentLoaded", function () {
+    // B0: màn nội bộ chưa đặt công tắc trong topbar → tự gắn vào đầu khối bên phải (trước chuông, tài khoản)
+    if (document.body.classList.contains("dock") && !document.querySelector("[data-theme-toggle]")) {
+        const topbar = document.querySelector(".topbar");
+        if (topbar) {
+            const slot = topbar.querySelector(".top-right") || topbar;
+            const toggle = document.createElement("button");
+            toggle.type = "button";
+            toggle.className = "theme-toggle";
+            toggle.setAttribute("data-theme-toggle", "");
+            toggle.innerHTML = '<span class="theme-toggle__track" aria-hidden="true"><span class="theme-toggle__knob"></span></span>'
+                + '<span class="theme-toggle__label">Tối</span>';
+            slot.insertBefore(toggle, slot === topbar ? null : slot.firstChild);
+        }
+    }
+    const buttons = document.querySelectorAll("[data-theme-toggle]");
+    if (!buttons.length) {
+        return;
+    }
+    const root = document.documentElement;
+
+    // B1: cập nhật chữ, icon và aria-pressed theo chế độ hiện tại
+    function paint() {
+        const light = root.getAttribute("data-theme") === "light";
+        buttons.forEach(function (button) {
+            button.setAttribute("aria-pressed", light ? "true" : "false");
+            const label = button.querySelector(".theme-toggle__label");
+            if (label) {
+                label.textContent = light ? "Sáng" : "Tối";
+            }
+            button.setAttribute("aria-label", light ? "Chuyển sang nền tối" : "Chuyển sang nền sáng");
+        });
+    }
+
+    // B2: bấm → đổi chế độ, ghi nhớ
+    buttons.forEach(function (button) {
+        button.addEventListener("click", function () {
+            const next = root.getAttribute("data-theme") === "light" ? "dark" : "light";
+            root.setAttribute("data-theme", next);
+            try {
+                localStorage.setItem("gms-theme", next);
+            } catch (error) {
+                // Trình duyệt chặn lưu trữ: vẫn đổi được trong lần xem này
+            }
+            paint();
+        });
+    });
+    paint();
 });

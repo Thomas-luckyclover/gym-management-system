@@ -234,15 +234,116 @@ button {
   gap: var(--space-2-5);
 }
 
-/* [JS] common.js — setButtonLoading() thêm/xóa class này khi đang chờ server (GBR-22), vẽ vòng xoay trước chữ */
-.btn.is-loading::before {
-  content: "";
-  width: var(--icon-size-sm);
-  height: var(--icon-size-sm);
-  border: var(--border-width-thick) solid currentColor;
-  border-right-color: transparent;
-  border-radius: var(--radius-circle);
-  animation: spin var(--duration-spin) linear infinite;
+/* [JS] common.js — setButtonLoading() thêm/xóa class này khi đang chờ server (GBR-22).
+   Loading Pumpy đẩy tạ: Pumpy dồn hết sức đẩy quả tạ to hơn người, chân cào đất, mồ hôi văng,
+   còn quả tạ gần như đứng yên — "chẳng xi nhê gì". */
+.btn.is-loading {
+  gap: var(--space-2);
+  opacity: 1;
+  cursor: progress;
+}
+
+/* Cỡ theo chữ của nút (em) để nút nhỏ/lớn đều cân; vẫn nằm gọn trong chiều cao nút */
+.btn .btn-pumpy {
+  width: 5em;
+  height: 1.75em;
+  margin-block: -0.35em;
+  flex: none;
+  overflow: visible;
+}
+
+/* Nút nền vàng chanh (trang khách / đăng nhập): Pumpy cũng màu chanh nên đặt lên "sân" đen cho nổi */
+:is(.theme-guest, .theme-guest-dark) .btn-primary .btn-pumpy {
+  box-sizing: content-box;
+  padding: 0.2em 0.6em;
+  border-radius: var(--radius-pill);
+  background: var(--color-lime-ink);
+}
+
+/* Thân: nghiêng về phía tạ + rung vì gồng hết sức */
+.btn-pumpy .bp-pumpy {
+  transform-box: view-box;
+  transform-origin: 18px 32px;
+  animation: bp-strain 0.22s steps(2) infinite;
+}
+
+/* Hai chân cào đất xen kẽ */
+.btn-pumpy .bp-foot {
+  animation: bp-scrabble 0.28s ease-in-out infinite;
+}
+
+.btn-pumpy .bp-foot--front {
+  animation-delay: -0.14s;
+}
+
+/* Quả tạ: chỉ rung nhẹ đúng 1px, không hề dịch chuyển */
+.btn-pumpy .bp-db {
+  animation: bp-unmoved 1.6s steps(1) infinite;
+}
+
+/* Mồ hôi văng ngược ra sau */
+.btn-pumpy .bp-sweat path {
+  fill: #7FD3FF;
+  stroke: #141414;
+  stroke-width: 0.6;
+  opacity: 0;
+  animation: bp-sweat 0.9s ease-out infinite;
+}
+
+.btn-pumpy .bp-sweat path:nth-child(2) {
+  animation-delay: 0.45s;
+}
+
+/* Bụi dưới gót */
+.btn-pumpy .bp-dust circle {
+  fill: currentColor;
+  opacity: 0;
+  animation: bp-dust 0.56s ease-out infinite;
+}
+
+.btn-pumpy .bp-dust circle:nth-child(2) {
+  animation-delay: 0.28s;
+}
+
+@keyframes bp-strain {
+  0% { transform: rotate(14deg) translateX(-0.4px); }
+  100% { transform: rotate(14deg) translateX(0.4px); }
+}
+
+@keyframes bp-scrabble {
+  0%, 100% { transform: translateX(0); }
+  50% { transform: translateX(-3px); }
+}
+
+@keyframes bp-unmoved {
+  0%, 92%, 100% { transform: translateX(0); }
+  94% { transform: translateX(0.6px); }
+  96% { transform: translateX(-0.4px); }
+}
+
+@keyframes bp-sweat {
+  0% { opacity: 0; transform: translate(0, 0); }
+  20% { opacity: 1; }
+  100% { opacity: 0; transform: translate(-6px, -5px); }
+}
+
+@keyframes bp-dust {
+  0% { opacity: 0.6; transform: translate(0, 0) scale(0.6); }
+  100% { opacity: 0; transform: translate(-5px, -2px) scale(1.3); }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .btn-pumpy * {
+    animation: none !important;
+  }
+
+  .btn-pumpy .bp-pumpy {
+    transform: rotate(14deg);
+  }
+
+  .btn-pumpy .bp-sweat path {
+    opacity: 1;
+  }
 }
 
 @keyframes spin {
@@ -460,6 +561,14 @@ input[type="password"]::-ms-clear {
   border-left-color: var(--color-info);
 }
 
+.theme-guest-dark .toast-info {
+  border-left-color: var(--color-lime);
+}
+
+.theme-guest-dark .toast-info .toast-icon {
+  color: var(--color-lime);
+}
+
 .toast-info .toast-icon {
   color: var(--color-info);
 }
@@ -617,6 +726,28 @@ input[type="password"]::-ms-clear {
   text-align: center;
 }
 
+/* Trạng thái rỗng khu nội bộ: Pumpy ngồi ngơ ngác cạnh quả tạ nhỏ (chỉ CSS, không cần sửa JSP) */
+.dock .empty-state::before {
+  content: "";
+  display: block;
+  width: calc(var(--space-12) * 1.6);
+  height: calc(var(--space-12) * 1.2);
+  margin: 0 auto var(--space-3);
+  background: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 124 92'%3E %3Cellipse cx='60' cy='88' rx='44' ry='3.4' fill='url(%23hte)'/%3E %3Cg transform='translate(96 70)'%3E%3Crect x='4' y='6' width='14' height='3' fill='%23fff' stroke='%23141414' stroke-width='1.6'/%3E%3Crect x='0' y='0' width='5' height='15' rx='1' fill='%23141414'/%3E%3Crect x='17' y='0' width='5' height='15' rx='1' fill='%23141414'/%3E%3Crect x='2' y='2' width='1' height='11' fill='%2318B8C0'/%3E%3Crect x='19' y='2' width='1' height='11' fill='%2318B8C0'/%3E%3C/g%3E %3Cdefs%3E%3Cpattern id='hte' width='3.4' height='3.4' patternUnits='userSpaceOnUse' patternTransform='rotate(45)'%3E%3Ccircle cx='1.7' cy='1.7' r='0.95' fill='%23141414'/%3E%3C/pattern%3E %3Cmask id='she'%3E%3Cpath d='M22 62 C22 38 38 26 58 26 C78 26 94 38 94 62 C94 78 79 86 58 86 C37 86 22 78 22 62Z' fill='%23fff'/%3E%3Cpath d='M22 62 C22 38 38 26 58 26 C78 26 94 38 94 62 C94 78 79 86 58 86 C37 86 22 78 22 62Z' transform='translate(-7 -6)' fill='%23000'/%3E%3C/mask%3E%3C/defs%3E %3Cpath d='M30 40 L31 19 L45 30Z M86 40 L85 19 L71 30Z' fill='%2318B8C0' stroke='%23141414' stroke-width='3' stroke-linejoin='round'/%3E %3Cpath d='M32 37 L33 26 L40 31Z' fill='url(%23hte)'/%3E %3Cpath d='M22 62 C22 38 38 26 58 26 C78 26 94 38 94 62 C94 78 79 86 58 86 C37 86 22 78 22 62Z' fill='%2318B8C0'/%3E%3Cellipse cx='58' cy='70' rx='18' ry='12' fill='%23F2FBF8'/%3E %3Crect x='0' y='0' width='124' height='92' fill='url(%23hte)' mask='url(%23she)'/%3E %3Cpath d='M22 62 C22 38 38 26 58 26 C78 26 94 38 94 62 C94 78 79 86 58 86 C37 86 22 78 22 62Z' fill='none' stroke='%23141414' stroke-width='3.2'/%3E %3Cpath d='M30 47 Q33 37 42 32' fill='none' stroke='%23141414' stroke-width='1.6' stroke-linecap='round'/%3E %3Cpath transform='translate(58 72) scale(0.26) translate(-150 -280)' d='M150.0 278.0 L150.3 278.2 L150.4 278.5 L150.5 278.9 L150.5 279.3 L150.4 279.7 L150.2 280.1 L149.9 280.5 L149.4 280.8 L148.9 281.0 L148.3 281.1 L147.7 281.1 L147.0 281.0 L146.3 280.7 L145.7 280.3 L145.0 279.8 L144.5 279.1 L144.0 278.3 L143.7 277.4 L143.5 276.4 L143.5 275.3 L143.7 274.2 L144.0 273.1 L144.5 272.0 L145.3 271.0 L146.2 270.1 L147.3 269.3 L148.5 268.6 L149.9 268.1 L151.4 267.9 L153.0 267.9 L154.6 268.1 L156.2 268.6 L157.7 269.3 L159.2 270.3 L160.5 271.5 L161.6 273.0 L162.6 274.7 L163.3 276.5 L163.7 278.5 L163.8 280.5 L163.7 282.6 L163.1 284.7 L162.3 286.8 L161.1 288.8 L159.7 290.5 L157.9 292.1 L155.9 293.5 L153.6 294.5 L151.2 295.2 L148.7 295.5 L146.0 295.5 L143.4 295.1 L140.8 294.2 L138.3 293.0 L136.0 291.4 L133.9 289.4 L132.1 287.0 L130.6 284.4 L129.6 281.6 L128.9 278.6 L128.7 275.5 L128.9 272.3 L129.7 269.1 L130.9 266.1 L132.6 263.2 L134.7 260.5 L137.2 258.2 L140.1 256.2 L143.3 254.7 L146.7 253.6 L150.3 253.0 L154.0 253.0 L157.8 253.5 L161.4 254.6 L164.9 256.2 L168.2 258.4 L171.1 261.0 L173.7 264.1 L175.8 267.6 L177.4 271.4 L178.4 275.4 L178.8 279.6 L178.6 283.9 L177.8 288.1 L176.3 292.2 L174.2 296.1 L171.6 299.7 L168.4 302.9 L164.7 305.6 L160.6 307.8' fill='none' stroke='%23087A80' stroke-width='7'/%3E %3Ccircle cx='49' cy='50' r='3.6' fill='%23141414'/%3E%3Ccircle cx='69' cy='50' r='3.6' fill='%23141414'/%3E %3Ccircle cx='50.2' cy='48.6' r='1.2' fill='%23fff'/%3E%3Ccircle cx='70.2' cy='48.6' r='1.2' fill='%23fff'/%3E %3Ccircle cx='59' cy='59' r='2.6' fill='none' stroke='%23141414' stroke-width='2'/%3E %3Cellipse cx='42' cy='85' rx='9' ry='5' fill='%2318B8C0' stroke='%23141414' stroke-width='2.6'/%3E%3Cellipse cx='74' cy='85' rx='9' ry='5' fill='%2318B8C0' stroke='%23141414' stroke-width='2.6'/%3E %3Cpath d='M101 14 Q101 6 108 6 Q115 6 115 13 Q115 18 108.5 20 L108.5 24' fill='none' stroke='%23141414' stroke-width='4' stroke-linecap='round'/%3E%3Ccircle cx='108.5' cy='30' r='2.4' fill='%23141414'/%3E %3Cpath d='M95 30 L99 27 M93 22 L98 21' stroke='%23141414' stroke-width='1.8' stroke-linecap='round'/%3E %3C/svg%3E") center / contain no-repeat;
+  animation: none;
+}
+
+@keyframes empty-pumpy-bob {
+  0%, 100% { transform: translateY(0) rotate(0deg); }
+  50% { transform: translateY(calc(-1 * var(--space-1))) rotate(-2deg); }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .dock .empty-state::before {
+    animation: none;
+  }
+}
+
 /* ===== 9. TRANG LỖI 403/404/500 (WEB-INF/jsp/error) ===== */
 
 .error-page {
@@ -667,10 +798,13 @@ input[type="password"]::-ms-clear {
   display: flex;
   align-items: center;
   justify-content: space-between;
-  gap: var(--space-4);
+  /* Khoảng thở giữa logo – menu – cụm tài khoản (trước 16px nên chữ dính nhau) */
+  gap: var(--space-8);
 }
 
 .brand {
+  /* Không cho logo bị ép co lại, tránh menu đè lên chữ SUPER GYM */
+  flex: none;
   display: flex;
   align-items: center;
   gap: var(--space-2);
@@ -696,7 +830,8 @@ input[type="password"]::-ms-clear {
 
 .nav-links {
   display: flex;
-  gap: var(--space-4);
+  gap: var(--space-5);
+  margin-inline: auto;
 }
 
 .nav-links a {
@@ -711,6 +846,38 @@ input[type="password"]::-ms-clear {
 .nav-links a[aria-current="page"] {
   color: var(--color-primary);
 }
+
+.guest-account {
+  display: inline-flex;
+  align-items: center;
+  gap: var(--space-2);
+  min-width: 0;
+  max-width: 32ch;
+  padding: var(--space-1-5) var(--space-3) var(--space-1-5) var(--space-1-5);
+  border: var(--border-width) solid color-mix(in srgb, var(--color-primary) 38%, #242824);
+  border-radius: var(--radius-xs);
+  background: #111410;
+  color: #F1F6E7;
+  text-decoration: none;
+  transition: border-color var(--duration-fast) var(--ease-standard);
+}
+.guest-account:hover { border-color: var(--color-primary); color: #FFFFFF; }
+.guest-account:focus-visible { outline: var(--focus-outline-width) solid var(--color-primary); outline-offset: var(--focus-outline-offset); }
+.guest-account__avatar {
+  display: grid;
+  place-items: center;
+  flex: none;
+  width: var(--avatar-size-sm);
+  height: var(--avatar-size-sm);
+  border-radius: var(--radius-circle);
+  background: var(--color-primary);
+  color: var(--color-on-primary);
+}
+.guest-account__text { min-width: 0; }
+.guest-account__text strong { display: block; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; font-size: var(--font-size-sm); }
+.guest-account__text small { display: block; color: #B6C1A7; font-size: var(--font-size-xs); }
+.guest-account__arrow { color: var(--color-primary); font-size: var(--font-size-xs); }
+.guest-logout-icon { transform: scaleX(-1); }
 
 .header-actions {
   display: flex;
@@ -828,10 +995,26 @@ input[type="password"]::-ms-clear {
   font-size: var(--font-size-xs);
 }
 
-/* 7 mục menu không đủ chỗ dưới 1080px → chuyển sang nút hamburger (menu mobile) */
-@media (max-width: 1080px) {
+/* Đã đăng nhập: khung header rộng cố định nên luôn thu gọn cụm tài khoản (Đăng xuất chỉ còn icon có tooltip,
+   bỏ dòng "Khu vực…") để menu 7 mục có chỗ. Menu mobile vẫn hiện đủ chữ. */
+.header-actions .guest-logout-text,
+.header-actions .guest-account__text small {
+  display: none;
+}
+
+.header-actions .guest-logout {
+  padding-inline: var(--space-2-5);
+}
+
+/* 7 mục menu + cụm tài khoản không đủ chỗ dưới 1280px → chuyển sang nút hamburger (menu mobile) */
+@media (max-width: 1279px) {
   .nav-links {
     display: none;
+  }
+
+  /* Menu ẩn → đẩy cụm tài khoản sát nút hamburger thay vì nằm giữa */
+  .header-actions {
+    margin-left: auto;
   }
 
   .hamburger {
@@ -893,7 +1076,7 @@ body.dock ::-webkit-scrollbar-thumb {
   background: transparent;
 }
 
-/* ----- Sidebar trượt: ẩn sau mép trái, rê chuột vào tay nắm thì trượt ra ----- */
+/* ----- Drawer thu gọn ở mọi màn hình, #dockHandle do common.js initDock quản lý ----- */
 .dock .dockwrap {
   position: fixed;
   z-index: var(--z-sidebar);
@@ -915,6 +1098,8 @@ body.dock ::-webkit-scrollbar-thumb {
   overflow-x: hidden;
   overflow-y: auto;
   background: var(--dock-bg);
+  overscroll-behavior-y: contain;
+  height: 100dvh;
   color: var(--dock-text);
   transform: translateX(-100%);
   transition: transform var(--duration-slower) var(--ease-out-expo);
@@ -947,8 +1132,6 @@ body.dock ::-webkit-scrollbar-thumb {
   z-index: 1;
 }
 
-.dock .dockwrap:hover .sidebar,
-.dock .dockwrap:focus-within .sidebar,
 .dock .dockwrap.is-open .sidebar {
   transform: none;
 }
@@ -986,13 +1169,20 @@ body.dock ::-webkit-scrollbar-thumb {
   background: var(--color-primary);
 }
 
+/* Tay nắm nhìn gọn nhưng vùng chạm rộng hơn trên điện thoại. */
+@media (pointer: coarse) {
+  .dock .dock-handle::before {
+    content: "";
+    position: absolute;
+    inset: 0 calc(-1 * var(--space-3)) 0 0;
+  }
+}
+
 .dock .dock-handle:hover {
   width: calc(var(--dock-handle-width) + var(--space-1));
   background: var(--color-primary);
 }
 
-.dock .dockwrap:hover .dock-handle,
-.dock .dockwrap:focus-within .dock-handle,
 .dock .dockwrap.is-open .dock-handle {
   left: var(--sidebar-width);
 }
@@ -1009,9 +1199,8 @@ body.dock ::-webkit-scrollbar-thumb {
   transition: transform var(--duration-slower) var(--ease-out-expo);
 }
 
-.dock .dockwrap:hover .dock-handle svg,
-.dock .dockwrap:focus-within .dock-handle svg,
-.dock .dockwrap.is-open .dock-handle svg {
+.dock .dockwrap.is-open .dock-handle svg,
+.dock .dockwrap.is-open .dock-handle i {
   transform: rotate(180deg);
 }
 
@@ -1066,7 +1255,11 @@ body.dock ::-webkit-scrollbar-thumb {
   gap: var(--space-0-5);
   align-content: start;
   flex: 1;
+  flex-shrink: 0;
 }
+
+.dock .sidebar > .brand,
+.dock .sidebar > .side-foot { flex-shrink: 0; }
 
 .dock .nav-group {
   margin: var(--space-4) var(--space-2) var(--space-1);
@@ -1127,17 +1320,21 @@ body.dock ::-webkit-scrollbar-thumb {
 
 .dock .nav-link.active,
 .dock .nav-link[aria-current="page"] {
-  background: var(--color-primary);
-  color: var(--color-on-primary);
+  background:
+    repeating-linear-gradient(90deg, transparent 0 2px, color-mix(in srgb, var(--dock-active-edge) 14%, transparent) 2px 3px),
+    linear-gradient(180deg, var(--dock-active-top), var(--dock-active-bottom));
+  color: var(--dock-active-text);
   font-weight: var(--font-weight-semibold);
-  box-shadow: inset 0 var(--border-width) 0 color-mix(in srgb, var(--color-on-primary) 18%, transparent);
+  box-shadow:
+    inset 0 var(--border-width) 0 var(--dock-active-edge),
+    0 var(--space-1) var(--space-3) color-mix(in srgb, var(--dock-active-bottom) 22%, transparent);
 }
 
 .dock .nav-link.active svg,
 .dock .nav-link.active i,
 .dock .nav-link[aria-current="page"] svg,
 .dock .nav-link[aria-current="page"] i {
-  color: var(--color-on-primary);
+  color: var(--dock-active-text);
 }
 
 .dock .nav-link:focus-visible,
@@ -1187,7 +1384,8 @@ body.dock ::-webkit-scrollbar-thumb {
 .dock .main {
   min-width: 0;
   min-height: 100vh;
-  /* Chừa rãnh bằng tay nắm dock để nội dung không bị tay nắm đè/dính sát */
+  /* Chừa rãnh tay nắm; drawer đóng thì trả toàn bộ bề rộng cho tác vụ. */
+  margin-left: 0;
   padding-left: var(--dock-handle-width);
 }
 
@@ -1235,9 +1433,9 @@ body.dock ::-webkit-scrollbar-thumb {
   align-items: center;
   gap: var(--space-2-5);
   padding: var(--space-1) var(--space-3) var(--space-1) var(--space-1);
-  border: var(--border-width) solid var(--color-border);
+  border: var(--border-width) solid color-mix(in srgb, var(--color-primary) 24%, var(--color-border));
   border-radius: var(--radius-pill);
-  background: var(--color-surface);
+  background: linear-gradient(135deg, color-mix(in srgb, var(--color-primary) 15%, var(--color-surface)), color-mix(in srgb, var(--color-primary) 7%, var(--color-surface)));
   color: var(--color-text);
   text-decoration: none;
   transition: border-color var(--duration-fast) var(--ease-standard), box-shadow var(--duration-fast) var(--ease-standard);
@@ -1246,6 +1444,11 @@ body.dock ::-webkit-scrollbar-thumb {
 .dock .tb-user:hover {
   border-color: var(--color-primary-border);
   box-shadow: var(--shadow-card);
+}
+
+.dock .tb-user:focus-visible {
+  outline: var(--focus-outline-width) solid var(--color-primary);
+  outline-offset: var(--focus-outline-offset);
 }
 
 .dock .tb-user .avatar {
@@ -1262,6 +1465,41 @@ body.dock ::-webkit-scrollbar-thumb {
   font-size: var(--font-size-sm);
   font-weight: var(--font-weight-bold);
   object-fit: cover;
+}
+
+.dock .tb-avatar {
+  position: relative;
+  display: inline-flex;
+  flex: none;
+  border-radius: var(--radius-circle);
+  transition: transform var(--duration-slow) var(--ease-standard);
+}
+.dock .tb-avatar::after {
+  content: "";
+  position: absolute;
+  right: 0;
+  bottom: 0;
+  width: var(--space-3);
+  height: var(--space-3);
+  border: var(--border-width-thick) solid var(--color-surface);
+  border-radius: var(--radius-circle);
+  background: var(--color-success);
+  animation: account-status-pulse 3s ease-in-out infinite;
+}
+.dock .tb-user .avatar {
+  border: var(--border-width-thick) solid var(--color-surface);
+  outline: var(--border-width) solid var(--color-primary-border);
+}
+.dock .tb-user:hover .tb-avatar,
+.dock .tb-user:focus-visible .tb-avatar { transform: scale(1.05) rotate(-5deg); }
+@keyframes account-status-pulse {
+  50% { box-shadow: 0 0 0 var(--space-1) var(--color-success-tint); }
+}
+@media (prefers-reduced-motion: reduce) {
+  .dock .tb-avatar { transition: none; }
+  .dock .tb-avatar::after { animation: none; }
+  .dock .tb-user:hover .tb-avatar,
+  .dock .tb-user:focus-visible .tb-avatar { transform: none; }
 }
 
 .dock .tb-user b,
@@ -1422,14 +1660,24 @@ body.dock ::-webkit-scrollbar-thumb {
 
 /* Hiện dần: chỉ ẩn khi JS đã gắn .has-reveal lên body */
 .dock.has-reveal [data-reveal]:not(.is-revealed) {
-  opacity: 0;
-  transform: translateY(var(--space-3));
+  opacity: 1;
+  transform: none;
 }
 
 .dock [data-reveal] {
   transition:
     opacity var(--duration-grow) var(--ease-out-expo),
     transform var(--duration-grow) var(--ease-out-expo);
+}
+
+/* Nội dung luôn sẵn sàng; chỉ animate khối đã được JS đánh dấu. */
+.dock [data-reveal].is-revealed {
+  animation: gms-panel-reveal var(--duration-slower) var(--ease-out-expo) both;
+}
+
+@keyframes gms-panel-reveal {
+  from { opacity: 0.7; transform: translateY(var(--space-2)); }
+  to { opacity: 1; transform: none; }
 }
 
 /* Khung xương đang tải */
@@ -1505,3 +1753,956 @@ body.dock ::-webkit-scrollbar-thumb {
     transform: none;
   }
 }
+
+/* =====================================================================
+   13. HỘP GỢI Ý PUMPY (common/pumpy-mail-hint.jspf) — bước nhập mã của
+       Quên mật khẩu và Đăng ký: Pumpy tựa tạ + bong bóng hướng dẫn
+   ===================================================================== */
+/* Truyện tranh: bong bóng thoại ở góc trên bên trái, Pumpy ngồi bên phải phía dưới */
+.pumpy-hint {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) minmax(150px, 36%);
+  align-items: end;
+  gap: 0;
+  margin-top: var(--space-6);
+  padding-top: var(--space-5);
+  border-top: var(--border-width) dashed var(--color-border);
+}
+
+/* Phóng to và lấn sang trái dưới bong bóng: đầu Pumpy nằm ngay dưới đuôi thoại */
+.pumpy-lazy {
+  position: relative;
+  z-index: 2; /* ló đầu ra trước góc bong bóng như nhân vật truyện tranh */
+  display: block;
+  width: 150%;
+  height: auto;
+  margin-left: -46%;
+  overflow: visible;
+}
+
+.pumpy-bubble {
+  z-index: 1;
+}
+
+/* Thở chậm như đang ngủ gật */
+.pumpy-lazy__body {
+  transform-box: fill-box;
+  transform-origin: 50% 100%;
+  animation: pumpy-snooze 3.6s ease-in-out infinite;
+}
+
+/* z z z bay lên rồi mờ dần, lần lượt từng chữ */
+.pumpy-lazy__z text {
+  animation: pumpy-z 3s ease-in-out infinite;
+  opacity: 0;
+}
+
+.pumpy-lazy__z text:nth-child(2) { animation-delay: 0.6s; }
+.pumpy-lazy__z text:nth-child(3) { animation-delay: 1.2s; }
+
+@keyframes pumpy-snooze {
+  0%, 100% { transform: scale(1, 1); }
+  50% { transform: scale(1.025, 0.97); }
+}
+
+@keyframes pumpy-z {
+  0% { opacity: 0; transform: translate(0, 6px); }
+  30% { opacity: 1; }
+  100% { opacity: 0; transform: translate(6px, -10px); }
+}
+
+/* Bong bóng thoại: đuôi chỉ về Pumpy bên trái */
+.pumpy-bubble {
+  position: relative;
+  align-self: start;
+  margin-bottom: var(--space-12);
+  padding: var(--space-3-5) var(--space-4);
+  border: var(--border-width-thick) solid var(--color-primary);
+  border-radius: calc(var(--radius-lg) * 1.6);
+  background: var(--color-surface);
+  box-shadow: var(--space-1) var(--space-1) 0 color-mix(in srgb, var(--color-primary) 35%, transparent);
+}
+
+/* Đuôi bong bóng kiểu truyện tranh: từ góc dưới phải chỉ xéo xuống đầu Pumpy */
+.pumpy-bubble::before,
+.pumpy-bubble::after {
+  content: "";
+  position: absolute;
+  right: var(--space-10);
+  bottom: calc(-1 * var(--space-6));
+  width: 0;
+  height: 0;
+  border-style: solid;
+  border-width: var(--space-6) 0 0 var(--space-6);
+  border-color: var(--color-primary) transparent transparent transparent;
+  transform: skewX(-25deg);
+}
+
+.pumpy-bubble::after {
+  right: calc(var(--space-10) + 3px);
+  bottom: calc(-1 * var(--space-6) + 5px);
+  border-width: calc(var(--space-6) - 5px) 0 0 calc(var(--space-6) - 5px);
+  border-color: var(--color-surface) transparent transparent transparent;
+}
+
+.pumpy-bubble__title {
+  margin: 0 0 var(--space-2);
+  color: var(--color-primary);
+  font-family: var(--font-heading);
+  font-size: var(--font-size-md);
+  font-weight: var(--font-weight-extrabold);
+}
+
+.pumpy-steps {
+  display: grid;
+  gap: var(--space-1-5);
+  margin: 0;
+  padding-left: var(--space-4-5);
+  color: var(--color-text-soft);
+  font-size: var(--font-size-sm);
+  line-height: var(--line-height-snug);
+}
+
+.pumpy-steps li::marker {
+  color: var(--color-primary);
+  font-family: var(--font-heading);
+  font-weight: var(--font-weight-bold);
+}
+
+.pumpy-steps b {
+  color: var(--color-text);
+}
+
+@media (max-width: 480px) {
+  .pumpy-hint {
+    grid-template-columns: minmax(0, 1fr) 120px;
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .pumpy-lazy__body,
+  .pumpy-lazy__z text {
+    animation: none;
+  }
+
+  .pumpy-lazy__z text {
+    opacity: 1;
+  }
+}
+
+
+/* =====================================================================
+   14. TÌM NHANH (Ctrl/⌘ + K) — [JS] common.js mục "Tìm nhanh"
+   ===================================================================== */
+.cmdk {
+  width: min(560px, calc(100% - var(--space-8)));
+  margin: 12vh auto auto;
+  padding: 0;
+  border: var(--border-width) solid var(--dock-line, var(--color-border));
+  border-radius: var(--radius-md);
+  background: var(--dock-bg, var(--color-surface-inverse));
+  color: var(--dock-text, var(--color-text-inverse));
+  box-shadow: var(--shadow-pop);
+}
+
+.cmdk::backdrop {
+  background: rgba(8, 10, 14, 0.55);
+  backdrop-filter: blur(3px);
+}
+
+.cmdk-input {
+  width: 100%;
+  padding: var(--space-4) var(--space-4-5);
+  border: 0;
+  border-bottom: var(--border-width) solid var(--dock-line, var(--color-border));
+  background: transparent;
+  color: inherit;
+  font: inherit;
+  font-size: var(--font-size-lg);
+  outline: none;
+}
+
+.cmdk-input::placeholder {
+  color: var(--dock-muted, var(--color-text-muted));
+}
+
+.cmdk-list {
+  max-height: 50vh;
+  margin: 0;
+  padding: var(--space-2);
+  overflow-y: auto;
+  list-style: none;
+}
+
+.cmdk-item {
+  padding: var(--space-2-5) var(--space-3);
+  border-radius: var(--radius-sm);
+  font-weight: var(--font-weight-medium);
+  cursor: pointer;
+}
+
+.cmdk-item:hover {
+  background: var(--dock-hover, var(--color-surface-hover));
+}
+
+.cmdk-item.is-active {
+  background: var(--color-primary);
+  color: var(--color-on-primary);
+}
+
+.cmdk-empty {
+  padding: var(--space-4);
+  color: var(--dock-muted, var(--color-text-muted));
+  text-align: center;
+}
+
+.cmdk-foot {
+  margin: 0;
+  padding: var(--space-2) var(--space-4);
+  border-top: var(--border-width) solid var(--dock-line, var(--color-border));
+  color: var(--dock-muted, var(--color-text-muted));
+  font-size: var(--font-size-xs);
+}
+
+.cmdk-foot kbd {
+  margin: 0 var(--space-0-5);
+  padding: 0 var(--space-1-5);
+  border: var(--border-width) solid var(--dock-line, var(--color-border));
+  border-radius: var(--radius-sm);
+  font-family: var(--font-heading);
+}
+
+
+/* =====================================================================
+   15. KHUNG MÀN DÙNG CHUNG (WEB-INF/jsp/_templates) — danh sách · chi tiết · form
+   Nhóm sao chép template rồi chỉ điền dữ liệu; không viết lại CSS khung trong file trang.
+   ===================================================================== */
+.dock .gms-page {
+  display: grid;
+  gap: var(--space-5);
+  align-content: start;
+}
+
+.dock .gms-panel {
+  min-width: 0;
+  border: var(--border-width) solid var(--color-border);
+  border-radius: var(--radius-md);
+  background: var(--color-surface);
+  box-shadow: var(--shadow-card);
+}
+
+.dock .gms-panel-head {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  justify-content: space-between;
+  gap: var(--space-3);
+  padding: var(--space-4) var(--space-5);
+  border-bottom: var(--border-width) solid var(--color-border);
+}
+
+.dock .gms-panel-head h2 {
+  margin: 0;
+  font-family: var(--font-heading);
+  font-size: var(--font-size-lg);
+  font-weight: var(--font-weight-bold);
+}
+
+.dock .gms-panel-body {
+  padding: var(--space-5);
+}
+
+/* Thanh lọc: ô tìm + chọn trạng thái + nút */
+.dock .gms-toolbar {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: flex-end;
+  gap: var(--space-3);
+}
+
+.dock .gms-toolbar .field {
+  margin: 0;
+  min-width: calc(var(--space-12) * 3);
+}
+
+/* Bảng dữ liệu */
+.dock .gms-table-wrap {
+  overflow-x: auto;
+}
+
+.dock .gms-table {
+  width: 100%;
+  border-collapse: collapse;
+  font-size: var(--font-size-md);
+}
+
+.dock .gms-table th {
+  padding: var(--space-2-5) var(--space-4);
+  border-bottom: var(--border-width) solid var(--color-border-strong);
+  background: var(--color-surface-muted);
+  color: var(--color-text-soft);
+  font-size: var(--font-size-xs);
+  font-weight: var(--font-weight-bold);
+  text-align: left;
+  white-space: nowrap;
+}
+
+.dock .gms-table td {
+  padding: var(--space-3) var(--space-4);
+  border-bottom: var(--border-width) solid var(--color-border);
+  vertical-align: middle;
+}
+
+.dock .gms-table tbody tr:hover {
+  background: var(--color-primary-tint);
+}
+
+.dock .gms-table .num {
+  text-align: right;
+  font-variant-numeric: tabular-nums;
+}
+
+.dock .gms-table .actions {
+  text-align: right;
+  white-space: nowrap;
+}
+
+/* Phân trang */
+.dock .gms-pagination {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  justify-content: space-between;
+  gap: var(--space-3);
+  padding: var(--space-3) var(--space-5);
+  color: var(--color-text-soft);
+  font-size: var(--font-size-sm);
+}
+
+/* Chi tiết: cặp nhãn – giá trị */
+.dock .gms-detail {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(calc(var(--space-12) * 3.5), 1fr));
+  gap: var(--space-4) var(--space-6);
+  margin: 0;
+}
+
+.dock .gms-detail dt {
+  color: var(--color-text-muted);
+  font-size: var(--font-size-xs);
+  font-weight: var(--font-weight-semibold);
+}
+
+.dock .gms-detail dd {
+  margin: var(--space-1) 0 0;
+  font-weight: var(--font-weight-semibold);
+}
+
+/* Form: 2 cột trên màn rộng, hàng nút ở cuối */
+.dock .gms-form {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: var(--space-4) var(--space-5);
+}
+
+.dock .gms-form .is-full {
+  grid-column: 1 / -1;
+}
+
+.dock .gms-form-actions {
+  grid-column: 1 / -1;
+  display: flex;
+  justify-content: flex-end;
+  gap: var(--space-3);
+  padding-top: var(--space-4);
+  border-top: var(--border-width) solid var(--color-border);
+}
+
+@media (max-width: 720px) {
+  .dock .gms-form {
+    grid-template-columns: 1fr;
+  }
+
+  .dock .gms-form-actions {
+    flex-direction: column-reverse;
+  }
+}
+
+/* Lỗi chung của form/màn (không gắn với ô nào) */
+.dock .gms-alert {
+  grid-column: 1 / -1;
+  margin-bottom: var(--space-4);
+  padding: var(--space-3) var(--space-4);
+  border: var(--border-width) solid var(--color-danger-border);
+  border-radius: var(--radius-sm);
+  background: var(--color-danger-tint);
+  color: var(--color-danger-ink);
+  font-weight: var(--font-weight-medium);
+}
+
+/* =====================================================================
+   PUMPY: thân aqua đậm #18B8C0, bụng kem #F2FBF8, xoáy xanh #087A80; tạ trắng lõi ember, tạ đen lõi aqua.
+   ===================================================================== */
+
+/* Chọn nhanh khoảng ngày (common.js) */
+.range-presets {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: flex-end;
+  gap: var(--space-1-5);
+}
+
+.range-presets .chip {
+  min-height: 36px;
+  padding: var(--space-1) var(--space-3);
+  border: var(--border-width) solid var(--color-border);
+  border-radius: var(--radius-xs);
+  background: var(--color-surface);
+  color: var(--color-text);
+  font: inherit;
+  font-size: var(--font-size-sm);
+  cursor: pointer;
+}
+
+.range-presets .chip:hover,
+.range-presets .chip:focus-visible {
+  border-color: var(--color-primary);
+  color: var(--color-primary);
+}
+
+/* =====================================================================
+   OPERATIONS — giao diện làm việc: điều hướng rõ, dữ liệu đọc ngay.
+   Drawer mọi kích thước: .is-open do common.js initDock quản lý.
+   ===================================================================== */
+body.dock {
+  background: var(--color-bg);
+  line-height: var(--line-height-normal);
+  color-scheme: dark;
+}
+body.dock.is-light { color-scheme: light; }
+.dock .sidebar {
+  padding: var(--space-5) var(--space-3) var(--space-4);
+  border-right: var(--border-width) solid var(--dock-line);
+  background: var(--dock-bg);
+  box-shadow: none;
+  scrollbar-width: thin;
+  scrollbar-color: var(--dock-line) transparent;
+}
+.dock .sidebar::before { display: block; }
+.dock .brand { gap: var(--space-3); padding-bottom: var(--space-5); }
+.dock .brand-mark { background: transparent; }
+.dock .brand-name {
+  font-family: var(--font-brand-display);
+  font-size: var(--font-size-2xl);
+  font-weight: var(--font-weight-bold);
+  letter-spacing: var(--letter-spacing-wide);
+  line-height: var(--line-height-snug);
+  text-transform: uppercase;
+}
+.dock .brand-role { font-weight: var(--font-weight-regular); }
+.dock .nav-group {
+  margin-top: var(--space-5);
+  font-family: var(--font-body);
+  font-weight: var(--font-weight-semibold);
+  font-size: var(--font-size-xs);
+  letter-spacing: var(--letter-spacing-normal);
+  text-transform: none;
+}
+.dock .nav-link {
+  gap: var(--space-3);
+  min-height: var(--control-height-lg);
+  padding: var(--space-2-5) var(--space-3);
+  font-size: var(--font-size-sm);
+  line-height: var(--line-height-snug);
+}
+.dock .nav-link:hover { transform: none; }
+.dock .nav-link.active,
+.dock .nav-link[aria-current="page"] {
+  background: linear-gradient(180deg, var(--dock-active-top), var(--dock-active-bottom));
+  color: var(--dock-active-text);
+  box-shadow: inset 0 var(--border-width) 0 var(--dock-active-edge), var(--shadow-card);
+}
+.dock .nav-link.active svg,
+.dock .nav-link.active i,
+.dock .nav-link[aria-current="page"] svg,
+.dock .nav-link[aria-current="page"] i { color: var(--dock-active-text); }
+.dock .nav-link svg,
+.dock .nav-link i {
+  width: var(--icon-size-md);
+  height: var(--icon-size-md);
+  flex: 0 0 var(--icon-size-md);
+  font-size: var(--icon-size-md);
+  opacity: 1;
+}
+.dock .dock-backdrop { display: none; }
+.dock .topbar {
+  min-height: var(--space-12);
+  padding: var(--space-4) var(--space-6);
+  background: color-mix(in srgb, var(--color-bg) 94%, transparent);
+  backdrop-filter: blur(var(--space-3));
+}
+html body.dock .tb-title {
+  font-family: var(--font-body);
+  font-size: var(--font-size-xl);
+  font-weight: var(--font-weight-semibold);
+  letter-spacing: var(--letter-spacing-normal);
+  line-height: var(--line-height-snug);
+  text-transform: none;
+  white-space: normal;
+  text-wrap: balance;
+}
+.dock .tb-left { min-width: 0; }
+.dock .top-right { min-width: 0; gap: var(--space-2-5); }
+.dock .tb-user {
+  min-width: 0;
+  border-color: var(--color-border);
+  background: var(--color-surface);
+  border-radius: var(--radius-md);
+}
+.dock .tb-user b,
+.dock .tb-user-text { min-width: 0; overflow-wrap: anywhere; }
+.dock .tb-avatar::after { animation: none; }
+.dock .tb-user:hover .tb-avatar,
+.dock .tb-user:focus-visible .tb-avatar { transform: none; }
+.dock .tb-user small,
+.dock .tb-user-text span {
+  padding: 0;
+  color: var(--color-text-muted);
+  background: transparent;
+  font-weight: var(--font-weight-regular);
+}
+.dock .content {
+  width: 100%;
+  max-width: var(--layout-content-width);
+  margin-inline: auto;
+  padding: var(--space-6) var(--space-6) var(--space-12);
+}
+.dock .gms-panel,
+.dock .report-card,
+.dock .card { box-shadow: var(--shadow-card); }
+.dock .gms-panel-head h2,
+.dock .section-title,
+.dock .report-card-title {
+  font-family: var(--font-body);
+  font-weight: var(--font-weight-semibold);
+  letter-spacing: var(--letter-spacing-normal);
+  line-height: var(--line-height-snug);
+  text-transform: none;
+  text-wrap: balance;
+}
+.dock .gms-panel-head h2::before,
+.dock .report-card-title::before { display: none; }
+.dock .btn { letter-spacing: var(--letter-spacing-normal); text-transform: none; }
+.dock .btn-primary {
+  background: var(--brand-sunset);
+  border-color: var(--brand-sunset);
+  color: var(--brand-ink);
+}
+.dock .btn-primary:hover:not(:disabled) {
+  background: var(--brand-sunset-hi);
+  border-color: var(--brand-sunset-hi);
+}
+.dock .btn-outline,
+.dock .btn-ghost { border-color: var(--color-border-strong); color: var(--color-text); }
+.dock .btn-outline:hover,
+.dock .btn-ghost:hover { background: var(--color-surface-hover); border-color: var(--color-text-muted); }
+.dock .gms-toolbar .field { flex: 1 1 calc(var(--space-12) * 2.5); min-width: 0; }
+.dock .gms-table-wrap { min-width: 0; overscroll-behavior-inline: contain; }
+.dock .gms-table td { line-height: var(--line-height-normal); }
+.dock .gms-table tbody tr:hover { background: var(--color-surface-hover); }
+.dock .scoreboard,
+.dock .metric-grid { background: var(--color-border); box-shadow: none; }
+.dock .scoreboard .stat,
+.dock .metric-card { background: var(--color-surface); color: var(--color-text); }
+.dock .scoreboard .stat.is-lead,
+.dock .metric-card-primary {
+  background: var(--brand-ocean-deep);
+  color: var(--dock-text);
+}
+.dock .stat-value,
+.dock .metric-value {
+  font-family: var(--font-body);
+  font-weight: var(--font-weight-bold);
+  color: var(--color-text);
+  line-height: var(--line-height-snug);
+  letter-spacing: var(--letter-spacing-normal);
+}
+.dock .stat-label,
+.dock .metric-label,
+.dock .stat-note,
+.dock .metric-note { color: var(--color-text-muted); }
+.dock .scoreboard .stat.is-lead .stat-value,
+.dock .metric-card-primary .metric-value { color: var(--brand-aqua-soft); }
+.dock .scoreboard .stat.is-lead .stat-label,
+.dock .metric-card-primary .metric-label,
+.dock .scoreboard .stat.is-lead .stat-note,
+.dock .metric-card-primary .metric-note { color: var(--dock-text); }
+.dock .is-flap .flip-char,
+.dock .is-flap .flip-char.is-symbol { min-width: 0; padding: 0; margin: 0; border: 0; background: none; box-shadow: none; }
+.dock .is-flap .flip-char::after { display: none; }
+/* Motion có thời hạn, dữ liệu thật luôn có trong HTML; Reduce motion được tôn trọng. */
+@media (prefers-reduced-motion: reduce) {
+  .dock [data-reveal].is-revealed { animation: none; }
+}
+.dock .skip-link {
+  position: fixed;
+  z-index: var(--z-toast);
+  top: var(--space-3);
+  left: var(--space-3);
+  padding: var(--space-3) var(--space-4);
+  background: var(--brand-sunset);
+  color: var(--brand-ink);
+  border-radius: var(--radius-md);
+  transform: translateY(calc(-100% - var(--space-6)));
+}
+.dock .skip-link:focus { transform: none; }
+.dock main.content { scroll-margin-top: var(--space-12); }
+body.dock.nav-open { overflow: hidden; }
+.dock .sidebar { box-shadow: var(--shadow-drawer); }
+.dock .dockwrap.is-open .dock-backdrop {
+  position: fixed;
+  display: block;
+  inset: 0;
+  z-index: -1;
+  width: 100%;
+  height: 100%;
+  padding: 0;
+  border: 0;
+  background: var(--color-overlay);
+  backdrop-filter: blur(var(--space-1));
+  cursor: pointer;
+}
+@media (max-width: 767px) {
+  .dock .content { padding: var(--space-5) var(--space-4) var(--space-10); }
+  .dock .topbar { gap: var(--space-2); padding-right: var(--space-4); }
+  .dock .tb-user b,
+  .dock .tb-user small,
+  .dock .tb-user-text { display: none; }
+  .dock .gms-form { grid-template-columns: minmax(0, 1fr); }
+  .dock .gms-form-actions { flex-wrap: wrap; }
+  .dock .gms-detail { grid-template-columns: minmax(0, 1fr); }
+}
+
+/* Duotone thương hiệu cho ảnh chưa chỉnh sẵn (ảnh bài viết từ CSDL): khung bọc ảnh có class "duo".
+   Bộ lọc #gms-duo và dòng gắn filter nằm trong common/brand-duo-filter.jspf (url(#id) phải nằm trong trang,
+   đặt trong file css riêng trình duyệt sẽ tìm sai chỗ). Rê chuột / focus: hiện màu thật của ảnh. */
+.duo { overflow: hidden; background: var(--brand-abyss); }
+.duo > img { display: block; transition: transform 700ms var(--ease-out-expo); }
+a:is(:hover, :focus-visible) .duo > img,
+.duo:hover > img { filter: none; transform: scale(1.03); }
+
+/* =====================================================================
+   TRANG XÁC THỰC (đăng nhập, đăng ký, quên mật khẩu, chọn vai trò) — một bộ nhận diện chung.
+   Ảnh nền đã chỉnh duotone hoàng hôn × đại dương; mỗi trang một ảnh. Nút hoàng hôn, link + viền focus aqua.
+   Bộ chọn có "html body" để thắng CSS riêng của từng trang (nạp sau common.css).
+   ===================================================================== */
+html body.auth-dark .auth-shell { background-color: var(--brand-abyss); }
+html body.auth-dark .auth-shell::before {
+  background: url("../images/brand/strip-squat.jpg") center 30% / cover no-repeat;
+  filter: blur(3px) brightness(0.62) contrast(1.05);
+}
+html body.auth-dark.auth-page-register .auth-shell::before { background-image: url("../images/brand/auth-run.jpg"); background-position: center 60%; }
+html body.auth-dark.auth-page-forgot .auth-shell::before { background-image: url("../images/brand/auth-press.jpg"); background-position: center 25%; }
+html body.auth-dark .auth-shell::after {
+  background:
+    radial-gradient(900px 520px at 88% -8%, rgba(255, 122, 61, 0.38), transparent 62%),
+    radial-gradient(760px 520px at 0% 108%, rgba(43, 212, 222, 0.24), transparent 65%),
+    linear-gradient(180deg, rgba(4, 24, 32, 0.3) 0%, rgba(4, 24, 32, 0.62) 50%, rgba(4, 24, 32, 0.9) 100%);
+}
+html body.auth-dark .auth-brand { color: var(--brand-sunset-hi); font-family: var(--font-brand-display); font-size: 1.5rem; font-weight: 400; letter-spacing: 0.05em; }
+html body.auth-dark .auth-head h1 {
+  font-family: var(--font-brand-display);
+  font-size: clamp(1.9rem, 4vw, 2.3rem);
+  font-style: normal;
+  font-weight: 400;
+  line-height: 1.15;
+  letter-spacing: 0.02em;
+  text-transform: uppercase;
+}
+html body.auth-dark .auth-card {
+  background: linear-gradient(160deg, rgba(10, 34, 44, 0.78), rgba(6, 18, 24, 0.82));
+  border-color: rgba(127, 230, 236, 0.16);
+  backdrop-filter: blur(16px);
+  box-shadow: 0 1px 0 rgba(255, 255, 255, 0.05) inset, 0 30px 60px -30px rgba(0, 0, 0, 0.85);
+}
+html body.auth-dark .btn-primary {
+  border-color: var(--brand-sunset);
+  border-radius: var(--radius-pill);
+  background: var(--brand-sunset);
+  color: var(--brand-ink);
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+  box-shadow: 0 14px 30px -14px rgba(242, 92, 27, 0.8);
+}
+html body.auth-dark .btn-primary:hover:not(:disabled) {
+  border-color: var(--brand-sunset-hi);
+  background: var(--brand-sunset-hi);
+  color: var(--brand-ink);
+}
+html body.auth-dark .auth-switch a,
+html body.auth-dark .auth-back:hover,
+html body.auth-dark .btn-link { color: var(--brand-aqua-soft); }
+html body.auth-dark .auth-switch a:hover,
+html body.auth-dark .btn-link:hover { color: var(--brand-aqua); }
+html body.auth-dark .field input:focus,
+html body.auth-dark .field select:focus {
+  border-color: var(--brand-aqua);
+  box-shadow: 0 0 0 3px rgba(43, 212, 222, 0.22);
+}
+
+/* Công tắc nền sáng / tối (mọi màn nội bộ; common.js tự gắn vào topbar nếu trang chưa có) */
+.theme-toggle {
+  display: inline-flex;
+  align-items: center;
+  gap: var(--space-2);
+  min-height: 40px;
+  padding: var(--space-1-5) var(--space-3);
+  border: var(--border-width) solid var(--pt-line-strong);
+  border-radius: var(--radius-pill);
+  background: transparent;
+  color: var(--pt-text);
+  font: inherit;
+  font-size: var(--font-size-sm);
+  font-weight: var(--font-weight-semibold);
+  cursor: pointer;
+}
+.theme-toggle:hover { border-color: var(--pt-text); }
+/* Công tắc gạt: rãnh đại dương, núm là "mặt trời" cam (sáng) / "trăng khuyết" (tối) */
+.theme-toggle { padding: var(--space-1) var(--space-3) var(--space-1) var(--space-1-5); }
+.theme-toggle__track {
+  position: relative;
+  width: 44px;
+  height: 24px;
+  border-radius: var(--radius-pill);
+  background: var(--brand-ocean-deep);
+  box-shadow: inset 0 0 0 var(--border-width) rgba(43, 212, 222, 0.35);
+}
+.theme-toggle__knob {
+  position: absolute;
+  top: 3px;
+  left: 3px;
+  width: 18px;
+  height: 18px;
+  border-radius: var(--radius-circle);
+  background: #EAF4F6;
+  box-shadow: inset -5px -2px 0 0 #C9D6DA;
+  transition: transform var(--duration-base) var(--ease-out-expo), background var(--duration-base), box-shadow var(--duration-base);
+}
+.theme-toggle[aria-pressed="true"] .theme-toggle__track { background: #FDE4D8; box-shadow: inset 0 0 0 var(--border-width) rgba(194, 65, 12, 0.4); }
+.theme-toggle[aria-pressed="true"] .theme-toggle__knob { transform: translateX(20px); background: var(--brand-sunset); box-shadow: 0 0 0 3px rgba(242, 92, 27, 0.25); }
+.theme-toggle__label { min-width: 3ch; }
+.top-right .theme-toggle { margin-right: var(--space-1); }
+@media (max-width: 767px) { .theme-toggle__label { display: none; } }
+
+/* Nhãn trạng thái: chấm màu phát sáng nhẹ phía trước (nhãn không có icon riêng), chữ đậm vừa, giãn chữ */
+.badge { padding: var(--space-1) var(--space-2-5); letter-spacing: 0.02em; line-height: 1.3; }
+.badge:not(:has(i, svg))::before {
+  content: "";
+  flex: none;
+  width: 6px;
+  height: 6px;
+  border-radius: var(--radius-circle);
+  background: currentColor;
+  box-shadow: 0 0 0 3px color-mix(in srgb, currentColor 22%, transparent);
+}
+
+/* Màn hẹp: tiêu đề trang không đẩy tài khoản và nút điều hướng xuống dòng. */
+@media (max-width: 480px) {
+  .dock .tb-left { flex: 1; min-width: 0; }
+  html body.dock .tb-title {
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+    font-size: var(--font-size-base);
+  }
+}
+
+
+/* =====================================================================
+   KHU LÀM VIỆC — "KÍNH THỦY CUNG" (2026-10-13)
+   Tham khảo các site đạt giải trên webdesignawards.io (UI/UX):
+     · Supa Stellar: khung lưới mảnh có dấu "+" ở góc, nhãn nhỏ kiểu mã [ ... ] giãn chữ, màu nhấn dùng rất ít
+     · Grassfeld: khối bo lớn, con số chính tô gradient, nhiều khoảng thở, tab dạng viên thuốc
+   Nền: phòng gym nhìn qua vách kính bể cá ở đáy biển sâu — ảnh mờ (images/brand/zone-gym.jpg),
+   ánh hoàng hôn cam rọi xuống từ mặt nước, vân sáng khúc xạ trôi trên kính (caustics.png).
+   ===================================================================== */
+html body.dock { background-color: #020A0E; }
+
+/* Lớp 1: cảnh phòng gym mờ sau kính + ánh cam từ mặt nước + vệt phản chiếu chéo trên vách kính */
+html body.dock::before {
+  content: "";
+  position: fixed;
+  inset: -4%;
+  z-index: 0;
+  pointer-events: none;
+  background:
+    radial-gradient(120% 90% at 50% 40%, transparent 35%, rgba(1, 6, 9, 0.8) 100%),
+    linear-gradient(180deg, rgba(2, 10, 14, 0.25) 0%, rgba(2, 10, 14, 0.45) 45%, rgba(1, 6, 9, 0.88) 100%),
+    radial-gradient(50% 45% at 86% -6%, rgba(255, 138, 70, 0.34), transparent 70%),
+    radial-gradient(34% 30% at 18% -4%, rgba(255, 160, 96, 0.16), transparent 70%),
+    linear-gradient(104deg, transparent 28%, rgba(255, 255, 255, 0.05) 31%, transparent 34%, transparent 62%, rgba(255, 255, 255, 0.03) 64%, transparent 66%),
+    url("../images/brand/zone-gym.jpg") center / cover no-repeat;
+  animation: gms-tide 46s ease-in-out infinite alternate;
+}
+/* Lớp 2: vân sáng khúc xạ — 2 lớp trôi ngược chiều, đậm gần mặt nước, nhạt dần xuống sâu */
+html body.dock::after {
+  content: "";
+  position: fixed;
+  inset: 0;
+  z-index: 0;
+  pointer-events: none;
+  background:
+    url("../images/brand/caustics.png") 0 0 / 900px 900px repeat,
+    url("../images/brand/caustics.png") 140px 90px / 1300px 1300px repeat;
+  opacity: 0.09;
+  filter: blur(1.5px);
+  mix-blend-mode: screen;
+  -webkit-mask-image: linear-gradient(180deg, #000 0%, rgba(0, 0, 0, 0.45) 45%, transparent 85%);
+  mask-image: linear-gradient(180deg, #000 0%, rgba(0, 0, 0, 0.45) 45%, transparent 85%);
+  animation: gms-caustic 34s linear infinite;
+}
+html body.dock .app { position: relative; z-index: 1; }
+@keyframes gms-tide {
+  from { transform: translate3d(-1.5%, -1%, 0) scale(1.02); }
+  to { transform: translate3d(1.5%, 1%, 0) scale(1.07); }
+}
+@keyframes gms-caustic {
+  to { background-position: 900px 450px, -1300px 650px; }
+}
+/* Nền sáng: cùng cảnh nhưng như kính mờ sương ban ngày */
+html[data-theme="light"] body.dock { background-color: #E4ECEE; }
+html[data-theme="light"] body.dock::before {
+  background:
+    linear-gradient(180deg, rgba(232, 240, 242, 0.82), rgba(228, 236, 238, 0.92)),
+    radial-gradient(50% 45% at 86% -6%, rgba(255, 138, 70, 0.3), transparent 70%),
+    url("../images/brand/zone-gym.jpg") center / cover no-repeat;
+}
+html[data-theme="light"] body.dock::after { display: none; }
+
+/* Panel: kính tối trong suốt nhìn xuyên thấy cảnh, viền aqua rất mảnh, không bóng nhựa */
+html body.dock :is(.gms-panel, .report-card:not(.stat), .card, .pt-schedule, .pt-alerts, .pt-clients, .pt-rating, .pt-summary, .pt-board__hero) {
+  position: relative;
+  border: var(--border-width) solid rgba(127, 230, 236, 0.1);
+  border-radius: 18px;
+  background: rgba(4, 18, 25, 0.72);
+  box-shadow: 0 30px 60px -40px rgba(0, 0, 0, 0.9);
+  -webkit-backdrop-filter: blur(18px) saturate(1.15);
+  backdrop-filter: blur(18px) saturate(1.15);
+}
+html[data-theme="light"] body.dock :is(.gms-panel, .report-card:not(.stat), .card, .pt-schedule, .pt-alerts, .pt-clients, .pt-rating, .pt-summary, .pt-board__hero) {
+  border-color: rgba(14, 110, 130, 0.14);
+  background: rgba(255, 255, 255, 0.84);
+  box-shadow: 0 18px 40px -30px rgba(6, 43, 56, 0.4);
+}
+/* Dấu "+" ở 2 góc trên khối — chi tiết kỹ thuật kiểu bản vẽ, không chiếm chỗ */
+html body.dock :is(.gms-panel, .pt-schedule, .pt-alerts, .pt-clients, .pt-rating, .pt-summary, .pt-board__hero)::before {
+  content: "";
+  position: absolute;
+  top: 10px;
+  left: 10px;
+  right: 10px;
+  height: 9px;
+  pointer-events: none;
+  background:
+    linear-gradient(var(--brand-aqua), var(--brand-aqua)) 4px 0 / 1px 9px no-repeat,
+    linear-gradient(var(--brand-aqua), var(--brand-aqua)) 0 4px / 9px 1px no-repeat,
+    linear-gradient(var(--brand-aqua), var(--brand-aqua)) calc(100% - 4px) 0 / 1px 9px no-repeat,
+    linear-gradient(var(--brand-aqua), var(--brand-aqua)) 100% 4px / 9px 1px no-repeat;
+  opacity: 0.35;
+}
+
+/* Mục menu đang chọn: bạc satin (không bóng nhựa) */
+html body.dock .nav-link.active,
+html body.dock .nav-link[aria-current="page"] {
+  background: linear-gradient(180deg, #C3CCD2 0%, #9AA6AE 100%);
+  color: #0B1418;
+  box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.45), inset 3px 0 0 var(--brand-sunset);
+}
+
+/* Cụm tài khoản: viền bạc lạnh, avatar gradient aqua → đại dương, mã nhân viên chip aqua (bỏ ánh nâu cam) */
+html body.dock .tb-user {
+  border-color: rgba(127, 230, 236, 0.18);
+  background: rgba(4, 18, 25, 0.7);
+  -webkit-backdrop-filter: blur(12px);
+  backdrop-filter: blur(12px);
+}
+html[data-theme="light"] body.dock .tb-user { background: rgba(255, 255, 255, 0.84); border-color: rgba(14, 110, 130, 0.2); }
+html body.dock .tb-user:hover,
+html body.dock .tb-user:focus-visible { border-color: rgba(127, 230, 236, 0.5); box-shadow: 0 0 0 3px rgba(43, 212, 222, 0.12); }
+html body.dock :is(.tb-user .avatar, .tb-avatar, .pt-user-avatar) {
+  background: linear-gradient(140deg, var(--brand-aqua) 0%, var(--brand-ocean) 100%);
+  color: #04212B;
+}
+html body.dock :is(.tb-user small, .tb-user-text span, .tb-user .pt-user-code) {
+  background: rgba(43, 212, 222, 0.12);
+  color: var(--pt-lagoon-text);
+  letter-spacing: 0.04em;
+}
+/* Topbar trong suốt trên cảnh, chỉ mờ kính */
+html body.dock .topbar {
+  background: rgba(2, 10, 14, 0.45);
+  border-bottom-color: rgba(127, 230, 236, 0.08);
+  -webkit-backdrop-filter: blur(16px);
+  backdrop-filter: blur(16px);
+}
+html[data-theme="light"] body.dock .topbar { background: rgba(240, 245, 246, 0.75); }
+
+/* Nhãn nhỏ kiểu mã: [ NHÃN ] chữ đơn cách, giãn rộng — dùng cho tiêu đề phụ của khối */
+html body.dock :is(.pt-section-caption, .gms-panel-head p, .report-card-subtitle) {
+  font-family: var(--font-brand-mono);
+  font-size: 0.72rem;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  color: var(--pt-lagoon-text);
+  opacity: 0.85;
+}
+html body.dock :is(.pt-section-caption, .gms-panel-head p, .report-card-subtitle)::before { content: "[ "; opacity: 0.6; }
+html body.dock :is(.pt-section-caption, .gms-panel-head p, .report-card-subtitle)::after { content: " ]"; opacity: 0.6; }
+
+/* Con số chính tô gradient aqua → cam (kiểu Grassfeld), giữ màu đặc khi trình duyệt không hỗ trợ */
+@supports (-webkit-background-clip: text) or (background-clip: text) {
+  html body.dock :is(.pt-summary-money strong, .wx-card__temp) {
+    background: linear-gradient(100deg, #FFFFFF 0%, #BFF3F5 45%, #FFB27A 100%);
+    -webkit-background-clip: text;
+    background-clip: text;
+    color: transparent;
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  html body.dock::before,
+  html body.dock::after { animation: none; }
+}
+
+/* =====================================================================
+   BỘ CHỮ 3 VAI (2026-10-13) — kiểu trang đề cử Awwwards:
+   Tiêu đề: Inter Tight đậm, khít chữ (càng lớn càng khít). Nội dung: Inter.
+   Chữ phụ (ngày giờ, mã, nhãn nhỏ, đầu cột bảng): JetBrains Mono in hoa, giãn chữ, cỡ nhỏ.
+   ===================================================================== */
+body { font-family: var(--font-brand-body); font-feature-settings: "cv11", "ss01"; }
+:is(h1, h2, h3, .tb-title, .cine-h2, .cine-h3, .cine-title, .cy-h2, .cy-title, .auth-head h1, .brand-name, .gms-panel-head h2, .pt-section-heading h2) {
+  font-family: var(--font-brand-display);
+  letter-spacing: var(--tracking-heading);
+}
+:is(.cine-title, .cy-title, .cine-h2, .cy-h2) { letter-spacing: -0.005em; line-height: 1.2; }
+:is(.stat-value, .metric-value, .wx-card__temp, .pt-day__date, .pt-session-time b, .pt-summary-stat strong, .pt-summary-money strong, .cine-price__amount, .cine-meta dd) {
+  font-family: var(--font-brand-display);
+  letter-spacing: -0.02em;
+  font-variant-numeric: tabular-nums;
+}
+:is(.pt-header-date, .tb-user small, .tb-user-text span, .pt-user-code, .nav-group, .report-sub, .page-intro p, th, .cine-post__date, .cine-meta dt, .cy-meta, .cy-tag, .pt-day__name, .wx-card__place, .badge-code) {
+  font-family: var(--font-brand-mono);
+  font-size: 0.72rem;
+  font-weight: 500;
+  letter-spacing: var(--tracking-mono);
+  text-transform: uppercase;
+}
+/* Liên kết trong nội dung: gạch chân dày màu xám tách khỏi chữ (giống tên studio trên trang đề cử) */
+:is(.cine-link, .auth-switch a, .cy-scroll) {
+  text-decoration: underline;
+  text-decoration-thickness: 3px;
+  text-underline-offset: 6px;
+  text-decoration-color: rgba(181, 201, 207, 0.45);
+  transition: text-decoration-color var(--duration-base);
+}
+:is(.cine-link, .auth-switch a, .cy-scroll):hover { text-decoration-color: currentColor; }

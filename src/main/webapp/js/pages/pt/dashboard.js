@@ -1,22 +1,70 @@
-// ===== Mở tất cả / đóng tất cả ngày trong lịch 7 ngày =====
-// Mỗi ngày tự mở bằng <details>; JS chỉ cần cho hai nút điều khiển cả lịch.
+// ===== Dải 7 ngày dạng tab =====
+// JSP render đủ 7 bảng ngày (tắt JS vẫn đọc được); JS chỉ hiện bảng của ngày đang chọn.
+// Bàn phím: ←/→ chuyển ngày, Home/End về ngày đầu/cuối (mẫu tab của WAI-ARIA).
 document.addEventListener("DOMContentLoaded", function () {
-    const schedule = document.querySelector(".pt-schedule");
-    if (!schedule) {
+    const strip = document.querySelector("[data-pt-days]");
+    if (!strip) {
         return;
     }
-    const controls = schedule.querySelector("[data-schedule-controls]");
-    const days = schedule.querySelectorAll("details.pt-schedule-day");
-    if (!controls || !days.length) {
+    const tabs = Array.from(strip.querySelectorAll('[role="tab"]'));
+    if (!tabs.length) {
         return;
     }
-    controls.hidden = false;
-    controls.querySelector("[data-schedule-expand]").addEventListener("click", function () {
-        days.forEach(function (day) { day.open = true; });
+
+    // B1: chọn một ngày — đổi aria-selected, tabindex, ẩn/hiện bảng
+    function select(tab, moveFocus) {
+        tabs.forEach(function (item) {
+            const selected = item === tab;
+            item.setAttribute("aria-selected", selected ? "true" : "false");
+            item.tabIndex = selected ? 0 : -1;
+            const panel = document.getElementById(item.getAttribute("aria-controls"));
+            if (panel) {
+                panel.hidden = !selected;
+            }
+        });
+        if (moveFocus) {
+            tab.focus();
+        }
+        // Chỉ cuộn dải ngày ngang; không kéo cả trang khi đổi tab bằng bàn phím.
+        if (strip.scrollWidth > strip.clientWidth) {
+            strip.scrollTo({
+                left: Math.max(0, tab.offsetLeft - strip.offsetLeft - (strip.clientWidth - tab.offsetWidth) / 2),
+                behavior: window.matchMedia("(prefers-reduced-motion: reduce)").matches ? "instant" : "smooth"
+            });
+        }
+    }
+
+    // B2: mặc định chọn hôm nay (ngày có aria-selected="true" từ JSP), không có thì ngày đầu
+    const initial = tabs.find(function (tab) { return tab.getAttribute("aria-selected") === "true"; }) || tabs[0];
+    select(initial, false);
+    strip.classList.add("is-ready");
+
+    strip.addEventListener("click", function (event) {
+        const tab = event.target.closest('[role="tab"]');
+        if (tab) {
+            select(tab, false);
+        }
     });
-    controls.querySelector("[data-schedule-reset]").addEventListener("click", function () {
-        // Đóng mọi ngày, kể cả Hôm nay đang mở sẵn khi vào trang.
-        days.forEach(function (day) { day.open = false; });
+
+    strip.addEventListener("keydown", function (event) {
+        const index = tabs.indexOf(document.activeElement);
+        if (index < 0) {
+            return;
+        }
+        let next = -1;
+        if (event.key === "ArrowRight") {
+            next = (index + 1) % tabs.length;
+        } else if (event.key === "ArrowLeft") {
+            next = (index - 1 + tabs.length) % tabs.length;
+        } else if (event.key === "Home") {
+            next = 0;
+        } else if (event.key === "End") {
+            next = tabs.length - 1;
+        }
+        if (next >= 0) {
+            event.preventDefault();
+            select(tabs[next], true);
+        }
     });
 });
 

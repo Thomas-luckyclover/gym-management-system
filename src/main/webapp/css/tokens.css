@@ -70,7 +70,8 @@
   /* avatar, chấm trạng thái */
   --radius-circle: 50%;
   /* hình dạng nút: khu Guest/Hội viên/Nhân viên bo tròn 2 đầu như prototype */
-  --radius-button: var(--radius-pill);
+  /* Nút trang khách bo vừa (12px): mềm hơn góc vuông nhưng không còn dạng viên thuốc */
+  --radius-button: var(--radius-md);
 
   /* ===== 3. CHỮ ===== */
   /* Montserrat: tiêu đề lớn, nút CTA, số liệu */
@@ -83,18 +84,18 @@
   --font-numeric: tabular-nums;
 
   /* Cỡ chữ (1rem = 16px) */
-  /* 11px — tag spec, nhãn siêu nhỏ */
-  --font-size-2xs: 0.6875rem;
-  /* 12px — chú thích, header bảng, badge */
-  --font-size-xs: 0.75rem;
-  /* 13px — lỗi dưới ô nhập, nút nhỏ, breadcrumb */
-  --font-size-sm: 0.8125rem;
-  /* 14px — nội dung phụ, nội dung chính khu Manager/Admin */
-  --font-size-md: 0.875rem;
-  /* 15px — nội dung chính khu Guest/Hội viên/Nhân viên */
-  --font-size-base: 0.9375rem;
-  /* 17px — tiêu đề card, đoạn dẫn */
-  --font-size-lg: 1.0625rem;
+  /* Sàn chữ 13px: không dùng chữ nhỏ hơn (đọc được khi chiếu máy chiếu). 2xs giữ tên cho code cũ, bằng xs */
+  --font-size-2xs: 0.8125rem;
+  /* 13px — chú thích, header bảng, badge */
+  --font-size-xs: 0.8125rem;
+  /* 14px — lỗi dưới ô nhập, nút nhỏ, breadcrumb, nội dung phụ */
+  --font-size-sm: 0.875rem;
+  /* 15px — nội dung phụ dài, nội dung bảng khu Manager/Admin */
+  --font-size-md: 0.9375rem;
+  /* 16px — nội dung chính mọi khu */
+  --font-size-base: 1rem;
+  /* 18px — tiêu đề card, đoạn dẫn */
+  --font-size-lg: 1.125rem;
   /* 20px — tiêu đề khối nhỏ */
   --font-size-xl: 1.25rem;
   /* 24px — tiêu đề trang */
@@ -113,6 +114,8 @@
   --font-weight-semibold: 600;
   --font-weight-bold: 700;
   --font-weight-extrabold: 800;
+  /* Tiêu đề lớn kiểu áp phích thể thao: Montserrat 900 nghiêng */
+  --font-weight-black: 900;
 
   --line-height-none: 1;
   /* tiêu đề */
@@ -124,8 +127,8 @@
   /* bài viết blog dài */
   --line-height-relaxed: 1.7;
 
-  --letter-spacing-tighter: -0.03em;
-  --letter-spacing-tight: -0.02em;
+  --letter-spacing-tighter: 0;
+  --letter-spacing-tight: 0;
   --letter-spacing-normal: 0;
   --letter-spacing-wide: 0.04em;
   /* chữ IN HOA nhỏ: eyebrow, header bảng */
@@ -211,8 +214,9 @@
      - Vàng chanh (lime) chỉ dùng trên nền đen, hoặc làm mảng nhỏ đi với chữ đen; không bao giờ làm màu chữ trên nền trắng. */
 
   /* Màu thương hiệu của theme */
-  --color-primary: #A9762C;
-  --color-primary-hover: #8F6121;
+  /* Vàng nâu đậm hơn để chữ màu chủ đạo đạt 4.5:1 trên nền trắng/kem */
+  --color-primary: #906425;
+  --color-primary-hover: #7A5520;
   --color-primary-tint: #F6EFE2;
   --color-primary-border: #D9C4A0;
   /* chữ/icon đặt trên nền primary */
@@ -239,7 +243,7 @@
   /* Chữ */
   --color-text: #23221F;
   --color-text-soft: #6B6960;
-  --color-text-muted: #8F8B81;
+  --color-text-muted: #706C65;
   --color-text-disabled: #B8B4AA;
   --color-text-inverse: #F3F1EC;
   --color-text-inverse-soft: #C9C5BC;
@@ -321,7 +325,7 @@
 
 /* Guest nền sáng — chính là giá trị mặc định ở :root, khai báo để JSP ghi rõ theme đang dùng */
 .theme-guest {
-  --color-primary: #A9762C;
+  --color-primary: #906425;
 }
 
 /* Guest nền đen · Vàng chanh — trang chủ và blog */
@@ -338,7 +342,7 @@
   --color-surface-hover: #181716;
   --color-text: #F3F1EC;
   --color-text-soft: #A09C93;
-  --color-text-muted: #79766F;
+  --color-text-muted: #828079;
   --color-border: rgba(255, 255, 255, 0.11);
   --color-border-strong: rgba(255, 255, 255, 0.2);
   --color-link: var(--color-lime);
@@ -416,6 +420,11 @@
   --dock-text: #F5F7FA;
   --dock-muted: #A3ACB8;
   --dock-hover: rgba(255, 255, 255, 0.07);
+  /* Mục đang chọn trên sidebar: thép bạc chải xước, chữ đen (dùng chung mọi vai trò) */
+  --dock-active-top: #EEF1F4;
+  --dock-active-bottom: #AEB6C0;
+  --dock-active-edge: #FFFFFF;
+  --dock-active-text: #0B0D10;
   --dock-glow-size: 220px;
   --dock-glow-alpha: 0.32;
   --dock-handle-width: 26px;
@@ -443,6 +452,23 @@
 
   --layout-sidebar-width: 256px;
   --layout-content-width: 1320px;
+
+  /* Khối chào + thẻ thời tiết (dashboard-weather.css) */
+  --wx-white: #FFFFFF;
+  --wx-star: #DDEBFF;
+  --wx-speech-ink: #172333;
+  --wx-black: #000;
+  --wx-speech-bg: #FFF7E6;
+  --wx-bolt: #FDE047;
+  --wx-hero-text: #F5F7FC;
+  --wx-sign-text: #F1F7FC;
+  --wx-hero-soft: #BFCBDD;
+  --wx-sign-pole: #8298AB;
+  --wx-stadium-line: #25394D;
+  --wx-stadium: #192839;
+  --wx-sign-bg: #193448;
+  --wx-hero-bg: #10151D;
+  --wx-hero-bg-deep: #050608;
 
   /* Bí danh cho tên biến các màn cũ đang gọi */
   --color-text-subtle: var(--color-text-muted);
@@ -535,10 +561,37 @@
   --doodle-4: #38BDF8;
   /* Hạt/sương trong cảnh luôn sáng để nổi trên nền màu */
   --scene-particle: rgba(255, 255, 255, 0.85);
+  /* Phòng tập trong khối chào (dashboard-weather.css + js/gym-floor.js): tường bê tông, sàn cao su, khung thép */
+  --gym-wall: #20252C;
+  --gym-wall-hi: #2C333C;
+  --gym-floor: #101317;
+  --gym-floor-hi: #1A1F25;
+  --gym-floor-line: rgba(255, 255, 255, 0.06);
+  --gym-steel: #0C0F13;
+  --gym-steel-hi: #56616E;
+  --gym-glass: rgba(255, 255, 255, 0.1);
+  --gym-ink: #0B0D10;
+  --gym-tights: #171B21;
+  --gym-skin: #E5B58C;
+  --gym-skin-2: #B98463;
+  --gym-skin-3: #F0C9A8;
+  --gym-tights-2: #2A2F3A;
+  --gym-rope: #C9B48F;
+  /* Số LED đồng hồ phòng tập (awning.css) */
+  --gym-led: color-mix(in srgb, var(--color-primary) 62%, #FFFFFF);
+  --gym-led-glow: color-mix(in srgb, var(--color-primary) 70%, transparent);
+  --gym-shoe: #F2F4F7;
+  --gym-plate: #15191E;
+  --gym-shadow: rgba(0, 0, 0, 0.45);
+  --gym-chip-bg: rgba(8, 10, 13, 0.78);
+  --gym-shirt-1: var(--color-primary);
+  --gym-shirt-2: #E9EDF2;
+  --gym-shirt-3: #3E4855;
+  --gym-shirt-4: color-mix(in srgb, var(--color-primary) 55%, #FFFFFF);
 }
 
 :is(.pt-dashboard-page, .customer-dashboard-page).weather-sunny {
-  --color-primary: #B45309;
+  --color-primary: #A94E08;
   --color-primary-hover: #92420A;
   --color-primary-tint: #FEF3E2;
   --color-primary-border: #F5D29A;
@@ -554,7 +607,7 @@
 }
 
 :is(.pt-dashboard-page, .customer-dashboard-page).weather-hot {
-  --color-primary: #C2410C;
+  --color-primary: #B13B0B;
   --color-primary-hover: #9A3412;
   --color-primary-tint: #FFEDE3;
   --color-primary-border: #F6C3A6;
@@ -585,7 +638,7 @@
 }
 
 :is(.pt-dashboard-page, .customer-dashboard-page).weather-rain {
-  --color-primary: #0F6A80;
+  --color-primary: #0E657A;
   --color-primary-hover: #0B5466;
   --color-primary-tint: #E0F0F3;
   --color-primary-border: #A9D2DC;
@@ -638,7 +691,7 @@
 }
 
 :is(.pt-dashboard-page, .customer-dashboard-page).weather-wind {
-  --color-primary: #0F766E;
+  --color-primary: #0F726B;
   --color-primary-hover: #0B5D57;
   --color-primary-tint: #E1F3F1;
   --color-primary-border: #A7D8D2;
@@ -682,4 +735,223 @@
     --duration-slow: 0ms;
     --duration-slower: 0ms;
   }
+}
+
+/* =====================================================================
+   THƯƠNG HIỆU SUPER GYM — "SUNSET × DEEP OCEAN" (redesign 2026-10)
+   Cam hoàng hôn cháy × xanh đại dương sâu / thủy cung — cặp bổ túc trên vòng màu.
+   Liều lượng: trang khách (homepage, auth, blog) ~65% cam than hồng + ~35% aqua sâu;
+               khu nội bộ ngược lại ~75% đại dương + ~25% cam (cam cho điểm nóng, số quan trọng).
+   Chữ: Barlow Condensed (chiến dịch) + Be Vietnam Pro (giao diện, nội dung); không ép ngang hoặc giãn chữ âm.
+   Mọi cặp chữ/nền đã đo ≥ 4.5:1; nền cam dùng chữ tối (chữ trắng chỉ cho tiêu đề cỡ lớn).
+   ===================================================================== */
+:root {
+  --brand-sunset: #FF5D2E;
+  --brand-ember-red: #F13C2D;
+  --brand-paper: #FFF7EF;
+  --brand-muted: #C6B9B1;
+  --brand-line: rgba(255, 247, 239, 0.16);
+  --brand-warm-surface: #21130F;
+  --brand-ocean-surface: #052B34;
+  --brand-header-glass: rgba(15, 18, 19, 0.88);
+  --brand-glass: rgba(4, 25, 32, 0.86);
+  --brand-shadow: 0 24px 64px -32px rgba(0, 0, 0, 0.6);
+  --brand-gradient: linear-gradient(115deg, #FF7036, #F13C2D);
+  --brand-hero-size: clamp(3.8rem, 7.2vw, 7.6rem);
+  --brand-heading-size: clamp(2.8rem, 5vw, 5.2rem);
+  --brand-section-space: clamp(64px, 8vw, 128px);
+  --brand-content-width: 1360px;
+  --brand-hero-min-height: min(840px, 90svh);
+  --brand-blur: 20px;
+  --brand-wordmark-width: 180px;
+  --brand-wordmark-height: 44px;
+  --brand-header-height: 88px;
+  --brand-control-height: 44px;
+  --font-cinematic: var(--font-brand-display);
+  --brand-sunset-hi: #FF7A4C;
+  --brand-sunset-deep: #B93423;
+  --brand-sunset-glow: #FF9A3C;
+  --brand-ocean: #066B78;
+  --brand-ocean-deep: #04303C;
+  --brand-abyss: #03131C;
+  --brand-aqua: #2BD4DE;
+  --brand-ink: #0B1418;
+  --brand-lime: #D6F55B;
+  /* Bí danh cho CSS màn mẫu PT */
+  --brand-ember: var(--brand-sunset);
+  --brand-ember-hi: var(--brand-sunset-hi);
+  --brand-ember-deep: var(--brand-sunset-deep);
+  --brand-lagoon: var(--brand-ocean);
+  --brand-lagoon-hi: var(--brand-aqua);
+  --brand-lagoon-deep: var(--brand-ocean-deep);
+  /* Vàng chanh cũ không còn trong thương hiệu: mọi chỗ còn gọi --color-lime (nút, link, hover) chuyển sang hoàng hôn */
+  --color-lime: var(--brand-sunset);
+  --color-lime-hover: var(--brand-sunset-hi);
+  --color-lime-ink: var(--brand-ink);
+  --brand-aqua-soft: #7FE6EC;
+  /* Bộ chữ 3 vai (kiểu trang đề cử Awwwards): tiêu đề Inter Tight đậm, khít chữ;
+     nội dung Inter; chữ phụ (ngày, mã, nhãn nhỏ) JetBrains Mono in hoa giãn chữ. Cả ba có đủ dấu tiếng Việt. */
+  --font-brand-display: "Inter Tight", "Inter", "Segoe UI", sans-serif;
+  --font-brand-body: "Inter", "Segoe UI", system-ui, sans-serif;
+  --font-brand-mono: "JetBrains Mono", ui-monospace, "Cascadia Mono", Consolas, monospace;
+  --font-display: var(--font-brand-display);
+  --font-heading: var(--font-brand-display);
+  --font-body: var(--font-brand-body);
+  --tracking-display: -0.035em;
+  --tracking-heading: -0.02em;
+  --tracking-mono: 0.06em;
+}
+
+/* ---- Trang khách: hoàng hôn là chủ đạo ---- */
+.theme-guest,
+.theme-guest-dark {
+  --font-display: var(--font-brand-display);
+  --font-heading: var(--font-brand-display);
+  --font-body: var(--font-brand-body);
+  --color-primary: var(--brand-sunset);
+  --color-primary-hover: var(--brand-sunset-hi);
+  --color-primary-tint: rgba(242, 92, 27, 0.14);
+  --color-primary-border: rgba(255, 122, 61, 0.45);
+  --color-on-primary: var(--brand-ink);
+  --color-lime: var(--brand-sunset);
+}
+.theme-guest-dark {
+  --color-bg: #120A07;
+  --color-surface: #1A0F0A;
+  --color-surface-muted: #160C08;
+  --color-surface-hover: #22140D;
+  --color-text: #FFF4EC;
+  --color-text-soft: #C9AFA2;
+  --color-text-muted: #A88E80;
+  --color-border: rgba(255, 244, 236, 0.1);
+}
+
+/* ---- Khu nội bộ: đại dương là chủ đạo (sáng mặc định; PT có nền tối riêng bên dưới) ---- */
+.theme-member,
+.theme-pt,
+.theme-staff,
+.theme-manager,
+.theme-admin {
+  --font-display: var(--font-brand-display);
+  --font-heading: var(--font-brand-display);
+  --font-body: var(--font-brand-body);
+  --color-primary: var(--brand-ocean);
+  --color-primary-hover: #0B5E70;
+  --color-primary-tint: #E2F2F5;
+  --color-primary-border: #9FCFD9;
+  --color-on-primary: #FFFFFF;
+  --color-accent-ink: var(--brand-ocean-deep);
+  --color-bg: #E4ECEE;
+  --color-board: var(--brand-ocean-deep);
+  --dock-bg: var(--brand-abyss);
+  --dock-surface: var(--brand-ocean-deep);
+  --dock-hover: rgba(43, 212, 222, 0.1);
+  /* Mục đang chọn: bạc xước (kim loại) thay vì trắng — sáng ở mép trên, tối dần xuống dưới */
+  --dock-active-top: #C9D1D6;
+  --dock-active-bottom: #8995A0;
+  --dock-active-edge: rgba(255, 255, 255, 0.55);
+  --dock-active-text: #0B1418;
+}
+
+/* ---- Mọi màn nội bộ (PT, Hội viên, Lễ tân, Quản lý, Admin): nền tối đại dương mặc định ---- */
+body.dock,
+body.dock[class*="weather-"] {
+  color-scheme: dark;
+  --pt-bg: #04151F;
+  --pt-panel: #09232F;
+  --pt-panel-2: #0C2C39;
+  --pt-line: rgba(234, 244, 246, 0.09);
+  --pt-line-strong: rgba(234, 244, 246, 0.2);
+  --pt-text: #EAF4F6;
+  --pt-soft: #A9C3CC;
+  --pt-muted: #86A4AE;
+  --pt-ember-text: var(--brand-sunset-hi);
+  --pt-lagoon-text: var(--brand-aqua);
+  --pt-shadow: 0 1px 0 rgba(255, 255, 255, 0.03) inset, 0 18px 40px -24px rgba(0, 0, 0, 0.8);
+  --color-primary: var(--brand-sunset);
+  --color-primary-hover: var(--brand-sunset-hi);
+  --color-primary-tint: rgba(242, 92, 27, 0.16);
+  --color-primary-border: rgba(255, 122, 61, 0.45);
+  --color-on-primary: var(--brand-ink);
+  --color-accent-ink: var(--pt-text);
+  --color-bg: var(--pt-bg);
+  --color-surface: var(--pt-panel);
+  --color-surface-muted: var(--pt-panel-2);
+  --color-text: var(--pt-text);
+  --color-text-soft: var(--pt-soft);
+  --color-text-muted: var(--pt-muted);
+  --color-border: var(--pt-line);
+  --color-border-strong: var(--pt-line-strong);
+  --color-board: var(--brand-ocean-deep);
+  --color-board-text: #EAF4F6;
+  --color-surface-hover: var(--pt-panel-2);
+  --awning-h: 0px;
+  --pt-awning-height: 0px;
+  /* Trạng thái trên nền tối: nền mờ trong suốt + chữ sáng, vẫn giữ đúng nghĩa xanh/vàng/đỏ */
+  --color-success-tint: rgba(76, 214, 140, 0.14);
+  --color-success-border: rgba(126, 226, 168, 0.36);
+  --color-success-ink: #8CE8B4;
+  --color-warning-tint: rgba(245, 183, 64, 0.14);
+  --color-warning-border: rgba(248, 207, 122, 0.38);
+  --color-warning-ink: #F8CF7A;
+  --color-danger-tint: rgba(255, 99, 115, 0.14);
+  --color-danger-border: rgba(255, 154, 165, 0.38);
+  --color-danger-ink: #FFA3AD;
+  --color-info-tint: rgba(43, 212, 222, 0.12);
+  --color-info-border: rgba(127, 230, 236, 0.36);
+  --color-info-ink: var(--brand-aqua-soft);
+  --color-neutral-tint: rgba(234, 244, 246, 0.07);
+  --color-neutral-border: var(--pt-line-strong);
+  --color-tag: rgba(234, 244, 246, 0.08);
+  --color-row-pinned: rgba(242, 92, 27, 0.08);
+  --color-text-disabled: #5E7A84;
+  --color-overlay: rgba(2, 10, 14, 0.72);
+  --color-link: var(--brand-aqua-soft);
+  --color-role-admin-tint: rgba(167, 139, 250, 0.16);
+  --color-role-manager-tint: rgba(129, 150, 255, 0.16);
+  --color-role-staff-tint: rgba(43, 212, 222, 0.14);
+  --color-role-customer-tint: rgba(255, 122, 61, 0.16);
+}
+
+/* ---- Nền sáng: công tắc trên topbar, lựa chọn nhớ trong localStorage gms-theme ---- */
+html[data-theme="light"] body.dock,
+html[data-theme="light"] body.dock[class*="weather-"] {
+  color-scheme: light;
+  --pt-bg: #E4ECEE;
+  --pt-panel: #FFFFFF;
+  --pt-panel-2: #F1F6F7;
+  --pt-line: rgba(22, 39, 46, 0.12);
+  --pt-line-strong: rgba(22, 39, 46, 0.24);
+  --pt-text: #16272E;
+  --pt-soft: #3F5660;
+  --pt-muted: #4C6670;
+  --pt-ember-text: var(--brand-sunset-deep);
+  --pt-lagoon-text: #0B5E70;
+  --pt-shadow: 0 1px 2px rgba(22, 39, 46, 0.06), 0 18px 36px -26px rgba(22, 39, 46, 0.45);
+  --color-primary-tint: #FDE4D8;
+  --color-primary-border: #F2B094;
+  --color-surface-hover: #E8F0F2;
+  --color-success-tint: #E9F5EF;
+  --color-success-border: #BFE1CD;
+  --color-success-ink: #1F6B41;
+  --color-warning-tint: #FCF3DE;
+  --color-warning-border: #F0D89A;
+  --color-warning-ink: #8A5A0E;
+  --color-danger-tint: #FBEAEC;
+  --color-danger-border: #F0BCC2;
+  --color-danger-ink: #9A2230;
+  --color-info-tint: #E2F2F5;
+  --color-info-border: #9FCFD9;
+  --color-info-ink: #0B5E70;
+  --color-neutral-tint: #EEF3F4;
+  --color-neutral-border: #D3DFE2;
+  --color-tag: #EEF3F4;
+  --color-row-pinned: #FFF4EC;
+  --color-text-disabled: #9BB0B7;
+  --color-overlay: rgba(6, 24, 32, 0.5);
+  --color-link: #0B5E70;
+  --color-role-admin-tint: #F1ECFB;
+  --color-role-manager-tint: #EDEFFA;
+  --color-role-staff-tint: #E2F2F5;
+  --color-role-customer-tint: #FDEDEB;
 }

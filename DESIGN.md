@@ -1,42 +1,39 @@
-# DESIGN.md — Hệ giao diện khu nội bộ Super Gym (10/2026)
+# Super Gym — Ember / Deep Aqua
 
-Áp dụng cho mọi trang sau đăng nhập (`body.dock` + `theme-*`). Trang Guest, Auth và trang lỗi giữ thiết kế cũ.
+Cập nhật 13/10/2026 theo yêu cầu redesign cả khu công khai và nội bộ; thay quyết định cũ về font và logo. HTML/CSS/JS thuần, JSP/JSTL, giữ luồng dữ liệu và route hiện có.
 
-## Nguyên tắc
-- **Tác vụ trước, trang trí sau.** Hiệu ứng chỉ để báo trạng thái hoặc tạo điểm nhấn; dữ liệu luôn nằm trên card trắng, chữ tối, tương phản AA.
-- **Một hệ, hai nhóm màu:**
-  - **Vận hành** (Quản lý, Quản trị, Lễ tân): xanh đậm navy, ba sắc lệch nhẹ (`theme-manager`, `theme-admin`, `theme-staff`).
-  - **Thời tiết** (PT, Hội viên): màu chủ đạo đổi theo `weather-<kiểu>` trên `<body>` (nắng, nóng, nhiều mây, mưa, giông, tuyết, gió, đêm). Các trang không có dữ liệu thời tiết dùng màu "trời quang".
-- **Font:** Montserrat (tiêu đề, số liệu) + Inter (nội dung). Không thêm font khác.
-- **Bo góc:** control 2px, card 4px. Không dùng bo tròn lớn.
-- **Không Tailwind/Bootstrap.** Mọi giá trị lấy từ `tokens.css` (mục 9b).
+## Nhận diện
 
-## Khung trang (common.css mục 11)
-- **Sidebar dock nền đen chữ trắng:** ẩn sau mép trái, tay nắm mũi tên ở giữa chiều cao màn hình; rê chuột thì trượt ra. Quầng sáng tròn chạy theo con trỏ. Mục đang chọn tô màu chủ đạo.
-- **Topbar:** dính trên cùng, nền kính. `tb-title` dùng Montserrat 800.
-- Layout: `layout-<vai-trò>.jspf`. Cấu trúc: `.app > #dock(.sidebar + #dockHandle) + .main(.topbar + .content)`. **Không chép lại CSS/JS dock vào file trang.**
+Cam cháy `--brand-sunset` (#FF5D2E), đỏ than `--brand-ember-red` (#F13C2D), aqua sâu `--brand-ocean-deep` (#04303C), aqua sáng `--brand-aqua` (#2BD4DE). Sắc đỏ trong cam tăng theo yêu cầu mới; đại dương sâu hơn. Homepage hướng đến tỷ trọng 65% ember / 35% aqua trong các vùng nhận diện. Khu vận hành dùng nền aqua tối, surface rõ và ember cho hành động chính. Chế độ sáng vẫn hỗ trợ.
 
-## Thành phần đặc trưng
-| Thành phần | Dùng ở | Ghi chú |
-|---|---|---|
-| Bảng điểm `.scoreboard` | Manager dashboard | Nền đen `--color-board`, ô đầu `is-lead` tô màu chủ đạo, số Montserrat 800 |
-| Biểu đồ cột `.bar` | Manager dashboard | Cột mọc lên khi tải; cột kỳ gần nhất tô màu chủ đạo; `tabindex` + `data-tooltip` |
-| Làn chạy `.lane` | Bảng doanh thu theo gói | Mặt đường màu chủ đạo, vạch đích ca-rô, chấm chạy tới `--pct` |
-| Khối chào `.wx-hero` | PT/Customer dashboard | Lời chào + 4 người chạy doodle trên đường chạy (rê chuột → chạy nhanh) + thẻ thời tiết **khối màu** (hiệu ứng riêng bên trong, icon/nhiệt độ nổi 3D khi nghiêng) |
-| Cảnh thời tiết `.weather-scene` | PT/Customer dashboard | Nền màu đậm theo thời tiết + cảnh riêng: nắng (mặt trời tia xoay), nóng (mặt trời đỏ, hơi nóng), mây (dải mây), mưa (kính mưa hoàng hôn: đèn nhòe, thành phố, giọt đọng/trượt), giông (mây đen, chớp), tuyết (núi tuyết), gió (đồi cỏ, lá bay), đêm (trăng, cực quang, sao băng). Hạt né con trỏ, parallax 3 tầng |
-| Mái bạt `.pt-awning` | PT/Customer dashboard | Sọc màu thời tiết; cuộn xuống thì cuốn, cuộn lên thì thả |
+Logo: hai đường cong đối hướng gợi chữ S và vòng chuyển động, ember phía trên/aqua phía dưới. Wordmark Barlow Condensed SemiBold có khoảng cách riêng, chuyển thành SVG path để không phụ thuộc font tải ngoài. Giấy phép font kèm `images/brand/OFL-Barlow.txt`. Dùng `images/brand/supergym-wordmark.svg` trên nền tối, `supergym-wordmark-dark.svg` trên nền sáng, `supergym-mark.svg` cho favicon và sidebar.
 
-## Hiệu ứng dùng lại (common.js mục "Hiệu ứng giao diện")
-| Thuộc tính | Tác dụng |
-|---|---|
-| `data-count` | Số chạy từ 0 khi tải trang (giữ định dạng `1.248`, `184,6 tr`) |
-| `data-flip` + `setFlipValue(el, text)` | Số lật kiểu bảng điểm khi đổi giá trị |
-| `data-tilt` | Nghiêng 3D ≤ 4° theo con trỏ + vệt sáng (không dùng trên phần tử đã có `::after`) |
-| `data-reveal` | Hiện dần theo thứ tự khi tải trang |
-| `data-tooltip="..."` | Chú thích khi hover/focus bàn phím |
-| `.skeleton` | Khung xương đang tải |
+Pumpy giữ tạo hình: thân aqua đậm #18B8C0, mọi xoáy bụng xanh #087A80; tạ trắng lõi cam, tạ đen lõi aqua. Áp dụng cả auth, lỗi, coach, empty state và loading. Không dùng màu thương hiệu để thay đổi nghĩa badge trạng thái.
 
-Mọi hiệu ứng tự tắt khi người dùng bật "Reduce motion".
+## Typography và khoảng thở
 
-## Trạng thái bắt buộc mỗi khối
-Đang tải (skeleton), rỗng (câu nói rõ không có gì), lỗi (thông báo thân thiện, không biến thành "rỗng"), chưa hoàn thiện (khóa nút + lý do). Badge trạng thái theo GBR-28.
+Be Vietnam Pro cho nội dung, menu, form và dữ liệu vận hành; Barlow Condensed 600–800 cho tiêu đề chiến dịch. Không dùng Anton, không tracking âm, không scale ngang chữ. Tiêu đề nội bộ không viết hoa dài hoặc dùng font condensed. Dấu tiếng Việt phải đủ khoảng trên/dưới. Số tài chính dùng tabular-nums và hiển thị ngay giá trị thật.
+
+## Homepage — Persuade
+
+Ảnh thể thao lớn, bố cục editorial, một tiêu đề và hai hành động rõ. Thanh nav theo ba vùng logo / liên kết / tài khoản; thu gọn trên tablet. Nhịp section luân phiên khoảng thở, ảnh, hàng dịch vụ và bảng giá aqua. Bảng giá tự xuống hàng tối đa 3 cột desktop / 2 tablet / 1 mobile, hàng cuối căn giữa: 5 gói = 3+2, 6 gói = 3+3. Giá, giờ hoạt động và PT lấy từ dữ liệu thật. Không tạo lời chứng thực, chỉ số hiệu quả hoặc đối tác giả.
+
+Footer giữ Instagram/Facebook/TikTok dưới dạng biểu tượng không bấm vì chưa có URL chính thức. Bản đồ lazy-load và link chỉ đường cùng truy vấn 25 Cầu Giấy, Hà Nội.
+
+Ảnh mỗi khối là một nội dung riêng; không nhân bản ảnh hero thành bóng mờ. Ánh ember/aqua từ lớp màu CSS thay vì ảnh lặp. Chữ blog chỉ underline khi tương tác, không gạch chân toàn card.
+
+## Khu nội bộ — Operate
+
+Sidebar thu gọn bằng mũi tên ở mọi kích thước, trả không gian cho màn chính. Trạng thái đang chọn màu bạc, hover ánh sáng nhẹ theo con trỏ. Drawer đóng bằng nền ngoài/Escape, giữ focus trong menu, `inert` vùng không hoạt động. Có skip link tới nội dung chính. Topbar, bộ lọc, dữ liệu và thao tác theo thứ tự ổn định; vùng bấm đủ lớn.
+
+Header PT/Customer giữ lời chào, sân gym chuyển động và hiệu ứng thời tiết trong thẻ theo yêu cầu người dùng. Nhiệt độ và dữ liệu thật xuất hiện ngay; có điều khiển tạm dừng hiệu ứng. Motion không cản tác vụ, loops dừng khi offscreen/tab ẩn và theo prefers-reduced-motion. Khối 5 trạng thái hoa hồng PT căn giữa 2 ô hàng cuối. Mọi khối giữ phân biệt đang tải / rỗng / lỗi / chưa hoàn thiện.
+
+## Motion và hiệu năng
+
+Homepage dùng Web Animations API và IntersectionObserver: entrance tiêu đề, reveal ảnh và parallax hero tối đa 20px. Nội dung hiển thị ngay khi JavaScript hoặc animation không chạy. Motion tắt theo prefers-reduced-motion, loops dừng khi offscreen/tab ẩn. Blur chỉ ở lớp ảnh/lớp nền giới hạn, không trên nội dung cần đọc. Không scroll hijacking hoặc pin section dài. Ảnh dưới fold lazy-load và có kích thước dự trữ.
+
+## Cấu trúc triển khai
+
+`tokens.css` → `common.css` → `brand-system.css` → CSS riêng trang. Token là nguồn giá trị; brand-system quản lý nhận diện chung, guest header và auth. Common giữ component vận hành; mỗi trang chỉ sở hữu bố cục của mình. JS dùng lại API form/toast/confirmation đang có, render text động qua c:out/textContent/escapeHtml.
+
+Nguồn tham khảo nghệ thuật: ảnh người dùng cung cấp; Adidas (ảnh thể thao và CTA), Equinox (nhịp editorial), Gymshark (phân cấp thương mại). Không dùng logo hoặc nhận diện độc quyền của các thương hiệu này.

@@ -111,12 +111,15 @@
 }
 
 /* Bảng điểm 4 chỉ số: nền đen liền khối, ô đầu tô màu chủ đạo, số lật kiểu bảng giờ tàu */
+/* Ô rộng tối thiểu 200px, không đủ chỗ thì tự xuống hàng và ô hàng dưới giãn lấp kín;
+   vạch chia = khe 1px lộ nền vạch (đúng ở mọi cách xếp hàng) */
 .metric-grid {
-    display: grid;
-    grid-template-columns: repeat(4, minmax(0, 1fr));
+    display: flex;
+    flex-wrap: wrap;
+    gap: var(--border-width);
     overflow: hidden;
     border-radius: var(--radius-md);
-    background: var(--color-board);
+    background: var(--color-board-line);
     box-shadow: var(--shadow-lift);
 }
 
@@ -130,14 +133,16 @@
     display: grid;
     align-content: start;
     gap: var(--space-2);
+    flex: 1 1 200px;
+    min-width: 0;
     padding: var(--space-4-5) var(--space-5);
-    border-right: var(--border-width) solid var(--color-board-line);
-    color: var(--color-board-text);
+    background: var(--color-board);
+    color: var(--color-text);
+    /* Cỡ số co theo bề rộng ô (đơn vị cqi) */
+    container-type: inline-size;
 }
 
-.metric-card:last-child {
-    border-right: 0;
-}
+
 
 .metric-card-primary {
     background: var(--color-primary);
@@ -145,7 +150,7 @@
 }
 
 .metric-label {
-    color: var(--color-board-soft);
+    color: var(--color-text-muted);
     font-size: var(--font-size-sm);
     font-weight: var(--font-weight-semibold);
 }
@@ -156,10 +161,11 @@
 }
 
 .metric-value {
-    color: var(--color-board-text);
+    color: var(--color-text);
     font-family: var(--font-heading);
     font-variant-numeric: tabular-nums;
-    font-size: var(--font-size-3xl);
+    /* 10cqi: "999.999.999 ₫" vẫn vừa ô 200px, không bị cắt */
+    font-size: clamp(var(--font-size-lg), 11cqi, 3.25rem);
     font-weight: var(--font-weight-extrabold);
     letter-spacing: var(--letter-spacing-tight);
     line-height: var(--line-height-tight);
@@ -167,16 +173,11 @@
 }
 
 .metric-note {
-    color: var(--color-board-soft);
+    color: var(--color-text-muted);
     font-size: var(--font-size-xs);
     line-height: var(--line-height-relaxed);
 }
 
-@media (max-width: 1080px) {
-    .metric-grid { grid-template-columns: repeat(2, minmax(0, 1fr)); }
-    .metric-card:nth-child(2n) { border-right: 0; }
-    .metric-card:nth-child(-n + 2) { border-bottom: var(--border-width) solid var(--color-board-line); }
-}
 
 .report-stack,
 .audit-detail-grid {
@@ -323,10 +324,6 @@
 
 /* ===== Responsive ===== */
 @media (max-width: 1000px) {
-    .metric-grid {
-        grid-template-columns: repeat(2, minmax(0, 1fr));
-    }
-
     .audit-summary-grid {
         grid-template-columns: 1fr;
     }
@@ -352,8 +349,8 @@
         flex-direction: column;
     }
 
-    .metric-grid {
-        grid-template-columns: 1fr;
+    .metric-card {
+        flex-basis: 150px;
     }
 }
 .report-date-control {
@@ -399,4 +396,19 @@
     height: var(--space-1);
     opacity: 0;
     pointer-events: none;
+}
+
+/* Bộ lọc dùng được bằng bàn phím; chỉ số đồng nhất với báo cáo quản lý. */
+.report-date-input:focus-visible {
+  outline: var(--focus-outline-width) solid var(--brand-aqua);
+  outline-offset: var(--focus-outline-offset);
+}
+.dock .metric-grid { display: grid; grid-template-columns: repeat(4, minmax(0, 1fr)); }
+.dock .metric-card { padding: var(--space-5); }
+.dock .metric-value { font-size: var(--font-size-2xl); }
+@media (max-width: 1279px) {
+  .dock .metric-grid { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+}
+@media (max-width: 480px) {
+  .dock .metric-grid { grid-template-columns: minmax(0, 1fr); }
 }

@@ -5,6 +5,12 @@
         <h1 class="tb-title"><c:out value="${pageTitle}" /></h1>
         <p class="pt-header-date"><c:out value="${gms:formatDate(today)}" /></p>
     </div>
+    <div class="pt-top-actions">
+    <%-- Chuyển nền tối/sáng (common.js "Giao diện sáng / tối"); mặc định tối --%>
+    <button type="button" class="theme-toggle" data-theme-toggle aria-pressed="false" aria-label="Chuyển sang nền sáng">
+        <span class="theme-toggle__track" aria-hidden="true"><span class="theme-toggle__knob"></span></span>
+        <span class="theme-toggle__label">Tối</span>
+    </button>
     <a class="tb-user" href="${pageContext.request.contextPath}/account">
         <span class="pt-user-avatar">
             <i class="fa-solid fa-user" aria-hidden="true"></i>
@@ -18,4 +24,5 @@
             </c:if>
         </span>
     </a>
+    </div>
 </header>

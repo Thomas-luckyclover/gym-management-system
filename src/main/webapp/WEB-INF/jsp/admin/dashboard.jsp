@@ -6,7 +6,7 @@
 <head>
   <%@ include file="/WEB-INF/jsp/common/head.jspf" %>
   <title>Báo cáo vận hành hệ thống · Super Gym</title>
-  <link rel="stylesheet" href="${pageContext.request.contextPath}/css/pages/admin/dashboard.css?v=3">
+  <link rel="stylesheet" href="${pageContext.request.contextPath}/css/pages/admin/dashboard.css?v=20261013c">
   <script src="${pageContext.request.contextPath}/js/pages/admin/dashboard.js" defer></script>
 </head>
 <body class="dock theme-admin">
@@ -39,12 +39,11 @@
         </div>
       </header>
 
-      <main class="content">
+      <main class="content" id="main-content" tabindex="-1">
         <%-- UC-47: cả hai ngày bắt buộc, mặc định ngày 1 tháng hiện tại tới hôm nay. --%>
         <section class="report-head" aria-labelledby="reportTitle" data-reveal>
           <div class="report-title-block">
             <h2 id="reportTitle">Báo cáo vận hành</h2>
-            <p>Doanh thu, check-in, hoa hồng PT và chỉ số audit theo khoảng ngày đã chọn.</p>
           </div>
 
           <form
@@ -126,6 +125,12 @@
             </div>
 
             <div class="report-filter-actions">
+              <%-- Chọn nhanh khoảng ngày (common.js "Chọn nhanh khoảng ngày"): điền 2 ô ẩn rồi xem luôn --%>
+              <div class="range-presets" data-range-presets data-from="#fromDate" data-to="#toDate" role="group" aria-label="Chọn nhanh khoảng ngày">
+                <button type="button" class="chip" data-range="7">7 ngày</button>
+                <button type="button" class="chip" data-range="30">30 ngày</button>
+                <button type="button" class="chip" data-range="month">Tháng này</button>
+              </div>
               <button type="submit" class="btn btn-primary">
                 Xem báo cáo
               </button>
@@ -156,7 +161,6 @@
             <div class="section-heading">
               <div>
                 <h2 id="operationTitle">Vận hành &amp; doanh thu</h2>
-                <p>Doanh thu theo thời điểm giao dịch thành công; hoa hồng theo ngày diễn ra buổi; check-in theo thời điểm check-in.</p>
               </div>
             </div>
 
@@ -229,7 +233,6 @@
                 <div class="card-heading">
                   <div>
                     <h3>Hoa hồng theo PT</h3>
-                    <p>Hoa hồng lọc theo ngày diễn ra buổi và giá trị đã chốt trên từng buổi.</p>
                   </div>
                 </div>
 
@@ -286,7 +289,6 @@
                 <div class="card-heading">
                   <div>
                     <h3>Hoạt động đăng nhập</h3>
-                    <p>Ba Action đã chốt cho báo cáo Admin.</p>
                   </div>
                 </div>
 

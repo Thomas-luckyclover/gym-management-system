@@ -7,7 +7,7 @@
 /* ===== BỐ CỤC 2 CỘT ===== */
 .split {
   display: grid;
-  grid-template-columns: minmax(0, 1fr) 340px;
+  grid-template-columns: minmax(0, 2fr) minmax(0, 1fr);
   gap: var(--space-6);
   align-items: start;
 }
@@ -21,7 +21,7 @@
 
 .split > .col-side {
   position: sticky;
-  top: 104px;
+  top: calc(var(--space-12) + var(--space-5));
   display: flex;
   flex-direction: column;
   gap: var(--space-5);
@@ -352,7 +352,8 @@
 
 .tabular {
   font-variant-numeric: tabular-nums;
-  font-family: monospace;
+  font-family: var(--font-body);
+  font-variant-numeric: tabular-nums;
   font-weight: var(--font-weight-semibold);
   color: var(--color-text-muted);
 }
@@ -489,3 +490,40 @@
     width: 88px;
   }
 }
+
+/* Khung mã thử (demo) gập sẵn; bấm tiêu đề để mở */
+.ci-demo > summary {
+  cursor: pointer;
+  list-style: none;
+}
+
+.ci-demo > summary::-webkit-details-marker {
+  display: none;
+}
+
+.ci-demo > summary::after {
+  content: "";
+  display: inline-block;
+  width: var(--space-1-5);
+  height: var(--space-1-5);
+  margin-left: var(--space-2);
+  border-right: var(--border-width-thick) solid currentColor;
+  border-bottom: var(--border-width-thick) solid currentColor;
+  rotate: 45deg;
+  translate: 0 -2px;
+}
+
+.ci-demo[open] > summary::after {
+  rotate: 225deg;
+  translate: 0 2px;
+}
+
+.ci-demo[open] > summary {
+  margin-bottom: var(--space-3);
+}
+
+
+/* Tìm và đọc kết quả: phân cấp rõ, ô nhập đủ lớn cho chuột và cảm ứng. */
+.toolbar .search { min-width: 0; flex-basis: calc(var(--space-12) * 2.5); }
+.toolbar .search input { min-height: var(--control-height-lg); }
+.panel-head h2 { font-weight: var(--font-weight-semibold); line-height: var(--line-height-snug); }

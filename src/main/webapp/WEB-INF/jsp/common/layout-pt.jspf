@@ -9,10 +9,11 @@
 <%@ page pageEncoding="UTF-8" %>
 <%@ taglib prefix="c" uri="jakarta.tags.core" %>
 
+<a class="skip-link" href="#main-content">Bỏ qua menu, đến nội dung</a>
 <div class="dockwrap" id="dock">
   <aside class="sidebar">
     <div class="brand">
-      <span class="brand-mark"><img src="${pageContext.request.contextPath}/images/logo-mark.png" alt=""></span>
+      <span class="brand-mark"><img src="${pageContext.request.contextPath}/images/brand/supergym-mark.svg?v=2" alt="" width="40" height="40"></span>
       <div class="brand-text">
         <div class="brand-name">Super Gym</div>
         <div class="brand-role">Huấn luyện viên</div>
@@ -24,38 +25,38 @@
       <a href="${pageContext.request.contextPath}/pt/dashboard"
          class="nav-link<c:if test="${activeNav == 'dashboard'}"> active</c:if>"
          <c:if test="${activeNav == 'dashboard'}">aria-current="page"</c:if>>
-        <i class="fa-solid fa-gauge-high" aria-hidden="true"></i><span>Tổng quan</span>
+        <svg viewBox="0 0 24 24" aria-hidden="true"><rect x="3" y="3" width="7" height="7" rx="1"></rect><rect x="14" y="3" width="7" height="7" rx="1"></rect><rect x="3" y="14" width="7" height="7" rx="1"></rect><rect x="14" y="14" width="7" height="7" rx="1"></rect></svg><span>Tổng quan</span>
       </a>
       <a href="${pageContext.request.contextPath}/pt/sessions/attendance"
          class="nav-link<c:if test="${activeNav == 'attendance'}"> active</c:if>"
          <c:if test="${activeNav == 'attendance'}">aria-current="page"</c:if>>
-        <i class="fa-solid fa-clipboard-check" aria-hidden="true"></i><span>Điểm danh</span>
+        <svg viewBox="0 0 24 24" aria-hidden="true"><rect x="5" y="4" width="14" height="17" rx="2"></rect><rect x="8" y="2" width="8" height="4" rx="1"></rect><path d="m8 13 3 3 5-6"></path></svg><span>Điểm danh</span>
       </a>
 
       <div class="nav-group">Lịch dạy</div>
       <a href="${pageContext.request.contextPath}/pt/time-slots"
          class="nav-link<c:if test="${activeNav == 'time-slots'}"> active</c:if>"
          <c:if test="${activeNav == 'time-slots'}">aria-current="page"</c:if>>
-        <i class="fa-solid fa-calendar-days" aria-hidden="true"></i><span>Lịch rảnh</span>
+        <svg viewBox="0 0 24 24" aria-hidden="true"><rect x="3" y="5" width="18" height="16" rx="2"></rect><path d="M3 10h18M8 3v4M16 3v4M7 14h2M11 14h2M15 14h2M7 18h2M11 18h2"></path></svg><span>Lịch rảnh</span>
       </a>
 
       <div class="nav-group">Khách phụ trách</div>
       <a href="${pageContext.request.contextPath}/pt/clients"
          class="nav-link<c:if test="${activeNav == 'clients'}"> active</c:if>"
          <c:if test="${activeNav == 'clients'}">aria-current="page"</c:if>>
-        <i class="fa-solid fa-user-group" aria-hidden="true"></i><span>Khách của tôi</span>
+        <svg viewBox="0 0 24 24" aria-hidden="true"><circle cx="9" cy="8" r="3.5"></circle><path d="M2.5 20v-1a6.5 6.5 0 0 1 13 0v1M16 4.6a3.5 3.5 0 0 1 0 6.8M18.5 14.8c1.6.7 2.7 2.4 3 5.2"></path></svg><span>Khách của tôi</span>
       </a>
 
       <div class="nav-group">Cá nhân</div>
       <a href="${pageContext.request.contextPath}/pt/leave-requests"
          class="nav-link<c:if test="${activeNav == 'leaves'}"> active</c:if>"
          <c:if test="${activeNav == 'leaves'}">aria-current="page"</c:if>>
-        <i class="fa-solid fa-plane-departure" aria-hidden="true"></i><span>Nghỉ phép</span>
+        <svg viewBox="0 0 24 24" aria-hidden="true"><rect x="3" y="5" width="18" height="16" rx="2"></rect><path d="M3 10h18M8 3v4M16 3v4m-7 7 6 6m0-6-6 6"></path></svg><span>Nghỉ phép</span>
       </a>
       <a href="${pageContext.request.contextPath}/account"
          class="nav-link<c:if test="${activeNav == 'account'}"> active</c:if>"
          <c:if test="${activeNav == 'account'}">aria-current="page"</c:if>>
-        <i class="fa-solid fa-user-gear" aria-hidden="true"></i><span>Cài đặt tài khoản</span>
+        <svg viewBox="0 0 24 24" aria-hidden="true"><circle cx="12" cy="8" r="4"></circle><path d="M4 21v-2a8 8 0 0 1 16 0v2"></path></svg><span>Cài đặt tài khoản</span>
       </a>
     </nav>
 
@@ -69,6 +70,7 @@
       </a>
     </div>
   </aside>
+  <button class="dock-backdrop" type="button" tabindex="-1" aria-hidden="true"></button>
 
   <button class="dock-handle"
           id="dockHandle"
@@ -76,6 +78,6 @@
           aria-label="Mở menu điều hướng"
           aria-expanded="false"
           aria-controls="dock">
-    <i class="fa-solid fa-chevron-right" aria-hidden="true"></i>
+    <svg viewBox="0 0 24 24" aria-hidden="true"><path d="m9 6 6 6-6 6"></path></svg>
   </button>
 </div>
