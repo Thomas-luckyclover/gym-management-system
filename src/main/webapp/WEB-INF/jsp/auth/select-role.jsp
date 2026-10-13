@@ -24,7 +24,7 @@
         <%@ include file="/WEB-INF/jsp/common/flash-toast.jspf" %>
         <div class="auth-shell">
             <div class="auth-top">
-                <span class="auth-brand"><img src="${pageContext.request.contextPath}/images/brand/supergym-wordmark.svg?v=2" alt="Super Gym" width="180" height="44"></span>
+                <span class="auth-brand"><img src="${pageContext.request.contextPath}/images/logo.png?v=3" alt="Super Gym" width="52" height="52"></span>
             </div>
 
             <div class="auth-card">
