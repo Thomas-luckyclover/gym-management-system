@@ -1,7 +1,9 @@
 package com.gms.dao;
 
+import com.gms.dto.LeaveRequestFilter;
 import com.gms.entity.LeaveRequest;
 import com.gms.util.DBContext;
+import com.gms.util.SqlUtil;
 import java.sql.Connection;
 import java.sql.PreparedStatement;
 import java.sql.ResultSet;
@@ -47,6 +49,46 @@ public class LeaveRequestDAO {
 
         // B3: không có dòng nào khớp
         return null;
+    }
+
+    /**
+     * Đếm số đơn khớp bộ lọc của Manager (màn #26) để tính tổng số trang.
+     *
+     * @param filter bộ lọc đã hợp lệ; status null = mọi trạng thái, keyword rỗng = không tìm tên
+     * @return tổng số đơn khớp, 0 nếu không có
+     * @throws SQLException lỗi kết nối hoặc lỗi câu SQL
+     */
+    public int countByFilter(LeaveRequestFilter filter) throws SQLException {
+        // B1: nối Employees và Persons vì tên nhân viên nằm ở Persons.FullName
+        String sql = "SELECT COUNT(*) "
+                + "FROM LeaveRequests lr "
+                + "JOIN Employees e ON e.EmployeeId = lr.EmployeeId "
+                + "JOIN Persons p ON p.PersonId = e.PersonId "
+                // status null thì điều kiện đầu luôn đúng (không lọc theo tab)
+                + "WHERE (? IS NULL OR lr.Status = ?) "
+                + "AND p.FullName COLLATE Vietnamese_CI_AI LIKE ? ESCAPE '\\'";
+
+        // B2: đổi status sang giá trị DB; null giữ nguyên để bỏ lọc
+        String statusValue = filter.getStatus() == null
+                ? null : filter.getStatus().getDbValue();
+
+        try (Connection connection = DBContext.getConnection();
+                PreparedStatement statement
+                = connection.prepareStatement(sql)) {
+
+            statement.setString(1, statusValue);
+            statement.setString(2, statusValue);
+            statement.setString(3,
+                    SqlUtil.toContainsPattern(filter.getKeyword()));
+
+            try (ResultSet resultSet = statement.executeQuery()) {
+                if (resultSet.next()) {
+                    return resultSet.getInt(1);
+                }
+            }
+        }
+
+        return 0;
     }
 
     // ===== Map ResultSet → Entity =====
