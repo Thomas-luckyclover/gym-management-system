@@ -1,6 +1,9 @@
 package com.gms.servlet.manager;
 
+import com.gms.dao.LeaveRequestDAO;
+import com.gms.dto.ServiceResult;
 import com.gms.service.LeaveRequestService;
+import com.gms.util.RequestUtil;
 import jakarta.servlet.ServletException;
 import jakarta.servlet.annotation.WebServlet;
 import jakarta.servlet.http.HttpServlet;
@@ -30,7 +33,28 @@ public class LeaveRequestReviewServlet extends HttpServlet {
             HttpServletRequest request,
             HttpServletResponse response
     ) throws ServletException, IOException {
-        // TODO: cài đặt doGet ở bước tiếp theo
+        // B1: đọc mã đơn cần duyệt từ query param ?id=
+        int leaveRequestId = RequestUtil.getIntParam(request, "id", 0);
+        if (leaveRequestId <= 0) {
+            RequestUtil.redirect(request, response, "/manager/leave-requests");
+            return;
+        }
+
+        // B2: gọi Service lấy thông tin chi tiết đơn
+        ServiceResult<LeaveRequestDAO.LeaveReviewDetail> result
+                = leaveRequestService.getReviewDetail(leaveRequestId);
+
+        // B3: nếu không tìm thấy, báo lỗi và quay về danh sách
+        if (!result.isSuccess()) {
+            RequestUtil.setFlashToast(request, "danger", result.getMessage());
+            RequestUtil.redirect(request, response, "/manager/leave-requests");
+            return;
+        }
+
+        // B4: đặt attribute cho JSP hiển thị
+        request.setAttribute("item", result.getData());
+        request.setAttribute("activeNav", "leaves");
+        RequestUtil.forward(request, response, "manager/leave-request-review");
     }
 
     @Override
