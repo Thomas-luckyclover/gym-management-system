@@ -441,6 +441,40 @@ public class LeaveRequestDAO {
         return 0;
     }
 
+    /**
+     * Lấy danh sách đơn xin nghỉ gần đây của một nhân viên (màn #25, UC-14).
+     *
+     * @param employeeId mã nhân viên
+     * @param limit số đơn tối đa cần lấy
+     * @return danh sách entity LeaveRequest xếp theo SubmittedAt giảm dần
+     * @throws SQLException lỗi kết nối hoặc truy vấn DB
+     */
+    public List<LeaveRequest> findByEmployeeId(int employeeId, int limit) throws SQLException {
+        // B1: câu SQL lấy danh sách đơn của nhân viên theo ngày nộp mới nhất
+        String sql = SELECT_COLUMNS
+                + "WHERE EmployeeId = ? "
+                + "ORDER BY SubmittedAt DESC "
+                + "OFFSET 0 ROWS FETCH NEXT ? ROWS ONLY";
+
+        List<LeaveRequest> list = new ArrayList<>();
+
+        // B2: thực thi và map từng dòng kết quả
+        try (Connection connection = DBContext.getConnection();
+                PreparedStatement statement = connection.prepareStatement(sql)) {
+
+            statement.setInt(1, employeeId);
+            statement.setInt(2, limit);
+
+            try (ResultSet resultSet = statement.executeQuery()) {
+                while (resultSet.next()) {
+                    list.add(mapResultSetToLeaveRequest(resultSet));
+                }
+            }
+        }
+
+        return list;
+    }
+
     // ===== Map ResultSet → Entity =====
 
     /** Đổi 1 dòng ResultSet thành LeaveRequest; cột nullable được đọc riêng để không mất NULL. */
