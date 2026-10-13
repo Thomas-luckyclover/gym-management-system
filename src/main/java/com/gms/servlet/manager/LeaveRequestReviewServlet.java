@@ -1,5 +1,6 @@
 package com.gms.servlet.manager;
 
+import com.gms.constant.SessionKey;
 import com.gms.dao.LeaveRequestDAO;
 import com.gms.dto.ServiceResult;
 import com.gms.service.LeaveRequestService;
@@ -9,6 +10,7 @@ import jakarta.servlet.annotation.WebServlet;
 import jakarta.servlet.http.HttpServlet;
 import jakarta.servlet.http.HttpServletRequest;
 import jakarta.servlet.http.HttpServletResponse;
+import jakarta.servlet.http.HttpSession;
 
 import java.io.IOException;
 
@@ -62,6 +64,62 @@ public class LeaveRequestReviewServlet extends HttpServlet {
             HttpServletRequest request,
             HttpServletResponse response
     ) throws ServletException, IOException {
-        // TODO: cài đặt doPost ở bước tiếp theo
+
+        // B1: lấy accountId của Manager từ session
+        HttpSession session = request.getSession(false);
+        Integer managerAccountId = session == null
+                ? null
+                : (Integer) session.getAttribute(SessionKey.ACCOUNT_ID);
+
+        if (managerAccountId == null) {
+            RequestUtil.redirect(request, response, "/login");
+            return;
+        }
+
+        // B2: đọc tham số form
+        int leaveRequestId = RequestUtil.getIntParam(request, "leaveRequestId", 0);
+        String action = RequestUtil.getTrimmedParam(request, "action");
+
+        if (leaveRequestId <= 0) {
+            RequestUtil.redirect(request, response, "/manager/leave-requests");
+            return;
+        }
+
+        // B3: xử lý theo hành động Duyệt (approve) hoặc Từ chối (reject)
+        ServiceResult<Void> result;
+        String rejectReason = RequestUtil.getTrimmedParam(request, "rejectReason");
+
+        if ("approve".equalsIgnoreCase(action)) {
+            result = leaveRequestService.approveRequest(managerAccountId, leaveRequestId);
+        } else if ("reject".equalsIgnoreCase(action)) {
+            result = leaveRequestService.rejectRequest(managerAccountId, leaveRequestId, rejectReason);
+        } else {
+            RequestUtil.redirect(request, response, "/manager/leave-requests");
+            return;
+        }
+
+        // B4: nếu xử lý thành công, thông báo và quay về danh sách
+        if (result.isSuccess()) {
+            String successMsg = "approve".equalsIgnoreCase(action)
+                    ? "Đã duyệt đơn nghỉ phép thành công."
+                    : "Đã từ chối đơn nghỉ phép.";
+            RequestUtil.setFlashToast(request, "success", successMsg);
+            RequestUtil.redirect(request, response, "/manager/leave-requests");
+            return;
+        }
+
+        // B5: nếu thất bại (VD vi phạm min staffing hoặc thiếu lý do), nạp lại form kèm lỗi
+        ServiceResult<LeaveRequestDAO.LeaveReviewDetail> detailResult
+                = leaveRequestService.getReviewDetail(leaveRequestId);
+        if (detailResult.isSuccess()) {
+            request.setAttribute("item", detailResult.getData());
+        }
+
+        request.setAttribute("formMessage", result.getMessage());
+        request.setAttribute("rejectReason", rejectReason);
+        request.setAttribute("errors", result.getFieldErrors());
+        request.setAttribute("activeNav", "leaves");
+
+        RequestUtil.forward(request, response, "manager/leave-request-review");
     }
 }
