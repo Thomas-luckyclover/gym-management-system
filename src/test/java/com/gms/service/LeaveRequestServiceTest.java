@@ -15,7 +15,26 @@ class LeaveRequestServiceTest {
     private final LeaveRequestService service = new LeaveRequestService();
 
     @Test
-    void serviceInstanceIsNotNull() {
-        assertNotNull(service);
+    void parseStatusFilter_returnsPendingByDefault_whenNullOrBlank() {
+        assertEquals(LeaveRequest.Status.PENDING, service.parseStatusFilter(null));
+        assertEquals(LeaveRequest.Status.PENDING, service.parseStatusFilter(""));
+        assertEquals(LeaveRequest.Status.PENDING, service.parseStatusFilter("   "));
+    }
+
+    @Test
+    void parseStatusFilter_returnsNull_whenAll() {
+        assertNull(service.parseStatusFilter("All"));
+        assertNull(service.parseStatusFilter("all"));
+        assertNull(service.parseStatusFilter(" ALL "));
+    }
+
+    @ParameterizedTest
+    @CsvSource({
+        "Pending, PENDING",
+        "Approved, APPROVED",
+        "Rejected, REJECTED"
+    })
+    void parseStatusFilter_mapsValidStatus(String param, LeaveRequest.Status expected) {
+        assertEquals(expected, service.parseStatusFilter(param));
     }
 }
