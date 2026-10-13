@@ -6,7 +6,7 @@ Cập nhật 13/10/2026 theo yêu cầu redesign cả khu công khai và nội b
 
 Cam cháy `--brand-sunset` (#FF5D2E), đỏ than `--brand-ember-red` (#F13C2D), aqua sâu `--brand-ocean-deep` (#04303C), aqua sáng `--brand-aqua` (#2BD4DE). Sắc đỏ trong cam tăng theo yêu cầu mới; đại dương sâu hơn. Homepage hướng đến tỷ trọng 65% ember / 35% aqua trong các vùng nhận diện. Khu vận hành dùng nền aqua tối, surface rõ và ember cho hành động chính. Chế độ sáng vẫn hỗ trợ.
 
-Logo: hai đường cong đối hướng gợi chữ S và vòng chuyển động, ember phía trên/aqua phía dưới. Wordmark Barlow Condensed SemiBold có khoảng cách riêng, chuyển thành SVG path để không phụ thuộc font tải ngoài. Giấy phép font kèm `images/brand/OFL-Barlow.txt`. Dùng `images/brand/supergym-wordmark.svg` trên nền tối, `supergym-wordmark-dark.svg` trên nền sáng, `supergym-mark.svg` cho favicon và sidebar.
+Logo: huy hiệu vòm góc bo tròn màu cyan với chữ SUPER GYM cam/đỏ và biểu tượng đòn tạ ở giữa, tách nền trong suốt (`images/logo.png` và `images/logo-mark.png`). Dùng đồng bộ cho Header/Footer khách, các màn Auth, Sidebar dock nội bộ và Favicon. Giữ tương thích với các fallback SVG trong `images/brand/`.
 
 Pumpy giữ tạo hình: thân aqua đậm #18B8C0, mọi xoáy bụng xanh #087A80; tạ trắng lõi cam, tạ đen lõi aqua. Áp dụng cả auth, lỗi, coach, empty state và loading. Không dùng màu thương hiệu để thay đổi nghĩa badge trạng thái.
 
