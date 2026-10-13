@@ -5,12 +5,15 @@ import com.gms.constant.Role;
 import com.gms.dao.AccountDAO;
 import com.gms.dao.EmployeeDAO;
 import com.gms.dao.LeaveRequestDAO;
+import com.gms.dao.PersonDAO;
 import com.gms.dto.LeaveRequestFilter;
 import com.gms.dto.LeaveRequestItemView;
 import com.gms.dto.PageResult;
 import com.gms.dto.ServiceResult;
+import com.gms.dto.StaffLeaveFormView;
 import com.gms.entity.Employee;
 import com.gms.entity.LeaveRequest;
+import com.gms.entity.Person;
 import com.gms.util.DBContext;
 import com.gms.util.DateTimeUtil;
 import com.gms.util.PaginationUtil;
@@ -40,6 +43,9 @@ public class LeaveRequestService {
     private final AccountDAO accountDAO;
     private final EmployeeDAO employeeDAO;
 
+    // DAO đọc Persons (lấy họ tên nhân viên hiển thị trên form nộp đơn)
+    private final PersonDAO personDAO;
+
     // Đọc tham số P-20 (giờ chốt duyệt đơn), P-13/P-14 (min staffing)
     private final SystemConfigService systemConfigService;
 
@@ -53,6 +59,7 @@ public class LeaveRequestService {
         leaveRequestDAO = new LeaveRequestDAO();
         accountDAO = new AccountDAO();
         employeeDAO = new EmployeeDAO();
+        personDAO = new PersonDAO();
         systemConfigService = new SystemConfigService();
         auditLogService = new AuditLogService();
         notificationService = new NotificationService();
@@ -385,6 +392,50 @@ public class LeaveRequestService {
             }
 
             return ServiceResult.ok(null);
+
+        } catch (SQLException e) {
+            e.printStackTrace();
+            return ServiceResult.fail(Messages.MSG04_SYSTEM_BUSY);
+        }
+    }
+
+    // ===== Màn nộp đơn của nhân viên (màn #25, UC-14) =====
+
+    /**
+     * Lấy dữ liệu để hiện form nộp đơn nghỉ phép của PT/Lễ tân (màn #25).
+     *
+     * @param accountId AccountId của nhân viên từ session, không lấy từ request parameter
+     * @return view gồm thông tin nhân viên, hạn nộp P-12 và các đơn đã nộp; hoặc thông báo lỗi
+     */
+    public ServiceResult<StaffLeaveFormView> getStaffLeaveForm(int accountId) {
+        try {
+            // B1: tìm nhân viên từ tài khoản đăng nhập
+            Employee employee = findEmployeeForAccount(accountId);
+            if (employee == null) {
+                return ServiceResult.fail(
+                        String.format(Messages.MSG08_NOT_FOUND, "nhân viên"));
+            }
+
+            // B2: lấy họ tên từ Persons để hiện trên form
+            Person person = personDAO.findById(employee.getPersonId());
+            String fullName = person == null ? "" : person.getFullName();
+
+            // B3: đọc giờ chốt nộp đơn P-12 (mặc định 15:00 ngày liền trước ngày nghỉ)
+            LocalTime submissionCutoff = LocalTime.parse(
+                    systemConfigService.getString(
+                            SystemConfigService.LEAVE_SUBMIT_DEADLINE));
+
+            // B4: lấy 10 đơn gần nhất của chính nhân viên này
+            List<LeaveRequest> myRequests
+                    = leaveRequestDAO.findByEmployeeId(employee.getEmployeeId(), 10);
+
+            return ServiceResult.ok(new StaffLeaveFormView(
+                    employee.getEmployeeId(),
+                    employee.getEmployeeCode(),
+                    fullName,
+                    employee.getPosition().getDbValue(),
+                    submissionCutoff,
+                    myRequests));
 
         } catch (SQLException e) {
             e.printStackTrace();
