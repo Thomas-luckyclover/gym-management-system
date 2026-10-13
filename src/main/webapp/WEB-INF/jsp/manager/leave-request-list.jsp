@@ -135,6 +135,11 @@
             </a>
           </form>
 
+          <%-- ===== Thông báo lỗi tải danh sách (pageError: Servlet đặt khi Service trả lỗi, không có thì không hiện) ===== --%>
+          <c:if test="${not empty pageError}">
+            <div class="leave-empty" role="alert"><c:out value="${pageError}" /></div>
+          </c:if>
+
           <%-- ===== Bảng danh sách (leavePage.items: List<LeaveRequestItemView>, mỗi dòng 1 đơn) ===== --%>
           <c:choose>
             <c:when test="${not empty leavePage.items}">
@@ -214,7 +219,34 @@
             </c:otherwise>
           </c:choose>
 
-          <%-- ===== Phân trang — nạp ở commit sau ===== --%>
+          <%-- ===== Phân trang (leavePage.totalPages, hasPrevious, hasNext do PageResult cung cấp; link giữ keyword, status, pageSize) ===== --%>
+          <c:if test="${leavePage.totalPages > 1}">
+            <div class="leave-pager">
+
+              <c:if test="${leavePage.hasPrevious}">
+                <c:url var="previousUrl" value="/manager/leave-requests">
+                  <c:param name="page" value="${leavePage.pageNumber - 1}" />
+                  <c:param name="pageSize" value="${leavePage.pageSize}" />
+                  <c:param name="keyword" value="${keyword}" />
+                  <c:param name="status" value="${statusFilter}" />
+                </c:url>
+                <a class="btn btn-ghost btn-sm" href="${previousUrl}">Trang trước</a>
+              </c:if>
+
+              <span>Trang ${leavePage.pageNumber} / ${leavePage.totalPages}</span>
+
+              <c:if test="${leavePage.hasNext}">
+                <c:url var="nextUrl" value="/manager/leave-requests">
+                  <c:param name="page" value="${leavePage.pageNumber + 1}" />
+                  <c:param name="pageSize" value="${leavePage.pageSize}" />
+                  <c:param name="keyword" value="${keyword}" />
+                  <c:param name="status" value="${statusFilter}" />
+                </c:url>
+                <a class="btn btn-ghost btn-sm" href="${nextUrl}">Trang sau</a>
+              </c:if>
+
+            </div>
+          </c:if>
 
         </section>
 
