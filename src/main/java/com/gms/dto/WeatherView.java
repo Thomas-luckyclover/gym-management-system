@@ -1,5 +1,7 @@
 package com.gms.dto;
 
+import java.time.LocalDateTime;
+
 /**
  * Một thẻ thời tiết đã có sẵn câu chữ để PT Dashboard hiển thị.
  * WeatherService sẽ tạo DTO này từ WeatherForecast; JSP chỉ đọc, không xét mã thời tiết.
@@ -58,6 +60,10 @@ public class WeatherView {
     private final Integer maxTemperature;
     private final Integer rainProbabilityPercent;
 
+    // WeatherService ghi thời điểm lấy API thành công theo giờ gym. Stale chỉ bật khi lần thử mới thất bại.
+    private final LocalDateTime updatedAt;
+    private final boolean stale;
+
     /** Giữ constructor cũ cho nơi chỉ cần dòng thời tiết ngắn. */
     public WeatherView(Mood mood, String cityName, String conditionLabel, String title,
             String advice, String iconClass, int temperature) {
@@ -70,6 +76,16 @@ public class WeatherView {
             String advice, String iconClass, int temperature, Integer feelsLikeTemperature,
             Integer humidityPercent, Integer windSpeedKmh, Integer minTemperature,
             Integer maxTemperature, Integer rainProbabilityPercent) {
+        this(mood, cityName, conditionLabel, title, advice, iconClass, temperature,
+                feelsLikeTemperature, humidityPercent, windSpeedKmh, minTemperature,
+                maxTemperature, rainProbabilityPercent, null, false);
+    }
+
+    private WeatherView(Mood mood, String cityName, String conditionLabel, String title,
+            String advice, String iconClass, int temperature, Integer feelsLikeTemperature,
+            Integer humidityPercent, Integer windSpeedKmh, Integer minTemperature,
+            Integer maxTemperature, Integer rainProbabilityPercent,
+            LocalDateTime updatedAt, boolean stale) {
         this.mood = mood;
         this.cityName = cityName;
         this.conditionLabel = conditionLabel;
@@ -83,7 +99,27 @@ public class WeatherView {
         this.minTemperature = minTemperature;
         this.maxTemperature = maxTemperature;
         this.rainProbabilityPercent = rainProbabilityPercent;
+        this.updatedAt = updatedAt;
+        this.stale = stale;
     }
+
+    /** Gắn thời điểm lần GET thành công; dữ liệu preview vẫn không có mốc này. */
+    public WeatherView withUpdatedAt(LocalDateTime fetchedAt) {
+        return new WeatherView(mood, cityName, conditionLabel, title, advice, iconClass,
+                temperature, feelsLikeTemperature, humidityPercent, windSpeedKmh,
+                minTemperature, maxTemperature, rainProbabilityPercent, fetchedAt, false);
+    }
+
+    /** Dùng lại đúng số đo và mốc lấy cũ sau lỗi mạng, để giao diện ghi rõ dữ liệu cũ. */
+    public WeatherView asStale() {
+        return new WeatherView(mood, cityName, conditionLabel, title, advice, iconClass,
+                temperature, feelsLikeTemperature, humidityPercent, windSpeedKmh,
+                minTemperature, maxTemperature, rainProbabilityPercent, updatedAt, true);
+    }
+
+    public LocalDateTime getUpdatedAt() { return updatedAt; }
+
+    public boolean isStale() { return stale; }
 
     /** @return mood để Service hoặc test kiểm tra kiểu thời tiết đã chọn */
     public Mood getMood() {
