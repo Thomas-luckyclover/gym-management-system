@@ -153,7 +153,41 @@
           </div>
 
           <div class="leave-col-side">
-            <%-- TODO Bước 3: Side cards thông tin hạn nộp và định biên ca --%>
+            <%-- Card 1: Thông tin hạn nộp P-12 --%>
+            <div class="side-card" style="margin-bottom:var(--space-4);padding:var(--space-4) var(--space-5);border-radius:var(--radius-lg);background:var(--color-surface);border:1px solid var(--color-border-strong);box-shadow:var(--shadow-card)">
+              <span class="section-label" style="display:block;margin-bottom:var(--space-3);font-size:var(--font-size-xs);font-weight:700;text-transform:uppercase;color:var(--color-text-soft)">
+                Hạn chốt nộp đơn (P-12)
+              </span>
+              <div style="display:flex;justify-content:space-between;margin-bottom:var(--space-2);font-size:var(--font-size-sm)">
+                <span style="color:var(--color-text-soft)">Ngày nghỉ:</span>
+                <b id="infoDate">—</b>
+              </div>
+              <div style="display:flex;justify-content:space-between;margin-bottom:var(--space-3);font-size:var(--font-size-sm)">
+                <span style="color:var(--color-text-soft)">Giờ chốt:</span>
+                <b id="infoDeadline"><c:out value="${formView.submissionCutoffTime}" /> · ngày hôm trước</b>
+              </div>
+              <p style="margin:0;font-size:var(--font-size-xs);color:var(--color-text-soft);line-height:1.5">
+                Quá giờ chốt thì nghỉ đột xuất vui lòng báo trực tiếp Quản lý ngoài hệ thống (CBR-84).
+              </p>
+            </div>
+
+            <%-- Card 2: Quy định định biên nhân sự --%>
+            <div class="side-card" style="padding:var(--space-4) var(--space-5);border-radius:var(--radius-lg);background:var(--color-surface);border:1px solid var(--color-border-strong);box-shadow:var(--shadow-card)">
+              <span class="section-label" style="display:block;margin-bottom:var(--space-3);font-size:var(--font-size-xs);font-weight:700;text-transform:uppercase;color:var(--color-text-soft)">
+                Định biên tối thiểu
+              </span>
+              <div style="display:flex;justify-content:space-between;margin-bottom:var(--space-2);font-size:var(--font-size-sm)">
+                <span style="color:var(--color-text-soft)">Huấn luyện viên:</span>
+                <b>≥ 2 PT / ca</b>
+              </div>
+              <div style="display:flex;justify-content:space-between;margin-bottom:var(--space-3);font-size:var(--font-size-sm)">
+                <span style="color:var(--color-text-soft)">Lễ tân quầy:</span>
+                <b>≥ 1 Lễ tân / ca</b>
+              </div>
+              <p style="margin:0;font-size:var(--font-size-xs);color:var(--color-text-soft);line-height:1.5">
+                Đơn chỉ được Quản lý duyệt nếu quân số trực của ca hôm đó đảm bảo mức tối thiểu.
+              </p>
+            </div>
           </div>
         </div>
       </main>
