@@ -15,6 +15,7 @@ import java.time.LocalDateTime;
 import java.time.LocalTime;
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Map;
 
 /**
  * Nghiệp vụ đơn xin nghỉ phép của nhân viên (BF-05, UC-14, UC-15, JOB-07).
@@ -72,6 +73,34 @@ public class LeaveRequestService {
 
             return ServiceResult.ok(
                     new PageResult<>(items, page, pageSize, totalItems));
+
+        } catch (SQLException e) {
+            e.printStackTrace();
+            return ServiceResult.fail(Messages.MSG04_SYSTEM_BUSY);
+        }
+    }
+
+    /**
+     * Lấy số đơn cho các tab của màn #26 (UC-15).
+     *
+     * @return map có 4 khóa: All, Pending, Approved, Rejected; hoặc thông báo lỗi hệ thống
+     */
+    public ServiceResult<Map<String, Integer>> getStatusCounts() {
+        try {
+            // B1: DAO trả số đơn của 3 trạng thái thật
+            Map<String, Integer> counts = leaveRequestDAO.getStatusCounts();
+
+            // B2: tab "Tất cả" = tổng 3 trạng thái, thêm vào đầu map để JSP đọc theo khóa All
+            int total = 0;
+            for (int count : counts.values()) {
+                total += count;
+            }
+
+            Map<String, Integer> result = new java.util.LinkedHashMap<>();
+            result.put("All", total);
+            result.putAll(counts);
+
+            return ServiceResult.ok(result);
 
         } catch (SQLException e) {
             e.printStackTrace();
