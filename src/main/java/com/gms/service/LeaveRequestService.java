@@ -541,6 +541,56 @@ public class LeaveRequestService {
         }
     }
 
+    // ===== Background Job (JOB-07) =====
+
+    /**
+     * Chạy định kỳ mỗi phút: nhắc Manager trước mốc P-20 và tự động từ chối đơn quá hạn (JOB-07).
+     *
+     * @throws SQLException lỗi kết nối hoặc truy vấn DB
+     */
+    public void processJob07() throws SQLException {
+        // B1: đọc mốc giờ chốt duyệt đơn P-20 (mặc định 20:00)
+        LocalTime cutoffTime = LocalTime.parse(
+                systemConfigService.getString(
+                        SystemConfigService.LEAVE_APPROVED_DEADLINE));
+
+        LocalDate today = DateTimeUtil.today();
+        LocalDate tomorrow = today.plusDays(1);
+        LocalDateTime now = DateTimeUtil.now();
+        LocalTime currentTime = now.toLocalTime();
+
+        // B2: nhắc Manager từ 2 tiếng trước mốc P-20 (ví dụ từ 18:00 đến trước 20:00)
+        LocalTime reminderStartTime = cutoffTime.minusHours(2);
+        boolean inReminderWindow = !currentTime.isBefore(reminderStartTime)
+                && currentTime.isBefore(cutoffTime);
+
+        if (inReminderWindow) {
+            List<LeaveRequest> remindList = leaveRequestDAO.findPendingNeedingReminder(tomorrow);
+            for (LeaveRequest req : remindList) {
+                leaveRequestDAO.markReminded(req.getLeaveRequestId());
+            }
+        }
+
+        // B3: tự động từ chối các đơn Pending đã quá mốc P-20
+        LocalDate maxOverdue = !currentTime.isBefore(cutoffTime) ? tomorrow : today;
+        List<LeaveRequest> overdueList = leaveRequestDAO.findPendingOverdueRequests(maxOverdue);
+
+        for (LeaveRequest req : overdueList) {
+            leaveRequestDAO.autoReject(req.getLeaveRequestId(), "Quá hạn duyệt");
+
+            // Thông báo cho nhân viên có đơn bị từ chối
+            try (Connection conn = DBContext.getConnection()) {
+                notificationService.notifyEmployeeInTransaction(
+                        conn,
+                        req.getEmployeeId(),
+                        "Nghỉ phép bị từ chối",
+                        "Đơn nghỉ ngày " + req.getLeaveDate() + " đã bị từ chối do quá hạn duyệt.");
+            } catch (Exception ignored) {
+                // lỗi gửi thông báo không làm gián đoạn job
+            }
+        }
+    }
+
     /** Tìm Employee đang Working theo AccountId (Manager duyệt đơn). */
     private Employee findEmployeeForAccount(int accountId) throws SQLException {
         com.gms.entity.Account account = accountDAO.findById(accountId);
