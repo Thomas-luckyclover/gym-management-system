@@ -100,7 +100,44 @@
 
         </div>
 
-        <%-- ===== Bộ lọc và danh sách (leavePage, keyword) — nạp ở commit sau ===== --%>
+        <%-- ===== Bộ lọc và danh sách (leavePage: PageResult<LeaveRequestItemView> do Service tạo; keyword: từ khóa đang nhập) ===== --%>
+        <section class="panel leave-panel">
+          <div class="panel-head">
+            <div>
+              <h2>Danh sách đơn nghỉ phép</h2>
+              <p>Đơn Chờ duyệt được ưu tiên hiển thị trước.</p>
+            </div>
+          </div>
+
+          <%-- Form lọc: status giữ tab đang chọn, keyword tìm theo tên nhân viên (không phân biệt hoa thường và dấu) --%>
+          <form action="${pageContext.request.contextPath}/manager/leave-requests"
+                method="get"
+                class="leave-filter">
+
+            <input type="hidden" name="status" value="<c:out value='${statusFilter}' />">
+
+            <input type="search"
+                   name="keyword"
+                   maxlength="100"
+                   value="<c:out value='${keyword}' />"
+                   placeholder="Tìm theo tên nhân viên">
+
+            <select name="pageSize">
+              <option value="10" ${leavePage.pageSize == 10 ? 'selected' : ''}>10</option>
+              <option value="20" ${leavePage.pageSize == 20 ? 'selected' : ''}>20</option>
+              <option value="50" ${leavePage.pageSize == 50 ? 'selected' : ''}>50</option>
+            </select>
+
+            <button class="btn btn-primary" type="submit">Tìm</button>
+            <a class="btn btn-ghost"
+               href="${pageContext.request.contextPath}/manager/leave-requests">
+              Xóa lọc
+            </a>
+          </form>
+
+          <%-- ===== Bảng danh sách và phân trang — nạp ở commit sau ===== --%>
+
+        </section>
 
       </main>
     </div>
