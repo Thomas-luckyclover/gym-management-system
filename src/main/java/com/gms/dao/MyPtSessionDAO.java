@@ -4,6 +4,7 @@ import com.gms.dto.MyPtHistorySessionView;
 import com.gms.dto.MyPtPackageView;
 import com.gms.dto.MyPtSessionFilter;
 import com.gms.dto.MyPtUpcomingSessionView;
+import com.gms.dto.PtSessionCancelInfo;
 import com.gms.entity.Package;
 import com.gms.entity.Session;
 import com.gms.util.DBContext;
@@ -13,6 +14,7 @@ import java.sql.ResultSet;
 import java.sql.SQLException;
 import java.sql.Date;
 import java.sql.Time;
+import java.sql.Timestamp;
 import java.time.LocalDate;
 import java.time.LocalDateTime;
 import java.time.LocalTime;
@@ -39,7 +41,17 @@ public class MyPtSessionDAO {
      * @return danh sách gói theo hạn gần nhất; rỗng nếu không có gói phù hợp
      * @throws SQLException khi kết nối hoặc truy vấn lỗi; Service sẽ xử lý lỗi
      */
-    public List<MyPtPackageView> findActivePtPackages(int customerId) throws SQLException {
+    public List<MyPtPackageView> findActivePtPackages(int customerId, LocalDateTime now) throws SQLException {
+        return findPtPackages(customerId, true, now);
+    }
+
+    /** Các lần mua gói PT đã Paid của khách, gồm gói cũ phục vụ bộ lọc Lịch sử. */
+    public List<MyPtPackageView> findPtPackageOptions(int customerId, LocalDateTime now) throws SQLException {
+        return findPtPackages(customerId, false, now);
+    }
+
+    private List<MyPtPackageView> findPtPackages(int customerId, boolean activeOnly,
+            LocalDateTime now) throws SQLException {
         // B1: chọn mỗi gói một dòng; tên gói lấy từ đơn lúc mua, PT lấy từ người phụ trách gói.
         String sql = """
                 SELECT sub.SubscriptionId,
@@ -54,6 +66,7 @@ public class MyPtSessionDAO {
                        sub.StartDate, sub.EndDate,
                        sub.GeneratedSessionCount,
                        sessionCounts.ScheduledSessionCount,
+                       sessionCounts.UpcomingSessionCount,
                        sub.MaxSwapsSnapshot, sub.SwapsUsed
                 FROM Subscriptions sub
                 JOIN Orders o ON o.OrderId = sub.OrderId
@@ -66,13 +79,17 @@ public class MyPtSessionDAO {
                 LEFT JOIN Persons partnerPerson ON partnerPerson.PersonId = partner.PersonId
                 -- Đếm riêng buổi của từng gói để không lặp thẻ theo số buổi.
                 OUTER APPLY (
-                    SELECT COUNT(*) AS ScheduledSessionCount
+                    SELECT COUNT(*) AS ScheduledSessionCount,
+                           COUNT(CASE WHEN t.SlotDate > ?
+                                           OR (t.SlotDate = ? AND t.StartTime > CAST(? AS TIME))
+                                      THEN 1 END) AS UpcomingSessionCount
                     FROM Sessions s
+                    JOIN TimeSlots t ON t.TimeSlotId = s.TimeSlotId
                     WHERE s.SubscriptionId = sub.SubscriptionId
                       AND s.Status = 'Scheduled'
                 ) sessionCounts
                 WHERE sub.SubscriptionType IN ('PTSingle', 'PTCouple')
-                  AND sub.Status = 'Active'
+                  AND (? = 0 OR sub.Status = 'Active')
                   AND o.Status = 'Paid'
                   AND (
                       sub.CustomerId = ?
@@ -83,14 +100,18 @@ public class MyPtSessionDAO {
 
         List<MyPtPackageView> ptPackages = new ArrayList<>();
 
-        // B2: mở kết nối; truyền cùng customerId vào ba vị trí, không nối dữ liệu vào SQL.
+        // B2: truyền customerId và cờ lọc Active qua PreparedStatement, không nối dữ liệu vào SQL.
         try (Connection connection = DBContext.getConnection();
                 PreparedStatement statement = connection.prepareStatement(sql)) {
             // Vị trí 1 chọn tên người còn lại: khách đăng nhập không thấy tên mình là người đi cùng.
             statement.setInt(1, customerId);
-            // Vị trí 2 và 3 giới hạn gói khách được xem, gồm cả hai thành viên gói đôi (DBR-54).
-            statement.setInt(2, customerId);
-            statement.setInt(3, customerId);
+            // 2–4 đếm lịch chưa bắt đầu; 5 chọn Active; 6–7 giới hạn người đứng tên/đi cùng.
+            statement.setDate(2, Date.valueOf(now.toLocalDate()));
+            statement.setDate(3, Date.valueOf(now.toLocalDate()));
+            statement.setTime(4, Time.valueOf(now.toLocalTime()));
+            statement.setInt(5, activeOnly ? 1 : 0);
+            statement.setInt(6, customerId);
+            statement.setInt(7, customerId);
 
             // B3: mỗi dòng SQL tạo một DTO, rồi thêm vào danh sách gói trả về.
             try (ResultSet resultSet = statement.executeQuery()) {
@@ -114,6 +135,7 @@ public class MyPtSessionDAO {
                             resultSet.getDate("StartDate").toLocalDate(),
                             resultSet.getDate("EndDate").toLocalDate(),
                             generatedSessionCount, scheduledSessionCount, maxSwapsSnapshot, swapsUsed);
+                    ptPackage.setUpcomingSessionCount(resultSet.getInt("UpcomingSessionCount"));
                     ptPackages.add(ptPackage);
                 }
             }
@@ -169,6 +191,7 @@ public class MyPtSessionDAO {
         String baseSql = """
                 SELECT s.SessionId, sub.SubscriptionId, sub.CustomerId AS HolderCustomerId,
                        o.PackageNameSnapshot AS PackageName, sub.SubscriptionType,
+                       sub.StartDate AS PackageStartDate, sub.EndDate AS PackageEndDate,
                        ptPerson.FullName AS PtName,
                        CASE WHEN sub.SubscriptionType <> 'PTCouple' THEN NULL
                             WHEN sub.CustomerId = ? THEN partnerPerson.FullName
@@ -274,6 +297,10 @@ public class MyPtSessionDAO {
                             resultSet.getBoolean("HolderHasDayPass"), resultSet.getBoolean("HolderFrozen"),
                             resultSet.getBoolean("PartnerHasMembership"),
                             resultSet.getBoolean("PartnerHasDayPass"), resultSet.getBoolean("PartnerFrozen"));
+                    if (session.getSubscriptionType() != Package.Type.SINGLE_SESSION) {
+                        session.setPackageTerm(resultSet.getDate("PackageStartDate").toLocalDate(),
+                                resultSet.getDate("PackageEndDate").toLocalDate());
+                    }
                     sessions.add(session);
                 }
             }
@@ -324,12 +351,13 @@ public class MyPtSessionDAO {
         String baseSql = """
                 SELECT s.SessionId, sub.SubscriptionId, sub.CustomerId AS HolderCustomerId,
                        o.PackageNameSnapshot AS PackageName, sub.SubscriptionType,
+                       sub.StartDate AS PackageStartDate, sub.EndDate AS PackageEndDate,
                        ptPerson.FullName AS PtName,
                        CASE WHEN sub.SubscriptionType <> 'PTCouple' THEN NULL
                             WHEN sub.CustomerId = ? THEN partnerPerson.FullName
                             ELSE holderPerson.FullName END AS PartnerName,
                        t.SlotDate, t.StartTime, t.EndTime,
-                       s.Status, s.MissedReason, s.CancelType, s.CancelReason
+                       s.Status, s.MissedReason, s.CancelType, s.CancelReason, s.CancelledAt
                 FROM Sessions s
                 JOIN TimeSlots t ON t.TimeSlotId = s.TimeSlotId
                 JOIN Subscriptions sub ON sub.SubscriptionId = s.SubscriptionId
@@ -373,6 +401,7 @@ public class MyPtSessionDAO {
             // B3: chỉ đọc; mỗi dòng SQL tạo một DTO, nhãn và giải thích do Service bổ sung.
             try (ResultSet resultSet = statement.executeQuery()) {
                 while (resultSet.next()) {
+                    Timestamp cancelledAt = resultSet.getTimestamp("CancelledAt");
                     MyPtHistorySessionView session = new MyPtHistorySessionView(
                             resultSet.getInt("SessionId"), resultSet.getInt("SubscriptionId"),
                             resultSet.getInt("HolderCustomerId"), resultSet.getString("PackageName"),
@@ -385,7 +414,12 @@ public class MyPtSessionDAO {
                             // MissedReason và CancelType NULL khi buổi không thuộc trạng thái tương ứng.
                             Session.MissedReason.fromDbValue(resultSet.getString("MissedReason")),
                             Session.CancelType.fromDbValue(resultSet.getString("CancelType")),
-                            resultSet.getString("CancelReason"));
+                            resultSet.getString("CancelReason"),
+                            cancelledAt == null ? null : cancelledAt.toLocalDateTime());
+                    if (session.getSubscriptionType() != Package.Type.SINGLE_SESSION) {
+                        session.setPackageTerm(resultSet.getDate("PackageStartDate").toLocalDate(),
+                                resultSet.getDate("PackageEndDate").toLocalDate());
+                    }
                     sessions.add(session);
                 }
             }
@@ -538,6 +572,11 @@ public class MyPtSessionDAO {
      * @param filter bộ lọc đã hợp lệ; field null thì bỏ qua điều kiện đó
      */
     private void appendCommonFilter(StringBuilder sql, List<Object> parameters, MyPtSessionFilter filter) {
+        // Lọc theo lần mua, đồng thời giữ nguyên điều kiện sở hữu trong truy vấn gốc.
+        if (filter.getSubscriptionId() != null) {
+            sql.append(" AND sub.SubscriptionId = ?");
+            parameters.add(filter.getSubscriptionId());
+        }
         // B1: loại buổi; so mã DB (PTSingle/PTCouple/SingleSession), không so nhãn tiếng Việt.
         if (filter.getSubscriptionType() != null) {
             sql.append(" AND sub.SubscriptionType = ?");
@@ -565,14 +604,14 @@ public class MyPtSessionDAO {
         for (int index = 0; index < parameters.size(); index++) {
             int position = index + 1; // JDBC đánh số dấu ? từ 1.
             Object value = parameters.get(index);
-            if (value instanceof Integer number) {
-                statement.setInt(position, number);
-            } else if (value instanceof String text) {
-                statement.setString(position, text);
-            } else if (value instanceof LocalDate date) {
-                statement.setDate(position, Date.valueOf(date));
-            } else if (value instanceof LocalTime time) {
-                statement.setTime(position, Time.valueOf(time));
+            if (value instanceof Integer) {
+                statement.setInt(position, (Integer) value);
+            } else if (value instanceof String) {
+                statement.setString(position, (String) value);
+            } else if (value instanceof LocalDate) {
+                statement.setDate(position, Date.valueOf((LocalDate) value));
+            } else if (value instanceof LocalTime) {
+                statement.setTime(position, Time.valueOf((LocalTime) value));
             } else {
                 throw new SQLException("Kiểu tham số chưa hỗ trợ ở vị trí " + position + ": " + value);
             }
@@ -621,6 +660,88 @@ public class MyPtSessionDAO {
                 }
                 return resultSet.getInt("TotalDays");
             }
+        }
+    }
+
+    // ===== 7. HỦY BUỔI TẬP PT (CBR-66, BR-79) =====
+
+    /**
+     * Lấy thông tin tối thiểu cần thiết để Service quyết định có cho phép khách hủy buổi này không.
+     * Gồm: người đứng tên, partner (nếu đôi), ngày/giờ buổi, trạng thái buổi, trạng thái gói.
+     * Không trả về null khi buổi không tồn tại — Service phân biệt "không thấy" bằng cách check kết quả null.
+     *
+     * @param sessionId mã buổi cần truy vấn
+     * @return PtSessionCancelInfo hoặc null nếu không tìm thấy buổi
+     * @throws SQLException khi truy vấn lỗi
+     */
+    public PtSessionCancelInfo findSessionForCancel(int sessionId) throws SQLException {
+        // SQL: SELECT tối thiểu cần cho quyết định hủy (customer, partner, slot, status).
+        // Dùng OUTER JOIN Orders vì SingleSession có thể không có PartnerCustomerId.
+        String sql = """
+                SELECT s.SessionId,
+                       sub.CustomerId,
+                       o.PartnerCustomerId,
+                       t.SlotDate, t.StartTime, t.EndTime,
+                       s.Status AS SessionStatus,
+                       sub.Status AS SubscriptionStatus
+                FROM Sessions s
+                JOIN Subscriptions sub ON sub.SubscriptionId = s.SubscriptionId
+                JOIN TimeSlots t       ON t.TimeSlotId = s.TimeSlotId
+                JOIN Orders o          ON o.OrderId = sub.OrderId
+                WHERE s.SessionId = ?
+                """;
+        try (Connection connection = DBContext.getConnection();
+                PreparedStatement statement = connection.prepareStatement(sql)) {
+            statement.setInt(1, sessionId);
+            try (ResultSet rs = statement.executeQuery()) {
+                if (!rs.next()) {
+                    return null;
+                }
+                PtSessionCancelInfo info = new PtSessionCancelInfo();
+                info.setSessionId(rs.getInt("SessionId"));
+                info.setCustomerId(rs.getInt("CustomerId"));
+                int partner = rs.getInt("PartnerCustomerId");
+                info.setPartnerCustomerId(rs.wasNull() ? null : partner);
+                info.setSlotDate(rs.getDate("SlotDate").toLocalDate());
+                info.setStartTime(rs.getTime("StartTime").toLocalTime());
+                info.setEndTime(rs.getTime("EndTime").toLocalTime());
+                info.setSessionStatus(rs.getString("SessionStatus"));
+                info.setSubscriptionStatus(rs.getString("SubscriptionStatus"));
+                return info;
+            }
+        }
+    }
+
+    /**
+     * Hủy buổi tập: cập nhật trạng thái Sessions thành Cancelled với CancelType = ByCustomer.
+     * <p>Quy tắc DB (CK_Sessions_CustomerCancel): CancelledByAccountId bắt buộc, RefundAgreed = 0.
+     * Trước khi gọi, Service phải đã xác nhận: đúng chủ, Status = Scheduled, buổi chưa kết thúc.
+     *
+     * @param sessionId          mã buổi cần hủy
+     * @param cancelledByAccountId tài khoản bấm hủy (lưu vào Sessions.CancelledByAccountId)
+     * @return true nếu cập nhật đúng 1 dòng, false nếu buổi không tồn tại hoặc đã đổi trạng thái
+     * @throws SQLException khi UPDATE lỗi
+     */
+    public boolean cancelSessionByCustomer(int sessionId, int cancelledByAccountId) throws SQLException {
+        // SQL: chỉ UPDATE khi Status = 'Scheduled' để chống double-submit / người khác vừa đổi.
+        // RefundAgreed = 0 vì BR-79: khách tự hủy không hoàn buổi.
+        // CancelledAt = SYSDATETIME() vì chính là lúc khách bấm.
+        // TODO: thay bằng SQL thật khi Service dùng tới.
+        String sql = """
+                UPDATE s SET s.Status = 'Cancelled',
+                             s.CancelType = 'ByCustomer',
+                             s.CancelledAt = SYSDATETIME(),
+                             s.CancelledByAccountId = ?,
+                             s.RefundAgreed = 0
+                FROM Sessions s
+                WHERE s.SessionId = ?
+                  AND s.Status = 'Scheduled'
+                """;
+        try (Connection connection = DBContext.getConnection();
+                PreparedStatement statement = connection.prepareStatement(sql)) {
+            statement.setInt(1, cancelledByAccountId);
+            statement.setInt(2, sessionId);
+            return statement.executeUpdate() == 1;
         }
     }
 }

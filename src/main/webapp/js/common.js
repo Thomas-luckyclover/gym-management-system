@@ -1067,7 +1067,7 @@ const PUMPY_PUSH_SVG =
     + '<path d="M17 15 L19.5 16.5 L17 18 M24.5 15 L22 16.5 L24.5 18" fill="none" stroke="#141414" stroke-width="1.3" stroke-linecap="round" stroke-linejoin="round"/>'
     + '<path d="M18.5 22 H24" stroke="#141414" stroke-width="1.6" stroke-linecap="round"/>'
     + '<ellipse cx="18" cy="26" rx="4" ry="3.4" fill="#F2FBF8"/>'
-    + '<path d="M17.4 25.6 a1 1 0 1 1 1 1 a2 2 0 1 1 -2 -2" fill="none" stroke="#087A80" stroke-width="0.8" stroke-linecap="round"/>'
+    + '<path d="M17.4 25.6 a1 1 0 1 1 1 1 a2 2 0 1 1 -2 -2" fill="none" stroke="#F25C1B" stroke-width="0.8" stroke-linecap="round"/>'
     + '<g class="bp-foot bp-foot--front"><ellipse cx="20" cy="31" rx="4" ry="2.4" fill="#18B8C0" stroke="#141414" stroke-width="1.4"/></g>'
     + '</g>'
     + '<g class="bp-sweat"><path d="M9 7 q-2 -3 0 -5 q2 2 0 5z"/><path d="M5 12 q-2 -2.5 0 -4.5 q2 2 0 4.5z"/></g>'
@@ -2320,8 +2320,23 @@ function initDashboardMotionToggle() {
         label.textContent = "Hiệu ứng đã tắt";
         return;
     }
+    // Máy yếu đã tự vào chế độ nhẹ (gms-lite): mở trang ở trạng thái tạm dừng luôn
+    if (document.documentElement.classList.contains("gms-lite")) {
+        document.body.classList.add("dashboard-motion-paused");
+        button.setAttribute("aria-pressed", "true");
+        label.textContent = "Tiếp tục hiệu ứng";
+        button.setAttribute("aria-label", label.textContent);
+        icon.setAttribute("d", "m8 5 11 7-11 7z");
+    }
     button.addEventListener("click", function () {
         const paused = document.body.classList.toggle("dashboard-motion-paused");
+        // Cùng lúc bật/tắt chế độ nhẹ cho cả nền kính thủy cung, và nhớ lựa chọn cho các trang sau
+        document.documentElement.classList.toggle("gms-lite", paused);
+        try {
+            localStorage.setItem("gms-fx", paused ? "lite" : "full");
+        } catch (error) {
+            // Trình duyệt chặn lưu trữ: chỉ áp cho trang này
+        }
         button.setAttribute("aria-pressed", String(paused));
         label.textContent = paused ? "Tiếp tục hiệu ứng" : "Tạm dừng hiệu ứng";
         button.setAttribute("aria-label", label.textContent);
@@ -2747,4 +2762,89 @@ document.addEventListener("DOMContentLoaded", function () {
         });
     });
     paint();
+});
+
+
+// =====================================================================
+// NÂNG CẤP 2026-10-13: biểu đồ màu thương hiệu + đường xu hướng, số đếm lên, Pumpy theo ngữ cảnh
+// =====================================================================
+document.addEventListener("DOMContentLoaded", function () {
+    const calm = prefersReducedMotion() || document.documentElement.classList.contains("gms-lite");
+
+    // B1: biểu đồ cột — đánh dấu cột cao nhất; vẽ đường xu hướng từ các cột vào ô dẫn đầu của bảng điểm
+    document.querySelectorAll(".bars").forEach(function (bars) {
+        const items = Array.prototype.slice.call(bars.querySelectorAll(".bar"));
+        const values = items.map(function (bar) {
+            return parseFloat(bar.style.getPropertyValue("--percent")) || 0;
+        });
+        if (!values.length) {
+            return;
+        }
+        const max = Math.max.apply(null, values);
+        if (max > 0) {
+            items[values.indexOf(max)].classList.add("is-max");
+        }
+        const lead = document.querySelector(".scoreboard .stat.is-lead");
+        if (!lead || values.length < 2 || lead.querySelector(".stat-spark")) {
+            return;
+        }
+        const width = 200;
+        const height = 34;
+        const top = Math.max(max, 1);
+        const points = values.map(function (value, index) {
+            return [index * width / (values.length - 1), height - 3 - (value / top) * (height - 6)];
+        });
+        const line = points.map(function (point, index) {
+            return (index ? "L" : "M") + point[0].toFixed(1) + " " + point[1].toFixed(1);
+        }).join(" ");
+        const last = points[points.length - 1];
+        const svg = '<svg class="stat-spark" viewBox="0 0 ' + width + " " + height + '" preserveAspectRatio="none" aria-hidden="true">'
+            + '<defs><linearGradient id="gmsSparkFill" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#2BD4DE" stop-opacity=".35"/><stop offset="1" stop-color="#2BD4DE" stop-opacity="0"/></linearGradient></defs>'
+            + '<path class="area" d="' + line + " L" + width + " " + height + " L0 " + height + ' Z"/>'
+            + '<path class="line" d="' + line + '" vector-effect="non-scaling-stroke"/>'
+            + '<circle cx="' + last[0].toFixed(1) + '" cy="' + last[1].toFixed(1) + '" r="3"/></svg>';
+        lead.insertAdjacentHTML("beforeend", svg);
+    });
+
+    // B2: số liệu đếm lên khi mở trang (giữ nguyên định dạng: dấu chấm hàng nghìn, phần thập phân, đơn vị)
+    if (!calm) {
+        const targets = document.querySelectorAll(".pt-pulse dd, .pt-summary-stat strong, .pt-summary-money strong, .dock .stat-value:not([data-flip]), .dock .metric-value:not([data-flip])");
+        targets.forEach(function (el) {
+            if (el.children.length || el.hasAttribute("data-count")) {
+                return;
+            }
+            const text = el.textContent;
+            const match = text.match(/\d[\d.]*(,\d+)?/);
+            if (!match || /\d:\d/.test(text)) {
+                return;
+            }
+            const raw = match[0];
+            const decimals = match[1] ? match[1].length - 1 : 0;
+            const target = parseFloat(raw.replace(/\./g, "").replace(",", "."));
+            if (!isFinite(target) || target === 0) {
+                return;
+            }
+            const format = function (value) {
+                return value.toLocaleString("vi-VN", { minimumFractionDigits: decimals, maximumFractionDigits: decimals });
+            };
+            const start = performance.now();
+            const duration = 900;
+            function step(now) {
+                const t = Math.min(1, (now - start) / duration);
+                const eased = 1 - Math.pow(1 - t, 3);
+                el.textContent = text.replace(raw, t < 1 ? format(target * eased) : raw);
+                if (t < 1) {
+                    requestAnimationFrame(step);
+                }
+            }
+            requestAnimationFrame(step);
+        });
+    }
+
+    // B3: trạng thái rỗng nói về lịch / buổi tập → Pumpy nằm nghỉ cạnh quả tạ (images/pumpy/relax.svg)
+    document.querySelectorAll(".dock .empty-state").forEach(function (box) {
+        if (/lịch|buổi|đánh giá|yêu cầu/i.test(box.textContent)) {
+            box.classList.add("empty-state--relax");
+        }
+    });
 });

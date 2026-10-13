@@ -21,7 +21,7 @@
 
         <div class="auth-shell">
             <div class="auth-top">
-                <a class="auth-brand" href="${pageContext.request.contextPath}/"><img src="${pageContext.request.contextPath}/images/logo.png?v=3" alt="Super Gym" width="52" height="52"></a>
+                <a class="auth-brand" href="${pageContext.request.contextPath}/" aria-label="Super Gym — Trang chủ"><span class="auth-brand__wordmark">SUPER GYM</span></a>
                 <a class="auth-back" href="${pageContext.request.contextPath}/">
                     <i class="fa-solid fa-arrow-left"></i> Về trang chủ
                 </a>

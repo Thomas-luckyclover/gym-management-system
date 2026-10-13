@@ -51,14 +51,22 @@ public class MyPtSessionFilter {
     // ===== Chỉ khối Lịch sử: thu hẹp kết quả lịch sử, không ảnh hưởng Sắp tới =====
     // null = Tất cả, gồm cả Scheduled đã kết thúc.
     private final HistoryStatus historyStatus;
+    // Subscriptions.SubscriptionId: phân biệt chính xác từng lần mua; null = mọi gói.
+    private final Integer subscriptionId;
 
     /** Service gọi sau khi đã kiểm tra hợp lệ; không tự validate trong constructor. */
     public MyPtSessionFilter(Package.Type subscriptionType, LocalDate dateFrom, LocalDate dateTo,
             HistoryStatus historyStatus) {
+        this(subscriptionType, dateFrom, dateTo, historyStatus, null);
+    }
+
+    public MyPtSessionFilter(Package.Type subscriptionType, LocalDate dateFrom, LocalDate dateTo,
+            HistoryStatus historyStatus, Integer subscriptionId) {
         this.subscriptionType = subscriptionType;
         this.dateFrom = dateFrom;
         this.dateTo = dateTo;
         this.historyStatus = historyStatus;
+        this.subscriptionId = subscriptionId;
     }
 
     /** Không lọc gì: dùng khi URL trống hoặc khi bộ lọc người dùng nhập không hợp lệ. */
@@ -88,7 +96,11 @@ public class MyPtSessionFilter {
 
     /** Có điều kiện bộ lọc chung: JSP dùng câu rỗng "Không có buổi phù hợp". */
     public boolean isCommonFilterActive() {
-        return subscriptionType != null || dateFrom != null || dateTo != null;
+        return subscriptionType != null || dateFrom != null || dateTo != null || subscriptionId != null;
+    }
+
+    public Integer getSubscriptionId() {
+        return subscriptionId;
     }
 
     /** Khối Lịch sử đang bị thu hẹp (bộ lọc chung hoặc trạng thái lịch sử). */

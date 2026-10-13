@@ -3,6 +3,7 @@ package com.gms.dto;
 import com.gms.entity.Package;
 import com.gms.entity.Session;
 import java.time.LocalDate;
+import java.time.LocalDateTime;
 import java.time.LocalTime;
 
 /**
@@ -30,14 +31,18 @@ public class MyPtHistorySessionView {
     private final LocalDate slotDate;
     private final LocalTime startTime;
     private final LocalTime endTime;
+    private LocalDate packageStartDate;
+    private LocalDate packageEndDate;
     // Sessions.Status: trạng thái lưu trong DB; Service đổi thành nhãn, không in mã enum.
     private final Session.Status status;
     // Sessions.MissedReason: chỉ có khi Status = Missed, các trường hợp khác null.
     private final Session.MissedReason missedReason;
     // Sessions.CancelType (ByPt/ByCustomer/GymClosed/PackageExpired): chỉ có khi Cancelled, còn lại null.
     private final Session.CancelType cancelType;
-    // Sessions.CancelReason: lý do hủy PT chọn trong dropdown, có thể null; JSP in nguyên văn khi có.
+    // Sessions.CancelReason: lý do đã ghi nhận khi hủy, có thể null; JSP in nguyên văn khi có.
     private final String cancelReason;
+    // Sessions.CancelledAt: thời điểm hủy thật, khác ngày dự kiến tập.
+    private final LocalDateTime cancelledAt;
 
     // Service chọn từ subscriptionType: JSP in loại buổi.
     private String subscriptionTypeLabel;
@@ -55,7 +60,7 @@ public class MyPtHistorySessionView {
             String packageName, Package.Type subscriptionType, String ptName, String partnerName,
             LocalDate slotDate, LocalTime startTime, LocalTime endTime,
             Session.Status status, Session.MissedReason missedReason,
-            Session.CancelType cancelType, String cancelReason) {
+            Session.CancelType cancelType, String cancelReason, LocalDateTime cancelledAt) {
         // B1: nhận định danh, gói và người liên quan đến buổi.
         this.sessionId = sessionId;
         this.subscriptionId = subscriptionId;
@@ -73,6 +78,7 @@ public class MyPtHistorySessionView {
         this.missedReason = missedReason;
         this.cancelType = cancelType;
         this.cancelReason = cancelReason;
+        this.cancelledAt = cancelledAt;
     }
 
     /** Mã buổi để nối thao tác sau này. */
@@ -83,6 +89,20 @@ public class MyPtHistorySessionView {
     /** Mã gói để nối bộ lọc sau này. */
     public int getSubscriptionId() {
         return subscriptionId;
+    }
+
+    public LocalDate getPackageStartDate() {
+        return packageStartDate;
+    }
+
+    public LocalDate getPackageEndDate() {
+        return packageEndDate;
+    }
+
+    /** DAO điền thời hạn lần mua để phân biệt các gói cùng tên trong lịch sử. */
+    public void setPackageTerm(LocalDate packageStartDate, LocalDate packageEndDate) {
+        this.packageStartDate = packageStartDate;
+        this.packageEndDate = packageEndDate;
     }
 
     /** Khách đứng tên, dùng xác định người đang xem. */
@@ -143,6 +163,10 @@ public class MyPtHistorySessionView {
     /** Lý do hủy PT đã chọn, có thể null; hiển thị nguyên văn. */
     public String getCancelReason() {
         return cancelReason;
+    }
+
+    public LocalDateTime getCancelledAt() {
+        return cancelledAt;
     }
 
     /** Nhãn loại buổi do Service chuẩn bị. */

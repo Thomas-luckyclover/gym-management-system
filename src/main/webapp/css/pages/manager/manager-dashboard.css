@@ -441,3 +441,53 @@
 @media (max-width: 380px) {
   .report-stats.scoreboard { grid-template-columns: minmax(0, 1fr); }
 }
+
+/* ===== Biểu đồ màu thương hiệu (2026-10-13) =====
+   Cột aqua đậm dần lên đỉnh, cột cao nhất cam hoàng hôn (common.js gắn .is-max), trục chữ mono,
+   rê chuột/Tab: hộp số tiền nổi trên cột. Ô doanh thu có đường xu hướng nhỏ vẽ từ chính các cột. */
+.bar {
+  border-radius: 6px 6px 2px 2px;
+  background: linear-gradient(180deg, #7FE6EC 0%, #2BD4DE 30%, #0E6E82 100%);
+  box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.35);
+}
+.bar.is-max { background: linear-gradient(180deg, #FFB27A 0%, #FF7A3D 35%, #C2410C 100%); box-shadow: 0 0 24px -6px rgba(242, 92, 27, 0.7); }
+.bar.bar-last:not(.is-max) { background: linear-gradient(180deg, #BFF3F5 0%, #7FE6EC 40%, #0E6E82 100%); }
+.bar:hover,
+.bar:focus-visible { filter: brightness(1.2); background: linear-gradient(180deg, #BFF3F5 0%, #2BD4DE 40%, #0E6E82 100%); }
+.bar.is-max:hover,
+.bar.is-max:focus-visible { background: linear-gradient(180deg, #FFD2AE 0%, #FF7A3D 40%, #C2410C 100%); }
+.bars:hover .bar:not(:hover) { opacity: 0.45; }
+.grid-line { border-top-color: rgba(127, 230, 236, 0.1); }
+.grid-line span,
+.x-labels span { font-family: var(--font-brand-mono); font-size: 0.72rem; letter-spacing: 0.04em; color: var(--pt-muted); }
+.chart-plot { border-left-color: rgba(127, 230, 236, 0.2); border-bottom-color: rgba(127, 230, 236, 0.2); overflow: visible; }
+
+/* Hộp số tiền khi rê / focus cột (thay tooltip chung, luôn nổi trên cột) */
+.bars .bar[data-tooltip] { position: relative; }
+.bars .bar[data-tooltip]::before {
+  content: attr(data-tooltip);
+  position: absolute;
+  left: 50%;
+  bottom: calc(100% + 10px);
+  z-index: 5;
+  padding: 6px 10px;
+  border: 1px solid rgba(127, 230, 236, 0.3);
+  border-radius: 8px;
+  background: rgba(2, 14, 20, 0.94);
+  color: #EAF4F6;
+  font-family: var(--font-brand-mono);
+  font-size: 0.75rem;
+  white-space: nowrap;
+  transform: translate(-50%, 4px);
+  opacity: 0;
+  pointer-events: none;
+  transition: opacity 150ms, transform 150ms;
+}
+.bars .bar[data-tooltip]:hover::before,
+.bars .bar[data-tooltip]:focus-visible::before { opacity: 1; transform: translate(-50%, 0); }
+
+/* Đường xu hướng nhỏ trong ô số liệu */
+.stat-spark { display: block; width: 100%; height: 34px; margin-top: var(--space-2); overflow: visible; }
+.stat-spark path.line { fill: none; stroke: #7FE6EC; stroke-width: 1.75; stroke-linejoin: round; stroke-linecap: round; }
+.stat-spark path.area { fill: url(#gmsSparkFill); stroke: none; }
+.stat-spark circle { fill: #FF7A3D; stroke: #04212B; stroke-width: 1.5; }

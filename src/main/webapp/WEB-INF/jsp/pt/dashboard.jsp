@@ -14,7 +14,7 @@
     <%@ include file="/WEB-INF/jsp/common/head.jspf" %>
     <title><c:out value="${pageTitle}" /> · GMS</title>
     <link rel="stylesheet" href="${pageContext.request.contextPath}/css/pages/auth/account-settings.css?v=2">
-    <link rel="stylesheet" href="${pageContext.request.contextPath}/css/pages/pt/dashboard.css?v=20261013g">
+    <link rel="stylesheet" href="${pageContext.request.contextPath}/css/pages/pt/dashboard.css?v=20261013j">
     <script src="${pageContext.request.contextPath}/js/pages/pt/dashboard.js?v=9" defer></script>
     <link rel="stylesheet" href="${pageContext.request.contextPath}/css/dashboard-weather.css?v=20261013d">
 </head>

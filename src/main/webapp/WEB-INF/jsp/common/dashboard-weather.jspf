@@ -47,7 +47,7 @@
     </div>
 
     <c:if test="${not empty weather}">
-        <div class="wx-card" data-tilt aria-label="Thời tiết hôm nay tại phòng gym">
+        <div class="wx-card ${weather.stale ? 'wx-card--stale' : ''}" data-tilt aria-label="Thời tiết hôm nay tại phòng gym">
             <div class="wx-card__fx" aria-hidden="true"><canvas class="wx-card__canvas"></canvas></div>
             <div class="wx-card__top">
                 <div>
@@ -56,6 +56,14 @@
                         <c:if test="${weatherPreview}"><span class="wx-card__preview">Xem trước</span></c:if>
                     </p>
                     <p class="wx-card__condition"><c:out value="${weather.conditionLabel}" /></p>
+                    <c:if test="${not empty weather.updatedAt}">
+                        <p class="wx-card__update">
+                            <c:choose>
+                                <c:when test="${weather.stale}">Dữ liệu gần nhất · lấy lúc <c:out value="${gms:formatDateTime(weather.updatedAt)}" />. Đang thử kết nối lại.</c:when>
+                                <c:otherwise>Cập nhật lúc <c:out value="${gms:formatDateTime(weather.updatedAt)}" /></c:otherwise>
+                            </c:choose>
+                        </p>
+                    </c:if>
                 </div>
                 <%-- Icon động theo weatherType (giá trị cố định từ enum WeatherView.Mood) --%>
                 <span class="wx-icon wx-icon--${weatherType}" aria-hidden="true">
@@ -127,5 +135,5 @@
     </c:if>
 </section>
 
-<script src="${pageContext.request.contextPath}/js/gym-floor.js?v=20261013c" defer></script>
+<script src="${pageContext.request.contextPath}/js/gym-floor.js?v=20261013e" defer></script>
 <script src="${pageContext.request.contextPath}/js/weather-card.js?v=20261013g" defer></script>

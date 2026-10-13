@@ -53,10 +53,7 @@
   --space-12: 80px;
 
   /* ===== 2. BO GÓC =====
-     Các bo góc lớn giảm 19% so với prototype (nhân 0.81), bo góc nhỏ giữ nguyên:
-       md : 12px × 0.81 = 9.72px   (input to, banner, toast, FAQ, ô thống kê)
-       lg : 18px × 0.81 = 14.58px  (card, form đăng nhập, modal; gộp luôn card 16px của hero)
-     Muốn chỉnh lại độ giảm chỉ cần đổi --radius-reduce-ratio. */
+     Khung lớn dùng góc 4px theo art direction thể thao; nút/ô nhập vẫn đủ mềm để dễ bấm. */
   --radius-reduce-ratio: 0.81;
   --radius-none: 0;
   /* tag spec, checkbox, vạch trang trí */
@@ -64,7 +61,7 @@
   /* input, nút vuông, mục menu */
   --radius-sm: 8px;
   --radius-md: calc(12px * var(--radius-reduce-ratio));
-  --radius-lg: calc(18px * var(--radius-reduce-ratio));
+  --radius-lg: 4px;
   /* nút bo tròn 2 đầu, chip, badge — dạng viên thuốc, không áp tỉ lệ giảm */
   --radius-pill: 999px;
   /* avatar, chấm trạng thái */
@@ -264,6 +261,7 @@
   --color-warning-ink: #8A5A0E;
   --color-danger: #D32F3F;
   --color-danger-hover: #B8283A;
+  --color-on-danger: #FFFFFF;
   --color-danger-tint: #FBEAEC;
   --color-danger-border: #F0BCC2;
   --color-danger-ink: #9A2230;
@@ -742,18 +740,22 @@
    Cam hoàng hôn cháy × xanh đại dương sâu / thủy cung — cặp bổ túc trên vòng màu.
    Liều lượng: trang khách (homepage, auth, blog) ~65% cam than hồng + ~35% aqua sâu;
                khu nội bộ ngược lại ~75% đại dương + ~25% cam (cam cho điểm nóng, số quan trọng).
-   Chữ: Barlow Condensed (chiến dịch) + Be Vietnam Pro (giao diện, nội dung); không ép ngang hoặc giãn chữ âm.
+   Chữ: Inter Tight (tiêu đề) + Inter (nội dung) + JetBrains Mono (chữ phụ).
    Mọi cặp chữ/nền đã đo ≥ 4.5:1; nền cam dùng chữ tối (chữ trắng chỉ cho tiêu đề cỡ lớn).
    ===================================================================== */
 :root {
   --brand-sunset: #FF5D2E;
   --brand-ember-red: #F13C2D;
+  --dock-sunset-rose: #68233F;
+  --dock-sunset-orange: #B44725;
+  --dock-sunset-red: #922534;
+  --dock-sunset-light: #FFF7F1;
   --brand-paper: #FFF7EF;
-  --brand-muted: #C6B9B1;
+  --brand-muted: #B5C9CF;
   --brand-line: rgba(255, 247, 239, 0.16);
-  --brand-warm-surface: #21130F;
+  --brand-warm-surface: #08171E; /* đổi từ nâu sang mực đại dương: mọi trang khách chung một nền */
   --brand-ocean-surface: #052B34;
-  --brand-header-glass: rgba(15, 18, 19, 0.88);
+  --brand-header-glass: rgba(4, 18, 24, 0.86);
   --brand-glass: rgba(4, 25, 32, 0.86);
   --brand-shadow: 0 24px 64px -32px rgba(0, 0, 0, 0.6);
   --brand-gradient: linear-gradient(115deg, #FF7036, #F13C2D);
@@ -763,8 +765,8 @@
   --brand-content-width: 1360px;
   --brand-hero-min-height: min(840px, 90svh);
   --brand-blur: 20px;
-  --brand-wordmark-width: 180px;
-  --brand-wordmark-height: 44px;
+  --brand-wordmark-width: 84px;
+  --brand-wordmark-height: 64px;
   --brand-header-height: 88px;
   --brand-control-height: 44px;
   --font-cinematic: var(--font-brand-display);
@@ -815,15 +817,16 @@
   --color-on-primary: var(--brand-ink);
   --color-lime: var(--brand-sunset);
 }
+/* Mọi trang khách (trang chủ, blog, về chúng tôi, lỗi) chung một nền mực đại dương sâu — cam chỉ là điểm nhấn */
 .theme-guest-dark {
-  --color-bg: #120A07;
-  --color-surface: #1A0F0A;
-  --color-surface-muted: #160C08;
-  --color-surface-hover: #22140D;
-  --color-text: #FFF4EC;
-  --color-text-soft: #C9AFA2;
-  --color-text-muted: #A88E80;
-  --color-border: rgba(255, 244, 236, 0.1);
+  --color-bg: #071319;
+  --color-surface: #0C1F27;
+  --color-surface-muted: #0A1A21;
+  --color-surface-hover: #11282F;
+  --color-text: #F2F6F7;
+  --color-text-soft: #B5C9CF;
+  --color-text-muted: #8AA5AE;
+  --color-border: rgba(234, 244, 246, 0.1);
 }
 
 /* ---- Khu nội bộ: đại dương là chủ đạo (sáng mặc định; PT có nền tối riêng bên dưới) ---- */
@@ -846,7 +849,7 @@
   --dock-bg: var(--brand-abyss);
   --dock-surface: var(--brand-ocean-deep);
   --dock-hover: rgba(43, 212, 222, 0.1);
-  /* Mục đang chọn: bạc xước (kim loại) thay vì trắng — sáng ở mép trên, tối dần xuống dưới */
+  /* Fallback cho trạng thái chọn; sắc hoàng hôn được áp ở common.css. */
   --dock-active-top: #C9D1D6;
   --dock-active-bottom: #8995A0;
   --dock-active-edge: rgba(255, 255, 255, 0.55);

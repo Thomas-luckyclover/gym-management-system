@@ -475,7 +475,7 @@ Không phụ thuộc số gói DB; flex-basis lấy đúng chiều rộng sau kh
   min-width: 0;
   padding: var(--space-6);
   border: var(--border-width) solid var(--brand-line);
-  border-radius: var(--radius-sm);
+  border-radius: var(--radius-lg);
   padding-top: var(--space-10);
   background: linear-gradient(155deg, color-mix(in srgb, var(--brand-aqua) 6%, var(--brand-ocean-surface)), var(--brand-abyss));
   box-shadow: var(--brand-shadow);
@@ -581,23 +581,37 @@ Không phụ thuộc số gói DB; flex-basis lấy đúng chiều rộng sau kh
 }
 
 .cine-pt__list {
+  display: flex;
+  flex-wrap: wrap;
+  justify-content: center;
+  align-items: stretch;
+  gap: var(--space-5);
   padding: 0;
   margin: var(--space-6) 0 0;
   list-style: none;
 }
 
 .cine-pt__row {
-  display: grid;
-  grid-template-columns: minmax(0, 1fr) auto minmax(0, 0.6fr);
-  gap: var(--space-6);
-  align-items: center;
-  padding-block: var(--space-5);
-  border-top: var(--border-width) solid var(--brand-line);
+  display: flex;
+  flex-direction: column;
+  flex: 0 1 calc((100% - var(--space-5) * 2) / 3);
+  min-width: 0;
+  padding: var(--space-6);
+  border: var(--border-width) solid var(--brand-line);
+  border-radius: var(--radius-lg);
+  background: linear-gradient(155deg, color-mix(in srgb, var(--brand-aqua) 5%, var(--brand-ocean-surface)), var(--brand-abyss));
+  box-shadow: var(--brand-shadow);
+}
+
+.cine-pt__row.is-bookable {
+  border-color: color-mix(in srgb, var(--brand-sunset) 62%, var(--brand-line));
+  background: linear-gradient(150deg, color-mix(in srgb, var(--brand-ember-red) 18%, var(--brand-ocean-surface)), var(--brand-abyss));
 }
 
 .cine-pt__row h4 {
-  margin: 0 0 var(--space-1);
-  font-size: var(--font-size-base);
+  margin: 0 0 var(--space-2);
+  font-size: var(--font-size-lg);
+  line-height: var(--line-height-snug);
 }
 
 .cine-pt__row p {
@@ -607,20 +621,31 @@ Không phụ thuộc số gói DB; flex-basis lấy đúng chiều rộng sau kh
 }
 
 .cine-pt__row .cine-pt__price {
+  margin: var(--space-6) 0;
   font-family: var(--font-cinematic);
   font-size: var(--font-size-3xl);
   color: var(--brand-paper);
   font-weight: var(--font-weight-bold);
+  line-height: var(--line-height-tight);
+  overflow-wrap: anywhere;
 }
 
 .cine-pt__counter {
-  text-align: right;
+  display: flex;
+  align-items: center;
+  min-height: var(--control-height-lg);
+  margin-top: auto;
+  padding-inline: var(--space-4);
+  border: var(--border-width) solid var(--brand-line);
+  border-radius: var(--radius-button);
   font-size: var(--font-size-sm);
   color: var(--brand-muted);
 }
 
 .cine-pt__row .cine-btn {
-  justify-self: end;
+  justify-content: space-between;
+  min-height: var(--control-height-lg);
+  margin-top: auto;
 }
 
 /* Đội ngũ và bài viết: nhịp đọc rõ, giữ ảnh ngang tự nhiên. */
@@ -803,9 +828,7 @@ Không phụ thuộc số gói DB; flex-basis lấy đúng chiều rộng sau kh
     gap: var(--space-8);
   }
 
-  .cine-pt__row {
-    grid-template-columns: minmax(0, 1fr) auto auto;
-  }
+  .cine-pt__row { flex-basis: calc((100% - var(--space-5)) / 2); }
 }
 
 @media (max-width: 760px) {
@@ -897,16 +920,7 @@ Không phụ thuộc số gói DB; flex-basis lấy đúng chiều rộng sau kh
     font-size: var(--font-size-display);
   }
 
-  .cine-pt__row {
-    grid-template-columns: minmax(0, 1fr) auto;
-    gap: var(--space-3);
-  }
-
-  .cine-pt__row .cine-btn, .cine-pt__counter {
-    grid-column: 1 / -1;
-    justify-self: start;
-    text-align: left;
-  }
+  .cine-pt__row { flex-basis: 100%; }
 
   .cine-coaches {
     grid-template-columns: repeat(2, minmax(0, 1fr));

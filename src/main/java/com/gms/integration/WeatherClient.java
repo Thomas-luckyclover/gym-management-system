@@ -16,7 +16,8 @@ import java.time.Duration;
 public class WeatherClient {
 
     private static final String FORECAST_URL = "https://api.open-meteo.com/v1/forecast";
-    private static final Duration TIMEOUT = Duration.ofSeconds(3);
+    // Open-Meteo từ Việt Nam thường trả lời sau 3–4 giây (đo 13/10/2026); chờ tối đa 8 giây để không báo lỗi oan
+    private static final Duration TIMEOUT = Duration.ofSeconds(8);
 
     /** Gửi GET rồi đổi JSON thành các số liệu thô mà WeatherService cần. */
     public WeatherForecast fetchToday(double latitude, double longitude) throws WeatherUnavailableException {

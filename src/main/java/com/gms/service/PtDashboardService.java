@@ -99,7 +99,7 @@ public class PtDashboardService {
 
             // B4: tạo từng nhóm ngày và chọn các buổi của ngày đó.
             List<PtScheduleDayView> scheduleDays = new ArrayList<>();
-            for (int i = 0; i < SCHEDULE_DAYS; i++) { // Vòng lặp ngoài - SlotDate trong tuần
+            for (int i = SCHEDULE_DAYS - 1; i >= 0; i--) { // Vòng lặp ngoài - SlotDate trong tuần
                 // B4.1: xác định ngày, nhãn và dấu hiệu hôm nay.
                 LocalDate slotDate = today.plusDays(i); // ngày tháng năm
                 String dayLabel = buildDayLabel(slotDate, today); // thứ/ Hôm nay
@@ -135,6 +135,14 @@ public class PtDashboardService {
      * @param now thời điểm hiện tại theo giờ VN, lấy một lần trong getSchedule
      */
     void prepareSessionDisplay(PtSessionView session, LocalDateTime now) throws SQLException {
+        // Lịch từ hôm nay trở đi không được có kết quả vắng: JOB-04 chỉ chốt sau ngày tập.
+        // Báo dữ liệu bất thường, không đổi trạng thái DB hoặc âm thầm ẩn buổi.
+        if (session.getStatus() == Session.Status.MISSED
+                && !session.getSlotDate().isBefore(now.toLocalDate())) {
+            throw new SQLException("Buổi hôm nay hoặc tương lai đã bị chốt vắng, SessionId="
+                    + session.getSessionId());
+        }
+
         // B1: lấy loại gói gốc để chọn chữ hiện dưới tên khách.
         switch (session.getSubscriptionType()) {
             case PT_SINGLE:
@@ -607,7 +615,7 @@ public class PtDashboardService {
      */
     void prepareRating(PtRatingView rating, int minimumCustomers) {
         if (minimumCustomers < 1) {
-            throw new IllegalStateException("P-22 phải lớn hơn 0.");
+            throw new IllegalStateException("Tham số P-22 phải lớn hơn 0.");
         }
 
         int customerCount = rating.getRatingCustomerCount();

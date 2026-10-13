@@ -28,7 +28,7 @@
 
                     <div class="auth-shell">
                         <div class="auth-top">
-                            <a class="auth-brand" href="${pageContext.request.contextPath}/"><img src="${pageContext.request.contextPath}/images/logo.png?v=3" alt="Super Gym" width="52" height="52"></a>
+                            <a class="auth-brand" href="${pageContext.request.contextPath}/" aria-label="Super Gym — Trang chủ"><span class="auth-brand__wordmark">SUPER GYM</span></a>
 
                             <a class="auth-back" href="${pageContext.request.contextPath}/">
                                 <i class="fa-solid fa-arrow-left"></i>
@@ -674,8 +674,8 @@
                                                                 <div class="counter-box">
                                                                     <i class="fa-solid fa-location-dot"></i>
                                                                     <span>
-                                                                        <strong>Quầy Lễ tân:</strong> 25 Cầu Giấy,
-                                                                        Hà Nội — mở cửa 06:00 – 22:00 mỗi ngày.
+                                                                        <strong>Quầy Lễ tân:</strong> 106/36 Cầu Giấy,
+                                                                        Tổ Dân Phố Số 12, Nghĩa Đô, Hà Nội — mở cửa 06:00 – 22:00 mỗi ngày.
                                                                         Mang theo giấy tờ tuỳ thân để Lễ tân đối chiếu
                                                                         hồ sơ.
                                                                     </span>
@@ -718,8 +718,8 @@
                                                                     <div class="counter-box">
                                                                         <i class="fa-solid fa-location-dot"></i>
                                                                         <span>
-                                                                            <strong>Quầy Lễ tân:</strong> 25 Cầu Giấy,
-                                                                            Hà Nội — mở cửa 06:00 – 22:00 mỗi ngày.
+                                                                            <strong>Quầy Lễ tân:</strong> 106/36 Cầu Giấy,
+                                                                            Tổ Dân Phố Số 12, Nghĩa Đô, Hà Nội — mở cửa 06:00 – 22:00 mỗi ngày.
                                                                             Mang theo giấy tờ tuỳ thân để Lễ tân đối
                                                                             chiếu hồ sơ.
                                                                         </span>
