@@ -11,7 +11,7 @@
     <head>
         <%@ include file="/WEB-INF/jsp/common/head.jspf" %>
         <title>Chọn vai trò — Super Gym</title>
-        <link rel="stylesheet" href="${pageContext.request.contextPath}/css/pages/auth/login.css?v=6">
+        <link rel="stylesheet" href="${pageContext.request.contextPath}/css/pages/auth/login.css?v=8">
         <style>
             .role-list { display: grid; gap: 12px; margin-top: 8px; }
             .role-list form { margin: 0; }
@@ -24,7 +24,7 @@
         <%@ include file="/WEB-INF/jsp/common/flash-toast.jspf" %>
         <div class="auth-shell">
             <div class="auth-top">
-                <span class="auth-brand">Super Gym</span>
+                <span class="auth-brand"><img src="${pageContext.request.contextPath}/images/brand/supergym-wordmark.svg?v=2" alt="Super Gym" width="180" height="44"></span>
             </div>
 
             <div class="auth-card">

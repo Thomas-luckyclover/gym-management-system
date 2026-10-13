@@ -12,7 +12,7 @@
     <%@ include file="/WEB-INF/jsp/common/head.jspf" %>
     <title>Báo cáo vận hành &amp; doanh thu - GMS</title>
     <%-- Khung dock/sidebar/topbar dùng chung ở common.css (mục 11) --%>
-    <link rel="stylesheet" href="${pageContext.request.contextPath}/css/pages/manager/manager-dashboard.css?v=4">
+    <link rel="stylesheet" href="${pageContext.request.contextPath}/css/pages/manager/manager-dashboard.css?v=20261013c">
     <link rel="stylesheet" href="${pageContext.request.contextPath}/css/pages/auth/notification-bell.css">
 
     <script src="${pageContext.request.contextPath}/js/pages/auth/notification-bell.js" defer></script>
@@ -83,7 +83,7 @@
             </div>
         </header>
 
-        <main class="content">
+        <main class="content" id="main-content" tabindex="-1">
 
             <%-- Ghi chú bên trái, bộ lọc bên phải (giống mockup) --%>
             <div class="page-intro" data-reveal>
@@ -102,6 +102,12 @@
                     <div class="field">
                         <label class="field-label" for="reportTo">Đến ngày</label>
                         <input id="reportTo" name="to" type="date" required value="${to}">
+                    </div>
+                    <%-- Chọn nhanh khoảng ngày: điền 2 ô ngày rồi xem luôn (common.js "Chọn nhanh khoảng ngày") --%>
+                    <div class="range-presets" data-range-presets data-from="#reportFrom" data-to="#reportTo" role="group" aria-label="Chọn nhanh khoảng ngày">
+                        <button type="button" class="chip" data-range="7">7 ngày</button>
+                        <button type="button" class="chip" data-range="30">30 ngày</button>
+                        <button type="button" class="chip" data-range="month">Tháng này</button>
                     </div>
                     <button class="btn btn-primary" type="submit">Xem</button>
                     <%-- Xuất đúng báo cáo đang hiển thị (from/to của lần xem gần nhất), không phải ô ngày đang sửa dở --%>
@@ -131,12 +137,12 @@
             <%-- ===== 6 thẻ tổng quan ===== --%>
             <%-- Bảng điểm: ô đầu tô màu chủ đạo; data-flip: số lật kiểu bảng giờ tàu khi tải (common.js) --%>
             <section class="report-stats scoreboard" aria-label="Tổng quan" data-reveal>
-                <div class="report-card stat is-lead"><div class="stat-label">Doanh thu</div><div class="stat-value is-flap" title="${gms:formatMoney(report.totalRevenue)}" data-flip><c:out value="${report.totalRevenueText}" /></div><div class="stat-note">Đã gồm VAT</div></div>
+                <div class="report-card stat is-lead"><div class="stat-label">Doanh thu</div><div class="stat-value is-flap" title="${gms:formatMoney(report.totalRevenue)}" data-flip><c:out value="${report.totalRevenueText}" /></div><div class="stat-note">Đã gồm VAT</div><c:set var="delta" value="${reportDeltas['revenue']}" /><%@ include file="/WEB-INF/jsp/manager/_stat-delta.jspf" %></div>
                 <div class="report-card stat"><div class="stat-label">Hội viên đang hoạt động</div><div class="stat-value is-flap" data-flip>${report.activeMembers}</div><div class="stat-note">+${report.newMembers} hội viên mới</div></div>
                 <div class="report-card stat"><div class="stat-label">Gói đang chạy</div><div class="stat-value is-flap" data-flip>${report.runningPackages}</div><div class="stat-note">Gói tập, không gồm vé ngày</div></div>
-                <div class="report-card stat"><div class="stat-label">Hoa hồng PT</div><div class="stat-value is-flap" title="${gms:formatMoney(report.totalCommission)}" data-flip><c:out value="${report.totalCommissionText}" /></div><div class="stat-note">Theo % riêng từng PT</div></div>
-                <div class="report-card stat"><div class="stat-label">Vé 1 ngày</div><div class="stat-value is-flap" data-flip>${report.dayPassVisits}</div><div class="stat-note">lượt · <c:out value="${report.dayPassRevenueText}" /> doanh thu</div></div>
-                <div class="report-card stat"><div class="stat-label">Lượt check-in</div><div class="stat-value is-flap" data-flip>${report.checkInCount}</div><div class="stat-note">Gồm cả vé 1 ngày</div></div>
+                <div class="report-card stat"><div class="stat-label">Hoa hồng PT</div><div class="stat-value is-flap" title="${gms:formatMoney(report.totalCommission)}" data-flip><c:out value="${report.totalCommissionText}" /></div><div class="stat-note">Theo % riêng từng PT</div><c:set var="delta" value="${reportDeltas['commission']}" /><%@ include file="/WEB-INF/jsp/manager/_stat-delta.jspf" %></div>
+                <div class="report-card stat"><div class="stat-label">Vé 1 ngày</div><div class="stat-value is-flap" data-flip>${report.dayPassVisits}</div><div class="stat-note">lượt · <c:out value="${report.dayPassRevenueText}" /> doanh thu</div><c:set var="delta" value="${reportDeltas['dayPass']}" /><%@ include file="/WEB-INF/jsp/manager/_stat-delta.jspf" %></div>
+                <div class="report-card stat"><div class="stat-label">Lượt check-in</div><div class="stat-value is-flap" data-flip>${report.checkInCount}</div><div class="stat-note">Gồm cả vé 1 ngày</div><c:set var="delta" value="${reportDeltas['checkIn']}" /><%@ include file="/WEB-INF/jsp/manager/_stat-delta.jspf" %></div>
             </section>
 
             <%-- Không có dữ liệu trong khoảng ngày → báo rõ (MSG03), vẫn giữ các thẻ ở trên --%>

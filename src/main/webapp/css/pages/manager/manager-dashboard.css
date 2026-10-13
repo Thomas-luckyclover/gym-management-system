@@ -96,8 +96,8 @@
    Flex xuống hàng: ô rộng tối thiểu 180px (đủ 6 ô một hàng ở màn 1280), không đủ chỗ thì tự xuống hàng
    và các ô hàng dưới giãn ra lấp kín. Vạch chia là khe 1px để lộ nền vạch, đúng ở mọi cách xếp hàng. */
 .report-stats.scoreboard {
-  display: flex;
-  flex-wrap: wrap;
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
   gap: var(--border-width);
   overflow: hidden;
   border-radius: var(--radius-md);
@@ -113,7 +113,7 @@
   border-radius: 0;
   background: var(--color-board);
   box-shadow: none;
-  color: var(--color-board-text);
+  color: var(--color-text);
   /* Cỡ số co theo bề rộng ô (đơn vị cqi bên dưới) */
   container-type: inline-size;
 }
@@ -129,7 +129,7 @@
   min-height: 2lh;
   font-size: var(--font-size-sm);
   font-weight: var(--font-weight-semibold);
-  color: var(--color-board-soft);
+  color: var(--color-text-muted);
 }
 
 .scoreboard .stat.is-lead .stat-label,
@@ -141,11 +141,11 @@
   margin-top: var(--space-1-5);
   font-family: var(--font-heading);
   /* 11cqi: số tiền dài nhất (9 chữ số + dấu chấm + đ) vẫn vừa ô 200px, không bị cắt */
-  font-size: clamp(var(--font-size-base), 11cqi, var(--font-size-4xl));
+  font-size: var(--font-size-2xl);
   font-weight: var(--font-weight-extrabold);
   letter-spacing: var(--letter-spacing-tight);
   line-height: var(--line-height-none);
-  color: var(--color-board-text);
+  color: var(--color-text);
   white-space: nowrap;
   font-variant-numeric: tabular-nums;
 }
@@ -153,7 +153,7 @@
 .scoreboard .stat-note {
   margin-top: var(--space-2);
   font-size: var(--font-size-xs);
-  color: var(--color-board-soft);
+  color: var(--color-text-muted);
 }
 
 /* ===== Biểu đồ cột ===== */
@@ -412,4 +412,32 @@
   .lane-runner {
     animation: none;
   }
+}
+
+/* So sánh với kỳ trước dưới mỗi ô (manager/_stat-delta.jspf): xanh tăng, đỏ giảm, xám không so được */
+.scoreboard .stat-delta {
+  margin-top: var(--space-1-5);
+  font-size: var(--font-size-xs);
+  font-weight: var(--font-weight-semibold);
+  color: var(--color-text-muted);
+}
+
+.scoreboard .stat-delta.is-up { color: var(--color-success-ink); }
+.scoreboard .stat-delta.is-down { color: var(--color-danger-ink); }
+.dock .scoreboard .stat.is-lead .stat-delta { color: var(--color-board-text); }
+.dock .scoreboard .stat.is-lead .stat-delta.is-up { color: var(--color-board-up); }
+.dock .scoreboard .stat.is-lead .stat-delta.is-down { color: var(--brand-sunset-hi); }
+
+
+/* Sáu chỉ số chia ba cột: số tiền dài và nhãn cùng một nhịp đọc. */
+.dock .scoreboard .stat { padding: var(--space-5); }
+.dock .scoreboard .stat-label { min-height: auto; }
+.dock .scoreboard .stat-value { margin-top: var(--space-3); line-height: var(--line-height-snug); }
+@media (max-width: 767px) {
+  .report-stats.scoreboard { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+  .dock .scoreboard .stat { padding: var(--space-4); }
+  .dock .scoreboard .stat-value { font-size: var(--font-size-xl); }
+}
+@media (max-width: 380px) {
+  .report-stats.scoreboard { grid-template-columns: minmax(0, 1fr); }
 }

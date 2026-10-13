@@ -43,7 +43,7 @@
         </div>
       </header>
 
-      <main class="content">
+      <main class="content" id="main-content" tabindex="-1">
 
         <%-- ===== Thống kê trạng thái ===== --%>
         <div class="maintenance-stats">
@@ -102,7 +102,6 @@
           <div class="panel-head">
             <div>
               <h2>Danh sách yêu cầu</h2>
-              <p>Yêu cầu Chờ duyệt được ưu tiên hiển thị trước.</p>
             </div>
           </div>
 

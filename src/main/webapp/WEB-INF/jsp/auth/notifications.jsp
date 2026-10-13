@@ -16,9 +16,7 @@
 
   <link rel="stylesheet"
         href="${pageContext.request.contextPath}/css/pages/auth/account-settings.css">
-
-  <link rel="stylesheet"
-        href="${pageContext.request.contextPath}/css/pages/auth/notifications.css">
+  <link rel="stylesheet" href="${pageContext.request.contextPath}/css/pages/auth/notification-bell.css">
 
 </head>
 
@@ -34,11 +32,11 @@ ${sessionScope.role == 'Manager'
   <c:choose>
 
     <c:when test="${sessionScope.role == 'Manager'}">
-      <jsp:include page="/WEB-INF/jsp/common/layout-manager.jspf" />
+      <%@ include file="/WEB-INF/jsp/common/layout-manager.jspf" %>
     </c:when>
 
     <c:otherwise>
-      <jsp:include page="/WEB-INF/jsp/common/layout-receptionist.jspf" />
+      <%@ include file="/WEB-INF/jsp/common/layout-receptionist.jspf" %>
     </c:otherwise>
 
   </c:choose>
@@ -50,7 +48,7 @@ ${sessionScope.role == 'Manager'
       <div class="tb-left">
 
         <h1 class="tb-title">
-          🔔 Thông báo
+          Thông báo
         </h1>
 
       </div>
@@ -60,11 +58,7 @@ ${sessionScope.role == 'Manager'
         <a class="tb-user"
            href="${pageContext.request.contextPath}/account">
 
-          <span class="avatar">
-            ${sessionScope.role == 'Manager'
-                    ? 'QL'
-                    : 'LT'}
-          </span>
+          <span class="avatar"><i class="fa-solid fa-user" aria-hidden="true"></i></span>
 
           <span>
 
@@ -87,7 +81,7 @@ ${sessionScope.role == 'Manager'
 
     </header>
 
-    <main class="content">
+    <main class="content" id="main-content" tabindex="-1">
 
       <section class="notification-panel">
 
@@ -105,9 +99,7 @@ ${sessionScope.role == 'Manager'
                         ? ''
                         : 'notification-unread'}">
 
-                  <div class="notification-icon">
-                    🔔
-                  </div>
+                  <div class="notification-icon"><i class="fa-solid fa-bell" aria-hidden="true"></i></div>
 
                   <div class="notification-body">
 

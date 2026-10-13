@@ -8,10 +8,11 @@
   <%@ include file="/WEB-INF/jsp/common/head.jspf" %>
   <title><c:out value="${post.title}" /> · Super Gym</title>
   <meta name="description" content="<c:out value='${post.excerpt}' />">
-  <link rel="stylesheet" href="${pageContext.request.contextPath}/css/pages/guest/blog-detail.css">
+  <link rel="stylesheet" href="${pageContext.request.contextPath}/css/pages/guest/blog-list.css?v=20261013c">
+  <link rel="stylesheet" href="${pageContext.request.contextPath}/css/pages/guest/blog-detail.css?v=20261013c">
   <script src="${pageContext.request.contextPath}/js/pages/guest/blog-detail.js?v=2" defer></script>
 </head>
-<body class="theme-guest-dark">
+<body class="theme-guest-dark journal-page journal-detail">
   <%-- Flash Toast thông báo redirect từ server nếu có --%>
   <%@ include file="/WEB-INF/jsp/common/flash-toast.jspf" %>
 
@@ -23,12 +24,12 @@
   <%@ include file="/WEB-INF/jsp/common/guest-header.jspf" %>
 
   <%-- ====================== CHI TIẾT BÀI VIẾT (SRS #7 / 2.2.2) ====================== --%>
-  <main class="main-content">
+  <main class="main-content" id="main-content">
     <div class="wrap">
       <article class="article-wrap">
         <%-- Nút quay lại danh sách blog --%>
         <a class="back-link" href="${pageContext.request.contextPath}/blog">
-          <i class="fa-solid fa-arrow-left"></i> Quay lại danh sách
+          <i class="fa-solid fa-arrow-left" aria-hidden="true"></i> Quay lại danh sách
         </a>
 
         <%-- Xác định màu nền và icon đại diện theo chuyên mục --%>
@@ -52,7 +53,8 @@
         <div class="article-cover ${toneClass}">
           <c:if test="${not empty post.coverImage}">
             <img class="article-cover-img"
-                 src="${post.coverImage.startsWith('/') ? pageContext.request.contextPath : ''}${post.coverImage}"
+                 src="${post.coverImage.startsWith('/') ? pageContext.request.contextPath : ''}<c:out value='${post.coverImage}' />"
+                 width="1200" height="800" fetchpriority="high"
                  alt="<c:out value='${post.title}' />"
                  onerror="this.style.display='none'; if(this.nextElementSibling){this.nextElementSibling.style.display='flex';}">
           </c:if>
@@ -64,7 +66,7 @@
                 <circle cx="106" cy="142" r="4"/><circle cx="6" cy="120" r="4"/><circle cx="106" cy="180" r="4"/>
               </g>
             </svg>
-            <span class="article-cover-icon"><i class="fa-solid ${iconClass}"></i></span>
+            <span class="article-cover-icon"><i class="fa-solid ${iconClass}" aria-hidden="true"></i></span>
           </div>
         </div>
 
@@ -77,23 +79,23 @@
         <%-- Thông tin bổ sung: ngày đăng, thời gian đọc ước tính, nút chia sẻ --%>
         <div class="article-meta">
           <span class="meta-item">
-            <i class="fa-solid fa-calendar-days"></i>
+            <i class="fa-solid fa-calendar-days" aria-hidden="true"></i>
             <time datetime="${post.publishedAt}">
               <c:out value="${gms:formatDate(post.publishedAt.toLocalDate())}" />
             </time>
           </span>
           <span class="meta-item">
-            <i class="fa-solid fa-clock"></i>
+            <i class="fa-solid fa-clock" aria-hidden="true"></i>
             <c:out value="${detailView.readingTimeFormatted}" />
           </span>
           <c:if test="${not empty post.authorName}">
             <span class="meta-item">
-              <i class="fa-solid fa-user-pen"></i>
+              <i class="fa-solid fa-user-pen" aria-hidden="true"></i>
               <c:out value="${post.authorName}" />
             </span>
           </c:if>
           <button type="button" class="btn-share" id="btnShareArticle" title="Sao chép liên kết bài viết">
-            <i class="fa-solid fa-share-nodes"></i> <span>Chia sẻ</span>
+            <i class="fa-solid fa-share-nodes" aria-hidden="true"></i> <span>Chia sẻ</span>
           </button>
         </div>
 
@@ -105,10 +107,10 @@
         <%-- Thanh điều hướng cuối bài --%>
         <div class="article-nav">
           <a class="back-link back-link-flush" href="${pageContext.request.contextPath}/blog">
-            <i class="fa-solid fa-arrow-left"></i> Quay lại danh sách
+            <i class="fa-solid fa-arrow-left" aria-hidden="true"></i> Quay lại danh sách
           </a>
           <button type="button" class="btn-top" id="btnScrollToTop" aria-label="Cuộn lên đầu trang">
-            <i class="fa-solid fa-arrow-up"></i> <span>Lên đầu trang</span>
+            <i class="fa-solid fa-arrow-up" aria-hidden="true"></i> <span>Lên đầu trang</span>
           </button>
         </div>
       </article>
@@ -119,7 +121,6 @@
       <section class="section section-alt related-section">
         <div class="wrap">
           <div class="section-head">
-            <span class="eyebrow">Cùng chuyên mục</span>
             <h2>Đọc tiếp</h2>
           </div>
 
@@ -147,8 +148,8 @@
                 <div class="post-thumb ${relToneClass}">
                   <c:if test="${not empty related.coverImage}">
                     <img class="post-thumb-img"
-                         src="${related.coverImage.startsWith('/') ? pageContext.request.contextPath : ''}${related.coverImage}"
-                         alt="<c:out value='${related.title}' />"
+                         src="${related.coverImage.startsWith('/') ? pageContext.request.contextPath : ''}<c:out value='${related.coverImage}' />"
+                         alt="" width="800" height="533" loading="lazy"
                          onerror="this.style.display='none'; if(this.nextElementSibling){this.nextElementSibling.style.display='flex';}">
                   </c:if>
                   <div class="post-thumb-fallback ${not empty related.coverImage ? 'is-hidden' : ''}">
@@ -158,7 +159,7 @@
                         <circle cx="22" cy="180" r="4"/><circle cx="50" cy="180" r="4"/><circle cx="78" cy="190" r="4"/>
                       </g>
                     </svg>
-                    <span class="post-thumb-icon"><i class="fa-solid ${relIconClass}"></i></span>
+                    <span class="post-thumb-icon"><i class="fa-solid ${relIconClass}" aria-hidden="true"></i></span>
                   </div>
                 </div>
 
@@ -167,7 +168,7 @@
                   <h3><c:out value="${related.title}" /></h3>
                   <p class="post-excerpt"><c:out value="${related.excerpt}" /></p>
                   <div class="post-meta">
-                    <i class="fa-solid fa-calendar-days"></i>
+                    <i class="fa-solid fa-calendar-days" aria-hidden="true"></i>
                     <c:out value="${gms:formatDate(related.publishedAt.toLocalDate())}" />
                   </div>
                 </div>

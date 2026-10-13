@@ -8,7 +8,7 @@
 <head>
   <%@ include file="/WEB-INF/jsp/common/head.jspf" %>
   <title>403 · Super Gym</title>
-  <link rel="stylesheet" href="${pageContext.request.contextPath}/css/pages/error/error.css?v=4">
+  <link rel="stylesheet" href="${pageContext.request.contextPath}/css/pages/error/error.css?v=6">
 </head>
 <body class="theme-guest-dark err-body">
   <main class="err">
@@ -16,7 +16,7 @@
 
     <section class="err-card">
       <a class="err-brand" href="${pageContext.request.contextPath}/">
-        <img src="${pageContext.request.contextPath}/images/logo-mark.png?v=2" alt="" width="40" height="30">
+        <img src="${pageContext.request.contextPath}/images/brand/supergym-mark.svg?v=2" alt="" width="40" height="30">
         Super Gym
       </a>
 
