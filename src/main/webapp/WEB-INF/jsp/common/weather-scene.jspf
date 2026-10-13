@@ -1,0 +1,11 @@
+<%@ page pageEncoding="UTF-8" %>
+<%-- ===== Cảnh thời tiết toàn trang (chỉ PT/Customer Dashboard) =====
+     Đặt ngay sau <body>, ngoài .app, để position: fixed không bị khối cha có transform làm lệch.
+     Màu đọc từ token weather-* trên <body>; js/weather-scene.js vẽ hạt lên canvas, CSS lo mây/nắng/chớp. --%>
+<div class="weather-scene" id="weatherScene" aria-hidden="true">
+    <div class="weather-scene__layer weather-scene__far"><span class="weather-scene__glow"></span></div>
+    <div class="weather-scene__layer weather-scene__mid"><span class="weather-scene__cloud weather-scene__cloud--a"></span><span class="weather-scene__cloud weather-scene__cloud--b"></span></div>
+    <canvas class="weather-scene__canvas"></canvas>
+    <div class="weather-scene__layer weather-scene__near"><span class="weather-scene__cloud weather-scene__cloud--c"></span></div>
+    <div class="weather-scene__flash"></div>
+</div>

@@ -12,7 +12,7 @@
 
     <link
         rel="stylesheet"
-        href="${pageContext.request.contextPath}/css/pages/auth/account-settings.css"
+        href="${pageContext.request.contextPath}/css/pages/auth/account-settings.css?v=2"
     >
 
 </head>
@@ -145,15 +145,7 @@
         </header>
 
 
-        <main class="content">
-
-            <div class="page-intro">
-
-                <p>
-                    Hồ sơ và mật khẩu của chính bạn.
-                </p>
-
-            </div>
+        <main class="content" id="main-content" tabindex="-1">
 
 
             <%-- Lỗi khi không tải được Account Settings --%>
@@ -253,7 +245,7 @@
 
                                 <c:otherwise>
 
-                                    <section class="account-card">
+                                    <section class="account-card" data-reveal>
 
                                         <div class="account-card-body">
 

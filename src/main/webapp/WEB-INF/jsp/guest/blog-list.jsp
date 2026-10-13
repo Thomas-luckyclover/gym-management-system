@@ -8,10 +8,10 @@
   <%@ include file="/WEB-INF/jsp/common/head.jspf" %>
   <title>Blog — Super Gym</title>
   <meta name="description" content="Kiến thức tập luyện, dinh dưỡng và tin tức phòng gym, cập nhật mỗi tuần từ đội ngũ huấn luyện viên.">
-  <link rel="stylesheet" href="${pageContext.request.contextPath}/css/pages/guest/blog-list.css">
+  <link rel="stylesheet" href="${pageContext.request.contextPath}/css/pages/guest/blog-list.css?v=20261013c">
   <script src="${pageContext.request.contextPath}/js/pages/guest/blog-list.js" defer></script>
 </head>
-<body class="theme-guest-dark">
+<body class="theme-guest-dark journal-page">
   <%-- Flash Toast thông báo redirect từ server nếu có --%>
   <%@ include file="/WEB-INF/jsp/common/flash-toast.jspf" %>
 
@@ -20,12 +20,11 @@
   <%@ include file="/WEB-INF/jsp/common/guest-header.jspf" %>
 
   <%-- ======================= 2.2.1 — BLOG LIST (SRS #6 / UC-06) ======================= --%>
-  <main class="main-content">
+  <main class="main-content" id="main-content">
     <div class="wrap">
       <%-- Tiêu đề trang danh sách blog --%>
       <div class="page-head">
-        <h1>Blog Super Gym</h1>
-        <p>Kiến thức tập luyện, dinh dưỡng và tin tức phòng gym, cập nhật mỗi tuần từ đội ngũ huấn luyện viên.</p>
+        <h1>Tập luyện.<br><em>Hiểu sâu hơn.</em></h1>
       </div>
 
       <%-- Thanh công cụ tìm kiếm và lọc chuyên mục --%>
@@ -34,8 +33,8 @@
           <c:if test="${not empty selectedCategory and selectedCategory ne 'Tất cả'}">
             <input type="hidden" name="category" value="<c:out value='${selectedCategory}' />">
           </c:if>
-          <i class="fa-solid fa-magnifying-glass"></i>
-          <input id="blogSearch" name="q" type="search" placeholder="Tìm bài viết theo tiêu đề..." aria-label="Tìm bài viết theo tiêu đề" value="<c:out value='${keyword}' />" maxlength="100">
+          <svg viewBox="0 0 24 24" width="20" height="20" fill="none" stroke="currentColor" stroke-width="1.8" aria-hidden="true"><circle cx="10.5" cy="10.5" r="6.5"/><path d="m16 16 4 4"/></svg>
+          <input id="blogSearch" name="q" type="search" placeholder="Tìm bài viết…" aria-label="Tìm bài viết theo tiêu đề" autocomplete="off" value="<c:out value='${keyword}' />" maxlength="100">
         </form>
 
         <div class="chip-filter" id="chipFilter">
@@ -77,8 +76,8 @@
           <a class="post-card" href="${pageContext.request.contextPath}/blog/detail?id=${post.blogPostId}"
              data-category="${cardCatName}" data-title="<c:out value='${post.title}' />">
             <c:if test="${not empty post.coverImage}">
-              <img class="post-thumb" loading="lazy" alt="<c:out value='${post.title}' />"
-                   src="${post.coverImage.startsWith('/') ? pageContext.request.contextPath : ''}${post.coverImage}">
+              <img class="post-thumb" loading="lazy" alt="" width="800" height="533"
+                   src="${post.coverImage.startsWith('/') ? pageContext.request.contextPath : ''}<c:out value='${post.coverImage}' />">
             </c:if>
 
             <div class="post-body">
@@ -86,7 +85,7 @@
               <h3><c:out value="${post.title}" /></h3>
               <p class="post-excerpt"><c:out value="${post.excerpt}" /></p>
               <div class="post-meta">
-                <i class="fa-solid fa-calendar-days"></i>
+                <svg viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" stroke-width="1.8" aria-hidden="true"><rect x="4" y="5" width="16" height="16" rx="2"/><path d="M8 3v4m8-4v4M4 10h16"/></svg>
                 <c:if test="${not empty post.publishedAt}">
                   <c:out value="${gms:formatDate(post.publishedAt.toLocalDate())}" />
                 </c:if>
@@ -97,7 +96,7 @@
 
         <%-- Trạng thái rỗng khi không có bài viết khớp bộ lọc (MSG01) --%>
         <div class="empty-state" id="blogEmpty" <c:if test="${not empty posts}">hidden</c:if>>
-          <div class="empty-icon"><i class="fa-solid fa-box-open"></i></div>
+          <div class="empty-icon"><i class="fa-solid fa-box-open" aria-hidden="true"></i></div>
           <p><b>Không tìm thấy kết quả phù hợp với bộ lọc.</b><br>Thử từ khoá khác hoặc chọn lại danh mục.</p>
         </div>
       </div>
@@ -107,7 +106,7 @@
         <div class="pagination" id="blogPagination">
           <%-- Nút lùi về trang trước --%>
           <button type="button" class="page-btn" data-page="${currentPage - 1}" ${currentPage <= 1 ? 'disabled' : ''} aria-label="Trang trước">
-            <i class="fa-solid fa-chevron-left"></i>
+            <i class="fa-solid fa-chevron-left" aria-hidden="true"></i>
           </button>
 
           <%-- Danh sách các số trang --%>
@@ -119,7 +118,7 @@
 
           <%-- Nút tiến tới trang sau --%>
           <button type="button" class="page-btn" data-page="${currentPage + 1}" ${currentPage >= totalPages ? 'disabled' : ''} aria-label="Trang sau">
-            <i class="fa-solid fa-chevron-right"></i>
+            <i class="fa-solid fa-chevron-right" aria-hidden="true"></i>
           </button>
         </div>
       </c:if>

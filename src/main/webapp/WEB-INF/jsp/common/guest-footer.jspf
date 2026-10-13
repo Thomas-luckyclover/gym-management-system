@@ -13,14 +13,22 @@
 <footer class="site-footer">
   <div class="footer-inner">
     <div>
-      <div class="footer-brand">Super Gym</div>
+      <a class="footer-brand" href="${pageContext.request.contextPath}/" aria-label="Super Gym — Trang chủ"><img class="footer-wordmark" src="${pageContext.request.contextPath}/images/brand/supergym-wordmark.svg?v=2" alt="Super Gym" width="240" height="60"></a>
       <p class="footer-tag">Theo dõi tiến độ, đặt lịch PT và quản lý gói tập trong một tài khoản duy nhất.</p>
+      <%-- Chưa có URL mạng xã hội chính thức trong cấu hình; biểu tượng giữ nhãn rõ ràng. --%>
+      <div class="footer-socials" role="group" aria-label="Mạng xã hội Super Gym">
+        <span role="img" aria-label="Instagram" title="Instagram"><i class="fa-brands fa-instagram" aria-hidden="true"></i></span>
+        <span role="img" aria-label="Facebook" title="Facebook"><i class="fa-brands fa-facebook-f" aria-hidden="true"></i></span>
+        <span role="img" aria-label="TikTok" title="TikTok"><i class="fa-brands fa-tiktok" aria-hidden="true"></i></span>
+      </div>
     </div>
     <div class="footer-col">
       <h4>Khám phá</h4>
       <a href="${pageContext.request.contextPath}/">Trang chủ</a>
       <a href="${pageContext.request.contextPath}/#pricing">Bảng giá</a>
       <a href="${pageContext.request.contextPath}/blog">Blog</a>
+      <a href="${pageContext.request.contextPath}/about">Về chúng tôi</a>
+      <a href="${pageContext.request.contextPath}/#faq">Hỏi đáp</a>
     </div>
     <div class="footer-col">
       <h4>Tài khoản</h4>
@@ -28,14 +36,19 @@
       <a href="${pageContext.request.contextPath}/register">Đăng ký</a>
       <a href="${pageContext.request.contextPath}/forgot-password">Quên mật khẩu</a>
     </div>
-    <div class="footer-col">
+    <div class="footer-col footer-contact">
       <h4>Liên hệ</h4>
-      <p><i class="fa-solid fa-location-dot"></i> 12 Nguyễn Huệ, Q.1, TP.HCM</p>
+      <p><i class="fa-solid fa-location-dot" aria-hidden="true"></i> 25 Cầu Giấy, Hà Nội</p>
       <c:if test="${not empty openingHours}">
-        <p><i class="fa-solid fa-clock"></i> <c:out value="${openingHours}" /> mỗi ngày</p>
+        <p><i class="fa-solid fa-clock" aria-hidden="true"></i> <c:out value="${openingHours}" /> mỗi ngày</p>
       </c:if>
-      <a href="tel:19006868"><i class="fa-solid fa-phone"></i> 1900 6868</a>
+      <a href="tel:19006868"><i class="fa-solid fa-phone" aria-hidden="true"></i> 1900 6868</a>
+      <a class="footer-directions" href="https://www.google.com/maps/dir/?api=1&amp;destination=25%20C%E1%BA%A7u%20Gi%E1%BA%A5y%2C%20H%C3%A0%20N%E1%BB%99i" target="_blank" rel="noopener noreferrer">Chỉ đường tới phòng tập <i class="fa-solid fa-arrow-up-right-from-square" aria-hidden="true"></i></a>
+      <div class="footer-map">
+        <iframe title="Bản đồ Super Gym — 25 Cầu Giấy, Hà Nội" src="https://maps.google.com/maps?q=25%20C%E1%BA%A7u%20Gi%E1%BA%A5y%2C%20H%C3%A0%20N%E1%BB%99i&amp;output=embed" width="320" height="180" loading="lazy" referrerpolicy="no-referrer-when-downgrade" allowfullscreen></iframe>
+      </div>
     </div>
   </div>
   <div class="footer-bottom">© 2026 Super Gym</div>
 </footer>
+<%@ include file="/WEB-INF/jsp/common/brand-duo-filter.jspf" %>

@@ -1,0 +1,431 @@
+.notification-bell {
+    position: relative;
+    flex: none;
+}
+
+.notification-bell-button {
+    position: relative;
+
+    display: grid;
+    place-items: center;
+
+    width: 40px;
+    height: 40px;
+
+    padding: 0;
+
+    border:
+            var(--border-width)
+            solid
+            var(--color-border);
+
+    border-radius:
+            var(--radius-circle);
+
+    background:
+            var(--color-surface);
+
+    color:
+            var(--color-text-soft);
+
+    cursor: pointer;
+
+    transition:
+            background var(--duration-base),
+            border-color var(--duration-base),
+            color var(--duration-base);
+}
+
+.notification-bell-button:hover,
+.notification-bell-button[aria-expanded="true"] {
+
+    border-color:
+            var(--color-primary-border);
+
+    background:
+            var(--color-primary-tint);
+
+    color:
+            var(--color-primary);
+}
+
+.notification-bell-button:focus-visible {
+    outline: none;
+    box-shadow: var(--shadow-focus);
+}
+
+.notification-bell-button i {
+    font-size: var(--font-size-lg);
+}
+
+
+/* ===== Badge số chưa đọc ===== */
+
+.notification-bell-count {
+    position: absolute;
+
+    top: -5px;
+    right: -6px;
+
+    min-width: 19px;
+    height: 19px;
+
+    padding:
+            0 var(--space-1);
+
+    border:
+            2px solid
+            var(--color-surface);
+
+    border-radius:
+            var(--radius-pill);
+
+    background:
+            var(--color-danger);
+
+    color:
+            var(--color-text-inverse);
+
+    font-size:
+            var(--font-size-2xs);
+
+    font-weight:
+            var(--font-weight-bold);
+
+    line-height: 15px;
+
+    text-align: center;
+}
+
+
+/* ===== Popup ===== */
+
+.notification-popover {
+    position: absolute;
+
+    z-index:
+            var(--z-dropdown);
+
+    top:
+            calc(100% + var(--space-2));
+
+    right: 0;
+
+    width:
+            min(390px, calc(100vw - 32px));
+
+    overflow: hidden;
+
+    border:
+            var(--border-width)
+            solid
+            var(--color-border-strong);
+
+    border-radius:
+            var(--radius-lg);
+
+    background:
+            var(--color-surface);
+
+    box-shadow:
+            var(--shadow-pop);
+}
+
+.notification-popover-head {
+    display: flex;
+
+    align-items: center;
+    justify-content: space-between;
+
+    gap: var(--space-3);
+
+    padding: var(--space-4);
+
+    border-bottom:
+            var(--border-width)
+            solid
+            var(--color-border);
+}
+
+.notification-popover-head > div {
+    min-width: 0;
+}
+
+.notification-popover-head strong {
+    display: block;
+
+    color:
+            var(--color-text);
+
+    font-size:
+            var(--font-size-base);
+}
+
+.notification-popover-head small {
+    display: block;
+
+    margin-top:
+            var(--space-1);
+
+    color:
+            var(--color-text-muted);
+
+    font-size:
+            var(--font-size-xs);
+}
+
+
+/* ===== Đánh dấu tất cả ===== */
+
+.notification-read-all {
+    flex: none;
+
+    padding:
+            var(--space-2);
+
+    border: 0;
+
+    border-radius:
+            var(--radius-sm);
+
+    background:
+            transparent;
+
+    color:
+            var(--color-primary);
+
+    font: inherit;
+
+    font-size:
+            var(--font-size-xs);
+
+    font-weight:
+            var(--font-weight-semibold);
+
+    cursor: pointer;
+}
+
+.notification-read-all:hover {
+    background:
+            var(--color-primary-tint);
+}
+
+
+/* ===== Danh sách ===== */
+
+.notification-popover-list {
+    max-height: 420px;
+    overflow-y: auto;
+}
+
+.notification-item {
+    display: grid;
+
+    grid-template-columns:
+      36px minmax(0, 1fr) auto;
+
+    gap: var(--space-3);
+
+    width: 100%;
+
+    padding:
+            var(--space-4);
+
+    border: 0;
+
+    border-bottom:
+            var(--border-width)
+            solid
+            var(--color-border);
+
+    background:
+            var(--color-surface);
+
+    color:
+            var(--color-text);
+
+    font: inherit;
+
+    text-align: left;
+
+    cursor: pointer;
+
+    transition:
+            background
+            var(--duration-fast);
+}
+
+.notification-item:last-child {
+    border-bottom: 0;
+}
+
+.notification-item:hover {
+    background:
+            var(--color-surface-hover);
+}
+
+.notification-item.unread {
+    background:
+            var(--color-primary-tint);
+}
+
+
+/* ===== Icon ===== */
+
+.notification-item-icon {
+    display: grid;
+    place-items: center;
+
+    width: 36px;
+    height: 36px;
+
+    border-radius:
+            var(--radius-circle);
+
+    background:
+            var(--color-surface-muted);
+
+    color:
+            var(--color-text-soft);
+}
+
+.notification-item.maintenance
+.notification-item-icon {
+
+    background:
+            var(--color-warning-tint);
+
+    color:
+            var(--color-warning-ink);
+}
+
+.notification-item.system
+.notification-item-icon {
+
+    background:
+            var(--color-info-tint);
+
+    color:
+            var(--color-info-ink);
+}
+
+
+/* ===== Nội dung ===== */
+
+.notification-item-body {
+    min-width: 0;
+}
+
+.notification-item-title-row {
+    display: flex;
+
+    align-items: center;
+
+    gap:
+            var(--space-2);
+}
+
+.notification-unread-dot {
+    width: 7px;
+    height: 7px;
+
+    flex: none;
+
+    border-radius:
+            var(--radius-circle);
+
+    background:
+            var(--color-primary);
+}
+
+.notification-item-title {
+    overflow: hidden;
+
+    color:
+            var(--color-text);
+
+    font-size:
+            var(--font-size-sm);
+
+    font-weight:
+            var(--font-weight-semibold);
+
+    text-overflow: ellipsis;
+    white-space: nowrap;
+}
+
+.notification-item-content {
+    display: -webkit-box;
+
+    overflow: hidden;
+
+    margin-top:
+            var(--space-1);
+
+    color:
+            var(--color-text-soft);
+
+    font-size:
+            var(--font-size-xs);
+
+    line-height:
+            var(--line-height-normal);
+
+    -webkit-box-orient: vertical;
+    -webkit-line-clamp: 2;
+}
+
+.notification-item-time {
+    display: block;
+
+    margin-top:
+            var(--space-2);
+
+    color:
+            var(--color-text-muted);
+
+    font-size:
+            var(--font-size-2xs);
+}
+
+.notification-item-arrow {
+    align-self: center;
+
+    color:
+            var(--color-text-muted);
+
+    font-size:
+            var(--font-size-xs);
+}
+
+.notification-state {
+    padding:
+            var(--space-6)
+            var(--space-4);
+
+    color:
+            var(--color-text-muted);
+
+    font-size:
+            var(--font-size-sm);
+
+    text-align: center;
+}
+
+
+@media (max-width: 600px) {
+
+    .notification-popover {
+        position: fixed;
+
+        top: 64px;
+
+        right:
+                var(--space-3);
+
+        left:
+                var(--space-3);
+
+        width: auto;
+    }
+}

@@ -21,3 +21,9 @@ Thumbs.db
 
 # ===== Script chạy tay trên máy cá nhân (file tự loại mình khỏi commit) =====
 day-len-github.bat
+
+# ===== File tạm khi thiết kế (bản xem trước, công cụ impeccable, cache Python) =====
+design-preview/
+design-preview.html
+.impeccable/
+__pycache__/

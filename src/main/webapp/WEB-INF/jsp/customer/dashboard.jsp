@@ -10,13 +10,13 @@
 <head>
     <%@ include file="/WEB-INF/jsp/common/head.jspf" %>
     <title>Trang cá nhân · Super Gym</title>
-    <link rel="stylesheet" href="${pageContext.request.contextPath}/css/base.css?v=4">
-    <link rel="stylesheet" href="${pageContext.request.contextPath}/css/awning.css?v=2">
-    <link rel="stylesheet" href="${pageContext.request.contextPath}/css/weather.css?v=2">
-    <link rel="stylesheet" href="${pageContext.request.contextPath}/css/pages/customer/dashboard.css?v=4">
+    <link rel="stylesheet" href="${pageContext.request.contextPath}/css/pages/customer/dashboard.css?v=20261013c">
+    <%-- Dải điểm nhấn dùng chung kiểu với PT Dashboard (.pt-board__hero) --%>
+    <link rel="stylesheet" href="${pageContext.request.contextPath}/css/pages/pt/dashboard.css?v=20261013g">
+    <link rel="stylesheet" href="${pageContext.request.contextPath}/css/dashboard-weather.css?v=20261013d">
 </head>
 
-<body class="dock ${themeClass} weather-${weatherType}">
+<body class="dock theme-pt customer-dashboard-page customer-weather-page weather-${weatherType}">
 
 <%@ include file="/WEB-INF/jsp/common/flash-toast.jspf" %>
 
@@ -32,6 +32,11 @@
             </div>
             <c:if test="${not empty dashboard}">
                 <div class="top-right">
+                    <%-- Chuyển nền tối/sáng (common.js "Giao diện sáng / tối"); mặc định tối --%>
+                    <button type="button" class="theme-toggle" data-theme-toggle aria-pressed="false" aria-label="Chuyển sang nền sáng">
+                        <span class="theme-toggle__track" aria-hidden="true"><span class="theme-toggle__knob"></span></span>
+                        <span class="theme-toggle__label">Tối</span>
+                    </button>
                     <a class="tb-user" href="${pageContext.request.contextPath}/account" title="Cài đặt tài khoản">
                         <c:choose>
                             <c:when test="${not empty dashboard.avatar}">
@@ -50,7 +55,7 @@
             </c:if>
         </header>
 
-        <main class="content">
+        <main class="content" id="main-content" tabindex="-1">
 
             <c:if test="${not empty dashboardError}">
                 <div class="alert-banner danger" role="alert">
@@ -60,38 +65,33 @@
             </c:if>
 
             <c:if test="${not empty dashboard}">
-                <%-- Khối thời tiết dùng cùng WeatherService/API với PT Dashboard; các khối Customer bên dưới giữ nguyên. --%>
-                <c:if test="${not empty weather}">
-                    <section class="customer-weather" aria-label="Thời tiết hôm nay tại phòng gym">
-                        <div class="customer-weather__copy">
-                            <div class="customer-weather__eyebrow">
-                                <span><c:out value="${weather.cityName}" /> · <c:out value="${weather.title}" /></span>
-                                <c:if test="${weatherPreview}"><span class="customer-weather__preview">Xem trước</span></c:if>
-                            </div>
-                            <p class="customer-weather__condition">Hiện tại: <c:out value="${weather.conditionLabel}" /></p>
-                            <p class="customer-weather__advice"><c:out value="${weather.advice}" /></p>
-                        </div>
-                        <strong class="customer-weather__temperature"><c:out value="${weather.temperature}" />°</strong>
-                        <dl class="customer-weather__details">
-                            <div><dt>Cảm giác</dt><dd><c:out value="${weather.feelsLikeTemperature}" />°</dd></div>
-                            <div><dt>Thấp / cao</dt><dd><c:out value="${weather.minTemperature}" />° / <c:out value="${weather.maxTemperature}" />°</dd></div>
-                            <div><dt>Độ ẩm</dt><dd><c:out value="${weather.humidityPercent}" />%</dd></div>
-                            <div><dt>Gió</dt><dd><c:out value="${weather.windSpeedKmh}" /> km/h</dd></div>
-                            <div><dt>Khả năng mưa</dt><dd><c:out value="${weather.rainProbabilityPercent}" />%</dd></div>
-                        </dl>
-                    </section>
-                </c:if>
+                <%-- ===== Lời chào và thời tiết (cùng fragment với PT Dashboard) ===== --%>
+                <c:set var="weatherGreetingName" value="${dashboard.fullName}" />
+                <c:set var="weatherAudience" value="customer" />
+                <section class="pt-board__hero cust-hero" aria-label="Lời chào và thời tiết hôm nay">
+                    <%@ include file="/WEB-INF/jsp/common/dashboard-weather.jspf" %>
+                    <%-- Nhịp của bạn: lấy từ dữ liệu dashboard sẵn có (gói hiệu lực, buổi sắp tới) --%>
+                    <c:set var="pulseNext" value="${empty dashboard.upcomingSessions ? null : dashboard.upcomingSessions[0]}" />
+                    <dl class="pt-pulse">
+                        <div><dt>Ngày tập còn lại</dt><dd><c:out value="${empty dashboard.activeMembership ? 0 : dashboard.activeMembership.daysRemaining}" /></dd></div>
+                        <div><dt>Buổi PT kế tiếp</dt><dd><c:choose><c:when test="${not empty pulseNext}"><c:out value="${gms:formatTime(pulseNext.startTime)}" /></c:when><c:otherwise>—</c:otherwise></c:choose></dd></div>
+                        <div><dt>Buổi sắp tới</dt><dd><c:out value="${empty dashboard.upcomingSessions ? 0 : fn:length(dashboard.upcomingSessions)}" /></dd></div>
+                    </dl>
+                </section>
                 <div class="split">
                     <div class="col-main">
 
                         <%-- Status Hero (Khớp prototype 10.1.1) --%>
                         <c:set var="am" value="${dashboard.activeMembership}" />
-                        <section class="status-hero">
+                        <section class="status-hero" data-reveal>
                             <div>
                                 <c:choose>
                                     <c:when test="${not empty am}">
                                         <div class="section-label"><c:out value="${am.packageName}" /></div>
                                         <h2>Còn ${am.daysRemaining} ngày tập</h2>
+                                        <c:if test="${am.daysRemaining le 7}">
+                                            <p class="status-expiring" role="status"><i class="fa-solid fa-hourglass-half" aria-hidden="true"></i> Gói sắp hết hạn. Gia hạn tại quầy hoặc mua gói mới để không bị gián đoạn buổi tập.</p>
+                                        </c:if>
                                         <div class="status-meta">
                                             <div>
                                                 <b class="tabular"><c:out value="${gms:formatDate(am.endDate)}" /></b>
@@ -161,10 +161,10 @@
                         </c:forEach>
 
                         <%-- Panel: Buổi tập sắp tới --%>
-                        <section class="panel">
+                        <section class="panel" data-reveal>
                             <div class="panel-head">
                                 <h2>Buổi tập sắp tới</h2>
-                                <a class="btn btn-ghost btn-sm" href="${pageContext.request.contextPath}/customer/schedule">Tất cả lịch <i class="fa-solid fa-arrow-right"></i></a>
+                                <a class="btn btn-ghost btn-sm" href="${pageContext.request.contextPath}/customer/pt-sessions">Tất cả lịch <i class="fa-solid fa-arrow-right"></i></a>
                             </div>
                             <c:choose>
                                 <c:when test="${empty dashboard.upcomingSessions}">

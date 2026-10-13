@@ -48,4 +48,27 @@ public final class Session {
             return null;
         }
     }
+
+    /** Loại hủy buổi PT (Sessions.CancelType): chỉ có khi buổi Cancelled. */
+    public enum CancelType {
+        BY_PT("ByPt"), BY_CUSTOMER("ByCustomer"), GYM_CLOSED("GymClosed"), PACKAGE_EXPIRED("PackageExpired");
+        private final String dbValue;
+
+        CancelType(String dbValue) {
+            this.dbValue = dbValue;
+        }
+
+        public String getDbValue() {
+            return dbValue;
+        }
+
+        public static CancelType fromDbValue(String value) {
+            for (CancelType item : values()) {
+                if (item.dbValue.equals(value)) {
+                    return item;
+                }
+            }
+            return null;
+        }
+    }
 }

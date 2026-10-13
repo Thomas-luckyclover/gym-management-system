@@ -1,0 +1,374 @@
+@charset "UTF-8";
+/* =====================================================================
+   weather-scene.css — Cảnh thời tiết toàn trang cho PT/Customer Dashboard
+   Markup: common/weather-scene.jspf · JS: js/weather-scene.js (hạt trên canvas, parallax, chớp)
+   3 tầng xa/giữa/gần lệch theo con trỏ (--px, --py do JS ghi) tạo chiều sâu.
+   Nội dung (.app) nằm trên cảnh; card trắng giữ nguyên để dữ liệu luôn dễ đọc.
+   ===================================================================== */
+
+/* body.dock:is(...) để thắng luật nền body.dock trong common.css */
+body.dock:is(.pt-dashboard-page, .customer-dashboard-page) {
+  background: linear-gradient(180deg, var(--pt-sky-top) 0%, var(--pt-sky-bottom) 100%);
+  background-attachment: fixed;
+}
+
+:is(.pt-dashboard-page, .customer-dashboard-page) .app,
+:is(.pt-dashboard-page, .customer-dashboard-page) .main {
+  position: relative;
+  z-index: var(--z-base);
+  background: transparent;
+}
+
+/* Thanh tiêu đề kính sáng: chữ tối luôn đọc được kể cả khi trời đêm/giông */
+:is(.pt-dashboard-page, .customer-dashboard-page) .topbar {
+  background: color-mix(in srgb, var(--color-surface) 84%, transparent);
+  border-bottom-color: color-mix(in srgb, var(--color-surface) 50%, transparent);
+  color: var(--color-text);
+}
+
+/* ----- Cảnh ----- */
+.weather-scene {
+  position: fixed;
+  inset: 0;
+  z-index: 0;
+  overflow: hidden;
+  pointer-events: none;
+}
+
+.weather-scene__layer {
+  position: absolute;
+  inset: calc(-1 * var(--space-10));
+  transition: transform var(--duration-grow) var(--ease-out-expo);
+}
+
+.weather-scene__far {
+  transform: translate3d(calc(var(--px, 0) * -10px), calc(var(--py, 0) * -6px), 0);
+}
+
+.weather-scene__mid {
+  transform: translate3d(calc(var(--px, 0) * -22px), calc(var(--py, 0) * -12px), 0);
+}
+
+.weather-scene__near {
+  transform: translate3d(calc(var(--px, 0) * -40px), calc(var(--py, 0) * -20px), 0);
+}
+
+.weather-scene__canvas {
+  position: absolute;
+  inset: 0;
+  width: 100%;
+  height: 100%;
+}
+
+/* Quầng nắng / trăng góc trên phải */
+.weather-scene__glow {
+  position: absolute;
+  top: 4%;
+  right: 8%;
+  width: 46vmin;
+  height: 46vmin;
+  border-radius: var(--radius-circle);
+  background: radial-gradient(circle, var(--scene-glow) 0%, transparent 65%);
+  opacity: 0;
+  animation: scene-breathe 9s ease-in-out infinite alternate;
+}
+
+.weather-sunny .weather-scene__glow,
+.weather-hot .weather-scene__glow,
+.weather-night .weather-scene__glow {
+  opacity: 1;
+}
+
+.weather-hot .weather-scene__glow {
+  width: 62vmin;
+  height: 62vmin;
+}
+
+/* Mưa chiều hoàng hôn sau kính: đèn đường/đèn xe nhòe (bokeh) phía xa; JS vẽ giọt đọng + trượt trên kính */
+:is(.weather-rain, .weather-storm) .weather-scene__far::before {
+  content: "";
+  position: absolute;
+  inset: 0;
+  background:
+    radial-gradient(circle at 12% 78%, rgba(255, 190, 120, 0.55) 0 2.5%, transparent 6%),
+    radial-gradient(circle at 26% 70%, rgba(255, 120, 90, 0.45) 0 3%, transparent 7%),
+    radial-gradient(circle at 44% 82%, rgba(255, 220, 150, 0.5) 0 2%, transparent 5%),
+    radial-gradient(circle at 63% 74%, rgba(120, 200, 255, 0.4) 0 3.5%, transparent 8%),
+    radial-gradient(circle at 78% 84%, rgba(255, 170, 110, 0.5) 0 2.5%, transparent 6%),
+    radial-gradient(circle at 90% 68%, rgba(255, 230, 170, 0.45) 0 3%, transparent 7%),
+    radial-gradient(circle at 35% 58%, rgba(255, 150, 200, 0.3) 0 4%, transparent 9%);
+  filter: blur(var(--space-6));
+  opacity: 0.65;
+  animation: scene-bokeh 28s ease-in-out infinite alternate;
+}
+
+.weather-storm .weather-scene__far::before {
+  opacity: 0.45;
+}
+
+@keyframes scene-bokeh { to { transform: translateX(-2%) scale(1.04); opacity: 0.8; } }
+
+/* Mây: ghép nhiều vòng tròn mờ, trôi ngang chậm */
+.weather-scene__cloud {
+  position: absolute;
+  width: 44vw;
+  height: 14vw;
+  border-radius: var(--radius-pill);
+  background:
+    radial-gradient(circle at 30% 60%, var(--scene-cloud) 0 32%, transparent 33%),
+    radial-gradient(circle at 55% 40%, var(--scene-cloud) 0 38%, transparent 39%),
+    radial-gradient(circle at 75% 62%, var(--scene-cloud) 0 30%, transparent 31%);
+  filter: blur(var(--space-3));
+  opacity: 0;
+  animation: scene-drift 70s linear infinite;
+}
+
+.weather-scene__cloud--a { top: 8%; left: -10%; }
+.weather-scene__cloud--b { top: 26%; left: 40%; animation-duration: 95s; animation-delay: -40s; transform: scale(0.7); }
+.weather-scene__cloud--c { top: 58%; left: 10%; animation-duration: 55s; animation-delay: -20s; transform: scale(1.3); }
+
+:is(.weather-cloudy, .weather-rain, .weather-storm, .weather-wind, .weather-snow, .weather-sunny) .weather-scene__cloud--a,
+:is(.weather-cloudy, .weather-rain, .weather-storm, .weather-wind) .weather-scene__cloud--b {
+  opacity: 1;
+}
+
+:is(.weather-cloudy, .weather-storm) .weather-scene__cloud--c {
+  opacity: 0.6;
+}
+
+.weather-wind .weather-scene__cloud {
+  animation-duration: 28s;
+}
+
+/* Hơi nóng: lớp nhòe gợn sóng phía dưới */
+.weather-hot .weather-scene__near::after {
+  content: "";
+  position: absolute;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  height: 40%;
+  background: linear-gradient(0deg, color-mix(in srgb, var(--color-primary) 18%, transparent), transparent);
+  animation: scene-heat 3.5s ease-in-out infinite alternate;
+}
+
+/* Chớp (giông) — JS bật .is-flashing */
+.weather-scene__flash {
+  position: absolute;
+  inset: 0;
+  background: var(--scene-flash);
+  opacity: 0;
+}
+
+.weather-scene.is-flashing .weather-scene__flash {
+  animation: scene-flash 2.4s ease-in-out;
+}
+
+@keyframes scene-breathe { to { transform: scale(1.08); } }
+@keyframes scene-drift { from { translate: 0 0; } to { translate: 120vw 0; } }
+@keyframes scene-heat { from { transform: scaleY(1) skewX(0deg); opacity: 0.7; } to { transform: scaleY(1.12) skewX(2deg); opacity: 1; } }
+@keyframes scene-flash { 0%, 100% { opacity: 0; } 25% { opacity: 0.2; } 55% { opacity: 0.045; } }
+
+.weather-storm .weather-scene__flash::before {
+  content: "";
+  position: absolute;
+  top: 3%;
+  right: 12%;
+  width: 9vmin;
+  height: 36vmin;
+  background: #DFEDFF;
+  clip-path: polygon(65% 0, 29% 43%, 54% 42%, 12% 100%, 86% 32%, 59% 34%, 100% 0);
+}
+.weather-storm .weather-scene__cloud { animation-duration: 32s; }
+
+/* =====================================================================
+   CẢNH RIÊNG TỪNG KIỂU THỜI TIẾT (tầng xa ::after, tầng gần ::before)
+   ===================================================================== */
+.weather-scene__far::after,
+.weather-scene__near::before {
+  content: "";
+  position: absolute;
+  pointer-events: none;
+}
+
+/* Nắng / nóng: mặt trời + tia sáng xoay chậm */
+:is(.weather-sunny, .weather-hot) .weather-scene__far::after {
+  top: 16%;
+  right: 6%;
+  width: 34vmin;
+  aspect-ratio: 1;
+  border-radius: var(--radius-circle);
+  background:
+    radial-gradient(circle, #FFF8DC 0 22%, #FFE08A 30%, transparent 34%),
+    repeating-conic-gradient(rgba(255, 244, 200, 0.55) 0 6deg, transparent 6deg 18deg);
+  mask: radial-gradient(circle, #000 34%, transparent 72%);
+  animation: fx-spin-slow 80s linear infinite;
+}
+
+.weather-hot .weather-scene__far::after {
+  width: 44vmin;
+  background:
+    radial-gradient(circle, #FFF1D0 0 20%, #FF9F43 30%, transparent 34%),
+    repeating-conic-gradient(rgba(255, 200, 140, 0.55) 0 6deg, transparent 6deg 18deg);
+}
+
+/* Nhiều mây: dải mây dày phía dưới */
+.weather-cloudy .weather-scene__far::after {
+  left: -5%;
+  right: -5%;
+  bottom: -6%;
+  height: 34%;
+  background:
+    radial-gradient(ellipse at 10% 60%, rgba(255, 255, 255, 0.55) 0 30%, transparent 31%),
+    radial-gradient(ellipse at 35% 40%, rgba(255, 255, 255, 0.5) 0 34%, transparent 35%),
+    radial-gradient(ellipse at 62% 62%, rgba(255, 255, 255, 0.55) 0 30%, transparent 31%),
+    radial-gradient(ellipse at 88% 45%, rgba(255, 255, 255, 0.5) 0 32%, transparent 33%);
+  filter: blur(var(--space-4));
+}
+
+/* Mưa / giông: thành phố mờ phía sau kính */
+:is(.weather-rain, .weather-storm) .weather-scene__near::before {
+  left: 0;
+  right: 0;
+  bottom: 0;
+  height: 26%;
+  background:
+    linear-gradient(rgba(10, 12, 30, 0.75), rgba(10, 12, 30, 0.75)) 4% 100% / 7% 70% no-repeat,
+    linear-gradient(rgba(10, 12, 30, 0.7), rgba(10, 12, 30, 0.7)) 13% 100% / 5% 92% no-repeat,
+    linear-gradient(rgba(10, 12, 30, 0.75), rgba(10, 12, 30, 0.75)) 21% 100% / 9% 55% no-repeat,
+    linear-gradient(rgba(10, 12, 30, 0.7), rgba(10, 12, 30, 0.7)) 34% 100% / 6% 80% no-repeat,
+    linear-gradient(rgba(10, 12, 30, 0.75), rgba(10, 12, 30, 0.75)) 47% 100% / 8% 62% no-repeat,
+    linear-gradient(rgba(10, 12, 30, 0.7), rgba(10, 12, 30, 0.7)) 60% 100% / 5% 96% no-repeat,
+    linear-gradient(rgba(10, 12, 30, 0.75), rgba(10, 12, 30, 0.75)) 72% 100% / 10% 58% no-repeat,
+    linear-gradient(rgba(10, 12, 30, 0.7), rgba(10, 12, 30, 0.7)) 86% 100% / 6% 84% no-repeat,
+    linear-gradient(rgba(10, 12, 30, 0.75), rgba(10, 12, 30, 0.75)) 97% 100% / 7% 66% no-repeat;
+  filter: blur(var(--space-4));
+  opacity: 0.35;
+}
+
+/* Lớp hơi nước chỉ phủ cảnh; nội dung ứng dụng nằm ở tầng riêng phía trên. */
+:is(.weather-rain, .weather-storm) .weather-scene__near::after {
+  content: "";
+  position: absolute;
+  inset: 0;
+  background:
+    radial-gradient(ellipse at 15% 20%, rgba(163, 188, 205, 0.14), transparent 55%),
+    radial-gradient(ellipse at 85% 65%, rgba(133, 164, 184, 0.12), transparent 60%),
+    linear-gradient(180deg, rgba(121, 150, 171, 0.06), rgba(19, 33, 48, 0.16));
+}
+
+.weather-storm .weather-scene__far::after {
+  top: -10%;
+  left: -10%;
+  right: -10%;
+  height: 46%;
+  background:
+    radial-gradient(ellipse at 20% 70%, rgba(20, 18, 40, 0.85) 0 32%, transparent 33%),
+    radial-gradient(ellipse at 50% 55%, rgba(30, 26, 56, 0.85) 0 36%, transparent 37%),
+    radial-gradient(ellipse at 80% 70%, rgba(20, 18, 40, 0.85) 0 32%, transparent 33%);
+  filter: blur(var(--space-5));
+}
+
+/* Tuyết: dãy núi tuyết */
+.weather-snow .weather-scene__far::after {
+  left: 0;
+  right: 0;
+  bottom: 0;
+  height: 32%;
+  background: linear-gradient(180deg, #FFFFFF 0%, #C9DDF2 100%);
+  clip-path: polygon(0 100%, 0 55%, 12% 20%, 22% 48%, 34% 8%, 48% 52%, 60% 22%, 72% 50%, 84% 14%, 100% 46%, 100% 100%);
+  opacity: 0.9;
+}
+
+.weather-snow .weather-scene__near::before {
+  left: 0;
+  right: 0;
+  bottom: 0;
+  height: 18%;
+  background: linear-gradient(180deg, #E7F1FC 0%, #FFFFFF 100%);
+  clip-path: polygon(0 100%, 0 40%, 18% 10%, 32% 45%, 50% 15%, 66% 50%, 82% 20%, 100% 55%, 100% 100%);
+}
+
+/* Gió: đồi cỏ phía dưới (JS cho lá bay) */
+.weather-wind .weather-scene__far::after {
+  left: -10%;
+  right: -10%;
+  bottom: -14%;
+  height: 34%;
+  border-radius: 50% 50% 0 0 / 100% 100% 0 0;
+  background: linear-gradient(180deg, #2BA38A, #136B5B);
+  opacity: 0.85;
+}
+
+.weather-wind .weather-scene__near::before {
+  left: 30%;
+  right: -20%;
+  bottom: -12%;
+  height: 24%;
+  border-radius: 50% 50% 0 0 / 100% 100% 0 0;
+  background: linear-gradient(180deg, #1E8C74, #0D5246);
+}
+
+/* Đêm: trăng khuyết + cực quang uốn lượn */
+.weather-night .weather-scene__far::after {
+  top: 9%;
+  right: 14%;
+  width: 14vmin;
+  aspect-ratio: 1;
+  border-radius: var(--radius-circle);
+  box-shadow: inset -3.2vmin 1.6vmin 0 0 #FFF4D6, 0 0 6vmin rgba(255, 244, 214, 0.35);
+}
+
+.weather-night .weather-scene__mid::after {
+  content: "";
+  position: absolute;
+  left: -10%;
+  right: -10%;
+  top: 14%;
+  height: 26%;
+  background: linear-gradient(90deg, transparent, rgba(60, 255, 170, 0.30), rgba(40, 220, 200, 0.34), rgba(80, 200, 255, 0.26), transparent);
+  filter: blur(var(--space-6));
+  transform: skewY(-6deg);
+  animation: scene-aurora 14s ease-in-out infinite alternate;
+}
+
+@keyframes fx-spin-slow { to { transform: rotate(360deg); } }
+@keyframes scene-aurora { from { transform: skewY(-6deg) translateX(-4%); opacity: 0.7; } to { transform: skewY(-2deg) translateX(4%); opacity: 1; } }
+
+/* =====================================================================
+   CARD NỘI DUNG TRÊN NỀN THỜI TIẾT: viền + nền nhấn trung tính cố định
+   (nền trời đổi màu theo thời tiết; nếu viền cũng đổi theo sẽ lệch tông giữa các card)
+   ===================================================================== */
+:is(.pt-dashboard-page, .customer-dashboard-page) .content > :not(.wx-hero) {
+  --color-primary-border: var(--color-border);
+  --color-primary-tint: var(--color-surface-muted);
+  --color-warning-tint: var(--color-surface);
+}
+
+/* Bỏ viền trái dày: mọi mục danh sách dùng viền 1px đều nhau */
+:is(.pt-dashboard-page, .customer-dashboard-page) .content [class*="pt-"],
+:is(.pt-dashboard-page, .customer-dashboard-page) .content .panel,
+:is(.pt-dashboard-page, .customer-dashboard-page) .content .data-item {
+  border-left-width: var(--border-width);
+}
+
+/* Nút phụ trong lịch (Xem tùy chọn lịch): trung tính, hover mới tô màu chủ đạo */
+:is(.pt-dashboard-page, .customer-dashboard-page) .pt-session-action {
+  border-color: var(--color-border-strong);
+  background: var(--color-surface);
+  color: var(--color-text);
+}
+
+:is(.pt-dashboard-page, .customer-dashboard-page) .pt-session-action:hover,
+:is(.pt-dashboard-page, .customer-dashboard-page) .pt-session-action:focus-visible {
+  border-color: var(--color-primary);
+  background: var(--color-primary);
+  color: var(--color-on-primary);
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .weather-scene * {
+    animation: none !important;
+    transition: none !important;
+  }
+}

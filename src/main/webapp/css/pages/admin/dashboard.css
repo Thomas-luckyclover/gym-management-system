@@ -1,283 +1,3 @@
-/* ===== Khung Admin + sidebar dùng layout-admin.jspf ===== */
-body.dock {
-    --sidebar-width: var(--layout-sidebar-width);
-}
-
-.dock .app {
-    display: block;
-    min-height: 100vh;
-    background: var(--color-bg);
-}
-
-.dock .dockwrap {
-    position: fixed;
-    z-index: 120;
-    top: 0;
-    bottom: 0;
-    left: 0;
-    width: 0;
-}
-
-.dock .sidebar {
-    position: absolute;
-    top: 0;
-    left: 0;
-    display: flex;
-    flex-direction: column;
-    width: var(--sidebar-width);
-    height: 100vh;
-    padding: var(--space-5) var(--space-4) var(--space-4);
-    overflow-y: auto;
-    background: var(--color-surface-inverse);
-    color: var(--color-text-inverse-soft);
-    transform: translateX(calc(-1 * var(--sidebar-width)));
-    transition: transform var(--duration-slower) var(--ease-standard);
-    box-shadow: var(--shadow-drawer);
-}
-
-.dock .dockwrap:hover .sidebar,
-.dock .dockwrap:focus-within .sidebar,
-.dock .dockwrap.is-open .sidebar {
-    transform: none;
-}
-
-.dock .dock-handle {
-    position: absolute;
-    top: 50%;
-    left: 0;
-    display: grid;
-    place-items: center;
-    width: 28px;
-    height: 72px;
-    border: 0;
-    border-radius: 0 var(--radius-md) var(--radius-md) 0;
-    background: var(--color-primary);
-    color: var(--color-on-primary);
-    cursor: pointer;
-    transform: translateY(-50%);
-    box-shadow: var(--shadow-card);
-    transition: left var(--duration-slower) var(--ease-standard), background var(--duration-fast) var(--ease-standard);
-}
-
-.dock .dockwrap:hover .dock-handle,
-.dock .dockwrap:focus-within .dock-handle,
-.dock .dockwrap.is-open .dock-handle {
-    left: var(--sidebar-width);
-}
-
-.dock .dock-handle:hover {
-    background: var(--color-primary-hover);
-}
-
-.dock .dock-handle svg {
-    width: 12px;
-    height: 12px;
-    fill: none;
-    stroke: currentColor;
-    stroke-width: 2.5;
-    stroke-linecap: round;
-    stroke-linejoin: round;
-    transition: transform var(--duration-slower) var(--ease-standard);
-}
-
-.dock .dockwrap:hover .dock-handle svg,
-.dock .dockwrap.is-open .dock-handle svg {
-    transform: rotate(180deg);
-}
-
-.dock .brand {
-    display: block;
-    padding: var(--space-0) var(--space-2);
-    margin-bottom: var(--space-7);
-}
-
-.dock .brand-name {
-    color: var(--color-surface);
-    font-family: var(--font-display);
-    font-size: var(--font-size-xl);
-    font-weight: var(--font-weight-extrabold);
-    line-height: var(--line-height-tight);
-    letter-spacing: var(--letter-spacing-tight);
-    text-transform: uppercase;
-}
-
-.dock .brand-role {
-    margin-top: var(--space-1);
-    color: var(--color-primary-border);
-    font-size: var(--font-size-xs);
-    font-weight: var(--font-weight-semibold);
-    letter-spacing: var(--letter-spacing-wide);
-    text-transform: uppercase;
-}
-
-.dock .nav {
-    display: flex;
-    flex: none;
-    flex-direction: column;
-    gap: var(--space-1);
-    padding: 0;
-}
-
-.dock .nav-group {
-    margin: var(--space-5) var(--space-2) var(--space-1);
-    color: var(--color-text-muted);
-    font-size: var(--font-size-xs);
-    font-weight: var(--font-weight-medium);
-    letter-spacing: var(--letter-spacing-wide);
-    text-transform: uppercase;
-}
-
-.dock .nav-group:first-child {
-    margin-top: 0;
-}
-
-.dock .nav-link {
-    display: flex;
-    align-items: center;
-    gap: var(--space-2-5);
-    padding: var(--space-2) var(--space-3);
-    border-radius: var(--radius-sm);
-    color: var(--color-text-inverse-soft);
-    text-decoration: none;
-    font-size: var(--font-size-md);
-}
-
-.dock .nav-link svg {
-    width: 18px;
-    height: 18px;
-    flex: none;
-    fill: none;
-    stroke: currentColor;
-    stroke-width: 1.7;
-    stroke-linecap: round;
-    stroke-linejoin: round;
-    opacity: .75;
-}
-
-.dock .nav-link:hover {
-    color: var(--color-surface);
-    background: var(--color-surface-inverse-soft);
-    text-decoration: none;
-}
-
-.dock .nav-link.active,
-.dock .nav-link[aria-current="page"] {
-    background: var(--color-primary);
-    color: var(--color-on-primary);
-    font-weight: var(--font-weight-semibold);
-}
-
-.dock .nav-link.active svg,
-.dock .nav-link[aria-current="page"] svg {
-    opacity: 1;
-}
-
-.dock .side-foot {
-    margin-top: auto;
-    padding-top: var(--space-5);
-    border-top: var(--border-width) solid var(--color-border-inverse);
-}
-
-.dock .logout {
-    display: block;
-    width: 100%;
-    padding: var(--space-2) var(--space-3);
-    border-radius: var(--radius-sm);
-    color: var(--color-text-muted);
-    text-decoration: none;
-}
-
-.dock .logout:hover {
-    color: var(--color-text-inverse);
-    background: var(--color-surface-inverse-soft);
-    text-decoration: none;
-}
-
-/* ===== Topbar và vùng nội dung ===== */
-.dock .main {
-    min-height: 100vh;
-}
-
-.dock .topbar {
-    position: sticky;
-    z-index: 40;
-    top: 0;
-    display: flex;
-    align-items: center;
-    gap: var(--space-4);
-    padding: var(--space-3-5) max(var(--space-8), calc((100% - var(--layout-content-width)) / 2)) var(--space-3-5) max(var(--space-12), calc((100% - var(--layout-content-width)) / 2));
-    border-bottom: var(--border-width) solid var(--color-border);
-    background: var(--color-surface);
-}
-
-.dock .tb-left {
-    min-width: 0;
-}
-
-.dock .tb-title {
-    margin: 0;
-    color: var(--color-text);
-    font-family: var(--font-heading);
-    font-size: var(--font-size-lg);
-    font-weight: var(--font-weight-bold);
-    letter-spacing: var(--letter-spacing-normal);
-    text-transform: uppercase;
-}
-
-.dock .top-right {
-    display: flex;
-    align-items: center;
-    flex: none;
-    gap: var(--space-3-5);
-    margin-left: auto;
-}
-
-.dock .tb-user {
-    display: flex;
-    align-items: center;
-    gap: var(--space-3);
-    padding: var(--space-1-5) var(--space-2) var(--space-1-5) var(--space-4);
-    border-left: var(--border-width) solid var(--color-border);
-    border-radius: var(--radius-sm);
-    color: var(--color-text);
-    text-decoration: none;
-}
-
-.dock .tb-user:hover {
-    background: var(--color-primary-tint);
-    text-decoration: none;
-}
-
-.dock .tb-user .avatar {
-    display: grid;
-    place-items: center;
-    width: calc(var(--space-6) + var(--space-1));
-    height: calc(var(--space-6) + var(--space-1));
-    border-radius: var(--radius-circle);
-    background: var(--color-primary);
-    color: var(--color-on-primary);
-    font-family: var(--font-display);
-    font-size: var(--font-size-sm);
-    font-weight: var(--font-weight-bold);
-}
-
-.dock .tb-user b {
-    display: block;
-    font-size: var(--font-size-sm);
-    font-weight: var(--font-weight-semibold);
-    line-height: var(--line-height-tight);
-}
-
-.dock .tb-user small {
-    color: var(--color-text-soft);
-    font-size: var(--font-size-xs);
-}
-
-.dock .content {
-    width: 100%;
-    padding: var(--space-7) max(var(--space-8), calc((100% - var(--layout-content-width)) / 2)) var(--space-12) max(var(--space-12), calc((100% - var(--layout-content-width)) / 2));
-}
-
 /* ===== Đầu báo cáo và bộ lọc ===== */
 .report-head {
     display: grid;
@@ -390,13 +110,19 @@ body.dock {
     gap: var(--space-4);
 }
 
+/* Bảng điểm 4 chỉ số: nền đen liền khối, ô đầu tô màu chủ đạo, số lật kiểu bảng giờ tàu */
+/* Ô rộng tối thiểu 200px, không đủ chỗ thì tự xuống hàng và ô hàng dưới giãn lấp kín;
+   vạch chia = khe 1px lộ nền vạch (đúng ở mọi cách xếp hàng) */
 .metric-grid {
-    display: grid;
-    grid-template-columns: repeat(4, minmax(0, 1fr));
-    gap: var(--space-3);
+    display: flex;
+    flex-wrap: wrap;
+    gap: var(--border-width);
+    overflow: hidden;
+    border-radius: var(--radius-md);
+    background: var(--color-board-line);
+    box-shadow: var(--shadow-lift);
 }
 
-.metric-card,
 .report-card {
     border: var(--border-width) solid var(--color-border);
     border-radius: var(--radius-md);
@@ -407,33 +133,51 @@ body.dock {
     display: grid;
     align-content: start;
     gap: var(--space-2);
-    padding: var(--space-4);
+    flex: 1 1 200px;
+    min-width: 0;
+    padding: var(--space-4-5) var(--space-5);
+    background: var(--color-board);
+    color: var(--color-text);
+    /* Cỡ số co theo bề rộng ô (đơn vị cqi) */
+    container-type: inline-size;
 }
 
+
+
 .metric-card-primary {
-    border-color: var(--color-primary-border);
-    background: var(--color-primary-tint);
+    background: var(--color-primary);
+    border-right-color: transparent;
 }
 
 .metric-label {
-    color: var(--color-text-soft);
+    color: var(--color-text-muted);
     font-size: var(--font-size-sm);
     font-weight: var(--font-weight-semibold);
 }
 
+.metric-card-primary .metric-label,
+.metric-card-primary .metric-note {
+    color: color-mix(in srgb, var(--color-on-primary) 82%, transparent);
+}
+
 .metric-value {
     color: var(--color-text);
-    font-family: var(--font-numeric);
-    font-size: var(--font-size-2xl);
-    font-weight: var(--font-weight-bold);
+    font-family: var(--font-heading);
+    font-variant-numeric: tabular-nums;
+    /* 10cqi: "999.999.999 ₫" vẫn vừa ô 200px, không bị cắt */
+    font-size: clamp(var(--font-size-lg), 11cqi, 3.25rem);
+    font-weight: var(--font-weight-extrabold);
+    letter-spacing: var(--letter-spacing-tight);
     line-height: var(--line-height-tight);
+    white-space: nowrap;
 }
 
 .metric-note {
-    color: var(--color-text-soft);
+    color: var(--color-text-muted);
     font-size: var(--font-size-xs);
     line-height: var(--line-height-relaxed);
 }
+
 
 .report-stack,
 .audit-detail-grid {
@@ -495,7 +239,8 @@ body.dock {
 }
 
 .tabular {
-    font-family: var(--font-numeric);
+    font-family: var(--font-heading);
+    font-variant-numeric: tabular-nums;
     font-variant-numeric: tabular-nums;
 }
 
@@ -579,10 +324,6 @@ body.dock {
 
 /* ===== Responsive ===== */
 @media (max-width: 1000px) {
-    .metric-grid {
-        grid-template-columns: repeat(2, minmax(0, 1fr));
-    }
-
     .audit-summary-grid {
         grid-template-columns: 1fr;
     }
@@ -608,8 +349,8 @@ body.dock {
         flex-direction: column;
     }
 
-    .metric-grid {
-        grid-template-columns: 1fr;
+    .metric-card {
+        flex-basis: 150px;
     }
 }
 .report-date-control {
@@ -655,4 +396,19 @@ body.dock {
     height: var(--space-1);
     opacity: 0;
     pointer-events: none;
+}
+
+/* Bộ lọc dùng được bằng bàn phím; chỉ số đồng nhất với báo cáo quản lý. */
+.report-date-input:focus-visible {
+  outline: var(--focus-outline-width) solid var(--brand-aqua);
+  outline-offset: var(--focus-outline-offset);
+}
+.dock .metric-grid { display: grid; grid-template-columns: repeat(4, minmax(0, 1fr)); }
+.dock .metric-card { padding: var(--space-5); }
+.dock .metric-value { font-size: var(--font-size-2xl); }
+@media (max-width: 1279px) {
+  .dock .metric-grid { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+}
+@media (max-width: 480px) {
+  .dock .metric-grid { grid-template-columns: minmax(0, 1fr); }
 }

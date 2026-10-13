@@ -1,56 +1,6 @@
 document.addEventListener("DOMContentLoaded", function () {
 
-    const dock = document.getElementById("dock");
-    const dockHandle = document.getElementById("dockHandle");
-
-    if (!dock || !dockHandle) {
-        return;
-    }
-
-    function handleDockToggle() {
-
-        const isOpen =
-            dock.classList.toggle("is-open");
-
-        dockHandle.setAttribute(
-            "aria-expanded",
-            String(isOpen)
-        );
-
-        dockHandle.setAttribute(
-            "aria-label",
-            isOpen
-                ? "Đóng menu điều hướng"
-                : "Mở menu điều hướng"
-        );
-    }
-
-    dockHandle.addEventListener("click", handleDockToggle);
-
-    function handleEscapeKeydown(event) {
-
-        if (event.key !== "Escape") {
-            return;
-        }
-
-        if (!dock.classList.contains("is-open")) {
-            return;
-        }
-
-        dock.classList.remove("is-open");
-
-        dockHandle.setAttribute(
-            "aria-expanded",
-            "false"
-        );
-
-        dockHandle.setAttribute(
-            "aria-label",
-            "Mở menu điều hướng"
-        );
-    }
-
-    document.addEventListener("keydown", handleEscapeKeydown);
+    // Sidebar dock mở/đóng đã chuyển sang common.js (initDock) — dùng chung mọi khu
 
     const avatarFile =
         document.getElementById("avatarFile");

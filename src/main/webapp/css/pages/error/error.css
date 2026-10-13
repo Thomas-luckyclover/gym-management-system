@@ -87,7 +87,7 @@
 .err-plate path,
 .err-plate rect {
   fill: none;
-  stroke: var(--color-lime);
+  stroke: var(--brand-aqua);
   stroke-linecap: round;
   stroke-linejoin: round;
 }
@@ -106,7 +106,7 @@
 .err-plate .hole,
 .err-barbell .hole,
 .err-barbell .bar {
-  fill: var(--color-lime);
+  fill: var(--brand-aqua);
   stroke: none;
 }
 
@@ -116,9 +116,9 @@
 
 .err-plate .label,
 .err-barbell .label {
-  fill: var(--color-lime);
+  fill: var(--brand-aqua);
   font-family: var(--font-display);
-  font-size: 11px;
+  font-size: 13px;
   font-weight: var(--font-weight-extrabold);
   letter-spacing: 0.08em;
   text-anchor: middle;
@@ -179,7 +179,7 @@
 }
 
 .err-doodle .err-fill {
-  fill: var(--color-lime);
+  fill: var(--brand-aqua);
   stroke: none;
 }
 
@@ -187,7 +187,7 @@
   top: 12%;
   left: 8%;
   width: 150px;
-  stroke: var(--color-lime);
+  stroke: var(--brand-aqua);
   opacity: 0.7;
   animation: err-float 5s ease-in-out infinite;
 }
@@ -201,7 +201,7 @@
 }
 
 .err-kettlebell .err-hint {
-  stroke: var(--color-lime);
+  stroke: var(--brand-aqua);
 }
 
 .err-flower--big {
@@ -228,7 +228,7 @@
   bottom: 7%;
   width: 190px;
   transform: translateX(-50%);
-  stroke: var(--color-lime);
+  stroke: var(--brand-aqua);
   opacity: 0.5;
 }
 
@@ -260,7 +260,7 @@
 .err-sparkle {
   position: absolute;
   width: 22px;
-  fill: var(--color-lime);
+  fill: var(--brand-aqua);
   animation: err-twinkle 2.8s ease-in-out infinite;
 }
 
@@ -281,7 +281,7 @@
 
 .err-dot--1 { top: 32%; left: 20%; }
 .err-dot--2 { top: 60%; right: 14%; animation-delay: 1.5s; }
-.err-dot--3 { bottom: 30%; left: 40%; background: var(--color-lime); animation-delay: 3s; }
+.err-dot--3 { bottom: 30%; left: 40%; background: var(--brand-aqua); animation-delay: 3s; }
 
 /* ---------- Keyframes ---------- */
 @keyframes err-rise {
@@ -332,7 +332,61 @@
   .err-title { font-size: var(--font-size-3xl); }
 }
 
+/* Bỏ bớt nét trang trí mềm (hoa) để trang lỗi chắc hơn; giữ tạ, nét vẽ và Pumpy */
+.err-flower {
+  display: none;
+}
+
+/* ---------- Pumpy (error/pumpy.jspf): 404 ngó nghiêng, 403 giơ tay chặn, 500 choáng ---------- */
+.err-pumpy {
+  display: block;
+  width: clamp(110px, 28vw, 150px);
+  height: auto;
+  margin: var(--space-2) auto var(--space-1);
+  overflow: visible;
+}
+
+.err-pumpy__body {
+  transform-box: view-box;
+  transform-origin: 58px 88px;
+  animation: err-pumpy-bob 3.2s ease-in-out infinite;
+}
+
+.err-pumpy--lost .err-pumpy__eyes { animation: err-pumpy-look 4s ease-in-out infinite; }
+.err-pumpy--lost .err-pumpy__q { transform-box: fill-box; transform-origin: 50% 100%; animation: err-pumpy-q 2s ease-in-out infinite; }
+.err-pumpy--stop .err-pumpy__paw { transform-box: fill-box; transform-origin: 50% 100%; animation: err-pumpy-wave 1.6s ease-in-out infinite; }
+.err-pumpy--dizzy .err-pumpy__stars { transform-box: view-box; transform-origin: 60px 24px; animation: err-pumpy-orbit 3s linear infinite; }
+
+@keyframes err-pumpy-bob {
+  0%, 100% { transform: translateY(0) scale(1, 1); }
+  50% { transform: translateY(-3px) scale(1.02, 0.98); }
+}
+
+@keyframes err-pumpy-look {
+  0%, 40%, 100% { transform: translateX(0); }
+  50%, 85% { transform: translateX(-5px); }
+}
+
+@keyframes err-pumpy-q {
+  0%, 100% { transform: rotate(0deg); }
+  50% { transform: rotate(12deg); }
+}
+
+@keyframes err-pumpy-wave {
+  0%, 100% { transform: rotate(0deg); }
+  50% { transform: rotate(-10deg); }
+}
+
+@keyframes err-pumpy-orbit {
+  to { transform: rotate(360deg); }
+}
+
+
 @media (prefers-reduced-motion: reduce) {
+  .err-pumpy * {
+    animation: none !important;
+  }
+
   .err-card,
   .err-plate,
   .err-barbell,

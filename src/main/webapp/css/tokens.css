@@ -70,7 +70,8 @@
   /* avatar, chấm trạng thái */
   --radius-circle: 50%;
   /* hình dạng nút: khu Guest/Hội viên/Nhân viên bo tròn 2 đầu như prototype */
-  --radius-button: var(--radius-pill);
+  /* Nút trang khách bo vừa (12px): mềm hơn góc vuông nhưng không còn dạng viên thuốc */
+  --radius-button: var(--radius-md);
 
   /* ===== 3. CHỮ ===== */
   /* Montserrat: tiêu đề lớn, nút CTA, số liệu */
@@ -83,18 +84,18 @@
   --font-numeric: tabular-nums;
 
   /* Cỡ chữ (1rem = 16px) */
-  /* 11px — tag spec, nhãn siêu nhỏ */
-  --font-size-2xs: 0.6875rem;
-  /* 12px — chú thích, header bảng, badge */
-  --font-size-xs: 0.75rem;
-  /* 13px — lỗi dưới ô nhập, nút nhỏ, breadcrumb */
-  --font-size-sm: 0.8125rem;
-  /* 14px — nội dung phụ, nội dung chính khu Manager/Admin */
-  --font-size-md: 0.875rem;
-  /* 15px — nội dung chính khu Guest/Hội viên/Nhân viên */
-  --font-size-base: 0.9375rem;
-  /* 17px — tiêu đề card, đoạn dẫn */
-  --font-size-lg: 1.0625rem;
+  /* Sàn chữ 13px: không dùng chữ nhỏ hơn (đọc được khi chiếu máy chiếu). 2xs giữ tên cho code cũ, bằng xs */
+  --font-size-2xs: 0.8125rem;
+  /* 13px — chú thích, header bảng, badge */
+  --font-size-xs: 0.8125rem;
+  /* 14px — lỗi dưới ô nhập, nút nhỏ, breadcrumb, nội dung phụ */
+  --font-size-sm: 0.875rem;
+  /* 15px — nội dung phụ dài, nội dung bảng khu Manager/Admin */
+  --font-size-md: 0.9375rem;
+  /* 16px — nội dung chính mọi khu */
+  --font-size-base: 1rem;
+  /* 18px — tiêu đề card, đoạn dẫn */
+  --font-size-lg: 1.125rem;
   /* 20px — tiêu đề khối nhỏ */
   --font-size-xl: 1.25rem;
   /* 24px — tiêu đề trang */
@@ -113,6 +114,8 @@
   --font-weight-semibold: 600;
   --font-weight-bold: 700;
   --font-weight-extrabold: 800;
+  /* Tiêu đề lớn kiểu áp phích thể thao: Montserrat 900 nghiêng */
+  --font-weight-black: 900;
 
   --line-height-none: 1;
   /* tiêu đề */
@@ -124,8 +127,8 @@
   /* bài viết blog dài */
   --line-height-relaxed: 1.7;
 
-  --letter-spacing-tighter: -0.03em;
-  --letter-spacing-tight: -0.02em;
+  --letter-spacing-tighter: 0;
+  --letter-spacing-tight: 0;
   --letter-spacing-normal: 0;
   --letter-spacing-wide: 0.04em;
   /* chữ IN HOA nhỏ: eyebrow, header bảng */
@@ -211,8 +214,9 @@
      - Vàng chanh (lime) chỉ dùng trên nền đen, hoặc làm mảng nhỏ đi với chữ đen; không bao giờ làm màu chữ trên nền trắng. */
 
   /* Màu thương hiệu của theme */
-  --color-primary: #A9762C;
-  --color-primary-hover: #8F6121;
+  /* Vàng nâu đậm hơn để chữ màu chủ đạo đạt 4.5:1 trên nền trắng/kem */
+  --color-primary: #906425;
+  --color-primary-hover: #7A5520;
   --color-primary-tint: #F6EFE2;
   --color-primary-border: #D9C4A0;
   /* chữ/icon đặt trên nền primary */
@@ -239,7 +243,7 @@
   /* Chữ */
   --color-text: #23221F;
   --color-text-soft: #6B6960;
-  --color-text-muted: #8F8B81;
+  --color-text-muted: #706C65;
   --color-text-disabled: #B8B4AA;
   --color-text-inverse: #F3F1EC;
   --color-text-inverse-soft: #C9C5BC;
@@ -321,7 +325,7 @@
 
 /* Guest nền sáng — chính là giá trị mặc định ở :root, khai báo để JSP ghi rõ theme đang dùng */
 .theme-guest {
-  --color-primary: #A9762C;
+  --color-primary: #906425;
 }
 
 /* Guest nền đen · Vàng chanh — trang chủ và blog */
@@ -338,7 +342,7 @@
   --color-surface-hover: #181716;
   --color-text: #F3F1EC;
   --color-text-soft: #A09C93;
-  --color-text-muted: #79766F;
+  --color-text-muted: #828079;
   --color-border: rgba(255, 255, 255, 0.11);
   --color-border-strong: rgba(255, 255, 255, 0.2);
   --color-link: var(--color-lime);
@@ -347,331 +351,380 @@
   color-scheme: dark;
 }
 
-/* Hội viên · Nâu đất (Umber) */
-.theme-member {
-  --color-primary: #6B4A35;
-  --color-primary-hover: #503628;
-  --color-primary-tint: #F1EAE3;
-  --color-primary-border: #D4C4B4;
-  --color-accent-ink: #23221F;
-  --color-bg: #FAF8F6;
-  --color-surface-muted: #EFEBE3;
-  --color-surface-hover: #F4F0EA;
-  --color-text: #23221F;
-  --color-text-soft: #6E655D;
-  --color-border: #E5DED7;
-  --color-border-strong: #D8BFA6;
-  --color-success: #2F7A50;
-  --color-success-tint: #EAF3ED;
-  --color-success-border: #C5DECF;
-  --color-info: #3A6291;
-  --color-info-tint: #EDF1F6;
-  --color-info-border: #C8D6E6;
-  --color-warning: #B07D18;
-  --color-warning-tint: #FAF3E2;
-  --color-warning-border: #E6D4A6;
-  --color-danger: #A83232;
-  --color-danger-hover: #8F2A2A;
-  --color-danger-tint: #F9EAEA;
-  --color-danger-border: #E8C4C4;
-  --shadow-button-primary: 0 8px 20px -12px rgba(107, 74, 53, 0.8);
-}
-
-/* Nhân viên (PT, Lễ tân) · Xanh rêu đá (Slate Pine) */
-.theme-staff {
-  --color-primary: #3D6B5C;
-  --color-primary-hover: #2A4D42;
-  /* be-xám canvas, cố ý không pha từ primary */
-  --color-primary-tint: #EAE7DD;
-  /* nâu-xám, lệch trục khỏi xanh */
-  --color-primary-border: #A89A85;
-  /* xanh đen thay cho đen thuần */
-  --color-accent-ink: #1F3830;
-  /* pill phụ, avatar dùng chung 1 màu cho mọi người */
-  --color-tag: #B8CFC5;
-  --color-bg: #F6F4EE;
-  --color-surface-muted: #EFEBE3;
-  --color-surface-hover: #F1EEE6;
-  --color-text: #222624;
-  --color-text-soft: #65706B;
-  --color-border: #D8D2C4;
-  --color-border-strong: #C4BCAB;
-  --color-success: #2F7A50;
-  --color-success-tint: #E9F2EC;
-  --color-success-border: #C2DCCD;
-  --color-info: #3A6291;
-  --color-info-tint: #ECF1F6;
-  --color-info-border: #C8D6E6;
-  --color-warning: #A5760F;
-  --color-warning-tint: #F8F2E0;
-  --color-warning-border: #E0CFA2;
-  --color-danger: #A13A3A;
-  --color-danger-hover: #873030;
-  --color-danger-tint: #F7EBEB;
-  --color-danger-border: #E4C5C5;
-  --shadow-button-primary: 0 8px 20px -12px rgba(61, 107, 92, 0.8);
-}
-
-/* PT · Xanh xám như mẫu đã chốt; chỉ áp dụng trang PT, không đổi màu Lễ tân. */
-.theme-pt {
-  --color-primary: #4A6873;
-  --color-primary-hover: #344F5B;
-  --color-primary-tint: #E7EFF0;
-  --color-primary-border: #B8CBD0;
-  --color-on-primary: #FFFFFF;
-  --color-accent-ink: #263E44;
-  --color-bg: #F2F5F2;
-  --color-surface: #FFFEFA;
-  --color-surface-muted: #F1F3EF;
-  --color-surface-hover: #E8EFED;
-  --color-text: #243239;
-  --color-text-soft: #5D706F;
-  --color-border: #D6DEDA;
-  --color-border-strong: #B9C9C6;
-  --color-surface-inverse: #344F5B;
-  --color-surface-inverse-soft: #2A434E;
-  --color-text-inverse: #F8FAF8;
-  --color-text-inverse-soft: #D8E5E4;
-  --shadow-button-primary: 0 8px 20px -12px rgba(74, 104, 115, 0.45);
-}
-
-/* PT Dashboard: bảng màu thời tiết chỉ tác động trang /pt/dashboard.
-   Nền, bạt, header, nút và card cùng đọc các biến này để không lệch tông. */
-.pt-dashboard-page {
-  --color-primary: #2F5D50;
-  --color-primary-hover: #21483E;
-  --color-primary-tint: #E8F2EB;
-  --color-primary-border: #B8CDBF;
-  --color-on-primary: #FFFFFF;
-  --color-accent-ink: #1F3830;
-  --color-bg: #FBF6EC;
-  --color-surface: #FFFEFA;
-  --color-surface-muted: #F7F3EB;
-  --color-surface-hover: #F1EBDD;
-  --color-text: #1F2A26;
-  --color-text-soft: #52665C;
-  --color-border: #E2DCCF;
-  --color-border-strong: #C9BEA9;
-  --pt-sky-top: #FBF6EC;
-  --pt-sky-bottom: #F0E6D2;
-  --pt-sky-dot: rgba(47, 93, 80, 0.08);
-  --pt-hero-start: #F5EACD;
-  --pt-hero-end: #DCECDD;
-  --pt-hero-text: #1F3830;
-  --pt-hero-muted: #496659;
-  --pt-hero-blob: rgba(227, 169, 43, 0.23);
-  --pt-weather-glass: rgba(255, 254, 250, 0.72);
-  --pt-weather-border: rgba(255, 255, 255, 0.85);
-  --pt-weather-icon-bg: #FFF3D3;
-  --pt-weather-icon: #A7621D;
-  --pt-awning-one: #2F5D50;
-  --pt-awning-two: #FBF6EC;
-  --pt-awning-rail: #24473D;
-  --pt-awning-light: #E3A92B;
-  --pt-particle: rgba(255, 255, 255, 0.78);
-  --pt-card-shadow: 0 10px 28px -18px rgba(40, 49, 39, 0.27), 0 2px 8px rgba(40, 49, 39, 0.06);
-  --color-surface-inverse: var(--pt-awning-rail);
-  --color-surface-inverse-soft: color-mix(in srgb, var(--pt-awning-rail) 82%, black);
-  --color-text-inverse: #FFFEFA;
-  --color-text-inverse-soft: #E8F2EB;
-}
-
-.pt-dashboard-page.weather-cloudy {
-  --color-primary: #496C66;
-  --color-primary-hover: #2D514B;
-  --color-primary-tint: #E5EEEB;
-  --color-primary-border: #B9CFC9;
-  --color-bg: #E7ECE9;
-  --pt-sky-top: #EEF1EF;
-  --pt-sky-bottom: #CEDBD8;
-  --pt-sky-dot: rgba(73, 108, 102, 0.08);
-  --pt-hero-start: #E7F0EB;
-  --pt-hero-end: #D2E0DC;
-  --pt-hero-blob: rgba(144, 177, 167, 0.27);
-  --pt-weather-icon-bg: #E1EBE7;
-  --pt-weather-icon: #3A6660;
-  --pt-awning-one: #5C7771;
-  --pt-awning-two: #EFF1E8;
-  --pt-awning-rail: #405C57;
-}
-
-.pt-dashboard-page.weather-rain {
-  --color-primary: #3C6470;
-  --color-primary-hover: #244A56;
-  --color-primary-tint: #E3EDF0;
-  --color-primary-border: #AEC8D0;
-  --color-bg: #D5E0E1;
-  --pt-sky-top: #DBE6E7;
-  --pt-sky-bottom: #9BB2B7;
-  --pt-sky-dot: rgba(40, 81, 94, 0.10);
-  --pt-hero-start: #D8E7E7;
-  --pt-hero-end: #BBD2D4;
-  --pt-hero-blob: rgba(126, 162, 169, 0.32);
-  --pt-weather-icon-bg: #DCECEF;
-  --pt-weather-icon: #2B6172;
-  --pt-awning-one: #45646C;
-  --pt-awning-two: #D9E6E7;
-  --pt-awning-rail: #304C55;
-}
-
-.pt-dashboard-page.weather-storm {
-  --color-primary: #425B68;
-  --color-primary-hover: #2A4552;
-  --color-primary-tint: #E5ECEF;
-  --color-primary-border: #B7C9CE;
-  --color-bg: #45535C;
-  --color-surface: #F8FBFA;
-  --color-surface-muted: #ECF2F1;
-  --color-text: #203139;
-  --color-text-soft: #4C626B;
-  --color-border: #C7D5D7;
-  --pt-sky-top: #5B6A72;
-  --pt-sky-bottom: #29343C;
-  --pt-sky-dot: rgba(224, 236, 240, 0.09);
-  --pt-hero-start: #38515D;
-  --pt-hero-end: #1D333F;
-  --pt-hero-text: #F5FAFA;
-  --pt-hero-muted: #D5E6E7;
-  --pt-hero-blob: rgba(160, 198, 212, 0.22);
-  --pt-weather-glass: rgba(238, 249, 250, 0.12);
-  --pt-weather-border: rgba(238, 249, 250, 0.3);
-  --pt-weather-icon-bg: rgba(222, 241, 245, 0.16);
-  --pt-weather-icon: #F9DF9B;
-  --pt-awning-one: #203640;
-  --pt-awning-two: #77929A;
-  --pt-awning-rail: #152B35;
-}
-
-.pt-dashboard-page.weather-snow {
-  --color-primary: #527A91;
-  --color-primary-hover: #365A72;
-  --color-primary-tint: #E7F0F5;
-  --color-primary-border: #BED3DF;
-  --color-bg: #F1F7FA;
-  --pt-sky-top: #F5FAFB;
-  --pt-sky-bottom: #D9E7ED;
-  --pt-sky-dot: rgba(82, 122, 145, 0.08);
-  --pt-hero-start: #F6FCFC;
-  --pt-hero-end: #D9EAF1;
-  --pt-hero-blob: rgba(166, 201, 222, 0.3);
-  --pt-weather-icon-bg: #E9F3F8;
-  --pt-weather-icon: #4B7895;
-  --pt-awning-one: #7198AE;
-  --pt-awning-two: #F4F9F8;
-  --pt-awning-rail: #4A7289;
-}
-
-.pt-dashboard-page.weather-wind {
-  --color-primary: #626D4F;
-  --color-primary-hover: #414D32;
-  --color-primary-tint: #EDF0E4;
-  --color-primary-border: #C9D0B8;
-  --color-bg: #E9E7D8;
-  --pt-sky-top: #EFEEE1;
-  --pt-sky-bottom: #C8CEB6;
-  --pt-sky-dot: rgba(98, 109, 79, 0.09);
-  --pt-hero-start: #EEECDD;
-  --pt-hero-end: #D8DEC6;
-  --pt-hero-blob: rgba(182, 172, 110, 0.23);
-  --pt-weather-icon-bg: #F0EDD6;
-  --pt-weather-icon: #6C7245;
-  --pt-awning-one: #616C4E;
-  --pt-awning-two: #E9E7D5;
-  --pt-awning-rail: #485039;
-}
-
-.pt-dashboard-page.weather-hot {
-  --color-primary: #9B5535;
-  --color-primary-hover: #783D26;
-  --color-primary-tint: #FCECE0;
-  --color-primary-border: #ECC4AD;
-  --color-bg: #FBE3C8;
-  --pt-sky-top: #FFEACF;
-  --pt-sky-bottom: #F0B78D;
-  --pt-sky-dot: rgba(155, 85, 53, 0.09);
-  --pt-hero-start: #FFE8C5;
-  --pt-hero-end: #F6C5A3;
-  --pt-hero-blob: rgba(217, 115, 78, 0.24);
-  --pt-weather-icon-bg: #FFE2AB;
-  --pt-weather-icon: #A45125;
-  --pt-awning-one: #A45335;
-  --pt-awning-two: #FFF0D8;
-  --pt-awning-rail: #7D3D29;
-}
-
-.pt-dashboard-page.weather-night {
-  --color-primary: #455D83;
-  --color-primary-hover: #2E456D;
-  --color-primary-tint: #E8ECF4;
-  --color-primary-border: #C4D0E1;
-  --color-bg: #18243A;
-  --color-surface: #F9FAFC;
-  --color-surface-muted: #EDF1F6;
-  --color-text: #1E2B3F;
-  --color-text-soft: #526279;
-  --color-border: #D1D9E5;
-  --pt-sky-top: #243450;
-  --pt-sky-bottom: #0E1628;
-  --pt-sky-dot: rgba(221, 231, 250, 0.11);
-  --pt-hero-start: #263D60;
-  --pt-hero-end: #152443;
-  --pt-hero-text: #F5F7FC;
-  --pt-hero-muted: #D6E1F1;
-  --pt-hero-blob: rgba(247, 205, 118, 0.16);
-  --pt-weather-glass: rgba(239, 246, 255, 0.1);
-  --pt-weather-border: rgba(239, 246, 255, 0.28);
-  --pt-weather-icon-bg: rgba(238, 245, 255, 0.13);
-  --pt-weather-icon: #F3D592;
-  --pt-awning-one: #152440;
-  --pt-awning-two: #4D6584;
-  --pt-awning-rail: #0B1830;
-}
-
-/* Quản lý · Chàm (Indigo) — bố cục dày thông tin: chữ 14px, bo góc nhỏ hơn */
-.theme-manager {
-  --color-primary: #3B4FA0;
-  --color-primary-hover: #2F3F85;
-  --color-primary-tint: #EDEFFA;
-  --color-primary-border: #C5CCEC;
-  --color-success-tint: #E8F4EC;
-  --color-warning-tint: #FBF3E2;
-  --color-danger-hover: #B72633;
-  --color-danger-tint: #FBE9EA;
-  --color-info-tint: #E8F0F9;
-  /* nền header bảng */
-  --color-surface-muted: #FCFCFA;
-  --font-body: "Work Sans", "Segoe UI", system-ui, sans-serif;
-  --font-heading: "Be Vietnam Pro", "Segoe UI", system-ui, sans-serif;
-  --font-size-body: var(--font-size-md);
-  /* mockup Manager dùng bo 6px cho input/nút — giữ nguyên, không tăng lên 8px */
-  --radius-sm: 6px;
-  /* khu quản trị: nút góc vuông bo nhẹ như mockup */
-  --radius-button: var(--radius-sm);
-  --layout-sidebar-width: 244px;
-  --shadow-button-primary: none;
-}
-
-/* Quản trị · Tím (Violet) — cùng bố cục với Quản lý */
+/* =====================================================================
+   9b. KHU NỘI BỘ — nền chung cho 5 theme sau đăng nhập (redesign 10/2026)
+   Hệ "Sân vận động": nền bê tông, card trắng, bảng điểm đen, sidebar dock đen.
+   Font giữ Montserrat (tiêu đề, số) + Inter (nội dung). Bo góc 2–4px.
+   Trang Guest/Auth/lỗi KHÔNG dùng các class này nên không bị ảnh hưởng.
+   ===================================================================== */
+.theme-member,
+.theme-pt,
+.theme-staff,
+.theme-manager,
 .theme-admin {
-  --color-primary: #5B3FA0;
-  --color-primary-hover: #4A3287;
-  --color-primary-tint: #F1ECFB;
-  --color-primary-border: #D8CCF0;
-  --color-success-tint: #E8F4EC;
-  --color-warning-tint: #FBF3E2;
-  --color-danger-hover: #B72633;
-  --color-danger-tint: #FBE9EA;
-  --color-info-tint: #E8F0F9;
-  --color-surface-muted: #FCFCFA;
-  --color-surface-hover: #FBFAFD;
-  --font-body: "Work Sans", "Segoe UI", system-ui, sans-serif;
-  --font-heading: "Be Vietnam Pro", "Segoe UI", system-ui, sans-serif;
-  --font-size-body: var(--font-size-md);
-  --radius-sm: 6px;
-  /* khu quản trị: nút góc vuông bo nhẹ như mockup */
-  --radius-button: var(--radius-sm);
-  --layout-sidebar-width: 240px;
+  --font-display: "Montserrat", "Segoe UI", system-ui, sans-serif;
+  --font-heading: "Montserrat", "Segoe UI", system-ui, sans-serif;
+  --font-body: "Inter", "Segoe UI", system-ui, sans-serif;
+  --font-size-body: var(--font-size-base);
+
+  /* Bo góc nhỏ: control 2px, card 4px */
+  --radius-sm: 2px;
+  --radius-md: 4px;
+  --radius-lg: 4px;
+  --radius-button: 2px;
+
+  /* Bề mặt */
+  --color-bg: #E6E9ED;
+  --color-surface: #FFFFFF;
+  --color-surface-muted: #F3F5F7;
+  --color-surface-hover: #EEF2F6;
+  --color-text: #0F1215;
+  --color-text-soft: #454D57;
+  --color-text-muted: #59616B;
+  --color-text-disabled: #9AA2AC;
+  --color-border: #D0D5DC;
+  --color-border-strong: #AEB6C0;
+  --color-tag: #EEF1F4;
+  --color-row-pinned: #F5F8FC;
+
+  /* Trạng thái GBR-28 */
+  --color-success: #17703F;
+  --color-success-tint: #E2F3E9;
+  --color-success-border: #9FD2B4;
+  --color-success-ink: #135F35;
+  --color-warning: #B7791F;
+  --color-warning-tint: #FFF2CF;
+  --color-warning-border: #E8C36A;
+  --color-warning-ink: #7A4F00;
+  --color-danger: #B42335;
+  --color-danger-hover: #951B2B;
+  --color-danger-tint: #FCE5E8;
+  --color-danger-border: #EBA1AB;
+  --color-danger-ink: #8E1424;
+  --color-info: #1D5FA8;
+  --color-info-tint: #E4EEF9;
+  --color-info-border: #A9C6E8;
+  --color-info-ink: #164A84;
+
+  /* Bảng điểm (khối số liệu nổi bật) */
+  --color-board: #0E1013;
+  --color-board-line: #2A2F36;
+  --color-board-text: #F4F6F8;
+  --color-board-soft: #A4ADB7;
+  --color-board-up: #7ED7A2;
+
+  /* Sidebar dock: nền đen chữ trắng, quầng sáng theo con trỏ */
+  --dock-bg: #0B0D10;
+  --dock-surface: #15181D;
+  --dock-line: rgba(255, 255, 255, 0.09);
+  --dock-text: #F5F7FA;
+  --dock-muted: #A3ACB8;
+  --dock-hover: rgba(255, 255, 255, 0.07);
+  /* Mục đang chọn trên sidebar: thép bạc chải xước, chữ đen (dùng chung mọi vai trò) */
+  --dock-active-top: #EEF1F4;
+  --dock-active-bottom: #AEB6C0;
+  --dock-active-edge: #FFFFFF;
+  --dock-active-text: #0B0D10;
+  --dock-glow-size: 220px;
+  --dock-glow-alpha: 0.32;
+  --dock-handle-width: 26px;
+  --dock-handle-height: 76px;
+
+  --color-surface-inverse: var(--dock-bg);
+  --color-surface-inverse-soft: var(--dock-surface);
+  --color-text-inverse: var(--dock-text);
+  --color-text-inverse-soft: var(--dock-muted);
+  --color-border-inverse: var(--dock-line);
+
+  --shadow-card: 0 1px 2px rgba(18, 20, 23, 0.05), 0 6px 18px -12px rgba(18, 20, 23, 0.22);
+  --shadow-lift: 0 2px 4px rgba(18, 20, 23, 0.06), 0 18px 36px -18px rgba(18, 20, 23, 0.35);
+  --shadow-pop: 0 18px 40px -18px rgba(18, 20, 23, 0.4);
+  --shadow-drawer: 12px 0 40px -12px rgba(0, 0, 0, 0.55);
   --shadow-button-primary: none;
+
+  /* Chuyển động & 3D */
+  --ease-out-expo: cubic-bezier(0.16, 1, 0.3, 1);
+  --duration-flip: 420ms;
+  --duration-grow: 700ms;
+  --duration-run: 900ms;
+  --tilt-max: 4deg;
+  --tilt-perspective: 900px;
+
+  --layout-sidebar-width: 256px;
+  --layout-content-width: 1320px;
+
+  /* Khối chào + thẻ thời tiết (dashboard-weather.css) */
+  --wx-white: #FFFFFF;
+  --wx-star: #DDEBFF;
+  --wx-speech-ink: #172333;
+  --wx-black: #000;
+  --wx-speech-bg: #FFF7E6;
+  --wx-bolt: #FDE047;
+  --wx-hero-text: #F5F7FC;
+  --wx-sign-text: #F1F7FC;
+  --wx-hero-soft: #BFCBDD;
+  --wx-sign-pole: #8298AB;
+  --wx-stadium-line: #25394D;
+  --wx-stadium: #192839;
+  --wx-sign-bg: #193448;
+  --wx-hero-bg: #10151D;
+  --wx-hero-bg-deep: #050608;
+
+  /* Bí danh cho tên biến các màn cũ đang gọi */
+  --color-text-subtle: var(--color-text-muted);
+  --color-warning-dark: var(--color-warning-ink);
+  --shadow-lg: var(--shadow-lift);
+  --z-tooltip: var(--z-toast);
+}
+
+/* ===== Nhóm vận hành: Quản lý · Quản trị · Lễ tân — cùng gam xanh đậm (navy) =====
+   Ba sắc lệch nhẹ để biết đang ở khu nào nhưng vẫn là một hệ. */
+.theme-manager {
+  --color-primary: #1E3A8A;
+  --color-primary-hover: #172E6E;
+  --color-primary-tint: #E6ECF8;
+  --color-primary-border: #B8C6E6;
+  --color-on-primary: #FFFFFF;
+  --color-accent-ink: #13265C;
+}
+
+.theme-admin {
+  --color-primary: #23307A;
+  --color-primary-hover: #1A2560;
+  --color-primary-tint: #E7E9F6;
+  --color-primary-border: #BCC2E4;
+  --color-on-primary: #FFFFFF;
+  --color-accent-ink: #161F52;
+}
+
+.theme-staff {
+  --color-primary: #173F73;
+  --color-primary-hover: #11315A;
+  --color-primary-tint: #E4EBF4;
+  --color-primary-border: #B4C5DC;
+  --color-on-primary: #FFFFFF;
+  --color-accent-ink: #0F2A4D;
+}
+
+/* ===== Nhóm thời tiết: PT · Hội viên =====
+   Mặc định "trời quang" cho các trang không có dữ liệu thời tiết.
+   Dashboard gắn thêm weather-<kiểu> trên <body> để đổi màu chủ đạo + bầu trời. */
+.theme-member,
+.theme-pt {
+  --color-primary: #1F5E7A;
+  --color-primary-hover: #174A61;
+  --color-primary-tint: #E3EEF3;
+  --color-primary-border: #AFCCD9;
+  --color-on-primary: #FFFFFF;
+  --color-accent-ink: #123C4F;
+  --color-bg: #E4ECEF;
+  --zone-sky-top: #EEF4F6;
+  --zone-sky-bottom: #CFDFE5;
+  --zone-sky-dot: rgba(31, 94, 122, 0.07);
+}
+
+/* Biến bầu trời + khung thời tiết dùng chung cho 2 dashboard */
+:is(.pt-dashboard-page, .customer-dashboard-page) {
+  --pt-sky-top: var(--zone-sky-top);
+  --pt-sky-bottom: var(--zone-sky-bottom);
+  --pt-sky-dot: var(--zone-sky-dot);
+  --pt-hero-text: #0F1215;
+  --pt-hero-muted: #3E4650;
+  --pt-weather-glass: rgba(255, 255, 255, 0.86);
+  --pt-weather-border: rgba(255, 255, 255, 0.95);
+  --pt-weather-icon-bg: var(--color-primary-tint);
+  --pt-weather-icon: var(--color-primary);
+  --pt-particle: rgba(255, 255, 255, 0.8);
+  --pt-card-shadow: var(--shadow-card);
+  --pt-nav-text: var(--dock-text);
+  --pt-nav-muted: var(--dock-muted);
+  /* Màu cảnh thời tiết (canvas đọc qua getComputedStyle) */
+  --scene-particle: rgba(255, 255, 255, 0.75);
+  --scene-glow: rgba(255, 255, 255, 0.55);
+  --scene-cloud: rgba(255, 255, 255, 0.6);
+  --scene-flash: rgba(235, 240, 255, 0.85);
+  --scene-ground: #1A1E24;
+  --scene-runner: #0F1215;
+  /* Mái bạt: sọc màu chủ đạo của thời tiết + sọc sáng, thanh treo đậm hơn */
+  --pt-awning-one: var(--color-primary);
+  --pt-awning-two: #F7F8FA;
+  --pt-awning-rail: var(--color-accent-ink);
+  --pt-awning-light: #FFD27A;
+  --wx-card-a: var(--color-primary);
+  --wx-card-b: var(--color-accent-ink);
+  /* Người chạy doodle: màu áo 4 người, da, nét viền */
+  --doodle-ink: #111318;
+  --doodle-skin: #F4C89E;
+  --doodle-1: #F43F5E;
+  --doodle-2: #FACC15;
+  --doodle-3: #22C55E;
+  --doodle-4: #38BDF8;
+  /* Hạt/sương trong cảnh luôn sáng để nổi trên nền màu */
+  --scene-particle: rgba(255, 255, 255, 0.85);
+  /* Phòng tập trong khối chào (dashboard-weather.css + js/gym-floor.js): tường bê tông, sàn cao su, khung thép */
+  --gym-wall: #20252C;
+  --gym-wall-hi: #2C333C;
+  --gym-floor: #101317;
+  --gym-floor-hi: #1A1F25;
+  --gym-floor-line: rgba(255, 255, 255, 0.06);
+  --gym-steel: #0C0F13;
+  --gym-steel-hi: #56616E;
+  --gym-glass: rgba(255, 255, 255, 0.1);
+  --gym-ink: #0B0D10;
+  --gym-tights: #171B21;
+  --gym-skin: #E5B58C;
+  --gym-skin-2: #B98463;
+  --gym-skin-3: #F0C9A8;
+  --gym-tights-2: #2A2F3A;
+  --gym-rope: #C9B48F;
+  /* Số LED đồng hồ phòng tập (awning.css) */
+  --gym-led: color-mix(in srgb, var(--color-primary) 62%, #FFFFFF);
+  --gym-led-glow: color-mix(in srgb, var(--color-primary) 70%, transparent);
+  --gym-shoe: #F2F4F7;
+  --gym-plate: #15191E;
+  --gym-shadow: rgba(0, 0, 0, 0.45);
+  --gym-chip-bg: rgba(8, 10, 13, 0.78);
+  --gym-shirt-1: var(--color-primary);
+  --gym-shirt-2: #E9EDF2;
+  --gym-shirt-3: #3E4855;
+  --gym-shirt-4: color-mix(in srgb, var(--color-primary) 55%, #FFFFFF);
+}
+
+:is(.pt-dashboard-page, .customer-dashboard-page).weather-sunny {
+  --color-primary: #A94E08;
+  --color-primary-hover: #92420A;
+  --color-primary-tint: #FEF3E2;
+  --color-primary-border: #F5D29A;
+  --color-accent-ink: #6E3205;
+  --color-bg: #F6EAD6;
+  --pt-sky-top: #2F86E0;
+  --pt-sky-bottom: #FFC97A;
+  --pt-sky-dot: rgba(180, 83, 9, 0.07);
+  --scene-glow: rgba(255, 214, 120, 0.6);
+  --scene-cloud: rgba(255, 255, 255, 0.7);
+  --wx-card-a: #F59E0B;
+  --wx-card-b: #C2410C;
+}
+
+:is(.pt-dashboard-page, .customer-dashboard-page).weather-hot {
+  --color-primary: #B13B0B;
+  --color-primary-hover: #9A3412;
+  --color-primary-tint: #FFEDE3;
+  --color-primary-border: #F6C3A6;
+  --color-accent-ink: #7C2D12;
+  --color-bg: #F8DECB;
+  --pt-sky-top: #FF8A3D;
+  --pt-sky-bottom: #B91C1C;
+  --pt-sky-dot: rgba(194, 65, 12, 0.08);
+  --scene-glow: rgba(255, 170, 90, 0.6);
+  --scene-cloud: rgba(255, 240, 225, 0.5);
+  --wx-card-a: #EA580C;
+  --wx-card-b: #9F1239;
+}
+
+:is(.pt-dashboard-page, .customer-dashboard-page).weather-cloudy {
+  --color-primary: #3F5873;
+  --color-primary-hover: #30445A;
+  --color-primary-tint: #E7EDF3;
+  --color-primary-border: #BFCCDA;
+  --color-accent-ink: #263649;
+  --color-bg: #DCE3EA;
+  --pt-sky-top: #7F95AF;
+  --pt-sky-bottom: #36475C;
+  --pt-sky-dot: rgba(63, 88, 115, 0.07);
+  --scene-cloud: rgba(255, 255, 255, 0.75);
+  --wx-card-a: #475569;
+  --wx-card-b: #1E293B;
+}
+
+:is(.pt-dashboard-page, .customer-dashboard-page).weather-rain {
+  --color-primary: #0E657A;
+  --color-primary-hover: #0B5466;
+  --color-primary-tint: #E0F0F3;
+  --color-primary-border: #A9D2DC;
+  --color-accent-ink: #083F4D;
+  --color-bg: #C9DADF;
+  --pt-sky-top: #2E3366;
+  --pt-sky-bottom: #D9735A;
+  --pt-sky-dot: rgba(15, 106, 128, 0.08);
+  --scene-particle: rgba(225, 240, 246, 0.7);
+  --scene-cloud: rgba(120, 145, 158, 0.45);
+  --wx-card-a: #0F6A80;
+  --wx-card-b: #1E2A5F;
+}
+
+:is(.pt-dashboard-page, .customer-dashboard-page).weather-storm {
+  --color-primary: #4338CA;
+  --color-primary-hover: #3730A3;
+  --color-primary-tint: #E8E7FB;
+  --color-primary-border: #C1BDF2;
+  --color-accent-ink: #2A2380;
+  --color-bg: #2A3140;
+  --pt-sky-top: #24204A;
+  --pt-sky-bottom: #0A0C16;
+  --pt-sky-dot: rgba(220, 228, 255, 0.07);
+  --pt-hero-text: #F4F6FB;
+  --pt-hero-muted: #D3D9E8;
+  --pt-weather-glass: rgba(20, 24, 36, 0.62);
+  --pt-weather-border: rgba(255, 255, 255, 0.18);
+  --scene-particle: rgba(200, 215, 240, 0.75);
+  --scene-cloud: rgba(70, 80, 100, 0.55);
+  --scene-ground: #0B0E14;
+  --scene-runner: #F4F6FB;
+  --wx-card-a: #312E81;
+  --wx-card-b: #0F172A;
+}
+
+:is(.pt-dashboard-page, .customer-dashboard-page).weather-snow {
+  --color-primary: #2B6CB0;
+  --color-primary-hover: #22568D;
+  --color-primary-tint: #E6F0FA;
+  --color-primary-border: #B9D2EE;
+  --color-accent-ink: #1A4372;
+  --color-bg: #EAF1F8;
+  --pt-sky-top: #8FBFEA;
+  --pt-sky-bottom: #E6F0FB;
+  --pt-sky-dot: rgba(43, 108, 176, 0.06);
+  --scene-particle: rgba(255, 255, 255, 0.95);
+  --wx-card-a: #2B6CB0;
+  --wx-card-b: #1E3A8A;
+}
+
+:is(.pt-dashboard-page, .customer-dashboard-page).weather-wind {
+  --color-primary: #0F726B;
+  --color-primary-hover: #0B5D57;
+  --color-primary-tint: #E1F3F1;
+  --color-primary-border: #A7D8D2;
+  --color-accent-ink: #094A45;
+  --color-bg: #DAEBE8;
+  --pt-sky-top: #3FBFA8;
+  --pt-sky-bottom: #1D5F7A;
+  --pt-sky-dot: rgba(15, 118, 110, 0.07);
+  --scene-particle: rgba(255, 255, 255, 0.7);
+  --wx-card-a: #0F766E;
+  --wx-card-b: #134E4A;
+}
+
+:is(.pt-dashboard-page, .customer-dashboard-page).weather-night {
+  --color-primary: #1D4ED8;
+  --color-primary-hover: #1E40AF;
+  --color-primary-tint: #E0EAFD;
+  --color-primary-border: #A9C1F5;
+  --color-accent-ink: #172E6E;
+  --color-bg: #07122A;
+  --pt-sky-top: #020617;
+  --pt-sky-bottom: #0B2E4F;
+  --pt-sky-dot: transparent;
+  --pt-hero-text: #F4F6FB;
+  --pt-hero-muted: #CBD5E5;
+  --pt-weather-glass: rgba(8, 18, 40, 0.62);
+  --pt-weather-border: rgba(255, 255, 255, 0.16);
+  --scene-particle: rgba(235, 242, 255, 0.95);
+  --scene-glow: rgba(150, 190, 255, 0.28);
+  --scene-ground: #01040C;
+  --scene-runner: #F4F6FB;
+  --wx-card-a: #0E2A5A;
+  --wx-card-b: #030A1C;
 }
 
 /* ===== 10. GIẢM CHUYỂN ĐỘNG — người dùng bật "Reduce motion" trong hệ điều hành ===== */
@@ -682,4 +735,223 @@
     --duration-slow: 0ms;
     --duration-slower: 0ms;
   }
+}
+
+/* =====================================================================
+   THƯƠNG HIỆU SUPER GYM — "SUNSET × DEEP OCEAN" (redesign 2026-10)
+   Cam hoàng hôn cháy × xanh đại dương sâu / thủy cung — cặp bổ túc trên vòng màu.
+   Liều lượng: trang khách (homepage, auth, blog) ~65% cam than hồng + ~35% aqua sâu;
+               khu nội bộ ngược lại ~75% đại dương + ~25% cam (cam cho điểm nóng, số quan trọng).
+   Chữ: Barlow Condensed (chiến dịch) + Be Vietnam Pro (giao diện, nội dung); không ép ngang hoặc giãn chữ âm.
+   Mọi cặp chữ/nền đã đo ≥ 4.5:1; nền cam dùng chữ tối (chữ trắng chỉ cho tiêu đề cỡ lớn).
+   ===================================================================== */
+:root {
+  --brand-sunset: #FF5D2E;
+  --brand-ember-red: #F13C2D;
+  --brand-paper: #FFF7EF;
+  --brand-muted: #C6B9B1;
+  --brand-line: rgba(255, 247, 239, 0.16);
+  --brand-warm-surface: #21130F;
+  --brand-ocean-surface: #052B34;
+  --brand-header-glass: rgba(15, 18, 19, 0.88);
+  --brand-glass: rgba(4, 25, 32, 0.86);
+  --brand-shadow: 0 24px 64px -32px rgba(0, 0, 0, 0.6);
+  --brand-gradient: linear-gradient(115deg, #FF7036, #F13C2D);
+  --brand-hero-size: clamp(3.8rem, 7.2vw, 7.6rem);
+  --brand-heading-size: clamp(2.8rem, 5vw, 5.2rem);
+  --brand-section-space: clamp(64px, 8vw, 128px);
+  --brand-content-width: 1360px;
+  --brand-hero-min-height: min(840px, 90svh);
+  --brand-blur: 20px;
+  --brand-wordmark-width: 180px;
+  --brand-wordmark-height: 44px;
+  --brand-header-height: 88px;
+  --brand-control-height: 44px;
+  --font-cinematic: var(--font-brand-display);
+  --brand-sunset-hi: #FF7A4C;
+  --brand-sunset-deep: #B93423;
+  --brand-sunset-glow: #FF9A3C;
+  --brand-ocean: #066B78;
+  --brand-ocean-deep: #04303C;
+  --brand-abyss: #03131C;
+  --brand-aqua: #2BD4DE;
+  --brand-ink: #0B1418;
+  --brand-lime: #D6F55B;
+  /* Bí danh cho CSS màn mẫu PT */
+  --brand-ember: var(--brand-sunset);
+  --brand-ember-hi: var(--brand-sunset-hi);
+  --brand-ember-deep: var(--brand-sunset-deep);
+  --brand-lagoon: var(--brand-ocean);
+  --brand-lagoon-hi: var(--brand-aqua);
+  --brand-lagoon-deep: var(--brand-ocean-deep);
+  /* Vàng chanh cũ không còn trong thương hiệu: mọi chỗ còn gọi --color-lime (nút, link, hover) chuyển sang hoàng hôn */
+  --color-lime: var(--brand-sunset);
+  --color-lime-hover: var(--brand-sunset-hi);
+  --color-lime-ink: var(--brand-ink);
+  --brand-aqua-soft: #7FE6EC;
+  /* Bộ chữ 3 vai (kiểu trang đề cử Awwwards): tiêu đề Inter Tight đậm, khít chữ;
+     nội dung Inter; chữ phụ (ngày, mã, nhãn nhỏ) JetBrains Mono in hoa giãn chữ. Cả ba có đủ dấu tiếng Việt. */
+  --font-brand-display: "Inter Tight", "Inter", "Segoe UI", sans-serif;
+  --font-brand-body: "Inter", "Segoe UI", system-ui, sans-serif;
+  --font-brand-mono: "JetBrains Mono", ui-monospace, "Cascadia Mono", Consolas, monospace;
+  --font-display: var(--font-brand-display);
+  --font-heading: var(--font-brand-display);
+  --font-body: var(--font-brand-body);
+  --tracking-display: -0.035em;
+  --tracking-heading: -0.02em;
+  --tracking-mono: 0.06em;
+}
+
+/* ---- Trang khách: hoàng hôn là chủ đạo ---- */
+.theme-guest,
+.theme-guest-dark {
+  --font-display: var(--font-brand-display);
+  --font-heading: var(--font-brand-display);
+  --font-body: var(--font-brand-body);
+  --color-primary: var(--brand-sunset);
+  --color-primary-hover: var(--brand-sunset-hi);
+  --color-primary-tint: rgba(242, 92, 27, 0.14);
+  --color-primary-border: rgba(255, 122, 61, 0.45);
+  --color-on-primary: var(--brand-ink);
+  --color-lime: var(--brand-sunset);
+}
+.theme-guest-dark {
+  --color-bg: #120A07;
+  --color-surface: #1A0F0A;
+  --color-surface-muted: #160C08;
+  --color-surface-hover: #22140D;
+  --color-text: #FFF4EC;
+  --color-text-soft: #C9AFA2;
+  --color-text-muted: #A88E80;
+  --color-border: rgba(255, 244, 236, 0.1);
+}
+
+/* ---- Khu nội bộ: đại dương là chủ đạo (sáng mặc định; PT có nền tối riêng bên dưới) ---- */
+.theme-member,
+.theme-pt,
+.theme-staff,
+.theme-manager,
+.theme-admin {
+  --font-display: var(--font-brand-display);
+  --font-heading: var(--font-brand-display);
+  --font-body: var(--font-brand-body);
+  --color-primary: var(--brand-ocean);
+  --color-primary-hover: #0B5E70;
+  --color-primary-tint: #E2F2F5;
+  --color-primary-border: #9FCFD9;
+  --color-on-primary: #FFFFFF;
+  --color-accent-ink: var(--brand-ocean-deep);
+  --color-bg: #E4ECEE;
+  --color-board: var(--brand-ocean-deep);
+  --dock-bg: var(--brand-abyss);
+  --dock-surface: var(--brand-ocean-deep);
+  --dock-hover: rgba(43, 212, 222, 0.1);
+  /* Mục đang chọn: bạc xước (kim loại) thay vì trắng — sáng ở mép trên, tối dần xuống dưới */
+  --dock-active-top: #C9D1D6;
+  --dock-active-bottom: #8995A0;
+  --dock-active-edge: rgba(255, 255, 255, 0.55);
+  --dock-active-text: #0B1418;
+}
+
+/* ---- Mọi màn nội bộ (PT, Hội viên, Lễ tân, Quản lý, Admin): nền tối đại dương mặc định ---- */
+body.dock,
+body.dock[class*="weather-"] {
+  color-scheme: dark;
+  --pt-bg: #04151F;
+  --pt-panel: #09232F;
+  --pt-panel-2: #0C2C39;
+  --pt-line: rgba(234, 244, 246, 0.09);
+  --pt-line-strong: rgba(234, 244, 246, 0.2);
+  --pt-text: #EAF4F6;
+  --pt-soft: #A9C3CC;
+  --pt-muted: #86A4AE;
+  --pt-ember-text: var(--brand-sunset-hi);
+  --pt-lagoon-text: var(--brand-aqua);
+  --pt-shadow: 0 1px 0 rgba(255, 255, 255, 0.03) inset, 0 18px 40px -24px rgba(0, 0, 0, 0.8);
+  --color-primary: var(--brand-sunset);
+  --color-primary-hover: var(--brand-sunset-hi);
+  --color-primary-tint: rgba(242, 92, 27, 0.16);
+  --color-primary-border: rgba(255, 122, 61, 0.45);
+  --color-on-primary: var(--brand-ink);
+  --color-accent-ink: var(--pt-text);
+  --color-bg: var(--pt-bg);
+  --color-surface: var(--pt-panel);
+  --color-surface-muted: var(--pt-panel-2);
+  --color-text: var(--pt-text);
+  --color-text-soft: var(--pt-soft);
+  --color-text-muted: var(--pt-muted);
+  --color-border: var(--pt-line);
+  --color-border-strong: var(--pt-line-strong);
+  --color-board: var(--brand-ocean-deep);
+  --color-board-text: #EAF4F6;
+  --color-surface-hover: var(--pt-panel-2);
+  --awning-h: 0px;
+  --pt-awning-height: 0px;
+  /* Trạng thái trên nền tối: nền mờ trong suốt + chữ sáng, vẫn giữ đúng nghĩa xanh/vàng/đỏ */
+  --color-success-tint: rgba(76, 214, 140, 0.14);
+  --color-success-border: rgba(126, 226, 168, 0.36);
+  --color-success-ink: #8CE8B4;
+  --color-warning-tint: rgba(245, 183, 64, 0.14);
+  --color-warning-border: rgba(248, 207, 122, 0.38);
+  --color-warning-ink: #F8CF7A;
+  --color-danger-tint: rgba(255, 99, 115, 0.14);
+  --color-danger-border: rgba(255, 154, 165, 0.38);
+  --color-danger-ink: #FFA3AD;
+  --color-info-tint: rgba(43, 212, 222, 0.12);
+  --color-info-border: rgba(127, 230, 236, 0.36);
+  --color-info-ink: var(--brand-aqua-soft);
+  --color-neutral-tint: rgba(234, 244, 246, 0.07);
+  --color-neutral-border: var(--pt-line-strong);
+  --color-tag: rgba(234, 244, 246, 0.08);
+  --color-row-pinned: rgba(242, 92, 27, 0.08);
+  --color-text-disabled: #5E7A84;
+  --color-overlay: rgba(2, 10, 14, 0.72);
+  --color-link: var(--brand-aqua-soft);
+  --color-role-admin-tint: rgba(167, 139, 250, 0.16);
+  --color-role-manager-tint: rgba(129, 150, 255, 0.16);
+  --color-role-staff-tint: rgba(43, 212, 222, 0.14);
+  --color-role-customer-tint: rgba(255, 122, 61, 0.16);
+}
+
+/* ---- Nền sáng: công tắc trên topbar, lựa chọn nhớ trong localStorage gms-theme ---- */
+html[data-theme="light"] body.dock,
+html[data-theme="light"] body.dock[class*="weather-"] {
+  color-scheme: light;
+  --pt-bg: #E4ECEE;
+  --pt-panel: #FFFFFF;
+  --pt-panel-2: #F1F6F7;
+  --pt-line: rgba(22, 39, 46, 0.12);
+  --pt-line-strong: rgba(22, 39, 46, 0.24);
+  --pt-text: #16272E;
+  --pt-soft: #3F5660;
+  --pt-muted: #4C6670;
+  --pt-ember-text: var(--brand-sunset-deep);
+  --pt-lagoon-text: #0B5E70;
+  --pt-shadow: 0 1px 2px rgba(22, 39, 46, 0.06), 0 18px 36px -26px rgba(22, 39, 46, 0.45);
+  --color-primary-tint: #FDE4D8;
+  --color-primary-border: #F2B094;
+  --color-surface-hover: #E8F0F2;
+  --color-success-tint: #E9F5EF;
+  --color-success-border: #BFE1CD;
+  --color-success-ink: #1F6B41;
+  --color-warning-tint: #FCF3DE;
+  --color-warning-border: #F0D89A;
+  --color-warning-ink: #8A5A0E;
+  --color-danger-tint: #FBEAEC;
+  --color-danger-border: #F0BCC2;
+  --color-danger-ink: #9A2230;
+  --color-info-tint: #E2F2F5;
+  --color-info-border: #9FCFD9;
+  --color-info-ink: #0B5E70;
+  --color-neutral-tint: #EEF3F4;
+  --color-neutral-border: #D3DFE2;
+  --color-tag: #EEF3F4;
+  --color-row-pinned: #FFF4EC;
+  --color-text-disabled: #9BB0B7;
+  --color-overlay: rgba(6, 24, 32, 0.5);
+  --color-link: #0B5E70;
+  --color-role-admin-tint: #F1ECFB;
+  --color-role-manager-tint: #EDEFFA;
+  --color-role-staff-tint: #E2F2F5;
+  --color-role-customer-tint: #FDEDEB;
 }

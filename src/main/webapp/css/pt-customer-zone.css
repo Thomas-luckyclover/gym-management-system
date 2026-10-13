@@ -1,0 +1,16 @@
+/* Nền chung cho /pt/* và /customer/*; head.jspf chỉ nạp file này ở hai zone.
+   Dashboard có nền riêng; các trang còn lại dùng nền đại dương theo token --pt-bg
+   (tối mặc định, sáng khi bật công tắc) để chữ luôn đủ tương phản. */
+body:not(.pt-dashboard-page):not(.customer-weather-page) {
+  background:
+    radial-gradient(80% 50% at 100% 0%, rgba(43, 212, 222, 0.12), transparent 60%),
+    radial-gradient(60% 45% at 0% 100%, rgba(242, 92, 27, 0.1), transparent 60%),
+    var(--pt-bg) !important;
+  background-attachment: fixed !important;
+}
+
+/* Để lộ nền trang qua lớp layout, giữ nguyên nền riêng của từng card. */
+body .app,
+body .main {
+  background: transparent !important;
+}

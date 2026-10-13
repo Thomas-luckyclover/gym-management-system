@@ -16,6 +16,23 @@ Khi nhóm chốt xong 1 mục → đổi trạng thái thành **ĐÃ CHỐT**, g
 - Cần sửa SRS/SDS: BR-40, CBR-56, CBR-57, BF-08/UC liên quan và bổ sung rule đặt buổi lẻ; bỏ mô tả không sinh buổi ngày nghỉ. Rà ý nghĩa “không trừ buổi” trong số liệu/quota và cách xử lý quyền lợi nếu buổi bị lưới an toàn hủy khi chưa dời; chưa tự triển khai phục hồi hoặc bù/gia hạn sau hủy.
 - Chưa chạy schema/seed lên SQL Server đang dùng. Muốn nạp bộ seed mới, nhóm chạy lại bộ 3 file SQL theo quy trình reset dữ liệu của dự án; thao tác này cần chủ động vì thay dữ liệu test hiện tại.
 
+## My PT Sessions — Lịch sử buổi tập và bộ lọc (10/10/2026, ĐÃ CHỐT trong chat)
+
+- Phân nhóm hiển thị (chỉ UI, không UPDATE DB), dùng **một `now` giờ VN cho cả request**: Scheduled kết thúc > now → Lịch tập sắp tới; Scheduled kết thúc ≤ now → Lịch sử "Kết quả đang cập nhật"; CheckedIn → "Đã check-in"; Missed → "Vắng" + lý do; Cancelled (kể cả buổi tương lai) → "Đã hủy" + lý do.
+- Nhãn CheckedIn là "Đã check-in", không dùng "Đã tập"/"Hoàn thành". Giải thích nằm trong hint chung của khối Lịch sử (tạm bỏ hint từng buổi): cá nhân/buổi lẻ "Bạn đã check-in…", gói đôi "Bạn hoặc người tập cùng đã check-in…"; không xác nhận buổi PT đã hoàn thành.
+- Lịch sử đọc `Sessions.Status/MissedReason/CancelType/CancelReason`, không tính lại từ CheckIns hay membership hiện tại; không lọc `Subscriptions.Status`, không lọc `Packages.Status` (CBR-55). `CancelReason` in nguyên văn. Thêm enum `Session.CancelType`.
+- Cập nhật 11/10/2026: My PT Sessions bỏ rèm `<details>` và nút Mở tất cả/Thu gọn; cả Sắp tới và Lịch sử luôn hiện đầy đủ các buổi theo nhóm ngày. Phân trang theo 8 ngày có buổi/trang, không cắt cùng ngày sang hai trang; đang triển khai từng bước, chưa nối truy vấn phân trang. PT Dashboard giữ cơ chế thu gọn hiện có.
+- **Bộ lọc chung** chỉ gồm Loại buổi, Từ ngày, Đến ngày, áp dụng cho cả Sắp tới và Lịch sử. **Không có ô Trạng thái** trong bộ lọc chung.
+- **Trạng thái riêng của khối Lịch sử**: Tất cả · Kết quả đang cập nhật · Đã check-in · Vắng · Đã hủy. "Tất cả" gồm cả Scheduled đã kết thúc. Chọn trạng thái lịch sử không làm khối Sắp tới rỗng. Các điều kiện kết hợp AND.
+- Rỗng: đang có điều kiện lọc → "Không có buổi phù hợp với bộ lọc"; không lọc → thông báo rỗng mặc định của từng khối (GBR-21).
+- Giá trị không hợp lệ (ngày sai, Từ ngày > Đến ngày, lựa chọn lạ): giữ nguyên giá trị người dùng nhập, báo lỗi ngay ô tương ứng, **không áp dụng yêu cầu lọc đó** (không áp dụng một phần), giữ danh sách mặc định và ghi "Bộ lọc chưa được áp dụng". Không trả 500.
+- Code: tách dữ liệu thô (tham số URL) khỏi filter đã hợp lệ; validate trả `ServiceResult` + `failFields` sẵn có. DAO được ghép đoạn SQL cố định, giá trị người dùng luôn truyền bằng `?`.
+- Xóa lọc: link về URL gốc, xóa cả bộ lọc chung lẫn trạng thái lịch sử. Đổi bộ lọc chung thì giữ trạng thái lịch sử đang chọn nếu hợp lệ.
+- Phân trang đang triển khai từng bước: đã có DTO trang, đọc số trang URL và DAO `countUpcomingSessionDays` / `countHistorySessionDays` đếm ngày sau lọc bằng `COUNT(DISTINCT SlotDate)`. Sắp tới xét Scheduled chưa kết thúc; lịch sử xét đúng nhóm hiện tại và trạng thái lọc riêng.
+- Bước 4 đã có DAO `findUpcomingSessionsPage` / `findHistorySessionsPage`: CTE FilteredSessions giữ đúng quyền xem/nhóm/bộ lọc, PageDays chọn các ngày bằng DISTINCT + OFFSET/FETCH, rồi JOIN lấy đủ buổi thuộc ngày đã chọn. Service sẽ truyền offset và cỡ trang 8; chưa nối vào Service/Servlet/JSP nên màn hiện tại vẫn dùng luồng lấy danh sách cũ. Không tải toàn bộ kết quả vào Java để cắt trang; không tách buổi cùng ngày. Đã compile và đối chiếu 288 trang trên SQL Server local với danh sách cũ, có lọc/trạng thái/gói đôi/rỗng và ngày nhiều buổi. Chưa làm AJAX.
+- Bước 5 đã thêm Service `getUpcomingSessionsPage` / `getHistorySessionsPage`: kiểm tra tài khoản/hồ sơ → gọi DAO đếm ngày sau lọc → tính tổng trang (tối thiểu 1), chặn số trang trong 1..totalPages → tính offset → gọi DAO lấy trang → bổ sung nhãn/cảnh báo hiện có → gom ngày và tạo `MyPtSessionPage`. Cỡ trang dùng hằng `DAYS_PER_PAGE = 8`. Không có ngày thì bỏ truy vấn lấy buổi, trả trang 1/1 với map rỗng; lỗi truy vấn trả fail, không trả rỗng. Chưa nối Servlet/JSP, nên màn hình vẫn dùng hai hàm Service cũ cho tới bước tiếp theo.
+- Kiểm tra bước 5: compile Java 17 thành công; đối chiếu 124 trang Service trên SQL Server local, gồm rỗng và các mốc 8/9/16/17 ngày, số trang âm/vượt giới hạn, khách đứng tên/đi cùng gói đôi, nhãn/cảnh báo khớp luồng cũ; tài khoản không tồn tại bị từ chối. Kiểm tra chỉ đọc, không sửa dữ liệu DB.
+
 ## Hạn mức đổi buổi gói PT theo tháng (10/10/2026, ĐÃ CHỐT trong chat)
 
 - P-08 đổi nghĩa: **số lượt đổi buổi cho mỗi tháng của gói PT**, mặc định 3. Hạn mức một gói = P-08 × số tháng của gói → gói 1/2/3 tháng được 3/6/9 lượt. Buổi lẻ vẫn không được đổi (BR-74).
@@ -27,6 +44,33 @@ Khi nhóm chốt xong 1 mục → đổi trạng thái thành **ĐÃ CHỐT**, g
 
 - `seedgen.py` trước đây chốt sẵn mọi buổi trong kỳ bảo lưu thành `Missed/MembershipFrozen` và nhả slot, kể cả buổi tương lai. Đã sửa: buổi chưa tới ngày giữ `Scheduled`, slot `Booked`; chỉ buổi đã qua ngày mới là `Missed/MembershipFrozen` (như JOB-04 chốt). Cập nhật `docs/database/SEED_CASES.md`.
 - Còn để ngỏ (chưa sửa): 9 buổi `Missed/NoCheckIn` mà cùng ngày khách có check-in vào gym (check-in ngẫu nhiên trùng ngày); seed vẫn nhả slot về `Free` cho mọi buổi `Missed`, trong khi mục JOB-04 ghi JOB-04 không giải phóng slot.
+## My PT Sessions — quyền vào gym thống nhất theo JOB-04 (10/10/2026, ĐÃ CHỐT trong chat)
+
+- Quyết định có hiệu lực: xét quyền vào gym của buổi PT theo logic JOB-04 hiện tại, chấp nhận **Membership hoặc DayPass hợp lệ theo ngày buổi tập**, áp dụng cho cả `PTSingle`, `PTCouple` và `SingleSession`.
+- Với gói đôi, ít nhất một thành viên có quyền vào gym hợp lệ thì không cảnh báo cả buổi là thiếu quyền vào gym. Có thể giải thích riêng tình trạng từng người khi cần.
+- Áp dụng thống nhất cho cảnh báo trên My PT Sessions, PT/Customer Dashboard và kiểm tra quyền vào gym trong các thao tác liên quan buổi PT; không dùng CBR-63 cũ để phủ nhận DayPass đã được chấp nhận theo quyết định này.
+- Nếu có DayPass hợp lệ cho ngày đó thì không hiện cảnh báo chỉ vì thiếu membership. Giữ nguyên điều kiện bảo lưu trong JOB-04 hiện tại: `canUseGym = (hasMembership || hasDayPass) && !isFrozen`; DayPass không tự bỏ qua kỳ bảo lưu. Gói đôi chỉ coi cả buổi thiếu quyền khi cả hai đều không dùng được gym.
+- Đầu việc tài liệu: sửa CBR-63 và rà CBR-61, CBR-66, CBR-67 cùng mô tả BF-08/UC liên quan để thống nhất điều kiện Membership hoặc DayPass; cảnh báo thiếu quyền vào gym không được diễn đạt thành bắt buộc mua membership khi DayPass đã hợp lệ.
+- Không suy rộng thành mọi điều kiện mua/đặt buổi đều được bỏ: các giới hạn slot, thời gian, hạn gói và lượt đổi vẫn giữ theo rule tương ứng.
+- Đây là quyết định đã chốt, không hỏi lại khi triển khai. Lần này chỉ cập nhật notes, chưa sửa SRS/SDS hoặc code cảnh báo.
+
+## Gói PT — lượt đổi theo thời hạn gói (10/10/2026, ĐÃ CHỐT; cập nhật triển khai xem mục đầu file)
+
+- Thay giới hạn 3 lượt cho toàn bộ gói bằng tổng lượt theo số tháng thời hạn gói: 1 tháng → 3 lượt, 2 tháng → 6 lượt, 3 tháng → 9 lượt. Cấp tổng giới hạn ngay lúc mua; dùng linh hoạt trong hạn gói, không reset theo tháng hoặc chu kỳ 25 ngày.
+- Giữ cách lưu hiện tại: lúc thanh toán tạo Subscription, tính `MaxSwapsSnapshot = số lượt mỗi tháng × số tháng của gói`; `SwapsUsed` vẫn là tổng lượt đã dùng của cả gói. Gói đôi dùng chung giới hạn, không nhân thêm theo số thành viên; SingleSession không được đổi theo BR-74.
+- Theo GBR-04, chỉ áp dụng chính sách mới cho gói mua mới; gói cũ giữ `MaxSwapsSnapshot` đã lưu, không tự cập nhật hàng loạt.
+- Đầu việc tài liệu: sửa BR-73 và mô tả P-08 để nói rõ số lượt đổi trên mỗi tháng thời hạn gói, thay cho số lượt tối đa của cả gói; rà các mô tả UC-38, đổi hộ khách và snapshot trong SRS/SDS để thống nhất.
+- Đầu việc code: rà các luồng thanh toán/tạo Subscription để tính snapshot mới. Các luồng đổi lịch vẫn kiểm tra tổng `SwapsUsed` với `MaxSwapsSnapshot`; DAO/Service/JSP khối Gói PT của bạn vẫn tính lượt còn lại từ snapshot trừ lượt đã dùng.
+- Không cần thêm bảng/cột cho phương án này: đã có `MaxSwapsSnapshot` và `SwapsUsed`. Có thể cập nhật seed data để minh họa chính sách mới khi test; không chạy seed/migration hoặc sửa dữ liệu đang dùng trong lần ghi notes này.
+- Cập nhật sau khi pull develop ngày 10/10/2026: seed, comment schema/entity/config đã được sửa như mục đầu file. Các đầu việc SRS/SDS và rà luồng bán gói/tạo snapshot ở trên vẫn cần đối chiếu; không suy ra dữ liệu DB đang chạy đã được cập nhật.
+
+## Danh mục gói — ngừng bán và gói khách đã mua (10/10/2026, ĐÃ CHỐT trong chat)
+
+- Quyết định: cho phép chuyển `Packages.Status` sang `Inactive` để ngừng bán dù còn khách sử dụng. UI gọi thao tác này là **Ngừng bán**, không gọi Xóa; giữ bản ghi để tra cứu lịch sử, không xóa vật lý.
+- Ngừng bán chỉ chặn bán mới, không thay đổi các đơn và subscription đã tạo. `Subscriptions.Status = Active` vẫn giữ hiệu lực, thời hạn, lịch tập và quyền lợi đã chốt; không đổi trạng thái theo `Packages.Status`.
+- Mâu thuẫn cần sửa tài liệu: **GBR-06** hiện cấm deactivate khi còn bản ghi Active tham chiếu, trong khi ghi chú màn quản lý gói cho phép ngừng bán gói còn đơn đang chạy. Cần bổ sung ngoại lệ cho danh mục `Packages` vào GBR-06 và thống nhất thuật ngữ/nghiệp vụ ngừng bán ở SRS, SDS nếu có nội dung tương ứng. Không mở rộng ngoại lệ này sang hồ sơ khách hoặc nhân viên.
+- Áp dụng ở My PT Sessions: `findActivePtPackages(customerId)` lọc `Subscriptions.Status = Active`, loại `PTSingle`/`PTCouple`, đơn `Paid` và quyền sở hữu/đi cùng; không lọc `Packages.Status`. Gói khách đã mua vẫn hiện khi danh mục đã ngừng bán.
+- Trạng thái tài liệu: mới ghi quyết định và đầu việc tại notes; **chưa sửa SRS/SDS gốc**. DAO/Service hiện tại giữ nguyên.
 
 ## BF-08 — kiểm tra và cập nhật Main Business Flow (09/10/2026)
 

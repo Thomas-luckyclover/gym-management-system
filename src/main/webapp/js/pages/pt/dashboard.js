@@ -1,22 +1,70 @@
-// ===== Mở tất cả / đóng tất cả ngày trong lịch 7 ngày =====
-// Mỗi ngày tự mở bằng <details>; JS chỉ cần cho hai nút điều khiển cả lịch.
+// ===== Dải 7 ngày dạng tab =====
+// JSP render đủ 7 bảng ngày (tắt JS vẫn đọc được); JS chỉ hiện bảng của ngày đang chọn.
+// Bàn phím: ←/→ chuyển ngày, Home/End về ngày đầu/cuối (mẫu tab của WAI-ARIA).
 document.addEventListener("DOMContentLoaded", function () {
-    const schedule = document.querySelector(".pt-schedule");
-    if (!schedule) {
+    const strip = document.querySelector("[data-pt-days]");
+    if (!strip) {
         return;
     }
-    const controls = schedule.querySelector("[data-schedule-controls]");
-    const days = schedule.querySelectorAll("details.pt-schedule-day");
-    if (!controls || !days.length) {
+    const tabs = Array.from(strip.querySelectorAll('[role="tab"]'));
+    if (!tabs.length) {
         return;
     }
-    controls.hidden = false;
-    controls.querySelector("[data-schedule-expand]").addEventListener("click", function () {
-        days.forEach(function (day) { day.open = true; });
+
+    // B1: chọn một ngày — đổi aria-selected, tabindex, ẩn/hiện bảng
+    function select(tab, moveFocus) {
+        tabs.forEach(function (item) {
+            const selected = item === tab;
+            item.setAttribute("aria-selected", selected ? "true" : "false");
+            item.tabIndex = selected ? 0 : -1;
+            const panel = document.getElementById(item.getAttribute("aria-controls"));
+            if (panel) {
+                panel.hidden = !selected;
+            }
+        });
+        if (moveFocus) {
+            tab.focus();
+        }
+        // Chỉ cuộn dải ngày ngang; không kéo cả trang khi đổi tab bằng bàn phím.
+        if (strip.scrollWidth > strip.clientWidth) {
+            strip.scrollTo({
+                left: Math.max(0, tab.offsetLeft - strip.offsetLeft - (strip.clientWidth - tab.offsetWidth) / 2),
+                behavior: window.matchMedia("(prefers-reduced-motion: reduce)").matches ? "instant" : "smooth"
+            });
+        }
+    }
+
+    // B2: mặc định chọn hôm nay (ngày có aria-selected="true" từ JSP), không có thì ngày đầu
+    const initial = tabs.find(function (tab) { return tab.getAttribute("aria-selected") === "true"; }) || tabs[0];
+    select(initial, false);
+    strip.classList.add("is-ready");
+
+    strip.addEventListener("click", function (event) {
+        const tab = event.target.closest('[role="tab"]');
+        if (tab) {
+            select(tab, false);
+        }
     });
-    controls.querySelector("[data-schedule-reset]").addEventListener("click", function () {
-        // Đóng mọi ngày, kể cả Hôm nay đang mở sẵn khi vào trang.
-        days.forEach(function (day) { day.open = false; });
+
+    strip.addEventListener("keydown", function (event) {
+        const index = tabs.indexOf(document.activeElement);
+        if (index < 0) {
+            return;
+        }
+        let next = -1;
+        if (event.key === "ArrowRight") {
+            next = (index + 1) % tabs.length;
+        } else if (event.key === "ArrowLeft") {
+            next = (index - 1 + tabs.length) % tabs.length;
+        } else if (event.key === "Home") {
+            next = 0;
+        } else if (event.key === "End") {
+            next = tabs.length - 1;
+        }
+        if (next >= 0) {
+            event.preventDefault();
+            select(tabs[next], true);
+        }
     });
 });
 
@@ -81,71 +129,4 @@ document.addEventListener("DOMContentLoaded", function () {
         }
         openingButton = null;
     });
-});
-
-// Tạo hạt cho lớp .pt-weather-effects trong _awning.jspf; CSS weather.css lo chuyển động.
-document.addEventListener("DOMContentLoaded", function () {
-    const effects = document.querySelector(".pt-weather-effects");
-    if (!effects || window.matchMedia("(prefers-reduced-motion: reduce)").matches) {
-        return;
-    }
-
-    let count = 0;
-    let shortestDuration = 2;
-    let durationRange = 3;
-    if (document.body.classList.contains("weather-rain")) {
-        count = 42;
-    } else if (document.body.classList.contains("weather-storm")) {
-        count = 60;
-        shortestDuration = 1.2;
-        durationRange = 1.5;
-    } else if (document.body.classList.contains("weather-snow")) {
-        count = 38;
-        shortestDuration = 8;
-        durationRange = 8;
-    } else if (document.body.classList.contains("weather-wind")) {
-        count = 24;
-        shortestDuration = 5;
-        durationRange = 5;
-    } else if (document.body.classList.contains("weather-night")) {
-        count = 36;
-        shortestDuration = 2;
-        durationRange = 3;
-    }
-
-    const particles = document.createDocumentFragment();
-    for (let i = 0; i < count; i++) {
-        const particle = document.createElement("span");
-        particle.className = "weather-particle";
-        particle.style.setProperty("--particle-x", Math.random() * 100 + "%");
-        particle.style.setProperty("--particle-y", Math.random() * 85 + 10 + "%");
-        particle.style.setProperty("--particle-opacity", Math.random() * 0.4 + 0.25);
-        particle.style.setProperty("--particle-delay", -Math.random() * 12 + "s");
-        particle.style.setProperty("--particle-duration", Math.random() * durationRange + shortestDuration + "s");
-        particle.style.setProperty("--particle-scale", (Math.random() * 0.6 + 0.7).toFixed(2));
-        particles.appendChild(particle);
-    }
-    effects.appendChild(particles);
-});
-
-// Nhiệt độ đã có sẵn trong HTML; JS chỉ cho số chạy nhanh khi không bật Reduce motion.
-document.addEventListener("DOMContentLoaded", function () {
-    const temperature = document.querySelector("[data-weather-temperature]");
-    if (!temperature || window.matchMedia("(prefers-reduced-motion: reduce)").matches) {
-        return;
-    }
-    const target = Number(temperature.dataset.weatherTemperature);
-    if (!Number.isFinite(target)) {
-        return;
-    }
-    temperature.setAttribute("aria-label", target + " độ C");
-    const start = performance.now();
-    function drawTemperature(now) {
-        const progress = Math.min((now - start) / 700, 1);
-        temperature.textContent = Math.round(target * progress) + "°";
-        if (progress < 1) {
-            requestAnimationFrame(drawTemperature);
-        }
-    }
-    requestAnimationFrame(drawTemperature);
 });

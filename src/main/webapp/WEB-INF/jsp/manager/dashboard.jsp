@@ -11,9 +11,11 @@
 <head>
     <%@ include file="/WEB-INF/jsp/common/head.jspf" %>
     <title>Báo cáo vận hành &amp; doanh thu - GMS</title>
-    <%-- Khung sidebar/topbar hiện nằm trong account-settings.css (chưa tách chung) — tạm dùng lại, nhờ Leader tách sau --%>
-    <link rel="stylesheet" href="${pageContext.request.contextPath}/css/pages/auth/account-settings.css">
-    <link rel="stylesheet" href="${pageContext.request.contextPath}/css/pages/manager/manager-dashboard.css">
+    <%-- Khung dock/sidebar/topbar dùng chung ở common.css (mục 11) --%>
+    <link rel="stylesheet" href="${pageContext.request.contextPath}/css/pages/manager/manager-dashboard.css?v=20261013c">
+    <link rel="stylesheet" href="${pageContext.request.contextPath}/css/pages/auth/notification-bell.css">
+
+    <script src="${pageContext.request.contextPath}/js/pages/auth/notification-bell.js" defer></script>
 </head>
 <body class="dock ${themeClass}">
 
@@ -29,30 +31,62 @@
             </div>
 
             <%-- Khối người dùng: giống topbar của Account Settings --%>
-            <c:if test="${not empty accountSettings}">
-                <div class="top-right">
-                    <a class="tb-user" href="${pageContext.request.contextPath}/account" title="Cài đặt tài khoản">
+            <%-- Chuông thông báo + tài khoản --%>
+            <div class="top-right">
+
+                <%@ include file="/WEB-INF/jsp/common/notification-bell.jspf" %>
+
+
+                <c:if test="${not empty accountSettings}">
+
+                    <a class="tb-user"
+                       href="${pageContext.request.contextPath}/account"
+                       title="Cài đặt tài khoản">
+
                         <c:choose>
+
                             <c:when test="${not empty accountSettings.avatar}">
-                                <img class="avatar" src="${pageContext.request.contextPath}${accountSettings.avatar}" alt="Ảnh đại diện">
+
+                                <img class="avatar"
+                                     src="${pageContext.request.contextPath}${accountSettings.avatar}"
+                                     alt="Ảnh đại diện">
+
                             </c:when>
+
                             <c:otherwise>
-                                <span class="avatar"><c:out value="${accountSettings.fullName.substring(0, 1)}" /></span>
+
+                                <span class="avatar">
+                                    <c:out value="${accountSettings.fullName.substring(0, 1)}" />
+                                </span>
+
                             </c:otherwise>
+
                         </c:choose>
+
+
                         <span class="tb-user-text">
-                            <b><c:out value="${accountSettings.fullName}" /></b>
-                            <small><c:out value="${currentRole.displayName}" /></small>
+
+                            <b>
+                                <c:out value="${accountSettings.fullName}" />
+                            </b>
+
+                            <small>
+                                <c:out value="${currentRole.displayName}" />
+                            </small>
+
                         </span>
+
                     </a>
-                </div>
-            </c:if>
+
+                </c:if>
+
+            </div>
         </header>
 
-        <main class="content">
+        <main class="content" id="main-content" tabindex="-1">
 
             <%-- Ghi chú bên trái, bộ lọc bên phải (giống mockup) --%>
-            <div class="page-intro">
+            <div class="page-intro" data-reveal>
                 <p>
                     <c:if test="${not empty report}">Số liệu cập nhật lúc ${gms:formatDateTime(report.generatedAt)}, không theo thời gian thực.</c:if>
                     <c:if test="${empty report}">Số liệu là ảnh chụp lúc xem, không theo thời gian thực.</c:if>
@@ -68,6 +102,12 @@
                     <div class="field">
                         <label class="field-label" for="reportTo">Đến ngày</label>
                         <input id="reportTo" name="to" type="date" required value="${to}">
+                    </div>
+                    <%-- Chọn nhanh khoảng ngày: điền 2 ô ngày rồi xem luôn (common.js "Chọn nhanh khoảng ngày") --%>
+                    <div class="range-presets" data-range-presets data-from="#reportFrom" data-to="#reportTo" role="group" aria-label="Chọn nhanh khoảng ngày">
+                        <button type="button" class="chip" data-range="7">7 ngày</button>
+                        <button type="button" class="chip" data-range="30">30 ngày</button>
+                        <button type="button" class="chip" data-range="month">Tháng này</button>
                     </div>
                     <button class="btn btn-primary" type="submit">Xem</button>
                     <%-- Xuất đúng báo cáo đang hiển thị (from/to của lần xem gần nhất), không phải ô ngày đang sửa dở --%>
@@ -95,13 +135,14 @@
             <c:when test="${not empty report}">
 
             <%-- ===== 6 thẻ tổng quan ===== --%>
-            <section class="report-stats" aria-label="Tổng quan">
-                <div class="report-card stat"><div class="stat-label">Doanh thu</div><div class="stat-value" title="${gms:formatMoney(report.totalRevenue)}"><c:out value="${report.totalRevenueText}" /></div><div class="stat-note">Đã gồm VAT</div></div>
-                <div class="report-card stat"><div class="stat-label">Hội viên đang hoạt động</div><div class="stat-value">${report.activeMembers}</div><div class="stat-note">+${report.newMembers} hội viên mới</div></div>
-                <div class="report-card stat"><div class="stat-label">Gói đang chạy</div><div class="stat-value">${report.runningPackages}</div><div class="stat-note">Gói tập, không gồm vé ngày</div></div>
-                <div class="report-card stat"><div class="stat-label">Hoa hồng PT</div><div class="stat-value" title="${gms:formatMoney(report.totalCommission)}"><c:out value="${report.totalCommissionText}" /></div><div class="stat-note">Theo % riêng từng PT</div></div>
-                <div class="report-card stat"><div class="stat-label">Vé 1 ngày</div><div class="stat-value">${report.dayPassVisits}</div><div class="stat-note">lượt · <c:out value="${report.dayPassRevenueText}" /> doanh thu</div></div>
-                <div class="report-card stat"><div class="stat-label">Lượt check-in</div><div class="stat-value">${report.checkInCount}</div><div class="stat-note">Gồm cả vé 1 ngày</div></div>
+            <%-- Bảng điểm: ô đầu tô màu chủ đạo; data-flip: số lật kiểu bảng giờ tàu khi tải (common.js) --%>
+            <section class="report-stats scoreboard" aria-label="Tổng quan" data-reveal>
+                <div class="report-card stat is-lead"><div class="stat-label">Doanh thu</div><div class="stat-value is-flap" title="${gms:formatMoney(report.totalRevenue)}" data-flip><c:out value="${report.totalRevenueText}" /></div><div class="stat-note">Đã gồm VAT</div><c:set var="delta" value="${reportDeltas['revenue']}" /><%@ include file="/WEB-INF/jsp/manager/_stat-delta.jspf" %></div>
+                <div class="report-card stat"><div class="stat-label">Hội viên đang hoạt động</div><div class="stat-value is-flap" data-flip>${report.activeMembers}</div><div class="stat-note">+${report.newMembers} hội viên mới</div></div>
+                <div class="report-card stat"><div class="stat-label">Gói đang chạy</div><div class="stat-value is-flap" data-flip>${report.runningPackages}</div><div class="stat-note">Gói tập, không gồm vé ngày</div></div>
+                <div class="report-card stat"><div class="stat-label">Hoa hồng PT</div><div class="stat-value is-flap" title="${gms:formatMoney(report.totalCommission)}" data-flip><c:out value="${report.totalCommissionText}" /></div><div class="stat-note">Theo % riêng từng PT</div><c:set var="delta" value="${reportDeltas['commission']}" /><%@ include file="/WEB-INF/jsp/manager/_stat-delta.jspf" %></div>
+                <div class="report-card stat"><div class="stat-label">Vé 1 ngày</div><div class="stat-value is-flap" data-flip>${report.dayPassVisits}</div><div class="stat-note">lượt · <c:out value="${report.dayPassRevenueText}" /> doanh thu</div><c:set var="delta" value="${reportDeltas['dayPass']}" /><%@ include file="/WEB-INF/jsp/manager/_stat-delta.jspf" %></div>
+                <div class="report-card stat"><div class="stat-label">Lượt check-in</div><div class="stat-value is-flap" data-flip>${report.checkInCount}</div><div class="stat-note">Gồm cả vé 1 ngày</div><c:set var="delta" value="${reportDeltas['checkIn']}" /><%@ include file="/WEB-INF/jsp/manager/_stat-delta.jspf" %></div>
             </section>
 
             <%-- Không có dữ liệu trong khoảng ngày → báo rõ (MSG03), vẫn giữ các thẻ ở trên --%>
@@ -112,7 +153,7 @@
             <c:if test="${not report.emptyInRange}">
 
             <%-- ===== Biểu đồ doanh thu: chiều cao cột = --percent (% so với trục Y) ===== --%>
-            <section class="report-card report-pad">
+            <section class="report-card report-pad" data-reveal>
                 <h2>Doanh thu theo <c:out value="${report.monthlyChart ? 'tháng' : 'ngày'}" /></h2>
                 <p class="report-sub">Triệu đồng, đã gồm VAT</p>
                 <div class="chart" role="img" aria-label="Biểu đồ doanh thu">
@@ -122,8 +163,10 @@
                         </c:forEach>
                         <div class="bars">
                             <c:forEach var="b" items="${report.buckets}">
-                                <div class="bar${b.last ? ' bar-last' : ''}" style="--percent:${b.percent}"
-                                     title="<c:out value='${b.fullLabel}' />: ${gms:formatMoney(b.amount)}"></div>
+                                <%-- tabindex + data-tooltip: xem số khi rê chuột hoặc Tab bằng bàn phím --%>
+                                <div class="bar${b.last ? ' bar-last' : ''}" style="--percent:${b.percent}" tabindex="0"
+                                     data-tooltip="<c:out value='${b.fullLabel}' />: ${gms:formatMoney(b.amount)}"
+                                     aria-label="<c:out value='${b.fullLabel}' />: ${gms:formatMoney(b.amount)}"></div>
                             </c:forEach>
                         </div>
                     </div>
@@ -133,7 +176,7 @@
                 </div>
             </section>
 
-            <div class="report-grid">
+            <div class="report-grid" data-reveal>
 
                 <%-- ===== Doanh thu theo gói ===== --%>
                 <section class="report-card">
@@ -141,19 +184,25 @@
                     <div class="report-table-wrap">
                         <table class="report-table">
                             <thead>
-                            <tr><th>Gói</th><th class="num">Số đơn</th><th class="num">Doanh thu</th><th class="num">VAT</th></tr>
+                            <tr><th>Gói</th><th class="lane-col">Tỉ lệ</th><th class="num">Số đơn</th><th class="num">Doanh thu</th><th class="num">VAT</th></tr>
                             </thead>
                             <tbody>
+                            <%-- Làn chạy: chấm dừng ở % doanh thu gói so với gói cao nhất (× 100 trước khi chia để BigDecimal không làm tròn về 0/1) --%>
+                            <c:set var="maxPackageRevenue" value="${0}" />
                             <c:forEach var="row" items="${report.packages}">
+                                <c:if test="${row.revenue > maxPackageRevenue}"><c:set var="maxPackageRevenue" value="${row.revenue}" /></c:if>
+                            </c:forEach>
+                            <c:forEach var="row" items="${report.packages}" varStatus="loop">
                                 <tr>
-                                    <td><c:out value="${row.packageName}" /></td>
+                                    <td><span class="rank">${loop.index + 1}</span><c:out value="${row.packageName}" /></td>
+                                    <td class="lane-col"><span class="lane"><span class="lane-runner" style="--pct:${maxPackageRevenue > 0 ? (row.revenue * 100) / maxPackageRevenue : 0}"></span></span></td>
                                     <td class="num">${row.orderCount}</td>
                                     <td class="num">${gms:formatMoney(row.revenue)}</td>
                                     <td class="num muted">${gms:formatMoney(row.vat)}</td>
                                 </tr>
                             </c:forEach>
                             <c:if test="${empty report.packages}">
-                                <tr><td colspan="4" class="muted">Không có đơn nào trong khoảng ngày.</td></tr>
+                                <tr><td colspan="5" class="muted">Không có đơn nào trong khoảng ngày.</td></tr>
                             </c:if>
                             </tbody>
                         </table>
@@ -195,8 +244,6 @@
     </div>
 </div>
 
-<%-- Dock (mở/đóng sidebar) đang nằm trong account-settings.js — nạp tạm; sẽ tách chung cùng CSS --%>
-<script src="${pageContext.request.contextPath}/js/pages/auth/account-settings.js?v=3" defer></script>
 <script src="${pageContext.request.contextPath}/js/pages/manager/manager-dashboard.js" defer></script>
 </body>
 </html>

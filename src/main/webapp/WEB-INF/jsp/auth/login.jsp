@@ -5,7 +5,7 @@
     <head>
         <%@ include file="/WEB-INF/jsp/common/head.jspf" %>
         <title>Đăng nhập — Super Gym</title>
-        <link rel="stylesheet" href="${pageContext.request.contextPath}/css/pages/auth/login.css?v=6">
+        <link rel="stylesheet" href="${pageContext.request.contextPath}/css/pages/auth/login.css?v=8">
         <script src="${pageContext.request.contextPath}/js/pages/auth/login.js?v=2" defer></script>
     </head>
     <%-- Theme tối + kính mờ: khớp prototype dang-nhap.html (body.dark.auth-dark) --%>
@@ -21,7 +21,7 @@
 
         <div class="auth-shell">
             <div class="auth-top">
-                <a class="auth-brand" href="${pageContext.request.contextPath}/">Super Gym</a>
+                <a class="auth-brand" href="${pageContext.request.contextPath}/"><img src="${pageContext.request.contextPath}/images/brand/supergym-wordmark.svg?v=2" alt="Super Gym" width="180" height="44"></a>
                 <a class="auth-back" href="${pageContext.request.contextPath}/">
                     <i class="fa-solid fa-arrow-left"></i> Về trang chủ
                 </a>
