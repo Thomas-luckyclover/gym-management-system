@@ -1,0 +1,224 @@
+@charset "UTF-8";
+/* Pumpy: aqua + ember. DOM .js-mascot/.is-visible/.is-jumping do home.js quản lý. */
+.mascot-stage {
+  position: relative;
+  isolation: isolate;
+  justify-self: center;
+  width: min(100%, calc(var(--layout-auth-card-width) + var(--space-12)));
+}
+
+/* Ánh sáng cục bộ tách nét vẽ khỏi nền tối, không chạy filter toàn khung. */
+.mascot-stage::before {
+  content: "";
+  position: absolute;
+  inset: -8% -4% -2%;
+  z-index: -1;
+  background:
+    radial-gradient(ellipse 46% 52% at 30% 58%, color-mix(in srgb, var(--brand-aqua) 16%, transparent), transparent 72%),
+    radial-gradient(ellipse 40% 40% at 76% 64%, color-mix(in srgb, var(--brand-sunset) 12%, transparent), transparent 72%);
+  pointer-events: none;
+}
+
+.mascot-hit {
+  display: block;
+  width: 100%;
+  padding: 0;
+  border: 0;
+  background: none;
+  cursor: pointer;
+  -webkit-tap-highlight-color: transparent;
+}
+
+.mascot-hit:focus-visible {
+  outline: var(--focus-outline-width) solid var(--brand-aqua);
+  outline-offset: var(--space-2);
+  border-radius: var(--radius-md);
+}
+
+.mascot-svg {
+  display: block;
+  width: 100%;
+  height: auto;
+  overflow: visible;
+}
+
+.mochi-lbl {
+  font-family: var(--font-heading);
+  font-weight: var(--font-weight-black);
+  font-size: var(--font-size-xs);
+  letter-spacing: var(--letter-spacing-normal);
+}
+
+/* Thở/chớp mắt. home-motion.js dừng vòng lặp khi khối ra khỏi màn hình. */
+.mochi {
+  transform-box: fill-box;
+  transform-origin: 50% 100%;
+  animation: mochi-breathe calc(var(--duration-grow) * 6) ease-in-out infinite;
+}
+
+.mochi .bl {
+  transform-box: fill-box;
+  transform-origin: 50% 50%;
+  animation: mochi-blink calc(var(--duration-grow) * 9) infinite;
+}
+
+.mascot-stage.is-motion-paused .mochi,
+.mascot-stage.is-motion-paused .mochi .bl {
+  animation-play-state: paused;
+}
+
+.mochi-eyes {
+  transform: translate(var(--ex, 0), var(--ey, 0));
+  transition: transform var(--duration-base) var(--ease-out);
+}
+
+.mochi-jump,
+.mochi-drop {
+  transform-box: fill-box;
+  transform-origin: 50% 100%;
+}
+
+/* Chỉ chờ sau khi home.js đã tạo IntersectionObserver; không JS vẫn hiện Pumpy. */
+.mascot-stage.js-mascot:not(.is-visible) .mochi-jump {
+  opacity: 0;
+  transform: translateY(var(--space-10)) scale(0.92);
+}
+
+.mascot-stage.js-mascot:not(.is-visible) .mochi-drop {
+  opacity: 0;
+  transform: translateY(calc((var(--space-12) * 2 + var(--space-4-5)) * -1));
+}
+
+.mascot-stage.is-visible .mochi-jump {
+  animation: mochi-pop var(--duration-grow) cubic-bezier(0.34, 1.56, 0.64, 1) both;
+}
+
+.mascot-stage.is-visible .mochi-drop--1 {
+  animation: mochi-fall calc(var(--duration-grow) * 0.85) cubic-bezier(0.5, 0, 0.75, 0) calc(var(--duration-grow) * 0.5) both,
+    mochi-land calc(var(--duration-grow) * 0.5) ease-out calc(var(--duration-grow) * 1.35);
+}
+
+.mascot-stage.is-visible .mochi-drop--2 {
+  animation: mochi-fall calc(var(--duration-grow) * 0.85) cubic-bezier(0.5, 0, 0.75, 0) calc(var(--duration-grow) * 0.85) both,
+    mochi-land calc(var(--duration-grow) * 0.5) ease-out calc(var(--duration-grow) * 1.7);
+}
+
+.mascot-hit:hover .mochi {
+  animation: mochi-wiggle var(--duration-grow) ease-in-out infinite alternate;
+}
+
+.mascot-stage.is-jumping .mochi-jump {
+  animation: mochi-hop var(--duration-grow) var(--ease-out) both;
+}
+
+.mascot-stage.is-jumping .mochi-shadow {
+  transform-box: fill-box;
+  transform-origin: 50% 50%;
+  animation: mochi-shadow var(--duration-grow) ease-in-out both;
+}
+
+.mascot-bubble {
+  position: absolute;
+  top: -2%;
+  left: 2%;
+  z-index: var(--z-base);
+  max-width: 90%;
+  margin: 0;
+  padding: var(--space-2) var(--space-3-5);
+  border: var(--border-width-thick) solid var(--brand-ink);
+  border-radius: var(--radius-md);
+  background: var(--brand-aqua);
+  color: var(--brand-ink);
+  font-family: var(--font-heading);
+  font-weight: var(--font-weight-extrabold);
+  font-size: var(--font-size-md);
+  line-height: var(--line-height-snug);
+  pointer-events: none;
+  opacity: 0;
+  transform: translateY(var(--space-2));
+  transition: opacity var(--duration-base) ease, transform var(--duration-slow) var(--ease-out-expo);
+}
+
+.mascot-bubble::after {
+  content: "";
+  position: absolute;
+  left: 30%;
+  bottom: calc(var(--space-2) * -1);
+  width: var(--space-3);
+  height: var(--space-3);
+  border-right: var(--border-width-thick) solid var(--brand-ink);
+  border-bottom: var(--border-width-thick) solid var(--brand-ink);
+  background: var(--brand-aqua);
+  transform: rotate(45deg);
+}
+
+.mascot-bubble.is-on {
+  opacity: 1;
+  transform: none;
+}
+
+@keyframes mochi-breathe {
+  0%, 100% { transform: scale(1); }
+  50% { transform: scale(1.015, 0.985); }
+}
+
+@keyframes mochi-blink {
+  0%, 92%, 96%, 100% { transform: scaleY(1); }
+  94% { transform: scaleY(0.1); }
+}
+
+@keyframes mochi-wiggle {
+  from { transform: rotate(-2deg) scale(1.02, 0.98); }
+  to { transform: rotate(2deg) scale(0.98, 1.02); }
+}
+
+@keyframes mochi-pop {
+  0% { opacity: 0; transform: translateY(var(--space-10)) scale(0.8); }
+  60% { opacity: 1; transform: translateY(calc(var(--space-3-5) * -1)) scale(1.04, 0.96); }
+  80% { transform: scale(0.97, 1.03); }
+  100% { opacity: 1; transform: none; }
+}
+
+@keyframes mochi-fall {
+  from { opacity: 0; transform: translateY(calc((var(--space-12) * 2 + var(--space-4-5)) * -1)); }
+  to { opacity: 1; transform: none; }
+}
+
+@keyframes mochi-land {
+  from { transform: scale(1.06, 0.92); }
+  to { transform: scale(1); }
+}
+
+@keyframes mochi-hop {
+  0% { transform: scale(1.04, 0.96); }
+  35% { transform: translateY(calc(var(--space-10) * -1)) scale(0.97, 1.03); }
+  70% { transform: scale(1.05, 0.95); }
+  100% { transform: none; }
+}
+
+@keyframes mochi-shadow {
+  35% { transform: scale(0.65); opacity: 0.08; }
+  100% { transform: scale(1); }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .mochi,
+  .mochi .bl,
+  .mascot-stage .mochi-jump,
+  .mascot-stage .mochi-drop,
+  .mascot-stage .mochi-shadow {
+    animation: none !important;
+  }
+
+  .mascot-stage.js-mascot .mochi-jump,
+  .mascot-stage.js-mascot .mochi-drop {
+    opacity: 1;
+    transform: none;
+  }
+
+  .mochi-eyes,
+  .mascot-bubble {
+    transition: opacity var(--duration-base) ease;
+    transform: none;
+  }
+}

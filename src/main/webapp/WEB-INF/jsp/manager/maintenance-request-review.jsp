@@ -64,7 +64,7 @@
 
       </header>
 
-      <main class="content">
+      <main class="content" id="main-content" tabindex="-1">
 
         <a class="maintenance-back"
            href="${pageContext.request.contextPath}/manager/maintenance-requests">

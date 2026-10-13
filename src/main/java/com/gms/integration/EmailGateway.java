@@ -1,6 +1,7 @@
 package com.gms.integration;
 
 import com.gms.util.AppConfig;
+import jakarta.mail.AuthenticationFailedException;
 import jakarta.mail.Authenticator;
 import jakarta.mail.Message;
 import jakarta.mail.MessagingException;
@@ -133,8 +134,9 @@ public class EmailGateway {
             body.addBodyPart(htmlPart);
             message.setContent(body);
 
-            // B6: gửi — dòng này đứng chờ tới khi Gmail nhận xong (thường 1–5 giây, tối đa 10 giây)
-            Transport.send(message);
+            // B6: gửi — đứng chờ tới khi Gmail nhận xong (thường 1–5 giây). Lần gửi đầu sau khi Tomcat vừa
+            //     khởi động hay mạng chập chờn đôi khi rớt kết nối → tự thử lại 1 lần trước khi báo lỗi cho khách
+            sendWithRetry(message);
 
         } catch (MessagingException | UnsupportedEncodingException e) {
             // B7: in lỗi thật cho dev xem, rồi ném EmailSendException để Service quyết định báo gì với khách
@@ -177,6 +179,24 @@ public class EmailGateway {
                 return new PasswordAuthentication(username, appPassword);
             }
         });
+    }
+
+    /**
+     * Gửi thư, rớt kết nối / hết giờ chờ thì thử lại thêm đúng 1 lần.
+     * Sai App Password thì gửi lại cũng vô ích → báo lỗi luôn.
+     *
+     * @param message thư đã dựng xong (người gửi, người nhận, tiêu đề, nội dung).
+     * @throws MessagingException khi cả 2 lần đều thất bại, hoặc Gmail từ chối đăng nhập.
+     */
+    private void sendWithRetry(MimeMessage message) throws MessagingException {
+        try {
+            Transport.send(message);
+        } catch (AuthenticationFailedException wrongPassword) {
+            throw wrongPassword;
+        } catch (MessagingException firstFailure) {
+            System.err.println("[EMAIL] Gửi lần 1 thất bại, thử lại: " + firstFailure.getMessage());
+            Transport.send(message);
+        }
     }
 
     /**

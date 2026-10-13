@@ -20,6 +20,9 @@ import java.io.IOException;
 import java.io.OutputStream;
 import java.nio.charset.StandardCharsets;
 import java.time.LocalDate;
+import java.time.temporal.ChronoUnit;
+import java.util.HashMap;
+import java.util.Map;
 
 /**
  * Servlet Báo cáo vận hành & doanh thu của Manager (URL /manager/dashboard).
@@ -86,6 +89,9 @@ public class ManagerDashboardServlet extends HttpServlet {
                 request.setAttribute("report", report);
                 session.setAttribute(SESSION_SNAPSHOT, report);
 
+                // B2.1: so với kỳ liền trước cùng số ngày (VD 01–31/10 so với 31/08–30/09) cho các chỉ số theo khoảng ngày
+                request.setAttribute("reportDeltas", buildDeltas(report, from, to));
+
                 // Toast MSG32 hiện phía trình duyệt khi bấm Xuất (file tải về không làm tải lại trang)
                 String fileName = ReportService.buildFileName(from, to);
                 request.setAttribute("exportedMessage", String.format(Messages.MSG32_EXPORTED, fileName));
@@ -142,5 +148,35 @@ public class ManagerDashboardServlet extends HttpServlet {
             out.write(new byte[] {(byte) 0xEF, (byte) 0xBB, (byte) 0xBF});   // BOM UTF-8
             out.write(body);
         }
+    }
+
+    /**
+     * % thay đổi so với kỳ liền trước cùng độ dài, cho 4 chỉ số tính theo khoảng ngày
+     * (doanh thu, hoa hồng PT, lượt vé 1 ngày, lượt check-in). Hội viên/gói đang chạy là số tại thời điểm xem nên không so.
+     * Giá trị null nghĩa là kỳ trước bằng 0 hoặc không lấy được, JSP ghi "Kỳ trước chưa có dữ liệu".
+     */
+    private Map<String, Integer> buildDeltas(ReportView current, LocalDate from, LocalDate to) {
+        Map<String, Integer> deltas = new HashMap<>();
+        long days = ChronoUnit.DAYS.between(from, to) + 1;
+        LocalDate previousTo = from.minusDays(1);
+        LocalDate previousFrom = previousTo.minusDays(days - 1);
+        ServiceResult<ReportView> previous = reportService.getReport(previousFrom, previousTo);
+        if (!previous.isSuccess() || previous.getData() == null) {
+            return deltas;
+        }
+        ReportView before = previous.getData();
+        deltas.put("revenue", percentChange(current.getTotalRevenue(), before.getTotalRevenue()));
+        deltas.put("commission", percentChange(current.getTotalCommission(), before.getTotalCommission()));
+        deltas.put("dayPass", percentChange(current.getDayPassVisits(), before.getDayPassVisits()));
+        deltas.put("checkIn", percentChange(current.getCheckInCount(), before.getCheckInCount()));
+        return deltas;
+    }
+
+    /** Làm tròn % thay đổi; kỳ trước bằng 0 thì không chia được → null. */
+    private Integer percentChange(long current, long previous) {
+        if (previous == 0) {
+            return null;
+        }
+        return (int) Math.round((current - previous) * 100.0 / previous);
     }
 }

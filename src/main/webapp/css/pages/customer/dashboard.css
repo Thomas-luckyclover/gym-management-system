@@ -7,7 +7,7 @@
 /* ===== 4. BỐ CỤC 2 CỘT (.split, .col-main, .col-side) ===== */
 .split {
   display: grid;
-  grid-template-columns: minmax(0, 1fr) 340px;
+  grid-template-columns: minmax(0, 2fr) minmax(0, 1fr);
   gap: var(--space-6);
   align-items: start;
 }
@@ -21,7 +21,7 @@
 
 .split > .col-side {
   position: sticky;
-  top: 84px;
+  top: calc(var(--space-12) + var(--space-5));
   display: flex;
   flex-direction: column;
   gap: var(--space-5);
@@ -93,7 +93,7 @@
 
 .status-hero .status-meta span {
   font-size: 0.8125rem;
-  text-transform: uppercase;
+  text-transform: none;
   letter-spacing: 0.06em;
   color: var(--color-board-soft);
 }
@@ -300,7 +300,7 @@
   font-family: var(--font-body);
   font-size: 0.8125rem;
   font-weight: 600;
-  text-transform: uppercase;
+  text-transform: none;
   letter-spacing: 0.1em;
   color: var(--color-text-soft);
 }
@@ -339,10 +339,10 @@
   white-space: nowrap;
 }
 
-.badge-ok     { background: var(--color-success-tint); color: var(--color-success); border-color: var(--color-success-border); }
-.badge-warn   { background: var(--color-warning-tint); color: var(--color-warning); border-color: var(--color-warning-border); }
-.badge-danger { background: var(--color-danger-tint); color: var(--color-danger); border-color: var(--color-danger-border); }
-.badge-info   { background: var(--color-info-tint); color: var(--color-info); border-color: var(--color-info-border); }
+.badge-ok     { background: var(--color-success-tint); color: var(--color-success-ink); border-color: var(--color-success-border); }
+.badge-warn   { background: var(--color-warning-tint); color: var(--color-warning-ink); border-color: var(--color-warning-border); }
+.badge-danger { background: var(--color-danger-tint); color: var(--color-danger-ink); border-color: var(--color-danger-border); }
+.badge-info   { background: var(--color-info-tint); color: var(--color-info-ink); border-color: var(--color-info-border); }
 .badge-muted  { background: var(--color-bg); color: var(--color-text-soft); border-color: var(--color-border); }
 
 .stack-3 { display: flex; flex-direction: column; gap: var(--space-3); }
@@ -374,3 +374,78 @@
 }
 .customer-weather-page .status-hero .section-label,
 .customer-weather-page .status-hero .status-meta span { color: var(--color-board-soft); }
+
+/* Gói còn từ 7 ngày trở xuống: nhắc gia hạn ngay trong khối trạng thái (nền đen) */
+.status-expiring {
+  margin: var(--space-2) 0 0;
+  color: var(--color-warning-border);
+  font-size: var(--font-size-sm);
+  font-weight: var(--font-weight-semibold);
+}
+
+/* =====================================================================
+   CUSTOMER DASHBOARD — thương hiệu SUNSET × DEEP OCEAN (cùng chế độ tối/sáng với PT, biến --pt-* ở tokens.css).
+   Đại dương làm nền, hoàng hôn cho khối trạng thái gói (điểm nóng duy nhất ngoài dải lời chào).
+   ===================================================================== */
+body.customer-dashboard-page { background: var(--pt-bg); color: var(--pt-text); }
+.customer-dashboard-page .app,
+.customer-dashboard-page .main { background: transparent; }
+.customer-dashboard-page .topbar {
+  background: color-mix(in srgb, var(--pt-bg) 88%, transparent);
+  border-bottom: var(--border-width) solid var(--pt-line);
+  backdrop-filter: blur(var(--space-3));
+  color: var(--pt-text);
+}
+.customer-dashboard-page .top-right { display: flex; align-items: center; gap: var(--space-3); }
+.customer-dashboard-page .tb-user { border: var(--border-width) solid var(--pt-line-strong); background: var(--pt-panel); color: var(--pt-text); }
+
+.cust-hero { margin-bottom: var(--space-6); }
+
+/* Gói đang dùng: ngày và hành động đọc rõ, điểm nhấn thương hiệu gọn. */
+.customer-dashboard-page .status-hero {
+  border: var(--border-width) solid var(--pt-line-strong);
+  border-radius: var(--radius-md);
+  background: var(--brand-ocean-deep);
+  color: var(--dock-text);
+  box-shadow: none;
+}
+.customer-dashboard-page .status-hero::after { display: none; }
+.customer-dashboard-page .status-hero h2 {
+  margin-top: var(--space-2);
+  font-family: var(--font-body);
+  font-size: var(--font-size-2xl);
+  font-weight: var(--font-weight-semibold);
+  line-height: var(--line-height-snug);
+  text-transform: none;
+  color: var(--brand-aqua-soft);
+}
+.customer-dashboard-page .status-hero .section-label,
+.customer-dashboard-page .status-hero .status-meta span { color: var(--dock-muted); }
+.customer-dashboard-page .status-hero .status-meta b { color: var(--dock-text); }
+.customer-dashboard-page .status-expiring { color: var(--brand-sunset-hi); }
+
+/* Panel và thẻ bên: nước sâu */
+.customer-dashboard-page .panel,
+.customer-dashboard-page .side-card {
+  border: var(--border-width) solid var(--pt-line);
+  border-radius: var(--radius-sm);
+  background: var(--pt-panel);
+  color: var(--pt-text);
+  box-shadow: var(--pt-shadow);
+}
+.customer-dashboard-page .panel-head h2,
+.customer-dashboard-page .side-card h3 {
+  font-family: var(--font-body);
+  font-weight: var(--font-weight-semibold);
+  letter-spacing: var(--letter-spacing-normal);
+  text-transform: none;
+  color: var(--pt-text);
+}
+.customer-dashboard-page .section-label { color: var(--pt-lagoon-text); letter-spacing: var(--letter-spacing-normal); }
+.customer-dashboard-page .side-row span,
+.customer-dashboard-page .muted { color: var(--pt-soft); }
+.customer-dashboard-page .data-list { border-color: var(--pt-line); background: transparent; }
+.customer-dashboard-page .data-row { border-color: var(--pt-line); }
+.customer-dashboard-page .data-row:hover { background: var(--pt-panel-2); }
+.customer-dashboard-page .kpi-bar { background: var(--pt-line-strong); }
+.customer-dashboard-page .kpi-bar i { background: linear-gradient(90deg, var(--brand-aqua), var(--brand-ocean)); }

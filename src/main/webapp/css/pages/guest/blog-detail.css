@@ -1,479 +1,276 @@
-/* =====================================================================
-   blog-detail.css — CSS riêng cho màn hình Chi tiết bài viết Blog (SRS #7 / UC-06)
-   Lớp 3/3 của CSS: tokens.css → common.css → css/pages/guest/blog-detail.css
-   Toàn bộ màu sắc, khoảng cách, font chữ, bo góc sử dụng biến từ tokens.css.
-   ===================================================================== */
-
-/* ============================ THANH TIẾN TRÌNH ĐỌC ============================ */
-/* id này được dùng trong blog-detail.js — hàm updateReadingProgress() cập nhật độ rộng (width: 0% -> 100%) khi cuộn trang */
-#readingProgressBar {
+/* Chi tiết Journal: bề rộng đọc 72ch; ảnh bìa tự nhiên 3:2.
+   blog-detail.js dùng #readingProgressBar, #articleBody, #btnShareArticle, #btnScrollToTop. */
+.journal-detail #readingProgressBar {
   position: fixed;
-  top: 0;
-  left: 0;
-  height: 3px;
+  inset: 0 auto auto 0;
+  height: var(--border-width-accent);
   width: 0%;
-  background: var(--color-primary);
-  z-index: var(--z-sticky, 200);
-  transition: width var(--duration-fast) linear;
+  background: var(--brand-ember);
+  z-index: var(--z-header);
 }
 
-
-/* ============================ BỐ CỤC CHÍNH BÀI VIẾT ============================ */
-.main-content {
-  min-height: calc(100vh - 350px);
+.journal-detail .article-wrap {
+  max-width: var(--layout-text-max-width);
+  margin-inline: auto;
+  padding-block: var(--space-8) var(--space-12);
 }
 
-.wrap {
-  max-width: var(--layout-container-max, 1180px);
-  margin: 0 auto;
-  padding-inline: var(--space-5);
-}
-
-.article-wrap {
-  max-width: 760px;
-  margin: 0 auto;
-  padding-block: var(--space-7) var(--space-10);
-}
-
-.back-link {
+.journal-detail .back-link {
   display: inline-flex;
   align-items: center;
   gap: var(--space-2);
-  color: var(--color-text-soft);
-  font-weight: 700;
+  min-height: var(--control-height-lg);
+  margin-bottom: var(--space-5);
+  color: var(--brand-muted);
   font-size: var(--font-size-sm);
   text-decoration: none;
-  margin-bottom: var(--space-5);
-  transition: color var(--duration-fast);
 }
 
-.back-link:hover {
-  color: var(--color-primary-hover);
+.journal-detail .back-link:hover {
+  color: var(--brand-ember);
 }
 
-.back-link-flush {
+.journal-detail .article-cover {
+  position: relative;
+  aspect-ratio: 3 / 2;
+  overflow: hidden;
+  background: var(--brand-ocean-deep);
+  margin-bottom: var(--space-6);
+}
+
+.journal-detail .article-cover-img {
+  display: block;
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+}
+
+.journal-detail .article-cover-fallback {
+  position: absolute;
+  inset: 0;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  color: var(--brand-aqua);
+}
+
+.journal-detail .article-cover-fallback.is-hidden {
+  display: none;
+}
+
+.journal-detail .article-cover-icon {
+  font-size: var(--font-size-display);
+  position: relative;
+}
+
+.journal-detail .article-wrap h1 {
+  font-family: var(--font-body);
+  font-size: var(--font-size-display);
+  font-weight: var(--font-weight-bold);
+  line-height: var(--line-height-snug);
+  letter-spacing: var(--letter-spacing-normal);
+  text-wrap: balance;
+  margin-block: var(--space-4) var(--space-5);
+}
+
+.journal-detail .article-meta {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: var(--space-4);
+  padding-bottom: var(--space-5);
+  border-bottom: var(--border-width) solid var(--brand-line);
+  color: var(--brand-muted);
+  font-size: var(--font-size-sm);
+}
+
+.journal-detail .meta-item {
+  display: inline-flex;
+  align-items: center;
+  gap: var(--space-2);
+}
+
+.journal-detail .btn-share, .journal-detail .btn-top {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: var(--space-2);
+  min-height: var(--control-height-lg);
+  padding: var(--space-2) var(--space-4);
+  border: var(--border-width) solid var(--brand-line);
+  border-radius: var(--radius-xs);
+  background: transparent;
+  color: var(--brand-paper);
+  font-family: var(--font-body);
+  font-size: var(--font-size-sm);
+  cursor: pointer;
+}
+
+.journal-detail .btn-share {
+  margin-left: auto;
+}
+
+.journal-detail .btn-share:hover, .journal-detail .btn-top:hover {
+  border-color: var(--brand-ember);
+  color: var(--brand-ember);
+}
+
+.journal-detail .btn-share:focus-visible, .journal-detail .btn-top:focus-visible, .journal-detail .back-link:focus-visible {
+  outline: var(--focus-outline-width) solid var(--brand-aqua);
+  outline-offset: var(--focus-outline-offset);
+}
+
+.journal-detail .article-body {
+  margin-top: var(--space-8);
+  font-family: var(--font-body);
+  font-size: var(--font-size-lg);
+  line-height: var(--line-height-relaxed);
+  color: var(--brand-paper);
+  overflow-wrap: anywhere;
+}
+
+.journal-detail .article-body p {
+  margin-block: 0 var(--space-5);
+}
+
+.journal-detail .article-body h2 {
+  font-size: var(--font-size-2xl);
+  margin-block: var(--space-10) var(--space-4);
+  font-weight: var(--font-weight-bold);
+  line-height: var(--line-height-snug);
+  text-wrap: balance;
+}
+
+.journal-detail .article-body h3 {
+  font-size: var(--font-size-xl);
+  margin-block: var(--space-8) var(--space-4);
+  line-height: var(--line-height-normal);
+}
+
+.journal-detail .article-body h4 {
+  font-size: var(--font-size-lg);
+  margin-block: var(--space-6) var(--space-3);
+}
+
+.journal-detail .article-body a {
+  color: var(--brand-aqua);
+  text-underline-offset: var(--space-1);
+}
+
+.journal-detail .article-body a:hover {
+  color: var(--brand-paper);
+}
+
+.journal-detail .article-body ul, .journal-detail .article-body ol {
+  margin-block: var(--space-5);
+  padding-left: var(--space-6);
+}
+
+.journal-detail .article-body li {
+  padding-left: var(--space-1);
+  margin-bottom: var(--space-3);
+}
+
+.journal-detail .article-body li::marker {
+  color: var(--brand-ember);
+}
+
+.journal-detail .article-body blockquote {
+  margin: var(--space-8) 0;
+  padding: var(--space-6);
+  background: var(--brand-ocean-deep);
+  font-size: var(--font-size-xl);
+  line-height: var(--line-height-relaxed);
+}
+
+.journal-detail .article-body blockquote p:last-child {
   margin-bottom: 0;
 }
 
-/* ============================ ẢNH BÌA BÀI VIẾT ============================ */
-.article-cover {
-  height: 320px;
-  position: relative;
-  overflow: hidden;
-  border-radius: var(--radius-lg);
-  margin-bottom: var(--space-6);
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  color: rgba(255, 255, 255, 0.92);
-  box-shadow: var(--shadow-card);
-}
-
-.article-cover-img {
-  width: 100%;
-  height: 100%;
-  object-fit: cover;
+.journal-detail .article-body img {
   display: block;
-}
-
-.article-cover-fallback {
-  position: absolute;
-  inset: 0;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-}
-
-.article-cover-fallback.is-hidden {
-  display: none;
-}
-
-.cover-pattern {
-  position: absolute;
-  inset: 0;
-  width: 100%;
-  height: 100%;
-}
-
-.article-cover-icon {
-  position: relative;
-  z-index: 1;
-  display: flex;
-}
-
-.article-cover-icon i,
-.article-cover-icon svg {
-  font-size: 3rem;
-  width: 48px;
-  height: 48px;
-}
-
-/* Tone gradients cho ảnh bìa / thumbnail */
-.tone-amber {
-  background: linear-gradient(135deg, #A9762C, #6E4A17);
-}
-
-.tone-green {
-  background: linear-gradient(135deg, #2F8F5B, #1F6B41);
-}
-
-.tone-blue {
-  background: linear-gradient(135deg, #2E6FBA, #1F4F8A);
-}
-
-/* ============================ NHÃN CHUYÊN MỤC (CHIP) ============================ */
-.chip {
-  display: inline-flex;
-  align-items: center;
-  font-size: var(--font-size-2xs);
-  font-weight: 800;
-  text-transform: uppercase;
-  letter-spacing: 0.05em;
-  padding: var(--space-1) var(--space-2-5);
-  border-radius: var(--radius-pill);
-}
-
-.chip-tap-luyen {
-  background: var(--color-primary-tint);
-  color: var(--color-primary-hover);
-}
-
-.chip-dinh-duong {
-  background: var(--color-success-tint);
-  color: var(--color-success);
-}
-
-.chip-tin-tuc {
-  background: var(--color-info-tint);
-  color: var(--color-info);
-}
-
-/* ============================ TIÊU ĐỀ & THÔNG TIN META ============================ */
-.article-wrap h1 {
-  font-family: var(--font-heading);
-  font-size: clamp(1.65rem, 3.5vw, 2.25rem);
-  font-weight: 800;
-  color: var(--color-text);
-  margin-top: var(--space-4);
-  line-height: 1.25;
-  letter-spacing: -0.02em;
-}
-
-.article-meta {
-  display: flex;
-  gap: var(--space-4);
-  align-items: center;
-  color: var(--color-text-soft);
-  font-size: var(--font-size-sm);
-  margin-top: var(--space-4);
-  padding-bottom: var(--space-5);
-  border-bottom: 1px solid var(--color-border);
-  flex-wrap: wrap;
-}
-
-.meta-item {
-  display: inline-flex;
-  align-items: center;
-  gap: var(--space-1-5);
-}
-
-/* id này được dùng trong blog-detail.js — hàm handleShareArticle() gắn sự kiện click để sao chép liên kết */
-#btnShareArticle {
-  background: none;
-  border: 1px solid var(--color-border);
-  border-radius: var(--radius-pill);
-  padding: var(--space-1) var(--space-3);
-  font-size: var(--font-size-xs);
-  font-weight: 600;
-  color: var(--color-text-soft);
-  cursor: pointer;
-  display: inline-flex;
-  align-items: center;
-  gap: var(--space-1-5);
-  margin-left: auto;
-  transition: all var(--duration-fast);
-}
-
-#btnShareArticle:hover {
-  background: var(--color-primary-tint);
-  border-color: var(--color-primary);
-  color: var(--color-primary-hover);
-}
-
-/* ============================ NỘI DUNG CHI TIẾT (ARTICLE BODY) ============================ */
-/* id này được dùng trong blog-detail.js — đọc chiều cao nội dung để tính toán tiến trình đọc */
-#articleBody {
-  margin-top: var(--space-6);
-  font-family: var(--font-body);
-  font-size: var(--font-size-base);
-  color: var(--color-text);
-  line-height: 1.8;
-  display: flex;
-  flex-direction: column;
-  gap: var(--space-4-5);
-}
-
-#articleBody p {
-  margin: 0;
-  max-width: 100%;
-}
-
-#articleBody h2 {
-  font-family: var(--font-heading);
-  font-size: var(--font-size-xl);
-  font-weight: 700;
-  color: var(--color-text);
-  margin-top: var(--space-6);
-  margin-bottom: var(--space-2);
-  line-height: 1.35;
-  padding-left: var(--space-3);
-  border-left: 4px solid var(--color-primary);
-}
-
-#articleBody h3 {
-  font-family: var(--font-heading);
-  font-size: var(--font-size-lg);
-  font-weight: 700;
-  color: var(--color-text);
-  margin-top: var(--space-4);
-  margin-bottom: var(--space-1-5);
-}
-
-#articleBody ul,
-#articleBody ol {
-  margin: 0;
-  padding-left: var(--space-6);
-  display: flex;
-  flex-direction: column;
-  gap: var(--space-2);
-}
-
-#articleBody li {
-  line-height: 1.7;
-}
-
-#articleBody strong {
-  font-weight: 700;
-  color: var(--color-text);
-}
-
-#articleBody a {
-  color: var(--color-primary);
-  text-decoration: underline;
-  text-underline-offset: 3px;
-  font-weight: 600;
-}
-
-#articleBody a:hover {
-  color: var(--color-primary-hover);
-}
-
-#articleBody blockquote {
-  margin: var(--space-4) 0;
-  padding: var(--space-4) var(--space-5);
-  background: var(--color-primary-tint);
-  border-left: 4px solid var(--color-primary);
-  border-radius: 0 var(--radius-md) var(--radius-md) 0;
-  font-style: italic;
-  color: var(--color-text);
-}
-
-#articleBody img {
   max-width: 100%;
   height: auto;
-  border-radius: var(--radius-md);
-  margin: var(--space-4) 0;
-  box-shadow: var(--shadow-card);
+  margin-block: var(--space-6);
 }
 
-/* ============================ THANH ĐIỀU HƯỚNG CUỐI BÀI ============================ */
-.article-nav {
-  margin-top: var(--space-8);
-  padding-top: var(--space-5);
-  border-top: 1px solid var(--color-border);
+.journal-detail .article-body table {
+  width: 100%;
+  border-collapse: collapse;
+  margin-block: var(--space-6);
+  font-size: var(--font-size-sm);
+}
+
+.journal-detail .article-body th, .journal-detail .article-body td {
+  padding: var(--space-3);
+  border: var(--border-width) solid var(--brand-line);
+  text-align: left;
+}
+
+.journal-detail .article-body th {
+  background: var(--brand-ocean-deep);
+}
+
+.journal-detail .article-body hr {
+  border: 0;
+  border-top: var(--border-width) solid var(--brand-line);
+  margin-block: var(--space-8);
+}
+
+.journal-detail .article-nav {
   display: flex;
-  align-items: center;
   justify-content: space-between;
+  align-items: center;
   gap: var(--space-4);
   flex-wrap: wrap;
+  border-top: var(--border-width) solid var(--brand-line);
+  padding-top: var(--space-6);
+  margin-top: var(--space-10);
 }
 
-/* id này được dùng trong blog-detail.js — hàm handleScrollToTop() gắn sự kiện cuộn mượt lên đầu */
-#btnScrollToTop {
-  background: none;
-  border: 1px solid var(--color-border);
-  border-radius: var(--radius-pill);
-  padding: var(--space-2) var(--space-4);
-  font-size: var(--font-size-sm);
-  font-weight: 600;
-  color: var(--color-text-soft);
-  cursor: pointer;
-  display: inline-flex;
-  align-items: center;
-  gap: var(--space-2);
-  transition: all var(--duration-fast);
+.journal-detail .back-link-flush {
+  margin-bottom: 0;
 }
 
-#btnScrollToTop:hover {
-  background: var(--color-surface-soft, #f7f6f2);
-  color: var(--color-primary);
-  border-color: var(--color-primary);
+.journal-detail .related-section {
+  padding-block: var(--space-12);
+  background: var(--brand-ocean-surface);
 }
 
-/* ============================ CÙNG CHUYÊN MỤC / ĐỌC TIẾP ============================ */
-.section-alt {
-  background: var(--color-bg);
-  border-top: 1px solid var(--color-border);
-  padding-block: var(--space-8) var(--space-10);
+.journal-detail .section-head {
+  margin-bottom: var(--space-8);
 }
 
-.section-head {
-  margin-bottom: var(--space-6);
-}
-
-.eyebrow {
-  display: inline-flex;
-  align-items: center;
-  gap: var(--space-2);
-  font-size: var(--font-size-xs);
-  font-weight: 700;
+.journal-detail .section-head h2 {
+  margin: 0;
+  font-family: var(--font-cinematic);
+  font-size: var(--brand-heading-size);
+  font-weight: var(--font-weight-bold);
+  line-height: var(--line-height-tight);
   text-transform: uppercase;
-  letter-spacing: 0.08em;
-  color: var(--color-primary);
 }
 
-.section-head h2 {
-  font-family: var(--font-heading);
-  font-size: var(--font-size-2xl);
-  font-weight: 800;
-  color: var(--color-text);
-  margin-top: var(--space-2);
-}
-
-.post-grid {
-  display: grid;
-  grid-template-columns: repeat(3, 1fr);
-  gap: var(--space-5);
-}
-
-.post-card {
-  background: var(--color-surface);
-  border: 1px solid var(--color-border);
-  border-radius: var(--radius-lg);
-  overflow: hidden;
-  box-shadow: var(--shadow-card);
-  text-decoration: none;
-  color: inherit;
-  display: flex;
-  flex-direction: column;
-  transition: transform var(--duration-fast), box-shadow var(--duration-fast);
-}
-
-.post-card:hover {
-  transform: translateY(-3px);
-  box-shadow: var(--shadow-pop);
-  border-color: var(--color-primary-border);
-}
-
-.post-thumb {
-  height: 140px;
-  position: relative;
-  overflow: hidden;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  color: rgba(255, 255, 255, 0.92);
-}
-
-.post-thumb-img {
-  width: 100%;
-  height: 100%;
-  object-fit: cover;
-  display: block;
-}
-
-.post-thumb-fallback {
-  position: absolute;
-  inset: 0;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-}
-
-.post-thumb-fallback.is-hidden {
+.journal-detail .section-head .eyebrow {
   display: none;
 }
-
-.post-thumb-icon i,
-.post-thumb-icon svg {
-  font-size: 1.8rem;
-  width: 30px;
-  height: 30px;
+@media (max-width: 640px) {
+  .journal-detail .article-wrap {
+  padding-top: var(--space-5);
 }
 
-.post-body {
-  padding: var(--space-4) var(--space-4-5);
-  display: flex;
-  flex-direction: column;
-  gap: var(--space-2-5);
-  flex-grow: 1;
+.journal-detail .article-body {
+  font-size: var(--font-size-base);
 }
 
-.post-body h3 {
-  font-family: var(--font-heading);
-  font-size: var(--font-size-md);
-  font-weight: 700;
-  line-height: 1.4;
-  margin: 0;
-  color: var(--color-text);
+.journal-detail .article-wrap h1 {
+  font-size: var(--font-size-4xl);
 }
 
-.post-excerpt {
-  color: var(--color-text-soft);
-  font-size: var(--font-size-sm);
-  line-height: 1.5;
-  margin: 0;
-  flex-grow: 1;
+.journal-detail .btn-share {
+  margin-left: 0;
 }
 
-.post-meta {
-  font-size: var(--font-size-xs);
-  color: var(--color-text-muted);
-  display: flex;
-  align-items: center;
-  gap: var(--space-1-5);
-  margin-top: auto;
+.journal-detail .article-nav {
+  align-items: flex-start;
 }
-
-/* ============================ RESPONSIVE CHO MÀN HÌNH NHỎ ============================ */
-@media (max-width: 900px) {
-  .post-grid {
-    grid-template-columns: repeat(2, 1fr);
-  }
-}
-
-@media (max-width: 768px) {
-  .article-cover {
-    height: 220px;
-  }
-
-  .article-wrap h1 {
-    font-size: 1.5rem;
-  }
-}
-
-@media (max-width: 600px) {
-  .post-grid {
-    grid-template-columns: 1fr;
-  }
-
-  .article-meta {
-    gap: var(--space-2-5);
-  }
-
-  #btnShareArticle {
-    margin-left: 0;
-    width: 100%;
-    justify-content: center;
-  }
 }

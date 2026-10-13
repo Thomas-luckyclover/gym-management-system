@@ -5,14 +5,16 @@
 <%-- Đang lọc theo filter Servlet THỰC SỰ áp dụng (không theo URL thô): khối đang bị lọc dùng câu rỗng "Không có buổi phù hợp". Bộ lọc sai → sessionFilter là none() → hai biến này false. --%>
 <c:set var="upcomingFiltered" value="${sessionFilter.commonFilterActive}" />
 <c:set var="historyFiltered" value="${sessionFilter.historyFilterActive}" />
+<c:set var="activeSessionView" value="${param.view eq 'packages' ? 'packages' : param.view eq 'upcoming' ? 'upcoming' : param.view eq 'history' or not empty param.historyStatus ? 'history' : 'upcoming'}" />
 
 <!DOCTYPE html>
 <html lang="vi">
 <head>
     <%@ include file="/WEB-INF/jsp/common/head.jspf" %>
     <title>Lịch tập của tôi · Super Gym</title>
-    <link rel="stylesheet" href="${pageContext.request.contextPath}/css/pages/customer/dashboard.css?v=8">
-    <link rel="stylesheet" href="${pageContext.request.contextPath}/css/pages/customer/my-pt-sessions.css?v=13">
+    <link rel="stylesheet" href="${pageContext.request.contextPath}/css/pages/customer/dashboard.css?v=20261013c">
+    <link rel="stylesheet" href="${pageContext.request.contextPath}/css/pages/customer/my-pt-sessions.css?v=17">
+    <script src="${pageContext.request.contextPath}/js/pages/customer/my-pt-sessions.js?v=1" defer></script>
 </head>
 <body class="dock ${themeClass}">
 <%@ include file="/WEB-INF/jsp/common/flash-toast.jspf" %>
@@ -38,108 +40,35 @@
             </c:if>
         </header>
 
-        <main class="content my-pt-sessions">
+        <main class="content my-pt-sessions" id="main-content" tabindex="-1" data-active-view="${activeSessionView}">
             <c:if test="${not empty dashboardError}">
                 <div class="alert-banner danger" role="alert"><c:out value="${dashboardError}" /></div>
             </c:if>
 
-            <%-- ===== Gói PT của bạn (ptPackages: List<MyPtPackageView>, ptPackagesError: lỗi từ Service) ===== --%>
-            <section class="my-pt-panel" aria-labelledby="packages-title" data-reveal>
-                <div class="my-pt-heading">
-                    <div class="my-pt-title-with-hint">
-                        <h2 id="packages-title">Gói PT của bạn</h2>
-                        <%-- Giải thích chỉ hiện khi hover/focus nút i, cùng cách dùng với PT Dashboard. --%>
-                        <span class="my-pt-info">
-                            <button type="button" aria-label="Giải thích thông tin gói PT" aria-describedby="packages-help">i</button>
-                            <span id="packages-help" role="tooltip">
-                                <strong>Tổng số buổi:</strong> số buổi được tạo khi thanh toán gói.<br>
-                                <strong>Buổi chưa chốt:</strong> gồm buổi sắp tới và buổi đang chờ kết quả.<br>
-                                <strong>Lượt đổi còn lại:</strong> theo giới hạn lúc mua gói. Với gói đôi, hai thành viên dùng chung số buổi và lượt đổi.
-                            </span>
-                        </span>
-                    </div>
-                    <a class="btn btn-primary btn-sm" href="${pageContext.request.contextPath}/customer/book-session">Đặt buổi lẻ</a>
-                </div>
-                <c:choose>
-                    <%-- 1. Kiểm tra lỗi trước: lỗi tải không có nghĩa là khách chưa có gói. --%>
-                    <c:when test="${not empty ptPackagesError}">
-                        <p class="my-pt-package-error" role="alert"><c:out value="${ptPackagesError}" /></p>
-                    </c:when>
-                    <%-- 2. Tải thành công nhưng rỗng: chỉ xét gói đã mua có Subscriptions.Status = Active. --%>
-                    <c:when test="${empty ptPackages}">
-                        <div class="my-pt-placeholder">
-                            <p>Bạn chưa có gói PT đang hoạt động.</p>
-                            <span>Bạn vẫn có thể đặt buổi PT lẻ.</span>
-                        </div>
-                    </c:when>
-                    <%-- 3. Mỗi DTO do DAO tạo tương ứng một gói; Service đã điền nhãn và lượt đổi còn lại. --%>
-                    <c:otherwise>
-                        <div class="my-pt-package-list">
-                            <c:forEach var="ptPackage" items="${ptPackages}">
-                                <article class="my-pt-package-card">
-                                    <div class="my-pt-package-heading">
-                                        <h3><c:out value="${ptPackage.packageName}" /></h3>
-                                        <span class="my-pt-package-type"><c:out value="${ptPackage.subscriptionTypeLabel}" /></span>
-                                    </div>
-
-                                    <%-- PT phụ trách chung của gói; partnerName là thành viên còn lại của gói đôi. --%>
-                                    <dl class="my-pt-package-details ${not empty ptPackage.partnerName ? 'my-pt-package-details-couple' : ''}">
-                                        <div>
-                                            <dt>PT phụ trách</dt>
-                                            <dd><c:out value="${ptPackage.ptName}" /></dd>
-                                        </div>
-                                        <c:if test="${not empty ptPackage.partnerName}">
-                                            <div>
-                                                <dt>Người tập cùng</dt>
-                                                <dd><c:out value="${ptPackage.partnerName}" /></dd>
-                                            </div>
-                                        </c:if>
-                                        <%-- LocalDate định dạng bằng hàm gms; ngày hết hạn vẫn là ngày còn hiệu lực. --%>
-                                        <div>
-                                            <dt>Bắt đầu</dt>
-                                            <dd><c:out value="${gms:formatDate(ptPackage.startDate)}" /></dd>
-                                        </div>
-                                        <div>
-                                            <dt>Hạn gói</dt>
-                                            <dd><c:out value="${gms:formatDate(ptPackage.endDate)}" /></dd>
-                                        </div>
-                                    </dl>
-
-                                    <%-- Tổng buổi sinh lúc Paid; chưa chốt là COUNT Scheduled, không phải tổng trừ đã tập. --%>
-                                    <dl class="my-pt-package-stats">
-                                        <div>
-                                            <dt>Tổng số buổi</dt>
-                                            <dd><c:out value="${ptPackage.generatedSessionCount}" /></dd>
-                                        </div>
-                                        <div>
-                                            <dt>Buổi chưa chốt</dt>
-                                            <dd><c:out value="${ptPackage.scheduledSessionCount}" /></dd>
-                                        </div>
-                                        <div>
-                                            <dt>Lượt đổi còn lại</dt>
-                                            <dd><c:out value="${ptPackage.remainingSwaps}" /></dd>
-                                        </div>
-                                    </dl>
-                                </article>
-                            </c:forEach>
-                        </div>
-                    </c:otherwise>
-                </c:choose>
-            </section>
+            <%-- ===== Điều hướng ba tác vụ; JS chỉ chuyển vùng đang xem, dữ liệu vẫn do Servlet tạo ===== --%>
+            <div class="my-pt-page-heading">
+                <p>Xem lịch sắp tới, kết quả buổi tập và gói PT đang hoạt động.</p>
+                <a class="btn btn-primary" href="${pageContext.request.contextPath}/customer/book-session"><svg viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="currentColor" stroke-width="1.8" aria-hidden="true"><path d="M12 5v14M5 12h14"/></svg>Đặt buổi lẻ</a>
+            </div>
+            <nav class="my-pt-view-tabs" aria-label="Lịch và gói PT" hidden>
+                <button type="button" id="session-tab-upcoming" data-session-view="upcoming" aria-controls="sessions-upcoming">Sắp tới</button>
+                <button type="button" id="session-tab-history" data-session-view="history" aria-controls="sessions-history">Lịch sử</button>
+                <button type="button" id="session-tab-packages" data-session-view="packages" aria-controls="sessions-packages">Gói PT của tôi</button>
+            </nav>
 
             <%-- ===== Bộ lọc chung (sessionFilter: filter đang áp dụng; filterErrors: lỗi từng ô; filterNotApplied) =====
                  Chỉ gồm Loại buổi, Từ ngày, Đến ngày; áp dụng cho cả Sắp tới và Lịch sử.
                  Giá trị trong ô lấy từ ${param.*} (khách đã nhập, kể cả khi sai) để khách sửa tiếp. --%>
-            <section class="my-pt-panel" aria-labelledby="filters-title" data-reveal>
+            <section class="my-pt-panel my-pt-filter-panel" aria-labelledby="filters-title">
                 <div class="my-pt-heading">
                     <h2 id="filters-title">Lọc lịch tập</h2>
-                    <span class="my-pt-caption">Áp dụng cho cả lịch sắp tới và lịch sử</span>
                 </div>
                 <%-- 1. Có ô sai: Servlet đã dùng danh sách mặc định, báo rõ để khách không tưởng đã lọc. --%>
                 <c:if test="${filterNotApplied}">
                     <p class="my-pt-filter-alert" role="alert">Bộ lọc chưa được áp dụng. Vui lòng sửa ô được đánh dấu bên dưới.</p>
                 </c:if>
-                <form method="get" action="${pageContext.request.contextPath}/customer/pt-sessions">
+                <form method="get" action="${pageContext.request.contextPath}/customer/pt-sessions" id="sessionFilterForm">
+                    <input type="hidden" name="view" value="${activeSessionView}">
                     <fieldset class="my-pt-filters">
                         <legend class="my-pt-visually-hidden">Điều kiện lọc lịch tập</legend>
                         <%-- 2. Loại buổi: value là mã DB, Service chỉ nhận 3 loại này. --%>
@@ -179,22 +108,19 @@
                         <%-- 5. Xóa lọc là link về URL gốc: xóa cả bộ lọc chung lẫn trạng thái lịch sử.
                              Không dùng type="reset" vì reset chỉ đưa ô về giá trị lúc tải trang, không xóa URL. --%>
                         <div class="my-pt-filter-actions">
-                            <button class="btn btn-primary btn-sm" type="submit">Áp dụng</button>
-                            <a class="btn btn-outline btn-sm" href="${pageContext.request.contextPath}/customer/pt-sessions">Xóa lọc</a>
+                            <button class="btn btn-primary btn-sm" type="submit">Lọc lịch tập</button>
+                            <a class="btn btn-outline btn-sm" href="${pageContext.request.contextPath}/customer/pt-sessions?view=${activeSessionView}" data-clear-session-filters>Xóa lọc</a>
                         </div>
                     </fieldset>
                 </form>
             </section>
 
             <%-- ===== Lịch tập sắp tới (upcomingDays: Map ngày → List<MyPtUpcomingSessionView>, upcomingSessionsError) ===== --%>
-            <section class="my-pt-panel" aria-labelledby="pending-title" data-reveal>
+            <section class="my-pt-panel my-pt-schedule-panel" id="sessions-upcoming" data-session-panel="upcoming" aria-labelledby="pending-title">
                 <div class="my-pt-heading">
                     <div class="my-pt-title-with-hint">
                         <h2 id="pending-title">Lịch tập sắp tới</h2>
-                        <span class="my-pt-info">
-                            <button type="button" aria-label="Giải thích lịch tập sắp tới" aria-describedby="pending-help">i</button>
-                            <span id="pending-help" role="tooltip">Các buổi chưa kết thúc, xếp theo ngày giờ gần nhất. Membership hoặc DayPass hợp lệ cho ngày tập được công nhận là quyền vào gym. Cảnh báo bảo lưu không phải kết quả vắng.</span>
-                        </span>
+                        <details class="my-pt-info"><summary aria-label="Giải thích lịch tập sắp tới"><svg viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="currentColor" stroke-width="1.8" aria-hidden="true"><circle cx="12" cy="12" r="9"/><path d="M12 11v6m0-10v1"/></svg></summary><div class="my-pt-help">Các buổi chưa kết thúc, xếp theo ngày giờ gần nhất. Membership hoặc DayPass hợp lệ cho ngày tập được công nhận là quyền vào gym. Cảnh báo bảo lưu không phải kết quả vắng.</div></details>
                     </div>
                 </div>
                 <c:choose>
@@ -232,7 +158,7 @@
                                         <c:forEach var="ptSession" items="${day.value}">
                                             <article class="my-pt-session">
                                                 <div class="my-pt-session-time">
-                                                    <p class="my-pt-session-hours"><c:out value="${gms:formatTime(ptSession.startTime)}" />–<c:out value="${gms:formatTime(ptSession.endTime)}" /></p>
+                                                    <p class="my-pt-session-hours"><span><c:out value="${gms:formatTime(ptSession.startTime)}" /></span><span class="my-pt-time-separator" aria-hidden="true">–</span><span><c:out value="${gms:formatTime(ptSession.endTime)}" /></span></p>
                                     </div>
                                     <div class="my-pt-session-content">
                                         <div class="my-pt-session-heading">
@@ -300,20 +226,17 @@
             </section>
 
             <%-- ===== Lịch sử buổi tập (historyDays: Map ngày → List<MyPtHistorySessionView>, historySessionsError) ===== --%>
-            <section class="my-pt-panel" aria-labelledby="history-title" data-reveal>
+            <section class="my-pt-panel my-pt-schedule-panel" id="sessions-history" data-session-panel="history" aria-labelledby="history-title">
                 <div class="my-pt-heading">
                     <div class="my-pt-title-with-hint">
                         <h2 id="history-title">Lịch sử buổi tập</h2>
                         <%-- Hint chung cho khối: cách chia nhóm và ý nghĩa từng trạng thái. --%>
-                        <span class="my-pt-info">
-                            <button type="button" aria-label="Giải thích lịch sử buổi tập" aria-describedby="history-help">i</button>
-                            <span id="history-help" role="tooltip">
+                        <details class="my-pt-info"><summary aria-label="Giải thích lịch sử buổi tập"><svg viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="currentColor" stroke-width="1.8" aria-hidden="true"><circle cx="12" cy="12" r="9"/><path d="M12 11v6m0-10v1"/></svg></summary><div class="my-pt-help">
                                 Các buổi tập đã diễn ra và các buổi đã bị hủy.<br>
                                 <strong>Kết quả đang cập nhật:</strong> buổi vừa kết thúc, kết quả sẽ có sau khi hết ngày tập.<br>
                                 <strong>Đã check-in:</strong> bạn (hoặc người tập cùng, nếu là gói đôi) đã check-in vào gym hôm đó. Đây chỉ là ghi nhận vào cửa, không phải xác nhận đã tập xong với PT.<br>
                                 <strong>Vắng / Đã hủy:</strong> lý do ghi ngay dưới từng buổi. Buổi bạn tự hủy vẫn bị trừ khỏi gói và không được hoàn tiền.
-                            </span>
-                        </span>
+                            </div></details>
                     </div>
                 </div>
                 <%-- Trạng thái riêng của Lịch sử: mỗi lựa chọn là một link GET, bấm là lọc ngay, không cần JS.
@@ -328,6 +251,7 @@
                                 ? empty sessionFilter.historyStatus
                                 : sessionFilter.historyStatus.urlValue eq optionValue}" />
                         <c:url var="optionUrl" value="/customer/pt-sessions">
+                            <c:param name="view" value="history" />
                             <c:param name="upcomingPage" value="${not empty upcomingPage ? upcomingPage.currentPage : 1}" />
                             <c:if test="${not empty param.type}"><c:param name="type" value="${param.type}" /></c:if>
                             <c:if test="${not empty param.dateFrom}"><c:param name="dateFrom" value="${param.dateFrom}" /></c:if>
@@ -378,7 +302,7 @@
                                             <article class="my-pt-session">
                                                 <%-- Giờ thực tế của buổi (TimeSlots); ngày đã nằm ở tiêu đề nhóm. --%>
                                                 <div class="my-pt-session-time">
-                                                    <p class="my-pt-session-hours"><c:out value="${gms:formatTime(historySession.startTime)}" />–<c:out value="${gms:formatTime(historySession.endTime)}" /></p>
+                                                    <p class="my-pt-session-hours"><span><c:out value="${gms:formatTime(historySession.startTime)}" /></span><span class="my-pt-time-separator" aria-hidden="true">–</span><span><c:out value="${gms:formatTime(historySession.endTime)}" /></span></p>
                                     </div>
                                     <div class="my-pt-session-content">
                                         <div class="my-pt-session-heading">
@@ -449,6 +373,86 @@
                     </nav>
                 </c:if>
             </section>
+            <%-- ===== Gói PT của bạn (ptPackages: List<MyPtPackageView>, ptPackagesError: lỗi từ Service) ===== --%>
+            <section class="my-pt-panel my-pt-packages-panel" id="sessions-packages" data-session-panel="packages" aria-labelledby="packages-title">
+                <div class="my-pt-heading">
+                    <div class="my-pt-title-with-hint">
+                        <h2 id="packages-title">Gói PT của bạn</h2>
+                        <%-- Giải thích chỉ hiện khi hover/focus nút i, cùng cách dùng với PT Dashboard. --%>
+                        <details class="my-pt-info"><summary aria-label="Giải thích thông tin gói PT"><svg viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="currentColor" stroke-width="1.8" aria-hidden="true"><circle cx="12" cy="12" r="9"/><path d="M12 11v6m0-10v1"/></svg></summary><div class="my-pt-help">
+                                <strong>Tổng số buổi:</strong> số buổi được tạo khi thanh toán gói.<br>
+                                <strong>Buổi chưa chốt:</strong> gồm buổi sắp tới và buổi đang chờ kết quả.<br>
+                                <strong>Lượt đổi còn lại:</strong> theo giới hạn lúc mua gói. Với gói đôi, hai thành viên dùng chung số buổi và lượt đổi.
+                            </div></details>
+                    </div>
+                </div>
+                <c:choose>
+                    <%-- 1. Kiểm tra lỗi trước: lỗi tải không có nghĩa là khách chưa có gói. --%>
+                    <c:when test="${not empty ptPackagesError}">
+                        <p class="my-pt-package-error" role="alert"><c:out value="${ptPackagesError}" /></p>
+                    </c:when>
+                    <%-- 2. Tải thành công nhưng rỗng: chỉ xét gói đã mua có Subscriptions.Status = Active. --%>
+                    <c:when test="${empty ptPackages}">
+                        <div class="my-pt-placeholder">
+                            <p>Bạn chưa có gói PT đang hoạt động.</p>
+                            <span>Bạn vẫn có thể đặt buổi PT lẻ.</span>
+                        </div>
+                    </c:when>
+                    <%-- 3. Mỗi DTO do DAO tạo tương ứng một gói; Service đã điền nhãn và lượt đổi còn lại. --%>
+                    <c:otherwise>
+                        <div class="my-pt-package-list">
+                            <c:forEach var="ptPackage" items="${ptPackages}">
+                                <article class="my-pt-package-card">
+                                    <div class="my-pt-package-heading">
+                                        <h3><c:out value="${ptPackage.packageName}" /></h3>
+                                        <span class="my-pt-package-type"><c:out value="${ptPackage.subscriptionTypeLabel}" /></span>
+                                    </div>
+
+                                    <%-- PT phụ trách chung của gói; partnerName là thành viên còn lại của gói đôi. --%>
+                                    <dl class="my-pt-package-details ${not empty ptPackage.partnerName ? 'my-pt-package-details-couple' : ''}">
+                                        <div>
+                                            <dt>PT phụ trách</dt>
+                                            <dd><c:out value="${ptPackage.ptName}" /></dd>
+                                        </div>
+                                        <c:if test="${not empty ptPackage.partnerName}">
+                                            <div>
+                                                <dt>Người tập cùng</dt>
+                                                <dd><c:out value="${ptPackage.partnerName}" /></dd>
+                                            </div>
+                                        </c:if>
+                                        <%-- LocalDate định dạng bằng hàm gms; ngày hết hạn vẫn là ngày còn hiệu lực. --%>
+                                        <div>
+                                            <dt>Bắt đầu</dt>
+                                            <dd><c:out value="${gms:formatDate(ptPackage.startDate)}" /></dd>
+                                        </div>
+                                        <div>
+                                            <dt>Hạn gói</dt>
+                                            <dd><c:out value="${gms:formatDate(ptPackage.endDate)}" /></dd>
+                                        </div>
+                                    </dl>
+
+                                    <%-- Tổng buổi sinh lúc Paid; chưa chốt là COUNT Scheduled, không phải tổng trừ đã tập. --%>
+                                    <dl class="my-pt-package-stats">
+                                        <div>
+                                            <dt>Tổng số buổi</dt>
+                                            <dd><c:out value="${ptPackage.generatedSessionCount}" /></dd>
+                                        </div>
+                                        <div>
+                                            <dt>Buổi chưa chốt</dt>
+                                            <dd><c:out value="${ptPackage.scheduledSessionCount}" /></dd>
+                                        </div>
+                                        <div>
+                                            <dt>Lượt đổi còn lại</dt>
+                                            <dd><c:out value="${ptPackage.remainingSwaps}" /></dd>
+                                        </div>
+                                    </dl>
+                                </article>
+                            </c:forEach>
+                        </div>
+                    </c:otherwise>
+                </c:choose>
+            </section>
+
         </main>
     </div>
 </div>
