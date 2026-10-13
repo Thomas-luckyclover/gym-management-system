@@ -354,6 +354,93 @@ public class LeaveRequestDAO {
         }
     }
 
+    /**
+     * Thêm mới một đơn xin nghỉ phép vào database.
+     *
+     * @param leaveRequest entity đơn xin nghỉ
+     * @return mã đơn vừa tạo (LeaveRequestId)
+     * @throws SQLException lỗi kết nối hoặc truy vấn DB
+     */
+    public int insert(LeaveRequest leaveRequest) throws SQLException {
+        String sql = "INSERT INTO LeaveRequests (EmployeeId, LeaveType, LeaveDate, ShiftType, Reason, Status, SubmittedAt) "
+                + "VALUES (?, ?, ?, ?, ?, 'Pending', SYSDATETIME())";
+
+        try (Connection connection = DBContext.getConnection();
+                PreparedStatement statement = connection.prepareStatement(sql, PreparedStatement.RETURN_GENERATED_KEYS)) {
+
+            statement.setInt(1, leaveRequest.getEmployeeId());
+            statement.setString(2, leaveRequest.getLeaveType().getDbValue());
+            statement.setDate(3, java.sql.Date.valueOf(leaveRequest.getLeaveDate()));
+            statement.setString(4, leaveRequest.getShiftType().getDbValue());
+            statement.setString(5, leaveRequest.getReason());
+
+            statement.executeUpdate();
+
+            try (ResultSet rs = statement.getGeneratedKeys()) {
+                if (rs.next()) {
+                    return rs.getInt(1);
+                }
+            }
+        }
+        return 0;
+    }
+
+    /**
+     * Kiểm tra nhân viên đã có đơn nghỉ Pending hoặc Approved trùng ngày và ca chưa.
+     */
+    public boolean hasConflictingLeave(int employeeId, LocalDate leaveDate, String shiftType) throws SQLException {
+        String sql = "SELECT COUNT(*) FROM LeaveRequests "
+                + "WHERE EmployeeId = ? AND LeaveDate = ? "
+                + "AND Status IN ('Pending', 'Approved') "
+                + "AND (ShiftType = 'FullDay' OR ? = 'FullDay' OR ShiftType = ?)";
+
+        try (Connection connection = DBContext.getConnection();
+                PreparedStatement statement = connection.prepareStatement(sql)) {
+
+            statement.setInt(1, employeeId);
+            statement.setDate(2, java.sql.Date.valueOf(leaveDate));
+            statement.setString(3, shiftType);
+            statement.setString(4, shiftType);
+
+            try (ResultSet rs = statement.executeQuery()) {
+                if (rs.next()) {
+                    return rs.getInt(1) > 0;
+                }
+            }
+        }
+        return false;
+    }
+
+    /**
+     * Đếm số buổi dạy Scheduled của PT trong ngày và ca xin nghỉ.
+     */
+    public int countScheduledSessions(int ptEmployeeId, LocalDate leaveDate, String shiftType) throws SQLException {
+        StringBuilder sql = new StringBuilder();
+        sql.append("SELECT COUNT(*) FROM Sessions s ")
+                .append("JOIN TimeSlots ts ON s.TimeSlotId = ts.TimeSlotId ")
+                .append("WHERE s.PtEmployeeId = ? AND ts.SlotDate = ? AND s.Status = 'Scheduled' ");
+
+        if ("Morning".equalsIgnoreCase(shiftType)) {
+            sql.append("AND ts.StartTime < '12:00:00' ");
+        } else if ("Afternoon".equalsIgnoreCase(shiftType)) {
+            sql.append("AND ts.StartTime >= '12:00:00' ");
+        }
+
+        try (Connection connection = DBContext.getConnection();
+                PreparedStatement statement = connection.prepareStatement(sql.toString())) {
+
+            statement.setInt(1, ptEmployeeId);
+            statement.setDate(2, java.sql.Date.valueOf(leaveDate));
+
+            try (ResultSet rs = statement.executeQuery()) {
+                if (rs.next()) {
+                    return rs.getInt(1);
+                }
+            }
+        }
+        return 0;
+    }
+
     // ===== Map ResultSet → Entity =====
 
     /** Đổi 1 dòng ResultSet thành LeaveRequest; cột nullable được đọc riêng để không mất NULL. */
