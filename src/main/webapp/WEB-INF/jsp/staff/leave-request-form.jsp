@@ -149,7 +149,59 @@
               </form>
             </section>
 
-            <%-- TODO Bước 4: Danh sách đơn đã nộp --%>
+            <%-- ===== Panel danh sách đơn đã nộp gần đây ===== --%>
+            <section class="panel" style="padding:var(--space-5);border-radius:var(--radius-lg);background:var(--color-surface);border:1px solid var(--color-border-strong);box-shadow:var(--shadow-card)">
+              <div class="panel-head" style="margin-bottom:var(--space-4);display:flex;align-items:center;justify-content:space-between">
+                <h2 style="margin:0;font-size:var(--font-size-lg)">Đơn đã nộp gần đây</h2>
+                <small style="color:var(--color-text-soft)">Tối đa 10 đơn mới nhất</small>
+              </div>
+
+              <c:choose>
+                <c:when test="${empty formView.myRequests}">
+                  <p style="color:var(--color-text-soft);margin:0;padding:var(--space-4) 0">
+                    Bạn chưa có đơn xin nghỉ phép nào được nộp.
+                  </p>
+                </c:when>
+                <c:otherwise>
+                  <div class="data-list" style="display:flex;flex-direction:column;gap:var(--space-3)">
+                    <c:forEach var="req" items="${formView.myRequests}">
+                      <div class="data-row" style="padding:var(--space-3) var(--space-4);border-radius:var(--radius-md);background:var(--color-surface-subtle);border:1px solid var(--color-border);display:flex;justify-content:space-between;align-items:flex-start;gap:var(--space-3)">
+                        <div style="flex:1">
+                          <div style="display:flex;align-items:center;gap:var(--space-2);margin-bottom:var(--space-1)">
+                            <b>${gms:formatDate(req.leaveDate)}</b>
+                            <span style="color:var(--color-text-soft);font-size:var(--font-size-xs)">· <c:out value="${req.shiftType.displayName}" /></span>
+                          </div>
+                          <div style="font-size:var(--font-size-xs);color:var(--color-text-soft);display:flex;flex-wrap:wrap;gap:var(--space-3);margin-bottom:var(--space-1)">
+                            <span><i class="fa-solid fa-tag" aria-hidden="true"></i> <c:out value="${req.leaveType.displayName}" /></span>
+                            <span><i class="fa-solid fa-quote-left" aria-hidden="true"></i> <c:out value="${req.reason}" /></span>
+                          </div>
+                          <c:if test="${req.rejected and not empty req.rejectReason}">
+                            <div style="font-size:var(--font-size-xs);color:var(--color-danger)">
+                              <i class="fa-solid fa-circle-exclamation" aria-hidden="true"></i> Lý do từ chối: <c:out value="${req.rejectReason}" />
+                            </div>
+                          </c:if>
+                        </div>
+
+                        <%-- Badge trạng thái --%>
+                        <div>
+                          <c:choose>
+                            <c:when test="${req.pending}">
+                              <span class="badge badge-warning">Chờ duyệt</span>
+                            </c:when>
+                            <c:when test="${req.approved}">
+                              <span class="badge badge-success">Đã duyệt</span>
+                            </c:when>
+                            <c:otherwise>
+                              <span class="badge badge-danger">Từ chối</span>
+                            </c:otherwise>
+                          </c:choose>
+                        </div>
+                      </div>
+                    </c:forEach>
+                  </div>
+                </c:otherwise>
+              </c:choose>
+            </section>
           </div>
 
           <div class="leave-col-side">
