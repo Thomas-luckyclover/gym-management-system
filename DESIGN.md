@@ -6,7 +6,7 @@ Cập nhật 13/10/2026 theo yêu cầu redesign cả khu công khai và nội b
 
 Cam cháy `--brand-sunset` (#FF5D2E), đỏ than `--brand-ember-red` (#F13C2D), aqua sâu `--brand-ocean-deep` (#04303C), aqua sáng `--brand-aqua` (#2BD4DE). Sắc đỏ trong cam tăng theo yêu cầu mới; đại dương sâu hơn. Homepage hướng đến tỷ trọng 65% ember / 35% aqua trong các vùng nhận diện. Khu vận hành dùng nền aqua tối, surface rõ và ember cho hành động chính. Chế độ sáng vẫn hỗ trợ.
 
-Logo: hai đường cong đối hướng gợi chữ S và vòng chuyển động, ember phía trên/aqua phía dưới. Wordmark Barlow Condensed SemiBold có khoảng cách riêng, chuyển thành SVG path để không phụ thuộc font tải ngoài. Giấy phép font kèm `images/brand/OFL-Barlow.txt`. Dùng `images/brand/supergym-wordmark.svg` trên nền tối, `supergym-wordmark-dark.svg` trên nền sáng, `supergym-mark.svg` cho favicon và sidebar.
+Logo hiện hành là `src/main/webapp/images/logo.png`: nền gradient hoàng hôn, biểu tượng khung aqua, chữ SUPER GYM và tạ. Dùng cùng ảnh PNG ở header, footer, auth, sidebar, trang lỗi và favicon; giữ tỷ lệ gốc 792:600 khi hiển thị. Các logo SVG cũ đã loại bỏ.
 
 Pumpy giữ tạo hình: thân aqua đậm #18B8C0, mọi xoáy bụng xanh #087A80; tạ trắng lõi cam, tạ đen lõi aqua. Áp dụng cả auth, lỗi, coach, empty state và loading. Không dùng màu thương hiệu để thay đổi nghĩa badge trạng thái.
 
@@ -18,7 +18,7 @@ Be Vietnam Pro cho nội dung, menu, form và dữ liệu vận hành; Barlow Co
 
 Ảnh thể thao lớn, bố cục editorial, một tiêu đề và hai hành động rõ. Thanh nav theo ba vùng logo / liên kết / tài khoản; thu gọn trên tablet. Nhịp section luân phiên khoảng thở, ảnh, hàng dịch vụ và bảng giá aqua. Bảng giá tự xuống hàng tối đa 3 cột desktop / 2 tablet / 1 mobile, hàng cuối căn giữa: 5 gói = 3+2, 6 gói = 3+3. Giá, giờ hoạt động và PT lấy từ dữ liệu thật. Không tạo lời chứng thực, chỉ số hiệu quả hoặc đối tác giả.
 
-Footer giữ Instagram/Facebook/TikTok dưới dạng biểu tượng không bấm vì chưa có URL chính thức. Bản đồ lazy-load và link chỉ đường cùng truy vấn 25 Cầu Giấy, Hà Nội.
+Footer giữ Instagram/Facebook/TikTok dưới dạng biểu tượng không bấm vì chưa có URL chính thức. Địa chỉ hiển thị: 106/36 Cầu Giấy, Tổ Dân Phố Số 12, Nghĩa Đô, Hà Nội; URL bản đồ và chỉ đường giữ nguyên theo yêu cầu cập nhật sau cùng.
 
 Ảnh mỗi khối là một nội dung riêng; không nhân bản ảnh hero thành bóng mờ. Ánh ember/aqua từ lớp màu CSS thay vì ảnh lặp. Chữ blog chỉ underline khi tương tác, không gạch chân toàn card.
 
@@ -37,3 +37,15 @@ Homepage dùng Web Animations API và IntersectionObserver: entrance tiêu đề
 `tokens.css` → `common.css` → `brand-system.css` → CSS riêng trang. Token là nguồn giá trị; brand-system quản lý nhận diện chung, guest header và auth. Common giữ component vận hành; mỗi trang chỉ sở hữu bố cục của mình. JS dùng lại API form/toast/confirmation đang có, render text động qua c:out/textContent/escapeHtml.
 
 Nguồn tham khảo nghệ thuật: ảnh người dùng cung cấp; Adidas (ảnh thể thao và CTA), Equinox (nhịp editorial), Gymshark (phân cấp thương mại). Không dùng logo hoặc nhận diện độc quyền của các thương hiệu này.
+
+## Quyết định cuối 13/10
+
+Art direction 70% thể thao giàu năng lượng và 30% ánh sáng cinematic. Cảnh gym tăng nhịp vận động khi hover, nhưng bỏ nét tốc độ cam/aqua cạnh người tập vì gây nhiễu; tay của vận động viên đẩy tạ luôn nằm trong tầm hai đoạn cánh tay. Nút tạm dừng và chế độ giảm chuyển động vẫn hoạt động. Khung panel ngoài dùng góc 4px (`--radius-lg`); nút và ô nhập giữ góc mềm dễ thao tác. Bỏ dấu cộng chỉ dùng để trang trí.
+
+Sidebar giữ ánh hover và dạng mũi tên. Trạng thái chọn, ánh hover và tay nắm dùng dải hồng than → cam cháy → đỏ hoàng hôn; chữ và icon sáng trên nền tối để đọc rõ.
+
+Trang Về chúng tôi giữ cảnh mặt trời nóng chảy, phản chiếu cam/aqua trên biển ghép thành thanh và hai bánh tạ bằng dải sóng. PT Dashboard đặt lịch và việc cần chú ý thành hai vùng rõ trên màn rộng, xuống một cột trên màn nhỏ. My PT Sessions tách Buổi sắp tới / Lịch sử / Gói tập với một bộ lọc chung.
+
+Bảng gói PT trên homepage dùng card cùng lưới với gói tập: tối đa ba cột trên desktop, hai cột trên tablet, một cột trên điện thoại; hàng cuối căn giữa. Buổi lẻ giữ CTA đặt trực tuyến thật, các gói tại quầy hiển thị nhãn thông tin thay vì nút giả.
+
+Thời tiết lấy từ Open-Meteo. Khi mất kết nối tạm thời, dùng mẫu thành công gần nhất trong cùng ngày với giờ cập nhật và trạng thái thử kết nối lại sau 5 phút. Nếu chưa từng lấy được dữ liệu hoặc đã sang ngày mới, khối báo chưa cập nhật; không hiển thị số liệu cũ như thời tiết hiện tại.

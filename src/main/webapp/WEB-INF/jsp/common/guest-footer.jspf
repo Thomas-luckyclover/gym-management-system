@@ -13,7 +13,7 @@
 <footer class="site-footer">
   <div class="footer-inner">
     <div>
-      <a class="footer-brand" href="${pageContext.request.contextPath}/" aria-label="Super Gym — Trang chủ"><img class="footer-wordmark" src="${pageContext.request.contextPath}/images/brand/supergym-wordmark.svg?v=2" alt="Super Gym" width="240" height="60"></a>
+      <a class="footer-brand" href="${pageContext.request.contextPath}/" aria-label="Super Gym — Trang chủ"><img class="footer-wordmark" src="${pageContext.request.contextPath}/images/logo.png?v=20261013" alt="Super Gym" width="160" height="121"></a>
       <p class="footer-tag">Theo dõi tiến độ, đặt lịch PT và quản lý gói tập trong một tài khoản duy nhất.</p>
       <%-- Chưa có URL mạng xã hội chính thức trong cấu hình; biểu tượng giữ nhãn rõ ràng. --%>
       <div class="footer-socials" role="group" aria-label="Mạng xã hội Super Gym">
@@ -38,14 +38,14 @@
     </div>
     <div class="footer-col footer-contact">
       <h4>Liên hệ</h4>
-      <p><i class="fa-solid fa-location-dot" aria-hidden="true"></i> 25 Cầu Giấy, Hà Nội</p>
+      <p><i class="fa-solid fa-location-dot" aria-hidden="true"></i> 106/36 Cầu Giấy, Tổ Dân Phố Số 12, Nghĩa Đô, Hà Nội, Việt Nam</p>
       <c:if test="${not empty openingHours}">
         <p><i class="fa-solid fa-clock" aria-hidden="true"></i> <c:out value="${openingHours}" /> mỗi ngày</p>
       </c:if>
       <a href="tel:19006868"><i class="fa-solid fa-phone" aria-hidden="true"></i> 1900 6868</a>
       <a class="footer-directions" href="https://www.google.com/maps/dir/?api=1&amp;destination=25%20C%E1%BA%A7u%20Gi%E1%BA%A5y%2C%20H%C3%A0%20N%E1%BB%99i" target="_blank" rel="noopener noreferrer">Chỉ đường tới phòng tập <i class="fa-solid fa-arrow-up-right-from-square" aria-hidden="true"></i></a>
       <div class="footer-map">
-        <iframe title="Bản đồ Super Gym — 25 Cầu Giấy, Hà Nội" src="https://maps.google.com/maps?q=25%20C%E1%BA%A7u%20Gi%E1%BA%A5y%2C%20H%C3%A0%20N%E1%BB%99i&amp;output=embed" width="320" height="180" loading="lazy" referrerpolicy="no-referrer-when-downgrade" allowfullscreen></iframe>
+        <iframe title="Bản đồ Super Gym" src="https://maps.google.com/maps?q=25%20C%E1%BA%A7u%20Gi%E1%BA%A5y%2C%20H%C3%A0%20N%E1%BB%99i&amp;output=embed" width="320" height="180" loading="lazy" referrerpolicy="no-referrer-when-downgrade" allowfullscreen></iframe>
       </div>
     </div>
   </div>

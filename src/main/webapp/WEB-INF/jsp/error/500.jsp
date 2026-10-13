@@ -16,7 +16,7 @@
 
     <section class="err-card">
       <a class="err-brand" href="${pageContext.request.contextPath}/">
-        <img src="${pageContext.request.contextPath}/images/brand/supergym-mark.svg?v=2" alt="" width="40" height="30">
+        <img src="${pageContext.request.contextPath}/images/logo.png?v=20261013" alt="" width="44" height="34">
         Super Gym
       </a>
 
