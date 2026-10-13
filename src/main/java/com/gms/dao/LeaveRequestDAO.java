@@ -132,4 +132,70 @@ public class LeaveRequestDAO {
     private LocalDateTime toLocalDateTime(Timestamp timestamp) {
         return timestamp == null ? null : timestamp.toLocalDateTime();
     }
+
+    /**
+     * Một dòng danh sách đơn nghỉ phép của Manager do DAO tạo: gồm entity đơn
+     * và thông tin nhân viên lấy từ Employees/Persons. Service đổi sang
+     * LeaveRequestItemView (thêm hạn duyệt, đếm ngược) trước khi đưa ra JSP.
+     */
+    public static class LeaveRequestRow {
+
+        // DAO: toàn bộ cột LeaveRequests của đơn này.
+        private final LeaveRequest leaveRequest;
+
+        // DAO: Employees.EmployeeCode, ví dụ NV-0005.
+        private final String employeeCode;
+
+        // DAO: Persons.FullName của nhân viên nộp đơn.
+        private final String fullName;
+
+        // DAO: Employees.Position (PT hoặc Receptionist).
+        private final String position;
+
+        // DAO: Persons.Avatar; NULL thì JSP hiện chữ viết tắt.
+        private final String avatarUrl;
+
+        // DAO: Persons.FullName của người duyệt; NULL khi Pending hoặc tự từ chối.
+        private final String reviewerName;
+
+        public LeaveRequestRow(
+                LeaveRequest leaveRequest,
+                String employeeCode,
+                String fullName,
+                String position,
+                String avatarUrl,
+                String reviewerName
+        ) {
+            this.leaveRequest = leaveRequest;
+            this.employeeCode = employeeCode;
+            this.fullName = fullName;
+            this.position = position;
+            this.avatarUrl = avatarUrl;
+            this.reviewerName = reviewerName;
+        }
+
+        public LeaveRequest getLeaveRequest() {
+            return leaveRequest;
+        }
+
+        public String getEmployeeCode() {
+            return employeeCode;
+        }
+
+        public String getFullName() {
+            return fullName;
+        }
+
+        public String getPosition() {
+            return position;
+        }
+
+        public String getAvatarUrl() {
+            return avatarUrl;
+        }
+
+        public String getReviewerName() {
+            return reviewerName;
+        }
+    }
 }
