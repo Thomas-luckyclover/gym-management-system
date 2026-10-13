@@ -135,7 +135,86 @@
             </a>
           </form>
 
-          <%-- ===== Bảng danh sách và phân trang — nạp ở commit sau ===== --%>
+          <%-- ===== Bảng danh sách (leavePage.items: List<LeaveRequestItemView>, mỗi dòng 1 đơn) ===== --%>
+          <c:choose>
+            <c:when test="${not empty leavePage.items}">
+              <div class="leave-table-wrap">
+                <table class="leave-table">
+                  <thead>
+                    <tr>
+                      <th>Nhân viên</th>
+                      <th>Ngày nghỉ</th>
+                      <th>Loại nghỉ</th>
+                      <th>Trạng thái</th>
+                      <th>Hạn duyệt</th>
+                      <th></th>
+                    </tr>
+                  </thead>
+                  <tbody>
+                    <c:forEach var="item" items="${leavePage.items}">
+                      <%-- item.urgent: Service tính, đơn Chờ duyệt sắp quá hạn thì tô nổi dòng --%>
+                      <tr class="${item.urgent ? 'leave-row-urgent' : ''}">
+
+                        <td>
+                          <b><c:out value="${item.fullName}" /></b>
+                          <small>
+                            <c:out value="${item.employeeCode}" />
+                            ·
+                            <c:out value="${item.position}" />
+                          </small>
+                        </td>
+
+                        <td>
+                          <b>${gms:formatDate(item.leaveDate)}</b>
+                          <small><c:out value="${item.shiftType.displayName}" /></small>
+                        </td>
+
+                        <td><c:out value="${item.leaveType.displayName}" /></td>
+
+                        <td>
+                          <span class="badge
+                            ${item.status.dbValue == 'Pending' ? 'badge-warning' :
+                              item.status.dbValue == 'Approved' ? 'badge-success' : 'badge-danger'}">
+                            <c:out value="${item.status.displayName}" />
+                          </span>
+                          <%-- item.autoRejected: Rejected mà không có người duyệt (quá hạn duyệt) --%>
+                          <c:if test="${item.autoRejected}">
+                            <small>Tự động: quá hạn duyệt</small>
+                          </c:if>
+                        </td>
+
+                        <td>
+                          <%-- deadlineCountdownText chỉ có với đơn Chờ duyệt, đơn đã xử lý để trống --%>
+                          <c:choose>
+                            <c:when test="${not empty item.deadlineCountdownText}">
+                              <c:out value="${item.deadlineCountdownText}" />
+                            </c:when>
+                            <c:otherwise>—</c:otherwise>
+                          </c:choose>
+                        </td>
+
+                        <td>
+                          <a class="btn btn-sm
+                             ${item.status.dbValue == 'Pending' ? 'btn-primary' : 'btn-outline'}"
+                             href="${pageContext.request.contextPath}/manager/leave-requests/review?id=${item.leaveRequestId}">
+                            ${item.status.dbValue == 'Pending' ? 'Xử lý' : 'Xem'}
+                          </a>
+                        </td>
+
+                      </tr>
+                    </c:forEach>
+                  </tbody>
+                </table>
+              </div>
+            </c:when>
+
+            <%-- Rỗng: tải được nhưng không có đơn nào khớp bộ lọc --%>
+            <c:otherwise>
+              <div class="leave-empty">Không có đơn nghỉ phép nào.</div>
+            </c:otherwise>
+          </c:choose>
+
+          <%-- ===== Phân trang — nạp ở commit sau ===== --%>
 
         </section>
 
