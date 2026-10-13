@@ -1,16 +1,24 @@
 package com.gms.service;
 
 import com.gms.constant.Messages;
+import com.gms.constant.Role;
+import com.gms.dao.AccountDAO;
+import com.gms.dao.EmployeeDAO;
 import com.gms.dao.LeaveRequestDAO;
 import com.gms.dto.LeaveRequestFilter;
 import com.gms.dto.LeaveRequestItemView;
 import com.gms.dto.PageResult;
 import com.gms.dto.ServiceResult;
+import com.gms.entity.Employee;
 import com.gms.entity.LeaveRequest;
+import com.gms.util.DBContext;
 import com.gms.util.DateTimeUtil;
 import com.gms.util.PaginationUtil;
+import com.gms.util.ValidationUtil;
+import java.sql.Connection;
 import java.sql.SQLException;
 import java.time.Duration;
+import java.time.LocalDate;
 import java.time.LocalDateTime;
 import java.time.LocalTime;
 import java.util.ArrayList;
@@ -28,12 +36,26 @@ public class LeaveRequestService {
     // DAO truy vấn bảng LeaveRequests; Service không tự viết SQL
     private final LeaveRequestDAO leaveRequestDAO;
 
-    // Đọc tham số P-20 (giờ chốt duyệt đơn)
+    // DAO đọc Employees (lấy EmployeeId từ AccountId khi Manager duyệt)
+    private final AccountDAO accountDAO;
+    private final EmployeeDAO employeeDAO;
+
+    // Đọc tham số P-20 (giờ chốt duyệt đơn), P-13/P-14 (min staffing)
     private final SystemConfigService systemConfigService;
+
+    // Ghi audit log mỗi khi Manager duyệt / từ chối
+    private final AuditLogService auditLogService;
+
+    // Thông báo cho nhân viên sau khi đơn được xử lý
+    private final NotificationService notificationService;
 
     public LeaveRequestService() {
         leaveRequestDAO = new LeaveRequestDAO();
+        accountDAO = new AccountDAO();
+        employeeDAO = new EmployeeDAO();
         systemConfigService = new SystemConfigService();
+        auditLogService = new AuditLogService();
+        notificationService = new NotificationService();
     }
 
     /**
@@ -188,5 +210,194 @@ public class LeaveRequestService {
             return "Còn " + minutesLeft + " phút";
         }
         return "Còn " + (minutesLeft / 60) + " giờ " + (minutesLeft % 60) + " phút";
+    }
+
+    // ===== Màn duyệt đơn (màn #27, UC-15) =====
+
+    /**
+     * Lấy thông tin đầy đủ 1 đơn để hiện trên màn duyệt của Manager (#27).
+     *
+     * @param leaveRequestId mã đơn
+     * @return view đơn, hoặc thông báo lỗi nếu không tìm thấy / lỗi hệ thống
+     */
+    public ServiceResult<LeaveRequestDAO.LeaveReviewDetail> getReviewDetail(int leaveRequestId) {
+        if (leaveRequestId <= 0) {
+            return ServiceResult.fail(String.format(Messages.MSG08_NOT_FOUND, "đơn nghỉ phép"));
+        }
+        try {
+            LeaveRequestDAO.LeaveReviewDetail detail =
+                    leaveRequestDAO.findReviewDetail(leaveRequestId);
+            if (detail == null) {
+                return ServiceResult.fail(
+                        String.format(Messages.MSG08_NOT_FOUND, "đơn nghỉ phép"));
+            }
+            return ServiceResult.ok(detail);
+        } catch (SQLException e) {
+            e.printStackTrace();
+            return ServiceResult.fail(Messages.MSG04_SYSTEM_BUSY);
+        }
+    }
+
+    /**
+     * Manager duyệt đơn nghỉ phép (UC-15).
+     * Kiểm tra: đơn phải Pending, không vi phạm min-staffing (CBR-88, CBR-90, BR-14).
+     *
+     * @param managerAccountId AccountId của Manager từ session
+     * @param leaveRequestId   mã đơn cần duyệt
+     * @return ok() nếu thành công, fail() kèm thông báo lỗi nếu không được
+     */
+    public ServiceResult<Void> approveRequest(int managerAccountId, int leaveRequestId) {
+        try {
+            // B1: lấy thông tin đơn
+            LeaveRequestDAO.LeaveReviewDetail detail =
+                    leaveRequestDAO.findReviewDetail(leaveRequestId);
+            if (detail == null) {
+                return ServiceResult.fail(
+                        String.format(Messages.MSG08_NOT_FOUND, "đơn nghỉ phép"));
+            }
+            LeaveRequest request = detail.getLeaveRequest();
+
+            // B2: chỉ duyệt đơn Pending
+            if (!request.isPending()) {
+                return ServiceResult.fail("Đơn này đã được xử lý rồi.");
+            }
+
+            // B3: tìm Employee của Manager (lấy EmployeeId để ghi ReviewedByEmployeeId)
+            Employee manager = findEmployeeForAccount(managerAccountId);
+            if (manager == null) {
+                return ServiceResult.fail(Messages.MSG04_SYSTEM_BUSY);
+            }
+
+            // B4: kiểm tra min-staffing sau khi duyệt (CBR-88, CBR-90)
+            String position = detail.getPosition();
+            String shiftType = request.getShiftType().getDbValue();
+            int remaining = leaveRequestDAO.countOnDutyAfterApproval(
+                    request.getLeaveDate(), shiftType, position, leaveRequestId);
+
+            int minRequired = "PT".equalsIgnoreCase(position)
+                    ? systemConfigService.getInt(SystemConfigService.MIN_PT_PER_SHIFT)
+                    : systemConfigService.getInt(SystemConfigService.MIN_RECEPTIONIST_PER_SHIFT);
+
+            if (remaining < minRequired) {
+                String roleLabel = "PT".equalsIgnoreCase(position) ? "PT" : "lễ tân";
+                return ServiceResult.fail(String.format(
+                        Messages.MSG79_LEAVE_BREAKS_MIN_STAFFING,
+                        request.getShiftType().getDisplayName(),
+                        request.getLeaveDate(),
+                        minRequired,
+                        roleLabel));
+            }
+
+            // B5: ghi DB
+            leaveRequestDAO.approve(leaveRequestId, manager.getEmployeeId());
+
+            // B6: ghi audit log
+            auditLogService.log(
+                    managerAccountId,
+                    "Duyệt đơn nghỉ phép",
+                    "LeaveRequests",
+                    leaveRequestId,
+                    "Status",
+                    "Pending",
+                    "Approved",
+                    null);
+
+            // B7: thông báo cho nhân viên (non-blocking, lỗi không rollback)
+            try (Connection conn = DBContext.getConnection()) {
+                notificationService.notifyEmployeeInTransaction(
+                        conn,
+                        detail.getLeaveRequest().getEmployeeId(),
+                        "Nghỉ phép được duyệt",
+                        "Đơn nghỉ ngày " + request.getLeaveDate()
+                                + " (đã duyệt)");
+            } catch (Exception ignored) {
+                // thông báo thất bại không nên chặn luồng chính
+            }
+
+            return ServiceResult.ok(null);
+
+        } catch (SQLException e) {
+            e.printStackTrace();
+            return ServiceResult.fail(Messages.MSG04_SYSTEM_BUSY);
+        }
+    }
+
+    /**
+     * Manager từ chối đơn nghỉ phép (UC-15).
+     * Kiểm tra: đơn phải Pending, lý do 5-500 ký tự.
+     *
+     * @param managerAccountId AccountId của Manager từ session
+     * @param leaveRequestId   mã đơn cần từ chối
+     * @param rejectReason     lý do từ chối
+     * @return ok() nếu thành công, fail() kèm lỗi nếu không được
+     */
+    public ServiceResult<Void> rejectRequest(
+            int managerAccountId, int leaveRequestId, String rejectReason) {
+        try {
+            // B1: validate lý do từ chối 5–500 ký tự
+            if (!ValidationUtil.isLengthValid(rejectReason, 5, 500)) {
+                return ServiceResult.failField(
+                        "rejectReason", "Lý do từ chối phải từ 5 đến 500 ký tự.");
+            }
+
+            // B2: kiểm tra đơn tồn tại và còn Pending
+            LeaveRequestDAO.LeaveReviewDetail detail =
+                    leaveRequestDAO.findReviewDetail(leaveRequestId);
+            if (detail == null) {
+                return ServiceResult.fail(
+                        String.format(Messages.MSG08_NOT_FOUND, "đơn nghỉ phép"));
+            }
+            if (!detail.getLeaveRequest().isPending()) {
+                return ServiceResult.fail("Đơn này đã được xử lý rồi.");
+            }
+
+            // B3: tìm Employee của Manager
+            Employee manager = findEmployeeForAccount(managerAccountId);
+            if (manager == null) {
+                return ServiceResult.fail(Messages.MSG04_SYSTEM_BUSY);
+            }
+
+            // B4: ghi DB
+            leaveRequestDAO.reject(leaveRequestId, manager.getEmployeeId(), rejectReason);
+
+            // B5: ghi audit log
+            auditLogService.log(
+                    managerAccountId,
+                    "Từ chối đơn nghỉ phép",
+                    "LeaveRequests",
+                    leaveRequestId,
+                    "Status",
+                    "Pending",
+                    "Rejected",
+                    rejectReason);
+
+            // B6: thông báo cho nhân viên
+            try (Connection conn = DBContext.getConnection()) {
+                notificationService.notifyEmployeeInTransaction(
+                        conn,
+                        detail.getLeaveRequest().getEmployeeId(),
+                        "Nghỉ phép bị từ chối",
+                        "Đơn nghỉ ngày "
+                                + detail.getLeaveRequest().getLeaveDate()
+                                + " bị từ chối. Lý do: " + rejectReason);
+            } catch (Exception ignored) {
+                // lỗi thông báo không chặn luồng chính
+            }
+
+            return ServiceResult.ok(null);
+
+        } catch (SQLException e) {
+            e.printStackTrace();
+            return ServiceResult.fail(Messages.MSG04_SYSTEM_BUSY);
+        }
+    }
+
+    /** Tìm Employee đang Working theo AccountId (Manager duyệt đơn). */
+    private Employee findEmployeeForAccount(int accountId) throws SQLException {
+        com.gms.entity.Account account = accountDAO.findById(accountId);
+        if (account == null) {
+            return null;
+        }
+        return employeeDAO.findByPersonId(account.getPersonId());
     }
 }
