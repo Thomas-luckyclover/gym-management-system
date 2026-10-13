@@ -551,6 +551,36 @@ public class LeaveRequestDAO {
         }
     }
 
+    /**
+     * Lấy danh sách các đơn Pending đã quá hạn duyệt P-20 để tự động từ chối (JOB-07).
+     *
+     * @param maxOverdueLeaveDate ngày nghỉ muộn nhất đã quá hạn duyệt (hôm nay hoặc ngày mai)
+     * @return danh sách các đơn Pending có LeaveDate <= maxOverdueLeaveDate
+     * @throws SQLException lỗi kết nối hoặc truy vấn DB
+     */
+    public List<LeaveRequest> findPendingOverdueRequests(LocalDate maxOverdueLeaveDate) throws SQLException {
+        String sql = SELECT_COLUMNS
+                + "WHERE Status = 'Pending' "
+                + "AND LeaveDate <= ? "
+                + "ORDER BY SubmittedAt ASC";
+
+        List<LeaveRequest> list = new ArrayList<>();
+
+        try (Connection connection = DBContext.getConnection();
+                PreparedStatement statement = connection.prepareStatement(sql)) {
+
+            statement.setDate(1, java.sql.Date.valueOf(maxOverdueLeaveDate));
+
+            try (ResultSet resultSet = statement.executeQuery()) {
+                while (resultSet.next()) {
+                    list.add(mapResultSetToLeaveRequest(resultSet));
+                }
+            }
+        }
+
+        return list;
+    }
+
     // ===== Map ResultSet → Entity =====
 
     /** Đổi 1 dòng ResultSet thành LeaveRequest; cột nullable được đọc riêng để không mất NULL. */
