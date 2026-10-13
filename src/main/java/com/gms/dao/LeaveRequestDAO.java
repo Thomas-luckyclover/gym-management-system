@@ -10,6 +10,10 @@ import java.sql.ResultSet;
 import java.sql.SQLException;
 import java.sql.Timestamp;
 import java.time.LocalDateTime;
+import java.util.ArrayList;
+import java.util.LinkedHashMap;
+import java.util.List;
+import java.util.Map;
 
 /** Truy vấn bảng LeaveRequests (BF-05, UC-14, UC-15, JOB-07). */
 public class LeaveRequestDAO {
@@ -89,6 +93,109 @@ public class LeaveRequestDAO {
         }
 
         return 0;
+    }
+
+    /**
+     * Lấy một trang đơn nghỉ phép cho màn danh sách của Manager (màn #26).
+     * Đơn Pending xếp trước, trong cùng nhóm xếp theo ngày nghỉ gần nhất (hạn duyệt
+     * gần nhất) rồi đến thời điểm nộp.
+     *
+     * @param filter   bộ lọc đã hợp lệ (trạng thái, từ khóa tên)
+     * @param offset   số dòng bỏ qua, tính từ (page - 1) * pageSize
+     * @param pageSize số dòng tối đa mỗi trang
+     * @return danh sách dòng của trang; rỗng (không phải null) nếu không có
+     * @throws SQLException lỗi kết nối hoặc lỗi câu SQL
+     */
+    public List<LeaveRequestRow> findManagerPage(
+            LeaveRequestFilter filter, int offset, int pageSize)
+            throws SQLException {
+
+        // B1: nối thêm Employees/Persons của người duyệt bằng LEFT JOIN
+        // vì đơn Pending hoặc tự từ chối không có người duyệt
+        String sql = "SELECT lr.LeaveRequestId, lr.EmployeeId, "
+                + "lr.ReviewedByEmployeeId, lr.LeaveType, lr.LeaveDate, "
+                + "lr.ShiftType, lr.Reason, lr.Status, lr.RejectReason, "
+                + "lr.SubmittedAt, lr.ReviewedAt, lr.ReminderSentAt, "
+                + "e.EmployeeCode, e.Position, "
+                + "p.FullName AS EmployeeName, p.Avatar, "
+                + "rp.FullName AS ReviewerName "
+                + "FROM LeaveRequests lr "
+                + "JOIN Employees e ON e.EmployeeId = lr.EmployeeId "
+                + "JOIN Persons p ON p.PersonId = e.PersonId "
+                + "LEFT JOIN Employees re ON re.EmployeeId = lr.ReviewedByEmployeeId "
+                + "LEFT JOIN Persons rp ON rp.PersonId = re.PersonId "
+                + "WHERE (? IS NULL OR lr.Status = ?) "
+                + "AND p.FullName COLLATE Vietnamese_CI_AI LIKE ? ESCAPE '\\' "
+                // Pending lên đầu, sau đó ngày nghỉ gần nhất, rồi đến giờ nộp
+                + "ORDER BY CASE WHEN lr.Status = 'Pending' THEN 0 ELSE 1 END, "
+                + "lr.LeaveDate, lr.SubmittedAt "
+                + "OFFSET ? ROWS FETCH NEXT ? ROWS ONLY";
+
+        String statusValue = filter.getStatus() == null
+                ? null : filter.getStatus().getDbValue();
+
+        List<LeaveRequestRow> rows = new ArrayList<>();
+
+        try (Connection connection = DBContext.getConnection();
+                PreparedStatement statement
+                = connection.prepareStatement(sql)) {
+
+            // B2: truyền tham số theo đúng thứ tự dấu ?
+            statement.setString(1, statusValue);
+            statement.setString(2, statusValue);
+            statement.setString(3,
+                    SqlUtil.toContainsPattern(filter.getKeyword()));
+            statement.setInt(4, offset);
+            statement.setInt(5, pageSize);
+
+            // B3: mỗi dòng đổi thành entity đơn + thông tin nhân viên
+            try (ResultSet resultSet = statement.executeQuery()) {
+                while (resultSet.next()) {
+                    rows.add(new LeaveRequestRow(
+                            mapResultSetToLeaveRequest(resultSet),
+                            resultSet.getString("EmployeeCode"),
+                            resultSet.getString("EmployeeName"),
+                            resultSet.getString("Position"),
+                            resultSet.getString("Avatar"),
+                            resultSet.getString("ReviewerName")));
+                }
+            }
+        }
+
+        return rows;
+    }
+
+    /**
+     * Đếm số đơn theo từng trạng thái để hiện số trên các tab của màn #26.
+     *
+     * @return map có đủ 3 khóa Pending, Approved, Rejected (trạng thái không có đơn thì giá trị 0);
+     *         số tab "Tất cả" do Service cộng từ 3 giá trị này
+     * @throws SQLException lỗi kết nối hoặc lỗi câu SQL
+     */
+    public Map<String, Integer> getStatusCounts() throws SQLException {
+        // B1: khởi tạo sẵn 3 trạng thái = 0, vì GROUP BY không trả dòng cho trạng thái rỗng
+        Map<String, Integer> counts = new LinkedHashMap<>();
+        counts.put(LeaveRequest.Status.PENDING.getDbValue(), 0);
+        counts.put(LeaveRequest.Status.APPROVED.getDbValue(), 0);
+        counts.put(LeaveRequest.Status.REJECTED.getDbValue(), 0);
+
+        String sql = "SELECT Status, COUNT(*) AS Total "
+                + "FROM LeaveRequests "
+                + "GROUP BY Status";
+
+        // B2: ghi đè số thật lên các khóa đã khởi tạo
+        try (Connection connection = DBContext.getConnection();
+                PreparedStatement statement
+                = connection.prepareStatement(sql);
+                ResultSet resultSet = statement.executeQuery()) {
+
+            while (resultSet.next()) {
+                counts.put(resultSet.getString("Status"),
+                        resultSet.getInt("Total"));
+            }
+        }
+
+        return counts;
     }
 
     // ===== Map ResultSet → Entity =====
