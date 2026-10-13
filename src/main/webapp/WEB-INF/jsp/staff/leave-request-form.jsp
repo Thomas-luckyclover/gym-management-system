@@ -69,7 +69,8 @@
                 <h2 style="margin:0;font-size:var(--font-size-lg)">Tạo đơn nghỉ phép</h2>
               </div>
 
-              <form action="${pageContext.request.requestURI}" method="post" id="leaveForm" novalidate>
+              <c:set var="submitActionUrl" value="${pageContext.request.contextPath}${formView.position eq 'Receptionist' ? '/receptionist/leave-requests' : '/pt/leave-requests'}" />
+              <form action="${submitActionUrl}" method="post" id="leaveForm" novalidate>
                 <div class="form-grid" style="display:grid;grid-template-columns:1fr 1fr;gap:var(--space-4);margin-bottom:var(--space-4)">
                   <div class="field">
                     <label class="field-label" for="leaveType">
