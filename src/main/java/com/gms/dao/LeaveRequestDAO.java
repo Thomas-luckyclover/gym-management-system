@@ -9,6 +9,7 @@ import java.sql.PreparedStatement;
 import java.sql.ResultSet;
 import java.sql.SQLException;
 import java.sql.Timestamp;
+import java.time.LocalDate;
 import java.time.LocalDateTime;
 import java.util.ArrayList;
 import java.util.LinkedHashMap;
@@ -198,6 +199,161 @@ public class LeaveRequestDAO {
         return counts;
     }
 
+    /**
+     * Lấy thông tin đầy đủ của 1 đơn cho màn duyệt của Manager (màn #27, UC-15).
+     * JOIN thêm Employees/Persons của người nộp để lấy tên, mã NV, chức vụ.
+     *
+     * @param leaveRequestId mã đơn
+     * @return LeaveReviewDetail, hoặc null nếu không tìm thấy
+     * @throws SQLException lỗi kết nối hoặc lỗi câu SQL
+     */
+    public LeaveReviewDetail findReviewDetail(int leaveRequestId) throws SQLException {
+        String sql = "SELECT lr.LeaveRequestId, lr.EmployeeId, "
+                + "lr.ReviewedByEmployeeId, lr.LeaveType, lr.LeaveDate, "
+                + "lr.ShiftType, lr.Reason, lr.Status, lr.RejectReason, "
+                + "lr.SubmittedAt, lr.ReviewedAt, lr.ReminderSentAt, "
+                + "e.EmployeeCode, e.Position, "
+                + "p.FullName AS EmployeeName, p.Avatar, "
+                + "rp.FullName AS ReviewerName "
+                + "FROM LeaveRequests lr "
+                + "JOIN Employees e ON e.EmployeeId = lr.EmployeeId "
+                + "JOIN Persons p ON p.PersonId = e.PersonId "
+                + "LEFT JOIN Employees re ON re.EmployeeId = lr.ReviewedByEmployeeId "
+                + "LEFT JOIN Persons rp ON rp.PersonId = re.PersonId "
+                + "WHERE lr.LeaveRequestId = ?";
+
+        try (Connection connection = DBContext.getConnection();
+                PreparedStatement statement = connection.prepareStatement(sql)) {
+
+            statement.setInt(1, leaveRequestId);
+
+            try (ResultSet resultSet = statement.executeQuery()) {
+                if (resultSet.next()) {
+                    return new LeaveReviewDetail(
+                            mapResultSetToLeaveRequest(resultSet),
+                            resultSet.getString("EmployeeCode"),
+                            resultSet.getString("EmployeeName"),
+                            resultSet.getString("Position"),
+                            resultSet.getString("Avatar"),
+                            resultSet.getString("ReviewerName"));
+                }
+            }
+        }
+
+        return null;
+    }
+
+    /**
+     * Đếm số nhân viên theo chức vụ còn trực ca trong ngày sau khi trừ các đơn nghỉ Approved.
+     * Dùng để kiểm tra min-staffing trước khi Manager duyệt thêm (CBR-88, CBR-90, BR-14).
+     *
+     * @param leaveDate ngày nghỉ cần kiểm tra
+     * @param shiftType ca cần kiểm tra (Morning/Afternoon/FullDay)
+     * @param position  chức vụ (PT/Receptionist)
+     * @return số nhân viên sẽ còn trực nếu đơn này được duyệt
+     * @throws SQLException lỗi kết nối hoặc lỗi câu SQL
+     */
+    public int countOnDutyAfterApproval(
+            LocalDate leaveDate,
+            String shiftType,
+            String position,
+            int excludeLeaveRequestId
+    ) throws SQLException {
+        // B1: tổng nhân viên chức vụ đó đang Working
+        String sqlTotal = "SELECT COUNT(*) FROM Employees WHERE Position = ? AND Status = 'Working'";
+
+        // B2: đếm đơn Approved (hoặc đang xét = đơn excludeLeaveRequestId vừa approve) cùng ngày, ca, chức vụ
+        // ShiftType FullDay overlap với Morning và Afternoon
+        String sqlApproved = "SELECT COUNT(*) "
+                + "FROM LeaveRequests lr "
+                + "JOIN Employees e ON e.EmployeeId = lr.EmployeeId "
+                + "WHERE lr.LeaveDate = ? "
+                + "AND (lr.Status = 'Approved' OR lr.LeaveRequestId = ?) "
+                + "AND e.Position = ? "
+                + "AND ("
+                + "  lr.ShiftType = 'FullDay' "
+                + "  OR lr.ShiftType = ? "
+                + "  OR ? = 'FullDay' "
+                + ")";
+
+        int total = 0;
+        int approved = 0;
+
+        try (Connection connection = DBContext.getConnection()) {
+            try (PreparedStatement stmt = connection.prepareStatement(sqlTotal)) {
+                stmt.setString(1, position);
+                try (ResultSet rs = stmt.executeQuery()) {
+                    if (rs.next()) {
+                        total = rs.getInt(1);
+                    }
+                }
+            }
+
+            try (PreparedStatement stmt = connection.prepareStatement(sqlApproved)) {
+                stmt.setDate(1, java.sql.Date.valueOf(leaveDate));
+                stmt.setInt(2, excludeLeaveRequestId);
+                stmt.setString(3, position);
+                stmt.setString(4, shiftType);
+                stmt.setString(5, shiftType);
+                try (ResultSet rs = stmt.executeQuery()) {
+                    if (rs.next()) {
+                        approved = rs.getInt(1);
+                    }
+                }
+            }
+        }
+
+        return total - approved;
+    }
+
+    /**
+     * Duyệt đơn nghỉ phép: cập nhật Status = 'Approved', ghi người duyệt và thời điểm.
+     *
+     * @param leaveRequestId mã đơn
+     * @param reviewerEmployeeId mã nhân viên Manager duyệt
+     * @throws SQLException lỗi kết nối hoặc lỗi câu SQL
+     */
+    public void approve(int leaveRequestId, int reviewerEmployeeId) throws SQLException {
+        String sql = "UPDATE LeaveRequests "
+                + "SET Status = 'Approved', "
+                + "ReviewedByEmployeeId = ?, "
+                + "ReviewedAt = SYSDATETIME() "
+                + "WHERE LeaveRequestId = ? AND Status = 'Pending'";
+
+        try (Connection connection = DBContext.getConnection();
+                PreparedStatement statement = connection.prepareStatement(sql)) {
+            statement.setInt(1, reviewerEmployeeId);
+            statement.setInt(2, leaveRequestId);
+            statement.executeUpdate();
+        }
+    }
+
+    /**
+     * Từ chối đơn nghỉ phép: cập nhật Status = 'Rejected', ghi người duyệt, thời điểm và lý do.
+     *
+     * @param leaveRequestId mã đơn
+     * @param reviewerEmployeeId mã nhân viên Manager từ chối
+     * @param rejectReason lý do từ chối, 5-500 ký tự
+     * @throws SQLException lỗi kết nối hoặc lỗi câu SQL
+     */
+    public void reject(int leaveRequestId, int reviewerEmployeeId, String rejectReason)
+            throws SQLException {
+        String sql = "UPDATE LeaveRequests "
+                + "SET Status = 'Rejected', "
+                + "ReviewedByEmployeeId = ?, "
+                + "ReviewedAt = SYSDATETIME(), "
+                + "RejectReason = ? "
+                + "WHERE LeaveRequestId = ? AND Status = 'Pending'";
+
+        try (Connection connection = DBContext.getConnection();
+                PreparedStatement statement = connection.prepareStatement(sql)) {
+            statement.setInt(1, reviewerEmployeeId);
+            statement.setString(2, rejectReason);
+            statement.setInt(3, leaveRequestId);
+            statement.executeUpdate();
+        }
+    }
+
     // ===== Map ResultSet → Entity =====
 
     /** Đổi 1 dòng ResultSet thành LeaveRequest; cột nullable được đọc riêng để không mất NULL. */
@@ -245,6 +401,43 @@ public class LeaveRequestDAO {
      * và thông tin nhân viên lấy từ Employees/Persons. Service đổi sang
      * LeaveRequestItemView (thêm hạn duyệt, đếm ngược) trước khi đưa ra JSP.
      */
+    /**
+     * Thông tin đầy đủ một đơn nghỉ phép cho màn duyệt của Manager (#27).
+     * Giống LeaveRequestRow nhưng dành riêng cho trang review, Service thêm trường tính toán.
+     */
+    public static class LeaveReviewDetail {
+
+        private final LeaveRequest leaveRequest;
+        private final String employeeCode;
+        private final String fullName;
+        private final String position;
+        private final String avatarUrl;
+        private final String reviewerName;
+
+        public LeaveReviewDetail(
+                LeaveRequest leaveRequest,
+                String employeeCode,
+                String fullName,
+                String position,
+                String avatarUrl,
+                String reviewerName
+        ) {
+            this.leaveRequest = leaveRequest;
+            this.employeeCode = employeeCode;
+            this.fullName = fullName;
+            this.position = position;
+            this.avatarUrl = avatarUrl;
+            this.reviewerName = reviewerName;
+        }
+
+        public LeaveRequest getLeaveRequest() { return leaveRequest; }
+        public String getEmployeeCode() { return employeeCode; }
+        public String getFullName() { return fullName; }
+        public String getPosition() { return position; }
+        public String getAvatarUrl() { return avatarUrl; }
+        public String getReviewerName() { return reviewerName; }
+    }
+
     public static class LeaveRequestRow {
 
         // DAO: toàn bộ cột LeaveRequests của đơn này.
