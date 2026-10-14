@@ -814,6 +814,16 @@
   --pumpy-dialog-bg: #203D60;
   --pumpy-dialog-text: #F2FBF8;
   --pumpy-dialog-space: 104px;
+  /* Pumpy đi thuyền (hero About, 15/10): kích thước, quãng trôi, nhịp; góc thuyền tối như ngược sáng hoàng hôn. */
+  --sailor-width: clamp(150px, 15vw, 236px);
+  --sailor-right: clamp(16px, 5vw, 96px);
+  --sailor-bottom: clamp(24px, 8%, 88px);
+  --sailor-drift: clamp(110px, 18vw, 300px);
+  --sailor-leg: 9000ms;
+  --sailor-bob: 3600ms;
+  --sailor-dim: 0.74;
+  --sailor-shade: radial-gradient(ellipse 60% 55% at 70% 72%, rgba(5, 9, 18, 0.62), transparent 72%);
+  --sailor-bubble-width: 248px;
   --my-pt-time-width: 168px;
   --my-pt-cancel-bg: #352B35;
   --my-pt-cancel-border: #A86761;

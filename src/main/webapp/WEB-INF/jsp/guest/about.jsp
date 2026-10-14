@@ -12,9 +12,10 @@
 <head>
   <%@ include file="/WEB-INF/jsp/common/head.jspf" %>
   <title>Về chúng tôi · Super Gym</title>
-  <link rel="stylesheet" href="${pageContext.request.contextPath}/css/pages/guest/about.css?v=20261014a">
+  <link rel="stylesheet" href="${pageContext.request.contextPath}/css/pages/guest/about.css?v=20261015a">
   <script src="${pageContext.request.contextPath}/js/pages/guest/about-sun.js?v=20261014a" defer></script>
   <script src="${pageContext.request.contextPath}/js/pages/guest/about.js?v=20261014a" defer></script>
+  <script src="${pageContext.request.contextPath}/js/pages/guest/about-pumpy.js?v=20261015a" defer></script>
 </head>
 <body class="theme-guest-dark about-page">
   <%@ include file="/WEB-INF/jsp/common/flash-toast.jspf" %>
@@ -35,6 +36,7 @@
           <a class="cy-btn cy-btn--line" href="#story">Câu chuyện của chúng tôi</a>
         </div>
       </div>
+      <%@ include file="/WEB-INF/jsp/guest/_pumpy-sailor.jspf" %>
     </section>
 
     <%-- ===== Triết lý tập luyện: nội dung tĩnh, không số liệu hoặc lời chứng thực ===== --%>
