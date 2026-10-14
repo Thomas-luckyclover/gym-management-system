@@ -15,7 +15,7 @@
 <header class="site-header">
   <div class="header-inner">
     <a class="brand" href="${ctx}/" aria-label="Super Gym — Trang chủ" translate="no">
-      <img class="brand-wordmark" src="${ctx}/images/logo.png?v=20261013" alt="Super Gym" width="84" height="64">
+      <img class="brand-wordmark" src="${ctx}/images/brand/super-gym-wordmark.svg?v=20261014d" alt="Super Gym" width="170" height="44">
     </a>
 
     <nav class="nav-links" aria-label="Menu chính">
