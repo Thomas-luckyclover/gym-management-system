@@ -252,12 +252,46 @@ button {
   overflow: visible;
 }
 
-/* Nút nền vàng chanh (trang khách / đăng nhập): Pumpy cũng màu chanh nên đặt lên "sân" đen cho nổi */
+/* Capsule ngân hà: Pumpy và tạ navy có viền sáng, nền chỉ nằm trong loading. */
 :is(.theme-guest, .theme-guest-dark) .btn-primary .btn-pumpy {
-  box-sizing: content-box;
-  padding: 0.2em 0.6em;
+  padding: 0;
+  background: none;
+}
+.btn-pumpy-capsule {
+  position: relative;
+  isolation: isolate;
+  display: inline-flex;
+  flex: none;
+  align-items: center;
+  overflow: hidden;
+  padding: var(--space-0-5) var(--space-2);
+  border: var(--border-width) solid var(--loading-outline);
   border-radius: var(--radius-pill);
-  background: var(--color-lime-ink);
+  background: var(--loading-galaxy-bg);
+  box-shadow: var(--loading-capsule-shadow);
+}
+.btn-pumpy-capsule::before,
+.btn-pumpy-capsule::after {
+  content: "";
+  position: absolute;
+  inset: 0;
+  z-index: -1;
+  pointer-events: none;
+}
+.btn-pumpy-capsule::before {
+  background: var(--loading-nebula);
+  background-size: 180% 100%;
+  animation: capsule-nebula var(--loading-drift-duration) ease-in-out infinite alternate;
+}
+.btn-pumpy-capsule::after { background: var(--loading-stars); }
+.btn-pumpy-capsule .bp-pumpy > ellipse,
+.btn-pumpy-capsule .bp-pumpy > circle { stroke: var(--loading-outline); }
+@keyframes capsule-nebula {
+  from { background-position: 0 50%; }
+  to { background-position: 100% 50%; }
+}
+@media (prefers-reduced-motion: reduce) {
+  .btn-pumpy-capsule::before { animation: none; }
 }
 
 /* Thân: nghiêng về phía tạ + rung vì gồng hết sức */
@@ -733,7 +767,7 @@ input[type="password"]::-ms-clear {
   width: calc(var(--space-12) * 1.6);
   height: calc(var(--space-12) * 1.2);
   margin: 0 auto var(--space-3);
-  background: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 124 92'%3E %3Cellipse cx='60' cy='88' rx='44' ry='3.4' fill='url(%23hte)'/%3E %3Cg transform='translate(96 70)'%3E%3Crect x='4' y='6' width='14' height='3' fill='%23fff' stroke='%23141414' stroke-width='1.6'/%3E%3Crect x='0' y='0' width='5' height='15' rx='1' fill='%23141414'/%3E%3Crect x='17' y='0' width='5' height='15' rx='1' fill='%23141414'/%3E%3Crect x='2' y='2' width='1' height='11' fill='%2318B8C0'/%3E%3Crect x='19' y='2' width='1' height='11' fill='%2318B8C0'/%3E%3C/g%3E %3Cdefs%3E%3Cpattern id='hte' width='3.4' height='3.4' patternUnits='userSpaceOnUse' patternTransform='rotate(45)'%3E%3Ccircle cx='1.7' cy='1.7' r='0.95' fill='%23141414'/%3E%3C/pattern%3E %3Cmask id='she'%3E%3Cpath d='M22 62 C22 38 38 26 58 26 C78 26 94 38 94 62 C94 78 79 86 58 86 C37 86 22 78 22 62Z' fill='%23fff'/%3E%3Cpath d='M22 62 C22 38 38 26 58 26 C78 26 94 38 94 62 C94 78 79 86 58 86 C37 86 22 78 22 62Z' transform='translate(-7 -6)' fill='%23000'/%3E%3C/mask%3E%3C/defs%3E %3Cpath d='M30 40 L31 19 L45 30Z M86 40 L85 19 L71 30Z' fill='%2318B8C0' stroke='%23141414' stroke-width='3' stroke-linejoin='round'/%3E %3Cpath d='M32 37 L33 26 L40 31Z' fill='url(%23hte)'/%3E %3Cpath d='M22 62 C22 38 38 26 58 26 C78 26 94 38 94 62 C94 78 79 86 58 86 C37 86 22 78 22 62Z' fill='%2318B8C0'/%3E%3Cellipse cx='58' cy='70' rx='18' ry='12' fill='%23F2FBF8'/%3E %3Crect x='0' y='0' width='124' height='92' fill='url(%23hte)' mask='url(%23she)'/%3E %3Cpath d='M22 62 C22 38 38 26 58 26 C78 26 94 38 94 62 C94 78 79 86 58 86 C37 86 22 78 22 62Z' fill='none' stroke='%23141414' stroke-width='3.2'/%3E %3Cpath d='M30 47 Q33 37 42 32' fill='none' stroke='%23141414' stroke-width='1.6' stroke-linecap='round'/%3E %3Cpath transform='translate(58 72) scale(0.26) translate(-150 -280)' d='M150.0 278.0 L150.3 278.2 L150.4 278.5 L150.5 278.9 L150.5 279.3 L150.4 279.7 L150.2 280.1 L149.9 280.5 L149.4 280.8 L148.9 281.0 L148.3 281.1 L147.7 281.1 L147.0 281.0 L146.3 280.7 L145.7 280.3 L145.0 279.8 L144.5 279.1 L144.0 278.3 L143.7 277.4 L143.5 276.4 L143.5 275.3 L143.7 274.2 L144.0 273.1 L144.5 272.0 L145.3 271.0 L146.2 270.1 L147.3 269.3 L148.5 268.6 L149.9 268.1 L151.4 267.9 L153.0 267.9 L154.6 268.1 L156.2 268.6 L157.7 269.3 L159.2 270.3 L160.5 271.5 L161.6 273.0 L162.6 274.7 L163.3 276.5 L163.7 278.5 L163.8 280.5 L163.7 282.6 L163.1 284.7 L162.3 286.8 L161.1 288.8 L159.7 290.5 L157.9 292.1 L155.9 293.5 L153.6 294.5 L151.2 295.2 L148.7 295.5 L146.0 295.5 L143.4 295.1 L140.8 294.2 L138.3 293.0 L136.0 291.4 L133.9 289.4 L132.1 287.0 L130.6 284.4 L129.6 281.6 L128.9 278.6 L128.7 275.5 L128.9 272.3 L129.7 269.1 L130.9 266.1 L132.6 263.2 L134.7 260.5 L137.2 258.2 L140.1 256.2 L143.3 254.7 L146.7 253.6 L150.3 253.0 L154.0 253.0 L157.8 253.5 L161.4 254.6 L164.9 256.2 L168.2 258.4 L171.1 261.0 L173.7 264.1 L175.8 267.6 L177.4 271.4 L178.4 275.4 L178.8 279.6 L178.6 283.9 L177.8 288.1 L176.3 292.2 L174.2 296.1 L171.6 299.7 L168.4 302.9 L164.7 305.6 L160.6 307.8' fill='none' stroke='%23F25C1B' stroke-width='7'/%3E %3Ccircle cx='49' cy='50' r='3.6' fill='%23141414'/%3E%3Ccircle cx='69' cy='50' r='3.6' fill='%23141414'/%3E %3Ccircle cx='50.2' cy='48.6' r='1.2' fill='%23fff'/%3E%3Ccircle cx='70.2' cy='48.6' r='1.2' fill='%23fff'/%3E %3Ccircle cx='59' cy='59' r='2.6' fill='none' stroke='%23141414' stroke-width='2'/%3E %3Cellipse cx='42' cy='85' rx='9' ry='5' fill='%2318B8C0' stroke='%23141414' stroke-width='2.6'/%3E%3Cellipse cx='74' cy='85' rx='9' ry='5' fill='%2318B8C0' stroke='%23141414' stroke-width='2.6'/%3E %3Cpath d='M101 14 Q101 6 108 6 Q115 6 115 13 Q115 18 108.5 20 L108.5 24' fill='none' stroke='%23141414' stroke-width='4' stroke-linecap='round'/%3E%3Ccircle cx='108.5' cy='30' r='2.4' fill='%23141414'/%3E %3Cpath d='M95 30 L99 27 M93 22 L98 21' stroke='%23141414' stroke-width='1.8' stroke-linecap='round'/%3E %3C/svg%3E") center / contain no-repeat;
+  background: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 124 92'%3E %3Cellipse cx='60' cy='88' rx='44' ry='3.4' fill='url(%23hte)'/%3E %3Cg transform='translate(96 70)'%3E%3Crect x='4' y='6' width='14' height='3' fill='%23fff' stroke='%23141414' stroke-width='1.6'/%3E%3Crect x='0' y='0' width='5' height='15' rx='1' fill='%23141414'/%3E%3Crect x='17' y='0' width='5' height='15' rx='1' fill='%23141414'/%3E%3Crect x='2' y='2' width='1' height='11' fill='%23294F78'/%3E%3Crect x='19' y='2' width='1' height='11' fill='%23294F78'/%3E%3C/g%3E %3Cdefs%3E%3Cpattern id='hte' width='3.4' height='3.4' patternUnits='userSpaceOnUse' patternTransform='rotate(45)'%3E%3Ccircle cx='1.7' cy='1.7' r='0.95' fill='%23141414'/%3E%3C/pattern%3E %3Cmask id='she'%3E%3Cpath d='M22 62 C22 38 38 26 58 26 C78 26 94 38 94 62 C94 78 79 86 58 86 C37 86 22 78 22 62Z' fill='%23fff'/%3E%3Cpath d='M22 62 C22 38 38 26 58 26 C78 26 94 38 94 62 C94 78 79 86 58 86 C37 86 22 78 22 62Z' transform='translate(-7 -6)' fill='%23000'/%3E%3C/mask%3E%3C/defs%3E %3Cpath d='M30 40 L31 19 L45 30Z M86 40 L85 19 L71 30Z' fill='%23294F78' stroke='%23141414' stroke-width='3' stroke-linejoin='round'/%3E %3Cpath d='M32 37 L33 26 L40 31Z' fill='url(%23hte)'/%3E %3Cpath d='M22 62 C22 38 38 26 58 26 C78 26 94 38 94 62 C94 78 79 86 58 86 C37 86 22 78 22 62Z' fill='%23294F78'/%3E%3Cellipse cx='58' cy='70' rx='18' ry='12' fill='%23F2FBF8'/%3E %3Crect x='0' y='0' width='124' height='92' fill='url(%23hte)' mask='url(%23she)'/%3E %3Cpath d='M22 62 C22 38 38 26 58 26 C78 26 94 38 94 62 C94 78 79 86 58 86 C37 86 22 78 22 62Z' fill='none' stroke='%23141414' stroke-width='3.2'/%3E %3Cpath d='M30 47 Q33 37 42 32' fill='none' stroke='%23141414' stroke-width='1.6' stroke-linecap='round'/%3E %3Cpath transform='translate(58 72) scale(0.26) translate(-150 -280)' d='M150.0 278.0 L150.3 278.2 L150.4 278.5 L150.5 278.9 L150.5 279.3 L150.4 279.7 L150.2 280.1 L149.9 280.5 L149.4 280.8 L148.9 281.0 L148.3 281.1 L147.7 281.1 L147.0 281.0 L146.3 280.7 L145.7 280.3 L145.0 279.8 L144.5 279.1 L144.0 278.3 L143.7 277.4 L143.5 276.4 L143.5 275.3 L143.7 274.2 L144.0 273.1 L144.5 272.0 L145.3 271.0 L146.2 270.1 L147.3 269.3 L148.5 268.6 L149.9 268.1 L151.4 267.9 L153.0 267.9 L154.6 268.1 L156.2 268.6 L157.7 269.3 L159.2 270.3 L160.5 271.5 L161.6 273.0 L162.6 274.7 L163.3 276.5 L163.7 278.5 L163.8 280.5 L163.7 282.6 L163.1 284.7 L162.3 286.8 L161.1 288.8 L159.7 290.5 L157.9 292.1 L155.9 293.5 L153.6 294.5 L151.2 295.2 L148.7 295.5 L146.0 295.5 L143.4 295.1 L140.8 294.2 L138.3 293.0 L136.0 291.4 L133.9 289.4 L132.1 287.0 L130.6 284.4 L129.6 281.6 L128.9 278.6 L128.7 275.5 L128.9 272.3 L129.7 269.1 L130.9 266.1 L132.6 263.2 L134.7 260.5 L137.2 258.2 L140.1 256.2 L143.3 254.7 L146.7 253.6 L150.3 253.0 L154.0 253.0 L157.8 253.5 L161.4 254.6 L164.9 256.2 L168.2 258.4 L171.1 261.0 L173.7 264.1 L175.8 267.6 L177.4 271.4 L178.4 275.4 L178.8 279.6 L178.6 283.9 L177.8 288.1 L176.3 292.2 L174.2 296.1 L171.6 299.7 L168.4 302.9 L164.7 305.6 L160.6 307.8' fill='none' stroke='%2324496E' stroke-width='7'/%3E %3Ccircle cx='49' cy='50' r='3.6' fill='%23141414'/%3E%3Ccircle cx='69' cy='50' r='3.6' fill='%23141414'/%3E %3Ccircle cx='50.2' cy='48.6' r='1.2' fill='%23fff'/%3E%3Ccircle cx='70.2' cy='48.6' r='1.2' fill='%23fff'/%3E %3Ccircle cx='59' cy='59' r='2.6' fill='none' stroke='%23141414' stroke-width='2'/%3E %3Cellipse cx='42' cy='85' rx='9' ry='5' fill='%23294F78' stroke='%23141414' stroke-width='2.6'/%3E%3Cellipse cx='74' cy='85' rx='9' ry='5' fill='%23294F78' stroke='%23141414' stroke-width='2.6'/%3E %3Cpath d='M101 14 Q101 6 108 6 Q115 6 115 13 Q115 18 108.5 20 L108.5 24' fill='none' stroke='%23141414' stroke-width='4' stroke-linecap='round'/%3E%3Ccircle cx='108.5' cy='30' r='2.4' fill='%23141414'/%3E %3Cpath d='M95 30 L99 27 M93 22 L98 21' stroke='%23141414' stroke-width='1.8' stroke-linecap='round'/%3E %3C/svg%3E") center / contain no-repeat;
   animation: none;
 }
 
@@ -1713,7 +1747,69 @@ body.dock ::-webkit-scrollbar-thumb {
   }
 }
 
-/* Tooltip */
+/* HintBox chung: mẫu PT Dashboard, dùng .pt-info/.pt-info-trigger/.pt-info-popover. */
+.pt-info { position: relative; display: inline-flex; flex: none; }
+.pt-info-trigger {
+  display: grid;
+  place-items: center;
+  width: var(--control-height-md);
+  height: var(--control-height-md);
+  padding: 0;
+  border: var(--border-width) solid var(--pt-line-strong);
+  border-radius: var(--radius-circle);
+  background: transparent;
+  color: var(--pt-text);
+  font-family: var(--font-body);
+  font-weight: var(--font-weight-semibold);
+  cursor: help;
+}
+.pt-info-trigger:hover { border-color: var(--pt-text); }
+.pt-info-popover {
+  position: absolute;
+  z-index: var(--z-dropdown);
+  top: calc(100% + var(--space-2));
+  right: 0;
+  width: min(72vw, calc(var(--space-12) * 4));
+  opacity: 0;
+  visibility: hidden;
+  transform: translateY(calc(-1 * var(--space-1)));
+  transition: opacity var(--duration-slow), transform var(--duration-slow), visibility var(--duration-slow);
+}
+html body.dock :is(.pt-info-popover, .package-tip__bubble) {
+  padding: var(--space-3) var(--space-4);
+  border: var(--border-width) solid var(--pt-line-strong);
+  border-radius: var(--radius-sm);
+  background: var(--pt-panel-2);
+  color: var(--pt-text);
+  font-family: var(--font-body);
+  font-size: var(--font-size-sm);
+  font-weight: var(--font-weight-regular);
+  line-height: var(--line-height-normal);
+  text-align: left;
+  box-shadow: var(--shadow-pop);
+  overflow-wrap: anywhere;
+}
+.pt-info:is(:hover, :focus-within, .is-open) .pt-info-popover {
+  opacity: 1;
+  visibility: visible;
+  transform: none;
+}
+.pt-info.is-dismissed .pt-info-popover { opacity: 0; visibility: hidden; }
+@media (max-width: 700px) {
+  .pt-info-popover {
+    position: fixed;
+    top: auto;
+    right: var(--space-4);
+    bottom: var(--space-6);
+    left: var(--space-4);
+    width: auto;
+  }
+}
+@media (prefers-reduced-motion: reduce) {
+  .pt-info-popover { transition: none; }
+}
+
+/* Tooltip biểu đồ dùng cùng surface của HintBox. */
 .dock [data-tooltip] {
   position: relative;
 }
@@ -1724,13 +1820,18 @@ body.dock ::-webkit-scrollbar-thumb {
   bottom: calc(100% + var(--space-2));
   left: 50%;
   z-index: var(--z-dropdown);
-  padding: var(--space-1-5) var(--space-2-5);
+  padding: var(--space-3) var(--space-4);
+  border: var(--border-width) solid var(--pt-line-strong);
   border-radius: var(--radius-sm);
-  background: var(--color-board);
-  color: var(--color-board-text);
-  font-size: var(--font-size-xs);
-  font-weight: var(--font-weight-medium);
-  white-space: nowrap;
+  background: var(--pt-panel-2);
+  color: var(--pt-text);
+  font-size: var(--font-size-sm);
+  font-weight: var(--font-weight-regular);
+  line-height: var(--line-height-normal);
+  box-shadow: var(--shadow-pop);
+  white-space: normal;
+  width: max-content;
+  max-width: min(72vw, calc(var(--space-12) * 4));
   pointer-events: none;
   opacity: 0;
   transform: translate(-50%, var(--space-1));
@@ -2146,7 +2247,7 @@ body.dock ::-webkit-scrollbar-thumb {
 }
 
 /* =====================================================================
-   PUMPY: thân aqua đậm #18B8C0, bụng kem #F2FBF8, xoáy bụng cam cháy #F25C1B (bắt buộc, theo yêu cầu chủ dự án); tạ trắng lõi ember, tạ đen lõi aqua.
+   PUMPY: thân navy #294F78, bụng kem #F2FBF8, xoáy bụng navy #24496E; tay tròn ngắn sát thân; tạ trắng lõi ember, tạ navy đồng bộ.
    ===================================================================== */
 
 /* Chọn nhanh khoảng ngày (common.js) */
@@ -2401,19 +2502,9 @@ a:is(:hover, :focus-visible) .duo > img,
    Ảnh nền đã chỉnh duotone hoàng hôn × đại dương; mỗi trang một ảnh. Nút hoàng hôn, link + viền focus aqua.
    Bộ chọn có "html body" để thắng CSS riêng của từng trang (nạp sau common.css).
    ===================================================================== */
-html body.auth-dark .auth-shell { background-color: var(--brand-abyss); }
-html body.auth-dark .auth-shell::before {
-  background: url("../images/brand/strip-squat.jpg") center 30% / cover no-repeat;
-  filter: blur(3px) brightness(0.62) contrast(1.05);
-}
-html body.auth-dark.auth-page-register .auth-shell::before { background-image: url("../images/brand/auth-run.jpg"); background-position: center 60%; }
-html body.auth-dark.auth-page-forgot .auth-shell::before { background-image: url("../images/brand/auth-press.jpg"); background-position: center 25%; }
-html body.auth-dark .auth-shell::after {
-  background:
-    radial-gradient(900px 520px at 88% -8%, rgba(255, 122, 61, 0.38), transparent 62%),
-    radial-gradient(760px 520px at 0% 108%, rgba(43, 212, 222, 0.24), transparent 65%),
-    linear-gradient(180deg, rgba(4, 24, 32, 0.3) 0%, rgba(4, 24, 32, 0.62) 50%, rgba(4, 24, 32, 0.9) 100%);
-}
+html body.auth-dark .auth-shell { background: var(--auth-ocean-ground); }
+html body.auth-dark .auth-shell::before,
+html body.auth-dark .auth-shell::after { content: none; }
 html body.auth-dark .auth-brand { color: var(--brand-sunset-hi); font-family: var(--font-brand-display); font-size: 1.5rem; font-weight: 400; letter-spacing: 0.05em; }
 html body.auth-dark .auth-head h1 {
   font-family: var(--font-brand-display);
@@ -2528,154 +2619,210 @@ html body.auth-dark .field select:focus {
    Tham khảo các site đạt giải trên webdesignawards.io (UI/UX):
      · Khung lưới mảnh, nhãn nhỏ kiểu mã [ ... ] giãn chữ, màu nhấn dùng có tiết chế
      · Khoảng thở rộng và phân cấp số liệu rõ ràng
-   Nền: phòng gym nhìn qua vách kính bể cá ở đáy biển sâu — ảnh mờ (images/brand/zone-gym.jpg),
-   ánh hoàng hôn cam rọi xuống từ mặt nước, vân sáng khúc xạ trôi trên kính (caustics.png).
+   Nền: nghệ thuật trừu tượng gang, phấn tập và pigment ember. Ảnh tĩnh lùi sau surface đặc.
    ===================================================================== */
-html body.dock { background-color: #020A0E; }
-
-/* Lớp 1: cảnh phòng gym mờ sau kính + ánh cam từ mặt nước + vệt phản chiếu chéo trên vách kính */
+/* Nền nghệ thuật tĩnh: ảnh macro gang/phấn ở mép phải, trung tâm tối để đọc. */
+html body.dock { background-color: var(--ink-ground); }
 html body.dock::before {
   content: "";
   position: fixed;
-  inset: -4%;
+  inset: 0;
   z-index: 0;
   pointer-events: none;
-  background:
-    radial-gradient(120% 90% at 50% 40%, transparent 35%, rgba(1, 6, 9, 0.8) 100%),
-    linear-gradient(180deg, rgba(2, 10, 14, 0.25) 0%, rgba(2, 10, 14, 0.45) 45%, rgba(1, 6, 9, 0.88) 100%),
-    radial-gradient(50% 45% at 86% -6%, rgba(255, 138, 70, 0.34), transparent 70%),
-    radial-gradient(34% 30% at 18% -4%, rgba(255, 160, 96, 0.16), transparent 70%),
-    linear-gradient(104deg, transparent 28%, rgba(255, 255, 255, 0.05) 31%, transparent 34%, transparent 62%, rgba(255, 255, 255, 0.03) 64%, transparent 66%),
-    url("../images/brand/zone-gym.jpg") center / cover no-repeat;
-  animation: gms-tide 46s ease-in-out infinite alternate;
+  background: var(--ink-overlay), var(--ink-vignette), var(--ink-art) right center / cover no-repeat;
+  animation: none;
 }
-/* Lớp 2: vân sáng khúc xạ — 2 lớp trôi ngược chiều, đậm gần mặt nước, nhạt dần xuống sâu */
 html body.dock::after {
   content: "";
   position: fixed;
   inset: 0;
   z-index: 0;
   pointer-events: none;
-  background:
-    url("../images/brand/caustics.png") 0 0 / 900px 900px repeat,
-    url("../images/brand/caustics.png") 140px 90px / 1300px 1300px repeat;
-  opacity: 0.09;
-  filter: blur(1.5px);
-  mix-blend-mode: screen;
-  -webkit-mask-image: linear-gradient(180deg, #000 0%, rgba(0, 0, 0, 0.45) 45%, transparent 85%);
-  mask-image: linear-gradient(180deg, #000 0%, rgba(0, 0, 0, 0.45) 45%, transparent 85%);
-  animation: gms-caustic 34s linear infinite;
+  background: var(--ink-ripples) 0 0 / var(--ink-ripple-size) repeat;
+  opacity: var(--ink-ripple-opacity);
+  mask-image: var(--ink-ripple-mask);
+  -webkit-mask-image: var(--ink-ripple-mask);
+  animation: ink-ripple-drift var(--ink-ripple-duration) linear infinite;
+}
+html[data-theme="light"] body.dock { background: var(--ink-ground); }
+html[data-theme="light"] body.dock::before,
+html[data-theme="light"] body.dock::after,
+html[data-theme="light"] body.dock .weather-scene { display: none; }
+@keyframes ink-ripple-drift {
+  to { background-position: var(--ink-ripple-travel); }
 }
 html body.dock .app { position: relative; z-index: 1; }
-@keyframes gms-tide {
-  from { transform: translate3d(-1.5%, -1%, 0) scale(1.02); }
-  to { transform: translate3d(1.5%, 1%, 0) scale(1.07); }
-}
-@keyframes gms-caustic {
-  to { background-position: 900px 450px, -1300px 650px; }
-}
-/* Nền sáng: cùng cảnh nhưng như kính mờ sương ban ngày */
-html[data-theme="light"] body.dock { background-color: #E4ECEE; }
-html[data-theme="light"] body.dock::before {
-  background:
-    linear-gradient(180deg, rgba(232, 240, 242, 0.82), rgba(228, 236, 238, 0.92)),
-    radial-gradient(50% 45% at 86% -6%, rgba(255, 138, 70, 0.3), transparent 70%),
-    url("../images/brand/zone-gym.jpg") center / cover no-repeat;
-}
-html[data-theme="light"] body.dock::after { display: none; }
 
-/* Panel: kính tối trong suốt nhìn xuyên thấy cảnh, viền aqua rất mảnh, không bóng nhựa */
-html body.dock :is(.gms-panel, .report-card:not(.stat), .card, .pt-schedule, .pt-alerts, .pt-clients, .pt-rating, .pt-summary, .pt-board__hero) {
-  position: relative;
-  border: var(--border-width) solid rgba(127, 230, 236, 0.1);
+/* Bảng, form và khối tác vụ là lớp đặc ở tiền cảnh; không xuyên ảnh qua chữ. */
+html body.dock :is(.panel, .side-card, .gms-panel, .report-card, .card, .stat, .pt-schedule, .pt-alerts, .pt-clients, .pt-rating, .pt-summary, .my-pt-panel, .package-card) {
+  border: var(--border-width) solid var(--ink-border);
   border-radius: var(--radius-lg);
-  background: rgba(4, 18, 25, 0.72);
-  box-shadow: 0 30px 60px -40px rgba(0, 0, 0, 0.9);
-  -webkit-backdrop-filter: blur(18px) saturate(1.15);
-  backdrop-filter: blur(18px) saturate(1.15);
+  background: var(--ink-surface);
+  color: var(--pt-text);
+  box-shadow: var(--ink-shadow);
+  -webkit-backdrop-filter: none;
+  backdrop-filter: none;
 }
-html[data-theme="light"] body.dock :is(.gms-panel, .report-card:not(.stat), .card, .pt-schedule, .pt-alerts, .pt-clients, .pt-rating, .pt-summary, .pt-board__hero) {
-  border-color: rgba(14, 110, 130, 0.14);
-  background: rgba(255, 255, 255, 0.84);
-  box-shadow: 0 18px 40px -30px rgba(6, 43, 56, 0.4);
+html body.dock :is(.pt-board__hero, .wx-hero) {
+  border-color: var(--pt-line);
+  box-shadow: none;
 }
-/* Mục đang chọn: hoàng hôn hồng than → cam cháy → đỏ, chữ trắng đủ tương phản. */
+
+/* Sidebar đại dương đặc; ánh xanh theo --mx/--my và gió nét mảnh chỉ chạy khi hover. */
+html body.dock .sidebar {
+  padding: var(--space-6) var(--space-4) var(--space-5);
+  background: var(--ink-sidebar-bg);
+  border-right: var(--border-width) solid var(--ink-sidebar-line);
+}
+html body.dock .sidebar::before {
+  background: radial-gradient(var(--dock-glow-size) circle at var(--mx, 50%) var(--my, -30%), var(--ink-sidebar-light-core), var(--ink-sidebar-light-edge) 48%, transparent 72%);
+}
+html body.dock .sidebar::after {
+  content: "";
+  position: absolute;
+  top: calc(var(--my, 50%) - var(--ink-breeze-height) / 2);
+  left: calc(-1 * var(--ink-breeze-travel));
+  width: calc(100% + var(--ink-breeze-travel) * 2);
+  height: var(--ink-breeze-height);
+  background: var(--ink-sidebar-breeze) center / cover no-repeat;
+  opacity: 0;
+  pointer-events: none;
+  z-index: 0;
+}
+/* Chế độ nhẹ vẫn thấy nét gió tĩnh; chỉ chuyển động được tắt theo tùy chọn. */
+html body.dock .sidebar:hover::after { opacity: var(--ink-breeze-opacity); }
+@media (hover: hover) and (prefers-reduced-motion: no-preference) {
+  html:not(.gms-lite) body.dock .sidebar:hover::after {
+    animation: sidebar-sea-breeze var(--ink-breeze-duration) ease-in-out infinite alternate;
+  }
+}
+@keyframes sidebar-sea-breeze {
+  0% { opacity: calc(var(--ink-breeze-opacity) * 0.6); transform: translateX(calc(-1 * var(--ink-breeze-travel))); }
+  50% { opacity: var(--ink-breeze-opacity); }
+  100% { opacity: calc(var(--ink-breeze-opacity) * 0.6); transform: translateX(var(--ink-breeze-travel)); }
+}
+html body.dock .sidebar > .brand {
+  gap: var(--space-3);
+  padding-bottom: var(--space-5);
+  border-bottom: var(--border-width) solid var(--ink-sidebar-line);
+}
+html body.dock .brand-mark {
+  width: var(--logo-mark-size);
+  height: var(--logo-mark-size);
+  background: transparent;
+  border-radius: var(--radius-md);
+}
+html body.dock .brand-mark img { object-fit: contain; }
+html body.dock .brand-name {
+  font-family: var(--font-brand-display);
+  letter-spacing: var(--letter-spacing-normal);
+  font-size: var(--font-size-lg);
+}
+html body.dock .brand-role { color: var(--ink-sidebar-top); }
+html body.dock .nav { gap: var(--space-1); }
+html body.dock .nav-group {
+  margin: var(--space-5) var(--space-3) var(--space-1-5);
+  font-family: var(--font-body);
+  font-size: var(--font-size-xs);
+  letter-spacing: var(--letter-spacing-wide);
+  color: var(--ink-sidebar-top);
+}
+html body.dock .nav-link {
+  min-height: var(--brand-control-height);
+  padding: var(--space-2-5) var(--space-3);
+  border: var(--border-width) solid transparent;
+  border-radius: var(--radius-xs);
+  font-size: var(--font-size-sm);
+}
+html body.dock .nav-link:hover {
+  background: var(--ink-nav-hover);
+  border-color: var(--ink-sidebar-line);
+  transform: none;
+}
 html body.dock .nav-link.active,
 html body.dock .nav-link[aria-current="page"] {
-  background:
-    radial-gradient(circle at 68% -25%, color-mix(in srgb, var(--brand-sunset-hi) 35%, transparent), transparent 60%),
-    linear-gradient(112deg, var(--dock-sunset-rose), var(--dock-sunset-orange) 52%, var(--dock-sunset-red));
-  color: var(--dock-sunset-light);
-  box-shadow:
-    inset 0 var(--border-width) 0 color-mix(in srgb, var(--dock-sunset-light) 35%, transparent),
-    inset var(--border-width-accent) 0 0 var(--brand-sunset-hi),
-    0 var(--space-1) var(--space-4) color-mix(in srgb, var(--dock-sunset-red) 28%, transparent);
+  background: var(--ink-nav-active);
+  border-color: color-mix(in srgb, var(--ink-nav-edge) 32%, transparent);
+  color: var(--ink-nav-ink);
+  box-shadow: var(--ink-inset-edge);
 }
-html body.dock .nav-link.active :is(svg, i),
-html body.dock .nav-link[aria-current="page"] :is(svg, i) {
-  color: var(--dock-sunset-light);
+html body.dock .nav-link:is(.active, [aria-current="page"]) :is(svg, i) { color: var(--ink-nav-edge); }
+html body.dock .dock-handle {
+  background: var(--ink-sidebar-bg);
+  color: var(--brand-paper);
+  border: var(--border-width) solid var(--ink-sidebar-line);
+  border-left: 0;
 }
-html body.dock .dock-handle::after {
-  background: linear-gradient(180deg, var(--dock-sunset-rose), var(--dock-sunset-orange), var(--dock-sunset-red));
-}
-html body.dock .dock-handle:hover {
-  background: linear-gradient(145deg, var(--dock-sunset-rose), var(--dock-sunset-orange) 52%, var(--dock-sunset-red));
-  color: var(--dock-sunset-light);
-}
+html body.dock .dock-handle::after { background: var(--brand-sunset); }
+html body.dock .dock-handle:hover { background: var(--ink-nav-active); color: var(--ink-nav-ink); }
+html body.dock .side-foot { border-color: var(--ink-sidebar-line); }
+html body.dock .nav-link:focus-visible,
+html body.dock .logout:focus-visible { outline-color: var(--ink-sidebar-top); }
+html body.dock .dock-handle:focus-visible { outline-color: var(--ink-focus); }
 
 /* Cụm tài khoản: viền bạc lạnh, avatar gradient aqua → đại dương, mã nhân viên chip aqua (bỏ ánh nâu cam) */
 html body.dock .tb-user {
-  border-color: rgba(127, 230, 236, 0.18);
-  background: rgba(4, 18, 25, 0.7);
-  -webkit-backdrop-filter: blur(12px);
-  backdrop-filter: blur(12px);
+  border-color: var(--ink-border);
+  background: var(--ink-surface);
+  -webkit-backdrop-filter: none;
+  backdrop-filter: none;
 }
-html[data-theme="light"] body.dock .tb-user { background: rgba(255, 255, 255, 0.84); border-color: rgba(14, 110, 130, 0.2); }
+html[data-theme="light"] body.dock .tb-user { background: var(--ink-surface); border-color: var(--ink-border); }
 html body.dock .tb-user:hover,
-html body.dock .tb-user:focus-visible { border-color: rgba(127, 230, 236, 0.5); box-shadow: 0 0 0 3px rgba(43, 212, 222, 0.12); }
+html body.dock .tb-user:focus-visible { border-color: var(--ink-focus); box-shadow: var(--ink-shadow); }
 html body.dock :is(.tb-user .avatar, .tb-avatar, .pt-user-avatar) {
   background: linear-gradient(140deg, var(--brand-aqua) 0%, var(--brand-ocean) 100%);
-  color: #04212B;
+  color: var(--brand-ink);
+}
+/* Avatar PT dùng đúng vòng mảnh của avatar chung ở các zone còn lại. */
+html body.dock .pt-user-avatar {
+  border: var(--border-width-thick) solid var(--color-surface);
+  outline: var(--border-width) solid var(--color-primary-border);
 }
 html body.dock :is(.tb-user small, .tb-user-text span, .tb-user .pt-user-code) {
-  background: rgba(43, 212, 222, 0.12);
+  background: var(--color-info-tint);
   color: var(--pt-lagoon-text);
   letter-spacing: 0.04em;
 }
 /* Topbar trong suốt trên cảnh, chỉ mờ kính */
 html body.dock .topbar {
-  background: rgba(2, 10, 14, 0.45);
-  border-bottom-color: rgba(127, 230, 236, 0.08);
-  -webkit-backdrop-filter: blur(16px);
-  backdrop-filter: blur(16px);
+  background: var(--ink-header);
+  border-bottom-color: var(--ink-border);
+  -webkit-backdrop-filter: none;
+  backdrop-filter: none;
 }
-html[data-theme="light"] body.dock .topbar { background: #F0F5F6; }
+html[data-theme="light"] body.dock .topbar { background: var(--ink-header); }
 
-/* Nhãn nhỏ kiểu mã: [ NHÃN ] chữ đơn cách, giãn rộng — dùng cho tiêu đề phụ của khối */
+/* Nội dung tác vụ: nhãn dễ đọc, số liệu đặc màu, không gradient chữ. */
 html body.dock :is(.pt-section-caption, .gms-panel-head p, .report-card-subtitle) {
-  font-family: var(--font-brand-mono);
-  font-size: 0.78rem;
-  letter-spacing: 0.08em;
-  text-transform: uppercase;
-  color: var(--pt-lagoon-text);
-  opacity: 0.85;
+  font-family: var(--font-body);
+  font-size: var(--font-size-sm);
+  letter-spacing: var(--letter-spacing-normal);
+  text-transform: none;
+  color: var(--pt-soft);
 }
-html body.dock :is(.pt-section-caption, .gms-panel-head p, .report-card-subtitle)::before { content: "[ "; opacity: 0.6; }
-html body.dock :is(.pt-section-caption, .gms-panel-head p, .report-card-subtitle)::after { content: " ]"; opacity: 0.6; }
-
-/* Con số chính tô gradient aqua → cam (kiểu Grassfeld), giữ màu đặc khi trình duyệt không hỗ trợ */
-@supports (-webkit-background-clip: text) or (background-clip: text) {
-  html:not([data-theme="light"]) body.dock :is(.pt-summary-money strong, .wx-card__temp) {
-    background: linear-gradient(100deg, #FFFFFF 0%, #BFF3F5 45%, #FFB27A 100%);
-    -webkit-background-clip: text;
-    background-clip: text;
-    color: transparent;
-  }
-}
-html[data-theme="light"] body.dock .pt-summary-money strong {
+html body.dock :is(.pt-section-caption, .gms-panel-head p, .report-card-subtitle)::before,
+html body.dock :is(.pt-section-caption, .gms-panel-head p, .report-card-subtitle)::after { content: none; }
+html body.dock :is(.pt-summary-money strong, .wx-card__temp) {
   background: none;
-  color: var(--pt-ember-text);
+  color: var(--pt-text);
   -webkit-text-fill-color: currentColor;
+}
+html body.dock .btn-primary {
+  background: var(--ink-primary);
+  border-color: var(--brand-sunset);
+  color: var(--brand-ink);
+  box-shadow: none;
+}
+html body.dock .btn-primary:hover:not(:disabled) { background: var(--ink-primary-hover); }
+html body.dock :is(input, textarea, select) { caret-color: var(--pt-text); }
+html body.dock :is(input, textarea, select)::placeholder { color: var(--pt-muted); opacity: 1; }
+html body.dock :focus-visible { outline-color: var(--ink-focus); }
+html body.dock .sidebar :focus-visible { outline-color: var(--ink-sidebar-top); }
+html body.dock .stat-value { color: var(--pt-text); }
+html body.dock :is(.tb-title, .gms-panel-head h2, .panel-head h2) {
+  letter-spacing: var(--letter-spacing-normal);
+  text-transform: none;
 }
 
 @media (prefers-reduced-motion: reduce) {
@@ -2701,7 +2848,7 @@ body { font-family: var(--font-brand-body); font-feature-settings: "cv11", "ss01
 }
 :is(.pt-header-date, .tb-user small, .tb-user-text span, .pt-user-code, .nav-group, .report-sub, .page-intro p, th, .cine-post__date, .cine-meta dt, .cy-meta, .cy-tag, .pt-day__name, .wx-card__place, .badge-code) {
   font-family: var(--font-brand-mono);
-  font-size: 0.78rem;
+  font-size: var(--font-size-xs);
   font-weight: 500;
   letter-spacing: var(--tracking-mono);
   text-transform: uppercase;
@@ -2729,8 +2876,8 @@ i.ico svg { width: 100%; height: 100%; }
 html body.dock table:not(.no-gms-table) { width: 100%; border-collapse: separate; border-spacing: 0; }
 html body.dock table:not(.no-gms-table) thead th {
   padding: var(--space-3) var(--space-4);
-  border-bottom: var(--border-width) solid rgba(127, 230, 236, 0.16);
-  background: rgba(43, 212, 222, 0.06);
+  border-bottom: var(--border-width) solid var(--ink-border);
+  background: var(--ink-table-head);
   color: var(--pt-lagoon-text);
   text-align: left;
   white-space: nowrap;
@@ -2743,7 +2890,7 @@ html body.dock table:not(.no-gms-table) tbody td {
   vertical-align: middle;
 }
 html body.dock table:not(.no-gms-table) tbody tr { transition: background var(--duration-fast); }
-html body.dock table:not(.no-gms-table) tbody tr:hover { background: rgba(43, 212, 222, 0.06); }
+html body.dock table:not(.no-gms-table) tbody tr:hover { background: var(--ink-row-hover); }
 html body.dock table:not(.no-gms-table) tbody tr:last-child td { border-bottom: 0; }
 html body.dock table :is(.num, .money, td[class*="amount"]),
 html body.dock table th:is(.num, .money) { text-align: right; font-variant-numeric: tabular-nums; font-feature-settings: "tnum"; }

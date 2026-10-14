@@ -98,29 +98,15 @@ function initializeSessionViews() {
     form.addEventListener("submit", function () {
         const submitButton = form.querySelector('button[type="submit"]');
         form.setAttribute("aria-busy", "true");
-        submitButton.disabled = true;
-        submitButton.textContent = "Đang lọc…";
+        setButtonLoading(submitButton, true);
     });
     window.addEventListener("pageshow", function () {
         const submitButton = form.querySelector('button[type="submit"]');
         form.removeAttribute("aria-busy");
-        submitButton.disabled = false;
-        submitButton.textContent = "Lọc lịch tập";
+        setButtonLoading(submitButton, false);
     });
 
-    // B4: Escape đóng phần giải thích; trả focus về nút mở disclosure.
-    // Đóng phần giải thích i
-    page.addEventListener("keydown", function (event) {
-        if (event.key !== "Escape") {
-            return;
-        }
-        const openHelp = page.querySelectorAll(".my-pt-info[open]");
-        for (let index = 0; index < openHelp.length; index++) {
-            const details = openHelp[index];
-            details.open = false;
-            details.querySelector("summary").focus();
-        }
-    });
+    // B4: HintBox dùng chung common.js (chạm, hover/focus và Escape).
 
     // B5: Chỉ gửi yêu cầu khi khách xác nhận hủy; đóng hộp thoại không gửi form.
     const cancelDialog = document.createElement("dialog");
@@ -148,6 +134,13 @@ function initializeSessionViews() {
         }
         pendingSessionId = button.dataset.cancelSessionId; // Quan Trọng: lấy ID buổi
         cancelOpener = button;
+        // Hiện đúng ngày, giờ và PT của hàng vừa chọn; không đổi dữ liệu gửi POST.
+        const session = button.closest(".my-pt-session");
+        const day = button.closest(".my-pt-day");
+        const sessionDetails = day.querySelector(".my-pt-day-label").textContent.trim()
+                + " · " + session.querySelector(".my-pt-session-hours").textContent.trim()
+                + " · " + session.querySelector("h3").textContent.trim();
+        cancelDialog.querySelector("#cancelDialogDesc").textContent = sessionDetails;
         cancelDialog.returnValue = "";                      // xóa kết quả của lần mở trước
         cancelDialog.showModal();
         // Giữ buổi là lựa chọn an toàn khi dùng bàn phím.

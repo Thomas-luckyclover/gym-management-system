@@ -22,33 +22,25 @@
 <%-- Bộ chữ: Inter Tight (tiêu đề) + Inter (nội dung) + JetBrains Mono (chữ phụ: ngày, mã, nhãn); đều có dấu tiếng Việt. --%>
 <%-- Chế độ sáng/tối người dùng đã chọn (nút [data-theme-toggle], common.js): áp ngay trước khi vẽ để không nháy --%>
 <script>try{var gmsTheme=localStorage.getItem("gms-theme");if(gmsTheme){document.documentElement.setAttribute("data-theme",gmsTheme);}}catch(e){}</script>
-<<<<<<< HEAD
-=======
 <%-- Chế độ nhẹ: máy ít nhân CPU / ít RAM / bật tiết kiệm dữ liệu thì tắt nền động + kính mờ; người dùng chọn lại được bằng nút "Tạm dừng hiệu ứng" --%>
 <script>try{var gmsFx=localStorage.getItem("gms-fx"),gmsNav=navigator,gmsWeak=(gmsNav.hardwareConcurrency&&gmsNav.hardwareConcurrency<=4)||(gmsNav.deviceMemory&&gmsNav.deviceMemory<=4)||(gmsNav.connection&&gmsNav.connection.saveData);if(gmsFx==="lite"||(gmsFx!=="full"&&gmsWeak)){document.documentElement.classList.add("gms-lite");}}catch(e){}</script>
->>>>>>> 84845062763ad531404d3fa0ed4f05745dc6bd40
+
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Inter+Tight:wght@500;600;700;800&family=Inter:wght@400;500;600;700&family=JetBrains+Mono:wght@400;500;600&display=swap">
-<link rel="icon" type="image/png" href="${pageContext.request.contextPath}/images/logo.png?v=20261013">
-<meta name="theme-color" content="#04303C">
+<link rel="icon" type="image/svg+xml" href="${pageContext.request.contextPath}/images/brand/super-gym-mark.svg?v=20261014p">
+<meta name="theme-color" content="#050D19">
 
 <%-- Icon Font Awesome (cùng bản với prototype) — dùng <i class="fa-solid fa-..."></i> --%>
 <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/7.3.1/css/all.min.css">
 
-<<<<<<< HEAD
-<link rel="stylesheet" href="${pageContext.request.contextPath}/css/tokens.css?v=20261013h">
-<link rel="stylesheet" href="${pageContext.request.contextPath}/css/common.css?v=20261013i">
-<link rel="stylesheet" href="${pageContext.request.contextPath}/css/brand-system.css?v=20261013c">
-<script src="${pageContext.request.contextPath}/js/common.js?v=20261013d" defer></script>
-=======
-<link rel="stylesheet" href="${pageContext.request.contextPath}/css/tokens.css?v=20261013m">
-<link rel="stylesheet" href="${pageContext.request.contextPath}/css/common.css?v=20261013m">
-<link rel="stylesheet" href="${pageContext.request.contextPath}/css/brand-system.css?v=20261013e">
-<script src="${pageContext.request.contextPath}/js/common.js?v=20261013j" defer></script>
+<link rel="stylesheet" href="${pageContext.request.contextPath}/css/tokens.css?v=20261014r">
+<link rel="stylesheet" href="${pageContext.request.contextPath}/css/common.css?v=20261014p">
+<link rel="stylesheet" href="${pageContext.request.contextPath}/css/brand-system.css?v=20261014p">
+<script src="${pageContext.request.contextPath}/js/common.js?v=20261014p" defer></script>
 <script src="${pageContext.request.contextPath}/js/icons.js?v=2" defer></script>
->>>>>>> 84845062763ad531404d3fa0ed4f05745dc6bd40
+
 <%-- Nạp nền cho cả URL Servlet lẫn đường dẫn JSP sau khi forward, không tác động role khác. --%>
 <c:if test="${pageContext.request.requestURI.contains('/customer/') or pageContext.request.requestURI.contains('/pt/')}">
-    <link rel="stylesheet" href="${pageContext.request.contextPath}/css/pt-customer-zone.css?v=2">
+    <link rel="stylesheet" href="${pageContext.request.contextPath}/css/pt-customer-zone.css?v=20261014p">
 </c:if>

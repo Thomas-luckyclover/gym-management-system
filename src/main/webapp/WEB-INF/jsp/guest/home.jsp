@@ -14,10 +14,10 @@
   <%@ include file="/WEB-INF/jsp/common/head.jspf" %>
   <title>Super Gym · Mạnh hơn mỗi ngày</title>
   <meta name="description" content="Super Gym — chọn gói tập, đặt lịch huấn luyện viên và theo dõi hành trình tập luyện của bạn.">
-  <link rel="stylesheet" href="${pageContext.request.contextPath}/css/pages/guest/home.css?v=20261013j">
-  <link rel="stylesheet" href="${pageContext.request.contextPath}/css/pages/guest/mascot.css?v=20261013c">
+  <link rel="stylesheet" href="${pageContext.request.contextPath}/css/pages/guest/home.css?v=20261014a">
+  <link rel="stylesheet" href="${pageContext.request.contextPath}/css/pages/guest/mascot.css?v=20261014f">
   <script src="${pageContext.request.contextPath}/js/pages/guest/home-motion.js?v=20261013c" defer></script>
-  <script src="${pageContext.request.contextPath}/js/pages/guest/home.js?v=2" defer></script>
+  <script src="${pageContext.request.contextPath}/js/pages/guest/home.js?v=20261014f" defer></script>
 </head>
 <body class="theme-guest-dark home-cine">
   <%@ include file="/WEB-INF/jsp/common/flash-toast.jspf" %>
@@ -67,7 +67,7 @@
       <div class="cine-strip__cards">
         <figure class="cine-card" data-card><img src="${ctx}/images/brand/strip-squat.jpg" alt="Học viên nữ squat với đòn tạ" loading="lazy" width="1600" height="1067"><figcaption>Sức mạnh</figcaption></figure>
         <figure class="cine-card" data-card><img src="${ctx}/images/brand/strip-curl.jpg" alt="Học viên nam tập tay với tạ" loading="lazy" width="1600" height="1067"><figcaption>Kiểm soát</figcaption></figure>
-        <figure class="cine-card" data-card><img src="${ctx}/images/brand/strip-deadlift.jpg" alt="Học viên deadlift trong phòng tối" loading="lazy" width="1600" height="1067"><figcaption>Bền bỉ</figcaption></figure>
+        <figure class="cine-card" data-card><img src="${ctx}/images/brand/strip-endurance.jpg" alt="Vận động viên nữ nâng đòn tạ trong phòng tập" loading="lazy" width="1200" height="1600"><figcaption>Bền bỉ</figcaption></figure>
         <figure class="cine-card" data-card><img src="${ctx}/images/brand/strip-ropes.jpg" alt="Học viên tập thừng chiến" loading="lazy" width="1600" height="1067"><figcaption>Bùng nổ</figcaption></figure>
       </div>
     </section>
@@ -194,7 +194,7 @@
             <c:forEach var="post" items="${home.latestPosts}">
               <a class="cine-post" href="${ctx}/blog/detail?id=${post.blogPostId}" data-fade>
                 <c:if test="${not empty post.coverImage}">
-                  <span class="cine-post__media"><img loading="lazy" alt="" width="800" height="533" src="${post.coverImage.startsWith('/') ? ctx : ''}<c:out value='${post.coverImage}' />"></span>
+                  <span class="cine-post__media"><img loading="lazy" alt="" width="800" height="533" data-image-fallback="${pageContext.request.contextPath}/images/blog/default-blog.jpg" src="${post.coverImage.startsWith('/') ? ctx : ''}<c:out value='${post.coverImage}' />"></span>
                 </c:if>
                 <span class="cine-post__date"><c:out value="${gms:formatDate(post.publishedAt.toLocalDate())}" /></span>
                 <h3><c:out value="${post.title}" /></h3>

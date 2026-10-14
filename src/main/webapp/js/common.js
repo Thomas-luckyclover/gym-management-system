@@ -328,6 +328,8 @@ function initCommon() {
     bindCollapseGroups();
     bindConfirmButtons();
     bindCountdowns();
+    bindArticleImageFallbacks();
+    bindHintBoxes();
 
     // B3
     bindPageSizeSelects();
@@ -342,6 +344,67 @@ function initCommon() {
     const unsavedForms = document.querySelectorAll("form[data-unsaved-warning]");
     for (const form of unsavedForms) {
         bindUnsavedChangesWarning(form);
+    }
+}
+
+// HintBox chung từ PT Dashboard: chạm để mở/đóng, Escape hoặc bấm ngoài để đóng.
+// DOM: .pt-info > .pt-info-trigger + .pt-info-popover, dùng ở mọi zone.
+function bindHintBoxes() {
+    const hints = document.querySelectorAll(".pt-info");
+    function closeHint(hint) {
+        hint.classList.remove("is-open");
+        hint.classList.add("is-dismissed");
+        hint.querySelector(".pt-info-trigger").setAttribute("aria-expanded", "false");
+    }
+    for (const hint of hints) {
+        const trigger = hint.querySelector(".pt-info-trigger");
+        if (!trigger) { continue; }
+        trigger.setAttribute("aria-expanded", "false");
+        trigger.addEventListener("click", function () {
+            const wasOpen = hint.classList.contains("is-open");
+            for (const other of hints) { closeHint(other); }
+            if (!wasOpen) {
+                hint.classList.remove("is-dismissed");
+                hint.classList.add("is-open");
+                trigger.setAttribute("aria-expanded", "true");
+            }
+        });
+        hint.addEventListener("pointerleave", function () {
+            if (!hint.classList.contains("is-open")) {
+                hint.classList.remove("is-dismissed");
+            }
+        });
+        hint.addEventListener("keydown", function (event) {
+            if (event.key === "Escape") {
+                closeHint(hint);
+                trigger.focus();
+            }
+        });
+    }
+    document.addEventListener("click", function (event) {
+        for (const hint of hints) {
+            if (!hint.contains(event.target)) { closeHint(hint); }
+        }
+    });
+}
+
+// Ảnh bài viết ở homepage/blog: dùng ảnh tĩnh thật khi URL bìa lỗi, không lặp error vô hạn.
+// JSP nối bằng img[data-image-fallback]; ảnh đã lỗi trước DOMContentLoaded cũng được xử lý.
+function bindArticleImageFallbacks() {
+    const images = document.querySelectorAll("img[data-image-fallback]");
+    for (const image of images) {
+        function useFallback() {
+            if (image.dataset.fallbackUsed === "true") {
+                image.hidden = true;
+                return;
+            }
+            image.dataset.fallbackUsed = "true";
+            image.src = image.dataset.imageFallback;
+        }
+        image.addEventListener("error", useFallback);
+        if (image.complete && image.naturalWidth === 0) {
+            useFallback();
+        }
     }
 }
 
@@ -1044,31 +1107,31 @@ function bindFormValidation(form) {
 
 // ----- 4.3 Nút đang xử lý (GBR-22: khóa nút gửi trong lúc chờ server) -----
 
-// Hình loading của nút: Pumpy aqua, bụng kem và xoáy xanh, đẩy quả tạ to hơn người.
+// Hình loading của nút: Pumpy navy, bụng kem và xoáy navy; bàn tay tròn ngắn, đẩy quả tạ to hơn người.
 // SVG tĩnh (không chứa dữ liệu người dùng); CSS ở common.css mục "Loading Pumpy đẩy tạ".
 const PUMPY_PUSH_SVG =
     '<svg class="btn-pumpy" viewBox="0 0 100 35" aria-hidden="true" focusable="false">'
     + '<g class="bp-dust"><circle cx="5" cy="31" r="1.6"/><circle cx="2" cy="29" r="1.1"/></g>'
     + '<g class="bp-db">'
-    + '<rect x="51" y="15" width="28" height="5" rx="1.5" fill="#FFFFFF" stroke="#141414" stroke-width="1.4"/>'
-    + '<rect x="46" y="4" width="6" height="27" rx="2" fill="#141414" stroke="#141414" stroke-width="1.4"/>'
-    + '<rect x="78" y="4" width="6" height="27" rx="2" fill="#141414" stroke="#141414" stroke-width="1.4"/>'
-    + '<rect x="33" y="1" width="13" height="33" rx="3" fill="#141414" stroke="#141414" stroke-width="1.6"/>'
-    + '<rect x="84" y="1" width="13" height="33" rx="3" fill="#141414" stroke="#141414" stroke-width="1.6"/>'
-    + '<rect x="38" y="5" width="2.2" height="25" rx="1" fill="#18B8C0"/>'
-    + '<rect x="89.5" y="5" width="2.2" height="25" rx="1" fill="#18B8C0"/>'
+    + '<rect x="51" y="15" width="28" height="5" rx="1.5" fill="#91A7BE" stroke="#141414" stroke-width="1.4"/>'
+    + '<rect x="46" y="4" width="6" height="27" rx="2" fill="#203D60" stroke="#141414" stroke-width="1.4"/>'
+    + '<rect x="78" y="4" width="6" height="27" rx="2" fill="#203D60" stroke="#141414" stroke-width="1.4"/>'
+    + '<rect x="33" y="1" width="13" height="33" rx="3" fill="#203D60" stroke="#141414" stroke-width="1.6"/>'
+    + '<rect x="84" y="1" width="13" height="33" rx="3" fill="#203D60" stroke="#141414" stroke-width="1.6"/>'
+    + '<rect x="38" y="5" width="2.2" height="25" rx="1" fill="#294F78"/>'
+    + '<rect x="89.5" y="5" width="2.2" height="25" rx="1" fill="#294F78"/>'
     + '</g>'
     + '<g class="bp-pumpy">'
-    + '<g class="bp-foot bp-foot--back"><ellipse cx="11" cy="31" rx="4" ry="2.4" fill="#18B8C0" stroke="#141414" stroke-width="1.4"/></g>'
-    + '<path d="M9 12 L9.5 5 L14 9 Z M27 11 L25.5 4.5 L21.5 8.5 Z" fill="#18B8C0" stroke="#141414" stroke-width="1.3" stroke-linejoin="round"/>'
-    + '<ellipse cx="18" cy="19" rx="11" ry="10" fill="#18B8C0" stroke="#141414" stroke-width="1.6"/>'
-    + '<path d="M27 15 L33.5 14 M27.5 21 L33.5 21" stroke="#141414" stroke-width="3.6" stroke-linecap="round"/>'
-    + '<path d="M27 15 L33.5 14 M27.5 21 L33.5 21" stroke="#18B8C0" stroke-width="1.8" stroke-linecap="round"/>'
+    + '<g class="bp-foot bp-foot--back"><ellipse cx="11" cy="31" rx="4" ry="2.4" fill="#294F78" stroke="#141414" stroke-width="1.4"/></g>'
+    + '<path d="M9 12 L9.5 5 L14 9 Z M27 11 L25.5 4.5 L21.5 8.5 Z" fill="#294F78" stroke="#141414" stroke-width="1.3" stroke-linejoin="round"/>'
+    + '<ellipse cx="18" cy="19" rx="11" ry="10" fill="#294F78" stroke="#141414" stroke-width="1.6"/>'
+    + '<circle cx="29.5" cy="16" r="3.4" fill="#294F78" stroke="#141414" stroke-width="1.2"/>'
+    + '<circle cx="30" cy="22" r="3.4" fill="#294F78" stroke="#141414" stroke-width="1.2"/>'
     + '<path d="M17 15 L19.5 16.5 L17 18 M24.5 15 L22 16.5 L24.5 18" fill="none" stroke="#141414" stroke-width="1.3" stroke-linecap="round" stroke-linejoin="round"/>'
     + '<path d="M18.5 22 H24" stroke="#141414" stroke-width="1.6" stroke-linecap="round"/>'
     + '<ellipse cx="18" cy="26" rx="4" ry="3.4" fill="#F2FBF8"/>'
-    + '<path d="M17.4 25.6 a1 1 0 1 1 1 1 a2 2 0 1 1 -2 -2" fill="none" stroke="#F25C1B" stroke-width="0.8" stroke-linecap="round"/>'
-    + '<g class="bp-foot bp-foot--front"><ellipse cx="20" cy="31" rx="4" ry="2.4" fill="#18B8C0" stroke="#141414" stroke-width="1.4"/></g>'
+    + '<path d="M17.4 25.6 a1 1 0 1 1 1 1 a2 2 0 1 1 -2 -2" fill="none" stroke="#24496E" stroke-width="0.8" stroke-linecap="round"/>'
+    + '<g class="bp-foot bp-foot--front"><ellipse cx="20" cy="31" rx="4" ry="2.4" fill="#294F78" stroke="#141414" stroke-width="1.4"/></g>'
     + '</g>'
     + '<g class="bp-sweat"><path d="M9 7 q-2 -3 0 -5 q2 2 0 5z"/><path d="M5 12 q-2 -2.5 0 -4.5 q2 2 0 4.5z"/></g>'
     + '</svg>';
@@ -1090,7 +1153,7 @@ function setButtonLoading(button, isLoading) {
         button.classList.add("is-loading");
         button.setAttribute("aria-busy", "true");
         // B1.1: hình Pumpy (chuỗi tĩnh) rồi chữ thường qua textContent
-        button.innerHTML = PUMPY_PUSH_SVG;
+        button.innerHTML = '<span class="btn-pumpy-capsule" aria-hidden="true">' + PUMPY_PUSH_SVG + '</span>';
         const label = document.createElement("span");
         label.textContent = "Đang xử lý…";
         button.appendChild(label);

@@ -37,15 +37,15 @@ public class EmailGateway {
         // B1: tiêu đề thư
         String subject = SUBJECT_PREFIX + "Mã xác thực " + purpose;
 
-        // B2: nội dung dạng HTML (bản hiện chính trên Gmail) — mã nằm trong ô màu chanh, chữ to.
+        // B2: HTML trên Gmail — ô mã cam cháy, đồng bộ palette trong webapp/css/tokens.css.
         //     Mọi chuỗi đưa vào đều qua escapeHtml để không bị chèn mã HTML lạ
         String html = "<p>Xin chào,</p>"
                 + "<p>Mã xác thực để " + escapeHtml(purpose) + " của bạn là:</p>"
-                + "<p style=\"margin:20px 0;font-size:30px;font-weight:800;letter-spacing:8px;color:#0D0D0D;"
-                + "background:#D4FF3F;display:inline-block;padding:10px 18px;border-radius:10px\">"
+                + "<p style=\"margin:20px 0;font-family:'Courier New',monospace;font-size:30px;font-weight:800;letter-spacing:8px;color:#080F1B;"
+                + "background:#FF4F2B;display:inline-block;padding:10px 18px;border-radius:6px\">"
                 + escapeHtml(code) + "</p>"
                 + "<p>Mã có hiệu lực trong <b>" + validMinutes + " phút</b> và chỉ dùng được 1 lần.</p>"
-                + "<p style=\"color:#6B6960\">Nếu bạn không yêu cầu mã này, hãy bỏ qua email. Không chia sẻ mã cho bất kỳ ai.</p>";
+                + "<p style=\"color:#4C6670\">Nếu bạn không yêu cầu mã này, hãy bỏ qua email. Không chia sẻ mã cho bất kỳ ai.</p>";
 
         // B3: cùng nội dung nhưng chữ thường (cho trình đọc thư không hiện được HTML)
         String text = "Xin chào,\n\n"
@@ -69,19 +69,19 @@ public class EmailGateway {
     // ===== 2. Khung giao diện chung =====
 
     /**
-     * Bọc nội dung thư vào khung chung của Super Gym: thanh đen chữ "SUPER GYM" ở trên, chân thư ở dưới.
-     * Chỉ dùng style viết thẳng trong thẻ (inline) vì Gmail xóa thẻ &lt;style&gt;.
+     * Bọc thư bằng header navy, chữ cam cháy và nền trắng be theo nhận diện Super Gym.
+     * Dùng style inline để các trình đọc thư hiển thị màu nhất quán, không cần tải CSS của website.
      *
      * @param contentHtml phần ruột thư đã soạn (các đoạn &lt;p&gt;...), VD đoạn chứa mã 6 số.
      * @return toàn bộ HTML của thư, sẵn sàng để gửi.
      */
     private String wrapInLayout(String contentHtml) {
-        return "<div style=\"background:#F3F1EC;padding:24px 12px;font-family:Arial,Helvetica,sans-serif\">"
-                + "<div style=\"max-width:520px;margin:0 auto;background:#FFFFFF;border-radius:14px;overflow:hidden\">"
-                + "<div style=\"background:#0D0D0D;padding:18px 24px;color:#D4FF3F;font-size:20px;font-weight:800;"
+        return "<div style=\"background:#F5F2EB;padding:24px 12px;font-family:Arial,Helvetica,sans-serif\">"
+                + "<div style=\"max-width:520px;margin:0 auto;background:#FFFDF8;border:1px solid #D9DEDE;border-radius:8px;overflow:hidden\">"
+                + "<div style=\"background:#0C2337;padding:18px 24px;border-bottom:3px solid #FF4F2B;color:#FF4F2B;font-size:20px;font-weight:800;"
                 + "letter-spacing:1px\">SUPER GYM</div>"
-                + "<div style=\"padding:24px;color:#23221F;font-size:15px;line-height:1.6\">" + contentHtml + "</div>"
-                + "<div style=\"padding:14px 24px;border-top:1px solid #E7E5DF;color:#8F8B81;font-size:12px\">"
+                + "<div style=\"padding:24px;color:#16272E;font-size:15px;line-height:1.6\">" + contentHtml + "</div>"
+                + "<div style=\"padding:14px 24px;border-top:1px solid #D9DEDE;color:#4C6670;font-size:12px\">"
                 + "Email tự động từ hệ thống Super Gym, vui lòng không trả lời thư này.</div>"
                 + "</div></div>";
     }

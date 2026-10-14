@@ -40,7 +40,7 @@ button, a, input, select { touch-action: manipulation; }
   display: block;
   width: var(--brand-wordmark-width);
   height: var(--brand-wordmark-height);
-  object-fit: cover;
+  object-fit: contain;
   object-position: left center;
   border-radius: var(--radius-xs);
 }
@@ -69,8 +69,8 @@ button, a, input, select { touch-action: manipulation; }
   letter-spacing: var(--letter-spacing-normal);
   border-radius: var(--radius-xs);
 }
-.site-header .btn-primary { background: var(--brand-gradient); border-color: var(--brand-sunset); color: var(--brand-ink); }
-.site-header .btn-primary:hover { background: var(--brand-sunset-hi); color: var(--brand-ink); }
+.site-header .btn-primary { background: var(--brand-sunset); box-shadow: none; border-color: var(--brand-sunset); color: var(--brand-ink); }
+.site-header .btn-primary:hover { background: var(--ink-primary-hover); color: var(--brand-ink); }
 .site-header .btn-ghost { color: var(--brand-paper); border-color: var(--brand-line); background: transparent; }
 .site-header .btn-ghost:hover { color: var(--brand-sunset-hi); border-color: var(--brand-sunset); background: var(--brand-warm-surface); }
 .site-header .hamburger { display: none; color: var(--brand-paper); min-height: var(--brand-control-height); min-width: var(--brand-control-height); }
@@ -85,8 +85,10 @@ button, a, input, select { touch-action: manipulation; }
 .site-footer a { text-decoration: none; }
 .site-footer a:hover { color: var(--brand-sunset-hi); }
 .site-footer .brand-wordmark { width: var(--brand-wordmark-width); height: auto; }
-.site-footer .footer-wordmark { width: 160px; height: auto; display: block; margin-bottom: var(--space-4); border-radius: var(--radius-xs); }
+.site-footer .footer-wordmark { width: var(--logo-footer-width); height: auto; display: block; margin-bottom: var(--space-4); }
+.auth-brand__logo { display: block; width: var(--brand-wordmark-width); height: auto; }
 html body.auth-dark .auth-brand {
+  position: relative;
   display: inline-flex;
   align-items: center;
   color: var(--brand-paper);
@@ -95,6 +97,18 @@ html body.auth-dark .auth-brand {
   font-weight: var(--font-weight-bold);
   letter-spacing: var(--letter-spacing-normal);
 }
+.auth-muse {
+  position: absolute;
+  top: var(--auth-muse-top);
+  right: var(--auth-muse-right);
+  width: var(--auth-muse-width);
+  height: auto;
+  color: var(--auth-muse-ink);
+  stroke-width: var(--auth-muse-stroke);
+  pointer-events: none;
+}
+.auth-muse__laurel { stroke: var(--auth-ember-line); }
+html body.auth-dark .auth-top { margin-top: var(--auth-muse-clearance); }
 .auth-brand__wordmark {
   color: var(--brand-paper);
   font-family: var(--font-brand-display);
@@ -120,8 +134,8 @@ html body.auth-dark .auth-card {
   box-shadow: var(--brand-shadow);
   backdrop-filter: blur(var(--brand-blur));
 }
-html body.auth-dark .auth-card .btn-primary { background: var(--brand-gradient); color: var(--brand-ink); border-color: var(--brand-sunset); border-radius: var(--radius-xs); letter-spacing: var(--letter-spacing-normal); text-transform: none; }
-html body.auth-dark .auth-card .btn-primary:hover { background: var(--brand-sunset-hi); color: var(--brand-ink); }
+html body.auth-dark .auth-card .btn-primary { background: var(--brand-sunset); box-shadow: none; color: var(--brand-ink); border-color: var(--brand-sunset); border-radius: var(--radius-xs); letter-spacing: var(--letter-spacing-normal); text-transform: none; }
+html body.auth-dark .auth-card .btn-primary:hover { background: var(--ink-primary-hover); color: var(--brand-ink); }
 html body.auth-dark .field input { min-height: var(--control-height-lg); }
 html body.auth-dark .auth-head p { line-height: var(--line-height-relaxed); }
 .error-page .error-page__title { font-family: var(--font-brand-body); letter-spacing: var(--letter-spacing-normal); }
@@ -155,7 +169,7 @@ html body.auth-dark .auth-head p { line-height: var(--line-height-relaxed); }
   .site-header .hamburger { display: inline-grid; place-items: center; }
 }
 @media (max-width: 640px) {
-  .site-header .brand-wordmark { width: 64px; height: 48px; }
+  .site-header .brand-wordmark { width: calc(var(--brand-wordmark-width) - var(--space-6)); height: auto; }
   .site-header .header-inner { gap: var(--space-3); padding-inline: var(--space-4); }
   .site-header .header-actions .btn-ghost, .site-header .header-actions .guest-logout { display: none; }
   .site-header .header-actions .guest-account__text, .site-header .header-actions .guest-account__arrow { display: none; }
@@ -166,3 +180,59 @@ html body.auth-dark .auth-head p { line-height: var(--line-height-relaxed); }
   html { scroll-behavior: auto; }
   *, *::before, *::after { scroll-behavior: auto !important; }
 }
+
+/* Xác thực: atelier nét khắc Hy Lạp trên aqua, trung tâm luôn yên để nhập liệu. */
+html body.auth-dark {
+  --brand-aqua: #23ACB4;
+  --brand-aqua-soft: #67BABF;
+}
+html body.auth-dark .auth-shell { background: var(--auth-ocean-gradient); overflow-x: clip; }
+html body.auth-dark .auth-artwork {
+  position: fixed;
+  inset: 0;
+  z-index: 0;
+  pointer-events: none;
+  color: var(--auth-ink-line);
+  opacity: var(--auth-art-opacity);
+}
+.auth-engraving { display: block; width: 100%; height: 100%; stroke-width: var(--auth-art-stroke); }
+.auth-ember-line { stroke: var(--auth-ember-line); }
+.auth-figure path,
+.auth-column path,
+.auth-muse path {
+  stroke-dasharray: var(--auth-art-trace-length);
+  animation: auth-ink-trace var(--auth-art-duration) var(--ease-out-expo) both;
+}
+.auth-sea-lines { animation: auth-sea-drift var(--auth-sea-duration) ease-in-out infinite alternate; }
+html body.auth-dark .auth-shell:focus-within .auth-sea-lines { animation-play-state: paused; }
+html body.auth-dark .auth-card {
+  background: var(--auth-card-solid);
+  border-color: var(--auth-field-border);
+  -webkit-backdrop-filter: none;
+  backdrop-filter: none;
+}
+html body.auth-dark .field :is(input, select, textarea) {
+  background: var(--auth-input-solid);
+  color: var(--brand-paper);
+  border-color: var(--auth-field-border);
+  caret-color: var(--brand-paper);
+}
+html body.auth-dark .field input::placeholder { color: var(--brand-muted); opacity: 1; }
+html body.auth-dark .auth-back,
+html body.auth-dark .auth-footer { color: var(--brand-muted); }
+@keyframes auth-ink-trace {
+  from { stroke-dashoffset: var(--auth-art-trace-length); }
+  to { stroke-dashoffset: 0; }
+}
+@keyframes auth-sea-drift {
+  from { transform: translateX(calc(-1 * var(--space-3))); }
+  to { transform: translateX(var(--space-3)); }
+}
+@media (max-width: 900px) {
+  html body.auth-dark .auth-artwork { opacity: calc(var(--auth-art-opacity) * 0.55); }
+}
+@media (prefers-reduced-motion: reduce) {
+  .auth-figure path, .auth-column path, .auth-muse path, .auth-sea-lines { animation: none; }
+}
+html.gms-lite .auth-engraving * { animation: none; }
+html.gms-lite .auth-muse path { animation: none; }

@@ -363,14 +363,15 @@
   width: var(--space-2-5);
   height: var(--space-2-5);
   border-radius: var(--radius-circle);
-  background: var(--color-surface);
-  box-shadow: 0 0 0 var(--space-0-5) color-mix(in srgb, var(--color-surface) 35%, transparent);
+  background: var(--brand-aqua-soft);
+  box-shadow: 0 0 0 var(--space-0-5) var(--brand-ocean-deep);
   transform: translateY(-50%);
   animation: lane-run var(--duration-run) var(--ease-out-expo) both;
 }
 
 .report-table tbody tr:first-child .lane-runner {
-  background: var(--color-board-up);
+  background: var(--brand-ink);
+  box-shadow: 0 0 0 var(--space-0-5) var(--brand-sunset-hi);
 }
 
 @keyframes lane-run {
