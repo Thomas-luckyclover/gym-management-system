@@ -1,3 +1,61 @@
+/* Profile riêng: bố cục ba khu vực, không tác động Password hoặc layout chung. */
+.account-profile-card .account-profile-section {
+    margin-top: var(--space-5);
+    padding-top: var(--space-5);
+    border-top: var(--border-width) solid var(--color-border);
+}
+
+/* Tách thông tin vai trò khỏi các nút đổi liên hệ và form OTP phía trên. */
+.account-profile-card .account-profile-section + .account-profile-section {
+    margin-top: var(--space-6);
+}
+
+.account-profile-card .account-profile-section h2 {
+    margin-bottom: var(--space-4);
+}
+
+.account-profile-card .account-avatar-section {
+    flex-wrap: wrap;
+}
+
+.account-profile-card .account-avatar-info,
+.account-profile-card .account-profile-contact,
+.account-profile-card .field {
+    min-width: 0;
+    overflow-wrap: anywhere;
+}
+
+.account-profile-card input:not([type="hidden"]):not([type="file"]) {
+    width: 100%;
+    min-width: 0;
+    box-sizing: border-box;
+}
+
+.account-profile-card .account-profile-verification {
+    margin-top: var(--space-4);
+    padding: var(--space-4);
+    background: var(--color-bg);
+    border: var(--border-width) solid var(--color-border);
+    border-radius: var(--radius-sm);
+}
+
+/* Avatar dùng account-settings.js để ẩn/hiện ảnh xem trước. */
+.account-profile-card .account-avatar-image.is-hidden,
+.account-profile-card .account-avatar-fallback.is-hidden {
+    display: none;
+}
+
+@media (max-width: 600px) {
+    .account-profile-card .account-form-grid {
+        grid-template-columns: minmax(0, 1fr);
+    }
+
+    .account-profile-card .account-avatar-form {
+        width: 100%;
+        margin-left: 0;
+    }
+}
+
 .dock .page-intro {
     display: flex;
     align-items: flex-end;
