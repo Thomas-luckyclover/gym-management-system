@@ -588,7 +588,7 @@
   padding: 2px var(--space-1-5);
   border-radius: var(--radius-xs);
   background: var(--color-success-ink);
-  color: var(--color-on-primary);
+  color: #ffffff;
 }
 
 .package-card__actions {
@@ -867,4 +867,21 @@ a.package-pager__item:hover {
   .package-card__actions--single {
     grid-template-columns: 1fr;
   }
+}
+.package-card__banner .package-card__brand,
+.package-card__banner .package-card__headline,
+.package-card__banner .package-card__kind {
+  color: #fff !important;
+  opacity: 1;
+  text-shadow: 0 2px 4px #000;
+}
+.package-dialog__footer .btn-primary {
+  background: #f4c430 !important;
+  border-color: #f4c430 !important;
+  color: #221a00 !important;
+}
+
+.package-dialog__footer .btn-primary:hover {
+  background: #e5b422 !important;
+  border-color: #e5b422 !important;
 }
