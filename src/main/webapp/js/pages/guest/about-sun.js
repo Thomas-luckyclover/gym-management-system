@@ -14,8 +14,8 @@ document.addEventListener("DOMContentLoaded", function () {
     }
     const ctx = canvas.getContext("2d");
     const reduceMotion = window.matchMedia("(prefers-reduced-motion: reduce)").matches;
-    const SUNSET = "242, 92, 27";
-    const AQUA = "43, 212, 222";
+    const SUNSET = "255, 88, 63";
+    const AQUA = "140, 178, 208";
 
     let width = 0;
     let height = 0;
@@ -73,8 +73,8 @@ document.addEventListener("DOMContentLoaded", function () {
         const sky = ctx.createLinearGradient(0, 0, 0, horizon);
         sky.addColorStop(0, "#041820");
         sky.addColorStop(0.45, "#0B1E26");
-        sky.addColorStop(0.78, "#4A1A0A");
-        sky.addColorStop(1, "#C2410C");
+        sky.addColorStop(0.78, "#412436");
+        sky.addColorStop(1, "#A63A38");
         ctx.fillStyle = sky;
         ctx.fillRect(0, 0, width, horizon);
 
@@ -94,8 +94,8 @@ document.addEventListener("DOMContentLoaded", function () {
         // Thân mặt trời: nửa trên tròn đều, nửa dưới mép gợn như chất lỏng đang chảy
         const body = layerCtx.createLinearGradient(0, c - sunR, 0, c + sunR);
         body.addColorStop(0, "#FFB36B");
-        body.addColorStop(0.45, "#FF7A3D");
-        body.addColorStop(1, "#C2410C");
+        body.addColorStop(0.45, "#FF6849");
+        body.addColorStop(1, "#A63A38");
         layerCtx.fillStyle = body;
         layerCtx.beginPath();
         for (let i = 0; i <= 120; i++) {
@@ -127,7 +127,7 @@ document.addEventListener("DOMContentLoaded", function () {
 
     // B3: giọt dài ra từ mép dưới mặt trời, đứt thì thành giọt rơi xuống nước
     function drawDrips(sunY, dt) {
-        ctx.fillStyle = "#E2541A";
+        ctx.fillStyle = "#FF583F";
         drips.forEach(function (drip, index) {
             if (drip.wait > 0) {
                 drip.wait -= dt;
@@ -153,14 +153,17 @@ document.addEventListener("DOMContentLoaded", function () {
         });
     }
 
-    // Giọt rơi: chạm mặt nước thì tạo gợn tròn aqua
+    // Giọt rơi xuyên mặt nước, chạm thanh tạ rồi tạo gợn sáng
     function drawDrops(dt) {
-        ctx.fillStyle = "#FF9A3C";
+        ctx.fillStyle = "#FF986B";
         drops = drops.filter(function (drop) {
             drop.vy += sunR * 1.6 * dt;
             drop.y += drop.vy * dt;
-            if (drop.y >= horizon + 4) {
-                rings.push({ x: drop.x, y: horizon + 6 + Math.random() * 10, r: 2, life: 1 });
+            // Cùng hình học với drawDumbbellReflection: giọt chạm mặt trên thanh tạ.
+            const geometry = dumbbellGeometry(height - horizon);
+            const impactY = geometry.centerY - geometry.barHeight / 2;
+            if (drop.y >= impactY) {
+                rings.push({ x: drop.x, y: impactY, r: 2, life: 1 });
                 return false;
             }
             ctx.beginPath();
@@ -170,17 +173,24 @@ document.addEventListener("DOMContentLoaded", function () {
         });
     }
 
+    // Một hình học chung cho tạ và điểm chạm giọt: không dừng dòng chảy ở chân trời.
+    function dumbbellGeometry(depth) {
+        const unit = Math.min(sunR * 0.92, width * 0.2, depth * 0.78);
+        return { unit: unit, centerY: horizon + depth * 0.48, barHeight: Math.max(5, unit * 0.12) };
+    }
+
     // Nét tạ nằm trong phản chiếu: thanh ngang và hai bánh tạ được ghép bằng dải sáng mặt nước.
     function drawDumbbellReflection(time, depth) {
-        const unit = Math.min(sunR * 0.92, width * 0.2, depth * 0.78);
+        const geometry = dumbbellGeometry(depth);
+        const unit = geometry.unit;
         if (unit < 12) return;
-        const centerY = horizon + depth * 0.48;
+        const centerY = geometry.centerY;
         const plateX = unit * 0.79;
         const plateWidth = unit * 0.25;
         const plateHeight = unit * 0.84;
         const collarWidth = unit * 0.1;
         const collarHeight = unit * 0.54;
-        const barHeight = Math.max(5, unit * 0.12);
+        const barHeight = geometry.barHeight;
 
         ctx.save();
         ctx.beginPath();
@@ -196,7 +206,7 @@ document.addEventListener("DOMContentLoaded", function () {
         const metalLight = ctx.createLinearGradient(0, centerY - plateHeight / 2, 0, centerY + plateHeight / 2);
         metalLight.addColorStop(0, "rgba(255, 154, 72, 0.22)");
         metalLight.addColorStop(0.45, "rgba(255, 116, 58, 0.38)");
-        metalLight.addColorStop(1, "rgba(43, 212, 222, 0.19)");
+        metalLight.addColorStop(1, "rgba(140, 178, 208, 0.19)");
         ctx.fillStyle = metalLight;
         ctx.fillRect(sunX - unit * 1.18, centerY - plateHeight / 2, unit * 2.36, plateHeight);
 
@@ -205,7 +215,7 @@ document.addEventListener("DOMContentLoaded", function () {
             const drift = Math.sin(y * 0.08 + time * 0.8) * unit * 0.035;
             ctx.strokeStyle = y < centerY
                 ? "rgba(255, 162, 87, " + (0.42 + ripple * 0.11).toFixed(3) + ")"
-                : "rgba(82, 216, 224, " + (0.31 + ripple * 0.1).toFixed(3) + ")";
+                : "rgba(140, 178, 208, " + (0.31 + ripple * 0.1).toFixed(3) + ")";
             ctx.lineWidth = 1.2 + (ripple + 1) * 0.75;
             ctx.beginPath();
             ctx.moveTo(sunX - unit * 1.18 + drift, y);
@@ -218,9 +228,9 @@ document.addEventListener("DOMContentLoaded", function () {
     // B4: mặt nước + vệt phản chiếu + gợn
     function drawWater(time, dt) {
         const sea = ctx.createLinearGradient(0, horizon, 0, height);
-        sea.addColorStop(0, "#0E6E82");
-        sea.addColorStop(0.35, "#073847");
-        sea.addColorStop(1, "#03121A");
+        sea.addColorStop(0, "#1C425B");
+        sea.addColorStop(0.35, "#102A43");
+        sea.addColorStop(1, "#060F1C");
         ctx.fillStyle = sea;
         ctx.fillRect(0, horizon, width, height - horizon);
 
