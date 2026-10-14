@@ -7,6 +7,7 @@ import com.gms.dto.PackageSelectionView;
 import com.gms.dto.ServiceResult;
 import com.gms.service.CustomerDashboardService;
 import com.gms.service.PackageSelectionService;
+import com.gms.service.PaymentService;
 import com.gms.util.RequestUtil;
 import jakarta.servlet.ServletException;
 import jakarta.servlet.annotation.WebServlet;
@@ -38,6 +39,8 @@ public class PackageSelectionServlet extends HttpServlet {
     private final PackageSelectionService packageSelectionService = new PackageSelectionService();
     private final CustomerDashboardService dashboardService = new CustomerDashboardService();
 
+    private final PaymentService paymentService = new PaymentService();
+
     // ===== GET: mở màn Mua gói =====
 
     /**
@@ -58,6 +61,8 @@ public class PackageSelectionServlet extends HttpServlet {
             RequestUtil.redirect(request, response, "/login?returnUrl=/customer/packages");
             return;
         }
+
+        request.setAttribute("csrfToken", RequestUtil.getOrCreateCsrfToken(session));
 
         // B2: thông tin khách cho thanh trên cùng (cùng nguồn với Customer Dashboard)
         ServiceResult<CustomerDashboardView> dashboardResult = dashboardService.getDashboard(accountId);
@@ -85,6 +90,36 @@ public class PackageSelectionServlet extends HttpServlet {
         request.setAttribute("activeSidebar", "buy-package");
         request.setAttribute("themeClass", "theme-pt customer-dashboard-page package-selection-page");
         RequestUtil.forward(request, response, VIEW);
+    }
+
+    /** POST mua gói: Service tạo đơn, Servlet chỉ lấy session/parameter và điều hướng. */
+    @Override
+    protected void doPost(HttpServletRequest request, HttpServletResponse response)
+            throws ServletException, IOException {
+        // B1: danh tính chỉ lấy từ session; CustomerAreaFilter kiểm vai trò Customer.
+        HttpSession session = request.getSession(false);
+        Integer accountId = session == null ? null : (Integer) session.getAttribute(SessionKey.ACCOUNT_ID);
+        if (accountId == null) {
+            RequestUtil.redirect(request, response, "/login?returnUrl=/customer/packages");
+            return;
+        }
+        if (!RequestUtil.isValidCsrfToken(request)) {
+            response.sendError(HttpServletResponse.SC_FORBIDDEN);
+            return;
+        }
+
+        // B2: chuyển kiểu packageId; Service kiểm giá trị và loại gói.
+        Integer packageId = parseNullableInt(request.getParameter("packageId"));
+        ServiceResult<Integer> result = paymentService.createOnlineOrder(accountId, packageId);
+        if (!result.isSuccess()) {
+            request.setAttribute("purchaseError", result.getMessage());
+            doGet(request, response);
+            return;
+        }
+
+        // B3: redirect sau POST để refresh trang không tạo thêm đơn.
+        RequestUtil.setFlashToast(request, "success", "Đã tạo đơn chờ thanh toán.");
+        RequestUtil.redirect(request, response, "/customer/checkout?order=" + result.getData());
     }
 
     // ===== Hàm phụ =====

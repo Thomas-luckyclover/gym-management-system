@@ -9,7 +9,7 @@
         <%@ include file="/WEB-INF/jsp/common/head.jspf" %>
         <title>Mua gói · Super Gym</title>
         <link rel="stylesheet" href="${pageContext.request.contextPath}/css/pages/customer/dashboard.css?v=7">
-        <link rel="stylesheet" href="${pageContext.request.contextPath}/css/pages/customer/package-selection.css?v=9">
+        <link rel="stylesheet" href="${pageContext.request.contextPath}/css/pages/customer/package-selection.css?v=7">
         <script src="${pageContext.request.contextPath}/js/pages/customer/package-selection.js?v=2" defer></script>
     </head>
 
@@ -51,6 +51,12 @@
                 <main class="content package-selection">
 
                     <%-- ===== Thông báo lỗi (dashboardError, selectionError: chuỗi do Servlet đặt khi Service thất bại) ===== --%>
+                    <%-- ===== Lỗi tạo đơn (purchaseError: thông báo an toàn từ PaymentService) ===== --%>
+                    <c:if test="${not empty purchaseError}">
+                        <div class="alert-banner danger" role="alert">
+                            <c:out value="${purchaseError}" />
+                        </div>
+                    </c:if>
                     <c:if test="${not empty dashboardError}">
                         <div class="alert-banner danger" role="alert">
                             <i class="fa-solid fa-circle-exclamation"></i>
@@ -271,7 +277,8 @@
                                                         <div class="package-card__actions${option.purchasableOnline ? '' : ' package-card__actions--single'}">
                                                             <c:choose>
                                                                 <c:when test="${option.purchasableOnline}">
-                                                                    <form method="post" action="${pageContext.request.contextPath}/customer/checkout">
+                                                                    <form method="post" action="${pageContext.request.contextPath}/customer/packages/purchase">
+                                                                        <input type="hidden" name="csrfToken" value="<c:out value="${csrfToken}" />">
                                                                         <input type="hidden" name="packageId" value="${pkg.packageId}">
                                                                         <button class="package-card__buy" type="submit">Mua ngay</button>
                                                                     </form>
@@ -358,7 +365,8 @@
 
                                                         <c:if test="${option.purchasableOnline}">
                                                             <footer class="package-dialog__footer">
-                                                                <form method="post" action="${pageContext.request.contextPath}/customer/checkout">
+                                                                <form method="post" action="${pageContext.request.contextPath}/customer/packages/purchase">
+                                                                    <input type="hidden" name="csrfToken" value="<c:out value="${csrfToken}" />">
                                                                     <input type="hidden" name="packageId" value="${pkg.packageId}">
                                                                     <button class="btn btn-primary" type="submit">
                                                                         Thanh toán ngay <i class="fa-solid fa-arrow-right"></i>

@@ -77,7 +77,7 @@ public class OrderDAO {
         int year = LocalDate.now(DateTimeUtil.GYM_ZONE).getYear();
         String prefix = String.format("DH-%d-", year);
 
-        String sql = "SELECT MAX(OrderCode) FROM Orders WHERE OrderCode LIKE ?";
+        String sql = "SELECT MAX(OrderCode) FROM Orders WITH (UPDLOCK, HOLDLOCK) WHERE OrderCode LIKE ?";
 
         // B1: lấy mã lớn nhất của năm nay
         try (PreparedStatement stmt = conn.prepareStatement(sql)) {
@@ -219,7 +219,7 @@ public class OrderDAO {
      */
     public List<Order> findPendingOnlineByHolderAndPackage(Connection conn, int holderCustomerId, int packageId)
             throws SQLException {
-        String sql = "SELECT " + SELECT_COLUMNS + " FROM Orders "
+        String sql = "SELECT " + SELECT_COLUMNS + " FROM Orders WITH (UPDLOCK, HOLDLOCK) "
                 + "WHERE HolderCustomerId = ? AND PackageId = ? "
                 + "AND Channel = 'Online' AND Status = 'Pending' "
                 + "ORDER BY CreatedAt ASC";
@@ -252,6 +252,67 @@ public class OrderDAO {
     public List<Order> findPendingOnlineByHolderAndPackage(int holderCustomerId, int packageId) throws SQLException {
         try (Connection conn = DBContext.getConnection()) {
             return findPendingOnlineByHolderAndPackage(conn, holderCustomerId, packageId);
+        }
+    }
+
+    /**
+     * Đọc đơn online thuộc tài khoản hiện tại; không cho xem đơn của khách khác.
+     * @param conn kết nối do Service quản lý
+     * @param accountId tài khoản từ session
+     * @param orderId mã đơn trên URL
+     * @return đơn thuộc chủ hoặc null
+     */
+    public Order findOnlineByIdAndAccount(Connection conn, int accountId, int orderId) throws SQLException {
+        String sql = "SELECT " + SELECT_COLUMNS + " FROM Orders "
+                + "WHERE OrderId = ? AND Channel = 'Online' AND HolderCustomerId IN ("
+                + "SELECT c.CustomerId FROM Customers c JOIN Accounts a ON a.PersonId = c.PersonId "
+                + "WHERE a.AccountId = ? AND a.Status = 'Active' AND c.Status <> 'Inactive')";
+        try (PreparedStatement statement = conn.prepareStatement(sql)) {
+            statement.setInt(1, orderId);
+            statement.setInt(2, accountId);
+            try (ResultSet resultSet = statement.executeQuery()) {
+                if (resultSet.next()) {
+                    return mapResultSetToOrder(resultSet);
+                }
+            }
+        }
+        return null;
+    }
+
+    /** Khóa đơn online đúng chủ tới cuối transaction thay voucher. */
+    public Order findOnlineForUpdate(Connection conn, int accountId, int orderId) throws SQLException {
+        String sql = "SELECT " + SELECT_COLUMNS + " FROM Orders WITH (UPDLOCK, HOLDLOCK) "
+                + "WHERE OrderId = ? AND Channel = 'Online' AND HolderCustomerId IN ("
+                + "SELECT c.CustomerId FROM Customers c JOIN Accounts a ON a.PersonId = c.PersonId "
+                + "WHERE a.AccountId = ? AND a.Status = 'Active' AND c.Status <> 'Inactive')";
+        try (PreparedStatement statement = conn.prepareStatement(sql)) {
+            statement.setInt(1, orderId);
+            statement.setInt(2, accountId);
+            try (ResultSet resultSet = statement.executeQuery()) {
+                return resultSet.next() ? mapResultSetToOrder(resultSet) : null;
+            }
+        }
+    }
+
+    /**
+     * Ghi voucher/giảm giá/VAT cùng lúc, chỉ khi đơn còn Pending trong hạn và chưa trả tiền.
+     * @param conn transaction giữ lượt voucher và cập nhật đơn
+     * @param order đơn do Service đã tính lại giảm giá và VAT
+     * @param now mốc giờ VN dùng kiểm hạn; kiểm lại sát lúc ghi
+     * @return số đơn cập nhật; 0 thì Service rollback toàn bộ
+     */
+    public int updateVoucher(Connection conn, Order order, LocalDateTime now) throws SQLException {
+        String sql = "UPDATE Orders SET VoucherId = ?, DiscountAmount = ?, VatAmount = ? "
+                + "WHERE OrderId = ? AND Channel = 'Online' AND Status = 'Pending' AND PaymentDueAt > ? "
+                + "AND NOT EXISTS (SELECT 1 FROM Transactions WHERE OrderId = ? AND Status = 'Pending')";
+        try (PreparedStatement statement = conn.prepareStatement(sql)) {
+            setNullableInt(statement, 1, order.getVoucherId());
+            statement.setLong(2, order.getDiscountAmount());
+            statement.setLong(3, order.getVatAmount());
+            statement.setInt(4, order.getOrderId());
+            statement.setTimestamp(5, Timestamp.valueOf(now));
+            statement.setInt(6, order.getOrderId());
+            return statement.executeUpdate();
         }
     }
 
