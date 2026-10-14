@@ -53,10 +53,9 @@
         <div class="article-cover ${toneClass}">
           <c:if test="${not empty post.coverImage}">
             <img class="article-cover-img"
-                 src="${post.coverImage.startsWith('/') ? pageContext.request.contextPath : ''}<c:out value='${post.coverImage}' />"
+                 data-image-fallback="${pageContext.request.contextPath}/images/blog/default-blog.jpg" src="${post.coverImage.startsWith('/') ? pageContext.request.contextPath : ''}<c:out value='${post.coverImage}' />"
                  width="1200" height="800" fetchpriority="high"
-                 alt="<c:out value='${post.title}' />"
-                 onerror="this.style.display='none'; if(this.nextElementSibling){this.nextElementSibling.style.display='flex';}">
+                 alt="<c:out value='${post.title}' />">
           </c:if>
           <div class="article-cover-fallback ${not empty post.coverImage ? 'is-hidden' : ''}">
             <svg class="cover-pattern" viewBox="0 0 400 200" preserveAspectRatio="xMidYMid slice" aria-hidden="true">
@@ -148,9 +147,8 @@
                 <div class="post-thumb ${relToneClass}">
                   <c:if test="${not empty related.coverImage}">
                     <img class="post-thumb-img"
-                         src="${related.coverImage.startsWith('/') ? pageContext.request.contextPath : ''}<c:out value='${related.coverImage}' />"
-                         alt="" width="800" height="533" loading="lazy"
-                         onerror="this.style.display='none'; if(this.nextElementSibling){this.nextElementSibling.style.display='flex';}">
+                         data-image-fallback="${pageContext.request.contextPath}/images/blog/default-blog.jpg" src="${related.coverImage.startsWith('/') ? pageContext.request.contextPath : ''}<c:out value='${related.coverImage}' />"
+                         alt="" width="800" height="533" loading="lazy">
                   </c:if>
                   <div class="post-thumb-fallback ${not empty related.coverImage ? 'is-hidden' : ''}">
                     <svg class="cover-pattern" viewBox="0 0 400 200" preserveAspectRatio="xMidYMid slice" aria-hidden="true">
