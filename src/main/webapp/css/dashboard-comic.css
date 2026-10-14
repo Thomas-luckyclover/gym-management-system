@@ -1,0 +1,111 @@
+@charset "UTF-8";
+/* Original pen-and-paper SVG world; existing dashboard grid is preserved. */
+.pt-board__hero .wx-gym { opacity: 1; background: var(--comic-paper); border-color: var(--comic-ink); box-shadow: none; isolation: isolate; }
+.comic-art { display: block; width: 100%; height: 100%; color: var(--comic-ink); }
+.comic-paper { fill: var(--comic-paper); }
+.comic-black { fill: var(--comic-ink); }
+.comic-wash { fill: var(--comic-wash); }
+.comic-shadow { fill: var(--comic-shadow); }
+.comic-window { fill: var(--comic-paper); stroke: currentColor; stroke-width: 2.5; }
+.comic-outline { stroke: currentColor; stroke-width: 1.8; stroke-linecap: round; stroke-linejoin: round; }
+.comic-line, .comic-fine, .comic-heavy { fill: none; stroke: currentColor; stroke-linecap: round; stroke-linejoin: round; }
+.comic-line { stroke-width: 2; }
+.comic-fine { stroke-width: 1; }
+.comic-heavy { stroke-width: 4; }
+.comic-line--white { stroke: var(--comic-paper); }
+.comic-letter { font-family: var(--font-heading); font-weight: var(--font-weight-extrabold); letter-spacing: var(--letter-spacing-tight); fill: currentColor; }
+.comic-letter--white { fill: var(--comic-paper); }
+.comic-gym { position: absolute; inset: 0; }
+.pt-board__hero .wx-gym-panel::after { display: none; }
+
+/* Central vertical pause icon, only revealed on hover/focus on desktop. */
+.pt-board__hero .dashboard-motion-toggle {
+  top: 50%; left: 50%; right: auto; width: var(--comic-control-size); height: var(--comic-control-size);
+  min-height: 0; padding: var(--space-4); display: grid; place-items: center;
+  border: var(--border-width-thick) solid var(--comic-paper); border-radius: var(--radius-lg);
+  background: var(--comic-ink); color: var(--comic-paper); opacity: 0;
+  transform: translate(-50%, -40%) scale(.94); box-shadow: var(--shadow-card);
+  transition: opacity var(--duration-fast) var(--ease-out), transform var(--duration-fast) var(--ease-out);
+  z-index: var(--z-dropdown);
+}
+.pt-board__hero .dashboard-motion-toggle svg { width: 100%; height: 100%; stroke-width: 3; }
+.pt-board__hero .dashboard-motion-toggle span { position: absolute; width: var(--border-width); height: var(--border-width); padding: 0; overflow: hidden; clip-path: inset(50%); white-space: nowrap; }
+.pt-board__hero .wx-gym-panel:hover .dashboard-motion-toggle,
+.pt-board__hero .dashboard-motion-toggle:focus-visible { opacity: 1; transform: translate(-50%, -50%) scale(1); }
+.pt-board__hero .dashboard-motion-toggle:hover { background: var(--comic-ink); }
+.pt-board__hero .dashboard-motion-toggle:focus-visible { outline: var(--border-width-thick) solid var(--comic-ink); outline-offset: var(--space-1); }
+.pt-board__hero .dashboard-motion-toggle:disabled { cursor: default; }
+
+/* Paper plates prevent the street illustration from competing with data. */
+.pt-board__hero .wx-card { color: var(--comic-ink); background: var(--comic-paper); border-color: var(--comic-ink); box-shadow: none; min-height: var(--comic-weather-height); gap: var(--space-1) var(--space-3); }
+.pt-board__hero .wx-card__fx { color: var(--comic-ink); }
+.comic-street { position: absolute; inset: 0; }
+.pt-board__hero .wx-card__top > div { align-self: start; justify-self: start; padding: var(--space-1) var(--space-2); margin: calc(-1 * var(--space-1)) 0 0 calc(-1 * var(--space-2)); background: var(--comic-caption-plate); max-width: 100%; }
+.pt-board__hero .wx-card__place, .pt-board__hero .wx-card__condition,
+.pt-board__hero .wx-card__update, .pt-board__hero .wx-card__temp,
+.pt-board__hero .wx-card__details dt, .pt-board__hero .wx-card__details dd,
+.pt-board__hero .wx-card__advice { color: var(--comic-ink); opacity: 1; }
+.pt-board__hero .wx-card__temp { justify-self: start; align-self: start; background: var(--comic-caption-plate); padding: 0 var(--space-2) var(--space-1); margin-left: calc(-1 * var(--space-2)); text-shadow: none; }
+html body.dock .pt-board__hero .wx-card__temp { color: var(--comic-ink); -webkit-text-fill-color: var(--comic-ink); background: var(--comic-caption-plate); }
+.pt-board__hero .wx-icon { color: var(--comic-ink); border-color: var(--comic-ink); background: var(--comic-paper); backdrop-filter: none; transform: none; animation: none; }
+.pt-board__hero .wx-icon__sun circle, .pt-board__hero .wx-icon__moon path,
+.pt-board__hero .wx-icon__cloud { fill: var(--comic-paper); stroke: var(--comic-ink); }
+.pt-board__hero .wx-icon__bolt, .pt-board__hero .wx-icon__star { fill: var(--comic-ink); stroke: var(--comic-ink); animation: none; }
+.pt-board__hero .wx-icon * { animation-duration: var(--comic-cycle); }
+.pt-board__hero .wx-card__preview { color: var(--comic-ink); border-color: var(--comic-ink); }
+.pt-board__hero .wx-card__more { background: var(--comic-caption-plate); padding: var(--space-1-5) var(--space-2); color: var(--comic-ink); justify-self: start; max-width: 100%; border: var(--border-width) solid var(--comic-ink); }
+.pt-board__hero .wx-card__more summary { color: var(--comic-ink); cursor: pointer; font-size: var(--font-size-xs); }
+.pt-board__hero .wx-card__more > summary::marker { color: var(--comic-ink); }
+.pt-board__hero .wx-card__more[open] { width: 100%; background: var(--comic-paper); }
+.pt-board__hero .wx-card__more[open] .wx-card__details { margin-top: var(--space-3); border-color: var(--comic-ink); }
+.pt-board__hero .wx-card__advice { background: var(--comic-paper); border-color: var(--comic-ink); backdrop-filter: none; margin-top: var(--space-2); }
+.pt-board__hero .wx-card--offline .wx-card__advice { grid-column: 1 / -1; }
+.pt-board__hero .wx-card--stale { border-style: dashed; }
+
+/* Eight-second loops with independently articulated limbs. */
+[data-comic-squat] { animation: comic-squat var(--comic-cycle) ease-in-out infinite; }
+[data-comic-breathe] { animation: comic-breathe var(--comic-cycle) ease-in-out infinite; }
+[data-comic-curl] { transform-box: fill-box; transform-origin: 5% 90%; animation: comic-curl var(--comic-cycle) ease-in-out infinite; }
+[data-comic-artist] { transform-box: fill-box; transform-origin: 35% 85%; animation: comic-sketch var(--comic-cycle) ease-in-out infinite; }
+[data-comic-gum] { animation: comic-breathe var(--comic-cycle) ease-in-out infinite reverse; }
+[data-comic-bubble] { transform-box: fill-box; transform-origin: left center; animation: comic-bubble var(--comic-cycle) ease-in-out infinite; }
+[data-comic-phone] { transform-box: fill-box; transform-origin: center 75%; animation: comic-phone var(--comic-cycle) ease-in-out infinite; }
+[data-comic-runner] { animation: comic-run-bob var(--comic-cycle) linear infinite; }
+[data-comic-run-back], [data-comic-run-front] { transform-box: fill-box; transform-origin: 60% 0; animation: comic-run-leg var(--comic-cycle) ease-in-out infinite; }
+[data-comic-run-back] { animation-direction: reverse; }
+[data-comic-run-arm] { transform-box: fill-box; transform-origin: 10% 5%; animation: comic-run-arm var(--comic-cycle) ease-in-out infinite; }
+[data-comic-visitor] { animation: comic-enter var(--comic-cycle) linear infinite; }
+[data-comic-visitor-two] { animation: comic-walk var(--comic-cycle) ease-in-out infinite; }
+[data-comic-door] { transform-box: fill-box; transform-origin: left center; animation: comic-door var(--comic-cycle) ease-in-out infinite; }
+[data-comic-cyclist] { animation: comic-cycle var(--comic-cycle) linear infinite; }
+[data-comic-tree] { transform-box: fill-box; transform-origin: center bottom; animation: comic-tree var(--comic-cycle) ease-in-out infinite; }
+.comic-umbrella, .comic-weather-marks { display: none; }
+:is([data-weather-type="sunny"], [data-weather-type="hot"]) .comic-weather-marks--sun,
+[data-weather-type="night"] .comic-weather-marks--moon,
+:is([data-weather-type="cloudy"], [data-weather-type="rain"], [data-weather-type="storm"], [data-weather-type="snow"]) .comic-weather-marks--cloud,
+[data-weather-type="storm"] .comic-weather-marks--storm,
+:is([data-weather-type="rain"], [data-weather-type="storm"]) .comic-umbrella { display: inline; }
+:is([data-weather-type="rain"], [data-weather-type="storm"], [data-weather-type="snow"]) [data-comic-cyclist] { visibility: hidden; }
+.comic-scene--sleeping *, .dashboard-motion-paused .comic-scene *, .gms-lite .comic-scene * { animation-play-state: paused !important; }
+@keyframes comic-squat { 0%, 15%, 55%, 100% { transform: translate(0, 0); } 32%, 78% { transform: translate(-5px, 15px) rotate(2deg); } }
+@keyframes comic-breathe { 0%, 50%, 100% { transform: translateY(0); } 25%, 75% { transform: translateY(2px); } }
+@keyframes comic-curl { 0%, 10%, 50%, 100% { transform: rotate(25deg); } 28%, 75% { transform: rotate(-20deg); } }
+@keyframes comic-sketch { 0%, 50%, 100% { transform: rotate(0); } 22%, 28%, 72%, 78% { transform: rotate(2deg); } 25%, 75% { transform: rotate(1deg); } }
+@keyframes comic-bubble { 0%, 100% { transform: scale(.25); } 55%, 70% { transform: scale(1.2); } 75% { transform: scale(1); } 80% { transform: scale(.25); } }
+@keyframes comic-phone { 0%, 35%, 100% { transform: rotate(0); } 45%, 70% { transform: rotate(3deg); } }
+@keyframes comic-run-bob { 0%, 25%, 50%, 75%, 100% { transform: translateY(0); } 12.5%, 37.5%, 62.5%, 87.5% { transform: translateY(-3px); } }
+@keyframes comic-run-leg { 0%, 25%, 50%, 75%, 100% { transform: rotate(-18deg); } 12.5%, 37.5%, 62.5%, 87.5% { transform: rotate(18deg); } }
+@keyframes comic-run-arm { 0%, 25%, 50%, 75%, 100% { transform: rotate(12deg); } 12.5%, 37.5%, 62.5%, 87.5% { transform: rotate(-12deg); } }
+@keyframes comic-enter { 0%, 10% { transform: translate(0,0); opacity: 1; } 18%, 34%, 50% { transform: translate(12px,-2px); opacity: 1; } 26%, 42% { transform: translate(22px,0); opacity: 1; } 62% { transform: translate(39px,-3px); opacity: 1; } 74%, 90% { transform: translate(48px,-8px); opacity: 0; } 91% { transform: translate(0,0); opacity: 0; } 100% { transform: translate(0,0); opacity: 1; } }
+@keyframes comic-walk { 0%, 100% { transform: translate(0,0); } 25% { transform: translate(-4px,-2px); } 50% { transform: translate(-8px,0); } 75% { transform: translate(-4px,-2px); } }
+@keyframes comic-door { 0%, 20%, 85%, 100% { transform: scaleX(1); } 45%, 65% { transform: scaleX(.3); } }
+@keyframes comic-cycle { 0% { transform: translateX(-140px); } 100% { transform: translateX(710px); } }
+@keyframes comic-tree { 0%, 100% { transform: rotate(-1deg); } 50% { transform: rotate(2deg); } }
+@media (hover: none) { .pt-board__hero .dashboard-motion-toggle { opacity: .85; transform: translate(-50%, -50%); } }
+@media (max-width: 767px) {
+  .pt-board__hero .dashboard-motion-toggle { width: var(--control-height-lg); height: var(--control-height-lg); padding: var(--space-2); }
+  .pt-board__hero .wx-gym { height: auto; aspect-ratio: 1000 / 350; }
+  .comic-gym { width: 100%; left: 0; transform: none; }
+  .pt-board__hero .wx-card { min-height: var(--comic-weather-height); }
+}
+@media (prefers-reduced-motion: reduce) { .comic-scene * { animation: none !important; } .pt-board__hero .dashboard-motion-toggle { transition: none; } }

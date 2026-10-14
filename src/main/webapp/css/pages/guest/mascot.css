@@ -1,10 +1,11 @@
 @charset "UTF-8";
-/* Pumpy: aqua + ember. DOM .js-mascot/.is-visible/.is-jumping do home.js quản lý. */
+/* Pumpy navy. DOM .js-mascot/.is-visible/.is-jumping và data-mood do home.js quản lý. */
 .mascot-stage {
   position: relative;
   isolation: isolate;
   justify-self: center;
   width: min(100%, calc(var(--layout-auth-card-width) + var(--space-12)));
+  padding-top: var(--pumpy-dialog-space);
 }
 
 /* Ánh sáng cục bộ tách nét vẽ khỏi nền tối, không chạy filter toàn khung. */
@@ -119,7 +120,7 @@
 
 .mascot-bubble {
   position: absolute;
-  top: -2%;
+  top: 0;
   left: 2%;
   z-index: var(--z-base);
   max-width: 90%;
@@ -127,12 +128,12 @@
   padding: var(--space-2) var(--space-3-5);
   border: var(--border-width-thick) solid var(--brand-ink);
   border-radius: var(--radius-md);
-  background: var(--brand-aqua);
-  color: var(--brand-ink);
+  background: var(--pumpy-dialog-bg);
+  color: var(--pumpy-dialog-text);
   font-family: var(--font-heading);
-  font-weight: var(--font-weight-extrabold);
-  font-size: var(--font-size-md);
-  line-height: var(--line-height-snug);
+  font-weight: var(--font-weight-semibold);
+  font-size: var(--font-size-sm);
+  line-height: var(--line-height-relaxed);
   pointer-events: none;
   opacity: 0;
   transform: translateY(var(--space-2));
@@ -148,7 +149,7 @@
   height: var(--space-3);
   border-right: var(--border-width-thick) solid var(--brand-ink);
   border-bottom: var(--border-width-thick) solid var(--brand-ink);
-  background: var(--brand-aqua);
+  background: var(--pumpy-dialog-bg);
   transform: rotate(45deg);
 }
 
@@ -156,6 +157,20 @@
   opacity: 1;
   transform: none;
 }
+
+.mascot-cue {
+  margin: var(--space-2) 0 0;
+  color: var(--brand-muted);
+  text-align: center;
+  font-size: var(--font-size-xs);
+}
+.mochi-eye-wink, .mochi-eye-smile, .mochi-brows { opacity: 0; }
+.mascot-stage[data-mood="warm"] .mochi-eyes { opacity: 0; }
+.mascot-stage[data-mood="warm"] .mochi-eye-smile,
+.mascot-stage[data-mood="curious"] .mochi-brows,
+.mascot-stage[data-mood="wink"] .mochi-eye-wink { opacity: 1; }
+.mascot-stage[data-mood="wink"] .bl > circle:first-child,
+.mascot-stage[data-mood="wink"] .bl > circle:nth-child(3) { opacity: 0; }
 
 @keyframes mochi-breathe {
   0%, 100% { transform: scale(1); }

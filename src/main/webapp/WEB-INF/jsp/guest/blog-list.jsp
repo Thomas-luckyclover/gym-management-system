@@ -8,7 +8,7 @@
   <%@ include file="/WEB-INF/jsp/common/head.jspf" %>
   <title>Blog — Super Gym</title>
   <meta name="description" content="Kiến thức tập luyện, dinh dưỡng và tin tức phòng gym, cập nhật mỗi tuần từ đội ngũ huấn luyện viên.">
-  <link rel="stylesheet" href="${pageContext.request.contextPath}/css/pages/guest/blog-list.css?v=20261013c">
+  <link rel="stylesheet" href="${pageContext.request.contextPath}/css/pages/guest/blog-list.css?v=20261014a">
   <script src="${pageContext.request.contextPath}/js/pages/guest/blog-list.js" defer></script>
 </head>
 <body class="theme-guest-dark journal-page">
@@ -77,7 +77,7 @@
              data-category="${cardCatName}" data-title="<c:out value='${post.title}' />">
             <c:if test="${not empty post.coverImage}">
               <img class="post-thumb" loading="lazy" alt="" width="800" height="533"
-                   src="${post.coverImage.startsWith('/') ? pageContext.request.contextPath : ''}<c:out value='${post.coverImage}' />">
+                   data-image-fallback="${pageContext.request.contextPath}/images/blog/default-blog.jpg" src="${post.coverImage.startsWith('/') ? pageContext.request.contextPath : ''}<c:out value='${post.coverImage}' />">
             </c:if>
 
             <div class="post-body">

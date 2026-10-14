@@ -399,7 +399,7 @@ body.customer-dashboard-page { background: var(--pt-bg); color: var(--pt-text); 
 .customer-dashboard-page .top-right { display: flex; align-items: center; gap: var(--space-3); }
 .customer-dashboard-page .tb-user { border: var(--border-width) solid var(--pt-line-strong); background: var(--pt-panel); color: var(--pt-text); }
 
-.cust-hero { margin-bottom: var(--space-6); }
+.cust-hero { margin-top: var(--space-6); margin-bottom: 0; }
 
 /* Gói đang dùng: ngày và hành động đọc rõ, điểm nhấn thương hiệu gọn. */
 .customer-dashboard-page .status-hero {

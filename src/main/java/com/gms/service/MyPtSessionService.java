@@ -656,7 +656,7 @@ public class MyPtSessionService {
 
             // B5: khách được hủy trước khi buổi kết thúc, kể cả khi buổi đang diễn ra.
             LocalDateTime endsAt = info.getSlotDate().atTime(info.getEndTime());
-            LocalDateTime now = DateTimeUtil.now();
+            LocalDateTime now = DateTimeUtil.now(); // Quan Trọng: lấy giờ thực tế, từ chối trường hợp biên
             if (!now.isBefore(endsAt)) {
                 return ServiceResult.fail(Messages.MSG91_SESSION_CANNOT_CHANGE);
             }

@@ -122,45 +122,7 @@ body.pt-dashboard-page { background: var(--pt-bg); color: var(--pt-text); }
   letter-spacing: var(--letter-spacing-normal);
   text-wrap: balance;
 }
-.pt-section-heading .pt-info { margin-left: auto; }
-.pt-section-caption { margin: var(--space-1) 0 0; color: var(--pt-muted); font-size: var(--font-size-sm); line-height: var(--line-height-normal); }
-
-.pt-info { position: relative; display: inline-flex; }
-.pt-info-trigger {
-  display: grid;
-  place-items: center;
-  width: var(--control-height-md);
-  height: var(--control-height-md);
-  border: var(--border-width) solid var(--pt-line-strong);
-  border-radius: var(--radius-circle);
-  background: transparent;
-  color: var(--pt-text);
-  font-family: var(--font-body);
-  font-weight: var(--font-weight-semibold);
-  cursor: help;
-}
-.pt-info-trigger:hover { border-color: var(--pt-text); }
-.pt-info-popover {
-  position: absolute;
-  z-index: var(--z-dropdown);
-  top: calc(100% + var(--space-2));
-  right: 0;
-  width: min(72vw, calc(var(--space-12) * 4));
-  padding: var(--space-3) var(--space-4);
-  border: var(--border-width) solid var(--pt-line-strong);
-  border-radius: var(--radius-sm);
-  background: var(--pt-panel-2);
-  color: var(--pt-text);
-  font-size: var(--font-size-sm);
-  line-height: var(--line-height-normal);
-  box-shadow: var(--shadow-pop);
-  opacity: 0;
-  visibility: hidden;
-  transform: translateY(calc(-1 * var(--space-1)));
-  transition: opacity var(--duration-slow), transform var(--duration-slow), visibility var(--duration-slow);
-}
-.pt-info:hover .pt-info-popover,
-.pt-info:focus-within .pt-info-popover { opacity: 1; visibility: visible; transform: none; }
+.pt-section-heading /* HintBox dùng component chung .pt-info trong common.css. */
 
 .pt-block-error { margin: 0; padding: var(--space-3) var(--space-4); border: var(--border-width) solid var(--color-danger-border); border-radius: var(--radius-sm); background: var(--color-danger-tint); color: var(--color-danger-ink); }
 

@@ -13,7 +13,8 @@
     <link rel="stylesheet" href="${pageContext.request.contextPath}/css/pages/customer/dashboard.css?v=20261013c">
     <%-- Dải điểm nhấn dùng chung kiểu với PT Dashboard (.pt-board__hero) --%>
     <link rel="stylesheet" href="${pageContext.request.contextPath}/css/pages/pt/dashboard.css?v=20261013g">
-    <link rel="stylesheet" href="${pageContext.request.contextPath}/css/dashboard-weather.css?v=20261013d">
+    <link rel="stylesheet" href="${pageContext.request.contextPath}/css/dashboard-weather.css?v=20261014s">
+    <link rel="stylesheet" href="${pageContext.request.contextPath}/css/dashboard-comic.css?v=20261014s">
 </head>
 
 <body class="dock theme-pt customer-dashboard-page customer-weather-page weather-${weatherType}">
@@ -65,19 +66,6 @@
             </c:if>
 
             <c:if test="${not empty dashboard}">
-                <%-- ===== Lời chào và thời tiết (cùng fragment với PT Dashboard) ===== --%>
-                <c:set var="weatherGreetingName" value="${dashboard.fullName}" />
-                <c:set var="weatherAudience" value="customer" />
-                <section class="pt-board__hero cust-hero" aria-label="Lời chào và thời tiết hôm nay">
-                    <%@ include file="/WEB-INF/jsp/common/dashboard-weather.jspf" %>
-                    <%-- Nhịp của bạn: lấy từ dữ liệu dashboard sẵn có (gói hiệu lực, buổi sắp tới) --%>
-                    <c:set var="pulseNext" value="${empty dashboard.upcomingSessions ? null : dashboard.upcomingSessions[0]}" />
-                    <dl class="pt-pulse">
-                        <div><dt>Ngày tập còn lại</dt><dd><c:out value="${empty dashboard.activeMembership ? 0 : dashboard.activeMembership.daysRemaining}" /></dd></div>
-                        <div><dt>Buổi PT kế tiếp</dt><dd><c:choose><c:when test="${not empty pulseNext}"><c:out value="${gms:formatTime(pulseNext.startTime)}" /></c:when><c:otherwise>—</c:otherwise></c:choose></dd></div>
-                        <div><dt>Buổi sắp tới</dt><dd><c:out value="${empty dashboard.upcomingSessions ? 0 : fn:length(dashboard.upcomingSessions)}" /></dd></div>
-                    </dl>
-                </section>
                 <div class="split">
                     <div class="col-main">
 
@@ -260,6 +248,19 @@
                         </div>
                     </aside>
                 </div>
+                <%-- ===== Lời chào và thời tiết (cùng fragment với PT Dashboard) ===== --%>
+                <c:set var="weatherGreetingName" value="${dashboard.fullName}" />
+                <c:set var="weatherAudience" value="customer" />
+                <section class="pt-board__hero cust-hero" aria-label="Lời chào và thời tiết hôm nay">
+                    <%@ include file="/WEB-INF/jsp/common/dashboard-weather.jspf" %>
+                    <%-- Nhịp của bạn: lấy từ dữ liệu dashboard sẵn có (gói hiệu lực, buổi sắp tới) --%>
+                    <c:set var="pulseNext" value="${empty dashboard.upcomingSessions ? null : dashboard.upcomingSessions[0]}" />
+                    <dl class="pt-pulse">
+                        <div><dt>Ngày tập còn lại</dt><dd><c:out value="${empty dashboard.activeMembership ? 0 : dashboard.activeMembership.daysRemaining}" /></dd></div>
+                        <div><dt>Buổi PT kế tiếp</dt><dd><c:choose><c:when test="${not empty pulseNext}"><c:out value="${gms:formatTime(pulseNext.startTime)}" /></c:when><c:otherwise>—</c:otherwise></c:choose></dd></div>
+                        <div><dt>Buổi sắp tới</dt><dd><c:out value="${empty dashboard.upcomingSessions ? 0 : fn:length(dashboard.upcomingSessions)}" /></dd></div>
+                    </dl>
+                </section>
             </c:if>
 
         </main>

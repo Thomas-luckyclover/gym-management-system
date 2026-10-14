@@ -13,7 +13,7 @@
 <footer class="site-footer">
   <div class="footer-inner">
     <div>
-      <a class="footer-brand" href="${pageContext.request.contextPath}/" aria-label="Super Gym — Trang chủ"><img class="footer-wordmark" src="${pageContext.request.contextPath}/images/logo.png?v=20261013" alt="Super Gym" width="160" height="121"></a>
+      <a class="footer-brand" href="${pageContext.request.contextPath}/" aria-label="Super Gym — Trang chủ"><img class="footer-wordmark" src="${pageContext.request.contextPath}/images/brand/super-gym-wordmark.svg?v=20261014d" alt="Super Gym" width="180" height="46"></a>
       <p class="footer-tag">Theo dõi tiến độ, đặt lịch PT và quản lý gói tập trong một tài khoản duy nhất.</p>
       <%-- Chưa có URL mạng xã hội chính thức trong cấu hình; biểu tượng giữ nhãn rõ ràng. --%>
       <div class="footer-socials" role="group" aria-label="Mạng xã hội Super Gym">

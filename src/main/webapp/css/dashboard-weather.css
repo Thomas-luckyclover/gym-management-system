@@ -55,12 +55,16 @@
   position: relative;
   flex: 1;
   min-height: calc(var(--space-12) * 2.6);
+  opacity: var(--ink-gym-opacity);
   margin-top: var(--space-4);
   overflow: hidden;
   border-radius: var(--radius-lg);
   background: var(--gym-wall);
   box-shadow: inset 0 0 0 var(--border-width) var(--gym-glass);
 }
+
+/* Không khí phòng tập đứng sau dữ liệu; không giảm tương phản chữ/thời tiết. */
+html.gms-lite .wx-gym { opacity: var(--ink-gym-opacity-lite); }
 
 /* Cửa kính: trời theo thời tiết (hiệu ứng mưa/tuyết/nắng bên dưới vẫn chạy trong khung kính) */
 .wx-gym__sky {
