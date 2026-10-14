@@ -18,8 +18,9 @@ document.addEventListener("DOMContentLoaded", function () {
         return;
     }
 
-    const reduceMotion = window.matchMedia("(prefers-reduced-motion: reduce)").matches
-        || document.documentElement.classList.contains("gms-lite");
+    // Chỉ "giảm chuyển động" của hệ điều hành mới giữ thuyền đứng yên. Chế độ nhẹ (gms-lite, tự bật trên máy
+    // ≤ 4 nhân) vẫn cho thuyền trôi vì chỉ là một transform chậm; CSS đã tắt nhấp nhô/cờ bay ở chế độ đó.
+    const reduceMotion = window.matchMedia("(prefers-reduced-motion: reduce)").matches;
 
     const OUTBOUND = [
         "Ra khơi tập cardio đây! Máy chèo ở Super Gym tốt hơn, nhưng không có hoàng hôn.",

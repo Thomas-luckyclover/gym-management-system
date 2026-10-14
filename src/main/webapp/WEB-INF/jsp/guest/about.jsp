@@ -15,7 +15,7 @@
   <link rel="stylesheet" href="${pageContext.request.contextPath}/css/pages/guest/about.css?v=20261015a">
   <script src="${pageContext.request.contextPath}/js/pages/guest/about-sun.js?v=20261014a" defer></script>
   <script src="${pageContext.request.contextPath}/js/pages/guest/about.js?v=20261014a" defer></script>
-  <script src="${pageContext.request.contextPath}/js/pages/guest/about-pumpy.js?v=20261015a" defer></script>
+  <script src="${pageContext.request.contextPath}/js/pages/guest/about-pumpy.js?v=20261015b" defer></script>
 </head>
 <body class="theme-guest-dark about-page">
   <%@ include file="/WEB-INF/jsp/common/flash-toast.jspf" %>
