@@ -11,6 +11,7 @@ import com.gms.dto.DependentCustomerRow;
 import com.gms.dto.DependentCustomerView;
 import com.gms.dto.ServiceResult;
 import com.gms.entity.Account;
+import com.gms.entity.Customer;
 import com.gms.entity.Employee;
 import com.gms.entity.Person;
 import com.gms.listener.SessionRegistryListener;
@@ -87,10 +88,19 @@ public class AccountSettingsService {
                         }
 
                         Employee employee = null;
+                        Customer customer = null;
 
                         boolean isCustomer = sessionRole == Role.CUSTOMER;
 
-                        if (!isCustomer) {
+                        if (isCustomer) {
+                                // Chỉ tìm theo PersonId của Account, không theo số điện thoại giám hộ.
+                                // DAO ưu tiên hồ sơ chưa Inactive; schema chỉ cho một hồ sơ còn hiệu lực.
+                                customer = customerDAO.findByPersonId(person.getPersonId());
+                                if (customer != null && customer.getDeletedAt() != null) {
+                                        // Không đưa hồ sơ cũ đã xóa lên Profile khi không còn hồ sơ hiện hành.
+                                        customer = null;
+                                }
+                        } else {
                                 employee = employeeDAO.findByPersonId(
                                         person.getPersonId());
                         }
@@ -118,7 +128,15 @@ public class AccountSettingsService {
                                 sessionRole,
                                 employeeCode,
                                 hireDate,
-                                employmentStatus);
+                                employmentStatus,
+                                employee == null ? null : employee.getPosition(),
+                                employee == null || sessionRole != Role.PT ? null : employee.getSpecialty(),
+                                employee == null || sessionRole != Role.PT ? null : employee.getYearsOfExperience(),
+                                employee == null || sessionRole != Role.PT ? null : employee.getCommissionRate(),
+                                customer == null ? null : customer.getCustomerCode(),
+                                customer == null ? null : customer.getCustomerType(),
+                                customer == null ? null : customer.getStatus(),
+                                customer == null ? null : customer.getJoinedAt());
 
                         return ServiceResult.ok(view);
 
