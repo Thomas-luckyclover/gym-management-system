@@ -16,7 +16,8 @@
     <link rel="stylesheet" href="${pageContext.request.contextPath}/css/pages/auth/account-settings.css?v=2">
     <link rel="stylesheet" href="${pageContext.request.contextPath}/css/pages/pt/dashboard.css?v=20261013j">
     <script src="${pageContext.request.contextPath}/js/pages/pt/dashboard.js?v=9" defer></script>
-    <link rel="stylesheet" href="${pageContext.request.contextPath}/css/dashboard-weather.css?v=20261013d">
+    <link rel="stylesheet" href="${pageContext.request.contextPath}/css/dashboard-weather.css?v=20261014s">
+    <link rel="stylesheet" href="${pageContext.request.contextPath}/css/dashboard-comic.css?v=20261014s">
 </head>
 <%-- weatherType do Servlet kiểm tra: sunny/cloudy/rain/storm/snow/wind/night/hot. --%>
 <body class="dock theme-pt pt-dashboard-page weather-${weatherType}">
