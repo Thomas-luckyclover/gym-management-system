@@ -67,7 +67,7 @@
       <div class="cine-strip__cards">
         <figure class="cine-card" data-card><img src="${ctx}/images/brand/strip-squat.jpg" alt="Học viên nữ squat với đòn tạ" loading="lazy" width="1600" height="1067"><figcaption>Sức mạnh</figcaption></figure>
         <figure class="cine-card" data-card><img src="${ctx}/images/brand/strip-curl.jpg" alt="Học viên nam tập tay với tạ" loading="lazy" width="1600" height="1067"><figcaption>Kiểm soát</figcaption></figure>
-        <figure class="cine-card" data-card><img src="${ctx}/images/brand/strip-endurance.jpg" alt="Vận động viên nữ nâng đòn tạ trong phòng tập" loading="lazy" width="1200" height="1600"><figcaption>Bền bỉ</figcaption></figure>
+        <figure class="cine-card" data-card><img src="${ctx}/images/brand/strip-press.jpg" alt="Vận động viên nữ nâng đòn tạ qua vai trong phòng tập" loading="lazy" width="901" height="1202"><figcaption>Bền bỉ</figcaption></figure>
         <figure class="cine-card" data-card><img src="${ctx}/images/brand/strip-ropes.jpg" alt="Học viên tập thừng chiến" loading="lazy" width="1600" height="1067"><figcaption>Bùng nổ</figcaption></figure>
       </div>
     </section>
