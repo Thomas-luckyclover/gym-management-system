@@ -110,3 +110,122 @@ html body.dock .pt-board__hero .wx-card__temp { color: var(--comic-ink); -webkit
   .pt-board__hero .wx-card { min-height: var(--comic-weather-height); }
 }
 @media (prefers-reduced-motion: reduce) { .comic-scene * { animation: none !important; } .pt-board__hero .dashboard-motion-toggle { transition: none; } }
+
+/* =====================================================================
+   Tranh comic raster (15/10/2026): ảnh mực đen trắng do nhóm tạo bằng Gemini, ghép bằng script.
+   Khối gym: ảnh nền + 2 tư thế người nâng tạ (đổi tư thế kiểu limited animation), đèn chập chờn,
+   bong bóng kẹo, bụi phấn. Khối thời tiết: thành phố trong bóng đầu người, mỗi thời tiết một tranh.
+   Tạm dừng/ngủ dùng chung quy tắc .comic-scene--sleeping ở trên; reduced motion tắt hết.
+   ===================================================================== */
+.comic-photo {
+  position: absolute;
+  left: 50%;
+  top: 50%;
+  width: 100%;
+  aspect-ratio: 2400 / 837;
+  transform: translate(-50%, -50%);
+  overflow: hidden;
+  background: var(--comic-paper-warm);
+}
+.comic-photo__plate { position: absolute; inset: 0; width: 100%; height: 100%; display: block; }
+.pt-board__hero .wx-gym { background: var(--comic-paper-warm); }
+.comic-lifter { position: absolute; height: auto; display: block; }
+.comic-lifter--rack { left: var(--comic-lifter-rack-left); top: var(--comic-lifter-rack-top); width: var(--comic-lifter-rack-width); opacity: 0; }
+.comic-lifter--up { left: var(--comic-lifter-up-left); top: var(--comic-lifter-up-top); width: var(--comic-lifter-up-width); }
+.comic-lifter--up { animation: comic-pose-up var(--comic-cycle) linear infinite; }
+.comic-lifter--rack { animation: comic-pose-rack var(--comic-cycle) linear infinite; }
+.comic-lamp {
+  position: absolute;
+  width: 12%;
+  aspect-ratio: 1 / 1.3;
+  transform: translateX(-50%);
+  background: radial-gradient(ellipse 50% 60% at 50% 12%, rgba(255, 248, 226, 0.5), transparent 70%);
+  mix-blend-mode: screen;
+  pointer-events: none;
+  animation: comic-lamp var(--comic-cycle) steps(1, end) infinite;
+}
+.comic-lamp--a { left: 22.3%; top: 12%; }
+.comic-lamp--b { left: 36.1%; top: 13%; animation-delay: -2.7s; }
+.comic-lamp--c { left: 45.4%; top: 20%; animation-delay: -5.1s; }
+.comic-gum {
+  position: absolute;
+  left: var(--comic-gum-left);
+  top: var(--comic-gum-top);
+  width: var(--comic-gum-size);
+  aspect-ratio: 1;
+  border: var(--border-width-thick) solid var(--comic-ink);
+  border-radius: var(--radius-circle);
+  background: radial-gradient(circle at 35% 30%, var(--comic-paper) 0 30%, var(--comic-wash) 75%);
+  transform-origin: 85% 55%;
+  animation: comic-gum var(--comic-cycle) ease-in-out infinite;
+}
+.comic-dust {
+  position: absolute;
+  inset: 0;
+  pointer-events: none;
+  opacity: 0.55;
+  background-image:
+    radial-gradient(circle, rgba(250, 246, 236, 0.9) 0 1px, transparent 1.6px),
+    radial-gradient(circle, rgba(250, 246, 236, 0.7) 0 1px, transparent 1.4px);
+  background-size: 140px 90px, 210px 130px;
+  background-position: 0 0, 60px 40px;
+  mix-blend-mode: screen;
+  animation: comic-dust var(--comic-dust-duration) linear infinite;
+}
+@keyframes comic-pose-up {
+  0%, 14.9% { opacity: 0; }
+  15% { opacity: 1; transform: translateY(1.5%); }
+  18%, 37% { opacity: 1; transform: none; }
+  37.1%, 64.9% { opacity: 0; }
+  65% { opacity: 1; transform: translateY(1.5%); }
+  68%, 87% { opacity: 1; transform: none; }
+  87.1%, 100% { opacity: 0; }
+}
+@keyframes comic-pose-rack {
+  0%, 14.9% { opacity: 1; transform: none; }
+  15%, 37% { opacity: 0; }
+  37.1% { opacity: 1; transform: translateY(-1%); }
+  40%, 64.9% { opacity: 1; transform: none; }
+  65%, 87% { opacity: 0; }
+  87.1% { opacity: 1; transform: translateY(-1%); }
+  90%, 100% { opacity: 1; transform: none; }
+}
+@keyframes comic-lamp {
+  0%, 46%, 50%, 100% { opacity: 1; }
+  47%, 49% { opacity: 0.35; }
+}
+@keyframes comic-gum {
+  0%, 10% { transform: scale(1); opacity: 1; }
+  45% { transform: scale(1.7); opacity: 1; }
+  52% { transform: scale(1.9); opacity: 1; }
+  53%, 60% { transform: scale(0.4); opacity: 0; }
+  61% { transform: scale(0.6); opacity: 1; }
+  100% { transform: scale(1); opacity: 1; }
+}
+@keyframes comic-dust {
+  from { background-position: 0 0, 60px 40px; }
+  to { background-position: 140px -90px, -150px -90px; }
+}
+
+/* Khối thời tiết: tranh phủ thẻ, đầu người nằm phải, chữ dữ liệu thật trên nền giấy bên trái. */
+.pt-board__hero .wx-card { background: var(--comic-paper-warm); }
+.comic-photo__weather {
+  position: absolute;
+  inset: 0;
+  width: 100%;
+  height: 100%;
+  display: block;
+  object-fit: cover;
+  object-position: 78% 50%;
+}
+.pt-board__hero .wx-card__top > div,
+.pt-board__hero .wx-card__temp { background: var(--comic-caption-plate); box-shadow: var(--border-width-thick) var(--border-width-thick) 0 var(--comic-ink); border: var(--border-width) solid var(--comic-ink); }
+.pt-board__hero .wx-card__place,
+.pt-board__hero .wx-card__condition,
+.pt-board__hero .wx-card__temp { font-family: var(--font-comic-hand); letter-spacing: 0; }
+.pt-board__hero .wx-card__place { font-size: var(--font-size-xl); text-transform: uppercase; }
+.pt-board__hero .wx-card__condition { font-size: var(--font-size-lg); }
+@media (prefers-reduced-motion: reduce) {
+  .comic-lifter--rack { opacity: 0; }
+  .comic-lifter--up { opacity: 1; }
+}

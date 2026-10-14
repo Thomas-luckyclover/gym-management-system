@@ -1,0 +1,10 @@
+{
+  "origin": "Tranh do nhóm G5 tạo bằng Google Gemini theo brief comic Mỹ (15/10/2026), Claude ghép và xử lý bằng script",
+  "files": {
+    "gym-plate.webp": "Cảnh phòng gym không có người nâng tạ; vá vùng thanh tạ lơ lửng bằng nét lân cận",
+    "gym-lifter-rack.webp / gym-lifter-up.webp": "Cô gái váy đỏ 2 tư thế, tách nền bằng rembg (isnet-general-use), đặt theo token --comic-lifter-*",
+    "weather-{sunny,hot,cloudy,rain,storm,snow,wind}.webp": "Thành phố trong bóng đầu người theo từng thời tiết; storm cắt bỏ khung bo góc của ảnh chụp",
+    "weather-night.webp": "Suy ra từ weather-sunny bằng đảo sáng, giữ khối Super Gym đỏ"
+  },
+  "usage": "Minh họa trang trí cho Dashboard (aria-hidden); không phải ảnh cơ sở vật chất thật"
+}
