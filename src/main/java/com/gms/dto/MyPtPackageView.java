@@ -42,6 +42,9 @@ public class MyPtPackageView {
     // COUNT Sessions cùng SubscriptionId còn Scheduled: JSP in “Buổi chưa chốt”.
     // Gồm cả buổi đã kết thúc nhưng chờ JOB-04, không chỉ buổi tương lai.
     private final int scheduledSessionCount;
+    // COUNT Scheduled có SlotDate + StartTime sau thời điểm xem.
+    // JSP in Buổi sắp tới; không gồm buổi đang diễn ra hoặc đang chờ JOB-04.
+    private int upcomingSessionCount;
 
     // Subscriptions.MaxSwapsSnapshot: Service dùng giới hạn đã lưu lúc bán (GBR-04).
     private final int maxSwapsSnapshot;
@@ -127,6 +130,16 @@ public class MyPtPackageView {
     /** Số buổi Scheduled chưa có kết quả cuối cùng. */
     public int getScheduledSessionCount() {
         return scheduledSessionCount;
+    }
+
+    /** Số buổi còn Scheduled và chưa bắt đầu trong từng lần mua gói. */
+    public int getUpcomingSessionCount() {
+        return upcomingSessionCount;
+    }
+
+    /** DAO gán số đếm từ lịch thực tế, không lấy tổng ban đầu trừ số buổi đã dùng. */
+    public void setUpcomingSessionCount(int upcomingSessionCount) {
+        this.upcomingSessionCount = upcomingSessionCount;
     }
 
     /** Giới hạn đổi của gói lúc bán, không lấy cấu hình mới thay thế. */

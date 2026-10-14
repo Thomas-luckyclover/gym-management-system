@@ -8,39 +8,6 @@ my-pt-sessions.js dùng [data-session-view], [data-session-panel], #sessionFilte
   font-family: var(--font-body);
 }
 
-/* Chỉ ép tông tối khi người dùng chưa bật nền sáng (công tắc topbar) */
-html:not([data-theme="light"]) body.my-pt-sessions-page {
-  color-scheme: dark;
-  --color-bg: #04151F;
-  --color-surface: #09232F;
-  --color-surface-muted: #0C2C39;
-  --color-surface-hover: #0C2C39;
-  --color-text: #EAF4F6;
-  --color-text-soft: #A9C3CC;
-  --color-text-muted: #86A4AE;
-  --color-border: rgba(234, 244, 246, 0.09);
-  --color-border-strong: rgba(234, 244, 246, 0.2);
-  --color-primary: var(--brand-sunset);
-  --color-primary-tint: rgba(242, 92, 27, 0.16);
-  --color-primary-border: rgba(255, 122, 61, 0.45);
-  --color-danger-tint: rgba(255, 99, 115, 0.14);
-  --color-danger-border: rgba(255, 154, 165, 0.38);
-  --color-danger-ink: #FFA3AD;
-  --color-warning-tint: rgba(245, 183, 64, 0.14);
-  --color-warning-border: rgba(248, 207, 122, 0.38);
-  --color-warning-ink: #F8CF7A;
-  --pt-bg: #04151F;
-  --pt-panel: #09232F;
-  --pt-panel-2: #0C2C39;
-  --pt-line: rgba(234, 244, 246, 0.09);
-  --pt-line-strong: rgba(234, 244, 246, 0.2);
-  --pt-text: #EAF4F6;
-  --pt-soft: #A9C3CC;
-  --pt-muted: #86A4AE;
-  --pt-lagoon-text: var(--brand-aqua);
-  --pt-ember-text: var(--brand-sunset-hi);
-}
-
 body.my-pt-sessions-page .topbar {
   background: color-mix(in srgb, var(--pt-bg) 88%, transparent);
   border-bottom-color: var(--pt-line);
@@ -182,7 +149,7 @@ body.my-pt-sessions-page .tb-user-text span { color: var(--pt-muted); }
 
 .my-pt-filters {
   display: grid;
-  grid-template-columns: minmax(0, 1fr) minmax(0, 1fr) minmax(0, 1fr) auto;
+  grid-template-columns: repeat(3, minmax(0, 1fr)) auto;
   align-items: end;
   gap: var(--space-4);
   margin: 0;
@@ -228,6 +195,16 @@ body.my-pt-sessions-page .tb-user-text span { color: var(--pt-muted); }
   flex-wrap: wrap;
   padding-top: 0;
   align-self: end;
+  justify-content: flex-end;
+}
+
+.my-pt-filters .my-pt-package-filter {
+  grid-column: 1 / -1;
+}
+
+.my-pt-package-term {
+  font-size: var(--font-size-sm);
+  font-variant-numeric: tabular-nums;
 }
 
 .my-pt-filter-actions .btn {
@@ -303,6 +280,12 @@ body.my-pt-sessions-page .tb-user-text span { color: var(--pt-muted); }
   min-width: 0;
 }
 
+.my-pt-session-time {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-start;
+}
+
 .my-pt-session-hours {
   display: flex;
   align-items: center;
@@ -315,6 +298,44 @@ body.my-pt-sessions-page .tb-user-text span { color: var(--pt-muted); }
   font-weight: var(--font-weight-semibold);
   line-height: var(--line-height-normal);
   font-variant-numeric: tabular-nums;
+}
+
+.my-pt-cancel-button {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: var(--space-2);
+  min-height: var(--control-height-md);
+  margin-top: var(--space-3);
+  padding: var(--space-2) var(--space-3);
+  border: var(--border-width) solid var(--color-border-strong);
+  border-radius: var(--radius-button);
+  background: transparent;
+  color: var(--color-danger-ink);
+  font: inherit;
+  font-size: var(--font-size-sm);
+  font-weight: var(--font-weight-semibold);
+  line-height: var(--line-height-normal);
+  white-space: nowrap;
+  cursor: pointer;
+  transition: background var(--duration-fast) var(--ease-standard),
+              border-color var(--duration-fast) var(--ease-standard),
+              transform var(--duration-fast) var(--ease-standard);
+}
+
+.my-pt-cancel-button:hover {
+  background: var(--color-danger-tint);
+  border-color: var(--color-danger-border);
+  transform: translateY(calc(-1 * var(--border-width)));
+}
+
+.my-pt-cancel-button:active {
+  transform: none;
+}
+
+.my-pt-cancel-button:focus-visible {
+  outline: var(--focus-outline-width) solid var(--color-danger-ink);
+  outline-offset: var(--focus-outline-offset);
 }
 
 .my-pt-time-separator {
@@ -622,6 +643,131 @@ body.my-pt-sessions-page .tb-user-text span { color: var(--pt-muted); }
   outline-offset: var(--focus-outline-offset);
 }
 
+/* Dialog hủy buổi tập: xác nhận một lần, không cho hủy vô tình. */
+.my-pt-cancel-dialog {
+  width: min(calc(var(--space-12) * 6), calc(100vw - var(--space-8)));
+  height: fit-content;
+  max-height: calc(100dvh - var(--space-8));
+  margin: auto;
+  padding: 0;
+  border: var(--border-width) solid var(--color-border-strong);
+  border-radius: var(--radius-sm);
+  background: var(--color-surface);
+  color: var(--color-text);
+  box-shadow: var(--shadow-pop);
+  font-family: var(--font-body);
+  overflow: auto;
+  animation: dialogSlideIn var(--duration-slow) var(--ease-standard) both;
+}
+
+@keyframes dialogSlideIn {
+  from {
+    opacity: 0;
+    transform: translateY(var(--space-3));
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+.my-pt-cancel-dialog::backdrop {
+  background: var(--color-overlay);
+  animation: backdropFadeIn var(--duration-fast) var(--ease-standard) both;
+}
+
+@keyframes backdropFadeIn {
+  from {
+    opacity: 0;
+  }
+  to {
+    opacity: 1;
+  }
+}
+
+.my-pt-cancel-dialog-content {
+  padding: var(--space-6);
+}
+
+.my-pt-cancel-dialog h2 {
+  margin: 0 0 var(--space-2);
+  font-size: var(--font-size-xl);
+  font-weight: var(--font-weight-bold);
+  line-height: var(--line-height-snug);
+  color: var(--color-text);
+  letter-spacing: -0.02em;
+}
+
+.my-pt-cancel-dialog p {
+  margin: 0;
+  font-size: var(--font-size-sm);
+  line-height: var(--line-height-relaxed);
+  color: var(--color-text-soft);
+}
+
+.my-pt-cancel-dialog .my-pt-cancel-dialog-warning {
+  margin-top: var(--space-5);
+  padding: var(--space-3) var(--space-4);
+  border-left: var(--border-width-thick) solid var(--color-danger);
+  background: var(--color-danger-tint);
+  color: var(--color-text);
+}
+
+.my-pt-cancel-dialog-warning strong {
+  color: var(--color-danger-ink);
+  font-weight: var(--font-weight-semibold);
+}
+
+.my-pt-dialog-actions {
+  display: flex;
+  gap: var(--space-3);
+  justify-content: flex-end;
+  margin-top: var(--space-6);
+}
+
+.my-pt-dialog-actions button {
+  min-height: var(--control-height-lg);
+  flex: 1;
+  border-radius: var(--radius-button);
+  font-weight: var(--font-weight-semibold);
+  font-size: var(--font-size-sm);
+  transition: all var(--duration-fast) var(--ease-standard);
+}
+
+.my-pt-dialog-actions button[data-cancel-choice="keep"] {
+  border: var(--border-width) solid var(--color-border-strong);
+  background: var(--color-surface);
+  color: var(--color-text);
+}
+
+.my-pt-dialog-actions button[data-cancel-choice="keep"]:hover {
+  background: var(--color-surface-hover);
+  border-color: var(--color-border);
+}
+
+.my-pt-dialog-actions button[data-cancel-choice="keep"]:active {
+  transform: translateY(1px) scale(0.98);
+}
+
+.my-pt-dialog-actions button[data-cancel-choice="confirm"] {
+  background: var(--color-danger);
+  color: var(--color-on-danger);
+  border: 0;
+}
+
+.my-pt-dialog-actions button[data-cancel-choice="confirm"]:hover {
+  background: var(--color-danger-hover);
+}
+
+.my-pt-dialog-actions button[data-cancel-choice="confirm"]:active {
+  transform: translateY(1px) scale(0.98);
+}
+
+.my-pt-dialog-actions button:focus-visible {
+  outline: var(--focus-outline-width) solid var(--color-primary);
+  outline-offset: var(--focus-outline-offset);
+}
+
 .my-pt-visually-hidden {
   position: absolute;
   width: var(--border-width);
@@ -719,4 +865,27 @@ body.my-pt-sessions-page .tb-user-text span { color: var(--pt-muted); }
     left: var(--layout-gutter-mobile);
     width: calc(100vw - var(--layout-gutter-mobile) * 2);
   }
+
+  .my-pt-cancel-dialog {
+    width: calc(100vw - var(--space-6));
+  }
+
+  .my-pt-cancel-dialog-content { padding: var(--space-5); }
+
+  .my-pt-cancel-dialog h2 {
+    font-size: var(--font-size-lg);
+  }
+
+  .my-pt-dialog-actions {
+    gap: var(--space-2);
+  }
+
+  .my-pt-dialog-actions button {
+    flex: 1;
+    font-size: var(--font-size-xs);
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .my-pt-cancel-dialog, .my-pt-cancel-dialog::backdrop { animation: none; }
 }

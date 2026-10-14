@@ -335,6 +335,10 @@ public final class Messages {
     // EN: Invalid date.
     public static final String MSG109_INVALID_DATE = "Ngày không hợp lệ.";
 
+    /** BR-79: khách hủy buổi PT thành công. */
+    // EN: Session cancelled.
+    public static final String MSG110_SESSION_CANCELLED = "Buổi đã hủy thành công.";
+
     private Messages() {
     }
 }

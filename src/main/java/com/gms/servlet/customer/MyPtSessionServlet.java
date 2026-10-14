@@ -1,5 +1,6 @@
 package com.gms.servlet.customer;
 
+import com.gms.constant.Messages;
 import com.gms.constant.SessionKey;
 import com.gms.dto.CustomerDashboardView;
 import com.gms.dto.MyPtHistorySessionView;
@@ -27,6 +28,16 @@ import java.util.List;
 public class MyPtSessionServlet extends HttpServlet {
 
     private static final String VIEW = "customer/my-pt-sessions";
+
+    /** Tham số hành động JSP gửi lên (name="action"). */
+    private static final String PARAM_ACTION = "action";
+
+    /** Tham số mã buổi tập JSP gửi lên (name="sessionId"). */
+    private static final String PARAM_SESSION_ID = "sessionId";
+
+    /** Giá trị hành động hủy buổi tập của khách. */
+    private static final String ACTION_CANCEL = "cancel";
+
     private final CustomerDashboardService dashboardService = new CustomerDashboardService();
     private final MyPtSessionService sessionService = new MyPtSessionService(); // Chuẩn bị gói PT của khách đăng nhập.
 
@@ -66,13 +77,24 @@ public class MyPtSessionServlet extends HttpServlet {
             request.setAttribute("ptPackagesError", ptPackagesResult.getMessage());
         }
 
+        // Bộ lọc cần cả gói cũ để khách tra cứu Lịch sử; không đổi danh sách thẻ gói Active.
+        ServiceResult<List<MyPtPackageView>> packageOptionsResult =
+                sessionService.getPtPackageOptions(accountId);
+        if (packageOptionsResult.isSuccess()) {
+            request.setAttribute("ptPackageOptions", packageOptionsResult.getData());
+        } else {
+            request.setAttribute("ptPackageOptionsError", packageOptionsResult.getMessage());
+        }
+
         // Lấy giờ VN đúng một lần cho cả request: hai khối Sắp tới/Lịch sử chia nhóm cùng thời điểm.
         LocalDateTime now = DateTimeUtil.now();
         // B3.1: đọc bộ lọc từ URL. Servlet chỉ lấy chuỗi thô; Service kiểm tra và đổi sang kiểu đúng.
         // Bộ lọc chung (type, dateFrom, dateTo) áp dụng hai khối; historyStatus chỉ thu hẹp Lịch sử.
         ServiceResult<MyPtSessionFilter> filterResult = sessionService.parseFilter(
                 request.getParameter("type"), request.getParameter("dateFrom"),
-                request.getParameter("dateTo"), request.getParameter("historyStatus"));
+                request.getParameter("dateTo"), request.getParameter("historyStatus"),
+                request.getParameter("subscriptionId"),
+                packageOptionsResult.isSuccess() ? packageOptionsResult.getData() : null);
         MyPtSessionFilter filter;
         if (filterResult.isSuccess()) {
             filter = filterResult.getData();
@@ -126,5 +148,64 @@ public class MyPtSessionServlet extends HttpServlet {
 
         // B7: chuyển dữ liệu header, gói PT, lịch sắp tới, lịch sử sang JSP.
         RequestUtil.forward(request, response, VIEW);
+    }
+
+    /**
+     * Xử lý hành động của khách trên màn Lịch tập (hiện tại: hủy buổi tập).
+     * <p>Luồng khớp doGet: lấy accountId từ session, parse sessionId an toàn, gọi Service,
+     * redirect về trang danh sách với toast (Post/Redirect/Get) để F5 không resubmit.
+     */
+    @Override
+    protected void doPost(HttpServletRequest request, HttpServletResponse response)
+            throws ServletException, IOException {
+
+        // B1: lấy account hiện tại; CustomerAreaFilter đã kiểm tra quyền truy cập.
+        HttpSession session = request.getSession(false);
+        Integer accountId = session == null
+                ? null
+                : (Integer) session.getAttribute(SessionKey.ACCOUNT_ID);
+
+        if (accountId == null) {
+            RequestUtil.redirect(request, response, "/login?returnUrl=/customer/pt-sessions");
+            return;
+        }
+
+        // B2: đọc hành động và mã buổi tập từ form. Hai bước tách rời để dễ mở rộng sau này.
+        String action = request.getParameter(PARAM_ACTION);
+
+        // B3: parse sessionId an toàn — số nguyên dương; null/0/âm thì fail thân thiện.
+        //    Không cố tìm buổi trước khi parse: tránh để lộ sự tồn tại của buổi lạ.
+        Integer sessionId = RequestUtil.getPositiveIntParam(request, PARAM_SESSION_ID);
+        if (sessionId == null) {
+            // Redirect chứ không forward: đổi URL để không lộ sessionId lạ và F5 không resubmit.
+            RequestUtil.setFlashToast(request, "error", Messages.MSG08_NOT_FOUND.formatted("buổi tập"));
+            RequestUtil.redirect(request, response, "/customer/pt-sessions");
+            return;
+        }
+
+        // B4: phân nhánh theo action. Mỗi nhánh redirect về trang danh sách để áp dụng Post/Redirect/Get.
+        if (ACTION_CANCEL.equals(action)) {
+            handleCancel(request, response, accountId, sessionId);
+        } else {
+            // Action lạ/hết hỗ trợ: không thực hiện, báo lỗi thân thiện.
+            RequestUtil.setFlashToast(request, "error", Messages.MSG108_INVALID_OPTION);
+            RequestUtil.redirect(request, response, "/customer/pt-sessions");
+        }
+    }
+
+    /**
+     * Hủy buổi tập PT: ủy quyền cho Service, dùng toast để phản hồi.
+     * Service kiểm tra quyền sở hữu, trạng thái buổi (chỉ hủy được Scheduled), chính sách hủy.
+     */
+    private void handleCancel(HttpServletRequest request, HttpServletResponse response,
+                              int accountId, int sessionId) throws IOException {
+        ServiceResult<Void> result = sessionService.cancelPtSession(accountId, sessionId);
+
+        if (result.isSuccess()) {
+            RequestUtil.setFlashToast(request, "success", result.getMessage());
+        } else {
+            RequestUtil.setFlashToast(request, "error", result.getMessage());
+        }
+        RequestUtil.redirect(request, response, "/customer/pt-sessions");
     }
 }

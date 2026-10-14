@@ -4,7 +4,7 @@
 //   B1 trời: đêm đại dương phía trên, ửng cam cháy sát chân trời
 //   B2 mặt trời: khối cam cháy chìm một phần dưới chân trời, các dải cắt ngang trôi xuống (cảm giác đang chảy)
 //   B3 giọt nắng: nhỏ dài ra từ mép dưới mặt trời, đứt thành giọt, rơi xuống mặt nước tạo gợn tròn aqua
-//   B4 mặt nước: gradient aqua → đáy biển, vệt phản chiếu mặt trời lăn tăn theo sóng
+//   B4 mặt nước: gradient aqua → đáy biển, vệt phản chiếu chuyển thành hình tạ bằng những gợn sáng
 // Bật "Reduce motion" hoặc tab ẩn / cuộn khỏi hero: chỉ vẽ một khung tĩnh, không chạy vòng lặp.
 // =====================================================================
 document.addEventListener("DOMContentLoaded", function () {
@@ -170,6 +170,51 @@ document.addEventListener("DOMContentLoaded", function () {
         });
     }
 
+    // Nét tạ nằm trong phản chiếu: thanh ngang và hai bánh tạ được ghép bằng dải sáng mặt nước.
+    function drawDumbbellReflection(time, depth) {
+        const unit = Math.min(sunR * 0.92, width * 0.2, depth * 0.78);
+        if (unit < 12) return;
+        const centerY = horizon + depth * 0.48;
+        const plateX = unit * 0.79;
+        const plateWidth = unit * 0.25;
+        const plateHeight = unit * 0.84;
+        const collarWidth = unit * 0.1;
+        const collarHeight = unit * 0.54;
+        const barHeight = Math.max(5, unit * 0.12);
+
+        ctx.save();
+        ctx.beginPath();
+        ctx.rect(sunX - plateX, centerY - barHeight / 2, plateX * 2, barHeight);
+        [-1, 1].forEach(function (side) {
+            const x = sunX + side * plateX;
+            ctx.rect(x - plateWidth / 2, centerY - plateHeight / 2, plateWidth, plateHeight);
+            ctx.rect(x - side * (plateWidth / 2 + collarWidth / 2) - collarWidth / 2,
+                centerY - collarHeight / 2, collarWidth, collarHeight);
+        });
+        ctx.clip();
+
+        const metalLight = ctx.createLinearGradient(0, centerY - plateHeight / 2, 0, centerY + plateHeight / 2);
+        metalLight.addColorStop(0, "rgba(255, 154, 72, 0.22)");
+        metalLight.addColorStop(0.45, "rgba(255, 116, 58, 0.38)");
+        metalLight.addColorStop(1, "rgba(43, 212, 222, 0.19)");
+        ctx.fillStyle = metalLight;
+        ctx.fillRect(sunX - unit * 1.18, centerY - plateHeight / 2, unit * 2.36, plateHeight);
+
+        for (let y = centerY - plateHeight / 2; y <= centerY + plateHeight / 2; y += 5) {
+            const ripple = Math.sin(y * 0.13 + time * 1.7);
+            const drift = Math.sin(y * 0.08 + time * 0.8) * unit * 0.035;
+            ctx.strokeStyle = y < centerY
+                ? "rgba(255, 162, 87, " + (0.42 + ripple * 0.11).toFixed(3) + ")"
+                : "rgba(82, 216, 224, " + (0.31 + ripple * 0.1).toFixed(3) + ")";
+            ctx.lineWidth = 1.2 + (ripple + 1) * 0.75;
+            ctx.beginPath();
+            ctx.moveTo(sunX - unit * 1.18 + drift, y);
+            ctx.lineTo(sunX + unit * 1.18 + drift, y);
+            ctx.stroke();
+        }
+        ctx.restore();
+    }
+
     // B4: mặt nước + vệt phản chiếu + gợn
     function drawWater(time, dt) {
         const sea = ctx.createLinearGradient(0, horizon, 0, height);
@@ -194,7 +239,7 @@ document.addEventListener("DOMContentLoaded", function () {
         cool.addColorStop(0.5, "rgba(127, 230, 236, 1)");
         cool.addColorStop(1, "rgba(" + AQUA + ", 0)");
         ctx.lineCap = "round";
-        for (let y = horizon + 4; y < height; y += 6) {
+        for (let y = horizon + 4; y < horizon + depth * 0.22; y += 6) {
             const k = (y - horizon) / depth;
             const wave = Math.sin(time * 1.4 + y * 0.09) * 0.5 + Math.sin(time * 0.7 + y * 0.031) * 0.5;
             const half = sunR * (1 - k * 0.5) * (0.7 + 0.3 * wave);
@@ -213,6 +258,7 @@ document.addEventListener("DOMContentLoaded", function () {
             }
         }
         ctx.globalAlpha = 1;
+        drawDumbbellReflection(time, depth);
 
         // Gợn sóng lăn tăn trên toàn mặt nước
         ctx.strokeStyle = "rgba(" + AQUA + ", 0.14)";

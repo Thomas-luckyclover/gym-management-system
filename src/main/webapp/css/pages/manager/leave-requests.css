@@ -1,0 +1,352 @@
+/* ===================================================
+   BF-05 – Leave Request Screens (màn #26 & #27)
+   leave-request-list.jsp | leave-request-review.jsp
+   =================================================== */
+
+/* ===== Tab thống kê ===== */
+
+.leave-stats {
+    display: grid;
+    grid-template-columns: repeat(4, minmax(0, 1fr));
+    gap: var(--space-4);
+    margin-bottom: var(--space-6);
+}
+
+.leave-stat {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: var(--space-3);
+    min-height: 80px;
+    padding: var(--space-4) var(--space-5);
+    border: var(--border-width) solid var(--color-border-strong);
+    border-radius: var(--radius-lg);
+    background: var(--color-surface);
+    box-shadow: var(--shadow-card);
+    color: var(--color-text);
+    text-decoration: none;
+    transition:
+        border-color var(--duration-base),
+        background var(--duration-base),
+        transform var(--duration-base);
+}
+
+.leave-stat:hover {
+    transform: translateY(-1px);
+    border-color: var(--color-primary-border);
+}
+
+.leave-stat.active {
+    border: var(--border-width-thick) solid var(--color-primary);
+    background: var(--color-primary-tint);
+}
+
+.leave-stat strong {
+    font-size: var(--font-size-xl);
+    font-weight: 700;
+}
+
+
+/* ===== Panel danh sách ===== */
+
+.leave-panel {
+    padding: var(--space-5);
+    border: var(--border-width) solid var(--color-border-strong);
+    border-radius: var(--radius-lg);
+    background: var(--color-surface);
+    box-shadow: var(--shadow-card);
+    margin-bottom: var(--space-6);
+}
+
+.leave-panel .panel-head {
+    padding-bottom: var(--space-4);
+    margin-bottom: var(--space-4);
+    border-bottom: var(--border-width) solid var(--color-border);
+}
+
+.leave-panel .panel-head h2 {
+    margin: 0 0 var(--space-1);
+}
+
+.leave-panel .panel-head p {
+    margin: 0;
+    color: var(--color-text-soft);
+    font-size: var(--font-size-sm);
+}
+
+
+/* ===== Bộ lọc ===== */
+
+.leave-filter {
+    display: grid;
+    grid-template-columns: minmax(240px, 1fr) 90px auto auto;
+    gap: var(--space-3);
+    padding: var(--space-4);
+    margin-bottom: var(--space-5);
+    border: var(--border-width) solid var(--color-border);
+    border-radius: var(--radius-md);
+    background: var(--color-bg);
+}
+
+.leave-filter input,
+.leave-filter select {
+    min-height: 42px;
+}
+
+
+/* ===== Bảng danh sách ===== */
+
+.leave-table-wrap {
+    overflow-x: auto;
+}
+
+.leave-table {
+    width: 100%;
+    border-collapse: collapse;
+    font-size: var(--font-size-sm);
+}
+
+.leave-table thead tr {
+    border-bottom: var(--border-width) solid var(--color-border-strong);
+}
+
+.leave-table th {
+    padding: var(--space-3) var(--space-4);
+    text-align: left;
+    color: var(--color-text-soft);
+    font-weight: 600;
+    white-space: nowrap;
+}
+
+.leave-table td {
+    padding: var(--space-3) var(--space-4);
+    border-bottom: var(--border-width) solid var(--color-border);
+    vertical-align: middle;
+}
+
+.leave-table td b {
+    display: block;
+    font-weight: 600;
+    color: var(--color-text);
+}
+
+.leave-table td small {
+    display: block;
+    color: var(--color-text-soft);
+    font-size: var(--font-size-xs);
+    margin-top: var(--space-1);
+}
+
+.leave-table tbody tr:hover {
+    background: var(--color-bg);
+}
+
+/* Hàng khẩn cấp (deadline sắp đến) */
+.leave-row-urgent {
+    background: var(--color-warning-tint) !important;
+}
+
+.leave-row-urgent:hover {
+    background: var(--color-warning-tint) !important;
+}
+
+
+/* ===== Trống ===== */
+
+.leave-empty {
+    padding: var(--space-8);
+    text-align: center;
+    color: var(--color-text-muted);
+}
+
+
+/* ===== Phân trang ===== */
+
+.leave-pager {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: var(--space-4);
+    margin-top: var(--space-6);
+    color: var(--color-text-soft);
+    font-size: var(--font-size-sm);
+}
+
+
+/* ===== Trang duyệt đơn (màn #27) ===== */
+
+.leave-back {
+    display: inline-block;
+    margin-bottom: var(--space-4);
+    color: var(--color-primary);
+    text-decoration: none;
+    font-size: var(--font-size-sm);
+}
+
+.leave-back:hover {
+    text-decoration: underline;
+}
+
+.leave-review {
+    max-width: 900px;
+}
+
+/* Thông tin đơn */
+.leave-info-grid {
+    display: grid;
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+    gap: var(--space-4);
+    margin-bottom: var(--space-5);
+}
+
+.leave-info-grid > div {
+    display: flex;
+    flex-direction: column;
+    gap: var(--space-1);
+    padding: var(--space-4);
+    border: var(--border-width) solid var(--color-border);
+    border-radius: var(--radius-md);
+    background: var(--color-bg);
+}
+
+.leave-info-label {
+    color: var(--color-text-soft);
+    font-size: var(--font-size-xs);
+    font-weight: 600;
+    text-transform: uppercase;
+    letter-spacing: 0.04em;
+}
+
+.leave-info-value {
+    font-weight: 500;
+    color: var(--color-text);
+}
+
+/* Hộp lý do */
+.leave-reason-box {
+    padding: var(--space-4);
+    margin-bottom: var(--space-5);
+    border: var(--border-width) solid var(--color-border);
+    border-radius: var(--radius-md);
+    background: var(--color-bg);
+}
+
+.leave-reason-box p {
+    margin: var(--space-2) 0 0;
+    line-height: 1.6;
+}
+
+/* Thông tin nhân sự ca bị ảnh hưởng */
+.leave-staffing-box {
+    display: flex;
+    align-items: flex-start;
+    gap: var(--space-3);
+    padding: var(--space-4);
+    margin-bottom: var(--space-5);
+    border: var(--border-width) solid var(--color-border);
+    border-radius: var(--radius-md);
+    background: var(--color-bg);
+}
+
+.leave-staffing-box.danger {
+    background: var(--color-danger-tint);
+    border-color: var(--color-danger-border);
+    color: var(--color-danger-ink);
+}
+
+.leave-staffing-box.warning {
+    background: var(--color-warning-tint);
+    border-color: var(--color-warning-border, var(--color-border));
+}
+
+.leave-staffing-numbers {
+    display: flex;
+    gap: var(--space-6);
+    margin-top: var(--space-2);
+}
+
+.leave-staffing-item {
+    display: flex;
+    flex-direction: column;
+    gap: var(--space-1);
+}
+
+.leave-staffing-item strong {
+    font-size: var(--font-size-xl);
+    font-weight: 700;
+}
+
+.leave-staffing-item small {
+    color: var(--color-text-soft);
+    font-size: var(--font-size-xs);
+}
+
+/* Khu vực quyết định */
+.leave-actions {
+    display: grid;
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+    gap: var(--space-5);
+}
+
+.leave-action-card {
+    padding: var(--space-5);
+    border: var(--border-width) solid var(--color-border-strong);
+    border-radius: var(--radius-lg);
+    background: var(--color-surface);
+    box-shadow: var(--shadow-card);
+}
+
+.leave-action-card h3 {
+    margin: 0 0 var(--space-3);
+    font-size: var(--font-size-base);
+}
+
+.leave-action-card p {
+    margin: 0 0 var(--space-4);
+    color: var(--color-text-soft);
+    font-size: var(--font-size-sm);
+}
+
+.leave-action-card textarea {
+    width: 100%;
+    min-height: 120px;
+    resize: vertical;
+    box-sizing: border-box;
+}
+
+/* Badge trạng thái của đơn đã xử lý */
+.leave-reviewed-info {
+    padding: var(--space-4);
+    margin-bottom: var(--space-5);
+    border: var(--border-width) solid var(--color-border);
+    border-radius: var(--radius-md);
+    background: var(--color-bg);
+}
+
+.leave-reviewed-info .badge {
+    margin-bottom: var(--space-2);
+}
+
+
+/* ===== Responsive ===== */
+
+@media (max-width: 900px) {
+    .leave-stats {
+        grid-template-columns: repeat(2, minmax(0, 1fr));
+    }
+
+    .leave-filter {
+        grid-template-columns: 1fr;
+    }
+
+    .leave-info-grid,
+    .leave-actions {
+        grid-template-columns: 1fr;
+    }
+}
+
+@media (max-width: 600px) {
+    .leave-stats {
+        grid-template-columns: repeat(2, minmax(0, 1fr));
+    }
+}

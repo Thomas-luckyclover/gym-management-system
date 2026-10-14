@@ -47,7 +47,7 @@ Thành công nghĩa là mỗi vai trò làm xong việc của mình nhanh, khôn
 
 ## Brand Commitments
 
-- Giữ tên **Super Gym**. Logo ngày 13/10/2026: biểu tượng S hai đường cong đối hướng ember/aqua, wordmark Barlow SemiBold chuyển thành path SVG tại `src/main/webapp/images/brand/supergym-*.svg`.
+- Giữ tên **Super Gym**. Logo hiện hành là `src/main/webapp/images/logo.png`, dùng chung ở mọi vị trí nhận diện và favicon; không dùng các logo SVG cũ.
 - Giữ được sự phân biệt trực quan giữa các vai trò.
 - Yêu cầu mới ngày 13/10/2026 cho phép đổi font để khắc phục chữ dính nhau: Be Vietnam Pro cho nội dung/điều khiển, Barlow Condensed cho tiêu đề chiến dịch. Không tracking âm, không ép ngang chữ, chừa khoảng cho dấu tiếng Việt.
 - Homepage cân bằng sắc độ khoảng 65% cam cháy pha đỏ than và 35% aqua sâu trong các vùng màu thương hiệu; đây là tỷ trọng art direction, không phải phép đo từng pixel ảnh.
@@ -66,3 +66,5 @@ Thành công nghĩa là mỗi vai trò làm xong việc của mình nhanh, khôn
 - **Trung thực về trạng thái:** đang tải, rỗng, lỗi và chưa hoàn thiện là bốn trạng thái khác nhau, không đánh tráo cho nhau.
 - **Lời lẽ theo góc nhìn người dùng:** chữ trên giao diện nói bằng ngôn ngữ của khách và nhân viên phòng gym, không dùng từ kỹ thuật của hệ thống.
 - **Đủ chất để thuyết phục khi demo:** chăm chút như sản phẩm thật, đọc rõ trên máy chiếu.
+
+Hướng thị giác được chốt 13/10: 70% nhịp thể thao, 30% cinematic; khung ngoài bo 2–4px, điều khiển đủ dễ bấm; bỏ dấu cộng trang trí và nét tốc độ gây nhiễu trong sân gym. Thời tiết mất kết nối dùng dữ liệu thật gần nhất trong ngày, có giờ lấy mẫu và nhãn rõ ràng.

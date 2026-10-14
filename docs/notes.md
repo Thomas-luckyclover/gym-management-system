@@ -98,11 +98,18 @@ Khi nhóm chốt xong 1 mục → đổi trạng thái thành **ĐÃ CHỐT**, g
 - Trạng thái cần hiển thị: `Scheduled`, `CheckedIn`, `Missed`, `Cancelled`. Khi `Missed` phải phân biệt `NoCheckIn`, `NoMembership`, `MembershipFrozen`; khi `Cancelled` phải phân biệt `CancelType` nếu màn hình cần giải thích.
 - Buổi tương lai đang nằm trong kỳ bảo lưu **không đổi thành `Missed` trước ngày tập**. Màn hình có thể hiện cảnh báo “Buổi nằm trong thời gian bảo lưu”; trạng thái vẫn là `Scheduled`. Nếu bảo lưu kết thúc sớm, buổi sau `ActualEndDate` vẫn giữ `Scheduled`.
 - JOB-04 chỉ chốt các buổi `Scheduled` đã qua ngày. Màn hình không tự chốt buổi, không tự xác nhận khách đã tập và không thay thế check-in.
-- Các thao tác customer cần tách rõ khỏi thao tác xem: chỉ buổi `Scheduled` chưa bắt đầu mới có thể đổi/huỷ theo điều kiện BF-08; buổi đã `CheckedIn`, `Missed` hoặc `Cancelled` là lịch sử, không cho sửa trực tiếp.
+- Các thao tác customer cần tách rõ khỏi thao tác xem: chỉ buổi `Scheduled` chưa bắt đầu mới được đổi; buổi `Scheduled` chưa kết thúc được hủy, kể cả khi đang diễn ra. Buổi đã `CheckedIn`, `Missed` hoặc `Cancelled` là lịch sử, không cho sửa trực tiếp.
 - Customer swap chỉ chọn slot được công bố và còn trống theo giới hạn thời gian/tuần của nghiệp vụ; đổi buổi phải giữ đúng gói, PT và điều kiện membership, đồng thời ghi `SessionMoveLogs` và tăng `SwapsUsed` khi áp dụng. Không được sửa thẳng `TimeSlots` mà bỏ qua transaction.
 - Hủy bởi customer là `Cancelled / ByCustomer`, vẫn tiêu buổi và không hoàn tiền; cần lưu account thực hiện và thời điểm theo schema. Đây là khác với PT hủy (`ByPt`) và gym hủy (`GymClosed`).
 - Với `PTCouple`, màn hình phải hiện đủ hai khách liên quan nếu dữ liệu có partner; các quy tắc đủ điều kiện/check-in của gói đôi không được suy ra chỉ từ tên người đứng tên.
 - Không đưa logic SQL, tính trạng thái hoặc quy tắc đổi/hủy vào JSP. DTO nên chứa sẵn nhãn, thời gian, tên PT, loại gói, trạng thái và quyền thao tác để JSP chỉ render.
+
+## My PT Sessions — khách hủy buổi trước giờ kết thúc (13/10/2026, ĐÃ CHỐT)
+
+- Gộp thao tác đổi buổi (UC-38) và hủy buổi (UC-39) vào từng buổi đủ điều kiện trên màn `Lịch tập của tôi` (`/customer/pt-sessions`); giữ `Đặt buổi lẻ` là trang riêng. Đây là quyết định về luồng UI, chưa có nghĩa backend đổi/hủy đã được triển khai.
+- Khách được hủy khi buổi còn `Scheduled` **và thời điểm kết thúc của `TimeSlots` lớn hơn thời điểm hiện tại theo giờ VN**. Như vậy được hủy cả khi buổi đang diễn ra, nhưng không được hủy từ lúc buổi kết thúc trở đi, dù JOB-04 chưa chốt. Nút trên JSP chỉ phản ánh điều kiện để khách thấy; server phải kiểm tra lại tại lúc nhận yêu cầu.
+- Mục đích của hủy khi đang diễn ra là báo ngay cho PT biết khách không đến để PT không phải tiếp tục chờ. Khi khách xác nhận, buổi chuyển thành `Cancelled / ByCustomer`, lưu `CancelledAt` và `CancelledByAccountId`; buổi vẫn bị trừ khỏi gói, không hoàn tiền, và PT được thông báo ngay. Modal phải nói rõ hậu quả trước khi xác nhận.
+- Cần sửa SRS/BF-08: UC-39 đang viết “at any time”, mục My Bookings chỉ chặn theo `Scheduled`, còn mô tả BF-08 có thể bị hiểu là chỉ được hủy trước lúc bắt đầu. Tất cả phải ghi rõ điều kiện **trước giờ kết thúc** và cho phép hủy khi đang diễn ra; chuyển điểm vào thao tác từ My Bookings sang My PT Sessions cho khớp menu hiện tại.
 
 ## JOB-04 — viết lại từng bước (08/10/2026, ĐÃ CHỐT trong chat)
 
@@ -246,6 +253,14 @@ Theo agents.md Phần 5: **chưa ai sửa schema**. Trước khi sửa: copy sch
 | Kết nối DB bằng `DriverManager` qua `DBContext` | Đơn giản, đủ cho quy mô đồ án; đổi sang connection pool sau chỉ sửa 1 file |
 | Bo góc md/lg giảm 19% (`--radius-reduce-ratio: 0.81`) | Yêu cầu của Leader trong chat |
 | Khu Manager/Admin giữ bo góc nhỏ 6px + font Work Sans như mockup | Giữ đúng prototype từng vai trò |
+
+## Quy tắc bổ sung: nhiều gói PT cùng thời hạn (chốt với người dùng, 13/10/2026)
+
+- Khách được mua và sở hữu nhiều gói PT có thời hạn trùng nhau, với cùng PT hoặc các PT khác nhau. Không chặn mua chỉ vì khách đang có một gói PT Active.
+- Mỗi lần mua là một Subscription riêng; thời hạn, quota buổi và lượt đổi của từng gói được quản lý độc lập, không cộng gộp hoặc chuyển qua lại.
+- Không được xếp một buổi trùng giờ với buổi Scheduled khác của bất kỳ khách tham gia nào, kể cả thành viên gói đôi và buổi thuộc gói/PT khác. Kiểm tra này áp dụng khi bán gói, khách đổi buổi, PT đổi lịch hoặc chuyển PT; vẫn phải kiểm tra PT và slot đích đủ điều kiện.
+- Ví dụ: khách có gói với PT Sơn lúc 08:00–09:30 có thể mua thêm gói với Sơn hoặc Trang lúc 15:00–16:30 trong cùng thời hạn; không được xếp thêm buổi 09:00–10:30 vào ngày đã có buổi Scheduled 08:00–09:30.
+- Đây là quyết định nghiệp vụ bổ sung để đồng bộ vào SRS và triển khai; ghi chú này không xác nhận code hiện tại đã kiểm tra đầy đủ các điều kiện trên.
 
 ## C. File tài liệu được `agents.md` nhắc tới nhưng chưa có trong repo
 

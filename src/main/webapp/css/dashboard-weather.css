@@ -13,7 +13,7 @@
   gap: var(--space-5);
   align-items: stretch;
   padding: var(--space-5);
-  border-radius: var(--radius-md);
+  border-radius: var(--radius-lg);
   background: var(--wx-hero-bg);
   color: var(--wx-hero-text);
   box-shadow: var(--shadow-lift);
@@ -57,7 +57,7 @@
   min-height: calc(var(--space-12) * 2.6);
   margin-top: var(--space-4);
   overflow: hidden;
-  border-radius: var(--radius-md);
+  border-radius: var(--radius-lg);
   background: var(--gym-wall);
   box-shadow: inset 0 0 0 var(--border-width) var(--gym-glass);
 }
@@ -339,7 +339,7 @@
   align-content: start;
   gap: var(--space-2) var(--space-4);
   padding: var(--space-4) var(--space-5);
-  border-radius: var(--radius-md);
+  border-radius: var(--radius-lg);
   /* Nền đen để nổi trên mọi bầu trời; chỉ một quầng màu thời tiết ở góc */
   background:
     radial-gradient(circle at 88% 8%, color-mix(in srgb, var(--color-primary) 55%, transparent), transparent 52%),
@@ -440,6 +440,24 @@
   color: var(--wx-white);
   font-size: var(--font-size-sm);
   font-weight: var(--font-weight-medium);
+}
+
+.wx-card__update {
+  grid-column: 1 / -1;
+  margin: 0;
+  font-size: var(--font-size-xs);
+  line-height: var(--line-height-snug);
+  color: var(--wx-white);
+  opacity: 0.82;
+}
+
+.wx-card--stale {
+  border-color: var(--brand-sunset);
+}
+
+.wx-card--stale .wx-card__update {
+  padding-top: var(--space-2);
+  border-top: var(--border-width) solid color-mix(in srgb, var(--brand-sunset) 42%, transparent);
 }
 
 /* ----- Hiệu ứng trong thẻ: canvas do js/weather-card.js vẽ (mưa trên kính, tuyết, tia nắng, mây, gió, sao) ----- */
