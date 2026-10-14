@@ -230,13 +230,9 @@ html body.auth-dark .auth-artwork {
 .hb-bar { fill: var(--auth-ink-line); }
 .hb-stone { fill: var(--auth-figure-ink); stroke: var(--auth-ink-line); stroke-width: var(--auth-line-strong); }
 .hb-band { fill: none; stroke: var(--auth-ember-line); stroke-width: 4px; stroke-linecap: round; }
-/* Cột Ionic: nét kem mảnh, bóng gạch chéo comic, vòng nguyệt quế cam. */
+/* Cột Ionic: cùng lối với chiến binh (khối mực, viền sáng kem), khăn tập đất nung vắt đỉnh, tạ đá dưới chân. */
 .auth-column { opacity: var(--auth-column-opacity); }
-.ac-line { fill: none; stroke: var(--auth-ink-line); stroke-width: var(--auth-art-stroke); stroke-linejoin: round; }
-.ac-hatch { fill: none; stroke: var(--auth-ink-line); stroke-width: 2.2px; stroke-linecap: round; }
-.ac-ribbon { fill: none; stroke: var(--auth-ink-line); stroke-width: 2.5px; stroke-linecap: round; }
-.ac-laurel path { fill: var(--auth-ember-line); }
-.ac-laurel-line { fill: none; stroke: var(--auth-ember-line); stroke-width: 2.5px; }
+.ac-outline path { stroke: var(--auth-ink-line); stroke-width: 2px; stroke-opacity: 0.5; }
 .auth-frieze { fill: none; stroke: var(--auth-ink-line); stroke-width: 2.5px; opacity: var(--auth-frieze-opacity); }
 .auth-tondo, .auth-figure, .auth-column { animation: auth-ink-in var(--auth-art-duration) var(--ease-out-expo) both; }
 .auth-figure { animation-delay: 80ms; }
