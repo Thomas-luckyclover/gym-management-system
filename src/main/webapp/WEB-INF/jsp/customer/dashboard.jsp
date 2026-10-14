@@ -14,7 +14,7 @@
     <%-- Dải điểm nhấn dùng chung kiểu với PT Dashboard (.pt-board__hero) --%>
     <link rel="stylesheet" href="${pageContext.request.contextPath}/css/pages/pt/dashboard.css?v=20261013g">
     <link rel="stylesheet" href="${pageContext.request.contextPath}/css/dashboard-weather.css?v=20261014s">
-    <link rel="stylesheet" href="${pageContext.request.contextPath}/css/dashboard-comic.css?v=20261014s">
+    <link rel="stylesheet" href="${pageContext.request.contextPath}/css/dashboard-comic.css?v=20261015a">
 </head>
 
 <body class="dock theme-pt customer-dashboard-page customer-weather-page weather-${weatherType}">
