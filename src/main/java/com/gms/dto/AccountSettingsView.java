@@ -2,6 +2,7 @@ package com.gms.dto;
 
 import com.gms.constant.Role;
 import java.time.LocalDate;
+import java.time.LocalDateTime;
 
 /**
  * Dữ liệu hiển thị trên màn Account Settings.
@@ -27,6 +28,23 @@ public class AccountSettingsView {
     private final LocalDate hireDate;
     private final String employmentStatus;
 
+    // Service lấy Employees.Position; JSP hiển thị chức vụ thực tế, không suy từ role.
+    private final Role position;
+    // Employees.Specialty; chuyên môn chỉ hiển thị trong Profile PT, null hiện dấu —.
+    private final String specialty;
+    // Employees.YearsOfExperience; số năm kinh nghiệm PT, giữ null khác với 0 năm.
+    private final Integer yearsOfExperience;
+    // Employees.CommissionRate; phần trăm hoa hồng PT, chỉ đọc trên giao diện.
+    private final Integer commissionRate;
+    // Customers.CustomerCode của chính Person đăng nhập; dùng ở header và thông tin khách.
+    private final String customerCode;
+    // Customers.CustomerType; loại hồ sơ khách, không lấy loại của hồ sơ được giám hộ.
+    private final String customerType;
+    // Customers.Status; trạng thái hội viên hiện có, không tính lại từ gói tập.
+    private final String membershipStatus;
+    // Customers.JoinedAt; ngày tham gia của hồ sơ khách được chọn, JSP định dạng ngày.
+    private final LocalDateTime joinedAt;
+
     public AccountSettingsView(
             int accountId,
             int personId,
@@ -42,6 +60,22 @@ public class AccountSettingsView {
 
     ) {
 
+        this(accountId, personId, fullName, dateOfBirth, phone, email, avatar, role,
+                employeeCode, hireDate, employmentStatus,
+                null, null, null, null, null, null, null, null);
+    }
+
+    /**
+     * Service ghép Person và hồ sơ theo vai trò đang hoạt động để Servlet đưa lên Profile.
+     * Các trường thuộc vai trò khác hoặc chưa có dữ liệu được giữ null.
+     */
+    public AccountSettingsView(
+            int accountId, int personId, String fullName, LocalDate dateOfBirth,
+            String phone, String email, String avatar, Role role,
+            String employeeCode, LocalDate hireDate, String employmentStatus,
+            Role position, String specialty, Integer yearsOfExperience, Integer commissionRate,
+            String customerCode, String customerType, String membershipStatus, LocalDateTime joinedAt) {
+
         this.accountId = accountId;
         this.personId = personId;
         this.fullName = fullName;
@@ -53,6 +87,14 @@ public class AccountSettingsView {
         this.employeeCode = employeeCode;
         this.hireDate = hireDate;
         this.employmentStatus = employmentStatus;
+        this.position = position;
+        this.specialty = specialty;
+        this.yearsOfExperience = yearsOfExperience;
+        this.commissionRate = commissionRate;
+        this.customerCode = customerCode;
+        this.customerType = customerType;
+        this.membershipStatus = membershipStatus;
+        this.joinedAt = joinedAt;
     }
 
     public int getAccountId() {
@@ -97,5 +139,45 @@ public class AccountSettingsView {
 
     public String getEmploymentStatus() {
         return employmentStatus;
+    }
+
+    /** Chức vụ thực tế từ hồ sơ nhân viên, chỉ dùng để hiển thị. */
+    public Role getPosition() {
+        return position;
+    }
+
+    /** Chuyên môn PT, null khi chưa khai báo. */
+    public String getSpecialty() {
+        return specialty;
+    }
+
+    /** Số năm kinh nghiệm; 0 là giá trị hợp lệ. */
+    public Integer getYearsOfExperience() {
+        return yearsOfExperience;
+    }
+
+    /** Hoa hồng theo đơn vị phần trăm, không có setter. */
+    public Integer getCommissionRate() {
+        return commissionRate;
+    }
+
+    /** Mã hồ sơ khách của chính Person đăng nhập. */
+    public String getCustomerCode() {
+        return customerCode;
+    }
+
+    /** Loại khách theo dữ liệu đã lưu. */
+    public String getCustomerType() {
+        return customerType;
+    }
+
+    /** Trạng thái hội viên từ Customers.Status. */
+    public String getMembershipStatus() {
+        return membershipStatus;
+    }
+
+    /** Thời điểm tham gia của hồ sơ khách. */
+    public LocalDateTime getJoinedAt() {
+        return joinedAt;
     }
 }
