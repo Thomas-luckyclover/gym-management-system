@@ -27,8 +27,8 @@ colors:
   home-aqua-soft: "#67BABF"
   home-ocean: "#055762"
   home-deep: "#032731"
-  auth-panel: "#0B2534"
-  auth-input: "#133B49"
+  auth-panel: "#0E1A2C"
+  auth-input: "#080F1B"
   email-header: "#0C2337"
   pumpy-body: "#294F78"
   pumpy-swirl: "#24496E"
@@ -194,7 +194,7 @@ Khung nội bộ chung dùng góc 4px. Cả năm theme nội bộ override radiu
 - **HintBox:** mẫu PT Dashboard là chuẩn chung trong `common.css`: `.pt-info`, `.pt-info-trigger`, `.pt-info-popover`. Tooltip gói và biểu đồ dùng cùng surface, viền, padding và chữ; HintBox dùng chung xử lý chạm, Escape và bấm ngoài trong `common.js`. Ở màn dưới 700px, HintBox chuyển thành hộp cố định gần đáy.
 - **My PT Sessions:** bỏ subtitle; ba tab Sắp tới/Lịch sử/Gói PT của tôi và một bộ lọc chung. Mỗi ngày là panel riêng với nhãn ngày; mỗi buổi là hàng có divider và hành động hủy riêng. Cột giờ 168px trên màn rộng, chuyển một cột dưới 700px. Dialog hủy nêu đúng ngày, giờ, PT đã chọn; giữ POST `action=cancel` + `sessionId` về route hiện tại. PT/gói/trạng thái và cảnh báo quyền tập của buổi sắp tới luôn hiện; thời hạn, mã gói, thời điểm hủy, giải thích và lý do nằm trong `details.my-pt-session-details` đóng mặc định, dùng `dl/dt/dd` với lưới metadata hai cột desktop/một cột mobile.
 - **Logo:** `images/brand/super-gym-mark.svg` và `super-gym-wordmark.svg` thay PNG trong các vị trí triển khai. Chữ S cam đặc chiếm ưu thế, đầu cuộn Ionic, gợn biển và xoáy mực trời; không mặt trời. Wordmark vẽ bằng path, không phụ thuộc font tải ngoài.
-- **Auth:** SVG nguyên bản gồm nam vận động viên bên trái, cột bên phải, nữ vận động viên trưởng thành đội nguyệt quế ngồi trên wordmark. Trung tâm yên để nhập liệu; không ảnh người mờ chung chung. Trace chạy một lần (3s), đường biển trôi chậm (40s) và dừng khi nhập; reduced motion/chế độ nhẹ bỏ animation.
+- **Auth "Gymnasion Ink" (15/10):** nền mực `#080F1E` như homepage, bảng màu gọn: mực, kem, cam (CTA, liên kết, nét khắc), aqua chỉ cho focus. Tranh gốm Hy Lạp vẽ lối comic: trái là chiến binh Sparta mũ Corinthian nâng hai tạ đá trong lòng chén kylix viền hoa văn chìa khóa (chòm mũ, áo choàng, Lambda trên khiên màu cam); phải là cột Ionic nét kem treo vòng nguyệt quế; chân trang dải meander mờ. Nữ hoàng đội nguyệt quế ngồi ở mép phải wordmark, chân buông ra ngoài chữ, không che logo. SVG sinh bằng script, viết thẳng vào `auth-artwork.jspf`/`auth-muse.jspf`. Hiện một lần (900ms, rise + fade), reduced motion/chế độ nhẹ tắt animation; dưới 900px tranh mờ còn 45%.
 - **Pumpy và loading:** giữ silhouette mũm mĩm, bàn tay ngắn tròn, bụng xoáy và miệng zigzag nguyên bản ở mọi biểu cảm; chỉ mắt thể hiện cảm xúc. Homepage có 12 câu tương tác có nội dung. Bong bóng PT Coach dùng navy, chữ và gạch chân kem, giữ hình/copy cũ. Loading là capsule thiên hà đen trắng, Pumpy và tạ vẫn navy. Từ nguyên “gym”/“gymnasium” chỉ giải thích nguồn từ Hy Lạp; không khẳng định toàn bộ hoạt động tập luyện do Hy Lạp phát minh. Nguồn: [gym](https://www.etymonline.com/word/gym), [gymnasium](https://www.etymonline.com/word/gymnasium).
 - **Email giao dịch:** mẫu xác minh và thông báo chung trong `EmailGateway.java` dùng header navy, brand/khối OTP cam, thân kem và nền ngoài trắng be. Email dùng Arial/Helvetica fallback theo template; giữ nội dung, hạn OTP và cấu hình SMTP hiện có.
 - **Ảnh và cảnh riêng trang:** giữ `hero-barbell.jpg`, `home.css` và `home-motion.js` như HEAD. Gallery thứ ba dùng `strip-endurance.jpg` ([Pexels 14623740](https://www.pexels.com/photo/a-woman-doing-a-deadlift-14623740/)), không đổi ảnh hero. About có bốn ảnh giá trị Pexels thật; giữ canvas mặt trời/tạ, giọt rơi chạm thanh tạ thực tế. Bìa khởi động dùng ảnh stretching thật. Ảnh mới có sidecar `.json` ghi nguồn/cách tạo và mục đích; stock là ảnh minh họa, không chứng minh cơ sở vật chất thật.

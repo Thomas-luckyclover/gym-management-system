@@ -103,11 +103,9 @@ html body.auth-dark .auth-brand {
   right: var(--auth-muse-right);
   width: var(--auth-muse-width);
   height: auto;
-  color: var(--auth-muse-ink);
-  stroke-width: var(--auth-muse-stroke);
+  overflow: visible;
   pointer-events: none;
 }
-.auth-muse__laurel { stroke: var(--auth-ember-line); }
 html body.auth-dark .auth-top { margin-top: var(--auth-muse-clearance); }
 .auth-brand__wordmark {
   color: var(--brand-paper);
@@ -181,12 +179,30 @@ html body.auth-dark .auth-head p { line-height: var(--line-height-relaxed); }
   *, *::before, *::after { scroll-behavior: auto !important; }
 }
 
-/* Xác thực: atelier nét khắc Hy Lạp trên aqua, trung tâm luôn yên để nhập liệu. */
+/* Xác thực "Gymnasion Ink": gốm hình đen vẽ lối comic trên nền mực trang chủ.
+   Bảng màu: mực (nền, panel, ô nhập), kem (chữ, nét vẽ), cam (hành động, liên kết, nét khắc), aqua chỉ cho focus.
+   Áp chung cho đăng nhập, đăng ký, quên mật khẩu, chọn vai trò. Form luôn ở tiền cảnh, đặc màu. */
 html body.auth-dark {
-  --brand-aqua: #23ACB4;
-  --brand-aqua-soft: #67BABF;
+  --brand-aqua: var(--auth-focus);
+  --brand-aqua-soft: var(--auth-link);
+  --color-primary: var(--brand-sunset);
+  --color-primary-border: rgba(255, 79, 43, 0.45);
+  --color-primary-tint: rgba(255, 247, 239, 0.06);
+  --color-on-primary: var(--brand-ink);
+  --color-lime: var(--auth-link);
+  --color-lime-hover: var(--auth-link-hover);
+  --color-text: var(--brand-paper);
+  --color-text-soft: var(--brand-muted);
+  --color-text-muted: var(--brand-muted);
+  --color-border: var(--auth-panel-border);
+  --color-border-strong: var(--auth-field-border-hover);
+  background: var(--auth-ocean-ground);
+  color: var(--brand-paper);
+  scrollbar-color: var(--brand-sunset) var(--auth-ocean-ground);
 }
-html body.auth-dark .auth-shell { background: var(--auth-ocean-gradient); overflow-x: clip; }
+html:has(body.auth-dark) { color-scheme: dark; }
+html body.auth-dark ::selection { background: var(--brand-sunset); color: var(--brand-ink); }
+html body.auth-dark .auth-shell { background: var(--auth-ocean-ground); overflow-x: clip; }
 html body.auth-dark .auth-artwork {
   position: fixed;
   inset: 0;
@@ -195,44 +211,141 @@ html body.auth-dark .auth-artwork {
   color: var(--auth-ink-line);
   opacity: var(--auth-art-opacity);
 }
-.auth-engraving { display: block; width: 100%; height: 100%; stroke-width: var(--auth-art-stroke); }
-.auth-ember-line { stroke: var(--auth-ember-line); }
-.auth-figure path,
-.auth-column path,
-.auth-muse path {
-  stroke-dasharray: var(--auth-art-trace-length);
-  animation: auth-ink-trace var(--auth-art-duration) var(--ease-out-expo) both;
-}
-.auth-sea-lines { animation: auth-sea-drift var(--auth-sea-duration) ease-in-out infinite alternate; }
-html body.auth-dark .auth-shell:focus-within .auth-sea-lines { animation-play-state: paused; }
+.auth-engraving { display: block; width: 100%; height: 100%; }
+/* Đĩa kylix: lòng đất nung, vòng hoa văn chìa khóa cam trên dải mực. */
+.at-clay { fill: var(--auth-clay); }
+.at-band { fill: var(--auth-figure-ink); }
+.at-meander { fill: none; stroke: var(--auth-ember-line); stroke-width: var(--auth-art-stroke); stroke-linecap: square; stroke-linejoin: miter; }
+.at-ground { fill: none; stroke: var(--auth-ink-line); stroke-width: 4px; stroke-linecap: round; }
+/* Chiến binh: bóng mực đặc, viền sáng kem, chòm mũ + áo choàng + Lambda cam. */
+.aw-ink, .aw-ink path { fill: var(--auth-figure-ink); }
+.aw-rim path { fill: var(--auth-ink-line); }
+.aw-paper { fill: var(--auth-ink-line); }
+.aw-paper-line { fill: none; stroke: var(--auth-ink-line); stroke-width: var(--auth-line-strong); stroke-linecap: round; stroke-linejoin: round; }
+.aw-cape { fill: var(--auth-cape); }
+.aw-cape-fold { fill: none; stroke: var(--auth-figure-ink); stroke-width: 4px; stroke-linecap: round; }
+.aw-crest { fill: var(--auth-ember-line); }
+.aw-crest-line { fill: none; stroke: var(--auth-figure-ink); stroke-width: var(--auth-art-stroke); stroke-linecap: round; }
+.aw-clay-line { fill: none; stroke: var(--auth-ember-line); stroke-width: 8px; stroke-linecap: round; stroke-linejoin: round; }
+.hb-bar { fill: var(--auth-ink-line); }
+.hb-stone { fill: var(--auth-figure-ink); stroke: var(--auth-ink-line); stroke-width: var(--auth-line-strong); }
+.hb-band { fill: none; stroke: var(--auth-ember-line); stroke-width: 4px; stroke-linecap: round; }
+/* Cột Ionic: nét kem mảnh, bóng gạch chéo comic, vòng nguyệt quế cam. */
+.auth-column { opacity: var(--auth-column-opacity); }
+.ac-line { fill: none; stroke: var(--auth-ink-line); stroke-width: var(--auth-art-stroke); stroke-linejoin: round; }
+.ac-hatch { fill: none; stroke: var(--auth-ink-line); stroke-width: 2.2px; stroke-linecap: round; }
+.ac-ribbon { fill: none; stroke: var(--auth-ink-line); stroke-width: 2.5px; stroke-linecap: round; }
+.ac-laurel path { fill: var(--auth-ember-line); }
+.ac-laurel-line { fill: none; stroke: var(--auth-ember-line); stroke-width: 2.5px; }
+.auth-frieze { fill: none; stroke: var(--auth-ink-line); stroke-width: 2.5px; opacity: var(--auth-frieze-opacity); }
+.auth-tondo, .auth-figure, .auth-column { animation: auth-ink-in var(--auth-art-duration) var(--ease-out-expo) both; }
+.auth-figure { animation-delay: 80ms; }
+.auth-column { animation-delay: 160ms; }
+
+/* Nữ hoàng trên wordmark: khối kem, bóng và nét mực, nguyệt quế cam. */
+.aq-body path { fill: var(--auth-muse-ink); }
+.aq-front path { fill: var(--auth-muse-ink); stroke: var(--auth-figure-ink); stroke-width: 1.6px; }
+.aq-hair { fill: var(--auth-figure-ink); stroke: var(--auth-muse-ink); stroke-width: var(--auth-muse-stroke); stroke-linejoin: round; }
+.aq-shadow { fill: var(--auth-figure-ink); }
+.aq-ink { fill: none; stroke: var(--auth-figure-ink); stroke-width: 1.8px; stroke-linecap: round; }
+.aq-gold { fill: none; stroke: var(--auth-ember-line); stroke-width: 3px; stroke-linecap: round; }
+.aq-drape { fill: var(--auth-muse-ink); stroke: var(--auth-figure-ink); stroke-width: 1.6px; }
+.aq-laurel path { fill: none; stroke: var(--auth-ember-line); stroke-width: var(--auth-muse-stroke); stroke-linecap: round; }
+.aq-laurel .aq-leaf { fill: var(--auth-ember-line); stroke: none; }
+.auth-muse { animation: auth-ink-in var(--auth-art-duration) var(--ease-out-expo) 240ms both; }
+
+/* Thẻ form: panel mực đặc, viền kem mảnh, tiêu đề đậm như chữ bìa truyện. */
 html body.auth-dark .auth-card {
   background: var(--auth-card-solid);
-  border-color: var(--auth-field-border);
+  border: var(--border-width) solid var(--auth-panel-border);
+  border-radius: var(--radius-xs);
+  box-shadow: var(--auth-panel-shadow);
   -webkit-backdrop-filter: none;
   backdrop-filter: none;
 }
+html body.auth-dark .auth-head h1 {
+  font-family: var(--font-brand-display);
+  font-size: var(--font-size-4xl);
+  font-weight: var(--font-weight-extrabold);
+  line-height: 1.12;
+  letter-spacing: -0.02em;
+  text-transform: none;
+  text-wrap: balance;
+}
+html body.auth-dark .auth-head p { color: var(--brand-muted); text-wrap: pretty; }
+html body.auth-dark .field-label { color: var(--brand-paper); }
 html body.auth-dark .field :is(input, select, textarea) {
   background: var(--auth-input-solid);
   color: var(--brand-paper);
-  border-color: var(--auth-field-border);
-  caret-color: var(--brand-paper);
+  border: var(--border-width) solid var(--auth-field-border);
+  border-radius: var(--radius-xs);
+  caret-color: var(--brand-sunset);
 }
-html body.auth-dark .field input::placeholder { color: var(--brand-muted); opacity: 1; }
-html body.auth-dark .auth-back,
+html body.auth-dark .field :is(input, select, textarea):hover { border-color: var(--auth-field-border-hover); }
+html body.auth-dark .field :is(input, select, textarea):focus {
+  outline: none;
+  border-color: var(--auth-focus);
+  background: var(--auth-input-solid);
+  box-shadow: var(--auth-focus-ring);
+}
+html body.auth-dark .field input::placeholder { color: var(--brand-muted); opacity: 0.8; }
+html body.auth-dark .pw-toggle { color: var(--brand-muted); }
+html body.auth-dark .pw-toggle:hover { color: var(--brand-paper); }
+html body.auth-dark .auth-card .btn-primary,
+html body.auth-dark .btn-primary {
+  border: var(--border-width) solid var(--brand-sunset);
+  border-radius: var(--radius-xs);
+  background: var(--brand-sunset);
+  color: var(--brand-ink);
+  font-weight: var(--font-weight-bold);
+  letter-spacing: var(--letter-spacing-normal);
+  text-transform: none;
+  box-shadow: none;
+}
+html body.auth-dark .auth-card .btn-primary:hover:not(:disabled),
+html body.auth-dark .btn-primary:hover:not(:disabled) { background: var(--brand-ember-red); border-color: var(--brand-ember-red); color: var(--brand-ink); }
+html body.auth-dark .btn-outline { border-color: var(--auth-field-border-hover); color: var(--brand-paper); background: transparent; }
+html body.auth-dark .btn-outline:hover:not(:disabled) { border-color: var(--brand-paper); }
+html body.auth-dark :is(.auth-switch a, .btn-link, .phone-chip a, .register-phone-chip a, .recovery-actions a) {
+  color: var(--auth-link);
+  text-decoration: underline;
+  text-decoration-thickness: 1px;
+  text-underline-offset: 0.2em;
+}
+html body.auth-dark :is(.auth-switch a, .btn-link, .phone-chip a, .register-phone-chip a, .recovery-actions a):hover:not(:disabled) {
+  color: var(--auth-link-hover);
+  background: transparent;
+}
+html body.auth-dark .auth-forgot a { text-decoration: none; }
+html body.auth-dark .auth-forgot a:hover { text-decoration: underline; }
+html body.auth-dark :is(.phone-chip, .register-phone-chip) { border-color: var(--auth-field-border); color: var(--brand-paper); }
+html body.auth-dark .required-mark { color: var(--auth-link); }
+html body.auth-dark .auth-back { color: var(--brand-muted); }
+html body.auth-dark .auth-back:hover { color: var(--brand-paper); }
+html body.auth-dark .auth-foot-note,
 html body.auth-dark .auth-footer { color: var(--brand-muted); }
-@keyframes auth-ink-trace {
-  from { stroke-dashoffset: var(--auth-art-trace-length); }
-  to { stroke-dashoffset: 0; }
+html body.auth-dark :is(a, button, input, select, textarea):focus-visible { outline: 2px solid var(--auth-focus); outline-offset: 2px; }
+html body.auth-dark .field :is(input, select, textarea):focus-visible { outline: none; }
+
+/* Bước khôi phục mật khẩu: vạch kem, bước hiện tại cam. */
+html body.auth-dark .recovery-steps li { border-top-color: var(--auth-panel-border); }
+html body.auth-dark .recovery-steps li.is-current { border-top-color: var(--brand-sunset); }
+html body.auth-dark .recovery-steps li.is-done { border-top-color: var(--color-primary-border); }
+html body.auth-dark .recovery-timer { background: var(--color-primary-tint); }
+
+@keyframes auth-ink-in {
+  from { opacity: 0; transform: translateY(var(--space-3)); }
+  to { opacity: 1; transform: none; }
 }
 @keyframes auth-sea-drift {
   from { transform: translateX(calc(-1 * var(--space-3))); }
   to { transform: translateX(var(--space-3)); }
 }
 @media (max-width: 900px) {
-  html body.auth-dark .auth-artwork { opacity: calc(var(--auth-art-opacity) * 0.55); }
+  html body.auth-dark .auth-artwork { opacity: 0.45; }
 }
 @media (prefers-reduced-motion: reduce) {
-  .auth-figure path, .auth-column path, .auth-muse path, .auth-sea-lines { animation: none; }
+  .auth-figure, .auth-column, .auth-tondo, .auth-muse { animation: none; }
 }
 html.gms-lite .auth-engraving * { animation: none; }
-html.gms-lite .auth-muse path { animation: none; }
+html.gms-lite .auth-muse { animation: none; }
