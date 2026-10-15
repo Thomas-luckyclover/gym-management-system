@@ -141,7 +141,7 @@ html body.dock .pt-board__hero .wx-card__temp { color: var(--comic-ink); -webkit
 .comic-p--sketch { left: 18.917%; top: 46.834%; width: 12.875%; }
 .comic-p--boxer { left: 91.458%; top: 26.882%; width: 8.167%; }
 .comic-p--platinum { left: 69.375%; top: 11.47%; width: 17.917%; }
-.comic-p--pumpy { left: 78.792%; top: 68.339%; width: 10.417%; }
+.comic-p--pumpy { left: 79.875%; top: 67.622%; width: 10.417%; }
 .comic-p--hand { left: 81.5%; top: 61.171%; width: 5.833%; }
 .comic-move--run { animation: comic-run-bob calc(var(--comic-cycle) / 16) ease-in-out infinite; }
 .comic-move--lift { animation: comic-lift var(--comic-cycle) ease-in-out infinite; }
@@ -156,7 +156,7 @@ html body.dock .pt-board__hero .wx-card__temp { color: var(--comic-ink); -webkit
 .comic-move--breathe { animation: comic-breathe-in calc(var(--comic-cycle) / 2) ease-in-out infinite; }
 .comic-move--crowd { animation: comic-crowd calc(var(--comic-cycle) / 2) ease-in-out infinite; }
 .comic-move--sign { transform-origin: 9% 8%; animation: comic-sign var(--comic-cycle) ease-in-out infinite; }
-.comic-move--snuggle { transform-origin: 50% 100%; animation: comic-snuggle calc(var(--comic-cycle) / 2) ease-in-out infinite; }
+.comic-move--snuggle { transform-origin: 70% 100%; animation: comic-snuggle calc(var(--comic-cycle) / 2) ease-in-out infinite; }
 .comic-move--pat { transform-origin: 100% 60%; animation: comic-pat calc(var(--comic-cycle) / 4) ease-in-out infinite; }
 @keyframes comic-sign {
   0%, 100% { transform: rotate(9deg); }
@@ -164,10 +164,10 @@ html body.dock .pt-board__hero .wx-card__temp { color: var(--comic-ink); -webkit
   70% { transform: rotate(10.5deg); }
 }
 @keyframes comic-snuggle {
-  0%, 100% { transform: rotate(-2deg); }
-  25% { transform: rotate(0) scale(1.02, 0.98); }
-  50% { transform: rotate(2deg); }
-  75% { transform: rotate(0) scale(1.02, 0.98); }
+  0%, 100% { transform: rotate(3deg) scale(1, 1); }
+  30% { transform: rotate(5deg) scale(1.05, 0.93); }
+  45% { transform: rotate(4deg) scale(1.03, 0.96); }
+  60% { transform: rotate(5deg) scale(1.06, 0.92); }
 }
 @keyframes comic-pat {
   0%, 100% { transform: translate(0, 0) rotate(0); }
