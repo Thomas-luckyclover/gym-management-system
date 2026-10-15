@@ -1,10 +1,12 @@
 {
   "origin": "Tranh do nhóm G5 tạo bằng Google Gemini theo brief comic Mỹ (15/10/2026), Claude ghép và xử lý bằng script",
   "files": {
-    "gym-plate.webp": "Cảnh phòng gym gốc (bản có cô gái váy đỏ) đã vá chỗ các nhân vật bằng inpaint",
+    "gym-plate.webp": "Tranh gym 3 màu (Gemini, phong cách comic punk), posterize đen–kem–đỏ bằng script, vá chỗ nhân vật và biển",
     "weather-{sunny,hot,cloudy,rain,storm,snow,wind}.webp": "Thành phố trong bóng đầu người theo từng thời tiết; storm cắt bỏ khung bo góc của ảnh chụp",
     "weather-night.webp": "Suy ra từ weather-sunny bằng đảo sáng, giữ khối Super Gym đỏ",
-    "gym-<tên>.webp": "13 nhân vật tách lớp bằng rembg (isnet-general-use), kèm viền nền ~10px để che chỗ vá khi cử động"
+    "gym-<tên>.webp": "Nhân vật tách lớp bằng rembg/GrabCut từ tranh gym, kèm viền nền để che chỗ vá khi cử động",
+    "gym-sign.webp": "Biển SUPER GYM cắt từ tranh, CSS xoay quanh móc trái (tuột xích phải)",
+    "gym-pumpy.webp / gym-pumpy-bell.webp": "Pumpy và quả tạ vẽ lại bằng SVG theo đúng hình linh vật _mascot.jspf, nét mực 3 màu"
   },
   "usage": "Minh họa trang trí cho Dashboard (aria-hidden); không phải ảnh cơ sở vật chất thật"
 }

@@ -113,7 +113,7 @@ html body.dock .pt-board__hero .wx-card__temp { color: var(--comic-ink); -webkit
 
 /* =====================================================================
    Tranh comic raster (15/10/2026): ảnh mực đen trắng do nhóm tạo bằng Gemini, ghép bằng script.
-   Khối gym: ảnh nền + 13 lớp nhân vật tách riêng, mỗi người một cử động nhẹ (motion comic). Khối thời tiết: thành phố trong bóng đầu người, mỗi thời tiết một tranh.
+   Khối gym: tranh 3 màu, các lớp nhân vật tách riêng + biển SUPER GYM tuột nghiêng + Pumpy cố nâng tạ (motion comic). Khối thời tiết: thành phố trong bóng đầu người, mỗi thời tiết một tranh.
    Tạm dừng/ngủ dùng chung quy tắc .comic-scene--sleeping ở trên; reduced motion tắt hết.
    ===================================================================== */
 .comic-photo {
@@ -130,19 +130,19 @@ html body.dock .pt-board__hero .wx-card__temp { color: var(--comic-ink); -webkit
 .pt-board__hero .wx-gym { background: var(--comic-paper-warm); }
 /* Mỗi nhân vật là một lớp (vị trí % theo ảnh nền 2400×837, sinh từ script tách lớp). */
 .comic-p { position: absolute; height: auto; display: block; transform-origin: 50% 100%; will-change: transform; }
-.comic-p--crowd { left: 49.25%; top: 43.011%; width: 10.042%; }
-.comic-p--tablet { left: 13.917%; top: 38.59%; width: 4.833%; }
-.comic-p--runner { left: 7.583%; top: 29.152%; width: 5.708%; }
-.comic-p--minor { left: 65.917%; top: 40.263%; width: 4.667%; }
-.comic-p--sidecut { left: 58.167%; top: 24.134%; width: 11.542%; }
-.comic-p--lifter { left: 25.042%; top: 17.563%; width: 12.167%; }
-.comic-p--bubble { left: 43.417%; top: 33.931%; width: 5.833%; }
-.comic-p--phone { left: 51.042%; top: 50.896%; width: 8.25%; }
-.comic-p--coach { left: 69.25%; top: 28.315%; width: 10.083%; }
-.comic-p--curly { left: 56.75%; top: 55.914%; width: 9.167%; }
-.comic-p--sketch { left: 18.833%; top: 45.4%; width: 13.0%; }
-.comic-p--boxer { left: 91.333%; top: 25.329%; width: 8.417%; }
-.comic-p--platinum { left: 77.625%; top: 10.394%; width: 13.333%; }
+.comic-p--sign { left: 49.917%; top: 10.992%; width: 12.75%; }
+.comic-p--tablet { left: 13.958%; top: 40.024%; width: 4.792%; }
+.comic-p--runner { left: 6.667%; top: 30.585%; width: 9.667%; }
+.comic-p--minor { left: 66.042%; top: 48.387%; width: 4.0%; }
+.comic-p--sidecut { left: 61.125%; top: 25.448%; width: 8.25%; }
+.comic-p--lifter { left: 24.875%; top: 19.355%; width: 13.0%; }
+.comic-p--bubble { left: 43.542%; top: 35.006%; width: 5.958%; }
+.comic-p--coach { left: 69.375%; top: 29.51%; width: 8.75%; }
+.comic-p--sketch { left: 18.917%; top: 46.834%; width: 12.875%; }
+.comic-p--boxer { left: 91.458%; top: 26.882%; width: 8.167%; }
+.comic-p--platinum { left: 69.375%; top: 11.47%; width: 17.917%; }
+.comic-p--pumpy { left: 78.625%; top: 68.339%; width: 9.833%; }
+.comic-p--pumpy-bell { left: 79.0%; top: 85.066%; width: 9.083%; }
 .comic-move--run { animation: comic-run-bob calc(var(--comic-cycle) / 16) ease-in-out infinite; }
 .comic-move--lift { animation: comic-lift var(--comic-cycle) ease-in-out infinite; }
 .comic-move--press { animation: comic-press calc(var(--comic-cycle) / 2) ease-in-out infinite; }
@@ -151,11 +151,32 @@ html body.dock .pt-board__hero .wx-card__temp { color: var(--comic-ink); -webkit
 .comic-p--tablet { animation-delay: -2s; }
 .comic-move--nod { transform-origin: 30% 100%; animation: comic-nod var(--comic-cycle) ease-in-out infinite; }
 .comic-move--talk { animation: comic-talk calc(var(--comic-cycle) / 4) ease-in-out infinite; }
-.comic-p--curly { animation-delay: -1s; animation-duration: calc(var(--comic-cycle) / 2.6); }
 .comic-move--sketch { transform-origin: 40% 100%; animation: comic-sketch-row calc(var(--comic-cycle) / 8) ease-in-out infinite; }
 .comic-move--punch { animation: comic-jab calc(var(--comic-cycle) / 4) ease-out infinite; }
 .comic-move--breathe { animation: comic-breathe-in calc(var(--comic-cycle) / 2) ease-in-out infinite; }
 .comic-move--crowd { animation: comic-crowd calc(var(--comic-cycle) / 2) ease-in-out infinite; }
+.comic-move--sign { transform-origin: 9% 8%; animation: comic-sign var(--comic-cycle) ease-in-out infinite; }
+.comic-move--strain { animation: comic-strain calc(var(--comic-cycle) / 2) linear infinite; }
+.comic-move--bell { transform-origin: 50% 50%; animation: comic-bell calc(var(--comic-cycle) / 2) ease-in-out infinite; }
+@keyframes comic-sign {
+  0%, 100% { transform: rotate(9deg); }
+  50% { transform: rotate(13deg); }
+  70% { transform: rotate(10.5deg); }
+}
+@keyframes comic-strain {
+  0%, 30%, 100% { transform: translate(0, 0); }
+  35%, 45%, 55% { transform: translate(-0.6%, -0.6%); }
+  40%, 50%, 60% { transform: translate(0.6%, -1.2%); }
+  70% { transform: translate(0, -2%) scaleY(1.02); }
+  80% { transform: translate(0, 0); }
+}
+@keyframes comic-bell {
+  0%, 30%, 100% { transform: translateY(0); }
+  40%, 60% { transform: translateY(-3%) rotate(-1deg); }
+  70% { transform: translateY(-9%) rotate(-2deg); }
+  78% { transform: translateY(1%); }
+  84% { transform: translateY(0); }
+}
 @keyframes comic-lift {
   0%, 8%, 50%, 58%, 100% { transform: translateY(0); }
   18%, 68% { transform: translateY(1.2%); }
