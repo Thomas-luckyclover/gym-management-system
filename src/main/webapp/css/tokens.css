@@ -866,10 +866,12 @@
   --loading-outline: #9B9D9F;
   --loading-capsule-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.2);
   --loading-drift-duration: 12s;
-  --ink-art: url("../images/brand/kinetic-iron.webp");
+  /* 15/10: nền nội bộ là bản đồ thành phố nét mực (cùng thành phố với khối thời tiết), chỉ nét màu giấy, không đỏ.
+     Phủ navy đặc ở trên/trái và tan dần về góc dưới phải để không đè khối chào + thời tiết ở đầu Dashboard. */
+  --ink-art: url("../images/brand/city-map-ink.webp");
   --ink-ground: #0A1E31;
-  --ink-overlay: linear-gradient(90deg, rgba(10, 30, 49, 0.82), rgba(10, 30, 49, 0.64) 58%, rgba(10, 30, 49, 0.22));
-  --ink-vignette: linear-gradient(180deg, rgba(10, 30, 49, 0.12), rgba(10, 30, 49, 0.54));
+  --ink-overlay: radial-gradient(ellipse 75% 70% at 92% 96%, rgba(10, 30, 49, 0.76), rgba(10, 30, 49, 0.9) 55%, #0A1E31 85%);
+  --ink-vignette: linear-gradient(180deg, #0A1E31 0, rgba(10, 30, 49, 0) 45%);
   --ink-ripples: url("../images/brand/ocean-ripples.svg");
   --ink-ripple-size: 360px 120px;
   --ink-ripple-travel: 360px 120px;
