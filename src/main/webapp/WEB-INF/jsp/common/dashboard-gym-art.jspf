@@ -1,7 +1,7 @@
 <%@ page pageEncoding="UTF-8" %>
 <%-- Phòng gym comic 3 màu (đen, kem, đỏ phẳng). Nguồn: tranh nhóm tạo bằng Gemini 15/10/2026, posterize bằng script.
      Motion comic: mỗi nhân vật là một lớp tách riêng; biển SUPER GYM tuột xích bên phải, treo nghiêng và lắc;
-     Pumpy (đúng hình linh vật, vẽ lại nét mực) run run cố nhấc tạ dưới tay cô tóc bạch kim.
+     Pumpy (đúng hình linh vật, vẽ lại nét mực) được cô tóc bạch kim ôm và xoa đầu; bàn tay là lớp riêng đè lên đầu Pumpy.
      Vị trí lớp và chuyển động 8 giây ở dashboard-comic.css. Hoàn toàn trang trí (khung chứa aria-hidden). --%>
 <div class="comic-photo comic-gym">
     <img class="comic-photo__plate" src="${pageContext.request.contextPath}/images/comic/gym-plate.webp" alt="" width="2400" height="837" decoding="async">
@@ -16,6 +16,6 @@
     <img class="comic-p comic-p--sketch comic-move--sketch" src="${pageContext.request.contextPath}/images/comic/gym-sketch.webp" alt="" decoding="async">
     <img class="comic-p comic-p--boxer comic-move--punch" src="${pageContext.request.contextPath}/images/comic/gym-boxer.webp" alt="" decoding="async">
     <img class="comic-p comic-p--platinum comic-move--breathe" src="${pageContext.request.contextPath}/images/comic/gym-platinum.webp" alt="" decoding="async">
-    <img class="comic-p comic-p--pumpy comic-move--strain" src="${pageContext.request.contextPath}/images/comic/gym-pumpy.webp" alt="" decoding="async">
-    <img class="comic-p comic-p--pumpy-bell comic-move--bell" src="${pageContext.request.contextPath}/images/comic/gym-pumpy-bell.webp" alt="" decoding="async">
+    <img class="comic-p comic-p--pumpy comic-move--snuggle" src="${pageContext.request.contextPath}/images/comic/gym-pumpy.webp" alt="" decoding="async">
+    <img class="comic-p comic-p--hand comic-move--pat" src="${pageContext.request.contextPath}/images/comic/gym-hand.webp" alt="" decoding="async">
 </div>
