@@ -137,12 +137,11 @@ html body.dock .pt-board__hero .wx-card__temp { color: var(--comic-ink); -webkit
 .comic-p--sidecut { left: 61.125%; top: 25.448%; width: 8.25%; }
 .comic-p--lifter { left: 24.875%; top: 19.355%; width: 13.0%; }
 .comic-p--bubble { left: 43.542%; top: 35.006%; width: 5.958%; }
+.comic-p--pumpy { left: 69.458%; top: 68.1%; width: 2.75%; }
 .comic-p--coach { left: 69.375%; top: 29.51%; width: 8.75%; }
 .comic-p--sketch { left: 18.917%; top: 46.834%; width: 12.875%; }
 .comic-p--boxer { left: 91.458%; top: 26.882%; width: 8.167%; }
 .comic-p--platinum { left: 69.375%; top: 11.47%; width: 17.917%; }
-.comic-p--pumpy { left: 79.875%; top: 67.622%; width: 10.417%; }
-.comic-p--hand { left: 81.5%; top: 61.171%; width: 5.833%; }
 .comic-move--run { animation: comic-run-bob calc(var(--comic-cycle) / 16) ease-in-out infinite; }
 .comic-move--lift { animation: comic-lift var(--comic-cycle) ease-in-out infinite; }
 .comic-move--press { animation: comic-press calc(var(--comic-cycle) / 2) ease-in-out infinite; }
@@ -156,8 +155,7 @@ html body.dock .pt-board__hero .wx-card__temp { color: var(--comic-ink); -webkit
 .comic-move--breathe { animation: comic-breathe-in calc(var(--comic-cycle) / 2) ease-in-out infinite; }
 .comic-move--crowd { animation: comic-crowd calc(var(--comic-cycle) / 2) ease-in-out infinite; }
 .comic-move--sign { transform-origin: 9% 8%; animation: comic-sign var(--comic-cycle) ease-in-out infinite; }
-.comic-move--snuggle { transform-origin: 70% 100%; animation: comic-snuggle calc(var(--comic-cycle) / 2) ease-in-out infinite; }
-.comic-move--pat { transform-origin: 100% 60%; animation: comic-pat calc(var(--comic-cycle) / 4) ease-in-out infinite; }
+.comic-move--snuggle { transform-origin: 50% 100%; animation: comic-snuggle calc(var(--comic-cycle) / 2) ease-in-out infinite; }
 @keyframes comic-sign {
   0%, 100% { transform: rotate(9deg); }
   50% { transform: rotate(13deg); }
