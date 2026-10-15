@@ -12,7 +12,7 @@
 <head>
   <%@ include file="/WEB-INF/jsp/common/head.jspf" %>
   <title>Về chúng tôi · Super Gym</title>
-  <link rel="stylesheet" href="${pageContext.request.contextPath}/css/pages/guest/about.css?v=20261015a">
+  <link rel="stylesheet" href="${pageContext.request.contextPath}/css/pages/guest/about.css?v=20261015c">
   <script src="${pageContext.request.contextPath}/js/pages/guest/about-sun.js?v=20261014a" defer></script>
   <script src="${pageContext.request.contextPath}/js/pages/guest/about.js?v=20261014a" defer></script>
   <script src="${pageContext.request.contextPath}/js/pages/guest/about-pumpy.js?v=20261015b" defer></script>

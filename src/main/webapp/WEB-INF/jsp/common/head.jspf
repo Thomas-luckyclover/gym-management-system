@@ -35,7 +35,7 @@
 
 <link rel="stylesheet" href="${pageContext.request.contextPath}/css/tokens.css?v=20261015auth1">
 <link rel="stylesheet" href="${pageContext.request.contextPath}/css/common.css?v=20261015hint1">
-<link rel="stylesheet" href="${pageContext.request.contextPath}/css/brand-system.css?v=20261015auth1">
+<link rel="stylesheet" href="${pageContext.request.contextPath}/css/brand-system.css?v=20261015c">
 <script src="${pageContext.request.contextPath}/js/common.js?v=20261015hint1" defer></script>
 <script src="${pageContext.request.contextPath}/js/icons.js?v=2" defer></script>
 <%-- Nạp nền cho cả URL Servlet lẫn đường dẫn JSP sau khi forward, không tác động role khác. --%>
