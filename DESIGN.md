@@ -179,7 +179,7 @@ Khu vận hành đặt topbar, bộ lọc, dữ liệu và hành động theo th
 
 ## Elevation & Depth
 
-Panel nội bộ là lớp màu đặc, viền mảnh và bóng thấp; ảnh sắt trừu tượng cùng ripple nằm sau vùng tác vụ. Light mode tắt artwork, ripple và weather nền. Auth dùng form đặc màu; header khách vẫn giữ lớp kính hiện hành. Shadow, focus, motion và breakpoint chi tiết nằm trong `.impeccable/design.json`.
+Panel nội bộ là lớp màu đặc, viền mảnh và bóng thấp; vân mực comic mờ (images/brand/comic-ink.svg, thay ảnh gang gỉ từ 15/10) cùng ripple nằm sau vùng tác vụ. Light mode tắt artwork, ripple và weather nền. Auth dùng form đặc màu; header khách vẫn giữ lớp kính hiện hành. Shadow, focus, motion và breakpoint chi tiết nằm trong `.impeccable/design.json`.
 
 **The Foreground Rule.** Không để ảnh hoặc hiệu ứng xuyên qua bảng, form và chữ cần đọc.
 
