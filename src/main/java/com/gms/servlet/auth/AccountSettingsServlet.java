@@ -32,8 +32,11 @@ import java.time.LocalDateTime;
  * Servlet Cài đặt tài khoản dùng chung mọi vai trò (URL /account).
  *
  * <p>Cho phép đổi mật khẩu, cập nhật avatar, đổi email/SĐT (kèm xác thực OTP); tab khác nhau theo vai trò.</p>
+ * 
  */
+// đăng kí địa chỉ URL
 @WebServlet("/account")
+//Cho phép servlet xử lý request multipart, phục vụ xử lý các chức năng upload khác trong account setting
 @MultipartConfig
 public class AccountSettingsServlet extends HttpServlet {
 
@@ -47,11 +50,11 @@ public class AccountSettingsServlet extends HttpServlet {
 
         private static final String TAB_DEPENDENTS = "dependents";
         private static final String ACTION_UPDATE_AVATAR = "updateAvatar";
+        private static final String ACTION_REMOVE_AVATAR = "removeAvatar";
         private static final String ACTION_REQUEST_EMAIL_CHANGE = "requestEmailChange";
-
         private static final String ACTION_REQUEST_PHONE_CHANGE = "requestPhoneChange";
-
         private static final String ACTION_VERIFY_CONTACT_CHANGE = "verifyContactChange";
+        private static final String ACTION_CANCEL_CONTACT_CHANGE = "cancelContactChange";
         private final AccountSettingsService accountSettingsService = new AccountSettingsService();
         private final ContactChangeService contactChangeService = new ContactChangeService();
 
@@ -72,8 +75,8 @@ public class AccountSettingsServlet extends HttpServlet {
         }
 
         /**
-         * POST /account — nhận form theo action: changePassword / updateAvatar / requestEmailChange /
-         * requestPhoneChange / verifyContactChange; action lạ thì báo lỗi và redirect.
+         * POST /account — nhận form theo action: changePassword / updateAvatar / removeAvatar / requestEmailChange /
+         * requestPhoneChange / verifyContactChange / cancelContactChange; action lạ thì báo lỗi và redirect.
          */
         @Override
         protected void doPost(
@@ -85,16 +88,22 @@ public class AccountSettingsServlet extends HttpServlet {
                         "action");
 
                 if (ACTION_CHANGE_PASSWORD.equals(action)) {
-
                         handleChangePassword(
                                 request,
                                 response);
-
                         return;
                 }
                 if (ACTION_UPDATE_AVATAR.equals(action)) {
 
                         handleUpdateAvatar(
+                                request,
+                                response);
+
+                        return;
+                }
+                if (ACTION_REMOVE_AVATAR.equals(action)) {
+
+                        handleRemoveAvatar(
                                 request,
                                 response);
 
@@ -121,6 +130,14 @@ public class AccountSettingsServlet extends HttpServlet {
                 if (ACTION_VERIFY_CONTACT_CHANGE.equals(action)) {
 
                         handleVerifyContactChange(
+                                request,
+                                response);
+
+                        return;
+                }
+                if (ACTION_CANCEL_CONTACT_CHANGE.equals(action)) {
+
+                        handleCancelContactChange(
                                 request,
                                 response);
 
@@ -167,6 +184,19 @@ public class AccountSettingsServlet extends HttpServlet {
                                 response,
                                 "/login");
 
+                        return;
+                }
+
+                if (!RequestUtil.isValidCsrfToken(request)) {
+                        request.setAttribute(
+                                "formMessage",
+                                Messages.MSG07_NO_PERMISSION);
+                        request.setAttribute(
+                                "activeTab",
+                                TAB_PROFILE);
+                        renderAccountSettings(
+                                request,
+                                response);
                         return;
                 }
 
@@ -266,6 +296,19 @@ public class AccountSettingsServlet extends HttpServlet {
                                 HttpServletResponse.SC_FORBIDDEN,
                                 Messages.MSG07_NO_PERMISSION);
 
+                        return;
+                }
+
+                if (!RequestUtil.isValidCsrfToken(request)) {
+                        request.setAttribute(
+                                "formMessage",
+                                Messages.MSG07_NO_PERMISSION);
+                        request.setAttribute(
+                                "activeTab",
+                                TAB_PROFILE);
+                        renderAccountSettings(
+                                request,
+                                response);
                         return;
                 }
 
@@ -389,18 +432,38 @@ public class AccountSettingsServlet extends HttpServlet {
                         "verifyTarget",
                         verificationEmail);
 
-                request.setAttribute(
-                        "formMessage",
-                        message);
+                if (message != null && !message.isBlank()) {
+                        request.setAttribute(
+                                "formMessage",
+                                message);
+                }
 
                 long codeSecondsLeft = 900;
+                long resendCooldownSecondsLeft = 0;
+                long serverTimeMillis = DateTimeUtil.now().atZone(DateTimeUtil.GYM_ZONE).toInstant().toEpochMilli();
+                long expiresAtMillis = serverTimeMillis + (900 * 1000L);
+                long resendAllowedAtMillis = serverTimeMillis;
+
                 try {
+                        VerificationCode.Purpose purpose = (field == ContactField.EMAIL)
+                                ? VerificationCode.Purpose.EMAIL_CHANGE
+                                : VerificationCode.Purpose.PHONE_CHANGE;
+
                         VerificationCode latestCode = verificationCodeDAO.findLatestByEmailAndPurpose(
                                 verificationEmail,
-                                VerificationCode.Purpose.EMAIL_CHANGE);
-                        if (latestCode != null && latestCode.getExpiresAt() != null) {
+                                purpose);
+
+                        if (latestCode != null) {
                                 LocalDateTime now = DateTimeUtil.now();
-                                codeSecondsLeft = Math.max(0, Duration.between(now, latestCode.getExpiresAt()).getSeconds());
+                                if (latestCode.getExpiresAt() != null) {
+                                        codeSecondsLeft = Math.max(0, Duration.between(now, latestCode.getExpiresAt()).getSeconds());
+                                        expiresAtMillis = latestCode.getExpiresAt().atZone(DateTimeUtil.GYM_ZONE).toInstant().toEpochMilli();
+                                }
+                                if (latestCode.getSentAt() != null) {
+                                        LocalDateTime allowedAt = latestCode.getSentAt().plusSeconds(com.gms.constant.AppConstants.CODE_RESEND_GAP_SECONDS);
+                                        resendCooldownSecondsLeft = Math.max(0, Duration.between(now, allowedAt).getSeconds());
+                                        resendAllowedAtMillis = allowedAt.atZone(DateTimeUtil.GYM_ZONE).toInstant().toEpochMilli();
+                                }
                         }
                 } catch (Exception ignored) {
                 }
@@ -408,6 +471,22 @@ public class AccountSettingsServlet extends HttpServlet {
                 request.setAttribute(
                         "codeSecondsLeft",
                         codeSecondsLeft);
+
+                request.setAttribute(
+                        "resendCooldownSecondsLeft",
+                        resendCooldownSecondsLeft);
+
+                request.setAttribute(
+                        "serverTimeMillis",
+                        serverTimeMillis);
+
+                request.setAttribute(
+                        "expiresAtMillis",
+                        expiresAtMillis);
+
+                request.setAttribute(
+                        "resendAllowedAtMillis",
+                        resendAllowedAtMillis);
 
                 request.setAttribute(
                         "activeTab",
@@ -460,6 +539,19 @@ public class AccountSettingsServlet extends HttpServlet {
                                 HttpServletResponse.SC_FORBIDDEN,
                                 Messages.MSG07_NO_PERMISSION);
 
+                        return;
+                }
+
+                if (!RequestUtil.isValidCsrfToken(request)) {
+                        request.setAttribute(
+                                "formMessage",
+                                Messages.MSG07_NO_PERMISSION);
+                        request.setAttribute(
+                                "activeTab",
+                                TAB_PROFILE);
+                        renderAccountSettings(
+                                request,
+                                response);
                         return;
                 }
 
@@ -655,6 +747,7 @@ public class AccountSettingsServlet extends HttpServlet {
                         "confirmPassword");
 
                 String roleValue = (String) session.getAttribute(SessionKey.ROLE);
+                //tìm vai trò tương ứng
                 Role actingRole = Role.fromDbValue(roleValue);
 
                 if (actingRole == null) {
@@ -735,6 +828,19 @@ public class AccountSettingsServlet extends HttpServlet {
                                 response,
                                 "/login");
 
+                        return;
+                }
+
+                if (!RequestUtil.isValidCsrfToken(request)) {
+                        request.setAttribute(
+                                "avatarError",
+                                Messages.MSG07_NO_PERMISSION);
+                        request.setAttribute(
+                                "activeTab",
+                                TAB_PROFILE);
+                        renderAccountSettings(
+                                request,
+                                response);
                         return;
                 }
 
@@ -836,6 +942,99 @@ public class AccountSettingsServlet extends HttpServlet {
         }
 
         /**
+         * Xử lý xóa avatar cá nhân.
+         *
+         * @param request  request hiện tại
+         * @param response response hiện tại
+         */
+        private void handleRemoveAvatar(
+                HttpServletRequest request,
+                HttpServletResponse response) throws ServletException, IOException {
+                HttpSession session = request.getSession(false);
+
+                if (session == null) {
+                        RequestUtil.redirect(
+                                request,
+                                response,
+                                "/login");
+                        return;
+                }
+
+                Integer accountId = (Integer) session.getAttribute(
+                        SessionKey.ACCOUNT_ID);
+
+                if (accountId == null) {
+                        RequestUtil.redirect(
+                                request,
+                                response,
+                                "/login");
+                        return;
+                }
+
+                if (!RequestUtil.isValidCsrfToken(request)) {
+                        request.setAttribute(
+                                "avatarError",
+                                Messages.MSG07_NO_PERMISSION);
+                        request.setAttribute(
+                                "activeTab",
+                                TAB_PROFILE);
+                        renderAccountSettings(
+                                request,
+                                response);
+                        return;
+                }
+
+                String uploadDirectoryValue = getServletContext()
+                        .getRealPath(
+                                "/uploads/avatar");
+
+                Path uploadDirectory = uploadDirectoryValue != null ? Path.of(uploadDirectoryValue) : null;
+
+                ServiceResult<Void> result = accountSettingsService.removeAvatar(
+                        accountId,
+                        uploadDirectory);
+
+                if (!result.isSuccess()) {
+                        request.setAttribute(
+                                "avatarError",
+                                result.getMessage());
+                        request.setAttribute(
+                                "activeTab",
+                                TAB_PROFILE);
+                        renderAccountSettings(
+                                request,
+                                response);
+                        return;
+                }
+
+                RequestUtil.setFlashToast(
+                        request,
+                        "success",
+                        result.getMessage());
+
+                RequestUtil.redirect(
+                        request,
+                        response,
+                        "/account?tab=profile");
+        }
+
+        /**
+         * Hủy yêu cầu đổi liên hệ đang chờ (xóa pending khỏi session).
+         */
+        private void handleCancelContactChange(
+                HttpServletRequest request,
+                HttpServletResponse response) throws IOException {
+                HttpSession session = request.getSession(false);
+                if (session != null) {
+                        clearPendingContact(session);
+                }
+                RequestUtil.redirect(
+                        request,
+                        response,
+                        "/account?tab=profile");
+        }
+
+        /**
          * Tải dữ liệu và hiển thị Account Settings.
          *
          * @param request  request hiện tại
@@ -923,6 +1122,31 @@ public class AccountSettingsServlet extends HttpServlet {
                 request.setAttribute(
                         "accountSettings",
                         result.getData());
+
+                // Khôi phục trạng thái xác thực đang chờ (CBR-110) nếu phiên có pending contact
+                if (request.getAttribute("contactVerificationPending") == null) {
+                        ContactField pendingField = (ContactField) session.getAttribute(SessionKey.PENDING_CONTACT_FIELD);
+                        String pendingEmail = (String) session.getAttribute(SessionKey.PENDING_CONTACT_VERIFY_EMAIL);
+                        String pendingVal = (String) session.getAttribute(SessionKey.PENDING_CONTACT_VALUE);
+
+                        if (pendingField != null && pendingEmail != null && pendingVal != null) {
+                                VerificationCode.Purpose purpose = (pendingField == ContactField.EMAIL)
+                                        ? VerificationCode.Purpose.EMAIL_CHANGE
+                                        : VerificationCode.Purpose.PHONE_CHANGE;
+                                try {
+                                        VerificationCode latestCode = verificationCodeDAO.findLatestByEmailAndPurpose(
+                                                pendingEmail, purpose);
+                                        LocalDateTime now = DateTimeUtil.now();
+                                        if (latestCode != null && latestCode.getUsedAt() == null
+                                                && latestCode.getExpiresAt() != null && now.isBefore(latestCode.getExpiresAt())) {
+                                                prepareContactVerification(request, pendingField, pendingEmail, pendingVal, null);
+                                        } else {
+                                                clearPendingContact(session);
+                                        }
+                                } catch (Exception ignored) {
+                                }
+                        }
+                }
 
                 // Tải danh sách Dependent khi tab là dependents
                 if (TAB_DEPENDENTS.equals(activeTab)) {

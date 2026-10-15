@@ -42,7 +42,7 @@
 /* Avatar dùng account-settings.js để ẩn/hiện ảnh xem trước. */
 .account-profile-card .account-avatar-image.is-hidden,
 .account-profile-card .account-avatar-fallback.is-hidden {
-    display: none;
+    display: none !important;
 }
 
 @media (max-width: 600px) {
@@ -50,6 +50,7 @@
         grid-template-columns: minmax(0, 1fr);
     }
 
+    .account-profile-card .account-avatar-actions,
     .account-profile-card .account-avatar-form {
         width: 100%;
         margin-left: 0;
@@ -192,6 +193,19 @@
     font-size: var(--font-size-sm);
 }
 
+.account-avatar-actions {
+    display: flex;
+    align-items: center;
+    gap: var(--space-2);
+    margin-left: auto;
+    flex-wrap: wrap;
+}
+
+.account-avatar-remove-form {
+    display: inline-flex;
+    margin: 0;
+}
+
 .account-avatar-form {
     display: flex;
     align-items: center;
@@ -205,8 +219,10 @@
     display: none;
 }
 
-.is-hidden {
-    display: none;
+.is-hidden,
+.dock .tb-user .avatar.is-hidden,
+.dock .tb-user .is-hidden {
+    display: none !important;
 }
 
 .account-tabs {
@@ -273,6 +289,63 @@
     padding: 2px 8px;
     border-radius: var(--radius-xs, 4px);
     letter-spacing: 0.05em;
+}
+
+.account-otp-button-group {
+    margin-top: var(--space-3);
+}
+
+.account-otp-secondary-actions {
+    display: flex;
+    align-items: center;
+    gap: var(--space-2);
+    margin-top: var(--space-3);
+    padding-top: var(--space-3);
+    border-top: var(--border-width, 1px) dashed var(--color-border);
+}
+
+.inline-form {
+    display: inline;
+    margin: 0;
+}
+
+.btn-sm {
+    padding: var(--space-1-5, 4px) var(--space-2-5, 10px);
+    font-size: var(--font-size-xs, 12px);
+}
+
+.btn-ghost {
+    background: transparent;
+    border: none;
+    color: var(--color-text-soft);
+    cursor: pointer;
+}
+
+.btn-ghost:hover {
+    color: var(--color-text);
+    text-decoration: underline;
+}
+
+.btn-danger-outline {
+    background: transparent;
+    color: var(--color-danger, #dc2626);
+    border: var(--border-width, 1px) solid var(--color-danger-border, #fca5a5);
+    border-radius: var(--radius-sm, 6px);
+    padding: var(--space-2) var(--space-3);
+    font-size: var(--font-size-sm);
+    cursor: pointer;
+    transition: all var(--duration-fast, 0.15s) ease;
+}
+
+.btn-danger-outline:hover:not(:disabled) {
+    background: var(--color-danger-tint, #fef2f2);
+    border-color: var(--color-danger, #dc2626);
+    color: var(--color-danger-dark, #991b1b);
+}
+
+.btn-danger-outline:disabled {
+    opacity: 0.5;
+    cursor: not-allowed;
 }
 
 /* =========================

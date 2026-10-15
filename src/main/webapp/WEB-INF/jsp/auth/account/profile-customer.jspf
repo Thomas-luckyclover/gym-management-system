@@ -11,15 +11,20 @@
                 <c:choose>
                     <c:when test="${not empty accountSettings.avatar}">
                         <img id="avatarPreview" class="account-avatar-image"
-                             src="<c:out value='${pageContext.request.contextPath}${accountSettings.avatar}' />" alt="Ảnh đại diện">
-                        <div id="avatarFallback" class="account-avatar-fallback is-hidden">
-                            <c:out value="${empty accountSettings.fullName ? '—' : accountSettings.fullName.substring(0, 1)}" />
+                             src="<c:out value='${pageContext.request.contextPath}${accountSettings.avatar}' />" alt="Ảnh đại diện"
+                             data-original-src="<c:out value='${pageContext.request.contextPath}${accountSettings.avatar}' />"
+                             onerror="this.classList.add('is-hidden'); this.style.display='none'; var fb = document.getElementById('avatarFallback'); if (fb) { fb.classList.remove('is-hidden'); fb.style.display=''; }">
+                        <div id="avatarFallback" class="account-avatar-fallback is-hidden" data-initials="<c:out value='${accountSettings.initials}' />" style="display: none;">
+                            <c:out value="${accountSettings.initials}" />
                         </div>
                     </c:when>
                     <c:otherwise>
-                        <img id="avatarPreview" class="account-avatar-image is-hidden" alt="Ảnh đại diện">
-                        <div id="avatarFallback" class="account-avatar-fallback">
-                            <c:out value="${empty accountSettings.fullName ? '—' : accountSettings.fullName.substring(0, 1)}" />
+                        <img id="avatarPreview" class="account-avatar-image is-hidden" alt="Ảnh đại diện"
+                             data-original-src=""
+                             style="display: none;"
+                             onerror="this.classList.add('is-hidden'); this.style.display='none'; var fb = document.getElementById('avatarFallback'); if (fb) { fb.classList.remove('is-hidden'); fb.style.display=''; }">
+                        <div id="avatarFallback" class="account-avatar-fallback" data-initials="<c:out value='${accountSettings.initials}' />">
+                            <c:out value="${accountSettings.initials}" />
                         </div>
                     </c:otherwise>
                 </c:choose>
@@ -29,14 +34,24 @@
                 <span><c:out value="${accountSettings.role.displayName}" default="—" /></span>
                 <span><c:out value="${empty accountSettings.customerCode ? '—' : accountSettings.customerCode}" /></span>
             </div>
-            <form id="avatarForm" method="post" action="${pageContext.request.contextPath}/account"
-                  enctype="multipart/form-data" class="account-avatar-form">
-                <input type="hidden" name="action" value="updateAvatar">
-                <input type="hidden" name="csrfToken" value="<c:out value='${sessionScope.csrfToken}' />">
-                <input id="avatarFile" name="avatarFile" type="file" accept="image/jpeg,image/png"
-                       data-max-bytes="2097152" class="account-avatar-input">
-                <label for="avatarFile" class="btn btn-primary">Đổi ảnh đại diện</label>
-            </form>
+            <div class="account-avatar-actions">
+                <form id="avatarForm" method="post" action="${pageContext.request.contextPath}/account"
+                      enctype="multipart/form-data" class="account-avatar-form">
+                    <input type="hidden" name="action" value="updateAvatar">
+                    <input type="hidden" name="csrfToken" value="<c:out value='${sessionScope.csrfToken}' />">
+                    <input id="avatarFile" name="avatarFile" type="file" accept="image/jpeg,image/png"
+                           data-max-bytes="5242880" class="account-avatar-input">
+                    <button type="button" id="btnSelectAvatar" class="btn btn-outline">Chọn ảnh</button>
+                    <button type="submit" id="btnSaveAvatar" class="btn btn-primary" disabled>Lưu ảnh</button>
+                </form>
+                <form id="removeAvatarForm" method="post" action="${pageContext.request.contextPath}/account"
+                      class="account-avatar-remove-form">
+                    <input type="hidden" name="action" value="removeAvatar">
+                    <input type="hidden" name="csrfToken" value="<c:out value='${sessionScope.csrfToken}' />">
+                    <button type="button" id="btnRemoveAvatar"
+                            class="btn btn-danger-outline ${empty accountSettings.avatar ? 'is-hidden' : ''}">Xóa ảnh</button>
+                </form>
+            </div>
         </div>
         <span id="avatarClientError" class="field-error is-hidden" role="alert"></span>
         <c:if test="${not empty avatarError}">
@@ -84,26 +99,54 @@
                     </form>
                     <%-- OTP là form riêng ngay dưới trường email; giá trị chờ đổi được Servlet lấy từ Session. --%>
                     <c:if test="${contactVerificationPending and contactField eq 'EMAIL'}">
-                        <form id="verifyEmailForm" method="post" action="${pageContext.request.contextPath}/account"
-                              class="stack account-profile-verification" data-validate>
-                            <input type="hidden" name="action" value="verifyContactChange">
-                            <input type="hidden" name="csrfToken" value="<c:out value='${sessionScope.csrfToken}' />">
-                            <p class="field-hint">
-                                Nhập mã gửi tới <strong><c:out value="${verificationEmail}" /></strong>
-                                để xác nhận <strong><c:out value="${pendingContactValue}" /></strong>.
-                            </p>
-                            <div class="field">
-                                <label class="field-label" for="emailVerificationCode">Mã xác thực (6 chữ số)</label>
-                                <input id="emailVerificationCode" name="verificationCode" type="text"
-                                       maxlength="6" inputmode="numeric" autocomplete="one-time-code"
-                                       data-rule="verificationCode" data-label="Mã xác thực" required>
-                                <span id="emailVerificationCodeError" class="field-error"
-                                      ${empty errors.code and empty errors.verificationCode ? 'hidden' : ''}>
-                                    <c:out value="${not empty errors.code ? errors.code : errors.verificationCode}" />
-                                </span>
+                        <div class="account-profile-verification"
+                             data-otp-container="email"
+                             data-server-time="${serverTimeMillis}"
+                             data-expires-at="${expiresAtMillis}"
+                             data-resend-allowed-at="${resendAllowedAtMillis}">
+                            <form id="verifyEmailForm" method="post" action="${pageContext.request.contextPath}/account"
+                                  class="stack" data-validate>
+                                <input type="hidden" name="action" value="verifyContactChange">
+                                <input type="hidden" name="csrfToken" value="<c:out value='${sessionScope.csrfToken}' />">
+                                <p class="field-hint">
+                                    Nhập mã gửi tới <strong><c:out value="${verificationEmail}" /></strong>
+                                    để xác nhận <strong><c:out value="${pendingContactValue}" /></strong>.
+                                </p>
+                                <div class="field">
+                                    <label class="field-label" for="emailVerificationCode">Mã xác thực (6 chữ số)</label>
+                                    <input id="emailVerificationCode" name="verificationCode" type="text"
+                                           maxlength="6" inputmode="numeric" autocomplete="one-time-code"
+                                           data-rule="verificationCode" data-label="Mã xác thực" placeholder="Ví dụ: 123456" required>
+                                    <div class="account-countdown-wrap" id="emailCountdownWrap">
+                                        <span>Mã còn hiệu lực:</span>
+                                        <span class="countdown-badge" id="emailCountdownTimer">--:--</span>
+                                    </div>
+                                    <span id="emailVerificationCodeError" class="field-error"
+                                          ${empty errors.code and empty errors.verificationCode ? 'hidden' : ''}>
+                                        <c:out value="${not empty errors.code ? errors.code : errors.verificationCode}" />
+                                    </span>
+                                    <div id="emailExpiredAlert" class="field-error is-hidden" role="alert">
+                                        Mã xác thực đã hết hạn. Vui lòng gửi lại mã mới.
+                                    </div>
+                                </div>
+                                <div class="account-otp-button-group">
+                                    <button type="submit" id="btnVerifyEmail" class="btn btn-primary">Xác nhận email</button>
+                                </div>
+                            </form>
+                            <div class="account-otp-secondary-actions">
+                                <form id="resendEmailForm" method="post" action="${pageContext.request.contextPath}/account" class="inline-form">
+                                    <input type="hidden" name="action" value="requestEmailChange">
+                                    <input type="hidden" name="csrfToken" value="<c:out value='${sessionScope.csrfToken}' />">
+                                    <input type="hidden" name="newEmail" value="<c:out value='${pendingContactValue}' />">
+                                    <button type="submit" id="btnResendEmailOtp" class="btn btn-outline btn-sm">Gửi lại mã</button>
+                                </form>
+                                <form id="cancelEmailChangeForm" method="post" action="${pageContext.request.contextPath}/account" class="inline-form">
+                                    <input type="hidden" name="action" value="cancelContactChange">
+                                    <input type="hidden" name="csrfToken" value="<c:out value='${sessionScope.csrfToken}' />">
+                                    <button type="submit" class="btn btn-ghost btn-sm">Hủy</button>
+                                </form>
                             </div>
-                            <button type="submit" class="btn btn-primary">Xác nhận email</button>
-                        </form>
+                        </div>
                     </c:if>
                 </div>
                 <div class="account-profile-contact">
@@ -126,26 +169,54 @@
                     </form>
                     <%-- OTP là form riêng ngay dưới trường phone; giá trị chờ đổi được Servlet lấy từ Session. --%>
                     <c:if test="${contactVerificationPending and contactField eq 'PHONE'}">
-                        <form id="verifyPhoneForm" method="post" action="${pageContext.request.contextPath}/account"
-                              class="stack account-profile-verification" data-validate>
-                            <input type="hidden" name="action" value="verifyContactChange">
-                            <input type="hidden" name="csrfToken" value="<c:out value='${sessionScope.csrfToken}' />">
-                            <p class="field-hint">
-                                Nhập mã gửi tới <strong><c:out value="${verificationEmail}" /></strong>
-                                để xác nhận <strong><c:out value="${pendingContactValue}" /></strong>.
-                            </p>
-                            <div class="field">
-                                <label class="field-label" for="phoneVerificationCode">Mã xác thực (6 chữ số)</label>
-                                <input id="phoneVerificationCode" name="verificationCode" type="text"
-                                       maxlength="6" inputmode="numeric" autocomplete="one-time-code"
-                                       data-rule="verificationCode" data-label="Mã xác thực" required>
-                                <span id="phoneVerificationCodeError" class="field-error"
-                                      ${empty errors.code and empty errors.verificationCode ? 'hidden' : ''}>
-                                    <c:out value="${not empty errors.code ? errors.code : errors.verificationCode}" />
-                                </span>
+                        <div class="account-profile-verification"
+                             data-otp-container="phone"
+                             data-server-time="${serverTimeMillis}"
+                             data-expires-at="${expiresAtMillis}"
+                             data-resend-allowed-at="${resendAllowedAtMillis}">
+                            <form id="verifyPhoneForm" method="post" action="${pageContext.request.contextPath}/account"
+                                  class="stack" data-validate>
+                                <input type="hidden" name="action" value="verifyContactChange">
+                                <input type="hidden" name="csrfToken" value="<c:out value='${sessionScope.csrfToken}' />">
+                                <p class="field-hint">
+                                    Nhập mã gửi tới <strong><c:out value="${verificationEmail}" /></strong>
+                                    để xác nhận <strong><c:out value="${pendingContactValue}" /></strong>.
+                                </p>
+                                <div class="field">
+                                    <label class="field-label" for="phoneVerificationCode">Mã xác thực (6 chữ số)</label>
+                                    <input id="phoneVerificationCode" name="verificationCode" type="text"
+                                           maxlength="6" inputmode="numeric" autocomplete="one-time-code"
+                                           data-rule="verificationCode" data-label="Mã xác thực" placeholder="Ví dụ: 123456" required>
+                                    <div class="account-countdown-wrap" id="phoneCountdownWrap">
+                                        <span>Mã còn hiệu lực:</span>
+                                        <span class="countdown-badge" id="phoneCountdownTimer">--:--</span>
+                                    </div>
+                                    <span id="phoneVerificationCodeError" class="field-error"
+                                          ${empty errors.code and empty errors.verificationCode ? 'hidden' : ''}>
+                                        <c:out value="${not empty errors.code ? errors.code : errors.verificationCode}" />
+                                    </span>
+                                    <div id="phoneExpiredAlert" class="field-error is-hidden" role="alert">
+                                        Mã xác thực đã hết hạn. Vui lòng gửi lại mã mới.
+                                    </div>
+                                </div>
+                                <div class="account-otp-button-group">
+                                    <button type="submit" id="btnVerifyPhone" class="btn btn-primary">Xác nhận số điện thoại</button>
+                                </div>
+                            </form>
+                            <div class="account-otp-secondary-actions">
+                                <form id="resendPhoneForm" method="post" action="${pageContext.request.contextPath}/account" class="inline-form">
+                                    <input type="hidden" name="action" value="requestPhoneChange">
+                                    <input type="hidden" name="csrfToken" value="<c:out value='${sessionScope.csrfToken}' />">
+                                    <input type="hidden" name="newPhone" value="<c:out value='${pendingContactValue}' />">
+                                    <button type="submit" id="btnResendPhoneOtp" class="btn btn-outline btn-sm">Gửi lại mã</button>
+                                </form>
+                                <form id="cancelPhoneChangeForm" method="post" action="${pageContext.request.contextPath}/account" class="inline-form">
+                                    <input type="hidden" name="action" value="cancelContactChange">
+                                    <input type="hidden" name="csrfToken" value="<c:out value='${sessionScope.csrfToken}' />">
+                                    <button type="submit" class="btn btn-ghost btn-sm">Hủy</button>
+                                </form>
                             </div>
-                            <button type="submit" class="btn btn-primary">Xác nhận số điện thoại</button>
-                        </form>
+                        </div>
                     </c:if>
                 </div>
             </div>
