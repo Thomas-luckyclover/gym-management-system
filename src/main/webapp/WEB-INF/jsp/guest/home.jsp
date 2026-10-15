@@ -81,7 +81,7 @@
         </div>
         <ul class="cine-services__list">
           <li class="cine-service" data-fade>
-            <img src="${ctx}/images/brand/svc-free.jpg" alt="" loading="lazy" width="1600" height="1067">
+            <img src="${ctx}/images/brand/facility.jpg" alt="" loading="lazy" width="1600" height="1199">
             <div><h3>Phòng tập tự do</h3><p>Khu tạ, máy tập và cardio đầy đủ, vào tập bất cứ lúc nào trong giờ mở cửa.</p></div>
           </li>
           <li class="cine-service" data-fade>

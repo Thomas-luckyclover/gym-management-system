@@ -111,5 +111,5 @@
     </c:if>
 </section>
 
-<script src="${pageContext.request.contextPath}/js/gym-floor.js?v=20261014s" defer></script>
-<script src="${pageContext.request.contextPath}/js/weather-card.js?v=20261014s" defer></script>
+<script src="${pageContext.request.contextPath}/js/gym-floor.js?v=20261015a" defer></script>
+<script src="${pageContext.request.contextPath}/js/weather-card.js?v=20261015a" defer></script>

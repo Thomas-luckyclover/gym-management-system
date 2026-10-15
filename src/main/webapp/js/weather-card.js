@@ -1,4 +1,5 @@
-/* Original ink weather marks in a deterministic eight-second loop.
+/* Ink weather marks drawn over the comic city art (images/comic/weather-*.webp) in an eight-second loop:
+ * rain/storm lines + lightning flash, snow, night stars in paper colour, heat haze, wind/cloud leaves.
  * The Service still owns the city, condition and all weather measurements. */
 (function () {
     "use strict";
@@ -13,13 +14,17 @@
         const CYCLE = 8;
         let width = 0, height = 0, seconds = 0, previous = 0, handle = 0, visible = true;
         let ink = "#151515";
+        let paper = "#FAFAFA";
         function resize() {
             const rect = canvas.getBoundingClientRect();
             const ratio = Math.min(window.devicePixelRatio || 1, 2);
             width = Math.max(1, rect.width); height = Math.max(1, rect.height);
             canvas.width = Math.round(width * ratio); canvas.height = Math.round(height * ratio);
             ctx.setTransform(ratio, 0, 0, ratio, 0, 0);
-            ink = getComputedStyle(card).getPropertyValue(type === "night" ? "--comic-paper" : "--comic-ink").trim() || ink;
+
+            ink = getComputedStyle(card).getPropertyValue("--comic-ink").trim() || ink;
+            paper = getComputedStyle(card).getPropertyValue("--comic-paper").trim() || paper;
+
             draw();
         }
         function draw() {
@@ -27,6 +32,9 @@
             ctx.strokeStyle = ink; ctx.fillStyle = ink; ctx.lineWidth = 1; ctx.lineCap = "round";
             const phase = seconds / CYCLE;
             if (type === "rain" || type === "storm") {
+                if (type === "storm" && ((phase > .42 && phase < .44) || (phase > .46 && phase < .47))) {
+                    ctx.globalAlpha = .55; ctx.fillStyle = paper; ctx.fillRect(0, 0, width, height); ctx.fillStyle = ink;
+                }
                 ctx.globalAlpha = .38;
                 for (let i = 0; i < 70; i++) {
                     const x = ((i * 73.7 - phase * width * 2) % width + width) % width;
@@ -41,12 +49,26 @@
                     ctx.beginPath(); ctx.arc(x, y, 1.5, 0, Math.PI * 2); ctx.stroke();
                 }
             } else if (type === "night") {
-                for (let i = 0; i < 12; i++) {
-                    const x = width * (.66 + (i % 4) * .075), y = 12 + Math.floor(i / 4) * 23;
-                    ctx.globalAlpha = .3 + .35 * (1 + Math.sin(phase * Math.PI * 2 + i)) / 2;
-                    ctx.beginPath(); ctx.moveTo(x - 2, y); ctx.lineTo(x + 2, y);
-                    ctx.moveTo(x, y - 2); ctx.lineTo(x, y + 2); ctx.stroke();
+                // Đầu người phủ mực: sao vẽ bằng màu giấy để thấy trên nền đen.
+                ctx.strokeStyle = paper;
+                for (let i = 0; i < 14; i++) {
+                    const x = width * (.6 + (i % 5) * .08), y = height * (.08 + Math.floor(i / 5) * .14);
+                    ctx.globalAlpha = .25 + .6 * (1 + Math.sin(phase * Math.PI * 2 + i * 1.7)) / 2;
+                    ctx.beginPath(); ctx.moveTo(x - 2.5, y); ctx.lineTo(x + 2.5, y);
+                    ctx.moveTo(x, y - 2.5); ctx.lineTo(x, y + 2.5); ctx.stroke();
                 }
+                ctx.strokeStyle = ink;
+            } else if (type === "hot") {
+                // Hơi nóng bốc lên: nét gợn sóng mảnh trôi lên.
+                ctx.globalAlpha = .28;
+                for (let i = 0; i < 6; i++) {
+                    const x = width * (.5 + i * .08), y = height * (1 - ((phase + i / 6) % 1) * .9);
+                    ctx.beginPath(); ctx.moveTo(x, y);
+                    for (let k = 1; k <= 4; k++) { ctx.quadraticCurveTo(x + (k % 2 ? 5 : -5), y - k * 6 + 3, x, y - k * 6); }
+                    ctx.stroke();
+                }
+            } else if (type === "sunny") {
+                // Nắng: tranh đã có tia sáng, không vẽ thêm.
             } else {
                 const count = type === "wind" ? 7 : 3;
                 ctx.globalAlpha = .75;

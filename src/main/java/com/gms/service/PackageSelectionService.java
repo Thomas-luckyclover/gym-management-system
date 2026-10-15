@@ -864,7 +864,7 @@ public class PackageSelectionService {
      */
     private String buildPurchaseHint(Package.Type packageType, int paymentDueMinutes, String openingHours) {
         if (isOnlinePurchasable(packageType)) {
-            return "Thanh toán VNPay, giữ đơn " + paymentDueMinutes + " phút. Hoặc mua tại quầy.";
+            return "Thanh toán VNPay. Hoặc mua tại quầy.";
         }
 
         if (packageType == Package.Type.SINGLE_SESSION) {
