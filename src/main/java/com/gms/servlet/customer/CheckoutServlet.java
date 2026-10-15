@@ -3,6 +3,10 @@ package com.gms.servlet.customer;
 import com.gms.constant.SessionKey;
 import com.gms.dto.ServiceResult;
 import com.gms.dto.CheckoutView;
+import com.gms.dto.JsonResponse;
+import com.gms.util.JsonUtil;
+import java.util.LinkedHashMap;
+import java.util.Map;
 import com.gms.service.PaymentService;
 import com.gms.util.RequestUtil;
 import jakarta.servlet.ServletException;
@@ -13,7 +17,7 @@ import jakarta.servlet.http.HttpServletResponse;
 import jakarta.servlet.http.HttpSession;
 import java.io.IOException;
 
-/** Checkout SEQ-2: đọc đơn đúng chủ, áp/thay/gỡ voucher; VNPay làm ở SEQ-3. */
+/**  đọc đơn đúng chủ, áp/thay/gỡ voucher */
 @WebServlet("/customer/checkout")
 public class CheckoutServlet extends HttpServlet {
 
@@ -47,8 +51,14 @@ public class CheckoutServlet extends HttpServlet {
 
         // B3: token bảo vệ hai thao tác áp/gỡ voucher, countdown dùng common.js.
         request.setAttribute("csrfToken", RequestUtil.getOrCreateCsrfToken(session));
+        request.setAttribute("customerName", session.getAttribute(SessionKey.DISPLAY_NAME));
         request.setAttribute("activeSidebar", "buy-package");
         request.setAttribute("themeClass", "theme-pt customer-dashboard-page checkout-page");
+        // B4: trang tạm chỉ đọc đơn đúng chủ, không mở giao dịch thanh toán.
+        if ("payment".equals(request.getParameter("stage"))) {
+            RequestUtil.forward(request, response, "customer/payment");
+            return;
+        }
         RequestUtil.forward(request, response, "customer/checkout");
     }
     /** POST áp/gỡ voucher: lỗi giữ input và forward, thành công redirect để tránh gửi lại form. */
@@ -80,6 +90,12 @@ public class CheckoutServlet extends HttpServlet {
             return;
         }
 
+        // AJAX trả snapshot mới hoặc lỗi field, không reload toàn trang.
+        if (RequestUtil.isAjaxRequest(request)) {
+            writeVoucherResponse(request, response, accountId, orderId, result);
+            return;
+        }
+
         // B3: lỗi giữ nguyên mã đã nhập; giá/giảm/VAT đọc lại từ DB, không lấy từ request.
         if (!result.isSuccess()) {
             request.setAttribute("voucherInput", request.getParameter("voucherCode"));
@@ -90,6 +106,30 @@ public class CheckoutServlet extends HttpServlet {
         }
         RequestUtil.setFlashToast(request, "success", result.getMessage());
         RequestUtil.redirect(request, response, "/customer/checkout?order=" + orderId);
+    }
+
+    /** Trả dữ liệu tối thiểu cho checkout.js; không xuất Entity hoặc URL ký số vào JSON voucher. */
+    private void writeVoucherResponse(HttpServletRequest request, HttpServletResponse response,
+            int accountId, Integer orderId, ServiceResult<Void> mutation) throws IOException {
+        if (!mutation.isSuccess()) {
+            JsonUtil.writeJson(response, JsonResponse.from(mutation));
+            return;
+        }
+        ServiceResult<CheckoutView> viewResult = paymentService.getCheckoutView(accountId, orderId);
+        if (!viewResult.isSuccess()) {
+            JsonUtil.writeJson(response, JsonResponse.from(viewResult));
+            return;
+        }
+        CheckoutView view = viewResult.getData();
+        Map<String, Object> data = new LinkedHashMap<>();
+        data.put("voucherCode", view.getVoucherCode());
+        data.put("voucherMessage", view.getVoucherMessage());
+        data.put("discountText", view.getDiscountText());
+        data.put("totalText", view.getTotalText());
+        data.put("vatText", view.getVatText());
+        data.put("voucherEditable", view.isVoucherEditable());
+        data.put("voucherLockReason", view.getVoucherLockReason());
+        JsonUtil.writeJson(response, JsonResponse.from(ServiceResult.ok(data, mutation.getMessage())));
     }
 
 }

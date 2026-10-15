@@ -1,0 +1,74 @@
+[33m57b4cad[m[33m ([m[1;36mHEAD[m[33m -> [m[1;32mdev_mb3_NhanLTT[m[33m, [m[1;31morigin/develop[m[33m, [m[1;31morigin/dev_mb1_MinhLC[m[33m, [m[1;31morigin/HEAD[m[33m)[m HEAD@{0}: reset: moving to origin/develop
+[33m2a60d93[m[33m ([m[1;31morigin/main[m[33m)[m HEAD@{1}: reset: moving to origin/main
+[33mea2de33[m[33m ([m[1;31morigin/dev_mb3_NhanLTT[m[33m)[m HEAD@{2}: commit: update feature pay online
+[33meff05e2[m HEAD@{3}: commit (merge): update UI
+[33mdde5d19[m HEAD@{4}: commit: update
+[33m221ca2d[m HEAD@{5}: commit (merge): update form dev
+[33m8e123fe[m HEAD@{6}: commit (merge): update from main
+[33md6d4a7c[m HEAD@{7}: checkout: moving from develop to dev_mb3_NhanLTT
+[33m331108b[m[33m ([m[1;32mdevelop[m[33m)[m HEAD@{8}: pull origin develop: Fast-forward
+[33me1609c8[m HEAD@{9}: checkout: moving from dev_mb3_NhanLTT to develop
+[33md6d4a7c[m HEAD@{10}: commit: Update UI for customer dashboard
+[33m807e6ae[m HEAD@{11}: commit: Update Customer dashboard
+[33m25bd83a[m HEAD@{12}: commit: Merge main and modify UI /package-selection
+[33me1be47a[m HEAD@{13}: merge develop: Merge made by the 'ort' strategy.
+[33m56e6c41[m HEAD@{14}: reset: moving to HEAD
+[33m56e6c41[m HEAD@{15}: checkout: moving from develop to dev_mb3_NhanLTT
+[33me1609c8[m HEAD@{16}: pull: Fast-forward
+[33mbbb91a1[m HEAD@{17}: checkout: moving from dev_mb3_NhanLTT to develop
+[33m56e6c41[m HEAD@{18}: commit: update
+[33m45c57e1[m HEAD@{19}: commit: Modify Customer Package Selection
+[33m9d30b01[m HEAD@{20}: commit: Modify UI Customer Package Selection
+[33m7db4a41[m HEAD@{21}: reset: moving to origin/develop
+[33md0a20cb[m HEAD@{22}: reset: moving to HEAD
+[33md0a20cb[m HEAD@{23}: reset: moving to HEAD
+[33md0a20cb[m HEAD@{24}: commit (merge): Add customer\package
+[33mfeb254f[m HEAD@{25}: commit: modify
+[33m0c4ac90[m HEAD@{26}: commit: Add entity subscription and vovoucher
+[33m87731da[m HEAD@{27}: commit (merge): Update
+[33m46614bd[m HEAD@{28}: commit (merge): new
+[33me485f58[m HEAD@{29}: commit: modify
+[33m39700e7[m HEAD@{30}: commit: Edit messages, modify common.js
+[33md9bde9e[m HEAD@{31}: commit (merge): Fix merge conflict: keep ReceptionistAccountSettingsTest from develop
+[33m012d102[m HEAD@{32}: commit: Add countdown timer for manager account setting
+[33m509aa84[m HEAD@{33}: commit: modify
+[33mbbb91a1[m HEAD@{34}: checkout: moving from develop to dev_mb3_NhanLTT
+[33mbbb91a1[m HEAD@{35}: checkout: moving from dev_mb3_NhanLTT to develop
+[33mbbb91a1[m HEAD@{36}: merge develop: Fast-forward
+[33m48c15d4[m HEAD@{37}: checkout: moving from develop to dev_mb3_NhanLTT
+[33mbbb91a1[m HEAD@{38}: pull: Fast-forward
+[33m70ec2dd[m HEAD@{39}: checkout: moving from dev_mb3_NhanLTT to develop
+[33m48c15d4[m HEAD@{40}: commit (merge): fix conflix merge origin develop
+[33m0f52075[m HEAD@{41}: checkout: moving from develop to dev_mb3_NhanLTT
+[33m70ec2dd[m HEAD@{42}: pull: Fast-forward
+[33m595d66a[m HEAD@{43}: checkout: moving from dev_mb3_NhanLTT to develop
+[33m0f52075[m HEAD@{44}: commit: Modify jsp
+[33m22caffa[m HEAD@{45}: commit: Modify profile-manager, tab-password,Add account-setting.js, Add manager-dashboard js,css,jsp, Dashboard servlet, ReportDAo, ReportView, ReportService
+[33mfa05551[m HEAD@{46}: commit (merge): Modify new
+[33mfa13d98[m HEAD@{47}: commit: fix: add missing profile-pt/receptionist.jspf, unlock Admin fields, add email/phone change for Staff
+[33m1f25647[m HEAD@{48}: pull origin develop: Fast-forward
+[33m83b706b[m HEAD@{49}: commit: Modigy login(js,css,jsp), guest header
+[33md2044e1[m HEAD@{50}: pull origin develop: Fast-forward
+[33m1d62601[m HEAD@{51}: checkout: moving from develop to dev_mb3_NhanLTT
+[33m595d66a[m HEAD@{52}: checkout: moving from dev_mb3_NhanLTT to develop
+[33m1d62601[m HEAD@{53}: commit: new commit
+[33m2c2ff86[m HEAD@{54}: merge develop: Merge made by the 'ort' strategy.
+[33m4f2dd46[m HEAD@{55}: checkout: moving from develop to dev_mb3_NhanLTT
+[33m595d66a[m HEAD@{56}: checkout: moving from dev_mb3_NhanLTT to develop
+[33m4f2dd46[m HEAD@{57}: checkout: moving from develop to dev_mb3_NhanLTT
+[33m595d66a[m HEAD@{58}: checkout: moving from dev_mb3_NhanLTT to develop
+[33m4f2dd46[m HEAD@{59}: checkout: moving from develop to dev_mb3_NhanLTT
+[33m595d66a[m HEAD@{60}: pull: Fast-forward
+[33mc7adbf0[m HEAD@{61}: checkout: moving from dev_mb3_NhanLTT to develop
+[33m4f2dd46[m HEAD@{62}: commit: modify
+[33m0c82bb6[m HEAD@{63}: commit: Add layout-manager and profile-manager
+[33mb70164f[m HEAD@{64}: commit: add login.jsp, login.css, login.js
+[33m5bea0d6[m HEAD@{65}: commit: Add LoginServlet and LogoutServlet
+[33m8d77f4a[m HEAD@{66}: commit: Add service/AuthService
+[33meca854a[m HEAD@{67}: commit: Modify AccountDao, add dto/LoginResult.java
+[33mb7ff33c[m HEAD@{68}: commit: Modify AccountDao.java
+[33m3fd0fc3[m HEAD@{69}: commit: Add AccountDao.java
+[33mc7adbf0[m HEAD@{70}: merge develop: Fast-forward
+[33m2a60d93[m[33m ([m[1;31morigin/main[m[33m)[m HEAD@{71}: checkout: moving from develop to dev_mb3_NhanLTT
+[33mc7adbf0[m HEAD@{72}: commit: Add account
+[33m6d1e1f8[m HEAD@{73}: clone: from https://github.com/Thomas-luckyclover/gym-management-system.git

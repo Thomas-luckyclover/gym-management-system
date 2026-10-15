@@ -7,7 +7,8 @@
         <%@ include file="/WEB-INF/jsp/common/head.jspf" %>
         <title>Thanh toán · Super Gym</title>
         <link rel="stylesheet" href="${pageContext.request.contextPath}/css/pages/customer/dashboard.css?v=7">
-        <link rel="stylesheet" href="${pageContext.request.contextPath}/css/pages/customer/checkout.css?v=1">
+        <link rel="stylesheet" href="${pageContext.request.contextPath}/css/pages/customer/checkout.css?v=5">
+        <script src="${pageContext.request.contextPath}/js/pages/customer/checkout.js?v=4" defer></script>
     </head>
     <body class="dock ${themeClass}">
         <%@ include file="/WEB-INF/jsp/common/flash-toast.jspf" %>
@@ -15,73 +16,114 @@
             <%@ include file="/WEB-INF/jsp/common/layout-customer.jspf" %>
             <div class="main">
                 <header class="topbar">
-                    <h1 class="tb-title">Đơn hàng của bạn</h1>
+                    <div class="tb-left"><h1 class="tb-title">Thanh toán</h1></div>
+                    <div class="top-right"><span class="tb-user-text"><c:out value="${customerName}" /></span></div>
                 </header>
-                <main class="content">
-                    <%-- ===== Tóm tắt: checkout do PaymentService tạo; order là snapshot do OrderDAO đọc ===== --%>
+                <main class="content" id="main-content">
+                    <a class="checkout-back" href="${pageContext.request.contextPath}/customer/packages">← Quay lại chọn gói</a>
+                    <div class="checkout-heading">
+                        <div>
+                            <h1>Xác nhận và thanh toán</h1>
+                            <p>Kiểm tra gói tập và ưu đãi trước khi tiếp tục.</p>
+                        </div>
+                        <%-- common.js bindCountdowns() dùng số giây do PaymentService tính; hết giờ reload khóa form. --%>
+                        <c:if test="${not empty checkout and order.pending and checkout.secondsLeft gt 0}">
+                            <div class="checkout-clock"><i class="fa-regular fa-clock" aria-hidden="true"></i> Còn lại
+                                <strong data-countdown-seconds="${checkout.secondsLeft}" data-countdown-reload="true">Đang cập nhật…</strong>
+                            </div>
+                        </c:if>
+                    </div>
+                    <c:if test="${not empty paymentError}"><div class="alert-banner danger" role="alert"><c:out value="${paymentError}" /></div></c:if>
                     <c:choose>
                         <c:when test="${not empty checkoutError}">
                             <div class="alert-banner danger" role="alert"><c:out value="${checkoutError}" /></div>
                         </c:when>
                         <c:otherwise>
-                            <section class="checkout-card">
-                                <h2><c:out value="${order.packageNameSnapshot}" /></h2>
-                                <p>Mã đơn: <c:out value="${order.orderCode}" /></p>
-                                <c:choose>
-                                    <c:when test="${order.pending}"><p>Trạng thái: Chờ thanh toán</p></c:when>
-                                    <c:when test="${order.paid}"><p>Trạng thái: Đã thanh toán</p></c:when>
-                                    <c:otherwise><p>Trạng thái: Đã hủy</p></c:otherwise>
-                                </c:choose>
-                                <dl class="checkout-summary">
-                                    <div><dt>Giá gói</dt><dd><c:out value="${gms:formatMoney(order.unitPriceSnapshot)}" /></dd></div>
-                                    <div><dt>Giảm giá voucher</dt><dd><c:out value="${gms:formatMoney(order.discountAmount)}" /></dd></div>
-                                    <div class="checkout-total"><dt>Tổng thanh toán</dt><dd><c:out value="${gms:formatMoney(order.finalAmount)}" /></dd></div>
-                                    <div><dt>Trong đó VAT <c:out value="${order.vatRateSnapshot}" />%</dt><dd><c:out value="${gms:formatMoney(order.vatAmount)}" /></dd></div>
-                                </dl>
-                                <p>Hạn thanh toán: <c:out value="${gms:formatDateTime(order.paymentDueAt)}" /></p>
-                                <%-- ===== common.js bindCountdowns(): số giây do server tính, hết giờ reload để khóa form ===== --%>
-                                <c:if test="${order.pending and checkout.secondsLeft gt 0}">
-                                    <p class="checkout-countdown">Thời gian còn lại:
-                                        <strong data-countdown-seconds="${checkout.secondsLeft}" data-countdown-reload="true">Đang cập nhật…</strong>
-                                    </p>
-                                </c:if>
-
-                                <%-- ===== Voucher: giữ voucherInput khi POST lỗi; errors.voucherCode do Service trả ===== --%>
-                                <form class="checkout-voucher" method="post" action="${pageContext.request.contextPath}/customer/checkout">
-                                    <h3>Mã giảm giá</h3>
-                                    <input type="hidden" name="order" value="${order.orderId}">
-                                    <input type="hidden" name="csrfToken" value="<c:out value="${csrfToken}" />">
-                                    <label for="voucherCode">Nhập mã voucher</label>
-                                    <div class="checkout-voucher__controls">
-                                        <input id="voucherCode" type="text" name="voucherCode" maxlength="20"
-                                               value="<c:out value="${voucherInput}" />" placeholder="Ví dụ: WELCOME10"
-                                               aria-describedby="voucherHint voucherError" ${checkout.voucherEditable ? '' : 'disabled'}>
-                                        <button class="btn btn-primary" type="submit" name="action" value="apply-voucher"
-                                                ${checkout.voucherEditable ? '' : 'disabled'}>Áp dụng</button>
-                                        <c:if test="${not empty checkout.voucherCode}">
-                                            <button class="btn btn-outline" type="submit" name="action" value="remove-voucher"
-                                                    ${checkout.voucherEditable ? '' : 'disabled'}>Gỡ mã</button>
-                                        </c:if>
+                            <div class="checkout-grid">
+                                <%-- Dữ liệu gói là snapshot trên Order, không gán tên/giá/quyền lợi minh họa từ mockup. --%>
+                                <section class="checkout-card checkout-package">
+                                    <h2>Gói tập của bạn</h2>
+                                    <div class="checkout-banner">
+                                        <div class="checkout-banner__brand"><i class="fa-solid fa-dumbbell" aria-hidden="true"></i> SUPER GYM</div>
+                                        <h3><c:out value="${order.packageNameSnapshot}" /></h3>
                                     </div>
-                                    <p id="voucherHint" class="checkout-voucher__hint">Mỗi đơn áp dụng một mã. Giá trên đã bao gồm VAT.</p>
-                                    <c:if test="${not empty checkout.voucherCode}">
-                                        <p>Đang áp dụng: <strong><c:out value="${checkout.voucherCode}" /></strong></p>
-                                    </c:if>
-                                    <div id="voucherError" class="checkout-voucher__error" role="alert">
+                                    <h3 class="checkout-package__name"><c:out value="${order.packageNameSnapshot}" /></h3>
+                                    <c:if test="${not empty order.packageDescriptionSnapshot}"><p class="checkout-muted"><c:out value="${order.packageDescriptionSnapshot}" /></p></c:if>
+                                    <ul class="checkout-benefits">
+                                        <c:forEach var="benefit" items="${checkout.benefitLines}">
+                                            <li><i class="fa-regular fa-circle-check" aria-hidden="true"></i><span><c:out value="${benefit}" /></span></li>
+                                        </c:forEach>
+                                    </ul>
+                                    <div class="checkout-details">
+                                        <div><span>Khách hàng</span><strong><c:out value="${customerName}" /></strong></div>
+                                        <div><span>Mã đơn</span><strong><c:out value="${order.orderCode}" /></strong></div>
                                         <c:choose>
-                                            <c:when test="${not empty errors.voucherCode}"><c:out value="${errors.voucherCode}" /></c:when>
-                                            <c:otherwise><c:out value="${voucherError}" /></c:otherwise>
+                                            <c:when test="${order.pending}"><span class="badge badge-warning">Chờ thanh toán</span></c:when>
+                                            <c:when test="${order.paid}"><span class="badge badge-success">Đã thanh toán</span></c:when>
+                                            <c:otherwise><span class="badge badge-danger">Đã hủy</span></c:otherwise>
                                         </c:choose>
                                     </div>
-                                    <c:if test="${not checkout.voucherEditable}">
-                                        <p><c:out value="${checkout.voucherLockReason}" /></p>
-                                    </c:if>
-                                </form>
-                                <p class="checkout-voucher__hint">Thanh toán qua VNPay đang được hoàn thiện.</p>
-                            </section>
+                                </section>
+                                <section class="checkout-card checkout-summary">
+                                    <h2>Tóm tắt thanh toán</h2>
+                                    <dl class="checkout-prices">
+                                        <div><dt>Giá gói</dt><dd><c:out value="${checkout.priceText}" /></dd></div>
+                                        <div id="discountRow" ${empty checkout.voucherCode ? 'hidden' : ''}>
+                                            <dt>Giảm giá</dt>
+                                            <dd class="checkout-discount">
+                                                −<span id="discountAmount"><c:out value="${checkout.discountText}" /></span>
+                                            </dd>
+                                        </div>
+                                    </dl>
+                                    <%-- checkout.js tự POST khi blur/Enter, dưới ô chỉ hiện một trạng thái cụ thể. --%>
+                                    <form id="voucherForm" class="checkout-voucher" method="post" action="${pageContext.request.contextPath}/customer/checkout"
+                                          data-editable="${checkout.voucherEditable}" data-valid="${empty voucherError}"
+                                          data-applied="<c:out value="${checkout.voucherCode}" />">
+                                        <input type="hidden" name="order" value="${order.orderId}">
+                                        <input type="hidden" name="csrfToken" value="<c:out value="${csrfToken}" />">
+                                        <input type="hidden" name="action" value="apply-voucher">
+                                        <label for="voucherCode">Mã giảm giá</label>
+                                        <div class="checkout-voucher__input">
+                                            <input id="voucherCode" type="text" name="voucherCode" maxlength="20" autocomplete="off"
+                                                   value="<c:out value="${voucherInput}" />" placeholder="Nhập mã giảm giá"
+                                                   aria-describedby="voucherStatus" ${checkout.voucherEditable ? '' : 'disabled'}>
+                                            <i id="voucherValidIcon" class="fa-solid fa-circle-check" aria-hidden="true" ${empty checkout.voucherCode ? 'hidden' : ''}></i>
+                                            <button id="voucherClear" type="button" aria-label="Gỡ mã giảm giá" title="Gỡ mã giảm giá"
+                                                    ${checkout.voucherEditable ? '' : 'disabled'} ${empty checkout.voucherCode and empty voucherInput ? 'hidden' : ''}>×</button>
+                                        </div>
+                                        <p id="voucherStatus" class="checkout-voucher__status" data-state="${empty voucherError ? 'success' : 'error'}" role="status" aria-live="polite">
+                                            <c:choose>
+                                                <c:when test="${not empty voucherError}"><c:out value="${voucherError}" /></c:when>
+                                                <c:otherwise><c:out value="${checkout.voucherMessage}" /></c:otherwise>
+                                            </c:choose>
+                                        </p>
+                                        <c:if test="${not checkout.voucherEditable}"><p class="checkout-muted"><c:out value="${checkout.voucherLockReason}" /></p></c:if>
+                                        <noscript><button class="btn btn-outline" type="submit">Kiểm tra mã</button></noscript>
+                                    </form>
+                                    <div class="checkout-total">
+                                        <div><span>Tổng thanh toán</span><strong id="totalAmount"><c:out value="${checkout.totalText}" /></strong></div>
+                                        <p>Đã bao gồm VAT <c:out value="${order.vatRateSnapshot}" />%: <span id="vatAmount"><c:out value="${checkout.vatText}" /></span></p>
+                                        <%-- Tiền trước thuế từ snapshot đơn; checkout.js cập nhật preTaxAmount khi đổi voucher. --%>
+                                        <p>Tiền trước thuế:
+                                            <span id="preTaxAmount"><c:out value="${gms:formatMoney(order.finalAmount - order.vatAmount)}" /></span>
+                                        </p>
+                                    </div>
+                                    <form id="paymentForm" method="get" action="${pageContext.request.contextPath}/customer/checkout">
+                                        <input type="hidden" name="order" value="${order.orderId}">
+                                        <input type="hidden" name="stage" value="payment">
+                                        <button id="payButton" class="btn checkout-pay" type="submit" ${checkout.voucherEditable ? '' : 'disabled'}>
+                                            Tiến hành thanh toán <i class="fa-solid fa-arrow-right" aria-hidden="true"></i>
+                                        </button>
+                                    </form>
+                                    <div class="checkout-provider">
+                                        <img src="${pageContext.request.contextPath}/images/payment/vnpay.svg" alt="VNPay">
+                                        <p><i class="fa-solid fa-lock" aria-hidden="true"></i> Thanh toán an toàn qua VNPay</p>
+                                    </div>
+                                </section>
+                            </div>
+                            <p id="paymentAvailability" class="checkout-footer">Kiểm tra thông tin trước khi tiến hành thanh toán.</p>
                         </c:otherwise>
                     </c:choose>
-                    <a class="btn btn-outline" href="${pageContext.request.contextPath}/customer/packages">Quay lại chọn gói</a>
                 </main>
             </div>
         </div>

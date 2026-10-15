@@ -1,6 +1,53 @@
-/* Khối tóm tắt và voucher; chỉ áp dụng trong checkout-page. */
-.checkout-page .checkout-card {
+/* Chỉ nội dung checkout; không sửa sidebar/topbar/layout chung. */
+.checkout-page .content {
+  padding: var(--space-5);
+}
+
+.checkout-back {
+  display: inline-block;
+  margin-bottom: var(--space-5);
+  color: var(--color-text-muted);
+}
+
+.checkout-heading {
+  display: flex;
+  flex-wrap: wrap;
+  justify-content: space-between;
+  align-items: center;
+  gap: var(--space-4);
+  margin-bottom: var(--space-5);
+}
+
+.checkout-heading h1 {
+  margin: 0 0 var(--space-2);
+  font-size: var(--font-size-3xl);
+  font-weight: var(--font-weight-bold);
+}
+
+.checkout-heading p {
+  margin: 0;
+  color: var(--color-text-muted);
+}
+
+.checkout-clock {
+  display: flex;
+  gap: var(--space-2);
+  align-items: center;
+  background: var(--color-warning-tint);
+  color: var(--color-warning-ink);
+  padding: var(--space-3);
+  border-radius: var(--radius-md);
+}
+
+.checkout-grid {
   display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(min(100%, calc(var(--space-8) * 8)), 1fr));
+  gap: var(--space-5);
+}
+
+.checkout-card {
+  display: flex;
+  flex-direction: column;
   gap: var(--space-4);
   padding: var(--space-5);
   border: var(--border-width) solid var(--color-border);
@@ -8,87 +55,275 @@
   background: var(--color-surface);
   color: var(--color-text);
   box-shadow: var(--shadow-card);
-  margin-bottom: var(--space-4);
 }
 
-.checkout-card h2,
-.checkout-card h3,
-.checkout-card p {
+.checkout-card h2, .checkout-card h3, .checkout-card p {
   margin: 0;
 }
 
-.checkout-summary {
-  display: grid;
-  gap: var(--space-3);
-  margin: 0;
-}
-
-.checkout-summary div {
-  display: flex;
-  flex-wrap: wrap;
-  justify-content: space-between;
-  gap: var(--space-2);
-}
-
-.checkout-summary dd {
-  margin: 0;
-  font-weight: var(--font-weight-semibold);
-}
-
-.checkout-total {
-  padding-top: var(--space-3);
-  border-top: var(--border-width) solid var(--color-border);
+.checkout-card h2 {
   font-size: var(--font-size-xl);
 }
 
-/* Form POST gửi apply-voucher/remove-voucher; không có logic tính giá trên JS. */
-.checkout-voucher {
-  display: grid;
-  gap: var(--space-3);
-  padding-top: var(--space-4);
-  border-top: var(--border-width) solid var(--color-border);
-}
-
-.checkout-voucher__controls {
-  display: flex;
-  flex-wrap: wrap;
-  gap: var(--space-2);
-}
-
-.checkout-voucher input[type="text"] {
-  flex: 1;
-  min-width: 0;
-  padding: var(--space-3);
-  border: var(--border-width) solid var(--color-border);
+.checkout-banner {
+  position: relative;
+  overflow: hidden;
+  padding: var(--space-5);
   border-radius: var(--radius-sm);
-  background: var(--color-surface);
-  color: var(--color-text);
-  font: inherit;
+  color: var(--color-text-inverse);
+  background: linear-gradient(110deg, var(--brand-ink), color-mix(in srgb, var(--color-warning) 70%, var(--brand-ink)));
 }
 
-.checkout-voucher input[type="text"]:focus-visible {
-  outline: var(--border-width-thick) solid var(--color-primary);
-  outline-offset: var(--space-0-5);
+.checkout-banner::after {
+  content: "";
+  position: absolute;
+  inset: 0;
+  pointer-events: none;
+  background: repeating-linear-gradient(135deg, transparent 0, transparent var(--space-8), color-mix(in srgb, var(--color-warning) 35%, transparent) var(--space-8), transparent calc(var(--space-8) + var(--border-width)));
 }
 
-.checkout-voucher input:disabled {
-  background: var(--color-surface-muted);
-  color: var(--color-text-muted);
+.checkout-banner__brand {
+  position: relative;
+  z-index: 1;
+  display: flex;
+  gap: var(--space-3);
+  align-items: center;
+  margin-bottom: var(--space-4);
+  font-size: var(--font-size-sm);
+  letter-spacing: var(--letter-spacing-wide);
 }
 
-.checkout-voucher__error {
-  color: var(--color-danger);
+.checkout-banner__brand i {
+  color: var(--color-warning);
+  font-size: var(--font-size-xl);
 }
 
-.checkout-voucher__hint {
+.checkout-banner h3 {
+  position: relative;
+  z-index: 1;
+  color: var(--color-text-inverse);
+  font-size: var(--font-size-3xl);
+  text-transform: uppercase;
+}
+
+.checkout-package__name {
+  font-size: var(--font-size-xl);
+}
+
+.checkout-muted {
   color: var(--color-text-muted);
   font-size: var(--font-size-sm);
 }
 
-/* common.js bindCountdowns() đọc data-countdown-seconds để hiện mm:ss và reload khi hết hạn. */
-.checkout-countdown {
-  padding: var(--space-3);
+.checkout-benefits {
+  display: grid;
+  gap: var(--space-3);
+  list-style: none;
+  padding: 0;
+  margin: 0;
+}
+
+.checkout-benefits li {
+  display: flex;
+  gap: var(--space-3);
+  align-items: flex-start;
+}
+
+.checkout-details {
+  margin-top: auto;
+  display: flex;
+  flex-wrap: wrap;
+  gap: var(--space-4);
+  align-items: center;
+  padding-top: var(--space-4);
+  border-top: var(--border-width) solid var(--color-border);
+}
+
+.checkout-details div {
+  display: grid;
+  gap: var(--space-2);
+}
+
+.checkout-details div span {
+  color: var(--color-text-muted);
+  font-size: var(--font-size-sm);
+}
+
+.checkout-prices {
+  display: grid;
+  gap: var(--space-3);
+  margin: 0;
+}
+
+.checkout-prices div {
+  display: flex;
+  justify-content: space-between;
+  gap: var(--space-3);
+}
+
+.checkout-prices dd {
+  margin: 0;
+  font-weight: var(--font-weight-semibold);
+}
+
+.checkout-discount {
+  color: var(--color-success-ink);
+}
+
+/* checkout.js initCheckout/checkVoucher xử lý các ID nằm trong khối này. */
+.checkout-voucher {
+  display: grid;
+  gap: var(--space-2);
+  border-top: var(--border-width) solid var(--color-border);
+  padding-top: var(--space-4);
+}
+
+.checkout-voucher__input {
+  display: flex;
+  align-items: center;
+  gap: var(--space-2);
+  border: var(--border-width) solid var(--color-border);
   border-radius: var(--radius-sm);
-  background: var(--color-warning-tint);
-  color: var(--color-warning-ink);
+  padding-right: var(--space-3);
+}
+
+.checkout-voucher__input:focus-within {
+  outline: var(--border-width-thick) solid var(--color-primary);
+}
+
+.checkout-voucher input[type="text"] {
+  width: 100%;
+  min-width: 0;
+  border: none;
+  outline: none;
+  background: transparent;
+  color: var(--color-text);
+  font: inherit;
+  padding: var(--space-3);
+}
+
+.checkout-voucher__input i {
+  color: var(--color-success-ink);
+}
+
+.checkout-voucher__input button {
+  border: none;
+  border-left: var(--border-width) solid var(--color-border);
+  padding-left: var(--space-3);
+  background: transparent;
+  color: var(--color-text-muted);
+  font-size: var(--font-size-xl);
+  cursor: pointer;
+}
+
+.checkout-voucher__input button:disabled {
+  cursor: default;
+  opacity: var(--opacity-disabled);
+}
+
+.checkout-voucher__status {
+  min-height: var(--space-4);
+  font-size: var(--font-size-sm);
+}
+
+.checkout-voucher__status[data-state="success"] {
+  color: var(--color-success-ink);
+}
+
+.checkout-voucher__status[data-state="error"] {
+  color: var(--color-danger);
+}
+
+.checkout-voucher__status[data-state="neutral"] {
+  color: var(--color-text-muted);
+}
+
+.checkout-total {
+  border-top: var(--border-width) solid var(--color-border);
+  padding-top: var(--space-4);
+}
+
+.checkout-total div {
+  display: flex;
+  flex-wrap: wrap;
+  justify-content: space-between;
+  gap: var(--space-3);
+  align-items: center;
+  font-weight: var(--font-weight-bold);
+}
+
+.checkout-total strong {
+  font-size: var(--font-size-2xl);
+}
+
+.checkout-total p {
+  margin-top: var(--space-2);
+  text-align: right;
+  color: var(--color-text-muted);
+  font-size: var(--font-size-sm);
+}
+
+/* Cùng kiểu nút Mua ngay; chỉ áp dụng tại checkout. */
+.checkout-page {
+  --checkout-buy-top: #F7C948;
+  --checkout-buy-bottom: #E0A01C;
+  --checkout-buy-ink: #2A1D04;
+  --checkout-buy-edge: #B8800F;
+}
+
+.checkout-page .checkout-pay {
+  width: 100%;
+  justify-content: center;
+  gap: var(--space-3);
+  padding: var(--space-3);
+  border: 0;
+  border-radius: var(--radius-xs);
+  font-family: var(--font-body);
+  font-size: var(--font-size-md);
+  font-weight: var(--font-weight-semibold);
+  background: linear-gradient(var(--checkout-buy-top), var(--checkout-buy-bottom));
+  color: var(--checkout-buy-ink);
+  box-shadow: 0 var(--border-width-thick) 0 var(--checkout-buy-edge), var(--shadow-card);
+  cursor: pointer;
+}
+
+.checkout-page .checkout-pay:hover:not(:disabled) {
+  filter: brightness(1.06);
+}
+
+.checkout-page .checkout-pay:disabled {
+  opacity: var(--opacity-disabled);
+  cursor: not-allowed;
+}
+
+.checkout-provider {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: var(--space-2);
+  text-align: center;
+}
+
+.checkout-provider img {
+  display: block;
+  width: calc(var(--space-8) * 3);
+  max-width: 100%;
+  height: auto;
+  margin: 0 auto;
+}
+
+.checkout-provider p {
+  color: var(--color-text-muted);
+  font-size: var(--font-size-sm);
+}
+
+.checkout-footer {
+  margin-top: var(--space-4);
+  text-align: center;
+  color: var(--color-text-muted);
+  font-size: var(--font-size-sm);
+}
+
+.checkout-page [hidden] {
+  display: none;
 }
