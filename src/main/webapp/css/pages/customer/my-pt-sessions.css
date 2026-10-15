@@ -344,6 +344,43 @@ html body.dock.my-pt-sessions-page :is(.my-pt-schedule-panel, .my-pt-history-pan
               transform var(--duration-fast) var(--ease-standard);
 }
 
+/* initializeSwapDialog trong my-pt-sessions.js điều khiển dialog, trạng thái tải và slot chọn. */
+.my-pt-swap-button {
+  margin-top: var(--space-3);
+  font-size: var(--font-size-sm);
+}
+
+.my-pt-swap-dialog .my-pt-swap-policy {
+  margin-block: var(--space-4);
+}
+
+.my-pt-swap-slot-label {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-2);
+  margin-top: var(--space-4);
+  color: var(--color-text);
+  font-size: var(--font-size-sm);
+}
+
+.my-pt-swap-slot-label[hidden] { display: none; }
+
+.my-pt-swap-slot-label select {
+  width: 100%;
+  min-height: var(--control-height-lg);
+  padding: var(--space-3);
+  border: var(--border-width) solid var(--color-border-strong);
+  border-radius: var(--radius-button);
+  background: var(--color-surface-muted);
+  color: var(--color-text);
+  font: inherit;
+}
+
+.my-pt-swap-slot-label select:focus-visible {
+  outline: var(--focus-outline-width) solid var(--color-primary);
+  outline-offset: var(--focus-outline-offset);
+}
+
 .my-pt-cancel-button:hover {
   background: var(--brand-ember-red);
   color: var(--brand-paper);

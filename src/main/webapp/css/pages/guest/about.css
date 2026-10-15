@@ -147,6 +147,158 @@
   margin-top: var(--space-8);
 }
 
+/* Pumpy đi thuyền: góc phải trên mặt nước, tối như ngược sáng hoàng hôn. JS: about-pumpy.js. */
+.cy-hero { overflow-x: clip; }
+.sailor {
+  position: absolute;
+  right: var(--sailor-right);
+  bottom: var(--sailor-bottom);
+  z-index: 1;
+  width: var(--sailor-width);
+}
+.sailor::before {
+  content: "";
+  position: absolute;
+  inset: -70% -40% -30% -120%;
+  z-index: -1;
+  background: var(--sailor-shade);
+  pointer-events: none;
+}
+.sailor__track {
+  position: relative;
+  transition: transform var(--sailor-leg) cubic-bezier(0.45, 0, 0.55, 1);
+}
+.sailor.is-out .sailor__track { transform: translateX(calc(-1 * var(--sailor-drift))); }
+.sailor__hit {
+  display: block;
+  width: 100%;
+  padding: 0;
+  border: 0;
+  background: none;
+  cursor: pointer;
+  -webkit-tap-highlight-color: transparent;
+}
+.sailor__hit:focus-visible {
+  outline: var(--focus-outline-width) solid var(--brand-aqua);
+  outline-offset: var(--space-2);
+  border-radius: var(--radius-md);
+}
+.sailor__svg {
+  display: block;
+  width: 100%;
+  height: auto;
+  overflow: visible;
+  filter: brightness(var(--sailor-dim));
+  transition: filter var(--duration-slow) var(--ease-out);
+}
+.sailor__hit:hover .sailor__svg,
+.sailor.is-docked .sailor__svg { filter: brightness(1); }
+.sailor__bob {
+  transform-box: fill-box;
+  transform-origin: 50% 90%;
+  animation: sailor-bob var(--sailor-bob) ease-in-out infinite;
+}
+.sailor__flag {
+  transform-box: fill-box;
+  transform-origin: 100% 50%;
+  animation: sailor-flag calc(var(--sailor-bob) / 3) ease-in-out infinite alternate;
+}
+.sailor__wake { opacity: 0.45; }
+.sailor__blink {
+  transform-box: fill-box;
+  transform-origin: 50% 50%;
+  animation: sailor-blink calc(var(--duration-grow) * 9) infinite;
+}
+.sailor.is-hop .sailor__bob { animation: sailor-hop var(--duration-grow) var(--ease-out); }
+.sailor.is-paused .sailor__bob,
+.sailor.is-paused .sailor__flag,
+.sailor.is-paused .sailor__blink { animation-play-state: paused; }
+.sailor__bubble {
+  position: absolute;
+  right: 4%;
+  bottom: calc(100% - var(--space-4));
+  width: max-content;
+  max-width: var(--sailor-bubble-width);
+  margin: 0;
+  padding: var(--space-3) var(--space-4);
+  border: 3px solid var(--comic-ink);
+  border-radius: var(--radius-md);
+  background: var(--pumpy-dialog-bg);
+  color: var(--pumpy-dialog-text);
+  font-size: var(--font-size-sm);
+  font-weight: var(--font-weight-semibold);
+  line-height: var(--line-height-normal);
+  text-wrap: pretty;
+  opacity: 0;
+  transform: translateY(var(--space-2)) scale(0.96);
+  transform-origin: 80% 100%;
+  transition: opacity var(--duration-base) var(--ease-out), transform var(--duration-base) var(--ease-out);
+  pointer-events: none;
+}
+.sailor__bubble::after {
+  content: "";
+  position: absolute;
+  right: 62%;
+  bottom: calc(-1 * var(--space-3));
+  width: var(--space-4);
+  height: var(--space-4);
+  border-right: 3px solid var(--comic-ink);
+  border-bottom: 3px solid var(--comic-ink);
+  background: var(--pumpy-dialog-bg);
+  transform: rotate(45deg);
+}
+.sailor__bubble.is-on { opacity: 1; transform: none; }
+.sailor__rescue {
+  position: absolute;
+  top: calc(100% + var(--space-2));
+  right: 0;
+  display: inline-flex;
+  align-items: center;
+  min-height: var(--brand-control-height);
+  padding: 0 var(--space-4);
+  border-radius: var(--radius-xs);
+  background: var(--brand-sunset);
+  color: var(--brand-ink);
+  font-size: var(--font-size-sm);
+  font-weight: var(--font-weight-bold);
+  text-decoration: none;
+  white-space: nowrap;
+  visibility: hidden;
+  opacity: 0;
+  transform: translateY(calc(-1 * var(--space-2)));
+  transition: opacity var(--duration-base) var(--ease-out), transform var(--duration-base) var(--ease-out), visibility 0s linear var(--duration-base);
+}
+.sailor.is-docked .sailor__rescue {
+  visibility: visible;
+  opacity: 1;
+  transform: none;
+  transition-delay: 0s;
+}
+.sailor__rescue:hover { background: var(--brand-ember-red); }
+.sailor__rescue:focus-visible { outline: var(--focus-outline-width) solid var(--brand-aqua); outline-offset: var(--focus-outline-offset); }
+.sailor.is-static .sailor__track { transition: none; }
+@keyframes sailor-bob {
+  0%, 100% { transform: translateY(0) rotate(-1.5deg); }
+  50% { transform: translateY(5px) rotate(1.5deg); }
+}
+@keyframes sailor-blink {
+  0%, 92%, 100% { transform: scaleY(1); }
+  95% { transform: scaleY(0.1); }
+}
+@keyframes sailor-flag {
+  from { transform: scaleX(1); }
+  to { transform: scaleX(0.78); }
+}
+@keyframes sailor-hop {
+  0%, 100% { transform: translateY(0); }
+  40% { transform: translateY(-14px) rotate(-3deg); }
+}
+@media (prefers-reduced-motion: reduce) {
+  .sailor__track { transition: none; }
+  .sailor__bob, .sailor__flag, .sailor__blink, .sailor.is-hop .sailor__bob { animation: none; }
+}
+html.gms-lite .sailor__bob, html.gms-lite .sailor__flag, html.gms-lite .sailor__blink { animation: none; }
+
 /* Triết lý và giá trị: đường kẻ mảnh, không khung card hoặc trang trí thừa. */
 .cy-manifesto {
   display: grid;
@@ -368,6 +520,10 @@
 .cy-sub {
   font-size: var(--font-size-lg);
 }
+}
+@media (max-width: 760px) {
+  .sailor { --sailor-width: 132px; --sailor-drift: 96px; --sailor-bubble-width: 200px; right: var(--space-3); bottom: var(--space-3); }
+  .cy-hero { padding-bottom: calc(var(--space-12) * 2); }
 }
 @media (max-width: 420px) {
   .cy-section, .cy-hero__inner {
