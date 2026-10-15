@@ -13,8 +13,8 @@
     <%@ include file="/WEB-INF/jsp/common/head.jspf" %>
     <title>Lịch tập của tôi · Super Gym</title>
     <link rel="stylesheet" href="${pageContext.request.contextPath}/css/pages/customer/dashboard.css?v=20261013c">
-    <link rel="stylesheet" href="${pageContext.request.contextPath}/css/pages/customer/my-pt-sessions.css?v=20261014q">
-    <script src="${pageContext.request.contextPath}/js/pages/customer/my-pt-sessions.js?v=20261014q" defer></script>
+    <link rel="stylesheet" href="${pageContext.request.contextPath}/css/pages/customer/my-pt-sessions.css?v=20261014swap">
+    <script src="${pageContext.request.contextPath}/js/pages/customer/my-pt-sessions.js?v=20261014swap" defer></script>
 </head>
 <body class="dock my-pt-sessions-page ${themeClass}">
 <%@ include file="/WEB-INF/jsp/common/flash-toast.jspf" %>
@@ -40,7 +40,7 @@
             </c:if>
         </header>
 
-        <main class="content my-pt-sessions" id="main-content" tabindex="-1" data-active-view="${activeSessionView}">
+        <main class="content my-pt-sessions" id="main-content" tabindex="-1" data-active-view="${activeSessionView}" data-csrf-token="${fn:escapeXml(csrfToken)}">
             <c:if test="${not empty dashboardError}">
                 <div class="alert-banner danger" role="alert"><c:out value="${dashboardError}" /></div>
             </c:if>
@@ -176,6 +176,9 @@
                                             <article class="my-pt-session">
                                                 <div class="my-pt-session-time">
                                                     <p class="my-pt-session-hours"><span><c:out value="${gms:formatTime(ptSession.startTime)}" /></span><span class="my-pt-time-separator" aria-hidden="true">–</span><span><c:out value="${gms:formatTime(ptSession.endTime)}" /></span></p>
+                                                    <c:if test="${not ptSession.inProgress and ptSession.subscriptionType ne 'SINGLE_SESSION'}">
+                                                        <button type="button" class="btn btn-outline my-pt-swap-button" data-swap-session-id="${ptSession.sessionId}">Đổi buổi</button>
+                                                    </c:if>
                                                     <button type="button" class="my-pt-cancel-button" data-cancel-session-id="${ptSession.sessionId}">
                                                         <i class="fa-solid fa-xmark" aria-hidden="true"></i>
                                                         Hủy buổi
