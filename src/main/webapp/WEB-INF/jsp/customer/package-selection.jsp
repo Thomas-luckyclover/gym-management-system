@@ -9,7 +9,7 @@
         <%@ include file="/WEB-INF/jsp/common/head.jspf" %>
         <title>Mua gói · Super Gym</title>
         <link rel="stylesheet" href="${pageContext.request.contextPath}/css/pages/customer/dashboard.css?v=7">
-        <link rel="stylesheet" href="${pageContext.request.contextPath}/css/pages/customer/package-selection.css?v=7">
+        <link rel="stylesheet" href="${pageContext.request.contextPath}/css/pages/customer/package-selection.css?v=8">
         <script src="${pageContext.request.contextPath}/js/pages/customer/package-selection.js?v=2" defer></script>
     </head>
 
@@ -271,10 +271,10 @@
                                                         </div>
 
                                                         <%-- Nút theo loại gói: mua được online → Mua ngay (nút vàng) + Xem chi tiết (viền);
-                                                             chỉ mua tại quầy → chỉ có Xem chi tiết (không có nút đặt chỗ vì hệ thống không hỗ trợ).
+                                                             SingleSession → Chọn buổi + Xem chi tiết; gói PT theo kỳ chỉ xem chi tiết.
                                                              Tooltip là phần thêm cho máy có chuột; cách mua đầy đủ nằm trong popup chi tiết.
                                                              package-selection.js (hàm bindDetailButtons) mở popup theo data-dialog-target. --%>
-                                                        <div class="package-card__actions${option.purchasableOnline ? '' : ' package-card__actions--single'}">
+                                                        <div class="package-card__actions${option.purchasableOnline or option.singleSession ? '' : ' package-card__actions--single'}">
                                                             <c:choose>
                                                                 <c:when test="${option.purchasableOnline}">
                                                                     <form method="post" action="${pageContext.request.contextPath}/customer/packages/purchase">
@@ -282,6 +282,16 @@
                                                                         <input type="hidden" name="packageId" value="${pkg.packageId}">
                                                                         <button class="package-card__buy" type="submit">Mua ngay</button>
                                                                     </form>
+                                                                    <button class="package-card__detail" type="button"
+                                                                            data-dialog-target="packageDialog-${pkg.packageId}">
+                                                                        Xem chi tiết
+                                                                    </button>
+                                                                </c:when>
+                                                                <c:when test="${option.singleSession}">
+                                                                    <c:url var="bookSessionUrl" value="/customer/book-session">
+                                                                        <c:param name="packageId" value="${pkg.packageId}" />
+                                                                    </c:url>
+                                                                    <a class="package-card__buy" href="<c:out value='${bookSessionUrl}' />">Chọn buổi</a>
                                                                     <button class="package-card__detail" type="button"
                                                                             data-dialog-target="packageDialog-${pkg.packageId}">
                                                                         Xem chi tiết
@@ -363,15 +373,28 @@
                                                             </section>
                                                         </div>
 
-                                                        <c:if test="${option.purchasableOnline}">
+                                                        <%-- SingleSession chọn lịch trước; Membership/DayPass giữ POST mua ngay. --%>
+                                                        <c:if test="${option.purchasableOnline or option.singleSession}">
                                                             <footer class="package-dialog__footer">
-                                                                <form method="post" action="${pageContext.request.contextPath}/customer/packages/purchase">
+                                                                <c:choose>
+                                                                    <c:when test="${option.singleSession}">
+                                                                        <c:url var="bookSessionDialogUrl" value="/customer/book-session">
+                                                                            <c:param name="packageId" value="${pkg.packageId}" />
+                                                                        </c:url>
+                                                                        <a class="btn btn-primary" href="<c:out value='${bookSessionDialogUrl}' />">
+                                                                            Chọn buổi <i class="fa-solid fa-arrow-right" aria-hidden="true"></i>
+                                                                        </a>
+                                                                    </c:when>
+                                                                    <c:otherwise>
+                                                                        <form method="post" action="${pageContext.request.contextPath}/customer/packages/purchase">
                                                                     <input type="hidden" name="csrfToken" value="<c:out value="${csrfToken}" />">
                                                                     <input type="hidden" name="packageId" value="${pkg.packageId}">
                                                                     <button class="btn btn-primary" type="submit">
                                                                         Thanh toán ngay <i class="fa-solid fa-arrow-right"></i>
                                                                     </button>
                                                                 </form>
+                                                                    </c:otherwise>
+                                                                </c:choose>
                                                             </footer>
                                                         </c:if>
                                                     </div>

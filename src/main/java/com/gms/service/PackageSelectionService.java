@@ -852,7 +852,7 @@ public class PackageSelectionService {
             return "Thanh toán trực tuyến hoặc tại quầy";
         }
         if (packageType == Package.Type.SINGLE_SESSION) {
-            return "Đặt qua mục Đặt buổi lẻ";
+            return "Chọn PT và khung giờ để đặt buổi";
         }
         return "Chỉ mua tại quầy";
     }
@@ -868,7 +868,7 @@ public class PackageSelectionService {
         }
 
         if (packageType == Package.Type.SINGLE_SESSION) {
-            return "Đặt ở mục Đặt buổi lẻ hoặc tại quầy.";
+            return "Bấm Chọn buổi để chọn PT, ngày và khung giờ. Sau khi xác nhận lịch, bạn sẽ được chuyển sang chi tiết thanh toán.";
         }
 
         String counterHint = "Đăng ký tại quầy lễ tân.";

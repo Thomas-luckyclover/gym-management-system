@@ -885,3 +885,12 @@ a.package-pager__item:hover {
   background: #e5b422 !important;
   border-color: #e5b422 !important;
 }
+/* Link Chọn buổi dùng cùng kiểu nút Mua ngay. */
+a.package-card__buy {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  text-align: center;
+  text-decoration: none;
+  box-sizing: border-box;
+}
