@@ -726,7 +726,6 @@ public class MyPtSessionDAO {
         // SQL: chỉ UPDATE khi Status = 'Scheduled' để chống double-submit / người khác vừa đổi.
         // RefundAgreed = 0 vì BR-79: khách tự hủy không hoàn buổi.
         // CancelledAt = SYSDATETIME() vì chính là lúc khách bấm.
-        // TODO: thay bằng SQL thật khi Service dùng tới.
         String sql = """
                 UPDATE s SET s.Status = 'Cancelled',
                              s.CancelType = 'ByCustomer',

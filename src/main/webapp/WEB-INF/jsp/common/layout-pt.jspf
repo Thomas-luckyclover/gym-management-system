@@ -13,7 +13,7 @@
 <div class="dockwrap" id="dock">
   <aside class="sidebar">
     <div class="brand">
-      <span class="brand-mark"><img src="${pageContext.request.contextPath}/images/logo.png?v=20261013" alt="" width="56" height="42"></span>
+      <span class="brand-mark"><img src="${pageContext.request.contextPath}/images/brand/super-gym-mark.svg?v=20261014d" alt="" width="44" height="44"></span>
       <div class="brand-text">
         <div class="brand-name">Super Gym</div>
         <div class="brand-role">Huấn luyện viên</div>

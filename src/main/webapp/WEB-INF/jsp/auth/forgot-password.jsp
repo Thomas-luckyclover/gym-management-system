@@ -14,8 +14,8 @@
 <head>
   <%@ include file="/WEB-INF/jsp/common/head.jspf" %>
   <title>Quên mật khẩu — Super Gym</title>
-  <link rel="stylesheet" href="${pageContext.request.contextPath}/css/pages/auth/login.css?v=3">
-  <link rel="stylesheet" href="${pageContext.request.contextPath}/css/pages/auth/forgot-password.css?v=6">
+  <link rel="stylesheet" href="${pageContext.request.contextPath}/css/pages/auth/login.css?v=20261014b">
+  <link rel="stylesheet" href="${pageContext.request.contextPath}/css/pages/auth/forgot-password.css?v=20261014b">
   <script src="${pageContext.request.contextPath}/js/pages/auth/forgot-password.js?v=1" defer></script>
 </head>
 <body class="theme-guest-dark auth-dark auth-page-forgot">
@@ -24,8 +24,10 @@
   <c:set var="step" value="${empty recoveryStep ? 'email' : recoveryStep}" />
 
   <div class="auth-shell">
+  <%@ include file="/WEB-INF/jsp/common/auth-artwork.jspf" %>
     <div class="auth-top">
-      <a class="auth-brand" href="${ctx}/" aria-label="Super Gym — Trang chủ"><span class="auth-brand__wordmark">SUPER GYM</span></a>
+      <a class="auth-brand" href="${ctx}/" aria-label="Super Gym — Trang chủ"><img class="auth-brand__logo" src="${pageContext.request.contextPath}/images/brand/super-gym-wordmark.svg?v=20261014d" alt="Super Gym" width="170" height="44">
+                    <%@ include file="/WEB-INF/jsp/common/auth-muse.jspf" %></a>
       <a class="auth-back" href="${ctx}/login">
         <i class="fa-solid fa-arrow-left"></i> Về đăng nhập
       </a>

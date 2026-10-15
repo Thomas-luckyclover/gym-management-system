@@ -9,7 +9,7 @@
 
                 <title>Tạo tài khoản — Super Gym</title>
 
-                <link rel="stylesheet" href="${pageContext.request.contextPath}/css/pages/auth/register.css?v=2">
+                <link rel="stylesheet" href="${pageContext.request.contextPath}/css/pages/auth/register.css?v=20261014b">
 
                 <script src="${pageContext.request.contextPath}/js/pages/auth/register.js?v=3" defer></script>
         </head>
@@ -27,8 +27,10 @@
                 <%@ include file="/WEB-INF/jsp/common/flash-toast.jspf" %>
 
                     <div class="auth-shell">
+  <%@ include file="/WEB-INF/jsp/common/auth-artwork.jspf" %>
                         <div class="auth-top">
-                            <a class="auth-brand" href="${pageContext.request.contextPath}/" aria-label="Super Gym — Trang chủ"><span class="auth-brand__wordmark">SUPER GYM</span></a>
+                            <a class="auth-brand" href="${pageContext.request.contextPath}/" aria-label="Super Gym — Trang chủ"><img class="auth-brand__logo" src="${pageContext.request.contextPath}/images/brand/super-gym-wordmark.svg?v=20261014d" alt="Super Gym" width="170" height="44">
+                    <%@ include file="/WEB-INF/jsp/common/auth-muse.jspf" %></a>
 
                             <a class="auth-back" href="${pageContext.request.contextPath}/">
                                 <i class="fa-solid fa-arrow-left"></i>

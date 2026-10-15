@@ -18,7 +18,7 @@ Khu nội bộ gồm mọi khu cần đăng nhập. Mỗi vai trò làm một vi
 - **Manager (quản lý):** cấu hình tham số và giờ mở cửa, quản lý danh mục gói và voucher, quản lý hồ sơ nhân sự, danh mục cơ sở vật chất và bài blog. Duyệt các yêu cầu xóa khách, nghỉ phép và bảo trì. Xem giao dịch toàn hệ thống, đọc góp ý, gửi thông báo, xem dashboard tổng hợp.
 - **Admin (quản trị):** tạo và quản lý tài khoản nội bộ, xem nhật ký kiểm toán (audit log) và báo cáo vận hành.
 
-Cập nhật theo yêu cầu ngày 13/10/2026: phạm vi gồm cả khu công khai (homepage, giới thiệu, blog, đăng nhập/đăng ký) và khu nội bộ. Homepage phục vụ lựa chọn dịch vụ và đăng ký; khu nội bộ ưu tiên hoàn thành tác vụ, giảm rối và trang trí.
+Cập nhật phạm vi ngày 14/10/2026: gồm khu công khai (homepage, giới thiệu, blog, đăng nhập/đăng ký) và khu nội bộ. Homepage phục vụ lựa chọn dịch vụ và đăng ký; khu nội bộ ưu tiên hoàn thành tác vụ, giảm rối và trang trí. Đợt hiện tại tinh chỉnh nhận diện và các component chung, đồng thời làm rõ lịch theo ngày, bộ lọc và xác nhận hủy trong My PT Sessions; giữ route và nghiệp vụ hiện có.
 
 ## Product Purpose
 
@@ -47,11 +47,15 @@ Thành công nghĩa là mỗi vai trò làm xong việc của mình nhanh, khôn
 
 ## Brand Commitments
 
-- Giữ tên **Super Gym**. Logo hiện hành là `src/main/webapp/images/logo.png`, dùng chung ở mọi vị trí nhận diện và favicon; không dùng các logo SVG cũ.
-- Giữ được sự phân biệt trực quan giữa các vai trò.
-- Yêu cầu mới ngày 13/10/2026 cho phép đổi font để khắc phục chữ dính nhau: Be Vietnam Pro cho nội dung/điều khiển, Barlow Condensed cho tiêu đề chiến dịch. Không tracking âm, không ép ngang chữ, chừa khoảng cho dấu tiếng Việt.
-- Homepage cân bằng sắc độ khoảng 65% cam cháy pha đỏ than và 35% aqua sâu trong các vùng màu thương hiệu; đây là tỷ trọng art direction, không phải phép đo từng pixel ảnh.
-- Pumpy giữ hình dáng, thân aqua đậm hơn: mọi xoáy bụng aqua/xanh; tạ trắng lõi cam, tạ đen lõi aqua. Giữ animation của Pumpy, sân gym và thời tiết theo yêu cầu, có tạm dừng và giảm chuyển động. Sidebar dạng mũi tên thu gọn, active bạc. Ảnh cùng trang không lặp lại thành nhiều khối nội dung.
+- Giữ tên **Super Gym**. Nhận diện triển khai dùng `src/main/webapp/images/brand/super-gym-mark.svg` và `super-gym-wordmark.svg`: S cam đặc #FF4F2B, đầu cuộn Ionic, gợn biển và xoáy mực trời; không dấu mặt trời. SVG thay logo PNG ở các vị trí nhận diện và favicon.
+- Các vai trò nhận ra được qua tên khu, menu, nội dung và tác vụ, cùng thuộc một hệ thống thị giác. HintBox dùng mẫu PT Dashboard chung; badge giữ nghĩa xanh thành công/vàng cảnh báo/đỏ lỗi/trung tính.
+- Font hiện hành: **Inter Tight / Inter / JetBrains Mono** cho tiêu đề / nội dung / nhãn ngắn. Chừa đủ khoảng cho dấu tiếng Việt, không ép ngang chữ; số dùng tabular-nums khi cần đối chiếu.
+- Homepage giữ hero `hero-barbell.jpg` và hiệu ứng gốc, aqua tươi đậm hơn khoảng 19%. Nội bộ dùng navy còn sắc đại dương, bản đồ thành phố nét mực rất mờ ở góc dưới phải (cùng thành phố với khối thời tiết, không màu đỏ; thay ảnh gang gỉ từ 15/10) và ripple nhẹ phía sau panel đặc. Light mode "kem bánh" (15/10): nền vàng kem #F8E9D2, panel kem #FFF8EE, chữ nâu espresso, liên kết/focus cam đất; không artwork/sóng/weather nền. Nút chính cam đặc, không gradient hoặc halo.
+- Sidebar màu biển đặc #153D4E, trạng thái chọn màu đặc; tay nắm navy và mũi tên sáng. Ánh xanh theo con trỏ và gió nét SVG hiện khi hover; reduced motion/chế độ nhẹ giữ nét gió tĩnh. Avatar PT dùng viền mảnh như các zone, không vòng cam dày.
+- Auth dùng nét SVG nguyên bản: nam vận động viên bên trái, nữ vận động viên trưởng thành đội nguyệt quế ngồi trên wordmark; form trung tâm yên, rõ. Nét khắc chạy một lần, sóng dừng khi nhập và tuân theo giảm chuyển động.
+- Pumpy giữ silhouette mũm mĩm, tay ngắn tròn, xoáy bụng và **miệng zigzag nguyên bản**; chỉ đổi mắt để biểu cảm. Thân #294F78, xoáy #24496E, tạ/bong bóng #203D60, chữ kem #F2FBF8. Loading thiên hà đen trắng giữ Pumpy/tạ navy. Nội dung tương tác thân thiện, có 12 câu; dẫn nguồn khi kể từ nguyên gym/gymnasium, không suy rộng thành nguồn gốc mọi hoạt động tập luyện.
+- Ảnh nội dung là ảnh chụp thật; ảnh stock chỉ minh họa, có sidecar nguồn cho asset mới. Giữ cảnh canvas mặt trời/tạ riêng trang About, giọt rơi tới thanh tạ. Giữ animation Pumpy, sân gym và thời tiết đã có, cùng cơ chế tạm dừng/giảm chuyển động; ảnh cùng trang không lặp thành nhiều khối nội dung.
+- Email xác minh và thông báo chung dùng cùng palette navy/cam/kem; giữ nội dung, thời hạn OTP và cấu hình gửi hiện có.
 
 ## Evidence on Hand
 
@@ -67,4 +71,4 @@ Thành công nghĩa là mỗi vai trò làm xong việc của mình nhanh, khôn
 - **Lời lẽ theo góc nhìn người dùng:** chữ trên giao diện nói bằng ngôn ngữ của khách và nhân viên phòng gym, không dùng từ kỹ thuật của hệ thống.
 - **Đủ chất để thuyết phục khi demo:** chăm chút như sản phẩm thật, đọc rõ trên máy chiếu.
 
-Hướng thị giác được chốt 13/10: 70% nhịp thể thao, 30% cinematic; khung ngoài bo 2–4px, điều khiển đủ dễ bấm; bỏ dấu cộng trang trí và nét tốc độ gây nhiễu trong sân gym. Thời tiết mất kết nối dùng dữ liệu thật gần nhất trong ngày, có giờ lấy mẫu và nhãn rõ ràng.
+Hướng thị giác hiện tại là **Aegean Ink** theo brief 14/10; chi tiết token và biến thể nằm ở `DESIGN.md`. Không thêm dấu cộng trang trí hoặc nét tốc độ gây nhiễu sân gym. Thời tiết mất kết nối dùng dữ liệu thật gần nhất trong ngày, có giờ lấy mẫu và nhãn rõ ràng. Kiểm chứng gồm preview tĩnh từ source trên desktop/mobile, JS/SVG/diff và biên dịch javac tập trung cho EmailGateway; chưa xác nhận Tomcat, DB, đăng nhập, POST hủy buổi hoặc gửi email thật.

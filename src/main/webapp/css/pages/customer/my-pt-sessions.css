@@ -7,6 +7,9 @@ my-pt-sessions.js dùng [data-session-view], [data-session-panel], #sessionFilte
   min-width: 0;
   font-family: var(--font-body);
 }
+.my-pt-sessions :is([data-session-panel], h2) {
+  scroll-margin-top: calc(var(--space-12) + var(--space-8));
+}
 
 body.my-pt-sessions-page .topbar {
   background: color-mix(in srgb, var(--pt-bg) 88%, transparent);
@@ -18,33 +21,30 @@ body.my-pt-sessions-page .tb-title { color: var(--pt-text); }
 body.my-pt-sessions-page .tb-user { border-color: var(--pt-line-strong); background: var(--pt-panel); color: var(--pt-text); }
 body.my-pt-sessions-page .tb-user-text span { color: var(--pt-muted); }
 
-.my-pt-page-heading {
+.my-pt-toolbar {
   display: flex;
   justify-content: space-between;
   align-items: center;
-  gap: var(--space-5);
+  flex-wrap: wrap;
+  gap: var(--space-4);
+  min-width: 0;
 }
 
-.my-pt-page-heading p {
-  max-width: var(--layout-text-max-width);
-  margin: 0;
-  font-size: var(--font-size-base);
-  line-height: var(--line-height-normal);
-  color: var(--color-text-soft);
-}
-
-.my-pt-page-heading .btn {
+.my-pt-toolbar > .btn {
   flex-shrink: 0;
   min-height: var(--control-height-lg);
   gap: var(--space-2);
 }
 
 .my-pt-view-tabs {
-  display: flex;
-  gap: var(--space-2);
-  overflow-x: auto;
-  border-bottom: var(--border-width) solid var(--color-border);
-  scrollbar-width: thin;
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  flex: 1;
+  min-width: 0;
+  padding: var(--space-1);
+  border: var(--border-width) solid var(--pt-line);
+  border-radius: var(--radius-sm);
+  background: var(--pt-panel);
 }
 
 .my-pt-view-tabs[hidden], .my-pt-sessions [data-session-panel][hidden], .my-pt-filter-panel[hidden] {
@@ -53,22 +53,25 @@ body.my-pt-sessions-page .tb-user-text span { color: var(--pt-muted); }
 
 .my-pt-view-tabs button {
   position: relative;
-  min-height: calc(var(--control-height-lg) + var(--space-2));
-  padding: var(--space-3) var(--space-1);
+  min-width: 0;
+  min-height: var(--control-height-lg);
+  padding: var(--space-2) var(--space-3);
+  border-radius: var(--radius-xs);
   border: 0;
   background: transparent;
   color: var(--color-text-soft);
   font-family: var(--font-body);
   font-size: var(--font-size-base);
   font-weight: var(--font-weight-medium);
-  white-space: nowrap;
+  white-space: normal;
+  text-wrap: balance;
   cursor: pointer;
 }
 
 .my-pt-view-tabs button::after {
   content: "";
   position: absolute;
-  inset: auto 0 0;
+  inset: auto var(--space-3) 0;
   height: var(--border-width-thick);
   background: transparent;
 }
@@ -78,19 +81,21 @@ body.my-pt-sessions-page .tb-user-text span { color: var(--pt-muted); }
 }
 
 .my-pt-view-tabs button[aria-selected="true"] {
-  color: var(--color-text);
+  color: var(--pt-text);
+  background: var(--pt-panel-2);
   font-weight: var(--font-weight-bold);
 }
 
 .my-pt-view-tabs button[aria-selected="true"]::after {
-  background: var(--color-primary);
+  background: var(--brand-sunset);
 }
 
 .my-pt-panel {
   min-width: 0;
-  padding: 0;
-  border: 0;
-  background: transparent;
+  padding: var(--space-5);
+  border: var(--border-width) solid var(--pt-line);
+  border-radius: var(--radius-sm);
+  background: var(--pt-panel);
   box-shadow: none;
 }
 
@@ -226,25 +231,43 @@ body.my-pt-sessions-page .tb-user-text span { color: var(--pt-muted); }
 .my-pt-days {
   display: flex;
   flex-direction: column;
-  gap: var(--space-7);
+  gap: var(--space-5);
 }
 
 .my-pt-day {
   min-width: 0;
+  padding: var(--space-5);
+  border: var(--border-width) solid var(--pt-line-strong);
+  border-radius: var(--radius-sm);
+  background: var(--pt-panel);
+}
+
+/* Mỗi ngày sở hữu một surface riêng, không đặt cả danh sách trên một mảng liền. */
+html body.dock.my-pt-sessions-page :is(.my-pt-schedule-panel, .my-pt-history-panel) {
+  padding: 0;
+  border: 0;
+  background: transparent;
+  box-shadow: none;
 }
 
 .my-pt-day-heading {
   display: flex;
   align-items: center;
   gap: var(--space-3);
-  margin-bottom: var(--space-3);
+  flex-wrap: wrap;
+  margin-bottom: var(--space-1);
+  padding-bottom: var(--space-4);
+  border-bottom: var(--border-width) solid var(--pt-line);
 }
 
 .my-pt-day-label {
   min-width: 0;
-  font-size: var(--font-size-sm);
-  font-weight: var(--font-weight-semibold);
-  color: var(--color-text);
+  padding: var(--space-1) var(--space-2-5);
+  border-radius: var(--radius-xs);
+  background: var(--pt-panel-2);
+  font-size: var(--font-size-base);
+  font-weight: var(--font-weight-bold);
+  color: var(--pt-text);
 }
 
 .my-pt-day-count {
@@ -258,16 +281,14 @@ body.my-pt-sessions-page .tb-user-text span { color: var(--pt-muted); }
 }
 
 .my-pt-day-sessions {
-  border: var(--border-width) solid var(--color-border);
-  border-radius: var(--radius-sm);
-  background: var(--color-surface);
+  background: transparent;
 }
 
 .my-pt-session {
   display: grid;
-  grid-template-columns: minmax(120px, calc(var(--space-12) * 2)) minmax(0, 1fr);
+  grid-template-columns: minmax(0, var(--my-pt-time-width)) minmax(0, 1fr);
   gap: var(--space-5);
-  padding: var(--space-5);
+  padding: var(--space-5) 0;
   border-bottom: var(--border-width) solid var(--color-border);
   min-width: 0;
 }
@@ -308,10 +329,10 @@ body.my-pt-sessions-page .tb-user-text span { color: var(--pt-muted); }
   min-height: var(--control-height-md);
   margin-top: var(--space-3);
   padding: var(--space-2) var(--space-3);
-  border: var(--border-width) solid var(--color-border-strong);
-  border-radius: var(--radius-button);
-  background: transparent;
-  color: var(--color-danger-ink);
+  border: var(--border-width) solid var(--my-pt-cancel-border);
+  border-radius: var(--radius-xs);
+  background: var(--my-pt-cancel-bg);
+  color: var(--my-pt-cancel-text);
   font: inherit;
   font-size: var(--font-size-sm);
   font-weight: var(--font-weight-semibold);
@@ -323,10 +344,47 @@ body.my-pt-sessions-page .tb-user-text span { color: var(--pt-muted); }
               transform var(--duration-fast) var(--ease-standard);
 }
 
+/* initializeSwapDialog trong my-pt-sessions.js điều khiển dialog, trạng thái tải và slot chọn. */
+.my-pt-swap-button {
+  margin-top: var(--space-3);
+  font-size: var(--font-size-sm);
+}
+
+.my-pt-swap-dialog .my-pt-swap-policy {
+  margin-block: var(--space-4);
+}
+
+.my-pt-swap-slot-label {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-2);
+  margin-top: var(--space-4);
+  color: var(--color-text);
+  font-size: var(--font-size-sm);
+}
+
+.my-pt-swap-slot-label[hidden] { display: none; }
+
+.my-pt-swap-slot-label select {
+  width: 100%;
+  min-height: var(--control-height-lg);
+  padding: var(--space-3);
+  border: var(--border-width) solid var(--color-border-strong);
+  border-radius: var(--radius-button);
+  background: var(--color-surface-muted);
+  color: var(--color-text);
+  font: inherit;
+}
+
+.my-pt-swap-slot-label select:focus-visible {
+  outline: var(--focus-outline-width) solid var(--color-primary);
+  outline-offset: var(--focus-outline-offset);
+}
+
 .my-pt-cancel-button:hover {
-  background: var(--color-danger-tint);
-  border-color: var(--color-danger-border);
-  transform: translateY(calc(-1 * var(--border-width)));
+  background: var(--brand-ember-red);
+  color: var(--brand-paper);
+  border-color: var(--brand-ember-red);
 }
 
 .my-pt-cancel-button:active {
@@ -344,13 +402,18 @@ body.my-pt-sessions-page .tb-user-text span { color: var(--pt-muted); }
 
 .my-pt-session-content {
   display: grid;
-  grid-template-columns: minmax(0, 1fr) auto;
+  grid-template-columns: minmax(0, 1fr);
   gap: var(--space-2) var(--space-4);
   align-items: start;
 }
 
 .my-pt-session-heading {
-  display: contents;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  flex-wrap: wrap;
+  gap: var(--space-2) var(--space-4);
+  min-width: 0;
 }
 
 .my-pt-session-heading h3 {
@@ -365,9 +428,7 @@ body.my-pt-sessions-page .tb-user-text span { color: var(--pt-muted); }
 }
 
 .my-pt-session-heading > .my-pt-package-type, .my-pt-session-status {
-  grid-column: 2;
-  grid-row: 1 / 3;
-  justify-self: end;
+  min-width: 0;
 }
 
 .my-pt-session-content > .my-pt-caption {
@@ -396,6 +457,41 @@ body.my-pt-sessions-page .tb-user-text span { color: var(--pt-muted); }
   line-height: var(--line-height-relaxed);
   overflow-wrap: anywhere;
 }
+.my-pt-session-details { min-width: 0; }
+.my-pt-session-details summary {
+  display: inline-flex;
+  align-items: center;
+  gap: var(--space-2);
+  min-height: var(--control-height-md);
+  color: var(--pt-lagoon-text);
+  font-size: var(--font-size-sm);
+  font-weight: var(--font-weight-medium);
+  cursor: pointer;
+  list-style: none;
+}
+.my-pt-session-details summary::-webkit-details-marker { display: none; }
+.my-pt-session-details summary svg { width: var(--icon-size-md); height: var(--icon-size-md); }
+.my-pt-session-details[open] summary svg { transform: rotate(180deg); }
+.my-pt-session-facts {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: var(--space-4) var(--space-6);
+  margin: var(--space-2) 0 0;
+  padding: var(--space-4);
+  border-radius: var(--radius-xs);
+  background: var(--pt-panel-2);
+}
+.my-pt-session-facts > div { min-width: 0; }
+.my-pt-session-facts dt { color: var(--pt-muted); font-size: var(--font-size-xs); }
+.my-pt-session-facts dd {
+  max-width: var(--layout-text-max-width);
+  margin: var(--space-1) 0 0;
+  color: var(--pt-text);
+  font-size: var(--font-size-sm);
+  line-height: var(--line-height-relaxed);
+  overflow-wrap: anywhere;
+}
+.my-pt-session-fact-wide { grid-column: 1 / -1; }
 
 .my-pt-session-status {
   display: flex;
@@ -406,7 +502,7 @@ body.my-pt-sessions-page .tb-user-text span { color: var(--pt-muted); }
 .my-pt-session-status .badge {
   white-space: normal;
   text-align: center;
-  max-width: var(--layout-auth-card-width);
+  max-width: 100%;
 }
 
 .my-pt-package-type {
@@ -432,8 +528,8 @@ body.my-pt-sessions-page .tb-user-text span { color: var(--pt-muted); }
 .my-pt-status-tab {
   display: inline-flex;
   align-items: center;
-  min-height: var(--control-height-lg);
-  padding: var(--space-2) var(--space-4);
+  min-height: var(--control-height-md);
+  padding: var(--space-2) var(--space-3);
   border: var(--border-width) solid var(--color-border);
   border-radius: var(--radius-xs);
   background: var(--color-surface);
@@ -566,50 +662,7 @@ body.my-pt-sessions-page .tb-user-text span { color: var(--pt-muted); }
   line-height: var(--line-height-relaxed);
 }
 
-/* Giải thích native: mở bằng chạm hoặc Enter, hỗ trợ Escape trong JS. */
-.my-pt-info {
-  position: relative;
-  display: inline-block;
-}
-
-.my-pt-info summary {
-  display: grid;
-  place-items: center;
-  min-width: var(--control-height-lg);
-  min-height: var(--control-height-lg);
-  color: var(--color-text-muted);
-  cursor: pointer;
-  list-style: none;
-}
-
-.my-pt-info summary::-webkit-details-marker {
-  display: none;
-}
-
-.my-pt-info summary:hover {
-  color: var(--color-text);
-}
-
-.my-pt-info[open] summary {
-  color: var(--pt-lagoon-text);
-}
-
-.my-pt-help {
-  position: absolute;
-  top: 100%;
-  left: 0;
-  width: min(var(--layout-auth-card-width), 70vw);
-  padding: var(--space-4);
-  border: var(--border-width) solid var(--color-border-strong);
-  border-radius: var(--radius-sm);
-  background: var(--color-surface);
-  color: var(--color-text);
-  font-size: var(--font-size-sm);
-  font-weight: var(--font-weight-regular);
-  line-height: var(--line-height-relaxed);
-  box-shadow: var(--shadow-pop);
-  z-index: var(--z-dropdown);
-}
+.my-pt-title-with-hint { width: 100%; justify-content: space-between; }
 
 .my-pt-pagination {
   display: flex;
@@ -638,7 +691,7 @@ body.my-pt-sessions-page .tb-user-text span { color: var(--pt-muted); }
   cursor: default;
 }
 
-.my-pt-view-tabs button:focus-visible, .my-pt-info summary:focus-visible, .my-pt-filters input:focus-visible, .my-pt-filters select:focus-visible, .my-pt-status-tab:focus-visible {
+.my-pt-view-tabs button:focus-visible, .my-pt-filters input:focus-visible, .my-pt-filters select:focus-visible, .my-pt-status-tab:focus-visible {
   outline: var(--focus-outline-width) solid var(--color-primary);
   outline-offset: var(--focus-outline-offset);
 }
@@ -708,7 +761,8 @@ body.my-pt-sessions-page .tb-user-text span { color: var(--pt-muted); }
 .my-pt-cancel-dialog .my-pt-cancel-dialog-warning {
   margin-top: var(--space-5);
   padding: var(--space-3) var(--space-4);
-  border-left: var(--border-width-thick) solid var(--color-danger);
+  border: var(--border-width) solid var(--color-danger-border);
+  border-radius: var(--radius-xs);
   background: var(--color-danger-tint);
   color: var(--color-text);
 }
@@ -750,13 +804,13 @@ body.my-pt-sessions-page .tb-user-text span { color: var(--pt-muted); }
 }
 
 .my-pt-dialog-actions button[data-cancel-choice="confirm"] {
-  background: var(--color-danger);
-  color: var(--color-on-danger);
+  background: var(--brand-ember-red);
+  color: var(--brand-ink);
   border: 0;
 }
 
 .my-pt-dialog-actions button[data-cancel-choice="confirm"]:hover {
-  background: var(--color-danger-hover);
+  background: var(--brand-sunset);
 }
 
 .my-pt-dialog-actions button[data-cancel-choice="confirm"]:active {
@@ -794,20 +848,14 @@ body.my-pt-sessions-page .tb-user-text span { color: var(--pt-muted); }
 @media (max-width: 900px) {
   body.my-pt-sessions-page .content {
     width: 100%;
-    padding-inline: calc(var(--layout-gutter-mobile) + var(--dock-handle-width));
+    padding-left: var(--layout-gutter-mobile);
+    padding-right: var(--layout-gutter-mobile);
   }
 }
 
 @media (max-width: 700px) {
-  .my-pt-page-heading {
-    align-items: flex-start;
-    flex-direction: column;
-    gap: var(--space-4);
-  }
-
-  .my-pt-view-tabs {
-    gap: var(--space-4);
-  }
+  .my-pt-view-tabs { flex-basis: 100%; }
+  .my-pt-toolbar > .btn { margin-left: auto; }
 
   .my-pt-view-tabs button {
     font-size: var(--font-size-sm);
@@ -816,6 +864,7 @@ body.my-pt-sessions-page .tb-user-text span { color: var(--pt-muted); }
   .my-pt-filter-panel {
     padding: var(--space-4);
   }
+  .my-pt-day { padding: var(--space-4); }
 
   .my-pt-filters {
     grid-template-columns: repeat(2, minmax(0, 1fr));
@@ -828,13 +877,14 @@ body.my-pt-sessions-page .tb-user-text span { color: var(--pt-muted); }
   .my-pt-session {
     grid-template-columns: minmax(0, 1fr);
     gap: var(--space-3);
-    padding: var(--space-4);
+    padding: var(--space-4) 0;
   }
 
   .my-pt-session-content {
     grid-template-columns: minmax(0, 1fr);
     gap: var(--space-2);
   }
+  .my-pt-session-facts { grid-template-columns: minmax(0, 1fr); }
 
   .my-pt-session-heading > .my-pt-package-type, .my-pt-session-status {
     grid-column: 1;
@@ -858,14 +908,6 @@ body.my-pt-sessions-page .tb-user-text span { color: var(--pt-muted); }
     font-size: var(--font-size-xs);
   }
 
-  .my-pt-help {
-    position: fixed;
-    top: auto;
-    bottom: var(--space-6);
-    left: var(--layout-gutter-mobile);
-    width: calc(100vw - var(--layout-gutter-mobile) * 2);
-  }
-
   .my-pt-cancel-dialog {
     width: calc(100vw - var(--space-6));
   }
@@ -882,7 +924,7 @@ body.my-pt-sessions-page .tb-user-text span { color: var(--pt-muted); }
 
   .my-pt-dialog-actions button {
     flex: 1;
-    font-size: var(--font-size-xs);
+    font-size: var(--font-size-sm);
   }
 }
 

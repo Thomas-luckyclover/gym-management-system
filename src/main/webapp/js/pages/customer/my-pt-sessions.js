@@ -98,29 +98,15 @@ function initializeSessionViews() {
     form.addEventListener("submit", function () {
         const submitButton = form.querySelector('button[type="submit"]');
         form.setAttribute("aria-busy", "true");
-        submitButton.disabled = true;
-        submitButton.textContent = "Đang lọc…";
+        setButtonLoading(submitButton, true);
     });
     window.addEventListener("pageshow", function () {
         const submitButton = form.querySelector('button[type="submit"]');
         form.removeAttribute("aria-busy");
-        submitButton.disabled = false;
-        submitButton.textContent = "Lọc lịch tập";
+        setButtonLoading(submitButton, false);
     });
 
-    // B4: Escape đóng phần giải thích; trả focus về nút mở disclosure.
-    // Đóng phần giải thích i
-    page.addEventListener("keydown", function (event) {
-        if (event.key !== "Escape") {
-            return;
-        }
-        const openHelp = page.querySelectorAll(".my-pt-info[open]");
-        for (let index = 0; index < openHelp.length; index++) {
-            const details = openHelp[index];
-            details.open = false;
-            details.querySelector("summary").focus();
-        }
-    });
+    // B4: HintBox dùng chung common.js (chạm, hover/focus và Escape).
 
     // B5: Chỉ gửi yêu cầu khi khách xác nhận hủy; đóng hộp thoại không gửi form.
     const cancelDialog = document.createElement("dialog");
@@ -137,6 +123,7 @@ function initializeSessionViews() {
         '<button type="button" data-cancel-choice="confirm" class="btn">Xác nhận hủy</button>' +
         '</div></div>';
     document.body.appendChild(cancelDialog);
+    initializeSwapDialog(page);
 
     let pendingSessionId = null;
     let cancelOpener = null;
@@ -148,6 +135,13 @@ function initializeSessionViews() {
         }
         pendingSessionId = button.dataset.cancelSessionId; // Quan Trọng: lấy ID buổi
         cancelOpener = button;
+        // Hiện đúng ngày, giờ và PT của hàng vừa chọn; không đổi dữ liệu gửi POST.
+        const session = button.closest(".my-pt-session");
+        const day = button.closest(".my-pt-day");
+        const sessionDetails = day.querySelector(".my-pt-day-label").textContent.trim()
+                + " · " + session.querySelector(".my-pt-session-hours").textContent.trim()
+                + " · " + session.querySelector("h3").textContent.trim();
+        cancelDialog.querySelector("#cancelDialogDesc").textContent = sessionDetails;
         cancelDialog.returnValue = "";                      // xóa kết quả của lần mở trước
         cancelDialog.showModal();
         // Giữ buổi là lựa chọn an toàn khi dùng bàn phím.
@@ -193,4 +187,104 @@ function initializeSessionViews() {
         document.body.appendChild(form);
         form.submit();
     }
+}
+
+// UC-38: chỉ tải lựa chọn bằng AJAX; xác nhận gửi POST để refresh lịch và quota cùng nhau.
+function initializeSwapDialog(page) {
+    const dialog = document.createElement("dialog");
+    dialog.className = "my-pt-cancel-dialog my-pt-swap-dialog";
+    dialog.setAttribute("aria-labelledby", "swapDialogTitle");
+    dialog.innerHTML = '<div class="my-pt-cancel-dialog-content">'
+            + '<h2 id="swapDialogTitle">Đổi buổi tập</h2>'
+            + '<p data-swap-session></p>'
+            + '<p class="my-pt-swap-policy">Chọn slot thứ 7 hoặc Chủ nhật của cùng PT, trong hạn gói. Tuần sau mở từ thứ 7. Mỗi lần xác nhận sử dụng một lượt đổi.</p>'
+            + '<p data-swap-status role="status" aria-live="polite"></p>'
+            + '<label class="my-pt-swap-slot-label" hidden>Khung giờ mới<select data-swap-slots><option value="">Chọn khung giờ</option></select></label>'
+            + '<div class="my-pt-dialog-actions">'
+            + '<button type="button" class="btn btn-outline" data-swap-close>Giữ lịch cũ</button>'
+            + '<button type="button" class="btn btn-primary" data-swap-confirm disabled>Xác nhận đổi</button>'
+            + '</div></div>';
+    document.body.appendChild(dialog);
+    const select = dialog.querySelector("[data-swap-slots]");
+    const label = dialog.querySelector("label");
+    const status = dialog.querySelector("[data-swap-status]");
+    const confirm = dialog.querySelector("[data-swap-confirm]");
+    let sessionId = null;
+    let originalSlotId = null;
+    let opener = null;
+    let requestVersion = 0;
+
+    page.addEventListener("click", async function (event) {
+        const button = event.target.closest("[data-swap-session-id]");
+        if (!button) return;
+        opener = button;
+        sessionId = button.dataset.swapSessionId;
+        originalSlotId = null;
+        const version = ++requestVersion;
+        confirm.disabled = true;
+        label.hidden = true;
+        select.replaceChildren(new Option("Chọn khung giờ", ""));
+        status.textContent = "Đang tìm khung giờ phù hợp…";
+        const row = button.closest(".my-pt-session");
+        dialog.querySelector("[data-swap-session]").textContent =
+                button.closest(".my-pt-day").querySelector(".my-pt-day-label").textContent.trim()
+                + " · " + row.querySelector(".my-pt-session-hours").textContent.trim()
+                + " · " + row.querySelector("h3").textContent.trim();
+        dialog.showModal();
+        dialog.querySelector("[data-swap-close]").focus();
+        try {
+            const result = await getJson(window.location.pathname, {action: "swapOptions", sessionId: sessionId});
+            if (version !== requestVersion || !dialog.open) return;
+            if (!result.success) {
+                status.textContent = result.message || "Không tải được khung giờ. Vui lòng thử lại.";
+                return;
+            }
+            originalSlotId = result.data.originalTimeSlotId;
+            const slots = result.data.slots;
+            if (!slots.length) {
+                status.textContent = "Chưa có slot cuối tuần phù hợp. Bạn có thể thử lại khi PT mở thêm lịch hoặc trao đổi trực tiếp với PT.";
+                return;
+            }
+            status.textContent = "Còn " + result.data.remainingSwaps + " lượt đổi trong gói · PT " + result.data.ptName;
+            for (const slot of slots) {
+                const date = slot.slotDate.split("-").reverse().join("/");
+                select.appendChild(new Option(date + " · " + slot.startTime + "–" + slot.endTime, slot.timeSlotId));
+            }
+            label.hidden = false;
+        } catch (error) {
+            if (version === requestVersion && dialog.open) status.textContent = "Không tải được khung giờ. Vui lòng đóng và thử lại.";
+        }
+    });
+    select.addEventListener("change", function () { confirm.disabled = !select.value; });
+    dialog.querySelector("[data-swap-close]").addEventListener("click", function () { dialog.close(); });
+    dialog.addEventListener("close", function () {
+        requestVersion++;
+        sessionId = null;
+        opener?.focus();
+    });
+    confirm.addEventListener("click", function () {
+        if (!sessionId || !select.value || !originalSlotId || confirm.disabled) return;
+        setButtonLoading(confirm, true);
+        dialog.querySelector("[data-swap-close]").disabled = true;
+        const form = document.createElement("form");
+        form.method = "POST";
+        form.action = window.location.pathname;
+        const values = {action: "swap", sessionId: sessionId,
+            targetTimeSlotId: select.value, originalTimeSlotId: originalSlotId,
+            csrfToken: page.dataset.csrfToken};
+        for (const name of Object.keys(values)) {
+            const input = document.createElement("input");
+            input.type = "hidden";
+            input.name = name;
+            input.value = values[name];
+            form.appendChild(input);
+        }
+        document.body.appendChild(form);
+        form.submit();
+    });
+    window.addEventListener("pageshow", function () {
+        setButtonLoading(confirm, false);
+        confirm.disabled = !select.value;
+        dialog.querySelector("[data-swap-close]").disabled = false;
+    });
 }

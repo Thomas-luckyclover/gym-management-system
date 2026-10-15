@@ -11,29 +11,44 @@ document.addEventListener("DOMContentLoaded", function () {
     if (!stage || !button || !bubble) {
         return;
     }
-    const reduceMotion = window.matchMedia("(prefers-reduced-motion: reduce)").matches;
+    const reduceMotion = window.matchMedia("(prefers-reduced-motion: reduce)").matches
+        || document.documentElement.classList.contains("gms-lite");
+    // Fact về từ nguyên: https://www.etymonline.com/word/gym và /word/gymnasium.
     const lines = [
-        "Tập thôi!",
-        "Thêm 1 rep nữa!",
-        "Khởi động kỹ nhé!",
-        "Nhớ uống đủ nước!",
-        "Hẹn gặp ở phòng tập!",
-        "Cố lên, sắp về đích!"
+        { text: "Mình rất muốn đồng hành cùng bạn. Super Gym cũng thế!", mood: "warm" },
+        { text: "Bạn có biết? ‘Gym’ viết tắt của ‘gymnasium’, có gốc từ ‘gymnasion’ của Hy Lạp cổ đại.", mood: "curious" },
+        { text: "Bạn lại chạm mình rồi! High-five nào… tay mình tròn nên hơi khó một tí.", mood: "wink" },
+        { text: "Buổi đầu hơi ngại? Mình ở đây cổ vũ bạn mà. Cứ bắt đầu theo nhịp của bạn nhé.", mood: "warm" },
+        { text: "Hôm nay bạn muốn thử gì: gặp huấn luyện viên, khám phá phòng tập hay chọn gói tập?", mood: "curious" },
+        { text: "Mình ôm tạ chờ bạn nãy giờ đấy. Hẹn gặp nhau ở Super Gym nhé!", mood: "happy" },
+        { text: "Bạn có biết? Gymnasion Hy Lạp cổ đại còn là nơi rèn cả trí tuệ lẫn thể chất.", mood: "curious" },
+        { text: "Mình không biết hôm nay bạn nâng được bao nhiêu. Nhưng mình vui vì bạn đã có mặt.", mood: "warm" },
+        { text: "Tay mình ngắn, nhưng tinh thần cổ vũ thì dài vô tận. Bạn làm được mà!", mood: "wink" },
+        { text: "Bạn có mục tiêu, Super Gym có người đồng hành. Còn mình có hai tay tròn để cổ vũ!", mood: "happy" },
+        { text: "Muốn bắt đầu cùng tụi mình? Nút Tạo tài khoản ở ngay cạnh mình đó.", mood: "happy" },
+        { text: "Cảm ơn vì ghé nói chuyện với mình. Lần tới gặp ở phòng tập nhé?", mood: "warm" }
     ];
     let lineIndex = 0;
     let bubbleTimer = null;
+    let greetingTimer = null;
+    let greeted = false;
 
     // B1: xuất hiện (bật lên + tạ rơi) khi khối kêu gọi cuộn vào màn hình
-    if (!reduceMotion && "IntersectionObserver" in window) {
-        stage.classList.add("js-mascot");
+    if ("IntersectionObserver" in window) {
+        if (!reduceMotion) {
+            stage.classList.add("js-mascot");
+        }
         const observer = new IntersectionObserver(function (entries) {
             for (let i = 0; i < entries.length; i++) {
                 if (entries[i].isIntersecting) {
                     stage.classList.add("is-visible");
                     observer.disconnect();
                     // Chào người xem ngay khi vừa xuất hiện
-                    setTimeout(function () {
-                        say("Chào bạn! Mình là Pumpy.");
+                    greetingTimer = setTimeout(function () {
+                        if (!greeted) {
+                            greeted = true;
+                            say("Chào bạn, mình là Pumpy! Chạm mình nhé, mình có chuyện muốn kể.", "warm");
+                        }
                     }, 900);
                 }
             }
@@ -61,21 +76,24 @@ document.addEventListener("DOMContentLoaded", function () {
 
     // B3: bấm (chuột, Enter, Space) → nhảy + nói câu tiếp theo
     button.addEventListener("click", function () {
+        greeted = true;
+        clearTimeout(greetingTimer);
         if (!reduceMotion) {
             stage.classList.remove("is-jumping");
             void stage.offsetWidth;
             stage.classList.add("is-jumping");
         }
-        say(lines[lineIndex]);
+        say(lines[lineIndex].text, lines[lineIndex].mood);
         lineIndex = (lineIndex + 1) % lines.length;
     });
 
-    function say(text) {
+    function say(text, mood) {
         bubble.textContent = text;
+        stage.dataset.mood = mood;
         bubble.classList.add("is-on");
         clearTimeout(bubbleTimer);
         bubbleTimer = setTimeout(function () {
             bubble.classList.remove("is-on");
-        }, 2200);
+        }, Math.max(5000, Math.min(10000, text.length * 75)));
     }
 });

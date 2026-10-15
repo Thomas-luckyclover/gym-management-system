@@ -13,8 +13,8 @@
     <%@ include file="/WEB-INF/jsp/common/head.jspf" %>
     <title>Lịch tập của tôi · Super Gym</title>
     <link rel="stylesheet" href="${pageContext.request.contextPath}/css/pages/customer/dashboard.css?v=20261013c">
-    <link rel="stylesheet" href="${pageContext.request.contextPath}/css/pages/customer/my-pt-sessions.css?v=20">
-    <script src="${pageContext.request.contextPath}/js/pages/customer/my-pt-sessions.js?v=2" defer></script>
+    <link rel="stylesheet" href="${pageContext.request.contextPath}/css/pages/customer/my-pt-sessions.css?v=20261014swap">
+    <script src="${pageContext.request.contextPath}/js/pages/customer/my-pt-sessions.js?v=20261014swap" defer></script>
 </head>
 <body class="dock my-pt-sessions-page ${themeClass}">
 <%@ include file="/WEB-INF/jsp/common/flash-toast.jspf" %>
@@ -40,21 +40,20 @@
             </c:if>
         </header>
 
-        <main class="content my-pt-sessions" id="main-content" tabindex="-1" data-active-view="${activeSessionView}">
+        <main class="content my-pt-sessions" id="main-content" tabindex="-1" data-active-view="${activeSessionView}" data-csrf-token="${fn:escapeXml(csrfToken)}">
             <c:if test="${not empty dashboardError}">
                 <div class="alert-banner danger" role="alert"><c:out value="${dashboardError}" /></div>
             </c:if>
 
             <%-- ===== Điều hướng ba tác vụ; JS chỉ chuyển vùng đang xem, dữ liệu vẫn do Servlet tạo ===== --%>
-            <div class="my-pt-page-heading">
-                <p>Xem lịch sắp tới, kết quả buổi tập và gói PT đang hoạt động.</p>
-                <a class="btn btn-primary" href="${pageContext.request.contextPath}/customer/book-session"><svg viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="currentColor" stroke-width="1.8" aria-hidden="true"><path d="M12 5v14M5 12h14"/></svg>Đặt buổi lẻ</a>
-            </div>
+            <div class="my-pt-toolbar">
             <nav class="my-pt-view-tabs" aria-label="Lịch và gói PT" hidden>
                 <button type="button" id="session-tab-upcoming" data-session-view="upcoming" aria-controls="sessions-upcoming">Sắp tới</button>
                 <button type="button" id="session-tab-history" data-session-view="history" aria-controls="sessions-history">Lịch sử</button>
                 <button type="button" id="session-tab-packages" data-session-view="packages" aria-controls="sessions-packages">Gói PT của tôi</button>
             </nav>
+                <a class="btn btn-primary" href="${pageContext.request.contextPath}/customer/book-session"><svg viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="currentColor" stroke-width="1.8" aria-hidden="true"><path d="M12 5v14M5 12h14"/></svg>Đặt buổi lẻ</a>
+            </div>
 
             <%-- ===== Bộ lọc chung (sessionFilter: filter đang áp dụng; filterErrors: lỗi từng ô; filterNotApplied) =====
                  Gói PT, Loại buổi, Từ ngày, Đến ngày áp dụng cho cả Sắp tới và Lịch sử.
@@ -137,7 +136,7 @@
                 <div class="my-pt-heading">
                     <div class="my-pt-title-with-hint">
                         <h2 id="pending-title">Lịch tập sắp tới</h2>
-                        <details class="my-pt-info"><summary aria-label="Giải thích lịch tập sắp tới"><svg viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="currentColor" stroke-width="1.8" aria-hidden="true"><circle cx="12" cy="12" r="9"/><path d="M12 11v6m0-10v1"/></svg></summary><div class="my-pt-help">Các buổi chưa kết thúc, xếp theo ngày giờ gần nhất. Membership hoặc DayPass hợp lệ cho ngày tập được công nhận là quyền vào gym. Cảnh báo bảo lưu không phải kết quả vắng.</div></details>
+                        <span class="pt-info"><button type="button" class="pt-info-trigger" aria-label="Giải thích lịch tập sắp tới" aria-describedby="my-pt-help-1"><span aria-hidden="true">i</span></button><span id="my-pt-help-1" class="pt-info-popover" role="tooltip">Các buổi chưa kết thúc, xếp theo ngày giờ gần nhất. Membership hoặc DayPass hợp lệ cho ngày tập được công nhận là quyền vào gym. Cảnh báo bảo lưu không phải kết quả vắng.</span></span>
                     </div>
                 </div>
                 <c:choose>
@@ -177,6 +176,9 @@
                                             <article class="my-pt-session">
                                                 <div class="my-pt-session-time">
                                                     <p class="my-pt-session-hours"><span><c:out value="${gms:formatTime(ptSession.startTime)}" /></span><span class="my-pt-time-separator" aria-hidden="true">–</span><span><c:out value="${gms:formatTime(ptSession.endTime)}" /></span></p>
+                                                    <c:if test="${not ptSession.inProgress and ptSession.subscriptionType ne 'SINGLE_SESSION'}">
+                                                        <button type="button" class="btn btn-outline my-pt-swap-button" data-swap-session-id="${ptSession.sessionId}">Đổi buổi</button>
+                                                    </c:if>
                                                     <button type="button" class="my-pt-cancel-button" data-cancel-session-id="${ptSession.sessionId}">
                                                         <i class="fa-solid fa-xmark" aria-hidden="true"></i>
                                                         Hủy buổi
@@ -191,15 +193,23 @@
                                             </c:if>
                                         </div>
                                         <p class="my-pt-caption"><c:out value="${ptSession.packageName}" /> · <c:out value="${ptSession.subscriptionTypeLabel}" /></p>
-                                        <c:if test="${not empty ptSession.packageStartDate}">
-                                            <p class="my-pt-caption my-pt-package-term">Thời hạn gói: <c:out value="${gms:formatDate(ptSession.packageStartDate)}" />–<c:out value="${gms:formatDate(ptSession.packageEndDate)}" /> · Gói #<c:out value="${ptSession.subscriptionId}" /></p>
-                                        </c:if>
-                                        <c:if test="${not empty ptSession.partnerName}">
-                                            <p class="my-pt-caption">Tập cùng: <c:out value="${ptSession.partnerName}" /></p>
-                                        </c:if>
                                         <%-- 3. Cảnh báo do Service xét riêng cho người xem và người đi cùng, không đổi trạng thái. --%>
                                         <c:if test="${not empty ptSession.warning}">
                                             <p class="my-pt-session-warning"><c:out value="${ptSession.warning}" /></p>
+                                        </c:if>
+                                        <c:if test="${not empty ptSession.packageStartDate or not empty ptSession.partnerName}">
+                                            <details class="my-pt-session-details">
+                                                <summary>Chi tiết buổi tập<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" aria-hidden="true"><path d="m6 9 6 6 6-6"/></svg></summary>
+                                                <dl class="my-pt-session-facts">
+                                                    <c:if test="${not empty ptSession.packageStartDate}">
+                                                        <div><dt>Thời hạn gói</dt><dd><c:out value="${gms:formatDate(ptSession.packageStartDate)}" /> – <c:out value="${gms:formatDate(ptSession.packageEndDate)}" /></dd></div>
+                                                        <div><dt>Mã gói</dt><dd>#<c:out value="${ptSession.subscriptionId}" /></dd></div>
+                                                    </c:if>
+                                                    <c:if test="${not empty ptSession.partnerName}">
+                                                        <div><dt>Tập cùng</dt><dd><c:out value="${ptSession.partnerName}" /></dd></div>
+                                                    </c:if>
+                                                </dl>
+                                            </details>
                                         </c:if>
                                     </div>
                                 </article>
@@ -257,12 +267,12 @@
                     <div class="my-pt-title-with-hint">
                         <h2 id="history-title">Lịch sử buổi tập</h2>
                         <%-- Hint chung cho khối: cách chia nhóm và ý nghĩa từng trạng thái. --%>
-                        <details class="my-pt-info"><summary aria-label="Giải thích lịch sử buổi tập"><svg viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="currentColor" stroke-width="1.8" aria-hidden="true"><circle cx="12" cy="12" r="9"/><path d="M12 11v6m0-10v1"/></svg></summary><div class="my-pt-help">
+                        <span class="pt-info"><button type="button" class="pt-info-trigger" aria-label="Giải thích lịch sử buổi tập" aria-describedby="my-pt-help-2"><span aria-hidden="true">i</span></button><span id="my-pt-help-2" class="pt-info-popover" role="tooltip">
                                 Các buổi tập đã diễn ra và các buổi đã bị hủy.<br>
                                 <strong>Kết quả đang cập nhật:</strong> buổi vừa kết thúc, kết quả sẽ có sau khi hết ngày tập.<br>
                                 <strong>Đã check-in:</strong> bạn (hoặc người tập cùng, nếu là gói đôi) đã check-in vào gym hôm đó. Đây chỉ là ghi nhận vào cửa, không phải xác nhận đã tập xong với PT.<br>
                                 <strong>Vắng / Đã hủy:</strong> lý do ghi ngay dưới từng buổi. Buổi bạn tự hủy vẫn bị trừ khỏi gói và không được hoàn tiền.
-                            </div></details>
+                            </span></span>
                     </div>
                 </div>
                 <%-- Trạng thái riêng của Lịch sử: mỗi lựa chọn là một link GET, bấm là lọc ngay, không cần JS.
@@ -342,23 +352,30 @@
                                             </div>
                                         </div>
                                         <p class="my-pt-caption"><c:out value="${historySession.packageName}" /> · <c:out value="${historySession.subscriptionTypeLabel}" /></p>
+                                        <%-- Thông tin phụ có nhãn, mở khi cần; nhãn trạng thái vẫn hiện ở đầu hàng. --%>
+                                        <details class="my-pt-session-details">
+                                            <summary>Chi tiết buổi tập<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" aria-hidden="true"><path d="m6 9 6 6 6-6"/></svg></summary>
+                                            <dl class="my-pt-session-facts">
                                         <c:if test="${not empty historySession.packageStartDate}">
-                                            <p class="my-pt-caption my-pt-package-term">Thời hạn gói: <c:out value="${gms:formatDate(historySession.packageStartDate)}" />–<c:out value="${gms:formatDate(historySession.packageEndDate)}" /> · Gói #<c:out value="${historySession.subscriptionId}" /></p>
+                                            <div><dt>Thời hạn gói</dt><dd><c:out value="${gms:formatDate(historySession.packageStartDate)}" /> – <c:out value="${gms:formatDate(historySession.packageEndDate)}" /></dd></div>
+                                            <div><dt>Mã gói</dt><dd>#<c:out value="${historySession.subscriptionId}" /></dd></div>
                                         </c:if>
                                         <c:if test="${not empty historySession.partnerName}">
-                                            <p class="my-pt-caption">Tập cùng: <c:out value="${historySession.partnerName}" /></p>
+                                            <div><dt>Tập cùng</dt><dd><c:out value="${historySession.partnerName}" /></dd></div>
                                         </c:if>
                                         <%-- Giải thích Vắng/Hủy/chờ chốt do Service diễn giải từ kết quả đã lưu. --%>
                                         <c:if test="${not empty historySession.explanation}">
-                                            <p class="my-pt-session-note"><c:out value="${historySession.explanation}" /></p>
+                                            <div class="my-pt-session-fact-wide"><dt>Kết quả buổi tập</dt><dd><c:out value="${historySession.explanation}" /></dd></div>
                                         </c:if>
                                         <c:if test="${not empty historySession.cancelledAt}">
-                                            <p class="my-pt-session-note">Thời điểm hủy: <c:out value="${gms:formatDateTime(historySession.cancelledAt)}" /></p>
+                                            <div><dt>Thời điểm hủy</dt><dd><c:out value="${gms:formatDateTime(historySession.cancelledAt)}" /></dd></div>
                                         </c:if>
                                         <%-- Lý do đã lưu lúc hủy, in nguyên văn khi có. --%>
                                         <c:if test="${not empty historySession.cancelReason}">
-                                            <p class="my-pt-session-note">Lý do đã ghi nhận: <c:out value="${historySession.cancelReason}" /></p>
+                                            <div class="my-pt-session-fact-wide"><dt>Lý do đã ghi nhận</dt><dd><c:out value="${historySession.cancelReason}" /></dd></div>
                                         </c:if>
+                                            </dl>
+                                        </details>
                                     </div>
                                 </article>
                             </c:forEach>
@@ -414,11 +431,11 @@
                     <div class="my-pt-title-with-hint">
                         <h2 id="packages-title">Gói PT của bạn</h2>
                         <%-- Giải thích chỉ hiện khi hover/focus nút i, cùng cách dùng với PT Dashboard. --%>
-                        <details class="my-pt-info"><summary aria-label="Giải thích thông tin gói PT"><svg viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="currentColor" stroke-width="1.8" aria-hidden="true"><circle cx="12" cy="12" r="9"/><path d="M12 11v6m0-10v1"/></svg></summary><div class="my-pt-help">
+                        <span class="pt-info"><button type="button" class="pt-info-trigger" aria-label="Giải thích thông tin gói PT" aria-describedby="my-pt-help-3"><span aria-hidden="true">i</span></button><span id="my-pt-help-3" class="pt-info-popover" role="tooltip">
                                 <strong>Tổng số buổi:</strong> số buổi được tạo khi thanh toán gói.<br>
                                 <strong>Buổi sắp tới:</strong> buổi còn trong lịch và chưa bắt đầu; không gồm buổi đang diễn ra, chờ kết quả hoặc đã hủy.<br>
                                 <strong>Lượt đổi còn lại:</strong> theo giới hạn lúc mua gói. Với gói đôi, hai thành viên dùng chung số buổi và lượt đổi.
-                            </div></details>
+                            </span></span>
                     </div>
                 </div>
                 <c:choose>

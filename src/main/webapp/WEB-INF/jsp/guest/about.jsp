@@ -12,8 +12,10 @@
 <head>
   <%@ include file="/WEB-INF/jsp/common/head.jspf" %>
   <title>Về chúng tôi · Super Gym</title>
-  <link rel="stylesheet" href="${pageContext.request.contextPath}/css/pages/guest/about.css?v=20261013c">
-  <script src="${pageContext.request.contextPath}/js/pages/guest/about-sun.js?v=2" defer></script>
+  <link rel="stylesheet" href="${pageContext.request.contextPath}/css/pages/guest/about.css?v=20261015c">
+  <script src="${pageContext.request.contextPath}/js/pages/guest/about-sun.js?v=20261014a" defer></script>
+  <script src="${pageContext.request.contextPath}/js/pages/guest/about.js?v=20261014a" defer></script>
+  <script src="${pageContext.request.contextPath}/js/pages/guest/about-pumpy.js?v=20261015b" defer></script>
 </head>
 <body class="theme-guest-dark about-page">
   <%@ include file="/WEB-INF/jsp/common/flash-toast.jspf" %>
@@ -34,6 +36,7 @@
           <a class="cy-btn cy-btn--line" href="#story">Câu chuyện của chúng tôi</a>
         </div>
       </div>
+      <%@ include file="/WEB-INF/jsp/guest/_pumpy-sailor.jspf" %>
     </section>
 
     <%-- ===== Triết lý tập luyện: nội dung tĩnh, không số liệu hoặc lời chứng thực ===== --%>
@@ -46,24 +49,32 @@
       <h2 id="values-title" class="cy-h2">Điều làm nên <em>Super Gym</em></h2>
       <div class="cy-values">
         <article class="cy-value">
-          <svg class="cy-value-ico" viewBox="0 0 24 24" aria-hidden="true"><path d="M3 20h18M6 16v-5M11 16V7M16 16v-8M21 16V4"/></svg>
-          <h3>Tiến bộ đo được</h3>
-          <p>Mỗi buổi tập, mỗi lần check-in đều được ghi lại để bạn thấy mình đã đi được bao xa.</p>
+          <div class="cy-value-media"><img src="${ctx}/images/brand/value-progress.jpg" alt="Huấn luyện viên ghi chép buổi tập lên bảng" loading="lazy" width="900" height="900"></div>
+          <div class="cy-value-copy">
+            <h3>Tiến bộ đo được</h3>
+            <p>Mỗi buổi tập, mỗi lần check-in đều được ghi lại để bạn thấy mình đã đi được bao xa.</p>
+          </div>
         </article>
         <article class="cy-value">
-          <svg class="cy-value-ico" viewBox="0 0 24 24" aria-hidden="true"><path d="M6 7v10M3 9.5v5M18 7v10M21 9.5v5M6 12h12"/></svg>
-          <h3>Kỹ thuật trước mức tạ</h3>
-          <p>Huấn luyện viên sửa từng tư thế trước khi tăng tạ, để bạn tập đúng kỹ thuật và bền bỉ hơn.</p>
+          <div class="cy-value-media"><img src="${ctx}/images/brand/value-technique.jpg" alt="Huấn luyện viên hướng dẫn kỹ thuật tập" loading="lazy" width="900" height="900"></div>
+          <div class="cy-value-copy">
+            <h3>Kỹ thuật trước mức tạ</h3>
+            <p>Huấn luyện viên sửa từng tư thế trước khi tăng tạ, để bạn tập đúng kỹ thuật và bền bỉ hơn.</p>
+          </div>
         </article>
         <article class="cy-value">
-          <svg class="cy-value-ico" viewBox="0 0 24 24" aria-hidden="true"><circle cx="9" cy="8" r="3.5"/><path d="M2.5 20c.6-3.6 3.3-5.5 6.5-5.5s5.9 1.9 6.5 5.5"/><path d="M16 4.6a3.5 3.5 0 0 1 0 6.8M18.5 14.8c1.6.7 2.7 2.4 3 5.2"/></svg>
-          <h3>Có người đồng hành</h3>
-          <p>Huấn luyện viên riêng theo sát lịch tập, ghi chú tiến độ và điều chỉnh giáo án cho bạn.</p>
+          <div class="cy-value-media"><img src="${ctx}/images/brand/value-coaching.jpg" alt="Huấn luyện viên đồng hành cùng hội viên khi tập cardio" loading="lazy" width="900" height="900"></div>
+          <div class="cy-value-copy">
+            <h3>Có người đồng hành</h3>
+            <p>Huấn luyện viên riêng theo sát lịch tập, ghi chú tiến độ và điều chỉnh giáo án cho bạn.</p>
+          </div>
         </article>
         <article class="cy-value">
-          <svg class="cy-value-ico" viewBox="0 0 24 24" aria-hidden="true"><rect x="3" y="5" width="18" height="16" rx="2"/><path d="M3 10h18M8 3v4M16 3v4M8 15l2.5 2.5L16 12"/></svg>
-          <h3>Mọi thứ trong một tài khoản</h3>
-          <p>Mua gói, đặt buổi PT, xem lịch tập và lịch sử giao dịch ngay trên điện thoại.</p>
+          <div class="cy-value-media"><img src="${ctx}/images/brand/value-account.jpg" alt="Theo dõi buổi tập bằng điện thoại" loading="lazy" width="900" height="900"></div>
+          <div class="cy-value-copy">
+            <h3>Mọi thứ trong một tài khoản</h3>
+            <p>Mua gói, đặt buổi PT, xem lịch tập và lịch sử giao dịch ngay trên điện thoại.</p>
+          </div>
         </article>
       </div>
     </section>

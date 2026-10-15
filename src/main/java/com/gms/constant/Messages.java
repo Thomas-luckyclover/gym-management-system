@@ -339,6 +339,11 @@ public final class Messages {
     // EN: Session cancelled.
     public static final String MSG110_SESSION_CANCELLED = "Buổi đã hủy thành công.";
 
+    /** UC-38: buổi lẻ không thuộc chính sách đổi buổi gói PT. */
+    public static final String MSG111_SINGLE_SESSION_CANNOT_SWAP = "Buổi PT lẻ không được đổi lịch.";
+    public static final String MSG112_SWAP_SLOT_UNAVAILABLE = "Slot không còn hợp lệ. Hãy chọn slot cuối tuần còn trống, trong hạn gói và không trùng lịch.";
+    public static final String MSG113_SESSION_SWAPPED = "Đã đổi buổi PT và sử dụng một lượt đổi của gói.";
+
     private Messages() {
     }
 }

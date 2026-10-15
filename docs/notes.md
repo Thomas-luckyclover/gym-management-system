@@ -1,5 +1,14 @@
 # File notes — mâu thuẫn tài liệu & quyết định đã chốt
 
+## Customer Swap UC-38 — runtime My PT Session (14/10/2026)
+
+- Đã nối nút Đổi buổi trên buổi gói PT Scheduled chưa bắt đầu. Dialog tải slot qua GET AJAX `action=swapOptions`, xác nhận qua POST `action=swap` với CSRF token và mã slot nguồn để phát hiện lịch đã bị người khác đổi.
+- Backend chỉ cho đổi gói PTSingle/PTCouple Active, đúng người đứng tên hoặc partner, còn lượt theo MaxSwapsSnapshot − SwapsUsed. Không dùng P-08 hiện tại hoặc ghi cứng 3 lượt; không đổi buổi lẻ/đang diễn ra/đã chốt.
+- Slot mới phải Free của PT thực tế đang phụ trách buổi, cùng độ dài, chưa bắt đầu, T7/CN trong hạn gói và cửa sổ CBR-39 (tuần sau mở từ T7). Kiểm tra giờ mở cửa P-19/ngày ngoại lệ, Membership hoặc DayPass theo notes và kỳ bảo lưu; gói đôi cần ít nhất một thành viên đủ quyền vào gym.
+- Chặn trùng lịch Scheduled của PT và bất kỳ thành viên gói với mọi gói khác. Service dùng transaction SERIALIZABLE, khóa buổi/gói/người tham gia, kiểm tra lại slot/quota lúc xác nhận. Bất kỳ bước nào lỗi đều rollback.
+- Cập nhật TimeSlotId của chính buổi, slot đích Booked, nhả slot cũ khi không còn Scheduled, tăng SwapsUsed một lần; giữ nguyên trạng thái Scheduled, giá trị/hoa hồng, hạn gói và tổng buổi. Ghi SessionMoveLogs.CustomerSwap, AuditLogs và thông báo trong ứng dụng cho PT cùng các thành viên có tài khoản, trong cùng transaction.
+- Rỗng/hết lượt/slot mất hiệu lực có thông báo riêng; chọn Giữ lịch cũ hoặc Escape không ghi DB. Chưa triển khai thao tác dời/chuyển PT UC-35 trong lần này.
+
 Theo agents.md Phần 3, 4, 7.3: mọi chỗ SRS/SDS/prototype/chat nói khác nhau được ghi ở đây, kèm trạng thái.
 Khi nhóm chốt xong 1 mục → đổi trạng thái thành **ĐÃ CHỐT**, ghi ngày + phương án, và sửa lại tài liệu gốc cho khớp.
 
