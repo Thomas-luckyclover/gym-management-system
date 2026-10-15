@@ -33,7 +33,7 @@
 <%-- Icon Font Awesome (cùng bản với prototype) — dùng <i class="fa-solid fa-..."></i> --%>
 <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/7.3.1/css/all.min.css">
 
-<link rel="stylesheet" href="${pageContext.request.contextPath}/css/tokens.css?v=20261015a">
+<link rel="stylesheet" href="${pageContext.request.contextPath}/css/tokens.css?v=20261014r">
 <link rel="stylesheet" href="${pageContext.request.contextPath}/css/common.css?v=20261014p">
 <link rel="stylesheet" href="${pageContext.request.contextPath}/css/brand-system.css?v=20261014p">
 <script src="${pageContext.request.contextPath}/js/common.js?v=20261014p" defer></script>

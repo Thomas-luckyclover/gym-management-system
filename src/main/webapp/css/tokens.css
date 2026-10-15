@@ -866,10 +866,9 @@
   --loading-outline: #9B9D9F;
   --loading-capsule-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.2);
   --loading-drift-duration: 12s;
-  /* 15/10: thay ảnh gang gỉ bằng vân mực comic rất mờ (chấm tram, gạch cọ khô) cho khớp hai tranh comic Dashboard. */
-  --ink-art: url("../images/brand/comic-ink.svg");
+  --ink-art: url("../images/brand/kinetic-iron.webp");
   --ink-ground: #0A1E31;
-  --ink-overlay: linear-gradient(90deg, rgba(10, 30, 49, 0.6), rgba(10, 30, 49, 0.2) 58%, rgba(10, 30, 49, 0));
+  --ink-overlay: linear-gradient(90deg, rgba(10, 30, 49, 0.82), rgba(10, 30, 49, 0.64) 58%, rgba(10, 30, 49, 0.22));
   --ink-vignette: linear-gradient(180deg, rgba(10, 30, 49, 0.12), rgba(10, 30, 49, 0.54));
   --ink-ripples: url("../images/brand/ocean-ripples.svg");
   --ink-ripple-size: 360px 120px;
