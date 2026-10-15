@@ -351,19 +351,43 @@ function initCommon() {
 // DOM: .pt-info > .pt-info-trigger + .pt-info-popover, dùng ở mọi zone.
 function bindHintBoxes() {
     const hints = document.querySelectorAll(".pt-info");
+    // Hộp vẫn thuộc nút i, nhưng luôn nằm trong mép màn hình khi mở.
+    function positionHint(hint) {
+        const popover = hint.querySelector(".pt-info-popover");
+        if (!popover) { return; }
+        if (window.matchMedia("(max-width: 700px)").matches) {
+            popover.style.removeProperty("left");
+            popover.style.removeProperty("right");
+            return;
+        }
+        const bounds = hint.getBoundingClientRect();
+        // max-width đã được trình duyệt đổi từ token rem/calc sang px.
+        const maxWidth = parseFloat(getComputedStyle(popover).maxWidth);
+        const gutter = Number.isFinite(maxWidth) ? Math.max(0, (window.innerWidth - maxWidth) / 2) : 16;
+        const viewportWidth = document.documentElement.clientWidth;
+        const width = popover.getBoundingClientRect().width;
+        const preferredLeft = bounds.right - width;
+        const left = Math.max(gutter, Math.min(preferredLeft, viewportWidth - width - gutter));
+        popover.style.right = "auto";
+        popover.style.left = (left - bounds.left) + "px";
+    }
     function closeHint(hint) {
         hint.classList.remove("is-open");
         hint.classList.add("is-dismissed");
-        hint.querySelector(".pt-info-trigger").setAttribute("aria-expanded", "false");
+        const trigger = hint.querySelector(".pt-info-trigger");
+        if (trigger) { trigger.setAttribute("aria-expanded", "false"); }
     }
     for (const hint of hints) {
         const trigger = hint.querySelector(".pt-info-trigger");
         if (!trigger) { continue; }
         trigger.setAttribute("aria-expanded", "false");
+        hint.addEventListener("pointerenter", function () { positionHint(hint); });
+        hint.addEventListener("focusin", function () { positionHint(hint); });
         trigger.addEventListener("click", function () {
             const wasOpen = hint.classList.contains("is-open");
             for (const other of hints) { closeHint(other); }
             if (!wasOpen) {
+                positionHint(hint);
                 hint.classList.remove("is-dismissed");
                 hint.classList.add("is-open");
                 trigger.setAttribute("aria-expanded", "true");
@@ -385,6 +409,9 @@ function bindHintBoxes() {
         for (const hint of hints) {
             if (!hint.contains(event.target)) { closeHint(hint); }
         }
+    });
+    window.addEventListener("resize", function () {
+        for (const hint of hints) { positionHint(hint); }
     });
 }
 
