@@ -3,6 +3,7 @@ package com.gms.dto;
 import com.gms.constant.Role;
 import java.time.LocalDate;
 import java.time.LocalDateTime;
+import java.util.Locale;
 
 /**
  * Dữ liệu hiển thị trên màn Account Settings.
@@ -179,5 +180,32 @@ public class AccountSettingsView {
     /** Thời điểm tham gia của hồ sơ khách. */
     public LocalDateTime getJoinedAt() {
         return joinedAt;
+    }
+
+    /**
+     * Lấy 1 chữ cái đầu của tên (từ cuối cùng trong họ và tên) để làm avatar fallback khi chưa có ảnh.
+     * Quy tắc chính thức toàn hệ thống:
+     * - "Nguyễn Hải Đăng" → "Đ"
+     * - "Nguyễn Đăng Vũ" → "V"
+     * - "Trần Minh Anh" → "A"
+     * - "Lê Hoàng Nam" → "N"
+     * - "Vũ" → "V"
+     * Giữ nguyên dấu tiếng Việt (không chuyển Đ thành D).
+     * Xử lý an toàn khi null, rỗng hoặc nhiều khoảng trắng (trả về "—").
+     */
+    public String getInitials() {
+        if (fullName == null || fullName.isBlank()) {
+            return "—";
+        }
+        String trimmed = fullName.trim();
+        String[] parts = trimmed.split("\\s+");
+        if (parts.length == 0) {
+            return "—";
+        }
+        String lastName = parts[parts.length - 1];
+        if (lastName.isEmpty()) {
+            return "—";
+        }
+        return lastName.substring(0, 1).toUpperCase(Locale.forLanguageTag("vi-VN"));
     }
 }
