@@ -1099,18 +1099,8 @@ body.home-cine {
   --comic-gym-mobile-height: 13rem;
   --comic-weather-height: 21rem;
   --comic-caption-plate: rgba(250, 250, 250, 0.96);
-  /* Tranh comic raster (15/10, Gemini theo brief nhóm): vị trí lớp người nâng tạ trên ảnh nền gym, tính từ script ghép ảnh. */
+  /* Tranh comic raster (15/10, Gemini theo brief nhóm): màu giấy, nhấn đỏ, font chữ viết tay cho chữ thời tiết. */
   --comic-paper-warm: #F8F3EA;
   --comic-red: #B3252B;
-  --comic-lifter-rack-left: 23.909%;
-  --comic-lifter-rack-top: 23.305%;
-  --comic-lifter-rack-width: 21.101%;
-  --comic-lifter-up-left: 26.068%;
-  --comic-lifter-up-top: 19.753%;
-  --comic-lifter-up-width: 17.861%;
-  --comic-gum-left: 44.27%;
-  --comic-gum-top: 40.3%;
-  --comic-gum-size: 1.5%;
-  --comic-dust-duration: 14s;
   --font-comic-hand: "Patrick Hand", "Comic Neue", "Segoe Print", cursive;
 }

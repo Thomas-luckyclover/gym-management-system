@@ -1,13 +1,21 @@
 <%@ page pageEncoding="UTF-8" %>
-<%-- Phòng gym comic (tranh mực đen trắng, chỉ váy và giày cao gót đỏ). Nguồn: ảnh nhóm tạo bằng Gemini 15/10/2026,
-     ghép bằng script: ảnh nền đã xóa người nâng tạ + 2 tư thế cô gái (giữ tạ trước vai / khóa tay qua đầu) tách nền,
-     đặt đúng chỗ cũ bằng token --comic-lifter-*. Vòng lặp 8 giây trong dashboard-comic.css: đổi tư thế kiểu limited
-     animation, bong bóng kẹo phồng xẹp, đèn chập chờn, bụi phấn trôi. Hoàn toàn trang trí (khung chứa aria-hidden). --%>
+<%-- Phòng gym comic (tranh mực đen trắng, chỉ váy và giày cao gót đỏ). Nguồn: ảnh nhóm tạo bằng Gemini 15/10/2026.
+     Motion comic: script tách từng nhân vật thành lớp riêng (kèm viền nền ~10px) và vá chỗ trống trên ảnh nền,
+     nên mỗi người cử động nhẹ độc lập (chạy, nâng tạ, nói chuyện, cúi xem điện thoại, phác họa, đấm bao cát, thở).
+     Vị trí lớp và chuyển động 8 giây ở dashboard-comic.css. Hoàn toàn trang trí (khung chứa aria-hidden). --%>
 <div class="comic-photo comic-gym">
     <img class="comic-photo__plate" src="${pageContext.request.contextPath}/images/comic/gym-plate.webp" alt="" width="2400" height="837" decoding="async">
-    <span class="comic-lamp comic-lamp--a"></span><span class="comic-lamp comic-lamp--b"></span><span class="comic-lamp comic-lamp--c"></span>
-    <img class="comic-lifter comic-lifter--rack" src="${pageContext.request.contextPath}/images/comic/gym-lifter-rack.webp" alt="" decoding="async">
-    <img class="comic-lifter comic-lifter--up" src="${pageContext.request.contextPath}/images/comic/gym-lifter-up.webp" alt="" decoding="async">
-    <span class="comic-gum"></span>
-    <span class="comic-dust"></span>
+    <img class="comic-p comic-p--crowd comic-move--crowd" src="${pageContext.request.contextPath}/images/comic/gym-crowd.webp" alt="" decoding="async">
+    <img class="comic-p comic-p--tablet comic-move--sway" src="${pageContext.request.contextPath}/images/comic/gym-tablet.webp" alt="" decoding="async">
+    <img class="comic-p comic-p--runner comic-move--run" src="${pageContext.request.contextPath}/images/comic/gym-runner.webp" alt="" decoding="async">
+    <img class="comic-p comic-p--minor comic-move--press" src="${pageContext.request.contextPath}/images/comic/gym-minor.webp" alt="" decoding="async">
+    <img class="comic-p comic-p--sidecut comic-move--press" src="${pageContext.request.contextPath}/images/comic/gym-sidecut.webp" alt="" decoding="async">
+    <img class="comic-p comic-p--lifter comic-move--lift" src="${pageContext.request.contextPath}/images/comic/gym-lifter.webp" alt="" decoding="async">
+    <img class="comic-p comic-p--bubble comic-move--sway" src="${pageContext.request.contextPath}/images/comic/gym-bubble.webp" alt="" decoding="async">
+    <img class="comic-p comic-p--phone comic-move--nod" src="${pageContext.request.contextPath}/images/comic/gym-phone.webp" alt="" decoding="async">
+    <img class="comic-p comic-p--coach comic-move--talk" src="${pageContext.request.contextPath}/images/comic/gym-coach.webp" alt="" decoding="async">
+    <img class="comic-p comic-p--curly comic-move--talk" src="${pageContext.request.contextPath}/images/comic/gym-curly.webp" alt="" decoding="async">
+    <img class="comic-p comic-p--sketch comic-move--sketch" src="${pageContext.request.contextPath}/images/comic/gym-sketch.webp" alt="" decoding="async">
+    <img class="comic-p comic-p--boxer comic-move--punch" src="${pageContext.request.contextPath}/images/comic/gym-boxer.webp" alt="" decoding="async">
+    <img class="comic-p comic-p--platinum comic-move--breathe" src="${pageContext.request.contextPath}/images/comic/gym-platinum.webp" alt="" decoding="async">
 </div>

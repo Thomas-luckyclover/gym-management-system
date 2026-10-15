@@ -113,8 +113,7 @@ html body.dock .pt-board__hero .wx-card__temp { color: var(--comic-ink); -webkit
 
 /* =====================================================================
    Tranh comic raster (15/10/2026): ảnh mực đen trắng do nhóm tạo bằng Gemini, ghép bằng script.
-   Khối gym: ảnh nền + 2 tư thế người nâng tạ (đổi tư thế kiểu limited animation), đèn chập chờn,
-   bong bóng kẹo, bụi phấn. Khối thời tiết: thành phố trong bóng đầu người, mỗi thời tiết một tranh.
+   Khối gym: ảnh nền + 13 lớp nhân vật tách riêng, mỗi người một cử động nhẹ (motion comic). Khối thời tiết: thành phố trong bóng đầu người, mỗi thời tiết một tranh.
    Tạm dừng/ngủ dùng chung quy tắc .comic-scene--sleeping ở trên; reduced motion tắt hết.
    ===================================================================== */
 .comic-photo {
@@ -129,83 +128,48 @@ html body.dock .pt-board__hero .wx-card__temp { color: var(--comic-ink); -webkit
 }
 .comic-photo__plate { position: absolute; inset: 0; width: 100%; height: 100%; display: block; }
 .pt-board__hero .wx-gym { background: var(--comic-paper-warm); }
-.comic-lifter { position: absolute; height: auto; display: block; }
-.comic-lifter--rack { left: var(--comic-lifter-rack-left); top: var(--comic-lifter-rack-top); width: var(--comic-lifter-rack-width); opacity: 0; }
-.comic-lifter--up { left: var(--comic-lifter-up-left); top: var(--comic-lifter-up-top); width: var(--comic-lifter-up-width); }
-.comic-lifter--up { animation: comic-pose-up var(--comic-cycle) linear infinite; }
-.comic-lifter--rack { animation: comic-pose-rack var(--comic-cycle) linear infinite; }
-.comic-lamp {
-  position: absolute;
-  width: 12%;
-  aspect-ratio: 1 / 1.3;
-  transform: translateX(-50%);
-  background: radial-gradient(ellipse 50% 60% at 50% 12%, rgba(255, 248, 226, 0.5), transparent 70%);
-  mix-blend-mode: screen;
-  pointer-events: none;
-  animation: comic-lamp var(--comic-cycle) steps(1, end) infinite;
+/* Mỗi nhân vật là một lớp (vị trí % theo ảnh nền 2400×837, sinh từ script tách lớp). */
+.comic-p { position: absolute; height: auto; display: block; transform-origin: 50% 100%; will-change: transform; }
+.comic-p--crowd { left: 49.25%; top: 43.011%; width: 10.042%; }
+.comic-p--tablet { left: 13.917%; top: 38.59%; width: 4.833%; }
+.comic-p--runner { left: 7.583%; top: 29.152%; width: 5.708%; }
+.comic-p--minor { left: 65.917%; top: 40.263%; width: 4.667%; }
+.comic-p--sidecut { left: 58.167%; top: 24.134%; width: 11.542%; }
+.comic-p--lifter { left: 25.042%; top: 17.563%; width: 12.167%; }
+.comic-p--bubble { left: 43.417%; top: 33.931%; width: 5.833%; }
+.comic-p--phone { left: 51.042%; top: 50.896%; width: 8.25%; }
+.comic-p--coach { left: 69.25%; top: 28.315%; width: 10.083%; }
+.comic-p--curly { left: 56.75%; top: 55.914%; width: 9.167%; }
+.comic-p--sketch { left: 18.833%; top: 45.4%; width: 13.0%; }
+.comic-p--boxer { left: 91.333%; top: 25.329%; width: 8.417%; }
+.comic-p--platinum { left: 77.625%; top: 10.394%; width: 13.333%; }
+.comic-move--run { animation: comic-run-bob calc(var(--comic-cycle) / 16) ease-in-out infinite; }
+.comic-move--lift { animation: comic-lift var(--comic-cycle) ease-in-out infinite; }
+.comic-move--press { animation: comic-press calc(var(--comic-cycle) / 2) ease-in-out infinite; }
+.comic-p--minor { animation-delay: -1.3s; }
+.comic-move--sway { animation: comic-sway calc(var(--comic-cycle) / 2) ease-in-out infinite; }
+.comic-p--tablet { animation-delay: -2s; }
+.comic-move--nod { transform-origin: 30% 100%; animation: comic-nod var(--comic-cycle) ease-in-out infinite; }
+.comic-move--talk { animation: comic-talk calc(var(--comic-cycle) / 4) ease-in-out infinite; }
+.comic-p--curly { animation-delay: -1s; animation-duration: calc(var(--comic-cycle) / 2.6); }
+.comic-move--sketch { transform-origin: 40% 100%; animation: comic-sketch-row calc(var(--comic-cycle) / 8) ease-in-out infinite; }
+.comic-move--punch { animation: comic-jab calc(var(--comic-cycle) / 4) ease-out infinite; }
+.comic-move--breathe { animation: comic-breathe-in calc(var(--comic-cycle) / 2) ease-in-out infinite; }
+.comic-move--crowd { animation: comic-crowd calc(var(--comic-cycle) / 2) ease-in-out infinite; }
+@keyframes comic-lift {
+  0%, 8%, 50%, 58%, 100% { transform: translateY(0); }
+  18%, 68% { transform: translateY(1.2%); }
+  30%, 80% { transform: translateY(-1%); }
 }
-.comic-lamp--a { left: 22.3%; top: 12%; }
-.comic-lamp--b { left: 36.1%; top: 13%; animation-delay: -2.7s; }
-.comic-lamp--c { left: 45.4%; top: 20%; animation-delay: -5.1s; }
-.comic-gum {
-  position: absolute;
-  left: var(--comic-gum-left);
-  top: var(--comic-gum-top);
-  width: var(--comic-gum-size);
-  aspect-ratio: 1;
-  border: var(--border-width-thick) solid var(--comic-ink);
-  border-radius: var(--radius-circle);
-  background: radial-gradient(circle at 35% 30%, var(--comic-paper) 0 30%, var(--comic-wash) 75%);
-  transform-origin: 85% 55%;
-  animation: comic-gum var(--comic-cycle) ease-in-out infinite;
-}
-.comic-dust {
-  position: absolute;
-  inset: 0;
-  pointer-events: none;
-  opacity: 0.55;
-  background-image:
-    radial-gradient(circle, rgba(250, 246, 236, 0.9) 0 1px, transparent 1.6px),
-    radial-gradient(circle, rgba(250, 246, 236, 0.7) 0 1px, transparent 1.4px);
-  background-size: 140px 90px, 210px 130px;
-  background-position: 0 0, 60px 40px;
-  mix-blend-mode: screen;
-  animation: comic-dust var(--comic-dust-duration) linear infinite;
-}
-@keyframes comic-pose-up {
-  0%, 14.9% { opacity: 0; }
-  15% { opacity: 1; transform: translateY(1.5%); }
-  18%, 37% { opacity: 1; transform: none; }
-  37.1%, 64.9% { opacity: 0; }
-  65% { opacity: 1; transform: translateY(1.5%); }
-  68%, 87% { opacity: 1; transform: none; }
-  87.1%, 100% { opacity: 0; }
-}
-@keyframes comic-pose-rack {
-  0%, 14.9% { opacity: 1; transform: none; }
-  15%, 37% { opacity: 0; }
-  37.1% { opacity: 1; transform: translateY(-1%); }
-  40%, 64.9% { opacity: 1; transform: none; }
-  65%, 87% { opacity: 0; }
-  87.1% { opacity: 1; transform: translateY(-1%); }
-  90%, 100% { opacity: 1; transform: none; }
-}
-@keyframes comic-lamp {
-  0%, 46%, 50%, 100% { opacity: 1; }
-  47%, 49% { opacity: 0.35; }
-}
-@keyframes comic-gum {
-  0%, 10% { transform: scale(1); opacity: 1; }
-  45% { transform: scale(1.7); opacity: 1; }
-  52% { transform: scale(1.9); opacity: 1; }
-  53%, 60% { transform: scale(0.4); opacity: 0; }
-  61% { transform: scale(0.6); opacity: 1; }
-  100% { transform: scale(1); opacity: 1; }
-}
-@keyframes comic-dust {
-  from { background-position: 0 0, 60px 40px; }
-  to { background-position: 140px -90px, -150px -90px; }
-}
+@keyframes comic-press { 0%, 100% { transform: translateY(0); } 45% { transform: translateY(-1.2%) scaleY(1.008); } }
+@keyframes comic-sway { 0%, 100% { transform: rotate(-0.7deg); } 50% { transform: rotate(0.7deg); } }
+@keyframes comic-nod { 0%, 30%, 60%, 100% { transform: rotate(0); } 40%, 50% { transform: rotate(1.4deg); } 75% { transform: rotate(0.6deg); } }
+@keyframes comic-talk { 0%, 100% { transform: rotate(-0.6deg) translateX(0); } 30% { transform: rotate(0.5deg) translateX(0.6%); } 60% { transform: rotate(-0.2deg) translateX(-0.4%); } }
+@keyframes comic-sketch-row { 0%, 100% { transform: rotate(0); } 50% { transform: rotate(0.6deg); } }
+@keyframes comic-jab { 0%, 60%, 100% { transform: translateX(0); } 15% { transform: translateX(-2.2%) rotate(-0.8deg); } 30% { transform: translateX(0.6%); } }
+@keyframes comic-breathe-in { 0%, 100% { transform: scale(1); } 50% { transform: scale(1.008) translateY(-0.4%); } }
+@keyframes comic-crowd { 0%, 100% { transform: translateY(0); } 50% { transform: translateY(-0.8%); } }
+@keyframes comic-run-bob { 0%, 100% { transform: translateY(0); } 50% { transform: translateY(-1.4%); } }
 
 /* Khối thời tiết: tranh phủ thẻ, đầu người nằm phải, chữ dữ liệu thật trên nền giấy bên trái. */
 .pt-board__hero .wx-card { background: var(--comic-paper-warm); }
@@ -225,7 +189,3 @@ html body.dock .pt-board__hero .wx-card__temp { color: var(--comic-ink); -webkit
 .pt-board__hero .wx-card__temp { font-family: var(--font-comic-hand); letter-spacing: 0; }
 .pt-board__hero .wx-card__place { font-size: var(--font-size-xl); text-transform: uppercase; }
 .pt-board__hero .wx-card__condition { font-size: var(--font-size-lg); }
-@media (prefers-reduced-motion: reduce) {
-  .comic-lifter--rack { opacity: 0; }
-  .comic-lifter--up { opacity: 1; }
-}
