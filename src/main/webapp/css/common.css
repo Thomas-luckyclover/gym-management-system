@@ -2629,8 +2629,7 @@ html body.dock::before {
   inset: 0;
   z-index: 0;
   pointer-events: none;
-  /* Vạch đường cam nằm trên lớp phủ navy nên vẫn thấy rõ; cùng vị trí/cỡ với bản đồ để trùng phố. */
-  background: var(--ink-route, none) right center / cover no-repeat, var(--ink-overlay), var(--ink-vignette), var(--ink-art) right center / cover no-repeat;
+  background: var(--ink-overlay), var(--ink-vignette), var(--ink-art) right center / cover no-repeat;
   animation: none;
 }
 html body.dock::after {

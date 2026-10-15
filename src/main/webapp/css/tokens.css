@@ -866,10 +866,9 @@
   --loading-outline: #9B9D9F;
   --loading-capsule-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.2);
   --loading-drift-duration: 12s;
-  /* 15/10: nền nội bộ là bản đồ thành phố nét mực (cùng thành phố với khối thời tiết), nét màu giấy + một tuyến đường cam nét đứt dẫn tới góc phải.
+  /* 15/10: nền nội bộ là bản đồ thành phố nét mực (cùng thành phố với khối thời tiết), chỉ nét màu giấy, không đỏ.
      Phủ navy đặc ở trên/trái và tan dần về góc dưới phải để không đè khối chào + thời tiết ở đầu Dashboard. */
   --ink-art: url("../images/brand/city-map-ink.webp");
-  --ink-route: url("../images/brand/city-route.svg");
   --ink-ground: #0A1E31;
   --ink-overlay: radial-gradient(ellipse 75% 70% at 92% 96%, rgba(10, 30, 49, 0.76), rgba(10, 30, 49, 0.9) 55%, #0A1E31 85%);
   --ink-vignette: linear-gradient(180deg, #0A1E31 0, rgba(10, 30, 49, 0) 45%);
@@ -1031,7 +1030,6 @@ html[data-theme="light"] body.dock[class*="weather-"] {
   --ink-overlay: none;
   --ink-vignette: none;
   --ink-art: none;
-  --ink-route: none;
   --ink-surface: #FFF8EE;
   --ink-border: #E3CCAA;
   --ink-header: #FBEFDC;
