@@ -1021,38 +1021,39 @@ body.dock[class*="weather-"] {
   --color-role-customer-tint: rgba(255, 122, 61, 0.16);
 }
 
-/* ---- Nền sáng: công tắc trên topbar, lựa chọn nhớ trong localStorage gms-theme ---- */
+/* ---- Nền sáng "kem bánh" (15/10): nền vàng kem, panel kem sáng, chữ nâu espresso, liên kết/focus cam đất.
+   Công tắc trên topbar, lựa chọn nhớ trong localStorage gms-theme. Màu trạng thái (xanh/vàng/đỏ) giữ nghĩa. ---- */
 html[data-theme="light"] body.dock,
 html[data-theme="light"] body.dock[class*="weather-"] {
   color-scheme: light;
-  --ink-ground: #F5F2EB;
+  --ink-ground: #F8E9D2;
   --ink-overlay: none;
   --ink-vignette: none;
   --ink-art: none;
-  --ink-surface: #FFFDF8;
-  --ink-border: #C1CEDB;
-  --ink-header: #FAF8F3;
-  --ink-shadow: 0 18px 48px -32px rgba(18, 40, 64, 0.32);
-  --ink-focus: #315D83;
-  --ink-row-hover: rgba(49, 93, 131, 0.06);
-  --ink-table-head: #E9F0F6;
-  --pt-bg: #F5F2EB;
-  --pt-panel: #FFFDF8;
-  --pt-panel-2: #F0F0E9;
-  --my-pt-cancel-bg: #F8EDEA;
-  --my-pt-cancel-border: #D2A29B;
+  --ink-surface: #FFF8EE;
+  --ink-border: #E3CCAA;
+  --ink-header: #FBEFDC;
+  --ink-shadow: 0 18px 48px -32px rgba(74, 46, 20, 0.3);
+  --ink-focus: #A8461F;
+  --ink-row-hover: rgba(168, 70, 31, 0.06);
+  --ink-table-head: #F4E3C8;
+  --pt-bg: #F8E9D2;
+  --pt-panel: #FFF8EE;
+  --pt-panel-2: #F4E3C8;
+  --my-pt-cancel-bg: #FBE6DC;
+  --my-pt-cancel-border: #D9A18C;
   --my-pt-cancel-text: #8C3540;
-  --pt-line: rgba(22, 39, 46, 0.12);
-  --pt-line-strong: rgba(22, 39, 46, 0.24);
-  --pt-text: #16272E;
-  --pt-soft: #3F5660;
-  --pt-muted: #4C6670;
+  --pt-line: rgba(58, 38, 22, 0.12);
+  --pt-line-strong: rgba(58, 38, 22, 0.26);
+  --pt-text: #2A1E14;
+  --pt-soft: #4E3B2B;
+  --pt-muted: #65503E;
   --pt-ember-text: var(--brand-sunset-deep);
-  --pt-lagoon-text: #0B5E70;
-  --pt-shadow: 0 1px 2px rgba(22, 39, 46, 0.06), 0 18px 36px -26px rgba(22, 39, 46, 0.45);
-  --color-primary-tint: #FDE4D8;
-  --color-primary-border: #F2B094;
-  --color-surface-hover: #E8F0F2;
+  --pt-lagoon-text: #9A3F1C;
+  --pt-shadow: 0 1px 2px rgba(58, 38, 22, 0.06), 0 18px 36px -26px rgba(74, 46, 20, 0.4);
+  --color-primary-tint: #FCE0CC;
+  --color-primary-border: #EDAA86;
+  --color-surface-hover: #F6E4C8;
   --color-success-tint: #E9F5EF;
   --color-success-border: #BFE1CD;
   --color-success-ink: #1F6B41;
@@ -1065,13 +1066,13 @@ html[data-theme="light"] body.dock[class*="weather-"] {
   --color-info-tint: #E2F2F5;
   --color-info-border: #9FCFD9;
   --color-info-ink: #0B5E70;
-  --color-neutral-tint: #EEF3F4;
-  --color-neutral-border: #D3DFE2;
-  --color-tag: #EEF3F4;
-  --color-row-pinned: #FFF4EC;
-  --color-text-disabled: #9BB0B7;
-  --color-overlay: rgba(6, 24, 32, 0.5);
-  --color-link: #0B5E70;
+  --color-neutral-tint: #F3E7D5;
+  --color-neutral-border: #E2D0B6;
+  --color-tag: #F3E7D5;
+  --color-row-pinned: #FDEBD6;
+  --color-text-disabled: #A8937C;
+  --color-overlay: rgba(42, 30, 20, 0.5);
+  --color-link: #A8461F;
   --color-role-admin-tint: #F1ECFB;
   --color-role-manager-tint: #EDEFFA;
   --color-role-staff-tint: #E2F2F5;
