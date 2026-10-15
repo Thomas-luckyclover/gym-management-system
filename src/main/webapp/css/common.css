@@ -1754,6 +1754,9 @@ body.dock ::-webkit-scrollbar-thumb {
   place-items: center;
   width: var(--control-height-md);
   height: var(--control-height-md);
+  min-width: var(--control-height-md);
+  min-height: var(--control-height-md);
+  flex-shrink: 0;
   padding: 0;
   border: var(--border-width) solid var(--pt-line-strong);
   border-radius: var(--radius-circle);
@@ -1768,10 +1771,13 @@ body.dock ::-webkit-scrollbar-thumb {
   position: absolute;
   z-index: var(--z-dropdown);
   top: calc(100% + var(--space-2));
-  right: 0;
+  left: 0;
   width: min(72vw, calc(var(--space-12) * 4));
+  max-width: calc(100vw - var(--space-4) * 2);
+  box-sizing: border-box;
   opacity: 0;
   visibility: hidden;
+  pointer-events: none;
   transform: translateY(calc(-1 * var(--space-1)));
   transition: opacity var(--duration-slow), transform var(--duration-slow), visibility var(--duration-slow);
 }
@@ -1792,9 +1798,10 @@ html body.dock :is(.pt-info-popover, .package-tip__bubble) {
 .pt-info:is(:hover, :focus-within, .is-open) .pt-info-popover {
   opacity: 1;
   visibility: visible;
+  pointer-events: auto;
   transform: none;
 }
-.pt-info.is-dismissed .pt-info-popover { opacity: 0; visibility: hidden; }
+.pt-info.is-dismissed .pt-info-popover { opacity: 0; visibility: hidden; pointer-events: none; }
 @media (max-width: 700px) {
   .pt-info-popover {
     position: fixed;
