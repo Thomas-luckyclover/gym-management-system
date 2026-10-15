@@ -141,8 +141,8 @@ html body.dock .pt-board__hero .wx-card__temp { color: var(--comic-ink); -webkit
 .comic-p--sketch { left: 18.917%; top: 46.834%; width: 12.875%; }
 .comic-p--boxer { left: 91.458%; top: 26.882%; width: 8.167%; }
 .comic-p--platinum { left: 69.375%; top: 11.47%; width: 17.917%; }
-.comic-p--pumpy { left: 78.625%; top: 68.339%; width: 9.833%; }
-.comic-p--pumpy-bell { left: 79.0%; top: 85.066%; width: 9.083%; }
+.comic-p--pumpy { left: 79.5%; top: 64.516%; width: 9.833%; }
+.comic-p--pumpy-bell { left: 79.875%; top: 81.243%; width: 9.083%; }
 .comic-move--run { animation: comic-run-bob calc(var(--comic-cycle) / 16) ease-in-out infinite; }
 .comic-move--lift { animation: comic-lift var(--comic-cycle) ease-in-out infinite; }
 .comic-move--press { animation: comic-press calc(var(--comic-cycle) / 2) ease-in-out infinite; }
