@@ -26,6 +26,7 @@ public class MyPtPackageView {
 
     // ===== 2. Service điền: để hiển thị =====
     private String ptName;               // tên PT phụ trách
+    private String ptPhone;              // [SDT-PT] số điện thoại PT phụ trách
     private String partnerName;          // tên "người tập cùng" (gói đôi)
     private String typeLabel;            // "PT cá nhân" | "PT đôi"
     private int upcomingSessionCount;    // số buổi Scheduled chưa bắt đầu
@@ -58,6 +59,8 @@ public class MyPtPackageView {
     public void setSwapsUsed(int swapsUsed) { this.swapsUsed = swapsUsed; }
     public String getPtName() { return ptName; }
     public void setPtName(String ptName) { this.ptName = ptName; }
+    public String getPtPhone() { return ptPhone; }
+    public void setPtPhone(String ptPhone) { this.ptPhone = ptPhone; }
     public String getPartnerName() { return partnerName; }
     public void setPartnerName(String partnerName) { this.partnerName = partnerName; }
     public String getTypeLabel() { return typeLabel; }
