@@ -47,6 +47,7 @@ public class MyPtSessionRow {
     // =====================================================================
 
     private String ptName;               // tên PT
+    private String ptPhone;              // [SDT-PT] số điện thoại PT (chỉ điền ở khối Sắp tới)
     private String partnerName;          // tên "người tập cùng" (gói đôi), null nếu không có
     private String typeLabel;            // "PT cá nhân" | "PT đôi" | "Buổi lẻ"
 
@@ -148,6 +149,9 @@ public class MyPtSessionRow {
 
     public String getPtName() { return ptName; }
     public void setPtName(String ptName) { this.ptName = ptName; }
+
+    public String getPtPhone() { return ptPhone; }
+    public void setPtPhone(String ptPhone) { this.ptPhone = ptPhone; }
 
     public String getPartnerName() { return partnerName; }
     public void setPartnerName(String partnerName) { this.partnerName = partnerName; }

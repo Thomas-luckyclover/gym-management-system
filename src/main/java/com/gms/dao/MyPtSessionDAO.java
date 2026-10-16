@@ -24,6 +24,7 @@ import java.util.List;
  * TÌM NHANH (Ctrl+F gõ tag):
  *   [GOI-PT]        thẻ "Gói PT của bạn"         → findPtPackages, countUpcomingSessionsOfPackage
  *   [TEN]           tên người                     → findCustomerName, findEmployeeName
+ *   [SDT-PT]        số điện thoại PT              → findEmployeePhone
  *   [CANH-BAO-GYM]  quyền vào gym (cảnh báo vàng) → hasGymPass, isFrozen
  *   [SAP-TOI]       lịch sắp tới                  → findUpcomingDays, findUpcomingSessions
  *   [LICH-SU]       lịch sử                       → findHistoryDays, findHistorySessions
@@ -195,6 +196,17 @@ public class MyPtSessionDAO {
                 WHERE e.EmployeeId = ?
                 """;
         return findOneName(sql, employeeId);
+    }
+
+    /** [SDT-PT] Số điện thoại của PT (Persons.Phone) để khách gọi khi cần. Không có → null. */
+    public String findEmployeePhone(int employeeId) throws SQLException {
+        String sql = """
+                SELECT p.Phone
+                FROM Employees e
+                JOIN Persons p ON p.PersonId = e.PersonId
+                WHERE e.EmployeeId = ?
+                """;
+        return findOneName(sql, employeeId);   // dùng chung hàm đọc 1 cột chữ
     }
 
 

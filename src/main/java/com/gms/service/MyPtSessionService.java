@@ -37,6 +37,7 @@ import java.util.Map;
  *   [SAP-TOI]       1 trang lịch sắp tới                    → getUpcomingPage
  *   [LICH-SU]       1 trang lịch sử                         → getHistoryPage
  *   [PHAN-TRANG]    tính trang, cắt 8 ngày                  → countPages, clampPage, cutDaysOfPage
+ *   [SDT-PT]        số điện thoại PT cho khách xem          → getUpcomingPage, fillPackageNames
  *   [CANH-BAO-GYM]  câu cảnh báo vàng                       → buildGymWarning
  *   [NUT]           bật/tắt nút Hủy, Đổi trên từng buổi     → fillActionFlags
  *   [HUY-BUOI]      khách hủy buổi                          → cancelPtSession
@@ -141,6 +142,7 @@ public class MyPtSessionService {
     /** [GOI-PT] Điền tên PT và tên "người tập cùng" cho 1 gói. */
     private void fillPackageNames(MyPtPackageView p, int myCustomerId) throws SQLException {
         p.setPtName(sessionDAO.findEmployeeName(p.getPtEmployeeId()));
+        p.setPtPhone(sessionDAO.findEmployeePhone(p.getPtEmployeeId()));   // [SDT-PT]
 
         Integer otherId = otherPersonId(p.isCouple(), p.getHolderCustomerId(), p.getPartnerCustomerId(), myCustomerId);
         if (otherId != null) {
@@ -267,6 +269,7 @@ public class MyPtSessionService {
             // B4: điền thông tin hiển thị cho từng buổi
             for (MyPtSessionRow row : rows) {
                 fillCommonInfo(row, customerId);
+                row.setPtPhone(sessionDAO.findEmployeePhone(row.getPtEmployeeId()));   // [SDT-PT] để khách gọi PT
 
                 // Đang diễn ra = đã tới giờ bắt đầu (bây giờ >= giờ bắt đầu)
                 LocalDateTime startsAt = row.getSlotDate().atTime(row.getStartTime());

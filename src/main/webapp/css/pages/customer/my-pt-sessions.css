@@ -955,3 +955,18 @@ html body.dock.my-pt-sessions-page :is(.my-pt-schedule-panel, .my-pt-history-pan
   opacity: 0.55;
   cursor: not-allowed;
 }
+
+/* [SDT-PT] Số điện thoại PT: bấm để gọi */
+.my-pt-pt-phone {
+  display: inline-flex;
+  align-items: center;
+  gap: var(--space-1);
+  color: var(--color-primary);
+  font-size: var(--font-size-sm);
+  font-weight: 600;
+  text-decoration: none;
+}
+
+.my-pt-pt-phone:hover {
+  text-decoration: underline;
+}

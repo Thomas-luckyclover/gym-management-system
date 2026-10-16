@@ -15,7 +15,7 @@
   ${param.xxx} = giá trị thô trên URL, dùng để điền lại ô lọc.
 
   TÌM NHANH (Ctrl+F gõ tag): [HEADER] [TAB] [LOC] [SAP-TOI] [LICH-SU] [PHAN-TRANG] [GOI-PT]
-                            [NUT] [HUY-BUOI] [DOI-BUOI]
+                            [NUT] [HUY-BUOI] [DOI-BUOI] [SDT-PT]
 --%>
 
 <%-- Biến dùng nhiều lần --%>
@@ -38,8 +38,8 @@
     <%@ include file="/WEB-INF/jsp/common/head.jspf" %>
     <title>Lịch tập của tôi · Super Gym</title>
     <link rel="stylesheet" href="${pageContext.request.contextPath}/css/pages/customer/dashboard.css?v=20261013c">
-    <link rel="stylesheet" href="${pageContext.request.contextPath}/css/pages/customer/my-pt-sessions.css?v=20261017b">
-    <script src="${pageContext.request.contextPath}/js/pages/customer/my-pt-sessions.js?v=20261017b" defer></script>
+    <link rel="stylesheet" href="${pageContext.request.contextPath}/css/pages/customer/my-pt-sessions.css?v=20261017c">
+    <script src="${pageContext.request.contextPath}/js/pages/customer/my-pt-sessions.js?v=20261017c" defer></script>
 </head>
 <body class="dock my-pt-sessions-page ${themeClass}">
 <%@ include file="/WEB-INF/jsp/common/flash-toast.jspf" %>
@@ -223,6 +223,10 @@
                                                 <div class="my-pt-session-content">
                                                     <div class="my-pt-session-heading">
                                                         <h3>PT <c:out value="${s.ptName}" /></h3>
+                                                        <%-- [SDT-PT] Bấm số để gọi (trên điện thoại) --%>
+                                                        <c:if test="${not empty s.ptPhone}">
+                                                            <a class="my-pt-pt-phone" href="tel:${fn:escapeXml(s.ptPhone)}"><i class="fa-solid fa-phone" aria-hidden="true"></i> <c:out value="${s.ptPhone}" /></a>
+                                                        </c:if>
                                                         <c:if test="${s.inProgress}"><span class="my-pt-package-type">Đang diễn ra</span></c:if>
                                                     </div>
                                                     <p class="my-pt-caption"><c:out value="${s.packageName}" /> · ${s.typeLabel}</p>
@@ -426,7 +430,16 @@
                                         <span class="my-pt-package-type">${p.typeLabel}</span>
                                     </div>
                                     <dl class="my-pt-package-details ${not empty p.partnerName ? 'my-pt-package-details-couple' : ''}">
-                                        <div><dt>PT phụ trách</dt><dd><c:out value="${p.ptName}" /></dd></div>
+                                        <div>
+                                            <dt>PT phụ trách</dt>
+                                            <dd>
+                                                <c:out value="${p.ptName}" />
+                                                <%-- [SDT-PT] --%>
+                                                <c:if test="${not empty p.ptPhone}">
+                                                    <br><a class="my-pt-pt-phone" href="tel:${fn:escapeXml(p.ptPhone)}"><i class="fa-solid fa-phone" aria-hidden="true"></i> <c:out value="${p.ptPhone}" /></a>
+                                                </c:if>
+                                            </dd>
+                                        </div>
                                         <c:if test="${not empty p.partnerName}">
                                             <div><dt>Người tập cùng</dt><dd><c:out value="${p.partnerName}" /></dd></div>
                                         </c:if>
