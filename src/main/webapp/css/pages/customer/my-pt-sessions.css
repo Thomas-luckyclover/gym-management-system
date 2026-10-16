@@ -931,3 +931,27 @@ html body.dock.my-pt-sessions-page :is(.my-pt-schedule-panel, .my-pt-history-pan
 @media (prefers-reduced-motion: reduce) {
   .my-pt-cancel-dialog, .my-pt-cancel-dialog::backdrop { animation: none; }
 }
+
+/* [HUY-BUOI] Ô "Lý do hủy" trong hộp thoại Hủy buổi (GBR-09) — dùng chung kiểu với ô chọn slot */
+.my-pt-swap-slot-label textarea {
+  width: 100%;
+  min-height: 96px;
+  padding: var(--space-3);
+  border: var(--border-width) solid var(--color-border-strong);
+  border-radius: var(--radius-button);
+  background: var(--color-surface-muted);
+  color: var(--color-text);
+  font: inherit;
+  resize: vertical;
+}
+
+.my-pt-swap-slot-label textarea:focus-visible {
+  outline: var(--focus-outline-width) solid var(--color-primary);
+  outline-offset: var(--focus-outline-offset);
+}
+
+/* [NUT][DOI-BUOI] Nút "Đổi buổi" bị khóa (hết lượt / gói hết hiệu lực) */
+.my-pt-swap-button:disabled {
+  opacity: 0.55;
+  cursor: not-allowed;
+}

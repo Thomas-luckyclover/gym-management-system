@@ -3,18 +3,16 @@ package com.gms.servlet.customer;
 import com.gms.constant.Messages;
 import com.gms.constant.SessionKey;
 import com.gms.dto.CustomerDashboardView;
-import com.gms.dto.MyPtHistorySessionView;
+import com.gms.dto.JsonResponse;
 import com.gms.dto.MyPtPackageView;
 import com.gms.dto.MyPtSessionFilter;
 import com.gms.dto.MyPtSessionPage;
-import com.gms.dto.MyPtUpcomingSessionView;
 import com.gms.dto.ServiceResult;
-import com.gms.dto.JsonResponse;
-import com.gms.service.PtSessionSwapService;
-import com.gms.util.JsonUtil;
 import com.gms.service.CustomerDashboardService;
 import com.gms.service.MyPtSessionService;
+import com.gms.service.PtSessionSwapService;
 import com.gms.util.DateTimeUtil;
+import com.gms.util.JsonUtil;
 import com.gms.util.RequestUtil;
 import jakarta.servlet.ServletException;
 import jakarta.servlet.annotation.WebServlet;
@@ -23,219 +21,248 @@ import jakarta.servlet.http.HttpServletRequest;
 import jakarta.servlet.http.HttpServletResponse;
 import jakarta.servlet.http.HttpSession;
 import java.io.IOException;
+import java.net.URLEncoder;
+import java.nio.charset.StandardCharsets;
 import java.time.LocalDateTime;
 import java.util.List;
 
-/** Điều phối màn Lịch tập của tôi: gộp My Bookings và My PT Sessions. */
+/**
+ * Màn "Lịch tập của tôi" — URL: /customer/pt-sessions
+ *
+ *   GET  (xem trang)          → doGet: nạp dữ liệu các khối rồi forward sang JSP
+ *   GET  ?action=swapOptions  → [DOI-BUOI-GET]  trả JSON slot cho hộp thoại Đổi buổi (AJAX)
+ *   POST action=cancel        → [HUY-BUOI]      hủy buổi (có lý do)
+ *   POST action=swap          → [DOI-BUOI-POST] đổi buổi
+ *   POST xong luôn redirect về trang → F5 không gửi lại (Post/Redirect/Get)
+ *
+ * TÌM NHANH: [GOI-PT] [LOC] [SAP-TOI] [LICH-SU] [PHAN-TRANG] [HUY-BUOI] [DOI-BUOI-GET] [DOI-BUOI-POST] [CSRF] [QUYEN]
+ */
 @WebServlet("/customer/pt-sessions")
 public class MyPtSessionServlet extends HttpServlet {
 
     private static final String VIEW = "customer/my-pt-sessions";
+    private static final String PAGE_URL = "/customer/pt-sessions";
 
-    /** Tham số hành động JSP gửi lên (name="action"). */
-    private static final String PARAM_ACTION = "action";
-
-    /** Tham số mã buổi tập JSP gửi lên (name="sessionId"). */
-    private static final String PARAM_SESSION_ID = "sessionId";
-
-    /** Giá trị hành động hủy buổi tập của khách. */
-    private static final String ACTION_CANCEL = "cancel";
+    /** [LOC][PHAN-TRANG] Tên các ô lọc trên form. THÊM Ô LỌC MỚI → thêm tên vào đây (link phân trang tự giữ). */
+    private static final String[] FILTER_PARAMS = {"subscriptionId", "type", "timeOfDay", "dateFrom", "dateTo"};
 
     private final CustomerDashboardService dashboardService = new CustomerDashboardService();
+    private final MyPtSessionService sessionService = new MyPtSessionService();
     private final PtSessionSwapService swapService = new PtSessionSwapService();
-    private final MyPtSessionService sessionService = new MyPtSessionService(); // Chuẩn bị gói PT của khách đăng nhập.
+
+    // =====================================================================
+    // GET
+    // =====================================================================
 
     @Override
     protected void doGet(HttpServletRequest request, HttpServletResponse response)
             throws ServletException, IOException {
-
-        // B1: lấy account hiện tại; CustomerAreaFilter đã kiểm tra quyền truy cập.
-        HttpSession session = request.getSession(false);
-        Integer accountId = session == null
-                ? null
-                : (Integer) session.getAttribute(SessionKey.ACCOUNT_ID);
-
+        // B1 [QUYEN]: phải đăng nhập
+        Integer accountId = getAccountId(request);
         if (accountId == null) {
-            RequestUtil.redirect(request, response, "/login?returnUrl=/customer/pt-sessions");
+            RequestUtil.redirect(request, response, "/login?returnUrl=" + PAGE_URL);
             return;
         }
 
-        // AJAX chỉ đọc slot cho dialog, không ghi DB và không tải lại cả trang.
-        if ("swapOptions".equals(request.getParameter(PARAM_ACTION))) {
-            Integer sessionId = RequestUtil.getPositiveIntParam(request, PARAM_SESSION_ID);
-            if (sessionId == null) {
-                JsonUtil.writeJson(response, JsonResponse.error(Messages.MSG108_INVALID_OPTION));
-            } else {
-                JsonUtil.writeJson(response, JsonResponse.from(swapService.getOptions(accountId, sessionId)));
-            }
+        // B2 [DOI-BUOI-GET]: nếu là AJAX lấy slot đổi buổi → trả JSON rồi dừng
+        if ("swapOptions".equals(request.getParameter("action"))) {
+            writeSwapOptions(request, response, accountId);
             return;
         }
 
-        request.setAttribute("csrfToken", RequestUtil.getOrCreateCsrfToken(session));
+        // B3: nạp dữ liệu cho từng khối của trang
+        request.setAttribute("csrfToken", RequestUtil.getOrCreateCsrfToken(request.getSession()));
+        loadHeader(request, accountId);
+        List<MyPtPackageView> packageOptions = loadPackages(request, accountId);
+        MyPtSessionFilter filter = loadFilter(request, packageOptions);
+        loadSessionBlocks(request, accountId, filter);
+        loadLinkQueries(request);
 
-        // B2: lấy thông tin header dùng chung với Customer Dashboard.
-        ServiceResult<CustomerDashboardView> dashboardResult =
-                dashboardService.getDashboard(accountId);
-        if (dashboardResult.isSuccess()) {
-            request.setAttribute("dashboard", dashboardResult.getData());
-        } else {
-            request.setAttribute("dashboardError", dashboardResult.getMessage());
-        }
-
-        // B3: lấy gói khách đã mua có Subscriptions.Status = Active, không phải Packages.Status.
-        // Truyền accountId từ session; Service tự xác định customerId và quyền xem gói đôi.
-        ServiceResult<List<MyPtPackageView>> ptPackagesResult =
-                sessionService.getPtPackages(accountId);
-        if (ptPackagesResult.isSuccess()) {
-            // Danh sách rỗng vẫn là tải thành công; JSP mới hiện thông báo chưa có gói phù hợp.
-            request.setAttribute("ptPackages", ptPackagesResult.getData());
-        } else {
-            // Lỗi tải tách khỏi trường hợp không có gói, không thay bằng danh sách rỗng.
-            request.setAttribute("ptPackagesError", ptPackagesResult.getMessage());
-        }
-
-        // Bộ lọc cần cả gói cũ để khách tra cứu Lịch sử; không đổi danh sách thẻ gói Active.
-        ServiceResult<List<MyPtPackageView>> packageOptionsResult =
-                sessionService.getPtPackageOptions(accountId);
-        if (packageOptionsResult.isSuccess()) {
-            request.setAttribute("ptPackageOptions", packageOptionsResult.getData());
-        } else {
-            request.setAttribute("ptPackageOptionsError", packageOptionsResult.getMessage());
-        }
-
-        // Lấy giờ VN đúng một lần cho cả request: hai khối Sắp tới/Lịch sử chia nhóm cùng thời điểm.
-        LocalDateTime now = DateTimeUtil.now();
-        // B3.1: đọc bộ lọc từ URL. Servlet chỉ lấy chuỗi thô; Service kiểm tra và đổi sang kiểu đúng.
-        // Bộ lọc chung (type, dateFrom, dateTo) áp dụng hai khối; historyStatus chỉ thu hẹp Lịch sử.
-        ServiceResult<MyPtSessionFilter> filterResult = sessionService.parseFilter(
-                request.getParameter("type"), request.getParameter("dateFrom"),
-                request.getParameter("dateTo"), request.getParameter("historyStatus"),
-                request.getParameter("subscriptionId"),
-                packageOptionsResult.isSuccess() ? packageOptionsResult.getData() : null);
-        MyPtSessionFilter filter;
-        if (filterResult.isSuccess()) {
-            filter = filterResult.getData();
-        } else {
-            // Có ô sai: không áp dụng một phần, giữ danh sách mặc định và báo lỗi tại từng ô.
-            // Giá trị khách đã nhập vẫn còn trong ${param.*} để JSP điền lại vào ô.
-            filter = MyPtSessionFilter.none();
-            request.setAttribute("filterErrors", filterResult.getFieldErrors());
-            request.setAttribute("filterNotApplied", true);
-        }
-        // JSP đọc sessionFilter để chọn câu rỗng phù hợp khi đang lọc.
-        request.setAttribute("sessionFilter", filter);
-
-        // B3.2: mỗi khối có số trang riêng; Service đổi chuỗi URL thành số nguyên dương.
-        // Service giới hạn số trang theo dữ liệu sau lọc và lấy tối đa 8 ngày có buổi.
-        int upcomingPageNumber = sessionService.parsePageNumber(request.getParameter("upcomingPage"));
-        int historyPageNumber = sessionService.parsePageNumber(request.getParameter("historyPage"));
-        request.setAttribute("upcomingPageNumber", upcomingPageNumber);
-        request.setAttribute("historyPageNumber", historyPageNumber);
-
-        // B4: lấy Scheduled chưa kết thúc; Service bổ sung cảnh báo và nhãn Đang diễn ra.
-        ServiceResult<MyPtSessionPage<MyPtUpcomingSessionView>> upcomingResult =
-                sessionService.getUpcomingSessionsPage(accountId, filter, now, upcomingPageNumber);
-        if (upcomingResult.isSuccess()) {
-            // Gom theo ngày để JSP hiển thị đầy đủ buổi; thứ tự ngày gần nhất trước.
-            request.setAttribute("upcomingDays", upcomingResult.getData().getDays());
-            request.setAttribute("upcomingPage", upcomingResult.getData());
-        } else {
-            request.setAttribute("upcomingSessionsError", upcomingResult.getMessage());
-        }
-
-        // B5: lấy lịch sử gồm CheckedIn, Missed, Cancelled và Scheduled đã qua giờ kết thúc.
-        // Chỉ đọc kết quả đã lưu; Service gắn nhãn, giải thích, hint cho từng dòng.
-        ServiceResult<MyPtSessionPage<MyPtHistorySessionView>> historyResult =
-                sessionService.getHistorySessionsPage(accountId, filter, now, historyPageNumber);
-        if (historyResult.isSuccess()) {
-            // Rỗng vẫn là tải thành công; gom theo ngày, ngày mới nhất trước như thứ tự DAO.
-            request.setAttribute("historyDays", historyResult.getData().getDays());
-            request.setAttribute("historyPage", historyResult.getData());
-        } else {
-            // Lỗi tải tách khỏi trường hợp rỗng, không thay bằng danh sách rỗng.
-            request.setAttribute("historySessionsError", historyResult.getMessage());
-        }
-
-        // Ngày hôm nay giờ VN: JSP dùng để tô nổi bật và hiện nhãn Hôm nay.
-        request.setAttribute("todayDate", now.toLocalDate());
-
-        // B6: chọn mục lịch và dùng màu chung của Customer Zone.
+        // B4: chuyển sang JSP
         request.setAttribute("activeSidebar", "pt-sessions");
         request.setAttribute("themeClass", "theme-pt customer-dashboard-page my-pt-sessions-page");
-
-        // B7: chuyển dữ liệu header, gói PT, lịch sắp tới, lịch sử sang JSP.
         RequestUtil.forward(request, response, VIEW);
     }
 
-    /**
-     * Xử lý hành động của khách trên màn Lịch tập (hiện tại: hủy buổi tập).
-     * <p>Luồng khớp doGet: lấy accountId từ session, parse sessionId an toàn, gọi Service,
-     * redirect về trang danh sách với toast (Post/Redirect/Get) để F5 không resubmit.
-     */
-    @Override
-    protected void doPost(HttpServletRequest request, HttpServletResponse response)
-            throws ServletException, IOException {
-
-        // B1: lấy account hiện tại; CustomerAreaFilter đã kiểm tra quyền truy cập.
-        HttpSession session = request.getSession(false);
-        Integer accountId = session == null
-                ? null
-                : (Integer) session.getAttribute(SessionKey.ACCOUNT_ID);
-
-        if (accountId == null) {
-            RequestUtil.redirect(request, response, "/login?returnUrl=/customer/pt-sessions");
-            return;
-        }
-
-        // B2: đọc hành động và mã buổi tập từ form. Hai bước tách rời để dễ mở rộng sau này.
-        String action = request.getParameter(PARAM_ACTION);
-
-        // B3: parse sessionId an toàn — số nguyên dương; null/0/âm thì fail thân thiện.
-        //    Không cố tìm buổi trước khi parse: tránh để lộ sự tồn tại của buổi lạ.
-        Integer sessionId = RequestUtil.getPositiveIntParam(request, PARAM_SESSION_ID);
-        if (sessionId == null) {
-            // Redirect chứ không forward: đổi URL để không lộ sessionId lạ và F5 không resubmit.
-            RequestUtil.setFlashToast(request, "error", Messages.MSG08_NOT_FOUND.formatted("buổi tập"));
-            RequestUtil.redirect(request, response, "/customer/pt-sessions");
-            return;
-        }
-
-        // B4: phân nhánh theo action. Mỗi nhánh redirect về trang danh sách để áp dụng Post/Redirect/Get.
-        if (ACTION_CANCEL.equals(action)) {
-            handleCancel(request, response, accountId, sessionId);
-        } else if ("swap".equals(action)) {
-            if (!RequestUtil.isValidCsrfToken(request)) {
-                RequestUtil.setFlashToast(request, "error", Messages.MSG07_NO_PERMISSION);
-                RequestUtil.redirect(request, response, "/customer/pt-sessions");
-                return;
-            }
-            Integer targetId = RequestUtil.getPositiveIntParam(request, "targetTimeSlotId");
-            Integer originalId = RequestUtil.getPositiveIntParam(request, "originalTimeSlotId");
-            ServiceResult<Void> result = targetId == null || originalId == null
-                    ? ServiceResult.fail(Messages.MSG108_INVALID_OPTION)
-                    : swapService.swapSession(accountId, sessionId, targetId, originalId);
-            RequestUtil.setFlashToast(request, result.isSuccess() ? "success" : "error", result.getMessage());
-            RequestUtil.redirect(request, response, "/customer/pt-sessions?view=upcoming");
+    /** Header: tên + mã khách (dùng chung với Customer Dashboard). */
+    private void loadHeader(HttpServletRequest request, int accountId) {
+        ServiceResult<CustomerDashboardView> result = dashboardService.getDashboard(accountId);
+        if (result.isSuccess()) {
+            request.setAttribute("dashboard", result.getData());
         } else {
-            // Action lạ/hết hỗ trợ: không thực hiện, báo lỗi thân thiện.
-            RequestUtil.setFlashToast(request, "error", Messages.MSG108_INVALID_OPTION);
-            RequestUtil.redirect(request, response, "/customer/pt-sessions");
+            request.setAttribute("dashboardError", result.getMessage());
         }
     }
 
     /**
-     * Hủy buổi tập PT: ủy quyền cho Service, dùng toast để phản hồi.
-     * Service kiểm tra quyền sở hữu, trạng thái buổi (chỉ hủy được Scheduled), chính sách hủy.
+     * [GOI-PT] Khối "Gói PT của bạn" (gói Active) + danh sách gói cho ô lọc (mọi gói).
+     * @return danh sách gói cho ô lọc (null nếu lỗi) để kiểm tra mã gói trên URL
      */
-    private void handleCancel(HttpServletRequest request, HttpServletResponse response,
-                              int accountId, int sessionId) throws IOException {
-        ServiceResult<Void> result = sessionService.cancelPtSession(accountId, sessionId);
-
-        if (result.isSuccess()) {
-            RequestUtil.setFlashToast(request, "success", result.getMessage());
+    private List<MyPtPackageView> loadPackages(HttpServletRequest request, int accountId) {
+        ServiceResult<List<MyPtPackageView>> packages = sessionService.getPtPackages(accountId);
+        if (packages.isSuccess()) {
+            request.setAttribute("ptPackages", packages.getData());
         } else {
-            RequestUtil.setFlashToast(request, "error", result.getMessage());
+            request.setAttribute("ptPackagesError", packages.getMessage());
         }
-        RequestUtil.redirect(request, response, "/customer/pt-sessions");
+
+        ServiceResult<List<MyPtPackageView>> options = sessionService.getPtPackageOptions(accountId);
+        if (options.isSuccess()) {
+            request.setAttribute("ptPackageOptions", options.getData());
+            return options.getData();
+        }
+        request.setAttribute("ptPackageOptionsError", options.getMessage());
+        return null;
+    }
+
+    /** [LOC] Đọc bộ lọc trên URL. Sai ô nào → báo lỗi ô đó và KHÔNG lọc gì (none). */
+    private MyPtSessionFilter loadFilter(HttpServletRequest request, List<MyPtPackageView> packageOptions) {
+        ServiceResult<MyPtSessionFilter> result = sessionService.parseFilter(
+                request.getParameter("type"),
+                request.getParameter("dateFrom"),
+                request.getParameter("dateTo"),
+                request.getParameter("historyStatus"),
+                request.getParameter("subscriptionId"),
+                request.getParameter("timeOfDay"),
+                packageOptions);
+
+        MyPtSessionFilter filter;
+        if (result.isSuccess()) {
+            filter = result.getData();
+        } else {
+            filter = MyPtSessionFilter.none();
+            request.setAttribute("filterErrors", result.getFieldErrors());
+            request.setAttribute("filterNotApplied", true);
+        }
+        request.setAttribute("sessionFilter", filter);
+        return filter;
+    }
+
+    /** [SAP-TOI][LICH-SU][PHAN-TRANG] Khối "Sắp tới" và "Lịch sử": mỗi khối 1 trang riêng. */
+    private void loadSessionBlocks(HttpServletRequest request, int accountId, MyPtSessionFilter filter) {
+        // Lấy giờ ĐÚNG 1 LẦN để 2 khối chia buổi theo cùng 1 thời điểm (không buổi nào lọt giữa 2 khối)
+        LocalDateTime now = DateTimeUtil.now();
+        request.setAttribute("todayDate", now.toLocalDate());
+
+        int upcomingPageNumber = sessionService.parsePageNumber(request.getParameter("upcomingPage"));
+        ServiceResult<MyPtSessionPage> upcoming =
+                sessionService.getUpcomingPage(accountId, filter, now, upcomingPageNumber);
+        if (upcoming.isSuccess()) {
+            request.setAttribute("upcomingPage", upcoming.getData());
+        } else {
+            request.setAttribute("upcomingSessionsError", upcoming.getMessage());
+        }
+
+        int historyPageNumber = sessionService.parsePageNumber(request.getParameter("historyPage"));
+        ServiceResult<MyPtSessionPage> history =
+                sessionService.getHistoryPage(accountId, filter, now, historyPageNumber);
+        if (history.isSuccess()) {
+            request.setAttribute("historyPage", history.getData());
+        } else {
+            request.setAttribute("historySessionsError", history.getMessage());
+        }
+    }
+
+    /**
+     * [PHAN-TRANG][LOC] Chuỗi tham số để JSP gắn vào link phân trang / tab trạng thái, giữ nguyên bộ lọc đang chọn.
+     *   filterQuery = "type=PTSingle&timeOfDay=morning&"          (chỉ bộ lọc chung)
+     *   pagingQuery = filterQuery + "historyStatus=missed&"       (thêm tab trạng thái)
+     * Mỗi cặp kết thúc bằng "&" để JSP nối tiếp tham số khác phía sau.
+     */
+    private void loadLinkQueries(HttpServletRequest request) {
+        StringBuilder filterQuery = new StringBuilder();
+        for (String name : FILTER_PARAMS) {
+            appendParam(filterQuery, name, request.getParameter(name));
+        }
+        StringBuilder pagingQuery = new StringBuilder(filterQuery);
+        appendParam(pagingQuery, "historyStatus", request.getParameter("historyStatus"));
+
+        request.setAttribute("filterQuery", filterQuery.toString());
+        request.setAttribute("pagingQuery", pagingQuery.toString());
+    }
+
+    private void appendParam(StringBuilder query, String name, String value) {
+        if (value != null && !value.isBlank()) {
+            query.append(name).append('=')
+                    .append(URLEncoder.encode(value.trim(), StandardCharsets.UTF_8))
+                    .append('&');
+        }
+    }
+
+    /** [DOI-BUOI-GET] AJAX: trả JSON { success, message, data: { slots, remainingSwaps, ptName, originalTimeSlotId } }. */
+    private void writeSwapOptions(HttpServletRequest request, HttpServletResponse response, int accountId)
+            throws IOException {
+        Integer sessionId = RequestUtil.getPositiveIntParam(request, "sessionId");
+        if (sessionId == null) {
+            JsonUtil.writeJson(response, JsonResponse.error(Messages.MSG108_INVALID_OPTION));
+            return;
+        }
+        JsonUtil.writeJson(response, JsonResponse.from(swapService.getOptions(accountId, sessionId)));
+    }
+
+    // =====================================================================
+    // POST: hủy buổi / đổi buổi
+    // =====================================================================
+
+    @Override
+    protected void doPost(HttpServletRequest request, HttpServletResponse response)
+            throws ServletException, IOException {
+        // B1 [QUYEN]: phải đăng nhập
+        Integer accountId = getAccountId(request);
+        if (accountId == null) {
+            RequestUtil.redirect(request, response, "/login?returnUrl=" + PAGE_URL);
+            return;
+        }
+
+        // B2 [CSRF]: chống giả mạo request: token gửi lên phải khớp token trong session
+        if (!RequestUtil.isValidCsrfToken(request)) {
+            redirectWithToast(request, response, false, Messages.MSG07_NO_PERMISSION, PAGE_URL);
+            return;
+        }
+
+        // B3: mã buổi phải là số nguyên dương
+        Integer sessionId = RequestUtil.getPositiveIntParam(request, "sessionId");
+        if (sessionId == null) {
+            redirectWithToast(request, response, false, Messages.MSG08_NOT_FOUND.formatted("buổi tập"), PAGE_URL);
+            return;
+        }
+
+        // B4: làm theo action
+        String action = request.getParameter("action");
+        if ("cancel".equals(action)) {
+            // [HUY-BUOI] lý do hủy bắt buộc (GBR-09) — Service kiểm tra độ dài 5–500
+            String reason = request.getParameter("cancelReason");
+            ServiceResult<Void> result = sessionService.cancelPtSession(accountId, sessionId, reason);
+            redirectWithToast(request, response, result.isSuccess(), result.getMessage(), PAGE_URL);
+
+        } else if ("swap".equals(action)) {
+            // [DOI-BUOI-POST]
+            Integer targetSlotId = RequestUtil.getPositiveIntParam(request, "targetTimeSlotId");
+            Integer originalSlotId = RequestUtil.getPositiveIntParam(request, "originalTimeSlotId");
+            ServiceResult<Void> result = (targetSlotId == null || originalSlotId == null)
+                    ? ServiceResult.fail(Messages.MSG108_INVALID_OPTION)
+                    : swapService.swapSession(accountId, sessionId, targetSlotId, originalSlotId);
+            redirectWithToast(request, response, result.isSuccess(), result.getMessage(), PAGE_URL + "?view=upcoming");
+
+        } else {
+            redirectWithToast(request, response, false, Messages.MSG108_INVALID_OPTION, PAGE_URL);
+        }
+    }
+
+    // =====================================================================
+    // HÀM PHỤ
+    // =====================================================================
+
+    /** accountId trong HttpSession (đặt lúc đăng nhập). null = chưa đăng nhập. */
+    private Integer getAccountId(HttpServletRequest request) {
+        HttpSession session = request.getSession(false);
+        return session == null ? null : (Integer) session.getAttribute(SessionKey.ACCOUNT_ID);
+    }
+
+    /** Lưu toast (xanh/đỏ) rồi redirect — trang sau hiện toast. */
+    private void redirectWithToast(HttpServletRequest request, HttpServletResponse response,
+            boolean success, String message, String path) throws IOException {
+        RequestUtil.setFlashToast(request, success ? "success" : "error", message);
+        RequestUtil.redirect(request, response, path);
     }
 }
