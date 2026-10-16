@@ -1,5 +1,11 @@
 # File notes — mâu thuẫn tài liệu & quyết định đã chốt
 
+## Khách hủy buổi — lý do không bắt buộc (17/10/2026, ĐÃ CHỐT)
+
+- Khách tự hủy buổi **không bắt buộc nhập lý do** (theo SRS 9.2.1: hủy không có ô nhập). Có ô "Lý do hủy (không bắt buộc)", tối đa 500 ký tự; bỏ trống thì `Sessions.CancelReason` = NULL.
+- GBR-09 (bắt buộc lý do 5–500) chỉ áp cho nhân viên hủy / từ chối / void; cần sửa câu chữ GBR-09 cho rõ phạm vi.
+- Vẫn giữ: ghi AuditLog, thông báo PT + người tập cùng (CBR-46), 1 transaction, vẫn trừ buổi không hoàn tiền (BR-79).
+
 ## Customer Swap UC-38 — mở rộng ngày được chọn (17/10/2026, ĐÃ CHỐT)
 
 - Khách đổi buổi được chọn **bất kỳ slot thứ 7 / Chủ nhật** của cùng PT, từ hôm nay tới **hết hạn gói** (tuần sau, tháng sau đều được). Bỏ giới hạn "chỉ tuần này, từ thứ 7 mở tuần sau" của CBR-39 cho riêng thao tác đổi buổi.

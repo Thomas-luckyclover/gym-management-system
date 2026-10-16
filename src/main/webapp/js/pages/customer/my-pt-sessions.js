@@ -87,7 +87,7 @@ function setupCancelDialog() {
             dialog.querySelector("[data-session-text]").textContent = button.dataset.sessionText;
             dialog.querySelector('textarea[name="cancelReason"]').value = "";
             dialog.showModal();
-            // "Xác nhận hủy" là nút submit → trình duyệt kiểm tra lý do rồi gửi POST action=cancel
+            // "Xác nhận hủy" là nút submit → trình duyệt gửi POST action=cancel (lý do có thể bỏ trống)
         });
     });
 }

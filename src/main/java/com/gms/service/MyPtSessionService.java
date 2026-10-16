@@ -366,7 +366,8 @@ public class MyPtSessionService {
 
     /**
      * [HUY-BUOI] Quy tắc:
-     *   - Phải nhập LÝ DO 5–500 ký tự (GBR-09).
+     *   - LÝ DO KHÔNG BẮT BUỘC (SRS 9.2.1: hủy không có ô nhập); nếu có thì tối đa 500 ký tự.
+     *     [CHOT 17/10] Khách tự hủy không cần giải thích — GBR-09 chỉ áp cho nhân viên hủy / từ chối.
      *   - Chỉ hủy buổi CỦA MÌNH (đứng tên / đi kèm gói đôi), còn Scheduled, gói còn Active.
      *   - Được hủy tới TRƯỚC GIỜ KẾT THÚC, kể cả khi đang diễn ra (notes 13/10).
      *   - Vẫn TRỪ BUỔI, KHÔNG hoàn tiền (BR-79).
@@ -374,15 +375,9 @@ public class MyPtSessionService {
      */
     public ServiceResult<Void> cancelPtSession(int accountId, int sessionId, String reason) {
 
-        // B1 [HUY-BUOI]: kiểm tra lý do (GBR-09)
-        String cleanReason = reason == null ? "" : reason.trim();
-        if (cleanReason.isEmpty()) {
-            return ServiceResult.fail(Messages.MSG09_REQUIRED.formatted("Lý do hủy"));
-        }
-        if (cleanReason.length() < AppConstants.REASON_MIN_LENGTH) {
-            return ServiceResult.fail(Messages.MSG19_TOO_SHORT.formatted(AppConstants.REASON_MIN_LENGTH));
-        }
-        if (cleanReason.length() > AppConstants.REASON_MAX_LENGTH) {
+        // B1 [HUY-BUOI]: lý do KHÔNG bắt buộc. Bỏ trống → lưu NULL. Có nhập thì tối đa 500 ký tự.
+        String cleanReason = (reason == null || reason.isBlank()) ? null : reason.trim();
+        if (cleanReason != null && cleanReason.length() > AppConstants.REASON_MAX_LENGTH) {
             return ServiceResult.fail(Messages.MSG10_MAX_LENGTH.formatted(AppConstants.REASON_MAX_LENGTH));
         }
 
@@ -427,7 +422,7 @@ public class MyPtSessionService {
     /**
      * [HUY-BUOI] 3 việc ghi DB, ĐỦ CẢ 3 hoặc KHÔNG GÌ CẢ:
      *   1. UPDATE buổi → Cancelled
-     *   2. INSERT AuditLog (có lý do)
+     *   2. INSERT AuditLog (kèm lý do nếu khách có nhập)
      *   3. INSERT thông báo cho khách, người tập cùng, PT
      */
     private ServiceResult<Void> cancelInTransaction(PtSessionInfo info, int accountId, String reason)

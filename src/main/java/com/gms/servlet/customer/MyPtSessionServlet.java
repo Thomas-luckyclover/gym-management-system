@@ -31,7 +31,7 @@ import java.util.List;
  *
  *   GET  (xem trang)          → doGet: nạp dữ liệu các khối rồi forward sang JSP
  *   GET  ?action=swapOptions  → [DOI-BUOI-GET]  trả JSON slot cho hộp thoại Đổi buổi (AJAX)
- *   POST action=cancel        → [HUY-BUOI]      hủy buổi (có lý do)
+ *   POST action=cancel        → [HUY-BUOI]      hủy buổi (lý do không bắt buộc)
  *   POST action=swap          → [DOI-BUOI-POST] đổi buổi
  *   POST xong luôn redirect về trang → F5 không gửi lại (Post/Redirect/Get)
  *
@@ -230,7 +230,7 @@ public class MyPtSessionServlet extends HttpServlet {
         // B4: làm theo action
         String action = request.getParameter("action");
         if ("cancel".equals(action)) {
-            // [HUY-BUOI] lý do hủy bắt buộc (GBR-09) — Service kiểm tra độ dài 5–500
+            // [HUY-BUOI] lý do hủy KHÔNG bắt buộc — Service chỉ chặn quá 500 ký tự
             String reason = request.getParameter("cancelReason");
             ServiceResult<Void> result = sessionService.cancelPtSession(accountId, sessionId, reason);
             redirectWithToast(request, response, result.isSuccess(), result.getMessage(), PAGE_URL);
