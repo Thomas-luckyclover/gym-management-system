@@ -932,10 +932,10 @@ html body.dock.my-pt-sessions-page :is(.my-pt-schedule-panel, .my-pt-history-pan
   .my-pt-cancel-dialog, .my-pt-cancel-dialog::backdrop { animation: none; }
 }
 
-/* [HUY-BUOI] Ô "Lý do hủy" trong hộp thoại Hủy buổi (GBR-09) — dùng chung kiểu với ô chọn slot */
+/* [HUY-BUOI] Ô "Lý do hủy" (không bắt buộc) trong hộp thoại Hủy buổi — dùng chung kiểu với ô chọn slot */
 .my-pt-swap-slot-label textarea {
   width: 100%;
-  min-height: 96px;
+  min-height: 64px;
   padding: var(--space-3);
   border: var(--border-width) solid var(--color-border-strong);
   border-radius: var(--radius-button);

@@ -459,9 +459,9 @@
         <p class="my-pt-cancel-dialog-intro" data-session-text></p>
         <p class="my-pt-cancel-dialog-warning"><strong>Vẫn trừ một buổi trong gói.</strong> Không hoàn tiền và không thể hoàn tác.</p>
 
-        <%-- [HUY-BUOI] Lý do hủy bắt buộc 5–500 ký tự (GBR-09). Trình duyệt chặn trước, Service kiểm tra lại. --%>
-        <label class="my-pt-swap-slot-label">Lý do hủy
-            <textarea name="cancelReason" rows="3" required minlength="5" maxlength="500"
+        <%-- [HUY-BUOI] Lý do hủy KHÔNG bắt buộc (tối đa 500 ký tự). Có ghi thì PT xem được trong lịch sử. --%>
+        <label class="my-pt-swap-slot-label">Lý do hủy (không bắt buộc)
+            <textarea name="cancelReason" rows="2" maxlength="500"
                       placeholder="Ví dụ: Em bị ốm, không thể đến tập"></textarea>
         </label>
 

@@ -377,7 +377,7 @@ public class MyPtSessionDAO {
 
     /**
      * [HUY-BUOI] Khách hủy buổi:
-     *   Status = Cancelled, CancelType = ByCustomer, lưu lý do + người hủy + giờ hủy,
+     *   Status = Cancelled, CancelType = ByCustomer, lưu lý do (có thể null) + người hủy + giờ hủy,
      *   RefundAgreed = 0 (BR-79: vẫn trừ buổi, không hoàn tiền).
      *   "AND Status = 'Scheduled'" = chống bấm 2 lần / người khác vừa đổi trạng thái.
      *
@@ -405,7 +405,7 @@ public class MyPtSessionDAO {
         }
     }
 
-    /** [HUY-BUOI][AUDIT] Ghi nhật ký: ai hủy buổi nào, lý do gì (GBR-07, GBR-09). */
+    /** [HUY-BUOI][AUDIT] Ghi nhật ký: ai hủy buổi nào (GBR-07). reason có thể null. */
     public void insertCancelAuditLog(Connection connection, int accountId, int sessionId, String reason)
             throws SQLException {
         String sql = """
