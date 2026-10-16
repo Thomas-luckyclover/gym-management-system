@@ -1,110 +1,55 @@
 package com.gms.dto;
 
-import com.gms.entity.Package;
 import java.time.LocalDate;
 
 /**
- * Điều kiện lọc ĐÃ HỢP LỆ cho màn Lịch tập của tôi; chỉ Service tạo sau khi kiểm tra tham số URL.
- * Dữ liệu thô (chuỗi người dùng nhập) không nằm ở đây: JSP giữ lại bằng ${param.*},
- * lỗi từng ô trả qua ServiceResult.failFields. Mọi field null nghĩa là không lọc theo điều kiện đó.
+ * BỘ LỌC ĐÃ KIỂM TRA HỢP LỆ của màn "Lịch tập của tôi".
+ * Chỉ Service tạo (hàm parseFilter). Field nào null = không lọc theo điều kiện đó.
+ *
+ *   Ô trên form        | Tham số URL     | Field
+ *   -------------------|-----------------|------------------
+ *   Gói PT             | subscriptionId  | subscriptionId
+ *   Loại buổi          | type            | type
+ *   Buổi trong ngày    | timeOfDay       | timeOfDay
+ *   Từ ngày / Đến ngày | dateFrom/dateTo | dateFrom/dateTo
+ *   Tab trạng thái     | historyStatus   | historyStatus  (chỉ khối Lịch sử)
  */
 public class MyPtSessionFilter {
 
-    /** Trạng thái riêng của khối Lịch sử; giá trị URL cố định, không phải mã Sessions.Status. */
-    public enum HistoryStatus {
-        // Scheduled đã qua giờ kết thúc, chờ JOB-04 chốt.
-        PENDING_RESULT("pending"),
-        CHECKED_IN("checkedIn"),
-        MISSED("missed"),
-        CANCELLED("cancelled");
+    private Integer subscriptionId;   // mã gói
+    private String type;              // PTSingle | PTCouple | SingleSession
+    private String timeOfDay;         // morning | afternoon | evening
+    private LocalDate dateFrom;       // từ ngày (gồm cả ngày này)
+    private LocalDate dateTo;         // đến ngày (gồm cả ngày này)
+    private String historyStatus;     // pending | checkedIn | missed | cancelled
 
-        private final String urlValue;
-
-        HistoryStatus(String urlValue) {
-            this.urlValue = urlValue;
-        }
-
-        /** Giá trị trên URL và trong option của JSP. */
-        public String getUrlValue() {
-            return urlValue;
-        }
-
-        /** Đổi giá trị URL thành enum; trả null nếu không khớp để Service báo lỗi ô. */
-        public static HistoryStatus fromUrlValue(String value) {
-            for (HistoryStatus item : values()) {
-                if (item.urlValue.equals(value)) {
-                    return item;
-                }
-            }
-            return null;
-        }
-    }
-
-    // ===== Bộ lọc chung: áp dụng cho cả Sắp tới và Lịch sử =====
-    // Subscriptions.SubscriptionType: PTSingle, PTCouple hoặc SingleSession; null = mọi loại.
-    private final Package.Type subscriptionType;
-    // TimeSlots.SlotDate từ ngày này (gồm cả ngày đó); null = không giới hạn đầu.
-    private final LocalDate dateFrom;
-    // TimeSlots.SlotDate đến ngày này (gồm cả ngày đó); null = không giới hạn cuối.
-    private final LocalDate dateTo;
-
-    // ===== Chỉ khối Lịch sử: thu hẹp kết quả lịch sử, không ảnh hưởng Sắp tới =====
-    // null = Tất cả, gồm cả Scheduled đã kết thúc.
-    private final HistoryStatus historyStatus;
-    // Subscriptions.SubscriptionId: phân biệt chính xác từng lần mua; null = mọi gói.
-    private final Integer subscriptionId;
-
-    /** Service gọi sau khi đã kiểm tra hợp lệ; không tự validate trong constructor. */
-    public MyPtSessionFilter(Package.Type subscriptionType, LocalDate dateFrom, LocalDate dateTo,
-            HistoryStatus historyStatus) {
-        this(subscriptionType, dateFrom, dateTo, historyStatus, null);
-    }
-
-    public MyPtSessionFilter(Package.Type subscriptionType, LocalDate dateFrom, LocalDate dateTo,
-            HistoryStatus historyStatus, Integer subscriptionId) {
-        this.subscriptionType = subscriptionType;
-        this.dateFrom = dateFrom;
-        this.dateTo = dateTo;
-        this.historyStatus = historyStatus;
-        this.subscriptionId = subscriptionId;
-    }
-
-    /** Không lọc gì: dùng khi URL trống hoặc khi bộ lọc người dùng nhập không hợp lệ. */
+    /** Bộ lọc rỗng = không lọc gì (dùng khi URL trống hoặc khi khách nhập sai). */
     public static MyPtSessionFilter none() {
-        return new MyPtSessionFilter(null, null, null, null);
+        return new MyPtSessionFilter();
     }
 
-    /** Loại buổi cần lọc, null nếu không lọc. */
-    public Package.Type getSubscriptionType() {
-        return subscriptionType;
-    }
-
-    /** Ngày bắt đầu khoảng lọc, null nếu không giới hạn. */
-    public LocalDate getDateFrom() {
-        return dateFrom;
-    }
-
-    /** Ngày kết thúc khoảng lọc, null nếu không giới hạn. */
-    public LocalDate getDateTo() {
-        return dateTo;
-    }
-
-    /** Trạng thái lịch sử cần lọc, null là Tất cả. */
-    public HistoryStatus getHistoryStatus() {
-        return historyStatus;
-    }
-
-    /** Có điều kiện bộ lọc chung: JSP dùng câu rỗng "Không có buổi phù hợp". */
+    /** Có đang lọc khối Sắp tới không? (JSP dùng để chọn câu "Không có buổi phù hợp bộ lọc") */
     public boolean isCommonFilterActive() {
-        return subscriptionType != null || dateFrom != null || dateTo != null || subscriptionId != null;
+        return subscriptionId != null || type != null || timeOfDay != null
+                || dateFrom != null || dateTo != null;
     }
 
-    public Integer getSubscriptionId() {
-        return subscriptionId;
-    }
-
-    /** Khối Lịch sử đang bị thu hẹp (bộ lọc chung hoặc trạng thái lịch sử). */
+    /** Có đang lọc khối Lịch sử không? (bộ lọc chung HOẶC tab trạng thái) */
     public boolean isHistoryFilterActive() {
         return isCommonFilterActive() || historyStatus != null;
     }
+
+    // ===== getter / setter =====
+    public Integer getSubscriptionId() { return subscriptionId; }
+    public void setSubscriptionId(Integer subscriptionId) { this.subscriptionId = subscriptionId; }
+    public String getType() { return type; }
+    public void setType(String type) { this.type = type; }
+    public String getTimeOfDay() { return timeOfDay; }
+    public void setTimeOfDay(String timeOfDay) { this.timeOfDay = timeOfDay; }
+    public LocalDate getDateFrom() { return dateFrom; }
+    public void setDateFrom(LocalDate dateFrom) { this.dateFrom = dateFrom; }
+    public LocalDate getDateTo() { return dateTo; }
+    public void setDateTo(LocalDate dateTo) { this.dateTo = dateTo; }
+    public String getHistoryStatus() { return historyStatus; }
+    public void setHistoryStatus(String historyStatus) { this.historyStatus = historyStatus; }
 }

@@ -1,5 +1,13 @@
 # File notes — mâu thuẫn tài liệu & quyết định đã chốt
 
+## Customer Swap UC-38 — mở rộng ngày được chọn (17/10/2026, ĐÃ CHỐT)
+
+- Khách đổi buổi được chọn **bất kỳ slot thứ 7 / Chủ nhật** của cùng PT, từ hôm nay tới **hết hạn gói** (tuần sau, tháng sau đều được). Bỏ giới hạn "chỉ tuần này, từ thứ 7 mở tuần sau" của CBR-39 cho riêng thao tác đổi buổi.
+- CBR-39 vẫn giữ nguyên cho đặt buổi lẻ (UC-37).
+- Các điều kiện khác giữ nguyên: cùng PT, slot Free, cùng thời lượng, chưa bắt đầu, trong hạn gói, gym mở cửa, PT/khách không trùng buổi, ít nhất 1 người vào được gym, còn lượt đổi.
+- Code: `PtSessionSwapService.findValidSlots` lấy slot tới `PackageEndDate`; `isAllowedSlot` bỏ điều kiện cửa sổ tuần. Test `anyWeekendInsidePackageTermIsAllowed`.
+- Cần sửa SRS: CBR-39 (tách riêng UC-37 / UC-38), mô tả UC-38 và mục 9.2.4 "Limited to the current week...".
+
 ## Customer Swap UC-38 — runtime My PT Session (14/10/2026)
 
 - Đã nối nút Đổi buổi trên buổi gói PT Scheduled chưa bắt đầu. Dialog tải slot qua GET AJAX `action=swapOptions`, xác nhận qua POST `action=swap` với CSRF token và mã slot nguồn để phát hiện lịch đã bị người khác đổi.
