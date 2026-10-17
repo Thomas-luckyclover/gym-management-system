@@ -120,34 +120,77 @@
             </div>
           </c:if>
 
-          <%-- ===== Đơn Pending: hiện 2 card Duyệt / Từ chối ===== --%>
+          <%-- ===== Đơn Pending: hiện dự báo quân số ca trực & 2 card Duyệt / Từ chối ===== --%>
           <c:if test="${item.leaveRequest.pending}">
+
+            <%-- Khung thông tin định biên nhân sự dự kiến nếu duyệt đơn này --%>
+            <c:if test="${item.minStaffRequired > 0}">
+              <div class="leave-staffing-box ${item.remainingStaff < item.minStaffRequired ? 'danger' : ''}">
+                <i class="fa-solid ${item.remainingStaff < item.minStaffRequired ? 'fa-triangle-exclamation' : 'fa-users'}"
+                   aria-hidden="true"
+                   style="font-size:var(--font-size-lg);margin-top:2px"></i>
+                <div style="flex:1">
+                  <span class="leave-info-label">Dự báo quân số trực ca nếu duyệt đơn này</span>
+                  <div class="leave-staffing-numbers">
+                    <div class="leave-staffing-item">
+                      <strong><c:out value="${item.remainingStaff}" /></strong>
+                      <small>Dự kiến còn lại</small>
+                    </div>
+                    <div class="leave-staffing-item">
+                      <strong><c:out value="${item.minStaffRequired}" /></strong>
+                      <small>Tối thiểu theo quy định</small>
+                    </div>
+                  </div>
+                  <c:if test="${item.remainingStaff < item.minStaffRequired}">
+                    <p style="margin:var(--space-2) 0 0;font-size:var(--font-size-sm);color:var(--color-danger-ink);font-weight:600">
+                      Cảnh báo: Nếu duyệt, ca trực sẽ chỉ còn ${item.remainingStaff} người (thấp hơn định biên tối thiểu ${item.minStaffRequired}). Nút duyệt bị vô hiệu hóa.
+                    </p>
+                  </c:if>
+                </div>
+              </div>
+            </c:if>
+
             <div class="leave-actions">
 
               <%-- Card Duyệt --%>
               <form action="${pageContext.request.contextPath}/manager/leave-requests/review"
                     method="post"
                     class="leave-action-card">
+                <input type="hidden" name="csrfToken" value="${csrfToken}">
                 <input type="hidden" name="leaveRequestId" value="${item.leaveRequest.leaveRequestId}">
                 <input type="hidden" name="action" value="approve">
 
                 <h3><i class="fa-solid fa-circle-check" aria-hidden="true"></i> Duyệt đơn</h3>
                 <p>Nhân viên được phép nghỉ đúng ngày và ca đã đăng ký.</p>
 
-                <button class="btn btn-primary"
-                        type="submit"
-                        id="btnApproveLeave"
-                        data-confirm-title="Duyệt đơn nghỉ phép"
-                        data-confirm-message="Xác nhận duyệt đơn nghỉ này?">
-                  <i class="fa-solid fa-check" aria-hidden="true"></i>
-                  Duyệt đơn
-                </button>
+                <c:choose>
+                  <c:when test="${item.minStaffRequired > 0 and item.remainingStaff < item.minStaffRequired}">
+                    <button class="btn btn-primary"
+                            type="button"
+                            disabled
+                            title="Không thể duyệt do vi phạm định biên nhân sự tối thiểu">
+                      <i class="fa-solid fa-ban" aria-hidden="true"></i>
+                      Không đủ người trực ca
+                    </button>
+                  </c:when>
+                  <c:otherwise>
+                    <button class="btn btn-primary"
+                            type="submit"
+                            id="btnApproveLeave"
+                            data-confirm-title="Duyệt đơn nghỉ phép"
+                            data-confirm-message="Xác nhận duyệt đơn nghỉ này?">
+                      <i class="fa-solid fa-check" aria-hidden="true"></i>
+                      Duyệt đơn
+                    </button>
+                  </c:otherwise>
+                </c:choose>
               </form>
 
               <%-- Card Từ chối --%>
               <form action="${pageContext.request.contextPath}/manager/leave-requests/review"
                     method="post"
                     class="leave-action-card">
+                <input type="hidden" name="csrfToken" value="${csrfToken}">
                 <input type="hidden" name="leaveRequestId" value="${item.leaveRequest.leaveRequestId}">
                 <input type="hidden" name="action" value="reject">
 
