@@ -104,4 +104,30 @@ class LeaveRequestServiceTest {
         assertFalse(result.isSuccess());
         assertTrue(result.getFieldErrors().containsKey("rejectReason"));
     }
+
+    @Test
+    void rejectRequest_fails_whenRejectReasonIsNull() {
+        var result = service.rejectRequest(1, 1, null);
+        assertFalse(result.isSuccess());
+        assertTrue(result.getFieldErrors().containsKey("rejectReason"));
+    }
+
+    @Test
+    void rejectRequest_fails_whenRejectReasonIsTooLong() {
+        String longReason = "a".repeat(501); // vượt quá 500 ký tự
+        var result = service.rejectRequest(1, 1, longReason);
+        assertFalse(result.isSuccess());
+        assertTrue(result.getFieldErrors().containsKey("rejectReason"));
+    }
+
+    // ===== Kiểm thử getReviewDetail (UC-15) =====
+
+    @Test
+    void getReviewDetail_fails_whenIdIsZeroOrNegative() {
+        var resultZero = service.getReviewDetail(0);
+        assertFalse(resultZero.isSuccess());
+
+        var resultNegative = service.getReviewDetail(-5);
+        assertFalse(resultNegative.isSuccess());
+    }
 }
