@@ -33,7 +33,8 @@ import java.util.Map;
  */
 public class LeaveRequestService {
 
-    // Đơn còn dưới số phút này đến hạn duyệt thì đánh dấu khẩn cấp (tô nổi trên danh sách)
+    // Đơn còn dưới số phút này đến hạn duyệt thì đánh dấu khẩn cấp (tô nổi trên
+    // danh sách)
     private static final long URGENT_WITHIN_MINUTES = 180;
 
     // DAO truy vấn bảng LeaveRequests; Service không tự viết SQL
@@ -69,10 +70,12 @@ public class LeaveRequestService {
      * Lấy một trang đơn nghỉ phép cho màn danh sách của Manager (màn #26, UC-15).
      *
      * @param keyword  từ khóa tên nhân viên từ URL, có thể null/rỗng
-     * @param status   tab trạng thái từ URL (Pending, Approved, Rejected, All), có thể null
+     * @param status   tab trạng thái từ URL (Pending, Approved, Rejected, All), có
+     *                 thể null
      * @param page     số trang, bắt đầu từ 1
      * @param pageSize số dòng mỗi trang
-     * @return trang các dòng đã tính hạn duyệt và đếm ngược, hoặc thông báo lỗi hệ thống
+     * @return trang các dòng đã tính hạn duyệt và đếm ngược, hoặc thông báo lỗi hệ
+     *         thống
      */
     public ServiceResult<PageResult<LeaveRequestItemView>> getManagerPage(
             String keyword, String status, int page, int pageSize) {
@@ -86,8 +89,7 @@ public class LeaveRequestService {
             // B2: đếm tổng và lấy đúng một trang (DAO cắt bằng OFFSET/FETCH)
             int totalItems = leaveRequestDAO.countByFilter(filter);
             int offset = PaginationUtil.calculateOffset(page, pageSize);
-            List<LeaveRequestDAO.LeaveRequestRow> rows
-                    = leaveRequestDAO.findManagerPage(filter, offset, pageSize);
+            List<LeaveRequestDAO.LeaveRequestRow> rows = leaveRequestDAO.findManagerPage(filter, offset, pageSize);
 
             // B3: đổi từng dòng DAO sang view, thêm hạn duyệt P-20 và đếm ngược
             LocalTime approvalTime = LocalTime.parse(
@@ -112,14 +114,16 @@ public class LeaveRequestService {
     /**
      * Lấy số đơn cho các tab của màn #26 (UC-15).
      *
-     * @return map có 4 khóa: All, Pending, Approved, Rejected; hoặc thông báo lỗi hệ thống
+     * @return map có 4 khóa: All, Pending, Approved, Rejected; hoặc thông báo lỗi
+     *         hệ thống
      */
     public ServiceResult<Map<String, Integer>> getStatusCounts() {
         try {
             // B1: DAO trả số đơn của 3 trạng thái thật
             Map<String, Integer> counts = leaveRequestDAO.getStatusCounts();
 
-            // B2: tab "Tất cả" = tổng 3 trạng thái, thêm vào đầu map để JSP đọc theo khóa All
+            // B2: tab "Tất cả" = tổng 3 trạng thái, thêm vào đầu map để JSP đọc theo khóa
+            // All
             int total = 0;
             for (int count : counts.values()) {
                 total += count;
@@ -138,10 +142,13 @@ public class LeaveRequestService {
     }
 
     /**
-     * Đổi tham số tab trạng thái trên URL thành Status để lọc danh sách của Manager.
+     * Đổi tham số tab trạng thái trên URL thành Status để lọc danh sách của
+     * Manager.
      *
-     * @param statusParam giá trị param "status" (Pending, Approved, Rejected, All) hoặc null/rỗng
-     * @return Status tương ứng; null nghĩa là tab "Tất cả"; URL trống thì mặc định PENDING
+     * @param statusParam giá trị param "status" (Pending, Approved, Rejected, All)
+     *                    hoặc null/rỗng
+     * @return Status tương ứng; null nghĩa là tab "Tất cả"; URL trống thì mặc định
+     *         PENDING
      */
     LeaveRequest.Status parseStatusFilter(String statusParam) {
         // B1: URL không có status thì màn mặc định mở tab "Chờ duyệt"
@@ -170,8 +177,7 @@ public class LeaveRequestService {
         LeaveRequest request = row.getLeaveRequest();
 
         // B1: hạn duyệt = giờ P-20 vào ngày liền trước ngày nghỉ
-        LocalDateTime approvalDeadline
-                = request.getLeaveDate().minusDays(1).atTime(approvalTime);
+        LocalDateTime approvalDeadline = request.getLeaveDate().minusDays(1).atTime(approvalTime);
 
         // B2: đơn đã xử lý không cần đếm ngược; đơn Pending thì tính số phút còn lại
         String countdownText = "";
@@ -232,8 +238,7 @@ public class LeaveRequestService {
             return ServiceResult.fail(String.format(Messages.MSG08_NOT_FOUND, "đơn nghỉ phép"));
         }
         try {
-            LeaveRequestDAO.LeaveReviewDetail detail =
-                    leaveRequestDAO.findReviewDetail(leaveRequestId);
+            LeaveRequestDAO.LeaveReviewDetail detail = leaveRequestDAO.findReviewDetail(leaveRequestId);
             if (detail == null) {
                 return ServiceResult.fail(
                         String.format(Messages.MSG08_NOT_FOUND, "đơn nghỉ phép"));
@@ -247,7 +252,8 @@ public class LeaveRequestService {
 
     /**
      * Manager duyệt đơn nghỉ phép (UC-15).
-     * Kiểm tra: đơn phải Pending, không vi phạm min-staffing (CBR-88, CBR-90, BR-14).
+     * Kiểm tra: đơn phải Pending, không vi phạm min-staffing (CBR-88, CBR-90,
+     * BR-14).
      *
      * @param managerAccountId AccountId của Manager từ session
      * @param leaveRequestId   mã đơn cần duyệt
@@ -256,8 +262,7 @@ public class LeaveRequestService {
     public ServiceResult<Void> approveRequest(int managerAccountId, int leaveRequestId) {
         try {
             // B1: lấy thông tin đơn
-            LeaveRequestDAO.LeaveReviewDetail detail =
-                    leaveRequestDAO.findReviewDetail(leaveRequestId);
+            LeaveRequestDAO.LeaveReviewDetail detail = leaveRequestDAO.findReviewDetail(leaveRequestId);
             if (detail == null) {
                 return ServiceResult.fail(
                         String.format(Messages.MSG08_NOT_FOUND, "đơn nghỉ phép"));
@@ -348,8 +353,7 @@ public class LeaveRequestService {
             }
 
             // B2: kiểm tra đơn tồn tại và còn Pending
-            LeaveRequestDAO.LeaveReviewDetail detail =
-                    leaveRequestDAO.findReviewDetail(leaveRequestId);
+            LeaveRequestDAO.LeaveReviewDetail detail = leaveRequestDAO.findReviewDetail(leaveRequestId);
             if (detail == null) {
                 return ServiceResult.fail(
                         String.format(Messages.MSG08_NOT_FOUND, "đơn nghỉ phép"));
@@ -404,8 +408,10 @@ public class LeaveRequestService {
     /**
      * Lấy dữ liệu để hiện form nộp đơn nghỉ phép của PT/Lễ tân (màn #25).
      *
-     * @param accountId AccountId của nhân viên từ session, không lấy từ request parameter
-     * @return view gồm thông tin nhân viên, hạn nộp P-12 và các đơn đã nộp; hoặc thông báo lỗi
+     * @param accountId AccountId của nhân viên từ session, không lấy từ request
+     *                  parameter
+     * @return view gồm thông tin nhân viên, hạn nộp P-12 và các đơn đã nộp; hoặc
+     *         thông báo lỗi
      */
     public ServiceResult<StaffLeaveFormView> getStaffLeaveForm(int accountId) {
         try {
@@ -426,8 +432,7 @@ public class LeaveRequestService {
                             SystemConfigService.LEAVE_SUBMIT_DEADLINE));
 
             // B4: lấy 10 đơn gần nhất của chính nhân viên này
-            List<LeaveRequest> myRequests
-                    = leaveRequestDAO.findByEmployeeId(employee.getEmployeeId(), 10);
+            List<LeaveRequest> myRequests = leaveRequestDAO.findByEmployeeId(employee.getEmployeeId(), 10);
 
             return ServiceResult.ok(new StaffLeaveFormView(
                     employee.getEmployeeId(),
@@ -445,13 +450,14 @@ public class LeaveRequestService {
 
     /**
      * Nhân viên nộp đơn xin nghỉ phép (màn #25, UC-14).
-     * Kiểm tra: hạn chốt nộp P-12 (CBR-84), trùng lịch nghỉ, và buổi dạy Scheduled của PT (CBR-83).
+     * Kiểm tra: hạn chốt nộp P-12 (CBR-84), trùng lịch nghỉ, và buổi dạy Scheduled
+     * của PT (CBR-83).
      *
      * @param accountId AccountId của nhân viên từ session
      * @param leaveType loại nghỉ (Annual, Sick, Unpaid)
      * @param leaveDate ngày nghỉ (phải > hôm nay)
      * @param shiftType ca nghỉ (Morning, Afternoon, FullDay)
-     * @param reason lý do nghỉ (5–500 ký tự)
+     * @param reason    lý do nghỉ (5–500 ký tự)
      * @return mã đơn mới tạo (LeaveRequestId), hoặc thông báo lỗi cụ thể
      */
     public ServiceResult<Integer> submitLeaveRequest(
@@ -489,7 +495,8 @@ public class LeaveRequestService {
                         String.format(Messages.MSG08_NOT_FOUND, "nhân viên"));
             }
 
-            // B3: kiểm tra hạn chốt nộp đơn P-12 (CBR-84: mặc định 15:00 ngày liền trước ngày nghỉ)
+            // B3: kiểm tra hạn chốt nộp đơn P-12 (CBR-84: mặc định 15:00 ngày liền trước
+            // ngày nghỉ)
             LocalTime submissionCutoff = LocalTime.parse(
                     systemConfigService.getString(
                             SystemConfigService.LEAVE_SUBMIT_DEADLINE));
@@ -501,7 +508,8 @@ public class LeaveRequestService {
                         "Đã quá hạn nộp đơn cho ngày này. Nghỉ đột xuất vui lòng báo trực tiếp Quản lý.");
             }
 
-            // B4: kiểm tra trùng đơn nghỉ Pending hoặc Approved (cùng ca hoặc bao phủ FullDay)
+            // B4: kiểm tra trùng đơn nghỉ Pending hoặc Approved (cùng ca hoặc bao phủ
+            // FullDay)
             boolean hasConflict = leaveRequestDAO.hasConflictingLeave(
                     employee.getEmployeeId(), leaveDate, shiftType.getDbValue());
             if (hasConflict) {
@@ -509,14 +517,16 @@ public class LeaveRequestService {
                         "Bạn đã có đơn nghỉ trùng ngày và ca này đang chờ duyệt hoặc đã được duyệt.");
             }
 
-            // B5: đối với PT, kiểm tra buổi dạy Scheduled trong ngày và ca xin nghỉ (CBR-83)
+            // B5: đối với PT, kiểm tra buổi dạy Scheduled trong ngày và ca xin nghỉ
+            // (CBR-83)
             boolean isPt = Role.PT == employee.getPosition();
             if (isPt) {
                 int clashCount = leaveRequestDAO.countScheduledSessions(
                         employee.getEmployeeId(), leaveDate, shiftType.getDbValue());
                 if (clashCount > 0) {
                     return ServiceResult.fail(
-                            "Bạn còn " + clashCount + " buổi dạy đã xếp trong khoảng nghỉ này. Vui lòng xử lý các buổi dạy trước khi nộp đơn.");
+                            "Bạn còn " + clashCount
+                                    + " buổi dạy đã xếp trong khoảng nghỉ này. Vui lòng xử lý các buổi dạy trước khi nộp đơn.");
                 }
             }
 
@@ -544,7 +554,8 @@ public class LeaveRequestService {
     // ===== Background Job (JOB-07) =====
 
     /**
-     * Chạy định kỳ mỗi phút: nhắc Manager trước mốc P-20 và tự động từ chối đơn quá hạn (JOB-07).
+     * Chạy định kỳ mỗi phút: nhắc Manager trước mốc P-20 và tự động từ chối đơn quá
+     * hạn (JOB-07).
      *
      * @throws SQLException lỗi kết nối hoặc truy vấn DB
      */

@@ -122,12 +122,6 @@
                    value="<c:out value='${keyword}' />"
                    placeholder="Tìm theo tên nhân viên">
 
-            <select name="pageSize">
-              <option value="10" ${leavePage.pageSize == 10 ? 'selected' : ''}>10</option>
-              <option value="20" ${leavePage.pageSize == 20 ? 'selected' : ''}>20</option>
-              <option value="50" ${leavePage.pageSize == 50 ? 'selected' : ''}>50</option>
-            </select>
-
             <button class="btn btn-primary" type="submit">Tìm</button>
             <a class="btn btn-ghost"
                href="${pageContext.request.contextPath}/manager/leave-requests">

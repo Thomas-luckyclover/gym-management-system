@@ -56,13 +56,6 @@ public class LeaveRequestDAO {
         return null;
     }
 
-    /**
-     * Đếm số đơn khớp bộ lọc của Manager (màn #26) để tính tổng số trang.
-     *
-     * @param filter bộ lọc đã hợp lệ; status null = mọi trạng thái, keyword rỗng = không tìm tên
-     * @return tổng số đơn khớp, 0 nếu không có
-     * @throws SQLException lỗi kết nối hoặc lỗi câu SQL
-     */
     public int countByFilter(LeaveRequestFilter filter) throws SQLException {
         // B1: nối Employees và Persons vì tên nhân viên nằm ở Persons.FullName
         String sql = "SELECT COUNT(*) "

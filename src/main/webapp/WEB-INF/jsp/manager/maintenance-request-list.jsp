@@ -126,12 +126,6 @@
               </c:forEach>
             </select>
 
-            <select name="pageSize">
-              <option value="10" ${requestPage.pageSize == 10 ? 'selected' : ''}>10</option>
-              <option value="20" ${requestPage.pageSize == 20 ? 'selected' : ''}>20</option>
-              <option value="50" ${requestPage.pageSize == 50 ? 'selected' : ''}>50</option>
-            </select>
-
             <button class="btn btn-primary" type="submit">
               Lọc
             </button>
