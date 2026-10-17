@@ -252,6 +252,22 @@ public class LeaveRequestDAO {
             String position,
             int excludeLeaveRequestId
     ) throws SQLException {
+        try (Connection connection = DBContext.getConnection()) {
+            return countOnDutyAfterApproval(connection, leaveDate, shiftType, position, excludeLeaveRequestId);
+        }
+    }
+
+    /**
+     * Đếm số nhân viên theo chức vụ còn trực ca trong ngày sau khi trừ các đơn nghỉ Approved
+     * (chạy trong connection/transaction có sẵn).
+     */
+    public int countOnDutyAfterApproval(
+            Connection connection,
+            LocalDate leaveDate,
+            String shiftType,
+            String position,
+            int excludeLeaveRequestId
+    ) throws SQLException {
         // B1: tổng nhân viên chức vụ đó đang Working
         String sqlTotal = "SELECT COUNT(*) FROM Employees WHERE Position = ? AND Status = 'Working'";
 
@@ -272,26 +288,24 @@ public class LeaveRequestDAO {
         int total = 0;
         int approved = 0;
 
-        try (Connection connection = DBContext.getConnection()) {
-            try (PreparedStatement stmt = connection.prepareStatement(sqlTotal)) {
-                stmt.setString(1, position);
-                try (ResultSet rs = stmt.executeQuery()) {
-                    if (rs.next()) {
-                        total = rs.getInt(1);
-                    }
+        try (PreparedStatement stmt = connection.prepareStatement(sqlTotal)) {
+            stmt.setString(1, position);
+            try (ResultSet rs = stmt.executeQuery()) {
+                if (rs.next()) {
+                    total = rs.getInt(1);
                 }
             }
+        }
 
-            try (PreparedStatement stmt = connection.prepareStatement(sqlApproved)) {
-                stmt.setDate(1, java.sql.Date.valueOf(leaveDate));
-                stmt.setInt(2, excludeLeaveRequestId);
-                stmt.setString(3, position);
-                stmt.setString(4, shiftType);
-                stmt.setString(5, shiftType);
-                try (ResultSet rs = stmt.executeQuery()) {
-                    if (rs.next()) {
-                        approved = rs.getInt(1);
-                    }
+        try (PreparedStatement stmt = connection.prepareStatement(sqlApproved)) {
+            stmt.setDate(1, java.sql.Date.valueOf(leaveDate));
+            stmt.setInt(2, excludeLeaveRequestId);
+            stmt.setString(3, position);
+            stmt.setString(4, shiftType);
+            stmt.setString(5, shiftType);
+            try (ResultSet rs = stmt.executeQuery()) {
+                if (rs.next()) {
+                    approved = rs.getInt(1);
                 }
             }
         }
@@ -300,36 +314,50 @@ public class LeaveRequestDAO {
     }
 
     /**
-     * Duyệt đơn nghỉ phép: cập nhật Status = 'Approved', ghi người duyệt và thời điểm.
+     * Duyệt đơn nghỉ phép trong transaction: cập nhật Status = 'Approved', ghi người duyệt và thời điểm.
+     * Chỉ cập nhật khi đơn còn ở trạng thái Pending.
      *
+     * @param connection kết nối DB dùng chung transaction
      * @param leaveRequestId mã đơn
      * @param reviewerEmployeeId mã nhân viên Manager duyệt
+     * @return true nếu cập nhật thành công 1 dòng, false nếu đơn không còn ở trạng thái Pending
      * @throws SQLException lỗi kết nối hoặc lỗi câu SQL
      */
-    public void approve(int leaveRequestId, int reviewerEmployeeId) throws SQLException {
+    public boolean approve(Connection connection, int leaveRequestId, int reviewerEmployeeId) throws SQLException {
         String sql = "UPDATE LeaveRequests "
                 + "SET Status = 'Approved', "
                 + "ReviewedByEmployeeId = ?, "
                 + "ReviewedAt = SYSDATETIME() "
                 + "WHERE LeaveRequestId = ? AND Status = 'Pending'";
 
-        try (Connection connection = DBContext.getConnection();
-                PreparedStatement statement = connection.prepareStatement(sql)) {
+        try (PreparedStatement statement = connection.prepareStatement(sql)) {
             statement.setInt(1, reviewerEmployeeId);
             statement.setInt(2, leaveRequestId);
-            statement.executeUpdate();
+            return statement.executeUpdate() > 0;
         }
     }
 
     /**
-     * Từ chối đơn nghỉ phép: cập nhật Status = 'Rejected', ghi người duyệt, thời điểm và lý do.
+     * Duyệt đơn nghỉ phép với connection mới.
+     */
+    public boolean approve(int leaveRequestId, int reviewerEmployeeId) throws SQLException {
+        try (Connection connection = DBContext.getConnection()) {
+            return approve(connection, leaveRequestId, reviewerEmployeeId);
+        }
+    }
+
+    /**
+     * Từ chối đơn nghỉ phép trong transaction: cập nhật Status = 'Rejected', ghi người duyệt, thời điểm và lý do.
+     * Chỉ cập nhật khi đơn còn ở trạng thái Pending.
      *
+     * @param connection kết nối DB dùng chung transaction
      * @param leaveRequestId mã đơn
      * @param reviewerEmployeeId mã nhân viên Manager từ chối
      * @param rejectReason lý do từ chối, 5-500 ký tự
+     * @return true nếu cập nhật thành công 1 dòng, false nếu đơn không còn Pending
      * @throws SQLException lỗi kết nối hoặc lỗi câu SQL
      */
-    public void reject(int leaveRequestId, int reviewerEmployeeId, String rejectReason)
+    public boolean reject(Connection connection, int leaveRequestId, int reviewerEmployeeId, String rejectReason)
             throws SQLException {
         String sql = "UPDATE LeaveRequests "
                 + "SET Status = 'Rejected', "
@@ -338,24 +366,35 @@ public class LeaveRequestDAO {
                 + "RejectReason = ? "
                 + "WHERE LeaveRequestId = ? AND Status = 'Pending'";
 
-        try (Connection connection = DBContext.getConnection();
-                PreparedStatement statement = connection.prepareStatement(sql)) {
+        try (PreparedStatement statement = connection.prepareStatement(sql)) {
             statement.setInt(1, reviewerEmployeeId);
             statement.setString(2, rejectReason);
             statement.setInt(3, leaveRequestId);
-            statement.executeUpdate();
+            return statement.executeUpdate() > 0;
         }
     }
 
     /**
-     * Hệ thống tự động từ chối đơn nghỉ phép quá hạn duyệt (JOB-07, CBR-85).
+     * Từ chối đơn nghỉ phép với connection mới.
+     */
+    public boolean reject(int leaveRequestId, int reviewerEmployeeId, String rejectReason)
+            throws SQLException {
+        try (Connection connection = DBContext.getConnection()) {
+            return reject(connection, leaveRequestId, reviewerEmployeeId, rejectReason);
+        }
+    }
+
+    /**
+     * Hệ thống tự động từ chối đơn nghỉ phép quá hạn duyệt trong transaction (JOB-07, CBR-85).
      * ReviewedByEmployeeId được để NULL để thể hiện hệ thống tự từ chối.
      *
+     * @param connection kết nối DB dùng chung transaction
      * @param leaveRequestId mã đơn
      * @param reason lý do từ chối ("Quá hạn duyệt")
+     * @return true nếu cập nhật thành công 1 dòng, false nếu đơn đã được xử lý trước đó
      * @throws SQLException lỗi kết nối hoặc truy vấn DB
      */
-    public void autoReject(int leaveRequestId, String reason) throws SQLException {
+    public boolean autoReject(Connection connection, int leaveRequestId, String reason) throws SQLException {
         String sql = "UPDATE LeaveRequests "
                 + "SET Status = 'Rejected', "
                 + "ReviewedByEmployeeId = NULL, "
@@ -363,11 +402,19 @@ public class LeaveRequestDAO {
                 + "RejectReason = ? "
                 + "WHERE LeaveRequestId = ? AND Status = 'Pending'";
 
-        try (Connection connection = DBContext.getConnection();
-                PreparedStatement statement = connection.prepareStatement(sql)) {
+        try (PreparedStatement statement = connection.prepareStatement(sql)) {
             statement.setString(1, reason);
             statement.setInt(2, leaveRequestId);
-            statement.executeUpdate();
+            return statement.executeUpdate() > 0;
+        }
+    }
+
+    /**
+     * Tự động từ chối đơn với connection mới.
+     */
+    public boolean autoReject(int leaveRequestId, String reason) throws SQLException {
+        try (Connection connection = DBContext.getConnection()) {
+            return autoReject(connection, leaveRequestId, reason);
         }
     }
 
@@ -634,6 +681,10 @@ public class LeaveRequestDAO {
         private final String avatarUrl;
         private final String reviewerName;
 
+        // Quân số trực dự kiến nếu duyệt và định biên tối thiểu theo cấu hình
+        private int remainingStaff;
+        private int minStaffRequired;
+
         public LeaveReviewDetail(
                 LeaveRequest leaveRequest,
                 String employeeCode,
@@ -656,6 +707,12 @@ public class LeaveRequestDAO {
         public String getPosition() { return position; }
         public String getAvatarUrl() { return avatarUrl; }
         public String getReviewerName() { return reviewerName; }
+
+        public int getRemainingStaff() { return remainingStaff; }
+        public void setRemainingStaff(int remainingStaff) { this.remainingStaff = remainingStaff; }
+
+        public int getMinStaffRequired() { return minStaffRequired; }
+        public void setMinStaffRequired(int minStaffRequired) { this.minStaffRequired = minStaffRequired; }
     }
 
     public static class LeaveRequestRow {
