@@ -90,59 +90,66 @@ public class LeaveRequestDAO {
     }
 
     /**
-     * Lấy một trang đơn nghỉ phép cho màn danh sách của Manager (màn #26).
-     * Đơn Pending xếp trước, trong cùng nhóm xếp theo ngày nghỉ gần nhất (hạn duyệt
-     * gần nhất) rồi đến thời điểm nộp.
+     * Lấy danh sách đơn nghỉ phép có phân trang cho màn hình của Manager (màn #26).
      *
-     * @param filter   bộ lọc đã hợp lệ (trạng thái, từ khóa tên)
-     * @param offset   số dòng bỏ qua, tính từ (page - 1) * pageSize
-     * @param pageSize số dòng tối đa mỗi trang
-     * @return danh sách dòng của trang; rỗng (không phải null) nếu không có
-     * @throws SQLException lỗi kết nối hoặc lỗi câu SQL
+     * @param filter   bộ lọc gồm trạng thái tab và từ khóa tìm kiếm tên nhân viên
+     * @param offset   vị trí bắt đầu lấy dòng (trang 1 bắt đầu từ 0)
+     * @param pageSize số lượng đơn tối đa trên một trang
+     * @return danh sách các dòng đơn kèm thông tin nhân viên
+     * @throws SQLException khi có lỗi truy vấn cơ sở dữ liệu
      */
     public List<LeaveRequestRow> findManagerPage(
             LeaveRequestFilter filter, int offset, int pageSize)
             throws SQLException {
 
-        // B1: nối thêm Employees/Persons của người duyệt bằng LEFT JOIN
-        // vì đơn Pending hoặc tự từ chối không có người duyệt
-        String sql = "SELECT lr.LeaveRequestId, lr.EmployeeId, "
-                + "lr.ReviewedByEmployeeId, lr.LeaveType, lr.LeaveDate, "
-                + "lr.ShiftType, lr.Reason, lr.Status, lr.RejectReason, "
-                + "lr.SubmittedAt, lr.ReviewedAt, lr.ReminderSentAt, "
-                + "e.EmployeeCode, e.Position, "
-                + "p.FullName AS EmployeeName, p.Avatar, "
-                + "rp.FullName AS ReviewerName "
+        // Câu SQL gồm 6 phần rõ ràng:
+        // 1. SELECT: lấy đủ thông tin đơn nghỉ, thông tin nhân viên và người duyệt
+        // 2. JOIN: nối Employees & Persons để lấy họ tên, mã NV, chức vụ, avatar
+        // 3. LEFT JOIN: lấy tên người duyệt (nếu đơn chưa duyệt thì ReviewerName sẽ là NULL)
+        // 4. WHERE: lọc theo tab trạng thái (? IS NULL để lấy tất cả) và tìm tên tiếng Việt
+        // 5. ORDER BY: ưu tiên đơn 'Pending' lên đầu, sau đó sắp xếp theo ngày nghỉ và giờ nộp
+        // 6. OFFSET/FETCH: phân trang của SQL Server
+        String sql = "SELECT "
+                + "  lr.LeaveRequestId, lr.EmployeeId, lr.ReviewedByEmployeeId, "
+                + "  lr.LeaveType, lr.LeaveDate, lr.ShiftType, lr.Reason, lr.Status, lr.RejectReason, "
+                + "  lr.SubmittedAt, lr.ReviewedAt, lr.ReminderSentAt, "
+                + "  e.EmployeeCode, e.Position, "
+                + "  p.FullName AS EmployeeName, p.Avatar, "
+                + "  rp.FullName AS ReviewerName "
                 + "FROM LeaveRequests lr "
-                + "JOIN Employees e ON e.EmployeeId = lr.EmployeeId "
-                + "JOIN Persons p ON p.PersonId = e.PersonId "
-                + "LEFT JOIN Employees re ON re.EmployeeId = lr.ReviewedByEmployeeId "
-                + "LEFT JOIN Persons rp ON rp.PersonId = re.PersonId "
+                + "  JOIN Employees e ON e.EmployeeId = lr.EmployeeId "
+                + "  JOIN Persons p ON p.PersonId = e.PersonId "
+                + "  LEFT JOIN Employees re ON re.EmployeeId = lr.ReviewedByEmployeeId "
+                + "  LEFT JOIN Persons rp ON rp.PersonId = re.PersonId "
                 + "WHERE (? IS NULL OR lr.Status = ?) "
-                + "AND p.FullName COLLATE Vietnamese_CI_AI LIKE ? ESCAPE '\\' "
-                // Pending lên đầu, sau đó ngày nghỉ gần nhất, rồi đến giờ nộp
-                + "ORDER BY CASE WHEN lr.Status = 'Pending' THEN 0 ELSE 1 END, "
-                + "lr.LeaveDate, lr.SubmittedAt "
+                + "  AND p.FullName COLLATE Vietnamese_CI_AI LIKE ? ESCAPE '\\' "
+                + "ORDER BY "
+                + "  CASE WHEN lr.Status = 'Pending' THEN 0 ELSE 1 END, "
+                + "  lr.LeaveDate ASC, "
+                + "  lr.SubmittedAt ASC "
                 + "OFFSET ? ROWS FETCH NEXT ? ROWS ONLY";
 
+        // Giá trị trạng thái lọc: nếu chọn tab "Tất cả" thì statusValue là null
         String statusValue = filter.getStatus() == null
-                ? null : filter.getStatus().getDbValue();
+                ? null
+                : filter.getStatus().getDbValue();
 
         List<LeaveRequestRow> rows = new ArrayList<>();
 
         try (Connection connection = DBContext.getConnection();
-                PreparedStatement statement
-                = connection.prepareStatement(sql)) {
+                PreparedStatement statement = connection.prepareStatement(sql)) {
 
-            // B2: truyền tham số theo đúng thứ tự dấu ?
+            // B1: Truyền 5 tham số theo đúng thứ tự dấu ?
+            // ?1 & ?2: trạng thái tab (null để bỏ qua lọc trạng thái)
             statement.setString(1, statusValue);
             statement.setString(2, statusValue);
-            statement.setString(3,
-                    SqlUtil.toContainsPattern(filter.getKeyword()));
+            // ?3: từ khóa tìm kiếm họ tên nhân viên
+            statement.setString(3, SqlUtil.toContainsPattern(filter.getKeyword()));
+            // ?4 & ?5: phân trang (bỏ qua offset dòng, lấy tiếp pageSize dòng)
             statement.setInt(4, offset);
             statement.setInt(5, pageSize);
 
-            // B3: mỗi dòng đổi thành entity đơn + thông tin nhân viên
+            // B2: Đọc kết quả và chuyển thành danh sách đối tượng LeaveRequestRow
             try (ResultSet resultSet = statement.executeQuery()) {
                 while (resultSet.next()) {
                     rows.add(new LeaveRequestRow(
