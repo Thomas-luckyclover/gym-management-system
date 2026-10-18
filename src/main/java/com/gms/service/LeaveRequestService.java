@@ -313,9 +313,21 @@ public class LeaveRequestService {
                 conn.setAutoCommit(false); // Bắt đầu transaction
 
                 try {
-                    // B4.1: kiểm tra định biên nhân sự tối thiểu (min-staffing) trong ca
                     String position = detail.getPosition();
                     String shiftType = request.getShiftType().getDbValue();
+
+                    // B4.0: Nếu nhân viên là PT, kiểm tra lại xem có phát sinh buổi dạy Scheduled trùng ca không (CBR-83)
+                    if ("PT".equalsIgnoreCase(position)) {
+                        int scheduledCount = leaveRequestDAO.countScheduledSessions(
+                                request.getEmployeeId(), request.getLeaveDate(), shiftType);
+                        if (scheduledCount > 0) {
+                            conn.rollback();
+                            return ServiceResult.fail(String.format(
+                                    Messages.MSG78_LEAVE_BLOCKED_BY_SESSIONS, scheduledCount));
+                        }
+                    }
+
+                    // B4.1: kiểm tra định biên nhân sự tối thiểu (min-staffing) trong ca
                     int remaining = leaveRequestDAO.countOnDutyAfterApproval(
                             conn, request.getLeaveDate(), shiftType, position, leaveRequestId);
 
