@@ -522,10 +522,12 @@ public class LeaveRequestService {
             Person person = personDAO.findById(employee.getPersonId());
             String fullName = person == null ? "" : person.getFullName();
 
-            // B3: đọc giờ chốt nộp đơn P-12 (mặc định 15:00 ngày liền trước ngày nghỉ)
+            // B3: đọc giờ chốt nộp đơn P-12 và định biên P-13, P-14 từ SystemConfigs
             LocalTime submissionCutoff = LocalTime.parse(
                     systemConfigService.getString(
                             SystemConfigService.LEAVE_SUBMIT_DEADLINE));
+            int minPt = systemConfigService.getInt(SystemConfigService.MIN_PT_PER_SHIFT);
+            int minReceptionist = systemConfigService.getInt(SystemConfigService.MIN_RECEPTIONIST_PER_SHIFT);
 
             // B4: lấy 10 đơn gần nhất của chính nhân viên này
             List<LeaveRequest> myRequests = leaveRequestDAO.findByEmployeeId(employee.getEmployeeId(), 10);
@@ -536,6 +538,8 @@ public class LeaveRequestService {
                     fullName,
                     employee.getPosition().getDbValue(),
                     submissionCutoff,
+                    minPt,
+                    minReceptionist,
                     myRequests));
 
         } catch (SQLException e) {
@@ -600,8 +604,10 @@ public class LeaveRequestService {
             LocalDateTime now = DateTimeUtil.now();
 
             if (now.isAfter(deadline)) {
-                return ServiceResult.fail(
-                        "Đã quá hạn nộp đơn cho ngày này. Nghỉ đột xuất vui lòng báo trực tiếp Quản lý.");
+                return ServiceResult.fail(String.format(
+                        Messages.MSG77_LEAVE_SUBMISSION_DEADLINE,
+                        leaveDate,
+                        submissionCutoff));
             }
 
             // B4: kiểm tra trùng đơn nghỉ Pending hoặc Approved (cùng ca hoặc bao phủ
@@ -620,13 +626,12 @@ public class LeaveRequestService {
                 int clashCount = leaveRequestDAO.countScheduledSessions(
                         employee.getEmployeeId(), leaveDate, shiftType.getDbValue());
                 if (clashCount > 0) {
-                    return ServiceResult.fail(
-                            "Bạn còn " + clashCount
-                                    + " buổi dạy đã xếp trong khoảng nghỉ này. Vui lòng xử lý các buổi dạy trước khi nộp đơn.");
+                    return ServiceResult.fail(String.format(
+                            Messages.MSG78_LEAVE_BLOCKED_BY_SESSIONS, clashCount));
                 }
             }
 
-            // B6: tạo entity và lưu đơn mới vào DB
+            // B6: tạo entity và mở Transaction lưu đơn + ghi AuditLog + thông báo cho Manager (BF-05)
             LeaveRequest request = new LeaveRequest();
             request.setEmployeeId(employee.getEmployeeId());
             request.setLeaveType(leaveType);
@@ -634,12 +639,42 @@ public class LeaveRequestService {
             request.setShiftType(shiftType);
             request.setReason(reason.trim());
 
-            int newLeaveRequestId = leaveRequestDAO.insert(request);
-            if (newLeaveRequestId <= 0) {
-                return ServiceResult.fail(Messages.MSG04_SYSTEM_BUSY);
-            }
+            try (Connection conn = DBContext.getConnection()) {
+                conn.setAutoCommit(false);
+                try {
+                    int newLeaveRequestId = leaveRequestDAO.insert(conn, request);
+                    if (newLeaveRequestId <= 0) {
+                        conn.rollback();
+                        return ServiceResult.fail(Messages.MSG04_SYSTEM_BUSY);
+                    }
 
-            return ServiceResult.ok(newLeaveRequestId);
+                    // B6.1: ghi nhật ký kiểm toán (Audit Log)
+                    auditLogService.logInTransaction(
+                            conn,
+                            accountId,
+                            "Nộp đơn nghỉ phép",
+                            "LeaveRequests",
+                            newLeaveRequestId,
+                            "Status",
+                            null,
+                            "Pending",
+                            reason.trim());
+
+                    // B6.2: gửi thông báo đến chuông của tất cả Manager (theo sơ đồ BF-05)
+                    String notifTitle = "Đơn xin nghỉ phép mới";
+                    String notifContent = "Nhân viên " + employee.getEmployeeCode()
+                            + " xin nghỉ ngày " + leaveDate
+                            + " (" + shiftType.getDisplayName() + ").";
+                    notificationService.notifyRoleInTransaction(
+                            conn, Role.MANAGER, notifTitle, notifContent);
+
+                    conn.commit();
+                    return ServiceResult.ok(newLeaveRequestId);
+                } catch (Exception e) {
+                    conn.rollback();
+                    throw e;
+                }
+            }
 
         } catch (SQLException e) {
             e.printStackTrace();

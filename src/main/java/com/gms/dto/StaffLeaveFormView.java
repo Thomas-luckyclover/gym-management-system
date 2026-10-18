@@ -32,6 +32,12 @@ public class StaffLeaveFormView {
     // JSP/JS dùng để hiển thị thông tin hạn chốt và validate client-side.
     private final LocalTime submissionCutoffTime;
 
+    // SystemConfigs: tham số P-13 (số PT tối thiểu mỗi ca, mặc định 2).
+    private final int minPtPerShift;
+
+    // SystemConfigs: tham số P-14 (số Lễ tân tối thiểu mỗi ca, mặc định 1).
+    private final int minReceptionistPerShift;
+
     // DAO: danh sách các đơn xin nghỉ gần đây của nhân viên này.
     // JSP lặp để hiển thị bảng "Đơn đã nộp" kèm badge trạng thái.
     private final List<LeaveRequest> myRequests;
@@ -44,11 +50,26 @@ public class StaffLeaveFormView {
             LocalTime submissionCutoffTime,
             List<LeaveRequest> myRequests
     ) {
+        this(employeeId, employeeCode, fullName, position, submissionCutoffTime, 2, 1, myRequests);
+    }
+
+    public StaffLeaveFormView(
+            int employeeId,
+            String employeeCode,
+            String fullName,
+            String position,
+            LocalTime submissionCutoffTime,
+            int minPtPerShift,
+            int minReceptionistPerShift,
+            List<LeaveRequest> myRequests
+    ) {
         this.employeeId = employeeId;
         this.employeeCode = employeeCode;
         this.fullName = fullName;
         this.position = position;
         this.submissionCutoffTime = submissionCutoffTime;
+        this.minPtPerShift = minPtPerShift;
+        this.minReceptionistPerShift = minReceptionistPerShift;
         this.myRequests = myRequests == null
                 ? Collections.emptyList()
                 : Collections.unmodifiableList(myRequests);
@@ -72,6 +93,14 @@ public class StaffLeaveFormView {
 
     public LocalTime getSubmissionCutoffTime() {
         return submissionCutoffTime;
+    }
+
+    public int getMinPtPerShift() {
+        return minPtPerShift;
+    }
+
+    public int getMinReceptionistPerShift() {
+        return minReceptionistPerShift;
     }
 
     public List<LeaveRequest> getMyRequests() {
