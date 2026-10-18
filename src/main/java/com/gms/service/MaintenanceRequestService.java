@@ -56,17 +56,57 @@ public class MaintenanceRequestService {
                 new NotificationService();
     }
 
+    /**
+     * Package-private constructor for dependency injection during unit testing.
+     */
+    MaintenanceRequestService(
+            MaintenanceRequestDAO maintenanceRequestDAO,
+            FacilityDAO facilityDAO,
+            AccountDAO accountDAO,
+            EmployeeDAO employeeDAO,
+            AuditLogService auditLogService,
+            NotificationService notificationService
+    ) {
+        this.maintenanceRequestDAO = maintenanceRequestDAO;
+        this.facilityDAO = facilityDAO;
+        this.accountDAO = accountDAO;
+        this.employeeDAO = employeeDAO;
+        this.auditLogService = auditLogService;
+        this.notificationService = notificationService;
+    }
+
+    /**
+     * Factory method for obtaining a database connection.
+     * Overridable by tests to supply connection wrappers or mock connections.
+     */
+    protected Connection openConnection() throws SQLException {
+        return DBContext.getConnection();
+    }
+
     // ===== Tạo yêu cầu =====
 
     /**
-     * Lễ tân tạo yêu cầu bảo trì mới.
+     * Receptionist creates a new maintenance request for gym equipment.
      *
-     * @param accountId        tài khoản lễ tân
-     * @param facilityId       cơ sở vật chất bị lỗi
-     * @param priorityValue    mức ưu tiên
-     * @param description      mô tả lỗi
-     * @param warningTagPlaced đã đặt cảnh báo hay chưa
-     * @return mã yêu cầu vừa tạo
+     * <p><b>Business Rules & Constraints (BF-06):</b></p>
+     * <ul>
+     *   <li><b>Facility Status Rule:</b> Allowed for both {@code Available} and {@code UnderMaintenance}
+     *       facilities because equipment may have minor issues while already partially flagged. Only
+     *       {@code Retired} (permanently decommissioned) or non-existent facilities are rejected.</li>
+     *   <li><b>Zero Available Quantity Rule:</b> Creating requests is NOT blocked when {@code AvailableQuantity = 0}.
+     *       In a gym setting, multiple tickets may concern the same physical unit or batch. Front-end displays
+     *       a clear warning of existing unfinished requests, but the Receptionist can proceed.</li>
+     *   <li><b>Transaction Boundary:</b> All steps (code generation, insertion, audit logging, notification)
+     *       execute within a single database transaction. If any step fails, changes are rolled back.</li>
+     *   <li><b>Audit Trail:</b> The acting role is strictly recorded as {@code Role.RECEPTIONIST}.</li>
+     * </ul>
+     *
+     * @param accountId        authenticated receptionist account ID
+     * @param facilityId       targeted facility ID
+     * @param priorityValue    priority string ("Low", "Normal", "Urgent")
+     * @param description      detailed description of malfunction (10-500 characters)
+     * @param warningTagPlaced whether physical warning tag was placed on equipment
+     * @return ServiceResult containing generated request code (e.g. "BT-0001") or validation errors
      */
     public ServiceResult<String> createRequest(
             int accountId,
@@ -101,11 +141,12 @@ public class MaintenanceRequestService {
             );
         }
 
-        try (Connection connection = DBContext.getConnection()) {
+        // Step 2: Open transactional boundary (setAutoCommit = false)
+        try (Connection connection = openConnection()) {
             connection.setAutoCommit(false);
 
             try {
-                // B2: xác định lễ tân đang thao tác
+                // Verify the acting account belongs to an active Receptionist
                 Employee receptionist =
                         findEmployeeForAccount(accountId, Role.RECEPTIONIST);
 
@@ -217,11 +258,12 @@ public class MaintenanceRequestService {
             );
         }
 
-        try (Connection connection = DBContext.getConnection()) {
+        // Open transaction boundary
+        try (Connection connection = openConnection()) {
             connection.setAutoCommit(false);
 
             try {
-                // B1: xác định Manager đang thao tác (BR-49)
+                // Step 1: Verify manager role (BR-49)
                 Employee manager =
                         findEmployeeForAccount(accountId, Role.MANAGER);
 
@@ -342,11 +384,11 @@ public class MaintenanceRequestService {
             );
         }
 
-        try (Connection connection = DBContext.getConnection()) {
+        try (Connection connection = openConnection()) {
             connection.setAutoCommit(false);
 
             try {
-                // B1: xác định Manager đang thao tác (BR-49)
+                // Step 1: Verify manager role (BR-49)
                 Employee manager =
                         findEmployeeForAccount(accountId, Role.MANAGER);
 
@@ -455,11 +497,12 @@ public class MaintenanceRequestService {
             );
         }
 
-        try (Connection connection = DBContext.getConnection()) {
+        // Open transaction boundary
+        try (Connection connection = openConnection()) {
             connection.setAutoCommit(false);
 
             try {
-                // B1: xác định lễ tân đang thao tác (BR-48)
+                // Step 1: Verify receptionist role (BR-48)
                 Employee receptionist =
                         findEmployeeForAccount(accountId, Role.RECEPTIONIST);
 
