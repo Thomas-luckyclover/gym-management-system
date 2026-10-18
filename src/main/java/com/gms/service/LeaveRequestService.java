@@ -429,6 +429,16 @@ public class LeaveRequestService {
                 return ServiceResult.fail("Đơn này đã được xử lý rồi.");
             }
 
+            // B2.1: kiểm tra hạn duyệt P-20 (CBR-85) — quá giờ P-20 thì thuộc diện hệ thống tự từ chối
+            LocalTime approvalCutoff = LocalTime.parse(
+                    systemConfigService.getString(SystemConfigService.LEAVE_APPROVED_DEADLINE));
+            LocalDateTime approvalDeadline = LocalDateTime.of(
+                    request.getLeaveDate().minusDays(1), approvalCutoff);
+            if (!DateTimeUtil.now().isBefore(approvalDeadline)) {
+                return ServiceResult.fail("Đơn nghỉ phép này đã quá hạn duyệt ("
+                        + approvalCutoff + " ngày hôm trước ngày nghỉ).");
+            }
+
             // B3: tìm thông tin nhân viên của Manager
             Employee manager = findEmployeeForAccount(managerAccountId);
             if (manager == null) {
