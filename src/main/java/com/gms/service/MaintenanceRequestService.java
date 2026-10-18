@@ -116,7 +116,7 @@ public class MaintenanceRequestService {
             boolean warningTagPlaced
     ) {
 
-        // B1: kiểm tra dữ liệu đầu vào
+        // Step 1: Input validation before acquiring database resources
         if (facilityId <= 0) {
             return ServiceResult.failField(
                     "facilityId",
@@ -155,7 +155,7 @@ public class MaintenanceRequestService {
                     return ServiceResult.fail(Messages.MSG04_SYSTEM_BUSY);
                 }
 
-                // B3: kiểm tra cơ sở vật chất còn tồn tại
+                // Verify facility exists and is not retired (Available and UnderMaintenance are both allowed)
                 Facility facility =
                         facilityDAO.findById(connection, facilityId);
 
@@ -189,10 +189,11 @@ public class MaintenanceRequestService {
                 int requestId =
                         maintenanceRequestDAO.insert(connection, request);
 
-                // B5: ghi AuditLog
+                // B5: ghi AuditLog với vai trò Receptionist
                 auditLogService.logInTransaction(
                         connection,
                         accountId,
+                        Role.RECEPTIONIST,
                         "Tạo yêu cầu bảo trì",
                         "MaintenanceRequest",
                         requestId,
@@ -239,12 +240,27 @@ public class MaintenanceRequestService {
     // ===== Duyệt yêu cầu =====
 
     /**
-     * Manager duyệt yêu cầu Open sang In Progress.
+     * Manager approves an Open maintenance request, transitioning it to InProgress (BR-49).
      *
-     * @param accountId           tài khoản Manager
-     * @param requestId           id yêu cầu
-     * @param setUnderMaintenance có chuyển thiết bị sang bảo trì không
-     * @return kết quả xử lý
+     * <p><b>Business Logic & State Transitions:</b></p>
+     * <ul>
+     *   <li><b>Role Verification:</b> Only active employees with {@code Role.MANAGER} can approve requests.</li>
+     *   <li><b>Pessimistic Row Locking:</b> Uses {@code findByIdForUpdate} to lock the request record,
+     *       preventing concurrent approvals or conflicting updates.</li>
+     *   <li><b>Precondition:</b> The request must currently be in {@code Status.OPEN}.</li>
+     *   <li><b>Facility State Transition (CBR-101):</b> If the manager specifies {@code setUnderMaintenance = true}
+     *       and the facility is currently {@code Available}, its status transitions to {@code UnderMaintenance}.</li>
+     *   <li><b>Separate Audit Logging:</b> When the facility status changes, a distinct {@code AuditLog} entry
+     *       is recorded for the {@code Facility} entity (with {@code Role.MANAGER}) alongside the request's
+     *       own status transition audit log.</li>
+     *   <li><b>Quantity Impact:</b> Transitioning from {@code Open} to {@code InProgress} maintains the request
+     *       within the unfinished set; thus {@code PendingQuantity} and {@code AvailableQuantity} remain stable.</li>
+     * </ul>
+     *
+     * @param accountId           authenticated manager account ID
+     * @param requestId           ID of the request to approve
+     * @param setUnderMaintenance whether to mark the physical facility as UnderMaintenance
+     * @return ServiceResult indicating success or failure message
      */
     public ServiceResult<Void> approveRequest(
             int accountId,
@@ -272,7 +288,7 @@ public class MaintenanceRequestService {
                     return ServiceResult.fail(Messages.MSG04_SYSTEM_BUSY);
                 }
 
-                // B2: khóa và kiểm tra trạng thái hiện tại
+                // Step 2: Lock and verify current request state to prevent race conditions
                 MaintenanceRequest request =
                         maintenanceRequestDAO.findByIdForUpdate(
                                 connection,
@@ -296,7 +312,7 @@ public class MaintenanceRequestService {
                     );
                 }
 
-                // B3: chuyển Open sang InProgress (BR-49)
+                // Step 3: Transition request status from Open to InProgress (BR-49)
                 boolean updated =
                         maintenanceRequestDAO.approve(
                                 connection,
@@ -310,25 +326,48 @@ public class MaintenanceRequestService {
                     return ServiceResult.fail(Messages.MSG04_SYSTEM_BUSY);
                 }
 
-                // B4: cập nhật thiết bị nếu Manager chọn (CBR-101)
+                // Step 4: Conditionally update physical Facility status if manager opted in (CBR-101)
                 if (setUnderMaintenance) {
-                    boolean facilityUpdated =
-                            facilityDAO.updateStatus(
-                                    connection,
-                                    request.getFacilityId(),
-                                    Facility.Status.UNDER_MAINTENANCE
-                            );
+                    Facility facility =
+                            facilityDAO.findById(connection, request.getFacilityId());
 
-                    if (!facilityUpdated) {
-                        connection.rollback();
-                        return ServiceResult.fail(Messages.MSG04_SYSTEM_BUSY);
+                    if (facility != null
+                            && facility.getStatus() != Facility.Status.UNDER_MAINTENANCE) {
+
+                        Facility.Status oldStatus = facility.getStatus();
+                        boolean facilityUpdated =
+                                facilityDAO.updateStatus(
+                                        connection,
+                                        request.getFacilityId(),
+                                        Facility.Status.UNDER_MAINTENANCE
+                                );
+
+                        if (!facilityUpdated) {
+                            connection.rollback();
+                            return ServiceResult.fail(Messages.MSG04_SYSTEM_BUSY);
+                        }
+
+                        // Write a dedicated AuditLog entry for the Facility status transition
+                        auditLogService.logInTransaction(
+                                connection,
+                                accountId,
+                                Role.MANAGER,
+                                "Cập nhật trạng thái thiết bị",
+                                "Facility",
+                                request.getFacilityId(),
+                                "Status",
+                                oldStatus.getDbValue(),
+                                Facility.Status.UNDER_MAINTENANCE.getDbValue(),
+                                "Chuyển sang bảo trì khi duyệt yêu cầu " + request.getRequestCode()
+                        );
                     }
                 }
 
-                // B5: ghi AuditLog
+                // Step 5: Write request AuditLog with Role.MANAGER
                 auditLogService.logInTransaction(
                         connection,
                         accountId,
+                        Role.MANAGER,
                         "Duyệt yêu cầu bảo trì",
                         "MaintenanceRequest",
                         requestId,
@@ -364,12 +403,15 @@ public class MaintenanceRequestService {
     }
 
     /**
-     * Manager từ chối yêu cầu Open.
+     * Manager rejects an Open maintenance request with a required justification reason (BR-49).
      *
-     * @param accountId    tài khoản Manager
-     * @param requestId    id yêu cầu
-     * @param rejectReason lý do từ chối
-     * @return kết quả xử lý
+     * <p><b>Quantity Impact:</b> Transitioning from {@code Open} to {@code Rejected} removes the request
+     * from the unfinished set, immediately restoring the facility's {@code AvailableQuantity} on next refresh.</p>
+     *
+     * @param accountId    authenticated manager account ID
+     * @param requestId    ID of the request to reject
+     * @param rejectReason justification reason (5-500 characters)
+     * @return ServiceResult indicating success or failure
      */
     public ServiceResult<Void> rejectRequest(
             int accountId,
@@ -377,6 +419,7 @@ public class MaintenanceRequestService {
             String rejectReason
     ) {
 
+        // Validate reason length before acquiring database connection
         if (!ValidationUtil.isValidReason(rejectReason)) {
             return ServiceResult.failField(
                     "rejectReason",
@@ -397,7 +440,7 @@ public class MaintenanceRequestService {
                     return ServiceResult.fail(Messages.MSG04_SYSTEM_BUSY);
                 }
 
-                // B2: khóa yêu cầu cần từ chối
+                // Step 2: Lock request and verify it is currently Open
                 MaintenanceRequest request =
                         maintenanceRequestDAO.findByIdForUpdate(
                                 connection,
@@ -421,7 +464,7 @@ public class MaintenanceRequestService {
                     );
                 }
 
-                // B3: chuyển Open sang Rejected (BR-49)
+                // Step 3: Transition from Open to Rejected in DAO (BR-49)
                 boolean updated =
                         maintenanceRequestDAO.reject(
                                 connection,
@@ -435,10 +478,11 @@ public class MaintenanceRequestService {
                     return ServiceResult.fail(Messages.MSG04_SYSTEM_BUSY);
                 }
 
-                // B4: ghi AuditLog
+                // Step 4: Write AuditLog with Role.MANAGER and rejection reason
                 auditLogService.logInTransaction(
                         connection,
                         accountId,
+                        Role.MANAGER,
                         "Từ chối yêu cầu bảo trì",
                         "MaintenanceRequest",
                         requestId,
@@ -477,12 +521,26 @@ public class MaintenanceRequestService {
     // ===== Đóng yêu cầu =====
 
     /**
-     * Lễ tân nghiệm thu và đóng yêu cầu In Progress.
+     * Receptionist inspects and closes an InProgress maintenance request after physical verification (BR-48).
      *
-     * @param accountId      tài khoản lễ tân
-     * @param requestId      id yêu cầu
-     * @param acceptanceNote ghi chú nghiệm thu
-     * @return kết quả xử lý
+     * <p><b>Business Logic & State Transitions:</b></p>
+     * <ul>
+     *   <li><b>Role Verification:</b> Only active employees with {@code Role.RECEPTIONIST} can close requests.</li>
+     *   <li><b>Pessimistic Row Locking:</b> Uses {@code findByIdForUpdate} to lock the request record.</li>
+     *   <li><b>Precondition:</b> The request must currently be in {@code Status.IN_PROGRESS}.</li>
+     *   <li><b>Facility Status Recovery (CBR-102):</b> Checks if any OTHER active InProgress requests exist
+     *       for the same facility. If none remain ({@code !hasOtherInProgress}) and the facility is currently
+     *       {@code UnderMaintenance}, it is automatically restored to {@code Available}.</li>
+     *   <li><b>Separate Audit Logging:</b> If the facility is restored, a separate {@code AuditLog} entry
+     *       is written for the {@code Facility} entity with {@code Role.RECEPTIONIST}.</li>
+     *   <li><b>Quantity Impact:</b> Closing the request decrements {@code PendingQuantity} and restores
+     *       {@code AvailableQuantity} in subsequent catalog calculations.</li>
+     * </ul>
+     *
+     * @param accountId      authenticated receptionist account ID
+     * @param requestId      ID of the request to close
+     * @param acceptanceNote verification and acceptance notes (5-500 characters)
+     * @return ServiceResult indicating success or failure
      */
     public ServiceResult<Void> closeRequest(
             int accountId,
@@ -490,6 +548,7 @@ public class MaintenanceRequestService {
             String acceptanceNote
     ) {
 
+        // Validate acceptance note length before acquiring database resources
         if (!ValidationUtil.isLengthValid(acceptanceNote, 5, 500)) {
             return ServiceResult.failField(
                     "acceptanceNote",
@@ -511,7 +570,7 @@ public class MaintenanceRequestService {
                     return ServiceResult.fail(Messages.MSG04_SYSTEM_BUSY);
                 }
 
-                // B2: khóa yêu cầu cần đóng
+                // Step 2: Lock request and verify it is currently InProgress
                 MaintenanceRequest request =
                         maintenanceRequestDAO.findByIdForUpdate(
                                 connection,
@@ -535,7 +594,7 @@ public class MaintenanceRequestService {
                     );
                 }
 
-                // B3: đóng yêu cầu sau nghiệm thu (BR-48)
+                // Step 3: Transition request to CLOSED in DAO (BR-48)
                 boolean updated =
                         maintenanceRequestDAO.close(
                                 connection,
@@ -549,25 +608,55 @@ public class MaintenanceRequestService {
                     return ServiceResult.fail(Messages.MSG04_SYSTEM_BUSY);
                 }
 
-                // B4: khôi phục thiết bị nếu không còn yêu cầu đang xử lý (CBR-102)
+                // Step 4: Check if any other InProgress tickets exist for this facility (CBR-102)
                 boolean hasOtherInProgress =
                         maintenanceRequestDAO.hasInProgressRequest(
                                 connection,
                                 request.getFacilityId()
                         );
 
+                // If no other in-progress tickets remain, restore the facility to Available
                 if (!hasOtherInProgress) {
-                    facilityDAO.updateStatus(
-                            connection,
-                            request.getFacilityId(),
-                            Facility.Status.AVAILABLE
-                    );
+                    Facility facility =
+                            facilityDAO.findById(connection, request.getFacilityId());
+
+                    if (facility != null
+                            && facility.getStatus() != Facility.Status.AVAILABLE) {
+
+                        Facility.Status oldStatus = facility.getStatus();
+                        boolean facilityUpdated =
+                                facilityDAO.updateStatus(
+                                        connection,
+                                        request.getFacilityId(),
+                                        Facility.Status.AVAILABLE
+                                );
+
+                        if (!facilityUpdated) {
+                            connection.rollback();
+                            return ServiceResult.fail(Messages.MSG04_SYSTEM_BUSY);
+                        }
+
+                        // Write a dedicated AuditLog entry for the Facility status recovery
+                        auditLogService.logInTransaction(
+                                connection,
+                                accountId,
+                                Role.RECEPTIONIST,
+                                "Khôi phục trạng thái thiết bị",
+                                "Facility",
+                                request.getFacilityId(),
+                                "Status",
+                                oldStatus.getDbValue(),
+                                Facility.Status.AVAILABLE.getDbValue(),
+                                "Khôi phục khả dụng sau khi đóng yêu cầu " + request.getRequestCode()
+                        );
+                    }
                 }
 
-                // B5: ghi AuditLog
+                // Step 5: Write request closure AuditLog with Role.RECEPTIONIST
                 auditLogService.logInTransaction(
                         connection,
                         accountId,
+                        Role.RECEPTIONIST,
                         "Đóng yêu cầu bảo trì",
                         "MaintenanceRequest",
                         requestId,
