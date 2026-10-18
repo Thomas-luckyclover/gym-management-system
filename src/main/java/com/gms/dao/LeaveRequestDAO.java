@@ -602,21 +602,34 @@ public class LeaveRequestDAO {
     }
 
     /**
-     * Đánh dấu đơn đã được gửi thông báo nhắc Manager (JOB-07).
+     * Đánh dấu đơn đã được gửi thông báo nhắc Manager (JOB-07) trên cùng Connection của Transaction.
+     *
+     * @param connection     kết nối đang mở transaction
+     * @param leaveRequestId mã đơn xin nghỉ
+     * @return true nếu cập nhật thành công
+     * @throws SQLException lỗi kết nối hoặc truy vấn DB
+     */
+    public boolean markReminded(Connection connection, int leaveRequestId) throws SQLException {
+        // B1: Cập nhật cột ReminderSentAt trên cùng Connection của Transaction
+        String sql = "UPDATE LeaveRequests "
+                + "SET ReminderSentAt = SYSDATETIME() "
+                + "WHERE LeaveRequestId = ? AND ReminderSentAt IS NULL";
+
+        try (PreparedStatement statement = connection.prepareStatement(sql)) {
+            statement.setInt(1, leaveRequestId);
+            return statement.executeUpdate() > 0;
+        }
+    }
+
+    /**
+     * Đánh dấu đơn đã được gửi thông báo nhắc Manager (bản tự mở kết nối đơn lẻ).
      *
      * @param leaveRequestId mã đơn xin nghỉ
      * @throws SQLException lỗi kết nối hoặc truy vấn DB
      */
     public void markReminded(int leaveRequestId) throws SQLException {
-        String sql = "UPDATE LeaveRequests "
-                + "SET ReminderSentAt = SYSDATETIME() "
-                + "WHERE LeaveRequestId = ? AND ReminderSentAt IS NULL";
-
-        try (Connection connection = DBContext.getConnection();
-                PreparedStatement statement = connection.prepareStatement(sql)) {
-
-            statement.setInt(1, leaveRequestId);
-            statement.executeUpdate();
+        try (Connection connection = DBContext.getConnection()) {
+            markReminded(connection, leaveRequestId);
         }
     }
 
