@@ -275,49 +275,71 @@ public class LeaveRequestDAO {
             String position,
             int excludeLeaveRequestId
     ) throws SQLException {
-        // B1: tổng nhân viên chức vụ đó đang Working
+        // B1: Neu don xin nghi Ca ngay (FullDay) -> kiem tra doc lap ca Sang va ca Chieu,
+        // lay moc quan so thap nhat (Math.min) theo dung DBR-60 & BR-14
+        if (LeaveRequest.ShiftType.FULL_DAY.getDbValue().equalsIgnoreCase(shiftType) || "FullDay".equalsIgnoreCase(shiftType)) {
+            int morningRem = countOnDutySingleShift(
+                    connection, leaveDate, LeaveRequest.ShiftType.MORNING.getDbValue(), position, excludeLeaveRequestId);
+            int afternoonRem = countOnDutySingleShift(
+                    connection, leaveDate, LeaveRequest.ShiftType.AFTERNOON.getDbValue(), position, excludeLeaveRequestId);
+            return Math.min(morningRem, afternoonRem);
+        }
+
+        // B2: Neu chi nghi 1 ca (Morning hoac Afternoon) -> dem truc tiep tren ca do
+        return countOnDutySingleShift(connection, leaveDate, shiftType, position, excludeLeaveRequestId);
+    }
+
+    /**
+     * Ham phu tro: Dem so nhan su dang Working con truc cua 1 ca don le (Morning hoac Afternoon)
+     * sau khi tru di nhung nguoi da duoc Approved nghi trung ca do va tru them 1 cho don dang xet.
+     */
+    private int countOnDutySingleShift(
+            Connection connection,
+            LocalDate leaveDate,
+            String targetShift,
+            String position,
+            int excludeLeaveRequestId) throws SQLException {
+
+        // B1: Dem tong nhan su dang lam viec (Working) cua vi tri do
         String sqlTotal = "SELECT COUNT(*) FROM Employees WHERE Position = ? AND Status = 'Working'";
 
-        // B2: đếm đơn Approved (hoặc đang xét = đơn excludeLeaveRequestId vừa approve) cùng ngày, ca, chức vụ
-        // ShiftType FullDay overlap với Morning và Afternoon
-        String sqlApproved = "SELECT COUNT(*) "
+        // B2: Dem so nhan su (DISTINCT EmployeeId) dang Working da duoc duyet nghi trung vao ca targetShift
+        // (Bao gom nguoi nghi dung ca targetShift HOAC nguoi nghi FullDay)
+        String sqlApproved = "SELECT COUNT(DISTINCT lr.EmployeeId) "
                 + "FROM LeaveRequests lr "
-                + "JOIN Employees e ON e.EmployeeId = lr.EmployeeId "
+                + "INNER JOIN Employees e ON e.EmployeeId = lr.EmployeeId "
                 + "WHERE lr.LeaveDate = ? "
-                + "AND (lr.Status = 'Approved' OR lr.LeaveRequestId = ?) "
-                + "AND e.Position = ? "
-                + "AND ("
-                + "  lr.ShiftType = 'FullDay' "
-                + "  OR lr.ShiftType = ? "
-                + "  OR ? = 'FullDay' "
-                + ")";
+                + "  AND lr.Status = 'Approved' "
+                + "  AND e.Position = ? "
+                + "  AND e.Status = 'Working' "
+                + "  AND lr.LeaveRequestId <> ? "
+                + "  AND (lr.ShiftType = 'FullDay' OR lr.ShiftType = ?)";
 
-        int total = 0;
-        int approved = 0;
-
-        try (PreparedStatement stmt = connection.prepareStatement(sqlTotal)) {
-            stmt.setString(1, position);
-            try (ResultSet rs = stmt.executeQuery()) {
+        int totalWorking = 0;
+        try (PreparedStatement ps = connection.prepareStatement(sqlTotal)) {
+            ps.setString(1, position);
+            try (ResultSet rs = ps.executeQuery()) {
                 if (rs.next()) {
-                    total = rs.getInt(1);
+                    totalWorking = rs.getInt(1);
                 }
             }
         }
 
-        try (PreparedStatement stmt = connection.prepareStatement(sqlApproved)) {
-            stmt.setDate(1, java.sql.Date.valueOf(leaveDate));
-            stmt.setInt(2, excludeLeaveRequestId);
-            stmt.setString(3, position);
-            stmt.setString(4, shiftType);
-            stmt.setString(5, shiftType);
-            try (ResultSet rs = stmt.executeQuery()) {
+        int approvedSameShift = 0;
+        try (PreparedStatement ps = connection.prepareStatement(sqlApproved)) {
+            ps.setDate(1, java.sql.Date.valueOf(leaveDate));
+            ps.setString(2, position);
+            ps.setInt(3, excludeLeaveRequestId);
+            ps.setString(4, targetShift);
+            try (ResultSet rs = ps.executeQuery()) {
                 if (rs.next()) {
-                    approved = rs.getInt(1);
+                    approvedSameShift = rs.getInt(1);
                 }
             }
         }
 
-        return total - approved;
+        // B3: Quan so con lai neu duyet them don hien tai (-1)
+        return Math.max(0, totalWorking - approvedSameShift - 1);
     }
 
     /**
