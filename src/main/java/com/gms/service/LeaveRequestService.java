@@ -456,7 +456,10 @@ public class LeaveRequestService {
                     // B4.3: gửi thông báo đến chuông của nhân viên
                     String notifTitle = "Nghỉ phép bị từ chối";
                     String notifContent = "Đơn nghỉ ngày " + request.getLeaveDate()
-                            + " bị từ chối. Lý do: " + rejectReason;
+                            + " bị từ chối. Lý do: " + rejectReason.trim();
+                    if (notifContent.length() > 500) {
+                        notifContent = notifContent.substring(0, 497) + "...";
+                    }
                     notificationService.notifyEmployeeInTransaction(
                             conn,
                             request.getEmployeeId(),
@@ -658,7 +661,7 @@ public class LeaveRequestService {
                     conn.setAutoCommit(false);
                     try {
                         for (LeaveRequest req : remindList) {
-                            leaveRequestDAO.markReminded(req.getLeaveRequestId());
+                            leaveRequestDAO.markReminded(conn, req.getLeaveRequestId());
                         }
 
                         // Gửi thông báo đến chuông của tất cả Manager trong hệ thống
