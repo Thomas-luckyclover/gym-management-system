@@ -126,7 +126,7 @@
 
             <button class="btn btn-primary" type="submit">Tìm</button>
             <a class="btn btn-ghost"
-               href="${pageContext.request.contextPath}/manager/leave-requests">
+               href="${pageContext.request.contextPath}/manager/leave-requests<c:if test="${not empty statusFilter and statusFilter != 'Pending'}">?status=<c:out value='${statusFilter}' /></c:if>">
               Xóa lọc
             </a>
           </form>
@@ -161,11 +161,13 @@
                           <small>
                             <c:out value="${item.employeeCode}" />
                             ·
+                            <span style="white-space:nowrap">
                             <c:choose>
                               <c:when test="${item.position == 'PT'}">Huấn luyện viên (PT)</c:when>
                               <c:when test="${item.position == 'Receptionist'}">Lễ tân</c:when>
                               <c:otherwise><c:out value="${item.position}" /></c:otherwise>
                             </c:choose>
+                            </span>
                           </small>
                         </td>
 
@@ -189,7 +191,7 @@
                           </span>
                           <%-- item.autoRejected: Rejected mà không có người duyệt (quá hạn duyệt) --%>
                           <c:if test="${item.autoRejected}">
-                            <small>Tự động: quá hạn duyệt</small>
+                            <small style="display:block;white-space:nowrap">Tự động: quá hạn duyệt</small>
                           </c:if>
                         </td>
 
@@ -197,7 +199,12 @@
                           <%-- deadlineCountdownText chỉ có với đơn Chờ duyệt, đơn đã xử lý để trống --%>
                           <c:choose>
                             <c:when test="${not empty item.deadlineCountdownText}">
-                              <c:out value="${item.deadlineCountdownText}" />
+                              <b><c:out value="${item.deadlineCountdownText}" /></b>
+                              <c:if test="${not empty item.approvalDeadline}">
+                                <small style="display:block;color:var(--color-text-soft)">
+                                  Trước ${gms:formatDateTime(item.approvalDeadline)}
+                                </small>
+                              </c:if>
                             </c:when>
                             <c:otherwise>—</c:otherwise>
                           </c:choose>

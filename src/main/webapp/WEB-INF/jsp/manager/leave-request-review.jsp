@@ -130,15 +130,17 @@
                    aria-hidden="true"
                    style="font-size:var(--font-size-lg);margin-top:2px"></i>
                 <div style="flex:1">
-                  <span class="leave-info-label">Dự báo quân số trực ca nếu duyệt đơn này</span>
+                  <span class="leave-info-label">
+                    Dự báo quân số ${item.position eq 'PT' ? 'HLV (PT)' : 'Lễ tân'} trực ca nếu duyệt đơn này
+                  </span>
                   <div class="leave-staffing-numbers">
                     <div class="leave-staffing-item">
                       <strong><c:out value="${item.remainingStaff}" /></strong>
-                      <small>Dự kiến còn lại</small>
+                      <small>${item.position eq 'PT' ? 'PT' : 'Lễ tân'} dự kiến còn lại</small>
                     </div>
                     <div class="leave-staffing-item">
                       <strong><c:out value="${item.minStaffRequired}" /></strong>
-                      <small>Tối thiểu theo quy định</small>
+                      <small>Định biên tối thiểu (${item.position eq 'PT' ? 'P-13' : 'P-14'})</small>
                     </div>
                   </div>
                   <c:if test="${item.remainingStaff < item.minStaffRequired}">
@@ -217,11 +219,9 @@
 
                 <button class="btn btn-danger"
                         type="submit"
-                        id="btnRejectLeave"
-                        data-confirm-title="Từ chối đơn nghỉ phép"
-                        data-confirm-message="Xác nhận từ chối đơn nghỉ này?">
+                        id="btnRejectLeave">
                   <i class="fa-solid fa-xmark" aria-hidden="true"></i>
-                  Từ chối
+                  Từ chối đơn
                 </button>
               </form>
 
@@ -237,12 +237,17 @@
                 <c:out value="${item.leaveRequest.status.displayName}" />
               </span>
 
-              <c:if test="${not empty item.reviewerName}">
-                <p style="margin:var(--space-3) 0 var(--space-1);color:var(--color-text-soft);font-size:var(--font-size-sm)">
-                  Người xử lý
-                </p>
-                <b><c:out value="${item.reviewerName}" /></b>
-              </c:if>
+              <p style="margin:var(--space-3) 0 var(--space-1);color:var(--color-text-soft);font-size:var(--font-size-sm)">
+                Người xử lý
+              </p>
+              <c:choose>
+                <c:when test="${not empty item.reviewerName}">
+                  <b><c:out value="${item.reviewerName}" /></b>
+                </c:when>
+                <c:otherwise>
+                  <b>Hệ thống tự động (Quá hạn duyệt P-20)</b>
+                </c:otherwise>
+              </c:choose>
 
               <c:if test="${item.leaveRequest.reviewedAt != null}">
                 <p style="margin:var(--space-3) 0 var(--space-1);color:var(--color-text-soft);font-size:var(--font-size-sm)">
