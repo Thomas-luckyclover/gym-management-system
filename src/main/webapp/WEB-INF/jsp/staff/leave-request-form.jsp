@@ -9,9 +9,9 @@
 <head>
   <%@ include file="/WEB-INF/jsp/common/head.jspf" %>
   <title>Nghỉ phép · Super Gym</title>
-  <link rel="stylesheet" href="${pageContext.request.contextPath}/css/pages/auth/account-settings.css">
-  <link rel="stylesheet" href="${pageContext.request.contextPath}/css/pages/manager/leave-requests.css">
-  <link rel="stylesheet" href="${pageContext.request.contextPath}/css/pages/auth/notification-bell.css">
+  <link rel="stylesheet" href="${pageContext.request.contextPath}/css/pages/auth/account-settings.css?v=20261018">
+  <link rel="stylesheet" href="${pageContext.request.contextPath}/css/pages/manager/leave-requests.css?v=20261018">
+  <link rel="stylesheet" href="${pageContext.request.contextPath}/css/pages/auth/notification-bell.css?v=20261018">
   <script src="${pageContext.request.contextPath}/js/pages/auth/notification-bell.js" defer></script>
 </head>
 
@@ -78,7 +78,7 @@
           </div>
         </c:if>
 
-        <%-- Layout 2 cột cho màn nộp đơn --%>
+        <%-- Layout 2 cột cho màn nộp đơn (formView: StaffLeaveFormView do Service tạo) --%>
         <div class="leave-split">
           <div class="leave-col-main">
             <%-- ===== Panel 1: Form nộp đơn xin nghỉ phép ===== --%>
@@ -92,8 +92,8 @@
               <form action="${submitActionUrl}" method="post" id="leaveForm" novalidate>
                 <input type="hidden" name="csrfToken" value="${csrfToken}">
 
-                <div class="leave-info-grid" style="margin-bottom:var(--space-4)">
-                  <div class="field" style="padding:0;border:none;background:transparent">
+                <div class="leave-form-grid">
+                  <div class="field">
                     <label class="field-label" for="leaveType">
                       Loại nghỉ <span aria-hidden="true">*</span>
                     </label>
@@ -109,7 +109,7 @@
                     </c:if>
                   </div>
 
-                  <div class="field" style="padding:0;border:none;background:transparent">
+                  <div class="field">
                     <label class="field-label" for="shiftType">
                       Ca nghỉ <span aria-hidden="true">*</span>
                     </label>
@@ -172,7 +172,7 @@
               </form>
             </section>
 
-            <%-- ===== Panel 2: Danh sách đơn đã nộp gần đây ===== --%>
+            <%-- ===== Panel 2: Danh sách đơn đã nộp gần đây (formView.myRequests) ===== --%>
             <section class="panel leave-panel">
               <div class="panel-head" style="display:flex;align-items:center;justify-content:space-between">
                 <div>
@@ -190,9 +190,16 @@
                     <c:forEach var="req" items="${formView.myRequests}">
                       <div class="leave-history-row">
                         <div style="flex:1">
-                          <div style="display:flex;align-items:center;gap:var(--space-2);margin-bottom:var(--space-1)">
+                          <div style="display:flex;align-items:center;gap:var(--space-2);margin-bottom:var(--space-1);flex-wrap:wrap">
                             <b>${gms:formatDate(req.leaveDate)}</b>
-                            <span style="color:var(--color-text-soft);font-size:var(--font-size-xs)">· <c:out value="${req.shiftType.displayName}" /></span>
+                            <span style="color:var(--color-text-soft);font-size:var(--font-size-xs)">
+                              · <c:out value="${req.shiftType.displayName}" />
+                            </span>
+                            <c:if test="${req.submittedAt != null}">
+                              <span style="color:var(--color-text-soft);font-size:var(--font-size-xs)">
+                                · Nộp lúc ${gms:formatDateTime(req.submittedAt)}
+                              </span>
+                            </c:if>
                           </div>
                           <div style="font-size:var(--font-size-xs);color:var(--color-text-soft);display:flex;flex-wrap:wrap;gap:var(--space-3);margin-bottom:var(--space-1)">
                             <span><i class="fa-solid fa-tag" aria-hidden="true"></i> <c:out value="${req.leaveType.displayName}" /></span>
@@ -205,7 +212,7 @@
                           </c:if>
                         </div>
 
-                        <div>
+                        <div style="white-space:nowrap">
                           <span class="badge ${req.pending ? 'badge-warning' : req.approved ? 'badge-success' : 'badge-danger'}">
                             <c:out value="${req.status.displayName}" />
                           </span>
@@ -218,7 +225,7 @@
             </section>
           </div>
 
-          <%-- ===== Cột phải: Thông tin hạn nộp P-12 & Định biên P-13, P-14 ===== --%>
+          <%-- ===== Cột phải: Staffing preview theo SRS 5.2.1 (Hạn nộp P-12 & Quân số trực ca dự kiến) ===== --%>
           <div class="leave-col-side">
             <div class="leave-side-card">
               <span class="leave-side-title">Hạn chốt nộp đơn (P-12)</span>
@@ -236,17 +243,17 @@
             </div>
 
             <div class="leave-side-card">
-              <span class="leave-side-title">Định biên trực ca tối thiểu</span>
+              <span class="leave-side-title">Dự báo quân số & Định biên ca trực</span>
               <div class="leave-side-row">
-                <span style="color:var(--color-text-soft)">Huấn luyện viên (P-13):</span>
-                <b>≥ <c:out value="${formView.minPtPerShift}" default="2" /> PT / ca</b>
+                <span style="color:var(--color-text-soft)">PT còn trực (nếu duyệt):</span>
+                <b><c:out value="${formView.remainingPt}" default="2" /> PT <small style="font-weight:400;color:var(--color-text-soft)">(tối thiểu ≥ <c:out value="${formView.minPtPerShift}" default="2" />)</small></b>
               </div>
               <div class="leave-side-row" style="margin-bottom:var(--space-3)">
-                <span style="color:var(--color-text-soft)">Lễ tân quầy (P-14):</span>
-                <b>≥ <c:out value="${formView.minReceptionistPerShift}" default="1" /> Lễ tân / ca</b>
+                <span style="color:var(--color-text-soft)">Lễ tân còn trực (nếu duyệt):</span>
+                <b><c:out value="${formView.remainingReceptionist}" default="1" /> Lễ tân <small style="font-weight:400;color:var(--color-text-soft)">(tối thiểu ≥ <c:out value="${formView.minReceptionistPerShift}" default="1" />)</small></b>
               </div>
               <p style="margin:0;font-size:var(--font-size-xs);color:var(--color-text-soft);line-height:1.5">
-                Đơn chỉ được Quản lý duyệt khi số nhân sự còn lại trong ca đảm bảo định biên tối thiểu (CBR-88, CBR-90).
+                Đơn chỉ được Quản lý duyệt khi số nhân sự còn lại trong ca đảm bảo định biên tối thiểu (P-13, P-14).
               </p>
             </div>
           </div>
@@ -255,6 +262,6 @@
     </div>
   </div>
 
-  <script src="${pageContext.request.contextPath}/js/pages/staff/leave-request-form.js"></script>
+  <script src="${pageContext.request.contextPath}/js/pages/staff/leave-request-form.js?v=20261018"></script>
 </body>
 </html>
