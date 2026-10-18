@@ -14,10 +14,6 @@ document.addEventListener("DOMContentLoaded", function () {
         return;
     }
 
-    // Giờ chốt nộp P-12 mặc định (15:00)
-    const CUTOFF_HOUR = 15;
-    const CUTOFF_MINUTE = 0;
-
     // Helper: thêm số 0 vào đầu số có 1 chữ số
     function padZero(num) {
         return num < 10 ? "0" + num : String(num);
@@ -31,6 +27,20 @@ document.addEventListener("DOMContentLoaded", function () {
         return day + "/" + month + "/" + year;
     }
 
+    // B1.1: đọc giờ chốt nộp P-12 từ data-cutoff của server (mặc định 15:00 nếu trống)
+    const cutoffStr = leaveDateInput.getAttribute("data-cutoff") || "15:00";
+    const cutoffParts = cutoffStr.split(":");
+    const CUTOFF_HOUR = parseInt(cutoffParts[0], 10) || 15;
+    const CUTOFF_MINUTE = parseInt(cutoffParts[1], 10) || 0;
+    const cutoffLabel = padZero(CUTOFF_HOUR) + ":" + padZero(CUTOFF_MINUTE);
+
+    // B1.2: đặt thuộc tính min cho ô chọn ngày là ngày mai (GBR-26: chỉ chọn ngày sau hôm nay)
+    const tomorrow = new Date();
+    tomorrow.setDate(tomorrow.getDate() + 1);
+    leaveDateInput.min = tomorrow.getFullYear() + "-"
+            + padZero(tomorrow.getMonth() + 1) + "-"
+            + padZero(tomorrow.getDate());
+
     // B2: hàm cập nhật hiển thị hạn nộp và kiểm tra hợp lệ
     function checkDeadline() {
         const val = leaveDateInput.value;
@@ -39,6 +49,9 @@ document.addEventListener("DOMContentLoaded", function () {
         if (!val) {
             if (infoDateEl) {
                 infoDateEl.textContent = "—";
+            }
+            if (infoDeadlineEl) {
+                infoDeadlineEl.textContent = cutoffLabel + " · ngày hôm trước";
             }
             if (clientErrDiv) {
                 clientErrDiv.textContent = "";
@@ -60,13 +73,13 @@ document.addEventListener("DOMContentLoaded", function () {
             infoDateEl.textContent = formatDateDisplay(leaveDate);
         }
 
-        // Tính mốc deadline: ngày hôm trước lúc 15:00
+        // Tính mốc deadline: ngày hôm trước lúc P-12 (CUTOFF_HOUR:CUTOFF_MINUTE)
         const cutoffDate = new Date(leaveYear, leaveMonth, leaveDay - 1, CUTOFF_HOUR, CUTOFF_MINUTE, 0);
 
         if (infoDeadlineEl) {
             const cutoffDay = padZero(cutoffDate.getDate());
             const cutoffMonth = padZero(cutoffDate.getMonth() + 1);
-            infoDeadlineEl.textContent = "15:00 · " + cutoffDay + "/" + cutoffMonth;
+            infoDeadlineEl.textContent = cutoffLabel + " · " + cutoffDay + "/" + cutoffMonth;
         }
 
         // So sánh thời điểm hiện tại với deadline
@@ -75,7 +88,8 @@ document.addEventListener("DOMContentLoaded", function () {
 
         if (isPastDeadline) {
             if (clientErrDiv) {
-                clientErrDiv.textContent = "Đã quá hạn nộp đơn cho ngày này (hạn chốt 15:00 ngày hôm trước). Nghỉ đột xuất vui lòng báo trực tiếp Quản lý.";
+                clientErrDiv.textContent = "Đã quá hạn nộp đơn cho ngày này (hạn chốt "
+                        + cutoffLabel + " ngày hôm trước). Nghỉ đột xuất vui lòng báo trực tiếp Quản lý.";
                 clientErrDiv.hidden = false;
             }
             submitBtn.disabled = true;

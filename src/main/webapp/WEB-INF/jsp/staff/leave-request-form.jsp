@@ -2,22 +2,27 @@
 <%@ taglib prefix="c" uri="jakarta.tags.core" %>
 <%@ taglib prefix="gms" uri="/WEB-INF/gms-functions.tld" %>
 
+<c:set var="isReceptionist" value="${sessionScope.role eq 'Receptionist' or formView.position eq 'Receptionist'}" />
+
 <!DOCTYPE html>
 <html lang="vi">
 <head>
   <%@ include file="/WEB-INF/jsp/common/head.jspf" %>
   <title>Nghỉ phép · Super Gym</title>
+  <link rel="stylesheet" href="${pageContext.request.contextPath}/css/pages/auth/account-settings.css">
   <link rel="stylesheet" href="${pageContext.request.contextPath}/css/pages/manager/leave-requests.css">
+  <link rel="stylesheet" href="${pageContext.request.contextPath}/css/pages/auth/notification-bell.css">
+  <script src="${pageContext.request.contextPath}/js/pages/auth/notification-bell.js" defer></script>
 </head>
 
-<body class="dock ${formView.position eq 'Receptionist' ? 'theme-staff' : 'theme-staff'}">
+<body class="dock ${isReceptionist ? 'theme-staff' : 'theme-pt'}">
   <%@ include file="/WEB-INF/jsp/common/flash-toast.jspf" %>
 
   <div class="app">
     <%-- ===== Sidebar dock theo role PT / Lễ tân ===== --%>
     <c:set var="activeNav" value="leaves" />
     <c:choose>
-      <c:when test="${formView.position eq 'Receptionist'}">
+      <c:when test="${isReceptionist}">
         <%@ include file="/WEB-INF/jsp/common/layout-receptionist.jspf" %>
       </c:when>
       <c:otherwise>
@@ -26,53 +31,69 @@
     </c:choose>
 
     <div class="main">
-      <%-- ===== Topbar: thông tin nhân viên đang đăng nhập ===== --%>
+      <%-- ===== Topbar đồng bộ chuẩn thiết kế có chuông thông báo ===== --%>
       <header class="topbar">
-        <div class="topbar-title">
-          <h1 style="margin:0;font-size:var(--font-size-xl)">Nghỉ phép</h1>
+        <div class="tb-left">
+          <h1 class="tb-title">Đơn nghỉ phép</h1>
         </div>
-        <div class="topbar-actions" style="display:flex;align-items:center;gap:var(--space-3)">
-          <span class="badge badge-info">
-            <c:choose>
-              <c:when test="${formView.position eq 'PT'}">Huấn luyện viên PT</c:when>
-              <c:when test="${formView.position eq 'Receptionist'}">Lễ tân</c:when>
-              <c:otherwise><c:out value="${formView.position}" /></c:otherwise>
-            </c:choose>
-            · <c:out value="${formView.employeeCode}" />
-          </span>
-          <b style="font-size:var(--font-size-sm)"><c:out value="${formView.fullName}" /></b>
+
+        <div class="top-right">
+          <%@ include file="/WEB-INF/jsp/common/notification-bell.jspf" %>
+
+          <a class="tb-user" href="${pageContext.request.contextPath}/account">
+            <span class="avatar">${isReceptionist ? 'LT' : 'PT'}</span>
+            <span>
+              <b><c:out value="${not empty formView.fullName ? formView.fullName : sessionScope.displayName}" default="Nhân viên" /></b>
+              <small>
+                ${isReceptionist ? 'Lễ tân' : 'Huấn luyện viên'}
+                <c:if test="${not empty formView.employeeCode}">
+                  · <c:out value="${formView.employeeCode}" />
+                </c:if>
+              </small>
+            </span>
+          </a>
         </div>
       </header>
 
       <main class="content" id="main-content" tabindex="-1">
-        <%-- Thông báo lỗi nộp đơn từ server --%>
+        <%-- Thông báo lỗi nộp đơn từ server + Nút dẫn sang màn xử lý lịch dạy (BF-08 / CBR-83) --%>
         <c:if test="${not empty submitError}">
-          <div class="alert-banner danger" style="margin-bottom:var(--space-4);padding:var(--space-3) var(--space-4);border-radius:var(--radius-md);background:var(--color-danger-tint);color:var(--color-danger);border:1px solid var(--color-danger-border)">
-            <i class="fa-solid fa-circle-exclamation" aria-hidden="true"></i>
-            <c:out value="${submitError}" />
+          <div class="alert-banner danger" style="margin-bottom:var(--space-4);display:flex;align-items:center;justify-content:space-between;gap:var(--space-3);flex-wrap:wrap">
+            <div>
+              <i class="fa-solid fa-circle-exclamation" aria-hidden="true"></i>
+              <c:out value="${submitError}" />
+            </div>
+            <c:if test="${not isReceptionist and submitError.contains('buổi')}">
+              <a class="btn btn-sm btn-outline" href="${pageContext.request.contextPath}/pt/dashboard">
+                Mở lịch dạy để xử lý (BF-08) →
+              </a>
+            </c:if>
           </div>
         </c:if>
 
         <c:if test="${not empty formError}">
-          <div class="alert-banner danger" style="margin-bottom:var(--space-4);padding:var(--space-3) var(--space-4);border-radius:var(--radius-md);background:var(--color-danger-tint);color:var(--color-danger);border:1px solid var(--color-danger-border)">
+          <div class="alert-banner danger" style="margin-bottom:var(--space-4)">
             <i class="fa-solid fa-circle-exclamation" aria-hidden="true"></i>
             <c:out value="${formError}" />
           </div>
         </c:if>
 
-        <%-- Layout 2 cột split cho màn nộp đơn --%>
-        <div class="leave-split" style="display:grid;grid-template-columns:1fr 320px;gap:var(--space-6);align-items:start">
+        <%-- Layout 2 cột cho màn nộp đơn --%>
+        <div class="leave-split">
           <div class="leave-col-main">
-            <%-- ===== Panel form nộp đơn xin nghỉ phép ===== --%>
-            <section class="panel" style="margin-bottom:var(--space-6);padding:var(--space-5);border-radius:var(--radius-lg);background:var(--color-surface);border:1px solid var(--color-border-strong);box-shadow:var(--shadow-card)">
-              <div class="panel-head" style="margin-bottom:var(--space-4)">
-                <h2 style="margin:0;font-size:var(--font-size-lg)">Tạo đơn nghỉ phép</h2>
+            <%-- ===== Panel 1: Form nộp đơn xin nghỉ phép ===== --%>
+            <section class="panel leave-panel">
+              <div class="panel-head">
+                <h2>Tạo đơn nghỉ phép</h2>
+                <p>Điền thông tin ngày, ca nghỉ và lý do để gửi Quản lý phê duyệt.</p>
               </div>
 
-              <c:set var="submitActionUrl" value="${pageContext.request.contextPath}${formView.position eq 'Receptionist' ? '/receptionist/leave-requests' : '/pt/leave-requests'}" />
+              <c:set var="submitActionUrl" value="${pageContext.request.contextPath}${isReceptionist ? '/receptionist/leave-requests' : '/pt/leave-requests'}" />
               <form action="${submitActionUrl}" method="post" id="leaveForm" novalidate>
-                <div class="form-grid" style="display:grid;grid-template-columns:1fr 1fr;gap:var(--space-4);margin-bottom:var(--space-4)">
-                  <div class="field">
+                <input type="hidden" name="csrfToken" value="${csrfToken}">
+
+                <div class="leave-info-grid" style="margin-bottom:var(--space-4)">
+                  <div class="field" style="padding:0;border:none;background:transparent">
                     <label class="field-label" for="leaveType">
                       Loại nghỉ <span aria-hidden="true">*</span>
                     </label>
@@ -82,13 +103,13 @@
                       <option value="Unpaid" ${paramLeaveType eq 'Unpaid' ? 'selected' : ''}>Nghỉ không lương</option>
                     </select>
                     <c:if test="${not empty fieldErrors.leaveType}">
-                      <div class="field-error" style="color:var(--color-danger);font-size:var(--font-size-xs);margin-top:var(--space-1)">
+                      <div class="field-error">
                         <c:out value="${fieldErrors.leaveType}" />
                       </div>
                     </c:if>
                   </div>
 
-                  <div class="field">
+                  <div class="field" style="padding:0;border:none;background:transparent">
                     <label class="field-label" for="shiftType">
                       Ca nghỉ <span aria-hidden="true">*</span>
                     </label>
@@ -98,7 +119,7 @@
                       <option value="Afternoon" ${paramShiftType eq 'Afternoon' ? 'selected' : ''}>Ca chiều</option>
                     </select>
                     <c:if test="${not empty fieldErrors.shiftType}">
-                      <div class="field-error" style="color:var(--color-danger);font-size:var(--font-size-xs);margin-top:var(--space-1)">
+                      <div class="field-error">
                         <c:out value="${fieldErrors.shiftType}" />
                       </div>
                     </c:if>
@@ -112,15 +133,16 @@
                   <input id="leaveDate"
                          name="leaveDate"
                          type="date"
+                         data-cutoff="<c:out value='${formView.submissionCutoffTime}' default='15:00' />"
                          value="<c:out value='${paramLeaveDate}' />"
                          required>
                   <span class="field-hint" style="display:block;margin-top:var(--space-1);color:var(--color-text-soft);font-size:var(--font-size-xs)">
                     <i class="fa-solid fa-circle-info" aria-hidden="true"></i>
-                    Đơn phải nộp trước giờ chốt của ngày hôm trước. Nghỉ cùng ngày vui lòng báo trực tiếp Quản lý.
+                    Đơn phải nộp trước giờ chốt (<c:out value="${formView.submissionCutoffTime}" default="15:00" />) của ngày hôm trước. Nghỉ đột xuất cùng ngày vui lòng báo trực tiếp Quản lý.
                   </span>
-                  <div class="field-error" id="leaveDateClientErr" style="color:var(--color-danger);font-size:var(--font-size-xs);margin-top:var(--space-1)" hidden></div>
+                  <div class="field-error" id="leaveDateClientErr" hidden></div>
                   <c:if test="${not empty fieldErrors.leaveDate}">
-                    <div class="field-error" style="color:var(--color-danger);font-size:var(--font-size-xs);margin-top:var(--space-1)">
+                    <div class="field-error">
                       <c:out value="${fieldErrors.leaveDate}" />
                     </div>
                   </c:if>
@@ -138,35 +160,35 @@
                             placeholder="Nêu ngắn gọn lý do nghỉ (5–500 ký tự)…"
                             required><c:out value="${paramReason}" /></textarea>
                   <c:if test="${not empty fieldErrors.reason}">
-                    <div class="field-error" style="color:var(--color-danger);font-size:var(--font-size-xs);margin-top:var(--space-1)">
+                    <div class="field-error">
                       <c:out value="${fieldErrors.reason}" />
                     </div>
                   </c:if>
                 </div>
 
                 <button class="btn btn-primary" type="submit" id="leaveSubmit">
-                  <i class="fa-solid fa-paper-plane" aria-hidden="true"></i> Nộp đơn
+                  <i class="fa-solid fa-paper-plane" aria-hidden="true"></i> Nộp đơn nghỉ phép
                 </button>
               </form>
             </section>
 
-            <%-- ===== Panel danh sách đơn đã nộp gần đây ===== --%>
-            <section class="panel" style="padding:var(--space-5);border-radius:var(--radius-lg);background:var(--color-surface);border:1px solid var(--color-border-strong);box-shadow:var(--shadow-card)">
-              <div class="panel-head" style="margin-bottom:var(--space-4);display:flex;align-items:center;justify-content:space-between">
-                <h2 style="margin:0;font-size:var(--font-size-lg)">Đơn đã nộp gần đây</h2>
-                <small style="color:var(--color-text-soft)">Tối đa 10 đơn mới nhất</small>
+            <%-- ===== Panel 2: Danh sách đơn đã nộp gần đây ===== --%>
+            <section class="panel leave-panel">
+              <div class="panel-head" style="display:flex;align-items:center;justify-content:space-between">
+                <div>
+                  <h2>Đơn đã nộp gần đây</h2>
+                  <p>Hiển thị tối đa 10 đơn xin nghỉ phép mới nhất của bạn.</p>
+                </div>
               </div>
 
               <c:choose>
                 <c:when test="${empty formView.myRequests}">
-                  <p style="color:var(--color-text-soft);margin:0;padding:var(--space-4) 0">
-                    Bạn chưa có đơn xin nghỉ phép nào được nộp.
-                  </p>
+                  <div class="leave-empty">Bạn chưa có đơn xin nghỉ phép nào được nộp.</div>
                 </c:when>
                 <c:otherwise>
-                  <div class="data-list" style="display:flex;flex-direction:column;gap:var(--space-3)">
+                  <div class="leave-history-list">
                     <c:forEach var="req" items="${formView.myRequests}">
-                      <div class="data-row" style="padding:var(--space-3) var(--space-4);border-radius:var(--radius-md);background:var(--color-surface-subtle);border:1px solid var(--color-border);display:flex;justify-content:space-between;align-items:flex-start;gap:var(--space-3)">
+                      <div class="leave-history-row">
                         <div style="flex:1">
                           <div style="display:flex;align-items:center;gap:var(--space-2);margin-bottom:var(--space-1)">
                             <b>${gms:formatDate(req.leaveDate)}</b>
@@ -183,19 +205,10 @@
                           </c:if>
                         </div>
 
-                        <%-- Badge trạng thái --%>
                         <div>
-                          <c:choose>
-                            <c:when test="${req.pending}">
-                              <span class="badge badge-warning">Chờ duyệt</span>
-                            </c:when>
-                            <c:when test="${req.approved}">
-                              <span class="badge badge-success">Đã duyệt</span>
-                            </c:when>
-                            <c:otherwise>
-                              <span class="badge badge-danger">Từ chối</span>
-                            </c:otherwise>
-                          </c:choose>
+                          <span class="badge ${req.pending ? 'badge-warning' : req.approved ? 'badge-success' : 'badge-danger'}">
+                            <c:out value="${req.status.displayName}" />
+                          </span>
                         </div>
                       </div>
                     </c:forEach>
@@ -205,40 +218,35 @@
             </section>
           </div>
 
+          <%-- ===== Cột phải: Thông tin hạn nộp P-12 & Định biên P-13, P-14 ===== --%>
           <div class="leave-col-side">
-            <%-- Card 1: Thông tin hạn nộp P-12 --%>
-            <div class="side-card" style="margin-bottom:var(--space-4);padding:var(--space-4) var(--space-5);border-radius:var(--radius-lg);background:var(--color-surface);border:1px solid var(--color-border-strong);box-shadow:var(--shadow-card)">
-              <span class="section-label" style="display:block;margin-bottom:var(--space-3);font-size:var(--font-size-xs);font-weight:700;text-transform:uppercase;color:var(--color-text-soft)">
-                Hạn chốt nộp đơn (P-12)
-              </span>
-              <div style="display:flex;justify-content:space-between;margin-bottom:var(--space-2);font-size:var(--font-size-sm)">
-                <span style="color:var(--color-text-soft)">Ngày nghỉ:</span>
+            <div class="leave-side-card">
+              <span class="leave-side-title">Hạn chốt nộp đơn (P-12)</span>
+              <div class="leave-side-row">
+                <span style="color:var(--color-text-soft)">Ngày nghỉ đang chọn:</span>
                 <b id="infoDate">—</b>
               </div>
-              <div style="display:flex;justify-content:space-between;margin-bottom:var(--space-3);font-size:var(--font-size-sm)">
-                <span style="color:var(--color-text-soft)">Giờ chốt:</span>
-                <b id="infoDeadline"><c:out value="${formView.submissionCutoffTime}" /> · ngày hôm trước</b>
+              <div class="leave-side-row" style="margin-bottom:var(--space-3)">
+                <span style="color:var(--color-text-soft)">Hạn nộp trước:</span>
+                <b id="infoDeadline"><c:out value="${formView.submissionCutoffTime}" default="15:00" /> · ngày hôm trước</b>
               </div>
               <p style="margin:0;font-size:var(--font-size-xs);color:var(--color-text-soft);line-height:1.5">
-                Quá giờ chốt thì nghỉ đột xuất vui lòng báo trực tiếp Quản lý ngoài hệ thống (CBR-84).
+                Quá giờ chốt trên, nếu nghỉ đột xuất vui lòng báo trực tiếp Quản lý ngoài hệ thống (CBR-84).
               </p>
             </div>
 
-            <%-- Card 2: Quy định định biên nhân sự --%>
-            <div class="side-card" style="padding:var(--space-4) var(--space-5);border-radius:var(--radius-lg);background:var(--color-surface);border:1px solid var(--color-border-strong);box-shadow:var(--shadow-card)">
-              <span class="section-label" style="display:block;margin-bottom:var(--space-3);font-size:var(--font-size-xs);font-weight:700;text-transform:uppercase;color:var(--color-text-soft)">
-                Định biên tối thiểu
-              </span>
-              <div style="display:flex;justify-content:space-between;margin-bottom:var(--space-2);font-size:var(--font-size-sm)">
-                <span style="color:var(--color-text-soft)">Huấn luyện viên:</span>
-                <b>≥ 2 PT / ca</b>
+            <div class="leave-side-card">
+              <span class="leave-side-title">Định biên trực ca tối thiểu</span>
+              <div class="leave-side-row">
+                <span style="color:var(--color-text-soft)">Huấn luyện viên (P-13):</span>
+                <b>≥ <c:out value="${formView.minPtPerShift}" default="2" /> PT / ca</b>
               </div>
-              <div style="display:flex;justify-content:space-between;margin-bottom:var(--space-3);font-size:var(--font-size-sm)">
-                <span style="color:var(--color-text-soft)">Lễ tân quầy:</span>
-                <b>≥ 1 Lễ tân / ca</b>
+              <div class="leave-side-row" style="margin-bottom:var(--space-3)">
+                <span style="color:var(--color-text-soft)">Lễ tân quầy (P-14):</span>
+                <b>≥ <c:out value="${formView.minReceptionistPerShift}" default="1" /> Lễ tân / ca</b>
               </div>
               <p style="margin:0;font-size:var(--font-size-xs);color:var(--color-text-soft);line-height:1.5">
-                Đơn chỉ được Quản lý duyệt nếu quân số trực của ca hôm đó đảm bảo mức tối thiểu.
+                Đơn chỉ được Quản lý duyệt khi số nhân sự còn lại trong ca đảm bảo định biên tối thiểu (CBR-88, CBR-90).
               </p>
             </div>
           </div>
