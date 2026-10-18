@@ -79,7 +79,7 @@ public class LeaveRequestListServlet extends HttpServlet {
         request.setAttribute(
                 "statusFilter", hasStatus ? status : DEFAULT_STATUS_TAB);
 
-        request.setAttribute("activeNav", "leave-requests");
+        request.setAttribute("activeNav", "leaves");
 
         if (!pageResult.isSuccess()) {
             request.setAttribute("pageError", pageResult.getMessage());
