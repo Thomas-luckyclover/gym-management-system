@@ -222,7 +222,14 @@ public class LeaveRequestService {
         if (minutesLeft < 60) {
             return "Còn " + minutesLeft + " phút";
         }
-        return "Còn " + (minutesLeft / 60) + " giờ " + (minutesLeft % 60) + " phút";
+        long hours = minutesLeft / 60;
+        long minutes = minutesLeft % 60;
+        if (hours >= 24) {
+            long days = hours / 24;
+            long remHours = hours % 24;
+            return "Còn " + days + " ngày " + remHours + " giờ";
+        }
+        return "Còn " + hours + " giờ " + minutes + " phút";
     }
 
     // ===== Màn duyệt đơn (màn #27, UC-15) =====
