@@ -93,7 +93,7 @@
                       Ca nghỉ <span aria-hidden="true">*</span>
                     </label>
                     <select id="shiftType" name="shiftType" required>
-                      <option value="FullDay" ${paramLeaveType eq 'FullDay' ? 'selected' : ''}>Cả ngày</option>
+                      <option value="FullDay" ${paramShiftType eq 'FullDay' ? 'selected' : ''}>Cả ngày</option>
                       <option value="Morning" ${paramShiftType eq 'Morning' ? 'selected' : ''}>Ca sáng</option>
                       <option value="Afternoon" ${paramShiftType eq 'Afternoon' ? 'selected' : ''}>Ca chiều</option>
                     </select>

@@ -105,7 +105,9 @@
           <div class="panel-head">
             <div>
               <h2>Danh sách đơn nghỉ phép</h2>
-              <p>Đơn Chờ duyệt được ưu tiên hiển thị trước.</p>
+              <c:if test="${statusFilter == 'All'}">
+                <p>Đơn Chờ duyệt được ưu tiên hiển thị trước.</p>
+              </c:if>
             </div>
           </div>
 
@@ -159,7 +161,11 @@
                           <small>
                             <c:out value="${item.employeeCode}" />
                             ·
-                            <c:out value="${item.position}" />
+                            <c:choose>
+                              <c:when test="${item.position == 'PT'}">Huấn luyện viên (PT)</c:when>
+                              <c:when test="${item.position == 'Receptionist'}">Lễ tân</c:when>
+                              <c:otherwise><c:out value="${item.position}" /></c:otherwise>
+                            </c:choose>
                           </small>
                         </td>
 
@@ -168,7 +174,12 @@
                           <small><c:out value="${item.shiftType.displayName}" /></small>
                         </td>
 
-                        <td><c:out value="${item.leaveType.displayName}" /></td>
+                        <td>
+                          <b><c:out value="${item.leaveType.displayName}" /></b>
+                          <c:if test="${not empty item.reason}">
+                            <small><c:out value="${item.reason}" /></small>
+                          </c:if>
+                        </td>
 
                         <td>
                           <span class="badge
