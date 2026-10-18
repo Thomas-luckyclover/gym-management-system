@@ -529,7 +529,20 @@ public class LeaveRequestService {
             int minPt = systemConfigService.getInt(SystemConfigService.MIN_PT_PER_SHIFT);
             int minReceptionist = systemConfigService.getInt(SystemConfigService.MIN_RECEPTIONIST_PER_SHIFT);
 
-            // B4: lấy 10 đơn gần nhất của chính nhân viên này
+            // B4: tính dự báo quân số PT và Lễ tân còn trực vào ngày mai nếu đơn này được duyệt (SRS 5.2.1)
+            LocalDate tomorrow = DateTimeUtil.today().plusDays(1);
+            int remainingPt = leaveRequestDAO.countOnDutyAfterApproval(tomorrow, "FullDay", "PT", 0);
+            int remainingReceptionist = leaveRequestDAO.countOnDutyAfterApproval(tomorrow, "FullDay", "Receptionist", 0);
+
+            if (Role.PT == employee.getPosition()) {
+                // Người nộp là PT nên số Lễ tân đang trực không bị trừ 1
+                remainingReceptionist = remainingReceptionist + 1;
+            } else {
+                // Người nộp là Lễ tân nên số PT đang trực không bị trừ 1
+                remainingPt = remainingPt + 1;
+            }
+
+            // B5: lấy 10 đơn gần nhất của chính nhân viên này
             List<LeaveRequest> myRequests = leaveRequestDAO.findByEmployeeId(employee.getEmployeeId(), 10);
 
             return ServiceResult.ok(new StaffLeaveFormView(
@@ -540,6 +553,8 @@ public class LeaveRequestService {
                     submissionCutoff,
                     minPt,
                     minReceptionist,
+                    remainingPt,
+                    remainingReceptionist,
                     myRequests));
 
         } catch (SQLException e) {
