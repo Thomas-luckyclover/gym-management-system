@@ -748,6 +748,17 @@ function bindConfirmButtons() {
         trigger.addEventListener("click", function (event) {
             event.preventDefault();
 
+            // UX Guard: If the enclosing form requires validation (data-validate),
+            // validate all fields before opening the confirmation dialog.
+            // This prevents opening unnecessary confirm modals when required fields
+            // (e.g. rejection reasons or acceptance notes) are invalid or empty.
+            const form = trigger.closest("form");
+            if (form !== null && form.dataset.validate !== undefined) {
+                if (!validateForm(form)) {
+                    return;
+                }
+            }
+
             let dialogTitle = trigger.dataset.confirmTitle;
             if (dialogTitle === undefined) {
                 dialogTitle = "Xác nhận thao tác";
@@ -934,11 +945,14 @@ function validateField(input) {
     }
 
     // B5: kiểm tra độ dài
-    const hasMaxLength = input.maxLength > 0;
-    if (hasMaxLength && value.length > input.maxLength) {
-        return formatMessage(MESSAGES.MSG10_MAX_LENGTH, [input.maxLength]);
+    // Check both custom dataset attributes (data-min-length / data-max-length) and native HTML attributes.
+    // Using dataset attributes allows custom validation and styled error labels without triggering
+    // unwanted native browser constraint validation tooltips.
+    const maxLength = Number(input.dataset.maxLength) || (input.maxLength > 0 ? input.maxLength : 0);
+    if (maxLength > 0 && value.length > maxLength) {
+        return formatMessage(MESSAGES.MSG10_MAX_LENGTH, [maxLength]);
     }
-    const minLength = Number(input.dataset.minLength);
+    const minLength = Number(input.dataset.minLength) || (input.minLength > 0 ? input.minLength : 0);
     if (minLength > 0 && value.length < minLength) {
         return formatMessage(MESSAGES.MSG19_TOO_SHORT, [minLength]);
     }

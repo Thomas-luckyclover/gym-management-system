@@ -91,7 +91,7 @@
               <div class="field">
                 <label class="field-label" for="priority">Mức ưu tiên *</label>
 
-                <select id="priority" name="priority" required>
+                <select id="priority" name="priority" required data-label="Mức ưu tiên">
                   <c:forEach var="priority" items="${priorityOptions}">
                     <option value="${priority.dbValue}"
                             <c:if test="${formPriority == priority.dbValue
@@ -103,7 +103,9 @@
                   </c:forEach>
                 </select>
 
-                <div class="field-error">
+                <div class="field-error"
+                     id="priorityError"
+                     <c:if test="${empty errors.priority}">hidden</c:if>>
                   <c:out value="${errors.priority}" />
                 </div>
               </div>
@@ -119,10 +121,15 @@
                         rows="4"
                         minlength="10"
                         maxlength="500"
+                        data-min-length="10"
+                        data-max-length="500"
+                        data-label="Mô tả hỏng hóc"
                         required
                         placeholder="Hỏng ở đâu, xảy ra khi nào, đã xử lý tạm thế nào"><c:out value="${formDescription}" /></textarea>
 
-              <div class="field-error">
+              <div class="field-error"
+                   id="descriptionError"
+                   <c:if test="${empty errors.description}">hidden</c:if>>
                 <c:out value="${errors.description}" />
               </div>
             </div>
@@ -261,7 +268,9 @@
                     <c:if test="${item.request.inProgress}">
                       <form action="${pageContext.request.contextPath}/receptionist/maintenance-requests"
                             method="post"
-                            class="maintenance-close-form">
+                            class="maintenance-close-form"
+                            data-validate
+                            novalidate>
 
                         <input type="hidden"
                                name="action"
@@ -280,8 +289,15 @@
                                   name="acceptanceNote"
                                   minlength="5"
                                   maxlength="500"
+                                  data-min-length="5"
+                                  data-max-length="500"
+                                  data-label="Ghi chú nghiệm thu"
                                   required
                                   placeholder="Đã kiểm tra thiết bị hoạt động bình thường..."></textarea>
+
+                        <div class="field-error"
+                             id="acceptance-${item.request.maintenanceRequestId}Error"
+                             hidden></div>
 
                         <button class="btn btn-primary btn-sm"
                                 type="submit"
