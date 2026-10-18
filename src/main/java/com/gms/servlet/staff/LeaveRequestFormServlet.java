@@ -52,6 +52,8 @@ public class LeaveRequestFormServlet extends HttpServlet {
         ServiceResult<StaffLeaveFormView> result = leaveRequestService.getStaffLeaveForm(accountId);
 
         // B3: chuyển dữ liệu sang JSP
+        request.setAttribute("csrfToken", RequestUtil.getOrCreateCsrfToken(session));
+        request.setAttribute("activeNav", "leaves");
         if (!result.isSuccess()) {
             request.setAttribute("formError", result.getMessage());
         } else {
@@ -75,6 +77,14 @@ public class LeaveRequestFormServlet extends HttpServlet {
 
         if (accountId == null) {
             RequestUtil.redirect(request, response, "/login");
+            return;
+        }
+
+        // B1.1: kiểm tra CSRF token chống giả mạo request
+        if (!RequestUtil.isValidCsrfToken(request)) {
+            RequestUtil.setFlashToast(request, "danger",
+                    "Phiên làm việc không hợp lệ hoặc đã hết hạn. Vui lòng thử lại.");
+            RequestUtil.redirect(request, response, RequestUtil.getPathWithinApp(request));
             return;
         }
 
@@ -113,6 +123,8 @@ public class LeaveRequestFormServlet extends HttpServlet {
             request.setAttribute("paramLeaveDate", leaveDateStr);
             request.setAttribute("paramShiftType", shiftTypeStr);
             request.setAttribute("paramReason", reason);
+            request.setAttribute("csrfToken", RequestUtil.getOrCreateCsrfToken(session));
+            request.setAttribute("activeNav", "leaves");
 
             RequestUtil.forward(request, response, "staff/leave-request-form");
             return;
