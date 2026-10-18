@@ -125,8 +125,10 @@ public class LeaveRequestDAO {
                 + "  AND p.FullName COLLATE Vietnamese_CI_AI LIKE ? ESCAPE '\\' "
                 + "ORDER BY "
                 + "  CASE WHEN lr.Status = 'Pending' THEN 0 ELSE 1 END, "
-                + "  lr.LeaveDate ASC, "
-                + "  lr.SubmittedAt ASC "
+                + "  CASE WHEN lr.Status = 'Pending' THEN lr.LeaveDate END ASC, "
+                + "  CASE WHEN lr.Status = 'Pending' THEN lr.SubmittedAt END ASC, "
+                + "  lr.LeaveDate DESC, "
+                + "  lr.SubmittedAt DESC "
                 + "OFFSET ? ROWS FETCH NEXT ? ROWS ONLY";
 
         // Giá trị trạng thái lọc: nếu chọn tab "Tất cả" thì statusValue là null
