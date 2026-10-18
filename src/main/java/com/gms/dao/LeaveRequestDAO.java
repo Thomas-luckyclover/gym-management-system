@@ -450,19 +450,18 @@ public class LeaveRequestDAO {
     }
 
     /**
-     * Thêm mới một đơn xin nghỉ phép vào database.
+     * Thêm mới một đơn xin nghỉ phép vào database (dùng chung Connection của Transaction).
      *
+     * @param connection kết nối Transaction đang mở
      * @param leaveRequest entity đơn xin nghỉ
      * @return mã đơn vừa tạo (LeaveRequestId)
-     * @throws SQLException lỗi kết nối hoặc truy vấn DB
+     * @throws SQLException lỗi truy vấn DB
      */
-    public int insert(LeaveRequest leaveRequest) throws SQLException {
+    public int insert(Connection connection, LeaveRequest leaveRequest) throws SQLException {
         String sql = "INSERT INTO LeaveRequests (EmployeeId, LeaveType, LeaveDate, ShiftType, Reason, Status, SubmittedAt) "
                 + "VALUES (?, ?, ?, ?, ?, 'Pending', SYSDATETIME())";
 
-        try (Connection connection = DBContext.getConnection();
-                PreparedStatement statement = connection.prepareStatement(sql, PreparedStatement.RETURN_GENERATED_KEYS)) {
-
+        try (PreparedStatement statement = connection.prepareStatement(sql, PreparedStatement.RETURN_GENERATED_KEYS)) {
             statement.setInt(1, leaveRequest.getEmployeeId());
             statement.setString(2, leaveRequest.getLeaveType().getDbValue());
             statement.setDate(3, java.sql.Date.valueOf(leaveRequest.getLeaveDate()));
@@ -478,6 +477,19 @@ public class LeaveRequestDAO {
             }
         }
         return 0;
+    }
+
+    /**
+     * Thêm mới một đơn xin nghỉ phép vào database.
+     *
+     * @param leaveRequest entity đơn xin nghỉ
+     * @return mã đơn vừa tạo (LeaveRequestId)
+     * @throws SQLException lỗi kết nối hoặc truy vấn DB
+     */
+    public int insert(LeaveRequest leaveRequest) throws SQLException {
+        try (Connection connection = DBContext.getConnection()) {
+            return insert(connection, leaveRequest);
+        }
     }
 
     /**
@@ -518,7 +530,7 @@ public class LeaveRequestDAO {
         if ("Morning".equalsIgnoreCase(shiftType)) {
             sql.append("AND ts.StartTime < '12:00:00' ");
         } else if ("Afternoon".equalsIgnoreCase(shiftType)) {
-            sql.append("AND ts.StartTime >= '12:00:00' ");
+            sql.append("AND ts.EndTime > '12:00:00' ");
         }
 
         try (Connection connection = DBContext.getConnection();
