@@ -116,17 +116,12 @@
                                 value="${facility.facilityName}" />
                       </strong>
 
-                      <span class="badge
-                        ${facility.status.dbValue == 'Available'
-                          ? 'badge-success'
-                          : facility.status.dbValue == 'UnderMaintenance'
-                          ? 'badge-warning'
-                          : 'badge-neutral'}">
-
-                        <c:out
-                                value="${facility.status.displayName}" />
-
-                      </span>
+                      <%-- Retired facility indicator only; active facilities have no status badges --%>
+                      <c:if test="${facility.status.dbValue == 'Retired'}">
+                        <span class="badge badge-neutral">
+                          Ngừng sử dụng
+                        </span>
+                      </c:if>
 
                     </div>
 
@@ -153,12 +148,25 @@
                       </c:if>
 
                       <span>
-                        Số lượng:
+                        Khả dụng:
                         <b>
-                          <c:out
-                                  value="${facility.quantity}" />
+                          <c:choose>
+                            <c:when test="${facility.status.dbValue == 'Retired'}">0</c:when>
+                            <c:otherwise><c:out value="${facility.availableQuantity}" />/<c:out value="${facility.quantity}" /></c:otherwise>
+                          </c:choose>
                         </b>
                       </span>
+
+                      <c:if test="${facility.status.dbValue != 'Retired'}">
+
+                        <span>
+                          Yêu cầu chưa hoàn tất:
+                          <b>
+                            <c:out value="${facility.pendingQuantity}" />
+                          </b>
+                        </span>
+
+                      </c:if>
 
                     </div>
 
