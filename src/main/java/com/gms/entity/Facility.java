@@ -281,6 +281,44 @@ public class Facility {
 
             return null;
         }
+
+        /**
+         * Resolves matching Category enums from a search keyword against both
+         * English dbValue and Vietnamese displayName, supporting case-insensitive
+         * and accent-insensitive matching.
+         *
+         * @param keyword search term entered by receptionist
+         * @return list of matching Category enums, or empty list if none match
+         */
+        public static List<Category> matchByKeyword(String keyword) {
+            if (keyword == null || keyword.isBlank()) {
+                return Collections.emptyList();
+            }
+
+            String normalizedQuery = removeAccents(keyword.trim().toLowerCase());
+            String queryNoSpace = normalizedQuery.replace(" ", "");
+
+            List<Category> matches = new ArrayList<>();
+            for (Category category : values()) {
+                String normDisplay = removeAccents(category.displayName.toLowerCase());
+                String normDb = removeAccents(category.dbValue.toLowerCase());
+
+                if (normDisplay.contains(normalizedQuery) || normalizedQuery.contains(normDisplay)
+                        || normDb.contains(normalizedQuery) || normalizedQuery.contains(normDb)
+                        || normDb.contains(queryNoSpace) || queryNoSpace.contains(normDb)) {
+                    matches.add(category);
+                }
+            }
+            return matches;
+        }
+
+        private static String removeAccents(String text) {
+            if (text == null) {
+                return "";
+            }
+            String normalized = Normalizer.normalize(text, Normalizer.Form.NFD);
+            return normalized.replaceAll("\\p{M}", "").replace('đ', 'd').replace('Đ', 'D');
+        }
     }
 
     public enum Status {

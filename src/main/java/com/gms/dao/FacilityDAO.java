@@ -78,40 +78,28 @@ public class FacilityDAO {
         return facilities;
     }
 
-    public long countCatalog(
-            String keyword,
-            Facility.Category category,
-            Facility.Status status
-    ) throws SQLException {
-
+    /**
+     * Counts facilities matching the keyword search.
+     * When keyword is null or blank, counts all facilities in the system.
+     *
+     * @param keyword search term matching name, category, or location
+     * @return total matching count
+     * @throws SQLException if a query error occurs
+     */
+    public long countCatalog(String keyword) throws SQLException {
         StringBuilder sql = new StringBuilder(
-                "SELECT COUNT(*) "
-                        + "FROM Facilities "
-                        + "WHERE 1 = 1 "
+                "SELECT COUNT(*) FROM Facilities f WHERE 1 = 1 "
         );
 
         List<Object> parameters = new ArrayList<>();
-
-        appendCatalogFilters(
-                sql,
-                parameters,
-                keyword,
-                category,
-                status
-        );
+        appendCatalogFilters(sql, parameters, keyword);
 
         try (Connection connection = DBContext.getConnection();
-             PreparedStatement statement =
-                     connection.prepareStatement(sql.toString())) {
+             PreparedStatement statement = connection.prepareStatement(sql.toString())) {
 
-            setCatalogParameters(
-                    statement,
-                    parameters
-            );
+            setCatalogParameters(statement, parameters);
 
-            try (ResultSet resultSet =
-                         statement.executeQuery()) {
-
+            try (ResultSet resultSet = statement.executeQuery()) {
                 if (resultSet.next()) {
                     return resultSet.getLong(1);
                 }
@@ -121,71 +109,80 @@ public class FacilityDAO {
         return 0;
     }
 
-    public List<Facility> findCatalogPage(
+    /**
+     * Legacy signature: safely delegates to {@link #countCatalog(String)},
+     * ignoring obsolete category and status parameters.
+     */
+    public long countCatalog(
             String keyword,
             Facility.Category category,
-            Facility.Status status,
+            Facility.Status status
+    ) throws SQLException {
+        return countCatalog(keyword);
+    }
+
+    /**
+     * Retrieves a paginated list of facilities for the catalog view using a single unified keyword search.
+     *
+     * <p><b>Search Scope:</b> Matches across FacilityName, Category (English dbValue & Vietnamese displayName),
+     * and Location using case- and accent-insensitive collation.</p>
+     *
+     * @param keyword  optional search keyword
+     * @param page     1-based page index
+     * @param pageSize number of records per page
+     * @return paginated list of facilities with calculated quantities
+     * @throws SQLException if a query execution error occurs
+     */
+    public List<Facility> findCatalogPage(
+            String keyword,
             int page,
             int pageSize
     ) throws SQLException {
 
+        // Dynamically compute PendingQuantity and AvailableQuantity via subquery
         StringBuilder sql = new StringBuilder(
-                "SELECT FacilityId, FacilityName, Category, "
-                        + "Location, Quantity, Status "
-                        + "FROM Facilities "
+                "SELECT f.FacilityId, f.FacilityName, f.Category, "
+                        + "f.Location, f.Quantity, f.Status, "
+                        + "ISNULL(mr_counts.PendingCount, 0) AS PendingQuantity, "
+                        + "CASE WHEN f.Status = 'Retired' THEN 0 "
+                        + "WHEN (f.Quantity - ISNULL(mr_counts.PendingCount, 0)) < 0 THEN 0 "
+                        + "ELSE (f.Quantity - ISNULL(mr_counts.PendingCount, 0)) END AS AvailableQuantity "
+                        + "FROM Facilities f "
+                        + "LEFT JOIN ("
+                        + "    SELECT FacilityId, COUNT(*) AS PendingCount "
+                        + "    FROM MaintenanceRequests "
+                        + "    WHERE Status IN ('Open', 'InProgress') "
+                        + "    GROUP BY FacilityId"
+                        + ") mr_counts ON mr_counts.FacilityId = f.FacilityId "
                         + "WHERE 1 = 1 "
         );
 
         List<Object> parameters = new ArrayList<>();
-
-        appendCatalogFilters(
-                sql,
-                parameters,
-                keyword,
-                category,
-                status
-        );
+        appendCatalogFilters(sql, parameters, keyword);
 
         sql.append(
                 "ORDER BY "
-                        + "CASE Status "
+                        + "CASE f.Status "
                         + "WHEN 'Available' THEN 0 "
                         + "WHEN 'UnderMaintenance' THEN 1 "
                         + "ELSE 2 END, "
-                        + "FacilityName, FacilityId "
+                        + "f.FacilityName, f.FacilityId "
                         + "OFFSET ? ROWS FETCH NEXT ? ROWS ONLY"
         );
 
-        parameters.add(
-                PaginationUtil.calculateOffset(
-                        page,
-                        pageSize
-                )
-        );
-
+        parameters.add(PaginationUtil.calculateOffset(page, pageSize));
         parameters.add(pageSize);
 
-        List<Facility> facilities =
-                new ArrayList<>();
+        List<Facility> facilities = new ArrayList<>();
 
         try (Connection connection = DBContext.getConnection();
-             PreparedStatement statement =
-                     connection.prepareStatement(sql.toString())) {
+             PreparedStatement statement = connection.prepareStatement(sql.toString())) {
 
-            setCatalogParameters(
-                    statement,
-                    parameters
-            );
+            setCatalogParameters(statement, parameters);
 
-            try (ResultSet resultSet =
-                         statement.executeQuery()) {
-
+            try (ResultSet resultSet = statement.executeQuery()) {
                 while (resultSet.next()) {
-                    facilities.add(
-                            mapResultSetToFacility(
-                                    resultSet
-                            )
-                    );
+                    facilities.add(mapResultSetToFacility(resultSet));
                 }
             }
         }
@@ -193,39 +190,75 @@ public class FacilityDAO {
         return facilities;
     }
 
+    /**
+     * Legacy signature: safely delegates to {@link #findCatalogPage(String, int, int)},
+     * ignoring obsolete category and status parameters.
+     */
+    public List<Facility> findCatalogPage(
+            String keyword,
+            Facility.Category category,
+            Facility.Status status,
+            int page,
+            int pageSize
+    ) throws SQLException {
+        return findCatalogPage(keyword, page, pageSize);
+    }
+
+    /**
+     * Appends search filters for the Facility Catalog keyword search.
+     *
+     * <p><b>Multi-Field Search Design:</b></p>
+     * Searches across:
+     * <ul>
+     *   <li>{@code Facilities.FacilityName} (case- and accent-insensitive)</li>
+     *   <li>{@code Facilities.Location} (case- and accent-insensitive)</li>
+     *   <li>{@code Facilities.Category} (English database values: 'Cardio', 'FreeWeights', 'Machines', 'Amenities')</li>
+     *   <li>Vietnamese Category display names (e.g. 'Tạ tự do', 'Máy tập', 'Tiện ích', 'Cardio') via SQL CASE mapping</li>
+     *   <li>Java-level enum resolution: maps Vietnamese keywords (e.g. 'ta', 'may tap') to database enum values</li>
+     * </ul>
+     * When {@code keyword} is null or blank, no WHERE clause conditions are added, returning all facilities.
+     */
     private void appendCatalogFilters(
             StringBuilder sql,
             List<Object> parameters,
-            String keyword,
-            Facility.Category category,
-            Facility.Status status
+            String keyword
     ) {
+        if (keyword != null && !keyword.isBlank()) {
+            String trimmed = keyword.trim();
+            String searchPattern = "%" + trimmed + "%";
 
-        if (keyword != null
-                && !keyword.isBlank()) {
+            // Resolve matching Category enums from keyword (supporting Vietnamese and unaccented terms)
+            List<Facility.Category> matchedCategories = Facility.Category.matchByKeyword(trimmed);
 
-            sql.append(
-                    "AND ("
-                            + "FacilityName COLLATE Latin1_General_100_CI_AI LIKE ? "
-                            + "OR Location COLLATE Latin1_General_100_CI_AI LIKE ?"
-                            + ") "
-            );
+            sql.append("AND (")
+                    .append("f.FacilityName COLLATE Latin1_General_100_CI_AI LIKE ? ")
+                    .append("OR f.Location COLLATE Latin1_General_100_CI_AI LIKE ? ")
+                    .append("OR f.Category COLLATE Latin1_General_100_CI_AI LIKE ? ")
+                    .append("OR (CASE f.Category ")
+                    .append("WHEN 'Cardio' THEN N'Cardio' ")
+                    .append("WHEN 'FreeWeights' THEN N'Tạ tự do' ")
+                    .append("WHEN 'Machines' THEN N'Máy tập' ")
+                    .append("WHEN 'Amenities' THEN N'Tiện ích' ")
+                    .append("ELSE f.Category END) COLLATE Latin1_General_100_CI_AI LIKE ? ");
 
-            String search =
-                    "%" + keyword.trim() + "%";
+            parameters.add(searchPattern);
+            parameters.add(searchPattern);
+            parameters.add(searchPattern);
+            parameters.add(searchPattern);
 
-            parameters.add(search);
-            parameters.add(search);
-        }
+            if (!matchedCategories.isEmpty()) {
+                sql.append("OR f.Category IN (");
+                for (int i = 0; i < matchedCategories.size(); i++) {
+                    if (i > 0) {
+                        sql.append(", ");
+                    }
+                    sql.append("?");
+                    parameters.add(matchedCategories.get(i).getDbValue());
+                }
+                sql.append(") ");
+            }
 
-        if (category != null) {
-            sql.append("AND Category = ? ");
-            parameters.add(category.getDbValue());
-        }
-
-        if (status != null) {
-            sql.append("AND Status = ? ");
-            parameters.add(status.getDbValue());
+            sql.append(") ");
         }
     }
 

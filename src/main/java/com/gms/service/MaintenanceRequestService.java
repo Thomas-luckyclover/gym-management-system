@@ -694,41 +694,23 @@ public class MaintenanceRequestService {
         }
     }
 
-    public ServiceResult<PageResult<Facility>>
-    getFacilityCatalogPage(
+    /**
+     * Retrieves a paginated list of facilities for the receptionist catalog view based on a single search keyword.
+     * Obsolete category and status filter parameters from legacy bookmarks or URLs are safely ignored.
+     *
+     * @param keyword  optional search keyword matching facility name, category (English or Vietnamese), or location
+     * @param page     1-based page number
+     * @param pageSize number of items per page
+     * @return ServiceResult containing paginated facilities
+     */
+    public ServiceResult<PageResult<Facility>> getFacilityCatalogPage(
             String keyword,
-            String categoryValue,
-            String statusValue,
             int page,
             int pageSize
     ) {
-
         try {
-            Facility.Category category =
-                    Facility.Category.fromDbValue(
-                            categoryValue
-                    );
-
-            Facility.Status status =
-                    Facility.Status.fromDbValue(
-                            statusValue
-                    );
-
-            long totalItems =
-                    facilityDAO.countCatalog(
-                            keyword,
-                            category,
-                            status
-                    );
-
-            List<Facility> facilities =
-                    facilityDAO.findCatalogPage(
-                            keyword,
-                            category,
-                            status,
-                            page,
-                            pageSize
-                    );
+            long totalItems = facilityDAO.countCatalog(keyword);
+            List<Facility> facilities = facilityDAO.findCatalogPage(keyword, page, pageSize);
 
             return ServiceResult.ok(
                     new PageResult<>(
@@ -738,13 +720,24 @@ public class MaintenanceRequestService {
                             totalItems
                     )
             );
-
         } catch (SQLException e) {
             e.printStackTrace();
-            return ServiceResult.fail(
-                    Messages.MSG04_SYSTEM_BUSY
-            );
+            return ServiceResult.fail(Messages.MSG04_SYSTEM_BUSY);
         }
+    }
+
+    /**
+     * Legacy signature preserving backward compatibility while safely ignoring obsolete category/status parameters.
+     */
+    public ServiceResult<PageResult<Facility>> getFacilityCatalogPage(
+            String keyword,
+            String categoryValue,
+            String statusValue,
+            int page,
+            int pageSize
+    ) {
+        // Obsolete category and status filters are intentionally ignored per BF-06 search simplification
+        return getFacilityCatalogPage(keyword, page, pageSize);
     }
 
     private Employee findEmployeeForAccount(

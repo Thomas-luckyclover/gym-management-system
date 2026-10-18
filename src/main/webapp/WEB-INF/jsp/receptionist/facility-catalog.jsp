@@ -78,60 +78,16 @@
                  name="keyword"
                  maxlength="100"
                  value="<c:out value='${keyword}' />"
-                 placeholder="Tìm tên thiết bị hoặc khu vực">
-
-          <select name="category">
-
-            <option value="">
-              Tất cả khu vực
-            </option>
-
-            <c:forEach var="category"
-                       items="${categoryOptions}">
-
-              <option value="${category.dbValue}"
-                      ${categoryFilter == category.dbValue
-                              ? 'selected' : ''}>
-
-                <c:out
-                        value="${category.displayName}" />
-
-              </option>
-
-            </c:forEach>
-
-          </select>
-
-          <select name="status">
-
-            <option value="">
-              Tất cả tình trạng
-            </option>
-
-            <c:forEach var="status"
-                       items="${statusOptions}">
-
-              <option value="${status.dbValue}"
-                      ${statusFilter == status.dbValue
-                              ? 'selected' : ''}>
-
-                <c:out
-                        value="${status.displayName}" />
-
-              </option>
-
-            </c:forEach>
-
-          </select>
+                 placeholder="Tìm tên thiết bị, danh mục hoặc khu vực...">
 
           <button class="btn btn-primary"
                   type="submit">
-            Lọc
+            Tìm kiếm
           </button>
 
           <a class="btn btn-ghost"
              href="${pageContext.request.contextPath}/receptionist/facilities">
-            Xóa lọc
+            Xóa tìm kiếm
           </a>
 
         </form>
@@ -258,14 +214,10 @@
                 <c:param name="pageSize"
                          value="${facilityPage.pageSize}" />
 
-                <c:param name="keyword"
-                         value="${keyword}" />
-
-                <c:param name="category"
-                         value="${categoryFilter}" />
-
-                <c:param name="status"
-                         value="${statusFilter}" />
+                <c:if test="${not empty keyword}">
+                  <c:param name="keyword"
+                           value="${keyword}" />
+                </c:if>
 
               </c:url>
 
@@ -292,14 +244,10 @@
                 <c:param name="pageSize"
                          value="${facilityPage.pageSize}" />
 
-                <c:param name="keyword"
-                         value="${keyword}" />
-
-                <c:param name="category"
-                         value="${categoryFilter}" />
-
-                <c:param name="status"
-                         value="${statusFilter}" />
+                <c:if test="${not empty keyword}">
+                  <c:param name="keyword"
+                           value="${keyword}" />
+                </c:if>
 
               </c:url>
 
