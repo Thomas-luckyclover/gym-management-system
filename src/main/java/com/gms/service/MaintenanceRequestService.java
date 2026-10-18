@@ -17,11 +17,25 @@ import com.gms.util.ValidationUtil;
 
 import java.sql.Connection;
 import java.sql.SQLException;
+import java.time.LocalDate;
+import java.util.Collections;
 import java.util.List;
 import java.util.Map;
 
 /**
- * Nghiệp vụ quy trình báo hỏng, duyệt và đóng yêu cầu bảo trì (UC-28, UC-29).
+ * Service Layer: Encapsulates the core business logic and transaction boundaries
+ * for Facility Maintenance Workflows (BF-06 / UC-28, UC-29).
+ *
+ * <p><b>Architectural Responsibility:</b></p>
+ * Sits between the Presentation Layer (Servlets) and the Persistence Layer (DAOs).
+ * The Service layer is responsible for:
+ * <ul>
+ *   <li>Enforcing domain business rules and multi-step workflows.</li>
+ *   <li>Managing database transaction lifecycles ({@code setAutoCommit(false)}, {@code commit()}, and {@code rollback()}).</li>
+ *   <li>Authorizing employee position roles (Receptionist vs. Manager).</li>
+ *   <li>Recording immutable audit logs for regulatory and compliance tracking.</li>
+ *   <li>Emitting contextual system notifications.</li>
+ * </ul>
  */
 public class MaintenanceRequestService {
 
@@ -561,11 +575,56 @@ public class MaintenanceRequestService {
         }
     }
 
+    public ServiceResult<List<MaintenanceRequestDAO.UnfinishedRequestSummary>>
+    getUnfinishedRequests(int facilityId) {
+        try {
+            return ServiceResult.ok(
+                    maintenanceRequestDAO.findUnfinishedByFacilityId(facilityId)
+            );
+        } catch (SQLException e) {
+            e.printStackTrace();
+            return ServiceResult.fail(Messages.MSG04_SYSTEM_BUSY);
+        }
+    }
+
+    /**
+     * Retrieves all active unfinished requests mapped by FacilityId.
+     * Serves front-end dynamic warnings when selecting a facility during request creation.
+     */
+    public ServiceResult<Map<Integer, List<MaintenanceRequestDAO.UnfinishedRequestSummary>>>
+    getUnfinishedRequestsMap() {
+        try {
+            return ServiceResult.ok(
+                    maintenanceRequestDAO.findUnfinishedRequestsMap()
+            );
+        } catch (SQLException e) {
+            e.printStackTrace();
+            return ServiceResult.fail(Messages.MSG04_SYSTEM_BUSY);
+        }
+    }
+
     public ServiceResult<PageResult<MaintenanceRequestDAO.MaintenanceRequestView>>
     getReceptionistPage(
             int accountId,
             String keyword,
             String statusValue,
+            int page,
+            int pageSize
+    ) {
+        return getReceptionistPage(accountId, keyword, statusValue, null, null, page, pageSize);
+    }
+
+    /**
+     * Retrieves a paginated list of maintenance requests for Receptionists with extended filters.
+     * Receptionists have full visibility across all tickets to answer member inquiries.
+     */
+    public ServiceResult<PageResult<MaintenanceRequestDAO.MaintenanceRequestView>>
+    getReceptionistPage(
+            int accountId,
+            String keyword,
+            String statusValue,
+            String priorityValue,
+            LocalDate reportedDate,
             int page,
             int pageSize
     ) {
@@ -580,19 +639,23 @@ public class MaintenanceRequestService {
 
             MaintenanceRequest.Status status =
                     MaintenanceRequest.Status.fromDbValue(statusValue);
+            MaintenanceRequest.Priority priority =
+                    MaintenanceRequest.Priority.fromDbValue(priorityValue);
 
             long totalItems =
                     maintenanceRequestDAO.countForReceptionist(
-                            receptionist.getEmployeeId(),
                             keyword,
-                            status
+                            status,
+                            priority,
+                            reportedDate
                     );
 
             List<MaintenanceRequestDAO.MaintenanceRequestView> items =
                     maintenanceRequestDAO.findForReceptionist(
-                            receptionist.getEmployeeId(),
                             keyword,
                             status,
+                            priority,
+                            reportedDate,
                             page,
                             pageSize
                     );
@@ -619,21 +682,42 @@ public class MaintenanceRequestService {
             int page,
             int pageSize
     ) {
+        return getManagerPage(keyword, statusValue, null, null, page, pageSize);
+    }
+
+    /**
+     * Retrieves a paginated list of maintenance requests for Managers with keyword, status, priority, and date filters.
+     */
+    public ServiceResult<PageResult<MaintenanceRequestDAO.MaintenanceRequestView>>
+    getManagerPage(
+            String keyword,
+            String statusValue,
+            String priorityValue,
+            LocalDate reportedDate,
+            int page,
+            int pageSize
+    ) {
 
         try {
             MaintenanceRequest.Status status =
                     MaintenanceRequest.Status.fromDbValue(statusValue);
+            MaintenanceRequest.Priority priority =
+                    MaintenanceRequest.Priority.fromDbValue(priorityValue);
 
             long totalItems =
                     maintenanceRequestDAO.countAll(
                             keyword,
-                            status
+                            status,
+                            priority,
+                            reportedDate
                     );
 
             List<MaintenanceRequestDAO.MaintenanceRequestView> items =
                     maintenanceRequestDAO.findAll(
                             keyword,
                             status,
+                            priority,
+                            reportedDate,
                             page,
                             pageSize
                     );
