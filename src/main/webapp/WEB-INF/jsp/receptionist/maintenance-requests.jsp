@@ -183,6 +183,23 @@
               </c:forEach>
             </select>
 
+            <select name="priority">
+              <option value="">Tất cả mức ưu tiên</option>
+
+              <c:forEach var="p" items="${priorityOptions}">
+                <option value="${p.dbValue}"
+                        <c:if test="${priorityFilter == p.dbValue}">selected</c:if>>
+                  <c:out value="${p.displayName}" />
+                </option>
+              </c:forEach>
+            </select>
+
+            <input type="date"
+                   name="reportedDate"
+                   value="<c:out value='${reportedDateFilter}' />"
+                   title="Lọc theo ngày báo"
+                   aria-label="Ngày báo">
+
             <select name="pageSize">
               <option value="10" ${requestPage.pageSize == 10 ? 'selected' : ''}>10</option>
               <option value="20" ${requestPage.pageSize == 20 ? 'selected' : ''}>20</option>
@@ -331,6 +348,8 @@
                   <c:param name="pageSize" value="${requestPage.pageSize}" />
                   <c:param name="keyword" value="${keyword}" />
                   <c:param name="status" value="${statusFilter}" />
+                  <c:param name="priority" value="${priorityFilter}" />
+                  <c:param name="reportedDate" value="${reportedDateFilter}" />
                 </c:url>
 
                 <a class="btn btn-ghost btn-sm"
@@ -351,6 +370,8 @@
                   <c:param name="pageSize" value="${requestPage.pageSize}" />
                   <c:param name="keyword" value="${keyword}" />
                   <c:param name="status" value="${statusFilter}" />
+                  <c:param name="priority" value="${priorityFilter}" />
+                  <c:param name="reportedDate" value="${reportedDateFilter}" />
                 </c:url>
 
                 <a class="btn btn-ghost btn-sm"
