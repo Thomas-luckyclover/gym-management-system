@@ -1,6 +1,7 @@
 package com.gms.dto;
 
 import com.gms.entity.LeaveRequest;
+import java.time.LocalDate;
 
 /**
  * Điều kiện lọc ĐÃ HỢP LỆ cho danh sách đơn nghỉ phép của Manager (màn #26, UC-15).
@@ -17,10 +18,31 @@ public class LeaveRequestFilter {
     // null hoặc rỗng = không tìm theo tên.
     private final String keyword;
 
+    // Bộ lọc mở rộng (BF-05): Chức vụ (PT/Receptionist), Loại nghỉ, Khoảng ngày
+    private final String position;
+    private final LeaveRequest.LeaveType leaveType;
+    private final LocalDate fromDate;
+    private final LocalDate toDate;
+
     /** Service gọi sau khi đã kiểm tra hợp lệ; không tự validate trong constructor. */
     public LeaveRequestFilter(LeaveRequest.Status status, String keyword) {
+        this(status, keyword, null, null, null, null);
+    }
+
+    public LeaveRequestFilter(
+            LeaveRequest.Status status,
+            String keyword,
+            String position,
+            LeaveRequest.LeaveType leaveType,
+            LocalDate fromDate,
+            LocalDate toDate
+    ) {
         this.status = status;
         this.keyword = keyword;
+        this.position = position;
+        this.leaveType = leaveType;
+        this.fromDate = fromDate;
+        this.toDate = toDate;
     }
 
     public LeaveRequest.Status getStatus() {
@@ -30,4 +52,21 @@ public class LeaveRequestFilter {
     public String getKeyword() {
         return keyword;
     }
+
+    public String getPosition() {
+        return position;
+    }
+
+    public LeaveRequest.LeaveType getLeaveType() {
+        return leaveType;
+    }
+
+    public LocalDate getFromDate() {
+        return fromDate;
+    }
+
+    public LocalDate getToDate() {
+        return toDate;
+    }
 }
+
