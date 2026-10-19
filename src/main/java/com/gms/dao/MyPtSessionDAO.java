@@ -28,6 +28,7 @@ import java.util.List;
  *   [SAP-TOI]       lịch sắp tới                  → findUpcomingDays, findUpcomingSessions
  *   [LICH-SU]       lịch sử                       → findHistoryDays, findHistorySessions
  *   [PHAN-TRANG]    phân trang theo ngày          → find...Days (bước 1), find...Sessions (bước 2)
+ *   [TKB]           thời khóa biểu tuần / tháng   → findSessionsInRange (1 câu SQL, có số thứ tự buổi)
  */
 public class MyPtSessionDAO {
 
@@ -284,6 +285,89 @@ public class MyPtSessionDAO {
         params.add(fromDate);
         params.add(toDate);
         return querySessions(sql, params);
+    }
+
+
+    // =====================================================================
+    // [TKB] THỜI KHÓA BIỂU — lấy mọi buổi của khách trong 1 khoảng ngày (tuần hoặc tháng)
+    // =====================================================================
+
+    /**
+     * [TKB] Câu SQL lấy buổi cho thời khóa biểu. 4 dấu ?: customerId, customerId, từ ngày, đến ngày.
+     *
+     * Bước 1 (CTE MySessions): lấy MỌI buổi thuộc gói của tôi, rồi đánh số thứ tự trong từng gói
+     *         bằng ROW_NUMBER theo NGÀY GIỜ (buổi sớm nhất = #1). Phải đánh số TRƯỚC khi lọc ngày,
+     *         nếu lọc tuần trước thì tuần nào cũng đếm lại từ 1 → sai. [CHOT 19/10: đánh số theo ngày giờ]
+     * Bước 2 (SELECT ngoài): JOIN tên + SĐT PT, tên người đứng tên và người đi kèm
+     *         (1 câu SQL là đủ, không gọi DB lại cho từng buổi), rồi mới lọc theo khoảng ngày.
+     */
+    private static final String TIMETABLE_SQL = """
+            WITH MySessions AS (
+                SELECT s.SessionId, s.Status, s.PtEmployeeId,
+                       s.MissedReason, s.CancelType, s.CancelReason, s.CancelledAt,
+                       t.SlotDate, t.StartTime, t.EndTime,
+                       sub.SubscriptionId, sub.SubscriptionType, sub.CustomerId,
+                       sub.StartDate, sub.EndDate, sub.GeneratedSessionCount,
+                       o.PackageNameSnapshot, o.PartnerCustomerId,
+                       ROW_NUMBER() OVER (PARTITION BY s.SubscriptionId
+                                          ORDER BY t.SlotDate, t.StartTime, s.SessionId) AS SessionNo
+                FROM Sessions s
+                JOIN TimeSlots t       ON t.TimeSlotId = s.TimeSlotId
+                JOIN Subscriptions sub ON sub.SubscriptionId = s.SubscriptionId
+                JOIN Orders o          ON o.OrderId = sub.OrderId
+                WHERE o.Status = 'Paid'
+                  AND sub.SubscriptionType IN ('PTSingle', 'PTCouple', 'SingleSession')
+                  AND (sub.CustomerId = ?
+                       OR (sub.SubscriptionType = 'PTCouple' AND o.PartnerCustomerId = ?))
+            )
+            SELECT ms.*,
+                   ptPerson.FullName      AS PtName,
+                   ptPerson.Phone         AS PtPhone,
+                   holderPerson.FullName  AS HolderName,
+                   partnerPerson.FullName AS PartnerFullName
+            FROM MySessions ms
+            JOIN Employees e              ON e.EmployeeId = ms.PtEmployeeId
+            JOIN Persons ptPerson         ON ptPerson.PersonId = e.PersonId
+            JOIN Customers holder         ON holder.CustomerId = ms.CustomerId
+            JOIN Persons holderPerson     ON holderPerson.PersonId = holder.PersonId
+            LEFT JOIN Customers partner   ON partner.CustomerId = ms.PartnerCustomerId
+            LEFT JOIN Persons partnerPerson ON partnerPerson.PersonId = partner.PersonId
+            WHERE ms.SlotDate BETWEEN ? AND ?
+            ORDER BY ms.SlotDate, ms.StartTime, ms.SessionId
+            """;
+
+    /**
+     * [TKB] Mọi buổi của khách (đứng tên hoặc đi kèm gói đôi) có ngày tập trong [fromDate, toDate],
+     * xếp theo ngày giờ. Dùng chung cho xem theo TUẦN và theo THÁNG.
+     */
+    public List<MyPtSessionRow> findSessionsInRange(int customerId, LocalDate fromDate, LocalDate toDate)
+            throws SQLException {
+        List<MyPtSessionRow> rows = new ArrayList<>();
+
+        try (Connection connection = DBContext.getConnection();
+                PreparedStatement statement = connection.prepareStatement(TIMETABLE_SQL)) {
+
+            statement.setInt(1, customerId);                  // sub.CustomerId = ?
+            statement.setInt(2, customerId);                  // o.PartnerCustomerId = ?
+            statement.setDate(3, Date.valueOf(fromDate));     // từ ngày
+            statement.setDate(4, Date.valueOf(toDate));       // đến ngày
+
+            try (ResultSet rs = statement.executeQuery()) {
+                while (rs.next()) {
+                    MyPtSessionRow row = readSessionRow(rs);
+
+                    // Cột thêm của thời khóa biểu (đã JOIN sẵn, không gọi DB lần nữa)
+                    row.setSessionNo(rs.getInt("SessionNo"));
+                    row.setTotalSessions(rs.getInt("GeneratedSessionCount"));
+                    row.setPtName(rs.getString("PtName"));
+                    row.setPtPhone(rs.getString("PtPhone"));
+                    row.setHolderName(rs.getString("HolderName"));
+                    row.setPartnerFullName(rs.getString("PartnerFullName"));
+                    rows.add(row);
+                }
+            }
+        }
+        return rows;
     }
 
 
