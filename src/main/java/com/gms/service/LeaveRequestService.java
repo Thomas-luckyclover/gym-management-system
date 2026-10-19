@@ -272,6 +272,13 @@ public class LeaveRequestService {
 
                 detail.setRemainingStaff(remaining);
                 detail.setMinStaffRequired(minRequired);
+
+                // Tính hạn duyệt P-20 và cờ quá hạn để màn #27 khóa nút (CBR-85)
+                LocalTime approvalCutoff = LocalTime.parse(
+                        systemConfigService.getString(SystemConfigService.LEAVE_APPROVED_DEADLINE));
+                LocalDateTime deadline = detail.getLeaveRequest().getLeaveDate().minusDays(1).atTime(approvalCutoff);
+                detail.setApprovalDeadline(deadline);
+                detail.setOverdue(!DateTimeUtil.now().isBefore(deadline));
             }
 
             return ServiceResult.ok(detail);
