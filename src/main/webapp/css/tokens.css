@@ -825,9 +825,6 @@
   --sailor-shade: radial-gradient(ellipse 60% 55% at 70% 72%, rgba(5, 9, 18, 0.62), transparent 72%);
   --sailor-bubble-width: 248px;
   --my-pt-time-width: 168px;
-  --my-pt-cancel-bg: #352B35;
-  --my-pt-cancel-border: #A86761;
-  --my-pt-cancel-text: #FFB2A6;
   /* Auth "Gymnasion Ink" (15/10): cùng nền mực trang chủ; 1 nhấn cam, kem cho nét vẽ, aqua chỉ cho focus. */
   --auth-ocean-ground: #080F1E;
   --auth-ocean-gradient: #080F1E;
@@ -1040,9 +1037,6 @@ html[data-theme="light"] body.dock[class*="weather-"] {
   --pt-bg: #F8E9D2;
   --pt-panel: #FFF8EE;
   --pt-panel-2: #F4E3C8;
-  --my-pt-cancel-bg: #FBE6DC;
-  --my-pt-cancel-border: #D9A18C;
-  --my-pt-cancel-text: #8C3540;
   --pt-line: rgba(58, 38, 22, 0.12);
   --pt-line-strong: rgba(58, 38, 22, 0.26);
   --pt-text: #2A1E14;

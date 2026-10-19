@@ -1,47 +1,36 @@
 package com.gms.service;
 
-import com.gms.constant.AppConstants;
 import com.gms.constant.Messages;
 import com.gms.dao.AccountDAO;
 import com.gms.dao.CustomerDAO;
 import com.gms.dao.MyPtSessionDAO;
-import com.gms.dao.NotificationDAO;
 import com.gms.dto.MyPtPackageView;
-import com.gms.dto.MyPtSessionFilter;
 import com.gms.dto.MyPtSessionPage;
 import com.gms.dto.MyPtSessionRow;
-import com.gms.dto.PtSessionInfo;
 import com.gms.dto.ServiceResult;
 import com.gms.entity.Account;
 import com.gms.entity.Customer;
-import com.gms.util.DBContext;
 import com.gms.util.DateTimeUtil;
 import com.gms.util.ValidationUtil;
-import java.sql.Connection;
 import java.sql.SQLException;
 import java.time.LocalDate;
 import java.time.LocalDateTime;
 import java.util.ArrayList;
 import java.util.Collections;
-import java.util.LinkedHashMap;
 import java.util.List;
-import java.util.Map;
 
 /**
- * Service màn "Lịch tập của tôi" (UC-36 xem lịch, UC-39 hủy buổi).
+ * Service màn "Lịch tập của tôi" (UC-36 xem lịch). Màn CHỈ XEM.
+ * [CHOT 19/10] Bỏ khách tự hủy (UC-39) / tự đổi buổi (UC-38): khách nhắn PT qua Zalo.
  *
  * TÌM NHANH (Ctrl+F gõ tag):
- *   [QUYEN]         tìm khách đang đăng nhập, kiểm tra buổi có phải của mình → findCustomerId, isMySession
- *   [GOI-PT]        thẻ "Gói PT của bạn" + ô lọc gói         → getPtPackages, getPtPackageOptions
- *   [LOC]           kiểm tra bộ lọc trên URL                → parseFilter, parsePageNumber
+ *   [QUYEN]         tìm khách đang đăng nhập                → findCustomerId
+ *   [GOI-PT]        thẻ "Gói PT của bạn"                     → getPtPackages
  *   [SAP-TOI]       1 trang lịch sắp tới                    → getUpcomingPage
  *   [LICH-SU]       1 trang lịch sử                         → getHistoryPage
- *   [PHAN-TRANG]    tính trang, cắt 8 ngày                  → countPages, clampPage, cutDaysOfPage
+ *   [PHAN-TRANG]    tính trang, cắt 8 ngày                  → parsePageNumber, countPages, clampPage, cutDaysOfPage
  *   [SDT-PT]        số điện thoại PT cho khách xem          → getUpcomingPage, fillPackageNames
  *   [CANH-BAO-GYM]  câu cảnh báo vàng                       → buildGymWarning
- *   [NUT]           bật/tắt nút Hủy, Đổi trên từng buổi     → fillActionFlags
- *   [HUY-BUOI]      khách hủy buổi                          → cancelPtSession
- *   [THONG-BAO]     gửi thông báo khi hủy                   → notifyCancel
  */
 public class MyPtSessionService {
 
@@ -51,7 +40,6 @@ public class MyPtSessionService {
     private final AccountDAO accountDAO = new AccountDAO();
     private final CustomerDAO customerDAO = new CustomerDAO();
     private final MyPtSessionDAO sessionDAO = new MyPtSessionDAO();
-    private final NotificationDAO notificationDAO = new NotificationDAO();
 
 
     // =====================================================================
@@ -75,13 +63,6 @@ public class MyPtSessionService {
         }
 
         return customer.getCustomerId();
-    }
-
-    /** [QUYEN] Buổi này là của khách? = khách ĐỨNG TÊN gói, hoặc là NGƯỜI ĐI KÈM gói đôi (BR-77). */
-    static boolean isMySession(PtSessionInfo info, int customerId) {
-        boolean isHolder = info.getCustomerId() == customerId;
-        boolean isPartner = info.getPartnerCustomerId() != null && info.getPartnerCustomerId() == customerId;
-        return isHolder || isPartner;
     }
 
 
@@ -118,27 +99,6 @@ public class MyPtSessionService {
         }
     }
 
-    /** [GOI-PT][LOC] Ô lọc "Gói PT": mọi gói đã mua (kể cả gói cũ) để tra lịch sử. */
-    public ServiceResult<List<MyPtPackageView>> getPtPackageOptions(int accountId) {
-        try {
-            Integer customerId = findCustomerId(accountId);
-            if (customerId == null) {
-                return ServiceResult.fail(Messages.MSG07_NO_PERMISSION);
-            }
-
-            List<MyPtPackageView> packages = sessionDAO.findPtPackages(customerId, false);
-            for (MyPtPackageView p : packages) {
-                p.setPtName(sessionDAO.findEmployeeName(p.getPtEmployeeId()));
-            }
-
-            return ServiceResult.ok(packages);
-
-        } catch (SQLException e) {
-            e.printStackTrace();
-            return ServiceResult.fail(Messages.MSG04_SYSTEM_BUSY);
-        }
-    }
-
     /** [GOI-PT] Điền tên PT và tên "người tập cùng" cho 1 gói. */
     private void fillPackageNames(MyPtPackageView p, int myCustomerId) throws SQLException {
         p.setPtName(sessionDAO.findEmployeeName(p.getPtEmployeeId()));
@@ -152,80 +112,8 @@ public class MyPtSessionService {
 
 
     // =====================================================================
-    // [LOC] KIỂM TRA THAM SỐ TRÊN URL
+    // [PHAN-TRANG] SỐ TRANG TRÊN URL
     // =====================================================================
-
-    /**
-     * [LOC] Kiểm tra từng ô lọc. Ô trống = không lọc ô đó.
-     * Có ô sai → trả lỗi theo từng ô; Servlet sẽ dùng bộ lọc rỗng none() (không lọc nửa vời).
-     */
-    public ServiceResult<MyPtSessionFilter> parseFilter(String type, String dateFrom, String dateTo,
-            String historyStatus, String subscriptionId, String timeOfDay,
-            List<MyPtPackageView> myPackages) {
-
-        Map<String, String> errors = new LinkedHashMap<>();   // tên ô → câu lỗi
-        MyPtSessionFilter filter = new MyPtSessionFilter();
-
-        // [LOC] Ô "Gói PT": phải là số VÀ là gói của chính khách (chống xem lén gói người khác)
-        if (!ValidationUtil.isNullOrEmpty(subscriptionId)) {
-            Integer id = parsePositiveInt(subscriptionId);
-            if (id == null || !isMyPackage(id, myPackages)) {
-                errors.put("subscriptionId", Messages.MSG108_INVALID_OPTION);
-            } else {
-                filter.setSubscriptionId(id);
-            }
-        }
-
-        // [LOC] Ô "Loại buổi": chỉ 3 giá trị
-        if (!ValidationUtil.isNullOrEmpty(type)) {
-            if (isOneOf(type.trim(), "PTSingle", "PTCouple", "SingleSession")) {
-                filter.setType(type.trim());
-            } else {
-                errors.put("type", Messages.MSG108_INVALID_OPTION);
-            }
-        }
-
-        // [LOC] Ô "Buổi trong ngày": chỉ 3 giá trị
-        if (!ValidationUtil.isNullOrEmpty(timeOfDay)) {
-            if (isOneOf(timeOfDay.trim(), "morning", "afternoon", "evening")) {
-                filter.setTimeOfDay(timeOfDay.trim());
-            } else {
-                errors.put("timeOfDay", Messages.MSG108_INVALID_OPTION);
-            }
-        }
-
-        // [LOC] Ô "Từ ngày" / "Đến ngày": đúng dạng yyyy-MM-dd
-        LocalDate from = DateTimeUtil.parseHtmlDate(dateFrom);
-        if (!ValidationUtil.isNullOrEmpty(dateFrom) && from == null) {
-            errors.put("dateFrom", Messages.MSG109_INVALID_DATE);
-        }
-
-        LocalDate to = DateTimeUtil.parseHtmlDate(dateTo);
-        if (!ValidationUtil.isNullOrEmpty(dateTo) && to == null) {
-            errors.put("dateTo", Messages.MSG109_INVALID_DATE);
-        }
-
-        // [LOC] Từ ngày phải <= Đến ngày (DBR-13), báo lỗi ở ô Đến ngày
-        if (from != null && to != null && from.isAfter(to)) {
-            errors.put("dateTo", Messages.MSG16_DATE_RANGE_REVERSED);
-        }
-        filter.setDateFrom(from);
-        filter.setDateTo(to);
-
-        // [LOC][LICH-SU] Tab trạng thái: chỉ 4 giá trị
-        if (!ValidationUtil.isNullOrEmpty(historyStatus)) {
-            if (isOneOf(historyStatus.trim(), "pending", "checkedIn", "missed", "cancelled")) {
-                filter.setHistoryStatus(historyStatus.trim());
-            } else {
-                errors.put("historyStatus", Messages.MSG108_INVALID_OPTION);
-            }
-        }
-
-        if (!errors.isEmpty()) {
-            return ServiceResult.failFields(errors);
-        }
-        return ServiceResult.ok(filter);
-    }
 
     /** [PHAN-TRANG] Số trang trên URL: thiếu / sai / nhỏ hơn 1 → trang 1 (không lỗi 500). */
     public int parsePageNumber(String value) {
@@ -243,8 +131,7 @@ public class MyPtSessionService {
      *
      * @param now giờ VN Servlet lấy 1 LẦN, dùng chung với [LICH-SU] để mỗi buổi chỉ nằm ở 1 khối
      */
-    public ServiceResult<MyPtSessionPage> getUpcomingPage(int accountId, MyPtSessionFilter filter,
-            LocalDateTime now, int requestedPage) {
+    public ServiceResult<MyPtSessionPage> getUpcomingPage(int accountId, LocalDateTime now, int requestedPage) {
         try {
             Integer customerId = findCustomerId(accountId);
             if (customerId == null) {
@@ -252,7 +139,7 @@ public class MyPtSessionService {
             }
 
             // B1 [PHAN-TRANG]: lấy TẤT CẢ các ngày có buổi (chỉ lấy ngày → rất nhẹ)
-            List<LocalDate> allDays = sessionDAO.findUpcomingDays(customerId, now, filter);
+            List<LocalDate> allDays = sessionDAO.findUpcomingDays(customerId, now);
 
             // B2 [PHAN-TRANG]: tính trang, cắt tối đa 8 ngày của trang đang xem
             int totalPages = countPages(allDays.size());
@@ -262,21 +149,20 @@ public class MyPtSessionService {
             // B3: lấy các buổi của những ngày đó
             List<MyPtSessionRow> rows = new ArrayList<>();
             if (!pageDays.isEmpty()) {
-                rows = sessionDAO.findUpcomingSessions(customerId, now, filter,
+                rows = sessionDAO.findUpcomingSessions(customerId, now,
                         Collections.min(pageDays), Collections.max(pageDays));
             }
 
             // B4: điền thông tin hiển thị cho từng buổi
             for (MyPtSessionRow row : rows) {
                 fillCommonInfo(row, customerId);
-                row.setPtPhone(sessionDAO.findEmployeePhone(row.getPtEmployeeId()));   // [SDT-PT] để khách gọi PT
+                row.setPtPhone(sessionDAO.findEmployeePhone(row.getPtEmployeeId()));   // [SDT-PT] để khách liên hệ PT
 
                 // Đang diễn ra = đã tới giờ bắt đầu (bây giờ >= giờ bắt đầu)
                 LocalDateTime startsAt = row.getSlotDate().atTime(row.getStartTime());
                 row.setInProgress(!now.isBefore(startsAt));
 
                 row.setWarning(buildGymWarning(row, customerId));   // [CANH-BAO-GYM]
-                fillActionFlags(row);                                // [NUT]
             }
 
             // B5: gom buổi theo ngày → 1 trang
@@ -289,42 +175,13 @@ public class MyPtSessionService {
         }
     }
 
-    /**
-     * [NUT] Bật / tắt nút trên từng buổi SẮP TỚI.
-     * Nút trên giao diện chỉ để khách thấy; server vẫn kiểm tra lại khi bấm ([HUY-BUOI], [DOI-BUOI]).
-     *
-     *   Hủy buổi : gói còn Active (buổi ở khối Sắp tới = còn Scheduled, chưa kết thúc)
-     *   Đổi buổi : không phải buổi lẻ (BR-74), chưa bắt đầu (BR-76), gói Active, còn lượt đổi (BR-73)
-     *              Hết lượt → nút bị KHÓA với chữ "Hết lượt đổi" (SRS 9.2.4: "the form is locked")
-     */
-    private void fillActionFlags(MyPtSessionRow row) {
-        boolean packageActive = "Active".equals(row.getSubscriptionStatus());
-
-        // --- [HUY-BUOI] ---
-        row.setCanCancel(packageActive);
-
-        // --- [DOI-BUOI] ---
-        row.setCanSwap(false);
-        if (row.isSingleSession() || row.isInProgress()) {
-            return;                                   // JSP không hiện nút Đổi
-        }
-        if (!packageActive) {
-            row.setSwapNote("Gói đã hết hiệu lực");
-        } else if (row.getSwapsUsed() >= row.getMaxSwaps()) {
-            row.setSwapNote("Hết lượt đổi");
-        } else {
-            row.setCanSwap(true);
-        }
-    }
-
 
     // =====================================================================
     // [LICH-SU] LỊCH SỬ BUỔI TẬP (1 trang) — giống [SAP-TOI], chỉ khác hàm DAO và nhãn
     // =====================================================================
 
     /** [LICH-SU] CheckedIn / Missed / Cancelled + Scheduled đã kết thúc (chờ JOB-04). Mới nhất trước. */
-    public ServiceResult<MyPtSessionPage> getHistoryPage(int accountId, MyPtSessionFilter filter,
-            LocalDateTime now, int requestedPage) {
+    public ServiceResult<MyPtSessionPage> getHistoryPage(int accountId, LocalDateTime now, int requestedPage) {
         try {
             Integer customerId = findCustomerId(accountId);
             if (customerId == null) {
@@ -332,7 +189,7 @@ public class MyPtSessionService {
             }
 
             // B1 [PHAN-TRANG]
-            List<LocalDate> allDays = sessionDAO.findHistoryDays(customerId, now, filter);
+            List<LocalDate> allDays = sessionDAO.findHistoryDays(customerId, now);
 
             // B2 [PHAN-TRANG]
             int totalPages = countPages(allDays.size());
@@ -342,7 +199,7 @@ public class MyPtSessionService {
             // B3
             List<MyPtSessionRow> rows = new ArrayList<>();
             if (!pageDays.isEmpty()) {
-                rows = sessionDAO.findHistorySessions(customerId, now, filter,
+                rows = sessionDAO.findHistorySessions(customerId, now,
                         Collections.min(pageDays), Collections.max(pageDays));
             }
 
@@ -359,117 +216,6 @@ public class MyPtSessionService {
         } catch (SQLException e) {
             e.printStackTrace();
             return ServiceResult.fail(Messages.MSG04_SYSTEM_BUSY);
-        }
-    }
-
-
-    // =====================================================================
-    // [HUY-BUOI] KHÁCH HỦY BUỔI (UC-39)
-    // =====================================================================
-
-    /**
-     * [HUY-BUOI] Quy tắc:
-     *   - LÝ DO KHÔNG BẮT BUỘC (SRS 9.2.1: hủy không có ô nhập); nếu có thì tối đa 500 ký tự.
-     *     [CHOT 17/10] Khách tự hủy không cần giải thích — GBR-09 chỉ áp cho nhân viên hủy / từ chối.
-     *   - Chỉ hủy buổi CỦA MÌNH (đứng tên / đi kèm gói đôi), còn Scheduled, gói còn Active.
-     *   - Được hủy tới TRƯỚC GIỜ KẾT THÚC, kể cả khi đang diễn ra (notes 13/10).
-     *   - Vẫn TRỪ BUỔI, KHÔNG hoàn tiền (BR-79).
-     *   - Cập nhật buổi + ghi AuditLog + thông báo PT và người tập cùng trong 1 TRANSACTION (GBR-07, CBR-46).
-     */
-    public ServiceResult<Void> cancelPtSession(int accountId, int sessionId, String reason) {
-
-        // B1 [HUY-BUOI]: lý do KHÔNG bắt buộc. Bỏ trống → lưu NULL. Có nhập thì tối đa 500 ký tự.
-        String cleanReason = (reason == null || reason.isBlank()) ? null : reason.trim();
-        if (cleanReason != null && cleanReason.length() > AppConstants.REASON_MAX_LENGTH) {
-            return ServiceResult.fail(Messages.MSG10_MAX_LENGTH.formatted(AppConstants.REASON_MAX_LENGTH));
-        }
-
-        try {
-            // B2 [QUYEN]: khách đang đăng nhập
-            Integer customerId = findCustomerId(accountId);
-            if (customerId == null) {
-                return ServiceResult.fail(Messages.MSG07_NO_PERMISSION);
-            }
-
-            // B3 [QUYEN]: buổi có tồn tại và là của mình?
-            PtSessionInfo info = sessionDAO.findSessionInfo(sessionId);
-            if (info == null || !isMySession(info, customerId)) {
-                return ServiceResult.fail(Messages.MSG07_NO_PERMISSION);   // không lộ "buổi có tồn tại"
-            }
-
-            // B4: chỉ hủy được buổi đang Scheduled
-            if (!"Scheduled".equals(info.getSessionStatus())) {
-                return ServiceResult.fail(Messages.MSG91_SESSION_CANNOT_CHANGE);
-            }
-
-            // B5: gói phải còn Active (gói hết hạn do JOB-02 hủy — CBR-55)
-            if (!"Active".equals(info.getSubscriptionStatus())) {
-                return ServiceResult.fail(Messages.MSG105_ACTION_OUTSIDE_WINDOW);
-            }
-
-            // B6: buổi chưa KẾT THÚC
-            LocalDateTime endsAt = info.getSlotDate().atTime(info.getEndTime());
-            if (!DateTimeUtil.now().isBefore(endsAt)) {
-                return ServiceResult.fail(Messages.MSG91_SESSION_CANNOT_CHANGE);
-            }
-
-            // B7: ghi DB trong 1 transaction
-            return cancelInTransaction(info, accountId, cleanReason);
-
-        } catch (SQLException e) {
-            e.printStackTrace();
-            return ServiceResult.fail(Messages.MSG04_SYSTEM_BUSY);
-        }
-    }
-
-    /**
-     * [HUY-BUOI] 3 việc ghi DB, ĐỦ CẢ 3 hoặc KHÔNG GÌ CẢ:
-     *   1. UPDATE buổi → Cancelled
-     *   2. INSERT AuditLog (kèm lý do nếu khách có nhập)
-     *   3. INSERT thông báo cho khách, người tập cùng, PT
-     */
-    private ServiceResult<Void> cancelInTransaction(PtSessionInfo info, int accountId, String reason)
-            throws SQLException {
-
-        try (Connection connection = DBContext.getConnection()) {
-            connection.setAutoCommit(false);
-
-            try {
-                // 1. UPDATE. Không được dòng nào = có người vừa đổi trạng thái trước mình
-                if (!sessionDAO.cancelSession(connection, info.getSessionId(), accountId, reason)) {
-                    connection.rollback();
-                    return ServiceResult.fail(Messages.MSG22_CONCURRENT_EDIT);
-                }
-
-                // 2. [AUDIT]
-                sessionDAO.insertCancelAuditLog(connection, accountId, info.getSessionId(), reason);
-
-                // 3. [THONG-BAO]
-                notifyCancel(connection, info);
-
-                connection.commit();
-                return ServiceResult.ok(null, Messages.MSG110_SESSION_CANCELLED);
-
-            } catch (SQLException | RuntimeException e) {
-                connection.rollback();
-                throw e;
-            }
-        }
-    }
-
-    /** [THONG-BAO][HUY-BUOI] Báo ngay cho PT (để không phải chờ) và các thành viên của gói (CBR-46). */
-    private void notifyCancel(Connection connection, PtSessionInfo info) throws SQLException {
-        String content = "Buổi PT " + DateTimeUtil.formatDate(info.getSlotDate()) + " "
-                + DateTimeUtil.formatTime(info.getStartTime()) + "–" + DateTimeUtil.formatTime(info.getEndTime())
-                + " với PT " + info.getPtName() + " đã được hủy theo yêu cầu của khách."
-                + " Buổi vẫn được tính vào gói và không hoàn tiền.";
-
-        int notificationId = notificationDAO.insertSystemNotification(connection, "Buổi PT đã bị hủy", content);
-
-        List<Integer> recipients = sessionDAO.findRecipientAccounts(connection,
-                info.getCustomerId(), info.getPartnerCustomerId(), info.getPtEmployeeId());
-        for (int recipientAccountId : recipients) {
-            notificationDAO.insertRecipient(connection, notificationId, recipientAccountId);
         }
     }
 
@@ -535,7 +281,7 @@ public class MyPtSessionService {
         };
     }
 
-    /** [LICH-SU] Vì sao bị hủy (Sessions.CancelType). */
+    /** [LICH-SU] Vì sao bị hủy (Sessions.CancelType). Dữ liệu cũ vẫn có thể là ByCustomer. */
     private String cancelExplanation(String cancelType, boolean couple) {
         if (cancelType == null) {
             return "Buổi đã bị hủy.";
@@ -676,27 +422,5 @@ public class MyPtSessionService {
         } catch (NumberFormatException e) {
             return null;
         }
-    }
-
-    private boolean isOneOf(String value, String... allowed) {
-        for (String item : allowed) {
-            if (item.equals(value)) {
-                return true;
-            }
-        }
-        return false;
-    }
-
-    /** [LOC][QUYEN] Mã gói có thuộc danh sách gói của khách không? (null = chưa tải được → bỏ qua) */
-    private boolean isMyPackage(int subscriptionId, List<MyPtPackageView> myPackages) {
-        if (myPackages == null) {
-            return true;
-        }
-        for (MyPtPackageView p : myPackages) {
-            if (p.getSubscriptionId() == subscriptionId) {
-                return true;
-            }
-        }
-        return false;
     }
 }

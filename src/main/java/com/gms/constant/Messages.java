@@ -327,23 +327,6 @@ public final class Messages {
     // EN: Your PT rating has been updated.
     public static final String MSG107_PT_RATING_UPDATED = "Đã cập nhật đánh giá PT của bạn.";
 
-    /** My PT Sessions — bộ lọc: giá trị chọn không thuộc danh sách cho phép (sửa URL thủ công). */
-    // EN: Invalid option.
-    public static final String MSG108_INVALID_OPTION = "Lựa chọn không hợp lệ.";
-
-    /** My PT Sessions — bộ lọc: ngày không đọc được theo định dạng yyyy-MM-dd. */
-    // EN: Invalid date.
-    public static final String MSG109_INVALID_DATE = "Ngày không hợp lệ.";
-
-    /** BR-79: khách hủy buổi PT thành công. */
-    // EN: Session cancelled.
-    public static final String MSG110_SESSION_CANCELLED = "Buổi đã hủy thành công.";
-
-    /** UC-38: buổi lẻ không thuộc chính sách đổi buổi gói PT. */
-    public static final String MSG111_SINGLE_SESSION_CANNOT_SWAP = "Buổi PT lẻ không được đổi lịch.";
-    public static final String MSG112_SWAP_SLOT_UNAVAILABLE = "Slot không còn hợp lệ. Hãy chọn slot cuối tuần còn trống, trong hạn gói và không trùng lịch.";
-    public static final String MSG113_SESSION_SWAPPED = "Đã đổi buổi PT và sử dụng một lượt đổi của gói.";
-
     private Messages() {
     }
 }

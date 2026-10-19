@@ -32,11 +32,8 @@ public class MyPtSessionRow {
 
     private int subscriptionId;          // Subscriptions.SubscriptionId (mã gói)
     private String type;                 // Subscriptions.SubscriptionType: PTSingle | PTCouple | SingleSession
-    private String subscriptionStatus;   // Subscriptions.Status: Active | Expired | ...
     private LocalDate packageStartDate;  // Subscriptions.StartDate
     private LocalDate packageEndDate;    // Subscriptions.EndDate
-    private int maxSwaps;                // Subscriptions.MaxSwapsSnapshot (giới hạn lượt đổi lúc mua)
-    private int swapsUsed;               // Subscriptions.SwapsUsed (đã đổi bao nhiêu lượt)
     private int holderCustomerId;        // Subscriptions.CustomerId (người đứng tên gói)
 
     private String packageName;          // Orders.PackageNameSnapshot (tên gói lúc mua)
@@ -57,9 +54,6 @@ public class MyPtSessionRow {
 
     private boolean inProgress;          // true = buổi đã bắt đầu, đang diễn ra
     private String warning;              // [CANH-BAO-GYM] câu cảnh báo vàng
-    private boolean canCancel;           // [HUY-BUOI] có hiện nút "Hủy buổi" không
-    private boolean canSwap;             // [DOI-BUOI] nút "Đổi buổi" bấm được không
-    private String swapNote;             // [DOI-BUOI] lý do không đổi được (vd "Hết lượt đổi"), null = đổi được
 
     // =====================================================================
     // 3b. SERVICE ĐIỀN — chỉ khối [LICH-SU]
@@ -123,20 +117,11 @@ public class MyPtSessionRow {
     public String getType() { return type; }
     public void setType(String type) { this.type = type; }
 
-    public String getSubscriptionStatus() { return subscriptionStatus; }
-    public void setSubscriptionStatus(String subscriptionStatus) { this.subscriptionStatus = subscriptionStatus; }
-
     public LocalDate getPackageStartDate() { return packageStartDate; }
     public void setPackageStartDate(LocalDate packageStartDate) { this.packageStartDate = packageStartDate; }
 
     public LocalDate getPackageEndDate() { return packageEndDate; }
     public void setPackageEndDate(LocalDate packageEndDate) { this.packageEndDate = packageEndDate; }
-
-    public int getMaxSwaps() { return maxSwaps; }
-    public void setMaxSwaps(int maxSwaps) { this.maxSwaps = maxSwaps; }
-
-    public int getSwapsUsed() { return swapsUsed; }
-    public void setSwapsUsed(int swapsUsed) { this.swapsUsed = swapsUsed; }
 
     public int getHolderCustomerId() { return holderCustomerId; }
     public void setHolderCustomerId(int holderCustomerId) { this.holderCustomerId = holderCustomerId; }
@@ -164,15 +149,6 @@ public class MyPtSessionRow {
 
     public String getWarning() { return warning; }
     public void setWarning(String warning) { this.warning = warning; }
-
-    public boolean isCanCancel() { return canCancel; }
-    public void setCanCancel(boolean canCancel) { this.canCancel = canCancel; }
-
-    public boolean isCanSwap() { return canSwap; }
-    public void setCanSwap(boolean canSwap) { this.canSwap = canSwap; }
-
-    public String getSwapNote() { return swapNote; }
-    public void setSwapNote(String swapNote) { this.swapNote = swapNote; }
 
     public String getStatusLabel() { return statusLabel; }
     public void setStatusLabel(String statusLabel) { this.statusLabel = statusLabel; }

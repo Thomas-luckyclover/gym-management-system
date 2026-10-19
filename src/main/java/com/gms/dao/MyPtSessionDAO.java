@@ -1,9 +1,7 @@
 package com.gms.dao;
 
 import com.gms.dto.MyPtPackageView;
-import com.gms.dto.MyPtSessionFilter;
 import com.gms.dto.MyPtSessionRow;
-import com.gms.dto.PtSessionInfo;
 import com.gms.util.DBContext;
 import java.sql.Connection;
 import java.sql.Date;
@@ -19,7 +17,8 @@ import java.util.ArrayList;
 import java.util.List;
 
 /**
- * DAO màn "Lịch tập của tôi". MỖI HÀM = 1 CÂU SQL NHỎ. DAO chỉ đọc/ghi DB, KHÔNG tính toán nghiệp vụ.
+ * DAO màn "Lịch tập của tôi". MỖI HÀM = 1 CÂU SQL NHỎ. DAO chỉ ĐỌC DB, KHÔNG tính toán nghiệp vụ.
+ * [CHOT 19/10] Màn chỉ xem: đã bỏ các hàm ghi (hủy buổi / đổi buổi).
  *
  * TÌM NHANH (Ctrl+F gõ tag):
  *   [GOI-PT]        thẻ "Gói PT của bạn"         → findPtPackages, countUpcomingSessionsOfPackage
@@ -29,9 +28,6 @@ import java.util.List;
  *   [SAP-TOI]       lịch sắp tới                  → findUpcomingDays, findUpcomingSessions
  *   [LICH-SU]       lịch sử                       → findHistoryDays, findHistorySessions
  *   [PHAN-TRANG]    phân trang theo ngày          → find...Days (bước 1), find...Sessions (bước 2)
- *   [LOC]           bộ lọc                        → addFilter
- *   [HUY-BUOI]      hủy buổi                      → findSessionInfo, cancelSession, insertCancelAuditLog
- *   [THONG-BAO]     người nhận thông báo          → findRecipientAccounts
  */
 public class MyPtSessionDAO {
 
@@ -44,9 +40,8 @@ public class MyPtSessionDAO {
             SELECT s.SessionId, s.Status, s.PtEmployeeId,
                    s.MissedReason, s.CancelType, s.CancelReason, s.CancelledAt,
                    t.SlotDate, t.StartTime, t.EndTime,
-                   sub.SubscriptionId, sub.SubscriptionType, sub.Status AS SubscriptionStatus,
+                   sub.SubscriptionId, sub.SubscriptionType,
                    sub.CustomerId, sub.StartDate, sub.EndDate,
-                   sub.MaxSwapsSnapshot, sub.SwapsUsed,
                    o.PackageNameSnapshot, o.PartnerCustomerId
             """;
 
@@ -95,7 +90,7 @@ public class MyPtSessionDAO {
      * [GOI-PT] Lấy các gói PT (cá nhân / đôi) của khách.
      *
      * @param activeOnly true  = chỉ gói Active (thẻ "Gói PT của bạn")
-     *                   false = mọi gói (ô lọc "Gói PT", để tra lịch sử gói cũ)
+     *                   false = mọi gói (kể cả gói đã kết thúc)
      */
     public List<MyPtPackageView> findPtPackages(int customerId, boolean activeOnly) throws SQLException {
         String sql = """
@@ -198,7 +193,7 @@ public class MyPtSessionDAO {
         return findOneName(sql, employeeId);
     }
 
-    /** [SDT-PT] Số điện thoại của PT (Persons.Phone) để khách gọi khi cần. Không có → null. */
+    /** [SDT-PT] Số điện thoại của PT (Persons.Phone) để khách liên hệ khi cần. Không có → null. */
     public String findEmployeePhone(int employeeId) throws SQLException {
         String sql = """
                 SELECT p.Phone
@@ -247,34 +242,23 @@ public class MyPtSessionDAO {
     // =====================================================================
 
     /** [SAP-TOI][PHAN-TRANG] Bước 1: các NGÀY có buổi sắp tới (gần nhất trước). */
-    public List<LocalDate> findUpcomingDays(int customerId, LocalDateTime now, MyPtSessionFilter filter)
-            throws SQLException {
-
-        StringBuilder sql = new StringBuilder("SELECT DISTINCT t.SlotDate " + FROM_MY_SESSIONS + IS_UPCOMING);
-        List<Object> params = startParams(customerId, now);
-
-        addFilter(sql, params, filter, false);
-        sql.append(" ORDER BY t.SlotDate");
-
-        return queryDays(sql.toString(), params);
+    public List<LocalDate> findUpcomingDays(int customerId, LocalDateTime now) throws SQLException {
+        String sql = "SELECT DISTINCT t.SlotDate " + FROM_MY_SESSIONS + IS_UPCOMING + " ORDER BY t.SlotDate";
+        return queryDays(sql, startParams(customerId, now));
     }
 
     /** [SAP-TOI][PHAN-TRANG] Bước 2: các BUỔI sắp tới trong khoảng [fromDate, toDate] (= các ngày của trang). */
-    public List<MyPtSessionRow> findUpcomingSessions(int customerId, LocalDateTime now, MyPtSessionFilter filter,
+    public List<MyPtSessionRow> findUpcomingSessions(int customerId, LocalDateTime now,
             LocalDate fromDate, LocalDate toDate) throws SQLException {
 
-        StringBuilder sql = new StringBuilder(SESSION_COLUMNS + FROM_MY_SESSIONS + IS_UPCOMING);
+        String sql = SESSION_COLUMNS + FROM_MY_SESSIONS + IS_UPCOMING
+                + " AND t.SlotDate BETWEEN ? AND ?"
+                + " ORDER BY t.SlotDate, t.StartTime, s.SessionId";
+
         List<Object> params = startParams(customerId, now);
-
-        addFilter(sql, params, filter, false);
-
-        sql.append(" AND t.SlotDate BETWEEN ? AND ?");
         params.add(fromDate);
         params.add(toDate);
-
-        sql.append(" ORDER BY t.SlotDate, t.StartTime, s.SessionId");
-
-        return querySessions(sql.toString(), params);
+        return querySessions(sql, params);
     }
 
 
@@ -283,191 +267,23 @@ public class MyPtSessionDAO {
     // =====================================================================
 
     /** [LICH-SU][PHAN-TRANG] Bước 1: các NGÀY có buổi lịch sử (mới nhất trước). */
-    public List<LocalDate> findHistoryDays(int customerId, LocalDateTime now, MyPtSessionFilter filter)
-            throws SQLException {
-
-        StringBuilder sql = new StringBuilder("SELECT DISTINCT t.SlotDate " + FROM_MY_SESSIONS + IS_HISTORY);
-        List<Object> params = startParams(customerId, now);
-
-        addFilter(sql, params, filter, true);
-        sql.append(" ORDER BY t.SlotDate DESC");
-
-        return queryDays(sql.toString(), params);
+    public List<LocalDate> findHistoryDays(int customerId, LocalDateTime now) throws SQLException {
+        String sql = "SELECT DISTINCT t.SlotDate " + FROM_MY_SESSIONS + IS_HISTORY + " ORDER BY t.SlotDate DESC";
+        return queryDays(sql, startParams(customerId, now));
     }
 
     /** [LICH-SU][PHAN-TRANG] Bước 2: các BUỔI lịch sử trong khoảng [fromDate, toDate]. */
-    public List<MyPtSessionRow> findHistorySessions(int customerId, LocalDateTime now, MyPtSessionFilter filter,
+    public List<MyPtSessionRow> findHistorySessions(int customerId, LocalDateTime now,
             LocalDate fromDate, LocalDate toDate) throws SQLException {
 
-        StringBuilder sql = new StringBuilder(SESSION_COLUMNS + FROM_MY_SESSIONS + IS_HISTORY);
+        String sql = SESSION_COLUMNS + FROM_MY_SESSIONS + IS_HISTORY
+                + " AND t.SlotDate BETWEEN ? AND ?"
+                + " ORDER BY t.SlotDate DESC, t.StartTime DESC, s.SessionId DESC";
+
         List<Object> params = startParams(customerId, now);
-
-        addFilter(sql, params, filter, true);
-
-        sql.append(" AND t.SlotDate BETWEEN ? AND ?");
         params.add(fromDate);
         params.add(toDate);
-
-        sql.append(" ORDER BY t.SlotDate DESC, t.StartTime DESC, s.SessionId DESC");
-
-        return querySessions(sql.toString(), params);
-    }
-
-
-    // =====================================================================
-    // [HUY-BUOI] 1 BUỔI: đọc để kiểm tra + hủy (cũng được [DOI-BUOI] dùng lại)
-    // =====================================================================
-
-    /** [HUY-BUOI] Đọc thông tin 1 buổi (tự mở connection). null = không có buổi này. */
-    public PtSessionInfo findSessionInfo(int sessionId) throws SQLException {
-        try (Connection connection = DBContext.getConnection()) {
-            return findSessionInfo(connection, sessionId, false);
-        }
-    }
-
-    /**
-     * [HUY-BUOI][DOI-BUOI] Đọc thông tin 1 buổi trên connection có sẵn (dùng trong transaction).
-     *
-     * @param lock true = KHÓA dòng buổi + gói (UPDLOCK, HOLDLOCK) → người khác phải chờ mình xong
-     */
-    public PtSessionInfo findSessionInfo(Connection connection, int sessionId, boolean lock) throws SQLException {
-        String lockHint = lock ? "WITH (UPDLOCK, HOLDLOCK)" : "";
-
-        String sql = """
-                SELECT s.SessionId, s.Status, s.TimeSlotId, s.PtEmployeeId,
-                       t.SlotDate, t.StartTime, t.EndTime,
-                       sub.SubscriptionId, sub.SubscriptionType, sub.Status AS SubscriptionStatus,
-                       sub.CustomerId, sub.StartDate, sub.EndDate, sub.SwapsUsed, sub.MaxSwapsSnapshot,
-                       o.Status AS OrderStatus, o.PartnerCustomerId,
-                       e.Status AS PtStatus, e.PersonId AS PtPersonId, p.FullName AS PtName
-                FROM Sessions s %s
-                JOIN Subscriptions sub %s ON sub.SubscriptionId = s.SubscriptionId
-                JOIN TimeSlots t ON t.TimeSlotId = s.TimeSlotId
-                JOIN Orders o    ON o.OrderId = sub.OrderId
-                JOIN Employees e ON e.EmployeeId = s.PtEmployeeId
-                JOIN Persons p   ON p.PersonId = e.PersonId
-                WHERE s.SessionId = ?
-                """.formatted(lockHint, lockHint);
-
-        try (PreparedStatement statement = connection.prepareStatement(sql)) {
-            statement.setInt(1, sessionId);
-
-            try (ResultSet rs = statement.executeQuery()) {
-                if (!rs.next()) {
-                    return null;
-                }
-
-                PtSessionInfo info = new PtSessionInfo();
-                info.setSessionId(rs.getInt("SessionId"));
-                info.setSessionStatus(rs.getString("Status"));
-                info.setTimeSlotId(rs.getInt("TimeSlotId"));
-                info.setPtEmployeeId(rs.getInt("PtEmployeeId"));
-                info.setSlotDate(rs.getDate("SlotDate").toLocalDate());
-                info.setStartTime(rs.getTime("StartTime").toLocalTime());
-                info.setEndTime(rs.getTime("EndTime").toLocalTime());
-                info.setSubscriptionId(rs.getInt("SubscriptionId"));
-                info.setSubscriptionType(rs.getString("SubscriptionType"));
-                info.setSubscriptionStatus(rs.getString("SubscriptionStatus"));
-                info.setCustomerId(rs.getInt("CustomerId"));
-                info.setPackageStartDate(getNullableDate(rs, "StartDate"));
-                info.setPackageEndDate(getNullableDate(rs, "EndDate"));
-                info.setSwapsUsed(rs.getInt("SwapsUsed"));
-                info.setMaxSwaps(rs.getInt("MaxSwapsSnapshot"));
-                info.setOrderStatus(rs.getString("OrderStatus"));
-
-                // Người đi kèm chỉ có nghĩa với gói đôi
-                boolean isCouple = "PTCouple".equals(info.getSubscriptionType());
-                info.setPartnerCustomerId(isCouple ? getNullableInt(rs, "PartnerCustomerId") : null);
-
-                info.setPtStatus(rs.getString("PtStatus"));
-                info.setPtPersonId(rs.getInt("PtPersonId"));
-                info.setPtName(rs.getString("PtName"));
-                return info;
-            }
-        }
-    }
-
-    /**
-     * [HUY-BUOI] Khách hủy buổi:
-     *   Status = Cancelled, CancelType = ByCustomer, lưu lý do (có thể null) + người hủy + giờ hủy,
-     *   RefundAgreed = 0 (BR-79: vẫn trừ buổi, không hoàn tiền).
-     *   "AND Status = 'Scheduled'" = chống bấm 2 lần / người khác vừa đổi trạng thái.
-     *
-     * @return true nếu cập nhật đúng 1 dòng
-     */
-    public boolean cancelSession(Connection connection, int sessionId, int accountId, String reason)
-            throws SQLException {
-        String sql = """
-                UPDATE Sessions
-                SET Status               = 'Cancelled',
-                    CancelType           = 'ByCustomer',
-                    CancelReason         = ?,
-                    CancelledAt          = SYSDATETIME(),
-                    CancelledByAccountId = ?,
-                    RefundAgreed         = 0
-                WHERE SessionId = ?
-                  AND Status = 'Scheduled'
-                """;
-
-        try (PreparedStatement statement = connection.prepareStatement(sql)) {
-            statement.setString(1, reason);
-            statement.setInt(2, accountId);
-            statement.setInt(3, sessionId);
-            return statement.executeUpdate() == 1;
-        }
-    }
-
-    /** [HUY-BUOI][AUDIT] Ghi nhật ký: ai hủy buổi nào (GBR-07). reason có thể null. */
-    public void insertCancelAuditLog(Connection connection, int accountId, int sessionId, String reason)
-            throws SQLException {
-        String sql = """
-                INSERT INTO AuditLogs (AccountId, ActingRole, Action, EntityName, EntityId,
-                                       FieldChanged, OldValue, NewValue, Reason)
-                VALUES (?, 'Customer', N'Khách hủy buổi PT', 'Sessions', ?,
-                        'Status', 'Scheduled', 'Cancelled', ?)
-                """;
-
-        try (PreparedStatement statement = connection.prepareStatement(sql)) {
-            statement.setInt(1, accountId);
-            statement.setInt(2, sessionId);
-            statement.setString(3, reason);
-            statement.executeUpdate();
-        }
-    }
-
-
-    // =====================================================================
-    // [THONG-BAO] NGƯỜI NHẬN THÔNG BÁO (dùng cho [HUY-BUOI] và [DOI-BUOI])
-    // =====================================================================
-
-    /**
-     * [THONG-BAO] Tài khoản (đang Active) cần nhận thông báo: khách đứng tên, người đi kèm, PT (CBR-46).
-     * Người không có tài khoản thì không nhận (không gửi ra kênh ngoài).
-     */
-    public List<Integer> findRecipientAccounts(Connection connection, int customerId, Integer partnerCustomerId,
-            int ptEmployeeId) throws SQLException {
-        String sql = """
-                SELECT DISTINCT a.AccountId
-                FROM Accounts a
-                WHERE a.Status = 'Active'
-                  AND (   a.PersonId IN (SELECT PersonId FROM Customers WHERE CustomerId IN (?, ?))
-                       OR a.PersonId IN (SELECT PersonId FROM Employees WHERE EmployeeId = ?))
-                """;
-
-        List<Integer> accountIds = new ArrayList<>();
-
-        try (PreparedStatement statement = connection.prepareStatement(sql)) {
-            statement.setInt(1, customerId);
-            statement.setInt(2, partnerCustomerId == null ? customerId : partnerCustomerId);
-            statement.setInt(3, ptEmployeeId);
-
-            try (ResultSet rs = statement.executeQuery()) {
-                while (rs.next()) {
-                    accountIds.add(rs.getInt(1));
-                }
-            }
-        }
-        return accountIds;
+        return querySessions(sql, params);
     }
 
 
@@ -486,73 +302,6 @@ public class MyPtSessionDAO {
         return params;
     }
 
-    /**
-     * [LOC] Ghép điều kiện BỘ LỌC vào cuối WHERE. Ô nào null thì bỏ qua.
-     * Giá trị luôn đi qua dấu ? (KHÔNG nối chuỗi người dùng nhập → chống SQL Injection).
-     *
-     * @param isHistory true = khối [LICH-SU], được lọc thêm theo tab trạng thái
-     */
-    private void addFilter(StringBuilder sql, List<Object> params, MyPtSessionFilter filter, boolean isHistory) {
-
-        // [LOC] Gói PT
-        if (filter.getSubscriptionId() != null) {
-            sql.append(" AND sub.SubscriptionId = ?");
-            params.add(filter.getSubscriptionId());
-        }
-
-        // [LOC] Loại buổi
-        if (filter.getType() != null) {
-            sql.append(" AND sub.SubscriptionType = ?");
-            params.add(filter.getType());
-        }
-
-        // [LOC] Từ ngày / Đến ngày (gồm cả 2 đầu)
-        if (filter.getDateFrom() != null) {
-            sql.append(" AND t.SlotDate >= ?");
-            params.add(filter.getDateFrom());
-        }
-        if (filter.getDateTo() != null) {
-            sql.append(" AND t.SlotDate <= ?");
-            params.add(filter.getDateTo());
-        }
-
-        // [LOC] Buổi trong ngày — so giờ BẮT ĐẦU: Sáng < 12:00 | Chiều 12:00–18:00 | Tối >= 18:00
-        if (filter.getTimeOfDay() != null) {
-            switch (filter.getTimeOfDay()) {
-                case "morning" -> {
-                    sql.append(" AND t.StartTime < CAST(? AS TIME)");
-                    params.add(LocalTime.of(12, 0));
-                }
-                case "afternoon" -> {
-                    sql.append(" AND t.StartTime >= CAST(? AS TIME) AND t.StartTime < CAST(? AS TIME)");
-                    params.add(LocalTime.of(12, 0));
-                    params.add(LocalTime.of(18, 0));
-                }
-                case "evening" -> {
-                    sql.append(" AND t.StartTime >= CAST(? AS TIME)");
-                    params.add(LocalTime.of(18, 0));
-                }
-                default -> { }
-            }
-        }
-
-        // [LOC][LICH-SU] Tab trạng thái — chỉ khối Lịch sử
-        if (isHistory && filter.getHistoryStatus() != null) {
-            sql.append(" AND s.Status = ?");
-            params.add(toDbStatus(filter.getHistoryStatus()));
-        }
-    }
-
-    /** [LOC] Đổi giá trị tab trên URL sang Sessions.Status trong DB. */
-    private String toDbStatus(String historyStatus) {
-        return switch (historyStatus) {
-            case "pending"   -> "Scheduled";   // đã kết thúc, chờ JOB-04 chốt
-            case "checkedIn" -> "CheckedIn";
-            case "missed"    -> "Missed";
-            default          -> "Cancelled";   // "cancelled"
-        };
-    }
-
     /** Gán lần lượt giá trị vào các dấu ? (JDBC đánh số từ 1). */
     private void setParams(PreparedStatement statement, List<Object> params) throws SQLException {
         for (int i = 0; i < params.size(); i++) {
@@ -561,8 +310,6 @@ public class MyPtSessionDAO {
 
             if (value instanceof Integer number) {
                 statement.setInt(position, number);
-            } else if (value instanceof String text) {
-                statement.setString(position, text);
             } else if (value instanceof LocalDate date) {
                 statement.setDate(position, Date.valueOf(date));
             } else if (value instanceof LocalTime time) {
@@ -631,9 +378,6 @@ public class MyPtSessionDAO {
         // --- gói ---
         row.setSubscriptionId(rs.getInt("SubscriptionId"));
         row.setType(rs.getString("SubscriptionType"));
-        row.setSubscriptionStatus(rs.getString("SubscriptionStatus"));
-        row.setMaxSwaps(rs.getInt("MaxSwapsSnapshot"));
-        row.setSwapsUsed(rs.getInt("SwapsUsed"));
         row.setHolderCustomerId(rs.getInt("CustomerId"));
         row.setPackageName(rs.getString("PackageNameSnapshot"));
 
