@@ -39,6 +39,12 @@ public class MyPtSessionRow {
     private String packageName;          // Orders.PackageNameSnapshot (tên gói lúc mua)
     private Integer partnerCustomerId;   // Orders.PartnerCustomerId (người đi kèm, chỉ gói đôi)
 
+    // [TKB] chỉ findSessionsInRange điền (đã JOIN sẵn trong 1 câu SQL)
+    private int sessionNo;               // số thứ tự buổi trong gói, theo ngày giờ (ROW_NUMBER) → "buổi 31/45"
+    private int totalSessions;           // Subscriptions.GeneratedSessionCount (tổng số buổi của gói)
+    private String holderName;           // họ tên người đứng tên gói
+    private String partnerFullName;      // họ tên người đi kèm (gói đôi), null nếu không có
+
     // =====================================================================
     // 2. SERVICE ĐIỀN — dùng chung 2 khối
     // =====================================================================
@@ -131,6 +137,18 @@ public class MyPtSessionRow {
 
     public Integer getPartnerCustomerId() { return partnerCustomerId; }
     public void setPartnerCustomerId(Integer partnerCustomerId) { this.partnerCustomerId = partnerCustomerId; }
+
+    public int getSessionNo() { return sessionNo; }
+    public void setSessionNo(int sessionNo) { this.sessionNo = sessionNo; }
+
+    public int getTotalSessions() { return totalSessions; }
+    public void setTotalSessions(int totalSessions) { this.totalSessions = totalSessions; }
+
+    public String getHolderName() { return holderName; }
+    public void setHolderName(String holderName) { this.holderName = holderName; }
+
+    public String getPartnerFullName() { return partnerFullName; }
+    public void setPartnerFullName(String partnerFullName) { this.partnerFullName = partnerFullName; }
 
     public String getPtName() { return ptName; }
     public void setPtName(String ptName) { this.ptName = ptName; }
