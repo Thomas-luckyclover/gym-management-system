@@ -57,28 +57,67 @@ public class LeaveRequestDAO {
         return null;
     }
 
+    private static class FilterSql {
+        final String whereClause;
+        final List<Object> params;
+        FilterSql(String whereClause, List<Object> params) {
+            this.whereClause = whereClause;
+            this.params = params;
+        }
+    }
+
+    private FilterSql buildFilterSql(LeaveRequestFilter filter) {
+        StringBuilder where = new StringBuilder(" WHERE 1 = 1 ");
+        List<Object> params = new ArrayList<>();
+
+        if (filter != null) {
+            if (filter.getStatus() != null) {
+                where.append(" AND lr.Status = ? ");
+                params.add(filter.getStatus().getDbValue());
+            }
+            if (filter.getKeyword() != null && !filter.getKeyword().isBlank()) {
+                where.append(" AND p.FullName COLLATE Vietnamese_CI_AI LIKE ? ESCAPE '\\' ");
+                params.add(SqlUtil.toContainsPattern(filter.getKeyword()));
+            }
+            if (filter.getPosition() != null && !filter.getPosition().isBlank()) {
+                where.append(" AND e.Position = ? ");
+                params.add(filter.getPosition());
+            }
+            if (filter.getLeaveType() != null) {
+                where.append(" AND lr.LeaveType = ? ");
+                params.add(filter.getLeaveType().getDbValue());
+            }
+            if (filter.getFromDate() != null) {
+                where.append(" AND lr.LeaveDate >= ? ");
+                params.add(java.sql.Date.valueOf(filter.getFromDate()));
+            }
+            if (filter.getToDate() != null) {
+                where.append(" AND lr.LeaveDate <= ? ");
+                params.add(java.sql.Date.valueOf(filter.getToDate()));
+            }
+        }
+        return new FilterSql(where.toString(), params);
+    }
+
     public int countByFilter(LeaveRequestFilter filter) throws SQLException {
-        // B1: nối Employees và Persons vì tên nhân viên nằm ở Persons.FullName
+        FilterSql fs = buildFilterSql(filter);
         String sql = "SELECT COUNT(*) "
                 + "FROM LeaveRequests lr "
                 + "JOIN Employees e ON e.EmployeeId = lr.EmployeeId "
                 + "JOIN Persons p ON p.PersonId = e.PersonId "
-                // status null thì điều kiện đầu luôn đúng (không lọc theo tab)
-                + "WHERE (? IS NULL OR lr.Status = ?) "
-                + "AND p.FullName COLLATE Vietnamese_CI_AI LIKE ? ESCAPE '\\'";
-
-        // B2: đổi status sang giá trị DB; null giữ nguyên để bỏ lọc
-        String statusValue = filter.getStatus() == null
-                ? null : filter.getStatus().getDbValue();
+                + fs.whereClause;
 
         try (Connection connection = DBContext.getConnection();
-                PreparedStatement statement
-                = connection.prepareStatement(sql)) {
+                PreparedStatement statement = connection.prepareStatement(sql)) {
 
-            statement.setString(1, statusValue);
-            statement.setString(2, statusValue);
-            statement.setString(3,
-                    SqlUtil.toContainsPattern(filter.getKeyword()));
+            for (int i = 0; i < fs.params.size(); i++) {
+                Object p = fs.params.get(i);
+                if (p instanceof java.sql.Date) {
+                    statement.setDate(i + 1, (java.sql.Date) p);
+                } else {
+                    statement.setString(i + 1, (String) p);
+                }
+            }
 
             try (ResultSet resultSet = statement.executeQuery()) {
                 if (resultSet.next()) {
@@ -93,7 +132,7 @@ public class LeaveRequestDAO {
     /**
      * Lấy danh sách đơn nghỉ phép có phân trang cho màn hình của Manager (màn #26).
      *
-     * @param filter   bộ lọc gồm trạng thái tab và từ khóa tìm kiếm tên nhân viên
+     * @param filter   bộ lọc gồm trạng thái tab, từ khóa tìm kiếm tên, chức vụ, loại nghỉ, khoảng ngày
      * @param offset   vị trí bắt đầu lấy dòng (trang 1 bắt đầu từ 0)
      * @param pageSize số lượng đơn tối đa trên một trang
      * @return danh sách các dòng đơn kèm thông tin nhân viên
@@ -103,13 +142,7 @@ public class LeaveRequestDAO {
             LeaveRequestFilter filter, int offset, int pageSize)
             throws SQLException {
 
-        // Câu SQL gồm 6 phần rõ ràng:
-        // 1. SELECT: lấy đủ thông tin đơn nghỉ, thông tin nhân viên và người duyệt
-        // 2. JOIN: nối Employees & Persons để lấy họ tên, mã NV, chức vụ, avatar
-        // 3. LEFT JOIN: lấy tên người duyệt (nếu đơn chưa duyệt thì ReviewerName sẽ là NULL)
-        // 4. WHERE: lọc theo tab trạng thái (? IS NULL để lấy tất cả) và tìm tên tiếng Việt
-        // 5. ORDER BY: ưu tiên đơn 'Pending' lên đầu, sau đó sắp xếp theo ngày nghỉ và giờ nộp
-        // 6. OFFSET/FETCH: phân trang của SQL Server
+        FilterSql fs = buildFilterSql(filter);
         String sql = "SELECT "
                 + "  lr.LeaveRequestId, lr.EmployeeId, lr.ReviewedByEmployeeId, "
                 + "  lr.LeaveType, lr.LeaveDate, lr.ShiftType, lr.Reason, lr.Status, lr.RejectReason, "
@@ -122,8 +155,7 @@ public class LeaveRequestDAO {
                 + "  JOIN Persons p ON p.PersonId = e.PersonId "
                 + "  LEFT JOIN Employees re ON re.EmployeeId = lr.ReviewedByEmployeeId "
                 + "  LEFT JOIN Persons rp ON rp.PersonId = re.PersonId "
-                + "WHERE (? IS NULL OR lr.Status = ?) "
-                + "  AND p.FullName COLLATE Vietnamese_CI_AI LIKE ? ESCAPE '\\' "
+                + fs.whereClause
                 + "ORDER BY "
                 + "  CASE WHEN lr.Status = 'Pending' THEN 0 ELSE 1 END, "
                 + "  CASE WHEN lr.Status = 'Pending' THEN lr.LeaveDate END ASC, "
@@ -132,27 +164,22 @@ public class LeaveRequestDAO {
                 + "  lr.SubmittedAt DESC "
                 + "OFFSET ? ROWS FETCH NEXT ? ROWS ONLY";
 
-        // Giá trị trạng thái lọc: nếu chọn tab "Tất cả" thì statusValue là null
-        String statusValue = filter.getStatus() == null
-                ? null
-                : filter.getStatus().getDbValue();
-
         List<LeaveRequestRow> rows = new ArrayList<>();
 
         try (Connection connection = DBContext.getConnection();
                 PreparedStatement statement = connection.prepareStatement(sql)) {
 
-            // B1: Truyền 5 tham số theo đúng thứ tự dấu ?
-            // ?1 & ?2: trạng thái tab (null để bỏ qua lọc trạng thái)
-            statement.setString(1, statusValue);
-            statement.setString(2, statusValue);
-            // ?3: từ khóa tìm kiếm họ tên nhân viên
-            statement.setString(3, SqlUtil.toContainsPattern(filter.getKeyword()));
-            // ?4 & ?5: phân trang (bỏ qua offset dòng, lấy tiếp pageSize dòng)
-            statement.setInt(4, offset);
-            statement.setInt(5, pageSize);
+            int paramIndex = 1;
+            for (Object p : fs.params) {
+                if (p instanceof java.sql.Date) {
+                    statement.setDate(paramIndex++, (java.sql.Date) p);
+                } else {
+                    statement.setString(paramIndex++, (String) p);
+                }
+            }
+            statement.setInt(paramIndex++, offset);
+            statement.setInt(paramIndex, pageSize);
 
-            // B2: Đọc kết quả và chuyển thành danh sách đối tượng LeaveRequestRow
             try (ResultSet resultSet = statement.executeQuery()) {
                 while (resultSet.next()) {
                     rows.add(new LeaveRequestRow(
