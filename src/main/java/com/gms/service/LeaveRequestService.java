@@ -11,6 +11,7 @@ import com.gms.dto.LeaveRequestItemView;
 import com.gms.dto.PageResult;
 import com.gms.dto.ServiceResult;
 import com.gms.dto.StaffLeaveFormView;
+import com.gms.dto.StaffingPreview;
 import com.gms.entity.Employee;
 import com.gms.entity.LeaveRequest;
 import com.gms.entity.Person;
@@ -575,6 +576,51 @@ public class LeaveRequestService {
                     remainingPt,
                     remainingReceptionist,
                     myRequests));
+
+        } catch (SQLException e) {
+            e.printStackTrace();
+            return ServiceResult.fail(Messages.MSG04_SYSTEM_BUSY);
+        }
+    }
+
+    /**
+     * Dự báo quân số của ca đã chọn nếu đơn của nhân viên này được duyệt (SRS 5.2.1).
+     * Chỉ trừ 1 người ở đúng chức vụ của người nộp.
+     *
+     * @param accountId AccountId của nhân viên từ session
+     * @param leaveDate ngày nghỉ đang chọn trên form
+     * @param shiftType ca nghỉ đang chọn (Morning, Afternoon, FullDay)
+     * @return số PT, Lễ tân còn lại và định biên tối thiểu; hoặc thông báo lỗi
+     */
+    public ServiceResult<StaffingPreview> previewStaffing(int accountId, LocalDate leaveDate, String shiftType) {
+        // B1: kiểm tra tham số
+        if (leaveDate == null || LeaveRequest.ShiftType.fromDbValue(shiftType) == null) {
+            return ServiceResult.fail("Ngày hoặc ca nghỉ không hợp lệ.");
+        }
+
+        try {
+            // B2: tìm nhân viên đang đăng nhập
+            Employee employee = findEmployeeForAccount(accountId);
+            if (employee == null) {
+                return ServiceResult.fail(String.format(Messages.MSG08_NOT_FOUND, "nhân viên"));
+            }
+
+            // B3: đếm số còn lại của từng chức vụ (DAO đã trừ 1 cho đơn đang xét)
+            int remainingPt = leaveRequestDAO.countOnDutyAfterApproval(leaveDate, shiftType, "PT", 0);
+            int remainingReceptionist = leaveRequestDAO.countOnDutyAfterApproval(leaveDate, shiftType, "Receptionist", 0);
+
+            // B4: chức vụ không phải của người nộp thì không bị trừ 1
+            if (Role.PT == employee.getPosition()) {
+                remainingReceptionist = remainingReceptionist + 1;
+            } else {
+                remainingPt = remainingPt + 1;
+            }
+
+            // B5: đọc định biên tối thiểu P-13, P-14
+            int minPt = systemConfigService.getInt(SystemConfigService.MIN_PT_PER_SHIFT);
+            int minReceptionist = systemConfigService.getInt(SystemConfigService.MIN_RECEPTIONIST_PER_SHIFT);
+
+            return ServiceResult.ok(new StaffingPreview(remainingPt, remainingReceptionist, minPt, minReceptionist));
 
         } catch (SQLException e) {
             e.printStackTrace();
