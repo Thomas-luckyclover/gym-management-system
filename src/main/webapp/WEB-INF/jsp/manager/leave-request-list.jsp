@@ -55,6 +55,18 @@
             <c:if test="${not empty keyword}">
               <c:param name="keyword" value="${keyword}" />
             </c:if>
+            <c:if test="${not empty positionFilter}">
+              <c:param name="position" value="${positionFilter}" />
+            </c:if>
+            <c:if test="${not empty leaveTypeFilter}">
+              <c:param name="leaveType" value="${leaveTypeFilter}" />
+            </c:if>
+            <c:if test="${not empty fromDateFilter}">
+              <c:param name="fromDate" value="${fromDateFilter}" />
+            </c:if>
+            <c:if test="${not empty toDateFilter}">
+              <c:param name="toDate" value="${toDateFilter}" />
+            </c:if>
           </c:url>
           <a href="${allTabUrl}"
              class="leave-stat ${statusFilter == 'All' ? 'active' : ''}">
@@ -66,6 +78,18 @@
             <c:param name="status" value="Pending" />
             <c:if test="${not empty keyword}">
               <c:param name="keyword" value="${keyword}" />
+            </c:if>
+            <c:if test="${not empty positionFilter}">
+              <c:param name="position" value="${positionFilter}" />
+            </c:if>
+            <c:if test="${not empty leaveTypeFilter}">
+              <c:param name="leaveType" value="${leaveTypeFilter}" />
+            </c:if>
+            <c:if test="${not empty fromDateFilter}">
+              <c:param name="fromDate" value="${fromDateFilter}" />
+            </c:if>
+            <c:if test="${not empty toDateFilter}">
+              <c:param name="toDate" value="${toDateFilter}" />
             </c:if>
           </c:url>
           <a href="${pendingTabUrl}"
@@ -79,6 +103,18 @@
             <c:if test="${not empty keyword}">
               <c:param name="keyword" value="${keyword}" />
             </c:if>
+            <c:if test="${not empty positionFilter}">
+              <c:param name="position" value="${positionFilter}" />
+            </c:if>
+            <c:if test="${not empty leaveTypeFilter}">
+              <c:param name="leaveType" value="${leaveTypeFilter}" />
+            </c:if>
+            <c:if test="${not empty fromDateFilter}">
+              <c:param name="fromDate" value="${fromDateFilter}" />
+            </c:if>
+            <c:if test="${not empty toDateFilter}">
+              <c:param name="toDate" value="${toDateFilter}" />
+            </c:if>
           </c:url>
           <a href="${approvedTabUrl}"
              class="leave-stat ${statusFilter == 'Approved' ? 'active' : ''}">
@@ -90,6 +126,18 @@
             <c:param name="status" value="Rejected" />
             <c:if test="${not empty keyword}">
               <c:param name="keyword" value="${keyword}" />
+            </c:if>
+            <c:if test="${not empty positionFilter}">
+              <c:param name="position" value="${positionFilter}" />
+            </c:if>
+            <c:if test="${not empty leaveTypeFilter}">
+              <c:param name="leaveType" value="${leaveTypeFilter}" />
+            </c:if>
+            <c:if test="${not empty fromDateFilter}">
+              <c:param name="fromDate" value="${fromDateFilter}" />
+            </c:if>
+            <c:if test="${not empty toDateFilter}">
+              <c:param name="toDate" value="${toDateFilter}" />
             </c:if>
           </c:url>
           <a href="${rejectedTabUrl}"
@@ -111,7 +159,7 @@
             </div>
           </div>
 
-          <%-- Form lọc: status giữ tab đang chọn, keyword tìm theo tên nhân viên (không phân biệt hoa thường và dấu) --%>
+          <%-- Form lọc: status giữ tab đang chọn, keyword tìm theo tên nhân viên, chức vụ, loại nghỉ, khoảng ngày --%>
           <form action="${pageContext.request.contextPath}/manager/leave-requests"
                 method="get"
                 class="leave-filter">
@@ -120,9 +168,29 @@
 
             <input type="search"
                    name="keyword"
+                   class="filter-input-search"
                    maxlength="100"
                    value="<c:out value='${keyword}' />"
                    placeholder="Tìm theo tên nhân viên">
+
+            <select name="position" class="filter-select" aria-label="Lọc theo chức vụ">
+              <option value="">-- Tất cả chức vụ --</option>
+              <option value="PT" ${positionFilter == 'PT' ? 'selected' : ''}>PT (HLV)</option>
+              <option value="Receptionist" ${positionFilter == 'Receptionist' ? 'selected' : ''}>Lễ tân</option>
+            </select>
+
+            <select name="leaveType" class="filter-select" aria-label="Lọc theo loại nghỉ">
+              <option value="">-- Tất cả loại nghỉ --</option>
+              <option value="Annual" ${leaveTypeFilter == 'Annual' ? 'selected' : ''}>Nghỉ phép năm</option>
+              <option value="Sick" ${leaveTypeFilter == 'Sick' ? 'selected' : ''}>Nghỉ ốm</option>
+              <option value="Unpaid" ${leaveTypeFilter == 'Unpaid' ? 'selected' : ''}>Nghỉ không lương</option>
+            </select>
+
+            <div class="filter-date-group">
+              <input type="date" name="fromDate" value="<c:out value='${fromDateFilter}' />" title="Từ ngày">
+              <span>-</span>
+              <input type="date" name="toDate" value="<c:out value='${toDateFilter}' />" title="Đến ngày">
+            </div>
 
             <button class="btn btn-primary" type="submit">Tìm</button>
             <a class="btn btn-ghost"
@@ -242,6 +310,18 @@
                   <c:param name="pageSize" value="${leavePage.pageSize}" />
                   <c:param name="keyword" value="${keyword}" />
                   <c:param name="status" value="${statusFilter}" />
+                  <c:if test="${not empty positionFilter}">
+                    <c:param name="position" value="${positionFilter}" />
+                  </c:if>
+                  <c:if test="${not empty leaveTypeFilter}">
+                    <c:param name="leaveType" value="${leaveTypeFilter}" />
+                  </c:if>
+                  <c:if test="${not empty fromDateFilter}">
+                    <c:param name="fromDate" value="${fromDateFilter}" />
+                  </c:if>
+                  <c:if test="${not empty toDateFilter}">
+                    <c:param name="toDate" value="${toDateFilter}" />
+                  </c:if>
                 </c:url>
                 <a class="btn btn-ghost btn-sm" href="${previousUrl}">Trang trước</a>
               </c:if>
@@ -254,6 +334,18 @@
                   <c:param name="pageSize" value="${leavePage.pageSize}" />
                   <c:param name="keyword" value="${keyword}" />
                   <c:param name="status" value="${statusFilter}" />
+                  <c:if test="${not empty positionFilter}">
+                    <c:param name="position" value="${positionFilter}" />
+                  </c:if>
+                  <c:if test="${not empty leaveTypeFilter}">
+                    <c:param name="leaveType" value="${leaveTypeFilter}" />
+                  </c:if>
+                  <c:if test="${not empty fromDateFilter}">
+                    <c:param name="fromDate" value="${fromDateFilter}" />
+                  </c:if>
+                  <c:if test="${not empty toDateFilter}">
+                    <c:param name="toDate" value="${toDateFilter}" />
+                  </c:if>
                 </c:url>
                 <a class="btn btn-ghost btn-sm" href="${nextUrl}">Trang sau</a>
               </c:if>
