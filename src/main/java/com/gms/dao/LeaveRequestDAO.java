@@ -761,6 +761,10 @@ public class LeaveRequestDAO {
         private int remainingStaff;
         private int minStaffRequired;
 
+        // Hạn duyệt P-20 của đơn và cờ đã quá hạn (Service tính, JSP dùng để khóa nút)
+        private LocalDateTime approvalDeadline;
+        private boolean overdue;
+
         public LeaveReviewDetail(
                 LeaveRequest leaveRequest,
                 String employeeCode,
@@ -789,6 +793,12 @@ public class LeaveRequestDAO {
 
         public int getMinStaffRequired() { return minStaffRequired; }
         public void setMinStaffRequired(int minStaffRequired) { this.minStaffRequired = minStaffRequired; }
+
+        public LocalDateTime getApprovalDeadline() { return approvalDeadline; }
+        public void setApprovalDeadline(LocalDateTime approvalDeadline) { this.approvalDeadline = approvalDeadline; }
+
+        public boolean isOverdue() { return overdue; }
+        public void setOverdue(boolean overdue) { this.overdue = overdue; }
     }
 
     public static class LeaveRequestRow {
