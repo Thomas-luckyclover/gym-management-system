@@ -747,15 +747,22 @@ public class LeaveRequestService {
                 try (Connection conn = DBContext.getConnection()) {
                     conn.setAutoCommit(false);
                     try {
+                        // Chỉ đếm những đơn thật sự vừa được đánh dấu (tránh nhắc trùng khi job chạy chồng nhau)
+                        int remindedCount = 0;
                         for (LeaveRequest req : remindList) {
-                            leaveRequestDAO.markReminded(conn, req.getLeaveRequestId());
+                            boolean isMarked = leaveRequestDAO.markReminded(conn, req.getLeaveRequestId());
+                            if (isMarked) {
+                                remindedCount = remindedCount + 1;
+                            }
                         }
 
                         // Gửi thông báo đến chuông của tất cả Manager trong hệ thống
-                        String notifTitle = "Nhắc duyệt đơn nghỉ phép";
-                        String notifContent = "Có " + remindList.size()
-                                + " đơn nghỉ phép ngày mai (" + tomorrow + ") cần duyệt trước " + cutoffTime + ".";
-                        notificationService.notifyRoleInTransaction(conn, Role.MANAGER, notifTitle, notifContent);
+                        if (remindedCount > 0) {
+                            String notifTitle = "Nhắc duyệt đơn nghỉ phép";
+                            String notifContent = "Có " + remindedCount
+                                    + " đơn nghỉ phép ngày mai (" + tomorrow + ") cần duyệt trước " + cutoffTime + ".";
+                            notificationService.notifyRoleInTransaction(conn, Role.MANAGER, notifTitle, notifContent);
+                        }
 
                         conn.commit();
                     } catch (Exception e) {
