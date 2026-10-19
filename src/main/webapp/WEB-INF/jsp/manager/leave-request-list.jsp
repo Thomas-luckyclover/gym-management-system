@@ -1,5 +1,6 @@
 <%@ page contentType="text/html; charset=UTF-8" pageEncoding="UTF-8" %>
 <%@ taglib prefix="c" uri="jakarta.tags.core" %>
+<%@ taglib prefix="fn" uri="jakarta.tags.functions" %>
 <%@ taglib prefix="gms" uri="/WEB-INF/gms-functions.tld" %>
 
 <!DOCTYPE html>
@@ -225,18 +226,30 @@
                       <tr class="${item.urgent ? 'leave-row-urgent' : ''}">
 
                         <td>
-                          <b><c:out value="${item.fullName}" /></b>
-                          <small>
-                            <c:out value="${item.employeeCode}" />
-                            ·
-                            <span style="white-space:nowrap">
+                          <div class="leave-employee-cell">
                             <c:choose>
-                              <c:when test="${item.position == 'PT'}">Huấn luyện viên (PT)</c:when>
-                              <c:when test="${item.position == 'Receptionist'}">Lễ tân</c:when>
-                              <c:otherwise><c:out value="${item.position}" /></c:otherwise>
+                              <c:when test="${not empty item.avatarUrl}">
+                                <img src="${pageContext.request.contextPath}${item.avatarUrl}" alt="Avatar" class="leave-employee-avatar">
+                              </c:when>
+                              <c:otherwise>
+                                <span class="leave-employee-initial">${fn:substring(item.fullName, 0, 1)}</span>
+                              </c:otherwise>
                             </c:choose>
-                            </span>
-                          </small>
+                            <div class="leave-employee-meta">
+                              <b><c:out value="${item.fullName}" /></b>
+                              <small>
+                                <c:out value="${item.employeeCode}" />
+                                ·
+                                <span class="leave-text-nowrap">
+                                <c:choose>
+                                  <c:when test="${item.position == 'PT'}">Huấn luyện viên (PT)</c:when>
+                                  <c:when test="${item.position == 'Receptionist'}">Lễ tân</c:when>
+                                  <c:otherwise><c:out value="${item.position}" /></c:otherwise>
+                                </c:choose>
+                                </span>
+                              </small>
+                            </div>
+                          </div>
                         </td>
 
                         <td>
@@ -259,7 +272,7 @@
                           </span>
                           <%-- item.autoRejected: Rejected mà không có người duyệt (quá hạn duyệt) --%>
                           <c:if test="${item.autoRejected}">
-                            <small style="display:block;white-space:nowrap">Tự động: quá hạn duyệt</small>
+                            <small class="leave-text-muted leave-text-nowrap">Tự động: quá hạn duyệt</small>
                           </c:if>
                         </td>
 
@@ -269,7 +282,7 @@
                             <c:when test="${not empty item.deadlineCountdownText}">
                               <b><c:out value="${item.deadlineCountdownText}" /></b>
                               <c:if test="${not empty item.approvalDeadline}">
-                                <small style="display:block;color:var(--color-text-soft)">
+                                <small class="leave-text-muted">
                                   Trước ${gms:formatDateTime(item.approvalDeadline)}
                                 </small>
                               </c:if>
