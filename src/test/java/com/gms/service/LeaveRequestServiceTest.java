@@ -200,12 +200,12 @@ class LeaveRequestServiceTest {
     // ===== Kiểm thử duyệt đơn (approveRequest - UC-15, CBR-85) =====
 
     @Test
-    void approveRequest_blockedWhenOverdue() throws Exception {
-        // Đơn nghỉ trong quá khứ hoặc hôm nay nộp từ trước -> hạn duyệt đã qua
+    void approveRequest_notBlockedByDeadline_whenOverdue() throws Exception {
+        // Đơn quá hạn duyệt nhưng Manager vẫn có quyền xem xét xử lý, không bị hard block
         LeaveRequest req = new LeaveRequest();
         req.setLeaveRequestId(101);
         req.setStatus(LeaveRequest.Status.PENDING);
-        req.setLeaveDate(LocalDate.now().minusDays(1)); // Ngày nghỉ hôm qua -> hạn duyệt hôm kia
+        req.setLeaveDate(LocalDate.now().minusDays(1));
         req.setSubmittedAt(LocalDateTime.now().minusDays(5));
         req.setShiftType(LeaveRequest.ShiftType.MORNING);
 
@@ -214,14 +214,12 @@ class LeaveRequestServiceTest {
         );
 
         when(leaveRequestDAO.findReviewDetail(101)).thenReturn(detail);
-        when(systemConfigService.getString(SystemConfigService.LEAVE_APPROVED_DEADLINE)).thenReturn("20:00");
+        when(accountDAO.findById(1)).thenReturn(null);
 
         var result = service.approveRequest(1, 101);
 
         assertFalse(result.isSuccess());
-        assertTrue(result.getMessage().contains("quá hạn duyệt"));
-        // Đảm bảo không bao giờ gọi xuống DB để lock hay approve đơn quá hạn
-        verify(leaveRequestDAO, never()).approve(any(), anyInt(), anyInt());
+        assertFalse(result.getMessage().contains("quá hạn duyệt"));
     }
 
     @Test
@@ -257,7 +255,8 @@ class LeaveRequestServiceTest {
     // ===== Kiểm thử từ chối đơn (rejectRequest - UC-15, CBR-85) =====
 
     @Test
-    void rejectRequest_blockedWhenOverdue() throws Exception {
+    void rejectRequest_notBlockedByDeadline_whenOverdue() throws Exception {
+        // Đơn quá hạn duyệt nhưng Manager vẫn có quyền từ chối, không bị hard block
         LeaveRequest req = new LeaveRequest();
         req.setLeaveRequestId(103);
         req.setStatus(LeaveRequest.Status.PENDING);
@@ -270,13 +269,12 @@ class LeaveRequestServiceTest {
         );
 
         when(leaveRequestDAO.findReviewDetail(103)).thenReturn(detail);
-        when(systemConfigService.getString(SystemConfigService.LEAVE_APPROVED_DEADLINE)).thenReturn("20:00");
+        when(accountDAO.findById(1)).thenReturn(null);
 
         var result = service.rejectRequest(1, 103, "Lý do từ chối hợp lệ");
 
         assertFalse(result.isSuccess());
-        assertTrue(result.getMessage().contains("quá hạn duyệt"));
-        verify(leaveRequestDAO, never()).reject(any(), anyInt(), anyInt(), anyString());
+        assertFalse(result.getMessage().contains("quá hạn duyệt"));
     }
 
     // ===== Kiểm thử rút đơn (withdrawRequest - UC-14) =====
