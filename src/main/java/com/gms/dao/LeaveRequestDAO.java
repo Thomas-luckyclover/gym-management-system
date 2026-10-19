@@ -417,15 +417,6 @@ public class LeaveRequestDAO {
     }
 
     /**
-     * Duyệt đơn nghỉ phép với connection mới.
-     */
-    public boolean approve(int leaveRequestId, int reviewerEmployeeId) throws SQLException {
-        try (Connection connection = DBContext.getConnection()) {
-            return approve(connection, leaveRequestId, reviewerEmployeeId);
-        }
-    }
-
-    /**
      * Từ chối đơn nghỉ phép trong transaction: cập nhật Status = 'Rejected', ghi người duyệt, thời điểm và lý do.
      * Chỉ cập nhật khi đơn còn ở trạng thái Pending.
      *
@@ -454,16 +445,6 @@ public class LeaveRequestDAO {
     }
 
     /**
-     * Từ chối đơn nghỉ phép với connection mới.
-     */
-    public boolean reject(int leaveRequestId, int reviewerEmployeeId, String rejectReason)
-            throws SQLException {
-        try (Connection connection = DBContext.getConnection()) {
-            return reject(connection, leaveRequestId, reviewerEmployeeId, rejectReason);
-        }
-    }
-
-    /**
      * Hệ thống tự động từ chối đơn nghỉ phép quá hạn duyệt trong transaction (JOB-07, CBR-85).
      * ReviewedByEmployeeId được để NULL để thể hiện hệ thống tự từ chối.
      *
@@ -485,15 +466,6 @@ public class LeaveRequestDAO {
             statement.setString(1, reason);
             statement.setInt(2, leaveRequestId);
             return statement.executeUpdate() > 0;
-        }
-    }
-
-    /**
-     * Tự động từ chối đơn với connection mới.
-     */
-    public boolean autoReject(int leaveRequestId, String reason) throws SQLException {
-        try (Connection connection = DBContext.getConnection()) {
-            return autoReject(connection, leaveRequestId, reason);
         }
     }
 
