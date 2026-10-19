@@ -413,15 +413,6 @@ public class LeaveRequestService {
                 return ServiceResult.fail("Đơn này đã được xử lý rồi.");
             }
 
-            // B2.1: kiểm tra hạn duyệt P-20 (CBR-85) — chặn duyệt đơn đã quá hạn P-20
-            LocalTime approvalCutoff = LocalTime.parse(
-                    systemConfigService.getString(SystemConfigService.LEAVE_APPROVED_DEADLINE));
-            LocalDateTime approvalDeadline = computeApprovalDeadline(request, approvalCutoff);
-            if (!DateTimeUtil.now().isBefore(approvalDeadline)) {
-                return ServiceResult.fail("Đơn nghỉ phép này đã quá hạn duyệt ("
-                        + approvalCutoff + ").");
-            }
-
             // B3: tìm thông tin nhân viên của Manager (lấy EmployeeId để lưu người duyệt)
             Employee manager = findEmployeeForAccount(managerAccountId);
             if (manager == null) {
@@ -544,15 +535,6 @@ public class LeaveRequestService {
             LeaveRequest request = detail.getLeaveRequest();
             if (!request.isPending()) {
                 return ServiceResult.fail("Đơn này đã được xử lý rồi.");
-            }
-
-            // B2.1: kiểm tra hạn duyệt P-20 (CBR-85) — quá hạn P-20 thì thuộc diện hệ thống tự từ chối
-            LocalTime approvalCutoff = LocalTime.parse(
-                    systemConfigService.getString(SystemConfigService.LEAVE_APPROVED_DEADLINE));
-            LocalDateTime approvalDeadline = computeApprovalDeadline(request, approvalCutoff);
-            if (!DateTimeUtil.now().isBefore(approvalDeadline)) {
-                return ServiceResult.fail("Đơn nghỉ phép này đã quá hạn duyệt ("
-                        + approvalCutoff + ").");
             }
 
             // B3: tìm thông tin nhân viên của Manager
@@ -976,60 +958,6 @@ public class LeaveRequestService {
                         conn.rollback();
                         e.printStackTrace();
                     }
-                }
-            }
-        }
-
-        // B3: tự động từ chối các đơn Pending đã quá mốc P-20
-        LocalDate maxOverdueLeaveDate = !currentTime.isBefore(cutoffTime) ? tomorrow : today;
-        LocalDate maxOverdueSubmittedDate = maxOverdueLeaveDate.minusDays(1 + APPROVAL_SLA_DAYS);
-        List<LeaveRequest> overdueList = leaveRequestDAO.findPendingOverdueRequests(
-                maxOverdueLeaveDate, maxOverdueSubmittedDate);
-        if (!overdueList.isEmpty()) {
-            System.out.println("[JOB-07] Tự từ chối " + overdueList.size() + " đơn quá hạn lúc " + now);
-        }
-
-        for (LeaveRequest req : overdueList) {
-            // Xử lý từng đơn trong một transaction riêng:
-            // Đảm bảo cập nhật trạng thái + ghi audit log + gửi thông báo nguyên tử,
-            // đồng thời lỗi ở một đơn không làm gián đoạn các đơn còn lại trong danh sách.
-            try (Connection conn = DBContext.getConnection()) {
-                conn.setAutoCommit(false);
-
-                try {
-                    // B3.1: cập nhật đơn sang Rejected với lý do "Quá hạn duyệt"
-                    boolean isRejected = leaveRequestDAO.autoReject(conn, req.getLeaveRequestId(), "Quá hạn duyệt");
-                    if (!isRejected) {
-                        conn.rollback();
-                        continue;
-                    }
-
-                    // B3.2: ghi Audit Log ghi nhận hệ thống tự từ chối
-                    auditLogService.logInTransaction(
-                            conn,
-                            null,
-                            "Hệ thống tự từ chối đơn nghỉ phép",
-                            "LeaveRequests",
-                            req.getLeaveRequestId(),
-                            "Status",
-                            "Pending",
-                            "Rejected",
-                            "Quá hạn duyệt");
-
-                    // B3.3: gửi thông báo đến chuông của nhân viên
-                    String notifTitle = "Nghỉ phép bị từ chối";
-                    String notifContent = "Đơn nghỉ ngày " + req.getLeaveDate()
-                            + " đã bị từ chối do quá hạn duyệt.";
-                    notificationService.notifyEmployeeInTransaction(
-                            conn,
-                            req.getEmployeeId(),
-                            notifTitle,
-                            notifContent);
-
-                    conn.commit();
-                } catch (Exception e) {
-                    conn.rollback();
-                    e.printStackTrace();
                 }
             }
         }
