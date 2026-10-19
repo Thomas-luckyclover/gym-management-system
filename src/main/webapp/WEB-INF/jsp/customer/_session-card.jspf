@@ -1,0 +1,18 @@
+<%@ page pageEncoding="UTF-8" %>
+<%-- ===== Một thẻ buổi trong ô lịch tuần: s (MyPtSessionRow) lấy từ vòng lặp của JSP cha, Service đã điền nhãn/trạng thái ===== --%>
+<%-- ended làm nền trầm nhưng không khóa bấm; initSessionDetails nối summary với openSessionDetail. --%>
+<details class="session-card ${s.ended ? 'is-ended' : ''}" data-session-detail data-status="${s.statusKey}">
+    <summary>
+        <%-- Phần nhìn thấy trên thẻ: giờ → tên PT → loại gói và buổi số mấy → trạng thái. --%>
+        <c:if test="${s.ended}"><span class="visually-hidden">Buổi đã kết thúc. </span></c:if>
+        <strong>${gms:formatTime(s.startTime)} – ${gms:formatTime(s.endTime)}</strong>
+        <span class="session-card-pt">PT <c:out value="${s.ptName}" /></span>
+        <small><c:out value="${s.typeLabel}" /><c:if test="${not s.singleSession}"> · ${s.sessionNo}/${s.totalSessions}</c:if></small>
+        <span class="session-status" data-status="${s.statusKey}"><c:out value="${s.statusLabel}" /></span>
+    </summary>
+    <%-- KẾT THÚC phần tóm tắt nhìn thấy trên thẻ buổi. --%>
+    <%-- Nội dung chi tiết đã dựng sẵn cho đúng s; openSessionDetail clone khối này vào dialog.
+         Không có JS, details/summary vẫn cho mở nội dung ngay dưới thẻ. --%>
+    <div data-session-content><%@ include file="_session-detail.jspf" %></div>
+</details>
+<%-- ===== KẾT THÚC một thẻ buổi trong ô lịch tuần ===== --%>

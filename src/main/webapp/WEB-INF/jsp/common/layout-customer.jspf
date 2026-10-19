@@ -24,6 +24,11 @@
             </a>
 
             <div class="nav-group">Gói tập</div>
+            <a href="${pageContext.request.contextPath}/customer/bookings"
+               class="nav-link <c:if test="${activeSidebar == 'bookings'}">active</c:if>"
+               <c:if test="${activeSidebar == 'bookings'}">aria-current="page"</c:if>>
+                <svg viewBox="0 0 24 24" aria-hidden="true"><rect x="3" y="5" width="18" height="16" rx="2"></rect><path d="M3 10h18M8 3v4M16 3v4M8 15h8"></path></svg> Gói của tôi
+            </a>
             <a href="${pageContext.request.contextPath}/customer/packages/purchase"
                class="nav-link <c:if test="${activeSidebar == 'buy-package'}">active</c:if>"
                <c:if test="${activeSidebar == 'buy-package'}">aria-current="page"</c:if>>

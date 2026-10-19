@@ -7,7 +7,7 @@ import java.util.List;
 /**
  * [TKB] Thời khóa biểu 1 TUẦN của khách (màn "Lịch tập của tôi").
  *
- *   Hàng = 5 khung giờ cố định (Sáng sớm, Sáng, Trưa, Chiều, Tối)
+ *   Hàng = 3 khung giờ (Sáng, Chiều, Tối)
  *   Cột  = 7 ngày, Thứ 2 → Chủ nhật
  *   Ô    = các buổi bắt đầu trong khung đó của ngày đó (thường 0 hoặc 1 buổi)
  *
@@ -54,8 +54,8 @@ public class TimetableView {
 
     /** 1 hàng khung giờ: tên + khoảng giờ + 7 ô (mỗi ô là danh sách buổi). */
     public static class Band {
-        private final String name;     // "Sáng sớm"
-        private final String range;    // "06:00 – 09:00"
+        private final String name;     // "Sáng"
+        private final String range;    // "06:00 – 12:00"
         private final List<List<MyPtSessionRow>> cells = new ArrayList<>();
 
         public Band(String name, String range) {

@@ -15,6 +15,15 @@ class MyPtSessionServiceTest {
     /** "Bây giờ" cố định: Thứ 2, 19/10/2026 lúc 14:20. */
     private static final LocalDateTime NOW = LocalDateTime.of(2026, 10, 19, 14, 20);
 
+    @Test
+    void invalidAndExtremeViewDatesFallBackToToday() {
+        LocalDate today = NOW.toLocalDate();
+        for (String input : new String[]{null, "", "abc", "2026-02-30", "0001-01-01", "+999999999-12-31", "9999-12-31"}) {
+            assertEquals(today, MyPtSessionService.parseViewDate(input, today));
+        }
+        assertEquals(LocalDate.of(2026, 12, 31), MyPtSessionService.parseViewDate("2026-12-31", today));
+    }
+
     // ---------------------------------------------------------------- weekStartOf
 
     @ParameterizedTest
@@ -32,11 +41,9 @@ class MyPtSessionServiceTest {
 
     @ParameterizedTest
     @CsvSource({
-        "06:00, 0", "08:59, 0",     // Sáng sớm
-        "09:00, 1", "11:45, 1",     // Sáng
-        "12:00, 2", "14:59, 2",     // Trưa
-        "15:00, 3", "17:59, 3",     // Chiều
-        "18:00, 4", "20:30, 4"      // Tối
+        "06:00, 0", "08:59, 0", "09:00, 0", "11:59, 0",
+        "12:00, 1", "14:59, 1", "15:00, 1", "17:59, 1",
+        "18:00, 2", "20:30, 2", "22:00, 2"
     })
     void startTimeFallsIntoCorrectBand(LocalTime startTime, int expectedBand) {
         assertEquals(expectedBand, MyPtSessionService.bandOf(startTime));
@@ -80,6 +87,18 @@ class MyPtSessionServiceTest {
     }
 
     // ---------------------------------------------------------------- applyStatus
+
+    @Test
+    void endedFlagUsesExactEndTimeAndKeepsStoredResult() {
+        MyPtSessionRow row = scheduled(NOW.toLocalDate(), 12, 50); // Kết thúc đúng 14:20.
+        row.setStatus("CheckedIn");
+        MyPtSessionService.applyStatus(row, NOW.minusNanos(1), null);
+        assertFalse(row.isEnded());
+        MyPtSessionService.applyStatus(row, NOW, null);
+        assertTrue(row.isEnded());
+        assertEquals("checkedIn", row.getStatusKey());
+        assertEquals("Đã check-in", row.getStatusLabel());
+    }
 
     @Test
     void scheduledTodayNotStartedIsToday() {

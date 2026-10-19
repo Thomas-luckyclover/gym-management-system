@@ -1,0 +1,244 @@
+/* Gói của tôi: danh sách bên trái và bảng các buổi bên phải. */
+.booking-layout {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) minmax(0, 2.5fr);
+  align-items: start;
+  gap: var(--space-4);
+}
+.booking-sidebar {
+  padding: var(--space-4);
+}
+.booking-sidebar h3 {
+  margin: 0 0 var(--space-4);
+  font-size: var(--font-size-lg);
+}
+.booking-sidebar h4 {
+  display: flex;
+  justify-content: space-between;
+  margin: var(--space-5) 0 var(--space-3);
+  font-size: var(--font-size-sm);
+  color: var(--color-text-soft);
+}
+.booking-package-filters {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: var(--space-2);
+}
+.booking-package-filters label {
+  display: grid;
+  gap: var(--space-2);
+  font-size: var(--font-size-xs);
+  color: var(--color-text-soft);
+}
+.booking-package-filters select {
+  width: 100%;
+  padding: var(--space-2);
+}
+.booking-package {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-2);
+  padding: var(--space-4) var(--space-3);
+  color: var(--color-text);
+  border: var(--border-width) solid var(--color-border);
+  border-radius: var(--radius-sm);
+  text-decoration: none;
+  margin-bottom: var(--space-2);
+}
+.booking-package:hover {
+  background: var(--color-surface-hover);
+  border-color: var(--color-primary);
+}
+.booking-package[aria-current="page"] {
+  background: var(--color-primary-tint);
+  border-color: var(--color-primary);
+}
+.booking-package-title, .booking-title {
+  display: flex;
+  align-items: baseline;
+  justify-content: space-between;
+  gap: var(--space-3);
+}
+.booking-package span, .booking-package small {
+  font-size: var(--font-size-xs);
+  color: var(--color-text-soft);
+}
+.booking-package strong {
+  font-size: var(--font-size-sm);
+  color: var(--color-text);
+}
+.booking-package progress {
+  width: 100%;
+  height: var(--space-1-5);
+  accent-color: var(--color-primary);
+}
+.booking-overview {
+  padding: var(--space-4);
+}
+.booking-overview h3 {
+  font-size: var(--font-size-xl);
+  margin: 0;
+}
+.booking-overview p {
+  color: var(--color-text-soft);
+  font-size: var(--font-size-sm);
+  line-height: var(--line-height-normal);
+}
+/* data-filter: filterSessions trong my-bookings.js cập nhật aria-pressed và ẩn/hiện các hàng. */
+.booking-counts {
+  display: flex;
+  flex-wrap: wrap;
+  border-block: var(--border-width) solid var(--color-border);
+}
+.booking-counts button {
+  flex: 1 1 0;
+  padding: var(--space-4) var(--space-3);
+  background: var(--color-surface);
+  color: var(--color-text-soft);
+  border: 0;
+  border-right: var(--border-width) solid var(--color-border);
+  cursor: pointer;
+  font: inherit;
+  font-size: var(--font-size-xs);
+  text-align: left;
+}
+.booking-counts strong {
+  display: block;
+  color: var(--color-text);
+  font-size: var(--font-size-xl);
+  margin-top: var(--space-2);
+  font-variant-numeric: tabular-nums;
+}
+.booking-counts button:hover, .booking-counts button[aria-pressed="true"] {
+  background: var(--color-primary-tint);
+  box-shadow: inset 0 calc(-1 * var(--border-width-thick)) var(--color-primary);
+}
+.booking-result {
+  padding: 0 var(--space-5);
+}
+.booking-table-scroll {
+  overflow: auto;
+  max-height: calc(var(--space-12) * 6);
+  scroll-padding-block: var(--space-8);
+}
+.booking-table {
+  width: 100%;
+  min-width: calc(var(--space-12) * 7);
+  border-collapse: collapse;
+  font-size: var(--font-size-sm);
+}
+.booking-table th, .booking-table td {
+  padding: var(--space-3) var(--space-4);
+  border-bottom: var(--border-width) solid var(--color-border);
+  text-align: left;
+  vertical-align: top;
+}
+.booking-table th {
+  position: sticky;
+  top: 0;
+  z-index: var(--z-base);
+  background: var(--color-surface-muted);
+  color: var(--color-text-soft);
+  font-weight: var(--font-weight-medium);
+}
+.booking-table td span, .booking-table td small {
+  display: block;
+  margin-top: var(--space-1);
+}
+.booking-table td small {
+  font-size: var(--font-size-xs);
+  color: var(--color-text-soft);
+  max-width: var(--layout-dialog-width);
+}
+.booking-table .session-status {
+  display: inline-flex;
+}
+.booking-table .is-focus {
+  background: var(--color-primary-tint);
+}
+.booking-session-detail summary {
+  margin-top: var(--space-2);
+  color: var(--color-link);
+  cursor: pointer;
+}
+.booking-table td:nth-child(2) {
+  white-space: nowrap;
+}
+/* Desktop vừa cửa sổ: header đứng yên, hai cột cuộn riêng và không đẩy dài trang. */
+@media (min-width: 1080px) and (min-height: 480px) {
+  body.my-bookings-page {
+    height: 100dvh;
+    overflow: hidden;
+  }
+  .my-bookings-page .app {
+    height: 100%;
+    min-height: 0;
+  }
+  .my-bookings-page .main {
+    display: flex;
+    flex-direction: column;
+    height: 100%;
+    min-height: 0;
+  }
+  .my-bookings-page .topbar {
+    flex: none;
+  }
+  .my-bookings-page .pt-schedule.content {
+    display: flex;
+    flex-direction: column;
+    flex: 1;
+    min-height: 0;
+    overflow: hidden;
+  }
+  .my-bookings-page .booking-layout {
+    flex: 1;
+    min-height: 0;
+    align-items: stretch;
+  }
+  .my-bookings-page .booking-sidebar {
+    min-height: 0;
+    overflow-y: auto;
+    overscroll-behavior-y: contain;
+  }
+  .my-bookings-page .booking-content {
+    display: flex;
+    flex-direction: column;
+    min-height: 0;
+    overflow: hidden;
+  }
+  .my-bookings-page .booking-overview,
+  .my-bookings-page .booking-counts,
+  .my-bookings-page .booking-result {
+    flex: none;
+  }
+  .my-bookings-page .booking-table-scroll {
+    flex: 1;
+    min-height: 0;
+    max-height: none;
+    overscroll-behavior-y: contain;
+  }
+  .my-bookings-page .booking-result {
+    margin-block: var(--space-2);
+  }
+  .my-bookings-page .schedule-empty {
+    min-height: 0;
+    overflow-y: auto;
+  }
+}
+@media (max-width: 900px) {
+  .booking-layout {
+    grid-template-columns: minmax(0, 1fr);
+  }
+  .booking-sidebar {
+    max-height: calc(var(--space-12) * 4);
+    overflow: auto;
+  }
+  .booking-title {
+    flex-wrap: wrap;
+  }
+}
+@media (max-width: 640px) {
+  .booking-counts button {
+    flex-basis: 30%;
+  }
+}
