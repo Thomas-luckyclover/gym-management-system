@@ -162,6 +162,49 @@
     background: var(--color-bg);
 }
 
+.leave-employee-cell {
+    display: flex;
+    align-items: center;
+    gap: var(--space-3);
+}
+
+.leave-employee-avatar {
+    width: 36px;
+    height: 36px;
+    border-radius: 50%;
+    object-fit: cover;
+    border: var(--border-width) solid var(--color-border);
+    flex-shrink: 0;
+}
+
+.leave-employee-initial {
+    width: 36px;
+    height: 36px;
+    border-radius: 50%;
+    background: var(--color-primary-light, #e0e7ff);
+    color: var(--color-primary, #3730a3);
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    font-weight: 600;
+    font-size: var(--font-size-xs, 12px);
+    border: var(--border-width) solid var(--color-border);
+    flex-shrink: 0;
+}
+
+.leave-employee-meta {
+    display: flex;
+    flex-direction: column;
+}
+
+.leave-text-nowrap {
+    white-space: nowrap;
+}
+
+.leave-text-muted {
+    color: var(--color-text-soft);
+}
+
 /* Hàng khẩn cấp (deadline sắp đến) */
 .leave-row-urgent {
     background: var(--color-warning-tint) !important;
