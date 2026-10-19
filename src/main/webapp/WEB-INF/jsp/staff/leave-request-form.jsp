@@ -213,10 +213,22 @@
                           </c:if>
                         </div>
 
-                        <div style="white-space:nowrap">
+                        <div style="white-space:nowrap;display:flex;align-items:center;gap:var(--space-2)">
                           <span class="badge ${req.pending ? 'badge-warning' : req.approved ? 'badge-success' : 'badge-danger'}">
                             <c:out value="${req.status.displayName}" />
                           </span>
+                          <c:if test="${req.pending}">
+                            <form action="${submitActionUrl}" method="post" style="display:inline;margin:0">
+                              <input type="hidden" name="csrfToken" value="${csrfToken}">
+                              <input type="hidden" name="action" value="withdraw">
+                              <input type="hidden" name="leaveRequestId" value="${req.leaveRequestId}">
+                              <button type="submit" class="btn btn-sm btn-outline danger"
+                                      data-confirm-title="Rút đơn nghỉ phép"
+                                      data-confirm-message="Xác nhận rút đơn nghỉ ngày ${gms:formatDate(req.leaveDate)}?">
+                                <i class="fa-solid fa-rotate-left" aria-hidden="true"></i> Rút đơn
+                              </button>
+                            </form>
+                          </c:if>
                         </div>
                       </div>
                     </c:forEach>
