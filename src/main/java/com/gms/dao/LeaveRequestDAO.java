@@ -445,31 +445,6 @@ public class LeaveRequestDAO {
     }
 
     /**
-     * Hệ thống tự động từ chối đơn nghỉ phép quá hạn duyệt trong transaction (JOB-07, CBR-85).
-     * ReviewedByEmployeeId được để NULL để thể hiện hệ thống tự từ chối.
-     *
-     * @param connection kết nối DB dùng chung transaction
-     * @param leaveRequestId mã đơn
-     * @param reason lý do từ chối ("Quá hạn duyệt")
-     * @return true nếu cập nhật thành công 1 dòng, false nếu đơn đã được xử lý trước đó
-     * @throws SQLException lỗi kết nối hoặc truy vấn DB
-     */
-    public boolean autoReject(Connection connection, int leaveRequestId, String reason) throws SQLException {
-        String sql = "UPDATE LeaveRequests "
-                + "SET Status = 'Rejected', "
-                + "ReviewedByEmployeeId = NULL, "
-                + "ReviewedAt = SYSDATETIME(), "
-                + "RejectReason = ? "
-                + "WHERE LeaveRequestId = ? AND Status = 'Pending'";
-
-        try (PreparedStatement statement = connection.prepareStatement(sql)) {
-            statement.setString(1, reason);
-            statement.setInt(2, leaveRequestId);
-            return statement.executeUpdate() > 0;
-        }
-    }
-
-    /**
      * Thêm mới một đơn xin nghỉ phép vào database (dùng chung Connection của Transaction).
      *
      * @param connection kết nối Transaction đang mở
@@ -732,65 +707,7 @@ public class LeaveRequestDAO {
      * Lấy danh sách các đơn Pending đã quá hạn duyệt P-20 để tự động từ chối (JOB-07).
      *
      * @param maxOverdueLeaveDate ngày nghỉ muộn nhất đã quá hạn duyệt (hôm nay hoặc ngày mai)
-     * @return danh sách các đơn Pending có LeaveDate <= maxOverdueLeaveDate
-     * @throws SQLException lỗi kết nối hoặc truy vấn DB
-     */
-    public List<LeaveRequest> findPendingOverdueRequests(LocalDate maxOverdueLeaveDate) throws SQLException {
-        String sql = SELECT_COLUMNS
-                + "WHERE Status = 'Pending' "
-                + "AND LeaveDate <= ? "
-                + "ORDER BY SubmittedAt ASC";
 
-        List<LeaveRequest> list = new ArrayList<>();
-
-        try (Connection connection = DBContext.getConnection();
-                PreparedStatement statement = connection.prepareStatement(sql)) {
-
-            statement.setDate(1, java.sql.Date.valueOf(maxOverdueLeaveDate));
-
-            try (ResultSet resultSet = statement.executeQuery()) {
-                while (resultSet.next()) {
-                    list.add(mapResultSetToLeaveRequest(resultSet));
-                }
-            }
-        }
-
-        return list;
-    }
-
-    /**
-     * Lấy danh sách các đơn Pending đã quá hạn duyệt P-20 để tự động từ chối (JOB-07, CBR-85):
-     * Quá hạn khi LeaveDate <= maxOverdueLeaveDate HOẶC CAST(SubmittedAt AS DATE) <= maxOverdueSubmittedDate.
-     *
-     * @param maxOverdueLeaveDate ngày nghỉ muộn nhất đã quá hạn duyệt
-     * @param maxOverdueSubmittedDate ngày nộp muộn nhất đã quá hạn duyệt theo SLA
-     * @return danh sách các đơn Pending đã quá hạn
-     * @throws SQLException lỗi truy vấn
-     */
-    public List<LeaveRequest> findPendingOverdueRequests(
-            LocalDate maxOverdueLeaveDate, LocalDate maxOverdueSubmittedDate) throws SQLException {
-        String sql = SELECT_COLUMNS
-                + "WHERE Status = 'Pending' "
-                + "AND (LeaveDate <= ? OR CAST(SubmittedAt AS DATE) <= ?) "
-                + "ORDER BY SubmittedAt ASC";
-
-        List<LeaveRequest> list = new ArrayList<>();
-
-        try (Connection connection = DBContext.getConnection();
-                PreparedStatement statement = connection.prepareStatement(sql)) {
-
-            statement.setDate(1, java.sql.Date.valueOf(maxOverdueLeaveDate));
-            statement.setDate(2, java.sql.Date.valueOf(maxOverdueSubmittedDate));
-
-            try (ResultSet resultSet = statement.executeQuery()) {
-                while (resultSet.next()) {
-                    list.add(mapResultSetToLeaveRequest(resultSet));
-                }
-            }
-        }
-
-        return list;
-    }
 
     // ===== Map ResultSet → Entity =====
 
