@@ -746,11 +746,6 @@ public class LeaveRequestDAO {
     }
 
     /**
-     * Một dòng danh sách đơn nghỉ phép của Manager do DAO tạo: gồm entity đơn
-     * và thông tin nhân viên lấy từ Employees/Persons. Service đổi sang
-     * LeaveRequestItemView (thêm hạn duyệt, đếm ngược) trước khi đưa ra JSP.
-     */
-    /**
      * Thông tin đầy đủ một đơn nghỉ phép cho màn duyệt của Manager (#27).
      * Giống LeaveRequestRow nhưng dành riêng cho trang review, Service thêm trường tính toán.
      */
@@ -813,6 +808,11 @@ public class LeaveRequestDAO {
         public void setStaffingRows(List<ShiftStaffingRow> staffingRows) { this.staffingRows = staffingRows; }
     }
 
+    /**
+     * Một dòng danh sách đơn nghỉ phép của Manager do DAO tạo: gồm entity đơn
+     * và thông tin nhân viên lấy từ Employees/Persons. Service đổi sang
+     * LeaveRequestItemView (thêm hạn duyệt, đếm ngược) trước khi đưa ra JSP.
+     */
     public static class LeaveRequestRow {
 
         // DAO: toàn bộ cột LeaveRequests của đơn này.
