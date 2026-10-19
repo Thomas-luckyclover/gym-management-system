@@ -47,13 +47,17 @@ public class LeaveRequestListServlet extends HttpServlet {
         // B1: đọc tham số lọc và phân trang từ URL
         String keyword = RequestUtil.getTrimmedParam(request, "keyword");
         String status = RequestUtil.getTrimmedParam(request, "status");
+        String position = RequestUtil.getTrimmedParam(request, "position");
+        String leaveType = RequestUtil.getTrimmedParam(request, "leaveType");
+        String fromDate = RequestUtil.getTrimmedParam(request, "fromDate");
+        String toDate = RequestUtil.getTrimmedParam(request, "toDate");
         int page = PaginationUtil.getPageNumber(request);
         int pageSize = PaginationUtil.getPageSize(request);
 
         // B2: lấy một trang đơn và số đơn của các tab
         ServiceResult<PageResult<LeaveRequestItemView>> pageResult
                 = leaveRequestService.getManagerPage(
-                        keyword, status, page, pageSize);
+                        keyword, status, position, leaveType, fromDate, toDate, page, pageSize);
 
         ServiceResult<Map<String, Integer>> countResult
                 = leaveRequestService.getStatusCounts();
@@ -73,6 +77,10 @@ public class LeaveRequestListServlet extends HttpServlet {
                         : Collections.emptyMap());
 
         request.setAttribute("keyword", keyword);
+        request.setAttribute("positionFilter", position);
+        request.setAttribute("leaveTypeFilter", leaveType);
+        request.setAttribute("fromDateFilter", fromDate);
+        request.setAttribute("toDateFilter", toDate);
 
         // URL trống nghĩa là tab mặc định "Pending" (khớp parseStatusFilter của Service)
         boolean hasStatus = status != null && !status.isEmpty();
