@@ -102,12 +102,70 @@ document.addEventListener("DOMContentLoaded", function () {
         }
     }
 
+    // B2.1: gọi server lấy dự báo quân số cho ngày + ca đang chọn (SRS 5.2.1)
+    const leaveForm = document.getElementById("leaveForm");
+    const shiftTypeSelect = document.getElementById("shiftType");
+    const pvPt = document.getElementById("pvPt");
+    const pvRecep = document.getElementById("pvRecep");
+    const pvMinPt = document.getElementById("pvMinPt");
+    const pvMinRecep = document.getElementById("pvMinRecep");
+    const pvScope = document.getElementById("pvScope");
+
+    function setPreviewText(pt, recep, minPt, minRecep) {
+        if (pvPt) {
+            pvPt.textContent = pt;
+        }
+        if (pvRecep) {
+            pvRecep.textContent = recep;
+        }
+        if (pvMinPt) {
+            pvMinPt.textContent = minPt;
+        }
+        if (pvMinRecep) {
+            pvMinRecep.textContent = minRecep;
+        }
+    }
+
+    async function refreshStaffingPreview() {
+        const leaveDateValue = leaveDateInput.value;
+        const shiftValue = shiftTypeSelect ? shiftTypeSelect.value : "";
+        if (!leaveForm || !leaveDateValue || !shiftValue) {
+            return;
+        }
+
+        const url = leaveForm.dataset.previewUrl
+                + "?date=" + encodeURIComponent(leaveDateValue)
+                + "&shift=" + encodeURIComponent(shiftValue);
+
+        try {
+            const response = await fetch(url, {headers: {"Accept": "application/json"}});
+            const body = await response.json();
+            if (!body.success) {
+                setPreviewText("—", "—", "—", "—");
+                return;
+            }
+            const data = body.data;
+            setPreviewText(data.remainingPt, data.remainingReceptionist, data.minPt, data.minReceptionist);
+            if (pvScope) {
+                pvScope.textContent = "Số liệu cho ngày " + formatDateDisplay(new Date(leaveDateValue + "T00:00:00"))
+                        + ", ca đã chọn.";
+            }
+        } catch (error) {
+            setPreviewText("—", "—", "—", "—");
+        }
+    }
+
     // B3: lắng nghe sự kiện thay đổi ngày
     leaveDateInput.addEventListener("change", checkDeadline);
     leaveDateInput.addEventListener("input", checkDeadline);
+    leaveDateInput.addEventListener("change", refreshStaffingPreview);
+    if (shiftTypeSelect) {
+        shiftTypeSelect.addEventListener("change", refreshStaffingPreview);
+    }
 
     // Kiểm tra ngay khi tải trang (nếu có giá trị sẵn)
     if (leaveDateInput.value) {
         checkDeadline();
+        refreshStaffingPreview();
     }
 });
