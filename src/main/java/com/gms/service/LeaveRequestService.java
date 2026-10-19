@@ -61,14 +61,27 @@ public class LeaveRequestService {
     // Thông báo cho nhân viên sau khi đơn được xử lý
     private final NotificationService notificationService;
 
+    /** Constructor cho test: truyền DAO/Service giả vào. */
+    LeaveRequestService(
+            LeaveRequestDAO leaveRequestDAO,
+            AccountDAO accountDAO,
+            EmployeeDAO employeeDAO,
+            PersonDAO personDAO,
+            SystemConfigService systemConfigService,
+            AuditLogService auditLogService,
+            NotificationService notificationService) {
+        this.leaveRequestDAO = leaveRequestDAO;
+        this.accountDAO = accountDAO;
+        this.employeeDAO = employeeDAO;
+        this.personDAO = personDAO;
+        this.systemConfigService = systemConfigService;
+        this.auditLogService = auditLogService;
+        this.notificationService = notificationService;
+    }
+
     public LeaveRequestService() {
-        leaveRequestDAO = new LeaveRequestDAO();
-        accountDAO = new AccountDAO();
-        employeeDAO = new EmployeeDAO();
-        personDAO = new PersonDAO();
-        systemConfigService = new SystemConfigService();
-        auditLogService = new AuditLogService();
-        notificationService = new NotificationService();
+        this(new LeaveRequestDAO(), new AccountDAO(), new EmployeeDAO(), new PersonDAO(),
+                new SystemConfigService(), new AuditLogService(), new NotificationService());
     }
 
     /**
