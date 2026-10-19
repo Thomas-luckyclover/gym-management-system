@@ -9,6 +9,7 @@
 - Liên hệ PT: link `https://zalo.me/<SĐT>` + sao chép số (laptop bấm `tel:` không ra gì khi demo).
 - Dữ liệu cũ vẫn có buổi `Cancelled / ByCustomer` → giữ câu giải thích khi hiển thị lịch sử; schema không đổi.
 - Code giai đoạn 1 (19/10): đã xóa `PtSessionSwapService`, `PtSessionSwapDAO`, `PtSwapSlotView`, `PtSessionInfo`, `MyPtSessionFilter`, test đổi buổi, phần POST / hộp thoại / bộ lọc trên màn và các mã MSG108–113 chỉ dùng cho bộ lọc / hủy / đổi buổi.
+- Code giai đoạn 2 (19/10, backend): `MyPtSessionDAO` dùng 1 câu SQL gốc (CTE + `ROW_NUMBER` đánh số buổi theo ngày giờ trong từng gói, JOIN sẵn tên/SĐT PT) cho 3 hàm `findSessionsInRange` / `findSessionsOfPackage` / `findSingleSessions`; `findMyPackages` 1 câu cho cột trái; `findClosedDays` cho cảnh báo phòng nghỉ. `MyPtSessionService.getWeek/getMonth` + `applyStatus` (7 trạng thái), `MyBookingService` + `MyBookingServlet` `/customer/bookings?id=`. Ô đếm: Tổng = Đã check-in + Vắng + Đã hủy + Còn lại + Đang cập nhật. Đã bỏ thẻ "Lượt đổi còn lại" (khách không tự đổi buổi). JSP hai màn đang là bảng thô, giao diện thật ở giai đoạn 3.
 - **Cần sửa SRS:** bỏ UC-38, UC-39 phía khách (giữ đổi hộ qua PT), bỏ màn #53, cập nhật mô tả màn #50, #51, BF-08 A3/A4, các BR-73…79 / CBR liên quan tới thao tác của khách.
 
 ## Khách hủy buổi — lý do không bắt buộc (17/10/2026, HẾT HIỆU LỰC từ 19/10 — xem mục trên)

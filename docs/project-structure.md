@@ -100,8 +100,8 @@ duyệt `…/review?id=`. Tên JSP kebab-case. Cột "Phụ trách" là gợi ý
 | 35 | Package Selection | `customer.PackageSelectionServlet` | `/customer/packages` | `customer/package-selection.jsp` | UC-22 | TV1 |
 | 36 | Checkout / Payment | `customer.CheckoutServlet` | `/customer/checkout` | `customer/checkout.jsp` | UC-22, UC-23, UC-PAY | TV1 |
 | 40 | Personal Transaction History | `customer.TransactionHistoryServlet` | `/customer/transactions` | `customer/transaction-history.jsp` | UC-24 | TV1 |
-| 50 | My Bookings | `customer.MyBookingServlet` | `/customer/bookings` | `customer/my-bookings.jsp` | UC-36, UC-39 | TV5 |
-| 51 | My PT Sessions | `customer.MyPtSessionServlet` | `/customer/pt-sessions` | `customer/my-pt-sessions.jsp` | UC-36, UC-41 | TV5 |
+| 50 | My Bookings — "Gói của tôi" (19/10: danh sách gói PT + buổi lẻ, bảng buổi #1→N, chỉ xem) | `customer.MyBookingServlet` | `/customer/bookings` | `customer/my-bookings.jsp` | UC-36 | TV5 |
+| 51 | My PT Sessions — "Lịch tập" (19/10: thời khóa biểu tuần/tháng, chỉ xem) | `customer.MyPtSessionServlet` | `/customer/pt-sessions` | `customer/my-pt-sessions.jsp` | UC-36, UC-41 | TV5 |
 | 52 | Book Single Session | `customer.BookSingleSessionServlet` | `/customer/book-session` | `customer/book-session.jsp` | UC-37 | TV5 |
 | 53 | ~~Swap Session~~ (bỏ 19/10: khách không tự đổi buổi, PT đổi giúp qua UC-35 — xem notes.md) | — | — | — | UC-38 | TV5 |
 | 60 | My Plan | `customer.MyPlanServlet` | `/customer/plans` | `customer/my-plan.jsp` | UC-40 | TV5 |
