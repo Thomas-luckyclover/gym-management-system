@@ -636,6 +636,41 @@ public class LeaveRequestDAO {
     }
 
     /**
+     * Lấy danh sách các đơn Pending cần nhắc duyệt hôm nay (JOB-07, CBR-85):
+     * Khớp đơn nghỉ ngày mai (LeaveDate = leaveDate) HOẶC đơn nộp đã đủ SLA 3 ngày (CAST(SubmittedAt AS DATE) = submittedDate).
+     *
+     * @param leaveDate ngày mai
+     * @param submittedDate ngày nộp tương ứng mốc SLA 3 ngày
+     * @return danh sách các đơn Pending chưa gửi nhắc
+     * @throws SQLException lỗi truy vấn
+     */
+    public List<LeaveRequest> findPendingNeedingReminder(
+            LocalDate leaveDate, LocalDate submittedDate) throws SQLException {
+        String sql = SELECT_COLUMNS
+                + "WHERE Status = 'Pending' "
+                + "AND ReminderSentAt IS NULL "
+                + "AND (LeaveDate = ? OR CAST(SubmittedAt AS DATE) = ?) "
+                + "ORDER BY SubmittedAt ASC";
+
+        List<LeaveRequest> list = new ArrayList<>();
+
+        try (Connection connection = DBContext.getConnection();
+                PreparedStatement statement = connection.prepareStatement(sql)) {
+
+            statement.setDate(1, java.sql.Date.valueOf(leaveDate));
+            statement.setDate(2, java.sql.Date.valueOf(submittedDate));
+
+            try (ResultSet resultSet = statement.executeQuery()) {
+                while (resultSet.next()) {
+                    list.add(mapResultSetToLeaveRequest(resultSet));
+                }
+            }
+        }
+
+        return list;
+    }
+
+    /**
      * Đánh dấu đơn đã được gửi thông báo nhắc Manager (JOB-07) trên cùng Connection của Transaction.
      *
      * @param connection     kết nối đang mở transaction
@@ -686,6 +721,40 @@ public class LeaveRequestDAO {
                 PreparedStatement statement = connection.prepareStatement(sql)) {
 
             statement.setDate(1, java.sql.Date.valueOf(maxOverdueLeaveDate));
+
+            try (ResultSet resultSet = statement.executeQuery()) {
+                while (resultSet.next()) {
+                    list.add(mapResultSetToLeaveRequest(resultSet));
+                }
+            }
+        }
+
+        return list;
+    }
+
+    /**
+     * Lấy danh sách các đơn Pending đã quá hạn duyệt P-20 để tự động từ chối (JOB-07, CBR-85):
+     * Quá hạn khi LeaveDate <= maxOverdueLeaveDate HOẶC CAST(SubmittedAt AS DATE) <= maxOverdueSubmittedDate.
+     *
+     * @param maxOverdueLeaveDate ngày nghỉ muộn nhất đã quá hạn duyệt
+     * @param maxOverdueSubmittedDate ngày nộp muộn nhất đã quá hạn duyệt theo SLA
+     * @return danh sách các đơn Pending đã quá hạn
+     * @throws SQLException lỗi truy vấn
+     */
+    public List<LeaveRequest> findPendingOverdueRequests(
+            LocalDate maxOverdueLeaveDate, LocalDate maxOverdueSubmittedDate) throws SQLException {
+        String sql = SELECT_COLUMNS
+                + "WHERE Status = 'Pending' "
+                + "AND (LeaveDate <= ? OR CAST(SubmittedAt AS DATE) <= ?) "
+                + "ORDER BY SubmittedAt ASC";
+
+        List<LeaveRequest> list = new ArrayList<>();
+
+        try (Connection connection = DBContext.getConnection();
+                PreparedStatement statement = connection.prepareStatement(sql)) {
+
+            statement.setDate(1, java.sql.Date.valueOf(maxOverdueLeaveDate));
+            statement.setDate(2, java.sql.Date.valueOf(maxOverdueSubmittedDate));
 
             try (ResultSet resultSet = statement.executeQuery()) {
                 while (resultSet.next()) {
