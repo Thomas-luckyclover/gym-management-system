@@ -589,6 +589,15 @@ public class LeaveRequestDAO {
      * Đếm số buổi dạy Scheduled của PT trong ngày và ca xin nghỉ.
      */
     public int countScheduledSessions(int ptEmployeeId, LocalDate leaveDate, String shiftType) throws SQLException {
+        try (Connection connection = DBContext.getConnection()) {
+            return countScheduledSessions(connection, ptEmployeeId, leaveDate, shiftType);
+        }
+    }
+
+    /**
+     * Đếm số buổi dạy Scheduled của PT trong transaction của lượt duyệt đơn (CBR-83).
+     */
+    public int countScheduledSessions(Connection connection, int ptEmployeeId, LocalDate leaveDate, String shiftType) throws SQLException {
         StringBuilder sql = new StringBuilder();
         sql.append("SELECT COUNT(*) FROM Sessions s ")
                 .append("JOIN TimeSlots ts ON s.TimeSlotId = ts.TimeSlotId ")
@@ -600,9 +609,7 @@ public class LeaveRequestDAO {
             sql.append("AND ts.EndTime > '12:00:00' ");
         }
 
-        try (Connection connection = DBContext.getConnection();
-                PreparedStatement statement = connection.prepareStatement(sql.toString())) {
-
+        try (PreparedStatement statement = connection.prepareStatement(sql.toString())) {
             statement.setInt(1, ptEmployeeId);
             statement.setDate(2, java.sql.Date.valueOf(leaveDate));
 
