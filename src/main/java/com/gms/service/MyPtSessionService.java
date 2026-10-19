@@ -10,12 +10,17 @@ import com.gms.dto.ServiceResult;
 import com.gms.dto.TimetableView;
 import com.gms.entity.Account;
 import com.gms.entity.Customer;
+import com.gms.util.DateTimeUtil;
+import java.net.URLEncoder;
+import java.nio.charset.StandardCharsets;
 import java.sql.SQLException;
 import java.time.DayOfWeek;
 import java.time.LocalDate;
 import java.time.LocalDateTime;
 import java.time.LocalTime;
 import java.time.YearMonth;
+import java.time.ZoneOffset;
+import java.time.format.DateTimeFormatter;
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
@@ -26,6 +31,7 @@ import java.util.Set;
  * Màn "Lịch tập" (/customer/pt-sessions) — thời khóa biểu tuần / tháng, CHỈ XEM.
  * Khách không tự hủy / đổi buổi: nhắn PT qua Zalo, PT cập nhật lịch (chốt 19/10).
  * Các hàm fillDisplay, findCustomerId, typeLabel, zaloUrl được màn "Gói của tôi" dùng lại.
+ * Link Zalo và "Thêm vào Google Calendar" chỉ là URL ghép sẵn, không gọi API ngoài.
  */
 public class MyPtSessionService {
 
@@ -222,6 +228,11 @@ public class MyPtSessionService {
 
             // B5: mã + nhãn + lý do
             applyStatus(row, now, warning);
+
+            // B6: buổi chưa diễn ra → link "Thêm vào Google Calendar"
+            if ("Scheduled".equals(row.getStatus()) && isNotEnded(row, now)) {
+                row.setCalendarUrl(calendarUrl(row));
+            }
         }
     }
 
@@ -393,6 +404,38 @@ public class MyPtSessionService {
             digits = "0" + digits.substring(2);
         }
         return digits.isEmpty() ? null : "https://zalo.me/" + digits;
+    }
+
+    /**
+     * Buổi → link "Thêm vào Google Calendar" (không cần API key, Google mở sẵn sự kiện để khách bấm Lưu).
+     * Giờ trong DB là giờ VN → đổi sang UTC (đuôi Z) để lịch của khách hiện đúng giờ.
+     * Vd 21/10/2026 18:00–19:30 → dates=20261021T110000Z/20261021T123000Z.
+     */
+    static String calendarUrl(MyPtSessionRow row) {
+        // B1: giờ bắt đầu / kết thúc theo giờ VN → UTC
+        String start = CALENDAR_TIME.format(row.getSlotDate().atTime(row.getStartTime()).atZone(DateTimeUtil.GYM_ZONE));
+        String end = CALENDAR_TIME.format(row.getSlotDate().atTime(row.getEndTime()).atZone(DateTimeUtil.GYM_ZONE));
+
+        // B2: tiêu đề + mô tả (buổi lẻ không có số thứ tự)
+        String title = "Buổi PT với " + row.getPtName() + " · Super Gym";
+        String details = row.getPackageName()
+                + (row.isSingleSession() ? "" : " · buổi " + row.getSessionNo() + "/" + row.getTotalSessions());
+
+        // B3: ghép link, mã hóa chữ tiếng Việt / khoảng trắng
+        return "https://calendar.google.com/calendar/render?action=TEMPLATE"
+                + "&text=" + encode(title)
+                + "&dates=" + start + "/" + end
+                + "&details=" + encode(details)
+                + "&location=" + encode("Super Gym");
+    }
+
+    /** Định dạng giờ Google Calendar cần: yyyyMMdd'T'HHmmss'Z' theo UTC. */
+    private static final DateTimeFormatter CALENDAR_TIME =
+            DateTimeFormatter.ofPattern("yyyyMMdd'T'HHmmss'Z'").withZone(ZoneOffset.UTC);
+
+    /** Mã hóa chữ để đặt vào URL (khoảng trắng → %20). */
+    private static String encode(String text) {
+        return URLEncoder.encode(text, StandardCharsets.UTF_8).replace("+", "%20");
     }
 
     /** Mã loại gói → chữ tiếng Việt. */

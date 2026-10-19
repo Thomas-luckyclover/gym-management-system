@@ -72,6 +72,7 @@
                                                 <c:if test="${not empty s.partnerName}">Tập cùng: <c:out value="${s.partnerName}" /><br></c:if>
                                                 <c:if test="${not empty s.explanation}"><small><c:out value="${s.explanation}" /></small><br></c:if>
                                                 <c:if test="${not empty s.zaloUrl}"><a href="${fn:escapeXml(s.zaloUrl)}" target="_blank" rel="noopener">Zalo PT</a></c:if>
+                                                <c:if test="${not empty s.calendarUrl}"> · <a href="${fn:escapeXml(s.calendarUrl)}" target="_blank" rel="noopener">Thêm vào Google Calendar</a></c:if>
                                             </div>
                                         </c:forEach>
                                     </td>

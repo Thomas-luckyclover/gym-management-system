@@ -61,6 +61,24 @@ class MyPtSessionServiceTest {
         assertNull(MyPtSessionService.zaloUrl("  "));
     }
 
+    // ---------------------------------------------------------------- calendarUrl
+
+    @Test
+    void calendarLinkUsesUtcTimeAndEncodedText() {
+        MyPtSessionRow row = scheduled(LocalDate.of(2026, 10, 21), 18, 0);   // 18:00–19:30 giờ VN
+        row.setPtName("Trần Quốc Bảo");
+        row.setPackageName("PT cá nhân 2 tháng");
+        row.setSessionNo(33);
+        row.setTotalSessions(45);
+
+        String url = MyPtSessionService.calendarUrl(row);
+
+        assertTrue(url.startsWith("https://calendar.google.com/calendar/render?action=TEMPLATE"));
+        assertTrue(url.contains("&dates=20261021T110000Z/20261021T123000Z"));   // VN = UTC+7
+        assertTrue(url.contains("&text=Bu%E1%BB%95i%20PT%20v%E1%BB%9Bi%20Tr%E1%BA%A7n"));
+        assertTrue(url.contains("bu%E1%BB%95i%2033%2F45"));                       // "buổi 33/45"
+    }
+
     // ---------------------------------------------------------------- applyStatus
 
     @Test

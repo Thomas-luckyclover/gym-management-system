@@ -45,6 +45,7 @@ public class MyPtSessionRow {
     private String statusLabel;          // chữ hiện trên badge
     private String explanation;          // lý do / giải thích (thanh chi tiết)
     private String zaloUrl;              // https://zalo.me/<SĐT PT>
+    private String calendarUrl;          // link "Thêm vào Google Calendar" (chỉ buổi chưa diễn ra)
 
     /** Gói đôi? */
     public boolean isCouple() {
@@ -140,4 +141,7 @@ public class MyPtSessionRow {
 
     public String getZaloUrl() { return zaloUrl; }
     public void setZaloUrl(String zaloUrl) { this.zaloUrl = zaloUrl; }
+
+    public String getCalendarUrl() { return calendarUrl; }
+    public void setCalendarUrl(String calendarUrl) { this.calendarUrl = calendarUrl; }
 }

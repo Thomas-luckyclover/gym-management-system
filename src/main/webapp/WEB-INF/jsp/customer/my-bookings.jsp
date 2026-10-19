@@ -87,7 +87,8 @@
                                         <td>${gms:formatDate(s.slotDate)}</td>
                                         <td>${gms:formatTime(s.startTime)}–${gms:formatTime(s.endTime)}</td>
                                         <td>[<c:out value="${s.statusKey}" />] <c:out value="${s.statusLabel}" /></td>
-                                        <td><c:out value="${s.explanation}" /></td>
+                                        <td><c:out value="${s.explanation}" />
+                                            <c:if test="${not empty s.calendarUrl}"><a href="${fn:escapeXml(s.calendarUrl)}" target="_blank" rel="noopener">Thêm vào Google Calendar</a></c:if></td>
                                     </tr>
                                 </c:forEach>
                             </tbody>
