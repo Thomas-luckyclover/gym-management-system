@@ -501,6 +501,25 @@ public class LeaveRequestDAO {
     }
 
     /**
+     * Nhân viên tự rút đơn còn Pending của chính mình. Xóa hẳn vì schema không có trạng thái Withdrawn (BF-05).
+     *
+     * @param connection kết nối trong transaction
+     * @param leaveRequestId mã đơn nghỉ phép
+     * @param employeeId mã nhân viên người nộp
+     * @return true nếu xóa thành công 1 dòng Pending
+     * @throws SQLException lỗi truy vấn
+     */
+    public boolean withdraw(Connection connection, int leaveRequestId, int employeeId) throws SQLException {
+        String sql = "DELETE FROM LeaveRequests "
+                + "WHERE LeaveRequestId = ? AND EmployeeId = ? AND Status = 'Pending'";
+        try (PreparedStatement statement = connection.prepareStatement(sql)) {
+            statement.setInt(1, leaveRequestId);
+            statement.setInt(2, employeeId);
+            return statement.executeUpdate() > 0;
+        }
+    }
+
+    /**
      * Thêm mới một đơn xin nghỉ phép vào database.
      *
      * @param leaveRequest entity đơn xin nghỉ
