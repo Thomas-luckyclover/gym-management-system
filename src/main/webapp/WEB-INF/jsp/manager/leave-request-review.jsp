@@ -142,16 +142,49 @@
                   <span class="leave-info-label">
                     Dự báo quân số ${item.position eq 'PT' ? 'HLV (PT)' : 'Lễ tân'} trực ca nếu duyệt đơn này
                   </span>
-                  <div class="leave-staffing-numbers">
-                    <div class="leave-staffing-item">
-                      <strong><c:out value="${item.remainingStaff}" /></strong>
-                      <small>${item.position eq 'PT' ? 'PT' : 'Lễ tân'} dự kiến còn lại</small>
-                    </div>
-                    <div class="leave-staffing-item">
-                      <strong><c:out value="${item.minStaffRequired}" /></strong>
-                      <small>Định biên tối thiểu (${item.position eq 'PT' ? 'P-13' : 'P-14'})</small>
-                    </div>
-                  </div>
+                  <c:choose>
+                    <c:when test="${not empty item.staffingRows and item.staffingRows.size() > 1}">
+                      <table class="leave-staffing-table" style="width:100%;margin-top:var(--space-2);border-collapse:collapse;font-size:var(--font-size-sm)">
+                        <thead>
+                          <tr style="border-bottom:1px solid var(--color-border);text-align:left;color:var(--color-text-soft)">
+                            <th style="padding:4px 8px">Ca trực</th>
+                            <th style="padding:4px 8px">Đang trực</th>
+                            <th style="padding:4px 8px">Sau duyệt</th>
+                            <th style="padding:4px 8px">Tối thiểu</th>
+                            <th style="padding:4px 8px">Đánh giá</th>
+                          </tr>
+                        </thead>
+                        <tbody>
+                          <c:forEach var="row" items="${item.staffingRows}">
+                            <tr style="border-bottom:1px solid var(--color-border-subtle);${row.belowMin ? 'color:var(--color-danger-ink);font-weight:600' : ''}">
+                              <td style="padding:4px 8px"><c:out value="${row.shiftLabel}" /></td>
+                              <td style="padding:4px 8px">${row.current}</td>
+                              <td style="padding:4px 8px"><b>${row.afterApproval}</b></td>
+                              <td style="padding:4px 8px">${row.minRequired}</td>
+                              <td style="padding:4px 8px">
+                                <c:choose>
+                                  <c:when test="${row.belowMin}"><span class="badge badge-sm badge-danger">Thiếu người</span></c:when>
+                                  <c:otherwise><span class="badge badge-sm badge-success">Đạt</span></c:otherwise>
+                                </c:choose>
+                              </td>
+                            </tr>
+                          </c:forEach>
+                        </tbody>
+                      </table>
+                    </c:when>
+                    <c:otherwise>
+                      <div class="leave-staffing-numbers">
+                        <div class="leave-staffing-item">
+                          <strong><c:out value="${item.remainingStaff}" /></strong>
+                          <small>${item.position eq 'PT' ? 'PT' : 'Lễ tân'} dự kiến còn lại</small>
+                        </div>
+                        <div class="leave-staffing-item">
+                          <strong><c:out value="${item.minStaffRequired}" /></strong>
+                          <small>Định biên tối thiểu (${item.position eq 'PT' ? 'P-13' : 'P-14'})</small>
+                        </div>
+                      </div>
+                    </c:otherwise>
+                  </c:choose>
                   <c:if test="${item.remainingStaff < item.minStaffRequired}">
                     <p style="margin:var(--space-2) 0 0;font-size:var(--font-size-sm);color:var(--color-danger-ink);font-weight:600">
                       Cảnh báo: Nếu duyệt, ca trực sẽ chỉ còn ${item.remainingStaff} người (thấp hơn định biên tối thiểu ${item.minStaffRequired}). Nút duyệt bị vô hiệu hóa.
