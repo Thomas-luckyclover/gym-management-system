@@ -34,6 +34,9 @@ import java.util.Map;
  */
 public class LeaveRequestService {
 
+    // Số ngày tối đa để Manager duyệt đơn nộp sớm (CBR-85, trừ hao Manager nghỉ cuối tuần/nghỉ phép ngắn)
+    public static final int APPROVAL_SLA_DAYS = 3;
+
     // Đơn còn dưới số phút này đến hạn duyệt thì đánh dấu khẩn cấp (tô nổi trên
     // danh sách)
     private static final long URGENT_WITHIN_MINUTES = 180;
@@ -167,6 +170,27 @@ public class LeaveRequestService {
     }
 
     /**
+     * Tính hạn duyệt P-20 của một đơn nghỉ phép (CBR-85):
+     * Lấy mốc sớm hơn giữa (Ngày nộp + APPROVAL_SLA_DAYS lúc P-20) và (Ngày nghỉ - 1 ngày lúc P-20).
+     *
+     * @param request đơn xin nghỉ phép
+     * @param approvalCutoff giờ chốt duyệt P-20
+     * @return thời điểm hạn duyệt
+     */
+    public LocalDateTime computeApprovalDeadline(LeaveRequest request, LocalTime approvalCutoff) {
+        LocalDate cutoffByLeaveDate = request.getLeaveDate().minusDays(1);
+        LocalDate submittedDate = request.getSubmittedAt() != null
+                ? request.getSubmittedAt().toLocalDate()
+                : DateTimeUtil.today();
+        LocalDate cutoffBySubmittedDate = submittedDate.plusDays(APPROVAL_SLA_DAYS);
+
+        LocalDate deadlineDate = cutoffBySubmittedDate.isBefore(cutoffByLeaveDate)
+                ? cutoffBySubmittedDate
+                : cutoffByLeaveDate;
+        return deadlineDate.atTime(approvalCutoff);
+    }
+
+    /**
      * Đổi một dòng DAO sang LeaveRequestItemView: tính hạn duyệt (P-20 của ngày
      * liền trước ngày nghỉ, CBR-85), chữ đếm ngược và cờ khẩn cấp cho đơn Pending.
      */
@@ -177,8 +201,8 @@ public class LeaveRequestService {
 
         LeaveRequest request = row.getLeaveRequest();
 
-        // B1: hạn duyệt = giờ P-20 vào ngày liền trước ngày nghỉ
-        LocalDateTime approvalDeadline = request.getLeaveDate().minusDays(1).atTime(approvalTime);
+        // B1: hạn duyệt P-20 theo công thức CBR-85: MIN(Ngày nộp + 3 ngày, Ngày nghỉ - 1 ngày) lúc P-20
+        LocalDateTime approvalDeadline = computeApprovalDeadline(request, approvalTime);
 
         // B2: đơn đã xử lý không cần đếm ngược; đơn Pending thì xét đã quá hạn chưa
         String countdownText = "";
@@ -277,7 +301,7 @@ public class LeaveRequestService {
                 // Tính hạn duyệt P-20 và cờ quá hạn để màn #27 khóa nút (CBR-85)
                 LocalTime approvalCutoff = LocalTime.parse(
                         systemConfigService.getString(SystemConfigService.LEAVE_APPROVED_DEADLINE));
-                LocalDateTime deadline = detail.getLeaveRequest().getLeaveDate().minusDays(1).atTime(approvalCutoff);
+                LocalDateTime deadline = computeApprovalDeadline(detail.getLeaveRequest(), approvalCutoff);
                 detail.setApprovalDeadline(deadline);
                 detail.setOverdue(!DateTimeUtil.now().isBefore(deadline));
             }
@@ -296,7 +320,7 @@ public class LeaveRequestService {
      * được thực hiện trong cùng một transaction để bảo toàn tính toàn vẹn dữ liệu.
      *
      * @param managerAccountId AccountId của Manager từ session
-     * @param leaveRequestId   mã đơn cần duyệt
+     * @param leaveRequestId mã đơn cần duyệt
      * @return ok() nếu thành công, fail() kèm thông báo lỗi nếu không được
      */
     public ServiceResult<Void> approveRequest(int managerAccountId, int leaveRequestId) {
@@ -314,14 +338,13 @@ public class LeaveRequestService {
                 return ServiceResult.fail("Đơn này đã được xử lý rồi.");
             }
 
-            // B2.1: kiểm tra hạn duyệt P-20 (CBR-85) — chặn duyệt đơn đã qua ngày nghỉ hoặc quá giờ P-20
+            // B2.1: kiểm tra hạn duyệt P-20 (CBR-85) — chặn duyệt đơn đã quá hạn P-20
             LocalTime approvalCutoff = LocalTime.parse(
                     systemConfigService.getString(SystemConfigService.LEAVE_APPROVED_DEADLINE));
-            LocalDateTime approvalDeadline = LocalDateTime.of(
-                    request.getLeaveDate().minusDays(1), approvalCutoff);
+            LocalDateTime approvalDeadline = computeApprovalDeadline(request, approvalCutoff);
             if (!DateTimeUtil.now().isBefore(approvalDeadline)) {
                 return ServiceResult.fail("Đơn nghỉ phép này đã quá hạn duyệt ("
-                        + approvalCutoff + " ngày hôm trước ngày nghỉ).");
+                        + approvalCutoff + ").");
             }
 
             // B3: tìm thông tin nhân viên của Manager (lấy EmployeeId để lưu người duyệt)
@@ -448,14 +471,13 @@ public class LeaveRequestService {
                 return ServiceResult.fail("Đơn này đã được xử lý rồi.");
             }
 
-            // B2.1: kiểm tra hạn duyệt P-20 (CBR-85) — quá giờ P-20 thì thuộc diện hệ thống tự từ chối
+            // B2.1: kiểm tra hạn duyệt P-20 (CBR-85) — quá hạn P-20 thì thuộc diện hệ thống tự từ chối
             LocalTime approvalCutoff = LocalTime.parse(
                     systemConfigService.getString(SystemConfigService.LEAVE_APPROVED_DEADLINE));
-            LocalDateTime approvalDeadline = LocalDateTime.of(
-                    request.getLeaveDate().minusDays(1), approvalCutoff);
+            LocalDateTime approvalDeadline = computeApprovalDeadline(request, approvalCutoff);
             if (!DateTimeUtil.now().isBefore(approvalDeadline)) {
                 return ServiceResult.fail("Đơn nghỉ phép này đã quá hạn duyệt ("
-                        + approvalCutoff + " ngày hôm trước ngày nghỉ).");
+                        + approvalCutoff + ").");
             }
 
             // B3: tìm thông tin nhân viên của Manager
@@ -792,8 +814,10 @@ public class LeaveRequestService {
         boolean inReminderWindow = !currentTime.isBefore(reminderStartTime)
                 && currentTime.isBefore(cutoffTime);
 
+        // Đơn có hạn duyệt tối nay khi: LeaveDate = tomorrow HOẶC SubmittedDate = today - APPROVAL_SLA_DAYS
+        LocalDate remindSubmittedDate = today.minusDays(APPROVAL_SLA_DAYS);
         if (inReminderWindow) {
-            List<LeaveRequest> remindList = leaveRequestDAO.findPendingNeedingReminder(tomorrow);
+            List<LeaveRequest> remindList = leaveRequestDAO.findPendingNeedingReminder(tomorrow, remindSubmittedDate);
             if (!remindList.isEmpty()) {
                 try (Connection conn = DBContext.getConnection()) {
                     conn.setAutoCommit(false);
@@ -811,7 +835,7 @@ public class LeaveRequestService {
                         if (remindedCount > 0) {
                             String notifTitle = "Nhắc duyệt đơn nghỉ phép";
                             String notifContent = "Có " + remindedCount
-                                    + " đơn nghỉ phép ngày mai (" + tomorrow + ") cần duyệt trước " + cutoffTime + ".";
+                                    + " đơn nghỉ phép đến hạn cần duyệt trước " + cutoffTime + " hôm nay.";
                             notificationService.notifyRoleInTransaction(conn, Role.MANAGER, notifTitle, notifContent);
                         }
 
@@ -825,8 +849,10 @@ public class LeaveRequestService {
         }
 
         // B3: tự động từ chối các đơn Pending đã quá mốc P-20
-        LocalDate maxOverdue = !currentTime.isBefore(cutoffTime) ? tomorrow : today;
-        List<LeaveRequest> overdueList = leaveRequestDAO.findPendingOverdueRequests(maxOverdue);
+        LocalDate maxOverdueLeaveDate = !currentTime.isBefore(cutoffTime) ? tomorrow : today;
+        LocalDate maxOverdueSubmittedDate = maxOverdueLeaveDate.minusDays(1 + APPROVAL_SLA_DAYS);
+        List<LeaveRequest> overdueList = leaveRequestDAO.findPendingOverdueRequests(
+                maxOverdueLeaveDate, maxOverdueSubmittedDate);
         if (!overdueList.isEmpty()) {
             System.out.println("[JOB-07] Tự từ chối " + overdueList.size() + " đơn quá hạn lúc " + now);
         }
