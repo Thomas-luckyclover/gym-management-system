@@ -1,6 +1,7 @@
 package com.gms.dao;
 
 import com.gms.dto.LeaveRequestFilter;
+import com.gms.dto.ShiftStaffingRow;
 import com.gms.entity.LeaveRequest;
 import com.gms.util.DBContext;
 import com.gms.util.SqlUtil;
@@ -868,6 +869,12 @@ public class LeaveRequestDAO {
 
         public boolean isOverdue() { return overdue; }
         public void setOverdue(boolean overdue) { this.overdue = overdue; }
+
+        // Bảng dự báo định biên chi tiết từng ca (màn #27, UC-15)
+        private List<ShiftStaffingRow> staffingRows;
+
+        public List<ShiftStaffingRow> getStaffingRows() { return staffingRows; }
+        public void setStaffingRows(List<ShiftStaffingRow> staffingRows) { this.staffingRows = staffingRows; }
     }
 
     public static class LeaveRequestRow {
