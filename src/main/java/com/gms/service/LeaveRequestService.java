@@ -712,6 +712,11 @@ public class LeaveRequestService {
             }
 
         } catch (SQLException e) {
+            // Lỗi trùng khóa duy nhất (2601/2627): đơn trùng ngày + ca vừa được tạo (bấm nộp 2 lần)
+            if (e.getErrorCode() == 2601 || e.getErrorCode() == 2627) {
+                return ServiceResult.fail(
+                        "Bạn đã có đơn nghỉ trùng ngày và ca này đang chờ duyệt hoặc đã được duyệt.");
+            }
             e.printStackTrace();
             return ServiceResult.fail(Messages.MSG04_SYSTEM_BUSY);
         }
