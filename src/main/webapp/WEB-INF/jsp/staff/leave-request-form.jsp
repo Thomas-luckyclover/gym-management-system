@@ -63,7 +63,7 @@
               <i class="fa-solid fa-circle-exclamation" aria-hidden="true"></i>
               <c:out value="${submitError}" />
             </div>
-            <c:if test="${not isReceptionist and submitError.contains('buổi')}">
+            <c:if test="${not isReceptionist and blockedBySessions}">
               <a class="btn btn-sm btn-outline" href="${pageContext.request.contextPath}/pt/dashboard">
                 Mở lịch dạy để xử lý (BF-08) →
               </a>
