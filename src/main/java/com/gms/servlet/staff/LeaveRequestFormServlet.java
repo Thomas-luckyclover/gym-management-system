@@ -1,5 +1,6 @@
 package com.gms.servlet.staff;
 
+import com.gms.constant.Messages;
 import com.gms.constant.SessionKey;
 import com.gms.dto.ServiceResult;
 import com.gms.dto.StaffLeaveFormView;
@@ -118,6 +119,13 @@ public class LeaveRequestFormServlet extends HttpServlet {
             }
 
             request.setAttribute("submitError", submitResult.getMessage());
+
+            // Cờ riêng cho JSP (hiện nút "Mở lịch dạy") thay vì so khớp chữ trong câu lỗi
+            String sessionsMsgPrefix = Messages.MSG78_LEAVE_BLOCKED_BY_SESSIONS.substring(
+                    0, Messages.MSG78_LEAVE_BLOCKED_BY_SESSIONS.indexOf("%d"));
+            boolean blockedBySessions = submitResult.getMessage() != null
+                    && submitResult.getMessage().startsWith(sessionsMsgPrefix);
+            request.setAttribute("blockedBySessions", blockedBySessions);
             request.setAttribute("fieldErrors", submitResult.getFieldErrors());
             request.setAttribute("paramLeaveType", leaveTypeStr);
             request.setAttribute("paramLeaveDate", leaveDateStr);
