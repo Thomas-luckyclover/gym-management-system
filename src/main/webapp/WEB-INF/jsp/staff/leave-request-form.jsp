@@ -89,7 +89,8 @@
               </div>
 
               <c:set var="submitActionUrl" value="${pageContext.request.contextPath}${isReceptionist ? '/receptionist/leave-requests' : '/pt/leave-requests'}" />
-              <form action="${submitActionUrl}" method="post" id="leaveForm" novalidate>
+              <form action="${submitActionUrl}" method="post" id="leaveForm" novalidate
+                    data-preview-url="${submitActionUrl}/preview">
                 <input type="hidden" name="csrfToken" value="${csrfToken}">
 
                 <div class="leave-form-grid">
@@ -271,6 +272,6 @@
     </div>
   </div>
 
-  <script src="${pageContext.request.contextPath}/js/pages/staff/leave-request-form.js?v=20261018"></script>
+  <script src="${pageContext.request.contextPath}/js/pages/staff/leave-request-form.js?v=20261019"></script>
 </body>
 </html>
