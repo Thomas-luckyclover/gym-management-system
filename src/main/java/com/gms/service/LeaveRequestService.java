@@ -179,13 +179,19 @@ public class LeaveRequestService {
         // B1: hạn duyệt = giờ P-20 vào ngày liền trước ngày nghỉ
         LocalDateTime approvalDeadline = request.getLeaveDate().minusDays(1).atTime(approvalTime);
 
-        // B2: đơn đã xử lý không cần đếm ngược; đơn Pending thì tính số phút còn lại
+        // B2: đơn đã xử lý không cần đếm ngược; đơn Pending thì xét đã quá hạn chưa
         String countdownText = "";
         boolean isUrgent = false;
+        boolean isOverdue = false;
         if (request.isPending()) {
-            long minutesLeft = Duration.between(now, approvalDeadline).toMinutes();
-            countdownText = formatCountdown(minutesLeft);
-            isUrgent = minutesLeft < URGENT_WITHIN_MINUTES;
+            if (!now.isBefore(approvalDeadline)) {
+                isOverdue = true;
+                countdownText = "Đã quá hạn duyệt";
+            } else {
+                long minutesLeft = Duration.between(now, approvalDeadline).toMinutes();
+                countdownText = formatCountdown(minutesLeft);
+                isUrgent = minutesLeft < URGENT_WITHIN_MINUTES;
+            }
         }
 
         // B3: tự từ chối = Rejected mà không có người duyệt (CBR-85)
@@ -211,7 +217,8 @@ public class LeaveRequestService {
                 row.getReviewerName(),
                 approvalDeadline,
                 countdownText,
-                isUrgent);
+                isUrgent,
+                isOverdue);
     }
 
     /** Đổi số phút còn lại thành chữ hiển thị; số âm nghĩa là đã quá hạn duyệt. */

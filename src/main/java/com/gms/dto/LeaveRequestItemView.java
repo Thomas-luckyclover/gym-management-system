@@ -68,6 +68,9 @@ public class LeaveRequestItemView {
     // Service: true khi đơn Pending và còn dưới ngưỡng URGENT_WITHIN_MINUTES đến hạn duyệt.
     private final boolean urgent;
 
+    // Service: true khi đơn Pending đã quá hạn duyệt P-20 (JSP khóa nút Xử lý, CBR-85).
+    private final boolean overdue;
+
     public LeaveRequestItemView(
             int leaveRequestId,
             int employeeId,
@@ -87,7 +90,8 @@ public class LeaveRequestItemView {
             String reviewerName,
             LocalDateTime approvalDeadline,
             String deadlineCountdownText,
-            boolean urgent
+            boolean urgent,
+            boolean overdue
     ) {
         this.leaveRequestId = leaveRequestId;
         this.employeeId = employeeId;
@@ -108,6 +112,7 @@ public class LeaveRequestItemView {
         this.approvalDeadline = approvalDeadline;
         this.deadlineCountdownText = deadlineCountdownText;
         this.urgent = urgent;
+        this.overdue = overdue;
     }
 
     public int getLeaveRequestId() {
@@ -184,5 +189,9 @@ public class LeaveRequestItemView {
 
     public boolean isUrgent() {
         return urgent;
+    }
+
+    public boolean isOverdue() {
+        return overdue;
     }
 }
