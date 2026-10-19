@@ -442,7 +442,7 @@ public class LeaveRequestService {
                     // B4.0: Nếu nhân viên là PT, kiểm tra lại xem có phát sinh buổi dạy Scheduled trùng ca không (CBR-83)
                     if ("PT".equalsIgnoreCase(position)) {
                         int scheduledCount = leaveRequestDAO.countScheduledSessions(
-                                request.getEmployeeId(), request.getLeaveDate(), shiftType);
+                                conn, request.getEmployeeId(), request.getLeaveDate(), shiftType);
                         if (scheduledCount > 0) {
                             conn.rollback();
                             return ServiceResult.fail(String.format(
@@ -504,7 +504,7 @@ public class LeaveRequestService {
                     conn.commit();
                     return ServiceResult.ok(null);
 
-                } catch (Exception e) {
+                } catch (SQLException | RuntimeException e) {
                     conn.rollback(); // Hoàn tác nếu có lỗi
                     throw e;
                 }
@@ -604,7 +604,7 @@ public class LeaveRequestService {
                     conn.commit();
                     return ServiceResult.ok(null);
 
-                } catch (Exception e) {
+                } catch (SQLException | RuntimeException e) {
                     conn.rollback();
                     throw e;
                 }
@@ -848,7 +848,7 @@ public class LeaveRequestService {
 
                     conn.commit();
                     return ServiceResult.ok(newLeaveRequestId);
-                } catch (Exception e) {
+                } catch (SQLException | RuntimeException e) {
                     conn.rollback();
                     throw e;
                 }
@@ -910,7 +910,7 @@ public class LeaveRequestService {
                     conn.commit();
                     return ServiceResult.ok(null);
 
-                } catch (Exception e) {
+                } catch (SQLException | RuntimeException e) {
                     conn.rollback();
                     throw e;
                 }
