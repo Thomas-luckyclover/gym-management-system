@@ -120,17 +120,16 @@
             </div>
           </c:if>
 
-          <%-- Đơn Pending nhưng đã quá P-20: chỉ báo, không cho thao tác (CBR-85) --%>
+          <%-- Đơn Pending đã quá hạn duyệt: hiện cảnh báo nhắc nhở, Manager vẫn có thể xem xét duyệt/từ chối --%>
           <c:if test="${item.leaveRequest.pending and item.overdue}">
-            <div class="alert-banner danger" style="margin-bottom:var(--space-5)">
-              <i class="fa-solid fa-clock" aria-hidden="true"></i>
-              Đơn đã quá hạn duyệt (${gms:formatDateTime(item.approvalDeadline)}).
-              Hệ thống sẽ tự từ chối trong vòng 1 phút.
+            <div class="alert-banner warning" style="margin-bottom:var(--space-5);background:var(--color-warning-tint, #fffbeb);border:1px solid var(--color-warning, #f59e0b);color:var(--color-warning-ink, #92400e);padding:var(--space-3) var(--space-4);border-radius:var(--radius-md);display:flex;align-items:center;gap:var(--space-3);">
+              <i class="fa-solid fa-triangle-exclamation" aria-hidden="true"></i>
+              <span>Đơn này đã quá hạn duyệt quy định (${gms:formatDateTime(item.approvalDeadline)}). Bạn vẫn có thể xem xét phê duyệt hoặc từ chối đơn.</span>
             </div>
           </c:if>
 
-          <%-- ===== Đơn Pending còn hạn: hiện dự báo quân số ca trực & 2 card Duyệt / Từ chối ===== --%>
-          <c:if test="${item.leaveRequest.pending and not item.overdue}">
+          <%-- ===== Đơn Pending: hiện dự báo quân số ca trực & 2 card Duyệt / Từ chối ===== --%>
+          <c:if test="${item.leaveRequest.pending}">
 
             <%-- Khung thông tin định biên nhân sự dự kiến nếu duyệt đơn này --%>
             <c:if test="${item.minStaffRequired > 0}">
