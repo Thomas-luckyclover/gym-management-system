@@ -84,12 +84,53 @@ public class LeaveRequestService {
      */
     public ServiceResult<PageResult<LeaveRequestItemView>> getManagerPage(
             String keyword, String status, int page, int pageSize) {
+        return getManagerPage(keyword, status, null, null, null, null, page, pageSize);
+    }
+
+    /**
+     * Lấy một trang đơn nghỉ phép cho màn danh sách của Manager với bộ lọc mở rộng (màn #26, UC-15, BF-05).
+     *
+     * @param keyword     từ khóa tên nhân viên từ URL, có thể null/rỗng
+     * @param status      tab trạng thái từ URL (Pending, Approved, Rejected, All)
+     * @param position    vị trí nhân viên (PT, Receptionist), có thể null/rỗng
+     * @param leaveType   loại nghỉ phép (Annual, Sick, Unpaid), có thể null/rỗng
+     * @param fromDateStr ngày nghỉ từ (YYYY-MM-DD), có thể null/rỗng
+     * @param toDateStr   ngày nghỉ đến (YYYY-MM-DD), có thể null/rỗng
+     * @param page        số trang, bắt đầu từ 1
+     * @param pageSize    số dòng mỗi trang
+     * @return trang các dòng đã tính hạn duyệt và đếm ngược, hoặc thông báo lỗi hệ thống
+     */
+    public ServiceResult<PageResult<LeaveRequestItemView>> getManagerPage(
+            String keyword, String status, String position, String leaveType,
+            String fromDateStr, String toDateStr, int page, int pageSize) {
 
         try {
             // B1: chuẩn hóa tham số URL thành bộ lọc hợp lệ
             String trimmedKeyword = keyword == null ? "" : keyword.trim();
+            String trimmedPosition = (position == null || position.isBlank() || "All".equalsIgnoreCase(position))
+                    ? null : position.trim();
+            LeaveRequest.LeaveType parsedLeaveType = (leaveType == null || leaveType.isBlank() || "All".equalsIgnoreCase(leaveType))
+                    ? null : LeaveRequest.LeaveType.fromDbValue(leaveType.trim());
+
+            LocalDate parsedFromDate = null;
+            if (fromDateStr != null && !fromDateStr.isBlank()) {
+                try {
+                    parsedFromDate = LocalDate.parse(fromDateStr.trim());
+                } catch (Exception ignored) {
+                }
+            }
+
+            LocalDate parsedToDate = null;
+            if (toDateStr != null && !toDateStr.isBlank()) {
+                try {
+                    parsedToDate = LocalDate.parse(toDateStr.trim());
+                } catch (Exception ignored) {
+                }
+            }
+
             LeaveRequestFilter filter = new LeaveRequestFilter(
-                    parseStatusFilter(status), trimmedKeyword);
+                    parseStatusFilter(status), trimmedKeyword,
+                    trimmedPosition, parsedLeaveType, parsedFromDate, parsedToDate);
 
             // B2: đếm tổng và lấy đúng một trang (DAO cắt bằng OFFSET/FETCH)
             int totalItems = leaveRequestDAO.countByFilter(filter);
