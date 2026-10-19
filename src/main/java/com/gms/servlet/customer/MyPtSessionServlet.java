@@ -3,8 +3,9 @@ package com.gms.servlet.customer;
 import com.gms.constant.SessionKey;
 import com.gms.dto.CustomerDashboardView;
 import com.gms.dto.MyPtPackageView;
-import com.gms.dto.MyPtSessionPage;
+import com.gms.dto.MonthView;
 import com.gms.dto.ServiceResult;
+import com.gms.dto.TimetableView;
 import com.gms.service.CustomerDashboardService;
 import com.gms.service.MyPtSessionService;
 import com.gms.util.DateTimeUtil;
@@ -16,17 +17,18 @@ import jakarta.servlet.http.HttpServletRequest;
 import jakarta.servlet.http.HttpServletResponse;
 import jakarta.servlet.http.HttpSession;
 import java.io.IOException;
+import java.time.LocalDate;
 import java.time.LocalDateTime;
 import java.util.List;
 
 /**
  * Màn "Lịch tập của tôi" — URL: /customer/pt-sessions
  *
- *   GET (xem trang) → doGet: nạp dữ liệu các khối rồi forward sang JSP.
+ *   GET ?view=week|month&date=yyyy-MM-dd → doGet: nạp thời khóa biểu rồi forward sang JSP.
  *   Màn CHỈ XEM. [CHOT 19/10] Khách không tự hủy / tự đổi buổi nữa:
  *   muốn hủy hoặc đổi thì nhắn PT qua Zalo, PT cập nhật lịch giúp (UC-35).
  *
- * TÌM NHANH: [GOI-PT] [SAP-TOI] [LICH-SU] [PHAN-TRANG] [QUYEN]
+ * TÌM NHANH: [QUYEN] [TKB] [GOI-PT]
  */
 @WebServlet("/customer/pt-sessions")
 public class MyPtSessionServlet extends HttpServlet {
@@ -50,7 +52,7 @@ public class MyPtSessionServlet extends HttpServlet {
         // B2: nạp dữ liệu cho từng khối của trang
         loadHeader(request, accountId);
         loadPackages(request, accountId);
-        loadSessionBlocks(request, accountId);
+        loadTimetable(request, accountId);
 
         // B3: chuyển sang JSP
         request.setAttribute("activeSidebar", "pt-sessions");
@@ -78,26 +80,33 @@ public class MyPtSessionServlet extends HttpServlet {
         }
     }
 
-    /** [SAP-TOI][LICH-SU][PHAN-TRANG] Khối "Sắp tới" và "Lịch sử": mỗi khối 1 trang riêng. */
-    private void loadSessionBlocks(HttpServletRequest request, int accountId) {
-        // Lấy giờ ĐÚNG 1 LẦN để 2 khối chia buổi theo cùng 1 thời điểm (không buổi nào lọt giữa 2 khối)
-        LocalDateTime now = DateTimeUtil.now();
-        request.setAttribute("todayDate", now.toLocalDate());
-
-        int upcomingPageNumber = sessionService.parsePageNumber(request.getParameter("upcomingPage"));
-        ServiceResult<MyPtSessionPage> upcoming = sessionService.getUpcomingPage(accountId, now, upcomingPageNumber);
-        if (upcoming.isSuccess()) {
-            request.setAttribute("upcomingPage", upcoming.getData());
-        } else {
-            request.setAttribute("upcomingSessionsError", upcoming.getMessage());
+    /**
+     * [TKB] Thời khóa biểu: ?view=week|month (mặc định week), ?date=yyyy-MM-dd (ngày bất kỳ trong tuần/tháng muốn xem).
+     * date sai định dạng hoặc thiếu → hôm nay (không báo lỗi, không trả 500).
+     */
+    private void loadTimetable(HttpServletRequest request, int accountId) {
+        LocalDateTime now = DateTimeUtil.now();   // lấy giờ 1 LẦN cho cả request
+        LocalDate date = DateTimeUtil.parseHtmlDate(request.getParameter("date"));
+        if (date == null) {
+            date = now.toLocalDate();
         }
+        boolean monthView = "month".equals(request.getParameter("view"));
+        request.setAttribute("view", monthView ? "month" : "week");
 
-        int historyPageNumber = sessionService.parsePageNumber(request.getParameter("historyPage"));
-        ServiceResult<MyPtSessionPage> history = sessionService.getHistoryPage(accountId, now, historyPageNumber);
-        if (history.isSuccess()) {
-            request.setAttribute("historyPage", history.getData());
+        if (monthView) {
+            ServiceResult<MonthView> result = sessionService.getMonth(accountId, date, now);
+            if (result.isSuccess()) {
+                request.setAttribute("month", result.getData());
+            } else {
+                request.setAttribute("timetableError", result.getMessage());
+            }
         } else {
-            request.setAttribute("historySessionsError", history.getMessage());
+            ServiceResult<TimetableView> result = sessionService.getWeek(accountId, date, now);
+            if (result.isSuccess()) {
+                request.setAttribute("timetable", result.getData());
+            } else {
+                request.setAttribute("timetableError", result.getMessage());
+            }
         }
     }
 

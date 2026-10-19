@@ -5,12 +5,11 @@ import java.time.LocalDateTime;
 import java.time.LocalTime;
 
 /**
- * [DTO-BUOI] MỘT BUỔI TẬP PT hiển thị trên màn "Lịch tập của tôi".
- * Dùng chung cho khối [SAP-TOI] và khối [LICH-SU].
+ * [DTO-BUOI] MỘT BUỔI TẬP PT hiển thị trên thời khóa biểu "Lịch tập của tôi".
  *
  * Ai điền field nào?
- *   - DAO     : phần 1 (lấy thẳng từ DB)  → MyPtSessionDAO.readSessionRow
- *   - Service : phần 2, 3a, 3b (tính thêm) → MyPtSessionService
+ *   - DAO     : phần 1 (lấy thẳng từ DB)  → MyPtSessionDAO.findSessionsInRange
+ *   - Service : phần 2 (tính thêm)        → MyPtSessionService.fillDisplay
  */
 public class MyPtSessionRow {
 
@@ -45,29 +44,20 @@ public class MyPtSessionRow {
     private String holderName;           // họ tên người đứng tên gói
     private String partnerFullName;      // họ tên người đi kèm (gói đôi), null nếu không có
 
+    private String ptName;               // tên PT
+    private String ptPhone;              // [SDT-PT] số điện thoại PT (Persons.Phone)
+
     // =====================================================================
-    // 2. SERVICE ĐIỀN — dùng chung 2 khối
+    // 2. SERVICE ĐIỀN — tính thêm để hiển thị
     // =====================================================================
 
-    private String ptName;               // tên PT
-    private String ptPhone;              // [SDT-PT] số điện thoại PT (chỉ điền ở khối Sắp tới)
     private String partnerName;          // tên "người tập cùng" (gói đôi), null nếu không có
     private String typeLabel;            // "PT cá nhân" | "PT đôi" | "Buổi lẻ"
 
-    // =====================================================================
-    // 3a. SERVICE ĐIỀN — chỉ khối [SAP-TOI]
-    // =====================================================================
-
-    private boolean inProgress;          // true = buổi đã bắt đầu, đang diễn ra
-    private String warning;              // [CANH-BAO-GYM] câu cảnh báo vàng
-
-    // =====================================================================
-    // 3b. SERVICE ĐIỀN — chỉ khối [LICH-SU]
-    // =====================================================================
-
-    private String statusLabel;          // "Đã check-in" | "Vắng" | "Đã hủy" | "Kết quả đang cập nhật"
-    private String badgeClass;           // class màu badge
-    private String explanation;          // câu giải thích kết quả
+    private String statusKey;            // [TKB] today | upcoming | warn | pending | checkedIn | missed | cancelled (JSP chọn màu theo key)
+    private String statusLabel;          // "Hôm nay" | "Sắp tới" | "Cần chú ý" | "Đang cập nhật" | "Đã check-in" | "Vắng" | "Đã hủy"
+    private String explanation;          // câu giải thích trạng thái / lý do (hiện ở thanh chi tiết)
+    private String zaloUrl;              // [TKB] https://zalo.me/<SĐT PT>, null nếu PT chưa có SĐT
 
     // =====================================================================
     // HÀM TIỆN ÍCH
@@ -162,17 +152,14 @@ public class MyPtSessionRow {
     public String getTypeLabel() { return typeLabel; }
     public void setTypeLabel(String typeLabel) { this.typeLabel = typeLabel; }
 
-    public boolean isInProgress() { return inProgress; }
-    public void setInProgress(boolean inProgress) { this.inProgress = inProgress; }
+    public String getStatusKey() { return statusKey; }
+    public void setStatusKey(String statusKey) { this.statusKey = statusKey; }
 
-    public String getWarning() { return warning; }
-    public void setWarning(String warning) { this.warning = warning; }
+    public String getZaloUrl() { return zaloUrl; }
+    public void setZaloUrl(String zaloUrl) { this.zaloUrl = zaloUrl; }
 
     public String getStatusLabel() { return statusLabel; }
     public void setStatusLabel(String statusLabel) { this.statusLabel = statusLabel; }
-
-    public String getBadgeClass() { return badgeClass; }
-    public void setBadgeClass(String badgeClass) { this.badgeClass = badgeClass; }
 
     public String getExplanation() { return explanation; }
     public void setExplanation(String explanation) { this.explanation = explanation; }
