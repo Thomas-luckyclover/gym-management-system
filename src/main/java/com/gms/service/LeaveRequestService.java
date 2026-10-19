@@ -319,6 +319,9 @@ public class LeaveRequestService {
             try (Connection conn = DBContext.getConnection()) {
                 conn.setAutoCommit(false); // Bắt đầu transaction
 
+                // B4.(-1): khóa các đơn cùng ngày nghỉ để hai lượt duyệt cùng ngày phải chạy lần lượt (BR-14)
+                leaveRequestDAO.lockLeaveDate(conn, request.getLeaveDate());
+
                 try {
                     String position = detail.getPosition();
                     String shiftType = request.getShiftType().getDbValue();
