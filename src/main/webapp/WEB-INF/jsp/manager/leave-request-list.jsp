@@ -211,10 +211,11 @@
                         </td>
 
                         <td>
-                          <a class="btn btn-sm
-                             ${item.status.dbValue == 'Pending' ? 'btn-primary' : 'btn-outline'}"
+                          <%-- Chỉ cho xử lý khi đơn còn Pending và chưa quá hạn P-20 --%>
+                          <c:set var="canProcess" value="${item.status.dbValue == 'Pending' and not item.overdue}" />
+                          <a class="btn btn-sm ${canProcess ? 'btn-primary' : 'btn-outline'}"
                              href="${pageContext.request.contextPath}/manager/leave-requests/review?id=${item.leaveRequestId}">
-                            ${item.status.dbValue == 'Pending' ? 'Xử lý' : 'Xem'}
+                            ${canProcess ? 'Xử lý' : 'Xem'}
                           </a>
                         </td>
 
