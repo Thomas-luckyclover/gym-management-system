@@ -46,12 +46,10 @@ public class MyPtSessionService {
 
     private static final String[] DAY_NAMES = {"Thứ 2", "Thứ 3", "Thứ 4", "Thứ 5", "Thứ 6", "Thứ 7", "Chủ nhật"};
 
-    /** 5 khung giờ = 5 hàng của thời khóa biểu (xếp theo giờ BẮT ĐẦU, xem bandOf). */
+    /** 3 khung giờ = 3 hàng của thời khóa biểu (xếp theo giờ BẮT ĐẦU, xem bandOf). */
     private static final String[][] BANDS = {
-        {"Sáng sớm", "06:00 – 09:00"},
-        {"Sáng", "09:00 – 12:00"},
-        {"Trưa", "12:00 – 15:00"},
-        {"Chiều", "15:00 – 18:00"},
+        {"Sáng", "06:00 – 12:00"},
+        {"Chiều", "12:00 – 18:00"},
         {"Tối", "18:00 – 22:00"}
     };
 
@@ -88,7 +86,7 @@ public class MyPtSessionService {
     // XEM THEO TUẦN
     // =====================================================================
 
-    /** Thời khóa biểu tuần chứa ngày anyDay: 7 ngày × 5 khung giờ. */
+    /** Thời khóa biểu tuần chứa ngày anyDay: 7 ngày × 3 khung giờ. */
     public ServiceResult<TimetableView> getWeek(int accountId, LocalDate anyDay, LocalDateTime now) {
         try {
             // B1: tìm khách
@@ -103,7 +101,7 @@ public class MyPtSessionService {
             List<MyPtSessionRow> rows = sessionDAO.findSessionsInRange(customerId, monday, sunday);
             fillDisplay(rows, customerId, now);
 
-            // B3: dựng khung rỗng 7 ngày × 5 khung giờ
+            // B3: dựng khung rỗng 7 ngày × 3 khung giờ
             LocalDate today = now.toLocalDate();
             TimetableView view = new TimetableView(monday, today);
             for (int i = 0; i < 7; i++) {
@@ -146,8 +144,8 @@ public class MyPtSessionService {
             LocalDate gridStart = weekStartOf(month.atDay(1));
             LocalDate gridEnd = weekStartOf(month.atEndOfMonth()).plusDays(6);
 
-            // B3: lấy buổi (cùng hàm DAO với xem tuần), điền nhãn + trạng thái
-            List<MyPtSessionRow> rows = sessionDAO.findSessionsInRange(customerId, gridStart, gridEnd);
+            // B3: chỉ lấy buổi trong tháng đang xem; ô đệm đầu/cuối tuần để trống.
+            List<MyPtSessionRow> rows = sessionDAO.findSessionsInRange(customerId, month.atDay(1), month.atEndOfMonth());
             fillDisplay(rows, customerId, now);
 
             // B4: dựng lưới, nhớ ô theo ngày
@@ -165,12 +163,10 @@ public class MyPtSessionService {
                 view.getWeeks().add(week);
             }
 
-            // B5: thả buổi vào ô; chỉ đếm buổi thuộc tháng đang xem
+            // B5: thả và đếm các buổi của đúng tháng đã chọn.
             for (MyPtSessionRow row : rows) {
                 cellByDate.get(row.getSlotDate()).getSessions().add(row);
-                if (YearMonth.from(row.getSlotDate()).equals(month)) {
-                    countInto(view, row.getStatusKey());
-                }
+                countInto(view, row.getStatusKey());
             }
             return ServiceResult.ok(view);
 
@@ -219,6 +215,8 @@ public class MyPtSessionService {
             }
 
             // B4: cảnh báo chỉ cho buổi CHƯA KẾT THÚC (ngày phòng nghỉ ưu tiên trước)
+            // Xét riêng row.slotDate của mỗi buổi, không dùng cảnh báo ngày trước cho ngày sau.
+            // Ví dụ seed: 20/10 phòng nghỉ → warn; 21/10 mở cửa và quyền vào gym hợp lệ → upcoming.
             String warning = null;
             if (isNotEnded(row, now)) {
                 warning = closedDays.contains(row.getSlotDate())
@@ -242,6 +240,7 @@ public class MyPtSessionService {
      *   Scheduled đã kết thúc → pending | CheckedIn / Missed / Cancelled → giữ nguyên + lý do
      */
     static void applyStatus(MyPtSessionRow row, LocalDateTime now, String warning) {
+        row.setEnded(!isNotEnded(row, now));
         boolean couple = row.isCouple();
 
         switch (row.getStatus()) {
@@ -369,27 +368,28 @@ public class MyPtSessionService {
     // HÀM NHỎ — không đụng DB, có unit test (MyPtSessionServiceTest)
     // =====================================================================
 
+    /** Ngày URL sai hoặc ngoài khoảng an toàn cho SQL và điều hướng tuần/tháng → hôm nay. */
+    public static LocalDate parseViewDate(String value, LocalDate today) {
+        // B1: đọc định dạng yyyy-MM-dd; không để ngày cực trị làm tràn phép cộng tuần/tháng.
+        LocalDate date = DateTimeUtil.parseHtmlDate(value);
+        if (date == null || date.getYear() < 1754 || date.getYear() > 9998) {
+            return today;
+        }
+        // B2: trả ngày hợp lệ; Service tự tìm tuần hoặc tháng chứa ngày này.
+        return date;
+    }
+
     /** Ngày bất kỳ → Thứ 2 của tuần đó. Vd 22/10/2026 → 19/10; Chủ nhật 25/10 → 19/10. */
     static LocalDate weekStartOf(LocalDate date) {
         return date.with(DayOfWeek.MONDAY);
     }
 
-    /** Giờ bắt đầu → khung giờ: <9h Sáng sớm(0) | <12h Sáng(1) | <15h Trưa(2) | <18h Chiều(3) | còn lại Tối(4). */
+    /** Xếp theo giờ bắt đầu: trước 12h là Sáng, trước 18h là Chiều, còn lại là Tối. */
     static int bandOf(LocalTime startTime) {
-        int hour = startTime.getHour();
-        if (hour < 9) {
+        if (startTime.getHour() < 12) {
             return 0;
         }
-        if (hour < 12) {
-            return 1;
-        }
-        if (hour < 15) {
-            return 2;
-        }
-        if (hour < 18) {
-            return 3;
-        }
-        return 4;
+        return startTime.getHour() < 18 ? 1 : 2;
     }
 
     /** SĐT → link Zalo. "0912 345 678" / "+84912345678" → https://zalo.me/0912345678. Không có số → null. */

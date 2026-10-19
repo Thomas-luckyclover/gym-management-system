@@ -1,0 +1,55 @@
+<%@ page pageEncoding="UTF-8" %>
+<%-- ===== Thanh đầu trang dùng chung: scheduleTitle do JSP cha đặt; dashboard (CustomerDashboardView) do Servlet lấy từ Service ===== --%>
+<header class="topbar">
+    <div class="tb-left">
+        <h1 class="tb-title">
+            <c:out value="${scheduleTitle}" />
+        </h1>
+        <%-- Nút i cạnh tiêu đề: common.js điều khiển hint .pt-info; activeSidebar chọn nội dung đúng màn. --%>
+        <span class="pt-info">
+            <button type="button" class="pt-info-trigger" aria-label="Hướng dẫn ${scheduleTitle}" aria-describedby="schedule-page-help"><span aria-hidden="true">i</span></button>
+            <span id="schedule-page-help" class="pt-info-popover" role="tooltip">
+                <c:choose>
+                    <c:when test="${activeSidebar eq 'bookings'}">Chọn gói bên trái để xem các buổi. Các ô số liệu lọc bảng theo trạng thái. “Còn lại” gồm Hôm nay, Sắp tới và Cần chú ý; không gồm Đang cập nhật.</c:when>
+                    <c:otherwise>Lịch chia thành Sáng, Chiều, Tối theo giờ bắt đầu. Bấm một buổi để xem chi tiết; bấm ngoài, nút Đóng hoặc Escape để đóng. Cần đổi/hủy buổi, hãy liên hệ PT.</c:otherwise>
+                </c:choose>
+            </span>
+        </span>
+        <%-- KẾT THÚC hint hướng dẫn cạnh tiêu đề. --%>
+    </div>
+    <div class="top-right">
+        <%-- Trên Lịch tập hiện “Đặt buổi lẻ”; fragment dùng ở màn Gói của tôi thì hiện link quay về Lịch tập. --%>
+        <c:choose>
+            <c:when test="${activeSidebar eq 'bookings'}"><a class="btn btn-outline btn-sm" href="${pageContext.request.contextPath}/customer/pt-sessions">Lịch tập</a></c:when>
+            <c:otherwise><a class="btn btn-primary btn-sm" href="${pageContext.request.contextPath}/customer/book-session">Đặt buổi lẻ</a></c:otherwise>
+        </c:choose>
+        <%-- KẾT THÚC nút điều hướng Đặt buổi lẻ / Lịch tập. --%>
+        <%-- Công tắc Sáng/Tối: data-theme-toggle nối với xử lý theme dùng chung trong common.js. --%>
+        <button type="button" class="theme-toggle" data-theme-toggle aria-pressed="false" aria-label="Chuyển sang nền sáng">
+            <span class="theme-toggle__track" aria-hidden="true">
+                <span class="theme-toggle__knob">
+                </span>
+            </span>
+            <span class="theme-toggle__label">Tối</span>
+        </button>
+        <%-- KẾT THÚC công tắc Sáng/Tối. --%>
+        <%-- Góc phải: chữ viết tắt, tên và mã khách; chỉ hiện nếu đã lấy được dashboard. --%>
+        <c:if test="${not empty dashboard}">
+            <a class="tb-user" href="${pageContext.request.contextPath}/account">
+                <span class="avatar">
+                    <c:out value="${dashboard.initials}" />
+                </span>
+                <span class="tb-user-text">
+                    <b>
+                        <c:out value="${dashboard.fullName}" />
+                    </b>
+                    <span>
+                        <c:out value="${dashboard.customerCode}" />
+                    </span>
+                </span>
+            </a>
+        </c:if>
+        <%-- KẾT THÚC thông tin tài khoản góc phải. --%>
+    </div>
+</header>
+<%-- ===== KẾT THÚC thanh đầu trang dùng chung ===== --%>

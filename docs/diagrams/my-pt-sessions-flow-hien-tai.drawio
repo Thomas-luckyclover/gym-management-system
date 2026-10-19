@@ -1,0 +1,1165 @@
+<?xml version='1.0' encoding='utf-8'?>
+<mxfile host="Electron" agent="Codex" pages="11">
+  <diagram id="gms-current-0" name="0. Mục lục · cách học">
+    <mxGraphModel dx="1600" dy="1000" grid="1" gridSize="10" guides="1" tooltips="1" connect="1" arrows="1" fold="1" page="0" pageScale="1" pageWidth="2260" pageHeight="1530" math="0" shadow="0">
+      <root>
+        <mxCell id="0" />
+        <mxCell id="1" parent="0" />
+        <mxCell id="title" value="MY PT SESSION · LỊCH TẬP · Flow hàm → hàm" style="text;html=1;whiteSpace=wrap;align=left;verticalAlign=top;fillColor=none;strokeColor=none;fontFamily=Arial;fontSize=25;fontStyle=1;" vertex="1" parent="1">
+          <mxGeometry as="geometry" x="30" y="20" width="2200" height="40" />
+        </mxCell>
+        <mxCell id="sub" value="Chỉ màn /customer/pt-sessions. Nguồn: working tree trên HEAD 564f252, ngày 19/10/2026 (có thay đổi chưa commit). Giữ cách chia tầng của mẫu, theo code mới." style="text;html=1;whiteSpace=wrap;align=left;verticalAlign=top;fillColor=none;strokeColor=none;fontFamily=Arial;fontSize=15;" vertex="1" parent="1">
+          <mxGeometry as="geometry" x="30" y="70" width="2200" height="52" />
+        </mxCell>
+        <mxCell id="idx1" value="&lt;b&gt;1. GET và quyền truy cập&lt;/b&gt;" style="rounded=1;whiteSpace=wrap;html=1;align=left;spacing=12;fontSize=17;fillColor=#dae8fc;strokeColor=#6c8ebf;" vertex="1" parent="1" link="data:page/id,gms-current-1">
+          <mxGeometry as="geometry" x="35" y="145" width="390" height="70" />
+        </mxCell>
+        <mxCell id="idxdesc1" value="Mở /customer/pt-sessions. Hai Filter được nhóm theo trách nhiệm; sơ đồ không ấn định thứ tự chạy của @WebFilter." style="rounded=1;whiteSpace=wrap;html=1;align=left;spacing=12;fontSize=16;fillColor=#ffffff;strokeColor=#cccccc;" vertex="1" parent="1">
+          <mxGeometry as="geometry" x="445" y="145" width="1770" height="70" />
+        </mxCell>
+        <mxCell id="idx2" value="&lt;b&gt;2. Dựng lịch tuần&lt;/b&gt;" style="rounded=1;whiteSpace=wrap;html=1;align=left;spacing=12;fontSize=17;fillColor=#dae8fc;strokeColor=#6c8ebf;" vertex="1" parent="1" link="data:page/id,gms-current-2">
+          <mxGeometry as="geometry" x="35" y="250" width="390" height="70" />
+        </mxCell>
+        <mxCell id="idxdesc2" value="MyPtSessionService.getWeek(accountId, anyDay, now)" style="rounded=1;whiteSpace=wrap;html=1;align=left;spacing=12;fontSize=16;fillColor=#ffffff;strokeColor=#cccccc;" vertex="1" parent="1">
+          <mxGeometry as="geometry" x="445" y="250" width="1770" height="70" />
+        </mxCell>
+        <mxCell id="idx3" value="&lt;b&gt;3. Dựng lịch tháng&lt;/b&gt;" style="rounded=1;whiteSpace=wrap;html=1;align=left;spacing=12;fontSize=17;fillColor=#dae8fc;strokeColor=#6c8ebf;" vertex="1" parent="1" link="data:page/id,gms-current-3">
+          <mxGeometry as="geometry" x="35" y="355" width="390" height="70" />
+        </mxCell>
+        <mxCell id="idxdesc3" value="getMonth(): phân biệt phạm vi lấy buổi với phạm vi khung lịch" style="rounded=1;whiteSpace=wrap;html=1;align=left;spacing=12;fontSize=16;fillColor=#ffffff;strokeColor=#cccccc;" vertex="1" parent="1">
+          <mxGeometry as="geometry" x="445" y="355" width="1770" height="70" />
+        </mxCell>
+        <mxCell id="idx4" value="&lt;b&gt;4. SQL và số thứ tự buổi&lt;/b&gt;" style="rounded=1;whiteSpace=wrap;html=1;align=left;spacing=12;fontSize=17;fillColor=#dae8fc;strokeColor=#6c8ebf;" vertex="1" parent="1" link="data:page/id,gms-current-4">
+          <mxGeometry as="geometry" x="35" y="460" width="390" height="70" />
+        </mxCell>
+        <mxCell id="idxdesc4" value="findSessionsInRange(): SQL lấy đúng buổi của khách trong khoảng ngày và giữ số thứ tự trong cả gói" style="rounded=1;whiteSpace=wrap;html=1;align=left;spacing=12;fontSize=16;fillColor=#ffffff;strokeColor=#cccccc;" vertex="1" parent="1">
+          <mxGeometry as="geometry" x="445" y="460" width="1770" height="70" />
+        </mxCell>
+        <mxCell id="idx5" value="&lt;b&gt;5. Điền dữ liệu hiển thị&lt;/b&gt;" style="rounded=1;whiteSpace=wrap;html=1;align=left;spacing=12;fontSize=17;fillColor=#dae8fc;strokeColor=#6c8ebf;" vertex="1" parent="1" link="data:page/id,gms-current-5">
+          <mxGeometry as="geometry" x="35" y="565" width="390" height="70" />
+        </mxCell>
+        <mxCell id="idxdesc5" value="fillDisplay(rows, myCustomerId, now): chuẩn bị dữ liệu để Lịch tập xuất lên HTML" style="rounded=1;whiteSpace=wrap;html=1;align=left;spacing=12;fontSize=16;fillColor=#ffffff;strokeColor=#cccccc;" vertex="1" parent="1">
+          <mxGeometry as="geometry" x="445" y="565" width="1770" height="70" />
+        </mxCell>
+        <mxCell id="idx6" value="&lt;b&gt;6. Cây quyết định trạng thái&lt;/b&gt;" style="rounded=1;whiteSpace=wrap;html=1;align=left;spacing=12;fontSize=17;fillColor=#dae8fc;strokeColor=#6c8ebf;" vertex="1" parent="1" link="data:page/id,gms-current-6">
+          <mxGeometry as="geometry" x="35" y="670" width="390" height="70" />
+        </mxCell>
+        <mxCell id="idxdesc6" value="applyStatus(): đọc từ trên xuống; Scheduled xét lần lượt, gặp nhánh phù hợp thì dừng" style="rounded=1;whiteSpace=wrap;html=1;align=left;spacing=12;fontSize=16;fillColor=#ffffff;strokeColor=#cccccc;" vertex="1" parent="1">
+          <mxGeometry as="geometry" x="445" y="670" width="1770" height="70" />
+        </mxCell>
+        <mxCell id="idx7" value="&lt;b&gt;7. Cảnh báo quyền vào gym&lt;/b&gt;" style="rounded=1;whiteSpace=wrap;html=1;align=left;spacing=12;fontSize=17;fillColor=#dae8fc;strokeColor=#6c8ebf;" vertex="1" parent="1" link="data:page/id,gms-current-7">
+          <mxGeometry as="geometry" x="35" y="775" width="390" height="70" />
+        </mxCell>
+        <mxCell id="idxdesc7" value="buildGymWarning(): tính quyền của từng người rồi chọn câu nói theo người đang xem" style="rounded=1;whiteSpace=wrap;html=1;align=left;spacing=12;fontSize=16;fillColor=#ffffff;strokeColor=#cccccc;" vertex="1" parent="1">
+          <mxGeometry as="geometry" x="445" y="775" width="1770" height="70" />
+        </mxCell>
+        <mxCell id="idx8" value="&lt;b&gt;8. Chọn ngày và highlight&lt;/b&gt;" style="rounded=1;whiteSpace=wrap;html=1;align=left;spacing=12;fontSize=17;fillColor=#dae8fc;strokeColor=#6c8ebf;" vertex="1" parent="1" link="data:page/id,gms-current-8">
+          <mxGeometry as="geometry" x="35" y="880" width="390" height="70" />
+        </mxCell>
+        <mxCell id="idxdesc8" value="Điều hướng lịch: khi nào gửi GET mới, khi nào chỉ đổi giao diện?" style="rounded=1;whiteSpace=wrap;html=1;align=left;spacing=12;fontSize=16;fillColor=#ffffff;strokeColor=#cccccc;" vertex="1" parent="1">
+          <mxGeometry as="geometry" x="445" y="880" width="1770" height="70" />
+        </mxCell>
+        <mxCell id="idx9" value="&lt;b&gt;9. Chi tiết, Đóng và liên hệ PT&lt;/b&gt;" style="rounded=1;whiteSpace=wrap;html=1;align=left;spacing=12;fontSize=17;fillColor=#dae8fc;strokeColor=#6c8ebf;" vertex="1" parent="1" link="data:page/id,gms-current-9">
+          <mxGeometry as="geometry" x="35" y="985" width="390" height="70" />
+        </mxCell>
+        <mxCell id="idxdesc9" value="Toàn bộ nội dung chi tiết đã có trong HTML; mở dialog không tải lại DB" style="rounded=1;whiteSpace=wrap;html=1;align=left;spacing=12;fontSize=16;fillColor=#ffffff;strokeColor=#cccccc;" vertex="1" parent="1">
+          <mxGeometry as="geometry" x="445" y="985" width="1770" height="70" />
+        </mxCell>
+        <mxCell id="idx10" value="&lt;b&gt;10. Ôn tập MyPTSession&lt;/b&gt;" style="rounded=1;whiteSpace=wrap;html=1;align=left;spacing=12;fontSize=17;fillColor=#dae8fc;strokeColor=#6c8ebf;" vertex="1" parent="1" link="data:page/id,gms-current-10">
+          <mxGeometry as="geometry" x="35" y="1090" width="390" height="70" />
+        </mxCell>
+        <mxCell id="idxdesc10" value="Tự kể được: thao tác người dùng → hàm gọi → dữ liệu → kết quả trên màn hình" style="rounded=1;whiteSpace=wrap;html=1;align=left;spacing=12;fontSize=16;fillColor=#ffffff;strokeColor=#cccccc;" vertex="1" parent="1">
+          <mxGeometry as="geometry" x="445" y="1090" width="1770" height="70" />
+        </mxCell>
+        <mxCell id="read" value="&lt;b&gt;Cách đọc:&lt;/b&gt; Theo số thứ tự và mũi tên. Đen = bước xử lý/gọi hàm; xanh đứt = dữ liệu trả về; đỏ đứt = nhánh bị chặn/lỗi. Cột thể hiện trách nhiệm, không có nghĩa bước nào cũng gọi DB. Bấm tên trang trong mục lục để chuyển trang." style="rounded=1;whiteSpace=wrap;html=1;align=left;spacing=12;fontSize=16;fillColor=#fff2cc;strokeColor=#d6b656;" vertex="1" parent="1">
+          <mxGeometry as="geometry" x="35" y="1260" width="2180" height="80" />
+        </mxCell>
+        <mxCell id="scope" value="&lt;b&gt;Phạm vi:&lt;/b&gt; MyPTSession chỉ xem lịch Tuần/Tháng, chi tiết và liên hệ PT. Không mô tả màn Gói của tôi, đặt buổi lẻ hay JOB-04; các link sang màn khác chỉ được đánh dấu là điểm ra khỏi phạm vi." style="rounded=1;whiteSpace=wrap;html=1;align=left;spacing=12;fontSize=16;fillColor=#f8cecc;strokeColor=#b85450;" vertex="1" parent="1">
+          <mxGeometry as="geometry" x="35" y="1360" width="2180" height="80" />
+        </mxCell>
+      </root>
+    </mxGraphModel>
+  </diagram>
+  <diagram id="gms-current-1" name="1. GET và quyền truy cập">
+    <mxGraphModel dx="1600" dy="1000" grid="1" gridSize="10" guides="1" tooltips="1" connect="1" arrows="1" fold="1" page="0" pageScale="1" pageWidth="2260" pageHeight="1530" math="0" shadow="0">
+      <root>
+        <mxCell id="0" />
+        <mxCell id="1" parent="0" />
+        <mxCell id="title" value="1. GET và quyền truy cập · FLOW HÀM → HÀM" style="text;html=1;whiteSpace=wrap;align=left;verticalAlign=top;fillColor=none;strokeColor=none;fontFamily=Arial;fontSize=25;fontStyle=1;" vertex="1" parent="1">
+          <mxGeometry as="geometry" x="30" y="20" width="2200" height="40" />
+        </mxCell>
+        <mxCell id="sub" value="Mở /customer/pt-sessions. Hai Filter được nhóm theo trách nhiệm; sơ đồ không ấn định thứ tự chạy của @WebFilter." style="text;html=1;whiteSpace=wrap;align=left;verticalAlign=top;fillColor=none;strokeColor=none;fontFamily=Arial;fontSize=15;" vertex="1" parent="1">
+          <mxGeometry as="geometry" x="30" y="70" width="2200" height="52" />
+        </mxCell>
+        <mxCell id="lbg0" value="" style="rounded=0;fillColor=#dae8fc;fillOpacity=18;strokeColor=none;" vertex="1" parent="1">
+          <mxGeometry as="geometry" x="20" y="135" width="360" height="1235" />
+        </mxCell>
+        <mxCell id="lh0" value="&lt;b&gt;JSP / JS · giao diện&lt;/b&gt;" style="rounded=1;html=1;fontSize=15;fillColor=#dae8fc;strokeColor=#6c8ebf;" vertex="1" parent="1">
+          <mxGeometry as="geometry" x="30" y="140" width="340" height="33" />
+        </mxCell>
+        <mxCell id="lbg1" value="" style="rounded=0;fillColor=#fff2cc;fillOpacity=18;strokeColor=none;" vertex="1" parent="1">
+          <mxGeometry as="geometry" x="390" y="135" width="360" height="1235" />
+        </mxCell>
+        <mxCell id="lh1" value="&lt;b&gt;Filter · quyền truy cập&lt;/b&gt;" style="rounded=1;html=1;fontSize=15;fillColor=#fff2cc;strokeColor=#d6b656;" vertex="1" parent="1">
+          <mxGeometry as="geometry" x="400" y="140" width="340" height="33" />
+        </mxCell>
+        <mxCell id="lbg2" value="" style="rounded=0;fillColor=#e1d5e7;fillOpacity=18;strokeColor=none;" vertex="1" parent="1">
+          <mxGeometry as="geometry" x="760" y="135" width="360" height="1235" />
+        </mxCell>
+        <mxCell id="lh2" value="&lt;b&gt;Servlet · nhận request&lt;/b&gt;" style="rounded=1;html=1;fontSize=15;fillColor=#e1d5e7;strokeColor=#9673a6;" vertex="1" parent="1">
+          <mxGeometry as="geometry" x="770" y="140" width="340" height="33" />
+        </mxCell>
+        <mxCell id="lbg3" value="" style="rounded=0;fillColor=#d5e8d4;fillOpacity=18;strokeColor=none;" vertex="1" parent="1">
+          <mxGeometry as="geometry" x="1130" y="135" width="360" height="1235" />
+        </mxCell>
+        <mxCell id="lh3" value="&lt;b&gt;Service · nghiệp vụ&lt;/b&gt;" style="rounded=1;html=1;fontSize=15;fillColor=#d5e8d4;strokeColor=#82b366;" vertex="1" parent="1">
+          <mxGeometry as="geometry" x="1140" y="140" width="340" height="33" />
+        </mxCell>
+        <mxCell id="lbg4" value="" style="rounded=0;fillColor=#ffe6cc;fillOpacity=18;strokeColor=none;" vertex="1" parent="1">
+          <mxGeometry as="geometry" x="1500" y="135" width="360" height="1235" />
+        </mxCell>
+        <mxCell id="lh4" value="&lt;b&gt;DAO · câu SQL&lt;/b&gt;" style="rounded=1;html=1;fontSize=15;fillColor=#ffe6cc;strokeColor=#d79b00;" vertex="1" parent="1">
+          <mxGeometry as="geometry" x="1510" y="140" width="340" height="33" />
+        </mxCell>
+        <mxCell id="lbg5" value="" style="rounded=0;fillColor=#f5f5f5;fillOpacity=18;strokeColor=none;" vertex="1" parent="1">
+          <mxGeometry as="geometry" x="1870" y="135" width="360" height="1235" />
+        </mxCell>
+        <mxCell id="lh5" value="&lt;b&gt;DB · dữ liệu gốc&lt;/b&gt;" style="rounded=1;html=1;fontSize=15;fillColor=#f5f5f5;strokeColor=#666666;" vertex="1" parent="1">
+          <mxGeometry as="geometry" x="1880" y="140" width="340" height="33" />
+        </mxCell>
+        <mxCell id="a" value="&lt;b&gt;1 · Người dùng mở Lịch tập&lt;/b&gt;&lt;br&gt;GET /customer/pt-sessions&lt;br&gt;?view=week|month&amp;amp;date=yyyy-MM-dd&lt;br&gt;&lt;font color=&quot;#555555&quot; style=&quot;font-size:11px&quot;&gt;my-pt-sessions.jsp&lt;/font&gt;" style="rounded=1;arcSize=8;whiteSpace=wrap;html=1;align=left;verticalAlign=top;spacing=9;fontFamily=Arial;fontSize=13;fillColor=#dae8fc;strokeColor=#6c8ebf;" vertex="1" parent="1">
+          <mxGeometry as="geometry" x="30" y="180" width="340" height="110" />
+        </mxCell>
+        <mxCell id="b" value="&lt;b&gt;2 · AuthFilter.doFilter()&lt;/b&gt;&lt;br&gt;Session có ACCOUNT_ID? Có ROLE?&lt;br&gt;Chưa đăng nhập → login; chưa chọn vai trò → select-role.&lt;br&gt;&lt;font color=&quot;#555555&quot; style=&quot;font-size:11px&quot;&gt;AuthFilter.java&lt;/font&gt;" style="rounded=1;arcSize=8;whiteSpace=wrap;html=1;align=left;verticalAlign=top;spacing=9;fontFamily=Arial;fontSize=13;fillColor=#fff2cc;strokeColor=#d6b656;" vertex="1" parent="1">
+          <mxGeometry as="geometry" x="400" y="310" width="340" height="110" />
+        </mxCell>
+        <mxCell id="c" value="&lt;b&gt;3 · RoleAreaFilter.doFilter()&lt;/b&gt;&lt;br&gt;Có ACCOUNT_ID → role phải là CUSTOMER.&lt;br&gt;Chưa đăng nhập → chain để AuthFilter xử lý.&lt;br&gt;CustomerAreaFilter khai báo getAllowedRole().&lt;br&gt;&lt;font color=&quot;#555555&quot; style=&quot;font-size:11px&quot;&gt;RoleAreaFilter.java&lt;/font&gt;" style="rounded=1;arcSize=8;whiteSpace=wrap;html=1;align=left;verticalAlign=top;spacing=9;fontFamily=Arial;fontSize=13;fillColor=#fff2cc;strokeColor=#d6b656;" vertex="1" parent="1">
+          <mxGeometry as="geometry" x="400" y="440" width="340" height="110" />
+        </mxCell>
+        <mxCell id="d" value="&lt;b&gt;4 · MyPtSessionServlet.doGet()&lt;/b&gt;&lt;br&gt;getAccountId(request) → đọc HttpSession.&lt;br&gt;null → redirect login rồi return.&lt;br&gt;&lt;font color=&quot;#555555&quot; style=&quot;font-size:11px&quot;&gt;MyPtSessionServlet.java&lt;/font&gt;" style="rounded=1;arcSize=8;whiteSpace=wrap;html=1;align=left;verticalAlign=top;spacing=9;fontFamily=Arial;fontSize=13;fillColor=#e1d5e7;strokeColor=#9673a6;" vertex="1" parent="1">
+          <mxGeometry as="geometry" x="770" y="570" width="340" height="110" />
+        </mxCell>
+        <mxCell id="err" value="&lt;b&gt;Nhánh dừng&lt;/b&gt;&lt;br&gt;Không đăng nhập → redirect.&lt;br&gt;Sai vai trò → HTTP 403.&lt;br&gt;Không đi tới truy vấn lịch." style="rounded=1;arcSize=8;whiteSpace=wrap;html=1;align=left;verticalAlign=top;spacing=9;fontFamily=Arial;fontSize=13;fillColor=#f8cecc;strokeColor=#b85450;" vertex="1" parent="1">
+          <mxGeometry as="geometry" x="770" y="310" width="340" height="110" />
+        </mxCell>
+        <mxCell id="f" value="&lt;b&gt;5 · loadHeader()&lt;/b&gt;&lt;br&gt;dashboardService.getDashboard(accountId)&lt;br&gt;Đặt dashboard hoặc dashboardError.&lt;br&gt;&lt;font color=&quot;#555555&quot; style=&quot;font-size:11px&quot;&gt;MyPtSessionServlet.java&lt;/font&gt;" style="rounded=1;arcSize=8;whiteSpace=wrap;html=1;align=left;verticalAlign=top;spacing=9;fontFamily=Arial;fontSize=13;fillColor=#e1d5e7;strokeColor=#9673a6;" vertex="1" parent="1">
+          <mxGeometry as="geometry" x="770" y="700" width="340" height="110" />
+        </mxCell>
+        <mxCell id="g" value="&lt;b&gt;6 · loadTimetable()&lt;/b&gt;&lt;br&gt;DateTimeUtil.now() lấy 1 lần.&lt;br&gt;parseViewDate(date, today) → viewDate.&lt;br&gt;URL có date không rỗng → selectedDate.&lt;br&gt;&lt;font color=&quot;#555555&quot; style=&quot;font-size:11px&quot;&gt;MyPtSessionServlet.java&lt;/font&gt;" style="rounded=1;arcSize=8;whiteSpace=wrap;html=1;align=left;verticalAlign=top;spacing=9;fontFamily=Arial;fontSize=13;fillColor=#e1d5e7;strokeColor=#9673a6;" vertex="1" parent="1">
+          <mxGeometry as="geometry" x="770" y="830" width="340" height="110" />
+        </mxCell>
+        <mxCell id="h" value="&lt;b&gt;7 · getWeek() hoặc getMonth()&lt;/b&gt;&lt;br&gt;view=month → getMonth(); còn lại → getWeek().&lt;br&gt;ServiceResult: success + data, hoặc fail + message.&lt;br&gt;&lt;font color=&quot;#555555&quot; style=&quot;font-size:11px&quot;&gt;MyPtSessionService.java&lt;/font&gt;" style="rounded=1;arcSize=8;whiteSpace=wrap;html=1;align=left;verticalAlign=top;spacing=9;fontFamily=Arial;fontSize=13;fillColor=#d5e8d4;strokeColor=#82b366;" vertex="1" parent="1">
+          <mxGeometry as="geometry" x="1140" y="960" width="340" height="110" />
+        </mxCell>
+        <mxCell id="i" value="&lt;b&gt;8 · Nhận ServiceResult&lt;/b&gt;&lt;br&gt;Thành công → timetable / month.&lt;br&gt;Thất bại → timetableError.&lt;br&gt;Đặt activeSidebar, themeClass; forward VIEW.&lt;br&gt;&lt;font color=&quot;#555555&quot; style=&quot;font-size:11px&quot;&gt;MyPtSessionServlet.java&lt;/font&gt;" style="rounded=1;arcSize=8;whiteSpace=wrap;html=1;align=left;verticalAlign=top;spacing=9;fontFamily=Arial;fontSize=13;fillColor=#e1d5e7;strokeColor=#9673a6;" vertex="1" parent="1">
+          <mxGeometry as="geometry" x="770" y="1090" width="340" height="110" />
+        </mxCell>
+        <mxCell id="j" value="&lt;b&gt;9 · JSP render HTML&lt;/b&gt;&lt;br&gt;Lỗi tải lịch → khối thông báo + Tải lại.&lt;br&gt;Thành công → bảng tuần/tháng.&lt;br&gt;Forward giữ request attribute.&lt;br&gt;&lt;font color=&quot;#555555&quot; style=&quot;font-size:11px&quot;&gt;my-pt-sessions.jsp&lt;/font&gt;" style="rounded=1;arcSize=8;whiteSpace=wrap;html=1;align=left;verticalAlign=top;spacing=9;fontFamily=Arial;fontSize=13;fillColor=#dae8fc;strokeColor=#6c8ebf;" vertex="1" parent="1">
+          <mxGeometry as="geometry" x="30" y="1220" width="340" height="110" />
+        </mxCell>
+        <mxCell id="e0" value="" style="edgeStyle=orthogonalEdgeStyle;rounded=0;html=1;endArrow=block;endFill=1;strokeWidth=1.6;strokeColor=#333333;fontSize=12;labelBackgroundColor=#ffffff;exitX=0.5;exitY=1;entryX=0.5;entryY=0;" edge="1" parent="1" source="a" target="b">
+          <mxGeometry as="geometry" relative="1" />
+        </mxCell>
+        <mxCell id="e1" value="" style="edgeStyle=orthogonalEdgeStyle;rounded=0;html=1;endArrow=block;endFill=1;strokeWidth=1.6;strokeColor=#333333;fontSize=12;labelBackgroundColor=#ffffff;exitX=0.5;exitY=1;entryX=0.5;entryY=0;" edge="1" parent="1" source="b" target="c">
+          <mxGeometry as="geometry" relative="1" />
+        </mxCell>
+        <mxCell id="e2" value="" style="edgeStyle=orthogonalEdgeStyle;rounded=0;html=1;endArrow=block;endFill=1;strokeWidth=1.6;strokeColor=#333333;fontSize=12;labelBackgroundColor=#ffffff;exitX=0.5;exitY=1;entryX=0.5;entryY=0;" edge="1" parent="1" source="c" target="d">
+          <mxGeometry as="geometry" relative="1" />
+        </mxCell>
+        <mxCell id="e3" value="" style="edgeStyle=orthogonalEdgeStyle;rounded=0;html=1;endArrow=block;endFill=1;strokeWidth=1.6;strokeColor=#333333;fontSize=12;labelBackgroundColor=#ffffff;exitX=0.5;exitY=1;entryX=0.5;entryY=0;" edge="1" parent="1" source="d" target="f">
+          <mxGeometry as="geometry" relative="1" />
+        </mxCell>
+        <mxCell id="e4" value="" style="edgeStyle=orthogonalEdgeStyle;rounded=0;html=1;endArrow=block;endFill=1;strokeWidth=1.6;strokeColor=#333333;fontSize=12;labelBackgroundColor=#ffffff;exitX=0.5;exitY=1;entryX=0.5;entryY=0;" edge="1" parent="1" source="f" target="g">
+          <mxGeometry as="geometry" relative="1" />
+        </mxCell>
+        <mxCell id="e5" value="" style="edgeStyle=orthogonalEdgeStyle;rounded=0;html=1;endArrow=block;endFill=1;strokeWidth=1.6;strokeColor=#333333;fontSize=12;labelBackgroundColor=#ffffff;exitX=0.5;exitY=1;entryX=0.5;entryY=0;" edge="1" parent="1" source="g" target="h">
+          <mxGeometry as="geometry" relative="1" />
+        </mxCell>
+        <mxCell id="e6" value="" style="edgeStyle=orthogonalEdgeStyle;rounded=0;html=1;endArrow=block;endFill=1;strokeWidth=1.6;strokeColor=#3d729f;fontSize=12;labelBackgroundColor=#ffffff;exitX=0.5;exitY=1;entryX=0.5;entryY=0;dashed=1;" edge="1" parent="1" source="h" target="i">
+          <mxGeometry as="geometry" relative="1" />
+        </mxCell>
+        <mxCell id="e7" value="" style="edgeStyle=orthogonalEdgeStyle;rounded=0;html=1;endArrow=block;endFill=1;strokeWidth=1.6;strokeColor=#3d729f;fontSize=12;labelBackgroundColor=#ffffff;exitX=0.5;exitY=1;entryX=0.5;entryY=0;dashed=1;" edge="1" parent="1" source="i" target="j">
+          <mxGeometry as="geometry" relative="1" />
+        </mxCell>
+        <mxCell id="e8" value="thiếu đăng nhập / vai trò" style="edgeStyle=orthogonalEdgeStyle;rounded=0;html=1;endArrow=block;endFill=1;strokeWidth=1.6;strokeColor=#b85450;fontSize=12;labelBackgroundColor=#ffffff;exitX=1;exitY=0.5;entryX=0;entryY=0.5;dashed=1;" edge="1" parent="1" source="b" target="err">
+          <mxGeometry as="geometry" relative="1" />
+        </mxCell>
+        <mxCell id="e9" value="sai vai trò" style="edgeStyle=orthogonalEdgeStyle;rounded=0;html=1;endArrow=block;endFill=1;strokeWidth=1.6;strokeColor=#b85450;fontSize=12;labelBackgroundColor=#ffffff;exitX=0.5;exitY=1;entryX=0.5;entryY=0;dashed=1;" edge="1" parent="1" source="c" target="err">
+          <mxGeometry as="geometry" relative="1" />
+        </mxCell>
+        <mxCell id="takeaway" value="&lt;b&gt;CẦN NHỚ · &lt;/b&gt;Filter kiểm tra đăng nhập/vai trò; Service xác minh hồ sơ khách. accountId lấy từ session. Trang này chỉ theo dõi request /customer/pt-sessions." style="rounded=1;whiteSpace=wrap;html=1;align=left;spacing=12;fontFamily=Arial;fontSize=16;fillColor=#fff2cc;strokeColor=#d6b656;" vertex="1" parent="1">
+          <mxGeometry as="geometry" x="30" y="1390" width="2190" height="88" />
+        </mxCell>
+        <mxCell id="home" value="← Mục lục" style="text;html=1;whiteSpace=wrap;align=left;verticalAlign=top;fillColor=none;strokeColor=none;fontFamily=Arial;fontSize=14;fontColor=#225588;" vertex="1" parent="1" link="data:page/id,gms-current-0">
+          <mxGeometry as="geometry" x="30" y="1490" width="180" height="28" />
+        </mxCell>
+      </root>
+    </mxGraphModel>
+  </diagram>
+  <diagram id="gms-current-2" name="2. Dựng lịch tuần">
+    <mxGraphModel dx="1600" dy="1000" grid="1" gridSize="10" guides="1" tooltips="1" connect="1" arrows="1" fold="1" page="0" pageScale="1" pageWidth="2260" pageHeight="1530" math="0" shadow="0">
+      <root>
+        <mxCell id="0" />
+        <mxCell id="1" parent="0" />
+        <mxCell id="title" value="2. Dựng lịch tuần · FLOW HÀM → HÀM" style="text;html=1;whiteSpace=wrap;align=left;verticalAlign=top;fillColor=none;strokeColor=none;fontFamily=Arial;fontSize=25;fontStyle=1;" vertex="1" parent="1">
+          <mxGeometry as="geometry" x="30" y="20" width="2200" height="40" />
+        </mxCell>
+        <mxCell id="sub" value="MyPtSessionService.getWeek(accountId, anyDay, now)" style="text;html=1;whiteSpace=wrap;align=left;verticalAlign=top;fillColor=none;strokeColor=none;fontFamily=Arial;fontSize=15;" vertex="1" parent="1">
+          <mxGeometry as="geometry" x="30" y="70" width="2200" height="52" />
+        </mxCell>
+        <mxCell id="lbg0" value="" style="rounded=0;fillColor=#dae8fc;fillOpacity=18;strokeColor=none;" vertex="1" parent="1">
+          <mxGeometry as="geometry" x="20" y="135" width="360" height="1235" />
+        </mxCell>
+        <mxCell id="lh0" value="&lt;b&gt;JSP / JS · giao diện&lt;/b&gt;" style="rounded=1;html=1;fontSize=15;fillColor=#dae8fc;strokeColor=#6c8ebf;" vertex="1" parent="1">
+          <mxGeometry as="geometry" x="30" y="140" width="340" height="33" />
+        </mxCell>
+        <mxCell id="lbg1" value="" style="rounded=0;fillColor=#fff2cc;fillOpacity=18;strokeColor=none;" vertex="1" parent="1">
+          <mxGeometry as="geometry" x="390" y="135" width="360" height="1235" />
+        </mxCell>
+        <mxCell id="lh1" value="&lt;b&gt;Filter · quyền truy cập&lt;/b&gt;" style="rounded=1;html=1;fontSize=15;fillColor=#fff2cc;strokeColor=#d6b656;" vertex="1" parent="1">
+          <mxGeometry as="geometry" x="400" y="140" width="340" height="33" />
+        </mxCell>
+        <mxCell id="lbg2" value="" style="rounded=0;fillColor=#e1d5e7;fillOpacity=18;strokeColor=none;" vertex="1" parent="1">
+          <mxGeometry as="geometry" x="760" y="135" width="360" height="1235" />
+        </mxCell>
+        <mxCell id="lh2" value="&lt;b&gt;Servlet · nhận request&lt;/b&gt;" style="rounded=1;html=1;fontSize=15;fillColor=#e1d5e7;strokeColor=#9673a6;" vertex="1" parent="1">
+          <mxGeometry as="geometry" x="770" y="140" width="340" height="33" />
+        </mxCell>
+        <mxCell id="lbg3" value="" style="rounded=0;fillColor=#d5e8d4;fillOpacity=18;strokeColor=none;" vertex="1" parent="1">
+          <mxGeometry as="geometry" x="1130" y="135" width="360" height="1235" />
+        </mxCell>
+        <mxCell id="lh3" value="&lt;b&gt;Service · nghiệp vụ&lt;/b&gt;" style="rounded=1;html=1;fontSize=15;fillColor=#d5e8d4;strokeColor=#82b366;" vertex="1" parent="1">
+          <mxGeometry as="geometry" x="1140" y="140" width="340" height="33" />
+        </mxCell>
+        <mxCell id="lbg4" value="" style="rounded=0;fillColor=#ffe6cc;fillOpacity=18;strokeColor=none;" vertex="1" parent="1">
+          <mxGeometry as="geometry" x="1500" y="135" width="360" height="1235" />
+        </mxCell>
+        <mxCell id="lh4" value="&lt;b&gt;DAO · câu SQL&lt;/b&gt;" style="rounded=1;html=1;fontSize=15;fillColor=#ffe6cc;strokeColor=#d79b00;" vertex="1" parent="1">
+          <mxGeometry as="geometry" x="1510" y="140" width="340" height="33" />
+        </mxCell>
+        <mxCell id="lbg5" value="" style="rounded=0;fillColor=#f5f5f5;fillOpacity=18;strokeColor=none;" vertex="1" parent="1">
+          <mxGeometry as="geometry" x="1870" y="135" width="360" height="1235" />
+        </mxCell>
+        <mxCell id="lh5" value="&lt;b&gt;DB · dữ liệu gốc&lt;/b&gt;" style="rounded=1;html=1;fontSize=15;fillColor=#f5f5f5;strokeColor=#666666;" vertex="1" parent="1">
+          <mxGeometry as="geometry" x="1880" y="140" width="340" height="33" />
+        </mxCell>
+        <mxCell id="a" value="&lt;b&gt;1 · loadTimetable()&lt;/b&gt;&lt;br&gt;Gọi getWeek(accountId, date, now).&lt;br&gt;&lt;font color=&quot;#555555&quot; style=&quot;font-size:11px&quot;&gt;MyPtSessionServlet.java&lt;/font&gt;" style="rounded=1;arcSize=8;whiteSpace=wrap;html=1;align=left;verticalAlign=top;spacing=9;fontFamily=Arial;fontSize=13;fillColor=#e1d5e7;strokeColor=#9673a6;" vertex="1" parent="1">
+          <mxGeometry as="geometry" x="770" y="180" width="340" height="110" />
+        </mxCell>
+        <mxCell id="b" value="&lt;b&gt;2 · findCustomerId(accountId)&lt;/b&gt;&lt;br&gt;Account phải ACTIVE; Customer tồn tại và chưa xóa.&lt;br&gt;Không hợp lệ → MSG07_NO_PERMISSION.&lt;br&gt;&lt;font color=&quot;#555555&quot; style=&quot;font-size:11px&quot;&gt;MyPtSessionService.java&lt;/font&gt;" style="rounded=1;arcSize=8;whiteSpace=wrap;html=1;align=left;verticalAlign=top;spacing=9;fontFamily=Arial;fontSize=13;fillColor=#d5e8d4;strokeColor=#82b366;" vertex="1" parent="1">
+          <mxGeometry as="geometry" x="1140" y="310" width="340" height="110" />
+        </mxCell>
+        <mxCell id="c" value="&lt;b&gt;AccountDAO / CustomerDAO&lt;/b&gt;&lt;br&gt;findById(accountId)&lt;br&gt;findByPersonId(account.personId)&lt;br&gt;&lt;font color=&quot;#555555&quot; style=&quot;font-size:11px&quot;&gt;AccountDAO.java / CustomerDAO.java&lt;/font&gt;" style="rounded=1;arcSize=8;whiteSpace=wrap;html=1;align=left;verticalAlign=top;spacing=9;fontFamily=Arial;fontSize=13;fillColor=#ffe6cc;strokeColor=#d79b00;" vertex="1" parent="1">
+          <mxGeometry as="geometry" x="1510" y="310" width="340" height="110" />
+        </mxCell>
+        <mxCell id="d" value="&lt;b&gt;Accounts → Customers&lt;/b&gt;&lt;br&gt;Liên hệ qua PersonId; mã khách dùng cho truy vấn dữ liệu cá nhân." style="rounded=1;arcSize=8;whiteSpace=wrap;html=1;align=left;verticalAlign=top;spacing=9;fontFamily=Arial;fontSize=13;fillColor=#f5f5f5;strokeColor=#666666;shape=cylinder3;boundedLbl=1;backgroundOutline=1;size=12;" vertex="1" parent="1">
+          <mxGeometry as="geometry" x="1880" y="310" width="340" height="110" />
+        </mxCell>
+        <mxCell id="f" value="&lt;b&gt;3 · Tính phạm vi tuần&lt;/b&gt;&lt;br&gt;monday = weekStartOf(anyDay)&lt;br&gt;sunday = monday.plusDays(6)&lt;br&gt;20/10/2026 → 19/10 … 25/10.&lt;br&gt;&lt;font color=&quot;#555555&quot; style=&quot;font-size:11px&quot;&gt;MyPtSessionService.java&lt;/font&gt;" style="rounded=1;arcSize=8;whiteSpace=wrap;html=1;align=left;verticalAlign=top;spacing=9;fontFamily=Arial;fontSize=13;fillColor=#d5e8d4;strokeColor=#82b366;" vertex="1" parent="1">
+          <mxGeometry as="geometry" x="1140" y="440" width="340" height="110" />
+        </mxCell>
+        <mxCell id="g" value="&lt;b&gt;4 · findSessionsInRange()&lt;/b&gt;&lt;br&gt;customerId, monday, sunday&lt;br&gt;Ngày đầu và cuối đều được tính.&lt;br&gt;&lt;font color=&quot;#555555&quot; style=&quot;font-size:11px&quot;&gt;MyPtSessionDAO.java&lt;/font&gt;" style="rounded=1;arcSize=8;whiteSpace=wrap;html=1;align=left;verticalAlign=top;spacing=9;fontFamily=Arial;fontSize=13;fillColor=#ffe6cc;strokeColor=#d79b00;" vertex="1" parent="1">
+          <mxGeometry as="geometry" x="1510" y="570" width="340" height="110" />
+        </mxCell>
+        <mxCell id="h" value="&lt;b&gt;5 · fillDisplay(rows, customerId, now)&lt;/b&gt;&lt;br&gt;Điền nhãn, người tập cùng, cảnh báo,&lt;br&gt;statusKey, ended, liên kết. Xem trang 5–7.&lt;br&gt;&lt;font color=&quot;#555555&quot; style=&quot;font-size:11px&quot;&gt;MyPtSessionService.java&lt;/font&gt;" style="rounded=1;arcSize=8;whiteSpace=wrap;html=1;align=left;verticalAlign=top;spacing=9;fontFamily=Arial;fontSize=13;fillColor=#d5e8d4;strokeColor=#82b366;" vertex="1" parent="1">
+          <mxGeometry as="geometry" x="1140" y="700" width="340" height="110" />
+        </mxCell>
+        <mxCell id="i" value="&lt;b&gt;6 · Dựng TimetableView&lt;/b&gt;&lt;br&gt;7 Day: Thứ 2 … Chủ nhật + cờ today.&lt;br&gt;3 Band: Sáng / Chiều / Tối.&lt;br&gt;Mỗi Band có 7 danh sách buổi.&lt;br&gt;&lt;font color=&quot;#555555&quot; style=&quot;font-size:11px&quot;&gt;TimetableView.java&lt;/font&gt;" style="rounded=1;arcSize=8;whiteSpace=wrap;html=1;align=left;verticalAlign=top;spacing=9;fontFamily=Arial;fontSize=13;fillColor=#d5e8d4;strokeColor=#82b366;" vertex="1" parent="1">
+          <mxGeometry as="geometry" x="1140" y="830" width="340" height="110" />
+        </mxCell>
+        <mxCell id="j" value="&lt;b&gt;7 · Xếp từng row vào ô&lt;/b&gt;&lt;br&gt;dayIndex = dayOfWeek.value - 1&lt;br&gt;bandOf(startTime): &amp;lt;12 → 0; &amp;lt;18 → 1; còn lại → 2.&lt;br&gt;cells[dayIndex].add(row)&lt;br&gt;&lt;font color=&quot;#555555&quot; style=&quot;font-size:11px&quot;&gt;MyPtSessionService.java&lt;/font&gt;" style="rounded=1;arcSize=8;whiteSpace=wrap;html=1;align=left;verticalAlign=top;spacing=9;fontFamily=Arial;fontSize=13;fillColor=#d5e8d4;strokeColor=#82b366;" vertex="1" parent="1">
+          <mxGeometry as="geometry" x="1140" y="960" width="340" height="110" />
+        </mxCell>
+        <mxCell id="k" value="&lt;b&gt;8 · ServiceResult.ok(view)&lt;/b&gt;&lt;br&gt;Đặt request.timetable → forward JSP.&lt;br&gt;SQLException → MSG04_SYSTEM_BUSY.&lt;br&gt;&lt;font color=&quot;#555555&quot; style=&quot;font-size:11px&quot;&gt;MyPtSessionServlet.java&lt;/font&gt;" style="rounded=1;arcSize=8;whiteSpace=wrap;html=1;align=left;verticalAlign=top;spacing=9;fontFamily=Arial;fontSize=13;fillColor=#e1d5e7;strokeColor=#9673a6;" vertex="1" parent="1">
+          <mxGeometry as="geometry" x="770" y="1090" width="340" height="110" />
+        </mxCell>
+        <mxCell id="l" value="&lt;b&gt;9 · Bảng lịch tuần&lt;/b&gt;&lt;br&gt;Lặp timetable.days và bands/cells.&lt;br&gt;Ô có thể có nhiều buổi.&lt;br&gt;Ô rỗng vẫn giữ đủ khung lịch.&lt;br&gt;&lt;font color=&quot;#555555&quot; style=&quot;font-size:11px&quot;&gt;my-pt-sessions.jsp&lt;/font&gt;" style="rounded=1;arcSize=8;whiteSpace=wrap;html=1;align=left;verticalAlign=top;spacing=9;fontFamily=Arial;fontSize=13;fillColor=#dae8fc;strokeColor=#6c8ebf;" vertex="1" parent="1">
+          <mxGeometry as="geometry" x="30" y="1220" width="340" height="110" />
+        </mxCell>
+        <mxCell id="e0" value="" style="edgeStyle=orthogonalEdgeStyle;rounded=0;html=1;endArrow=block;endFill=1;strokeWidth=1.6;strokeColor=#333333;fontSize=12;labelBackgroundColor=#ffffff;exitX=0.5;exitY=1;entryX=0.5;entryY=0;" edge="1" parent="1" source="a" target="b">
+          <mxGeometry as="geometry" relative="1" />
+        </mxCell>
+        <mxCell id="e1" value="" style="edgeStyle=orthogonalEdgeStyle;rounded=0;html=1;endArrow=block;endFill=1;strokeWidth=1.6;strokeColor=#333333;fontSize=12;labelBackgroundColor=#ffffff;exitX=1;exitY=0.5;entryX=0;entryY=0.5;" edge="1" parent="1" source="b" target="c">
+          <mxGeometry as="geometry" relative="1" />
+        </mxCell>
+        <mxCell id="e2" value="" style="edgeStyle=orthogonalEdgeStyle;rounded=0;html=1;endArrow=block;endFill=1;strokeWidth=1.6;strokeColor=#333333;fontSize=12;labelBackgroundColor=#ffffff;exitX=1;exitY=0.5;entryX=0;entryY=0.5;" edge="1" parent="1" source="c" target="d">
+          <mxGeometry as="geometry" relative="1" />
+        </mxCell>
+        <mxCell id="e3" value="" style="edgeStyle=orthogonalEdgeStyle;rounded=0;html=1;endArrow=block;endFill=1;strokeWidth=1.6;strokeColor=#333333;fontSize=12;labelBackgroundColor=#ffffff;exitX=0.5;exitY=1;entryX=0.5;entryY=0;" edge="1" parent="1" source="b" target="f">
+          <mxGeometry as="geometry" relative="1" />
+        </mxCell>
+        <mxCell id="e4" value="" style="edgeStyle=orthogonalEdgeStyle;rounded=0;html=1;endArrow=block;endFill=1;strokeWidth=1.6;strokeColor=#333333;fontSize=12;labelBackgroundColor=#ffffff;exitX=0.5;exitY=1;entryX=0.5;entryY=0;" edge="1" parent="1" source="f" target="g">
+          <mxGeometry as="geometry" relative="1" />
+        </mxCell>
+        <mxCell id="e5" value="" style="edgeStyle=orthogonalEdgeStyle;rounded=0;html=1;endArrow=block;endFill=1;strokeWidth=1.6;strokeColor=#3d729f;fontSize=12;labelBackgroundColor=#ffffff;exitX=0.5;exitY=1;entryX=0.5;entryY=0;dashed=1;" edge="1" parent="1" source="g" target="h">
+          <mxGeometry as="geometry" relative="1" />
+        </mxCell>
+        <mxCell id="e6" value="" style="edgeStyle=orthogonalEdgeStyle;rounded=0;html=1;endArrow=block;endFill=1;strokeWidth=1.6;strokeColor=#333333;fontSize=12;labelBackgroundColor=#ffffff;exitX=0.5;exitY=1;entryX=0.5;entryY=0;" edge="1" parent="1" source="h" target="i">
+          <mxGeometry as="geometry" relative="1" />
+        </mxCell>
+        <mxCell id="e7" value="" style="edgeStyle=orthogonalEdgeStyle;rounded=0;html=1;endArrow=block;endFill=1;strokeWidth=1.6;strokeColor=#333333;fontSize=12;labelBackgroundColor=#ffffff;exitX=0.5;exitY=1;entryX=0.5;entryY=0;" edge="1" parent="1" source="i" target="j">
+          <mxGeometry as="geometry" relative="1" />
+        </mxCell>
+        <mxCell id="e8" value="" style="edgeStyle=orthogonalEdgeStyle;rounded=0;html=1;endArrow=block;endFill=1;strokeWidth=1.6;strokeColor=#3d729f;fontSize=12;labelBackgroundColor=#ffffff;exitX=0.5;exitY=1;entryX=0.5;entryY=0;dashed=1;" edge="1" parent="1" source="j" target="k">
+          <mxGeometry as="geometry" relative="1" />
+        </mxCell>
+        <mxCell id="e9" value="" style="edgeStyle=orthogonalEdgeStyle;rounded=0;html=1;endArrow=block;endFill=1;strokeWidth=1.6;strokeColor=#3d729f;fontSize=12;labelBackgroundColor=#ffffff;exitX=0.5;exitY=1;entryX=0.5;entryY=0;dashed=1;" edge="1" parent="1" source="k" target="l">
+          <mxGeometry as="geometry" relative="1" />
+        </mxCell>
+        <mxCell id="takeaway" value="&lt;b&gt;CẦN NHỚ · &lt;/b&gt;Vị trí ô = ngày trong tuần + khung giờ bắt đầu. 15:00 thuộc Chiều; đúng 18:00 thuộc Tối." style="rounded=1;whiteSpace=wrap;html=1;align=left;spacing=12;fontFamily=Arial;fontSize=16;fillColor=#fff2cc;strokeColor=#d6b656;" vertex="1" parent="1">
+          <mxGeometry as="geometry" x="30" y="1390" width="2190" height="88" />
+        </mxCell>
+        <mxCell id="home" value="← Mục lục" style="text;html=1;whiteSpace=wrap;align=left;verticalAlign=top;fillColor=none;strokeColor=none;fontFamily=Arial;fontSize=14;fontColor=#225588;" vertex="1" parent="1" link="data:page/id,gms-current-0">
+          <mxGeometry as="geometry" x="30" y="1490" width="180" height="28" />
+        </mxCell>
+      </root>
+    </mxGraphModel>
+  </diagram>
+  <diagram id="gms-current-3" name="3. Dựng lịch tháng">
+    <mxGraphModel dx="1600" dy="1000" grid="1" gridSize="10" guides="1" tooltips="1" connect="1" arrows="1" fold="1" page="0" pageScale="1" pageWidth="2260" pageHeight="1530" math="0" shadow="0">
+      <root>
+        <mxCell id="0" />
+        <mxCell id="1" parent="0" />
+        <mxCell id="title" value="3. Dựng lịch tháng · FLOW HÀM → HÀM" style="text;html=1;whiteSpace=wrap;align=left;verticalAlign=top;fillColor=none;strokeColor=none;fontFamily=Arial;fontSize=25;fontStyle=1;" vertex="1" parent="1">
+          <mxGeometry as="geometry" x="30" y="20" width="2200" height="40" />
+        </mxCell>
+        <mxCell id="sub" value="getMonth(): phân biệt phạm vi lấy buổi với phạm vi khung lịch" style="text;html=1;whiteSpace=wrap;align=left;verticalAlign=top;fillColor=none;strokeColor=none;fontFamily=Arial;fontSize=15;" vertex="1" parent="1">
+          <mxGeometry as="geometry" x="30" y="70" width="2200" height="52" />
+        </mxCell>
+        <mxCell id="lbg0" value="" style="rounded=0;fillColor=#dae8fc;fillOpacity=18;strokeColor=none;" vertex="1" parent="1">
+          <mxGeometry as="geometry" x="20" y="135" width="360" height="1235" />
+        </mxCell>
+        <mxCell id="lh0" value="&lt;b&gt;JSP / JS · giao diện&lt;/b&gt;" style="rounded=1;html=1;fontSize=15;fillColor=#dae8fc;strokeColor=#6c8ebf;" vertex="1" parent="1">
+          <mxGeometry as="geometry" x="30" y="140" width="340" height="33" />
+        </mxCell>
+        <mxCell id="lbg1" value="" style="rounded=0;fillColor=#fff2cc;fillOpacity=18;strokeColor=none;" vertex="1" parent="1">
+          <mxGeometry as="geometry" x="390" y="135" width="360" height="1235" />
+        </mxCell>
+        <mxCell id="lh1" value="&lt;b&gt;Filter · quyền truy cập&lt;/b&gt;" style="rounded=1;html=1;fontSize=15;fillColor=#fff2cc;strokeColor=#d6b656;" vertex="1" parent="1">
+          <mxGeometry as="geometry" x="400" y="140" width="340" height="33" />
+        </mxCell>
+        <mxCell id="lbg2" value="" style="rounded=0;fillColor=#e1d5e7;fillOpacity=18;strokeColor=none;" vertex="1" parent="1">
+          <mxGeometry as="geometry" x="760" y="135" width="360" height="1235" />
+        </mxCell>
+        <mxCell id="lh2" value="&lt;b&gt;Servlet · nhận request&lt;/b&gt;" style="rounded=1;html=1;fontSize=15;fillColor=#e1d5e7;strokeColor=#9673a6;" vertex="1" parent="1">
+          <mxGeometry as="geometry" x="770" y="140" width="340" height="33" />
+        </mxCell>
+        <mxCell id="lbg3" value="" style="rounded=0;fillColor=#d5e8d4;fillOpacity=18;strokeColor=none;" vertex="1" parent="1">
+          <mxGeometry as="geometry" x="1130" y="135" width="360" height="1235" />
+        </mxCell>
+        <mxCell id="lh3" value="&lt;b&gt;Service · nghiệp vụ&lt;/b&gt;" style="rounded=1;html=1;fontSize=15;fillColor=#d5e8d4;strokeColor=#82b366;" vertex="1" parent="1">
+          <mxGeometry as="geometry" x="1140" y="140" width="340" height="33" />
+        </mxCell>
+        <mxCell id="lbg4" value="" style="rounded=0;fillColor=#ffe6cc;fillOpacity=18;strokeColor=none;" vertex="1" parent="1">
+          <mxGeometry as="geometry" x="1500" y="135" width="360" height="1235" />
+        </mxCell>
+        <mxCell id="lh4" value="&lt;b&gt;DAO · câu SQL&lt;/b&gt;" style="rounded=1;html=1;fontSize=15;fillColor=#ffe6cc;strokeColor=#d79b00;" vertex="1" parent="1">
+          <mxGeometry as="geometry" x="1510" y="140" width="340" height="33" />
+        </mxCell>
+        <mxCell id="lbg5" value="" style="rounded=0;fillColor=#f5f5f5;fillOpacity=18;strokeColor=none;" vertex="1" parent="1">
+          <mxGeometry as="geometry" x="1870" y="135" width="360" height="1235" />
+        </mxCell>
+        <mxCell id="lh5" value="&lt;b&gt;DB · dữ liệu gốc&lt;/b&gt;" style="rounded=1;html=1;fontSize=15;fillColor=#f5f5f5;strokeColor=#666666;" vertex="1" parent="1">
+          <mxGeometry as="geometry" x="1880" y="140" width="340" height="33" />
+        </mxCell>
+        <mxCell id="a" value="&lt;b&gt;1 · view=month&lt;/b&gt;&lt;br&gt;getMonth(accountId, date, now)&lt;br&gt;Ngày 6/11 → YearMonth 11/2026.&lt;br&gt;&lt;font color=&quot;#555555&quot; style=&quot;font-size:11px&quot;&gt;MyPtSessionServlet.java&lt;/font&gt;" style="rounded=1;arcSize=8;whiteSpace=wrap;html=1;align=left;verticalAlign=top;spacing=9;fontFamily=Arial;fontSize=13;fillColor=#e1d5e7;strokeColor=#9673a6;" vertex="1" parent="1">
+          <mxGeometry as="geometry" x="770" y="180" width="340" height="110" />
+        </mxCell>
+        <mxCell id="b" value="&lt;b&gt;2 · findCustomerId()&lt;/b&gt;&lt;br&gt;Xác minh Account ACTIVE và hồ sơ Customer.&lt;br&gt;Không hợp lệ → ServiceResult.fail.&lt;br&gt;&lt;font color=&quot;#555555&quot; style=&quot;font-size:11px&quot;&gt;MyPtSessionService.java&lt;/font&gt;" style="rounded=1;arcSize=8;whiteSpace=wrap;html=1;align=left;verticalAlign=top;spacing=9;fontFamily=Arial;fontSize=13;fillColor=#d5e8d4;strokeColor=#82b366;" vertex="1" parent="1">
+          <mxGeometry as="geometry" x="1140" y="310" width="340" height="110" />
+        </mxCell>
+        <mxCell id="c" value="&lt;b&gt;3 · Hai khoảng ngày khác nhau&lt;/b&gt;&lt;br&gt;Dữ liệu: month.atDay(1) → atEndOfMonth().&lt;br&gt;Khung: Thứ 2 tuần đầu → CN tuần cuối.&lt;br&gt;11/2026: khung 26/10 … 6/12.&lt;br&gt;&lt;font color=&quot;#555555&quot; style=&quot;font-size:11px&quot;&gt;MyPtSessionService.java&lt;/font&gt;" style="rounded=1;arcSize=8;whiteSpace=wrap;html=1;align=left;verticalAlign=top;spacing=9;fontFamily=Arial;fontSize=13;fillColor=#d5e8d4;strokeColor=#82b366;" vertex="1" parent="1">
+          <mxGeometry as="geometry" x="1140" y="440" width="340" height="110" />
+        </mxCell>
+        <mxCell id="d" value="&lt;b&gt;4 · findSessionsInRange()&lt;/b&gt;&lt;br&gt;Chỉ truy vấn 01/11 … 30/11.&lt;br&gt;Không lấy buổi của tháng 10 hoặc tháng 12.&lt;br&gt;&lt;font color=&quot;#555555&quot; style=&quot;font-size:11px&quot;&gt;MyPtSessionDAO.java&lt;/font&gt;" style="rounded=1;arcSize=8;whiteSpace=wrap;html=1;align=left;verticalAlign=top;spacing=9;fontFamily=Arial;fontSize=13;fillColor=#ffe6cc;strokeColor=#d79b00;" vertex="1" parent="1">
+          <mxGeometry as="geometry" x="1510" y="570" width="340" height="110" />
+        </mxCell>
+        <mxCell id="f" value="&lt;b&gt;5 · fillDisplay() → dựng MonthView&lt;/b&gt;&lt;br&gt;Tạo từng Cell(date, inMonth, today).&lt;br&gt;Nhóm Cell vào từng tuần; map cellByDate&lt;br&gt;giúp tìm ô theo LocalDate.&lt;br&gt;&lt;font color=&quot;#555555&quot; style=&quot;font-size:11px&quot;&gt;MonthView.java / MyPtSessionService.java&lt;/font&gt;" style="rounded=1;arcSize=8;whiteSpace=wrap;html=1;align=left;verticalAlign=top;spacing=9;fontFamily=Arial;fontSize=13;fillColor=#d5e8d4;strokeColor=#82b366;" vertex="1" parent="1">
+          <mxGeometry as="geometry" x="1140" y="700" width="340" height="110" />
+        </mxCell>
+        <mxCell id="g" value="&lt;b&gt;6 · Thả buổi + countInto()&lt;/b&gt;&lt;br&gt;cellByDate.get(slotDate).sessions.add(row)&lt;br&gt;Đếm upcoming, checkedIn, missed, cancelled, pending.&lt;br&gt;today/upcoming/warn gộp vào upcomingCount.&lt;br&gt;&lt;font color=&quot;#555555&quot; style=&quot;font-size:11px&quot;&gt;MyPtSessionService.java&lt;/font&gt;" style="rounded=1;arcSize=8;whiteSpace=wrap;html=1;align=left;verticalAlign=top;spacing=9;fontFamily=Arial;fontSize=13;fillColor=#d5e8d4;strokeColor=#82b366;" vertex="1" parent="1">
+          <mxGeometry as="geometry" x="1140" y="830" width="340" height="110" />
+        </mxCell>
+        <mxCell id="h" value="&lt;b&gt;7 · ServiceResult.ok(view)&lt;/b&gt;&lt;br&gt;Đặt request.month rồi forward JSP.&lt;br&gt;SQLException → timetableError.&lt;br&gt;&lt;font color=&quot;#555555&quot; style=&quot;font-size:11px&quot;&gt;MyPtSessionServlet.java&lt;/font&gt;" style="rounded=1;arcSize=8;whiteSpace=wrap;html=1;align=left;verticalAlign=top;spacing=9;fontFamily=Arial;fontSize=13;fillColor=#e1d5e7;strokeColor=#9673a6;" vertex="1" parent="1">
+          <mxGeometry as="geometry" x="770" y="960" width="340" height="110" />
+        </mxCell>
+        <mxCell id="i" value="&lt;b&gt;8 · JSP xét cell.inMonth&lt;/b&gt;&lt;br&gt;false → td.is-month-padding rỗng.&lt;br&gt;true → số ngày dạng d/M + danh sách buổi.&lt;br&gt;Ngày luôn căn trên; today và selected độc lập.&lt;br&gt;&lt;font color=&quot;#555555&quot; style=&quot;font-size:11px&quot;&gt;my-pt-sessions.jsp&lt;/font&gt;" style="rounded=1;arcSize=8;whiteSpace=wrap;html=1;align=left;verticalAlign=top;spacing=9;fontFamily=Arial;fontSize=13;fillColor=#dae8fc;strokeColor=#6c8ebf;" vertex="1" parent="1">
+          <mxGeometry as="geometry" x="30" y="1090" width="340" height="110" />
+        </mxCell>
+        <mxCell id="j" value="&lt;b&gt;9 · Bấm ngày / thẻ buổi tháng&lt;/b&gt;&lt;br&gt;GET ?view=week&amp;amp;date=2026-11-06&lt;br&gt;Mở tuần chứa ngày đó; selectedDate vẫn là 6/11.&lt;br&gt;Không mở drawer ngay trong lịch tháng.&lt;br&gt;&lt;font color=&quot;#555555&quot; style=&quot;font-size:11px&quot;&gt;my-pt-sessions.jsp&lt;/font&gt;" style="rounded=1;arcSize=8;whiteSpace=wrap;html=1;align=left;verticalAlign=top;spacing=9;fontFamily=Arial;fontSize=13;fillColor=#dae8fc;strokeColor=#6c8ebf;" vertex="1" parent="1">
+          <mxGeometry as="geometry" x="30" y="1220" width="340" height="110" />
+        </mxCell>
+        <mxCell id="e0" value="" style="edgeStyle=orthogonalEdgeStyle;rounded=0;html=1;endArrow=block;endFill=1;strokeWidth=1.6;strokeColor=#333333;fontSize=12;labelBackgroundColor=#ffffff;exitX=0.5;exitY=1;entryX=0.5;entryY=0;" edge="1" parent="1" source="a" target="b">
+          <mxGeometry as="geometry" relative="1" />
+        </mxCell>
+        <mxCell id="e1" value="" style="edgeStyle=orthogonalEdgeStyle;rounded=0;html=1;endArrow=block;endFill=1;strokeWidth=1.6;strokeColor=#333333;fontSize=12;labelBackgroundColor=#ffffff;exitX=0.5;exitY=1;entryX=0.5;entryY=0;" edge="1" parent="1" source="b" target="c">
+          <mxGeometry as="geometry" relative="1" />
+        </mxCell>
+        <mxCell id="e2" value="" style="edgeStyle=orthogonalEdgeStyle;rounded=0;html=1;endArrow=block;endFill=1;strokeWidth=1.6;strokeColor=#333333;fontSize=12;labelBackgroundColor=#ffffff;exitX=0.5;exitY=1;entryX=0.5;entryY=0;" edge="1" parent="1" source="c" target="d">
+          <mxGeometry as="geometry" relative="1" />
+        </mxCell>
+        <mxCell id="e3" value="" style="edgeStyle=orthogonalEdgeStyle;rounded=0;html=1;endArrow=block;endFill=1;strokeWidth=1.6;strokeColor=#3d729f;fontSize=12;labelBackgroundColor=#ffffff;exitX=0.5;exitY=1;entryX=0.5;entryY=0;dashed=1;" edge="1" parent="1" source="d" target="f">
+          <mxGeometry as="geometry" relative="1" />
+        </mxCell>
+        <mxCell id="e4" value="" style="edgeStyle=orthogonalEdgeStyle;rounded=0;html=1;endArrow=block;endFill=1;strokeWidth=1.6;strokeColor=#333333;fontSize=12;labelBackgroundColor=#ffffff;exitX=0.5;exitY=1;entryX=0.5;entryY=0;" edge="1" parent="1" source="f" target="g">
+          <mxGeometry as="geometry" relative="1" />
+        </mxCell>
+        <mxCell id="e5" value="" style="edgeStyle=orthogonalEdgeStyle;rounded=0;html=1;endArrow=block;endFill=1;strokeWidth=1.6;strokeColor=#3d729f;fontSize=12;labelBackgroundColor=#ffffff;exitX=0.5;exitY=1;entryX=0.5;entryY=0;dashed=1;" edge="1" parent="1" source="g" target="h">
+          <mxGeometry as="geometry" relative="1" />
+        </mxCell>
+        <mxCell id="e6" value="" style="edgeStyle=orthogonalEdgeStyle;rounded=0;html=1;endArrow=block;endFill=1;strokeWidth=1.6;strokeColor=#3d729f;fontSize=12;labelBackgroundColor=#ffffff;exitX=0.5;exitY=1;entryX=0.5;entryY=0;dashed=1;" edge="1" parent="1" source="h" target="i">
+          <mxGeometry as="geometry" relative="1" />
+        </mxCell>
+        <mxCell id="e7" value="" style="edgeStyle=orthogonalEdgeStyle;rounded=0;html=1;endArrow=block;endFill=1;strokeWidth=1.6;strokeColor=#333333;fontSize=12;labelBackgroundColor=#ffffff;exitX=0.5;exitY=1;entryX=0.5;entryY=0;" edge="1" parent="1" source="i" target="j">
+          <mxGeometry as="geometry" relative="1" />
+        </mxCell>
+        <mxCell id="takeaway" value="&lt;b&gt;CẦN NHỚ · &lt;/b&gt;Tháng 11 chỉ hiện 1/11 … 30/11. Ô đầu/cuối tuần thuộc tháng khác là ô đệm trống, không có liên kết." style="rounded=1;whiteSpace=wrap;html=1;align=left;spacing=12;fontFamily=Arial;fontSize=16;fillColor=#fff2cc;strokeColor=#d6b656;" vertex="1" parent="1">
+          <mxGeometry as="geometry" x="30" y="1390" width="2190" height="88" />
+        </mxCell>
+        <mxCell id="home" value="← Mục lục" style="text;html=1;whiteSpace=wrap;align=left;verticalAlign=top;fillColor=none;strokeColor=none;fontFamily=Arial;fontSize=14;fontColor=#225588;" vertex="1" parent="1" link="data:page/id,gms-current-0">
+          <mxGeometry as="geometry" x="30" y="1490" width="180" height="28" />
+        </mxCell>
+      </root>
+    </mxGraphModel>
+  </diagram>
+  <diagram id="gms-current-4" name="4. SQL và số thứ tự buổi">
+    <mxGraphModel dx="1600" dy="1000" grid="1" gridSize="10" guides="1" tooltips="1" connect="1" arrows="1" fold="1" page="0" pageScale="1" pageWidth="2260" pageHeight="1530" math="0" shadow="0">
+      <root>
+        <mxCell id="0" />
+        <mxCell id="1" parent="0" />
+        <mxCell id="title" value="4. SQL và số thứ tự buổi · FLOW HÀM → HÀM" style="text;html=1;whiteSpace=wrap;align=left;verticalAlign=top;fillColor=none;strokeColor=none;fontFamily=Arial;fontSize=25;fontStyle=1;" vertex="1" parent="1">
+          <mxGeometry as="geometry" x="30" y="20" width="2200" height="40" />
+        </mxCell>
+        <mxCell id="sub" value="findSessionsInRange(): SQL lấy đúng buổi của khách trong khoảng ngày và giữ số thứ tự trong cả gói" style="text;html=1;whiteSpace=wrap;align=left;verticalAlign=top;fillColor=none;strokeColor=none;fontFamily=Arial;fontSize=15;" vertex="1" parent="1">
+          <mxGeometry as="geometry" x="30" y="70" width="2200" height="52" />
+        </mxCell>
+        <mxCell id="lbg0" value="" style="rounded=0;fillColor=#dae8fc;fillOpacity=18;strokeColor=none;" vertex="1" parent="1">
+          <mxGeometry as="geometry" x="20" y="135" width="360" height="1235" />
+        </mxCell>
+        <mxCell id="lh0" value="&lt;b&gt;JSP / JS · giao diện&lt;/b&gt;" style="rounded=1;html=1;fontSize=15;fillColor=#dae8fc;strokeColor=#6c8ebf;" vertex="1" parent="1">
+          <mxGeometry as="geometry" x="30" y="140" width="340" height="33" />
+        </mxCell>
+        <mxCell id="lbg1" value="" style="rounded=0;fillColor=#fff2cc;fillOpacity=18;strokeColor=none;" vertex="1" parent="1">
+          <mxGeometry as="geometry" x="390" y="135" width="360" height="1235" />
+        </mxCell>
+        <mxCell id="lh1" value="&lt;b&gt;Filter · quyền truy cập&lt;/b&gt;" style="rounded=1;html=1;fontSize=15;fillColor=#fff2cc;strokeColor=#d6b656;" vertex="1" parent="1">
+          <mxGeometry as="geometry" x="400" y="140" width="340" height="33" />
+        </mxCell>
+        <mxCell id="lbg2" value="" style="rounded=0;fillColor=#e1d5e7;fillOpacity=18;strokeColor=none;" vertex="1" parent="1">
+          <mxGeometry as="geometry" x="760" y="135" width="360" height="1235" />
+        </mxCell>
+        <mxCell id="lh2" value="&lt;b&gt;Servlet · nhận request&lt;/b&gt;" style="rounded=1;html=1;fontSize=15;fillColor=#e1d5e7;strokeColor=#9673a6;" vertex="1" parent="1">
+          <mxGeometry as="geometry" x="770" y="140" width="340" height="33" />
+        </mxCell>
+        <mxCell id="lbg3" value="" style="rounded=0;fillColor=#d5e8d4;fillOpacity=18;strokeColor=none;" vertex="1" parent="1">
+          <mxGeometry as="geometry" x="1130" y="135" width="360" height="1235" />
+        </mxCell>
+        <mxCell id="lh3" value="&lt;b&gt;Service · nghiệp vụ&lt;/b&gt;" style="rounded=1;html=1;fontSize=15;fillColor=#d5e8d4;strokeColor=#82b366;" vertex="1" parent="1">
+          <mxGeometry as="geometry" x="1140" y="140" width="340" height="33" />
+        </mxCell>
+        <mxCell id="lbg4" value="" style="rounded=0;fillColor=#ffe6cc;fillOpacity=18;strokeColor=none;" vertex="1" parent="1">
+          <mxGeometry as="geometry" x="1500" y="135" width="360" height="1235" />
+        </mxCell>
+        <mxCell id="lh4" value="&lt;b&gt;DAO · câu SQL&lt;/b&gt;" style="rounded=1;html=1;fontSize=15;fillColor=#ffe6cc;strokeColor=#d79b00;" vertex="1" parent="1">
+          <mxGeometry as="geometry" x="1510" y="140" width="340" height="33" />
+        </mxCell>
+        <mxCell id="lbg5" value="" style="rounded=0;fillColor=#f5f5f5;fillOpacity=18;strokeColor=none;" vertex="1" parent="1">
+          <mxGeometry as="geometry" x="1870" y="135" width="360" height="1235" />
+        </mxCell>
+        <mxCell id="lh5" value="&lt;b&gt;DB · dữ liệu gốc&lt;/b&gt;" style="rounded=1;html=1;fontSize=15;fillColor=#f5f5f5;strokeColor=#666666;" vertex="1" parent="1">
+          <mxGeometry as="geometry" x="1880" y="140" width="340" height="33" />
+        </mxCell>
+        <mxCell id="a" value="&lt;b&gt;1 · getWeek() / getMonth() gọi DAO&lt;/b&gt;&lt;br&gt;findSessionsInRange(customerId, fromDate, toDate)&lt;br&gt;Cùng SQL gốc cho lịch tuần và lịch tháng.&lt;br&gt;&lt;font color=&quot;#555555&quot; style=&quot;font-size:11px&quot;&gt;MyPtSessionService.java&lt;/font&gt;" style="rounded=1;arcSize=8;whiteSpace=wrap;html=1;align=left;verticalAlign=top;spacing=9;fontFamily=Arial;fontSize=13;fillColor=#d5e8d4;strokeColor=#82b366;" vertex="1" parent="1">
+          <mxGeometry as="geometry" x="1140" y="180" width="340" height="110" />
+        </mxCell>
+        <mxCell id="b" value="&lt;b&gt;2 · SESSIONS_SQL · CTE MySessions&lt;/b&gt;&lt;br&gt;Orders.Status=Paid; loại PTSingle/PTCouple/SingleSession.&lt;br&gt;Khách đứng tên HOẶC người đi kèm của PTCouple.&lt;br&gt;Hai dấu ? đầu cùng là customerId.&lt;br&gt;&lt;font color=&quot;#555555&quot; style=&quot;font-size:11px&quot;&gt;MyPtSessionDAO.java&lt;/font&gt;" style="rounded=1;arcSize=8;whiteSpace=wrap;html=1;align=left;verticalAlign=top;spacing=9;fontFamily=Arial;fontSize=13;fillColor=#ffe6cc;strokeColor=#d79b00;" vertex="1" parent="1">
+          <mxGeometry as="geometry" x="1510" y="310" width="340" height="110" />
+        </mxCell>
+        <mxCell id="c" value="&lt;b&gt;Nguồn lịch + gói&lt;/b&gt;&lt;br&gt;Sessions → TimeSlots&lt;br&gt;Sessions → Subscriptions → Orders" style="rounded=1;arcSize=8;whiteSpace=wrap;html=1;align=left;verticalAlign=top;spacing=9;fontFamily=Arial;fontSize=13;fillColor=#f5f5f5;strokeColor=#666666;shape=cylinder3;boundedLbl=1;backgroundOutline=1;size=12;" vertex="1" parent="1">
+          <mxGeometry as="geometry" x="1880" y="310" width="340" height="110" />
+        </mxCell>
+        <mxCell id="d" value="&lt;b&gt;3 · ROW_NUMBER()&lt;/b&gt;&lt;br&gt;PARTITION BY s.SubscriptionId&lt;br&gt;ORDER BY SlotDate, StartTime, SessionId&lt;br&gt;AS SessionNo — đánh số cả gói trước khi lọc.&lt;br&gt;&lt;font color=&quot;#555555&quot; style=&quot;font-size:11px&quot;&gt;MyPtSessionDAO.java&lt;/font&gt;" style="rounded=1;arcSize=8;whiteSpace=wrap;html=1;align=left;verticalAlign=top;spacing=9;fontFamily=Arial;fontSize=13;fillColor=#ffe6cc;strokeColor=#d79b00;" vertex="1" parent="1">
+          <mxGeometry as="geometry" x="1510" y="440" width="340" height="110" />
+        </mxCell>
+        <mxCell id="f" value="&lt;b&gt;4 · JOIN tên và số điện thoại&lt;/b&gt;&lt;br&gt;Employees → Persons: PtName, PtPhone.&lt;br&gt;Customers → Persons: HolderName.&lt;br&gt;LEFT JOIN người đi kèm: PartnerFullName.&lt;br&gt;&lt;font color=&quot;#555555&quot; style=&quot;font-size:11px&quot;&gt;MyPtSessionDAO.java&lt;/font&gt;" style="rounded=1;arcSize=8;whiteSpace=wrap;html=1;align=left;verticalAlign=top;spacing=9;fontFamily=Arial;fontSize=13;fillColor=#ffe6cc;strokeColor=#d79b00;" vertex="1" parent="1">
+          <mxGeometry as="geometry" x="1510" y="570" width="340" height="110" />
+        </mxCell>
+        <mxCell id="g" value="&lt;b&gt;Nguồn thông tin người&lt;/b&gt;&lt;br&gt;Employees / Customers / Persons&lt;br&gt;LEFT JOIN cho người đi kèm có thể rỗng." style="rounded=1;arcSize=8;whiteSpace=wrap;html=1;align=left;verticalAlign=top;spacing=9;fontFamily=Arial;fontSize=13;fillColor=#f5f5f5;strokeColor=#666666;shape=cylinder3;boundedLbl=1;backgroundOutline=1;size=12;" vertex="1" parent="1">
+          <mxGeometry as="geometry" x="1880" y="570" width="340" height="110" />
+        </mxCell>
+        <mxCell id="h" value="&lt;b&gt;5 · WHERE khoảng ngày + ORDER_BY&lt;/b&gt;&lt;br&gt;WHERE ms.SlotDate BETWEEN ? AND ?&lt;br&gt;Rồi ORDER BY ms.SlotDate, ms.StartTime, ms.SessionId.&lt;br&gt;Lọc sau CTE để giữ SessionNo của cả gói.&lt;br&gt;&lt;font color=&quot;#555555&quot; style=&quot;font-size:11px&quot;&gt;MyPtSessionDAO.java&lt;/font&gt;" style="rounded=1;arcSize=8;whiteSpace=wrap;html=1;align=left;verticalAlign=top;spacing=9;fontFamily=Arial;fontSize=13;fillColor=#ffe6cc;strokeColor=#d79b00;" vertex="1" parent="1">
+          <mxGeometry as="geometry" x="1510" y="700" width="340" height="110" />
+        </mxCell>
+        <mxCell id="i" value="&lt;b&gt;6 · querySessions()&lt;/b&gt;&lt;br&gt;DBContext.getConnection → prepareStatement.&lt;br&gt;setInt(1, customerId), setInt(2, customerId).&lt;br&gt;extraParams bắt đầu vị trí 3 → executeQuery().&lt;br&gt;&lt;font color=&quot;#555555&quot; style=&quot;font-size:11px&quot;&gt;MyPtSessionDAO.java&lt;/font&gt;" style="rounded=1;arcSize=8;whiteSpace=wrap;html=1;align=left;verticalAlign=top;spacing=9;fontFamily=Arial;fontSize=13;fillColor=#ffe6cc;strokeColor=#d79b00;" vertex="1" parent="1">
+          <mxGeometry as="geometry" x="1510" y="830" width="340" height="110" />
+        </mxCell>
+        <mxCell id="j" value="&lt;b&gt;7 · readSessionRow(ResultSet)&lt;/b&gt;&lt;br&gt;Mỗi dòng → MyPtSessionRow.&lt;br&gt;SessionNo → sessionNo; GeneratedSessionCount&lt;br&gt;→ totalSessions; SQL Date/Time → java.time.&lt;br&gt;&lt;font color=&quot;#555555&quot; style=&quot;font-size:11px&quot;&gt;MyPtSessionDAO.java&lt;/font&gt;" style="rounded=1;arcSize=8;whiteSpace=wrap;html=1;align=left;verticalAlign=top;spacing=9;fontFamily=Arial;fontSize=13;fillColor=#ffe6cc;strokeColor=#d79b00;" vertex="1" parent="1">
+          <mxGeometry as="geometry" x="1510" y="960" width="340" height="110" />
+        </mxCell>
+        <mxCell id="k" value="&lt;b&gt;8 · Nhận List&amp;lt;MyPtSessionRow&amp;gt;&lt;/b&gt;&lt;br&gt;DAO chỉ đọc và ánh xạ dữ liệu.&lt;br&gt;Service mới tính nhãn và trạng thái hiển thị.&lt;br&gt;try-with-resources tự đóng Connection/Statement/RS.&lt;br&gt;&lt;font color=&quot;#555555&quot; style=&quot;font-size:11px&quot;&gt;MyPtSessionService.java&lt;/font&gt;" style="rounded=1;arcSize=8;whiteSpace=wrap;html=1;align=left;verticalAlign=top;spacing=9;fontFamily=Arial;fontSize=13;fillColor=#d5e8d4;strokeColor=#82b366;" vertex="1" parent="1">
+          <mxGeometry as="geometry" x="1140" y="1090" width="340" height="110" />
+        </mxCell>
+        <mxCell id="l" value="&lt;b&gt;9 · Hiện 17/45&lt;/b&gt;&lt;br&gt;sessionNo = vị trí buổi trong gói.&lt;br&gt;totalSessions = số buổi đã sinh của gói.&lt;br&gt;Buổi lẻ không hiện số thứ tự này.&lt;br&gt;&lt;font color=&quot;#555555&quot; style=&quot;font-size:11px&quot;&gt;_session-card.jspf / _session-detail.jspf&lt;/font&gt;" style="rounded=1;arcSize=8;whiteSpace=wrap;html=1;align=left;verticalAlign=top;spacing=9;fontFamily=Arial;fontSize=13;fillColor=#dae8fc;strokeColor=#6c8ebf;" vertex="1" parent="1">
+          <mxGeometry as="geometry" x="30" y="1220" width="340" height="110" />
+        </mxCell>
+        <mxCell id="e0" value="" style="edgeStyle=orthogonalEdgeStyle;rounded=0;html=1;endArrow=block;endFill=1;strokeWidth=1.6;strokeColor=#333333;fontSize=12;labelBackgroundColor=#ffffff;exitX=0.5;exitY=1;entryX=0.5;entryY=0;" edge="1" parent="1" source="a" target="b">
+          <mxGeometry as="geometry" relative="1" />
+        </mxCell>
+        <mxCell id="e1" value="" style="edgeStyle=orthogonalEdgeStyle;rounded=0;html=1;endArrow=block;endFill=1;strokeWidth=1.6;strokeColor=#333333;fontSize=12;labelBackgroundColor=#ffffff;exitX=1;exitY=0.5;entryX=0;entryY=0.5;" edge="1" parent="1" source="b" target="c">
+          <mxGeometry as="geometry" relative="1" />
+        </mxCell>
+        <mxCell id="e2" value="" style="edgeStyle=orthogonalEdgeStyle;rounded=0;html=1;endArrow=block;endFill=1;strokeWidth=1.6;strokeColor=#333333;fontSize=12;labelBackgroundColor=#ffffff;exitX=0.5;exitY=1;entryX=0.5;entryY=0;" edge="1" parent="1" source="b" target="d">
+          <mxGeometry as="geometry" relative="1" />
+        </mxCell>
+        <mxCell id="e3" value="" style="edgeStyle=orthogonalEdgeStyle;rounded=0;html=1;endArrow=block;endFill=1;strokeWidth=1.6;strokeColor=#333333;fontSize=12;labelBackgroundColor=#ffffff;exitX=0.5;exitY=1;entryX=0.5;entryY=0;" edge="1" parent="1" source="d" target="f">
+          <mxGeometry as="geometry" relative="1" />
+        </mxCell>
+        <mxCell id="e4" value="" style="edgeStyle=orthogonalEdgeStyle;rounded=0;html=1;endArrow=block;endFill=1;strokeWidth=1.6;strokeColor=#333333;fontSize=12;labelBackgroundColor=#ffffff;exitX=1;exitY=0.5;entryX=0;entryY=0.5;" edge="1" parent="1" source="f" target="g">
+          <mxGeometry as="geometry" relative="1" />
+        </mxCell>
+        <mxCell id="e5" value="" style="edgeStyle=orthogonalEdgeStyle;rounded=0;html=1;endArrow=block;endFill=1;strokeWidth=1.6;strokeColor=#333333;fontSize=12;labelBackgroundColor=#ffffff;exitX=0.5;exitY=1;entryX=0.5;entryY=0;" edge="1" parent="1" source="f" target="h">
+          <mxGeometry as="geometry" relative="1" />
+        </mxCell>
+        <mxCell id="e6" value="" style="edgeStyle=orthogonalEdgeStyle;rounded=0;html=1;endArrow=block;endFill=1;strokeWidth=1.6;strokeColor=#333333;fontSize=12;labelBackgroundColor=#ffffff;exitX=0.5;exitY=1;entryX=0.5;entryY=0;" edge="1" parent="1" source="h" target="i">
+          <mxGeometry as="geometry" relative="1" />
+        </mxCell>
+        <mxCell id="e7" value="" style="edgeStyle=orthogonalEdgeStyle;rounded=0;html=1;endArrow=block;endFill=1;strokeWidth=1.6;strokeColor=#333333;fontSize=12;labelBackgroundColor=#ffffff;exitX=0.5;exitY=1;entryX=0.5;entryY=0;" edge="1" parent="1" source="i" target="j">
+          <mxGeometry as="geometry" relative="1" />
+        </mxCell>
+        <mxCell id="e8" value="" style="edgeStyle=orthogonalEdgeStyle;rounded=0;html=1;endArrow=block;endFill=1;strokeWidth=1.6;strokeColor=#3d729f;fontSize=12;labelBackgroundColor=#ffffff;exitX=0.5;exitY=1;entryX=0.5;entryY=0;dashed=1;" edge="1" parent="1" source="j" target="k">
+          <mxGeometry as="geometry" relative="1" />
+        </mxCell>
+        <mxCell id="e9" value="" style="edgeStyle=orthogonalEdgeStyle;rounded=0;html=1;endArrow=block;endFill=1;strokeWidth=1.6;strokeColor=#3d729f;fontSize=12;labelBackgroundColor=#ffffff;exitX=0.5;exitY=1;entryX=0.5;entryY=0;dashed=1;" edge="1" parent="1" source="k" target="l">
+          <mxGeometry as="geometry" relative="1" />
+        </mxCell>
+        <mxCell id="takeaway" value="&lt;b&gt;CẦN NHỚ · &lt;/b&gt;ROW_NUMBER tính trước khi lọc tuần/tháng. Buổi 17/45 vẫn là 17/45 khi đổi cách xem, không trở lại 1/45." style="rounded=1;whiteSpace=wrap;html=1;align=left;spacing=12;fontFamily=Arial;fontSize=16;fillColor=#fff2cc;strokeColor=#d6b656;" vertex="1" parent="1">
+          <mxGeometry as="geometry" x="30" y="1390" width="2190" height="88" />
+        </mxCell>
+        <mxCell id="home" value="← Mục lục" style="text;html=1;whiteSpace=wrap;align=left;verticalAlign=top;fillColor=none;strokeColor=none;fontFamily=Arial;fontSize=14;fontColor=#225588;" vertex="1" parent="1" link="data:page/id,gms-current-0">
+          <mxGeometry as="geometry" x="30" y="1490" width="180" height="28" />
+        </mxCell>
+      </root>
+    </mxGraphModel>
+  </diagram>
+  <diagram id="gms-current-5" name="5. Điền dữ liệu hiển thị">
+    <mxGraphModel dx="1600" dy="1000" grid="1" gridSize="10" guides="1" tooltips="1" connect="1" arrows="1" fold="1" page="0" pageScale="1" pageWidth="2260" pageHeight="1530" math="0" shadow="0">
+      <root>
+        <mxCell id="0" />
+        <mxCell id="1" parent="0" />
+        <mxCell id="title" value="5. Điền dữ liệu hiển thị · FLOW HÀM → HÀM" style="text;html=1;whiteSpace=wrap;align=left;verticalAlign=top;fillColor=none;strokeColor=none;fontFamily=Arial;fontSize=25;fontStyle=1;" vertex="1" parent="1">
+          <mxGeometry as="geometry" x="30" y="20" width="2200" height="40" />
+        </mxCell>
+        <mxCell id="sub" value="fillDisplay(rows, myCustomerId, now): chuẩn bị dữ liệu để Lịch tập xuất lên HTML" style="text;html=1;whiteSpace=wrap;align=left;verticalAlign=top;fillColor=none;strokeColor=none;fontFamily=Arial;fontSize=15;" vertex="1" parent="1">
+          <mxGeometry as="geometry" x="30" y="70" width="2200" height="52" />
+        </mxCell>
+        <mxCell id="lbg0" value="" style="rounded=0;fillColor=#dae8fc;fillOpacity=18;strokeColor=none;" vertex="1" parent="1">
+          <mxGeometry as="geometry" x="20" y="135" width="360" height="1235" />
+        </mxCell>
+        <mxCell id="lh0" value="&lt;b&gt;JSP / JS · giao diện&lt;/b&gt;" style="rounded=1;html=1;fontSize=15;fillColor=#dae8fc;strokeColor=#6c8ebf;" vertex="1" parent="1">
+          <mxGeometry as="geometry" x="30" y="140" width="340" height="33" />
+        </mxCell>
+        <mxCell id="lbg1" value="" style="rounded=0;fillColor=#fff2cc;fillOpacity=18;strokeColor=none;" vertex="1" parent="1">
+          <mxGeometry as="geometry" x="390" y="135" width="360" height="1235" />
+        </mxCell>
+        <mxCell id="lh1" value="&lt;b&gt;Filter · quyền truy cập&lt;/b&gt;" style="rounded=1;html=1;fontSize=15;fillColor=#fff2cc;strokeColor=#d6b656;" vertex="1" parent="1">
+          <mxGeometry as="geometry" x="400" y="140" width="340" height="33" />
+        </mxCell>
+        <mxCell id="lbg2" value="" style="rounded=0;fillColor=#e1d5e7;fillOpacity=18;strokeColor=none;" vertex="1" parent="1">
+          <mxGeometry as="geometry" x="760" y="135" width="360" height="1235" />
+        </mxCell>
+        <mxCell id="lh2" value="&lt;b&gt;Servlet · nhận request&lt;/b&gt;" style="rounded=1;html=1;fontSize=15;fillColor=#e1d5e7;strokeColor=#9673a6;" vertex="1" parent="1">
+          <mxGeometry as="geometry" x="770" y="140" width="340" height="33" />
+        </mxCell>
+        <mxCell id="lbg3" value="" style="rounded=0;fillColor=#d5e8d4;fillOpacity=18;strokeColor=none;" vertex="1" parent="1">
+          <mxGeometry as="geometry" x="1130" y="135" width="360" height="1235" />
+        </mxCell>
+        <mxCell id="lh3" value="&lt;b&gt;Service · nghiệp vụ&lt;/b&gt;" style="rounded=1;html=1;fontSize=15;fillColor=#d5e8d4;strokeColor=#82b366;" vertex="1" parent="1">
+          <mxGeometry as="geometry" x="1140" y="140" width="340" height="33" />
+        </mxCell>
+        <mxCell id="lbg4" value="" style="rounded=0;fillColor=#ffe6cc;fillOpacity=18;strokeColor=none;" vertex="1" parent="1">
+          <mxGeometry as="geometry" x="1500" y="135" width="360" height="1235" />
+        </mxCell>
+        <mxCell id="lh4" value="&lt;b&gt;DAO · câu SQL&lt;/b&gt;" style="rounded=1;html=1;fontSize=15;fillColor=#ffe6cc;strokeColor=#d79b00;" vertex="1" parent="1">
+          <mxGeometry as="geometry" x="1510" y="140" width="340" height="33" />
+        </mxCell>
+        <mxCell id="lbg5" value="" style="rounded=0;fillColor=#f5f5f5;fillOpacity=18;strokeColor=none;" vertex="1" parent="1">
+          <mxGeometry as="geometry" x="1870" y="135" width="360" height="1235" />
+        </mxCell>
+        <mxCell id="lh5" value="&lt;b&gt;DB · dữ liệu gốc&lt;/b&gt;" style="rounded=1;html=1;fontSize=15;fillColor=#f5f5f5;strokeColor=#666666;" vertex="1" parent="1">
+          <mxGeometry as="geometry" x="1880" y="140" width="340" height="33" />
+        </mxCell>
+        <mxCell id="a" value="&lt;b&gt;1 · fillDisplay()&lt;/b&gt;&lt;br&gt;rows rỗng → return.&lt;br&gt;Danh sách từ DAO đã xếp ngày giờ tăng dần.&lt;br&gt;&lt;font color=&quot;#555555&quot; style=&quot;font-size:11px&quot;&gt;MyPtSessionService.java&lt;/font&gt;" style="rounded=1;arcSize=8;whiteSpace=wrap;html=1;align=left;verticalAlign=top;spacing=9;fontFamily=Arial;fontSize=13;fillColor=#d5e8d4;strokeColor=#82b366;" vertex="1" parent="1">
+          <mxGeometry as="geometry" x="1140" y="180" width="340" height="110" />
+        </mxCell>
+        <mxCell id="b" value="&lt;b&gt;2 · findClosedDays(first, last)&lt;/b&gt;&lt;br&gt;Đọc ngày nghỉ cả ngày cho toàn bộ khoảng.&lt;br&gt;Trả Set&amp;lt;LocalDate&amp;gt; để contains nhanh.&lt;br&gt;&lt;font color=&quot;#555555&quot; style=&quot;font-size:11px&quot;&gt;MyPtSessionDAO.java&lt;/font&gt;" style="rounded=1;arcSize=8;whiteSpace=wrap;html=1;align=left;verticalAlign=top;spacing=9;fontFamily=Arial;fontSize=13;fillColor=#ffe6cc;strokeColor=#d79b00;" vertex="1" parent="1">
+          <mxGeometry as="geometry" x="1510" y="310" width="340" height="110" />
+        </mxCell>
+        <mxCell id="c" value="&lt;b&gt;OperatingHourExceptions&lt;/b&gt;&lt;br&gt;IsClosedAllDay = 1&lt;br&gt;ApplyDate BETWEEN first AND last" style="rounded=1;arcSize=8;whiteSpace=wrap;html=1;align=left;verticalAlign=top;spacing=9;fontFamily=Arial;fontSize=13;fillColor=#f5f5f5;strokeColor=#666666;shape=cylinder3;boundedLbl=1;backgroundOutline=1;size=12;" vertex="1" parent="1">
+          <mxGeometry as="geometry" x="1880" y="310" width="340" height="110" />
+        </mxCell>
+        <mxCell id="d" value="&lt;b&gt;3 · Lặp từng row&lt;/b&gt;&lt;br&gt;typeLabel(type): PT cá nhân / PT đôi / Buổi lẻ.&lt;br&gt;zaloUrl(ptPhone): chuẩn hóa số → link Zalo.&lt;br&gt;&lt;font color=&quot;#555555&quot; style=&quot;font-size:11px&quot;&gt;MyPtSessionService.java&lt;/font&gt;" style="rounded=1;arcSize=8;whiteSpace=wrap;html=1;align=left;verticalAlign=top;spacing=9;fontFamily=Arial;fontSize=13;fillColor=#d5e8d4;strokeColor=#82b366;" vertex="1" parent="1">
+          <mxGeometry as="geometry" x="1140" y="440" width="340" height="110" />
+        </mxCell>
+        <mxCell id="f" value="&lt;b&gt;4 · Người tập cùng&lt;/b&gt;&lt;br&gt;Nếu PTCouple và partnerCustomerId != null:&lt;br&gt;tôi là holder → partnerFullName;&lt;br&gt;tôi là partner → holderName.&lt;br&gt;&lt;font color=&quot;#555555&quot; style=&quot;font-size:11px&quot;&gt;MyPtSessionService.java&lt;/font&gt;" style="rounded=1;arcSize=8;whiteSpace=wrap;html=1;align=left;verticalAlign=top;spacing=9;fontFamily=Arial;fontSize=13;fillColor=#d5e8d4;strokeColor=#82b366;" vertex="1" parent="1">
+          <mxGeometry as="geometry" x="1140" y="570" width="340" height="110" />
+        </mxCell>
+        <mxCell id="g" value="&lt;b&gt;5 · Chỉ tính warning khi chưa hết giờ&lt;/b&gt;&lt;br&gt;isNotEnded = now &amp;lt; slotDate + endTime.&lt;br&gt;Ngày phòng nghỉ ưu tiên trước; nếu không nghỉ&lt;br&gt;thì buildGymWarning(row, myCustomerId).&lt;br&gt;&lt;font color=&quot;#555555&quot; style=&quot;font-size:11px&quot;&gt;MyPtSessionService.java&lt;/font&gt;" style="rounded=1;arcSize=8;whiteSpace=wrap;html=1;align=left;verticalAlign=top;spacing=9;fontFamily=Arial;fontSize=13;fillColor=#d5e8d4;strokeColor=#82b366;" vertex="1" parent="1">
+          <mxGeometry as="geometry" x="1140" y="700" width="340" height="110" />
+        </mxCell>
+        <mxCell id="h" value="&lt;b&gt;DAO quyền vào gym&lt;/b&gt;&lt;br&gt;isFrozen(customerId, day)&lt;br&gt;hasGymPass(customerId, day)&lt;br&gt;Chi tiết điều kiện ở trang 7.&lt;br&gt;&lt;font color=&quot;#555555&quot; style=&quot;font-size:11px&quot;&gt;MyPtSessionDAO.java&lt;/font&gt;" style="rounded=1;arcSize=8;whiteSpace=wrap;html=1;align=left;verticalAlign=top;spacing=9;fontFamily=Arial;fontSize=13;fillColor=#ffe6cc;strokeColor=#d79b00;" vertex="1" parent="1">
+          <mxGeometry as="geometry" x="1510" y="700" width="340" height="110" />
+        </mxCell>
+        <mxCell id="i" value="&lt;b&gt;6 · applyStatus(row, now, warning)&lt;/b&gt;&lt;br&gt;Dựa Sessions.Status + thời gian + warning.&lt;br&gt;Gán statusKey, statusLabel, explanation.&lt;br&gt;ended chỉ dựa thời gian kết thúc.&lt;br&gt;&lt;font color=&quot;#555555&quot; style=&quot;font-size:11px&quot;&gt;MyPtSessionService.java&lt;/font&gt;" style="rounded=1;arcSize=8;whiteSpace=wrap;html=1;align=left;verticalAlign=top;spacing=9;fontFamily=Arial;fontSize=13;fillColor=#d5e8d4;strokeColor=#82b366;" vertex="1" parent="1">
+          <mxGeometry as="geometry" x="1140" y="830" width="340" height="110" />
+        </mxCell>
+        <mxCell id="j" value="&lt;b&gt;7 · calendarUrl(row) nếu đủ điều kiện&lt;/b&gt;&lt;br&gt;Status=Scheduled VÀ now &amp;lt; endTime.&lt;br&gt;Đổi giờ gym sang UTC; ghép URL TEMPLATE.&lt;br&gt;Đây là link mở form, không tự tạo sự kiện.&lt;br&gt;&lt;font color=&quot;#555555&quot; style=&quot;font-size:11px&quot;&gt;MyPtSessionService.java&lt;/font&gt;" style="rounded=1;arcSize=8;whiteSpace=wrap;html=1;align=left;verticalAlign=top;spacing=9;fontFamily=Arial;fontSize=13;fillColor=#d5e8d4;strokeColor=#82b366;" vertex="1" parent="1">
+          <mxGeometry as="geometry" x="1140" y="960" width="340" height="110" />
+        </mxCell>
+        <mxCell id="k" value="&lt;b&gt;8 · JSP chỉ xuất dữ liệu&lt;/b&gt;&lt;br&gt;c:out / fn:escapeXml cho nội dung động.&lt;br&gt;CSS nhận statusKey và ended để chọn giao diện.&lt;br&gt;JSP không tính lại nghiệp vụ.&lt;br&gt;&lt;font color=&quot;#555555&quot; style=&quot;font-size:11px&quot;&gt;_session-card.jspf / _session-detail.jspf&lt;/font&gt;" style="rounded=1;arcSize=8;whiteSpace=wrap;html=1;align=left;verticalAlign=top;spacing=9;fontFamily=Arial;fontSize=13;fillColor=#dae8fc;strokeColor=#6c8ebf;" vertex="1" parent="1">
+          <mxGeometry as="geometry" x="30" y="1090" width="340" height="110" />
+        </mxCell>
+        <mxCell id="l" value="&lt;b&gt;Học cách tách trách nhiệm&lt;/b&gt;&lt;br&gt;DAO = dữ liệu thô. Service = quyết định nghiệp vụ.&lt;br&gt;DTO = mang dữ liệu. JSP = HTML. JS = tương tác.&lt;br&gt;Một màn Lịch tập có nhiều tầng phối hợp." style="rounded=1;arcSize=8;whiteSpace=wrap;html=1;align=left;verticalAlign=top;spacing=9;fontFamily=Arial;fontSize=13;fillColor=#fff2cc;strokeColor=#d6b656;" vertex="1" parent="1">
+          <mxGeometry as="geometry" x="30" y="1220" width="340" height="110" />
+        </mxCell>
+        <mxCell id="e0" value="" style="edgeStyle=orthogonalEdgeStyle;rounded=0;html=1;endArrow=block;endFill=1;strokeWidth=1.6;strokeColor=#333333;fontSize=12;labelBackgroundColor=#ffffff;exitX=0.5;exitY=1;entryX=0.5;entryY=0;" edge="1" parent="1" source="a" target="b">
+          <mxGeometry as="geometry" relative="1" />
+        </mxCell>
+        <mxCell id="e1" value="" style="edgeStyle=orthogonalEdgeStyle;rounded=0;html=1;endArrow=block;endFill=1;strokeWidth=1.6;strokeColor=#333333;fontSize=12;labelBackgroundColor=#ffffff;exitX=1;exitY=0.5;entryX=0;entryY=0.5;" edge="1" parent="1" source="b" target="c">
+          <mxGeometry as="geometry" relative="1" />
+        </mxCell>
+        <mxCell id="e2" value="" style="edgeStyle=orthogonalEdgeStyle;rounded=0;html=1;endArrow=block;endFill=1;strokeWidth=1.6;strokeColor=#3d729f;fontSize=12;labelBackgroundColor=#ffffff;exitX=0.5;exitY=1;entryX=0.5;entryY=0;dashed=1;" edge="1" parent="1" source="b" target="d">
+          <mxGeometry as="geometry" relative="1" />
+        </mxCell>
+        <mxCell id="e3" value="" style="edgeStyle=orthogonalEdgeStyle;rounded=0;html=1;endArrow=block;endFill=1;strokeWidth=1.6;strokeColor=#333333;fontSize=12;labelBackgroundColor=#ffffff;exitX=0.5;exitY=1;entryX=0.5;entryY=0;" edge="1" parent="1" source="d" target="f">
+          <mxGeometry as="geometry" relative="1" />
+        </mxCell>
+        <mxCell id="e4" value="" style="edgeStyle=orthogonalEdgeStyle;rounded=0;html=1;endArrow=block;endFill=1;strokeWidth=1.6;strokeColor=#333333;fontSize=12;labelBackgroundColor=#ffffff;exitX=0.5;exitY=1;entryX=0.5;entryY=0;" edge="1" parent="1" source="f" target="g">
+          <mxGeometry as="geometry" relative="1" />
+        </mxCell>
+        <mxCell id="e5" value="" style="edgeStyle=orthogonalEdgeStyle;rounded=0;html=1;endArrow=block;endFill=1;strokeWidth=1.6;strokeColor=#333333;fontSize=12;labelBackgroundColor=#ffffff;exitX=1;exitY=0.5;entryX=0;entryY=0.5;" edge="1" parent="1" source="g" target="h">
+          <mxGeometry as="geometry" relative="1" />
+        </mxCell>
+        <mxCell id="e6" value="" style="edgeStyle=orthogonalEdgeStyle;rounded=0;html=1;endArrow=block;endFill=1;strokeWidth=1.6;strokeColor=#333333;fontSize=12;labelBackgroundColor=#ffffff;exitX=0.5;exitY=1;entryX=0.5;entryY=0;" edge="1" parent="1" source="g" target="i">
+          <mxGeometry as="geometry" relative="1" />
+        </mxCell>
+        <mxCell id="e7" value="" style="edgeStyle=orthogonalEdgeStyle;rounded=0;html=1;endArrow=block;endFill=1;strokeWidth=1.6;strokeColor=#333333;fontSize=12;labelBackgroundColor=#ffffff;exitX=0.5;exitY=1;entryX=0.5;entryY=0;" edge="1" parent="1" source="i" target="j">
+          <mxGeometry as="geometry" relative="1" />
+        </mxCell>
+        <mxCell id="e8" value="" style="edgeStyle=orthogonalEdgeStyle;rounded=0;html=1;endArrow=block;endFill=1;strokeWidth=1.6;strokeColor=#3d729f;fontSize=12;labelBackgroundColor=#ffffff;exitX=0.5;exitY=1;entryX=0.5;entryY=0;dashed=1;" edge="1" parent="1" source="j" target="k">
+          <mxGeometry as="geometry" relative="1" />
+        </mxCell>
+        <mxCell id="takeaway" value="&lt;b&gt;CẦN NHỚ · &lt;/b&gt;Danh sách rỗng trả ngay. Phòng nghỉ lấy một lần cho cả khoảng; kiểm tra quyền vào gym vẫn có thể gọi DB theo từng buổi/người." style="rounded=1;whiteSpace=wrap;html=1;align=left;spacing=12;fontFamily=Arial;fontSize=16;fillColor=#fff2cc;strokeColor=#d6b656;" vertex="1" parent="1">
+          <mxGeometry as="geometry" x="30" y="1390" width="2190" height="88" />
+        </mxCell>
+        <mxCell id="home" value="← Mục lục" style="text;html=1;whiteSpace=wrap;align=left;verticalAlign=top;fillColor=none;strokeColor=none;fontFamily=Arial;fontSize=14;fontColor=#225588;" vertex="1" parent="1" link="data:page/id,gms-current-0">
+          <mxGeometry as="geometry" x="30" y="1490" width="180" height="28" />
+        </mxCell>
+      </root>
+    </mxGraphModel>
+  </diagram>
+  <diagram id="gms-current-6" name="6. Cây quyết định trạng thái">
+    <mxGraphModel dx="1600" dy="1000" grid="1" gridSize="10" guides="1" tooltips="1" connect="1" arrows="1" fold="1" page="0" pageScale="1" pageWidth="2260" pageHeight="1530" math="0" shadow="0">
+      <root>
+        <mxCell id="0" />
+        <mxCell id="1" parent="0" />
+        <mxCell id="title" value="6. Cây quyết định trạng thái · FLOW HÀM → HÀM" style="text;html=1;whiteSpace=wrap;align=left;verticalAlign=top;fillColor=none;strokeColor=none;fontFamily=Arial;fontSize=25;fontStyle=1;" vertex="1" parent="1">
+          <mxGeometry as="geometry" x="30" y="20" width="2200" height="40" />
+        </mxCell>
+        <mxCell id="sub" value="applyStatus(): đọc từ trên xuống; Scheduled xét lần lượt, gặp nhánh phù hợp thì dừng" style="text;html=1;whiteSpace=wrap;align=left;verticalAlign=top;fillColor=none;strokeColor=none;fontFamily=Arial;fontSize=15;" vertex="1" parent="1">
+          <mxGeometry as="geometry" x="30" y="70" width="2200" height="52" />
+        </mxCell>
+        <mxCell id="lbg0" value="" style="rounded=0;fillColor=#dae8fc;fillOpacity=18;strokeColor=none;" vertex="1" parent="1">
+          <mxGeometry as="geometry" x="20" y="135" width="360" height="1235" />
+        </mxCell>
+        <mxCell id="lh0" value="&lt;b&gt;JSP / JS · giao diện&lt;/b&gt;" style="rounded=1;html=1;fontSize=15;fillColor=#dae8fc;strokeColor=#6c8ebf;" vertex="1" parent="1">
+          <mxGeometry as="geometry" x="30" y="140" width="340" height="33" />
+        </mxCell>
+        <mxCell id="lbg1" value="" style="rounded=0;fillColor=#fff2cc;fillOpacity=18;strokeColor=none;" vertex="1" parent="1">
+          <mxGeometry as="geometry" x="390" y="135" width="360" height="1235" />
+        </mxCell>
+        <mxCell id="lh1" value="&lt;b&gt;Filter · quyền truy cập&lt;/b&gt;" style="rounded=1;html=1;fontSize=15;fillColor=#fff2cc;strokeColor=#d6b656;" vertex="1" parent="1">
+          <mxGeometry as="geometry" x="400" y="140" width="340" height="33" />
+        </mxCell>
+        <mxCell id="lbg2" value="" style="rounded=0;fillColor=#e1d5e7;fillOpacity=18;strokeColor=none;" vertex="1" parent="1">
+          <mxGeometry as="geometry" x="760" y="135" width="360" height="1235" />
+        </mxCell>
+        <mxCell id="lh2" value="&lt;b&gt;Servlet · nhận request&lt;/b&gt;" style="rounded=1;html=1;fontSize=15;fillColor=#e1d5e7;strokeColor=#9673a6;" vertex="1" parent="1">
+          <mxGeometry as="geometry" x="770" y="140" width="340" height="33" />
+        </mxCell>
+        <mxCell id="lbg3" value="" style="rounded=0;fillColor=#d5e8d4;fillOpacity=18;strokeColor=none;" vertex="1" parent="1">
+          <mxGeometry as="geometry" x="1130" y="135" width="360" height="1235" />
+        </mxCell>
+        <mxCell id="lh3" value="&lt;b&gt;Service · nghiệp vụ&lt;/b&gt;" style="rounded=1;html=1;fontSize=15;fillColor=#d5e8d4;strokeColor=#82b366;" vertex="1" parent="1">
+          <mxGeometry as="geometry" x="1140" y="140" width="340" height="33" />
+        </mxCell>
+        <mxCell id="lbg4" value="" style="rounded=0;fillColor=#d5e8d4;fillOpacity=18;strokeColor=none;" vertex="1" parent="1">
+          <mxGeometry as="geometry" x="1500" y="135" width="360" height="1235" />
+        </mxCell>
+        <mxCell id="lh4" value="&lt;b&gt;Service · nhánh Status khác&lt;/b&gt;" style="rounded=1;html=1;fontSize=15;fillColor=#d5e8d4;strokeColor=#82b366;" vertex="1" parent="1">
+          <mxGeometry as="geometry" x="1510" y="140" width="340" height="33" />
+        </mxCell>
+        <mxCell id="lbg5" value="" style="rounded=0;fillColor=#f5f5f5;fillOpacity=18;strokeColor=none;" vertex="1" parent="1">
+          <mxGeometry as="geometry" x="1870" y="135" width="360" height="1235" />
+        </mxCell>
+        <mxCell id="lh5" value="&lt;b&gt;DB · dữ liệu gốc&lt;/b&gt;" style="rounded=1;html=1;fontSize=15;fillColor=#f5f5f5;strokeColor=#666666;" vertex="1" parent="1">
+          <mxGeometry as="geometry" x="1880" y="140" width="340" height="33" />
+        </mxCell>
+        <mxCell id="a" value="&lt;b&gt;1 · Cờ thời gian, độc lập Status&lt;/b&gt;&lt;br&gt;ended = !isNotEnded(row, now)&lt;br&gt;isNotEnded: now.isBefore(slotDate.atTime(endTime))&lt;br&gt;16:30 kết thúc; now=16:30 → ended=true.&lt;br&gt;&lt;font color=&quot;#555555&quot; style=&quot;font-size:11px&quot;&gt;MyPtSessionService.java&lt;/font&gt;" style="rounded=1;arcSize=8;whiteSpace=wrap;html=1;align=left;verticalAlign=top;spacing=9;fontFamily=Arial;fontSize=13;fillColor=#d5e8d4;strokeColor=#82b366;" vertex="1" parent="1">
+          <mxGeometry as="geometry" x="1140" y="180" width="340" height="110" />
+        </mxCell>
+        <mxCell id="b" value="&lt;b&gt;2 · switch(row.getStatus())&lt;/b&gt;&lt;br&gt;Scheduled → cây quyết định bên dưới.&lt;br&gt;CheckedIn / Missed / default → cột bên phải.&lt;br&gt;&lt;font color=&quot;#555555&quot; style=&quot;font-size:11px&quot;&gt;MyPtSessionService.java&lt;/font&gt;" style="rounded=1;arcSize=8;whiteSpace=wrap;html=1;align=left;verticalAlign=top;spacing=9;fontFamily=Arial;fontSize=13;fillColor=#d5e8d4;strokeColor=#82b366;" vertex="1" parent="1">
+          <mxGeometry as="geometry" x="1140" y="310" width="340" height="110" />
+        </mxCell>
+        <mxCell id="c" value="&lt;b&gt;Scheduled · đã hết giờ?&lt;/b&gt;&lt;br&gt;Có → pending / “Đang cập nhật”.&lt;br&gt;Giải thích: chờ chốt kết quả sau ngày tập.&lt;br&gt;Không tự ghi Missed vào DB.&lt;br&gt;&lt;font color=&quot;#555555&quot; style=&quot;font-size:11px&quot;&gt;MyPtSessionService.java&lt;/font&gt;" style="rounded=1;arcSize=8;whiteSpace=wrap;html=1;align=left;verticalAlign=top;spacing=9;fontFamily=Arial;fontSize=13;fillColor=#d5e8d4;strokeColor=#82b366;" vertex="1" parent="1">
+          <mxGeometry as="geometry" x="1140" y="440" width="340" height="110" />
+        </mxCell>
+        <mxCell id="d" value="&lt;b&gt;Scheduled · warning != null?&lt;/b&gt;&lt;br&gt;Chưa hết giờ và có cảnh báo → warn.&lt;br&gt;Nhãn “Cần chú ý”; explanation = warning.&lt;br&gt;&lt;font color=&quot;#555555&quot; style=&quot;font-size:11px&quot;&gt;MyPtSessionService.java&lt;/font&gt;" style="rounded=1;arcSize=8;whiteSpace=wrap;html=1;align=left;verticalAlign=top;spacing=9;fontFamily=Arial;fontSize=13;fillColor=#d5e8d4;strokeColor=#82b366;" vertex="1" parent="1">
+          <mxGeometry as="geometry" x="1140" y="570" width="340" height="110" />
+        </mxCell>
+        <mxCell id="f" value="&lt;b&gt;Scheduled · ngày tập là hôm nay?&lt;/b&gt;&lt;br&gt;Có → key=today.&lt;br&gt;now &amp;lt; startTime → “Hôm nay”.&lt;br&gt;now &amp;gt;= startTime → “Đang diễn ra”.&lt;br&gt;&lt;font color=&quot;#555555&quot; style=&quot;font-size:11px&quot;&gt;MyPtSessionService.java&lt;/font&gt;" style="rounded=1;arcSize=8;whiteSpace=wrap;html=1;align=left;verticalAlign=top;spacing=9;fontFamily=Arial;fontSize=13;fillColor=#d5e8d4;strokeColor=#82b366;" vertex="1" parent="1">
+          <mxGeometry as="geometry" x="1140" y="700" width="340" height="110" />
+        </mxCell>
+        <mxCell id="g" value="&lt;b&gt;Scheduled · còn lại&lt;/b&gt;&lt;br&gt;upcoming / “Sắp tới”.&lt;br&gt;Không cảnh báo và chưa tới ngày tập.&lt;br&gt;&lt;font color=&quot;#555555&quot; style=&quot;font-size:11px&quot;&gt;MyPtSessionService.java&lt;/font&gt;" style="rounded=1;arcSize=8;whiteSpace=wrap;html=1;align=left;verticalAlign=top;spacing=9;fontFamily=Arial;fontSize=13;fillColor=#d5e8d4;strokeColor=#82b366;" vertex="1" parent="1">
+          <mxGeometry as="geometry" x="1140" y="830" width="340" height="110" />
+        </mxCell>
+        <mxCell id="h" value="&lt;b&gt;CheckedIn&lt;/b&gt;&lt;br&gt;checkedIn / “Đã check-in”.&lt;br&gt;Gói đôi: bạn HOẶC người tập cùng đã check-in.&lt;br&gt;Giữ nhãn này dù ended=true.&lt;br&gt;&lt;font color=&quot;#555555&quot; style=&quot;font-size:11px&quot;&gt;MyPtSessionService.java&lt;/font&gt;" style="rounded=1;arcSize=8;whiteSpace=wrap;html=1;align=left;verticalAlign=top;spacing=9;fontFamily=Arial;fontSize=13;fillColor=#d5e8d4;strokeColor=#82b366;" vertex="1" parent="1">
+          <mxGeometry as="geometry" x="1510" y="440" width="340" height="110" />
+        </mxCell>
+        <mxCell id="i" value="&lt;b&gt;Missed&lt;/b&gt;&lt;br&gt;missed / “Vắng”.&lt;br&gt;missedExplanation(MissedReason, couple):&lt;br&gt;NoCheckIn / NoMembership / MembershipFrozen.&lt;br&gt;&lt;font color=&quot;#555555&quot; style=&quot;font-size:11px&quot;&gt;MyPtSessionService.java&lt;/font&gt;" style="rounded=1;arcSize=8;whiteSpace=wrap;html=1;align=left;verticalAlign=top;spacing=9;fontFamily=Arial;fontSize=13;fillColor=#d5e8d4;strokeColor=#82b366;" vertex="1" parent="1">
+          <mxGeometry as="geometry" x="1510" y="570" width="340" height="110" />
+        </mxCell>
+        <mxCell id="j" value="&lt;b&gt;default · thông thường Cancelled&lt;/b&gt;&lt;br&gt;cancelled / “Đã hủy”.&lt;br&gt;cancelExplanation(CancelType, couple): ByPt,&lt;br&gt;ByCustomer, GymClosed, PackageExpired.&lt;br&gt;&lt;font color=&quot;#555555&quot; style=&quot;font-size:11px&quot;&gt;MyPtSessionService.java&lt;/font&gt;" style="rounded=1;arcSize=8;whiteSpace=wrap;html=1;align=left;verticalAlign=top;spacing=9;fontFamily=Arial;fontSize=13;fillColor=#d5e8d4;strokeColor=#82b366;" vertex="1" parent="1">
+          <mxGeometry as="geometry" x="1510" y="700" width="340" height="110" />
+        </mxCell>
+        <mxCell id="k" value="&lt;b&gt;Nguồn trạng thái đã lưu&lt;/b&gt;&lt;br&gt;Sessions.Status / MissedReason / CancelType.&lt;br&gt;Màn này đọc kết quả; JOB-04 là luồng riêng,&lt;br&gt;không được gọi bởi applyStatus()." style="rounded=1;arcSize=8;whiteSpace=wrap;html=1;align=left;verticalAlign=top;spacing=9;fontFamily=Arial;fontSize=13;fillColor=#f5f5f5;strokeColor=#666666;shape=cylinder3;boundedLbl=1;backgroundOutline=1;size=12;" vertex="1" parent="1">
+          <mxGeometry as="geometry" x="1880" y="960" width="340" height="110" />
+        </mxCell>
+        <mxCell id="l" value="&lt;b&gt;3 · Hiển thị thẻ đã qua&lt;/b&gt;&lt;br&gt;ended=true → nền trầm, vẫn bấm được.&lt;br&gt;statusKey vẫn giữ nhãn/màu trạng thái.&lt;br&gt;Không đồng nhất ended với CheckedIn hoặc Missed.&lt;br&gt;&lt;font color=&quot;#555555&quot; style=&quot;font-size:11px&quot;&gt;my-pt-sessions.css / _session-card.jspf&lt;/font&gt;" style="rounded=1;arcSize=8;whiteSpace=wrap;html=1;align=left;verticalAlign=top;spacing=9;fontFamily=Arial;fontSize=13;fillColor=#dae8fc;strokeColor=#6c8ebf;" vertex="1" parent="1">
+          <mxGeometry as="geometry" x="30" y="1090" width="340" height="110" />
+        </mxCell>
+        <mxCell id="m" value="&lt;b&gt;Ví dụ tự kiểm tra&lt;/b&gt;&lt;br&gt;20/10 15:00–16:30, Scheduled, now=16:29 → today.&lt;br&gt;now=16:30 → pending. Nếu Status=CheckedIn&lt;br&gt;thì vẫn checkedIn và ended=true." style="rounded=1;arcSize=8;whiteSpace=wrap;html=1;align=left;verticalAlign=top;spacing=9;fontFamily=Arial;fontSize=13;fillColor=#fff2cc;strokeColor=#d6b656;" vertex="1" parent="1">
+          <mxGeometry as="geometry" x="30" y="1220" width="340" height="110" />
+        </mxCell>
+        <mxCell id="e0" value="" style="edgeStyle=orthogonalEdgeStyle;rounded=0;html=1;endArrow=block;endFill=1;strokeWidth=1.6;strokeColor=#333333;fontSize=12;labelBackgroundColor=#ffffff;exitX=0.5;exitY=1;entryX=0.5;entryY=0;" edge="1" parent="1" source="a" target="b">
+          <mxGeometry as="geometry" relative="1" />
+        </mxCell>
+        <mxCell id="e1" value="Scheduled" style="edgeStyle=orthogonalEdgeStyle;rounded=0;html=1;endArrow=block;endFill=1;strokeWidth=1.6;strokeColor=#333333;fontSize=12;labelBackgroundColor=#ffffff;exitX=0.5;exitY=1;entryX=0.5;entryY=0;" edge="1" parent="1" source="b" target="c">
+          <mxGeometry as="geometry" relative="1" />
+        </mxCell>
+        <mxCell id="e2" value="chưa hết giờ" style="edgeStyle=orthogonalEdgeStyle;rounded=0;html=1;endArrow=block;endFill=1;strokeWidth=1.6;strokeColor=#333333;fontSize=12;labelBackgroundColor=#ffffff;exitX=0.5;exitY=1;entryX=0.5;entryY=0;" edge="1" parent="1" source="c" target="d">
+          <mxGeometry as="geometry" relative="1" />
+        </mxCell>
+        <mxCell id="e3" value="không warning" style="edgeStyle=orthogonalEdgeStyle;rounded=0;html=1;endArrow=block;endFill=1;strokeWidth=1.6;strokeColor=#333333;fontSize=12;labelBackgroundColor=#ffffff;exitX=0.5;exitY=1;entryX=0.5;entryY=0;" edge="1" parent="1" source="d" target="f">
+          <mxGeometry as="geometry" relative="1" />
+        </mxCell>
+        <mxCell id="e4" value="không phải hôm nay" style="edgeStyle=orthogonalEdgeStyle;rounded=0;html=1;endArrow=block;endFill=1;strokeWidth=1.6;strokeColor=#333333;fontSize=12;labelBackgroundColor=#ffffff;exitX=0.5;exitY=1;entryX=0.5;entryY=0;" edge="1" parent="1" source="f" target="g">
+          <mxGeometry as="geometry" relative="1" />
+        </mxCell>
+        <mxCell id="e5" value="CheckedIn" style="edgeStyle=orthogonalEdgeStyle;rounded=0;html=1;endArrow=block;endFill=1;strokeWidth=1.6;strokeColor=#333333;fontSize=12;labelBackgroundColor=#ffffff;exitX=0.5;exitY=1;entryX=0.5;entryY=0;" edge="1" parent="1" source="b" target="h">
+          <mxGeometry as="geometry" relative="1" />
+        </mxCell>
+        <mxCell id="e6" value="Missed" style="edgeStyle=orthogonalEdgeStyle;rounded=0;html=1;endArrow=block;endFill=1;strokeWidth=1.6;strokeColor=#333333;fontSize=12;labelBackgroundColor=#ffffff;exitX=0.5;exitY=1;entryX=0.5;entryY=0;" edge="1" parent="1" source="b" target="i">
+          <mxGeometry as="geometry" relative="1" />
+        </mxCell>
+        <mxCell id="e7" value="default" style="edgeStyle=orthogonalEdgeStyle;rounded=0;html=1;endArrow=block;endFill=1;strokeWidth=1.6;strokeColor=#333333;fontSize=12;labelBackgroundColor=#ffffff;exitX=0.5;exitY=1;entryX=0.5;entryY=0;" edge="1" parent="1" source="b" target="j">
+          <mxGeometry as="geometry" relative="1" />
+        </mxCell>
+        <mxCell id="e8" value="kết quả" style="edgeStyle=orthogonalEdgeStyle;rounded=0;html=1;endArrow=block;endFill=1;strokeWidth=1.6;strokeColor=#3d729f;fontSize=12;labelBackgroundColor=#ffffff;exitX=0.5;exitY=1;entryX=0.5;entryY=0;dashed=1;" edge="1" parent="1" source="g" target="l">
+          <mxGeometry as="geometry" relative="1" />
+        </mxCell>
+        <mxCell id="e9" value="kết quả" style="edgeStyle=orthogonalEdgeStyle;rounded=0;html=1;endArrow=block;endFill=1;strokeWidth=1.6;strokeColor=#3d729f;fontSize=12;labelBackgroundColor=#ffffff;exitX=0.5;exitY=1;entryX=0.5;entryY=0;dashed=1;" edge="1" parent="1" source="h" target="l">
+          <mxGeometry as="geometry" relative="1" />
+        </mxCell>
+        <mxCell id="e10" value="kết quả" style="edgeStyle=orthogonalEdgeStyle;rounded=0;html=1;endArrow=block;endFill=1;strokeWidth=1.6;strokeColor=#3d729f;fontSize=12;labelBackgroundColor=#ffffff;exitX=0.5;exitY=1;entryX=0.5;entryY=0;dashed=1;" edge="1" parent="1" source="i" target="l">
+          <mxGeometry as="geometry" relative="1" />
+        </mxCell>
+        <mxCell id="e11" value="kết quả" style="edgeStyle=orthogonalEdgeStyle;rounded=0;html=1;endArrow=block;endFill=1;strokeWidth=1.6;strokeColor=#3d729f;fontSize=12;labelBackgroundColor=#ffffff;exitX=0.5;exitY=1;entryX=0.5;entryY=0;dashed=1;" edge="1" parent="1" source="j" target="l">
+          <mxGeometry as="geometry" relative="1" />
+        </mxCell>
+        <mxCell id="takeaway" value="&lt;b&gt;CẦN NHỚ · &lt;/b&gt;Đúng giờ kết thúc cũng đã ended. “Đã check-in” là ghi nhận vào gym, không khẳng định đã tập xong với PT." style="rounded=1;whiteSpace=wrap;html=1;align=left;spacing=12;fontFamily=Arial;fontSize=16;fillColor=#fff2cc;strokeColor=#d6b656;" vertex="1" parent="1">
+          <mxGeometry as="geometry" x="30" y="1390" width="2190" height="88" />
+        </mxCell>
+        <mxCell id="home" value="← Mục lục" style="text;html=1;whiteSpace=wrap;align=left;verticalAlign=top;fillColor=none;strokeColor=none;fontFamily=Arial;fontSize=14;fontColor=#225588;" vertex="1" parent="1" link="data:page/id,gms-current-0">
+          <mxGeometry as="geometry" x="30" y="1490" width="180" height="28" />
+        </mxCell>
+      </root>
+    </mxGraphModel>
+  </diagram>
+  <diagram id="gms-current-7" name="7. Cảnh báo quyền vào gym">
+    <mxGraphModel dx="1600" dy="1000" grid="1" gridSize="10" guides="1" tooltips="1" connect="1" arrows="1" fold="1" page="0" pageScale="1" pageWidth="2260" pageHeight="1530" math="0" shadow="0">
+      <root>
+        <mxCell id="0" />
+        <mxCell id="1" parent="0" />
+        <mxCell id="title" value="7. Cảnh báo quyền vào gym · FLOW HÀM → HÀM" style="text;html=1;whiteSpace=wrap;align=left;verticalAlign=top;fillColor=none;strokeColor=none;fontFamily=Arial;fontSize=25;fontStyle=1;" vertex="1" parent="1">
+          <mxGeometry as="geometry" x="30" y="20" width="2200" height="40" />
+        </mxCell>
+        <mxCell id="sub" value="buildGymWarning(): tính quyền của từng người rồi chọn câu nói theo người đang xem" style="text;html=1;whiteSpace=wrap;align=left;verticalAlign=top;fillColor=none;strokeColor=none;fontFamily=Arial;fontSize=15;" vertex="1" parent="1">
+          <mxGeometry as="geometry" x="30" y="70" width="2200" height="52" />
+        </mxCell>
+        <mxCell id="lbg0" value="" style="rounded=0;fillColor=#dae8fc;fillOpacity=18;strokeColor=none;" vertex="1" parent="1">
+          <mxGeometry as="geometry" x="20" y="135" width="360" height="1235" />
+        </mxCell>
+        <mxCell id="lh0" value="&lt;b&gt;JSP / JS · giao diện&lt;/b&gt;" style="rounded=1;html=1;fontSize=15;fillColor=#dae8fc;strokeColor=#6c8ebf;" vertex="1" parent="1">
+          <mxGeometry as="geometry" x="30" y="140" width="340" height="33" />
+        </mxCell>
+        <mxCell id="lbg1" value="" style="rounded=0;fillColor=#fff2cc;fillOpacity=18;strokeColor=none;" vertex="1" parent="1">
+          <mxGeometry as="geometry" x="390" y="135" width="360" height="1235" />
+        </mxCell>
+        <mxCell id="lh1" value="&lt;b&gt;Filter · quyền truy cập&lt;/b&gt;" style="rounded=1;html=1;fontSize=15;fillColor=#fff2cc;strokeColor=#d6b656;" vertex="1" parent="1">
+          <mxGeometry as="geometry" x="400" y="140" width="340" height="33" />
+        </mxCell>
+        <mxCell id="lbg2" value="" style="rounded=0;fillColor=#e1d5e7;fillOpacity=18;strokeColor=none;" vertex="1" parent="1">
+          <mxGeometry as="geometry" x="760" y="135" width="360" height="1235" />
+        </mxCell>
+        <mxCell id="lh2" value="&lt;b&gt;Servlet · nhận request&lt;/b&gt;" style="rounded=1;html=1;fontSize=15;fillColor=#e1d5e7;strokeColor=#9673a6;" vertex="1" parent="1">
+          <mxGeometry as="geometry" x="770" y="140" width="340" height="33" />
+        </mxCell>
+        <mxCell id="lbg3" value="" style="rounded=0;fillColor=#d5e8d4;fillOpacity=18;strokeColor=none;" vertex="1" parent="1">
+          <mxGeometry as="geometry" x="1130" y="135" width="360" height="1235" />
+        </mxCell>
+        <mxCell id="lh3" value="&lt;b&gt;Service · nghiệp vụ&lt;/b&gt;" style="rounded=1;html=1;fontSize=15;fillColor=#d5e8d4;strokeColor=#82b366;" vertex="1" parent="1">
+          <mxGeometry as="geometry" x="1140" y="140" width="340" height="33" />
+        </mxCell>
+        <mxCell id="lbg4" value="" style="rounded=0;fillColor=#ffe6cc;fillOpacity=18;strokeColor=none;" vertex="1" parent="1">
+          <mxGeometry as="geometry" x="1500" y="135" width="360" height="1235" />
+        </mxCell>
+        <mxCell id="lh4" value="&lt;b&gt;DAO · câu SQL&lt;/b&gt;" style="rounded=1;html=1;fontSize=15;fillColor=#ffe6cc;strokeColor=#d79b00;" vertex="1" parent="1">
+          <mxGeometry as="geometry" x="1510" y="140" width="340" height="33" />
+        </mxCell>
+        <mxCell id="lbg5" value="" style="rounded=0;fillColor=#f5f5f5;fillOpacity=18;strokeColor=none;" vertex="1" parent="1">
+          <mxGeometry as="geometry" x="1870" y="135" width="360" height="1235" />
+        </mxCell>
+        <mxCell id="lh5" value="&lt;b&gt;DB · dữ liệu gốc&lt;/b&gt;" style="rounded=1;html=1;fontSize=15;fillColor=#f5f5f5;strokeColor=#666666;" vertex="1" parent="1">
+          <mxGeometry as="geometry" x="1880" y="140" width="340" height="33" />
+        </mxCell>
+        <mxCell id="a" value="&lt;b&gt;1 · Kiểm tra ngày phòng nghỉ trước&lt;/b&gt;&lt;br&gt;fillDisplay(): nếu chưa kết thúc và closedDays có ngày&lt;br&gt;→ warning phòng nghỉ; không gọi buildGymWarning&lt;br&gt;cho nhánh này.&lt;br&gt;&lt;font color=&quot;#555555&quot; style=&quot;font-size:11px&quot;&gt;MyPtSessionService.java&lt;/font&gt;" style="rounded=1;arcSize=8;whiteSpace=wrap;html=1;align=left;verticalAlign=top;spacing=9;fontFamily=Arial;fontSize=13;fillColor=#d5e8d4;strokeColor=#82b366;" vertex="1" parent="1">
+          <mxGeometry as="geometry" x="1140" y="180" width="340" height="110" />
+        </mxCell>
+        <mxCell id="b" value="&lt;b&gt;2 · Tính holderOk&lt;/b&gt;&lt;br&gt;holderFrozen = isFrozen(holderId, day)&lt;br&gt;holderOk = hasGymPass(holderId, day)&lt;br&gt;&amp;amp;&amp;amp; !holderFrozen&lt;br&gt;&lt;font color=&quot;#555555&quot; style=&quot;font-size:11px&quot;&gt;MyPtSessionService.java&lt;/font&gt;" style="rounded=1;arcSize=8;whiteSpace=wrap;html=1;align=left;verticalAlign=top;spacing=9;fontFamily=Arial;fontSize=13;fillColor=#d5e8d4;strokeColor=#82b366;" vertex="1" parent="1">
+          <mxGeometry as="geometry" x="1140" y="310" width="340" height="110" />
+        </mxCell>
+        <mxCell id="c" value="&lt;b&gt;hasGymPass() / isFrozen()&lt;/b&gt;&lt;br&gt;Membership: Active/Frozen/Expired.&lt;br&gt;DayPass: Active/Used/Expired; ngày phải trong hạn.&lt;br&gt;isFrozen: ngày có nằm trong kỳ bảo lưu?&lt;br&gt;&lt;font color=&quot;#555555&quot; style=&quot;font-size:11px&quot;&gt;MyPtSessionDAO.java&lt;/font&gt;" style="rounded=1;arcSize=8;whiteSpace=wrap;html=1;align=left;verticalAlign=top;spacing=9;fontFamily=Arial;fontSize=13;fillColor=#ffe6cc;strokeColor=#d79b00;" vertex="1" parent="1">
+          <mxGeometry as="geometry" x="1510" y="310" width="340" height="110" />
+        </mxCell>
+        <mxCell id="d" value="&lt;b&gt;Subscriptions + FreezeRecords&lt;/b&gt;&lt;br&gt;FreezeRecords JOIN Membership. Khoảng bảo lưu:&lt;br&gt;StartDate → COALESCE(ActualEndDate, PlannedEndDate).&lt;br&gt;Không chỉ xét Status hiện tại." style="rounded=1;arcSize=8;whiteSpace=wrap;html=1;align=left;verticalAlign=top;spacing=9;fontFamily=Arial;fontSize=13;fillColor=#f5f5f5;strokeColor=#666666;shape=cylinder3;boundedLbl=1;backgroundOutline=1;size=12;" vertex="1" parent="1">
+          <mxGeometry as="geometry" x="1880" y="310" width="340" height="110" />
+        </mxCell>
+        <mxCell id="f" value="&lt;b&gt;3 · Cá nhân hoặc thiếu partner?&lt;/b&gt;&lt;br&gt;holderOk → không cảnh báo.&lt;br&gt;Không Ok và frozen → nhắc bảo lưu.&lt;br&gt;Còn lại → thiếu Membership/DayPass.&lt;br&gt;&lt;font color=&quot;#555555&quot; style=&quot;font-size:11px&quot;&gt;MyPtSessionService.java&lt;/font&gt;" style="rounded=1;arcSize=8;whiteSpace=wrap;html=1;align=left;verticalAlign=top;spacing=9;fontFamily=Arial;fontSize=13;fillColor=#d5e8d4;strokeColor=#82b366;" vertex="1" parent="1">
+          <mxGeometry as="geometry" x="1140" y="440" width="340" height="110" />
+        </mxCell>
+        <mxCell id="g" value="&lt;b&gt;4 · Gói đôi có partner&lt;/b&gt;&lt;br&gt;Tính partnerFrozen và partnerOk tương tự holder.&lt;br&gt;iAmHolder quyết định meOk / otherOk / meFrozen.&lt;br&gt;&lt;font color=&quot;#555555&quot; style=&quot;font-size:11px&quot;&gt;MyPtSessionService.java&lt;/font&gt;" style="rounded=1;arcSize=8;whiteSpace=wrap;html=1;align=left;verticalAlign=top;spacing=9;fontFamily=Arial;fontSize=13;fillColor=#d5e8d4;strokeColor=#82b366;" vertex="1" parent="1">
+          <mxGeometry as="geometry" x="1140" y="570" width="340" height="110" />
+        </mxCell>
+        <mxCell id="h" value="&lt;b&gt;5 · meOk &amp;amp;&amp;amp; otherOk&lt;/b&gt;&lt;br&gt;Cả hai hợp lệ → return null (không cảnh báo).&lt;br&gt;&lt;font color=&quot;#555555&quot; style=&quot;font-size:11px&quot;&gt;MyPtSessionService.java&lt;/font&gt;" style="rounded=1;arcSize=8;whiteSpace=wrap;html=1;align=left;verticalAlign=top;spacing=9;fontFamily=Arial;fontSize=13;fillColor=#d5e8d4;strokeColor=#82b366;" vertex="1" parent="1">
+          <mxGeometry as="geometry" x="1140" y="700" width="340" height="110" />
+        </mxCell>
+        <mxCell id="i" value="&lt;b&gt;6 · Chỉ meOk hoặc chỉ otherOk&lt;/b&gt;&lt;br&gt;Chỉ tôi hợp lệ → tôi vẫn tham gia; nhắc người kia.&lt;br&gt;Chỉ người kia hợp lệ → họ vẫn tham gia;&lt;br&gt;nhắc tôi thiếu quyền hoặc đang bảo lưu.&lt;br&gt;&lt;font color=&quot;#555555&quot; style=&quot;font-size:11px&quot;&gt;MyPtSessionService.java&lt;/font&gt;" style="rounded=1;arcSize=8;whiteSpace=wrap;html=1;align=left;verticalAlign=top;spacing=9;fontFamily=Arial;fontSize=13;fillColor=#d5e8d4;strokeColor=#82b366;" vertex="1" parent="1">
+          <mxGeometry as="geometry" x="1140" y="830" width="340" height="110" />
+        </mxCell>
+        <mxCell id="j" value="&lt;b&gt;7 · Cả hai không hợp lệ&lt;/b&gt;&lt;br&gt;Có người frozen → nhắc bảo lưu + quyền vào gym.&lt;br&gt;Không ai frozen → cả hai thiếu quyền vào gym.&lt;br&gt;&lt;font color=&quot;#555555&quot; style=&quot;font-size:11px&quot;&gt;MyPtSessionService.java&lt;/font&gt;" style="rounded=1;arcSize=8;whiteSpace=wrap;html=1;align=left;verticalAlign=top;spacing=9;fontFamily=Arial;fontSize=13;fillColor=#d5e8d4;strokeColor=#82b366;" vertex="1" parent="1">
+          <mxGeometry as="geometry" x="1140" y="960" width="340" height="110" />
+        </mxCell>
+        <mxCell id="k" value="&lt;b&gt;8 · applyStatus() chọn warn&lt;/b&gt;&lt;br&gt;Chỉ Scheduled chưa hết giờ mới dùng warning&lt;br&gt;để hiện “Cần chú ý”; nội dung vào explanation.&lt;br&gt;&lt;font color=&quot;#555555&quot; style=&quot;font-size:11px&quot;&gt;_session-detail.jspf&lt;/font&gt;" style="rounded=1;arcSize=8;whiteSpace=wrap;html=1;align=left;verticalAlign=top;spacing=9;fontFamily=Arial;fontSize=13;fillColor=#dae8fc;strokeColor=#6c8ebf;" vertex="1" parent="1">
+          <mxGeometry as="geometry" x="30" y="1090" width="340" height="110" />
+        </mxCell>
+        <mxCell id="l" value="&lt;b&gt;Lưu ý khi trả lời thầy&lt;/b&gt;&lt;br&gt;Quyền vào gym khác quyền sở hữu gói PT.&lt;br&gt;Có gói PT vẫn có thể bị nhắc thiếu quyền vào gym.&lt;br&gt;Một người gói đôi hợp lệ không làm người kia tự hợp lệ." style="rounded=1;arcSize=8;whiteSpace=wrap;html=1;align=left;verticalAlign=top;spacing=9;fontFamily=Arial;fontSize=13;fillColor=#fff2cc;strokeColor=#d6b656;" vertex="1" parent="1">
+          <mxGeometry as="geometry" x="30" y="1220" width="340" height="110" />
+        </mxCell>
+        <mxCell id="e0" value="" style="edgeStyle=orthogonalEdgeStyle;rounded=0;html=1;endArrow=block;endFill=1;strokeWidth=1.6;strokeColor=#333333;fontSize=12;labelBackgroundColor=#ffffff;exitX=0.5;exitY=1;entryX=0.5;entryY=0;" edge="1" parent="1" source="a" target="b">
+          <mxGeometry as="geometry" relative="1" />
+        </mxCell>
+        <mxCell id="e1" value="" style="edgeStyle=orthogonalEdgeStyle;rounded=0;html=1;endArrow=block;endFill=1;strokeWidth=1.6;strokeColor=#333333;fontSize=12;labelBackgroundColor=#ffffff;exitX=1;exitY=0.5;entryX=0;entryY=0.5;" edge="1" parent="1" source="b" target="c">
+          <mxGeometry as="geometry" relative="1" />
+        </mxCell>
+        <mxCell id="e2" value="" style="edgeStyle=orthogonalEdgeStyle;rounded=0;html=1;endArrow=block;endFill=1;strokeWidth=1.6;strokeColor=#333333;fontSize=12;labelBackgroundColor=#ffffff;exitX=1;exitY=0.5;entryX=0;entryY=0.5;" edge="1" parent="1" source="c" target="d">
+          <mxGeometry as="geometry" relative="1" />
+        </mxCell>
+        <mxCell id="e3" value="" style="edgeStyle=orthogonalEdgeStyle;rounded=0;html=1;endArrow=block;endFill=1;strokeWidth=1.6;strokeColor=#333333;fontSize=12;labelBackgroundColor=#ffffff;exitX=0.5;exitY=1;entryX=0.5;entryY=0;" edge="1" parent="1" source="b" target="f">
+          <mxGeometry as="geometry" relative="1" />
+        </mxCell>
+        <mxCell id="e4" value="nếu là gói đôi" style="edgeStyle=orthogonalEdgeStyle;rounded=0;html=1;endArrow=block;endFill=1;strokeWidth=1.6;strokeColor=#333333;fontSize=12;labelBackgroundColor=#ffffff;exitX=0.5;exitY=1;entryX=0.5;entryY=0;" edge="1" parent="1" source="f" target="g">
+          <mxGeometry as="geometry" relative="1" />
+        </mxCell>
+        <mxCell id="e5" value="" style="edgeStyle=orthogonalEdgeStyle;rounded=0;html=1;endArrow=block;endFill=1;strokeWidth=1.6;strokeColor=#333333;fontSize=12;labelBackgroundColor=#ffffff;exitX=0.5;exitY=1;entryX=0.5;entryY=0;" edge="1" parent="1" source="g" target="h">
+          <mxGeometry as="geometry" relative="1" />
+        </mxCell>
+        <mxCell id="e6" value="" style="edgeStyle=orthogonalEdgeStyle;rounded=0;html=1;endArrow=block;endFill=1;strokeWidth=1.6;strokeColor=#333333;fontSize=12;labelBackgroundColor=#ffffff;exitX=0.5;exitY=1;entryX=0.5;entryY=0;" edge="1" parent="1" source="h" target="i">
+          <mxGeometry as="geometry" relative="1" />
+        </mxCell>
+        <mxCell id="e7" value="" style="edgeStyle=orthogonalEdgeStyle;rounded=0;html=1;endArrow=block;endFill=1;strokeWidth=1.6;strokeColor=#333333;fontSize=12;labelBackgroundColor=#ffffff;exitX=0.5;exitY=1;entryX=0.5;entryY=0;" edge="1" parent="1" source="i" target="j">
+          <mxGeometry as="geometry" relative="1" />
+        </mxCell>
+        <mxCell id="e8" value="" style="edgeStyle=orthogonalEdgeStyle;rounded=0;html=1;endArrow=block;endFill=1;strokeWidth=1.6;strokeColor=#3d729f;fontSize=12;labelBackgroundColor=#ffffff;exitX=0.5;exitY=1;entryX=0.5;entryY=0;dashed=1;" edge="1" parent="1" source="j" target="k">
+          <mxGeometry as="geometry" relative="1" />
+        </mxCell>
+        <mxCell id="takeaway" value="&lt;b&gt;CẦN NHỚ · &lt;/b&gt;holderOk/partnerOk = hasGymPass &amp;amp;&amp;amp; !isFrozen. Warning là lời nhắc hiển thị; không hủy buổi và không cập nhật DB." style="rounded=1;whiteSpace=wrap;html=1;align=left;spacing=12;fontFamily=Arial;fontSize=16;fillColor=#fff2cc;strokeColor=#d6b656;" vertex="1" parent="1">
+          <mxGeometry as="geometry" x="30" y="1390" width="2190" height="88" />
+        </mxCell>
+        <mxCell id="home" value="← Mục lục" style="text;html=1;whiteSpace=wrap;align=left;verticalAlign=top;fillColor=none;strokeColor=none;fontFamily=Arial;fontSize=14;fontColor=#225588;" vertex="1" parent="1" link="data:page/id,gms-current-0">
+          <mxGeometry as="geometry" x="30" y="1490" width="180" height="28" />
+        </mxCell>
+      </root>
+    </mxGraphModel>
+  </diagram>
+  <diagram id="gms-current-8" name="8. Chọn ngày và highlight">
+    <mxGraphModel dx="1600" dy="1000" grid="1" gridSize="10" guides="1" tooltips="1" connect="1" arrows="1" fold="1" page="0" pageScale="1" pageWidth="2260" pageHeight="1530" math="0" shadow="0">
+      <root>
+        <mxCell id="0" />
+        <mxCell id="1" parent="0" />
+        <mxCell id="title" value="8. Chọn ngày và highlight · FLOW HÀM → HÀM" style="text;html=1;whiteSpace=wrap;align=left;verticalAlign=top;fillColor=none;strokeColor=none;fontFamily=Arial;fontSize=25;fontStyle=1;" vertex="1" parent="1">
+          <mxGeometry as="geometry" x="30" y="20" width="2200" height="40" />
+        </mxCell>
+        <mxCell id="sub" value="Điều hướng lịch: khi nào gửi GET mới, khi nào chỉ đổi giao diện?" style="text;html=1;whiteSpace=wrap;align=left;verticalAlign=top;fillColor=none;strokeColor=none;fontFamily=Arial;fontSize=15;" vertex="1" parent="1">
+          <mxGeometry as="geometry" x="30" y="70" width="2200" height="52" />
+        </mxCell>
+        <mxCell id="lbg0" value="" style="rounded=0;fillColor=#dae8fc;fillOpacity=18;strokeColor=none;" vertex="1" parent="1">
+          <mxGeometry as="geometry" x="20" y="135" width="360" height="1235" />
+        </mxCell>
+        <mxCell id="lh0" value="&lt;b&gt;JSP / JS · giao diện&lt;/b&gt;" style="rounded=1;html=1;fontSize=15;fillColor=#dae8fc;strokeColor=#6c8ebf;" vertex="1" parent="1">
+          <mxGeometry as="geometry" x="30" y="140" width="340" height="33" />
+        </mxCell>
+        <mxCell id="lbg1" value="" style="rounded=0;fillColor=#fff2cc;fillOpacity=18;strokeColor=none;" vertex="1" parent="1">
+          <mxGeometry as="geometry" x="390" y="135" width="360" height="1235" />
+        </mxCell>
+        <mxCell id="lh1" value="&lt;b&gt;Filter · quyền truy cập&lt;/b&gt;" style="rounded=1;html=1;fontSize=15;fillColor=#fff2cc;strokeColor=#d6b656;" vertex="1" parent="1">
+          <mxGeometry as="geometry" x="400" y="140" width="340" height="33" />
+        </mxCell>
+        <mxCell id="lbg2" value="" style="rounded=0;fillColor=#e1d5e7;fillOpacity=18;strokeColor=none;" vertex="1" parent="1">
+          <mxGeometry as="geometry" x="760" y="135" width="360" height="1235" />
+        </mxCell>
+        <mxCell id="lh2" value="&lt;b&gt;Servlet · nhận request&lt;/b&gt;" style="rounded=1;html=1;fontSize=15;fillColor=#e1d5e7;strokeColor=#9673a6;" vertex="1" parent="1">
+          <mxGeometry as="geometry" x="770" y="140" width="340" height="33" />
+        </mxCell>
+        <mxCell id="lbg3" value="" style="rounded=0;fillColor=#d5e8d4;fillOpacity=18;strokeColor=none;" vertex="1" parent="1">
+          <mxGeometry as="geometry" x="1130" y="135" width="360" height="1235" />
+        </mxCell>
+        <mxCell id="lh3" value="&lt;b&gt;Service · nghiệp vụ&lt;/b&gt;" style="rounded=1;html=1;fontSize=15;fillColor=#d5e8d4;strokeColor=#82b366;" vertex="1" parent="1">
+          <mxGeometry as="geometry" x="1140" y="140" width="340" height="33" />
+        </mxCell>
+        <mxCell id="lbg4" value="" style="rounded=0;fillColor=#ffe6cc;fillOpacity=18;strokeColor=none;" vertex="1" parent="1">
+          <mxGeometry as="geometry" x="1500" y="135" width="360" height="1235" />
+        </mxCell>
+        <mxCell id="lh4" value="&lt;b&gt;DAO · câu SQL&lt;/b&gt;" style="rounded=1;html=1;fontSize=15;fillColor=#ffe6cc;strokeColor=#d79b00;" vertex="1" parent="1">
+          <mxGeometry as="geometry" x="1510" y="140" width="340" height="33" />
+        </mxCell>
+        <mxCell id="lbg5" value="" style="rounded=0;fillColor=#f5f5f5;fillOpacity=18;strokeColor=none;" vertex="1" parent="1">
+          <mxGeometry as="geometry" x="1870" y="135" width="360" height="1235" />
+        </mxCell>
+        <mxCell id="lh5" value="&lt;b&gt;DB · dữ liệu gốc&lt;/b&gt;" style="rounded=1;html=1;fontSize=15;fillColor=#f5f5f5;strokeColor=#666666;" vertex="1" parent="1">
+          <mxGeometry as="geometry" x="1880" y="140" width="340" height="33" />
+        </mxCell>
+        <mxCell id="a" value="&lt;b&gt;1 · Chọn ngày / Tuần / Tháng&lt;/b&gt;&lt;br&gt;Form GET gửi view + date.&lt;br&gt;Link chuyển Tuần/Tháng giữ viewDate thực,&lt;br&gt;không tự thay bằng Thứ 2 hay ngày đầu tháng.&lt;br&gt;&lt;font color=&quot;#555555&quot; style=&quot;font-size:11px&quot;&gt;my-pt-sessions.jsp&lt;/font&gt;" style="rounded=1;arcSize=8;whiteSpace=wrap;html=1;align=left;verticalAlign=top;spacing=9;fontFamily=Arial;fontSize=13;fillColor=#dae8fc;strokeColor=#6c8ebf;" vertex="1" parent="1">
+          <mxGeometry as="geometry" x="30" y="180" width="340" height="110" />
+        </mxCell>
+        <mxCell id="b" value="&lt;b&gt;2 · parseViewDate(value, today)&lt;/b&gt;&lt;br&gt;DateTimeUtil.parseHtmlDate().&lt;br&gt;Thiếu/sai hoặc năm ngoài 1754…9998 → hôm nay.&lt;br&gt;view khác month → mặc định week.&lt;br&gt;&lt;font color=&quot;#555555&quot; style=&quot;font-size:11px&quot;&gt;MyPtSessionServlet.java / MyPtSessionService.java&lt;/font&gt;" style="rounded=1;arcSize=8;whiteSpace=wrap;html=1;align=left;verticalAlign=top;spacing=9;fontFamily=Arial;fontSize=13;fillColor=#e1d5e7;strokeColor=#9673a6;" vertex="1" parent="1">
+          <mxGeometry as="geometry" x="770" y="310" width="340" height="110" />
+        </mxCell>
+        <mxCell id="c" value="&lt;b&gt;3 · Hai request attribute&lt;/b&gt;&lt;br&gt;viewDate = ngày đã parse.&lt;br&gt;URL date không rỗng → selectedDate=viewDate.&lt;br&gt;Không date → không gắn dấu “Đang chọn”.&lt;br&gt;&lt;font color=&quot;#555555&quot; style=&quot;font-size:11px&quot;&gt;MyPtSessionServlet.java&lt;/font&gt;" style="rounded=1;arcSize=8;whiteSpace=wrap;html=1;align=left;verticalAlign=top;spacing=9;fontFamily=Arial;fontSize=13;fillColor=#e1d5e7;strokeColor=#9673a6;" vertex="1" parent="1">
+          <mxGeometry as="geometry" x="770" y="440" width="340" height="110" />
+        </mxCell>
+        <mxCell id="d" value="&lt;b&gt;4 · DTO giữ cờ today&lt;/b&gt;&lt;br&gt;Day/Cell.today = date.equals(now.toLocalDate()).&lt;br&gt;Chỉ ngày nằm trong kỳ đang hiện mới có dấu.&lt;br&gt;Month: ngoài tháng luôn để trống.&lt;br&gt;&lt;font color=&quot;#555555&quot; style=&quot;font-size:11px&quot;&gt;TimetableView.java / MonthView.java&lt;/font&gt;" style="rounded=1;arcSize=8;whiteSpace=wrap;html=1;align=left;verticalAlign=top;spacing=9;fontFamily=Arial;fontSize=13;fillColor=#d5e8d4;strokeColor=#82b366;" vertex="1" parent="1">
+          <mxGeometry as="geometry" x="1140" y="570" width="340" height="110" />
+        </mxCell>
+        <mxCell id="f" value="&lt;b&gt;5 · JSP gắn hai class độc lập&lt;/b&gt;&lt;br&gt;is-today: nền cam + “Hôm nay”.&lt;br&gt;is-selected: viền xanh + “Đang chọn”.&lt;br&gt;Hai ngày khác nhau vẫn được đánh dấu cùng lúc.&lt;br&gt;&lt;font color=&quot;#555555&quot; style=&quot;font-size:11px&quot;&gt;my-pt-sessions.jsp&lt;/font&gt;" style="rounded=1;arcSize=8;whiteSpace=wrap;html=1;align=left;verticalAlign=top;spacing=9;fontFamily=Arial;fontSize=13;fillColor=#dae8fc;strokeColor=#6c8ebf;" vertex="1" parent="1">
+          <mxGeometry as="geometry" x="30" y="700" width="340" height="110" />
+        </mxCell>
+        <mxCell id="g" value="&lt;b&gt;6 · initScheduleDays() trên mobile&lt;/b&gt;&lt;br&gt;Ưu tiên requestedButton → todayButton → buttons[0].&lt;br&gt;Gọi selectScheduleDay(), hiện bộ chọn ngày;&lt;br&gt;CSS thu bảng tuần còn một cột ngày.&lt;br&gt;&lt;font color=&quot;#555555&quot; style=&quot;font-size:11px&quot;&gt;my-pt-sessions.js&lt;/font&gt;" style="rounded=1;arcSize=8;whiteSpace=wrap;html=1;align=left;verticalAlign=top;spacing=9;fontFamily=Arial;fontSize=13;fillColor=#dae8fc;strokeColor=#6c8ebf;" vertex="1" parent="1">
+          <mxGeometry as="geometry" x="30" y="830" width="340" height="110" />
+        </mxCell>
+        <mxCell id="h" value="&lt;b&gt;7 · Bấm ngày mobile&lt;/b&gt;&lt;br&gt;selectScheduleDay(button, true): đổi aria-pressed,&lt;br&gt;is-mobile-day, is-selected; cập nhật date input&lt;br&gt;và link Tuần/Tháng. Không gọi fetch / không GET mới.&lt;br&gt;&lt;font color=&quot;#555555&quot; style=&quot;font-size:11px&quot;&gt;my-pt-sessions.js&lt;/font&gt;" style="rounded=1;arcSize=8;whiteSpace=wrap;html=1;align=left;verticalAlign=top;spacing=9;fontFamily=Arial;fontSize=13;fillColor=#dae8fc;strokeColor=#6c8ebf;" vertex="1" parent="1">
+          <mxGeometry as="geometry" x="30" y="960" width="340" height="110" />
+        </mxCell>
+        <mxCell id="i" value="&lt;b&gt;8 · Bấm ngày ở lịch tháng&lt;/b&gt;&lt;br&gt;Link sang ?view=week&amp;amp;date=YYYY-MM-DD.&lt;br&gt;Có GET mới → lại qua Filter → Servlet → Service.&lt;br&gt;&lt;font color=&quot;#555555&quot; style=&quot;font-size:11px&quot;&gt;my-pt-sessions.jsp&lt;/font&gt;" style="rounded=1;arcSize=8;whiteSpace=wrap;html=1;align=left;verticalAlign=top;spacing=9;fontFamily=Arial;fontSize=13;fillColor=#dae8fc;strokeColor=#6c8ebf;" vertex="1" parent="1">
+          <mxGeometry as="geometry" x="30" y="1090" width="340" height="110" />
+        </mxCell>
+        <mxCell id="j" value="&lt;b&gt;Ví dụ dễ nhớ&lt;/b&gt;&lt;br&gt;Hôm nay 19/10; chọn 20/10 cùng tuần:&lt;br&gt;19/10 nền cam, 20/10 viền xanh. Chọn tháng 11:&lt;br&gt;không hiển thị 19/10 vì nằm ngoài tháng." style="rounded=1;arcSize=8;whiteSpace=wrap;html=1;align=left;verticalAlign=top;spacing=9;fontFamily=Arial;fontSize=13;fillColor=#fff2cc;strokeColor=#d6b656;" vertex="1" parent="1">
+          <mxGeometry as="geometry" x="30" y="1220" width="340" height="110" />
+        </mxCell>
+        <mxCell id="e0" value="" style="edgeStyle=orthogonalEdgeStyle;rounded=0;html=1;endArrow=block;endFill=1;strokeWidth=1.6;strokeColor=#333333;fontSize=12;labelBackgroundColor=#ffffff;exitX=0.5;exitY=1;entryX=0.5;entryY=0;" edge="1" parent="1" source="a" target="b">
+          <mxGeometry as="geometry" relative="1" />
+        </mxCell>
+        <mxCell id="e1" value="" style="edgeStyle=orthogonalEdgeStyle;rounded=0;html=1;endArrow=block;endFill=1;strokeWidth=1.6;strokeColor=#333333;fontSize=12;labelBackgroundColor=#ffffff;exitX=0.5;exitY=1;entryX=0.5;entryY=0;" edge="1" parent="1" source="b" target="c">
+          <mxGeometry as="geometry" relative="1" />
+        </mxCell>
+        <mxCell id="e2" value="" style="edgeStyle=orthogonalEdgeStyle;rounded=0;html=1;endArrow=block;endFill=1;strokeWidth=1.6;strokeColor=#333333;fontSize=12;labelBackgroundColor=#ffffff;exitX=0.5;exitY=1;entryX=0.5;entryY=0;" edge="1" parent="1" source="c" target="d">
+          <mxGeometry as="geometry" relative="1" />
+        </mxCell>
+        <mxCell id="e3" value="" style="edgeStyle=orthogonalEdgeStyle;rounded=0;html=1;endArrow=block;endFill=1;strokeWidth=1.6;strokeColor=#3d729f;fontSize=12;labelBackgroundColor=#ffffff;exitX=0.5;exitY=1;entryX=0.5;entryY=0;dashed=1;" edge="1" parent="1" source="d" target="f">
+          <mxGeometry as="geometry" relative="1" />
+        </mxCell>
+        <mxCell id="e4" value="" style="edgeStyle=orthogonalEdgeStyle;rounded=0;html=1;endArrow=block;endFill=1;strokeWidth=1.6;strokeColor=#333333;fontSize=12;labelBackgroundColor=#ffffff;exitX=0.5;exitY=1;entryX=0.5;entryY=0;" edge="1" parent="1" source="f" target="g">
+          <mxGeometry as="geometry" relative="1" />
+        </mxCell>
+        <mxCell id="e5" value="" style="edgeStyle=orthogonalEdgeStyle;rounded=0;html=1;endArrow=block;endFill=1;strokeWidth=1.6;strokeColor=#333333;fontSize=12;labelBackgroundColor=#ffffff;exitX=0.5;exitY=1;entryX=0.5;entryY=0;" edge="1" parent="1" source="g" target="h">
+          <mxGeometry as="geometry" relative="1" />
+        </mxCell>
+        <mxCell id="e6" value="" style="edgeStyle=orthogonalEdgeStyle;rounded=0;html=1;endArrow=block;endFill=1;strokeWidth=1.6;strokeColor=#333333;fontSize=12;labelBackgroundColor=#ffffff;exitX=0.5;exitY=1;entryX=0.5;entryY=0;" edge="1" parent="1" source="h" target="i">
+          <mxGeometry as="geometry" relative="1" />
+        </mxCell>
+        <mxCell id="takeaway" value="&lt;b&gt;CẦN NHỚ · &lt;/b&gt;today = ngày thật theo giờ gym; selectedDate = ngày đã chọn. Hai dấu độc lập, có thể xuất hiện đồng thời." style="rounded=1;whiteSpace=wrap;html=1;align=left;spacing=12;fontFamily=Arial;fontSize=16;fillColor=#fff2cc;strokeColor=#d6b656;" vertex="1" parent="1">
+          <mxGeometry as="geometry" x="30" y="1390" width="2190" height="88" />
+        </mxCell>
+        <mxCell id="home" value="← Mục lục" style="text;html=1;whiteSpace=wrap;align=left;verticalAlign=top;fillColor=none;strokeColor=none;fontFamily=Arial;fontSize=14;fontColor=#225588;" vertex="1" parent="1" link="data:page/id,gms-current-0">
+          <mxGeometry as="geometry" x="30" y="1490" width="180" height="28" />
+        </mxCell>
+      </root>
+    </mxGraphModel>
+  </diagram>
+  <diagram id="gms-current-9" name="9. Chi tiết, Đóng và liên hệ PT">
+    <mxGraphModel dx="1600" dy="1000" grid="1" gridSize="10" guides="1" tooltips="1" connect="1" arrows="1" fold="1" page="0" pageScale="1" pageWidth="2260" pageHeight="1530" math="0" shadow="0">
+      <root>
+        <mxCell id="0" />
+        <mxCell id="1" parent="0" />
+        <mxCell id="title" value="9. Chi tiết, Đóng và liên hệ PT · FLOW HÀM → HÀM" style="text;html=1;whiteSpace=wrap;align=left;verticalAlign=top;fillColor=none;strokeColor=none;fontFamily=Arial;fontSize=25;fontStyle=1;" vertex="1" parent="1">
+          <mxGeometry as="geometry" x="30" y="20" width="2200" height="40" />
+        </mxCell>
+        <mxCell id="sub" value="Toàn bộ nội dung chi tiết đã có trong HTML; mở dialog không tải lại DB" style="text;html=1;whiteSpace=wrap;align=left;verticalAlign=top;fillColor=none;strokeColor=none;fontFamily=Arial;fontSize=15;" vertex="1" parent="1">
+          <mxGeometry as="geometry" x="30" y="70" width="2200" height="52" />
+        </mxCell>
+        <mxCell id="lbg0" value="" style="rounded=0;fillColor=#dae8fc;fillOpacity=18;strokeColor=none;" vertex="1" parent="1">
+          <mxGeometry as="geometry" x="20" y="135" width="360" height="1235" />
+        </mxCell>
+        <mxCell id="lh0" value="&lt;b&gt;JSP / JS · giao diện&lt;/b&gt;" style="rounded=1;html=1;fontSize=15;fillColor=#dae8fc;strokeColor=#6c8ebf;" vertex="1" parent="1">
+          <mxGeometry as="geometry" x="30" y="140" width="340" height="33" />
+        </mxCell>
+        <mxCell id="lbg1" value="" style="rounded=0;fillColor=#fff2cc;fillOpacity=18;strokeColor=none;" vertex="1" parent="1">
+          <mxGeometry as="geometry" x="390" y="135" width="360" height="1235" />
+        </mxCell>
+        <mxCell id="lh1" value="&lt;b&gt;Filter · quyền truy cập&lt;/b&gt;" style="rounded=1;html=1;fontSize=15;fillColor=#fff2cc;strokeColor=#d6b656;" vertex="1" parent="1">
+          <mxGeometry as="geometry" x="400" y="140" width="340" height="33" />
+        </mxCell>
+        <mxCell id="lbg2" value="" style="rounded=0;fillColor=#e1d5e7;fillOpacity=18;strokeColor=none;" vertex="1" parent="1">
+          <mxGeometry as="geometry" x="760" y="135" width="360" height="1235" />
+        </mxCell>
+        <mxCell id="lh2" value="&lt;b&gt;Servlet · nhận request&lt;/b&gt;" style="rounded=1;html=1;fontSize=15;fillColor=#e1d5e7;strokeColor=#9673a6;" vertex="1" parent="1">
+          <mxGeometry as="geometry" x="770" y="140" width="340" height="33" />
+        </mxCell>
+        <mxCell id="lbg3" value="" style="rounded=0;fillColor=#d5e8d4;fillOpacity=18;strokeColor=none;" vertex="1" parent="1">
+          <mxGeometry as="geometry" x="1130" y="135" width="360" height="1235" />
+        </mxCell>
+        <mxCell id="lh3" value="&lt;b&gt;Service · nghiệp vụ&lt;/b&gt;" style="rounded=1;html=1;fontSize=15;fillColor=#d5e8d4;strokeColor=#82b366;" vertex="1" parent="1">
+          <mxGeometry as="geometry" x="1140" y="140" width="340" height="33" />
+        </mxCell>
+        <mxCell id="lbg4" value="" style="rounded=0;fillColor=#ffe6cc;fillOpacity=18;strokeColor=none;" vertex="1" parent="1">
+          <mxGeometry as="geometry" x="1500" y="135" width="360" height="1235" />
+        </mxCell>
+        <mxCell id="lh4" value="&lt;b&gt;DAO · câu SQL&lt;/b&gt;" style="rounded=1;html=1;fontSize=15;fillColor=#ffe6cc;strokeColor=#d79b00;" vertex="1" parent="1">
+          <mxGeometry as="geometry" x="1510" y="140" width="340" height="33" />
+        </mxCell>
+        <mxCell id="lbg5" value="" style="rounded=0;fillColor=#f5f5f5;fillOpacity=18;strokeColor=none;" vertex="1" parent="1">
+          <mxGeometry as="geometry" x="1870" y="135" width="360" height="1235" />
+        </mxCell>
+        <mxCell id="lh5" value="&lt;b&gt;DB · dữ liệu gốc&lt;/b&gt;" style="rounded=1;html=1;fontSize=15;fillColor=#f5f5f5;strokeColor=#666666;" vertex="1" parent="1">
+          <mxGeometry as="geometry" x="1880" y="140" width="340" height="33" />
+        </mxCell>
+        <mxCell id="a" value="&lt;b&gt;1 · JSP chuẩn bị nội dung từng buổi&lt;/b&gt;&lt;br&gt;details[data-session-detail] chứa summary&lt;br&gt;và [data-session-content] đã escape.&lt;br&gt;_session-detail.jspf chuẩn bị nội dung của buổi.&lt;br&gt;&lt;font color=&quot;#555555&quot; style=&quot;font-size:11px&quot;&gt;_session-card.jspf / _session-detail.jspf&lt;/font&gt;" style="rounded=1;arcSize=8;whiteSpace=wrap;html=1;align=left;verticalAlign=top;spacing=9;fontFamily=Arial;fontSize=13;fillColor=#dae8fc;strokeColor=#6c8ebf;" vertex="1" parent="1">
+          <mxGeometry as="geometry" x="30" y="180" width="340" height="110" />
+        </mxCell>
+        <mxCell id="b" value="&lt;b&gt;2 · initSessionDetails()&lt;/b&gt;&lt;br&gt;Nếu hỗ trợ dialog.showModal → gắn listener.&lt;br&gt;Nếu không hỗ trợ → details/summary vẫn đọc được.&lt;br&gt;&lt;font color=&quot;#555555&quot; style=&quot;font-size:11px&quot;&gt;my-pt-sessions.js&lt;/font&gt;" style="rounded=1;arcSize=8;whiteSpace=wrap;html=1;align=left;verticalAlign=top;spacing=9;fontFamily=Arial;fontSize=13;fillColor=#dae8fc;strokeColor=#6c8ebf;" vertex="1" parent="1">
+          <mxGeometry as="geometry" x="30" y="310" width="340" height="110" />
+        </mxCell>
+        <mxCell id="c" value="&lt;b&gt;3 · openSessionDetail(event)&lt;/b&gt;&lt;br&gt;preventDefault(); cloneNode(true) đúng nội dung.&lt;br&gt;destination.replaceChildren(...); xóa thông báo copy.&lt;br&gt;Lưu summary để trả focus khi đóng.&lt;br&gt;&lt;font color=&quot;#555555&quot; style=&quot;font-size:11px&quot;&gt;my-pt-sessions.js&lt;/font&gt;" style="rounded=1;arcSize=8;whiteSpace=wrap;html=1;align=left;verticalAlign=top;spacing=9;fontFamily=Arial;fontSize=13;fillColor=#dae8fc;strokeColor=#6c8ebf;" vertex="1" parent="1">
+          <mxGeometry as="geometry" x="30" y="440" width="340" height="110" />
+        </mxCell>
+        <mxCell id="d" value="&lt;b&gt;4 · showModal()&lt;/b&gt;&lt;br&gt;aria-expanded=true; mở dialog.&lt;br&gt;Cuộn phần nội dung về đầu; thêm session-detail-open&lt;br&gt;để khóa cuộn trang nền. Không có fetch().&lt;br&gt;&lt;font color=&quot;#555555&quot; style=&quot;font-size:11px&quot;&gt;my-pt-sessions.js&lt;/font&gt;" style="rounded=1;arcSize=8;whiteSpace=wrap;html=1;align=left;verticalAlign=top;spacing=9;fontFamily=Arial;fontSize=13;fillColor=#dae8fc;strokeColor=#6c8ebf;" vertex="1" parent="1">
+          <mxGeometry as="geometry" x="30" y="570" width="340" height="110" />
+        </mxCell>
+        <mxCell id="f" value="&lt;b&gt;5 · Ba cách đóng&lt;/b&gt;&lt;br&gt;Nút type=button gọi drawer.close().&lt;br&gt;Bấm ngoài khung dialog → kiểm tra bounds → close().&lt;br&gt;Escape do dialog xử lý mặc định.&lt;br&gt;&lt;font color=&quot;#555555&quot; style=&quot;font-size:11px&quot;&gt;_session-drawer.jspf / my-pt-sessions.js&lt;/font&gt;" style="rounded=1;arcSize=8;whiteSpace=wrap;html=1;align=left;verticalAlign=top;spacing=9;fontFamily=Arial;fontSize=13;fillColor=#dae8fc;strokeColor=#6c8ebf;" vertex="1" parent="1">
+          <mxGeometry as="geometry" x="30" y="700" width="340" height="110" />
+        </mxCell>
+        <mxCell id="g" value="&lt;b&gt;6 · Sự kiện close&lt;/b&gt;&lt;br&gt;Gỡ class khóa cuộn; aria-expanded=false.&lt;br&gt;Trả focus về summary đã mở, preventScroll=true.&lt;br&gt;Nút Đóng không submit form nên không bị loading.&lt;br&gt;&lt;font color=&quot;#555555&quot; style=&quot;font-size:11px&quot;&gt;my-pt-sessions.js&lt;/font&gt;" style="rounded=1;arcSize=8;whiteSpace=wrap;html=1;align=left;verticalAlign=top;spacing=9;fontFamily=Arial;fontSize=13;fillColor=#dae8fc;strokeColor=#6c8ebf;" vertex="1" parent="1">
+          <mxGeometry as="geometry" x="30" y="830" width="340" height="110" />
+        </mxCell>
+        <mxCell id="h" value="&lt;b&gt;Liên hệ · zaloUrl(phone)&lt;/b&gt;&lt;br&gt;Giữ chữ số; đầu 84 có 11 số → đổi về 0.&lt;br&gt;Ghép https://zalo.me/&amp;lt;số&amp;gt;.&lt;br&gt;JSP mở link; không tự gửi tin nhắn.&lt;br&gt;&lt;font color=&quot;#555555&quot; style=&quot;font-size:11px&quot;&gt;MyPtSessionService.java&lt;/font&gt;" style="rounded=1;arcSize=8;whiteSpace=wrap;html=1;align=left;verticalAlign=top;spacing=9;fontFamily=Arial;fontSize=13;fillColor=#d5e8d4;strokeColor=#82b366;" vertex="1" parent="1">
+          <mxGeometry as="geometry" x="1140" y="310" width="340" height="110" />
+        </mxCell>
+        <mxCell id="i" value="&lt;b&gt;Sao chép · copyPtPhone(button)&lt;/b&gt;&lt;br&gt;navigator.clipboard.writeText(phone).&lt;br&gt;Thành công → thông báo. Bị chặn → tạo input readonly,&lt;br&gt;focus + select để người dùng tự Ctrl+C.&lt;br&gt;&lt;font color=&quot;#555555&quot; style=&quot;font-size:11px&quot;&gt;my-pt-sessions.js&lt;/font&gt;" style="rounded=1;arcSize=8;whiteSpace=wrap;html=1;align=left;verticalAlign=top;spacing=9;fontFamily=Arial;fontSize=13;fillColor=#dae8fc;strokeColor=#6c8ebf;" vertex="1" parent="1">
+          <mxGeometry as="geometry" x="30" y="960" width="340" height="110" />
+        </mxCell>
+        <mxCell id="j" value="&lt;b&gt;Lịch Google · calendarUrl(row)&lt;/b&gt;&lt;br&gt;Scheduled và chưa hết giờ mới có link.&lt;br&gt;Giờ VN → UTC; URLEncoder cho chữ tiếng Việt.&lt;br&gt;Mở form Google; người dùng tự bấm Lưu.&lt;br&gt;&lt;font color=&quot;#555555&quot; style=&quot;font-size:11px&quot;&gt;MyPtSessionService.java&lt;/font&gt;" style="rounded=1;arcSize=8;whiteSpace=wrap;html=1;align=left;verticalAlign=top;spacing=9;fontFamily=Arial;fontSize=13;fillColor=#d5e8d4;strokeColor=#82b366;" vertex="1" parent="1">
+          <mxGeometry as="geometry" x="1140" y="570" width="340" height="110" />
+        </mxCell>
+        <mxCell id="k" value="&lt;b&gt;Điểm ra khỏi màn Lịch tập&lt;/b&gt;&lt;br&gt;“Xem toàn bộ gói” → /customer/bookings?id=...&lt;br&gt;“Đặt buổi lẻ” → /customer/book-session.&lt;br&gt;Chỉ là điều hướng; không đi sâu hai màn này.&lt;br&gt;&lt;font color=&quot;#555555&quot; style=&quot;font-size:11px&quot;&gt;_session-detail.jspf / _schedule-header.jspf&lt;/font&gt;" style="rounded=1;arcSize=8;whiteSpace=wrap;html=1;align=left;verticalAlign=top;spacing=9;fontFamily=Arial;fontSize=13;fillColor=#dae8fc;strokeColor=#6c8ebf;" vertex="1" parent="1">
+          <mxGeometry as="geometry" x="30" y="1220" width="340" height="110" />
+        </mxCell>
+        <mxCell id="e0" value="" style="edgeStyle=orthogonalEdgeStyle;rounded=0;html=1;endArrow=block;endFill=1;strokeWidth=1.6;strokeColor=#333333;fontSize=12;labelBackgroundColor=#ffffff;exitX=0.5;exitY=1;entryX=0.5;entryY=0;" edge="1" parent="1" source="a" target="b">
+          <mxGeometry as="geometry" relative="1" />
+        </mxCell>
+        <mxCell id="e1" value="" style="edgeStyle=orthogonalEdgeStyle;rounded=0;html=1;endArrow=block;endFill=1;strokeWidth=1.6;strokeColor=#333333;fontSize=12;labelBackgroundColor=#ffffff;exitX=0.5;exitY=1;entryX=0.5;entryY=0;" edge="1" parent="1" source="b" target="c">
+          <mxGeometry as="geometry" relative="1" />
+        </mxCell>
+        <mxCell id="e2" value="" style="edgeStyle=orthogonalEdgeStyle;rounded=0;html=1;endArrow=block;endFill=1;strokeWidth=1.6;strokeColor=#333333;fontSize=12;labelBackgroundColor=#ffffff;exitX=0.5;exitY=1;entryX=0.5;entryY=0;" edge="1" parent="1" source="c" target="d">
+          <mxGeometry as="geometry" relative="1" />
+        </mxCell>
+        <mxCell id="e3" value="" style="edgeStyle=orthogonalEdgeStyle;rounded=0;html=1;endArrow=block;endFill=1;strokeWidth=1.6;strokeColor=#333333;fontSize=12;labelBackgroundColor=#ffffff;exitX=0.5;exitY=1;entryX=0.5;entryY=0;" edge="1" parent="1" source="d" target="f">
+          <mxGeometry as="geometry" relative="1" />
+        </mxCell>
+        <mxCell id="e4" value="" style="edgeStyle=orthogonalEdgeStyle;rounded=0;html=1;endArrow=block;endFill=1;strokeWidth=1.6;strokeColor=#333333;fontSize=12;labelBackgroundColor=#ffffff;exitX=0.5;exitY=1;entryX=0.5;entryY=0;" edge="1" parent="1" source="f" target="g">
+          <mxGeometry as="geometry" relative="1" />
+        </mxCell>
+        <mxCell id="e5" value="nhánh thao tác" style="edgeStyle=orthogonalEdgeStyle;rounded=0;html=1;endArrow=block;endFill=1;strokeWidth=1.6;strokeColor=#333333;fontSize=12;labelBackgroundColor=#ffffff;exitX=0.5;exitY=1;entryX=0.5;entryY=0;" edge="1" parent="1" source="d" target="i">
+          <mxGeometry as="geometry" relative="1" />
+        </mxCell>
+        <mxCell id="e6" value="" style="edgeStyle=orthogonalEdgeStyle;rounded=0;html=1;endArrow=block;endFill=1;strokeWidth=1.6;strokeColor=#333333;fontSize=12;labelBackgroundColor=#ffffff;exitX=0.5;exitY=1;entryX=0.5;entryY=0;" edge="1" parent="1" source="i" target="k">
+          <mxGeometry as="geometry" relative="1" />
+        </mxCell>
+        <mxCell id="e7" value="URL đã điền" style="edgeStyle=orthogonalEdgeStyle;rounded=0;html=1;endArrow=block;endFill=1;strokeWidth=1.6;strokeColor=#3d729f;fontSize=12;labelBackgroundColor=#ffffff;exitX=0.5;exitY=1;entryX=0.5;entryY=0;dashed=1;" edge="1" parent="1" source="h" target="a">
+          <mxGeometry as="geometry" relative="1" />
+        </mxCell>
+        <mxCell id="e8" value="URL đã điền" style="edgeStyle=orthogonalEdgeStyle;rounded=0;html=1;endArrow=block;endFill=1;strokeWidth=1.6;strokeColor=#3d729f;fontSize=12;labelBackgroundColor=#ffffff;exitX=0;exitY=0.5;entryX=1;entryY=0.5;dashed=1;" edge="1" parent="1" source="j" target="d">
+          <mxGeometry as="geometry" relative="1" />
+        </mxCell>
+        <mxCell id="takeaway" value="&lt;b&gt;CẦN NHỚ · &lt;/b&gt;MyPTSession chỉ xem: cần đổi/hủy thì liên hệ PT. Không có doPost hủy/đổi hoặc AJAX lấy slot trong luồng hiện tại." style="rounded=1;whiteSpace=wrap;html=1;align=left;spacing=12;fontFamily=Arial;fontSize=16;fillColor=#fff2cc;strokeColor=#d6b656;" vertex="1" parent="1">
+          <mxGeometry as="geometry" x="30" y="1390" width="2190" height="88" />
+        </mxCell>
+        <mxCell id="home" value="← Mục lục" style="text;html=1;whiteSpace=wrap;align=left;verticalAlign=top;fillColor=none;strokeColor=none;fontFamily=Arial;fontSize=14;fontColor=#225588;" vertex="1" parent="1" link="data:page/id,gms-current-0">
+          <mxGeometry as="geometry" x="30" y="1490" width="180" height="28" />
+        </mxCell>
+      </root>
+    </mxGraphModel>
+  </diagram>
+  <diagram id="gms-current-10" name="10. Ôn tập MyPTSession">
+    <mxGraphModel dx="1600" dy="1000" grid="1" gridSize="10" guides="1" tooltips="1" connect="1" arrows="1" fold="1" page="0" pageScale="1" pageWidth="2260" pageHeight="1530" math="0" shadow="0">
+      <root>
+        <mxCell id="0" />
+        <mxCell id="1" parent="0" />
+        <mxCell id="title" value="10. Ôn tập MyPTSession · FLOW HÀM → HÀM" style="text;html=1;whiteSpace=wrap;align=left;verticalAlign=top;fillColor=none;strokeColor=none;fontFamily=Arial;fontSize=25;fontStyle=1;" vertex="1" parent="1">
+          <mxGeometry as="geometry" x="30" y="20" width="2200" height="40" />
+        </mxCell>
+        <mxCell id="sub" value="Tự kể được: thao tác người dùng → hàm gọi → dữ liệu → kết quả trên màn hình" style="text;html=1;whiteSpace=wrap;align=left;verticalAlign=top;fillColor=none;strokeColor=none;fontFamily=Arial;fontSize=15;" vertex="1" parent="1">
+          <mxGeometry as="geometry" x="30" y="70" width="2200" height="52" />
+        </mxCell>
+        <mxCell id="q0" value="&lt;b&gt;URL tới bảng lịch bằng cách nào?&lt;/b&gt;&lt;br&gt;Filter → MyPtSessionServlet.doGet → loadTimetable → getWeek/getMonth → DAO → ServiceResult → request attribute → forward JSP.&lt;br&gt;&lt;font color=&quot;#555555&quot; style=&quot;font-size:11px&quot;&gt;Trang 1–4&lt;/font&gt;" style="rounded=1;arcSize=8;whiteSpace=wrap;html=1;align=left;verticalAlign=top;spacing=9;fontFamily=Arial;fontSize=13;fillColor=#fff2cc;strokeColor=#d6b656;" vertex="1" parent="1">
+          <mxGeometry as="geometry" x="30" y="180.0" width="1080" height="170" />
+        </mxCell>
+        <mxCell id="q1" value="&lt;b&gt;Vì sao tuần nào cũng không đếm lại buổi #1?&lt;/b&gt;&lt;br&gt;ROW_NUMBER theo SubscriptionId trong CTE, trước WHERE lọc ngày. GeneratedSessionCount là tổng số buổi sinh của gói.&lt;br&gt;&lt;font color=&quot;#555555&quot; style=&quot;font-size:11px&quot;&gt;Trang 4&lt;/font&gt;" style="rounded=1;arcSize=8;whiteSpace=wrap;html=1;align=left;verticalAlign=top;spacing=9;fontFamily=Arial;fontSize=13;fillColor=#fff2cc;strokeColor=#d6b656;" vertex="1" parent="1">
+          <mxGeometry as="geometry" x="1140" y="180.0" width="1080" height="170" />
+        </mxCell>
+        <mxCell id="q2" value="&lt;b&gt;Ended khác Status ra sao?&lt;/b&gt;&lt;br&gt;Ended chỉ xét now &amp;gt;= giờ kết thúc. Status lấy từ DB. CheckedIn có thể vừa ended=true vừa giữ nhãn Đã check-in.&lt;br&gt;&lt;font color=&quot;#555555&quot; style=&quot;font-size:11px&quot;&gt;Trang 6&lt;/font&gt;" style="rounded=1;arcSize=8;whiteSpace=wrap;html=1;align=left;verticalAlign=top;spacing=9;fontFamily=Arial;fontSize=13;fillColor=#fff2cc;strokeColor=#d6b656;" vertex="1" parent="1">
+          <mxGeometry as="geometry" x="30" y="388.0" width="1080" height="170" />
+        </mxCell>
+        <mxCell id="q3" value="&lt;b&gt;Đang cập nhật có phải server đang tải không?&lt;/b&gt;&lt;br&gt;Không. Scheduled đã hết giờ → pending, chờ chốt kết quả. Đây là nhãn nghiệp vụ, khác loading của nút.&lt;br&gt;&lt;font color=&quot;#555555&quot; style=&quot;font-size:11px&quot;&gt;Trang 6&lt;/font&gt;" style="rounded=1;arcSize=8;whiteSpace=wrap;html=1;align=left;verticalAlign=top;spacing=9;fontFamily=Arial;fontSize=13;fillColor=#fff2cc;strokeColor=#d6b656;" vertex="1" parent="1">
+          <mxGeometry as="geometry" x="1140" y="388.0" width="1080" height="170" />
+        </mxCell>
+        <mxCell id="q4" value="&lt;b&gt;Chọn 20/10 có mất đánh dấu 19/10 không?&lt;/b&gt;&lt;br&gt;Không nếu cùng kỳ đang hiện: 19/10 là today, 20/10 là selectedDate. Tháng chỉ hiện đúng tháng; ngày ghi d/M.&lt;br&gt;&lt;font color=&quot;#555555&quot; style=&quot;font-size:11px&quot;&gt;Trang 3, 8&lt;/font&gt;" style="rounded=1;arcSize=8;whiteSpace=wrap;html=1;align=left;verticalAlign=top;spacing=9;fontFamily=Arial;fontSize=13;fillColor=#fff2cc;strokeColor=#d6b656;" vertex="1" parent="1">
+          <mxGeometry as="geometry" x="30" y="596.0" width="1080" height="170" />
+        </mxCell>
+        <mxCell id="q5" value="&lt;b&gt;Mở chi tiết có truy vấn DB nữa không?&lt;/b&gt;&lt;br&gt;Không. JS clone nội dung đã render trong HTML vào dialog. Đóng bằng nút, backdrop hoặc Escape; focus trả về nút mở.&lt;br&gt;&lt;font color=&quot;#555555&quot; style=&quot;font-size:11px&quot;&gt;Trang 9&lt;/font&gt;" style="rounded=1;arcSize=8;whiteSpace=wrap;html=1;align=left;verticalAlign=top;spacing=9;fontFamily=Arial;fontSize=13;fillColor=#fff2cc;strokeColor=#d6b656;" vertex="1" parent="1">
+          <mxGeometry as="geometry" x="1140" y="596.0" width="1080" height="170" />
+        </mxCell>
+        <mxCell id="q7" value="&lt;b&gt;Màn này có tự đổi/hủy buổi không?&lt;/b&gt;&lt;br&gt;MyPtSessionServlet chỉ có doGet, không có POST hủy/đổi. Liên hệ PT qua Zalo; link Google mở form để người dùng tự lưu sự kiện.&lt;br&gt;&lt;font color=&quot;#555555&quot; style=&quot;font-size:11px&quot;&gt;Trang 9&lt;/font&gt;" style="rounded=1;arcSize=8;whiteSpace=wrap;html=1;align=left;verticalAlign=top;spacing=9;fontFamily=Arial;fontSize=13;fillColor=#fff2cc;strokeColor=#d6b656;" vertex="1" parent="1">
+          <mxGeometry as="geometry" x="30" y="804.0000000000001" width="1080" height="170" />
+        </mxCell>
+        <mxCell id="q8" value="&lt;b&gt;Lỗi SQL và không có dữ liệu có giống nhau?&lt;/b&gt;&lt;br&gt;Không. SQLException → fail(MSG04_SYSTEM_BUSY) và timetableError. Không có buổi vẫn success; JSP dựng khung lịch với các ô rỗng.&lt;br&gt;&lt;font color=&quot;#555555&quot; style=&quot;font-size:11px&quot;&gt;Trang 1–3&lt;/font&gt;" style="rounded=1;arcSize=8;whiteSpace=wrap;html=1;align=left;verticalAlign=top;spacing=9;fontFamily=Arial;fontSize=13;fillColor=#fff2cc;strokeColor=#d6b656;" vertex="1" parent="1">
+          <mxGeometry as="geometry" x="1140" y="804.0000000000001" width="1080" height="170" />
+        </mxCell>
+        <mxCell id="takeaway" value="&lt;b&gt;CẦN NHỚ · &lt;/b&gt;Học trang 1 → 2/3 → 4 → 5 → 6/7, rồi trang 8/9. Mỗi lần học, kể lại một thao tác từ giao diện tới hàm và dữ liệu." style="rounded=1;whiteSpace=wrap;html=1;align=left;spacing=12;fontFamily=Arial;fontSize=16;fillColor=#fff2cc;strokeColor=#d6b656;" vertex="1" parent="1">
+          <mxGeometry as="geometry" x="30" y="1390" width="2190" height="88" />
+        </mxCell>
+        <mxCell id="home" value="← Mục lục" style="text;html=1;whiteSpace=wrap;align=left;verticalAlign=top;fillColor=none;strokeColor=none;fontFamily=Arial;fontSize=14;fontColor=#225588;" vertex="1" parent="1" link="data:page/id,gms-current-0">
+          <mxGeometry as="geometry" x="30" y="1490" width="180" height="28" />
+        </mxCell>
+      </root>
+    </mxGraphModel>
+  </diagram>
+</mxfile>

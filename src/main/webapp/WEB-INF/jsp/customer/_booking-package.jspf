@@ -1,0 +1,17 @@
+<%@ page pageEncoding="UTF-8" %>
+<%-- p: MyPtPackageView; JS filterPackages đọc data-package-state/type, không thay đổi gói đang xem. --%>
+<a class="booking-package" href="${pageUrl}?id=${p.subscriptionId}" data-package-item data-package-state="${p.active ? 'active' : 'ended'}" data-package-type="${p.couple ? 'couple' : 'personal'}" aria-current="${booking.selectedPackage.subscriptionId eq p.subscriptionId ? 'page' : 'false'}">
+    <span class="booking-package-title">
+        <strong>
+            <c:out value="${p.packageName}" />
+        </strong>
+        <span>#${p.subscriptionId}</span>
+    </span>
+    <span>
+        <c:out value="${p.typeLabel}" /> · PT <c:out value="${p.ptName}" />
+    </span>
+    <small>${gms:formatDate(p.startDate)} – ${gms:formatDate(p.endDate)}</small>
+    <progress value="${p.pastSessions}" max="${p.totalSessions gt 0 ? p.totalSessions : 1}" aria-label="Số buổi có ngày tập đã qua">
+    </progress>
+    <small>Đã qua ${p.pastSessions}/${p.totalSessions} buổi</small>
+</a>

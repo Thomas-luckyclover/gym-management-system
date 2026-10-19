@@ -1,5 +1,37 @@
 # File notes — mâu thuẫn tài liệu & quyết định đã chốt
 
+## Lịch tập — gọn giao diện và sửa đóng chi tiết (19/10/2026, cập nhật theo phản hồi)
+
+- Lịch tháng chỉ lấy/hiện buổi trong đúng tháng đã chọn. Ô đệm của tháng trước/sau để trống, không có số ngày hoặc link. Mỗi ngày hiện dạng d/M (6/10, 6/11), ngày có/không có buổi đều căn phía trên. Quyết định này thay cách hiện ngày ngoài tháng ở các mục cũ bên dưới.
+- Ngày hôm nay và ngày người dùng chọn có hai dấu độc lập: hôm nay nền cam + nhãn, ngày chọn viền xanh + nhãn “Đang chọn”. Cùng ngày giữ cả hai; khác tuần/tháng chỉ đánh dấu các ngày có trong lưới. Áp dụng cả tuần, tháng và chọn ngày trên mobile.
+- Servlet giữ `viewDate` là ngày hợp lệ thực sự đang xem; `selectedDate` là ngày được chọn qua URL. Ô chọn ngày và link Tuần/Tháng giữ đúng ngày đó, không đổi thành Thứ 2/ngày đầu tháng.
+- `MyPtSessionRow.ended` do Service so sánh giờ kết thúc với `now` của request; nền buổi cũ trầm hơn nhưng không disabled, không giảm opacity của cả thẻ và không đổi nhãn kết quả đã lưu. Thời điểm đúng bằng giờ kết thúc được tính đã kết thúc.
+- Màn Gói của tôi trên desktop từ 1080px và cao từ 480px dùng chiều cao cửa sổ: header và ô đếm cố định, danh sách gói/bảng buổi cuộn riêng. Không ẩn scrollbar bằng CSS để che phần tràn; mobile hoặc cửa sổ rất thấp vẫn cuộn trang bình thường. Đã kiểm tra trang cao đúng 720px ở viewport 720px, bàn phím End tới được hàng cuối trong bảng dài.
+- Thay 5 khung trước đó bằng **Sáng 06:00–12:00 / Chiều 12:00–18:00 / Tối 18:00–22:00**, xếp theo giờ bắt đầu. Service và test cùng dùng 3 khung.
+- Chỉ giữ tiêu đề trang ở topbar; bỏ “Lịch của bạn”, “Theo dõi hành trình tập” và các đoạn hướng dẫn lặp. Hướng dẫn sử dụng/cách đếm/trạng thái nằm trong HintBox `.pt-info` dùng chung.
+- Thanh công cụ chỉ gồm điều hướng tuần/tháng, Hôm nay, Chọn ngày và Tuần/Tháng. Ngày trong tiêu đề cột rút gọn dd/MM; ô buổi không lặp “Xem chi tiết”.
+- Nút Đóng là `type=button`, gọi `dialog.close()` trực tiếp. Không dùng form dialog vì bộ xử lý submit chung sẽ bật loading “Đang xử lý…” dù không có request server.
+- Bấm ngoài khung, nút Đóng hoặc Escape đều đóng và trả focus về buổi vừa chọn. Khóa cuộn nền khi mở; chỉ thân chi tiết có thể cuộn, phần đầu và nút Đóng luôn nhìn thấy.
+- Chi tiết gom PT/SĐT/liên hệ vào một nhóm; cảnh báo hiện ngay dưới ngày giờ, thông tin gói dùng nhãn–giá trị; Google Calendar là liên kết phụ.
+- Kiểm tra: 32/32 test của hai Service qua; Jasper biên dịch hai JSP không lỗi. Đã kiểm thử thực tế trên fixture Tomcat: nút Đóng không loading sau mở lại, bấm ngoài/Escape đóng, focus và cuộn nền được trả lại, HintBox mở được, desktop và mobile 390px dùng 3 khung.
+
+## Giao diện Lịch tập và Gói của tôi — triển khai tiếp (19/10/2026)
+
+- Mẫu đối chiếu: artifact Claude `8B3PiEFhEu9LGgbx8jJLVq`, gồm lịch tuần, thanh chi tiết, lịch tháng, gói và mobile theo ngày. Giữ theme/token/layout hiện tại; dữ liệu minh họa của mẫu không thay cho DB.
+- Phạm vi: Customer đang đăng nhập, chỉ đọc các buổi của người đứng tên hoặc người đi kèm gói đôi. Không mở thêm quyền cho vai trò khác; không có phân tầng tenant/plan trong chức năng này.
+- Lịch tuần: 5 khung × 7 ngày; mobile chọn một ngày và vẫn đọc đủ 5 khung. Lịch tháng hiện giờ + nhãn ngắn; bấm ngày/buổi để mở tuần chứa ngày đó.
+- Hai màn dùng chung nội dung chi tiết, link Zalo/Google Calendar và sao chép số. Clipboard bị chặn thì hiện ô số đã chọn để khách tự sao chép. Không có JS vẫn đọc được qua details.
+- Hai dropdown chỉ lọc danh sách gói bên trái; không âm thầm thay gói đang xem bên phải. Ô trạng thái lọc bảng buổi; Còn lại gồm Hôm nay, Sắp tới, Cần chú ý. Đang cập nhật được tính riêng và chỉ hiện ô đếm khi có buổi.
+- Số buổi đã qua trên thẻ gói là số buổi có ngày tập trước hôm nay, không phải số buổi hoàn thành. CheckedIn chỉ ghi nhận vào gym.
+- Tiêu chí nghiệm thu (Given / When / Then):
+  - Có lịch trong tuần → đổi tuần/tháng hoặc chọn ngày → URL giữ đúng cách xem và dữ liệu đúng khoảng; ngày sai/cực trị trở về hôm nay.
+  - Có buổi cảnh báo → mở chi tiết → đọc được lý do, PT và gói; Escape đóng và trả focus về buổi đã chọn.
+  - Có gói cá nhân/đôi/buổi lẻ → kết hợp hai bộ lọc → chỉ thẻ khớp cả hai xuất hiện; không khớp hiện thông báo rỗng.
+  - Có nhiều trạng thái → chọn Còn lại → chỉ hiện today/upcoming/warn, không gồm buổi pending hoặc đã hủy.
+  - Tải thành công nhưng không có dữ liệu → hiện trạng thái rỗng; lỗi Service → hiện lỗi và nút tải lại, không báo nhầm là không có buổi.
+  - Tên/lý do chứa ký tự HTML → hiển thị dạng chữ, không thực thi mã; buổi thiếu số PT → hướng dẫn liên hệ lễ tân.
+- Kiểm tra: build WAR và 151 test có sẵn đã qua; thêm test ngày URL sai/cực trị, bộ test hai Service qua 31/31. Jasper biên dịch hai JSP không lỗi. Đã chạy JSP trên Tomcat riêng với fixture minh họa trong target; chưa xác nhận truy vấn bằng SQL Server thật.
+
 ## My PT Sessions — đổi sang thời khóa biểu, khách chỉ xem (19/10/2026, ĐÃ CHỐT theo góp ý GVHD)
 
 - **Bỏ khách tự hủy buổi (UC-39) và khách tự đổi buổi (UC-38, màn #53 Swap Session).** Lý do: vận hành thực tế khách nhắn PT qua Zalo; PT dời / đổi buổi giúp khách qua UC-35 (`PtReschedule`). Hủy phía khách ít giá trị. Hai mục 17/10 bên dưới về hủy / đổi buổi phía khách **hết hiệu lực**.

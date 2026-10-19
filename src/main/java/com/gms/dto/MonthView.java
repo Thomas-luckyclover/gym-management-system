@@ -7,7 +7,7 @@ import java.util.List;
 
 /**
  * [TKB] Lịch 1 THÁNG của khách: lưới 7 cột (Thứ 2 → Chủ nhật), mỗi hàng 1 tuần.
- * Ô của ngày ngoài tháng vẫn hiện (mờ) cho đủ tuần, nhưng KHÔNG tính vào số đếm.
+ * Ô ngoài tháng chỉ là ô đệm để giữ đúng cột thứ; JSP không hiện ngày hoặc buổi của ô này.
  *
  * JSP đọc: ${month.weeks} → week (List<Cell>) → cell.sessions.
  */

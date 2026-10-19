@@ -64,9 +64,13 @@ public class MyPtSessionServlet extends HttpServlet {
     private void loadTimetable(HttpServletRequest request, int accountId) {
         // B1: giờ hiện tại lấy 1 lần cho cả request; ngày sai/thiếu → hôm nay (không trả lỗi 500)
         LocalDateTime now = DateTimeUtil.now();
-        LocalDate date = DateTimeUtil.parseHtmlDate(request.getParameter("date"));
-        if (date == null) {
-            date = now.toLocalDate();
+        String requestedDate = request.getParameter("date");
+        LocalDate date = MyPtSessionService.parseViewDate(requestedDate, now.toLocalDate());
+
+        // Giữ đúng ngày đã chọn, không thay bằng Thứ 2 hoặc ngày đầu tháng khi hiển thị.
+        request.setAttribute("viewDate", date);
+        if (requestedDate != null && !requestedDate.isBlank()) {
+            request.setAttribute("selectedDate", date);
         }
 
         // B2: chọn cách xem
