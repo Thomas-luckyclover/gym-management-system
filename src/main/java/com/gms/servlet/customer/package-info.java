@@ -10,7 +10,7 @@
  * MyBookingServlet                 /customer/bookings                                   #50  My Bookings                        TV5
  * MyPtSessionServlet               /customer/pt-sessions                                #51  My PT Sessions                     TV5
  * BookSingleSessionServlet         /customer/book-session                               #52  Book Single Session                TV5
- * SwapSessionServlet               /customer/swap-session                               #53  Swap Session                       TV5
+ * (#53 Swap Session đã bỏ 19/10 — khách không tự đổi buổi, xem docs/notes.md)
  * MyPlanServlet                    /customer/plans                                      #60  My Plan                            TV5
  * SubmitFeedbackServlet            /customer/feedback                                   #61  Submit Feedback                    TV2
  * </pre>

@@ -1,5 +1,5 @@
-/* Lịch PT: ba vùng tác vụ, filter chung, danh sách buổi nhóm theo ngày.
-my-pt-sessions.js dùng [data-session-view], [data-session-panel], #sessionFilterForm. */
+/* Lịch PT (chỉ xem): ba vùng tác vụ, danh sách buổi nhóm theo ngày.
+my-pt-sessions.js dùng [data-session-view], [data-session-panel]. */
 .my-pt-sessions {
   display: flex;
   flex-direction: column;
@@ -47,7 +47,7 @@ body.my-pt-sessions-page .tb-user-text span { color: var(--pt-muted); }
   background: var(--pt-panel);
 }
 
-.my-pt-view-tabs[hidden], .my-pt-sessions [data-session-panel][hidden], .my-pt-filter-panel[hidden] {
+.my-pt-view-tabs[hidden],.my-pt-sessions [data-session-panel][hidden] {
   display: none;
 }
 
@@ -131,92 +131,7 @@ body.my-pt-sessions-page .tb-user-text span { color: var(--pt-muted); }
   line-height: var(--line-height-normal);
 }
 
-/* Bộ lọc gọn: nhãn luôn hiện, thao tác tách rõ, lỗi đặt cạnh ô nhập. */
-.my-pt-filter-panel {
-  padding: var(--space-5);
-  border: var(--border-width) solid var(--color-border);
-  border-radius: var(--radius-sm);
-  background: var(--color-surface);
-}
-
-.my-pt-filter-panel .my-pt-heading {
-  margin-bottom: var(--space-4);
-}
-
-.my-pt-filter-panel .my-pt-heading h2 {
-  font-size: var(--font-size-base);
-}
-
-.my-pt-filter-panel .my-pt-heading > .my-pt-caption {
-  margin: 0;
-  font-size: var(--font-size-xs);
-}
-
-.my-pt-filters {
-  display: grid;
-  grid-template-columns: repeat(3, minmax(0, 1fr)) auto;
-  align-items: end;
-  gap: var(--space-4);
-  margin: 0;
-  padding: 0;
-  border: 0;
-  min-width: 0;
-}
-
-.my-pt-filters label {
-  display: flex;
-  flex-direction: column;
-  gap: var(--space-2);
-  min-width: 0;
-  color: var(--color-text-soft);
-  font-size: var(--font-size-sm);
-  font-weight: var(--font-weight-medium);
-}
-
-.my-pt-filters input, .my-pt-filters select {
-  width: 100%;
-  min-width: 0;
-  min-height: var(--control-height-lg);
-  padding: var(--space-2) var(--space-3);
-  border: var(--border-width) solid var(--color-border-strong);
-  border-radius: var(--radius-xs);
-  background: var(--color-surface-muted);
-  color: var(--color-text);
-  font-family: var(--font-body);
-  font-size: var(--font-size-sm);
-}
-
-.my-pt-filters .invalid {
-  border-color: var(--color-danger);
-}
-
-.my-pt-filters .field-error {
-  font-weight: var(--font-weight-regular);
-}
-
-.my-pt-filter-actions {
-  display: flex;
-  gap: var(--space-2);
-  flex-wrap: wrap;
-  padding-top: 0;
-  align-self: end;
-  justify-content: flex-end;
-}
-
-.my-pt-filters .my-pt-package-filter {
-  grid-column: 1 / -1;
-}
-
-.my-pt-package-term {
-  font-size: var(--font-size-sm);
-  font-variant-numeric: tabular-nums;
-}
-
-.my-pt-filter-actions .btn {
-  min-height: var(--control-height-lg);
-}
-
-.my-pt-filter-alert, .my-pt-package-error {
+.my-pt-package-error {
   margin: 0 0 var(--space-4);
   padding: var(--space-3) var(--space-4);
   border: var(--border-width) solid var(--color-danger-border);
@@ -321,81 +236,6 @@ html body.dock.my-pt-sessions-page :is(.my-pt-schedule-panel, .my-pt-history-pan
   font-variant-numeric: tabular-nums;
 }
 
-.my-pt-cancel-button {
-  display: inline-flex;
-  align-items: center;
-  justify-content: center;
-  gap: var(--space-2);
-  min-height: var(--control-height-md);
-  margin-top: var(--space-3);
-  padding: var(--space-2) var(--space-3);
-  border: var(--border-width) solid var(--my-pt-cancel-border);
-  border-radius: var(--radius-xs);
-  background: var(--my-pt-cancel-bg);
-  color: var(--my-pt-cancel-text);
-  font: inherit;
-  font-size: var(--font-size-sm);
-  font-weight: var(--font-weight-semibold);
-  line-height: var(--line-height-normal);
-  white-space: nowrap;
-  cursor: pointer;
-  transition: background var(--duration-fast) var(--ease-standard),
-              border-color var(--duration-fast) var(--ease-standard),
-              transform var(--duration-fast) var(--ease-standard);
-}
-
-/* initializeSwapDialog trong my-pt-sessions.js điều khiển dialog, trạng thái tải và slot chọn. */
-.my-pt-swap-button {
-  margin-top: var(--space-3);
-  font-size: var(--font-size-sm);
-}
-
-.my-pt-swap-dialog .my-pt-swap-policy {
-  margin-block: var(--space-4);
-}
-
-.my-pt-swap-slot-label {
-  display: flex;
-  flex-direction: column;
-  gap: var(--space-2);
-  margin-top: var(--space-4);
-  color: var(--color-text);
-  font-size: var(--font-size-sm);
-}
-
-.my-pt-swap-slot-label[hidden] { display: none; }
-
-.my-pt-swap-slot-label select {
-  width: 100%;
-  min-height: var(--control-height-lg);
-  padding: var(--space-3);
-  border: var(--border-width) solid var(--color-border-strong);
-  border-radius: var(--radius-button);
-  background: var(--color-surface-muted);
-  color: var(--color-text);
-  font: inherit;
-}
-
-.my-pt-swap-slot-label select:focus-visible {
-  outline: var(--focus-outline-width) solid var(--color-primary);
-  outline-offset: var(--focus-outline-offset);
-}
-
-.my-pt-cancel-button:hover {
-  background: var(--brand-ember-red);
-  color: var(--brand-paper);
-  border-color: var(--brand-ember-red);
-}
-
-.my-pt-cancel-button:active {
-  transform: none;
-}
-
-.my-pt-cancel-button:focus-visible {
-  outline: var(--focus-outline-width) solid var(--color-danger-ink);
-  outline-offset: var(--focus-outline-offset);
-}
-
 .my-pt-time-separator {
   color: var(--color-text-muted);
 }
@@ -447,15 +287,6 @@ html body.dock.my-pt-sessions-page :is(.my-pt-schedule-panel, .my-pt-history-pan
   background: var(--color-warning-tint);
   font-size: var(--font-size-sm);
   line-height: var(--line-height-normal);
-}
-
-.my-pt-session-note {
-  grid-column: 1 / -1;
-  margin: var(--space-2) 0 0;
-  font-size: var(--font-size-sm);
-  color: var(--color-text-soft);
-  line-height: var(--line-height-relaxed);
-  overflow-wrap: anywhere;
 }
 .my-pt-session-details { min-width: 0; }
 .my-pt-session-details summary {
@@ -515,45 +346,6 @@ html body.dock.my-pt-sessions-page :is(.my-pt-schedule-panel, .my-pt-history-pan
   font-size: var(--font-size-xs);
   font-weight: var(--font-weight-medium);
   line-height: var(--line-height-normal);
-}
-
-/* Lịch sử: bộ trạng thái GET giữ nguyên URL và dữ liệu lọc thật. */
-.my-pt-status-tabs {
-  display: flex;
-  gap: var(--space-2);
-  flex-wrap: wrap;
-  margin-bottom: var(--space-6);
-}
-
-.my-pt-status-tab {
-  display: inline-flex;
-  align-items: center;
-  min-height: var(--control-height-md);
-  padding: var(--space-2) var(--space-3);
-  border: var(--border-width) solid var(--color-border);
-  border-radius: var(--radius-xs);
-  background: var(--color-surface);
-  color: var(--color-text-soft);
-  font-size: var(--font-size-sm);
-  line-height: var(--line-height-normal);
-  text-decoration: none;
-}
-
-.my-pt-status-tab:hover {
-  color: var(--color-text);
-  border-color: var(--color-border-strong);
-  text-decoration: none;
-}
-
-.my-pt-status-tab[aria-current="true"] {
-  color: var(--color-text);
-  background: var(--color-primary-tint);
-  border-color: var(--color-primary-border);
-  font-weight: var(--font-weight-semibold);
-}
-
-.my-pt-status-error {
-  margin: 0 0 var(--space-4);
 }
 
 /* Gói: dữ liệu và hạn sử dụng trước; thống kê dùng hàng số gọn. */
@@ -691,155 +483,12 @@ html body.dock.my-pt-sessions-page :is(.my-pt-schedule-panel, .my-pt-history-pan
   cursor: default;
 }
 
-.my-pt-view-tabs button:focus-visible, .my-pt-filters input:focus-visible, .my-pt-filters select:focus-visible, .my-pt-status-tab:focus-visible {
+.my-pt-view-tabs button:focus-visible {
   outline: var(--focus-outline-width) solid var(--color-primary);
   outline-offset: var(--focus-outline-offset);
-}
-
-/* Dialog hủy buổi tập: xác nhận một lần, không cho hủy vô tình. */
-.my-pt-cancel-dialog {
-  width: min(calc(var(--space-12) * 6), calc(100vw - var(--space-8)));
-  height: fit-content;
-  max-height: calc(100dvh - var(--space-8));
-  margin: auto;
-  padding: 0;
-  border: var(--border-width) solid var(--color-border-strong);
-  border-radius: var(--radius-sm);
-  background: var(--color-surface);
-  color: var(--color-text);
-  box-shadow: var(--shadow-pop);
-  font-family: var(--font-body);
-  overflow: auto;
-  animation: dialogSlideIn var(--duration-slow) var(--ease-standard) both;
-}
-
-@keyframes dialogSlideIn {
-  from {
-    opacity: 0;
-    transform: translateY(var(--space-3));
-  }
-  to {
-    opacity: 1;
-    transform: translateY(0);
-  }
-}
-
-.my-pt-cancel-dialog::backdrop {
-  background: var(--color-overlay);
-  animation: backdropFadeIn var(--duration-fast) var(--ease-standard) both;
-}
-
-@keyframes backdropFadeIn {
-  from {
-    opacity: 0;
-  }
-  to {
-    opacity: 1;
-  }
-}
-
-.my-pt-cancel-dialog-content {
-  padding: var(--space-6);
-}
-
-.my-pt-cancel-dialog h2 {
-  margin: 0 0 var(--space-2);
-  font-size: var(--font-size-xl);
-  font-weight: var(--font-weight-bold);
-  line-height: var(--line-height-snug);
-  color: var(--color-text);
-  letter-spacing: -0.02em;
-}
-
-.my-pt-cancel-dialog p {
-  margin: 0;
-  font-size: var(--font-size-sm);
-  line-height: var(--line-height-relaxed);
-  color: var(--color-text-soft);
-}
-
-.my-pt-cancel-dialog .my-pt-cancel-dialog-warning {
-  margin-top: var(--space-5);
-  padding: var(--space-3) var(--space-4);
-  border: var(--border-width) solid var(--color-danger-border);
-  border-radius: var(--radius-xs);
-  background: var(--color-danger-tint);
-  color: var(--color-text);
-}
-
-.my-pt-cancel-dialog-warning strong {
-  color: var(--color-danger-ink);
-  font-weight: var(--font-weight-semibold);
-}
-
-.my-pt-dialog-actions {
-  display: flex;
-  gap: var(--space-3);
-  justify-content: flex-end;
-  margin-top: var(--space-6);
-}
-
-.my-pt-dialog-actions button {
-  min-height: var(--control-height-lg);
-  flex: 1;
-  border-radius: var(--radius-button);
-  font-weight: var(--font-weight-semibold);
-  font-size: var(--font-size-sm);
-  transition: all var(--duration-fast) var(--ease-standard);
-}
-
-.my-pt-dialog-actions button[data-cancel-choice="keep"] {
-  border: var(--border-width) solid var(--color-border-strong);
-  background: var(--color-surface);
-  color: var(--color-text);
-}
-
-.my-pt-dialog-actions button[data-cancel-choice="keep"]:hover {
-  background: var(--color-surface-hover);
-  border-color: var(--color-border);
-}
-
-.my-pt-dialog-actions button[data-cancel-choice="keep"]:active {
-  transform: translateY(1px) scale(0.98);
-}
-
-.my-pt-dialog-actions button[data-cancel-choice="confirm"] {
-  background: var(--brand-ember-red);
-  color: var(--brand-ink);
-  border: 0;
-}
-
-.my-pt-dialog-actions button[data-cancel-choice="confirm"]:hover {
-  background: var(--brand-sunset);
-}
-
-.my-pt-dialog-actions button[data-cancel-choice="confirm"]:active {
-  transform: translateY(1px) scale(0.98);
-}
-
-.my-pt-dialog-actions button:focus-visible {
-  outline: var(--focus-outline-width) solid var(--color-primary);
-  outline-offset: var(--focus-outline-offset);
-}
-
-.my-pt-visually-hidden {
-  position: absolute;
-  width: var(--border-width);
-  height: var(--border-width);
-  overflow: hidden;
-  clip-path: inset(50%);
-  white-space: nowrap;
 }
 
 @media (max-width: 1000px) {
-  .my-pt-filters {
-    grid-template-columns: repeat(2, minmax(0, 1fr));
-  }
-
-  .my-pt-filter-actions {
-    grid-column: 1 / -1;
-    padding-top: 0;
-  }
 
   .my-pt-package-list {
     grid-template-columns: minmax(0, 1fr);
@@ -860,19 +509,7 @@ html body.dock.my-pt-sessions-page :is(.my-pt-schedule-panel, .my-pt-history-pan
   .my-pt-view-tabs button {
     font-size: var(--font-size-sm);
   }
-
-  .my-pt-filter-panel {
-    padding: var(--space-4);
-  }
   .my-pt-day { padding: var(--space-4); }
-
-  .my-pt-filters {
-    grid-template-columns: repeat(2, minmax(0, 1fr));
-  }
-
-  .my-pt-filters label:first-of-type {
-    grid-column: 1 / -1;
-  }
 
   .my-pt-session {
     grid-template-columns: minmax(0, 1fr);
@@ -907,53 +544,6 @@ html body.dock.my-pt-sessions-page :is(.my-pt-schedule-panel, .my-pt-history-pan
   .my-pt-package-stats dt {
     font-size: var(--font-size-xs);
   }
-
-  .my-pt-cancel-dialog {
-    width: calc(100vw - var(--space-6));
-  }
-
-  .my-pt-cancel-dialog-content { padding: var(--space-5); }
-
-  .my-pt-cancel-dialog h2 {
-    font-size: var(--font-size-lg);
-  }
-
-  .my-pt-dialog-actions {
-    gap: var(--space-2);
-  }
-
-  .my-pt-dialog-actions button {
-    flex: 1;
-    font-size: var(--font-size-sm);
-  }
-}
-
-@media (prefers-reduced-motion: reduce) {
-  .my-pt-cancel-dialog, .my-pt-cancel-dialog::backdrop { animation: none; }
-}
-
-/* [HUY-BUOI] Ô "Lý do hủy" (không bắt buộc) trong hộp thoại Hủy buổi — dùng chung kiểu với ô chọn slot */
-.my-pt-swap-slot-label textarea {
-  width: 100%;
-  min-height: 64px;
-  padding: var(--space-3);
-  border: var(--border-width) solid var(--color-border-strong);
-  border-radius: var(--radius-button);
-  background: var(--color-surface-muted);
-  color: var(--color-text);
-  font: inherit;
-  resize: vertical;
-}
-
-.my-pt-swap-slot-label textarea:focus-visible {
-  outline: var(--focus-outline-width) solid var(--color-primary);
-  outline-offset: var(--focus-outline-offset);
-}
-
-/* [NUT][DOI-BUOI] Nút "Đổi buổi" bị khóa (hết lượt / gói hết hiệu lực) */
-.my-pt-swap-button:disabled {
-  opacity: 0.55;
-  cursor: not-allowed;
 }
 
 /* [SDT-PT] Số điện thoại PT: bấm để gọi */
