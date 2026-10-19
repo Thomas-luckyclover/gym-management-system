@@ -10,8 +10,7 @@
     view       : "week" | "month"
     timetable  : (view=week)  .days (7 cột) + .bands (5 hàng) → band.cells[i] (danh sách buổi)
     month      : (view=month) .weeks → week (7 ô) → cell.sessions + các số đếm
-    ptPackages : thẻ "Gói PT của bạn"
-    timetableError, ptPackagesError, dashboard
+    timetableError, dashboard
 --%>
 <c:set var="pageUrl" value="${pageContext.request.contextPath}/customer/pt-sessions" />
 
@@ -112,13 +111,6 @@
                 </table>
             </c:if>
 
-            <%-- ===== GÓI PT (tạm giữ, chuyển sang màn "Gói của tôi" ở GĐ4) ===== --%>
-            <h2>Gói PT của bạn</h2>
-            <c:if test="${not empty ptPackagesError}"><p role="alert"><c:out value="${ptPackagesError}" /></p></c:if>
-            <c:forEach var="p" items="${ptPackages}">
-                <p><b><c:out value="${p.packageName}" /></b> · <c:out value="${p.typeLabel}" /> · PT <c:out value="${p.ptName}" />
-                    · ${gms:formatDate(p.startDate)} – ${gms:formatDate(p.endDate)} · ${p.generatedSessionCount} buổi · sắp tới ${p.upcomingSessionCount}</p>
-            </c:forEach>
         </main>
     </div>
 </div>

@@ -5,13 +5,11 @@ import com.gms.dao.AccountDAO;
 import com.gms.dao.CustomerDAO;
 import com.gms.dao.MyPtSessionDAO;
 import com.gms.dto.MonthView;
-import com.gms.dto.MyPtPackageView;
 import com.gms.dto.MyPtSessionRow;
 import com.gms.dto.ServiceResult;
 import com.gms.dto.TimetableView;
 import com.gms.entity.Account;
 import com.gms.entity.Customer;
-import com.gms.util.DateTimeUtil;
 import java.sql.SQLException;
 import java.time.DayOfWeek;
 import java.time.LocalDate;
@@ -25,33 +23,24 @@ import java.util.Map;
 import java.util.Set;
 
 /**
- * Service màn "Lịch tập của tôi" (UC-36 xem lịch) — THỜI KHÓA BIỂU, CHỈ XEM.
- * [CHOT 19/10] Khách không tự hủy / tự đổi buổi: nhắn PT qua Zalo, PT cập nhật lịch giúp (UC-35).
- *
- * TÌM NHANH (Ctrl+F gõ tag):
- *   [QUYEN]         tìm khách đang đăng nhập                 → findCustomerId
- *   [TKB-TUAN]      thời khóa biểu 1 tuần (5 khung × 7 ngày) → getWeek
- *   [TKB-THANG]     lưới 1 tháng + số đếm                    → getMonth
- *   [TRANG-THAI]    nhãn + màu + lý do của 1 buổi            → fillDisplay, applyStatus
- *   [CANH-BAO-GYM]  câu cảnh báo vàng                        → buildGymWarning
- *   [GOI-PT]        thẻ "Gói PT của bạn"                     → getPtPackages
- *   [HAM-NHO]       hàm tính toán không đụng DB (có unit test) → weekStartOf, bandOf, zaloUrl, applyStatus
+ * Màn "Lịch tập" (/customer/pt-sessions) — thời khóa biểu tuần / tháng, CHỈ XEM.
+ * Khách không tự hủy / đổi buổi: nhắn PT qua Zalo, PT cập nhật lịch (chốt 19/10).
+ * Các hàm fillDisplay, findCustomerId, typeLabel, zaloUrl được màn "Gói của tôi" dùng lại.
  */
 public class MyPtSessionService {
 
-    // ---- Mã trạng thái hiển thị (JSP chọn màu theo mã này) ----
-    static final String KEY_TODAY = "today";            // buổi hôm nay, chưa kết thúc
-    static final String KEY_UPCOMING = "upcoming";      // buổi các ngày sau
-    static final String KEY_WARN = "warn";              // sắp tới nhưng có cảnh báo (phòng nghỉ, chưa có quyền vào gym)
+    // Mã trạng thái hiển thị → JSP chọn màu theo mã
+    static final String KEY_TODAY = "today";            // hôm nay, chưa kết thúc
+    static final String KEY_UPCOMING = "upcoming";      // các ngày sau
+    static final String KEY_WARN = "warn";              // sắp tới nhưng có cảnh báo
     static final String KEY_PENDING = "pending";        // đã kết thúc, chờ JOB-04 chốt
     static final String KEY_CHECKED_IN = "checkedIn";
     static final String KEY_MISSED = "missed";
     static final String KEY_CANCELLED = "cancelled";
 
-    /** Tên 7 ngày, theo thứ tự cột (Thứ 2 → Chủ nhật). */
     private static final String[] DAY_NAMES = {"Thứ 2", "Thứ 3", "Thứ 4", "Thứ 5", "Thứ 6", "Thứ 7", "Chủ nhật"};
 
-    /** 5 khung giờ cố định = 5 hàng của thời khóa biểu. Xếp buổi theo GIỜ BẮT ĐẦU (xem bandOf). */
+    /** 5 khung giờ = 5 hàng của thời khóa biểu (xếp theo giờ BẮT ĐẦU, xem bandOf). */
     private static final String[][] BANDS = {
         {"Sáng sớm", "06:00 – 09:00"},
         {"Sáng", "09:00 – 12:00"},
@@ -66,56 +55,49 @@ public class MyPtSessionService {
 
 
     // =====================================================================
-    // [QUYEN] TÌM KHÁCH ĐANG ĐĂNG NHẬP
+    // QUYỀN
     // =====================================================================
 
     /**
-     * [QUYEN] accountId (lấy trong HttpSession, KHÔNG tin URL) → customerId.
-     *
-     * @return customerId, hoặc null nếu tài khoản bị khóa / không phải khách hàng
+     * Tài khoản đang đăng nhập → mã khách. Null = tài khoản khóa / không phải khách.
+     * (accountId lấy trong HttpSession, KHÔNG tin URL.)
      */
     Integer findCustomerId(int accountId) throws SQLException {
+        // B1: tài khoản phải còn hoạt động
         Account account = accountDAO.findById(accountId);
         if (account == null || account.getStatus() != Account.Status.ACTIVE) {
             return null;
         }
 
+        // B2: phải có hồ sơ khách chưa bị xóa
         Customer customer = customerDAO.findByPersonId(account.getPersonId());
         if (customer == null || customer.getDeletedAt() != null) {
             return null;
         }
-
         return customer.getCustomerId();
     }
 
 
     // =====================================================================
-    // [TKB-TUAN] THỜI KHÓA BIỂU 1 TUẦN
+    // XEM THEO TUẦN
     // =====================================================================
 
-    /**
-     * [TKB-TUAN] Thời khóa biểu của tuần chứa ngày anyDay.
-     *
-     * @param anyDay ngày bất kỳ trong tuần muốn xem (Servlet đọc ?date=, sai/thiếu → hôm nay)
-     * @param now    giờ VN Servlet lấy 1 LẦN cho cả request
-     */
+    /** Thời khóa biểu tuần chứa ngày anyDay: 7 ngày × 5 khung giờ. */
     public ServiceResult<TimetableView> getWeek(int accountId, LocalDate anyDay, LocalDateTime now) {
         try {
+            // B1: tìm khách
             Integer customerId = findCustomerId(accountId);
             if (customerId == null) {
                 return ServiceResult.fail(Messages.MSG07_NO_PERMISSION);
             }
 
-            // B1: khoảng ngày Thứ 2 → Chủ nhật
+            // B2: lấy buổi từ Thứ 2 → Chủ nhật (1 câu SQL), điền nhãn + trạng thái
             LocalDate monday = weekStartOf(anyDay);
             LocalDate sunday = monday.plusDays(6);
-
-            // B2: 1 câu SQL lấy hết buổi trong tuần + ngày phòng nghỉ
             List<MyPtSessionRow> rows = sessionDAO.findSessionsInRange(customerId, monday, sunday);
-            Set<LocalDate> closedDays = sessionDAO.findClosedDays(monday, sunday);
-            fillDisplay(rows, customerId, now, closedDays);
+            fillDisplay(rows, customerId, now);
 
-            // B3: dựng khung 7 ngày × 5 khung giờ
+            // B3: dựng khung rỗng 7 ngày × 5 khung giờ
             LocalDate today = now.toLocalDate();
             TimetableView view = new TimetableView(monday, today);
             for (int i = 0; i < 7; i++) {
@@ -126,11 +108,10 @@ public class MyPtSessionService {
                 view.getBands().add(new TimetableView.Band(band[0], band[1]));
             }
 
-            // B4: thả từng buổi vào đúng ô (hàng = khung giờ, cột = thứ trong tuần)
+            // B4: thả từng buổi vào ô [khung giờ][thứ]
             for (MyPtSessionRow row : rows) {
-                int dayIndex = row.getSlotDate().getDayOfWeek().getValue() - 1;   // Thứ 2 = 0 … Chủ nhật = 6
-                int bandIndex = bandOf(row.getStartTime());
-                view.getBands().get(bandIndex).getCells().get(dayIndex).add(row);
+                int dayIndex = row.getSlotDate().getDayOfWeek().getValue() - 1;   // Thứ 2 = 0 … CN = 6
+                view.getBands().get(bandOf(row.getStartTime())).getCells().get(dayIndex).add(row);
             }
             return ServiceResult.ok(view);
 
@@ -142,31 +123,28 @@ public class MyPtSessionService {
 
 
     // =====================================================================
-    // [TKB-THANG] LỊCH 1 THÁNG
+    // XEM THEO THÁNG
     // =====================================================================
 
-    /**
-     * [TKB-THANG] Lưới tháng chứa ngày anyDay. Lưới luôn đủ tuần (bắt đầu Thứ 2, kết thúc Chủ nhật),
-     * ngày ngoài tháng vẫn có buổi để hiện mờ, nhưng KHÔNG tính vào số đếm.
-     */
+    /** Lưới tháng chứa ngày anyDay (đủ tuần Thứ 2 → CN) + số đếm theo trạng thái. */
     public ServiceResult<MonthView> getMonth(int accountId, LocalDate anyDay, LocalDateTime now) {
         try {
+            // B1: tìm khách
             Integer customerId = findCustomerId(accountId);
             if (customerId == null) {
                 return ServiceResult.fail(Messages.MSG07_NO_PERMISSION);
             }
 
-            // B1: khoảng ngày của lưới = Thứ 2 tuần chứa ngày 1 → Chủ nhật tuần chứa ngày cuối tháng
+            // B2: khoảng ngày của lưới = Thứ 2 tuần đầu → Chủ nhật tuần cuối
             YearMonth month = YearMonth.from(anyDay);
             LocalDate gridStart = weekStartOf(month.atDay(1));
             LocalDate gridEnd = weekStartOf(month.atEndOfMonth()).plusDays(6);
 
-            // B2: cùng 1 hàm DAO với xem tuần, chỉ khác khoảng ngày
+            // B3: lấy buổi (cùng hàm DAO với xem tuần), điền nhãn + trạng thái
             List<MyPtSessionRow> rows = sessionDAO.findSessionsInRange(customerId, gridStart, gridEnd);
-            Set<LocalDate> closedDays = sessionDAO.findClosedDays(gridStart, gridEnd);
-            fillDisplay(rows, customerId, now, closedDays);
+            fillDisplay(rows, customerId, now);
 
-            // B3: dựng lưới tuần × 7 ô, nhớ ô theo ngày để thả buổi vào
+            // B4: dựng lưới, nhớ ô theo ngày
             LocalDate today = now.toLocalDate();
             MonthView view = new MonthView(month, today);
             Map<LocalDate, MonthView.Cell> cellByDate = new HashMap<>();
@@ -181,7 +159,7 @@ public class MyPtSessionService {
                 view.getWeeks().add(week);
             }
 
-            // B4: thả buổi vào ô + đếm (chỉ buổi trong tháng)
+            // B5: thả buổi vào ô; chỉ đếm buổi thuộc tháng đang xem
             for (MyPtSessionRow row : rows) {
                 cellByDate.get(row.getSlotDate()).getSessions().add(row);
                 if (YearMonth.from(row.getSlotDate()).equals(month)) {
@@ -196,56 +174,61 @@ public class MyPtSessionService {
         }
     }
 
-    /** [TKB-THANG] Cộng 1 vào ô đếm tương ứng. Hôm nay + Sắp tới + Cần chú ý đều là "Sắp tới". */
+    /** Cộng 1 vào ô đếm của tháng. Hôm nay / Sắp tới / Cần chú ý đều tính là "Sắp tới". */
     private void countInto(MonthView view, String statusKey) {
         switch (statusKey) {
             case KEY_TODAY, KEY_UPCOMING, KEY_WARN -> view.setUpcomingCount(view.getUpcomingCount() + 1);
             case KEY_CHECKED_IN -> view.setCheckedInCount(view.getCheckedInCount() + 1);
             case KEY_MISSED -> view.setMissedCount(view.getMissedCount() + 1);
             case KEY_CANCELLED -> view.setCancelledCount(view.getCancelledCount() + 1);
-            default -> view.setPendingCount(view.getPendingCount() + 1);   // KEY_PENDING
+            default -> view.setPendingCount(view.getPendingCount() + 1);
         }
     }
 
 
     // =====================================================================
-    // [TRANG-THAI] ĐIỀN THÔNG TIN HIỂN THỊ CHO TỪNG BUỔI
+    // ĐIỀN THÔNG TIN HIỂN THỊ (dùng chung với màn "Gói của tôi")
     // =====================================================================
 
-    /** [TRANG-THAI] Điền nhãn loại gói, người tập cùng, link Zalo, trạng thái cho mọi buổi. */
-    private void fillDisplay(List<MyPtSessionRow> rows, int myCustomerId, LocalDateTime now,
-            Set<LocalDate> closedDays) throws SQLException {
+    /** Điền nhãn loại gói, người tập cùng, link Zalo, trạng thái + lý do cho mọi buổi. */
+    void fillDisplay(List<MyPtSessionRow> rows, int myCustomerId, LocalDateTime now) throws SQLException {
+        if (rows.isEmpty()) {
+            return;
+        }
+
+        // B1: ngày phòng nghỉ trong khoảng của danh sách (1 câu SQL cho cả danh sách)
+        LocalDate first = rows.get(0).getSlotDate();
+        LocalDate last = rows.get(rows.size() - 1).getSlotDate();
+        Set<LocalDate> closedDays = sessionDAO.findClosedDays(first, last);
+
         for (MyPtSessionRow row : rows) {
+            // B2: nhãn loại gói + link Zalo PT
             row.setTypeLabel(typeLabel(row.getType()));
             row.setZaloUrl(zaloUrl(row.getPtPhone()));
 
-            // Gói đôi: "người tập cùng" = NGƯỜI CÒN LẠI so với người đang xem
+            // B3: gói đôi → "người tập cùng" là người còn lại
             if (row.isCouple() && row.getPartnerCustomerId() != null) {
                 boolean iAmHolder = row.getHolderCustomerId() == myCustomerId;
                 row.setPartnerName(iAmHolder ? row.getPartnerFullName() : row.getHolderName());
             }
 
-            // Cảnh báo chỉ cần cho buổi CHƯA KẾT THÚC (buổi đã qua thì đọc kết quả đã lưu)
+            // B4: cảnh báo chỉ cho buổi CHƯA KẾT THÚC (ngày phòng nghỉ ưu tiên trước)
             String warning = null;
             if (isNotEnded(row, now)) {
                 warning = closedDays.contains(row.getSlotDate())
                         ? "Phòng tập nghỉ ngày này. PT sẽ liên hệ để dời buổi sang ngày khác, buổi không bị trừ."
                         : buildGymWarning(row, myCustomerId);
             }
+
+            // B5: mã + nhãn + lý do
             applyStatus(row, now, warning);
         }
     }
 
     /**
-     * [TRANG-THAI][HAM-NHO] Gán mã + nhãn + lý do theo Sessions.Status (ĐỌC kết quả đã lưu, không tự chốt thay JOB-04).
-     *
-     *   Scheduled, chưa kết thúc, có cảnh báo  → warn      "Cần chú ý"
-     *   Scheduled, chưa kết thúc, hôm nay      → today     "Hôm nay" / "Đang diễn ra"
-     *   Scheduled, chưa kết thúc, ngày sau     → upcoming  "Sắp tới"
-     *   Scheduled, đã kết thúc                 → pending   "Đang cập nhật"
-     *   CheckedIn / Missed / Cancelled         → checkedIn / missed / cancelled
-     *
-     * @param warning câu cảnh báo (null = không cảnh báo); chỉ dùng cho buổi chưa kết thúc
+     * Gán mã + nhãn + lý do theo Sessions.Status (chỉ ĐỌC kết quả đã lưu, không chốt thay JOB-04).
+     *   Scheduled chưa kết thúc: có cảnh báo → warn | hôm nay → today | ngày sau → upcoming
+     *   Scheduled đã kết thúc → pending | CheckedIn / Missed / Cancelled → giữ nguyên + lý do
      */
     static void applyStatus(MyPtSessionRow row, LocalDateTime now, String warning) {
         boolean couple = row.isCouple();
@@ -279,11 +262,11 @@ public class MyPtSessionService {
     }
 
     /** Buổi chưa kết thúc? (bây giờ < giờ kết thúc) */
-    private static boolean isNotEnded(MyPtSessionRow row, LocalDateTime now) {
+    static boolean isNotEnded(MyPtSessionRow row, LocalDateTime now) {
         return now.isBefore(row.getSlotDate().atTime(row.getEndTime()));
     }
 
-    /** [TRANG-THAI] Vì sao vắng (Sessions.MissedReason). */
+    /** Vì sao vắng (Sessions.MissedReason). */
     private static String missedExplanation(String reason, boolean couple) {
         if (reason == null) {
             return "Buổi được ghi nhận là vắng. Buổi vẫn tính vào gói.";
@@ -302,7 +285,7 @@ public class MyPtSessionService {
         };
     }
 
-    /** [TRANG-THAI] Vì sao bị hủy (Sessions.CancelType). Dữ liệu cũ vẫn có thể là ByCustomer. */
+    /** Vì sao bị hủy (Sessions.CancelType). Dữ liệu cũ vẫn có thể là ByCustomer. */
     private static String cancelExplanation(String cancelType, boolean couple) {
         if (cancelType == null) {
             return "Buổi đã bị hủy.";
@@ -319,38 +302,40 @@ public class MyPtSessionService {
     }
 
     /**
-     * [CANH-BAO-GYM] Ngày tập có quyền vào gym không? (giống JOB-04 — notes 10/10)
-     *   "Vào được gym" = có Membership HOẶC DayPass phủ ngày đó  VÀ  không đang bảo lưu.
-     *   Chỉ là CẢNH BÁO, KHÔNG đổi trạng thái buổi. Trả null = không cần cảnh báo.
+     * Cảnh báo quyền vào gym cho 1 buổi chưa diễn ra (giống JOB-04 — notes 10/10). Null = không cảnh báo.
+     * "Vào được gym" = có Membership HOẶC DayPass phủ ngày đó VÀ không đang bảo lưu.
+     * Gói đôi: chỉ cần 1 trong 2 người vào được; câu chữ nói theo góc nhìn người đang xem.
      */
     private String buildGymWarning(MyPtSessionRow row, int myCustomerId) throws SQLException {
         LocalDate day = row.getSlotDate();
 
+        // B1: người đứng tên
         int holderId = row.getHolderCustomerId();
         boolean holderFrozen = sessionDAO.isFrozen(holderId, day);
         boolean holderOk = sessionDAO.hasGymPass(holderId, day) && !holderFrozen;
 
-        // --- Gói cá nhân / buổi lẻ: chỉ xét người đứng tên ---
+        // B2: gói cá nhân / buổi lẻ → chỉ xét người đứng tên
         if (!row.isCouple() || row.getPartnerCustomerId() == null) {
             if (holderOk) {
                 return null;
             }
-            if (holderFrozen) {
-                return "Buổi tập nằm trong kỳ bảo lưu. Hãy kiểm tra thời gian bảo lưu trước ngày tập.";
-            }
-            return "Bạn chưa có Membership hoặc DayPass hợp lệ cho ngày tập này.";
+            return holderFrozen
+                    ? "Buổi tập nằm trong kỳ bảo lưu. Hãy kiểm tra thời gian bảo lưu trước ngày tập."
+                    : "Bạn chưa có Membership hoặc DayPass hợp lệ cho ngày tập này.";
         }
 
-        // --- Gói đôi: xét cả 2 người, nói theo góc nhìn NGƯỜI ĐANG XEM ---
+        // B3: gói đôi → xét thêm người đi kèm
         int partnerId = row.getPartnerCustomerId();
         boolean partnerFrozen = sessionDAO.isFrozen(partnerId, day);
         boolean partnerOk = sessionDAO.hasGymPass(partnerId, day) && !partnerFrozen;
 
+        // B4: đổi sang góc nhìn "tôi" / "người còn lại"
         boolean iAmHolder = holderId == myCustomerId;
         boolean meOk = iAmHolder ? holderOk : partnerOk;
         boolean otherOk = iAmHolder ? partnerOk : holderOk;
         boolean meFrozen = iAmHolder ? holderFrozen : partnerFrozen;
 
+        // B5: chọn câu cảnh báo
         if (meOk && otherOk) {
             return null;
         }
@@ -370,58 +355,15 @@ public class MyPtSessionService {
 
 
     // =====================================================================
-    // [GOI-PT] GÓI PT (thẻ "Gói PT của bạn" — chuyển sang màn "Gói của tôi" ở GĐ4)
+    // HÀM NHỎ — không đụng DB, có unit test (MyPtSessionServiceTest)
     // =====================================================================
 
-    /** [GOI-PT] Thẻ "Gói PT của bạn": chỉ gói Active, kèm số liệu. */
-    public ServiceResult<List<MyPtPackageView>> getPtPackages(int accountId) {
-        try {
-            Integer customerId = findCustomerId(accountId);
-            if (customerId == null) {
-                return ServiceResult.fail(Messages.MSG07_NO_PERMISSION);
-            }
-
-            LocalDateTime now = DateTimeUtil.now();
-            List<MyPtPackageView> packages = sessionDAO.findPtPackages(customerId, true);
-
-            for (MyPtPackageView p : packages) {
-                p.setPtName(sessionDAO.findEmployeeName(p.getPtEmployeeId()));
-                p.setPtPhone(sessionDAO.findEmployeePhone(p.getPtEmployeeId()));
-                p.setTypeLabel(typeLabel(p.getType()));
-
-                // Gói đôi: "người tập cùng" = người còn lại
-                if (p.isCouple() && p.getPartnerCustomerId() != null) {
-                    int otherId = p.getHolderCustomerId() == customerId ? p.getPartnerCustomerId() : p.getHolderCustomerId();
-                    p.setPartnerName(sessionDAO.findCustomerName(otherId));
-                }
-
-                // Lượt đổi còn lại = giới hạn LÚC MUA − đã dùng (GBR-04, BR-73). Không để âm.
-                p.setRemainingSwaps(Math.max(0, p.getMaxSwaps() - p.getSwapsUsed()));
-                p.setUpcomingSessionCount(sessionDAO.countUpcomingSessionsOfPackage(p.getSubscriptionId(), now));
-            }
-            return ServiceResult.ok(packages);
-
-        } catch (SQLException e) {
-            e.printStackTrace();
-            return ServiceResult.fail(Messages.MSG04_SYSTEM_BUSY);
-        }
-    }
-
-
-    // =====================================================================
-    // [HAM-NHO] HÀM TÍNH TOÁN KHÔNG ĐỤNG DB (unit test: MyPtSessionServiceTest)
-    // =====================================================================
-
-    /** [HAM-NHO] Ngày bất kỳ → Thứ 2 của tuần đó. Vd 22/10/2026 (Thứ 5) → 19/10; 25/10 (Chủ nhật) → 19/10. */
+    /** Ngày bất kỳ → Thứ 2 của tuần đó. Vd 22/10/2026 → 19/10; Chủ nhật 25/10 → 19/10. */
     static LocalDate weekStartOf(LocalDate date) {
         return date.with(DayOfWeek.MONDAY);
     }
 
-    /**
-     * [HAM-NHO] Giờ bắt đầu → số thứ tự khung giờ (hàng của thời khóa biểu).
-     *   trước 09:00 → 0 Sáng sớm | 09:00–11:59 → 1 Sáng | 12:00–14:59 → 2 Trưa
-     *   15:00–17:59 → 3 Chiều    | từ 18:00   → 4 Tối
-     */
+    /** Giờ bắt đầu → khung giờ: <9h Sáng sớm(0) | <12h Sáng(1) | <15h Trưa(2) | <18h Chiều(3) | còn lại Tối(4). */
     static int bandOf(LocalTime startTime) {
         int hour = startTime.getHour();
         if (hour < 9) {
@@ -439,15 +381,14 @@ public class MyPtSessionService {
         return 4;
     }
 
-    /**
-     * [HAM-NHO] Số điện thoại PT → link Zalo. Bỏ ký tự không phải số; "+84…" đổi về "0…".
-     * Vd "0912 345 678" và "+84912345678" → https://zalo.me/0912345678. Không có số → null.
-     */
+    /** SĐT → link Zalo. "0912 345 678" / "+84912345678" → https://zalo.me/0912345678. Không có số → null. */
     static String zaloUrl(String phone) {
         if (phone == null || phone.isBlank()) {
             return null;
         }
+        // B1: chỉ giữ chữ số
         String digits = phone.replaceAll("\\D", "");
+        // B2: đầu 84 (mã nước) → đổi về 0
         if (digits.startsWith("84") && digits.length() == 11) {
             digits = "0" + digits.substring(2);
         }
@@ -455,11 +396,11 @@ public class MyPtSessionService {
     }
 
     /** Mã loại gói → chữ tiếng Việt. */
-    private static String typeLabel(String type) {
+    static String typeLabel(String type) {
         return switch (type) {
             case "PTSingle" -> "PT cá nhân";
             case "PTCouple" -> "PT đôi";
-            default -> "Buổi lẻ";   // SingleSession
+            default -> "Buổi lẻ";
         };
     }
 }
