@@ -781,6 +781,9 @@ public class LeaveRequestService {
         // B3: tự động từ chối các đơn Pending đã quá mốc P-20
         LocalDate maxOverdue = !currentTime.isBefore(cutoffTime) ? tomorrow : today;
         List<LeaveRequest> overdueList = leaveRequestDAO.findPendingOverdueRequests(maxOverdue);
+        if (!overdueList.isEmpty()) {
+            System.out.println("[JOB-07] Tự từ chối " + overdueList.size() + " đơn quá hạn lúc " + now);
+        }
 
         for (LeaveRequest req : overdueList) {
             // Xử lý từng đơn trong một transaction riêng:
