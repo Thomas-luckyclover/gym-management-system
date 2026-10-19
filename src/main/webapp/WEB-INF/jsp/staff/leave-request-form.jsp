@@ -243,14 +243,23 @@
             </div>
 
             <div class="leave-side-card">
-              <span class="leave-side-title">Dự báo quân số & Định biên ca trực</span>
+              <span class="leave-side-title">Dự báo quân số &amp; Định biên ca trực</span>
+              <p id="pvScope" style="margin:0 0 var(--space-2);font-size:var(--font-size-xs);color:var(--color-text-soft)">
+                Mặc định tính cho ngày mai, cả ngày. Chọn ngày và ca nghỉ để xem số liệu đúng ca.
+              </p>
               <div class="leave-side-row">
                 <span style="color:var(--color-text-soft)">PT còn trực (nếu duyệt):</span>
-                <b><c:out value="${formView.remainingPt}" default="2" /> PT <small style="font-weight:400;color:var(--color-text-soft)">(tối thiểu ≥ <c:out value="${formView.minPtPerShift}" default="2" />)</small></b>
+                <b>
+                  <span id="pvPt"><c:choose><c:when test="${not empty formView}"><c:out value="${formView.remainingPt}" /></c:when><c:otherwise>—</c:otherwise></c:choose></span> PT
+                  <small style="font-weight:400;color:var(--color-text-soft)">(tối thiểu ≥ <span id="pvMinPt"><c:choose><c:when test="${not empty formView}"><c:out value="${formView.minPtPerShift}" /></c:when><c:otherwise>—</c:otherwise></c:choose></span>)</small>
+                </b>
               </div>
               <div class="leave-side-row" style="margin-bottom:var(--space-3)">
                 <span style="color:var(--color-text-soft)">Lễ tân còn trực (nếu duyệt):</span>
-                <b><c:out value="${formView.remainingReceptionist}" default="1" /> Lễ tân <small style="font-weight:400;color:var(--color-text-soft)">(tối thiểu ≥ <c:out value="${formView.minReceptionistPerShift}" default="1" />)</small></b>
+                <b>
+                  <span id="pvRecep"><c:choose><c:when test="${not empty formView}"><c:out value="${formView.remainingReceptionist}" /></c:when><c:otherwise>—</c:otherwise></c:choose></span> Lễ tân
+                  <small style="font-weight:400;color:var(--color-text-soft)">(tối thiểu ≥ <span id="pvMinRecep"><c:choose><c:when test="${not empty formView}"><c:out value="${formView.minReceptionistPerShift}" /></c:when><c:otherwise>—</c:otherwise></c:choose></span>)</small>
+                </b>
               </div>
               <p style="margin:0;font-size:var(--font-size-xs);color:var(--color-text-soft);line-height:1.5">
                 Đơn chỉ được Quản lý duyệt khi số nhân sự còn lại trong ca đảm bảo định biên tối thiểu (P-13, P-14).
