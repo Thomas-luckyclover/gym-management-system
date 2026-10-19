@@ -345,6 +345,26 @@ public class LeaveRequestDAO {
     }
 
     /**
+     * Khóa mọi đơn nghỉ của một ngày cho tới khi transaction kết thúc (chống duyệt đồng thời, BR-14).
+     * UPDLOCK: hai transaction cùng khóa một ngày sẽ phải xếp hàng.
+     * HOLDLOCK: giữ khóa tới khi commit/rollback, kể cả khoảng khóa (range).
+     *
+     * @param connection kết nối đang mở transaction
+     * @param leaveDate ngày nghỉ cần khóa
+     * @throws SQLException lỗi truy vấn
+     */
+    public void lockLeaveDate(Connection connection, LocalDate leaveDate) throws SQLException {
+        String sql = "SELECT COUNT(*) FROM LeaveRequests WITH (UPDLOCK, HOLDLOCK) WHERE LeaveDate = ?";
+
+        try (PreparedStatement statement = connection.prepareStatement(sql)) {
+            statement.setDate(1, java.sql.Date.valueOf(leaveDate));
+            try (ResultSet resultSet = statement.executeQuery()) {
+                resultSet.next();
+            }
+        }
+    }
+
+    /**
      * Duyệt đơn nghỉ phép trong transaction: cập nhật Status = 'Approved', ghi người duyệt và thời điểm.
      * Chỉ cập nhật khi đơn còn ở trạng thái Pending.
      *
