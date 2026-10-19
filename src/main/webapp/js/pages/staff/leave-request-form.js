@@ -163,6 +163,14 @@ document.addEventListener("DOMContentLoaded", function () {
         shiftTypeSelect.addEventListener("change", refreshStaffingPreview);
     }
 
+    // B3.1: khóa nút sau lần bấm đầu để không nộp đơn hai lần
+    if (leaveForm) {
+        leaveForm.addEventListener("submit", function () {
+            submitBtn.disabled = true;
+            submitBtn.textContent = "Đang gửi...";
+        });
+    }
+
     // Kiểm tra ngay khi tải trang (nếu có giá trị sẵn)
     if (leaveDateInput.value) {
         checkDeadline();
