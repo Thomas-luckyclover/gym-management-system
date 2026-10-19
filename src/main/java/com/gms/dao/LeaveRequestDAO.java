@@ -703,12 +703,6 @@ public class LeaveRequestDAO {
         }
     }
 
-    /**
-     * Lấy danh sách các đơn Pending đã quá hạn duyệt P-20 để tự động từ chối (JOB-07).
-     *
-     * @param maxOverdueLeaveDate ngày nghỉ muộn nhất đã quá hạn duyệt (hôm nay hoặc ngày mai)
-
-
     // ===== Map ResultSet → Entity =====
 
     /** Đổi 1 dòng ResultSet thành LeaveRequest; cột nullable được đọc riêng để không mất NULL. */
