@@ -382,6 +382,7 @@ public class LeaveRequestService {
                     auditLogService.logInTransaction(
                             conn,
                             managerAccountId,
+                            Role.MANAGER,
                             "Duyệt đơn nghỉ phép",
                             "LeaveRequests",
                             leaveRequestId,
@@ -479,6 +480,7 @@ public class LeaveRequestService {
                     auditLogService.logInTransaction(
                             conn,
                             managerAccountId,
+                            Role.MANAGER,
                             "Từ chối đơn nghỉ phép",
                             "LeaveRequests",
                             leaveRequestId,
@@ -684,6 +686,7 @@ public class LeaveRequestService {
                     auditLogService.logInTransaction(
                             conn,
                             accountId,
+                            employee.getPosition(),
                             "Nộp đơn nghỉ phép",
                             "LeaveRequests",
                             newLeaveRequestId,
