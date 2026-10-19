@@ -219,7 +219,9 @@
 
                 <button class="btn btn-danger"
                         type="submit"
-                        id="btnRejectLeave">
+                        id="btnRejectLeave"
+                        data-confirm-title="Từ chối đơn nghỉ phép"
+                        data-confirm-message="Xác nhận từ chối đơn nghỉ này? Nhân viên sẽ nhận thông báo kèm lý do.">
                   <i class="fa-solid fa-xmark" aria-hidden="true"></i>
                   Từ chối đơn
                 </button>
