@@ -89,6 +89,26 @@ public class LeaveRequestFormServlet extends HttpServlet {
             return;
         }
 
+        // B1.2: kiểm tra nếu là hành động rút đơn (action=withdraw)
+        String action = RequestUtil.getTrimmedParam(request, "action");
+        if ("withdraw".equalsIgnoreCase(action)) {
+            int leaveRequestId = 0;
+            try {
+                leaveRequestId = Integer.parseInt(RequestUtil.getTrimmedParam(request, "leaveRequestId"));
+            } catch (Exception e) {
+                leaveRequestId = 0;
+            }
+            ServiceResult<Void> withdrawResult = leaveRequestService.withdrawRequest(accountId, leaveRequestId);
+            if (withdrawResult.isSuccess()) {
+                RequestUtil.setFlashToast(request, "success",
+                        "Đã rút đơn xin nghỉ phép thành công.");
+            } else {
+                RequestUtil.setFlashToast(request, "danger", withdrawResult.getMessage());
+            }
+            RequestUtil.redirect(request, response, RequestUtil.getPathWithinApp(request));
+            return;
+        }
+
         // B2: đọc và parse các tham số gửi từ form
         String leaveTypeStr = RequestUtil.getTrimmedParam(request, "leaveType");
         String leaveDateStr = RequestUtil.getTrimmedParam(request, "leaveDate");
