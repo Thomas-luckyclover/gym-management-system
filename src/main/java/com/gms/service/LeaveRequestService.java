@@ -12,6 +12,7 @@ import com.gms.dto.PageResult;
 import com.gms.dto.ServiceResult;
 import com.gms.dto.StaffLeaveFormView;
 import com.gms.dto.StaffingPreview;
+import com.gms.dto.ShiftStaffingRow;
 import com.gms.entity.Employee;
 import com.gms.entity.LeaveRequest;
 import com.gms.entity.Person;
@@ -304,6 +305,26 @@ public class LeaveRequestService {
                 LocalDateTime deadline = computeApprovalDeadline(detail.getLeaveRequest(), approvalCutoff);
                 detail.setApprovalDeadline(deadline);
                 detail.setOverdue(!DateTimeUtil.now().isBefore(deadline));
+
+                // Tính định biên chi tiết cho từng ca (với đơn FullDay thì tính cả ca Sáng và Chiều)
+                List<String> shifts = new ArrayList<>();
+                if (detail.getLeaveRequest().getShiftType() == LeaveRequest.ShiftType.FULL_DAY) {
+                    shifts.add(LeaveRequest.ShiftType.MORNING.getDbValue());
+                    shifts.add(LeaveRequest.ShiftType.AFTERNOON.getDbValue());
+                } else {
+                    shifts.add(detail.getLeaveRequest().getShiftType().getDbValue());
+                }
+
+                List<ShiftStaffingRow> rows = new ArrayList<>();
+                for (String s : shifts) {
+                    int after = leaveRequestDAO.countOnDutyAfterApproval(
+                            detail.getLeaveRequest().getLeaveDate(), s, position, leaveRequestId);
+                    String sLabel = "Morning".equalsIgnoreCase(s) ? "Ca sáng"
+                            : ("Afternoon".equalsIgnoreCase(s) ? "Ca chiều" : "Cả ngày");
+                    String pLabel = "PT".equalsIgnoreCase(position) ? "PT" : "Lễ tân";
+                    rows.add(new ShiftStaffingRow(sLabel, pLabel, after + 1, after, minRequired));
+                }
+                detail.setStaffingRows(rows);
             }
 
             return ServiceResult.ok(detail);
