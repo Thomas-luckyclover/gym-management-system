@@ -103,7 +103,7 @@ duyệt `…/review?id=`. Tên JSP kebab-case. Cột "Phụ trách" là gợi ý
 | 50 | My Bookings | `customer.MyBookingServlet` | `/customer/bookings` | `customer/my-bookings.jsp` | UC-36, UC-39 | TV5 |
 | 51 | My PT Sessions | `customer.MyPtSessionServlet` | `/customer/pt-sessions` | `customer/my-pt-sessions.jsp` | UC-36, UC-41 | TV5 |
 | 52 | Book Single Session | `customer.BookSingleSessionServlet` | `/customer/book-session` | `customer/book-session.jsp` | UC-37 | TV5 |
-| 53 | Swap Session | `customer.SwapSessionServlet` | `/customer/swap-session` | `customer/swap-session.jsp` | UC-38 | TV5 |
+| 53 | ~~Swap Session~~ (bỏ 19/10: khách không tự đổi buổi, PT đổi giúp qua UC-35 — xem notes.md) | — | — | — | UC-38 | TV5 |
 | 60 | My Plan | `customer.MyPlanServlet` | `/customer/plans` | `customer/my-plan.jsp` | UC-40 | TV5 |
 | 61 | Submit Feedback | `customer.SubmitFeedbackServlet` | `/customer/feedback` | `customer/submit-feedback.jsp` | UC-42 | TV2 |
 | 49 | PT Dashboard | `pt.PtDashboardServlet` | `/pt/dashboard` | `pt/dashboard.jsp` | UC-32 | TV5 |

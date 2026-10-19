@@ -1,12 +1,23 @@
 # File notes — mâu thuẫn tài liệu & quyết định đã chốt
 
-## Khách hủy buổi — lý do không bắt buộc (17/10/2026, ĐÃ CHỐT)
+## My PT Sessions — đổi sang thời khóa biểu, khách chỉ xem (19/10/2026, ĐÃ CHỐT theo góp ý GVHD)
+
+- **Bỏ khách tự hủy buổi (UC-39) và khách tự đổi buổi (UC-38, màn #53 Swap Session).** Lý do: vận hành thực tế khách nhắn PT qua Zalo; PT dời / đổi buổi giúp khách qua UC-35 (`PtReschedule`). Hủy phía khách ít giá trị. Hai mục 17/10 bên dưới về hủy / đổi buổi phía khách **hết hiệu lực**.
+- Màn `/customer/pt-sessions` thành **Lịch tập** dạng thời khóa biểu như FAP: hàng = 5 khung giờ cố định (Sáng sớm 06–09, Sáng 09–12, Trưa 12–15, Chiều 15–18, Tối 18–22, xếp theo giờ bắt đầu), cột = Thứ 2 → Chủ nhật; có chế độ Tuần / Tháng. Bấm một buổi → thanh chi tiết dọc bên phải (PT, gói, trạng thái + lý do, Nhắn Zalo, Sao chép số).
+- **Màn mới #50 `/customer/bookings` "Gói của tôi"**: cột trái danh sách gói PT + buổi lẻ (nhóm Đang tập / Đã kết thúc / Buổi lẻ, 2 dropdown Tình trạng + Loại gói); cột phải chi tiết gói + 5 ô đếm (Tất cả, Đã check-in, Vắng, Đã hủy, Còn lại — "Còn lại" gồm cả buổi cần chú ý) kiêm nút lọc + bảng buổi đánh số #1→N theo thứ tự thời gian.
+- Bỏ bộ lọc 5 ô (gói, loại, buổi trong ngày, từ/đến ngày), tab trạng thái lịch sử và phân trang 8 ngày (phân trang bỏ ở giai đoạn thay bằng thời khóa biểu).
+- Liên hệ PT: link `https://zalo.me/<SĐT>` + sao chép số (laptop bấm `tel:` không ra gì khi demo).
+- Dữ liệu cũ vẫn có buổi `Cancelled / ByCustomer` → giữ câu giải thích khi hiển thị lịch sử; schema không đổi.
+- Code giai đoạn 1 (19/10): đã xóa `PtSessionSwapService`, `PtSessionSwapDAO`, `PtSwapSlotView`, `PtSessionInfo`, `MyPtSessionFilter`, test đổi buổi, phần POST / hộp thoại / bộ lọc trên màn và các mã MSG108–113 chỉ dùng cho bộ lọc / hủy / đổi buổi.
+- **Cần sửa SRS:** bỏ UC-38, UC-39 phía khách (giữ đổi hộ qua PT), bỏ màn #53, cập nhật mô tả màn #50, #51, BF-08 A3/A4, các BR-73…79 / CBR liên quan tới thao tác của khách.
+
+## Khách hủy buổi — lý do không bắt buộc (17/10/2026, HẾT HIỆU LỰC từ 19/10 — xem mục trên)
 
 - Khách tự hủy buổi **không bắt buộc nhập lý do** (theo SRS 9.2.1: hủy không có ô nhập). Có ô "Lý do hủy (không bắt buộc)", tối đa 500 ký tự; bỏ trống thì `Sessions.CancelReason` = NULL.
 - GBR-09 (bắt buộc lý do 5–500) chỉ áp cho nhân viên hủy / từ chối / void; cần sửa câu chữ GBR-09 cho rõ phạm vi.
 - Vẫn giữ: ghi AuditLog, thông báo PT + người tập cùng (CBR-46), 1 transaction, vẫn trừ buổi không hoàn tiền (BR-79).
 
-## Customer Swap UC-38 — mở rộng ngày được chọn (17/10/2026, ĐÃ CHỐT)
+## Customer Swap UC-38 — mở rộng ngày được chọn (17/10/2026, HẾT HIỆU LỰC từ 19/10 — khách không tự đổi buổi)
 
 - Khách đổi buổi được chọn **bất kỳ slot thứ 7 / Chủ nhật** của cùng PT, từ hôm nay tới **hết hạn gói** (tuần sau, tháng sau đều được). Bỏ giới hạn "chỉ tuần này, từ thứ 7 mở tuần sau" của CBR-39 cho riêng thao tác đổi buổi.
 - CBR-39 vẫn giữ nguyên cho đặt buổi lẻ (UC-37).
