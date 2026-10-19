@@ -78,8 +78,9 @@
 /* ===== Bộ lọc ===== */
 
 .leave-filter {
-    display: grid;
-    grid-template-columns: minmax(240px, 1fr) 90px auto auto;
+    display: flex;
+    flex-wrap: wrap;
+    align-items: center;
     gap: var(--space-3);
     padding: var(--space-4);
     margin-bottom: var(--space-5);
@@ -91,6 +92,26 @@
 .leave-filter input,
 .leave-filter select {
     min-height: 42px;
+}
+
+.leave-filter .filter-input-search {
+    flex: 1 1 200px;
+    min-width: 180px;
+}
+
+.leave-filter .filter-select {
+    flex: 0 1 160px;
+    min-width: 130px;
+}
+
+.leave-filter .filter-date-group {
+    display: flex;
+    align-items: center;
+    gap: var(--space-2);
+}
+
+.leave-filter .filter-date-group input[type="date"] {
+    width: 145px;
 }
 
 
