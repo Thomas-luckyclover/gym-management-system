@@ -2,10 +2,7 @@ package com.gms.servlet.customer;
 
 import com.gms.constant.SessionKey;
 import com.gms.dto.CustomerDashboardView;
-import com.gms.dto.MyPtPackageView;
-import com.gms.dto.MonthView;
 import com.gms.dto.ServiceResult;
-import com.gms.dto.TimetableView;
 import com.gms.service.CustomerDashboardService;
 import com.gms.service.MyPtSessionService;
 import com.gms.util.DateTimeUtil;
@@ -19,16 +16,10 @@ import jakarta.servlet.http.HttpSession;
 import java.io.IOException;
 import java.time.LocalDate;
 import java.time.LocalDateTime;
-import java.util.List;
 
 /**
- * Màn "Lịch tập của tôi" — URL: /customer/pt-sessions
- *
- *   GET ?view=week|month&date=yyyy-MM-dd → doGet: nạp thời khóa biểu rồi forward sang JSP.
- *   Màn CHỈ XEM. [CHOT 19/10] Khách không tự hủy / tự đổi buổi nữa:
- *   muốn hủy hoặc đổi thì nhắn PT qua Zalo, PT cập nhật lịch giúp (UC-35).
- *
- * TÌM NHANH: [QUYEN] [TKB] [GOI-PT]
+ * Màn "Lịch tập" — GET /customer/pt-sessions?view=week|month&date=yyyy-MM-dd (CHỈ XEM).
+ *   view: week (mặc định) | month    date: ngày bất kỳ trong tuần/tháng muốn xem (sai/thiếu → hôm nay)
  */
 @WebServlet("/customer/pt-sessions")
 public class MyPtSessionServlet extends HttpServlet {
@@ -42,25 +33,24 @@ public class MyPtSessionServlet extends HttpServlet {
     @Override
     protected void doGet(HttpServletRequest request, HttpServletResponse response)
             throws ServletException, IOException {
-        // B1 [QUYEN]: phải đăng nhập
+        // B1: phải đăng nhập
         Integer accountId = getAccountId(request);
         if (accountId == null) {
             RequestUtil.redirect(request, response, "/login?returnUrl=" + PAGE_URL);
             return;
         }
 
-        // B2: nạp dữ liệu cho từng khối của trang
+        // B2: header (tên + mã khách) và thời khóa biểu
         loadHeader(request, accountId);
-        loadPackages(request, accountId);
         loadTimetable(request, accountId);
 
-        // B3: chuyển sang JSP
+        // B3: sang JSP
         request.setAttribute("activeSidebar", "pt-sessions");
         request.setAttribute("themeClass", "theme-pt customer-dashboard-page my-pt-sessions-page");
         RequestUtil.forward(request, response, VIEW);
     }
 
-    /** Header: tên + mã khách (dùng chung với Customer Dashboard). */
+    /** Tên + mã khách ở header (dùng chung với Customer Dashboard). */
     private void loadHeader(HttpServletRequest request, int accountId) {
         ServiceResult<CustomerDashboardView> result = dashboardService.getDashboard(accountId);
         if (result.isSuccess()) {
@@ -70,47 +60,31 @@ public class MyPtSessionServlet extends HttpServlet {
         }
     }
 
-    /** [GOI-PT] Khối "Gói PT của bạn" (gói Active). */
-    private void loadPackages(HttpServletRequest request, int accountId) {
-        ServiceResult<List<MyPtPackageView>> packages = sessionService.getPtPackages(accountId);
-        if (packages.isSuccess()) {
-            request.setAttribute("ptPackages", packages.getData());
-        } else {
-            request.setAttribute("ptPackagesError", packages.getMessage());
-        }
-    }
-
-    /**
-     * [TKB] Thời khóa biểu: ?view=week|month (mặc định week), ?date=yyyy-MM-dd (ngày bất kỳ trong tuần/tháng muốn xem).
-     * date sai định dạng hoặc thiếu → hôm nay (không báo lỗi, không trả 500).
-     */
+    /** Đọc ?view, ?date rồi lấy thời khóa biểu tuần hoặc lưới tháng. */
     private void loadTimetable(HttpServletRequest request, int accountId) {
-        LocalDateTime now = DateTimeUtil.now();   // lấy giờ 1 LẦN cho cả request
+        // B1: giờ hiện tại lấy 1 lần cho cả request; ngày sai/thiếu → hôm nay (không trả lỗi 500)
+        LocalDateTime now = DateTimeUtil.now();
         LocalDate date = DateTimeUtil.parseHtmlDate(request.getParameter("date"));
         if (date == null) {
             date = now.toLocalDate();
         }
+
+        // B2: chọn cách xem
         boolean monthView = "month".equals(request.getParameter("view"));
         request.setAttribute("view", monthView ? "month" : "week");
 
-        if (monthView) {
-            ServiceResult<MonthView> result = sessionService.getMonth(accountId, date, now);
-            if (result.isSuccess()) {
-                request.setAttribute("month", result.getData());
-            } else {
-                request.setAttribute("timetableError", result.getMessage());
-            }
+        // B3: gọi Service, lỗi thì JSP hiện thông báo thay cho bảng
+        ServiceResult<?> result = monthView
+                ? sessionService.getMonth(accountId, date, now)
+                : sessionService.getWeek(accountId, date, now);
+        if (result.isSuccess()) {
+            request.setAttribute(monthView ? "month" : "timetable", result.getData());
         } else {
-            ServiceResult<TimetableView> result = sessionService.getWeek(accountId, date, now);
-            if (result.isSuccess()) {
-                request.setAttribute("timetable", result.getData());
-            } else {
-                request.setAttribute("timetableError", result.getMessage());
-            }
+            request.setAttribute("timetableError", result.getMessage());
         }
     }
 
-    /** accountId trong HttpSession (đặt lúc đăng nhập). null = chưa đăng nhập. */
+    /** accountId trong HttpSession (đặt lúc đăng nhập). Null = chưa đăng nhập. */
     private Integer getAccountId(HttpServletRequest request) {
         HttpSession session = request.getSession(false);
         return session == null ? null : (Integer) session.getAttribute(SessionKey.ACCOUNT_ID);
