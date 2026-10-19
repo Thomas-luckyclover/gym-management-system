@@ -811,6 +811,63 @@ public class LeaveRequestService {
         }
     }
 
+    /**
+     * Nhân viên tự rút đơn xin nghỉ phép còn Pending của mình (BF-05).
+     *
+     * @param accountId      AccountId của nhân viên từ session
+     * @param leaveRequestId mã đơn xin nghỉ cần rút
+     * @return ok() nếu thành công, fail() kèm thông báo lỗi cụ thể
+     */
+    public ServiceResult<Void> withdrawRequest(int accountId, int leaveRequestId) {
+        if (leaveRequestId <= 0) {
+            return ServiceResult.fail("Mã đơn không hợp lệ.");
+        }
+
+        try {
+            // B1: tìm thông tin nhân viên theo tài khoản đăng nhập
+            Employee employee = findEmployeeForAccount(accountId);
+            if (employee == null) {
+                return ServiceResult.fail(String.format(Messages.MSG08_NOT_FOUND, "nhân viên"));
+            }
+
+            // B2: mở transaction để xóa đơn Pending và ghi Audit Log
+            try (Connection conn = DBContext.getConnection()) {
+                conn.setAutoCommit(false);
+                try {
+                    boolean isDeleted = leaveRequestDAO.withdraw(conn, leaveRequestId, employee.getEmployeeId());
+                    if (!isDeleted) {
+                        conn.rollback();
+                        return ServiceResult.fail("Không thể rút đơn (đơn không tồn tại, đã được xử lý hoặc không phải của bạn).");
+                    }
+
+                    // B2.1: ghi Audit Log ghi nhận nhân viên tự rút đơn
+                    auditLogService.logInTransaction(
+                            conn,
+                            accountId,
+                            employee.getPosition(),
+                            "Rút đơn nghỉ phép",
+                            "LeaveRequests",
+                            leaveRequestId,
+                            "Status",
+                            "Pending",
+                            "Withdrawn",
+                            "Nhân viên tự rút đơn");
+
+                    conn.commit();
+                    return ServiceResult.ok(null);
+
+                } catch (Exception e) {
+                    conn.rollback();
+                    throw e;
+                }
+            }
+
+        } catch (SQLException e) {
+            e.printStackTrace();
+            return ServiceResult.fail(Messages.MSG04_SYSTEM_BUSY);
+        }
+    }
+
     // ===== Background Job (JOB-07) =====
 
     /**
