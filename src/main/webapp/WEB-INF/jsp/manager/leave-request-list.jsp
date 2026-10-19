@@ -291,9 +291,8 @@
                           </c:choose>
                         </td>
 
-                        <td>
-                          <%-- Chỉ cho xử lý khi đơn còn Pending và chưa quá hạn P-20 --%>
-                          <c:set var="canProcess" value="${item.status.dbValue == 'Pending' and not item.overdue}" />
+                          <%-- Đơn Pending luôn cho phép Manager vào Xử lý (kể cả quá hạn duyệt) --%>
+                          <c:set var="canProcess" value="${item.status.dbValue == 'Pending'}" />
                           <a class="btn btn-sm ${canProcess ? 'btn-primary' : 'btn-outline'}"
                              href="${pageContext.request.contextPath}/manager/leave-requests/review?id=${item.leaveRequestId}">
                             ${canProcess ? 'Xử lý' : 'Xem'}
