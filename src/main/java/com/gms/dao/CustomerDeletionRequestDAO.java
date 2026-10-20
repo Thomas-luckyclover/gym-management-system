@@ -1,5 +1,6 @@
 package com.gms.dao;
 
+import com.gms.dto.CustomerDeletionReviewView;
 import com.gms.entity.CustomerDeletionRequest;
 import com.gms.util.DBContext;
 import java.sql.Connection;
@@ -255,5 +256,269 @@ public class CustomerDeletionRequestDAO {
         LocalDateTime revAt = revTs != null ? revTs.toLocalDateTime() : null;
 
         return new CustomerDeletionRequest(id, custId, reqEmpId, revEmpId, reason, status, rejectReason, reqAt, revAt);
+    }
+
+    /**
+     * Lấy chi tiết một yêu cầu xóa để Quản lý duyệt (#32).
+     *
+     * @param requestId mã yêu cầu xóa
+     * @param currentManagerAccountId mã tài khoản Quản lý đang duyệt (để kiểm tra CBR-115)
+     * @return CustomerDeletionReviewView hoặc null nếu không tồn tại
+     * @throws SQLException khi truy vấn gặp lỗi
+     */
+    public CustomerDeletionReviewView findReviewDetail(int requestId, int currentManagerAccountId) throws SQLException {
+        String sql = """
+            SELECT cdr.CustomerDeletionRequestId, cdr.CustomerId, cdr.RequestedByEmployeeId, cdr.ReviewedByEmployeeId,
+                   cdr.Reason, cdr.Status, cdr.RejectReason, cdr.RequestedAt, cdr.ReviewedAt,
+                   c.CustomerCode, c.CustomerType, c.JoinedAt,
+                   cp.FullName AS CustomerFullName, cp.Phone AS CustomerPhone, cp.Email AS CustomerEmail, cp.Avatar AS CustomerAvatar,
+                   reqP.FullName AS RequesterName, reqE.EmployeeCode AS RequesterCode,
+                   revP.FullName AS ReviewerName,
+                   CASE WHEN EXISTS (
+                       SELECT 1 FROM Accounts a
+                       JOIN Customers c2 ON c2.PersonId = a.PersonId
+                       WHERE a.AccountId = ? AND c2.CustomerId = cdr.CustomerId
+                   ) THEN 1 ELSE 0 END AS IsOwnProfile
+            FROM CustomerDeletionRequests cdr
+            JOIN Customers c ON c.CustomerId = cdr.CustomerId
+            JOIN Persons cp ON cp.PersonId = c.PersonId
+            JOIN Employees reqE ON reqE.EmployeeId = cdr.RequestedByEmployeeId
+            JOIN Persons reqP ON reqP.PersonId = reqE.PersonId
+            LEFT JOIN Employees revE ON revE.EmployeeId = cdr.ReviewedByEmployeeId
+            LEFT JOIN Persons revP ON revP.PersonId = revE.PersonId
+            WHERE cdr.CustomerDeletionRequestId = ?
+            """;
+
+        try (Connection conn = DBContext.getConnection();
+             PreparedStatement stmt = conn.prepareStatement(sql)) {
+            stmt.setInt(1, currentManagerAccountId);
+            stmt.setInt(2, requestId);
+
+            try (ResultSet rs = stmt.executeQuery()) {
+                if (rs.next()) {
+                    CustomerDeletionRequest req = mapResultSetToEntity(rs);
+                    int customerId = rs.getInt("CustomerId");
+                    String customerCode = rs.getString("CustomerCode");
+                    String customerFullName = rs.getString("CustomerFullName");
+                    String customerPhone = rs.getString("CustomerPhone");
+                    String customerEmail = rs.getString("CustomerEmail");
+                    String customerAvatar = rs.getString("CustomerAvatar");
+                    String customerType = rs.getString("CustomerType");
+                    Timestamp joinedAtTs = rs.getTimestamp("JoinedAt");
+                    LocalDateTime joinedAt = joinedAtTs != null ? joinedAtTs.toLocalDateTime() : null;
+                    String requesterName = rs.getString("RequesterName");
+                    String requesterCode = rs.getString("RequesterCode");
+                    String reviewerName = rs.getString("ReviewerName");
+                    boolean ownProfile = rs.getInt("IsOwnProfile") == 1;
+
+                    CustomerDAO customerDAO = new CustomerDAO();
+                    List<CustomerDAO.ActiveSubscriptionSummary> activePackages =
+                            customerDAO.findActiveSubscriptionsByCustomer(conn, customerId);
+                    List<CustomerDAO.ScheduledSessionSummary> scheduledSessions =
+                            customerDAO.findScheduledSessionsByCustomer(conn, customerId);
+
+                    return new CustomerDeletionReviewView(
+                            req,
+                            customerId,
+                            customerCode,
+                            customerFullName,
+                            customerPhone,
+                            customerEmail,
+                            customerAvatar,
+                            customerType,
+                            joinedAt,
+                            requesterName,
+                            requesterCode,
+                            reviewerName,
+                            activePackages,
+                            scheduledSessions,
+                            ownProfile
+                    );
+                }
+            }
+        }
+        return null;
+    }
+
+    /**
+     * Lấy danh sách các yêu cầu xóa Pending để hiển thị trên màn hình Quản lý duyệt (#32).
+     */
+    public List<CustomerDeletionReviewView> findPendingViews(int currentManagerAccountId, int offset, int limit) throws SQLException {
+        List<CustomerDeletionReviewView> list = new ArrayList<>();
+        String sql = """
+            SELECT cdr.CustomerDeletionRequestId, cdr.CustomerId, cdr.RequestedByEmployeeId, cdr.ReviewedByEmployeeId,
+                   cdr.Reason, cdr.Status, cdr.RejectReason, cdr.RequestedAt, cdr.ReviewedAt,
+                   c.CustomerCode, c.CustomerType, c.JoinedAt,
+                   cp.FullName AS CustomerFullName, cp.Phone AS CustomerPhone, cp.Email AS CustomerEmail, cp.Avatar AS CustomerAvatar,
+                   reqP.FullName AS RequesterName, reqE.EmployeeCode AS RequesterCode,
+                   revP.FullName AS ReviewerName,
+                   CASE WHEN EXISTS (
+                       SELECT 1 FROM Accounts a
+                       JOIN Customers c2 ON c2.PersonId = a.PersonId
+                       WHERE a.AccountId = ? AND c2.CustomerId = cdr.CustomerId
+                   ) THEN 1 ELSE 0 END AS IsOwnProfile
+            FROM CustomerDeletionRequests cdr
+            JOIN Customers c ON c.CustomerId = cdr.CustomerId
+            JOIN Persons cp ON cp.PersonId = c.PersonId
+            JOIN Employees reqE ON reqE.EmployeeId = cdr.RequestedByEmployeeId
+            JOIN Persons reqP ON reqP.PersonId = reqE.PersonId
+            LEFT JOIN Employees revE ON revE.EmployeeId = cdr.ReviewedByEmployeeId
+            LEFT JOIN Persons revP ON revP.PersonId = revE.PersonId
+            WHERE cdr.Status = 'Pending'
+            ORDER BY cdr.RequestedAt ASC
+            OFFSET ? ROWS FETCH NEXT ? ROWS ONLY
+            """;
+
+        try (Connection conn = DBContext.getConnection();
+             PreparedStatement stmt = conn.prepareStatement(sql)) {
+            stmt.setInt(1, currentManagerAccountId);
+            stmt.setInt(2, offset);
+            stmt.setInt(3, limit);
+
+            try (ResultSet rs = stmt.executeQuery()) {
+                CustomerDAO customerDAO = new CustomerDAO();
+                while (rs.next()) {
+                    CustomerDeletionRequest req = mapResultSetToEntity(rs);
+                    int customerId = rs.getInt("CustomerId");
+                    String customerCode = rs.getString("CustomerCode");
+                    String customerFullName = rs.getString("CustomerFullName");
+                    String customerPhone = rs.getString("CustomerPhone");
+                    String customerEmail = rs.getString("CustomerEmail");
+                    String customerAvatar = rs.getString("CustomerAvatar");
+                    String customerType = rs.getString("CustomerType");
+                    Timestamp joinedAtTs = rs.getTimestamp("JoinedAt");
+                    LocalDateTime joinedAt = joinedAtTs != null ? joinedAtTs.toLocalDateTime() : null;
+                    String requesterName = rs.getString("RequesterName");
+                    String requesterCode = rs.getString("RequesterCode");
+                    String reviewerName = rs.getString("ReviewerName");
+                    boolean ownProfile = rs.getInt("IsOwnProfile") == 1;
+
+                    List<CustomerDAO.ActiveSubscriptionSummary> activePackages =
+                            customerDAO.findActiveSubscriptionsByCustomer(conn, customerId);
+                    List<CustomerDAO.ScheduledSessionSummary> scheduledSessions =
+                            customerDAO.findScheduledSessionsByCustomer(conn, customerId);
+
+                    list.add(new CustomerDeletionReviewView(
+                            req,
+                            customerId,
+                            customerCode,
+                            customerFullName,
+                            customerPhone,
+                            customerEmail,
+                            customerAvatar,
+                            customerType,
+                            joinedAt,
+                            requesterName,
+                            requesterCode,
+                            reviewerName,
+                            activePackages,
+                            scheduledSessions,
+                            ownProfile
+                    ));
+                }
+            }
+        }
+        return list;
+    }
+
+    /**
+     * Lấy danh sách các yêu cầu xóa do Lễ tân (theo AccountId) đã gửi (Q8 - Tab Yêu cầu của tôi trên #28).
+     */
+    public List<CustomerDeletionReviewView> findByRequesterAccountViews(int receptionistAccountId, int offset, int limit) throws SQLException {
+        List<CustomerDeletionReviewView> list = new ArrayList<>();
+        String sql = """
+            SELECT cdr.CustomerDeletionRequestId, cdr.CustomerId, cdr.RequestedByEmployeeId, cdr.ReviewedByEmployeeId,
+                   cdr.Reason, cdr.Status, cdr.RejectReason, cdr.RequestedAt, cdr.ReviewedAt,
+                   c.CustomerCode, c.CustomerType, c.JoinedAt,
+                   cp.FullName AS CustomerFullName, cp.Phone AS CustomerPhone, cp.Email AS CustomerEmail, cp.Avatar AS CustomerAvatar,
+                   reqP.FullName AS RequesterName, reqE.EmployeeCode AS RequesterCode,
+                   revP.FullName AS ReviewerName,
+                   0 AS IsOwnProfile
+            FROM CustomerDeletionRequests cdr
+            JOIN Customers c ON c.CustomerId = cdr.CustomerId
+            JOIN Persons cp ON cp.PersonId = c.PersonId
+            JOIN Employees reqE ON reqE.EmployeeId = cdr.RequestedByEmployeeId
+            JOIN Persons reqP ON reqP.PersonId = reqE.PersonId
+            JOIN Accounts reqA ON reqA.PersonId = reqE.PersonId
+            LEFT JOIN Employees revE ON revE.EmployeeId = cdr.ReviewedByEmployeeId
+            LEFT JOIN Persons revP ON revP.PersonId = revE.PersonId
+            WHERE reqA.AccountId = ?
+            ORDER BY cdr.RequestedAt DESC
+            OFFSET ? ROWS FETCH NEXT ? ROWS ONLY
+            """;
+
+        try (Connection conn = DBContext.getConnection();
+             PreparedStatement stmt = conn.prepareStatement(sql)) {
+            stmt.setInt(1, receptionistAccountId);
+            stmt.setInt(2, offset);
+            stmt.setInt(3, limit);
+
+            try (ResultSet rs = stmt.executeQuery()) {
+                CustomerDAO customerDAO = new CustomerDAO();
+                while (rs.next()) {
+                    CustomerDeletionRequest req = mapResultSetToEntity(rs);
+                    int customerId = rs.getInt("CustomerId");
+                    String customerCode = rs.getString("CustomerCode");
+                    String customerFullName = rs.getString("CustomerFullName");
+                    String customerPhone = rs.getString("CustomerPhone");
+                    String customerEmail = rs.getString("CustomerEmail");
+                    String customerAvatar = rs.getString("CustomerAvatar");
+                    String customerType = rs.getString("CustomerType");
+                    Timestamp joinedAtTs = rs.getTimestamp("JoinedAt");
+                    LocalDateTime joinedAt = joinedAtTs != null ? joinedAtTs.toLocalDateTime() : null;
+                    String requesterName = rs.getString("RequesterName");
+                    String requesterCode = rs.getString("RequesterCode");
+                    String reviewerName = rs.getString("ReviewerName");
+
+                    List<CustomerDAO.ActiveSubscriptionSummary> activePackages =
+                            customerDAO.findActiveSubscriptionsByCustomer(conn, customerId);
+                    List<CustomerDAO.ScheduledSessionSummary> scheduledSessions =
+                            customerDAO.findScheduledSessionsByCustomer(conn, customerId);
+
+                    list.add(new CustomerDeletionReviewView(
+                            req,
+                            customerId,
+                            customerCode,
+                            customerFullName,
+                            customerPhone,
+                            customerEmail,
+                            customerAvatar,
+                            customerType,
+                            joinedAt,
+                            requesterName,
+                            requesterCode,
+                            reviewerName,
+                            activePackages,
+                            scheduledSessions,
+                            false
+                    ));
+                }
+            }
+        }
+        return list;
+    }
+
+    /**
+     * Đếm tổng số lượng yêu cầu xóa do tài khoản Lễ tân đã gửi.
+     */
+    public int countByRequesterAccountId(int receptionistAccountId) throws SQLException {
+        String sql = """
+            SELECT COUNT(*)
+            FROM CustomerDeletionRequests cdr
+            JOIN Employees reqE ON reqE.EmployeeId = cdr.RequestedByEmployeeId
+            JOIN Accounts reqA ON reqA.PersonId = reqE.PersonId
+            WHERE reqA.AccountId = ?
+            """;
+
+        try (Connection conn = DBContext.getConnection();
+             PreparedStatement stmt = conn.prepareStatement(sql)) {
+            stmt.setInt(1, receptionistAccountId);
+            try (ResultSet rs = stmt.executeQuery()) {
+                if (rs.next()) {
+                    return rs.getInt(1);
+                }
+            }
+        }
+        return 0;
     }
 }

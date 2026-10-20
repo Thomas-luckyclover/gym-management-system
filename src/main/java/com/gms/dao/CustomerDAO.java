@@ -1,5 +1,6 @@
 package com.gms.dao;
 
+import com.gms.dto.CustomerProfileRowView;
 import com.gms.dto.DependentCustomerRow;
 import com.gms.entity.Customer;
 import com.gms.util.DBContext;
@@ -441,5 +442,189 @@ public class CustomerDAO {
         }
 
         return customer;
+    }
+
+    /**
+     * Tìm kiếm và phân trang danh sách hồ sơ khách hàng cho Lễ tân (#28) và Quản lý (#30).
+     *
+     * @param keyword      từ khóa tìm kiếm (theo tên, SĐT, email, mã KH), có thể null
+     * @param statusFilter bộ lọc trạng thái (Active, Inactive, v.v.), có thể null hoặc ALL
+     * @param pendingOnly  chỉ lấy các hồ sơ đang có yêu cầu xóa Pending (dành cho Quản lý)
+     * @param isManager    true nếu là Quản lý (xem được Inactive); false nếu là Lễ tân (chỉ xem Active, CBR-04)
+     * @param offset       vị trí dòng bắt đầu
+     * @param limit        số lượng dòng tối đa
+     * @return danh sách các dòng hồ sơ khách hàng
+     * @throws SQLException khi truy vấn cơ sở dữ liệu gặp lỗi
+     */
+    public List<CustomerProfileRowView> findCustomerProfiles(
+            String keyword,
+            String statusFilter,
+            Boolean pendingOnly,
+            boolean isManager,
+            int offset,
+            int limit) throws SQLException {
+
+        List<CustomerProfileRowView> list = new ArrayList<>();
+        StringBuilder sql = new StringBuilder("""
+            SELECT c.CustomerId, c.CustomerCode, c.PersonId, p.FullName, p.Phone, p.Email,
+                   c.CustomerType, c.Status, c.JoinedAt, c.DeletedAt,
+                   latestSub.PackageNameSnapshot AS CurrentPackageName,
+                   CASE WHEN (activeSubs.SubCount > 0 OR scheduledSessions.SessionCount > 0) THEN 1 ELSE 0 END AS HasActivePackage,
+                   CASE WHEN cdr.CustomerDeletionRequestId IS NOT NULL THEN 1 ELSE 0 END AS HasPendingDeletion,
+                   cdr.CustomerDeletionRequestId AS PendingRequestId
+            FROM Customers c
+            JOIN Persons p ON p.PersonId = c.PersonId
+            LEFT JOIN CustomerDeletionRequests cdr ON cdr.CustomerId = c.CustomerId AND cdr.Status = 'Pending'
+            OUTER APPLY (
+                SELECT TOP 1 o.PackageNameSnapshot
+                FROM Subscriptions s
+                JOIN Orders o ON o.OrderId = s.OrderId
+                WHERE (s.CustomerId = c.CustomerId OR o.PartnerCustomerId = c.CustomerId)
+                  AND s.Status IN ('Active', 'Frozen')
+                  AND s.EndDate >= CAST(GETDATE() AS DATE)
+                ORDER BY s.EndDate DESC
+            ) latestSub
+            OUTER APPLY (
+                SELECT COUNT(*) AS SubCount
+                FROM Subscriptions s
+                LEFT JOIN Orders o ON o.OrderId = s.OrderId
+                WHERE (s.CustomerId = c.CustomerId OR o.PartnerCustomerId = c.CustomerId)
+                  AND s.Status IN ('Active', 'Frozen')
+                  AND s.EndDate >= CAST(GETDATE() AS DATE)
+            ) activeSubs
+            OUTER APPLY (
+                SELECT COUNT(*) AS SessionCount
+                FROM Sessions ss
+                JOIN Subscriptions s ON s.SubscriptionId = ss.SubscriptionId
+                LEFT JOIN Orders o ON o.OrderId = s.OrderId
+                WHERE (s.CustomerId = c.CustomerId OR o.PartnerCustomerId = c.CustomerId)
+                  AND ss.Status = 'Scheduled'
+            ) scheduledSessions
+            WHERE 1 = 1
+            """);
+
+        List<Object> params = new ArrayList<>();
+
+        if (!isManager) {
+            sql.append(" AND c.Status <> 'Inactive' ");
+        }
+
+        if (statusFilter != null && !statusFilter.isBlank() && !"ALL".equalsIgnoreCase(statusFilter)) {
+            sql.append(" AND c.Status = ? ");
+            params.add(statusFilter.trim());
+        }
+
+        if (Boolean.TRUE.equals(pendingOnly)) {
+            sql.append(" AND cdr.CustomerDeletionRequestId IS NOT NULL ");
+        }
+
+        if (keyword != null && !keyword.isBlank()) {
+            sql.append(" AND (p.FullName LIKE ? OR p.Phone LIKE ? OR p.Email LIKE ? OR c.CustomerCode LIKE ?) ");
+            String kw = "%" + keyword.trim() + "%";
+            params.add(kw);
+            params.add(kw);
+            params.add(kw);
+            params.add(kw);
+        }
+
+        sql.append(" ORDER BY CASE WHEN cdr.CustomerDeletionRequestId IS NOT NULL THEN 0 ELSE 1 END, c.CustomerId DESC ");
+        sql.append(" OFFSET ? ROWS FETCH NEXT ? ROWS ONLY ");
+        params.add(offset);
+        params.add(limit);
+
+        try (Connection conn = DBContext.getConnection();
+             PreparedStatement stmt = conn.prepareStatement(sql.toString())) {
+            for (int i = 0; i < params.size(); i++) {
+                stmt.setObject(i + 1, params.get(i));
+            }
+            try (ResultSet rs = stmt.executeQuery()) {
+                while (rs.next()) {
+                    Timestamp joinedAtTs = rs.getTimestamp("JoinedAt");
+                    Timestamp deletedAtTs = rs.getTimestamp("DeletedAt");
+                    int pendingReqIdVal = rs.getInt("PendingRequestId");
+                    Integer pendingRequestId = rs.wasNull() ? null : pendingReqIdVal;
+
+                    list.add(new CustomerProfileRowView(
+                            rs.getInt("CustomerId"),
+                            rs.getString("CustomerCode"),
+                            rs.getInt("PersonId"),
+                            rs.getString("FullName"),
+                            rs.getString("Phone"),
+                            rs.getString("Email"),
+                            rs.getString("CustomerType"),
+                            rs.getString("Status"),
+                            rs.getString("CurrentPackageName"),
+                            rs.getInt("HasActivePackage") == 1,
+                            rs.getInt("HasPendingDeletion") == 1,
+                            pendingRequestId,
+                            joinedAtTs != null ? joinedAtTs.toLocalDateTime() : null,
+                            deletedAtTs != null ? deletedAtTs.toLocalDateTime() : null
+                    ));
+                }
+            }
+        }
+        return list;
+    }
+
+    /**
+     * Đếm tổng số lượng hồ sơ khách hàng thỏa mãn bộ lọc tìm kiếm.
+     *
+     * @param keyword      từ khóa tìm kiếm (theo tên, SĐT, email, mã KH)
+     * @param statusFilter bộ lọc trạng thái (Active, Inactive, v.v.)
+     * @param pendingOnly  chỉ lấy các hồ sơ đang có yêu cầu xóa Pending
+     * @param isManager    true nếu là Quản lý; false nếu là Lễ tân (CBR-04)
+     * @return số lượng hồ sơ thỏa mãn
+     * @throws SQLException khi truy vấn gặp lỗi
+     */
+    public int countCustomerProfiles(
+            String keyword,
+            String statusFilter,
+            Boolean pendingOnly,
+            boolean isManager) throws SQLException {
+
+        StringBuilder sql = new StringBuilder("""
+            SELECT COUNT(*)
+            FROM Customers c
+            JOIN Persons p ON p.PersonId = c.PersonId
+            LEFT JOIN CustomerDeletionRequests cdr ON cdr.CustomerId = c.CustomerId AND cdr.Status = 'Pending'
+            WHERE 1 = 1
+            """);
+
+        List<Object> params = new ArrayList<>();
+
+        if (!isManager) {
+            sql.append(" AND c.Status <> 'Inactive' ");
+        }
+
+        if (statusFilter != null && !statusFilter.isBlank() && !"ALL".equalsIgnoreCase(statusFilter)) {
+            sql.append(" AND c.Status = ? ");
+            params.add(statusFilter.trim());
+        }
+
+        if (Boolean.TRUE.equals(pendingOnly)) {
+            sql.append(" AND cdr.CustomerDeletionRequestId IS NOT NULL ");
+        }
+
+        if (keyword != null && !keyword.isBlank()) {
+            sql.append(" AND (p.FullName LIKE ? OR p.Phone LIKE ? OR p.Email LIKE ? OR c.CustomerCode LIKE ?) ");
+            String kw = "%" + keyword.trim() + "%";
+            params.add(kw);
+            params.add(kw);
+            params.add(kw);
+            params.add(kw);
+        }
+
+        try (Connection conn = DBContext.getConnection();
+             PreparedStatement stmt = conn.prepareStatement(sql.toString())) {
+            for (int i = 0; i < params.size(); i++) {
+                stmt.setObject(i + 1, params.get(i));
+            }
+            try (ResultSet rs = stmt.executeQuery()) {
+                if (rs.next()) {
+                    return rs.getInt(1);
+                }
+            }
+        }
+        return 0;
     }
 }
