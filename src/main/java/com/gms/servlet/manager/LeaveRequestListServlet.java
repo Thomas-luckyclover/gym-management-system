@@ -54,13 +54,31 @@ public class LeaveRequestListServlet extends HttpServlet {
         int page = PaginationUtil.getPageNumber(request);
         int pageSize = PaginationUtil.getPageSize(request);
 
+        jakarta.servlet.http.HttpSession session = request.getSession(false);
+        Integer managerAccountId = session == null
+                ? null
+                : (Integer) session.getAttribute(com.gms.constant.SessionKey.ACCOUNT_ID);
+
         // B2: lấy một trang đơn và số đơn của các tab
         ServiceResult<PageResult<LeaveRequestItemView>> pageResult
                 = leaveRequestService.getManagerPage(
-                        keyword, status, position, leaveType, fromDate, toDate, page, pageSize);
+                        keyword, status, position, leaveType, fromDate, toDate, managerAccountId, page, pageSize);
 
+        com.gms.dto.LeaveRequestFilter countFilter = new com.gms.dto.LeaveRequestFilter(
+                null, keyword, position,
+                (leaveType == null || leaveType.isBlank() || "All".equalsIgnoreCase(leaveType)) ? null : com.gms.entity.LeaveRequest.LeaveType.fromDbValue(leaveType),
+                null, null);
         ServiceResult<Map<String, Integer>> countResult
-                = leaveRequestService.getStatusCounts();
+                = leaveRequestService.getStatusCounts(countFilter);
+
+        if (managerAccountId != null) {
+            ServiceResult<java.util.List<com.gms.dao.LeaveRequestDAO.EligibleReviewer>> reviewersResult
+                    = leaveRequestService.getEligibleReviewers(managerAccountId);
+            if (reviewersResult.isSuccess()) {
+                request.setAttribute("eligibleReviewers", reviewersResult.getData());
+            }
+        }
+        request.setAttribute("csrfToken", RequestUtil.getOrCreateCsrfToken(request.getSession(true)));
 
         // B3: đặt dữ liệu cho JSP; lỗi thì dùng trang rỗng để màn vẫn dựng được
         request.setAttribute(

@@ -1,12 +1,13 @@
 <%@ page contentType="text/html; charset=UTF-8" pageEncoding="UTF-8" %>
 <%@ taglib prefix="c" uri="jakarta.tags.core" %>
+<%@ taglib prefix="fn" uri="jakarta.tags.functions" %>
 <%@ taglib prefix="gms" uri="/WEB-INF/gms-functions.tld" %>
 
 <!DOCTYPE html>
 <html lang="vi">
 <head>
   <%@ include file="/WEB-INF/jsp/common/head.jspf" %>
-  <title>Duyệt đơn nghỉ phép · Super Gym</title>
+  <title>Chi tiết đơn nghỉ phép #${item.leaveRequest.leaveRequestId} · Super Gym</title>
   <link rel="stylesheet" href="${pageContext.request.contextPath}/css/pages/auth/account-settings.css">
   <link rel="stylesheet" href="${pageContext.request.contextPath}/css/pages/manager/leave-requests.css">
   <link rel="stylesheet" href="${pageContext.request.contextPath}/css/pages/auth/notification-bell.css">
@@ -40,298 +41,450 @@
 
       <main class="content" id="main-content" tabindex="-1">
 
-        <%-- Nút quay lại danh sách --%>
-        <a class="leave-back"
-           href="${pageContext.request.contextPath}/manager/leave-requests">
-          ← Quay lại danh sách
-        </a>
-
-        <section class="panel leave-review">
-
-          <%-- ===== Tiêu đề đơn + badge trạng thái ===== --%>
-          <div class="panel-head" style="display:flex;align-items:center;justify-content:space-between;gap:var(--space-4)">
-            <div>
-              <h2 style="margin:0 0 var(--space-1)">
-                <c:out value="${item.fullName}" />
-              </h2>
-              <p style="margin:0;color:var(--color-text-soft);font-size:var(--font-size-sm)">
-                <c:out value="${item.employeeCode}" /> ·
-                <c:choose>
-                  <c:when test="${item.position eq 'PT'}">Huấn luyện viên PT</c:when>
-                  <c:when test="${item.position eq 'Receptionist'}">Lễ tân</c:when>
-                  <c:otherwise><c:out value="${item.position}" /></c:otherwise>
-                </c:choose>
-              </p>
-            </div>
-
-            <%-- Badge trạng thái --%>
-            <span class="badge
-              ${item.leaveRequest.pending   ? 'badge-warning' :
-                item.leaveRequest.approved  ? 'badge-success' : 'badge-danger'}">
+        <%-- ===== Thanh trên cùng: Nút quay lại, Tiêu đề đơn, Trạng thái & Nút tác vụ ===== --%>
+        <div class="review-top-bar">
+          <div class="review-top-left">
+            <a class="btn btn-sm btn-ghost" href="${pageContext.request.contextPath}/manager/leave-requests" title="Quay lại danh sách">
+              <i class="fa-solid fa-arrow-left" aria-hidden="true"></i> Danh sách
+            </a>
+            <h2 class="review-top-title">Đơn nghỉ phép #${item.leaveRequest.leaveRequestId}</h2>
+            <span class="badge ${item.leaveRequest.pending ? 'badge-warning' : (item.leaveRequest.approved ? 'badge-success' : 'badge-danger')}">
               <c:out value="${item.leaveRequest.status.displayName}" />
             </span>
           </div>
 
-          <%-- ===== Lưới thông tin đơn ===== --%>
-          <div class="leave-info-grid">
-            <div>
-              <span class="leave-info-label">Ngày nghỉ</span>
-              <span class="leave-info-value">
-                <b>${gms:formatDate(item.leaveRequest.leaveDate)}</b>
-              </span>
-            </div>
+          <div class="review-top-actions">
+            <c:if test="${item.leaveRequest.pending and item.canAct}">
+              <%-- Nút Từ chối --%>
+              <button type="button" class="btn btn-sm btn-outline" style="color:var(--color-danger);border-color:var(--color-danger)" onclick="openRejectModal()">
+                <i class="fa-solid fa-xmark" aria-hidden="true"></i> Từ chối
+              </button>
 
-            <div>
-              <span class="leave-info-label">Ca nghỉ</span>
-              <span class="leave-info-value">
-                <c:out value="${item.leaveRequest.shiftType.displayName}" />
-              </span>
-            </div>
+              <%-- Nút Chuyển người duyệt --%>
+              <button type="button" class="btn btn-sm btn-outline" onclick="openTransferModal()">
+                <i class="fa-solid fa-share" aria-hidden="true"></i> Chuyển người duyệt
+              </button>
 
-            <div>
-              <span class="leave-info-label">Loại nghỉ</span>
-              <span class="leave-info-value">
-                <c:out value="${item.leaveRequest.leaveType.displayName}" />
-              </span>
-            </div>
-
-            <div>
-              <span class="leave-info-label">Nộp lúc</span>
-              <span class="leave-info-value">
-                ${gms:formatDate(item.leaveRequest.submittedAt.toLocalDate())}
-                <small style="color:var(--color-text-soft)">
-                  <c:out value="${item.leaveRequest.submittedAt.toLocalTime()}" />
-                </small>
-              </span>
-            </div>
-          </div>
-
-          <%-- ===== Lý do nghỉ ===== --%>
-          <div class="leave-reason-box">
-            <span class="leave-info-label">Lý do nghỉ</span>
-            <p><c:out value="${item.leaveRequest.reason}" /></p>
-          </div>
-
-          <%-- ===== Thông báo lỗi form (approve thất bại) ===== --%>
-          <c:if test="${not empty formMessage}">
-            <div class="alert-banner danger" style="margin-bottom:var(--space-5)">
-              <i class="fa-solid fa-circle-exclamation" aria-hidden="true"></i>
-              <c:out value="${formMessage}" />
-            </div>
-          </c:if>
-
-          <%-- Đơn Pending có ngày nghỉ đã qua hoặc đã quá hạn duyệt: hiện cảnh báo nhắc nhở --%>
-          <c:if test="${item.leaveRequest.pending and item.leaveDatePassed}">
-            <div class="alert-banner danger" style="margin-bottom:var(--space-5);background:var(--color-danger-tint, #fef2f2);border:1px solid var(--color-danger, #ef4444);color:var(--color-danger-ink, #991b1b);padding:var(--space-3) var(--space-4);border-radius:var(--radius-md);display:flex;align-items:center;gap:var(--space-3);">
-              <i class="fa-solid fa-circle-exclamation" aria-hidden="true"></i>
-              <span>Ngày nghỉ của đơn này (${gms:formatDate(item.leaveRequest.leaveDate)}) đã trôi qua. Bạn không thể phê duyệt đơn này nữa, chỉ có thể từ chối đơn.</span>
-            </div>
-          </c:if>
-          <c:if test="${item.leaveRequest.pending and not item.leaveDatePassed and item.overdue}">
-            <div class="alert-banner warning" style="margin-bottom:var(--space-5);background:var(--color-warning-tint, #fffbeb);border:1px solid var(--color-warning, #f59e0b);color:var(--color-warning-ink, #92400e);padding:var(--space-3) var(--space-4);border-radius:var(--radius-md);display:flex;align-items:center;gap:var(--space-3);">
-              <i class="fa-solid fa-triangle-exclamation" aria-hidden="true"></i>
-              <span>Đơn này đã quá hạn duyệt quy định (${gms:formatDateTime(item.approvalDeadline)}). Bạn vẫn có thể xem xét phê duyệt hoặc từ chối đơn.</span>
-            </div>
-          </c:if>
-
-          <%-- ===== Đơn Pending: hiện dự báo quân số ca trực & 2 card Duyệt / Từ chối ===== --%>
-          <c:if test="${item.leaveRequest.pending}">
-
-            <%-- Khung thông tin định biên nhân sự dự kiến nếu duyệt đơn này --%>
-            <c:if test="${item.minStaffRequired > 0}">
-              <div class="leave-staffing-box ${item.remainingStaff < item.minStaffRequired ? 'danger' : ''}">
-                <i class="fa-solid ${item.remainingStaff < item.minStaffRequired ? 'fa-triangle-exclamation' : 'fa-users'}"
-                   aria-hidden="true"
-                   style="font-size:var(--font-size-lg);margin-top:2px"></i>
-                <div style="flex:1">
-                  <span class="leave-info-label">
-                    Dự báo quân số ${item.position eq 'PT' ? 'HLV (PT)' : 'Lễ tân'} trực ca nếu duyệt đơn này
-                  </span>
-                  <c:choose>
-                    <c:when test="${not empty item.staffingRows and item.staffingRows.size() > 1}">
-                      <table class="leave-staffing-table" style="width:100%;margin-top:var(--space-2);border-collapse:collapse;font-size:var(--font-size-sm)">
-                        <thead>
-                          <tr style="border-bottom:1px solid var(--color-border);text-align:left;color:var(--color-text-soft)">
-                            <th style="padding:4px 8px">Ca trực</th>
-                            <th style="padding:4px 8px">Đang trực</th>
-                            <th style="padding:4px 8px">Sau duyệt</th>
-                            <th style="padding:4px 8px">Tối thiểu</th>
-                            <th style="padding:4px 8px">Đánh giá</th>
-                          </tr>
-                        </thead>
-                        <tbody>
-                          <c:forEach var="row" items="${item.staffingRows}">
-                            <tr style="border-bottom:1px solid var(--color-border-subtle);${row.belowMin ? 'color:var(--color-danger-ink);font-weight:600' : ''}">
-                              <td style="padding:4px 8px"><c:out value="${row.shiftLabel}" /></td>
-                              <td style="padding:4px 8px">${row.current}</td>
-                              <td style="padding:4px 8px"><b>${row.afterApproval}</b></td>
-                              <td style="padding:4px 8px">${row.minRequired}</td>
-                              <td style="padding:4px 8px">
-                                <c:choose>
-                                  <c:when test="${row.belowMin}"><span class="badge badge-sm badge-danger">Thiếu người</span></c:when>
-                                  <c:otherwise><span class="badge badge-sm badge-success">Đạt</span></c:otherwise>
-                                </c:choose>
-                              </td>
-                            </tr>
-                          </c:forEach>
-                        </tbody>
-                      </table>
-                    </c:when>
-                    <c:otherwise>
-                      <div class="leave-staffing-numbers">
-                        <div class="leave-staffing-item">
-                          <strong><c:out value="${item.remainingStaff}" /></strong>
-                          <small>${item.position eq 'PT' ? 'PT' : 'Lễ tân'} dự kiến còn lại</small>
-                        </div>
-                        <div class="leave-staffing-item">
-                          <strong><c:out value="${item.minStaffRequired}" /></strong>
-                          <small>Định biên tối thiểu (${item.position eq 'PT' ? 'P-13' : 'P-14'})</small>
-                        </div>
-                      </div>
-                    </c:otherwise>
-                  </c:choose>
-                  <c:if test="${item.remainingStaff < item.minStaffRequired}">
-                    <p style="margin:var(--space-2) 0 0;font-size:var(--font-size-sm);color:var(--color-danger-ink);font-weight:600">
-                      Cảnh báo: Nếu duyệt, ca trực sẽ chỉ còn ${item.remainingStaff} người (thấp hơn định biên tối thiểu ${item.minStaffRequired}). Nút duyệt bị vô hiệu hóa.
-                    </p>
-                  </c:if>
-                </div>
-              </div>
-            </c:if>
-
-            <div class="leave-actions">
-
-              <%-- Card Duyệt --%>
-              <form action="${pageContext.request.contextPath}/manager/leave-requests/review"
-                    method="post"
-                    class="leave-action-card">
-                <input type="hidden" name="csrfToken" value="${csrfToken}">
-                <input type="hidden" name="leaveRequestId" value="${item.leaveRequest.leaveRequestId}">
-                <input type="hidden" name="action" value="approve">
-
-                <h3><i class="fa-solid fa-circle-check" aria-hidden="true"></i> Duyệt đơn</h3>
-                <p>Nhân viên được phép nghỉ đúng ngày và ca đã đăng ký.</p>
-
-                <c:choose>
-                  <c:when test="${item.leaveDatePassed}">
-                    <button class="btn btn-primary"
-                            type="button"
-                            disabled
-                            title="Không thể duyệt do ngày nghỉ đã trôi qua">
-                      <i class="fa-solid fa-ban" aria-hidden="true"></i>
-                      Ngày nghỉ đã qua
-                    </button>
-                  </c:when>
-                  <c:when test="${item.minStaffRequired > 0 and item.remainingStaff < item.minStaffRequired}">
-                    <button class="btn btn-primary"
-                            type="button"
-                            disabled
-                            title="Không thể duyệt do vi phạm định biên nhân sự tối thiểu">
-                      <i class="fa-solid fa-ban" aria-hidden="true"></i>
-                      Không đủ người trực ca
-                    </button>
-                  </c:when>
-                  <c:otherwise>
-                    <button class="btn btn-primary"
-                            type="submit"
-                            id="btnApproveLeave"
-                            data-confirm-title="Duyệt đơn nghỉ phép"
-                            data-confirm-message="Xác nhận duyệt đơn nghỉ này?">
-                      <i class="fa-solid fa-check" aria-hidden="true"></i>
-                      Duyệt đơn
-                    </button>
-                  </c:otherwise>
-                </c:choose>
-              </form>
-
-              <%-- Card Từ chối --%>
-              <form action="${pageContext.request.contextPath}/manager/leave-requests/review"
-                    method="post"
-                    class="leave-action-card">
-                <input type="hidden" name="csrfToken" value="${csrfToken}">
-                <input type="hidden" name="leaveRequestId" value="${item.leaveRequest.leaveRequestId}">
-                <input type="hidden" name="action" value="reject">
-
-                <h3><i class="fa-solid fa-circle-xmark" aria-hidden="true"></i> Từ chối đơn</h3>
-
-                <div class="field">
-                  <label class="field-label" for="rejectReason">
-                    Lý do từ chối <span aria-hidden="true">*</span>
-                  </label>
-
-                  <textarea id="rejectReason"
-                            name="rejectReason"
-                            minlength="5"
-                            maxlength="500"
-                            placeholder="Nhập lý do từ chối (5–500 ký tự)…"
-                            required><c:out value="${rejectReason}" /></textarea>
-
-                  <c:if test="${not empty errors.rejectReason}">
-                    <div class="field-error">
-                      <c:out value="${errors.rejectReason}" />
-                    </div>
-                  </c:if>
-                </div>
-
-                <button class="btn btn-danger"
-                        type="submit"
-                        id="btnRejectLeave"
-                        data-confirm-title="Từ chối đơn nghỉ phép"
-                        data-confirm-message="Xác nhận từ chối đơn nghỉ này? Nhân viên sẽ nhận thông báo kèm lý do.">
-                  <i class="fa-solid fa-xmark" aria-hidden="true"></i>
-                  Từ chối đơn
-                </button>
-              </form>
-
-            </div>
-          </c:if>
-
-          <%-- ===== Đơn đã xử lý: hiện read-only trạng thái + người duyệt ===== --%>
-          <c:if test="${not item.leaveRequest.pending}">
-            <div class="leave-reviewed-info">
-
-              <span class="badge
-                ${item.leaveRequest.approved ? 'badge-success' : 'badge-danger'}">
-                <c:out value="${item.leaveRequest.status.displayName}" />
-              </span>
-
-              <p style="margin:var(--space-3) 0 var(--space-1);color:var(--color-text-soft);font-size:var(--font-size-sm)">
-                Người xử lý
-              </p>
+              <%-- Nút Duyệt --%>
               <c:choose>
-                <c:when test="${not empty item.reviewerName}">
-                  <b><c:out value="${item.reviewerName}" /></b>
+                <c:when test="${item.leaveDatePassed}">
+                  <button type="button" class="btn btn-sm btn-primary" disabled title="Không thể duyệt do ngày nghỉ đã qua">
+                    <i class="fa-solid fa-ban" aria-hidden="true"></i> Ngày nghỉ đã qua
+                  </button>
+                </c:when>
+                <c:when test="${item.minStaffRequired > 0 and item.remainingStaff < item.minStaffRequired}">
+                  <button type="button" class="btn btn-sm btn-primary" disabled title="Không đủ định biên nhân sự tối thiểu">
+                    <i class="fa-solid fa-ban" aria-hidden="true"></i> Thiếu người trực
+                  </button>
                 </c:when>
                 <c:otherwise>
-                  <b>Hệ thống tự động (Quá hạn duyệt P-20)</b>
+                  <button type="button" class="btn btn-sm btn-primary" onclick="openApproveModal()">
+                    <i class="fa-solid fa-check" aria-hidden="true"></i> Duyệt đơn
+                  </button>
                 </c:otherwise>
               </c:choose>
+            </c:if>
+          </div>
+        </div>
 
-              <c:if test="${item.leaveRequest.reviewedAt != null}">
-                <p style="margin:var(--space-3) 0 var(--space-1);color:var(--color-text-soft);font-size:var(--font-size-sm)">
-                  Thời điểm xử lý
-                </p>
-                <span>
-                  ${gms:formatDate(item.leaveRequest.reviewedAt.toLocalDate())}
-                  <small style="color:var(--color-text-soft)">
-                    <c:out value="${item.leaveRequest.reviewedAt.toLocalTime()}" />
+        <%-- ===== Banner thông báo / Cảnh báo hệ thống ===== --%>
+        <c:if test="${not empty item.banner}">
+          <div class="alert-banner ${item.leaveDatePassed ? 'danger' : 'warning'}" style="margin-bottom:var(--space-4);padding:var(--space-3) var(--space-4);border-radius:var(--radius-md);display:flex;align-items:center;gap:var(--space-3)">
+            <i class="fa-solid ${item.leaveDatePassed ? 'fa-circle-exclamation' : 'fa-triangle-exclamation'}" aria-hidden="true"></i>
+            <span><c:out value="${item.banner}" /></span>
+          </div>
+        </c:if>
+
+        <c:if test="${not empty formMessage}">
+          <div class="alert-banner danger" style="margin-bottom:var(--space-4);padding:var(--space-3) var(--space-4);border-radius:var(--radius-md);display:flex;align-items:center;gap:var(--space-3)">
+            <i class="fa-solid fa-circle-exclamation" aria-hidden="true"></i>
+            <c:out value="${formMessage}" />
+          </div>
+        </c:if>
+
+        <%-- ===== Lưới chính 2 cột (Tối ưu 1366x768) ===== --%>
+        <div class="review-grid-2col">
+
+          <%-- CỘT TRÁI (60%): Thông tin đơn & Kiểm tra điều kiện --%>
+          <div class="review-col-left">
+
+            <%-- Card 1: Thông tin nhân viên & Chi tiết đơn --%>
+            <div class="review-card">
+              <div class="user-info-row">
+                <c:choose>
+                  <c:when test="${not empty item.avatarUrl}">
+                    <img src="${pageContext.request.contextPath}${item.avatarUrl}" alt="Avatar" class="user-avatar-circle">
+                  </c:when>
+                  <c:otherwise>
+                    <div class="user-avatar-circle">${fn:substring(item.fullName, 0, 1)}</div>
+                  </c:otherwise>
+                </c:choose>
+                <div class="user-name-meta">
+                  <b><c:out value="${item.fullName}" /></b>
+                  <small>
+                    <c:out value="${item.employeeCode}" /> ·
+                    <span class="badge badge-sm ${item.position == 'PT' ? 'badge-info' : 'badge-neutral'}">
+                      ${item.position == 'PT' ? 'Huấn luyện viên PT' : 'Lễ tân'}
+                    </span>
                   </small>
-                </span>
-              </c:if>
+                </div>
+              </div>
 
-              <c:if test="${item.leaveRequest.rejected and not empty item.leaveRequest.rejectReason}">
-                <p style="margin:var(--space-4) 0 var(--space-1);color:var(--color-text-soft);font-size:var(--font-size-sm)">
-                  Lý do từ chối
+              <div class="detail-prop-grid">
+                <div class="detail-prop-item">
+                  <span class="detail-prop-label">Thời gian nghỉ</span>
+                  <span class="detail-prop-val">
+                    ${gms:formatDate(item.leaveRequest.fromDate)}
+                    <c:if test="${item.leaveRequest.fromDate != item.leaveRequest.toDate}">
+                      → ${gms:formatDate(item.leaveRequest.toDate)}
+                    </c:if>
+                    <span style="font-weight:normal;color:var(--color-text-soft)">(${item.leaveRequest.days} ngày)</span>
+                  </span>
+                </div>
+
+                <div class="detail-prop-item">
+                  <span class="detail-prop-label">Ca làm việc</span>
+                  <span class="detail-prop-val"><c:out value="${item.leaveRequest.shiftType.displayName}" /></span>
+                </div>
+
+                <div class="detail-prop-item">
+                  <span class="detail-prop-label">Loại nghỉ</span>
+                  <span class="detail-prop-val">
+                    <span class="badge ${item.leaveRequest.leaveType.dbValue == 'Annual' ? 'badge-success' : (item.leaveRequest.leaveType.dbValue == 'Sick' ? 'badge-info' : 'badge-neutral')}">
+                      <c:out value="${item.leaveRequest.leaveType.displayName}" />
+                    </span>
+                  </span>
+                </div>
+
+                <div class="detail-prop-item">
+                  <span class="detail-prop-label">Thời điểm gửi đơn</span>
+                  <span class="detail-prop-val">
+                    ${gms:formatDate(item.leaveRequest.submittedAt.toLocalDate())}
+                    <small style="color:var(--color-text-soft);font-weight:normal">${gms:formatTime(item.leaveRequest.submittedAt.toLocalTime())}</small>
+                  </span>
+                </div>
+              </div>
+
+              <%-- Lý do nghỉ (clamp-3 có toggle) --%>
+              <div class="reason-box-clamp">
+                <span class="detail-prop-label">Lý do xin nghỉ</span>
+                <p id="reasonClampText" class="reason-clamp-text">
+                  <c:out value="${item.leaveRequest.reason}" />
                 </p>
-                <p style="margin:0"><c:out value="${item.leaveRequest.rejectReason}" /></p>
-              </c:if>
-
+                <button type="button" id="btnToggleReason" class="btn-toggle-reason" onclick="toggleReasonClamp()">Xem thêm</button>
+              </div>
             </div>
-          </c:if>
 
-        </section>
+            <%-- Card 2: Kiểm tra điều kiện duyệt (Review Checks) --%>
+            <div class="review-card">
+              <div class="review-card-head">
+                <h3 class="review-card-title">
+                  <i class="fa-solid fa-list-check" aria-hidden="true"></i> Kiểm tra điều kiện phê duyệt
+                </h3>
+                <span style="font-size:var(--font-size-xs);color:var(--color-text-soft)">3 tiêu chuẩn bắt buộc</span>
+              </div>
+
+              <div class="review-check-list">
+                <c:forEach var="c" items="${item.checks}">
+                  <div class="review-check-item ${c.ok ? 'pass' : 'fail'}">
+                    <div class="check-icon-badge">
+                      <i class="fa-solid ${c.ok ? 'fa-check' : 'fa-xmark'}" aria-hidden="true"></i>
+                    </div>
+                    <div class="check-meta-content">
+                      <div class="check-meta-title"><c:out value="${c.label}" /></div>
+                      <div class="check-meta-msg"><c:out value="${c.message}" /></div>
+
+                      <%-- Nếu là mục Định biên và có bảng chi tiết từng ca --%>
+                      <c:if test="${c.key == 'STAFFING' and not empty item.staffingRows and item.staffingRows.size() > 1}">
+                        <table style="width:100%;margin-top:var(--space-2);border-collapse:collapse;font-size:11px">
+                          <thead>
+                            <tr style="border-bottom:1px solid var(--color-border);color:var(--color-text-soft);text-align:left">
+                              <th style="padding:2px 4px">Ca trực</th>
+                              <th style="padding:2px 4px">Đang trực</th>
+                              <th style="padding:2px 4px">Sau duyệt</th>
+                              <th style="padding:2px 4px">Tối thiểu</th>
+                              <th style="padding:2px 4px">Kết quả</th>
+                            </tr>
+                          </thead>
+                          <tbody>
+                            <c:forEach var="row" items="${item.staffingRows}">
+                              <tr style="border-bottom:1px solid var(--color-border-subtle)">
+                                <td style="padding:2px 4px"><c:out value="${row.shiftLabel}" /></td>
+                                <td style="padding:2px 4px">${row.current}</td>
+                                <td style="padding:2px 4px"><b>${row.afterApproval}</b></td>
+                                <td style="padding:2px 4px">${row.minRequired}</td>
+                                <td style="padding:2px 4px">
+                                  <c:choose>
+                                    <c:when test="${row.belowMin}"><span class="badge badge-sm badge-danger">Thiếu người</span></c:when>
+                                    <c:otherwise><span class="badge badge-sm badge-success">Đạt</span></c:otherwise>
+                                  </c:choose>
+                                </td>
+                              </tr>
+                            </c:forEach>
+                          </tbody>
+                        </table>
+                      </c:if>
+                    </div>
+                  </div>
+                </c:forEach>
+              </div>
+            </div>
+
+          </div>
+
+          <%-- CỘT PHẢI (40%): Quy trình duyệt & Người phụ trách --%>
+          <div class="review-col-right">
+
+            <%-- Card: Quy trình duyệt (Timeline) --%>
+            <div class="review-card">
+              <div class="review-card-head">
+                <h3 class="review-card-title">
+                  <i class="fa-solid fa-clock-rotate-left" aria-hidden="true"></i> Tiến trình xử lý
+                </h3>
+              </div>
+
+              <div class="timeline-list">
+                <div class="timeline-track-line"></div>
+                <c:forEach var="node" items="${item.timeline}">
+                  <div class="timeline-step ${node.state}">
+                    <div class="timeline-dot">
+                      <c:choose>
+                        <c:when test="${node.state == 'DONE'}"><i class="fa-solid fa-check"></i></c:when>
+                        <c:when test="${node.state == 'CURRENT'}"><i class="fa-solid fa-clock"></i></c:when>
+                        <c:when test="${node.state == 'FAILED'}"><i class="fa-solid fa-xmark"></i></c:when>
+                        <c:otherwise><i class="fa-solid fa-circle"></i></c:otherwise>
+                      </c:choose>
+                    </div>
+
+                    <div class="timeline-step-title">
+                      <span><c:out value="${node.title}" /></span>
+                      <c:if test="${node.at != null}">
+                        <span class="timeline-step-time">${gms:formatDateTime(node.at)}</span>
+                      </c:if>
+                    </div>
+
+                    <c:if test="${not empty node.actorName}">
+                      <div class="timeline-step-actor">
+                        <c:choose>
+                          <c:when test="${node.kind == 'TRANSFERRED'}">
+                            <c:out value="${node.actorName}" /> → <c:out value="${node.targetName}" />
+                          </c:when>
+                          <c:otherwise>
+                            <c:out value="${node.actorName}" />
+                          </c:otherwise>
+                        </c:choose>
+                      </div>
+                    </c:if>
+
+                    <c:if test="${not empty node.note}">
+                      <div class="timeline-step-sub"><c:out value="${node.note}" /></div>
+                    </c:if>
+                  </div>
+                </c:forEach>
+              </div>
+            </div>
+
+            <%-- Card: Người duyệt phụ trách --%>
+            <div class="review-card">
+              <div class="review-card-head">
+                <h3 class="review-card-title">
+                  <i class="fa-solid fa-user-shield" aria-hidden="true"></i> Phụ trách xử lý
+                </h3>
+              </div>
+
+              <div style="display:flex;align-items:center;justify-content:space-between">
+                <div>
+                  <div style="font-weight:600;font-size:var(--font-size-sm)">
+                    <c:choose>
+                      <c:when test="${not empty item.reviewerName}">
+                        <c:out value="${item.reviewerName}" /> (Đã duyệt)
+                      </c:when>
+                      <c:when test="${not empty item.assignedToName}">
+                        <c:out value="${item.assignedToName}" />
+                      </c:when>
+                      <c:otherwise>
+                        Chưa phân công (Quản lý chung)
+                      </c:otherwise>
+                    </c:choose>
+                  </div>
+                  <div style="font-size:var(--font-size-xs);color:var(--color-text-soft);margin-top:2px">
+                    <c:choose>
+                      <c:when test="${item.canAct}">Bạn đang có quyền thao tác trên đơn này</c:when>
+                      <c:otherwise>Bạn đang ở chế độ chỉ xem</c:otherwise>
+                    </c:choose>
+                  </div>
+                </div>
+
+                <c:if test="${item.leaveRequest.pending and item.canAct}">
+                  <button type="button" class="btn btn-sm btn-ghost" onclick="openTransferModal()" title="Chuyển cho Manager khác">
+                    <i class="fa-solid fa-arrow-right-arrow-left"></i> Chuyển
+                  </button>
+                </c:if>
+              </div>
+            </div>
+
+          </div>
+
+        </div>
+
       </main>
     </div>
   </div>
+
+  <%-- ===== MODAL XÁC NHẬN DUYỆT ĐƠN ===== --%>
+  <div id="modalApproveDetail" class="gms-modal" role="dialog" aria-modal="true" aria-labelledby="modalApproveTitle">
+    <div class="gms-modal-dialog">
+      <form action="${pageContext.request.contextPath}/manager/leave-requests/review" method="post">
+        <input type="hidden" name="csrfToken" value="${csrfToken}">
+        <input type="hidden" name="action" value="approve">
+        <input type="hidden" name="leaveRequestId" value="${item.leaveRequest.leaveRequestId}">
+
+        <div class="gms-modal-header">
+          <h3 class="gms-modal-title" id="modalApproveTitle">Phê duyệt đơn nghỉ phép</h3>
+          <button type="button" class="gms-modal-close" onclick="closeModal('modalApproveDetail')">&times;</button>
+        </div>
+        <div class="gms-modal-body">
+          <p>Xác nhận duyệt đơn nghỉ phép của <b><c:out value="${item.fullName}" /></b>?</p>
+          <div style="font-size:var(--font-size-xs);color:var(--color-text-soft);line-height:1.6">
+            • Thời gian nghỉ: ${gms:formatDate(item.leaveRequest.fromDate)} - ${gms:formatDate(item.leaveRequest.toDate)} (${item.leaveRequest.days} ngày)<br>
+            • Ca làm việc: <c:out value="${item.leaveRequest.shiftType.displayName}" /><br>
+            Hệ thống sẽ cập nhật trạng thái đơn thành <b>Đã duyệt</b> và gửi thông báo đến chuông của nhân viên.
+          </div>
+        </div>
+        <div class="gms-modal-footer">
+          <button type="button" class="btn btn-ghost" onclick="closeModal('modalApproveDetail')">Hủy</button>
+          <button type="submit" class="btn btn-primary">Xác nhận duyệt</button>
+        </div>
+      </form>
+    </div>
+  </div>
+
+  <%-- ===== MODAL TỪ CHỐI ĐƠN ===== --%>
+  <div id="modalRejectDetail" class="gms-modal" role="dialog" aria-modal="true" aria-labelledby="modalRejectTitle">
+    <div class="gms-modal-dialog">
+      <form action="${pageContext.request.contextPath}/manager/leave-requests/review" method="post">
+        <input type="hidden" name="csrfToken" value="${csrfToken}">
+        <input type="hidden" name="action" value="reject">
+        <input type="hidden" name="leaveRequestId" value="${item.leaveRequest.leaveRequestId}">
+
+        <div class="gms-modal-header">
+          <h3 class="gms-modal-title" id="modalRejectTitle">Từ chối đơn nghỉ phép</h3>
+          <button type="button" class="gms-modal-close" onclick="closeModal('modalRejectDetail')">&times;</button>
+        </div>
+        <div class="gms-modal-body">
+          <div class="field">
+            <label class="field-label" for="rejectReasonDetailInput">
+              Lý do từ chối <span aria-hidden="true">*</span>
+            </label>
+            <textarea id="rejectReasonDetailInput"
+                      name="rejectReason"
+                      class="field-input"
+                      rows="3"
+                      minlength="5"
+                      maxlength="500"
+                      placeholder="Nhập lý do từ chối (5–500 ký tự)..."
+                      required><c:out value="${rejectReason}" /></textarea>
+            <c:if test="${not empty errors.rejectReason}">
+              <div class="field-error"><c:out value="${errors.rejectReason}" /></div>
+            </c:if>
+          </div>
+        </div>
+        <div class="gms-modal-footer">
+          <button type="button" class="btn btn-ghost" onclick="closeModal('modalRejectDetail')">Hủy</button>
+          <button type="submit" class="btn btn-danger">Từ chối đơn</button>
+        </div>
+      </form>
+    </div>
+  </div>
+
+  <%-- ===== MODAL CHUYỂN NGƯỜI DUYỆT ===== --%>
+  <div id="modalTransferDetail" class="gms-modal" role="dialog" aria-modal="true" aria-labelledby="modalTransferTitle">
+    <div class="gms-modal-dialog">
+      <form action="${pageContext.request.contextPath}/manager/leave-requests/review" method="post">
+        <input type="hidden" name="csrfToken" value="${csrfToken}">
+        <input type="hidden" name="action" value="transfer">
+        <input type="hidden" name="leaveRequestId" value="${item.leaveRequest.leaveRequestId}">
+
+        <div class="gms-modal-header">
+          <h3 class="gms-modal-title" id="modalTransferTitle">Chuyển quyền duyệt đơn</h3>
+          <button type="button" class="gms-modal-close" onclick="closeModal('modalTransferDetail')">&times;</button>
+        </div>
+        <div class="gms-modal-body">
+          <div class="field">
+            <label class="field-label" for="transferToEmployeeSelect">Chọn người tiếp nhận <span aria-hidden="true">*</span></label>
+            <select name="toEmployeeId" id="transferToEmployeeSelect" class="field-input" required>
+              <option value="">-- Chọn Quản lý --</option>
+              <c:forEach var="rev" items="${eligibleReviewers}">
+                <option value="${rev.employeeId}">
+                  <c:out value="${rev.fullName}" /> (<c:out value="${rev.employeeCode}" />)
+                </option>
+              </c:forEach>
+            </select>
+          </div>
+
+          <div class="field" style="margin-top:var(--space-3)">
+            <label class="field-label" for="transferNoteDetailInput">Ghi chú chuyển giao (tùy chọn)</label>
+            <textarea id="transferNoteDetailInput"
+                      name="note"
+                      class="field-input"
+                      rows="2"
+                      maxlength="200"
+                      placeholder="Ghi chú cho người nhận (tối đa 200 ký tự)..."></textarea>
+          </div>
+        </div>
+        <div class="gms-modal-footer">
+          <button type="button" class="btn btn-ghost" onclick="closeModal('modalTransferDetail')">Hủy</button>
+          <button type="submit" class="btn btn-primary">Xác nhận chuyển</button>
+        </div>
+      </form>
+    </div>
+  </div>
+
+  <script>
+    function closeModal(id) {
+      document.getElementById(id).classList.remove('show');
+    }
+
+    function openApproveModal() {
+      document.getElementById('modalApproveDetail').classList.add('show');
+    }
+
+    function openRejectModal() {
+      document.getElementById('modalRejectDetail').classList.add('show');
+    }
+
+    function openTransferModal() {
+      document.getElementById('modalTransferDetail').classList.add('show');
+    }
+
+    function toggleReasonClamp() {
+      const text = document.getElementById('reasonClampText');
+      const btn = document.getElementById('btnToggleReason');
+      if (text.classList.contains('expanded')) {
+        text.classList.remove('expanded');
+        btn.innerText = 'Xem thêm';
+      } else {
+        text.classList.add('expanded');
+        btn.innerText = 'Thu gọn';
+      }
+    }
+
+    // Kiểm tra nếu nội dung lý do quá ngắn thì ẩn nút "Xem thêm"
+    window.addEventListener('DOMContentLoaded', function() {
+      const text = document.getElementById('reasonClampText');
+      const btn = document.getElementById('btnToggleReason');
+      if (text && btn) {
+        if (text.scrollHeight <= text.clientHeight + 2) {
+          btn.style.display = 'none';
+        }
+      }
+    });
+
+    window.addEventListener('click', function(e) {
+      if (e.target.classList.contains('gms-modal')) {
+        e.target.classList.remove('show');
+      }
+    });
+  </script>
 </body>
 </html>

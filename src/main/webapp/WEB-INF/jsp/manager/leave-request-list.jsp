@@ -7,14 +7,11 @@
 <html lang="vi">
 <head>
   <%@ include file="/WEB-INF/jsp/common/head.jspf" %>
-  <title>Đơn nghỉ phép · Super Gym</title>
+  <title>Quản lý đơn nghỉ phép · Super Gym</title>
   <link rel="stylesheet" href="${pageContext.request.contextPath}/css/pages/auth/account-settings.css">
   <link rel="stylesheet" href="${pageContext.request.contextPath}/css/pages/manager/leave-requests.css">
-  <link rel="stylesheet"
-        href="${pageContext.request.contextPath}/css/pages/auth/notification-bell.css">
-
-  <script src="${pageContext.request.contextPath}/js/pages/auth/notification-bell.js"
-          defer></script>
+  <link rel="stylesheet" href="${pageContext.request.contextPath}/css/pages/auth/notification-bell.css">
+  <script src="${pageContext.request.contextPath}/js/pages/auth/notification-bell.js" defer></script>
 </head>
 
 <body class="dock theme-manager">
@@ -24,18 +21,15 @@
     <%@ include file="/WEB-INF/jsp/common/layout-manager.jspf" %>
 
     <div class="main">
-      <%-- ===== Thanh trên cùng (sessionScope.displayName do AuthService đặt khi đăng nhập) ===== --%>
       <header class="topbar">
         <div class="tb-left">
-          <h1 class="tb-title">Đơn nghỉ phép</h1>
+          <h1 class="tb-title">Quản lý đơn nghỉ phép</h1>
         </div>
 
         <div class="top-right">
-
           <%@ include file="/WEB-INF/jsp/common/notification-bell.jspf" %>
 
-          <a class="tb-user"
-             href="${pageContext.request.contextPath}/account">
+          <a class="tb-user" href="${pageContext.request.contextPath}/account">
             <span class="avatar">QL</span>
             <span>
               <b><c:out value="${sessionScope.displayName}" default="Quản lý" /></b>
@@ -47,184 +41,120 @@
 
       <main class="content">
 
-        <%-- ===== Các tab trạng thái (statusCounts: Map số đơn theo All/Pending/Approved/Rejected do Service tạo; statusFilter: tab đang chọn do Servlet đặt) ===== --%>
-        <div class="leave-stats">
+        <%-- ===== Thanh công cụ gom nhóm: Tabs trạng thái bên trái + Bộ lọc bên phải ===== --%>
+        <div class="leave-toolbar">
 
-          <%-- Tab "Tất cả" dùng status=All vì URL không có status nghĩa là tab Chờ duyệt --%>
-          <c:url var="allTabUrl" value="/manager/leave-requests">
-            <c:param name="status" value="All" />
-            <c:if test="${not empty keyword}">
-              <c:param name="keyword" value="${keyword}" />
-            </c:if>
-            <c:if test="${not empty positionFilter}">
-              <c:param name="position" value="${positionFilter}" />
-            </c:if>
-            <c:if test="${not empty leaveTypeFilter}">
-              <c:param name="leaveType" value="${leaveTypeFilter}" />
-            </c:if>
-            <c:if test="${not empty fromDateFilter}">
-              <c:param name="fromDate" value="${fromDateFilter}" />
-            </c:if>
-            <c:if test="${not empty toDateFilter}">
-              <c:param name="toDate" value="${toDateFilter}" />
-            </c:if>
-          </c:url>
-          <a href="${allTabUrl}"
-             class="leave-stat ${statusFilter == 'All' ? 'active' : ''}">
-            <span>Tất cả</span>
-            <strong><c:out value="${statusCounts['All']}" default="0" /></strong>
-          </a>
+          <%-- 4 Tab trạng thái --%>
+          <div class="leave-tabs-nav">
+            <c:url var="pendingTabUrl" value="/manager/leave-requests">
+              <c:param name="status" value="Pending" />
+              <c:if test="${not empty keyword}"><c:param name="keyword" value="${keyword}" /></c:if>
+              <c:if test="${not empty positionFilter}"><c:param name="position" value="${positionFilter}" /></c:if>
+              <c:if test="${not empty leaveTypeFilter}"><c:param name="leaveType" value="${leaveTypeFilter}" /></c:if>
+            </c:url>
+            <a href="${pendingTabUrl}" class="leave-tab-btn ${statusFilter == 'Pending' ? 'active' : ''}">
+              <span>Chờ duyệt</span>
+              <span class="leave-tab-count"><c:out value="${statusCounts['Pending'] != null ? statusCounts['Pending'] : 0}" /></span>
+            </a>
 
-          <c:url var="pendingTabUrl" value="/manager/leave-requests">
-            <c:param name="status" value="Pending" />
-            <c:if test="${not empty keyword}">
-              <c:param name="keyword" value="${keyword}" />
-            </c:if>
-            <c:if test="${not empty positionFilter}">
-              <c:param name="position" value="${positionFilter}" />
-            </c:if>
-            <c:if test="${not empty leaveTypeFilter}">
-              <c:param name="leaveType" value="${leaveTypeFilter}" />
-            </c:if>
-            <c:if test="${not empty fromDateFilter}">
-              <c:param name="fromDate" value="${fromDateFilter}" />
-            </c:if>
-            <c:if test="${not empty toDateFilter}">
-              <c:param name="toDate" value="${toDateFilter}" />
-            </c:if>
-          </c:url>
-          <a href="${pendingTabUrl}"
-             class="leave-stat ${statusFilter == 'Pending' ? 'active' : ''}">
-            <span>Chờ duyệt</span>
-            <strong><c:out value="${statusCounts['Pending']}" default="0" /></strong>
-          </a>
+            <c:url var="approvedTabUrl" value="/manager/leave-requests">
+              <c:param name="status" value="Approved" />
+              <c:if test="${not empty keyword}"><c:param name="keyword" value="${keyword}" /></c:if>
+              <c:if test="${not empty positionFilter}"><c:param name="position" value="${positionFilter}" /></c:if>
+              <c:if test="${not empty leaveTypeFilter}"><c:param name="leaveType" value="${leaveTypeFilter}" /></c:if>
+            </c:url>
+            <a href="${approvedTabUrl}" class="leave-tab-btn ${statusFilter == 'Approved' ? 'active' : ''}">
+              <span>Đã duyệt</span>
+              <span class="leave-tab-count"><c:out value="${statusCounts['Approved'] != null ? statusCounts['Approved'] : 0}" /></span>
+            </a>
 
-          <c:url var="approvedTabUrl" value="/manager/leave-requests">
-            <c:param name="status" value="Approved" />
-            <c:if test="${not empty keyword}">
-              <c:param name="keyword" value="${keyword}" />
-            </c:if>
-            <c:if test="${not empty positionFilter}">
-              <c:param name="position" value="${positionFilter}" />
-            </c:if>
-            <c:if test="${not empty leaveTypeFilter}">
-              <c:param name="leaveType" value="${leaveTypeFilter}" />
-            </c:if>
-            <c:if test="${not empty fromDateFilter}">
-              <c:param name="fromDate" value="${fromDateFilter}" />
-            </c:if>
-            <c:if test="${not empty toDateFilter}">
-              <c:param name="toDate" value="${toDateFilter}" />
-            </c:if>
-          </c:url>
-          <a href="${approvedTabUrl}"
-             class="leave-stat ${statusFilter == 'Approved' ? 'active' : ''}">
-            <span>Đã duyệt</span>
-            <strong><c:out value="${statusCounts['Approved']}" default="0" /></strong>
-          </a>
+            <c:url var="rejectedTabUrl" value="/manager/leave-requests">
+              <c:param name="status" value="Rejected" />
+              <c:if test="${not empty keyword}"><c:param name="keyword" value="${keyword}" /></c:if>
+              <c:if test="${not empty positionFilter}"><c:param name="position" value="${positionFilter}" /></c:if>
+              <c:if test="${not empty leaveTypeFilter}"><c:param name="leaveType" value="${leaveTypeFilter}" /></c:if>
+            </c:url>
+            <a href="${rejectedTabUrl}" class="leave-tab-btn ${statusFilter == 'Rejected' ? 'active' : ''}">
+              <span>Từ chối</span>
+              <span class="leave-tab-count"><c:out value="${statusCounts['Rejected'] != null ? statusCounts['Rejected'] : 0}" /></span>
+            </a>
 
-          <c:url var="rejectedTabUrl" value="/manager/leave-requests">
-            <c:param name="status" value="Rejected" />
-            <c:if test="${not empty keyword}">
-              <c:param name="keyword" value="${keyword}" />
-            </c:if>
-            <c:if test="${not empty positionFilter}">
-              <c:param name="position" value="${positionFilter}" />
-            </c:if>
-            <c:if test="${not empty leaveTypeFilter}">
-              <c:param name="leaveType" value="${leaveTypeFilter}" />
-            </c:if>
-            <c:if test="${not empty fromDateFilter}">
-              <c:param name="fromDate" value="${fromDateFilter}" />
-            </c:if>
-            <c:if test="${not empty toDateFilter}">
-              <c:param name="toDate" value="${toDateFilter}" />
-            </c:if>
-          </c:url>
-          <a href="${rejectedTabUrl}"
-             class="leave-stat ${statusFilter == 'Rejected' ? 'active' : ''}">
-            <span>Từ chối</span>
-            <strong><c:out value="${statusCounts['Rejected']}" default="0" /></strong>
-          </a>
-
-        </div>
-
-        <%-- ===== Bộ lọc và danh sách (leavePage: PageResult<LeaveRequestItemView> do Service tạo; keyword: từ khóa đang nhập) ===== --%>
-        <section class="panel leave-panel">
-          <div class="panel-head">
-            <div>
-              <h2>Danh sách đơn nghỉ phép</h2>
-              <c:if test="${statusFilter == 'All'}">
-                <p>Đơn Chờ duyệt được ưu tiên hiển thị trước.</p>
-              </c:if>
-            </div>
+            <c:url var="allTabUrl" value="/manager/leave-requests">
+              <c:param name="status" value="All" />
+              <c:if test="${not empty keyword}"><c:param name="keyword" value="${keyword}" /></c:if>
+              <c:if test="${not empty positionFilter}"><c:param name="position" value="${positionFilter}" /></c:if>
+              <c:if test="${not empty leaveTypeFilter}"><c:param name="leaveType" value="${leaveTypeFilter}" /></c:if>
+            </c:url>
+            <a href="${allTabUrl}" class="leave-tab-btn ${statusFilter == 'All' ? 'active' : ''}">
+              <span>Tất cả</span>
+              <span class="leave-tab-count"><c:out value="${statusCounts['All'] != null ? statusCounts['All'] : 0}" /></span>
+            </a>
           </div>
 
-          <%-- Form lọc: status giữ tab đang chọn, keyword tìm theo tên nhân viên, chức vụ, loại nghỉ, khoảng ngày --%>
-          <form action="${pageContext.request.contextPath}/manager/leave-requests"
-                method="get"
-                class="leave-filter">
-
+          <%-- Form lọc tìm kiếm --%>
+          <form action="${pageContext.request.contextPath}/manager/leave-requests" method="get" class="leave-filter-nav">
             <input type="hidden" name="status" value="<c:out value='${statusFilter}' />">
+
+            <select name="position" class="filter-select" aria-label="Lọc theo chức vụ">
+              <option value="">Tất cả chức vụ</option>
+              <option value="PT" ${positionFilter == 'PT' ? 'selected' : ''}>Huấn luyện viên (PT)</option>
+              <option value="Receptionist" ${positionFilter == 'Receptionist' ? 'selected' : ''}>Lễ tân</option>
+            </select>
+
+            <select name="leaveType" class="filter-select" aria-label="Lọc theo loại nghỉ">
+              <option value="">Tất cả loại nghỉ</option>
+              <option value="Annual" ${leaveTypeFilter == 'Annual' ? 'selected' : ''}>Phép năm</option>
+              <option value="Sick" ${leaveTypeFilter == 'Sick' ? 'selected' : ''}>Nghỉ ốm</option>
+              <option value="Unpaid" ${leaveTypeFilter == 'Unpaid' ? 'selected' : ''}>Không lương</option>
+            </select>
 
             <input type="search"
                    name="keyword"
                    class="filter-input-search"
                    maxlength="100"
                    value="<c:out value='${keyword}' />"
-                   placeholder="Tìm theo tên nhân viên">
+                   placeholder="Tìm theo tên / mã nhân viên...">
 
-            <select name="position" class="filter-select" aria-label="Lọc theo chức vụ">
-              <option value="">-- Tất cả chức vụ --</option>
-              <option value="PT" ${positionFilter == 'PT' ? 'selected' : ''}>PT (HLV)</option>
-              <option value="Receptionist" ${positionFilter == 'Receptionist' ? 'selected' : ''}>Lễ tân</option>
-            </select>
+            <button class="btn btn-sm btn-primary" type="submit">
+              <i class="fa-solid fa-magnifying-glass" aria-hidden="true"></i> Tìm
+            </button>
 
-            <select name="leaveType" class="filter-select" aria-label="Lọc theo loại nghỉ">
-              <option value="">-- Tất cả loại nghỉ --</option>
-              <option value="Annual" ${leaveTypeFilter == 'Annual' ? 'selected' : ''}>Nghỉ phép năm</option>
-              <option value="Sick" ${leaveTypeFilter == 'Sick' ? 'selected' : ''}>Nghỉ ốm</option>
-              <option value="Unpaid" ${leaveTypeFilter == 'Unpaid' ? 'selected' : ''}>Nghỉ không lương</option>
-            </select>
-
-            <div class="filter-date-group">
-              <input type="date" name="fromDate" value="<c:out value='${fromDateFilter}' />" title="Từ ngày">
-              <span>-</span>
-              <input type="date" name="toDate" value="<c:out value='${toDateFilter}' />" title="Đến ngày">
-            </div>
-
-            <button class="btn btn-primary" type="submit">Tìm</button>
-            <a class="btn btn-ghost"
-               href="${pageContext.request.contextPath}/manager/leave-requests<c:if test="${not empty statusFilter and statusFilter != 'Pending'}">?status=<c:out value='${statusFilter}' /></c:if>">
-              Xóa lọc
-            </a>
+            <c:if test="${not empty keyword or not empty positionFilter or not empty leaveTypeFilter or not empty fromDateFilter or not empty toDateFilter}">
+              <a class="btn btn-sm btn-ghost"
+                 href="${pageContext.request.contextPath}/manager/leave-requests<c:if test="${not empty statusFilter and statusFilter != 'Pending'}">?status=<c:out value='${statusFilter}' /></c:if>">
+                Xóa lọc
+              </a>
+            </c:if>
           </form>
 
-          <%-- ===== Thông báo lỗi tải danh sách (pageError: Servlet đặt khi Service trả lỗi, không có thì không hiện) ===== --%>
+        </div>
+
+        <%-- ===== Bảng danh sách đơn nghỉ phép ===== --%>
+        <section class="panel leave-panel" style="padding:0;overflow:hidden">
+
           <c:if test="${not empty pageError}">
-            <div class="leave-empty" role="alert"><c:out value="${pageError}" /></div>
+            <div class="leave-empty" role="alert" style="color:var(--color-danger-ink)"><c:out value="${pageError}" /></div>
           </c:if>
 
-          <%-- ===== Bảng danh sách (leavePage.items: List<LeaveRequestItemView>, mỗi dòng 1 đơn) ===== --%>
           <c:choose>
             <c:when test="${not empty leavePage.items}">
               <div class="leave-table-wrap">
                 <table class="leave-table">
                   <thead>
                     <tr>
-                      <th>Nhân viên</th>
-                      <th>Ngày nghỉ</th>
-                      <th>Loại nghỉ</th>
-                      <th>Trạng thái</th>
-                      <th>Hạn duyệt</th>
-                      <th></th>
+                      <th style="width:25%">Nhân viên</th>
+                      <th style="width:20%">Thời gian nghỉ</th>
+                      <th style="width:13%">Loại nghỉ</th>
+                      <th style="width:14%">Trạng thái</th>
+                      <th style="width:14%">Người duyệt</th>
+                      <th style="width:14%;text-align:right">Thao tác</th>
                     </tr>
                   </thead>
                   <tbody>
                     <c:forEach var="item" items="${leavePage.items}">
-                      <%-- item.urgent: Service tính, đơn Chờ duyệt sắp quá hạn thì tô nổi dòng --%>
                       <tr class="${item.urgent ? 'leave-row-urgent' : ''}">
 
+                        <%-- Cột 1: Nhân viên --%>
                         <td>
                           <div class="leave-employee-cell">
                             <c:choose>
@@ -238,66 +168,119 @@
                             <div class="leave-employee-meta">
                               <b><c:out value="${item.fullName}" /></b>
                               <small>
-                                <c:out value="${item.employeeCode}" />
-                                ·
-                                <span class="leave-text-nowrap">
-                                <c:choose>
-                                  <c:when test="${item.position == 'PT'}">Huấn luyện viên (PT)</c:when>
-                                  <c:when test="${item.position == 'Receptionist'}">Lễ tân</c:when>
-                                  <c:otherwise><c:out value="${item.position}" /></c:otherwise>
-                                </c:choose>
+                                <c:out value="${item.employeeCode}" /> ·
+                                <span class="badge badge-sm ${item.position == 'PT' ? 'badge-info' : 'badge-neutral'}">
+                                  ${item.position == 'PT' ? 'PT' : 'Lễ tân'}
                                 </span>
                               </small>
                             </div>
                           </div>
                         </td>
 
+                        <%-- Cột 2: Thời gian nghỉ --%>
                         <td>
-                          <b>${gms:formatDate(item.leaveDate)}</b>
-                          <small><c:out value="${item.shiftType.displayName}" /></small>
+                          <div style="font-weight:600;font-size:var(--font-size-sm)">
+                            ${gms:formatDate(item.fromDate)}
+                            <c:if test="${item.fromDate != item.toDate}">
+                              → ${gms:formatDate(item.toDate)}
+                            </c:if>
+                            <span style="font-size:11px;color:var(--color-text-soft);font-weight:normal">(${item.days} ngày)</span>
+                          </div>
+                          <small style="color:var(--color-text-soft)">
+                            <c:out value="${item.shiftType.displayName}" />
+                          </small>
                         </td>
 
+                        <%-- Cột 3: Loại nghỉ --%>
                         <td>
-                          <b><c:out value="${item.leaveType.displayName}" /></b>
+                          <span class="badge ${item.leaveType.dbValue == 'Annual' ? 'badge-success' : (item.leaveType.dbValue == 'Sick' ? 'badge-info' : 'badge-neutral')}">
+                            <c:out value="${item.leaveType.displayName}" />
+                          </span>
                           <c:if test="${not empty item.reason}">
-                            <small><c:out value="${item.reason}" /></small>
+                            <div style="font-size:11px;color:var(--color-text-soft);margin-top:2px;max-width:160px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis" title="<c:out value="${item.reason}" />">
+                              <c:out value="${item.reason}" />
+                            </div>
                           </c:if>
                         </td>
 
+                        <%-- Cột 4: Trạng thái --%>
                         <td>
                           <span class="badge
                             ${item.status.dbValue == 'Pending' ? 'badge-warning' :
                               item.status.dbValue == 'Approved' ? 'badge-success' : 'badge-danger'}">
                             <c:out value="${item.status.displayName}" />
                           </span>
-                          <%-- item.autoRejected: Rejected mà không có người duyệt (quá hạn duyệt) --%>
                           <c:if test="${item.autoRejected}">
-                            <small class="leave-text-muted leave-text-nowrap">Tự động: quá hạn duyệt</small>
+                            <div style="font-size:10px;color:var(--color-danger-ink);margin-top:2px">Quá hạn duyệt SLA</div>
+                          </c:if>
+                          <c:if test="${item.status.dbValue == 'Pending' and not empty item.deadlineCountdownText}">
+                            <div style="font-size:11px;color:${item.urgent ? 'var(--color-danger-ink);font-weight:600' : 'var(--color-text-soft)'};margin-top:2px">
+                              <c:out value="${item.deadlineCountdownText}" />
+                            </div>
                           </c:if>
                         </td>
 
+                        <%-- Cột 5: Người duyệt / Người được giao --%>
                         <td>
-                          <%-- deadlineCountdownText chỉ có với đơn Chờ duyệt, đơn đã xử lý để trống --%>
                           <c:choose>
-                            <c:when test="${not empty item.deadlineCountdownText}">
-                              <b><c:out value="${item.deadlineCountdownText}" /></b>
-                              <c:if test="${not empty item.approvalDeadline}">
-                                <small class="leave-text-muted">
-                                  Trước ${gms:formatDateTime(item.approvalDeadline)}
-                                </small>
-                              </c:if>
+                            <c:when test="${not empty item.reviewerName}">
+                              <div style="font-size:var(--font-size-sm);font-weight:500"><c:out value="${item.reviewerName}" /></div>
+                              <small style="font-size:11px;color:var(--color-text-soft)">Đã xử lý</small>
                             </c:when>
-                            <c:otherwise>—</c:otherwise>
+                            <c:when test="${not empty item.assignedToName}">
+                              <div style="font-size:var(--font-size-sm);font-weight:500"><c:out value="${item.assignedToName}" /></div>
+                              <small style="font-size:11px;color:var(--color-warning-ink)">Được giao duyệt</small>
+                            </c:when>
+                            <c:otherwise>
+                              <span style="font-size:var(--font-size-xs);color:var(--color-text-soft)">Quản lý chung</span>
+                            </c:otherwise>
                           </c:choose>
                         </td>
 
-                        <td>
-                          <%-- Đơn Pending luôn cho phép Manager vào Xử lý (kể cả quá hạn duyệt) --%>
-                          <c:set var="canProcess" value="${item.status.dbValue == 'Pending'}" />
-                          <a class="btn btn-sm ${canProcess ? 'btn-primary' : 'btn-outline'}"
-                             href="${pageContext.request.contextPath}/manager/leave-requests/review?id=${item.leaveRequestId}">
-                            ${canProcess ? 'Xử lý' : 'Xem'}
-                          </a>
+                        <%-- Cột 6: Thao tác --%>
+                        <td style="text-align:right">
+                          <c:choose>
+                            <c:when test="${item.status.dbValue == 'Pending' and item.canAct}">
+                              <div class="row-action-group" style="justify-content:flex-end">
+                                <%-- Nút Duyệt nhanh --%>
+                                <button type="button"
+                                        class="btn-icon-action success"
+                                        title="Duyệt nhanh"
+                                        onclick="openQuickApproveModal('${item.leaveRequestId}', '<c:out value="${item.fullName}" />', '${gms:formatDate(item.fromDate)}', '${item.days}')">
+                                  <i class="fa-solid fa-check" aria-hidden="true"></i>
+                                </button>
+
+                                <%-- Nút Từ chối --%>
+                                <button type="button"
+                                        class="btn-icon-action danger"
+                                        title="Từ chối đơn"
+                                        onclick="openRejectModal('${item.leaveRequestId}', '<c:out value="${item.fullName}" />')">
+                                  <i class="fa-solid fa-xmark" aria-hidden="true"></i>
+                                </button>
+
+                                <%-- Nút Chuyển người duyệt --%>
+                                <button type="button"
+                                        class="btn-icon-action"
+                                        title="Chuyển người duyệt"
+                                        onclick="openTransferModal('${item.leaveRequestId}', '<c:out value="${item.fullName}" />')">
+                                  <i class="fa-solid fa-share" aria-hidden="true"></i>
+                                </button>
+
+                                <%-- Nút Xem chi tiết --%>
+                                <a class="btn-icon-action"
+                                   title="Xem chi tiết đơn"
+                                   href="${pageContext.request.contextPath}/manager/leave-requests/review?id=${item.leaveRequestId}">
+                                  <i class="fa-solid fa-arrow-right" aria-hidden="true"></i>
+                                </a>
+                              </div>
+                            </c:when>
+                            <c:otherwise>
+                              <a class="btn btn-sm btn-outline"
+                                 href="${pageContext.request.contextPath}/manager/leave-requests/review?id=${item.leaveRequestId}">
+                                Xem
+                              </a>
+                            </c:otherwise>
+                          </c:choose>
                         </td>
 
                       </tr>
@@ -306,40 +289,27 @@
                 </table>
               </div>
             </c:when>
-
-            <%-- Rỗng: tải được nhưng không có đơn nào khớp bộ lọc --%>
             <c:otherwise>
-              <div class="leave-empty">Không có đơn nghỉ phép nào.</div>
+              <div class="leave-empty">Không tìm thấy đơn nghỉ phép nào phù hợp điều kiện lọc.</div>
             </c:otherwise>
           </c:choose>
 
-          <%-- ===== Phân trang (leavePage.totalPages, hasPrevious, hasNext do PageResult cung cấp; link giữ keyword, status, pageSize) ===== --%>
+          <%-- Phân trang --%>
           <c:if test="${leavePage.totalPages > 1}">
-            <div class="leave-pager">
-
+            <div class="leave-pager" style="padding:var(--space-4)">
               <c:if test="${leavePage.hasPrevious}">
                 <c:url var="previousUrl" value="/manager/leave-requests">
                   <c:param name="page" value="${leavePage.pageNumber - 1}" />
                   <c:param name="pageSize" value="${leavePage.pageSize}" />
                   <c:param name="keyword" value="${keyword}" />
                   <c:param name="status" value="${statusFilter}" />
-                  <c:if test="${not empty positionFilter}">
-                    <c:param name="position" value="${positionFilter}" />
-                  </c:if>
-                  <c:if test="${not empty leaveTypeFilter}">
-                    <c:param name="leaveType" value="${leaveTypeFilter}" />
-                  </c:if>
-                  <c:if test="${not empty fromDateFilter}">
-                    <c:param name="fromDate" value="${fromDateFilter}" />
-                  </c:if>
-                  <c:if test="${not empty toDateFilter}">
-                    <c:param name="toDate" value="${toDateFilter}" />
-                  </c:if>
+                  <c:if test="${not empty positionFilter}"><c:param name="position" value="${positionFilter}" /></c:if>
+                  <c:if test="${not empty leaveTypeFilter}"><c:param name="leaveType" value="${leaveTypeFilter}" /></c:if>
                 </c:url>
                 <a class="btn btn-ghost btn-sm" href="${previousUrl}">Trang trước</a>
               </c:if>
 
-              <span>Trang ${leavePage.pageNumber} / ${leavePage.totalPages}</span>
+              <span>Trang ${leavePage.pageNumber} / ${leavePage.totalPages} (${leavePage.totalItems} đơn)</span>
 
               <c:if test="${leavePage.hasNext}">
                 <c:url var="nextUrl" value="/manager/leave-requests">
@@ -347,22 +317,11 @@
                   <c:param name="pageSize" value="${leavePage.pageSize}" />
                   <c:param name="keyword" value="${keyword}" />
                   <c:param name="status" value="${statusFilter}" />
-                  <c:if test="${not empty positionFilter}">
-                    <c:param name="position" value="${positionFilter}" />
-                  </c:if>
-                  <c:if test="${not empty leaveTypeFilter}">
-                    <c:param name="leaveType" value="${leaveTypeFilter}" />
-                  </c:if>
-                  <c:if test="${not empty fromDateFilter}">
-                    <c:param name="fromDate" value="${fromDateFilter}" />
-                  </c:if>
-                  <c:if test="${not empty toDateFilter}">
-                    <c:param name="toDate" value="${toDateFilter}" />
-                  </c:if>
+                  <c:if test="${not empty positionFilter}"><c:param name="position" value="${positionFilter}" /></c:if>
+                  <c:if test="${not empty leaveTypeFilter}"><c:param name="leaveType" value="${leaveTypeFilter}" /></c:if>
                 </c:url>
                 <a class="btn btn-ghost btn-sm" href="${nextUrl}">Trang sau</a>
               </c:if>
-
             </div>
           </c:if>
 
@@ -371,5 +330,143 @@
       </main>
     </div>
   </div>
+
+  <%-- ===== MODAL 1: DUYỆT NHANH ===== --%>
+  <div id="modalQuickApprove" class="gms-modal" role="dialog" aria-modal="true" aria-labelledby="modalQuickApproveTitle">
+    <div class="gms-modal-dialog">
+      <form action="${pageContext.request.contextPath}/manager/leave-requests/review" method="post">
+        <input type="hidden" name="csrfToken" value="${csrfToken}">
+        <input type="hidden" name="action" value="approve">
+        <input type="hidden" name="leaveRequestId" id="quickApproveLeaveRequestId">
+
+        <div class="gms-modal-header">
+          <h3 class="gms-modal-title" id="modalQuickApproveTitle">Duyệt nhanh đơn nghỉ phép</h3>
+          <button type="button" class="gms-modal-close" onclick="closeModal('modalQuickApprove')">&times;</button>
+        </div>
+        <div class="gms-modal-body">
+          <p id="quickApproveMessage">Bạn có chắc chắn muốn duyệt đơn nghỉ phép này?</p>
+          <div style="font-size:var(--font-size-xs);color:var(--color-text-soft)">
+            Hệ thống sẽ cập nhật trạng thái đơn thành <b>Đã duyệt</b> và gửi thông báo đến nhân viên.
+          </div>
+        </div>
+        <div class="gms-modal-footer">
+          <button type="button" class="btn btn-ghost" onclick="closeModal('modalQuickApprove')">Hủy</button>
+          <button type="submit" class="btn btn-primary">Xác nhận duyệt</button>
+        </div>
+      </form>
+    </div>
+  </div>
+
+  <%-- ===== MODAL 2: TỪ CHỐI ĐƠN ===== --%>
+  <div id="modalReject" class="gms-modal" role="dialog" aria-modal="true" aria-labelledby="modalRejectTitle">
+    <div class="gms-modal-dialog">
+      <form action="${pageContext.request.contextPath}/manager/leave-requests/review" method="post">
+        <input type="hidden" name="csrfToken" value="${csrfToken}">
+        <input type="hidden" name="action" value="reject">
+        <input type="hidden" name="leaveRequestId" id="rejectLeaveRequestId">
+
+        <div class="gms-modal-header">
+          <h3 class="gms-modal-title" id="modalRejectTitle">Từ chối đơn nghỉ phép</h3>
+          <button type="button" class="gms-modal-close" onclick="closeModal('modalReject')">&times;</button>
+        </div>
+        <div class="gms-modal-body">
+          <p id="rejectEmpNameText" style="font-weight:600;margin-bottom:var(--space-3)"></p>
+          <div class="field">
+            <label class="field-label" for="rejectReasonInput">Lý do từ chối <span aria-hidden="true">*</span></label>
+            <textarea id="rejectReasonInput"
+                      name="rejectReason"
+                      class="field-input"
+                      rows="3"
+                      minlength="5"
+                      maxlength="500"
+                      placeholder="Nhập lý do từ chối cụ thể (5–500 ký tự)..."
+                      required></textarea>
+          </div>
+        </div>
+        <div class="gms-modal-footer">
+          <button type="button" class="btn btn-ghost" onclick="closeModal('modalReject')">Hủy</button>
+          <button type="submit" class="btn btn-danger">Từ chối đơn</button>
+        </div>
+      </form>
+    </div>
+  </div>
+
+  <%-- ===== MODAL 3: CHUYỂN NGƯỜI DUYỆT ===== --%>
+  <div id="modalTransfer" class="gms-modal" role="dialog" aria-modal="true" aria-labelledby="modalTransferTitle">
+    <div class="gms-modal-dialog">
+      <form action="${pageContext.request.contextPath}/manager/leave-requests/review" method="post">
+        <input type="hidden" name="csrfToken" value="${csrfToken}">
+        <input type="hidden" name="action" value="transfer">
+        <input type="hidden" name="leaveRequestId" id="transferLeaveRequestId">
+
+        <div class="gms-modal-header">
+          <h3 class="gms-modal-title" id="modalTransferTitle">Chuyển quyền duyệt đơn</h3>
+          <button type="button" class="gms-modal-close" onclick="closeModal('modalTransfer')">&times;</button>
+        </div>
+        <div class="gms-modal-body">
+          <p id="transferEmpNameText" style="font-weight:600;margin-bottom:var(--space-3)"></p>
+
+          <div class="field">
+            <label class="field-label" for="transferToEmployeeId">Chọn người tiếp nhận <span aria-hidden="true">*</span></label>
+            <select name="toEmployeeId" id="transferToEmployeeId" class="field-input" required>
+              <option value="">-- Chọn Quản lý --</option>
+              <c:forEach var="rev" items="${eligibleReviewers}">
+                <option value="${rev.employeeId}">
+                  <c:out value="${rev.fullName}" /> (<c:out value="${rev.employeeCode}" />)
+                </option>
+              </c:forEach>
+            </select>
+          </div>
+
+          <div class="field" style="margin-top:var(--space-3)">
+            <label class="field-label" for="transferNote">Ghi chú chuyển giao (tùy chọn)</label>
+            <textarea id="transferNote"
+                      name="note"
+                      class="field-input"
+                      rows="2"
+                      maxlength="200"
+                      placeholder="Lý do chuyển duyệt (tối đa 200 ký tự)..."></textarea>
+          </div>
+        </div>
+        <div class="gms-modal-footer">
+          <button type="button" class="btn btn-ghost" onclick="closeModal('modalTransfer')">Hủy</button>
+          <button type="submit" class="btn btn-primary">Xác nhận chuyển</button>
+        </div>
+      </form>
+    </div>
+  </div>
+
+  <script>
+    function closeModal(modalId) {
+      document.getElementById(modalId).classList.remove('show');
+    }
+
+    function openQuickApproveModal(id, name, date, days) {
+      document.getElementById('quickApproveLeaveRequestId').value = id;
+      document.getElementById('quickApproveMessage').innerHTML = 'Xác nhận duyệt đơn nghỉ phép của <b>' + name + '</b> (ngày ' + date + ' - ' + days + ' ngày)?';
+      document.getElementById('modalQuickApprove').classList.add('show');
+    }
+
+    function openRejectModal(id, name) {
+      document.getElementById('rejectLeaveRequestId').value = id;
+      document.getElementById('rejectEmpNameText').innerText = 'Nhân viên: ' + name;
+      document.getElementById('rejectReasonInput').value = '';
+      document.getElementById('modalReject').classList.add('show');
+    }
+
+    function openTransferModal(id, name) {
+      document.getElementById('transferLeaveRequestId').value = id;
+      document.getElementById('transferEmpNameText').innerText = 'Nhân viên: ' + name;
+      document.getElementById('transferNote').value = '';
+      document.getElementById('modalTransfer').classList.add('show');
+    }
+
+    // Đóng modal khi nhấn ra ngoài
+    window.addEventListener('click', function(e) {
+      if (e.target.classList.contains('gms-modal')) {
+        e.target.classList.remove('show');
+      }
+    });
+  </script>
 </body>
 </html>

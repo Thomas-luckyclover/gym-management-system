@@ -35,6 +35,15 @@ public class LeaveRequestItemView {
     // DAO: LeaveRequests.LeaveDate.
     private final LocalDate leaveDate;
 
+    // V2: FromDate, ToDate, Days
+    private LocalDate fromDate;
+    private LocalDate toDate;
+    private java.math.BigDecimal days;
+
+    // V2: AssignedToName, canAct
+    private String assignedToName;
+    private boolean canAct = true;
+
     // DAO: LeaveRequests.ShiftType.
     private final LeaveRequest.ShiftType shiftType;
 
@@ -193,5 +202,45 @@ public class LeaveRequestItemView {
 
     public boolean isOverdue() {
         return overdue;
+    }
+
+    public LocalDate getFromDate() {
+        return fromDate != null ? fromDate : leaveDate;
+    }
+
+    public void setFromDate(LocalDate fromDate) {
+        this.fromDate = fromDate;
+    }
+
+    public LocalDate getToDate() {
+        return toDate != null ? toDate : (fromDate != null ? fromDate : leaveDate);
+    }
+
+    public void setToDate(LocalDate toDate) {
+        this.toDate = toDate;
+    }
+
+    public java.math.BigDecimal getDays() {
+        return days;
+    }
+
+    public void setDays(java.math.BigDecimal days) {
+        this.days = days;
+    }
+
+    public String getAssignedToName() {
+        return assignedToName;
+    }
+
+    public void setAssignedToName(String assignedToName) {
+        this.assignedToName = assignedToName;
+    }
+
+    public boolean isCanAct() {
+        return canAct;
+    }
+
+    public void setCanAct(boolean canAct) {
+        this.canAct = canAct;
     }
 }

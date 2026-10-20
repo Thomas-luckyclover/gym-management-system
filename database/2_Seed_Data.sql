@@ -3400,14 +3400,14 @@ SET IDENTITY_INSERT SessionMoveLogs OFF;
    LeaveRequests — 7 dòng.
    ============================================================================ */
 SET IDENTITY_INSERT LeaveRequests ON;
-INSERT INTO LeaveRequests (LeaveRequestId, EmployeeId, ReviewedByEmployeeId, LeaveType, LeaveDate, ShiftType, Reason, Status, RejectReason, SubmittedAt, ReviewedAt, ReminderSentAt) VALUES
- (1, 5, 2, 'Annual', '2026-09-19', 'Morning', N'Về quê giỗ ông', 'Approved', NULL, '2026-09-17 10:00:00', '2026-09-17 15:30:00', NULL),
- (2, 7, 2, 'Unpaid', '2026-09-19', 'Afternoon', N'Có việc cá nhân', 'Rejected', N'Ca chiều chỉ còn 2 PT, duyệt sẽ thiếu người (CBR-88)', '2026-09-18 09:00:00', '2026-09-18 17:00:00', NULL),
- (3, 4, NULL, 'Annual', '2026-09-16', 'Morning', N'Đưa con đi khám', 'Rejected', N'Quá hạn duyệt', '2026-09-15 14:00:00', '2026-09-15 20:00:00', '2026-09-15 19:00:00'),
- (4, 3, 2, 'Annual', '2026-10-14', 'Afternoon', N'Đi đám cưới bạn', 'Approved', NULL, '2026-10-01 09:30:00', '2026-10-01 11:00:00', NULL),
- (5, 6, NULL, 'Sick', '2026-10-10', 'FullDay', N'Lịch tái khám định kỳ', 'Pending', NULL, '2026-10-02 08:00:00', NULL, NULL),
- (6, 13, NULL, 'Annual', '2026-10-12', 'Morning', N'Thi chứng chỉ huấn luyện', 'Pending', NULL, '2026-10-02 14:00:00', NULL, NULL),
- (7, 9, 2, 'Sick', '2026-09-24', 'FullDay', N'Sốt cao, có giấy khám', 'Approved', NULL, '2026-09-23 11:00:00', '2026-09-23 16:00:00', NULL);
+INSERT INTO LeaveRequests (LeaveRequestId, EmployeeId, ReviewedByEmployeeId, AssignedToEmployeeId, LeaveType, FromDate, ToDate, ShiftType, Days, Reason, Status, RejectReason, SubmittedAt, ReviewedAt) VALUES
+ (1, 5, 2, NULL, 'Annual', '2026-09-19', '2026-09-19', 'Morning', 0.5, N'Về quê giỗ ông', 'Approved', NULL, '2026-09-17 10:00:00', '2026-09-17 15:30:00'),
+ (2, 7, 2, NULL, 'Unpaid', '2026-09-19', '2026-09-19', 'Afternoon', 0.5, N'Có việc cá nhân', 'Rejected', N'Ca chiều chỉ còn 2 PT, duyệt sẽ thiếu người (CBR-88)', '2026-09-18 09:00:00', '2026-09-18 17:00:00'),
+ (3, 4, 2, NULL, 'Annual', '2026-09-16', '2026-09-16', 'Morning', 0.5, N'Đưa con đi khám', 'Rejected', N'Không đủ nhân sự trực ca', '2026-09-15 14:00:00', '2026-09-15 20:00:00'),
+ (4, 3, 2, NULL, 'Annual', '2026-10-14', '2026-10-14', 'Afternoon', 0.5, N'Đi đám cưới bạn', 'Approved', NULL, '2026-10-01 09:30:00', '2026-10-01 11:00:00'),
+ (5, 6, NULL, NULL, 'Sick', '2026-10-10', '2026-10-10', 'FullDay', 1.0, N'Lịch tái khám định kỳ', 'Pending', NULL, '2026-10-02 08:00:00', NULL),
+ (6, 13, NULL, NULL, 'Annual', '2026-10-12', '2026-10-12', 'Morning', 0.5, N'Thi chứng chỉ huấn luyện', 'Pending', NULL, '2026-10-02 14:00:00', NULL),
+ (7, 9, 2, NULL, 'Sick', '2026-09-24', '2026-09-24', 'FullDay', 1.0, N'Sốt cao, có giấy khám', 'Approved', NULL, '2026-09-23 11:00:00', '2026-09-23 16:00:00');
 SET IDENTITY_INSERT LeaveRequests OFF;
 
 /* ============================================================================

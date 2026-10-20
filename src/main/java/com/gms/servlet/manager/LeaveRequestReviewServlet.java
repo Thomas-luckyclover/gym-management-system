@@ -43,8 +43,13 @@ public class LeaveRequestReviewServlet extends HttpServlet {
         }
 
         // B2: gọi Service lấy thông tin chi tiết đơn
+        HttpSession session = request.getSession(false);
+        Integer managerAccountId = session == null
+                ? null
+                : (Integer) session.getAttribute(SessionKey.ACCOUNT_ID);
+
         ServiceResult<LeaveRequestDAO.LeaveReviewDetail> result
-                = leaveRequestService.getReviewDetail(leaveRequestId);
+                = leaveRequestService.getReviewDetail(leaveRequestId, managerAccountId);
 
         // B3: nếu không tìm thấy, báo lỗi và quay về danh sách
         if (!result.isSuccess()) {
@@ -53,8 +58,17 @@ public class LeaveRequestReviewServlet extends HttpServlet {
             return;
         }
 
-        // B4: sinh CSRF token và đặt attribute cho JSP hiển thị
-        HttpSession session = request.getSession(true);
+        // B4: lấy danh sách người duyệt đủ điều kiện nếu cần chuyển duyệt
+        if (managerAccountId != null) {
+            ServiceResult<java.util.List<LeaveRequestDAO.EligibleReviewer>> reviewersResult
+                    = leaveRequestService.getEligibleReviewers(managerAccountId);
+            if (reviewersResult.isSuccess()) {
+                request.setAttribute("eligibleReviewers", reviewersResult.getData());
+            }
+        }
+
+        // B5: sinh CSRF token và đặt attribute cho JSP hiển thị
+        session = request.getSession(true);
         request.setAttribute("csrfToken", RequestUtil.getOrCreateCsrfToken(session));
         request.setAttribute("item", result.getData());
         request.setAttribute("activeNav", "leaves");
@@ -94,7 +108,7 @@ public class LeaveRequestReviewServlet extends HttpServlet {
             return;
         }
 
-        // B4: xử lý theo hành động Duyệt (approve) hoặc Từ chối (reject)
+        // B4: xử lý theo hành động Duyệt (approve), Từ chối (reject) hoặc Chuyển người duyệt (transfer)
         ServiceResult<Void> result;
         String rejectReason = RequestUtil.getTrimmedParam(request, "rejectReason");
 
@@ -102,6 +116,10 @@ public class LeaveRequestReviewServlet extends HttpServlet {
             result = leaveRequestService.approveRequest(managerAccountId, leaveRequestId);
         } else if ("reject".equalsIgnoreCase(action)) {
             result = leaveRequestService.rejectRequest(managerAccountId, leaveRequestId, rejectReason);
+        } else if ("transfer".equalsIgnoreCase(action)) {
+            int toEmployeeId = RequestUtil.getIntParam(request, "toEmployeeId", 0);
+            String note = RequestUtil.getTrimmedParam(request, "note");
+            result = leaveRequestService.transferReviewer(managerAccountId, leaveRequestId, toEmployeeId, note);
         } else {
             RequestUtil.redirect(request, response, "/manager/leave-requests");
             return;
@@ -111,17 +129,25 @@ public class LeaveRequestReviewServlet extends HttpServlet {
         if (result.isSuccess()) {
             String successMsg = "approve".equalsIgnoreCase(action)
                     ? "Đã duyệt đơn nghỉ phép thành công."
-                    : "Đã từ chối đơn nghỉ phép.";
+                    : ("reject".equalsIgnoreCase(action)
+                            ? "Đã từ chối đơn nghỉ phép."
+                            : "Đã chuyển người duyệt thành công.");
             RequestUtil.setFlashToast(request, "success", successMsg);
             RequestUtil.redirect(request, response, "/manager/leave-requests");
             return;
         }
 
-        // B6: nếu thất bại (VD vi phạm min staffing hoặc thiếu lý do), nạp lại form kèm lỗi
+        // B6: nếu thất bại (VD vi phạm min staffing, thiếu lý do hoặc không có quyền), nạp lại form kèm lỗi
         ServiceResult<LeaveRequestDAO.LeaveReviewDetail> detailResult
-                = leaveRequestService.getReviewDetail(leaveRequestId);
+                = leaveRequestService.getReviewDetail(leaveRequestId, managerAccountId);
         if (detailResult.isSuccess()) {
             request.setAttribute("item", detailResult.getData());
+        }
+
+        ServiceResult<java.util.List<LeaveRequestDAO.EligibleReviewer>> reviewersResult
+                = leaveRequestService.getEligibleReviewers(managerAccountId);
+        if (reviewersResult.isSuccess()) {
+            request.setAttribute("eligibleReviewers", reviewersResult.getData());
         }
 
         // Đảm bảo truyền lại csrfToken cho form hiển thị lại
