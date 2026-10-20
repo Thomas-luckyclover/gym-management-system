@@ -806,6 +806,10 @@ public class LeaveRequestDAO {
                     && leaveRequest.getLeaveDate().isBefore(java.time.LocalDate.now());
         }
 
+        public boolean getLeaveDatePassed() {
+            return isLeaveDatePassed();
+        }
+
         // Bảng dự báo định biên chi tiết từng ca (màn #27, UC-15)
         private List<ShiftStaffingRow> staffingRows;
 
