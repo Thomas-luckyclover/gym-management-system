@@ -173,6 +173,42 @@
                 </p>
                 <button type="button" id="btnToggleReason" class="btn-toggle-reason" onclick="toggleReasonClamp()">Xem thêm</button>
               </div>
+
+              <%-- Kết quả xử lý đơn (nếu đã duyệt hoặc từ chối) --%>
+              <c:if test="${item.leaveRequest.rejected}">
+                <div style="margin-top:var(--space-4);padding:var(--space-3) var(--space-4);border-radius:var(--radius-md);background-color:rgba(239,68,68,0.1);border:1px solid rgba(239,68,68,0.3)">
+                  <div style="font-weight:600;color:var(--color-danger);display:flex;align-items:center;gap:var(--space-2)">
+                    <i class="fa-solid fa-circle-xmark"></i>
+                    <span>Đơn đã bị từ chối</span>
+                    <c:if test="${not empty item.reviewerName}">
+                      <span style="font-weight:normal;font-size:var(--font-size-xs)">bởi <c:out value="${item.reviewerName}" /></span>
+                    </c:if>
+                    <c:if test="${not empty item.leaveRequest.reviewedAt}">
+                      <span style="font-weight:normal;font-size:var(--font-size-xs)">(${gms:formatDateTime(item.leaveRequest.reviewedAt)})</span>
+                    </c:if>
+                  </div>
+                  <c:if test="${not empty item.leaveRequest.rejectReason}">
+                    <div style="margin-top:var(--space-2);font-size:var(--font-size-sm);color:var(--color-text)">
+                      <b>Lý do từ chối:</b> <c:out value="${item.leaveRequest.rejectReason}" />
+                    </div>
+                  </c:if>
+                </div>
+              </c:if>
+
+              <c:if test="${item.leaveRequest.approved}">
+                <div style="margin-top:var(--space-4);padding:var(--space-3) var(--space-4);border-radius:var(--radius-md);background-color:rgba(16,185,129,0.1);border:1px solid rgba(16,185,129,0.3)">
+                  <div style="font-weight:600;color:var(--color-success);display:flex;align-items:center;gap:var(--space-2)">
+                    <i class="fa-solid fa-circle-check"></i>
+                    <span>Đơn đã được phê duyệt</span>
+                    <c:if test="${not empty item.reviewerName}">
+                      <span style="font-weight:normal;font-size:var(--font-size-xs)">bởi <c:out value="${item.reviewerName}" /></span>
+                    </c:if>
+                    <c:if test="${not empty item.leaveRequest.reviewedAt}">
+                      <span style="font-weight:normal;font-size:var(--font-size-xs)">(${gms:formatDateTime(item.leaveRequest.reviewedAt)})</span>
+                    </c:if>
+                  </div>
+                </div>
+              </c:if>
             </div>
 
             <%-- Card 2: Kiểm tra điều kiện duyệt (Review Checks) --%>
