@@ -302,4 +302,26 @@ public class PersonDAO {
                 }
         }
 
+        /**
+         * Nhả số điện thoại và email (IsReleased = 1) chỉ khi Person không còn bất kỳ vai trò nào hoạt động
+         * (không còn hồ sơ khách hàng chưa Inactive, không còn hồ sơ nhân viên Working) - DBR-28, CBR-23.
+         *
+         * @param conn     Connection tham gia transaction
+         * @param personId mã Person
+         * @return true nếu có dòng được cập nhật thành IsReleased = 1
+         * @throws SQLException khi truy vấn gặp lỗi
+         */
+        public boolean releasePersonContactIfNoActiveRoles(Connection conn, int personId) throws SQLException {
+                String sql = "UPDATE Persons SET IsReleased = 1 "
+                                + "WHERE PersonId = ? "
+                                + "AND NOT EXISTS (SELECT 1 FROM Customers WHERE PersonId = Persons.PersonId AND Status <> 'Inactive') "
+                                + "AND NOT EXISTS (SELECT 1 FROM Employees WHERE PersonId = Persons.PersonId AND Status = 'Working')";
+
+                try (PreparedStatement stmt = conn.prepareStatement(sql)) {
+                        stmt.setInt(1, personId);
+                        return stmt.executeUpdate() > 0;
+                }
+        }
+
 }
+
