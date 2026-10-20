@@ -412,6 +412,9 @@ public class LeaveRequestService {
             if (!request.isPending()) {
                 return ServiceResult.fail("Đơn này đã được xử lý rồi.");
             }
+            if (request.getLeaveDate() != null && request.getLeaveDate().isBefore(LocalDate.now())) {
+                return ServiceResult.fail("Không thể duyệt đơn nghỉ phép của ngày đã qua.");
+            }
 
             // B3: tìm thông tin nhân viên của Manager (lấy EmployeeId để lưu người duyệt)
             Employee manager = findEmployeeForAccount(managerAccountId);

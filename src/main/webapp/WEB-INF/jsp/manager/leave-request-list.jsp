@@ -291,6 +291,7 @@
                           </c:choose>
                         </td>
 
+                        <td>
                           <%-- Đơn Pending luôn cho phép Manager vào Xử lý (kể cả quá hạn duyệt) --%>
                           <c:set var="canProcess" value="${item.status.dbValue == 'Pending'}" />
                           <a class="btn btn-sm ${canProcess ? 'btn-primary' : 'btn-outline'}"

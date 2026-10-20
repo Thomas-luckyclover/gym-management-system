@@ -120,8 +120,14 @@
             </div>
           </c:if>
 
-          <%-- Đơn Pending đã quá hạn duyệt: hiện cảnh báo nhắc nhở, Manager vẫn có thể xem xét duyệt/từ chối --%>
-          <c:if test="${item.leaveRequest.pending and item.overdue}">
+          <%-- Đơn Pending có ngày nghỉ đã qua hoặc đã quá hạn duyệt: hiện cảnh báo nhắc nhở --%>
+          <c:if test="${item.leaveRequest.pending and item.leaveDatePassed}">
+            <div class="alert-banner danger" style="margin-bottom:var(--space-5);background:var(--color-danger-tint, #fef2f2);border:1px solid var(--color-danger, #ef4444);color:var(--color-danger-ink, #991b1b);padding:var(--space-3) var(--space-4);border-radius:var(--radius-md);display:flex;align-items:center;gap:var(--space-3);">
+              <i class="fa-solid fa-circle-exclamation" aria-hidden="true"></i>
+              <span>Ngày nghỉ của đơn này (${gms:formatDate(item.leaveRequest.leaveDate)}) đã trôi qua. Bạn không thể phê duyệt đơn này nữa, chỉ có thể từ chối đơn.</span>
+            </div>
+          </c:if>
+          <c:if test="${item.leaveRequest.pending and not item.leaveDatePassed and item.overdue}">
             <div class="alert-banner warning" style="margin-bottom:var(--space-5);background:var(--color-warning-tint, #fffbeb);border:1px solid var(--color-warning, #f59e0b);color:var(--color-warning-ink, #92400e);padding:var(--space-3) var(--space-4);border-radius:var(--radius-md);display:flex;align-items:center;gap:var(--space-3);">
               <i class="fa-solid fa-triangle-exclamation" aria-hidden="true"></i>
               <span>Đơn này đã quá hạn duyệt quy định (${gms:formatDateTime(item.approvalDeadline)}). Bạn vẫn có thể xem xét phê duyệt hoặc từ chối đơn.</span>
@@ -207,6 +213,15 @@
                 <p>Nhân viên được phép nghỉ đúng ngày và ca đã đăng ký.</p>
 
                 <c:choose>
+                  <c:when test="${item.leaveDatePassed}">
+                    <button class="btn btn-primary"
+                            type="button"
+                            disabled
+                            title="Không thể duyệt do ngày nghỉ đã trôi qua">
+                      <i class="fa-solid fa-ban" aria-hidden="true"></i>
+                      Ngày nghỉ đã qua
+                    </button>
+                  </c:when>
                   <c:when test="${item.minStaffRequired > 0 and item.remainingStaff < item.minStaffRequired}">
                     <button class="btn btn-primary"
                             type="button"

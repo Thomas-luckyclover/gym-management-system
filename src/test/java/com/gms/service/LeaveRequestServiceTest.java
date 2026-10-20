@@ -200,12 +200,34 @@ class LeaveRequestServiceTest {
     // ===== Kiểm thử duyệt đơn (approveRequest - UC-15, CBR-85) =====
 
     @Test
-    void approveRequest_notBlockedByDeadline_whenOverdue() throws Exception {
-        // Đơn quá hạn duyệt nhưng Manager vẫn có quyền xem xét xử lý, không bị hard block
+    void approveRequest_fails_whenLeaveDatePassed() throws Exception {
         LeaveRequest req = new LeaveRequest();
         req.setLeaveRequestId(101);
         req.setStatus(LeaveRequest.Status.PENDING);
-        req.setLeaveDate(LocalDate.now().minusDays(1));
+        req.setLeaveDate(LocalDate.now().minusDays(1)); // Ngày nghỉ đã qua
+        req.setSubmittedAt(LocalDateTime.now().minusDays(5));
+        req.setShiftType(LeaveRequest.ShiftType.MORNING);
+
+        LeaveRequestDAO.LeaveReviewDetail detail = new LeaveRequestDAO.LeaveReviewDetail(
+                req, "NV001", "Nguyễn Văn A", "PT", null, null
+        );
+
+        when(leaveRequestDAO.findReviewDetail(101)).thenReturn(detail);
+
+        var result = service.approveRequest(1, 101);
+
+        assertFalse(result.isSuccess());
+        assertEquals("Không thể duyệt đơn nghỉ phép của ngày đã qua.", result.getMessage());
+        verify(leaveRequestDAO, never()).approve(any(), anyInt(), anyInt());
+    }
+
+    @Test
+    void approveRequest_notBlockedByDeadline_whenOverdue() throws Exception {
+        // Đơn quá hạn duyệt nhưng ngày nghỉ trong tương lai: Manager vẫn có quyền xem xét xử lý, không bị hard block
+        LeaveRequest req = new LeaveRequest();
+        req.setLeaveRequestId(101);
+        req.setStatus(LeaveRequest.Status.PENDING);
+        req.setLeaveDate(LocalDate.now().plusDays(2));
         req.setSubmittedAt(LocalDateTime.now().minusDays(5));
         req.setShiftType(LeaveRequest.ShiftType.MORNING);
 
@@ -220,6 +242,7 @@ class LeaveRequestServiceTest {
 
         assertFalse(result.isSuccess());
         assertFalse(result.getMessage().contains("quá hạn duyệt"));
+        assertNotEquals("Không thể duyệt đơn nghỉ phép của ngày đã qua.", result.getMessage());
     }
 
     @Test

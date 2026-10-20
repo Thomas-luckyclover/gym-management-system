@@ -801,6 +801,11 @@ public class LeaveRequestDAO {
         public boolean isOverdue() { return overdue; }
         public void setOverdue(boolean overdue) { this.overdue = overdue; }
 
+        public boolean isLeaveDatePassed() {
+            return leaveRequest != null && leaveRequest.getLeaveDate() != null
+                    && leaveRequest.getLeaveDate().isBefore(java.time.LocalDate.now());
+        }
+
         // Bảng dự báo định biên chi tiết từng ca (màn #27, UC-15)
         private List<ShiftStaffingRow> staffingRows;
 
