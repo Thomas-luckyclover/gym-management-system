@@ -197,11 +197,11 @@ public class CustomerDAO {
      */
     public List<ActiveSubscriptionSummary> findActiveSubscriptionsByCustomer(Connection conn, int customerId) throws SQLException {
         List<ActiveSubscriptionSummary> list = new ArrayList<>();
-        String sql = "SELECT s.SubscriptionId, p.PackageName, p.PackageType, s.StartDate, s.EndDate, s.Status, "
+        String sql = "SELECT s.SubscriptionId, COALESCE(o.PackageNameSnapshot, p.PackageName) AS PackageName, p.PackageType, s.StartDate, s.EndDate, s.Status, "
                 + "CASE WHEN o.PartnerCustomerId = ? THEN 1 ELSE 0 END AS IsPartner "
                 + "FROM Subscriptions s "
                 + "JOIN Orders o ON o.OrderId = s.OrderId "
-                + "JOIN Packages p ON p.PackageId = s.PackageId "
+                + "JOIN Packages p ON p.PackageId = o.PackageId "
                 + "WHERE (s.CustomerId = ? OR o.PartnerCustomerId = ?) "
                 + "AND s.Status IN ('Active', 'Frozen') "
                 + "AND s.EndDate >= CAST(SYSDATETIME() AS DATE) "
@@ -233,7 +233,7 @@ public class CustomerDAO {
      */
     public List<ScheduledSessionSummary> findScheduledSessionsByCustomer(Connection conn, int customerId) throws SQLException {
         List<ScheduledSessionSummary> list = new ArrayList<>();
-        String sql = "SELECT ss.SessionId, ss.SlotDate, ts.StartTime, pp.FullName AS PtName "
+        String sql = "SELECT ss.SessionId, ts.SlotDate, ts.StartTime, pp.FullName AS PtName "
                 + "FROM Sessions ss "
                 + "JOIN Subscriptions s ON s.SubscriptionId = ss.SubscriptionId "
                 + "JOIN Orders o ON o.OrderId = s.OrderId "
@@ -242,7 +242,7 @@ public class CustomerDAO {
                 + "JOIN Persons pp ON pp.PersonId = pe.PersonId "
                 + "WHERE (s.CustomerId = ? OR o.PartnerCustomerId = ?) "
                 + "AND ss.Status = 'Scheduled' "
-                + "ORDER BY ss.SlotDate ASC, ts.StartTime ASC";
+                + "ORDER BY ts.SlotDate ASC, ts.StartTime ASC";
 
         try (PreparedStatement stmt = conn.prepareStatement(sql)) {
             stmt.setInt(1, customerId);
