@@ -60,7 +60,7 @@
 
       <%-- Nhóm: Hội viên --%>
       <div class="nav-group">Hội viên</div>
-      <a href="#"
+      <a href="${pageContext.request.contextPath}/receptionist/customers"
          class="nav-link<c:if test="${activeNav == 'customers'}"> active</c:if>"
          <c:if test="${activeNav == 'customers'}">aria-current="page"</c:if>>
         <svg viewBox="0 0 24 24" aria-hidden="true">
