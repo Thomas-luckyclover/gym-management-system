@@ -1,17 +1,15 @@
 <%@ page pageEncoding="UTF-8" %>
-<%-- p: MyPtPackageView; JS filterPackages đọc data-package-state/type, không thay đổi gói đang xem. --%>
-<a class="booking-package" href="${pageUrl}?id=${p.subscriptionId}" data-package-item data-package-state="${p.active ? 'active' : 'ended'}" data-package-type="${p.couple ? 'couple' : 'personal'}" aria-current="${booking.selectedPackage.subscriptionId eq p.subscriptionId ? 'page' : 'false'}">
-    <span class="booking-package-title">
-        <strong>
-            <c:out value="${p.packageName}" />
-        </strong>
-        <span>#${p.subscriptionId}</span>
+<%-- ===== 1 thẻ gói PT ở cột trái: p (MyPtPackageView) từ vòng lặp của my-bookings.jsp ===== --%>
+<%-- Không hiện mã gói (#82): khách không dùng mã này, dễ nhầm với số thứ tự buổi #1, #2… --%>
+<a class="booking-package" href="${pageUrl}?id=${p.subscriptionId}" aria-current="${booking.selectedPackage.subscriptionId eq p.subscriptionId ? 'page' : 'false'}">
+    <strong class="booking-package-name"><c:out value="${p.packageName}" /></strong>
+    <span class="booking-package-meta">
+        <span class="booking-tag"><c:out value="${p.typeLabel}" /></span>
+        PT <c:out value="${p.ptName}" />
     </span>
-    <span>
-        <c:out value="${p.typeLabel}" /> · PT <c:out value="${p.ptName}" />
-    </span>
-    <small>${gms:formatDate(p.startDate)} – ${gms:formatDate(p.endDate)}</small>
-    <progress value="${p.pastSessions}" max="${p.totalSessions gt 0 ? p.totalSessions : 1}" aria-label="Số buổi có ngày tập đã qua">
-    </progress>
-    <small>Đã qua ${p.pastSessions}/${p.totalSessions} buổi</small>
+    <span class="booking-package-meta">${gms:formatDate(p.startDate)} – ${gms:formatDate(p.endDate)}</span>
+    <%-- pastSessions = số buổi có ngày tập trước hôm nay (gồm cả vắng/hủy) → "còn" = tổng − đã qua. --%>
+    <progress value="${p.pastSessions}" max="${p.totalSessions gt 0 ? p.totalSessions : 1}" aria-label="Đã qua ${p.pastSessions} trên ${p.totalSessions} buổi"></progress>
+    <span class="booking-package-meta">${p.pastSessions}/${p.totalSessions} buổi đã qua<c:if test="${p.active}"> · <b>còn ${p.totalSessions - p.pastSessions}</b></c:if></span>
 </a>
+<%-- ===== KẾT THÚC thẻ gói ===== --%>
