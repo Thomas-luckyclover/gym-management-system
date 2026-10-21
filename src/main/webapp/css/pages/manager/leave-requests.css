@@ -1015,3 +1015,16 @@
     border-bottom-right-radius: var(--radius-lg);
 }
 
+
+/* Gợi ý và danh sách buổi chặn duyệt trên hai màn BF-05. */
+.leave-help {
+  color: var(--color-text-soft);
+  font-size: var(--font-size-xs);
+  margin: var(--space-3) var(--space-4);
+}
+
+.leave-conflicts {
+  margin: var(--space-3) 0;
+  padding-left: var(--space-5);
+  color: var(--color-danger-ink);
+}

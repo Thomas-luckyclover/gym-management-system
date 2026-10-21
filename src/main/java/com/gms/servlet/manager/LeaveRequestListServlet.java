@@ -71,15 +71,6 @@ public class LeaveRequestListServlet extends HttpServlet {
         ServiceResult<Map<String, Integer>> countResult
                 = leaveRequestService.getStatusCounts(countFilter);
 
-        if (managerAccountId != null) {
-            ServiceResult<java.util.List<com.gms.dao.LeaveRequestDAO.EligibleReviewer>> reviewersResult
-                    = leaveRequestService.getEligibleReviewers(managerAccountId);
-            if (reviewersResult.isSuccess()) {
-                request.setAttribute("eligibleReviewers", reviewersResult.getData());
-            }
-        }
-        request.setAttribute("csrfToken", RequestUtil.getOrCreateCsrfToken(request.getSession(true)));
-
         // B3: đặt dữ liệu cho JSP; lỗi thì dùng trang rỗng để màn vẫn dựng được
         request.setAttribute(
                 "leavePage",

@@ -129,6 +129,7 @@
 
         </div>
 
+        <p class="leave-help">Ưu tiên hạn xử lý gần nhất. Kiểm tra là snapshot; hệ thống kiểm tra lại trước khi ghi quyết định.</p>
         <%-- ===== Bảng danh sách đơn nghỉ phép ===== --%>
         <section class="panel leave-panel" style="padding:0;overflow:hidden">
 
@@ -146,13 +147,14 @@
                       <th style="width:20%">Thời gian nghỉ</th>
                       <th style="width:13%">Loại nghỉ</th>
                       <th style="width:14%">Trạng thái</th>
+                      <th>Kiểm tra</th>
                       <th style="width:14%">Người duyệt</th>
                       <th style="width:14%;text-align:right">Thao tác</th>
                     </tr>
                   </thead>
                   <tbody>
                     <c:forEach var="item" items="${leavePage.items}">
-                      <tr class="${item.urgent ? 'leave-row-urgent' : ''}">
+                      <tr class="${item.urgent or item.overdue ? 'leave-row-urgent' : ''}">
 
                         <%-- Cột 1: Nhân viên --%>
                         <td>
@@ -210,6 +212,9 @@
                               item.status.dbValue == 'Approved' ? 'badge-success' : 'badge-danger'}">
                             <c:out value="${item.status.displayName}" />
                           </span>
+                          <c:if test="${item.status.dbValue == 'Pending' and (item.urgent or item.overdue)}">
+                            <span class="badge badge-danger">${item.overdue ? 'Quá hạn' : 'Sắp quá hạn'}</span>
+                          </c:if>
                           <c:if test="${item.autoRejected}">
                             <div style="font-size:10px;color:var(--color-danger-ink);margin-top:2px">Quá hạn duyệt SLA</div>
                           </c:if>
@@ -220,6 +225,14 @@
                           </c:if>
                         </td>
 
+                        <td title="<c:out value='${item.checkMessage}' />">
+                          <c:choose>
+                            <c:when test="${item.status.dbValue == 'Pending'}">
+                              <span class="badge ${item.checkSummary == 'Đạt' ? 'badge-success' : 'badge-warning'}"><c:out value="${item.checkSummary}" /></span>
+                            </c:when>
+                            <c:otherwise>Đã xử lý</c:otherwise>
+                          </c:choose>
+                        </td>
                         <%-- Cột 5: Người duyệt / Người được giao --%>
                         <td>
                           <c:choose>
@@ -239,48 +252,10 @@
 
                         <%-- Cột 6: Thao tác --%>
                         <td style="text-align:right">
-                          <c:choose>
-                            <c:when test="${item.status.dbValue == 'Pending' and item.canAct}">
-                              <div class="row-action-group" style="justify-content:flex-end">
-                                <%-- Nút Duyệt nhanh --%>
-                                <button type="button"
-                                        class="btn-icon-action success"
-                                        title="Duyệt nhanh"
-                                        onclick="openQuickApproveModal('${item.leaveRequestId}', '<c:out value="${item.fullName}" />', '${gms:formatDate(item.fromDate)}', '${item.days}')">
-                                  <i class="fa-solid fa-check" aria-hidden="true"></i>
-                                </button>
-
-                                <%-- Nút Từ chối --%>
-                                <button type="button"
-                                        class="btn-icon-action danger"
-                                        title="Từ chối đơn"
-                                        onclick="openRejectModal('${item.leaveRequestId}', '<c:out value="${item.fullName}" />')">
-                                  <i class="fa-solid fa-xmark" aria-hidden="true"></i>
-                                </button>
-
-                                <%-- Nút Chuyển người duyệt --%>
-                                <button type="button"
-                                        class="btn-icon-action"
-                                        title="Chuyển người duyệt"
-                                        onclick="openTransferModal('${item.leaveRequestId}', '<c:out value="${item.fullName}" />')">
-                                  <i class="fa-solid fa-share" aria-hidden="true"></i>
-                                </button>
-
-                                <%-- Nút Xem chi tiết --%>
-                                <a class="btn-icon-action"
-                                   title="Xem chi tiết đơn"
-                                   href="${pageContext.request.contextPath}/manager/leave-requests/review?id=${item.leaveRequestId}">
-                                  <i class="fa-solid fa-arrow-right" aria-hidden="true"></i>
-                                </a>
-                              </div>
-                            </c:when>
-                            <c:otherwise>
-                              <a class="btn btn-sm btn-outline"
-                                 href="${pageContext.request.contextPath}/manager/leave-requests/review?id=${item.leaveRequestId}">
-                                Xem
-                              </a>
-                            </c:otherwise>
-                          </c:choose>
+                          <a class="btn btn-sm btn-outline"
+                             href="${pageContext.request.contextPath}/manager/leave-requests/review?id=${item.leaveRequestId}">
+                            Xem chi tiết
+                          </a>
                         </td>
 
                       </tr>
@@ -331,142 +306,5 @@
     </div>
   </div>
 
-  <%-- ===== MODAL 1: DUYỆT NHANH ===== --%>
-  <div id="modalQuickApprove" class="gms-modal" role="dialog" aria-modal="true" aria-labelledby="modalQuickApproveTitle">
-    <div class="gms-modal-dialog">
-      <form action="${pageContext.request.contextPath}/manager/leave-requests/review" method="post">
-        <input type="hidden" name="csrfToken" value="${csrfToken}">
-        <input type="hidden" name="action" value="approve">
-        <input type="hidden" name="leaveRequestId" id="quickApproveLeaveRequestId">
-
-        <div class="gms-modal-header">
-          <h3 class="gms-modal-title" id="modalQuickApproveTitle">Duyệt nhanh đơn nghỉ phép</h3>
-          <button type="button" class="gms-modal-close" onclick="closeModal('modalQuickApprove')">&times;</button>
-        </div>
-        <div class="gms-modal-body">
-          <p id="quickApproveMessage">Bạn có chắc chắn muốn duyệt đơn nghỉ phép này?</p>
-          <div style="font-size:var(--font-size-xs);color:var(--color-text-soft)">
-            Hệ thống sẽ cập nhật trạng thái đơn thành <b>Đã duyệt</b> và gửi thông báo đến nhân viên.
-          </div>
-        </div>
-        <div class="gms-modal-footer">
-          <button type="button" class="btn btn-ghost" onclick="closeModal('modalQuickApprove')">Hủy</button>
-          <button type="submit" class="btn btn-primary">Xác nhận duyệt</button>
-        </div>
-      </form>
-    </div>
-  </div>
-
-  <%-- ===== MODAL 2: TỪ CHỐI ĐƠN ===== --%>
-  <div id="modalReject" class="gms-modal" role="dialog" aria-modal="true" aria-labelledby="modalRejectTitle">
-    <div class="gms-modal-dialog">
-      <form action="${pageContext.request.contextPath}/manager/leave-requests/review" method="post">
-        <input type="hidden" name="csrfToken" value="${csrfToken}">
-        <input type="hidden" name="action" value="reject">
-        <input type="hidden" name="leaveRequestId" id="rejectLeaveRequestId">
-
-        <div class="gms-modal-header">
-          <h3 class="gms-modal-title" id="modalRejectTitle">Từ chối đơn nghỉ phép</h3>
-          <button type="button" class="gms-modal-close" onclick="closeModal('modalReject')">&times;</button>
-        </div>
-        <div class="gms-modal-body">
-          <p id="rejectEmpNameText" style="font-weight:600;margin-bottom:var(--space-3)"></p>
-          <div class="field">
-            <label class="field-label" for="rejectReasonInput">Lý do từ chối <span aria-hidden="true">*</span></label>
-            <textarea id="rejectReasonInput"
-                      name="rejectReason"
-                      class="field-input"
-                      rows="3"
-                      minlength="5"
-                      maxlength="500"
-                      placeholder="Nhập lý do từ chối cụ thể (5–500 ký tự)..."
-                      required></textarea>
-          </div>
-        </div>
-        <div class="gms-modal-footer">
-          <button type="button" class="btn btn-ghost" onclick="closeModal('modalReject')">Hủy</button>
-          <button type="submit" class="btn btn-danger">Từ chối đơn</button>
-        </div>
-      </form>
-    </div>
-  </div>
-
-  <%-- ===== MODAL 3: CHUYỂN NGƯỜI DUYỆT ===== --%>
-  <div id="modalTransfer" class="gms-modal" role="dialog" aria-modal="true" aria-labelledby="modalTransferTitle">
-    <div class="gms-modal-dialog">
-      <form action="${pageContext.request.contextPath}/manager/leave-requests/review" method="post">
-        <input type="hidden" name="csrfToken" value="${csrfToken}">
-        <input type="hidden" name="action" value="transfer">
-        <input type="hidden" name="leaveRequestId" id="transferLeaveRequestId">
-
-        <div class="gms-modal-header">
-          <h3 class="gms-modal-title" id="modalTransferTitle">Chuyển quyền duyệt đơn</h3>
-          <button type="button" class="gms-modal-close" onclick="closeModal('modalTransfer')">&times;</button>
-        </div>
-        <div class="gms-modal-body">
-          <p id="transferEmpNameText" style="font-weight:600;margin-bottom:var(--space-3)"></p>
-
-          <div class="field">
-            <label class="field-label" for="transferToEmployeeId">Chọn người tiếp nhận <span aria-hidden="true">*</span></label>
-            <select name="toEmployeeId" id="transferToEmployeeId" class="field-input" required>
-              <option value="">-- Chọn Quản lý --</option>
-              <c:forEach var="rev" items="${eligibleReviewers}">
-                <option value="${rev.employeeId}">
-                  <c:out value="${rev.fullName}" /> (<c:out value="${rev.employeeCode}" />)
-                </option>
-              </c:forEach>
-            </select>
-          </div>
-
-          <div class="field" style="margin-top:var(--space-3)">
-            <label class="field-label" for="transferNote">Ghi chú chuyển giao (tùy chọn)</label>
-            <textarea id="transferNote"
-                      name="note"
-                      class="field-input"
-                      rows="2"
-                      maxlength="200"
-                      placeholder="Lý do chuyển duyệt (tối đa 200 ký tự)..."></textarea>
-          </div>
-        </div>
-        <div class="gms-modal-footer">
-          <button type="button" class="btn btn-ghost" onclick="closeModal('modalTransfer')">Hủy</button>
-          <button type="submit" class="btn btn-primary">Xác nhận chuyển</button>
-        </div>
-      </form>
-    </div>
-  </div>
-
-  <script>
-    function closeModal(modalId) {
-      document.getElementById(modalId).classList.remove('show');
-    }
-
-    function openQuickApproveModal(id, name, date, days) {
-      document.getElementById('quickApproveLeaveRequestId').value = id;
-      document.getElementById('quickApproveMessage').innerHTML = 'Xác nhận duyệt đơn nghỉ phép của <b>' + name + '</b> (ngày ' + date + ' - ' + days + ' ngày)?';
-      document.getElementById('modalQuickApprove').classList.add('show');
-    }
-
-    function openRejectModal(id, name) {
-      document.getElementById('rejectLeaveRequestId').value = id;
-      document.getElementById('rejectEmpNameText').innerText = 'Nhân viên: ' + name;
-      document.getElementById('rejectReasonInput').value = '';
-      document.getElementById('modalReject').classList.add('show');
-    }
-
-    function openTransferModal(id, name) {
-      document.getElementById('transferLeaveRequestId').value = id;
-      document.getElementById('transferEmpNameText').innerText = 'Nhân viên: ' + name;
-      document.getElementById('transferNote').value = '';
-      document.getElementById('modalTransfer').classList.add('show');
-    }
-
-    // Đóng modal khi nhấn ra ngoài
-    window.addEventListener('click', function(e) {
-      if (e.target.classList.contains('gms-modal')) {
-        e.target.classList.remove('show');
-      }
-    });
-  </script>
 </body>
 </html>

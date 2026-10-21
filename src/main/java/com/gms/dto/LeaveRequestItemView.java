@@ -11,6 +11,15 @@ import java.time.LocalDateTime;
  */
 public class LeaveRequestItemView {
 
+    // Service kiểm tra snapshot của đơn Pending; JSP hiển thị trong cột Kiểm tra, không dùng làm quyền duyệt.
+    private String checkSummary;
+    private String checkMessage;
+
+    public String getCheckSummary() { return checkSummary; }
+    public void setCheckSummary(String summary) { this.checkSummary = summary; }
+    public String getCheckMessage() { return checkMessage; }
+    public void setCheckMessage(String message) { this.checkMessage = message; }
+
     // DAO: LeaveRequests.LeaveRequestId.
     private final int leaveRequestId;
 

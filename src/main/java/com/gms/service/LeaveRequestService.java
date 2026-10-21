@@ -268,7 +268,7 @@ public class LeaveRequestService {
     private LeaveRequestItemView toItemView(
             LeaveRequestDAO.LeaveRequestRow row,
             LocalTime approvalTime,
-            LocalDateTime now) {
+            LocalDateTime now) throws SQLException {
 
         LeaveRequest request = row.getLeaveRequest();
 
@@ -320,6 +320,13 @@ public class LeaveRequestService {
         view.setDays(request.getDays());
         view.setAssignedToName(row.getAssignedToName());
         view.setCanAct(row.isCanAct());
+        if (request.isPending()) {
+            try (Connection connection = DBContext.getConnection()) {
+                ServiceResult<Void> checks = validateApproval(connection, request, row.getPosition());
+                view.setCheckSummary(checks.isSuccess() ? "Đạt" : "Cần xử lý");
+                view.setCheckMessage(checks.isSuccess() ? "Snapshot hiện tại; hệ thống kiểm tra lại khi duyệt." : checks.getMessage());
+            }
+        }
         return view;
     }
 
