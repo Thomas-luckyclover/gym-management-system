@@ -260,4 +260,39 @@ class LeaveApprovalSafetyTest {
         detail.setCanAct(false);
         assertFalse(detail.isCanApprove());
     }
+
+    @Test
+    void listDoesNotMarkAResignedEmployeeAsPassing() throws Exception {
+        when(configs.getString(SystemConfigService.LEAVE_APPROVED_DEADLINE)).thenReturn("20:00");
+        when(dao.countByFilter(any())).thenReturn(1);
+        when(dao.findManagerPage(any(), eq(0), eq(20), isNull())).thenReturn(java.util.List.of(
+                new LeaveRequestDAO.LeaveRequestRow(request, "NV-0050", "PT test", "PT", null, null)));
+        when(dao.findWorkingPosition(connection, 50)).thenReturn(null);
+        try (MockedStatic<DBContext> database = mockStatic(DBContext.class)) {
+            database.when(DBContext::getConnection).thenReturn(connection);
+            var result = service.getManagerPage("", "Pending", 1, 20);
+            assertTrue(result.isSuccess());
+            var item = result.getData().getItems().get(0);
+            assertEquals("Cần xử lý", item.getCheckSummary());
+            assertTrue(item.getCheckMessage().contains("không còn"));
+        }
+    }
+
+    @Test
+    void reviewBlocksConfirmationWhenTheEmployeeHasResigned() throws Exception {
+        stubManagerAndCurrentRequest();
+        when(configs.getString(SystemConfigService.LEAVE_APPROVED_DEADLINE)).thenReturn("20:00");
+        when(dao.findReviewDetail(12, 7)).thenReturn(new LeaveRequestDAO.LeaveReviewDetail(
+                request, "NV-0050", "PT test", "PT", null, null));
+        when(dao.findWorkingPosition(connection, 50)).thenReturn(null);
+        try (MockedStatic<DBContext> database = mockStatic(DBContext.class)) {
+            database.when(DBContext::getConnection).thenReturn(connection);
+            var result = service.getReviewDetail(12, 10);
+            assertTrue(result.isSuccess());
+            var staffing = result.getData().getChecks().get(1);
+            assertFalse(staffing.isOk());
+            assertTrue(staffing.getMessage().contains("đã nghỉ việc"));
+            assertFalse(result.getData().isCanApprove());
+        }
+    }
 }

@@ -322,9 +322,11 @@ public class LeaveRequestService {
         view.setCanAct(row.isCanAct());
         if (request.isPending()) {
             try (Connection connection = DBContext.getConnection()) {
-                ServiceResult<Void> checks = validateApproval(connection, request, row.getPosition());
+                // Trạng thái Working phải giống bước duyệt thật, không chỉ dùng chức vụ trên dòng danh sách.
+                String workingPosition = leaveRequestDAO.findWorkingPosition(connection, request.getEmployeeId());
+                ServiceResult<Void> checks = validateApproval(connection, request, workingPosition);
                 view.setCheckSummary(checks.isSuccess() ? "Đạt" : "Cần xử lý");
-                view.setCheckMessage(checks.isSuccess() ? "Snapshot hiện tại; hệ thống kiểm tra lại khi duyệt." : checks.getMessage());
+                view.setCheckMessage(checks.isSuccess() ? "Chưa phát hiện vướng mắc. Mở chi tiết để kiểm tra trước khi duyệt." : checks.getMessage());
             }
         }
         return view;
@@ -571,6 +573,13 @@ public class LeaveRequestService {
             c2.setMessage("Đạt trên toàn khoảng nghỉ: còn ít nhất " + remainingStaff + " " + posName + "; tối thiểu " + minRequired + ". Giả định nhân viên Working làm cả hai ca.");
         } else {
             c2.setMessage("Có ngày/ca thiếu người: còn " + remainingStaff + ", tối thiểu " + minRequired + " " + posName + ". Xem từng ngày/ca bên dưới và bố trí người trước khi duyệt.");
+        }
+        try (Connection connection = DBContext.getConnection()) {
+            String workingPosition = leaveRequestDAO.findWorkingPosition(connection, req.getEmployeeId());
+            if (!"PT".equals(workingPosition) && !"Receptionist".equals(workingPosition)) {
+                c2.setOk(false);
+                c2.setMessage("Nhân viên đã nghỉ việc hoặc không còn làm PT/Lễ tân. Không thể duyệt đơn này.");
+            }
         }
         list.add(c2);
 
