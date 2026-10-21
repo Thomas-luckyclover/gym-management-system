@@ -11,7 +11,7 @@
   <%@ include file="/WEB-INF/jsp/common/head.jspf" %>
   <title>Quản lý đơn nghỉ phép · Super Gym</title>
   <link rel="stylesheet" href="${pageContext.request.contextPath}/css/pages/auth/account-settings.css">
-  <link rel="stylesheet" href="${pageContext.request.contextPath}/css/pages/manager/leave-request-list.css?v=20261021-near-date">
+  <link rel="stylesheet" href="${pageContext.request.contextPath}/css/pages/manager/leave-request-list.css?v=20261021-near-badge">
   <link rel="stylesheet" href="${pageContext.request.contextPath}/css/pages/auth/notification-bell.css">
   <script src="${pageContext.request.contextPath}/js/pages/auth/notification-bell.js" defer></script>
 </head>
@@ -190,7 +190,10 @@
                             <c:out value="${item.status.displayName}" />
                           </span>
                           <c:if test="${item.nearLeaveDate}">
-                            <span class="leave-near-label">Sắp đến ngày nghỉ</span>
+                            <span class="leave-near-label">
+                              <i class="fa-solid fa-calendar-days" aria-hidden="true"></i>
+                              Sắp đến ngày nghỉ
+                            </span>
                           </c:if>
                         </td>
 
