@@ -727,6 +727,7 @@ public class LeaveRequestService {
                 conn.setAutoCommit(false); // Bắt đầu transaction
 
                 try {
+                    // B4.1: khóa trước khi đọc lại trạng thái, phân công và quỹ phép.
                     leaveRequestDAO.lockDecisionScope(conn);
                     ServiceResult<LeaveRequest> lockedResult = validateDecision(conn, leaveRequestId, manager.getEmployeeId());
                     if (!lockedResult.isSuccess()) {
@@ -735,36 +736,10 @@ public class LeaveRequestService {
                     }
                     request = lockedResult.getData();
                     String position = leaveRequestDAO.findWorkingPosition(conn, request.getEmployeeId());
-                    String shiftType = request.getShiftType().getDbValue();
-
-                    // B4.0: Nếu nhân viên là PT, kiểm tra lại xem có phát sinh buổi dạy Scheduled trùng ca không (CBR-83)
-                    if ("PT".equalsIgnoreCase(position)) {
-                        int scheduledCount = leaveRequestDAO.countScheduledSessions(
-                                conn, request.getEmployeeId(), request.getLeaveDate(), shiftType);
-                        if (scheduledCount > 0) {
-                            conn.rollback();
-                            return ServiceResult.fail(String.format(
-                                    Messages.MSG78_LEAVE_BLOCKED_BY_SESSIONS, scheduledCount));
-                        }
-                    }
-
-                    // B4.1: kiểm tra định biên nhân sự tối thiểu (min-staffing) trong ca
-                    int remaining = leaveRequestDAO.countOnDutyAfterApproval(
-                            conn, request.getLeaveDate(), shiftType, position, leaveRequestId);
-
-                    int minRequired = "PT".equalsIgnoreCase(position)
-                            ? systemConfigService.getInt(SystemConfigService.MIN_PT_PER_SHIFT)
-                            : systemConfigService.getInt(SystemConfigService.MIN_RECEPTIONIST_PER_SHIFT);
-
-                    if (remaining < minRequired) {
+                    ServiceResult<Void> checks = validateApproval(conn, request, position);
+                    if (!checks.isSuccess()) {
                         conn.rollback();
-                        String roleLabel = "PT".equalsIgnoreCase(position) ? "PT" : "lễ tân";
-                        return ServiceResult.fail(String.format(
-                                Messages.MSG79_LEAVE_BREAKS_MIN_STAFFING,
-                                request.getShiftType().getDisplayName(),
-                                request.getLeaveDate(),
-                                minRequired,
-                                roleLabel));
+                        return checks;
                     }
 
                     // B4.2: cập nhật trạng thái đơn thành Approved (WHERE Status = 'Pending')
@@ -1246,6 +1221,67 @@ public class LeaveRequestService {
             return ServiceResult.fail("Đơn này đã được phân công cho người khác duyệt.");
         }
         return ServiceResult.ok(current);
+    }
+
+    ServiceResult<Void> validateApproval(Connection connection, LeaveRequest request, String position) throws SQLException {
+        LocalDate fromDate = request.getFromDate();
+        LocalDate toDate = request.getToDate();
+        if (fromDate == null || toDate == null || toDate.isBefore(fromDate)
+                || java.time.temporal.ChronoUnit.DAYS.between(fromDate, toDate) >= 31
+                || fromDate.getYear() != toDate.getYear() || request.getShiftType() == null
+                || request.getLeaveType() == null
+                || (!fromDate.equals(toDate) && request.getShiftType() != LeaveRequest.ShiftType.FULL_DAY)) {
+            return ServiceResult.fail("Khoảng ngày hoặc ca nghỉ không hợp lệ.");
+        }
+        if (fromDate.isBefore(DateTimeUtil.today())) {
+            return ServiceResult.fail("Không thể duyệt đơn nghỉ phép của ngày đã qua.");
+        }
+        if (!"PT".equals(position) && !"Receptionist".equals(position)) {
+            return ServiceResult.fail("Nhân viên xin nghỉ không còn ở vị trí PT hoặc Lễ tân đang làm việc.");
+        }
+        java.math.BigDecimal days = requestedDays(request);
+        if (request.getDays() == null || request.getDays().compareTo(days) != 0) {
+            return ServiceResult.fail("Số ngày nghỉ không khớp ngày và ca. Vui lòng kiểm tra lại đơn.");
+        }
+        if (request.getLeaveType() == LeaveRequest.LeaveType.ANNUAL) {
+            int quota;
+            try {
+                quota = systemConfigService.getInt(SystemConfigService.LEAVE_ANNUAL_QUOTA);
+            } catch (IllegalStateException e) {
+                return ServiceResult.fail("Chưa cấu hình quỹ phép năm P-23. Không thể duyệt phép năm.");
+            }
+            LeaveBalance balance = leaveRequestDAO.getAnnualBalance(connection, request.getEmployeeId(),
+                    fromDate.getYear(), quota, request.getLeaveRequestId());
+            if (balance.getRemainingDays().compareTo(days) < 0) {
+                return ServiceResult.fail("Vượt quá số phép năm còn lại. Vui lòng kiểm tra quỹ phép và các đơn đang chờ.");
+            }
+        }
+        int minRequired = systemConfigService.getInt("PT".equals(position)
+                ? SystemConfigService.MIN_PT_PER_SHIFT : SystemConfigService.MIN_RECEPTIONIST_PER_SHIFT);
+        for (LocalDate date = fromDate; !date.isAfter(toDate); date = date.plusDays(1)) {
+            String shift = request.getShiftType().getDbValue();
+            if ("PT".equals(position)) {
+                int clashes = leaveRequestDAO.countScheduledSessions(connection, request.getEmployeeId(), date, shift);
+                if (clashes > 0) {
+                    return ServiceResult.fail(DateTimeUtil.formatDate(date) + ": "
+                            + String.format(Messages.MSG78_LEAVE_BLOCKED_BY_SESSIONS, clashes));
+                }
+            }
+            int remaining = leaveRequestDAO.countOnDutyAfterApproval(connection, date, shift, position, request.getLeaveRequestId());
+            if (remaining < minRequired) {
+                return ServiceResult.fail(String.format(Messages.MSG79_LEAVE_BREAKS_MIN_STAFFING,
+                        request.getShiftType().getDisplayName(), date, minRequired, position));
+            }
+        }
+        return ServiceResult.ok(null);
+    }
+
+    private java.math.BigDecimal requestedDays(LeaveRequest request) {
+        if (request.getShiftType() != LeaveRequest.ShiftType.FULL_DAY) {
+            return new java.math.BigDecimal("0.5");
+        }
+        return java.math.BigDecimal.valueOf(java.time.temporal.ChronoUnit.DAYS.between(
+                request.getFromDate(), request.getToDate()) + 1);
     }
 
     // ===== Background Job (JOB-07) =====

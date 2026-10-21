@@ -680,15 +680,22 @@ public class LeaveRequestDAO {
     }
 
     public com.gms.dto.LeaveBalance getAnnualBalance(Connection connection, int employeeId, int year, int quota) throws SQLException {
+        return getAnnualBalance(connection, employeeId, year, quota, 0);
+    }
+
+    public com.gms.dto.LeaveBalance getAnnualBalance(Connection connection, int employeeId, int year, int quota,
+            int excludeRequestId) throws SQLException {
         String sql = "SELECT "
                 + "ISNULL(SUM(CASE WHEN Status = 'Approved' THEN Days ELSE 0 END), 0) AS UsedDays, "
                 + "ISNULL(SUM(CASE WHEN Status = 'Pending'  THEN Days ELSE 0 END), 0) AS PendingDays "
                 + "FROM LeaveRequests "
-                + "WHERE EmployeeId = ? AND LeaveType = 'Annual' AND YEAR(FromDate) = ? AND Status <> 'Rejected'";
+                + "WHERE EmployeeId = ? AND LeaveType = 'Annual' AND YEAR(FromDate) = ? AND Status IN ('Approved', 'Pending') "
+                + "AND LeaveRequestId <> ?";
 
         try (PreparedStatement ps = connection.prepareStatement(sql)) {
             ps.setInt(1, employeeId);
             ps.setInt(2, year);
+            ps.setInt(3, excludeRequestId);
             try (ResultSet rs = ps.executeQuery()) {
                 if (rs.next()) {
                     return new com.gms.dto.LeaveBalance(quota, rs.getBigDecimal("UsedDays"), rs.getBigDecimal("PendingDays"));
