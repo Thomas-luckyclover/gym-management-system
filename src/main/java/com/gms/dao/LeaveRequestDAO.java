@@ -58,6 +58,7 @@ public class LeaveRequestDAO {
         return null;
     }
 
+    /** Đọc lại đơn trong transaction quyết định; giữ khóa đến khi commit/rollback. */
     public LeaveRequest findById(Connection connection, int leaveRequestId) throws SQLException {
         String sql = SELECT_COLUMNS.replace("FROM LeaveRequests ", "FROM LeaveRequests WITH (UPDLOCK, HOLDLOCK) ")
                 + "WHERE LeaveRequestId = ?";
@@ -69,6 +70,10 @@ public class LeaveRequestDAO {
         }
     }
 
+    /**
+     * Tuần tự hóa quyết định BF-05 trên mọi khoảng ngày và quỹ phép.
+     * Khóa bảng phù hợp quy mô đồ án; cả chuyển/rút/nộp đơn đều dùng cùng thứ tự khóa.
+     */
     public void lockDecisionScope(Connection connection) throws SQLException {
         try (PreparedStatement statement = connection.prepareStatement(
                 "SELECT COUNT(*) FROM LeaveRequests WITH (TABLOCKX, HOLDLOCK)");
@@ -77,6 +82,7 @@ public class LeaveRequestDAO {
         }
     }
 
+    /** Vị trí hiện tại của nhân viên Working; giữ khóa để tránh đổi vị trí giữa lúc quyết định. */
     public String findWorkingPosition(Connection connection, int employeeId) throws SQLException {
         String sql = "SELECT Position FROM Employees WITH (HOLDLOCK) WHERE EmployeeId = ? AND Status = 'Working'";
         try (PreparedStatement statement = connection.prepareStatement(sql)) {
@@ -411,8 +417,8 @@ public class LeaveRequestDAO {
             String position,
             int excludeLeaveRequestId) throws SQLException {
 
-        // B1: Dem tong nhan su dang lam viec (Working) cua vi tri do
-        String sqlTotal = "SELECT COUNT(*) FROM Employees WHERE Position = ? AND Status = 'Working'";
+        // B1: Giả định đã chốt: mọi nhân viên Working làm cả hai ca; đây không phải lịch phân ca thực tế.
+        String sqlTotal = "SELECT COUNT(*) FROM Employees WITH (HOLDLOCK) WHERE Position = ? AND Status = 'Working'";
 
         // B2: Dem so nhan su (DISTINCT EmployeeId) dang Working da duoc duyet nghi trung vao ca targetShift
         // (Bao gom nguoi nghi dung ca targetShift HOAC nguoi nghi FullDay)
@@ -451,26 +457,6 @@ public class LeaveRequestDAO {
 
         // B3: Quan so con lai neu duyet them don hien tai (-1)
         return Math.max(0, totalWorking - approvedSameShift - 1);
-    }
-
-    /**
-     * Khóa mọi đơn nghỉ của một ngày cho tới khi transaction kết thúc (chống duyệt đồng thời, BR-14).
-     * UPDLOCK: hai transaction cùng khóa một ngày sẽ phải xếp hàng.
-     * HOLDLOCK: giữ khóa tới khi commit/rollback, kể cả khoảng khóa (range).
-     *
-     * @param connection kết nối đang mở transaction
-     * @param leaveDate ngày nghỉ cần khóa
-     * @throws SQLException lỗi truy vấn
-     */
-    public void lockLeaveDate(Connection connection, LocalDate leaveDate) throws SQLException {
-        String sql = "SELECT COUNT(*) FROM LeaveRequests WITH (UPDLOCK, HOLDLOCK) WHERE FromDate = ?";
-
-        try (PreparedStatement statement = connection.prepareStatement(sql)) {
-            statement.setDate(1, java.sql.Date.valueOf(leaveDate));
-            try (ResultSet resultSet = statement.executeQuery()) {
-                resultSet.next();
-            }
-        }
     }
 
     /**
@@ -683,6 +669,7 @@ public class LeaveRequestDAO {
         return getAnnualBalance(connection, employeeId, year, quota, 0);
     }
 
+    /** Không giữ chỗ hai lần cho chính đơn đang xét; các đơn Pending khác vẫn giữ chỗ như chính sách hiện tại. */
     public com.gms.dto.LeaveBalance getAnnualBalance(Connection connection, int employeeId, int year, int quota,
             int excludeRequestId) throws SQLException {
         String sql = "SELECT "
@@ -750,6 +737,7 @@ public class LeaveRequestDAO {
         return hasConflictingLeave(connection, employeeId, leaveDate, leaveDate, shiftType);
     }
 
+    /** Kiểm tra giao khoảng ngày, kể cả khi ngày bắt đầu khác nhau. */
     public boolean hasConflictingLeave(Connection connection, int employeeId, LocalDate fromDate, LocalDate toDate,
             String shiftType) throws SQLException {
         String sql = "SELECT COUNT(*) FROM LeaveRequests "
@@ -788,8 +776,8 @@ public class LeaveRequestDAO {
      */
     public int countScheduledSessions(Connection connection, int ptEmployeeId, LocalDate leaveDate, String shiftType) throws SQLException {
         StringBuilder sql = new StringBuilder();
-        sql.append("SELECT COUNT(*) FROM Sessions s ")
-                .append("JOIN TimeSlots ts ON s.TimeSlotId = ts.TimeSlotId ")
+        sql.append("SELECT COUNT(*) FROM Sessions s WITH (HOLDLOCK) ")
+                .append("JOIN TimeSlots ts WITH (HOLDLOCK) ON s.TimeSlotId = ts.TimeSlotId ")
                 .append("WHERE s.PtEmployeeId = ? AND ts.SlotDate = ? AND s.Status = 'Scheduled' ");
 
         if ("Morning".equalsIgnoreCase(shiftType)) {
@@ -809,6 +797,77 @@ public class LeaveRequestDAO {
             }
         }
         return 0;
+    }
+
+    /** Các buổi Scheduled trùng toàn khoảng nghỉ; dùng giờ từ TimeSlots để hiện trên trang review. */
+    public List<SessionConflict> findSessionConflicts(int employeeId, LocalDate fromDate, LocalDate toDate,
+            String shiftType) throws SQLException {
+        String sql = "SELECT s.SessionId, ts.SlotDate, ts.StartTime, ts.EndTime "
+                + "FROM Sessions s JOIN TimeSlots ts ON ts.TimeSlotId = s.TimeSlotId "
+                + "WHERE s.PtEmployeeId = ? AND s.Status = 'Scheduled' AND ts.SlotDate BETWEEN ? AND ? "
+                + "AND (? = 'FullDay' OR (? = 'Morning' AND ts.StartTime < '12:00:00') "
+                + "OR (? = 'Afternoon' AND ts.EndTime > '12:00:00')) ORDER BY ts.SlotDate, ts.StartTime, s.SessionId";
+        List<SessionConflict> conflicts = new ArrayList<>();
+        try (Connection connection = DBContext.getConnection();
+                PreparedStatement statement = connection.prepareStatement(sql)) {
+            statement.setInt(1, employeeId);
+            statement.setDate(2, java.sql.Date.valueOf(fromDate));
+            statement.setDate(3, java.sql.Date.valueOf(toDate));
+            statement.setString(4, shiftType);
+            statement.setString(5, shiftType);
+            statement.setString(6, shiftType);
+            try (ResultSet resultSet = statement.executeQuery()) {
+                while (resultSet.next()) {
+                    conflicts.add(new SessionConflict(resultSet.getInt("SessionId"),
+                            resultSet.getDate("SlotDate").toLocalDate(),
+                            resultSet.getTime("StartTime").toLocalTime(), resultSet.getTime("EndTime").toLocalTime()));
+                }
+            }
+        }
+        return conflicts;
+    }
+
+    /** Đếm riêng Approved và Pending của đơn khác có ngày/ca giao với đơn đang xem. */
+    public Map<String, Integer> countOverlappingRequests(LeaveRequest request) throws SQLException {
+        String sql = "SELECT Status, COUNT(*) AS Total FROM LeaveRequests "
+                + "WHERE LeaveRequestId <> ? AND FromDate <= ? AND ToDate >= ? AND Status IN ('Pending', 'Approved') "
+                + "AND (ShiftType = 'FullDay' OR ? = 'FullDay' OR ShiftType = ?) GROUP BY Status";
+        Map<String, Integer> counts = new LinkedHashMap<>();
+        try (Connection connection = DBContext.getConnection(); PreparedStatement statement = connection.prepareStatement(sql)) {
+            statement.setInt(1, request.getLeaveRequestId());
+            statement.setDate(2, java.sql.Date.valueOf(request.getToDate()));
+            statement.setDate(3, java.sql.Date.valueOf(request.getFromDate()));
+            statement.setString(4, request.getShiftType().getDbValue());
+            statement.setString(5, request.getShiftType().getDbValue());
+            try (ResultSet resultSet = statement.executeQuery()) {
+                while (resultSet.next()) {
+                    counts.put(resultSet.getString("Status"), resultSet.getInt("Total"));
+                }
+            }
+        }
+        return counts;
+    }
+
+    /** DAO tạo từ Sessions/TimeSlots; JSP dùng để chỉ rõ từng buổi đang chặn duyệt. */
+    public static class SessionConflict {
+        // Sessions.SessionId: mã buổi cần PT xử lý.
+        private final int sessionId;
+        // TimeSlots.SlotDate/StartTime/EndTime: ngày và giờ thực tế của buổi Scheduled.
+        private final LocalDate date;
+        private final java.time.LocalTime startTime;
+        private final java.time.LocalTime endTime;
+
+        public SessionConflict(int sessionId, LocalDate date, java.time.LocalTime startTime, java.time.LocalTime endTime) {
+            this.sessionId = sessionId;
+            this.date = date;
+            this.startTime = startTime;
+            this.endTime = endTime;
+        }
+
+        public int getSessionId() { return sessionId; }
+        public LocalDate getDate() { return date; }
+        public java.time.LocalTime getStartTime() { return startTime; }
+        public java.time.LocalTime getEndTime() { return endTime; }
     }
 
     /**
@@ -1074,12 +1133,35 @@ public class LeaveRequestDAO {
 
         public boolean isLeaveDatePassed() {
             return leaveRequest != null && leaveRequest.getLeaveDate() != null
-                    && leaveRequest.getLeaveDate().isBefore(java.time.LocalDate.now());
+                    && leaveRequest.getLeaveDate().isBefore(com.gms.util.DateTimeUtil.today());
         }
 
         public boolean getLeaveDatePassed() {
             return isLeaveDatePassed();
         }
+
+        /** Chỉ mở xác nhận khi tất cả kiểm tra hiện tại đạt; backend vẫn kiểm tra lại khi POST. */
+        public boolean isCanApprove() {
+            if (!canAct || leaveRequest == null || !leaveRequest.isPending() || isLeaveDatePassed() || checks.isEmpty()) {
+                return false;
+            }
+            for (com.gms.dto.ReviewCheck check : checks) {
+                if (check.isApplicable() && !check.isOk()) {
+                    return false;
+                }
+            }
+            return true;
+        }
+
+        // DAO đọc Sessions/TimeSlots; Service gắn danh sách buổi chặn duyệt cho JSP.
+        private List<SessionConflict> sessionConflicts = new ArrayList<>();
+        // DAO đếm đơn cùng khoảng ngày/ca; Pending chỉ là thông tin, chưa tính là nghỉ chính thức.
+        private Map<String, Integer> overlappingCounts = new LinkedHashMap<>();
+
+        public List<SessionConflict> getSessionConflicts() { return sessionConflicts; }
+        public void setSessionConflicts(List<SessionConflict> conflicts) { this.sessionConflicts = conflicts; }
+        public Map<String, Integer> getOverlappingCounts() { return overlappingCounts; }
+        public void setOverlappingCounts(Map<String, Integer> counts) { this.overlappingCounts = counts; }
 
         public boolean isAutoRejected() {
             return leaveRequest != null && leaveRequest.isRejected() && leaveRequest.getReviewedByEmployeeId() == null;

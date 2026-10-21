@@ -384,12 +384,19 @@ public class LeaveRequestService {
             int year = targetDate != null ? targetDate.getYear() : DateTimeUtil.today().getYear();
 
             // 1. Quỹ phép năm
-            int annualQuota = 14;
-            try {
-                annualQuota = systemConfigService.getInt(SystemConfigService.LEAVE_ANNUAL_QUOTA);
-            } catch (Exception ignored) {
+            LeaveBalance balance = null;
+            if (req.getLeaveType() == LeaveRequest.LeaveType.ANNUAL) {
+                try {
+                    int annualQuota = systemConfigService.getInt(SystemConfigService.LEAVE_ANNUAL_QUOTA);
+                    try (Connection connection = DBContext.getConnection()) {
+                        balance = leaveRequestDAO.getAnnualBalance(connection, req.getEmployeeId(), year, annualQuota,
+                                req.isPending() ? req.getLeaveRequestId() : 0);
+                    }
+                } catch (IllegalStateException e) {
+                    // Không tự cấp 14 ngày khi phòng gym chưa cấu hình chính sách quỹ phép.
+                    balance = null;
+                }
             }
-            LeaveBalance balance = leaveRequestDAO.getAnnualBalance(req.getEmployeeId(), year, annualQuota);
             detail.setLeaveBalance(balance);
 
             // 2. Tính hạn duyệt P-20 và cờ quá hạn
@@ -406,27 +413,25 @@ public class LeaveRequestService {
             detail.setMinStaffRequired(minRequired);
 
             String shiftTypeStr = req.getShiftType() != null ? req.getShiftType().getDbValue() : "FullDay";
-            int remaining = leaveRequestDAO.countOnDutyAfterApproval(targetDate, shiftTypeStr, position, leaveRequestId);
-            detail.setRemainingStaff(remaining);
-
+            int remaining = Integer.MAX_VALUE;
             List<String> shifts = new ArrayList<>();
             if (req.getShiftType() == LeaveRequest.ShiftType.FULL_DAY) {
-                shifts.add(LeaveRequest.ShiftType.MORNING.getDbValue());
-                shifts.add(LeaveRequest.ShiftType.AFTERNOON.getDbValue());
-            } else if (req.getShiftType() != null) {
-                shifts.add(req.getShiftType().getDbValue());
+                shifts.add("Morning");
+                shifts.add("Afternoon");
             } else {
-                shifts.add("FullDay");
+                shifts.add(shiftTypeStr);
             }
-
             List<ShiftStaffingRow> rows = new ArrayList<>();
-            for (String s : shifts) {
-                int after = leaveRequestDAO.countOnDutyAfterApproval(targetDate, s, position, leaveRequestId);
-                String sLabel = "Morning".equalsIgnoreCase(s) ? "Ca sáng"
-                        : ("Afternoon".equalsIgnoreCase(s) ? "Ca chiều" : "Cả ngày");
-                String pLabel = "PT".equalsIgnoreCase(position) ? "PT" : "Lễ tân";
-                rows.add(new ShiftStaffingRow(sLabel, pLabel, after + 1, after, minRequired));
+            for (LocalDate date = req.getFromDate(); !date.isAfter(req.getToDate()); date = date.plusDays(1)) {
+                for (String shift : shifts) {
+                    int after = leaveRequestDAO.countOnDutyAfterApproval(date, shift, position, leaveRequestId);
+                    remaining = Math.min(remaining, after);
+                    String label = "Morning".equals(shift) ? "Ca sáng" : "Ca chiều";
+                    rows.add(new ShiftStaffingRow(DateTimeUtil.formatDate(date) + " · " + label,
+                            position, after + 1, after, minRequired));
+                }
             }
+            detail.setRemainingStaff(remaining);
             detail.setStaffingRows(rows);
 
             // 4. Lịch sử chuyển duyệt (transfers) & timeline
@@ -435,6 +440,7 @@ public class LeaveRequestService {
 
             // 5. Build 3 ReviewChecks
             detail.setChecks(buildChecks(detail, balance, remaining, minRequired));
+            detail.setOverlappingCounts(leaveRequestDAO.countOverlappingRequests(req));
 
             // 6. Banner cảnh báo (nếu có)
             if (detail.isLeaveDatePassed()) {
@@ -536,7 +542,9 @@ public class LeaveRequestService {
             java.math.BigDecimal days = req.getDays() != null ? req.getDays() : java.math.BigDecimal.ONE;
             boolean ok = balance != null && balance.getRemainingDays().compareTo(days) >= 0;
             c1.setOk(ok);
-            if (ok) {
+            if (balance == null) {
+                c1.setMessage("Chưa cấu hình quỹ phép năm P-23. Cần thiết lập chính sách trước khi duyệt.");
+            } else if (ok) {
                 c1.setMessage("Còn " + (balance != null ? balance.getRemainingDays() : 0) + " ngày phép năm (Đơn này xin " + days + " ngày)");
             } else {
                 c1.setMessage("Vượt quá số phép năm còn lại (Còn " + (balance != null ? balance.getRemainingDays() : 0) + ", xin " + days + " ngày)");
@@ -553,9 +561,9 @@ public class LeaveRequestService {
         c2.setOk(staffingOk);
         String posName = "PT".equalsIgnoreCase(detail.getPosition()) ? "PT" : "Lễ tân";
         if (staffingOk) {
-            c2.setMessage("Đảm bảo định biên tối thiểu ca trực (Còn " + remainingStaff + "/" + minRequired + " " + posName + ")");
+            c2.setMessage("Đạt trên toàn khoảng nghỉ: còn ít nhất " + remainingStaff + " " + posName + "; tối thiểu " + minRequired + ". Giả định nhân viên Working làm cả hai ca.");
         } else {
-            c2.setMessage("Không đủ định biên tối thiểu ca trực (Còn " + remainingStaff + " < tối thiểu " + minRequired + " " + posName + ")");
+            c2.setMessage("Có ngày/ca thiếu người: còn " + remainingStaff + ", tối thiểu " + minRequired + " " + posName + ". Xem từng ngày/ca bên dưới và bố trí người trước khi duyệt.");
         }
         list.add(c2);
 
@@ -571,13 +579,16 @@ public class LeaveRequestService {
         } else {
             LocalDate targetDate = req.getFromDate() != null ? req.getFromDate() : req.getLeaveDate();
             String shiftType = req.getShiftType() != null ? req.getShiftType().getDbValue() : "FullDay";
-            int clashes = leaveRequestDAO.countScheduledSessions(req.getEmployeeId(), targetDate, shiftType);
+            List<LeaveRequestDAO.SessionConflict> conflicts = leaveRequestDAO.findSessionConflicts(
+                    req.getEmployeeId(), req.getFromDate(), req.getToDate(), shiftType);
+            detail.setSessionConflicts(conflicts);
+            int clashes = conflicts.size();
             boolean sessionsOk = clashes == 0;
             c3.setOk(sessionsOk);
             if (sessionsOk) {
                 c3.setMessage("Không có lịch dạy PT bị trùng trong ca này");
             } else {
-                c3.setMessage("Trùng " + clashes + " buổi dạy PT đã hẹn học viên");
+                c3.setMessage("Trùng " + clashes + " buổi dạy PT đã hẹn học viên. Nhờ PT xử lý các buổi bên dưới; tải lại để kiểm tra trước khi duyệt.");
             }
         }
         list.add(c3);
