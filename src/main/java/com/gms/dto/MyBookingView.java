@@ -19,7 +19,10 @@ public class MyBookingView {
     private MyPtPackageView selectedPackage;     // gói đang chọn (null nếu đang xem buổi lẻ / chưa có gì)
     private boolean singleSelected;              // true = đang xem nhóm "Các buổi lẻ"
     private List<MyPtSessionRow> sessions = new ArrayList<>();   // bảng buổi, theo thứ tự #1 → #N
-    private Integer focusSessionId;              // buổi để tự cuộn tới: buổi đầu tiên chưa kết thúc
+    private Integer focusSessionId;              // "Buổi tới": buổi Scheduled đầu tiên chưa kết thúc (null nếu không có)
+    private MyPtSessionRow focusSession;         // chính buổi đó → thẻ "Buổi tới" ở đầu cột phải
+    private long daysUntilFocus;                 // còn mấy ngày tới buổi đó (0 = hôm nay, 1 = ngày mai)
+    private int endedCount;                      // số buổi đã qua giờ kết thúc → dòng gập "▸ N buổi đã qua"
 
     // 5 ô đếm (Tổng = Đã check-in + Vắng + Đã hủy + Còn lại + Đang cập nhật)
     private int totalCount;
@@ -51,6 +54,15 @@ public class MyBookingView {
 
     public Integer getFocusSessionId() { return focusSessionId; }
     public void setFocusSessionId(Integer focusSessionId) { this.focusSessionId = focusSessionId; }
+
+    public MyPtSessionRow getFocusSession() { return focusSession; }
+    public void setFocusSession(MyPtSessionRow focusSession) { this.focusSession = focusSession; }
+
+    public long getDaysUntilFocus() { return daysUntilFocus; }
+    public void setDaysUntilFocus(long daysUntilFocus) { this.daysUntilFocus = daysUntilFocus; }
+
+    public int getEndedCount() { return endedCount; }
+    public void setEndedCount(int endedCount) { this.endedCount = endedCount; }
 
     public int getTotalCount() { return totalCount; }
     public void setTotalCount(int totalCount) { this.totalCount = totalCount; }

@@ -6,7 +6,8 @@
 - Thẻ gói không hiện mã gói (#82) vì dễ nhầm với số thứ tự buổi #1, #2; tiến độ ghi "17/45 buổi đã qua · còn 28".
 - Ô đếm → chip lọc có chấm màu trạng thái; đổi "Còn lại" thành "Sắp tới" (vẫn gồm Hôm nay + Sắp tới + Cần chú ý); chip = 0 thì khóa.
 - Bảng: buổi lẻ bỏ cột #, thêm cột PT; lý do chỉ hiện với Cần chú ý / Vắng / Đã hủy, câu chung của các trạng thái khác nằm trong "Chi tiết"; dòng buổi sắp tới có nhãn "Buổi tới"; bảng co theo số dòng, không còn khoảng trống lớn.
-- Bảng tự cuộn tới buổi sắp tới làm buổi đã qua bị khuất → thêm vạch "Hôm nay · các buổi sắp tới" giữa 2 nhóm và nút "↑ Xem N buổi phía trên". Buổi "Đang cập nhật" (qua giờ, chưa chốt) thuộc nhóm đã qua, nằm trên vạch.
+- Đầu cột phải có thẻ **"Buổi tới"** (ngày giờ, còn mấy ngày, PT + Nhắn Zalo / Sao chép số / Google Calendar / Xem trên lịch tập; buổi Cần chú ý thì nói lý do ngay trên thẻ) + vòng tiến độ 17/45. Service thêm `focusSession`, `daysUntilFocus`, `endedCount` vào `MyBookingView` (có unit test).
+- Buổi đã qua (gồm cả "Đang cập nhật") được gập thành 1 dòng đầu bảng "▸ 19 buổi đã qua · 16 đã check-in · 1 vắng…", bấm để mở; bỏ cách tự cuộn + vạch "Hôm nay" làm trước đó. Bấm chip lọc khác "Tất cả" thì hiện đủ các buổi khớp, không gập.
 - Thêm `MyPtSessionRow.getDayName()` để hiện "Thứ 6, 23/10/2026".
 
 ## Lịch tập — gọn giao diện và sửa đóng chi tiết (19/10/2026, cập nhật theo phản hồi)

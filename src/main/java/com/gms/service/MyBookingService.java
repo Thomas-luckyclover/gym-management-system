@@ -8,6 +8,7 @@ import com.gms.dto.MyPtSessionRow;
 import com.gms.dto.ServiceResult;
 import java.sql.SQLException;
 import java.time.LocalDateTime;
+import java.time.temporal.ChronoUnit;
 import java.util.List;
 
 /**
@@ -123,7 +124,7 @@ public class MyBookingService {
     }
 
     /**
-     * Đếm 5 ô + tìm buổi để tự cuộn tới.
+     * Đếm các chip lọc + tìm "Buổi tới" + đếm số buổi đã qua.
      * Tổng = Đã check-in + Vắng + Đã hủy + Còn lại + Đang cập nhật (unit test kiểm tra).
      */
     static void countSessions(MyBookingView view, List<MyPtSessionRow> sessions, LocalDateTime now) {
@@ -140,10 +141,20 @@ public class MyBookingService {
         view.setTotalCount(sessions.size());
 
         // B2: buổi "còn lại" đầu tiên (hôm nay / sắp tới / cần chú ý); danh sách đã xếp theo ngày giờ
+        //     → thẻ "Buổi tới" + số ngày còn lại (0 = hôm nay, 1 = ngày mai)
         for (MyPtSessionRow s : sessions) {
             if (s.getStatus().equals("Scheduled") && MyPtSessionService.isNotEnded(s, now)) {
                 view.setFocusSessionId(s.getSessionId());
+                view.setFocusSession(s);
+                view.setDaysUntilFocus(ChronoUnit.DAYS.between(now.toLocalDate(), s.getSlotDate()));
                 break;
+            }
+        }
+
+        // B3: số buổi đã kết thúc (đã qua giờ) → dòng gập "▸ N buổi đã qua"
+        for (MyPtSessionRow s : sessions) {
+            if (!MyPtSessionService.isNotEnded(s, now)) {
+                view.setEndedCount(view.getEndedCount() + 1);
             }
         }
     }

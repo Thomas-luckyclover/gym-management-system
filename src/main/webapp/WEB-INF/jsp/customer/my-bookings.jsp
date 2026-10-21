@@ -6,8 +6,8 @@
   MÀN "GÓI CỦA TÔI" — /customer/bookings?id=<mã gói | single>  (CHỈ XEM)
   booking: MyBookingView do MyBookingService tạo; mã khách lấy từ session, không lấy từ URL.
   Cột trái : 3 tab Đang tập / Đã kết thúc / Buổi lẻ (bindTabs của common.js đổi tab, không tải lại) → bấm thẻ gói = tải lại với ?id=
-  Cột phải: thông tin gói + chip lọc trạng thái (JS ẩn/hiện dòng) + bảng buổi #1 → N
-  TÌM NHANH: [TAB] [THONG-TIN-GOI] [CHIP-LOC] [BANG]
+  Cột phải: thông tin gói + thẻ "Buổi tới" + chip lọc (JS ẩn/hiện dòng) + bảng buổi #1 → N, buổi đã qua gập lại
+  TÌM NHANH: [TAB] [THONG-TIN-GOI] [BUOI-TOI] [CHIP-LOC] [BANG]
 --%>
 <c:set var="pageUrl" value="${pageContext.request.contextPath}/customer/bookings" />
 <c:set var="sp" value="${booking.selectedPackage}" />
@@ -20,9 +20,9 @@
         <title>Gói của tôi · Super Gym</title>
         <link rel="stylesheet" href="${pageContext.request.contextPath}/css/pages/customer/dashboard.css?v=20261013c">
         <link rel="stylesheet" href="${pageContext.request.contextPath}/css/pages/customer/my-pt-sessions.css?v=20261019f">
-        <link rel="stylesheet" href="${pageContext.request.contextPath}/css/pages/customer/my-bookings.css?v=20261021d">
+        <link rel="stylesheet" href="${pageContext.request.contextPath}/css/pages/customer/my-bookings.css?v=20261021e">
         <script src="${pageContext.request.contextPath}/js/pages/customer/my-pt-sessions.js?v=20261019e" defer></script>
-        <script src="${pageContext.request.contextPath}/js/pages/customer/my-bookings.js?v=20261021c" defer></script>
+        <script src="${pageContext.request.contextPath}/js/pages/customer/my-bookings.js?v=20261021e" defer></script>
     </head>
     <body class="dock ${themeClass}">
         <%@ include file="/WEB-INF/jsp/common/flash-toast.jspf" %>
@@ -102,12 +102,12 @@
                                 </aside>
 
                                 <section class="booking-content schedule-board" aria-labelledby="booking-heading">
-                                    <%-- ===================== [THONG-TIN-GOI] ===================== --%>
+                                    <%-- ===================== [THONG-TIN-GOI] tên gói + trạng thái gói ===================== --%>
                                     <div class="booking-overview">
                                         <c:choose>
                                             <c:when test="${booking.singleSelected}">
                                                 <h3 id="booking-heading">Buổi lẻ</h3>
-                                                <p class="booking-sub">Mỗi buổi đặt riêng và có thể với PT khác nhau. Bấm "Chi tiết" ở từng dòng để liên hệ PT.</p>
+                                                <p class="booking-sub">Mỗi buổi đặt riêng và có thể với PT khác nhau.</p>
                                             </c:when>
                                             <c:otherwise>
                                                 <div class="booking-title">
@@ -115,21 +115,64 @@
                                                     <span class="booking-state ${sp.active ? 'is-active' : 'is-ended'}">${sp.active ? 'Đang tập' : 'Đã kết thúc'}</span>
                                                 </div>
                                                 <p class="booking-sub">
-                                                    <c:out value="${sp.typeLabel}" /> · ${gms:formatDate(sp.startDate)} – ${gms:formatDate(sp.endDate)}
+                                                    <c:out value="${sp.typeLabel}" /> · ${gms:formatDate(sp.startDate)} – ${gms:formatDate(sp.endDate)} · PT <strong><c:out value="${sp.ptName}" /></strong>
                                                     <c:if test="${not empty sp.partnerName}"> · Tập cùng <strong><c:out value="${sp.partnerName}" /></strong></c:if>
                                                 </p>
-                                                <div class="booking-pt">
-                                                    <span>PT <strong><c:out value="${sp.ptName}" /></strong><c:if test="${not empty sp.ptPhone}"> · <c:out value="${sp.ptPhone}" /></c:if></span>
-                                                    <c:if test="${not empty sp.zaloUrl}"><a class="btn btn-primary btn-sm" href="${fn:escapeXml(sp.zaloUrl)}" target="_blank" rel="noopener noreferrer">Nhắn Zalo</a></c:if>
-                                                    <c:if test="${not empty sp.ptPhone}"><button class="btn btn-outline btn-sm" type="button" data-copy-phone="${fn:escapeXml(sp.ptPhone)}">Sao chép số</button></c:if>
-                                                </div>
-                                                <div class="booking-progress">
-                                                    <progress value="${sp.pastSessions}" max="${sp.totalSessions gt 0 ? sp.totalSessions : 1}" aria-label="Tiến độ gói"></progress>
-                                                    <span>${sp.pastSessions}/${sp.totalSessions} buổi đã qua<c:if test="${sp.active}"> · <strong>còn ${sp.totalSessions - sp.pastSessions} buổi</strong></c:if></span>
-                                                    <span class="pt-info"><button type="button" class="pt-info-trigger" aria-label="Cách tính tiến độ" aria-describedby="hint-progress"><span aria-hidden="true">i</span></button><span id="hint-progress" class="pt-info-popover" role="tooltip"><strong>Đã qua:</strong> số buổi có ngày tập trước hôm nay, tính cả buổi vắng và buổi bị hủy.<br><strong>Còn:</strong> số buổi từ hôm nay trở đi.</span></span>
-                                                </div>
                                             </c:otherwise>
                                         </c:choose>
+                                    </div>
+
+                                    <%-- ===================== [BUOI-TOI] thẻ nổi bật: buổi gần nhất + liên hệ PT + vòng tiến độ ===================== --%>
+                                    <%-- f = buổi Scheduled đầu tiên chưa kết thúc (MyBookingService.countSessions); null → hiện tóm tắt thay thế. --%>
+                                    <c:set var="f" value="${booking.focusSession}" />
+                                    <div class="booking-hero ${empty f ? 'is-quiet' : ''} ${not empty f and f.statusKey eq 'warn' ? 'is-warn' : ''}">
+                                        <div class="booking-hero-main">
+                                            <c:choose>
+                                                <c:when test="${not empty f}">
+                                                    <p class="booking-hero-label">Buổi tới ·
+                                                        <c:choose>
+                                                            <c:when test="${booking.daysUntilFocus eq 0}">hôm nay</c:when>
+                                                            <c:when test="${booking.daysUntilFocus eq 1}">ngày mai</c:when>
+                                                            <c:otherwise>còn ${booking.daysUntilFocus} ngày</c:otherwise>
+                                                        </c:choose>
+                                                    </p>
+                                                    <p class="booking-hero-when"><c:out value="${f.dayName}" />, ${gms:formatDate(f.slotDate)} · ${gms:formatTime(f.startTime)} – ${gms:formatTime(f.endTime)}</p>
+                                                    <p class="booking-hero-sub">PT <strong><c:out value="${f.ptName}" /></strong><c:if test="${not empty f.ptPhone}"> · <c:out value="${f.ptPhone}" /></c:if>
+                                                        · <c:choose><c:when test="${f.singleSession}">Buổi lẻ</c:when><c:otherwise>Buổi ${f.sessionNo}/${f.totalSessions}</c:otherwise></c:choose></p>
+                                                    <%-- Cần chú ý (phòng nghỉ / chưa có quyền vào gym): nói lý do ngay trên thẻ. --%>
+                                                    <c:if test="${f.statusKey eq 'warn' and not empty f.explanation}">
+                                                        <p class="booking-hero-warn"><c:out value="${f.explanation}" /></p>
+                                                    </c:if>
+                                                    <div class="booking-hero-actions">
+                                                        <c:if test="${not empty f.zaloUrl}"><a class="btn btn-primary btn-sm" href="${fn:escapeXml(f.zaloUrl)}" target="_blank" rel="noopener noreferrer">Nhắn Zalo PT</a></c:if>
+                                                        <c:if test="${not empty f.ptPhone}"><button class="btn btn-outline btn-sm" type="button" data-copy-phone="${fn:escapeXml(f.ptPhone)}">Sao chép số</button></c:if>
+                                                        <c:if test="${not empty f.calendarUrl}"><a class="btn btn-outline btn-sm" href="${fn:escapeXml(f.calendarUrl)}" target="_blank" rel="noopener noreferrer">+ Google Calendar</a></c:if>
+                                                        <a class="btn btn-ghost btn-sm" href="${pageContext.request.contextPath}/customer/pt-sessions?view=week&amp;date=${f.slotDate}">Xem trên lịch tập ›</a>
+                                                    </div>
+                                                </c:when>
+                                                <c:when test="${booking.singleSelected}">
+                                                    <p class="booking-hero-label">Buổi tới</p>
+                                                    <p class="booking-hero-when">Chưa có buổi lẻ sắp tới</p>
+                                                    <div class="booking-hero-actions"><a class="btn btn-primary btn-sm" href="${pageContext.request.contextPath}/customer/book-session">Đặt buổi lẻ</a></div>
+                                                </c:when>
+                                                <c:otherwise>
+                                                    <p class="booking-hero-label">${sp.active ? 'Buổi tới' : 'Gói đã kết thúc'}</p>
+                                                    <p class="booking-hero-when"><c:choose><c:when test="${sp.active}">Không còn buổi nào sắp tới</c:when><c:otherwise>Kết thúc ngày ${gms:formatDate(sp.endDate)}</c:otherwise></c:choose></p>
+                                                    <p class="booking-hero-sub">Đã tập cùng PT <strong><c:out value="${sp.ptName}" /></strong> · ${booking.checkedInCount} buổi check-in, ${booking.missedCount} vắng, ${booking.cancelledCount} hủy.</p>
+                                                </c:otherwise>
+                                            </c:choose>
+                                        </div>
+                                        <%-- Vòng tiến độ (chỉ gói PT): --p = % đã qua, vẽ bằng conic-gradient trong CSS. --%>
+                                        <c:if test="${not empty sp}">
+                                            <div class="booking-ring" style="--p: ${sp.progressPercent}" role="img" aria-label="Đã qua ${sp.pastSessions} trên ${sp.totalSessions} buổi">
+                                                <div>
+                                                    <b>${sp.pastSessions}/${sp.totalSessions}</b>
+                                                    <span>buổi đã qua</span>
+                                                    <c:if test="${sp.active}"><span class="booking-ring-rest">còn ${sp.totalSessions - sp.pastSessions}</span></c:if>
+                                                </div>
+                                            </div>
+                                            <span class="pt-info booking-ring-hint"><button type="button" class="pt-info-trigger" aria-label="Cách tính tiến độ" aria-describedby="hint-progress"><span aria-hidden="true">i</span></button><span id="hint-progress" class="pt-info-popover" role="tooltip"><strong>Đã qua:</strong> số buổi có ngày tập trước hôm nay, tính cả buổi vắng và buổi bị hủy.<br><strong>Còn:</strong> số buổi từ hôm nay trở đi.</span></span>
+                                        </c:if>
                                     </div>
 
                                     <%-- ===================== [CHIP-LOC] số do Service đếm; JS chỉ ẩn/hiện dòng ===================== --%>
@@ -155,14 +198,10 @@
                                     <c:set var="isSingle" value="${booking.singleSelected}" />
                                     <%-- Cả 2 kiểu bảng đều 5 cột: gói (# Ngày Giờ TrạngThái ChiTiết), buổi lẻ (Ngày Giờ PT TrạngThái ChiTiết). --%>
                                     <c:set var="colCount" value="5" />
-                                    <div class="booking-result-row">
-                                        <p class="schedule-note booking-result"><span id="booking-result" role="status" aria-live="polite">${booking.totalCount} buổi · xếp theo ngày tập</span>
-                                            <span class="pt-info"><button type="button" class="pt-info-trigger" aria-label="Cách đọc bảng buổi" aria-describedby="hint-table"><span aria-hidden="true">i</span></button><span id="hint-table" class="pt-info-popover" role="tooltip"><strong>#:</strong> thứ tự buổi trong gói theo ngày tập.<br><strong>Vạch Hôm nay:</strong> phía trên là buổi đã qua, phía dưới là buổi sắp tới.<br><strong>Buổi tới:</strong> buổi gần nhất bạn cần đi tập.<br><strong>Chi tiết:</strong> xem PT, lý do và thêm vào Google Calendar.</span></span></p>
-                                        <%-- Bảng tự cuộn tới "Buổi tới" → buổi đã qua bị khuất phía trên; nút này báo và cuộn lên. JS điền số. --%>
-                                        <button type="button" class="booking-jump" data-jump-past hidden></button>
-                                    </div>
+                                    <p class="schedule-note booking-result"><span id="booking-result" role="status" aria-live="polite">${booking.totalCount} buổi · xếp theo ngày tập</span>
+                                        <span class="pt-info"><button type="button" class="pt-info-trigger" aria-label="Cách đọc bảng buổi" aria-describedby="hint-table"><span aria-hidden="true">i</span></button><span id="hint-table" class="pt-info-popover" role="tooltip"><strong>#:</strong> thứ tự buổi trong gói theo ngày tập.<br><strong>Buổi đã qua:</strong> được gập lại ở đầu bảng, bấm để mở xem lịch sử.<br><strong>Buổi tới:</strong> buổi gần nhất bạn cần đi tập.<br><strong>Chi tiết:</strong> xem PT, lý do và thêm vào Google Calendar.</span></span></p>
                                     <div class="booking-table-scroll" tabindex="0" role="region" aria-label="Danh sách buổi, có thể cuộn">
-                                        <table class="booking-table" id="booking-sessions" data-focus-session="${booking.focusSessionId}">
+                                        <table class="booking-table" id="booking-sessions">
                                             <caption class="visually-hidden">Các buổi theo thứ tự ngày giờ · Giờ Việt Nam</caption>
                                             <thead>
                                                 <tr>
@@ -175,17 +214,22 @@
                                                 </tr>
                                             </thead>
                                             <tbody>
+                                                <%-- Dòng gập "▸ N buổi đã qua": JS gập các dòng is-ended và điền tóm tắt; không có JS thì dòng này ẩn, bảng hiện đủ. --%>
+                                                <c:if test="${booking.endedCount gt 0}">
+                                                    <tr class="booking-fold" data-past-fold hidden>
+                                                        <td colspan="${colCount}">
+                                                            <button type="button" data-toggle-past aria-expanded="false" aria-controls="booking-sessions">
+                                                                <span class="booking-fold-icon" aria-hidden="true">▸</span>
+                                                                <b>${booking.endedCount} buổi đã qua</b>
+                                                                <span class="booking-fold-summary" data-past-summary></span>
+                                                                <span class="booking-fold-action" data-past-action>Hiện</span>
+                                                            </button>
+                                                        </td>
+                                                    </tr>
+                                                </c:if>
                                                 <c:forEach var="s" items="${booking.sessions}">
                                                     <c:set var="isFocus" value="${s.sessionId eq booking.focusSessionId}" />
-                                                    <%-- Vạch ngăn "Hôm nay": trước buổi đầu tiên chưa kết thúc, nếu phía trên đã có buổi đã qua. --%>
-                                                    <c:if test="${not s.ended and not dividerShown}">
-                                                        <c:if test="${hasEnded}">
-                                                            <tr class="booking-divider" data-divider><td colspan="${colCount}"><span>Hôm nay · các buổi sắp tới</span></td></tr>
-                                                        </c:if>
-                                                        <c:set var="dividerShown" value="${true}" />
-                                                    </c:if>
-                                                    <c:if test="${s.ended}"><c:set var="hasEnded" value="${true}" /></c:if>
-                                                    <tr data-session-row data-session-id="${s.sessionId}" data-status="${s.statusKey}" class="${isFocus ? 'is-focus' : ''} ${s.ended ? 'is-ended' : ''}">
+                                                    <tr data-session-row data-status="${s.statusKey}" data-status-label="${fn:escapeXml(s.statusLabel)}" class="${isFocus ? 'is-focus' : ''} ${s.ended ? 'is-ended' : ''}">
                                                         <c:if test="${not isSingle}"><td class="booking-col-no">${s.sessionNo}</td></c:if>
                                                         <td>
                                                             <strong><c:out value="${s.dayName}" /></strong>, ${gms:formatDate(s.slotDate)}
