@@ -44,6 +44,35 @@ class MyBookingServiceTest {
         assertEquals(view.getTotalCount(), view.getCheckedInCount() + view.getMissedCount()
                 + view.getCancelledCount() + view.getRemainingCount() + view.getPendingCount());
         assertEquals(Integer.valueOf(5), view.getFocusSessionId());
+        assertEquals(5, view.getFocusSession().getSessionId());
+        assertEquals(0, view.getDaysUntilFocus());   // buổi tới là hôm nay
+        assertEquals(4, view.getEndedCount());       // 1, 2, 3 và buổi 4 đã qua giờ chờ chốt
+    }
+
+    @Test
+    void daysUntilFocusCountsFromToday() {
+        List<MyPtSessionRow> sessions = new ArrayList<>();
+        sessions.add(session(1, "Scheduled", LocalDate.of(2026, 10, 22)));   // Thứ 5, còn 3 ngày
+        MyPtSessionService.applyStatus(sessions.get(0), NOW, null);
+
+        MyBookingView view = new MyBookingView();
+        MyBookingService.countSessions(view, sessions, NOW);
+
+        assertEquals(3, view.getDaysUntilFocus());
+        assertEquals(0, view.getEndedCount());
+    }
+
+    @Test
+    void noFocusWhenEverySessionIsOver() {
+        List<MyPtSessionRow> sessions = new ArrayList<>();
+        sessions.add(session(1, "CheckedIn", LocalDate.of(2026, 10, 12)));
+        MyPtSessionService.applyStatus(sessions.get(0), NOW, null);
+
+        MyBookingView view = new MyBookingView();
+        MyBookingService.countSessions(view, sessions, NOW);
+
+        assertNull(view.getFocusSession());
+        assertEquals(1, view.getEndedCount());
     }
 
     // ---------------------------------------------------------------- pickPackage

@@ -77,8 +77,7 @@
   font-size: var(--font-size-xs);
   font-weight: var(--font-weight-semibold);
 }
-.booking-package progress,
-.booking-progress progress {
+.booking-package progress {
   width: 100%;
   height: var(--space-1-5);
   accent-color: var(--color-primary);
@@ -103,12 +102,73 @@
 }
 .booking-state.is-active { background: var(--color-success-tint); color: var(--color-success-ink); border: var(--border-width) solid var(--color-success-border); }
 .booking-state.is-ended { background: var(--color-neutral-tint); color: var(--color-text-soft); border: var(--border-width) solid var(--color-neutral-border); }
-.booking-pt { display: flex; align-items: center; flex-wrap: wrap; gap: var(--space-2); margin-top: var(--space-1); }
-.booking-pt > span { margin-right: var(--space-2); }
-.booking-progress { display: flex; align-items: center; gap: var(--space-3); color: var(--color-text-soft); font-size: var(--font-size-sm); }
-.booking-progress progress { flex: 1; }
-.booking-progress span { white-space: nowrap; }
-.booking-progress strong { color: var(--color-text); }
+
+/* ===================== [BUOI-TOI] thẻ nổi bật + vòng tiến độ ===================== */
+/* Nền = surface-muted + vạch màu chính bên trái (không tô màu chính kín: theme tối ra nâu đục). */
+.booking-hero {
+  position: relative;
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) auto;
+  align-items: center;
+  gap: var(--space-5);
+  margin: 0 var(--space-5) var(--space-4);
+  padding: var(--space-4) var(--space-5);
+  background: var(--color-surface-muted);
+  border: var(--border-width) solid var(--color-primary-border);
+  border-radius: var(--radius-md);
+  box-shadow: inset var(--space-1) 0 0 var(--color-primary);
+}
+.booking-hero.is-warn { border-color: var(--color-warning-border); box-shadow: inset var(--space-1) 0 0 var(--color-warning); }
+.booking-hero.is-quiet { border-color: var(--color-border); box-shadow: none; }
+.booking-hero-main { display: flex; flex-direction: column; gap: var(--space-1); min-width: 0; }
+.booking-hero-main p { margin: 0; }
+.booking-hero-label {
+  color: var(--color-primary);
+  font-size: var(--font-size-xs);
+  font-weight: var(--font-weight-bold);
+  text-transform: uppercase;
+  letter-spacing: 0.06em;
+}
+.booking-hero.is-warn .booking-hero-label { color: var(--color-warning-ink); }
+.booking-hero.is-quiet .booking-hero-label { color: var(--color-text-soft); }
+.booking-hero-when { color: var(--color-text); font-size: var(--font-size-2xl); font-weight: var(--font-weight-extrabold); line-height: 1.2; }
+.booking-hero.is-quiet .booking-hero-when { font-size: var(--font-size-lg); }
+.booking-hero-sub { color: var(--color-text-soft); font-size: var(--font-size-sm); }
+.booking-hero-sub strong { color: var(--color-text); }
+.booking-hero-warn {
+  padding: var(--space-2) var(--space-3);
+  border-radius: var(--radius-sm);
+  background: var(--color-warning-tint);
+  color: var(--color-warning-ink);
+  font-size: var(--font-size-sm);
+}
+.booking-hero-actions { display: flex; flex-wrap: wrap; gap: var(--space-2); margin-top: var(--space-2); }
+
+/* Vòng tiến độ: --p (0–100) do JSP gắn = % buổi đã qua. */
+.booking-ring {
+  display: grid;
+  place-items: center;
+  width: calc(var(--space-12) * 2);
+  aspect-ratio: 1;
+  border-radius: var(--radius-circle);
+  background: conic-gradient(var(--color-primary) calc(var(--p) * 1%), var(--color-surface-hover) 0);
+}
+.booking-ring > div {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  width: calc(100% - var(--space-5));
+  aspect-ratio: 1;
+  border-radius: var(--radius-circle);
+  background: var(--color-surface);
+  text-align: center;
+  line-height: 1.15;
+}
+.booking-ring b { color: var(--color-text); font-size: var(--font-size-xl); font-variant-numeric: tabular-nums; }
+.booking-ring span { color: var(--color-text-soft); font-size: var(--font-size-xs); }
+.booking-ring .booking-ring-rest { margin-top: var(--space-0-5); color: var(--color-text); font-weight: var(--font-weight-bold); }
+.booking-ring-hint { position: absolute; top: var(--space-2); right: var(--space-2); }
 
 /* ===================== [CHIP] lọc trạng thái — viên thuốc có chấm màu trạng thái ===================== */
 .booking-chips {
@@ -156,42 +216,7 @@
 .booking-chips [data-filter]:disabled { opacity: var(--opacity-disabled); cursor: default; }
 
 /* ===================== [BANG] ===================== */
-.booking-result-row {
-  display: flex;
-  align-items: center;
-  justify-content: space-between;
-  gap: var(--space-3);
-  padding: var(--space-3) var(--space-5) var(--space-2);
-}
-.booking-result { display: inline-flex; align-items: center; gap: var(--space-2); margin: 0; }
-.booking-sidebar-head { display: flex; align-items: center; gap: var(--space-2); }
-.booking-sidebar-head h2 { margin: 0; font-size: var(--font-size-lg); }
-.booking-progress .pt-info { flex: none; }
-.booking-jump {
-  padding: var(--space-0-5) var(--space-3);
-  background: var(--color-surface-hover);
-  color: var(--color-text);
-  border: var(--border-width) solid var(--color-border);
-  border-radius: var(--radius-pill);
-  font: inherit;
-  font-size: var(--font-size-sm);
-  font-weight: var(--font-weight-semibold);
-  cursor: pointer;
-}
-.booking-jump:hover { border-color: var(--color-text-soft); }
-.booking-jump:focus-visible { outline: none; box-shadow: var(--shadow-focus); }
-/* Vạch "Hôm nay": ranh giới buổi đã qua (trên) và buổi sắp tới (dưới). */
-.booking-table .booking-divider td {
-  padding: var(--space-1-5) var(--space-4);
-  background: var(--color-surface-muted);
-  border-bottom: var(--border-width-thick) solid var(--color-primary);
-  color: var(--color-primary);
-  font-size: var(--font-size-xs);
-  font-weight: var(--font-weight-bold);
-  text-transform: uppercase;
-  letter-spacing: 0.04em;
-}
-.booking-table .booking-divider:hover { background: transparent; }
+.booking-result { display: flex; align-items: center; gap: var(--space-2); margin: 0; padding: var(--space-3) var(--space-5) var(--space-2); }
 .booking-table-scroll {
   overflow: auto;
   max-height: calc(var(--space-12) * 6);
@@ -245,6 +270,30 @@
 }
 .booking-session-detail summary::-webkit-details-marker { display: none; }
 .booking-session-detail summary::after { content: " ›"; }
+/* Dòng gập "▸ N buổi đã qua" (đầu bảng) — kiểu dòng thời gian của app di động. */
+.booking-table .booking-fold td { padding: 0; }
+.booking-table .booking-fold:hover { background: transparent; }
+.booking-fold button {
+  display: flex;
+  align-items: center;
+  flex-wrap: wrap;
+  gap: var(--space-2);
+  width: 100%;
+  padding: var(--space-3) var(--space-4);
+  background: var(--color-surface-muted);
+  color: var(--color-text-soft);
+  border: 0;
+  font: inherit;
+  font-size: var(--font-size-sm);
+  text-align: left;
+  cursor: pointer;
+}
+.booking-fold button:hover { color: var(--color-text); }
+.booking-fold button:focus-visible { outline: none; box-shadow: inset var(--shadow-focus); }
+.booking-fold b { color: var(--color-text); }
+.booking-fold-icon { display: inline-block; transition: transform var(--duration-fast); }
+.booking-fold.is-open .booking-fold-icon { transform: rotate(90deg); }
+.booking-fold-action { margin-left: auto; color: var(--color-link); font-weight: var(--font-weight-semibold); }
 .booking-foot { margin: 0; padding: var(--space-3) var(--space-5); border-top: var(--border-width) solid var(--color-border); }
 
 /* ===================== [DESKTOP] cửa sổ đủ lớn: header đứng yên, hai cột cuộn riêng ===================== */
@@ -259,7 +308,8 @@
   .my-bookings-page .booking-content { display: flex; flex-direction: column; max-height: 100%; min-height: 0; overflow: hidden; }
   .my-bookings-page .booking-overview,
   .my-bookings-page .booking-chips,
-  .my-bookings-page .booking-result-row,
+  .my-bookings-page .booking-hero,
+  .my-bookings-page .booking-result,
   .my-bookings-page .booking-foot { flex: none; }
   /* Co theo số dòng; nhiều buổi thì cuộn trong khung, không để khoảng trống lớn khi ít buổi. */
   .my-bookings-page .booking-table-scroll { flex: 0 1 auto; min-height: 0; max-height: none; overscroll-behavior-y: contain; }
@@ -272,6 +322,17 @@
   .booking-sidebar { max-height: calc(var(--space-12) * 5); overflow: auto; }
 }
 @media (max-width: 640px) {
-  .booking-overview, .booking-chips, .booking-result-row, .booking-foot { padding-inline: var(--space-4); }
+  /* Mobile: vòng tiến độ thu nhỏ lên góc phải thẻ, chữ chừa chỗ cho vòng. */
+  .booking-hero { display: block; margin-inline: var(--space-4); padding: var(--space-4); }
+  .booking-hero-main { padding-right: calc(var(--space-12) + var(--space-3)); }
+  .booking-hero-when { font-size: var(--font-size-lg); }
+  .booking-hero-actions { padding-right: 0; margin-right: calc(-1 * (var(--space-12) + var(--space-3))); }
+  .booking-ring { position: absolute; top: var(--space-4); right: var(--space-4); width: var(--space-12); }
+  .booking-ring > div { width: calc(100% - var(--space-2-5)); }
+  .booking-ring b { font-size: var(--font-size-sm); }
+  .booking-ring span:not(.booking-ring-rest) { display: none; }
+  .booking-ring .booking-ring-rest { font-size: var(--font-size-2xs); font-weight: var(--font-weight-regular); }
+  .booking-ring-hint { display: none; }
+  .booking-overview, .booking-chips, .booking-result, .booking-foot { padding-inline: var(--space-4); }
   .booking-table th, .booking-table td { padding: var(--space-2) var(--space-3); }
 }
