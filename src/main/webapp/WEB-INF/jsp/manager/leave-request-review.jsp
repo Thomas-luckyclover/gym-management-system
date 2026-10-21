@@ -72,9 +72,9 @@
                     <i class="fa-solid fa-ban" aria-hidden="true"></i> Ngày nghỉ đã qua
                   </button>
                 </c:when>
-                <c:when test="${item.minStaffRequired > 0 and item.remainingStaff < item.minStaffRequired}">
-                  <button type="button" class="btn btn-sm btn-primary" disabled title="Không đủ định biên nhân sự tối thiểu">
-                    <i class="fa-solid fa-ban" aria-hidden="true"></i> Thiếu người trực
+                <c:when test="${not item.canApprove}">
+                  <button type="button" class="btn btn-sm btn-primary" disabled title="Xem các điều kiện chưa đạt bên dưới">
+                    <i class="fa-solid fa-ban" aria-hidden="true"></i> Chưa đủ điều kiện
                   </button>
                 </c:when>
                 <c:otherwise>
@@ -217,9 +217,18 @@
                 <h3 class="review-card-title">
                   <i class="fa-solid fa-list-check" aria-hidden="true"></i> Kiểm tra điều kiện phê duyệt
                 </h3>
-                <span style="font-size:var(--font-size-xs);color:var(--color-text-soft)">3 tiêu chuẩn bắt buộc</span>
+                <span class="leave-help">3 điều kiện · kiểm tra lại khi duyệt</span>
               </div>
 
+              <p class="leave-help">Giả định ca cố định: nhân viên Working làm cả hai ca. Chưa có lịch phân ca thực tế; giờ ca chưa được cấu hình riêng.</p>
+              <c:url var="overlapUrl" value="/manager/leave-requests">
+                <c:param name="status" value="All" />
+                <c:param name="fromDate" value="${item.leaveRequest.fromDate}" />
+                <c:param name="toDate" value="${item.leaveRequest.toDate}" />
+              </c:url>
+              <p class="leave-help">Đơn khác cùng khoảng ngày/ca: ${empty item.overlappingCounts['Approved'] ? 0 : item.overlappingCounts['Approved']} đã duyệt · ${empty item.overlappingCounts['Pending'] ? 0 : item.overlappingCounts['Pending']} chờ xử lý.
+                <a href="<c:out value='${overlapUrl}' />">Xem đơn trong khoảng ngày</a>. Đơn chờ chưa được tính là nghỉ chính thức.
+              </p>
               <div class="review-check-list">
                 <c:forEach var="c" items="${item.checks}">
                   <div class="review-check-item ${c.ok ? 'pass' : 'fail'}">
@@ -230,13 +239,22 @@
                       <div class="check-meta-title"><c:out value="${c.label}" /></div>
                       <div class="check-meta-msg"><c:out value="${c.message}" /></div>
 
+                      <c:if test="${c.key == 'SESSIONS' and not empty item.sessionConflicts}">
+                        <ul class="leave-conflicts">
+                          <c:forEach var="session" items="${item.sessionConflicts}">
+                            <li>Buổi #${session.sessionId} · ${gms:formatDate(session.date)} · ${gms:formatTime(session.startTime)}–${gms:formatTime(session.endTime)} · Đã lên lịch</li>
+                          </c:forEach>
+                        </ul>
+                        <p class="leave-help">Chức năng PT đổi/hủy/bàn giao buổi chưa được triển khai. Liên hệ PT và xử lý theo quy trình của phòng gym; chỉ duyệt khi hệ thống không còn buổi trùng.</p>
+                      </c:if>
+
                       <%-- Nếu là mục Định biên và có bảng chi tiết từng ca --%>
-                      <c:if test="${c.key == 'STAFFING' and not empty item.staffingRows and item.staffingRows.size() > 1}">
+                      <c:if test="${c.key == 'STAFFING' and not empty item.staffingRows}">
                         <table style="width:100%;margin-top:var(--space-2);border-collapse:collapse;font-size:11px">
                           <thead>
                             <tr style="border-bottom:1px solid var(--color-border);color:var(--color-text-soft);text-align:left">
                               <th style="padding:2px 4px">Ca trực</th>
-                              <th style="padding:2px 4px">Đang trực</th>
+                              <th style="padding:2px 4px">Trước đơn này (giả định)</th>
                               <th style="padding:2px 4px">Sau duyệt</th>
                               <th style="padding:2px 4px">Tối thiểu</th>
                               <th style="padding:2px 4px">Kết quả</th>
@@ -384,12 +402,14 @@
           <div style="font-size:var(--font-size-xs);color:var(--color-text-soft);line-height:1.6">
             • Thời gian nghỉ: ${gms:formatDate(item.leaveRequest.fromDate)} - ${gms:formatDate(item.leaveRequest.toDate)} (${item.leaveRequest.days} ngày)<br>
             • Ca làm việc: <c:out value="${item.leaveRequest.shiftType.displayName}" /><br>
+            • Loại nghỉ: <c:out value="${item.leaveRequest.leaveType.displayName}" /><br>
+            <c:if test="${item.leaveRequest.leaveType.dbValue == 'Annual'}">• Quỹ phép năm sẽ ghi nhận thêm ${item.leaveRequest.days} ngày đã duyệt; không trừ hai lần khi gửi lại.<br></c:if>
             Hệ thống sẽ cập nhật trạng thái đơn thành <b>Đã duyệt</b> và gửi thông báo đến chuông của nhân viên.
           </div>
         </div>
         <div class="gms-modal-footer">
           <button type="button" class="btn btn-ghost" onclick="closeModal('modalApproveDetail')">Hủy</button>
-          <button type="submit" class="btn btn-primary">Xác nhận duyệt</button>
+          <button type="submit" class="btn btn-primary" ${item.canApprove ? '' : 'disabled'}>Xác nhận duyệt</button>
         </div>
       </form>
     </div>
@@ -477,20 +497,37 @@
   </div>
 
   <script>
+    let modalTrigger = null;
+
+    // Đóng hộp thoại và trả focus cho nút đã mở.
     function closeModal(id) {
       document.getElementById(id).classList.remove('show');
+      if (modalTrigger) {
+        modalTrigger.focus();
+      }
+    }
+
+    // Các nút tác vụ chỉ mở hộp thoại; form POST do backend kiểm tra lại.
+    function openModal(id) {
+      modalTrigger = document.activeElement;
+      const modal = document.getElementById(id);
+      modal.classList.add('show');
+      const firstControl = modal.querySelector('button, select, textarea');
+      if (firstControl) {
+        firstControl.focus();
+      }
     }
 
     function openApproveModal() {
-      document.getElementById('modalApproveDetail').classList.add('show');
+      openModal('modalApproveDetail');
     }
 
     function openRejectModal() {
-      document.getElementById('modalRejectDetail').classList.add('show');
+      openModal('modalRejectDetail');
     }
 
     function openTransferModal() {
-      document.getElementById('modalTransferDetail').classList.add('show');
+      openModal('modalTransferDetail');
     }
 
     function toggleReasonClamp() {
@@ -516,9 +553,31 @@
       }
     });
 
+    window.addEventListener('keydown', function(e) {
+      const modal = document.querySelector('.gms-modal.show');
+      if (!modal) {
+        return;
+      }
+      if (e.key === 'Escape') {
+        closeModal(modal.id);
+      }
+      if (e.key === 'Tab') {
+        const controls = modal.querySelectorAll('button:not([disabled]), select, textarea');
+        const first = controls[0];
+        const last = controls[controls.length - 1];
+        if (e.shiftKey && document.activeElement === first) {
+          e.preventDefault();
+          last.focus();
+        } else if (!e.shiftKey && document.activeElement === last) {
+          e.preventDefault();
+          first.focus();
+        }
+      }
+    });
+
     window.addEventListener('click', function(e) {
       if (e.target.classList.contains('gms-modal')) {
-        e.target.classList.remove('show');
+        closeModal(e.target.id);
       }
     });
   </script>
