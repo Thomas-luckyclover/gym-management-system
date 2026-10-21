@@ -73,7 +73,7 @@ public class LeaveRequestItemView {
     // DAO: LeaveRequests.RejectReason; NULL nếu không bị từ chối.
     private final String rejectReason;
 
-    // Service: true khi Rejected mà ReviewedByEmployeeId IS NULL (quá hạn duyệt – CBR-85).
+    // Dữ liệu cũ: Rejected không có người xử lý thì hiển thị Hệ thống.
     private final boolean autoRejected;
 
     // DAO: LeaveRequests.SubmittedAt.
@@ -85,19 +85,10 @@ public class LeaveRequestItemView {
     // DAO: Persons.FullName của người duyệt; NULL khi Pending hoặc tự từ chối.
     private final String reviewerName;
 
-    // Service: mốc sớm hơn giữa ngày nộp + 3 và ngày nghỉ - 1, lúc P-20.
-    private LocalDateTime approvalDeadline;
+    // Service: đơn Pending bắt đầu nghỉ hôm nay hoặc ngày mai.
+    private boolean nearLeaveDate;
 
-    // Service: chuỗi đếm ngược dễ đọc (VD "Còn 3 giờ 20 phút"); rỗng nếu đơn đã xử lý.
-    private String deadlineCountdownText;
-
-    // Service: true khi đơn Pending và còn dưới ngưỡng URGENT_WITHIN_MINUTES đến hạn duyệt.
-    private boolean urgent;
-
-    // Service: true khi đơn Pending đã quá hạn để màn hình cảnh báo.
-    private boolean overdue;
-
-    /** Sao chép dữ liệu đã đọc; các thuộc tính hạn duyệt/kiểm tra do Service đặt riêng. */
+    /** Sao chép dữ liệu đã đọc; cờ sắp nghỉ và kết quả kiểm tra do Service đặt riêng. */
     public LeaveRequestItemView(LeaveRequestRow row) {
         LeaveRequest request = row.getLeaveRequest();
         this.leaveRequestId = request.getLeaveRequestId();
@@ -122,20 +113,12 @@ public class LeaveRequestItemView {
         this.canAct = row.isCanAct();
     }
 
-    public void setApprovalDeadline(LocalDateTime approvalDeadline) {
-        this.approvalDeadline = approvalDeadline;
+    public boolean isNearLeaveDate() {
+        return nearLeaveDate;
     }
 
-    public void setDeadlineCountdownText(String deadlineCountdownText) {
-        this.deadlineCountdownText = deadlineCountdownText;
-    }
-
-    public void setUrgent(boolean urgent) {
-        this.urgent = urgent;
-    }
-
-    public void setOverdue(boolean overdue) {
-        this.overdue = overdue;
+    public void setNearLeaveDate(boolean nearLeaveDate) {
+        this.nearLeaveDate = nearLeaveDate;
     }
 
     public int getLeaveRequestId() {
@@ -196,22 +179,6 @@ public class LeaveRequestItemView {
 
     public String getReviewerName() {
         return reviewerName;
-    }
-
-    public LocalDateTime getApprovalDeadline() {
-        return approvalDeadline;
-    }
-
-    public String getDeadlineCountdownText() {
-        return deadlineCountdownText;
-    }
-
-    public boolean isUrgent() {
-        return urgent;
-    }
-
-    public boolean isOverdue() {
-        return overdue;
     }
 
     public LocalDate getFromDate() {

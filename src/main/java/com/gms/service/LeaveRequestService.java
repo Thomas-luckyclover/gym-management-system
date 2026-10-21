@@ -24,10 +24,7 @@ import com.gms.util.PaginationUtil;
 import com.gms.util.ValidationUtil;
 import java.sql.Connection;
 import java.sql.SQLException;
-import java.time.Duration;
 import java.time.LocalDate;
-import java.time.LocalDateTime;
-import java.time.LocalTime;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
@@ -37,13 +34,6 @@ import java.util.Map;
  */
 public class LeaveRequestService {
 
-    // Số ngày tối đa để Manager duyệt đơn nộp sớm (CBR-85, trừ hao Manager nghỉ cuối tuần/nghỉ phép ngắn)
-    public static final int APPROVAL_SLA_DAYS = 3;
-
-    // Đơn còn dưới số phút này đến hạn duyệt thì đánh dấu khẩn cấp (tô nổi trên
-    // danh sách)
-    private static final long URGENT_WITHIN_MINUTES = 180;
-
     // DAO truy vấn bảng LeaveRequests; Service không tự viết SQL
     private final LeaveRequestDAO leaveRequestDAO;
     private final LeaveApprovalService leaveApprovalService;
@@ -52,7 +42,7 @@ public class LeaveRequestService {
     private final AccountDAO accountDAO;
     private final EmployeeDAO employeeDAO;
 
-    // Đọc tham số P-20 (giờ chốt duyệt đơn), P-13/P-14 (min staffing)
+    // Đọc các tham số nghiệp vụ dùng khi kiểm tra đơn.
     private final SystemConfigService systemConfigService;
 
     // Ghi audit log mỗi khi Manager duyệt / từ chối
@@ -91,7 +81,7 @@ public class LeaveRequestService {
      *                 thể null
      * @param page     số trang, bắt đầu từ 1
      * @param pageSize số dòng mỗi trang
-     * @return trang các dòng đã tính hạn duyệt và đếm ngược, hoặc thông báo lỗi hệ
+     * @return trang các dòng có kết quả kiểm tra và cờ sắp đến ngày nghỉ, hoặc thông báo lỗi hệ
      *         thống
      */
     public ServiceResult<PageResult<LeaveRequestItemView>> getManagerPage(
@@ -112,15 +102,12 @@ public class LeaveRequestService {
             int offset = PaginationUtil.calculateOffset(page, pageSize);
             List<LeaveRequestRow> rows = leaveRequestDAO.findManagerPage(filter, offset, pageSize, managerEmployeeId);
 
-            // B3: đổi từng dòng DAO sang view, thêm hạn duyệt P-20 và đếm ngược
-            LocalTime approvalTime = LocalTime.parse(
-                    systemConfigService.getString(
-                            SystemConfigService.LEAVE_APPROVED_DEADLINE));
-            LocalDateTime now = DateTimeUtil.now();
+            // B3: thêm cờ ngày nghỉ sắp đến; không tính hạn duyệt hoặc đếm ngược.
+            LocalDate today = DateTimeUtil.today();
 
             List<LeaveRequestItemView> items = new ArrayList<>();
             for (LeaveRequestRow row : rows) {
-                LeaveRequestItemView item = toItemView(row, approvalTime, now);
+                LeaveRequestItemView item = toItemView(row, today);
                 if (row.getLeaveRequest().isPending()) {
                     loadApprovalSummary(item, row.getLeaveRequest());
                 }
@@ -217,62 +204,17 @@ public class LeaveRequestService {
         return LeaveRequest.Status.fromDbValue(statusParam.trim());
     }
 
-    /**
-     * Tính hạn duyệt P-20 của một đơn nghỉ phép (CBR-85):
-     * Lấy mốc sớm hơn giữa (Ngày nộp + APPROVAL_SLA_DAYS lúc P-20) và (Ngày nghỉ - 1 ngày lúc P-20).
-     *
-     * @param request đơn xin nghỉ phép
-     * @param approvalCutoff giờ chốt duyệt P-20
-     * @return thời điểm hạn duyệt
-     */
-    public LocalDateTime computeApprovalDeadline(LeaveRequest request, LocalTime approvalCutoff) {
-        LocalDate cutoffByLeaveDate = request.getFromDate().minusDays(1);
-        LocalDate submittedDate = request.getSubmittedAt() != null
-                ? request.getSubmittedAt().toLocalDate()
-                : DateTimeUtil.today();
-        LocalDate cutoffBySubmittedDate = submittedDate.plusDays(APPROVAL_SLA_DAYS);
-
-        LocalDate deadlineDate = cutoffBySubmittedDate.isBefore(cutoffByLeaveDate)
-                ? cutoffBySubmittedDate
-                : cutoffByLeaveDate;
-        return deadlineDate.atTime(approvalCutoff);
+    /** Đơn chờ có ngày bắt đầu hôm nay hoặc ngày mai cần ưu tiên xử lý. */
+    boolean isNearLeaveDate(LeaveRequest request, LocalDate today) {
+        LocalDate fromDate = request.getFromDate();
+        return request.isPending() && fromDate != null
+                && !fromDate.isBefore(today) && !fromDate.isAfter(today.plusDays(1));
     }
 
-    /**
-     * Đổi một dòng DAO sang LeaveRequestItemView: tính hạn duyệt (P-20 của ngày
-     * liền trước ngày nghỉ, CBR-85), chữ đếm ngược và cờ khẩn cấp cho đơn Pending.
-     */
-    private LeaveRequestItemView toItemView(
-            LeaveRequestRow row,
-            LocalTime approvalTime,
-            LocalDateTime now) {
-
-        LeaveRequest request = row.getLeaveRequest();
-
-        // B1: hạn duyệt P-20 theo công thức CBR-85: MIN(Ngày nộp + 3 ngày, Ngày nghỉ - 1 ngày) lúc P-20
-        LocalDateTime approvalDeadline = computeApprovalDeadline(request, approvalTime);
-
-        // B2: đơn đã xử lý không cần đếm ngược; đơn Pending thì xét đã quá hạn chưa
-        String countdownText = "";
-        boolean isUrgent = false;
-        boolean isOverdue = false;
-        if (request.isPending()) {
-            if (!now.isBefore(approvalDeadline)) {
-                isOverdue = true;
-                countdownText = "Đã quá hạn duyệt";
-            } else {
-                long minutesLeft = Duration.between(now, approvalDeadline).toMinutes();
-                countdownText = formatCountdown(minutesLeft);
-                isUrgent = minutesLeft < URGENT_WITHIN_MINUTES;
-            }
-        }
-
-        // B3: sao chép dữ liệu gốc rồi đặt riêng các giá trị Service vừa tính.
+    /** Chỉ đổi dữ liệu hiển thị; các kiểm tra database nằm ở loadApprovalSummary(). */
+    private LeaveRequestItemView toItemView(LeaveRequestRow row, LocalDate today) {
         LeaveRequestItemView view = new LeaveRequestItemView(row);
-        view.setApprovalDeadline(approvalDeadline);
-        view.setDeadlineCountdownText(countdownText);
-        view.setUrgent(isUrgent);
-        view.setOverdue(isOverdue);
+        view.setNearLeaveDate(isNearLeaveDate(row.getLeaveRequest(), today));
         return view;
     }
 
@@ -290,24 +232,6 @@ public class LeaveRequestService {
                 view.setCheckMessage(blockingMessage);
             }
         }
-    }
-
-    /** Đổi số phút còn lại thành chữ hiển thị; số âm nghĩa là đã quá hạn duyệt. */
-    private String formatCountdown(long minutesLeft) {
-        if (minutesLeft < 0) {
-            return "Đã quá hạn duyệt";
-        }
-        if (minutesLeft < 60) {
-            return "Còn " + minutesLeft + " phút";
-        }
-        long hours = minutesLeft / 60;
-        long minutes = minutesLeft % 60;
-        if (hours >= 24) {
-            long days = hours / 24;
-            long remHours = hours % 24;
-            return "Còn " + days + " ngày " + remHours + " giờ";
-        }
-        return "Còn " + hours + " giờ " + minutes + " phút";
     }
 
     // ===== Màn duyệt đơn (màn #27, UC-15) =====
@@ -356,12 +280,8 @@ public class LeaveRequestService {
                 }
             }
 
-            // B2: tính hạn xử lý để hiển thị cảnh báo.
-            LocalTime approvalCutoff = LocalTime.parse(
-                    systemConfigService.getString(SystemConfigService.LEAVE_APPROVED_DEADLINE));
-            LocalDateTime deadline = computeApprovalDeadline(req, approvalCutoff);
-            detail.setApprovalDeadline(deadline);
-            detail.setOverdue(!DateTimeUtil.now().isBefore(deadline));
+            // B2: chỉ đánh dấu ngày nghỉ gần để nhắc xử lý, không đặt hạn duyệt.
+            detail.setNearLeaveDate(isNearLeaveDate(req, DateTimeUtil.today()));
 
             // B3: lịch sử chuyển duyệt và các đơn trùng khoảng nghỉ.
             List<LeaveRequestTransfer> transfers = leaveRequestDAO.findTransfers(leaveRequestId);
@@ -374,10 +294,10 @@ public class LeaveRequestService {
             // B4: chọn thông báo chính của trang.
             if (detail.isLeaveDatePassed()) {
                 detail.setBanner("Ngày xin nghỉ đã qua. Không thể duyệt đơn này.");
-            } else if (!detail.isCanAct()) {
+            } else if (req.isPending() && !detail.isCanAct()) {
                 detail.setBanner("Đơn này đang được giao cho " + (detail.getAssignedToName() != null ? detail.getAssignedToName() : "người khác") + ". Bạn chỉ có quyền xem.");
-            } else if (detail.isOverdue() && req.isPending()) {
-                detail.setBanner("Đơn đã quá hạn xử lý.");
+            } else if (detail.isNearLeaveDate()) {
+                detail.setBanner("Đơn sắp đến ngày nghỉ. Vui lòng ưu tiên xử lý để bố trí nhân sự.");
             }
 
             return ServiceResult.ok(detail);
@@ -446,7 +366,7 @@ public class LeaveRequestService {
                     "Chờ duyệt",
                     detail.getAssignedToName() != null ? detail.getAssignedToName() : "Chưa phân công",
                     null,
-                    detail.getApprovalDeadline() != null ? "Hạn duyệt: " + DateTimeUtil.formatDateTime(detail.getApprovalDeadline()) : null,
+                    "Ngày bắt đầu nghỉ: " + DateTimeUtil.formatDate(req.getFromDate()),
                     null,
                     "CURRENT"));
         }
@@ -762,58 +682,33 @@ public class LeaveRequestService {
 
     // ===== Background Job (JOB-07) =====
 
-    /**
-     * Chạy định kỳ mỗi phút: nhắc Manager trước mốc P-20 (JOB-07).
-     *
-     * @throws SQLException lỗi kết nối hoặc truy vấn DB
-     */
+    /** Nhắc một lần cho đơn Pending nghỉ ngày mai; không tự duyệt/từ chối hoặc đặt hạn theo giờ. */
     public void sendDueReminders() throws SQLException {
-        // B1: đọc mốc giờ chốt duyệt đơn P-20 (mặc định 20:00)
-        LocalTime cutoffTime = LocalTime.parse(
-                systemConfigService.getString(
-                        SystemConfigService.LEAVE_APPROVED_DEADLINE));
-
-        LocalDate today = DateTimeUtil.today();
-        LocalDate tomorrow = today.plusDays(1);
-        LocalDateTime now = DateTimeUtil.now();
-        LocalTime currentTime = now.toLocalTime();
-
-        // B2: nhắc Manager từ 2 tiếng trước mốc P-20 (ví dụ từ 18:00 đến trước 20:00)
-        LocalTime reminderStartTime = cutoffTime.minusHours(2);
-        boolean inReminderWindow = !currentTime.isBefore(reminderStartTime)
-                && currentTime.isBefore(cutoffTime);
-
-        // Đơn có hạn duyệt tối nay khi: LeaveDate = tomorrow HOẶC SubmittedDate = today - APPROVAL_SLA_DAYS
-        LocalDate remindSubmittedDate = today.minusDays(APPROVAL_SLA_DAYS);
-        if (inReminderWindow) {
-            List<LeaveRequest> remindList = leaveRequestDAO.findPendingNeedingReminder(tomorrow, remindSubmittedDate);
-            if (!remindList.isEmpty()) {
-                try (Connection conn = DBContext.getConnection()) {
-                    conn.setAutoCommit(false);
-                    try {
-                        // Chỉ đếm những đơn thật sự vừa được đánh dấu (tránh nhắc trùng khi job chạy chồng nhau)
-                        int remindedCount = 0;
-                        for (LeaveRequest req : remindList) {
-                            boolean isMarked = leaveRequestDAO.markReminded(conn, req.getLeaveRequestId());
-                            if (isMarked) {
-                                remindedCount = remindedCount + 1;
-                            }
-                        }
-
-                        // Gửi thông báo đến chuông của tất cả Manager trong hệ thống
-                        if (remindedCount > 0) {
-                            String notifTitle = "Nhắc duyệt đơn nghỉ phép";
-                            String notifContent = "Có " + remindedCount
-                                    + " đơn nghỉ phép đến hạn cần duyệt trước " + cutoffTime + " hôm nay.";
-                            notificationService.notifyRoleInTransaction(conn, Role.MANAGER, notifTitle, notifContent);
-                        }
-
-                        conn.commit();
-                    } catch (Exception e) {
-                        conn.rollback();
-                        e.printStackTrace();
+        LocalDate tomorrow = DateTimeUtil.today().plusDays(1);
+        List<LeaveRequest> requests = leaveRequestDAO.findPendingNeedingReminder(tomorrow);
+        if (requests.isEmpty()) {
+            return;
+        }
+        try (Connection connection = DBContext.getConnection()) {
+            connection.setAutoCommit(false);
+            try {
+                // Đánh dấu chỉ khi còn Pending và chưa nhắc; hai lượt job không gửi trùng.
+                int remindedCount = 0;
+                for (LeaveRequest request : requests) {
+                    if (leaveRequestDAO.markReminded(connection, request.getLeaveRequestId())) {
+                        remindedCount += 1;
                     }
                 }
+                if (remindedCount > 0) {
+                    String content = "Có " + remindedCount + " đơn nghỉ từ ngày mai đang chờ xử lý. "
+                            + "Vui lòng kiểm tra và bố trí nhân sự.";
+                    notificationService.notifyRoleInTransaction(connection, Role.MANAGER,
+                            "Đơn sắp đến ngày nghỉ", content);
+                }
+                connection.commit();
+            } catch (SQLException | RuntimeException e) {
+                connection.rollback();
+                throw e;
             }
         }
     }

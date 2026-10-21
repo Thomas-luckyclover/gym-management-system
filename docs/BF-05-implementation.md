@@ -22,11 +22,11 @@ Duyệt/từ chối/chuyển khóa trước khi đọc lại đơn, kiểm tra P
 
 TABLOCKX/HOLDLOCK trên LeaveRequests tuần tự hóa quyết định, kể cả đơn khác ngày bắt đầu nhưng giao khoảng nghỉ hoặc dùng chung quỹ phép. Nộp/rút dùng cùng thứ tự khóa. Lựa chọn đơn giản này phù hợp quy mô đồ án, nhưng các quyết định khác ngày cũng phải chờ nhau. Đọc lịch PT và số nhân viên giữ khóa đến hết transaction.
 
-Hạn duyệt giữ quy tắc sẵn có: mốc sớm hơn giữa ngày nộp + 3 ngày và ngày bắt đầu nghỉ - 1 ngày, tại giờ P-20. Có nhãn quá hạn; chưa thêm trạng thái Expired hoặc đổi chính sách quá hạn.
+Quyết định mới 21/10: bỏ hạn duyệt, đếm ngược và mốc ngày nộp + 3. Pending nghỉ hôm nay/ngày mai hiện Sắp đến ngày nghỉ. Job nhắc một lần cho Pending nghỉ ngày mai, không phụ thuộc giờ P-20 và không tự duyệt/từ chối. Không xóa P-20 khỏi cấu hình chung hoặc thay schema.
 
 ## Hai màn Manager
 
-- Danh sách chỉ có Xem chi tiết; bỏ modal xử lý nhanh và JS chèn tên vào handler. Ưu tiên hạn gần nhất, nhãn Sắp quá hạn/Quá hạn, snapshot kiểm tra kèm lý do.
+- Danh sách chỉ có Xem chi tiết; bỏ modal xử lý nhanh và JS chèn tên vào handler. Ưu tiên Pending sắp nghỉ theo ngày bắt đầu; có nhãn Sắp đến ngày nghỉ và kết quả kiểm tra kèm lý do.
 - Chi tiết có từng ngày/ca, số trước đơn đang xét, sau duyệt và mức tối thiểu; ghi rõ giả định ca cố định.
 - Khóa xác nhận khi thiếu quyền, ngày đã qua hoặc kiểm tra bắt buộc chưa đạt. Backend kiểm tra lại khi POST.
 - Hiện mã/ngày/giờ thực tế/trạng thái Scheduled của từng buổi PT trùng và hướng dẫn liên hệ PT xử lý. UC-35 chưa có nên không tạo liên kết đến URL chưa tồn tại.
@@ -91,3 +91,11 @@ Thêm 2 test tái hiện lỗi danh sách/chi tiết. Clean package chạy 176 t
 Bổ sung luồng nhân viên: form và API dùng chung dự báo; parse ngày bằng util có sẵn, bỏ kiểm tra loại lỗi bằng cách cắt chuỗi thông báo. PT có đường dẫn xem lịch trên banner lỗi. JS dùng getJson/formatDate chung, có trạng thái tải/lỗi và bỏ phản hồi cũ khi đổi lựa chọn. LeaveBalance bỏ constructor tự cấp 14 ngày và các setter không dùng để số dư không bị lệch với định mức/đã duyệt/đang chờ.
 
 Kiểm chứng cuối: 184 test qua; ba JSP biên dịch không lỗi. Trình duyệt bản xem thử chỉ đọc đã kiểm tra lại danh sách, chi tiết, hộp thoại, form PT, dự báo AJAX và khóa ngày quá hạn. Không ghi dữ liệu nghỉ phép, không redeploy Tomcat chính.
+
+## Đơn giản hóa việc nhắc duyệt theo ngày nghỉ (21/10/2026)
+
+Đã bỏ toàn bộ thuộc tính hạn/đếm ngược/quá hạn khỏi DTO và Service màn quản lý; bỏ SQL sắp theo ngày nộp + 3 và truy vấn nhắc SLA cũ. Danh sách còn bảy cột, cảnh báo sắp nghỉ nằm cùng trạng thái. Chi tiết/timeline dùng ngày bắt đầu nghỉ. Pending đã qua ngày vẫn bị chặn duyệt như cũ; chưa tự từ chối.
+
+ReminderSentAt chỉ được đánh dấu nếu đơn còn Pending và chưa nhắc. Lưu dấu nhắc và thông báo cùng transaction, lỗi thì rollback để job có thể thử lại. Các dấu nhắc cũ được giữ nguyên; không reset database.
+
+Kiểm chứng thay đổi nhắc theo ngày: clean package chạy 191 test, không lỗi; Jasper biên dịch hai JSP quản lý không lỗi. Bản Tomcat xem thử chỉ đọc xác nhận bảy cột, nhãn sắp nghỉ ngày mai, thứ tự tab Tất cả, timeline ngày bắt đầu nghỉ, lọc khoảng ngày và loại nghỉ. Không chạy job gửi nhắc hoặc ghi quyết định trên DB thật; ứng dụng chính chưa redeploy.

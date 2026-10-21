@@ -5,9 +5,14 @@ import com.gms.dao.EmployeeDAO;
 import com.gms.dao.LeaveRequestDAO;
 import com.gms.dao.PersonDAO;
 import com.gms.entity.LeaveRequest;
+import com.gms.constant.Role;
+import com.gms.util.DBContext;
+import com.gms.util.DateTimeUtil;
+import java.sql.Connection;
+import java.sql.SQLException;
+import java.util.List;
+import org.mockito.MockedStatic;
 import java.time.LocalDate;
-import java.time.LocalDateTime;
-import java.time.LocalTime;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
@@ -198,30 +203,65 @@ class LeaveRequestServiceTest {
         assertFalse(resultNegative.isSuccess());
     }
 
-    // ===== Kiểm thử tính hạn duyệt P-20 (CBR-85) =====
-
-    @Test
-    void computeApprovalDeadline_nearDate_usesDayBeforeLeaveDate() {
-        // Đơn nộp 19/10, xin nghỉ 21/10 -> Hạn duyệt chốt 20:00 ngày 20/10 (vì 20/10 < 22/10)
-        LeaveRequest req = new LeaveRequest();
-        req.setSubmittedAt(LocalDateTime.of(2026, 10, 19, 9, 30));
-        req.setFromDate(LocalDate.of(2026, 10, 21));
-        req.setToDate(req.getFromDate());
-
-        LocalDateTime deadline = service.computeApprovalDeadline(req, LocalTime.of(20, 0));
-        assertEquals(LocalDateTime.of(2026, 10, 20, 20, 0), deadline);
+    // Cờ ưu tiên chỉ dựa vào ngày bắt đầu, không dựa ngày nộp hoặc giờ chốt.
+    @ParameterizedTest
+    @CsvSource({"-1, Pending, false", "0, Pending, true", "1, Pending, true", "2, Pending, false",
+            "1, Approved, false", "1, Rejected, false"})
+    void nearLeaveDateDependsOnPendingAndTodayOrTomorrow(int daysFromToday, String status, boolean expected) {
+        LocalDate today = LocalDate.of(2026, 10, 21);
+        LeaveRequest request = new LeaveRequest();
+        request.setStatus(LeaveRequest.Status.fromDbValue(status));
+        request.setFromDate(today.plusDays(daysFromToday));
+        assertEquals(expected, service.isNearLeaveDate(request, today));
     }
 
     @Test
-    void computeApprovalDeadline_farDate_capsAt3DaysSla() {
-        // Đơn nộp 19/10, xin nghỉ xa 20/12 -> Hạn duyệt chốt sau 3 ngày lúc 20:00 ngày 22/10 (CBR-85)
-        LeaveRequest req = new LeaveRequest();
-        req.setSubmittedAt(LocalDateTime.of(2026, 10, 19, 9, 30));
-        req.setFromDate(LocalDate.of(2026, 12, 20));
-        req.setToDate(req.getFromDate());
+    void remindersOnlyTargetTomorrowAndCommitWithTheNotification() throws Exception {
+        Connection connection = mock(Connection.class);
+        LeaveRequest request = new LeaveRequest();
+        request.setLeaveRequestId(12);
+        when(leaveRequestDAO.findPendingNeedingReminder(DateTimeUtil.today().plusDays(1))).thenReturn(List.of(request));
+        when(leaveRequestDAO.markReminded(connection, 12)).thenReturn(true);
+        try (MockedStatic<DBContext> database = mockStatic(DBContext.class)) {
+            database.when(DBContext::getConnection).thenReturn(connection);
+            service.sendDueReminders();
+            verify(notificationService).notifyRoleInTransaction(eq(connection), eq(Role.MANAGER),
+                    eq("Đơn sắp đến ngày nghỉ"), contains("ngày mai"));
+            verify(connection).commit();
+            verify(connection, never()).rollback();
+        }
+    }
 
-        LocalDateTime deadline = service.computeApprovalDeadline(req, LocalTime.of(20, 0));
-        assertEquals(LocalDateTime.of(2026, 10, 22, 20, 0), deadline);
+    @Test
+    void aRequestAlreadyRemindedOrProcessedDoesNotSendAnotherNotification() throws Exception {
+        Connection connection = mock(Connection.class);
+        LeaveRequest request = new LeaveRequest();
+        request.setLeaveRequestId(12);
+        when(leaveRequestDAO.findPendingNeedingReminder(DateTimeUtil.today().plusDays(1))).thenReturn(List.of(request));
+        when(leaveRequestDAO.markReminded(connection, 12)).thenReturn(false);
+        try (MockedStatic<DBContext> database = mockStatic(DBContext.class)) {
+            database.when(DBContext::getConnection).thenReturn(connection);
+            service.sendDueReminders();
+            verifyNoInteractions(notificationService);
+            verify(connection).commit();
+        }
+    }
+
+    @Test
+    void reminderNotificationFailureRollsBackTheReminderMark() throws Exception {
+        Connection connection = mock(Connection.class);
+        LeaveRequest request = new LeaveRequest();
+        request.setLeaveRequestId(12);
+        when(leaveRequestDAO.findPendingNeedingReminder(DateTimeUtil.today().plusDays(1))).thenReturn(List.of(request));
+        when(leaveRequestDAO.markReminded(connection, 12)).thenReturn(true);
+        doThrow(new SQLException("notification failed")).when(notificationService)
+                .notifyRoleInTransaction(eq(connection), eq(Role.MANAGER), anyString(), anyString());
+        try (MockedStatic<DBContext> database = mockStatic(DBContext.class)) {
+            database.when(DBContext::getConnection).thenReturn(connection);
+            assertThrows(SQLException.class, service::sendDueReminders);
+            verify(connection).rollback();
+            verify(connection, never()).commit();
+        }
     }
 
     // Các trường hợp duyệt/từ chối có transaction nằm ở LeaveApprovalSafetyTest.

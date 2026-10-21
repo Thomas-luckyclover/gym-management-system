@@ -7,7 +7,7 @@ BF-05 có hai người dùng: PT/Lễ tân nộp hoặc rút đơn của mình; 
 1. `LeaveRequestListServlet.doGet()` đọc bộ lọc từ URL và AccountId từ session.
 2. `LeaveRequestService.createManagerFilter()` đổi dữ liệu nhập thành `LeaveRequestFilter`. Bộ lọc này dùng cho cả bảng và số đếm trên tab.
 3. `getManagerPage()` gọi DAO đếm và lấy một trang đơn. DAO trả `LeaveRequestRow`, gồm đơn và thông tin nhân viên.
-4. `toItemView()` sao chép dữ liệu, thêm hạn xử lý và chữ đếm ngược. Hàm này không truy vấn database.
+4. `toItemView()` sao chép dữ liệu, đánh dấu đơn chờ bắt đầu nghỉ hôm nay/ngày mai. Hàm này không truy vấn database.
 5. Với đơn Pending, `loadApprovalSummary()` đọc điều kiện qua `LeaveApprovalService.review()` để hiện Đạt/Cần xử lý.
 6. Servlet đặt `leavePage`, `statusCounts` và bộ lọc vào request; `leave-request-list.jsp` hiển thị chúng.
 
@@ -60,7 +60,7 @@ Service tính số ngày: một ca là 0,5; cả ngày là số ngày từ FromD
 - `leave-request-review.jsp`: dữ liệu chi tiết và các form xác nhận.
 - `leave-request-review.js`: mở/đóng hộp thoại, Escape, giữ focus và thu gọn lý do; không gửi AJAX xử lý đơn.
 - `leave-requests.css`: style form nhân viên và chi tiết; đã bỏ các khối lọc/tab/nút duyệt nhanh cũ không dùng.
-- `LeaveRequestReminderJob` gọi `sendDueReminders()`: nhắc đơn đến hạn. Tên job phản ánh hành vi hiện tại; không tự từ chối đơn.
+- `LeaveRequestReminderJob` gọi `sendDueReminders()`: nhắc một lần cho đơn còn chờ bắt đầu nghỉ ngày mai. Tên job phản ánh hành vi hiện tại; không tự từ chối đơn.
 
 ## 7. Những giả định vẫn giữ
 
@@ -73,3 +73,9 @@ PT/Lễ tân đang làm việc được tạm tính làm cả hai ca. Chưa có 
 Chạy `mvn package` để kiểm tra Java và test; JSP được kiểm tra riêng bằng Jasper của Tomcat 10.1. Kiểm tra trình duyệt dùng bản Tomcat xem thử chỉ đọc dữ liệu, không gửi quyết định thật.
 
 Kết quả cuối đợt: `mvn package` chạy 184 test, không lỗi; Jasper biên dịch cả ba JSP không lỗi. Trình duyệt xác nhận lọc/đếm tab, trạng thái nhân viên đã nghỉ việc, chi tiết 0,5 ngày, hộp thoại và Escape, form PT, dự báo AJAX theo ngày/ca và khóa nộp khi đã quá hạn. Bản xem thử chặn POST; không ghi quyết định hoặc nộp đơn lên DB thật. WAR chưa được redeploy vào Tomcat chính.
+
+## Cập nhật: ưu tiên ngày nghỉ, bỏ hạn duyệt (21/10/2026)
+
+Theo quyết định mới trong chat, không còn cột Hạn xử lý, đếm ngược, nhãn Sắp quá hạn/Quá hạn hay mốc ngày nộp + 3. Đơn Pending bắt đầu nghỉ hôm nay hoặc ngày mai có nhãn Sắp đến ngày nghỉ. Thứ tự danh sách: Pending từ hôm nay trở đi theo ngày nghỉ tăng dần, rồi Pending đã qua ngày, cuối cùng đơn đã xử lý. Kiểm tra nhân sự/quỹ phép/quyền duyệt vẫn thực hiện như trước.
+
+JOB-07 chọn Pending nghỉ ngày mai, chưa có ReminderSentAt. Job đánh dấu và lưu thông báo trong cùng transaction; không dùng giờ P-20 để đặt hạn hoặc chặn duyệt. P-20 vẫn còn trong cấu hình chung nhưng luồng này không đọc nữa. Đơn đã được nhắc theo chính sách cũ không tự xóa dấu để gửi lại.

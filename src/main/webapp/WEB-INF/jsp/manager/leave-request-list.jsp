@@ -11,7 +11,7 @@
   <%@ include file="/WEB-INF/jsp/common/head.jspf" %>
   <title>Quản lý đơn nghỉ phép · Super Gym</title>
   <link rel="stylesheet" href="${pageContext.request.contextPath}/css/pages/auth/account-settings.css">
-  <link rel="stylesheet" href="${pageContext.request.contextPath}/css/pages/manager/leave-request-list.css?v=20261021-readable2">
+  <link rel="stylesheet" href="${pageContext.request.contextPath}/css/pages/manager/leave-request-list.css?v=20261021-near-date">
   <link rel="stylesheet" href="${pageContext.request.contextPath}/css/pages/auth/notification-bell.css">
   <script src="${pageContext.request.contextPath}/js/pages/auth/notification-bell.js" defer></script>
 </head>
@@ -119,7 +119,7 @@
             <c:if test="${not empty fromDateFilter or not empty toDateFilter}">
               <span>Khoảng ngày: <c:out value="${fromDateFilter}" default="—" /> → <c:out value="${toDateFilter}" default="—" /></span>
             </c:if>
-            <span><i class="fa-solid fa-arrow-down-short-wide" aria-hidden="true"></i> Hạn xử lý gần nhất</span>
+            <span><i class="fa-solid fa-arrow-down-short-wide" aria-hidden="true"></i> Ưu tiên đơn sắp nghỉ</span>
           </div>
 
           <c:if test="${not empty pageError}">
@@ -137,14 +137,13 @@
                       <th scope="col">Loại nghỉ</th>
                       <th scope="col">Trạng thái</th>
                       <th scope="col">Kiểm tra</th>
-                      <th scope="col">Hạn xử lý</th>
                       <th scope="col">Người xử lý</th>
                       <th scope="col" class="leave-actions-cell">Thao tác</th>
                     </tr>
                   </thead>
                   <tbody>
                     <c:forEach var="item" items="${leavePage.items}">
-                      <tr class="${item.urgent or item.overdue ? 'leave-row-urgent' : ''}">
+                      <tr class="${item.nearLeaveDate ? 'leave-row-near' : ''}">
 
                         <%-- Nhân viên: tên, mã và chức vụ lấy từ LeaveRequestItemView. --%>
                         <td>
@@ -190,6 +189,9 @@
                           <span class="badge ${item.status.dbValue == 'Pending' ? 'badge-warning' : item.status.dbValue == 'Approved' ? 'badge-success' : 'badge-danger'}">
                             <c:out value="${item.status.displayName}" />
                           </span>
+                          <c:if test="${item.nearLeaveDate}">
+                            <span class="leave-near-label">Sắp đến ngày nghỉ</span>
+                          </c:if>
                         </td>
 
                         <%-- Kiểm tra do Service tính; rê chuột để xem lý do, mở chi tiết để xử lý. --%>
@@ -199,18 +201,6 @@
                               <span class="badge ${item.checkSummary == 'Đạt' ? 'badge-success' : 'badge-warning'}" title="<c:out value='${item.checkMessage}' />">
                                 <c:out value="${item.checkSummary}" />
                               </span>
-                            </c:when>
-                            <c:otherwise><span class="leave-text-muted">—</span></c:otherwise>
-                          </c:choose>
-                        </td>
-
-                        <td>
-                          <c:choose>
-                            <c:when test="${item.status.dbValue == 'Pending'}">
-                              <c:if test="${item.urgent or item.overdue}">
-                                <span class="badge badge-danger">${item.overdue ? 'Quá hạn' : 'Sắp quá hạn'}</span>
-                              </c:if>
-                              <span class="leave-deadline ${item.urgent or item.overdue ? 'leave-deadline-urgent' : ''}" title="${gms:formatDateTime(item.approvalDeadline)}"><c:out value="${item.deadlineCountdownText}" /></span>
                             </c:when>
                             <c:otherwise><span class="leave-text-muted">—</span></c:otherwise>
                           </c:choose>

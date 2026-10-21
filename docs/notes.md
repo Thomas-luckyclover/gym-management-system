@@ -1,5 +1,10 @@
 # File notes — mâu thuẫn tài liệu & quyết định đã chốt
 
+## BF-05 — bỏ hạn duyệt, nhắc theo ngày nghỉ (21/10/2026, ĐÃ CHỐT)
+
+User đồng ý bỏ cột đếm ngược và mốc nộp + 3 ngày. Pending nghỉ hôm nay/ngày mai hiện Sắp đến ngày nghỉ; ưu tiên Pending sắp nghỉ theo ngày bắt đầu. Job nhắc một lần cho Pending nghỉ ngày mai, không dùng giờ P-20 làm hạn duyệt. Giữ kiểm tra quyền/quỹ phép/nhân sự/lịch PT và chặn duyệt ngày đã qua. Quyết định này thay các mô tả hạn P-20/SLA cũ trong SRS/checklist; không đổi schema hoặc xóa cấu hình dùng chung. Chi tiết: [BF-05-code-guide.md](BF-05-code-guide.md).
+
+
 ## BF-05 — refactor dễ học, gom commit theo nhóm (21/10/2026)
 
 User chốt đợt này không chia commit quá nhỏ. Tách luồng nhân viên/Manager, dùng chung điều kiện xem và duyệt, tách DTO khỏi DAO, bỏ ngày lưu trùng và CSS/JS khó lần theo. Luồng và nơi bắt đầu học: [BF-05-code-guide.md](BF-05-code-guide.md). Không đổi schema hoặc chính sách ca; tiếp tục giả định nhân viên đang làm việc làm cả hai ca. JOB-07 đặt tên theo chức năng nhắc hạn hiện có.

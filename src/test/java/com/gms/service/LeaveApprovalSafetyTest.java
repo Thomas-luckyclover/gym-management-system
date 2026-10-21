@@ -264,7 +264,6 @@ class LeaveApprovalSafetyTest {
 
     @Test
     void listDoesNotMarkAResignedEmployeeAsPassing() throws Exception {
-        when(configs.getString(SystemConfigService.LEAVE_APPROVED_DEADLINE)).thenReturn("20:00");
         when(dao.countByFilter(any())).thenReturn(1);
         when(dao.findManagerPage(any(), eq(0), eq(20), isNull())).thenReturn(java.util.List.of(
                 new LeaveRequestRow(request, "NV-0050", "PT test", "PT", null, null)));
@@ -282,7 +281,6 @@ class LeaveApprovalSafetyTest {
     @Test
     void reviewBlocksConfirmationWhenTheEmployeeHasResigned() throws Exception {
         stubManagerAndCurrentRequest();
-        when(configs.getString(SystemConfigService.LEAVE_APPROVED_DEADLINE)).thenReturn("20:00");
         when(dao.findReviewDetail(12, 7)).thenReturn(new LeaveReviewDetail(
                 request, "NV-0050", "PT test", "PT", null, null));
         when(dao.findWorkingPosition(connection, 50)).thenReturn(null);
@@ -336,7 +334,7 @@ class LeaveApprovalSafetyTest {
     }
 
     @Test
-    void overdueReminderDoesNotBlockAnOtherwiseEligibleApproval() throws Exception {
+    void earlySubmissionDoesNotImposeAnApprovalDeadline() throws Exception {
         request.setSubmittedAt(DateTimeUtil.now().minusDays(5));
         assertReadinessAcrossScreens(true, null);
     }
@@ -383,7 +381,6 @@ class LeaveApprovalSafetyTest {
     /** Cùng dữ liệu giả đi qua cả ba luồng để bắt việc giao diện lệch điều kiện POST. */
     private void assertReadinessAcrossScreens(boolean expectedAllowed, String expectedMessage) throws Exception {
         stubManagerAndCurrentRequest();
-        when(configs.getString(SystemConfigService.LEAVE_APPROVED_DEADLINE)).thenReturn("20:00");
         when(dao.countByFilter(any())).thenReturn(1);
         when(dao.findManagerPage(any(), eq(0), eq(20), isNull())).thenReturn(java.util.List.of(
                 new LeaveRequestRow(request, "NV-0050", "PT test", "PT", null, null)));

@@ -2,7 +2,6 @@ package com.gms.dto;
 
 import com.gms.entity.LeaveRequest;
 import com.gms.util.DateTimeUtil;
-import java.time.LocalDateTime;
 import java.util.ArrayList;
 import java.util.LinkedHashMap;
 import java.util.List;
@@ -22,9 +21,8 @@ public class LeaveReviewDetail {
     private int remainingStaff;
     private int minStaffRequired;
 
-    // Hạn duyệt P-20 của đơn và cờ đã quá hạn (Service tính, JSP hiện cảnh báo)
-    private LocalDateTime approvalDeadline;
-    private boolean overdue;
+    // Service: đơn Pending bắt đầu nghỉ hôm nay hoặc ngày mai.
+    private boolean nearLeaveDate;
 
     public LeaveReviewDetail(
             LeaveRequest leaveRequest,
@@ -82,20 +80,12 @@ public class LeaveReviewDetail {
         this.minStaffRequired = minStaffRequired;
     }
 
-    public LocalDateTime getApprovalDeadline() {
-        return approvalDeadline;
+    public boolean isNearLeaveDate() {
+        return nearLeaveDate;
     }
 
-    public void setApprovalDeadline(LocalDateTime approvalDeadline) {
-        this.approvalDeadline = approvalDeadline;
-    }
-
-    public boolean isOverdue() {
-        return overdue;
-    }
-
-    public void setOverdue(boolean overdue) {
-        this.overdue = overdue;
+    public void setNearLeaveDate(boolean nearLeaveDate) {
+        this.nearLeaveDate = nearLeaveDate;
     }
 
     public boolean isLeaveDatePassed() {

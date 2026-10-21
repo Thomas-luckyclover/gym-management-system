@@ -9,6 +9,7 @@ import com.gms.dto.SessionConflict;
 import com.gms.entity.LeaveRequest;
 import com.gms.entity.LeaveRequestTransfer;
 import com.gms.util.DBContext;
+import com.gms.util.DateTimeUtil;
 import com.gms.util.SqlUtil;
 import java.math.BigDecimal;
 import java.sql.Connection;
@@ -214,11 +215,10 @@ public class LeaveRequestDAO {
                 + "  LEFT JOIN Persons ap ON ap.PersonId = ae.PersonId "
                 + fs.whereClause
                 + "ORDER BY "
-                + "  CASE WHEN lr.Status = 'Pending' THEN 0 ELSE 1 END, "
-                + "  CASE WHEN lr.Status = 'Pending' THEN CASE WHEN DATEADD(day, 3, CAST(lr.SubmittedAt AS date)) < DATEADD(day, -1, lr.FromDate) THEN DATEADD(day, 3, CAST(lr.SubmittedAt AS date)) ELSE DATEADD(day, -1, lr.FromDate) END END ASC, "
-                + "  CASE WHEN lr.Status = 'Pending' THEN lr.SubmittedAt END ASC, "
-                + "  lr.FromDate DESC, "
-                + "  lr.SubmittedAt DESC "
+                + "  CASE WHEN lr.Status = 'Pending' AND lr.FromDate >= ? THEN 0 "
+                + "       WHEN lr.Status = 'Pending' THEN 1 ELSE 2 END, "
+                + "  CASE WHEN lr.Status = 'Pending' THEN lr.FromDate END ASC, "
+                + "  lr.FromDate DESC, lr.SubmittedAt ASC, lr.LeaveRequestId ASC "
                 + "OFFSET ? ROWS FETCH NEXT ? ROWS ONLY";
 
         List<LeaveRequestRow> rows = new ArrayList<>();
@@ -234,6 +234,8 @@ public class LeaveRequestDAO {
                     statement.setString(paramIndex++, (String) p);
                 }
             }
+            // Pending sắp nghỉ xếp trước; đơn đã qua ngày nằm sau nhóm sắp nghỉ.
+            statement.setDate(paramIndex++, java.sql.Date.valueOf(DateTimeUtil.today()));
             statement.setInt(paramIndex++, offset);
             statement.setInt(paramIndex, pageSize);
 
@@ -901,41 +903,6 @@ public class LeaveRequestDAO {
     }
 
     /**
-     * Lấy danh sách các đơn Pending cần nhắc duyệt hôm nay (JOB-07, CBR-85):
-     * Khớp đơn nghỉ ngày mai (LeaveDate = leaveDate) HOẶC đơn nộp đã đủ SLA 3 ngày (CAST(SubmittedAt AS DATE) = submittedDate).
-     *
-     * @param leaveDate ngày mai
-     * @param submittedDate ngày nộp tương ứng mốc SLA 3 ngày
-     * @return danh sách các đơn Pending chưa gửi nhắc
-     * @throws SQLException lỗi truy vấn
-     */
-    public List<LeaveRequest> findPendingNeedingReminder(
-            LocalDate leaveDate, LocalDate submittedDate) throws SQLException {
-        String sql = SELECT_COLUMNS
-                + "WHERE Status = 'Pending' "
-                + "AND ReminderSentAt IS NULL "
-                + "AND (FromDate = ? OR CAST(SubmittedAt AS DATE) = ?) "
-                + "ORDER BY SubmittedAt ASC";
-
-        List<LeaveRequest> list = new ArrayList<>();
-
-        try (Connection connection = DBContext.getConnection();
-                PreparedStatement statement = connection.prepareStatement(sql)) {
-
-            statement.setDate(1, java.sql.Date.valueOf(leaveDate));
-            statement.setDate(2, java.sql.Date.valueOf(submittedDate));
-
-            try (ResultSet resultSet = statement.executeQuery()) {
-                while (resultSet.next()) {
-                    list.add(mapResultSetToLeaveRequest(resultSet));
-                }
-            }
-        }
-
-        return list;
-    }
-
-    /**
      * Đánh dấu đơn đã được gửi thông báo nhắc Manager (JOB-07) trên cùng Connection của Transaction.
      *
      * @param connection     kết nối đang mở transaction
@@ -947,7 +914,7 @@ public class LeaveRequestDAO {
         // B1: Cập nhật cột ReminderSentAt trên cùng Connection của Transaction
         String sql = "UPDATE LeaveRequests "
                 + "SET ReminderSentAt = SYSDATETIME() "
-                + "WHERE LeaveRequestId = ? AND ReminderSentAt IS NULL";
+                + "WHERE LeaveRequestId = ? AND Status = 'Pending' AND ReminderSentAt IS NULL";
 
         try (PreparedStatement statement = connection.prepareStatement(sql)) {
             statement.setInt(1, leaveRequestId);
