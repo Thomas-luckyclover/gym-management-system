@@ -843,8 +843,8 @@ CREATE TABLE StaffAttendances (
 GO
 
 -- Index cluster D
-CREATE INDEX IX_LeaveRequests_StatusDate ON LeaveRequests(Status, LeaveDate);        -- hàng chờ duyệt + job tự từ chối
-CREATE INDEX IX_LeaveRequests_DateShift  ON LeaveRequests(LeaveDate, ShiftType, Status); -- định biên (DBR-60)
+CREATE INDEX IX_LeaveRequests_StatusDate ON LeaveRequests(Status, FromDate);        -- hàng chờ duyệt + job tự từ chối
+CREATE INDEX IX_LeaveRequests_DateShift  ON LeaveRequests(FromDate, ToDate, ShiftType, Status); -- định biên (DBR-60)
 CREATE INDEX IX_Maintenance_Status       ON MaintenanceRequests(Status, ReportedAt);
 CREATE INDEX IX_Maintenance_Facility     ON MaintenanceRequests(FacilityId, Status);  -- CBR-99, CBR-102
 CREATE INDEX IX_StaffAttendances_EmpDate ON StaffAttendances(EmployeeId, WorkDate);
