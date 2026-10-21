@@ -1,5 +1,12 @@
 # File notes — mâu thuẫn tài liệu & quyết định đã chốt
 
+## BF-05 — duyệt nghỉ phép và ca cố định (21/10/2026, chốt trong chat)
+
+- Ưu tiên checklist BF-05; SRS sẽ cập nhật sau. Tạm giả định mọi PT/Lễ tân Working làm cả hai ca, chưa thêm bảng phân ca thực tế. Giao diện ghi rõ giới hạn này.
+- Hỗ trợ đơn nhiều ngày bằng FromDate/ToDate/Days; kiểm tra đủ ngày/ca, quỹ phép và lịch PT trong transaction duyệt. Người được giao và trạng thái được đọc lại khi ghi quyết định.
+- Quỹ Annual lấy P-23 hiện có, không tự mặc định 14 khi thiếu cấu hình; các đơn Pending khác vẫn giữ chỗ. Không tính giữ chỗ hai lần cho đơn đang xét. Sick/Unpaid không dùng quỹ Annual.
+- Kết quả, bằng chứng kiểm tra và phần nâng cao chưa làm (Withdrawn, xử lý buổi PT, báo vắng khẩn cấp) được ghi tại [BF-05-implementation.md](BF-05-implementation.md). Chưa đổi schema/data của DB local hoặc redeploy Tomcat.
+
 ## Customer Swap UC-38 — runtime My PT Session (14/10/2026)
 
 - Đã nối nút Đổi buổi trên buổi gói PT Scheduled chưa bắt đầu. Dialog tải slot qua GET AJAX `action=swapOptions`, xác nhận qua POST `action=swap` với CSRF token và mã slot nguồn để phát hiện lịch đã bị người khác đổi.
