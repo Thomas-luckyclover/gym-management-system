@@ -7,6 +7,7 @@ import com.gms.dao.EmployeeDAO;
 import com.gms.dao.LeaveRequestDAO;
 import com.gms.dto.EligibleReviewer;
 import com.gms.dto.LeaveApprovalReview;
+import com.gms.dto.LeaveEmployeeView;
 import com.gms.dto.LeaveRequestFilter;
 import com.gms.dto.LeaveRequestItemView;
 import com.gms.dto.LeaveRequestRow;
@@ -26,6 +27,7 @@ import java.sql.Connection;
 import java.sql.SQLException;
 import java.time.LocalDate;
 import java.util.ArrayList;
+import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
 
@@ -41,9 +43,6 @@ public class LeaveRequestService {
     // DAO đọc Employees (lấy EmployeeId từ AccountId khi Manager duyệt)
     private final AccountDAO accountDAO;
     private final EmployeeDAO employeeDAO;
-
-    // Đọc các tham số nghiệp vụ dùng khi kiểm tra đơn.
-    private final SystemConfigService systemConfigService;
 
     // Ghi audit log mỗi khi Manager duyệt / từ chối
     private final AuditLogService auditLogService;
@@ -63,7 +62,6 @@ public class LeaveRequestService {
         this.leaveApprovalService = new LeaveApprovalService(leaveRequestDAO, systemConfigService);
         this.accountDAO = accountDAO;
         this.employeeDAO = employeeDAO;
-        this.systemConfigService = systemConfigService;
         this.auditLogService = auditLogService;
         this.notificationService = notificationService;
     }
@@ -73,50 +71,43 @@ public class LeaveRequestService {
                 new SystemConfigService(), new AuditLogService(), new NotificationService());
     }
 
-    /**
-     * Lấy một trang đơn nghỉ phép cho màn danh sách của Manager (màn #26, UC-15).
-     *
-     * @param keyword  từ khóa tên nhân viên từ URL, có thể null/rỗng
-     * @param status   tab trạng thái từ URL (Pending, Approved, Rejected, All), có
-     *                 thể null
-     * @param page     số trang, bắt đầu từ 1
-     * @param pageSize số dòng mỗi trang
-     * @return trang các dòng có kết quả kiểm tra và cờ sắp đến ngày nghỉ, hoặc thông báo lỗi hệ
-     *         thống
-     */
-    public ServiceResult<PageResult<LeaveRequestItemView>> getManagerPage(
-            String keyword, String status, int page, int pageSize) {
-        LeaveRequestFilter filter = createManagerFilter(keyword, status, null, null, null, null);
-        return getManagerPage(filter, null, page, pageSize);
-    }
-
-    /** Servlet tạo bộ lọc một lần, dùng lại cho bảng và số lượng từng tab. */
-    public ServiceResult<PageResult<LeaveRequestItemView>> getManagerPage(
+    /** Danh sách cha phân trang theo nhân viên; mỗi người giữ đầy đủ đơn phù hợp bộ lọc. */
+    public ServiceResult<PageResult<LeaveEmployeeView>> getEmployeePage(
             LeaveRequestFilter filter, Integer managerAccountId, int page, int pageSize) {
         try {
-            // B1: AccountId từ session được đổi sang EmployeeId của Manager đang làm việc.
+            // B1: lấy trang nhân viên, bao gồm người chưa có đơn. SQL đã sắp theo đơn chờ gần nhất.
             Integer managerEmployeeId = findWorkingManagerId(managerAccountId);
-
-            // B2: đếm tổng và lấy đúng một trang (DAO cắt bằng OFFSET/FETCH)
-            int totalItems = leaveRequestDAO.countByFilter(filter);
-            int offset = PaginationUtil.calculateOffset(page, pageSize);
-            List<LeaveRequestRow> rows = leaveRequestDAO.findManagerPage(filter, offset, pageSize, managerEmployeeId);
-
-            // B3: thêm cờ ngày nghỉ sắp đến; không tính hạn duyệt hoặc đếm ngược.
+            int totalEmployees = leaveRequestDAO.countEmployees(filter);
+            int totalPages = Math.max(1, (totalEmployees + pageSize - 1) / pageSize);
+            int currentPage = Math.max(1, Math.min(page, totalPages));
+            int offset = PaginationUtil.calculateOffset(currentPage, pageSize);
+            List<LeaveEmployeeView> employees = leaveRequestDAO.findEmployeePage(filter, offset, pageSize);
+            List<Integer> employeeIds = new ArrayList<>();
+            Map<Integer, LeaveEmployeeView> employeeById = new LinkedHashMap<>();
             LocalDate today = DateTimeUtil.today();
-
-            List<LeaveRequestItemView> items = new ArrayList<>();
-            for (LeaveRequestRow row : rows) {
-                LeaveRequestItemView item = toItemView(row, today);
-                if (row.getLeaveRequest().isPending()) {
-                    loadApprovalSummary(item, row.getLeaveRequest());
-                }
-                items.add(item);
+            for (LeaveEmployeeView employee : employees) {
+                employeeIds.add(employee.getEmployeeId());
+                employeeById.put(employee.getEmployeeId(), employee);
+                LocalDate nextDate = employee.getNextPendingDate();
+                employee.setNearLeaveDate(nextDate != null && !nextDate.isBefore(today) && !nextDate.isAfter(today.plusDays(1)));
             }
 
-            return ServiceResult.ok(
-                    new PageResult<>(items, page, pageSize, totalItems));
-
+            // B2: đọc đơn của cả trang một lần rồi gắn về đúng nhân viên bằng EmployeeId.
+            if (!employeeIds.isEmpty()) {
+                List<LeaveRequestRow> rows = leaveRequestDAO.findEmployeeRequests(filter, employeeIds, managerEmployeeId);
+                for (LeaveRequestRow row : rows) {
+                    LeaveEmployeeView employee = employeeById.get(row.getLeaveRequest().getEmployeeId());
+                    if (employee == null) {
+                        continue;
+                    }
+                    LeaveRequestItemView item = toItemView(row, today);
+                    if (row.getLeaveRequest().isPending()) {
+                        loadApprovalSummary(item, row.getLeaveRequest());
+                    }
+                    employee.getRequests().add(item);
+                }
+            }
+            return ServiceResult.ok(new PageResult<>(employees, currentPage, pageSize, totalEmployees));
         } catch (SQLException e) {
             e.printStackTrace();
             return ServiceResult.fail(Messages.MSG04_SYSTEM_BUSY);
@@ -186,13 +177,12 @@ public class LeaveRequestService {
      *
      * @param statusParam giá trị param "status" (Pending, Approved, Rejected, All)
      *                    hoặc null/rỗng
-     * @return Status tương ứng; null nghĩa là tab "Tất cả"; URL trống thì mặc định
-     *         PENDING
+     * @return Status tương ứng; null là tab Tất cả, cũng là mặc định của màn gom theo nhân viên
      */
     LeaveRequest.Status parseStatusFilter(String statusParam) {
-        // B1: URL không có status thì màn mặc định mở tab "Chờ duyệt"
+        // B1: mặc định xem đủ lịch sử khi mở một nhân viên.
         if (statusParam == null || statusParam.isBlank()) {
-            return LeaveRequest.Status.PENDING;
+            return null;
         }
 
         // B2: tab "Tất cả" không lọc theo trạng thái

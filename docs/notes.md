@@ -1,5 +1,10 @@
 # File notes — mâu thuẫn tài liệu & quyết định đã chốt
 
+## BF-05 — nhóm đơn theo nhân viên (21/10/2026, ĐÃ CHỐT THỬ)
+
+User yêu cầu hiển thị toàn bộ nhân viên và bấm mở các đơn. Triển khai toàn bộ PT/Lễ tân (hai chức vụ đang hỗ trợ nghỉ phép), giữ người chưa có đơn và lịch sử người đã nghỉ việc. Phân trang theo nhân viên tại SQL, đếm tổng/Pending trên hàng cha, badge đỏ khi sắp nghỉ; mặc định Tất cả. Tab/loại/ngày lọc đơn bên trong, tên/mã/chức vụ lọc nhân viên. Dùng details/summary native; quyết định vẫn ở trang chi tiết, không đổi schema hoặc chính sách nghỉ. Luồng đọc code: [BF-05-code-guide.md](BF-05-code-guide.md).
+
+
 ## BF-05 — bỏ hạn duyệt, nhắc theo ngày nghỉ (21/10/2026, ĐÃ CHỐT)
 
 User đồng ý bỏ cột đếm ngược và mốc nộp + 3 ngày. Pending nghỉ hôm nay/ngày mai hiện Sắp đến ngày nghỉ; ưu tiên Pending sắp nghỉ theo ngày bắt đầu. Job nhắc một lần cho Pending nghỉ ngày mai, không dùng giờ P-20 làm hạn duyệt. Giữ kiểm tra quyền/quỹ phép/nhân sự/lịch PT và chặn duyệt ngày đã qua. Quyết định này thay các mô tả hạn P-20/SLA cũ trong SRS/checklist; không đổi schema hoặc xóa cấu hình dùng chung. Chi tiết: [BF-05-code-guide.md](BF-05-code-guide.md).

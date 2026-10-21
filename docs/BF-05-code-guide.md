@@ -4,12 +4,14 @@ BF-05 có hai người dùng: PT/Lễ tân nộp hoặc rút đơn của mình; 
 
 ## 1. Xem danh sách đơn
 
-1. `LeaveRequestListServlet.doGet()` đọc bộ lọc từ URL và AccountId từ session.
-2. `LeaveRequestService.createManagerFilter()` đổi dữ liệu nhập thành `LeaveRequestFilter`. Bộ lọc này dùng cho cả bảng và số đếm trên tab.
-3. `getManagerPage()` gọi DAO đếm và lấy một trang đơn. DAO trả `LeaveRequestRow`, gồm đơn và thông tin nhân viên.
-4. `toItemView()` sao chép dữ liệu, đánh dấu đơn chờ bắt đầu nghỉ hôm nay/ngày mai. Hàm này không truy vấn database.
-5. Với đơn Pending, `loadApprovalSummary()` đọc điều kiện qua `LeaveApprovalService.review()` để hiện Đạt/Cần xử lý.
-6. Servlet đặt `leavePage`, `statusCounts` và bộ lọc vào request; `leave-request-list.jsp` hiển thị chúng.
+1. `LeaveRequestListServlet.doGet()` đọc bộ lọc từ URL và AccountId từ session. Mặc định mở Tất cả để thấy đủ lịch sử khi mở nhân viên.
+2. `LeaveRequestService.createManagerFilter()` đổi dữ liệu nhập thành `LeaveRequestFilter`. Tên/mã và chức vụ lọc nhân viên; trạng thái, loại nghỉ, ngày lọc đơn bên trong.
+3. `getEmployeePage()` gọi DAO `countEmployees()` và `findEmployeePage()`. SQL LEFT JOIN giữ người chưa có đơn, đếm tổng/đơn chờ, ưu tiên người sắp nghỉ và phân trang theo nhân viên.
+4. Service lấy danh sách EmployeeId của trang, gọi `findEmployeeRequests()` một lần để lấy các đơn phù hợp. Map theo EmployeeId giúp gắn đơn về đúng người; không cắt trang giữa các đơn của cùng một người.
+5. `toItemView()` sao chép mỗi đơn và đánh dấu sắp nghỉ. Với Pending, `loadApprovalSummary()` gọi bộ kiểm tra chung để hiện Đạt/Cần xử lý.
+6. Servlet đặt `employeePage`, `statusCounts` và bộ lọc vào request. JSP lặp nhân viên; details/summary mở danh sách đơn mà không cần JS riêng.
+
+Số tổng/đơn chờ trên hàng nhân viên luôn tính trên toàn bộ lịch sử của người đó. Số trên tab và danh sách bên trong theo bộ lọc đang chọn. Nếu có lịch sử nhưng không có đơn khớp bộ lọc, hàng vẫn mở được và giải thích rõ. Người chưa từng có đơn hiện Chưa có đơn, không có nút mở rộng. Nhân viên đã nghỉ việc vẫn có nhãn riêng để giữ lịch sử.
 
 `AccountId` là mã tài khoản đăng nhập. `EmployeeId` là mã nhân viên. Service phải tra từ tài khoản sang nhân viên; hai mã không thay thế cho nhau.
 
@@ -55,7 +57,8 @@ Service tính số ngày: một ca là 0,5; cả ngày là số ngày từ FromD
 ## 6. File giao diện và dữ liệu
 
 - `dto/`: các lớp chỉ chứa dữ liệu truyền giữa DAO, Service và JSP. Các lớp này không còn nằm lẫn bên trong DAO.
-- `leave-request-list.jsp`: tab, bộ lọc, bảng; các tab dùng một vòng lặp JSTL.
+- `leave-request-list.jsp`: tab, bộ lọc, danh sách nhân viên và bảng đơn trong mỗi nhóm; các tab dùng một vòng lặp JSTL.
+- `leave-employee-header.jspf`: tên/chức vụ, tổng đơn, số đơn chờ và cảnh báo sắp nghỉ dùng chung cho hàng có đơn và chưa có đơn.
 - `leave-request-list.css`: toàn bộ style riêng danh sách. Trang không còn nạp CSS chi tiết để rồi ghi đè.
 - `leave-request-review.jsp`: dữ liệu chi tiết và các form xác nhận.
 - `leave-request-review.js`: mở/đóng hộp thoại, Escape, giữ focus và thu gọn lý do; không gửi AJAX xử lý đơn.
@@ -64,7 +67,7 @@ Service tính số ngày: một ca là 0,5; cả ngày là số ngày từ FromD
 
 ## 7. Những giả định vẫn giữ
 
-PT/Lễ tân đang làm việc được tạm tính làm cả hai ca. Chưa có bảng phân ca thực tế. Rút đơn vẫn xóa Pending và ghi audit; chưa thêm trạng thái Withdrawn. Chưa triển khai màn gom toàn bộ nhân viên rồi mở rộng các đơn bên dưới vì ý tưởng đó chưa được chốt thực hiện.
+PT/Lễ tân đang làm việc được tạm tính làm cả hai ca. Chưa có bảng phân ca thực tế. Rút đơn vẫn xóa Pending và ghi audit; chưa thêm trạng thái Withdrawn. Đã triển khai hàng mở rộng cho toàn bộ PT/Lễ tân; đây là hai chức vụ được phép nộp đơn trong BF-05 hiện tại.
 
 ## 8. Kiểm chứng
 
@@ -79,3 +82,9 @@ Kết quả cuối đợt: `mvn package` chạy 184 test, không lỗi; Jasper b
 Theo quyết định mới trong chat, không còn cột Hạn xử lý, đếm ngược, nhãn Sắp quá hạn/Quá hạn hay mốc ngày nộp + 3. Đơn Pending bắt đầu nghỉ hôm nay hoặc ngày mai có nhãn Sắp đến ngày nghỉ. Thứ tự danh sách: Pending từ hôm nay trở đi theo ngày nghỉ tăng dần, rồi Pending đã qua ngày, cuối cùng đơn đã xử lý. Kiểm tra nhân sự/quỹ phép/quyền duyệt vẫn thực hiện như trước.
 
 JOB-07 chọn Pending nghỉ ngày mai, chưa có ReminderSentAt. Job đánh dấu và lưu thông báo trong cùng transaction; không dùng giờ P-20 để đặt hạn hoặc chặn duyệt. P-20 vẫn còn trong cấu hình chung nhưng luồng này không đọc nữa. Đơn đã được nhắc theo chính sách cũ không tự xóa dấu để gửi lại.
+
+## Cập nhật: gom đơn theo nhân viên (21/10/2026)
+
+Luồng duyệt/từ chối/chuyển người duyệt giữ nguyên ở trang chi tiết. Chỉ màn danh sách đổi sang LeaveEmployeeView. Phân trang SQL theo nhân viên; lấy toàn bộ đơn phù hợp của những người trên trang trong một truy vấn, không truy vấn riêng từng người. Tab mặc định đổi sang Tất cả. Không thêm bảng, schema hoặc JavaScript cho accordion.
+
+Kiểm chứng đợt nhóm nhân viên: 197 test qua; JSP/fragment biên dịch không lỗi. Trình duyệt xác nhận hai trang nhân viên, người chưa có đơn, mở/đóng bằng Enter, lọc tên/mã/loại/ngày và Xem chi tiết. Header fragment tự khai báo UTF-8 để chữ cố định không bị lỗi khi include. Chưa redeploy ứng dụng chính.

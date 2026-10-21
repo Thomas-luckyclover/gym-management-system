@@ -1,7 +1,7 @@
 package com.gms.servlet.manager;
 
 import com.gms.constant.SessionKey;
-import com.gms.dto.LeaveRequestItemView;
+import com.gms.dto.LeaveEmployeeView;
 import com.gms.dto.LeaveRequestFilter;
 import com.gms.dto.PageResult;
 import com.gms.dto.ServiceResult;
@@ -31,9 +31,9 @@ public class LeaveRequestListServlet extends HttpServlet {
             = new LeaveRequestService();
 
     /**
-     * Hiện danh sách đơn nghỉ phép.
+     * Hiện nhân viên và các đơn nghỉ phép mở rộng bên dưới.
      * Request attribute đặt cho JSP:
-     * leavePage (PageResult của LeaveRequestItemView, Service tạo),
+     * employeePage (PageResult của LeaveEmployeeView, Service tạo),
      * statusCounts (Map số đơn theo All/Pending/Approved/Rejected, Service tạo),
      * keyword và statusFilter (giá trị người dùng đang chọn, để giữ ô tìm và tab),
      * pageError (chỉ có khi tải danh sách thất bại).
@@ -62,16 +62,16 @@ public class LeaveRequestListServlet extends HttpServlet {
         // B2: chuẩn hóa một lần; đếm tab bỏ qua trạng thái nhưng giữ các điều kiện còn lại.
         LeaveRequestFilter filter = leaveRequestService.createManagerFilter(
                 keyword, status, position, leaveType, fromDate, toDate);
-        ServiceResult<PageResult<LeaveRequestItemView>> pageResult = leaveRequestService.getManagerPage(
+        ServiceResult<PageResult<LeaveEmployeeView>> pageResult = leaveRequestService.getEmployeePage(
                 filter, managerAccountId, page, pageSize);
         ServiceResult<Map<String, Integer>> countResult = leaveRequestService.getStatusCounts(filter);
 
         // B3: đặt dữ liệu cho JSP; lỗi thì dùng trang rỗng để màn vẫn dựng được
         request.setAttribute(
-                "leavePage",
+                "employeePage",
                 pageResult.isSuccess()
                         ? pageResult.getData()
-                        : new PageResult<LeaveRequestItemView>(
+                        : new PageResult<LeaveEmployeeView>(
                                 Collections.emptyList(), 1, pageSize, 0));
 
         request.setAttribute(

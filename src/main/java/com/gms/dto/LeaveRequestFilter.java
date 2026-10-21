@@ -11,7 +11,7 @@ import java.time.LocalDate;
 public class LeaveRequestFilter {
 
     // Tab trạng thái trên màn: Service đổi từ tham số URL bằng LeaveRequest.Status.fromDbValue.
-    // null = tab "Tất cả"; mặc định của màn là PENDING nên Service truyền PENDING khi URL trống.
+    // null = tab Tất cả, cũng là mặc định để mở nhân viên xem đủ lịch sử.
     private final LeaveRequest.Status status;
 
     // Từ khóa tên nhân viên đã trim; DAO ghép thành mẫu LIKE không phân biệt hoa thường và dấu.

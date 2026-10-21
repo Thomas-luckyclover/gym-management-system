@@ -1,6 +1,7 @@
 package com.gms.service;
 
 import com.gms.dto.LeaveRequestRow;
+import com.gms.dto.LeaveEmployeeView;
 import com.gms.dto.LeaveReviewDetail;
 import com.gms.constant.Role;
 import com.gms.dao.AccountDAO;
@@ -264,15 +265,17 @@ class LeaveApprovalSafetyTest {
 
     @Test
     void listDoesNotMarkAResignedEmployeeAsPassing() throws Exception {
-        when(dao.countByFilter(any())).thenReturn(1);
-        when(dao.findManagerPage(any(), eq(0), eq(20), isNull())).thenReturn(java.util.List.of(
+        when(dao.countEmployees(any())).thenReturn(1);
+        when(dao.findEmployeePage(any(), eq(0), eq(20))).thenReturn(java.util.List.of(
+                new LeaveEmployeeView(50, "NV-0050", "PT test", "PT", null, "Working")));
+        when(dao.findEmployeeRequests(any(), eq(java.util.List.of(50)), isNull())).thenReturn(java.util.List.of(
                 new LeaveRequestRow(request, "NV-0050", "PT test", "PT", null, null)));
         when(dao.findWorkingPosition(connection, 50)).thenReturn(null);
         try (MockedStatic<DBContext> database = mockStatic(DBContext.class)) {
             database.when(DBContext::getConnection).thenReturn(connection);
-            var result = service.getManagerPage("", "Pending", 1, 20);
+            var result = service.getEmployeePage(service.createManagerFilter("", "Pending", null, null, null, null), null, 1, 20);
             assertTrue(result.isSuccess());
-            var item = result.getData().getItems().get(0);
+            var item = result.getData().getItems().get(0).getRequests().get(0);
             assertEquals("Cần xử lý", item.getCheckSummary());
             assertTrue(item.getCheckMessage().contains("không còn"));
         }
@@ -381,20 +384,22 @@ class LeaveApprovalSafetyTest {
     /** Cùng dữ liệu giả đi qua cả ba luồng để bắt việc giao diện lệch điều kiện POST. */
     private void assertReadinessAcrossScreens(boolean expectedAllowed, String expectedMessage) throws Exception {
         stubManagerAndCurrentRequest();
-        when(dao.countByFilter(any())).thenReturn(1);
-        when(dao.findManagerPage(any(), eq(0), eq(20), isNull())).thenReturn(java.util.List.of(
+        when(dao.countEmployees(any())).thenReturn(1);
+        when(dao.findEmployeePage(any(), eq(0), eq(20))).thenReturn(java.util.List.of(
+                new LeaveEmployeeView(50, "NV-0050", "PT test", "PT", null, "Working")));
+        when(dao.findEmployeeRequests(any(), eq(java.util.List.of(50)), isNull())).thenReturn(java.util.List.of(
                 new LeaveRequestRow(request, "NV-0050", "PT test", "PT", null, null)));
         when(dao.findReviewDetail(12, 7)).thenReturn(new LeaveReviewDetail(
                 request, "NV-0050", "PT test", "PT", null, null));
         when(dao.approve(connection, 12, 7)).thenReturn(true);
         try (MockedStatic<DBContext> database = mockStatic(DBContext.class)) {
             database.when(DBContext::getConnection).thenReturn(connection);
-            var pageResult = service.getManagerPage("", "Pending", 1, 20);
+            var pageResult = service.getEmployeePage(service.createManagerFilter("", "Pending", null, null, null, null), null, 1, 20);
             var detailResult = service.getReviewDetail(12, 10);
             var decisionResult = service.approveRequest(10, 12);
             assertTrue(pageResult.isSuccess());
             assertTrue(detailResult.isSuccess());
-            var item = pageResult.getData().getItems().get(0);
+            var item = pageResult.getData().getItems().get(0).getRequests().get(0);
             assertEquals(expectedAllowed ? "Đạt" : "Cần xử lý", item.getCheckSummary());
             assertEquals(expectedAllowed, detailResult.getData().isCanApprove());
             assertEquals(expectedAllowed, decisionResult.isSuccess());

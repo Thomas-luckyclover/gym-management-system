@@ -99,3 +99,14 @@ Kiểm chứng cuối: 184 test qua; ba JSP biên dịch không lỗi. Trình du
 ReminderSentAt chỉ được đánh dấu nếu đơn còn Pending và chưa nhắc. Lưu dấu nhắc và thông báo cùng transaction, lỗi thì rollback để job có thể thử lại. Các dấu nhắc cũ được giữ nguyên; không reset database.
 
 Kiểm chứng thay đổi nhắc theo ngày: clean package chạy 191 test, không lỗi; Jasper biên dịch hai JSP quản lý không lỗi. Bản Tomcat xem thử chỉ đọc xác nhận bảy cột, nhãn sắp nghỉ ngày mai, thứ tự tab Tất cả, timeline ngày bắt đầu nghỉ, lọc khoảng ngày và loại nghỉ. Không chạy job gửi nhắc hoặc ghi quyết định trên DB thật; ứng dụng chính chưa redeploy.
+
+## Danh sách nhân viên mở rộng các đơn (21/10/2026, user yêu cầu thử triển khai)
+
+- Toàn bộ PT/Lễ tân xuất hiện, kể cả người chưa có đơn hoặc đã nghỉ việc; người đã nghỉ việc có nhãn riêng. Manager không thêm vào vì nghiệp vụ nộp đơn hiện chỉ hỗ trợ PT/Lễ tân.
+- Hàng cha hiện tên/mã/chức vụ, tổng đơn và tổng Pending của nhân viên. Pending gần ngày nghỉ được xếp trước và có badge đỏ.
+- Bấm hàng cha để mở các đơn bằng details/summary native, hỗ trợ bàn phím không cần JS. Người chưa có đơn hiện Chưa có đơn và không mở rộng. Xem chi tiết và luồng quyết định giữ nguyên.
+- Mặc định tab Tất cả. Bộ lọc trạng thái/loại/ngày chỉ lọc đơn bên trong; tên/mã/chức vụ lọc hàng nhân viên. Không khớp bộ lọc không bị hiểu nhầm là chưa từng có đơn.
+- countEmployees/findEmployeePage phân trang nhân viên tại SQL; LEFT JOIN giữ người chưa có đơn. findEmployeeRequests lấy đơn của cả trang bằng danh sách EmployeeId có tham số, không cắt đôi nhóm và không đọc riêng từng nhân viên.
+- Không đổi schema, chính sách nghỉ hoặc các kiểm tra khi duyệt. Hướng dẫn luồng mới ở BF-05-code-guide.md.
+
+Kiểm chứng nhóm nhân viên: 197 test qua, hai JSP quản lý cùng header mới biên dịch không lỗi. Bản xem thử chỉ đọc trên DB local hiển thị 12 PT/Lễ tân qua hai trang; đã kiểm tra mở/đóng bằng chuột và Enter, đi tới chi tiết, người chưa có đơn, lịch sử người đã nghỉ việc, lọc tên/mã, loại nghỉ và ngày cuối của đơn nhiều ngày. Mã hóa UTF-8 được khai báo riêng ở fragment header. Không thay DB hoặc gửi quyết định; chưa redeploy Tomcat chính.
