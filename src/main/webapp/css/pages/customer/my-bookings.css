@@ -163,7 +163,10 @@
   gap: var(--space-3);
   padding: var(--space-3) var(--space-5) var(--space-2);
 }
-.booking-result { margin: 0; }
+.booking-result { display: inline-flex; align-items: center; gap: var(--space-2); margin: 0; }
+.booking-sidebar-head { display: flex; align-items: center; gap: var(--space-2); }
+.booking-sidebar-head h2 { margin: 0; font-size: var(--font-size-lg); }
+.booking-progress .pt-info { flex: none; }
 .booking-jump {
   padding: var(--space-0-5) var(--space-3);
   background: var(--color-surface-hover);

@@ -20,7 +20,7 @@
         <title>Gói của tôi · Super Gym</title>
         <link rel="stylesheet" href="${pageContext.request.contextPath}/css/pages/customer/dashboard.css?v=20261013c">
         <link rel="stylesheet" href="${pageContext.request.contextPath}/css/pages/customer/my-pt-sessions.css?v=20261019f">
-        <link rel="stylesheet" href="${pageContext.request.contextPath}/css/pages/customer/my-bookings.css?v=20261021c">
+        <link rel="stylesheet" href="${pageContext.request.contextPath}/css/pages/customer/my-bookings.css?v=20261021d">
         <script src="${pageContext.request.contextPath}/js/pages/customer/my-pt-sessions.js?v=20261019e" defer></script>
         <script src="${pageContext.request.contextPath}/js/pages/customer/my-bookings.js?v=20261021c" defer></script>
     </head>
@@ -52,6 +52,10 @@
 
                                 <%-- ===================== [TAB] cột trái: 3 tab, mỗi tab 1 danh sách ===================== --%>
                                 <aside class="booking-sidebar schedule-board" aria-label="Danh sách gói">
+                                    <div class="booking-sidebar-head">
+                                        <h2>Gói của bạn</h2>
+                                        <span class="pt-info"><button type="button" class="pt-info-trigger" aria-label="Giải thích các nhóm gói" aria-describedby="hint-tabs"><span aria-hidden="true">i</span></button><span id="hint-tabs" class="pt-info-popover" role="tooltip"><strong>Đang tập:</strong> gói PT còn hạn.<br><strong>Đã kết thúc:</strong> gói hết hạn hoặc đã dùng hết buổi.<br><strong>Buổi lẻ:</strong> các buổi bạn đặt riêng từng buổi, không thuộc gói nào.</span></span>
+                                    </div>
                                     <div class="booking-tabs" role="tablist" aria-label="Nhóm gói">
                                         <button type="button" role="tab" id="tab-active" aria-controls="panel-active" data-tab="active" aria-selected="${openTab eq 'active'}">
                                             Đang tập <span>${fn:length(booking.activePackages)}</span>
@@ -122,6 +126,7 @@
                                                 <div class="booking-progress">
                                                     <progress value="${sp.pastSessions}" max="${sp.totalSessions gt 0 ? sp.totalSessions : 1}" aria-label="Tiến độ gói"></progress>
                                                     <span>${sp.pastSessions}/${sp.totalSessions} buổi đã qua<c:if test="${sp.active}"> · <strong>còn ${sp.totalSessions - sp.pastSessions} buổi</strong></c:if></span>
+                                                    <span class="pt-info"><button type="button" class="pt-info-trigger" aria-label="Cách tính tiến độ" aria-describedby="hint-progress"><span aria-hidden="true">i</span></button><span id="hint-progress" class="pt-info-popover" role="tooltip"><strong>Đã qua:</strong> số buổi có ngày tập trước hôm nay, tính cả buổi vắng và buổi bị hủy.<br><strong>Còn:</strong> số buổi từ hôm nay trở đi.</span></span>
                                                 </div>
                                             </c:otherwise>
                                         </c:choose>
@@ -151,7 +156,8 @@
                                     <%-- Cả 2 kiểu bảng đều 5 cột: gói (# Ngày Giờ TrạngThái ChiTiết), buổi lẻ (Ngày Giờ PT TrạngThái ChiTiết). --%>
                                     <c:set var="colCount" value="5" />
                                     <div class="booking-result-row">
-                                        <p class="schedule-note booking-result" id="booking-result" role="status" aria-live="polite">${booking.totalCount} buổi · xếp theo ngày tập</p>
+                                        <p class="schedule-note booking-result"><span id="booking-result" role="status" aria-live="polite">${booking.totalCount} buổi · xếp theo ngày tập</span>
+                                            <span class="pt-info"><button type="button" class="pt-info-trigger" aria-label="Cách đọc bảng buổi" aria-describedby="hint-table"><span aria-hidden="true">i</span></button><span id="hint-table" class="pt-info-popover" role="tooltip"><strong>#:</strong> thứ tự buổi trong gói theo ngày tập.<br><strong>Vạch Hôm nay:</strong> phía trên là buổi đã qua, phía dưới là buổi sắp tới.<br><strong>Buổi tới:</strong> buổi gần nhất bạn cần đi tập.<br><strong>Chi tiết:</strong> xem PT, lý do và thêm vào Google Calendar.</span></span></p>
                                         <%-- Bảng tự cuộn tới "Buổi tới" → buổi đã qua bị khuất phía trên; nút này báo và cuộn lên. JS điền số. --%>
                                         <button type="button" class="booking-jump" data-jump-past hidden></button>
                                     </div>
