@@ -133,6 +133,7 @@ public class LeaveRequestDAO {
                 where.append(" AND lr.LeaveType = ? ");
                 params.add(filter.getLeaveType().getDbValue());
             }
+            // Hai khoảng giao nhau khi ngày kết thúc đơn >= Từ ngày và ngày bắt đầu đơn <= Đến ngày (tính cả biên).
             if (filter.getFromDate() != null) {
                 where.append(" AND lr.ToDate >= ? ");
                 params.add(java.sql.Date.valueOf(filter.getFromDate()));
@@ -145,10 +146,16 @@ public class LeaveRequestDAO {
         return new FilterSql(where.toString(), params);
     }
 
-    /** Chỉ tên/mã và chức vụ lọc nhân viên; bộ lọc đơn không làm mất người chưa có đơn. */
+    /** Khi chọn ngày, chỉ giữ nhân viên có đơn khớp toàn bộ bộ lọc; không chọn ngày thì giữ cả người chưa có đơn. */
     private FilterSql buildEmployeeFilterSql(LeaveRequestFilter filter) {
         if (filter == null) {
             return buildFilterSql(null, false);
+        }
+        if (filter.getFromDate() != null || filter.getToDate() != null) {
+            // EXISTS kiểm tra có ít nhất một đơn phù hợp, dùng cùng điều kiện với bảng đơn bên trong.
+            FilterSql requestFilter = buildFilterSql(filter, true);
+            return new FilterSql(" WHERE EXISTS (SELECT 1 FROM LeaveRequests lr "
+                    + requestFilter.whereClause + " AND lr.EmployeeId = e.EmployeeId) ", requestFilter.params);
         }
         LeaveRequestFilter employeeFilter = new LeaveRequestFilter(null, filter.getKeyword(), filter.getPosition(),
                 null, null, null);
@@ -178,11 +185,11 @@ public class LeaveRequestDAO {
         FilterSql employeeFilter = buildEmployeeFilterSql(filter);
         String sql = "WITH EmployeeLeaveCounts AS ("
                 + " SELECT e.EmployeeId, e.EmployeeCode, p.FullName, e.Position, p.Avatar, e.Status AS EmploymentStatus, "
-                + " COUNT(lr.LeaveRequestId) AS TotalRequestCount, "
-                + " SUM(CASE WHEN lr.Status = 'Pending' THEN 1 ELSE 0 END) AS PendingCount, "
-                + " MIN(CASE WHEN lr.Status = 'Pending' AND lr.FromDate >= ? THEN lr.FromDate END) AS NextPendingDate "
+                + " COUNT(employeeLeave.LeaveRequestId) AS TotalRequestCount, "
+                + " SUM(CASE WHEN employeeLeave.Status = 'Pending' THEN 1 ELSE 0 END) AS PendingCount, "
+                + " MIN(CASE WHEN employeeLeave.Status = 'Pending' AND employeeLeave.FromDate >= ? THEN employeeLeave.FromDate END) AS NextPendingDate "
                 + " FROM Employees e JOIN Persons p ON p.PersonId = e.PersonId "
-                + " LEFT JOIN LeaveRequests lr ON lr.EmployeeId = e.EmployeeId "
+                + " LEFT JOIN LeaveRequests employeeLeave ON employeeLeave.EmployeeId = e.EmployeeId "
                 + employeeFilter.whereClause
                 + " GROUP BY e.EmployeeId, e.EmployeeCode, p.FullName, e.Position, p.Avatar, e.Status "
                 + ") SELECT * FROM EmployeeLeaveCounts "

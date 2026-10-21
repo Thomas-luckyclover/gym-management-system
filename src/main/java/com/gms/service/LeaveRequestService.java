@@ -74,8 +74,11 @@ public class LeaveRequestService {
     /** Danh sách cha phân trang theo nhân viên; mỗi người giữ đầy đủ đơn phù hợp bộ lọc. */
     public ServiceResult<PageResult<LeaveEmployeeView>> getEmployeePage(
             LeaveRequestFilter filter, Integer managerAccountId, int page, int pageSize) {
+        if (hasReversedDateRange(filter)) {
+            return ServiceResult.fail("Từ ngày phải trước hoặc trùng Đến ngày.");
+        }
         try {
-            // B1: lấy trang nhân viên, bao gồm người chưa có đơn. SQL đã sắp theo đơn chờ gần nhất.
+            // B1: lấy trang nhân viên; khi chọn ngày, SQL chỉ giữ người có đơn phù hợp.
             Integer managerEmployeeId = findWorkingManagerId(managerAccountId);
             int totalEmployees = leaveRequestDAO.countEmployees(filter);
             int totalPages = Math.max(1, (totalEmployees + pageSize - 1) / pageSize);
@@ -152,6 +155,9 @@ public class LeaveRequestService {
     }
 
     public ServiceResult<Map<String, Integer>> getStatusCounts(LeaveRequestFilter filter) {
+        if (hasReversedDateRange(filter)) {
+            return ServiceResult.fail("Từ ngày phải trước hoặc trùng Đến ngày.");
+        }
         try {
             Map<String, Integer> counts = leaveRequestDAO.getStatusCounts(filter);
             int total = 0;
@@ -169,6 +175,12 @@ public class LeaveRequestService {
             e.printStackTrace();
             return ServiceResult.fail(Messages.MSG04_SYSTEM_BUSY);
         }
+    }
+
+    /** Kiểm tra khoảng ngày nhập từ bộ lọc; cho phép bỏ trống một hoặc cả hai ngày. */
+    private boolean hasReversedDateRange(LeaveRequestFilter filter) {
+        return filter != null && filter.getFromDate() != null && filter.getToDate() != null
+                && filter.getFromDate().isAfter(filter.getToDate());
     }
 
     /**

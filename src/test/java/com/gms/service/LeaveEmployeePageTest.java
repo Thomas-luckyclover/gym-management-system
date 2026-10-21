@@ -10,6 +10,7 @@ import com.gms.entity.LeaveRequest;
 import com.gms.util.DateTimeUtil;
 import java.math.BigDecimal;
 import java.sql.SQLException;
+import java.time.LocalDate;
 import java.util.List;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
@@ -101,6 +102,35 @@ class LeaveEmployeePageTest {
     void databaseFailureIsAnErrorRatherThanAnEmptyEmployeeList() throws Exception {
         when(dao.countEmployees(filter)).thenThrow(new SQLException("database unavailable"));
         assertFalse(service.getEmployeePage(filter, null, 1, 20).isSuccess());
+    }
+
+    @Test
+    void reversedDatesShowAnErrorWithoutQueryingTheDatabase() {
+        filter = service.createManagerFilter("", "All", null, null, "2026-10-25", "2026-10-23");
+        var pageResult = service.getEmployeePage(filter, null, 1, 20);
+        var countResult = service.getStatusCounts(filter);
+        assertFalse(pageResult.isSuccess());
+        assertEquals("Từ ngày phải trước hoặc trùng Đến ngày.", pageResult.getMessage());
+        assertFalse(countResult.isSuccess());
+        verifyNoInteractions(dao);
+    }
+
+    @Test
+    void sameDayRangeCanFindLeaveThatStartedBeforeTheSelectedDay() throws Exception {
+        filter = service.createManagerFilter("", "All", null, null, "2026-10-24", "2026-10-24");
+        LeaveEmployeeView employee = employee(10, 1);
+        LeaveRequestRow row = request(101, 10);
+        row.getLeaveRequest().setFromDate(LocalDate.of(2026, 10, 23));
+        row.getLeaveRequest().setToDate(LocalDate.of(2026, 10, 24));
+        row.getLeaveRequest().setShiftType(LeaveRequest.ShiftType.FULL_DAY);
+        row.getLeaveRequest().setDays(new BigDecimal("2"));
+        when(dao.countEmployees(filter)).thenReturn(1);
+        when(dao.findEmployeePage(filter, 0, 20)).thenReturn(List.of(employee));
+        when(dao.findEmployeeRequests(filter, List.of(10), null)).thenReturn(List.of(row));
+
+        var result = service.getEmployeePage(filter, null, 1, 20);
+        assertTrue(result.isSuccess());
+        assertEquals(101, result.getData().getItems().get(0).getRequests().get(0).getLeaveRequestId());
     }
 
     private LeaveEmployeeView employee(int employeeId, int totalRequests) {
