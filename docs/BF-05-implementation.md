@@ -55,3 +55,11 @@ Metadata DB local: có FromDate/ToDate/Days/AssignedToEmployeeId, có LeaveDate 
 Rút Pending vẫn xóa vật lý và ghi audit, chưa đạt TC-09 theo hướng Withdrawn. Đơn có lịch sử chuyển có thể bị FK chặn xóa. Cần thay đổi schema/migration riêng cho Withdrawn và kiểm thử lịch sử; không dùng Rejected giả lập rút đơn.
 
 Chưa có module PT đổi/hủy/bàn giao, hủy sau duyệt/hoàn quỹ hoặc báo vắng khẩn cấp trong hệ thống. Nghỉ đột xuất vẫn báo trực tiếp Manager. Không tuyên bố đã hoàn thiện các phần nâng cao này hay mô hình phân ca thực tế.
+
+## Rà lại ảnh danh sách ngày 21/10/2026
+
+Phát hiện đơn #7 của nhân viên Resigned vẫn hiện Đạt: snapshot danh sách dùng chức vụ từ dòng DAO mà chưa đối chiếu Working; trang chi tiết cũng chưa phản ánh điều kiện này. POST duyệt đã kiểm tra Working và chặn trường hợp đó.
+
+Đã sửa danh sách tra lại vị trí Working giống bước duyệt; chi tiết hiện lý do nhân viên đã nghỉ việc và khóa xác nhận. Lý do Cần xử lý xuất hiện ngay trên danh sách. Bỏ thuật ngữ snapshot khỏi nội dung người dùng thấy, cập nhật phiên bản CSS để trình duyệt tải lại.
+
+Thêm 2 test tái hiện lỗi danh sách/chi tiết. Clean package chạy 176 test, không lỗi; kiểm tra Service thật trên DB local xác nhận đơn #7 Cần xử lý và canApprove = false, không đổi bản ghi. Chưa redeploy WAR mới hoặc xác minh bản sửa này bằng trình duyệt.
