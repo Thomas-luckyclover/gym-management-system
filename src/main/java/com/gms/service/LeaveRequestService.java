@@ -159,7 +159,7 @@ public class LeaveRequestService {
             if (currentManagerEmployeeId != null) {
                 // If it's an account ID, try resolving to EmployeeId; if not found, use as-is
                 Employee mgr = findEmployeeForAccount(currentManagerEmployeeId);
-                currentEmpId = mgr != null ? mgr.getEmployeeId() : currentManagerEmployeeId;
+                currentEmpId = isWorkingManager(mgr) ? mgr.getEmployeeId() : null;
             }
 
             // B2: đếm tổng và lấy đúng một trang (DAO cắt bằng OFFSET/FETCH)
@@ -368,7 +368,7 @@ public class LeaveRequestService {
             Integer currentManagerEmployeeId = null;
             if (managerAccountId != null) {
                 Employee mgr = findEmployeeForAccount(managerAccountId);
-                if (mgr != null) {
+                if (isWorkingManager(mgr)) {
                     currentManagerEmployeeId = mgr.getEmployeeId();
                 }
             }
@@ -598,8 +598,8 @@ public class LeaveRequestService {
         }
         try {
             Employee currentManager = findEmployeeForAccount(managerAccountId);
-            if (currentManager == null) {
-                return ServiceResult.fail(Messages.MSG04_SYSTEM_BUSY);
+            if (!isWorkingManager(currentManager)) {
+                return ServiceResult.fail("Bạn không có quyền xử lý đơn nghỉ phép.");
             }
             if (currentManager.getEmployeeId() == toEmployeeId) {
                 return ServiceResult.fail("Không thể chuyển quyền duyệt cho chính bạn.");
@@ -619,6 +619,16 @@ public class LeaveRequestService {
             try (Connection conn = DBContext.getConnection()) {
                 conn.setAutoCommit(false);
                 try {
+                    leaveRequestDAO.lockDecisionScope(conn);
+                    ServiceResult<LeaveRequest> lockedResult = validateDecision(conn, leaveRequestId, currentManager.getEmployeeId());
+                    if (!lockedResult.isSuccess()) {
+                        conn.rollback();
+                        return ServiceResult.fail(lockedResult.getMessage());
+                    }
+                    if (!"Manager".equals(leaveRequestDAO.findWorkingPosition(conn, toEmployeeId))) {
+                        conn.rollback();
+                        return ServiceResult.fail("Người nhận phải là Quản lý đang làm việc.");
+                    }
                     boolean updated = leaveRequestDAO.assign(conn, leaveRequestId, toEmployeeId);
                     if (!updated) {
                         conn.rollback();
@@ -699,14 +709,14 @@ public class LeaveRequestService {
             if (!request.isPending()) {
                 return ServiceResult.fail("Đơn này đã được xử lý rồi.");
             }
-            if (request.getLeaveDate() != null && request.getLeaveDate().isBefore(LocalDate.now())) {
+            if (request.getLeaveDate() != null && request.getLeaveDate().isBefore(DateTimeUtil.today())) {
                 return ServiceResult.fail("Không thể duyệt đơn nghỉ phép của ngày đã qua.");
             }
 
             // B3: tìm thông tin nhân viên của Manager (lấy EmployeeId để lưu người duyệt)
             Employee manager = findEmployeeForAccount(managerAccountId);
-            if (manager == null) {
-                return ServiceResult.fail(Messages.MSG04_SYSTEM_BUSY);
+            if (!isWorkingManager(manager)) {
+                return ServiceResult.fail("Bạn không có quyền xử lý đơn nghỉ phép.");
             }
             if (detail.getAssignedToEmployeeId() != null && !detail.getAssignedToEmployeeId().equals(manager.getEmployeeId())) {
                 return ServiceResult.fail("Đơn này đã được phân công cho người khác duyệt.");
@@ -716,11 +726,15 @@ public class LeaveRequestService {
             try (Connection conn = DBContext.getConnection()) {
                 conn.setAutoCommit(false); // Bắt đầu transaction
 
-                // B4.(-1): khóa các đơn cùng ngày nghỉ để hai lượt duyệt cùng ngày phải chạy lần lượt (BR-14)
-                leaveRequestDAO.lockLeaveDate(conn, request.getLeaveDate());
-
                 try {
-                    String position = detail.getPosition();
+                    leaveRequestDAO.lockDecisionScope(conn);
+                    ServiceResult<LeaveRequest> lockedResult = validateDecision(conn, leaveRequestId, manager.getEmployeeId());
+                    if (!lockedResult.isSuccess()) {
+                        conn.rollback();
+                        return ServiceResult.fail(lockedResult.getMessage());
+                    }
+                    request = lockedResult.getData();
+                    String position = leaveRequestDAO.findWorkingPosition(conn, request.getEmployeeId());
                     String shiftType = request.getShiftType().getDbValue();
 
                     // B4.0: Nếu nhân viên là PT, kiểm tra lại xem có phát sinh buổi dạy Scheduled trùng ca không (CBR-83)
@@ -832,8 +846,8 @@ public class LeaveRequestService {
 
             // B3: tìm thông tin nhân viên của Manager
             Employee manager = findEmployeeForAccount(managerAccountId);
-            if (manager == null) {
-                return ServiceResult.fail(Messages.MSG04_SYSTEM_BUSY);
+            if (!isWorkingManager(manager)) {
+                return ServiceResult.fail("Bạn không có quyền xử lý đơn nghỉ phép.");
             }
             if (detail.getAssignedToEmployeeId() != null && !detail.getAssignedToEmployeeId().equals(manager.getEmployeeId())) {
                 return ServiceResult.fail("Đơn này đã được phân công cho người khác duyệt.");
@@ -844,6 +858,13 @@ public class LeaveRequestService {
                 conn.setAutoCommit(false); // Bắt đầu transaction
 
                 try {
+                    leaveRequestDAO.lockDecisionScope(conn);
+                    ServiceResult<LeaveRequest> lockedResult = validateDecision(conn, leaveRequestId, manager.getEmployeeId());
+                    if (!lockedResult.isSuccess()) {
+                        conn.rollback();
+                        return ServiceResult.fail(lockedResult.getMessage());
+                    }
+                    request = lockedResult.getData();
                     // B4.1: cập nhật trạng thái đơn thành Rejected
                     boolean isRejected = leaveRequestDAO.reject(
                             conn, leaveRequestId, manager.getEmployeeId(), rejectReason);
@@ -1097,6 +1118,11 @@ public class LeaveRequestService {
             try (Connection conn = DBContext.getConnection()) {
                 conn.setAutoCommit(false);
                 try {
+                    leaveRequestDAO.lockDecisionScope(conn);
+                    if (leaveRequestDAO.hasConflictingLeave(conn, employee.getEmployeeId(), leaveDate, shiftType.getDbValue())) {
+                        conn.rollback();
+                        return ServiceResult.fail("Bạn đã có đơn nghỉ trùng ngày và ca này.");
+                    }
                     int newLeaveRequestId = leaveRequestDAO.insert(conn, request);
                     if (newLeaveRequestId <= 0) {
                         conn.rollback();
@@ -1166,6 +1192,7 @@ public class LeaveRequestService {
             try (Connection conn = DBContext.getConnection()) {
                 conn.setAutoCommit(false);
                 try {
+                    leaveRequestDAO.lockDecisionScope(conn);
                     boolean isDeleted = leaveRequestDAO.withdraw(conn, leaveRequestId, employee.getEmployeeId());
                     if (!isDeleted) {
                         conn.rollback();
@@ -1198,6 +1225,27 @@ public class LeaveRequestService {
             e.printStackTrace();
             return ServiceResult.fail(Messages.MSG04_SYSTEM_BUSY);
         }
+    }
+
+    private boolean isWorkingManager(Employee employee) {
+        return employee != null && employee.getPosition() == Role.MANAGER
+                && employee.getStatus() == Employee.Status.WORKING;
+    }
+
+    private ServiceResult<LeaveRequest> validateDecision(Connection connection, int requestId, int managerEmployeeId)
+            throws SQLException {
+        if (!"Manager".equals(leaveRequestDAO.findWorkingPosition(connection, managerEmployeeId))) {
+            return ServiceResult.fail("Bạn không có quyền xử lý đơn nghỉ phép.");
+        }
+        LeaveRequest current = leaveRequestDAO.findById(connection, requestId);
+        if (current == null || !current.isPending()) {
+            return ServiceResult.fail("Đơn này đã thay đổi trạng thái. Vui lòng tải lại trang.");
+        }
+        Integer assignee = current.getAssignedToEmployeeId();
+        if (assignee != null && assignee != managerEmployeeId) {
+            return ServiceResult.fail("Đơn này đã được phân công cho người khác duyệt.");
+        }
+        return ServiceResult.ok(current);
     }
 
     // ===== Background Job (JOB-07) =====
@@ -1262,7 +1310,7 @@ public class LeaveRequestService {
     /** Tìm Employee đang Working theo AccountId (Manager duyệt đơn). */
     private Employee findEmployeeForAccount(int accountId) throws SQLException {
         com.gms.entity.Account account = accountDAO.findById(accountId);
-        if (account == null) {
+        if (account == null || account.getStatus() != com.gms.entity.Account.Status.ACTIVE) {
             return null;
         }
         return employeeDAO.findByPersonId(account.getPersonId());

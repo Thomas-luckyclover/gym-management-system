@@ -58,6 +58,35 @@ public class LeaveRequestDAO {
         return null;
     }
 
+    public LeaveRequest findById(Connection connection, int leaveRequestId) throws SQLException {
+        String sql = SELECT_COLUMNS.replace("FROM LeaveRequests ", "FROM LeaveRequests WITH (UPDLOCK, HOLDLOCK) ")
+                + "WHERE LeaveRequestId = ?";
+        try (PreparedStatement statement = connection.prepareStatement(sql)) {
+            statement.setInt(1, leaveRequestId);
+            try (ResultSet resultSet = statement.executeQuery()) {
+                return resultSet.next() ? mapResultSetToLeaveRequest(resultSet) : null;
+            }
+        }
+    }
+
+    public void lockDecisionScope(Connection connection) throws SQLException {
+        try (PreparedStatement statement = connection.prepareStatement(
+                "SELECT COUNT(*) FROM LeaveRequests WITH (TABLOCKX, HOLDLOCK)");
+                ResultSet resultSet = statement.executeQuery()) {
+            resultSet.next();
+        }
+    }
+
+    public String findWorkingPosition(Connection connection, int employeeId) throws SQLException {
+        String sql = "SELECT Position FROM Employees WITH (HOLDLOCK) WHERE EmployeeId = ? AND Status = 'Working'";
+        try (PreparedStatement statement = connection.prepareStatement(sql)) {
+            statement.setInt(1, employeeId);
+            try (ResultSet resultSet = statement.executeQuery()) {
+                return resultSet.next() ? resultSet.getString("Position") : null;
+            }
+        }
+    }
+
     private static class FilterSql {
         final String whereClause;
         final List<Object> params;
@@ -209,7 +238,7 @@ public class LeaveRequestDAO {
 
                     row.setAssignedToName(resultSet.getString("AssignedToName"));
                     boolean canAct = false;
-                    if (lr.isPending()) {
+                    if (lr.isPending() && currentManagerEmployeeId != null) {
                         if (lr.getAssignedToEmployeeId() == null) {
                             canAct = true;
                         } else if (currentManagerEmployeeId != null && lr.getAssignedToEmployeeId().equals(currentManagerEmployeeId)) {
@@ -309,7 +338,7 @@ public class LeaveRequestDAO {
                     detail.setAssignedToName(resultSet.getString("AssignedToName"));
 
                     boolean canAct = false;
-                    if (lr.isPending()) {
+                    if (lr.isPending() && currentManagerEmployeeId != null) {
                         if (lr.getAssignedToEmployeeId() == null) {
                             canAct = true;
                         } else if (currentManagerEmployeeId != null && lr.getAssignedToEmployeeId().equals(currentManagerEmployeeId)) {
@@ -705,18 +734,29 @@ public class LeaveRequestDAO {
      * Kiểm tra nhân viên đã có đơn nghỉ Pending hoặc Approved trùng ngày và ca chưa.
      */
     public boolean hasConflictingLeave(int employeeId, LocalDate leaveDate, String shiftType) throws SQLException {
+        try (Connection connection = DBContext.getConnection()) {
+            return hasConflictingLeave(connection, employeeId, leaveDate, shiftType);
+        }
+    }
+
+    public boolean hasConflictingLeave(Connection connection, int employeeId, LocalDate leaveDate, String shiftType) throws SQLException {
+        return hasConflictingLeave(connection, employeeId, leaveDate, leaveDate, shiftType);
+    }
+
+    public boolean hasConflictingLeave(Connection connection, int employeeId, LocalDate fromDate, LocalDate toDate,
+            String shiftType) throws SQLException {
         String sql = "SELECT COUNT(*) FROM LeaveRequests "
-                + "WHERE EmployeeId = ? AND ? BETWEEN FromDate AND ToDate "
+                + "WHERE EmployeeId = ? AND FromDate <= ? AND ToDate >= ? "
                 + "AND Status IN ('Pending', 'Approved') "
                 + "AND (ShiftType = 'FullDay' OR ? = 'FullDay' OR ShiftType = ?)";
 
-        try (Connection connection = DBContext.getConnection();
-                PreparedStatement statement = connection.prepareStatement(sql)) {
+        try (PreparedStatement statement = connection.prepareStatement(sql)) {
 
             statement.setInt(1, employeeId);
-            statement.setDate(2, java.sql.Date.valueOf(leaveDate));
-            statement.setString(3, shiftType);
+            statement.setDate(2, java.sql.Date.valueOf(toDate));
+            statement.setDate(3, java.sql.Date.valueOf(fromDate));
             statement.setString(4, shiftType);
+            statement.setString(5, shiftType);
 
             try (ResultSet rs = statement.executeQuery()) {
                 if (rs.next()) {
