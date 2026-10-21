@@ -20,9 +20,9 @@
         <title>Gói của tôi · Super Gym</title>
         <link rel="stylesheet" href="${pageContext.request.contextPath}/css/pages/customer/dashboard.css?v=20261013c">
         <link rel="stylesheet" href="${pageContext.request.contextPath}/css/pages/customer/my-pt-sessions.css?v=20261019f">
-        <link rel="stylesheet" href="${pageContext.request.contextPath}/css/pages/customer/my-bookings.css?v=20261021b">
+        <link rel="stylesheet" href="${pageContext.request.contextPath}/css/pages/customer/my-bookings.css?v=20261021c">
         <script src="${pageContext.request.contextPath}/js/pages/customer/my-pt-sessions.js?v=20261019e" defer></script>
-        <script src="${pageContext.request.contextPath}/js/pages/customer/my-bookings.js?v=20261021b" defer></script>
+        <script src="${pageContext.request.contextPath}/js/pages/customer/my-bookings.js?v=20261021c" defer></script>
     </head>
     <body class="dock ${themeClass}">
         <%@ include file="/WEB-INF/jsp/common/flash-toast.jspf" %>
@@ -150,7 +150,11 @@
                                     <c:set var="isSingle" value="${booking.singleSelected}" />
                                     <%-- Cả 2 kiểu bảng đều 5 cột: gói (# Ngày Giờ TrạngThái ChiTiết), buổi lẻ (Ngày Giờ PT TrạngThái ChiTiết). --%>
                                     <c:set var="colCount" value="5" />
-                                    <p class="schedule-note booking-result" id="booking-result" role="status" aria-live="polite">${booking.totalCount} buổi · xếp theo ngày tập</p>
+                                    <div class="booking-result-row">
+                                        <p class="schedule-note booking-result" id="booking-result" role="status" aria-live="polite">${booking.totalCount} buổi · xếp theo ngày tập</p>
+                                        <%-- Bảng tự cuộn tới "Buổi tới" → buổi đã qua bị khuất phía trên; nút này báo và cuộn lên. JS điền số. --%>
+                                        <button type="button" class="booking-jump" data-jump-past hidden></button>
+                                    </div>
                                     <div class="booking-table-scroll" tabindex="0" role="region" aria-label="Danh sách buổi, có thể cuộn">
                                         <table class="booking-table" id="booking-sessions" data-focus-session="${booking.focusSessionId}">
                                             <caption class="visually-hidden">Các buổi theo thứ tự ngày giờ · Giờ Việt Nam</caption>
@@ -167,6 +171,14 @@
                                             <tbody>
                                                 <c:forEach var="s" items="${booking.sessions}">
                                                     <c:set var="isFocus" value="${s.sessionId eq booking.focusSessionId}" />
+                                                    <%-- Vạch ngăn "Hôm nay": trước buổi đầu tiên chưa kết thúc, nếu phía trên đã có buổi đã qua. --%>
+                                                    <c:if test="${not s.ended and not dividerShown}">
+                                                        <c:if test="${hasEnded}">
+                                                            <tr class="booking-divider" data-divider><td colspan="${colCount}"><span>Hôm nay · các buổi sắp tới</span></td></tr>
+                                                        </c:if>
+                                                        <c:set var="dividerShown" value="${true}" />
+                                                    </c:if>
+                                                    <c:if test="${s.ended}"><c:set var="hasEnded" value="${true}" /></c:if>
                                                     <tr data-session-row data-session-id="${s.sessionId}" data-status="${s.statusKey}" class="${isFocus ? 'is-focus' : ''} ${s.ended ? 'is-ended' : ''}">
                                                         <c:if test="${not isSingle}"><td class="booking-col-no">${s.sessionNo}</td></c:if>
                                                         <td>

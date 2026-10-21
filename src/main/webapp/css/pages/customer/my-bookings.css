@@ -156,7 +156,39 @@
 .booking-chips [data-filter]:disabled { opacity: var(--opacity-disabled); cursor: default; }
 
 /* ===================== [BANG] ===================== */
-.booking-result { margin: 0; padding: var(--space-3) var(--space-5) var(--space-2); }
+.booking-result-row {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: var(--space-3);
+  padding: var(--space-3) var(--space-5) var(--space-2);
+}
+.booking-result { margin: 0; }
+.booking-jump {
+  padding: var(--space-0-5) var(--space-3);
+  background: var(--color-surface-hover);
+  color: var(--color-text);
+  border: var(--border-width) solid var(--color-border);
+  border-radius: var(--radius-pill);
+  font: inherit;
+  font-size: var(--font-size-sm);
+  font-weight: var(--font-weight-semibold);
+  cursor: pointer;
+}
+.booking-jump:hover { border-color: var(--color-text-soft); }
+.booking-jump:focus-visible { outline: none; box-shadow: var(--shadow-focus); }
+/* Vạch "Hôm nay": ranh giới buổi đã qua (trên) và buổi sắp tới (dưới). */
+.booking-table .booking-divider td {
+  padding: var(--space-1-5) var(--space-4);
+  background: var(--color-surface-muted);
+  border-bottom: var(--border-width-thick) solid var(--color-primary);
+  color: var(--color-primary);
+  font-size: var(--font-size-xs);
+  font-weight: var(--font-weight-bold);
+  text-transform: uppercase;
+  letter-spacing: 0.04em;
+}
+.booking-table .booking-divider:hover { background: transparent; }
 .booking-table-scroll {
   overflow: auto;
   max-height: calc(var(--space-12) * 6);
@@ -224,7 +256,7 @@
   .my-bookings-page .booking-content { display: flex; flex-direction: column; max-height: 100%; min-height: 0; overflow: hidden; }
   .my-bookings-page .booking-overview,
   .my-bookings-page .booking-chips,
-  .my-bookings-page .booking-result,
+  .my-bookings-page .booking-result-row,
   .my-bookings-page .booking-foot { flex: none; }
   /* Co theo số dòng; nhiều buổi thì cuộn trong khung, không để khoảng trống lớn khi ít buổi. */
   .my-bookings-page .booking-table-scroll { flex: 0 1 auto; min-height: 0; max-height: none; overscroll-behavior-y: contain; }
@@ -237,6 +269,6 @@
   .booking-sidebar { max-height: calc(var(--space-12) * 5); overflow: auto; }
 }
 @media (max-width: 640px) {
-  .booking-overview, .booking-chips, .booking-result, .booking-foot { padding-inline: var(--space-4); }
+  .booking-overview, .booking-chips, .booking-result-row, .booking-foot { padding-inline: var(--space-4); }
   .booking-table th, .booking-table td { padding: var(--space-2) var(--space-3); }
 }

@@ -6,6 +6,7 @@
 - Thẻ gói không hiện mã gói (#82) vì dễ nhầm với số thứ tự buổi #1, #2; tiến độ ghi "17/45 buổi đã qua · còn 28".
 - Ô đếm → chip lọc có chấm màu trạng thái; đổi "Còn lại" thành "Sắp tới" (vẫn gồm Hôm nay + Sắp tới + Cần chú ý); chip = 0 thì khóa.
 - Bảng: buổi lẻ bỏ cột #, thêm cột PT; lý do chỉ hiện với Cần chú ý / Vắng / Đã hủy, câu chung của các trạng thái khác nằm trong "Chi tiết"; dòng buổi sắp tới có nhãn "Buổi tới"; bảng co theo số dòng, không còn khoảng trống lớn.
+- Bảng tự cuộn tới buổi sắp tới làm buổi đã qua bị khuất → thêm vạch "Hôm nay · các buổi sắp tới" giữa 2 nhóm và nút "↑ Xem N buổi phía trên". Buổi "Đang cập nhật" (qua giờ, chưa chốt) thuộc nhóm đã qua, nằm trên vạch.
 - Thêm `MyPtSessionRow.getDayName()` để hiện "Thứ 6, 23/10/2026".
 
 ## Lịch tập — gọn giao diện và sửa đóng chi tiết (19/10/2026, cập nhật theo phản hồi)
