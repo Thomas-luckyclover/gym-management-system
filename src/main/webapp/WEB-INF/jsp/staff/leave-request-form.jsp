@@ -201,7 +201,7 @@
                       <div class="leave-history-row">
                         <div style="flex:1">
                           <div style="display:flex;align-items:center;gap:var(--space-2);margin-bottom:var(--space-1);flex-wrap:wrap">
-                            <b>${gms:formatDate(req.leaveDate)}</b>
+                            <b>${gms:formatDate(req.fromDate)}<c:if test="${req.fromDate != req.toDate}">–${gms:formatDate(req.toDate)}</c:if> · ${req.days} ngày</b>
                             <span style="color:var(--color-text-soft);font-size:var(--font-size-xs)">
                               · <c:out value="${req.shiftType.displayName}" />
                             </span>
@@ -233,7 +233,7 @@
                               <input type="hidden" name="leaveRequestId" value="${req.leaveRequestId}">
                               <button type="submit" class="btn btn-sm btn-outline danger"
                                       data-confirm-title="Rút đơn nghỉ phép"
-                                      data-confirm-message="Xác nhận rút đơn nghỉ ngày ${gms:formatDate(req.leaveDate)}?">
+                                      data-confirm-message="Xác nhận rút đơn nghỉ ${gms:formatDate(req.fromDate)}–${gms:formatDate(req.toDate)} (${req.days} ngày)?">
                                 <i class="fa-solid fa-rotate-left" aria-hidden="true"></i> Rút đơn
                               </button>
                             </form>
@@ -284,7 +284,7 @@
                 </b>
               </div>
               <p style="margin:0;font-size:var(--font-size-xs);color:var(--color-text-soft);line-height:1.5">
-                Đơn chỉ được Quản lý duyệt khi số nhân sự còn lại trong ca đảm bảo định biên tối thiểu (P-13, P-14).
+                Giả định nhân viên Working làm cả hai ca, chưa có lịch phân ca thực tế. Quản lý kiểm tra lại đủ ngày/ca trước khi duyệt.
               </p>
             </div>
           </div>

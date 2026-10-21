@@ -783,7 +783,7 @@ public class LeaveRequestService {
 
                     // B4.4: gửi thông báo đến chuông của nhân viên
                     String notifTitle = "Nghỉ phép được duyệt";
-                    String notifContent = "Đơn nghỉ ngày " + request.getLeaveDate()
+                    String notifContent = "Đơn nghỉ " + formatLeavePeriod(request)
                             + " (ca " + request.getShiftType().getDisplayName() + ") đã được duyệt.";
                     notificationService.notifyEmployeeInTransaction(
                             conn,
@@ -881,7 +881,7 @@ public class LeaveRequestService {
 
                     // B4.3: gửi thông báo đến chuông của nhân viên
                     String notifTitle = "Nghỉ phép bị từ chối";
-                    String notifContent = "Đơn nghỉ ngày " + request.getLeaveDate()
+                    String notifContent = "Đơn nghỉ " + formatLeavePeriod(request)
                             + " bị từ chối. Lý do: " + rejectReason.trim();
                     if (notifContent.length() > 500) {
                         notifContent = notifContent.substring(0, 497) + "...";
@@ -1161,7 +1161,7 @@ public class LeaveRequestService {
                     // B6.2: gửi thông báo đến chuông của tất cả Manager (theo sơ đồ BF-05)
                     String notifTitle = "Đơn xin nghỉ phép mới";
                     String notifContent = "Nhân viên " + employee.getEmployeeCode()
-                            + " xin nghỉ ngày " + leaveDate
+                            + " xin nghỉ " + formatLeavePeriod(request)
                             + " (" + shiftType.getDisplayName() + ").";
                     notificationService.notifyRoleInTransaction(
                             conn, Role.MANAGER, notifTitle, notifContent);
@@ -1321,6 +1321,15 @@ public class LeaveRequestService {
             }
         }
         return ServiceResult.ok(null);
+    }
+
+    /** Khoảng ngày dùng trong thông báo; không bỏ mất ngày kết thúc của đơn nhiều ngày. */
+    private String formatLeavePeriod(LeaveRequest request) {
+        String period = DateTimeUtil.formatDate(request.getFromDate());
+        if (!request.getFromDate().equals(request.getToDate())) {
+            period = period + "–" + DateTimeUtil.formatDate(request.getToDate());
+        }
+        return period;
     }
 
     /** Số ngày theo quy tắc hiện có: nửa ngày cho một ca, đủ ngày cho FullDay; tính cả hai ngày biên. */
