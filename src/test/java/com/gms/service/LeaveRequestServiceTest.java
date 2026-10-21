@@ -47,13 +47,38 @@ class LeaveRequestServiceTest {
     private NotificationService notificationService;
 
     private LeaveRequestService service;
+    private StaffLeaveService staffService;
 
     @BeforeEach
     void setUp() {
         service = new LeaveRequestService(
+                leaveRequestDAO, accountDAO, employeeDAO,
+                systemConfigService, auditLogService, notificationService
+        );
+        staffService = new StaffLeaveService(
                 leaveRequestDAO, accountDAO, employeeDAO, personDAO,
                 systemConfigService, auditLogService, notificationService
         );
+    }
+
+    @Test
+    void managerFilterUsesKnownTypesAndIgnoresMalformedDates() {
+        var filter = service.createManagerFilter("  NV-0006  ", "Pending", "Manager", "Sick", "not-a-date", "2026-10-24");
+        assertEquals("NV-0006", filter.getKeyword());
+        assertNull(filter.getPosition());
+        assertEquals(LeaveRequest.LeaveType.SICK, filter.getLeaveType());
+        assertNull(filter.getFromDate());
+        assertEquals(LocalDate.of(2026, 10, 24), filter.getToDate());
+    }
+
+    @Test
+    void managerFilterKeepsAllStatusAndDateRange() {
+        var filter = service.createManagerFilter("", "All", "Receptionist", "Unpaid", "2026-10-23", "2026-10-24");
+        assertNull(filter.getStatus());
+        assertEquals("Receptionist", filter.getPosition());
+        assertEquals(LeaveRequest.LeaveType.UNPAID, filter.getLeaveType());
+        assertEquals(LocalDate.of(2026, 10, 23), filter.getFromDate());
+        assertEquals(LocalDate.of(2026, 10, 24), filter.getToDate());
     }
 
     @Test
@@ -84,7 +109,7 @@ class LeaveRequestServiceTest {
 
     @Test
     void submitLeaveRequest_fails_whenLeaveTypeIsNull() {
-        var result = service.submitLeaveRequest(
+        var result = staffService.submitLeaveRequest(
                 1, null, java.time.LocalDate.now().plusDays(2),
                 LeaveRequest.ShiftType.MORNING, "Lý do hợp lệ");
 
@@ -94,7 +119,7 @@ class LeaveRequestServiceTest {
 
     @Test
     void submitLeaveRequest_fails_whenShiftTypeIsNull() {
-        var result = service.submitLeaveRequest(
+        var result = staffService.submitLeaveRequest(
                 1, LeaveRequest.LeaveType.ANNUAL, java.time.LocalDate.now().plusDays(2),
                 null, "Lý do hợp lệ");
 
@@ -104,7 +129,7 @@ class LeaveRequestServiceTest {
 
     @Test
     void submitLeaveRequest_fails_whenLeaveDateIsNull() {
-        var result = service.submitLeaveRequest(
+        var result = staffService.submitLeaveRequest(
                 1, LeaveRequest.LeaveType.ANNUAL, null,
                 LeaveRequest.ShiftType.MORNING, "Lý do hợp lệ");
 
@@ -115,13 +140,13 @@ class LeaveRequestServiceTest {
     @Test
     void submitLeaveRequest_fails_whenLeaveDateIsTodayOrInThePast() {
         java.time.LocalDate today = java.time.LocalDate.now();
-        var resultToday = service.submitLeaveRequest(
+        var resultToday = staffService.submitLeaveRequest(
                 1, LeaveRequest.LeaveType.ANNUAL, today,
                 LeaveRequest.ShiftType.MORNING, "Lý do hợp lệ");
         assertFalse(resultToday.isSuccess());
         assertTrue(resultToday.getFieldErrors().containsKey("leaveDate"));
 
-        var resultPast = service.submitLeaveRequest(
+        var resultPast = staffService.submitLeaveRequest(
                 1, LeaveRequest.LeaveType.ANNUAL, today.minusDays(1),
                 LeaveRequest.ShiftType.MORNING, "Lý do hợp lệ");
         assertFalse(resultPast.isSuccess());
@@ -130,7 +155,7 @@ class LeaveRequestServiceTest {
 
     @Test
     void submitLeaveRequest_fails_whenReasonIsTooShort() {
-        var result = service.submitLeaveRequest(
+        var result = staffService.submitLeaveRequest(
                 1, LeaveRequest.LeaveType.ANNUAL, java.time.LocalDate.now().plusDays(2),
                 LeaveRequest.ShiftType.MORNING, "abc"); // dưới 5 ký tự
 
@@ -180,7 +205,8 @@ class LeaveRequestServiceTest {
         // Đơn nộp 19/10, xin nghỉ 21/10 -> Hạn duyệt chốt 20:00 ngày 20/10 (vì 20/10 < 22/10)
         LeaveRequest req = new LeaveRequest();
         req.setSubmittedAt(LocalDateTime.of(2026, 10, 19, 9, 30));
-        req.setLeaveDate(LocalDate.of(2026, 10, 21));
+        req.setFromDate(LocalDate.of(2026, 10, 21));
+        req.setToDate(req.getFromDate());
 
         LocalDateTime deadline = service.computeApprovalDeadline(req, LocalTime.of(20, 0));
         assertEquals(LocalDateTime.of(2026, 10, 20, 20, 0), deadline);
@@ -191,123 +217,23 @@ class LeaveRequestServiceTest {
         // Đơn nộp 19/10, xin nghỉ xa 20/12 -> Hạn duyệt chốt sau 3 ngày lúc 20:00 ngày 22/10 (CBR-85)
         LeaveRequest req = new LeaveRequest();
         req.setSubmittedAt(LocalDateTime.of(2026, 10, 19, 9, 30));
-        req.setLeaveDate(LocalDate.of(2026, 12, 20));
+        req.setFromDate(LocalDate.of(2026, 12, 20));
+        req.setToDate(req.getFromDate());
 
         LocalDateTime deadline = service.computeApprovalDeadline(req, LocalTime.of(20, 0));
         assertEquals(LocalDateTime.of(2026, 10, 22, 20, 0), deadline);
     }
 
-    // ===== Kiểm thử duyệt đơn (approveRequest - UC-15, CBR-85) =====
-
-    @Test
-    void approveRequest_fails_whenLeaveDatePassed() throws Exception {
-        LeaveRequest req = new LeaveRequest();
-        req.setLeaveRequestId(101);
-        req.setStatus(LeaveRequest.Status.PENDING);
-        req.setLeaveDate(LocalDate.now().minusDays(1)); // Ngày nghỉ đã qua
-        req.setSubmittedAt(LocalDateTime.now().minusDays(5));
-        req.setShiftType(LeaveRequest.ShiftType.MORNING);
-
-        LeaveRequestDAO.LeaveReviewDetail detail = new LeaveRequestDAO.LeaveReviewDetail(
-                req, "NV001", "Nguyễn Văn A", "PT", null, null
-        );
-
-        when(leaveRequestDAO.findReviewDetail(101)).thenReturn(detail);
-
-        var result = service.approveRequest(1, 101);
-
-        assertFalse(result.isSuccess());
-        assertEquals("Không thể duyệt đơn nghỉ phép của ngày đã qua.", result.getMessage());
-        verify(leaveRequestDAO, never()).approve(any(), anyInt(), anyInt());
-    }
-
-    @Test
-    void approveRequest_notBlockedByDeadline_whenOverdue() throws Exception {
-        // Đơn quá hạn duyệt nhưng ngày nghỉ trong tương lai: Manager vẫn có quyền xem xét xử lý, không bị hard block
-        LeaveRequest req = new LeaveRequest();
-        req.setLeaveRequestId(101);
-        req.setStatus(LeaveRequest.Status.PENDING);
-        req.setLeaveDate(LocalDate.now().plusDays(2));
-        req.setSubmittedAt(LocalDateTime.now().minusDays(5));
-        req.setShiftType(LeaveRequest.ShiftType.MORNING);
-
-        LeaveRequestDAO.LeaveReviewDetail detail = new LeaveRequestDAO.LeaveReviewDetail(
-                req, "NV001", "Nguyễn Văn A", "PT", null, null
-        );
-
-        when(leaveRequestDAO.findReviewDetail(101)).thenReturn(detail);
-        when(accountDAO.findById(1)).thenReturn(null);
-
-        var result = service.approveRequest(1, 101);
-
-        assertFalse(result.isSuccess());
-        assertFalse(result.getMessage().contains("quá hạn duyệt"));
-        assertNotEquals("Không thể duyệt đơn nghỉ phép của ngày đã qua.", result.getMessage());
-    }
-
-    @Test
-    void approveRequest_fails_whenRequestNotFound() throws Exception {
-        when(leaveRequestDAO.findReviewDetail(999)).thenReturn(null);
-
-        var result = service.approveRequest(1, 999);
-
-        assertFalse(result.isSuccess());
-        verify(leaveRequestDAO, never()).approve(any(), anyInt(), anyInt());
-    }
-
-    @Test
-    void approveRequest_fails_whenNotPending() throws Exception {
-        LeaveRequest req = new LeaveRequest();
-        req.setLeaveRequestId(102);
-        req.setStatus(LeaveRequest.Status.APPROVED);
-        req.setLeaveDate(LocalDate.now().plusDays(5));
-        req.setShiftType(LeaveRequest.ShiftType.MORNING);
-
-        LeaveRequestDAO.LeaveReviewDetail detail = new LeaveRequestDAO.LeaveReviewDetail(
-                req, "NV001", "Nguyễn Văn A", "PT", null, "Manager B"
-        );
-
-        when(leaveRequestDAO.findReviewDetail(102)).thenReturn(detail);
-
-        var result = service.approveRequest(1, 102);
-
-        assertFalse(result.isSuccess());
-        verify(leaveRequestDAO, never()).approve(any(), anyInt(), anyInt());
-    }
-
-    // ===== Kiểm thử từ chối đơn (rejectRequest - UC-15, CBR-85) =====
-
-    @Test
-    void rejectRequest_notBlockedByDeadline_whenOverdue() throws Exception {
-        // Đơn quá hạn duyệt nhưng Manager vẫn có quyền từ chối, không bị hard block
-        LeaveRequest req = new LeaveRequest();
-        req.setLeaveRequestId(103);
-        req.setStatus(LeaveRequest.Status.PENDING);
-        req.setLeaveDate(LocalDate.now().minusDays(1));
-        req.setSubmittedAt(LocalDateTime.now().minusDays(5));
-        req.setShiftType(LeaveRequest.ShiftType.AFTERNOON);
-
-        LeaveRequestDAO.LeaveReviewDetail detail = new LeaveRequestDAO.LeaveReviewDetail(
-                req, "NV002", "Trần Thị B", "Receptionist", null, null
-        );
-
-        when(leaveRequestDAO.findReviewDetail(103)).thenReturn(detail);
-        when(accountDAO.findById(1)).thenReturn(null);
-
-        var result = service.rejectRequest(1, 103, "Lý do từ chối hợp lệ");
-
-        assertFalse(result.isSuccess());
-        assertFalse(result.getMessage().contains("quá hạn duyệt"));
-    }
+    // Các trường hợp duyệt/từ chối có transaction nằm ở LeaveApprovalSafetyTest.
 
     // ===== Kiểm thử rút đơn (withdrawRequest - UC-14) =====
 
     @Test
     void withdrawRequest_fails_whenIdIsInvalid() {
-        var resultZero = service.withdrawRequest(1, 0);
+        var resultZero = staffService.withdrawRequest(1, 0);
         assertFalse(resultZero.isSuccess());
 
-        var resultNegative = service.withdrawRequest(1, -1);
+        var resultNegative = staffService.withdrawRequest(1, -1);
         assertFalse(resultNegative.isSuccess());
     }
 }

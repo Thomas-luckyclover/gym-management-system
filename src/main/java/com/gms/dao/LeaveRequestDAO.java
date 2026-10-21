@@ -1,11 +1,16 @@
 package com.gms.dao;
 
+import com.gms.dto.EligibleReviewer;
+import com.gms.dto.LeaveBalance;
 import com.gms.dto.LeaveRequestFilter;
-import com.gms.dto.ShiftStaffingRow;
+import com.gms.dto.LeaveRequestRow;
+import com.gms.dto.LeaveReviewDetail;
+import com.gms.dto.SessionConflict;
 import com.gms.entity.LeaveRequest;
 import com.gms.entity.LeaveRequestTransfer;
 import com.gms.util.DBContext;
 import com.gms.util.SqlUtil;
+import java.math.BigDecimal;
 import java.sql.Connection;
 import java.sql.PreparedStatement;
 import java.sql.ResultSet;
@@ -22,11 +27,12 @@ import java.util.Map;
 public class LeaveRequestDAO {
 
     /** Danh sách cột LeaveRequests dùng chung cho mọi câu SELECT có map sang entity. */
-    private static final String SELECT_COLUMNS
-            = "SELECT LeaveRequestId, EmployeeId, ReviewedByEmployeeId, AssignedToEmployeeId, LeaveType, "
+    private static final String REQUEST_COLUMNS
+            = "LeaveRequestId, EmployeeId, ReviewedByEmployeeId, AssignedToEmployeeId, LeaveType, "
             + "FromDate, ToDate, Days, ShiftType, Reason, Status, RejectReason, "
-            + "SubmittedAt, ReviewedAt, ReminderSentAt "
-            + "FROM LeaveRequests ";
+            + "SubmittedAt, ReviewedAt, ReminderSentAt ";
+
+    private static final String SELECT_COLUMNS = "SELECT " + REQUEST_COLUMNS + "FROM LeaveRequests ";
 
     /**
      * Tìm một đơn nghỉ phép theo mã đơn.
@@ -60,7 +66,7 @@ public class LeaveRequestDAO {
 
     /** Đọc lại đơn trong transaction quyết định; giữ khóa đến khi commit/rollback. */
     public LeaveRequest findById(Connection connection, int leaveRequestId) throws SQLException {
-        String sql = SELECT_COLUMNS.replace("FROM LeaveRequests ", "FROM LeaveRequests WITH (UPDLOCK, HOLDLOCK) ")
+        String sql = "SELECT " + REQUEST_COLUMNS + "FROM LeaveRequests WITH (UPDLOCK, HOLDLOCK) "
                 + "WHERE LeaveRequestId = ?";
         try (PreparedStatement statement = connection.prepareStatement(sql)) {
             statement.setInt(1, leaveRequestId);
@@ -520,15 +526,10 @@ public class LeaveRequestDAO {
      * @throws SQLException lỗi truy vấn DB
      */
     public int insert(Connection connection, LeaveRequest leaveRequest) throws SQLException {
-        LocalDate fromDate = leaveRequest.getFromDate() != null ? leaveRequest.getFromDate() : leaveRequest.getLeaveDate();
-        LocalDate toDate = leaveRequest.getToDate() != null ? leaveRequest.getToDate() : fromDate;
-        java.math.BigDecimal days = leaveRequest.getDays();
-        if (days == null) {
-            long count = java.time.temporal.ChronoUnit.DAYS.between(fromDate, toDate) + 1;
-            days = (fromDate.equals(toDate) && leaveRequest.getShiftType() != LeaveRequest.ShiftType.FULL_DAY)
-                    ? new java.math.BigDecimal("0.5")
-                    : java.math.BigDecimal.valueOf(count);
-        }
+        // Service đã kiểm tra ngày/ca và tính Days; DAO chỉ lưu các giá trị đó.
+        LocalDate fromDate = leaveRequest.getFromDate();
+        LocalDate toDate = leaveRequest.getToDate();
+        BigDecimal days = leaveRequest.getDays();
 
         String sql = "INSERT INTO LeaveRequests (EmployeeId, LeaveType, FromDate, ToDate, Days, ShiftType, Reason, Status, SubmittedAt) "
                 + "VALUES (?, ?, ?, ?, ?, ?, ?, 'Pending', SYSDATETIME())";
@@ -612,28 +613,6 @@ public class LeaveRequestDAO {
         return list;
     }
 
-    public static class EligibleReviewer {
-        private final int employeeId;
-        private final String employeeCode;
-        private final String fullName;
-        private final String position;
-        private final String avatarUrl;
-
-        public EligibleReviewer(int employeeId, String employeeCode, String fullName, String position, String avatarUrl) {
-            this.employeeId = employeeId;
-            this.employeeCode = employeeCode;
-            this.fullName = fullName;
-            this.position = position;
-            this.avatarUrl = avatarUrl;
-        }
-
-        public int getEmployeeId() { return employeeId; }
-        public String getEmployeeCode() { return employeeCode; }
-        public String getFullName() { return fullName; }
-        public String getPosition() { return position; }
-        public String getAvatarUrl() { return avatarUrl; }
-    }
-
     public List<EligibleReviewer> findEligibleReviewers(int currentEmployeeId) throws SQLException {
         List<EligibleReviewer> list = new ArrayList<>();
         String sql = "SELECT e.EmployeeId, e.EmployeeCode, e.Position, p.FullName, p.Avatar "
@@ -659,18 +638,18 @@ public class LeaveRequestDAO {
         return list;
     }
 
-    public com.gms.dto.LeaveBalance getAnnualBalance(int employeeId, int year, int quota) throws SQLException {
+    public LeaveBalance getAnnualBalance(int employeeId, int year, int quota) throws SQLException {
         try (Connection conn = DBContext.getConnection()) {
             return getAnnualBalance(conn, employeeId, year, quota);
         }
     }
 
-    public com.gms.dto.LeaveBalance getAnnualBalance(Connection connection, int employeeId, int year, int quota) throws SQLException {
+    public LeaveBalance getAnnualBalance(Connection connection, int employeeId, int year, int quota) throws SQLException {
         return getAnnualBalance(connection, employeeId, year, quota, 0);
     }
 
     /** Không giữ chỗ hai lần cho chính đơn đang xét; các đơn Pending khác vẫn giữ chỗ như chính sách hiện tại. */
-    public com.gms.dto.LeaveBalance getAnnualBalance(Connection connection, int employeeId, int year, int quota,
+    public LeaveBalance getAnnualBalance(Connection connection, int employeeId, int year, int quota,
             int excludeRequestId) throws SQLException {
         String sql = "SELECT "
                 + "ISNULL(SUM(CASE WHEN Status = 'Approved' THEN Days ELSE 0 END), 0) AS UsedDays, "
@@ -685,11 +664,11 @@ public class LeaveRequestDAO {
             ps.setInt(3, excludeRequestId);
             try (ResultSet rs = ps.executeQuery()) {
                 if (rs.next()) {
-                    return new com.gms.dto.LeaveBalance(quota, rs.getBigDecimal("UsedDays"), rs.getBigDecimal("PendingDays"));
+                    return new LeaveBalance(quota, rs.getBigDecimal("UsedDays"), rs.getBigDecimal("PendingDays"));
                 }
             }
         }
-        return new com.gms.dto.LeaveBalance(quota, java.math.BigDecimal.ZERO, java.math.BigDecimal.ZERO);
+        return new LeaveBalance(quota, BigDecimal.ZERO, BigDecimal.ZERO);
     }
 
     /**
@@ -802,14 +781,20 @@ public class LeaveRequestDAO {
     /** Các buổi Scheduled trùng toàn khoảng nghỉ; dùng giờ từ TimeSlots để hiện trên trang review. */
     public List<SessionConflict> findSessionConflicts(int employeeId, LocalDate fromDate, LocalDate toDate,
             String shiftType) throws SQLException {
+        try (Connection connection = DBContext.getConnection()) {
+            return findSessionConflicts(connection, employeeId, fromDate, toDate, shiftType);
+        }
+    }
+
+    public List<SessionConflict> findSessionConflicts(Connection connection, int employeeId, LocalDate fromDate,
+            LocalDate toDate, String shiftType) throws SQLException {
         String sql = "SELECT s.SessionId, ts.SlotDate, ts.StartTime, ts.EndTime "
                 + "FROM Sessions s JOIN TimeSlots ts ON ts.TimeSlotId = s.TimeSlotId "
                 + "WHERE s.PtEmployeeId = ? AND s.Status = 'Scheduled' AND ts.SlotDate BETWEEN ? AND ? "
                 + "AND (? = 'FullDay' OR (? = 'Morning' AND ts.StartTime < '12:00:00') "
                 + "OR (? = 'Afternoon' AND ts.EndTime > '12:00:00')) ORDER BY ts.SlotDate, ts.StartTime, s.SessionId";
         List<SessionConflict> conflicts = new ArrayList<>();
-        try (Connection connection = DBContext.getConnection();
-                PreparedStatement statement = connection.prepareStatement(sql)) {
+        try (PreparedStatement statement = connection.prepareStatement(sql)) {
             statement.setInt(1, employeeId);
             statement.setDate(2, java.sql.Date.valueOf(fromDate));
             statement.setDate(3, java.sql.Date.valueOf(toDate));
@@ -846,28 +831,6 @@ public class LeaveRequestDAO {
             }
         }
         return counts;
-    }
-
-    /** DAO tạo từ Sessions/TimeSlots; JSP dùng để chỉ rõ từng buổi đang chặn duyệt. */
-    public static class SessionConflict {
-        // Sessions.SessionId: mã buổi cần PT xử lý.
-        private final int sessionId;
-        // TimeSlots.SlotDate/StartTime/EndTime: ngày và giờ thực tế của buổi Scheduled.
-        private final LocalDate date;
-        private final java.time.LocalTime startTime;
-        private final java.time.LocalTime endTime;
-
-        public SessionConflict(int sessionId, LocalDate date, java.time.LocalTime startTime, java.time.LocalTime endTime) {
-            this.sessionId = sessionId;
-            this.date = date;
-            this.startTime = startTime;
-            this.endTime = endTime;
-        }
-
-        public int getSessionId() { return sessionId; }
-        public LocalDate getDate() { return date; }
-        public java.time.LocalTime getStartTime() { return startTime; }
-        public java.time.LocalTime getEndTime() { return endTime; }
     }
 
     /**
@@ -1022,25 +985,11 @@ public class LeaveRequestDAO {
 
         leaveRequest.setLeaveType(LeaveRequest.LeaveType
                 .fromDbValue(resultSet.getString("LeaveType")));
-        if (hasColumn(resultSet, "FromDate") && resultSet.getDate("FromDate") != null) {
-            leaveRequest.setFromDate(resultSet.getDate("FromDate").toLocalDate());
-        }
-        if (hasColumn(resultSet, "ToDate") && resultSet.getDate("ToDate") != null) {
-            leaveRequest.setToDate(resultSet.getDate("ToDate").toLocalDate());
-        }
-        if (hasColumn(resultSet, "Days") && resultSet.getBigDecimal("Days") != null) {
-            leaveRequest.setDays(resultSet.getBigDecimal("Days"));
-        }
-        if (hasColumn(resultSet, "AssignedToEmployeeId")) {
-            int aId = resultSet.getInt("AssignedToEmployeeId");
-            leaveRequest.setAssignedToEmployeeId(resultSet.wasNull() ? null : aId);
-        }
-
-        if (hasColumn(resultSet, "LeaveDate") && resultSet.getDate("LeaveDate") != null) {
-            leaveRequest.setLeaveDate(resultSet.getDate("LeaveDate").toLocalDate());
-        } else if (leaveRequest.getFromDate() != null) {
-            leaveRequest.setLeaveDate(leaveRequest.getFromDate());
-        }
+        leaveRequest.setFromDate(resultSet.getDate("FromDate").toLocalDate());
+        leaveRequest.setToDate(resultSet.getDate("ToDate").toLocalDate());
+        leaveRequest.setDays(resultSet.getBigDecimal("Days"));
+        int assigneeId = resultSet.getInt("AssignedToEmployeeId");
+        leaveRequest.setAssignedToEmployeeId(resultSet.wasNull() ? null : assigneeId);
 
         leaveRequest.setShiftType(LeaveRequest.ShiftType
                 .fromDbValue(resultSet.getString("ShiftType")));
@@ -1053,21 +1002,8 @@ public class LeaveRequestDAO {
                 toLocalDateTime(resultSet.getTimestamp("SubmittedAt")));
         leaveRequest.setReviewedAt(
                 toLocalDateTime(resultSet.getTimestamp("ReviewedAt")));
-        if (hasColumn(resultSet, "ReminderSentAt")) {
-            leaveRequest.setReminderSentAt(
-                    toLocalDateTime(resultSet.getTimestamp("ReminderSentAt")));
-        }
-
+        leaveRequest.setReminderSentAt(toLocalDateTime(resultSet.getTimestamp("ReminderSentAt")));
         return leaveRequest;
-    }
-
-    private boolean hasColumn(ResultSet rs, String columnName) {
-        try {
-            rs.findColumn(columnName);
-            return true;
-        } catch (SQLException e) {
-            return false;
-        }
     }
 
     /** Timestamp có thể NULL (ReviewedAt, ReminderSentAt) nên đổi có kiểm tra null. */
@@ -1075,218 +1011,4 @@ public class LeaveRequestDAO {
         return timestamp == null ? null : timestamp.toLocalDateTime();
     }
 
-    /**
-     * Thông tin đầy đủ một đơn nghỉ phép cho màn duyệt của Manager (#27).
-     * Giống LeaveRequestRow nhưng dành riêng cho trang review, Service thêm trường tính toán.
-     */
-    public static class LeaveReviewDetail {
-
-        private final LeaveRequest leaveRequest;
-        private final String employeeCode;
-        private final String fullName;
-        private final String position;
-        private final String avatarUrl;
-        private final String reviewerName;
-
-        // Quân số trực dự kiến nếu duyệt và định biên tối thiểu theo cấu hình
-        private int remainingStaff;
-        private int minStaffRequired;
-
-        // Hạn duyệt P-20 của đơn và cờ đã quá hạn (Service tính, JSP dùng để khóa nút)
-        private LocalDateTime approvalDeadline;
-        private boolean overdue;
-
-        public LeaveReviewDetail(
-                LeaveRequest leaveRequest,
-                String employeeCode,
-                String fullName,
-                String position,
-                String avatarUrl,
-                String reviewerName
-        ) {
-            this.leaveRequest = leaveRequest;
-            this.employeeCode = employeeCode;
-            this.fullName = fullName;
-            this.position = position;
-            this.avatarUrl = avatarUrl;
-            this.reviewerName = reviewerName;
-        }
-
-        public LeaveRequest getLeaveRequest() { return leaveRequest; }
-        public String getEmployeeCode() { return employeeCode; }
-        public String getFullName() { return fullName; }
-        public String getPosition() { return position; }
-        public String getAvatarUrl() { return avatarUrl; }
-        public String getReviewerName() { return reviewerName; }
-
-        public int getRemainingStaff() { return remainingStaff; }
-        public void setRemainingStaff(int remainingStaff) { this.remainingStaff = remainingStaff; }
-
-        public int getMinStaffRequired() { return minStaffRequired; }
-        public void setMinStaffRequired(int minStaffRequired) { this.minStaffRequired = minStaffRequired; }
-
-        public LocalDateTime getApprovalDeadline() { return approvalDeadline; }
-        public void setApprovalDeadline(LocalDateTime approvalDeadline) { this.approvalDeadline = approvalDeadline; }
-
-        public boolean isOverdue() { return overdue; }
-        public void setOverdue(boolean overdue) { this.overdue = overdue; }
-
-        public boolean isLeaveDatePassed() {
-            return leaveRequest != null && leaveRequest.getLeaveDate() != null
-                    && leaveRequest.getLeaveDate().isBefore(com.gms.util.DateTimeUtil.today());
-        }
-
-        public boolean getLeaveDatePassed() {
-            return isLeaveDatePassed();
-        }
-
-        /** Chỉ mở xác nhận khi tất cả kiểm tra hiện tại đạt; backend vẫn kiểm tra lại khi POST. */
-        public boolean isCanApprove() {
-            if (!canAct || leaveRequest == null || !leaveRequest.isPending() || isLeaveDatePassed() || checks.isEmpty()) {
-                return false;
-            }
-            for (com.gms.dto.ReviewCheck check : checks) {
-                if (check.isApplicable() && !check.isOk()) {
-                    return false;
-                }
-            }
-            return true;
-        }
-
-        // DAO đọc Sessions/TimeSlots; Service gắn danh sách buổi chặn duyệt cho JSP.
-        private List<SessionConflict> sessionConflicts = new ArrayList<>();
-        // DAO đếm đơn cùng khoảng ngày/ca; Pending chỉ là thông tin, chưa tính là nghỉ chính thức.
-        private Map<String, Integer> overlappingCounts = new LinkedHashMap<>();
-
-        public List<SessionConflict> getSessionConflicts() { return sessionConflicts; }
-        public void setSessionConflicts(List<SessionConflict> conflicts) { this.sessionConflicts = conflicts; }
-        public Map<String, Integer> getOverlappingCounts() { return overlappingCounts; }
-        public void setOverlappingCounts(Map<String, Integer> counts) { this.overlappingCounts = counts; }
-
-        public boolean isAutoRejected() {
-            return leaveRequest != null && leaveRequest.isRejected() && leaveRequest.getReviewedByEmployeeId() == null;
-        }
-
-        // Bảng dự báo định biên chi tiết từng ca (màn #27, UC-15)
-        private List<ShiftStaffingRow> staffingRows;
-
-        public List<ShiftStaffingRow> getStaffingRows() { return staffingRows; }
-        public void setStaffingRows(List<ShiftStaffingRow> staffingRows) { this.staffingRows = staffingRows; }
-
-        // V2 (BF-05): Người được giao duyệt, quyền thao tác, banner, timeline, checks, balance
-        private Integer assignedToEmployeeId;
-        private String assignedToName;
-        private boolean canAct = true;
-        private String banner;
-        private List<com.gms.dto.TimelineNode> timeline = new java.util.ArrayList<>();
-        private List<com.gms.dto.ReviewCheck> checks = new java.util.ArrayList<>();
-        private com.gms.dto.LeaveBalance leaveBalance;
-
-        public Integer getAssignedToEmployeeId() { return assignedToEmployeeId; }
-        public void setAssignedToEmployeeId(Integer assignedToEmployeeId) { this.assignedToEmployeeId = assignedToEmployeeId; }
-
-        public String getAssignedToName() { return assignedToName; }
-        public void setAssignedToName(String assignedToName) { this.assignedToName = assignedToName; }
-
-        public boolean isCanAct() { return canAct; }
-        public void setCanAct(boolean canAct) { this.canAct = canAct; }
-
-        public String getBanner() { return banner; }
-        public void setBanner(String banner) { this.banner = banner; }
-
-        public List<com.gms.dto.TimelineNode> getTimeline() { return timeline; }
-        public void setTimeline(List<com.gms.dto.TimelineNode> timeline) { this.timeline = timeline; }
-
-        public List<com.gms.dto.ReviewCheck> getChecks() { return checks; }
-        public void setChecks(List<com.gms.dto.ReviewCheck> checks) { this.checks = checks; }
-
-        public com.gms.dto.LeaveBalance getLeaveBalance() { return leaveBalance; }
-        public void setLeaveBalance(com.gms.dto.LeaveBalance leaveBalance) { this.leaveBalance = leaveBalance; }
-    }
-
-    /**
-     * Một dòng danh sách đơn nghỉ phép của Manager do DAO tạo: gồm entity đơn
-     * và thông tin nhân viên lấy từ Employees/Persons. Service đổi sang
-     * LeaveRequestItemView (thêm hạn duyệt, đếm ngược) trước khi đưa ra JSP.
-     */
-    public static class LeaveRequestRow {
-
-        // DAO: toàn bộ cột LeaveRequests của đơn này.
-        private final LeaveRequest leaveRequest;
-
-        // DAO: Employees.EmployeeCode, ví dụ NV-0005.
-        private final String employeeCode;
-
-        // DAO: Persons.FullName của nhân viên nộp đơn.
-        private final String fullName;
-
-        // DAO: Employees.Position (PT hoặc Receptionist).
-        private final String position;
-
-        // DAO: Persons.Avatar; NULL thì JSP hiện chữ viết tắt.
-        private final String avatarUrl;
-
-        // DAO: Persons.FullName của người duyệt; NULL khi Pending hoặc tự từ chối.
-        private final String reviewerName;
-
-        // V2: Người được giao duyệt và quyền thao tác
-        private String assignedToName;
-        private boolean canAct = true;
-
-        public LeaveRequestRow(
-                LeaveRequest leaveRequest,
-                String employeeCode,
-                String fullName,
-                String position,
-                String avatarUrl,
-                String reviewerName
-        ) {
-            this.leaveRequest = leaveRequest;
-            this.employeeCode = employeeCode;
-            this.fullName = fullName;
-            this.position = position;
-            this.avatarUrl = avatarUrl;
-            this.reviewerName = reviewerName;
-        }
-
-        public LeaveRequest getLeaveRequest() {
-            return leaveRequest;
-        }
-
-        public String getEmployeeCode() {
-            return employeeCode;
-        }
-
-        public String getFullName() {
-            return fullName;
-        }
-
-        public String getPosition() {
-            return position;
-        }
-
-        public String getAvatarUrl() {
-            return avatarUrl;
-        }
-
-        public String getReviewerName() {
-            return reviewerName;
-        }
-
-        public String getAssignedToName() {
-            return assignedToName;
-        }
-
-        public void setAssignedToName(String assignedToName) {
-            this.assignedToName = assignedToName;
-        }
-
-        public boolean isCanAct() {
-            return canAct;
-        }
-
-        public void setCanAct(boolean canAct) {
-            this.canAct = canAct;
-        }
-    }
 }

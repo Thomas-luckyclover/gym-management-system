@@ -1,11 +1,11 @@
 package com.gms.servlet.staff;
 
-import com.gms.constant.Messages;
 import com.gms.constant.SessionKey;
 import com.gms.dto.ServiceResult;
 import com.gms.dto.StaffLeaveFormView;
-import com.gms.service.LeaveRequestService;
+import com.gms.service.StaffLeaveService;
 import com.gms.util.RequestUtil;
+import com.gms.util.DateTimeUtil;
 import com.gms.entity.LeaveRequest;
 import jakarta.servlet.ServletException;
 import jakarta.servlet.annotation.WebServlet;
@@ -27,10 +27,10 @@ import java.time.LocalDate;
 @WebServlet({"/pt/leave-requests", "/receptionist/leave-requests"})
 public class LeaveRequestFormServlet extends HttpServlet {
 
-    private final LeaveRequestService leaveRequestService;
+    private final StaffLeaveService staffLeaveService;
 
     public LeaveRequestFormServlet() {
-        this.leaveRequestService = new LeaveRequestService();
+        this.staffLeaveService = new StaffLeaveService();
     }
 
     @Override
@@ -50,7 +50,7 @@ public class LeaveRequestFormServlet extends HttpServlet {
         }
 
         // B2: gọi Service lấy dữ liệu khởi tạo cho form nộp đơn
-        ServiceResult<StaffLeaveFormView> result = leaveRequestService.getStaffLeaveForm(accountId);
+        ServiceResult<StaffLeaveFormView> result = staffLeaveService.getStaffLeaveForm(accountId);
 
         // B3: chuyển dữ liệu sang JSP
         request.setAttribute("csrfToken", RequestUtil.getOrCreateCsrfToken(session));
@@ -92,13 +92,8 @@ public class LeaveRequestFormServlet extends HttpServlet {
         // B1.2: kiểm tra nếu là hành động rút đơn (action=withdraw)
         String action = RequestUtil.getTrimmedParam(request, "action");
         if ("withdraw".equalsIgnoreCase(action)) {
-            int leaveRequestId = 0;
-            try {
-                leaveRequestId = Integer.parseInt(RequestUtil.getTrimmedParam(request, "leaveRequestId"));
-            } catch (Exception e) {
-                leaveRequestId = 0;
-            }
-            ServiceResult<Void> withdrawResult = leaveRequestService.withdrawRequest(accountId, leaveRequestId);
+            int leaveRequestId = RequestUtil.getIntParam(request, "leaveRequestId", 0);
+            ServiceResult<Void> withdrawResult = staffLeaveService.withdrawRequest(accountId, leaveRequestId);
             if (withdrawResult.isSuccess()) {
                 RequestUtil.setFlashToast(request, "success",
                         "Đã rút đơn xin nghỉ phép thành công.");
@@ -119,43 +114,25 @@ public class LeaveRequestFormServlet extends HttpServlet {
         LeaveRequest.LeaveType leaveType = LeaveRequest.LeaveType.fromDbValue(leaveTypeStr);
         LeaveRequest.ShiftType shiftType = LeaveRequest.ShiftType.fromDbValue(shiftTypeStr);
 
-        LocalDate leaveDate = null;
-        if (leaveDateStr != null && !leaveDateStr.isBlank()) {
-            try {
-                leaveDate = LocalDate.parse(leaveDateStr);
-            } catch (Exception ignored) {
-                // leaveDate null sẽ được Service báo lỗi
-            }
-        }
-
+        LocalDate leaveDate = DateTimeUtil.parseHtmlDate(leaveDateStr);
         LocalDate toDate = leaveDate;
         if (toDateStr != null && !toDateStr.isBlank()) {
-            try {
-                toDate = LocalDate.parse(toDateStr);
-            } catch (java.time.format.DateTimeParseException e) {
-                toDate = null;
-            }
+            toDate = DateTimeUtil.parseHtmlDate(toDateStr);
         }
 
         // B3: gọi Service nộp đơn
-        ServiceResult<Integer> submitResult = leaveRequestService.submitLeaveRequest(
+        ServiceResult<Integer> submitResult = staffLeaveService.submitLeaveRequest(
                 accountId, leaveType, leaveDate, toDate, shiftType, reason);
 
         // B4: nếu thất bại, nạp lại form kèm thông báo lỗi và giữ lại giá trị đã nhập
         if (!submitResult.isSuccess()) {
-            ServiceResult<StaffLeaveFormView> formResult = leaveRequestService.getStaffLeaveForm(accountId);
+            ServiceResult<StaffLeaveFormView> formResult = staffLeaveService.getStaffLeaveForm(accountId);
             if (formResult.isSuccess()) {
                 request.setAttribute("formView", formResult.getData());
             }
 
             request.setAttribute("submitError", submitResult.getMessage());
 
-            // Cờ riêng cho JSP (hiện nút "Mở lịch dạy") thay vì so khớp chữ trong câu lỗi
-            String sessionsMsgPrefix = Messages.MSG78_LEAVE_BLOCKED_BY_SESSIONS.substring(
-                    0, Messages.MSG78_LEAVE_BLOCKED_BY_SESSIONS.indexOf("%d"));
-            boolean blockedBySessions = submitResult.getMessage() != null
-                    && submitResult.getMessage().startsWith(sessionsMsgPrefix);
-            request.setAttribute("blockedBySessions", blockedBySessions);
             request.setAttribute("fieldErrors", submitResult.getFieldErrors());
             request.setAttribute("paramLeaveType", leaveTypeStr);
             request.setAttribute("paramLeaveDate", leaveDateStr);

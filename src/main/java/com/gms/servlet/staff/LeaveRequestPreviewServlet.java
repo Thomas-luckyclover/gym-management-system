@@ -4,9 +4,10 @@ import com.gms.constant.SessionKey;
 import com.gms.dto.JsonResponse;
 import com.gms.dto.ServiceResult;
 import com.gms.dto.StaffingPreview;
-import com.gms.service.LeaveRequestService;
+import com.gms.service.StaffLeaveService;
 import com.gms.util.JsonUtil;
 import com.gms.util.RequestUtil;
+import com.gms.util.DateTimeUtil;
 import jakarta.servlet.annotation.WebServlet;
 import jakarta.servlet.http.HttpServlet;
 import jakarta.servlet.http.HttpServletRequest;
@@ -25,10 +26,10 @@ import java.time.LocalDate;
 @WebServlet({"/pt/leave-requests/preview", "/receptionist/leave-requests/preview"})
 public class LeaveRequestPreviewServlet extends HttpServlet {
 
-    private final LeaveRequestService leaveRequestService;
+    private final StaffLeaveService staffLeaveService;
 
     public LeaveRequestPreviewServlet() {
-        this.leaveRequestService = new LeaveRequestService();
+        this.staffLeaveService = new StaffLeaveService();
     }
 
     @Override
@@ -45,16 +46,11 @@ public class LeaveRequestPreviewServlet extends HttpServlet {
         }
 
         // B2: đọc ngày và ca; ngày sai định dạng thì coi như null để Service báo lỗi
-        LocalDate leaveDate = null;
-        try {
-            leaveDate = LocalDate.parse(RequestUtil.getTrimmedParam(request, "date"));
-        } catch (Exception e) {
-            leaveDate = null;
-        }
+        LocalDate leaveDate = DateTimeUtil.parseHtmlDate(RequestUtil.getTrimmedParam(request, "date"));
         String shiftType = RequestUtil.getTrimmedParam(request, "shift");
 
         // B3: trả JSON
-        ServiceResult<StaffingPreview> result = leaveRequestService.previewStaffing(accountId, leaveDate, shiftType);
+        ServiceResult<StaffingPreview> result = staffLeaveService.previewStaffing(accountId, leaveDate, shiftType);
         JsonUtil.writeJson(response, JsonResponse.from(result));
     }
 }

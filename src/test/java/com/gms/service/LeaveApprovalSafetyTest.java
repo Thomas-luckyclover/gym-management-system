@@ -1,5 +1,7 @@
 package com.gms.service;
 
+import com.gms.dto.LeaveRequestRow;
+import com.gms.dto.LeaveReviewDetail;
 import com.gms.constant.Role;
 import com.gms.dao.AccountDAO;
 import com.gms.dao.EmployeeDAO;
@@ -32,12 +34,14 @@ class LeaveApprovalSafetyTest {
     private final NotificationService notifications = mock(NotificationService.class);
     private final Connection connection = mock(Connection.class);
     private LeaveRequestService service;
+    private StaffLeaveService staffService;
     private LeaveRequest request;
     private LocalDate firstDay;
 
     @BeforeEach
     void setUp() throws Exception {
-        service = new LeaveRequestService(dao, accounts, employees, mock(PersonDAO.class), configs, audit, notifications);
+        service = new LeaveRequestService(dao, accounts, employees, configs, audit, notifications);
+        staffService = new StaffLeaveService(dao, accounts, employees, mock(PersonDAO.class), configs, audit, notifications);
         firstDay = DateTimeUtil.today().plusDays(10);
         request = new LeaveRequest();
         request.setLeaveRequestId(12);
@@ -56,10 +60,10 @@ class LeaveApprovalSafetyTest {
 
     @Test
     void checksStaffingOnTheSecondDay() throws Exception {
-        when(dao.countOnDutyAfterApproval(connection, firstDay.plusDays(1), "FullDay", "PT", 12)).thenReturn(1);
+        when(dao.countOnDutyAfterApproval(connection, firstDay.plusDays(1), "Afternoon", "PT", 12)).thenReturn(1);
         var result = service.validateApproval(connection, request, "PT");
         assertFalse(result.isSuccess());
-        assertTrue(result.getMessage().contains(firstDay.plusDays(1).toString()));
+        assertTrue(result.getMessage().contains(DateTimeUtil.formatDate(firstDay.plusDays(1))));
     }
 
     @Test
@@ -78,7 +82,6 @@ class LeaveApprovalSafetyTest {
         when(dao.getAnnualBalance(connection, 50, firstDay.getYear(), 14, 12))
                 .thenReturn(new LeaveBalance(14, new BigDecimal("13"), BigDecimal.ZERO));
         assertFalse(service.validateApproval(connection, request, "PT").isSuccess());
-        verify(dao, never()).countScheduledSessions(any(), anyInt(), any(), anyString());
     }
 
     @Test
@@ -130,8 +133,6 @@ class LeaveApprovalSafetyTest {
         when(employees.findByPersonId(500)).thenReturn(manager);
         when(dao.findWorkingPosition(connection, 7)).thenReturn("Manager");
         when(dao.findWorkingPosition(connection, 50)).thenReturn("PT");
-        when(dao.findReviewDetail(12)).thenReturn(new LeaveRequestDAO.LeaveReviewDetail(
-                request, "NV-0050", "PT test", "PT", null, null));
         when(dao.findById(connection, 12)).thenReturn(request);
     }
 
@@ -213,7 +214,7 @@ class LeaveApprovalSafetyTest {
 
     @Test
     void submissionRejectsReversedDatesBeforeDatabaseAccess() {
-        var result = service.submitLeaveRequest(10, LeaveRequest.LeaveType.ANNUAL,
+        var result = staffService.submitLeaveRequest(10, LeaveRequest.LeaveType.ANNUAL,
                 firstDay, firstDay.minusDays(1), LeaveRequest.ShiftType.FULL_DAY, "Lý do hợp lệ");
         assertFalse(result.isSuccess());
         assertTrue(result.getFieldErrors().containsKey("toDate"));
@@ -222,7 +223,7 @@ class LeaveApprovalSafetyTest {
 
     @Test
     void submissionRejectsHalfShiftAcrossMultipleDays() {
-        var result = service.submitLeaveRequest(10, LeaveRequest.LeaveType.ANNUAL,
+        var result = staffService.submitLeaveRequest(10, LeaveRequest.LeaveType.ANNUAL,
                 firstDay, firstDay.plusDays(1), LeaveRequest.ShiftType.MORNING, "Lý do hợp lệ");
         assertFalse(result.isSuccess());
         assertTrue(result.getFieldErrors().containsKey("shiftType"));
@@ -232,7 +233,7 @@ class LeaveApprovalSafetyTest {
     @Test
     void submissionRejectsCrossYearLeave() {
         LocalDate december = LocalDate.of(DateTimeUtil.today().getYear() + 1, 12, 31);
-        var result = service.submitLeaveRequest(10, LeaveRequest.LeaveType.ANNUAL,
+        var result = staffService.submitLeaveRequest(10, LeaveRequest.LeaveType.ANNUAL,
                 december, december.plusDays(1), LeaveRequest.ShiftType.FULL_DAY, "Lý do hợp lệ");
         assertFalse(result.isSuccess());
         assertTrue(result.getFieldErrors().containsKey("toDate"));
@@ -241,7 +242,7 @@ class LeaveApprovalSafetyTest {
     @Test
     void submissionRejectsMoreThanThirtyOneDays() {
         LocalDate january = LocalDate.of(DateTimeUtil.today().getYear() + 1, 1, 1);
-        var result = service.submitLeaveRequest(10, LeaveRequest.LeaveType.ANNUAL,
+        var result = staffService.submitLeaveRequest(10, LeaveRequest.LeaveType.ANNUAL,
                 january, january.plusDays(31), LeaveRequest.ShiftType.FULL_DAY, "Lý do hợp lệ");
         assertFalse(result.isSuccess());
         assertTrue(result.getFieldErrors().containsKey("toDate"));
@@ -249,10 +250,10 @@ class LeaveApprovalSafetyTest {
 
     @Test
     void confirmationRequiresEveryApplicableCheckToPass() {
-        var detail = new LeaveRequestDAO.LeaveReviewDetail(request, "NV-0050", "PT test", "PT", null, null);
+        var detail = new LeaveReviewDetail(request, "NV-0050", "PT test", "PT", null, null);
         detail.setCanAct(true);
-        var quota = new com.gms.dto.ReviewCheck("ANNUAL_QUOTA", "Quỹ phép", true, true, "Đạt", null);
-        var sessions = new com.gms.dto.ReviewCheck("SESSIONS", "Lịch PT", true, false, "Trùng lịch", null);
+        var quota = new com.gms.dto.ReviewCheck("ANNUAL_QUOTA", "Quỹ phép", true, true, "Đạt");
+        var sessions = new com.gms.dto.ReviewCheck("SESSIONS", "Lịch PT", true, false, "Trùng lịch");
         detail.setChecks(java.util.List.of(quota, sessions));
         assertFalse(detail.isCanApprove());
         sessions.setOk(true);
@@ -266,7 +267,7 @@ class LeaveApprovalSafetyTest {
         when(configs.getString(SystemConfigService.LEAVE_APPROVED_DEADLINE)).thenReturn("20:00");
         when(dao.countByFilter(any())).thenReturn(1);
         when(dao.findManagerPage(any(), eq(0), eq(20), isNull())).thenReturn(java.util.List.of(
-                new LeaveRequestDAO.LeaveRequestRow(request, "NV-0050", "PT test", "PT", null, null)));
+                new LeaveRequestRow(request, "NV-0050", "PT test", "PT", null, null)));
         when(dao.findWorkingPosition(connection, 50)).thenReturn(null);
         try (MockedStatic<DBContext> database = mockStatic(DBContext.class)) {
             database.when(DBContext::getConnection).thenReturn(connection);
@@ -282,7 +283,7 @@ class LeaveApprovalSafetyTest {
     void reviewBlocksConfirmationWhenTheEmployeeHasResigned() throws Exception {
         stubManagerAndCurrentRequest();
         when(configs.getString(SystemConfigService.LEAVE_APPROVED_DEADLINE)).thenReturn("20:00");
-        when(dao.findReviewDetail(12, 7)).thenReturn(new LeaveRequestDAO.LeaveReviewDetail(
+        when(dao.findReviewDetail(12, 7)).thenReturn(new LeaveReviewDetail(
                 request, "NV-0050", "PT test", "PT", null, null));
         when(dao.findWorkingPosition(connection, 50)).thenReturn(null);
         try (MockedStatic<DBContext> database = mockStatic(DBContext.class)) {
@@ -293,6 +294,118 @@ class LeaveApprovalSafetyTest {
             assertFalse(staffing.isOk());
             assertTrue(staffing.getMessage().contains("đã nghỉ việc"));
             assertFalse(result.getData().isCanApprove());
+        }
+    }
+
+    @Test
+    void approvalReadsMissingRequestInsideTransaction() throws Exception {
+        stubManagerAndCurrentRequest();
+        when(dao.findById(connection, 12)).thenReturn(null);
+        try (MockedStatic<DBContext> database = mockStatic(DBContext.class)) {
+            database.when(DBContext::getConnection).thenReturn(connection);
+            assertFalse(service.approveRequest(10, 12).isSuccess());
+            verify(connection).rollback();
+            verify(dao, never()).approve(any(), anyInt(), anyInt());
+        }
+    }
+
+    @Test
+    void approvalRejectsPastLeaveInsideTransaction() throws Exception {
+        stubManagerAndCurrentRequest();
+        request.setFromDate(DateTimeUtil.today().minusDays(1));
+        request.setToDate(DateTimeUtil.today());
+        try (MockedStatic<DBContext> database = mockStatic(DBContext.class)) {
+            database.when(DBContext::getConnection).thenReturn(connection);
+            var result = service.approveRequest(10, 12);
+            assertFalse(result.isSuccess());
+            assertEquals("Không thể duyệt đơn nghỉ phép của ngày đã qua.", result.getMessage());
+            verify(connection).rollback();
+        }
+    }
+
+    @Test
+    void approvalRejectsAnAlreadyProcessedRequestInsideTransaction() throws Exception {
+        stubManagerAndCurrentRequest();
+        request.setStatus(LeaveRequest.Status.APPROVED);
+        try (MockedStatic<DBContext> database = mockStatic(DBContext.class)) {
+            database.when(DBContext::getConnection).thenReturn(connection);
+            assertFalse(service.approveRequest(10, 12).isSuccess());
+            verify(dao, never()).approve(any(), anyInt(), anyInt());
+            verify(connection).rollback();
+        }
+    }
+
+    @Test
+    void overdueReminderDoesNotBlockAnOtherwiseEligibleApproval() throws Exception {
+        request.setSubmittedAt(DateTimeUtil.now().minusDays(5));
+        assertReadinessAcrossScreens(true, null);
+    }
+
+    @Test
+    void managerCanRejectOverdueLeaveWithAValidReason() throws Exception {
+        stubManagerAndCurrentRequest();
+        request.setFromDate(DateTimeUtil.today().minusDays(2));
+        request.setToDate(DateTimeUtil.today().minusDays(1));
+        when(dao.reject(connection, 12, 7, "Lý do hợp lệ")).thenReturn(true);
+        try (MockedStatic<DBContext> database = mockStatic(DBContext.class)) {
+            database.when(DBContext::getConnection).thenReturn(connection);
+            assertTrue(service.rejectRequest(10, 12, "Lý do hợp lệ").isSuccess());
+            verify(connection).commit();
+        }
+    }
+
+    @Test
+    void listDetailAndPostAgreeOnLastAfternoonStaffingShortage() throws Exception {
+        when(dao.countOnDutyAfterApproval(connection, firstDay.plusDays(1), "Afternoon", "PT", 12)).thenReturn(1);
+        assertReadinessAcrossScreens(false, "Ca chiều");
+    }
+
+    @Test
+    void listDetailAndPostAgreeOnPendingAnnualReservations() throws Exception {
+        request.setLeaveType(LeaveRequest.LeaveType.ANNUAL);
+        when(configs.getInt(SystemConfigService.LEAVE_ANNUAL_QUOTA)).thenReturn(14);
+        when(dao.getAnnualBalance(connection, 50, firstDay.getYear(), 14, 12))
+                .thenReturn(new LeaveBalance(14, new BigDecimal("12"), new BigDecimal("1")));
+        assertReadinessAcrossScreens(false, "Vượt quá");
+    }
+
+    @Test
+    void listDetailAndPostAgreeOnLastDaySessionConflict() throws Exception {
+        when(dao.countScheduledSessions(connection, 50, firstDay.plusDays(1), "FullDay")).thenReturn(2);
+        assertReadinessAcrossScreens(false, "trùng 2");
+    }
+
+    @Test
+    void listDetailAndPostAllowAnEligibleRequest() throws Exception {
+        assertReadinessAcrossScreens(true, null);
+    }
+
+    /** Cùng dữ liệu giả đi qua cả ba luồng để bắt việc giao diện lệch điều kiện POST. */
+    private void assertReadinessAcrossScreens(boolean expectedAllowed, String expectedMessage) throws Exception {
+        stubManagerAndCurrentRequest();
+        when(configs.getString(SystemConfigService.LEAVE_APPROVED_DEADLINE)).thenReturn("20:00");
+        when(dao.countByFilter(any())).thenReturn(1);
+        when(dao.findManagerPage(any(), eq(0), eq(20), isNull())).thenReturn(java.util.List.of(
+                new LeaveRequestRow(request, "NV-0050", "PT test", "PT", null, null)));
+        when(dao.findReviewDetail(12, 7)).thenReturn(new LeaveReviewDetail(
+                request, "NV-0050", "PT test", "PT", null, null));
+        when(dao.approve(connection, 12, 7)).thenReturn(true);
+        try (MockedStatic<DBContext> database = mockStatic(DBContext.class)) {
+            database.when(DBContext::getConnection).thenReturn(connection);
+            var pageResult = service.getManagerPage("", "Pending", 1, 20);
+            var detailResult = service.getReviewDetail(12, 10);
+            var decisionResult = service.approveRequest(10, 12);
+            assertTrue(pageResult.isSuccess());
+            assertTrue(detailResult.isSuccess());
+            var item = pageResult.getData().getItems().get(0);
+            assertEquals(expectedAllowed ? "Đạt" : "Cần xử lý", item.getCheckSummary());
+            assertEquals(expectedAllowed, detailResult.getData().isCanApprove());
+            assertEquals(expectedAllowed, decisionResult.isSuccess());
+            if (!expectedAllowed) {
+                assertTrue(item.getCheckMessage().contains(expectedMessage));
+                assertEquals(item.getCheckMessage(), decisionResult.getMessage());
+                verify(dao, never()).approve(any(), anyInt(), anyInt());
+            }
         }
     }
 }
