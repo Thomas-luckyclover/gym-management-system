@@ -26,8 +26,34 @@ function filterSessions(event) {
     document.getElementById("booking-result").textContent = filter === "all"
             ? rows.length + " buổi · xếp theo ngày tập"
             : "Đang hiện " + visibleCount + "/" + rows.length + " buổi";
-    // B3: đổi bộ lọc thì đọc từ đầu bảng.
+    // B3: vạch "Hôm nay" chỉ có nghĩa khi xem tất cả; đổi bộ lọc thì đọc từ đầu bảng.
+    const divider = document.querySelector("[data-divider]");
+    if (divider) {
+        divider.hidden = filter !== "all";
+    }
     document.querySelector(".booking-table-scroll").scrollTop = 0;
+    updateJumpButton();
+}
+
+/**
+ * Nút "↑ Xem N buổi đã qua": hiện khi có buổi bị khuất phía trên khung bảng
+ * (VD lúc mở trang, bảng tự cuộn tới buổi sắp tới nên các buổi đã qua nằm khuất).
+ */
+function updateJumpButton() {
+    const button = document.querySelector("[data-jump-past]");
+    const container = document.querySelector(".booking-table-scroll");
+    const header = document.querySelector("#booking-sessions thead");
+    // B1: đếm dòng đang hiện mà nằm trên mép trên vùng nhìn thấy.
+    const visibleTop = container.scrollTop + header.offsetHeight;
+    let hiddenAbove = 0;
+    for (const row of document.querySelectorAll("[data-session-row]:not([hidden])")) {
+        if (row.offsetTop + row.offsetHeight <= visibleTop) {
+            hiddenAbove++;
+        }
+    }
+    // B2: có dòng khuất → hiện nút kèm số; không có → ẩn.
+    button.hidden = hiddenAbove === 0;
+    button.textContent = "↑ Xem " + hiddenAbove + " buổi phía trên";
 }
 
 /** Nối chip lọc, rồi cuộn bảng tới buổi sắp tới. */
@@ -41,14 +67,20 @@ function initMyBookings() {
     for (const button of document.querySelectorAll("[data-filter]")) {
         button.addEventListener("click", filterSessions);
     }
-    // B2: cuộn trong khung bảng (không cuộn cả trang) tới dòng "Buổi tới".
+    // B2: cuộn trong khung bảng (không cuộn cả trang) tới vạch "Hôm nay" (nếu không có thì tới dòng "Buổi tới").
     const table = document.getElementById("booking-sessions");
-    const row = table.querySelector('[data-session-id="' + table.dataset.focusSession + '"]');
-    if (row) {
-        const container = document.querySelector(".booking-table-scroll");
-        const header = table.querySelector("thead");
-        container.scrollTop = row.offsetTop - header.offsetHeight;
+    const container = document.querySelector(".booking-table-scroll");
+    const target = table.querySelector("[data-divider]")
+            || table.querySelector('[data-session-id="' + table.dataset.focusSession + '"]');
+    if (target) {
+        container.scrollTop = target.offsetTop - table.querySelector("thead").offsetHeight;
     }
+    // B3: nút "↑ Xem N buổi phía trên" — cập nhật khi cuộn, bấm thì cuộn mượt lên đầu.
+    container.addEventListener("scroll", updateJumpButton, { passive: true });
+    document.querySelector("[data-jump-past]").addEventListener("click", function () {
+        container.scrollTo({ top: 0, behavior: "smooth" });
+    });
+    updateJumpButton();
 }
 
 document.addEventListener("DOMContentLoaded", initMyBookings);
