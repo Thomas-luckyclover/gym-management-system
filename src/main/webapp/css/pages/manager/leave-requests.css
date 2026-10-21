@@ -1028,3 +1028,11 @@
   padding-left: var(--space-5);
   color: var(--color-danger-ink);
 }
+
+/* Lý do cần xử lý xuất hiện ngay dưới nhãn kiểm tra trên danh sách. */
+.leave-check-note {
+  display: block;
+  margin-top: var(--space-1);
+  color: var(--color-warning-ink);
+  font-size: var(--font-size-xs);
+}

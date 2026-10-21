@@ -9,7 +9,7 @@
   <%@ include file="/WEB-INF/jsp/common/head.jspf" %>
   <title>Quản lý đơn nghỉ phép · Super Gym</title>
   <link rel="stylesheet" href="${pageContext.request.contextPath}/css/pages/auth/account-settings.css">
-  <link rel="stylesheet" href="${pageContext.request.contextPath}/css/pages/manager/leave-requests.css">
+  <link rel="stylesheet" href="${pageContext.request.contextPath}/css/pages/manager/leave-requests.css?v=20261021-bf05-2">
   <link rel="stylesheet" href="${pageContext.request.contextPath}/css/pages/auth/notification-bell.css">
   <script src="${pageContext.request.contextPath}/js/pages/auth/notification-bell.js" defer></script>
 </head>
@@ -129,7 +129,7 @@
 
         </div>
 
-        <p class="leave-help">Ưu tiên hạn xử lý gần nhất. Kiểm tra là snapshot; hệ thống kiểm tra lại trước khi ghi quyết định.</p>
+        <p class="leave-help">Đơn có hạn xử lý gần nhất được hiển thị trước. Mở chi tiết để xem điều kiện duyệt.</p>
         <%-- ===== Bảng danh sách đơn nghỉ phép ===== --%>
         <section class="panel leave-panel" style="padding:0;overflow:hidden">
 
@@ -229,6 +229,9 @@
                           <c:choose>
                             <c:when test="${item.status.dbValue == 'Pending'}">
                               <span class="badge ${item.checkSummary == 'Đạt' ? 'badge-success' : 'badge-warning'}"><c:out value="${item.checkSummary}" /></span>
+                              <c:if test="${item.checkSummary != 'Đạt'}">
+                                <small class="leave-check-note"><c:out value="${item.checkMessage}" /></small>
+                              </c:if>
                             </c:when>
                             <c:otherwise>Đã xử lý</c:otherwise>
                           </c:choose>
