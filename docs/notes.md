@@ -1,5 +1,9 @@
 # File notes — mâu thuẫn tài liệu & quyết định đã chốt
 
+## BF-05 — thêm hai ô lọc ngày nghỉ (21/10/2026, ĐÃ CHỐT)
+
+User yêu cầu thêm Từ ngày/Đến ngày, mặc định trống; lọc theo thời gian nghỉ có giao với khoảng chọn, tính cả ngày biên, cho phép chỉ nhập một đầu. Khi chọn ngày, chỉ hiện nhân viên có đơn khớp toàn bộ bộ lọc; khi không chọn ngày, vẫn giữ hành vi hiện toàn bộ nhân viên như đợt trước. Service báo lỗi khoảng đảo chiều; tab, số lượng và phân trang dùng cùng khoảng ngày. Xóa lọc bỏ ngày và giữ tab. Không đổi schema hoặc luồng duyệt. User yêu cầu spam commit trở lại; đợt này chia hai commit backend và giao diện.
+
 ## BF-05 — nhóm đơn theo nhân viên (21/10/2026, ĐÃ CHỐT THỬ)
 
 User yêu cầu hiển thị toàn bộ nhân viên và bấm mở các đơn. Triển khai toàn bộ PT/Lễ tân (hai chức vụ đang hỗ trợ nghỉ phép), giữ người chưa có đơn và lịch sử người đã nghỉ việc. Phân trang theo nhân viên tại SQL, đếm tổng/Pending trên hàng cha, badge đỏ khi sắp nghỉ; mặc định Tất cả. Tab/loại/ngày lọc đơn bên trong, tên/mã/chức vụ lọc nhân viên. Dùng details/summary native; quyết định vẫn ở trang chi tiết, không đổi schema hoặc chính sách nghỉ. Luồng đọc code: [BF-05-code-guide.md](BF-05-code-guide.md).

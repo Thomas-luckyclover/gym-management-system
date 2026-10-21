@@ -11,7 +11,7 @@
   <%@ include file="/WEB-INF/jsp/common/head.jspf" %>
   <title>Quản lý đơn nghỉ phép · Super Gym</title>
   <link rel="stylesheet" href="${pageContext.request.contextPath}/css/pages/auth/account-settings.css">
-  <link rel="stylesheet" href="${pageContext.request.contextPath}/css/pages/manager/leave-request-list.css?v=20261021-employee-groups">
+  <link rel="stylesheet" href="${pageContext.request.contextPath}/css/pages/manager/leave-request-list.css?v=20261021-date-filters">
   <link rel="stylesheet" href="${pageContext.request.contextPath}/css/pages/auth/notification-bell.css">
   <script src="${pageContext.request.contextPath}/js/pages/auth/notification-bell.js" defer></script>
 </head>
@@ -71,11 +71,21 @@
             </c:forTokens>
           </div>
 
-          <%-- Chỉ lọc 2 chức vụ và 3 loại nghỉ đang được backend hỗ trợ. --%>
+          <%-- Bộ lọc GET: ngày nghỉ, chức vụ, loại nghỉ và tên/mã nhân viên. --%>
           <form action="${pageContext.request.contextPath}/manager/leave-requests" method="get" class="leave-filter-nav">
             <input type="hidden" name="status" value="<c:out value='${statusFilter}' />">
-            <c:if test="${not empty fromDateFilter}"><input type="hidden" name="fromDate" value="<c:out value='${fromDateFilter}' />"></c:if>
-            <c:if test="${not empty toDateFilter}"><input type="hidden" name="toDate" value="<c:out value='${toDateFilter}' />"></c:if>
+            <div class="leave-date-filters" role="group" aria-label="Lọc theo thời gian nghỉ">
+              <label class="leave-date-field" for="fromDate">
+                <span>Từ ngày</span>
+                <input type="date" id="fromDate" name="fromDate" class="filter-select"
+                       value="<c:out value='${fromDateFilter}' />">
+              </label>
+              <label class="leave-date-field" for="toDate">
+                <span>Đến ngày</span>
+                <input type="date" id="toDate" name="toDate" class="filter-select"
+                       value="<c:out value='${toDateFilter}' />">
+              </label>
+            </div>
 
             <select name="position" class="filter-select" aria-label="Lọc theo chức vụ">
               <option value="">Tất cả chức vụ</option>
@@ -104,7 +114,7 @@
 
             <c:if test="${not empty keyword or not empty positionFilter or not empty leaveTypeFilter or not empty fromDateFilter or not empty toDateFilter}">
               <a class="btn btn-sm btn-ghost"
-                 href="${pageContext.request.contextPath}/manager/leave-requests<c:if test="${not empty statusFilter and statusFilter != 'Pending'}">?status=<c:out value='${statusFilter}' /></c:if>">
+                 href="${pageContext.request.contextPath}/manager/leave-requests?status=<c:out value='${statusFilter}' />">
                 Xóa lọc
               </a>
             </c:if>
@@ -117,7 +127,7 @@
           <div class="leave-list-caption">
             <span><c:out value="${employeePage.totalItems}" /> nhân viên · <c:out value="${statusCounts[statusFilter]}" default="0" /> đơn phù hợp bộ lọc</span>
             <c:if test="${not empty fromDateFilter or not empty toDateFilter}">
-              <span>Khoảng ngày: <c:out value="${fromDateFilter}" default="—" /> → <c:out value="${toDateFilter}" default="—" /></span>
+              <span>Thời gian nghỉ: <c:out value="${empty fromDateFilter ? 'Không giới hạn' : gms:formatDate(fromDateFilter)}" /> → <c:out value="${empty toDateFilter ? 'Không giới hạn' : gms:formatDate(toDateFilter)}" /></span>
             </c:if>
             <span><i class="fa-solid fa-arrow-down-short-wide" aria-hidden="true"></i> Bấm nhân viên để xem đơn</span>
           </div>
@@ -247,7 +257,7 @@
             </c:when>
             <c:otherwise>
               <c:if test="${empty pageError}">
-                <div class="leave-empty">Không tìm thấy nhân viên phù hợp tên hoặc chức vụ đã chọn.</div>
+                <div class="leave-empty">Không tìm thấy nhân viên phù hợp bộ lọc đã chọn.</div>
               </c:if>
             </c:otherwise>
           </c:choose>

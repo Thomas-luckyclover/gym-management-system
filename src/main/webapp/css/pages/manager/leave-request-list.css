@@ -76,6 +76,28 @@
   grid-template-columns: minmax(0, 1fr) minmax(0, 1fr) minmax(0, 2fr) auto auto;
 }
 
+/* Hai ngày tùy chọn lọc theo thời gian nghỉ, dùng chung nút Tìm với các ô bên dưới. */
+.leave-list-page .leave-date-filters {
+  grid-column: 1 / -1;
+  display: flex;
+  flex-wrap: wrap;
+  gap: var(--space-3);
+}
+
+.leave-list-page .leave-date-field {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-1);
+  flex: 0 1 calc(var(--space-12) * 4);
+  min-width: 0;
+  font-size: var(--font-size-sm);
+  color: var(--color-text-soft);
+}
+
+.leave-list-page .leave-date-field input {
+  width: 100%;
+}
+
 .leave-list-page .leave-panel {
   padding: var(--space-0);
   border: var(--border-width) solid var(--color-border-strong);

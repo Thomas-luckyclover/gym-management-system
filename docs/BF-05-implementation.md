@@ -110,3 +110,12 @@ Kiểm chứng thay đổi nhắc theo ngày: clean package chạy 191 test, kh�
 - Không đổi schema, chính sách nghỉ hoặc các kiểm tra khi duyệt. Hướng dẫn luồng mới ở BF-05-code-guide.md.
 
 Kiểm chứng nhóm nhân viên: 197 test qua, hai JSP quản lý cùng header mới biên dịch không lỗi. Bản xem thử chỉ đọc trên DB local hiển thị 12 PT/Lễ tân qua hai trang; đã kiểm tra mở/đóng bằng chuột và Enter, đi tới chi tiết, người chưa có đơn, lịch sử người đã nghỉ việc, lọc tên/mã, loại nghỉ và ngày cuối của đơn nhiều ngày. Mã hóa UTF-8 được khai báo riêng ở fragment header. Không thay DB hoặc gửi quyết định; chưa redeploy Tomcat chính.
+
+## Bộ lọc Từ ngày/Đến ngày trên danh sách (21/10/2026)
+
+- Thêm hai ô date tùy chọn, dùng nút Tìm hiện tại; lọc theo thời gian nghỉ, tính cả ngày biên. Chỉ nhập một ngày thì đầu còn lại không giới hạn. Ví dụ chọn 24/10 vẫn thấy đơn nghỉ 23–24/10.
+- Khi chọn ít nhất một ngày, DAO dùng EXISTS với cùng điều kiện của bảng đơn để chỉ giữ nhân viên có đơn phù hợp. Không chọn ngày thì tiếp tục hiện toàn bộ nhân viên. Tổng đơn/Pending trên hàng cha vẫn là toàn bộ lịch sử; số trên tab theo bộ lọc, bỏ qua trạng thái tab.
+- Service từ chối khoảng đảo chiều trước khi truy vấn. Tab/phân trang giữ ngày; tìm mới về trang đầu; Xóa lọc bỏ ngày và giữ tab hiện tại. Không thêm JS, schema hoặc thay đổi quyết định duyệt.
+- Kiểm chứng: clean package chạy 199 test, không lỗi; hai JSP quản lý biên dịch Jasper không lỗi. Chạy kiểm tra chỉ đọc DB local qua 82 tổ hợp ngày biên, một đầu trống, trạng thái, loại, chức vụ, mã nhân viên, đếm tab và phân trang SQL. Trình duyệt xác nhận lọc riêng 24/10, mở đơn 23–24/10, chuyển tab giữ ngày, xóa lọc giữ tab, chỉ chọn Đến ngày và lỗi khoảng đảo chiều.
+
+Ảnh kiểm chứng lưu tại `C:/Users/Admin/.codex/visualizations/2026/10/21/01a15dec-4c25-7511-8159-f4bcb016266e/bf05-date-filters.jpg`. Bản xem thử đã đóng; không ghi DB hoặc redeploy Tomcat chính. Chia hai commit backend và giao diện theo yêu cầu mới nhất.

@@ -5,13 +5,15 @@ BF-05 có hai người dùng: PT/Lễ tân nộp hoặc rút đơn của mình; 
 ## 1. Xem danh sách đơn
 
 1. `LeaveRequestListServlet.doGet()` đọc bộ lọc từ URL và AccountId từ session. Mặc định mở Tất cả để thấy đủ lịch sử khi mở nhân viên.
-2. `LeaveRequestService.createManagerFilter()` đổi dữ liệu nhập thành `LeaveRequestFilter`. Tên/mã và chức vụ lọc nhân viên; trạng thái, loại nghỉ, ngày lọc đơn bên trong.
-3. `getEmployeePage()` gọi DAO `countEmployees()` và `findEmployeePage()`. SQL LEFT JOIN giữ người chưa có đơn, đếm tổng/đơn chờ, ưu tiên người sắp nghỉ và phân trang theo nhân viên.
+2. `LeaveRequestService.createManagerFilter()` đổi dữ liệu nhập thành `LeaveRequestFilter`. Hai ô Từ ngày/Đến ngày lọc theo thời gian nghỉ, được phép bỏ trống một hoặc cả hai. Service báo lỗi nếu Từ ngày lớn hơn Đến ngày.
+3. `getEmployeePage()` gọi DAO `countEmployees()` và `findEmployeePage()`. Khi chưa chọn ngày, SQL LEFT JOIN giữ người chưa có đơn. Khi chọn ít nhất một ngày, EXISTS chỉ giữ nhân viên có đơn khớp toàn bộ bộ lọc (ngày, trạng thái, loại nghỉ, tên/mã và chức vụ). SQL vẫn đếm tổng/đơn chờ trên toàn bộ lịch sử, ưu tiên người sắp nghỉ và phân trang theo nhân viên.
 4. Service lấy danh sách EmployeeId của trang, gọi `findEmployeeRequests()` một lần để lấy các đơn phù hợp. Map theo EmployeeId giúp gắn đơn về đúng người; không cắt trang giữa các đơn của cùng một người.
 5. `toItemView()` sao chép mỗi đơn và đánh dấu sắp nghỉ. Với Pending, `loadApprovalSummary()` gọi bộ kiểm tra chung để hiện Đạt/Cần xử lý.
 6. Servlet đặt `employeePage`, `statusCounts` và bộ lọc vào request. JSP lặp nhân viên; details/summary mở danh sách đơn mà không cần JS riêng.
 
-Số tổng/đơn chờ trên hàng nhân viên luôn tính trên toàn bộ lịch sử của người đó. Số trên tab và danh sách bên trong theo bộ lọc đang chọn. Nếu có lịch sử nhưng không có đơn khớp bộ lọc, hàng vẫn mở được và giải thích rõ. Người chưa từng có đơn hiện Chưa có đơn, không có nút mở rộng. Nhân viên đã nghỉ việc vẫn có nhãn riêng để giữ lịch sử.
+Số tổng/đơn chờ trên hàng nhân viên luôn tính trên toàn bộ lịch sử của người đó. Số trên tab và danh sách bên trong theo bộ lọc đang chọn. Khi chưa chọn ngày, nếu có lịch sử nhưng không có đơn khớp trạng thái/loại, hàng vẫn mở được và giải thích rõ. Người chưa từng có đơn hiện Chưa có đơn, không có nút mở rộng. Nhân viên đã nghỉ việc vẫn có nhãn riêng để giữ lịch sử.
+
+Điều kiện giao khoảng ngày (tính cả hai biên): `LeaveRequests.ToDate >= fromDate` và `LeaveRequests.FromDate <= toDate`. Ví dụ minh họa: chọn 24/10–24/10 vẫn thấy đơn nghỉ 23/10–24/10. Nếu bỏ trống một đầu thì không giới hạn đầu đó. Tab và phân trang giữ ngày đã chọn; Tìm quay về trang đầu; Xóa lọc bỏ cả hai ngày và giữ tab hiện tại.
 
 `AccountId` là mã tài khoản đăng nhập. `EmployeeId` là mã nhân viên. Service phải tra từ tài khoản sang nhân viên; hai mã không thay thế cho nhau.
 
