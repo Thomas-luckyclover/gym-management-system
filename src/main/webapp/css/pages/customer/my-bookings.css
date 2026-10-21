@@ -16,6 +16,10 @@
   padding: var(--space-4);
 }
 
+/* Tiêu đề "Gói của bạn" + nút (i) nằm cùng hàng */
+.booking-sidebar-head { display: flex; align-items: center; gap: var(--space-3); }
+.booking-sidebar-head h2 { margin: 0; }
+
 /* ===================== [TAB] dùng kiểu tab chung (common.css [role=tablist]), chỉ chia đều 3 tab + ô số ===================== */
 .booking-tabs [data-tab] {
   flex: 1 1 0;
@@ -214,6 +218,17 @@
 }
 .booking-chips [aria-pressed="true"]::before { background: var(--color-text-inverse); }
 .booking-chips [data-filter]:disabled { opacity: var(--opacity-disabled); cursor: default; }
+/* Nhóm "Đã qua" (check-in / vắng / đang cập nhật), vạch mảnh ngăn với Sắp tới và Đã hủy */
+.booking-chip-group {
+  display: inline-flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: var(--space-2);
+  padding-inline: var(--space-3);
+  border-left: var(--border-width) solid var(--color-border);
+  border-right: var(--border-width) solid var(--color-border);
+}
+.booking-chip-label { color: var(--color-text-soft); font-size: var(--font-size-xs); font-weight: var(--font-weight-semibold); }
 
 /* ===================== [BANG] ===================== */
 .booking-result { display: flex; align-items: center; gap: var(--space-2); margin: 0; padding: var(--space-3) var(--space-5) var(--space-2); }
@@ -304,15 +319,16 @@
   .my-bookings-page .topbar { flex: none; }
   .my-bookings-page .pt-schedule.content { display: flex; flex-direction: column; flex: 1; min-height: 0; overflow: hidden; }
   .my-bookings-page .booking-layout { flex: 1; min-height: 0; align-items: start; max-height: 100%; }
-  .my-bookings-page .booking-sidebar { max-height: 100%; min-height: 0; overflow-y: auto; overscroll-behavior-y: contain; }
-  .my-bookings-page .booking-content { display: flex; flex-direction: column; max-height: 100%; min-height: 0; overflow: hidden; }
+  .my-bookings-page .booking-sidebar { max-height: 100%; min-height: 0; overflow-x: hidden; overflow-y: auto; overscroll-behavior-y: contain; }
+  /* Cột phải tự cuộn khi thẻ "Buổi tới" + chip đã chiếm gần hết chiều cao (màn laptop) */
+  .my-bookings-page .booking-content { display: flex; flex-direction: column; max-height: 100%; min-height: 0; overflow-x: hidden; overflow-y: auto; overscroll-behavior-y: contain; }
   .my-bookings-page .booking-overview,
   .my-bookings-page .booking-chips,
   .my-bookings-page .booking-hero,
   .my-bookings-page .booking-result,
   .my-bookings-page .booking-foot { flex: none; }
-  /* Co theo số dòng; nhiều buổi thì cuộn trong khung, không để khoảng trống lớn khi ít buổi. */
-  .my-bookings-page .booking-table-scroll { flex: 0 1 auto; min-height: 0; max-height: none; overscroll-behavior-y: contain; }
+  /* Co theo số dòng nhưng KHÔNG bị ép bẹp: tối đa ~5 dòng mỗi lần, nhiều buổi thì cuộn trong bảng. */
+  .my-bookings-page .booking-table-scroll { flex: 0 0 auto; min-height: 0; max-height: calc(var(--space-12) * 5); overscroll-behavior-y: contain; }
   .my-bookings-page .schedule-empty { min-height: 0; overflow-y: auto; }
 }
 
@@ -334,5 +350,7 @@
   .booking-ring .booking-ring-rest { font-size: var(--font-size-2xs); font-weight: var(--font-weight-regular); }
   .booking-ring-hint { display: none; }
   .booking-overview, .booking-chips, .booking-result, .booking-foot { padding-inline: var(--space-4); }
+  /* Mobile: mỗi nhóm chip 1 dòng, bỏ vạch ngăn */
+  .booking-chip-group { flex-basis: 100%; padding-inline: 0; border: 0; }
   .booking-table th, .booking-table td { padding: var(--space-2) var(--space-3); }
 }

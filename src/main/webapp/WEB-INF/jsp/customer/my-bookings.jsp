@@ -20,7 +20,7 @@
         <title>Gói của tôi · Super Gym</title>
         <link rel="stylesheet" href="${pageContext.request.contextPath}/css/pages/customer/dashboard.css?v=20261013c">
         <link rel="stylesheet" href="${pageContext.request.contextPath}/css/pages/customer/my-pt-sessions.css?v=20261019f">
-        <link rel="stylesheet" href="${pageContext.request.contextPath}/css/pages/customer/my-bookings.css?v=20261021e">
+        <link rel="stylesheet" href="${pageContext.request.contextPath}/css/pages/customer/my-bookings.css?v=20261021f">
         <script src="${pageContext.request.contextPath}/js/pages/customer/my-pt-sessions.js?v=20261019e" defer></script>
         <script src="${pageContext.request.contextPath}/js/pages/customer/my-bookings.js?v=20261021e" defer></script>
     </head>
@@ -180,17 +180,22 @@
                                     <div class="booking-chips" role="group" aria-label="Lọc buổi theo trạng thái" hidden data-session-filters>
                                         <button type="button" data-filter="all" aria-pressed="true">Tất cả <b>${booking.totalCount}</b></button>
                                         <button type="button" data-filter="remaining" data-tone="upcoming" aria-pressed="false" ${booking.remainingCount eq 0 ? 'disabled' : ''}>Sắp tới <b>${booking.remainingCount}</b></button>
-                                        <button type="button" data-filter="checkedIn" data-tone="checkedIn" aria-pressed="false" ${booking.checkedInCount eq 0 ? 'disabled' : ''}>Đã check-in <b>${booking.checkedInCount}</b></button>
-                                        <button type="button" data-filter="missed" data-tone="missed" aria-pressed="false" ${booking.missedCount eq 0 ? 'disabled' : ''}>Vắng <b>${booking.missedCount}</b></button>
+                                        <%-- Nhóm "Đã qua": kết quả của buổi đã diễn ra --%>
+                                        <span class="booking-chip-group" role="group" aria-label="Buổi đã qua">
+                                            <span class="booking-chip-label" aria-hidden="true">Đã qua:</span>
+                                            <button type="button" data-filter="checkedIn" data-tone="checkedIn" aria-pressed="false" ${booking.checkedInCount eq 0 ? 'disabled' : ''}>Đã check-in <b>${booking.checkedInCount}</b></button>
+                                            <button type="button" data-filter="missed" data-tone="missed" aria-pressed="false" ${booking.missedCount eq 0 ? 'disabled' : ''}>Vắng <b>${booking.missedCount}</b></button>
+                                            <c:if test="${booking.pendingCount gt 0}">
+                                                <button type="button" data-filter="pending" data-tone="pending" aria-pressed="false">Đang cập nhật <b>${booking.pendingCount}</b></button>
+                                            </c:if>
+                                        </span>
                                         <button type="button" data-filter="cancelled" data-tone="cancelled" aria-pressed="false" ${booking.cancelledCount eq 0 ? 'disabled' : ''}>Đã hủy <b>${booking.cancelledCount}</b></button>
-                                        <c:if test="${booking.pendingCount gt 0}">
-                                            <button type="button" data-filter="pending" data-tone="pending" aria-pressed="false">Đang cập nhật <b>${booking.pendingCount}</b></button>
-                                        </c:if>
                                         <span class="pt-info"><button type="button" class="pt-info-trigger" aria-label="Giải thích các trạng thái" aria-describedby="hint-chips"><span aria-hidden="true">i</span></button><span id="hint-chips" class="pt-info-popover" role="tooltip">
                                             <strong>Sắp tới:</strong> buổi chưa diễn ra, gồm cả buổi Cần chú ý (phòng nghỉ hoặc chưa có quyền vào gym).<br>
-                                            <strong>Đã check-in:</strong> bạn đã vào gym ngày đó.<br>
+                                            <strong>Đã check-in:</strong> bạn đã vào gym ngày đó. Hệ thống chỉ biết bạn đã vào cửa, không biết bạn có tập cùng PT hay không.<br>
                                             <strong>Vắng:</strong> không check-in, buổi vẫn tính vào gói.<br>
-                                            <strong>Đang cập nhật:</strong> buổi vừa kết thúc, kết quả có sau khi hết ngày.
+                                            <strong>Đang cập nhật:</strong> buổi vừa kết thúc, kết quả có sau khi hết ngày.<br>
+                                            <strong>Đã hủy:</strong> buổi không diễn ra, có thể bị hủy trước hoặc sau ngày tập.
                                         </span></span>
                                     </div>
 
