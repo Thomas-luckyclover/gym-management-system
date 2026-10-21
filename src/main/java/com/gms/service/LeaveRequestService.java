@@ -457,7 +457,7 @@ public class LeaveRequestService {
             } else if (!detail.isCanAct()) {
                 detail.setBanner("Đơn này đang được giao cho " + (detail.getAssignedToName() != null ? detail.getAssignedToName() : "người khác") + ". Bạn chỉ có quyền xem.");
             } else if (detail.isOverdue() && req.isPending()) {
-                detail.setBanner("Đơn này đã quá hạn duyệt theo SLA.");
+                detail.setBanner("Đơn đã quá hạn xử lý.");
             }
 
             return ServiceResult.ok(detail);
@@ -479,7 +479,7 @@ public class LeaveRequestService {
                 "Nộp đơn",
                 detail.getFullName(),
                 null,
-                detail.getPosition(),
+                "PT".equals(detail.getPosition()) ? "PT" : "Lễ tân",
                 req.getSubmittedAt(),
                 "DONE"));
 
@@ -520,7 +520,7 @@ public class LeaveRequestService {
             list.add(new TimelineNode(
                     "PENDING",
                     "Chờ duyệt",
-                    detail.getAssignedToName() != null ? detail.getAssignedToName() : "Quản lý",
+                    detail.getAssignedToName() != null ? detail.getAssignedToName() : "Chưa phân công",
                     null,
                     detail.getApprovalDeadline() != null ? "Hạn duyệt: " + DateTimeUtil.formatDateTime(detail.getApprovalDeadline()) : null,
                     null,
@@ -570,7 +570,7 @@ public class LeaveRequestService {
         c2.setOk(staffingOk);
         String posName = "PT".equalsIgnoreCase(detail.getPosition()) ? "PT" : "Lễ tân";
         if (staffingOk) {
-            c2.setMessage("Đạt trên toàn khoảng nghỉ: còn ít nhất " + remainingStaff + " " + posName + "; tối thiểu " + minRequired + ". Giả định nhân viên Working làm cả hai ca.");
+            c2.setMessage("Đạt trên toàn khoảng nghỉ: còn ít nhất " + remainingStaff + " " + posName + "; tối thiểu " + minRequired + ". Tạm tính nhân viên đang làm việc làm cả hai ca.");
         } else {
             c2.setMessage("Có ngày/ca thiếu người: còn " + remainingStaff + ", tối thiểu " + minRequired + " " + posName + ". Xem từng ngày/ca bên dưới và bố trí người trước khi duyệt.");
         }
@@ -591,7 +591,7 @@ public class LeaveRequestService {
         c3.setApplicable(isPt);
         if (!isPt) {
             c3.setOk(true);
-            c3.setMessage("Không áp dụng (Vị trí " + (detail.getPosition() != null ? detail.getPosition() : "Lễ tân") + ")");
+            c3.setMessage("Không áp dụng cho lễ tân.");
         } else {
             LocalDate targetDate = req.getFromDate() != null ? req.getFromDate() : req.getLeaveDate();
             String shiftType = req.getShiftType() != null ? req.getShiftType().getDbValue() : "FullDay";

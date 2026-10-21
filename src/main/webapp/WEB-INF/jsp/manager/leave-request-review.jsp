@@ -9,7 +9,7 @@
   <%@ include file="/WEB-INF/jsp/common/head.jspf" %>
   <title>Chi tiết đơn nghỉ phép #${item.leaveRequest.leaveRequestId} · Super Gym</title>
   <link rel="stylesheet" href="${pageContext.request.contextPath}/css/pages/auth/account-settings.css">
-  <link rel="stylesheet" href="${pageContext.request.contextPath}/css/pages/manager/leave-requests.css?v=20261021-bf05-2">
+  <link rel="stylesheet" href="${pageContext.request.contextPath}/css/pages/manager/leave-requests.css?v=20261021-simple1">
   <link rel="stylesheet" href="${pageContext.request.contextPath}/css/pages/auth/notification-bell.css">
   <script src="${pageContext.request.contextPath}/js/pages/auth/notification-bell.js" defer></script>
 </head>
@@ -220,7 +220,7 @@
                 <span class="leave-help">3 điều kiện · kiểm tra lại khi duyệt</span>
               </div>
 
-              <p class="leave-help">Giả định ca cố định: nhân viên Working làm cả hai ca. Chưa có lịch phân ca thực tế; giờ ca chưa được cấu hình riêng.</p>
+              <p class="leave-help">Tạm tính nhân viên đang làm việc làm cả hai ca. Chưa có lịch phân ca và giờ ca riêng.</p>
               <c:url var="overlapUrl" value="/manager/leave-requests">
                 <c:param name="status" value="All" />
                 <c:param name="fromDate" value="${item.leaveRequest.fromDate}" />
@@ -342,29 +342,23 @@
             <div class="review-card">
               <div class="review-card-head">
                 <h3 class="review-card-title">
-                  <i class="fa-solid fa-user-shield" aria-hidden="true"></i> Phụ trách xử lý
+                  <i class="fa-solid fa-user-shield" aria-hidden="true"></i> ${item.leaveRequest.pending ? 'Người phụ trách' : 'Người đã xử lý'}
                 </h3>
               </div>
 
               <div style="display:flex;align-items:center;justify-content:space-between">
                 <div>
-                  <div style="font-weight:600;font-size:var(--font-size-sm)">
+                  <div class="leave-detail-handler">
                     <c:choose>
-                      <c:when test="${not empty item.reviewerName}">
-                        <c:out value="${item.reviewerName}" /> (Đã duyệt)
+                      <c:when test="${item.leaveRequest.pending}">
+                        <c:choose>
+                          <c:when test="${not empty item.assignedToName}"><c:out value="${item.assignedToName}" /></c:when>
+                          <c:otherwise><span class="leave-text-muted">Chưa phân công</span></c:otherwise>
+                        </c:choose>
                       </c:when>
-                      <c:when test="${not empty item.assignedToName}">
-                        <c:out value="${item.assignedToName}" />
-                      </c:when>
-                      <c:otherwise>
-                        Chưa phân công (Quản lý chung)
-                      </c:otherwise>
-                    </c:choose>
-                  </div>
-                  <div style="font-size:var(--font-size-xs);color:var(--color-text-soft);margin-top:2px">
-                    <c:choose>
-                      <c:when test="${item.canAct}">Bạn đang có quyền thao tác trên đơn này</c:when>
-                      <c:otherwise>Bạn đang ở chế độ chỉ xem</c:otherwise>
+                      <c:when test="${not empty item.reviewerName}"><c:out value="${item.reviewerName}" /></c:when>
+                      <c:when test="${item.autoRejected}">Hệ thống</c:when>
+                      <c:otherwise><span class="leave-text-muted">—</span></c:otherwise>
                     </c:choose>
                   </div>
                 </div>
