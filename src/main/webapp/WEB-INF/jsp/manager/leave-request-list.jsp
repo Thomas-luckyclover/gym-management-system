@@ -1,6 +1,8 @@
 <%@ page contentType="text/html; charset=UTF-8" pageEncoding="UTF-8" %>
 <%@ taglib prefix="c" uri="jakarta.tags.core" %>
 <%@ taglib prefix="fn" uri="jakarta.tags.functions" %>
+<%@ taglib prefix="fmt" uri="jakarta.tags.fmt" %>
+<fmt:setLocale value="vi_VN" scope="page" />
 <%@ taglib prefix="gms" uri="/WEB-INF/gms-functions.tld" %>
 
 <!DOCTYPE html>
@@ -10,11 +12,12 @@
   <title>Quản lý đơn nghỉ phép · Super Gym</title>
   <link rel="stylesheet" href="${pageContext.request.contextPath}/css/pages/auth/account-settings.css">
   <link rel="stylesheet" href="${pageContext.request.contextPath}/css/pages/manager/leave-requests.css?v=20261021-bf05-2">
+  <link rel="stylesheet" href="${pageContext.request.contextPath}/css/pages/manager/leave-request-list.css?v=20261021-simple1">
   <link rel="stylesheet" href="${pageContext.request.contextPath}/css/pages/auth/notification-bell.css">
   <script src="${pageContext.request.contextPath}/js/pages/auth/notification-bell.js" defer></script>
 </head>
 
-<body class="dock theme-manager">
+<body class="dock theme-manager leave-list-page">
   <%@ include file="/WEB-INF/jsp/common/flash-toast.jspf" %>
 
   <div class="app">
@@ -41,7 +44,7 @@
 
       <main class="content">
 
-        <%-- ===== Thanh công cụ gom nhóm: Tabs trạng thái bên trái + Bộ lọc bên phải ===== --%>
+        <%-- ===== Tabs trạng thái và bộ lọc danh sách ===== --%>
         <div class="leave-toolbar">
 
           <%-- 4 Tab trạng thái --%>
@@ -51,6 +54,8 @@
               <c:if test="${not empty keyword}"><c:param name="keyword" value="${keyword}" /></c:if>
               <c:if test="${not empty positionFilter}"><c:param name="position" value="${positionFilter}" /></c:if>
               <c:if test="${not empty leaveTypeFilter}"><c:param name="leaveType" value="${leaveTypeFilter}" /></c:if>
+              <c:if test="${not empty fromDateFilter}"><c:param name="fromDate" value="${fromDateFilter}" /></c:if>
+              <c:if test="${not empty toDateFilter}"><c:param name="toDate" value="${toDateFilter}" /></c:if>
             </c:url>
             <a href="${pendingTabUrl}" class="leave-tab-btn ${statusFilter == 'Pending' ? 'active' : ''}">
               <span>Chờ duyệt</span>
@@ -62,6 +67,8 @@
               <c:if test="${not empty keyword}"><c:param name="keyword" value="${keyword}" /></c:if>
               <c:if test="${not empty positionFilter}"><c:param name="position" value="${positionFilter}" /></c:if>
               <c:if test="${not empty leaveTypeFilter}"><c:param name="leaveType" value="${leaveTypeFilter}" /></c:if>
+              <c:if test="${not empty fromDateFilter}"><c:param name="fromDate" value="${fromDateFilter}" /></c:if>
+              <c:if test="${not empty toDateFilter}"><c:param name="toDate" value="${toDateFilter}" /></c:if>
             </c:url>
             <a href="${approvedTabUrl}" class="leave-tab-btn ${statusFilter == 'Approved' ? 'active' : ''}">
               <span>Đã duyệt</span>
@@ -73,6 +80,8 @@
               <c:if test="${not empty keyword}"><c:param name="keyword" value="${keyword}" /></c:if>
               <c:if test="${not empty positionFilter}"><c:param name="position" value="${positionFilter}" /></c:if>
               <c:if test="${not empty leaveTypeFilter}"><c:param name="leaveType" value="${leaveTypeFilter}" /></c:if>
+              <c:if test="${not empty fromDateFilter}"><c:param name="fromDate" value="${fromDateFilter}" /></c:if>
+              <c:if test="${not empty toDateFilter}"><c:param name="toDate" value="${toDateFilter}" /></c:if>
             </c:url>
             <a href="${rejectedTabUrl}" class="leave-tab-btn ${statusFilter == 'Rejected' ? 'active' : ''}">
               <span>Từ chối</span>
@@ -84,6 +93,8 @@
               <c:if test="${not empty keyword}"><c:param name="keyword" value="${keyword}" /></c:if>
               <c:if test="${not empty positionFilter}"><c:param name="position" value="${positionFilter}" /></c:if>
               <c:if test="${not empty leaveTypeFilter}"><c:param name="leaveType" value="${leaveTypeFilter}" /></c:if>
+              <c:if test="${not empty fromDateFilter}"><c:param name="fromDate" value="${fromDateFilter}" /></c:if>
+              <c:if test="${not empty toDateFilter}"><c:param name="toDate" value="${toDateFilter}" /></c:if>
             </c:url>
             <a href="${allTabUrl}" class="leave-tab-btn ${statusFilter == 'All' ? 'active' : ''}">
               <span>Tất cả</span>
@@ -91,13 +102,15 @@
             </a>
           </div>
 
-          <%-- Form lọc tìm kiếm --%>
+          <%-- Chỉ lọc 2 chức vụ và 3 loại nghỉ đang được backend hỗ trợ. --%>
           <form action="${pageContext.request.contextPath}/manager/leave-requests" method="get" class="leave-filter-nav">
             <input type="hidden" name="status" value="<c:out value='${statusFilter}' />">
+            <c:if test="${not empty fromDateFilter}"><input type="hidden" name="fromDate" value="<c:out value='${fromDateFilter}' />"></c:if>
+            <c:if test="${not empty toDateFilter}"><input type="hidden" name="toDate" value="<c:out value='${toDateFilter}' />"></c:if>
 
             <select name="position" class="filter-select" aria-label="Lọc theo chức vụ">
               <option value="">Tất cả chức vụ</option>
-              <option value="PT" ${positionFilter == 'PT' ? 'selected' : ''}>Huấn luyện viên (PT)</option>
+              <option value="PT" ${positionFilter == 'PT' ? 'selected' : ''}>PT</option>
               <option value="Receptionist" ${positionFilter == 'Receptionist' ? 'selected' : ''}>Lễ tân</option>
             </select>
 
@@ -113,7 +126,8 @@
                    class="filter-input-search"
                    maxlength="100"
                    value="<c:out value='${keyword}' />"
-                   placeholder="Tìm theo tên / mã nhân viên...">
+                   aria-label="Tìm theo tên hoặc mã nhân viên"
+                   placeholder="Tên hoặc mã nhân viên">
 
             <button class="btn btn-sm btn-primary" type="submit">
               <i class="fa-solid fa-magnifying-glass" aria-hidden="true"></i> Tìm
@@ -129,12 +143,18 @@
 
         </div>
 
-        <p class="leave-help">Đơn có hạn xử lý gần nhất được hiển thị trước. Mở chi tiết để xem điều kiện duyệt.</p>
         <%-- ===== Bảng danh sách đơn nghỉ phép ===== --%>
-        <section class="panel leave-panel" style="padding:0;overflow:hidden">
+        <section class="panel leave-panel leave-list-panel" aria-label="Danh sách đơn nghỉ phép">
+          <div class="leave-list-caption">
+            <span><c:out value="${leavePage.totalItems}" /> đơn</span>
+            <c:if test="${not empty fromDateFilter or not empty toDateFilter}">
+              <span>Khoảng ngày: <c:out value="${fromDateFilter}" default="—" /> → <c:out value="${toDateFilter}" default="—" /></span>
+            </c:if>
+            <span><i class="fa-solid fa-arrow-down-short-wide" aria-hidden="true"></i> Hạn xử lý gần nhất</span>
+          </div>
 
           <c:if test="${not empty pageError}">
-            <div class="leave-empty" role="alert" style="color:var(--color-danger-ink)"><c:out value="${pageError}" /></div>
+            <div class="leave-empty leave-list-error" role="alert"><c:out value="${pageError}" /></div>
           </c:if>
 
           <c:choose>
@@ -143,122 +163,107 @@
                 <table class="leave-table">
                   <thead>
                     <tr>
-                      <th style="width:25%">Nhân viên</th>
-                      <th style="width:20%">Thời gian nghỉ</th>
-                      <th style="width:13%">Loại nghỉ</th>
-                      <th style="width:14%">Trạng thái</th>
-                      <th>Kiểm tra</th>
-                      <th style="width:14%">Người duyệt</th>
-                      <th style="width:14%;text-align:right">Thao tác</th>
+                      <th scope="col">Nhân viên</th>
+                      <th scope="col">Ngày nghỉ / Ca</th>
+                      <th scope="col">Loại nghỉ</th>
+                      <th scope="col">Trạng thái</th>
+                      <th scope="col">Kiểm tra</th>
+                      <th scope="col">Hạn xử lý</th>
+                      <th scope="col">Người xử lý</th>
+                      <th scope="col" class="leave-actions-cell">Thao tác</th>
                     </tr>
                   </thead>
                   <tbody>
                     <c:forEach var="item" items="${leavePage.items}">
                       <tr class="${item.urgent or item.overdue ? 'leave-row-urgent' : ''}">
 
-                        <%-- Cột 1: Nhân viên --%>
+                        <%-- Nhân viên: tên, mã và chức vụ lấy từ LeaveRequestItemView. --%>
                         <td>
                           <div class="leave-employee-cell">
                             <c:choose>
                               <c:when test="${not empty item.avatarUrl}">
-                                <img src="${pageContext.request.contextPath}${item.avatarUrl}" alt="Avatar" class="leave-employee-avatar">
+                                <img src="${pageContext.request.contextPath}<c:out value='${item.avatarUrl}' />" alt="" class="leave-employee-avatar">
                               </c:when>
                               <c:otherwise>
-                                <span class="leave-employee-initial">${fn:substring(item.fullName, 0, 1)}</span>
+                                <span class="leave-employee-initial" aria-hidden="true"><c:out value="${fn:substring(item.fullName, 0, 1)}" /></span>
                               </c:otherwise>
                             </c:choose>
                             <div class="leave-employee-meta">
                               <b><c:out value="${item.fullName}" /></b>
-                              <small>
-                                <c:out value="${item.employeeCode}" /> ·
-                                <span class="badge badge-sm ${item.position == 'PT' ? 'badge-info' : 'badge-neutral'}">
-                                  ${item.position == 'PT' ? 'PT' : 'Lễ tân'}
-                                </span>
-                              </small>
+                              <small><c:out value="${item.employeeCode}" /> · ${item.position == 'PT' ? 'PT' : 'Lễ tân'}</small>
                             </div>
                           </div>
                         </td>
 
-                        <%-- Cột 2: Thời gian nghỉ --%>
+                        <%-- Ngày và ca: không tự bổ sung giờ khi chưa có cấu hình ca. --%>
                         <td>
-                          <div style="font-weight:600;font-size:var(--font-size-sm)">
-                            ${gms:formatDate(item.fromDate)}
+                          <div class="leave-date-range">
+                            <span>${gms:formatDate(item.fromDate)}</span>
                             <c:if test="${item.fromDate != item.toDate}">
-                              → ${gms:formatDate(item.toDate)}
+                              <span>→ ${gms:formatDate(item.toDate)}</span>
                             </c:if>
-                            <span style="font-size:11px;color:var(--color-text-soft);font-weight:normal">(${item.days} ngày)</span>
                           </div>
-                          <small style="color:var(--color-text-soft)">
-                            <c:out value="${item.shiftType.displayName}" />
-                          </small>
+                          <small><c:out value="${item.shiftType.displayName}" /> · <fmt:formatNumber value="${item.days}" maxFractionDigits="1" /> ngày</small>
                         </td>
 
-                        <%-- Cột 3: Loại nghỉ --%>
+                        <%-- Loại nghỉ chỉ hiện tên; lý do đầy đủ nằm trong trang chi tiết. --%>
                         <td>
-                          <span class="badge ${item.leaveType.dbValue == 'Annual' ? 'badge-success' : (item.leaveType.dbValue == 'Sick' ? 'badge-info' : 'badge-neutral')}">
-                            <c:out value="${item.leaveType.displayName}" />
+                          <span class="leave-type-label">
+                            <c:choose>
+                              <c:when test="${item.leaveType.dbValue == 'Annual'}">Phép năm</c:when>
+                              <c:when test="${item.leaveType.dbValue == 'Sick'}">Nghỉ ốm</c:when>
+                              <c:otherwise>Không lương</c:otherwise>
+                            </c:choose>
                           </span>
-                          <c:if test="${not empty item.reason}">
-                            <div style="font-size:11px;color:var(--color-text-soft);margin-top:2px;max-width:160px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis" title="<c:out value="${item.reason}" />">
-                              <c:out value="${item.reason}" />
-                            </div>
-                          </c:if>
                         </td>
 
-                        <%-- Cột 4: Trạng thái --%>
                         <td>
-                          <span class="badge
-                            ${item.status.dbValue == 'Pending' ? 'badge-warning' :
-                              item.status.dbValue == 'Approved' ? 'badge-success' : 'badge-danger'}">
+                          <span class="badge ${item.status.dbValue == 'Pending' ? 'badge-warning' : item.status.dbValue == 'Approved' ? 'badge-success' : 'badge-danger'}">
                             <c:out value="${item.status.displayName}" />
                           </span>
-                          <c:if test="${item.status.dbValue == 'Pending' and (item.urgent or item.overdue)}">
-                            <span class="badge badge-danger">${item.overdue ? 'Quá hạn' : 'Sắp quá hạn'}</span>
-                          </c:if>
-                          <c:if test="${item.autoRejected}">
-                            <div style="font-size:10px;color:var(--color-danger-ink);margin-top:2px">Quá hạn duyệt SLA</div>
-                          </c:if>
-                          <c:if test="${item.status.dbValue == 'Pending' and not empty item.deadlineCountdownText}">
-                            <div style="font-size:11px;color:${item.urgent ? 'var(--color-danger-ink);font-weight:600' : 'var(--color-text-soft)'};margin-top:2px">
-                              <c:out value="${item.deadlineCountdownText}" />
-                            </div>
-                          </c:if>
                         </td>
 
-                        <td title="<c:out value='${item.checkMessage}' />">
-                          <c:choose>
-                            <c:when test="${item.status.dbValue == 'Pending'}">
-                              <span class="badge ${item.checkSummary == 'Đạt' ? 'badge-success' : 'badge-warning'}"><c:out value="${item.checkSummary}" /></span>
-                              <c:if test="${item.checkSummary != 'Đạt'}">
-                                <small class="leave-check-note"><c:out value="${item.checkMessage}" /></small>
-                              </c:if>
-                            </c:when>
-                            <c:otherwise>Đã xử lý</c:otherwise>
-                          </c:choose>
-                        </td>
-                        <%-- Cột 5: Người duyệt / Người được giao --%>
+                        <%-- Kiểm tra do Service tính; rê chuột để xem lý do, mở chi tiết để xử lý. --%>
                         <td>
                           <c:choose>
-                            <c:when test="${not empty item.reviewerName}">
-                              <div style="font-size:var(--font-size-sm);font-weight:500"><c:out value="${item.reviewerName}" /></div>
-                              <small style="font-size:11px;color:var(--color-text-soft)">Đã xử lý</small>
+                            <c:when test="${item.status.dbValue == 'Pending'}">
+                              <span class="badge ${item.checkSummary == 'Đạt' ? 'badge-success' : 'badge-warning'}" title="<c:out value='${item.checkMessage}' />">
+                                <c:out value="${item.checkSummary}" />
+                              </span>
                             </c:when>
-                            <c:when test="${not empty item.assignedToName}">
-                              <div style="font-size:var(--font-size-sm);font-weight:500"><c:out value="${item.assignedToName}" /></div>
-                              <small style="font-size:11px;color:var(--color-warning-ink)">Được giao duyệt</small>
-                            </c:when>
-                            <c:otherwise>
-                              <span style="font-size:var(--font-size-xs);color:var(--color-text-soft)">Quản lý chung</span>
-                            </c:otherwise>
+                            <c:otherwise><span class="leave-text-muted">—</span></c:otherwise>
                           </c:choose>
                         </td>
 
-                        <%-- Cột 6: Thao tác --%>
-                        <td style="text-align:right">
-                          <a class="btn btn-sm btn-outline"
-                             href="${pageContext.request.contextPath}/manager/leave-requests/review?id=${item.leaveRequestId}">
-                            Xem chi tiết
-                          </a>
+                        <td>
+                          <c:choose>
+                            <c:when test="${item.status.dbValue == 'Pending'}">
+                              <c:if test="${item.urgent or item.overdue}">
+                                <span class="badge badge-danger">${item.overdue ? 'Quá hạn' : 'Sắp quá hạn'}</span>
+                              </c:if>
+                              <span class="leave-deadline ${item.urgent or item.overdue ? 'leave-deadline-urgent' : ''}" title="${gms:formatDateTime(item.approvalDeadline)}"><c:out value="${item.deadlineCountdownText}" /></span>
+                            </c:when>
+                            <c:otherwise><span class="leave-text-muted">—</span></c:otherwise>
+                          </c:choose>
+                        </td>
+
+                        <%-- Pending hiện người được giao; đơn đã xử lý hiện người thực hiện. Không tự tạo tên quản lý. --%>
+                        <td>
+                          <c:choose>
+                            <c:when test="${item.status.dbValue == 'Pending'}">
+                              <c:choose>
+                                <c:when test="${not empty item.assignedToName}"><span class="leave-handler-name"><c:out value="${item.assignedToName}" /></span></c:when>
+                                <c:otherwise><span class="leave-unassigned">Chưa phân công</span></c:otherwise>
+                              </c:choose>
+                            </c:when>
+                            <c:when test="${not empty item.reviewerName}"><span class="leave-handler-name"><c:out value="${item.reviewerName}" /></span></c:when>
+                            <c:when test="${item.autoRejected}"><span class="leave-text-muted">Hệ thống</span></c:when>
+                            <c:otherwise><span class="leave-text-muted">—</span></c:otherwise>
+                          </c:choose>
+                        </td>
+
+                        <td class="leave-actions-cell">
+                          <a class="btn btn-sm btn-outline" href="${pageContext.request.contextPath}/manager/leave-requests/review?id=${item.leaveRequestId}">Xem chi tiết</a>
                         </td>
 
                       </tr>
@@ -274,7 +279,7 @@
 
           <%-- Phân trang --%>
           <c:if test="${leavePage.totalPages > 1}">
-            <div class="leave-pager" style="padding:var(--space-4)">
+            <div class="leave-pager">
               <c:if test="${leavePage.hasPrevious}">
                 <c:url var="previousUrl" value="/manager/leave-requests">
                   <c:param name="page" value="${leavePage.pageNumber - 1}" />
@@ -283,6 +288,8 @@
                   <c:param name="status" value="${statusFilter}" />
                   <c:if test="${not empty positionFilter}"><c:param name="position" value="${positionFilter}" /></c:if>
                   <c:if test="${not empty leaveTypeFilter}"><c:param name="leaveType" value="${leaveTypeFilter}" /></c:if>
+                  <c:if test="${not empty fromDateFilter}"><c:param name="fromDate" value="${fromDateFilter}" /></c:if>
+                  <c:if test="${not empty toDateFilter}"><c:param name="toDate" value="${toDateFilter}" /></c:if>
                 </c:url>
                 <a class="btn btn-ghost btn-sm" href="${previousUrl}">Trang trước</a>
               </c:if>
@@ -297,6 +304,8 @@
                   <c:param name="status" value="${statusFilter}" />
                   <c:if test="${not empty positionFilter}"><c:param name="position" value="${positionFilter}" /></c:if>
                   <c:if test="${not empty leaveTypeFilter}"><c:param name="leaveType" value="${leaveTypeFilter}" /></c:if>
+                  <c:if test="${not empty fromDateFilter}"><c:param name="fromDate" value="${fromDateFilter}" /></c:if>
+                  <c:if test="${not empty toDateFilter}"><c:param name="toDate" value="${toDateFilter}" /></c:if>
                 </c:url>
                 <a class="btn btn-ghost btn-sm" href="${nextUrl}">Trang sau</a>
               </c:if>
