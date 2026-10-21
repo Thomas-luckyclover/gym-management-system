@@ -10,7 +10,7 @@
   <%@ include file="/WEB-INF/jsp/common/head.jspf" %>
   <title>Nghỉ phép · Super Gym</title>
   <link rel="stylesheet" href="${pageContext.request.contextPath}/css/pages/auth/account-settings.css?v=20261018">
-  <link rel="stylesheet" href="${pageContext.request.contextPath}/css/pages/manager/leave-requests.css?v=20261018">
+  <link rel="stylesheet" href="${pageContext.request.contextPath}/css/pages/manager/leave-requests.css?v=20261021-readable2">
   <link rel="stylesheet" href="${pageContext.request.contextPath}/css/pages/auth/notification-bell.css?v=20261018">
   <script src="${pageContext.request.contextPath}/js/pages/auth/notification-bell.js" defer></script>
 </head>
@@ -63,9 +63,9 @@
               <i class="fa-solid fa-circle-exclamation" aria-hidden="true"></i>
               <c:out value="${submitError}" />
             </div>
-            <c:if test="${not isReceptionist and blockedBySessions}">
+            <c:if test="${not isReceptionist}">
               <a class="btn btn-sm btn-outline" href="${pageContext.request.contextPath}/pt/dashboard">
-                Mở lịch dạy để xử lý (BF-08) →
+                Xem lịch dạy →
               </a>
             </c:if>
           </div>
@@ -134,12 +134,12 @@
                   <input id="leaveDate"
                          name="leaveDate"
                          type="date"
-                         data-cutoff="<c:out value='${formView.submissionCutoffTime}' default='15:00' />"
+                         data-cutoff="<c:out value='${formView.submissionCutoffTime}' default='' />"
                          value="<c:out value='${paramLeaveDate}' />"
                          required>
                   <span class="field-hint" style="display:block;margin-top:var(--space-1);color:var(--color-text-soft);font-size:var(--font-size-xs)">
                     <i class="fa-solid fa-circle-info" aria-hidden="true"></i>
-                    Đơn phải nộp trước giờ chốt (<c:out value="${formView.submissionCutoffTime}" default="15:00" />) của ngày hôm trước. Nghỉ đột xuất cùng ngày vui lòng báo trực tiếp Quản lý.
+                    Đơn phải nộp trước giờ chốt (<c:out value="${formView.submissionCutoffTime}" default="—" />) của ngày hôm trước. Nghỉ đột xuất cùng ngày vui lòng báo trực tiếp Quản lý.
                   </span>
                   <div class="field-error" id="leaveDateClientErr" hidden></div>
                   <c:if test="${not empty fieldErrors.leaveDate}">
@@ -250,22 +250,22 @@
           <%-- ===== Cột phải: Staffing preview theo SRS 5.2.1 (Hạn nộp P-12 & Quân số trực ca dự kiến) ===== --%>
           <div class="leave-col-side">
             <div class="leave-side-card">
-              <span class="leave-side-title">Hạn chốt nộp đơn (P-12)</span>
+              <span class="leave-side-title">Hạn nộp đơn</span>
               <div class="leave-side-row">
                 <span style="color:var(--color-text-soft)">Ngày nghỉ đang chọn:</span>
                 <b id="infoDate">—</b>
               </div>
               <div class="leave-side-row" style="margin-bottom:var(--space-3)">
                 <span style="color:var(--color-text-soft)">Hạn nộp trước:</span>
-                <b id="infoDeadline"><c:out value="${formView.submissionCutoffTime}" default="15:00" /> · ngày hôm trước</b>
+                <b id="infoDeadline"><c:out value="${formView.submissionCutoffTime}" default="—" /> · ngày hôm trước</b>
               </div>
               <p style="margin:0;font-size:var(--font-size-xs);color:var(--color-text-soft);line-height:1.5">
-                Quá giờ chốt trên, nếu nghỉ đột xuất vui lòng báo trực tiếp Quản lý ngoài hệ thống (CBR-84).
+                Quá giờ chốt trên, nếu nghỉ đột xuất vui lòng báo trực tiếp Quản lý.
               </p>
             </div>
 
             <div class="leave-side-card">
-              <span class="leave-side-title">Dự báo quân số &amp; Định biên ca trực</span>
+              <span class="leave-side-title">Dự báo nhân sự</span>
               <p id="pvScope" style="margin:0 0 var(--space-2);font-size:var(--font-size-xs);color:var(--color-text-soft)">
                 Mặc định tính cho ngày mai, cả ngày. Chọn ngày và ca nghỉ để xem số liệu đúng ca.
               </p>
@@ -284,7 +284,7 @@
                 </b>
               </div>
               <p style="margin:0;font-size:var(--font-size-xs);color:var(--color-text-soft);line-height:1.5">
-                Giả định nhân viên Working làm cả hai ca, chưa có lịch phân ca thực tế. Quản lý kiểm tra lại đủ ngày/ca trước khi duyệt.
+                Giả định nhân viên đang làm việc làm cả hai ca, chưa có lịch phân ca thực tế. Quản lý kiểm tra lại đủ ngày/ca trước khi duyệt.
               </p>
             </div>
           </div>
@@ -293,6 +293,6 @@
     </div>
   </div>
 
-  <script src="${pageContext.request.contextPath}/js/pages/staff/leave-request-form.js?v=20261019"></script>
+  <script src="${pageContext.request.contextPath}/js/pages/staff/leave-request-form.js?v=20261021-readable2"></script>
 </body>
 </html>

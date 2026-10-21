@@ -11,8 +11,7 @@
   <%@ include file="/WEB-INF/jsp/common/head.jspf" %>
   <title>Quản lý đơn nghỉ phép · Super Gym</title>
   <link rel="stylesheet" href="${pageContext.request.contextPath}/css/pages/auth/account-settings.css">
-  <link rel="stylesheet" href="${pageContext.request.contextPath}/css/pages/manager/leave-requests.css?v=20261021-bf05-2">
-  <link rel="stylesheet" href="${pageContext.request.contextPath}/css/pages/manager/leave-request-list.css?v=20261021-simple1">
+  <link rel="stylesheet" href="${pageContext.request.contextPath}/css/pages/manager/leave-request-list.css?v=20261021-readable2">
   <link rel="stylesheet" href="${pageContext.request.contextPath}/css/pages/auth/notification-bell.css">
   <script src="${pageContext.request.contextPath}/js/pages/auth/notification-bell.js" defer></script>
 </head>
@@ -49,57 +48,27 @@
 
           <%-- 4 Tab trạng thái --%>
           <div class="leave-tabs-nav">
-            <c:url var="pendingTabUrl" value="/manager/leave-requests">
-              <c:param name="status" value="Pending" />
-              <c:if test="${not empty keyword}"><c:param name="keyword" value="${keyword}" /></c:if>
-              <c:if test="${not empty positionFilter}"><c:param name="position" value="${positionFilter}" /></c:if>
-              <c:if test="${not empty leaveTypeFilter}"><c:param name="leaveType" value="${leaveTypeFilter}" /></c:if>
-              <c:if test="${not empty fromDateFilter}"><c:param name="fromDate" value="${fromDateFilter}" /></c:if>
-              <c:if test="${not empty toDateFilter}"><c:param name="toDate" value="${toDateFilter}" /></c:if>
-            </c:url>
-            <a href="${pendingTabUrl}" class="leave-tab-btn ${statusFilter == 'Pending' ? 'active' : ''}">
-              <span>Chờ duyệt</span>
-              <span class="leave-tab-count"><c:out value="${statusCounts['Pending'] != null ? statusCounts['Pending'] : 0}" /></span>
-            </a>
-
-            <c:url var="approvedTabUrl" value="/manager/leave-requests">
-              <c:param name="status" value="Approved" />
-              <c:if test="${not empty keyword}"><c:param name="keyword" value="${keyword}" /></c:if>
-              <c:if test="${not empty positionFilter}"><c:param name="position" value="${positionFilter}" /></c:if>
-              <c:if test="${not empty leaveTypeFilter}"><c:param name="leaveType" value="${leaveTypeFilter}" /></c:if>
-              <c:if test="${not empty fromDateFilter}"><c:param name="fromDate" value="${fromDateFilter}" /></c:if>
-              <c:if test="${not empty toDateFilter}"><c:param name="toDate" value="${toDateFilter}" /></c:if>
-            </c:url>
-            <a href="${approvedTabUrl}" class="leave-tab-btn ${statusFilter == 'Approved' ? 'active' : ''}">
-              <span>Đã duyệt</span>
-              <span class="leave-tab-count"><c:out value="${statusCounts['Approved'] != null ? statusCounts['Approved'] : 0}" /></span>
-            </a>
-
-            <c:url var="rejectedTabUrl" value="/manager/leave-requests">
-              <c:param name="status" value="Rejected" />
-              <c:if test="${not empty keyword}"><c:param name="keyword" value="${keyword}" /></c:if>
-              <c:if test="${not empty positionFilter}"><c:param name="position" value="${positionFilter}" /></c:if>
-              <c:if test="${not empty leaveTypeFilter}"><c:param name="leaveType" value="${leaveTypeFilter}" /></c:if>
-              <c:if test="${not empty fromDateFilter}"><c:param name="fromDate" value="${fromDateFilter}" /></c:if>
-              <c:if test="${not empty toDateFilter}"><c:param name="toDate" value="${toDateFilter}" /></c:if>
-            </c:url>
-            <a href="${rejectedTabUrl}" class="leave-tab-btn ${statusFilter == 'Rejected' ? 'active' : ''}">
-              <span>Từ chối</span>
-              <span class="leave-tab-count"><c:out value="${statusCounts['Rejected'] != null ? statusCounts['Rejected'] : 0}" /></span>
-            </a>
-
-            <c:url var="allTabUrl" value="/manager/leave-requests">
-              <c:param name="status" value="All" />
-              <c:if test="${not empty keyword}"><c:param name="keyword" value="${keyword}" /></c:if>
-              <c:if test="${not empty positionFilter}"><c:param name="position" value="${positionFilter}" /></c:if>
-              <c:if test="${not empty leaveTypeFilter}"><c:param name="leaveType" value="${leaveTypeFilter}" /></c:if>
-              <c:if test="${not empty fromDateFilter}"><c:param name="fromDate" value="${fromDateFilter}" /></c:if>
-              <c:if test="${not empty toDateFilter}"><c:param name="toDate" value="${toDateFilter}" /></c:if>
-            </c:url>
-            <a href="${allTabUrl}" class="leave-tab-btn ${statusFilter == 'All' ? 'active' : ''}">
-              <span>Tất cả</span>
-              <span class="leave-tab-count"><c:out value="${statusCounts['All'] != null ? statusCounts['All'] : 0}" /></span>
-            </a>
+            <c:forTokens var="tab" items="Pending,Approved,Rejected,All" delims=",">
+              <c:url var="statusTabUrl" value="/manager/leave-requests">
+                <c:param name="status" value="${tab}" />
+                <c:if test="${not empty keyword}"><c:param name="keyword" value="${keyword}" /></c:if>
+                <c:if test="${not empty positionFilter}"><c:param name="position" value="${positionFilter}" /></c:if>
+                <c:if test="${not empty leaveTypeFilter}"><c:param name="leaveType" value="${leaveTypeFilter}" /></c:if>
+                <c:if test="${not empty fromDateFilter}"><c:param name="fromDate" value="${fromDateFilter}" /></c:if>
+                <c:if test="${not empty toDateFilter}"><c:param name="toDate" value="${toDateFilter}" /></c:if>
+              </c:url>
+              <a href="${statusTabUrl}" class="leave-tab-btn ${statusFilter == tab ? 'active' : ''}">
+                <span>
+                  <c:choose>
+                    <c:when test="${tab == 'Pending'}">Chờ duyệt</c:when>
+                    <c:when test="${tab == 'Approved'}">Đã duyệt</c:when>
+                    <c:when test="${tab == 'Rejected'}">Từ chối</c:when>
+                    <c:otherwise>Tất cả</c:otherwise>
+                  </c:choose>
+                </span>
+                <span class="leave-tab-count"><c:out value="${statusCounts[tab]}" default="0" /></span>
+              </a>
+            </c:forTokens>
           </div>
 
           <%-- Chỉ lọc 2 chức vụ và 3 loại nghỉ đang được backend hỗ trợ. --%>

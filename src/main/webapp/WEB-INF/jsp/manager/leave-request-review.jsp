@@ -1,6 +1,8 @@
 <%@ page contentType="text/html; charset=UTF-8" pageEncoding="UTF-8" %>
 <%@ taglib prefix="c" uri="jakarta.tags.core" %>
 <%@ taglib prefix="fn" uri="jakarta.tags.functions" %>
+<%@ taglib prefix="fmt" uri="jakarta.tags.fmt" %>
+<fmt:setLocale value="vi_VN" scope="page" />
 <%@ taglib prefix="gms" uri="/WEB-INF/gms-functions.tld" %>
 
 <!DOCTYPE html>
@@ -9,9 +11,10 @@
   <%@ include file="/WEB-INF/jsp/common/head.jspf" %>
   <title>Chi tiết đơn nghỉ phép #${item.leaveRequest.leaveRequestId} · Super Gym</title>
   <link rel="stylesheet" href="${pageContext.request.contextPath}/css/pages/auth/account-settings.css">
-  <link rel="stylesheet" href="${pageContext.request.contextPath}/css/pages/manager/leave-requests.css?v=20261021-simple1">
+  <link rel="stylesheet" href="${pageContext.request.contextPath}/css/pages/manager/leave-requests.css?v=20261021-readable2">
   <link rel="stylesheet" href="${pageContext.request.contextPath}/css/pages/auth/notification-bell.css">
   <script src="${pageContext.request.contextPath}/js/pages/auth/notification-bell.js" defer></script>
+  <script src="${pageContext.request.contextPath}/js/pages/manager/leave-request-review.js?v=20261021-readable2" defer></script>
 </head>
 
 <body class="dock theme-manager">
@@ -56,12 +59,12 @@
           <div class="review-top-actions">
             <c:if test="${item.leaveRequest.pending and item.canAct}">
               <%-- Nút Từ chối --%>
-              <button type="button" class="btn btn-sm btn-outline" style="color:var(--color-danger);border-color:var(--color-danger)" onclick="openRejectModal()">
+              <button type="button" class="btn btn-sm btn-outline" style="color:var(--color-danger);border-color:var(--color-danger)" onclick="openModal('modalRejectDetail')">
                 <i class="fa-solid fa-xmark" aria-hidden="true"></i> Từ chối
               </button>
 
               <%-- Nút Chuyển người duyệt --%>
-              <button type="button" class="btn btn-sm btn-outline" onclick="openTransferModal()">
+              <button type="button" class="btn btn-sm btn-outline" onclick="openModal('modalTransferDetail')">
                 <i class="fa-solid fa-share" aria-hidden="true"></i> Chuyển người duyệt
               </button>
 
@@ -78,7 +81,7 @@
                   </button>
                 </c:when>
                 <c:otherwise>
-                  <button type="button" class="btn btn-sm btn-primary" onclick="openApproveModal()">
+                  <button type="button" class="btn btn-sm btn-primary" onclick="openModal('modalApproveDetail')">
                     <i class="fa-solid fa-check" aria-hidden="true"></i> Duyệt đơn
                   </button>
                 </c:otherwise>
@@ -138,7 +141,7 @@
                     <c:if test="${item.leaveRequest.fromDate != item.leaveRequest.toDate}">
                       → ${gms:formatDate(item.leaveRequest.toDate)}
                     </c:if>
-                    <span style="font-weight:normal;color:var(--color-text-soft)">(${item.leaveRequest.days} ngày)</span>
+                    <span style="font-weight:normal;color:var(--color-text-soft)">(<fmt:formatNumber value="${item.leaveRequest.days}" maxFractionDigits="1" /> ngày)</span>
                   </span>
                 </div>
 
@@ -217,7 +220,7 @@
                 <h3 class="review-card-title">
                   <i class="fa-solid fa-list-check" aria-hidden="true"></i> Kiểm tra điều kiện phê duyệt
                 </h3>
-                <span class="leave-help">3 điều kiện · kiểm tra lại khi duyệt</span>
+                <span class="leave-help"><c:out value="${fn:length(item.checks)}" /> điều kiện · kiểm tra lại khi duyệt</span>
               </div>
 
               <p class="leave-help">Tạm tính nhân viên đang làm việc làm cả hai ca. Chưa có lịch phân ca và giờ ca riêng.</p>
@@ -364,7 +367,7 @@
                 </div>
 
                 <c:if test="${item.leaveRequest.pending and item.canAct}">
-                  <button type="button" class="btn btn-sm btn-ghost" onclick="openTransferModal()" title="Chuyển cho Manager khác">
+                  <button type="button" class="btn btn-sm btn-ghost" onclick="openModal('modalTransferDetail')" title="Chuyển cho Manager khác">
                     <i class="fa-solid fa-arrow-right-arrow-left"></i> Chuyển
                   </button>
                 </c:if>
@@ -394,10 +397,10 @@
         <div class="gms-modal-body">
           <p>Xác nhận duyệt đơn nghỉ phép của <b><c:out value="${item.fullName}" /></b>?</p>
           <div style="font-size:var(--font-size-xs);color:var(--color-text-soft);line-height:1.6">
-            • Thời gian nghỉ: ${gms:formatDate(item.leaveRequest.fromDate)} - ${gms:formatDate(item.leaveRequest.toDate)} (${item.leaveRequest.days} ngày)<br>
+            • Thời gian nghỉ: ${gms:formatDate(item.leaveRequest.fromDate)}<c:if test="${item.leaveRequest.toDate != item.leaveRequest.fromDate}"> → ${gms:formatDate(item.leaveRequest.toDate)}</c:if> (<fmt:formatNumber value="${item.leaveRequest.days}" maxFractionDigits="1" /> ngày)<br>
             • Ca làm việc: <c:out value="${item.leaveRequest.shiftType.displayName}" /><br>
             • Loại nghỉ: <c:out value="${item.leaveRequest.leaveType.displayName}" /><br>
-            <c:if test="${item.leaveRequest.leaveType.dbValue == 'Annual'}">• Quỹ phép năm sẽ ghi nhận thêm ${item.leaveRequest.days} ngày đã duyệt; không trừ hai lần khi gửi lại.<br></c:if>
+            <c:if test="${item.leaveRequest.leaveType.dbValue == 'Annual'}">• Quỹ phép năm sẽ ghi nhận thêm <fmt:formatNumber value="${item.leaveRequest.days}" maxFractionDigits="1" /> ngày đã duyệt; không trừ hai lần khi gửi lại.<br></c:if>
             Hệ thống sẽ cập nhật trạng thái đơn thành <b>Đã duyệt</b> và gửi thông báo đến chuông của nhân viên.
           </div>
         </div>
@@ -465,7 +468,7 @@
             <select name="toEmployeeId" id="transferToEmployeeSelect" class="field-input" required>
               <option value="">-- Chọn Quản lý --</option>
               <c:forEach var="rev" items="${eligibleReviewers}">
-                <option value="${rev.employeeId}">
+                <option value="${rev.employeeId}" ${toEmployeeId == rev.employeeId ? 'selected' : ''}>
                   <c:out value="${rev.fullName}" /> (<c:out value="${rev.employeeCode}" />)
                 </option>
               </c:forEach>
@@ -479,7 +482,7 @@
                       class="field-input"
                       rows="2"
                       maxlength="200"
-                      placeholder="Ghi chú cho người nhận (tối đa 200 ký tự)..."></textarea>
+                      placeholder="Ghi chú cho người nhận (tối đa 200 ký tự)..."><c:out value="${note}" /></textarea>
           </div>
         </div>
         <div class="gms-modal-footer">
@@ -490,90 +493,6 @@
     </div>
   </div>
 
-  <script>
-    let modalTrigger = null;
 
-    // Đóng hộp thoại và trả focus cho nút đã mở.
-    function closeModal(id) {
-      document.getElementById(id).classList.remove('show');
-      if (modalTrigger) {
-        modalTrigger.focus();
-      }
-    }
-
-    // Các nút tác vụ chỉ mở hộp thoại; form POST do backend kiểm tra lại.
-    function openModal(id) {
-      modalTrigger = document.activeElement;
-      const modal = document.getElementById(id);
-      modal.classList.add('show');
-      const firstControl = modal.querySelector('button, select, textarea');
-      if (firstControl) {
-        firstControl.focus();
-      }
-    }
-
-    function openApproveModal() {
-      openModal('modalApproveDetail');
-    }
-
-    function openRejectModal() {
-      openModal('modalRejectDetail');
-    }
-
-    function openTransferModal() {
-      openModal('modalTransferDetail');
-    }
-
-    function toggleReasonClamp() {
-      const text = document.getElementById('reasonClampText');
-      const btn = document.getElementById('btnToggleReason');
-      if (text.classList.contains('expanded')) {
-        text.classList.remove('expanded');
-        btn.innerText = 'Xem thêm';
-      } else {
-        text.classList.add('expanded');
-        btn.innerText = 'Thu gọn';
-      }
-    }
-
-    // Kiểm tra nếu nội dung lý do quá ngắn thì ẩn nút "Xem thêm"
-    window.addEventListener('DOMContentLoaded', function() {
-      const text = document.getElementById('reasonClampText');
-      const btn = document.getElementById('btnToggleReason');
-      if (text && btn) {
-        if (text.scrollHeight <= text.clientHeight + 2) {
-          btn.style.display = 'none';
-        }
-      }
-    });
-
-    window.addEventListener('keydown', function(e) {
-      const modal = document.querySelector('.gms-modal.show');
-      if (!modal) {
-        return;
-      }
-      if (e.key === 'Escape') {
-        closeModal(modal.id);
-      }
-      if (e.key === 'Tab') {
-        const controls = modal.querySelectorAll('button:not([disabled]), select, textarea');
-        const first = controls[0];
-        const last = controls[controls.length - 1];
-        if (e.shiftKey && document.activeElement === first) {
-          e.preventDefault();
-          last.focus();
-        } else if (!e.shiftKey && document.activeElement === last) {
-          e.preventDefault();
-          first.focus();
-        }
-      }
-    });
-
-    window.addEventListener('click', function(e) {
-      if (e.target.classList.contains('gms-modal')) {
-        closeModal(e.target.id);
-      }
-    });
-  </script>
 </body>
 </html>

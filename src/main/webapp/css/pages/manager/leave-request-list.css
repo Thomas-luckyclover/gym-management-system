@@ -1,31 +1,67 @@
-/* Màn danh sách BF-05: chỉ áp dụng cho body.leave-list-page. */
+/* Danh sách BF-05: mỗi thành phần có một khối style, không ghi đè từ CSS màn khác. */
+
 .leave-list-page .leave-toolbar {
-  flex-direction: column;
+  display: flex;
+  flex-wrap: wrap;
   align-items: stretch;
+  justify-content: space-between;
   gap: var(--space-4);
+  margin-bottom: var(--space-4);
   padding: var(--space-4);
+  background: var(--color-surface);
+  border: var(--border-width) solid var(--color-border);
+  border-radius: var(--radius-lg);
+  box-shadow: var(--shadow-card);
+  flex-direction: column;
 }
 
 .leave-list-page .leave-tabs-nav {
-  flex-wrap: wrap;
+  display: flex;
+  align-items: center;
   gap: var(--space-1);
+  flex-wrap: wrap;
 }
 
 .leave-list-page .leave-tab-btn {
+  display: inline-flex;
+  align-items: center;
+  gap: var(--space-2);
   padding: var(--space-2) var(--space-3);
-  font-family: var(--font-body);
+  border-radius: var(--radius-pill);
   font-size: var(--font-size-sm);
   font-weight: var(--font-weight-medium);
+  color: var(--color-text-soft);
   text-decoration: none;
+  background: transparent;
+  border: var(--border-width) solid transparent;
+  transition: all var(--duration-base);
+  font-family: var(--font-body);
+}
+
+.leave-list-page .leave-tab-btn:hover {
+  color: var(--color-text);
+  background: var(--color-bg);
+}
+
+.leave-list-page .leave-tab-btn.active {
+  color: var(--color-primary-ink);
+  background: var(--color-primary-tint);
+  border-color: var(--color-primary-border);
+  font-weight: var(--font-weight-semibold);
 }
 
 .leave-list-page .leave-tab-count {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
   min-width: var(--space-5);
   height: var(--space-5);
   padding: var(--space-0) var(--space-1);
   border-radius: var(--radius-pill);
-  background: var(--color-surface-muted);
   font-size: var(--font-size-xs);
+  font-weight: var(--font-weight-semibold);
+  background: var(--color-surface-muted);
+  color: inherit;
 }
 
 .leave-list-page .leave-tab-btn.active .leave-tab-count {
@@ -33,11 +69,144 @@
   color: var(--color-on-primary);
 }
 
-/* Hai bộ lọc có sẵn, một ô tìm kiếm và các nút thực hiện. */
 .leave-list-page .leave-filter-nav {
   display: grid;
-  grid-template-columns: minmax(0, 1fr) minmax(0, 1fr) minmax(0, 2fr) auto auto;
+  align-items: center;
   gap: var(--space-3);
+  grid-template-columns: minmax(0, 1fr) minmax(0, 1fr) minmax(0, 2fr) auto auto;
+}
+
+.leave-list-page .leave-panel {
+  padding: var(--space-0);
+  border: var(--border-width) solid var(--color-border-strong);
+  border-radius: var(--radius-lg);
+  background: var(--color-surface);
+  box-shadow: var(--shadow-card);
+  margin-bottom: var(--space-6);
+  overflow: hidden;
+}
+
+.leave-list-page .leave-table-wrap {
+  overflow-x: auto;
+}
+
+.leave-list-page .leave-table {
+  width: 100%;
+  border-collapse: collapse;
+  font-size: var(--font-size-sm);
+  min-width: calc(var(--space-12) * 14);
+  table-layout: fixed;
+  font-family: var(--font-body);
+}
+
+.leave-list-page .leave-table thead tr {
+  border-bottom: var(--border-width) solid var(--color-border-strong);
+}
+
+.leave-list-page .leave-table th {
+  padding: var(--space-3);
+  text-align: left;
+  color: var(--color-text-soft);
+  font-weight: var(--font-weight-semibold);
+  white-space: nowrap;
+  background: var(--color-surface-muted);
+  font-family: var(--font-body);
+  font-size: var(--font-size-xs);
+  letter-spacing: var(--letter-spacing-normal);
+  text-transform: none;
+}
+
+.leave-list-page .leave-table td {
+  padding: var(--space-4) var(--space-3);
+  border-bottom: var(--border-width) solid var(--color-border);
+  vertical-align: middle;
+  line-height: var(--line-height-snug);
+  overflow-wrap: break-word;
+}
+
+.leave-list-page .leave-table td b {
+  display: block;
+  font-weight: var(--font-weight-semibold);
+  color: var(--color-text);
+}
+
+.leave-list-page .leave-table td small {
+  display: block;
+  color: var(--color-text-soft);
+  font-size: var(--font-size-xs);
+  margin-top: var(--space-1);
+}
+
+.leave-list-page .leave-table tbody tr:hover {
+  background: var(--color-bg);
+}
+
+.leave-list-page .leave-employee-cell {
+  display: flex;
+  align-items: center;
+  gap: var(--space-2);
+}
+
+.leave-list-page .leave-employee-avatar {
+  width: var(--avatar-size-sm);
+  height: var(--avatar-size-sm);
+  border-radius: var(--radius-circle);
+  object-fit: cover;
+  border: var(--border-width) solid var(--color-border);
+  flex-shrink: 0;
+}
+
+.leave-list-page .leave-employee-initial {
+  width: var(--avatar-size-sm);
+  height: var(--avatar-size-sm);
+  border-radius: var(--radius-circle);
+  background: var(--color-primary-tint);
+  color: var(--color-primary);
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  font-weight: var(--font-weight-semibold);
+  font-size: var(--font-size-xs);
+  border: var(--border-width) solid var(--color-border);
+  flex-shrink: 0;
+}
+
+.leave-list-page .leave-employee-meta {
+  display: flex;
+  flex-direction: column;
+}
+
+.leave-list-page .leave-text-nowrap {
+  white-space: nowrap;
+}
+
+.leave-list-page .leave-text-muted {
+  color: var(--color-text-soft);
+}
+
+.leave-list-page .leave-row-urgent {
+  background: var(--color-warning-tint);
+}
+
+.leave-list-page .leave-row-urgent:hover {
+  background: var(--color-warning-tint);
+}
+
+.leave-list-page .leave-empty {
+  padding: var(--space-8);
+  text-align: center;
+  color: var(--color-text-muted);
+}
+
+.leave-list-page .leave-pager {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: var(--space-4);
+  margin-top: var(--space-0);
+  color: var(--color-text-soft);
+  font-size: var(--font-size-sm);
+  padding: var(--space-4);
 }
 
 .leave-list-page .leave-filter-nav .filter-select,
@@ -54,11 +223,6 @@
   font-size: var(--font-size-sm);
 }
 
-.leave-list-page .leave-list-panel {
-  padding: var(--space-0);
-  overflow: hidden;
-}
-
 .leave-list-caption {
   display: flex;
   flex-wrap: wrap;
@@ -70,53 +234,33 @@
   font-size: var(--font-size-xs);
 }
 
-.leave-list-page .leave-table {
-  min-width: calc(var(--space-12) * 14);
-  table-layout: fixed;
-  font-family: var(--font-body);
-  font-size: var(--font-size-sm);
-}
-
-.leave-list-page .leave-table th {
-  padding: var(--space-3);
-  background: var(--color-surface-muted);
-  color: var(--color-text-soft);
-  font-family: var(--font-body);
-  font-size: var(--font-size-xs);
-  font-weight: var(--font-weight-semibold);
-  letter-spacing: var(--letter-spacing-normal);
-  text-transform: none;
-}
-
 /* Đủ chỗ cho tên, khoảng ngày và hạn xử lý; bảng tự cuộn trên màn hẹp. */
-.leave-list-page .leave-table th:nth-child(1) { width: 18%; }
-.leave-list-page .leave-table th:nth-child(2) { width: 15%; }
-.leave-list-page .leave-table th:nth-child(3) { width: 10%; }
-.leave-list-page .leave-table th:nth-child(4) { width: 11%; }
-.leave-list-page .leave-table th:nth-child(5) { width: 10%; }
-.leave-list-page .leave-table th:nth-child(6) { width: 12%; }
-.leave-list-page .leave-table th:nth-child(7) { width: 14%; }
-.leave-list-page .leave-table th:nth-child(8) { width: 10%; }
-
-.leave-list-page .leave-table td {
-  padding: var(--space-4) var(--space-3);
-  line-height: var(--line-height-snug);
-  overflow-wrap: break-word;
+.leave-list-page .leave-table th:nth-child(1) {
+  width: 18%;
 }
-
-.leave-list-page .leave-employee-cell {
-  gap: var(--space-2);
+.leave-list-page .leave-table th:nth-child(2) {
+  width: 15%;
+}
+.leave-list-page .leave-table th:nth-child(3) {
+  width: 10%;
+}
+.leave-list-page .leave-table th:nth-child(4) {
+  width: 11%;
+}
+.leave-list-page .leave-table th:nth-child(5) {
+  width: 10%;
+}
+.leave-list-page .leave-table th:nth-child(6) {
+  width: 12%;
+}
+.leave-list-page .leave-table th:nth-child(7) {
+  width: 14%;
+}
+.leave-list-page .leave-table th:nth-child(8) {
+  width: 10%;
 }
 
 .leave-list-page .leave-employee-avatar,
-.leave-list-page .leave-employee-initial {
-  width: var(--avatar-size-sm);
-  height: var(--avatar-size-sm);
-  border-radius: var(--radius-circle);
-  background: var(--color-primary-tint);
-  color: var(--color-primary);
-  font-size: var(--font-size-xs);
-}
 
 .leave-date-range {
   display: flex;
@@ -156,11 +300,6 @@
   padding: var(--space-2);
   font-size: var(--font-size-xs);
   white-space: nowrap;
-}
-
-.leave-list-page .leave-pager {
-  margin-top: var(--space-0);
-  padding: var(--space-4);
 }
 
 .leave-list-page .leave-list-error {

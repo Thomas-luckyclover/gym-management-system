@@ -14,32 +14,27 @@ document.addEventListener("DOMContentLoaded", function () {
         return;
     }
 
-    // Helper: thêm số 0 vào đầu số có 1 chữ số
-    function padZero(num) {
-        return num < 10 ? "0" + num : String(num);
+    // B1.1: giờ chốt do Service gửi trong data-cutoff; không tự đoán chính sách.
+    const cutoffStr = leaveDateInput.getAttribute("data-cutoff");
+    if (!cutoffStr) {
+        submitBtn.disabled = true;
+        if (clientErrDiv) {
+            clientErrDiv.textContent = "Chưa tải được hạn nộp. Vui lòng tải lại trang.";
+            clientErrDiv.hidden = false;
+        }
+        return;
     }
-
-    // Helper: định dạng Date thành chuỗi dd/MM/yyyy
-    function formatDateDisplay(d) {
-        const day = padZero(d.getDate());
-        const month = padZero(d.getMonth() + 1);
-        const year = d.getFullYear();
-        return day + "/" + month + "/" + year;
-    }
-
-    // B1.1: đọc giờ chốt nộp P-12 từ data-cutoff của server (mặc định 15:00 nếu trống)
-    const cutoffStr = leaveDateInput.getAttribute("data-cutoff") || "15:00";
     const cutoffParts = cutoffStr.split(":");
-    const CUTOFF_HOUR = parseInt(cutoffParts[0], 10) || 15;
-    const CUTOFF_MINUTE = parseInt(cutoffParts[1], 10) || 0;
-    const cutoffLabel = padZero(CUTOFF_HOUR) + ":" + padZero(CUTOFF_MINUTE);
+    const cutoffHour = Number(cutoffParts[0]);
+    const cutoffMinute = Number(cutoffParts[1]);
+    const cutoffLabel = String(cutoffHour).padStart(2, "0") + ":" + String(cutoffMinute).padStart(2, "0");
 
     // B1.2: đặt thuộc tính min cho ô chọn ngày là ngày mai (GBR-26: chỉ chọn ngày sau hôm nay)
     const tomorrow = new Date();
     tomorrow.setDate(tomorrow.getDate() + 1);
     leaveDateInput.min = tomorrow.getFullYear() + "-"
-            + padZero(tomorrow.getMonth() + 1) + "-"
-            + padZero(tomorrow.getDate());
+            + String(tomorrow.getMonth() + 1).padStart(2, "0") + "-"
+            + String(tomorrow.getDate()).padStart(2, "0");
 
     // B2: hàm cập nhật hiển thị hạn nộp và kiểm tra hợp lệ
     function checkDeadline() {
@@ -70,15 +65,15 @@ document.addEventListener("DOMContentLoaded", function () {
 
         // Hiển thị ngày nghỉ lên side card
         if (infoDateEl) {
-            infoDateEl.textContent = formatDateDisplay(leaveDate);
+            infoDateEl.textContent = formatDate(leaveDate);
         }
 
-        // Tính mốc deadline: ngày hôm trước lúc P-12 (CUTOFF_HOUR:CUTOFF_MINUTE)
-        const cutoffDate = new Date(leaveYear, leaveMonth, leaveDay - 1, CUTOFF_HOUR, CUTOFF_MINUTE, 0);
+        // Tính mốc deadline: ngày hôm trước lúc P-12 (cutoffHour:cutoffMinute)
+        const cutoffDate = new Date(leaveYear, leaveMonth, leaveDay - 1, cutoffHour, cutoffMinute, 0);
 
         if (infoDeadlineEl) {
-            const cutoffDay = padZero(cutoffDate.getDate());
-            const cutoffMonth = padZero(cutoffDate.getMonth() + 1);
+            const cutoffDay = String(cutoffDate.getDate()).padStart(2, "0");
+            const cutoffMonth = String(cutoffDate.getMonth() + 1).padStart(2, "0");
             infoDeadlineEl.textContent = cutoffLabel + " · " + cutoffDay + "/" + cutoffMonth;
         }
 
@@ -130,28 +125,32 @@ document.addEventListener("DOMContentLoaded", function () {
         const leaveDateValue = leaveDateInput.value;
         const shiftValue = shiftTypeSelect ? shiftTypeSelect.value : "";
         if (!leaveForm || !leaveDateValue || !shiftValue) {
+            setPreviewText("—", "—", "—", "—");
+            if (pvScope) {
+                pvScope.textContent = "Chọn ngày và ca để xem dự báo.";
+            }
             return;
         }
 
-        const url = leaveForm.dataset.previewUrl
-                + "?date=" + encodeURIComponent(leaveDateValue)
-                + "&shift=" + encodeURIComponent(shiftValue);
-
-        try {
-            const response = await fetch(url, {headers: {"Accept": "application/json"}});
-            const body = await response.json();
-            if (!body.success) {
-                setPreviewText("—", "—", "—", "—");
-                return;
-            }
-            const data = body.data;
-            setPreviewText(data.remainingPt, data.remainingReceptionist, data.minPt, data.minReceptionist);
-            if (pvScope) {
-                pvScope.textContent = "Số liệu cho ngày " + formatDateDisplay(new Date(leaveDateValue + "T00:00:00"))
-                        + ", ca đã chọn.";
-            }
-        } catch (error) {
+        if (pvScope) {
+            pvScope.textContent = "Đang tải dự báo...";
+        }
+        const result = await getJson(leaveForm.dataset.previewUrl, {date: leaveDateValue, shift: shiftValue});
+        // Người dùng có thể đổi lựa chọn trong lúc chờ; bỏ kết quả của lựa chọn cũ.
+        if (leaveDateInput.value !== leaveDateValue || shiftTypeSelect.value !== shiftValue) {
+            return;
+        }
+        if (!result.success) {
             setPreviewText("—", "—", "—", "—");
+            if (pvScope) {
+                pvScope.textContent = result.message || "Chưa tải được dự báo. Chọn lại ngày hoặc ca để thử lại.";
+            }
+            return;
+        }
+        const data = result.data;
+        setPreviewText(data.remainingPt, data.remainingReceptionist, data.minPt, data.minReceptionist);
+        if (pvScope) {
+            pvScope.textContent = "Số liệu cho ngày " + formatDate(leaveDateValue) + ", ca đã chọn.";
         }
     }
 

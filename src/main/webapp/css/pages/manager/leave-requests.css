@@ -1,51 +1,7 @@
 /* ===================================================
-   BF-05 – Leave Request Screens (màn #26 & #27)
-   leave-request-list.jsp | leave-request-review.jsp
+   BF-05 – CSS dùng cho form nhân viên và màn duyệt chi tiết
+   Danh sách có file riêng: leave-request-list.css
    =================================================== */
-
-/* ===== Tab thống kê ===== */
-
-.leave-stats {
-    display: grid;
-    grid-template-columns: repeat(4, minmax(0, 1fr));
-    gap: var(--space-4);
-    margin-bottom: var(--space-6);
-}
-
-.leave-stat {
-    display: flex;
-    align-items: center;
-    justify-content: space-between;
-    gap: var(--space-3);
-    min-height: 80px;
-    padding: var(--space-4) var(--space-5);
-    border: var(--border-width) solid var(--color-border-strong);
-    border-radius: var(--radius-lg);
-    background: var(--color-surface);
-    box-shadow: var(--shadow-card);
-    color: var(--color-text);
-    text-decoration: none;
-    transition:
-        border-color var(--duration-base),
-        background var(--duration-base),
-        transform var(--duration-base);
-}
-
-.leave-stat:hover {
-    transform: translateY(-1px);
-    border-color: var(--color-primary-border);
-}
-
-.leave-stat.active {
-    border: var(--border-width-thick) solid var(--color-primary);
-    background: var(--color-primary-tint);
-}
-
-.leave-stat strong {
-    font-size: var(--font-size-xl);
-    font-weight: 700;
-}
-
 
 /* ===== Panel danh sách ===== */
 
@@ -72,46 +28,6 @@
     margin: 0;
     color: var(--color-text-soft);
     font-size: var(--font-size-sm);
-}
-
-
-/* ===== Bộ lọc ===== */
-
-.leave-filter {
-    display: flex;
-    flex-wrap: wrap;
-    align-items: center;
-    gap: var(--space-3);
-    padding: var(--space-4);
-    margin-bottom: var(--space-5);
-    border: var(--border-width) solid var(--color-border);
-    border-radius: var(--radius-md);
-    background: var(--color-bg);
-}
-
-.leave-filter input,
-.leave-filter select {
-    min-height: 42px;
-}
-
-.leave-filter .filter-input-search {
-    flex: 1 1 200px;
-    min-width: 180px;
-}
-
-.leave-filter .filter-select {
-    flex: 0 1 160px;
-    min-width: 130px;
-}
-
-.leave-filter .filter-date-group {
-    display: flex;
-    align-items: center;
-    gap: var(--space-2);
-}
-
-.leave-filter .filter-date-group input[type="date"] {
-    width: 145px;
 }
 
 
@@ -395,23 +311,13 @@
 /* ===== Responsive ===== */
 
 @media (max-width: 900px) {
-    .leave-stats {
-        grid-template-columns: repeat(2, minmax(0, 1fr));
-    }
-
-    .leave-filter {
+.leave-filter {
         grid-template-columns: 1fr;
     }
 
     .leave-info-grid,
     .leave-actions {
         grid-template-columns: 1fr;
-    }
-}
-
-@media (max-width: 600px) {
-    .leave-stats {
-        grid-template-columns: repeat(2, minmax(0, 1fr));
     }
 }
 
@@ -486,133 +392,6 @@
 /* ===================================================
    BF-05 Redesign (Màn #26 & Màn #27)
    =================================================== */
-
-/* Toolbar màn #26: Tabs bên trái, search & filter bên phải */
-.leave-toolbar {
-    display: flex;
-    flex-wrap: wrap;
-    align-items: center;
-    justify-content: space-between;
-    gap: var(--space-3);
-    margin-bottom: var(--space-4);
-    padding: var(--space-3) var(--space-4);
-    background: var(--color-surface);
-    border: var(--border-width) solid var(--color-border);
-    border-radius: var(--radius-lg);
-    box-shadow: var(--shadow-card);
-}
-
-.leave-tabs-nav {
-    display: flex;
-    align-items: center;
-    gap: var(--space-2);
-}
-
-.leave-tab-btn {
-    display: inline-flex;
-    align-items: center;
-    gap: var(--space-2);
-    padding: 6px 14px;
-    border-radius: var(--radius-pill, 20px);
-    font-size: var(--font-size-sm);
-    font-weight: 500;
-    color: var(--color-text-soft);
-    text-decoration: none;
-    background: transparent;
-    border: 1px solid transparent;
-    transition: all var(--duration-base);
-}
-
-.leave-tab-btn:hover {
-    color: var(--color-text);
-    background: var(--color-bg);
-}
-
-.leave-tab-btn.active {
-    color: var(--color-primary-ink, var(--color-primary));
-    background: var(--color-primary-tint, #eff6ff);
-    border-color: var(--color-primary-border, #bfdbfe);
-    font-weight: 600;
-}
-
-.leave-tab-count {
-    display: inline-flex;
-    align-items: center;
-    justify-content: center;
-    min-width: 20px;
-    height: 20px;
-    padding: 0 6px;
-    border-radius: 10px;
-    font-size: 11px;
-    font-weight: 600;
-    background: rgba(0, 0, 0, 0.06);
-    color: inherit;
-}
-
-.leave-tab-btn.active .leave-tab-count {
-    background: var(--color-primary);
-    color: #fff;
-}
-
-.leave-filter-nav {
-    display: flex;
-    align-items: center;
-    gap: var(--space-2);
-    flex-wrap: wrap;
-}
-
-.leave-filter-nav .filter-input-search {
-    width: 220px;
-    min-height: 36px;
-    padding: 6px 12px;
-    font-size: var(--font-size-sm);
-}
-
-.leave-filter-nav .filter-select {
-    min-height: 36px;
-    padding: 6px 10px;
-    font-size: var(--font-size-sm);
-}
-
-/* Thao tác dòng màn #26 */
-.row-action-group {
-    display: flex;
-    align-items: center;
-    gap: 4px;
-}
-
-.btn-icon-action {
-    display: inline-flex;
-    align-items: center;
-    justify-content: center;
-    width: 30px;
-    height: 30px;
-    border-radius: var(--radius-md);
-    border: 1px solid var(--color-border);
-    background: var(--color-surface);
-    color: var(--color-text-soft);
-    cursor: pointer;
-    text-decoration: none;
-    transition: all var(--duration-base);
-}
-
-.btn-icon-action:hover {
-    color: var(--color-primary);
-    border-color: var(--color-primary-border);
-    background: var(--color-primary-tint);
-}
-
-.btn-icon-action.danger:hover {
-    color: var(--color-danger);
-    border-color: var(--color-danger-border);
-    background: var(--color-danger-tint);
-}
-
-.btn-icon-action.success:hover {
-    color: var(--color-success);
-    border-color: var(--color-success);
-    background: var(--color-success-tint);
-}
 
 /* ===== Màn #27 (Duyệt chi tiết) Layout 1366x768 ===== */
 .review-top-bar {

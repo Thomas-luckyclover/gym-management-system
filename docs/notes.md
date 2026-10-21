@@ -1,5 +1,10 @@
 # File notes — mâu thuẫn tài liệu & quyết định đã chốt
 
+## BF-05 — refactor dễ học, gom commit theo nhóm (21/10/2026)
+
+User chốt đợt này không chia commit quá nhỏ. Tách luồng nhân viên/Manager, dùng chung điều kiện xem và duyệt, tách DTO khỏi DAO, bỏ ngày lưu trùng và CSS/JS khó lần theo. Luồng và nơi bắt đầu học: [BF-05-code-guide.md](BF-05-code-guide.md). Không đổi schema hoặc chính sách ca; tiếp tục giả định nhân viên đang làm việc làm cả hai ca. JOB-07 đặt tên theo chức năng nhắc hạn hiện có.
+
+
 ## BF-05 — duyệt nghỉ phép và ca cố định (21/10/2026, chốt trong chat)
 
 - Ưu tiên checklist BF-05; SRS sẽ cập nhật sau. Tạm giả định mọi PT/Lễ tân Working làm cả hai ca, chưa thêm bảng phân ca thực tế. Giao diện ghi rõ giới hạn này.

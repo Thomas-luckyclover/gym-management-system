@@ -4,7 +4,7 @@
 
 - Ưu tiên checklist BF-05; SRS sẽ cập nhật theo các quyết định mới.
 - Tạm dùng ca cố định: mọi PT/Lễ tân `Working` được giả định làm cả hai ca. Không thêm bảng phân ca. Số liệu không phải số người đã được phân công thực tế.
-- Chia công việc thành nhiều commit nhỏ có nội dung thật.
+- Đợt đầu chia commit nhỏ có nội dung thật. Đợt refactor dễ học, user yêu cầu gom theo nhóm lớn, không chia quá vụn.
 
 ## Ngày nghỉ và quỹ phép
 
@@ -74,3 +74,20 @@ Thêm 2 test tái hiện lỗi danh sách/chi tiết. Clean package chạy 176 t
 - Đã kiểm tra hai JSP bằng Jasper của Tomcat 10.1, không lỗi. Bản Tomcat xem thử chỉ đọc dữ liệu đã xác nhận bộ lọc Nghỉ ốm, Lễ tân + Không lương, xóa lọc, đếm tab theo ngày và chi tiết Chưa phân công. Không redeploy ứng dụng chính hoặc ghi quyết định nghỉ phép khi kiểm tra.
 
 Để học luồng đơn giản: bắt đầu ở LeaveRequestListServlet.doGet, theo getManagerPage tới DAO rồi xem các field được JSP in ra. Tên hiển thị lấy từ dữ liệu thật; JSP không tự chọn hoặc gán một người duyệt mới.
+
+## Refactor để dễ học (21/10/2026)
+
+Đường dẫn đọc code mới: [BF-05-code-guide.md](BF-05-code-guide.md).
+
+- Luồng nhân viên tách sang StaffLeaveService; LeaveRequestService giữ luồng quản lý và nhắc hạn. LeaveApprovalService gom các điều kiện dùng chung cho danh sách, chi tiết và POST, dùng Connection bên gọi truyền vào.
+- Quyết định đọc lại đơn trong transaction, bỏ truy vấn chi tiết lặp trước transaction. Quyền, phân công, Pending, audit và thông báo vẫn được bảo vệ như trước.
+- DTO ra khỏi DAO; Entity dùng FromDate/ToDate/Days, bỏ LeaveDate cũ trùng dữ liệu. DAO đọc đúng cột schema hiện tại và lưu Days do Service tính. Câu SELECT có khóa viết rõ, không thay chuỗi SQL bằng replace.
+- Tham số AccountId đặt đúng tên. Bộ lọc chuẩn hóa một lần dùng cho bảng và tab. Servlet chi tiết dùng một hàm tải trang cho GET và POST lỗi, giữ lại ghi chú/người nhận khi chuyển lỗi.
+- DTO danh sách khởi tạo từ một dòng dữ liệu, đặt riêng hạn xử lý; bỏ constructor 20 tham số và các fallback ngày chồng nhau. Bỏ ReviewCheck.details không dùng.
+- Danh sách dùng CSS độc lập; bỏ khối CSS tab/lọc/nút nhanh cũ. JSP lặp tab một lần, JavaScript chi tiết ra file riêng. Số ngày và khoảng ngày trong xác nhận hiển thị gọn hơn.
+- JOB-07 đổi tên thành LeaveRequestReminderJob/sendDueReminders để khớp hành vi nhắc hạn hiện có; không thêm tự từ chối.
+- Không sửa schema, không triển khai ý tưởng accordion theo nhân viên, không đổi chính sách nghỉ phép.
+
+Bổ sung luồng nhân viên: form và API dùng chung dự báo; parse ngày bằng util có sẵn, bỏ kiểm tra loại lỗi bằng cách cắt chuỗi thông báo. PT có đường dẫn xem lịch trên banner lỗi. JS dùng getJson/formatDate chung, có trạng thái tải/lỗi và bỏ phản hồi cũ khi đổi lựa chọn. LeaveBalance bỏ constructor tự cấp 14 ngày và các setter không dùng để số dư không bị lệch với định mức/đã duyệt/đang chờ.
+
+Kiểm chứng cuối: 184 test qua; ba JSP biên dịch không lỗi. Trình duyệt bản xem thử chỉ đọc đã kiểm tra lại danh sách, chi tiết, hộp thoại, form PT, dự báo AJAX và khóa ngày quá hạn. Không ghi dữ liệu nghỉ phép, không redeploy Tomcat chính.
