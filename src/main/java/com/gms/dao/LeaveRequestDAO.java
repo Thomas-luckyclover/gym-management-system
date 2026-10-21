@@ -24,7 +24,7 @@ public class LeaveRequestDAO {
     /** Danh sách cột LeaveRequests dùng chung cho mọi câu SELECT có map sang entity. */
     private static final String SELECT_COLUMNS
             = "SELECT LeaveRequestId, EmployeeId, ReviewedByEmployeeId, AssignedToEmployeeId, LeaveType, "
-            + "LeaveDate, FromDate, ToDate, Days, ShiftType, Reason, Status, RejectReason, "
+            + "FromDate, ToDate, Days, ShiftType, Reason, Status, RejectReason, "
             + "SubmittedAt, ReviewedAt, ReminderSentAt "
             + "FROM LeaveRequests ";
 
@@ -95,13 +95,11 @@ public class LeaveRequestDAO {
                 params.add(filter.getLeaveType().getDbValue());
             }
             if (filter.getFromDate() != null) {
-                where.append(" AND (lr.ToDate >= ? OR lr.LeaveDate >= ?) ");
-                params.add(java.sql.Date.valueOf(filter.getFromDate()));
+                where.append(" AND lr.ToDate >= ? ");
                 params.add(java.sql.Date.valueOf(filter.getFromDate()));
             }
             if (filter.getToDate() != null) {
-                where.append(" AND (lr.FromDate <= ? OR lr.LeaveDate <= ?) ");
-                params.add(java.sql.Date.valueOf(filter.getToDate()));
+                where.append(" AND lr.FromDate <= ? ");
                 params.add(java.sql.Date.valueOf(filter.getToDate()));
             }
         }
@@ -160,7 +158,7 @@ public class LeaveRequestDAO {
         FilterSql fs = buildFilterSql(filter, true);
         String sql = "SELECT "
                 + "  lr.LeaveRequestId, lr.EmployeeId, lr.ReviewedByEmployeeId, lr.AssignedToEmployeeId, "
-                + "  lr.LeaveType, lr.LeaveDate, lr.FromDate, lr.ToDate, lr.Days, lr.ShiftType, lr.Reason, lr.Status, lr.RejectReason, "
+                + "  lr.LeaveType, lr.FromDate, lr.ToDate, lr.Days, lr.ShiftType, lr.Reason, lr.Status, lr.RejectReason, "
                 + "  lr.SubmittedAt, lr.ReviewedAt, lr.ReminderSentAt, "
                 + "  e.EmployeeCode, e.Position, "
                 + "  p.FullName AS EmployeeName, p.Avatar, "
@@ -176,9 +174,9 @@ public class LeaveRequestDAO {
                 + fs.whereClause
                 + "ORDER BY "
                 + "  CASE WHEN lr.Status = 'Pending' THEN 0 ELSE 1 END, "
-                + "  CASE WHEN lr.Status = 'Pending' THEN COALESCE(lr.FromDate, lr.LeaveDate) END ASC, "
+                + "  CASE WHEN lr.Status = 'Pending' THEN CASE WHEN DATEADD(day, 3, CAST(lr.SubmittedAt AS date)) < DATEADD(day, -1, lr.FromDate) THEN DATEADD(day, 3, CAST(lr.SubmittedAt AS date)) ELSE DATEADD(day, -1, lr.FromDate) END END ASC, "
                 + "  CASE WHEN lr.Status = 'Pending' THEN lr.SubmittedAt END ASC, "
-                + "  COALESCE(lr.FromDate, lr.LeaveDate) DESC, "
+                + "  lr.FromDate DESC, "
                 + "  lr.SubmittedAt DESC "
                 + "OFFSET ? ROWS FETCH NEXT ? ROWS ONLY";
 
@@ -274,7 +272,7 @@ public class LeaveRequestDAO {
 
     public LeaveReviewDetail findReviewDetail(int leaveRequestId, Integer currentManagerEmployeeId) throws SQLException {
         String sql = "SELECT lr.LeaveRequestId, lr.EmployeeId, "
-                + "lr.ReviewedByEmployeeId, lr.AssignedToEmployeeId, lr.LeaveType, lr.LeaveDate, "
+                + "lr.ReviewedByEmployeeId, lr.AssignedToEmployeeId, lr.LeaveType, "
                 + "lr.FromDate, lr.ToDate, lr.Days, "
                 + "lr.ShiftType, lr.Reason, lr.Status, lr.RejectReason, "
                 + "lr.SubmittedAt, lr.ReviewedAt, lr.ReminderSentAt, "
@@ -392,7 +390,7 @@ public class LeaveRequestDAO {
         String sqlApproved = "SELECT COUNT(DISTINCT lr.EmployeeId) "
                 + "FROM LeaveRequests lr "
                 + "INNER JOIN Employees e ON e.EmployeeId = lr.EmployeeId "
-                + "WHERE lr.LeaveDate = ? "
+                + "WHERE ? BETWEEN lr.FromDate AND lr.ToDate "
                 + "  AND lr.Status = 'Approved' "
                 + "  AND e.Position = ? "
                 + "  AND e.Status = 'Working' "
@@ -436,7 +434,7 @@ public class LeaveRequestDAO {
      * @throws SQLException lỗi truy vấn
      */
     public void lockLeaveDate(Connection connection, LocalDate leaveDate) throws SQLException {
-        String sql = "SELECT COUNT(*) FROM LeaveRequests WITH (UPDLOCK, HOLDLOCK) WHERE LeaveDate = ?";
+        String sql = "SELECT COUNT(*) FROM LeaveRequests WITH (UPDLOCK, HOLDLOCK) WHERE FromDate = ?";
 
         try (PreparedStatement statement = connection.prepareStatement(sql)) {
             statement.setDate(1, java.sql.Date.valueOf(leaveDate));
@@ -517,18 +515,17 @@ public class LeaveRequestDAO {
                     : java.math.BigDecimal.valueOf(count);
         }
 
-        String sql = "INSERT INTO LeaveRequests (EmployeeId, LeaveType, LeaveDate, FromDate, ToDate, Days, ShiftType, Reason, Status, SubmittedAt) "
-                + "VALUES (?, ?, ?, ?, ?, ?, ?, ?, 'Pending', SYSDATETIME())";
+        String sql = "INSERT INTO LeaveRequests (EmployeeId, LeaveType, FromDate, ToDate, Days, ShiftType, Reason, Status, SubmittedAt) "
+                + "VALUES (?, ?, ?, ?, ?, ?, ?, 'Pending', SYSDATETIME())";
 
         try (PreparedStatement statement = connection.prepareStatement(sql, PreparedStatement.RETURN_GENERATED_KEYS)) {
             statement.setInt(1, leaveRequest.getEmployeeId());
             statement.setString(2, leaveRequest.getLeaveType().getDbValue());
             statement.setDate(3, java.sql.Date.valueOf(fromDate));
-            statement.setDate(4, java.sql.Date.valueOf(fromDate));
-            statement.setDate(5, java.sql.Date.valueOf(toDate));
-            statement.setBigDecimal(6, days);
-            statement.setString(7, leaveRequest.getShiftType().getDbValue());
-            statement.setString(8, leaveRequest.getReason());
+            statement.setDate(4, java.sql.Date.valueOf(toDate));
+            statement.setBigDecimal(5, days);
+            statement.setString(6, leaveRequest.getShiftType().getDbValue());
+            statement.setString(7, leaveRequest.getReason());
 
             statement.executeUpdate();
 
@@ -658,7 +655,7 @@ public class LeaveRequestDAO {
                 + "ISNULL(SUM(CASE WHEN Status = 'Approved' THEN Days ELSE 0 END), 0) AS UsedDays, "
                 + "ISNULL(SUM(CASE WHEN Status = 'Pending'  THEN Days ELSE 0 END), 0) AS PendingDays "
                 + "FROM LeaveRequests "
-                + "WHERE EmployeeId = ? AND LeaveType = 'Annual' AND YEAR(COALESCE(FromDate, LeaveDate)) = ? AND Status <> 'Rejected'";
+                + "WHERE EmployeeId = ? AND LeaveType = 'Annual' AND YEAR(FromDate) = ? AND Status <> 'Rejected'";
 
         try (PreparedStatement ps = connection.prepareStatement(sql)) {
             ps.setInt(1, employeeId);
@@ -709,7 +706,7 @@ public class LeaveRequestDAO {
      */
     public boolean hasConflictingLeave(int employeeId, LocalDate leaveDate, String shiftType) throws SQLException {
         String sql = "SELECT COUNT(*) FROM LeaveRequests "
-                + "WHERE EmployeeId = ? AND LeaveDate = ? "
+                + "WHERE EmployeeId = ? AND ? BETWEEN FromDate AND ToDate "
                 + "AND Status IN ('Pending', 'Approved') "
                 + "AND (ShiftType = 'FullDay' OR ? = 'FullDay' OR ShiftType = ?)";
 
@@ -811,7 +808,7 @@ public class LeaveRequestDAO {
     public List<LeaveRequest> findPendingNeedingReminder(LocalDate leaveDate) throws SQLException {
         // B1: chỉ lấy đơn Pending chưa nhắc, để mỗi đơn chỉ được nhắc đúng một lần
         String sql = SELECT_COLUMNS
-                + "WHERE LeaveDate = ? "
+                + "WHERE FromDate = ? "
                 + "AND Status = 'Pending' "
                 + "AND ReminderSentAt IS NULL "
                 + "ORDER BY SubmittedAt ASC";
@@ -848,7 +845,7 @@ public class LeaveRequestDAO {
         String sql = SELECT_COLUMNS
                 + "WHERE Status = 'Pending' "
                 + "AND ReminderSentAt IS NULL "
-                + "AND (LeaveDate = ? OR CAST(SubmittedAt AS DATE) = ?) "
+                + "AND (FromDate = ? OR CAST(SubmittedAt AS DATE) = ?) "
                 + "ORDER BY SubmittedAt ASC";
 
         List<LeaveRequest> list = new ArrayList<>();
