@@ -99,14 +99,14 @@
 
             <c:choose>
               <c:when test="${detail.shift.open}">
-                <h2>Đang mở từ <c:out value="${gms:formatTime(detail.shift.openedAt)}"/></h2>
+                <h2>Đang mở từ <c:out value="${gms:formatDateTime(detail.shift.openedAt)}"/></h2>
                 <p class="muted">
                   Mở bởi <b><c:out value="${detail.openedByEmployeeName}" default="Lễ tân"/></b>.
                   Mọi hóa đơn phát sinh tại quầy từ thời điểm này được tính vào ca trực.
                 </p>
               </c:when>
               <c:when test="${detail.shift.closed}">
-                <h2>Đã chốt lúc <c:out value="${gms:formatTime(detail.shift.closedAt)}"/></h2>
+                <h2>Đã chốt lúc <c:out value="${gms:formatDateTime(detail.shift.closedAt)}"/></h2>
                 <p class="muted">
                   Chốt bởi <b><c:out value="${detail.closedByEmployeeName}" default="Lễ tân"/></b>.
                   <c:choose>
@@ -193,7 +193,7 @@
               <c:forEach var="p" items="${detail.pendingOrders}" varStatus="status">
                 <span class="pending-code"><c:out value="${p.orderCode}"/> (<c:out value="${p.customerName}"/>)</span><c:if test="${!status.last}">, </c:if>
               </c:forEach>
-              <div>Đối chiếu biến động số dư tài khoản ngân hàng để xác nhận hoặc hủy đơn có lý do (CBR-78).</div>
+              <div>Vui lòng đối chiếu biến động số dư tài khoản ngân hàng để xác nhận hoặc hủy đơn có lý do trước khi chốt ca.</div>
             </div>
           </div>
         </c:if>
@@ -276,7 +276,7 @@
                       </div>
 
                       <div class="row-meta">
-                        <span><i class="fa-solid fa-clock"></i> <c:out value="${gms:formatTime(item.createdAt)}"/></span>
+                        <span><i class="fa-solid fa-clock"></i> <c:out value="${gms:formatDateTime(item.createdAt)}"/></span>
                         <span><i class="fa-solid fa-dumbbell"></i> <c:out value="${item.packageName}"/></span>
                         <c:choose>
                           <c:when test="${item.cash}">
@@ -412,7 +412,7 @@
           <input type="hidden" id="expectedCashRaw" value="${detail.metrics.cashTotal}">
 
           <div class="modal-body">
-            <p class="modal-desc">Đếm số tiền mặt thực tế trong két quầy Lễ tân và nhập vào bên dưới. Nếu có chênh lệch so với số liệu sổ sách, bắt buộc phải nêu rõ lý do giải trình (BR-46).</p>
+            <p class="modal-desc">Đếm số tiền mặt thực tế trong két quầy Lễ tân và nhập vào bên dưới. Nếu có chênh lệch so với số liệu sổ sách, bắt buộc phải nêu rõ lý do giải trình.</p>
 
             <div class="reconcile-card">
               <div class="reconcile-item">
@@ -441,7 +441,7 @@
               <textarea id="inputVarianceReason" name="varianceReason" rows="3" class="field-textarea"
                         placeholder="Nêu rõ lý do thừa/thiếu tiền mặt (tối thiểu 5 ký tự)..."
                         minlength="5" maxlength="500"></textarea>
-              <small class="field-hint">Bắt buộc nhập tối thiểu 5 ký tự để Quản lý đối soát (GBR-09).</small>
+              <small class="field-hint">Bắt buộc nhập tối thiểu 5 ký tự để Quản lý đối soát.</small>
               <div class="field-error" id="varianceReasonError" hidden></div>
             </div>
           </div>
@@ -473,7 +473,7 @@
           <div class="modal-body">
             <p>
               Đơn bị hủy vẫn được lưu trong sổ ca để đối chiếu nhưng sẽ được <b>loại bỏ khỏi tổng doanh thu</b>.
-              Số tiền <b id="voidOrderAmountText"></b> sẽ được hoàn lại trực tiếp cho khách tại quầy (CBR-11).
+              Số tiền <b id="voidOrderAmountText"></b> sẽ được hoàn lại trực tiếp cho khách tại quầy.
             </p>
 
             <div class="field">
@@ -481,7 +481,7 @@
               <textarea id="inputCancelReason" name="cancelReason" rows="3" class="field-textarea"
                         placeholder="Ví dụ: Khách đổi ý ngay tại quầy, thu nhầm gói, quẹt lỗi..."
                         minlength="5" maxlength="500" required></textarea>
-              <small class="field-hint">Bắt buộc giải trình cụ thể từ 5 đến 500 ký tự (GBR-09).</small>
+              <small class="field-hint">Bắt buộc giải trình cụ thể từ 5 đến 500 ký tự.</small>
               <div class="field-error" id="cancelReasonError" hidden></div>
             </div>
           </div>

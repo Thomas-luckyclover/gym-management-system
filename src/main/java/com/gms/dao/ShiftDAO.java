@@ -2,18 +2,15 @@ package com.gms.dao;
 
 import com.gms.dto.ShiftMetrics;
 import com.gms.dto.ShiftTransactionItem;
-import com.gms.entity.Order;
 import com.gms.entity.Shift;
 import com.gms.util.DBContext;
 import com.gms.util.DateTimeUtil;
-import com.gms.util.SqlUtil;
 
 import java.sql.Connection;
 import java.sql.Date;
 import java.sql.PreparedStatement;
 import java.sql.ResultSet;
 import java.sql.SQLException;
-import java.sql.Statement;
 import java.sql.Timestamp;
 import java.time.LocalDate;
 import java.time.LocalDateTime;

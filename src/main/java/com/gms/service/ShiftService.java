@@ -430,7 +430,7 @@ public class ShiftService {
 
         // B3: Chặn Lễ tân hủy đơn của chính mình (CBR-115)
         if (isOrderOfStaff(accountId, orderId)) {
-            return ServiceResult.fail("Lễ tân không được thao tác trên đơn hàng của chính mình (CBR-115).");
+            return ServiceResult.fail(Messages.MSG76_STAFF_OWN_CUSTOMER_PROFILE);
         }
 
         try (Connection conn = DBContext.getConnection()) {
