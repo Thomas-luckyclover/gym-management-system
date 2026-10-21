@@ -4,8 +4,11 @@ import com.gms.constant.Messages;
 import com.gms.constant.SessionKey;
 import com.gms.dto.CheckInLogItem;
 import com.gms.dto.CheckInLookupResult;
+import com.gms.dto.CustomerSearchItem;
+import com.gms.dto.PageResult;
 import com.gms.dto.ServiceResult;
 import com.gms.service.CheckInService;
+import com.gms.util.PaginationUtil;
 import com.gms.util.RequestUtil;
 import com.gms.util.ValidationUtil;
 import jakarta.servlet.ServletException;
@@ -26,16 +29,19 @@ import java.util.List;
 import java.util.UUID;
 
 /**
- * Servlet màn hình Check-in hội viên tại quầy Lễ tân (URL /receptionist/check-in).
+ * Servlet màn hình Check-in hội viên tại quầy Lễ tân (URL
+ * /receptionist/check-in).
  *
- * <p>GET: tra cứu hội viên (mã/tên/SĐT) và xem danh sách lượt vào ca hôm nay.</p>
- * <p>POST: xác nhận cho hội viên vào tập hoặc lưu ảnh check-in chụp tại quầy.</p>
+ * <p>
+ * GET: tra cứu hội viên (mã/tên/SĐT) và xem danh sách lượt vào ca hôm nay.
+ * </p>
+ * <p>
+ * POST: xác nhận cho hội viên vào tập hoặc lưu ảnh check-in chụp tại quầy.
+ * </p>
  */
 @WebServlet("/receptionist/check-in")
-@MultipartConfig(
-        maxFileSize = 5 * 1024 * 1024,      // 5MB (DBR-08)
-        maxRequestSize = 6 * 1024 * 1024
-)
+@MultipartConfig(maxFileSize = 5 * 1024 * 1024, // 5MB (DBR-08)
+        maxRequestSize = 6 * 1024 * 1024)
 public class CheckInServlet extends HttpServlet {
 
     private static final String VIEW_NAME = "receptionist/check-in";
@@ -49,11 +55,30 @@ public class CheckInServlet extends HttpServlet {
             throws ServletException, IOException {
 
         String query = RequestUtil.getTrimmedParam(request, "q");
+        int page = PaginationUtil.getPageNumber(request);
+        int pageSize = 10; // Phân trang 10 khách mỗi trang để vừa vặn màn hình Check-in
 
         if (!ValidationUtil.isNullOrEmpty(query)) {
             ServiceResult<CheckInLookupResult> result = checkInService.lookupCustomer(query);
             if (result.isSuccess()) {
-                request.setAttribute("lookupResult", result.getData());
+                CheckInLookupResult lookupData = result.getData();
+
+                // Nếu exact match không tìm thấy (Mã KH / SĐT) → tìm theo một phần tên có phân
+                // trang
+                if (lookupData.getDecision() == CheckInLookupResult.Decision.NOT_FOUND) {
+                    PageResult<CustomerSearchItem> searchResultsPage = checkInService.searchCustomersPage(query, page,
+                            pageSize);
+
+                    if (!searchResultsPage.isEmpty()) {
+                        request.setAttribute("searchResultsPage", searchResultsPage);
+                        request.setAttribute("searchResults", searchResultsPage.getItems());
+                    } else {
+                        // Không tìm thấy khách nào
+                        request.setAttribute("lookupResult", lookupData);
+                    }
+                } else {
+                    request.setAttribute("lookupResult", lookupData);
+                }
             } else {
                 request.setAttribute("searchError", result.getMessage());
             }
@@ -69,7 +94,8 @@ public class CheckInServlet extends HttpServlet {
     }
 
     /**
-     * POST /receptionist/check-in — xác nhận cho hội viên vào tập hoặc lưu ảnh check-in (theo action).
+     * POST /receptionist/check-in — xác nhận cho hội viên vào tập hoặc lưu ảnh
+     * check-in (theo action).
      */
     @Override
     protected void doPost(HttpServletRequest request, HttpServletResponse response)
@@ -108,7 +134,7 @@ public class CheckInServlet extends HttpServlet {
         String customerName = RequestUtil.getTrimmedParam(request, "customerName");
         boolean photoVerified = "true".equalsIgnoreCase(RequestUtil.getTrimmedParam(request, "photoVerified"));
 
-        if (subscriptionId <= 0) {
+        if (subscriptionId <= 0) { // tránh th sửa bằng devtool
             RequestUtil.setFlashToast(request, "error", "Thông tin gói tập không hợp lệ.");
             RequestUtil.redirect(request, response, "/receptionist/check-in");
             return;
@@ -135,7 +161,7 @@ public class CheckInServlet extends HttpServlet {
         int customerId = RequestUtil.getIntParam(request, "customerId", 0);
         String customerCode = RequestUtil.getTrimmedParam(request, "customerCode");
 
-        if (customerId <= 0) {
+        if (customerId <= 0) { // tránh th sửa bằng devtool
             RequestUtil.setFlashToast(request, "error", "Không tìm thấy hồ sơ khách cần cập nhật ảnh.");
             RequestUtil.redirect(request, response, "/receptionist/check-in");
             return;
@@ -162,7 +188,7 @@ public class CheckInServlet extends HttpServlet {
 
             photoPath = "/uploads/checkin/" + fileName;
         } else {
-            // Trường hợp chụp nhanh từ webcam giả lập
+            // Lễ tân bấm lưu mà k có file ảnh tải lên
             photoPath = "https://images.unsplash.com/photo-1524504388940-b1c1722653e1?w=240&h=300&fit=crop&q=80";
         }
 
@@ -170,7 +196,8 @@ public class CheckInServlet extends HttpServlet {
 
         if (updateResult.isSuccess()) {
             RequestUtil.setFlashToast(request, "success", "Đã lưu ảnh check-in vào hồ sơ hội viên.");
-            String redirectUrl = "/receptionist/check-in" + (!ValidationUtil.isNullOrEmpty(customerCode) ? "?q=" + customerCode : "");
+            String redirectUrl = "/receptionist/check-in"
+                    + (!ValidationUtil.isNullOrEmpty(customerCode) ? "?q=" + customerCode : "");
             RequestUtil.redirect(request, response, redirectUrl);
         } else {
             RequestUtil.setFlashToast(request, "error", updateResult.getMessage());
