@@ -1,5 +1,13 @@
 # File notes — mâu thuẫn tài liệu & quyết định đã chốt
 
+## Gói của tôi — làm lại UX cột trái và bảng buổi (21/10/2026, ĐÃ CHỐT)
+- Bỏ 2 dropdown Tình trạng + Loại gói: "Buổi lẻ" nằm ở cả 2 dropdown nên tạo tổ hợp vô nghĩa (VD Đã kết thúc + Buổi lẻ → rỗng), người dùng tưởng lọc bị lỗi.
+- Thay bằng 3 tab: Đang tập / Đã kết thúc / Buổi lẻ (có số đếm). Dùng `bindTabs()` chung của `common.js` (`data-tab` ↔ `data-tab-panel`); JSP mở sẵn tab chứa gói đang xem. Loại gói (cá nhân/đôi) hiện thành nhãn trên thẻ, không lọc.
+- Thẻ gói không hiện mã gói (#82) vì dễ nhầm với số thứ tự buổi #1, #2; tiến độ ghi "17/45 buổi đã qua · còn 28".
+- Ô đếm → chip lọc có chấm màu trạng thái; đổi "Còn lại" thành "Sắp tới" (vẫn gồm Hôm nay + Sắp tới + Cần chú ý); chip = 0 thì khóa.
+- Bảng: buổi lẻ bỏ cột #, thêm cột PT; lý do chỉ hiện với Cần chú ý / Vắng / Đã hủy, câu chung của các trạng thái khác nằm trong "Chi tiết"; dòng buổi sắp tới có nhãn "Buổi tới"; bảng co theo số dòng, không còn khoảng trống lớn.
+- Thêm `MyPtSessionRow.getDayName()` để hiện "Thứ 6, 23/10/2026".
+
 ## Lịch tập — gọn giao diện và sửa đóng chi tiết (19/10/2026, cập nhật theo phản hồi)
 
 - Lịch tháng chỉ lấy/hiện buổi trong đúng tháng đã chọn. Ô đệm của tháng trước/sau để trống, không có số ngày hoặc link. Mỗi ngày hiện dạng d/M (6/10, 6/11), ngày có/không có buổi đều căn phía trên. Quyết định này thay cách hiện ngày ngoài tháng ở các mục cũ bên dưới.

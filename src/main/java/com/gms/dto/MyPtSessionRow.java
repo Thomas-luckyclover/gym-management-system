@@ -92,6 +92,12 @@ public class MyPtSessionRow {
     /** Service điền từ giờ kết thúc của buổi. */
     public void setEnded(boolean ended) { this.ended = ended; }
 
+    /** Thứ của ngày tập: "Thứ 2" … "Chủ nhật" (JSP: ${s.dayName}); tính từ TimeSlots.SlotDate. */
+    public String getDayName() {
+        int day = slotDate.getDayOfWeek().getValue();   // Thứ 2 = 1 … Chủ nhật = 7
+        return day == 7 ? "Chủ nhật" : "Thứ " + (day + 1);
+    }
+
     /** Gói đôi? */
     public boolean isCouple() {
         return "PTCouple".equals(type);
