@@ -1,9 +1,12 @@
 package com.gms.servlet.manager;
 
 import com.gms.dto.LeaveRequestItemView;
+import com.gms.dto.LeaveRequestFilter;
 import com.gms.dto.PageResult;
 import com.gms.dto.ServiceResult;
+import com.gms.entity.LeaveRequest;
 import com.gms.service.LeaveRequestService;
+import com.gms.util.DateTimeUtil;
 import com.gms.util.PaginationUtil;
 import com.gms.util.RequestUtil;
 import jakarta.servlet.ServletException;
@@ -64,10 +67,11 @@ public class LeaveRequestListServlet extends HttpServlet {
                 = leaveRequestService.getManagerPage(
                         keyword, status, position, leaveType, fromDate, toDate, managerAccountId, page, pageSize);
 
-        com.gms.dto.LeaveRequestFilter countFilter = new com.gms.dto.LeaveRequestFilter(
+        // Số lượng trên tab dùng cùng điều kiện với bảng, kể cả khoảng ngày từ trang chi tiết.
+        LeaveRequestFilter countFilter = new LeaveRequestFilter(
                 null, keyword, position,
-                (leaveType == null || leaveType.isBlank() || "All".equalsIgnoreCase(leaveType)) ? null : com.gms.entity.LeaveRequest.LeaveType.fromDbValue(leaveType),
-                null, null);
+                LeaveRequest.LeaveType.fromDbValue(leaveType),
+                DateTimeUtil.parseHtmlDate(fromDate), DateTimeUtil.parseHtmlDate(toDate));
         ServiceResult<Map<String, Integer>> countResult
                 = leaveRequestService.getStatusCounts(countFilter);
 
