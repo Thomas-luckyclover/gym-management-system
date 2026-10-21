@@ -63,3 +63,14 @@ Phát hiện đơn #7 của nhân viên Resigned vẫn hiện Đạt: snapshot d
 Đã sửa danh sách tra lại vị trí Working giống bước duyệt; chi tiết hiện lý do nhân viên đã nghỉ việc và khóa xác nhận. Lý do Cần xử lý xuất hiện ngay trên danh sách. Bỏ thuật ngữ snapshot khỏi nội dung người dùng thấy, cập nhật phiên bản CSS để trình duyệt tải lại.
 
 Thêm 2 test tái hiện lỗi danh sách/chi tiết. Clean package chạy 176 test, không lỗi; kiểm tra Service thật trên DB local xác nhận đơn #7 Cần xử lý và canApprove = false, không đổi bản ghi. Chưa redeploy WAR mới hoặc xác minh bản sửa này bằng trình duyệt.
+
+## Đơn giản hóa frontend theo yêu cầu trong chat
+
+- Danh sách chỉ hiện Phép năm/Nghỉ ốm/Không lương trong cột loại nghỉ; bỏ lý do bên dưới. Lý do đầy đủ vẫn ở trang chi tiết.
+- Người xử lý chỉ hiện một tên: Pending lấy người được giao, đơn đã xử lý lấy người thực hiện. Chưa giao ghi Chưa phân công; tự từ chối ghi Hệ thống. Bỏ Quản lý chung và các chú thích lặp dưới tên. Chi tiết phân biệt Người phụ trách với Người đã xử lý, không gắn Đã duyệt cho đơn bị từ chối.
+- Giữ đúng hai bộ lọc: chức vụ PT/Lễ tân, loại nghỉ Annual/Sick/Unpaid. Ô tìm theo tên hoặc mã. Tab trạng thái giữ nguyên bộ lọc; số lượng tab dùng cùng khoảng ngày với bảng.
+- Tách hạn xử lý thành cột riêng. Loại nghỉ, người xử lý và các tiêu đề dùng chữ gọn; số ngày hiển thị 0,5 / 1 / 2 thay vì 0.5 / 1.0 / 2.0.
+- Không thêm JS. JSP dùng c:choose để hiển thị, CSS riêng leave-request-list.css chỉ áp dụng cho body.leave-list-page. Service giữ phần tính điều kiện; Servlet nhận bộ lọc; DAO truy vấn như trước. Các câu nhắc trên chi tiết đổi Working/Receptionist/SLA thành tiếng Việt dễ hiểu.
+- Đã kiểm tra hai JSP bằng Jasper của Tomcat 10.1, không lỗi. Bản Tomcat xem thử chỉ đọc dữ liệu đã xác nhận bộ lọc Nghỉ ốm, Lễ tân + Không lương, xóa lọc, đếm tab theo ngày và chi tiết Chưa phân công. Không redeploy ứng dụng chính hoặc ghi quyết định nghỉ phép khi kiểm tra.
+
+Để học luồng đơn giản: bắt đầu ở LeaveRequestListServlet.doGet, theo getManagerPage tới DAO rồi xem các field được JSP in ra. Tên hiển thị lấy từ dữ liệu thật; JSP không tự chọn hoặc gán một người duyệt mới.
