@@ -129,7 +129,7 @@
 
                 <div class="field" style="margin-bottom:var(--space-4)">
                   <label class="field-label" for="leaveDate">
-                    Ngày nghỉ <span aria-hidden="true">*</span>
+                    Từ ngày <span aria-hidden="true">*</span>
                   </label>
                   <input id="leaveDate"
                          name="leaveDate"
@@ -146,6 +146,15 @@
                     <div class="field-error">
                       <c:out value="${fieldErrors.leaveDate}" />
                     </div>
+                  </c:if>
+                </div>
+
+                <div class="field">
+                  <label class="field-label" for="toDate">Đến ngày (bỏ trống nếu nghỉ một ngày)</label>
+                  <input id="toDate" name="toDate" type="date" value="<c:out value='${paramToDate}' />">
+                  <span class="field-hint">Đơn nhiều ngày chọn Cả ngày, tối đa 31 ngày trong cùng năm. Dự báo quân số bên cạnh chỉ xét ngày bắt đầu.</span>
+                  <c:if test="${not empty fieldErrors.toDate}">
+                    <div class="field-error"><c:out value="${fieldErrors.toDate}" /></div>
                   </c:if>
                 </div>
 

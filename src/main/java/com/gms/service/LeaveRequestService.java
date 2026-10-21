@@ -157,7 +157,7 @@ public class LeaveRequestService {
 
             Integer currentEmpId = null;
             if (currentManagerEmployeeId != null) {
-                // If it's an account ID, try resolving to EmployeeId; if not found, use as-is
+                // Tham số từ session là AccountId; không được dùng thay EmployeeId khi tra cứu thất bại.
                 Employee mgr = findEmployeeForAccount(currentManagerEmployeeId);
                 currentEmpId = isWorkingManager(mgr) ? mgr.getEmployeeId() : null;
             }
@@ -1036,6 +1036,13 @@ public class LeaveRequestService {
             LeaveRequest.ShiftType shiftType,
             String reason) {
 
+        return submitLeaveRequest(accountId, leaveType, leaveDate, leaveDate, shiftType, reason);
+    }
+
+    /** Nộp đơn theo khoảng ngày gồm cả hai biên; nửa ngày chỉ áp dụng cho một ngày. */
+    public ServiceResult<Integer> submitLeaveRequest(int accountId, LeaveRequest.LeaveType leaveType,
+            LocalDate leaveDate, LocalDate toDate, LeaveRequest.ShiftType shiftType, String reason) {
+
         // B1: validate dữ liệu đầu vào cơ bản
         if (leaveType == null) {
             return ServiceResult.failField("leaveType", "Vui lòng chọn loại nghỉ.");
@@ -1045,6 +1052,15 @@ public class LeaveRequestService {
         }
         if (leaveDate == null) {
             return ServiceResult.failField("leaveDate", "Vui lòng chọn ngày nghỉ.");
+        }
+
+        if (toDate == null || toDate.isBefore(leaveDate)
+                || java.time.temporal.ChronoUnit.DAYS.between(leaveDate, toDate) >= 31
+                || leaveDate.getYear() != toDate.getYear()) {
+            return ServiceResult.failField("toDate", "Chọn ngày kết thúc từ ngày bắt đầu, tối đa 31 ngày trong cùng năm.");
+        }
+        if (!leaveDate.equals(toDate) && shiftType != LeaveRequest.ShiftType.FULL_DAY) {
+            return ServiceResult.failField("shiftType", "Đơn nhiều ngày phải chọn Cả ngày.");
         }
 
         LocalDate today = DateTimeUtil.today();
@@ -1081,8 +1097,11 @@ public class LeaveRequestService {
 
             // B4: kiểm tra trùng đơn nghỉ Pending hoặc Approved (cùng ca hoặc bao phủ
             // FullDay)
-            boolean hasConflict = leaveRequestDAO.hasConflictingLeave(
-                    employee.getEmployeeId(), leaveDate, shiftType.getDbValue());
+            boolean hasConflict;
+            try (Connection connection = DBContext.getConnection()) {
+                hasConflict = leaveRequestDAO.hasConflictingLeave(connection,
+                        employee.getEmployeeId(), leaveDate, toDate, shiftType.getDbValue());
+            }
             if (hasConflict) {
                 return ServiceResult.fail(
                         "Bạn đã có đơn nghỉ trùng ngày và ca này đang chờ duyệt hoặc đã được duyệt.");
@@ -1092,11 +1111,13 @@ public class LeaveRequestService {
             // (CBR-83)
             boolean isPt = Role.PT == employee.getPosition();
             if (isPt) {
-                int clashCount = leaveRequestDAO.countScheduledSessions(
-                        employee.getEmployeeId(), leaveDate, shiftType.getDbValue());
-                if (clashCount > 0) {
-                    return ServiceResult.fail(String.format(
-                            Messages.MSG78_LEAVE_BLOCKED_BY_SESSIONS, clashCount));
+                for (LocalDate date = leaveDate; !date.isAfter(toDate); date = date.plusDays(1)) {
+                    int clashCount = leaveRequestDAO.countScheduledSessions(
+                            employee.getEmployeeId(), date, shiftType.getDbValue());
+                    if (clashCount > 0) {
+                        return ServiceResult.fail(String.format(Messages.MSG78_LEAVE_BLOCKED_BY_SESSIONS, clashCount)
+                                + " (" + DateTimeUtil.formatDate(date) + ")");
+                    }
                 }
             }
 
@@ -1104,15 +1125,17 @@ public class LeaveRequestService {
             LeaveRequest request = new LeaveRequest();
             request.setEmployeeId(employee.getEmployeeId());
             request.setLeaveType(leaveType);
-            request.setLeaveDate(leaveDate);
+            request.setFromDate(leaveDate);
+            request.setToDate(toDate);
             request.setShiftType(shiftType);
+            request.setDays(requestedDays(request));
             request.setReason(reason.trim());
 
             try (Connection conn = DBContext.getConnection()) {
                 conn.setAutoCommit(false);
                 try {
                     leaveRequestDAO.lockDecisionScope(conn);
-                    if (leaveRequestDAO.hasConflictingLeave(conn, employee.getEmployeeId(), leaveDate, shiftType.getDbValue())) {
+                    if (leaveRequestDAO.hasConflictingLeave(conn, employee.getEmployeeId(), leaveDate, toDate, shiftType.getDbValue())) {
                         conn.rollback();
                         return ServiceResult.fail("Bạn đã có đơn nghỉ trùng ngày và ca này.");
                     }
@@ -1220,11 +1243,13 @@ public class LeaveRequestService {
         }
     }
 
+    /** Chỉ nhân viên Working ở vị trí Manager mới được xử lý đơn. */
     private boolean isWorkingManager(Employee employee) {
         return employee != null && employee.getPosition() == Role.MANAGER
                 && employee.getStatus() == Employee.Status.WORKING;
     }
 
+    /** Đọc lại quyền và trạng thái trên Connection đã khóa, tránh thao tác từ tab cũ. */
     private ServiceResult<LeaveRequest> validateDecision(Connection connection, int requestId, int managerEmployeeId)
             throws SQLException {
         if (!"Manager".equals(leaveRequestDAO.findWorkingPosition(connection, managerEmployeeId))) {
@@ -1241,6 +1266,10 @@ public class LeaveRequestService {
         return ServiceResult.ok(current);
     }
 
+    /**
+     * Kiểm tra toàn bộ ngày/ca trong transaction duyệt. Không tin Days hoặc dữ liệu kiểm tra từ trình duyệt.
+     * Pending khác giữ chỗ quỹ phép; đơn hiện tại được loại ra rồi cộng đúng một lần.
+     */
     ServiceResult<Void> validateApproval(Connection connection, LeaveRequest request, String position) throws SQLException {
         LocalDate fromDate = request.getFromDate();
         LocalDate toDate = request.getToDate();
@@ -1294,6 +1323,7 @@ public class LeaveRequestService {
         return ServiceResult.ok(null);
     }
 
+    /** Số ngày theo quy tắc hiện có: nửa ngày cho một ca, đủ ngày cho FullDay; tính cả hai ngày biên. */
     private java.math.BigDecimal requestedDays(LeaveRequest request) {
         if (request.getShiftType() != LeaveRequest.ShiftType.FULL_DAY) {
             return new java.math.BigDecimal("0.5");

@@ -112,6 +112,7 @@ public class LeaveRequestFormServlet extends HttpServlet {
         // B2: đọc và parse các tham số gửi từ form
         String leaveTypeStr = RequestUtil.getTrimmedParam(request, "leaveType");
         String leaveDateStr = RequestUtil.getTrimmedParam(request, "leaveDate");
+        String toDateStr = RequestUtil.getTrimmedParam(request, "toDate");
         String shiftTypeStr = RequestUtil.getTrimmedParam(request, "shiftType");
         String reason = RequestUtil.getTrimmedParam(request, "reason");
 
@@ -127,9 +128,18 @@ public class LeaveRequestFormServlet extends HttpServlet {
             }
         }
 
+        LocalDate toDate = leaveDate;
+        if (toDateStr != null && !toDateStr.isBlank()) {
+            try {
+                toDate = LocalDate.parse(toDateStr);
+            } catch (java.time.format.DateTimeParseException e) {
+                toDate = null;
+            }
+        }
+
         // B3: gọi Service nộp đơn
         ServiceResult<Integer> submitResult = leaveRequestService.submitLeaveRequest(
-                accountId, leaveType, leaveDate, shiftType, reason);
+                accountId, leaveType, leaveDate, toDate, shiftType, reason);
 
         // B4: nếu thất bại, nạp lại form kèm thông báo lỗi và giữ lại giá trị đã nhập
         if (!submitResult.isSuccess()) {
@@ -149,6 +159,7 @@ public class LeaveRequestFormServlet extends HttpServlet {
             request.setAttribute("fieldErrors", submitResult.getFieldErrors());
             request.setAttribute("paramLeaveType", leaveTypeStr);
             request.setAttribute("paramLeaveDate", leaveDateStr);
+            request.setAttribute("paramToDate", toDateStr);
             request.setAttribute("paramShiftType", shiftTypeStr);
             request.setAttribute("paramReason", reason);
             request.setAttribute("csrfToken", RequestUtil.getOrCreateCsrfToken(session));
