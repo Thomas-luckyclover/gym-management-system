@@ -134,7 +134,7 @@ public class CheckInServlet extends HttpServlet {
         String customerName = RequestUtil.getTrimmedParam(request, "customerName");
         boolean photoVerified = "true".equalsIgnoreCase(RequestUtil.getTrimmedParam(request, "photoVerified"));
 
-        if (subscriptionId <= 0) { // tránh th sửa bằng devtool
+        if (subscriptionId <= 0) { // Kiểm tra ID gói tập hợp lệ phòng ngừa can thiệp dữ liệu
             RequestUtil.setFlashToast(request, "error", "Thông tin gói tập không hợp lệ.");
             RequestUtil.redirect(request, response, "/receptionist/check-in");
             return;
@@ -161,7 +161,7 @@ public class CheckInServlet extends HttpServlet {
         int customerId = RequestUtil.getIntParam(request, "customerId", 0);
         String customerCode = RequestUtil.getTrimmedParam(request, "customerCode");
 
-        if (customerId <= 0) { // tránh th sửa bằng devtool
+        if (customerId <= 0) { // Kiểm tra ID khách hàng hợp lệ phòng ngừa can thiệp dữ liệu
             RequestUtil.setFlashToast(request, "error", "Không tìm thấy hồ sơ khách cần cập nhật ảnh.");
             RequestUtil.redirect(request, response, "/receptionist/check-in");
             return;
@@ -188,7 +188,7 @@ public class CheckInServlet extends HttpServlet {
 
             photoPath = "/uploads/checkin/" + fileName;
         } else {
-            // Lễ tân bấm lưu mà k có file ảnh tải lên
+            // Ảnh mẫu dự phòng khi máy thực hành không có camera vật lý
             photoPath = "https://images.unsplash.com/photo-1524504388940-b1c1722653e1?w=240&h=300&fit=crop&q=80";
         }
 
