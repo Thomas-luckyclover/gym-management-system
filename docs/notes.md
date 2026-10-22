@@ -1,6 +1,17 @@
 # File notes — mâu thuẫn tài liệu & quyết định đã chốt
 
-## Gói của tôi — làm lại UX cột trái và bảng buổi (21/10/2026, ĐÃ CHỐT)
+## Gói của tôi v2 + PT Dashboard nhắc khách (22/10/2026, ĐÃ CHỐT theo góp ý mentor)
+Mentor chê: danh sách buổi quá dài, điều hướng cụt, thiếu CTA. Đã sửa:
+- **Bỏ bảng #1 → N, chip lọc, dòng gập** (thay cho mục 21/10 bên dưới). Xem từng buổi → màn Lịch tập (nút "Xem trên lịch tập" mở đúng tháng có buổi tới).
+- **Lịch cố định dạng tuần mẫu T2–T6** (BR-35, CBR-43, BR-41): mỗi ô = giờ có nhiều buổi nhất của thứ đó (≥ 50%, hòa → giờ sớm). Thứ cố định nhưng khác giờ chính (VD T4 07:00) → viền đứt. Buổi lệch (đổi buổi, PT dời, chuyển PT, xếp giờ khác từ đầu) → "Buổi khác giờ" kèm lý do đọc từ `SessionMoveLogs`. Hàm `MyBookingService.applyWeekTemplate` có unit test.
+- **Dải chấm "Các buổi của gói"**: 1 ô = 1 buổi, vạch = sang tuần; mỗi trạng thái có hình riêng (đặc / × / gạch chéo / viền) để không chỉ dựa vào màu. **"Cần để ý"** chỉ liệt kê buổi cảnh báo sắp tới + vắng + hủy, kèm lý do.
+- **CTA tối đa 1, chọn theo ưu tiên** (`chooseCta`): thiếu quyền vào gym → mua gói thành viên online; gói PT còn ≤ 3 buổi hoặc ≤ 14 ngày → **gia hạn TẠI QUẦY** (CBR-48: gói PT không bán online — nút Gọi lễ tân + Báo PT trước); gói đã kết thúc → đăng ký lại tại quầy; ≥ 3 buổi lẻ/30 ngày → gợi ý gói PT (tại quầy). Hotline lấy `AppConstants.GYM_HOTLINE` (giống chân trang), giờ mở cửa đọc P-19.
+- **Điều hướng**: cột trái có mục "Đi tới" (Gói thành viên & vé ngày, Lịch tập, Đặt buổi lẻ); buổi lẻ có "Đặt lại với PT này" → `/customer/book-session?pt=<EmployeeId>` (**màn Đặt buổi lẻ cần đọc tham số `pt` để chọn sẵn PT**).
+- Chữ giải thích phụ chuyển vào nút (i) (hint box chung), màn chỉ giữ dữ liệu.
+- **PT Dashboard**: bỏ khối "Đánh giá PT"; khối "Cần chú ý" có nút **Nhắc khách** → POST `/pt/dashboard` (CSRF) → 1 thông báo cá nhân (`Notifications` Audience = Individual, `SentByEmployeeId` = PT). Service tính lại danh sách Cần chú ý của chính PT đó (không tin form), mỗi khách 1 lần/ngày, khách chưa có tài khoản → báo PT nhắn Zalo (GBR-15).
+- Khách xem lời nhắc ở **chuông thông báo** đã thêm vào header Gói của tôi + Lịch tập; lời nhắc dẫn khách về Gói của tôi, nơi CTA "Mua gói thành viên" đang hiện → 3 màn nối thành 1 luồng.
+
+## Gói của tôi — làm lại UX cột trái và bảng buổi (21/10/2026, đã thay bằng v2 ở trên)
 - Bỏ 2 dropdown Tình trạng + Loại gói: "Buổi lẻ" nằm ở cả 2 dropdown nên tạo tổ hợp vô nghĩa (VD Đã kết thúc + Buổi lẻ → rỗng), người dùng tưởng lọc bị lỗi.
 - Thay bằng 3 tab: Đang tập / Đã kết thúc / Buổi lẻ (có số đếm). Dùng `bindTabs()` chung của `common.js` (`data-tab` ↔ `data-tab-panel`); JSP mở sẵn tab chứa gói đang xem. Loại gói (cá nhân/đôi) hiện thành nhãn trên thẻ, không lọc.
 - Thẻ gói không hiện mã gói (#82) vì dễ nhầm với số thứ tự buổi #1, #2; tiến độ ghi "17/45 buổi đã qua · còn 28".
