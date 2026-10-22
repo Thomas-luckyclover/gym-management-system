@@ -90,6 +90,7 @@ public class MyPtSessionRow {
     private String moveNote;             // vì sao buổi lệch lịch cố định: "PT dời lịch · thay buổi T3 06/10" (SessionMoveLogs)
     private boolean firstOfWeek;         // buổi đầu tiên của 1 tuần trong gói → dải chấm vẽ vạch ngăn tuần
     private boolean rebook;              // buổi lẻ gần nhất với PT này → hiện "Đặt lại với PT"
+    private boolean noGymPass;           // buổi sắp tới mà bạn chưa có Membership/DayPass (không tính bảo lưu, ngày phòng nghỉ)
     // ---------------- Kết thúc phần 2: dữ liệu Service tính thêm ----------------
 
     /** Buổi đã hết giờ; chỉ điều khiển cách hiển thị, không thay trạng thái trong DB. */
@@ -123,6 +124,9 @@ public class MyPtSessionRow {
 
     public boolean isFirstOfWeek() { return firstOfWeek; }
     public void setFirstOfWeek(boolean firstOfWeek) { this.firstOfWeek = firstOfWeek; }
+
+    public boolean isNoGymPass() { return noGymPass; }
+    public void setNoGymPass(boolean noGymPass) { this.noGymPass = noGymPass; }
 
     public boolean isRebook() { return rebook; }
     public void setRebook(boolean rebook) { this.rebook = rebook; }

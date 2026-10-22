@@ -347,6 +347,22 @@
                                                         <c:if test="${booking.pendingCount gt 0}"><li><i class="booking-dot" data-status="pending"></i>Đang cập nhật <b>${booking.pendingCount}</b></li></c:if>
                                                         <c:if test="${booking.remainingCount gt 0}"><li><i class="booking-dot" data-status="upcoming"></i>Sắp tới <b>${booking.remainingCount}</b></li></c:if>
                                                     </ul>
+                                                    <%-- Buổi vắng / hủy: chỉ là lịch sử → gập sẵn (details/summary có sẵn của trình duyệt, không cần JS). --%>
+                                                    <c:if test="${not empty booking.pastProblems}">
+                                                        <details class="booking-history">
+                                                            <summary>${fn:length(booking.pastProblems)} buổi vắng / hủy · xem lý do</summary>
+                                                            <ul class="booking-rows">
+                                                                <c:forEach var="s" items="${booking.pastProblems}">
+                                                                    <li>
+                                                                        <b><c:out value="${s.dayName}" />, ${gms:formatDate(s.slotDate)}</b>
+                                                                        <span class="booking-rows-time">${gms:formatTime(s.startTime)} – ${gms:formatTime(s.endTime)}</span>
+                                                                        <span class="booking-rows-note"><c:out value="${s.explanation}" /></span>
+                                                                        <span class="session-status" data-status="${s.statusKey}"><c:out value="${s.statusLabel}" /></span>
+                                                                    </li>
+                                                                </c:forEach>
+                                                            </ul>
+                                                        </details>
+                                                    </c:if>
                                                 </section>
                                             </c:if>
                                         </c:when>
@@ -377,12 +393,12 @@
                                         </c:otherwise>
                                     </c:choose>
 
-                                    <%-- ===================== [CAN-DE-Y] cảnh báo sắp tới + vắng + hủy, kèm lý do ===================== --%>
+                                    <%-- ===================== [CAN-DE-Y] chỉ buổi SẮP TỚI chưa có Membership/DayPass (còn kịp mua); không có thì ẩn cả mục ===================== --%>
                                     <c:if test="${not empty booking.watchList}">
                                         <section class="booking-section" aria-labelledby="watch-title">
                                             <div class="booking-section-head">
                                                 <h4 id="watch-title">Cần để ý</h4>
-                                                <span class="pt-info"><button type="button" class="pt-info-trigger" aria-label="Cần để ý gồm gì" aria-describedby="hint-watch"><span aria-hidden="true">i</span></button><span id="hint-watch" class="pt-info-popover" role="tooltip">Buổi sắp tới có cảnh báo, buổi vắng và buổi bị hủy. Buổi check-in bình thường không hiện ở đây.</span></span>
+                                                <span class="pt-info"><button type="button" class="pt-info-trigger" aria-label="Cần để ý gồm gì" aria-describedby="hint-watch"><span aria-hidden="true">i</span></button><span id="hint-watch" class="pt-info-popover" role="tooltip">Buổi sắp tới rơi vào ngày bạn chưa có gói thành viên hoặc vé ngày hợp lệ. Mua trước ngày tập để buổi không bị tính vắng.</span></span>
                                                 <span class="booking-count">${fn:length(booking.watchList)} buổi</span>
                                             </div>
                                             <ul class="booking-rows">

@@ -333,6 +333,7 @@ public class MyPtSessionService {
             if (holderOk) {
                 return null;
             }
+            row.setNoGymPass(!holderFrozen);   // thiếu gói (không phải bảo lưu) → màn Gói của tôi đưa vào "Cần để ý"
             return holderFrozen
                     ? "Buổi tập nằm trong kỳ bảo lưu. Hãy kiểm tra thời gian bảo lưu trước ngày tập."
                     : "Bạn chưa có Membership hoặc DayPass hợp lệ cho ngày tập này.";
@@ -357,10 +358,12 @@ public class MyPtSessionService {
             return "Người tập cùng chưa có quyền vào gym hợp lệ cho ngày này. Bạn vẫn có thể tham gia buổi tập.";
         }
         if (otherOk) {
+            row.setNoGymPass(!meFrozen);
             return meFrozen
                     ? "Bạn đang trong kỳ bảo lưu vào ngày tập. Người tập cùng vẫn có thể tham gia buổi tập."
                     : "Bạn chưa có quyền vào gym cho ngày này. Người tập cùng vẫn có thể tham gia buổi tập.";
         }
+        row.setNoGymPass(!holderFrozen && !partnerFrozen);
         if (holderFrozen || partnerFrozen) {
             return "Buổi tập trùng kỳ bảo lưu và cả hai chưa có quyền vào gym hợp lệ. Hãy kiểm tra Membership hoặc DayPass trước ngày tập.";
         }
