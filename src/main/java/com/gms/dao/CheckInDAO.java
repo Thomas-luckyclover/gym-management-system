@@ -321,24 +321,25 @@ public class CheckInDAO {
     // ===== Tìm kiếm khách hàng theo phần tên (dùng cho Check-in) =====
 
     /**
-     * Đếm tổng số khách hàng khớp từ khóa tìm kiếm theo tên (phục vụ phân trang).
+     * Đếm tổng số khách hàng khớp từ khóa tìm kiếm theo tên hoặc 4 số cuối SĐT (phục vụ phân trang).
      *
-     * @param keyword từ khóa tìm kiếm
+     * @param keyword từ khóa tìm kiếm (tên hoặc 4 số cuối SĐT)
      * @return tổng số khách hàng khớp
      */
     public long countCustomersByKeyword(String keyword) throws SQLException {
+        boolean isPhoneSuffix = keyword != null && keyword.trim().matches("\\d{4}");
         String sql = "SELECT COUNT(*) "
                 + "FROM Customers cust "
                 + "JOIN Persons p ON cust.PersonId = p.PersonId "
-                + "WHERE cust.DeletedAt IS NULL "
-                + "  AND p.FullName COLLATE Latin1_General_100_CI_AI LIKE ? ESCAPE '\\'";
+                + "WHERE cust.DeletedAt IS NULL AND "
+                + (isPhoneSuffix ? "p.Phone LIKE ?" : "p.FullName COLLATE Latin1_General_100_CI_AI LIKE ? ESCAPE '\\'");
 
-        String likePattern = SqlUtil.toContainsPattern(keyword);
+        String pattern = isPhoneSuffix ? ("%" + keyword.trim()) : SqlUtil.toContainsPattern(keyword);
 
         try (Connection conn = DBContext.getConnection();
                 PreparedStatement stmt = conn.prepareStatement(sql)) {
 
-            stmt.setString(1, likePattern);
+            stmt.setString(1, pattern);
 
             try (ResultSet rs = stmt.executeQuery()) {
                 if (rs.next()) {
@@ -350,9 +351,9 @@ public class CheckInDAO {
     }
 
     /**
-     * Tìm kiếm khách hàng theo một phần tên có phân trang (OFFSET ? ROWS FETCH NEXT ? ROWS ONLY).
+     * Tìm kiếm khách hàng theo một phần tên hoặc 4 số cuối SĐT có phân trang (OFFSET ? ROWS FETCH NEXT ? ROWS ONLY).
      *
-     * @param keyword    từ khóa tìm kiếm
+     * @param keyword    từ khóa tìm kiếm (tên hoặc 4 số cuối SĐT)
      * @param pageNumber số trang hiện tại (bắt đầu từ 1)
      * @param pageSize   số lượng dòng mỗi trang
      * @return danh sách khách hàng của trang
@@ -360,22 +361,23 @@ public class CheckInDAO {
     public List<CustomerSearchItem> searchCustomersByKeyword(String keyword, int pageNumber, int pageSize)
             throws SQLException {
         int offset = Math.max(0, (pageNumber - 1) * pageSize);
+        boolean isPhoneSuffix = keyword != null && keyword.trim().matches("\\d{4}");
         String sql = "SELECT cust.CustomerId, cust.CustomerCode, p.FullName, p.Phone, "
                 + "cust.Status AS CustomerStatus, cust.CheckInPhoto "
                 + "FROM Customers cust "
                 + "JOIN Persons p ON cust.PersonId = p.PersonId "
-                + "WHERE cust.DeletedAt IS NULL "
-                + "  AND p.FullName COLLATE Latin1_General_100_CI_AI LIKE ? ESCAPE '\\' "
-                + "ORDER BY p.FullName, cust.CustomerId "
+                + "WHERE cust.DeletedAt IS NULL AND "
+                + (isPhoneSuffix ? "p.Phone LIKE ?" : "p.FullName COLLATE Latin1_General_100_CI_AI LIKE ? ESCAPE '\\'")
+                + " ORDER BY p.FullName, cust.CustomerId "
                 + "OFFSET ? ROWS FETCH NEXT ? ROWS ONLY";
 
         List<CustomerSearchItem> list = new ArrayList<>();
-        String likePattern = SqlUtil.toContainsPattern(keyword);
+        String pattern = isPhoneSuffix ? ("%" + keyword.trim()) : SqlUtil.toContainsPattern(keyword);
 
         try (Connection conn = DBContext.getConnection();
                 PreparedStatement stmt = conn.prepareStatement(sql)) {
 
-            stmt.setString(1, likePattern);
+            stmt.setString(1, pattern);
             stmt.setInt(2, offset);
             stmt.setInt(3, pageSize);
 
