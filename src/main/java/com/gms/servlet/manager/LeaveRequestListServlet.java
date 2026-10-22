@@ -90,6 +90,12 @@ public class LeaveRequestListServlet extends HttpServlet {
         // B3: đặt dữ liệu cho JSP; lỗi thì dùng trang rỗng để màn vẫn dựng được
         request.setAttribute("listPage", listPage);
         request.setAttribute("employeeView", isEmployeeView);
+        request.setAttribute("csrfToken", RequestUtil.getOrCreateCsrfToken(session));
+        String listReturnUrl = "/manager/leave-requests";
+        if (request.getQueryString() != null && !request.getQueryString().isBlank()) {
+            listReturnUrl += "?" + request.getQueryString();
+        }
+        request.setAttribute("listReturnUrl", listReturnUrl);
 
         request.setAttribute(
                 "statusCounts",

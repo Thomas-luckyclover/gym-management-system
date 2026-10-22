@@ -29,7 +29,12 @@ public class LeaveRequestReviewServlet extends HttpServlet {
     private final LeaveRequestService leaveRequestService;
 
     public LeaveRequestReviewServlet() {
-        this.leaveRequestService = new LeaveRequestService();
+        this(new LeaveRequestService());
+    }
+
+    /** Truyền Service giả khi kiểm tra hợp đồng POST, không ghi DB thật. */
+    LeaveRequestReviewServlet(LeaveRequestService leaveRequestService) {
+        this.leaveRequestService = leaveRequestService;
     }
 
     @Override
@@ -102,7 +107,13 @@ public class LeaveRequestReviewServlet extends HttpServlet {
         // B5: nếu xử lý thành công, thông báo và quay về danh sách
         if (result.isSuccess()) {
             RequestUtil.setFlashToast(request, "success", successMessage);
-            RequestUtil.redirect(request, response, "/manager/leave-requests");
+            // Form trong danh sách giữ tab/bộ lọc/trang; chỉ nhận đường dẫn danh sách nội bộ.
+            String returnUrl = RequestUtil.getTrimmedParam(request, "returnUrl");
+            String listPath = "/manager/leave-requests";
+            if (returnUrl == null || !(returnUrl.equals(listPath) || returnUrl.startsWith(listPath + "?"))) {
+                returnUrl = listPath;
+            }
+            RequestUtil.redirect(request, response, returnUrl);
             return;
         }
 
