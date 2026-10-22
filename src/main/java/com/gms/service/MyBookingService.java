@@ -1,20 +1,36 @@
 package com.gms.service;
 
+import com.gms.constant.AppConstants;
 import com.gms.constant.Messages;
+import com.gms.dao.MyBookingDAO;
 import com.gms.dao.MyPtSessionDAO;
 import com.gms.dto.MyBookingView;
 import com.gms.dto.MyPtPackageView;
 import com.gms.dto.MyPtSessionRow;
 import com.gms.dto.ServiceResult;
+import com.gms.dto.SessionMoveInfo;
+import com.gms.dto.WeekdaySlot;
 import java.sql.SQLException;
+import java.time.DayOfWeek;
+import java.time.LocalDate;
 import java.time.LocalDateTime;
+import java.time.LocalTime;
+import java.time.format.DateTimeFormatter;
 import java.time.temporal.ChronoUnit;
+import java.util.ArrayList;
+import java.util.HashMap;
+import java.util.HashSet;
+import java.util.LinkedHashMap;
 import java.util.List;
+import java.util.Map;
+import java.util.Set;
+import java.util.TreeMap;
 
 /**
  * Màn "Gói của tôi" (/customer/bookings, màn #50) — CHỈ XEM.
  *   Cột trái : gói PT đang tập / đã kết thúc + nhóm "Các buổi lẻ"
- *   Cột phải : gói đang chọn + 5 ô đếm + bảng buổi #1 → #N
+ *   Cột phải : CTA đúng lúc + buổi tới + lịch cố định (tuần mẫu T2–T6) + dải chấm các buổi + cần để ý
+ * Không liệt kê hết các buổi ở đây: xem đủ từng buổi → màn "Lịch tập".
  * Dùng lại DAO và cách tính trạng thái của màn "Lịch tập" → 2 màn luôn hiện cùng 1 nhãn.
  */
 public class MyBookingService {
@@ -22,8 +38,26 @@ public class MyBookingService {
     /** Giá trị ?id= khi chọn nhóm "Các buổi lẻ". */
     public static final String SINGLE_KEY = "single";
 
+    // ----- Loại CTA (mỗi màn chỉ hiện tối đa 1) -----
+    static final String CTA_BUY_MEMBERSHIP = "buyMembership";   // buổi sắp tới chưa có quyền vào gym → mua gói thành viên online
+    static final String CTA_RENEW_AT_COUNTER = "renewAtCounter"; // gói PT sắp hết → gia hạn TẠI QUẦY (CBR-48)
+    static final String CTA_REJOIN = "rejoin";                   // gói PT đã kết thúc → đăng ký lại tại quầy
+    static final String CTA_PT_PACKAGE = "ptPackage";            // hay đặt buổi lẻ → gợi ý gói PT (tại quầy)
+
+    // ----- Ngưỡng hiện CTA -----
+    static final int RENEW_SESSIONS_LEFT = 3;     // còn ≤ 3 buổi
+    static final int RENEW_DAYS_LEFT = 14;        // hoặc còn ≤ 14 ngày
+    static final int SINGLE_SUGGEST_COUNT = 3;    // ≥ 3 buổi lẻ …
+    static final int SINGLE_SUGGEST_DAYS = 30;    // … trong 30 ngày gần nhất
+
+    private static final String[] WEEKDAY_SHORT = {"T2", "T3", "T4", "T5", "T6", "T7", "CN"};
+    private static final DateTimeFormatter HH_MM = DateTimeFormatter.ofPattern("HH:mm");
+    private static final DateTimeFormatter DD_MM = DateTimeFormatter.ofPattern("dd/MM");
+
     private final MyPtSessionDAO sessionDAO = new MyPtSessionDAO();
+    private final MyBookingDAO bookingDAO = new MyBookingDAO();
     private final MyPtSessionService sessionService = new MyPtSessionService();
+    private final SystemConfigService systemConfigService = new SystemConfigService();
 
     /**
      * Dữ liệu cả màn.
@@ -37,6 +71,7 @@ public class MyBookingService {
                 return ServiceResult.fail(Messages.MSG07_NO_PERMISSION);
             }
             MyBookingView view = new MyBookingView();
+            view.setTodayWeekday(now.getDayOfWeek().getValue());
 
             // B2: cột trái — gói PT (1 câu SQL), chia Đang tập / Đã kết thúc
             for (MyPtPackageView p : sessionDAO.findMyPackages(customerId, now.toLocalDate())) {
@@ -48,9 +83,10 @@ public class MyBookingService {
                 }
             }
 
-            // B3: cột trái — các buổi lẻ
+            // B3: cột trái — các buổi lẻ (+ đếm buổi lẻ 30 ngày gần nhất cho gợi ý gói PT)
             List<MyPtSessionRow> singles = sessionDAO.findSingleSessions(customerId);
             view.setSingleSessionCount(singles.size());
+            view.setRecentSingleCount(countRecentSingles(singles, now.toLocalDate()));
 
             // B4: chọn cái đang xem (URL hợp lệ → theo URL; không thì gói đầu tiên)
             MyPtPackageView selected = pickPackage(view, selectedId);
@@ -65,10 +101,22 @@ public class MyBookingService {
                 sessions = singles;
             }
 
-            // B5: cột phải — nhãn, trạng thái (giống màn Lịch tập), số đếm, buổi để cuộn tới
+            // B5: nhãn + trạng thái (giống màn Lịch tập), số đếm, buổi tới
             sessionService.fillDisplay(sessions, customerId, now);
-            view.setSessions(sessions);
             countSessions(view, sessions, now);
+            view.setWatchList(buildWatchList(sessions));
+
+            // B6: phần riêng của gói PT / của buổi lẻ
+            if (selected != null) {
+                fillPackageDetail(view, selected, sessions, now.toLocalDate());
+                view.setSessions(sessions);
+            } else {
+                view.setSessions(orderSingles(sessions, now));
+            }
+
+            // B7: CTA (tối đa 1) + thông tin quầy khi CTA bảo khách ra quầy
+            view.setCtaKind(chooseCta(view, sessions));
+            fillCounterInfo(view);
             return ServiceResult.ok(view);
 
         } catch (SQLException e) {
@@ -84,6 +132,41 @@ public class MyBookingService {
         if (p.isCouple() && p.getPartnerCustomerId() != null) {
             boolean iAmHolder = p.getHolderCustomerId() == myCustomerId;
             p.setPartnerName(iAmHolder ? p.getPartnerFullName() : p.getHolderName());
+        }
+    }
+
+    /** Gói PT: lịch cố định + lý do buổi lệch + vạch tuần cho dải chấm + số ngày còn lại. */
+    private void fillPackageDetail(MyBookingView view, MyPtPackageView selected,
+            List<MyPtSessionRow> sessions, LocalDate today) throws SQLException {
+        // B1: tuần mẫu T2–T6 + các buổi lệch
+        applyWeekTemplate(view, sessions);
+
+        // B2: buổi lệch → hỏi SessionMoveLogs vì sao lệch (chỉ khi có buổi lệch)
+        if (!view.getOffPattern().isEmpty()) {
+            Map<Integer, SessionMoveInfo> moves = bookingDAO.findMoves(selected.getSubscriptionId());
+            for (MyPtSessionRow row : view.getOffPattern()) {
+                row.setMoveNote(moveNote(moves.get(row.getSessionId())));
+            }
+        }
+
+        // B3: vạch ngăn tuần + số ngày tới hết hạn
+        markWeeks(sessions);
+        view.setDaysLeft(Math.max(0, ChronoUnit.DAYS.between(today, selected.getEndDate())));
+    }
+
+    /** Giờ mở cửa (P-19) + hotline — chỉ đọc khi CTA bảo khách ra quầy. */
+    private void fillCounterInfo(MyBookingView view) throws SQLException {
+        String cta = view.getCtaKind();
+        boolean atCounter = CTA_RENEW_AT_COUNTER.equals(cta) || CTA_REJOIN.equals(cta) || CTA_PT_PACKAGE.equals(cta);
+        if (!atCounter) {
+            return;
+        }
+        view.setHotline(AppConstants.GYM_HOTLINE);
+        view.setHotlineTel(AppConstants.GYM_HOTLINE_TEL);
+        try {
+            view.setOpeningHours(systemConfigService.getString(SystemConfigService.OPENING_HOURS).replace("-", " – "));
+        } catch (IllegalStateException e) {
+            view.setOpeningHours(null);   // thiếu P-19 thì chỉ không hiện giờ mở cửa, không làm hỏng màn
         }
     }
 
@@ -124,7 +207,7 @@ public class MyBookingService {
     }
 
     /**
-     * Đếm các chip lọc + tìm "Buổi tới" + đếm số buổi đã qua.
+     * Đếm theo trạng thái + tìm "Buổi tới" và buổi ngay sau nó + đếm số buổi đã qua.
      * Tổng = Đã check-in + Vắng + Đã hủy + Còn lại + Đang cập nhật (unit test kiểm tra).
      */
     static void countSessions(MyBookingView view, List<MyPtSessionRow> sessions, LocalDateTime now) {
@@ -140,22 +223,265 @@ public class MyBookingService {
         }
         view.setTotalCount(sessions.size());
 
-        // B2: buổi "còn lại" đầu tiên (hôm nay / sắp tới / cần chú ý); danh sách đã xếp theo ngày giờ
-        //     → thẻ "Buổi tới" + số ngày còn lại (0 = hôm nay, 1 = ngày mai)
+        // B2: 2 buổi Scheduled đầu tiên chưa kết thúc (danh sách đã xếp theo ngày giờ)
+        //     → thẻ "Buổi tới" + dòng "Sau đó"; số ngày còn lại (0 = hôm nay, 1 = ngày mai)
         for (MyPtSessionRow s : sessions) {
-            if (s.getStatus().equals("Scheduled") && MyPtSessionService.isNotEnded(s, now)) {
+            if (!s.getStatus().equals("Scheduled") || !MyPtSessionService.isNotEnded(s, now)) {
+                continue;
+            }
+            if (view.getFocusSession() == null) {
                 view.setFocusSessionId(s.getSessionId());
                 view.setFocusSession(s);
                 view.setDaysUntilFocus(ChronoUnit.DAYS.between(now.toLocalDate(), s.getSlotDate()));
+            } else {
+                view.setNextAfterFocus(s);
                 break;
             }
         }
 
-        // B3: số buổi đã kết thúc (đã qua giờ) → dòng gập "▸ N buổi đã qua"
+        // B3: số buổi đã kết thúc (đã qua giờ)
         for (MyPtSessionRow s : sessions) {
             if (!MyPtSessionService.isNotEnded(s, now)) {
                 view.setEndedCount(view.getEndedCount() + 1);
             }
         }
+    }
+
+    /**
+     * Lịch cố định dạng "tuần mẫu" T2 → T6 (BR-35: buổi gói PT chỉ rơi vào T2–T6).
+     *   Giờ cố định của 1 thứ = giờ bắt đầu có NHIỀU buổi nhất ở thứ đó, nếu chiếm ≥ 50% số buổi của thứ đó
+     *   (hòa → giờ sớm hơn). Giờ chính = giờ cố định của nhiều thứ nhất; thứ cố định nhưng khác giờ chính → "odd".
+     *   Buổi không khớp giờ cố định của thứ nó (kể cả T7/CN do đổi buổi) → "Buổi khác giờ".
+     * Ví dụ: T2, T3, T6 lúc 18:00 + T4 lúc 07:00 → 4 ô cố định (T4 là odd), T5 none.
+     */
+    static void applyWeekTemplate(MyBookingView view, List<MyPtSessionRow> sessions) {
+        // B1: đếm số buổi theo (thứ, giờ bắt đầu); nhớ giờ kết thúc của từng giờ bắt đầu
+        List<TreeMap<LocalTime, Integer>> perDay = new ArrayList<>();
+        for (int i = 0; i < 5; i++) {
+            perDay.add(new TreeMap<>());
+        }
+        Map<LocalTime, LocalTime> endOf = new HashMap<>();
+        for (MyPtSessionRow s : sessions) {
+            int day = s.getSlotDate().getDayOfWeek().getValue();   // Thứ 2 = 1 … Chủ nhật = 7
+            if (day <= 5) {
+                perDay.get(day - 1).merge(s.getStartTime(), 1, Integer::sum);
+                endOf.putIfAbsent(s.getStartTime(), s.getEndTime());
+            }
+        }
+
+        // B2: giờ cố định của từng thứ
+        LocalTime[] fixed = new LocalTime[5];
+        int[] fixedCount = new int[5];
+        boolean[] hasSessions = new boolean[5];
+        for (int d = 0; d < 5; d++) {
+            int total = 0;
+            LocalTime best = null;
+            int bestCount = 0;
+            for (Map.Entry<LocalTime, Integer> e : perDay.get(d).entrySet()) {   // TreeMap: giờ tăng dần → hòa giữ giờ sớm
+                total += e.getValue();
+                if (e.getValue() > bestCount) {
+                    best = e.getKey();
+                    bestCount = e.getValue();
+                }
+            }
+            hasSessions[d] = total > 0;
+            boolean majority = bestCount * 2 >= total && (bestCount >= 2 || total == 1);
+            if (hasSessions[d] && majority) {
+                fixed[d] = best;
+                fixedCount[d] = bestCount;
+            }
+        }
+
+        // B3: giờ chính = giờ cố định của nhiều thứ nhất (hòa → giờ sớm hơn)
+        TreeMap<LocalTime, Integer> daysPerTime = new TreeMap<>();
+        for (LocalTime time : fixed) {
+            if (time != null) {
+                daysPerTime.merge(time, 1, Integer::sum);
+            }
+        }
+        LocalTime main = null;
+        int mainDays = 0;
+        for (Map.Entry<LocalTime, Integer> e : daysPerTime.entrySet()) {
+            if (e.getValue() > mainDays) {
+                main = e.getKey();
+                mainDays = e.getValue();
+            }
+        }
+
+        // B4: 5 ô
+        List<WeekdaySlot> template = new ArrayList<>();
+        for (int d = 0; d < 5; d++) {
+            String kind;
+            if (fixed[d] != null) {
+                kind = fixed[d].equals(main) ? WeekdaySlot.KIND_MAIN : WeekdaySlot.KIND_ODD;
+            } else {
+                kind = hasSessions[d] ? WeekdaySlot.KIND_MIXED : WeekdaySlot.KIND_NONE;
+            }
+            template.add(new WeekdaySlot(WEEKDAY_SHORT[d], kind, fixed[d],
+                    fixed[d] == null ? null : endOf.get(fixed[d]), fixedCount[d]));
+        }
+        view.setWeekTemplate(template);
+        view.setTemplateSummary(summarize(fixed));
+
+        // B5: buổi khớp lịch → đếm; buổi lệch → "Buổi khác giờ"
+        int onPattern = 0;
+        List<MyPtSessionRow> off = new ArrayList<>();
+        for (MyPtSessionRow s : sessions) {
+            int day = s.getSlotDate().getDayOfWeek().getValue();
+            boolean match = day <= 5 && s.getStartTime().equals(fixed[day - 1]);
+            if (match) {
+                onPattern++;
+            } else {
+                off.add(s);
+            }
+        }
+        view.setTemplateCount(onPattern);
+        view.setOffPattern(off);
+    }
+
+    /**
+     * Câu tóm tắt lịch cố định: gom các thứ cùng giờ, theo thứ tự thứ xuất hiện.
+     *   cả 5 thứ cùng giờ → "T2 – T6 lúc 18:00"
+     *   khác nhau → "T2 · T3 · T6 lúc 18:00, T4 lúc 07:00"
+     *   không thứ nào cố định → null
+     */
+    static String summarize(LocalTime[] fixed) {
+        // B1: giờ → các thứ (giữ thứ tự xuất hiện)
+        Map<LocalTime, List<String>> daysByTime = new LinkedHashMap<>();
+        for (int d = 0; d < fixed.length; d++) {
+            if (fixed[d] != null) {
+                daysByTime.computeIfAbsent(fixed[d], k -> new ArrayList<>()).add(WEEKDAY_SHORT[d]);
+            }
+        }
+        if (daysByTime.isEmpty()) {
+            return null;
+        }
+
+        // B2: ghép từng cụm
+        List<String> parts = new ArrayList<>();
+        for (Map.Entry<LocalTime, List<String>> e : daysByTime.entrySet()) {
+            String days = e.getValue().size() == 5 ? "T2 – T6" : String.join(" · ", e.getValue());
+            parts.add(days + " lúc " + e.getKey().format(HH_MM));
+        }
+        return String.join(", ", parts);
+    }
+
+    /** Vì sao 1 buổi lệch lịch cố định. Không có log dời → giờ khác ngay từ lúc xếp lịch (BR-41). */
+    static String moveNote(SessionMoveInfo move) {
+        if (move == null) {
+            return "Xếp giờ khác từ đầu vì khung cố định ngày đó đã kín";
+        }
+        String who = switch (move.getMoveType()) {
+            case "CustomerSwap" -> "Bạn đổi buổi";
+            case "PtOnBehalfSwap" -> "PT đổi giúp bạn";
+            case "PtReschedule" -> "PT dời lịch";
+            case "PtTransfer" -> "Chuyển PT dạy thay";
+            default -> "Đã dời buổi";
+        };
+        int day = move.getOriginalDate().getDayOfWeek().getValue();
+        return who + " · thay buổi " + WEEKDAY_SHORT[day - 1] + " " + move.getOriginalDate().format(DD_MM);
+    }
+
+    /** Đánh dấu buổi đầu tiên của mỗi tuần (trừ tuần đầu) → dải chấm vẽ vạch ngăn tuần. */
+    static void markWeeks(List<MyPtSessionRow> sessions) {
+        LocalDate previousWeek = null;
+        for (MyPtSessionRow s : sessions) {
+            LocalDate week = s.getSlotDate().with(DayOfWeek.MONDAY);
+            s.setFirstOfWeek(previousWeek != null && !week.equals(previousWeek));
+            previousWeek = week;
+        }
+    }
+
+    /**
+     * "Cần để ý": buổi sắp tới có cảnh báo (trước), rồi buổi Vắng / Đã hủy (mới nhất trước).
+     * Buổi check-in bình thường không vào đây.
+     */
+    static List<MyPtSessionRow> buildWatchList(List<MyPtSessionRow> sessions) {
+        List<MyPtSessionRow> warn = new ArrayList<>();
+        List<MyPtSessionRow> problems = new ArrayList<>();
+        for (MyPtSessionRow s : sessions) {
+            String key = s.getStatusKey();
+            if (MyPtSessionService.KEY_WARN.equals(key)) {
+                warn.add(s);
+            } else if (MyPtSessionService.KEY_MISSED.equals(key) || MyPtSessionService.KEY_CANCELLED.equals(key)) {
+                problems.add(0, s);   // danh sách vào theo ngày tăng → chèn đầu để mới nhất lên trước
+            }
+        }
+        warn.addAll(problems);
+        return warn;
+    }
+
+    /**
+     * Buổi lẻ: buổi chưa kết thúc trước (gần nhất trước), rồi buổi đã qua (mới nhất trước).
+     * Buổi đã qua gần nhất với mỗi PT (không bị hủy) → rebook = "Đặt lại với PT này".
+     */
+    static List<MyPtSessionRow> orderSingles(List<MyPtSessionRow> singles, LocalDateTime now) {
+        // B1: tách sắp tới / đã qua
+        List<MyPtSessionRow> upcoming = new ArrayList<>();
+        List<MyPtSessionRow> past = new ArrayList<>();
+        for (MyPtSessionRow s : singles) {
+            if (MyPtSessionService.isNotEnded(s, now)) {
+                upcoming.add(s);
+            } else {
+                past.add(0, s);
+            }
+        }
+
+        // B2: mỗi PT chỉ 1 nút "Đặt lại" (ở buổi gần nhất)
+        Set<Integer> rebookedPts = new HashSet<>();
+        for (MyPtSessionRow s : past) {
+            boolean usable = !"Cancelled".equals(s.getStatus());
+            s.setRebook(usable && rebookedPts.add(s.getPtEmployeeId()));
+        }
+        upcoming.addAll(past);
+        return upcoming;
+    }
+
+    /** Số buổi lẻ (không tính buổi bị hủy) trong 30 ngày gần nhất tính tới hôm nay. */
+    static int countRecentSingles(List<MyPtSessionRow> singles, LocalDate today) {
+        LocalDate from = today.minusDays(SINGLE_SUGGEST_DAYS);
+        int count = 0;
+        for (MyPtSessionRow s : singles) {
+            boolean inWindow = !s.getSlotDate().isBefore(from) && !s.getSlotDate().isAfter(today);
+            if (inWindow && !"Cancelled".equals(s.getStatus())) {
+                count++;
+            }
+        }
+        return count;
+    }
+
+    /**
+     * Chọn 1 CTA theo độ ưu tiên (null = không hiện gì):
+     *   1. buổi sắp tới thiếu quyền vào gym (không tính ngày phòng nghỉ) → mua gói thành viên online
+     *   2. đang xem buổi lẻ: ≥ 3 buổi lẻ trong 30 ngày → gợi ý gói PT (tại quầy)
+     *   3. gói PT đã kết thúc → đăng ký lại tại quầy
+     *   4. gói PT đang tập còn ≤ 3 buổi hoặc ≤ 14 ngày → gia hạn tại quầy (CBR-48: gói PT không bán online)
+     * Gọi sau countSessions và sau khi đã tính daysLeft.
+     */
+    static String chooseCta(MyBookingView view, List<MyPtSessionRow> sessions) {
+        // B1: thiếu quyền vào gym ở buổi sắp tới
+        for (MyPtSessionRow s : sessions) {
+            boolean warn = MyPtSessionService.KEY_WARN.equals(s.getStatusKey());
+            if (warn && !MyPtSessionService.CLOSED_DAY_WARNING.equals(s.getExplanation())) {
+                return CTA_BUY_MEMBERSHIP;
+            }
+        }
+
+        // B2: buổi lẻ
+        if (view.isSingleSelected()) {
+            return view.getRecentSingleCount() >= SINGLE_SUGGEST_COUNT ? CTA_PT_PACKAGE : null;
+        }
+
+        // B3 + B4: gói PT
+        MyPtPackageView p = view.getSelectedPackage();
+        if (p == null) {
+            return null;
+        }
+        if (!p.isActive()) {
+            return CTA_REJOIN;
+        }
+        boolean fewSessions = view.getRemainingCount() <= RENEW_SESSIONS_LEFT;
+        boolean fewDays = view.getDaysLeft() <= RENEW_DAYS_LEFT;
+        return fewSessions || fewDays ? CTA_RENEW_AT_COUNTER : null;
     }
 }
