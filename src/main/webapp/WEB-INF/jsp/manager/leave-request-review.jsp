@@ -11,7 +11,7 @@
   <%@ include file="/WEB-INF/jsp/common/head.jspf" %>
   <title>Chi tiết đơn nghỉ phép #${item.leaveRequest.leaveRequestId} · Super Gym</title>
   <link rel="stylesheet" href="${pageContext.request.contextPath}/css/pages/auth/account-settings.css">
-  <link rel="stylesheet" href="${pageContext.request.contextPath}/css/pages/manager/leave-requests.css?v=20261021-readable2">
+  <link rel="stylesheet" href="${pageContext.request.contextPath}/css/pages/manager/leave-requests.css?v=20261022-no-handler">
   <link rel="stylesheet" href="${pageContext.request.contextPath}/css/pages/auth/notification-bell.css">
   <script src="${pageContext.request.contextPath}/js/pages/auth/notification-bell.js" defer></script>
   <script src="${pageContext.request.contextPath}/js/pages/manager/leave-request-review.js?v=20261021-readable2" defer></script>
@@ -224,13 +224,8 @@
               </div>
 
               <p class="leave-help">Tạm tính nhân viên đang làm việc làm cả hai ca. Chưa có lịch phân ca và giờ ca riêng.</p>
-              <c:url var="overlapUrl" value="/manager/leave-requests">
-                <c:param name="status" value="All" />
-                <c:param name="fromDate" value="${item.leaveRequest.fromDate}" />
-                <c:param name="toDate" value="${item.leaveRequest.toDate}" />
-              </c:url>
               <p class="leave-help">Đơn khác cùng khoảng ngày/ca: ${empty item.overlappingCounts['Approved'] ? 0 : item.overlappingCounts['Approved']} đã duyệt · ${empty item.overlappingCounts['Pending'] ? 0 : item.overlappingCounts['Pending']} chờ xử lý.
-                <a href="<c:out value='${overlapUrl}' />">Xem đơn trong khoảng ngày</a>. Đơn chờ chưa được tính là nghỉ chính thức.
+                Đơn chờ chưa được tính là nghỉ chính thức.
               </p>
               <div class="review-check-list">
                 <c:forEach var="c" items="${item.checks}">
@@ -289,7 +284,7 @@
 
           </div>
 
-          <%-- CỘT PHẢI (40%): Quy trình duyệt & Người phụ trách --%>
+          <%-- CỘT PHẢI: Tiến trình xử lý từ lịch sử của đơn. --%>
           <div class="review-col-right">
 
             <%-- Card: Quy trình duyệt (Timeline) --%>
@@ -338,39 +333,6 @@
                     </c:if>
                   </div>
                 </c:forEach>
-              </div>
-            </div>
-
-            <%-- Card: Người duyệt phụ trách --%>
-            <div class="review-card">
-              <div class="review-card-head">
-                <h3 class="review-card-title">
-                  <i class="fa-solid fa-user-shield" aria-hidden="true"></i> ${item.leaveRequest.pending ? 'Người phụ trách' : 'Người đã xử lý'}
-                </h3>
-              </div>
-
-              <div style="display:flex;align-items:center;justify-content:space-between">
-                <div>
-                  <div class="leave-detail-handler">
-                    <c:choose>
-                      <c:when test="${item.leaveRequest.pending}">
-                        <c:choose>
-                          <c:when test="${not empty item.assignedToName}"><c:out value="${item.assignedToName}" /></c:when>
-                          <c:otherwise><span class="leave-text-muted">Chưa phân công</span></c:otherwise>
-                        </c:choose>
-                      </c:when>
-                      <c:when test="${not empty item.reviewerName}"><c:out value="${item.reviewerName}" /></c:when>
-                      <c:when test="${item.autoRejected}">Hệ thống</c:when>
-                      <c:otherwise><span class="leave-text-muted">—</span></c:otherwise>
-                    </c:choose>
-                  </div>
-                </div>
-
-                <c:if test="${item.leaveRequest.pending and item.canAct}">
-                  <button type="button" class="btn btn-sm btn-ghost" onclick="openModal('modalTransferDetail')" title="Chuyển cho Manager khác">
-                    <i class="fa-solid fa-arrow-right-arrow-left"></i> Chuyển
-                  </button>
-                </c:if>
               </div>
             </div>
 

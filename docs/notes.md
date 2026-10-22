@@ -1,5 +1,13 @@
 # File notes — mâu thuẫn tài liệu & quyết định đã chốt
 
+## BF-05 — bỏ khung Người phụ trách ở chi tiết (22/10/2026, ĐÃ CHỐT)
+
+Bỏ card Người phụ trách/Người đã xử lý riêng ở cột phải và CSS chỉ dùng cho card đó. Tiến trình xử lý cùng thông tin kết quả duyệt/từ chối vẫn có người thực hiện; thao tác chuyển người duyệt ở thanh đầu trang dùng luồng hiện có.
+
+Khi rà màn này, bỏ liên kết Xem đơn trong khoảng ngày còn truyền ngày nghỉ vào bộ lọc đã đổi sang ngày gửi. Số đơn khác trùng ngày/ca vẫn được tính theo ngày nghỉ, không đổi kiểm tra điều kiện duyệt.
+
+Kiểm chứng: package thành công, Jasper biên dịch hai JSP quản lý không lỗi. Trình duyệt mở chi tiết xác nhận cột phải chỉ còn Tiến trình xử lý, không còn card Người phụ trách hoặc liên kết lọc sai ngày. Không thêm/chạy lại test Java cho thay đổi hiển thị này và không thực hiện quyết định thật.
+
 ## BF-05 — bộ lọc ngày là ngày gửi đơn (22/10/2026, ĐÃ SỬA)
 
 User sửa rõ hai ô ngày lọc theo SubmittedAt (thời gian gửi đơn), không theo FromDate/ToDate (thời gian nghỉ). Mặc định vẫn là hôm nay. DAO dùng cùng điều kiện cho bảng theo đơn, số đếm tab và nhóm/lịch sử nhân viên: SubmittedAt >= 00:00 Từ ngày và SubmittedAt < 00:00 ngày sau Đến ngày. Đơn gửi hôm nay nhưng nghỉ tháng sau vẫn hiện; đơn gửi hôm qua nhưng nghỉ hôm nay không thuộc bộ lọc hôm nay. Giao diện ghi Gửi từ ngày và Ngày gửi để phân biệt với cột Ngày nghỉ / Ca.
