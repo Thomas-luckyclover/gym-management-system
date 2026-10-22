@@ -1,5 +1,11 @@
 # File notes — mâu thuẫn tài liệu & quyết định đã chốt
 
+## BF-05 — thu gọn thanh lọc danh sách (22/10/2026, ĐÃ CHỐT)
+
+User xem ảnh đề xuất rồi yêu cầu áp dụng. Thanh trên gồm hàng tab trạng thái và hàng tìm nhân viên/khoảng ngày gửi/Bộ lọc/Tìm; chức vụ và loại nghỉ nằm trong details mở bằng Bộ lọc, số lựa chọn hiện trên nút. Ô ngày vẫn để trống khi chưa chọn, tab và phân trang tiếp tục giữ các điều kiện đã chọn. Xóa lọc trở về trạng thái không giới hạn ngày. Giữ form GET và bộ lọc Service/DAO hiện có; không thêm nghiệp vụ mới.
+
+Kiểm chứng: Jasper biên dịch JSP không lỗi; package với test bỏ qua thành công vì thay đổi chỉ ở JSP/CSS. Trên GMS cổng 8080, ở 1280 px thanh lọc gọn hai hàng và bảng được đẩy lên. Mở Bộ lọc, chọn PT + Phép năm trả 3 đơn và hiện Bộ lọc 2; chọn ngày gửi 22/10–22/10 vẫn trả 3 đơn; đổi sang Tất cả giữ ngày/chức vụ/loại; Xóa lọc đưa các điều kiện và ngày về trống, tab Chờ duyệt hiện 7 đơn. Ở 640 px và 390 px không tràn ngang. Đã đăng xuất tài khoản test; không duyệt/từ chối đơn.
+
 ## BF-05 — chỉ giữ Duyệt đã chọn (22/10/2026, ĐÃ CHỐT)
 
 User yêu cầu bỏ nút Duyệt tất cả trên trang vì trùng thao tác checkbox đầu bảng. Giữ checkbox chọn từng đơn/chọn tất cả đơn đủ điều kiện trên trang và một nút Duyệt đã chọn; bỏ JS riêng của nút thừa. Nút duyệt chỉ bật khi có lựa chọn, vẫn hỏi xác nhận số đơn và kiểm tra lại từng đơn ở backend.

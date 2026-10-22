@@ -71,31 +71,101 @@
 
 .leave-list-page .leave-filter-nav {
   display: grid;
-  align-items: center;
+  align-items: end;
   gap: var(--space-3);
-  grid-template-columns: minmax(0, 1fr) minmax(0, 1fr) minmax(0, 2fr) auto auto;
+  grid-template-columns: minmax(0, 1fr) minmax(0, 1.2fr) auto auto auto;
 }
 
-/* Hai ngày tùy chọn lọc theo thời gian nghỉ, dùng chung nút Tìm với các ô bên dưới. */
+.leave-list-page .leave-search-field {
+  position: relative;
+  min-width: 0;
+}
+
+.leave-list-page .leave-search-field i {
+  position: absolute;
+  left: var(--space-3);
+  top: 50%;
+  transform: translateY(-50%);
+  color: var(--color-text-soft);
+  pointer-events: none;
+}
+
+/* Khoảng ngày gửi luôn trống khi chưa chọn để đơn cũ không bị ẩn. */
 .leave-list-page .leave-date-filters {
-  grid-column: 1 / -1;
-  display: flex;
-  flex-wrap: wrap;
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
   gap: var(--space-3);
+  min-width: 0;
 }
 
 .leave-list-page .leave-date-field {
   display: flex;
   flex-direction: column;
   gap: var(--space-1);
-  flex: 0 1 calc(var(--space-12) * 4);
   min-width: 0;
-  font-size: var(--font-size-sm);
+  font-size: var(--font-size-xs);
   color: var(--color-text-soft);
 }
 
 .leave-list-page .leave-date-field input {
   width: 100%;
+}
+
+/* details giữ hai bộ lọc phụ trong cùng form GET, không cần JavaScript. */
+.leave-list-page .leave-more-filters {
+  position: relative;
+}
+
+.leave-list-page .leave-more-filters summary {
+  display: inline-flex;
+  align-items: center;
+  gap: var(--space-2);
+  min-height: var(--control-height-md);
+  white-space: nowrap;
+  cursor: pointer;
+  list-style: none;
+}
+
+.leave-list-page .leave-more-filters summary::-webkit-details-marker {
+  display: none;
+}
+
+.leave-list-page .leave-more-filters summary:focus-visible {
+  outline: var(--border-width-thick) solid var(--color-primary);
+  outline-offset: var(--space-1);
+}
+
+.leave-list-page .leave-filter-count {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  min-width: var(--space-5);
+  height: var(--space-5);
+  padding: var(--space-0) var(--space-1);
+  border-radius: var(--radius-pill);
+  background: var(--color-primary-tint);
+  color: var(--color-primary-ink);
+}
+
+.leave-list-page .leave-filter-popover {
+  position: absolute;
+  z-index: 5;
+  top: calc(100% + var(--space-2));
+  right: var(--space-0);
+  display: grid;
+  gap: var(--space-2);
+  width: calc(var(--space-12) * 3);
+  padding: var(--space-4);
+  background: var(--color-surface);
+  border: var(--border-width) solid var(--color-border-strong);
+  border-radius: var(--radius-lg);
+  box-shadow: var(--shadow-pop);
+  color: var(--color-text-soft);
+  font-size: var(--font-size-sm);
+}
+
+.leave-list-page .leave-filter-popover label:not(:first-child) {
+  margin-top: var(--space-1);
 }
 
 .leave-list-page .leave-panel {
@@ -243,6 +313,10 @@
   color: var(--color-text);
   font-family: var(--font-body);
   font-size: var(--font-size-sm);
+}
+
+.leave-list-page .leave-search-field .filter-input-search {
+  padding-left: var(--space-8);
 }
 
 .leave-list-page .leave-list-caption {
@@ -404,11 +478,26 @@
 
 @media (max-width: 900px) {
   .leave-list-page .leave-filter-nav {
-    grid-template-columns: repeat(2, minmax(0, 1fr));
+    grid-template-columns: minmax(0, 1fr) auto auto auto;
   }
 
-  .leave-list-page .leave-filter-nav .filter-input-search {
+  .leave-list-page .leave-search-field {
     grid-column: 1 / -1;
+  }
+}
+
+@media (max-width: 640px) {
+  .leave-list-page .leave-filter-nav {
+    grid-template-columns: minmax(0, 1fr) auto auto;
+  }
+
+  .leave-list-page .leave-date-filters {
+    grid-column: 1 / -1;
+  }
+
+  .leave-list-page .leave-filter-popover {
+    right: auto;
+    left: var(--space-0);
   }
 }
 

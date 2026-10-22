@@ -11,7 +11,7 @@
   <%@ include file="/WEB-INF/jsp/common/head.jspf" %>
   <title>Quản lý đơn nghỉ phép · Super Gym</title>
   <link rel="stylesheet" href="${pageContext.request.contextPath}/css/pages/auth/account-settings.css">
-  <link rel="stylesheet" href="${pageContext.request.contextPath}/css/pages/manager/leave-request-list.css?v=20261022-compact">
+  <link rel="stylesheet" href="${pageContext.request.contextPath}/css/pages/manager/leave-request-list.css?v=20261022-filters">
   <link rel="stylesheet" href="${pageContext.request.contextPath}/css/pages/auth/notification-bell.css">
   <script src="${pageContext.request.contextPath}/js/pages/auth/notification-bell.js" defer></script>
   <script src="${pageContext.request.contextPath}/js/pages/manager/leave-request-list.js?v=20261022-selected" defer></script>
@@ -75,6 +75,14 @@
           <%-- Bộ lọc GET: ngày gửi đơn, chức vụ, loại nghỉ và tên/mã nhân viên. --%>
           <form action="${pageContext.request.contextPath}/manager/leave-requests" method="get" class="leave-filter-nav">
             <input type="hidden" name="status" value="<c:out value='${statusFilter}' />">
+
+            <div class="leave-search-field">
+              <i class="fa-solid fa-magnifying-glass" aria-hidden="true"></i>
+              <input type="search" name="keyword" class="filter-input-search" maxlength="100"
+                     value="<c:out value='${keyword}' />"
+                     aria-label="Tìm theo tên hoặc mã nhân viên" placeholder="Tên hoặc mã nhân viên">
+            </div>
+
             <div class="leave-date-filters" role="group" aria-label="Lọc theo thời gian gửi đơn">
               <label class="leave-date-field" for="fromDate">
                 <span>Gửi từ ngày</span>
@@ -88,26 +96,30 @@
               </label>
             </div>
 
-            <select name="position" class="filter-select" aria-label="Lọc theo chức vụ">
-              <option value="">Tất cả chức vụ</option>
-              <option value="PT" ${positionFilter == 'PT' ? 'selected' : ''}>PT</option>
-              <option value="Receptionist" ${positionFilter == 'Receptionist' ? 'selected' : ''}>Lễ tân</option>
-            </select>
+            <details class="leave-more-filters">
+              <summary class="btn btn-sm btn-outline">
+                <i class="fa-solid fa-sliders" aria-hidden="true"></i> Bộ lọc
+                <c:if test="${not empty positionFilter or not empty leaveTypeFilter}">
+                  <span class="leave-filter-count"><c:out value="${(not empty positionFilter ? 1 : 0) + (not empty leaveTypeFilter ? 1 : 0)}" /></span>
+                </c:if>
+              </summary>
+              <div class="leave-filter-popover">
+                <label for="leave-position">Chức vụ</label>
+                <select id="leave-position" name="position" class="filter-select">
+                  <option value="">Tất cả chức vụ</option>
+                  <option value="PT" ${positionFilter == 'PT' ? 'selected' : ''}>PT</option>
+                  <option value="Receptionist" ${positionFilter == 'Receptionist' ? 'selected' : ''}>Lễ tân</option>
+                </select>
 
-            <select name="leaveType" class="filter-select" aria-label="Lọc theo loại nghỉ">
-              <option value="">Tất cả loại nghỉ</option>
-              <option value="Annual" ${leaveTypeFilter == 'Annual' ? 'selected' : ''}>Phép năm</option>
-              <option value="Sick" ${leaveTypeFilter == 'Sick' ? 'selected' : ''}>Nghỉ ốm</option>
-              <option value="Unpaid" ${leaveTypeFilter == 'Unpaid' ? 'selected' : ''}>Không lương</option>
-            </select>
-
-            <input type="search"
-                   name="keyword"
-                   class="filter-input-search"
-                   maxlength="100"
-                   value="<c:out value='${keyword}' />"
-                   aria-label="Tìm theo tên hoặc mã nhân viên"
-                   placeholder="Tên hoặc mã nhân viên">
+                <label for="leave-type">Loại nghỉ</label>
+                <select id="leave-type" name="leaveType" class="filter-select">
+                  <option value="">Tất cả loại nghỉ</option>
+                  <option value="Annual" ${leaveTypeFilter == 'Annual' ? 'selected' : ''}>Phép năm</option>
+                  <option value="Sick" ${leaveTypeFilter == 'Sick' ? 'selected' : ''}>Nghỉ ốm</option>
+                  <option value="Unpaid" ${leaveTypeFilter == 'Unpaid' ? 'selected' : ''}>Không lương</option>
+                </select>
+              </div>
+            </details>
 
             <button class="btn btn-sm btn-primary" type="submit">
               <i class="fa-solid fa-magnifying-glass" aria-hidden="true"></i> Tìm
