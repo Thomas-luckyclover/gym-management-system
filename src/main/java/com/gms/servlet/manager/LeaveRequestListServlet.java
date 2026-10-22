@@ -7,7 +7,6 @@ import com.gms.dto.LeaveRequestItemView;
 import com.gms.dto.PageResult;
 import com.gms.dto.ServiceResult;
 import com.gms.service.LeaveRequestService;
-import com.gms.util.DateTimeUtil;
 import com.gms.util.PaginationUtil;
 import com.gms.util.RequestUtil;
 import jakarta.servlet.ServletException;
@@ -29,8 +28,16 @@ public class LeaveRequestListServlet extends HttpServlet {
 
     private static final String VIEW_NAME = "manager/leave-request-list";
 
-    private final LeaveRequestService leaveRequestService
-            = new LeaveRequestService();
+    private final LeaveRequestService leaveRequestService;
+
+    public LeaveRequestListServlet() {
+        this(new LeaveRequestService());
+    }
+
+    /** Truyền Service giả để kiểm tra bộ lọc mà không cần truy vấn DB thật. */
+    LeaveRequestListServlet(LeaveRequestService leaveRequestService) {
+        this.leaveRequestService = leaveRequestService;
+    }
 
     /**
      * Tab Tất cả hiện nhóm nhân viên; các tab trạng thái hiện từng đơn.
@@ -53,12 +60,7 @@ public class LeaveRequestListServlet extends HttpServlet {
         String leaveType = RequestUtil.getTrimmedParam(request, "leaveType");
         String fromDate = RequestUtil.getTrimmedParam(request, "fromDate");
         String toDate = RequestUtil.getTrimmedParam(request, "toDate");
-        // Lần mở đầu chọn hôm nay; tham số rỗng là người dùng chủ động xóa ngày.
-        if (fromDate == null && toDate == null) {
-            String today = DateTimeUtil.today().toString();
-            fromDate = today;
-            toDate = today;
-        }
+        // Chỉ lọc ngày gửi khi người dùng chọn, tránh bỏ sót đơn từ ngày trước.
         int page = PaginationUtil.getPageNumber(request);
         int pageSize = PaginationUtil.getPageSize(request);
 

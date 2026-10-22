@@ -1,5 +1,11 @@
 # File notes — mâu thuẫn tài liệu & quyết định đã chốt
 
+## BF-05 — không tự ẩn đơn cũ bằng bộ lọc hôm nay (22/10/2026, ĐÃ CHỐT)
+
+User xác nhận đơn cũ không được bị ẩn khi qua ngày. Bỏ mặc định ngày gửi hôm nay ở danh sách, thay thế quyết định mặc định hai ô ngày trước đó. Mở Chờ duyệt hiện tất cả đơn chưa xử lý qua các ngày; các tab khác cũng không tự giới hạn ngày gửi. Chỉ áp dụng khoảng ngày khi người dùng chủ động chọn; Xóa lọc trở về không giới hạn ngày. Chuyển tab và phân trang vẫn giữ bộ lọc đã chọn. Thứ tự ưu tiên sắp nghỉ/FIFO, trạng thái và điều kiện duyệt không đổi.
+
+Kiểm chứng: package chạy 234 test không lỗi, gồm 8 trường hợp hồi quy mở tab không tự giới hạn ngày, chọn khoảng ngày và xóa ngày. Đã nạp lại riêng GMS trên Tomcat và đăng nhập tài khoản test: mặc định hai ô ngày trống, chọn 22–22 có 7 đơn, Xóa lọc trở về không giới hạn ngày. Đã đăng xuất; không ghi quyết định duyệt/từ chối.
+
 User yêu cầu bỏ dòng tổng số đơn phù hợp và khoảng Ngày gửi ở đầu bảng danh sách; đã bỏ hai dòng, để thao tác duyệt nhiều gọn bên phải. Không tạo thanh đệm rỗng ở tab đã xử lý hoặc danh sách trống.
 
 User yêu cầu bỏ Chuyển người duyệt ở chi tiết: bỏ nút, hộp chuyển giao và truy vấn danh sách người tiếp nhận không còn dùng. Thanh tác vụ chi tiết chỉ còn Duyệt/Từ chối. Lịch sử cũ vẫn hiển thị các mốc đã ghi trước đây.
