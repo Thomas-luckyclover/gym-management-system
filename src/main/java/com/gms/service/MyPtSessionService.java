@@ -44,6 +44,10 @@ public class MyPtSessionService {
     static final String KEY_MISSED = "missed";
     static final String KEY_CANCELLED = "cancelled";
 
+    /** Cảnh báo "phòng nghỉ" — màn Gói của tôi so câu này để phân biệt với cảnh báo thiếu quyền vào gym. */
+    static final String CLOSED_DAY_WARNING =
+            "Phòng tập nghỉ ngày này. PT sẽ liên hệ để dời buổi sang ngày khác, buổi không bị trừ.";
+
     private static final String[] DAY_NAMES = {"Thứ 2", "Thứ 3", "Thứ 4", "Thứ 5", "Thứ 6", "Thứ 7", "Chủ nhật"};
 
     /** 3 khung giờ = 3 hàng của thời khóa biểu (xếp theo giờ BẮT ĐẦU, xem bandOf). */
@@ -220,7 +224,7 @@ public class MyPtSessionService {
             String warning = null;
             if (isNotEnded(row, now)) {
                 warning = closedDays.contains(row.getSlotDate())
-                        ? "Phòng tập nghỉ ngày này. PT sẽ liên hệ để dời buổi sang ngày khác, buổi không bị trừ."
+                        ? CLOSED_DAY_WARNING
                         : buildGymWarning(row, myCustomerId);
             }
 
