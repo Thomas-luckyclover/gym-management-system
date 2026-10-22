@@ -261,23 +261,6 @@
                                 </c:otherwise>
                             </c:choose>
                         </c:otherwise>
-                                </c:choose>
-                            </div>
-                            <div class="pt-summary-group pt-summary-pending">
-                                <div class="pt-summary-group-heading">
-                                    <div><h3>Chờ hệ thống chốt</h3><p>Buổi đã kết thúc, đang chờ kết quả</p></div>
-                                    <p class="pt-summary-count"><strong><c:out value="${commissionSummary.pendingSessionCount}" /></strong> buổi</p>
-                                </div>
-                                <p class="pt-summary-money-line">Hoa hồng đang chờ <strong><c:out value="${gms:formatMoney(commissionSummary.pendingCommissionAmount)}" /></strong></p>
-                            </div>
-                            <div class="pt-summary-group pt-summary-projected">
-                                <div class="pt-summary-group-heading">
-                                    <div><h3>Dự kiến</h3><p>Buổi chưa kết thúc trong tháng</p></div>
-                                    <p class="pt-summary-count"><strong><c:out value="${commissionSummary.projectedSessionCount}" /></strong> buổi</p>
-                                </div>
-                                <p class="pt-summary-money-line">Hoa hồng dự kiến <strong><c:out value="${gms:formatMoney(commissionSummary.projectedCommissionAmount)}" /></strong></p>
-                            </div>
-                        </c:otherwise>
                     </c:choose>
                 </section>
 
