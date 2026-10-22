@@ -373,6 +373,18 @@ class CheckInServiceTest {
         assertEquals("Phạm Thu Trang", page.getItems().get(0).getFullName());
     }
 
+    @Test
+    @DisplayName("Tìm kiếm khách hàng theo 4 số cuối số điện thoại trả về đúng khách hàng")
+    void searchCustomersPage_returnsCustomerByPhoneSuffix() {
+        // KH-1003 có phone là "0901234503" -> 4 số cuối là "4503"
+        PageResult<CustomerSearchItem> page = checkInService.searchCustomersPage("4503", 1, 10);
+        assertNotNull(page);
+        assertEquals(1, page.getTotalItems());
+        assertEquals(1, page.getItems().size());
+        assertEquals("Phạm Thu Trang", page.getItems().get(0).getFullName());
+        assertEquals("0901234503", page.getItems().get(0).getPhone());
+    }
+
     // ===== FAKE DAOs =====
 
     private static class FakeCheckInDAO extends CheckInDAO {
@@ -457,15 +469,23 @@ class CheckInServiceTest {
 
         @Override
         public long countCustomersByKeyword(String keyword) {
+            boolean isPhoneSuffix = keyword != null && keyword.trim().matches("\\d{4}");
             return customers.values().stream()
-                    .filter(c -> c.fullName.toLowerCase().contains(keyword.toLowerCase()))
+                    .distinct()
+                    .filter(c -> isPhoneSuffix
+                            ? (c.phone != null && c.phone.endsWith(keyword.trim()))
+                            : (c.fullName != null && c.fullName.toLowerCase().contains(keyword.toLowerCase())))
                     .count();
         }
 
         @Override
         public List<CustomerSearchItem> searchCustomersByKeyword(String keyword, int pageNumber, int pageSize) {
+            boolean isPhoneSuffix = keyword != null && keyword.trim().matches("\\d{4}");
             return customers.values().stream()
-                    .filter(c -> c.fullName.toLowerCase().contains(keyword.toLowerCase()))
+                    .distinct()
+                    .filter(c -> isPhoneSuffix
+                            ? (c.phone != null && c.phone.endsWith(keyword.trim()))
+                            : (c.fullName != null && c.fullName.toLowerCase().contains(keyword.toLowerCase())))
                     .skip((long) Math.max(0, pageNumber - 1) * pageSize)
                     .limit(pageSize)
                     .map(c -> {
