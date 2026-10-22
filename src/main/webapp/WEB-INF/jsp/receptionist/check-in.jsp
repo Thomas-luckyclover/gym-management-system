@@ -59,9 +59,7 @@
                                 không cần đăng nhập.</p>
                             </div>
                           </div>
-                          <%-- action: cho bt du lieu gui den url nao khi submit, khi bam submit se gui "q" len server
-                            voi method GET, duong dan action //autocomplete="off" : tat tu dong goi y cua trinh duyet
-                            //aria-label: giup nhan biet the input cho nguoi khuyet tat --%>
+                          <%-- Form tìm kiếm hội viên theo mã khách, số điện thoại hoặc họ tên --%>
                             <form id="ciForm" action="${pageContext.request.contextPath}/receptionist/check-in"
                               method="GET" class="toolbar" novalidate>
                               <div class="search" style="flex:1;">
@@ -79,7 +77,7 @@
                             </form>
                         </section>
 
-                        <%-- Thông báo lỗi tìm kiếm danh cho khi he thong loi, loi ket noi db--%>
+                        <%-- Thông báo lỗi tra cứu (lỗi hệ thống hoặc kết nối cơ sở dữ liệu) --%>
                           <c:if test="${not empty searchError}">
                             <div class="alert-banner danger" style="margin-top:var(--space-4);">
                               <i class="fa-solid fa-circle-xmark"></i>
@@ -107,7 +105,7 @@
                                   <c:forEach var="item" items="${searchResults}">
                                     <a href="${pageContext.request.contextPath}/receptionist/check-in?q=<c:out value='${item.customerCode}' />"
                                       class="search-result-row">
-                                      <!-- click vào dòng này sẽ gửi request GET mới với query là mã KH-->
+                                      <%-- Chọn khách hàng để chuyển thẳng sang màn hình xác nhận check-in --%>
                                       <div class="sr-photo">
                                         <c:choose>
                                           <c:when test="${not empty item.checkInPhoto}">
