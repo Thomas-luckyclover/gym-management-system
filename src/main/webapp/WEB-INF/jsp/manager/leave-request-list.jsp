@@ -11,9 +11,10 @@
   <%@ include file="/WEB-INF/jsp/common/head.jspf" %>
   <title>Quản lý đơn nghỉ phép · Super Gym</title>
   <link rel="stylesheet" href="${pageContext.request.contextPath}/css/pages/auth/account-settings.css">
-  <link rel="stylesheet" href="${pageContext.request.contextPath}/css/pages/manager/leave-request-list.css?v=20261022-status-views">
+  <link rel="stylesheet" href="${pageContext.request.contextPath}/css/pages/manager/leave-request-list.css?v=20261022-row-actions">
   <link rel="stylesheet" href="${pageContext.request.contextPath}/css/pages/auth/notification-bell.css">
   <script src="${pageContext.request.contextPath}/js/pages/auth/notification-bell.js" defer></script>
+  <script src="${pageContext.request.contextPath}/js/pages/manager/leave-request-list.js?v=20261022-row-actions" defer></script>
 </head>
 
 <body class="dock theme-manager leave-list-page">
@@ -136,7 +137,7 @@
             </c:if>
             <c:choose>
               <c:when test="${employeeView}"><span>Bấm nhân viên để xem đơn</span></c:when>
-              <c:when test="${statusFilter == 'Pending'}"><span>Ưu tiên sắp nghỉ · Nộp trước xếp trước</span></c:when>
+              <c:when test="${statusFilter == 'Pending'}"><span>Bấm hàng để xem chi tiết · Ưu tiên sắp nghỉ</span></c:when>
             </c:choose>
           </div>
 

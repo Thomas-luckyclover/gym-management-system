@@ -1,5 +1,13 @@
 # File notes — mâu thuẫn tài liệu & quyết định đã chốt
 
+## BF-05 — bấm hàng mở chi tiết, xử lý ngay trên danh sách (22/10/2026, ĐÃ CHỐT)
+
+User chốt bấm phần thông tin/khoảng trống của một hàng đơn để mở chi tiết; bỏ nút Xem chi tiết. Pending có hai nút Duyệt/Từ chối cuối hàng: xác nhận trước khi duyệt, từ chối bắt buộc lý do 5–500 ký tự. Dùng data-confirm-message/data-confirm-reason-name có sẵn trong common.js; không viết thêm hệ thống hộp thoại. JS riêng chỉ mở hàng bằng click/Enter, bỏ qua nút/form và giữ focus bàn phím khi mở/đóng hộp.
+
+Form gửi CSRF, mã đơn và hành động tới LeaveRequestReviewServlet hiện có. Service vẫn kiểm tra lại trạng thái, quyền/phân công, quỹ phép, nhân sự, lịch PT và ghi transaction/audit/thông báo. Duyệt bị khóa khi chưa đạt kiểm tra hoặc không có quyền; Từ chối cần quyền xử lý. Đơn đã xử lý chỉ mở được chi tiết. Thành công quay lại tab/bộ lọc/trang đang xem bằng returnUrl, chỉ chấp nhận đường dẫn danh sách nội bộ; lỗi giữ luồng hiển thị chi tiết hiện có.
+
+Kiểm chứng: clean package chạy 213 test, không lỗi, gồm hợp đồng POST, CSRF, phiên đăng nhập, giữ lý do, quay lại bộ lọc và chặn returnUrl ngoài danh sách. Jasper biên dịch hai JSP quản lý/fragment không lỗi. Trình duyệt kiểm tra click/Enter mở hàng, hai nút không điều hướng nhầm, xác nhận, lý do bắt buộc, nút duyệt bị khóa, Tab/Escape/focus và thao tác trong nhóm nhân viên. POST trên bản xem thử chỉ in dữ liệu form, không gọi Service ghi DB; nhận đúng action/id/CSRF/lý do/returnUrl. Không duyệt/từ chối đơn thật hoặc redeploy Tomcat chính.
+
 ## BF-05 — chỉ nhóm nhân viên ở tab Tất cả (22/10/2026, ĐÃ CHỐT)
 
 User chốt Tất cả mới hiện toàn bộ PT/Lễ tân và mở lịch sử đơn của từng người. Chờ duyệt/Đã duyệt/Từ chối chuyển về bảng từng đơn, phân trang theo đơn tại SQL; Tất cả vẫn phân trang theo nhân viên. Bộ lọc tên/chức vụ/loại/ngày và tab tiếp tục được giữ khi điều hướng. Mặc định vẫn là Tất cả như trước; không thay schema hoặc chính sách duyệt.

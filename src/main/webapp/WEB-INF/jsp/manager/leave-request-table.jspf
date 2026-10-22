@@ -15,7 +15,11 @@
       </thead>
       <tbody>
         <c:forEach var="item" items="${requestItems}">
-          <tr class="${item.nearLeaveDate ? 'leave-row-near' : ''}">
+          <%-- JS mở chi tiết khi bấm hàng hoặc Enter; các nút trong form xử lý riêng. --%>
+          <tr class="leave-request-row ${item.nearLeaveDate ? 'leave-row-near' : ''}"
+              tabindex="0"
+              aria-label="Đơn của <c:out value='${item.fullName}' />, ${gms:formatDate(item.fromDate)}. Enter để xem chi tiết."
+              data-review-url="${pageContext.request.contextPath}/manager/leave-requests/review?id=${item.leaveRequestId}">
             <c:if test="${showEmployee}">
               <td>
                 <div class="leave-employee-cell">
@@ -94,7 +98,29 @@
             </c:if>
 
             <td class="leave-actions-cell">
-              <a class="btn btn-sm btn-outline" href="${pageContext.request.contextPath}/manager/leave-requests/review?id=${item.leaveRequestId}">Xem chi tiết</a>
+              <c:choose>
+                <c:when test="${item.status.dbValue == 'Pending'}">
+                  <%-- Hộp xác nhận/lý do dùng common.js; POST vẫn qua Servlet/Service kiểm tra lại. --%>
+                  <form class="leave-row-actions" action="${pageContext.request.contextPath}/manager/leave-requests/review" method="post">
+                    <input type="hidden" name="csrfToken" value="<c:out value='${csrfToken}' />">
+                    <input type="hidden" name="leaveRequestId" value="${item.leaveRequestId}">
+                    <input type="hidden" name="returnUrl" value="<c:out value='${listReturnUrl}' />">
+                    <button type="submit" name="action" value="approve" class="btn btn-sm btn-primary"
+                            ${not item.canAct or item.checkSummary != 'Đạt' ? 'disabled' : ''}
+                            title="<c:out value='${not item.canAct ? "Bạn không có quyền xử lý đơn này." : item.checkMessage}' />"
+                            data-confirm-title="Duyệt đơn nghỉ phép"
+                            data-confirm-text="Duyệt"
+                            data-confirm-message="Duyệt đơn của <c:out value='${item.fullName}' />, nghỉ ${gms:formatDate(item.fromDate)}<c:if test='${item.fromDate != item.toDate}'>–${gms:formatDate(item.toDate)}</c:if> (<c:out value='${item.shiftType.displayName}' />)?">Duyệt</button>
+                    <button type="submit" name="action" value="reject" class="btn btn-sm btn-outline danger"
+                            ${not item.canAct ? 'disabled' : ''}
+                            data-confirm-title="Từ chối đơn nghỉ phép"
+                            data-confirm-text="Từ chối"
+                            data-confirm-reason-name="rejectReason"
+                            data-confirm-message="Từ chối đơn của <c:out value='${item.fullName}' />, nghỉ ${gms:formatDate(item.fromDate)}<c:if test='${item.fromDate != item.toDate}'>–${gms:formatDate(item.toDate)}</c:if> (<c:out value='${item.shiftType.displayName}' />)?">Từ chối</button>
+                  </form>
+                </c:when>
+                <c:otherwise><span class="leave-text-muted">—</span></c:otherwise>
+              </c:choose>
             </td>
 
           </tr>
