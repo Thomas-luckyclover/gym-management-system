@@ -6,7 +6,8 @@ import java.util.List;
 /**
  * Dữ liệu màn "Gói của tôi" (/customer/bookings).
  *   Cột trái : activePackages, endedPackages, singleSessionCount
- *   Cột phải : gói đang chọn (selectedPackage, hoặc buổi lẻ khi singleSelected) + 5 ô đếm + bảng buổi
+ *   Cột phải : gói đang chọn (selectedPackage, hoặc buổi lẻ khi singleSelected)
+ *              → CTA đúng lúc + buổi tới + lịch cố định + dải chấm các buổi + cần để ý
  */
 public class MyBookingView {
 
@@ -31,6 +32,25 @@ public class MyBookingView {
     private int cancelledCount;
     private int remainingCount;                  // Hôm nay + Sắp tới + Cần chú ý
     private int pendingCount;                    // Đang cập nhật (đã kết thúc, chờ chốt) — JSP chỉ hiện khi > 0
+
+    // ---------------- Lịch cố định (chỉ gói PT) ----------------
+    private List<WeekdaySlot> weekTemplate = new ArrayList<>();      // 5 ô T2 → T6
+    private String templateSummary;              // "T2 · T3 · T6 lúc 18:00 · T4 lúc 07:00"
+    private int templateCount;                   // số buổi rơi đúng lịch cố định
+    private List<MyPtSessionRow> offPattern = new ArrayList<>();     // "Buổi khác giờ" (kèm moveNote)
+
+    // ---------------- Buổi tới / cần để ý ----------------
+    private MyPtSessionRow nextAfterFocus;       // buổi ngay sau "Buổi tới" → dòng "Sau đó …"
+    private List<MyPtSessionRow> watchList = new ArrayList<>();      // buổi Vắng + Đã hủy (kèm lý do)
+
+    // ---------------- CTA: tối đa 1, Service chọn theo độ ưu tiên ----------------
+    private String ctaKind;                      // buyMembership | renewAtCounter | rejoin | ptPackage | null
+    private long daysLeft;                       // số ngày tới hết hạn gói (renewAtCounter)
+    private int recentSingleCount;               // số buổi lẻ trong 30 ngày (ptPackage)
+    private String openingHours;                 // "05:30 – 22:00" (P-19)
+    private String hotline;                      // "1900 6868"
+    private String hotlineTel;                   // "19006868" → href tel:
+    private int todayWeekday;                    // thứ của hôm nay (1 = T2 … 7 = CN) → ô "hôm nay" trong lịch cố định
 
     /** Chưa có gói PT / buổi lẻ nào? (JSP: ${booking.noData}; không đặt tên isEmpty vì "empty" là từ khóa EL) */
     public boolean isNoData() {
@@ -80,5 +100,44 @@ public class MyBookingView {
     public void setRemainingCount(int remainingCount) { this.remainingCount = remainingCount; }
 
     public int getPendingCount() { return pendingCount; }
+
+    public List<WeekdaySlot> getWeekTemplate() { return weekTemplate; }
+    public void setWeekTemplate(List<WeekdaySlot> weekTemplate) { this.weekTemplate = weekTemplate; }
+
+    public String getTemplateSummary() { return templateSummary; }
+    public void setTemplateSummary(String templateSummary) { this.templateSummary = templateSummary; }
+
+    public int getTemplateCount() { return templateCount; }
+    public void setTemplateCount(int templateCount) { this.templateCount = templateCount; }
+
+    public List<MyPtSessionRow> getOffPattern() { return offPattern; }
+    public void setOffPattern(List<MyPtSessionRow> offPattern) { this.offPattern = offPattern; }
+
+    public MyPtSessionRow getNextAfterFocus() { return nextAfterFocus; }
+    public void setNextAfterFocus(MyPtSessionRow nextAfterFocus) { this.nextAfterFocus = nextAfterFocus; }
+
+    public List<MyPtSessionRow> getWatchList() { return watchList; }
+    public void setWatchList(List<MyPtSessionRow> watchList) { this.watchList = watchList; }
+
+    public String getCtaKind() { return ctaKind; }
+    public void setCtaKind(String ctaKind) { this.ctaKind = ctaKind; }
+
+    public long getDaysLeft() { return daysLeft; }
+    public void setDaysLeft(long daysLeft) { this.daysLeft = daysLeft; }
+
+    public int getRecentSingleCount() { return recentSingleCount; }
+    public void setRecentSingleCount(int recentSingleCount) { this.recentSingleCount = recentSingleCount; }
+
+    public String getOpeningHours() { return openingHours; }
+    public void setOpeningHours(String openingHours) { this.openingHours = openingHours; }
+
+    public String getHotline() { return hotline; }
+    public void setHotline(String hotline) { this.hotline = hotline; }
+
+    public int getTodayWeekday() { return todayWeekday; }
+    public void setTodayWeekday(int todayWeekday) { this.todayWeekday = todayWeekday; }
+
+    public String getHotlineTel() { return hotlineTel; }
+    public void setHotlineTel(String hotlineTel) { this.hotlineTel = hotlineTel; }
     public void setPendingCount(int pendingCount) { this.pendingCount = pendingCount; }
 }
