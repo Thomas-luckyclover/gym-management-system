@@ -134,10 +134,13 @@ public class LeaveRequestDAO {
                 params.add(filter.getStatus().getDbValue());
             }
             if (filter.getKeyword() != null && !filter.getKeyword().isBlank()) {
-                where.append(" AND (p.FullName COLLATE Vietnamese_CI_AI LIKE ? ESCAPE '\\' OR e.EmployeeCode LIKE ?) ");
+                where.append(" AND (p.FullName COLLATE Vietnamese_CI_AI LIKE ? ESCAPE '\\' "
+                        + "OR p.FullName COLLATE Latin1_General_100_CI_AI LIKE ? ESCAPE '\\' "
+                        + "OR e.EmployeeCode LIKE ? ESCAPE '\\') ");
                 String kw = SqlUtil.toContainsPattern(filter.getKeyword());
                 params.add(kw);
-                params.add("%" + filter.getKeyword().trim() + "%");
+                params.add(kw);
+                params.add(kw);
             }
             if (filter.getPosition() != null && !filter.getPosition().isBlank()) {
                 where.append(" AND e.Position = ? ");
