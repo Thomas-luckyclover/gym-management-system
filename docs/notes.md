@@ -6,6 +6,8 @@ User yêu cầu bỏ hai khung Hạn nộp đơn/Dự báo nhân sự ở bên p
 
 Kiểm chứng: package thành công; Jasper biên dịch JSP nhân viên không lỗi; trình duyệt xác nhận form PT/Lễ tân, chú thích ẩn ban đầu, mở bằng bàn phím/bấm nút, đóng bằng Escape và cập nhật khi đổi ngày/ca. Dùng bản xem thử chỉ đọc, không gửi/rút đơn hoặc redeploy Tomcat chính. Không thêm test cho thay đổi bố cục có thể đảo ngược này.
 
+User yêu cầu ít chữ hơn: rút gọn chú thích còn hạn nộp, hướng dẫn báo Quản lý, ngày/ca dự báo, số PT/Lễ tân và một dòng giới hạn. Khi đổi lựa chọn, chỉ hiện ngày và tên ca.
+
 ## BF-05 — thêm hai ô lọc ngày nghỉ (21/10/2026, ĐÃ CHỐT)
 
 User yêu cầu thêm Từ ngày/Đến ngày, mặc định trống; lọc theo thời gian nghỉ có giao với khoảng chọn, tính cả ngày biên, cho phép chỉ nhập một đầu. Khi chọn ngày, chỉ hiện nhân viên có đơn khớp toàn bộ bộ lọc; khi không chọn ngày, vẫn giữ hành vi hiện toàn bộ nhân viên như đợt trước. Service báo lỗi khoảng đảo chiều; tab, số lượng và phân trang dùng cùng khoảng ngày. Xóa lọc bỏ ngày và giữ tab. Không đổi schema hoặc luồng duyệt. User yêu cầu spam commit trở lại; đợt này chia hai commit backend và giao diện.

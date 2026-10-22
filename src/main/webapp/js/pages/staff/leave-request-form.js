@@ -127,13 +127,13 @@ document.addEventListener("DOMContentLoaded", function () {
         if (!leaveForm || !leaveDateValue || !shiftValue) {
             setPreviewText("—", "—", "—", "—");
             if (pvScope) {
-                pvScope.textContent = "Chọn ngày và ca để xem dự báo.";
+                pvScope.textContent = "Chọn ngày và ca nghỉ.";
             }
             return;
         }
 
         if (pvScope) {
-            pvScope.textContent = "Đang tải dự báo...";
+            pvScope.textContent = "Đang tải...";
         }
         const result = await getJson(leaveForm.dataset.previewUrl, {date: leaveDateValue, shift: shiftValue});
         // Người dùng có thể đổi lựa chọn trong lúc chờ; bỏ kết quả của lựa chọn cũ.
@@ -143,14 +143,15 @@ document.addEventListener("DOMContentLoaded", function () {
         if (!result.success) {
             setPreviewText("—", "—", "—", "—");
             if (pvScope) {
-                pvScope.textContent = result.message || "Chưa tải được dự báo. Chọn lại ngày hoặc ca để thử lại.";
+                pvScope.textContent = result.message || "Chưa tải được. Vui lòng thử lại.";
             }
             return;
         }
         const data = result.data;
         setPreviewText(data.remainingPt, data.remainingReceptionist, data.minPt, data.minReceptionist);
         if (pvScope) {
-            pvScope.textContent = "Số liệu cho ngày " + formatDate(leaveDateValue) + ", ca đã chọn.";
+            const shiftLabel = shiftTypeSelect.options[shiftTypeSelect.selectedIndex].text;
+            pvScope.textContent = formatDate(leaveDateValue) + " · " + shiftLabel;
         }
     }
 

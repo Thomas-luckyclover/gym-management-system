@@ -94,22 +94,22 @@
                     <span aria-hidden="true">i</span>
                   </button>
                   <div id="leaveFormHelp" class="pt-info-popover" role="tooltip">
-                    <strong class="leave-help-title">Hạn nộp đơn</strong>
+                    <strong class="leave-help-title">Hạn nộp</strong>
                     <p class="leave-help-row"><span>Ngày nghỉ:</span> <b id="infoDate">—</b></p>
                     <p class="leave-help-row"><span>Nộp trước:</span> <b id="infoDeadline"><c:out value="${formView.submissionCutoffTime}" default="—" /> · ngày hôm trước</b></p>
-                    <p class="leave-help-note">Nghỉ đột xuất hoặc quá giờ chốt, vui lòng báo trực tiếp Quản lý.</p>
+                    <p class="leave-help-note">Quá hạn hoặc nghỉ đột xuất: báo Quản lý.</p>
 
-                    <strong class="leave-help-title">Dự báo nhân sự</strong>
-                    <p id="pvScope" class="leave-help-note">Mặc định tính cho ngày mai, cả ngày. Chọn ngày và ca nghỉ để xem dự báo.</p>
+                    <strong class="leave-help-title">Nhân sự còn lại nếu duyệt</strong>
+                    <p id="pvScope" class="leave-help-note">Ngày mai · Cả ngày</p>
                     <p class="leave-help-row">
-                      <span>PT còn trực nếu duyệt:</span>
-                      <b><span id="pvPt"><c:out value="${formView.remainingPt}" default="—" /></span> / tối thiểu <span id="pvMinPt"><c:out value="${formView.minPtPerShift}" default="—" /></span></b>
+                      <span>PT:</span>
+                      <b><span id="pvPt"><c:out value="${formView.remainingPt}" default="—" /></span> (tối thiểu <span id="pvMinPt"><c:out value="${formView.minPtPerShift}" default="—" /></span>)</b>
                     </p>
                     <p class="leave-help-row">
-                      <span>Lễ tân còn trực nếu duyệt:</span>
-                      <b><span id="pvRecep"><c:out value="${formView.remainingReceptionist}" default="—" /></span> / tối thiểu <span id="pvMinRecep"><c:out value="${formView.minReceptionistPerShift}" default="—" /></span></b>
+                      <span>Lễ tân:</span>
+                      <b><span id="pvRecep"><c:out value="${formView.remainingReceptionist}" default="—" /></span> (tối thiểu <span id="pvMinRecep"><c:out value="${formView.minReceptionistPerShift}" default="—" /></span>)</b>
                     </p>
-                    <p class="leave-help-note">Dự báo chỉ xét ngày bắt đầu nghỉ. Tạm tính nhân viên đang làm việc làm cả hai ca; Quản lý kiểm tra lại đủ ngày/ca trước khi duyệt.</p>
+                    <p class="leave-help-note">Chỉ xét ngày đầu; tạm tính nhân viên làm cả hai ca.</p>
                   </div>
                 </div>
               </div>
@@ -272,6 +272,6 @@
     </div>
   </div>
 
-  <script src="${pageContext.request.contextPath}/js/pages/staff/leave-request-form.js?v=20261022-form-help"></script>
+  <script src="${pageContext.request.contextPath}/js/pages/staff/leave-request-form.js?v=20261022-short-help"></script>
 </body>
 </html>
