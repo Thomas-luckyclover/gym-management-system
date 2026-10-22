@@ -25,8 +25,7 @@ body.pt-dashboard-page { background: var(--pt-bg); color: var(--pt-text); }
 .pt-board__hero { grid-column: 1 / -1; }
 .pt-board__schedule { grid-column: span 8; }
 .pt-board__alerts { grid-column: span 4; }
-.pt-board__summary { grid-column: span 8; }
-.pt-board__rating { grid-column: span 4; }
+.pt-board__summary { grid-column: 1 / -1; }
 .pt-board__clients { grid-column: 1 / -1; }
 
 .pt-board :focus-visible {
@@ -385,11 +384,9 @@ body.pt-dashboard-page { background: var(--pt-bg); color: var(--pt-text); }
 .pt-summary-stat dd strong { font-family: var(--font-body); font-size: var(--font-size-2xl); font-weight: var(--font-weight-semibold); }
 .pt-summary-stat dd span { color: var(--pt-muted); font-size: var(--font-size-xs); font-variant-numeric: tabular-nums; }
 
-/* ---------- Đánh giá ---------- */
-.pt-rating-score { display: flex; align-items: baseline; gap: var(--space-2); }
-.pt-rating-score i { color: var(--pt-ember-text); }
-.pt-rating-score strong { font-family: var(--font-body); font-size: var(--font-size-3xl); font-weight: var(--font-weight-semibold); line-height: var(--line-height-snug); }
-.pt-rating p { margin: var(--space-2) 0 0; color: var(--pt-soft); }
+/* ---------- Nút Nhắc khách (khối Cần chú ý) ---------- */
+.pt-remind { margin: 0; }
+.pt-remind .btn { display: inline-flex; align-items: center; gap: var(--space-1-5); }
 
 /* ---------- Khách phụ trách: 3 cột ---------- */
 .pt-client-list { display: grid; }
@@ -420,7 +417,6 @@ body.pt-dashboard-page { background: var(--pt-bg); color: var(--pt-text); }
   .pt-board__schedule,
   .pt-board__alerts,
   .pt-board__summary,
-  .pt-board__rating { grid-column: 1 / -1; }
   .pt-summary { grid-template-columns: minmax(0, 1fr); }
   .pt-summary-group { padding: var(--space-4) 0; border-top: var(--border-width) solid var(--pt-line); }
   .pt-summary-finalized { padding-bottom: var(--space-5); border-top: 0; }
