@@ -91,7 +91,6 @@ class LeaveRequestReviewServletTest {
         when(service.approveRequest(10, 12)).thenReturn(ServiceResult.fail("Ca trực không đủ người."));
         LeaveReviewDetail detail = new LeaveReviewDetail(new LeaveRequest(), "NV-0050", "Nhân viên test", "PT", null, null);
         when(service.getReviewDetail(12, 10)).thenReturn(ServiceResult.ok(detail));
-        when(service.getEligibleReviewers(10)).thenReturn(ServiceResult.ok(List.of()));
         RequestDispatcher dispatcher = mock(RequestDispatcher.class);
         when(request.getRequestDispatcher("/WEB-INF/jsp/manager/leave-request-review.jsp")).thenReturn(dispatcher);
         servlet.doPost(request, response);

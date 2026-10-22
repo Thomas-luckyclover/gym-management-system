@@ -142,16 +142,8 @@
 
         <%-- ===== Bảng danh sách đơn nghỉ phép ===== --%>
         <section class="panel leave-panel leave-list-panel" aria-label="Nhân viên và đơn nghỉ phép">
+          <c:if test="${employeeView or (statusFilter == 'Pending' and not empty requestPage.items)}">
           <div class="leave-list-caption">
-            <span>
-              <c:choose>
-                <c:when test="${employeeView}"><c:out value="${listPage.totalItems}" /> nhân viên · <c:out value="${statusCounts[statusFilter]}" default="0" /> đơn</c:when>
-                <c:otherwise><c:out value="${listPage.totalItems}" /> đơn phù hợp bộ lọc</c:otherwise>
-              </c:choose>
-            </span>
-            <c:if test="${not empty fromDateFilter or not empty toDateFilter}">
-              <span>Ngày gửi: <c:out value="${empty fromDateFilter ? 'Không giới hạn' : gms:formatDate(fromDateFilter)}" /> → <c:out value="${empty toDateFilter ? 'Không giới hạn' : gms:formatDate(toDateFilter)}" /></span>
-            </c:if>
             <c:choose>
               <c:when test="${employeeView}"><span>Bấm nhân viên để xem đơn</span></c:when>
               <c:when test="${statusFilter == 'Pending' and not empty requestPage.items}">
@@ -171,6 +163,7 @@
               </c:when>
             </c:choose>
           </div>
+          </c:if>
 
           <c:if test="${not empty pageError}">
             <div class="leave-empty leave-list-error" role="alert"><c:out value="${pageError}" /></div>

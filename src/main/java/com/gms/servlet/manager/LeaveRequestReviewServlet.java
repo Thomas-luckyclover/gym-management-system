@@ -2,7 +2,6 @@ package com.gms.servlet.manager;
 
 import com.gms.dto.LeaveReviewDetail;
 import com.gms.dto.LeaveBulkApprovalResult;
-import com.gms.dto.EligibleReviewer;
 import com.gms.constant.SessionKey;
 import com.gms.dto.ServiceResult;
 import com.gms.service.LeaveRequestService;
@@ -171,12 +170,6 @@ public class LeaveRequestReviewServlet extends HttpServlet {
             RequestUtil.setFlashToast(request, "danger", detailResult.getMessage());
             RequestUtil.redirect(request, response, "/manager/leave-requests");
             return;
-        }
-        if (managerAccountId != null) {
-            ServiceResult<List<EligibleReviewer>> reviewersResult = leaveRequestService.getEligibleReviewers(managerAccountId);
-            if (reviewersResult.isSuccess()) {
-                request.setAttribute("eligibleReviewers", reviewersResult.getData());
-            }
         }
         request.setAttribute("csrfToken", RequestUtil.getOrCreateCsrfToken(request.getSession(true)));
         request.setAttribute("item", detailResult.getData());

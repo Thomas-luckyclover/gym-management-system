@@ -11,13 +11,13 @@
   <%@ include file="/WEB-INF/jsp/common/head.jspf" %>
   <title>Chi tiết đơn nghỉ phép #${item.leaveRequest.leaveRequestId} · Super Gym</title>
   <link rel="stylesheet" href="${pageContext.request.contextPath}/css/pages/auth/account-settings.css">
-  <link rel="stylesheet" href="${pageContext.request.contextPath}/css/pages/manager/leave-requests.css?v=20261022-no-handler">
+  <link rel="stylesheet" href="${pageContext.request.contextPath}/css/pages/manager/leave-requests.css?v=20261022-compact-detail">
   <link rel="stylesheet" href="${pageContext.request.contextPath}/css/pages/auth/notification-bell.css">
   <script src="${pageContext.request.contextPath}/js/pages/auth/notification-bell.js" defer></script>
   <script src="${pageContext.request.contextPath}/js/pages/manager/leave-request-review.js?v=20261021-readable2" defer></script>
 </head>
 
-<body class="dock theme-manager">
+<body class="dock theme-manager leave-review-page">
   <%@ include file="/WEB-INF/jsp/common/flash-toast.jspf" %>
 
   <div class="app">
@@ -63,11 +63,6 @@
                 <i class="fa-solid fa-xmark" aria-hidden="true"></i> Từ chối
               </button>
 
-              <%-- Nút Chuyển người duyệt --%>
-              <button type="button" class="btn btn-sm btn-outline" onclick="openModal('modalTransferDetail')">
-                <i class="fa-solid fa-share" aria-hidden="true"></i> Chuyển người duyệt
-              </button>
-
               <%-- Nút Duyệt --%>
               <c:choose>
                 <c:when test="${item.leaveDatePassed}">
@@ -92,14 +87,14 @@
 
         <%-- ===== Banner thông báo / Cảnh báo hệ thống ===== --%>
         <c:if test="${not empty item.banner}">
-          <div class="alert-banner ${item.leaveDatePassed ? 'danger' : 'warning'}" style="margin-bottom:var(--space-4);padding:var(--space-3) var(--space-4);border-radius:var(--radius-md);display:flex;align-items:center;gap:var(--space-3)">
+          <div class="alert-banner review-alert ${item.leaveDatePassed ? 'danger' : 'warning'}">
             <i class="fa-solid ${item.leaveDatePassed ? 'fa-circle-exclamation' : 'fa-triangle-exclamation'}" aria-hidden="true"></i>
             <span><c:out value="${item.banner}" /></span>
           </div>
         </c:if>
 
         <c:if test="${not empty formMessage}">
-          <div class="alert-banner danger" style="margin-bottom:var(--space-4);padding:var(--space-3) var(--space-4);border-radius:var(--radius-md);display:flex;align-items:center;gap:var(--space-3)">
+          <div class="alert-banner review-alert danger">
             <i class="fa-solid fa-circle-exclamation" aria-hidden="true"></i>
             <c:out value="${formMessage}" />
           </div>
@@ -108,7 +103,7 @@
         <%-- ===== Lưới chính 2 cột (Tối ưu 1366x768) ===== --%>
         <div class="review-grid-2col">
 
-          <%-- CỘT TRÁI (60%): Thông tin đơn & Kiểm tra điều kiện --%>
+          <%-- CỘT TRÁI: Thông tin đơn và lý do nghỉ. --%>
           <div class="review-col-left">
 
             <%-- Card 1: Thông tin nhân viên & Chi tiết đơn --%>
@@ -214,19 +209,20 @@
               </c:if>
             </div>
 
-            <%-- Card 2: Kiểm tra điều kiện duyệt (Review Checks) --%>
+          </div>
+
+          <%-- CỘT PHẢI: Kết quả kiểm tra; bảng và danh sách chi tiết mở khi cần. --%>
+          <div class="review-col-right">
             <div class="review-card">
               <div class="review-card-head">
                 <h3 class="review-card-title">
-                  <i class="fa-solid fa-list-check" aria-hidden="true"></i> Kiểm tra điều kiện phê duyệt
+                  <i class="fa-solid fa-list-check" aria-hidden="true"></i> Điều kiện duyệt
                 </h3>
-                <span class="leave-help"><c:out value="${fn:length(item.checks)}" /> điều kiện · kiểm tra lại khi duyệt</span>
+                <c:if test="${item.leaveRequest.pending}">
+                  <span class="badge ${item.canApprove ? 'badge-success' : 'badge-warning'}">${item.canApprove ? 'Đủ điều kiện' : 'Cần kiểm tra'}</span>
+                </c:if>
               </div>
 
-              <p class="leave-help">Tạm tính nhân viên đang làm việc làm cả hai ca. Chưa có lịch phân ca và giờ ca riêng.</p>
-              <p class="leave-help">Đơn khác cùng khoảng ngày/ca: ${empty item.overlappingCounts['Approved'] ? 0 : item.overlappingCounts['Approved']} đã duyệt · ${empty item.overlappingCounts['Pending'] ? 0 : item.overlappingCounts['Pending']} chờ xử lý.
-                Đơn chờ chưa được tính là nghỉ chính thức.
-              </p>
               <div class="review-check-list">
                 <c:forEach var="c" items="${item.checks}">
                   <div class="review-check-item ${c.ok ? 'pass' : 'fail'}">
@@ -238,62 +234,71 @@
                       <div class="check-meta-msg"><c:out value="${c.message}" /></div>
 
                       <c:if test="${c.key == 'SESSIONS' and not empty item.sessionConflicts}">
-                        <ul class="leave-conflicts">
-                          <c:forEach var="session" items="${item.sessionConflicts}">
-                            <li>Buổi #${session.sessionId} · ${gms:formatDate(session.date)} · ${gms:formatTime(session.startTime)}–${gms:formatTime(session.endTime)} · Đã lên lịch</li>
-                          </c:forEach>
-                        </ul>
-                        <p class="leave-help">Chức năng PT đổi/hủy/bàn giao buổi chưa được triển khai. Liên hệ PT và xử lý theo quy trình của phòng gym; chỉ duyệt khi hệ thống không còn buổi trùng.</p>
+                        <details class="review-extra">
+                          <summary><c:out value="${fn:length(item.sessionConflicts)}" /> buổi dạy trùng lịch</summary>
+                          <ul class="leave-conflicts">
+                            <c:forEach var="session" items="${item.sessionConflicts}">
+                              <li>Buổi #${session.sessionId} · ${gms:formatDate(session.date)} · ${gms:formatTime(session.startTime)}–${gms:formatTime(session.endTime)} · Đã lên lịch</li>
+                            </c:forEach>
+                          </ul>
+                          <p class="leave-help">Chức năng PT đổi/hủy/bàn giao buổi chưa được triển khai. Liên hệ PT và xử lý theo quy trình của phòng gym; chỉ duyệt khi hệ thống không còn buổi trùng.</p>
+                        </details>
                       </c:if>
 
                       <%-- Nếu là mục Định biên và có bảng chi tiết từng ca --%>
                       <c:if test="${c.key == 'STAFFING' and not empty item.staffingRows}">
-                        <table style="width:100%;margin-top:var(--space-2);border-collapse:collapse;font-size:11px">
-                          <thead>
-                            <tr style="border-bottom:1px solid var(--color-border);color:var(--color-text-soft);text-align:left">
-                              <th style="padding:2px 4px">Ca trực</th>
-                              <th style="padding:2px 4px">Trước đơn này (giả định)</th>
-                              <th style="padding:2px 4px">Sau duyệt</th>
-                              <th style="padding:2px 4px">Tối thiểu</th>
-                              <th style="padding:2px 4px">Kết quả</th>
-                            </tr>
-                          </thead>
-                          <tbody>
-                            <c:forEach var="row" items="${item.staffingRows}">
-                              <tr style="border-bottom:1px solid var(--color-border-subtle)">
-                                <td style="padding:2px 4px"><c:out value="${row.shiftLabel}" /></td>
-                                <td style="padding:2px 4px">${row.current}</td>
-                                <td style="padding:2px 4px"><b>${row.afterApproval}</b></td>
-                                <td style="padding:2px 4px">${row.minRequired}</td>
-                                <td style="padding:2px 4px">
-                                  <c:choose>
-                                    <c:when test="${row.belowMin}"><span class="badge badge-sm badge-danger">Thiếu người</span></c:when>
-                                    <c:otherwise><span class="badge badge-sm badge-success">Đạt</span></c:otherwise>
-                                  </c:choose>
-                                </td>
-                              </tr>
-                            </c:forEach>
-                          </tbody>
-                        </table>
+                        <details class="review-extra">
+                          <summary>Xem quân số từng ca</summary>
+                          <div class="review-table-wrap">
+                            <table class="review-staffing-table">
+                              <thead>
+                                <tr>
+                                  <th scope="col">Ca trực</th>
+                                  <th scope="col">Trước đơn</th>
+                                  <th scope="col">Sau duyệt</th>
+                                  <th scope="col">Tối thiểu</th>
+                                  <th scope="col">Kết quả</th>
+                                </tr>
+                              </thead>
+                              <tbody>
+                                <c:forEach var="row" items="${item.staffingRows}">
+                                  <tr>
+                                    <td><c:out value="${row.shiftLabel}" /></td>
+                                    <td>${row.current}</td>
+                                    <td><b>${row.afterApproval}</b></td>
+                                    <td>${row.minRequired}</td>
+                                    <td>
+                                      <c:choose>
+                                        <c:when test="${row.belowMin}"><span class="badge badge-sm badge-danger">Thiếu người</span></c:when>
+                                        <c:otherwise><span class="badge badge-sm badge-success">Đạt</span></c:otherwise>
+                                      </c:choose>
+                                    </td>
+                                  </tr>
+                                </c:forEach>
+                              </tbody>
+                            </table>
+                          </div>
+                        </details>
                       </c:if>
                     </div>
                   </div>
                 </c:forEach>
               </div>
+              <details class="review-extra review-check-notes">
+                <summary>Cách kiểm tra</summary>
+                <p class="leave-help">Tạm tính nhân viên đang làm việc làm cả hai ca. Hệ thống kiểm tra lại trước khi duyệt.</p>
+                <p class="leave-help">Đơn khác cùng ngày/ca: ${empty item.overlappingCounts['Approved'] ? 0 : item.overlappingCounts['Approved']} đã duyệt · ${empty item.overlappingCounts['Pending'] ? 0 : item.overlappingCounts['Pending']} chờ. Đơn chờ chưa được tính là nghỉ chính thức.</p>
+              </details>
             </div>
 
           </div>
 
-          <%-- CỘT PHẢI: Tiến trình xử lý từ lịch sử của đơn. --%>
-          <div class="review-col-right">
-
-            <%-- Card: Quy trình duyệt (Timeline) --%>
-            <div class="review-card">
-              <div class="review-card-head">
-                <h3 class="review-card-title">
-                  <i class="fa-solid fa-clock-rotate-left" aria-hidden="true"></i> Tiến trình xử lý
-                </h3>
-              </div>
+          <%-- Lịch sử dưới hai cột, thu gọn mặc định để giữ thông tin chính trong màn hình. --%>
+          <details class="review-card review-history">
+              <summary class="review-card-title">
+                <i class="fa-solid fa-clock-rotate-left" aria-hidden="true"></i> Lịch sử xử lý
+                <span class="leave-help"><c:out value="${fn:length(item.timeline)}" /> mốc</span>
+              </summary>
 
               <div class="timeline-list">
                 <div class="timeline-track-line"></div>
@@ -334,9 +339,7 @@
                   </div>
                 </c:forEach>
               </div>
-            </div>
-
-          </div>
+          </details>
 
         </div>
 
@@ -411,50 +414,6 @@
       </form>
     </div>
   </div>
-
-  <%-- ===== MODAL CHUYỂN NGƯỜI DUYỆT ===== --%>
-  <div id="modalTransferDetail" class="gms-modal" role="dialog" aria-modal="true" aria-labelledby="modalTransferTitle">
-    <div class="gms-modal-dialog">
-      <form action="${pageContext.request.contextPath}/manager/leave-requests/review" method="post">
-        <input type="hidden" name="csrfToken" value="${csrfToken}">
-        <input type="hidden" name="action" value="transfer">
-        <input type="hidden" name="leaveRequestId" value="${item.leaveRequest.leaveRequestId}">
-
-        <div class="gms-modal-header">
-          <h3 class="gms-modal-title" id="modalTransferTitle">Chuyển quyền duyệt đơn</h3>
-          <button type="button" class="gms-modal-close" onclick="closeModal('modalTransferDetail')">&times;</button>
-        </div>
-        <div class="gms-modal-body">
-          <div class="field">
-            <label class="field-label" for="transferToEmployeeSelect">Chọn người tiếp nhận <span aria-hidden="true">*</span></label>
-            <select name="toEmployeeId" id="transferToEmployeeSelect" class="field-input" required>
-              <option value="">-- Chọn Quản lý --</option>
-              <c:forEach var="rev" items="${eligibleReviewers}">
-                <option value="${rev.employeeId}" ${toEmployeeId == rev.employeeId ? 'selected' : ''}>
-                  <c:out value="${rev.fullName}" /> (<c:out value="${rev.employeeCode}" />)
-                </option>
-              </c:forEach>
-            </select>
-          </div>
-
-          <div class="field" style="margin-top:var(--space-3)">
-            <label class="field-label" for="transferNoteDetailInput">Ghi chú chuyển giao (tùy chọn)</label>
-            <textarea id="transferNoteDetailInput"
-                      name="note"
-                      class="field-input"
-                      rows="2"
-                      maxlength="200"
-                      placeholder="Ghi chú cho người nhận (tối đa 200 ký tự)..."><c:out value="${note}" /></textarea>
-          </div>
-        </div>
-        <div class="gms-modal-footer">
-          <button type="button" class="btn btn-ghost" onclick="closeModal('modalTransferDetail')">Hủy</button>
-          <button type="submit" class="btn btn-primary">Xác nhận chuyển</button>
-        </div>
-      </form>
-    </div>
-  </div>
-
 
 </body>
 </html>

@@ -398,12 +398,26 @@
    =================================================== */
 
 /* ===== Màn #27 (Duyệt chi tiết) Layout 1366x768 ===== */
+.leave-review-page .content {
+  padding: var(--space-4) var(--space-6);
+}
+
+.leave-review-page .review-alert {
+  display: flex;
+  align-items: center;
+  gap: var(--space-2);
+  margin-bottom: var(--space-3);
+  padding: var(--space-2) var(--space-3);
+  border-radius: var(--radius-md);
+  font-size: var(--font-size-sm);
+}
+
 .review-top-bar {
     display: flex;
     align-items: center;
     justify-content: space-between;
     gap: var(--space-4);
-    margin-bottom: var(--space-4);
+    margin-bottom: var(--space-3);
     padding: var(--space-3) var(--space-4);
     background: var(--color-surface);
     border: var(--border-width) solid var(--color-border);
@@ -413,6 +427,7 @@
 
 .review-top-left {
     display: flex;
+    flex-wrap: wrap;
     align-items: center;
     gap: var(--space-3);
 }
@@ -431,14 +446,20 @@
 
 .review-grid-2col {
     display: grid;
-    grid-template-columns: minmax(0, 1.4fr) minmax(320px, 0.9fr);
-    gap: var(--space-4);
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+    gap: var(--space-3);
     align-items: start;
 }
 
-@media (max-width: 1024px) {
+@media (max-width: 900px) {
     .review-grid-2col {
         grid-template-columns: 1fr;
+    }
+    .leave-review-page .review-top-bar {
+      flex-wrap: wrap;
+    }
+    .leave-review-page .review-top-actions {
+      flex-wrap: wrap;
     }
 }
 
@@ -448,7 +469,7 @@
     border: var(--border-width) solid var(--color-border);
     border-radius: var(--radius-lg);
     box-shadow: var(--shadow-card);
-    margin-bottom: var(--space-4);
+    margin: var(--space-0);
 }
 
 .review-card-head {
@@ -568,26 +589,26 @@
 .review-check-list {
     display: flex;
     flex-direction: column;
-    gap: var(--space-3);
+    gap: var(--space-2);
 }
 
 .review-check-item {
     display: flex;
     align-items: flex-start;
-    gap: var(--space-3);
-    padding: var(--space-3);
+    gap: var(--space-2);
+    padding: var(--space-2) var(--space-3);
     border-radius: var(--radius-md);
     border: 1px solid var(--color-border);
     background: var(--color-bg);
 }
 
 .review-check-item.pass {
-    border-left: 4px solid #10b981;
+    border-left: var(--space-1) solid var(--color-success);
 }
 
 .review-check-item.fail {
-    border-left: 4px solid #ef4444;
-    background: #fef2f2;
+    border-left: var(--space-1) solid var(--color-danger);
+    background: var(--color-danger-tint);
 }
 
 .check-icon-badge {
@@ -603,13 +624,13 @@
 }
 
 .review-check-item.pass .check-icon-badge {
-    background: #ecfdf5;
-    color: #10b981;
+    background: var(--color-success-tint);
+    color: var(--color-success-ink);
 }
 
 .review-check-item.fail .check-icon-badge {
-    background: #fee2e2;
-    color: #ef4444;
+    background: var(--color-danger-tint);
+    color: var(--color-danger-ink);
 }
 
 .check-meta-content {
@@ -629,8 +650,64 @@
 }
 
 .review-check-item.fail .check-meta-msg {
-    color: #991b1b;
-    font-weight: 500;
+    color: var(--color-danger-ink);
+    font-weight: var(--font-weight-medium);
+}
+
+/* Chi tiết phụ dùng details/summary của trình duyệt, không thêm JS đóng/mở. */
+.leave-review-page .review-col-left,
+.leave-review-page .review-col-right,
+.leave-review-page .check-meta-content {
+  min-width: 0;
+}
+
+.leave-review-page .review-extra {
+  margin-top: var(--space-2);
+  font-size: var(--font-size-xs);
+}
+
+.leave-review-page .review-extra summary,
+.leave-review-page .review-history > summary {
+  cursor: pointer;
+  color: var(--color-text-soft);
+}
+
+.leave-review-page .review-check-notes {
+  border-top: var(--border-width) solid var(--color-border);
+  padding-top: var(--space-2);
+}
+
+.leave-review-page .review-table-wrap {
+  overflow-x: auto;
+}
+
+.leave-review-page .review-staffing-table {
+  width: 100%;
+  border-collapse: collapse;
+  margin-top: var(--space-2);
+  font-size: var(--font-size-xs);
+}
+
+.leave-review-page .review-staffing-table th,
+.leave-review-page .review-staffing-table td {
+  padding: var(--space-2) var(--space-1);
+  border-bottom: var(--border-width) solid var(--color-border);
+  text-align: left;
+}
+
+.leave-review-page .review-history {
+  grid-column: 1 / -1;
+  padding: var(--space-3) var(--space-4);
+}
+
+.leave-review-page .review-history > summary {
+  display: list-item;
+  font-size: var(--font-size-sm);
+  color: var(--color-text);
+}
+
+.leave-review-page .review-history[open] .timeline-list {
+  margin-top: var(--space-4);
 }
 
 /* Timeline quy trình duyệt dọc */

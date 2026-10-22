@@ -1,5 +1,19 @@
 # File notes — mâu thuẫn tài liệu & quyết định đã chốt
 
+User yêu cầu bỏ dòng tổng số đơn phù hợp và khoảng Ngày gửi ở đầu bảng danh sách; đã bỏ hai dòng, để thao tác duyệt nhiều gọn bên phải. Không tạo thanh đệm rỗng ở tab đã xử lý hoặc danh sách trống.
+
+User yêu cầu bỏ Chuyển người duyệt ở chi tiết: bỏ nút, hộp chuyển giao và truy vấn danh sách người tiếp nhận không còn dùng. Thanh tác vụ chi tiết chỉ còn Duyệt/Từ chối. Lịch sử cũ vẫn hiển thị các mốc đã ghi trước đây.
+
+Kiểm chứng cuối đợt: package chạy 226 test không lỗi; Jasper biên dịch hai JSP không lỗi. Đã nạp lại context GMS và kiểm tra trên cổng 8080: lọc ngày gửi 22–22 vẫn có 7 đơn, không còn hai dòng thống kê ở đầu bảng; chi tiết chỉ còn Duyệt/Từ chối và giữ bố cục gọn. Đã đăng xuất tài khoản test sau khi xem.
+
+## BF-05 — chi tiết vừa màn hình và nạp lại mã Java (22/10/2026)
+
+Thông tin đơn và lý do nằm cột trái, kết quả kiểm tra ở cột phải. Quân số từng ca, danh sách buổi PT trùng và cách kiểm tra dùng details/summary thu gọn; lý do chưa đạt vẫn hiện ngay. Lịch sử xử lý chuyển thành hàng thu gọn dưới hai cột. Không thêm JS hoặc đổi điều kiện duyệt. Bản xem thử ở 1280×720 đo chiều cao tài liệu bằng chiều cao viewport, cả đơn đủ điều kiện và đơn vướng lịch PT đều không phải cuộn ở trạng thái ban đầu. Đã kiểm tra mở/đóng quân số, buổi trùng, lịch sử bằng chuột/bàn phím và mở/hủy hộp xác nhận.
+
+User báo lọc ngày gửi 22/10–22/10 trống: DB local có 7 Pending gửi ngày 22/10, code hiện tại trả đủ 7. Log Tomcat cho thấy ứng dụng /gym-management-system nạp lại lần cuối 15:31, trước bản sửa DAO sang SubmittedAt; request 22–22 vẫn trả trang rỗng còn mở rộng đến ngày nghỉ thì có đơn. Cần nạp lại riêng context GMS sau khi build để thay class Java cũ. Tomcat dùng docBase target/gms: tránh clean khi ứng dụng đang chạy vì xóa thư mục này sẽ làm Tomcat tự undeploy/redeploy giữa build. Package chỉ cập nhật file, không bảo đảm classloader đã đổi.
+
+Đã package thành công và yêu cầu Tomcat nạp lại riêng context bằng cập nhật thời gian descriptor gym-management-system.xml (hash nội dung cấu hình không đổi). Log xác nhận triển khai thành công lúc 16:08. Đăng nhập tài khoản Manager test theo SEED_CASES trên cổng 8080: URL status=Pending&fromDate=2026-10-22&toDate=2026-10-22 hiển thị đủ 7 đơn; màn chi tiết mới cũng vừa 1280×720. Đã đăng xuất tài khoản test. Không duyệt hoặc từ chối đơn thật. JSP đã biên dịch và kiểm tra giao diện; không thêm/chạy lại test Java cho thay đổi bố cục.
+
 ## BF-05 — bỏ khung Người phụ trách ở chi tiết (22/10/2026, ĐÃ CHỐT)
 
 Bỏ card Người phụ trách/Người đã xử lý riêng ở cột phải và CSS chỉ dùng cho card đó. Tiến trình xử lý cùng thông tin kết quả duyệt/từ chối vẫn có người thực hiện; thao tác chuyển người duyệt ở thanh đầu trang dùng luồng hiện có.

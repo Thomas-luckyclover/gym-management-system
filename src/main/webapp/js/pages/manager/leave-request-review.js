@@ -1,4 +1,4 @@
-/* Màn chi tiết BF-05: mở/đóng ba hộp thoại và thu gọn lý do; không gửi AJAX. */
+/* Màn chi tiết BF-05: mở/đóng hộp Duyệt/Từ chối và thu gọn lý do; không gửi AJAX. */
 let modalTrigger = null;
 
 // Đóng hộp thoại và trả focus cho nút đã mở.
