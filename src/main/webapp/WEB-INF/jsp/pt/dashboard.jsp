@@ -5,7 +5,7 @@
 <%@ taglib prefix="gms" uri="/WEB-INF/gms-functions.tld" %>
 <%--
     PtDashboardServlet truyền từng khối riêng: scheduleDays, attentionItems,
-    assignedPackages, commissionSummary, ptRating và weather. Mỗi khối có
+    assignedPackages, commissionSummary và weather. Mỗi khối có
     attribute *Error riêng; JSP không coi lỗi tải dữ liệu là danh sách rỗng.
 --%>
 <!DOCTYPE html>
@@ -128,7 +128,7 @@
                         <div><h2 id="alerts-title">Cần chú ý</h2></div>
                         <span class="pt-info">
                             <button type="button" class="pt-info-trigger" aria-label="Giải thích mục Cần chú ý" aria-describedby="alerts-help"><span aria-hidden="true">i</span></button>
-                            <span id="alerts-help" class="pt-info-popover" role="tooltip">Kiểm tra membership hoặc bảo lưu cho các buổi trong 14 ngày tới.</span>
+                            <span id="alerts-help" class="pt-info-popover" role="tooltip">Kiểm tra membership hoặc bảo lưu cho các buổi trong 14 ngày tới. Bấm <strong>Nhắc khách</strong> để gửi thông báo tới khách (mỗi khách 1 lần/ngày); khách xem ở chuông thông báo.</span>
                         </span>
                     </div>
                     <c:choose>
@@ -151,6 +151,20 @@
                                             <span class="badge badge-warning"><c:out value="${item.attentionTitle}" /></span>
                                         </div>
                                         <p class="pt-attention-message"><c:out value="${item.attentionMessage}" /></p>
+                                        <%-- Nút Nhắc khách: POST về PtDashboardServlet.doPost; Service kiểm tra lại khách + gói thuộc PT này. --%>
+                                        <form class="pt-remind" method="post" action="${pageContext.request.contextPath}/pt/dashboard">
+                                            <input type="hidden" name="csrfToken" value="${fn:escapeXml(csrfToken)}">
+                                            <input type="hidden" name="customerId" value="${item.customerId}">
+                                            <input type="hidden" name="subscriptionId" value="${item.ptSubscriptionId}">
+                                            <c:choose>
+                                                <c:when test="${item.reminded}">
+                                                    <button type="button" class="btn btn-outline btn-sm" disabled><i class="fa-solid fa-check" aria-hidden="true"></i> Đã nhắc hôm nay</button>
+                                                </c:when>
+                                                <c:otherwise>
+                                                    <button type="submit" class="btn btn-primary btn-sm" aria-label="Nhắc ${fn:escapeXml(item.customerName)}"><i class="fa-solid fa-bell" aria-hidden="true"></i> Nhắc khách</button>
+                                                </c:otherwise>
+                                            </c:choose>
+                                        </form>
                                         <details class="pt-attention-details">
                                             <summary>Chi tiết gói và membership</summary>
                                         <div class="pt-attention-package">
@@ -236,35 +250,6 @@
                                 </div>
                                 <p class="pt-summary-money-line">Hoa hồng dự kiến <strong><c:out value="${gms:formatMoney(commissionSummary.projectedCommissionAmount)}" /></strong></p>
                             </div>
-                        </c:otherwise>
-                    </c:choose>
-                </section>
-
-                <%-- ptRating: Service chỉ hiện điểm khi đủ số khách theo P-22. --%>
-                <section class="pt-rating pt-board__rating" aria-labelledby="rating-title" data-reveal>
-                    <div class="pt-section-heading">
-                        <h2 id="rating-title">Đánh giá PT</h2>
-                        <span class="pt-info">
-                            <button type="button" class="pt-info-trigger" aria-label="Giải thích đánh giá PT" aria-describedby="rating-help"><span aria-hidden="true">i</span></button>
-                            <span id="rating-help" class="pt-info-popover" role="tooltip">Điểm tháng này chỉ hiện khi đủ số khách đánh giá; không hiển thị người chấm.</span>
-                        </span>
-                    </div>
-                    <c:choose>
-                        <c:when test="${not empty ptRatingError}">
-                            <p class="pt-block-error" role="alert"><c:out value="${ptRatingError}" /></p>
-                        </c:when>
-                        <c:when test="${ptRating == null}">
-                            <p class="empty-state">Chưa tải được đánh giá.</p>
-                        </c:when>
-                        <c:when test="${ptRating.ratingVisible}">
-                            <div class="pt-rating-score"><i class="fa-solid fa-star" aria-hidden="true"></i>
-                                <strong><fmt:formatNumber value="${ptRating.averageRating}" maxFractionDigits="2" minFractionDigits="0" />/5</strong>
-                            </div>
-                            <p><c:out value="${ptRating.ratingCustomerCount}" /> khách đã đánh giá trong tháng</p>
-                            <p class="pt-rating-message"><c:out value="${ptRating.message}" /></p>
-                        </c:when>
-                        <c:otherwise>
-                            <p class="empty-state"><c:out value="${ptRating.message}" /></p>
                         </c:otherwise>
                     </c:choose>
                 </section>
