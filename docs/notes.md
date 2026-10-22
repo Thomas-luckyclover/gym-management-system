@@ -1,5 +1,125 @@
 # File notes — mâu thuẫn tài liệu & quyết định đã chốt
 
+## BF-05 — thu gọn thanh lọc danh sách (22/10/2026, ĐÃ CHỐT)
+
+User xem ảnh đề xuất rồi yêu cầu áp dụng. Thanh trên gồm hàng tab trạng thái và hàng tìm nhân viên/khoảng ngày gửi/Bộ lọc/Tìm; chức vụ và loại nghỉ nằm trong details mở bằng Bộ lọc, số lựa chọn hiện trên nút. Ô ngày vẫn để trống khi chưa chọn, tab và phân trang tiếp tục giữ các điều kiện đã chọn. Xóa lọc trở về trạng thái không giới hạn ngày. Giữ form GET và bộ lọc Service/DAO hiện có; không thêm nghiệp vụ mới.
+
+Kiểm chứng: Jasper biên dịch JSP không lỗi; package với test bỏ qua thành công vì thay đổi chỉ ở JSP/CSS. Trên GMS cổng 8080, ở 1280 px thanh lọc gọn hai hàng và bảng được đẩy lên. Mở Bộ lọc, chọn PT + Phép năm trả 3 đơn và hiện Bộ lọc 2; chọn ngày gửi 22/10–22/10 vẫn trả 3 đơn; đổi sang Tất cả giữ ngày/chức vụ/loại; Xóa lọc đưa các điều kiện và ngày về trống, tab Chờ duyệt hiện 7 đơn. Ở 640 px và 390 px không tràn ngang. Đã đăng xuất tài khoản test; không duyệt/từ chối đơn.
+
+## BF-05 — chỉ giữ Duyệt đã chọn (22/10/2026, ĐÃ CHỐT)
+
+User yêu cầu bỏ nút Duyệt tất cả trên trang vì trùng thao tác checkbox đầu bảng. Giữ checkbox chọn từng đơn/chọn tất cả đơn đủ điều kiện trên trang và một nút Duyệt đã chọn; bỏ JS riêng của nút thừa. Nút duyệt chỉ bật khi có lựa chọn, vẫn hỏi xác nhận số đơn và kiểm tra lại từng đơn ở backend.
+
+Kiểm chứng: Jasper biên dịch JSP không lỗi, package thành công. Trình duyệt trên GMS cổng 8080 xác nhận nút thừa đã mất; tick đầu bảng chọn 6 đơn đủ điều kiện, bỏ qua đơn vướng lịch PT; hộp xác nhận ghi đúng 6 đơn; hủy rồi bỏ tick hết thì nút bị khóa. Không gửi xác nhận duyệt; đã đăng xuất tài khoản test.
+
+## BF-05 — không tự ẩn đơn cũ bằng bộ lọc hôm nay (22/10/2026, ĐÃ CHỐT)
+
+User xác nhận đơn cũ không được bị ẩn khi qua ngày. Bỏ mặc định ngày gửi hôm nay ở danh sách, thay thế quyết định mặc định hai ô ngày trước đó. Mở Chờ duyệt hiện tất cả đơn chưa xử lý qua các ngày; các tab khác cũng không tự giới hạn ngày gửi. Chỉ áp dụng khoảng ngày khi người dùng chủ động chọn; Xóa lọc trở về không giới hạn ngày. Chuyển tab và phân trang vẫn giữ bộ lọc đã chọn. Thứ tự ưu tiên sắp nghỉ/FIFO, trạng thái và điều kiện duyệt không đổi.
+
+Kiểm chứng: package chạy 234 test không lỗi, gồm 8 trường hợp hồi quy mở tab không tự giới hạn ngày, chọn khoảng ngày và xóa ngày. Đã nạp lại riêng GMS trên Tomcat và đăng nhập tài khoản test: mặc định hai ô ngày trống, chọn 22–22 có 7 đơn, Xóa lọc trở về không giới hạn ngày. Đã đăng xuất; không ghi quyết định duyệt/từ chối.
+
+User yêu cầu bỏ dòng tổng số đơn phù hợp và khoảng Ngày gửi ở đầu bảng danh sách; đã bỏ hai dòng, để thao tác duyệt nhiều gọn bên phải. Không tạo thanh đệm rỗng ở tab đã xử lý hoặc danh sách trống.
+
+User yêu cầu bỏ Chuyển người duyệt ở chi tiết: bỏ nút, hộp chuyển giao và truy vấn danh sách người tiếp nhận không còn dùng. Thanh tác vụ chi tiết chỉ còn Duyệt/Từ chối. Lịch sử cũ vẫn hiển thị các mốc đã ghi trước đây.
+
+Kiểm chứng cuối đợt: package chạy 226 test không lỗi; Jasper biên dịch hai JSP không lỗi. Đã nạp lại context GMS và kiểm tra trên cổng 8080: lọc ngày gửi 22–22 vẫn có 7 đơn, không còn hai dòng thống kê ở đầu bảng; chi tiết chỉ còn Duyệt/Từ chối và giữ bố cục gọn. Đã đăng xuất tài khoản test sau khi xem.
+
+## BF-05 — chi tiết vừa màn hình và nạp lại mã Java (22/10/2026)
+
+Thông tin đơn và lý do nằm cột trái, kết quả kiểm tra ở cột phải. Quân số từng ca, danh sách buổi PT trùng và cách kiểm tra dùng details/summary thu gọn; lý do chưa đạt vẫn hiện ngay. Lịch sử xử lý chuyển thành hàng thu gọn dưới hai cột. Không thêm JS hoặc đổi điều kiện duyệt. Bản xem thử ở 1280×720 đo chiều cao tài liệu bằng chiều cao viewport, cả đơn đủ điều kiện và đơn vướng lịch PT đều không phải cuộn ở trạng thái ban đầu. Đã kiểm tra mở/đóng quân số, buổi trùng, lịch sử bằng chuột/bàn phím và mở/hủy hộp xác nhận.
+
+User báo lọc ngày gửi 22/10–22/10 trống: DB local có 7 Pending gửi ngày 22/10, code hiện tại trả đủ 7. Log Tomcat cho thấy ứng dụng /gym-management-system nạp lại lần cuối 15:31, trước bản sửa DAO sang SubmittedAt; request 22–22 vẫn trả trang rỗng còn mở rộng đến ngày nghỉ thì có đơn. Cần nạp lại riêng context GMS sau khi build để thay class Java cũ. Tomcat dùng docBase target/gms: tránh clean khi ứng dụng đang chạy vì xóa thư mục này sẽ làm Tomcat tự undeploy/redeploy giữa build. Package chỉ cập nhật file, không bảo đảm classloader đã đổi.
+
+Đã package thành công và yêu cầu Tomcat nạp lại riêng context bằng cập nhật thời gian descriptor gym-management-system.xml (hash nội dung cấu hình không đổi). Log xác nhận triển khai thành công lúc 16:08. Đăng nhập tài khoản Manager test theo SEED_CASES trên cổng 8080: URL status=Pending&fromDate=2026-10-22&toDate=2026-10-22 hiển thị đủ 7 đơn; màn chi tiết mới cũng vừa 1280×720. Đã đăng xuất tài khoản test. Không duyệt hoặc từ chối đơn thật. JSP đã biên dịch và kiểm tra giao diện; không thêm/chạy lại test Java cho thay đổi bố cục.
+
+## BF-05 — bỏ khung Người phụ trách ở chi tiết (22/10/2026, ĐÃ CHỐT)
+
+Bỏ card Người phụ trách/Người đã xử lý riêng ở cột phải và CSS chỉ dùng cho card đó. Tiến trình xử lý cùng thông tin kết quả duyệt/từ chối vẫn có người thực hiện; thao tác chuyển người duyệt ở thanh đầu trang dùng luồng hiện có.
+
+Khi rà màn này, bỏ liên kết Xem đơn trong khoảng ngày còn truyền ngày nghỉ vào bộ lọc đã đổi sang ngày gửi. Số đơn khác trùng ngày/ca vẫn được tính theo ngày nghỉ, không đổi kiểm tra điều kiện duyệt.
+
+Kiểm chứng: package thành công, Jasper biên dịch hai JSP quản lý không lỗi. Trình duyệt mở chi tiết xác nhận cột phải chỉ còn Tiến trình xử lý, không còn card Người phụ trách hoặc liên kết lọc sai ngày. Không thêm/chạy lại test Java cho thay đổi hiển thị này và không thực hiện quyết định thật.
+
+## BF-05 — bộ lọc ngày là ngày gửi đơn (22/10/2026, ĐÃ SỬA)
+
+User sửa rõ hai ô ngày lọc theo SubmittedAt (thời gian gửi đơn), không theo FromDate/ToDate (thời gian nghỉ). Mặc định vẫn là hôm nay. DAO dùng cùng điều kiện cho bảng theo đơn, số đếm tab và nhóm/lịch sử nhân viên: SubmittedAt >= 00:00 Từ ngày và SubmittedAt < 00:00 ngày sau Đến ngày. Đơn gửi hôm nay nhưng nghỉ tháng sau vẫn hiện; đơn gửi hôm qua nhưng nghỉ hôm nay không thuộc bộ lọc hôm nay. Giao diện ghi Gửi từ ngày và Ngày gửi để phân biệt với cột Ngày nghỉ / Ca.
+
+Quyết định này thay mô tả lọc giao khoảng ngày nghỉ trong các ghi chú trước. Thứ tự ưu tiên sắp nghỉ/FIFO vẫn dùng ngày nghỉ và giờ gửi như hiện tại.
+
+Kiểm chứng: clean package chạy 226 test không lỗi, gồm 6 truy vấn DAO dùng chung điều kiện ngày gửi. SQL production chạy trên VALUES chỉ đọc xác nhận gửi hôm nay/nghỉ tương lai, gửi hôm khác/nghỉ hôm nay, đầu ngày/cuối ngày, số đếm tab/nhân viên/lịch sử, phân trang và khoảng một đầu/trống. Jasper biên dịch không lỗi; trình duyệt hiển thị 7 đơn gửi hôm nay dù ngày nghỉ từ 23–30/10. Không ghi dữ liệu hay quyết định duyệt thật.
+
+## BF-05 — gọn thanh duyệt nhiều và mặc định ngày hôm nay (22/10/2026, ĐÃ CHỐT)
+
+Gộp số đã chọn và hai nút duyệt nhiều vào bên phải thanh trên bảng, thay dòng hướng dẫn Bấm hàng/Ưu tiên sắp nghỉ; bỏ khung thao tác riêng. Giữ ID/form liên kết checkbox và hộp xác nhận hiện có.
+
+Khi URL chưa có cả hai tham số ngày, Từ ngày và Đến ngày mặc định là hôm nay theo DateTimeUtil (giờ Việt Nam). Bộ lọc ngày gửi đơn tính trọn hai ngày biên theo quyết định sửa ở trên. Người dùng có thể xóa một hoặc cả hai ô để xem phạm vi mở; tab/phân trang gửi cả tham số rỗng để không tự điền lại hôm nay. Xóa lọc quay về ngày mặc định hôm nay. Quyết định này thay mặc định trống của bộ lọc ngày trước đó.
+
+Kiểm chứng: clean package chạy 220 test không lỗi; Jasper biên dịch JSP/fragment không lỗi. Trình duyệt xác nhận ngày mặc định, chủ động xóa ngày, giữ ngày trống khi đổi tab/phân trang và thanh duyệt nhiều nằm trong đầu bảng. POST xem thử sau khi chuyển form vẫn gửi đúng các mã đã tick, CSRF và returnUrl, không ghi quyết định thật.
+
+## BF-05 — duyệt nhiều đơn trên trang Chờ duyệt (22/10/2026, ĐÃ CHỐT)
+
+Thêm checkbox từng đơn, chọn hết trang, Duyệt đã chọn và Duyệt tất cả trên trang. Phạm vi mặc định là trang đang xem (tối đa 50 đơn), không tự chọn đơn ở trang khác. Chỉ cho tick đơn có quyền xử lý và kiểm tra Đạt; cả hai nút đều hỏi xác nhận số lượng trước khi POST. Không lồng form: checkbox liên kết form duyệt nhiều bằng thuộc tính form.
+
+Service giữ thứ tự của danh sách (sắp nghỉ/FIFO), bỏ mã trùng và gọi approveRequest hiện có lần lượt. Mỗi đơn có transaction riêng, đọc lại trạng thái/phân công/quỹ phép/nhân sự/lịch PT sau các đơn đã duyệt trước đó. Đơn không đủ điều kiện không bị thay đổi, các đơn thành công vẫn được lưu; kết quả sau redirect hiện số thành công và mã/lý do của từng đơn chưa duyệt. POST kiểm tra login/CSRF và giới hạn 50 mã; không đổi schema hoặc viết câu UPDATE duyệt hàng loạt bỏ qua nghiệp vụ.
+
+Kiểm chứng: clean package chạy 220 test không lỗi, gồm kết quả thành công một phần, giữ thứ tự, bỏ mã trùng, dữ liệu sai, login/CSRF và giữ bộ lọc qua redirect. Jasper biên dịch JSP/fragment không lỗi. Trình duyệt kiểm tra chọn từng đơn/chọn hết, trạng thái checkbox chọn một phần, hủy bằng Escape, khóa đơn vướng lịch, khóa cả hai nút khi không có đơn đủ điều kiện. POST ở bản xem thử chỉ in form: nhận đúng action, các mã đã chọn và CSRF, không gọi Service ghi quyết định.
+
+## BF-05 — mở mặc định tab Chờ duyệt (22/10/2026, ĐÃ CHỐT)
+
+Khi mở `/manager/leave-requests` mà URL không có `status`, mặc định chọn Chờ duyệt để Quản lý xử lý các đơn đang chờ. Tab Tất cả vẫn mở bằng `status=All` và tiếp tục hiện nhóm nhân viên cùng lịch sử đơn.
+
+## BF-05 — bấm hàng mở chi tiết, xử lý ngay trên danh sách (22/10/2026, ĐÃ CHỐT)
+
+User chốt bấm phần thông tin/khoảng trống của một hàng đơn để mở chi tiết; bỏ nút Xem chi tiết. Pending có hai nút Duyệt/Từ chối cuối hàng: xác nhận trước khi duyệt, từ chối bắt buộc lý do 5–500 ký tự. Dùng data-confirm-message/data-confirm-reason-name có sẵn trong common.js; không viết thêm hệ thống hộp thoại. JS riêng chỉ mở hàng bằng click/Enter, bỏ qua nút/form và giữ focus bàn phím khi mở/đóng hộp.
+
+Form gửi CSRF, mã đơn và hành động tới LeaveRequestReviewServlet hiện có. Service vẫn kiểm tra lại trạng thái, quyền/phân công, quỹ phép, nhân sự, lịch PT và ghi transaction/audit/thông báo. Duyệt bị khóa khi chưa đạt kiểm tra hoặc không có quyền; Từ chối cần quyền xử lý. Đơn đã xử lý chỉ mở được chi tiết. Thành công quay lại tab/bộ lọc/trang đang xem bằng returnUrl, chỉ chấp nhận đường dẫn danh sách nội bộ; lỗi giữ luồng hiển thị chi tiết hiện có.
+
+Kiểm chứng: clean package chạy 213 test, không lỗi, gồm hợp đồng POST, CSRF, phiên đăng nhập, giữ lý do, quay lại bộ lọc và chặn returnUrl ngoài danh sách. Jasper biên dịch hai JSP quản lý/fragment không lỗi. Trình duyệt kiểm tra click/Enter mở hàng, hai nút không điều hướng nhầm, xác nhận, lý do bắt buộc, nút duyệt bị khóa, Tab/Escape/focus và thao tác trong nhóm nhân viên. POST trên bản xem thử chỉ in dữ liệu form, không gọi Service ghi DB; nhận đúng action/id/CSRF/lý do/returnUrl. Không duyệt/từ chối đơn thật hoặc redeploy Tomcat chính.
+
+## BF-05 — chỉ nhóm nhân viên ở tab Tất cả (22/10/2026, ĐÃ CHỐT)
+
+User chốt Tất cả mới hiện toàn bộ PT/Lễ tân và mở lịch sử đơn của từng người. Chờ duyệt/Đã duyệt/Từ chối chuyển về bảng từng đơn, phân trang theo đơn tại SQL; Tất cả vẫn phân trang theo nhân viên. Bộ lọc tên/chức vụ/loại/ngày và tab tiếp tục được giữ khi điều hướng. Mặc định Tất cả ở thời điểm này đã được thay bằng quyết định Chờ duyệt ngày 22/10/2026 ở trên; không thay schema hoặc chính sách duyệt.
+
+Thứ tự Chờ duyệt: nhóm có FromDate hôm nay hoặc ngày mai lên trước (cùng điều kiện nhãn Sắp đến ngày nghỉ), rồi SubmittedAt tăng dần; cùng thời điểm nộp thì LeaveRequestId tăng dần để phân trang ổn định. Ngoài nhóm sắp nghỉ, đơn nộp trước đứng trước, không tiếp tục xếp theo ngày nghỉ. Đơn đã xử lý xếp theo ReviewedAt mới nhất.
+
+Bảng trạng thái không có cột người duyệt. Chỉ bảng lịch sử bên trong nhân viên hiện Người xử lý từ ReviewedByEmployeeId; Pending hiện dấu —, không lấy tên người được giao làm người đã xử lý. Hai kiểu bảng dùng chung leave-request-table.jspf để giữ cách hiển thị ngày/ca, loại, kiểm tra, trạng thái và Xem chi tiết nhất quán.
+
+Kiểm chứng: clean package chạy 205 test, không lỗi; mở rộng kiểm tra điều kiện duyệt để bảng từng đơn và nhóm nhân viên khớp với chi tiết/POST. Jasper biên dịch hai JSP quản lý và fragment mới không lỗi. SQL production chạy trên VALUES chỉ đọc xác nhận nhóm sắp nghỉ, FIFO, cùng thời điểm nộp, phân trang, tab và lọc ngày/loại; đối chiếu thêm các Pending hiện có trên DB local. Trình duyệt xác nhận Chờ duyệt không có nhóm/cột người xử lý, Tất cả có nhóm và lịch sử có cột người xử lý, trạng thái rỗng, lọc ngày/loại và mở chi tiết. Không ghi quyết định hoặc redeploy Tomcat chính.
+
+## BF-05 — gọn màn gửi đơn nhân viên (22/10/2026, ĐÃ CHỐT)
+
+User yêu cầu bỏ hai khung Hạn nộp đơn/Dự báo nhân sự ở bên phải và đặt một nút i tròn ở góc trên bên phải khung Tạo đơn nghỉ phép. Form/lịch sử về một cột; thông tin chuyển vào HintBox chung của common.css/common.js (hover/focus/chạm, Escape hoặc bấm ngoài để đóng). Giữ các ID để JS cập nhật hạn nộp và dự báo theo ngày/ca; bỏ dòng hạn nộp lặp dưới ô ngày. Không đổi hạn nộp P-12 hoặc nghiệp vụ gửi/rút/duyệt đơn. Dự báo vẫn chỉ xét ngày bắt đầu và ghi rõ giới hạn trong chú thích.
+
+Kiểm chứng: package thành công; Jasper biên dịch JSP nhân viên không lỗi; trình duyệt xác nhận form PT/Lễ tân, chú thích ẩn ban đầu, mở bằng bàn phím/bấm nút, đóng bằng Escape và cập nhật khi đổi ngày/ca. Dùng bản xem thử chỉ đọc, không gửi/rút đơn hoặc redeploy Tomcat chính. Không thêm test cho thay đổi bố cục có thể đảo ngược này.
+
+User yêu cầu ít chữ hơn: rút gọn chú thích còn hạn nộp, hướng dẫn báo Quản lý, ngày/ca dự báo, số PT/Lễ tân và một dòng giới hạn. Khi đổi lựa chọn, chỉ hiện ngày và tên ca.
+
+## BF-05 — thêm hai ô lọc ngày nghỉ (21/10/2026, ĐÃ CHỐT)
+
+User yêu cầu thêm Từ ngày/Đến ngày, mặc định trống; lọc theo thời gian nghỉ có giao với khoảng chọn, tính cả ngày biên, cho phép chỉ nhập một đầu. Khi chọn ngày, chỉ hiện nhân viên có đơn khớp toàn bộ bộ lọc; khi không chọn ngày, vẫn giữ hành vi hiện toàn bộ nhân viên như đợt trước. Service báo lỗi khoảng đảo chiều; tab, số lượng và phân trang dùng cùng khoảng ngày. Xóa lọc bỏ ngày và giữ tab. Không đổi schema hoặc luồng duyệt. User yêu cầu spam commit trở lại; đợt này chia hai commit backend và giao diện.
+
+## BF-05 — nhóm đơn theo nhân viên (21/10/2026, ĐÃ CHỐT THỬ)
+
+User yêu cầu hiển thị toàn bộ nhân viên và bấm mở các đơn. Triển khai toàn bộ PT/Lễ tân (hai chức vụ đang hỗ trợ nghỉ phép), giữ người chưa có đơn và lịch sử người đã nghỉ việc. Phân trang theo nhân viên tại SQL, đếm tổng/Pending trên hàng cha, badge đỏ khi sắp nghỉ; mặc định Tất cả. Tab/loại/ngày lọc đơn bên trong, tên/mã/chức vụ lọc nhân viên. Dùng details/summary native; quyết định vẫn ở trang chi tiết, không đổi schema hoặc chính sách nghỉ. Luồng đọc code: [BF-05-code-guide.md](BF-05-code-guide.md).
+
+
+## BF-05 — bỏ hạn duyệt, nhắc theo ngày nghỉ (21/10/2026, ĐÃ CHỐT)
+
+User đồng ý bỏ cột đếm ngược và mốc nộp + 3 ngày. Pending nghỉ hôm nay/ngày mai hiện Sắp đến ngày nghỉ; ưu tiên Pending sắp nghỉ theo ngày bắt đầu. Job nhắc một lần cho Pending nghỉ ngày mai, không dùng giờ P-20 làm hạn duyệt. Giữ kiểm tra quyền/quỹ phép/nhân sự/lịch PT và chặn duyệt ngày đã qua. Quyết định này thay các mô tả hạn P-20/SLA cũ trong SRS/checklist; không đổi schema hoặc xóa cấu hình dùng chung. Chi tiết: [BF-05-code-guide.md](BF-05-code-guide.md).
+
+
+## BF-05 — refactor dễ học, gom commit theo nhóm (21/10/2026)
+
+User chốt đợt này không chia commit quá nhỏ. Tách luồng nhân viên/Manager, dùng chung điều kiện xem và duyệt, tách DTO khỏi DAO, bỏ ngày lưu trùng và CSS/JS khó lần theo. Luồng và nơi bắt đầu học: [BF-05-code-guide.md](BF-05-code-guide.md). Không đổi schema hoặc chính sách ca; tiếp tục giả định nhân viên đang làm việc làm cả hai ca. JOB-07 đặt tên theo chức năng nhắc hạn hiện có.
+
+
+## BF-05 — duyệt nghỉ phép và ca cố định (21/10/2026, chốt trong chat)
+
+- Ưu tiên checklist BF-05; SRS sẽ cập nhật sau. Tạm giả định mọi PT/Lễ tân Working làm cả hai ca, chưa thêm bảng phân ca thực tế. Giao diện ghi rõ giới hạn này.
+- Hỗ trợ đơn nhiều ngày bằng FromDate/ToDate/Days; kiểm tra đủ ngày/ca, quỹ phép và lịch PT trong transaction duyệt. Người được giao và trạng thái được đọc lại khi ghi quyết định.
+- Quỹ Annual lấy P-23 hiện có, không tự mặc định 14 khi thiếu cấu hình; các đơn Pending khác vẫn giữ chỗ. Không tính giữ chỗ hai lần cho đơn đang xét. Sick/Unpaid không dùng quỹ Annual.
+- Kết quả, bằng chứng kiểm tra và phần nâng cao chưa làm (Withdrawn, xử lý buổi PT, báo vắng khẩn cấp) được ghi tại [BF-05-implementation.md](BF-05-implementation.md). Chưa đổi schema/data của DB local hoặc redeploy Tomcat.
+
 ## Customer Swap UC-38 — runtime My PT Session (14/10/2026)
 
 - Đã nối nút Đổi buổi trên buổi gói PT Scheduled chưa bắt đầu. Dialog tải slot qua GET AJAX `action=swapOptions`, xác nhận qua POST `action=swap` với CSRF token và mã slot nguồn để phát hiện lịch đã bị người khác đổi.

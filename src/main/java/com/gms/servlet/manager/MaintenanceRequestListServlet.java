@@ -14,11 +14,18 @@ import jakarta.servlet.http.HttpServletRequest;
 import jakarta.servlet.http.HttpServletResponse;
 
 import java.io.IOException;
+import java.time.LocalDate;
 import java.util.Collections;
 import java.util.Map;
 
 /**
- * Controller danh sách yêu cầu bảo trì cho Manager (UC-29).
+ * Presentation Layer (Servlet Controller): Manages HTTP interactions for the Manager's
+ * maintenance request review dashboard (UC-29 / BF-06).
+ *
+ * <p><b>Architectural Responsibility:</b></p>
+ * Handles request routing, multi-criteria filter extraction (keyword, status, priority, and date),
+ * aggregates system-wide status counts for operational badges, and forwards paginated results
+ * to the manager JSP view.
  */
 @WebServlet("/manager/maintenance-requests")
 public class MaintenanceRequestListServlet extends HttpServlet {
@@ -29,12 +36,16 @@ public class MaintenanceRequestListServlet extends HttpServlet {
     private final MaintenanceRequestService maintenanceRequestService =
             new MaintenanceRequestService();
 
+    /**
+     * Handles GET requests to display the filtered and paginated maintenance requests list for Managers.
+     */
     @Override
     protected void doGet(
             HttpServletRequest request,
             HttpServletResponse response
     ) throws ServletException, IOException {
 
+        // Extract and sanitize search and filter parameters
         String keyword =
                 RequestUtil.getTrimmedParam(
                         request,
@@ -47,6 +58,26 @@ public class MaintenanceRequestListServlet extends HttpServlet {
                         "status"
                 );
 
+        String priority =
+                RequestUtil.getTrimmedParam(
+                        request,
+                        "priority"
+                );
+
+        String reportedDateStr =
+                RequestUtil.getTrimmedParam(
+                        request,
+                        "reportedDate"
+                );
+
+        LocalDate reportedDate = null;
+        if (reportedDateStr != null && !reportedDateStr.isEmpty()) {
+            try {
+                reportedDate = LocalDate.parse(reportedDateStr);
+            } catch (Exception ignored) {
+            }
+        }
+
         int page =
                 PaginationUtil.getPageNumber(request);
 
@@ -58,6 +89,8 @@ public class MaintenanceRequestListServlet extends HttpServlet {
                 maintenanceRequestService.getManagerPage(
                         keyword,
                         status,
+                        priority,
+                        reportedDate,
                         page,
                         pageSize
                 );
@@ -104,6 +137,12 @@ public class MaintenanceRequestListServlet extends HttpServlet {
 
         request.setAttribute("keyword", keyword);
         request.setAttribute("statusFilter", status);
+        request.setAttribute("priorityFilter", priority);
+        request.setAttribute("reportedDateFilter", reportedDateStr);
+        request.setAttribute(
+                "priorityOptions",
+                MaintenanceRequest.Priority.values()
+        );
         request.setAttribute("activeNav", "maintenance");
 
         if (!pageResult.isSuccess()) {

@@ -1,5 +1,8 @@
 package com.gms.servlet.manager;
 
+import com.gms.constant.SessionKey;
+import com.gms.dto.LeaveEmployeeView;
+import com.gms.dto.LeaveRequestFilter;
 import com.gms.dto.LeaveRequestItemView;
 import com.gms.dto.PageResult;
 import com.gms.dto.ServiceResult;
@@ -11,6 +14,7 @@ import jakarta.servlet.annotation.WebServlet;
 import jakarta.servlet.http.HttpServlet;
 import jakarta.servlet.http.HttpServletRequest;
 import jakarta.servlet.http.HttpServletResponse;
+import jakarta.servlet.http.HttpSession;
 
 import java.io.IOException;
 import java.util.Collections;
@@ -24,16 +28,21 @@ public class LeaveRequestListServlet extends HttpServlet {
 
     private static final String VIEW_NAME = "manager/leave-request-list";
 
-    // Tab mặc định của màn khi URL không có status (SRS 5.2.2)
-    private static final String DEFAULT_STATUS_TAB = "Pending";
+    private final LeaveRequestService leaveRequestService;
 
-    private final LeaveRequestService leaveRequestService
-            = new LeaveRequestService();
+    public LeaveRequestListServlet() {
+        this(new LeaveRequestService());
+    }
+
+    /** Truyền Service giả để kiểm tra bộ lọc mà không cần truy vấn DB thật. */
+    LeaveRequestListServlet(LeaveRequestService leaveRequestService) {
+        this.leaveRequestService = leaveRequestService;
+    }
 
     /**
-     * Hiện danh sách đơn nghỉ phép.
+     * Tab Tất cả hiện nhóm nhân viên; các tab trạng thái hiện từng đơn.
      * Request attribute đặt cho JSP:
-     * leavePage (PageResult của LeaveRequestItemView, Service tạo),
+     * employeePage hoặc requestPage (Service tạo), listPage dùng chung cho phân trang,
      * statusCounts (Map số đơn theo All/Pending/Approved/Rejected, Service tạo),
      * keyword và statusFilter (giá trị người dùng đang chọn, để giữ ô tìm và tab),
      * pageError (chỉ có khi tải danh sách thất bại).
@@ -47,24 +56,59 @@ public class LeaveRequestListServlet extends HttpServlet {
         // B1: đọc tham số lọc và phân trang từ URL
         String keyword = RequestUtil.getTrimmedParam(request, "keyword");
         String status = RequestUtil.getTrimmedParam(request, "status");
+        String position = RequestUtil.getTrimmedParam(request, "position");
+        String leaveType = RequestUtil.getTrimmedParam(request, "leaveType");
+        String fromDate = RequestUtil.getTrimmedParam(request, "fromDate");
+        String toDate = RequestUtil.getTrimmedParam(request, "toDate");
+        // Chỉ lọc ngày gửi khi người dùng chọn, tránh bỏ sót đơn từ ngày trước.
         int page = PaginationUtil.getPageNumber(request);
         int pageSize = PaginationUtil.getPageSize(request);
 
-        // B2: lấy một trang đơn và số đơn của các tab
-        ServiceResult<PageResult<LeaveRequestItemView>> pageResult
-                = leaveRequestService.getManagerPage(
-                        keyword, status, page, pageSize);
+        HttpSession session = request.getSession(false);
+        if (session != null) {
+            request.setAttribute("bulkResult", session.getAttribute(SessionKey.LEAVE_BULK_RESULT));
+            session.removeAttribute(SessionKey.LEAVE_BULK_RESULT);
+        }
+        Integer managerAccountId = session == null
+                ? null
+                : (Integer) session.getAttribute(SessionKey.ACCOUNT_ID);
 
-        ServiceResult<Map<String, Integer>> countResult
-                = leaveRequestService.getStatusCounts();
+        // B2: chuẩn hóa một lần; đếm tab bỏ qua trạng thái nhưng giữ các điều kiện còn lại.
+        LeaveRequestFilter filter = leaveRequestService.createManagerFilter(
+                keyword, status, position, leaveType, fromDate, toDate);
+        boolean isEmployeeView = filter.getStatus() == null;
+        PageResult<?> listPage;
+        String pageError = null;
+        if (isEmployeeView) {
+            ServiceResult<PageResult<LeaveEmployeeView>> result = leaveRequestService.getEmployeePage(
+                    filter, managerAccountId, page, pageSize);
+            listPage = result.isSuccess() ? result.getData()
+                    : new PageResult<LeaveEmployeeView>(Collections.emptyList(), 1, pageSize, 0);
+            request.setAttribute("employeePage", listPage);
+            if (!result.isSuccess()) {
+                pageError = result.getMessage();
+            }
+        } else {
+            ServiceResult<PageResult<LeaveRequestItemView>> result = leaveRequestService.getRequestPage(
+                    filter, managerAccountId, page, pageSize);
+            listPage = result.isSuccess() ? result.getData()
+                    : new PageResult<LeaveRequestItemView>(Collections.emptyList(), 1, pageSize, 0);
+            request.setAttribute("requestPage", listPage);
+            if (!result.isSuccess()) {
+                pageError = result.getMessage();
+            }
+        }
+        ServiceResult<Map<String, Integer>> countResult = leaveRequestService.getStatusCounts(filter);
 
         // B3: đặt dữ liệu cho JSP; lỗi thì dùng trang rỗng để màn vẫn dựng được
-        request.setAttribute(
-                "leavePage",
-                pageResult.isSuccess()
-                        ? pageResult.getData()
-                        : new PageResult<LeaveRequestItemView>(
-                                Collections.emptyList(), 1, pageSize, 0));
+        request.setAttribute("listPage", listPage);
+        request.setAttribute("employeeView", isEmployeeView);
+        request.setAttribute("csrfToken", RequestUtil.getOrCreateCsrfToken(session));
+        String listReturnUrl = "/manager/leave-requests";
+        if (request.getQueryString() != null && !request.getQueryString().isBlank()) {
+            listReturnUrl += "?" + request.getQueryString();
+        }
+        request.setAttribute("listReturnUrl", listReturnUrl);
 
         request.setAttribute(
                 "statusCounts",
@@ -72,17 +116,19 @@ public class LeaveRequestListServlet extends HttpServlet {
                         ? countResult.getData()
                         : Collections.emptyMap());
 
-        request.setAttribute("keyword", keyword);
+        request.setAttribute("keyword", filter.getKeyword());
+        request.setAttribute("positionFilter", filter.getPosition());
+        request.setAttribute("leaveTypeFilter", filter.getLeaveType() == null ? null : filter.getLeaveType().getDbValue());
+        request.setAttribute("fromDateFilter", filter.getFromDate());
+        request.setAttribute("toDateFilter", filter.getToDate());
+        request.setAttribute("statusFilter", filter.getStatus() == null ? "All" : filter.getStatus().getDbValue());
 
-        // URL trống nghĩa là tab mặc định "Pending" (khớp parseStatusFilter của Service)
-        boolean hasStatus = status != null && !status.isEmpty();
-        request.setAttribute(
-                "statusFilter", hasStatus ? status : DEFAULT_STATUS_TAB);
+        request.setAttribute("activeNav", "leaves");
 
-        request.setAttribute("activeNav", "leave-requests");
-
-        if (!pageResult.isSuccess()) {
-            request.setAttribute("pageError", pageResult.getMessage());
+        if (pageError != null) {
+            request.setAttribute("pageError", pageError);
+        } else if (!countResult.isSuccess()) {
+            request.setAttribute("pageError", countResult.getMessage());
         }
 
         // B4: chuyển sang JSP danh sách

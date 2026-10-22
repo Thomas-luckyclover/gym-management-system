@@ -1,0 +1,611 @@
+/* Danh sách BF-05: mỗi thành phần có một khối style, không ghi đè từ CSS màn khác. */
+
+.leave-list-page .leave-toolbar {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: stretch;
+  justify-content: space-between;
+  gap: var(--space-4);
+  margin-bottom: var(--space-4);
+  padding: var(--space-4);
+  background: var(--color-surface);
+  border: var(--border-width) solid var(--color-border);
+  border-radius: var(--radius-lg);
+  box-shadow: var(--shadow-card);
+  flex-direction: column;
+}
+
+.leave-list-page .leave-tabs-nav {
+  display: flex;
+  align-items: center;
+  gap: var(--space-1);
+  flex-wrap: wrap;
+}
+
+.leave-list-page .leave-tab-btn {
+  display: inline-flex;
+  align-items: center;
+  gap: var(--space-2);
+  padding: var(--space-2) var(--space-3);
+  border-radius: var(--radius-pill);
+  font-size: var(--font-size-sm);
+  font-weight: var(--font-weight-medium);
+  color: var(--color-text-soft);
+  text-decoration: none;
+  background: transparent;
+  border: var(--border-width) solid transparent;
+  transition: all var(--duration-base);
+  font-family: var(--font-body);
+}
+
+.leave-list-page .leave-tab-btn:hover {
+  color: var(--color-text);
+  background: var(--color-bg);
+}
+
+.leave-list-page .leave-tab-btn.active {
+  color: var(--color-primary-ink);
+  background: var(--color-primary-tint);
+  border-color: var(--color-primary-border);
+  font-weight: var(--font-weight-semibold);
+}
+
+.leave-list-page .leave-tab-count {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  min-width: var(--space-5);
+  height: var(--space-5);
+  padding: var(--space-0) var(--space-1);
+  border-radius: var(--radius-pill);
+  font-size: var(--font-size-xs);
+  font-weight: var(--font-weight-semibold);
+  background: var(--color-surface-muted);
+  color: inherit;
+}
+
+.leave-list-page .leave-tab-btn.active .leave-tab-count {
+  background: var(--color-primary);
+  color: var(--color-on-primary);
+}
+
+.leave-list-page .leave-filter-nav {
+  display: grid;
+  align-items: end;
+  gap: var(--space-3);
+  grid-template-columns: minmax(0, 1fr) minmax(0, 1.2fr) auto auto auto;
+}
+
+.leave-list-page .leave-search-field {
+  position: relative;
+  min-width: 0;
+}
+
+.leave-list-page .leave-search-field i {
+  position: absolute;
+  left: var(--space-3);
+  top: 50%;
+  transform: translateY(-50%);
+  color: var(--color-text-soft);
+  pointer-events: none;
+}
+
+/* Khoảng ngày gửi luôn trống khi chưa chọn để đơn cũ không bị ẩn. */
+.leave-list-page .leave-date-filters {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: var(--space-3);
+  min-width: 0;
+}
+
+.leave-list-page .leave-date-field {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-1);
+  min-width: 0;
+  font-size: var(--font-size-xs);
+  color: var(--color-text-soft);
+}
+
+.leave-list-page .leave-date-field input {
+  width: 100%;
+}
+
+/* details giữ hai bộ lọc phụ trong cùng form GET, không cần JavaScript. */
+.leave-list-page .leave-more-filters {
+  position: relative;
+}
+
+.leave-list-page .leave-more-filters summary {
+  display: inline-flex;
+  align-items: center;
+  gap: var(--space-2);
+  min-height: var(--control-height-md);
+  white-space: nowrap;
+  cursor: pointer;
+  list-style: none;
+}
+
+.leave-list-page .leave-more-filters summary::-webkit-details-marker {
+  display: none;
+}
+
+.leave-list-page .leave-more-filters summary:focus-visible {
+  outline: var(--border-width-thick) solid var(--color-primary);
+  outline-offset: var(--space-1);
+}
+
+.leave-list-page .leave-filter-count {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  min-width: var(--space-5);
+  height: var(--space-5);
+  padding: var(--space-0) var(--space-1);
+  border-radius: var(--radius-pill);
+  background: var(--color-primary-tint);
+  color: var(--color-primary-ink);
+}
+
+.leave-list-page .leave-filter-popover {
+  position: absolute;
+  z-index: 5;
+  top: calc(100% + var(--space-2));
+  right: var(--space-0);
+  display: grid;
+  gap: var(--space-2);
+  width: calc(var(--space-12) * 3);
+  padding: var(--space-4);
+  background: var(--color-surface);
+  border: var(--border-width) solid var(--color-border-strong);
+  border-radius: var(--radius-lg);
+  box-shadow: var(--shadow-pop);
+  color: var(--color-text-soft);
+  font-size: var(--font-size-sm);
+}
+
+.leave-list-page .leave-filter-popover label:not(:first-child) {
+  margin-top: var(--space-1);
+}
+
+.leave-list-page .leave-panel {
+  padding: var(--space-0);
+  border: var(--border-width) solid var(--color-border-strong);
+  border-radius: var(--radius-lg);
+  background: var(--color-surface);
+  box-shadow: var(--shadow-card);
+  margin-bottom: var(--space-6);
+  overflow: hidden;
+}
+
+.leave-list-page .leave-table-wrap {
+  overflow-x: auto;
+}
+
+.leave-list-page .leave-table {
+  width: 100%;
+  border-collapse: collapse;
+  font-size: var(--font-size-sm);
+  min-width: calc(var(--space-12) * 14);
+  table-layout: fixed;
+  font-family: var(--font-body);
+}
+
+.leave-list-page .leave-table thead tr {
+  border-bottom: var(--border-width) solid var(--color-border-strong);
+}
+
+.leave-list-page .leave-table th {
+  padding: var(--space-3);
+  text-align: left;
+  color: var(--color-text-soft);
+  font-weight: var(--font-weight-semibold);
+  white-space: nowrap;
+  background: var(--color-surface-muted);
+  font-family: var(--font-body);
+  font-size: var(--font-size-xs);
+  letter-spacing: var(--letter-spacing-normal);
+  text-transform: none;
+}
+
+.leave-list-page .leave-table td {
+  padding: var(--space-4) var(--space-3);
+  border-bottom: var(--border-width) solid var(--color-border);
+  vertical-align: middle;
+  line-height: var(--line-height-snug);
+  overflow-wrap: break-word;
+}
+
+.leave-list-page .leave-table td b {
+  display: block;
+  font-weight: var(--font-weight-semibold);
+  color: var(--color-text);
+}
+
+.leave-list-page .leave-table td small {
+  display: block;
+  color: var(--color-text-soft);
+  font-size: var(--font-size-xs);
+  margin-top: var(--space-1);
+}
+
+.leave-list-page .leave-table tbody tr:hover {
+  background: var(--color-bg);
+}
+
+.leave-list-page .leave-employee-cell {
+  display: flex;
+  align-items: center;
+  gap: var(--space-2);
+}
+
+.leave-list-page .leave-employee-avatar {
+  width: var(--avatar-size-sm);
+  height: var(--avatar-size-sm);
+  border-radius: var(--radius-circle);
+  object-fit: cover;
+  border: var(--border-width) solid var(--color-border);
+  flex-shrink: 0;
+}
+
+.leave-list-page .leave-employee-initial {
+  width: var(--avatar-size-sm);
+  height: var(--avatar-size-sm);
+  border-radius: var(--radius-circle);
+  background: var(--color-primary-tint);
+  color: var(--color-primary);
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  font-weight: var(--font-weight-semibold);
+  font-size: var(--font-size-xs);
+  border: var(--border-width) solid var(--color-border);
+  flex-shrink: 0;
+}
+
+.leave-list-page .leave-employee-meta {
+  display: flex;
+  flex-direction: column;
+}
+
+.leave-list-page .leave-text-nowrap {
+  white-space: nowrap;
+}
+
+.leave-list-page .leave-text-muted {
+  color: var(--color-text-soft);
+}
+
+.leave-list-page .leave-row-near {
+  background: var(--color-warning-tint);
+}
+
+.leave-list-page .leave-row-near:hover {
+  background: var(--color-warning-tint);
+}
+
+.leave-list-page .leave-empty {
+  padding: var(--space-8);
+  text-align: center;
+  color: var(--color-text-muted);
+}
+
+.leave-list-page .leave-pager {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: var(--space-4);
+  margin-top: var(--space-0);
+  color: var(--color-text-soft);
+  font-size: var(--font-size-sm);
+  padding: var(--space-4);
+}
+
+.leave-list-page .leave-filter-nav .filter-select,
+.leave-list-page .leave-filter-nav .filter-input-search {
+  width: 100%;
+  min-width: 0;
+  min-height: var(--control-height-md);
+  padding: var(--space-2) var(--space-3);
+  border: var(--border-width) solid var(--color-border-strong);
+  border-radius: var(--radius-button);
+  background: var(--color-surface);
+  color: var(--color-text);
+  font-family: var(--font-body);
+  font-size: var(--font-size-sm);
+}
+
+.leave-list-page .leave-search-field .filter-input-search {
+  padding-left: var(--space-8);
+}
+
+.leave-list-page .leave-list-caption {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  justify-content: space-between;
+  gap: var(--space-3);
+  padding: var(--space-3) var(--space-4);
+  color: var(--color-text-soft);
+  font-size: var(--font-size-xs);
+}
+
+/* Lịch sử trong nhóm nhân viên có người xử lý; bảng theo đơn có tên nhân viên thay cột đó. */
+.leave-list-page .leave-table th:nth-child(1) {
+  width: 20%;
+}
+.leave-list-page .leave-table th:nth-child(2) {
+  width: 12%;
+}
+.leave-list-page .leave-table th:nth-child(3) {
+  width: 18%;
+}
+.leave-list-page .leave-table th:nth-child(4) {
+  width: 12%;
+}
+.leave-list-page .leave-table th:nth-child(5) {
+  width: 18%;
+}
+.leave-list-page .leave-table th:nth-child(6) {
+  width: 20%;
+}
+
+/* Các tab trạng thái có thêm cột nhân viên, tổng cộng sáu cột. */
+.leave-list-page .leave-request-table th:nth-child(1) {
+  width: 22%;
+}
+.leave-list-page .leave-request-table th:nth-child(2) {
+  width: 21%;
+}
+.leave-list-page .leave-request-table th:nth-child(3) {
+  width: 12%;
+}
+.leave-list-page .leave-request-table th:nth-child(4) {
+  width: 17%;
+}
+.leave-list-page .leave-request-table th:nth-child(5) {
+  width: 10%;
+}
+.leave-list-page .leave-request-table th:nth-child(6) {
+  width: 18%;
+}
+
+.leave-date-range {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-1);
+  font-weight: var(--font-weight-medium);
+  font-variant-numeric: var(--font-numeric);
+}
+
+.leave-type-label,
+.leave-handler-name {
+  color: var(--color-text);
+  font-weight: var(--font-weight-medium);
+}
+
+/* Nhãn sắp nghỉ dùng nền nổi bật để phân biệt với chữ ghi chú và trạng thái chờ. */
+.leave-list-page .leave-near-label {
+  display: flex;
+  align-items: center;
+  gap: var(--space-1);
+  width: fit-content;
+  margin-top: var(--space-2);
+  padding: var(--space-1) var(--space-2);
+  border-radius: var(--radius-pill);
+  background: var(--color-danger-tint);
+  color: var(--color-danger-ink);
+  border: var(--border-width) solid var(--color-danger-border);
+  font-size: var(--font-size-xs);
+  font-weight: var(--font-weight-semibold);
+  line-height: var(--line-height-snug);
+}
+
+.leave-list-page .leave-actions-cell {
+  text-align: right;
+}
+
+.leave-list-page .leave-actions-cell .btn {
+  padding: var(--space-2);
+  font-size: var(--font-size-xs);
+  white-space: nowrap;
+}
+
+/* leave-request-list.js dùng cả hàng làm điểm mở chi tiết; form/nút không kích hoạt điều hướng. */
+.leave-list-page .leave-request-row {
+  cursor: pointer;
+}
+
+.leave-list-page .leave-request-row:focus-visible {
+  outline: var(--border-width-thick) solid var(--color-primary);
+  outline-offset: calc(var(--border-width-thick) * -1);
+}
+
+.leave-list-page .leave-row-actions {
+  display: flex;
+  justify-content: flex-end;
+  flex-wrap: wrap;
+  gap: var(--space-2);
+  margin: var(--space-0);
+}
+
+/* Checkbox liên kết leave-bulk-form; bảng giữ sáu cột hiện tại. */
+.leave-list-page .leave-selection-checkbox {
+  flex-shrink: 0;
+  margin: var(--space-0) var(--space-2) var(--space-0) var(--space-0);
+  accent-color: var(--color-primary);
+  cursor: pointer;
+}
+
+.leave-list-page .leave-bulk-actions {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: var(--space-2);
+  margin: var(--space-0) var(--space-0) var(--space-0) auto;
+}
+
+.leave-list-page .leave-bulk-actions span,
+.leave-list-page .leave-bulk-actions .btn {
+  white-space: nowrap;
+}
+
+.leave-list-page .leave-bulk-result {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: var(--space-3);
+  margin: var(--space-0) var(--space-0) var(--space-4);
+  padding: var(--space-3) var(--space-4);
+  background: var(--color-surface);
+  border: var(--border-width) solid var(--color-border);
+  border-radius: var(--radius-lg);
+  font-size: var(--font-size-sm);
+}
+
+.leave-list-page .leave-bulk-result details {
+  flex-basis: 100%;
+}
+
+.leave-list-page .leave-bulk-result summary {
+  cursor: pointer;
+  color: var(--color-danger-ink);
+}
+
+.leave-list-page .leave-list-error {
+  color: var(--color-danger-ink);
+}
+
+@media (max-width: 900px) {
+  .leave-list-page .leave-filter-nav {
+    grid-template-columns: minmax(0, 1fr) auto auto auto;
+  }
+
+  .leave-list-page .leave-search-field {
+    grid-column: 1 / -1;
+  }
+}
+
+@media (max-width: 640px) {
+  .leave-list-page .leave-filter-nav {
+    grid-template-columns: minmax(0, 1fr) auto auto;
+  }
+
+  .leave-list-page .leave-date-filters {
+    grid-column: 1 / -1;
+  }
+
+  .leave-list-page .leave-filter-popover {
+    right: auto;
+    left: var(--space-0);
+  }
+}
+
+/* Nhân viên là hàng cha; details/summary tự hỗ trợ mở rộng bằng chuột và bàn phím. */
+.leave-employee-list {
+  padding: var(--space-4);
+}
+
+.leave-employee-group {
+  margin-bottom: var(--space-3);
+  border: var(--border-width) solid var(--color-border);
+  border-radius: var(--radius-lg);
+  background: var(--color-surface);
+  overflow: hidden;
+}
+
+.leave-employee-group:last-child {
+  margin-bottom: var(--space-0);
+}
+
+.leave-employee-summary {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: var(--space-4);
+  padding: var(--space-4);
+  list-style: none;
+}
+
+summary.leave-employee-summary {
+  cursor: pointer;
+}
+
+summary.leave-employee-summary::-webkit-details-marker {
+  display: none;
+}
+
+summary.leave-employee-summary:hover {
+  background: var(--color-bg);
+}
+
+summary.leave-employee-summary:focus-visible {
+  outline: var(--border-width-thick) solid var(--color-primary);
+  outline-offset: calc(var(--border-width-thick) * -1);
+}
+
+.leave-employee-near > .leave-employee-summary {
+  background: var(--color-warning-tint);
+}
+
+.leave-employee-name {
+  color: var(--color-text);
+  font-weight: var(--font-weight-semibold);
+  font-size: var(--font-size-sm);
+}
+
+.leave-employee-description,
+.leave-total-count,
+.leave-zero-count {
+  color: var(--color-text-soft);
+  font-size: var(--font-size-xs);
+}
+
+.leave-employee-description {
+  margin-top: var(--space-1);
+}
+
+.leave-employee-counts {
+  display: flex;
+  align-items: center;
+  justify-content: flex-end;
+  flex-wrap: wrap;
+  gap: var(--space-3);
+}
+
+.leave-list-page .leave-employee-counts .leave-near-label {
+  margin-top: var(--space-0);
+}
+
+.leave-expand-icon {
+  color: var(--color-text-soft);
+  transition: transform var(--duration-base);
+}
+
+.leave-employee-group[open] > summary .leave-expand-icon {
+  transform: rotate(180deg);
+}
+
+.leave-employee-requests {
+  border-top: var(--border-width) solid var(--color-border);
+}
+
+.leave-group-caption,
+.leave-group-empty {
+  margin: var(--space-0);
+  padding: var(--space-3) var(--space-4);
+  font-size: var(--font-size-xs);
+  color: var(--color-text-soft);
+}
+
+@media (max-width: 640px) {
+  .leave-employee-summary {
+    align-items: flex-start;
+    flex-direction: column;
+    gap: var(--space-3);
+  }
+
+  .leave-employee-counts {
+    justify-content: flex-start;
+  }
+}

@@ -8,6 +8,7 @@ import com.gms.dto.ServiceResult;
 import com.gms.entity.Facility;
 import com.gms.entity.MaintenanceRequest;
 import com.gms.service.MaintenanceRequestService;
+import com.gms.util.JsonUtil;
 import com.gms.util.PaginationUtil;
 import com.gms.util.RequestUtil;
 import jakarta.servlet.ServletException;
@@ -18,11 +19,24 @@ import jakarta.servlet.http.HttpServletResponse;
 import jakarta.servlet.http.HttpSession;
 
 import java.io.IOException;
+import java.time.LocalDate;
 import java.util.Collections;
 import java.util.List;
+import java.util.Map;
 
 /**
- * Controller tạo, theo dõi và đóng yêu cầu bảo trì của Lễ tân (UC-28).
+ * Presentation Layer (Servlet Controller): Manages HTTP interactions for Receptionist
+ * maintenance request creation, tracking, and closure workflows (UC-28 / BF-06).
+ *
+ * <p><b>Architectural Responsibility:</b></p>
+ * The Servlet acts as the Controller in the MVC pattern. It parses and validates HTTP request parameters,
+ * verifies session authentication, delegates business operations to {@link MaintenanceRequestService},
+ * and decides the next view:
+ * <ul>
+ *   <li><b>GET requests:</b> Read-only idempotent page rendering with multi-criteria filtering and pagination.</li>
+ *   <li><b>POST requests:</b> State-changing operations (create, close) adhering to the Post-Redirect-Get (PRG)
+ *       pattern with session flash messages to prevent duplicate submissions on browser refresh.</li>
+ * </ul>
  */
 @WebServlet("/receptionist/maintenance-requests")
 public class MaintenanceRequestServlet extends HttpServlet {
@@ -52,6 +66,9 @@ public class MaintenanceRequestServlet extends HttpServlet {
         renderPage(request, response, accountId);
     }
 
+    /**
+     * Dispatches state-changing POST actions (create or close) following the PRG pattern.
+     */
     @Override
     protected void doPost(
             HttpServletRequest request,
@@ -78,6 +95,7 @@ public class MaintenanceRequestServlet extends HttpServlet {
             return;
         }
 
+        // Unknown action fallback
         RequestUtil.setFlashToast(
                 request,
                 "error",
@@ -227,12 +245,26 @@ public class MaintenanceRequestServlet extends HttpServlet {
 
     // ===== Hiển thị =====
 
+    /**
+     * Renders the Receptionist maintenance management page.
+     *
+     * <p><b>Data Preparation:</b></p>
+     * <ul>
+     *   <li>Extracts multi-criteria filters: {@code keyword}, {@code status}, {@code priority}, and {@code reportedDate}.</li>
+     *   <li>Retrieves selectable facilities (with calculated available & pending quantities) for the dropdown.</li>
+     *   <li>Retrieves paginated requests with all-request visibility across the gym.</li>
+     *   <li>Retrieves unfinished requests map and serializes it to JSON ({@code unfinishedJson}).
+     *       This allows client-side JavaScript to instantaneously render warning banners and cross-links
+     *       when the receptionist selects a machine, avoiding asynchronous AJAX round-trips.</li>
+     * </ul>
+     */
     private void renderPage(
             HttpServletRequest request,
             HttpServletResponse response,
             int accountId
     ) throws ServletException, IOException {
 
+        // Extract and trim filter parameters
         String keyword =
                 RequestUtil.getTrimmedParam(
                         request,
@@ -244,6 +276,29 @@ public class MaintenanceRequestServlet extends HttpServlet {
                         request,
                         "status"
                 );
+
+        String priority =
+                RequestUtil.getTrimmedParam(
+                        request,
+                        "priority"
+                );
+
+        String reportedDateStr =
+                RequestUtil.getTrimmedParam(
+                        request,
+                        "reportedDate"
+                );
+
+        // Safe date parsing: invalid strings gracefully default to null
+        LocalDate reportedDate = null;
+        if (reportedDateStr != null && !reportedDateStr.isEmpty()) {
+            try {
+                reportedDate = LocalDate.parse(reportedDateStr);
+            } catch (Exception ignored) {
+            }
+        }
+
+        // Support pre-selecting a facility if redirected from the catalog page (?facilityId=...)
         if (request.getAttribute("formFacilityId") == null) {
 
             int preselectedFacilityId =
@@ -266,19 +321,34 @@ public class MaintenanceRequestServlet extends HttpServlet {
         int pageSize =
                 PaginationUtil.getPageSize(request);
 
+        // Fetch selectable facilities with derived quantities
         ServiceResult<List<Facility>> facilityResult =
                 maintenanceRequestService.getSelectableFacilities();
 
+        // Fetch paginated requests visible to receptionist
         ServiceResult<PageResult<MaintenanceRequestDAO.MaintenanceRequestView>>
                 pageResult =
                 maintenanceRequestService.getReceptionistPage(
                         accountId,
                         keyword,
                         status,
+                        priority,
+                        reportedDate,
                         page,
                         pageSize
                 );
 
+        // Fetch active requests map for client-side warning banners
+        ServiceResult<Map<Integer, List<MaintenanceRequestDAO.UnfinishedRequestSummary>>>
+                unfinishedResult =
+                maintenanceRequestService.getUnfinishedRequestsMap();
+
+        Map<Integer, List<MaintenanceRequestDAO.UnfinishedRequestSummary>> unfinishedMap =
+                unfinishedResult.isSuccess() && unfinishedResult.getData() != null
+                        ? unfinishedResult.getData()
+                        : Collections.emptyMap();
+
+        // Set request attributes for JSP view rendering
         request.setAttribute(
                 "facilities",
                 facilityResult.isSuccess()
@@ -298,6 +368,9 @@ public class MaintenanceRequestServlet extends HttpServlet {
                 )
         );
 
+        request.setAttribute("unfinishedMap", unfinishedMap);
+        request.setAttribute("unfinishedJson", JsonUtil.toJson(unfinishedMap));
+
         if (!pageResult.isSuccess()) {
             request.setAttribute(
                     "pageError",
@@ -307,6 +380,8 @@ public class MaintenanceRequestServlet extends HttpServlet {
 
         request.setAttribute("keyword", keyword);
         request.setAttribute("statusFilter", status);
+        request.setAttribute("priorityFilter", priority);
+        request.setAttribute("reportedDateFilter", reportedDateStr);
         request.setAttribute(
                 "priorityOptions",
                 MaintenanceRequest.Priority.values()

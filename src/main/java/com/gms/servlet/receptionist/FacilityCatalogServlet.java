@@ -32,22 +32,11 @@ public class FacilityCatalogServlet
             HttpServletResponse response
     ) throws ServletException, IOException {
 
+        // Read single keyword search parameter (obsolete category/status parameters are safely ignored)
         String keyword =
                 RequestUtil.getTrimmedParam(
                         request,
                         "keyword"
-                );
-
-        String category =
-                RequestUtil.getTrimmedParam(
-                        request,
-                        "category"
-                );
-
-        String status =
-                RequestUtil.getTrimmedParam(
-                        request,
-                        "status"
                 );
 
         int page =
@@ -60,16 +49,12 @@ public class FacilityCatalogServlet
                         request
                 );
 
-        ServiceResult<PageResult<Facility>>
-                result =
-                maintenanceRequestService
-                        .getFacilityCatalogPage(
-                                keyword,
-                                category,
-                                status,
-                                page,
-                                pageSize
-                        );
+        ServiceResult<PageResult<Facility>> result =
+                maintenanceRequestService.getFacilityCatalogPage(
+                        keyword,
+                        page,
+                        pageSize
+                );
 
         request.setAttribute(
                 "facilityPage",
@@ -86,26 +71,6 @@ public class FacilityCatalogServlet
         request.setAttribute(
                 "keyword",
                 keyword
-        );
-
-        request.setAttribute(
-                "categoryFilter",
-                category
-        );
-
-        request.setAttribute(
-                "statusFilter",
-                status
-        );
-
-        request.setAttribute(
-                "categoryOptions",
-                Facility.Category.values()
-        );
-
-        request.setAttribute(
-                "statusOptions",
-                Facility.Status.values()
         );
 
         request.setAttribute(

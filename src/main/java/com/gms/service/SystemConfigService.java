@@ -75,6 +75,12 @@ public class SystemConfigService {
     // P-22: Số khách tối thiểu để hiện điểm PT (DBR-69)
     public static final String MIN_PT_RATING_CUSTOMERS = "P-22";
 
+    // P-23: Định mức phép năm mặc định cho nhân viên (ngày)
+    public static final String LEAVE_ANNUAL_QUOTA = "P-23";
+
+    // P-24: Số ngày nghỉ tối đa cho một đơn nghỉ phép
+    public static final String LEAVE_MAX_DAYS_PER_REQUEST = "P-24";
+
     // DAO dùng chung
     private final SystemConfigDAO systemConfigDAO = new SystemConfigDAO();
 

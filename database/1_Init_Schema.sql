@@ -708,20 +708,24 @@ GO
 CREATE TABLE LeaveRequests (
     LeaveRequestId       INT IDENTITY(1,1) NOT NULL,
     EmployeeId           INT           NOT NULL,
-    ReviewedByEmployeeId INT           NULL,     -- NULL khi hệ thống tự từ chối (CBR-85)
+    ReviewedByEmployeeId INT           NULL,
+    AssignedToEmployeeId INT           NULL,     -- Người được giao duyệt (NULL = Chưa giao, Quản lý chung)
     LeaveType            VARCHAR(10)   NOT NULL, -- Annual | Sick | Unpaid
-    LeaveDate            DATE          NOT NULL,
+    FromDate             DATE          NOT NULL,
+    ToDate               DATE          NOT NULL,
     ShiftType            VARCHAR(10)   NOT NULL, -- Morning | Afternoon | FullDay
+    Days                 DECIMAL(4,1)  NOT NULL,
     Reason               NVARCHAR(500) NOT NULL,
     Status               VARCHAR(10)   NOT NULL CONSTRAINT DF_LeaveRequests_Status      DEFAULT ('Pending'), -- DBR-44
     RejectReason         NVARCHAR(500) NULL,
-    SubmittedAt          DATETIME2(0)  NOT NULL CONSTRAINT DF_LeaveRequests_SubmittedAt DEFAULT (SYSDATETIME()), -- trước P-12 ngày hôm trước (CBR-84)
+    SubmittedAt          DATETIME2(0)  NOT NULL CONSTRAINT DF_LeaveRequests_SubmittedAt DEFAULT (SYSDATETIME()),
     ReviewedAt           DATETIME2(0)  NULL,
-    ReminderSentAt       DATETIME2(0)  NULL,     -- job nhắc Manager đúng 1 lần
+    ReminderSentAt       DATETIME2(0)  NULL,
 
     CONSTRAINT PK_LeaveRequests PRIMARY KEY (LeaveRequestId),
     CONSTRAINT FK_LeaveRequests_Employee FOREIGN KEY (EmployeeId)           REFERENCES Employees(EmployeeId),
     CONSTRAINT FK_LeaveRequests_Reviewer FOREIGN KEY (ReviewedByEmployeeId) REFERENCES Employees(EmployeeId),
+    CONSTRAINT FK_LeaveRequests_Assignee FOREIGN KEY (AssignedToEmployeeId) REFERENCES Employees(EmployeeId),
     CONSTRAINT CK_LeaveRequests_Type   CHECK (LeaveType IN ('Annual','Sick','Unpaid')),
     CONSTRAINT CK_LeaveRequests_Shift  CHECK (ShiftType IN ('Morning','Afternoon','FullDay')),
     CONSTRAINT CK_LeaveRequests_Reason CHECK (LEN(LTRIM(RTRIM(Reason))) >= 5),
@@ -731,12 +735,29 @@ CREATE TABLE LeaveRequests (
         OR (Status = 'Approved' AND ReviewedByEmployeeId IS NOT NULL AND ReviewedAt IS NOT NULL AND RejectReason IS NULL)
         OR (Status = 'Rejected' AND ReviewedAt IS NOT NULL AND RejectReason IS NOT NULL AND LEN(LTRIM(RTRIM(RejectReason))) >= 5)
     ),
-    CONSTRAINT CK_LeaveRequests_Submit CHECK (CAST(SubmittedAt AS DATE) < LeaveDate)
+    CONSTRAINT CK_LeaveRequests_Range CHECK (ToDate >= FromDate AND DATEDIFF(DAY, FromDate, ToDate) < 31),
+    CONSTRAINT CK_LeaveRequests_Year  CHECK (YEAR(FromDate) = YEAR(ToDate)),
+    CONSTRAINT CK_LeaveRequests_Days  CHECK (Days > 0),
+    CONSTRAINT CK_LeaveRequests_Half  CHECK (ShiftType = 'FullDay' OR FromDate = ToDate)
 );
 GO
 
--- Mỗi nhân viên tối đa 1 đơn chưa bị từ chối cho cùng ngày + ca
-CREATE UNIQUE INDEX UX_LeaveRequests_OnePerShift ON LeaveRequests(EmployeeId, LeaveDate, ShiftType) WHERE Status <> 'Rejected';
+-- Bảng lưu lịch sử chuyển người duyệt (BF-05)
+CREATE TABLE LeaveRequestTransfers (
+    TransferId     INT IDENTITY(1,1) NOT NULL,
+    LeaveRequestId INT           NOT NULL,
+    FromEmployeeId INT           NOT NULL,
+    ToEmployeeId   INT           NOT NULL,
+    Note           NVARCHAR(200) NULL,
+    CreatedAt      DATETIME2(0)  NOT NULL CONSTRAINT DF_LRT_CreatedAt DEFAULT (SYSDATETIME()),
+    CONSTRAINT PK_LeaveRequestTransfers PRIMARY KEY (TransferId),
+    CONSTRAINT FK_LRT_Request FOREIGN KEY (LeaveRequestId) REFERENCES LeaveRequests(LeaveRequestId),
+    CONSTRAINT FK_LRT_From    FOREIGN KEY (FromEmployeeId) REFERENCES Employees(EmployeeId),
+    CONSTRAINT FK_LRT_To      FOREIGN KEY (ToEmployeeId)   REFERENCES Employees(EmployeeId),
+    CONSTRAINT CK_LRT_Diff    CHECK (FromEmployeeId <> ToEmployeeId)
+);
+GO
+CREATE INDEX IX_LRT_Request ON LeaveRequestTransfers(LeaveRequestId, CreatedAt);
 GO
 
 CREATE TABLE Facilities (
@@ -822,8 +843,8 @@ CREATE TABLE StaffAttendances (
 GO
 
 -- Index cluster D
-CREATE INDEX IX_LeaveRequests_StatusDate ON LeaveRequests(Status, LeaveDate);        -- hàng chờ duyệt + job tự từ chối
-CREATE INDEX IX_LeaveRequests_DateShift  ON LeaveRequests(LeaveDate, ShiftType, Status); -- định biên (DBR-60)
+CREATE INDEX IX_LeaveRequests_StatusDate ON LeaveRequests(Status, FromDate);        -- hàng chờ duyệt + job tự từ chối
+CREATE INDEX IX_LeaveRequests_DateShift  ON LeaveRequests(FromDate, ToDate, ShiftType, Status); -- định biên (DBR-60)
 CREATE INDEX IX_Maintenance_Status       ON MaintenanceRequests(Status, ReportedAt);
 CREATE INDEX IX_Maintenance_Facility     ON MaintenanceRequests(FacilityId, Status);  -- CBR-99, CBR-102
 CREATE INDEX IX_StaffAttendances_EmpDate ON StaffAttendances(EmployeeId, WorkDate);

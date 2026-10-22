@@ -30,4 +30,12 @@
         <exception-type>java.lang.Throwable</exception-type>
         <location>/WEB-INF/jsp/error/500.jsp</location>
     </error-page>
+
+    <!-- Bảo mật session cookie chống đánh cắp qua XSS -->
+    <session-config>
+        <cookie-config>
+            <http-only>true</http-only>
+        </cookie-config>
+        <tracking-mode>COOKIE</tracking-mode>
+    </session-config>
 </web-app>

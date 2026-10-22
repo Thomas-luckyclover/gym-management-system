@@ -8,15 +8,14 @@
 }
 
 .facility-filter {
-    display: grid;
-    grid-template-columns:
-        minmax(260px, 1fr)
-        180px
-        180px
-        auto
-        auto;
+    display: flex;
     gap: var(--space-3);
     align-items: center;
+}
+
+.facility-filter input[type="search"] {
+    flex: 1;
+    min-width: 260px;
 }
 
 .facility-list {

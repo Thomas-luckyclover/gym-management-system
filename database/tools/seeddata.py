@@ -584,7 +584,14 @@ vcode(None, 'khach.moi@gmail.com', 'SignUp', '112233', now_(-1), now_(14), note=
 vcode(None, 'yen.doan@gmail.com', 'Claim', '445566', now_(-1), now_(14), note='kích hoạt hồ sơ Yến, mã 445566')
 
 # ============================================================ 13. NHÂN SỰ, THIẾT BỊ
-LR = lambda **kw: add('LeaveRequests', kw)
+def LR(**kw):
+    """Map mẫu đơn một ngày sang schema FromDate/ToDate/Days hiện tại."""
+    leave_date = kw.pop('LeaveDate')
+    kw['FromDate'] = leave_date
+    kw['ToDate'] = leave_date
+    kw['Days'] = 1.0 if kw['ShiftType'] == 'FullDay' else 0.5
+    kw['AssignedToEmployeeId'] = None
+    return add('LeaveRequests', kw)
 LR(EmployeeId=5, ReviewedByEmployeeId=2, LeaveType='Annual', LeaveDate=d_(2026, 9, 19), ShiftType='Morning', Reason='Về quê giỗ ông',
    Status='Approved', RejectReason=None, SubmittedAt=dt_(2026, 9, 17, 10, 0), ReviewedAt=dt_(2026, 9, 17, 15, 30), ReminderSentAt=None)
 LR(EmployeeId=7, ReviewedByEmployeeId=2, LeaveType='Unpaid', LeaveDate=d_(2026, 9, 19), ShiftType='Afternoon', Reason='Có việc cá nhân',

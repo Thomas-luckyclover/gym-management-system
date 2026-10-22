@@ -1,5 +1,6 @@
 package com.gms.entity;
 
+import java.math.BigDecimal;
 import java.time.LocalDate;
 import java.time.LocalDateTime;
 
@@ -23,9 +24,6 @@ public class LeaveRequest {
     // DAO: LeaveRequests.LeaveType (Annual | Sick | Unpaid).
     private LeaveType leaveType;
 
-    // DAO: LeaveRequests.LeaveDate, ngày xin nghỉ; phải sau ngày nộp (CK_LeaveRequests_Submit).
-    private LocalDate leaveDate;
-
     // DAO: LeaveRequests.ShiftType (Morning | Afternoon | FullDay).
     private ShiftType shiftType;
 
@@ -43,6 +41,18 @@ public class LeaveRequest {
 
     // DAO: LeaveRequests.ReviewedAt; có khi Approved hoặc Rejected (kể cả tự từ chối).
     private LocalDateTime reviewedAt;
+
+    // DAO: LeaveRequests.AssignedToEmployeeId, người được giao duyệt (NULL = chưa phân công).
+    private Integer assignedToEmployeeId;
+
+    // DAO: LeaveRequests.FromDate, ngày bắt đầu nghỉ.
+    private LocalDate fromDate;
+
+    // DAO: LeaveRequests.ToDate, ngày kết thúc nghỉ.
+    private LocalDate toDate;
+
+    // DAO: LeaveRequests.Days, số ngày nghỉ (0.5 hoặc số ngày nguyên).
+    private BigDecimal days;
 
     // DAO: LeaveRequests.ReminderSentAt; job nhắc Manager đúng 1 lần, NULL nếu chưa nhắc.
     private LocalDateTime reminderSentAt;
@@ -82,12 +92,36 @@ public class LeaveRequest {
         this.leaveType = leaveType;
     }
 
-    public LocalDate getLeaveDate() {
-        return leaveDate;
+    public LocalDate getFromDate() {
+        return fromDate;
     }
 
-    public void setLeaveDate(LocalDate leaveDate) {
-        this.leaveDate = leaveDate;
+    public void setFromDate(LocalDate fromDate) {
+        this.fromDate = fromDate;
+    }
+
+    public LocalDate getToDate() {
+        return toDate;
+    }
+
+    public void setToDate(LocalDate toDate) {
+        this.toDate = toDate;
+    }
+
+    public BigDecimal getDays() {
+        return days;
+    }
+
+    public void setDays(BigDecimal days) {
+        this.days = days;
+    }
+
+    public Integer getAssignedToEmployeeId() {
+        return assignedToEmployeeId;
+    }
+
+    public void setAssignedToEmployeeId(Integer assignedToEmployeeId) {
+        this.assignedToEmployeeId = assignedToEmployeeId;
     }
 
     public ShiftType getShiftType() {

@@ -36,6 +36,9 @@ public final class SessionKey {
      */
     public static final String FLASH_TOAST = "flashToast";
 
+    /** Kết quả duyệt nhiều đơn, danh sách đọc và xóa sau redirect để không gửi lại POST khi tải lại. */
+    public static final String LEAVE_BULK_RESULT = "leaveBulkResult";
+
     /** CSRF token gắn với session để chống tấn công Cross-Site Request Forgery (TC-17A). */
     public static final String CSRF_TOKEN = "csrfToken";
 

@@ -3400,15 +3400,18 @@ SET IDENTITY_INSERT SessionMoveLogs OFF;
    LeaveRequests — 7 dòng.
    ============================================================================ */
 SET IDENTITY_INSERT LeaveRequests ON;
-INSERT INTO LeaveRequests (LeaveRequestId, EmployeeId, ReviewedByEmployeeId, LeaveType, LeaveDate, ShiftType, Reason, Status, RejectReason, SubmittedAt, ReviewedAt, ReminderSentAt) VALUES
- (1, 5, 2, 'Annual', '2026-09-19', 'Morning', N'Về quê giỗ ông', 'Approved', NULL, '2026-09-17 10:00:00', '2026-09-17 15:30:00', NULL),
- (2, 7, 2, 'Unpaid', '2026-09-19', 'Afternoon', N'Có việc cá nhân', 'Rejected', N'Ca chiều chỉ còn 2 PT, duyệt sẽ thiếu người (CBR-88)', '2026-09-18 09:00:00', '2026-09-18 17:00:00', NULL),
- (3, 4, NULL, 'Annual', '2026-09-16', 'Morning', N'Đưa con đi khám', 'Rejected', N'Quá hạn duyệt', '2026-09-15 14:00:00', '2026-09-15 20:00:00', '2026-09-15 19:00:00'),
- (4, 3, 2, 'Annual', '2026-10-14', 'Afternoon', N'Đi đám cưới bạn', 'Approved', NULL, '2026-10-01 09:30:00', '2026-10-01 11:00:00', NULL),
- (5, 6, NULL, 'Sick', '2026-10-10', 'FullDay', N'Lịch tái khám định kỳ', 'Pending', NULL, '2026-10-02 08:00:00', NULL, NULL),
- (6, 13, NULL, 'Annual', '2026-10-12', 'Morning', N'Thi chứng chỉ huấn luyện', 'Pending', NULL, '2026-10-02 14:00:00', NULL, NULL),
- (7, 9, 2, 'Sick', '2026-09-24', 'FullDay', N'Sốt cao, có giấy khám', 'Approved', NULL, '2026-09-23 11:00:00', '2026-09-23 16:00:00', NULL);
+INSERT INTO LeaveRequests (LeaveRequestId, EmployeeId, ReviewedByEmployeeId, AssignedToEmployeeId, LeaveType, FromDate, ToDate, ShiftType, Days, Reason, Status, RejectReason, SubmittedAt, ReviewedAt) VALUES
+ (1, 5, 2, 2, 'Annual', '2026-10-18', '2026-10-18', 'Morning', 0.5, N'Về quê có việc gia đình', 'Approved', NULL, '2026-10-16 09:00:00', '2026-10-17 15:30:00'),
+ (2, 4, 2, 2, 'Sick', '2026-10-19', '2026-10-19', 'Afternoon', 0.5, N'Nghỉ khám sức khỏe ca chiều', 'Rejected', N'Ca chiều thiếu lễ tân trực quầy, vui lòng đổi ca khác', '2026-10-18 08:30:00', '2026-10-18 16:00:00'),
+ (3, 6, NULL, 2, 'Annual', '2026-10-22', '2026-10-22', 'Morning', 0.5, N'Tham gia hội thảo chuyên môn fitness buổi sáng', 'Pending', NULL, '2026-10-20 08:30:00', NULL),
+ (4, 3, NULL, 2, 'Annual', '2026-10-23', '2026-10-24', 'FullDay', 2.0, N'Nghỉ phép thường niên cùng gia đình 2 ngày', 'Pending', NULL, '2026-10-20 09:15:00', NULL),
+ (5, 7, NULL, 2, 'Sick', '2026-10-24', '2026-10-24', 'Morning', 0.5, N'Khám chấn thương cổ tay tại bệnh viện thể thao', 'Pending', NULL, '2026-10-20 10:00:00', NULL),
+ (6, 9, NULL, NULL, 'Unpaid', '2026-10-25', '2026-10-25', 'Afternoon', 0.5, N'Xin nghỉ giải quyết thủ tục giấy tờ hành chính cá nhân', 'Pending', NULL, '2026-10-20 11:30:00', NULL),
+ (7, 8, NULL, 2, 'Annual', '2026-10-26', '2026-10-26', 'FullDay', 1.0, N'Nghỉ giải quyết việc gia đình đột xuất', 'Pending', NULL, '2026-10-20 13:45:00', NULL);
 SET IDENTITY_INSERT LeaveRequests OFF;
+
+INSERT INTO LeaveRequestTransfers (LeaveRequestId, FromEmployeeId, ToEmployeeId, Note, CreatedAt) VALUES
+ (5, 1, 2, N'Chuyển Quản lý Việt duyệt đơn phép bộ phận PT', '2026-10-20 10:15:00');
 
 /* ============================================================================
    Facilities — 10 dòng.

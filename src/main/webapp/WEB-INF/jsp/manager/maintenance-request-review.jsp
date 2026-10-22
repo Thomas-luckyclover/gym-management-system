@@ -173,7 +173,9 @@
 
               <form action="${pageContext.request.contextPath}/manager/maintenance-requests/review"
                     method="post"
-                    class="maintenance-action-card">
+                    class="maintenance-action-card"
+                    data-validate
+                    novalidate>
 
                 <input type="hidden"
                        name="requestId"
@@ -195,9 +197,15 @@
                             name="rejectReason"
                             minlength="5"
                             maxlength="500"
+                            data-min-length="5"
+                            data-max-length="500"
+                            data-label="Lý do từ chối"
+                            data-rule="reason"
                             required><c:out value="${rejectReason}" /></textarea>
 
-                  <div class="field-error">
+                  <div class="field-error"
+                       id="rejectReasonError"
+                       <c:if test="${empty errors.rejectReason}">hidden</c:if>>
                     <c:out value="${errors.rejectReason}" />
                   </div>
                 </div>
