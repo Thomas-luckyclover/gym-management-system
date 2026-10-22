@@ -78,60 +78,16 @@
                  name="keyword"
                  maxlength="100"
                  value="<c:out value='${keyword}' />"
-                 placeholder="Tìm tên thiết bị hoặc khu vực">
-
-          <select name="category">
-
-            <option value="">
-              Tất cả khu vực
-            </option>
-
-            <c:forEach var="category"
-                       items="${categoryOptions}">
-
-              <option value="${category.dbValue}"
-                      ${categoryFilter == category.dbValue
-                              ? 'selected' : ''}>
-
-                <c:out
-                        value="${category.displayName}" />
-
-              </option>
-
-            </c:forEach>
-
-          </select>
-
-          <select name="status">
-
-            <option value="">
-              Tất cả tình trạng
-            </option>
-
-            <c:forEach var="status"
-                       items="${statusOptions}">
-
-              <option value="${status.dbValue}"
-                      ${statusFilter == status.dbValue
-                              ? 'selected' : ''}>
-
-                <c:out
-                        value="${status.displayName}" />
-
-              </option>
-
-            </c:forEach>
-
-          </select>
+                 placeholder="Tìm tên thiết bị, danh mục hoặc khu vực...">
 
           <button class="btn btn-primary"
                   type="submit">
-            Lọc
+            Tìm kiếm
           </button>
 
           <a class="btn btn-ghost"
              href="${pageContext.request.contextPath}/receptionist/facilities">
-            Xóa lọc
+            Xóa tìm kiếm
           </a>
 
         </form>
@@ -160,17 +116,12 @@
                                 value="${facility.facilityName}" />
                       </strong>
 
-                      <span class="badge
-                        ${facility.status.dbValue == 'Available'
-                          ? 'badge-success'
-                          : facility.status.dbValue == 'UnderMaintenance'
-                          ? 'badge-warning'
-                          : 'badge-neutral'}">
-
-                        <c:out
-                                value="${facility.status.displayName}" />
-
-                      </span>
+                      <%-- Retired facility indicator only; active facilities have no status badges --%>
+                      <c:if test="${facility.status.dbValue == 'Retired'}">
+                        <span class="badge badge-neutral">
+                          Ngừng sử dụng
+                        </span>
+                      </c:if>
 
                     </div>
 
@@ -197,12 +148,25 @@
                       </c:if>
 
                       <span>
-                        Số lượng:
+                        Khả dụng:
                         <b>
-                          <c:out
-                                  value="${facility.quantity}" />
+                          <c:choose>
+                            <c:when test="${facility.status.dbValue == 'Retired'}">0</c:when>
+                            <c:otherwise><c:out value="${facility.availableQuantity}" />/<c:out value="${facility.quantity}" /></c:otherwise>
+                          </c:choose>
                         </b>
                       </span>
+
+                      <c:if test="${facility.status.dbValue != 'Retired'}">
+
+                        <span>
+                          Yêu cầu chưa hoàn tất:
+                          <b>
+                            <c:out value="${facility.pendingQuantity}" />
+                          </b>
+                        </span>
+
+                      </c:if>
 
                     </div>
 
@@ -258,14 +222,10 @@
                 <c:param name="pageSize"
                          value="${facilityPage.pageSize}" />
 
-                <c:param name="keyword"
-                         value="${keyword}" />
-
-                <c:param name="category"
-                         value="${categoryFilter}" />
-
-                <c:param name="status"
-                         value="${statusFilter}" />
+                <c:if test="${not empty keyword}">
+                  <c:param name="keyword"
+                           value="${keyword}" />
+                </c:if>
 
               </c:url>
 
@@ -292,14 +252,10 @@
                 <c:param name="pageSize"
                          value="${facilityPage.pageSize}" />
 
-                <c:param name="keyword"
-                         value="${keyword}" />
-
-                <c:param name="category"
-                         value="${categoryFilter}" />
-
-                <c:param name="status"
-                         value="${statusFilter}" />
+                <c:if test="${not empty keyword}">
+                  <c:param name="keyword"
+                           value="${keyword}" />
+                </c:if>
 
               </c:url>
 
