@@ -154,7 +154,7 @@ public class PaymentService {
         }
     }
 
-    /** Đọc đơn thật cho trang bàn giao SEQ-1; chưa áp voucher/khởi tạo thanh toán. */
+    /** Đọc đơn thật cho trang bàn giao; chưa áp voucher/khởi tạo thanh toán. */
     public ServiceResult<Order> getOwnedOnlineOrder(int accountId, Integer orderId) {
         if (accountId <= 0 || orderId == null || orderId <= 0) {
             return ServiceResult.fail("Mã đơn không hợp lệ.");
@@ -171,7 +171,7 @@ public class PaymentService {
         }
     }
 
-    /** Đọc dữ liệu thật cho checkout; giá/VAT giữ nguyên snapshot của đơn. */
+    /** Đọc dữ liệu thật cho checkout; giá/VAT giữ nguyên snapshot của đơn.  */
     public ServiceResult<CheckoutView> getCheckoutView(int accountId, Integer orderId) {
         if (accountId <= 0 || orderId == null || orderId <= 0) {
             return ServiceResult.fail("Mã đơn không hợp lệ.");

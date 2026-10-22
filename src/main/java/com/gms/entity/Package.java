@@ -6,14 +6,9 @@ import java.util.List;
 
 /**
  * Gói dịch vụ (gói tập, gói PT, buổi PT lẻ), ánh xạ bảng Packages.
- *
  * LƯU Ý TÊN CLASS: Java có sẵn class java.lang.Package (tự import vào mọi file).
  * File nào dùng class này PHẢI ghi rõ: import com.gms.entity.Package;
- * Có dòng import đó thì chữ "Package" trong file sẽ hiểu là class của mình, không phải của Java.
- *
- * Ví dụ 1 dòng seed: 3 | Gói 3 Tháng | Membership | 90 ngày | 2.190.000đ | đang bán
- *
- * @author Le Cong Minh
+
  */
 public class Package {
 

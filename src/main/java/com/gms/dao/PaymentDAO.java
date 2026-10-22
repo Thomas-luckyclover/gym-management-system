@@ -6,18 +6,23 @@ import java.sql.PreparedStatement;
 import java.sql.ResultSet;
 import java.sql.SQLException;
 
-/** Truy vấn SEQ-1; mọi ghi dữ liệu dùng Connection do PaymentService mở. */
+/**
+ * Truy vấn SEQ-1; mọi ghi dữ liệu dùng Connection do PaymentService mở.
+ */
 public class PaymentDAO {
 
     /**
      * Đọc hồ sơ theo tài khoản, giữ khóa tới cuối transaction để hai lần mua
      * đồng thời của cùng khách phải lần lượt kiểm tra đơn cũ.
+     *
      * @param conn transaction tạo đơn
      * @param accountId mã tài khoản từ session
      * @return hồ sơ còn hiệu lực; null nếu tài khoản/hồ sơ không hợp lệ
      */
     public PaymentCustomerView findCustomerForPurchase(Connection conn, int accountId) throws SQLException {
         String sql = "SELECT c.CustomerId, CASE WHEN c.Status = 'Frozen' THEN 1 ELSE 0 END AS IsFrozen "
+                // Khóa hồ sơ khách trong transaction để các yêu cầu cùng xử lý khách này phải chờ nhau.
+                // Khóa được giải phóng khi commit hoặc rollback.
                 + "FROM Customers c WITH (UPDLOCK, HOLDLOCK) "
                 + "JOIN Accounts a ON a.PersonId = c.PersonId "
                 + "WHERE a.AccountId = ? AND a.Status = 'Active' AND c.Status <> 'Inactive'";
@@ -34,6 +39,7 @@ public class PaymentDAO {
 
     /**
      * Trả đúng một lượt voucher của đơn vừa hủy; Service kiểm rowsAffected.
+     *
      * @param conn transaction hủy đơn cũ và tạo đơn mới
      * @param voucherId voucher trên đơn cũ, không lấy từ request
      * @return số voucher cập nhật; 0 nghĩa là dữ liệu không nhất quán
@@ -45,7 +51,10 @@ public class PaymentDAO {
             return statement.executeUpdate();
         }
     }
-    /** CBR-75: còn transaction Pending thì không cho thêm/gỡ/thay voucher. */
+
+    /**
+     * CBR-75: còn transaction Pending thì không cho thêm/gỡ/thay voucher.
+     */
     public boolean hasPendingTransaction(Connection conn, int orderId) throws SQLException {
         String sql = "SELECT TOP (1) TransactionId FROM Transactions "
                 + "WHERE OrderId = ? AND Status = 'Pending'";

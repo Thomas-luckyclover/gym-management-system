@@ -70,12 +70,12 @@
                         </div>
                     </c:if>
 
-                    <c:if test="${not empty packageSelection}">
+                    <c:if test="${not empty package1}">
                         <%-- Form lọc rỗng: mọi ô lọc (thanh trên, cột trái) khai báo form="packageFilterForm" để không lồng form
                              trong form (các thẻ gói bên dưới có form POST "Mua ngay"). Form dùng GET nên bộ lọc nằm trên URL.
                              package-selection.js gửi form khi đổi chip lọc hoặc ô sắp xếp (không dùng data-auto-submit của common.js vì
                              hàm đó tìm form bằng closest("form"), mà ô sắp xếp nằm ngoài form). common.js xử lý nút Xóa bộ lọc (data-clear-filters). --%>
-                        <form id="packageFilterForm" method="get" action="${pageContext.request.contextPath}/customer/packages" role="search"></form>
+                        <form id="packageFilterForm" method="get" action="${pageContext.request.contextPath}/customer/packages" role="search"></form> <%-- form truyền tham số bộ lọc --%>
 
                         <%-- ===== Khu 1: tìm kiếm + sắp xếp ===== --%>
                         <div class="package-toolbar">
@@ -85,16 +85,16 @@
                                 <input id="packageKeyword" name="keyword" type="search" maxlength="100" form="packageFilterForm"
                                        placeholder="Tên gói, ví dụ: 3 tháng, vé ngày, PT 1-1"
                                        data-placeholder-short="Tìm tên gói"
-                                       value="<c:out value='${packageSelection.keyword}' />">
+                                       value="<c:out value='${package1.keyword}' />">
                             </div>
 
                             <div class="package-toolbar__sort">
                                 <label for="packageSort">Sắp xếp</label>
                                 <select id="packageSort" name="sort" form="packageFilterForm">
-                                    <option value="default" ${packageSelection.sortKey == 'default' ? 'selected' : ''}>Mặc định</option>
-                                    <option value="saving" ${packageSelection.sortKey == 'saving' ? 'selected' : ''}>Tiết kiệm hơn</option>
-                                    <option value="price-asc" ${packageSelection.sortKey == 'price-asc' ? 'selected' : ''}>Giá thấp đến cao</option>
-                                    <option value="price-desc" ${packageSelection.sortKey == 'price-desc' ? 'selected' : ''}>Giá cao đến thấp</option>
+                                    <option value="default" ${package1.sortKey == 'default' ? 'selected' : ''}>Mặc định</option>
+                                    <option value="saving" ${package1.sortKey == 'saving' ? 'selected' : ''}>Tiết kiệm hơn</option>
+                                    <option value="price-asc" ${package1.sortKey == 'price-asc' ? 'selected' : ''}>Giá thấp đến cao</option>
+                                    <option value="price-desc" ${package1.sortKey == 'price-desc' ? 'selected' : ''}>Giá cao đến thấp</option>
                                 </select>
                             </div>
 
@@ -117,20 +117,20 @@
                                 <fieldset class="filter-group">
                                     <legend>Loại gói</legend>
                                     <label class="filter-chip">
-                                        <input type="radio" name="type" value="all" form="packageFilterForm" ${packageSelection.typeFilter == 'all' ? 'checked' : ''}>
-                                        <span>Tất cả <small>${packageSelection.allCount}</small></span>
+                                        <input type="radio" name="type" value="all" form="packageFilterForm" ${package1.typeFilter == 'all' ? 'checked' : ''}>
+                                        <span>Tất cả <small>${package1.allCount}</small></span>
                                     </label>
                                     <label class="filter-chip">
-                                        <input type="radio" name="type" value="gym" form="packageFilterForm" ${packageSelection.typeFilter == 'gym' ? 'checked' : ''}>
-                                        <span>Gói tập <small>${packageSelection.gymCount}</small></span>
+                                        <input type="radio" name="type" value="gym" form="packageFilterForm" ${package1.typeFilter == 'gym' ? 'checked' : ''}>
+                                        <span>Gói tập <small>${package1.gymCount}</small></span>
                                     </label>
                                     <label class="filter-chip">
-                                        <input type="radio" name="type" value="day-pass" form="packageFilterForm" ${packageSelection.typeFilter == 'day-pass' ? 'checked' : ''}>
-                                        <span>Vé ngày <small>${packageSelection.dayPassCount}</small></span>
+                                        <input type="radio" name="type" value="day-pass" form="packageFilterForm" ${package1.typeFilter == 'day-pass' ? 'checked' : ''}>
+                                        <span>Vé ngày <small>${package1.dayPassCount}</small></span>
                                     </label>
                                     <label class="filter-chip">
-                                        <input type="radio" name="type" value="pt" form="packageFilterForm" ${packageSelection.typeFilter == 'pt' ? 'checked' : ''}>
-                                        <span>Gói PT <small>${packageSelection.ptCount}</small></span>
+                                        <input type="radio" name="type" value="pt" form="packageFilterForm" ${package1.typeFilter == 'pt' ? 'checked' : ''}>
+                                        <span>Gói PT <small>${package1.ptCount}</small></span>
                                     </label>
                                 </fieldset>
 
@@ -141,19 +141,19 @@
                                     <div class="price-range" data-price-range>
                                         <span class="price-range__fill" data-range-fill></span>
                                         <input class="price-range__slider" type="range" data-range-min aria-label="Giá thấp nhất"
-                                               min="${packageSelection.minBound}" max="${packageSelection.maxBound}" step="10000" value="${packageSelection.minPrice}">
+                                               min="${package1.minBound}" max="${package1.maxBound}" step="10000" value="${package1.minPrice}">
                                         <input class="price-range__slider" type="range" data-range-max aria-label="Giá cao nhất"
-                                               min="${packageSelection.minBound}" max="${packageSelection.maxBound}" step="10000" value="${packageSelection.maxPrice}">
+                                               min="${package1.minBound}" max="${package1.maxBound}" step="10000" value="${package1.maxPrice}">
                                     </div>
                                     <div class="price-inputs">
                                         <span class="price-field">
                                             <input type="number" name="minPrice" form="packageFilterForm" inputmode="numeric" aria-label="Giá từ"
-                                                   min="${packageSelection.minBound}" max="${packageSelection.maxBound}" step="10000" value="${packageSelection.minPrice}" data-price-min>
+                                                   min="${package1.minBound}" max="${package1.maxBound}" step="10000" value="${package1.minPrice}" data-price-min>
                                         </span>
                                         <span aria-hidden="true">–</span>
                                         <span class="price-field">
                                             <input type="number" name="maxPrice" form="packageFilterForm" inputmode="numeric" aria-label="Giá đến"
-                                                   min="${packageSelection.minBound}" max="${packageSelection.maxBound}" step="10000" value="${packageSelection.maxPrice}" data-price-max>
+                                                   min="${package1.minBound}" max="${package1.maxBound}" step="10000" value="${package1.maxPrice}" data-price-max>
                                         </span>
                                     </div>
                                     <button class="btn btn-outline btn-sm btn-block" type="submit" form="packageFilterForm">Áp dụng</button>
@@ -161,7 +161,7 @@
 
                                 <fieldset class="filter-group">
                                     <legend>Thời hạn</legend>
-                                    <c:forEach var="durationOption" items="${packageSelection.durationOptions}">
+                                    <c:forEach var="durationOption" items="${package1.durationOptions}">
                                         <label class="filter-chip">
                                             <input type="checkbox" name="duration" value="${durationOption.key}" form="packageFilterForm"
                                                    ${durationOption.selected ? 'checked' : ''}>
@@ -173,12 +173,12 @@
                                 <fieldset class="filter-group">
                                     <legend>Hình thức mua</legend>
                                     <label class="filter-chip">
-                                        <input type="checkbox" name="buy" value="online" form="packageFilterForm" ${packageSelection.buyOnline ? 'checked' : ''}>
-                                        <span>Thanh toán trực tuyến <small>${packageSelection.onlineCount}</small></span>
+                                        <input type="checkbox" name="buy" value="online" form="packageFilterForm" ${package1.buyOnline ? 'checked' : ''}>
+                                        <span>Thanh toán trực tuyến <small>${package1.onlineCount}</small></span>
                                     </label>
                                     <label class="filter-chip">
-                                        <input type="checkbox" name="buy" value="counter" form="packageFilterForm" ${packageSelection.buyCounterOnly ? 'checked' : ''}>
-                                        <span>Chỉ mua tại quầy <small>${packageSelection.counterOnlyCount}</small></span>
+                                        <input type="checkbox" name="buy" value="counter" form="packageFilterForm" ${package1.buyCounterOnly ? 'checked' : ''}>
+                                        <span>Chỉ mua tại quầy <small>${package1.counterOnlyCount}</small></span>
                                     </label>
                                 </fieldset>
                             </aside>
@@ -186,9 +186,9 @@
                             <%-- ===== Khu 3: kết quả ===== --%>
                             <section class="package-results" aria-label="Danh sách gói">
 
-                                <c:if test="${not empty packageSelection.chips}">
+                                <c:if test="${not empty package1.chips}">
                                     <div class="package-chips">
-                                        <c:forEach var="chip" items="${packageSelection.chips}">
+                                        <c:forEach var="chip" items="${package1.chips}">
                                             <button class="package-chip-active" type="button"
                                                     data-chip-field="${chip.field}" data-chip-value="<c:out value='${chip.key}' />">
                                                 <c:out value="${chip.label}" /> <i class="fa-solid fa-xmark" aria-hidden="true"></i>
@@ -201,7 +201,7 @@
                                 <c:choose>
 
                                     <%-- Chưa có gói nào đang bán (khác với lọc không ra kết quả) --%>
-                                    <c:when test="${packageSelection.totalActiveCount == 0}">
+                                    <c:when test="${package1.totalActiveCount == 0}">
                                         <div class="empty-state package-empty">
                                             <h2>Hiện chưa có gói nào đang bán</h2>
                                             <p>Vui lòng quay lại sau hoặc liên hệ quầy lễ tân để được tư vấn.</p>
@@ -209,7 +209,7 @@
                                     </c:when>
 
                                     <%-- Có gói nhưng bộ lọc không khớp gói nào --%>
-                                    <c:when test="${empty packageSelection.options}">
+                                    <c:when test="${empty package1.options}">
                                         <div class="empty-state package-empty">
                                             <h2>Không tìm thấy gói phù hợp</h2>
                                             <p>Thử từ khóa khác hoặc bỏ bớt bộ lọc.</p>
@@ -219,12 +219,12 @@
 
                                     <c:otherwise>
                                         <p class="package-count" aria-live="polite">
-                                            Tìm thấy ${packageSelection.filteredCount} gói<c:if test="${packageSelection.totalPages > 1}"> · trang ${packageSelection.page}/${packageSelection.totalPages}</c:if>
+                                            Tìm thấy ${package1.filteredCount} gói<c:if test="${package1.totalPages > 1}"> · trang ${package1.page}/${package1.totalPages}</c:if>
                                             </p>
 
-                                        <%-- Lưới thẻ gói (packageSelection.options: List<PackageOptionView>) --%>
+                                        <%-- Lưới thẻ gói (package1.options: List<PackageOptionView>) --%>
                                         <div class="package-grid" id="packageGrid">
-                                            <c:forEach var="option" items="${packageSelection.options}">
+                                            <c:forEach var="option" items="${package1.options}">
                                                 <c:set var="pkg" value="${option.card.pkg}" />
 
                                                 <%-- Thẻ gói kiểu banner: banner tiêu đề lớn (có dải chéo nhãn ở góc nếu có) → chân thẻ có giá + nút.
@@ -403,26 +403,26 @@
                                         </div>
 
                                         <%-- Phân trang (chỉ hiện khi có từ 2 trang; link giữ nguyên mọi bộ lọc đang chọn) --%>
-                                        <c:if test="${packageSelection.totalPages > 1}">
+                                        <c:if test="${package1.totalPages > 1}">
                                             <nav class="package-pager" aria-label="Phân trang gói">
                                                 <c:url var="pagerBase" value="/customer/packages">
-                                                    <c:param name="keyword" value="${packageSelection.keyword}" />
-                                                    <c:param name="type" value="${packageSelection.typeFilter}" />
-                                                    <c:param name="sort" value="${packageSelection.sortKey}" />
-                                                    <c:param name="minPrice" value="${packageSelection.minPrice}" />
-                                                    <c:param name="maxPrice" value="${packageSelection.maxPrice}" />
-                                                    <c:forEach var="durationOption" items="${packageSelection.durationOptions}">
+                                                    <c:param name="keyword" value="${package1.keyword}" />
+                                                    <c:param name="type" value="${package1.typeFilter}" />
+                                                    <c:param name="sort" value="${package1.sortKey}" />
+                                                    <c:param name="minPrice" value="${package1.minPrice}" />
+                                                    <c:param name="maxPrice" value="${package1.maxPrice}" />
+                                                    <c:forEach var="durationOption" items="${package1.durationOptions}">
                                                         <c:if test="${durationOption.selected}">
                                                             <c:param name="duration" value="${durationOption.key}" />
                                                         </c:if>
                                                     </c:forEach>
-                                                    <c:if test="${packageSelection.buyOnline}"><c:param name="buy" value="online" /></c:if>
-                                                    <c:if test="${packageSelection.buyCounterOnly}"><c:param name="buy" value="counter" /></c:if>
+                                                    <c:if test="${package1.buyOnline}"><c:param name="buy" value="online" /></c:if>
+                                                    <c:if test="${package1.buyCounterOnly}"><c:param name="buy" value="counter" /></c:if>
                                                 </c:url>
 
                                                 <c:choose>
-                                                    <c:when test="${packageSelection.page > 1}">
-                                                        <a class="package-pager__item" href="${pagerBase}&amp;page=${packageSelection.page - 1}" aria-label="Trang trước">
+                                                    <c:when test="${package1.page > 1}">
+                                                        <a class="package-pager__item" href="${pagerBase}&amp;page=${package1.page - 1}" aria-label="Trang trước">
                                                             <i class="fa-solid fa-chevron-left" aria-hidden="true"></i>
                                                         </a>
                                                     </c:when>
@@ -431,9 +431,9 @@
                                                         </c:otherwise>
                                                     </c:choose>
 
-                                                <c:forEach var="pageNumber" begin="1" end="${packageSelection.totalPages}">
+                                                <c:forEach var="pageNumber" begin="1" end="${package1.totalPages}">
                                                     <c:choose>
-                                                        <c:when test="${pageNumber == packageSelection.page}">
+                                                        <c:when test="${pageNumber == package1.page}">
                                                             <span class="package-pager__item is-current" aria-current="page">${pageNumber}</span>
                                                         </c:when>
                                                         <c:otherwise>
@@ -443,8 +443,8 @@
                                                 </c:forEach>
 
                                                 <c:choose>
-                                                    <c:when test="${packageSelection.page < packageSelection.totalPages}">
-                                                        <a class="package-pager__item" href="${pagerBase}&amp;page=${packageSelection.page + 1}" aria-label="Trang sau">
+                                                    <c:when test="${package1.page < package1.totalPages}">
+                                                        <a class="package-pager__item" href="${pagerBase}&amp;page=${package1.page + 1}" aria-label="Trang sau">
                                                             <i class="fa-solid fa-chevron-right" aria-hidden="true"></i>
                                                         </a>
                                                     </c:when>

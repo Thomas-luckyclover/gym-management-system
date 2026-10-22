@@ -54,11 +54,10 @@ public class CheckoutServlet extends HttpServlet {
         request.setAttribute("customerName", session.getAttribute(SessionKey.DISPLAY_NAME));
         request.setAttribute("activeSidebar", "buy-package");
         request.setAttribute("themeClass", "theme-pt customer-dashboard-page checkout-page");
-        // B4: trang tạm chỉ đọc đơn đúng chủ, không mở giao dịch thanh toán.
-        if ("payment".equals(request.getParameter("stage"))) {
+        // B4: mở giao dịch thanh toán.
+        
             RequestUtil.forward(request, response, "customer/payment");
-            return;
-        }
+         
         RequestUtil.forward(request, response, "customer/checkout");
     }
     /** POST áp/gỡ voucher: lỗi giữ input và forward, thành công redirect để tránh gửi lại form. */
@@ -79,7 +78,7 @@ public class CheckoutServlet extends HttpServlet {
 
         // B2: Service kiểm đơn thuộc chủ, còn hạn và điều kiện voucher trong transaction.
         Integer orderId = RequestUtil.getPositiveIntParam(request, "order");
-        String action = request.getParameter("action");
+        String action = request.getParameter("action");  //front end truyen vao
         ServiceResult<Void> result;
         if ("apply-voucher".equals(action)) {
             result = paymentService.applyVoucher(accountId, orderId, request.getParameter("voucherCode"));
