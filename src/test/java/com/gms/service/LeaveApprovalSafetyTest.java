@@ -271,6 +271,9 @@ class LeaveApprovalSafetyTest {
         when(dao.findEmployeeRequests(any(), eq(java.util.List.of(50)), isNull())).thenReturn(java.util.List.of(
                 new LeaveRequestRow(request, "NV-0050", "PT test", "PT", null, null)));
         when(dao.findWorkingPosition(connection, 50)).thenReturn(null);
+        when(dao.countRequests(any())).thenReturn(1);
+        when(dao.findRequestPage(any(), eq(0), eq(20), isNull())).thenReturn(java.util.List.of(
+                new LeaveRequestRow(request, "NV-0050", "PT test", "PT", null, null)));
         try (MockedStatic<DBContext> database = mockStatic(DBContext.class)) {
             database.when(DBContext::getConnection).thenReturn(connection);
             var result = service.getEmployeePage(service.createManagerFilter("", "Pending", null, null, null, null), null, 1, 20);
@@ -278,6 +281,9 @@ class LeaveApprovalSafetyTest {
             var item = result.getData().getItems().get(0).getRequests().get(0);
             assertEquals("Cần xử lý", item.getCheckSummary());
             assertTrue(item.getCheckMessage().contains("không còn"));
+            var flatResult = service.getRequestPage(service.createManagerFilter("", "Pending", null, null, null, null), null, 1, 20);
+            assertTrue(flatResult.isSuccess());
+            assertEquals(item.getCheckMessage(), flatResult.getData().getItems().get(0).getCheckMessage());
         }
     }
 
@@ -384,6 +390,9 @@ class LeaveApprovalSafetyTest {
     /** Cùng dữ liệu giả đi qua cả ba luồng để bắt việc giao diện lệch điều kiện POST. */
     private void assertReadinessAcrossScreens(boolean expectedAllowed, String expectedMessage) throws Exception {
         stubManagerAndCurrentRequest();
+        when(dao.countRequests(any())).thenReturn(1);
+        when(dao.findRequestPage(any(), eq(0), eq(20), isNull())).thenReturn(java.util.List.of(
+                new LeaveRequestRow(request, "NV-0050", "PT test", "PT", null, null)));
         when(dao.countEmployees(any())).thenReturn(1);
         when(dao.findEmployeePage(any(), eq(0), eq(20))).thenReturn(java.util.List.of(
                 new LeaveEmployeeView(50, "NV-0050", "PT test", "PT", null, "Working")));
@@ -395,12 +404,16 @@ class LeaveApprovalSafetyTest {
         try (MockedStatic<DBContext> database = mockStatic(DBContext.class)) {
             database.when(DBContext::getConnection).thenReturn(connection);
             var pageResult = service.getEmployeePage(service.createManagerFilter("", "Pending", null, null, null, null), null, 1, 20);
+            var flatResult = service.getRequestPage(service.createManagerFilter("", "Pending", null, null, null, null), null, 1, 20);
             var detailResult = service.getReviewDetail(12, 10);
             var decisionResult = service.approveRequest(10, 12);
             assertTrue(pageResult.isSuccess());
+            assertTrue(flatResult.isSuccess());
             assertTrue(detailResult.isSuccess());
             var item = pageResult.getData().getItems().get(0).getRequests().get(0);
             assertEquals(expectedAllowed ? "Đạt" : "Cần xử lý", item.getCheckSummary());
+            assertEquals(item.getCheckSummary(), flatResult.getData().getItems().get(0).getCheckSummary());
+            assertEquals(item.getCheckMessage(), flatResult.getData().getItems().get(0).getCheckMessage());
             assertEquals(expectedAllowed, detailResult.getData().isCanApprove());
             assertEquals(expectedAllowed, decisionResult.isSuccess());
             if (!expectedAllowed) {

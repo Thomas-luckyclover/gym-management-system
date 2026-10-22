@@ -117,6 +117,38 @@ public class LeaveRequestService {
         }
     }
 
+    /** Trang từng đơn cho các tab trạng thái; kiểm tra Pending giống tab Tất cả và trang chi tiết. */
+    public ServiceResult<PageResult<LeaveRequestItemView>> getRequestPage(
+            LeaveRequestFilter filter, Integer managerAccountId, int page, int pageSize) {
+        if (hasReversedDateRange(filter)) {
+            return ServiceResult.fail("Từ ngày phải trước hoặc trùng Đến ngày.");
+        }
+        try {
+            // B1: đếm và phân trang theo đơn, không lấy trang nhân viên rồi lọc lại trong Java.
+            Integer managerEmployeeId = findWorkingManagerId(managerAccountId);
+            int totalRequests = leaveRequestDAO.countRequests(filter);
+            int totalPages = Math.max(1, (totalRequests + pageSize - 1) / pageSize);
+            int currentPage = Math.max(1, Math.min(page, totalPages));
+            int offset = PaginationUtil.calculateOffset(currentPage, pageSize);
+            List<LeaveRequestRow> rows = leaveRequestDAO.findRequestPage(filter, offset, pageSize, managerEmployeeId);
+
+            // B2: giữ thứ tự SQL, đánh dấu sắp nghỉ và đọc cùng bộ kiểm tra điều kiện duyệt.
+            List<LeaveRequestItemView> items = new ArrayList<>();
+            LocalDate today = DateTimeUtil.today();
+            for (LeaveRequestRow row : rows) {
+                LeaveRequestItemView item = toItemView(row, today);
+                if (row.getLeaveRequest().isPending()) {
+                    loadApprovalSummary(item, row.getLeaveRequest());
+                }
+                items.add(item);
+            }
+            return ServiceResult.ok(new PageResult<>(items, currentPage, pageSize, totalRequests));
+        } catch (SQLException e) {
+            e.printStackTrace();
+            return ServiceResult.fail(Messages.MSG04_SYSTEM_BUSY);
+        }
+    }
+
     /** Chuẩn hóa một lần để bảng và số lượng trên tab luôn dùng cùng điều kiện. */
     public LeaveRequestFilter createManagerFilter(String keyword, String status, String position, String leaveType,
             String fromDate, String toDate) {
