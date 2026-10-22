@@ -249,6 +249,27 @@ class MyBookingServiceTest {
         assertEquals(1, past.get(1).getSessionId());
     }
 
+    @Test
+    void groupByReasonMergesSameStatusAndReason() {
+        List<MyPtSessionRow> rows = new ArrayList<>();
+        for (int i = 1; i <= 3; i++) {
+            MyPtSessionRow s = session(i, "Missed", LocalDate.of(2026, 10, i + 4));
+            MyPtSessionService.applyStatus(s, NOW, null);
+            s.setMissedReason("NoMembership");
+            rows.add(s);
+        }
+        rows.forEach(s -> MyPtSessionService.applyStatus(s, NOW, null));
+        MyPtSessionRow cancelled = session(9, "Cancelled", LocalDate.of(2026, 10, 9));
+        cancelled.setCancelType("GymClosed");
+        MyPtSessionService.applyStatus(cancelled, NOW, null);
+        rows.add(cancelled);
+
+        var groups = MyBookingService.groupByReason(rows);
+        assertEquals(2, groups.size());                       // 3 buổi vắng cùng lý do → 1 nhóm; hủy phòng nghỉ → nhóm riêng
+        assertEquals(3, groups.get(0).getSessions().size());
+        assertEquals("cancelled", groups.get(1).getStatusKey());
+    }
+
     // ---------------------------------------------------------------- buổi lẻ
 
     @Test

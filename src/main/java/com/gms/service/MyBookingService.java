@@ -8,6 +8,7 @@ import com.gms.dto.MyBookingView;
 import com.gms.dto.MyPtPackageView;
 import com.gms.dto.MyPtSessionRow;
 import com.gms.dto.ServiceResult;
+import com.gms.dto.SessionGroup;
 import com.gms.dto.SessionMoveInfo;
 import com.gms.dto.WeekdaySlot;
 import java.sql.SQLException;
@@ -106,6 +107,8 @@ public class MyBookingService {
             countSessions(view, sessions, now);
             view.setWatchList(buildWatchList(sessions));
             view.setPastProblems(buildPastProblems(sessions));
+            view.setWatchGroups(groupByReason(view.getWatchList()));
+            view.setPastGroups(groupByReason(view.getPastProblems()));
 
             // B6: phần riêng của gói PT / của buổi lẻ
             if (selected != null) {
@@ -405,6 +408,20 @@ public class MyBookingService {
             }
         }
         return warn;
+    }
+
+    /**
+     * Gom các buổi CÙNG trạng thái + CÙNG lý do thành 1 nhóm (giữ thứ tự xuất hiện đầu tiên).
+     * VD 11 buổi "chưa có Membership" → 1 dòng "11 buổi" + 11 chip ngày.
+     */
+    static List<SessionGroup> groupByReason(List<MyPtSessionRow> sessions) {
+        Map<String, SessionGroup> groups = new LinkedHashMap<>();
+        for (MyPtSessionRow s : sessions) {
+            String key = s.getStatusKey() + "|" + s.getExplanation();
+            groups.computeIfAbsent(key, k -> new SessionGroup(s.getStatusKey(), s.getStatusLabel(), s.getExplanation()))
+                    .getSessions().add(s);
+        }
+        return new ArrayList<>(groups.values());
     }
 
     /** Buổi đã Vắng / Đã hủy, mới nhất trước — chỉ là lịch sử, JSP gập lại dưới dải chấm. */

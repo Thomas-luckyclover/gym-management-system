@@ -301,6 +301,25 @@ a.booking-dot:hover { transform: scale(1.25); }
 .booking-history[open] summary::before { transform: rotate(90deg); }
 .booking-history summary:focus-visible { outline: none; box-shadow: var(--shadow-focus); border-radius: var(--radius-xs); }
 .booking-history .booking-rows { margin-top: var(--space-1); }
+.booking-groups { display: grid; gap: var(--space-3); margin: var(--space-2) 0 0; padding: 0; list-style: none; }
+.booking-group { padding: var(--space-3) var(--space-4); border: var(--border-width) solid var(--color-border); border-radius: var(--radius-md); background: var(--color-surface-muted); }
+.booking-group-head { display: flex; flex-wrap: wrap; align-items: baseline; gap: var(--space-1) var(--space-2); margin: 0; font-size: var(--font-size-sm); }
+.booking-group-head b { font-variant-numeric: tabular-nums; }
+.booking-group-note { flex-basis: 100%; color: var(--color-text-soft); line-height: var(--line-height-normal); }
+.booking-group-dates { display: flex; flex-wrap: wrap; gap: var(--space-1-5); margin: var(--space-2) 0 0; }
+.booking-group-dates a {
+  padding: var(--space-0-5) var(--space-2);
+  border: var(--border-width) solid var(--color-border);
+  border-radius: var(--radius-pill);
+  background: var(--color-surface);
+  color: var(--color-text);
+  font-size: var(--font-size-xs);
+  font-weight: var(--font-weight-semibold);
+  font-variant-numeric: tabular-nums;
+  text-decoration: none;
+}
+.booking-group-dates a:hover { border-color: var(--color-link); color: var(--color-link); }
+.booking-group-dates a:focus-visible { outline: none; box-shadow: var(--shadow-focus); }
 .booking-foot { display: flex; align-items: center; gap: var(--space-2); padding: var(--space-3) var(--space-5); border-top: var(--border-width) solid var(--color-border); }
 .booking-foot a { display: inline-flex; align-items: center; gap: var(--space-1); color: var(--color-link); font-size: var(--font-size-sm); font-weight: var(--font-weight-bold); text-decoration: none; }
 .booking-foot a:hover { text-decoration: underline; }

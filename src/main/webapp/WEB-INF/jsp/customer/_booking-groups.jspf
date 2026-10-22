@@ -1,0 +1,21 @@
+<%@ page pageEncoding="UTF-8" %>
+<%-- ===== Danh sách nhóm buổi (Cần chú ý / Vắng – hủy): groups = List<SessionGroup> do JSP cha đặt ===== --%>
+<%-- Mỗi nhóm = 1 dòng: nhãn trạng thái + "N buổi" + lý do chung; bên dưới là chip ngày, bấm sang Lịch tập đúng buổi. --%>
+<ul class="booking-groups">
+    <c:forEach var="g" items="${groups}">
+        <li class="booking-group">
+            <p class="booking-group-head">
+                <span class="session-status" data-status="${g.statusKey}"><c:out value="${g.statusLabel}" /></span>
+                <b>${fn:length(g.sessions)} buổi</b>
+                <span class="booking-group-note"><c:out value="${g.explanation}" /></span>
+            </p>
+            <p class="booking-group-dates">
+                <c:forEach var="s" items="${g.sessions}">
+                    <%-- "Thứ 5" → "T5", "Chủ nhật" → "CN" cho chip gọn --%>
+                    <a href="${weekLink}&amp;date=${s.slotDate}&amp;session=${s.sessionId}" title="${fn:escapeXml(s.dayName)}, ${gms:formatDate(s.slotDate)} · ${gms:formatTime(s.startTime)} – ${gms:formatTime(s.endTime)}">${fn:replace(fn:replace(s.dayName, 'Thứ ', 'T'), 'Chủ nhật', 'CN')} ${fn:substring(gms:formatDate(s.slotDate), 0, 5)}</a>
+                </c:forEach>
+            </p>
+        </li>
+    </c:forEach>
+</ul>
+<%-- ===== KẾT THÚC danh sách nhóm buổi ===== --%>

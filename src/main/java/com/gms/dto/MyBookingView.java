@@ -42,6 +42,8 @@ public class MyBookingView {
     // ---------------- Buổi tới / cần để ý ----------------
     private MyPtSessionRow nextAfterFocus;       // buổi ngay sau "Buổi tới" → dòng "Sau đó …"
     private List<MyPtSessionRow> watchList = new ArrayList<>();      // "Cần để ý": buổi SẮP TỚI có cảnh báo (còn kịp xử lý)
+    private List<SessionGroup> watchGroups = new ArrayList<>();      // watchList gom theo lý do → JSP
+    private List<SessionGroup> pastGroups = new ArrayList<>();       // pastProblems gom theo lý do → JSP
     private List<MyPtSessionRow> pastProblems = new ArrayList<>();   // buổi đã Vắng / Đã hủy → gập dưới dải chấm (chỉ là lịch sử)
 
     // ---------------- CTA: tối đa 1, Service chọn theo độ ưu tiên ----------------
@@ -116,6 +118,12 @@ public class MyBookingView {
 
     public MyPtSessionRow getNextAfterFocus() { return nextAfterFocus; }
     public void setNextAfterFocus(MyPtSessionRow nextAfterFocus) { this.nextAfterFocus = nextAfterFocus; }
+
+    public List<SessionGroup> getWatchGroups() { return watchGroups; }
+    public void setWatchGroups(List<SessionGroup> watchGroups) { this.watchGroups = watchGroups; }
+
+    public List<SessionGroup> getPastGroups() { return pastGroups; }
+    public void setPastGroups(List<SessionGroup> pastGroups) { this.pastGroups = pastGroups; }
 
     public List<MyPtSessionRow> getPastProblems() { return pastProblems; }
     public void setPastProblems(List<MyPtSessionRow> pastProblems) { this.pastProblems = pastProblems; }

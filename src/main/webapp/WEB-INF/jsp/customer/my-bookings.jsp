@@ -8,7 +8,7 @@
   Cột trái : 3 tab Đang tập / Đã kết thúc / Buổi lẻ (bindTabs của common.js) + lối đi nhanh
   Cột phải: KHÔNG liệt kê hết các buổi (xem đủ → màn Lịch tập). Gồm:
             [DAU-GOI] tên gói · [CTA] tối đa 1 lời mời hành động · [BUOI-TOI] buổi tới + tiến độ
-            [LICH-CO-DINH] tuần mẫu T2–T6 + buổi khác giờ · [CAC-BUOI] dải chấm · [CAN-DE-Y] vắng/hủy/cảnh báo
+            [LICH-CO-DINH] tuần mẫu T2–T6 + buổi khác giờ · [CAC-BUOI] dải chấm · [CAN-CHU-Y] buổi sắp tới thiếu gói thành viên
             Buổi lẻ: [BUOI-LE] danh sách ngắn + "Đặt lại với PT"
   Lời giải thích dài để trong nút (i) (.pt-info, common.js bindHintBoxes), không rải chữ phụ trên màn.
 --%>
@@ -356,16 +356,8 @@
                                                     <c:if test="${not empty booking.pastProblems}">
                                                         <details class="booking-history">
                                                             <summary>${fn:length(booking.pastProblems)} buổi vắng / hủy · xem lý do</summary>
-                                                            <ul class="booking-rows">
-                                                                <c:forEach var="s" items="${booking.pastProblems}">
-                                                                    <li>
-                                                                        <a class="booking-rows-date" href="${weekLink}&amp;date=${s.slotDate}&amp;session=${s.sessionId}"><c:out value="${s.dayName}" />, ${gms:formatDate(s.slotDate)}</a>
-                                                                        <span class="booking-rows-time">${gms:formatTime(s.startTime)} – ${gms:formatTime(s.endTime)}</span>
-                                                                        <span class="booking-rows-note"><c:out value="${s.explanation}" /></span>
-                                                                        <span class="session-status" data-status="${s.statusKey}"><c:out value="${s.statusLabel}" /></span>
-                                                                    </li>
-                                                                </c:forEach>
-                                                            </ul>
+                                                            <c:set var="groups" value="${booking.pastGroups}" />
+                                                            <%@ include file="_booking-groups.jspf" %>
                                                         </details>
                                                     </c:if>
                                                 </section>
@@ -402,20 +394,12 @@
                                     <c:if test="${not empty booking.watchList}">
                                         <section class="booking-section" aria-labelledby="watch-title">
                                             <div class="booking-section-head">
-                                                <h4 id="watch-title">Cần để ý</h4>
-                                                <span class="pt-info"><button type="button" class="pt-info-trigger" aria-label="Cần để ý gồm gì" aria-describedby="hint-watch"><span aria-hidden="true">i</span></button><span id="hint-watch" class="pt-info-popover" role="tooltip">Buổi sắp tới rơi vào ngày bạn chưa có gói thành viên hoặc vé ngày hợp lệ. Mua trước ngày tập để buổi không bị tính vắng.</span></span>
+                                                <h4 id="watch-title">Cần chú ý</h4>
+                                                <span class="pt-info"><button type="button" class="pt-info-trigger" aria-label="Cần chú ý gồm gì" aria-describedby="hint-watch"><span aria-hidden="true">i</span></button><span id="hint-watch" class="pt-info-popover" role="tooltip">Buổi sắp tới rơi vào ngày bạn chưa có gói thành viên hoặc vé ngày hợp lệ. Mua trước ngày tập để buổi không bị tính vắng.</span></span>
                                                 <span class="booking-count">${fn:length(booking.watchList)} buổi</span>
                                             </div>
-                                            <ul class="booking-rows">
-                                                <c:forEach var="s" items="${booking.watchList}">
-                                                    <li>
-                                                        <a class="booking-rows-date" href="${weekLink}&amp;date=${s.slotDate}&amp;session=${s.sessionId}"><c:out value="${s.dayName}" />, ${gms:formatDate(s.slotDate)}</a>
-                                                        <span class="booking-rows-time">${gms:formatTime(s.startTime)} – ${gms:formatTime(s.endTime)}</span>
-                                                        <span class="booking-rows-note"><c:out value="${s.explanation}" /></span>
-                                                        <span class="session-status" data-status="${s.statusKey}"><c:out value="${s.statusLabel}" /></span>
-                                                    </li>
-                                                </c:forEach>
-                                            </ul>
+                                            <c:set var="groups" value="${booking.watchGroups}" />
+                                            <%@ include file="_booking-groups.jspf" %>
                                         </section>
                                     </c:if>
 
