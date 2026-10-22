@@ -45,6 +45,7 @@ public class MyPtSessionRow {
 
     // PT của BUỔI: JOIN Sessions.PtEmployeeId = Employees.EmployeeId,
     // rồi Employees.PersonId = Persons.PersonId (SQL đặt alias ptPerson).
+    private int ptEmployeeId;            // Sessions.PtEmployeeId → link "Đặt lại với PT này" (màn Gói của tôi, buổi lẻ)
     private String ptName;               // ptPerson.FullName = Persons.FullName → tên PT trên thẻ và chi tiết
     private String ptPhone;              // ptPerson.Phone = Persons.Phone → SĐT liên hệ, copy và tạo link Zalo
 
@@ -84,6 +85,11 @@ public class MyPtSessionRow {
     // applyStatus: ended = now >= TimeSlots.SlotDate + TimeSlots.EndTime (qua JOIN Sessions ↔ TimeSlots).
     // JSP dùng nền trầm cho buổi đã hết giờ; vẫn cho bấm chi tiết và giữ nhãn kết quả đã lưu trong Sessions.Status.
     private boolean ended;
+
+    // Chỉ màn "Gói của tôi" (MyBookingService) điền 3 field dưới:
+    private String moveNote;             // vì sao buổi lệch lịch cố định: "PT dời lịch · thay buổi T3 06/10" (SessionMoveLogs)
+    private boolean firstOfWeek;         // buổi đầu tiên của 1 tuần trong gói → dải chấm vẽ vạch ngăn tuần
+    private boolean rebook;              // buổi lẻ gần nhất với PT này → hiện "Đặt lại với PT"
     // ---------------- Kết thúc phần 2: dữ liệu Service tính thêm ----------------
 
     /** Buổi đã hết giờ; chỉ điều khiển cách hiển thị, không thay trạng thái trong DB. */
@@ -109,6 +115,18 @@ public class MyPtSessionRow {
     }
 
     // ---------------- Getter / Setter ----------------
+    public int getPtEmployeeId() { return ptEmployeeId; }
+    public void setPtEmployeeId(int ptEmployeeId) { this.ptEmployeeId = ptEmployeeId; }
+
+    public String getMoveNote() { return moveNote; }
+    public void setMoveNote(String moveNote) { this.moveNote = moveNote; }
+
+    public boolean isFirstOfWeek() { return firstOfWeek; }
+    public void setFirstOfWeek(boolean firstOfWeek) { this.firstOfWeek = firstOfWeek; }
+
+    public boolean isRebook() { return rebook; }
+    public void setRebook(boolean rebook) { this.rebook = rebook; }
+
     public int getSessionId() { return sessionId; }
     public void setSessionId(int sessionId) { this.sessionId = sessionId; }
 

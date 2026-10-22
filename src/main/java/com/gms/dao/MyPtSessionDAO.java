@@ -149,6 +149,7 @@ public class MyPtSessionDAO {
         row.setPartnerCustomerId(row.isCouple() ? getNullableInt(rs, "PartnerCustomerId") : null);
 
         // Người (đã JOIN sẵn)
+        row.setPtEmployeeId(rs.getInt("PtEmployeeId"));
         row.setPtName(rs.getString("PtName"));
         row.setPtPhone(rs.getString("PtPhone"));
         row.setHolderName(rs.getString("HolderName"));
