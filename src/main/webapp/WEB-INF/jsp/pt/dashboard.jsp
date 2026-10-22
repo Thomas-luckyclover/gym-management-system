@@ -161,8 +161,12 @@
                                         <header class="pt-attn__head">
                                             <span class="pt-attn__avatar" aria-hidden="true"><c:out value="${fn:substring(nameParts[fn:length(nameParts) - 1], 0, 1)}" /></span>
                                             <div class="pt-attn__who">
-                                                <h3><c:out value="${item.customerName}" /></h3>
-                                                <p><span class="pt-attn__tag"><c:out value="${item.attentionTitle}" /></span> <span class="pt-attn__when">buổi <strong><c:out value="${fn:substring(gms:formatDate(item.sessionDate), 0, 5)}" /></strong></span></p>
+                                                <%-- Hàng trên: tên + ngày buổi gần nhất (luôn cùng hàng); hàng dưới: nhãn tình trạng. --%>
+                                                <div class="pt-attn__top">
+                                                    <h3><c:out value="${item.customerName}" /></h3>
+                                                    <span class="pt-attn__when">buổi <strong><c:out value="${fn:substring(gms:formatDate(item.sessionDate), 0, 5)}" /></strong></span>
+                                                </div>
+                                                <p><span class="pt-attn__tag"><c:out value="${item.attentionTitle}" /></span></p>
                                             </div>
                                         </header>
                                         <dl class="pt-attn__facts">

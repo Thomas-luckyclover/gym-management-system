@@ -639,7 +639,8 @@ body.pt-dashboard-page { background: var(--pt-bg); color: var(--pt-text); }
 .pt-board .pt-attn__who h3 { margin: 0; overflow: hidden; font-size: var(--font-size-base); text-overflow: ellipsis; white-space: nowrap; text-transform: none; letter-spacing: normal; }
 .pt-attn__who p { display: flex; flex-wrap: wrap; align-items: center; gap: var(--space-1) var(--space-2); margin: var(--space-1) 0 0; color: var(--pt-muted); font-size: var(--font-size-xs); }
 .pt-attn__who strong { color: var(--pt-text); font-variant-numeric: tabular-nums; }
-.pt-attn__when { white-space: nowrap; }
+.pt-attn__top { display: flex; align-items: baseline; justify-content: space-between; gap: var(--space-2); min-width: 0; }
+.pt-attn__when { flex: none; color: var(--pt-muted); font-size: var(--font-size-xs); white-space: nowrap; }
 .pt-attn__tag {
   padding: var(--space-0-5) var(--space-2-5);
   border: var(--border-width) solid var(--color-warning-border);
