@@ -105,6 +105,7 @@ public class MyBookingService {
             sessionService.fillDisplay(sessions, customerId, now);
             countSessions(view, sessions, now);
             view.setWatchList(buildWatchList(sessions));
+            view.setPastProblems(buildPastProblems(sessions));
 
             // B6: phần riêng của gói PT / của buổi lẻ
             if (selected != null) {
@@ -393,22 +394,29 @@ public class MyBookingService {
     }
 
     /**
-     * "Cần để ý": buổi sắp tới có cảnh báo (trước), rồi buổi Vắng / Đã hủy (mới nhất trước).
-     * Buổi check-in bình thường không vào đây.
+     * "Cần để ý": chỉ buổi SẮP TỚI mà bạn chưa có Membership/DayPass — còn kịp mua gói trước ngày tập.
+     * Không tính ngày phòng nghỉ (PT tự dời) và kỳ bảo lưu (vẫn có gói).
      */
     static List<MyPtSessionRow> buildWatchList(List<MyPtSessionRow> sessions) {
         List<MyPtSessionRow> warn = new ArrayList<>();
+        for (MyPtSessionRow s : sessions) {
+            if (MyPtSessionService.KEY_WARN.equals(s.getStatusKey()) && s.isNoGymPass()) {
+                warn.add(s);
+            }
+        }
+        return warn;
+    }
+
+    /** Buổi đã Vắng / Đã hủy, mới nhất trước — chỉ là lịch sử, JSP gập lại dưới dải chấm. */
+    static List<MyPtSessionRow> buildPastProblems(List<MyPtSessionRow> sessions) {
         List<MyPtSessionRow> problems = new ArrayList<>();
         for (MyPtSessionRow s : sessions) {
             String key = s.getStatusKey();
-            if (MyPtSessionService.KEY_WARN.equals(key)) {
-                warn.add(s);
-            } else if (MyPtSessionService.KEY_MISSED.equals(key) || MyPtSessionService.KEY_CANCELLED.equals(key)) {
+            if (MyPtSessionService.KEY_MISSED.equals(key) || MyPtSessionService.KEY_CANCELLED.equals(key)) {
                 problems.add(0, s);   // danh sách vào theo ngày tăng → chèn đầu để mới nhất lên trước
             }
         }
-        warn.addAll(problems);
-        return warn;
+        return problems;
     }
 
     /**
@@ -452,19 +460,16 @@ public class MyBookingService {
 
     /**
      * Chọn 1 CTA theo độ ưu tiên (null = không hiện gì):
-     *   1. buổi sắp tới thiếu quyền vào gym (không tính ngày phòng nghỉ) → mua gói thành viên online
+     *   1. buổi sắp tới chưa có Membership/DayPass (không tính bảo lưu, ngày phòng nghỉ) → mua gói thành viên online
      *   2. đang xem buổi lẻ: ≥ 3 buổi lẻ trong 30 ngày → gợi ý gói PT (tại quầy)
      *   3. gói PT đã kết thúc → đăng ký lại tại quầy
      *   4. gói PT đang tập còn ≤ 3 buổi hoặc ≤ 14 ngày → gia hạn tại quầy (CBR-48: gói PT không bán online)
      * Gọi sau countSessions và sau khi đã tính daysLeft.
      */
     static String chooseCta(MyBookingView view, List<MyPtSessionRow> sessions) {
-        // B1: thiếu quyền vào gym ở buổi sắp tới
-        for (MyPtSessionRow s : sessions) {
-            boolean warn = MyPtSessionService.KEY_WARN.equals(s.getStatusKey());
-            if (warn && !MyPtSessionService.CLOSED_DAY_WARNING.equals(s.getExplanation())) {
-                return CTA_BUY_MEMBERSHIP;
-            }
+        // B1: buổi sắp tới chưa có gói thành viên (cùng điều kiện với "Cần để ý")
+        if (!buildWatchList(sessions).isEmpty()) {
+            return CTA_BUY_MEMBERSHIP;
         }
 
         // B2: buổi lẻ

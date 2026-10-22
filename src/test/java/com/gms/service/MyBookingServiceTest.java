@@ -224,7 +224,7 @@ class MyBookingServiceTest {
     }
 
     @Test
-    void watchListHasWarningsFirstThenNewestProblems() {
+    void watchListOnlyUpcomingWarningsAndPastProblemsNewestFirst() {
         List<MyPtSessionRow> sessions = new ArrayList<>();
         sessions.add(session(1, "Missed", LocalDate.of(2026, 10, 5)));
         sessions.add(session(2, "CheckedIn", LocalDate.of(2026, 10, 7)));
@@ -234,12 +234,19 @@ class MyBookingServiceTest {
             MyPtSessionService.applyStatus(s, NOW, null);
         }
         MyPtSessionService.applyStatus(sessions.get(3), NOW, "Bạn chưa có Membership hoặc DayPass hợp lệ cho ngày tập này.");
+        sessions.get(3).setNoGymPass(true);
+        MyPtSessionRow frozen = session(5, "Scheduled", LocalDate.of(2026, 10, 23));   // bảo lưu → không vào Cần để ý
+        MyPtSessionService.applyStatus(frozen, NOW, "Buổi tập nằm trong kỳ bảo lưu.");
+        sessions.add(frozen);
 
         List<MyPtSessionRow> watch = MyBookingService.buildWatchList(sessions);
-        assertEquals(3, watch.size());
+        assertEquals(1, watch.size());                    // chỉ buổi sắp tới có cảnh báo
         assertEquals(4, watch.get(0).getSessionId());
-        assertEquals(3, watch.get(1).getSessionId());
-        assertEquals(1, watch.get(2).getSessionId());
+
+        List<MyPtSessionRow> past = MyBookingService.buildPastProblems(sessions);
+        assertEquals(2, past.size());                     // Hủy 09/10 rồi Vắng 05/10 (mới nhất trước)
+        assertEquals(3, past.get(0).getSessionId());
+        assertEquals(1, past.get(1).getSessionId());
     }
 
     // ---------------------------------------------------------------- buổi lẻ
@@ -298,7 +305,7 @@ class MyBookingServiceTest {
     }
 
     @Test
-    void ctaBuyMembershipBeatsRenewButNotForClosedDay() {
+    void ctaBuyMembershipOnlyWhenNoGymPass() {
         MyBookingView view = viewWith(pkg(10, "Active"));
         view.setSelectedPackage(view.getActivePackages().get(0));
         view.setRemainingCount(1);
@@ -308,7 +315,11 @@ class MyBookingServiceTest {
         MyPtSessionService.applyStatus(s, NOW, MyPtSessionService.CLOSED_DAY_WARNING);
         assertEquals("renewAtCounter", MyBookingService.chooseCta(view, sessions));
 
+        MyPtSessionService.applyStatus(s, NOW, "Buổi tập nằm trong kỳ bảo lưu.");   // bảo lưu → vẫn gia hạn
+        assertEquals("renewAtCounter", MyBookingService.chooseCta(view, sessions));
+
         MyPtSessionService.applyStatus(s, NOW, "Bạn chưa có Membership hoặc DayPass hợp lệ cho ngày tập này.");
+        s.setNoGymPass(true);
         assertEquals("buyMembership", MyBookingService.chooseCta(view, sessions));
     }
 
