@@ -56,6 +56,10 @@ public class LeaveRequestListServlet extends HttpServlet {
         int pageSize = PaginationUtil.getPageSize(request);
 
         HttpSession session = request.getSession(false);
+        if (session != null) {
+            request.setAttribute("bulkResult", session.getAttribute(SessionKey.LEAVE_BULK_RESULT));
+            session.removeAttribute(SessionKey.LEAVE_BULK_RESULT);
+        }
         Integer managerAccountId = session == null
                 ? null
                 : (Integer) session.getAttribute(SessionKey.ACCOUNT_ID);

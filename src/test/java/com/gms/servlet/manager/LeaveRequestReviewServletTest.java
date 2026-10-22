@@ -2,6 +2,7 @@ package com.gms.servlet.manager;
 
 import com.gms.constant.SessionKey;
 import com.gms.dto.LeaveReviewDetail;
+import com.gms.dto.LeaveBulkApprovalResult;
 import com.gms.dto.ServiceResult;
 import com.gms.entity.LeaveRequest;
 import com.gms.service.LeaveRequestService;
@@ -10,6 +11,7 @@ import jakarta.servlet.http.HttpServletRequest;
 import jakarta.servlet.http.HttpServletResponse;
 import jakarta.servlet.http.HttpSession;
 import java.util.List;
+import java.util.Map;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.params.ParameterizedTest;
@@ -96,5 +98,38 @@ class LeaveRequestReviewServletTest {
         verify(request).setAttribute("formMessage", "Ca trực không đủ người.");
         verify(dispatcher).forward(request, response);
         verify(response, never()).sendRedirect(anyString());
+    }
+
+    @Test
+    void bulkApprovalKeepsResultAcrossRedirectAndPreservesFilters() throws Exception {
+        when(request.getParameter("action")).thenReturn("approveMany");
+        when(request.getParameterValues("leaveRequestIds")).thenReturn(new String[]{"12", "13"});
+        String returnUrl = "/manager/leave-requests?status=Pending&position=PT&page=2";
+        when(request.getParameter("returnUrl")).thenReturn(returnUrl);
+        var result = new LeaveBulkApprovalResult(1, Map.of(13, "Không đủ nhân sự."));
+        when(service.approveRequests(10, List.of(12, 13))).thenReturn(ServiceResult.ok(result));
+        servlet.doPost(request, response);
+        verify(session).setAttribute(SessionKey.LEAVE_BULK_RESULT, result);
+        verify(response).sendRedirect("/gms" + returnUrl);
+        verify(service, never()).approveRequest(anyInt(), anyInt());
+    }
+
+    @Test
+    void malformedBulkIdStopsBeforeTheService() throws Exception {
+        when(request.getParameter("action")).thenReturn("approveMany");
+        when(request.getParameterValues("leaveRequestIds")).thenReturn(new String[]{"12", "wrong"});
+        servlet.doPost(request, response);
+        verifyNoInteractions(service);
+        verify(response).sendRedirect("/gms/manager/leave-requests");
+    }
+
+    @Test
+    void bulkApprovalRequiresCsrfAndLogin() throws Exception {
+        when(request.getParameter("action")).thenReturn("approveMany");
+        when(request.getParameter("csrfToken")).thenReturn("wrong-token");
+        servlet.doPost(request, response);
+        when(session.getAttribute(SessionKey.ACCOUNT_ID)).thenReturn(null);
+        servlet.doPost(request, response);
+        verifyNoInteractions(service);
     }
 }

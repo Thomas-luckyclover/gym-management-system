@@ -4,7 +4,15 @@
     <table class="leave-table ${showEmployee ? 'leave-request-table' : ''}" aria-label="Đơn nghỉ phép">
       <thead>
         <tr>
-          <c:if test="${showEmployee}"><th scope="col">Nhân viên</th></c:if>
+          <c:if test="${showEmployee}">
+            <th scope="col">
+              <c:if test="${statusFilter == 'Pending'}">
+                <input type="checkbox" id="leave-select-all" class="leave-selection-checkbox" disabled
+                       aria-label="Chọn tất cả đơn đủ điều kiện trên trang này">
+              </c:if>
+              Nhân viên
+            </th>
+          </c:if>
           <th scope="col">Ngày nghỉ / Ca</th>
           <th scope="col">Loại nghỉ</th>
           <th scope="col">Trạng thái</th>
@@ -23,6 +31,13 @@
             <c:if test="${showEmployee}">
               <td>
                 <div class="leave-employee-cell">
+                  <c:if test="${statusFilter == 'Pending'}">
+                    <input type="checkbox" class="leave-selection-checkbox" name="leaveRequestIds"
+                           form="leave-bulk-form" value="${item.leaveRequestId}"
+                           ${not item.canAct or item.checkSummary != 'Đạt' ? 'disabled' : ''}
+                           aria-label="Chọn đơn của <c:out value='${item.fullName}' />, nghỉ ${gms:formatDate(item.fromDate)}"
+                           title="<c:out value='${not item.canAct ? "Bạn không có quyền xử lý đơn này." : item.checkMessage}' />">
+                  </c:if>
                   <c:choose>
                     <c:when test="${not empty item.avatarUrl}">
                       <img src="${pageContext.request.contextPath}<c:out value='${item.avatarUrl}' />" alt="" class="leave-employee-avatar">

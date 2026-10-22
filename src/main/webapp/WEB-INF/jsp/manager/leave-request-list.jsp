@@ -11,10 +11,10 @@
   <%@ include file="/WEB-INF/jsp/common/head.jspf" %>
   <title>Quản lý đơn nghỉ phép · Super Gym</title>
   <link rel="stylesheet" href="${pageContext.request.contextPath}/css/pages/auth/account-settings.css">
-  <link rel="stylesheet" href="${pageContext.request.contextPath}/css/pages/manager/leave-request-list.css?v=20261022-row-actions">
+  <link rel="stylesheet" href="${pageContext.request.contextPath}/css/pages/manager/leave-request-list.css?v=20261022-bulk">
   <link rel="stylesheet" href="${pageContext.request.contextPath}/css/pages/auth/notification-bell.css">
   <script src="${pageContext.request.contextPath}/js/pages/auth/notification-bell.js" defer></script>
-  <script src="${pageContext.request.contextPath}/js/pages/manager/leave-request-list.js?v=20261022-row-actions" defer></script>
+  <script src="${pageContext.request.contextPath}/js/pages/manager/leave-request-list.js?v=20261022-bulk" defer></script>
 </head>
 
 <body class="dock theme-manager leave-list-page">
@@ -122,6 +122,39 @@
           </form>
 
         </div>
+
+        <%-- Kết quả một lần sau POST/redirect; lỗi từng đơn được escape khi hiển thị. --%>
+        <c:if test="${not empty bulkResult}">
+          <div class="leave-bulk-result" role="status">
+            <b>Đã duyệt <c:out value="${bulkResult.approvedCount}" /> đơn.</b>
+            <c:if test="${not empty bulkResult.failedRequests}">
+              <details>
+                <summary><c:out value="${fn:length(bulkResult.failedRequests)}" /> đơn chưa duyệt — xem lý do</summary>
+                <ul>
+                  <c:forEach var="failure" items="${bulkResult.failedRequests}">
+                    <li><a href="${pageContext.request.contextPath}/manager/leave-requests/review?id=<c:out value='${failure.key}' />">Đơn #<c:out value="${failure.key}" /></a>: <c:out value="${failure.value}" /></li>
+                  </c:forEach>
+                </ul>
+              </details>
+            </c:if>
+          </div>
+        </c:if>
+
+        <c:if test="${statusFilter == 'Pending' and not empty requestPage.items}">
+          <%-- Checkbox trong bảng dùng form này qua thuộc tính form, tránh lồng form từng hàng. --%>
+          <form id="leave-bulk-form" class="leave-bulk-actions" action="${pageContext.request.contextPath}/manager/leave-requests/review" method="post">
+            <input type="hidden" name="csrfToken" value="<c:out value='${csrfToken}' />">
+            <input type="hidden" name="action" value="approveMany">
+            <input type="hidden" name="returnUrl" value="<c:out value='${listReturnUrl}' />">
+            <span id="leave-selection-count" aria-live="polite">Đã chọn 0 đơn</span>
+            <button id="leave-approve-selected" type="submit" class="btn btn-sm btn-primary" disabled
+                    data-confirm-title="Duyệt các đơn đã chọn" data-confirm-text="Duyệt"
+                    data-confirm-message="Duyệt các đơn đã chọn?">Duyệt đã chọn</button>
+            <button id="leave-approve-all" type="submit" class="btn btn-sm btn-outline" disabled
+                    data-confirm-title="Duyệt tất cả trên trang" data-confirm-text="Duyệt"
+                    data-confirm-message="Duyệt các đơn đủ điều kiện trên trang này?">Duyệt tất cả trên trang</button>
+          </form>
+        </c:if>
 
         <%-- ===== Bảng danh sách đơn nghỉ phép ===== --%>
         <section class="panel leave-panel leave-list-panel" aria-label="Nhân viên và đơn nghỉ phép">

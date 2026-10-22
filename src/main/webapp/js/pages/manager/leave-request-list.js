@@ -1,15 +1,61 @@
 /* BF-05: bấm hàng để xem chi tiết; Duyệt/Từ chối dùng hộp xác nhận và lý do có sẵn trong common.js. */
 document.addEventListener("DOMContentLoaded", function () {
     let decisionTrigger = null;
+    const bulkForm = document.getElementById("leave-bulk-form");
+    const selectAll = document.getElementById("leave-select-all");
+    const selectedButton = document.getElementById("leave-approve-selected");
+    const allButton = document.getElementById("leave-approve-all");
+    const choices = document.querySelectorAll('input[name="leaveRequestIds"]:not([disabled])');
+
+    // Checkbox chỉ giữ lựa chọn của trang hiện tại; server vẫn kiểm tra lại từng đơn khi duyệt.
+    function updateSelection() {
+        let count = 0;
+        for (const choice of choices) {
+            if (choice.checked) {
+                count++;
+            }
+        }
+        selectedButton.disabled = count === 0;
+        allButton.disabled = choices.length === 0;
+        selectAll.disabled = choices.length === 0;
+        selectAll.checked = count > 0 && count === choices.length;
+        selectAll.indeterminate = count > 0 && count < choices.length;
+        document.getElementById("leave-selection-count").textContent = "Đã chọn " + count + " đơn";
+        selectedButton.dataset.confirmMessage = "Duyệt " + count + " đơn đã chọn? Hệ thống kiểm tra lại từng đơn.";
+        allButton.dataset.confirmMessage = "Duyệt tất cả " + choices.length
+            + " đơn đủ điều kiện trên trang này? Hệ thống kiểm tra lại từng đơn.";
+    }
+
+    if (bulkForm) {
+        for (const choice of choices) {
+            choice.addEventListener("change", updateSelection);
+        }
+        selectAll.addEventListener("change", function () {
+            for (const choice of choices) {
+                choice.checked = selectAll.checked;
+            }
+            updateSelection();
+        });
+        updateSelection();
+    }
+
+    // Chạy trước hộp xác nhận chung để nút Duyệt tất cả chọn đúng các checkbox của trang.
+    document.addEventListener("click", function (event) {
+        const trigger = event.target.closest("button[data-confirm-message]");
+        if (trigger) {
+            decisionTrigger = trigger;
+        }
+        if (trigger === allButton && allButton) {
+            for (const choice of choices) {
+                choice.checked = true;
+            }
+            updateSelection();
+        }
+    }, true);
     const rows = document.querySelectorAll(".leave-request-row[data-review-url]");
     for (const row of rows) {
         // B1: bấm phần thông tin của hàng để mở đơn. Bỏ qua form/nút và thao tác bôi đen chữ.
         row.addEventListener("click", function (event) {
-            const actionButton = event.target.closest("button[data-confirm-message]");
-            if (actionButton) {
-                decisionTrigger = actionButton;
-                return;
-            }
             if (event.target.closest("form, button, a, input, select, textarea")) {
                 return;
             }

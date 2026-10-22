@@ -1,6 +1,7 @@
 package com.gms.servlet.manager;
 
 import com.gms.dto.LeaveReviewDetail;
+import com.gms.dto.LeaveBulkApprovalResult;
 import com.gms.dto.EligibleReviewer;
 import com.gms.constant.SessionKey;
 import com.gms.dto.ServiceResult;
@@ -14,6 +15,7 @@ import jakarta.servlet.http.HttpServletResponse;
 import jakarta.servlet.http.HttpSession;
 
 import java.io.IOException;
+import java.util.ArrayList;
 import java.util.List;
 
 /**
@@ -21,7 +23,7 @@ import java.util.List;
  * URL: /manager/leave-requests/review
  *
  * <p>GET  — hiển thị chi tiết đơn cần duyệt, quân số trực dự kiến.
- * <p>POST — xử lý duyệt (action=approve) hoặc từ chối (action=reject).
+ * <p>POST — duyệt một/nhiều đơn, từ chối hoặc chuyển người duyệt.
  */
 @WebServlet("/manager/leave-requests/review")
 public class LeaveRequestReviewServlet extends HttpServlet {
@@ -78,6 +80,11 @@ public class LeaveRequestReviewServlet extends HttpServlet {
         int leaveRequestId = RequestUtil.getIntParam(request, "leaveRequestId", 0);
         String action = RequestUtil.getTrimmedParam(request, "action");
 
+        if ("approveMany".equals(action)) {
+            approveMany(request, response, managerAccountId);
+            return;
+        }
+
         if (leaveRequestId <= 0) {
             RequestUtil.redirect(request, response, "/manager/leave-requests");
             return;
@@ -108,12 +115,7 @@ public class LeaveRequestReviewServlet extends HttpServlet {
         if (result.isSuccess()) {
             RequestUtil.setFlashToast(request, "success", successMessage);
             // Form trong danh sách giữ tab/bộ lọc/trang; chỉ nhận đường dẫn danh sách nội bộ.
-            String returnUrl = RequestUtil.getTrimmedParam(request, "returnUrl");
-            String listPath = "/manager/leave-requests";
-            if (returnUrl == null || !(returnUrl.equals(listPath) || returnUrl.startsWith(listPath + "?"))) {
-                returnUrl = listPath;
-            }
-            RequestUtil.redirect(request, response, returnUrl);
+            returnToList(request, response);
             return;
         }
 
@@ -124,6 +126,41 @@ public class LeaveRequestReviewServlet extends HttpServlet {
         request.setAttribute("toEmployeeId", RequestUtil.getIntParam(request, "toEmployeeId", 0));
         request.setAttribute("errors", result.getFieldErrors());
         showReview(request, response, leaveRequestId, managerAccountId);
+    }
+
+    /** Đọc các mã checkbox; toàn bộ danh sách phải hợp lệ trước khi gọi Service ghi dữ liệu. */
+    private void approveMany(HttpServletRequest request, HttpServletResponse response, int managerAccountId)
+            throws IOException {
+        String[] values = request.getParameterValues("leaveRequestIds");
+        List<Integer> requestIds = new ArrayList<>();
+        if (values != null && values.length <= 50) {
+            try {
+                for (String value : values) {
+                    requestIds.add(Integer.valueOf(value));
+                }
+            } catch (NumberFormatException e) {
+                RequestUtil.setFlashToast(request, "danger", "Danh sách đơn không hợp lệ. Vui lòng tải lại trang.");
+                returnToList(request, response);
+                return;
+            }
+        }
+        ServiceResult<LeaveBulkApprovalResult> result = leaveRequestService.approveRequests(managerAccountId, requestIds);
+        if (result.isSuccess()) {
+            request.getSession().setAttribute(SessionKey.LEAVE_BULK_RESULT, result.getData());
+        } else {
+            RequestUtil.setFlashToast(request, "danger", result.getMessage());
+        }
+        returnToList(request, response);
+    }
+
+    /** Chỉ trở lại danh sách nội bộ, giữ tab/bộ lọc/phân trang của form. */
+    private void returnToList(HttpServletRequest request, HttpServletResponse response) throws IOException {
+        String returnUrl = RequestUtil.getTrimmedParam(request, "returnUrl");
+        String listPath = "/manager/leave-requests";
+        if (returnUrl == null || !(returnUrl.equals(listPath) || returnUrl.startsWith(listPath + "?"))) {
+            returnUrl = listPath;
+        }
+        RequestUtil.redirect(request, response, returnUrl);
     }
 
     /** GET và POST lỗi đều đi qua đây, tránh quên nạp dữ liệu hoặc CSRF token. */

@@ -7,6 +7,7 @@ import com.gms.dao.EmployeeDAO;
 import com.gms.dao.LeaveRequestDAO;
 import com.gms.dto.EligibleReviewer;
 import com.gms.dto.LeaveApprovalReview;
+import com.gms.dto.LeaveBulkApprovalResult;
 import com.gms.dto.LeaveEmployeeView;
 import com.gms.dto.LeaveRequestFilter;
 import com.gms.dto.LeaveRequestItemView;
@@ -28,6 +29,7 @@ import java.sql.SQLException;
 import java.time.LocalDate;
 import java.util.ArrayList;
 import java.util.LinkedHashMap;
+import java.util.LinkedHashSet;
 import java.util.List;
 import java.util.Map;
 
@@ -495,6 +497,36 @@ public class LeaveRequestService {
             e.printStackTrace();
             return ServiceResult.fail(Messages.MSG04_SYSTEM_BUSY);
         }
+    }
+
+    /**
+     * Duyệt tối đa một trang (50 đơn), giữ thứ tự mã được gửi và bỏ mã trùng.
+     * Mỗi đơn dùng transaction riêng của approveRequest, kiểm tra lại trên dữ liệu sau đơn trước.
+     * @param managerAccountId tài khoản từ session
+     * @param requestIds các mã đơn trên trang; rỗng hoặc mã sai thì không ghi gì
+     * @return số đã duyệt và lỗi từng đơn; lỗi một đơn không hoàn tác các đơn đã thành công
+     */
+    public ServiceResult<LeaveBulkApprovalResult> approveRequests(int managerAccountId, List<Integer> requestIds) {
+        if (requestIds == null || requestIds.isEmpty() || requestIds.size() > 50) {
+            return ServiceResult.fail("Chọn từ 1 đến 50 đơn để duyệt.");
+        }
+        for (Integer requestId : requestIds) {
+            if (requestId == null || requestId <= 0) {
+                return ServiceResult.fail("Danh sách đơn không hợp lệ. Vui lòng tải lại trang.");
+            }
+        }
+
+        int approvedCount = 0;
+        Map<Integer, String> failedRequests = new LinkedHashMap<>();
+        for (Integer requestId : new LinkedHashSet<>(requestIds)) {
+            ServiceResult<Void> result = approveRequest(managerAccountId, requestId);
+            if (result.isSuccess()) {
+                approvedCount++;
+            } else {
+                failedRequests.put(requestId, result.getMessage());
+            }
+        }
+        return ServiceResult.ok(new LeaveBulkApprovalResult(approvedCount, failedRequests));
     }
 
     /**

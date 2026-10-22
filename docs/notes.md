@@ -1,5 +1,13 @@
 # File notes — mâu thuẫn tài liệu & quyết định đã chốt
 
+## BF-05 — duyệt nhiều đơn trên trang Chờ duyệt (22/10/2026, ĐÃ CHỐT)
+
+Thêm checkbox từng đơn, chọn hết trang, Duyệt đã chọn và Duyệt tất cả trên trang. Phạm vi mặc định là trang đang xem (tối đa 50 đơn), không tự chọn đơn ở trang khác. Chỉ cho tick đơn có quyền xử lý và kiểm tra Đạt; cả hai nút đều hỏi xác nhận số lượng trước khi POST. Không lồng form: checkbox liên kết form duyệt nhiều bằng thuộc tính form.
+
+Service giữ thứ tự của danh sách (sắp nghỉ/FIFO), bỏ mã trùng và gọi approveRequest hiện có lần lượt. Mỗi đơn có transaction riêng, đọc lại trạng thái/phân công/quỹ phép/nhân sự/lịch PT sau các đơn đã duyệt trước đó. Đơn không đủ điều kiện không bị thay đổi, các đơn thành công vẫn được lưu; kết quả sau redirect hiện số thành công và mã/lý do của từng đơn chưa duyệt. POST kiểm tra login/CSRF và giới hạn 50 mã; không đổi schema hoặc viết câu UPDATE duyệt hàng loạt bỏ qua nghiệp vụ.
+
+Kiểm chứng: clean package chạy 220 test không lỗi, gồm kết quả thành công một phần, giữ thứ tự, bỏ mã trùng, dữ liệu sai, login/CSRF và giữ bộ lọc qua redirect. Jasper biên dịch JSP/fragment không lỗi. Trình duyệt kiểm tra chọn từng đơn/chọn hết, trạng thái checkbox chọn một phần, hủy bằng Escape, khóa đơn vướng lịch, khóa cả hai nút khi không có đơn đủ điều kiện. POST ở bản xem thử chỉ in form: nhận đúng action, các mã đã chọn và CSRF, không gọi Service ghi quyết định.
+
 ## BF-05 — mở mặc định tab Chờ duyệt (22/10/2026, ĐÃ CHỐT)
 
 Khi mở `/manager/leave-requests` mà URL không có `status`, mặc định chọn Chờ duyệt để Quản lý xử lý các đơn đang chờ. Tab Tất cả vẫn mở bằng `status=All` và tiếp tục hiện nhóm nhân viên cùng lịch sử đơn.
