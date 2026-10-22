@@ -17,6 +17,8 @@
         <script src="${pageContext.request.contextPath}/js/pages/customer/my-pt-sessions.js?v=20261019e" defer>
         </script>
 
+        <link rel="stylesheet" href="${pageContext.request.contextPath}/css/pages/auth/notification-bell.css">
+        <script src="${pageContext.request.contextPath}/js/pages/auth/notification-bell.js" defer></script>
     </head>
     <body class="dock ${themeClass}">
         <%@ include file="/WEB-INF/jsp/common/flash-toast.jspf" %>
