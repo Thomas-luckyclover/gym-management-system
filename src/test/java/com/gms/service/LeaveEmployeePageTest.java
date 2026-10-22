@@ -116,12 +116,13 @@ class LeaveEmployeePageTest {
     }
 
     @Test
-    void sameDayRangeCanFindLeaveThatStartedBeforeTheSelectedDay() throws Exception {
+    void sameDaySubmissionRangeCanShowFutureLeave() throws Exception {
         filter = service.createManagerFilter("", "All", null, null, "2026-10-24", "2026-10-24");
         LeaveEmployeeView employee = employee(10, 1);
         LeaveRequestRow row = request(101, 10);
-        row.getLeaveRequest().setFromDate(LocalDate.of(2026, 10, 23));
-        row.getLeaveRequest().setToDate(LocalDate.of(2026, 10, 24));
+        row.getLeaveRequest().setSubmittedAt(LocalDate.of(2026, 10, 24).atTime(10, 30));
+        row.getLeaveRequest().setFromDate(LocalDate.of(2026, 11, 1));
+        row.getLeaveRequest().setToDate(LocalDate.of(2026, 11, 2));
         row.getLeaveRequest().setShiftType(LeaveRequest.ShiftType.FULL_DAY);
         row.getLeaveRequest().setDays(new BigDecimal("2"));
         when(dao.countEmployees(filter)).thenReturn(1);

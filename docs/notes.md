@@ -1,10 +1,18 @@
 # File notes — mâu thuẫn tài liệu & quyết định đã chốt
 
+## BF-05 — bộ lọc ngày là ngày gửi đơn (22/10/2026, ĐÃ SỬA)
+
+User sửa rõ hai ô ngày lọc theo SubmittedAt (thời gian gửi đơn), không theo FromDate/ToDate (thời gian nghỉ). Mặc định vẫn là hôm nay. DAO dùng cùng điều kiện cho bảng theo đơn, số đếm tab và nhóm/lịch sử nhân viên: SubmittedAt >= 00:00 Từ ngày và SubmittedAt < 00:00 ngày sau Đến ngày. Đơn gửi hôm nay nhưng nghỉ tháng sau vẫn hiện; đơn gửi hôm qua nhưng nghỉ hôm nay không thuộc bộ lọc hôm nay. Giao diện ghi Gửi từ ngày và Ngày gửi để phân biệt với cột Ngày nghỉ / Ca.
+
+Quyết định này thay mô tả lọc giao khoảng ngày nghỉ trong các ghi chú trước. Thứ tự ưu tiên sắp nghỉ/FIFO vẫn dùng ngày nghỉ và giờ gửi như hiện tại.
+
+Kiểm chứng: clean package chạy 226 test không lỗi, gồm 6 truy vấn DAO dùng chung điều kiện ngày gửi. SQL production chạy trên VALUES chỉ đọc xác nhận gửi hôm nay/nghỉ tương lai, gửi hôm khác/nghỉ hôm nay, đầu ngày/cuối ngày, số đếm tab/nhân viên/lịch sử, phân trang và khoảng một đầu/trống. Jasper biên dịch không lỗi; trình duyệt hiển thị 7 đơn gửi hôm nay dù ngày nghỉ từ 23–30/10. Không ghi dữ liệu hay quyết định duyệt thật.
+
 ## BF-05 — gọn thanh duyệt nhiều và mặc định ngày hôm nay (22/10/2026, ĐÃ CHỐT)
 
 Gộp số đã chọn và hai nút duyệt nhiều vào bên phải thanh trên bảng, thay dòng hướng dẫn Bấm hàng/Ưu tiên sắp nghỉ; bỏ khung thao tác riêng. Giữ ID/form liên kết checkbox và hộp xác nhận hiện có.
 
-Khi URL chưa có cả hai tham số ngày, Từ ngày và Đến ngày mặc định là hôm nay theo DateTimeUtil (giờ Việt Nam). Bộ lọc vẫn dùng giao khoảng nghỉ có tính ngày biên. Người dùng có thể xóa một hoặc cả hai ô để xem phạm vi mở; tab/phân trang gửi cả tham số rỗng để không tự điền lại hôm nay. Xóa lọc quay về ngày mặc định hôm nay. Quyết định này thay mặc định trống của bộ lọc ngày trước đó.
+Khi URL chưa có cả hai tham số ngày, Từ ngày và Đến ngày mặc định là hôm nay theo DateTimeUtil (giờ Việt Nam). Bộ lọc ngày gửi đơn tính trọn hai ngày biên theo quyết định sửa ở trên. Người dùng có thể xóa một hoặc cả hai ô để xem phạm vi mở; tab/phân trang gửi cả tham số rỗng để không tự điền lại hôm nay. Xóa lọc quay về ngày mặc định hôm nay. Quyết định này thay mặc định trống của bộ lọc ngày trước đó.
 
 Kiểm chứng: clean package chạy 220 test không lỗi; Jasper biên dịch JSP/fragment không lỗi. Trình duyệt xác nhận ngày mặc định, chủ động xóa ngày, giữ ngày trống khi đổi tab/phân trang và thanh duyệt nhiều nằm trong đầu bảng. POST xem thử sau khi chuyển form vẫn gửi đúng các mã đã tick, CSRF và returnUrl, không ghi quyết định thật.
 

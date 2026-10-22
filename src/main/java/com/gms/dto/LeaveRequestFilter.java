@@ -11,16 +11,18 @@ import java.time.LocalDate;
 public class LeaveRequestFilter {
 
     // Tab trạng thái trên màn: Service đổi từ tham số URL bằng LeaveRequest.Status.fromDbValue.
-    // null = tab Tất cả, cũng là mặc định để mở nhân viên xem đủ lịch sử.
+    // null = tab Tất cả; không có tham số trạng thái thì Service chọn Chờ duyệt.
     private final LeaveRequest.Status status;
 
     // Từ khóa tên nhân viên đã trim; DAO ghép thành mẫu LIKE không phân biệt hoa thường và dấu.
     // null hoặc rỗng = không tìm theo tên.
     private final String keyword;
 
-    // Bộ lọc mở rộng (BF-05): Chức vụ (PT/Receptionist), Loại nghỉ, Khoảng ngày
+    // Bộ lọc mở rộng (BF-05): Chức vụ (PT/Receptionist), Loại nghỉ.
     private final String position;
     private final LeaveRequest.LeaveType leaveType;
+    // Service đọc hai ô ngày gửi đơn; DAO so với SubmittedAt, tính trọn hai ngày biên.
+    // JSP hiện lại lựa chọn này; null ở một đầu nghĩa là không giới hạn đầu đó.
     private final LocalDate fromDate;
     private final LocalDate toDate;
 

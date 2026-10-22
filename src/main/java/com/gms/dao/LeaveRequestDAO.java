@@ -147,13 +147,13 @@ public class LeaveRequestDAO {
                 where.append(" AND lr.LeaveType = ? ");
                 params.add(filter.getLeaveType().getDbValue());
             }
-            // Hai khoảng giao nhau khi ngày kết thúc đơn >= Từ ngày và ngày bắt đầu đơn <= Đến ngày (tính cả biên).
+            // Lọc lúc gửi đơn: từ 00:00 ngày đầu đến trước 00:00 ngày sau ngày cuối.
             if (filter.getFromDate() != null) {
-                where.append(" AND lr.ToDate >= ? ");
+                where.append(" AND lr.SubmittedAt >= ? ");
                 params.add(java.sql.Date.valueOf(filter.getFromDate()));
             }
             if (filter.getToDate() != null) {
-                where.append(" AND lr.FromDate <= ? ");
+                where.append(" AND lr.SubmittedAt < DATEADD(DAY, 1, CAST(? AS date)) ");
                 params.add(java.sql.Date.valueOf(filter.getToDate()));
             }
         }
@@ -264,7 +264,7 @@ public class LeaveRequestDAO {
 
     /**
      * Phân trang từng đơn tại SQL. Pending: sắp nghỉ hôm nay/ngày mai trước, sau đó nộp trước xếp trước.
-     * Đơn đã xử lý: lần xử lý mới nhất trước. Bộ lọc ngày tính cả hai biên.
+     * Đơn đã xử lý: lần xử lý mới nhất trước. Bộ lọc theo ngày gửi đơn, tính cả hai biên.
      */
     public List<LeaveRequestRow> findRequestPage(LeaveRequestFilter filter, int offset, int pageSize,
             Integer currentManagerEmployeeId) throws SQLException {

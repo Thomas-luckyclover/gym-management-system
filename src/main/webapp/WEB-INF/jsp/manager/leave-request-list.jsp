@@ -72,12 +72,12 @@
             </c:forTokens>
           </div>
 
-          <%-- Bộ lọc GET: ngày nghỉ, chức vụ, loại nghỉ và tên/mã nhân viên. --%>
+          <%-- Bộ lọc GET: ngày gửi đơn, chức vụ, loại nghỉ và tên/mã nhân viên. --%>
           <form action="${pageContext.request.contextPath}/manager/leave-requests" method="get" class="leave-filter-nav">
             <input type="hidden" name="status" value="<c:out value='${statusFilter}' />">
-            <div class="leave-date-filters" role="group" aria-label="Lọc theo thời gian nghỉ">
+            <div class="leave-date-filters" role="group" aria-label="Lọc theo thời gian gửi đơn">
               <label class="leave-date-field" for="fromDate">
-                <span>Từ ngày</span>
+                <span>Gửi từ ngày</span>
                 <input type="date" id="fromDate" name="fromDate" class="filter-select"
                        value="<c:out value='${fromDateFilter}' />">
               </label>
@@ -150,7 +150,7 @@
               </c:choose>
             </span>
             <c:if test="${not empty fromDateFilter or not empty toDateFilter}">
-              <span>Thời gian nghỉ: <c:out value="${empty fromDateFilter ? 'Không giới hạn' : gms:formatDate(fromDateFilter)}" /> → <c:out value="${empty toDateFilter ? 'Không giới hạn' : gms:formatDate(toDateFilter)}" /></span>
+              <span>Ngày gửi: <c:out value="${empty fromDateFilter ? 'Không giới hạn' : gms:formatDate(fromDateFilter)}" /> → <c:out value="${empty toDateFilter ? 'Không giới hạn' : gms:formatDate(toDateFilter)}" /></span>
             </c:if>
             <c:choose>
               <c:when test="${employeeView}"><span>Bấm nhân viên để xem đơn</span></c:when>
