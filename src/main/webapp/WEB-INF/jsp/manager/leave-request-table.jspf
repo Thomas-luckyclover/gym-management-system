@@ -1,0 +1,104 @@
+<%@ page pageEncoding="UTF-8" %>
+<%-- requestItems: các đơn Service đã chuẩn bị; showEmployee: thêm cột nhân viên ở tab trạng thái. --%>
+  <div class="leave-table-wrap">
+    <table class="leave-table ${showEmployee ? 'leave-request-table' : ''}" aria-label="Đơn nghỉ phép">
+      <thead>
+        <tr>
+          <c:if test="${showEmployee}"><th scope="col">Nhân viên</th></c:if>
+          <th scope="col">Ngày nghỉ / Ca</th>
+          <th scope="col">Loại nghỉ</th>
+          <th scope="col">Trạng thái</th>
+          <th scope="col">Kiểm tra</th>
+          <c:if test="${not showEmployee}"><th scope="col">Người xử lý</th></c:if>
+          <th scope="col" class="leave-actions-cell">Thao tác</th>
+        </tr>
+      </thead>
+      <tbody>
+        <c:forEach var="item" items="${requestItems}">
+          <tr class="${item.nearLeaveDate ? 'leave-row-near' : ''}">
+            <c:if test="${showEmployee}">
+              <td>
+                <div class="leave-employee-cell">
+                  <c:choose>
+                    <c:when test="${not empty item.avatarUrl}">
+                      <img src="${pageContext.request.contextPath}<c:out value='${item.avatarUrl}' />" alt="" class="leave-employee-avatar">
+                    </c:when>
+                    <c:otherwise>
+                      <span class="leave-employee-initial" aria-hidden="true"><c:out value="${fn:substring(item.fullName, 0, 1)}" /></span>
+                    </c:otherwise>
+                  </c:choose>
+                  <div class="leave-employee-meta">
+                    <b><c:out value="${item.fullName}" /></b>
+                    <small><c:out value="${item.employeeCode}" /> · ${item.position == 'PT' ? 'PT' : 'Lễ tân'}</small>
+                    <small>Nộp ${gms:formatDateTime(item.submittedAt)}</small>
+                  </div>
+                </div>
+              </td>
+            </c:if>
+            <%-- Ngày và ca: không tự bổ sung giờ khi chưa có cấu hình ca. --%>
+            <td>
+              <div class="leave-date-range">
+                <span>${gms:formatDate(item.fromDate)}</span>
+                <c:if test="${item.fromDate != item.toDate}">
+                  <span>→ ${gms:formatDate(item.toDate)}</span>
+                </c:if>
+              </div>
+              <small><c:out value="${item.shiftType.displayName}" /> · <fmt:formatNumber value="${item.days}" maxFractionDigits="1" /> ngày</small>
+            </td>
+
+            <%-- Loại nghỉ chỉ hiện tên; lý do đầy đủ nằm trong trang chi tiết. --%>
+            <td>
+              <span class="leave-type-label">
+                <c:choose>
+                  <c:when test="${item.leaveType.dbValue == 'Annual'}">Phép năm</c:when>
+                  <c:when test="${item.leaveType.dbValue == 'Sick'}">Nghỉ ốm</c:when>
+                  <c:otherwise>Không lương</c:otherwise>
+                </c:choose>
+              </span>
+            </td>
+
+            <td>
+              <span class="badge ${item.status.dbValue == 'Pending' ? 'badge-warning' : item.status.dbValue == 'Approved' ? 'badge-success' : 'badge-danger'}">
+                <c:out value="${item.status.displayName}" />
+              </span>
+              <c:if test="${item.nearLeaveDate}">
+                <span class="leave-near-label">
+                  <i class="fa-solid fa-calendar-days" aria-hidden="true"></i>
+                  Sắp đến ngày nghỉ
+                </span>
+              </c:if>
+            </td>
+
+            <%-- Kiểm tra do Service tính; rê chuột để xem lý do, mở chi tiết để xử lý. --%>
+            <td>
+              <c:choose>
+                <c:when test="${item.status.dbValue == 'Pending'}">
+                  <span class="badge ${item.checkSummary == 'Đạt' ? 'badge-success' : 'badge-warning'}" title="<c:out value='${item.checkMessage}' />">
+                    <c:out value="${item.checkSummary}" />
+                  </span>
+                </c:when>
+                <c:otherwise><span class="leave-text-muted">—</span></c:otherwise>
+              </c:choose>
+            </td>
+
+            <%-- Chỉ lịch sử trong nhóm nhân viên mới hiện người đã xử lý; đơn chờ chưa có người xử lý. --%>
+            <c:if test="${not showEmployee}">
+              <td>
+                <c:choose>
+                  <c:when test="${item.status.dbValue == 'Pending'}"><span class="leave-text-muted">—</span></c:when>
+                  <c:when test="${not empty item.reviewerName}"><span class="leave-handler-name"><c:out value="${item.reviewerName}" /></span></c:when>
+                  <c:when test="${item.autoRejected}"><span class="leave-text-muted">Hệ thống</span></c:when>
+                  <c:otherwise><span class="leave-text-muted">—</span></c:otherwise>
+                </c:choose>
+              </td>
+            </c:if>
+
+            <td class="leave-actions-cell">
+              <a class="btn btn-sm btn-outline" href="${pageContext.request.contextPath}/manager/leave-requests/review?id=${item.leaveRequestId}">Xem chi tiết</a>
+            </td>
+
+          </tr>
+        </c:forEach>
+      </tbody>
+    </table>
+  </div>

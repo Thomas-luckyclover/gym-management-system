@@ -1,5 +1,15 @@
 # File notes — mâu thuẫn tài liệu & quyết định đã chốt
 
+## BF-05 — chỉ nhóm nhân viên ở tab Tất cả (22/10/2026, ĐÃ CHỐT)
+
+User chốt Tất cả mới hiện toàn bộ PT/Lễ tân và mở lịch sử đơn của từng người. Chờ duyệt/Đã duyệt/Từ chối chuyển về bảng từng đơn, phân trang theo đơn tại SQL; Tất cả vẫn phân trang theo nhân viên. Bộ lọc tên/chức vụ/loại/ngày và tab tiếp tục được giữ khi điều hướng. Mặc định vẫn là Tất cả như trước; không thay schema hoặc chính sách duyệt.
+
+Thứ tự Chờ duyệt: nhóm có FromDate hôm nay hoặc ngày mai lên trước (cùng điều kiện nhãn Sắp đến ngày nghỉ), rồi SubmittedAt tăng dần; cùng thời điểm nộp thì LeaveRequestId tăng dần để phân trang ổn định. Ngoài nhóm sắp nghỉ, đơn nộp trước đứng trước, không tiếp tục xếp theo ngày nghỉ. Đơn đã xử lý xếp theo ReviewedAt mới nhất.
+
+Bảng trạng thái không có cột người duyệt. Chỉ bảng lịch sử bên trong nhân viên hiện Người xử lý từ ReviewedByEmployeeId; Pending hiện dấu —, không lấy tên người được giao làm người đã xử lý. Hai kiểu bảng dùng chung leave-request-table.jspf để giữ cách hiển thị ngày/ca, loại, kiểm tra, trạng thái và Xem chi tiết nhất quán.
+
+Kiểm chứng: clean package chạy 205 test, không lỗi; mở rộng kiểm tra điều kiện duyệt để bảng từng đơn và nhóm nhân viên khớp với chi tiết/POST. Jasper biên dịch hai JSP quản lý và fragment mới không lỗi. SQL production chạy trên VALUES chỉ đọc xác nhận nhóm sắp nghỉ, FIFO, cùng thời điểm nộp, phân trang, tab và lọc ngày/loại; đối chiếu thêm các Pending hiện có trên DB local. Trình duyệt xác nhận Chờ duyệt không có nhóm/cột người xử lý, Tất cả có nhóm và lịch sử có cột người xử lý, trạng thái rỗng, lọc ngày/loại và mở chi tiết. Không ghi quyết định hoặc redeploy Tomcat chính.
+
 ## BF-05 — gọn màn gửi đơn nhân viên (22/10/2026, ĐÃ CHỐT)
 
 User yêu cầu bỏ hai khung Hạn nộp đơn/Dự báo nhân sự ở bên phải và đặt một nút i tròn ở góc trên bên phải khung Tạo đơn nghỉ phép. Form/lịch sử về một cột; thông tin chuyển vào HintBox chung của common.css/common.js (hover/focus/chạm, Escape hoặc bấm ngoài để đóng). Giữ các ID để JS cập nhật hạn nộp và dự báo theo ngày/ca; bỏ dòng hạn nộp lặp dưới ô ngày. Không đổi hạn nộp P-12 hoặc nghiệp vụ gửi/rút/duyệt đơn. Dự báo vẫn chỉ xét ngày bắt đầu và ghi rõ giới hạn trong chú thích.

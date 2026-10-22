@@ -256,7 +256,7 @@
   font-size: var(--font-size-xs);
 }
 
-/* Bảng đơn bên trong một nhân viên có sáu cột, không lặp lại tên nhân viên. */
+/* Lịch sử trong nhóm nhân viên có người xử lý; bảng theo đơn có tên nhân viên thay cột đó. */
 .leave-list-page .leave-table th:nth-child(1) {
   width: 23%;
 }
@@ -276,6 +276,26 @@
   width: 11%;
 }
 
+/* Các tab trạng thái có thêm cột nhân viên, tổng cộng sáu cột. */
+.leave-list-page .leave-request-table th:nth-child(1) {
+  width: 24%;
+}
+.leave-list-page .leave-request-table th:nth-child(2) {
+  width: 23%;
+}
+.leave-list-page .leave-request-table th:nth-child(3) {
+  width: 14%;
+}
+.leave-list-page .leave-request-table th:nth-child(4) {
+  width: 19%;
+}
+.leave-list-page .leave-request-table th:nth-child(5) {
+  width: 10%;
+}
+.leave-list-page .leave-request-table th:nth-child(6) {
+  width: 10%;
+}
+
 .leave-date-range {
   display: flex;
   flex-direction: column;
@@ -288,11 +308,6 @@
 .leave-handler-name {
   color: var(--color-text);
   font-weight: var(--font-weight-medium);
-}
-
-.leave-unassigned {
-  color: var(--color-text-muted);
-  font-size: var(--font-size-xs);
 }
 
 /* Nhãn sắp nghỉ dùng nền nổi bật để phân biệt với chữ ghi chú và trạng thái chờ. */
