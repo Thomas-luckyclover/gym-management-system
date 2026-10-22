@@ -221,12 +221,12 @@ public class LeaveRequestService {
      *
      * @param statusParam giá trị param "status" (Pending, Approved, Rejected, All)
      *                    hoặc null/rỗng
-     * @return Status tương ứng; null là tab Tất cả, cũng là mặc định của màn gom theo nhân viên
+     * @return Status tương ứng; null là tab Tất cả khi statusParam là "All"
      */
     LeaveRequest.Status parseStatusFilter(String statusParam) {
-        // B1: mặc định xem đủ lịch sử khi mở một nhân viên.
+        // B1: mở danh sách không có status thì vào Chờ duyệt.
         if (statusParam == null || statusParam.isBlank()) {
-            return null;
+            return LeaveRequest.Status.PENDING;
         }
 
         // B2: tab "Tất cả" không lọc theo trạng thái

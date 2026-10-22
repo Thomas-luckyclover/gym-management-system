@@ -1,5 +1,9 @@
 # File notes — mâu thuẫn tài liệu & quyết định đã chốt
 
+## BF-05 — mở mặc định tab Chờ duyệt (22/10/2026, ĐÃ CHỐT)
+
+Khi mở `/manager/leave-requests` mà URL không có `status`, mặc định chọn Chờ duyệt để Quản lý xử lý các đơn đang chờ. Tab Tất cả vẫn mở bằng `status=All` và tiếp tục hiện nhóm nhân viên cùng lịch sử đơn.
+
 ## BF-05 — bấm hàng mở chi tiết, xử lý ngay trên danh sách (22/10/2026, ĐÃ CHỐT)
 
 User chốt bấm phần thông tin/khoảng trống của một hàng đơn để mở chi tiết; bỏ nút Xem chi tiết. Pending có hai nút Duyệt/Từ chối cuối hàng: xác nhận trước khi duyệt, từ chối bắt buộc lý do 5–500 ký tự. Dùng data-confirm-message/data-confirm-reason-name có sẵn trong common.js; không viết thêm hệ thống hộp thoại. JS riêng chỉ mở hàng bằng click/Enter, bỏ qua nút/form và giữ focus bàn phím khi mở/đóng hộp.
@@ -10,7 +14,7 @@ Kiểm chứng: clean package chạy 213 test, không lỗi, gồm hợp đồng
 
 ## BF-05 — chỉ nhóm nhân viên ở tab Tất cả (22/10/2026, ĐÃ CHỐT)
 
-User chốt Tất cả mới hiện toàn bộ PT/Lễ tân và mở lịch sử đơn của từng người. Chờ duyệt/Đã duyệt/Từ chối chuyển về bảng từng đơn, phân trang theo đơn tại SQL; Tất cả vẫn phân trang theo nhân viên. Bộ lọc tên/chức vụ/loại/ngày và tab tiếp tục được giữ khi điều hướng. Mặc định vẫn là Tất cả như trước; không thay schema hoặc chính sách duyệt.
+User chốt Tất cả mới hiện toàn bộ PT/Lễ tân và mở lịch sử đơn của từng người. Chờ duyệt/Đã duyệt/Từ chối chuyển về bảng từng đơn, phân trang theo đơn tại SQL; Tất cả vẫn phân trang theo nhân viên. Bộ lọc tên/chức vụ/loại/ngày và tab tiếp tục được giữ khi điều hướng. Mặc định Tất cả ở thời điểm này đã được thay bằng quyết định Chờ duyệt ngày 22/10/2026 ở trên; không thay schema hoặc chính sách duyệt.
 
 Thứ tự Chờ duyệt: nhóm có FromDate hôm nay hoặc ngày mai lên trước (cùng điều kiện nhãn Sắp đến ngày nghỉ), rồi SubmittedAt tăng dần; cùng thời điểm nộp thì LeaveRequestId tăng dần để phân trang ổn định. Ngoài nhóm sắp nghỉ, đơn nộp trước đứng trước, không tiếp tục xếp theo ngày nghỉ. Đơn đã xử lý xếp theo ReviewedAt mới nhất.
 

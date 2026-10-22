@@ -87,10 +87,10 @@ class LeaveRequestServiceTest {
     }
 
     @Test
-    void parseStatusFilter_returnsAllByDefault_whenNullOrBlank() {
-        assertNull(service.parseStatusFilter(null));
-        assertNull(service.parseStatusFilter(""));
-        assertNull(service.parseStatusFilter("   "));
+    void parseStatusFilter_returnsPendingByDefault_whenNullOrBlank() {
+        assertEquals(LeaveRequest.Status.PENDING, service.parseStatusFilter(null));
+        assertEquals(LeaveRequest.Status.PENDING, service.parseStatusFilter(""));
+        assertEquals(LeaveRequest.Status.PENDING, service.parseStatusFilter("   "));
     }
 
     @Test
