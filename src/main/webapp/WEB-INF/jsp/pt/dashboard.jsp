@@ -155,34 +155,44 @@
                         <c:otherwise>
                             <div class="pt-attention-list">
                                 <c:forEach var="item" items="${attentionItems}">
-                                    <article class="pt-attention-item">
-                                        <div class="pt-attention-heading">
-                                            <%-- item.customerName copy từ DAO; attentionTitle do Service chọn. --%>
-                                            <h3><c:out value="${item.customerName}" /></h3>
-                                            <span class="badge badge-warning"><c:out value="${item.attentionTitle}" /></span>
-                                        </div>
-                                        <p class="pt-attention-message"><c:out value="${item.attentionMessage}" /></p>
+                                    <%-- 1 thẻ Cần chú ý: đầu thẻ (chữ cái tên + tên + nhãn) → 2 ô thông tin → nút Nhắc khách. --%>
+                                    <c:set var="nameParts" value="${fn:split(item.customerName, ' ')}" />
+                                    <article class="pt-attn ${not empty item.freezeEndDate ? 'is-frozen' : ''}">
+                                        <header class="pt-attn__head">
+                                            <span class="pt-attn__avatar" aria-hidden="true"><c:out value="${fn:substring(nameParts[fn:length(nameParts) - 1], 0, 1)}" /></span>
+                                            <div class="pt-attn__who">
+                                                <h3><c:out value="${item.customerName}" /></h3>
+                                                <p><span class="pt-attn__tag"><c:out value="${item.attentionTitle}" /></span> <span class="pt-attn__when">buổi <strong><c:out value="${fn:substring(gms:formatDate(item.sessionDate), 0, 5)}" /></strong></span></p>
+                                            </div>
+                                        </header>
+                                        <dl class="pt-attn__facts">
+                                            <div>
+                                                <dt>Membership</dt>
+                                                <dd class="is-bad"><c:out value="${item.membershipStatusLabel}" />
+                                                    <c:if test="${not empty item.freezeEndDate}"> · đến <c:out value="${fn:substring(gms:formatDate(item.freezeEndDate), 0, 5)}" /></c:if>
+                                                    <c:if test="${empty item.freezeEndDate and not empty item.membershipEndDate}"> · <c:out value="${fn:substring(gms:formatDate(item.membershipEndDate), 0, 5)}" /></c:if></dd>
+                                            </div>
+                                            <div>
+                                                <dt>Gói PT</dt>
+                                                <dd>Còn <c:out value="${item.scheduledSessionCount}" /> buổi · đến <c:out value="${fn:substring(gms:formatDate(item.ptEndDate), 0, 5)}" /></dd>
+                                            </div>
+                                        </dl>
+                                        <%-- Gói đôi: lời nhắc của Service nói thêm người còn lại có vào được gym không. --%>
+                                        <c:if test="${item.ptSubscriptionTypeLabel eq 'PT đôi'}"><p class="pt-attn__note"><c:out value="${item.attentionMessage}" /></p></c:if>
                                         <%-- Nút Nhắc khách: POST về PtDashboardServlet.doPost; Service kiểm tra lại khách + gói thuộc PT này. --%>
-                                        <form class="pt-remind" method="post" action="${pageContext.request.contextPath}/pt/dashboard">
+                                        <form class="pt-attn__act" method="post" action="${pageContext.request.contextPath}/pt/dashboard">
                                             <input type="hidden" name="csrfToken" value="${fn:escapeXml(csrfToken)}">
                                             <input type="hidden" name="customerId" value="${item.customerId}">
                                             <input type="hidden" name="subscriptionId" value="${item.ptSubscriptionId}">
                                             <c:choose>
                                                 <c:when test="${item.reminded}">
-                                                    <button type="button" class="btn btn-outline btn-sm" disabled><i class="fa-solid fa-check" aria-hidden="true"></i> Đã nhắc hôm nay</button>
+                                                    <button type="button" class="btn btn-outline btn-sm is-done" disabled><i class="fa-solid fa-check" aria-hidden="true"></i> Đã nhắc hôm nay</button>
                                                 </c:when>
                                                 <c:otherwise>
                                                     <button type="submit" class="btn btn-primary btn-sm" aria-label="Nhắc ${fn:escapeXml(item.customerName)}"><i class="fa-solid fa-bell" aria-hidden="true"></i> Nhắc khách</button>
                                                 </c:otherwise>
                                             </c:choose>
                                         </form>
-                                        <%-- 1 dòng đủ ý thay cho khối chi tiết gập: hạn membership/bảo lưu + gói PT còn bao nhiêu buổi. --%>
-                                        <p class="pt-attention-facts">
-                                            Membership: <strong><c:out value="${item.membershipStatusLabel}" /></strong>
-                                            <c:if test="${not empty item.membershipEndDate}"> (hạn <c:out value="${gms:formatDate(item.membershipEndDate)}" />)</c:if>
-                                            <c:if test="${not empty item.freezeEndDate}"> · bảo lưu đến <c:out value="${gms:formatDate(item.freezeEndDate)}" /></c:if>
-                                            · <c:out value="${item.ptSubscriptionTypeLabel}" /> còn <strong><c:out value="${item.scheduledSessionCount}" /> buổi</strong> (đến <c:out value="${gms:formatDate(item.ptEndDate)}" />)
-                                        </p>
                                     </article>
                                 </c:forEach>
                             </div>
