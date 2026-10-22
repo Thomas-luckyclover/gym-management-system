@@ -72,7 +72,7 @@ public class CheckInDAO {
             LocalDateTime checkedInAt = checkIn.getCheckedInAt() != null
                     ? checkIn.getCheckedInAt()
                     : LocalDateTime.now();
-            stmt.setTimestamp(3, Timestamp.valueOf(checkedInAt));// dich kieu localdate time sang Timestamp cua database
+            stmt.setTimestamp(3, Timestamp.valueOf(checkedInAt)); // Chuyển đổi LocalDateTime sang java.sql.Timestamp
             stmt.setBoolean(4, checkIn.isPhotoVerified());
 
             stmt.executeUpdate();
