@@ -295,7 +295,7 @@ public class PtDashboardDAO {
                 SELECT sub.SubscriptionId, p.FullName AS CustomerName,
                        pp.FullName AS PartnerName,
                        sub.SubscriptionType AS PtSubscriptionType,
-                       sub.EndDate AS PtEndDate,
+                       sub.EndDate AS PtEndDate, sub.GeneratedSessionCount AS TotalSessionCount,
                        futureSessions.ScheduledSessionCount
                 FROM Subscriptions sub
                 JOIN Orders o ON o.OrderId = sub.OrderId
@@ -321,7 +321,8 @@ public class PtDashboardDAO {
                   AND (
                       -- B1.2: gói PT lọc theo người phụ trách gói, không theo PT dạy từng buổi.
                       (sub.SubscriptionType IN ('PTSingle', 'PTCouple')
-                       AND sub.PtEmployeeId = ?)
+                       AND sub.PtEmployeeId = ?
+                       AND sub.EndDate >= CAST(q.Now AS DATE))   -- gói đã quá hạn (chưa chạy job) không còn là khách phụ trách
                       OR
                       -- B1.3: buổi lẻ theo PT đang được giao buổi Scheduled chưa bắt đầu.
                       -- EXISTS chỉ kiểm tra có buổi phù hợp; không tạo thêm dòng cho gói.
@@ -374,6 +375,7 @@ public class PtDashboardDAO {
                     // B3.4: điền năm field gốc; ptSubscriptionTypeLabel để Service bổ sung sau.
                     PtAssignedPackageView assignedPackage = new PtAssignedPackageView(
                             customerName, partnerName, ptSubscriptionType, ptEndDate, scheduledSessionCount);
+                    assignedPackage.setTotalSessionCount(resultSet.getInt("TotalSessionCount"));   // B3.5: tổng buổi → thanh "còn lại"
                     assignedPackages.add(assignedPackage);
                 }
             }
