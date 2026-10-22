@@ -14,7 +14,7 @@
   <link rel="stylesheet" href="${pageContext.request.contextPath}/css/pages/manager/leave-request-list.css?v=20261022-compact">
   <link rel="stylesheet" href="${pageContext.request.contextPath}/css/pages/auth/notification-bell.css">
   <script src="${pageContext.request.contextPath}/js/pages/auth/notification-bell.js" defer></script>
-  <script src="${pageContext.request.contextPath}/js/pages/manager/leave-request-list.js?v=20261022-bulk" defer></script>
+  <script src="${pageContext.request.contextPath}/js/pages/manager/leave-request-list.js?v=20261022-selected" defer></script>
 </head>
 
 <body class="dock theme-manager leave-list-page">
@@ -156,9 +156,6 @@
                   <button id="leave-approve-selected" type="submit" class="btn btn-sm btn-primary" disabled
                           data-confirm-title="Duyệt các đơn đã chọn" data-confirm-text="Duyệt"
                           data-confirm-message="Duyệt các đơn đã chọn?">Duyệt đã chọn</button>
-                  <button id="leave-approve-all" type="submit" class="btn btn-sm btn-outline" disabled
-                          data-confirm-title="Duyệt tất cả trên trang" data-confirm-text="Duyệt"
-                          data-confirm-message="Duyệt các đơn đủ điều kiện trên trang này?">Duyệt tất cả trên trang</button>
                 </form>
               </c:when>
             </c:choose>

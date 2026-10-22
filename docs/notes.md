@@ -1,5 +1,11 @@
 # File notes — mâu thuẫn tài liệu & quyết định đã chốt
 
+## BF-05 — chỉ giữ Duyệt đã chọn (22/10/2026, ĐÃ CHỐT)
+
+User yêu cầu bỏ nút Duyệt tất cả trên trang vì trùng thao tác checkbox đầu bảng. Giữ checkbox chọn từng đơn/chọn tất cả đơn đủ điều kiện trên trang và một nút Duyệt đã chọn; bỏ JS riêng của nút thừa. Nút duyệt chỉ bật khi có lựa chọn, vẫn hỏi xác nhận số đơn và kiểm tra lại từng đơn ở backend.
+
+Kiểm chứng: Jasper biên dịch JSP không lỗi, package thành công. Trình duyệt trên GMS cổng 8080 xác nhận nút thừa đã mất; tick đầu bảng chọn 6 đơn đủ điều kiện, bỏ qua đơn vướng lịch PT; hộp xác nhận ghi đúng 6 đơn; hủy rồi bỏ tick hết thì nút bị khóa. Không gửi xác nhận duyệt; đã đăng xuất tài khoản test.
+
 ## BF-05 — không tự ẩn đơn cũ bằng bộ lọc hôm nay (22/10/2026, ĐÃ CHỐT)
 
 User xác nhận đơn cũ không được bị ẩn khi qua ngày. Bỏ mặc định ngày gửi hôm nay ở danh sách, thay thế quyết định mặc định hai ô ngày trước đó. Mở Chờ duyệt hiện tất cả đơn chưa xử lý qua các ngày; các tab khác cũng không tự giới hạn ngày gửi. Chỉ áp dụng khoảng ngày khi người dùng chủ động chọn; Xóa lọc trở về không giới hạn ngày. Chuyển tab và phân trang vẫn giữ bộ lọc đã chọn. Thứ tự ưu tiên sắp nghỉ/FIFO, trạng thái và điều kiện duyệt không đổi.

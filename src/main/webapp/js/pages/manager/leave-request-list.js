@@ -4,7 +4,6 @@ document.addEventListener("DOMContentLoaded", function () {
     const bulkForm = document.getElementById("leave-bulk-form");
     const selectAll = document.getElementById("leave-select-all");
     const selectedButton = document.getElementById("leave-approve-selected");
-    const allButton = document.getElementById("leave-approve-all");
     const choices = document.querySelectorAll('input[name="leaveRequestIds"]:not([disabled])');
 
     // Checkbox chỉ giữ lựa chọn của trang hiện tại; server vẫn kiểm tra lại từng đơn khi duyệt.
@@ -16,14 +15,11 @@ document.addEventListener("DOMContentLoaded", function () {
             }
         }
         selectedButton.disabled = count === 0;
-        allButton.disabled = choices.length === 0;
         selectAll.disabled = choices.length === 0;
         selectAll.checked = count > 0 && count === choices.length;
         selectAll.indeterminate = count > 0 && count < choices.length;
         document.getElementById("leave-selection-count").textContent = "Đã chọn " + count + " đơn";
         selectedButton.dataset.confirmMessage = "Duyệt " + count + " đơn đã chọn? Hệ thống kiểm tra lại từng đơn.";
-        allButton.dataset.confirmMessage = "Duyệt tất cả " + choices.length
-            + " đơn đủ điều kiện trên trang này? Hệ thống kiểm tra lại từng đơn.";
     }
 
     if (bulkForm) {
@@ -39,17 +35,11 @@ document.addEventListener("DOMContentLoaded", function () {
         updateSelection();
     }
 
-    // Chạy trước hộp xác nhận chung để nút Duyệt tất cả chọn đúng các checkbox của trang.
+    // Ghi nhớ nút mở hộp xác nhận để trả focus khi đóng hộp.
     document.addEventListener("click", function (event) {
         const trigger = event.target.closest("button[data-confirm-message]");
         if (trigger) {
             decisionTrigger = trigger;
-        }
-        if (trigger === allButton && allButton) {
-            for (const choice of choices) {
-                choice.checked = true;
-            }
-            updateSelection();
         }
     }, true);
     const rows = document.querySelectorAll(".leave-request-row[data-review-url]");
