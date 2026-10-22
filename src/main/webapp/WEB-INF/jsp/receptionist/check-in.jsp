@@ -55,7 +55,7 @@
                           <div class="panel-head">
                             <div>
                               <h2>Tìm khách</h2>
-                              <p>Nhập mã khách, số điện thoại hoặc tên (một phần tên cũng được). Khách không cần thẻ,
+                              <p>Nhập mã khách, số điện thoại hoặc tên (một phần tên hoặc 4 số cuối SĐT đều được). Khách không cần thẻ,
                                 không cần đăng nhập.</p>
                             </div>
                           </div>
@@ -67,7 +67,7 @@
                               <div class="search" style="flex:1;">
                                 <i class="fa-solid fa-magnifying-glass"></i>
                                 <input id="ciq" name="q" type="search" value="<c:out value='${query}' />"
-                                  placeholder="Nhập mã khách (KH-...), số điện thoại hoặc họ tên..."
+                                  placeholder="Nhập mã khách (KH-...), họ tên hoặc 4 số cuối SĐT..."
                                   autocomplete="off" aria-label="Mã khách, số điện thoại hoặc tên" required
                                   <c:if test="${not lookupResult.canCheckIn}">autofocus</c:if>>
                               </div>
