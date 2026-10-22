@@ -1,6 +1,6 @@
-/* GÓI CỦA TÔI: cột trái 3 tab + thẻ gói, cột phải thông tin gói + chip lọc + bảng buổi.
-   Nạp sau my-pt-sessions.css (dùng lại .schedule-board, .session-status, .schedule-note).
-   TÌM NHANH: [BO-CUC] [TAB] [THE-GOI] [THONG-TIN-GOI] [CHIP] [BANG] [DESKTOP] [MOBILE] */
+/* GÓI CỦA TÔI: cột trái 3 tab + thẻ gói + lối đi nhanh; cột phải CTA, buổi tới, lịch cố định, dải chấm, cần để ý.
+   Nạp sau my-pt-sessions.css (dùng lại .schedule-board, .session-status, .schedule-note). Chỉ dùng token.
+   TÌM NHANH: [BO-CUC] [TAB] [THE-GOI] [LOI-DI] [DAU-GOI] [CTA] [BUOI-TOI] [MUC] [LICH-CO-DINH] [DONG] [CHAM] [DESKTOP] [MOBILE] */
 
 /* ===================== [BO-CUC] ===================== */
 .booking-layout {
@@ -15,12 +15,11 @@
   gap: var(--space-4);
   padding: var(--space-4);
 }
+.booking-sidebar-head { display: flex; align-items: center; gap: var(--space-2); }
+.booking-sidebar-head h2 { margin: 0; font-size: var(--font-size-lg); }
+.my-bookings-page svg { width: 1em; height: 1em; flex: none; fill: none; stroke: currentColor; stroke-width: 2; stroke-linecap: round; stroke-linejoin: round; }
 
-/* Tiêu đề "Gói của bạn" + nút (i) nằm cùng hàng */
-.booking-sidebar-head { display: flex; align-items: center; gap: var(--space-3); }
-.booking-sidebar-head h2 { margin: 0; }
-
-/* ===================== [TAB] dùng kiểu tab chung (common.css [role=tablist]), chỉ chia đều 3 tab + ô số ===================== */
+/* ===================== [TAB] dùng kiểu tab chung (common.css), chỉ chia đều 3 tab + ô số ===================== */
 .booking-tabs [data-tab] {
   flex: 1 1 0;
   display: inline-flex;
@@ -45,7 +44,6 @@
   font-variant-numeric: tabular-nums;
 }
 .booking-tabs [aria-selected="true"] span { background: var(--color-primary); color: var(--color-text-inverse); }
-
 .booking-panel { display: flex; flex-direction: column; gap: var(--space-2); }
 .booking-panel-empty { margin: 0; padding: var(--space-4) var(--space-2); text-align: center; }
 
@@ -60,18 +58,16 @@
   border: var(--border-width) solid var(--color-border);
   border-radius: var(--radius-sm);
   text-decoration: none;
-  transition: border-color var(--duration-fast), background var(--duration-fast);
+  transition: border-color var(--duration-fast) var(--ease-standard);
 }
 .booking-package:hover { border-color: var(--color-text-soft); }
 .booking-package:focus-visible { outline: none; box-shadow: var(--shadow-focus); }
 /* Gói đang xem: vạch màu bên trái thay cho nền tô kín (nền tô kín trên theme tối bị ra màu nâu đục). */
-.booking-package[aria-current="page"] {
-  border-color: var(--color-primary);
-  box-shadow: inset var(--space-1) 0 0 var(--color-primary);
-}
+.booking-package[aria-current="page"] { border-color: var(--color-primary); box-shadow: inset var(--space-1) 0 0 var(--color-primary); }
 .booking-package-name { font-size: var(--font-size-base); font-weight: var(--font-weight-bold); overflow-wrap: anywhere; }
 .booking-package-meta { display: flex; align-items: center; flex-wrap: wrap; gap: var(--space-1-5); font-size: var(--font-size-sm); color: var(--color-text-soft); }
 .booking-package-meta b { color: var(--color-text); }
+.booking-package-meta .is-ending { color: var(--color-warning-ink); font-weight: var(--font-weight-bold); }
 .booking-tag {
   padding: 0 var(--space-1-5);
   border: var(--border-width) solid var(--color-info-border);
@@ -81,36 +77,74 @@
   font-size: var(--font-size-xs);
   font-weight: var(--font-weight-semibold);
 }
-.booking-package progress {
-  width: 100%;
-  height: var(--space-1-5);
-  accent-color: var(--color-primary);
-}
+.booking-package progress { width: 100%; height: var(--space-1-5); accent-color: var(--color-primary); }
 
-/* ===================== [THONG-TIN-GOI] ===================== */
-.booking-overview {
+/* ===================== [LOI-DI] lối đi nhanh cuối cột trái: màn không được là ngõ cụt ===================== */
+.booking-links { display: flex; flex-direction: column; gap: var(--space-0-5); padding-top: var(--space-3); border-top: var(--border-width) solid var(--color-border); }
+.booking-links a {
   display: flex;
-  flex-direction: column;
+  align-items: center;
   gap: var(--space-2);
-  padding: var(--space-4) var(--space-5);
+  min-height: var(--control-height-sm);
+  padding: var(--space-1-5) var(--space-2);
+  border-radius: var(--radius-sm);
+  color: var(--color-text-soft);
+  font-size: var(--font-size-sm);
+  font-weight: var(--font-weight-semibold);
+  text-decoration: none;
 }
-.booking-title { display: flex; align-items: center; flex-wrap: wrap; gap: var(--space-3); }
+.booking-links a:hover { color: var(--color-text); background: var(--color-surface-hover); }
+.booking-links a:focus-visible { outline: none; box-shadow: var(--shadow-focus); }
+.booking-links .booking-explore { margin-bottom: var(--space-1); padding: var(--space-3); border: var(--border-width) dashed var(--color-border); color: var(--color-primary); }
+.booking-links .booking-explore:hover { border-color: var(--color-primary-border); background: transparent; }
+.booking-explore-arrow { margin-left: auto; color: var(--color-text-soft); }
+.booking-links-title { display: flex; align-items: center; gap: var(--space-2); margin: 0 0 var(--space-1); color: var(--color-text-soft); font-size: var(--font-size-xs); font-weight: var(--font-weight-bold); text-transform: uppercase; letter-spacing: 0.06em; }
+
+/* ===================== [DAU-GOI] ===================== */
+.booking-overview { display: flex; flex-direction: column; gap: var(--space-2); padding: var(--space-4) var(--space-5); }
+.booking-title { display: flex; align-items: center; flex-wrap: wrap; gap: var(--space-2) var(--space-3); }
 .booking-overview h3 { margin: 0; font-size: var(--font-size-xl); }
+.booking-title-actions { margin-left: auto; }
+.booking-title-actions .btn, .booking-hero-actions .btn, .booking-cta-actions .btn { display: inline-flex; align-items: center; gap: var(--space-1-5); }
 .booking-sub { margin: 0; color: var(--color-text-soft); font-size: var(--font-size-sm); line-height: var(--line-height-normal); }
 .booking-sub strong { color: var(--color-text); }
-.booking-state {
-  padding: 0 var(--space-2);
-  border-radius: var(--radius-pill);
-  font-size: var(--font-size-xs);
-  font-weight: var(--font-weight-bold);
-}
+.booking-state { padding: 0 var(--space-2); border-radius: var(--radius-pill); font-size: var(--font-size-xs); font-weight: var(--font-weight-bold); }
 .booking-state.is-active { background: var(--color-success-tint); color: var(--color-success-ink); border: var(--border-width) solid var(--color-success-border); }
 .booking-state.is-ended { background: var(--color-neutral-tint); color: var(--color-text-soft); border: var(--border-width) solid var(--color-neutral-border); }
 
+/* ===================== [CTA] tối đa 1 lời mời hành động; nút chính màu cam duy nhất của khối ===================== */
+.booking-cta {
+  display: grid;
+  grid-template-columns: auto minmax(0, 1fr) auto;
+  align-items: center;
+  gap: var(--space-4);
+  margin: 0 var(--space-5) var(--space-4);
+  padding: var(--space-4);
+  border: var(--border-width) solid var(--color-primary-border);
+  border-radius: var(--radius-md);
+  background: var(--color-surface-muted);
+  box-shadow: inset var(--space-1) 0 0 var(--color-primary);
+}
+.booking-cta.is-soft { border-color: var(--color-info-border); box-shadow: inset var(--space-1) 0 0 var(--color-info); }
+.booking-cta-icon {
+  display: grid;
+  place-items: center;
+  width: var(--space-10);
+  aspect-ratio: 1;
+  border-radius: var(--radius-circle);
+  border: var(--border-width) solid var(--color-primary-border);
+  color: var(--color-primary);
+  font-size: var(--font-size-lg);
+}
+.booking-cta.is-soft .booking-cta-icon { border-color: var(--color-info-border); color: var(--color-info-ink); }
+.booking-cta-text h4 { margin: 0 0 var(--space-0-5); font-size: var(--font-size-base); }
+.booking-cta-text p { margin: 0; max-width: 62ch; color: var(--color-text-soft); font-size: var(--font-size-sm); line-height: var(--line-height-normal); }
+.booking-cta-text strong { color: var(--color-text); }
+.booking-cta-actions { display: flex; flex-wrap: wrap; justify-content: flex-end; gap: var(--space-2); }
+.booking-cta-phone { font-variant-numeric: tabular-nums; }
+
 /* ===================== [BUOI-TOI] thẻ nổi bật + vòng tiến độ ===================== */
-/* Nền = surface-muted + vạch màu chính bên trái (không tô màu chính kín: theme tối ra nâu đục). */
 .booking-hero {
-  position: relative;
   display: grid;
   grid-template-columns: minmax(0, 1fr) auto;
   align-items: center;
@@ -118,35 +152,26 @@
   margin: 0 var(--space-5) var(--space-4);
   padding: var(--space-4) var(--space-5);
   background: var(--color-surface-muted);
-  border: var(--border-width) solid var(--color-primary-border);
+  border: var(--border-width) solid var(--color-border);
   border-radius: var(--radius-md);
-  box-shadow: inset var(--space-1) 0 0 var(--color-primary);
 }
 .booking-hero.is-warn { border-color: var(--color-warning-border); box-shadow: inset var(--space-1) 0 0 var(--color-warning); }
-.booking-hero.is-quiet { border-color: var(--color-border); box-shadow: none; }
+.booking-hero.is-single { grid-template-columns: minmax(0, 1fr); }
 .booking-hero-main { display: flex; flex-direction: column; gap: var(--space-1); min-width: 0; }
 .booking-hero-main p { margin: 0; }
-.booking-hero-label {
-  color: var(--color-primary);
-  font-size: var(--font-size-xs);
-  font-weight: var(--font-weight-bold);
-  text-transform: uppercase;
-  letter-spacing: 0.06em;
-}
+.booking-hero-label { color: var(--color-primary); font-size: var(--font-size-xs); font-weight: var(--font-weight-bold); text-transform: uppercase; letter-spacing: 0.06em; }
 .booking-hero.is-warn .booking-hero-label { color: var(--color-warning-ink); }
 .booking-hero.is-quiet .booking-hero-label { color: var(--color-text-soft); }
-.booking-hero-when { color: var(--color-text); font-size: var(--font-size-2xl); font-weight: var(--font-weight-extrabold); line-height: 1.2; }
+.booking-hero-when { color: var(--color-text); font-size: var(--font-size-2xl); font-weight: var(--font-weight-extrabold); line-height: 1.2; font-variant-numeric: tabular-nums; }
 .booking-hero.is-quiet .booking-hero-when { font-size: var(--font-size-lg); }
 .booking-hero-sub { color: var(--color-text-soft); font-size: var(--font-size-sm); }
 .booking-hero-sub strong { color: var(--color-text); }
-.booking-hero-warn {
-  padding: var(--space-2) var(--space-3);
-  border-radius: var(--radius-sm);
-  background: var(--color-warning-tint);
-  color: var(--color-warning-ink);
-  font-size: var(--font-size-sm);
-}
+.booking-phone { color: inherit; font-variant-numeric: tabular-nums; }
+.booking-phone:hover { color: var(--color-text); }
+.booking-hero-warn { padding: var(--space-2) var(--space-3); border-radius: var(--radius-sm); background: var(--color-warning-tint); color: var(--color-warning-ink); font-size: var(--font-size-sm); }
 .booking-hero-actions { display: flex; flex-wrap: wrap; gap: var(--space-2); margin-top: var(--space-2); }
+.booking-hero-after { margin-top: var(--space-3) !important; padding-top: var(--space-3); border-top: var(--border-width) dashed var(--color-border); color: var(--color-text-soft); font-size: var(--font-size-sm); }
+.booking-hero-after strong { color: var(--color-text); font-variant-numeric: tabular-nums; }
 
 /* Vòng tiến độ: --p (0–100) do JSP gắn = % buổi đã qua. */
 .booking-ring {
@@ -165,151 +190,120 @@
   width: calc(100% - var(--space-5));
   aspect-ratio: 1;
   border-radius: var(--radius-circle);
-  background: var(--color-surface);
+  background: var(--color-surface-muted);
   text-align: center;
   line-height: 1.15;
 }
 .booking-ring b { color: var(--color-text); font-size: var(--font-size-xl); font-variant-numeric: tabular-nums; }
 .booking-ring span { color: var(--color-text-soft); font-size: var(--font-size-xs); }
 .booking-ring .booking-ring-rest { margin-top: var(--space-0-5); color: var(--color-text); font-weight: var(--font-weight-bold); }
-.booking-ring-hint { position: absolute; top: var(--space-2); right: var(--space-2); }
 
-/* ===================== [CHIP] lọc trạng thái — viên thuốc có chấm màu trạng thái ===================== */
-.booking-chips {
+/* ===================== [MUC] mỗi mục ngăn bằng 1 đường kẻ, không lồng thẻ trong thẻ ===================== */
+.booking-section { padding: var(--space-4) var(--space-5); border-top: var(--border-width) solid var(--color-border); }
+.booking-section-head { display: flex; align-items: center; gap: var(--space-2); margin-bottom: var(--space-3); }
+.booking-section-head h4 { margin: 0; font-size: var(--font-size-sm); font-weight: var(--font-weight-bold); text-transform: uppercase; letter-spacing: 0.06em; color: var(--color-text-soft); }
+.booking-count { margin-left: auto; color: var(--color-text-soft); font-size: var(--font-size-sm); font-variant-numeric: tabular-nums; }
+.booking-subhead { display: flex; align-items: center; gap: var(--space-2); margin: var(--space-4) 0 var(--space-1); }
+.booking-subhead h5 { display: flex; align-items: center; gap: var(--space-2); margin: 0; font-size: var(--font-size-sm); }
+.booking-subhead h5 span { padding: 0 var(--space-1-5); border-radius: var(--radius-pill); background: var(--color-surface-hover); color: var(--color-text-soft); font-size: var(--font-size-xs); }
+.booking-summary { margin: var(--space-3) 0 0; color: var(--color-text-soft); font-size: var(--font-size-sm); }
+.booking-summary strong { color: var(--color-text); font-variant-numeric: tabular-nums; }
+
+/* ===================== [LICH-CO-DINH] 5 ô T2 → T6, mỗi ô giờ của thứ đó ===================== */
+.booking-week { display: grid; grid-template-columns: repeat(5, minmax(0, 1fr)); gap: var(--space-2); margin: 0; padding: 0; list-style: none; }
+.booking-day {
   display: flex;
-  flex-wrap: wrap;
+  flex-direction: column;
   align-items: center;
-  gap: var(--space-2);
-  padding: var(--space-3) var(--space-5);
-  border-block: var(--border-width) solid var(--color-border);
-}
-.booking-chips [data-filter] {
-  display: inline-flex;
-  align-items: center;
-  gap: var(--space-1-5);
-  min-height: var(--control-height-sm);
-  padding: 0 var(--space-3);
-  background: var(--color-surface);
-  color: var(--color-text);
+  gap: var(--space-0-5);
+  padding: var(--space-2-5) var(--space-1);
   border: var(--border-width) solid var(--color-border);
-  border-radius: var(--radius-pill);
-  font: inherit;
-  font-size: var(--font-size-sm);
-  cursor: pointer;
-}
-.booking-chips [data-filter] b { font-variant-numeric: tabular-nums; }
-.booking-chips [data-tone]::before {
-  content: "";
-  width: var(--space-2);
-  height: var(--space-2);
-  border-radius: var(--radius-circle);
-  background: var(--color-neutral);
-}
-.booking-chips [data-tone="upcoming"]::before { background: var(--color-info); }
-.booking-chips [data-tone="checkedIn"]::before { background: var(--color-success); }
-.booking-chips [data-tone="missed"]::before { background: var(--color-danger); }
-.booking-chips [data-tone="pending"]::before { background: var(--color-warning); }
-.booking-chips [data-filter]:not(:disabled):hover { border-color: var(--color-text-soft); }
-.booking-chips [data-filter]:focus-visible { outline: none; box-shadow: var(--shadow-focus); }
-.booking-chips [aria-pressed="true"] {
-  background: var(--color-primary);
-  border-color: var(--color-primary);
-  color: var(--color-text-inverse);
-}
-.booking-chips [aria-pressed="true"]::before { background: var(--color-text-inverse); }
-.booking-chips [data-filter]:disabled { opacity: var(--opacity-disabled); cursor: default; }
-/* Nhóm "Đã qua" (check-in / vắng / đang cập nhật), vạch mảnh ngăn với Sắp tới và Đã hủy */
-.booking-chip-group {
-  display: inline-flex;
-  flex-wrap: wrap;
-  align-items: center;
-  gap: var(--space-2);
-  padding-inline: var(--space-3);
-  border-left: var(--border-width) solid var(--color-border);
-  border-right: var(--border-width) solid var(--color-border);
-}
-.booking-chip-label { color: var(--color-text-soft); font-size: var(--font-size-xs); font-weight: var(--font-weight-semibold); }
-
-/* ===================== [BANG] ===================== */
-.booking-result { display: flex; align-items: center; gap: var(--space-2); margin: 0; padding: var(--space-3) var(--space-5) var(--space-2); }
-.booking-table-scroll {
-  overflow: auto;
-  max-height: calc(var(--space-12) * 6);
-}
-.booking-table {
-  width: 100%;
-  border-collapse: collapse;
-  font-size: var(--font-size-md);
-}
-.booking-table th,
-.booking-table td {
-  padding: var(--space-3) var(--space-4);
-  border-bottom: var(--border-width) solid var(--color-border);
-  text-align: left;
-  vertical-align: middle;
-}
-.booking-table th {
-  position: sticky;
-  top: 0;
-  z-index: var(--z-base);
+  border-radius: var(--radius-md);
   background: var(--color-surface-muted);
-  color: var(--color-text-soft);
+  text-align: center;
+}
+.booking-day-name { color: var(--color-text-soft); font-size: var(--font-size-sm); font-weight: var(--font-weight-bold); }
+.booking-day b { color: var(--color-text-soft); font-size: var(--font-size-lg); font-variant-numeric: tabular-nums; }
+.booking-day small { color: var(--color-text-soft); font-size: var(--font-size-xs); }
+.booking-day.is-main { border-color: var(--color-primary-border); box-shadow: inset 0 calc(-1 * var(--space-1)) 0 var(--color-primary); }
+.booking-day.is-main b, .booking-day.is-odd b { color: var(--color-text); }
+.booking-day.is-odd { border: var(--border-width-strong, 2px) dashed var(--color-info-border); background: var(--color-info-tint); }
+.booking-day.is-odd small { color: var(--color-info-ink); font-weight: var(--font-weight-semibold); }
+.booking-day.is-today .booking-day-name::after { content: " · hôm nay"; color: var(--color-primary); font-weight: var(--font-weight-semibold); }
+
+/* ===================== [DONG] danh sách ngắn: buổi khác giờ / cần để ý / buổi lẻ ===================== */
+.booking-rows { margin: 0; padding: 0; list-style: none; }
+.booking-rows li {
+  display: grid;
+  grid-template-columns: minmax(0, 9.5rem) minmax(0, 7.5rem) minmax(0, 1fr) auto;
+  align-items: center;
+  gap: var(--space-3);
+  padding: var(--space-2-5) 0;
+  border-top: var(--border-width) dashed var(--color-border);
   font-size: var(--font-size-sm);
-  font-weight: var(--font-weight-semibold);
 }
-.booking-table tbody tr:hover { background: var(--color-surface-hover); }
-.booking-table .booking-col-no { width: var(--space-10); color: var(--color-text-soft); font-variant-numeric: tabular-nums; text-align: right; }
-.booking-table .booking-col-time { white-space: nowrap; font-variant-numeric: tabular-nums; }
-.booking-table .booking-col-detail { width: 1%; text-align: right; white-space: nowrap; }
-/* Buổi đã qua: chữ trầm hơn, để mắt tập trung vào buổi sắp tới. */
-.booking-table tr.is-ended td:not(:last-child) { color: var(--color-text-soft); }
-/* Dòng "Buổi tới": chỉ vạch màu bên trái + nhãn; không tô nền kín (trên theme tối ra màu nâu đục). */
-.booking-table tr.is-focus { box-shadow: inset var(--space-1) 0 0 var(--color-primary); }
-.booking-next {
+.booking-rows li:first-child { border-top: 0; }
+.booking-rows.is-single li { grid-template-columns: minmax(0, 9.5rem) minmax(0, 7.5rem) minmax(0, 1fr) auto minmax(0, 9rem); }
+.booking-rows-date { color: var(--color-text); font-weight: var(--font-weight-bold); text-decoration: none; }
+.booking-rows-date:hover { color: var(--color-link); text-decoration: underline; }
+.booking-rows-date:focus-visible, .booking-hero-after a:focus-visible { outline: none; box-shadow: var(--shadow-focus); border-radius: var(--radius-xs); }
+.booking-hero-after a { color: inherit; text-decoration: none; }
+.booking-hero-after a:hover strong { color: var(--color-link); text-decoration: underline; }
+a.booking-dot { cursor: pointer; transition: transform var(--duration-fast) var(--ease-out); }
+a.booking-dot:hover { transform: scale(1.25); }
+.booking-rows-time { color: var(--color-text-soft); font-variant-numeric: tabular-nums; }
+.booking-rows-note { color: var(--color-text-soft); }
+.booking-rows-note strong { color: var(--color-text); }
+.booking-rows-action { justify-self: end; }
+.booking-rows-action a { color: var(--color-link); font-weight: var(--font-weight-semibold); text-decoration: none; }
+.booking-rows-action a:hover { text-decoration: underline; }
+
+/* ===================== [CHAM] dải chấm: hình khác nhau cho mỗi trạng thái, không chỉ dựa vào màu ===================== */
+.booking-dots { display: flex; flex-wrap: wrap; align-items: center; gap: var(--space-1-5); }
+.booking-dot {
+  position: relative;
   display: inline-block;
-  white-space: nowrap;
-  margin-left: var(--space-2);
-  padding: 0 var(--space-2);
-  border-radius: var(--radius-pill);
-  background: var(--color-primary);
-  color: var(--color-text-inverse);
-  font-size: var(--font-size-xs);
-  font-weight: var(--font-weight-bold);
+  width: var(--space-4);
+  height: var(--space-4);
+  flex: none;
+  border: var(--border-width) solid transparent;
+  border-radius: var(--radius-xs);
 }
-.booking-reason { display: block; margin-top: var(--space-1); max-width: var(--layout-dialog-width); font-size: var(--font-size-xs); color: var(--color-text-soft); }
-.booking-session-detail summary {
-  color: var(--color-link);
-  font-weight: var(--font-weight-semibold);
-  cursor: pointer;
-  list-style: none;
-}
-.booking-session-detail summary::-webkit-details-marker { display: none; }
-.booking-session-detail summary::after { content: " ›"; }
-/* Dòng gập "▸ N buổi đã qua" (đầu bảng) — kiểu dòng thời gian của app di động. */
-.booking-table .booking-fold td { padding: 0; }
-.booking-table .booking-fold:hover { background: transparent; }
-.booking-fold button {
+.booking-dot[data-status="checkedIn"] { background: var(--color-success); }
+.booking-dot[data-status="missed"] { background: var(--color-danger); }
+.booking-dot[data-status="missed"]::after { content: "×"; position: absolute; inset: 0; display: grid; place-items: center; color: var(--color-text-inverse); font-size: var(--font-size-xs); font-style: normal; font-weight: var(--font-weight-bold); line-height: 1; }
+.booking-dot[data-status="cancelled"] { border-color: var(--color-text-soft); background: linear-gradient(to top right, transparent 44%, var(--color-text-soft) 44% 56%, transparent 56%); }
+.booking-dot[data-status="pending"] { border: var(--border-width) dashed var(--color-warning); }
+.booking-dot:is([data-status="upcoming"], [data-status="today"]) { border-color: var(--color-text-soft); }
+.booking-dot[data-status="warn"] { border: 2px solid var(--color-warning); }
+.booking-dot.is-next { border: 2px solid var(--color-primary); box-shadow: 0 0 0 3px var(--color-primary-tint); }
+.booking-dot-week { width: var(--border-width); height: var(--space-4); margin-inline: var(--space-1); background: var(--color-border); }
+.booking-key { display: flex; flex-wrap: wrap; gap: var(--space-2) var(--space-4); margin: var(--space-3) 0 0; padding: 0; list-style: none; color: var(--color-text-soft); font-size: var(--font-size-xs); }
+.booking-key li { display: inline-flex; align-items: center; gap: var(--space-1-5); }
+.booking-key .booking-dot { width: var(--space-3); height: var(--space-3); }
+.booking-key b { color: var(--color-text); font-variant-numeric: tabular-nums; }
+
+.booking-history { margin-top: var(--space-3); }
+.booking-history summary {
   display: flex;
   align-items: center;
-  flex-wrap: wrap;
   gap: var(--space-2);
-  width: 100%;
-  padding: var(--space-3) var(--space-4);
-  background: var(--color-surface-muted);
-  color: var(--color-text-soft);
-  border: 0;
-  font: inherit;
+  width: fit-content;
+  min-height: var(--control-height-sm);
+  color: var(--color-link);
   font-size: var(--font-size-sm);
-  text-align: left;
+  font-weight: var(--font-weight-semibold);
+  list-style: none;
   cursor: pointer;
 }
-.booking-fold button:hover { color: var(--color-text); }
-.booking-fold button:focus-visible { outline: none; box-shadow: inset var(--shadow-focus); }
-.booking-fold b { color: var(--color-text); }
-.booking-fold-icon { display: inline-block; transition: transform var(--duration-fast); }
-.booking-fold.is-open .booking-fold-icon { transform: rotate(90deg); }
-.booking-fold-action { margin-left: auto; color: var(--color-link); font-weight: var(--font-weight-semibold); }
-.booking-foot { margin: 0; padding: var(--space-3) var(--space-5); border-top: var(--border-width) solid var(--color-border); }
+.booking-history summary::-webkit-details-marker { display: none; }
+.booking-history summary::before { content: "▸"; transition: transform var(--duration-fast) var(--ease-standard); }
+.booking-history[open] summary::before { transform: rotate(90deg); }
+.booking-history summary:focus-visible { outline: none; box-shadow: var(--shadow-focus); border-radius: var(--radius-xs); }
+.booking-history .booking-rows { margin-top: var(--space-1); }
+.booking-foot { display: flex; align-items: center; gap: var(--space-2); padding: var(--space-3) var(--space-5); border-top: var(--border-width) solid var(--color-border); }
+.booking-foot a { display: inline-flex; align-items: center; gap: var(--space-1); color: var(--color-link); font-size: var(--font-size-sm); font-weight: var(--font-weight-bold); text-decoration: none; }
+.booking-foot a:hover { text-decoration: underline; }
 
 /* ===================== [DESKTOP] cửa sổ đủ lớn: header đứng yên, hai cột cuộn riêng ===================== */
 @media (min-width: 1080px) and (min-height: 480px) {
@@ -318,39 +312,36 @@
   .my-bookings-page .main { display: flex; flex-direction: column; height: 100%; min-height: 0; }
   .my-bookings-page .topbar { flex: none; }
   .my-bookings-page .pt-schedule.content { display: flex; flex-direction: column; flex: 1; min-height: 0; overflow: hidden; }
-  .my-bookings-page .booking-layout { flex: 1; min-height: 0; align-items: start; max-height: 100%; }
-  .my-bookings-page .booking-sidebar { max-height: 100%; min-height: 0; overflow-x: hidden; overflow-y: auto; overscroll-behavior-y: contain; }
-  /* Cột phải tự cuộn khi thẻ "Buổi tới" + chip đã chiếm gần hết chiều cao (màn laptop) */
-  .my-bookings-page .booking-content { display: flex; flex-direction: column; max-height: 100%; min-height: 0; overflow-x: hidden; overflow-y: auto; overscroll-behavior-y: contain; }
-  .my-bookings-page .booking-overview,
-  .my-bookings-page .booking-chips,
-  .my-bookings-page .booking-hero,
-  .my-bookings-page .booking-result,
-  .my-bookings-page .booking-foot { flex: none; }
-  /* Co theo số dòng nhưng KHÔNG bị ép bẹp: tối đa ~5 dòng mỗi lần, nhiều buổi thì cuộn trong bảng. */
-  .my-bookings-page .booking-table-scroll { flex: 0 0 auto; min-height: 0; max-height: calc(var(--space-12) * 5); overscroll-behavior-y: contain; }
+  .my-bookings-page .booking-layout { flex: 1; min-height: 0; max-height: 100%; }
+  .my-bookings-page :is(.booking-sidebar, .booking-content) { max-height: 100%; min-height: 0; overflow-y: auto; overscroll-behavior-y: contain; }
   .my-bookings-page .schedule-empty { min-height: 0; overflow-y: auto; }
 }
 
 /* ===================== [MOBILE] ===================== */
 @media (max-width: 900px) {
   .booking-layout { grid-template-columns: minmax(0, 1fr); }
-  .booking-sidebar { max-height: calc(var(--space-12) * 5); overflow: auto; }
+  .booking-cta { grid-template-columns: auto minmax(0, 1fr); }
+  .booking-cta-actions { grid-column: 1 / -1; justify-content: flex-start; }
 }
 @media (max-width: 640px) {
-  /* Mobile: vòng tiến độ thu nhỏ lên góc phải thẻ, chữ chừa chỗ cho vòng. */
-  .booking-hero { display: block; margin-inline: var(--space-4); padding: var(--space-4); }
-  .booking-hero-main { padding-right: calc(var(--space-12) + var(--space-3)); }
+  .booking-overview, .booking-section, .booking-foot { padding-inline: var(--space-4); }
+  .booking-cta, .booking-hero { margin-inline: var(--space-4); padding: var(--space-4); }
+  .booking-hero { grid-template-columns: minmax(0, 1fr) auto; gap: var(--space-3); }
   .booking-hero-when { font-size: var(--font-size-lg); }
-  .booking-hero-actions { padding-right: 0; margin-right: calc(-1 * (var(--space-12) + var(--space-3))); }
-  .booking-ring { position: absolute; top: var(--space-4); right: var(--space-4); width: var(--space-12); }
+  .booking-hero-actions, .booking-hero-after { grid-column: 1 / -1; }
+  .booking-ring { width: var(--space-12); }
   .booking-ring > div { width: calc(100% - var(--space-2-5)); }
   .booking-ring b { font-size: var(--font-size-sm); }
   .booking-ring span:not(.booking-ring-rest) { display: none; }
   .booking-ring .booking-ring-rest { font-size: var(--font-size-2xs); font-weight: var(--font-weight-regular); }
-  .booking-ring-hint { display: none; }
-  .booking-overview, .booking-chips, .booking-result, .booking-foot { padding-inline: var(--space-4); }
-  /* Mobile: mỗi nhóm chip 1 dòng, bỏ vạch ngăn */
-  .booking-chip-group { flex-basis: 100%; padding-inline: 0; border: 0; }
-  .booking-table th, .booking-table td { padding: var(--space-2) var(--space-3); }
+  .booking-week { gap: var(--space-1); }
+  .booking-day { padding-inline: 0; }
+  .booking-day b { font-size: var(--font-size-sm); }
+  .booking-day small { display: none; }
+  .booking-day.is-today .booking-day-name::after { content: ""; }
+  .booking-rows li, .booking-rows.is-single li { grid-template-columns: minmax(0, 1fr) auto; gap: var(--space-1) var(--space-3); }
+  .booking-rows-note, .booking-rows-action { grid-column: 1 / -1; justify-self: start; }
+}
+@media (prefers-reduced-motion: reduce) {
+  .booking-package, .booking-history summary::before, a.booking-dot { transition: none; }
 }

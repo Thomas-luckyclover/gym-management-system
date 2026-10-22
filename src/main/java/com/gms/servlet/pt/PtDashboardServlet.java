@@ -4,7 +4,6 @@ import com.gms.constant.SessionKey;
 import com.gms.dto.PtAssignedPackageView;
 import com.gms.dto.PtAttentionView;
 import com.gms.dto.PtCommissionSummaryView;
-import com.gms.dto.PtRatingView;
 import com.gms.dto.PtScheduleDayView;
 import com.gms.dto.ServiceResult;
 import com.gms.dto.WeatherView;
@@ -112,13 +111,8 @@ public class PtDashboardServlet extends HttpServlet {
             request.setAttribute("commissionSummaryError", commissionResult.getMessage());
         }
 
-        // B10: Service chỉ trả điểm tổng hợp tháng của PT hiện tại; chưa đủ P-22 thì điểm bị ẩn.
-        ServiceResult<PtRatingView> ratingResult = dashboardService.getRating(accountId);
-        if (ratingResult.isSuccess()) {
-            request.setAttribute("ptRating", ratingResult.getData());
-        } else {
-            request.setAttribute("ptRatingError", ratingResult.getMessage());
-        }
+        // B10: token CSRF cho nút "Nhắc khách" (form POST) trong khối Cần chú ý.
+        request.setAttribute("csrfToken", RequestUtil.getOrCreateCsrfToken(session));
 
         // Thời tiết là dữ liệu phụ: API lỗi vẫn mở dashboard; nền dùng sunny, thẻ ẩn.
         String previewType = request.getParameter("weather");
@@ -138,6 +132,37 @@ public class PtDashboardServlet extends HttpServlet {
 
         // B12: mở JSP sau khi đã đặt dữ liệu hoặc lỗi riêng của từng khối.
         RequestUtil.forward(request, response, VIEW);
+    }
+
+    /**
+     * POST /pt/dashboard — nút "Nhắc khách" ở khối Cần chú ý: gửi thông báo tới khách rồi quay lại trang.
+     * Form gửi: csrfToken, customerId, subscriptionId. Service kiểm tra lại khách có thuộc PT này không.
+     */
+    @Override
+    protected void doPost(HttpServletRequest request, HttpServletResponse response) throws IOException {
+        // B0: chặn CSRF trước khi làm bất cứ việc gì
+        if (!RequestUtil.isValidCsrfToken(request)) {
+            response.sendError(HttpServletResponse.SC_FORBIDDEN);
+            return;
+        }
+
+        // B1: phải đăng nhập (mã tài khoản lấy từ session)
+        HttpSession session = request.getSession(false);
+        Integer accountId = session == null ? null : (Integer) session.getAttribute(SessionKey.ACCOUNT_ID);
+        if (accountId == null) {
+            RequestUtil.redirect(request, response, "/login?returnUrl=/pt/dashboard");
+            return;
+        }
+
+        // B2: gửi nhắc; mã sai/thiếu → 0 → Service báo "không còn cần nhắc"
+        Integer customerId = RequestUtil.getPositiveIntParam(request, "customerId");
+        Integer subscriptionId = RequestUtil.getPositiveIntParam(request, "subscriptionId");
+        ServiceResult<Void> result = dashboardService.remindCustomer(accountId,
+                customerId == null ? 0 : customerId, subscriptionId == null ? 0 : subscriptionId);
+
+        // B3: báo kết quả bằng toast, quay về đúng khối Cần chú ý (POST → redirect → GET, F5 không gửi lại)
+        RequestUtil.setFlashToast(request, result.isSuccess() ? "success" : "error", result.getMessage());
+        RequestUtil.redirect(request, response, "/pt/dashboard#alerts-title");
     }
 
     /** Chỉ nhận các tên CSS cố định, tránh đưa chuỗi tùy ý từ URL vào class HTML. */

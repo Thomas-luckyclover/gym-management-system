@@ -1,7 +1,7 @@
 <%@ page pageEncoding="UTF-8" %>
 <%-- ===== Một thẻ buổi trong ô lịch tuần: s (MyPtSessionRow) lấy từ vòng lặp của JSP cha, Service đã điền nhãn/trạng thái ===== --%>
 <%-- ended làm nền trầm nhưng không khóa bấm; initSessionDetails nối summary với openSessionDetail. --%>
-<details class="session-card ${s.ended ? 'is-ended' : ''}" data-session-detail data-status="${s.statusKey}">
+<details class="session-card ${s.ended ? 'is-ended' : ''}" data-session-detail data-session-id="${s.sessionId}" data-status="${s.statusKey}">
     <summary>
         <%-- Phần nhìn thấy trên thẻ: giờ → tên PT → loại gói và buổi số mấy → trạng thái. --%>
         <c:if test="${s.ended}"><span class="visually-hidden">Buổi đã kết thúc. </span></c:if>

@@ -10,7 +10,7 @@
             <button type="button" class="pt-info-trigger" aria-label="Hướng dẫn ${scheduleTitle}" aria-describedby="schedule-page-help"><span aria-hidden="true">i</span></button>
             <span id="schedule-page-help" class="pt-info-popover" role="tooltip">
                 <c:choose>
-                    <c:when test="${activeSidebar eq 'bookings'}">Chọn một gói ở cột trái để xem toàn bộ buổi của gói, đánh số #1 → hết theo ngày tập. Bấm các nút lọc phía trên bảng để xem riêng từng trạng thái. Muốn hủy hoặc đổi buổi, hãy nhắn PT qua Zalo.</c:when>
+                    <c:when test="${activeSidebar eq 'bookings'}">Chọn một gói ở cột trái: xem buổi tới, lịch cố định hằng tuần, các buổi đã qua và những buổi cần để ý. Xem từng buổi trên Lịch tập. Muốn hủy hoặc đổi buổi, hãy nhắn PT qua Zalo.</c:when>
                     <c:otherwise>Lịch chia thành Sáng, Chiều, Tối theo giờ bắt đầu. Bấm một buổi để xem chi tiết; bấm ngoài, nút Đóng hoặc Escape để đóng. Cần đổi/hủy buổi, hãy liên hệ PT.</c:otherwise>
                 </c:choose>
             </span>
@@ -21,9 +21,15 @@
         <%-- Trên Lịch tập hiện “Đặt buổi lẻ”; fragment dùng ở màn Gói của tôi thì hiện link quay về Lịch tập. --%>
         <c:choose>
             <c:when test="${activeSidebar eq 'bookings'}"><a class="btn btn-outline btn-sm" href="${pageContext.request.contextPath}/customer/pt-sessions">Lịch tập</a></c:when>
-            <c:otherwise><a class="btn btn-primary btn-sm" href="${pageContext.request.contextPath}/customer/book-session">Đặt buổi lẻ</a></c:otherwise>
+            <c:otherwise>
+                <%-- Đến từ Gói của tôi → nút quay về ĐÚNG gói đó (backBookingId do MyPtSessionServlet đã kiểm tra). --%>
+                <c:if test="${not empty backBookingId}"><a class="btn btn-outline btn-sm" href="${pageContext.request.contextPath}/customer/bookings?id=${backBookingId}">‹ Gói của tôi</a></c:if>
+                <a class="btn btn-primary btn-sm" href="${pageContext.request.contextPath}/customer/book-session">Đặt buổi lẻ</a>
+            </c:otherwise>
         </c:choose>
         <%-- KẾT THÚC nút điều hướng Đặt buổi lẻ / Lịch tập. --%>
+        <%-- Chuông thông báo dùng chung (notification-bell.js gọi /api/notifications): khách nhận lời nhắc PT gửi từ PT Dashboard. --%>
+        <%@ include file="/WEB-INF/jsp/common/notification-bell.jspf" %>
         <%-- Công tắc Sáng/Tối: data-theme-toggle nối với xử lý theme dùng chung trong common.js. --%>
         <button type="button" class="theme-toggle" data-theme-toggle aria-pressed="false" aria-label="Chuyển sang nền sáng">
             <span class="theme-toggle__track" aria-hidden="true">

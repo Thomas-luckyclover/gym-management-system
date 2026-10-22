@@ -44,6 +44,10 @@ public class MyPtSessionService {
     static final String KEY_MISSED = "missed";
     static final String KEY_CANCELLED = "cancelled";
 
+    /** Cảnh báo "phòng nghỉ" — màn Gói của tôi so câu này để phân biệt với cảnh báo thiếu quyền vào gym. */
+    static final String CLOSED_DAY_WARNING =
+            "Phòng tập nghỉ ngày này. PT sẽ liên hệ để dời buổi sang ngày khác, buổi không bị trừ.";
+
     private static final String[] DAY_NAMES = {"Thứ 2", "Thứ 3", "Thứ 4", "Thứ 5", "Thứ 6", "Thứ 7", "Chủ nhật"};
 
     /** 3 khung giờ = 3 hàng của thời khóa biểu (xếp theo giờ BẮT ĐẦU, xem bandOf). */
@@ -220,7 +224,7 @@ public class MyPtSessionService {
             String warning = null;
             if (isNotEnded(row, now)) {
                 warning = closedDays.contains(row.getSlotDate())
-                        ? "Phòng tập nghỉ ngày này. PT sẽ liên hệ để dời buổi sang ngày khác, buổi không bị trừ."
+                        ? CLOSED_DAY_WARNING
                         : buildGymWarning(row, myCustomerId);
             }
 
@@ -329,6 +333,7 @@ public class MyPtSessionService {
             if (holderOk) {
                 return null;
             }
+            row.setNoGymPass(!holderFrozen);   // thiếu gói (không phải bảo lưu) → màn Gói của tôi đưa vào "Cần để ý"
             return holderFrozen
                     ? "Buổi tập nằm trong kỳ bảo lưu. Hãy kiểm tra thời gian bảo lưu trước ngày tập."
                     : "Bạn chưa có Membership hoặc DayPass hợp lệ cho ngày tập này.";
@@ -353,10 +358,12 @@ public class MyPtSessionService {
             return "Người tập cùng chưa có quyền vào gym hợp lệ cho ngày này. Bạn vẫn có thể tham gia buổi tập.";
         }
         if (otherOk) {
+            row.setNoGymPass(!meFrozen);
             return meFrozen
                     ? "Bạn đang trong kỳ bảo lưu vào ngày tập. Người tập cùng vẫn có thể tham gia buổi tập."
                     : "Bạn chưa có quyền vào gym cho ngày này. Người tập cùng vẫn có thể tham gia buổi tập.";
         }
+        row.setNoGymPass(!holderFrozen && !partnerFrozen);
         if (holderFrozen || partnerFrozen) {
             return "Buổi tập trùng kỳ bảo lưu và cả hai chưa có quyền vào gym hợp lệ. Hãy kiểm tra Membership hoặc DayPass trước ngày tập.";
         }
