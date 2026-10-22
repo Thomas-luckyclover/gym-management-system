@@ -73,6 +73,17 @@ public class MyPtSessionServlet extends HttpServlet {
             request.setAttribute("selectedDate", date);
         }
 
+        // Đến từ "Gói của tôi": ?session= buổi cần mở sẵn chi tiết; ?from= gói để nút "‹ Gói của tôi" quay về đúng gói.
+        // Chỉ nhận số dương / "single"; buổi không có trong tuần thì JS tự bỏ qua (không lộ dữ liệu người khác).
+        Integer focusSession = RequestUtil.getPositiveIntParam(request, "session");
+        if (focusSession != null) {
+            request.setAttribute("focusSessionId", focusSession);
+        }
+        String from = request.getParameter("from");
+        if ("single".equals(from) || RequestUtil.getPositiveIntParam(request, "from") != null) {
+            request.setAttribute("backBookingId", from);
+        }
+
         // B2: chọn cách xem
         boolean monthView = "month".equals(request.getParameter("view"));
         request.setAttribute("view", monthView ? "month" : "week");

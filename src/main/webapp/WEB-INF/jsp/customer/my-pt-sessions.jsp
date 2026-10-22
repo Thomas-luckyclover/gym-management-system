@@ -31,7 +31,8 @@
                 <c:set var="scheduleTitle" value="Lịch tập" />
                 <%@ include file="_schedule-header.jspf" %>
                 <%-- ===== KẾT THÚC thanh đầu trang ===== --%>
-                <main class="content pt-schedule" id="main-content" tabindex="-1">
+                <%-- data-focus-session: buổi mở sẵn chi tiết khi đến từ "Gói của tôi" (initFocusSession). --%>
+                <main class="content pt-schedule" id="main-content" tabindex="-1" data-focus-session="${focusSessionId}">
                     <%-- ===== Vùng nội dung: lỗi tải lịch khác với lịch hợp lệ nhưng không có buổi ===== --%>
                     <c:choose>
                         <c:when test="${not empty timetableError}">
