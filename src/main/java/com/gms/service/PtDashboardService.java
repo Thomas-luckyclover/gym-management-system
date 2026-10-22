@@ -102,7 +102,7 @@ public class PtDashboardService {
 
             // B4: tạo từng nhóm ngày và chọn các buổi của ngày đó.
             List<PtScheduleDayView> scheduleDays = new ArrayList<>();
-            for (int i = SCHEDULE_DAYS - 1; i >= 0; i--) { // Vòng lặp ngoài - SlotDate trong tuần
+            for (int i = 0; i < SCHEDULE_DAYS; i++) { // Vòng lặp ngoài: hôm nay (i = 0) → 6 ngày sau, đúng thứ tự đọc trái → phải
                 // B4.1: xác định ngày, nhãn và dấu hiệu hôm nay.
                 LocalDate slotDate = today.plusDays(i); // ngày tháng năm
                 String dayLabel = buildDayLabel(slotDate, today); // thứ/ Hôm nay

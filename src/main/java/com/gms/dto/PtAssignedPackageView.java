@@ -51,6 +51,9 @@ public class PtAssignedPackageView {
     // JSP đọc assignedPackage.ptSubscriptionTypeLabel, in dưới tên khách.
     private String ptSubscriptionTypeLabel;
 
+    // DAO đọc Subscriptions.GeneratedSessionCount → JSP vẽ thanh "còn N/tổng buổi".
+    private int totalSessionCount;
+
     // ===== 2. CONSTRUCTOR: DAO điền năm field nhóm 1.1; Service điền nhóm 1.2 sau =====
 
     /**
@@ -76,6 +79,14 @@ public class PtAssignedPackageView {
     // ===== 3. GETTER / SETTER: cùng thứ tự với field ở phần 1 =====
 
     // ----- 3.1. Getter nhóm DAO (1.1): chỉ đọc dữ liệu gốc, không có setter -----
+
+    public int getTotalSessionCount() { return totalSessionCount; }
+    public void setTotalSessionCount(int totalSessionCount) { this.totalSessionCount = totalSessionCount; }
+
+    /** Độ dài thanh: % buổi còn trong lịch so với tổng buổi của gói (0 nếu chưa biết tổng). */
+    public int getRemainingPercent() {
+        return totalSessionCount <= 0 ? 0 : Math.min(100, scheduledSessionCount * 100 / totalSessionCount);
+    }
 
     /** JSP dùng customerName để in tên khách đứng tên gói bằng c:out. */
     public String getCustomerName() {
