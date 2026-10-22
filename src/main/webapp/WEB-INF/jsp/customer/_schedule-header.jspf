@@ -21,7 +21,11 @@
         <%-- Trên Lịch tập hiện “Đặt buổi lẻ”; fragment dùng ở màn Gói của tôi thì hiện link quay về Lịch tập. --%>
         <c:choose>
             <c:when test="${activeSidebar eq 'bookings'}"><a class="btn btn-outline btn-sm" href="${pageContext.request.contextPath}/customer/pt-sessions">Lịch tập</a></c:when>
-            <c:otherwise><a class="btn btn-primary btn-sm" href="${pageContext.request.contextPath}/customer/book-session">Đặt buổi lẻ</a></c:otherwise>
+            <c:otherwise>
+                <%-- Đến từ Gói của tôi → nút quay về ĐÚNG gói đó (backBookingId do MyPtSessionServlet đã kiểm tra). --%>
+                <c:if test="${not empty backBookingId}"><a class="btn btn-outline btn-sm" href="${pageContext.request.contextPath}/customer/bookings?id=${backBookingId}">‹ Gói của tôi</a></c:if>
+                <a class="btn btn-primary btn-sm" href="${pageContext.request.contextPath}/customer/book-session">Đặt buổi lẻ</a>
+            </c:otherwise>
         </c:choose>
         <%-- KẾT THÚC nút điều hướng Đặt buổi lẻ / Lịch tập. --%>
         <%-- Chuông thông báo dùng chung (notification-bell.js gọi /api/notifications): khách nhận lời nhắc PT gửi từ PT Dashboard. --%>

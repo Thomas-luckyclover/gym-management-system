@@ -184,7 +184,30 @@ function initScheduleDays() {
 }
 // ===== KẾT THÚC initScheduleDays: khởi tạo bộ chọn ngày mobile =====
 
+/**
+ * Đến từ "Gói của tôi" (?session=): tô viền buổi đó, cuộn tới và mở sẵn chi tiết.
+ * Buổi không có trong tuần đang xem thì bỏ qua (ngày vẫn được tô nhờ ?date=).
+ */
+function initFocusSession() {
+    // B1: mã buổi do JSP gắn trên main; không có thì thôi
+    const main = document.getElementById("main-content");
+    const sessionId = main ? main.dataset.focusSession : "";
+    if (!sessionId) {
+        return;
+    }
+    // B2: tìm thẻ buổi, tô viền, cuộn vào giữa màn hình
+    const card = document.querySelector('[data-session-detail][data-session-id="' + CSS.escape(sessionId) + '"]');
+    if (!card) {
+        return;
+    }
+    card.classList.add("is-focus");
+    card.scrollIntoView({ block: "center", behavior: "auto" });
+    // B3: mở chi tiết như khi khách bấm thẻ (openSessionDetail đã được nối ở initSessionDetails)
+    card.querySelector("summary").click();
+}
+
 // JSP đã tạo xong HTML → nối sự kiện chi tiết và bộ chọn ngày; không tải thêm dữ liệu.
 document.addEventListener("DOMContentLoaded", initSessionDetails);
 document.addEventListener("DOMContentLoaded", initScheduleDays);
+document.addEventListener("DOMContentLoaded", initFocusSession);
 // ===== KẾT THÚC đăng ký khởi tạo sau khi JSP tải xong =====
