@@ -11,7 +11,7 @@
   <%@ include file="/WEB-INF/jsp/common/head.jspf" %>
   <title>Quản lý đơn nghỉ phép · Super Gym</title>
   <link rel="stylesheet" href="${pageContext.request.contextPath}/css/pages/auth/account-settings.css">
-  <link rel="stylesheet" href="${pageContext.request.contextPath}/css/pages/manager/leave-request-list.css?v=20261022-bulk">
+  <link rel="stylesheet" href="${pageContext.request.contextPath}/css/pages/manager/leave-request-list.css?v=20261022-compact">
   <link rel="stylesheet" href="${pageContext.request.contextPath}/css/pages/auth/notification-bell.css">
   <script src="${pageContext.request.contextPath}/js/pages/auth/notification-bell.js" defer></script>
   <script src="${pageContext.request.contextPath}/js/pages/manager/leave-request-list.js?v=20261022-bulk" defer></script>
@@ -55,8 +55,8 @@
                 <c:if test="${not empty keyword}"><c:param name="keyword" value="${keyword}" /></c:if>
                 <c:if test="${not empty positionFilter}"><c:param name="position" value="${positionFilter}" /></c:if>
                 <c:if test="${not empty leaveTypeFilter}"><c:param name="leaveType" value="${leaveTypeFilter}" /></c:if>
-                <c:if test="${not empty fromDateFilter}"><c:param name="fromDate" value="${fromDateFilter}" /></c:if>
-                <c:if test="${not empty toDateFilter}"><c:param name="toDate" value="${toDateFilter}" /></c:if>
+                <c:param name="fromDate" value="${fromDateFilter}" />
+                <c:param name="toDate" value="${toDateFilter}" />
               </c:url>
               <a href="${statusTabUrl}" class="leave-tab-btn ${statusFilter == tab ? 'active' : ''}">
                 <span>
@@ -140,22 +140,6 @@
           </div>
         </c:if>
 
-        <c:if test="${statusFilter == 'Pending' and not empty requestPage.items}">
-          <%-- Checkbox trong bảng dùng form này qua thuộc tính form, tránh lồng form từng hàng. --%>
-          <form id="leave-bulk-form" class="leave-bulk-actions" action="${pageContext.request.contextPath}/manager/leave-requests/review" method="post">
-            <input type="hidden" name="csrfToken" value="<c:out value='${csrfToken}' />">
-            <input type="hidden" name="action" value="approveMany">
-            <input type="hidden" name="returnUrl" value="<c:out value='${listReturnUrl}' />">
-            <span id="leave-selection-count" aria-live="polite">Đã chọn 0 đơn</span>
-            <button id="leave-approve-selected" type="submit" class="btn btn-sm btn-primary" disabled
-                    data-confirm-title="Duyệt các đơn đã chọn" data-confirm-text="Duyệt"
-                    data-confirm-message="Duyệt các đơn đã chọn?">Duyệt đã chọn</button>
-            <button id="leave-approve-all" type="submit" class="btn btn-sm btn-outline" disabled
-                    data-confirm-title="Duyệt tất cả trên trang" data-confirm-text="Duyệt"
-                    data-confirm-message="Duyệt các đơn đủ điều kiện trên trang này?">Duyệt tất cả trên trang</button>
-          </form>
-        </c:if>
-
         <%-- ===== Bảng danh sách đơn nghỉ phép ===== --%>
         <section class="panel leave-panel leave-list-panel" aria-label="Nhân viên và đơn nghỉ phép">
           <div class="leave-list-caption">
@@ -170,7 +154,21 @@
             </c:if>
             <c:choose>
               <c:when test="${employeeView}"><span>Bấm nhân viên để xem đơn</span></c:when>
-              <c:when test="${statusFilter == 'Pending'}"><span>Bấm hàng để xem chi tiết · Ưu tiên sắp nghỉ</span></c:when>
+              <c:when test="${statusFilter == 'Pending' and not empty requestPage.items}">
+                <%-- Checkbox trong bảng liên kết form này, không lồng form từng hàng. --%>
+                <form id="leave-bulk-form" class="leave-bulk-actions" action="${pageContext.request.contextPath}/manager/leave-requests/review" method="post">
+                  <input type="hidden" name="csrfToken" value="<c:out value='${csrfToken}' />">
+                  <input type="hidden" name="action" value="approveMany">
+                  <input type="hidden" name="returnUrl" value="<c:out value='${listReturnUrl}' />">
+                  <span id="leave-selection-count" aria-live="polite">Đã chọn 0 đơn</span>
+                  <button id="leave-approve-selected" type="submit" class="btn btn-sm btn-primary" disabled
+                          data-confirm-title="Duyệt các đơn đã chọn" data-confirm-text="Duyệt"
+                          data-confirm-message="Duyệt các đơn đã chọn?">Duyệt đã chọn</button>
+                  <button id="leave-approve-all" type="submit" class="btn btn-sm btn-outline" disabled
+                          data-confirm-title="Duyệt tất cả trên trang" data-confirm-text="Duyệt"
+                          data-confirm-message="Duyệt các đơn đủ điều kiện trên trang này?">Duyệt tất cả trên trang</button>
+                </form>
+              </c:when>
             </c:choose>
           </div>
 
@@ -238,8 +236,8 @@
                   <c:param name="status" value="${statusFilter}" />
                   <c:if test="${not empty positionFilter}"><c:param name="position" value="${positionFilter}" /></c:if>
                   <c:if test="${not empty leaveTypeFilter}"><c:param name="leaveType" value="${leaveTypeFilter}" /></c:if>
-                  <c:if test="${not empty fromDateFilter}"><c:param name="fromDate" value="${fromDateFilter}" /></c:if>
-                  <c:if test="${not empty toDateFilter}"><c:param name="toDate" value="${toDateFilter}" /></c:if>
+                  <c:param name="fromDate" value="${fromDateFilter}" />
+                  <c:param name="toDate" value="${toDateFilter}" />
                 </c:url>
                 <a class="btn btn-ghost btn-sm" href="${previousUrl}">Trang trước</a>
               </c:if>
@@ -254,8 +252,8 @@
                   <c:param name="status" value="${statusFilter}" />
                   <c:if test="${not empty positionFilter}"><c:param name="position" value="${positionFilter}" /></c:if>
                   <c:if test="${not empty leaveTypeFilter}"><c:param name="leaveType" value="${leaveTypeFilter}" /></c:if>
-                  <c:if test="${not empty fromDateFilter}"><c:param name="fromDate" value="${fromDateFilter}" /></c:if>
-                  <c:if test="${not empty toDateFilter}"><c:param name="toDate" value="${toDateFilter}" /></c:if>
+                  <c:param name="fromDate" value="${fromDateFilter}" />
+                  <c:param name="toDate" value="${toDateFilter}" />
                 </c:url>
                 <a class="btn btn-ghost btn-sm" href="${nextUrl}">Trang sau</a>
               </c:if>

@@ -7,6 +7,7 @@ import com.gms.dto.LeaveRequestItemView;
 import com.gms.dto.PageResult;
 import com.gms.dto.ServiceResult;
 import com.gms.service.LeaveRequestService;
+import com.gms.util.DateTimeUtil;
 import com.gms.util.PaginationUtil;
 import com.gms.util.RequestUtil;
 import jakarta.servlet.ServletException;
@@ -52,6 +53,12 @@ public class LeaveRequestListServlet extends HttpServlet {
         String leaveType = RequestUtil.getTrimmedParam(request, "leaveType");
         String fromDate = RequestUtil.getTrimmedParam(request, "fromDate");
         String toDate = RequestUtil.getTrimmedParam(request, "toDate");
+        // Lần mở đầu chọn hôm nay; tham số rỗng là người dùng chủ động xóa ngày.
+        if (fromDate == null && toDate == null) {
+            String today = DateTimeUtil.today().toString();
+            fromDate = today;
+            toDate = today;
+        }
         int page = PaginationUtil.getPageNumber(request);
         int pageSize = PaginationUtil.getPageSize(request);
 

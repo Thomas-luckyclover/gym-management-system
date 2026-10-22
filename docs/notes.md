@@ -1,5 +1,13 @@
 # File notes — mâu thuẫn tài liệu & quyết định đã chốt
 
+## BF-05 — gọn thanh duyệt nhiều và mặc định ngày hôm nay (22/10/2026, ĐÃ CHỐT)
+
+Gộp số đã chọn và hai nút duyệt nhiều vào bên phải thanh trên bảng, thay dòng hướng dẫn Bấm hàng/Ưu tiên sắp nghỉ; bỏ khung thao tác riêng. Giữ ID/form liên kết checkbox và hộp xác nhận hiện có.
+
+Khi URL chưa có cả hai tham số ngày, Từ ngày và Đến ngày mặc định là hôm nay theo DateTimeUtil (giờ Việt Nam). Bộ lọc vẫn dùng giao khoảng nghỉ có tính ngày biên. Người dùng có thể xóa một hoặc cả hai ô để xem phạm vi mở; tab/phân trang gửi cả tham số rỗng để không tự điền lại hôm nay. Xóa lọc quay về ngày mặc định hôm nay. Quyết định này thay mặc định trống của bộ lọc ngày trước đó.
+
+Kiểm chứng: clean package chạy 220 test không lỗi; Jasper biên dịch JSP/fragment không lỗi. Trình duyệt xác nhận ngày mặc định, chủ động xóa ngày, giữ ngày trống khi đổi tab/phân trang và thanh duyệt nhiều nằm trong đầu bảng. POST xem thử sau khi chuyển form vẫn gửi đúng các mã đã tick, CSRF và returnUrl, không ghi quyết định thật.
+
 ## BF-05 — duyệt nhiều đơn trên trang Chờ duyệt (22/10/2026, ĐÃ CHỐT)
 
 Thêm checkbox từng đơn, chọn hết trang, Duyệt đã chọn và Duyệt tất cả trên trang. Phạm vi mặc định là trang đang xem (tối đa 50 đơn), không tự chọn đơn ở trang khác. Chỉ cho tick đơn có quyền xử lý và kiểm tra Đạt; cả hai nút đều hỏi xác nhận số lượng trước khi POST. Không lồng form: checkbox liên kết form duyệt nhiều bằng thuộc tính form.

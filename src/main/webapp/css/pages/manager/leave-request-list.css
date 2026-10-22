@@ -245,7 +245,7 @@
   font-size: var(--font-size-sm);
 }
 
-.leave-list-caption {
+.leave-list-page .leave-list-caption {
   display: flex;
   flex-wrap: wrap;
   align-items: center;
@@ -363,7 +363,19 @@
   cursor: pointer;
 }
 
-.leave-list-page .leave-bulk-actions,
+.leave-list-page .leave-bulk-actions {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: var(--space-2);
+  margin: var(--space-0) var(--space-0) var(--space-0) auto;
+}
+
+.leave-list-page .leave-bulk-actions span,
+.leave-list-page .leave-bulk-actions .btn {
+  white-space: nowrap;
+}
+
 .leave-list-page .leave-bulk-result {
   display: flex;
   flex-wrap: wrap;
