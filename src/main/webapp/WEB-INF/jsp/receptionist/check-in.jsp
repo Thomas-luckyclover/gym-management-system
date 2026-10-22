@@ -95,7 +95,7 @@
                                 <div class="panel-head">
                                   <div>
                                     <h2>Kết quả tìm kiếm</h2>
-                                    <p>Tìm thấy <b><c:out value="${not empty searchResultsPage ? searchResultsPage.totalItems : searchResults.size()}" /></b> khách khớp "<c:out value='${query}' />".
+                                    <p>Tìm thấy <b><c:out value="${not empty searchResultsPage ? searchResultsPage.totalItems : searchResults.size()}" /></b> khách hàng phù hợp với từ khóa "<c:out value='${query}' />".
                                       <c:if test="${not empty searchResultsPage and searchResultsPage.totalPages > 1}">
                                         (Trang <b>${searchResultsPage.pageNumber}</b> / <b>${searchResultsPage.totalPages}</b>)
                                       </c:if>
