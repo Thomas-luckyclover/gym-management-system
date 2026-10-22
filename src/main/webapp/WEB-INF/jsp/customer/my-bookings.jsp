@@ -18,6 +18,9 @@
 <c:set var="f" value="${booking.focusSession}" />
 <c:set var="cta" value="${booking.ctaKind}" />
 <%-- Tab mở sẵn = tab chứa thứ đang xem bên phải --%>
+<%-- Link sang Lịch tập tuần của 1 buổi: tô ngày đó + mở sẵn chi tiết (?session=) + nút quay về đúng gói (?from=). Nối thêm date + session. --%>
+<c:set var="fromKey" value="${booking.singleSelected ? 'single' : sp.subscriptionId}" />
+<c:set var="weekLink" value="${ctx}/customer/pt-sessions?view=week&amp;from=${fromKey}" />
 <c:set var="openTab" value="${booking.singleSelected ? 'single' : (not empty sp and not sp.active ? 'ended' : 'active')}" />
 <!DOCTYPE html>
 <html lang="vi">
@@ -148,7 +151,7 @@
                                                         </a>
                                                     </c:when>
                                                     <c:otherwise>
-                                                        <a class="btn btn-outline btn-sm" href="${ctx}/customer/pt-sessions?view=month${not empty f ? '&amp;date=' += f.slotDate : ''}">
+                                                        <a class="btn btn-outline btn-sm" href="${weekLink}${not empty f ? '&amp;date=' += f.slotDate += '&amp;session=' += f.sessionId : ''}">
                                                             <svg viewBox="0 0 24 24" aria-hidden="true"><rect x="3" y="5" width="18" height="16" rx="2"></rect><path d="M3 10h18M8 3v4M16 3v4"></path></svg> Xem trên lịch tập
                                                         </a>
                                                     </c:otherwise>
@@ -243,6 +246,7 @@
                                                                 <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M21 12a8 8 0 0 1-11.6 7.1L4 20l1-4.6A8 8 0 1 1 21 12z"></path></svg> Nhắn Zalo PT
                                                             </a>
                                                         </c:if>
+                                                        <a class="btn btn-ghost btn-sm" href="${weekLink}&amp;date=${f.slotDate}&amp;session=${f.sessionId}">Xem chi tiết ›</a>
                                                         <c:if test="${not empty f.calendarUrl}">
                                                             <a class="btn btn-outline btn-sm" href="${fn:escapeXml(f.calendarUrl)}" target="_blank" rel="noopener noreferrer">
                                                                 <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M12 5v14M5 12h14"></path></svg> Google Calendar
@@ -251,7 +255,7 @@
                                                     </div>
                                                     <c:set var="n" value="${booking.nextAfterFocus}" />
                                                     <c:if test="${not empty n}">
-                                                        <p class="booking-hero-after">Sau đó <strong><c:out value="${n.dayName}" />, ${gms:formatDate(n.slotDate)} · ${gms:formatTime(n.startTime)} – ${gms:formatTime(n.endTime)}</strong>
+                                                        <p class="booking-hero-after">Sau đó <a href="${weekLink}&amp;date=${n.slotDate}&amp;session=${n.sessionId}"><strong><c:out value="${n.dayName}" />, ${gms:formatDate(n.slotDate)} · ${gms:formatTime(n.startTime)} – ${gms:formatTime(n.endTime)}</strong></a>
                                                             <c:if test="${not n.singleSession}"> · buổi ${n.sessionNo}/${n.totalSessions}</c:if></p>
                                                     </c:if>
                                                 </c:when>
@@ -315,7 +319,7 @@
                                                     <ul class="booking-rows">
                                                         <c:forEach var="s" items="${booking.offPattern}">
                                                             <li>
-                                                                <b><c:out value="${s.dayName}" />, ${gms:formatDate(s.slotDate)}</b>
+                                                                <a class="booking-rows-date" href="${weekLink}&amp;date=${s.slotDate}&amp;session=${s.sessionId}"><c:out value="${s.dayName}" />, ${gms:formatDate(s.slotDate)}</a>
                                                                 <span class="booking-rows-time">${gms:formatTime(s.startTime)} – ${gms:formatTime(s.endTime)}</span>
                                                                 <span class="booking-rows-note"><c:out value="${s.moveNote}" /></span>
                                                                 <span class="session-status" data-status="${s.statusKey}"><c:out value="${s.statusLabel}" /></span>
@@ -336,8 +340,9 @@
                                                     <div class="booking-dots" role="img" aria-label="${booking.totalCount} buổi: ${booking.checkedInCount} đã check-in, ${booking.missedCount} vắng, ${booking.cancelledCount} đã hủy, ${booking.pendingCount} đang cập nhật, ${booking.remainingCount} sắp tới">
                                                         <c:forEach var="s" items="${booking.sessions}">
                                                             <c:if test="${s.firstOfWeek}"><span class="booking-dot-week"></span></c:if>
-                                                            <i class="booking-dot ${s.sessionId eq booking.focusSessionId ? 'is-next' : ''}" data-status="${s.statusKey}"
-                                                               title="Buổi ${s.sessionNo}/${s.totalSessions} · ${fn:escapeXml(s.dayName)}, ${gms:formatDate(s.slotDate)} · ${fn:escapeXml(s.statusLabel)}"></i>
+                                                            <a class="booking-dot ${s.sessionId eq booking.focusSessionId ? 'is-next' : ''}" data-status="${s.statusKey}" tabindex="-1"
+                                                               href="${weekLink}&amp;date=${s.slotDate}&amp;session=${s.sessionId}"
+                                                               title="Buổi ${s.sessionNo}/${s.totalSessions} · ${fn:escapeXml(s.dayName)}, ${gms:formatDate(s.slotDate)} · ${fn:escapeXml(s.statusLabel)} — bấm để xem"></a>
                                                         </c:forEach>
                                                     </div>
                                                     <ul class="booking-key">
@@ -354,7 +359,7 @@
                                                             <ul class="booking-rows">
                                                                 <c:forEach var="s" items="${booking.pastProblems}">
                                                                     <li>
-                                                                        <b><c:out value="${s.dayName}" />, ${gms:formatDate(s.slotDate)}</b>
+                                                                        <a class="booking-rows-date" href="${weekLink}&amp;date=${s.slotDate}&amp;session=${s.sessionId}"><c:out value="${s.dayName}" />, ${gms:formatDate(s.slotDate)}</a>
                                                                         <span class="booking-rows-time">${gms:formatTime(s.startTime)} – ${gms:formatTime(s.endTime)}</span>
                                                                         <span class="booking-rows-note"><c:out value="${s.explanation}" /></span>
                                                                         <span class="session-status" data-status="${s.statusKey}"><c:out value="${s.statusLabel}" /></span>
@@ -377,7 +382,7 @@
                                                 <ul class="booking-rows is-single">
                                                     <c:forEach var="s" items="${booking.sessions}">
                                                         <li>
-                                                            <b><c:out value="${s.dayName}" />, ${gms:formatDate(s.slotDate)}</b>
+                                                            <a class="booking-rows-date" href="${weekLink}&amp;date=${s.slotDate}&amp;session=${s.sessionId}"><c:out value="${s.dayName}" />, ${gms:formatDate(s.slotDate)}</a>
                                                             <span class="booking-rows-time">${gms:formatTime(s.startTime)} – ${gms:formatTime(s.endTime)}</span>
                                                             <span class="booking-rows-note">PT <strong><c:out value="${s.ptName}" /></strong></span>
                                                             <span class="session-status" data-status="${s.statusKey}"><c:out value="${s.statusLabel}" /></span>
@@ -404,7 +409,7 @@
                                             <ul class="booking-rows">
                                                 <c:forEach var="s" items="${booking.watchList}">
                                                     <li>
-                                                        <b><c:out value="${s.dayName}" />, ${gms:formatDate(s.slotDate)}</b>
+                                                        <a class="booking-rows-date" href="${weekLink}&amp;date=${s.slotDate}&amp;session=${s.sessionId}"><c:out value="${s.dayName}" />, ${gms:formatDate(s.slotDate)}</a>
                                                         <span class="booking-rows-time">${gms:formatTime(s.startTime)} – ${gms:formatTime(s.endTime)}</span>
                                                         <span class="booking-rows-note"><c:out value="${s.explanation}" /></span>
                                                         <span class="session-status" data-status="${s.statusKey}"><c:out value="${s.statusLabel}" /></span>
@@ -415,7 +420,7 @@
                                     </c:if>
 
                                     <footer class="booking-foot">
-                                        <a href="${ctx}/customer/pt-sessions?view=month${not empty f ? '&amp;date=' += f.slotDate : ''}">Xem ${booking.singleSelected ? 'các buổi' : 'cả ' += booking.totalCount += ' buổi'} trên lịch tập
+                                        <a href="${ctx}/customer/pt-sessions?view=month&amp;from=${fromKey}${not empty f ? '&amp;date=' += f.slotDate : ''}">Xem ${booking.singleSelected ? 'các buổi' : 'cả ' += booking.totalCount += ' buổi'} trên lịch tập
                                             <svg viewBox="0 0 24 24" aria-hidden="true"><path d="m9 6 6 6-6 6"></path></svg></a>
                                         <span class="pt-info"><button type="button" class="pt-info-trigger" aria-label="Hủy hoặc đổi buổi" aria-describedby="hint-change"><span aria-hidden="true">i</span></button><span id="hint-change" class="pt-info-popover" role="tooltip">Cần hủy hoặc đổi buổi? Nhắn PT qua Zalo, PT sẽ cập nhật lịch giúp bạn.</span></span>
                                     </footer>
