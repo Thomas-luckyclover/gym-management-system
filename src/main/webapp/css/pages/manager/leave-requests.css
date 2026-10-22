@@ -323,11 +323,44 @@
 
 /* ===== Trang nhân viên nộp đơn (màn #25, UC-14) ===== */
 
-.leave-split {
-    display: grid;
-    grid-template-columns: minmax(0, 1fr) 340px;
-    gap: var(--space-6);
-    align-items: start;
+.staff-leave-page .leave-staff-content {
+  max-width: calc(var(--space-12) * 12);
+  margin-inline: auto;
+}
+
+.staff-leave-page .leave-form-heading {
+  display: flex;
+  justify-content: space-between;
+  align-items: flex-start;
+  gap: var(--space-3);
+}
+
+/* Dùng HintBox chung; các ID bên trong vẫn do leave-request-form.js cập nhật. */
+.staff-leave-page .pt-info-popover {
+  max-height: calc(100dvh - var(--space-6) * 2);
+  overflow-y: auto;
+}
+
+.staff-leave-page .leave-help-title {
+  display: block;
+  margin-bottom: var(--space-2);
+}
+
+.staff-leave-page .leave-help-row {
+  display: flex;
+  flex-wrap: wrap;
+  justify-content: space-between;
+  gap: var(--space-1) var(--space-3);
+  margin: var(--space-0) var(--space-0) var(--space-2);
+}
+
+.staff-leave-page .leave-help-note {
+  margin: var(--space-0) var(--space-0) var(--space-3);
+  color: var(--color-text-soft);
+}
+
+.staff-leave-page .leave-help-note:last-child {
+  margin-bottom: var(--space-0);
 }
 
 .leave-form-grid {
@@ -335,34 +368,6 @@
     grid-template-columns: repeat(2, minmax(0, 1fr));
     gap: var(--space-4);
     margin-bottom: var(--space-4);
-}
-
-.leave-side-card {
-    padding: var(--space-4) var(--space-5);
-    margin-bottom: var(--space-4);
-    border: var(--border-width) solid var(--color-border-strong);
-    border-radius: var(--radius-lg);
-    background: var(--color-surface);
-    box-shadow: var(--shadow-card);
-}
-
-.leave-side-title {
-    display: block;
-    margin-bottom: var(--space-3);
-    font-size: var(--font-size-xs);
-    font-weight: 700;
-    text-transform: uppercase;
-    letter-spacing: 0.04em;
-    color: var(--color-text-soft);
-}
-
-.leave-side-row {
-    display: flex;
-    justify-content: space-between;
-    align-items: center;
-    gap: var(--space-2);
-    margin-bottom: var(--space-2);
-    font-size: var(--font-size-sm);
 }
 
 .leave-history-list {
@@ -383,7 +388,6 @@
 }
 
 @media (max-width: 960px) {
-    .leave-split,
     .leave-form-grid {
         grid-template-columns: 1fr;
     }

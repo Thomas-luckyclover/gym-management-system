@@ -10,12 +10,12 @@
   <%@ include file="/WEB-INF/jsp/common/head.jspf" %>
   <title>Nghỉ phép · Super Gym</title>
   <link rel="stylesheet" href="${pageContext.request.contextPath}/css/pages/auth/account-settings.css?v=20261018">
-  <link rel="stylesheet" href="${pageContext.request.contextPath}/css/pages/manager/leave-requests.css?v=20261021-readable2">
+  <link rel="stylesheet" href="${pageContext.request.contextPath}/css/pages/manager/leave-requests.css?v=20261022-form-help">
   <link rel="stylesheet" href="${pageContext.request.contextPath}/css/pages/auth/notification-bell.css?v=20261018">
   <script src="${pageContext.request.contextPath}/js/pages/auth/notification-bell.js" defer></script>
 </head>
 
-<body class="dock ${isReceptionist ? 'theme-staff' : 'theme-pt'}">
+<body class="dock staff-leave-page ${isReceptionist ? 'theme-staff' : 'theme-pt'}">
   <%@ include file="/WEB-INF/jsp/common/flash-toast.jspf" %>
 
   <div class="app">
@@ -78,14 +78,40 @@
           </div>
         </c:if>
 
-        <%-- Layout 2 cột cho màn nộp đơn (formView: StaffLeaveFormView do Service tạo) --%>
-        <div class="leave-split">
-          <div class="leave-col-main">
+        <%-- Form và lịch sử một cột (formView: StaffLeaveFormView do Service tạo). --%>
+        <div class="leave-staff-content">
             <%-- ===== Panel 1: Form nộp đơn xin nghỉ phép ===== --%>
             <section class="panel leave-panel">
-              <div class="panel-head">
-                <h2>Tạo đơn nghỉ phép</h2>
-                <p>Điền thông tin ngày, ca nghỉ và lý do để gửi Quản lý phê duyệt.</p>
+              <div class="panel-head leave-form-heading">
+                <div>
+                  <h2>Tạo đơn nghỉ phép</h2>
+                  <p>Điền thông tin ngày, ca nghỉ và lý do để gửi Quản lý phê duyệt.</p>
+                </div>
+                <%-- HintBox có sẵn trong common.css/common.js: hover, focus, chạm và Escape. --%>
+                <div class="pt-info">
+                  <button type="button" class="pt-info-trigger" aria-label="Thông tin gửi đơn nghỉ phép"
+                          aria-describedby="leaveFormHelp">
+                    <span aria-hidden="true">i</span>
+                  </button>
+                  <div id="leaveFormHelp" class="pt-info-popover" role="tooltip">
+                    <strong class="leave-help-title">Hạn nộp đơn</strong>
+                    <p class="leave-help-row"><span>Ngày nghỉ:</span> <b id="infoDate">—</b></p>
+                    <p class="leave-help-row"><span>Nộp trước:</span> <b id="infoDeadline"><c:out value="${formView.submissionCutoffTime}" default="—" /> · ngày hôm trước</b></p>
+                    <p class="leave-help-note">Nghỉ đột xuất hoặc quá giờ chốt, vui lòng báo trực tiếp Quản lý.</p>
+
+                    <strong class="leave-help-title">Dự báo nhân sự</strong>
+                    <p id="pvScope" class="leave-help-note">Mặc định tính cho ngày mai, cả ngày. Chọn ngày và ca nghỉ để xem dự báo.</p>
+                    <p class="leave-help-row">
+                      <span>PT còn trực nếu duyệt:</span>
+                      <b><span id="pvPt"><c:out value="${formView.remainingPt}" default="—" /></span> / tối thiểu <span id="pvMinPt"><c:out value="${formView.minPtPerShift}" default="—" /></span></b>
+                    </p>
+                    <p class="leave-help-row">
+                      <span>Lễ tân còn trực nếu duyệt:</span>
+                      <b><span id="pvRecep"><c:out value="${formView.remainingReceptionist}" default="—" /></span> / tối thiểu <span id="pvMinRecep"><c:out value="${formView.minReceptionistPerShift}" default="—" /></span></b>
+                    </p>
+                    <p class="leave-help-note">Dự báo chỉ xét ngày bắt đầu nghỉ. Tạm tính nhân viên đang làm việc làm cả hai ca; Quản lý kiểm tra lại đủ ngày/ca trước khi duyệt.</p>
+                  </div>
+                </div>
               </div>
 
               <c:set var="submitActionUrl" value="${pageContext.request.contextPath}${isReceptionist ? '/receptionist/leave-requests' : '/pt/leave-requests'}" />
@@ -137,10 +163,6 @@
                          data-cutoff="<c:out value='${formView.submissionCutoffTime}' default='' />"
                          value="<c:out value='${paramLeaveDate}' />"
                          required>
-                  <span class="field-hint" style="display:block;margin-top:var(--space-1);color:var(--color-text-soft);font-size:var(--font-size-xs)">
-                    <i class="fa-solid fa-circle-info" aria-hidden="true"></i>
-                    Đơn phải nộp trước giờ chốt (<c:out value="${formView.submissionCutoffTime}" default="—" />) của ngày hôm trước. Nghỉ đột xuất cùng ngày vui lòng báo trực tiếp Quản lý.
-                  </span>
                   <div class="field-error" id="leaveDateClientErr" hidden></div>
                   <c:if test="${not empty fieldErrors.leaveDate}">
                     <div class="field-error">
@@ -152,7 +174,7 @@
                 <div class="field">
                   <label class="field-label" for="toDate">Đến ngày (bỏ trống nếu nghỉ một ngày)</label>
                   <input id="toDate" name="toDate" type="date" value="<c:out value='${paramToDate}' />">
-                  <span class="field-hint">Đơn nhiều ngày chọn Cả ngày, tối đa 31 ngày trong cùng năm. Dự báo quân số bên cạnh chỉ xét ngày bắt đầu.</span>
+                  <span class="field-hint">Đơn nhiều ngày chọn Cả ngày, tối đa 31 ngày trong cùng năm.</span>
                   <c:if test="${not empty fieldErrors.toDate}">
                     <div class="field-error"><c:out value="${fieldErrors.toDate}" /></div>
                   </c:if>
@@ -245,54 +267,11 @@
                 </c:otherwise>
               </c:choose>
             </section>
-          </div>
-
-          <%-- ===== Cột phải: Staffing preview theo SRS 5.2.1 (Hạn nộp P-12 & Quân số trực ca dự kiến) ===== --%>
-          <div class="leave-col-side">
-            <div class="leave-side-card">
-              <span class="leave-side-title">Hạn nộp đơn</span>
-              <div class="leave-side-row">
-                <span style="color:var(--color-text-soft)">Ngày nghỉ đang chọn:</span>
-                <b id="infoDate">—</b>
-              </div>
-              <div class="leave-side-row" style="margin-bottom:var(--space-3)">
-                <span style="color:var(--color-text-soft)">Hạn nộp trước:</span>
-                <b id="infoDeadline"><c:out value="${formView.submissionCutoffTime}" default="—" /> · ngày hôm trước</b>
-              </div>
-              <p style="margin:0;font-size:var(--font-size-xs);color:var(--color-text-soft);line-height:1.5">
-                Quá giờ chốt trên, nếu nghỉ đột xuất vui lòng báo trực tiếp Quản lý.
-              </p>
-            </div>
-
-            <div class="leave-side-card">
-              <span class="leave-side-title">Dự báo nhân sự</span>
-              <p id="pvScope" style="margin:0 0 var(--space-2);font-size:var(--font-size-xs);color:var(--color-text-soft)">
-                Mặc định tính cho ngày mai, cả ngày. Chọn ngày và ca nghỉ để xem số liệu đúng ca.
-              </p>
-              <div class="leave-side-row">
-                <span style="color:var(--color-text-soft)">PT còn trực (nếu duyệt):</span>
-                <b>
-                  <span id="pvPt"><c:choose><c:when test="${not empty formView}"><c:out value="${formView.remainingPt}" /></c:when><c:otherwise>—</c:otherwise></c:choose></span> PT
-                  <small style="font-weight:400;color:var(--color-text-soft)">(tối thiểu ≥ <span id="pvMinPt"><c:choose><c:when test="${not empty formView}"><c:out value="${formView.minPtPerShift}" /></c:when><c:otherwise>—</c:otherwise></c:choose></span>)</small>
-                </b>
-              </div>
-              <div class="leave-side-row" style="margin-bottom:var(--space-3)">
-                <span style="color:var(--color-text-soft)">Lễ tân còn trực (nếu duyệt):</span>
-                <b>
-                  <span id="pvRecep"><c:choose><c:when test="${not empty formView}"><c:out value="${formView.remainingReceptionist}" /></c:when><c:otherwise>—</c:otherwise></c:choose></span> Lễ tân
-                  <small style="font-weight:400;color:var(--color-text-soft)">(tối thiểu ≥ <span id="pvMinRecep"><c:choose><c:when test="${not empty formView}"><c:out value="${formView.minReceptionistPerShift}" /></c:when><c:otherwise>—</c:otherwise></c:choose></span>)</small>
-                </b>
-              </div>
-              <p style="margin:0;font-size:var(--font-size-xs);color:var(--color-text-soft);line-height:1.5">
-                Giả định nhân viên đang làm việc làm cả hai ca, chưa có lịch phân ca thực tế. Quản lý kiểm tra lại đủ ngày/ca trước khi duyệt.
-              </p>
-            </div>
-          </div>
         </div>
       </main>
     </div>
   </div>
 
-  <script src="${pageContext.request.contextPath}/js/pages/staff/leave-request-form.js?v=20261021-readable2"></script>
+  <script src="${pageContext.request.contextPath}/js/pages/staff/leave-request-form.js?v=20261022-form-help"></script>
 </body>
 </html>

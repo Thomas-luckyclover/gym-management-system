@@ -63,7 +63,7 @@ document.addEventListener("DOMContentLoaded", function () {
         const leaveDay = parseInt(parts[2], 10);
         const leaveDate = new Date(leaveYear, leaveMonth, leaveDay);
 
-        // Hiển thị ngày nghỉ lên side card
+        // Hiển thị ngày nghỉ trong chú thích ở góc trên bên phải form.
         if (infoDateEl) {
             infoDateEl.textContent = formatDate(leaveDate);
         }

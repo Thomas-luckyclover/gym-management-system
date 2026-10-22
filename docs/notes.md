@@ -1,5 +1,11 @@
 # File notes — mâu thuẫn tài liệu & quyết định đã chốt
 
+## BF-05 — gọn màn gửi đơn nhân viên (22/10/2026, ĐÃ CHỐT)
+
+User yêu cầu bỏ hai khung Hạn nộp đơn/Dự báo nhân sự ở bên phải và đặt một nút i tròn ở góc trên bên phải khung Tạo đơn nghỉ phép. Form/lịch sử về một cột; thông tin chuyển vào HintBox chung của common.css/common.js (hover/focus/chạm, Escape hoặc bấm ngoài để đóng). Giữ các ID để JS cập nhật hạn nộp và dự báo theo ngày/ca; bỏ dòng hạn nộp lặp dưới ô ngày. Không đổi hạn nộp P-12 hoặc nghiệp vụ gửi/rút/duyệt đơn. Dự báo vẫn chỉ xét ngày bắt đầu và ghi rõ giới hạn trong chú thích.
+
+Kiểm chứng: package thành công; Jasper biên dịch JSP nhân viên không lỗi; trình duyệt xác nhận form PT/Lễ tân, chú thích ẩn ban đầu, mở bằng bàn phím/bấm nút, đóng bằng Escape và cập nhật khi đổi ngày/ca. Dùng bản xem thử chỉ đọc, không gửi/rút đơn hoặc redeploy Tomcat chính. Không thêm test cho thay đổi bố cục có thể đảo ngược này.
+
 ## BF-05 — thêm hai ô lọc ngày nghỉ (21/10/2026, ĐÃ CHỐT)
 
 User yêu cầu thêm Từ ngày/Đến ngày, mặc định trống; lọc theo thời gian nghỉ có giao với khoảng chọn, tính cả ngày biên, cho phép chỉ nhập một đầu. Khi chọn ngày, chỉ hiện nhân viên có đơn khớp toàn bộ bộ lọc; khi không chọn ngày, vẫn giữ hành vi hiện toàn bộ nhân viên như đợt trước. Service báo lỗi khoảng đảo chiều; tab, số lượng và phân trang dùng cùng khoảng ngày. Xóa lọc bỏ ngày và giữ tab. Không đổi schema hoặc luồng duyệt. User yêu cầu spam commit trở lại; đợt này chia hai commit backend và giao diện.
