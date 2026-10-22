@@ -105,7 +105,6 @@ public class MyBookingService {
             sessionService.fillDisplay(sessions, customerId, now);
             countSessions(view, sessions, now);
             view.setWatchList(buildWatchList(sessions));
-            view.setPastProblems(buildPastProblems(sessions));
 
             // B6: phần riêng của gói PT / của buổi lẻ
             if (selected != null) {
@@ -207,10 +206,7 @@ public class MyBookingService {
         return null;
     }
 
-    /**
-     * Đếm theo trạng thái + tìm "Buổi tới" và buổi ngay sau nó + đếm số buổi đã qua.
-     * Tổng = Đã check-in + Vắng + Đã hủy + Còn lại + Đang cập nhật (unit test kiểm tra).
-     */
+    /** Đếm các trạng thái và chọn buổi Scheduled đầu tiên chưa kết thúc. */
     static void countSessions(MyBookingView view, List<MyPtSessionRow> sessions, LocalDateTime now) {
         // B1: đếm theo mã trạng thái
         for (MyPtSessionRow s : sessions) {
@@ -224,27 +220,15 @@ public class MyBookingService {
         }
         view.setTotalCount(sessions.size());
 
-        // B2: 2 buổi Scheduled đầu tiên chưa kết thúc (danh sách đã xếp theo ngày giờ)
-        //     → thẻ "Buổi tới" + dòng "Sau đó"; số ngày còn lại (0 = hôm nay, 1 = ngày mai)
+        // B2: lấy buổi Scheduled đầu tiên chưa hết giờ để hiển thị và mở đúng buổi trên lịch.
         for (MyPtSessionRow s : sessions) {
             if (!s.getStatus().equals("Scheduled") || !MyPtSessionService.isNotEnded(s, now)) {
                 continue;
             }
-            if (view.getFocusSession() == null) {
-                view.setFocusSessionId(s.getSessionId());
-                view.setFocusSession(s);
-                view.setDaysUntilFocus(ChronoUnit.DAYS.between(now.toLocalDate(), s.getSlotDate()));
-            } else {
-                view.setNextAfterFocus(s);
-                break;
-            }
-        }
-
-        // B3: số buổi đã kết thúc (đã qua giờ)
-        for (MyPtSessionRow s : sessions) {
-            if (!MyPtSessionService.isNotEnded(s, now)) {
-                view.setEndedCount(view.getEndedCount() + 1);
-            }
+            view.setFocusSessionId(s.getSessionId());
+            view.setFocusSession(s);
+            view.setDaysUntilFocus(ChronoUnit.DAYS.between(now.toLocalDate(), s.getSlotDate()));
+            break;
         }
     }
 
@@ -405,18 +389,6 @@ public class MyBookingService {
             }
         }
         return warn;
-    }
-
-    /** Buổi đã Vắng / Đã hủy, mới nhất trước — chỉ là lịch sử, JSP gập lại dưới dải chấm. */
-    static List<MyPtSessionRow> buildPastProblems(List<MyPtSessionRow> sessions) {
-        List<MyPtSessionRow> problems = new ArrayList<>();
-        for (MyPtSessionRow s : sessions) {
-            String key = s.getStatusKey();
-            if (MyPtSessionService.KEY_MISSED.equals(key) || MyPtSessionService.KEY_CANCELLED.equals(key)) {
-                problems.add(0, s);   // danh sách vào theo ngày tăng → chèn đầu để mới nhất lên trước
-            }
-        }
-        return problems;
     }
 
     /**

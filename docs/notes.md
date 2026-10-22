@@ -354,3 +354,5 @@ Theo agents.md Phần 5: **chưa ai sửa schema**. Trước khi sửa: copy sch
 
 `frontend-design-pipeline-SWP391-v4.md`, `shared-library-guide.md` — nếu nhóm còn dùng, thêm vào thư mục gốc.
 Hướng dẫn dùng tokens/common hiện có: `docs/frontend-shared-usage.md`.
+- 23/10/2026 — Gói của tôi: gộp đầu gói/Buổi tới, giữ vòng tròn, bỏ lịch sử vắng/hủy và field thừa; hint i nhỏ, chỉ mở khi bấm và kẹp trong màn hình; giải thích Buổi khác giờ gộp vào i Lịch cố định. PT Dashboard gộp cảnh báo vào thẻ gói theo SubscriptionId, thêm SĐT chủ gói/partner; giữ nhắc khách và dời buổi.
+- Kiểm tra: 243 test pass, Jasper 0 lỗi, JS hợp lệ; seed Gia Hương/Mai và PT Sơn, desktop 1440 và mobile 390/320; draw.io cập nhật luồng/màu và tách 5 file theo màn.

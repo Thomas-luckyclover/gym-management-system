@@ -2,6 +2,8 @@ package com.gms.dto;
 
 import com.gms.entity.Package;
 import java.time.LocalDate;
+import java.util.ArrayList;
+import java.util.List;
 
 /**
  * Dữ liệu một gói PT hoặc một buổi lẻ trong khối Khách phụ trách.
@@ -51,8 +53,11 @@ public class PtAssignedPackageView {
     // JSP đọc assignedPackage.ptSubscriptionTypeLabel, in dưới tên khách.
     private String ptSubscriptionTypeLabel;
 
-    // DAO đọc Subscriptions.GeneratedSessionCount → JSP vẽ thanh "còn N/tổng buổi".
-    private int totalSessionCount;
+    // DAO đọc SubscriptionId và SĐT từ Persons; JSP hiện số và ghép cảnh báo đúng gói.
+    private int ptSubscriptionId;
+    private String customerPhone;
+    private String partnerPhone;
+    private final List<PtAttentionView> attentionItems = new ArrayList<>();
 
     // ===== 2. CONSTRUCTOR: DAO điền năm field nhóm 1.1; Service điền nhóm 1.2 sau =====
 
@@ -80,12 +85,22 @@ public class PtAssignedPackageView {
 
     // ----- 3.1. Getter nhóm DAO (1.1): chỉ đọc dữ liệu gốc, không có setter -----
 
-    public int getTotalSessionCount() { return totalSessionCount; }
-    public void setTotalSessionCount(int totalSessionCount) { this.totalSessionCount = totalSessionCount; }
+    public int getPtSubscriptionId() { return ptSubscriptionId; }
+    public void setPtSubscriptionId(int value) { ptSubscriptionId = value; }
+    public String getCustomerPhone() { return customerPhone; }
+    public void setCustomerPhone(String value) { customerPhone = value; }
+    public String getPartnerPhone() { return partnerPhone; }
+    public void setPartnerPhone(String value) { partnerPhone = value; }
+    public List<PtAttentionView> getAttentionItems() { return attentionItems; }
 
-    /** Độ dài thanh: % buổi còn trong lịch so với tổng buổi của gói (0 nếu chưa biết tổng). */
-    public int getRemainingPercent() {
-        return totalSessionCount <= 0 ? 0 : Math.min(100, scheduledSessionCount * 100 / totalSessionCount);
+    /** Đưa thẻ có buổi ngày nghỉ lên trước, tiếp đến cảnh báo khác và khách bình thường. */
+    public int getAttentionPriority() {
+        for (PtAttentionView item : attentionItems) {
+            if ("closedDay".equals(item.getKind())) {
+                return 0;
+            }
+        }
+        return attentionItems.isEmpty() ? 2 : 1;
     }
 
     /** JSP dùng customerName để in tên khách đứng tên gói bằng c:out. */

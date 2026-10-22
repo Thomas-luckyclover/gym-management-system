@@ -25,6 +25,7 @@ import java.sql.SQLException;
 import java.time.LocalDate;
 import java.time.LocalDateTime;
 import java.util.ArrayList;
+import java.util.Comparator;
 import java.util.List;
 import java.util.Set;
 
@@ -273,17 +274,45 @@ public class PtDashboardService {
             // B4: gom các ngày cùng vấn đề, rồi tạo DTO có field hiển thị trực tiếp.
             List<PtAttentionView> attentionItems = buildAttentionItems(clientPackages, today);
 
-            // B4.1: khách đã được nhắc hôm nay → JSP đổi nút thành "Đã nhắc hôm nay".
-            Set<Integer> remindedToday = remindDAO.findRemindedToday(employee.getEmployeeId());
-            for (PtAttentionView item : attentionItems) {
-                item.setReminded(remindedToday.contains(item.getCustomerId()));
+            // B4.1: mỗi buổi ngày nghỉ có một thẻ riêng, đặt trước cảnh báo membership/bảo lưu.
+            List<PtAttentionView> closedDayItems = new ArrayList<>();
+            for (PtDashboardDAO.ClosedDaySession row : dashboardDAO.findClosedDaySessions(
+                    employee.getEmployeeId(), today, toDate)) {
+                closedDayItems.add(buildClosedDayItem(row));
             }
-            return ServiceResult.ok(attentionItems);
+
+            // B4.2: chỉ đọc trạng thái nhắc cho hai loại cũ; closedDay là việc PT phải tự xử lý.
+            if (!attentionItems.isEmpty()) {
+                Set<Integer> remindedToday = remindDAO.findRemindedToday(employee.getEmployeeId());
+                for (PtAttentionView item : attentionItems) {
+                    item.setReminded(remindedToday.contains(item.getCustomerId()));
+                }
+            }
+            closedDayItems.addAll(attentionItems);
+            return ServiceResult.ok(closedDayItems);
         } catch (SQLException exception) {
             // B5: lỗi đọc dữ liệu được báo riêng, không trả danh sách rỗng giả là không có cảnh báo.
             exception.printStackTrace();
             return ServiceResult.fail(Messages.MSG04_SYSTEM_BUSY);
         }
+    }
+
+    /** Tạo thẻ ngày nghỉ từ một buổi DAO đọc; hàm thuần để test không cần DB. */
+    static PtAttentionView buildClosedDayItem(PtDashboardDAO.ClosedDaySession row) {
+        // B1: giữ ngày và giờ để phân biệt từng buổi, kể cả cùng khách/cùng ngày.
+        String when = DateTimeUtil.formatDate(row.slotDate()) + " " + DateTimeUtil.formatTime(row.startTime());
+        String typeLabel = switch (row.subscriptionType()) {
+            case PT_COUPLE -> "PT đôi";
+            case SINGLE_SESSION -> "Buổi lẻ";
+            default -> "PT cá nhân";
+        };
+
+        // B2: số buổi chưa truy vấn nhận 0, JSP closedDay chỉ hiện loại và hạn gói.
+        return new PtAttentionView(row.customerId(), row.subscriptionId(), row.customerName(),
+                row.ptEndDate(), 0, row.slotDate(), null, null, typeLabel, null,
+                "Ngày phòng nghỉ — cần dời",
+                "Buổi " + when + " rơi vào ngày phòng nghỉ. Dời buổi trước ngày này; nếu không, hệ thống sẽ hủy và không tính hoa hồng.",
+                "closedDay", row.sessionId());
     }
 
     /**
@@ -302,7 +331,8 @@ public class PtDashboardService {
             // B2: khách + gói phải còn trong danh sách của PT này
             PtAttentionView target = null;
             for (PtAttentionView item : items.getData()) {
-                if (item.getCustomerId() == customerId && item.getPtSubscriptionId() == ptSubscriptionId) {
+                if (!"closedDay".equals(item.getKind()) && item.getCustomerId() == customerId
+                        && item.getPtSubscriptionId() == ptSubscriptionId) {
                     target = item;
                     break;
                 }
@@ -482,7 +512,8 @@ public class PtDashboardService {
                 clientPackage.getCustomerName(), clientPackage.getPtEndDate(),
                 clientPackage.getScheduledSessionCount(), clientPackage.getSessionDate(),
                 clientPackage.getMembershipEndDate(), clientPackage.getFreezeEndDate(),
-                ptSubscriptionTypeLabel, membershipStatusLabel, attentionTitle, attentionMessage);
+                ptSubscriptionTypeLabel, membershipStatusLabel, attentionTitle, attentionMessage,
+                clientPackage.isFrozenOnSessionDate() ? "frozen" : "membership", null);
     }
 
     /**
@@ -517,7 +548,7 @@ public class PtDashboardService {
      * @param accountId mã tài khoản lấy từ session đăng nhập, không phải mã nhân viên PT
      * @return danh sách DTO đã có nhãn; rỗng nếu không có gói phù hợp, hoặc kết quả lỗi
      */
-    public ServiceResult<List<PtAssignedPackageView>> getAssignedPackages(int accountId) {
+    public ServiceResult<List<PtAssignedPackageView>> getAssignedPackages(int accountId, List<PtAttentionView> attentionItems) {
         try {
             // B1: kiểm tra tài khoản tồn tại và còn hoạt động.
             Account account = accountDAO.findById(accountId);
@@ -536,8 +567,11 @@ public class PtDashboardService {
             // B3: lấy thời điểm giờ VN một lần, gọi DAO lấy các DTO đã điền năm field gốc.
             // Gói cá nhân/đôi theo PT trên gói; buổi lẻ theo PT thực tế của buổi chưa bắt đầu.
             LocalDateTime now = DateTimeUtil.now();
+            // B3.1: mã gói cảnh báo giúp đọc cả khách của buổi PT dạy thay.
+            List<Integer> attentionPackageIds = attentionItems.stream()
+                    .map(PtAttentionView::getPtSubscriptionId).distinct().toList();
             List<PtAssignedPackageView> assignedPackages = dashboardDAO.findAssignedPackages(
-                    employee.getEmployeeId(), now);
+                    employee.getEmployeeId(), now, attentionPackageIds);
 
             // B4: lặp từng DTO DAO đã tạo, đổi loại gói thành nhãn rồi gán vào chính DTO đó.
             // Chỉ bổ sung ptSubscriptionTypeLabel; tên, hạn gói và số buổi vẫn giữ nguyên dữ liệu DAO.
@@ -559,6 +593,7 @@ public class PtDashboardService {
 
             // B5: trả danh sách đã có nhãn để Servlet truyền sang JSP bằng assignedPackages.
             // Nếu DAO trả list rỗng, vẫn là thành công; JSP sẽ hiện thông báo không có gói phù hợp.
+            mergeClientAttention(assignedPackages, attentionItems);
             return ServiceResult.ok(assignedPackages);
         } catch (SQLException exception) {
             // B6: ghi lỗi kỹ thuật; Servlet nhận thông báo an toàn cho assignedPackagesError.
@@ -567,6 +602,21 @@ public class PtDashboardService {
         }
     }
 
+
+    /** Gắn cảnh báo theo mã gói, giữ từng người trong gói đôi và ưu tiên việc PT cần xử lý. */
+    static void mergeClientAttention(List<PtAssignedPackageView> packages, List<PtAttentionView> items) {
+        // B1: chỉ ghép cùng SubscriptionId; không ghép theo tên vì khách có thể trùng tên hoặc nhiều gói.
+        for (PtAssignedPackageView client : packages) {
+            client.getAttentionItems().clear();
+            for (PtAttentionView item : items) {
+                if (client.getPtSubscriptionId() == item.getPtSubscriptionId()) {
+                    client.getAttentionItems().add(item);
+                }
+            }
+        }
+        // B2: cảnh báo ngày nghỉ trước, cảnh báo khác sau; khách bình thường vẫn có trong danh sách.
+        packages.sort(Comparator.comparingInt(PtAssignedPackageView::getAttentionPriority));
+    }
 
     // =====================================================================
     // 4. KẾT QUẢ THÁNG VÀ HOA HỒNG: DAO lấy số/tiền, Service tính tỷ lệ.

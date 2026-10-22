@@ -18,6 +18,14 @@ public class PtAttentionView {
     private final int ptSubscriptionId;    // PtClientPackageView.getPtSubscriptionId()
     private boolean reminded;              // hôm nay PT đã nhắc khách này chưa → nút thành "Đã nhắc hôm nay"
 
+    // Service chọn membership/frozen theo frozenOnSessionDate, hoặc closedDay từ lịch nghỉ.
+    // JSP chọn màu và nút xử lý; closedDay không gửi nhắc khách.
+    private final String kind;
+
+    // DAO đọc Sessions.SessionId của buổi ngày nghỉ; null với hai loại cảnh báo cũ.
+    // JSP gắn data-session-id để hộp #ptSessionDialog nhận đúng buổi cần dời.
+    private final Integer sessionId;
+
     // ----- 1.1. Service lấy nguyên giá trị từ DTO do DAO tạo -----
 
     // PtDashboardService: lấy từ PtClientPackageView.getCustomerName().
@@ -88,6 +96,19 @@ public class PtAttentionView {
             LocalDate sessionDate, LocalDate membershipEndDate, LocalDate freezeEndDate,
             String ptSubscriptionTypeLabel, String membershipStatusLabel,
             String attentionTitle, String attentionMessage) {
+        this(customerId, ptSubscriptionId, customerName, ptEndDate, scheduledSessionCount,
+                sessionDate, membershipEndDate, freezeEndDate, ptSubscriptionTypeLabel,
+                membershipStatusLabel, attentionTitle, attentionMessage,
+                freezeEndDate == null ? "membership" : "frozen", null);
+    }
+
+    /** Service truyền thêm loại cảnh báo và mã buổi; các field cũ giữ nguyên. */
+    public PtAttentionView(int customerId, int ptSubscriptionId, String customerName, LocalDate ptEndDate,
+            int scheduledSessionCount, LocalDate sessionDate, LocalDate membershipEndDate,
+            LocalDate freezeEndDate, String ptSubscriptionTypeLabel, String membershipStatusLabel,
+            String attentionTitle, String attentionMessage, String kind, Integer sessionId) {
+        this.kind = kind;
+        this.sessionId = sessionId;
         // B1: nhận các giá trị Service lấy từ DTO của DAO.
         this.customerId = customerId;
         this.ptSubscriptionId = ptSubscriptionId;
@@ -110,6 +131,11 @@ public class PtAttentionView {
     // ===== 3. GETTER: cùng thứ tự với field, JSP đọc trực tiếp từ item =====
 
     public int getCustomerId() { return customerId; }
+    /** JSP phân biệt membership, frozen và closedDay. */
+    public String getKind() { return kind; }
+
+    /** Mã buổi để mở hộp dời; hai loại cảnh báo cũ nhận null. */
+    public Integer getSessionId() { return sessionId; }
     public int getPtSubscriptionId() { return ptSubscriptionId; }
     public boolean isReminded() { return reminded; }
     public void setReminded(boolean reminded) { this.reminded = reminded; }

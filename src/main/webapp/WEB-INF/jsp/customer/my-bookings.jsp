@@ -7,8 +7,8 @@
   booking: MyBookingView do MyBookingService tạo; mã khách lấy từ session, không lấy từ URL.
   Cột trái : 3 tab Đang tập / Đã kết thúc / Buổi lẻ (bindTabs của common.js) + lối đi nhanh
   Cột phải: KHÔNG liệt kê hết các buổi (xem đủ → màn Lịch tập). Gồm:
-            [DAU-GOI] tên gói · [CTA] tối đa 1 lời mời hành động · [BUOI-TOI] buổi tới + tiến độ
-            [LICH-CO-DINH] tuần mẫu T2–T6 + buổi khác giờ · [CAC-BUOI] dải chấm · [CAN-DE-Y] vắng/hủy/cảnh báo
+            [DAU-GOI] tên gói + buổi tới + tiến độ · [CTA] tối đa 1 lời mời hành động
+            [LICH-CO-DINH] tuần mẫu T2–T6 + buổi khác giờ · [CAC-BUOI] dải chấm · [CAN-DE-Y] cảnh báo buổi sắp tới
             Buổi lẻ: [BUOI-LE] danh sách ngắn + "Đặt lại với PT"
   Lời giải thích dài để trong nút (i) (.pt-info, common.js bindHintBoxes), không rải chữ phụ trên màn.
 --%>
@@ -29,7 +29,7 @@
         <title>Gói của tôi · Super Gym</title>
         <link rel="stylesheet" href="${ctx}/css/pages/customer/dashboard.css?v=20261013c">
         <link rel="stylesheet" href="${ctx}/css/pages/customer/my-pt-sessions.css?v=20261019f">
-        <link rel="stylesheet" href="${ctx}/css/pages/customer/my-bookings.css?v=20261022a">
+        <link rel="stylesheet" href="${ctx}/css/pages/customer/my-bookings.css?v=20261023a">
         <link rel="stylesheet" href="${ctx}/css/pages/auth/notification-bell.css">
         <script src="${ctx}/js/pages/auth/notification-bell.js" defer></script>
     </head>
@@ -66,14 +66,18 @@
                                         <span class="pt-info"><button type="button" class="pt-info-trigger" aria-label="Giải thích các nhóm gói" aria-describedby="hint-tabs"><span aria-hidden="true">i</span></button><span id="hint-tabs" class="pt-info-popover" role="tooltip"><strong>Đang tập:</strong> gói PT còn hạn.<br><strong>Đã kết thúc:</strong> gói hết hạn hoặc đã dùng hết buổi.<br><strong>Buổi lẻ:</strong> các buổi bạn đặt riêng từng buổi, không thuộc gói nào.</span></span>
                                     </div>
                                     <div class="booking-tabs" role="tablist" aria-label="Nhóm gói">
+                                        <%-- Tách nhãn và số đếm: nhãn được ngắt chữ khi hẹp, badge luôn đứng cạnh nhãn. --%>
                                         <button type="button" role="tab" id="tab-active" aria-controls="panel-active" data-tab="active" aria-selected="${openTab eq 'active'}">
-                                            Đang tập <span>${fn:length(booking.activePackages)}</span>
+                                            <span class="booking-tab-label">Đang tập</span>
+                                            <span class="booking-tab-count">${fn:length(booking.activePackages)}</span>
                                         </button>
                                         <button type="button" role="tab" id="tab-ended" aria-controls="panel-ended" data-tab="ended" aria-selected="${openTab eq 'ended'}">
-                                            Đã kết thúc <span>${fn:length(booking.endedPackages)}</span>
+                                            <span class="booking-tab-label">Đã kết thúc</span>
+                                            <span class="booking-tab-count">${fn:length(booking.endedPackages)}</span>
                                         </button>
                                         <button type="button" role="tab" id="tab-single" aria-controls="panel-single" data-tab="single" aria-selected="${openTab eq 'single'}">
-                                            Buổi lẻ <span>${booking.singleSessionCount}</span>
+                                            <span class="booking-tab-label">Buổi lẻ</span>
+                                            <span class="booking-tab-count">${booking.singleSessionCount}</span>
                                         </button>
                                     </div>
 
@@ -130,40 +134,45 @@
 
                                 <section class="booking-content schedule-board" aria-labelledby="booking-heading">
 
-                                    <%-- ===================== [DAU-GOI] tên gói + trạng thái + nút sang Lịch tập / Đặt buổi lẻ ===================== --%>
+                                    <%-- B1: đầu gói và buổi tới dùng chung một khối, chỉ giữ một link mở đúng buổi. --%>
                                     <header class="booking-overview">
                                         <div class="booking-title">
-                                            <c:choose>
-                                                <c:when test="${booking.singleSelected}">
-                                                    <h3 id="booking-heading">Buổi lẻ</h3>
-                                                    <span class="pt-info"><button type="button" class="pt-info-trigger" aria-label="Buổi lẻ là gì" aria-describedby="hint-single"><span aria-hidden="true">i</span></button><span id="hint-single" class="pt-info-popover" role="tooltip">Mỗi buổi đặt và thanh toán online riêng, có thể chọn PT khác nhau. Buổi lẻ không kèm quyền vào gym: ngày tập vẫn cần gói thành viên hoặc vé ngày.</span></span>
-                                                </c:when>
-                                                <c:otherwise>
-                                                    <h3 id="booking-heading"><c:out value="${sp.packageName}" /></h3>
-                                                    <span class="booking-state ${sp.active ? 'is-active' : 'is-ended'}">${sp.active ? 'Đang tập' : 'Đã kết thúc'}</span>
-                                                </c:otherwise>
-                                            </c:choose>
-                                            <div class="booking-title-actions">
-                                                <c:choose>
-                                                    <c:when test="${booking.singleSelected}">
-                                                        <a class="btn btn-primary btn-sm" href="${ctx}/customer/book-session">
-                                                            <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M12 5v14M5 12h14"></path></svg> Đặt buổi lẻ
-                                                        </a>
-                                                    </c:when>
-                                                    <c:otherwise>
-                                                        <a class="btn btn-outline btn-sm" href="${weekLink}${not empty f ? '&amp;date=' += f.slotDate += '&amp;session=' += f.sessionId : ''}">
-                                                            <svg viewBox="0 0 24 24" aria-hidden="true"><rect x="3" y="5" width="18" height="16" rx="2"></rect><path d="M3 10h18M8 3v4M16 3v4"></path></svg> Xem trên lịch tập
-                                                        </a>
-                                                    </c:otherwise>
-                                                </c:choose>
-                                            </div>
+                                            <h3 id="booking-heading"><c:out value="${booking.singleSelected ? 'Buổi lẻ' : sp.packageName}" /></h3>
+                                            <a class="btn btn-outline btn-sm" href="${weekLink}${not empty f ? '&amp;date=' += f.slotDate += '&amp;session=' += f.sessionId : ''}">Xem trên lịch tập</a>
                                         </div>
-                                        <c:if test="${not booking.singleSelected}">
-                                            <p class="booking-sub">
-                                                <c:out value="${sp.typeLabel}" /> · ${gms:formatDate(sp.startDate)} – ${gms:formatDate(sp.endDate)} · PT <strong><c:out value="${sp.ptName}" /></strong>
-                                                <c:if test="${not empty sp.partnerName}"> · Tập cùng <strong><c:out value="${sp.partnerName}" /></strong></c:if>
-                                            </p>
+                                        <c:set var="ptName" value="${not empty f ? f.ptName : sp.ptName}" />
+                                        <c:set var="ptZalo" value="${not empty f ? f.zaloUrl : sp.zaloUrl}" />
+                                        <c:if test="${not empty ptName}">
+                                            <p class="booking-sub">PT <c:out value="${ptName}" /><c:if test="${not booking.singleSelected}"> · đến <c:out value="${gms:formatDate(sp.endDate)}" /></c:if></p>
                                         </c:if>
+                                        <div class="booking-hero ${empty f ? 'is-quiet' : ''} ${booking.singleSelected ? 'is-single' : ''}">
+                                            <div class="booking-hero-main">
+                                                <%-- B2: có buổi thì hiện ngày giờ và cảnh báo; hết buổi dùng một câu ngắn. --%>
+                                                <c:choose>
+                                                    <c:when test="${not empty f}">
+                                                        <p class="booking-hero-label">Buổi tới · <c:choose><c:when test="${booking.daysUntilFocus eq 0}">Hôm nay</c:when><c:when test="${booking.daysUntilFocus eq 1}">Ngày mai</c:when><c:otherwise><c:out value="${f.dayName}" />, <c:out value="${fn:substring(gms:formatDate(f.slotDate), 0, 5)}" /></c:otherwise></c:choose></p>
+                                                        <div class="booking-hero-time">
+                                                            <p class="booking-hero-when"><c:out value="${f.dayName}" />, <c:out value="${fn:substring(gms:formatDate(f.slotDate), 0, 5)}" /> · <c:out value="${gms:formatTime(f.startTime)}" /> – <c:out value="${gms:formatTime(f.endTime)}" /></p>
+                                                            <c:if test="${f.statusKey eq 'warn'}"><span class="booking-hero-warn" title="${fn:escapeXml(f.explanation)}" aria-label="${fn:escapeXml(f.explanation)}"><c:out value="${f.noGymPass ? 'Cần Membership/DayPass' : (fn:contains(f.explanation, 'Phòng tập nghỉ') ? 'Ngày phòng nghỉ' : 'Cần chú ý')}" /></span></c:if>
+                                                        </div>
+                                                    </c:when>
+                                                    <c:otherwise><p class="booking-hero-when">Không còn buổi sắp tới</p></c:otherwise>
+                                                </c:choose>
+                                                <c:if test="${(booking.singleSelected or sp.active) and not empty ptZalo}">
+                                                    <div class="booking-hero-actions"><a class="btn btn-primary btn-sm" href="${fn:escapeXml(ptZalo)}" target="_blank" rel="noopener noreferrer">Nhắn Zalo PT</a></div>
+                                                </c:if>
+                                            </div>
+                                            <%-- B3: buổi đã qua tính theo ngày; buổi lẻ không có quota gói hay tiến độ. --%>
+                                            <c:if test="${not empty sp}">
+                                                <c:set var="left" value="${sp.totalSessions - sp.pastSessions}" />
+                                                <div class="booking-progress">
+                                                    <div class="booking-ring ${left le 3 ? 'is-ending' : ''}" style="--p: ${sp.progressPercent}" role="img" aria-label="Còn ${left} buổi, đã qua ${sp.pastSessions} trên ${sp.totalSessions} buổi">
+                                                        <p class="booking-remaining">còn <b><c:out value="${left}" /></b> <span>buổi</span></p>
+                                                    </div>
+                                                    <p class="booking-sub"><c:out value="${sp.pastSessions}" />/<c:out value="${sp.totalSessions}" /> đã qua</p>
+                                                </div>
+                                            </c:if>
+                                        </div>
                                     </header>
 
                                     <%-- ===================== [CTA] tối đa 1 — Service chọn theo độ ưu tiên (MyBookingService.chooseCta) ===================== --%>
@@ -221,67 +230,6 @@
                                         </section>
                                     </c:if>
 
-                                    <%-- ===================== [BUOI-TOI] buổi gần nhất + "Sau đó" + vòng tiến độ (gói PT) ===================== --%>
-                                    <div class="booking-hero ${empty f ? 'is-quiet' : ''} ${not empty f and f.statusKey eq 'warn' ? 'is-warn' : ''} ${booking.singleSelected ? 'is-single' : ''}">
-                                        <div class="booking-hero-main">
-                                            <c:choose>
-                                                <c:when test="${not empty f}">
-                                                    <p class="booking-hero-label">Buổi tới ·
-                                                        <c:choose>
-                                                            <c:when test="${booking.daysUntilFocus eq 0}">hôm nay</c:when>
-                                                            <c:when test="${booking.daysUntilFocus eq 1}">ngày mai</c:when>
-                                                            <c:otherwise>còn ${booking.daysUntilFocus} ngày</c:otherwise>
-                                                        </c:choose>
-                                                    </p>
-                                                    <p class="booking-hero-when"><c:out value="${f.dayName}" />, ${gms:formatDate(f.slotDate)} · ${gms:formatTime(f.startTime)} – ${gms:formatTime(f.endTime)}</p>
-                                                    <p class="booking-hero-sub">PT <strong><c:out value="${f.ptName}" /></strong>
-                                                        <c:if test="${not empty f.ptPhone}"> · <a class="booking-phone" href="tel:${fn:escapeXml(f.ptPhone)}"><c:out value="${f.ptPhone}" /></a></c:if>
-                                                        · <c:choose><c:when test="${f.singleSession}">Buổi lẻ</c:when><c:otherwise>Buổi ${f.sessionNo}/${f.totalSessions}</c:otherwise></c:choose></p>
-                                                    <c:if test="${f.statusKey eq 'warn' and not empty f.explanation}">
-                                                        <p class="booking-hero-warn"><c:out value="${f.explanation}" /></p>
-                                                    </c:if>
-                                                    <div class="booking-hero-actions">
-                                                        <c:if test="${not empty f.zaloUrl}">
-                                                            <a class="btn btn-primary btn-sm" href="${fn:escapeXml(f.zaloUrl)}" target="_blank" rel="noopener noreferrer">
-                                                                <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M21 12a8 8 0 0 1-11.6 7.1L4 20l1-4.6A8 8 0 1 1 21 12z"></path></svg> Nhắn Zalo PT
-                                                            </a>
-                                                        </c:if>
-                                                        <a class="btn btn-ghost btn-sm" href="${weekLink}&amp;date=${f.slotDate}&amp;session=${f.sessionId}">Xem chi tiết ›</a>
-                                                        <c:if test="${not empty f.calendarUrl}">
-                                                            <a class="btn btn-outline btn-sm" href="${fn:escapeXml(f.calendarUrl)}" target="_blank" rel="noopener noreferrer">
-                                                                <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M12 5v14M5 12h14"></path></svg> Google Calendar
-                                                            </a>
-                                                        </c:if>
-                                                    </div>
-                                                    <c:set var="n" value="${booking.nextAfterFocus}" />
-                                                    <c:if test="${not empty n}">
-                                                        <p class="booking-hero-after">Sau đó <a href="${weekLink}&amp;date=${n.slotDate}&amp;session=${n.sessionId}"><strong><c:out value="${n.dayName}" />, ${gms:formatDate(n.slotDate)} · ${gms:formatTime(n.startTime)} – ${gms:formatTime(n.endTime)}</strong></a>
-                                                            <c:if test="${not n.singleSession}"> · buổi ${n.sessionNo}/${n.totalSessions}</c:if></p>
-                                                    </c:if>
-                                                </c:when>
-                                                <c:when test="${booking.singleSelected}">
-                                                    <p class="booking-hero-label">Buổi tới</p>
-                                                    <p class="booking-hero-when">Chưa có buổi lẻ sắp tới</p>
-                                                </c:when>
-                                                <c:otherwise>
-                                                    <p class="booking-hero-label">${sp.active ? 'Buổi tới' : 'Gói đã kết thúc'}</p>
-                                                    <p class="booking-hero-when"><c:choose><c:when test="${sp.active}">Không còn buổi nào sắp tới</c:when><c:otherwise>Kết thúc ngày ${gms:formatDate(sp.endDate)}</c:otherwise></c:choose></p>
-                                                    <p class="booking-hero-sub">Đã tập cùng PT <strong><c:out value="${sp.ptName}" /></strong> · ${booking.checkedInCount} buổi check-in, ${booking.missedCount} vắng, ${booking.cancelledCount} hủy.</p>
-                                                </c:otherwise>
-                                            </c:choose>
-                                        </div>
-                                        <%-- Vòng tiến độ (chỉ gói PT): --p = % buổi đã qua, vẽ bằng conic-gradient trong CSS. --%>
-                                        <c:if test="${not empty sp}">
-                                            <div class="booking-ring" style="--p: ${sp.progressPercent}" role="img" aria-label="Đã qua ${sp.pastSessions} trên ${sp.totalSessions} buổi">
-                                                <div>
-                                                    <b>${sp.pastSessions}/${sp.totalSessions}</b>
-                                                    <span>buổi đã qua</span>
-                                                    <c:if test="${sp.active}"><span class="booking-ring-rest">còn ${sp.totalSessions - sp.pastSessions}</span></c:if>
-                                                </div>
-                                            </div>
-                                        </c:if>
-                                    </div>
-
                                     <c:choose>
                                         <c:when test="${not booking.singleSelected}">
 
@@ -289,7 +237,7 @@
                                             <section class="booking-section" aria-labelledby="pattern-title">
                                                 <div class="booking-section-head">
                                                     <h4 id="pattern-title">Lịch cố định</h4>
-                                                    <span class="pt-info"><button type="button" class="pt-info-trigger" aria-label="Cách đọc lịch cố định" aria-describedby="hint-pattern"><span aria-hidden="true">i</span></button><span id="hint-pattern" class="pt-info-popover" role="tooltip">Gói PT chỉ xếp buổi từ Thứ 2 đến Thứ 6. Mỗi ô là giờ tập lặp lại hằng tuần của thứ đó.<br><strong>Viền đứt:</strong> thứ đó tập khác giờ các thứ còn lại.<br><strong>Không cố định:</strong> giờ thay đổi theo tuần, các buổi nằm ở "Buổi khác giờ".</span></span>
+                                                    <span class="pt-info"><button type="button" class="pt-info-trigger" aria-label="Cách đọc lịch cố định" aria-describedby="hint-pattern"><span aria-hidden="true">i</span></button><span id="hint-pattern" class="pt-info-popover" role="tooltip">Các ô là giờ tập lặp lại từ Thứ 2 đến Thứ 6.<br><strong>Viền đứt:</strong> giờ khác các thứ còn lại.<br><strong>Không cố định:</strong> giờ thay đổi theo tuần.<br><strong>Buổi khác giờ:</strong> do đổi lịch, PT dời/chuyển PT hoặc khung cố định đã kín.</span></span>
                                                     <span class="booking-count">${booking.templateCount}/${booking.totalCount} buổi theo lịch này</span>
                                                 </div>
                                                 <ul class="booking-week">
@@ -314,7 +262,6 @@
                                                 <c:if test="${not empty booking.offPattern}">
                                                     <div class="booking-subhead">
                                                         <h5>Buổi khác giờ <span>${fn:length(booking.offPattern)}</span></h5>
-                                                        <span class="pt-info"><button type="button" class="pt-info-trigger" aria-label="Vì sao có buổi khác giờ" aria-describedby="hint-off"><span aria-hidden="true">i</span></button><span id="hint-off" class="pt-info-popover" role="tooltip">Buổi bạn đã đổi, PT dời hoặc chuyển PT dạy thay, hoặc buổi được xếp giờ khác ngay từ đầu vì khung cố định ngày đó đã kín.</span></span>
                                                     </div>
                                                     <ul class="booking-rows">
                                                         <c:forEach var="s" items="${booking.offPattern}">
@@ -335,14 +282,22 @@
                                                 <section class="booking-section" aria-labelledby="dots-title">
                                                     <div class="booking-section-head">
                                                         <h4 id="dots-title">Các buổi của gói</h4>
-                                                        <span class="pt-info"><button type="button" class="pt-info-trigger" aria-label="Cách đọc dải buổi" aria-describedby="hint-dots"><span aria-hidden="true">i</span></button><span id="hint-dots" class="pt-info-popover" role="tooltip">Mỗi ô là 1 buổi, xếp theo ngày tập. Vạch dọc: sang tuần mới. Rê chuột vào ô để xem ngày.<br><strong>Vắng:</strong> không check-in, buổi vẫn tính vào gói.<br><strong>Đang cập nhật:</strong> buổi vừa kết thúc, kết quả có sau khi hết ngày.</span></span>
+                                                        <span class="pt-info"><button type="button" class="pt-info-trigger" aria-label="Cách đọc dải buổi" aria-describedby="hint-dots"><span aria-hidden="true">i</span></button><span id="hint-dots" class="pt-info-popover" role="tooltip">Mỗi ô là 1 buổi, xếp theo ngày tập. Vạch dọc: sang tuần mới. Bấm một ô để mở đúng buổi trên lịch tuần.<br><strong>Vắng:</strong> không check-in, buổi vẫn tính vào gói.<br><strong>Đang cập nhật:</strong> buổi vừa kết thúc, kết quả có sau khi hết ngày.</span></span>
                                                     </div>
-                                                    <div class="booking-dots" role="img" aria-label="${booking.totalCount} buổi: ${booking.checkedInCount} đã check-in, ${booking.missedCount} vắng, ${booking.cancelledCount} đã hủy, ${booking.pendingCount} đang cập nhật, ${booking.remainingCount} sắp tới">
+                                                    <%-- Mỗi ô là link sang lịch tuần; date chọn ngày, session mở đúng buổi, from giữ gói để quay lại. --%>
+                                                    <div class="booking-dots" role="group" aria-label="Các buổi trong gói">
                                                         <c:forEach var="s" items="${booking.sessions}">
-                                                            <c:if test="${s.firstOfWeek}"><span class="booking-dot-week"></span></c:if>
-                                                            <a class="booking-dot ${s.sessionId eq booking.focusSessionId ? 'is-next' : ''}" data-status="${s.statusKey}" tabindex="-1"
-                                                               href="${weekLink}&amp;date=${s.slotDate}&amp;session=${s.sessionId}"
-                                                               title="Buổi ${s.sessionNo}/${s.totalSessions} · ${fn:escapeXml(s.dayName)}, ${gms:formatDate(s.slotDate)} · ${fn:escapeXml(s.statusLabel)} — bấm để xem"></a>
+                                                            <c:if test="${s.firstOfWeek}"><span class="booking-dot-week" aria-hidden="true"></span></c:if>
+                                                            <c:url var="sessionWeekUrl" value="/customer/pt-sessions">
+                                                                <c:param name="view" value="week" />
+                                                                <c:param name="from" value="${fromKey}" />
+                                                                <c:param name="date" value="${s.slotDate}" />
+                                                                <c:param name="session" value="${s.sessionId}" />
+                                                            </c:url>
+                                                            <a class="booking-dot ${s.sessionId eq booking.focusSessionId ? 'is-next' : ''}"
+                                                               data-status="${fn:escapeXml(s.statusKey)}" href="${fn:escapeXml(sessionWeekUrl)}"
+                                                               aria-label="Buổi ${s.sessionNo}/${s.totalSessions}, ${gms:formatDate(s.slotDate)}, ${gms:formatTime(s.startTime)} – ${gms:formatTime(s.endTime)}, ${fn:escapeXml(s.statusLabel)}"
+                                                               title="Buổi ${s.sessionNo}/${s.totalSessions} · ${gms:formatDate(s.slotDate)} · ${fn:escapeXml(s.statusLabel)}"></a>
                                                         </c:forEach>
                                                     </div>
                                                     <ul class="booking-key">
@@ -352,22 +307,6 @@
                                                         <c:if test="${booking.pendingCount gt 0}"><li><i class="booking-dot" data-status="pending"></i>Đang cập nhật <b>${booking.pendingCount}</b></li></c:if>
                                                         <c:if test="${booking.remainingCount gt 0}"><li><i class="booking-dot" data-status="upcoming"></i>Sắp tới <b>${booking.remainingCount}</b></li></c:if>
                                                     </ul>
-                                                    <%-- Buổi vắng / hủy: chỉ là lịch sử → gập sẵn (details/summary có sẵn của trình duyệt, không cần JS). --%>
-                                                    <c:if test="${not empty booking.pastProblems}">
-                                                        <details class="booking-history">
-                                                            <summary>${fn:length(booking.pastProblems)} buổi vắng / hủy · xem lý do</summary>
-                                                            <ul class="booking-rows">
-                                                                <c:forEach var="s" items="${booking.pastProblems}">
-                                                                    <li>
-                                                                        <a class="booking-rows-date" href="${weekLink}&amp;date=${s.slotDate}&amp;session=${s.sessionId}"><c:out value="${s.dayName}" />, ${gms:formatDate(s.slotDate)}</a>
-                                                                        <span class="booking-rows-time">${gms:formatTime(s.startTime)} – ${gms:formatTime(s.endTime)}</span>
-                                                                        <span class="booking-rows-note"><c:out value="${s.explanation}" /></span>
-                                                                        <span class="session-status" data-status="${s.statusKey}"><c:out value="${s.statusLabel}" /></span>
-                                                                    </li>
-                                                                </c:forEach>
-                                                            </ul>
-                                                        </details>
-                                                    </c:if>
                                                 </section>
                                             </c:if>
                                         </c:when>
@@ -400,12 +339,13 @@
 
                                     <%-- ===================== [CAN-DE-Y] chỉ buổi SẮP TỚI chưa có Membership/DayPass (còn kịp mua); không có thì ẩn cả mục ===================== --%>
                                     <c:if test="${not empty booking.watchList}">
-                                        <section class="booking-section" aria-labelledby="watch-title">
-                                            <div class="booking-section-head">
-                                                <h4 id="watch-title">Cần để ý</h4>
-                                                <span class="pt-info"><button type="button" class="pt-info-trigger" aria-label="Cần để ý gồm gì" aria-describedby="hint-watch"><span aria-hidden="true">i</span></button><span id="hint-watch" class="pt-info-popover" role="tooltip">Buổi sắp tới rơi vào ngày bạn chưa có gói thành viên hoặc vé ngày hợp lệ. Mua trước ngày tập để buổi không bị tính vắng.</span></span>
+                                        <%-- details/summary hỗ trợ mở, đóng bằng chuột và bàn phím; mặc định thu gọn. --%>
+                                        <details class="booking-section booking-watch" aria-labelledby="watch-title">
+                                            <summary class="booking-section-head">
+                                                <span id="watch-title" class="booking-watch-title">Cần để ý</span>
                                                 <span class="booking-count">${fn:length(booking.watchList)} buổi</span>
-                                            </div>
+                                            </summary>
+                                            <p class="booking-summary">Buổi sắp tới rơi vào ngày bạn chưa có gói thành viên hoặc vé ngày hợp lệ. Mua trước ngày tập để buổi không bị tính vắng.</p>
                                             <ul class="booking-rows">
                                                 <c:forEach var="s" items="${booking.watchList}">
                                                     <li>
@@ -416,14 +356,9 @@
                                                     </li>
                                                 </c:forEach>
                                             </ul>
-                                        </section>
+                                        </details>
                                     </c:if>
 
-                                    <footer class="booking-foot">
-                                        <a href="${ctx}/customer/pt-sessions?view=month&amp;from=${fromKey}${not empty f ? '&amp;date=' += f.slotDate : ''}">Xem ${booking.singleSelected ? 'các buổi' : 'cả ' += booking.totalCount += ' buổi'} trên lịch tập
-                                            <svg viewBox="0 0 24 24" aria-hidden="true"><path d="m9 6 6 6-6 6"></path></svg></a>
-                                        <span class="pt-info"><button type="button" class="pt-info-trigger" aria-label="Hủy hoặc đổi buổi" aria-describedby="hint-change"><span aria-hidden="true">i</span></button><span id="hint-change" class="pt-info-popover" role="tooltip">Cần hủy hoặc đổi buổi? Nhắn PT qua Zalo, PT sẽ cập nhật lịch giúp bạn.</span></span>
-                                    </footer>
                                 </section>
                             </div>
                         </c:otherwise>

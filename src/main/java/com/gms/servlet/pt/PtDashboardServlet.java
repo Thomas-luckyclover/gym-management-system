@@ -87,7 +87,7 @@ public class PtDashboardServlet extends HttpServlet {
         // B6: gọi Service lấy đầy đủ gói PT Active và buổi lẻ sắp dạy của tài khoản này.
         // assignedPackagesResult chứa DTO do DAO tạo, đã được Service bổ sung nhãn loại gói.
         ServiceResult<List<PtAssignedPackageView>> assignedPackagesResult =
-                dashboardService.getAssignedPackages(accountId);
+                dashboardService.getAssignedPackages(accountId, attentionResult.isSuccess() ? attentionResult.getData() : List.of());
 
         // B7: chuyển danh sách hoặc lỗi của riêng khối Khách phụ trách sang JSP.
         if (assignedPackagesResult.isSuccess()) {

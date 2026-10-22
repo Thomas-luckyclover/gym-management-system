@@ -46,7 +46,6 @@ class MyBookingServiceTest {
         assertEquals(Integer.valueOf(5), view.getFocusSessionId());
         assertEquals(5, view.getFocusSession().getSessionId());
         assertEquals(0, view.getDaysUntilFocus());   // buổi tới là hôm nay
-        assertEquals(4, view.getEndedCount());       // 1, 2, 3 và buổi 4 đã qua giờ chờ chốt
     }
 
     @Test
@@ -59,7 +58,6 @@ class MyBookingServiceTest {
         MyBookingService.countSessions(view, sessions, NOW);
 
         assertEquals(3, view.getDaysUntilFocus());
-        assertEquals(0, view.getEndedCount());
     }
 
     @Test
@@ -72,7 +70,6 @@ class MyBookingServiceTest {
         MyBookingService.countSessions(view, sessions, NOW);
 
         assertNull(view.getFocusSession());
-        assertEquals(1, view.getEndedCount());
     }
 
     // ---------------------------------------------------------------- pickPackage
@@ -100,24 +97,6 @@ class MyBookingServiceTest {
     void defaultsToEndedPackageWhenNoActiveOne() {
         MyBookingView view = viewWith(pkg(20, "Expired"));
         assertEquals(20, MyBookingService.pickPackage(view, null).getSubscriptionId());
-    }
-
-    // ---------------------------------------------------------------- nextAfterFocus
-
-    @Test
-    void nextAfterFocusIsSecondUpcomingSession() {
-        List<MyPtSessionRow> sessions = new ArrayList<>();
-        sessions.add(session(1, "Scheduled", LocalDate.of(2026, 10, 21)));
-        sessions.add(session(2, "Scheduled", LocalDate.of(2026, 10, 23)));
-        sessions.add(session(3, "Scheduled", LocalDate.of(2026, 10, 26)));
-        for (MyPtSessionRow s : sessions) {
-            MyPtSessionService.applyStatus(s, NOW, null);
-        }
-        MyBookingView view = new MyBookingView();
-        MyBookingService.countSessions(view, sessions, NOW);
-
-        assertEquals(1, view.getFocusSession().getSessionId());
-        assertEquals(2, view.getNextAfterFocus().getSessionId());
     }
 
     // ---------------------------------------------------------------- applyWeekTemplate
@@ -224,7 +203,7 @@ class MyBookingServiceTest {
     }
 
     @Test
-    void watchListOnlyUpcomingWarningsAndPastProblemsNewestFirst() {
+    void watchListOnlyUpcomingMissingGymPass() {
         List<MyPtSessionRow> sessions = new ArrayList<>();
         sessions.add(session(1, "Missed", LocalDate.of(2026, 10, 5)));
         sessions.add(session(2, "CheckedIn", LocalDate.of(2026, 10, 7)));
@@ -243,10 +222,6 @@ class MyBookingServiceTest {
         assertEquals(1, watch.size());                    // chỉ buổi sắp tới có cảnh báo
         assertEquals(4, watch.get(0).getSessionId());
 
-        List<MyPtSessionRow> past = MyBookingService.buildPastProblems(sessions);
-        assertEquals(2, past.size());                     // Hủy 09/10 rồi Vắng 05/10 (mới nhất trước)
-        assertEquals(3, past.get(0).getSessionId());
-        assertEquals(1, past.get(1).getSessionId());
     }
 
     // ---------------------------------------------------------------- buổi lẻ

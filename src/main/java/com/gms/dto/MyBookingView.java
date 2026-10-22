@@ -23,7 +23,6 @@ public class MyBookingView {
     private Integer focusSessionId;              // "Buổi tới": buổi Scheduled đầu tiên chưa kết thúc (null nếu không có)
     private MyPtSessionRow focusSession;         // chính buổi đó → thẻ "Buổi tới" ở đầu cột phải
     private long daysUntilFocus;                 // còn mấy ngày tới buổi đó (0 = hôm nay, 1 = ngày mai)
-    private int endedCount;                      // số buổi đã qua giờ kết thúc → dòng gập "▸ N buổi đã qua"
 
     // 5 ô đếm (Tổng = Đã check-in + Vắng + Đã hủy + Còn lại + Đang cập nhật)
     private int totalCount;
@@ -39,10 +38,8 @@ public class MyBookingView {
     private int templateCount;                   // số buổi rơi đúng lịch cố định
     private List<MyPtSessionRow> offPattern = new ArrayList<>();     // "Buổi khác giờ" (kèm moveNote)
 
-    // ---------------- Buổi tới / cần để ý ----------------
-    private MyPtSessionRow nextAfterFocus;       // buổi ngay sau "Buổi tới" → dòng "Sau đó …"
+    // ---------------- Cần để ý ----------------
     private List<MyPtSessionRow> watchList = new ArrayList<>();      // "Cần để ý": buổi SẮP TỚI có cảnh báo (còn kịp xử lý)
-    private List<MyPtSessionRow> pastProblems = new ArrayList<>();   // buổi đã Vắng / Đã hủy → gập dưới dải chấm (chỉ là lịch sử)
 
     // ---------------- CTA: tối đa 1, Service chọn theo độ ưu tiên ----------------
     private String ctaKind;                      // buyMembership | renewAtCounter | rejoin | ptPackage | null
@@ -82,8 +79,6 @@ public class MyBookingView {
     public long getDaysUntilFocus() { return daysUntilFocus; }
     public void setDaysUntilFocus(long daysUntilFocus) { this.daysUntilFocus = daysUntilFocus; }
 
-    public int getEndedCount() { return endedCount; }
-    public void setEndedCount(int endedCount) { this.endedCount = endedCount; }
 
     public int getTotalCount() { return totalCount; }
     public void setTotalCount(int totalCount) { this.totalCount = totalCount; }
@@ -114,11 +109,7 @@ public class MyBookingView {
     public List<MyPtSessionRow> getOffPattern() { return offPattern; }
     public void setOffPattern(List<MyPtSessionRow> offPattern) { this.offPattern = offPattern; }
 
-    public MyPtSessionRow getNextAfterFocus() { return nextAfterFocus; }
-    public void setNextAfterFocus(MyPtSessionRow nextAfterFocus) { this.nextAfterFocus = nextAfterFocus; }
 
-    public List<MyPtSessionRow> getPastProblems() { return pastProblems; }
-    public void setPastProblems(List<MyPtSessionRow> pastProblems) { this.pastProblems = pastProblems; }
 
     public List<MyPtSessionRow> getWatchList() { return watchList; }
     public void setWatchList(List<MyPtSessionRow> watchList) { this.watchList = watchList; }

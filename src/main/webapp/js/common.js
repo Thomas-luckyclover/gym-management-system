@@ -351,26 +351,51 @@ function initCommon() {
 // DOM: .pt-info > .pt-info-trigger + .pt-info-popover, dùng ở mọi zone.
 function bindHintBoxes() {
     const hints = document.querySelectorAll(".pt-info");
-    // Hộp vẫn thuộc nút i, nhưng luôn nằm trong mép màn hình khi mở.
+    // Hộp mở ra dùng position: fixed (toạ độ màn hình) nên KHÔNG bị cột cuộn nào cắt mất;
+    // canh phải theo nút i, luôn nằm trong mép màn hình, thiếu chỗ bên dưới thì lật lên trên.
+    const EDGE = 12;   // khoảng cách tối thiểu tới mép màn hình (px)
+    const GAP = 8;     // khoảng cách giữa nút i và hộp (px)
     function positionHint(hint) {
         const popover = hint.querySelector(".pt-info-popover");
         if (!popover) { return; }
-        if (window.matchMedia("(max-width: 700px)").matches) {
-            popover.style.removeProperty("left");
-            popover.style.removeProperty("right");
-            return;
+        const compact = hint.closest(".my-bookings-page") !== null;
+        for (const prop of ["position", "top", "left", "right", "bottom"]) { popover.style.removeProperty(prop); }
+        if (!compact && window.matchMedia("(max-width: 700px)").matches) {
+            return;   // mobile: CSS đã cho hộp nằm cố định ở đáy màn hình
         }
-        const bounds = hint.getBoundingClientRect();
-        // max-width đã được trình duyệt đổi từ token rem/calc sang px.
-        const maxWidth = parseFloat(getComputedStyle(popover).maxWidth);
-        const gutter = Number.isFinite(maxWidth) ? Math.max(0, (window.innerWidth - maxWidth) / 2) : 16;
+        const trigger = hint.querySelector(".pt-info-trigger") || hint;
+        const bounds = trigger.getBoundingClientRect();
         const viewportWidth = document.documentElement.clientWidth;
-        const width = popover.getBoundingClientRect().width;
-        const preferredLeft = bounds.right - width;
-        const left = Math.max(gutter, Math.min(preferredLeft, viewportWidth - width - gutter));
+        const viewportHeight = document.documentElement.clientHeight;
+
+        // B1: chuyển sang fixed ở (0,0) rồi đo — bù lệch nếu tổ tiên có transform/backdrop-filter (vd topbar)
+        popover.style.position = "fixed";
         popover.style.right = "auto";
-        popover.style.left = (left - bounds.left) + "px";
+        popover.style.bottom = "auto";
+        popover.style.left = "0px";
+        popover.style.top = "0px";
+        const origin = popover.getBoundingClientRect();
+        const width = origin.width;
+        const height = origin.height;
+
+        // B2: canh phải theo nút i, kẹp trong màn hình
+        const left = Math.max(EDGE, Math.min(compact ? bounds.left : bounds.right - width, viewportWidth - width - EDGE));
+        // B3: ưu tiên bên dưới nút; không đủ chỗ mà bên trên rộng hơn thì đặt lên trên
+        let top = bounds.bottom + GAP;
+        if (top + height > viewportHeight - EDGE && bounds.top - GAP - height >= EDGE) {
+            top = bounds.top - GAP - height;
+        }
+        popover.style.left = (left - origin.left) + "px";
+        popover.style.top = (Math.max(EDGE, Math.min(top, viewportHeight - height - EDGE)) - origin.top) + "px";
     }
+    // Cuộn / đổi cỡ cửa sổ khi hộp đang mở → đặt lại vị trí theo nút i
+    function repositionVisibleHints() {
+        for (const hint of hints) {
+            if (hint.matches(".is-open, :hover, :focus-within")) { positionHint(hint); }
+        }
+    }
+    window.addEventListener("scroll", repositionVisibleHints, { capture: true, passive: true });
+    window.addEventListener("resize", repositionVisibleHints);
     function closeHint(hint) {
         hint.classList.remove("is-open");
         hint.classList.add("is-dismissed");
@@ -409,9 +434,6 @@ function bindHintBoxes() {
         for (const hint of hints) {
             if (!hint.contains(event.target)) { closeHint(hint); }
         }
-    });
-    window.addEventListener("resize", function () {
-        for (const hint of hints) { positionHint(hint); }
     });
 }
 

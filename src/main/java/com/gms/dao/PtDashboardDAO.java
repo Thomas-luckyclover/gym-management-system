@@ -23,6 +23,58 @@ import java.util.List;
 /** Đọc dữ liệu riêng cho trang tổng quan PT (UC-32). */
 public class PtDashboardDAO {
 
+    /** Một buổi ngày nghỉ do DAO đọc; Service dùng mã buổi và giờ để tạo thẻ dời buổi. */
+    public record ClosedDaySession(int sessionId, int customerId, String customerName,
+            int subscriptionId, Package.Type subscriptionType, LocalDate ptEndDate,
+            LocalDate slotDate, LocalTime startTime) { }
+
+    /** Lấy các buổi Scheduled của PT rơi vào ngày nghỉ cả ngày, tính cả hai ngày biên. */
+    public List<ClosedDaySession> findClosedDaySessions(int ptEmployeeId,
+            LocalDate fromDate, LocalDate toDate) throws SQLException {
+        // B1: EXISTS không nhân buổi; tên lấy từ người đứng tên gói.
+        String sql = """
+                SELECT s.SessionId, sub.CustomerId, p.FullName AS CustomerName,
+                       sub.SubscriptionId, sub.SubscriptionType, sub.EndDate,
+                       t.SlotDate, t.StartTime
+                FROM Sessions s
+                JOIN TimeSlots t ON t.TimeSlotId = s.TimeSlotId
+                JOIN Subscriptions sub ON sub.SubscriptionId = s.SubscriptionId
+                JOIN Customers c ON c.CustomerId = sub.CustomerId
+                JOIN Persons p ON p.PersonId = c.PersonId
+                WHERE s.Status = 'Scheduled' AND s.PtEmployeeId = ?
+                  AND t.SlotDate BETWEEN ? AND ?
+                  AND EXISTS (
+                      SELECT 1 FROM OperatingHourExceptions e
+                      WHERE e.ApplyDate = t.SlotDate AND e.IsClosedAllDay = 1
+                  )
+                ORDER BY t.SlotDate, t.StartTime, s.SessionId
+                """;
+        List<ClosedDaySession> rows = new ArrayList<>();
+
+        // B2: truyền mã PT đã xác minh và khoảng ngày bằng PreparedStatement.
+        try (Connection connection = DBContext.getConnection();
+                PreparedStatement statement = connection.prepareStatement(sql)) {
+            statement.setInt(1, ptEmployeeId);
+            statement.setDate(2, Date.valueOf(fromDate));
+            statement.setDate(3, Date.valueOf(toDate));
+
+            // B3: một dòng SQL tạo một DTO nhỏ; không gom mất các buổi cùng ngày.
+            try (ResultSet rs = statement.executeQuery()) {
+                while (rs.next()) {
+                    Package.Type type = Package.Type.fromDbValue(rs.getString("SubscriptionType"));
+                    if (type == null) {
+                        throw new SQLException("Loại gói không hợp lệ, SessionId=" + rs.getInt("SessionId"));
+                    }
+                    rows.add(new ClosedDaySession(rs.getInt("SessionId"), rs.getInt("CustomerId"),
+                            rs.getString("CustomerName"), rs.getInt("SubscriptionId"), type,
+                            rs.getDate("EndDate").toLocalDate(), rs.getDate("SlotDate").toLocalDate(),
+                            rs.getTime("StartTime").toLocalTime()));
+                }
+            }
+        }
+        return rows;
+    }
+
     /**
      * Lấy các buổi của PT trong khoảng ngày và tạo một PtSessionView cho mỗi buổi.
      * Service truyền EmployeeId của PT đã xác minh từ tài khoản đăng nhập.
@@ -284,7 +336,7 @@ public class PtDashboardDAO {
      * @return danh sách theo tên khách, hạn gói và mã gói; rỗng nếu không có dữ liệu phù hợp
      * @throws SQLException khi đọc DB lỗi hoặc loại gói không hợp lệ
      */
-    public List<PtAssignedPackageView> findAssignedPackages(int ptEmployeeId, LocalDateTime now)
+    public List<PtAssignedPackageView> findAssignedPackages(int ptEmployeeId, LocalDateTime now, List<Integer> attentionPackageIds)
             throws SQLException {
         // B1: chọn gói và tên khách; đếm số buổi tương lai riêng để không nhân số dòng của gói đôi.
         // QueryTime giữ thời điểm Service truyền vào, dùng chung cho lọc buổi lẻ và đếm số buổi.
@@ -292,10 +344,10 @@ public class PtDashboardDAO {
                 WITH QueryTime AS (
                     SELECT CAST(? AS DATETIME2) AS Now
                 )
-                SELECT sub.SubscriptionId, p.FullName AS CustomerName,
-                       pp.FullName AS PartnerName,
+                SELECT sub.SubscriptionId, p.FullName AS CustomerName, p.Phone AS CustomerPhone,
+                       pp.FullName AS PartnerName, pp.Phone AS PartnerPhone,
                        sub.SubscriptionType AS PtSubscriptionType,
-                       sub.EndDate AS PtEndDate, sub.GeneratedSessionCount AS TotalSessionCount,
+                       sub.EndDate AS PtEndDate,
                        futureSessions.ScheduledSessionCount
                 FROM Subscriptions sub
                 JOIN Orders o ON o.OrderId = sub.OrderId
@@ -316,9 +368,8 @@ public class PtDashboardDAO {
                            OR (t.SlotDate = CAST(q.Now AS DATE)
                                AND t.StartTime > CAST(q.Now AS TIME)))
                 ) futureSessions
-                WHERE sub.Status = 'Active'
-                  AND o.Status = 'Paid'
-                  AND (
+                WHERE o.Status = 'Paid'
+                  AND ((sub.Status = 'Active' AND (
                       -- B1.2: gói PT lọc theo người phụ trách gói, không theo PT dạy từng buổi.
                       (sub.SubscriptionType IN ('PTSingle', 'PTCouple')
                        AND sub.PtEmployeeId = ?
@@ -338,8 +389,9 @@ public class PtDashboardDAO {
                                      AND singleSlot.StartTime > CAST(q.Now AS TIME)))
                       ))
                   )
+                  ) OR sub.SubscriptionId IN (%s))
                 ORDER BY p.FullName, sub.EndDate, sub.SubscriptionId
-                """;
+                """.formatted(attentionPackageIds.isEmpty() ? "NULL" : String.join(",", java.util.Collections.nCopies(attentionPackageIds.size(), "?")));
 
         List<PtAssignedPackageView> assignedPackages = new ArrayList<>();
 
@@ -349,6 +401,10 @@ public class PtDashboardDAO {
             statement.setTimestamp(1, Timestamp.valueOf(now));
             statement.setInt(2, ptEmployeeId);
             statement.setInt(3, ptEmployeeId);
+            // B2.1: lấy cả gói có cảnh báo của buổi dạy thay, không bỏ sót vì PT phụ trách gói khác.
+            for (int i = 0; i < attentionPackageIds.size(); i++) {
+                statement.setInt(i + 4, attentionPackageIds.get(i));
+            }
 
             // B3: mỗi dòng SQL tạo một DTO; không gom khách theo tên vì một khách có thể có nhiều gói.
             try (ResultSet resultSet = statement.executeQuery()) {
@@ -375,7 +431,9 @@ public class PtDashboardDAO {
                     // B3.4: điền năm field gốc; ptSubscriptionTypeLabel để Service bổ sung sau.
                     PtAssignedPackageView assignedPackage = new PtAssignedPackageView(
                             customerName, partnerName, ptSubscriptionType, ptEndDate, scheduledSessionCount);
-                    assignedPackage.setTotalSessionCount(resultSet.getInt("TotalSessionCount"));   // B3.5: tổng buổi → thanh "còn lại"
+                    assignedPackage.setPtSubscriptionId(resultSet.getInt("SubscriptionId"));
+                    assignedPackage.setCustomerPhone(resultSet.getString("CustomerPhone"));
+                    assignedPackage.setPartnerPhone(resultSet.getString("PartnerPhone"));
                     assignedPackages.add(assignedPackage);
                 }
             }

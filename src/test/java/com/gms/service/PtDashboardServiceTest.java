@@ -1,10 +1,14 @@
 package com.gms.service;
 
 import com.gms.dto.PtSessionView;
+import com.gms.dto.PtAssignedPackageView;
+import com.gms.dto.PtAttentionView;
 import com.gms.entity.Package;
 import com.gms.entity.Session;
 import java.sql.SQLException;
 import java.time.LocalDateTime;
+import java.util.ArrayList;
+import java.util.List;
 import org.junit.jupiter.params.ParameterizedTest;
 import org.junit.jupiter.params.provider.CsvSource;
 import org.junit.jupiter.api.Test;
@@ -98,6 +102,51 @@ class PtDashboardServiceTest {
         PtSessionView session = createSession(Package.Type.MEMBERSHIP, Session.Status.SCHEDULED, null, NOW);
 
         assertThrows(SQLException.class, () -> service.prepareSessionDisplay(session, NOW));
+    }
+
+    @Test
+    void mergesByPackageIdAndKeepsBothPeopleOfCouple() {
+        var first = clientPackage(11);
+        var sameNameOtherPackage = clientPackage(12);
+        var packages = new ArrayList<>(List.of(sameNameOtherPackage, first));
+        var holder = attention(11, 6, "membership");
+        var partner = attention(11, 7, "frozen");
+
+        PtDashboardService.mergeClientAttention(packages, List.of(holder, partner));
+
+        assertEquals(List.of(holder, partner), first.getAttentionItems());
+        assertTrue(sameNameOtherPackage.getAttentionItems().isEmpty());
+        assertSame(first, packages.get(0));
+    }
+
+    @Test
+    void prioritizesClosedDayAndMergingAgainDoesNotDuplicateCards() {
+        var normal = clientPackage(10);
+        var membership = clientPackage(11);
+        var closed = clientPackage(12);
+        var packages = new ArrayList<>(List.of(normal, membership, closed));
+        var items = List.of(attention(11, 6, "membership"), attention(12, 7, "closedDay"));
+
+        PtDashboardService.mergeClientAttention(packages, items);
+        PtDashboardService.mergeClientAttention(packages, items);
+
+        assertEquals(List.of(closed, membership, normal), packages);
+        assertEquals(1, closed.getAttentionItems().size());
+        assertEquals(1, membership.getAttentionItems().size());
+    }
+
+    /** Tạo hai gói cùng tên để test không vô tình ghép cảnh báo theo tên khách. */
+    private static PtAssignedPackageView clientPackage(int subscriptionId) {
+        var client = new PtAssignedPackageView("Khách trùng tên", null, Package.Type.PT_COUPLE, NOW.toLocalDate(), 5);
+        client.setPtSubscriptionId(subscriptionId);
+        return client;
+    }
+
+    /** Dữ liệu cảnh báo tối thiểu để kiểm tra ghép gói, không gọi database. */
+    private static PtAttentionView attention(int subscriptionId, int customerId, String kind) {
+        return new PtAttentionView(customerId, subscriptionId, "Khách trùng tên", NOW.toLocalDate(), 5,
+                NOW.toLocalDate(), null, null, "PT đôi", null, "Cần chú ý", "Nội dung", kind,
+                "closedDay".equals(kind) ? 274 : null);
     }
 
     /** Tạo một buổi mẫu; thời điểm kiểm tra cố định để test không phụ thuộc giờ chạy. */

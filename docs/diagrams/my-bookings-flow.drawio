@@ -1,0 +1,744 @@
+<?xml version='1.0' encoding='utf-8'?>
+<mxfile host="Electron" agent="Codex" pages="6">
+  <diagram id="index-my-bookings-flow" name="00. Mục lục · cách học">
+    <mxGraphModel dx="1800" dy="1320" grid="1" gridSize="10" guides="1" tooltips="1" connect="1" arrows="1" fold="1" page="1" pageScale="1" pageWidth="1800" pageHeight="1320" math="0" shadow="0">
+      <root>
+        <mxCell id="0" />
+        <mxCell id="1" parent="0" />
+        <mxCell id="index-my-bookings-flow-title" value="MyBookings · Sơ đồ học code" style="rounded=1;whiteSpace=wrap;html=1;align=left;verticalAlign=middle;spacing=16;fontFamily=Arial;fontSize=31;fontColor=#172b4d;fillColor=none;strokeColor=none;fontStyle=1;arcSize=6;" vertex="1" parent="1">
+          <mxGeometry x="40" y="20" width="1720" height="65" as="geometry" />
+        </mxCell>
+        <mxCell id="index-my-bookings-flow-subtitle" value="Bấm tên trang để mở luồng. Mỗi ô dùng tên hàm thật; mũi tên chỉ thứ tự đọc, nhánh if/else ghi ngay trong ô." style="rounded=1;whiteSpace=wrap;html=1;align=left;verticalAlign=middle;spacing=16;fontFamily=Arial;fontSize=20;fontColor=#172b4d;fillColor=none;strokeColor=none;fontStyle=0;arcSize=6;" vertex="1" parent="1">
+          <mxGeometry x="40" y="92" width="1720" height="65" as="geometry" />
+        </mxCell>
+        <mxCell id="index-my-bookings-flow-nav" value="Về mục lục" style="rounded=1;whiteSpace=wrap;html=1;align=left;verticalAlign=middle;spacing=16;fontFamily=Arial;fontSize=18;fontColor=#172b4d;fillColor=#f5f5f5;strokeColor=#666666;fontStyle=1;arcSize=6;" vertex="1" parent="1" link="data:page/id,index-my-bookings-flow">
+          <mxGeometry x="40" y="164" width="210" height="43" as="geometry" />
+        </mxCell>
+        <mxCell id="index-my-bookings-flow-legend-servlet" value="Servlet" style="rounded=1;whiteSpace=wrap;html=1;align=center;verticalAlign=middle;spacing=16;fontFamily=Arial;fontSize=18;fontColor=#172b4d;fillColor=#dae8fc;strokeColor=#6c8ebf;fontStyle=0;arcSize=6;" vertex="1" parent="1">
+          <mxGeometry x="290" y="164" width="180" height="43" as="geometry" />
+        </mxCell>
+        <mxCell id="index-my-bookings-flow-legend-service" value="Service" style="rounded=1;whiteSpace=wrap;html=1;align=center;verticalAlign=middle;spacing=16;fontFamily=Arial;fontSize=18;fontColor=#172b4d;fillColor=#e1d5e7;strokeColor=#9673a6;fontStyle=0;arcSize=6;" vertex="1" parent="1">
+          <mxGeometry x="488" y="164" width="180" height="43" as="geometry" />
+        </mxCell>
+        <mxCell id="index-my-bookings-flow-legend-dao" value="DAO / SQL" style="rounded=1;whiteSpace=wrap;html=1;align=center;verticalAlign=middle;spacing=16;fontFamily=Arial;fontSize=18;fontColor=#172b4d;fillColor=#fff2cc;strokeColor=#d6b656;fontStyle=0;arcSize=6;" vertex="1" parent="1">
+          <mxGeometry x="686" y="164" width="180" height="43" as="geometry" />
+        </mxCell>
+        <mxCell id="index-my-bookings-flow-legend-dto" value="DTO" style="rounded=1;whiteSpace=wrap;html=1;align=center;verticalAlign=middle;spacing=16;fontFamily=Arial;fontSize=18;fontColor=#172b4d;fillColor=#d5e8d4;strokeColor=#82b366;fontStyle=0;arcSize=6;" vertex="1" parent="1">
+          <mxGeometry x="884" y="164" width="180" height="43" as="geometry" />
+        </mxCell>
+        <mxCell id="index-my-bookings-flow-legend-ui" value="JSP / JS" style="rounded=1;whiteSpace=wrap;html=1;align=center;verticalAlign=middle;spacing=16;fontFamily=Arial;fontSize=18;fontColor=#172b4d;fillColor=#f5f5f5;strokeColor=#666666;fontStyle=0;arcSize=6;" vertex="1" parent="1">
+          <mxGeometry x="1082" y="164" width="180" height="43" as="geometry" />
+        </mxCell>
+        <mxCell id="index-my-bookings-flow-group-0" value="" style="rounded=1;whiteSpace=wrap;html=1;align=left;verticalAlign=middle;spacing=16;fontFamily=Arial;fontSize=20;fontColor=#172b4d;fillColor=#f5f5f5;strokeColor=#666666;fontStyle=0;arcSize=6;" vertex="1" parent="1">
+          <mxGeometry x="40" y="245" width="1720" height="950" as="geometry" />
+        </mxCell>
+        <mxCell id="index-my-bookings-flow-label-0" value="MyBookings" style="rounded=1;whiteSpace=wrap;html=1;align=left;verticalAlign=middle;spacing=16;fontFamily=Arial;fontSize=24;fontColor=#172b4d;fillColor=none;strokeColor=none;fontStyle=1;arcSize=6;" vertex="1" parent="1">
+          <mxGeometry x="48" y="253" width="1704" height="52" as="geometry" />
+        </mxCell>
+        <mxCell id="index-my-bookings-flow-link-0-0" value="03. MyBookings · mở màn và chọn gói" style="rounded=1;whiteSpace=wrap;html=1;align=left;verticalAlign=middle;spacing=16;fontFamily=Arial;fontSize=18;fontColor=#172b4d;fillColor=#dae8fc;strokeColor=#6c8ebf;fontStyle=1;arcSize=6;" vertex="1" parent="1" link="data:page/id,gms-learn-bookings-1">
+          <mxGeometry x="60" y="321" width="1680" height="60" as="geometry" />
+        </mxCell>
+        <mxCell id="index-my-bookings-flow-link-0-1" value="04. MyBookings · DTO và số buổi" style="rounded=1;whiteSpace=wrap;html=1;align=left;verticalAlign=middle;spacing=16;fontFamily=Arial;fontSize=18;fontColor=#172b4d;fillColor=#dae8fc;strokeColor=#6c8ebf;fontStyle=1;arcSize=6;" vertex="1" parent="1" link="data:page/id,gms-learn-bookings-2">
+          <mxGeometry x="60" y="393" width="1680" height="60" as="geometry" />
+        </mxCell>
+        <mxCell id="index-my-bookings-flow-link-0-2" value="05. MyBookings · lịch mẫu và buổi lệch" style="rounded=1;whiteSpace=wrap;html=1;align=left;verticalAlign=middle;spacing=16;fontFamily=Arial;fontSize=18;fontColor=#172b4d;fillColor=#dae8fc;strokeColor=#6c8ebf;fontStyle=1;arcSize=6;" vertex="1" parent="1" link="data:page/id,gms-learn-bookings-3">
+          <mxGeometry x="60" y="465" width="1680" height="60" as="geometry" />
+        </mxCell>
+        <mxCell id="index-my-bookings-flow-link-0-3" value="06. MyBookings · cảnh báo và thao tác" style="rounded=1;whiteSpace=wrap;html=1;align=left;verticalAlign=middle;spacing=16;fontFamily=Arial;fontSize=18;fontColor=#172b4d;fillColor=#dae8fc;strokeColor=#6c8ebf;fontStyle=1;arcSize=6;" vertex="1" parent="1" link="data:page/id,gms-learn-bookings-4">
+          <mxGeometry x="60" y="537" width="1680" height="60" as="geometry" />
+        </mxCell>
+        <mxCell id="index-my-bookings-flow-link-0-4" value="22. MyBookings · bố cục mới và màu GMS" style="rounded=1;whiteSpace=wrap;html=1;align=left;verticalAlign=middle;spacing=16;fontFamily=Arial;fontSize=18;fontColor=#172b4d;fillColor=#dae8fc;strokeColor=#6c8ebf;fontStyle=1;arcSize=6;" vertex="1" parent="1" link="data:page/id,gms-learn-bookings-ui">
+          <mxGeometry x="60" y="609" width="1680" height="60" as="geometry" />
+        </mxCell>
+        <mxCell id="index-my-bookings-flow-note" value="Code đang có là nguồn chính. DAO đọc DB; Service quyết định nghiệp vụ; DTO mang dữ liệu; JSP/JS hiển thị và tương tác. PT Dashboard: nút Dời buổi hiện mới mở hộp thoại; thao tác nghiệp vụ&lt;br&gt;còn bị vô hiệu hóa." style="rounded=1;whiteSpace=wrap;html=1;align=left;verticalAlign=middle;spacing=16;fontFamily=Arial;fontSize=19;fontColor=#172b4d;fillColor=#d5e8d4;strokeColor=#82b366;fontStyle=0;arcSize=6;" vertex="1" parent="1">
+          <mxGeometry x="40" y="1220" width="1720" height="85" as="geometry" />
+        </mxCell>
+      </root>
+    </mxGraphModel>
+  </diagram>
+  <diagram id="gms-learn-bookings-1" name="03. MyBookings · mở màn và chọn gói">
+    <mxGraphModel dx="1800" dy="1320" grid="1" gridSize="10" guides="1" tooltips="1" connect="1" arrows="1" fold="1" page="1" pageScale="1" pageWidth="1800" pageHeight="1320" math="0" shadow="0">
+      <root>
+        <mxCell id="0" />
+        <mxCell id="1" parent="0" />
+        <mxCell id="gms-learn-bookings-1-title" value="03. MyBookings · mở màn và chọn gói" style="rounded=1;whiteSpace=wrap;html=1;align=left;verticalAlign=middle;spacing=16;fontFamily=Arial;fontSize=31;fontColor=#172b4d;fillColor=none;strokeColor=none;fontStyle=1;arcSize=6;" vertex="1" parent="1">
+          <mxGeometry x="40" y="20" width="1720" height="65" as="geometry" />
+        </mxCell>
+        <mxCell id="gms-learn-bookings-1-subtitle" value="GET /customer/bookings?id=&amp;lt;subscriptionId|single&amp;gt;. Màn đọc dữ liệu, không có POST đổi buổi hoặc hủy buổi." style="rounded=1;whiteSpace=wrap;html=1;align=left;verticalAlign=middle;spacing=16;fontFamily=Arial;fontSize=20;fontColor=#172b4d;fillColor=none;strokeColor=none;fontStyle=0;arcSize=6;" vertex="1" parent="1">
+          <mxGeometry x="40" y="92" width="1720" height="65" as="geometry" />
+        </mxCell>
+        <mxCell id="gms-learn-bookings-1-nav" value="Về mục lục" style="rounded=1;whiteSpace=wrap;html=1;align=left;verticalAlign=middle;spacing=16;fontFamily=Arial;fontSize=18;fontColor=#172b4d;fillColor=#f5f5f5;strokeColor=#666666;fontStyle=1;arcSize=6;" vertex="1" parent="1" link="data:page/id,index-my-bookings-flow">
+          <mxGeometry x="40" y="164" width="210" height="43" as="geometry" />
+        </mxCell>
+        <mxCell id="gms-learn-bookings-1-legend-servlet" value="Servlet" style="rounded=1;whiteSpace=wrap;html=1;align=center;verticalAlign=middle;spacing=16;fontFamily=Arial;fontSize=18;fontColor=#172b4d;fillColor=#dae8fc;strokeColor=#6c8ebf;fontStyle=0;arcSize=6;" vertex="1" parent="1">
+          <mxGeometry x="290" y="164" width="180" height="43" as="geometry" />
+        </mxCell>
+        <mxCell id="gms-learn-bookings-1-legend-service" value="Service" style="rounded=1;whiteSpace=wrap;html=1;align=center;verticalAlign=middle;spacing=16;fontFamily=Arial;fontSize=18;fontColor=#172b4d;fillColor=#e1d5e7;strokeColor=#9673a6;fontStyle=0;arcSize=6;" vertex="1" parent="1">
+          <mxGeometry x="488" y="164" width="180" height="43" as="geometry" />
+        </mxCell>
+        <mxCell id="gms-learn-bookings-1-legend-dao" value="DAO / SQL" style="rounded=1;whiteSpace=wrap;html=1;align=center;verticalAlign=middle;spacing=16;fontFamily=Arial;fontSize=18;fontColor=#172b4d;fillColor=#fff2cc;strokeColor=#d6b656;fontStyle=0;arcSize=6;" vertex="1" parent="1">
+          <mxGeometry x="686" y="164" width="180" height="43" as="geometry" />
+        </mxCell>
+        <mxCell id="gms-learn-bookings-1-legend-dto" value="DTO" style="rounded=1;whiteSpace=wrap;html=1;align=center;verticalAlign=middle;spacing=16;fontFamily=Arial;fontSize=18;fontColor=#172b4d;fillColor=#d5e8d4;strokeColor=#82b366;fontStyle=0;arcSize=6;" vertex="1" parent="1">
+          <mxGeometry x="884" y="164" width="180" height="43" as="geometry" />
+        </mxCell>
+        <mxCell id="gms-learn-bookings-1-legend-ui" value="JSP / JS" style="rounded=1;whiteSpace=wrap;html=1;align=center;verticalAlign=middle;spacing=16;fontFamily=Arial;fontSize=18;fontColor=#172b4d;fillColor=#f5f5f5;strokeColor=#666666;fontStyle=0;arcSize=6;" vertex="1" parent="1">
+          <mxGeometry x="1082" y="164" width="180" height="43" as="geometry" />
+        </mxCell>
+        <mxCell id="gms-learn-bookings-1-card-0" value="" style="rounded=1;whiteSpace=wrap;html=1;align=left;verticalAlign=middle;spacing=16;fontFamily=Arial;fontSize=20;fontColor=#172b4d;fillColor=#dae8fc;strokeColor=#6c8ebf;fontStyle=0;arcSize=6;" vertex="1" parent="1">
+          <mxGeometry x="40" y="230" width="520" height="350" as="geometry" />
+        </mxCell>
+        <mxCell id="gms-learn-bookings-1-role-0" value="1. SERVLET" style="rounded=1;whiteSpace=wrap;html=1;align=left;verticalAlign=middle;spacing=16;fontFamily=Arial;fontSize=14;fontColor=#172b4d;fillColor=none;strokeColor=none;fontStyle=1;arcSize=6;" vertex="1" parent="gms-learn-bookings-1-card-0">
+          <mxGeometry x="8.0" y="8.0" width="504" height="38" as="geometry" />
+        </mxCell>
+        <mxCell id="gms-learn-bookings-1-heading-0" value="MyBookingServlet.doGet()" style="rounded=1;whiteSpace=wrap;html=1;align=left;verticalAlign=middle;spacing=16;fontFamily=Arial;fontSize=22;fontColor=#172b4d;fillColor=none;strokeColor=none;fontStyle=1;arcSize=6;" vertex="1" parent="gms-learn-bookings-1-card-0">
+          <mxGeometry x="8.0" y="45.0" width="504" height="41" as="geometry" />
+        </mxCell>
+        <mxCell id="gms-learn-bookings-1-body-0" value="Lấy ACCOUNT_ID từ session.&lt;br&gt;Chưa đăng nhập: chuyển /login.&lt;br&gt;Đã đăng nhập: tải header và gọi&lt;br&gt;getMyBookings(accountId, id, now)." style="rounded=1;whiteSpace=wrap;html=1;align=left;verticalAlign=middle;spacing=16;fontFamily=Arial;fontSize=20;fontColor=#172b4d;fillColor=none;strokeColor=none;fontStyle=0;arcSize=6;" vertex="1" parent="gms-learn-bookings-1-card-0">
+          <mxGeometry x="8.0" y="78.0" width="504" height="124" as="geometry" />
+        </mxCell>
+        <mxCell id="gms-learn-bookings-1-card-1" value="" style="rounded=1;whiteSpace=wrap;html=1;align=left;verticalAlign=middle;spacing=16;fontFamily=Arial;fontSize=20;fontColor=#172b4d;fillColor=#e1d5e7;strokeColor=#9673a6;fontStyle=0;arcSize=6;" vertex="1" parent="1">
+          <mxGeometry x="640" y="230" width="520" height="350" as="geometry" />
+        </mxCell>
+        <mxCell id="gms-learn-bookings-1-role-1" value="2. SERVICE" style="rounded=1;whiteSpace=wrap;html=1;align=left;verticalAlign=middle;spacing=16;fontFamily=Arial;fontSize=14;fontColor=#172b4d;fillColor=none;strokeColor=none;fontStyle=1;arcSize=6;" vertex="1" parent="gms-learn-bookings-1-card-1">
+          <mxGeometry x="8.0" y="8.0" width="504" height="38" as="geometry" />
+        </mxCell>
+        <mxCell id="gms-learn-bookings-1-heading-1" value="Đúng khách đang đăng nhập" style="rounded=1;whiteSpace=wrap;html=1;align=left;verticalAlign=middle;spacing=16;fontFamily=Arial;fontSize=22;fontColor=#172b4d;fillColor=none;strokeColor=none;fontStyle=1;arcSize=6;" vertex="1" parent="gms-learn-bookings-1-card-1">
+          <mxGeometry x="8.0" y="45.0" width="504" height="41" as="geometry" />
+        </mxCell>
+        <mxCell id="gms-learn-bookings-1-body-1" value="MyBookingService gọi findCustomerId().&lt;br&gt;Kiểm tra account Active, customer tồn tại và chưa bị&lt;br&gt;xóa.&lt;br&gt;accountId và customerId là hai ID khác nhau." style="rounded=1;whiteSpace=wrap;html=1;align=left;verticalAlign=middle;spacing=16;fontFamily=Arial;fontSize=20;fontColor=#172b4d;fillColor=none;strokeColor=none;fontStyle=0;arcSize=6;" vertex="1" parent="gms-learn-bookings-1-card-1">
+          <mxGeometry x="8.0" y="78.0" width="504" height="124" as="geometry" />
+        </mxCell>
+        <mxCell id="gms-learn-bookings-1-card-2" value="" style="rounded=1;whiteSpace=wrap;html=1;align=left;verticalAlign=middle;spacing=16;fontFamily=Arial;fontSize=20;fontColor=#172b4d;fillColor=#fff2cc;strokeColor=#d6b656;fontStyle=0;arcSize=6;" vertex="1" parent="1">
+          <mxGeometry x="1240" y="230" width="520" height="350" as="geometry" />
+        </mxCell>
+        <mxCell id="gms-learn-bookings-1-role-2" value="3. DAO / SQL" style="rounded=1;whiteSpace=wrap;html=1;align=left;verticalAlign=middle;spacing=16;fontFamily=Arial;fontSize=14;fontColor=#172b4d;fillColor=none;strokeColor=none;fontStyle=1;arcSize=6;" vertex="1" parent="gms-learn-bookings-1-card-2">
+          <mxGeometry x="8.0" y="8.0" width="504" height="38" as="geometry" />
+        </mxCell>
+        <mxCell id="gms-learn-bookings-1-heading-2" value="Danh sách được phép xem" style="rounded=1;whiteSpace=wrap;html=1;align=left;verticalAlign=middle;spacing=16;fontFamily=Arial;fontSize=22;fontColor=#172b4d;fillColor=none;strokeColor=none;fontStyle=1;arcSize=6;" vertex="1" parent="gms-learn-bookings-1-card-2">
+          <mxGeometry x="8.0" y="45.0" width="504" height="41" as="geometry" />
+        </mxCell>
+        <mxCell id="gms-learn-bookings-1-body-2" value="MyPtSessionDAO.findMyPackages(): gói PT đã&lt;br&gt;thanh toán mà khách đứng tên hoặc cùng gói PT&lt;br&gt;đôi.&lt;br&gt;findSingleSessions(): các buổi lẻ của khách." style="rounded=1;whiteSpace=wrap;html=1;align=left;verticalAlign=middle;spacing=16;fontFamily=Arial;fontSize=20;fontColor=#172b4d;fillColor=none;strokeColor=none;fontStyle=0;arcSize=6;" vertex="1" parent="gms-learn-bookings-1-card-2">
+          <mxGeometry x="8.0" y="78.0" width="504" height="124" as="geometry" />
+        </mxCell>
+        <mxCell id="gms-learn-bookings-1-card-3" value="" style="rounded=1;whiteSpace=wrap;html=1;align=left;verticalAlign=middle;spacing=16;fontFamily=Arial;fontSize=20;fontColor=#172b4d;fillColor=#e1d5e7;strokeColor=#9673a6;fontStyle=0;arcSize=6;" vertex="1" parent="1">
+          <mxGeometry x="1240" y="710" width="520" height="350" as="geometry" />
+        </mxCell>
+        <mxCell id="gms-learn-bookings-1-role-3" value="4. SERVICE" style="rounded=1;whiteSpace=wrap;html=1;align=left;verticalAlign=middle;spacing=16;fontFamily=Arial;fontSize=14;fontColor=#172b4d;fillColor=none;strokeColor=none;fontStyle=1;arcSize=6;" vertex="1" parent="gms-learn-bookings-1-card-3">
+          <mxGeometry x="8.0" y="8.0" width="504" height="38" as="geometry" />
+        </mxCell>
+        <mxCell id="gms-learn-bookings-1-heading-3" value="Chia nhóm và pickPackage()" style="rounded=1;whiteSpace=wrap;html=1;align=left;verticalAlign=middle;spacing=16;fontFamily=Arial;fontSize=22;fontColor=#172b4d;fillColor=none;strokeColor=none;fontStyle=1;arcSize=6;" vertex="1" parent="gms-learn-bookings-1-card-3">
+          <mxGeometry x="8.0" y="45.0" width="504" height="41" as="geometry" />
+        </mxCell>
+        <mxCell id="gms-learn-bookings-1-body-3" value="Duyệt gói: isActive() → Đang tập; còn lại → Đã kết&lt;br&gt;thúc.&lt;br&gt;id=single và có buổi lẻ → xem buổi lẻ.&lt;br&gt;id gói hợp lệ → chọn đúng gói trong danh sách của&lt;br&gt;khách." style="rounded=1;whiteSpace=wrap;html=1;align=left;verticalAlign=middle;spacing=16;fontFamily=Arial;fontSize=20;fontColor=#172b4d;fillColor=none;strokeColor=none;fontStyle=0;arcSize=6;" vertex="1" parent="gms-learn-bookings-1-card-3">
+          <mxGeometry x="8.0" y="78.0" width="504" height="151" as="geometry" />
+        </mxCell>
+        <mxCell id="gms-learn-bookings-1-card-4" value="" style="rounded=1;whiteSpace=wrap;html=1;align=left;verticalAlign=middle;spacing=16;fontFamily=Arial;fontSize=20;fontColor=#172b4d;fillColor=#fff2cc;strokeColor=#d6b656;fontStyle=0;arcSize=6;" vertex="1" parent="1">
+          <mxGeometry x="640" y="710" width="520" height="350" as="geometry" />
+        </mxCell>
+        <mxCell id="gms-learn-bookings-1-role-4" value="5. ĐIỀU KIỆN" style="rounded=1;whiteSpace=wrap;html=1;align=left;verticalAlign=middle;spacing=16;fontFamily=Arial;fontSize=14;fontColor=#172b4d;fillColor=none;strokeColor=none;fontStyle=1;arcSize=6;" vertex="1" parent="gms-learn-bookings-1-card-4">
+          <mxGeometry x="8.0" y="8.0" width="504" height="38" as="geometry" />
+        </mxCell>
+        <mxCell id="gms-learn-bookings-1-heading-4" value="Nếu id sai / không có gói" style="rounded=1;whiteSpace=wrap;html=1;align=left;verticalAlign=middle;spacing=16;fontFamily=Arial;fontSize=22;fontColor=#172b4d;fillColor=none;strokeColor=none;fontStyle=1;arcSize=6;" vertex="1" parent="gms-learn-bookings-1-card-4">
+          <mxGeometry x="8.0" y="45.0" width="504" height="41" as="geometry" />
+        </mxCell>
+        <mxCell id="gms-learn-bookings-1-body-4" value="Không tìm thấy id: ưu tiên gói active đầu tiên, rồi gói&lt;br&gt;ended đầu tiên.&lt;br&gt;Không còn gói nhưng có buổi lẻ: chọn buổi lẻ.&lt;br&gt;Không có cả hai: trả DTO rỗng hợp lệ." style="rounded=1;whiteSpace=wrap;html=1;align=left;verticalAlign=middle;spacing=16;fontFamily=Arial;fontSize=20;fontColor=#172b4d;fillColor=none;strokeColor=none;fontStyle=0;arcSize=6;" vertex="1" parent="gms-learn-bookings-1-card-4">
+          <mxGeometry x="8.0" y="78.0" width="504" height="124" as="geometry" />
+        </mxCell>
+        <mxCell id="gms-learn-bookings-1-card-5" value="" style="rounded=1;whiteSpace=wrap;html=1;align=left;verticalAlign=middle;spacing=16;fontFamily=Arial;fontSize=20;fontColor=#172b4d;fillColor=#f5f5f5;strokeColor=#666666;fontStyle=0;arcSize=6;" vertex="1" parent="1">
+          <mxGeometry x="40" y="710" width="520" height="350" as="geometry" />
+        </mxCell>
+        <mxCell id="gms-learn-bookings-1-role-5" value="6. JSP / TRÌNH DUYỆT" style="rounded=1;whiteSpace=wrap;html=1;align=left;verticalAlign=middle;spacing=16;fontFamily=Arial;fontSize=14;fontColor=#172b4d;fillColor=none;strokeColor=none;fontStyle=1;arcSize=6;" vertex="1" parent="gms-learn-bookings-1-card-5">
+          <mxGeometry x="8.0" y="8.0" width="504" height="38" as="geometry" />
+        </mxCell>
+        <mxCell id="gms-learn-bookings-1-heading-5" value="DTO → JSP" style="rounded=1;whiteSpace=wrap;html=1;align=left;verticalAlign=middle;spacing=16;fontFamily=Arial;fontSize=22;fontColor=#172b4d;fillColor=none;strokeColor=none;fontStyle=1;arcSize=6;" vertex="1" parent="gms-learn-bookings-1-card-5">
+          <mxGeometry x="8.0" y="45.0" width="504" height="41" as="geometry" />
+        </mxCell>
+        <mxCell id="gms-learn-bookings-1-body-5" value="Có gói được chọn: đọc findSessionsOfPackage().&lt;br&gt;Servlet đặt booking hoặc bookingError; forward&lt;br&gt;customer/my-bookings.jsp.&lt;br&gt;Chọn gói khác là GET mới, không lọc SQL ở JSP." style="rounded=1;whiteSpace=wrap;html=1;align=left;verticalAlign=middle;spacing=16;fontFamily=Arial;fontSize=20;fontColor=#172b4d;fillColor=none;strokeColor=none;fontStyle=0;arcSize=6;" vertex="1" parent="gms-learn-bookings-1-card-5">
+          <mxGeometry x="8.0" y="78.0" width="504" height="124" as="geometry" />
+        </mxCell>
+        <mxCell id="gms-learn-bookings-1-edge-0" value="" style="edgeStyle=orthogonalEdgeStyle;rounded=0;html=1;endArrow=block;endFill=1;strokeColor=#46566d;strokeWidth=2;fontFamily=Arial;fontSize=16;labelBackgroundColor=#ffffff;jettySize=auto;exitX=1.0;exitY=0.5;exitDx=0;exitDy=0;entryX=0.0;entryY=0.5;entryDx=0;entryDy=0;" edge="1" parent="1" source="gms-learn-bookings-1-card-0" target="gms-learn-bookings-1-card-1">
+          <mxGeometry relative="1" as="geometry" />
+        </mxCell>
+        <mxCell id="gms-learn-bookings-1-edge-1" value="" style="edgeStyle=orthogonalEdgeStyle;rounded=0;html=1;endArrow=block;endFill=1;strokeColor=#46566d;strokeWidth=2;fontFamily=Arial;fontSize=16;labelBackgroundColor=#ffffff;jettySize=auto;exitX=1.0;exitY=0.5;exitDx=0;exitDy=0;entryX=0.0;entryY=0.5;entryDx=0;entryDy=0;" edge="1" parent="1" source="gms-learn-bookings-1-card-1" target="gms-learn-bookings-1-card-2">
+          <mxGeometry relative="1" as="geometry" />
+        </mxCell>
+        <mxCell id="gms-learn-bookings-1-edge-2" value="" style="edgeStyle=orthogonalEdgeStyle;rounded=0;html=1;endArrow=block;endFill=1;strokeColor=#46566d;strokeWidth=2;fontFamily=Arial;fontSize=16;labelBackgroundColor=#ffffff;jettySize=auto;exitX=0.5;exitY=1.0;exitDx=0;exitDy=0;entryX=0.5;entryY=0.0;entryDx=0;entryDy=0;" edge="1" parent="1" source="gms-learn-bookings-1-card-2" target="gms-learn-bookings-1-card-3">
+          <mxGeometry relative="1" as="geometry" />
+        </mxCell>
+        <mxCell id="gms-learn-bookings-1-edge-3" value="" style="edgeStyle=orthogonalEdgeStyle;rounded=0;html=1;endArrow=block;endFill=1;strokeColor=#46566d;strokeWidth=2;fontFamily=Arial;fontSize=16;labelBackgroundColor=#ffffff;jettySize=auto;exitX=0.0;exitY=0.5;exitDx=0;exitDy=0;entryX=1.0;entryY=0.5;entryDx=0;entryDy=0;" edge="1" parent="1" source="gms-learn-bookings-1-card-3" target="gms-learn-bookings-1-card-4">
+          <mxGeometry relative="1" as="geometry" />
+        </mxCell>
+        <mxCell id="gms-learn-bookings-1-edge-4" value="" style="edgeStyle=orthogonalEdgeStyle;rounded=0;html=1;endArrow=block;endFill=1;strokeColor=#46566d;strokeWidth=2;fontFamily=Arial;fontSize=16;labelBackgroundColor=#ffffff;jettySize=auto;exitX=0.0;exitY=0.5;exitDx=0;exitDy=0;entryX=1.0;entryY=0.5;entryDx=0;entryDy=0;" edge="1" parent="1" source="gms-learn-bookings-1-card-4" target="gms-learn-bookings-1-card-5">
+          <mxGeometry relative="1" as="geometry" />
+        </mxCell>
+        <mxCell id="gms-learn-bookings-1-read" value="Đọc theo số và mũi tên: hàng trên từ trái sang phải, hàng dưới từ phải sang trái. Mỗi ô giải thích một bước học." style="rounded=1;whiteSpace=wrap;html=1;align=left;verticalAlign=middle;spacing=16;fontFamily=Arial;fontSize=18;fontColor=#172b4d;fillColor=none;strokeColor=none;fontStyle=0;arcSize=6;" vertex="1" parent="1">
+          <mxGeometry x="40" y="1090" width="1720" height="45" as="geometry" />
+        </mxCell>
+        <mxCell id="gms-learn-bookings-1-note" value="GHI NHỚ&lt;br&gt;ID trên URL chỉ là đề nghị chọn gói. Quyền sở hữu vẫn được giới hạn theo customerId trong dữ liệu mà DAO trả về." style="rounded=1;whiteSpace=wrap;html=1;align=left;verticalAlign=middle;spacing=16;fontFamily=Arial;fontSize=20;fontColor=#172b4d;fillColor=#d5e8d4;strokeColor=#82b366;fontStyle=0;arcSize=6;" vertex="1" parent="1">
+          <mxGeometry x="40" y="1150" width="1720" height="110" as="geometry" />
+        </mxCell>
+        <mxCell id="gms-learn-bookings-1-source" value="Đối chiếu: MyBookingServlet.java; MyBookingService.getMyBookings()/pickPackage(); MyPtSessionDAO.java | Code hiện tại: 23/10/2026 (gồm thay đổi chưa commit)." style="rounded=1;whiteSpace=wrap;html=1;align=left;verticalAlign=middle;spacing=16;fontFamily=Arial;fontSize=14;fontColor=#172b4d;fillColor=none;strokeColor=none;fontStyle=0;arcSize=6;" vertex="1" parent="1">
+          <mxGeometry x="40" y="1267" width="1720" height="45" as="geometry" />
+        </mxCell>
+      </root>
+    </mxGraphModel>
+  </diagram>
+  <diagram id="gms-learn-bookings-2" name="04. MyBookings · DTO và số buổi">
+    <mxGraphModel dx="1800" dy="1320" grid="1" gridSize="10" guides="1" tooltips="1" connect="1" arrows="1" fold="1" page="1" pageScale="1" pageWidth="1800" pageHeight="1320" math="0" shadow="0">
+      <root>
+        <mxCell id="0" />
+        <mxCell id="1" parent="0" />
+        <mxCell id="gms-learn-bookings-2-title" value="04. MyBookings · DTO và số buổi" style="rounded=1;whiteSpace=wrap;html=1;align=left;verticalAlign=middle;spacing=16;fontFamily=Arial;fontSize=31;fontColor=#172b4d;fillColor=none;strokeColor=none;fontStyle=1;arcSize=6;" vertex="1" parent="1">
+          <mxGeometry x="40" y="20" width="1720" height="65" as="geometry" />
+        </mxCell>
+        <mxCell id="gms-learn-bookings-2-subtitle" value="MyBookingView là DTO của toàn màn; MyPtPackageView là một gói; MyPtSessionRow là một buổi." style="rounded=1;whiteSpace=wrap;html=1;align=left;verticalAlign=middle;spacing=16;fontFamily=Arial;fontSize=20;fontColor=#172b4d;fillColor=none;strokeColor=none;fontStyle=0;arcSize=6;" vertex="1" parent="1">
+          <mxGeometry x="40" y="92" width="1720" height="65" as="geometry" />
+        </mxCell>
+        <mxCell id="gms-learn-bookings-2-nav" value="Về mục lục" style="rounded=1;whiteSpace=wrap;html=1;align=left;verticalAlign=middle;spacing=16;fontFamily=Arial;fontSize=18;fontColor=#172b4d;fillColor=#f5f5f5;strokeColor=#666666;fontStyle=1;arcSize=6;" vertex="1" parent="1" link="data:page/id,index-my-bookings-flow">
+          <mxGeometry x="40" y="164" width="210" height="43" as="geometry" />
+        </mxCell>
+        <mxCell id="gms-learn-bookings-2-legend-servlet" value="Servlet" style="rounded=1;whiteSpace=wrap;html=1;align=center;verticalAlign=middle;spacing=16;fontFamily=Arial;fontSize=18;fontColor=#172b4d;fillColor=#dae8fc;strokeColor=#6c8ebf;fontStyle=0;arcSize=6;" vertex="1" parent="1">
+          <mxGeometry x="290" y="164" width="180" height="43" as="geometry" />
+        </mxCell>
+        <mxCell id="gms-learn-bookings-2-legend-service" value="Service" style="rounded=1;whiteSpace=wrap;html=1;align=center;verticalAlign=middle;spacing=16;fontFamily=Arial;fontSize=18;fontColor=#172b4d;fillColor=#e1d5e7;strokeColor=#9673a6;fontStyle=0;arcSize=6;" vertex="1" parent="1">
+          <mxGeometry x="488" y="164" width="180" height="43" as="geometry" />
+        </mxCell>
+        <mxCell id="gms-learn-bookings-2-legend-dao" value="DAO / SQL" style="rounded=1;whiteSpace=wrap;html=1;align=center;verticalAlign=middle;spacing=16;fontFamily=Arial;fontSize=18;fontColor=#172b4d;fillColor=#fff2cc;strokeColor=#d6b656;fontStyle=0;arcSize=6;" vertex="1" parent="1">
+          <mxGeometry x="686" y="164" width="180" height="43" as="geometry" />
+        </mxCell>
+        <mxCell id="gms-learn-bookings-2-legend-dto" value="DTO" style="rounded=1;whiteSpace=wrap;html=1;align=center;verticalAlign=middle;spacing=16;fontFamily=Arial;fontSize=18;fontColor=#172b4d;fillColor=#d5e8d4;strokeColor=#82b366;fontStyle=0;arcSize=6;" vertex="1" parent="1">
+          <mxGeometry x="884" y="164" width="180" height="43" as="geometry" />
+        </mxCell>
+        <mxCell id="gms-learn-bookings-2-legend-ui" value="JSP / JS" style="rounded=1;whiteSpace=wrap;html=1;align=center;verticalAlign=middle;spacing=16;fontFamily=Arial;fontSize=18;fontColor=#172b4d;fillColor=#f5f5f5;strokeColor=#666666;fontStyle=0;arcSize=6;" vertex="1" parent="1">
+          <mxGeometry x="1082" y="164" width="180" height="43" as="geometry" />
+        </mxCell>
+        <mxCell id="gms-learn-bookings-2-card-0" value="" style="rounded=1;whiteSpace=wrap;html=1;align=left;verticalAlign=middle;spacing=16;fontFamily=Arial;fontSize=20;fontColor=#172b4d;fillColor=#fff2cc;strokeColor=#d6b656;fontStyle=0;arcSize=6;" vertex="1" parent="1">
+          <mxGeometry x="40" y="230" width="520" height="350" as="geometry" />
+        </mxCell>
+        <mxCell id="gms-learn-bookings-2-role-0" value="1. DAO / SQL" style="rounded=1;whiteSpace=wrap;html=1;align=left;verticalAlign=middle;spacing=16;fontFamily=Arial;fontSize=14;fontColor=#172b4d;fillColor=none;strokeColor=none;fontStyle=1;arcSize=6;" vertex="1" parent="gms-learn-bookings-2-card-0">
+          <mxGeometry x="8.0" y="8.0" width="504" height="38" as="geometry" />
+        </mxCell>
+        <mxCell id="gms-learn-bookings-2-heading-0" value="Đọc từng buổi thật" style="rounded=1;whiteSpace=wrap;html=1;align=left;verticalAlign=middle;spacing=16;fontFamily=Arial;fontSize=22;fontColor=#172b4d;fillColor=none;strokeColor=none;fontStyle=1;arcSize=6;" vertex="1" parent="gms-learn-bookings-2-card-0">
+          <mxGeometry x="8.0" y="45.0" width="504" height="41" as="geometry" />
+        </mxCell>
+        <mxCell id="gms-learn-bookings-2-body-0" value="findSessionsOfPackage(customerId, subscriptionId)&lt;br&gt;hoặc findSingleSessions(customerId).&lt;br&gt;Mỗi dòng SQL → một MyPtSessionRow; danh sách&lt;br&gt;đã có thứ tự ngày / giờ." style="rounded=1;whiteSpace=wrap;html=1;align=left;verticalAlign=middle;spacing=16;fontFamily=Arial;fontSize=20;fontColor=#172b4d;fillColor=none;strokeColor=none;fontStyle=0;arcSize=6;" vertex="1" parent="gms-learn-bookings-2-card-0">
+          <mxGeometry x="8.0" y="78.0" width="504" height="124" as="geometry" />
+        </mxCell>
+        <mxCell id="gms-learn-bookings-2-card-1" value="" style="rounded=1;whiteSpace=wrap;html=1;align=left;verticalAlign=middle;spacing=16;fontFamily=Arial;fontSize=20;fontColor=#172b4d;fillColor=#e1d5e7;strokeColor=#9673a6;fontStyle=0;arcSize=6;" vertex="1" parent="1">
+          <mxGeometry x="640" y="230" width="520" height="350" as="geometry" />
+        </mxCell>
+        <mxCell id="gms-learn-bookings-2-role-1" value="2. SERVICE" style="rounded=1;whiteSpace=wrap;html=1;align=left;verticalAlign=middle;spacing=16;fontFamily=Arial;fontSize=14;fontColor=#172b4d;fillColor=none;strokeColor=none;fontStyle=1;arcSize=6;" vertex="1" parent="gms-learn-bookings-2-card-1">
+          <mxGeometry x="8.0" y="8.0" width="504" height="38" as="geometry" />
+        </mxCell>
+        <mxCell id="gms-learn-bookings-2-heading-1" value="Dùng chung cách hiển thị" style="rounded=1;whiteSpace=wrap;html=1;align=left;verticalAlign=middle;spacing=16;fontFamily=Arial;fontSize=22;fontColor=#172b4d;fillColor=none;strokeColor=none;fontStyle=1;arcSize=6;" vertex="1" parent="gms-learn-bookings-2-card-1">
+          <mxGeometry x="8.0" y="45.0" width="504" height="41" as="geometry" />
+        </mxCell>
+        <mxCell id="gms-learn-bookings-2-body-1" value="MyPtSessionService.fillDisplay() thêm tên loại gói,&lt;br&gt;PT liên hệ, cảnh báo, statusKey, nhãn và giải thích.&lt;br&gt;MyBookings và Lịch tập dùng chung bước này." style="rounded=1;whiteSpace=wrap;html=1;align=left;verticalAlign=middle;spacing=16;fontFamily=Arial;fontSize=20;fontColor=#172b4d;fillColor=none;strokeColor=none;fontStyle=0;arcSize=6;" vertex="1" parent="gms-learn-bookings-2-card-1">
+          <mxGeometry x="8.0" y="78.0" width="504" height="97" as="geometry" />
+        </mxCell>
+        <mxCell id="gms-learn-bookings-2-card-2" value="" style="rounded=1;whiteSpace=wrap;html=1;align=left;verticalAlign=middle;spacing=16;fontFamily=Arial;fontSize=20;fontColor=#172b4d;fillColor=#e1d5e7;strokeColor=#9673a6;fontStyle=0;arcSize=6;" vertex="1" parent="1">
+          <mxGeometry x="1240" y="230" width="520" height="350" as="geometry" />
+        </mxCell>
+        <mxCell id="gms-learn-bookings-2-role-2" value="3. SERVICE" style="rounded=1;whiteSpace=wrap;html=1;align=left;verticalAlign=middle;spacing=16;fontFamily=Arial;fontSize=14;fontColor=#172b4d;fillColor=none;strokeColor=none;fontStyle=1;arcSize=6;" vertex="1" parent="gms-learn-bookings-2-card-2">
+          <mxGeometry x="8.0" y="8.0" width="504" height="38" as="geometry" />
+        </mxCell>
+        <mxCell id="gms-learn-bookings-2-heading-2" value="countSessions()" style="rounded=1;whiteSpace=wrap;html=1;align=left;verticalAlign=middle;spacing=16;fontFamily=Arial;fontSize=22;fontColor=#172b4d;fillColor=none;strokeColor=none;fontStyle=1;arcSize=6;" vertex="1" parent="gms-learn-bookings-2-card-2">
+          <mxGeometry x="8.0" y="45.0" width="504" height="41" as="geometry" />
+        </mxCell>
+        <mxCell id="gms-learn-bookings-2-body-2" value="Duyệt từng dòng: đếm checkedIn, missed,&lt;br&gt;cancelled, pending; các trạng thái còn lại thuộc&lt;br&gt;remaining.&lt;br&gt;total bằng số dòng đã sinh, không phải số buổi&lt;br&gt;khách đã check-in." style="rounded=1;whiteSpace=wrap;html=1;align=left;verticalAlign=middle;spacing=16;fontFamily=Arial;fontSize=20;fontColor=#172b4d;fillColor=none;strokeColor=none;fontStyle=0;arcSize=6;" vertex="1" parent="gms-learn-bookings-2-card-2">
+          <mxGeometry x="8.0" y="78.0" width="504" height="151" as="geometry" />
+        </mxCell>
+        <mxCell id="gms-learn-bookings-2-card-3" value="" style="rounded=1;whiteSpace=wrap;html=1;align=left;verticalAlign=middle;spacing=16;fontFamily=Arial;fontSize=20;fontColor=#172b4d;fillColor=#d5e8d4;strokeColor=#82b366;fontStyle=0;arcSize=6;" vertex="1" parent="1">
+          <mxGeometry x="1240" y="710" width="520" height="350" as="geometry" />
+        </mxCell>
+        <mxCell id="gms-learn-bookings-2-role-3" value="4. DTO / KẾT QUẢ" style="rounded=1;whiteSpace=wrap;html=1;align=left;verticalAlign=middle;spacing=16;fontFamily=Arial;fontSize=14;fontColor=#172b4d;fillColor=none;strokeColor=none;fontStyle=1;arcSize=6;" vertex="1" parent="gms-learn-bookings-2-card-3">
+          <mxGeometry x="8.0" y="8.0" width="504" height="38" as="geometry" />
+        </mxCell>
+        <mxCell id="gms-learn-bookings-2-heading-3" value="Chỉ chọn một Buổi tới" style="rounded=1;whiteSpace=wrap;html=1;align=left;verticalAlign=middle;spacing=16;fontFamily=Arial;fontSize=22;fontColor=#172b4d;fillColor=none;strokeColor=none;fontStyle=1;arcSize=6;" vertex="1" parent="gms-learn-bookings-2-card-3">
+          <mxGeometry x="8.0" y="45.0" width="504" height="41" as="geometry" />
+        </mxCell>
+        <mxCell id="gms-learn-bookings-2-body-3" value="focusSession: buổi Scheduled đầu tiên chưa hết giờ;&lt;br&gt;tìm thấy thì break.&lt;br&gt;focusSessionId giữ deep link và chấm đang chọn.&lt;br&gt;Đã xóa nextAfterFocus và endedCount vì không còn&lt;br&gt;phục vụ UI." style="rounded=1;whiteSpace=wrap;html=1;align=left;verticalAlign=middle;spacing=16;fontFamily=Arial;fontSize=20;fontColor=#172b4d;fillColor=none;strokeColor=none;fontStyle=0;arcSize=6;" vertex="1" parent="gms-learn-bookings-2-card-3">
+          <mxGeometry x="8.0" y="78.0" width="504" height="151" as="geometry" />
+        </mxCell>
+        <mxCell id="gms-learn-bookings-2-card-4" value="" style="rounded=1;whiteSpace=wrap;html=1;align=left;verticalAlign=middle;spacing=16;fontFamily=Arial;fontSize=20;fontColor=#172b4d;fillColor=#d5e8d4;strokeColor=#82b366;fontStyle=0;arcSize=6;" vertex="1" parent="1">
+          <mxGeometry x="640" y="710" width="520" height="350" as="geometry" />
+        </mxCell>
+        <mxCell id="gms-learn-bookings-2-role-4" value="5. DTO / KẾT QUẢ" style="rounded=1;whiteSpace=wrap;html=1;align=left;verticalAlign=middle;spacing=16;fontFamily=Arial;fontSize=14;fontColor=#172b4d;fillColor=none;strokeColor=none;fontStyle=1;arcSize=6;" vertex="1" parent="gms-learn-bookings-2-card-4">
+          <mxGeometry x="8.0" y="8.0" width="504" height="38" as="geometry" />
+        </mxCell>
+        <mxCell id="gms-learn-bookings-2-heading-4" value="MyBookingView chứa gì?" style="rounded=1;whiteSpace=wrap;html=1;align=left;verticalAlign=middle;spacing=16;fontFamily=Arial;fontSize=22;fontColor=#172b4d;fillColor=none;strokeColor=none;fontStyle=1;arcSize=6;" vertex="1" parent="gms-learn-bookings-2-card-4">
+          <mxGeometry x="8.0" y="45.0" width="504" height="41" as="geometry" />
+        </mxCell>
+        <mxCell id="gms-learn-bookings-2-body-4" value="activePackages / endedPackages / selectedPackage&lt;br&gt;sessions: List&amp;lt;MyPtSessionRow&amp;gt;&lt;br&gt;focusSession / focusSessionId / daysUntilFocus&lt;br&gt;watchList / bộ đếm / lịch mẫu / CTA. Không còn list&lt;br&gt;lịch sử vắng/hủy riêng." style="rounded=1;whiteSpace=wrap;html=1;align=left;verticalAlign=middle;spacing=16;fontFamily=Arial;fontSize=20;fontColor=#172b4d;fillColor=none;strokeColor=none;fontStyle=0;arcSize=6;" vertex="1" parent="gms-learn-bookings-2-card-4">
+          <mxGeometry x="8.0" y="78.0" width="504" height="151" as="geometry" />
+        </mxCell>
+        <mxCell id="gms-learn-bookings-2-card-5" value="" style="rounded=1;whiteSpace=wrap;html=1;align=left;verticalAlign=middle;spacing=16;fontFamily=Arial;fontSize=20;fontColor=#172b4d;fillColor=#f5f5f5;strokeColor=#666666;fontStyle=0;arcSize=6;" vertex="1" parent="1">
+          <mxGeometry x="40" y="710" width="520" height="350" as="geometry" />
+        </mxCell>
+        <mxCell id="gms-learn-bookings-2-role-5" value="6. JSP / TRÌNH DUYỆT" style="rounded=1;whiteSpace=wrap;html=1;align=left;verticalAlign=middle;spacing=16;fontFamily=Arial;fontSize=14;fontColor=#172b4d;fillColor=none;strokeColor=none;fontStyle=1;arcSize=6;" vertex="1" parent="gms-learn-bookings-2-card-5">
+          <mxGeometry x="8.0" y="8.0" width="504" height="38" as="geometry" />
+        </mxCell>
+        <mxCell id="gms-learn-bookings-2-heading-5" value="Một khối đầu gói duy nhất" style="rounded=1;whiteSpace=wrap;html=1;align=left;verticalAlign=middle;spacing=16;fontFamily=Arial;fontSize=22;fontColor=#172b4d;fillColor=none;strokeColor=none;fontStyle=1;arcSize=6;" vertex="1" parent="gms-learn-bookings-2-card-5">
+          <mxGeometry x="8.0" y="45.0" width="504" height="41" as="geometry" />
+        </mxCell>
+        <mxCell id="gms-learn-bookings-2-body-5" value="Tên gói + PT thực dạy buổi tới + hạn gói; một nút&lt;br&gt;mở lịch đúng buổi.&lt;br&gt;Buổi tới + chip cảnh báo + Zalo.&lt;br&gt;Gói PT: vòng tròn còn N, N = tổng − pastSessions;&lt;br&gt;bên dưới số đã qua. Buổi lẻ ẩn vòng." style="rounded=1;whiteSpace=wrap;html=1;align=left;verticalAlign=middle;spacing=16;fontFamily=Arial;fontSize=20;fontColor=#172b4d;fillColor=none;strokeColor=none;fontStyle=0;arcSize=6;" vertex="1" parent="gms-learn-bookings-2-card-5">
+          <mxGeometry x="8.0" y="78.0" width="504" height="151" as="geometry" />
+        </mxCell>
+        <mxCell id="gms-learn-bookings-2-edge-0" value="" style="edgeStyle=orthogonalEdgeStyle;rounded=0;html=1;endArrow=block;endFill=1;strokeColor=#46566d;strokeWidth=2;fontFamily=Arial;fontSize=16;labelBackgroundColor=#ffffff;jettySize=auto;exitX=1.0;exitY=0.5;exitDx=0;exitDy=0;entryX=0.0;entryY=0.5;entryDx=0;entryDy=0;" edge="1" parent="1" source="gms-learn-bookings-2-card-0" target="gms-learn-bookings-2-card-1">
+          <mxGeometry relative="1" as="geometry" />
+        </mxCell>
+        <mxCell id="gms-learn-bookings-2-edge-1" value="" style="edgeStyle=orthogonalEdgeStyle;rounded=0;html=1;endArrow=block;endFill=1;strokeColor=#46566d;strokeWidth=2;fontFamily=Arial;fontSize=16;labelBackgroundColor=#ffffff;jettySize=auto;exitX=1.0;exitY=0.5;exitDx=0;exitDy=0;entryX=0.0;entryY=0.5;entryDx=0;entryDy=0;" edge="1" parent="1" source="gms-learn-bookings-2-card-1" target="gms-learn-bookings-2-card-2">
+          <mxGeometry relative="1" as="geometry" />
+        </mxCell>
+        <mxCell id="gms-learn-bookings-2-edge-2" value="" style="edgeStyle=orthogonalEdgeStyle;rounded=0;html=1;endArrow=block;endFill=1;strokeColor=#46566d;strokeWidth=2;fontFamily=Arial;fontSize=16;labelBackgroundColor=#ffffff;jettySize=auto;exitX=0.5;exitY=1.0;exitDx=0;exitDy=0;entryX=0.5;entryY=0.0;entryDx=0;entryDy=0;" edge="1" parent="1" source="gms-learn-bookings-2-card-2" target="gms-learn-bookings-2-card-3">
+          <mxGeometry relative="1" as="geometry" />
+        </mxCell>
+        <mxCell id="gms-learn-bookings-2-edge-3" value="" style="edgeStyle=orthogonalEdgeStyle;rounded=0;html=1;endArrow=block;endFill=1;strokeColor=#46566d;strokeWidth=2;fontFamily=Arial;fontSize=16;labelBackgroundColor=#ffffff;jettySize=auto;exitX=0.0;exitY=0.5;exitDx=0;exitDy=0;entryX=1.0;entryY=0.5;entryDx=0;entryDy=0;" edge="1" parent="1" source="gms-learn-bookings-2-card-3" target="gms-learn-bookings-2-card-4">
+          <mxGeometry relative="1" as="geometry" />
+        </mxCell>
+        <mxCell id="gms-learn-bookings-2-edge-4" value="" style="edgeStyle=orthogonalEdgeStyle;rounded=0;html=1;endArrow=block;endFill=1;strokeColor=#46566d;strokeWidth=2;fontFamily=Arial;fontSize=16;labelBackgroundColor=#ffffff;jettySize=auto;exitX=0.0;exitY=0.5;exitDx=0;exitDy=0;entryX=1.0;entryY=0.5;entryDx=0;entryDy=0;" edge="1" parent="1" source="gms-learn-bookings-2-card-4" target="gms-learn-bookings-2-card-5">
+          <mxGeometry relative="1" as="geometry" />
+        </mxCell>
+        <mxCell id="gms-learn-bookings-2-read" value="Đọc theo số và mũi tên: hàng trên từ trái sang phải, hàng dưới từ phải sang trái. Mỗi ô giải thích một bước học." style="rounded=1;whiteSpace=wrap;html=1;align=left;verticalAlign=middle;spacing=16;fontFamily=Arial;fontSize=18;fontColor=#172b4d;fillColor=none;strokeColor=none;fontStyle=0;arcSize=6;" vertex="1" parent="1">
+          <mxGeometry x="40" y="1090" width="1720" height="45" as="geometry" />
+        </mxCell>
+        <mxCell id="gms-learn-bookings-2-note" value="GHI NHỚ&lt;br&gt;Ví dụ Gia Hương: 19/45 đã qua → vòng tròn còn 26 buổi; link mở buổi 274 ngày 23/10. PastSessions là số buổi trước hôm nay, không phải số check-in." style="rounded=1;whiteSpace=wrap;html=1;align=left;verticalAlign=middle;spacing=16;fontFamily=Arial;fontSize=20;fontColor=#172b4d;fillColor=#d5e8d4;strokeColor=#82b366;fontStyle=0;arcSize=6;" vertex="1" parent="1">
+          <mxGeometry x="40" y="1150" width="1720" height="110" as="geometry" />
+        </mxCell>
+        <mxCell id="gms-learn-bookings-2-source" value="Đối chiếu: MyBookingService.countSessions(); MyBookingView.java; MyPtPackageView.java; MyPtSessionRow.java | Code hiện tại: 23/10/2026 (gồm thay đổi chưa commit)." style="rounded=1;whiteSpace=wrap;html=1;align=left;verticalAlign=middle;spacing=16;fontFamily=Arial;fontSize=14;fontColor=#172b4d;fillColor=none;strokeColor=none;fontStyle=0;arcSize=6;" vertex="1" parent="1">
+          <mxGeometry x="40" y="1267" width="1720" height="45" as="geometry" />
+        </mxCell>
+      </root>
+    </mxGraphModel>
+  </diagram>
+  <diagram id="gms-learn-bookings-3" name="05. MyBookings · lịch mẫu và buổi lệch">
+    <mxGraphModel dx="1800" dy="1320" grid="1" gridSize="10" guides="1" tooltips="1" connect="1" arrows="1" fold="1" page="1" pageScale="1" pageWidth="1800" pageHeight="1320" math="0" shadow="0">
+      <root>
+        <mxCell id="0" />
+        <mxCell id="1" parent="0" />
+        <mxCell id="gms-learn-bookings-3-title" value="05. MyBookings · lịch mẫu và buổi lệch" style="rounded=1;whiteSpace=wrap;html=1;align=left;verticalAlign=middle;spacing=16;fontFamily=Arial;fontSize=31;fontColor=#172b4d;fillColor=none;strokeColor=none;fontStyle=1;arcSize=6;" vertex="1" parent="1">
+          <mxGeometry x="40" y="20" width="1720" height="65" as="geometry" />
+        </mxCell>
+        <mxCell id="gms-learn-bookings-3-subtitle" value="fillPackageDetail() → applyWeekTemplate() → thông tin dời buổi → markWeeks(). Đây là suy ra lịch hiển thị từ các buổi đã có." style="rounded=1;whiteSpace=wrap;html=1;align=left;verticalAlign=middle;spacing=16;fontFamily=Arial;fontSize=20;fontColor=#172b4d;fillColor=none;strokeColor=none;fontStyle=0;arcSize=6;" vertex="1" parent="1">
+          <mxGeometry x="40" y="92" width="1720" height="65" as="geometry" />
+        </mxCell>
+        <mxCell id="gms-learn-bookings-3-nav" value="Về mục lục" style="rounded=1;whiteSpace=wrap;html=1;align=left;verticalAlign=middle;spacing=16;fontFamily=Arial;fontSize=18;fontColor=#172b4d;fillColor=#f5f5f5;strokeColor=#666666;fontStyle=1;arcSize=6;" vertex="1" parent="1" link="data:page/id,index-my-bookings-flow">
+          <mxGeometry x="40" y="164" width="210" height="43" as="geometry" />
+        </mxCell>
+        <mxCell id="gms-learn-bookings-3-legend-servlet" value="Servlet" style="rounded=1;whiteSpace=wrap;html=1;align=center;verticalAlign=middle;spacing=16;fontFamily=Arial;fontSize=18;fontColor=#172b4d;fillColor=#dae8fc;strokeColor=#6c8ebf;fontStyle=0;arcSize=6;" vertex="1" parent="1">
+          <mxGeometry x="290" y="164" width="180" height="43" as="geometry" />
+        </mxCell>
+        <mxCell id="gms-learn-bookings-3-legend-service" value="Service" style="rounded=1;whiteSpace=wrap;html=1;align=center;verticalAlign=middle;spacing=16;fontFamily=Arial;fontSize=18;fontColor=#172b4d;fillColor=#e1d5e7;strokeColor=#9673a6;fontStyle=0;arcSize=6;" vertex="1" parent="1">
+          <mxGeometry x="488" y="164" width="180" height="43" as="geometry" />
+        </mxCell>
+        <mxCell id="gms-learn-bookings-3-legend-dao" value="DAO / SQL" style="rounded=1;whiteSpace=wrap;html=1;align=center;verticalAlign=middle;spacing=16;fontFamily=Arial;fontSize=18;fontColor=#172b4d;fillColor=#fff2cc;strokeColor=#d6b656;fontStyle=0;arcSize=6;" vertex="1" parent="1">
+          <mxGeometry x="686" y="164" width="180" height="43" as="geometry" />
+        </mxCell>
+        <mxCell id="gms-learn-bookings-3-legend-dto" value="DTO" style="rounded=1;whiteSpace=wrap;html=1;align=center;verticalAlign=middle;spacing=16;fontFamily=Arial;fontSize=18;fontColor=#172b4d;fillColor=#d5e8d4;strokeColor=#82b366;fontStyle=0;arcSize=6;" vertex="1" parent="1">
+          <mxGeometry x="884" y="164" width="180" height="43" as="geometry" />
+        </mxCell>
+        <mxCell id="gms-learn-bookings-3-legend-ui" value="JSP / JS" style="rounded=1;whiteSpace=wrap;html=1;align=center;verticalAlign=middle;spacing=16;fontFamily=Arial;fontSize=18;fontColor=#172b4d;fillColor=#f5f5f5;strokeColor=#666666;fontStyle=0;arcSize=6;" vertex="1" parent="1">
+          <mxGeometry x="1082" y="164" width="180" height="43" as="geometry" />
+        </mxCell>
+        <mxCell id="gms-learn-bookings-3-card-0" value="" style="rounded=1;whiteSpace=wrap;html=1;align=left;verticalAlign=middle;spacing=16;fontFamily=Arial;fontSize=20;fontColor=#172b4d;fillColor=#e1d5e7;strokeColor=#9673a6;fontStyle=0;arcSize=6;" vertex="1" parent="1">
+          <mxGeometry x="40" y="230" width="520" height="350" as="geometry" />
+        </mxCell>
+        <mxCell id="gms-learn-bookings-3-role-0" value="1. SERVICE" style="rounded=1;whiteSpace=wrap;html=1;align=left;verticalAlign=middle;spacing=16;fontFamily=Arial;fontSize=14;fontColor=#172b4d;fillColor=none;strokeColor=none;fontStyle=1;arcSize=6;" vertex="1" parent="gms-learn-bookings-3-card-0">
+          <mxGeometry x="8.0" y="8.0" width="504" height="38" as="geometry" />
+        </mxCell>
+        <mxCell id="gms-learn-bookings-3-heading-0" value="Đếm giờ theo ngày trong tuần" style="rounded=1;whiteSpace=wrap;html=1;align=left;verticalAlign=middle;spacing=16;fontFamily=Arial;fontSize=22;fontColor=#172b4d;fillColor=none;strokeColor=none;fontStyle=1;arcSize=6;" vertex="1" parent="gms-learn-bookings-3-card-0">
+          <mxGeometry x="8.0" y="45.0" width="504" height="41" as="geometry" />
+        </mxCell>
+        <mxCell id="gms-learn-bookings-3-body-0" value="applyWeekTemplate() duyệt các buổi, gom theo thứ&lt;br&gt;và StartTime.&lt;br&gt;Chỉ Thứ 2–Thứ 6 được dựng thành năm ô lịch mẫu.&lt;br&gt;Không tạo thêm Sessions trong bước này." style="rounded=1;whiteSpace=wrap;html=1;align=left;verticalAlign=middle;spacing=16;fontFamily=Arial;fontSize=20;fontColor=#172b4d;fillColor=none;strokeColor=none;fontStyle=0;arcSize=6;" vertex="1" parent="gms-learn-bookings-3-card-0">
+          <mxGeometry x="8.0" y="78.0" width="504" height="124" as="geometry" />
+        </mxCell>
+        <mxCell id="gms-learn-bookings-3-card-1" value="" style="rounded=1;whiteSpace=wrap;html=1;align=left;verticalAlign=middle;spacing=16;fontFamily=Arial;fontSize=20;fontColor=#172b4d;fillColor=#fff2cc;strokeColor=#d6b656;fontStyle=0;arcSize=6;" vertex="1" parent="1">
+          <mxGeometry x="640" y="230" width="520" height="350" as="geometry" />
+        </mxCell>
+        <mxCell id="gms-learn-bookings-3-role-1" value="2. ĐIỀU KIỆN" style="rounded=1;whiteSpace=wrap;html=1;align=left;verticalAlign=middle;spacing=16;fontFamily=Arial;fontSize=14;fontColor=#172b4d;fillColor=none;strokeColor=none;fontStyle=1;arcSize=6;" vertex="1" parent="gms-learn-bookings-3-card-1">
+          <mxGeometry x="8.0" y="8.0" width="504" height="38" as="geometry" />
+        </mxCell>
+        <mxCell id="gms-learn-bookings-3-heading-1" value="Chọn giờ cố định" style="rounded=1;whiteSpace=wrap;html=1;align=left;verticalAlign=middle;spacing=16;fontFamily=Arial;fontSize=22;fontColor=#172b4d;fillColor=none;strokeColor=none;fontStyle=1;arcSize=6;" vertex="1" parent="gms-learn-bookings-3-card-1">
+          <mxGeometry x="8.0" y="45.0" width="504" height="41" as="geometry" />
+        </mxCell>
+        <mxCell id="gms-learn-bookings-3-body-1" value="Mỗi thứ chọn giờ xuất hiện nhiều nhất; hòa thì lấy&lt;br&gt;giờ sớm hơn.&lt;br&gt;Cố định khi chiếm ít nhất một nửa và có ≥2 lần, hoặc&lt;br&gt;cả thứ đó chỉ có một buổi." style="rounded=1;whiteSpace=wrap;html=1;align=left;verticalAlign=middle;spacing=16;fontFamily=Arial;fontSize=20;fontColor=#172b4d;fillColor=none;strokeColor=none;fontStyle=0;arcSize=6;" vertex="1" parent="gms-learn-bookings-3-card-1">
+          <mxGeometry x="8.0" y="78.0" width="504" height="124" as="geometry" />
+        </mxCell>
+        <mxCell id="gms-learn-bookings-3-card-2" value="" style="rounded=1;whiteSpace=wrap;html=1;align=left;verticalAlign=middle;spacing=16;fontFamily=Arial;fontSize=20;fontColor=#172b4d;fillColor=#d5e8d4;strokeColor=#82b366;fontStyle=0;arcSize=6;" vertex="1" parent="1">
+          <mxGeometry x="1240" y="230" width="520" height="350" as="geometry" />
+        </mxCell>
+        <mxCell id="gms-learn-bookings-3-role-2" value="3. DTO / KẾT QUẢ" style="rounded=1;whiteSpace=wrap;html=1;align=left;verticalAlign=middle;spacing=16;fontFamily=Arial;fontSize=14;fontColor=#172b4d;fillColor=none;strokeColor=none;fontStyle=1;arcSize=6;" vertex="1" parent="gms-learn-bookings-3-card-2">
+          <mxGeometry x="8.0" y="8.0" width="504" height="38" as="geometry" />
+        </mxCell>
+        <mxCell id="gms-learn-bookings-3-heading-2" value="Năm WeekdaySlot" style="rounded=1;whiteSpace=wrap;html=1;align=left;verticalAlign=middle;spacing=16;fontFamily=Arial;fontSize=22;fontColor=#172b4d;fillColor=none;strokeColor=none;fontStyle=1;arcSize=6;" vertex="1" parent="gms-learn-bookings-3-card-2">
+          <mxGeometry x="8.0" y="45.0" width="504" height="41" as="geometry" />
+        </mxCell>
+        <mxCell id="gms-learn-bookings-3-body-2" value="main: giờ cố định trùng giờ phổ biến.&lt;br&gt;odd: có giờ cố định khác giờ phổ biến.&lt;br&gt;mixed: có buổi nhưng không chốt được giờ.&lt;br&gt;none: không có buổi trong thứ đó." style="rounded=1;whiteSpace=wrap;html=1;align=left;verticalAlign=middle;spacing=16;fontFamily=Arial;fontSize=20;fontColor=#172b4d;fillColor=none;strokeColor=none;fontStyle=0;arcSize=6;" vertex="1" parent="gms-learn-bookings-3-card-2">
+          <mxGeometry x="8.0" y="78.0" width="504" height="124" as="geometry" />
+        </mxCell>
+        <mxCell id="gms-learn-bookings-3-card-3" value="" style="rounded=1;whiteSpace=wrap;html=1;align=left;verticalAlign=middle;spacing=16;fontFamily=Arial;fontSize=20;fontColor=#172b4d;fillColor=#e1d5e7;strokeColor=#9673a6;fontStyle=0;arcSize=6;" vertex="1" parent="1">
+          <mxGeometry x="1240" y="710" width="520" height="350" as="geometry" />
+        </mxCell>
+        <mxCell id="gms-learn-bookings-3-role-3" value="4. SERVICE" style="rounded=1;whiteSpace=wrap;html=1;align=left;verticalAlign=middle;spacing=16;fontFamily=Arial;fontSize=14;fontColor=#172b4d;fillColor=none;strokeColor=none;fontStyle=1;arcSize=6;" vertex="1" parent="gms-learn-bookings-3-card-3">
+          <mxGeometry x="8.0" y="8.0" width="504" height="38" as="geometry" />
+        </mxCell>
+        <mxCell id="gms-learn-bookings-3-heading-3" value="Tách các buổi lệch lịch" style="rounded=1;whiteSpace=wrap;html=1;align=left;verticalAlign=middle;spacing=16;fontFamily=Arial;fontSize=22;fontColor=#172b4d;fillColor=none;strokeColor=none;fontStyle=1;arcSize=6;" vertex="1" parent="gms-learn-bookings-3-card-3">
+          <mxGeometry x="8.0" y="45.0" width="504" height="41" as="geometry" />
+        </mxCell>
+        <mxCell id="gms-learn-bookings-3-body-3" value="Khớp giờ cố định của thứ → onPattern.&lt;br&gt;Không khớp hoặc rơi vào Thứ 7 / Chủ nhật →&lt;br&gt;offPattern.&lt;br&gt;Nếu không có offPattern thì không cần đọc lịch sử&lt;br&gt;dời buổi." style="rounded=1;whiteSpace=wrap;html=1;align=left;verticalAlign=middle;spacing=16;fontFamily=Arial;fontSize=20;fontColor=#172b4d;fillColor=none;strokeColor=none;fontStyle=0;arcSize=6;" vertex="1" parent="gms-learn-bookings-3-card-3">
+          <mxGeometry x="8.0" y="78.0" width="504" height="151" as="geometry" />
+        </mxCell>
+        <mxCell id="gms-learn-bookings-3-card-4" value="" style="rounded=1;whiteSpace=wrap;html=1;align=left;verticalAlign=middle;spacing=16;fontFamily=Arial;fontSize=20;fontColor=#172b4d;fillColor=#fff2cc;strokeColor=#d6b656;fontStyle=0;arcSize=6;" vertex="1" parent="1">
+          <mxGeometry x="640" y="710" width="520" height="350" as="geometry" />
+        </mxCell>
+        <mxCell id="gms-learn-bookings-3-role-4" value="5. DAO / SQL" style="rounded=1;whiteSpace=wrap;html=1;align=left;verticalAlign=middle;spacing=16;fontFamily=Arial;fontSize=14;fontColor=#172b4d;fillColor=none;strokeColor=none;fontStyle=1;arcSize=6;" vertex="1" parent="gms-learn-bookings-3-card-4">
+          <mxGeometry x="8.0" y="8.0" width="504" height="38" as="geometry" />
+        </mxCell>
+        <mxCell id="gms-learn-bookings-3-heading-4" value="MyBookingDAO.findMoves()" style="rounded=1;whiteSpace=wrap;html=1;align=left;verticalAlign=middle;spacing=16;fontFamily=Arial;fontSize=22;fontColor=#172b4d;fillColor=none;strokeColor=none;fontStyle=1;arcSize=6;" vertex="1" parent="gms-learn-bookings-3-card-4">
+          <mxGeometry x="8.0" y="45.0" width="504" height="41" as="geometry" />
+        </mxCell>
+        <mxCell id="gms-learn-bookings-3-body-4" value="Đọc SessionMoveLogs và giờ cũ theo&lt;br&gt;SubscriptionId.&lt;br&gt;Service giữ giờ gốc đầu tiên và loại thay đổi mới&lt;br&gt;nhất, tạo moveNote: khách đổi / PT dời / chuyển PT." style="rounded=1;whiteSpace=wrap;html=1;align=left;verticalAlign=middle;spacing=16;fontFamily=Arial;fontSize=20;fontColor=#172b4d;fillColor=none;strokeColor=none;fontStyle=0;arcSize=6;" vertex="1" parent="gms-learn-bookings-3-card-4">
+          <mxGeometry x="8.0" y="78.0" width="504" height="124" as="geometry" />
+        </mxCell>
+        <mxCell id="gms-learn-bookings-3-card-5" value="" style="rounded=1;whiteSpace=wrap;html=1;align=left;verticalAlign=middle;spacing=16;fontFamily=Arial;fontSize=20;fontColor=#172b4d;fillColor=#f5f5f5;strokeColor=#666666;fontStyle=0;arcSize=6;" vertex="1" parent="1">
+          <mxGeometry x="40" y="710" width="520" height="350" as="geometry" />
+        </mxCell>
+        <mxCell id="gms-learn-bookings-3-role-5" value="6. JSP / TRÌNH DUYỆT" style="rounded=1;whiteSpace=wrap;html=1;align=left;verticalAlign=middle;spacing=16;fontFamily=Arial;fontSize=14;fontColor=#172b4d;fillColor=none;strokeColor=none;fontStyle=1;arcSize=6;" vertex="1" parent="gms-learn-bookings-3-card-5">
+          <mxGeometry x="8.0" y="8.0" width="504" height="38" as="geometry" />
+        </mxCell>
+        <mxCell id="gms-learn-bookings-3-heading-5" value="Hiển thị lịch và chấm buổi" style="rounded=1;whiteSpace=wrap;html=1;align=left;verticalAlign=middle;spacing=16;fontFamily=Arial;fontSize=22;fontColor=#172b4d;fillColor=none;strokeColor=none;fontStyle=1;arcSize=6;" vertex="1" parent="gms-learn-bookings-3-card-5">
+          <mxGeometry x="8.0" y="45.0" width="504" height="41" as="geometry" />
+        </mxCell>
+        <mxCell id="gms-learn-bookings-3-body-5" value="markWeeks() đánh dấu khi sang tuần mới để tách&lt;br&gt;nhóm chấm.&lt;br&gt;Chấm mở đúng buổi trên Lịch tập.&lt;br&gt;Một nút i nhỏ ở Lịch cố định giải thích cả Buổi khác&lt;br&gt;giờ; không còn nút i riêng ở dòng phụ." style="rounded=1;whiteSpace=wrap;html=1;align=left;verticalAlign=middle;spacing=16;fontFamily=Arial;fontSize=20;fontColor=#172b4d;fillColor=none;strokeColor=none;fontStyle=0;arcSize=6;" vertex="1" parent="gms-learn-bookings-3-card-5">
+          <mxGeometry x="8.0" y="78.0" width="504" height="151" as="geometry" />
+        </mxCell>
+        <mxCell id="gms-learn-bookings-3-edge-0" value="" style="edgeStyle=orthogonalEdgeStyle;rounded=0;html=1;endArrow=block;endFill=1;strokeColor=#46566d;strokeWidth=2;fontFamily=Arial;fontSize=16;labelBackgroundColor=#ffffff;jettySize=auto;exitX=1.0;exitY=0.5;exitDx=0;exitDy=0;entryX=0.0;entryY=0.5;entryDx=0;entryDy=0;" edge="1" parent="1" source="gms-learn-bookings-3-card-0" target="gms-learn-bookings-3-card-1">
+          <mxGeometry relative="1" as="geometry" />
+        </mxCell>
+        <mxCell id="gms-learn-bookings-3-edge-1" value="" style="edgeStyle=orthogonalEdgeStyle;rounded=0;html=1;endArrow=block;endFill=1;strokeColor=#46566d;strokeWidth=2;fontFamily=Arial;fontSize=16;labelBackgroundColor=#ffffff;jettySize=auto;exitX=1.0;exitY=0.5;exitDx=0;exitDy=0;entryX=0.0;entryY=0.5;entryDx=0;entryDy=0;" edge="1" parent="1" source="gms-learn-bookings-3-card-1" target="gms-learn-bookings-3-card-2">
+          <mxGeometry relative="1" as="geometry" />
+        </mxCell>
+        <mxCell id="gms-learn-bookings-3-edge-2" value="" style="edgeStyle=orthogonalEdgeStyle;rounded=0;html=1;endArrow=block;endFill=1;strokeColor=#46566d;strokeWidth=2;fontFamily=Arial;fontSize=16;labelBackgroundColor=#ffffff;jettySize=auto;exitX=0.5;exitY=1.0;exitDx=0;exitDy=0;entryX=0.5;entryY=0.0;entryDx=0;entryDy=0;" edge="1" parent="1" source="gms-learn-bookings-3-card-2" target="gms-learn-bookings-3-card-3">
+          <mxGeometry relative="1" as="geometry" />
+        </mxCell>
+        <mxCell id="gms-learn-bookings-3-edge-3" value="" style="edgeStyle=orthogonalEdgeStyle;rounded=0;html=1;endArrow=block;endFill=1;strokeColor=#46566d;strokeWidth=2;fontFamily=Arial;fontSize=16;labelBackgroundColor=#ffffff;jettySize=auto;exitX=0.0;exitY=0.5;exitDx=0;exitDy=0;entryX=1.0;entryY=0.5;entryDx=0;entryDy=0;" edge="1" parent="1" source="gms-learn-bookings-3-card-3" target="gms-learn-bookings-3-card-4">
+          <mxGeometry relative="1" as="geometry" />
+        </mxCell>
+        <mxCell id="gms-learn-bookings-3-edge-4" value="" style="edgeStyle=orthogonalEdgeStyle;rounded=0;html=1;endArrow=block;endFill=1;strokeColor=#46566d;strokeWidth=2;fontFamily=Arial;fontSize=16;labelBackgroundColor=#ffffff;jettySize=auto;exitX=0.0;exitY=0.5;exitDx=0;exitDy=0;entryX=1.0;entryY=0.5;entryDx=0;entryDy=0;" edge="1" parent="1" source="gms-learn-bookings-3-card-4" target="gms-learn-bookings-3-card-5">
+          <mxGeometry relative="1" as="geometry" />
+        </mxCell>
+        <mxCell id="gms-learn-bookings-3-read" value="Đọc theo số và mũi tên: hàng trên từ trái sang phải, hàng dưới từ phải sang trái. Mỗi ô giải thích một bước học." style="rounded=1;whiteSpace=wrap;html=1;align=left;verticalAlign=middle;spacing=16;fontFamily=Arial;fontSize=18;fontColor=#172b4d;fillColor=none;strokeColor=none;fontStyle=0;arcSize=6;" vertex="1" parent="1">
+          <mxGeometry x="40" y="1090" width="1720" height="45" as="geometry" />
+        </mxCell>
+        <mxCell id="gms-learn-bookings-3-note" value="GHI NHỚ&lt;br&gt;Ví dụ: phần lớn Thứ 2 tập 15:00, có một buổi dời sang 17:00 → ô lịch mẫu vẫn 15:00; buổi 17:00 nằm trong nhóm lệch." style="rounded=1;whiteSpace=wrap;html=1;align=left;verticalAlign=middle;spacing=16;fontFamily=Arial;fontSize=20;fontColor=#172b4d;fillColor=#d5e8d4;strokeColor=#82b366;fontStyle=0;arcSize=6;" vertex="1" parent="1">
+          <mxGeometry x="40" y="1150" width="1720" height="110" as="geometry" />
+        </mxCell>
+        <mxCell id="gms-learn-bookings-3-source" value="Đối chiếu: MyBookingService.applyWeekTemplate()/fillPackageDetail()/markWeeks(); MyBookingDAO.findMoves(); WeekdaySlot.java | Code hiện tại: 23/10/2026 (gồm thay đổi chưa commit)." style="rounded=1;whiteSpace=wrap;html=1;align=left;verticalAlign=middle;spacing=16;fontFamily=Arial;fontSize=14;fontColor=#172b4d;fillColor=none;strokeColor=none;fontStyle=0;arcSize=6;" vertex="1" parent="1">
+          <mxGeometry x="40" y="1267" width="1720" height="45" as="geometry" />
+        </mxCell>
+      </root>
+    </mxGraphModel>
+  </diagram>
+  <diagram id="gms-learn-bookings-4" name="06. MyBookings · cảnh báo và thao tác">
+    <mxGraphModel dx="1800" dy="1320" grid="1" gridSize="10" guides="1" tooltips="1" connect="1" arrows="1" fold="1" page="1" pageScale="1" pageWidth="1800" pageHeight="1320" math="0" shadow="0">
+      <root>
+        <mxCell id="0" />
+        <mxCell id="1" parent="0" />
+        <mxCell id="gms-learn-bookings-4-title" value="06. MyBookings · cảnh báo và thao tác" style="rounded=1;whiteSpace=wrap;html=1;align=left;verticalAlign=middle;spacing=16;fontFamily=Arial;fontSize=31;fontColor=#172b4d;fillColor=none;strokeColor=none;fontStyle=1;arcSize=6;" vertex="1" parent="1">
+          <mxGeometry x="40" y="20" width="1720" height="65" as="geometry" />
+        </mxCell>
+        <mxCell id="gms-learn-bookings-4-subtitle" value="JSP không tự quyết định nghiệp vụ. Service chọn cảnh báo và CTA; trình duyệt xử lý tab và khối thu gọn." style="rounded=1;whiteSpace=wrap;html=1;align=left;verticalAlign=middle;spacing=16;fontFamily=Arial;fontSize=20;fontColor=#172b4d;fillColor=none;strokeColor=none;fontStyle=0;arcSize=6;" vertex="1" parent="1">
+          <mxGeometry x="40" y="92" width="1720" height="65" as="geometry" />
+        </mxCell>
+        <mxCell id="gms-learn-bookings-4-nav" value="Về mục lục" style="rounded=1;whiteSpace=wrap;html=1;align=left;verticalAlign=middle;spacing=16;fontFamily=Arial;fontSize=18;fontColor=#172b4d;fillColor=#f5f5f5;strokeColor=#666666;fontStyle=1;arcSize=6;" vertex="1" parent="1" link="data:page/id,index-my-bookings-flow">
+          <mxGeometry x="40" y="164" width="210" height="43" as="geometry" />
+        </mxCell>
+        <mxCell id="gms-learn-bookings-4-legend-servlet" value="Servlet" style="rounded=1;whiteSpace=wrap;html=1;align=center;verticalAlign=middle;spacing=16;fontFamily=Arial;fontSize=18;fontColor=#172b4d;fillColor=#dae8fc;strokeColor=#6c8ebf;fontStyle=0;arcSize=6;" vertex="1" parent="1">
+          <mxGeometry x="290" y="164" width="180" height="43" as="geometry" />
+        </mxCell>
+        <mxCell id="gms-learn-bookings-4-legend-service" value="Service" style="rounded=1;whiteSpace=wrap;html=1;align=center;verticalAlign=middle;spacing=16;fontFamily=Arial;fontSize=18;fontColor=#172b4d;fillColor=#e1d5e7;strokeColor=#9673a6;fontStyle=0;arcSize=6;" vertex="1" parent="1">
+          <mxGeometry x="488" y="164" width="180" height="43" as="geometry" />
+        </mxCell>
+        <mxCell id="gms-learn-bookings-4-legend-dao" value="DAO / SQL" style="rounded=1;whiteSpace=wrap;html=1;align=center;verticalAlign=middle;spacing=16;fontFamily=Arial;fontSize=18;fontColor=#172b4d;fillColor=#fff2cc;strokeColor=#d6b656;fontStyle=0;arcSize=6;" vertex="1" parent="1">
+          <mxGeometry x="686" y="164" width="180" height="43" as="geometry" />
+        </mxCell>
+        <mxCell id="gms-learn-bookings-4-legend-dto" value="DTO" style="rounded=1;whiteSpace=wrap;html=1;align=center;verticalAlign=middle;spacing=16;fontFamily=Arial;fontSize=18;fontColor=#172b4d;fillColor=#d5e8d4;strokeColor=#82b366;fontStyle=0;arcSize=6;" vertex="1" parent="1">
+          <mxGeometry x="884" y="164" width="180" height="43" as="geometry" />
+        </mxCell>
+        <mxCell id="gms-learn-bookings-4-legend-ui" value="JSP / JS" style="rounded=1;whiteSpace=wrap;html=1;align=center;verticalAlign=middle;spacing=16;fontFamily=Arial;fontSize=18;fontColor=#172b4d;fillColor=#f5f5f5;strokeColor=#666666;fontStyle=0;arcSize=6;" vertex="1" parent="1">
+          <mxGeometry x="1082" y="164" width="180" height="43" as="geometry" />
+        </mxCell>
+        <mxCell id="gms-learn-bookings-4-card-0" value="" style="rounded=1;whiteSpace=wrap;html=1;align=left;verticalAlign=middle;spacing=16;fontFamily=Arial;fontSize=20;fontColor=#172b4d;fillColor=#e1d5e7;strokeColor=#9673a6;fontStyle=0;arcSize=6;" vertex="1" parent="1">
+          <mxGeometry x="40" y="230" width="520" height="350" as="geometry" />
+        </mxCell>
+        <mxCell id="gms-learn-bookings-4-role-0" value="1. SERVICE" style="rounded=1;whiteSpace=wrap;html=1;align=left;verticalAlign=middle;spacing=16;fontFamily=Arial;fontSize=14;fontColor=#172b4d;fillColor=none;strokeColor=none;fontStyle=1;arcSize=6;" vertex="1" parent="gms-learn-bookings-4-card-0">
+          <mxGeometry x="8.0" y="8.0" width="504" height="38" as="geometry" />
+        </mxCell>
+        <mxCell id="gms-learn-bookings-4-heading-0" value="Cần để ý: buildWatchList()" style="rounded=1;whiteSpace=wrap;html=1;align=left;verticalAlign=middle;spacing=16;fontFamily=Arial;fontSize=22;fontColor=#172b4d;fillColor=none;strokeColor=none;fontStyle=1;arcSize=6;" vertex="1" parent="gms-learn-bookings-4-card-0">
+          <mxGeometry x="8.0" y="45.0" width="504" height="41" as="geometry" />
+        </mxCell>
+        <mxCell id="gms-learn-bookings-4-body-0" value="Chỉ nhận row.statusKey=warn và noGymPass=true.&lt;br&gt;Cảnh báo ngày phòng nghỉ hoặc bảo lưu không tự&lt;br&gt;động vào danh sách thiếu vé này.&lt;br&gt;Danh sách nằm trong &amp;lt;details&amp;gt; thu gọn." style="rounded=1;whiteSpace=wrap;html=1;align=left;verticalAlign=middle;spacing=16;fontFamily=Arial;fontSize=20;fontColor=#172b4d;fillColor=none;strokeColor=none;fontStyle=0;arcSize=6;" vertex="1" parent="gms-learn-bookings-4-card-0">
+          <mxGeometry x="8.0" y="78.0" width="504" height="124" as="geometry" />
+        </mxCell>
+        <mxCell id="gms-learn-bookings-4-card-1" value="" style="rounded=1;whiteSpace=wrap;html=1;align=left;verticalAlign=middle;spacing=16;fontFamily=Arial;fontSize=20;fontColor=#172b4d;fillColor=#f5f5f5;strokeColor=#666666;fontStyle=0;arcSize=6;" vertex="1" parent="1">
+          <mxGeometry x="640" y="230" width="520" height="350" as="geometry" />
+        </mxCell>
+        <mxCell id="gms-learn-bookings-4-role-1" value="2. JSP / TRÌNH DUYỆT" style="rounded=1;whiteSpace=wrap;html=1;align=left;verticalAlign=middle;spacing=16;fontFamily=Arial;fontSize=14;fontColor=#172b4d;fillColor=none;strokeColor=none;fontStyle=1;arcSize=6;" vertex="1" parent="gms-learn-bookings-4-card-1">
+          <mxGeometry x="8.0" y="8.0" width="504" height="38" as="geometry" />
+        </mxCell>
+        <mxCell id="gms-learn-bookings-4-heading-1" value="Vắng / hủy: xem trên lịch" style="rounded=1;whiteSpace=wrap;html=1;align=left;verticalAlign=middle;spacing=16;fontFamily=Arial;fontSize=22;fontColor=#172b4d;fillColor=none;strokeColor=none;fontStyle=1;arcSize=6;" vertex="1" parent="gms-learn-bookings-4-card-1">
+          <mxGeometry x="8.0" y="45.0" width="504" height="41" as="geometry" />
+        </mxCell>
+        <mxCell id="gms-learn-bookings-4-body-1" value="Đã bỏ toàn bộ khối “N buổi vắng / hủy · xem lý do”,&lt;br&gt;pastProblems và buildPastProblems().&lt;br&gt;Giữ số đếm, chú thích trạng thái và link từng ô chấm&lt;br&gt;→ Lịch tập để xem lý do." style="rounded=1;whiteSpace=wrap;html=1;align=left;verticalAlign=middle;spacing=16;fontFamily=Arial;fontSize=20;fontColor=#172b4d;fillColor=none;strokeColor=none;fontStyle=0;arcSize=6;" vertex="1" parent="gms-learn-bookings-4-card-1">
+          <mxGeometry x="8.0" y="78.0" width="504" height="124" as="geometry" />
+        </mxCell>
+        <mxCell id="gms-learn-bookings-4-card-2" value="" style="rounded=1;whiteSpace=wrap;html=1;align=left;verticalAlign=middle;spacing=16;fontFamily=Arial;fontSize=20;fontColor=#172b4d;fillColor=#fff2cc;strokeColor=#d6b656;fontStyle=0;arcSize=6;" vertex="1" parent="1">
+          <mxGeometry x="1240" y="230" width="520" height="350" as="geometry" />
+        </mxCell>
+        <mxCell id="gms-learn-bookings-4-role-2" value="3. ĐIỀU KIỆN" style="rounded=1;whiteSpace=wrap;html=1;align=left;verticalAlign=middle;spacing=16;fontFamily=Arial;fontSize=14;fontColor=#172b4d;fillColor=none;strokeColor=none;fontStyle=1;arcSize=6;" vertex="1" parent="gms-learn-bookings-4-card-2">
+          <mxGeometry x="8.0" y="8.0" width="504" height="38" as="geometry" />
+        </mxCell>
+        <mxCell id="gms-learn-bookings-4-heading-2" value="chooseCta(): ưu tiên 1–2" style="rounded=1;whiteSpace=wrap;html=1;align=left;verticalAlign=middle;spacing=16;fontFamily=Arial;fontSize=22;fontColor=#172b4d;fillColor=none;strokeColor=none;fontStyle=1;arcSize=6;" vertex="1" parent="gms-learn-bookings-4-card-2">
+          <mxGeometry x="8.0" y="45.0" width="504" height="41" as="geometry" />
+        </mxCell>
+        <mxCell id="gms-learn-bookings-4-body-2" value="Có watchList → mua Membership.&lt;br&gt;Đang xem buổi lẻ: ≥3 buổi gần đây trong 30 ngày →&lt;br&gt;gợi ý gói PT; chưa đủ → không có CTA đó.&lt;br&gt;Buổi cancelled không vào số buổi lẻ gần đây." style="rounded=1;whiteSpace=wrap;html=1;align=left;verticalAlign=middle;spacing=16;fontFamily=Arial;fontSize=20;fontColor=#172b4d;fillColor=none;strokeColor=none;fontStyle=0;arcSize=6;" vertex="1" parent="gms-learn-bookings-4-card-2">
+          <mxGeometry x="8.0" y="78.0" width="504" height="124" as="geometry" />
+        </mxCell>
+        <mxCell id="gms-learn-bookings-4-card-3" value="" style="rounded=1;whiteSpace=wrap;html=1;align=left;verticalAlign=middle;spacing=16;fontFamily=Arial;fontSize=20;fontColor=#172b4d;fillColor=#fff2cc;strokeColor=#d6b656;fontStyle=0;arcSize=6;" vertex="1" parent="1">
+          <mxGeometry x="1240" y="710" width="520" height="350" as="geometry" />
+        </mxCell>
+        <mxCell id="gms-learn-bookings-4-role-3" value="4. ĐIỀU KIỆN" style="rounded=1;whiteSpace=wrap;html=1;align=left;verticalAlign=middle;spacing=16;fontFamily=Arial;fontSize=14;fontColor=#172b4d;fillColor=none;strokeColor=none;fontStyle=1;arcSize=6;" vertex="1" parent="gms-learn-bookings-4-card-3">
+          <mxGeometry x="8.0" y="8.0" width="504" height="38" as="geometry" />
+        </mxCell>
+        <mxCell id="gms-learn-bookings-4-heading-3" value="chooseCta(): ưu tiên 3–4" style="rounded=1;whiteSpace=wrap;html=1;align=left;verticalAlign=middle;spacing=16;fontFamily=Arial;fontSize=22;fontColor=#172b4d;fillColor=none;strokeColor=none;fontStyle=1;arcSize=6;" vertex="1" parent="gms-learn-bookings-4-card-3">
+          <mxGeometry x="8.0" y="45.0" width="504" height="41" as="geometry" />
+        </mxCell>
+        <mxCell id="gms-learn-bookings-4-body-3" value="Gói đã kết thúc → đăng ký lại.&lt;br&gt;Gói còn ≤3 buổi hoặc ≤14 ngày → gia hạn tại quầy.&lt;br&gt;Các gợi ý tại quầy mới cần hotline và giờ mở cửa&lt;br&gt;P-19." style="rounded=1;whiteSpace=wrap;html=1;align=left;verticalAlign=middle;spacing=16;fontFamily=Arial;fontSize=20;fontColor=#172b4d;fillColor=none;strokeColor=none;fontStyle=0;arcSize=6;" vertex="1" parent="gms-learn-bookings-4-card-3">
+          <mxGeometry x="8.0" y="78.0" width="504" height="124" as="geometry" />
+        </mxCell>
+        <mxCell id="gms-learn-bookings-4-card-4" value="" style="rounded=1;whiteSpace=wrap;html=1;align=left;verticalAlign=middle;spacing=16;fontFamily=Arial;fontSize=20;fontColor=#172b4d;fillColor=#f5f5f5;strokeColor=#666666;fontStyle=0;arcSize=6;" vertex="1" parent="1">
+          <mxGeometry x="640" y="710" width="520" height="350" as="geometry" />
+        </mxCell>
+        <mxCell id="gms-learn-bookings-4-role-4" value="5. JSP / TRÌNH DUYỆT" style="rounded=1;whiteSpace=wrap;html=1;align=left;verticalAlign=middle;spacing=16;fontFamily=Arial;fontSize=14;fontColor=#172b4d;fillColor=none;strokeColor=none;fontStyle=1;arcSize=6;" vertex="1" parent="gms-learn-bookings-4-card-4">
+          <mxGeometry x="8.0" y="8.0" width="504" height="38" as="geometry" />
+        </mxCell>
+        <mxCell id="gms-learn-bookings-4-heading-4" value="Click đúng buổi → Lịch tập" style="rounded=1;whiteSpace=wrap;html=1;align=left;verticalAlign=middle;spacing=16;fontFamily=Arial;fontSize=22;fontColor=#172b4d;fillColor=none;strokeColor=none;fontStyle=1;arcSize=6;" vertex="1" parent="gms-learn-bookings-4-card-4">
+          <mxGeometry x="8.0" y="45.0" width="504" height="41" as="geometry" />
+        </mxCell>
+        <mxCell id="gms-learn-bookings-4-body-4" value="Chấm / link buổi mở:&lt;br&gt;/customer/pt-sessions?view=week&lt;br&gt;&amp;amp;from=&amp;lt;gói|single&amp;gt;&amp;amp;date=&amp;lt;ngày&amp;gt;&lt;br&gt;&amp;amp;session=&amp;lt;SessionId&amp;gt;&lt;br&gt;Màn đích chọn ngày, highlight và mở chi tiết." style="rounded=1;whiteSpace=wrap;html=1;align=left;verticalAlign=middle;spacing=16;fontFamily=Arial;fontSize=20;fontColor=#172b4d;fillColor=none;strokeColor=none;fontStyle=0;arcSize=6;" vertex="1" parent="gms-learn-bookings-4-card-4">
+          <mxGeometry x="8.0" y="78.0" width="504" height="151" as="geometry" />
+        </mxCell>
+        <mxCell id="gms-learn-bookings-4-card-5" value="" style="rounded=1;whiteSpace=wrap;html=1;align=left;verticalAlign=middle;spacing=16;fontFamily=Arial;fontSize=20;fontColor=#172b4d;fillColor=#f5f5f5;strokeColor=#666666;fontStyle=0;arcSize=6;" vertex="1" parent="1">
+          <mxGeometry x="40" y="710" width="520" height="350" as="geometry" />
+        </mxCell>
+        <mxCell id="gms-learn-bookings-4-role-5" value="6. JSP / TRÌNH DUYỆT" style="rounded=1;whiteSpace=wrap;html=1;align=left;verticalAlign=middle;spacing=16;fontFamily=Arial;fontSize=14;fontColor=#172b4d;fillColor=none;strokeColor=none;fontStyle=1;arcSize=6;" vertex="1" parent="gms-learn-bookings-4-card-5">
+          <mxGeometry x="8.0" y="8.0" width="504" height="38" as="geometry" />
+        </mxCell>
+        <mxCell id="gms-learn-bookings-4-heading-5" value="Giao diện gọn và trạng thái rỗng" style="rounded=1;whiteSpace=wrap;html=1;align=left;verticalAlign=middle;spacing=16;fontFamily=Arial;fontSize=22;fontColor=#172b4d;fillColor=none;strokeColor=none;fontStyle=1;arcSize=6;" vertex="1" parent="gms-learn-bookings-4-card-5">
+          <mxGeometry x="8.0" y="45.0" width="504" height="41" as="geometry" />
+        </mxCell>
+        <mxCell id="gms-learn-bookings-4-body-5" value="Đầu gói không còn Sau đó / số điện thoại / Buổi&lt;br&gt;20/45 / Google Calendar / Xem chi tiết trùng.&lt;br&gt;Không có buổi tới: hiện một câu; gói kết thúc ẩn&lt;br&gt;Zalo.&lt;br&gt;Thẻ trái: tên gói + PT Sơn · còn N buổi." style="rounded=1;whiteSpace=wrap;html=1;align=left;verticalAlign=middle;spacing=16;fontFamily=Arial;fontSize=20;fontColor=#172b4d;fillColor=none;strokeColor=none;fontStyle=0;arcSize=6;" vertex="1" parent="gms-learn-bookings-4-card-5">
+          <mxGeometry x="8.0" y="78.0" width="504" height="151" as="geometry" />
+        </mxCell>
+        <mxCell id="gms-learn-bookings-4-edge-0" value="" style="edgeStyle=orthogonalEdgeStyle;rounded=0;html=1;endArrow=block;endFill=1;strokeColor=#46566d;strokeWidth=2;fontFamily=Arial;fontSize=16;labelBackgroundColor=#ffffff;jettySize=auto;exitX=1.0;exitY=0.5;exitDx=0;exitDy=0;entryX=0.0;entryY=0.5;entryDx=0;entryDy=0;" edge="1" parent="1" source="gms-learn-bookings-4-card-0" target="gms-learn-bookings-4-card-1">
+          <mxGeometry relative="1" as="geometry" />
+        </mxCell>
+        <mxCell id="gms-learn-bookings-4-edge-1" value="" style="edgeStyle=orthogonalEdgeStyle;rounded=0;html=1;endArrow=block;endFill=1;strokeColor=#46566d;strokeWidth=2;fontFamily=Arial;fontSize=16;labelBackgroundColor=#ffffff;jettySize=auto;exitX=1.0;exitY=0.5;exitDx=0;exitDy=0;entryX=0.0;entryY=0.5;entryDx=0;entryDy=0;" edge="1" parent="1" source="gms-learn-bookings-4-card-1" target="gms-learn-bookings-4-card-2">
+          <mxGeometry relative="1" as="geometry" />
+        </mxCell>
+        <mxCell id="gms-learn-bookings-4-edge-2" value="" style="edgeStyle=orthogonalEdgeStyle;rounded=0;html=1;endArrow=block;endFill=1;strokeColor=#46566d;strokeWidth=2;fontFamily=Arial;fontSize=16;labelBackgroundColor=#ffffff;jettySize=auto;exitX=0.5;exitY=1.0;exitDx=0;exitDy=0;entryX=0.5;entryY=0.0;entryDx=0;entryDy=0;" edge="1" parent="1" source="gms-learn-bookings-4-card-2" target="gms-learn-bookings-4-card-3">
+          <mxGeometry relative="1" as="geometry" />
+        </mxCell>
+        <mxCell id="gms-learn-bookings-4-edge-3" value="" style="edgeStyle=orthogonalEdgeStyle;rounded=0;html=1;endArrow=block;endFill=1;strokeColor=#46566d;strokeWidth=2;fontFamily=Arial;fontSize=16;labelBackgroundColor=#ffffff;jettySize=auto;exitX=0.0;exitY=0.5;exitDx=0;exitDy=0;entryX=1.0;entryY=0.5;entryDx=0;entryDy=0;" edge="1" parent="1" source="gms-learn-bookings-4-card-3" target="gms-learn-bookings-4-card-4">
+          <mxGeometry relative="1" as="geometry" />
+        </mxCell>
+        <mxCell id="gms-learn-bookings-4-edge-4" value="" style="edgeStyle=orthogonalEdgeStyle;rounded=0;html=1;endArrow=block;endFill=1;strokeColor=#46566d;strokeWidth=2;fontFamily=Arial;fontSize=16;labelBackgroundColor=#ffffff;jettySize=auto;exitX=0.0;exitY=0.5;exitDx=0;exitDy=0;entryX=1.0;entryY=0.5;entryDx=0;entryDy=0;" edge="1" parent="1" source="gms-learn-bookings-4-card-4" target="gms-learn-bookings-4-card-5">
+          <mxGeometry relative="1" as="geometry" />
+        </mxCell>
+        <mxCell id="gms-learn-bookings-4-read" value="Đọc theo số và mũi tên: hàng trên từ trái sang phải, hàng dưới từ phải sang trái. Mỗi ô giải thích một bước học." style="rounded=1;whiteSpace=wrap;html=1;align=left;verticalAlign=middle;spacing=16;fontFamily=Arial;fontSize=18;fontColor=#172b4d;fillColor=none;strokeColor=none;fontStyle=0;arcSize=6;" vertex="1" parent="1">
+          <mxGeometry x="40" y="1090" width="1720" height="45" as="geometry" />
+        </mxCell>
+        <mxCell id="gms-learn-bookings-4-note" value="GHI NHỚ&lt;br&gt;Buổi lẻ: chưa hết giờ trước, đã qua mới nhất trước; mỗi PT tối đa một nút Đặt lại. Khối mới giữ vòng tròn theo yêu cầu cuối; còn ≤3 dùng is-ending. Các mục lịch / dải chấm / Cần chú ý&lt;br&gt;giữ nguyên." style="rounded=1;whiteSpace=wrap;html=1;align=left;verticalAlign=middle;spacing=16;fontFamily=Arial;fontSize=20;fontColor=#172b4d;fillColor=#d5e8d4;strokeColor=#82b366;fontStyle=0;arcSize=6;" vertex="1" parent="1">
+          <mxGeometry x="40" y="1150" width="1720" height="110" as="geometry" />
+        </mxCell>
+        <mxCell id="gms-learn-bookings-4-source" value="Đối chiếu: MyBookingService.buildWatchList()/chooseCta(); customer/my-bookings.jsp | Code hiện tại: 23/10/2026 (gồm thay đổi chưa commit)." style="rounded=1;whiteSpace=wrap;html=1;align=left;verticalAlign=middle;spacing=16;fontFamily=Arial;fontSize=14;fontColor=#172b4d;fillColor=none;strokeColor=none;fontStyle=0;arcSize=6;" vertex="1" parent="1">
+          <mxGeometry x="40" y="1267" width="1720" height="45" as="geometry" />
+        </mxCell>
+      </root>
+    </mxGraphModel>
+  </diagram>
+  <diagram id="gms-learn-bookings-ui" name="22. MyBookings · bố cục mới và màu GMS">
+    <mxGraphModel dx="1800" dy="1320" grid="1" gridSize="10" guides="1" tooltips="1" connect="1" arrows="1" fold="1" page="1" pageScale="1" pageWidth="1800" pageHeight="1320" math="0" shadow="0">
+      <root>
+        <mxCell id="0" />
+        <mxCell id="1" parent="0" />
+        <mxCell id="gms-learn-bookings-ui-title" value="22. MyBookings · bố cục mới và màu GMS" style="rounded=1;whiteSpace=wrap;html=1;align=left;verticalAlign=middle;spacing=16;fontFamily=Arial;fontSize=31;fontColor=#172b4d;fillColor=none;strokeColor=none;fontStyle=1;arcSize=6;" vertex="1" parent="1">
+          <mxGeometry x="40" y="20" width="1720" height="65" as="geometry" />
+        </mxCell>
+        <mxCell id="gms-learn-bookings-ui-subtitle" value="Bố cục mới đã chạy với seed thật; màu lấy từ computed style của GMS. Vòng tròn được giữ theo yêu cầu cuối." style="rounded=1;whiteSpace=wrap;html=1;align=left;verticalAlign=middle;spacing=16;fontFamily=Arial;fontSize=20;fontColor=#172b4d;fillColor=none;strokeColor=none;fontStyle=0;arcSize=6;" vertex="1" parent="1">
+          <mxGeometry x="40" y="92" width="1720" height="65" as="geometry" />
+        </mxCell>
+        <mxCell id="gms-learn-bookings-ui-nav" value="Về mục lục" style="rounded=1;whiteSpace=wrap;html=1;align=left;verticalAlign=middle;spacing=16;fontFamily=Arial;fontSize=18;fontColor=#172b4d;fillColor=#f5f5f5;strokeColor=#666666;fontStyle=1;arcSize=6;" vertex="1" parent="1" link="data:page/id,index-my-bookings-flow">
+          <mxGeometry x="40" y="164" width="210" height="43" as="geometry" />
+        </mxCell>
+        <mxCell id="gms-learn-bookings-ui-legend-servlet" value="Servlet" style="rounded=1;whiteSpace=wrap;html=1;align=center;verticalAlign=middle;spacing=16;fontFamily=Arial;fontSize=18;fontColor=#172b4d;fillColor=#dae8fc;strokeColor=#6c8ebf;fontStyle=0;arcSize=6;" vertex="1" parent="1">
+          <mxGeometry x="290" y="164" width="180" height="43" as="geometry" />
+        </mxCell>
+        <mxCell id="gms-learn-bookings-ui-legend-service" value="Service" style="rounded=1;whiteSpace=wrap;html=1;align=center;verticalAlign=middle;spacing=16;fontFamily=Arial;fontSize=18;fontColor=#172b4d;fillColor=#e1d5e7;strokeColor=#9673a6;fontStyle=0;arcSize=6;" vertex="1" parent="1">
+          <mxGeometry x="488" y="164" width="180" height="43" as="geometry" />
+        </mxCell>
+        <mxCell id="gms-learn-bookings-ui-legend-dao" value="DAO / SQL" style="rounded=1;whiteSpace=wrap;html=1;align=center;verticalAlign=middle;spacing=16;fontFamily=Arial;fontSize=18;fontColor=#172b4d;fillColor=#fff2cc;strokeColor=#d6b656;fontStyle=0;arcSize=6;" vertex="1" parent="1">
+          <mxGeometry x="686" y="164" width="180" height="43" as="geometry" />
+        </mxCell>
+        <mxCell id="gms-learn-bookings-ui-legend-dto" value="DTO" style="rounded=1;whiteSpace=wrap;html=1;align=center;verticalAlign=middle;spacing=16;fontFamily=Arial;fontSize=18;fontColor=#172b4d;fillColor=#d5e8d4;strokeColor=#82b366;fontStyle=0;arcSize=6;" vertex="1" parent="1">
+          <mxGeometry x="884" y="164" width="180" height="43" as="geometry" />
+        </mxCell>
+        <mxCell id="gms-learn-bookings-ui-legend-ui" value="JSP / JS" style="rounded=1;whiteSpace=wrap;html=1;align=center;verticalAlign=middle;spacing=16;fontFamily=Arial;fontSize=18;fontColor=#172b4d;fillColor=#f5f5f5;strokeColor=#666666;fontStyle=0;arcSize=6;" vertex="1" parent="1">
+          <mxGeometry x="1082" y="164" width="180" height="43" as="geometry" />
+        </mxCell>
+        <mxCell id="gms-learn-bookings-ui-ui-1" value="" style="rounded=1;whiteSpace=wrap;html=1;align=left;verticalAlign=middle;spacing=16;fontFamily=Arial;fontSize=22;fontColor=#172b4d;fillColor=none;strokeColor=none;fontStyle=0;arcSize=6;fillColor=#102A40;strokeColor=#3F5367;fontColor=#F0F4F8;" vertex="1" parent="1">
+          <mxGeometry x="40" y="235" width="1180" height="430" as="geometry" />
+        </mxCell>
+        <mxCell id="gms-learn-bookings-ui-ui-2" value="Gói PT 2 Tháng" style="rounded=1;whiteSpace=wrap;html=1;align=left;verticalAlign=middle;spacing=16;fontFamily=Arial;fontSize=28;fontColor=#172b4d;fillColor=none;strokeColor=none;fontStyle=1;arcSize=6;fillColor=none;strokeColor=none;fontColor=#F0F4F8;" vertex="1" parent="1">
+          <mxGeometry x="60" y="250" width="800" height="64" as="geometry" />
+        </mxCell>
+        <mxCell id="gms-learn-bookings-ui-ui-3" value="Xem trên lịch tập" style="rounded=1;whiteSpace=wrap;html=1;align=left;verticalAlign=middle;spacing=16;fontFamily=Arial;fontSize=20;fontColor=#172b4d;fillColor=none;strokeColor=none;fontStyle=0;arcSize=6;fillColor=none;strokeColor=#3F5367;fontColor=#F0F4F8;" vertex="1" parent="1">
+          <mxGeometry x="935" y="255" width="260" height="57" as="geometry" />
+        </mxCell>
+        <mxCell id="gms-learn-bookings-ui-ui-4" value="PT Đinh Công Sơn · đến 28/11/2026" style="rounded=1;whiteSpace=wrap;html=1;align=left;verticalAlign=middle;spacing=16;fontFamily=Arial;fontSize=22;fontColor=#172b4d;fillColor=none;strokeColor=none;fontStyle=0;arcSize=6;fillColor=none;strokeColor=none;fontColor=#B1C4D7;" vertex="1" parent="1">
+          <mxGeometry x="60" y="320" width="850" height="50" as="geometry" />
+        </mxCell>
+        <mxCell id="gms-learn-bookings-ui-ui-5" value="BUỔI TỚI · HÔM NAY" style="rounded=1;whiteSpace=wrap;html=1;align=left;verticalAlign=middle;spacing=16;fontFamily=Arial;fontSize=18;fontColor=#172b4d;fillColor=none;strokeColor=none;fontStyle=1;arcSize=6;fillColor=none;strokeColor=none;fontColor=#FF4F2B;" vertex="1" parent="1">
+          <mxGeometry x="60" y="406" width="800" height="48" as="geometry" />
+        </mxCell>
+        <mxCell id="gms-learn-bookings-ui-ui-6" value="Thứ 6, 23/10 · 15:00 – 16:30" style="rounded=1;whiteSpace=wrap;html=1;align=left;verticalAlign=middle;spacing=16;fontFamily=Arial;fontSize=27;fontColor=#172b4d;fillColor=none;strokeColor=none;fontStyle=1;arcSize=6;fillColor=none;strokeColor=none;fontColor=#F0F4F8;" vertex="1" parent="1">
+          <mxGeometry x="60" y="454" width="850" height="58" as="geometry" />
+        </mxCell>
+        <mxCell id="gms-learn-bookings-ui-ui-7" value="Nhắn Zalo PT" style="rounded=1;whiteSpace=wrap;html=1;align=left;verticalAlign=middle;spacing=16;fontFamily=Arial;fontSize=20;fontColor=#172b4d;fillColor=none;strokeColor=none;fontStyle=1;arcSize=6;fillColor=#FF4F2B;strokeColor=none;fontColor=#080F1B;" vertex="1" parent="1">
+          <mxGeometry x="76" y="532" width="220" height="56" as="geometry" />
+        </mxCell>
+        <mxCell id="gms-learn-bookings-ui-ring-8" value="" style="ellipse;fillColor=none;strokeColor=#18364F;strokeWidth=6;" vertex="1" parent="1">
+          <mxGeometry x="994" y="394" width="152" height="152" as="geometry" />
+        </mxCell>
+        <mxCell id="gms-learn-bookings-ui-arc-9" edge="1" parent="1" style="endArrow=none;startArrow=none;curved=1;strokeColor=#FF4F2B;strokeWidth=6;">
+          <mxGeometry relative="1" as="geometry">
+            <mxPoint x="1070.0" y="394.0" as="sourcePoint" />
+            <mxPoint x="1105.6798387717276" y="537.1040170572785" as="targetPoint" />
+            <Array as="points">
+              <mxPoint x="1080.0514856595414" y="394.66761894088285" />
+              <mxPoint x="1089.9263775767058" y="396.6587464201043" />
+              <mxPoint x="1099.4511845703598" y="399.938400479274" />
+              <mxPoint x="1108.4585660732084" y="404.44896114024846" />
+              <mxPoint x="1116.7902721247501" y="410.11118272588914" />
+              <mxPoint x="1124.299923652093" y="416.8255861209842" />
+              <mxPoint x="1130.8555841921038" y="424.4742065128155" />
+              <mxPoint x="1136.3420778725056" y="432.9226659054563" />
+              <mxPoint x="1140.6630129275072" y="442.02253399596447" />
+              <mxPoint x="1143.7424751969756" y="451.6139359344253" />
+              <mxPoint x="1145.5263618562053" y="461.52836115231923" />
+              <mxPoint x="1145.9833319440881" y="471.5916239111351" />
+              <mxPoint x="1145.105356989938" y="481.6269235575869" />
+              <mxPoint x="1142.9078620650444" y="491.4579507200586" />
+              <mxPoint x="1139.4294547808377" y="500.91198487376084" />
+              <mxPoint x="1134.7312469948715" y="509.822928853726" />
+              <mxPoint x="1128.8957811415178" y="518.0342270025286" />
+              <mxPoint x="1122.0255800505804" y="525.4016156840273" />
+              <mxPoint x="1114.241345731954" y="531.7956578395741" />
+            </Array>
+          </mxGeometry>
+        </mxCell>
+        <mxCell id="gms-learn-bookings-ui-ui-10" value="còn" style="rounded=1;whiteSpace=wrap;html=1;align=left;verticalAlign=middle;spacing=16;fontFamily=Arial;fontSize=21;fontColor=#172b4d;fillColor=none;strokeColor=none;fontStyle=0;arcSize=6;fillColor=none;strokeColor=none;fontColor=#F0F4F8;" vertex="1" parent="1">
+          <mxGeometry x="1018" y="406" width="104" height="40" as="geometry" />
+        </mxCell>
+        <mxCell id="gms-learn-bookings-ui-ui-11" value="26" style="rounded=1;whiteSpace=wrap;html=1;align=left;verticalAlign=middle;spacing=16;fontFamily=Arial;fontSize=32;fontColor=#172b4d;fillColor=none;strokeColor=none;fontStyle=1;arcSize=6;fillColor=none;strokeColor=none;fontColor=#F0F4F8;" vertex="1" parent="1">
+          <mxGeometry x="1020" y="446" width="100" height="52" as="geometry" />
+        </mxCell>
+        <mxCell id="gms-learn-bookings-ui-ui-12" value="buổi" style="rounded=1;whiteSpace=wrap;html=1;align=left;verticalAlign=middle;spacing=16;fontFamily=Arial;fontSize=21;fontColor=#172b4d;fillColor=none;strokeColor=none;fontStyle=0;arcSize=6;fillColor=none;strokeColor=none;fontColor=#F0F4F8;" vertex="1" parent="1">
+          <mxGeometry x="1018" y="498" width="104" height="40" as="geometry" />
+        </mxCell>
+        <mxCell id="gms-learn-bookings-ui-ui-13" value="19/45 đã qua" style="rounded=1;whiteSpace=wrap;html=1;align=left;verticalAlign=middle;spacing=16;fontFamily=Arial;fontSize=20;fontColor=#172b4d;fillColor=none;strokeColor=none;fontStyle=0;arcSize=6;fillColor=none;strokeColor=none;fontColor=#B1C4D7;" vertex="1" parent="1">
+          <mxGeometry x="974" y="562" width="192" height="46" as="geometry" />
+        </mxCell>
+        <mxCell id="gms-learn-bookings-ui-ui-14" value="Desktop: chỉ một khối đầu gói; một link lịch mở đúng buổi 274." style="rounded=1;whiteSpace=wrap;html=1;align=left;verticalAlign=middle;spacing=16;fontFamily=Arial;fontSize=20;fontColor=#172b4d;fillColor=none;strokeColor=none;fontStyle=0;arcSize=6;fillColor=#e8f0f5;strokeColor=#82b366;fontColor=#172b4d;" vertex="1" parent="1">
+          <mxGeometry x="40" y="695" width="1180" height="70" as="geometry" />
+        </mxCell>
+        <mxCell id="gms-learn-bookings-ui-ui-15" value="MÀU ĐÚNG THEO GMS ĐANG CHẠY&lt;br&gt;Nền: --color-surface #102A40; chữ: #F0F4F8.&lt;br&gt;Nút Zalo / vòng tròn: --color-primary #FF4F2B.&lt;br&gt;Cảnh báo: --color-warning-ink #F8CF7A; nền và viền RGBA được hòa trên nền panel." style="rounded=1;whiteSpace=wrap;html=1;align=left;verticalAlign=middle;spacing=16;fontFamily=Arial;fontSize=20;fontColor=#172b4d;fillColor=none;strokeColor=none;fontStyle=0;arcSize=6;fillColor=#f5f5f5;strokeColor=#666666;fontColor=#172b4d;" vertex="1" parent="1">
+          <mxGeometry x="40" y="800" width="1180" height="220" as="geometry" />
+        </mxCell>
+        <mxCell id="gms-learn-bookings-ui-ui-16" value="" style="rounded=1;whiteSpace=wrap;html=1;align=left;verticalAlign=middle;spacing=16;fontFamily=Arial;fontSize=22;fontColor=#172b4d;fillColor=none;strokeColor=none;fontStyle=0;arcSize=6;fillColor=#102A40;strokeColor=#3F5367;fontColor=#F0F4F8;" vertex="1" parent="1">
+          <mxGeometry x="1280" y="235" width="480" height="820" as="geometry" />
+        </mxCell>
+        <mxCell id="gms-learn-bookings-ui-ui-17" value="Gói PT 2 Tháng" style="rounded=1;whiteSpace=wrap;html=1;align=left;verticalAlign=middle;spacing=16;fontFamily=Arial;fontSize=26;fontColor=#172b4d;fillColor=none;strokeColor=none;fontStyle=1;arcSize=6;fillColor=none;strokeColor=none;fontColor=#F0F4F8;" vertex="1" parent="1">
+          <mxGeometry x="1298" y="255" width="440" height="60" as="geometry" />
+        </mxCell>
+        <mxCell id="gms-learn-bookings-ui-ui-18" value="Xem trên lịch tập" style="rounded=1;whiteSpace=wrap;html=1;align=left;verticalAlign=middle;spacing=16;fontFamily=Arial;fontSize=20;fontColor=#172b4d;fillColor=none;strokeColor=none;fontStyle=0;arcSize=6;fillColor=none;strokeColor=#3F5367;fontColor=#F0F4F8;" vertex="1" parent="1">
+          <mxGeometry x="1314" y="330" width="260" height="57" as="geometry" />
+        </mxCell>
+        <mxCell id="gms-learn-bookings-ui-ui-19" value="PT Đinh Công Sơn · đến 07/11/2026" style="rounded=1;whiteSpace=wrap;html=1;align=left;verticalAlign=middle;spacing=16;fontFamily=Arial;fontSize=21;fontColor=#172b4d;fillColor=none;strokeColor=none;fontStyle=0;arcSize=6;fillColor=none;strokeColor=none;fontColor=#B1C4D7;" vertex="1" parent="1">
+          <mxGeometry x="1298" y="407" width="440" height="80" as="geometry" />
+        </mxCell>
+        <mxCell id="gms-learn-bookings-ui-ui-20" value="BUỔI TỚI · HÔM NAY" style="rounded=1;whiteSpace=wrap;html=1;align=left;verticalAlign=middle;spacing=16;fontFamily=Arial;fontSize=18;fontColor=#172b4d;fillColor=none;strokeColor=none;fontStyle=1;arcSize=6;fillColor=none;strokeColor=none;fontColor=#FF4F2B;" vertex="1" parent="1">
+          <mxGeometry x="1298" y="500" width="440" height="48" as="geometry" />
+        </mxCell>
+        <mxCell id="gms-learn-bookings-ui-ui-21" value="Thứ 6, 23/10 · 18:00 – 19:30" style="rounded=1;whiteSpace=wrap;html=1;align=left;verticalAlign=middle;spacing=16;fontFamily=Arial;fontSize=24;fontColor=#172b4d;fillColor=none;strokeColor=none;fontStyle=1;arcSize=6;fillColor=none;strokeColor=none;fontColor=#F0F4F8;" vertex="1" parent="1">
+          <mxGeometry x="1298" y="550" width="440" height="94" as="geometry" />
+        </mxCell>
+        <mxCell id="gms-learn-bookings-ui-ui-22" value="Cần Membership/DayPass" style="rounded=1;whiteSpace=wrap;html=1;align=left;verticalAlign=middle;spacing=16;fontFamily=Arial;fontSize=19;fontColor=#172b4d;fillColor=none;strokeColor=none;fontStyle=0;arcSize=6;fillColor=#303E40;strokeColor=#686956;fontColor=#F8CF7A;" vertex="1" parent="1">
+          <mxGeometry x="1314" y="635" width="330" height="46" as="geometry" />
+        </mxCell>
+        <mxCell id="gms-learn-bookings-ui-ui-23" value="Nhắn Zalo PT" style="rounded=1;whiteSpace=wrap;html=1;align=left;verticalAlign=middle;spacing=16;fontFamily=Arial;fontSize=20;fontColor=#172b4d;fillColor=none;strokeColor=none;fontStyle=1;arcSize=6;fillColor=#FF4F2B;strokeColor=none;fontColor=#080F1B;" vertex="1" parent="1">
+          <mxGeometry x="1314" y="700" width="220" height="54" as="geometry" />
+        </mxCell>
+        <mxCell id="gms-learn-bookings-ui-ring-24" value="" style="ellipse;fillColor=none;strokeColor=#18364F;strokeWidth=6;" vertex="1" parent="1">
+          <mxGeometry x="1446" y="793" width="148" height="148" as="geometry" />
+        </mxCell>
+        <mxCell id="gms-learn-bookings-ui-arc-25" edge="1" parent="1" style="endArrow=none;startArrow=none;curved=1;strokeColor=#FF4F2B;strokeWidth=6;">
+          <mxGeometry relative="1" as="geometry">
+            <mxPoint x="1520.0" y="793.0" as="sourcePoint" />
+            <mxPoint x="1446.045078800587" y="864.4174372440149" as="targetPoint" />
+            <Array as="points">
+              <mxPoint x="1537.4005163695917" y="795.0748859571876" />
+              <mxPoint x="1553.8252466023434" y="801.1831883764439" />
+              <mxPoint x="1568.3531246952678" y="810.9823658817701" />
+              <mxPoint x="1580.1694563174801" y="823.9229002083606" />
+              <mxPoint x="1588.6116052379423" y="839.2791120872225" />
+              <mxPoint x="1593.206152639261" y="856.1898558863816" />
+              <mxPoint x="1593.6954454975819" y="873.7068109346358" />
+              <mxPoint x="1590.0520452485616" y="890.8476614470578" />
+              <mxPoint x="1582.480266487149" y="906.6511828284458" />
+              <mxPoint x="1571.4047194139657" y="920.2311452250602" />
+              <mxPoint x="1557.446498544966" y="930.826011521337" />
+              <mxPoint x="1541.388352973891" y="937.841642817373" />
+              <mxPoint x="1524.130791369494" y="940.8846165494666" />
+              <mxPoint x="1506.6415832514585" y="939.7842888401906" />
+              <mxPoint x="1489.9014884123908" y="934.6023638655524" />
+              <mxPoint x="1474.8492578713062" y="925.6294336082841" />
+              <mxPoint x="1462.328990595071" y="913.3686820409702" />
+              <mxPoint x="1453.0427981175146" y="898.5076675758154" />
+              <mxPoint x="1447.5114315296485" y="881.8797661648015" />
+            </Array>
+          </mxGeometry>
+        </mxCell>
+        <mxCell id="gms-learn-bookings-ui-ui-26" value="còn" style="rounded=1;whiteSpace=wrap;html=1;align=left;verticalAlign=middle;spacing=16;fontFamily=Arial;fontSize=21;fontColor=#172b4d;fillColor=none;strokeColor=none;fontStyle=0;arcSize=6;fillColor=none;strokeColor=none;fontColor=#F0F4F8;" vertex="1" parent="1">
+          <mxGeometry x="1468" y="803" width="104" height="40" as="geometry" />
+        </mxCell>
+        <mxCell id="gms-learn-bookings-ui-ui-27" value="11" style="rounded=1;whiteSpace=wrap;html=1;align=left;verticalAlign=middle;spacing=16;fontFamily=Arial;fontSize=32;fontColor=#172b4d;fillColor=none;strokeColor=none;fontStyle=1;arcSize=6;fillColor=none;strokeColor=none;fontColor=#F0F4F8;" vertex="1" parent="1">
+          <mxGeometry x="1470" y="843" width="100" height="52" as="geometry" />
+        </mxCell>
+        <mxCell id="gms-learn-bookings-ui-ui-28" value="buổi" style="rounded=1;whiteSpace=wrap;html=1;align=left;verticalAlign=middle;spacing=16;fontFamily=Arial;fontSize=21;fontColor=#172b4d;fillColor=none;strokeColor=none;fontStyle=0;arcSize=6;fillColor=none;strokeColor=none;fontColor=#F0F4F8;" vertex="1" parent="1">
+          <mxGeometry x="1468" y="895" width="104" height="40" as="geometry" />
+        </mxCell>
+        <mxCell id="gms-learn-bookings-ui-ui-29" value="34/45 đã qua" style="rounded=1;whiteSpace=wrap;html=1;align=left;verticalAlign=middle;spacing=16;fontFamily=Arial;fontSize=20;fontColor=#172b4d;fillColor=none;strokeColor=none;fontStyle=0;arcSize=6;fillColor=none;strokeColor=none;fontColor=#B1C4D7;" vertex="1" parent="1">
+          <mxGeometry x="1426" y="957" width="188" height="46" as="geometry" />
+        </mxCell>
+        <mxCell id="gms-learn-bookings-ui-ui-30" value="Mobile: nội dung theo thứ tự DOM, vòng tròn xuống dưới; kiểm tra 390px và 320px.&lt;br&gt;Gói hết buổi: “Không còn buổi sắp tới”; gói kết thúc ẩn Zalo; buổi lẻ không có vòng thống kê.&lt;br&gt;Còn ≤3: class is-ending dùng token warning. Các khối Lịch cố định / Các buổi / Cần chú ý giữ nguyên." style="rounded=1;whiteSpace=wrap;html=1;align=left;verticalAlign=middle;spacing=16;fontFamily=Arial;fontSize=20;fontColor=#172b4d;fillColor=none;strokeColor=none;fontStyle=0;arcSize=6;fillColor=#d5e8d4;strokeColor=#82b366;fontColor=#172b4d;" vertex="1" parent="1">
+          <mxGeometry x="40" y="1100" width="1720" height="136" as="geometry" />
+        </mxCell>
+        <mxCell id="gms-learn-bookings-ui-ui-31" value="Nguồn: my-bookings.jsp, _booking-package.jspf, my-bookings.css; seed Ngô Gia Hương / Đỗ Thị Mai; 23/10/2026." style="rounded=1;whiteSpace=wrap;html=1;align=left;verticalAlign=middle;spacing=16;fontFamily=Arial;fontSize=17;fontColor=#172b4d;fillColor=none;strokeColor=none;fontStyle=0;arcSize=6;fillColor=none;strokeColor=none;fontColor=#172b4d;" vertex="1" parent="1">
+          <mxGeometry x="40" y="1250" width="1720" height="55" as="geometry" />
+        </mxCell>
+      </root>
+    </mxGraphModel>
+  </diagram>
+</mxfile>
