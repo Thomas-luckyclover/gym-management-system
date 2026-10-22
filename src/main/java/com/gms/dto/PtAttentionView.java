@@ -13,6 +13,11 @@ public class PtAttentionView {
 
     // ===== 1. FIELD: PtDashboardService truyền đủ giá trị vào constructor =====
 
+    // ----- 1.0. Mã để nút "Nhắc khách" gửi lên (Service kiểm tra lại, không tin form) -----
+    private final int customerId;          // PtClientPackageView.getCustomerId()
+    private final int ptSubscriptionId;    // PtClientPackageView.getPtSubscriptionId()
+    private boolean reminded;              // hôm nay PT đã nhắc khách này chưa → nút thành "Đã nhắc hôm nay"
+
     // ----- 1.1. Service lấy nguyên giá trị từ DTO do DAO tạo -----
 
     // PtDashboardService: lấy từ PtClientPackageView.getCustomerName().
@@ -79,11 +84,13 @@ public class PtAttentionView {
      * @param attentionTitle tiêu đề cảnh báo
      * @param attentionMessage lời nhắc cụ thể
      */
-    public PtAttentionView(String customerName, LocalDate ptEndDate, int scheduledSessionCount,
+    public PtAttentionView(int customerId, int ptSubscriptionId, String customerName, LocalDate ptEndDate, int scheduledSessionCount,
             LocalDate sessionDate, LocalDate membershipEndDate, LocalDate freezeEndDate,
             String ptSubscriptionTypeLabel, String membershipStatusLabel,
             String attentionTitle, String attentionMessage) {
         // B1: nhận các giá trị Service lấy từ DTO của DAO.
+        this.customerId = customerId;
+        this.ptSubscriptionId = ptSubscriptionId;
         this.customerName = customerName;
         this.ptEndDate = ptEndDate;
         this.scheduledSessionCount = scheduledSessionCount;
@@ -101,6 +108,11 @@ public class PtAttentionView {
     }
 
     // ===== 3. GETTER: cùng thứ tự với field, JSP đọc trực tiếp từ item =====
+
+    public int getCustomerId() { return customerId; }
+    public int getPtSubscriptionId() { return ptSubscriptionId; }
+    public boolean isReminded() { return reminded; }
+    public void setReminded(boolean reminded) { this.reminded = reminded; }
     // Không có setter vì Service truyền đủ dữ liệu khi tạo DTO.
 
     // ----- 3.1. Giá trị lấy từ DTO của DAO, tương ứng nhóm 1.1 -----
