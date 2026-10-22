@@ -102,7 +102,7 @@
                 <h2>Đang mở từ <c:out value="${gms:formatDateTime(detail.shift.openedAt)}"/></h2>
                 <p class="muted">
                   Mở bởi <b><c:out value="${detail.openedByEmployeeName}" default="Lễ tân"/></b>.
-                  Mọi hóa đơn phát sinh tại quầy từ thời điểm này được tính vào ca trực.
+                  Mọi giao dịch phát sinh tại quầy từ thời điểm này được tính vào ca trực.
                 </p>
               </c:when>
               <c:when test="${detail.shift.closed}">
@@ -146,7 +146,7 @@
             </c:if>
             <c:if test="${detail.shift.closed}">
               <span class="badge badge-muted badge-lg">
-                <i class="fa-solid fa-circle-check"></i> Sổ ca đã chốt (chỉ xem)
+                <i class="fa-solid fa-lock"></i> Ca làm việc đã chốt (chỉ xem)
               </span>
             </c:if>
           </div>
@@ -157,19 +157,19 @@
           <div class="kpi-card">
             <span class="kpi-label"><i class="fa-solid fa-money-bill-wave"></i> Tiền mặt</span>
             <b class="kpi-value tabular"><c:out value="${gms:formatMoney(detail.metrics.cashTotal)}"/></b>
-            <span class="kpi-foot"><c:out value="${detail.metrics.cashCount}"/> hóa đơn hợp lệ</span>
+            <span class="kpi-foot"><c:out value="${detail.metrics.cashCount}"/> giao dịch hợp lệ</span>
           </div>
 
           <div class="kpi-card">
             <span class="kpi-label"><i class="fa-solid fa-building-columns"></i> Chuyển khoản</span>
             <b class="kpi-value tabular"><c:out value="${gms:formatMoney(detail.metrics.bankTotal)}"/></b>
-            <span class="kpi-foot"><c:out value="${detail.metrics.bankCount}"/> hóa đơn hợp lệ</span>
+            <span class="kpi-foot"><c:out value="${detail.metrics.bankCount}"/> giao dịch hợp lệ</span>
           </div>
 
           <div class="kpi-card">
             <span class="kpi-label"><i class="fa-solid fa-chart-line"></i> Tổng thu</span>
             <b class="kpi-value tabular"><c:out value="${gms:formatMoney(detail.metrics.totalRevenue)}"/></b>
-            <span class="kpi-foot"><c:out value="${detail.metrics.totalValidCount}"/> hóa đơn hợp lệ</span>
+            <span class="kpi-foot"><c:out value="${detail.metrics.totalValidCount}"/> giao dịch hợp lệ</span>
           </div>
 
           <div class="kpi-card ${detail.metrics.pendingCount > 0 ? 'kpi-warn' : ''}">
@@ -178,7 +178,7 @@
             <span class="kpi-foot">
               <c:choose>
                 <c:when test="${detail.metrics.pendingCount > 0}">Phải xử lý xong trước khi chốt ca</c:when>
-                <c:otherwise>Không có đơn treo trong ca</c:otherwise>
+                <c:otherwise>Không có đơn chờ xử lý</c:otherwise>
               </c:choose>
             </span>
           </div>
@@ -214,7 +214,7 @@
             <div class="search-box">
               <i class="fa-solid fa-magnifying-glass search-icon"></i>
               <input id="txSearch" name="q" type="search" value="<c:out value='${detail.searchKeyword}'/>"
-                     placeholder="Tìm theo mã đơn hoặc tên khách..." aria-label="Tìm giao dịch">
+                     placeholder="Tìm theo mã đơn hoặc họ tên khách hàng..." aria-label="Tìm giao dịch">
             </div>
 
             <div class="filter-group">
@@ -230,7 +230,7 @@
               <label for="filterStatus">Trạng thái:</label>
               <select id="filterStatus" name="status" class="select-input">
                 <option value="all" ${empty detail.statusFilter || detail.statusFilter == 'all' ? 'selected' : ''}>Tất cả</option>
-                <option value="paid" ${detail.statusFilter == 'paid' ? 'selected' : ''}>Đã thanh toán (Hợp lệ)</option>
+                <option value="paid" ${detail.statusFilter == 'paid' ? 'selected' : ''}>Đã thanh toán</option>
                 <option value="pending" ${detail.statusFilter == 'pending' ? 'selected' : ''}>Chờ xác nhận</option>
                 <option value="cancelled" ${detail.statusFilter == 'cancelled' ? 'selected' : ''}>Đã hủy</option>
               </select>
@@ -264,7 +264,7 @@
                         <%-- Trạng thái đơn --%>
                         <c:choose>
                           <c:when test="${item.paid}">
-                            <span class="badge badge-ok">Hợp lệ</span>
+                            <span class="badge badge-ok">Đã thanh toán</span>
                           </c:when>
                           <c:when test="${item.pending}">
                             <span class="badge badge-warn">Chờ xác nhận</span>
@@ -309,7 +309,7 @@
                             <input type="hidden" name="orderId" value="${item.orderId}">
                             <button class="btn btn-outline btn-sm btn-confirm-pay" type="submit"
                                     data-confirm-title="Xác nhận chuyển khoản"
-                                    data-confirm-message="Bạn đã kiểm tra biến động số dư và xác nhận nhận đủ tiền cho đơn ${item.orderCode}?">
+                                    data-confirm-message="Bạn đã kiểm tra biến động số dư tài khoản và xác nhận nhận đủ tiền cho đơn ${item.orderCode}?">
                               <i class="fa-solid fa-check"></i> Đã nhận tiền
                             </button>
                           </form>
@@ -479,7 +479,7 @@
             <div class="field">
               <label class="field-label" for="inputCancelReason">Lý do hủy đơn <span class="required">*</span></label>
               <textarea id="inputCancelReason" name="cancelReason" rows="3" class="field-textarea"
-                        placeholder="Ví dụ: Khách đổi ý ngay tại quầy, thu nhầm gói, quẹt lỗi..."
+                        placeholder="Ví dụ: Khách đổi ý tại quầy, chọn nhầm gói tập, thanh toán bị lỗi..."
                         minlength="5" maxlength="500" required></textarea>
               <small class="field-hint">Bắt buộc giải trình cụ thể từ 5 đến 500 ký tự.</small>
               <div class="field-error" id="cancelReasonError" hidden></div>
