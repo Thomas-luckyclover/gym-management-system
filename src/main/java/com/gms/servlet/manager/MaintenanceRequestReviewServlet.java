@@ -74,6 +74,20 @@ public class MaintenanceRequestReviewServlet extends HttpServlet {
                         SessionKey.ACCOUNT_ID
                 );
 
+        if (!RequestUtil.isValidCsrfToken(request)) {
+            RequestUtil.setFlashToast(
+                    request,
+                    "error",
+                    "Yêu cầu không hợp lệ hoặc đã hết hạn (CSRF)."
+            );
+            RequestUtil.redirect(
+                    request,
+                    response,
+                    "/manager/maintenance-requests"
+            );
+            return;
+        }
+
         int requestId =
                 RequestUtil.getIntParam(
                         request,
@@ -224,6 +238,10 @@ public class MaintenanceRequestReviewServlet extends HttpServlet {
                 "activeNav",
                 "maintenance"
         );
+
+        HttpSession session = request.getSession(true);
+        String csrfToken = RequestUtil.getOrCreateCsrfToken(session);
+        request.setAttribute("csrfToken", csrfToken);
 
         RequestUtil.forward(
                 request,

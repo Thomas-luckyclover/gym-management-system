@@ -3,6 +3,7 @@ package com.gms.servlet.receptionist;
 import com.gms.dto.PageResult;
 import com.gms.dto.ServiceResult;
 import com.gms.entity.Facility;
+import com.gms.entity.MaintenanceRequest;
 import com.gms.service.MaintenanceRequestService;
 import com.gms.util.PaginationUtil;
 import com.gms.util.RequestUtil;
@@ -11,6 +12,7 @@ import jakarta.servlet.annotation.WebServlet;
 import jakarta.servlet.http.HttpServlet;
 import jakarta.servlet.http.HttpServletRequest;
 import jakarta.servlet.http.HttpServletResponse;
+import jakarta.servlet.http.HttpSession;
 
 import java.io.IOException;
 import java.util.Collections;
@@ -77,6 +79,25 @@ public class FacilityCatalogServlet
                 "activeNav",
                 "equipment"
         );
+
+        request.setAttribute(
+                "priorityOptions",
+                MaintenanceRequest.Priority.values()
+        );
+
+        request.setAttribute(
+                "incidentTypeOptions",
+                MaintenanceRequest.IncidentType.values()
+        );
+
+        request.setAttribute(
+                "detectedByOptions",
+                MaintenanceRequest.DetectedBy.values()
+        );
+
+        HttpSession session = request.getSession(true);
+        String csrfToken = RequestUtil.getOrCreateCsrfToken(session);
+        request.setAttribute("csrfToken", csrfToken);
 
         if (!result.isSuccess()) {
             request.setAttribute(
