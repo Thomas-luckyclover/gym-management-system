@@ -60,6 +60,10 @@ public class MyBookingService {
     private final MyPtSessionService sessionService = new MyPtSessionService();
     private final SystemConfigService systemConfigService = new SystemConfigService();
 
+    // ================================================================================================================
+    // 1. HÀM CHÍNH — getMyBookings điều phối cả màn; các nhóm hàm phụ nằm ngay bên dưới
+    // ================================================================================================================
+
     /**
      * Dữ liệu cả màn.
      * @param selectedId ?id= trên URL: mã gói, "single", hoặc rỗng/sai → tự chọn gói đầu tiên
@@ -127,6 +131,10 @@ public class MyBookingService {
         }
     }
 
+    // ================================================================================================================
+    // 2. CHỌN GÓI — điền thẻ gói, đếm buổi lẻ gần đây rồi chọn gói đang xem
+    // ================================================================================================================
+
     /** Điền chữ hiển thị cho 1 thẻ gói: loại gói, người tập cùng, link Zalo PT. */
     private void fillPackage(MyPtPackageView p, int myCustomerId) {
         p.setTypeLabel(MyPtSessionService.typeLabel(p.getType()));
@@ -137,39 +145,17 @@ public class MyBookingService {
         }
     }
 
-    /** Gói PT: lịch cố định + lý do buổi lệch + vạch tuần cho dải chấm + số ngày còn lại. */
-    private void fillPackageDetail(MyBookingView view, MyPtPackageView selected,
-            List<MyPtSessionRow> sessions, LocalDate today) throws SQLException {
-        // B1: tuần mẫu T2–T6 + các buổi lệch
-        applyWeekTemplate(view, sessions);
-
-        // B2: buổi lệch → hỏi SessionMoveLogs vì sao lệch (chỉ khi có buổi lệch)
-        if (!view.getOffPattern().isEmpty()) {
-            Map<Integer, SessionMoveInfo> moves = bookingDAO.findMoves(selected.getSubscriptionId());
-            for (MyPtSessionRow row : view.getOffPattern()) {
-                row.setMoveNote(moveNote(moves.get(row.getSessionId())));
+    /** Số buổi lẻ (không tính buổi bị hủy) trong 30 ngày gần nhất tính tới hôm nay. */
+    static int countRecentSingles(List<MyPtSessionRow> singles, LocalDate today) {
+        LocalDate from = today.minusDays(SINGLE_SUGGEST_DAYS);
+        int count = 0;
+        for (MyPtSessionRow s : singles) {
+            boolean inWindow = !s.getSlotDate().isBefore(from) && !s.getSlotDate().isAfter(today);
+            if (inWindow && !"Cancelled".equals(s.getStatus())) {
+                count++;
             }
         }
-
-        // B3: vạch ngăn tuần + số ngày tới hết hạn
-        markWeeks(sessions);
-        view.setDaysLeft(Math.max(0, ChronoUnit.DAYS.between(today, selected.getEndDate())));
-    }
-
-    /** Giờ mở cửa (P-19) + hotline — chỉ đọc khi CTA bảo khách ra quầy. */
-    private void fillCounterInfo(MyBookingView view) throws SQLException {
-        String cta = view.getCtaKind();
-        boolean atCounter = CTA_RENEW_AT_COUNTER.equals(cta) || CTA_REJOIN.equals(cta) || CTA_PT_PACKAGE.equals(cta);
-        if (!atCounter) {
-            return;
-        }
-        view.setHotline(AppConstants.GYM_HOTLINE);
-        view.setHotlineTel(AppConstants.GYM_HOTLINE_TEL);
-        try {
-            view.setOpeningHours(systemConfigService.getString(SystemConfigService.OPENING_HOURS).replace("-", " – "));
-        } catch (IllegalStateException e) {
-            view.setOpeningHours(null);   // thiếu P-19 thì chỉ không hiện giờ mở cửa, không làm hỏng màn
-        }
+        return count;
     }
 
     /**
@@ -208,6 +194,10 @@ public class MyBookingService {
         return null;
     }
 
+    // ================================================================================================================
+    // 3. BUỔI TỚI VÀ CẢNH BÁO — số đếm và danh sách khách cần xử lý
+    // ================================================================================================================
+
     /** Đếm các trạng thái và chọn buổi Scheduled đầu tiên chưa kết thúc. */
     static void countSessions(MyBookingView view, List<MyPtSessionRow> sessions, LocalDateTime now) {
         // B1: đếm theo mã trạng thái
@@ -232,6 +222,57 @@ public class MyBookingService {
             view.setDaysUntilFocus(ChronoUnit.DAYS.between(now.toLocalDate(), s.getSlotDate()));
             break;
         }
+    }
+
+    /**
+     * "Cần để ý": chỉ buổi SẮP TỚI mà bạn chưa có Membership/DayPass — còn kịp mua gói trước ngày tập.
+     * Không tính ngày phòng nghỉ (PT tự dời) và kỳ bảo lưu (vẫn có gói).
+     */
+    static List<MyPtSessionRow> buildWatchList(List<MyPtSessionRow> sessions) {
+        List<MyPtSessionRow> warn = new ArrayList<>();
+        for (MyPtSessionRow s : sessions) {
+            if (MyPtSessionService.KEY_WARN.equals(s.getStatusKey()) && s.isNoGymPass()) {
+                warn.add(s);
+            }
+        }
+        return warn;
+    }
+
+    /**
+     * Gom các buổi CÙNG trạng thái + CÙNG lý do thành 1 nhóm (giữ thứ tự xuất hiện đầu tiên).
+     * VD 11 buổi "chưa có Membership" → 1 dòng "11 buổi" + 11 chip ngày.
+     */
+    static List<SessionGroup> groupByReason(List<MyPtSessionRow> sessions) {
+        Map<String, SessionGroup> groups = new LinkedHashMap<>();
+        for (MyPtSessionRow s : sessions) {
+            String key = s.getStatusKey() + "|" + s.getExplanation();
+            groups.computeIfAbsent(key, k -> new SessionGroup(s.getStatusKey(), s.getStatusLabel(), s.getExplanation()))
+                    .getSessions().add(s);
+        }
+        return new ArrayList<>(groups.values());
+    }
+
+    // ================================================================================================================
+    // 4. CHI TIẾT GÓI — fillPackageDetail gọi các hàm dựng lịch và lý do lệch ngay dưới
+    // ================================================================================================================
+
+    /** Gói PT: lịch cố định + lý do buổi lệch + vạch tuần cho dải chấm + số ngày còn lại. */
+    private void fillPackageDetail(MyBookingView view, MyPtPackageView selected,
+            List<MyPtSessionRow> sessions, LocalDate today) throws SQLException {
+        // B1: tuần mẫu T2–T6 + các buổi lệch
+        applyWeekTemplate(view, sessions);
+
+        // B2: buổi lệch → hỏi SessionMoveLogs vì sao lệch (chỉ khi có buổi lệch)
+        if (!view.getOffPattern().isEmpty()) {
+            Map<Integer, SessionMoveInfo> moves = bookingDAO.findMoves(selected.getSubscriptionId());
+            for (MyPtSessionRow row : view.getOffPattern()) {
+                row.setMoveNote(moveNote(moves.get(row.getSessionId())));
+            }
+        }
+
+        // B3: vạch ngăn tuần + số ngày tới hết hạn
+        markWeeks(sessions);
+        view.setDaysLeft(Math.max(0, ChronoUnit.DAYS.between(today, selected.getEndDate())));
     }
 
     /**
@@ -379,39 +420,16 @@ public class MyBookingService {
         }
     }
 
-    /**
-     * "Cần để ý": chỉ buổi SẮP TỚI mà bạn chưa có Membership/DayPass — còn kịp mua gói trước ngày tập.
-     * Không tính ngày phòng nghỉ (PT tự dời) và kỳ bảo lưu (vẫn có gói).
-     */
-    static List<MyPtSessionRow> buildWatchList(List<MyPtSessionRow> sessions) {
-        List<MyPtSessionRow> warn = new ArrayList<>();
-        for (MyPtSessionRow s : sessions) {
-            if (MyPtSessionService.KEY_WARN.equals(s.getStatusKey()) && s.isNoGymPass()) {
-                warn.add(s);
-            }
-        }
-        return warn;
-    }
+    // ================================================================================================================
+    // 5. BUỔI LẺ — xếp buổi sắp tới trước và đánh dấu buổi có thể đặt lại
+    // ================================================================================================================
 
-    /**
-     * Gom các buổi CÙNG trạng thái + CÙNG lý do thành 1 nhóm (giữ thứ tự xuất hiện đầu tiên).
-     * VD 11 buổi "chưa có Membership" → 1 dòng "11 buổi" + 11 chip ngày.
-     */
-    static List<SessionGroup> groupByReason(List<MyPtSessionRow> sessions) {
-        Map<String, SessionGroup> groups = new LinkedHashMap<>();
-        for (MyPtSessionRow s : sessions) {
-            String key = s.getStatusKey() + "|" + s.getExplanation();
-            groups.computeIfAbsent(key, k -> new SessionGroup(s.getStatusKey(), s.getStatusLabel(), s.getExplanation()))
-                    .getSessions().add(s);
-        }
-        return new ArrayList<>(groups.values());
-    }
+
 
     /**
      * Buổi lẻ: buổi chưa kết thúc trước (gần nhất trước), rồi buổi đã qua (mới nhất trước).
      * Buổi đã qua gần nhất với mỗi PT (không bị hủy) → rebook = "Đặt lại với PT này".
      */
-
 
     static List<MyPtSessionRow> orderSingles(List<MyPtSessionRow> singles, LocalDateTime now) {
         // B1: tách sắp tới / đã qua
@@ -435,18 +453,9 @@ public class MyBookingService {
         return upcoming;
     }
 
-    /** Số buổi lẻ (không tính buổi bị hủy) trong 30 ngày gần nhất tính tới hôm nay. */
-    static int countRecentSingles(List<MyPtSessionRow> singles, LocalDate today) {
-        LocalDate from = today.minusDays(SINGLE_SUGGEST_DAYS);
-        int count = 0;
-        for (MyPtSessionRow s : singles) {
-            boolean inWindow = !s.getSlotDate().isBefore(from) && !s.getSlotDate().isAfter(today);
-            if (inWindow && !"Cancelled".equals(s.getStatus())) {
-                count++;
-            }
-        }
-        return count;
-    }
+    // ================================================================================================================
+    // 6. GỢI Ý HÀNH ĐỘNG — chooseCta chọn nút; fillCounterInfo thêm thông tin quầy
+    // ================================================================================================================
 
     /**
      * Chọn 1 CTA theo độ ưu tiên (null = không hiện gì):
@@ -479,4 +488,21 @@ public class MyBookingService {
         boolean fewDays = view.getDaysLeft() <= RENEW_DAYS_LEFT;
         return fewSessions || fewDays ? CTA_RENEW_AT_COUNTER : null;
     }
+
+    /** Giờ mở cửa (P-19) + hotline — chỉ đọc khi CTA bảo khách ra quầy. */
+    private void fillCounterInfo(MyBookingView view) throws SQLException {
+        String cta = view.getCtaKind();
+        boolean atCounter = CTA_RENEW_AT_COUNTER.equals(cta) || CTA_REJOIN.equals(cta) || CTA_PT_PACKAGE.equals(cta);
+        if (!atCounter) {
+            return;
+        }
+        view.setHotline(AppConstants.GYM_HOTLINE);
+        view.setHotlineTel(AppConstants.GYM_HOTLINE_TEL);
+        try {
+            view.setOpeningHours(systemConfigService.getString(SystemConfigService.OPENING_HOURS).replace("-", " – "));
+        } catch (IllegalStateException e) {
+            view.setOpeningHours(null);   // thiếu P-19 thì chỉ không hiện giờ mở cửa, không làm hỏng màn
+        }
+    }
+
 }

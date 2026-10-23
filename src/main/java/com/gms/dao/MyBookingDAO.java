@@ -15,6 +15,10 @@ import java.util.Map;
  */
 public class MyBookingDAO {
 
+    // ================================================================================================================
+    // 1. LỊCH SỬ DỜI BUỔI — findMoves trả mã buổi và thông tin dời cho MyBookingService
+    // ================================================================================================================
+
     /**
      * Các buổi của 1 gói đã từng bị dời (SessionMoveLogs), theo mã buổi.
      * Service đã kiểm tra gói thuộc khách trước khi gọi → ở đây chỉ lọc theo mã gói.
@@ -52,4 +56,5 @@ public class MyBookingDAO {
         }
         return moves;
     }
+
 }

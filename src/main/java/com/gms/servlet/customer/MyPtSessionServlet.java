@@ -30,6 +30,11 @@ public class MyPtSessionServlet extends HttpServlet {
     private final CustomerDashboardService dashboardService = new CustomerDashboardService();
     private final MyPtSessionService sessionService = new MyPtSessionService();
 
+    // ================================================================================================================
+    // 1. MỞ MÀN — doGet gọi các hàm đọc session, header và lịch ngay dưới
+    // ================================================================================================================
+
+    /** Đọc tài khoản, tải header và lịch tuần/tháng rồi mở JSP. */
     @Override
     protected void doGet(HttpServletRequest request, HttpServletResponse response)
             throws ServletException, IOException {
@@ -48,6 +53,12 @@ public class MyPtSessionServlet extends HttpServlet {
         request.setAttribute("activeSidebar", "pt-sessions");
         request.setAttribute("themeClass", "theme-pt customer-dashboard-page my-pt-sessions-page");
         RequestUtil.forward(request, response, VIEW);
+    }
+
+    /** accountId trong HttpSession (đặt lúc đăng nhập). Null = chưa đăng nhập. */
+    private Integer getAccountId(HttpServletRequest request) {
+        HttpSession session = request.getSession(false);
+        return session == null ? null : (Integer) session.getAttribute(SessionKey.ACCOUNT_ID);
     }
 
     /** Tên + mã khách ở header (dùng chung với Customer Dashboard). */
@@ -99,9 +110,4 @@ public class MyPtSessionServlet extends HttpServlet {
         }
     }
 
-    /** accountId trong HttpSession (đặt lúc đăng nhập). Null = chưa đăng nhập. */
-    private Integer getAccountId(HttpServletRequest request) {
-        HttpSession session = request.getSession(false);
-        return session == null ? null : (Integer) session.getAttribute(SessionKey.ACCOUNT_ID);
-    }
 }

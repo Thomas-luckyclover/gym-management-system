@@ -29,6 +29,11 @@ public class MyBookingServlet extends HttpServlet {
     private final CustomerDashboardService dashboardService = new CustomerDashboardService();
     private final MyBookingService bookingService = new MyBookingService();
 
+    // ================================================================================================================
+    // 1. MỞ MÀN — doGet gọi Service lấy gói; getAccountId đọc tài khoản từ session
+    // ================================================================================================================
+
+    /** Đọc tài khoản, tải header và gói đang chọn rồi mở JSP. */
     @Override
     protected void doGet(HttpServletRequest request, HttpServletResponse response)
             throws ServletException, IOException {
@@ -65,4 +70,5 @@ public class MyBookingServlet extends HttpServlet {
         HttpSession session = request.getSession(false);
         return session == null ? null : (Integer) session.getAttribute(SessionKey.ACCOUNT_ID);
     }
+
 }

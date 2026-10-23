@@ -23,9 +23,6 @@ import java.util.Set;
  */
 public class MyPtSessionDAO {
 
-    // =====================================================================
-    // BUỔI TẬP — 1 câu SQL gốc, 3 hàm chỉ khác điều kiện WHERE
-    // =====================================================================
 
     /**
      * Câu SQL gốc lấy buổi của khách (đứng tên gói, hoặc đi kèm gói đôi). 2 dấu ?: customerId, customerId.
@@ -68,6 +65,10 @@ public class MyPtSessionDAO {
             """;
 
     private static final String ORDER_BY = " ORDER BY ms.SlotDate, ms.StartTime, ms.SessionId";
+
+    // ================================================================================================================
+    // 1. CÁC BUỔI CỦA KHÁCH — ba hàm find dùng chung querySessions / readSessionRow ngay dưới
+    // ================================================================================================================
 
     /** Lịch tập: buổi có ngày tập trong [fromDate, toDate] (1 tuần hoặc 1 tháng). */
     public List<MyPtSessionRow> findSessionsInRange(int customerId, LocalDate fromDate, LocalDate toDate)
@@ -157,10 +158,9 @@ public class MyPtSessionDAO {
         return row;
     }
 
-
-    // =====================================================================
-    // GÓI PT CỦA KHÁCH (cột trái màn "Gói của tôi")
-    // =====================================================================
+    // ================================================================================================================
+    // 2. GÓI PT CỦA KHÁCH — findMyPackages đọc dữ liệu cho cột trái MyBookings
+    // ================================================================================================================
 
     /**
      * Mọi gói PT cá nhân / đôi đã thanh toán của khách (đang tập và đã kết thúc), 1 câu SQL.
@@ -229,10 +229,9 @@ public class MyPtSessionDAO {
         return packages;
     }
 
-
-    // =====================================================================
-    // CẢNH BÁO: quyền vào gym + ngày phòng nghỉ (giống điều kiện JOB-04 — notes 10/10)
-    // =====================================================================
+    // ================================================================================================================
+    // 3. QUYỀN VÀO GYM — hasGymPass / isFrozen dùng chung hàm COUNT ngay dưới
+    // ================================================================================================================
 
     /** Khách có Membership HOẶC DayPass phủ ngày này không? */
     public boolean hasGymPass(int customerId, LocalDate date) throws SQLException {
@@ -260,6 +259,25 @@ public class MyPtSessionDAO {
         return countByCustomerAndDate(sql, customerId, date) > 0;
     }
 
+    /** Chạy câu COUNT có 2 dấu ?: customerId, ngày. */
+    private int countByCustomerAndDate(String sql, int customerId, LocalDate date) throws SQLException {
+        try (Connection connection = DBContext.getConnection();
+                PreparedStatement statement = connection.prepareStatement(sql)) {
+
+            statement.setInt(1, customerId);
+            statement.setDate(2, Date.valueOf(date));
+
+            try (ResultSet rs = statement.executeQuery()) {
+                rs.next();
+                return rs.getInt(1);
+            }
+        }
+    }
+
+    // ================================================================================================================
+    // 4. NGÀY PHÒNG NGHỈ — đọc ngoại lệ nghỉ cả ngày trong khoảng đang xem
+    // ================================================================================================================
+
     /** Các ngày phòng NGHỈ CẢ NGÀY (Manager khai báo) trong [fromDate, toDate]. */
     public Set<LocalDate> findClosedDays(LocalDate fromDate, LocalDate toDate) throws SQLException {
         String sql = """
@@ -286,29 +304,14 @@ public class MyPtSessionDAO {
         return days;
     }
 
-
-    // =====================================================================
-    // HÀM PHỤ
-    // =====================================================================
-
-    /** Chạy câu COUNT có 2 dấu ?: customerId, ngày. */
-    private int countByCustomerAndDate(String sql, int customerId, LocalDate date) throws SQLException {
-        try (Connection connection = DBContext.getConnection();
-                PreparedStatement statement = connection.prepareStatement(sql)) {
-
-            statement.setInt(1, customerId);
-            statement.setDate(2, Date.valueOf(date));
-
-            try (ResultSet rs = statement.executeQuery()) {
-                rs.next();
-                return rs.getInt(1);
-            }
-        }
-    }
+    // ================================================================================================================
+    // 5. ĐỌC MÃ CÓ THỂ NULL — readSessionRow và findMyPackages dùng chung
+    // ================================================================================================================
 
     /** rs.getInt trả 0 khi NULL → hàm này trả đúng null. */
     private Integer getNullableInt(ResultSet rs, String column) throws SQLException {
         int value = rs.getInt(column);
         return rs.wasNull() ? null : value;
     }
+
 }
