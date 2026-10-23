@@ -60,17 +60,24 @@ public class CheckInService {
      * @return kết quả đánh giá điều kiện vào tập
      */
     public ServiceResult<CheckInLookupResult> lookupCustomer(String query) {
-        if (ValidationUtil.isNullOrEmpty(query)) {
+        if (ValidationUtil.isNullOrEmpty(query)) {// nếu từ khóa null hoặc rỗng
             return ServiceResult.fail(String.format(Messages.MSG09_REQUIRED, "Mã khách hoặc số điện thoại"));
         }
 
         try {
             CustomerLookupInfo customer = checkInDAO.findCustomerByKeyword(query.trim());
-            if (customer == null) {
+            if (customer == null) {// nếu không tìm thấy khách hàng
                 CheckInLookupResult notFoundResult = CheckInLookupResult.notFound(
                         "Không tìm thấy hồ sơ. Kiểm tra lại mã khách hoặc số điện thoại. Khách chưa từng đến thì tạo hồ sơ mới.");
                 return ServiceResult.ok(notFoundResult);
             }
+            // CustomerLookupInfo là dữ liệu thô được lấy từ database
+            // CheckInLookupResult là kết quả sau khi xử lý nghiệp vụ từ dữ liệu thô kia
+            // Lý do tách k cho CheckInLookupResult gọi thẳng checkinDAO hoặc các DAO khác
+            // là để đảm bảo tính đóng gói và tuân thủ
+            // nguyên lý đơn trách nhiệm (SRP), mỗi class chỉ làm duy nhất 1 vc mà nó giỏi
+            // nhất ko ôm việc class khác
+            // dto là dữ liệu đc mang sang giao diện
 
             CheckInLookupResult result = new CheckInLookupResult();
             result.setCustomerId(customer.customerId);
@@ -92,6 +99,8 @@ public class CheckInService {
                 result.setCanCheckIn(false);
                 return ServiceResult.ok(result);
             }
+            // Decision phân loại kết quả bao gồm title và alertType (xanh đỏ vàng)
+            // Message giải thích chi tiết và hướng dẫn hành động cho lễ tân
 
             // Lấy danh sách gói tập của hội viên
             List<CustomerSubscriptionInfo> subs = checkInDAO.findSubscriptionsByCustomerId(customer.customerId);
@@ -301,7 +310,8 @@ public class CheckInService {
      * @param keyword    từ khóa tìm kiếm
      * @param pageNumber số trang (bắt đầu từ 1)
      * @param pageSize   kích thước trang
-     * @return đối tượng PageResult chứa danh sách khách hàng và thông tin phân trang
+     * @return đối tượng PageResult chứa danh sách khách hàng và thông tin phân
+     *         trang
      */
     public PageResult<CustomerSearchItem> searchCustomersPage(String keyword, int pageNumber, int pageSize) {
         if (ValidationUtil.isNullOrEmpty(keyword)) {

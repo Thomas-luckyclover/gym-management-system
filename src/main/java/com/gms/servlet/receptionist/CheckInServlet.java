@@ -55,12 +55,17 @@ public class CheckInServlet extends HttpServlet {
             throws ServletException, IOException {
 
         String query = RequestUtil.getTrimmedParam(request, "q");
+        // lay gia tri cua tham so q tu request
+        // gia tri q la cai ma minh nhap trong thanh tim kiem o giao dien
         int page = PaginationUtil.getPageNumber(request);
+        // lay so trang hien tai tu request phuc phu cho viec phan trang
         int pageSize = 10; // Phân trang 10 khách mỗi trang để vừa vặn màn hình Check-in
 
-        if (!ValidationUtil.isNullOrEmpty(query)) {
-            ServiceResult<CheckInLookupResult> result = checkInService.lookupCustomer(query);
-            if (result.isSuccess()) {
+        if (!ValidationUtil.isNullOrEmpty(query)) {// neu chuoi q khong rong
+            ServiceResult<CheckInLookupResult> result = checkInService.lookupCustomer(query);// goi ham lookupCustomer
+                                                                                             // de tim kiem thong tin
+                                                                                             // khach hang
+            if (result.isSuccess()) {// neu tim kiem thanh cong
                 CheckInLookupResult lookupData = result.getData();
 
                 // Nếu exact match không tìm thấy (Mã KH / SĐT) → tìm theo một phần tên có phân
@@ -69,20 +74,22 @@ public class CheckInServlet extends HttpServlet {
                     PageResult<CustomerSearchItem> searchResultsPage = checkInService.searchCustomersPage(query, page,
                             pageSize);
 
-                    if (!searchResultsPage.isEmpty()) {
+                    if (!searchResultsPage.isEmpty()) {// neu danh sach ket qua tim kiem khong rong
                         request.setAttribute("searchResultsPage", searchResultsPage);
+                        // dong goi thong tin phan trang
                         request.setAttribute("searchResults", searchResultsPage.getItems());
-                    } else {
+                        // dong goi danh sach cua cac khach hang tim thay
+                    } else {// neu danh sach ket qua tim kiem rong
                         // Không tìm thấy khách nào
                         request.setAttribute("lookupResult", lookupData);
                     }
-                } else {
-                    request.setAttribute("lookupResult", lookupData);
+                } else {// neu tim thay khach hang
+                    request.setAttribute("lookupResult", lookupData);// set thong tin khach hang
                 }
-            } else {
-                request.setAttribute("searchError", result.getMessage());
+            } else {// neu tim kiem that bai
+                request.setAttribute("searchError", result.getMessage());// set thong tin loi
             }
-            request.setAttribute("query", query);
+            request.setAttribute("query", query);// dong goi du lieu gui lai trang jsp
         }
 
         // Lấy danh sách lượt vào ca hôm nay
@@ -90,7 +97,8 @@ public class CheckInServlet extends HttpServlet {
         request.setAttribute("todayLogs", todayLogs);
         request.setAttribute("activeNav", "checkin");
 
-        RequestUtil.forward(request, response, VIEW_NAME);
+        RequestUtil.forward(request, response, VIEW_NAME);// chuyen tiep du lieu tu servlet sang jsp de hien thi cho
+                                                          // nguoi dung
     }
 
     /**
@@ -101,27 +109,37 @@ public class CheckInServlet extends HttpServlet {
     protected void doPost(HttpServletRequest request, HttpServletResponse response)
             throws ServletException, IOException {
 
-        HttpSession session = request.getSession(false);
-        if (session == null || session.getAttribute(SessionKey.ACCOUNT_ID) == null) {
-            RequestUtil.redirect(request, response, "/login");
+        HttpSession session = request.getSession(false);// "false" có nghĩa là nếu không có session thì không tạo
+                                                        // session mới
+        if (session == null || session.getAttribute(SessionKey.ACCOUNT_ID) == null) {// nếu không có session hoặc không
+                                                                                     // có id trong session
+            // session == null xảy ra khi chưa đăng nhập, đang xuất hoặc phiên làm việc hết
+            // hạn
+            // session.getAttribute(SessionKey.ACCOUNT_ID) == null phân biệt giữa khách vãng
+            // lai và khách đã đăng nhập
+            RequestUtil.redirect(request, response, "/login");// chuyển hướng về trang login
             return;
         }
 
-        int accountId = (Integer) session.getAttribute(SessionKey.ACCOUNT_ID);
-        String action = RequestUtil.getTrimmedParam(request, "action");
+        int accountId = (Integer) session.getAttribute(SessionKey.ACCOUNT_ID);// lấy id của account từ session
+        String action = RequestUtil.getTrimmedParam(request, "action");// đọc tham số action từ form bên jsp để biết ng
+                                                                       // dùng muốn làm gì
 
-        if (ACTION_CONFIRM_CHECK_IN.equals(action)) {
+        if (ACTION_CONFIRM_CHECK_IN.equals(action)) {// nếu action là confirm check in
             handleConfirmCheckIn(request, response, accountId);
             return;
         }
 
-        if (ACTION_SAVE_PHOTO.equals(action)) {
+        if (ACTION_SAVE_PHOTO.equals(action)) {// nếu action là save photo
             handleSavePhoto(request, response);
             return;
         }
 
         RequestUtil.setFlashToast(request, "error", Messages.MSG04_SYSTEM_BUSY);
-        RequestUtil.redirect(request, response, "/receptionist/check-in");
+        // nếu action không phải là confirm check in hoặc save photo
+        // người dùng cố tình sửa 1 action không hợp lệ trong http request
+        // lỗi mạng hoặc form gửi thiếu trường dữ liệu
+        RequestUtil.redirect(request, response, "/receptionist/check-in");// chuyển hướng về trang check in
     }
 
     /**
@@ -141,13 +159,21 @@ public class CheckInServlet extends HttpServlet {
         }
 
         ServiceResult<Void> result = checkInService.performCheckIn(subscriptionId, accountId, photoVerified);
-
-        if (result.isSuccess()) {
+        // thực hiện checkin, lưu thông tin id gói tập, id tk lễ tân đã checkin, ảnh
+        // check-in xác thực đã hợp lệ
+        if (result.isSuccess()) {// nếu checkin thành công
             String nameText = !ValidationUtil.isNullOrEmpty(customerName) ? customerName : "Hội viên";
-            RequestUtil.setFlashToast(request, "success", nameText + " đã vào tập thành công.");
+            // nếu tên khách không rỗng thì sử dụng tên khách, nếu rỗng thì sử dụng "Hội
+            // viên"
+            RequestUtil.setFlashToast(request, "success", nameText + " đã vào tập thành công.");// thông báo thành công
             RequestUtil.redirect(request, response, "/receptionist/check-in");
-        } else {
+        } else {// nếu checkin thất bại
+            // lễ tân k tồn tại trong csdl, khi đang checkin mà quản lý xóa
+            // message trả về "không tìm thấy tài khoản nhân viên"
+            // mất kết nối với database
+            // message trả về "hệ thông đang bận. Vui lòng thử lại sau"
             RequestUtil.setFlashToast(request, "error", result.getMessage());
+
             RequestUtil.redirect(request, response, "/receptionist/check-in");
         }
     }
