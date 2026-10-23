@@ -18,17 +18,13 @@
         <%-- KẾT THÚC hint hướng dẫn cạnh tiêu đề. --%>
     </div>
     <div class="top-right">
-        <%-- Trên Lịch tập hiện “Đặt buổi lẻ”; fragment dùng ở màn Gói của tôi thì hiện link quay về Lịch tập. --%>
-        <c:choose>
-            <c:when test="${activeSidebar eq 'bookings'}"><a class="btn btn-outline btn-sm" href="${pageContext.request.contextPath}/customer/pt-sessions">Lịch tập</a></c:when>
-            <c:otherwise>
-                <%-- Đến từ Gói của tôi → nút quay về ĐÚNG gói đó (backBookingId do MyPtSessionServlet đã kiểm tra). --%>
-                <c:if test="${not empty backBookingId}"><a class="btn btn-outline btn-sm" href="${pageContext.request.contextPath}/customer/bookings?id=${backBookingId}">‹ Gói của tôi</a></c:if>
-                <a class="btn btn-primary btn-sm" href="${pageContext.request.contextPath}/customer/book-session">Đặt buổi lẻ</a>
-            </c:otherwise>
-        </c:choose>
-        <%-- KẾT THÚC nút điều hướng Đặt buổi lẻ / Lịch tập. --%>
-        <%-- Chuông thông báo dùng chung (notification-bell.js gọi /api/notifications): khách nhận lời nhắc PT gửi từ PT Dashboard. --%>
+        <%-- Chỉ màn Lịch tập có nút ở đây. Màn Gói của tôi KHÔNG có nút "Lịch tập" (đã có link "Xem trên lịch tập" đúng buổi). --%>
+        <c:if test="${activeSidebar ne 'bookings'}">
+            <%-- Đến từ Gói của tôi → nút quay về ĐÚNG gói đó (backBookingId do MyPtSessionServlet đã kiểm tra). --%>
+            <c:if test="${not empty backBookingId}"><a class="btn btn-outline btn-sm" href="${pageContext.request.contextPath}/customer/bookings?id=${backBookingId}">‹ Gói của tôi</a></c:if>
+            <a class="btn btn-primary btn-sm" href="${pageContext.request.contextPath}/customer/book-session">Đặt buổi lẻ</a>
+        </c:if>
+        <%-- Chuông thông báo dùng chung (notification-bell.js gọi /api/notifications): thông báo hệ thống, vd JOB-08 nhắc buổi PT ngày mai. --%>
         <%@ include file="/WEB-INF/jsp/common/notification-bell.jspf" %>
         <%-- Công tắc Sáng/Tối: data-theme-toggle nối với xử lý theme dùng chung trong common.js. --%>
         <button type="button" class="theme-toggle" data-theme-toggle aria-pressed="false" aria-label="Chuyển sang nền sáng">

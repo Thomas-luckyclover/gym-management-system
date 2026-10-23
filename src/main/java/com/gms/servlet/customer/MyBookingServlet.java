@@ -17,8 +17,12 @@ import jakarta.servlet.http.HttpSession;
 import java.io.IOException;
 
 /**
- * Màn "Gói của tôi" (#50) — GET /customer/bookings?id=<mã gói | single> (CHỈ XEM).
- *   id: gói đang chọn ở cột trái; "single" = các buổi lẻ; sai/thiếu → gói đầu tiên.
+ * MÀN "GÓI CỦA TÔI" (#50) — GET /customer/bookings?id=<mã gói | single>. CHỈ XEM, không có form.
+ *
+ *   doGet         HÀM CHÍNH: gọi 2 Service → đặt attribute → JSP customer/my-bookings.jsp
+ *   getAccountId  HÀM PHỤ: đọc tài khoản đang đăng nhập từ session
+ *
+ * ?id= chỉ là "đang chọn gói nào"; Service tự kiểm tra gói đó có thuộc khách này không.
  */
 @WebServlet("/customer/bookings")
 public class MyBookingServlet extends HttpServlet {
@@ -29,28 +33,28 @@ public class MyBookingServlet extends HttpServlet {
     private final CustomerDashboardService dashboardService = new CustomerDashboardService();
     private final MyBookingService bookingService = new MyBookingService();
 
-    // ================================================================================================================
-    // 1. MỞ MÀN — doGet gọi Service lấy gói; getAccountId đọc tài khoản từ session
-    // ================================================================================================================
 
-    /** Đọc tài khoản, tải header và gói đang chọn rồi mở JSP. */
+    /**
+     * HÀM CHÍNH — trình duyệt gọi khi khách mở "Gói của tôi" hoặc bấm 1 gói ở cột trái (?id=...).
+     */
     @Override
     protected void doGet(HttpServletRequest request, HttpServletResponse response)
             throws ServletException, IOException {
-        // B1: phải đăng nhập
+        // B1: phải đăng nhập.
         Integer accountId = getAccountId(request);
         if (accountId == null) {
             RequestUtil.redirect(request, response, "/login?returnUrl=" + PAGE_URL);
             return;
         }
 
-        // B2: header (tên + mã khách)
+        // B2: dashboard = tên + mã khách (góc phải topbar) + canUseGym (thẻ "Vào phòng tập" ở cột trái).
+        //     Lỗi thì 2 chỗ đó tự ẩn, phần còn lại của màn vẫn hiện.
         ServiceResult<CustomerDashboardView> header = dashboardService.getDashboard(accountId);
         if (header.isSuccess()) {
             request.setAttribute("dashboard", header.getData());
         }
 
-        // B3: dữ liệu màn (cột trái + gói đang chọn)
+        // B3: dữ liệu chính của màn (cột trái + gói đang chọn).
         ServiceResult<MyBookingView> result =
                 bookingService.getMyBookings(accountId, request.getParameter("id"), DateTimeUtil.now());
         if (result.isSuccess()) {
@@ -59,13 +63,13 @@ public class MyBookingServlet extends HttpServlet {
             request.setAttribute("bookingError", result.getMessage());
         }
 
-        // B4: sang JSP
+        // B4: thông tin chung rồi mở JSP.
         request.setAttribute("activeSidebar", "bookings");
         request.setAttribute("themeClass", "theme-pt customer-dashboard-page my-bookings-page");
         RequestUtil.forward(request, response, VIEW);
     }
 
-    /** accountId trong HttpSession (đặt lúc đăng nhập). Null = chưa đăng nhập. */
+    /** HÀM PHỤ — gọi ở B1 của doGet. accountId lưu trong session lúc đăng nhập; null = chưa đăng nhập. */
     private Integer getAccountId(HttpServletRequest request) {
         HttpSession session = request.getSession(false);
         return session == null ? null : (Integer) session.getAttribute(SessionKey.ACCOUNT_ID);

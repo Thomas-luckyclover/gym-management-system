@@ -10,18 +10,19 @@ import java.util.LinkedHashMap;
 import java.util.Map;
 
 /**
- * DAO riêng của màn "Gói của tôi" (/customer/bookings). Chỉ ĐỌC.
- * Buổi / gói dùng chung MyPtSessionDAO; ở đây chỉ thêm lịch sử dời buổi.
+ * DAO RIÊNG CỦA MÀN "GÓI CỦA TÔI" (/customer/bookings). Chỉ ĐỌC.
+ *
+ *   findMoves   lịch sử dời buổi của 1 gói → giải thích "Buổi khác giờ"
+ *
+ * Gói và buổi đọc chung MyPtSessionDAO (màn Lịch tập), ở đây chỉ thêm phần riêng.
  */
 public class MyBookingDAO {
 
-    // ================================================================================================================
-    // 1. LỊCH SỬ DỜI BUỔI — findMoves trả mã buổi và thông tin dời cho MyBookingService
-    // ================================================================================================================
-
     /**
-     * Các buổi của 1 gói đã từng bị dời (SessionMoveLogs), theo mã buổi.
-     * Service đã kiểm tra gói thuộc khách trước khi gọi → ở đây chỉ lọc theo mã gói.
+     * HÀM CHÍNH — MyBookingService.fillPackageDetail gọi ở B2 (chỉ khi gói có buổi lệch giờ).
+     * Các buổi của 1 gói đã từng bị dời (bảng SessionMoveLogs), trả về theo mã buổi.
+     * Service đã chắc chắn gói thuộc khách trước khi gọi → ở đây chỉ lọc theo mã gói.
+     * Ví dụ: {812 → (CustomerSwap, giờ gốc T6 11/09 18:00)}
      */
     public Map<Integer, SessionMoveInfo> findMoves(int subscriptionId) throws SQLException {
         String sql = """

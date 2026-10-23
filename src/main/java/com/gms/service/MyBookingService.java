@@ -11,6 +11,7 @@ import com.gms.dto.ServiceResult;
 import com.gms.dto.SessionGroup;
 import com.gms.dto.SessionMoveInfo;
 import com.gms.dto.WeekdaySlot;
+import com.gms.util.ZaloUtil;
 import java.sql.SQLException;
 import java.time.DayOfWeek;
 import java.time.LocalDate;
@@ -28,28 +29,38 @@ import java.util.Set;
 import java.util.TreeMap;
 
 /**
- * Màn "Gói của tôi" (/customer/bookings, màn #50) — CHỈ XEM.
- *   Cột trái : gói PT đang tập / đã kết thúc + nhóm "Các buổi lẻ"
- *   Cột phải : CTA đúng lúc + buổi tới + lịch cố định (tuần mẫu T2–T6) + dải chấm các buổi + cần để ý
- * Không liệt kê hết các buổi ở đây: xem đủ từng buổi → màn "Lịch tập".
- * Dùng lại DAO và cách tính trạng thái của màn "Lịch tập" → 2 màn luôn hiện cùng 1 nhãn.
+ * SERVICE CỦA MÀN "GÓI CỦA TÔI" — /customer/bookings (màn #50). CHỈ XEM.
+ *
+ *   Cột trái : gói PT Đang tập / Đã kết thúc + nhóm "Buổi lẻ"
+ *   Cột phải : gói đang chọn → buổi tới + vòng tiến độ, 1 lời mời hành động (CTA),
+ *              lịch cố định T2–T6, dải ô các buổi, "Cần để ý"
+ *
+ * Chỉ có 1 HÀM CHÍNH: getMyBookings (MyBookingServlet gọi). Các hàm phụ xếp theo đúng thứ tự bước gọi chúng:
+ *   B2  fillPackage
+ *   B3  countRecentSingles
+ *   B4  pickPackage
+ *   B5  countSessions, buildWatchList, groupByReason
+ *   B6  fillPackageDetail → applyWeekTemplate, summarize, moveNote, markWeeks   |   orderSingles (buổi lẻ)
+ *   B7  chooseCta, fillCounterInfo
+ *
+ * Nhãn và trạng thái từng buổi dùng lại MyPtSessionService (màn Lịch tập) → hai màn luôn hiện cùng 1 chữ.
  */
 public class MyBookingService {
 
-    /** Giá trị ?id= khi chọn nhóm "Các buổi lẻ". */
+    /** Giá trị ?id= khi khách chọn nhóm "Buổi lẻ". */
     public static final String SINGLE_KEY = "single";
 
-    // ----- Loại CTA (mỗi màn chỉ hiện tối đa 1) -----
-    static final String CTA_BUY_MEMBERSHIP = "buyMembership";   // buổi sắp tới chưa có quyền vào gym → mua gói thành viên online
+    // ----- 4 loại CTA (mỗi màn hiện tối đa 1) -----
+    static final String CTA_BUY_MEMBERSHIP = "buyMembership";    // buổi sắp tới chưa vào được gym → mua gói thành viên online
     static final String CTA_RENEW_AT_COUNTER = "renewAtCounter"; // gói PT sắp hết → gia hạn TẠI QUẦY (CBR-48)
     static final String CTA_REJOIN = "rejoin";                   // gói PT đã kết thúc → đăng ký lại tại quầy
-    static final String CTA_PT_PACKAGE = "ptPackage";            // hay đặt buổi lẻ → gợi ý gói PT (tại quầy)
+    static final String CTA_PT_PACKAGE = "ptPackage";            // hay đặt buổi lẻ → gợi ý mua gói PT (tại quầy)
 
     // ----- Ngưỡng hiện CTA -----
-    static final int RENEW_SESSIONS_LEFT = 3;     // còn ≤ 3 buổi
-    static final int RENEW_DAYS_LEFT = 14;        // hoặc còn ≤ 14 ngày
+    static final int RENEW_SESSIONS_LEFT = 3;     // còn ≤ 3 buổi …
+    static final int RENEW_DAYS_LEFT = 14;        // … hoặc còn ≤ 14 ngày → nhắc gia hạn
     static final int SINGLE_SUGGEST_COUNT = 3;    // ≥ 3 buổi lẻ …
-    static final int SINGLE_SUGGEST_DAYS = 30;    // … trong 30 ngày gần nhất
+    static final int SINGLE_SUGGEST_DAYS = 30;    // … trong 30 ngày gần nhất → gợi ý gói PT
 
     private static final String[] WEEKDAY_SHORT = {"T2", "T3", "T4", "T5", "T6", "T7", "CN"};
     private static final DateTimeFormatter HH_MM = DateTimeFormatter.ofPattern("HH:mm");
@@ -60,17 +71,21 @@ public class MyBookingService {
     private final MyPtSessionService sessionService = new MyPtSessionService();
     private final SystemConfigService systemConfigService = new SystemConfigService();
 
-    // ================================================================================================================
-    // 1. HÀM CHÍNH — getMyBookings điều phối cả màn; các nhóm hàm phụ nằm ngay bên dưới
-    // ================================================================================================================
+
+    // =================================================================================================
+    // HÀM CHÍNH
+    // =================================================================================================
 
     /**
-     * Dữ liệu cả màn.
-     * @param selectedId ?id= trên URL: mã gói, "single", hoặc rỗng/sai → tự chọn gói đầu tiên
+     * HÀM CHÍNH — MyBookingServlet.doGet gọi mỗi lần khách mở /customer/bookings.
+     *
+     * @param accountId  lấy từ session (không bao giờ từ URL)
+     * @param selectedId ?id= trên URL: mã gói, "single", hoặc rỗng / sai → tự chọn gói đầu tiên
+     * @param now        thời điểm hiện tại (giờ VN) — truyền vào để test cố định được thời gian
      */
     public ServiceResult<MyBookingView> getMyBookings(int accountId, String selectedId, LocalDateTime now) {
         try {
-            // B1: tìm khách
+            // B1: accountId → mã khách. Không phải khách → không có quyền.
             Integer customerId = sessionService.findCustomerId(accountId);
             if (customerId == null) {
                 return ServiceResult.fail(Messages.MSG07_NO_PERMISSION);
@@ -78,7 +93,7 @@ public class MyBookingService {
             MyBookingView view = new MyBookingView();
             view.setTodayWeekday(now.getDayOfWeek().getValue());
 
-            // B2: cột trái — gói PT (1 câu SQL), chia Đang tập / Đã kết thúc
+            // B2: cột trái — các gói PT, chia "Đang tập" / "Đã kết thúc".
             for (MyPtPackageView p : sessionDAO.findMyPackages(customerId, now.toLocalDate())) {
                 fillPackage(p, customerId);
                 if (p.isActive()) {
@@ -88,31 +103,31 @@ public class MyBookingService {
                 }
             }
 
-            // B3: cột trái — các buổi lẻ (+ đếm buổi lẻ 30 ngày gần nhất cho gợi ý gói PT)
+            // B3: cột trái — các buổi lẻ (+ đếm buổi lẻ 30 ngày gần nhất, dùng cho gợi ý gói PT ở B7).
             List<MyPtSessionRow> singles = sessionDAO.findSingleSessions(customerId);
             view.setSingleSessionCount(singles.size());
             view.setRecentSingleCount(countRecentSingles(singles, now.toLocalDate()));
 
-            // B4: chọn cái đang xem (URL hợp lệ → theo URL; không thì gói đầu tiên)
+            // B4: chọn thứ đang xem ở cột phải: 1 gói PT, hoặc nhóm buổi lẻ.
             MyPtPackageView selected = pickPackage(view, selectedId);
             List<MyPtSessionRow> sessions;
             if (selected != null) {
                 view.setSelectedPackage(selected);
                 sessions = sessionDAO.findSessionsOfPackage(customerId, selected.getSubscriptionId());
             } else if (singles.isEmpty()) {
-                return ServiceResult.ok(view);   // chưa mua gói PT / buổi lẻ nào → JSP hiện trạng thái rỗng
+                return ServiceResult.ok(view);   // chưa có gói PT / buổi lẻ nào → JSP hiện màn trống
             } else {
                 view.setSingleSelected(true);
                 sessions = singles;
             }
 
-            // B5: nhãn + trạng thái (giống màn Lịch tập), số đếm, buổi tới
+            // B5: nhãn + trạng thái từng buổi (giống màn Lịch tập), số đếm, buổi tới, "Cần để ý".
             sessionService.fillDisplay(sessions, customerId, now);
             countSessions(view, sessions, now);
             view.setWatchList(buildWatchList(sessions));
             view.setWatchGroups(groupByReason(view.getWatchList()));
 
-            // B6: phần riêng của gói PT / của buổi lẻ
+            // B6: phần riêng — gói PT có lịch cố định; buổi lẻ thì xếp lại thứ tự.
             if (selected != null) {
                 fillPackageDetail(view, selected, sessions, now.toLocalDate());
                 view.setSessions(sessions);
@@ -120,7 +135,7 @@ public class MyBookingService {
                 view.setSessions(orderSingles(sessions, now));
             }
 
-            // B7: CTA (tối đa 1) + thông tin quầy khi CTA bảo khách ra quầy
+            // B7: chọn tối đa 1 CTA; CTA bảo ra quầy thì kèm giờ mở cửa + hotline.
             view.setCtaKind(chooseCta(view, sessions));
             fillCounterInfo(view);
             return ServiceResult.ok(view);
@@ -131,24 +146,38 @@ public class MyBookingService {
         }
     }
 
-    // ================================================================================================================
-    // 2. CHỌN GÓI — điền thẻ gói, đếm buổi lẻ gần đây rồi chọn gói đang xem
-    // ================================================================================================================
 
-    /** Điền chữ hiển thị cho 1 thẻ gói: loại gói, người tập cùng, link Zalo PT. */
+    // =================================================================================================
+    // B2 — THẺ GÓI Ở CỘT TRÁI
+    // =================================================================================================
+
+    /**
+     * HÀM PHỤ — gọi ở B2 của getMyBookings, mỗi gói 1 lần.
+     * Điền chữ hiển thị: loại gói, link Zalo của PT, tên người tập cùng (gói đôi: "người kia" so với mình).
+     */
     private void fillPackage(MyPtPackageView p, int myCustomerId) {
         p.setTypeLabel(MyPtSessionService.typeLabel(p.getType()));
-        p.setZaloUrl(MyPtSessionService.zaloUrl(p.getPtPhone()));
+        p.setZaloUrl(ZaloUtil.toUrl(p.getPtPhone()));
+
         if (p.isCouple() && p.getPartnerCustomerId() != null) {
             boolean iAmHolder = p.getHolderCustomerId() == myCustomerId;
             p.setPartnerName(iAmHolder ? p.getPartnerFullName() : p.getHolderName());
         }
     }
 
-    /** Số buổi lẻ (không tính buổi bị hủy) trong 30 ngày gần nhất tính tới hôm nay. */
+
+    // =================================================================================================
+    // B3 — ĐẾM BUỔI LẺ GẦN ĐÂY
+    // =================================================================================================
+
+    /**
+     * HÀM PHỤ — gọi ở B3 của getMyBookings.
+     * Số buổi lẻ (trừ buổi bị hủy) trong 30 ngày gần nhất tính tới hôm nay. Kết quả dùng ở chooseCta (B7).
+     */
     static int countRecentSingles(List<MyPtSessionRow> singles, LocalDate today) {
         LocalDate from = today.minusDays(SINGLE_SUGGEST_DAYS);
         int count = 0;
+
         for (MyPtSessionRow s : singles) {
             boolean inWindow = !s.getSlotDate().isBefore(from) && !s.getSlotDate().isAfter(today);
             if (inWindow && !"Cancelled".equals(s.getStatus())) {
@@ -158,33 +187,41 @@ public class MyBookingService {
         return count;
     }
 
+
+    // =================================================================================================
+    // B4 — CHỌN GÓI ĐANG XEM
+    // =================================================================================================
+
     /**
-     * Chọn gói theo ?id=. Trả null khi đang xem "Các buổi lẻ".
-     *   id = "single" và có buổi lẻ → null (xem buổi lẻ)
-     *   id = mã gói CỦA KHÁCH → gói đó (mã gói người khác → coi như không có, không lộ dữ liệu)
-     *   còn lại → gói đang tập đầu tiên → gói đã kết thúc đầu tiên → null (buổi lẻ)
+     * HÀM PHỤ — gọi ở B4 của getMyBookings. Trả null = đang xem nhóm "Buổi lẻ".
+     *
+     *   ?id=single (và có buổi lẻ)     → null
+     *   ?id=<mã gói CỦA KHÁCH NÀY>      → gói đó
+     *   ?id=<mã gói người khác> / sai   → coi như không có (không lộ dữ liệu người khác) → mặc định
+     *   mặc định                        → gói đang tập đầu tiên → gói đã kết thúc đầu tiên → null
      */
     static MyPtPackageView pickPackage(MyBookingView view, String selectedId) {
-        // B1: chọn nhóm buổi lẻ
+        // B1: chọn nhóm buổi lẻ.
         if (SINGLE_KEY.equals(selectedId) && view.getSingleSessionCount() > 0) {
             return null;
         }
 
-        // B2: tìm đúng mã gói trong danh sách gói của khách
+        // B2: tìm đúng mã gói trong danh sách gói CỦA KHÁCH (không đọc DB theo mã trên URL).
         if (selectedId != null) {
+            String id = selectedId.trim();
             for (MyPtPackageView p : view.getActivePackages()) {
-                if (String.valueOf(p.getSubscriptionId()).equals(selectedId.trim())) {
+                if (String.valueOf(p.getSubscriptionId()).equals(id)) {
                     return p;
                 }
             }
             for (MyPtPackageView p : view.getEndedPackages()) {
-                if (String.valueOf(p.getSubscriptionId()).equals(selectedId.trim())) {
+                if (String.valueOf(p.getSubscriptionId()).equals(id)) {
                     return p;
                 }
             }
         }
 
-        // B3: mặc định
+        // B3: mặc định.
         if (!view.getActivePackages().isEmpty()) {
             return view.getActivePackages().get(0);
         }
@@ -194,25 +231,29 @@ public class MyBookingService {
         return null;
     }
 
-    // ================================================================================================================
-    // 3. BUỔI TỚI VÀ CẢNH BÁO — số đếm và danh sách khách cần xử lý
-    // ================================================================================================================
 
-    /** Đếm các trạng thái và chọn buổi Scheduled đầu tiên chưa kết thúc. */
+    // =================================================================================================
+    // B5 — SỐ ĐẾM, BUỔI TỚI, "CẦN ĐỂ Ý"
+    // =================================================================================================
+
+    /**
+     * HÀM PHỤ — gọi ở B5 của getMyBookings.
+     * Đếm từng loại trạng thái (cho chú thích dải ô) và tìm "Buổi tới" = buổi Scheduled đầu tiên chưa kết thúc.
+     */
     static void countSessions(MyBookingView view, List<MyPtSessionRow> sessions, LocalDateTime now) {
-        // B1: đếm theo mã trạng thái
+        // B1: đếm theo mã trạng thái.
         for (MyPtSessionRow s : sessions) {
             switch (s.getStatusKey()) {
                 case MyPtSessionService.KEY_CHECKED_IN -> view.setCheckedInCount(view.getCheckedInCount() + 1);
                 case MyPtSessionService.KEY_MISSED -> view.setMissedCount(view.getMissedCount() + 1);
                 case MyPtSessionService.KEY_CANCELLED -> view.setCancelledCount(view.getCancelledCount() + 1);
                 case MyPtSessionService.KEY_PENDING -> view.setPendingCount(view.getPendingCount() + 1);
-                default -> view.setRemainingCount(view.getRemainingCount() + 1);   // today / upcoming / warn
+                default -> view.setRemainingCount(view.getRemainingCount() + 1);   // hôm nay / sắp tới / cần chú ý
             }
         }
         view.setTotalCount(sessions.size());
 
-        // B2: lấy buổi Scheduled đầu tiên chưa hết giờ để hiển thị và mở đúng buổi trên lịch.
+        // B2: buổi tới — buổi Scheduled đầu tiên chưa hết giờ.
         for (MyPtSessionRow s : sessions) {
             if (!s.getStatus().equals("Scheduled") || !MyPtSessionService.isNotEnded(s, now)) {
                 continue;
@@ -225,8 +266,9 @@ public class MyBookingService {
     }
 
     /**
-     * "Cần để ý": chỉ buổi SẮP TỚI mà bạn chưa có Membership/DayPass — còn kịp mua gói trước ngày tập.
-     * Không tính ngày phòng nghỉ (PT tự dời) và kỳ bảo lưu (vẫn có gói).
+     * HÀM PHỤ — gọi ở B5 của getMyBookings (và ở B1 của chooseCta).
+     * "Cần để ý" = buổi SẮP TỚI mà khách chưa có Membership/DayPass — còn kịp mua trước ngày tập.
+     * Không tính ngày phòng nghỉ (PT tự dời) và kỳ bảo lưu (khách vẫn có gói).
      */
     static List<MyPtSessionRow> buildWatchList(List<MyPtSessionRow> sessions) {
         List<MyPtSessionRow> warn = new ArrayList<>();
@@ -239,8 +281,9 @@ public class MyBookingService {
     }
 
     /**
-     * Gom các buổi CÙNG trạng thái + CÙNG lý do thành 1 nhóm (giữ thứ tự xuất hiện đầu tiên).
-     * VD 11 buổi "chưa có Membership" → 1 dòng "11 buổi" + 11 chip ngày.
+     * HÀM PHỤ — gọi ở B5 của getMyBookings.
+     * Gom các buổi CÙNG trạng thái + CÙNG lý do thành 1 nhóm (giữ thứ tự gặp đầu tiên).
+     * Ví dụ: 11 buổi "chưa có Membership" → 1 dòng "11 buổi" + 11 chip ngày.
      */
     static List<SessionGroup> groupByReason(List<MyPtSessionRow> sessions) {
         Map<String, SessionGroup> groups = new LinkedHashMap<>();
@@ -252,17 +295,20 @@ public class MyBookingService {
         return new ArrayList<>(groups.values());
     }
 
-    // ================================================================================================================
-    // 4. CHI TIẾT GÓI — fillPackageDetail gọi các hàm dựng lịch và lý do lệch ngay dưới
-    // ================================================================================================================
 
-    /** Gói PT: lịch cố định + lý do buổi lệch + vạch tuần cho dải chấm + số ngày còn lại. */
+    // =================================================================================================
+    // B6 — CHI TIẾT GÓI PT: LỊCH CỐ ĐỊNH, BUỔI KHÁC GIỜ, VẠCH TUẦN   |   BUỔI LẺ: THỨ TỰ HIỆN
+    // =================================================================================================
+
+    /**
+     * HÀM PHỤ — gọi ở B6 của getMyBookings (chỉ khi đang xem 1 gói PT).
+     */
     private void fillPackageDetail(MyBookingView view, MyPtPackageView selected,
             List<MyPtSessionRow> sessions, LocalDate today) throws SQLException {
-        // B1: tuần mẫu T2–T6 + các buổi lệch
+        // B1: tuần mẫu T2–T6 + danh sách buổi lệch giờ.
         applyWeekTemplate(view, sessions);
 
-        // B2: buổi lệch → hỏi SessionMoveLogs vì sao lệch (chỉ khi có buổi lệch)
+        // B2: có buổi lệch → hỏi SessionMoveLogs xem vì sao lệch.
         if (!view.getOffPattern().isEmpty()) {
             Map<Integer, SessionMoveInfo> moves = bookingDAO.findMoves(selected.getSubscriptionId());
             for (MyPtSessionRow row : view.getOffPattern()) {
@@ -270,20 +316,23 @@ public class MyBookingService {
             }
         }
 
-        // B3: vạch ngăn tuần + số ngày tới hết hạn
+        // B3: vạch ngăn tuần cho dải ô + số ngày tới hết hạn gói (dùng ở chooseCta).
         markWeeks(sessions);
         view.setDaysLeft(Math.max(0, ChronoUnit.DAYS.between(today, selected.getEndDate())));
     }
 
     /**
+     * HÀM PHỤ — gọi ở B1 của fillPackageDetail.
      * Lịch cố định dạng "tuần mẫu" T2 → T6 (BR-35: buổi gói PT chỉ rơi vào T2–T6).
-     *   Giờ cố định của 1 thứ = giờ bắt đầu có NHIỀU buổi nhất ở thứ đó, nếu chiếm ≥ 50% số buổi của thứ đó
-     *   (hòa → giờ sớm hơn). Giờ chính = giờ cố định của nhiều thứ nhất; thứ cố định nhưng khác giờ chính → "odd".
+     *
+     *   Giờ cố định của 1 thứ = giờ có NHIỀU buổi nhất ở thứ đó, nếu chiếm ≥ 50% số buổi của thứ đó (hòa → giờ sớm hơn).
+     *   Giờ chính = giờ cố định của nhiều thứ nhất. Thứ có giờ cố định khác giờ chính → ô "odd" (viền đứt).
      *   Buổi không khớp giờ cố định của thứ nó (kể cả T7/CN do đổi buổi) → "Buổi khác giờ".
-     * Ví dụ: T2, T3, T6 lúc 18:00 + T4 lúc 07:00 → 4 ô cố định (T4 là odd), T5 none.
+     *
+     * Ví dụ: T2, T3, T6 lúc 18:00 + T4 lúc 07:00 → T2/T3/T6 "main", T4 "odd", T5 "none".
      */
     static void applyWeekTemplate(MyBookingView view, List<MyPtSessionRow> sessions) {
-        // B1: đếm số buổi theo (thứ, giờ bắt đầu); nhớ giờ kết thúc của từng giờ bắt đầu
+        // B1: đếm số buổi theo (thứ, giờ bắt đầu); nhớ giờ kết thúc của mỗi giờ bắt đầu.
         List<TreeMap<LocalTime, Integer>> perDay = new ArrayList<>();
         for (int i = 0; i < 5; i++) {
             perDay.add(new TreeMap<>());
@@ -297,7 +346,7 @@ public class MyBookingService {
             }
         }
 
-        // B2: giờ cố định của từng thứ
+        // B2: giờ cố định của từng thứ.
         LocalTime[] fixed = new LocalTime[5];
         int[] fixedCount = new int[5];
         boolean[] hasSessions = new boolean[5];
@@ -305,7 +354,7 @@ public class MyBookingService {
             int total = 0;
             LocalTime best = null;
             int bestCount = 0;
-            for (Map.Entry<LocalTime, Integer> e : perDay.get(d).entrySet()) {   // TreeMap: giờ tăng dần → hòa giữ giờ sớm
+            for (Map.Entry<LocalTime, Integer> e : perDay.get(d).entrySet()) {   // TreeMap: giờ tăng dần → hòa thì giữ giờ sớm
                 total += e.getValue();
                 if (e.getValue() > bestCount) {
                     best = e.getKey();
@@ -320,7 +369,7 @@ public class MyBookingService {
             }
         }
 
-        // B3: giờ chính = giờ cố định của nhiều thứ nhất (hòa → giờ sớm hơn)
+        // B3: giờ chính = giờ cố định xuất hiện ở nhiều thứ nhất (hòa → giờ sớm hơn).
         TreeMap<LocalTime, Integer> daysPerTime = new TreeMap<>();
         for (LocalTime time : fixed) {
             if (time != null) {
@@ -336,7 +385,7 @@ public class MyBookingService {
             }
         }
 
-        // B4: 5 ô
+        // B4: dựng 5 ô T2 → T6.
         List<WeekdaySlot> template = new ArrayList<>();
         for (int d = 0; d < 5; d++) {
             String kind;
@@ -351,7 +400,7 @@ public class MyBookingService {
         view.setWeekTemplate(template);
         view.setTemplateSummary(summarize(fixed));
 
-        // B5: buổi khớp lịch → đếm; buổi lệch → "Buổi khác giờ"
+        // B5: buổi khớp lịch → đếm; buổi lệch → "Buổi khác giờ".
         int onPattern = 0;
         List<MyPtSessionRow> off = new ArrayList<>();
         for (MyPtSessionRow s : sessions) {
@@ -368,13 +417,14 @@ public class MyBookingService {
     }
 
     /**
-     * Câu tóm tắt lịch cố định: gom các thứ cùng giờ, theo thứ tự thứ xuất hiện.
-     *   cả 5 thứ cùng giờ → "T2 – T6 lúc 18:00"
-     *   khác nhau → "T2 · T3 · T6 lúc 18:00, T4 lúc 07:00"
+     * HÀM PHỤ — gọi ở B4 của applyWeekTemplate.
+     * Câu tóm tắt lịch cố định — JSP đọc làm nhãn cho trình đọc màn hình của 5 ô T2–T6.
+     *   cả 5 thứ cùng giờ   → "T2 – T6 lúc 18:00"
+     *   khác nhau           → "T2 · T3 · T6 lúc 18:00, T4 lúc 07:00"
      *   không thứ nào cố định → null
      */
     static String summarize(LocalTime[] fixed) {
-        // B1: giờ → các thứ (giữ thứ tự xuất hiện)
+        // B1: giờ → các thứ có giờ đó (giữ thứ tự xuất hiện).
         Map<LocalTime, List<String>> daysByTime = new LinkedHashMap<>();
         for (int d = 0; d < fixed.length; d++) {
             if (fixed[d] != null) {
@@ -385,7 +435,7 @@ public class MyBookingService {
             return null;
         }
 
-        // B2: ghép từng cụm
+        // B2: ghép từng cụm "các thứ lúc giờ".
         List<String> parts = new ArrayList<>();
         for (Map.Entry<LocalTime, List<String>> e : daysByTime.entrySet()) {
             String days = e.getValue().size() == 5 ? "T2 – T6" : String.join(" · ", e.getValue());
@@ -394,7 +444,11 @@ public class MyBookingService {
         return String.join(", ", parts);
     }
 
-    /** Vì sao 1 buổi lệch lịch cố định. Không có log dời → giờ khác ngay từ lúc xếp lịch (BR-41). */
+    /**
+     * HÀM PHỤ — gọi ở B2 của fillPackageDetail, mỗi buổi lệch 1 lần.
+     * Vì sao buổi này lệch lịch cố định. Không có log dời → bị xếp giờ khác ngay từ đầu (BR-41).
+     * Ví dụ: "Bạn đổi buổi · thay buổi T6 11/09".
+     */
     static String moveNote(SessionMoveInfo move) {
         if (move == null) {
             return "Xếp giờ khác từ đầu vì khung cố định ngày đó đã kín";
@@ -410,7 +464,10 @@ public class MyBookingService {
         return who + " · thay buổi " + WEEKDAY_SHORT[day - 1] + " " + move.getOriginalDate().format(DD_MM);
     }
 
-    /** Đánh dấu buổi đầu tiên của mỗi tuần (trừ tuần đầu) → dải chấm vẽ vạch ngăn tuần. */
+    /**
+     * HÀM PHỤ — gọi ở B3 của fillPackageDetail.
+     * Đánh dấu buổi đầu tiên của mỗi tuần (trừ tuần đầu) → JSP vẽ vạch dọc ngăn tuần trong dải ô.
+     */
     static void markWeeks(List<MyPtSessionRow> sessions) {
         LocalDate previousWeek = null;
         for (MyPtSessionRow s : sessions) {
@@ -420,63 +477,59 @@ public class MyBookingService {
         }
     }
 
-    // ================================================================================================================
-    // 5. BUỔI LẺ — xếp buổi sắp tới trước và đánh dấu buổi có thể đặt lại
-    // ================================================================================================================
-
-
-
     /**
-     * Buổi lẻ: buổi chưa kết thúc trước (gần nhất trước), rồi buổi đã qua (mới nhất trước).
-     * Buổi đã qua gần nhất với mỗi PT (không bị hủy) → rebook = "Đặt lại với PT này".
+     * HÀM PHỤ — gọi ở B6 của getMyBookings (khi đang xem nhóm buổi lẻ).
+     * Buổi chưa kết thúc trước (gần nhất trước), rồi buổi đã qua (mới nhất trước).
+     * Mỗi PT chỉ 1 nút "Đặt lại với PT này", gắn ở buổi đã qua gần nhất (không bị hủy) của PT đó.
      */
-
     static List<MyPtSessionRow> orderSingles(List<MyPtSessionRow> singles, LocalDateTime now) {
-        // B1: tách sắp tới / đã qua
+        // B1: tách sắp tới / đã qua.
         List<MyPtSessionRow> upcoming = new ArrayList<>();
         List<MyPtSessionRow> past = new ArrayList<>();
         for (MyPtSessionRow s : singles) {
             if (MyPtSessionService.isNotEnded(s, now)) {
                 upcoming.add(s);
             } else {
-                past.add(0, s);
+                past.add(0, s);   // chèn đầu → buổi mới nhất đứng trước
             }
         }
 
-        // B2: mỗi PT chỉ 1 nút "Đặt lại" (ở buổi gần nhất)
+        // B2: Set.add trả false nếu PT đã có nút → mỗi PT đúng 1 nút.
         Set<Integer> rebookedPts = new HashSet<>();
         for (MyPtSessionRow s : past) {
             boolean usable = !"Cancelled".equals(s.getStatus());
             s.setRebook(usable && rebookedPts.add(s.getPtEmployeeId()));
         }
+
         upcoming.addAll(past);
         return upcoming;
     }
 
-    // ================================================================================================================
-    // 6. GỢI Ý HÀNH ĐỘNG — chooseCta chọn nút; fillCounterInfo thêm thông tin quầy
-    // ================================================================================================================
+
+    // =================================================================================================
+    // B7 — LỜI MỜI HÀNH ĐỘNG (CTA)
+    // =================================================================================================
 
     /**
-     * Chọn 1 CTA theo độ ưu tiên (null = không hiện gì):
-     *   1. buổi sắp tới chưa có Membership/DayPass (không tính bảo lưu, ngày phòng nghỉ) → mua gói thành viên online
-     *   2. đang xem buổi lẻ: ≥ 3 buổi lẻ trong 30 ngày → gợi ý gói PT (tại quầy)
-     *   3. gói PT đã kết thúc → đăng ký lại tại quầy
-     *   4. gói PT đang tập còn ≤ 3 buổi hoặc ≤ 14 ngày → gia hạn tại quầy (CBR-48: gói PT không bán online)
-     * Gọi sau countSessions và sau khi đã tính daysLeft.
+     * HÀM PHỤ — gọi ở B7 của getMyBookings (sau countSessions và fillPackageDetail vì cần số buổi + số ngày).
+     * Chọn 1 CTA theo độ ưu tiên; null = không hiện gì.
+     *   1. buổi sắp tới chưa có Membership/DayPass          → mua gói thành viên online
+     *   2. đang xem buổi lẻ: ≥ 3 buổi lẻ trong 30 ngày       → gợi ý gói PT (tại quầy)
+     *   3. gói PT đã kết thúc                                → đăng ký lại tại quầy
+     *   4. gói PT đang tập còn ≤ 3 buổi hoặc ≤ 14 ngày       → gia hạn tại quầy (CBR-48: gói PT không bán online)
      */
     static String chooseCta(MyBookingView view, List<MyPtSessionRow> sessions) {
-        // B1: buổi sắp tới chưa có gói thành viên (cùng điều kiện với "Cần để ý")
+        // B1: buổi sắp tới chưa có gói thành viên (cùng điều kiện với "Cần để ý").
         if (!buildWatchList(sessions).isEmpty()) {
             return CTA_BUY_MEMBERSHIP;
         }
 
-        // B2: buổi lẻ
+        // B2: đang xem buổi lẻ.
         if (view.isSingleSelected()) {
             return view.getRecentSingleCount() >= SINGLE_SUGGEST_COUNT ? CTA_PT_PACKAGE : null;
         }
 
-        // B3 + B4: gói PT
+        // B3: gói PT đã kết thúc.
         MyPtPackageView p = view.getSelectedPackage();
         if (p == null) {
             return null;
@@ -484,25 +537,30 @@ public class MyBookingService {
         if (!p.isActive()) {
             return CTA_REJOIN;
         }
+
+        // B4: gói PT sắp hết buổi hoặc sắp hết hạn.
         boolean fewSessions = view.getRemainingCount() <= RENEW_SESSIONS_LEFT;
         boolean fewDays = view.getDaysLeft() <= RENEW_DAYS_LEFT;
         return fewSessions || fewDays ? CTA_RENEW_AT_COUNTER : null;
     }
 
-    /** Giờ mở cửa (P-19) + hotline — chỉ đọc khi CTA bảo khách ra quầy. */
+    /**
+     * HÀM PHỤ — gọi ở B7 của getMyBookings.
+     * CTA bảo khách ra quầy → thêm hotline + giờ mở cửa (P-19). Thiếu P-19 thì chỉ không hiện giờ, màn vẫn mở.
+     */
     private void fillCounterInfo(MyBookingView view) throws SQLException {
         String cta = view.getCtaKind();
         boolean atCounter = CTA_RENEW_AT_COUNTER.equals(cta) || CTA_REJOIN.equals(cta) || CTA_PT_PACKAGE.equals(cta);
         if (!atCounter) {
             return;
         }
+
         view.setHotline(AppConstants.GYM_HOTLINE);
         view.setHotlineTel(AppConstants.GYM_HOTLINE_TEL);
         try {
             view.setOpeningHours(systemConfigService.getString(SystemConfigService.OPENING_HOURS).replace("-", " – "));
         } catch (IllegalStateException e) {
-            view.setOpeningHours(null);   // thiếu P-19 thì chỉ không hiện giờ mở cửa, không làm hỏng màn
+            view.setOpeningHours(null);
         }
     }
-
 }

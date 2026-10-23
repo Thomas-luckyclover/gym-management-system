@@ -1,5 +1,6 @@
 <%@ page pageEncoding="UTF-8" %>
-<%-- B1: thẻ trái chỉ nhận diện gói; tiến độ chi tiết nằm trong khối phải. --%>
+<%-- Thẻ 1 gói ở cột trái (my-bookings.jsp lặp với biến p). Chỉ để nhận diện + chọn gói; chi tiết nằm ở cột phải.
+     "PT Sơn" = tên cuối của PT cho gọn. aria-current="page" = gói đang xem. --%>
 <c:set var="left" value="${p.totalSessions - p.pastSessions}" />
 <c:set var="ptWords" value="${fn:split(p.ptName, ' ')}" />
 <a class="booking-package" href="${pageUrl}?id=${p.subscriptionId}" aria-current="${booking.selectedPackage.subscriptionId eq p.subscriptionId ? 'page' : 'false'}">
