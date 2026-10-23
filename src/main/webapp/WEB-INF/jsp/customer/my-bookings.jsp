@@ -346,16 +346,8 @@
                                                 <span class="booking-count">${fn:length(booking.watchList)} buổi</span>
                                             </summary>
                                             <p class="booking-summary">Buổi sắp tới rơi vào ngày bạn chưa có gói thành viên hoặc vé ngày hợp lệ. Mua trước ngày tập để buổi không bị tính vắng.</p>
-                                            <ul class="booking-rows">
-                                                <c:forEach var="s" items="${booking.watchList}">
-                                                    <li>
-                                                        <a class="booking-rows-date" href="${weekLink}&amp;date=${s.slotDate}&amp;session=${s.sessionId}"><c:out value="${s.dayName}" />, ${gms:formatDate(s.slotDate)}</a>
-                                                        <span class="booking-rows-time">${gms:formatTime(s.startTime)} – ${gms:formatTime(s.endTime)}</span>
-                                                        <span class="booking-rows-note"><c:out value="${s.explanation}" /></span>
-                                                        <span class="session-status" data-status="${s.statusKey}"><c:out value="${s.statusLabel}" /></span>
-                                                    </li>
-                                                </c:forEach>
-                                            </ul>
+                                            <c:set var="groups" value="${booking.watchGroups}" />
+                                            <%@ include file="_booking-groups.jspf" %>
                                         </details>
                                     </c:if>
 

@@ -290,8 +290,8 @@ public class MyPtSessionService {
                     ? "Cả hai không check-in vào gym trong ngày tập. Buổi vẫn tính vào gói."
                     : "Bạn không check-in vào gym trong ngày tập. Buổi vẫn tính vào gói.";
             case "NoMembership" -> couple
-                    ? "Cả hai chưa có Membership hoặc DayPass hợp lệ cho ngày tập."
-                    : "Bạn chưa có Membership hoặc DayPass hợp lệ cho ngày tập.";
+                    ? "Hôm đó cả hai chưa có Membership hoặc DayPass nên buổi bị tính vắng."
+                    : "Hôm đó bạn chưa có Membership hoặc DayPass nên buổi bị tính vắng.";
             case "MembershipFrozen" -> couple
                     ? "Ngày tập nằm trong kỳ bảo lưu và cả hai chưa có quyền vào gym hợp lệ."
                     : "Ngày tập nằm trong kỳ bảo lưu Membership của bạn.";
@@ -307,9 +307,9 @@ public class MyPtSessionService {
         return switch (cancelType) {
             case "ByPt" -> "PT đã hủy buổi này.";
             case "ByCustomer" -> couple
-                    ? "Buổi được hủy theo yêu cầu của một thành viên. Gói vẫn bị trừ một buổi và không hoàn tiền."
-                    : "Buổi được hủy theo yêu cầu của bạn. Gói vẫn bị trừ một buổi và không hoàn tiền.";
-            case "GymClosed" -> "Phòng tập đóng cửa vào ngày này nên buổi bị hủy, không trừ buổi.";
+                    ? "Hủy theo yêu cầu của một thành viên (dữ liệu trước khi bỏ chức năng khách tự hủy). Buổi vẫn bị trừ."
+                    : "Hủy theo yêu cầu của bạn (dữ liệu trước khi bỏ chức năng khách tự hủy). Buổi vẫn bị trừ.";
+            case "GymClosed" -> "Phòng tập nghỉ ngày này và PT chưa dời buổi nên hệ thống hủy. Buổi không được dạy bù, hãy liên hệ PT hoặc lễ tân.";
             case "PackageExpired" -> "Gói PT đã hết hạn nên buổi chưa tập bị hủy.";
             default -> "Buổi đã bị hủy.";
         };
@@ -336,7 +336,7 @@ public class MyPtSessionService {
             row.setNoGymPass(!holderFrozen);   // thiếu gói (không phải bảo lưu) → màn Gói của tôi đưa vào "Cần để ý"
             return holderFrozen
                     ? "Buổi tập nằm trong kỳ bảo lưu. Hãy kiểm tra thời gian bảo lưu trước ngày tập."
-                    : "Bạn chưa có Membership hoặc DayPass hợp lệ cho ngày tập này.";
+                    : "Chưa có Membership hoặc DayPass cho ngày này. Mua trước ngày tập để không bị tính vắng.";
         }
 
         // B3: gói đôi → xét thêm người đi kèm
@@ -367,7 +367,7 @@ public class MyPtSessionService {
         if (holderFrozen || partnerFrozen) {
             return "Buổi tập trùng kỳ bảo lưu và cả hai chưa có quyền vào gym hợp lệ. Hãy kiểm tra Membership hoặc DayPass trước ngày tập.";
         }
-        return "Cả hai chưa có Membership hoặc DayPass hợp lệ cho ngày tập này.";
+        return "Cả hai chưa có Membership hoặc DayPass cho ngày này. Mua trước ngày tập để không bị tính vắng.";
     }
 
 

@@ -40,6 +40,7 @@ public class MyBookingView {
 
     // ---------------- Cần để ý ----------------
     private List<MyPtSessionRow> watchList = new ArrayList<>();      // "Cần để ý": buổi SẮP TỚI có cảnh báo (còn kịp xử lý)
+    private List<SessionGroup> watchGroups = new ArrayList<>();      // Gom buổi cần chú ý theo cùng lý do.
 
     // ---------------- CTA: tối đa 1, Service chọn theo độ ưu tiên ----------------
     private String ctaKind;                      // buyMembership | renewAtCounter | rejoin | ptPackage | null
@@ -113,6 +114,9 @@ public class MyBookingView {
 
     public List<MyPtSessionRow> getWatchList() { return watchList; }
     public void setWatchList(List<MyPtSessionRow> watchList) { this.watchList = watchList; }
+
+    public List<SessionGroup> getWatchGroups() { return watchGroups; }
+    public void setWatchGroups(List<SessionGroup> watchGroups) { this.watchGroups = watchGroups; }
 
     public String getCtaKind() { return ctaKind; }
     public void setCtaKind(String ctaKind) { this.ctaKind = ctaKind; }
