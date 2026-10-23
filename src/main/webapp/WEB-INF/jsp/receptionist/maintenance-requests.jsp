@@ -7,8 +7,7 @@
 <head>
   <%@ include file="/WEB-INF/jsp/common/head.jspf" %>
   <title>Yêu cầu bảo trì · Super Gym Lễ tân</title>
-  <link rel="stylesheet" href="${pageContext.request.contextPath}/css/pages/auth/account-settings.css">
-  <link rel="stylesheet" href="${pageContext.request.contextPath}/css/pages/receptionist/maintenance-requests.css">
+  <link rel="stylesheet" href="${pageContext.request.contextPath}/css/pages/receptionist/maintenance-requests.css?v=20261023fix1">
   <link rel="stylesheet"
         href="${pageContext.request.contextPath}/css/pages/auth/notification-bell.css">
 
@@ -30,6 +29,11 @@
 
         <div class="top-right">
 
+          <a class="btn btn-outline"
+             href="${pageContext.request.contextPath}/receptionist/facilities">
+            ‹ Cơ sở vật chất / Báo hỏng mới
+          </a>
+
           <%@ include file="/WEB-INF/jsp/common/notification-bell.jspf" %>
 
           <a class="tb-user"
@@ -45,155 +49,59 @@
 
       <main class="content" id="main-content" tabindex="-1">
 
-        <%-- ===== Form gửi yêu cầu ===== --%>
-        <section class="panel maintenance-panel">
-          <div class="panel-head">
-            <div>
-              <h2>Gửi yêu cầu mới</h2>
-            </div>
-          </div>
+        <%-- ===== Thống kê trạng thái ===== --%>
+        <div class="maintenance-stats">
 
-          <c:if test="${not empty formMessage}">
-            <div class="alert-banner danger">
-              <c:out value="${formMessage}" />
-            </div>
-          </c:if>
+          <%-- Tất cả --%>
+          <c:url var="allStatusUrl"
+                 value="/receptionist/maintenance-requests">
+            <c:if test="${not empty keyword}">
+              <c:param name="keyword" value="${keyword}" />
+            </c:if>
+            <c:if test="${not empty priorityFilter}">
+              <c:param name="priority" value="${priorityFilter}" />
+            </c:if>
+            <c:if test="${not empty reportedDateFilter}">
+              <c:param name="reportedDate" value="${reportedDateFilter}" />
+            </c:if>
+          </c:url>
 
-          <form id="createRequestForm"
-                action="${pageContext.request.contextPath}/receptionist/maintenance-requests"
-                method="post"
-                data-validate
-                novalidate>
+          <a href="${allStatusUrl}"
+             class="maintenance-stat ${empty statusFilter ? 'active' : ''}">
+            <span>Tất cả</span>
+            <strong><c:out value="${totalStatusCount}" default="0" /></strong>
+          </a>
 
-            <input type="hidden" name="action" value="create">
+          <%-- Theo từng trạng thái --%>
+          <c:forEach var="status" items="${statusOptions}">
+            <c:url var="statusUrl"
+                   value="/receptionist/maintenance-requests">
+              <c:param name="status" value="${status.dbValue}" />
+              <c:if test="${not empty keyword}">
+                <c:param name="keyword" value="${keyword}" />
+              </c:if>
+              <c:if test="${not empty priorityFilter}">
+                <c:param name="priority" value="${priorityFilter}" />
+              </c:if>
+              <c:if test="${not empty reportedDateFilter}">
+                <c:param name="reportedDate" value="${reportedDateFilter}" />
+              </c:if>
+            </c:url>
 
-            <%-- Khung cảnh báo yêu cầu chưa hoàn tất --%>
-            <div id="facilityWarningContainer"
-                 class="alert-banner warning"
-                 style="margin-bottom: 1.25rem; display: none;">
-              <div id="facilityWarningText"></div>
-              <ul id="facilityWarningList" style="margin: 0.5rem 0 0 1.25rem; padding: 0;"></ul>
-            </div>
+            <a href="${statusUrl}"
+               class="maintenance-stat ${statusFilter == status.dbValue ? 'active' : ''}">
+              <span><c:out value="${status.displayName}" /></span>
+              <strong><c:out value="${statusCounts[status.dbValue]}" default="0" /></strong>
+            </a>
+          </c:forEach>
 
-            <div class="maintenance-form-grid">
-              <div class="field">
-                <label class="field-label" for="facilityId">Thiết bị *</label>
-
-                <select id="facilityId" name="facilityId" required data-label="Thiết bị">
-                  <option value="">Chọn thiết bị...</option>
-
-                  <%-- BF-06: Display ONLY facility name in <option>; attach metadata via data-* attributes for dynamic client-side rendering --%>
-                  <c:forEach var="facility" items="${facilities}">
-                    <option value="${facility.facilityId}"
-                            data-location="<c:out value='${facility.location}' />"
-                            data-available="${facility.availableQuantity}"
-                            data-total="${facility.quantity}"
-                            data-pending="${facility.pendingQuantity}"
-                            <c:if test="${formFacilityId == facility.facilityId}">selected</c:if>>
-                      <c:out value="${facility.facilityName}" />
-                    </option>
-                  </c:forEach>
-                </select>
-
-                <%-- BF-06: Compact summary shown immediately after selecting a facility --%>
-                <div id="facilitySelectedInfo"
-                     class="facility-selected-info"
-                     style="display: none;"
-                     aria-live="polite">
-                  <span class="facility-info-item">
-                    <span class="facility-info-label">Khu vực:</span>
-                    <strong id="facilityInfoLocation" class="facility-info-value"></strong>
-                  </span>
-                  <span class="facility-info-separator" aria-hidden="true">·</span>
-                  <span class="facility-info-item">
-                    <span class="facility-info-label">Khả dụng:</span>
-                    <strong id="facilityInfoAvailability" class="facility-info-value"></strong>
-                  </span>
-                  <span class="facility-info-separator" aria-hidden="true">·</span>
-                  <span class="facility-info-item">
-                    <span class="facility-info-label">Yêu cầu chưa hoàn tất:</span>
-                    <strong id="facilityInfoPending" class="facility-info-value"></strong>
-                  </span>
-                </div>
-
-                <div class="field-error"
-                     id="facilityIdError"
-                     <c:if test="${empty errors.facilityId}">hidden</c:if>>
-                  <c:out value="${errors.facilityId}" />
-                </div>
-              </div>
-
-              <div class="field">
-                <label class="field-label" for="priority">Mức ưu tiên *</label>
-
-                <select id="priority" name="priority" required data-label="Mức ưu tiên">
-                  <c:forEach var="priority" items="${priorityOptions}">
-                    <option value="${priority.dbValue}"
-                            <c:if test="${formPriority == priority.dbValue
-                                    or (empty formPriority and priority.dbValue == 'Normal')}">
-                              selected
-                            </c:if>>
-                      <c:out value="${priority.displayName}" />
-                    </option>
-                  </c:forEach>
-                </select>
-
-                <div class="field-error"
-                     id="priorityError"
-                     <c:if test="${empty errors.priority}">hidden</c:if>>
-                  <c:out value="${errors.priority}" />
-                </div>
-              </div>
-            </div>
-
-            <div class="field">
-              <label class="field-label" for="description">
-                Mô tả hỏng hóc *
-              </label>
-
-              <textarea id="description"
-                        name="description"
-                        rows="4"
-                        minlength="10"
-                        maxlength="500"
-                        data-min-length="10"
-                        data-max-length="500"
-                        data-label="Mô tả hỏng hóc"
-                        required
-                        placeholder="Hỏng ở đâu, xảy ra khi nào, đã xử lý tạm thế nào"><c:out value="${formDescription}" /></textarea>
-
-              <div class="field-error"
-                   id="descriptionError"
-                   <c:if test="${empty errors.description}">hidden</c:if>>
-                <c:out value="${errors.description}" />
-              </div>
-            </div>
-
-            <label class="maintenance-check">
-              <input type="checkbox"
-                     name="warningTagPlaced"
-                     value="true"
-                     <c:if test="${formWarningTagPlaced}">checked</c:if>>
-
-              <span>
-                <b>Đã dán cảnh báo, ngừng cho khách dùng</b>
-                <small>Chọn khi thiết bị không còn an toàn.</small>
-              </span>
-            </label>
-
-            <div class="btn-row">
-              <button class="btn btn-primary" type="submit">
-                Gửi yêu cầu
-              </button>
-            </div>
-          </form>
-        </section>
+        </div>
 
         <%-- ===== Danh sách yêu cầu ===== --%>
         <section class="panel maintenance-panel">
           <div class="panel-head">
             <div>
-              <h2>Yêu cầu bảo trì</h2>
+              <h2>Danh sách yêu cầu</h2>
             </div>
           </div>
 
@@ -205,11 +113,10 @@
                    name="keyword"
                    maxlength="100"
                    value="<c:out value='${keyword}' />"
-                   placeholder="Tìm mã yêu cầu hoặc tên thiết bị">
+                   placeholder="Mã yêu cầu hoặc tên thiết bị">
 
             <select name="status">
               <option value="">Tất cả trạng thái</option>
-
               <c:forEach var="status" items="${statusOptions}">
                 <option value="${status.dbValue}"
                         <c:if test="${statusFilter == status.dbValue}">selected</c:if>>
@@ -220,7 +127,6 @@
 
             <select name="priority">
               <option value="">Tất cả mức ưu tiên</option>
-
               <c:forEach var="p" items="${priorityOptions}">
                 <option value="${p.dbValue}"
                         <c:if test="${priorityFilter == p.dbValue}">selected</c:if>>
@@ -240,12 +146,14 @@
               <option value="20" ${requestPage.pageSize == 20 ? 'selected' : ''}>20</option>
               <option value="50" ${requestPage.pageSize == 50 ? 'selected' : ''}>50</option>
             </select>
-            <button class="btn btn-primary" type="submit">Lọc</button>
-
-            <a class="btn btn-ghost"
-               href="${pageContext.request.contextPath}/receptionist/maintenance-requests">
-              Xóa lọc
-            </a>
+            <button class="btn btn-primary" type="submit">
+              Lọc
+            </button>
+            <c:if test="${not empty keyword || not empty statusFilter || not empty priorityFilter || not empty reportedDateFilter}">
+              <a class="btn btn-ghost" href="${pageContext.request.contextPath}/receptionist/maintenance-requests">
+                Xóa lọc
+              </a>
+            </c:if>
           </form>
 
           <c:choose>
@@ -259,7 +167,8 @@
                         <strong>
                           <c:out value="${item.request.requestCode}" />
                           ·
-                          <c:out value="${item.facilityName}" />
+                          <c:out value="${item.itemCode}" />
+                          (<c:out value="${item.facilityName}" />)
                         </strong>
 
                         <span class="badge
@@ -272,11 +181,29 @@
 
                       <div class="maintenance-meta">
                         <span>
-                          ${gms:formatDate(item.request.reportedAt.toLocalDate())}
+                          Ngày báo: <b>${gms:formatDate(item.request.reportedAt.toLocalDate())}</b>
                         </span>
 
                         <span>
-                          <c:out value="${item.request.priority.displayName}" />
+                          Ưu tiên: <b><c:out value="${item.request.priority.displayName}" /></b>
+                        </span>
+
+                        <c:if test="${not empty item.facilityLocation}">
+                          <span>
+                            Khu vực: <b><c:out value="${item.facilityLocation}" /></b>
+                          </span>
+                        </c:if>
+
+                        <span>
+                          Sự cố: <b><c:out value="${item.request.incidentType.displayName}" /></b>
+                        </span>
+
+                        <span>
+                          Phát hiện: <b><c:out value="${item.request.detectedBy.displayName}" /></b>
+                        </span>
+
+                        <span>
+                          Người báo: <b><c:out value="${item.reporterName}" /></b>
                         </span>
 
                         <c:if test="${item.request.warningTagPlaced}">
@@ -326,6 +253,10 @@
                         <input type="hidden"
                                name="action"
                                value="close">
+
+                        <input type="hidden"
+                               name="csrfToken"
+                               value="${sessionScope.csrfToken}">
 
                         <input type="hidden"
                                name="requestId"
@@ -423,116 +354,5 @@
     </div>
   </div>
 
-  <script id="unfinishedDataJson" type="application/json">
-    <c:out value="${unfinishedJson}" escapeXml="false" />
-  </script>
-  <script>
-    (function () {
-      var facilitySelect = document.getElementById('facilityId');
-      var warningContainer = document.getElementById('facilityWarningContainer');
-      var warningText = document.getElementById('facilityWarningText');
-      var warningList = document.getElementById('facilityWarningList');
-      var dataElem = document.getElementById('unfinishedDataJson');
-
-      // BF-06: Compact facility summary elements below dropdown
-      var infoContainer = document.getElementById('facilitySelectedInfo');
-      var infoLocation = document.getElementById('facilityInfoLocation');
-      var infoAvailability = document.getElementById('facilityInfoAvailability');
-      var infoPending = document.getElementById('facilityInfoPending');
-
-      if (!facilitySelect || !warningContainer || !dataElem) return;
-
-      var unfinishedData = {};
-      try {
-        unfinishedData = JSON.parse(dataElem.textContent || '{}');
-      } catch (e) {
-        console.error('Failed to parse unfinishedData', e);
-      }
-
-      /**
-       * BF-06: Dynamically updates the compact information section and warning banner
-       * whenever a facility is selected or preselected (e.g. from Facility Catalog query param).
-       * Reuses data-* attributes already baked into the DOM without additional DB/AJAX requests.
-       */
-      function updateFacilityDetails() {
-        var selectedId = facilitySelect.value;
-        var selectedOption = facilitySelect.options[facilitySelect.selectedIndex];
-
-        // 1. Update compact info section below selector
-        if (infoContainer) {
-          if (!selectedId || !selectedOption || selectedOption.value === '') {
-            infoContainer.style.display = 'none';
-          } else {
-            var loc = selectedOption.getAttribute('data-location');
-            var available = selectedOption.getAttribute('data-available') || '0';
-            var total = selectedOption.getAttribute('data-total') || '0';
-            var pending = selectedOption.getAttribute('data-pending') || '0';
-
-            if (infoLocation) {
-              infoLocation.textContent = (loc && loc.trim()) ? loc.trim() : 'Chưa cập nhật';
-            }
-            if (infoAvailability) {
-              infoAvailability.textContent = available + '/' + total;
-            }
-            if (infoPending) {
-              infoPending.textContent = pending;
-            }
-            infoContainer.style.display = 'flex';
-          }
-        }
-
-        // 2. Update unfinished requests warning banner
-        var list = unfinishedData[selectedId];
-
-        if (!list || list.length === 0) {
-          warningContainer.style.display = 'none';
-          warningText.textContent = '';
-          warningList.innerHTML = '';
-          return;
-        }
-
-        var total = list.length;
-        var openCount = 0;
-        var inProgressCount = 0;
-        list.forEach(function (item) {
-          if (item.status === 'Open') openCount++;
-          else if (item.status === 'InProgress') inProgressCount++;
-        });
-
-        warningText.textContent =
-          'Thiết bị này hiện có ' + total + ' yêu cầu bảo trì chưa hoàn tất (' +
-          openCount + ' chờ duyệt, ' + inProgressCount + ' đang xử lý). ' +
-          'Vui lòng kiểm tra các yêu cầu hiện có trước khi tạo đơn mới.';
-
-        warningList.innerHTML = '';
-        var contextPath = '${pageContext.request.contextPath}';
-        list.forEach(function (item) {
-          var li = document.createElement('li');
-          var a = document.createElement('a');
-          a.href = contextPath + '/receptionist/maintenance-requests?keyword=' + encodeURIComponent(item.requestCode);
-          a.textContent = '[' + item.requestCode + ']';
-          a.style.fontWeight = 'bold';
-          a.style.marginRight = '6px';
-          li.appendChild(a);
-
-          var statusSpan = document.createElement('span');
-          statusSpan.textContent = (item.statusDisplayName || item.status) + ' · ';
-          li.appendChild(statusSpan);
-
-          var descSpan = document.createElement('span');
-          descSpan.textContent = item.description ? (item.description.length > 80 ? item.description.substring(0, 80) + '...' : item.description) : '';
-          li.appendChild(descSpan);
-
-          warningList.appendChild(li);
-        });
-
-        warningContainer.style.display = 'block';
-      }
-
-      facilitySelect.addEventListener('change', updateFacilityDetails);
-      // Run once on load to handle automatic preselection (?facilityId=...)
-      updateFacilityDetails();
-    })();
-  </script>
 </body>
 </html>
