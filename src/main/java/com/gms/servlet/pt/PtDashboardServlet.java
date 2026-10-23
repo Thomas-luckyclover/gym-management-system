@@ -134,37 +134,6 @@ public class PtDashboardServlet extends HttpServlet {
         RequestUtil.forward(request, response, VIEW);
     }
 
-    /**
-     * POST /pt/dashboard — nút "Nhắc khách" ở khối Cần chú ý: gửi thông báo tới khách rồi quay lại trang.
-     * Form gửi: csrfToken, customerId, subscriptionId. Service kiểm tra lại khách có thuộc PT này không.
-     */
-    @Override
-    protected void doPost(HttpServletRequest request, HttpServletResponse response) throws IOException {
-        // B0: chặn CSRF trước khi làm bất cứ việc gì
-        if (!RequestUtil.isValidCsrfToken(request)) {
-            response.sendError(HttpServletResponse.SC_FORBIDDEN);
-            return;
-        }
-
-        // B1: phải đăng nhập (mã tài khoản lấy từ session)
-        HttpSession session = request.getSession(false);
-        Integer accountId = session == null ? null : (Integer) session.getAttribute(SessionKey.ACCOUNT_ID);
-        if (accountId == null) {
-            RequestUtil.redirect(request, response, "/login?returnUrl=/pt/dashboard");
-            return;
-        }
-
-        // B2: gửi nhắc; mã sai/thiếu → 0 → Service báo "không còn cần nhắc"
-        Integer customerId = RequestUtil.getPositiveIntParam(request, "customerId");
-        Integer subscriptionId = RequestUtil.getPositiveIntParam(request, "subscriptionId");
-        ServiceResult<Void> result = dashboardService.remindCustomer(accountId,
-                customerId == null ? 0 : customerId, subscriptionId == null ? 0 : subscriptionId);
-
-        // B3: báo kết quả bằng toast, quay về đúng khối Cần chú ý (POST → redirect → GET, F5 không gửi lại)
-        RequestUtil.setFlashToast(request, result.isSuccess() ? "success" : "error", result.getMessage());
-        RequestUtil.redirect(request, response, "/pt/dashboard#alerts-title");
-    }
-
     /** Chỉ nhận các tên CSS cố định, tránh đưa chuỗi tùy ý từ URL vào class HTML. */
     static String resolveWeatherType(String previewType, WeatherView weather) {
         if (previewType != null) {

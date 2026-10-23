@@ -5,7 +5,6 @@ import com.gms.constant.Role;
 import com.gms.dao.AccountDAO;
 import com.gms.dao.EmployeeDAO;
 import com.gms.dao.PtDashboardDAO;
-import com.gms.dao.PtRemindDAO;
 import com.gms.dto.PtAssignedPackageView;
 import com.gms.dto.PtAttentionView;
 import com.gms.dto.PtClientPackageView;
@@ -27,7 +26,6 @@ import java.time.LocalDateTime;
 import java.util.ArrayList;
 import java.util.Comparator;
 import java.util.List;
-import java.util.Set;
 
 /** Kiểm tra quyền và chuẩn bị dữ liệu các khối trên dashboard PT (UC-32). */
 public class PtDashboardService {
@@ -38,7 +36,6 @@ public class PtDashboardService {
     private final AccountDAO accountDAO = new AccountDAO(); // Đọc tài khoản và PersonId.
     private final EmployeeDAO employeeDAO = new EmployeeDAO(); // Tìm hồ sơ PT từ PersonId.
     private final PtDashboardDAO dashboardDAO = new PtDashboardDAO(); // Đọc lịch và dữ liệu gói của khách.
-    private final PtRemindDAO remindDAO = new PtRemindDAO(); // Nút "Nhắc khách": gửi thông báo + biết hôm nay đã nhắc chưa.
     private final SystemConfigService systemConfigService = new SystemConfigService(); // Đọc P-22 trước khi hiện điểm.
 
     /** Lấy Employees.EmployeeCode của PT đang đăng nhập để hiện cạnh tên ở đầu trang. */
@@ -281,13 +278,7 @@ public class PtDashboardService {
                 closedDayItems.add(buildClosedDayItem(row));
             }
 
-            // B4.2: chỉ đọc trạng thái nhắc cho hai loại cũ; closedDay là việc PT phải tự xử lý.
-            if (!attentionItems.isEmpty()) {
-                Set<Integer> remindedToday = remindDAO.findRemindedToday(employee.getEmployeeId());
-                for (PtAttentionView item : attentionItems) {
-                    item.setReminded(remindedToday.contains(item.getCustomerId()));
-                }
-            }
+            // B4.2: thẻ ngày nghỉ đứng trước; khách thiếu membership do JOB-08 tự nhắc, PT không phải bấm gì.
             closedDayItems.addAll(attentionItems);
             return ServiceResult.ok(closedDayItems);
         } catch (SQLException exception) {
@@ -313,64 +304,6 @@ public class PtDashboardService {
                 "Ngày phòng nghỉ — cần dời",
                 "Buổi " + when + " rơi vào ngày phòng nghỉ. Dời buổi trước ngày này; nếu không, hệ thống sẽ hủy và không tính hoa hồng.",
                 "closedDay", row.sessionId());
-    }
-
-    /**
-     * Nút "Nhắc khách" ở khối Cần chú ý: gửi 1 thông báo tới tài khoản của khách.
-     * Không tin form: tính lại danh sách Cần chú ý của CHÍNH PT này rồi tìm đúng khách + gói.
-     * Mỗi khách chỉ nhắc 1 lần/ngày để không thành spam.
-     */
-    public ServiceResult<Void> remindCustomer(int accountId, int customerId, int ptSubscriptionId) {
-        try {
-            // B1: danh sách Cần chú ý hiện tại (đã kiểm tra tài khoản là PT đang làm việc)
-            ServiceResult<List<PtAttentionView>> items = getAttentionItems(accountId);
-            if (!items.isSuccess()) {
-                return ServiceResult.fail(items.getMessage());
-            }
-
-            // B2: khách + gói phải còn trong danh sách của PT này
-            PtAttentionView target = null;
-            for (PtAttentionView item : items.getData()) {
-                if (!"closedDay".equals(item.getKind()) && item.getCustomerId() == customerId
-                        && item.getPtSubscriptionId() == ptSubscriptionId) {
-                    target = item;
-                    break;
-                }
-            }
-            if (target == null) {
-                return ServiceResult.fail("Khách này không còn cần nhắc (đã có gói hợp lệ hoặc buổi đã qua).");
-            }
-            if (target.isReminded()) {
-                return ServiceResult.fail("Bạn đã nhắc " + target.getCustomerName() + " hôm nay rồi.");
-            }
-
-            // B3: khách phải có tài khoản để nhận thông báo
-            Integer customerAccountId = remindDAO.findActiveAccountId(customerId);
-            if (customerAccountId == null) {
-                return ServiceResult.fail(target.getCustomerName() + " chưa có tài khoản để nhận thông báo. Hãy nhắn Zalo cho khách.");
-            }
-
-            // B4: ghi thông báo (PT gửi) cho đúng 1 người
-            Account account = accountDAO.findById(accountId);
-            Employee pt = employeeDAO.findByPersonId(account.getPersonId());
-            remindDAO.insertReminder(pt.getEmployeeId(), customerAccountId, remindContent(target));
-            return ServiceResult.ok(null, "Đã nhắc " + target.getCustomerName() + ".");
-
-        } catch (SQLException e) {
-            e.printStackTrace();
-            return ServiceResult.fail(Messages.MSG04_SYSTEM_BUSY);
-        }
-    }
-
-    /** Lời nhắc khách đọc ở chuông thông báo (10–500 ký tự, DBR-15). */
-    static String remindContent(PtAttentionView item) {
-        String day = DateTimeUtil.formatDate(item.getSessionDate());
-        if (item.getFreezeEndDate() != null) {
-            return "Buổi PT ngày " + day + " nằm trong kỳ bảo lưu gói thành viên của bạn. "
-                    + "Liên hệ lễ tân nếu muốn kết thúc bảo lưu sớm để tập buổi này.";
-        }
-        return "Buổi PT ngày " + day + " của bạn chưa có gói thành viên hợp lệ nên chưa vào được phòng tập. "
-                + "Mở Gói của tôi để mua gói thành viên hoặc vé ngày trước buổi tập.";
     }
 
     /**

@@ -36,7 +36,6 @@ class PtAttentionServiceTest {
         assertEquals(row.ptEndDate(), item.getPtEndDate());
         assertEquals("Ngày phòng nghỉ — cần dời", item.getAttentionTitle());
         assertEquals("Buổi 23/10/2026 18:00 rơi vào ngày phòng nghỉ. Dời buổi trước ngày này; nếu không, hệ thống sẽ hủy và không tính hoa hồng.", item.getAttentionMessage());
-        assertFalse(item.isReminded());
         assertNull(item.getMembershipEndDate());
     }
 

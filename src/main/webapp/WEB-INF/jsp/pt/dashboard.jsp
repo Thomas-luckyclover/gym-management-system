@@ -219,15 +219,7 @@
                                                         <c:when test="${item.kind eq 'closedDay'}">
                                                             <button type="button" class="btn btn-primary btn-sm" data-pt-session-action data-session-id="${item.sessionId}" data-session-label="Dời buổi ${gms:formatDate(item.sessionDate)} · ${fn:escapeXml(item.customerName)}">Dời buổi</button>
                                                         </c:when>
-                                                        <c:when test="${item.reminded}"><span class="pt-attn__done">Đã nhắc hôm nay</span></c:when>
-                                                        <c:otherwise>
-                                                            <form class="pt-attn__act" method="post" action="${pageContext.request.contextPath}/pt/dashboard">
-                                                                <input type="hidden" name="csrfToken" value="${fn:escapeXml(csrfToken)}">
-                                                                <input type="hidden" name="customerId" value="${item.customerId}">
-                                                                <input type="hidden" name="subscriptionId" value="${item.ptSubscriptionId}">
-                                                                <button type="submit" class="btn btn-primary btn-sm" aria-label="Nhắc ${fn:escapeXml(item.customerName)}">Nhắc khách</button>
-                                                            </form>
-                                                        </c:otherwise>
+                                                        <c:otherwise><p class="pt-attn__done">Hệ thống tự nhắc khách trước buổi 1 ngày.</p></c:otherwise>
                                                     </c:choose>
                                                 </div>
                                             </c:forEach>

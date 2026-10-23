@@ -13,10 +13,9 @@ public class PtAttentionView {
 
     // ===== 1. FIELD: PtDashboardService truyền đủ giá trị vào constructor =====
 
-    // ----- 1.0. Mã để nút "Nhắc khách" gửi lên (Service kiểm tra lại, không tin form) -----
+    // ----- 1.0. Mã khách + gói (JSP dùng để gắn nút Zalo / dời buổi đúng người) -----
     private final int customerId;          // PtClientPackageView.getCustomerId()
     private final int ptSubscriptionId;    // PtClientPackageView.getPtSubscriptionId()
-    private boolean reminded;              // hôm nay PT đã nhắc khách này chưa → nút thành "Đã nhắc hôm nay"
 
     // Service chọn membership/frozen theo frozenOnSessionDate, hoặc closedDay từ lịch nghỉ.
     // JSP chọn màu và nút xử lý; closedDay không gửi nhắc khách.
@@ -137,8 +136,6 @@ public class PtAttentionView {
     /** Mã buổi để mở hộp dời; hai loại cảnh báo cũ nhận null. */
     public Integer getSessionId() { return sessionId; }
     public int getPtSubscriptionId() { return ptSubscriptionId; }
-    public boolean isReminded() { return reminded; }
-    public void setReminded(boolean reminded) { this.reminded = reminded; }
     // Không có setter vì Service truyền đủ dữ liệu khi tạo DTO.
 
     // ----- 3.1. Giá trị lấy từ DTO của DAO, tương ứng nhóm 1.1 -----

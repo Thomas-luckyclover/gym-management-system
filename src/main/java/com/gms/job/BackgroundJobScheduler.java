@@ -15,7 +15,7 @@ import java.util.concurrent.TimeUnit;
 
 /**
  * Khởi động/dừng các job chạy ngầm theo vòng đời Tomcat (dùng ScheduledExecutorService của JDK, không cần Quartz).
- * Job hằng ngày chạy lúc 00:05 giờ VN (nối tiếp: cộng bảo lưu → hết hạn gói → hết hạn vé ngày → chốt buổi PT); job mỗi phút chạy độc lập.
+ * Job hằng ngày chạy lúc 00:05 giờ VN (nối tiếp: cộng bảo lưu → hết hạn gói → hết hạn vé ngày → chốt buổi PT → nhắc khách buổi ngày mai); job mỗi phút chạy độc lập.
  * Thêm job: tạo class implements BackgroundJob rồi thêm vào DAILY_JOBS hoặc MINUTE_JOBS.
  */
 @WebListener
@@ -30,7 +30,8 @@ public class BackgroundJobScheduler implements ServletContextListener {
             new ResumeExpiredFreezesJob(),
             new ExpireMembershipPackagesJob(),
             new ExpireUnusedDayPassesJob(),
-            new AutoCloseUnmarkedSessionsJob()
+            new AutoCloseUnmarkedSessionsJob(),
+            new RemindMissingGymAccessJob()       // JOB-08: chạy SAU các job hết hạn để xét quyền vào gym mới nhất
     );
 
     /** Job chạy mỗi phút — độc lập nhau. */
