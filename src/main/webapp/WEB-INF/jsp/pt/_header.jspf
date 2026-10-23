@@ -1,23 +1,63 @@
+<%--
+================================================================================
+ _header.jspf — Thanh đầu trang dùng chung cho các màn PT.
+ Trang cha (dashboard.jsp / schedule.jsp) include file này bên trong div.main.
+ Bạt nằm phía trên header.
+
+ DỮ LIỆU ĐỌC:
+   pageTitle       String     Servlet đặt tiêu đề, ví dụ "Lịch dạy".
+   today           LocalDate  Servlet lấy ngày hôm nay theo giờ Việt Nam.
+   ptEmployeeCode  String     mã Employees.EmployeeCode nếu trang đã tải, ví dụ NV-0005.
+   sessionScope.displayName   tên người đăng nhập; LoginServlet lưu trong session.
+
+ THƯ VIỆN: trang cha đã khai báo c và gms trước khi include.
+   c:out in dữ liệu có escape HTML; gms:formatDate đổi LocalDate sang dd/MM/yyyy.
+ ĐIỂM NỐI JS: common.js nhận diện nút [data-theme-toggle] để chuyển sáng/tối.
+================================================================================ --%>
 <%@ page pageEncoding="UTF-8" %>
-<%-- Servlet: pageTitle, today, ptEmployeeCode; session: displayName. Bạt nằm phía trên header. --%>
+
+<%-- ===== Thanh đầu trang PT ===== --%>
 <header class="topbar">
+    <%-- ===== Bên trái: tiêu đề trang + ngày hôm nay (pageTitle, today) ===== --%>
     <div class="tb-left">
-        <h1 class="tb-title"><c:out value="${pageTitle}" /></h1>
-        <p class="pt-header-date"><c:out value="${gms:formatDate(today)}" /></p>
+        <%-- pageTitle do Servlet của trang đang xem đặt; không ghi cứng để dùng chung nhiều màn. --%>
+        <h1 class="tb-title">
+            <c:out value="${pageTitle}" />
+        </h1>
+        <%-- today luôn là hôm nay, khác weekStart của tuần đang xem trong màn Lịch dạy.
+             Ví dụ today=2026-10-22 → gms:formatDate in "22/10/2026". --%>
+        <p class="pt-header-date">
+            <c:out value="${gms:formatDate(today)}" />
+        </p>
     </div>
+    <%-- ===== KẾT THÚC tiêu đề và ngày ===== --%>
+
+    <%-- ===== Bên phải: chọn giao diện + tài khoản PT ===== --%>
     <div class="pt-top-actions">
     <%-- Chuyển nền tối/sáng (common.js "Giao diện sáng / tối"); mặc định tối --%>
+    <%-- data-theme-toggle là dấu để common.js gắn sự kiện click, không phải dữ liệu từ Servlet.
+         JS lưu lựa chọn vào localStorage "gms-theme", cập nhật nhãn và aria-pressed.
+         aria-pressed=false và chữ "Tối" là trạng thái HTML ban đầu; JS đồng bộ với lựa chọn đã lưu. --%>
     <button type="button" class="theme-toggle" data-theme-toggle aria-pressed="false" aria-label="Chuyển sang nền sáng">
         <span class="theme-toggle__track" aria-hidden="true"><span class="theme-toggle__knob"></span></span>
         <span class="theme-toggle__label">Tối</span>
     </button>
+
+    <%-- Link tài khoản: contextPath tự ghép gốc app, ví dụ /gms/account.
+         Toàn bộ avatar + tên là một link để mở trang Cài đặt tài khoản. --%>
     <a class="tb-user" href="${pageContext.request.contextPath}/account">
+        <%-- Avatar và chấm trang trí, không phải kết quả truy vấn trạng thái online của PT. --%>
         <span class="pt-user-avatar">
             <i class="fa-solid fa-user" aria-hidden="true"></i>
             <span class="pt-user-online" aria-hidden="true"></span>
         </span>
         <span class="pt-user-details">
+            <%-- sessionScope đọc dữ liệu giữ qua nhiều request, khác request attribute pageTitle.
+                 Tên được c:out escape để ký tự HTML không chạy thành mã.
+                 default chỉ dùng khi giá trị null, hiện chữ "Huấn luyện viên". --%>
             <strong><c:out value="${sessionScope.displayName}" default="Huấn luyện viên" /></strong>
+            <%-- Mã nhân viên chỉ hiện nếu trang đã tải được ptEmployeeCode.
+                 Màn Lịch dạy hiện chưa tải mã: bỏ qua khối này, không in mã giả. --%>
             <c:if test="${not empty ptEmployeeCode}">
                 <%-- Employees.EmployeeCode, ví dụ NV-0005; không phải AccountId. --%>
                 <small class="pt-user-code" title="M&#227; nh&#226;n vi&#234;n"><c:out value="${ptEmployeeCode}" /></small>
@@ -25,4 +65,6 @@
         </span>
     </a>
     </div>
+    <%-- ===== KẾT THÚC giao diện và tài khoản ===== --%>
 </header>
+<%-- ===== KẾT THÚC thanh đầu trang PT ===== --%>

@@ -1,0 +1,120 @@
+@charset "UTF-8";
+/* ==================== Thanh tuần và kiểu xem: lịch là nội dung chính ==================== */
+.pt-schedule-frame { display: grid; gap: var(--space-4); }
+.pt-schedule-frame h2, .pt-schedule-frame h3, .pt-schedule-frame p { margin: var(--space-0); }
+.pt-schedule-frame h2 { font-size: var(--font-size-base); }
+.pt-schedule-frame :focus-visible { outline: var(--focus-outline-width) solid var(--color-link); outline-offset: var(--focus-outline-offset); }
+.pt-schedule-page .pt-top-actions, .pt-schedule-toolbar, .pt-week-nav, .pt-view-nav, .pt-board-heading, .pt-pending-frame, .pt-pending-actions { display: flex; align-items: center; gap: var(--space-3); flex-wrap: wrap; }
+.pt-schedule-toolbar, .pt-board-heading, .pt-pending-frame { justify-content: space-between; }
+.pt-schedule-page .pt-top-actions { flex-wrap: nowrap; }
+.pt-week-nav h2 { font-size: var(--font-size-lg); font-variant-numeric: var(--font-numeric); }
+.pt-view-nav { gap: var(--space-1); padding: var(--space-1); background: var(--color-surface-muted); border: var(--border-width) solid var(--color-border); border-radius: var(--radius-sm); }
+.pt-view-nav a { padding: var(--space-2) var(--space-4); color: var(--color-text-soft); border-radius: var(--radius-xs); font-size: var(--font-size-sm); font-weight: var(--font-weight-semibold); text-decoration: none; }
+.pt-view-nav a:hover { background: var(--color-primary-tint); color: var(--color-text); }
+.pt-view-nav a[aria-current="page"] { background: var(--color-surface); color: var(--color-text); box-shadow: var(--shadow-card); }
+.pt-frame-notice { padding: var(--space-2) var(--space-3); border-inline-start: var(--border-width-accent) solid var(--color-warning); color: var(--color-text-soft); font-size: var(--font-size-sm); line-height: var(--line-height-normal); }
+
+/* ==================== Nhập tay gọn ở trên; không lấy mất chiều ngang của 7 ngày ==================== */
+.pt-schedule-workspace { display: grid; gap: var(--space-3); min-width: 0; }
+.pt-schedule-tools, .pt-schedule-board, .pt-pending-frame { min-width: 0; border: var(--border-width) solid var(--color-border); border-radius: var(--radius-sm); background: var(--color-surface); }
+.pt-schedule-tools > summary { padding: var(--space-3) var(--space-4); cursor: pointer; font-size: var(--font-size-sm); font-weight: var(--font-weight-semibold); }
+.pt-schedule-tools > summary:hover { background: var(--color-surface-muted); }
+.pt-schedule-tools > summary span { margin-inline-start: var(--space-3); font-size: var(--font-size-xs); font-weight: var(--font-weight-regular); color: var(--color-text-soft); }
+.pt-schedule-tools form { padding: var(--space-0) var(--space-4) var(--space-4); }
+.pt-schedule-tools fieldset { display: grid; grid-template-columns: minmax(0, 1fr) minmax(0, 1.5fr) auto; align-items: end; gap: var(--space-3); margin: var(--space-0); padding: var(--space-0); border: none; }
+.pt-schedule-tools legend { padding: var(--space-0) var(--space-0) var(--space-3); font-size: var(--font-size-xs); color: var(--color-text-soft); }
+.pt-schedule-tools label { display: grid; min-width: 0; gap: var(--space-1); font-size: var(--font-size-sm); }
+.pt-schedule-tools input { width: 100%; min-width: 0; min-height: var(--space-7); padding: var(--space-2); border: var(--border-width) solid var(--color-border-strong); border-radius: var(--radius-xs); background: var(--color-bg); color: var(--color-text); font: inherit; font-variant-numeric: var(--font-numeric); }
+.pt-schedule-tools input[readonly] { color: var(--color-text-soft); background: var(--color-surface-muted); }
+.pt-schedule-tools small { grid-column: 1 / -1; color: var(--color-text-soft); line-height: var(--line-height-normal); }
+.pt-time-fields { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: var(--space-3); }
+.pt-schedule-frame button:disabled { cursor: not-allowed; }
+
+/* ==================== Cuộn dọc theo trang; lịch chỉ cuộn ngang khi màn hình không đủ rộng ==================== */
+.pt-board-heading { padding: var(--space-3) var(--space-4); border-bottom: var(--border-width) solid var(--color-border); }
+.pt-week-help { padding: var(--space-2) var(--space-4); color: var(--color-text-soft); font-size: var(--font-size-xs); line-height: var(--line-height-normal); }
+.pt-calendar-scroll { overflow-x: auto; overflow-y: hidden; isolation: isolate; border-top: var(--border-width) solid var(--color-border); border-radius: var(--space-0) var(--space-0) var(--radius-sm) var(--radius-sm); }
+.pt-calendar { display: grid; grid-template-columns: var(--space-10) repeat(7, minmax(calc(var(--space-12) * 1.6), 1fr)); user-select: none; -webkit-user-select: none; }
+.pt-time-axis { display: grid; grid-template-rows: var(--space-10) repeat(calc(var(--pt-axis-minutes) / 60), var(--space-8)); background: var(--color-surface); color: var(--color-text-soft); font-size: var(--font-size-xs); font-variant-numeric: var(--font-numeric); text-align: center; }
+.pt-time-axis > span { padding-block-start: var(--space-2); border-top: var(--border-width) solid var(--color-border); }
+.pt-time-axis > span:first-child { border-top: none; }
+.pt-calendar-day { min-width: 0; border-inline-start: var(--border-width) solid var(--color-border); }
+.pt-day-heading { display: flex; height: var(--space-10); padding: var(--space-2); flex-direction: column; justify-content: center; gap: var(--space-1); background: var(--color-surface); border-bottom: var(--border-width) solid var(--color-border); font-size: var(--font-size-sm); line-height: var(--line-height-snug); }
+.pt-day-heading span { white-space: nowrap; }
+.pt-day-heading small { color: var(--color-info-ink); font-size: var(--font-size-xs); font-weight: var(--font-weight-medium); }
+.is-today .pt-day-heading { background: var(--color-info-tint); box-shadow: inset var(--space-0) var(--border-width-accent) var(--color-info-ink); }
+.is-closed .pt-day-heading { background: var(--color-danger-tint); box-shadow: inset var(--space-0) var(--border-width-accent) var(--color-danger); }
+.is-closed .pt-day-track { background: var(--color-surface-muted); }
+.pt-day-track { position: relative; display: grid; grid-template-columns: minmax(0, 1fr); grid-auto-columns: minmax(0, 1fr); grid-template-rows: repeat(var(--pt-axis-minutes), calc(var(--space-8) / 60)); padding-inline: var(--space-1); touch-action: pan-x; cursor: crosshair; }
+.pt-schedule-board.is-dragging .pt-day-track { cursor: grabbing; }
+.pt-hour-lines { position: absolute; inset: var(--space-0); display: grid; grid-template-rows: repeat(calc(var(--pt-axis-minutes) / 60), var(--space-8)); pointer-events: none; }
+.pt-hour-lines span { border-block-end: var(--border-width) solid var(--color-border); }
+
+/* ==================== Thẻ thật: giờ rõ, tên khách là nội dung chính; không lặp chữ Khung giờ ==================== */
+.pt-slot-frame { display: grid; grid-row: var(--pt-slot-row) / span var(--pt-slot-duration); min-width: 0; min-height: 0; align-content: start; gap: var(--space-1); margin-block: var(--border-width); padding: var(--space-1) var(--space-2); border: var(--border-width) solid var(--color-neutral-border); border-inline-start-width: var(--border-width-accent); border-radius: var(--radius-xs); background: var(--color-surface); font-size: var(--font-size-xs); line-height: var(--line-height-snug); cursor: default; }
+.pt-slot-frame.is-booked { border-color: var(--color-info-border); border-inline-start-color: var(--color-info-ink); background: var(--color-info-tint); }
+.pt-slot-frame.is-free { border-color: var(--color-success-border); border-inline-start-color: var(--color-success-ink); background: var(--color-success-tint); }
+.pt-slot-frame.is-held { border-color: var(--color-warning-border); border-inline-start-color: var(--color-warning-ink); background: var(--color-warning-tint); }
+.pt-slot-frame.is-locked { border-color: var(--color-danger-border); border-inline-start-color: var(--color-danger-ink); background: var(--color-danger-tint); }
+.pt-slot-frame.is-past { border-inline-start-color: var(--color-neutral); background: var(--color-surface-muted); }
+.pt-slot-time { white-space: nowrap; font-weight: var(--font-weight-semibold); font-variant-numeric: var(--font-numeric); }
+.pt-slot-person { display: grid; min-width: 0; gap: var(--space-1); }
+.pt-slot-person strong, .pt-slot-state { overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.pt-slot-state { color: var(--color-text-soft); }
+.pt-slot-detail, .pt-slot-action { display: none; }
+.pt-slot-frame .btn { min-width: 0; padding-inline: var(--space-2); }
+.pt-day-notes { position: absolute; inset: var(--space-2) var(--space-2) auto; display: grid; gap: var(--space-1); pointer-events: none; color: var(--color-warning-ink); font-size: var(--font-size-xs); line-height: var(--line-height-tight); }
+.pt-day-heading .pt-day-closed { color: var(--color-danger-ink); }
+.pt-day-placeholder { position: absolute; inset: var(--space-12) var(--space-2) auto; color: var(--color-text-soft); font-size: var(--font-size-xs); line-height: var(--line-height-normal); pointer-events: none; }
+
+/* ==================== Preview nằm trên lớp riêng: không tạo cột phụ, không đổi bề rộng thẻ thật ==================== */
+.pt-preview-layer { position: absolute; inset: var(--space-0) var(--space-1); z-index: var(--z-base); display: grid; grid-template-columns: minmax(0, 1fr); grid-template-rows: repeat(var(--pt-axis-minutes), calc(var(--space-8) / 60)); pointer-events: none; }
+.pt-preview-layer:empty { display: none; }
+.pt-slot-preview { display: grid; grid-column: 1; grid-row: var(--pt-preview-row) / span var(--pt-preview-duration); min-width: 0; min-height: 0; align-content: center; gap: var(--space-1); padding: var(--space-2); border: var(--border-width-thick) dashed var(--color-info-ink); border-radius: var(--radius-xs); background: var(--color-surface); color: var(--color-info-ink); font-size: var(--font-size-xs); line-height: var(--line-height-tight); box-shadow: var(--shadow-card); }
+.pt-slot-preview strong { white-space: nowrap; font-variant-numeric: var(--font-numeric); }
+.pt-slot-preview.is-dragging { border-style: solid; }
+.pt-day-track:has(.pt-slot-preview) > .pt-day-placeholder { visibility: hidden; }
+.pt-schedule-legend { display: flex; flex-wrap: wrap; gap: var(--space-3); margin: var(--space-0); padding: var(--space-0); list-style: none; font-size: var(--font-size-xs); color: var(--color-text-soft); }
+.pt-schedule-legend li { display: flex; align-items: center; gap: var(--space-1); }
+.pt-schedule-legend li::before { content: ""; width: var(--space-2); height: var(--space-2); border-radius: var(--radius-xs); background: currentColor; }
+.pt-schedule-legend .is-free { color: var(--color-success-ink); }
+.pt-schedule-legend .is-held { color: var(--color-warning-ink); }
+.pt-schedule-legend .is-booked { color: var(--color-info-ink); }
+.pt-schedule-legend .is-locked { color: var(--color-danger-ink); }
+
+/* ==================== Danh sách dùng cùng dữ liệu, hiện đầy đủ tên/gói và tự xuống dòng ==================== */
+.is-list .pt-time-axis { display: none; }
+.is-list .pt-hour-lines { display: none; }
+.is-list .pt-calendar { display: block; user-select: text; -webkit-user-select: text; }
+.is-list .pt-calendar-day { border-inline-start: none; }
+.is-list .pt-day-heading { height: auto; min-height: var(--space-8); flex-direction: row; justify-content: space-between; padding: var(--space-3) var(--space-4); }
+.is-list .pt-day-track { grid-template-rows: none; gap: var(--space-2); padding: var(--space-3) var(--space-4); cursor: auto; touch-action: auto; }
+.is-list .pt-slot-frame { grid-row: auto; grid-template-columns: minmax(0, 1fr) minmax(0, 2fr) minmax(0, 1fr) auto; align-items: center; padding: var(--space-3); font-size: var(--font-size-sm); }
+.is-list .pt-slot-frame:not(.is-booked) { grid-template-columns: minmax(0, 1fr) minmax(0, 3fr) auto; }
+.is-list .pt-slot-person strong, .is-list .pt-slot-state { overflow: visible; white-space: normal; }
+.is-list .pt-slot-detail, .is-list .pt-slot-action { display: block; }
+.is-list .pt-day-placeholder, .is-list .pt-day-notes, .is-list .pt-preview-layer { position: static; }
+.is-list .pt-preview-layer { grid-template-rows: none; }
+.is-list .pt-slot-preview { grid-row: auto; min-height: var(--space-10); }
+.is-list .pt-day-track:has(.pt-slot-preview) > .pt-day-placeholder { display: none; }
+.pt-pending-frame { padding: var(--space-3) var(--space-4); gap: var(--space-4); }
+.pt-pending-frame p { margin-block-start: var(--space-1); color: var(--color-text-soft); font-size: var(--font-size-sm); line-height: var(--line-height-normal); }
+.pt-draft-list { flex-basis: 100%; display: grid; gap: var(--space-2); margin: var(--space-0); padding: var(--space-0); list-style: none; }
+.pt-draft-list li { display: flex; justify-content: space-between; align-items: center; gap: var(--space-2); flex-wrap: wrap; padding: var(--space-2); border: var(--border-width) dashed var(--color-info-border); border-radius: var(--radius-xs); font-size: var(--font-size-sm); }
+.pt-pending-frame .pt-publish-error { flex-basis: 100%; color: var(--color-danger-ink); }
+.pt-draft-list:empty, .pt-publish-error:empty { display: none; }
+
+@media (max-width: 700px) {
+  .pt-week-nav { gap: var(--space-1); }
+  .pt-week-nav h2 { font-size: var(--font-size-base); }
+  .pt-view-nav, .pt-pending-actions { width: 100%; }
+  .pt-view-nav a, .pt-pending-actions .btn { flex: 1; text-align: center; }
+  .pt-schedule-tools fieldset, .is-list .pt-slot-frame, .is-list .pt-slot-frame:not(.is-booked) { grid-template-columns: minmax(0, 1fr); }
+  .pt-schedule-tools > summary span { display: none; }
+  .pt-schedule-tools input { font-size: var(--font-size-base); }
+  .pt-board-heading { align-items: start; gap: var(--space-2); }
+  .pt-schedule-legend { gap: var(--space-2); }
+  .pt-schedule-page .topbar { flex-wrap: wrap; gap: var(--space-2); }
+  .pt-schedule-page .tb-left { flex: 1 0 100%; flex-wrap: wrap; }
+  .pt-schedule-page .pt-top-actions { width: 100%; justify-content: space-between; }
+}
