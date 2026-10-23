@@ -40,9 +40,10 @@ public class Facility {
     private int quantity;
     private Status status;
 
-    // Derived/calculated fields (computed at runtime from active MaintenanceRequests)
+    // Derived/calculated fields (computed at runtime from active MaintenanceRequests & EquipmentItems)
     private int pendingQuantity;
     private int availableQuantity;
+    private List<EquipmentItem> items = new ArrayList<>();
 
     public Facility() {
     }
@@ -136,6 +137,18 @@ public class Facility {
         this.quantity = quantity;
     }
 
+    public int getTotalQuantity() {
+        return quantity;
+    }
+
+    public void setTotalQuantity(int totalQuantity) {
+        this.quantity = totalQuantity;
+    }
+
+    public boolean isAvailable() {
+        return !isRetired() && availableQuantity > 0;
+    }
+
     public Status getStatus() {
         return status;
     }
@@ -173,6 +186,14 @@ public class Facility {
         } else {
             this.availableQuantity = Math.max(0, availableQuantity);
         }
+    }
+
+    public List<EquipmentItem> getItems() {
+        return items;
+    }
+
+    public void setItems(List<EquipmentItem> items) {
+        this.items = items != null ? items : new ArrayList<>();
     }
 
     /**
