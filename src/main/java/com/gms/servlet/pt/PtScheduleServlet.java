@@ -1,15 +1,16 @@
 package com.gms.servlet.pt;
 
-import com.gms.constant.SessionKey;
-import com.gms.constant.Role;
 import com.gms.constant.Messages;
+import com.gms.constant.Role;
+import com.gms.constant.SessionKey;
 import com.gms.dto.JsonResponse;
 import com.gms.dto.PtScheduleWeek;
 import com.gms.dto.ServiceResult;
+import com.gms.service.PtDashboardService;
 import com.gms.service.PtScheduleService;
 import com.gms.util.DateTimeUtil;
-import com.gms.util.RequestUtil;
 import com.gms.util.JsonUtil;
+import com.gms.util.RequestUtil;
 import jakarta.servlet.ServletException;
 import jakarta.servlet.annotation.WebServlet;
 import jakarta.servlet.http.HttpServlet;
@@ -20,106 +21,152 @@ import java.io.IOException;
 import java.time.LocalDate;
 import java.time.LocalDateTime;
 
-/** GET tải lịch tuần/danh sách; POST gọi Service công bố các khung nháp. */
+/**
+ * SERVLET MÀN LỊCH DẠY PT — URL /pt/schedule
+ *
+ *   GET  /pt/schedule?date=2026-10-27&view=week   mở trang: Service dựng tuần → schedule.jsp
+ *   POST /pt/schedule                             bấm Công bố (JS gửi AJAX): Service lưu → trả JSON
+ *
+ * Quyền PT cho GET do PtAreaFilter (@WebFilter "/pt/*") kiểm tra trước.
+ * POST tự kiểm tra lại vai trò + CSRF vì đây là thao tác GHI.
+ */
 @WebServlet("/pt/schedule")
 public class PtScheduleServlet extends HttpServlet {
 
-    private static final String VIEW = "pt/schedule"; // RequestUtil.forward ghép thành /WEB-INF/jsp/pt/schedule.jsp.
-    private static final String PAGE_URL = "/pt/schedule"; // URL trình duyệt, dùng để quay lại sau đăng nhập.
-    private final PtScheduleService scheduleService = new PtScheduleService(); // Service dựng tuần từ dữ liệu DAO.
+    private static final String VIEW = "pt/schedule";       // file JSP: /WEB-INF/jsp/pt/schedule.jsp
+    private static final String PAGE_URL = "/pt/schedule";  // URL trang, để quay lại sau khi đăng nhập
+
+    private final PtScheduleService scheduleService = new PtScheduleService();
+    private final PtDashboardService dashboardService = new PtDashboardService(); // chỉ để lấy mã nhân viên NV-xxxx
+
 
     // ================================================================================================================
-    // 1. MỞ MÀN — doGet gọi loadWeek; các hàm phụ nằm ngay dưới, không truy vấn DB trong Servlet
+    // 1. MỞ TRANG (GET)
     // ================================================================================================================
 
-    /** Tài khoản trong session → ServiceResult tuần lịch → JSP; bước này chỉ đọc dữ liệu. */
+    /**
+     * HÀM CHÍNH — trình duyệt gọi khi mở /pt/schedule hoặc bấm ‹ › / Tuần / Danh sách.
+     * Chỉ ĐỌC dữ liệu, không ghi gì.
+     */
     @Override
     protected void doGet(HttpServletRequest request, HttpServletResponse response)
             throws ServletException, IOException {
-        // B1: chỉ lấy tài khoản từ session; chưa đăng nhập thì quay về sau đăng nhập.
+
+        // B1: chưa đăng nhập → về trang đăng nhập, xong quay lại đây.
         Integer accountId = getAccountId(request);
         if (accountId == null) {
             RequestUtil.redirect(request, response, "/login?returnUrl=" + PAGE_URL);
             return;
         }
 
-        // B2: Service trả week hoặc scheduleError; JSP phân biệt tải lỗi với tuần chưa có khung.
+        // B2: nhờ Service dựng tuần; đọc kiểu xem (week / list).
         loadWeek(request, accountId);
         loadView(request);
+
+        // B3: dữ liệu phụ cho JSP và thanh đầu trang (giống PT Dashboard: tên + mã nhân viên + nút i).
         request.setAttribute("csrfToken", RequestUtil.getOrCreateCsrfToken(request.getSession(false)));
-        request.setAttribute("draftAccountId", accountId);
+        request.setAttribute("draftAccountId", accountId);   // JS dùng làm khóa lưu nháp theo tài khoản
         request.setAttribute("activeNav", "schedule");
         request.setAttribute("pageTitle", "Lịch dạy");
+        request.setAttribute("pageHelp", "Bấm vào chỗ trống trên lịch (hoặc nút Thêm khung) để thêm khung rảnh. "
+                + "Bấm vào khung Còn trống để đánh dấu gỡ. Khách chỉ thấy thay đổi sau khi bạn bấm Công bố.");
+        ServiceResult<String> employeeCode = dashboardService.getPtEmployeeCode(accountId);
+        if (employeeCode.isSuccess()) {
+            request.setAttribute("ptEmployeeCode", employeeCode.getData());
+        }
 
-        // B3: mở JSP trong WEB-INF; quyền PT đã được PtAreaFilter kiểm tra.
+        // B4: mở JSP.
         RequestUtil.forward(request, response, VIEW);
     }
 
-    /** Mã tài khoản từ session đăng nhập; null nếu chưa có session hoặc tài khoản. */
+    /** HÀM PHỤ — gọi ở B1 của doGet và doPost. Mã tài khoản trong session; chưa đăng nhập → null. */
     private Integer getAccountId(HttpServletRequest request) {
-        // false: chỉ đọc session đang có, không tạo session mới cho người chưa đăng nhập.
-        HttpSession session = request.getSession(false);
-        return session == null ? null : (Integer) session.getAttribute(SessionKey.ACCOUNT_ID);
+        HttpSession session = request.getSession(false);   // false = không tạo session mới
+        if (session == null) {
+            return null;
+        }
+        return (Integer) session.getAttribute(SessionKey.ACCOUNT_ID);
     }
 
-    /** Ngày trên URL + tài khoản + giờ VN → week cho JSP; lỗi không biến thành lịch trống. */
+    /**
+     * HÀM PHỤ — gọi ở B2 của doGet.
+     * Đọc ?date= trên URL → gọi Service.getWeek → đặt "week" (thành công) hoặc "scheduleError" (lỗi).
+     */
     private void loadWeek(HttpServletRequest request, int accountId) {
-        // B1: lấy giờ Việt Nam một lần; today luôn là hôm nay, không phải ngày trên URL.
+        // B1: giờ Việt Nam lấy MỘT lần, dùng chung cho cả trang.
         LocalDateTime now = DateTimeUtil.now();
         LocalDate today = now.toLocalDate();
 
-        // B2: ngày bất kỳ xác định tuần cần xem; now dùng để tính nhãn và quyền ở thời điểm hiện tại.
+        // B2: ngày muốn xem; thiếu hoặc sai → hôm nay.
         LocalDate date = PtScheduleService.parseDate(request.getParameter("date"), today);
         request.setAttribute("today", today);
-        request.setAttribute("viewDate", date); // Link chuyển view giữ ngày đang xem.
-        ServiceResult<PtScheduleWeek> result = scheduleService.getWeek(accountId, date, now);
+        request.setAttribute("viewDate", date);
 
-        // B3: DTO chứa đủ mốc tuần, cấu hình và 7 ngày; không tính lại hoặc đọc cấu hình lần nữa.
+        // B3: Service dựng tuần. Lỗi thì JSP hiện thông báo, KHÔNG hiện lịch trống.
+        ServiceResult<PtScheduleWeek> result = scheduleService.getWeek(accountId, date, now);
         if (result.isSuccess()) {
             request.setAttribute("week", result.getData());
         } else {
-            // Lỗi DB hoặc không có hồ sơ PT: JSP hiện thông báo, không bật chọn khung.
             request.setAttribute("scheduleError", result.getMessage());
         }
     }
 
-    /** Chỉ nhận list hoặc week; thiếu/sai tham số thì dùng lịch tuần. */
+    /** HÀM PHỤ — gọi ở B2 của doGet. Chỉ nhận "list"; mọi giá trị khác (kể cả thiếu) → "week". */
     private void loadView(HttpServletRequest request) {
-        // B1: không đưa nguyên tham số URL vào class CSS hoặc đường dẫn JSP.
         String view = "week";
         if ("list".equals(request.getParameter("view"))) {
             view = "list";
         }
-
-        // B2: JSP dùng cùng một bộ khung; CSS đổi cách xếp theo view đã chuẩn hóa.
         request.setAttribute("view", view);
     }
 
+
     // ================================================================================================================
-    // 2. CÔNG BỐ — nhận các cặp slotDate/startTime và các removeSlotId; không nhận mã PT hoặc EndTime từ client
+    // 2. CÔNG BỐ (POST)
     // ================================================================================================================
 
-    /** HÀM CHÍNH — JS publishPtDrafts gửi POST cùng URL khi bấm Công bố; kiểm tra session/CSRF rồi trả JsonResponse. */
+    /**
+     * HÀM CHÍNH — JS publishPtChanges gửi POST khi PT bấm Công bố.
+     *
+     * Tham số nhận:
+     *   slotDate[] + startTime[]   các khung MỚI, đi theo cặp (ví dụ 2026-10-27 + 12:30)
+     *   removeSlotId[]             mã các khung muốn GỠ (ví dụ 773)
+     *   duration                   P-06 trang đang dùng; csrfToken chống giả mạo request
+     *
+     * KHÔNG nhận mã PT hay giờ kết thúc từ trình duyệt: mã PT lấy từ session, giờ kết thúc Service tự tính.
+     */
     @Override
     protected void doPost(HttpServletRequest request, HttpServletResponse response) throws IOException {
-        // B1: hết phiên/sai vai trò không được ghi, kể cả khi gọi POST trực tiếp.
+
+        // B1: phải đăng nhập.
         Integer accountId = getAccountId(request);
         if (accountId == null) {
             JsonUtil.writeJson(response, 401, JsonResponse.error(Messages.MSG06_SESSION_EXPIRED));
             return;
         }
-        if (!Role.PT.getDbValue().equals(request.getSession(false).getAttribute(SessionKey.ROLE))
-                || !RequestUtil.isValidCsrfToken(request)) {
+
+        // B2: phải là PT và có CSRF token đúng.
+        Object role = request.getSession(false).getAttribute(SessionKey.ROLE);
+        boolean isPt = Role.PT.getDbValue().equals(role);
+        if (!isPt || !RequestUtil.isValidCsrfToken(request)) {
             JsonUtil.writeJson(response, 403, JsonResponse.error(Messages.MSG07_NO_PERMISSION));
             return;
         }
-        // B2: khung mới là các cặp slotDate/startTime; khung cần gỡ là các removeSlotId ("57", "63").
-        // Không có tham số nào thì getParameterValues trả null; Service kiểm tra lại mọi giá trị.
+
+        // B3: chuyển nguyên các mảng cho Service; Service kiểm tra lại MỌI giá trị.
+        //     Không có tham số nào thì getParameterValues trả null.
         Integer duration = RequestUtil.getPositiveIntParam(request, "duration");
         ServiceResult<Integer> result = scheduleService.publish(accountId,
-                request.getParameterValues("slotDate"), request.getParameterValues("startTime"),
-                request.getParameterValues("removeSlotId"), duration == null ? 0 : duration, DateTimeUtil.now());
-        if (result.isSuccess()) RequestUtil.setFlashToast(request, "success", result.getMessage());
+                request.getParameterValues("slotDate"),
+                request.getParameterValues("startTime"),
+                request.getParameterValues("removeSlotId"),
+                duration == null ? 0 : duration,
+                DateTimeUtil.now());
+
+        // B4: thành công → lưu toast để hiện sau khi JS tải lại trang; luôn trả JSON cho JS.
+        if (result.isSuccess()) {
+            RequestUtil.setFlashToast(request, "success", result.getMessage());
+        }
         JsonUtil.writeJson(response, JsonResponse.from(result));
     }
 }

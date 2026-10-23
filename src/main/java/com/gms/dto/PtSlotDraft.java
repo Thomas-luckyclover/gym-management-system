@@ -3,23 +3,30 @@ package com.gms.dto;
 import java.time.LocalDate;
 import java.time.LocalTime;
 
-/** Service tạo từ ngày/giờ nhập và P-06; DAO dùng để công bố, chưa có TimeSlotId. */
+/**
+ * MỘT KHUNG MỚI PT muốn công bố (chưa có trong DB nên chưa có TimeSlotId).
+ *
+ *   Ai tạo?   PtScheduleService.buildDrafts, từ ngày + giờ bắt đầu trình duyệt gửi lên.
+ *   Ai dùng?  PtScheduleService.validateDrafts kiểm tra; PtScheduleDAO.insertOrReopenSlot ghi DB.
+ *
+ * Giờ kết thúc KHÔNG lấy từ trình duyệt: Service tự tính = giờ bắt đầu + P-06.
+ * Ví dụ: 27/10, 12:30 và P-06 = 90 phút → endTime = 14:00.
+ */
 public class PtSlotDraft {
-    private final LocalDate slotDate; // Ngày từ form, Service kiểm tra trước khi ghi.
-    private final LocalTime startTime; // Giờ từ form, phải theo mốc 15 phút.
-    private final LocalTime endTime; // Service tính startTime + P-06, không lấy từ client.
 
-    /** Nhận ba mốc đã được Service chuẩn bị; DTO chỉ giữ dữ liệu. */
+    private final LocalDate slotDate;    // ngày của khung
+    private final LocalTime startTime;   // giờ bắt đầu, đúng mốc 15 phút
+    private final LocalTime endTime;     // giờ kết thúc do Service tính
+
     public PtSlotDraft(LocalDate slotDate, LocalTime startTime, LocalTime endTime) {
         this.slotDate = slotDate;
         this.startTime = startTime;
         this.endTime = endTime;
     }
 
-    /** Ngày DAO sẽ ghi vào SlotDate. */
     public LocalDate getSlotDate() { return slotDate; }
-    /** Giờ bắt đầu DAO sẽ ghi vào StartTime. */
+
     public LocalTime getStartTime() { return startTime; }
-    /** Giờ kết thúc do Service tính, DAO ghi vào EndTime. */
+
     public LocalTime getEndTime() { return endTime; }
 }

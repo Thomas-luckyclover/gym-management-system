@@ -5,116 +5,90 @@ const vm = require("node:vm");
 const path = require("node:path");
 const source = fs.readFileSync(path.resolve(__dirname, "../../main/webapp/js/pages/pt/schedule.js"), "utf8");
 
-// Chỉ kiểm tra tính giờ/lưu nháp; thao tác DOM và gửi request được kiểm tra trên trình duyệt.
-function loadPreview(duration = "90", draftKey = "15:2026-10-19") {
-    const board = {
-        dataset: { duration, draftKey, axisStart: "300", axisEnd: "1320", today: "2026-10-23" },
+// Chỉ kiểm tra phần tính giờ / kiểm tra chỗ đặt / lưu tạm; giao diện thật được kiểm tra trên trình duyệt.
+function loadSchedule() {
+    const saved = new Map();
+    const plan = {
+        dataset: { duration: "90", axisStart: "300", axisEnd: "1320", draftKey: "15:2026-10-26" },
+        querySelectorAll: () => [],
         classList: { contains: () => false }
     };
-    const status = { addEventListener() {} };
-    const savedDrafts = new Map();
-    const links = [{ href: "http://localhost/pt/schedule?date=2026-10-23&view=list" }];
     const context = vm.createContext({
         document: {
-            getElementById: id => id === "pt-schedule" ? board : status,
-            querySelectorAll: () => links,
+            getElementById: id => (id === "main-content" ? plan : { dataset: {} }),
             addEventListener() {}
         },
-        URL, URLSearchParams,
-        location: { href: "http://localhost/pt/schedule?date=2026-10-23&view=week" },
-        history: { replaceState: (state, title, url) => { context.savedUrl = String(url); } },
-        sessionStorage: { setItem: (key, value) => savedDrafts.set(key, value), getItem: key => savedDrafts.get(key) }
+        window: { matchMedia: () => ({ matches: true }) },
+        sessionStorage: { setItem: (key, value) => saved.set(key, value), getItem: key => saved.get(key) },
+        CSS: { escape: value => value }
     });
     vm.runInContext(source, context);
-    return { context, links, status, savedDrafts };
+    return { context, plan, saved };
 }
 
-function dayTrack(open = "330", close = "1320", top = 100, height = 1020) {
+/** Cột ngày giả: khoảng được thêm 05:30–20:30, có sẵn các thẻ chiếm giờ truyền vào. */
+function track(cards = [], first = "330", last = "1230") {
     return {
-        dataset: { open, close, date: "2026-10-23", closed: "false" },
-        getBoundingClientRect: () => ({ top, height })
+        dataset: { date: "2026-10-27", first, last },
+        querySelectorAll: () => cards,
+        getBoundingClientRect: () => ({ top: 100, height: 816 })   // 1020 phút × 0.8px
     };
 }
 
-test("kéo ngoài hai mép vẫn đủ thời lượng trong giờ mặc định", () => {
-    const { context } = loadPreview();
-    const track = dayTrack();
-    assert.equal(context.ptMinuteAtPointer(track, -20), 330);
-    assert.equal(context.ptMinuteAtPointer(track, 2000), 1230);
+/** Thẻ khung chiếm giờ [start, end); removing = đang được tích "Chờ gỡ". */
+function card(start, end, removing = false) {
+    return {
+        dataset: { start: String(start), end: String(end) },
+        querySelector: () => (removing ? {} : null)
+    };
+}
+
+test("vị trí chuột đổi thành giờ bắt đầu, làm tròn mốc 15 phút", () => {
+    const { context } = loadSchedule();
+    assert.equal(context.ptMinuteAtPointer(track(), 100), 300);           // đỉnh cột = 05:00
+    assert.equal(context.ptMinuteAtPointer(track(), 100 + 360), 750);     // 450 phút sau 05:00 = 12:30
+    assert.equal(context.ptMinuteAtPointer(track(), 100 + 365), 750);     // lệch vài px vẫn bám 12:30
 });
 
-test("đổi chiều cao lưới vẫn trỏ cùng giờ và bám mốc 15 phút", () => {
-    const { context } = loadPreview();
-    const full = dayTrack();
-    const half = dayTrack("330", "1320", 100, 510);
-    assert.equal(context.ptMinuteAtPointer(full, 250), 450);
-    assert.equal(context.ptMinuteAtPointer(half, 175), 450);
+test("ngày không có data-first (đã qua / phòng nghỉ) không cho thêm", () => {
+    const { context } = loadSchedule();
+    assert.match(context.ptWhyCannotPlace(track([], ""), 600), /không thêm được/);
+    assert.match(context.ptWhyCannotPlace(null, 600), /không thêm được/);
 });
 
-test("giờ mở lệch mốc và P-06 khác 90 phút không dùng số cố định", () => {
-    const { context } = loadPreview("75");
-    const track = dayTrack("340", "1320", 0);
-    assert.equal(context.ptMinuteAtPointer(track, 0), 345);
-    assert.equal(context.ptMinuteAtPointer(track, 1020), 1245);
+test("ngoài khoảng giờ được thêm hoặc lệch mốc 15 phút thì báo lý do", () => {
+    const { context } = loadSchedule();
+    assert.match(context.ptWhyCannotPlace(track(), 315), /từ 05:30 đến 20:30/);
+    assert.match(context.ptWhyCannotPlace(track(), 1245), /từ 05:30 đến 20:30/);
+    assert.match(context.ptWhyCannotPlace(track(), 610), /mốc 15 phút/);
+    assert.equal(context.ptWhyCannotPlace(track(), 330), "");
+    assert.equal(context.ptWhyCannotPlace(track(), 1230), "");
 });
 
-test("mỗi ngày dùng đúng giờ ngoại lệ thay vì giờ chung của tuần", () => {
-    const { context } = loadPreview();
-    const shortDay = dayTrack("480", "720"); // Mở 08:00–12:00, khung cuối bắt đầu 10:30.
-    assert.equal(context.ptMinuteAtPointer(shortDay, -20), 480);
-    assert.equal(context.ptMinuteAtPointer(shortDay, 2000), 630);
-    assert.equal(context.ptMinuteAtPointer(dayTrack(), 2000), 1230);
+test("trùng thẻ đang chiếm giờ thì chặn; chạm mép hoặc khung đang chờ gỡ thì cho", () => {
+    const { context } = loadSchedule();
+    const busy = [card(660, 750)];                                         // 11:00–12:30
+    assert.match(context.ptWhyCannotPlace(track(busy), 600), /Trùng khung 11:00 – 12:30/);
+    assert.equal(context.ptWhyCannotPlace(track(busy), 750), "");          // 12:30 chạm mép
+    assert.equal(context.ptWhyCannotPlace(track(busy), 570), "");          // 09:30–11:00 chạm mép
+    assert.equal(context.ptWhyCannotPlace(track([card(660, 750, true)]), 600), "");
 });
 
-test("ngày nghỉ cả ngày không bắt đầu kéo và không tạo ô xem trước", () => {
-    const { context, status } = loadPreview();
-    const track = dayTrack("", "");
-    track.dataset.closed = "true";
-    context.startPtSlotDrag({
-        button: 0, isPrimary: true,
-        target: { closest: selector => selector === ".pt-day-track" ? track : null }
-    });
-    assert.match(status.textContent, /phòng nghỉ/);
-});
-
-test("bấm thẻ buổi hoặc khung thật không bắt đầu kéo vùng trống", () => {
-    const { context, status } = loadPreview();
-    context.newPtSlotPreview = () => { throw new Error("Không được tạo preview trên thẻ thật"); };
-    context.startPtSlotDrag({
-        button: 0, isPrimary: true,
-        target: { closest: selector => selector === ".pt-day-track" ? dayTrack() : {} }
-    });
-    assert.equal(status.textContent, undefined);
-});
-
-test("ô giờ trống không trở thành 00:00; giờ có số 0 đầu giữ đúng định dạng", () => {
-    const { context } = loadPreview();
-    assert.ok(Number.isNaN(context.ptMinutes("")));
+test("đổi giờ ↔ phút giữ số 0 đầu; ô trống không thành 00:00", () => {
+    const { context } = loadSchedule();
     assert.equal(context.ptClock(330), "05:30");
     assert.equal(context.ptMinutes("19:45"), 1185);
+    assert.ok(Number.isNaN(context.ptMinutes("")));
 });
 
-test("cấu hình thời lượng không dương phải dừng trước khi bật tương tác", () => {
-    const { context, status } = loadPreview("0");
-    context.initPtSchedulePreview();
-    assert.match(status.textContent, /cấu hình giờ tập hợp lệ/);
-});
-
-test("nháp lưu theo đúng tài khoản và tuần, không ghi EndTime hoặc mã TimeSlot", () => {
-    const { context, savedDrafts } = loadPreview();
-    vm.runInContext('ptDrafts = [{date:"2026-10-23",start:"15:00"}]', context);
-    context.savePtDrafts();
-    assert.deepEqual(JSON.parse(savedDrafts.get("gms.pt-slots.15:2026-10-19")), [{date:"2026-10-23",start:"15:00"}]);
-    const other = loadPreview("90", "16:2026-10-19");
-    other.context.savePtDrafts();
-    assert.ok(other.savedDrafts.has("gms.pt-slots.16:2026-10-19"));
-    assert.equal(other.savedDrafts.has("gms.pt-slots.15:2026-10-19"), false);
-});
-
-test("khung chờ gỡ lưu riêng theo cùng key tài khoản/tuần, chỉ giữ mã TimeSlotId", () => {
-    const { context, savedDrafts } = loadPreview();
-    vm.runInContext('ptRemovals = ["57", "63"]', context);
-    context.savePtDrafts();
-    assert.deepEqual(JSON.parse(savedDrafts.get("gms.pt-slots.15:2026-10-19.remove")), ["57", "63"]);
-    assert.deepEqual(JSON.parse(savedDrafts.get("gms.pt-slots.15:2026-10-19")), []);
+test("lưu tạm theo đúng tài khoản + tuần, chỉ ngày/giờ bắt đầu và mã khung gỡ", () => {
+    const { context, plan, saved } = loadSchedule();
+    const draft = { querySelector: name => ({ value: name.includes("slotDate") ? "2026-10-27" : "12:30" }) };
+    const box = { value: "773" };
+    plan.querySelectorAll = selector => (selector === ".pt-draft" ? [draft] : [box]);
+    context.savePtChanges();
+    assert.deepEqual(JSON.parse(saved.get("gms.pt-plan.15:2026-10-26")), {
+        drafts: [{ date: "2026-10-27", start: "12:30" }],
+        removals: ["773"]
+    });
 });

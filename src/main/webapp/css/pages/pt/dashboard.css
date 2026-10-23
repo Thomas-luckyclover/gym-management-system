@@ -54,59 +54,6 @@ html body.dock.pt-dashboard-page main.pt-board {
 .pt-board h3,
 .pt-board h4 { font-family: var(--font-body); letter-spacing: 0; }
 
-/* ---------- Topbar ---------- */
-.pt-dashboard-page .topbar {
-  background: color-mix(in srgb, var(--pt-bg) 88%, transparent);
-  border-bottom: var(--border-width) solid var(--pt-line);
-  backdrop-filter: blur(var(--space-3));
-  color: var(--pt-text);
-}
-
-.pt-dashboard-page .tb-title {
-  color: var(--pt-text);
-  font-family: var(--font-body);
-  font-size: var(--font-size-2xl);
-  font-style: normal;
-  font-weight: var(--font-weight-semibold);
-  text-transform: none;
-  letter-spacing: var(--letter-spacing-normal);
-}
-
-.pt-dashboard-page .tb-left p { margin: var(--space-0-5) 0 0; color: var(--pt-muted); font-size: var(--font-size-sm); font-variant-numeric: tabular-nums; }
-
-.pt-dashboard-page .tb-user {
-  border: var(--border-width) solid var(--pt-line-strong);
-  background: var(--pt-panel);
-  color: var(--pt-text);
-}
-
-.pt-user-avatar {
-  position: relative;
-  flex: none;
-  display: grid;
-  place-items: center;
-  width: calc(var(--avatar-size-sm) + var(--space-2));
-  height: calc(var(--avatar-size-sm) + var(--space-2));
-  border-radius: var(--radius-circle);
-  background: var(--brand-lagoon);
-  color: var(--dock-text);
-}
-.pt-user-online {
-  position: absolute;
-  right: 0;
-  bottom: 0;
-  width: var(--space-3);
-  height: var(--space-3);
-  border: var(--border-width-thick) solid var(--pt-panel);
-  border-radius: var(--radius-circle);
-  background: var(--color-success);
-}
-.pt-user-details { min-width: 0; display: grid; gap: var(--space-0-5); }
-.pt-user-details strong { overflow: hidden; text-overflow: ellipsis; white-space: nowrap; font-size: var(--font-size-base); }
-.pt-user-code { width: fit-content; color: var(--pt-muted); font-size: var(--font-size-xs); font-variant-numeric: tabular-nums; letter-spacing: var(--letter-spacing-wide); }
-
-/* Công tắc sáng / tối: css chung trong common.css */
-.pt-top-actions { display: flex; align-items: center; gap: var(--space-3); }
 
 /* ---------- Panel chung ---------- */
 .pt-board__schedule,
@@ -415,10 +362,6 @@ html body.dock.pt-dashboard-page main.pt-board {
   .pt-session-time b { font-size: var(--font-size-2xl); }
   .pt-client-item { grid-template-columns: minmax(0, 1fr); }
   .pt-client-meta { gap: var(--space-1) var(--space-3); }
-  .pt-dashboard-page .tb-title { white-space: nowrap; font-size: var(--font-size-xl); }
-  .pt-dashboard-page .pt-user-details,
-  .theme-toggle__label { display: none; }
-  .pt-dashboard-page .tb-user { padding: var(--space-1); }
 }
 
 @media (prefers-reduced-motion: reduce) {
@@ -440,16 +383,6 @@ html body.dock.pt-dashboard-page main.pt-board {
 .pt-board__hero .wx-card--offline .wx-card__advice { grid-area: more; }
 @media (max-width: 480px) {
   .pt-days { grid-template-columns: repeat(3, minmax(0, 1fr)); }
-  .pt-dashboard-page .pt-header-date { display: none; }
-  .pt-dashboard-page .tb-left { flex: 1; min-width: 0; }
-  html body.pt-dashboard-page .tb-title {
-    overflow: hidden;
-    text-overflow: ellipsis;
-    white-space: nowrap;
-    font-size: var(--font-size-base);
-  }
-  .pt-dashboard-page .pt-top-actions { flex: none; gap: var(--space-2); }
-  .pt-dashboard-page .theme-toggle { padding-inline: var(--space-1); }
 }
 
 /* Màn rất hẹp vẫn đọc được ngày và nhãn, không cần kéo ngang dải lịch. */

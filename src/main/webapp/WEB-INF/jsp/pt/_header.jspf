@@ -24,6 +24,14 @@
         <h1 class="tb-title">
             <c:out value="${pageTitle}" />
         </h1>
+        <%-- Nút i cạnh tiêu đề (giống màn Lịch tập của khách): chỉ hiện khi Servlet đặt pageHelp.
+             common.js điều khiển .pt-info: bấm để mở, bấm ngoài hoặc Escape để đóng. --%>
+        <c:if test="${not empty pageHelp}">
+            <span class="pt-info">
+                <button type="button" class="pt-info-trigger" aria-label="Hướng dẫn ${pageTitle}" aria-describedby="pt-page-help"><span aria-hidden="true">i</span></button>
+                <span id="pt-page-help" class="pt-info-popover" role="tooltip"><c:out value="${pageHelp}" /></span>
+            </span>
+        </c:if>
         <%-- today luôn là hôm nay, khác weekStart của tuần đang xem trong màn Lịch dạy.
              Ví dụ today=2026-10-22 → gms:formatDate in "22/10/2026". --%>
         <p class="pt-header-date">

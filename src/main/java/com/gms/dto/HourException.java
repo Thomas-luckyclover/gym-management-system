@@ -4,57 +4,32 @@ import java.time.LocalDate;
 import java.time.LocalTime;
 
 /**
- * Dữ liệu giờ mở cửa ngoại lệ của một ngày trong OperatingHourExceptions.
- * PtScheduleDAO sẽ đọc các ngày ngoại lệ trong tuần; PtScheduleService áp dụng thay giờ P-19 của ngày đó.
- * Service chuyển kết quả sang PtScheduleDay; DTO này không tự tính giờ hoặc kiểm tra khung hợp lệ.
+ * GIỜ MỞ CỬA NGOẠI LỆ của một ngày (bảng OperatingHourExceptions).
+ *
+ *   Ai tạo?   PtScheduleDAO.findHourExceptions.
+ *   Ai dùng?  PtScheduleService.buildDay: ngày có ngoại lệ thì dùng giờ này thay cho P-19.
+ *
+ * Ví dụ: 01/11 phòng nghỉ → closedAllDay=true, openTime=null, closeTime=null.
  */
 public class HourException {
 
-    // ---------------- DAO đọc từ OperatingHourExceptions — không có bản ghi thì Service dùng giờ P-19. ----------------
-    private LocalDate applyDate; // OperatingHourExceptions.ApplyDate → ngày áp dụng giờ ngoại lệ.
-    private boolean closedAllDay; // OperatingHourExceptions.IsClosedAllDay → true nghĩa là phòng nghỉ cả ngày.
-    private LocalTime openTime; // OperatingHourExceptions.OpenTime → giờ mở cửa ngoại lệ; null nếu closedAllDay=true.
-    private LocalTime closeTime; // OperatingHourExceptions.CloseTime → giờ đóng cửa ngoại lệ; null nếu closedAllDay=true.
+    private LocalDate applyDate;     // ngày áp dụng
+    private boolean closedAllDay;    // true = phòng nghỉ cả ngày
+    private LocalTime openTime;      // giờ mở cửa riêng ngày này; null khi nghỉ cả ngày
+    private LocalTime closeTime;     // giờ đóng cửa riêng ngày này; null khi nghỉ cả ngày
 
-    // ---------------- Getter / Setter: chỉ đọc hoặc gán, không xử lý nghiệp vụ ----------------
 
-    /** Đọc applyDate: OperatingHourExceptions.ApplyDate → ngày áp dụng giờ ngoại lệ. */
-    public LocalDate getApplyDate() {
-        return applyDate;
-    }
+    // ===== Getter / Setter: chỉ đọc và gán, không có nghiệp vụ =====
 
-    /** Gán applyDate đã được DAO/Service chuẩn bị; không tính lại hoặc kiểm tra tại DTO. */
-    public void setApplyDate(LocalDate applyDate) {
-        this.applyDate = applyDate;
-    }
+    public LocalDate getApplyDate() { return applyDate; }
+    public void setApplyDate(LocalDate applyDate) { this.applyDate = applyDate; }
 
-    /** Đọc closedAllDay: OperatingHourExceptions.IsClosedAllDay → true nghĩa là phòng nghỉ cả ngày. */
-    public boolean isClosedAllDay() {
-        return closedAllDay;
-    }
+    public boolean isClosedAllDay() { return closedAllDay; }
+    public void setClosedAllDay(boolean closedAllDay) { this.closedAllDay = closedAllDay; }
 
-    /** Gán closedAllDay đã được DAO/Service chuẩn bị; không tính lại hoặc kiểm tra tại DTO. */
-    public void setClosedAllDay(boolean closedAllDay) {
-        this.closedAllDay = closedAllDay;
-    }
+    public LocalTime getOpenTime() { return openTime; }
+    public void setOpenTime(LocalTime openTime) { this.openTime = openTime; }
 
-    /** Đọc openTime: OperatingHourExceptions.OpenTime → giờ mở cửa ngoại lệ; null nếu closedAllDay=true. */
-    public LocalTime getOpenTime() {
-        return openTime;
-    }
-
-    /** Gán openTime đã được DAO/Service chuẩn bị; không tính lại hoặc kiểm tra tại DTO. */
-    public void setOpenTime(LocalTime openTime) {
-        this.openTime = openTime;
-    }
-
-    /** Đọc closeTime: OperatingHourExceptions.CloseTime → giờ đóng cửa ngoại lệ; null nếu closedAllDay=true. */
-    public LocalTime getCloseTime() {
-        return closeTime;
-    }
-
-    /** Gán closeTime đã được DAO/Service chuẩn bị; không tính lại hoặc kiểm tra tại DTO. */
-    public void setCloseTime(LocalTime closeTime) {
-        this.closeTime = closeTime;
-    }
+    public LocalTime getCloseTime() { return closeTime; }
+    public void setCloseTime(LocalTime closeTime) { this.closeTime = closeTime; }
 }

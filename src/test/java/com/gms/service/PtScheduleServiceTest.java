@@ -187,13 +187,29 @@ class PtScheduleServiceTest {
         assertEquals(90, week.getSessionMinutes());
         assertEquals(5, week.getAxisStartHour());
         assertEquals(22, week.getAxisEndHour());
-        assertEquals("T2", week.getDays().get(0).getDayName());
-        assertEquals("CN", week.getDays().get(6).getDayName());
+        assertEquals("Thứ 2", week.getDays().get(0).getDayName());
+        assertEquals("Chủ nhật", week.getDays().get(6).getDayName());
         assertTrue(week.getDays().get(2).isPast());
         assertTrue(week.getDays().get(3).isToday());
         assertFalse(week.getDays().get(4).isPast());
         week.getDays().get(0).getItems().add(slot(TODAY, "10:00", "11:30", "Free"));
         assertTrue(week.getDays().get(1).getItems().isEmpty());
+    }
+
+    /** Khoảng giờ được thêm khung: ngày qua/nghỉ thì không có; hôm nay chỉ từ sau giờ hiện tại. */
+    @Test
+    void addRangeFollowsOpeningHoursNowAndClosedDays() {
+        // NOW = Thứ 5 22/10 09:00; P-19 05:30–22:00; khung 90 phút.
+        PtScheduleWeek week = week(List.of(hours(TODAY.plusDays(2), true, null, null),
+                hours(TODAY.plusDays(1), false, "08:10", "12:00")), List.of());
+
+        assertNull(week.getDays().get(2).getFirstStartMinute());          // Thứ 4 đã qua
+        assertEquals(555, week.getDays().get(3).getFirstStartMinute());   // hôm nay: sau 09:00 → 09:15
+        assertEquals(1230, week.getDays().get(3).getLastStartMinute());   // 22:00 − 90 phút = 20:30
+        assertEquals(495, week.getDays().get(4).getFirstStartMinute());   // mở 08:10 → làm tròn lên 08:15
+        assertEquals(630, week.getDays().get(4).getLastStartMinute());    // 12:00 − 90 phút = 10:30
+        assertNull(week.getDays().get(5).getFirstStartMinute());          // Thứ 7 phòng nghỉ
+        assertEquals(330, week.getDays().get(6).getFirstStartMinute());   // Chủ nhật: từ 05:30
     }
 
     /** Ngày ngoại lệ thay giờ P-19, đồng thời mở rộng trục nếu mở sớm/đóng muộn. */
