@@ -44,6 +44,14 @@ import java.util.TreeMap;
  *   B7  chooseCta, fillCounterInfo
  *
  * Nhãn và trạng thái từng buổi dùng lại MyPtSessionService (màn Lịch tập) → hai màn luôn hiện cùng 1 chữ.
+ *
+ * THAM SỐ CẤU HÌNH (giá trị hiện tại — đổi ở đâu)
+ *   RENEW_SESSIONS_LEFT  = 3    gói PT còn ≤ 3 buổi … ┐ → CTA "gia hạn tại quầy"      (hằng số dưới đây)
+ *   RENEW_DAYS_LEFT      = 14   … hoặc còn ≤ 14 ngày  ┘
+ *   SINGLE_SUGGEST_COUNT = 3    ≥ 3 buổi lẻ …          ┐ → CTA "gợi ý mua gói PT"
+ *   SINGLE_SUGGEST_DAYS  = 30   … trong 30 ngày gần nhất ┘
+ *   P-19 = "05:30-22:00"        giờ mở cửa, hiện thành "05:30 – 22:00" cạnh hotline  (bảng SystemConfigs)
+ *   GYM_HOTLINE = "1900 6868"   số hiện trên màn; GYM_HOTLINE_TEL = "19006868" dùng cho link tel:  (AppConstants)
  */
 public class MyBookingService {
 

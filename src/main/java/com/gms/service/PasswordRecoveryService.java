@@ -28,6 +28,12 @@ import java.sql.SQLException;
  *
  * Luật gửi / nhập mã (chờ 60 giây, sai 5 lần khóa 5 phút…) KHÔNG nằm ở đây mà ở VerificationCodeService.
  *
+ * THAM SỐ CẤU HÌNH (giá trị hiện tại)
+ *   PASSWORD_MIN_LENGTH / MAX = 8 / 64   mật khẩu mới 8–64 ký tự, có cả chữ và số  (AppConstants)
+ *   P-15 = 15   mã khôi phục sống 15 phút → đồng hồ "Mã hết hạn sau 14:59"           (SystemConfigs)
+ *   P-17 = 5, P-18 = 5   nhập sai 5 lần → khóa 5 phút                               (SystemConfigs)
+ *   Bước 3 phải xong trước giờ hết hạn của mã vừa dùng (lúc gửi mã + 15 phút), Servlet giữ mốc này trong session.
+ *
  * @author Le Cong Minh
  */
 public class PasswordRecoveryService {

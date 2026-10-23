@@ -38,6 +38,12 @@ import java.util.List;
  *   PHẦN 4. HÀM DÙNG CHUNG    parseDate, weekStartOf, parseOpeningHours, đổi giờ ↔ phút
  *
  * Các hàm "static" không đọc DB nên test được trực tiếp (xem PtScheduleServiceTest, PtSchedulePublishTest).
+ *
+ * THAM SỐ CẤU HÌNH (giá trị hiện tại — bảng SystemConfigs)
+ *   P-06 = 90             độ dài 1 khung dạy (phút): bắt đầu 18:00 → kết thúc 19:30
+ *   P-19 = "05:30-22:00"  giờ mở / đóng cửa mặc định; ngày có dòng OperatingHourExceptions thì dùng giờ riêng hoặc nghỉ cả ngày
+ *   Mốc 15 phút (roundUpTo15 / roundDownTo15): giờ bắt đầu chỉ được 05:30, 05:45, 06:00…
+ *     → khung sớm nhất 05:30, muộn nhất 20:30 (22:00 − 90 phút).
  */
 public class PtScheduleService {
 

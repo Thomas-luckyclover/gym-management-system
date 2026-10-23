@@ -7,7 +7,7 @@ Mục tiêu: code dễ học, nội dung trên màn hình chỉ thêm, không m�
 - `RemindMissingGymAccessJob` chạy trong lượt 00:05 (`BackgroundJobScheduler.DAILY_JOBS`), xét các buổi PT `Scheduled` của NGÀY MAI (giờ Việt Nam).
 - Luật "vào được gym" giống JOB-04 (`AutoCloseSessionService.canUseGym`): có Membership hoặc DayPass phủ ngày tập VÀ không bảo lưu ngày đó. Không vào được → 1 thông báo hệ thống ở chuông (`Notifications.SentByEmployeeId` = NULL, Audience = Individual).
 - Gói PT đôi xét cả người đứng tên lẫn người tập cùng (`Orders.PartnerCustomerId`). Chỉ gửi cho tài khoản Active.
-- Bỏ qua ngày phòng nghỉ cả ngày (CBR-56: PT phải dời, còn sót thì JOB-04 hủy GymClosed). Đã chạy thử trên DB: ngày nghỉ 20/10/2026, câu SQL cũ sẽ nhắc nhầm 4 khách mua gói; câu mới trả 0 dòng.
+- Bỏ qua ngày phòng nghỉ cả ngày (CBR-56: PT phải dời trước ngày nghỉ; SRS ghi buổi còn sót do JOB-04 hủy GymClosed nhưng phần này JOB-04 **chưa code** — xem mục "Cần sửa tiếp code runtime" bên dưới). Đã chạy thử trên DB: ngày nghỉ 20/10/2026, câu SQL cũ sẽ nhắc nhầm 4 khách mua gói; câu mới trả 0 dòng.
 - Câu nhắc: thiếu gói → "mua gói thành viên hoặc vé ngày"; đang bảo lưu → "liên hệ lễ tân kiểm tra thời gian bảo lưu". KHÔNG khuyên mua vé ngày khi đang bảo lưu, vì theo JOB-04 có vé ngày mà đang bảo lưu vẫn không vào được.
 - Chống gửi trùng: tiêu đề "Nhắc buổi PT ngày dd/MM/yyyy"; tài khoản đã có thông báo hệ thống cùng tiêu đề thì bỏ qua (job chạy lại không gửi lần 2). Khách có 2 buổi cùng ngày → 1 lời nhắc, nêu buổi sớm nhất. Bước kiểm tra + 2 câu INSERT nằm trong 1 transaction.
 - PT Dashboard bỏ nút "Nhắc khách", bỏ `doPost` + CSRF; thẻ "Cần membership" ghi "Hệ thống tự nhắc khách trước buổi 1 ngày".

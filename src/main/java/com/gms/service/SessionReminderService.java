@@ -14,7 +14,7 @@ import java.util.List;
  *   Mỗi ngày lúc 00:05, hệ thống xét các buổi PT NGÀY MAI.
  *   Khách nào ngày mai chưa vào được phòng tập (thiếu membership / vé ngày, hoặc đang bảo lưu)
  *   → nhận 1 thông báo ở chuông, nói rõ giờ tập, PT và việc cần làm.
- *   Ngày phòng nghỉ cả ngày thì KHÔNG nhắc (CBR-56: PT phải dời buổi; còn sót thì JOB-04 hủy GymClosed).
+ *   Ngày phòng nghỉ cả ngày thì KHÔNG nhắc (CBR-56: PT phải dời buổi trước ngày nghỉ).
  *   Mỗi khách chỉ nhận 1 lời nhắc cho 1 ngày tập (job chạy lại cũng không gửi trùng).
  *   Có 2 buổi cùng ngày thì lời nhắc nêu buổi sớm nhất — thiếu quyền vào gym là chuyện của cả ngày.
  *
@@ -31,7 +31,7 @@ public class SessionReminderService {
      * Trả số thông báo đã gửi trong lượt này (để in log).
      */
     public int runJob() throws SQLException {
-        // B1: ngày cần xét = ngày mai theo giờ Việt Nam.
+        // B1: ngày cần xét = ngày mai theo giờ Việt Nam (plusDays(1) = nhắc trước 1 ngày; muốn trước 2 ngày thì đổi thành 2).
         LocalDate tomorrow = DateTimeUtil.today().plusDays(1);
 
         // B2: DAO tìm những người ngày mai chưa vào được phòng tập.

@@ -43,6 +43,12 @@ import java.util.List;
  *
  * Quy tắc quyền (GBR-10): mọi hàm chính đều bắt đầu bằng findWorkingPt(accountId).
  * accountId luôn lấy từ session, không bao giờ lấy mã PT từ URL → PT chỉ xem được dữ liệu của mình.
+ *
+ * THAM SỐ CẤU HÌNH (giá trị hiện tại — đổi ở đâu)
+ *   SCHEDULE_DAYS  = 7    dải lịch hiện 7 ngày: hôm nay → hôm nay + 6          (hằng số dưới đây)
+ *   ATTENTION_DAYS = 14   "Cần chú ý" xét buổi trong 14 ngày tới               (hằng số dưới đây)
+ *   P-22           = 3    cần ≥ 3 khách đánh giá mới hiện điểm trung bình PT  (bảng SystemConfigs)
+ *   Tỷ lệ hoa hồng của PT đọc từ Employees.CommissionRate (VD Đinh Công Sơn = 70%); P-11 = 70% chỉ là mặc định cho PT mới.
  */
 public class PtDashboardService {
 

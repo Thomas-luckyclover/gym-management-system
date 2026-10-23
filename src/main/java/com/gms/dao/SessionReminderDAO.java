@@ -44,7 +44,8 @@ public class SessionReminderDAO {
      * Gói PT đôi: cả người đứng tên lẫn người tập cùng đều phải dùng được gym, nên xét cả hai.
      * Chỉ lấy khách có tài khoản Active (người không có tài khoản thì không có chuông để nhận).
      * BỎ QUA ngày phòng nghỉ cả ngày (OperatingHourExceptions.IsClosedAllDay = 1): theo CBR-56 PT phải dời buổi
-     * trước ngày nghỉ, còn sót thì JOB-04 hủy GymClosed → không khuyên khách mua gói / vé ngày cho ngày phòng đóng cửa.
+     * trước ngày nghỉ (SRS: buổi còn sót do JOB-04 hủy GymClosed — phần này JOB-04 CHƯA code)
+     * → không khuyên khách mua gói / vé ngày cho ngày phòng đóng cửa.
      * 4 dấu ?: ngày tập (dùng 4 lần).
      */
     public List<Reminder> findCustomersToRemind(LocalDate sessionDate) throws SQLException {
