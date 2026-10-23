@@ -1,18 +1,20 @@
 <%@ page pageEncoding="UTF-8" %>
-<%-- ===== Nội dung chi tiết của một buổi: s (MyPtSessionRow) do Service điền trạng thái; JSP chỉ định dạng và xuất an toàn ===== --%>
-<%-- Đầu phần chi tiết: trạng thái, loại gói/số buổi, ngày và giờ; buổi lẻ không có số thứ tự trong gói. --%>
+<%-- ===== NỘI DUNG CHI TIẾT 1 BUỔI (nằm ẩn trong thẻ buổi, JS chép vào hộp chi tiết khi bấm) =====
+     Mọi chữ trạng thái / lời giải thích do MyPtSessionService điền sẵn vào s; JSP chỉ in ra (c:out chống XSS). --%>
+
+<%-- 1. Trạng thái + gói + ngày giờ --%>
 <div class="session-detail-heading">
     <span class="session-status" data-status="${s.statusKey}"><c:out value="${s.statusLabel}" /></span>
     <h3><c:out value="${s.typeLabel}" /><c:if test="${not s.singleSession}"> · ${s.sessionNo}/${s.totalSessions}</c:if></h3>
     <p>${gms:formatDate(s.slotDate)} · ${gms:formatTime(s.startTime)} – ${gms:formatTime(s.endTime)}</p>
 </div>
-<%-- KẾT THÚC tiêu đề và thời gian buổi tập. --%>
-<%-- Lời giải thích theo statusKey: cảnh báo, lý do vắng/hủy hoặc đang chờ chốt; ẩn khi không có explanation. --%>
+
+<%-- 2. Lời giải thích (cần chú ý / lý do vắng, hủy / đang chờ chốt). Không có thì ẩn. --%>
 <c:if test="${not empty s.explanation}">
     <p class="session-explanation" data-status="${s.statusKey}"><c:out value="${s.explanation}" /></p>
 </c:if>
-<%-- KẾT THÚC lời giải thích trạng thái. --%>
-<%-- ===== Khối liên hệ PT: tên, SĐT, link Zalo; copyPtPhone đọc data-copy-phone của nút Sao chép số ===== --%>
+
+<%-- 3. Liên hệ PT: Zalo + Sao chép số (nút có data-copy-phone → JS chép vào bộ nhớ tạm) --%>
 <div class="session-contact">
     <strong class="session-trainer">PT <c:out value="${s.ptName}" default="Chưa cập nhật" /></strong>
     <c:choose>
@@ -23,11 +25,11 @@
                 <button class="btn btn-outline btn-sm" type="button" data-copy-phone="${fn:escapeXml(s.ptPhone)}">Sao chép số</button>
             </div>
         </c:when>
-        <c:otherwise><p class="schedule-note">Chưa có số PT. Vui lòng liên hệ lễ tân.</p></c:otherwise>
+        <c:otherwise><p class="session-note">Chưa có số PT. Vui lòng liên hệ lễ tân.</p></c:otherwise>
     </c:choose>
 </div>
-<%-- ===== KẾT THÚC khối liên hệ PT ===== --%>
-<%-- ===== Thông tin gói bên dưới liên hệ: tên/hạn gói, người tập cùng, lý do và thời điểm hủy nếu có ===== --%>
+
+<%-- 4. Thông tin gói + lịch sử hủy (nếu có) --%>
 <dl class="session-facts">
     <div><dt>Gói tập</dt><dd><c:out value="${s.packageName}" /></dd></div>
     <c:if test="${not s.singleSession}"><div><dt>Thời hạn</dt><dd>${gms:formatDate(s.packageStartDate)} – ${gms:formatDate(s.packageEndDate)}</dd></div></c:if>
@@ -35,16 +37,11 @@
     <c:if test="${not empty s.cancelReason}"><div><dt>Lý do hủy</dt><dd><c:out value="${s.cancelReason}" /></dd></div></c:if>
     <c:if test="${not empty s.cancelledAt}"><div><dt>Hủy lúc</dt><dd>${gms:formatDateTime(s.cancelledAt)}</dd></div></c:if>
 </dl>
-<%-- ===== KẾT THÚC thông tin gói và lịch sử hủy ===== --%>
-<%-- ===== Liên kết cuối phần chi tiết: Google Calendar mở form để khách tự lưu; link gói chuyển sang màn khác ===== --%>
-<%-- calendarUrl chỉ được Service cấp cho Scheduled chưa hết giờ; JSP không tự tính điều kiện này. --%>
-<%-- Màn "Gói của tôi" đặt hidePackageLink = true: đang xem chính gói đó nên không cần link "Xem toàn bộ gói". --%>
-<c:set var="showPackageLink" value="${not s.singleSession and not hidePackageLink}" />
-<c:if test="${not empty s.calendarUrl or showPackageLink}">
-<div class="session-detail-links">
-    <c:if test="${not empty s.calendarUrl}"><a href="${fn:escapeXml(s.calendarUrl)}" target="_blank" rel="noopener noreferrer"><i class="fa-regular fa-calendar-plus" aria-hidden="true"></i> Thêm vào Google Calendar</a></c:if>
-    <c:if test="${showPackageLink}"><a href="${pageContext.request.contextPath}/customer/bookings?id=${s.subscriptionId}">Xem toàn bộ gói <i class="fa-solid fa-arrow-right" aria-hidden="true"></i></a></c:if>
-</div>
+
+<%-- 5. Link cuối: Google Calendar (Service chỉ cấp cho buổi Scheduled chưa hết giờ) + sang "Gói của tôi" đúng gói --%>
+<c:if test="${not empty s.calendarUrl or not s.singleSession}">
+    <div class="session-detail-links">
+        <c:if test="${not empty s.calendarUrl}"><a href="${fn:escapeXml(s.calendarUrl)}" target="_blank" rel="noopener noreferrer"><i class="fa-regular fa-calendar-plus" aria-hidden="true"></i> Thêm vào Google Calendar</a></c:if>
+        <c:if test="${not s.singleSession}"><a href="${pageContext.request.contextPath}/customer/bookings?id=${s.subscriptionId}">Xem toàn bộ gói <i class="fa-solid fa-arrow-right" aria-hidden="true"></i></a></c:if>
+    </div>
 </c:if>
-<%-- ===== KẾT THÚC liên kết cuối phần chi tiết ===== --%>
-<%-- ===== KẾT THÚC nội dung chi tiết của một buổi ===== --%>

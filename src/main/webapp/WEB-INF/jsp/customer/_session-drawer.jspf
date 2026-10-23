@@ -1,18 +1,15 @@
 <%@ page pageEncoding="UTF-8" %>
-<%-- ===== Khung “Chi tiết buổi tập” bên phải: một dialog dùng lại cho mọi thẻ, không nhận DTO riêng ===== --%>
-<%-- initSessionDetails nối nút Đóng và bấm ngoài; Escape do dialog xử lý. Nút type=button không kích hoạt loading của form. --%>
+<%-- ===== HỘP "CHI TIẾT BUỔI TẬP" — 1 hộp <dialog> dùng chung, trượt từ cạnh phải =====
+     Ban đầu rỗng. Bấm 1 thẻ buổi → my-pt-sessions.js chép chi tiết của thẻ đó vào #session-drawer-content rồi mở.
+     Đóng: nút Đóng, bấm ra ngoài, hoặc phím Esc (dialog tự lo). Không gọi server. --%>
 <dialog class="session-drawer" id="session-drawer" aria-labelledby="session-drawer-title">
     <header class="session-drawer-header">
         <h2 id="session-drawer-title">Chi tiết buổi tập</h2>
         <button type="button" class="btn btn-ghost" data-close-session aria-label="Đóng chi tiết buổi tập">Đóng <i class="fa-solid fa-xmark" aria-hidden="true"></i></button>
     </header>
-    <%-- KẾT THÚC tiêu đề và nút Đóng của dialog. --%>
     <div class="session-drawer-body">
-        <%-- openSessionDetail chép [data-session-content] của thẻ vừa bấm vào vùng này, không gọi server. --%>
         <div id="session-drawer-content"></div>
-        <%-- copyPtPhone ghi kết quả sao chép ở đây; aria-live đọc thông báo cho người dùng trình đọc màn hình. --%>
-        <p class="schedule-note" id="session-copy-message" role="status" aria-live="polite"></p>
+        <%-- Kết quả "Sao chép số"; aria-live để trình đọc màn hình đọc lên. --%>
+        <p class="session-note" id="session-copy-message" role="status" aria-live="polite"></p>
     </div>
-    <%-- KẾT THÚC vùng cuộn nội dung chi tiết. --%>
 </dialog>
-<%-- ===== KẾT THÚC khung Chi tiết buổi tập bên phải ===== --%>

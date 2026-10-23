@@ -1,72 +1,77 @@
-/* Lịch tập: một thanh công cụ, ba khung giờ, chi tiết gọn ở bên phải. */
-.pt-schedule.content {
-  min-width: 0;
-  padding: var(--space-5);
-  color: var(--color-text);
-}
-.pt-schedule [hidden] {
-  display: none !important;
-}
-.schedule-board {
-  min-width: 0;
-  background: var(--color-surface);
-  border: var(--border-width) solid var(--color-border);
-  border-radius: var(--radius-sm);
-}
-.schedule-toolbar, .schedule-period, .schedule-controls, .session-actions {
-  display: flex;
+@charset "UTF-8";
+/* =====================================================================
+   LỊCH TẬP CỦA KHÁCH — my-pt-sessions.css
+
+   ĐỌC THEO THỨ TỰ:
+     1. Khung: panel lịch + thanh công cụ (‹ kỳ ›, Chọn ngày, Tuần/Tháng)
+     2. Bảng chung (tuần + tháng) và dấu "Hôm nay" / "Đang chọn"
+     3. Lịch tuần: thẻ buổi
+     4. Lịch tháng: ô ngày + buổi gọn
+     5. Chú thích + số buổi cả tháng
+     6. Hộp "Chi tiết buổi tập" (trượt từ phải)
+     7. Điện thoại: dãy 7 ngày + chỉ hiện 1 cột
+        (nút topbar thu gọn trên điện thoại hẹp: xem customer/dashboard.css, dùng chung các trang khách)
+
+   Nền / viền / bóng của panel = lớp .panel chung. Nhãn trạng thái = session-status.css (dùng chung).
+   Mọi giá trị lấy từ tokens.css.
+   ===================================================================== */
+
+
+/* ==================== 1. KHUNG + THANH CÔNG CỤ ==================== */
+
+/* customer/dashboard.css cho .panel lề 32px + cách 24px giữa các con; bảng lịch cần sát mép. */
+.my-pt-page .panel { min-width: 0; padding: 0; overflow: hidden; }
+.my-pt-page .panel > * + * { margin-top: 0; }
+.my-pt-page h2 { margin: 0; }
+.my-pt-page :focus-visible { outline: var(--focus-outline-width) solid var(--color-primary); outline-offset: var(--focus-outline-offset); }
+
+/* "‹ Quay lại Gói của tôi" (chỉ khi đến từ màn Gói của tôi). */
+.schedule-back {
+  display: inline-flex;
   align-items: center;
-  flex-wrap: wrap;
-  gap: var(--space-2);
+  gap: var(--space-1-5);
+  margin-bottom: var(--space-3);
+  color: var(--color-link);
+  font-size: var(--font-size-sm);
+  font-weight: var(--font-weight-semibold);
+  text-decoration: none;
 }
+.schedule-back:hover { text-decoration: underline; }
+
 .schedule-toolbar {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
   justify-content: space-between;
+  gap: var(--space-2);
   padding: var(--space-3) var(--space-4);
   border-bottom: var(--border-width) solid var(--color-border);
 }
-.schedule-period h3 {
-  margin: 0 var(--space-1);
+.schedule-period,
+.schedule-controls {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: var(--space-2);
+}
+.schedule-period h2 {
+  margin-inline: var(--space-1);
   font-size: var(--font-size-base);
   font-weight: var(--font-weight-semibold);
   font-variant-numeric: tabular-nums;
+  white-space: nowrap;
 }
-.schedule-period .btn {
+/* Nút ‹ › vuông (giống màn Lịch dạy của PT). */
+.schedule-step {
   min-width: var(--control-height-md);
   min-height: var(--control-height-md);
   padding: var(--space-2);
 }
-.schedule-period .btn-ghost {
-  padding-inline: var(--space-3);
-}
-.schedule-switch {
-  display: flex;
-  border: var(--border-width) solid var(--color-border-strong);
-  border-radius: var(--radius-sm);
-  overflow: hidden;
-}
-.schedule-switch a {
-  padding: var(--space-2) var(--space-4);
-  color: var(--color-text-soft);
-  text-decoration: none;
-  font-size: var(--font-size-sm);
-}
-.schedule-switch a[aria-current="page"] {
-  color: var(--color-text);
-  background: var(--color-primary-tint);
-  box-shadow: inset 0 calc(-1 * var(--border-width-thick)) var(--color-primary);
-}
-/* Native details giữ được chọn ngày khi JS không chạy. */
-.schedule-date-picker {
-  position: relative;
-}
-.schedule-date-picker > summary {
-  list-style: none;
-  cursor: pointer;
-  font-size: var(--font-size-sm);
-}
-.schedule-date-picker > summary::-webkit-details-marker {
-  display: none;
-}
+
+/* --- Chọn ngày: <details> xổ ra 1 khung nổi --- */
+.schedule-date-picker { position: relative; }
+.schedule-date-picker > summary { list-style: none; cursor: pointer; font-size: var(--font-size-sm); }
+.schedule-date-picker > summary::-webkit-details-marker { display: none; }
 .schedule-date {
   position: absolute;
   top: calc(100% + var(--space-2));
@@ -82,24 +87,42 @@
   background: var(--color-surface);
   box-shadow: var(--shadow-pop);
 }
-.schedule-date label {
-  grid-column: 1 / -1;
-  font-size: var(--font-size-sm);
-  color: var(--color-text-soft);
-}
-.schedule-date input, .booking-package-filters select {
+.schedule-date label { grid-column: 1 / -1; color: var(--color-text-soft); font-size: var(--font-size-sm); }
+.schedule-date input {
   min-width: 0;
-  font: inherit;
-  font-size: var(--font-size-sm);
-  color: var(--color-text);
-  background: var(--color-surface);
   padding: var(--space-2) var(--space-3);
   border: var(--border-width) solid var(--color-border-strong);
   border-radius: var(--radius-sm);
+  background: var(--color-surface);
+  color: var(--color-text);
+  font: inherit;
+  font-size: var(--font-size-sm);
 }
-.schedule-scroll {
-  overflow-x: auto;
+
+/* --- Tuần / Tháng --- */
+.schedule-switch {
+  display: flex;
+  overflow: hidden;
+  border: var(--border-width) solid var(--color-border-strong);
+  border-radius: var(--radius-sm);
 }
+.schedule-switch a {
+  padding: var(--space-2) var(--space-4);
+  color: var(--color-text-soft);
+  font-size: var(--font-size-sm);
+  text-decoration: none;
+}
+.schedule-switch a[aria-current="page"] {
+  background: var(--color-primary-tint);
+  color: var(--color-text);
+  box-shadow: inset 0 calc(-1 * var(--border-width-thick)) var(--color-primary);
+}
+
+
+/* ==================== 2. BẢNG CHUNG + DẤU HÔM NAY / ĐANG CHỌN ==================== */
+
+.schedule-scroll { overflow-x: auto; }   /* màn vừa vừa: bảng giữ bề rộng tối thiểu, cuộn ngang */
+
 .schedule-grid {
   width: 100%;
   min-width: calc(var(--space-12) * 10);
@@ -107,64 +130,76 @@
   table-layout: fixed;
   font-size: var(--font-size-sm);
 }
-.pt-schedule .schedule-grid th, .pt-schedule .schedule-grid td {
+.schedule-grid th,
+.schedule-grid td {
   padding: var(--space-3);
   border: var(--border-width) solid var(--color-border);
   text-align: left;
   vertical-align: top;
   overflow-wrap: anywhere;
 }
-.pt-schedule .schedule-grid th {
+.schedule-grid th {
+  color: var(--color-text-soft);
   font-family: var(--font-body);
   font-weight: var(--font-weight-medium);
   letter-spacing: var(--letter-spacing-normal);
   text-transform: none;
-  color: var(--color-text-soft);
 }
-.schedule-grid thead th {
-  background: var(--color-surface-muted);
+.schedule-grid thead th { background: var(--color-surface-muted); }
+.schedule-grid th > span,
+.schedule-grid th strong,
+.schedule-grid th small { display: block; }
+.schedule-grid th strong { margin-top: var(--space-1); color: var(--color-text); }
+.schedule-grid th small { margin-top: var(--space-1); font-size: var(--font-size-xs); font-weight: var(--font-weight-regular); white-space: nowrap; }
+
+/* Hôm nay: nền cam nhạt + số ngày trong viên cam. Đang chọn (?date=): nền xanh nhạt + viền xanh.
+   Hai dấu độc lập, có thể cùng lúc. Luôn có chữ "Hôm nay" / "Đang chọn" đi kèm — không chỉ dựa vào màu. */
+.schedule-grid .is-today { background: var(--color-primary-tint); }
+.schedule-grid .is-selected { background: var(--color-info-tint); box-shadow: inset 0 0 0 var(--border-width-thick) var(--color-info-ink); }
+.schedule-grid .is-today.is-selected { background: var(--color-primary-tint); }
+.schedule-week td.is-selected {
+  box-shadow: inset var(--border-width-thick) 0 var(--color-info-ink), inset calc(-1 * var(--border-width-thick)) 0 var(--color-info-ink);
 }
-.schedule-week thead th:first-child {
-  width: calc(var(--space-12) + var(--space-7));
+.schedule-grid th.is-today strong,
+.schedule-grid .is-today .schedule-day-number {
+  display: inline-flex;
+  width: fit-content;
+  padding: var(--space-1) var(--space-2);
+  border-radius: var(--radius-pill);
+  background: var(--color-primary);
+  color: var(--color-on-primary);
 }
-.schedule-grid th strong, .schedule-grid th small {
-  display: block;
-  margin-top: var(--space-1);
-}
-.schedule-grid th strong {
-  color: var(--color-text);
-}
-.schedule-grid th small {
-  font-size: var(--font-size-xs);
-  font-weight: var(--font-weight-regular);
-  white-space: nowrap;
-}
-.schedule-grid tbody td {
-  height: calc(var(--space-12) + var(--space-4));
-}
-.schedule-grid thead .is-today {
-  color: var(--color-text);
-  background: var(--color-primary-tint);
-  box-shadow: inset 0 var(--border-width-thick) var(--color-primary);
-}
+.day-mark { font-size: var(--font-size-xs); }
+.day-mark.is-today-mark { color: var(--color-text); font-weight: var(--font-weight-semibold); }
+.day-mark.is-selected-mark { color: var(--color-info-ink); }
+
+
+/* ==================== 3. LỊCH TUẦN ==================== */
+
+.schedule-week thead th:first-child { width: calc(var(--space-12) + var(--space-7)); }
+.schedule-week tbody td { height: calc(var(--space-12) + var(--space-4)); }
+
 .schedule-vacant {
   display: block;
   padding-top: var(--space-5);
   color: var(--color-text-muted);
   text-align: center;
 }
-/* Toàn thẻ là điểm bấm; không thêm một dòng “Xem chi tiết” vào mỗi thẻ. */
-.session-card.is-focus { outline: 2px solid var(--color-primary); outline-offset: 2px; }
+
+/* Cả thẻ là chỗ bấm. */
 .session-card {
   margin-bottom: var(--space-2);
-  background: var(--color-surface-muted);
   border: var(--border-width) solid var(--color-border-strong);
   border-radius: var(--radius-xs);
+  background: var(--color-surface-muted);
 }
+.session-card:hover,
+.session-card:focus-within { border-color: var(--color-primary); }
+.session-card.is-focus { outline: 2px solid var(--color-primary); outline-offset: 2px; }
+
 .session-card summary {
-  display: flex;
-  flex-direction: column;
-  align-items: flex-start;
+  display: grid;
+  justify-items: start;
   gap: var(--space-1);
   padding: var(--space-2) var(--space-2-5);
   color: var(--color-text);
@@ -173,55 +208,55 @@
   list-style: none;
   cursor: pointer;
 }
-.session-card summary::-webkit-details-marker {
-  display: none;
-}
-.session-card summary > strong {
-  white-space: nowrap;
-  font-variant-numeric: tabular-nums;
-}
-.session-card small, .session-card-pt {
-  font-size: var(--font-size-xs);
-  color: var(--color-text-soft);
-}
-.session-card:hover, .session-card:focus-within {
-  border-color: var(--color-primary);
-}
-.session-card [data-session-content] {
-  padding: var(--space-3);
-}
-.session-status {
-  display: inline-flex;
-  align-items: center;
+.session-card summary::-webkit-details-marker { display: none; }
+.session-card summary > strong { font-variant-numeric: tabular-nums; white-space: nowrap; }
+.session-card small,
+.session-card-pt { color: var(--color-text-soft); font-size: var(--font-size-xs); }
+.session-card [data-session-content] { padding: var(--space-3); }   /* chỉ thấy khi không có JS */
+
+/* Buổi đã qua: nền trầm nhưng không làm mờ cả thẻ — kết quả vẫn đọc rõ, vẫn bấm được. */
+.session-card.is-ended { border-color: var(--color-border); background: var(--color-bg); }
+.session-card.is-ended summary,
+.session-card.is-ended summary > strong { color: var(--color-text-soft); }
+.session-card.is-ended:is(:hover, :focus-within) { border-color: var(--color-primary); background: var(--color-surface-muted); }
+
+
+/* ==================== 4. LỊCH THÁNG ==================== */
+
+.schedule-month .is-month-padding { background: var(--color-bg); }
+
+.schedule-day {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
   gap: var(--space-1);
-  color: var(--color-text-soft);
-  font-size: var(--font-size-xs);
-  line-height: var(--line-height-normal);
+  margin-bottom: var(--space-3);
+  color: var(--color-text);
+  text-decoration: none;
 }
-.session-status::before {
-  content: "";
-  flex: 0 0 var(--space-1-5);
-  width: var(--space-1-5);
-  height: var(--space-1-5);
-  border-radius: var(--radius-circle);
-  background: currentColor;
+.schedule-day-number { font-variant-numeric: tabular-nums; white-space: nowrap; }
+
+.month-session {
+  display: grid;
+  gap: var(--space-1);
+  margin-bottom: var(--space-2);
+  padding: var(--space-2);
+  border-radius: var(--radius-xs);
+  background: var(--color-surface-muted);
+  color: var(--color-text);
+  text-decoration: none;
 }
-.session-status[data-status="today"], .session-status[data-status="upcoming"] {
-  color: var(--color-info-ink);
-}
-.session-status[data-status="checkedIn"] {
-  color: var(--color-success-ink);
-}
-.session-status[data-status="warn"], .session-status[data-status="pending"] {
-  color: var(--color-warning-ink);
-}
-.session-status[data-status="missed"] {
-  color: var(--color-danger-ink);
-}
+.month-session:hover { background: var(--color-primary-tint); }
+.month-session.is-ended { background: var(--color-bg); }
+.month-session.is-ended > strong { color: var(--color-text-soft); }
+
+
+/* ==================== 5. CHÚ THÍCH + SỐ BUỔI CẢ THÁNG ==================== */
+
 .schedule-legend {
   display: flex;
-  align-items: center;
   flex-wrap: wrap;
+  align-items: center;
   gap: var(--space-3) var(--space-4);
   padding: var(--space-3) var(--space-4);
 }
@@ -232,7 +267,7 @@
   min-height: var(--control-height-sm);
   font-size: var(--font-size-xs);
 }
-/* Lịch tháng: số buổi trong tháng = các viên nhỏ dồn bên phải thanh chú thích (thay câu "Trong tháng: …") */
+
 .schedule-month-stats {
   display: flex;
   flex-wrap: wrap;
@@ -245,8 +280,8 @@
   color: var(--color-text-soft);
   font-size: var(--font-size-xs);
   font-weight: var(--font-weight-semibold);
+  letter-spacing: var(--letter-spacing-wide);
   text-transform: uppercase;
-  letter-spacing: 0.06em;
 }
 .schedule-month-stats [data-status] {
   display: inline-flex;
@@ -261,117 +296,83 @@
   white-space: nowrap;
 }
 .schedule-month-stats b { color: var(--color-text); font-size: var(--font-size-sm); font-variant-numeric: tabular-nums; }
-.schedule-month-stats [data-status="upcoming"] b { color: var(--color-info-ink); }
+.schedule-month-stats [data-status="upcoming"] b  { color: var(--color-info-ink); }
 .schedule-month-stats [data-status="checkedIn"] b { color: var(--color-success-ink); }
-.schedule-month-stats [data-status="missed"] b { color: var(--color-danger-ink); }
-.schedule-month-stats [data-status="pending"] b { color: var(--color-warning-ink); }
-@media (max-width: 700px) {
-  .schedule-month-stats { flex-basis: 100%; margin-left: 0; }
-}
-.schedule-note {
-  font-size: var(--font-size-sm);
-  line-height: var(--line-height-normal);
-  color: var(--color-text-soft);
-}
-.schedule-empty {
-  padding: var(--space-8) var(--space-5);
-  background: var(--color-surface);
-  border: var(--border-width) solid var(--color-border);
-  text-align: center;
-}
-/* Chỉ thân dialog cuộn, không tạo hai thanh cuộn cùng lúc. */
-body.session-detail-open {
-  overflow: hidden;
-}
+.schedule-month-stats [data-status="missed"] b    { color: var(--color-danger-ink); }
+.schedule-month-stats [data-status="pending"] b   { color: var(--color-warning-ink); }
+
+
+/* ==================== 6. HỘP CHI TIẾT BUỔI ==================== */
+
+/* Hộp mở → khóa cuộn trang phía sau (JS thêm class), chỉ thân hộp cuộn. */
+body.session-detail-open { overflow: hidden; }
+
 .session-drawer {
   position: fixed;
   inset: 0 0 0 auto;
-  margin: 0;
-  padding: 0;
   width: min(100%, var(--layout-auth-card-width));
   max-width: 100%;
   height: 100dvh;
   max-height: 100dvh;
-  box-sizing: border-box;
+  margin: 0;
+  padding: 0;
   overflow: hidden;
   border: var(--border-width) solid var(--color-border-strong);
   background: var(--color-surface);
   color: var(--color-text);
   box-shadow: var(--shadow-drawer);
 }
-.session-drawer[open] {
-  display: flex;
-  flex-direction: column;
-}
-.session-drawer::backdrop {
-  background: var(--color-overlay);
-}
+.session-drawer[open] { display: flex; flex-direction: column; }
+.session-drawer::backdrop { background: var(--color-overlay); }
+.session-drawer :focus-visible { outline: var(--focus-outline-width) solid var(--color-primary); outline-offset: var(--focus-outline-offset); }
+
 .session-drawer-header {
   display: flex;
-  flex: 0 0 auto;
-  justify-content: space-between;
+  flex: none;
   align-items: center;
+  justify-content: space-between;
   gap: var(--space-3);
   padding: var(--space-3) var(--space-4);
   border-bottom: var(--border-width) solid var(--color-border);
 }
-.session-drawer h2 {
-  margin: 0;
-  font-size: var(--font-size-base);
-  font-weight: var(--font-weight-semibold);
-}
-.session-drawer-body {
-  flex: 1;
-  min-height: 0;
-  overflow-y: auto;
-  padding: var(--space-4);
-}
-.session-detail-heading h3 {
-  margin: var(--space-2) 0;
-  font-size: var(--font-size-xl);
-}
-.session-detail-heading p, .session-phone {
-  margin: var(--space-1) 0 var(--space-3);
-  font-size: var(--font-size-sm);
-  color: var(--color-text-soft);
-}
+.session-drawer h2 { margin: 0; font-size: var(--font-size-base); font-weight: var(--font-weight-semibold); }
+.session-drawer-body { flex: 1; min-height: 0; overflow-y: auto; padding: var(--space-4); }
+
+.session-detail-heading h3 { margin: var(--space-2) 0; font-size: var(--font-size-xl); }
+.session-detail-heading p,
+.session-phone { margin: var(--space-1) 0 var(--space-3); color: var(--color-text-soft); font-size: var(--font-size-sm); }
+
 .session-explanation {
-  padding: var(--space-3);
   margin: var(--space-4) 0;
-  background: var(--color-surface-muted);
+  padding: var(--space-3);
   border-radius: var(--radius-xs);
+  background: var(--color-surface-muted);
   font-size: var(--font-size-sm);
   line-height: var(--line-height-normal);
 }
-.session-explanation[data-status="warn"] {
-  background: var(--color-warning-tint);
-  color: var(--color-warning-ink);
+.session-explanation[data-status="warn"] { background: var(--color-warning-tint); color: var(--color-warning-ink); }
+
+.session-contact { padding: var(--space-4) 0; border-block: var(--border-width) solid var(--color-border); }
+.session-trainer { font-size: var(--font-size-base); }
+.session-actions { display: flex; flex-wrap: wrap; align-items: center; gap: var(--space-2); }
+.session-actions input[data-phone-fallback] {
+  width: 100%;
+  padding: var(--space-2);
+  border: var(--border-width) solid var(--color-border-strong);
+  background: var(--color-surface);
+  color: var(--color-text);
 }
-.session-contact {
-  padding: var(--space-4) 0;
-  border-block: var(--border-width) solid var(--color-border);
-}
-.session-trainer {
-  font-size: var(--font-size-base);
-}
-.session-facts {
-  margin: var(--space-3) 0;
-  font-size: var(--font-size-sm);
-}
+
+.session-facts { margin: var(--space-3) 0; font-size: var(--font-size-sm); }
 .session-facts > div {
   display: grid;
   grid-template-columns: minmax(0, 1fr) minmax(0, 2fr);
   gap: var(--space-3);
   padding: var(--space-2) 0;
 }
-.session-facts dt {
-  color: var(--color-text-soft);
-}
-.session-facts dd {
-  margin: 0;
-  line-height: var(--line-height-normal);
-  overflow-wrap: anywhere;
-}
+.session-facts dt { color: var(--color-text-soft); }
+.session-facts dd { margin: 0; line-height: var(--line-height-normal); overflow-wrap: anywhere; }
+
 .session-detail-links {
   display: grid;
   gap: var(--space-3);
@@ -379,170 +380,51 @@ body.session-detail-open {
   border-top: var(--border-width) solid var(--color-border);
   font-size: var(--font-size-sm);
 }
-.pt-schedule :focus-visible, .session-drawer :focus-visible {
-  outline: var(--focus-outline-width) solid var(--color-primary);
-  outline-offset: var(--focus-outline-offset);
+.session-note { margin: 0; color: var(--color-text-soft); font-size: var(--font-size-sm); line-height: var(--line-height-normal); }
+
+
+/* ==================== 7. ĐIỆN THOẠI ==================== */
+
+/* Dãy 7 ngày chỉ dùng trên điện thoại. */
+.schedule-mobile-days { display: none; }
+
+@media (max-width: 700px) {
+  .schedule-month-stats { flex-basis: 100%; margin-left: 0; }
 }
-.month-session {
-  display: grid;
-  gap: var(--space-1);
-  padding: var(--space-2);
-  margin-bottom: var(--space-2);
-  border-radius: var(--radius-xs);
-  color: var(--color-text);
-  background: var(--color-surface-muted);
-  text-decoration: none;
-}
-.month-session:hover {
-  background: var(--color-primary-tint);
-}
-.schedule-day {
-  display: flex;
-  justify-content: space-between;
-  margin-bottom: var(--space-3);
-  color: var(--color-text);
-}
-.schedule-day small {
-  font-size: var(--font-size-xs);
-}
-.schedule-month .is-month-padding {
-  background: var(--color-bg);
-}
-.schedule-month .schedule-day-number {
-  white-space: nowrap;
-  font-variant-numeric: tabular-nums;
-}
-.schedule-mobile-days {
-  display: none;
-}
-.session-actions input[data-phone-fallback] {
-  width: 100%;
-  padding: var(--space-2);
-  color: var(--color-text);
-  background: var(--color-surface);
-  border: var(--border-width) solid var(--color-border-strong);
-}
+
 @media (max-width: 640px) {
-  .pt-schedule.content {
-    padding: var(--space-3);
-  }
-  .schedule-toolbar {
-    padding: var(--space-2);
-  }
-  .schedule-period {
-    gap: var(--space-1);
-  }
-  .schedule-period h3 {
-    font-size: var(--font-size-sm);
-  }
-  .schedule-controls {
-    width: 100%;
-    justify-content: space-between;
-  }
-  .schedule-date {
-    right: auto;
-    left: 0;
-  }
-  .has-day-picker .schedule-mobile-days {
+  .schedule-toolbar { padding: var(--space-2) var(--space-3); }
+  .schedule-period h2 { font-size: var(--font-size-sm); }
+  .schedule-controls { width: 100%; justify-content: space-between; }
+  .schedule-date { right: auto; left: 0; }
+
+  /* Mỗi ô là 1 link ?date=…; ô đang hiện (is-shown) tô viền cam. */
+  .schedule-mobile-days {
     display: grid;
     grid-template-columns: repeat(7, minmax(0, 1fr));
     gap: var(--space-1);
-    padding: var(--space-3) var(--space-2);
+    padding: var(--space-3);
+    border-bottom: var(--border-width) solid var(--color-border);
   }
-  .schedule-mobile-days button {
+  .schedule-mobile-days a {
     display: grid;
-    gap: var(--space-1);
-    min-height: var(--control-height-lg);
-    padding: var(--space-2) var(--space-1);
+    justify-items: center;
+    gap: var(--space-0-5);
+    padding: var(--space-2) 0;
     border: var(--border-width) solid var(--color-border);
     border-radius: var(--radius-xs);
     background: var(--color-surface);
-    color: var(--color-text);
-    font: inherit;
+    color: var(--color-text-soft);
     font-size: var(--font-size-xs);
-    cursor: pointer;
+    text-decoration: none;
   }
-  .schedule-mobile-days button[aria-pressed="true"] {
-    background: var(--color-primary-tint);
-    border-color: var(--color-primary);
-  }
-  .has-day-picker .schedule-week {
-    min-width: 0;
-  }
-  .has-day-picker .schedule-week [data-week-column]:not(.is-mobile-day) {
-    display: none;
-  }
-  .has-day-picker .schedule-week thead th:first-child {
-    width: 35%;
-  }
+  .schedule-mobile-days strong { color: var(--color-text); font-size: var(--font-size-base); font-variant-numeric: tabular-nums; }
+  .schedule-mobile-days a.is-today strong { color: var(--color-primary); }
+  .schedule-mobile-days a.is-shown { border-color: var(--color-primary); background: var(--color-primary-tint); }
+
+  /* Bảng tuần chỉ còn cột "Khung giờ" + cột của ngày đang hiện (JSP đã gắn is-mobile-day). */
+  .schedule-week { min-width: 0; }
+  .schedule-week [data-week-column]:not(.is-mobile-day) { display: none; }
+  .schedule-week thead th:first-child { width: 35%; }
 }
 
-/* Hôm nay và ngày chọn là hai dấu độc lập, có thể xuất hiện cùng lúc. */
-.schedule-grid thead th > span {
-  display: block;
-}
-.pt-schedule .schedule-grid .is-today {
-  background: var(--color-primary-tint);
-}
-.pt-schedule .schedule-grid .is-selected {
-  background: var(--color-info-tint);
-  box-shadow: inset 0 0 0 var(--border-width-thick) var(--color-info-ink);
-}
-.pt-schedule .schedule-week td.is-selected {
-  box-shadow: inset var(--border-width-thick) 0 var(--color-info-ink), inset calc(-1 * var(--border-width-thick)) 0 var(--color-info-ink);
-}
-.pt-schedule .schedule-grid .is-today.is-selected {
-  background: var(--color-primary-tint);
-}
-.schedule-grid th.is-today strong, .schedule-grid .is-today .schedule-day-number {
-  display: inline-flex;
-  justify-content: center;
-  align-items: center;
-  padding: var(--space-1) var(--space-2);
-  border-radius: var(--radius-pill);
-  background: var(--color-primary);
-  color: var(--color-on-primary);
-}
-.pt-schedule .schedule-grid .day-selected-label {
-  display: none;
-}
-.pt-schedule .schedule-grid .is-selected .day-selected-label {
-  display: block;
-  color: var(--color-info-ink);
-}
-.schedule-day {
-  align-items: flex-start;
-  gap: var(--space-1);
-}
-.schedule-day-labels {
-  display: flex;
-  flex-direction: column;
-  gap: var(--space-1);
-  align-items: flex-end;
-}
-.schedule-grid .is-today .day-today-label {
-  color: var(--color-text);
-  font-weight: var(--font-weight-semibold);
-}
-.schedule-mobile-days button.is-today {
-  background: var(--color-primary-tint);
-  border-color: var(--color-primary);
-}
-.schedule-mobile-days button.is-today strong {
-  color: var(--color-primary-hover);
-}
-.schedule-mobile-days button.is-selected {
-  box-shadow: inset 0 0 0 var(--border-width-thick) var(--color-info-ink);
-}
-/* Không giảm opacity của cả thẻ: kết quả vẫn rõ và buổi cũ vẫn tương tác được. */
-.session-card.is-ended, .month-session.is-ended {
-  background: var(--color-bg);
-  border-color: var(--color-border);
-}
-.session-card.is-ended summary, .session-card.is-ended summary > strong, .month-session.is-ended > strong {
-  color: var(--color-text-soft);
-}
-.session-card.is-ended:hover, .session-card.is-ended:focus-within, .month-session.is-ended:hover, .month-session.is-ended:focus-visible {
-  background: var(--color-surface-muted);
-  border-color: var(--color-primary);
-}

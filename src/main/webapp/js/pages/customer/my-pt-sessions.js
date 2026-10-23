@@ -1,54 +1,59 @@
 "use strict";
+
 /*
- * BẢN HỌC — viết lại my-pt-sessions.js cho dễ đọc, CHẠY Y HỆT bản gốc.
- * JS ở màn Lịch tập CHỈ LO GIAO DIỆN: không lấy dữ liệu, không gọi server.
- * Dữ liệu chi tiết buổi đã được Service điền + JSP in sẵn (ẩn) trong từng thẻ buổi.
+ * LỊCH TẬP CỦA KHÁCH — my-pt-sessions.js
  *
- * 5 NHÓM HÀM:
- *   PHẦN 1. Dialog "Chi tiết buổi tập": bấm thẻ → mở, các cách đóng
- *   PHẦN 2. Nút "Sao chép số" PT
- *   PHẦN 3. Dãy nút chọn ngày trên mobile (ẩn/hiện cột)
- *   PHẦN 4. Mở đúng buổi từ deep link
- *   PHẦN 5. Khởi động: trang tải xong thì gắn sự kiện
+ * JS CHỈ LÀM 3 VIỆC (không lấy dữ liệu, không gọi server — mọi chữ đã có sẵn trong HTML):
+ *   1. Bấm thẻ buổi → mở hộp "Chi tiết buổi tập" (chép phần chi tiết đang ẩn trong thẻ vào hộp).
+ *   2. Nút "Sao chép số" PT.
+ *   3. Đến từ "Gói của tôi" (?session=…) → mở sẵn chi tiết buổi đó.
  *
- * Các id/thuộc tính JS dựa vào (do JSP in ra):
- *   #session-drawer          dialog dùng chung        (_session-drawer.jspf)
- *   #session-drawer-content  khung rỗng trong dialog  (_session-drawer.jspf)
- *   #session-copy-message    dòng báo đã sao chép     (_session-drawer.jspf)
- *   [data-session-detail]    1 thẻ buổi (details)     (_session-card.jspf)
- *   [data-session-content]   chi tiết ẩn trong thẻ    (_session-card.jspf)
- *   [data-copy-phone]        nút Sao chép số          (_session-detail.jspf)
- *   [data-day-index]         nút ngày mobile          (my-pt-sessions.jsp:94)
- *   [data-week-column]       ô/tiêu đề của 1 cột ngày (my-pt-sessions.jsp:115, :139)
+ * NHỮNG VIỆC KHÔNG CẦN JS:
+ *   - Đổi tuần / tháng, chọn ngày, "Hôm nay": đều là link hoặc form GET.
+ *   - Chọn ngày trên điện thoại: mỗi nút là link ?date=…, JSP đánh dấu cột cần hiện, CSS ẩn các cột khác.
+ *
+ * MỤC LỤC
+ *   NHÓM 1. Hộp chi tiết     initSessionDrawer, openSessionDrawer, closeWhenClickOutside, afterDrawerClosed
+ *   NHÓM 2. Sao chép số PT   copyPtPhone, showPhoneToCopyByHand
+ *   NHÓM 3. Mở sẵn 1 buổi    openFocusSession
  */
 
-// Nhớ thẻ vừa bấm để khi đóng dialog thì trả focus về đúng thẻ.
-let lastClickedCard = null;
+document.addEventListener("DOMContentLoaded", function () {
+    initSessionDrawer();
+    openFocusSession();   // chạy sau initSessionDrawer vì cần hộp đã gắn sự kiện
+});
+
 
 // ================================================================================================================
-// 1. DIALOG CHI TIẾT — initSessionDetails gắn sự kiện; các hàm mở / đóng nằm ngay dưới
+// NHÓM 1. HỘP CHI TIẾT
 // ================================================================================================================
 
-/** Gắn sự kiện cho dialog: bấm thẻ để mở + 3 cách đóng. */
-function initSessionDetails() {
-    const drawer = getDrawer();
-    if (drawer) {
-        // Mở: mọi thẻ buổi trên trang
-        const summaries = document.querySelectorAll("[data-session-detail] > summary");
-        for (const summary of summaries) {
-            summary.setAttribute("aria-haspopup", "dialog");
-            summary.addEventListener("click", openSessionDetail);
-        }
-        // Đóng cách 1: nút "Đóng" (type=button, không submit form)
-        drawer.querySelector("[data-close-session]").addEventListener("click", () => drawer.close());
-        // Đóng cách 2: bấm ra ngoài
-        drawer.addEventListener("click", (event) => closeWhenClickOutside(drawer, event));
-        // Đóng cách 3: phím Esc — <dialog> tự xử lý, không cần code
-        // Sau khi đóng (cả 3 cách)
-        drawer.addEventListener("close", afterDrawerClosed);
+const sessionDrawer = document.getElementById("session-drawer");             // <dialog> dùng chung (_session-drawer.jspf)
+const drawerContent = document.getElementById("session-drawer-content");     // vùng rỗng trong hộp
+const copyMessage = document.getElementById("session-copy-message");         // dòng báo "Đã sao chép"
+let lastCard = null;                                                         // thẻ vừa bấm → đóng hộp thì trả focus về đây
+
+// HÀM CHÍNH — gọi 1 lần khi trang tải xong (DOMContentLoaded ở đầu file).
+function initSessionDrawer() {
+    if (!sessionDrawer) {
+        return;   // lịch lỗi → không có hộp; thẻ <details> vẫn tự xổ như HTML thường
     }
-    // Nút Sao chép số (Phần 2) — gắn ở document vì nút nằm trong nội dung VỪA chép vào dialog
-    document.addEventListener("click", (event) => {
+
+    // B1: mọi thẻ buổi — bấm phần nhìn thấy (summary) thì mở hộp.
+    document.querySelectorAll("[data-session-detail] > summary").forEach(function (summary) {
+        summary.setAttribute("aria-haspopup", "dialog");
+        summary.addEventListener("click", openSessionDrawer);
+    });
+
+    // B2: 3 cách đóng — nút Đóng, bấm ra vùng tối bên ngoài, phím Esc (<dialog> tự lo).
+    sessionDrawer.querySelector("[data-close-session]").addEventListener("click", function () {
+        sessionDrawer.close();
+    });
+    sessionDrawer.addEventListener("click", closeWhenClickOutside);
+    sessionDrawer.addEventListener("close", afterDrawerClosed);
+
+    // B3: nút "Sao chép số" nằm trong nội dung VỪA chép vào hộp → bắt click ở document (lúc này nút chưa tồn tại).
+    document.addEventListener("click", function (event) {
         const button = event.target.closest("[data-copy-phone]");
         if (button) {
             copyPtPhone(button);
@@ -56,92 +61,70 @@ function initSessionDetails() {
     });
 }
 
-/** SỰ KIỆN: bấm vào phần nhìn thấy của thẻ buổi (summary). */
-function openSessionDetail(event) {
-    const drawer = getDrawer();
-    if (!drawer) {
-        return;                                // không có dialog → để <details> tự xổ như HTML thường
-    }
-    const summary = event.currentTarget;       // phần vừa bấm
-    const card = summary.parentElement;        // cả thẻ buổi <details>
+// HÀM PHỤ — gọi ở B1 của initSessionDrawer, mỗi lần khách bấm 1 thẻ buổi.
+function openSessionDrawer(event) {
+    const summary = event.currentTarget;
+    const card = summary.parentElement;                                       // cả thẻ <details>
 
-    event.preventDefault();                    // B1: không cho <details> xổ ngay trong ô lịch
-    copyDetailIntoDrawer(card);                // B2: đổ chi tiết buổi này vào dialog
+    // B1: không cho <details> xổ ngay trong ô lịch.
+    event.preventDefault();
 
-    lastClickedCard = summary;                 // B3: nhớ thẻ để trả focus khi đóng
+    // B2: chép bản sao phần chi tiết đang ẩn trong thẻ vào hộp (replaceChildren = xóa nội dung cũ rồi đặt mới).
+    drawerContent.replaceChildren(card.querySelector("[data-session-content]").cloneNode(true));
+    copyMessage.textContent = "";
+
+    // B3: nhớ thẻ để trả focus, mở hộp, cuộn nội dung lên đầu, khóa cuộn trang phía sau.
+    lastCard = summary;
     summary.setAttribute("aria-expanded", "true");
-
-    drawer.showModal();                        // B4: mở dialog
-    drawer.querySelector(".session-drawer-body").scrollTop = 0;   // cuộn nội dung lên đầu
-    document.body.classList.add("session-detail-open");          // CSS khóa cuộn trang nền
+    sessionDrawer.showModal();
+    sessionDrawer.querySelector(".session-drawer-body").scrollTop = 0;
+    document.body.classList.add("session-detail-open");
 }
 
-/** Lấy dialog dùng chung. Trả null nếu trình duyệt quá cũ không hỗ trợ <dialog>. */
-function getDrawer() {
-    const drawer = document.getElementById("session-drawer");
-    if (!drawer || typeof drawer.showModal !== "function") {
-        return null;
-    }
-    return drawer;
-}
-
-/** Chép khối chi tiết (đang ẩn trong thẻ) vào khung rỗng của dialog. */
-function copyDetailIntoDrawer(card) {
-    const hiddenDetail = card.querySelector("[data-session-content]");   // nguồn: chi tiết ẩn
-    const drawerBox = document.getElementById("session-drawer-content"); // đích: khung rỗng
-    drawerBox.replaceChildren(hiddenDetail.cloneNode(true));              // xóa cũ, đặt bản sao
-    document.getElementById("session-copy-message").textContent = "";    // xóa thông báo cũ
-}
-
-/** Bấm ra ngoài khung dialog (vùng nền mờ) thì đóng. Bấm/chọn chữ bên trong thì không. */
-function closeWhenClickOutside(drawer, event) {
-    const box = drawer.getBoundingClientRect();
+// HÀM PHỤ — gọi ở B2 của initSessionDrawer. Bấm vào vùng tối ngoài khung thì đóng; bấm / bôi chữ bên trong thì không.
+function closeWhenClickOutside(event) {
+    const box = sessionDrawer.getBoundingClientRect();
     const outside = event.clientX < box.left || event.clientX > box.right
             || event.clientY < box.top || event.clientY > box.bottom;
-    if (event.target === drawer && outside) {
-        drawer.close();
+    if (event.target === sessionDrawer && outside) {
+        sessionDrawer.close();
     }
 }
 
-/** Chạy sau MỌI cách đóng (nút Đóng, bấm ngoài, phím Esc): trả lại trang như cũ. */
+// HÀM PHỤ — gọi ở B2 của initSessionDrawer, sau MỌI cách đóng: trả trang về như cũ.
 function afterDrawerClosed() {
-    document.body.classList.remove("session-detail-open");       // mở lại cuộn trang
-    if (lastClickedCard) {
-        lastClickedCard.setAttribute("aria-expanded", "false");
-        lastClickedCard.focus({ preventScroll: true });           // con trỏ về thẻ vừa bấm
+    document.body.classList.remove("session-detail-open");
+    if (lastCard) {
+        lastCard.setAttribute("aria-expanded", "false");
+        lastCard.focus({ preventScroll: true });
     }
 }
 
+
 // ================================================================================================================
-// 2. SAO CHÉP SỐ PT — copyPtPhone gọi các hàm báo kết quả và cách chép dự phòng ngay dưới
+// NHÓM 2. SAO CHÉP SỐ PT
 // ================================================================================================================
 
-/** SỰ KIỆN: bấm "Sao chép số". SĐT lấy từ data-copy-phone do JSP in. */
+// HÀM CHÍNH — gọi ở B3 của initSessionDrawer khi bấm nút có data-copy-phone (SĐT do JSP in vào thuộc tính).
 async function copyPtPhone(button) {
     const phone = button.dataset.copyPhone;
     try {
-        await navigator.clipboard.writeText(phone);          // cách chính: Clipboard API
+        // B1: cách chính — Clipboard API.
+        await navigator.clipboard.writeText(phone);
         button.textContent = "Đã sao chép";
-        showCopyMessage("Đã sao chép số điện thoại PT.");
+        copyMessage.textContent = "Đã sao chép số điện thoại PT.";
     } catch (error) {
-        showPhoneForManualCopy(button, phone);               // dự phòng: KHÔNG báo thành công giả
+        // B2: trình duyệt chặn → hiện ô chứa số, bôi đen sẵn để khách tự Ctrl+C. Không báo "thành công" giả.
+        showPhoneToCopyByHand(button, phone);
         button.textContent = "Chọn số để sao chép";
-        showCopyMessage("Trình duyệt chưa cho phép sao chép. Nhấn Ctrl+C hoặc giữ số để sao chép.");
+        copyMessage.textContent = "Trình duyệt chưa cho phép sao chép. Nhấn Ctrl+C hoặc giữ số để sao chép.";
     }
 }
 
-/** Ghi 1 dòng thông báo trong dialog (chỉ khi dialog đang mở). */
-function showCopyMessage(text) {
-    const drawer = document.getElementById("session-drawer");
-    if (drawer.open) {
-        document.getElementById("session-copy-message").textContent = text;
-    }
-}
-
-/** Trình duyệt chặn clipboard → hiện ô chứa SĐT, bôi đen sẵn để khách tự Ctrl+C. */
-function showPhoneForManualCopy(button, phone) {
+// HÀM PHỤ — gọi ở B2 của copyPtPhone. Tạo ô chữ 1 lần, các lần sau dùng lại.
+function showPhoneToCopyByHand(button, phone) {
     let input = button.parentElement.querySelector("[data-phone-fallback]");
-    if (!input) {                               // chưa có ô thì tạo 1 lần
+    if (!input) {
         input = document.createElement("input");
         input.type = "text";
         input.readOnly = true;
@@ -151,107 +134,30 @@ function showPhoneForManualCopy(button, phone) {
     }
     input.value = phone;
     input.focus();
-    input.select();                             // bôi đen số
+    input.select();
 }
+
 
 // ================================================================================================================
-// 3. CHỌN NGÀY MOBILE — initScheduleDays gọi selectScheduleDay và các hàm đổi cột ngay dưới
+// NHÓM 3. MỞ SẴN 1 BUỔI (đến từ "Gói của tôi" hoặc bấm 1 buổi ở lịch tháng: URL có ?session=…)
 // ================================================================================================================
 
-/** Khởi tạo dãy 7 nút ngày (chỉ có ở lịch TUẦN). Cột mặc định: ngày URL chọn → hôm nay → Thứ 2. */
-function initScheduleDays() {
-    const dayPicker = document.querySelector(".schedule-mobile-days");
-    if (!dayPicker) {
-        return;                                  // đang xem Tháng → không có dãy nút
-    }
-    const buttons = dayPicker.querySelectorAll("[data-day-index]");
-    const requestedDate = dayPicker.dataset.selectedDate;   // selectedDate do Servlet đặt
-
-    let todayButton = null;
-    let requestedButton = null;
-    for (const button of buttons) {
-        if (button.dataset.today === "true") todayButton = button;
-        if (button.dataset.dayDate === requestedDate) requestedButton = button;
-        button.addEventListener("click", () => selectScheduleDay(button, true));
-    }
-
-    const defaultButton = requestedButton || todayButton || buttons[0];
-    selectScheduleDay(defaultButton, Boolean(requestedDate));
-
-    dayPicker.hidden = false;                    // có JS mới hiện dãy nút
-    document.querySelector(".pt-schedule").classList.add("has-day-picker");   // CSS: 1 cột trên mobile
-}
-
-/**
- * Chọn 1 ngày. highlight = true khi NGƯỜI DÙNG bấm (tô viền "Đang chọn"),
- * false khi chỉ đặt cột mặc định lúc mở trang.
- */
-function selectScheduleDay(button, highlight) {
-    markDayButton(button, highlight);
-    showOnlyColumn(button.dataset.dayIndex, highlight);
-    if (highlight) {
-        rememberDateInLinks(button.dataset.dayDate);
-    }
-}
-
-/** Đánh dấu nút ngày được chọn trong dãy 7 nút. */
-function markDayButton(chosenButton, highlight) {
-    for (const button of document.querySelectorAll("[data-day-index]")) {
-        const isChosen = button === chosenButton;
-        button.setAttribute("aria-pressed", String(isChosen));
-        button.classList.toggle("is-selected", highlight && isChosen);
-    }
-}
-
-/** Chỉ hiện cột của ngày được chọn (CSS ẩn các cột không có is-mobile-day). */
-function showOnlyColumn(dayIndex, highlight) {
-    for (const column of document.querySelectorAll("[data-week-column]")) {
-        const isThisDay = column.dataset.weekColumn === dayIndex;
-        column.classList.toggle("is-mobile-day", isThisDay);
-        column.classList.toggle("is-selected", highlight && isThisDay);
-    }
-}
-
-/** Ghi ngày vừa chọn vào ô "Chọn ngày" và 2 link Tuần/Tháng (để chuyển cách xem giữ đúng ngày). */
-function rememberDateInLinks(date) {
-    document.getElementById("schedule-date").value = date;
-    for (const link of document.querySelectorAll(".schedule-switch a")) {
-        const url = new URL(link.href);
-        url.searchParams.set("date", date);
-        link.href = url.href;
-    }
-}
-
-// ================================================================================================================
-// 4. MỞ ĐÚNG BUỔI TỪ LINK — initFocusSession dùng dialog đã khởi tạo ở nhóm 1
-// ================================================================================================================
-
-/**
- * Đến từ "Gói của tôi" (?session=): tô viền buổi đó, cuộn tới và mở sẵn chi tiết.
- * Buổi không có trong tuần đang xem thì bỏ qua (ngày vẫn được tô nhờ ?date=).
- */
-function initFocusSession() {
-    // B1: mã buổi do JSP gắn trên main; không có thì thôi
-    const main = document.getElementById("main-content");
-    const sessionId = main ? main.dataset.focusSession : "";
+// HÀM CHÍNH — gọi 1 lần khi trang tải xong, SAU initSessionDrawer.
+function openFocusSession() {
+    // B1: mã buổi do JSP gắn trên <main data-focus-session="…">; không có thì thôi.
+    const sessionId = document.getElementById("main-content").dataset.focusSession;
     if (!sessionId) {
         return;
     }
-    // B2: tìm thẻ buổi, tô viền, cuộn vào giữa màn hình
+
+    // B2: tìm thẻ buổi trong tuần đang xem. Không thấy (buổi ở tuần khác / không phải của mình) → bỏ qua.
     const card = document.querySelector('[data-session-detail][data-session-id="' + CSS.escape(sessionId) + '"]');
     if (!card) {
         return;
     }
+
+    // B3: tô viền thẻ, cuộn tới giữa màn hình, rồi "bấm" giúp để mở hộp chi tiết.
     card.classList.add("is-focus");
-    card.scrollIntoView({ block: "center", behavior: "auto" });
-    // B3: mở chi tiết như khi khách bấm thẻ (openSessionDetail đã được nối ở initSessionDetails)
+    card.scrollIntoView({ block: "center" });
     card.querySelector("summary").click();
 }
-
-// ================================================================================================================
-// 5. KHỞI ĐỘNG — giữ thứ tự dialog → chọn ngày → mở buổi từ deep link
-// ================================================================================================================
-
-document.addEventListener("DOMContentLoaded", initSessionDetails);
-document.addEventListener("DOMContentLoaded", initScheduleDays);
-document.addEventListener("DOMContentLoaded", initFocusSession);
