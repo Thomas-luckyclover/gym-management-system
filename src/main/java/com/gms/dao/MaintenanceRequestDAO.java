@@ -84,9 +84,9 @@ public class MaintenanceRequestDAO {
     ) throws SQLException {
 
         String sql = "INSERT INTO MaintenanceRequests "
-                + "(RequestCode, FacilityId, ReportedByEmployeeId, Priority, "
-                + "WarningTagPlaced, Description, Status) "
-                + "VALUES (?, ?, ?, ?, ?, ?, ?)";
+                + "(RequestCode, EquipmentItemId, ReportedByEmployeeId, Priority, "
+                + "IncidentType, DetectedBy, WarningTagPlaced, Description, AttachedImages, Status) "
+                + "VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?)";
 
         try (PreparedStatement statement = connection.prepareStatement(
                 sql,
@@ -94,12 +94,15 @@ public class MaintenanceRequestDAO {
         )) {
 
             statement.setString(1, request.getRequestCode());
-            statement.setInt(2, request.getFacilityId());
+            statement.setInt(2, request.getEquipmentItemId());
             statement.setInt(3, request.getReportedByEmployeeId());
             statement.setString(4, request.getPriority().getDbValue());
-            statement.setBoolean(5, request.isWarningTagPlaced());
-            statement.setString(6, request.getDescription());
-            statement.setString(7, MaintenanceRequest.Status.OPEN.getDbValue());
+            statement.setString(5, request.getIncidentType() != null ? request.getIncidentType().getDbValue() : MaintenanceRequest.IncidentType.NOT_WORKING.getDbValue());
+            statement.setString(6, request.getDetectedBy() != null ? request.getDetectedBy().getDbValue() : MaintenanceRequest.DetectedBy.RECEPTIONIST.getDbValue());
+            statement.setBoolean(7, request.isWarningTagPlaced());
+            statement.setString(8, request.getDescription());
+            statement.setString(9, request.getAttachedImages());
+            statement.setString(10, MaintenanceRequest.Status.OPEN.getDbValue());
 
             statement.executeUpdate();
 
@@ -134,13 +137,14 @@ public class MaintenanceRequestDAO {
             int requestId
     ) throws SQLException {
 
-        String sql = "SELECT MaintenanceRequestId, RequestCode, FacilityId, "
-                + "ReportedByEmployeeId, ReviewedByEmployeeId, ClosedByEmployeeId, "
-                + "Priority, WarningTagPlaced, Description, Status, "
-                + "SetUnderMaintenance, RejectReason, AcceptanceNote, "
-                + "ReportedAt, ReviewedAt, ClosedAt "
-                + "FROM MaintenanceRequests WITH (UPDLOCK, HOLDLOCK) "
-                + "WHERE MaintenanceRequestId = ?";
+        String sql = "SELECT mr.MaintenanceRequestId, mr.RequestCode, mr.EquipmentItemId, "
+                + "mr.ReportedByEmployeeId, mr.ReviewedByEmployeeId, mr.ClosedByEmployeeId, "
+                + "mr.Priority, mr.IncidentType, mr.DetectedBy, mr.WarningTagPlaced, mr.Description, "
+                + "mr.AttachedImages, mr.Status, mr.SetUnderMaintenance, mr.RejectReason, mr.AcceptanceNote, "
+                + "mr.ReportedAt, mr.ReviewedAt, mr.ClosedAt, ei.FacilityId "
+                + "FROM MaintenanceRequests mr WITH (UPDLOCK, HOLDLOCK) "
+                + "JOIN EquipmentItems ei ON ei.EquipmentItemId = mr.EquipmentItemId "
+                + "WHERE mr.MaintenanceRequestId = ?";
 
         try (PreparedStatement statement = connection.prepareStatement(sql)) {
             statement.setInt(1, requestId);
@@ -260,7 +264,8 @@ public class MaintenanceRequestDAO {
         StringBuilder sql = new StringBuilder(
                 "SELECT COUNT(*) "
                         + "FROM MaintenanceRequests mr "
-                        + "JOIN Facilities f ON f.FacilityId = mr.FacilityId "
+                        + "JOIN EquipmentItems ei ON ei.EquipmentItemId = mr.EquipmentItemId "
+                        + "JOIN Facilities f ON f.FacilityId = ei.FacilityId "
                         + "JOIN Employees re ON re.EmployeeId = mr.ReportedByEmployeeId "
                         + "JOIN Persons reporter ON reporter.PersonId = re.PersonId "
                         + "WHERE 1 = 1 "
@@ -367,7 +372,7 @@ public class MaintenanceRequestDAO {
      * @param connection          transactional connection
      * @param requestId           ID of the request to approve
      * @param managerEmployeeId   employee ID of the reviewing manager
-     * @param setUnderMaintenance whether the manager flagged the facility for UnderMaintenance
+     * @param setUnderMaintenance whether the manager flagged the equipment item for UnderMaintenance
      * @return true if successfully approved, false otherwise
      */
     public boolean approve(
@@ -463,24 +468,24 @@ public class MaintenanceRequestDAO {
     }
 
     /**
-     * Checks if there are any remaining InProgress maintenance requests for a given facility.
+     * Checks if there are any remaining InProgress maintenance requests for a given individual equipment item.
      *
-     * <p><b>Facility Recovery Logic:</b> When a receptionist closes an InProgress request, the system must
-     * verify whether any OTHER ongoing requests exist for the same facility before restoring the facility's
-     * status to 'Available'. If this query returns true, the facility must remain 'UnderMaintenance'.</p>
+     * <p><b>Equipment Item Recovery Logic:</b> When closing an InProgress request, the system verifies
+     * whether any OTHER ongoing requests exist for the same individual machine before restoring its
+     * status to 'Available'. If this query returns true, the machine remains 'UnderMaintenance'.</p>
      */
     public boolean hasInProgressRequest(
             Connection connection,
-            int facilityId
+            int equipmentItemId
     ) throws SQLException {
 
         String sql = "SELECT TOP 1 1 "
                 + "FROM MaintenanceRequests "
-                + "WHERE FacilityId = ? "
+                + "WHERE EquipmentItemId = ? "
                 + "AND Status = ?";
 
         try (PreparedStatement statement = connection.prepareStatement(sql)) {
-            statement.setInt(1, facilityId);
+            statement.setInt(1, equipmentItemId);
             statement.setString(2, MaintenanceRequest.Status.IN_PROGRESS.getDbValue());
 
             try (ResultSet resultSet = statement.executeQuery()) {
@@ -493,17 +498,18 @@ public class MaintenanceRequestDAO {
 
     private String buildViewSelect() {
         return "SELECT "
-                + "mr.MaintenanceRequestId, mr.RequestCode, mr.FacilityId, "
+                + "mr.MaintenanceRequestId, mr.RequestCode, mr.EquipmentItemId, "
                 + "mr.ReportedByEmployeeId, mr.ReviewedByEmployeeId, mr.ClosedByEmployeeId, "
-                + "mr.Priority, mr.WarningTagPlaced, mr.Description, mr.Status, "
-                + "mr.SetUnderMaintenance, mr.RejectReason, mr.AcceptanceNote, "
+                + "mr.Priority, mr.IncidentType, mr.DetectedBy, mr.WarningTagPlaced, mr.Description, "
+                + "mr.AttachedImages, mr.Status, mr.SetUnderMaintenance, mr.RejectReason, mr.AcceptanceNote, "
                 + "mr.ReportedAt, mr.ReviewedAt, mr.ClosedAt, "
-                + "f.FacilityName, f.Location AS FacilityLocation, "
+                + "ei.ItemCode, f.FacilityId, f.FacilityName, f.Location AS FacilityLocation, "
                 + "reporter.FullName AS ReporterName, "
                 + "reviewer.FullName AS ReviewerName, "
                 + "closer.FullName AS CloserName "
                 + "FROM MaintenanceRequests mr "
-                + "JOIN Facilities f ON f.FacilityId = mr.FacilityId "
+                + "JOIN EquipmentItems ei ON ei.EquipmentItemId = mr.EquipmentItemId "
+                + "JOIN Facilities f ON f.FacilityId = ei.FacilityId "
                 + "JOIN Employees re ON re.EmployeeId = mr.ReportedByEmployeeId "
                 + "JOIN Persons reporter ON reporter.PersonId = re.PersonId "
                 + "LEFT JOIN Employees rv ON rv.EmployeeId = mr.ReviewedByEmployeeId "
@@ -524,6 +530,7 @@ public class MaintenanceRequestDAO {
         if (keyword != null && !keyword.isBlank()) {
             sql.append("AND ("
                     + "mr.RequestCode COLLATE Latin1_General_100_CI_AI LIKE ? "
+                    + "OR ei.ItemCode COLLATE Latin1_General_100_CI_AI LIKE ? "
                     + "OR f.FacilityName COLLATE Latin1_General_100_CI_AI LIKE ? "
                     + "OR f.Location COLLATE Latin1_General_100_CI_AI LIKE ? "
                     + "OR mr.Description COLLATE Latin1_General_100_CI_AI LIKE ? "
@@ -531,6 +538,7 @@ public class MaintenanceRequestDAO {
                     + ") ");
 
             String likeKeyword = "%" + keyword.trim() + "%";
+            parameters.add(likeKeyword);
             parameters.add(likeKeyword);
             parameters.add(likeKeyword);
             parameters.add(likeKeyword);
@@ -616,11 +624,13 @@ public class MaintenanceRequestDAO {
      * @throws SQLException if a query error occurs
      */
     public List<UnfinishedRequestSummary> findUnfinishedByFacilityId(int facilityId) throws SQLException {
-        String sql = "SELECT mr.MaintenanceRequestId, mr.RequestCode, mr.FacilityId, "
-                + "mr.Status, mr.Priority, mr.Description, mr.ReportedAt, f.FacilityName "
+        String sql = "SELECT mr.MaintenanceRequestId, mr.RequestCode, mr.EquipmentItemId, "
+                + "ei.ItemCode, f.FacilityId, f.FacilityName, "
+                + "mr.Status, mr.Priority, mr.Description, mr.ReportedAt "
                 + "FROM MaintenanceRequests mr "
-                + "JOIN Facilities f ON f.FacilityId = mr.FacilityId "
-                + "WHERE mr.FacilityId = ? AND mr.Status IN ('Open', 'InProgress') "
+                + "JOIN EquipmentItems ei ON ei.EquipmentItemId = mr.EquipmentItemId "
+                + "JOIN Facilities f ON f.FacilityId = ei.FacilityId "
+                + "WHERE f.FacilityId = ? AND mr.Status IN ('Open', 'InProgress') "
                 + "ORDER BY CASE mr.Status WHEN 'Open' THEN 0 ELSE 1 END, mr.ReportedAt DESC";
 
         List<UnfinishedRequestSummary> list = new ArrayList<>();
@@ -639,20 +649,18 @@ public class MaintenanceRequestDAO {
     /**
      * Retrieves all unfinished maintenance requests across all facilities, grouped by FacilityId in a Map.
      *
-     * <p><b>Performance Rationale:</b> Fetches all active requests in a single round-trip query and groups them
-     * into a JSON-serializable Map. The JSP view embeds this data client-side, allowing instantaneous,
-     * zero-latency warning banner updates whenever the user changes the facility dropdown, avoiding AJAX calls.</p>
-     *
      * @return Map where key is FacilityId and value is the list of active UnfinishedRequestSummary objects
      * @throws SQLException if a query error occurs
      */
     public Map<Integer, List<UnfinishedRequestSummary>> findUnfinishedRequestsMap() throws SQLException {
-        String sql = "SELECT mr.MaintenanceRequestId, mr.RequestCode, mr.FacilityId, "
-                + "mr.Status, mr.Priority, mr.Description, mr.ReportedAt, f.FacilityName "
+        String sql = "SELECT mr.MaintenanceRequestId, mr.RequestCode, mr.EquipmentItemId, "
+                + "ei.ItemCode, f.FacilityId, f.FacilityName, "
+                + "mr.Status, mr.Priority, mr.Description, mr.ReportedAt "
                 + "FROM MaintenanceRequests mr "
-                + "JOIN Facilities f ON f.FacilityId = mr.FacilityId "
+                + "JOIN EquipmentItems ei ON ei.EquipmentItemId = mr.EquipmentItemId "
+                + "JOIN Facilities f ON f.FacilityId = ei.FacilityId "
                 + "WHERE mr.Status IN ('Open', 'InProgress') "
-                + "ORDER BY mr.FacilityId, CASE mr.Status WHEN 'Open' THEN 0 ELSE 1 END, mr.ReportedAt DESC";
+                + "ORDER BY f.FacilityId, CASE mr.Status WHEN 'Open' THEN 0 ELSE 1 END, mr.ReportedAt DESC";
 
         Map<Integer, List<UnfinishedRequestSummary>> map = new LinkedHashMap<>();
         try (Connection connection = DBContext.getConnection();
@@ -667,12 +675,32 @@ public class MaintenanceRequestDAO {
     }
 
     /**
+     * Counts active unfinished requests for an individual equipment item.
+     */
+    public int countUnfinishedByEquipmentItem(Connection connection, int equipmentItemId) throws SQLException {
+        String sql = "SELECT COUNT(*) "
+                + "FROM MaintenanceRequests "
+                + "WHERE EquipmentItemId = ? AND Status IN ('Open', 'InProgress')";
+
+        try (PreparedStatement statement = connection.prepareStatement(sql)) {
+            statement.setInt(1, equipmentItemId);
+            try (ResultSet rs = statement.executeQuery()) {
+                if (rs.next()) {
+                    return rs.getInt(1);
+                }
+            }
+        }
+        return 0;
+    }
+
+    /**
      * Counts active unfinished requests for a facility within a transaction connection.
      */
     public int countUnfinishedByFacility(Connection connection, int facilityId) throws SQLException {
         String sql = "SELECT COUNT(*) "
-                + "FROM MaintenanceRequests "
-                + "WHERE FacilityId = ? AND Status IN ('Open', 'InProgress')";
+                + "FROM MaintenanceRequests mr "
+                + "JOIN EquipmentItems ei ON ei.EquipmentItemId = mr.EquipmentItemId "
+                + "WHERE ei.FacilityId = ? AND mr.Status IN ('Open', 'InProgress')";
 
         try (PreparedStatement statement = connection.prepareStatement(sql)) {
             statement.setInt(1, facilityId);
@@ -693,6 +721,8 @@ public class MaintenanceRequestDAO {
         return new UnfinishedRequestSummary(
                 rs.getInt("MaintenanceRequestId"),
                 rs.getString("RequestCode"),
+                rs.getInt("EquipmentItemId"),
+                rs.getString("ItemCode"),
                 rs.getInt("FacilityId"),
                 rs.getString("FacilityName"),
                 rs.getString("Status"),
@@ -711,7 +741,10 @@ public class MaintenanceRequestDAO {
 
         request.setMaintenanceRequestId(resultSet.getInt("MaintenanceRequestId"));
         request.setRequestCode(resultSet.getString("RequestCode"));
-        request.setFacilityId(resultSet.getInt("FacilityId"));
+        request.setEquipmentItemId(resultSet.getInt("EquipmentItemId"));
+        if (hasColumn(resultSet, "FacilityId")) {
+            request.setFacilityId(resultSet.getInt("FacilityId"));
+        }
         request.setReportedByEmployeeId(resultSet.getInt("ReportedByEmployeeId"));
 
         int reviewedBy = resultSet.getInt("ReviewedByEmployeeId");
@@ -726,8 +759,21 @@ public class MaintenanceRequestDAO {
                 )
         );
 
+        request.setIncidentType(
+                MaintenanceRequest.IncidentType.fromDbValue(
+                        resultSet.getString("IncidentType")
+                )
+        );
+
+        request.setDetectedBy(
+                MaintenanceRequest.DetectedBy.fromDbValue(
+                        resultSet.getString("DetectedBy")
+                )
+        );
+
         request.setWarningTagPlaced(resultSet.getBoolean("WarningTagPlaced"));
         request.setDescription(resultSet.getString("Description"));
+        request.setAttachedImages(resultSet.getString("AttachedImages"));
 
         request.setStatus(
                 MaintenanceRequest.Status.fromDbValue(
@@ -765,11 +811,22 @@ public class MaintenanceRequestDAO {
         return request;
     }
 
+    private boolean hasColumn(ResultSet rs, String columnName) {
+        try {
+            rs.findColumn(columnName);
+            return true;
+        } catch (SQLException ignored) {
+            return false;
+        }
+    }
+
     private MaintenanceRequestView mapResultSetToView(ResultSet resultSet)
             throws SQLException {
 
         return new MaintenanceRequestView(
                 mapResultSetToRequest(resultSet),
+                resultSet.getString("ItemCode"),
+                resultSet.getInt("FacilityId"),
                 resultSet.getString("FacilityName"),
                 resultSet.getString("FacilityLocation"),
                 resultSet.getString("ReporterName"),
@@ -784,6 +841,8 @@ public class MaintenanceRequestDAO {
     public static class MaintenanceRequestView {
 
         private final MaintenanceRequest request;
+        private final String itemCode;
+        private final int facilityId;
         private final String facilityName;
         private final String facilityLocation;
         private final String reporterName;
@@ -792,6 +851,8 @@ public class MaintenanceRequestDAO {
 
         public MaintenanceRequestView(
                 MaintenanceRequest request,
+                String itemCode,
+                int facilityId,
                 String facilityName,
                 String facilityLocation,
                 String reporterName,
@@ -799,6 +860,8 @@ public class MaintenanceRequestDAO {
                 String closerName
         ) {
             this.request = request;
+            this.itemCode = itemCode;
+            this.facilityId = facilityId;
             this.facilityName = facilityName;
             this.facilityLocation = facilityLocation;
             this.reporterName = reporterName;
@@ -808,6 +871,14 @@ public class MaintenanceRequestDAO {
 
         public MaintenanceRequest getRequest() {
             return request;
+        }
+
+        public String getItemCode() {
+            return itemCode;
+        }
+
+        public int getFacilityId() {
+            return facilityId;
         }
 
         public String getFacilityName() {
@@ -834,15 +905,13 @@ public class MaintenanceRequestDAO {
     /**
      * Data Transfer Object (DTO) / Projection: Represents a lightweight summary of an active
      * (Open or InProgress) maintenance request for UI warning banners and cross-linking.
-     *
-     * <p><b>Purpose:</b> Instead of sending full entity models with unneeded foreign key associations,
-     * this immutable projection encapsulates only the data required to warn the receptionist about existing
-     * pending work on a selected facility, including status/priority display names and timestamps.</p>
      */
     public static class UnfinishedRequestSummary {
 
         private final int maintenanceRequestId;
         private final String requestCode;
+        private final int equipmentItemId;
+        private final String itemCode;
         private final int facilityId;
         private final String facilityName;
         private final String status;
@@ -855,6 +924,8 @@ public class MaintenanceRequestDAO {
         public UnfinishedRequestSummary(
                 int maintenanceRequestId,
                 String requestCode,
+                int equipmentItemId,
+                String itemCode,
                 int facilityId,
                 String facilityName,
                 String status,
@@ -866,6 +937,8 @@ public class MaintenanceRequestDAO {
         ) {
             this.maintenanceRequestId = maintenanceRequestId;
             this.requestCode = requestCode;
+            this.equipmentItemId = equipmentItemId;
+            this.itemCode = itemCode;
             this.facilityId = facilityId;
             this.facilityName = facilityName;
             this.status = status;
@@ -882,6 +955,14 @@ public class MaintenanceRequestDAO {
 
         public String getRequestCode() {
             return requestCode;
+        }
+
+        public int getEquipmentItemId() {
+            return equipmentItemId;
+        }
+
+        public String getItemCode() {
+            return itemCode;
         }
 
         public int getFacilityId() {

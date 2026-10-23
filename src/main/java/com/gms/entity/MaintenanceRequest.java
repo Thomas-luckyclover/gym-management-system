@@ -9,13 +9,17 @@ public class MaintenanceRequest {
 
     private int maintenanceRequestId;
     private String requestCode;
-    private int facilityId;
+    private int equipmentItemId;
+    private int facilityId; // Thuộc tính dẫn xuất qua EquipmentItem để tiện hiển thị
     private int reportedByEmployeeId;
     private Integer reviewedByEmployeeId;
     private Integer closedByEmployeeId;
     private Priority priority;
+    private IncidentType incidentType = IncidentType.NOT_WORKING;
+    private DetectedBy detectedBy = DetectedBy.RECEPTIONIST;
     private boolean warningTagPlaced;
     private String description;
+    private String attachedImages;
     private Status status;
     private Boolean setUnderMaintenance;
     private String rejectReason;
@@ -41,6 +45,14 @@ public class MaintenanceRequest {
 
     public void setRequestCode(String requestCode) {
         this.requestCode = requestCode;
+    }
+
+    public int getEquipmentItemId() {
+        return equipmentItemId;
+    }
+
+    public void setEquipmentItemId(int equipmentItemId) {
+        this.equipmentItemId = equipmentItemId;
     }
 
     public int getFacilityId() {
@@ -83,6 +95,22 @@ public class MaintenanceRequest {
         this.priority = priority;
     }
 
+    public IncidentType getIncidentType() {
+        return incidentType;
+    }
+
+    public void setIncidentType(IncidentType incidentType) {
+        this.incidentType = incidentType != null ? incidentType : IncidentType.NOT_WORKING;
+    }
+
+    public DetectedBy getDetectedBy() {
+        return detectedBy;
+    }
+
+    public void setDetectedBy(DetectedBy detectedBy) {
+        this.detectedBy = detectedBy != null ? detectedBy : DetectedBy.RECEPTIONIST;
+    }
+
     public boolean isWarningTagPlaced() {
         return warningTagPlaced;
     }
@@ -97,6 +125,14 @@ public class MaintenanceRequest {
 
     public void setDescription(String description) {
         this.description = description;
+    }
+
+    public String getAttachedImages() {
+        return attachedImages;
+    }
+
+    public void setAttachedImages(String attachedImages) {
+        this.attachedImages = attachedImages;
     }
 
     public Status getStatus() {
@@ -172,7 +208,6 @@ public class MaintenanceRequest {
     }
 
     public enum Priority {
-
         URGENT("Urgent", "Khẩn"),
         NORMAL("Normal", "Thường"),
         LOW("Low", "Thấp");
@@ -194,22 +229,84 @@ public class MaintenanceRequest {
         }
 
         public static Priority fromDbValue(String dbValue) {
-            if (dbValue == null) {
-                return null;
-            }
-
+            if (dbValue == null) return null;
             for (Priority priority : values()) {
                 if (priority.dbValue.equalsIgnoreCase(dbValue)) {
                     return priority;
                 }
             }
-
             return null;
         }
     }
 
-    public enum Status {
+    public enum IncidentType {
+        NOT_WORKING("NotWorking", "Không hoạt động"),
+        STRANGE_NOISE("StrangeNoise", "Kêu / rung lạ"),
+        BROKEN_OR_WORN("BrokenOrWorn", "Gãy vỡ, hao mòn"),
+        SAFETY_HAZARD("SafetyHazard", "Mất an toàn"),
+        HYGIENE("Hygiene", "Vệ sinh");
 
+        private final String dbValue;
+        private final String displayName;
+
+        IncidentType(String dbValue, String displayName) {
+            this.dbValue = dbValue;
+            this.displayName = displayName;
+        }
+
+        public String getDbValue() {
+            return dbValue;
+        }
+
+        public String getDisplayName() {
+            return displayName;
+        }
+
+        public static IncidentType fromDbValue(String dbValue) {
+            if (dbValue == null) return NOT_WORKING;
+            for (IncidentType type : values()) {
+                if (type.dbValue.equalsIgnoreCase(dbValue)) {
+                    return type;
+                }
+            }
+            return NOT_WORKING;
+        }
+    }
+
+    public enum DetectedBy {
+        RECEPTIONIST("Receptionist", "Lễ tân tự phát hiện"),
+        CUSTOMER("Customer", "Khách hàng báo"),
+        TECHNICIAN("Technician", "Kỹ thuật viên báo"),
+        PT("PT", "PT báo");
+
+        private final String dbValue;
+        private final String displayName;
+
+        DetectedBy(String dbValue, String displayName) {
+            this.dbValue = dbValue;
+            this.displayName = displayName;
+        }
+
+        public String getDbValue() {
+            return dbValue;
+        }
+
+        public String getDisplayName() {
+            return displayName;
+        }
+
+        public static DetectedBy fromDbValue(String dbValue) {
+            if (dbValue == null) return RECEPTIONIST;
+            for (DetectedBy d : values()) {
+                if (d.dbValue.equalsIgnoreCase(dbValue)) {
+                    return d;
+                }
+            }
+            return RECEPTIONIST;
+        }
+    }
+
+    public enum Status {
         OPEN("Open", "Chờ duyệt"),
         IN_PROGRESS("InProgress", "Đang xử lý"),
         REJECTED("Rejected", "Từ chối"),
@@ -232,16 +329,12 @@ public class MaintenanceRequest {
         }
 
         public static Status fromDbValue(String dbValue) {
-            if (dbValue == null) {
-                return null;
-            }
-
+            if (dbValue == null) return null;
             for (Status status : values()) {
                 if (status.dbValue.equalsIgnoreCase(dbValue)) {
                     return status;
                 }
             }
-
             return null;
         }
     }
