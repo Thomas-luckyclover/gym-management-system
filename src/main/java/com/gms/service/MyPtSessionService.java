@@ -11,6 +11,7 @@ import com.gms.dto.TimetableView;
 import com.gms.entity.Account;
 import com.gms.entity.Customer;
 import com.gms.util.DateTimeUtil;
+import com.gms.util.ZaloUtil;
 import java.net.URLEncoder;
 import java.nio.charset.StandardCharsets;
 import java.sql.SQLException;
@@ -347,18 +348,9 @@ public class MyPtSessionService {
         };
     }
 
-    /** SĐT → link Zalo. "0912 345 678" / "+84912345678" → https://zalo.me/0912345678. Không có số → null. */
+    /** SĐT → link Zalo. Logic nằm ở ZaloUtil (PT Dashboard cũng dùng); giữ tên cũ cho MyBookingService và test. */
     static String zaloUrl(String phone) {
-        if (phone == null || phone.isBlank()) {
-            return null;
-        }
-        // B1: chỉ giữ chữ số
-        String digits = phone.replaceAll("\\D", "");
-        // B2: đầu 84 (mã nước) → đổi về 0
-        if (digits.startsWith("84") && digits.length() == 11) {
-            digits = "0" + digits.substring(2);
-        }
-        return digits.isEmpty() ? null : "https://zalo.me/" + digits;
+        return ZaloUtil.toUrl(phone);
     }
 
     // ================================================================================================================

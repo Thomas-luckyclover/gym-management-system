@@ -135,6 +135,19 @@ class PtDashboardServiceTest {
         assertEquals(1, membership.getAttentionItems().size());
     }
 
+    @Test
+    void clientCardBuildsZaloLinksFromBothPhones() {
+        var client = clientPackage(11);
+        client.setCustomerPhone("0912 345 678");
+        client.setPartnerPhone("+84 987 654 321");
+
+        assertEquals("https://zalo.me/0912345678", client.getCustomerZaloUrl());
+        assertEquals("https://zalo.me/0987654321", client.getPartnerZaloUrl());
+
+        client.setPartnerPhone(null);   // không có SĐT → null, JSP ẩn nút Zalo
+        assertNull(client.getPartnerZaloUrl());
+    }
+
     /** Tạo hai gói cùng tên để test không vô tình ghép cảnh báo theo tên khách. */
     private static PtAssignedPackageView clientPackage(int subscriptionId) {
         var client = new PtAssignedPackageView("Khách trùng tên", null, Package.Type.PT_COUPLE, NOW.toLocalDate(), 5);
