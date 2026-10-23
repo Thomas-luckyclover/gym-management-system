@@ -43,7 +43,9 @@ public class SessionReminderDAO {
      *
      * Gói PT đôi: cả người đứng tên lẫn người tập cùng đều phải dùng được gym, nên xét cả hai.
      * Chỉ lấy khách có tài khoản Active (người không có tài khoản thì không có chuông để nhận).
-     * 3 dấu ?: ngày tập (dùng 3 lần).
+     * BỎ QUA ngày phòng nghỉ cả ngày (OperatingHourExceptions.IsClosedAllDay = 1): theo CBR-56 PT phải dời buổi
+     * trước ngày nghỉ, còn sót thì JOB-04 hủy GymClosed → không khuyên khách mua gói / vé ngày cho ngày phòng đóng cửa.
+     * 4 dấu ?: ngày tập (dùng 4 lần).
      */
     public List<Reminder> findCustomersToRemind(LocalDate sessionDate) throws SQLException {
         String sql = """
@@ -54,6 +56,8 @@ public class SessionReminderDAO {
                     JOIN TimeSlots t      ON t.TimeSlotId = s.TimeSlotId
                     JOIN Subscriptions pt ON pt.SubscriptionId = s.SubscriptionId
                     WHERE s.Status = 'Scheduled' AND t.SlotDate = ?
+                      AND NOT EXISTS (SELECT 1 FROM OperatingHourExceptions e
+                                      WHERE e.ApplyDate = t.SlotDate AND e.IsClosedAllDay = 1)
 
                     UNION ALL
 
@@ -65,6 +69,8 @@ public class SessionReminderDAO {
                     JOIN Orders o         ON o.OrderId = pt.OrderId
                     WHERE s.Status = 'Scheduled' AND t.SlotDate = ?
                       AND pt.SubscriptionType = 'PTCouple' AND o.PartnerCustomerId IS NOT NULL
+                      AND NOT EXISTS (SELECT 1 FROM OperatingHourExceptions e
+                                      WHERE e.ApplyDate = t.SlotDate AND e.IsClosedAllDay = 1)
                 )
                 SELECT acc.AccountId, a.StartTime, ptPerson.FullName AS PtName,
                        CASE WHEN EXISTS (

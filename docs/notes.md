@@ -1,5 +1,34 @@
 # File notes — mâu thuẫn tài liệu & quyết định đã chốt
 
+## Làm gọn 7 màn + JOB-08 tự nhắc khách (24/10/2026, ĐÃ CHỐT)
+Mục tiêu: code dễ học, nội dung trên màn hình chỉ thêm, không mất. Quy ước comment: mỗi hàm mở đầu `HÀM CHÍNH` (ai gọi, lúc nào) hoặc `HÀM PHỤ` (gọi ở bước nào của hàm nào); trong hàm chỉ ghi B1, B2…; đầu file liệt kê nhóm + hàm chính, các nhóm ngăn bằng `// ====`.
+
+**JOB-08 — tự nhắc khách thiếu quyền vào gym (thay nút "Nhắc khách" của PT)**
+- `RemindMissingGymAccessJob` chạy trong lượt 00:05 (`BackgroundJobScheduler.DAILY_JOBS`), xét các buổi PT `Scheduled` của NGÀY MAI (giờ Việt Nam).
+- Luật "vào được gym" giống JOB-04 (`AutoCloseSessionService.canUseGym`): có Membership hoặc DayPass phủ ngày tập VÀ không bảo lưu ngày đó. Không vào được → 1 thông báo hệ thống ở chuông (`Notifications.SentByEmployeeId` = NULL, Audience = Individual).
+- Gói PT đôi xét cả người đứng tên lẫn người tập cùng (`Orders.PartnerCustomerId`). Chỉ gửi cho tài khoản Active.
+- Bỏ qua ngày phòng nghỉ cả ngày (CBR-56: PT phải dời, còn sót thì JOB-04 hủy GymClosed). Đã chạy thử trên DB: ngày nghỉ 20/10/2026, câu SQL cũ sẽ nhắc nhầm 4 khách mua gói; câu mới trả 0 dòng.
+- Câu nhắc: thiếu gói → "mua gói thành viên hoặc vé ngày"; đang bảo lưu → "liên hệ lễ tân kiểm tra thời gian bảo lưu". KHÔNG khuyên mua vé ngày khi đang bảo lưu, vì theo JOB-04 có vé ngày mà đang bảo lưu vẫn không vào được.
+- Chống gửi trùng: tiêu đề "Nhắc buổi PT ngày dd/MM/yyyy"; tài khoản đã có thông báo hệ thống cùng tiêu đề thì bỏ qua (job chạy lại không gửi lần 2). Khách có 2 buổi cùng ngày → 1 lời nhắc, nêu buổi sớm nhất. Bước kiểm tra + 2 câu INSERT nằm trong 1 transaction.
+- PT Dashboard bỏ nút "Nhắc khách", bỏ `doPost` + CSRF; thẻ "Cần membership" ghi "Hệ thống tự nhắc khách trước buổi 1 ngày".
+
+**PT Dashboard**
+- Giữ khối chào + thời tiết; bố cục khối đầu trang tách ra `css/dashboard-hero.css`, dùng chung với Trang cá nhân của khách.
+- Mỗi khách phụ trách (và người tập cùng của gói đôi) có số gọi (`tel:`) + nút **Zalo**. `ZaloUtil.toUrl` giữ lại chữ số, đổi `84xxxxxxxxx` → `0xxxxxxxxx`, trả `https://zalo.me/<số>`; không có số thì không hiện nút. `MyPtSessionService` dùng chung hàm này.
+
+**Gói của tôi**
+- Chỉ còn 1 link "Xem trên lịch tập" (thẻ Buổi tới); topbar màn này bỏ nút "Lịch tập".
+- Cột trái hết trống: dưới danh sách gói có "PT buổi tới" (tên, gọi, Nhắn Zalo) và "Vào phòng tập" (hôm nay vào được không + link mua gói). Bỏ mục "Đi tới" cũ.
+- Bỏ dòng thứ/ngày/buổi lặp trên-dưới. Màu + hình trạng thái buổi dùng chung `css/pages/customer/session-status.css`.
+
+**Lịch tập (MyPTSession)**: viết lại JSP/CSS/JS, Java giữ nguyên. Mobile chọn ngày bằng link server dựng sẵn (không cần JS). Topbar chỉ còn "Đặt buổi lẻ"; màn ≤ 480px chỉ hiện icon (aria-label giữ tên nút) để tiêu đề không bị ép.
+
+**Quên mật khẩu / Đăng nhập / Đăng ký**
+- Bỏ sub-title dưới tiêu đề form; thông tin cần thiết chuyển thành gợi ý dưới ô (VD "Mã 6 số sẽ được gửi tới email này…"). Quên mật khẩu viết lại Servlet/Service/JSP/JS/CSS; luồng 3 bước giữ nguyên (bước suy ra từ session, không từ URL).
+- Sửa lỗi có sẵn trong `common.js` (`bindFieldValidation`): ô có lỗi do server in sẵn trước đây chỉ mất lỗi khi rời ô → dòng lỗi biến mất đúng lúc nhấn chuột, nút gửi bị đẩy lên ~27px, cú bấm trượt, phải bấm lần 2. Nay ô đó được đánh dấu `invalid` ngay khi mở trang nên lỗi mất trong lúc gõ.
+
+**Trang chủ**: dọn comment + mục lục CSS, giao diện giữ nguyên (đã so pixel). Ảnh `strip-endurance.jpg` được phủ duotone xanh–cam như các ảnh khác (`strip-endurance.jpg.json` ghi cách xử lý).
+
 ## PT Dashboard nhắc dời buổi ngày phòng nghỉ (22/10/2026)
 - DAO lấy từng buổi Scheduled của PT rơi vào OperatingHourExceptions.IsClosedAllDay = 1 trong 14 ngày tới; Service tạo thẻ closedDay trước các cảnh báo membership/bảo lưu.
 - Thẻ ngày nghỉ có nút Dời buổi mở đúng SessionId trong hộp UC-35, không gửi nhắc khách. PT phải dời trước ngày nghỉ; buổi còn Scheduled sau ngày nghỉ do JOB-04 hủy GymClosed, không trừ buổi, không tính hoa hồng, không dạy bù hoặc gia hạn.
@@ -11,10 +40,10 @@ Mentor chê: danh sách buổi quá dài, điều hướng cụt, thiếu CTA. �
 - **Lịch cố định dạng tuần mẫu T2–T6** (BR-35, CBR-43, BR-41): mỗi ô = giờ có nhiều buổi nhất của thứ đó (≥ 50%, hòa → giờ sớm). Thứ cố định nhưng khác giờ chính (VD T4 07:00) → viền đứt. Buổi lệch (đổi buổi, PT dời, chuyển PT, xếp giờ khác từ đầu) → "Buổi khác giờ" kèm lý do đọc từ `SessionMoveLogs`. Hàm `MyBookingService.applyWeekTemplate` có unit test.
 - **Dải chấm "Các buổi của gói"**: 1 ô = 1 buổi, vạch = sang tuần; mỗi trạng thái có hình riêng (đặc / × / gạch chéo / viền) để không chỉ dựa vào màu. **"Cần để ý"** chỉ liệt kê buổi cảnh báo sắp tới + vắng + hủy, kèm lý do.
 - **CTA tối đa 1, chọn theo ưu tiên** (`chooseCta`): thiếu quyền vào gym → mua gói thành viên online; gói PT còn ≤ 3 buổi hoặc ≤ 14 ngày → **gia hạn TẠI QUẦY** (CBR-48: gói PT không bán online — nút Gọi lễ tân + Báo PT trước); gói đã kết thúc → đăng ký lại tại quầy; ≥ 3 buổi lẻ/30 ngày → gợi ý gói PT (tại quầy). Hotline lấy `AppConstants.GYM_HOTLINE` (giống chân trang), giờ mở cửa đọc P-19.
-- **Điều hướng**: cột trái có mục "Đi tới" (Gói thành viên & vé ngày, Lịch tập, Đặt buổi lẻ); buổi lẻ có "Đặt lại với PT này" → `/customer/book-session?pt=<EmployeeId>` (**màn Đặt buổi lẻ cần đọc tham số `pt` để chọn sẵn PT**).
+- **Điều hướng**: cột trái có mục "Đi tới" (Gói thành viên & vé ngày, Lịch tập, Đặt buổi lẻ); buổi lẻ có "Đặt lại với PT này" → `/customer/book-session?pt=<EmployeeId>` (**màn Đặt buổi lẻ cần đọc tham số `pt` để chọn sẵn PT**). **(24/10: bỏ mục "Đi tới", thay bằng "PT buổi tới" + "Vào phòng tập"; "Đặt lại với PT này" vẫn giữ.)**
 - Chữ giải thích phụ chuyển vào nút (i) (hint box chung), màn chỉ giữ dữ liệu.
-- **PT Dashboard**: bỏ khối "Đánh giá PT"; khối "Cần chú ý" có nút **Nhắc khách** → POST `/pt/dashboard` (CSRF) → 1 thông báo cá nhân (`Notifications` Audience = Individual, `SentByEmployeeId` = PT). Service tính lại danh sách Cần chú ý của chính PT đó (không tin form), mỗi khách 1 lần/ngày, khách chưa có tài khoản → báo PT nhắn Zalo (GBR-15).
-- Khách xem lời nhắc ở **chuông thông báo** đã thêm vào header Gói của tôi + Lịch tập; lời nhắc dẫn khách về Gói của tôi, nơi CTA "Mua gói thành viên" đang hiện → 3 màn nối thành 1 luồng.
+- **PT Dashboard**: bỏ khối "Đánh giá PT"; khối "Cần chú ý" có nút **Nhắc khách** → POST `/pt/dashboard` (CSRF) → 1 thông báo cá nhân (`Notifications` Audience = Individual, `SentByEmployeeId` = PT). Service tính lại danh sách Cần chú ý của chính PT đó (không tin form), mỗi khách 1 lần/ngày, khách chưa có tài khoản → báo PT nhắn Zalo (GBR-15). **(24/10: đã bỏ nút Nhắc khách, thay bằng JOB-08 tự nhắc — xem mục 24/10.)**
+- Khách xem lời nhắc ở **chuông thông báo** đã thêm vào header Gói của tôi + Lịch tập; lời nhắc dẫn khách về Gói của tôi, nơi CTA "Mua gói thành viên" đang hiện → 3 màn nối thành 1 luồng. **(24/10: lời nhắc nay do JOB-08 gửi.)**
 
 ## Gói của tôi — làm lại UX cột trái và bảng buổi (21/10/2026, đã thay bằng v2 ở trên)
 - Bỏ 2 dropdown Tình trạng + Loại gói: "Buổi lẻ" nằm ở cả 2 dropdown nên tạo tổ hợp vô nghĩa (VD Đã kết thúc + Buổi lẻ → rỗng), người dùng tưởng lọc bị lỗi.

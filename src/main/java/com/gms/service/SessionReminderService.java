@@ -14,7 +14,9 @@ import java.util.List;
  *   Mỗi ngày lúc 00:05, hệ thống xét các buổi PT NGÀY MAI.
  *   Khách nào ngày mai chưa vào được phòng tập (thiếu membership / vé ngày, hoặc đang bảo lưu)
  *   → nhận 1 thông báo ở chuông, nói rõ giờ tập, PT và việc cần làm.
+ *   Ngày phòng nghỉ cả ngày thì KHÔNG nhắc (CBR-56: PT phải dời buổi; còn sót thì JOB-04 hủy GymClosed).
  *   Mỗi khách chỉ nhận 1 lời nhắc cho 1 ngày tập (job chạy lại cũng không gửi trùng).
+ *   Có 2 buổi cùng ngày thì lời nhắc nêu buổi sớm nhất — thiếu quyền vào gym là chuyện của cả ngày.
  *
  * Vì sao nhắc? Không vào được phòng tập thì JOB-04 sẽ chốt buổi là Vắng → khách mất buổi.
  * Nhắc trước 1 ngày để khách kịp mua gói / vé ngày.
@@ -70,9 +72,11 @@ public class SessionReminderService {
                 + " lúc " + DateTimeUtil.formatTime(reminder.startTime())
                 + " bạn có buổi PT với " + reminder.ptName();
 
+        // Đang bảo lưu thì mua vé ngày cũng KHÔNG vào được (luật JOB-04: có gói VÀ không bảo lưu)
+        // → không khuyên mua vé ngày, chỉ bảo liên hệ lễ tân.
         if (reminder.frozen()) {
             return when + " nhưng membership của bạn đang bảo lưu vào ngày này. "
-                    + "Hãy mua vé ngày hoặc liên hệ lễ tân trước giờ tập để buổi không bị tính vắng.";
+                    + "Hãy liên hệ lễ tân kiểm tra thời gian bảo lưu trước giờ tập để buổi không bị tính vắng.";
         }
         return when + " nhưng chưa có membership hoặc vé ngày hợp lệ. "
                 + "Hãy mua gói thành viên hoặc vé ngày trước giờ tập để buổi không bị tính vắng.";

@@ -30,6 +30,8 @@ class SessionReminderServiceTest {
         String text = SessionReminderService.buildContent(new Reminder(5, LocalTime.of(7, 30), "Đinh Công Sơn", true), DAY);
         assertTrue(text.contains("lúc 07:30"));
         assertTrue(text.contains("đang bảo lưu"));
+        assertFalse(text.contains("vé ngày"));   // đang bảo lưu thì vé ngày cũng không giúp vào được (JOB-04)
+        assertTrue(text.contains("lễ tân"));
         assertTrue(text.length() <= 500);
     }
 }
