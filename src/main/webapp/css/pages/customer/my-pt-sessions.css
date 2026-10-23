@@ -223,7 +223,50 @@
   align-items: center;
   flex-wrap: wrap;
   gap: var(--space-3) var(--space-4);
-  padding: var(--space-2) var(--space-4);
+  padding: var(--space-3) var(--space-4);
+}
+.schedule-legend .pt-info-trigger {
+  width: var(--control-height-sm);
+  height: var(--control-height-sm);
+  min-width: var(--control-height-sm);
+  min-height: var(--control-height-sm);
+  font-size: var(--font-size-xs);
+}
+/* Lịch tháng: số buổi trong tháng = các viên nhỏ dồn bên phải thanh chú thích (thay câu "Trong tháng: …") */
+.schedule-month-stats {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: var(--space-1-5);
+  margin: 0 0 0 auto;
+}
+.schedule-month-stats-title {
+  margin-right: var(--space-1);
+  color: var(--color-text-soft);
+  font-size: var(--font-size-xs);
+  font-weight: var(--font-weight-semibold);
+  text-transform: uppercase;
+  letter-spacing: 0.06em;
+}
+.schedule-month-stats [data-status] {
+  display: inline-flex;
+  align-items: baseline;
+  gap: var(--space-1);
+  padding: var(--space-0-5) var(--space-2-5);
+  border: var(--border-width) solid var(--color-border);
+  border-radius: var(--radius-pill);
+  background: var(--color-surface-muted);
+  color: var(--color-text-soft);
+  font-size: var(--font-size-xs);
+  white-space: nowrap;
+}
+.schedule-month-stats b { color: var(--color-text); font-size: var(--font-size-sm); font-variant-numeric: tabular-nums; }
+.schedule-month-stats [data-status="upcoming"] b { color: var(--color-info-ink); }
+.schedule-month-stats [data-status="checkedIn"] b { color: var(--color-success-ink); }
+.schedule-month-stats [data-status="missed"] b { color: var(--color-danger-ink); }
+.schedule-month-stats [data-status="pending"] b { color: var(--color-warning-ink); }
+@media (max-width: 700px) {
+  .schedule-month-stats { flex-basis: 100%; margin-left: 0; }
 }
 .schedule-note {
   font-size: var(--font-size-sm);

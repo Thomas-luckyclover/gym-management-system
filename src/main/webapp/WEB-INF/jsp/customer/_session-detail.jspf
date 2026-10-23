@@ -38,9 +38,13 @@
 <%-- ===== KẾT THÚC thông tin gói và lịch sử hủy ===== --%>
 <%-- ===== Liên kết cuối phần chi tiết: Google Calendar mở form để khách tự lưu; link gói chuyển sang màn khác ===== --%>
 <%-- calendarUrl chỉ được Service cấp cho Scheduled chưa hết giờ; JSP không tự tính điều kiện này. --%>
+<%-- Màn "Gói của tôi" đặt hidePackageLink = true: đang xem chính gói đó nên không cần link "Xem toàn bộ gói". --%>
+<c:set var="showPackageLink" value="${not s.singleSession and not hidePackageLink}" />
+<c:if test="${not empty s.calendarUrl or showPackageLink}">
 <div class="session-detail-links">
     <c:if test="${not empty s.calendarUrl}"><a href="${fn:escapeXml(s.calendarUrl)}" target="_blank" rel="noopener noreferrer"><i class="fa-regular fa-calendar-plus" aria-hidden="true"></i> Thêm vào Google Calendar</a></c:if>
-    <c:if test="${not s.singleSession}"><a href="${pageContext.request.contextPath}/customer/bookings?id=${s.subscriptionId}">Xem toàn bộ gói <i class="fa-solid fa-arrow-right" aria-hidden="true"></i></a></c:if>
+    <c:if test="${showPackageLink}"><a href="${pageContext.request.contextPath}/customer/bookings?id=${s.subscriptionId}">Xem toàn bộ gói <i class="fa-solid fa-arrow-right" aria-hidden="true"></i></a></c:if>
 </div>
+</c:if>
 <%-- ===== KẾT THÚC liên kết cuối phần chi tiết ===== --%>
 <%-- ===== KẾT THÚC nội dung chi tiết của một buổi ===== --%>
