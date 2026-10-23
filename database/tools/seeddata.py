@@ -623,10 +623,10 @@ for f in FAC:
     add('Facilities', dict(FacilityName=f[0], Category=f[1], Location=f[2]))
 
 EQ_SPECS = [
-    (1, 'TM', 8, {3: 'UnderMaintenance'}),
-    (2, 'EB', 6, {2: 'UnderMaintenance'}),
-    (3, 'MS', 3, {2: 'UnderMaintenance'}),
-    (4, 'DB', 20, {12: 'Broken'}),
+    (1, 'TM', 8, {5: 'Broken'}),
+    (2, 'EB', 6, {2: 'Broken'}),
+    (3, 'MS', 3, {2: 'Broken'}),
+    (4, 'DB', 20, {}),
     (5, 'CP', 2, {1: 'UnderMaintenance', 2: 'UnderMaintenance'}),
     (6, 'SP', 2, {}),
     (7, 'LK', 60, {12: 'Broken'}),
