@@ -765,15 +765,26 @@ CREATE TABLE Facilities (
     FacilityName NVARCHAR(100) NOT NULL,
     Category     VARCHAR(15)   NOT NULL,  -- Cardio | FreeWeights | Machines | Amenities
     Location     NVARCHAR(100) NULL,
-    Quantity     SMALLINT      NOT NULL CONSTRAINT DF_Facilities_Quantity DEFAULT (1), -- DBR-14
-    Status       VARCHAR(20)   NOT NULL CONSTRAINT DF_Facilities_Status   DEFAULT ('Available'), -- Available | UnderMaintenance | Retired (= đã xóa, GBR-05)
     RowVer       ROWVERSION,
 
     CONSTRAINT PK_Facilities PRIMARY KEY (FacilityId),
-    CONSTRAINT CK_Facilities_Quantity CHECK (Quantity >= 1),
     CONSTRAINT CK_Facilities_Name     CHECK (LEN(LTRIM(RTRIM(FacilityName))) >= 3),
-    CONSTRAINT CK_Facilities_Category CHECK (Category IN ('Cardio','FreeWeights','Machines','Amenities')),
-    CONSTRAINT CK_Facilities_Status   CHECK (Status IN ('Available','UnderMaintenance','Retired'))
+    CONSTRAINT CK_Facilities_Category CHECK (Category IN ('Cardio','FreeWeights','Machines','Amenities'))
+);
+GO
+
+-- EquipmentItems: từng thiết bị cá thể vật lý (TM-001, CP-001...)
+CREATE TABLE EquipmentItems (
+    EquipmentItemId INT IDENTITY(1,1) NOT NULL,
+    FacilityId      INT           NOT NULL,
+    ItemCode        VARCHAR(20)   NOT NULL,
+    Status          VARCHAR(20)   NOT NULL CONSTRAINT DF_EquipmentItems_Status DEFAULT ('Available'),
+    RowVer          ROWVERSION,
+
+    CONSTRAINT PK_EquipmentItems PRIMARY KEY (EquipmentItemId),
+    CONSTRAINT UQ_EquipmentItems_ItemCode UNIQUE (ItemCode),
+    CONSTRAINT FK_EquipmentItems_Facilities FOREIGN KEY (FacilityId) REFERENCES Facilities(FacilityId),
+    CONSTRAINT CK_EquipmentItems_Status CHECK (Status IN ('Available','UnderMaintenance','Broken','Retired'))
 );
 GO
 
@@ -781,31 +792,36 @@ GO
 CREATE TABLE MaintenanceRequests (
     MaintenanceRequestId INT IDENTITY(1,1) NOT NULL,
     RequestCode          VARCHAR(12)   NOT NULL,  -- v25: BT-nnnn (SRS 8.2.1)
-    FacilityId           INT           NOT NULL,
+    EquipmentItemId      INT           NOT NULL,
     ReportedByEmployeeId INT           NOT NULL,  -- Lễ tân báo hỏng
     ReviewedByEmployeeId INT           NULL,      -- Manager duyệt / từ chối (BR-49)
     ClosedByEmployeeId   INT           NULL,      -- Lễ tân đóng (BR-48)
-    Priority             VARCHAR(10)   NOT NULL CONSTRAINT DF_Maintenance_Priority   DEFAULT ('Normal'), -- v25: Urgent | Normal | Low
-    WarningTagPlaced     BIT           NOT NULL CONSTRAINT DF_Maintenance_WarningTag DEFAULT (0),        -- v25: đã treo biển cảnh báo
+    Priority             VARCHAR(10)   NOT NULL CONSTRAINT DF_Maintenance_Priority   DEFAULT ('Normal'), -- Urgent | Normal | Low
+    IncidentType         VARCHAR(30)   NOT NULL CONSTRAINT DF_Maintenance_IncidentType DEFAULT ('NotWorking'), -- NotWorking | StrangeNoise | BrokenOrWorn | SafetyHazard | Hygiene
+    DetectedBy           VARCHAR(30)   NOT NULL CONSTRAINT DF_Maintenance_DetectedBy DEFAULT ('Receptionist'), -- Receptionist | Customer | Technician | PT
+    WarningTagPlaced     BIT           NOT NULL CONSTRAINT DF_Maintenance_WarningTag DEFAULT (0),        -- đã treo biển cảnh báo
     Description          NVARCHAR(500) NOT NULL,  -- DBR-15: 10–500
+    AttachedImages       NVARCHAR(1000) NULL,     -- đường dẫn ảnh/video đính kèm
     Status               VARCHAR(12)   NOT NULL CONSTRAINT DF_Maintenance_Status     DEFAULT ('Open'),
-    SetUnderMaintenance  BIT           NULL,      -- v25: Manager có chuyển thiết bị sang Under maintenance không (CBR-101)
+    SetUnderMaintenance  BIT           NULL,      -- Manager có chuyển riêng thiết bị sang Under maintenance không (CBR-101)
     RejectReason         NVARCHAR(500) NULL,
-    AcceptanceNote       NVARCHAR(500) NULL,      -- v25: ghi chú nghiệm thu khi đóng
+    AcceptanceNote       NVARCHAR(500) NULL,      -- ghi chú nghiệm thu khi đóng
     ReportedAt           DATETIME2(0)  NOT NULL CONSTRAINT DF_Maintenance_ReportedAt DEFAULT (SYSDATETIME()),
     ReviewedAt           DATETIME2(0)  NULL,
     ClosedAt             DATETIME2(0)  NULL,
 
     CONSTRAINT PK_MaintenanceRequests PRIMARY KEY (MaintenanceRequestId),
     CONSTRAINT UQ_MaintenanceRequests_Code UNIQUE (RequestCode),
-    CONSTRAINT FK_Maintenance_Facilities FOREIGN KEY (FacilityId)           REFERENCES Facilities(FacilityId),
-    CONSTRAINT FK_Maintenance_Reporter   FOREIGN KEY (ReportedByEmployeeId) REFERENCES Employees(EmployeeId),
-    CONSTRAINT FK_Maintenance_Reviewer   FOREIGN KEY (ReviewedByEmployeeId) REFERENCES Employees(EmployeeId),
-    CONSTRAINT FK_Maintenance_Closer     FOREIGN KEY (ClosedByEmployeeId)   REFERENCES Employees(EmployeeId),
-    CONSTRAINT CK_Maintenance_Code        CHECK (RequestCode LIKE 'BT-[0-9][0-9][0-9][0-9]'),
-    CONSTRAINT CK_Maintenance_Priority    CHECK (Priority IN ('Urgent','Normal','Low')),
-    CONSTRAINT CK_Maintenance_Description CHECK (LEN(LTRIM(RTRIM(Description))) BETWEEN 10 AND 500),
-    CONSTRAINT CK_Maintenance_Status      CHECK (Status IN ('Open','InProgress','Rejected','Closed')),
+    CONSTRAINT FK_Maintenance_EquipmentItem FOREIGN KEY (EquipmentItemId)     REFERENCES EquipmentItems(EquipmentItemId),
+    CONSTRAINT FK_Maintenance_Reporter      FOREIGN KEY (ReportedByEmployeeId) REFERENCES Employees(EmployeeId),
+    CONSTRAINT FK_Maintenance_Reviewer      FOREIGN KEY (ReviewedByEmployeeId) REFERENCES Employees(EmployeeId),
+    CONSTRAINT FK_Maintenance_Closer        FOREIGN KEY (ClosedByEmployeeId)   REFERENCES Employees(EmployeeId),
+    CONSTRAINT CK_Maintenance_Code          CHECK (RequestCode LIKE 'BT-[0-9][0-9][0-9][0-9]'),
+    CONSTRAINT CK_Maintenance_Priority      CHECK (Priority IN ('Urgent','Normal','Low')),
+    CONSTRAINT CK_Maintenance_IncidentType  CHECK (IncidentType IN ('NotWorking','StrangeNoise','BrokenOrWorn','SafetyHazard','Hygiene')),
+    CONSTRAINT CK_Maintenance_DetectedBy    CHECK (DetectedBy IN ('Receptionist','Customer','Technician','PT')),
+    CONSTRAINT CK_Maintenance_Description   CHECK (LEN(LTRIM(RTRIM(Description))) BETWEEN 10 AND 500),
+    CONSTRAINT CK_Maintenance_Status        CHECK (Status IN ('Open','InProgress','Rejected','Closed')),
     CONSTRAINT CK_Maintenance_Flow CHECK (
         (Status = 'Open' AND ReviewedByEmployeeId IS NULL AND ReviewedAt IS NULL AND SetUnderMaintenance IS NULL
             AND ClosedByEmployeeId IS NULL AND RejectReason IS NULL)
@@ -843,11 +859,12 @@ CREATE TABLE StaffAttendances (
 GO
 
 -- Index cluster D
-CREATE INDEX IX_LeaveRequests_StatusDate ON LeaveRequests(Status, FromDate);        -- hàng chờ duyệt + job tự từ chối
-CREATE INDEX IX_LeaveRequests_DateShift  ON LeaveRequests(FromDate, ToDate, ShiftType, Status); -- định biên (DBR-60)
-CREATE INDEX IX_Maintenance_Status       ON MaintenanceRequests(Status, ReportedAt);
-CREATE INDEX IX_Maintenance_Facility     ON MaintenanceRequests(FacilityId, Status);  -- CBR-99, CBR-102
-CREATE INDEX IX_StaffAttendances_EmpDate ON StaffAttendances(EmployeeId, WorkDate);
+CREATE INDEX IX_LeaveRequests_StatusDate  ON LeaveRequests(Status, FromDate);        -- hàng chờ duyệt + job tự từ chối
+CREATE INDEX IX_LeaveRequests_DateShift   ON LeaveRequests(FromDate, ToDate, ShiftType, Status); -- định biên (DBR-60)
+CREATE INDEX IX_EquipmentItems_Facility   ON EquipmentItems(FacilityId, Status);
+CREATE INDEX IX_Maintenance_Status        ON MaintenanceRequests(Status, ReportedAt);
+CREATE INDEX IX_Maintenance_EquipmentItem ON MaintenanceRequests(EquipmentItemId, Status);
+CREATE INDEX IX_StaffAttendances_EmpDate  ON StaffAttendances(EmployeeId, WorkDate);
 GO
 
 /* ============================================================================
