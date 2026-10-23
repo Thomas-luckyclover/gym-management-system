@@ -336,14 +336,16 @@ function removePtDraft(event) {
 
 /**
  * HÀM CHÍNH — trình duyệt gọi khi bấm bất kỳ đâu trên lịch (click #pt-schedule).
- * Bấm nút "Gỡ khung"/"Giữ lại": có trong ptRemovals thì bỏ ra, chưa có thì thêm vào. Chưa ghi DB.
+ * Bấm vào thẻ khung được gỡ (Lịch tuần: cả thẻ; Danh sách: nút "Gỡ khung"/"Giữ lại"):
+ * có trong ptRemovals thì bỏ ra, chưa có thì thêm vào. Chưa ghi DB.
  */
 function togglePtRemoval(event) {
-    // B1: lịch chỉ có một listener nên phải lọc: chỉ xử lý khi bấm đúng nút Gỡ.
-    const button = event.target.closest("[data-remove-slot]");
-    if (!button || ptPublishing) return;
-    // B2: từ nút đi lên thẻ <article> bọc nó, đọc data-slot-id, ví dụ "57".
-    const slotId = button.closest(".pt-slot-frame").dataset.slotId;
+    // B1: lịch chỉ có một listener nên phải lọc: chỉ xử lý thẻ có nút Gỡ
+    //     (JSP chỉ in nút khi Service cho canRemove = true; Lịch tuần ẩn nút nên bấm cả thẻ).
+    const frame = event.target.closest(".pt-slot-frame");
+    if (!frame || !frame.querySelector("[data-remove-slot]") || ptPublishing) return;
+    // B2: đọc data-slot-id của thẻ, ví dụ "57".
+    const slotId = frame.dataset.slotId;
     // B3: indexOf trả vị trí trong mảng, không có thì -1.
     const index = ptRemovals.indexOf(slotId);
     if (index >= 0) {

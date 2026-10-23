@@ -12,8 +12,8 @@
     <head>
         <%@ include file="/WEB-INF/jsp/common/head.jspf" %>
         <title>Lịch dạy · Super Gym</title>
-        <link rel="stylesheet" href="${pageContext.request.contextPath}/css/pages/pt/schedule.css?v=20261023g">
-        <c:if test="${not empty week}"><script src="${pageContext.request.contextPath}/js/pages/pt/schedule.js?v=20261023g" defer></script></c:if>
+        <link rel="stylesheet" href="${pageContext.request.contextPath}/css/pages/pt/schedule.css?v=20261024a">
+        <c:if test="${not empty week}"><script src="${pageContext.request.contextPath}/js/pages/pt/schedule.js?v=20261024a" defer></script></c:if>
     </head>
     <body class="dock theme-pt pt-schedule-page">
         <%@ include file="/WEB-INF/jsp/common/flash-toast.jspf" %>
@@ -98,7 +98,7 @@
                                             <li class="is-free">Trống</li><li class="is-held">Đang giữ</li><li class="is-booked">Có khách</li><li class="is-locked">Tạm khóa</li>
                                         </ul>
                                     </div>
-                                    <p class="pt-week-help" id="pt-preview-status" role="status"><c:out value="${view eq 'list' ? 'Mở Nhập ngày và giờ để thêm nháp; kiểm tra danh sách trước khi công bố.' : 'Kéo trên vùng trống, thả để thêm nháp. Escape để hủy kéo.'}" /></p>
+                                    <p class="pt-week-help" id="pt-preview-status" role="status"><c:out value="${view eq 'list' ? 'Mở Nhập ngày và giờ để thêm nháp; kiểm tra danh sách trước khi công bố.' : 'Kéo trên vùng trống để thêm nháp, Escape để hủy kéo. Bấm vào khung Còn trống để đánh dấu gỡ.'}" /></p>
                                     <div class="pt-calendar-scroll" tabindex="0" aria-label="Khung lịch dạy theo ngày">
                                         <div class="pt-calendar">
                                             <%-- Trục giờ bao hết giờ mở cửa và các buổi lịch sử của tuần. --%>
