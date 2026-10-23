@@ -35,7 +35,6 @@
                 <div class="step-panel" data-step="form" <c:if test="${loginStep ne 'form'}">hidden</c:if>>
                         <div class="auth-head">
                             <h1>Đăng nhập</h1>
-                            <p>Nhập email hoặc số điện thoại và mật khẩu để tiếp tục.</p>
                         </div>
 
                     <c:if test="${not empty errorMessage and loginStep eq 'form'}">

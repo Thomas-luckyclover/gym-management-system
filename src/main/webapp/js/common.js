@@ -840,7 +840,7 @@ function showFieldError(input, message) {
 
     // B2
     const errorElement = getFieldErrorElement(input);
-    input.setAttribute("aria-describedby", errorElement.id);
+    toggleDescribedBy(input, errorElement.id, true);
 
     // B3
     errorElement.innerHTML = '<i class="fa-solid fa-circle-xmark" aria-hidden="true"></i>';
@@ -856,10 +856,27 @@ function clearFieldError(input) {
     input.removeAttribute("aria-invalid");
 
     const errorId = input.id + "Error";
+    toggleDescribedBy(input, errorId, false);
     const errorElement = document.getElementById(errorId);
     if (errorElement !== null) {
         errorElement.hidden = true;
         errorElement.textContent = "";
+    }
+}
+
+// Thêm (on = true) hoặc bỏ 1 id trong aria-describedby, GIỮ các id khác (vd id dòng gợi ý dưới ô)
+// → trình đọc màn hình đọc cả gợi ý lẫn lỗi. VD "emailHint" + lỗi → "emailHint emailError".
+function toggleDescribedBy(input, id, on) {
+    const ids = (input.getAttribute("aria-describedby") || "").split(" ").filter(function (x) {
+        return x !== "" && x !== id;
+    });
+    if (on) {
+        ids.push(id);
+    }
+    if (ids.length > 0) {
+        input.setAttribute("aria-describedby", ids.join(" "));
+    } else {
+        input.removeAttribute("aria-describedby");
     }
 }
 
@@ -1108,6 +1125,17 @@ function getValidatableFields(form) {
 function bindFieldValidation(form) {
     // Tắt bong bóng kiểm tra mặc định của trình duyệt, dùng thông báo tiếng Việt của hệ thống
     form.noValidate = true;
+
+    // Ô có lỗi do SERVER in sẵn (ô báo lỗi đang hiện) → đánh dấu "invalid" ngay khi mở trang,
+    // để khách sửa ô là lỗi tự mất TRONG LÚC GÕ. Nếu đợi tới lúc rời ô thì dòng lỗi biến mất đúng lúc
+    // nhấn chuột vào nút gửi → nút bị đẩy lên → cú bấm trượt khỏi nút, phải bấm lần 2.
+    for (const field of getValidatableFields(form)) {
+        const serverError = document.getElementById(field.id + "Error");
+        if (serverError !== null && !serverError.hidden && serverError.textContent.trim() !== "") {
+            field.classList.add("invalid");
+            field.setAttribute("aria-invalid", "true");
+        }
+    }
 
     form.addEventListener("focusout", function (event) {
         const field = event.target;

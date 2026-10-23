@@ -44,7 +44,6 @@
                                 <c:if test="${step eq 'phone' or empty step}">
                                     <div class="auth-head">
                                         <h1>Tạo tài khoản</h1>
-                                        <p>Nhập số điện thoại để hệ thống kiểm tra hồ sơ sẵn có tại phòng gym.</p>
                                     </div>
 
                                     <%-- Lỗi server trả về khi SĐT không hợp lệ --%>
@@ -71,7 +70,10 @@
 
                                                 <input type="tel" id="phone" name="phone" maxlength="10"
                                                     inputmode="numeric" autocomplete="tel" placeholder="0912345678"
+                                                    aria-describedby="phoneHint"
                                                     required value="<c:out value='${phone}' />">
+                                                <%-- Thay cho dòng sub-title cũ: nói ngay dưới ô vì sao cần số điện thoại. --%>
+                                                <span class="field-hint" id="phoneHint">Đã có hồ sơ tại quầy? Hệ thống tự tìm theo số này.</span>
 
                                                 <span class="field-error" id="phoneError"></span>
                                             </label>
@@ -101,7 +103,6 @@
 
                                             <div class="auth-head">
                                                 <h1>Tạo tài khoản</h1>
-                                                <p>Điền thông tin để tạo tài khoản hội viên Super Gym.</p>
                                             </div>
 
                                             <%-- Lỗi server (validate thất bại hoặc email trùng...) --%>
@@ -373,8 +374,6 @@
 
                                                 <div class="auth-head">
                                                     <h1>Kích hoạt hồ sơ</h1>
-                                                    <p>Hệ thống tìm thấy hồ sơ khớp với số điện thoại của bạn. Nhập
-                                                        email đã đăng ký tại quầy để xác thực.</p>
                                                 </div>
 
                                                 <c:if test="${not empty errorMessage}">
@@ -402,8 +401,11 @@
 
                                                         <input type="email" id="claimEmail" name="email" maxlength="100"
                                                             autocomplete="email" placeholder="ban@email.com"
+                                                            aria-describedby="claimEmailHint"
                                                             data-rule="email" required
                                                             value="<c:out value='${email}' />">
+                                                        <%-- Thay cho dòng sub-title cũ: báo đã tìm thấy hồ sơ + cần làm gì. --%>
+                                                        <span class="field-hint" id="claimEmailHint">Đã tìm thấy hồ sơ tại quầy khớp số <c:out value="${phone}" />. Nhập đúng email đã đăng ký để xác thực.</span>
 
                                                         <span class="field-error" id="claimEmailError" ${empty
                                                             fieldErrors.email ? 'hidden' : '' }>
@@ -529,8 +531,12 @@
                                                     <c:if test="${step eq 'claim-password'}">
                                                         <div class="auth-head">
                                                             <h1>Đặt mật khẩu</h1>
-                                                            <p>Xác thực thành công! Đặt mật khẩu để hoàn tất kích hoạt
-                                                                tài khoản.</p>
+                                                        </div>
+
+                                                        <%-- Thay cho dòng sub-title cũ: xác nhận bước trước đã xong (banner xanh). --%>
+                                                        <div class="msg-banner success" role="status">
+                                                            <i class="fa-solid fa-circle-check" aria-hidden="true"></i>
+                                                            <span>Xác thực thành công — đặt mật khẩu để hoàn tất kích hoạt.</span>
                                                         </div>
 
                                                         <c:if test="${not empty errorMessage}">
