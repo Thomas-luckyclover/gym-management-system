@@ -1,78 +1,77 @@
-<?xml version='1.0' encoding='utf-8'?>
 <mxfile host="Electron" agent="Codex" pages="11">
   <diagram id="gms-current-0" name="00. Mục lục · cách học">
-    <mxGraphModel dx="1800" dy="1320" grid="1" gridSize="10" guides="1" tooltips="1" connect="1" arrows="1" fold="1" page="1" pageScale="1" pageWidth="1800" pageHeight="1320" math="0" shadow="0">
+    <mxGraphModel dx="2287" dy="1511" grid="1" gridSize="10" guides="1" tooltips="1" connect="1" arrows="1" fold="1" page="1" pageScale="1" pageWidth="1800" pageHeight="1320" math="0" shadow="0">
       <root>
         <mxCell id="0" />
         <mxCell id="1" parent="0" />
-        <mxCell id="gms-current-0-title" value="MyPTSession · Sơ đồ học code" style="rounded=1;whiteSpace=wrap;html=1;align=left;verticalAlign=middle;spacing=16;fontFamily=Arial;fontSize=31;fontColor=#172b4d;fillColor=none;strokeColor=none;fontStyle=1;arcSize=6;" vertex="1" parent="1">
-          <mxGeometry x="40" y="20" width="1720" height="65" as="geometry" />
+        <mxCell id="gms-current-0-title" parent="1" style="rounded=1;whiteSpace=wrap;html=1;align=left;verticalAlign=middle;spacing=16;fontFamily=Arial;fontSize=31;fontColor=#172b4d;fillColor=none;strokeColor=none;fontStyle=1;arcSize=6;" value="MyPTSession · Sơ đồ học code" vertex="1">
+          <mxGeometry height="65" width="1720" x="40" y="20" as="geometry" />
         </mxCell>
-        <mxCell id="gms-current-0-subtitle" value="Bấm tên trang để mở luồng. Mỗi ô dùng tên hàm thật; mũi tên chỉ thứ tự đọc, nhánh if/else ghi ngay trong ô." style="rounded=1;whiteSpace=wrap;html=1;align=left;verticalAlign=middle;spacing=16;fontFamily=Arial;fontSize=20;fontColor=#172b4d;fillColor=none;strokeColor=none;fontStyle=0;arcSize=6;" vertex="1" parent="1">
-          <mxGeometry x="40" y="92" width="1720" height="65" as="geometry" />
+        <mxCell id="gms-current-0-subtitle" parent="1" style="rounded=1;whiteSpace=wrap;html=1;align=left;verticalAlign=middle;spacing=16;fontFamily=Arial;fontSize=20;fontColor=#172b4d;fillColor=none;strokeColor=none;fontStyle=0;arcSize=6;" value="Bấm tên trang để mở luồng. Mỗi ô dùng tên hàm thật; mũi tên chỉ thứ tự đọc, nhánh if/else ghi ngay trong ô." vertex="1">
+          <mxGeometry height="65" width="1720" x="40" y="92" as="geometry" />
         </mxCell>
-        <mxCell id="gms-current-0-nav" value="Về mục lục" style="rounded=1;whiteSpace=wrap;html=1;align=left;verticalAlign=middle;spacing=16;fontFamily=Arial;fontSize=18;fontColor=#172b4d;fillColor=#f5f5f5;strokeColor=#666666;fontStyle=1;arcSize=6;" vertex="1" parent="1" link="data:page/id,gms-current-0">
-          <mxGeometry x="40" y="164" width="210" height="43" as="geometry" />
+        <mxCell id="gms-current-0-nav" link="data:page/id,gms-current-0" parent="1" style="rounded=1;whiteSpace=wrap;html=1;align=left;verticalAlign=middle;spacing=16;fontFamily=Arial;fontSize=18;fontColor=#172b4d;fillColor=#f5f5f5;strokeColor=#666666;fontStyle=1;arcSize=6;" value="Về mục lục" vertex="1">
+          <mxGeometry height="43" width="210" x="40" y="164" as="geometry" />
         </mxCell>
-        <mxCell id="gms-current-0-legend-servlet" value="Servlet" style="rounded=1;whiteSpace=wrap;html=1;align=center;verticalAlign=middle;spacing=16;fontFamily=Arial;fontSize=18;fontColor=#172b4d;fillColor=#dae8fc;strokeColor=#6c8ebf;fontStyle=0;arcSize=6;" vertex="1" parent="1">
-          <mxGeometry x="290" y="164" width="180" height="43" as="geometry" />
+        <mxCell id="gms-current-0-legend-servlet" parent="1" style="rounded=1;whiteSpace=wrap;html=1;align=center;verticalAlign=middle;spacing=16;fontFamily=Arial;fontSize=18;fontColor=#172b4d;fillColor=#dae8fc;strokeColor=#6c8ebf;fontStyle=0;arcSize=6;" value="Servlet" vertex="1">
+          <mxGeometry height="43" width="180" x="290" y="164" as="geometry" />
         </mxCell>
-        <mxCell id="gms-current-0-legend-service" value="Service" style="rounded=1;whiteSpace=wrap;html=1;align=center;verticalAlign=middle;spacing=16;fontFamily=Arial;fontSize=18;fontColor=#172b4d;fillColor=#e1d5e7;strokeColor=#9673a6;fontStyle=0;arcSize=6;" vertex="1" parent="1">
-          <mxGeometry x="488" y="164" width="180" height="43" as="geometry" />
+        <mxCell id="gms-current-0-legend-service" parent="1" style="rounded=1;whiteSpace=wrap;html=1;align=center;verticalAlign=middle;spacing=16;fontFamily=Arial;fontSize=18;fontColor=#172b4d;fillColor=#e1d5e7;strokeColor=#9673a6;fontStyle=0;arcSize=6;" value="Service" vertex="1">
+          <mxGeometry height="43" width="180" x="488" y="164" as="geometry" />
         </mxCell>
-        <mxCell id="gms-current-0-legend-dao" value="DAO / SQL" style="rounded=1;whiteSpace=wrap;html=1;align=center;verticalAlign=middle;spacing=16;fontFamily=Arial;fontSize=18;fontColor=#172b4d;fillColor=#fff2cc;strokeColor=#d6b656;fontStyle=0;arcSize=6;" vertex="1" parent="1">
-          <mxGeometry x="686" y="164" width="180" height="43" as="geometry" />
+        <mxCell id="gms-current-0-legend-dao" parent="1" style="rounded=1;whiteSpace=wrap;html=1;align=center;verticalAlign=middle;spacing=16;fontFamily=Arial;fontSize=18;fontColor=#172b4d;fillColor=#fff2cc;strokeColor=#d6b656;fontStyle=0;arcSize=6;" value="DAO / SQL" vertex="1">
+          <mxGeometry height="43" width="180" x="686" y="164" as="geometry" />
         </mxCell>
-        <mxCell id="gms-current-0-legend-dto" value="DTO" style="rounded=1;whiteSpace=wrap;html=1;align=center;verticalAlign=middle;spacing=16;fontFamily=Arial;fontSize=18;fontColor=#172b4d;fillColor=#d5e8d4;strokeColor=#82b366;fontStyle=0;arcSize=6;" vertex="1" parent="1">
-          <mxGeometry x="884" y="164" width="180" height="43" as="geometry" />
+        <mxCell id="gms-current-0-legend-dto" parent="1" style="rounded=1;whiteSpace=wrap;html=1;align=center;verticalAlign=middle;spacing=16;fontFamily=Arial;fontSize=18;fontColor=#172b4d;fillColor=#d5e8d4;strokeColor=#82b366;fontStyle=0;arcSize=6;" value="DTO" vertex="1">
+          <mxGeometry height="43" width="180" x="884" y="164" as="geometry" />
         </mxCell>
-        <mxCell id="gms-current-0-legend-ui" value="JSP / JS" style="rounded=1;whiteSpace=wrap;html=1;align=center;verticalAlign=middle;spacing=16;fontFamily=Arial;fontSize=18;fontColor=#172b4d;fillColor=#f5f5f5;strokeColor=#666666;fontStyle=0;arcSize=6;" vertex="1" parent="1">
-          <mxGeometry x="1082" y="164" width="180" height="43" as="geometry" />
+        <mxCell id="gms-current-0-legend-ui" parent="1" style="rounded=1;whiteSpace=wrap;html=1;align=center;verticalAlign=middle;spacing=16;fontFamily=Arial;fontSize=18;fontColor=#172b4d;fillColor=#f5f5f5;strokeColor=#666666;fontStyle=0;arcSize=6;" value="JSP / JS" vertex="1">
+          <mxGeometry height="43" width="180" x="1082" y="164" as="geometry" />
         </mxCell>
-        <mxCell id="gms-current-0-group-0" value="" style="rounded=1;whiteSpace=wrap;html=1;align=left;verticalAlign=middle;spacing=16;fontFamily=Arial;fontSize=20;fontColor=#172b4d;fillColor=#f5f5f5;strokeColor=#666666;fontStyle=0;arcSize=6;" vertex="1" parent="1">
-          <mxGeometry x="40" y="245" width="820" height="900" as="geometry" />
+        <mxCell id="gms-current-0-group-0" parent="1" style="rounded=1;whiteSpace=wrap;html=1;align=left;verticalAlign=middle;spacing=16;fontFamily=Arial;fontSize=20;fontColor=#172b4d;fillColor=#f5f5f5;strokeColor=#666666;fontStyle=0;arcSize=6;" value="" vertex="1">
+          <mxGeometry height="900" width="820" x="40" y="245" as="geometry" />
         </mxCell>
-        <mxCell id="gms-current-0-label-0" value="MyPTSession · đọc từ tổng quan đến ví dụ" style="rounded=1;whiteSpace=wrap;html=1;align=left;verticalAlign=middle;spacing=16;fontFamily=Arial;fontSize=24;fontColor=#172b4d;fillColor=none;strokeColor=none;fontStyle=1;arcSize=6;" vertex="1" parent="1">
-          <mxGeometry x="48" y="253" width="804" height="52" as="geometry" />
+        <mxCell id="gms-current-0-label-0" parent="1" style="rounded=1;whiteSpace=wrap;html=1;align=left;verticalAlign=middle;spacing=16;fontFamily=Arial;fontSize=24;fontColor=#172b4d;fillColor=none;strokeColor=none;fontStyle=1;arcSize=6;" value="MyPTSession · đọc từ tổng quan đến ví dụ" vertex="1">
+          <mxGeometry height="52" width="804" x="48" y="253" as="geometry" />
         </mxCell>
-        <mxCell id="gms-current-0-link-0-0" value="01. MyPTSession · GET và quyền xem" style="rounded=1;whiteSpace=wrap;html=1;align=left;verticalAlign=middle;spacing=16;fontFamily=Arial;fontSize=18;fontColor=#172b4d;fillColor=#dae8fc;strokeColor=#6c8ebf;fontStyle=1;arcSize=6;" vertex="1" parent="1" link="data:page/id,gms-current-1">
-          <mxGeometry x="60" y="321" width="780" height="70" as="geometry" />
+        <mxCell id="gms-current-0-link-0-0" link="data:page/id,gms-current-1" parent="1" style="rounded=1;whiteSpace=wrap;html=1;align=left;verticalAlign=middle;spacing=16;fontFamily=Arial;fontSize=18;fontColor=#172b4d;fillColor=#dae8fc;strokeColor=#6c8ebf;fontStyle=1;arcSize=6;" value="01. MyPTSession · GET và quyền xem" vertex="1">
+          <mxGeometry height="70" width="780" x="60" y="321" as="geometry" />
         </mxCell>
-        <mxCell id="gms-current-0-link-0-1" value="02. MyPTSession · dựng lịch tuần" style="rounded=1;whiteSpace=wrap;html=1;align=left;verticalAlign=middle;spacing=16;fontFamily=Arial;fontSize=18;fontColor=#172b4d;fillColor=#dae8fc;strokeColor=#6c8ebf;fontStyle=1;arcSize=6;" vertex="1" parent="1" link="data:page/id,gms-current-2">
-          <mxGeometry x="60" y="403" width="780" height="70" as="geometry" />
+        <mxCell id="gms-current-0-link-0-1" link="data:page/id,gms-current-2" parent="1" style="rounded=1;whiteSpace=wrap;html=1;align=left;verticalAlign=middle;spacing=16;fontFamily=Arial;fontSize=18;fontColor=#172b4d;fillColor=#dae8fc;strokeColor=#6c8ebf;fontStyle=1;arcSize=6;" value="02. MyPTSession · dựng lịch tuần" vertex="1">
+          <mxGeometry height="70" width="780" x="60" y="403" as="geometry" />
         </mxCell>
-        <mxCell id="gms-current-0-link-0-2" value="03. MyPTSession · dựng lịch tháng" style="rounded=1;whiteSpace=wrap;html=1;align=left;verticalAlign=middle;spacing=16;fontFamily=Arial;fontSize=18;fontColor=#172b4d;fillColor=#dae8fc;strokeColor=#6c8ebf;fontStyle=1;arcSize=6;" vertex="1" parent="1" link="data:page/id,gms-current-3">
-          <mxGeometry x="60" y="485" width="780" height="70" as="geometry" />
+        <mxCell id="gms-current-0-link-0-2" link="data:page/id,gms-current-3" parent="1" style="rounded=1;whiteSpace=wrap;html=1;align=left;verticalAlign=middle;spacing=16;fontFamily=Arial;fontSize=18;fontColor=#172b4d;fillColor=#dae8fc;strokeColor=#6c8ebf;fontStyle=1;arcSize=6;" value="03. MyPTSession · dựng lịch tháng" vertex="1">
+          <mxGeometry height="70" width="780" x="60" y="485" as="geometry" />
         </mxCell>
-        <mxCell id="gms-current-0-link-0-3" value="04. MyPTSession · SQL và số thứ tự" style="rounded=1;whiteSpace=wrap;html=1;align=left;verticalAlign=middle;spacing=16;fontFamily=Arial;fontSize=18;fontColor=#172b4d;fillColor=#dae8fc;strokeColor=#6c8ebf;fontStyle=1;arcSize=6;" vertex="1" parent="1" link="data:page/id,gms-current-4">
-          <mxGeometry x="60" y="567" width="780" height="70" as="geometry" />
+        <mxCell id="gms-current-0-link-0-3" link="data:page/id,gms-current-4" parent="1" style="rounded=1;whiteSpace=wrap;html=1;align=left;verticalAlign=middle;spacing=16;fontFamily=Arial;fontSize=18;fontColor=#172b4d;fillColor=#dae8fc;strokeColor=#6c8ebf;fontStyle=1;arcSize=6;" value="04. MyPTSession · SQL và số thứ tự" vertex="1">
+          <mxGeometry height="70" width="780" x="60" y="567" as="geometry" />
         </mxCell>
-        <mxCell id="gms-current-0-link-0-4" value="05. MyPTSession · điền nhãn và cảnh báo" style="rounded=1;whiteSpace=wrap;html=1;align=left;verticalAlign=middle;spacing=16;fontFamily=Arial;fontSize=18;fontColor=#172b4d;fillColor=#dae8fc;strokeColor=#6c8ebf;fontStyle=1;arcSize=6;" vertex="1" parent="1" link="data:page/id,gms-current-5">
-          <mxGeometry x="60" y="649" width="780" height="70" as="geometry" />
+        <mxCell id="gms-current-0-link-0-4" link="data:page/id,gms-current-5" parent="1" style="rounded=1;whiteSpace=wrap;html=1;align=left;verticalAlign=middle;spacing=16;fontFamily=Arial;fontSize=18;fontColor=#172b4d;fillColor=#dae8fc;strokeColor=#6c8ebf;fontStyle=1;arcSize=6;" value="05. MyPTSession · điền nhãn và cảnh báo" vertex="1">
+          <mxGeometry height="70" width="780" x="60" y="649" as="geometry" />
         </mxCell>
-        <mxCell id="gms-current-0-group-1" value="" style="rounded=1;whiteSpace=wrap;html=1;align=left;verticalAlign=middle;spacing=16;fontFamily=Arial;fontSize=20;fontColor=#172b4d;fillColor=#f5f5f5;strokeColor=#666666;fontStyle=0;arcSize=6;" vertex="1" parent="1">
-          <mxGeometry x="940" y="245" width="820" height="900" as="geometry" />
+        <mxCell id="gms-current-0-group-1" parent="1" style="rounded=1;whiteSpace=wrap;html=1;align=left;verticalAlign=middle;spacing=16;fontFamily=Arial;fontSize=20;fontColor=#172b4d;fillColor=#f5f5f5;strokeColor=#666666;fontStyle=0;arcSize=6;" value="" vertex="1">
+          <mxGeometry height="900" width="820" x="940" y="245" as="geometry" />
         </mxCell>
-        <mxCell id="gms-current-0-label-1" value="MyPTSession · trạng thái, tương tác và ôn tập" style="rounded=1;whiteSpace=wrap;html=1;align=left;verticalAlign=middle;spacing=16;fontFamily=Arial;fontSize=24;fontColor=#172b4d;fillColor=none;strokeColor=none;fontStyle=1;arcSize=6;" vertex="1" parent="1">
-          <mxGeometry x="948" y="253" width="804" height="52" as="geometry" />
+        <mxCell id="gms-current-0-label-1" parent="1" style="rounded=1;whiteSpace=wrap;html=1;align=left;verticalAlign=middle;spacing=16;fontFamily=Arial;fontSize=24;fontColor=#172b4d;fillColor=none;strokeColor=none;fontStyle=1;arcSize=6;" value="MyPTSession · trạng thái, tương tác và ôn tập" vertex="1">
+          <mxGeometry height="52" width="804" x="948" y="253" as="geometry" />
         </mxCell>
-        <mxCell id="gms-current-0-link-1-0" value="06. MyPTSession · cây trạng thái" style="rounded=1;whiteSpace=wrap;html=1;align=left;verticalAlign=middle;spacing=16;fontFamily=Arial;fontSize=18;fontColor=#172b4d;fillColor=#dae8fc;strokeColor=#6c8ebf;fontStyle=1;arcSize=6;" vertex="1" parent="1" link="data:page/id,gms-current-6">
-          <mxGeometry x="960" y="321" width="780" height="70" as="geometry" />
+        <mxCell id="gms-current-0-link-1-0" link="data:page/id,gms-current-6" parent="1" style="rounded=1;whiteSpace=wrap;html=1;align=left;verticalAlign=middle;spacing=16;fontFamily=Arial;fontSize=18;fontColor=#172b4d;fillColor=#dae8fc;strokeColor=#6c8ebf;fontStyle=1;arcSize=6;" value="06. MyPTSession · cây trạng thái" vertex="1">
+          <mxGeometry height="70" width="780" x="960" y="321" as="geometry" />
         </mxCell>
-        <mxCell id="gms-current-0-link-1-1" value="07. MyPTSession · quyền vào gym" style="rounded=1;whiteSpace=wrap;html=1;align=left;verticalAlign=middle;spacing=16;fontFamily=Arial;fontSize=18;fontColor=#172b4d;fillColor=#dae8fc;strokeColor=#6c8ebf;fontStyle=1;arcSize=6;" vertex="1" parent="1" link="data:page/id,gms-current-7">
-          <mxGeometry x="960" y="403" width="780" height="70" as="geometry" />
+        <mxCell id="gms-current-0-link-1-1" link="data:page/id,gms-current-7" parent="1" style="rounded=1;whiteSpace=wrap;html=1;align=left;verticalAlign=middle;spacing=16;fontFamily=Arial;fontSize=18;fontColor=#172b4d;fillColor=#dae8fc;strokeColor=#6c8ebf;fontStyle=1;arcSize=6;" value="07. MyPTSession · quyền vào gym" vertex="1">
+          <mxGeometry height="70" width="780" x="960" y="403" as="geometry" />
         </mxCell>
-        <mxCell id="gms-current-0-link-1-2" value="08. MyPTSession · chọn ngày và mở đúng buổi" style="rounded=1;whiteSpace=wrap;html=1;align=left;verticalAlign=middle;spacing=16;fontFamily=Arial;fontSize=18;fontColor=#172b4d;fillColor=#dae8fc;strokeColor=#6c8ebf;fontStyle=1;arcSize=6;" vertex="1" parent="1" link="data:page/id,gms-current-8">
-          <mxGeometry x="960" y="485" width="780" height="70" as="geometry" />
+        <mxCell id="gms-current-0-link-1-2" link="data:page/id,gms-current-8" parent="1" style="rounded=1;whiteSpace=wrap;html=1;align=left;verticalAlign=middle;spacing=16;fontFamily=Arial;fontSize=18;fontColor=#172b4d;fillColor=#dae8fc;strokeColor=#6c8ebf;fontStyle=1;arcSize=6;" value="08. MyPTSession · chọn ngày và mở đúng buổi" vertex="1">
+          <mxGeometry height="70" width="780" x="960" y="485" as="geometry" />
         </mxCell>
-        <mxCell id="gms-current-0-link-1-3" value="09. MyPTSession · chi tiết và liên hệ PT" style="rounded=1;whiteSpace=wrap;html=1;align=left;verticalAlign=middle;spacing=16;fontFamily=Arial;fontSize=18;fontColor=#172b4d;fillColor=#dae8fc;strokeColor=#6c8ebf;fontStyle=1;arcSize=6;" vertex="1" parent="1" link="data:page/id,gms-current-9">
-          <mxGeometry x="960" y="567" width="780" height="70" as="geometry" />
+        <mxCell id="gms-current-0-link-1-3" link="data:page/id,gms-current-9" parent="1" style="rounded=1;whiteSpace=wrap;html=1;align=left;verticalAlign=middle;spacing=16;fontFamily=Arial;fontSize=18;fontColor=#172b4d;fillColor=#dae8fc;strokeColor=#6c8ebf;fontStyle=1;arcSize=6;" value="09. MyPTSession · chi tiết và liên hệ PT" vertex="1">
+          <mxGeometry height="70" width="780" x="960" y="567" as="geometry" />
         </mxCell>
-        <mxCell id="gms-current-0-link-1-4" value="10. MyPTSession · ôn tập và lần theo code" style="rounded=1;whiteSpace=wrap;html=1;align=left;verticalAlign=middle;spacing=16;fontFamily=Arial;fontSize=18;fontColor=#172b4d;fillColor=#dae8fc;strokeColor=#6c8ebf;fontStyle=1;arcSize=6;" vertex="1" parent="1" link="data:page/id,gms-current-10">
-          <mxGeometry x="960" y="649" width="780" height="70" as="geometry" />
+        <mxCell id="gms-current-0-link-1-4" link="data:page/id,gms-current-10" parent="1" style="rounded=1;whiteSpace=wrap;html=1;align=left;verticalAlign=middle;spacing=16;fontFamily=Arial;fontSize=18;fontColor=#172b4d;fillColor=#dae8fc;strokeColor=#6c8ebf;fontStyle=1;arcSize=6;" value="10. MyPTSession · ôn tập và lần theo code" vertex="1">
+          <mxGeometry height="70" width="780" x="960" y="649" as="geometry" />
         </mxCell>
-        <mxCell id="gms-current-0-note" value="Code đang có là nguồn chính. DAO đọc DB; Service quyết định nghiệp vụ; DTO mang dữ liệu; JSP/JS hiển thị và tương tác." style="rounded=1;whiteSpace=wrap;html=1;align=left;verticalAlign=middle;spacing=16;fontFamily=Arial;fontSize=19;fontColor=#172b4d;fillColor=#d5e8d4;strokeColor=#82b366;fontStyle=0;arcSize=6;" vertex="1" parent="1">
-          <mxGeometry x="40" y="1220" width="1720" height="85" as="geometry" />
+        <mxCell id="gms-current-0-note" parent="1" style="rounded=1;whiteSpace=wrap;html=1;align=left;verticalAlign=middle;spacing=16;fontFamily=Arial;fontSize=19;fontColor=#172b4d;fillColor=#d5e8d4;strokeColor=#82b366;fontStyle=0;arcSize=6;" value="Code đang có là nguồn chính. DAO đọc DB; Service quyết định nghiệp vụ; DTO mang dữ liệu; JSP/JS hiển thị và tương tác." vertex="1">
+          <mxGeometry height="85" width="1720" x="40" y="1220" as="geometry" />
         </mxCell>
       </root>
     </mxGraphModel>
