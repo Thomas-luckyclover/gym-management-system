@@ -57,6 +57,8 @@
 .pt-slot-frame.is-held { border-color: var(--color-warning-border); border-inline-start-color: var(--color-warning-ink); background: var(--color-warning-tint); }
 .pt-slot-frame.is-locked { border-color: var(--color-danger-border); border-inline-start-color: var(--color-danger-ink); background: var(--color-danger-tint); }
 .pt-slot-frame.is-past { border-inline-start-color: var(--color-neutral); background: var(--color-surface-muted); }
+.pt-slot-frame.is-removing { border-style: dashed; border-inline-start-color: var(--color-danger-ink); }
+.pt-slot-frame.is-removing .pt-slot-time { text-decoration: line-through; }
 .pt-slot-time { white-space: nowrap; font-weight: var(--font-weight-semibold); font-variant-numeric: var(--font-numeric); }
 .pt-slot-person { display: grid; min-width: 0; gap: var(--space-1); }
 .pt-slot-person strong, .pt-slot-state { overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }

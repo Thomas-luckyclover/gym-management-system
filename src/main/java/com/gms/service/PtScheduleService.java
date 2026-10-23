@@ -340,17 +340,24 @@ public class PtScheduleService {
     // 5. CÔNG BỐ — publish giữ transaction, các hàm phụ kiểm tra dữ liệu trước khi DAO ghi
     // ================================================================================================================
 
-    /** Tài khoản + các ngày/giờ nháp → số khung đã công bố; lỗi thì rollback cả lần gửi. */
-    public ServiceResult<Integer> publish(int accountId, String[] dates, String[] starts,
+    /**
+     * HÀM CHÍNH — PtScheduleServlet.doPost gọi khi PT bấm Công bố.
+     * Tài khoản + khung mới (ngày/giờ) + mã khung cần gỡ → số khung đã đổi; lỗi thì rollback cả lần gửi.
+     */
+    public ServiceResult<Integer> publish(int accountId, String[] dates, String[] starts, String[] removeIds,
             int expectedMinutes, LocalDateTime now) {
-        if (dates == null || starts == null || dates.length == 0 || dates.length != starts.length) {
-            return ServiceResult.fail("Chọn ít nhất một khung nháp trước khi công bố.");
+        // B1: phải có ít nhất một thay đổi; ngày và giờ của khung mới phải đi thành cặp.
+        boolean hasDrafts = dates != null && dates.length > 0;
+        boolean hasRemovals = removeIds != null && removeIds.length > 0;
+        if ((!hasDrafts && !hasRemovals) || (hasDrafts && (starts == null || dates.length != starts.length))) {
+            return ServiceResult.fail("Chọn ít nhất một khung nháp hoặc khung cần gỡ trước khi công bố.");
         }
         try (Connection connection = DBContext.getConnection()) {
-            // B1: tất cả kiểm tra và ghi dùng chung transaction, không lưu từng phần.
+            // B2: tất cả kiểm tra và ghi dùng chung transaction, không lưu từng phần.
             connection.setAutoCommit(false);
             try {
-                ServiceResult<Integer> result = publishInTransaction(connection, accountId, dates, starts, expectedMinutes, now);
+                ServiceResult<Integer> result = publishInTransaction(connection, accountId, dates, starts, removeIds,
+                        expectedMinutes, now);
                 if (result.isSuccess()) {
                     connection.commit(); // Mọi khung hợp lệ và đã ghi xong thì chốt cả danh sách.
                 } else {
@@ -362,7 +369,7 @@ public class PtScheduleService {
                 throw exception;
             }
         } catch (IllegalArgumentException exception) {
-            // B2: lỗi nhập liệu giữ nguyên nháp ở client, không lộ lỗi SQL ra màn hình.
+            // B3: lỗi nhập liệu giữ nguyên nháp ở client, không lộ lỗi SQL ra màn hình.
             return ServiceResult.fail(exception.getMessage());
         } catch (SQLException | IllegalStateException | DateTimeException exception) {
             exception.printStackTrace();
@@ -370,9 +377,13 @@ public class PtScheduleService {
         }
     }
 
-    /** Connection đã tắt autoCommit; caller quyết định commit, test có thể rollback toàn bộ. */
+    /**
+     * HÀM PHỤ — gọi ở B2 của publish (test DB gọi trực tiếp để rollback).
+     * Connection đã tắt autoCommit; caller quyết định commit. Gỡ trước rồi mới thêm,
+     * để khung mới được đặt vào chỗ khung vừa gỡ trong cùng lần Công bố.
+     */
     ServiceResult<Integer> publishInTransaction(Connection connection, int accountId, String[] dates,
-            String[] starts, int expectedMinutes, LocalDateTime now) throws SQLException {
+            String[] starts, String[] removeIds, int expectedMinutes, LocalDateTime now) throws SQLException {
         // B1: khóa đúng PT và cấu hình để hai lần công bố không vượt qua kiểm tra trùng.
         Integer ptId = scheduleDAO.lockPtForPublish(connection, accountId);
         if (ptId == null) return ServiceResult.fail(Messages.MSG07_NO_PERMISSION);
@@ -384,7 +395,19 @@ public class PtScheduleService {
             return ServiceResult.fail("Thời lượng buổi đã thay đổi. Tải lại lịch và kiểm tra nháp trước khi công bố.");
         }
 
-        // B2: Service tính giờ kết thúc; đọc giờ ngoại lệ, nghỉ phép và khung đang có một lần.
+        // B2: gỡ khung (DBR-36: chỉ Free → Withdrawn). Một khung không còn gỡ được thì báo lỗi, cả lần gửi rollback.
+        List<Integer> slotIds = parseRemoveIds(removeIds);
+        for (int slotId : slotIds) {
+            if (!scheduleDAO.withdrawFreeSlot(connection, ptId, slotId, now)) {
+                throw new IllegalArgumentException("Có khung không còn gỡ được (khách vừa giữ/đặt hoặc đã tới giờ). "
+                        + "Tải lại lịch rồi thử lại.");
+            }
+        }
+        if (dates == null || dates.length == 0) {
+            return ServiceResult.ok(slotIds.size(), "Đã gỡ " + slotIds.size() + " khung giờ.");
+        }
+
+        // B3: Service tính giờ kết thúc; đọc giờ ngoại lệ, nghỉ phép và khung đang có một lần.
         List<PtSlotDraft> drafts = buildDrafts(dates, starts, minutes);
         LocalDate fromDate = drafts.get(0).getSlotDate();
         LocalDate toDate = drafts.get(drafts.size() - 1).getSlotDate();
@@ -393,11 +416,33 @@ public class PtScheduleService {
         List<PtScheduleItem> existing = scheduleDAO.findSlotsForPublish(connection, ptId, fromDate, toDate);
         validateDrafts(drafts, existing, leaves, exceptions, hours, now);
 
-        // B3: chỉ ghi sau khi mọi khung hợp lệ; mở lại Withdrawn đúng giờ hoặc tạo Free mới.
+        // B4: chỉ ghi sau khi mọi khung hợp lệ; mở lại Withdrawn đúng giờ hoặc tạo Free mới.
         for (PtSlotDraft draft : drafts) {
             scheduleDAO.insertOrReopenSlot(connection, ptId, draft);
         }
-        return ServiceResult.ok(drafts.size(), "Đã công bố " + drafts.size() + " khung giờ.");
+        String message = "Đã công bố " + drafts.size() + " khung giờ"
+                + (slotIds.isEmpty() ? "." : ", gỡ " + slotIds.size() + " khung giờ.");
+        return ServiceResult.ok(drafts.size() + slotIds.size(), message);
+    }
+
+    /**
+     * HÀM PHỤ — gọi ở B2 của publishInTransaction.
+     * Mã khung từ trình duyệt ("57") → số; bỏ mã trùng; mã không phải số dương thì báo lỗi.
+     * Không có mã nào → danh sách rỗng.
+     */
+    static List<Integer> parseRemoveIds(String[] removeIds) {
+        List<Integer> ids = new ArrayList<>();
+        if (removeIds == null) return ids;
+        for (String value : removeIds) {
+            try {
+                int id = Integer.parseInt(value == null ? "" : value.trim());
+                if (id <= 0) throw new NumberFormatException();
+                if (!ids.contains(id)) ids.add(id);
+            } catch (NumberFormatException exception) {
+                throw new IllegalArgumentException("Khung cần gỡ không hợp lệ. Tải lại lịch rồi chọn lại.");
+            }
+        }
+        return ids;
     }
 
     /** Ngày/giờ từ form → DTO nháp xếp theo ngày giờ; không nhận EndTime từ trình duyệt. */

@@ -30,8 +30,9 @@ class PtSchedulePublishDbTest {
         tests.insertsWholeBatchRejectsReplayAndRollsBackFixture();
         tests.invalidLastDraftWritesNothingAndChangedConfigKeepsDrafts();
         tests.reopensWithdrawnWithoutChangingItsIdOrTimes();
+        tests.withdrawsFreeSlotThenReplaysAsErrorAndCanAddIntoSameTime();
         tests.secondTransactionCannotPublishPastTheFirstPtLock();
-        System.out.println("4 SQL transaction tests passed; all fixture rows rolled back.");
+        System.out.println("5 SQL transaction tests passed; all fixture rows rolled back.");
     }
 
     @Test
@@ -42,12 +43,12 @@ class PtSchedulePublishDbTest {
                 int ptId = dao.lockPtForPublish(connection, 15);
                 int before = count(connection, ptId);
                 ServiceResult<Integer> result = service.publishInTransaction(connection, 15,
-                        new String[]{DATE, DATE}, new String[]{"08:00", "10:00"}, minutes, NOW);
+                        new String[]{DATE, DATE}, new String[]{"08:00", "10:00"}, null, minutes, NOW);
                 assertTrue(result.isSuccess());
                 assertEquals(2, result.getData());
                 assertEquals(before + 2, count(connection, ptId));
                 assertThrows(IllegalArgumentException.class, () -> service.publishInTransaction(connection, 15,
-                        new String[]{DATE}, new String[]{"08:00"}, minutes, NOW));
+                        new String[]{DATE}, new String[]{"08:00"}, null, minutes, NOW));
                 assertEquals(before + 2, count(connection, ptId));
             } finally { connection.rollback(); }
         }
@@ -61,13 +62,13 @@ class PtSchedulePublishDbTest {
                 int ptId = dao.lockPtForPublish(connection, 15);
                 int before = count(connection, ptId);
                 assertThrows(IllegalArgumentException.class, () -> service.publishInTransaction(connection, 15,
-                        new String[]{DATE, DATE}, new String[]{"08:00", "08:15"}, minutes, NOW));
+                        new String[]{DATE, DATE}, new String[]{"08:00", "08:15"}, null, minutes, NOW));
                 assertEquals(before, count(connection, ptId));
                 assertFalse(service.publishInTransaction(connection, 15,
-                        new String[]{DATE}, new String[]{"08:00"}, minutes + 15, NOW).isSuccess());
+                        new String[]{DATE}, new String[]{"08:00"}, null, minutes + 15, NOW).isSuccess());
                 assertEquals(before, count(connection, ptId));
                 assertFalse(service.publishInTransaction(connection, 1,
-                        new String[]{DATE}, new String[]{"08:00"}, minutes, NOW).isSuccess());
+                        new String[]{DATE}, new String[]{"08:00"}, null, minutes, NOW).isSuccess());
             } finally { connection.rollback(); }
         }
     }
@@ -89,13 +90,36 @@ class PtSchedulePublishDbTest {
                 }
                 int oldId = slotId(connection, ptId);
                 assertTrue(service.publishInTransaction(connection, 15,
-                        new String[]{DATE}, new String[]{"08:00"}, minutes, NOW).isSuccess());
+                        new String[]{DATE}, new String[]{"08:00"}, null, minutes, NOW).isSuccess());
                 assertEquals(before + 1, count(connection, ptId));
                 assertEquals(oldId, slotId(connection, ptId));
                 try (PreparedStatement statement = connection.prepareStatement("SELECT Status FROM TimeSlots WHERE TimeSlotId=?")) {
                     statement.setInt(1, oldId);
                     try (ResultSet rs = statement.executeQuery()) { assertTrue(rs.next()); assertEquals("Free", rs.getString(1)); }
                 }
+            } finally { connection.rollback(); }
+        }
+    }
+
+    @Test
+    void withdrawsFreeSlotThenReplaysAsErrorAndCanAddIntoSameTime() throws Exception {
+        try (Connection connection = DBContext.getConnection()) {
+            connection.setAutoCommit(false);
+            try {
+                int ptId = dao.lockPtForPublish(connection, 15);
+                assertTrue(service.publishInTransaction(connection, 15,
+                        new String[]{DATE}, new String[]{"08:00"}, null, minutes, NOW).isSuccess());
+                String id = String.valueOf(slotId(connection, ptId));
+                // Gỡ khung vừa tạo: Free → Withdrawn, dòng vẫn còn.
+                assertTrue(service.publishInTransaction(connection, 15, null, null, new String[]{id}, minutes, NOW).isSuccess());
+                assertEquals("Withdrawn", status(connection, Integer.parseInt(id)));
+                // Gỡ lần nữa: không còn Free → lỗi, transaction của Service sẽ rollback.
+                assertThrows(IllegalArgumentException.class, () -> service.publishInTransaction(connection, 15,
+                        null, null, new String[]{id}, minutes, NOW));
+                // Thêm lại đúng giờ cũ: mở lại chính dòng Withdrawn đó.
+                assertTrue(service.publishInTransaction(connection, 15,
+                        new String[]{DATE}, new String[]{"08:00"}, null, minutes, NOW).isSuccess());
+                assertEquals("Free", status(connection, Integer.parseInt(id)));
             } finally { connection.rollback(); }
         }
     }
@@ -118,6 +142,13 @@ class PtSchedulePublishDbTest {
             statement.setInt(1, ptId);
             statement.setString(2, DATE);
             try (ResultSet rs = statement.executeQuery()) { rs.next(); return rs.getInt(1); }
+        }
+    }
+
+    private static String status(Connection connection, int timeSlotId) throws SQLException {
+        try (PreparedStatement statement = connection.prepareStatement("SELECT Status FROM TimeSlots WHERE TimeSlotId=?")) {
+            statement.setInt(1, timeSlotId);
+            try (ResultSet rs = statement.executeQuery()) { assertTrue(rs.next()); return rs.getString(1); }
         }
     }
 

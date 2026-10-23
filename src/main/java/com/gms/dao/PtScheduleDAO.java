@@ -12,6 +12,7 @@ import java.sql.ResultSet;
 import java.sql.SQLException;
 import java.sql.Time;
 import java.time.LocalDate;
+import java.time.LocalDateTime;
 import java.util.ArrayList;
 import java.util.List;
 
@@ -421,6 +422,31 @@ public class PtScheduleDAO {
             statement.setString(3, draft.getStartTime().toString());
             statement.setString(4, draft.getEndTime().toString());
             statement.executeUpdate();
+        }
+    }
+
+    /**
+     * HÀM PHỤ — PtScheduleService.publishInTransaction gọi ở B2, mỗi khung cần gỡ một lần.
+     * Đổi Free → Withdrawn (DBR-36), giữ dòng để làm lịch sử. Chỉ đổi khi cả 4 điều kiện đúng:
+     * đúng PT, đang Free (không Held/Booked), chưa tới giờ bắt đầu, không có buổi Scheduled gắn vào.
+     * 5 dấu ?: timeSlotId, ptId, hôm nay, hôm nay, giờ hiện tại. Trả true nếu đổi được đúng 1 dòng.
+     */
+    public boolean withdrawFreeSlot(Connection connection, int ptId, int timeSlotId, LocalDateTime now)
+            throws SQLException {
+        String sql = """
+                UPDATE TimeSlots SET Status = 'Withdrawn'
+                WHERE TimeSlotId = ? AND PtEmployeeId = ? AND Status = 'Free'
+                  AND (SlotDate > ? OR (SlotDate = ? AND StartTime > CAST(? AS time)))
+                  AND NOT EXISTS (SELECT 1 FROM Sessions s
+                                  WHERE s.TimeSlotId = TimeSlots.TimeSlotId AND s.Status = 'Scheduled')
+                """;
+        try (PreparedStatement statement = connection.prepareStatement(sql)) {
+            statement.setInt(1, timeSlotId);
+            statement.setInt(2, ptId);
+            statement.setDate(3, Date.valueOf(now.toLocalDate()));
+            statement.setDate(4, Date.valueOf(now.toLocalDate()));
+            statement.setString(5, now.toLocalTime().withNano(0).toString());
+            return statement.executeUpdate() == 1;
         }
     }
 }

@@ -23,7 +23,17 @@ class PtSchedulePublishTest {
     void rejectsMissingOrUnpairedInputs() {
         assertThrows(IllegalArgumentException.class, () -> PtScheduleService.buildDrafts(null, null, 90));
         assertThrows(IllegalArgumentException.class, () -> PtScheduleService.buildDrafts(new String[]{"2026-10-23"}, new String[0], 90));
-        assertFalse(new PtScheduleService().publish(15, null, null, 90, NOW).isSuccess());
+        assertFalse(new PtScheduleService().publish(15, null, null, null, 90, NOW).isSuccess());
+        assertFalse(new PtScheduleService().publish(15, new String[0], null, new String[0], 90, NOW).isSuccess());
+    }
+
+    @Test
+    void parsesRemoveIdsSkippingDuplicatesAndRejectsGarbage() {
+        assertEquals(List.of(), PtScheduleService.parseRemoveIds(null));
+        assertEquals(List.of(57, 63), PtScheduleService.parseRemoveIds(new String[]{"57", "63", "57"}));
+        assertThrows(IllegalArgumentException.class, () -> PtScheduleService.parseRemoveIds(new String[]{"abc"}));
+        assertThrows(IllegalArgumentException.class, () -> PtScheduleService.parseRemoveIds(new String[]{"0"}));
+        assertThrows(IllegalArgumentException.class, () -> PtScheduleService.parseRemoveIds(new String[]{null}));
     }
 
     @ParameterizedTest

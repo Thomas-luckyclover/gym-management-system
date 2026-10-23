@@ -12,8 +12,8 @@
     <head>
         <%@ include file="/WEB-INF/jsp/common/head.jspf" %>
         <title>Lịch dạy · Super Gym</title>
-        <link rel="stylesheet" href="${pageContext.request.contextPath}/css/pages/pt/schedule.css?v=20261023f">
-        <c:if test="${not empty week}"><script src="${pageContext.request.contextPath}/js/pages/pt/schedule.js?v=20261023f" defer></script></c:if>
+        <link rel="stylesheet" href="${pageContext.request.contextPath}/css/pages/pt/schedule.css?v=20261023g">
+        <c:if test="${not empty week}"><script src="${pageContext.request.contextPath}/js/pages/pt/schedule.js?v=20261023g" defer></script></c:if>
     </head>
     <body class="dock theme-pt pt-schedule-page">
         <%@ include file="/WEB-INF/jsp/common/flash-toast.jspf" %>
@@ -66,7 +66,7 @@
                                     <a href="<c:out value='${listViewUrl}' />" aria-current="${view eq 'list' ? 'page' : 'false'}">Danh sách</a>
                                 </nav>
                             </section>
-                            <p class="pt-frame-notice">Kéo hoặc nhập giờ để thêm nháp. Chỉ sau khi Công bố thành công khách mới thấy các khung này.</p>
+                            <p class="pt-frame-notice">Kéo hoặc nhập giờ để thêm nháp, bấm Gỡ khung để đánh dấu gỡ. Chỉ sau khi Công bố thành công khách mới thấy thay đổi.</p>
 
                             <%-- ==================== B3: cùng khung 7 ngày; CSS đổi lưới tuần thành danh sách ==================== --%>
                             <div class="pt-schedule-workspace">
@@ -144,9 +144,9 @@
                                                                     </div>
                                                                 </c:if>
                                                                 <span class="pt-slot-state"><c:out value="${item.statusLabel}" /></span>
-                                                                <%-- B3.2: quyền đã có nhưng thao tác ghi chưa nối; không cho bấm nút giả. --%>
+                                                                <%-- B3.2: Xử lý buổi chưa nối; Gỡ khung chỉ đánh dấu chờ gỡ, bấm Công bố mới ghi DB. --%>
                                                                 <c:if test="${item.canHandle}"><button type="button" class="btn btn-outline btn-sm pt-slot-action" disabled title="Xử lý buổi sẽ được nối ở bước sau">Xử lý buổi</button></c:if>
-                                                                <c:if test="${item.canRemove}"><button type="button" class="btn btn-ghost btn-sm pt-slot-action" disabled title="Gỡ khung sẽ được nối ở bước sau">Gỡ khung</button></c:if>
+                                                                <c:if test="${item.canRemove}"><button type="button" class="btn btn-ghost btn-sm pt-slot-action" data-remove-slot title="Đánh dấu chờ gỡ; bấm Công bố mới lưu">Gỡ khung</button></c:if>
                                                             </article>
                                                         </c:forEach>
                                                     </div>

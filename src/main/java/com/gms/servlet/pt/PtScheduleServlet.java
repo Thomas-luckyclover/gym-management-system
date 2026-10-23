@@ -96,10 +96,10 @@ public class PtScheduleServlet extends HttpServlet {
     }
 
     // ================================================================================================================
-    // 2. CÔNG BỐ — nhận các cặp slotDate/startTime, không nhận mã PT hoặc EndTime từ client
+    // 2. CÔNG BỐ — nhận các cặp slotDate/startTime và các removeSlotId; không nhận mã PT hoặc EndTime từ client
     // ================================================================================================================
 
-    /** POST cùng URL: kiểm tra session/CSRF rồi trả JsonResponse cho nút Công bố. */
+    /** HÀM CHÍNH — JS publishPtDrafts gửi POST cùng URL khi bấm Công bố; kiểm tra session/CSRF rồi trả JsonResponse. */
     @Override
     protected void doPost(HttpServletRequest request, HttpServletResponse response) throws IOException {
         // B1: hết phiên/sai vai trò không được ghi, kể cả khi gọi POST trực tiếp.
@@ -113,11 +113,12 @@ public class PtScheduleServlet extends HttpServlet {
             JsonUtil.writeJson(response, 403, JsonResponse.error(Messages.MSG07_NO_PERMISSION));
             return;
         }
-        // B2: mảng giữ từng cặp theo thứ tự gửi; Service kiểm tra lại mọi giá trị.
+        // B2: khung mới là các cặp slotDate/startTime; khung cần gỡ là các removeSlotId ("57", "63").
+        // Không có tham số nào thì getParameterValues trả null; Service kiểm tra lại mọi giá trị.
         Integer duration = RequestUtil.getPositiveIntParam(request, "duration");
         ServiceResult<Integer> result = scheduleService.publish(accountId,
                 request.getParameterValues("slotDate"), request.getParameterValues("startTime"),
-                duration == null ? 0 : duration, DateTimeUtil.now());
+                request.getParameterValues("removeSlotId"), duration == null ? 0 : duration, DateTimeUtil.now());
         if (result.isSuccess()) RequestUtil.setFlashToast(request, "success", result.getMessage());
         JsonUtil.writeJson(response, JsonResponse.from(result));
     }

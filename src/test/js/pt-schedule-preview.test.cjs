@@ -110,3 +110,11 @@ test("nháp lưu theo đúng tài khoản và tuần, không ghi EndTime hoặc 
     assert.ok(other.savedDrafts.has("gms.pt-slots.16:2026-10-19"));
     assert.equal(other.savedDrafts.has("gms.pt-slots.15:2026-10-19"), false);
 });
+
+test("khung chờ gỡ lưu riêng theo cùng key tài khoản/tuần, chỉ giữ mã TimeSlotId", () => {
+    const { context, savedDrafts } = loadPreview();
+    vm.runInContext('ptRemovals = ["57", "63"]', context);
+    context.savePtDrafts();
+    assert.deepEqual(JSON.parse(savedDrafts.get("gms.pt-slots.15:2026-10-19.remove")), ["57", "63"]);
+    assert.deepEqual(JSON.parse(savedDrafts.get("gms.pt-slots.15:2026-10-19")), []);
+});
