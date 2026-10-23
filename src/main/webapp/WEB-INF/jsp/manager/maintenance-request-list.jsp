@@ -7,8 +7,7 @@
 <head>
   <%@ include file="/WEB-INF/jsp/common/head.jspf" %>
   <title>Yêu cầu bảo trì · Super Gym</title>
-  <link rel="stylesheet" href="${pageContext.request.contextPath}/css/pages/auth/account-settings.css">
-  <link rel="stylesheet" href="${pageContext.request.contextPath}/css/pages/manager/maintenance-requests.css">
+  <link rel="stylesheet" href="${pageContext.request.contextPath}/css/pages/manager/maintenance-requests.css?v=20261023fix1">
   <link rel="stylesheet"
         href="${pageContext.request.contextPath}/css/pages/auth/notification-bell.css">
 
@@ -181,7 +180,8 @@
                         <strong>
                           <c:out value="${item.request.requestCode}" />
                           ·
-                          <c:out value="${item.facilityName}" />
+                          <c:out value="${item.itemCode}" />
+                          (<c:out value="${item.facilityName}" />)
                         </strong>
 
                         <span class="badge
@@ -195,20 +195,39 @@
 
                       <div class="maintenance-meta">
                         <span>
-                          Người báo:
-                          <b><c:out value="${item.reporterName}" /></b>
+                          Ngày báo: <b>${gms:formatDate(item.request.reportedAt.toLocalDate())}</b>
                         </span>
 
                         <span>
-                          ${gms:formatDate(item.request.reportedAt.toLocalDate())}
+                          Ưu tiên: <b><c:out value="${item.request.priority.displayName}" /></b>
+                        </span>
+
+                        <c:if test="${not empty item.facilityLocation}">
+                          <span>
+                            Khu vực: <b><c:out value="${item.facilityLocation}" /></b>
+                          </span>
+                        </c:if>
+
+                        <span>
+                          Sự cố: <b><c:out value="${item.request.incidentType.displayName}" /></b>
                         </span>
 
                         <span>
-                          <c:out value="${item.request.priority.displayName}" />
+                          Phát hiện: <b><c:out value="${item.request.detectedBy.displayName}" /></b>
                         </span>
+
+                        <span>
+                          Người báo: <b><c:out value="${item.reporterName}" /></b>
+                        </span>
+
+                        <c:if test="${item.request.warningTagPlaced}">
+                          <span class="badge badge-danger">
+                            Đã đặt cảnh báo
+                          </span>
+                        </c:if>
                       </div>
 
-                      <p>
+                      <p class="maintenance-description" style="margin-top: var(--space-2);">
                         <c:out value="${item.request.description}" />
                       </p>
                     </div>
