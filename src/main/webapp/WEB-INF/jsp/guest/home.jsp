@@ -2,19 +2,29 @@
 <%@ taglib prefix="c" uri="jakarta.tags.core" %>
 <%@ taglib prefix="gms" uri="/WEB-INF/gms-functions.tld" %>
 <%--
-  Trang chủ (#5 Home, UC-06, luật 2.6). Dữ liệu: HomeServlet → request "home" (HomePageView).
-  Thiết kế thương hiệu EMBER × AQUA: khối cam đỏ có sức nặng, ảnh thể thao và đại dương sâu.
-  Tiêu đề Barlow Condensed, nội dung Be Vietnam Pro; khoảng dòng giữ đủ dấu tiếng Việt.
-  Chỉ hiển thị, không có ô nhập. Mọi con số lấy từ DB; ảnh trong images/brand là ảnh Unsplash (giấy phép tự do).
-  Hiệu ứng cuộn: js/pages/guest/home-motion.js (Web Animations API); linh vật: js/pages/guest/home.js.
---%>
+================================================================================
+ home.jsp — TRANG CHỦ CÔNG KHAI (GET /, màn #5, UC-06, luật 2.6). Chỉ hiển thị, không có ô nhập.
+
+ DỮ LIỆU SERVLET GỬI SANG
+   home   HomePageView (HomeService.getHomePage): openingHours, gymPackages, ptPackages, pts, ptCount, latestPosts
+          Mọi con số (giá, số buổi đã dạy…) lấy từ DB.
+
+ BỐ CỤC (từ trên xuống)
+   1. Hero: "Mạnh hơn mỗi ngày." + giờ mở cửa + số huấn luyện viên, dải chữ chạy
+   2. Dải 4 ảnh "Đánh thức bản năng"   (ảnh trong images/brand đã tô sẵn màu xanh-cam)
+   3. Dịch vụ                4. Bảng giá gói tập + gói PT      5. Đội ngũ (không ảnh thật, không liên hệ — luật 2.6)
+   6. 3 bài viết mới nhất    7. Hỏi đáp (<details>)             8. Kêu gọi đăng ký + linh vật Pumpy
+
+ JS: home-motion.js (hiệu ứng mở màn + cuộn, Web Animations API), home.js (Pumpy).
+ Ảnh images/brand: Unsplash / Pexels (giấy phép tự do, nguồn trong file .json cạnh ảnh).
+================================================================================ --%>
 <!DOCTYPE html>
 <html lang="vi">
 <head>
   <%@ include file="/WEB-INF/jsp/common/head.jspf" %>
   <title>Super Gym · Mạnh hơn mỗi ngày</title>
   <meta name="description" content="Super Gym — chọn gói tập, đặt lịch huấn luyện viên và theo dõi hành trình tập luyện của bạn.">
-  <link rel="stylesheet" href="${pageContext.request.contextPath}/css/pages/guest/home.css?v=20261014a">
+  <link rel="stylesheet" href="${pageContext.request.contextPath}/css/pages/guest/home.css?v=20261025a">
   <link rel="stylesheet" href="${pageContext.request.contextPath}/css/pages/guest/mascot.css?v=20261014f">
   <script src="${pageContext.request.contextPath}/js/pages/guest/home-motion.js?v=20261013c" defer></script>
   <script src="${pageContext.request.contextPath}/js/pages/guest/home.js?v=20261014f" defer></script>
@@ -25,7 +35,7 @@
   <%@ include file="/WEB-INF/jsp/common/guest-header.jspf" %>
 
   <main id="main-content">
-    <%-- ============================ HERO: một khung hình điện ảnh ============================ --%>
+    <%-- ============================ 1. HERO ============================ --%>
     <section class="cine-hero" aria-labelledby="hero-title">
       <div class="cine-hero__media" aria-hidden="true">
         <img class="cine-hero__photo" src="${ctx}/images/brand/hero-barbell.jpg" alt="" width="1600" height="1067" fetchpriority="high">
@@ -59,7 +69,7 @@
       </div>
     </section>
 
-    <%-- ============================ DẢI ẢNH CHUYỂN ĐỘNG ============================ --%>
+    <%-- ============================ 2. DẢI 4 ẢNH ============================ --%>
     <section class="cine-strip" aria-labelledby="strip-title">
       <div class="wrap">
         <div class="cine-row-head"><h2 id="strip-title" class="cine-h2" data-reveal-title>Đánh thức<br><em>bản năng.</em></h2></div>
@@ -67,12 +77,12 @@
       <div class="cine-strip__cards">
         <figure class="cine-card" data-card><img src="${ctx}/images/brand/strip-squat.jpg" alt="Học viên nữ squat với đòn tạ" loading="lazy" width="1600" height="1067"><figcaption>Sức mạnh</figcaption></figure>
         <figure class="cine-card" data-card><img src="${ctx}/images/brand/strip-curl.jpg" alt="Học viên nam tập tay với tạ" loading="lazy" width="1600" height="1067"><figcaption>Kiểm soát</figcaption></figure>
-        <figure class="cine-card" data-card><img src="${ctx}/images/brand/strip-endurance.jpg" alt="Vận động viên nữ nâng đòn tạ trong phòng tập" loading="lazy" width="1200" height="1600"><figcaption>Bền bỉ</figcaption></figure>
+        <figure class="cine-card" data-card><img src="${ctx}/images/brand/strip-endurance.jpg?v=20261025" alt="Vận động viên nữ nâng đòn tạ trong phòng tập" loading="lazy" width="1200" height="1600"><figcaption>Bền bỉ</figcaption></figure>
         <figure class="cine-card" data-card><img src="${ctx}/images/brand/strip-ropes.jpg" alt="Học viên tập thừng chiến" loading="lazy" width="1600" height="1067"><figcaption>Bùng nổ</figcaption></figure>
       </div>
     </section>
 
-    <%-- ============================ DỊCH VỤ ============================ --%>
+    <%-- ============================ 3. DỊCH VỤ ============================ --%>
     <section class="cine-section cine-section--services" id="dich-vu" aria-labelledby="svc-title">
       <div class="wrap cine-services">
         <div class="cine-services__head">
@@ -100,7 +110,7 @@
       </div>
     </section>
 
-    <%-- ============================ BẢNG GIÁ GÓI TẬP (khối đại dương sâu) ============================ --%>
+    <%-- ============================ 4. BẢNG GIÁ (khối đại dương sâu) ============================ --%>
     <section class="cine-ocean" id="pricing" aria-labelledby="pricing-title">
       <div class="wrap">
         <div class="cine-ocean__head">
@@ -163,7 +173,7 @@
       </div>
     </section>
 
-    <%-- ============================ ĐỘI NGŨ (luật 2.6: không dùng ảnh thật, không hiện liên hệ) ============================ --%>
+    <%-- ============================ 5. ĐỘI NGŨ (luật 2.6: không ảnh thật, không hiện liên hệ) ============================ --%>
     <c:if test="${not empty home.pts}">
       <section class="cine-section" id="doi-ngu" aria-labelledby="team-title">
         <div class="wrap">
@@ -182,7 +192,7 @@
       </section>
     </c:if>
 
-    <%-- ============================ BÀI VIẾT MỚI ============================ --%>
+    <%-- ============================ 6. BÀI VIẾT MỚI ============================ --%>
     <c:if test="${not empty home.latestPosts}">
       <section class="cine-section cine-section--tight" aria-labelledby="blog-title">
         <div class="wrap">
@@ -206,7 +216,7 @@
       </section>
     </c:if>
 
-    <%-- ============================ HỎI ĐÁP ============================ --%>
+    <%-- ============================ 7. HỎI ĐÁP ============================ --%>
     <section class="cine-section cine-section--tight" id="faq" aria-labelledby="faq-title">
       <div class="wrap cine-faq">
         <h2 id="faq-title" class="cine-h2" data-reveal-title>Câu hỏi thường gặp</h2>
@@ -231,7 +241,7 @@
       </div>
     </section>
 
-    <%-- ============================ KÊU GỌI ĐĂNG KÝ + PUMPY ============================ --%>
+    <%-- ============================ 8. KÊU GỌI ĐĂNG KÝ + PUMPY ============================ --%>
     <section class="cta-band cine-cta">
       <div class="wrap cta-inner">
         <div class="cta-copy">

@@ -1,7 +1,8 @@
 // =====================================================================
-// home-motion.js — Nhịp mở màn Super Gym: chữ lên trước, ảnh lấy nét theo sau.
-// DOM: .cine-hero, .cine-line > span, .cine-hero__photo, .cine-strip [data-card].
-// Web Animations API chỉ bổ sung chuyển động; HTML/CSS luôn hiển thị đủ nội dung.
+// home-motion.js — HIỆU ỨNG TRANG CHỦ: chữ hero trồi lên trước, ảnh lấy nét theo sau, khối hiện dần khi cuộn.
+// DOM: .cine-hero, .cine-line > span, .cine-hero__photo, .cine-strip [data-card], [data-fade].
+// Web Animations API chỉ THÊM chuyển động (fill: "none"): tắt JS hoặc bật "giảm chuyển động"
+// thì HTML/CSS vẫn hiện đủ nội dung — không có gì bị ẩn chờ JS.
 // =====================================================================
 
 document.addEventListener("DOMContentLoaded", function () {

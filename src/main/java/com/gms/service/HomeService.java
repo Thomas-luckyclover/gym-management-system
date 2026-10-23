@@ -13,11 +13,13 @@ import java.util.ArrayList;
 import java.util.List;
 
 /**
- * Service cung cấp dữ liệu cho trang chủ khách vãng lai (luật 2.6, kịch bản test H01–H07).
+ * SERVICE TRANG CHỦ (luật 2.6, kịch bản test H01–H07). Chỉ HomeServlet gọi.
  *
- * <p>Các nhóm dữ liệu: gói tập nổi bật (gym), gói PT, danh sách PT đang làm, giờ mở cửa và 3 bài blog mới nhất.</p>
+ *   getHomePage     HÀM CHÍNH: gom 5 khối — gói tập, gói PT, PT đang làm, giờ mở cửa, 3 bài blog mới nhất
+ *   buildGymCards   HÀM PHỤ: giá/tháng + % tiết kiệm cho gói tập → assignBadges gắn "Phổ biến nhất" / "Tiết kiệm nhất"
+ *   toMonths        HÀM PHỤ DÙNG CHUNG: số tháng của gói
  *
- * <p>Bộ lọc áp dụng: chỉ lấy gói đang bán qua PackageDAO.findActiveForHomepage(), tách nhóm theo packageType (PT / hội viên), gắn nhãn "Phổ biến nhất" và "Tiết kiệm nhất" cho gói hội viên; blog lấy 3 bài mới nhất (LATEST_POST_LIMIT).</p>
+ * Chỉ lấy gói ĐANG BÁN (PackageDAO.findActiveForHomepage); blog lấy LATEST_POST_LIMIT = 3 bài.
  *
  * @author Le Cong Minh
  */
@@ -32,9 +34,12 @@ public class HomeService {
     private final SystemConfigService systemConfigService = new SystemConfigService();
     private final BlogService blogService = new BlogService();
 
-    // ===== Truy vấn trang chủ =====
+    // =================================================================================================
+    // HÀM CHÍNH
+    // =================================================================================================
 
     /**
+     * HÀM CHÍNH — HomeServlet.doGet gọi ở B1, mỗi lần có người mở trang chủ.
      * Gom 5 khối dữ liệu trang chủ trong 1 lần gọi: gói tập (kèm giá/tháng, % tiết kiệm, nhãn), gói PT, PT đang làm, giờ mở cửa và 3 bài blog mới nhất.
      * Lỗi ở blog chỉ ẩn khối blog, không làm hỏng cả trang; lỗi DB khác trả về MSG04.
      */
@@ -84,9 +89,12 @@ public class HomeService {
         }
     }
 
-    // ===== Build thẻ gói tập (gym) =====
+    // =================================================================================================
+    // HÀM PHỤ
+    // =================================================================================================
 
     /**
+     * HÀM PHỤ — gọi ở B2 của getHomePage.
      * Tạo danh sách thẻ giá cho gói tập: tính giá/tháng, % tiết kiệm so với gói 1 tháng, rồi gắn nhãn "Phổ biến nhất" / "Tiết kiệm nhất".
      *
      * Ví dụ seed (gói 1 tháng = 799.000):
@@ -136,9 +144,8 @@ public class HomeService {
         return cards;
     }
 
-    // ===== Gắn nhãn cho gói hội viên =====
-
     /**
+     * HÀM PHỤ — gọi ở B3 của buildGymCards.
      * Gán nhãn cho các gói hội viên: "Tiết kiệm nhất" = gói có % tiết kiệm cao nhất, "Phổ biến nhất" = gói tháng dài thứ 2 (list đã sắp ngắn → dài); trùng thì bỏ.
      * Nhóm muốn đổi tiêu chí (VD đếm gói bán chạy) → chỉ sửa hàm này.
      */
@@ -164,9 +171,8 @@ public class HomeService {
         }
     }
 
-    // ===== Hỗ trợ chuyển đổi thời hạn =====
-
     /**
+     * HÀM PHỤ DÙNG CHUNG — gọi ở B2 của getHomePage và B1, B2 của buildGymCards.
      * Số tháng của gói (DBR-19); gói ngày và buổi lẻ → 0.
      */
     private int toMonths(Package pkg) {
