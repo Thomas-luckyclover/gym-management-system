@@ -59,7 +59,7 @@
     <head>
         <%@ include file="/WEB-INF/jsp/common/head.jspf" %>
         <title>Gói của tôi · Super Gym</title>
-        <link rel="stylesheet" href="${ctx}/css/pages/customer/dashboard.css?v=20261013c">
+        <link rel="stylesheet" href="${ctx}/css/pages/customer/dashboard.css?v=20261024flat">
         <link rel="stylesheet" href="${ctx}/css/pages/customer/session-status.css?v=20261025a">
         <link rel="stylesheet" href="${ctx}/css/pages/customer/my-bookings.css?v=20261025a">
         <link rel="stylesheet" href="${ctx}/css/pages/auth/notification-bell.css">

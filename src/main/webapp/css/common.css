@@ -2553,49 +2553,7 @@ html body.auth-dark .field select:focus {
   box-shadow: 0 0 0 3px rgba(43, 212, 222, 0.22);
 }
 
-/* Công tắc nền sáng / tối (mọi màn nội bộ; common.js tự gắn vào topbar nếu trang chưa có) */
-.theme-toggle {
-  display: inline-flex;
-  align-items: center;
-  gap: var(--space-2);
-  min-height: 40px;
-  padding: var(--space-1-5) var(--space-3);
-  border: var(--border-width) solid var(--pt-line-strong);
-  border-radius: var(--radius-pill);
-  background: transparent;
-  color: var(--pt-text);
-  font: inherit;
-  font-size: var(--font-size-sm);
-  font-weight: var(--font-weight-semibold);
-  cursor: pointer;
-}
-.theme-toggle:hover { border-color: var(--pt-text); }
-/* Công tắc gạt: rãnh đại dương, núm là "mặt trời" cam (sáng) / "trăng khuyết" (tối) */
-.theme-toggle { padding: var(--space-1) var(--space-3) var(--space-1) var(--space-1-5); }
-.theme-toggle__track {
-  position: relative;
-  width: 44px;
-  height: 24px;
-  border-radius: var(--radius-pill);
-  background: var(--brand-ocean-deep);
-  box-shadow: inset 0 0 0 var(--border-width) rgba(43, 212, 222, 0.35);
-}
-.theme-toggle__knob {
-  position: absolute;
-  top: 3px;
-  left: 3px;
-  width: 18px;
-  height: 18px;
-  border-radius: var(--radius-circle);
-  background: #EAF4F6;
-  box-shadow: inset -5px -2px 0 0 #C9D6DA;
-  transition: transform var(--duration-base) var(--ease-out-expo), background var(--duration-base), box-shadow var(--duration-base);
-}
-.theme-toggle[aria-pressed="true"] .theme-toggle__track { background: #FDE4D8; box-shadow: inset 0 0 0 var(--border-width) rgba(194, 65, 12, 0.4); }
-.theme-toggle[aria-pressed="true"] .theme-toggle__knob { transform: translateX(20px); background: var(--brand-sunset); box-shadow: 0 0 0 3px rgba(242, 92, 27, 0.25); }
-.theme-toggle__label { min-width: 3ch; }
-.top-right .theme-toggle { margin-right: var(--space-1); }
-@media (max-width: 767px) { .theme-toggle__label { display: none; } }
+
 
 /* Nhãn trạng thái: chấm màu phát sáng nhẹ phía trước (nhãn không có icon riêng), chữ đậm vừa, giãn chữ */
 .badge { padding: var(--space-1) var(--space-2-5); letter-spacing: 0.02em; line-height: 1.3; }
@@ -2622,11 +2580,9 @@ html body.auth-dark .field select:focus {
 
 
 /* =====================================================================
-   KHU LÀM VIỆC — "KÍNH THỦY CUNG" (2026-10-13)
-   Tham khảo các site đạt giải trên webdesignawards.io (UI/UX):
-     · Khung lưới mảnh, nhãn nhỏ kiểu mã [ ... ] giãn chữ, màu nhấn dùng có tiết chế
-     · Khoảng thở rộng và phân cấp số liệu rõ ràng
-   Nền: nghệ thuật trừu tượng gang, phấn tập và pigment ember. Ảnh tĩnh lùi sau surface đặc.
+   KHU LÀM VIỆC — "COBALT × EMBER" (24/10, xanh cobalt theo mẫu VYRA; một tông, không còn sáng/tối)
+   Nền: gradient cobalt (+ ảnh --ink-art khi có). Nội dung nằm trên thẻ giấy kem chữ mực; chữ nằm thẳng trên nền
+   dùng trắng/xanh bạc. Màu hành động: ember của trang chủ (chữ mực trên nút); aqua trang chủ cho dữ liệu.
    ===================================================================== */
 /* Nền nghệ thuật tĩnh: ảnh macro gang/phấn ở mép phải, trung tâm tối để đọc. */
 html body.dock { background-color: var(--ink-ground); }
@@ -2636,7 +2592,11 @@ html body.dock::before {
   inset: 0;
   z-index: 0;
   pointer-events: none;
-  background: var(--ink-overlay), var(--ink-vignette), var(--ink-art) right center / cover no-repeat;
+  /* Nền phẳng một màu cobalt; ảnh --ink-art (nếu đặt) chỉ hiện rất nhạt dưới lớp cobalt */
+  background:
+    linear-gradient(var(--zone-cobalt-600), var(--zone-cobalt-600)) 0 0 / 100% 100% no-repeat,
+    var(--ink-art) center / cover no-repeat;
+  opacity: 1;
   animation: none;
 }
 html body.dock::after {
@@ -2645,25 +2605,48 @@ html body.dock::after {
   inset: 0;
   z-index: 0;
   pointer-events: none;
-  background: var(--ink-ripples) 0 0 / var(--ink-ripple-size) repeat;
-  opacity: var(--ink-ripple-opacity);
-  mask-image: var(--ink-ripple-mask);
-  -webkit-mask-image: var(--ink-ripple-mask);
-  animation: ink-ripple-drift var(--ink-ripple-duration) linear infinite;
+  display: none;
 }
-html[data-theme="light"] body.dock { background: var(--ink-ground); }
-html[data-theme="light"] body.dock::before,
-html[data-theme="light"] body.dock::after,
-html[data-theme="light"] body.dock .weather-scene { display: none; }
 @keyframes ink-ripple-drift {
   to { background-position: var(--ink-ripple-travel); }
 }
 html body.dock .app { position: relative; z-index: 1; }
 
+/* Chữ mặc định trong khu làm việc là chữ mực (vì gần như mọi nội dung nằm trên thẻ trắng).
+   Chỉ những chữ nằm THẲNG trên nền cobalt (tiêu đề mục ngoài thẻ, dòng giới thiệu, nhãn bộ lọc của Quản lý)
+   mới đổi sang trắng / xanh bạc. Cách này an toàn: khối lạ chưa liệt kê vẫn đọc được trên thẻ trắng. */
+html body.dock .content :is(h1, h2, h3):not(:is(.panel, .side-card, .gms-panel, .report-card, .card, .stat, .metric-card, .account-card, .facility-panel, .status-hero, .pt-schedule, .pt-alerts, .pt-clients, .pt-rating, .pt-summary, .pt-board__hero, .my-pt-panel, .package-card, .empty-state, table, dialog) *),
+html body.dock .content .page-intro > p,
+html body.dock:not(.theme-admin) .content .report-filter .field-label {
+  color: #FFFFFF;
+}
+html body.dock .content .page-intro > p { color: var(--zone-silver); }
+/* Khối nổi bật cũ (ô dẫn đầu bảng điểm, trạng thái gói hội viên, ô audit Admin) cũng là thẻ trắng,
+   nhấn bằng vạch ember mép trên thay cho nền xanh đen */
+html body.dock .content :is(.status-hero, .scoreboard .stat.is-lead, .metric-card-primary, .metric-card.audit-highlight) {
+  --color-board: var(--zone-card);
+  --color-board-text: var(--zone-ink);
+  --color-board-soft: var(--zone-ink-muted);
+  --color-on-primary: var(--zone-ink);
+  background: var(--zone-card);
+  color: var(--zone-ink);
+  box-shadow: inset 0 4px 0 var(--zone-accent), var(--ink-shadow);
+}
+html body.dock .content .status-hero::after { display: none; }
+html body.dock .content :is(.scoreboard .stat.is-lead, .metric-card-primary, .metric-card.audit-highlight) :is(.stat-value, .metric-value, .stat-label, .metric-label, .stat-note, .metric-note) {
+  color: var(--zone-ink);
+}
+/* Ô nhập, chọn trong thẻ: nền trắng, viền xám xanh */
+html body.dock .content :is(input:not([type="checkbox"]):not([type="radio"]), select, textarea) {
+  background-color: var(--zone-card);
+  border-color: var(--pt-line-strong);
+  color: var(--zone-ink);
+}
+
 /* Bảng, form và khối tác vụ là lớp đặc ở tiền cảnh; không xuyên ảnh qua chữ. */
 html body.dock :is(.panel, .side-card, .gms-panel, .report-card, .card, .stat, .pt-schedule, .pt-alerts, .pt-clients, .pt-rating, .pt-summary, .my-pt-panel, .package-card) {
   border: var(--border-width) solid var(--ink-border);
-  border-radius: var(--radius-lg);
+  border-radius: 18px;
   background: var(--ink-surface);
   color: var(--pt-text);
   box-shadow: var(--ink-shadow);
@@ -2760,7 +2743,7 @@ html body.dock .dock-handle {
   border: var(--border-width) solid var(--ink-sidebar-line);
   border-left: 0;
 }
-html body.dock .dock-handle::after { background: var(--brand-sunset); }
+html body.dock .dock-handle::after { background: var(--zone-accent); }
 html body.dock .dock-handle:hover { background: var(--ink-nav-active); color: var(--ink-nav-ink); }
 html body.dock .side-foot { border-color: var(--ink-sidebar-line); }
 html body.dock .nav-link:focus-visible,
@@ -2774,12 +2757,11 @@ html body.dock .tb-user {
   -webkit-backdrop-filter: none;
   backdrop-filter: none;
 }
-html[data-theme="light"] body.dock .tb-user { background: var(--ink-surface); border-color: var(--ink-border); }
 html body.dock .tb-user:hover,
 html body.dock .tb-user:focus-visible { border-color: var(--ink-focus); box-shadow: var(--ink-shadow); }
 html body.dock :is(.tb-user .avatar, .tb-avatar, .pt-user-avatar) {
-  background: linear-gradient(140deg, var(--brand-aqua) 0%, var(--brand-ocean) 100%);
-  color: var(--brand-ink);
+  background: var(--zone-cobalt-600);
+  color: #FFFFFF;
 }
 /* Avatar PT dùng đúng vòng mảnh của avatar chung ở các zone còn lại. */
 html body.dock .pt-user-avatar {
@@ -2793,12 +2775,16 @@ html body.dock :is(.tb-user small, .tb-user-text span, .tb-user .pt-user-code) {
 }
 /* Topbar trong suốt trên cảnh, chỉ mờ kính */
 html body.dock .topbar {
-  background: var(--ink-header);
-  border-bottom-color: var(--ink-border);
+  background: var(--zone-cobalt-600);
+  border-bottom-color: rgba(255, 255, 255, 0.12);
+  color: #FFFFFF;
   -webkit-backdrop-filter: none;
   backdrop-filter: none;
 }
-html[data-theme="light"] body.dock .topbar { background: var(--ink-header); }
+html body.dock .topbar :is(.tb-title, .tb-left h1) { color: #FFFFFF; }
+html body.dock .topbar :is(.tb-left p, .pt-header-date) { color: var(--zone-silver); }
+html body.dock .topbar .notif-btn,
+html body.dock .topbar .bell-btn { color: #FFFFFF; }
 
 /* Nội dung tác vụ: nhãn dễ đọc, số liệu đặc màu, không gradient chữ. */
 html body.dock :is(.pt-section-caption, .gms-panel-head p, .report-card-subtitle) {
@@ -2817,8 +2803,10 @@ html body.dock :is(.pt-summary-money strong, .wx-card__temp) {
 }
 html body.dock .btn-primary {
   background: var(--ink-primary);
-  border-color: var(--brand-sunset);
-  color: var(--brand-ink);
+  border-color: var(--ink-primary);
+  color: var(--zone-ink);
+  border-radius: var(--radius-pill);
+  font-weight: var(--font-weight-semibold);
   box-shadow: none;
 }
 html body.dock .btn-primary:hover:not(:disabled) { background: var(--ink-primary-hover); }
@@ -2903,8 +2891,8 @@ html body.dock table :is(.num, .money, td[class*="amount"]),
 html body.dock table th:is(.num, .money) { text-align: right; font-variant-numeric: tabular-nums; font-feature-settings: "tnum"; }
 
 /* Nút có phản hồi khi nhấn: lún nhẹ */
-:is(.btn, .cine-btn, .cy-btn, .chip, .theme-toggle, .pt-day, .tb-user, button.btn-link) { transition-property: transform, background, color, border-color, box-shadow; }
-:is(.btn, .cine-btn, .cy-btn, .chip, .theme-toggle, .pt-day):active:not(:disabled) { transform: translateY(1px) scale(0.98); }
+:is(.btn, .cine-btn, .cy-btn, .chip, .pt-day, .tb-user, button.btn-link) { transition-property: transform, background, color, border-color, box-shadow; }
+:is(.btn, .cine-btn, .cy-btn, .chip, .pt-day):active:not(:disabled) { transform: translateY(1px) scale(0.98); }
 
 /* Chuyển trang mượt (View Transitions, trình duyệt hỗ trợ): trang cũ mờ đi, trang mới trượt nhẹ lên;
    thanh menu và tiêu đề giữ chỗ nên không nháy */
@@ -2952,3 +2940,26 @@ html.gms-lite::view-transition-new(root) { animation: none; }
   ::view-transition-old(root),
   ::view-transition-new(root) { animation: none; }
 }
+
+/* Khu làm việc: nút phụ luôn là nền giấy kem chữ mực (đọc được cả khi nằm thẳng trên nền cobalt);
+   thanh thao tác trong Cài đặt tài khoản không tô nền riêng. */
+html body.dock .content .btn:not(.btn-primary):not(.btn-danger):not(.btn-link) {
+  background: var(--zone-card);
+  border-color: var(--zone-card-line);
+  color: var(--zone-ink);
+}
+html body.dock .content .btn:not(.btn-primary):not(.btn-danger):not(.btn-link):hover:not(:disabled) {
+  background: var(--zone-card-2);
+  border-color: var(--zone-accent);
+}
+html body.dock .content .account-form-actions { background: transparent; border-color: var(--zone-card-line); }
+/* Bảng điểm: các ô tách nhau bằng khoảng trống, không lộ nền tối giữa các ô */
+html body.dock .scoreboard { gap: var(--space-3); background: transparent; box-shadow: none; overflow: visible; }
+/* Trong thẻ, "nền trang" (--color-bg) của các ô con là xám xanh rất nhạt, không phải cobalt */
+html body.dock .content :is(.panel, .side-card, .gms-panel, .report-card, .card, .metric-card, .account-card, .facility-panel, .status-hero, .pt-schedule, .pt-alerts, .pt-clients, .pt-rating, .pt-summary, .pt-board__hero, .my-pt-panel, .package-card, dialog) {
+  --color-bg: var(--zone-card-2);
+  --color-surface-muted: var(--zone-card-2);
+}
+html body.dock .content .status-hero :is(h2, h3, p, span, strong, b, .section-label, .status-meta, .status-meta *) { color: var(--zone-ink); }
+html body.dock .content .status-hero :is(.section-label, .status-meta span) { color: var(--zone-ink-muted); }
+html body.dock .content .status-hero .status-expiring { color: var(--zone-accent-ink); }

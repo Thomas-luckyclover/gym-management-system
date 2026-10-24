@@ -30,15 +30,6 @@
         </c:if>
         <%-- Chuông thông báo dùng chung (notification-bell.js gọi /api/notifications): thông báo hệ thống, vd JOB-08 nhắc buổi PT ngày mai. --%>
         <%@ include file="/WEB-INF/jsp/common/notification-bell.jspf" %>
-        <%-- Công tắc Sáng/Tối: data-theme-toggle nối với xử lý theme dùng chung trong common.js. --%>
-        <button type="button" class="theme-toggle" data-theme-toggle aria-pressed="false" aria-label="Chuyển sang nền sáng">
-            <span class="theme-toggle__track" aria-hidden="true">
-                <span class="theme-toggle__knob">
-                </span>
-            </span>
-            <span class="theme-toggle__label">Tối</span>
-        </button>
-        <%-- KẾT THÚC công tắc Sáng/Tối. --%>
         <%-- Góc phải: chữ viết tắt, tên và mã khách; chỉ hiện nếu đã lấy được dashboard. --%>
         <c:if test="${not empty dashboard}">
             <a class="tb-user" href="${pageContext.request.contextPath}/account">

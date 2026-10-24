@@ -25,12 +25,12 @@
   gap: var(--space-3) var(--space-5);
   align-items: start;
   padding: var(--space-4);
-  border: var(--border-width) solid var(--pt-line);
-  border-radius: var(--radius-xs);
-  background:
-    linear-gradient(112deg, color-mix(in srgb, var(--brand-ember) 8%, transparent), transparent 35%),
-    var(--pt-panel);
-  color: var(--pt-text);
+  /* Thẻ trắng như mọi khối khác (24/10): chữ mực, tên người dùng màu cobalt */
+  border: var(--border-width) solid var(--zone-card-line);
+  border-radius: 18px;
+  background: var(--zone-card);
+  color: var(--zone-ink);
+  box-shadow: var(--ink-shadow);
 }
 
 /* Hai lớp bọc trong fragment không tạo hộp riêng → con của chúng thành ô lưới trực tiếp. */
