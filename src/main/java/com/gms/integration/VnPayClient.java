@@ -15,6 +15,19 @@ import java.util.Map;
 import java.util.TreeMap;
 import javax.crypto.Mac;
 import javax.crypto.spec.SecretKeySpec;
+import com.gms.util.DateTimeUtil;
+import com.google.gson.JsonElement;
+import com.google.gson.JsonObject;
+import com.google.gson.JsonParser;
+import java.io.IOException;
+import java.net.URI;
+import java.net.http.HttpClient;
+import java.net.http.HttpRequest;
+import java.net.http.HttpResponse;
+import java.time.Duration;
+import java.util.LinkedHashMap;
+import java.util.Locale;
+import java.util.UUID;
 
 /**
  * Cổng thanh toán VNPay (API 2.1.0). Tạo URL thanh toán có chữ ký HMAC-SHA512,
@@ -240,5 +253,183 @@ public class VnPayClient {
         String decomposed = Normalizer.normalize(withoutD, Normalizer.Form.NFD);
         String withoutMarks = decomposed.replaceAll("\\p{M}", "");
         return withoutMarks.replaceAll("[^A-Za-z0-9 .,:_-]", "");
+    }
+    // ===== QueryDR: GMS chủ động hỏi kết quả thanh toán =====
+
+    private static final HttpClient QUERY_HTTP = HttpClient.newBuilder()
+            .connectTimeout(Duration.ofSeconds(10))
+            .build();
+
+    /**
+     * Truy vấn một lần thanh toán đã tạo.
+     *
+     * txnRef: Transactions.GatewayReference. paymentCreatedAt: thời điểm đã gửi
+     * trong vnp_CreateDate lúc tạo URL pay.
+     *
+     * Không mở transaction DB trong khi gọi API.
+     */
+    public Map<String, String> queryTransaction(
+            String txnRef,
+            LocalDateTime paymentCreatedAt)
+            throws IOException, InterruptedException {
+
+        if (txnRef == null || txnRef.isBlank()
+                || paymentCreatedAt == null) {
+            throw new IllegalArgumentException(
+                    "Thiếu thông tin lần thanh toán.");
+        }
+
+        // B1: chuẩn bị dữ liệu QueryDR.
+        Map<String, String> body = new LinkedHashMap<>();
+
+        body.put("vnp_RequestId",
+                UUID.randomUUID().toString().replace("-", ""));
+        body.put("vnp_Version", "2.1.0");
+        body.put("vnp_Command", "querydr");
+        body.put("vnp_TmnCode", AppConfig.get("vnpay.tmn-code"));
+        body.put("vnp_TxnRef", txnRef);
+
+        // Phải dùng thời gian giao dịch gốc, không dùng now().
+        body.put("vnp_TransactionDate",
+                paymentCreatedAt.format(VNP_DATE_FORMATTER));
+
+        body.put("vnp_CreateDate",
+                DateTimeUtil.now().format(VNP_DATE_FORMATTER));
+        body.put("vnp_IpAddr", AppConfig.get("vnpay.server-ip"));
+        body.put("vnp_OrderInfo", "Query payment " + txnRef);
+
+        // B2: QueryDR ký chuỗi có thứ tự cố định, phân cách bằng |.
+        String signData = joinQueryFields(body,
+                "vnp_RequestId",
+                "vnp_Version",
+                "vnp_Command",
+                "vnp_TmnCode",
+                "vnp_TxnRef",
+                "vnp_TransactionDate",
+                "vnp_CreateDate",
+                "vnp_IpAddr",
+                "vnp_OrderInfo");
+
+        body.put(PARAM_SECURE_HASH,
+                hmacSha512(
+                        AppConfig.get("vnpay.hash-secret"),
+                        signData));
+
+        JsonObject jsonBody = new JsonObject();
+        body.forEach(jsonBody::addProperty);
+
+        // B3: gửi POST JSON tới VNPay.
+        HttpRequest request = HttpRequest.newBuilder()
+                .uri(URI.create(AppConfig.get("vnpay.query-url")))
+                .timeout(Duration.ofSeconds(30))
+                .header("Content-Type", "application/json; charset=UTF-8")
+                .POST(HttpRequest.BodyPublishers.ofString(
+                        jsonBody.toString(),
+                        StandardCharsets.UTF_8))
+                .build();
+
+        HttpResponse<String> response = QUERY_HTTP.send(
+                request,
+                HttpResponse.BodyHandlers.ofString(
+                        StandardCharsets.UTF_8));
+
+        if (response.statusCode() != 200) {
+            throw new IOException(
+                    "VNPay chưa trả được kết quả QueryDR.");
+        }
+
+        // B4: đọc JSON thành Map.
+        Map<String, String> result = new LinkedHashMap<>();
+
+        try {
+            JsonObject json = JsonParser.parseString(response.body())
+                    .getAsJsonObject();
+
+            for (Map.Entry<String, JsonElement> entry
+                    : json.entrySet()) {
+
+                JsonElement value = entry.getValue();
+
+                result.put(
+                        entry.getKey(),
+                        value.isJsonNull() ? "" : value.getAsString());
+            }
+        } catch (RuntimeException e) {
+            throw new IOException(
+                    "Phản hồi QueryDR không đúng định dạng.", e);
+        }
+
+        // B5: chỉ trả dữ liệu đã kiểm chữ ký và đúng giao dịch yêu cầu.
+        if (!verifyQuerySignature(result)) {
+            throw new IOException(
+                    "Chữ ký QueryDR không hợp lệ.");
+        }
+
+        if (!"querydr".equals(result.get("vnp_Command"))
+                || !AppConfig.get("vnpay.tmn-code")
+                        .equals(result.get("vnp_TmnCode"))
+                || !txnRef.equals(result.get("vnp_TxnRef"))) {
+            throw new IOException(
+                    "Phản hồi QueryDR không khớp yêu cầu.");
+        }
+
+        return result;
+    }
+
+    /**
+     * Kiểm chữ ký phản hồi QueryDR. Không dùng verifySignature() của IPN vì
+     * cách ghép chuỗi khác nhau.
+     */
+    public boolean verifyQuerySignature(Map<String, String> data) {
+        String received = data.get(PARAM_SECURE_HASH);
+
+        if (received == null
+                || !received.matches("[0-9a-fA-F]{128}")) {
+            return false;
+        }
+
+        String signData = joinQueryFields(data,
+                "vnp_ResponseId",
+                "vnp_Command",
+                "vnp_ResponseCode",
+                "vnp_Message",
+                "vnp_TmnCode",
+                "vnp_TxnRef",
+                "vnp_Amount",
+                "vnp_BankCode",
+                "vnp_PayDate",
+                "vnp_TransactionNo",
+                "vnp_TransactionType",
+                "vnp_TransactionStatus",
+                "vnp_OrderInfo",
+                "vnp_PromotionCode",
+                "vnp_PromotionAmount");
+
+        String expected = hmacSha512(
+                AppConfig.get("vnpay.hash-secret"),
+                signData);
+
+        return MessageDigest.isEqual(
+                expected.getBytes(StandardCharsets.US_ASCII),
+                received.toLowerCase(Locale.ROOT)
+                        .getBytes(StandardCharsets.US_ASCII));
+    }
+
+    /**
+     * Giữ đúng thứ tự các trường khi ký. Trường không có giá trị vẫn giữ vị trí
+     * rỗng.
+     */
+    private String joinQueryFields(
+            Map<String, String> data,
+            String... fields) {
+
+        String[] values = new String[fields.length];
+
+        for (int i = 0; i < fields.length; i++) {
+            String value = data.get(fields[i]);
+            values[i] = value == null ? "" : value;
+        }
+
+        return String.join("|", values);
     }
 }

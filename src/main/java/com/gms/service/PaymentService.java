@@ -27,6 +27,7 @@ import com.gms.constant.AppConstants;
 import com.gms.dao.TransactionDAO;
 import com.gms.entity.Transaction;
 import com.gms.integration.VnPayClient;
+import java.util.UUID;
 
 /**
  * SEQ-1: tạo đơn online Pending; giao dịch và subscription được tạo ở sequence
@@ -460,11 +461,14 @@ public class PaymentService {
                     expiresAt = order.getPaymentDueAt();
                 }
 
-                // B5: tạo mã lần thanh toán theo SRS.
+                // B5: số lần thử tính theo đơn; UUID giúp tránh trùng giữa các DB riêng.
                 int attempt = transactionDAO.nextAttempt(conn, orderId);
 
-                String txnRef = order.getOrderCode().replace("-", "")
-                        + "A" + attempt;
+                String uniqueCode = UUID.randomUUID()
+                        .toString()
+                        .replace("-", "");
+
+                String txnRef = uniqueCode + "A" + attempt;
 
                 // B6: snapshot số tiền và hạn của lần thanh toán.
                 Transaction payment = new Transaction(0);

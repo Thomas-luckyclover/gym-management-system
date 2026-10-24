@@ -23,6 +23,13 @@
                                 );
         </script>
     </c:if>
+    <c:if test="${empty resultError and result.waiting}">
+        <script>
+            window.setTimeout(function () {
+                window.location.reload();
+            }, 15000);
+        </script>
+    </c:if>
     <body class="dock ${themeClass}">
         <%@ include file="/WEB-INF/jsp/common/flash-toast.jspf" %>
 

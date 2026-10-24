@@ -37,7 +37,8 @@ public class BackgroundJobScheduler implements ServletContextListener {
     private static final List<BackgroundJob> MINUTE_JOBS = List.of(
             new CancelOverdueOnlineOrdersJob(),
             new ExpireTimedOutTransactionsJob(),
-            new LeaveRequestReminderJob()
+            new LeaveRequestReminderJob(),
+            new ReconcileVnPayTransactionsJob()
     );
 
     private ScheduledExecutorService dailyExecutor;

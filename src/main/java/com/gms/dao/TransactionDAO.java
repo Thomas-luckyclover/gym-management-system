@@ -7,6 +7,9 @@ import java.sql.ResultSet;
 import java.sql.SQLException;
 import java.sql.Statement;
 import java.sql.Timestamp;
+import java.time.LocalDateTime;
+import java.util.ArrayList;
+import java.util.List;
 
 /**
  * Đọc và lưu các lần thử thanh toán. TransactionId là ID nội bộ.
@@ -219,5 +222,41 @@ public class TransactionDAO {
         }
 
         return findById(conn, transactionId, false);
+    }
+
+    /**
+     * Tìm các giao dịch online chưa có kết quả cuối cùng.
+     *
+     * Đọc cả Expired vì hết hạn ở GMS không chứng minh tiền chưa về. Không lọc
+     * Order.Pending để vẫn kiểm tra được tiền về sau khi đơn bị hủy.
+     */
+    public List<Integer> findQueryCandidates(
+            Connection conn,
+            LocalDateTime createdBefore) throws SQLException {
+
+        String sql = """
+            SELECT TransactionId
+            FROM Transactions
+            WHERE PaymentMethod = 'OnlineGateway'
+              AND Status IN ('Pending', 'Expired')
+              AND GatewayReference IS NOT NULL
+              AND CreatedAt <= ?
+            ORDER BY TransactionId
+            """;
+
+        List<Integer> ids = new ArrayList<>();
+
+        try (PreparedStatement statement = conn.prepareStatement(sql)) {
+            statement.setTimestamp(
+                    1, Timestamp.valueOf(createdBefore));
+
+            try (ResultSet rows = statement.executeQuery()) {
+                while (rows.next()) {
+                    ids.add(rows.getInt("TransactionId"));
+                }
+            }
+        }
+
+        return ids;
     }
 }
