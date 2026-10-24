@@ -1,5 +1,9 @@
 # File notes — mâu thuẫn tài liệu & quyết định đã chốt
 
+## BF-05 — chỉ nhận hai loại nghỉ cho đơn mới (23/10/2026, ĐÃ CHỐT)
+
+Theo yêu cầu user, form gửi đơn và bộ lọc quản lý chỉ còn Phép năm / Không lương. StaffLeaveService từ chối Sick ngay khi validate đầu vào, kể cả gửi trực tiếp POST. Giữ giá trị Sick trong entity và schema để đọc đúng lịch sử, không xóa hay đổi loại các đơn cũ. Tách đơn là cách xử lý phần vượt phép, không phải loại nghỉ thứ ba; chưa triển khai trong bước này. User yêu cầu chưa commit đến khi làm xong các phần còn lại.
+
 ## BF-05 — thu gọn thanh lọc danh sách (22/10/2026, ĐÃ CHỐT)
 
 User xem ảnh đề xuất rồi yêu cầu áp dụng. Thanh trên gồm hàng tab trạng thái và hàng tìm nhân viên/khoảng ngày gửi/Bộ lọc/Tìm; chức vụ và loại nghỉ nằm trong details mở bằng Bộ lọc, số lựa chọn hiện trên nút. Ô ngày vẫn để trống khi chưa chọn, tab và phân trang tiếp tục giữ các điều kiện đã chọn. Xóa lọc trở về trạng thái không giới hạn ngày. Giữ form GET và bộ lọc Service/DAO hiện có; không thêm nghiệp vụ mới.

@@ -113,6 +113,25 @@ class LeaveRequestServiceTest {
     // ===== Kiểm thử validate submitLeaveRequest (UC-14) =====
 
     @Test
+    void submitLeaveRequest_rejectsSickLeaveBeforeAccessingDatabase() {
+        LocalDate fromDate = DateTimeUtil.today().plusDays(2);
+
+        var singleDayResult = staffService.submitLeaveRequest(
+                1, LeaveRequest.LeaveType.SICK, fromDate,
+                LeaveRequest.ShiftType.FULL_DAY, "Lý do hợp lệ");
+        var dateRangeResult = staffService.submitLeaveRequest(
+                1, LeaveRequest.LeaveType.SICK, fromDate, fromDate.plusDays(1),
+                LeaveRequest.ShiftType.FULL_DAY, "Lý do hợp lệ");
+
+        assertFalse(singleDayResult.isSuccess());
+        assertTrue(singleDayResult.getFieldErrors().containsKey("leaveType"));
+        assertFalse(dateRangeResult.isSuccess());
+        assertTrue(dateRangeResult.getFieldErrors().containsKey("leaveType"));
+        verifyNoInteractions(leaveRequestDAO, accountDAO, employeeDAO, personDAO,
+                systemConfigService, auditLogService, notificationService);
+    }
+
+    @Test
     void submitLeaveRequest_fails_whenLeaveTypeIsNull() {
         var result = staffService.submitLeaveRequest(
                 1, null, java.time.LocalDate.now().plusDays(2),
