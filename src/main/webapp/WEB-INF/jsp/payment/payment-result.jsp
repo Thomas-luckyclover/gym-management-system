@@ -13,7 +13,16 @@
         <link rel="stylesheet"
               href="${pageContext.request.contextPath}/css/pages/payment/payment-result.css?v=1">
     </head>
-
+    <c:if test="${cleanResultUrl}">
+        <script>
+            // Rút gọn thanh địa chỉ, không gửi thêm request hoặc đổi dữ liệu đơn.
+            window.history.replaceState(
+                    null,
+                    "",
+                    "${pageContext.request.contextPath}/customer/payment-result?transaction=${transactionId}"
+                                );
+        </script>
+    </c:if>
     <body class="dock ${themeClass}">
         <%@ include file="/WEB-INF/jsp/common/flash-toast.jspf" %>
 
