@@ -38,7 +38,13 @@ public class HomeServlet extends HttpServlet {
             return;
         }
 
-        // B3: đưa dữ liệu cho JSP
+        // B3: đưa dữ liệu cho JSP. "home" (HomePageView) được đọc ở home.jsp:
+        //   dòng 65–69    giờ mở cửa + số huấn luyện viên (home.openingHours, home.ptCount)
+        //   dòng 140–145  thẻ gói tập (home.gymPackages)
+        //   dòng 170–175  thẻ gói PT (home.ptPackages)
+        //   dòng 197–204  đội ngũ PT (home.pts)
+        //   dòng 218–228  3 bài blog mới nhất (home.latestPosts)
+        //   dòng 282      giờ mở cửa cho chân trang → guest-footer.jspf dòng 10 (nhúng ở home.jsp dòng 283)
         request.setAttribute("home", result.getData());
         RequestUtil.forward(request, response, "guest/home");
     }

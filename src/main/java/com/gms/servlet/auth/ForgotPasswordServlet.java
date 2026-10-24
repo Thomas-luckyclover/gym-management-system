@@ -66,6 +66,7 @@ public class ForgotPasswordServlet extends HttpServlet {
         HttpSession session = request.getSession();
 
         // B1: "Dùng email khác" → xóa tiến độ, quay về bước 1.
+        //     ?restart=1 ← link "Dùng email khác" forgot-password.jsp dòng 138
         if ("1".equals(request.getParameter("restart"))) {
             clearRecovery(session);
             RequestUtil.redirect(request, response, "/forgot-password");
@@ -79,7 +80,7 @@ public class ForgotPasswordServlet extends HttpServlet {
         if (prefillEmail != null) {
             session.removeAttribute(SessionKey.RECOVERY_PREFILL_EMAIL);
             clearRecovery(session);
-            request.setAttribute("email", prefillEmail);
+            request.setAttribute("email", prefillEmail);   // → forgot-password.jsp dòng 81 điền sẵn ô Email
         }
 
         // B3: hiện đúng bước theo session.
@@ -93,6 +94,7 @@ public class ForgotPasswordServlet extends HttpServlet {
     protected void doPost(HttpServletRequest request, HttpServletResponse response)
             throws ServletException, IOException {
         HttpSession session = request.getSession();
+        // ô ẩn "action" của 4 form: send dòng 77, verify dòng 110, resend dòng 128, reset dòng 153 (forgot-password.jsp)
         String action = RequestUtil.getTrimmedParam(request, "action");
 
         // B1: rẽ theo nút. action lạ (bị sửa tay) → quay về trang như GET.
@@ -115,13 +117,13 @@ public class ForgotPasswordServlet extends HttpServlet {
      */
     private void handleSend(HttpServletRequest request, HttpServletResponse response, HttpSession session)
             throws ServletException, IOException {
-        // B1: Service kiểm tra email + gửi mã.
+        // B1: Service kiểm tra email + gửi mã. ô "email" ← forgot-password.jsp dòng 80
         String email = RequestUtil.getTrimmedParam(request, "email");
         ServiceResult<Void> result = passwordRecoveryService.requestCode(email);
 
         // B2: thất bại → hiện lại bước 1, giữ chữ khách đã gõ, kèm lỗi.
         if (!result.isSuccess()) {
-            request.setAttribute("email", email);
+            request.setAttribute("email", email);   // → forgot-password.jsp dòng 81 giữ chữ khách đã gõ
             forwardStep(request, response, STEP_EMAIL, result);
             return;
         }
@@ -168,7 +170,7 @@ public class ForgotPasswordServlet extends HttpServlet {
         }
 
         // B2: kiểm tra mã với email TRONG SESSION (không lấy email từ form → không đổi được sang email người khác).
-        String code = RequestUtil.getTrimmedParam(request, "code");
+        String code = RequestUtil.getTrimmedParam(request, "code");   // ← ô mã 6 số forgot-password.jsp dòng 113
         ServiceResult<VerificationCode> result = passwordRecoveryService.verifyCode(email, code);
 
         // B3: sai / hết hạn / bị khóa → hiện lại bước 2 kèm lỗi.
@@ -206,8 +208,8 @@ public class ForgotPasswordServlet extends HttpServlet {
         }
 
         // B3: Service kiểm tra 2 ô mật khẩu rồi lưu (accountId lấy từ SESSION, không từ form).
-        String password = request.getParameter("password");
-        String confirmPassword = request.getParameter("confirmPassword");
+        String password = request.getParameter("password");                 // ← forgot-password.jsp dòng 157
+        String confirmPassword = request.getParameter("confirmPassword");   // ← forgot-password.jsp dòng 169
         ServiceResult<Void> result = passwordRecoveryService.resetPassword(accountId, password, confirmPassword);
 
         // B4: thất bại.
@@ -252,7 +254,7 @@ public class ForgotPasswordServlet extends HttpServlet {
         // B2: đang ở bước 3 mà đã quá hạn → bỏ tiến độ, hiện bước 1 kèm MSG44.
         if (STEP_RESET.equals(step) && isResetExpired(session)) {
             clearRecovery(session);
-            request.setAttribute("errorMessage", Messages.MSG44_CODE_EXPIRED);
+            request.setAttribute("errorMessage", Messages.MSG44_CODE_EXPIRED);   // → forgot-password.jsp dòng 62–65
             step = STEP_EMAIL;
         }
 
@@ -270,9 +272,10 @@ public class ForgotPasswordServlet extends HttpServlet {
 
         // B1: lỗi gắn ô → hiện chữ đỏ dưới ô (fieldErrors). Lỗi chung → khung đỏ trên cùng (errorMessage).
         if (failedResult != null) {
+            // → forgot-password.jsp dòng 84 (email), 117 (code), 163 (password), 173 (confirmPassword)
             request.setAttribute("fieldErrors", failedResult.getFieldErrors());
             if (!failedResult.hasFieldErrors()) {
-                request.setAttribute("errorMessage", failedResult.getMessage());
+                request.setAttribute("errorMessage", failedResult.getMessage());   // → forgot-password.jsp dòng 62–65
             }
         }
 
@@ -282,8 +285,8 @@ public class ForgotPasswordServlet extends HttpServlet {
         }
 
         // B3: cho JSP biết bước nào, email nào.
-        request.setAttribute("recoveryStep", step);
-        request.setAttribute("recoveryEmail", email);
+        request.setAttribute("recoveryStep", step);     // → forgot-password.jsp dòng 40 (c:set step) → chọn khối dòng 73 (email) / 95 (code) / 149 (reset)
+        request.setAttribute("recoveryEmail", email);   // → forgot-password.jsp dòng 116 "Đã gửi tới …"
         RequestUtil.forward(request, response, VIEW);
     }
 
@@ -309,8 +312,8 @@ public class ForgotPasswordServlet extends HttpServlet {
         } catch (SQLException e) {
             e.printStackTrace();
         }
-        request.setAttribute("codeSecondsLeft", codeSecondsLeft);
-        request.setAttribute("resendSecondsLeft", resendSecondsLeft);
+        request.setAttribute("codeSecondsLeft", codeSecondsLeft);       // → forgot-password.jsp dòng 99, 103 (đồng hồ mã)
+        request.setAttribute("resendSecondsLeft", resendSecondsLeft);   // → forgot-password.jsp dòng 130 (nút Gửi lại mã)
 
         // B2: còn mấy lượt? Lỗi, hoặc email đang bị khóa (lúc đó đã có MSG61) → không hiện gợi ý.
         ServiceResult<VerificationAttemptInfo> attemptResult = passwordRecoveryService.getRecoveryAttemptInfo(email);
@@ -324,6 +327,7 @@ public class ForgotPasswordServlet extends HttpServlet {
         //     còn đúng 1  → MSG63 "Nhập sai thêm 1 lần … sẽ bị khóa 5 phút." (màu cảnh báo)
         if (info.getAttemptsLeft() > 0) {
             boolean isLastAttempt = info.getAttemptsLeft() == 1;
+            // → forgot-password.jsp dòng 119–120 dòng gợi ý dưới ô mã
             request.setAttribute("attemptHint", isLastAttempt
                     ? String.format(Messages.MSG63_CODE_LAST_ATTEMPT, info.getLockMinutes())
                     : String.format(Messages.MSG62_CODE_ATTEMPTS_LEFT, info.getAttemptsLeft()));
@@ -334,6 +338,7 @@ public class ForgotPasswordServlet extends HttpServlet {
         //     còn ≥ 1 lần → MSG64 "Còn n lần gửi lại mã trong 60 phút."
         //     còn 0 lần   → MSG65 "Đã hết lượt gửi lại. Gửi thêm sẽ khóa…" (màu cảnh báo)
         boolean isOutOfResends = info.getResendsLeft() == 0;
+        // → forgot-password.jsp dòng 134–135 dòng gợi ý dưới nút Gửi lại mã
         request.setAttribute("resendHint", isOutOfResends
                 ? String.format(Messages.MSG65_CODE_RESEND_WILL_LOCK, info.getLockMinutes())
                 : String.format(Messages.MSG64_CODE_RESENDS_LEFT, info.getResendsLeft()));

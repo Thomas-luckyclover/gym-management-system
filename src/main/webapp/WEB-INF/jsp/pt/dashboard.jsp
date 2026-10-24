@@ -38,7 +38,7 @@
 <html lang="vi">
 <head>
     <%@ include file="/WEB-INF/jsp/common/head.jspf" %>
-    <%-- pageTitle = "Tổng quan PT" (Servlet B8) → tab trình duyệt hiện "Tổng quan PT · GMS". --%>
+    <%-- pageTitle = "Tổng quan PT" (Servlet setPageInfo) → tab trình duyệt hiện "Tổng quan PT · GMS". --%>
     <title><c:out value="${pageTitle}" /> · GMS</title>
     <link rel="stylesheet" href="${pageContext.request.contextPath}/css/pages/pt/header.css?v=20261024flat">
     <link rel="stylesheet" href="${pageContext.request.contextPath}/css/pages/pt/dashboard.css?v=20261025a">
@@ -56,7 +56,7 @@
         <%-- Thanh menu trái của PT (dùng chung các màn PT). --%>
         <%@ include file="/WEB-INF/jsp/common/layout-pt.jspf" %>
         <div class="main">
-            <%-- Topbar: "Tổng quan PT" + ngày hôm nay + tên PT + mã NV (ptEmployeeCode, Servlet B2). --%>
+            <%-- Topbar: "Tổng quan PT" + ngày hôm nay + tên PT + mã NV (ptEmployeeCode, Servlet loadEmployeeCode). --%>
             <%@ include file="/WEB-INF/jsp/pt/_header.jspf" %>
 
             <main class="content pt-board" id="main-content" tabindex="-1">
