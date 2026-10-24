@@ -17,14 +17,13 @@ import javax.crypto.Mac;
 import javax.crypto.spec.SecretKeySpec;
 
 /**
- * Cổng thanh toán VNPay (API 2.1.0).
- * Tạo URL thanh toán có chữ ký HMAC-SHA512, kiểm tra chữ ký kết quả VNPay trả về (IPN và return URL).
- * Chỉ IPN mới đánh dấu đơn đã thanh toán; return URL chỉ hiển thị kết quả.
+ * Cổng thanh toán VNPay (API 2.1.0). Tạo URL thanh toán có chữ ký HMAC-SHA512,
+ * kiểm tra chữ ký kết quả VNPay trả về (IPN và return URL). Chỉ IPN mới đánh
+ * dấu đơn đã thanh toán; return URL chỉ hiển thị kết quả.
  */
 public class VnPayClient {
 
     // ===== Hằng số theo tài liệu VNPay 2.1.0 =====
-
     private static final String VNP_VERSION = "2.1.0";
     private static final String VNP_COMMAND_PAY = "pay";
     private static final String VNP_CURRENCY = "VND";
@@ -32,18 +31,25 @@ public class VnPayClient {
     private static final String VNP_ORDER_TYPE = "other";
     private static final String HMAC_ALGORITHM = "HmacSHA512";
 
-    /** VNPay yêu cầu thời gian dạng yyyyMMddHHmmss theo giờ Việt Nam (GMT+7). */
+    /**
+     * VNPay yêu cầu thời gian dạng yyyyMMddHHmmss theo giờ Việt Nam (GMT+7).
+     */
     private static final DateTimeFormatter VNP_DATE_FORMATTER = DateTimeFormatter.ofPattern("yyyyMMddHHmmss");
 
-    /** Tên tham số chữ ký — phải loại ra trước khi tự tính lại chữ ký để so sánh. */
+    /**
+     * Tên tham số chữ ký — phải loại ra trước khi tự tính lại chữ ký để so
+     * sánh.
+     */
     public static final String PARAM_SECURE_HASH = "vnp_SecureHash";
     public static final String PARAM_SECURE_HASH_TYPE = "vnp_SecureHashType";
 
-    /** "00" ở cả vnp_ResponseCode và vnp_TransactionStatus nghĩa là giao dịch thành công. */
+    /**
+     * "00" ở cả vnp_ResponseCode và vnp_TransactionStatus nghĩa là giao dịch
+     * thành công.
+     */
     public static final String CODE_SUCCESS = "00";
 
     // ===== Mã phản hồi IPN (RspCode) mà GMS trả lại cho VNPay — theo tài liệu VNPay =====
-
     public static final String IPN_CONFIRM_SUCCESS = "00";
     public static final String IPN_ORDER_NOT_FOUND = "01";
     public static final String IPN_ORDER_ALREADY_CONFIRMED = "02";
@@ -52,7 +58,6 @@ public class VnPayClient {
     public static final String IPN_UNKNOWN_ERROR = "99";
 
     // ===== API-01: tạo URL thanh toán =====
-
     /**
      * Tạo URL thanh toán đã ký HMAC-SHA512, dùng để redirect khách sang VNPay.
      * Mỗi lần thanh toán phải có txnRef mới (VNPay từ chối mã trùng).
@@ -65,14 +70,20 @@ public class VnPayClient {
         String hashSecret = AppConfig.get("vnpay.hash-secret");
         String payUrl = AppConfig.get("vnpay.pay-url");
         String returnUrl = AppConfig.get("vnpay.return-url");
+        if (tmnCode == null || tmnCode.isBlank()
+                || hashSecret == null || hashSecret.isBlank()
+                || payUrl == null || payUrl.isBlank()
+                || returnUrl == null || returnUrl.isBlank()) {
 
+            throw new IllegalStateException("Thiếu cấu hình merchant VNPay");
+        }
         // B2: gom tham số — TreeMap tự sắp xếp theo tên (a→z), đúng yêu cầu ký của VNPay
         Map<String, String> params = new TreeMap<>();
         params.put("vnp_Version", VNP_VERSION);
         params.put("vnp_Command", VNP_COMMAND_PAY);
         params.put("vnp_TmnCode", tmnCode);
         // VNPay tính tiền theo đơn vị "xu": 100.000đ phải gửi 10000000
-        params.put("vnp_Amount", String.valueOf(amountVnd * 100));
+        params.put("vnp_Amount", String.valueOf(Math.multiplyExact(amountVnd, 100L)));
         params.put("vnp_CurrCode", VNP_CURRENCY);
         params.put("vnp_TxnRef", txnRef);
         params.put("vnp_OrderInfo", toAsciiText(orderInfo));
@@ -93,7 +104,6 @@ public class VnPayClient {
     }
 
     // ===== API-02 + trang return: kiểm tra dữ liệu VNPay gửi về =====
-
     /**
      * Lấy các tham số vnp_* từ request (IPN hoặc return URL) thành map.
      */
@@ -112,7 +122,8 @@ public class VnPayClient {
     }
 
     /**
-     * Kiểm tra chữ ký VNPay gửi về có hợp lệ không — chống giả mạo kết quả thanh toán.
+     * Kiểm tra chữ ký VNPay gửi về có hợp lệ không — chống giả mạo kết quả
+     * thanh toán.
      */
     public boolean verifySignature(Map<String, String> vnpParams) {
         // B1: lấy chữ ký VNPay gửi kèm
@@ -150,8 +161,8 @@ public class VnPayClient {
     }
 
     /**
-     * Đọc số tiền VNPay báo về (đổi từ "xu" về VND) để so với Transaction.Amount.
-     * Trả -1 nếu thiếu hoặc sai định dạng.
+     * Đọc số tiền VNPay báo về (đổi từ "xu" về VND) để so với
+     * Transaction.Amount. Trả -1 nếu thiếu hoặc sai định dạng.
      */
     public long getAmountVnd(Map<String, String> vnpParams) {
         String amountValue = vnpParams.get("vnp_Amount");
@@ -164,17 +175,18 @@ public class VnPayClient {
     }
 
     /**
-     * Tạo JSON trả lời IPN cho VNPay, VD {"RspCode":"00","Message":"Confirm Success"}.
+     * Tạo JSON trả lời IPN cho VNPay, VD {"RspCode":"00","Message":"Confirm
+     * Success"}.
      */
     public String buildIpnResponse(String rspCode, String message) {
         return "{\"RspCode\":\"" + rspCode + "\",\"Message\":\"" + message + "\"}";
     }
 
     // ===== Phần kỹ thuật ký số =====
-
     /**
-     * Ghép tham số thành chuỗi "key1=value1&key2=value2..." theo thứ tự tên a→z, bỏ qua giá trị rỗng,
-     * giá trị được mã hóa URL — đúng cách ký trong code mẫu Java chính thức của VNPay 2.1.0.
+     * Ghép tham số thành chuỗi "key1=value1&key2=value2..." theo thứ tự tên
+     * a→z, bỏ qua giá trị rỗng, giá trị được mã hóa URL — đúng cách ký trong
+     * code mẫu Java chính thức của VNPay 2.1.0.
      */
     private String buildHashData(Map<String, String> sortedParams) {
         StringBuilder hashData = new StringBuilder();
@@ -219,8 +231,9 @@ public class VnPayClient {
     }
 
     /**
-     * Bỏ dấu tiếng Việt và ký tự lạ: "Thanh toán gói 3 tháng" → "Thanh toan goi 3 thang".
-     * VNPay yêu cầu vnp_OrderInfo chỉ gồm ký tự ASCII, có dấu sẽ lỗi chữ ký.
+     * Bỏ dấu tiếng Việt và ký tự lạ: "Thanh toán gói 3 tháng" → "Thanh toan goi
+     * 3 thang". VNPay yêu cầu vnp_OrderInfo chỉ gồm ký tự ASCII, có dấu sẽ lỗi
+     * chữ ký.
      */
     private String toAsciiText(String text) {
         String withoutD = text.replace('đ', 'd').replace('Đ', 'D');

@@ -8,7 +8,7 @@
         <title>Thanh toán · Super Gym</title>
         <link rel="stylesheet" href="${pageContext.request.contextPath}/css/pages/customer/dashboard.css?v=7">
         <link rel="stylesheet" href="${pageContext.request.contextPath}/css/pages/customer/checkout.css?v=5">
-        <script src="${pageContext.request.contextPath}/js/pages/customer/checkout.js?v=4" defer></script>
+        <script src="${pageContext.request.contextPath}/js/pages/customer/checkout.js?v=5" defer></script>
     </head>
     <body class="dock ${themeClass}">
         <%@ include file="/WEB-INF/jsp/common/flash-toast.jspf" %>
@@ -49,10 +49,10 @@
                                     </div>
                                     <h3 class="checkout-package__name"><c:out value="${order.packageNameSnapshot}" /></h3>
                                     <c:if test="${not empty order.packageDescriptionSnapshot}"><p class="checkout-muted"><c:out value="${order.packageDescriptionSnapshot}" /></p></c:if>
-                                    <ul class="checkout-benefits">
+                                        <ul class="checkout-benefits">
                                         <c:forEach var="benefit" items="${checkout.benefitLines}">
                                             <li><i class="fa-regular fa-circle-check" aria-hidden="true"></i><span><c:out value="${benefit}" /></span></li>
-                                        </c:forEach>
+                                                </c:forEach>
                                     </ul>
                                     <div class="checkout-details">
                                         <div><span>Khách hàng</span><strong><c:out value="${customerName}" /></strong></div>
@@ -98,21 +98,39 @@
                                             </c:choose>
                                         </p>
                                         <c:if test="${not checkout.voucherEditable}"><p class="checkout-muted"><c:out value="${checkout.voucherLockReason}" /></p></c:if>
-                                        <noscript><button class="btn btn-outline" type="submit">Kiểm tra mã</button></noscript>
-                                    </form>
-                                    <div class="checkout-total">
-                                        <div><span>Tổng thanh toán</span><strong id="totalAmount"><c:out value="${checkout.totalText}" /></strong></div>
+                                            <noscript><button class="btn btn-outline" type="submit">Kiểm tra mã</button></noscript>
+                                        </form>
+                                        <div class="checkout-total">
+                                            <div><span>Tổng thanh toán</span><strong id="totalAmount"><c:out value="${checkout.totalText}" /></strong></div>
                                         <p>Đã bao gồm VAT <c:out value="${order.vatRateSnapshot}" />%: <span id="vatAmount"><c:out value="${checkout.vatText}" /></span></p>
-                                        <%-- Tiền trước thuế từ snapshot đơn; checkout.js cập nhật preTaxAmount khi đổi voucher. --%>
+                                            <%-- Tiền trước thuế từ snapshot đơn; checkout.js cập nhật preTaxAmount khi đổi voucher. --%>
                                         <p>Tiền trước thuế:
                                             <span id="preTaxAmount"><c:out value="${gms:formatMoney(order.finalAmount - order.vatAmount)}" /></span>
                                         </p>
                                     </div>
-                                    <form id="paymentForm" method="get" action="${pageContext.request.contextPath}/customer/checkout">
-                                        <input type="hidden" name="order" value="${order.orderId}">
-                                        <input type="hidden" name="stage" value="payment">
-                                        <button id="payButton" class="btn checkout-pay" type="submit" ${checkout.voucherEditable ? '' : 'disabled'}>
-                                            Tiến hành thanh toán <i class="fa-solid fa-arrow-right" aria-hidden="true"></i>
+                                    <form id="paymentForm"
+                                          method="post"
+                                          action="${pageContext.request.contextPath}/customer/checkout">
+
+                                        <input type="hidden"
+                                               name="order"
+                                               value="${order.orderId}">
+
+                                        <input type="hidden"
+                                               name="action"
+                                               value="pay">
+
+                                        <input type="hidden"
+                                               name="csrfToken"
+                                               value="<c:out value='${csrfToken}' />">
+
+                                        <button id="payButton"
+                                                class="btn checkout-pay"
+                                                type="submit"
+                                                ${checkout.voucherEditable ? '' : 'disabled'}>
+
+                                            Tiến hành thanh toán
+                                            <i class="fa-solid fa-arrow-right" aria-hidden="true"></i>
                                         </button>
                                     </form>
                                     <div class="checkout-provider">

@@ -23,8 +23,15 @@ import java.time.LocalDate;
 import java.time.Duration;
 import java.util.Locale;
 import java.util.List;
+import com.gms.constant.AppConstants;
+import com.gms.dao.TransactionDAO;
+import com.gms.entity.Transaction;
+import com.gms.integration.VnPayClient;
 
-/** SEQ-1: tạo đơn online Pending; giao dịch và subscription được tạo ở sequence sau. */
+/**
+ * SEQ-1: tạo đơn online Pending; giao dịch và subscription được tạo ở sequence
+ * sau.
+ */
 public class PaymentService {
 
     // DAO đọc khách, gói và đơn bằng cùng connection của Service.
@@ -37,18 +44,31 @@ public class PaymentService {
     private final SystemConfigService configService;
     private final AuditLogService auditLogService;
 
-    /** Dùng DAO và tiện ích đã có của project. */
+    // Đọc và lưu các lần thử thanh toán.
+    private final TransactionDAO transactionDAO = new TransactionDAO();
+
+    // Tạo URL thanh toán có chữ ký theo quy định VNPay.
+    private final VnPayClient vnPayClient = new VnPayClient();
+
+    /**
+     * Dùng DAO và tiện ích đã có của project.
+     */
     public PaymentService() {
         this(new PaymentDAO(), new PackageDAO(), new OrderDAO(), new SystemConfigService(), new AuditLogService());
     }
 
-    /** Cho test thay DAO nhưng vẫn chạy cùng luồng transaction của Service. */
+    /**
+     * Cho test thay DAO nhưng vẫn chạy cùng luồng transaction của Service.
+     */
     public PaymentService(PaymentDAO paymentDAO, PackageDAO packageDAO, OrderDAO orderDAO,
             SystemConfigService configService, AuditLogService auditLogService) {
         this(paymentDAO, packageDAO, orderDAO, configService, auditLogService, new VoucherDAO());
     }
 
-    /** Constructor mở rộng cho kiểm thử SEQ-2, giữ constructor SEQ-1 để không phá chỗ gọi cũ. */
+    /**
+     * Constructor mở rộng cho kiểm thử SEQ-2, giữ constructor SEQ-1 để không
+     * phá chỗ gọi cũ.
+     */
     public PaymentService(PaymentDAO paymentDAO, PackageDAO packageDAO, OrderDAO orderDAO,
             SystemConfigService configService, AuditLogService auditLogService, VoucherDAO voucherDAO) {
         this.voucherDAO = voucherDAO;
@@ -61,6 +81,7 @@ public class PaymentService {
 
     /**
      * Tạo đơn từ giá DB; hủy đơn cũ và trả voucher trong cùng transaction.
+     *
      * @param accountId tài khoản từ session, không phải customerId
      * @param packageId gói khách chọn; chỉ Membership/DayPass được mua tại đây
      * @return orderId mới để Servlet redirect tới checkout, hoặc thông báo lỗi
@@ -154,7 +175,9 @@ public class PaymentService {
         }
     }
 
-    /** Đọc đơn thật cho trang bàn giao; chưa áp voucher/khởi tạo thanh toán. */
+    /**
+     * Đọc đơn thật cho trang bàn giao; chưa áp voucher/khởi tạo thanh toán.
+     */
     public ServiceResult<Order> getOwnedOnlineOrder(int accountId, Integer orderId) {
         if (accountId <= 0 || orderId == null || orderId <= 0) {
             return ServiceResult.fail("Mã đơn không hợp lệ.");
@@ -171,7 +194,9 @@ public class PaymentService {
         }
     }
 
-    /** Đọc dữ liệu thật cho checkout; giá/VAT giữ nguyên snapshot của đơn.  */
+    /**
+     * Đọc dữ liệu thật cho checkout; giá/VAT giữ nguyên snapshot của đơn.
+     */
     public ServiceResult<CheckoutView> getCheckoutView(int accountId, Integer orderId) {
         if (accountId <= 0 || orderId == null || orderId <= 0) {
             return ServiceResult.fail("Mã đơn không hợp lệ.");
@@ -201,7 +226,10 @@ public class PaymentService {
         }
     }
 
-    /** Nhận mã từ form, chuẩn hóa và áp/thay voucher; không nhận discount từ trình duyệt. */
+    /**
+     * Nhận mã từ form, chuẩn hóa và áp/thay voucher; không nhận discount từ
+     * trình duyệt.
+     */
     public ServiceResult<Void> applyVoucher(int accountId, Integer orderId, String rawCode) {
         String code = rawCode == null ? "" : rawCode.trim().toUpperCase(Locale.ROOT);
         if (!ValidationUtil.isValidVoucherCode(code)) {
@@ -210,12 +238,17 @@ public class PaymentService {
         return changeVoucher(accountId, orderId, code, false);
     }
 
-    /** Gỡ mã khỏi đơn Pending và hoàn đúng một lượt cũ (BR-45). */
+    /**
+     * Gỡ mã khỏi đơn Pending và hoàn đúng một lượt cũ (BR-45).
+     */
     public ServiceResult<Void> removeVoucher(int accountId, Integer orderId) {
         return changeVoucher(accountId, orderId, null, true);
     }
 
-    /** Một transaction cho kiểm điều kiện, giữ/hoàn lượt voucher, giảm giá, VAT và AuditLog. */
+    /**
+     * Một transaction cho kiểm điều kiện, giữ/hoàn lượt voucher, giảm giá, VAT
+     * và AuditLog.
+     */
     private ServiceResult<Void> changeVoucher(int accountId, Integer orderId, String code, boolean remove) {
         // B1: kiểm ID trước kết nối; danh tính không lấy từ hidden input.
         if (accountId <= 0 || orderId == null || orderId <= 0) {
@@ -311,7 +344,10 @@ public class PaymentService {
         }
     }
 
-    /** Trả lý do CBR-73/74/76; null nếu hợp lệ. Lượt dùng tính cả Pending/Paid khác đơn hiện tại. */
+    /**
+     * Trả lý do CBR-73/74/76; null nếu hợp lệ. Lượt dùng tính cả Pending/Paid
+     * khác đơn hiện tại.
+     */
     private String validateVoucher(Connection conn, Voucher voucher, Package pkg, Order order, LocalDate today)
             throws SQLException {
         if (voucher == null) {
@@ -350,7 +386,144 @@ public class PaymentService {
         return null;
     }
 
-    /** Mở kết nối thực; test thay bằng kết nối theo dõi commit/rollback. */
+    /**
+     * Tạo lần thử thanh toán Pending và URL VNPay. Chưa chuyển Order sang Paid,
+     * chưa cấp Subscription.
+     *
+     * @param accountId tài khoản từ session
+     * @param orderId đơn cần thanh toán
+     * @param clientIp IP do Servlet lấy từ request
+     * @return URL thanh toán hoặc thông báo lỗi
+     */
+    public ServiceResult<String> startPayment(
+            int accountId, Integer orderId, String clientIp) {
+
+        // B1: kiểm tra ID trước khi mở kết nối.
+        if (accountId <= 0 || orderId == null || orderId <= 0) {
+            return ServiceResult.fail("Mã đơn không hợp lệ.");
+        }
+
+        try (Connection conn = openConnection()) {
+            conn.setAutoCommit(false);
+
+            try {
+                // B2: khóa hồ sơ trước, cùng thứ tự với thao tác voucher.
+                PaymentCustomerView customer
+                        = paymentDAO.findCustomerForPurchase(conn, accountId);
+
+                if (customer == null || customer.isFrozen()) {
+                    conn.rollback();
+                    return ServiceResult.fail(
+                            "Hồ sơ không còn hiệu lực hoặc đang đóng băng.");
+                }
+
+                // B3: đọc và khóa đơn thuộc tài khoản hiện tại.
+                Order order
+                        = orderDAO.findOnlineForUpdate(conn, accountId, orderId);
+
+                LocalDateTime now = DateTimeUtil.now().withNano(0);
+
+                if (order == null || !order.isPending()) {
+                    conn.rollback();
+                    return ServiceResult.fail(
+                            "Không tìm thấy đơn chờ thanh toán của bạn.");
+                }
+
+                if (order.getPaymentDueAt() == null
+                        || !now.isBefore(order.getPaymentDueAt())) {
+                    conn.rollback();
+                    return ServiceResult.fail(
+                            "Đơn đã hết hạn thanh toán. Vui lòng tạo đơn mới.");
+                }
+
+                if (transactionDAO.hasPending(conn, orderId)) {
+                    conn.rollback();
+                    return ServiceResult.fail(
+                            "Đơn đang có giao dịch thanh toán xử lý. "
+                            + "Không tạo thêm giao dịch.");
+                }
+
+                long amount = order.getFinalAmount();
+
+                if (amount <= 0) {
+                    conn.rollback();
+                    return ServiceResult.fail(
+                            "VNPay yêu cầu số tiền lớn hơn 0đ. "
+                            + "Vui lòng gỡ hoặc đổi mã giảm giá.");
+                }
+
+                // B4: hạn link không vượt quá hạn thanh toán của đơn.
+                LocalDateTime expiresAt = now.plusMinutes(
+                        AppConstants.PAYMENT_LINK_VALID_MINUTES);
+
+                if (expiresAt.isAfter(order.getPaymentDueAt())) {
+                    expiresAt = order.getPaymentDueAt();
+                }
+
+                // B5: tạo mã lần thanh toán theo SRS.
+                int attempt = transactionDAO.nextAttempt(conn, orderId);
+
+                String txnRef = order.getOrderCode().replace("-", "")
+                        + "A" + attempt;
+
+                // B6: snapshot số tiền và hạn của lần thanh toán.
+                Transaction payment = new Transaction(0);
+                payment.setOrderId(orderId);
+                payment.setAmount(amount);
+                payment.setPaymentMethod(
+                        Transaction.PaymentMethod.ONLINE_GATEWAY);
+                payment.setStatus(Transaction.Status.PENDING);
+                payment.setGatewayReference(txnRef);
+                payment.setCreatedAt(now);
+                payment.setExpiresAt(expiresAt);
+
+                int transactionId
+                        = transactionDAO.insertPending(conn, payment);
+
+                // B7: tạo URL chứa thông tin thanh toán và chữ ký.
+                String paymentUrl = vnPayClient.buildPaymentUrl(
+                        txnRef,
+                        amount,
+                        "Thanh toan " + order.getOrderCode(),
+                        clientIp,
+                        now,
+                        expiresAt);
+
+                // B8: nhật ký và giao dịch được lưu cùng transaction.
+                auditLogService.logInTransaction(
+                        conn,
+                        accountId,
+                        Role.CUSTOMER,
+                        "Khởi tạo thanh toán VNPay",
+                        "Transactions",
+                        transactionId,
+                        "Status",
+                        null,
+                        Transaction.Status.PENDING.getDbValue(),
+                        null);
+
+                conn.commit();
+                return ServiceResult.ok(paymentUrl);
+
+            } catch (SQLException | RuntimeException e) {
+                conn.rollback();
+                throw e;
+            }
+
+        } catch (SQLException | RuntimeException e) {
+            // Không ghi secret hoặc URL đã ký ra log.
+            System.err.println("Không khởi tạo được thanh toán VNPay: "
+                    + e.getClass().getSimpleName());
+
+            return ServiceResult.fail(
+                    "Chưa mở được VNPay. Vui lòng kiểm tra cấu hình "
+                    + "merchant và kết nối hệ thống.");
+        }
+    }
+
+    /**
+     * Mở kết nối thực; test thay bằng kết nối theo dõi commit/rollback.
+     */
     protected Connection openConnection() throws SQLException {
         return DBContext.getConnection();
     }

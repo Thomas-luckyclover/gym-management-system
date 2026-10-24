@@ -8,10 +8,23 @@ import java.sql.SQLException;
 import java.sql.Statement;
 import java.sql.Timestamp;
 
-/** SEQ-3: tạo một lần thử thanh toán; TransactionId dùng làm vnp_TxnRef duy nhất. */
+/**
+ * Đọc và lưu các lần thử thanh toán.
+ * TransactionId là ID nội bộ.
+ * GatewayReference lưu merchant txnRef gửi sang VNPay.
+ */
 public class TransactionDAO {
 
-    /** Đơn đã được Service khóa; đọc giao dịch Pending để từ chối bấm thanh toán trùng. */
+    /**
+     * Kiểm tra đơn đã có giao dịch đang chờ kết quả thanh toán hay chưa.
+     * Service dùng kết quả để chặn tạo thêm giao dịch Pending cho cùng đơn. Hàm
+     * chỉ đọc dữ liệu, không đổi trạng thái hoặc xử lý hết hạn giao dịch.
+     *
+     * @param conn kết nối do Service quản lý, không đóng trong hàm này
+     * @param orderId ID đơn cần kiểm tra
+     * @return true nếu có giao dịch Pending của đơn; false nếu không có
+     * @throws SQLException nếu truy vấn database thất bại
+     */
     public boolean hasPending(Connection conn, int orderId) throws SQLException {
         try (PreparedStatement statement = conn.prepareStatement(
                 "SELECT TOP (1) TransactionId FROM Transactions WHERE OrderId = ? AND Status = 'Pending'")) {
@@ -23,33 +36,93 @@ public class TransactionDAO {
     }
 
     /**
-     * Lưu Transaction Pending, số tiền/hạn từ Service, dùng chung transaction của đơn.
-     * @param conn transaction PaymentService quản lý
-     * @param payment dữ liệu lần thử mới, không có bank reference trước khi nhận IPN
-     * @return ID tự sinh, chính là merchant txnRef gửi VNPay; không thay schema
+     * Lấy số lần thử thanh toán online tiếp theo của một đơn. PaymentService
+     * phải khóa đơn trước khi gọi.
+     *
+     * @param conn kết nối trong transaction của Service
+     * @param orderId đơn cần thanh toán
+     * @return số lần thử tiếp theo, bắt đầu từ 1
      */
-    public int insertPending(Connection conn, Transaction payment) throws SQLException {
-        String sql = "INSERT INTO Transactions (OrderId, Amount, PaymentMethod, Status, CreatedAt, ExpiresAt) "
-                + "VALUES (?, ?, ?, ?, ?, ?)";
-        try (PreparedStatement statement = conn.prepareStatement(sql, Statement.RETURN_GENERATED_KEYS)) {
-            statement.setInt(1, payment.getOrderId());
-            statement.setLong(2, payment.getAmount());
-            statement.setString(3, Transaction.PaymentMethod.ONLINE_GATEWAY.getDbValue());
-            statement.setString(4, Transaction.Status.PENDING.getDbValue());
-            statement.setTimestamp(5, Timestamp.valueOf(payment.getCreatedAt()));
-            statement.setTimestamp(6, Timestamp.valueOf(payment.getExpiresAt()));
-            if (statement.executeUpdate() != 1) {
-                throw new SQLException("Không tạo được transaction Pending");
-            }
-            try (ResultSet keys = statement.getGeneratedKeys()) {
-                if (keys.next()) {
-                    return keys.getInt(1);
+    public int nextAttempt(Connection conn, int orderId) throws SQLException {
+        String sql = "SELECT COUNT(*) + 1 AS NextAttempt "
+                + "FROM Transactions "
+                + "WHERE OrderId = ? AND PaymentMethod = 'OnlineGateway'";
+
+        try (PreparedStatement statement = conn.prepareStatement(sql)) {
+            statement.setInt(1, orderId);
+
+            try (ResultSet resultSet = statement.executeQuery()) {
+                if (resultSet.next()) {
+                    return resultSet.getInt("NextAttempt");
                 }
             }
         }
-        throw new SQLException("Thiếu TransactionId sau INSERT");
+
+        throw new SQLException("Không xác định được lần thử thanh toán");
     }
-    /** Đọc transaction theo txnRef = TransactionId từ SEQ-3; khi lock=true giữ khóa tới commit. */
+
+    /**
+     * Lưu Transaction Pending, số tiền/hạn từ Service, dùng chung transaction
+     * của đơn.
+     *
+     * @param conn transaction PaymentService quản lý
+     * @param payment dữ liệu lần thử mới, không có bank reference trước khi
+     * nhận IPN
+     * @return ID tự sinh, chính là merchant txnRef gửi VNPay; không thay schema
+     */
+    /**
+     * Lưu một lần thử thanh toán online Pending. Service quản lý
+     * commit/rollback, DAO không tự commit.
+     *
+     * @param conn kết nối trong transaction của Service
+     * @param payment giao dịch Service đã chuẩn bị
+     * @return TransactionId do database tự sinh
+     */
+    public int insertPending(Connection conn, Transaction payment)
+            throws SQLException {
+
+        String sql = "INSERT INTO Transactions "
+                + "(OrderId, Amount, PaymentMethod, Status, "
+                + "CreatedAt, ExpiresAt, GatewayReference) "
+                + "VALUES (?, ?, ?, ?, ?, ?, ?)";
+
+        try (PreparedStatement statement = conn.prepareStatement(
+                sql, Statement.RETURN_GENERATED_KEYS)) {
+
+            // B1: lưu đơn, số tiền và trạng thái.
+            statement.setInt(1, payment.getOrderId());
+            statement.setLong(2, payment.getAmount());
+            statement.setString(
+                    3, Transaction.PaymentMethod.ONLINE_GATEWAY.getDbValue());
+            statement.setString(
+                    4, Transaction.Status.PENDING.getDbValue());
+
+            // B2: lưu thời điểm tạo, hạn link và merchant txnRef.
+            statement.setTimestamp(
+                    5, Timestamp.valueOf(payment.getCreatedAt()));
+            statement.setTimestamp(
+                    6, Timestamp.valueOf(payment.getExpiresAt()));
+            statement.setString(7, payment.getGatewayReference());
+
+            if (statement.executeUpdate() != 1) {
+                throw new SQLException("Không tạo được giao dịch thanh toán");
+            }
+
+            // B3: lấy ID nội bộ do SQL Server tự sinh.
+            try (ResultSet generatedKeys = statement.getGeneratedKeys()) {
+                if (generatedKeys.next()) {
+                    return generatedKeys.getInt(1);
+                }
+            }
+        }
+
+        throw new SQLException("Không lấy được TransactionId sau khi tạo");
+    }
+
+    /**
+     * Đọc transaction theo txnRef = TransactionId từ SEQ-3; khi lock=true giữ
+     * khóa tới commit.
+     */
     public Transaction findById(Connection conn, int transactionId, boolean lock) throws SQLException {
         String sql = "SELECT TransactionId, OrderId, Amount, PaymentMethod, Status, GatewayReference, "
                 + "NeedsRefund, CreatedAt, ExpiresAt, CompletedAt FROM Transactions "
@@ -77,7 +150,10 @@ public class TransactionDAO {
         }
     }
 
-    /** Kiểm index hiện tại: có Success khác thì chưa được ghi Success thứ hai, kể cả NeedsRefund. */
+    /**
+     * Kiểm index hiện tại: có Success khác thì chưa được ghi Success thứ hai,
+     * kể cả NeedsRefund.
+     */
     public boolean hasOtherSuccess(Connection conn, int orderId, int excludedId) throws SQLException {
         try (PreparedStatement statement = conn.prepareStatement(
                 "SELECT TOP (1) TransactionId FROM Transactions WHERE OrderId = ? AND TransactionId <> ? AND Status = 'Success'")) {
@@ -89,7 +165,10 @@ public class TransactionDAO {
         }
     }
 
-    /** Ghi kết quả callback có điều kiện; Expired có thể nhận Success muộn, không bỏ sót tiền đã về. */
+    /**
+     * Ghi kết quả callback có điều kiện; Expired có thể nhận Success muộn,
+     * không bỏ sót tiền đã về.
+     */
     public int recordResult(Connection conn, int transactionId, Transaction.Status status, String reference,
             boolean needsRefund, String failureReason, java.time.LocalDateTime now) throws SQLException {
         String sql = "UPDATE Transactions SET Status = ?, GatewayReference = ?, NeedsRefund = ?, "

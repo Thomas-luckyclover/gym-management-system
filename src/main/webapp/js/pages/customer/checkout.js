@@ -1,75 +1,116 @@
-// Checkout: gọi postData dùng chung; chỉ server tính discount/VAT và giữ lượt voucher.
-// ID voucherForm/voucherCode/voucherStatus/voucherClear/payButton nối với checkout.jsp.
 document.addEventListener("DOMContentLoaded", initCheckout);
+
+// Quay lại từ VNPay bằng Back: đọc lại trạng thái đơn từ server.
+window.addEventListener("pageshow", function (event) {
+    if (event.persisted) {
+        window.location.reload();
+    }
+});
 
 function initCheckout() {
     const form = document.getElementById("voucherForm");
     if (!form) {
         return;
     }
+
     const input = document.getElementById("voucherCode");
     const clear = document.getElementById("voucherClear");
     const pay = document.getElementById("payButton");
-    let processing = false;
+    const paymentForm = document.getElementById("paymentForm");
+    const validIcon = document.getElementById("voucherValidIcon");
+
+    let inFlight = null;
+    let navigating = false;
     let confirmed = form.dataset.valid === "true";
     let editable = form.dataset.editable === "true";
+    let checkedCode = confirmed ? input.value.trim() : null;
 
     function updatePayButton() {
-        pay.disabled = processing || !editable;
+        // Mã sai không khóa nút. Submit sẽ chờ request voucher nếu có.
+        pay.disabled = navigating || !editable;
     }
 
-    // B1: sửa input khóa thanh toán ngay, tránh gửi tiền trước khi mã mới được kiểm tra.
+    // B1: nhập mã mới thì bỏ dấu hợp lệ cũ trên giao diện.
     input.addEventListener("input", function () {
         confirmed = false;
-        document.getElementById("voucherValidIcon").hidden = true;
+        validIcon.hidden = true;
         setVoucherStatus("", "neutral");
-        clear.hidden = input.value.trim() === "" && form.dataset.applied === "";
+
+        clear.hidden = input.value.trim() === ""
+                && !form.dataset.applied;
+
         updatePayButton();
     });
+
     input.addEventListener("blur", function () {
         if (!confirmed) {
             checkVoucher(false);
         }
     });
+
     input.addEventListener("keydown", function (event) {
         if (event.key === "Enter") {
             event.preventDefault();
             checkVoucher(false);
         }
     });
+
     form.addEventListener("submit", function (event) {
         event.preventDefault();
         checkVoucher(false);
     });
+
     clear.addEventListener("mousedown", function (event) {
-        // Không kích hoạt blur trước khi click dấu x, tránh gửi áp mã rồi lại gỡ mã.
+        // Tránh blur áp mã trước khi click gỡ mã.
         event.preventDefault();
     });
+
     clear.addEventListener("click", function () {
         checkVoucher(true);
     });
 
-    // B2: mỗi lần chỉ gửi một mutation, khóa input tới lúc có kết quả để tránh request đua.
-    async function checkVoucher(remove) {
-        if (processing || !editable) {
-            return;
+    // B2: dùng chung request đang chạy, tránh kiểm tra mã hai lần đồng thời.
+    function checkVoucher(remove) {
+        if (inFlight) {
+            return inFlight;
         }
-        if (!remove && input.value.trim() === "" && !form.dataset.applied) {
+
+        if (!editable) {
+            return Promise.resolve();
+        }
+
+        inFlight = performVoucherCheck(remove).finally(function () {
+            inFlight = null;
+        });
+
+        return inFlight;
+    }
+
+    async function performVoucherCheck(remove) {
+        const code = input.value.trim();
+
+        // Không nhập mã và chưa áp mã thì không cần gọi server.
+        if (!remove && code === "" && !form.dataset.applied) {
             confirmed = true;
             setVoucherStatus("", "neutral");
-            updatePayButton();
             return;
         }
-        processing = true;
+
+        checkedCode = code;
         confirmed = false;
+
         input.disabled = true;
         clear.disabled = true;
-        updatePayButton();
-        document.getElementById("voucherValidIcon").hidden = true;
+        validIcon.hidden = true;
+
         setVoucherStatus("Đang kiểm tra mã…", "neutral");
-        const code = input.value.trim();
-        const action = remove || code === "" ? "remove-voucher" : "apply-voucher";
+
+        const action = remove || code === ""
+                ? "remove-voucher"
+                : "apply-voucher";
+
         let result;
+
         try {
             result = await postData("/customer/checkout", {
                 order: form.elements.order.value,
@@ -77,55 +118,116 @@ function initCheckout() {
                 action: action,
                 voucherCode: code
             });
+
             if (result.data) {
                 renderCheckoutAmounts(result.data);
                 editable = result.data.voucherEditable;
                 form.dataset.applied = result.data.voucherCode || "";
             }
+
             if (result.success && result.data) {
                 input.value = result.data.voucherCode || "";
                 confirmed = true;
-                setVoucherStatus(result.data.voucherMessage || "", "success");
+
+                setVoucherStatus(
+                        result.data.voucherMessage || "",
+                        "success");
             } else {
-                const fieldError = result.errors && result.errors.voucherCode;
-                setVoucherStatus(fieldError || result.message || "Chưa kiểm tra được mã. Vui lòng thử lại.", "error");
+                const fieldError = result.errors
+                        && result.errors.voucherCode;
+
+                setVoucherStatus(
+                        fieldError || result.message
+                        || "Chưa kiểm tra được mã. Vui lòng thử lại.",
+                        "error");
             }
+
         } catch (error) {
-            setVoucherStatus("Chưa kiểm tra được mã. Vui lòng thử lại.", "error");
+            setVoucherStatus(
+                    "Chưa kiểm tra được mã. Vui lòng thử lại.",
+                    "error");
+
         } finally {
-            processing = false;
             input.disabled = !editable;
             clear.disabled = !editable;
-            clear.hidden = input.value.trim() === "" && form.dataset.applied === "";
-            const validIcon = document.getElementById("voucherValidIcon");
+
+            clear.hidden = input.value.trim() === ""
+                    && !form.dataset.applied;
+
             validIcon.hidden = !confirmed || input.value === "";
-            updatePayButton();
+
             if (!editable && result && result.data) {
-                setVoucherStatus(result.data.voucherLockReason || "Đơn không còn được đổi voucher.", "error");
+                setVoucherStatus(
+                        result.data.voucherLockReason
+                        || "Đơn không còn được đổi voucher.",
+                        "error");
             }
+
+            updatePayButton();
         }
     }
 
-    // B3: gửi GET tới trang thanh toán tạm, không tạo giao dịch hoặc gọi VNPay.
-    document.getElementById("paymentForm").addEventListener("submit", function (event) {
-        if (processing || !editable) {
-            event.preventDefault();
+    // B3: chờ kiểm tra voucher xong rồi gửi POST thanh toán.
+    paymentForm.addEventListener("submit", async function (event) {
+        event.preventDefault();
+
+        if (navigating || !editable) {
             return;
         }
-        pay.disabled = true;
-        pay.textContent = "Đang xử lý…";
+
+        navigating = true;
+        updatePayButton();
+
+        try {
+            if (inFlight) {
+                await inFlight;
+            } else if (input.value.trim() !== checkedCode) {
+                await checkVoucher(false);
+            }
+
+            if (!editable) {
+                navigating = false;
+                updatePayButton();
+                return;
+            }
+
+            pay.textContent = "Đang mở VNPay…";
+
+            // Gửi form thật, không kích hoạt lại listener submit.
+            // Form chỉ chứa order/action/csrfToken, không gửi số tiền.
+            HTMLFormElement.prototype.submit.call(paymentForm);
+
+        } catch (error) {
+            navigating = false;
+            updatePayButton();
+
+            setVoucherStatus(
+                    "Chưa gửi được yêu cầu. Vui lòng thử lại.",
+                    "error");
+        }
     });
+
     updatePayButton();
 }
 
-// Giá chỉ lấy từ snapshot server, không tự tính từ input hay catalogue.
+// JavaScript chỉ hiển thị số tiền do server trả về.
 function renderCheckoutAmounts(data) {
-    document.getElementById("discountAmount").textContent = data.discountText;
-    document.getElementById("totalAmount").textContent = data.totalText;
-    document.getElementById("vatAmount").textContent = data.vatText;
+    document.getElementById("discountAmount").textContent =
+            data.discountText;
+
+    document.getElementById("totalAmount").textContent =
+            data.totalText;
+
+    document.getElementById("vatAmount").textContent =
+            data.vatText;
+
+    document.getElementById("preTaxAmount").textContent =
+            data.preTaxText;
+
+    document.getElementById("discountRow").hidden =
+            !data.voucherCode;
 }
 
-// textContent tránh XSS khi hiện message hoặc mã voucher trả về.
 function setVoucherStatus(message, state) {
     const status = document.getElementById("voucherStatus");
     status.textContent = message;

@@ -3,65 +3,110 @@ package com.gms.entity;
 import java.time.LocalDateTime;
 
 /**
- * Giao dịch thanh toán (lần thử thanh toán cho đơn hàng), ánh xạ bảng Transactions trong database (Cluster B).
+ * Giao dịch thanh toán (lần thử thanh toán cho đơn hàng), ánh xạ bảng
+ * Transactions trong database (Cluster B).
  *
- * <p>Quy tắc nghiệp vụ:</p>
+ * <p>
+ * Quy tắc nghiệp vụ:</p>
  * <ul>
- *   <li>Mỗi lần thử thanh toán là 1 bản ghi Transaction (DBR-41). Một Order có thể có nhiều Transaction nhưng tối đa 1 Pending và 1 Success (DBR-42).</li>
- *   <li>Phương thức thanh toán: Cash (tiền mặt), Transfer (chuyển khoản tại quầy), OnlineGateway (cổng VNPay).</li>
- *   <li>Cổng Online bắt buộc có hạn ExpiresAt (5 phút, không vượt hạn đơn CBR-69, P-08, CK_Transactions_Online).</li>
- *   <li>Thanh toán tại quầy thành công phải ghi nhận Lễ tân thu tiền (ReceivedByEmployeeId, CBR-77).</li>
- *   <li>Vòng đời trạng thái: Pending → Success, Failed, hoặc Expired. CompletedAt bắt buộc khi Success/Failed (CK_Transactions_Completed).</li>
- *   <li>Trường hợp tiền về muộn khi đơn đã hủy (CBR-72): Transaction vẫn là Success nhưng NeedsRefund = 1 để Manager hoàn tiền ngoài hệ thống (BR-47).</li>
+ * <li>Mỗi lần thử thanh toán là 1 bản ghi Transaction (DBR-41). Một Order có
+ * thể có nhiều Transaction nhưng tối đa 1 Pending và 1 Success (DBR-42).</li>
+ * <li>Phương thức thanh toán: Cash (tiền mặt), Transfer (chuyển khoản tại
+ * quầy), OnlineGateway (cổng VNPay).</li>
+ * <li>Cổng Online bắt buộc có hạn ExpiresAt (5 phút, không vượt hạn đơn CBR-69,
+ * P-08, CK_Transactions_Online).</li>
+ * <li>Thanh toán tại quầy thành công phải ghi nhận Lễ tân thu tiền
+ * (ReceivedByEmployeeId, CBR-77).</li>
+ * <li>Vòng đời trạng thái: Pending → Success, Failed, hoặc Expired. CompletedAt
+ * bắt buộc khi Success/Failed (CK_Transactions_Completed).</li>
+ * <li>Trường hợp tiền về muộn khi đơn đã hủy (CBR-72): Transaction vẫn là
+ * Success nhưng NeedsRefund = 1 để Manager hoàn tiền ngoài hệ thống
+ * (BR-47).</li>
  * </ul>
  *
  * @author Le Cong Minh
  */
 public class Transaction {
 
-    /** Khóa chính tự tăng, bất biến → final, không có setter. */
+    /**
+     * Khóa chính tự tăng, bất biến → final, không có setter.
+     */
     private final int transactionId;
 
-    /** Đơn hàng tương ứng với giao dịch (FK -> Orders.OrderId). */
+    /**
+     * Đơn hàng tương ứng với giao dịch (FK -> Orders.OrderId).
+     */
     private int orderId;
 
-    /** Số tiền phải trả tại thời điểm tạo giao dịch (VND, Amount > 0). */
+    /**
+     * Số tiền phải trả tại thời điểm tạo giao dịch (VND, Amount > 0).
+     */
     private long amount;
 
-    /** Phương thức thanh toán: Cash, Transfer, OnlineGateway. */
+    /**
+     * Phương thức thanh toán: Cash, Transfer, OnlineGateway.
+     */
     private PaymentMethod paymentMethod;
 
-    /** Mã tham chiếu từ cổng thanh toán (vnp_TransactionNo / vnp_BankTranNo) hoặc mã chuyển khoản ngân hàng. */
+    /**
+     * OnlineGateway: merchant txnRef do GMS tạo và gửi sang VNPay, dùng để đối
+     * chiếu đúng lần thanh toán. Thanh toán tại quầy có thể lưu mã tham chiếu
+     * chuyển khoản.
+     */
     private String gatewayReference;
 
-    /** Nhân viên Lễ tân nhận tiền mặt hoặc xác nhận chuyển khoản tại quầy (null với OnlineGateway). */
+    /**
+     * Nhân viên Lễ tân nhận tiền mặt hoặc xác nhận chuyển khoản tại quầy (null
+     * với OnlineGateway).
+     */
     private Integer receivedByEmployeeId;
 
-    /** Trạng thái giao dịch: Pending, Success, Failed, Expired. */
+    /**
+     * Trạng thái giao dịch: Pending, Success, Failed, Expired.
+     */
     private Status status;
 
-    /** Lý do giao dịch thất bại (mã lỗi VNPay, lỗi thẻ, hoặc lý do hủy). */
+    /**
+     * Lý do giao dịch thất bại (mã lỗi VNPay, lỗi thẻ, hoặc lý do hủy).
+     */
     private String failureReason;
 
-    /** Cờ đánh dấu cần hoàn tiền (1 = tiền về cho đơn đã hủy hoặc lệch tiền theo CBR-72). */
+    /**
+     * Cờ đánh dấu cần hoàn tiền (1 = tiền về cho đơn đã hủy hoặc lệch tiền theo
+     * CBR-72).
+     */
     private boolean needsRefund;
 
-    /** Thời điểm Manager xác nhận đã hoàn tiền ngoài hệ thống (BR-47). */
+    /**
+     * Thời điểm Manager xác nhận đã hoàn tiền ngoài hệ thống (BR-47).
+     */
     private LocalDateTime refundedAt;
 
-    /** Nhân viên Manager thực hiện đánh dấu hoàn tiền (FK -> Employees.EmployeeId). */
+    /**
+     * Nhân viên Manager thực hiện đánh dấu hoàn tiền (FK ->
+     * Employees.EmployeeId).
+     */
     private Integer refundedByEmployeeId;
 
-    /** Ghi chú hoàn tiền (số tài khoản nhận, mã giao dịch hoàn, lý do...). */
+    /**
+     * Ghi chú hoàn tiền (số tài khoản nhận, mã giao dịch hoàn, lý do...).
+     */
     private String refundNote;
 
-    /** Thời điểm khởi tạo giao dịch. */
+    /**
+     * Thời điểm khởi tạo giao dịch.
+     */
     private LocalDateTime createdAt;
 
-    /** Hạn chót của phiên thanh toán online (5 phút, không vượt hạn đơn P-09). */
+    /**
+     * Hạn chót của phiên thanh toán online (5 phút, không vượt hạn đơn P-09).
+     */
     private LocalDateTime expiresAt;
 
-    /** Thời điểm giao dịch hoàn tất (thành công hoặc thất bại); null khi Pending/Expired. */
+    /**
+     * Thời điểm giao dịch hoàn tất (thành công hoặc thất bại); null khi
+     * Pending/Expired.
+     */
     private LocalDateTime completedAt;
 
     /**
@@ -91,7 +136,8 @@ public class Transaction {
     }
 
     /**
-     * Constructor đầy đủ các trường, dùng khi DAO nạp dữ liệu từ bảng Transactions.
+     * Constructor đầy đủ các trường, dùng khi DAO nạp dữ liệu từ bảng
+     * Transactions.
      */
     public Transaction(int transactionId, int orderId, long amount, PaymentMethod paymentMethod,
             String gatewayReference, Integer receivedByEmployeeId, Status status,
@@ -116,7 +162,6 @@ public class Transaction {
     }
 
     // ===== Getter / Setter =====
-
     public int getTransactionId() {
         return transactionId;
     }
@@ -234,43 +279,58 @@ public class Transaction {
     }
 
     // ===== Phương thức kiểm tra trạng thái tiện ích =====
-
-    /** Kiểm tra giao dịch đang chờ xử lý. */
+    /**
+     * Kiểm tra giao dịch đang chờ xử lý.
+     */
     public boolean isPending() {
         return this.status == Status.PENDING;
     }
 
-    /** Kiểm tra giao dịch đã thanh toán thành công. */
+    /**
+     * Kiểm tra giao dịch đã thanh toán thành công.
+     */
     public boolean isSuccess() {
         return this.status == Status.SUCCESS;
     }
 
-    /** Kiểm tra giao dịch thất bại. */
+    /**
+     * Kiểm tra giao dịch thất bại.
+     */
     public boolean isFailed() {
         return this.status == Status.FAILED;
     }
 
-    /** Kiểm tra giao dịch đã hết hạn phiên thanh toán. */
+    /**
+     * Kiểm tra giao dịch đã hết hạn phiên thanh toán.
+     */
     public boolean isExpired() {
         return this.status == Status.EXPIRED;
     }
 
-    /** Kiểm tra giao dịch qua cổng online VNPay. */
+    /**
+     * Kiểm tra giao dịch qua cổng online VNPay.
+     */
     public boolean isOnlineGateway() {
         return this.paymentMethod == PaymentMethod.ONLINE_GATEWAY;
     }
 
-    /** Kiểm tra giao dịch tiền mặt tại quầy. */
+    /**
+     * Kiểm tra giao dịch tiền mặt tại quầy.
+     */
     public boolean isCash() {
         return this.paymentMethod == PaymentMethod.CASH;
     }
 
-    /** Kiểm tra giao dịch chuyển khoản tại quầy. */
+    /**
+     * Kiểm tra giao dịch chuyển khoản tại quầy.
+     */
     public boolean isTransfer() {
         return this.paymentMethod == PaymentMethod.TRANSFER;
     }
 
-    /** Kiểm tra giao dịch đã được Manager hoàn tiền ngoài hệ thống. */
+    /**
+     * Kiểm tra giao dịch đã được Manager hoàn tiền ngoài hệ thống.
+     */
     public boolean isRefundCompleted() {
         return this.needsRefund && this.refundedAt != null;
     }
@@ -286,7 +346,6 @@ public class Transaction {
     }
 
     // ===== Enum lồng theo quy định GBR-01 và ràng buộc CHECK DB =====
-
     /**
      * Phương thức thanh toán (CK_Transactions_Method).
      */
