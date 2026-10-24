@@ -2963,3 +2963,136 @@ html body.dock .content :is(.panel, .side-card, .gms-panel, .report-card, .card,
 html body.dock .content .status-hero :is(h2, h3, p, span, strong, b, .section-label, .status-meta, .status-meta *) { color: var(--zone-ink); }
 html body.dock .content .status-hero :is(.section-label, .status-meta span) { color: var(--zone-ink-muted); }
 html body.dock .content .status-hero .status-expiring { color: var(--zone-accent-ink); }
+
+/* =====================================================================
+   ARENA (24/10 tối) — 4 màn: PT Dashboard, Lịch dạy PT, My PT Sessions, My Bookings.
+   Bảng màu đĩa tạ thi đấu (token --arena-* trong tokens.css):
+     đĩa 20kg xanh  = nền sân + topbar
+     đĩa 25kg đỏ    = MỘT việc nặng nhất mỗi màn (nút chính, hôm nay, ô cần chú ý)
+     phấn magie     = khối đọc sáng; ô con bên trong là trắng
+     thép thanh đòn = chữ phụ trên khối tối, vân nhám (chỉ đỉnh khối chào PT)
+   Hình: góc sắc theo cấp — khối 6px, ô 4px, chip/nhãn 2px; avatar vẫn tròn. Khe ghép 12px.
+   Phạm vi: 2 trang PT có class riêng trên <body>; 2 trang khách nhận qua <main> (.my-pt-page, .booking-page).
+   Các khu Quản lý, Lễ tân, Admin, Trang cá nhân khách KHÔNG đổi.
+   Sidebar giữ nguyên: không đổi --ink-sidebar-*, --ink-nav-* (ember cũ ghim lại ở --ink-nav-edge = --arena-sidebar-ember).
+   Animation có sẵn giữ nguyên; mục này chỉ đổi màu, hình, cỡ chữ.
+   ===================================================================== */
+html body.dock:is(.pt-dashboard-page, .pt-plan-page, :has(.my-pt-page, .booking-page)) {
+  --zone-accent: var(--arena-ember);
+  --zone-accent-hover: var(--arena-ember-hi);
+  --zone-accent-ink: var(--arena-ember-ink);
+  --ink-nav-edge: var(--arena-sidebar-ember);
+  --zone-ink: var(--arena-ink);
+  --zone-ink-soft: var(--arena-ink-soft);
+  --zone-ink-muted: var(--arena-steel-ink);
+  --zone-card-2: var(--arena-chalk-2);
+  --zone-card-line: var(--arena-chalk-line);
+  --ink-ground: var(--arena-700);
+  --ink-surface: var(--arena-chalk);
+  --ink-border: var(--arena-chalk-line);
+  --ink-shadow: var(--arena-shadow-light);
+  --ink-focus: var(--arena-700);
+  --ink-table-head: var(--arena-chalk-2);
+  --ink-row-hover: var(--arena-chalk-2);
+  --pt-bg: var(--arena-700);
+  --pt-panel: var(--arena-chalk);
+  --pt-panel-2: var(--arena-surface);
+  --pt-line: var(--arena-card-line);
+  --pt-line-strong: var(--arena-chalk-line-strong);
+  --pt-shadow: var(--arena-shadow-light);
+  --pt-lagoon-text: var(--arena-700);
+  --color-bg: var(--arena-700);
+  --color-primary-tint: var(--arena-ember-tint);
+  --color-primary-border: var(--arena-ember-border);
+  --color-link: var(--arena-700);
+  --color-info-ink: var(--arena-700);
+  --color-row-pinned: var(--arena-row-pinned);
+  --brand-lagoon: var(--arena-700);
+  --brand-ocean: var(--arena-800);
+  --radius-xs: var(--arena-radius-chip);
+  --radius-sm: var(--arena-radius-chip);
+  --radius-md: var(--arena-radius-tile);
+  --radius-lg: var(--arena-radius-block);
+  --radius-button: var(--arena-radius-tile);
+  --radius-pill: var(--arena-radius-chip);
+  background-color: var(--arena-700);
+}
+/* Nền sân phẳng một màu; trong khối: nền phụ là trắng nhạt, không phải nền sân */
+html body.dock:is(.pt-dashboard-page, .pt-plan-page, :has(.my-pt-page, .booking-page))::before {
+  background: var(--arena-700);
+}
+
+/* --- Topbar: cùng màu sân, tiêu đề đậm, ô tài khoản thành ô kính --- */
+html body.dock:is(.pt-dashboard-page, .pt-plan-page, :has(.my-pt-page, .booking-page)) .topbar {
+  background: var(--arena-700);
+  border-bottom-color: var(--arena-topbar-line);
+}
+html body.dock:is(.pt-dashboard-page, .pt-plan-page, :has(.my-pt-page, .booking-page)) .topbar :is(.tb-title, .tb-left h1) {
+  font-family: var(--font-brand-display);
+  font-size: var(--font-size-2xl);
+  font-weight: var(--font-weight-extrabold);
+  letter-spacing: -0.015em;
+}
+html body.dock:is(.pt-dashboard-page, .pt-plan-page, :has(.my-pt-page, .booking-page)) .topbar :is(.tb-left p, .pt-header-date) {
+  color: var(--arena-on-dark-soft);
+}
+html body.dock:is(.pt-dashboard-page, .pt-plan-page, :has(.my-pt-page, .booking-page)) .tb-user {
+  border-color: var(--arena-glass-line);
+  border-radius: var(--arena-radius-tile);
+  background: var(--arena-glass);
+  color: var(--arena-surface);
+  box-shadow: var(--arena-glass-edge);
+}
+html body.dock:is(.pt-dashboard-page, .pt-plan-page, :has(.my-pt-page, .booking-page)) .tb-user:is(:hover, :focus-visible) {
+  border-color: var(--arena-glass-line-hover);
+  background: var(--arena-glass-strong);
+  box-shadow: var(--arena-glass-edge);
+}
+html body.dock:is(.pt-dashboard-page, .pt-plan-page, :has(.my-pt-page, .booking-page)) .tb-user :is(b, strong) { color: var(--arena-surface); }
+html body.dock:is(.pt-dashboard-page, .pt-plan-page, :has(.my-pt-page, .booking-page)) .tb-user :is(small, .tb-user-text span, .pt-user-code) {
+  border-radius: var(--arena-radius-chip);
+  background: var(--arena-glass-strong);
+  color: var(--arena-on-dark-soft);
+}
+html body.dock:is(.pt-dashboard-page, .pt-plan-page, :has(.my-pt-page, .booking-page)) :is(.tb-user .avatar, .tb-avatar, .pt-user-avatar) {
+  background: var(--arena-800);
+}
+
+/* --- Khối sáng: phấn magie, góc 6px, bóng tông xanh thay viền --- */
+html body.dock:is(.pt-dashboard-page, .pt-plan-page, :has(.my-pt-page, .booking-page)) :is(.panel, .side-card, .gms-panel, .card) {
+  border: 0;
+  border-radius: var(--arena-radius-block);
+  background: var(--arena-chalk);
+  box-shadow: var(--arena-shadow-light);
+}
+
+/* --- Nút: góc 4px; ember chỉ cho nút chính; nút phụ rê chuột viền xanh (không thêm ember) --- */
+html body.dock:is(.pt-dashboard-page, .pt-plan-page, :has(.my-pt-page, .booking-page)) .btn { border-radius: var(--arena-radius-tile); }
+html body.dock:is(.pt-dashboard-page, .pt-plan-page, :has(.my-pt-page, .booking-page)) .btn-primary {
+  border-color: var(--arena-ember);
+  border-radius: var(--arena-radius-tile);
+  background: var(--arena-ember);
+  color: var(--arena-ink);
+}
+html body.dock:is(.pt-dashboard-page, .pt-plan-page, :has(.my-pt-page, .booking-page)) .btn-primary:hover:not(:disabled) {
+  border-color: var(--arena-ember-hi);
+  background: var(--arena-ember-hi);
+}
+html body.dock:is(.pt-dashboard-page, .pt-plan-page, :has(.my-pt-page, .booking-page)) .content .btn:not(.btn-primary):not(.btn-danger):not(.btn-link) {
+  border-color: var(--arena-chalk-line);
+  background: var(--arena-surface);
+  color: var(--arena-ink);
+}
+html body.dock:is(.pt-dashboard-page, .pt-plan-page, :has(.my-pt-page, .booking-page)) .content .btn:not(.btn-primary):not(.btn-danger):not(.btn-link):hover:not(:disabled) {
+  border-color: var(--arena-700);
+  background: var(--arena-chalk-2);
+}
+
+/* --- Bảng: đầu cột góc 4px như ô --- */
+html body.dock:is(.pt-dashboard-page, .pt-plan-page, :has(.my-pt-page, .booking-page)) table:not(.no-gms-table) thead th:first-child { border-top-left-radius: var(--arena-radius-tile); }
+html body.dock:is(.pt-dashboard-page, .pt-plan-page, :has(.my-pt-page, .booking-page)) table:not(.no-gms-table) thead th:last-child { border-top-right-radius: var(--arena-radius-tile); }
+
+/* --- Hộp gợi ý (i): góc 4px --- */
+html body.dock:is(.pt-dashboard-page, .pt-plan-page, :has(.my-pt-page, .booking-page)) .pt-info-popover {
+  border-radius: var(--arena-radius-tile);
+}

@@ -345,3 +345,22 @@ html body.auth-dark .recovery-timer { background: var(--color-primary-tint); }
 }
 html.gms-lite .auth-engraving * { animation: none; }
 html.gms-lite .auth-muse { animation: none; }
+
+/* ARENA (24/10 tối): trang xác thực theo nền Arena. Màu nền/thẻ/ô nhập/focus đổi ở token --auth-* (tokens.css);
+   ở đây chỉ thêm đèn sân khấu cho thẻ form, góc 6px và dấu chấm vuông ember sau tiêu đề.
+   Tranh gốm, wordmark, nữ hoàng nguyệt quế và animation vẽ nét giữ nguyên. */
+html body.auth-dark .auth-card {
+  border-radius: var(--arena-radius-block);
+  background:
+    radial-gradient(120% 80% at 0% 0%, var(--arena-glow), transparent 55%),
+    var(--auth-card-solid);
+}
+html.gms-lite body.auth-dark .auth-card { background: var(--auth-card-solid); }
+html body.auth-dark .auth-head h1::after {
+  content: "";
+  display: inline-block;
+  width: 0.18em;
+  height: 0.18em;
+  margin-left: 0.08em;
+  background: var(--arena-ember);
+}

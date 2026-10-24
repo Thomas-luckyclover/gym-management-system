@@ -825,25 +825,27 @@
   --sailor-shade: radial-gradient(ellipse 60% 55% at 70% 72%, rgba(5, 9, 18, 0.62), transparent 72%);
   --sailor-bubble-width: 248px;
   --my-pt-time-width: 168px;
-  /* Auth "Gymnasion Ink" (15/10): cùng nền mực trang chủ; 1 nhấn cam, kem cho nét vẽ, aqua chỉ cho focus. */
-  --auth-ocean-ground: #080F1E;
-  --auth-ocean-gradient: #080F1E;
+  /* Auth "Gymnasion Ink" (15/10), đổi nền sang Arena 24/10: tranh gốm giữ nguyên nét kem/cam,
+     nền + thẻ form + ô nhập theo xanh Arena đậm, focus xanh thép thay aqua. */
+  --auth-ocean-ground: #0D1A42;
+  --auth-ocean-gradient: #0D1A42;
   --auth-ink-line: #FFF7EF;
   --auth-ember-line: #FF4F2B;
   --auth-art-opacity: 1;
-  --auth-card-solid: #0E1A2C;
-  --auth-input-solid: #080F1B;
-  --auth-field-border: rgba(255, 247, 239, 0.2);
-  --auth-field-border-hover: rgba(255, 247, 239, 0.36);
-  --auth-panel-border: rgba(255, 247, 239, 0.14);
-  --auth-panel-shadow: 0 32px 64px -32px rgba(0, 0, 0, 0.7);
+  --auth-card-solid: #142660;
+  --auth-input-solid: #0A1638;
+  --auth-field-border: rgba(167, 179, 201, 0.32);
+  --auth-field-border-hover: rgba(200, 212, 232, 0.5);
+  --auth-panel-border: rgba(167, 179, 201, 0.22);
+  --auth-panel-shadow: 0 1px 0 rgba(255, 255, 255, 0.16) inset, 0 32px 64px -32px rgba(0, 0, 0, 0.75);
   --auth-link: #FF986B;
   --auth-link-hover: #FFF7EF;
-  --auth-focus: #23ACB4;
-  --auth-focus-ring: 0 0 0 3px rgba(35, 172, 180, 0.32);
+  --auth-focus: #9FB8EC;
+  --auth-focus-ring: 0 0 0 3px rgba(159, 184, 236, 0.32);
   --auth-figure-ink: #03070F;
-  --auth-clay: rgba(255, 79, 43, 0.26);
-  --auth-cape: rgba(255, 79, 43, 0.55);
+  /* Đất nung + áo choàng: màu đặc bằng đúng màu cũ trộn trên nền mực, để tranh không ngả tím trên nền Arena */
+  --auth-clay: #482021;
+  --auth-cape: #903225;
   --auth-line-strong: 3.5px;
   --auth-column-opacity: 0.92;
   --auth-frieze-opacity: 0.14;
@@ -981,6 +983,76 @@
   --zone-card: #FFFFFF;
   --zone-card-2: #F3F6FB;
   --zone-card-line: #E3E8F0;
+}
+
+/* ---- ARENA (24/10 tối) — bảng màu đĩa tạ thi đấu, dùng cho PT Dashboard, Lịch dạy PT,
+   My PT Sessions, My Bookings và trang xác thực. Lớp áp dụng: mục "ARENA" cuối common.css.
+   20kg xanh = nền sân · 25kg đỏ = MỘT việc nặng nhất mỗi màn · phấn magie = khối đọc · thép = chữ phụ, vân nhám.
+   Tương phản (đã đo): mực/phấn 15.8:1 · trắng/arena-900 14.2:1 · mực/ember 4.9:1 · thép/arena-900 6.7:1 ·
+   thép đậm/phấn 5.4:1 · ember-hi/arena-900 4.7:1 · chữ bạc/nền sân 6.1:1. */
+:root {
+  --arena-950: #0D1A42;
+  --arena-900: #142660;
+  --arena-800: #1B3171;
+  --arena-700: #24468F;
+  --arena-ember: #E8552F;
+  --arena-ember-hi: #F46A45;
+  --arena-ember-ink: #B23A16;
+  --arena-chalk: #EEF2F8;
+  --arena-chalk-2: #F7F9FC;
+  --arena-chalk-line: #CDD6E4;
+  --arena-chalk-line-strong: #B7C3D6;
+  --arena-steel: #A7B3C9;
+  --arena-steel-ink: #56637D;
+  --arena-ink: #0C1733;
+  --arena-ink-soft: #34405A;
+  --arena-focus: #9FB8EC;
+  --arena-glow: rgba(96, 146, 255, 0.34);
+  --arena-knurl: rgba(220, 230, 248, 0.42);
+  --arena-shadow-light: 0 1px 0 rgba(255, 255, 255, 0.7) inset, 0 18px 34px -24px rgba(6, 18, 64, 0.75);
+  --arena-shadow-drop: 0 18px 34px -24px rgba(6, 18, 64, 0.75);
+  --arena-shadow-dark: 0 1px 0 rgba(255, 255, 255, 0.18) inset, 0 24px 40px -30px rgba(0, 0, 0, 0.8);
+  /* Đường, ô và kính trên khối tối */
+  --arena-line-dark: rgba(167, 179, 201, 0.24);
+  --arena-line-dark-strong: rgba(167, 179, 201, 0.42);
+  --arena-tile-dark: rgba(255, 255, 255, 0.04);
+  --arena-glass: rgba(255, 255, 255, 0.07);
+  --arena-glass-strong: rgba(255, 255, 255, 0.12);
+  --arena-glass-line: rgba(255, 255, 255, 0.18);
+  --arena-glass-line-hover: rgba(255, 255, 255, 0.42);
+  --arena-glass-edge: 0 1px 0 rgba(255, 255, 255, 0.12) inset;
+  --arena-on-dark-soft: #C9D6EC;
+  --arena-ember-line: rgba(232, 85, 47, 0.75);
+  --arena-error-on-dark: #FFB4A3;
+  --arena-warn-on-dark: #F2C46B;
+  /* Bề mặt và đường trên khối sáng */
+  --arena-surface: #FFFFFF;
+  --arena-card-line: #D5DDE9;
+  --arena-grid-line: #DCE3EE;
+  --arena-segment: #DFE6F1;
+  --arena-today-tint: #F5F8FD;
+  --arena-ended: #F5F7FA;
+  --arena-ended-edge: #A9B5CA;
+  --arena-hover-line: #9FB2D6;
+  --arena-closed: #F3F5F9;
+  --arena-closed-hatch: rgba(86, 99, 125, 0.09);
+  --arena-ember-tint: #FDEAE3;
+  --arena-ember-border: #F4B29E;
+  --arena-info-chip: #DDE6F7;
+  --arena-lift: 0 6px 14px -10px rgba(12, 23, 51, 0.5);
+  --arena-knurl-base: #2B3F78;
+  --arena-topbar-line: rgba(255, 255, 255, 0.1);
+  --arena-row-pinned: #FDF1EC;
+  --arena-float: 0 18px 36px -18px rgba(0, 0, 0, 0.6);
+  /* Ember cũ của sidebar (#FF4F2B): sidebar giữ nguyên, không theo ember Arena */
+  --arena-sidebar-ember: #FF4F2B;
+  --arena-gap: 12px;
+  --arena-mark: 3px;            /* vạch nhấn: hôm nay, gói đang xem, thẻ buổi */
+  --arena-segment-pad: 3px;     /* lề trong công tắc Tuần/Tháng, tab */
+  --arena-knurl-height: 8px;    /* dải vân nhám đỉnh khối chào */
+  --arena-radius-block: 6px;
+  --arena-radius-tile: 4px;
+  --arena-radius-chip: 2px;
 }
 
 body.dock,

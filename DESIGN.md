@@ -204,6 +204,18 @@ Motion gợn nền (48s), gió sidebar (3.4s) và thiên hà loading (12s) chỉ
 
 Phạm vi kiểm chứng của đợt này: static preview dựng từ source ở desktop/mobile, kiểm tra cú pháp JS, parse SVG và diff; kiểm tra biên dịch javac tập trung cho EmailGateway đã qua. Chưa xác nhận chạy Tomcat, kết nối DB, đăng nhập thật, thực thi POST hủy buổi hoặc gửi email thật; không coi preview là kiểm thử nghiệp vụ.
 
+## Arena (24/10, 4 màn + xác thực)
+
+PT Dashboard, Lịch dạy PT, My PT Sessions và My Bookings dùng bảng màu đĩa tạ thi đấu (token `--arena-*` trong `tokens.css`, lớp áp dụng ở mục "ARENA" cuối `common.css` và mục Arena cuối CSS từng trang). Các khu Quản lý, Lễ tân, Admin và Trang cá nhân khách không đổi.
+
+- **Màu:** đĩa 20kg xanh `#24468F` là nền sân và topbar; đĩa 25kg đỏ `#E8552F` chỉ cho một việc nặng nhất mỗi màn (nút chính, hôm nay, ô Cần chú ý); phấn magie `#EEF2F8` là khối đọc, ô con bên trong trắng; thép `#A7B3C9` là chữ phụ trên khối tối. Màu nghĩa xanh lá/vàng/đỏ giữ nguyên.
+- **Khối tối có đèn:** khối chào, Kết quả tháng, dải đầu gói và thanh Chờ công bố dùng `--arena-900` + vùng sáng xanh ở góc trên + vạch sáng 1px. Chế độ nhẹ bỏ vùng sáng.
+- **Điểm nhớ duy nhất:** vân nhám thanh đòn 8px trên đỉnh khối chào PT (hai lớp sọc chéo CSS). Không dùng ở chỗ khác.
+- **Chữ:** tên người dùng trong khối chào to, đậm 800, kèm chấm vuông ember; "CHÀO," nhỏ màu thép. Tiêu đề khối Inter Tight 800.
+- **Hình:** khối 6px, ô 4px, chip/nhãn 2px; avatar vẫn tròn. Khe ghép 12px. Khối sáng không viền, dùng bóng tông xanh.
+- **Sidebar và chuyển động:** sidebar giữ nguyên (ember cũ `#FF4F2B` ghim ở `--arena-sidebar-ember`). Không thêm animation; hiệu ứng hiện dần, bấm lún và gió sidebar có sẵn giữ nguyên.
+- **Xác thực:** nền, thẻ form, ô nhập và focus đổi qua token `--auth-*`; đất nung và áo choàng của tranh gốm đổi sang màu đặc bằng đúng màu cũ để tranh không ngả tím trên nền mới.
+
 ## Do's and Don'ts
 
 ### Do:
