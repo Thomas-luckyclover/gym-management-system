@@ -1044,6 +1044,10 @@
   --arena-info-chip: #DDE6F7;
   --arena-lift: 0 6px 14px -10px rgba(12, 23, 51, 0.5);
   --arena-knurl-base: #2B3F78;
+  /* Nền doodle đồ tập (2 dải mép trái/phải, nét kem trong suốt, đĩa 25 viền cam) */
+  --arena-doodle-left: url("../images/brand/zone-doodle-left.webp?v=20261024a");
+  --arena-doodle-right: url("../images/brand/zone-doodle-right.webp?v=20261024a");
+  --arena-doodle-opacity: 0.22;
   --arena-topbar-line: rgba(255, 255, 255, 0.1);
   --arena-row-pinned: #FDF1EC;
   --arena-float: 0 18px 36px -18px rgba(0, 0, 0, 0.6);

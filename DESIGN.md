@@ -215,6 +215,7 @@ Mọi màn nội bộ (`body.dock`, 5 zone PT · Hội viên · Lễ tân · Qu�
 - **Hình:** khối 6px, ô 4px, chip/nhãn 2px; avatar vẫn tròn. Khe ghép 12px. Khối sáng không viền, dùng bóng tông xanh.
 - **Nhịp khoảng cách:** bước 4px; khe giữa khối 12px, khe giữa các ô 8px, lề trong khối 24px (điện thoại 16px). Tiêu đề topbar thẳng mép trái với khối nội dung ở mọi bề ngang.
 - **Tiếp cận (WCAG 2.1 AA):** quét axe-core 0 lỗi màu/focus/tên trên các màn; còn lỗi thiếu nhãn ô lọc/ô ngày ở 5 màn Quản lý · Lễ tân · Admin cần sửa trong JSP; zoom 200% không tràn ngang. Vòng focus 2 tông (vạch xanh + viền trắng, trên khối tối là xanh nhạt). Điều khiển trên điện thoại cao tối thiểu 44px; nút (i) và nút hiện mật khẩu giữ cỡ nhỏ nhưng có vùng chạm 44px. Viền nút phụ `#7D8FAE` ≥ 3:1 trên trắng. Ô tài khoản thu gọn trên điện thoại vẫn giữ tên cho trình đọc màn hình. Chip trạng thái có viền cùng tông.
+- **Nền doodle đồ tập:** hai dải nét kem trong suốt ở mép trái/phải (`images/brand/zone-doodle-left|right.webp`, ~280KB), hiện 22%, đứng yên, không phủ màu lên ảnh; đĩa 25 viền cam. Tắt ở màn < 1024px. Thay ảnh nền bản đồ cũ (vẫn còn trong repo, không dùng ở khu làm việc).
 - **Sidebar và chuyển động:** sidebar giữ nguyên (ember cũ `#FF4F2B` ghim ở `--arena-sidebar-ember`). Không thêm animation; hiệu ứng hiện dần, bấm lún và gió sidebar có sẵn giữ nguyên.
 - **Xác thực:** nền, thẻ form, ô nhập và focus đổi qua token `--auth-*`; đất nung và áo choàng của tranh gốm đổi sang màu đặc bằng đúng màu cũ để tranh không ngả tím trên nền mới.
 

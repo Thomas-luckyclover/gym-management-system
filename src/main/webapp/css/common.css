@@ -3182,3 +3182,24 @@ html body.dock:not(.no-arena) .notification-empty {
   box-shadow: var(--arena-shadow-light);
 }
 html body.dock:not(.no-arena) .notification-empty { padding: var(--arena-pad); text-align: center; }
+
+/* --- Nền doodle đồ tập: 2 dải nét ở mép trái + phải, đứng yên, nằm dưới mọi khối ---
+   Không phủ lớp màu lên ảnh (lớp phủ làm nền đục, đĩa cam ngả tím): ảnh là nét kem trong suốt,
+   chỉ giảm độ hiện. Topbar nền đặc nên che nét phía trên. Ảnh tĩnh nên vẫn hiện ở chế độ nhẹ
+   (chế độ nhẹ chỉ tắt chuyển động/kính mờ). Tắt ở màn < 1024px: khối nội dung đã chiếm gần hết
+   bề ngang, nét chỉ còn là vệt rối. */
+html body.dock:not(.no-arena)::after {
+  content: "";
+  position: fixed;
+  inset: 0;
+  z-index: 0;
+  display: block;
+  pointer-events: none;
+  opacity: var(--arena-doodle-opacity);
+  background:
+    var(--arena-doodle-left) left bottom / auto min(100%, 1144px) no-repeat,
+    var(--arena-doodle-right) right bottom / auto min(100%, 1144px) no-repeat;
+}
+@media (max-width: 1023px) {
+  html body.dock:not(.no-arena)::after { display: none; }
+}
