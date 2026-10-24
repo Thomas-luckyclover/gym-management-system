@@ -6,6 +6,8 @@ import com.gms.dao.EmployeeDAO;
 import com.gms.dto.CheckInLogItem;
 import com.gms.dto.CheckInLookupResult;
 import com.gms.dto.CheckInLookupResult.Decision;
+import com.gms.dto.CustomerSearchItem;
+import com.gms.dto.PageResult;
 import com.gms.dto.ServiceResult;
 import com.gms.entity.Account;
 import com.gms.entity.CheckIn;
@@ -360,6 +362,29 @@ class CheckInServiceTest {
         assertEquals("/uploads/checkin/kh-14-new.jpg", fakeCheckInDAO.getPhoto(14));
     }
 
+    @Test
+    @DisplayName("Tìm kiếm khách hàng theo tên có phân trang trả về đúng tổng số trang và danh sách")
+    void searchCustomersPage_returnsPaginatedResults() {
+        PageResult<CustomerSearchItem> page = checkInService.searchCustomersPage("Trang", 1, 10);
+        assertNotNull(page);
+        assertEquals(1, page.getTotalItems());
+        assertEquals(1, page.getTotalPages());
+        assertEquals(1, page.getItems().size());
+        assertEquals("Phạm Thu Trang", page.getItems().get(0).getFullName());
+    }
+
+    @Test
+    @DisplayName("Tìm kiếm khách hàng theo 4 số cuối số điện thoại trả về đúng khách hàng")
+    void searchCustomersPage_returnsCustomerByPhoneSuffix() {
+        // KH-1003 có phone là "0901234503" -> 4 số cuối là "4503"
+        PageResult<CustomerSearchItem> page = checkInService.searchCustomersPage("4503", 1, 10);
+        assertNotNull(page);
+        assertEquals(1, page.getTotalItems());
+        assertEquals(1, page.getItems().size());
+        assertEquals("Phạm Thu Trang", page.getItems().get(0).getFullName());
+        assertEquals("0901234503", page.getItems().get(0).getPhone());
+    }
+
     // ===== FAKE DAOs =====
 
     private static class FakeCheckInDAO extends CheckInDAO {
@@ -440,6 +465,40 @@ class CheckInServiceTest {
         @Override
         public List<CheckInLogItem> findTodayCheckIns(int limit) {
             return List.of(new CheckInLogItem(1, "Trần Bảo Ngọc", "KH-1001", LocalDateTime.now(), "Gói 3 Tháng", true));
+        }
+
+        @Override
+        public long countCustomersByKeyword(String keyword) {
+            boolean isPhoneSuffix = keyword != null && keyword.trim().matches("\\d{4}");
+            return customers.values().stream()
+                    .distinct()
+                    .filter(c -> isPhoneSuffix
+                            ? (c.phone != null && c.phone.endsWith(keyword.trim()))
+                            : (c.fullName != null && c.fullName.toLowerCase().contains(keyword.toLowerCase())))
+                    .count();
+        }
+
+        @Override
+        public List<CustomerSearchItem> searchCustomersByKeyword(String keyword, int pageNumber, int pageSize) {
+            boolean isPhoneSuffix = keyword != null && keyword.trim().matches("\\d{4}");
+            return customers.values().stream()
+                    .distinct()
+                    .filter(c -> isPhoneSuffix
+                            ? (c.phone != null && c.phone.endsWith(keyword.trim()))
+                            : (c.fullName != null && c.fullName.toLowerCase().contains(keyword.toLowerCase())))
+                    .skip((long) Math.max(0, pageNumber - 1) * pageSize)
+                    .limit(pageSize)
+                    .map(c -> {
+                        CustomerSearchItem item = new CustomerSearchItem();
+                        item.setCustomerId(c.customerId);
+                        item.setCustomerCode(c.customerCode);
+                        item.setFullName(c.fullName);
+                        item.setPhone(c.phone);
+                        item.setCustomerStatus(c.customerStatus);
+                        item.setCheckInPhoto(c.checkInPhoto);
+                        return item;
+                    })
+                    .toList();
         }
     }
 

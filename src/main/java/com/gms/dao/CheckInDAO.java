@@ -1,8 +1,10 @@
 package com.gms.dao;
 
 import com.gms.dto.CheckInLogItem;
+import com.gms.dto.CustomerSearchItem;
 import com.gms.entity.CheckIn;
 import com.gms.util.DBContext;
+import com.gms.util.SqlUtil;
 
 import java.sql.Connection;
 import java.sql.Date;
@@ -17,7 +19,8 @@ import java.util.ArrayList;
 import java.util.List;
 
 /**
- * Xử lý truy vấn dữ liệu Check-in và gói tập phục vụ nghiệp vụ quầy Lễ tân (UC-19).
+ * Xử lý truy vấn dữ liệu Check-in và gói tập phục vụ nghiệp vụ quầy Lễ tân
+ * (UC-19).
  */
 public class CheckInDAO {
 
@@ -69,7 +72,7 @@ public class CheckInDAO {
             LocalDateTime checkedInAt = checkIn.getCheckedInAt() != null
                     ? checkIn.getCheckedInAt()
                     : LocalDateTime.now();
-            stmt.setTimestamp(3, Timestamp.valueOf(checkedInAt));
+            stmt.setTimestamp(3, Timestamp.valueOf(checkedInAt)); // Chuyển đổi LocalDateTime sang java.sql.Timestamp
             stmt.setBoolean(4, checkIn.isPhotoVerified());
 
             stmt.executeUpdate();
@@ -117,7 +120,8 @@ public class CheckInDAO {
     // ===== Tra cứu thông tin hồ sơ cho Check-in =====
 
     /**
-     * Tra cứu Customer theo mã KH hoặc số điện thoại (Lễ tân dùng mã QR / nhập SĐT).
+     * Tra cứu Customer theo mã KH hoặc số điện thoại (Lễ tân dùng mã QR / nhập
+     * SĐT).
      */
     public CustomerLookupInfo findCustomerByKeyword(String keyword) throws SQLException {
         String sql = "SELECT cust.CustomerId, cust.PersonId, cust.CustomerCode, cust.CheckInPhoto, "
@@ -128,10 +132,9 @@ public class CheckInDAO {
                 + "  AND cust.DeletedAt IS NULL";
 
         try (Connection conn = DBContext.getConnection();
-             PreparedStatement stmt = conn.prepareStatement(sql)) {
+                PreparedStatement stmt = conn.prepareStatement(sql)) {
             stmt.setString(1, keyword.trim());
             stmt.setString(2, keyword.trim());
-
             try (ResultSet rs = stmt.executeQuery()) {
                 if (rs.next()) {
                     CustomerLookupInfo info = new CustomerLookupInfo();
@@ -141,7 +144,7 @@ public class CheckInDAO {
                     info.checkInPhoto = rs.getString("CheckInPhoto");
                     info.customerType = rs.getString("CustomerType");
                     info.customerStatus = rs.getString("CustomerStatus");
-                    info.fullName = rs.getString("FullName");
+                    info.fullName = rs.getString("FullName").trim();
                     info.phone = rs.getString("Phone");
                     info.avatar = rs.getString("Avatar");
                     return info;
@@ -152,12 +155,13 @@ public class CheckInDAO {
     }
 
     /**
-     * Kiểm tra Customer có yêu cầu xóa hồ sơ đang chờ duyệt không (chặn check-in nếu đang chờ xóa).
+     * Kiểm tra Customer có yêu cầu xóa hồ sơ đang chờ duyệt không (chặn check-in
+     * nếu đang chờ xóa).
      */
     public boolean hasPendingDeletionRequest(int customerId) throws SQLException {
         String sql = "SELECT COUNT(*) FROM CustomerDeletionRequests WHERE CustomerId = ? AND Status = 'Pending'";
         try (Connection conn = DBContext.getConnection();
-             PreparedStatement stmt = conn.prepareStatement(sql)) {
+                PreparedStatement stmt = conn.prepareStatement(sql)) {
             stmt.setInt(1, customerId);
             try (ResultSet rs = stmt.executeQuery()) {
                 if (rs.next()) {
@@ -169,7 +173,8 @@ public class CheckInDAO {
     }
 
     /**
-     * Lấy danh sách gói/quyền dùng của 1 Customer, xếp Active trước rồi đến Frozen, các trạng thái khác cuối.
+     * Lấy danh sách gói/quyền dùng của 1 Customer, xếp Active trước rồi đến Frozen,
+     * các trạng thái khác cuối.
      */
     public List<CustomerSubscriptionInfo> findSubscriptionsByCustomerId(int customerId) throws SQLException {
         String sql = "SELECT s.SubscriptionId, s.OrderId, s.CustomerId, s.SubscriptionType, s.PtEmployeeId, "
@@ -183,7 +188,7 @@ public class CheckInDAO {
 
         List<CustomerSubscriptionInfo> list = new ArrayList<>();
         try (Connection conn = DBContext.getConnection();
-             PreparedStatement stmt = conn.prepareStatement(sql)) {
+                PreparedStatement stmt = conn.prepareStatement(sql)) {
             stmt.setInt(1, customerId);
 
             try (ResultSet rs = stmt.executeQuery()) {
@@ -217,7 +222,8 @@ public class CheckInDAO {
     }
 
     /**
-     * Lấy ngày dự kiến kết thúc bảo lưu gần nhất (còn hiệu lực) của 1 Subscription, phục vụ cảnh báo "đang bảo lưu đến ngày X".
+     * Lấy ngày dự kiến kết thúc bảo lưu gần nhất (còn hiệu lực) của 1 Subscription,
+     * phục vụ cảnh báo "đang bảo lưu đến ngày X".
      */
     public LocalDate getPlannedFreezeEndDate(int subscriptionId) throws SQLException {
         String sql = "SELECT TOP 1 PlannedEndDate FROM FreezeRecords "
@@ -225,7 +231,7 @@ public class CheckInDAO {
                 + "ORDER BY CreatedAt DESC";
 
         try (Connection conn = DBContext.getConnection();
-             PreparedStatement stmt = conn.prepareStatement(sql)) {
+                PreparedStatement stmt = conn.prepareStatement(sql)) {
             stmt.setInt(1, subscriptionId);
 
             try (ResultSet rs = stmt.executeQuery()) {
@@ -239,14 +245,15 @@ public class CheckInDAO {
     }
 
     /**
-     * Kiểm tra vé ngày đã được dùng trong hôm nay chưa (chặn check-in trùng vé 1 ngày).
+     * Kiểm tra vé ngày đã được dùng trong hôm nay chưa (chặn check-in trùng vé 1
+     * ngày).
      */
     public boolean isDayPassUsedToday(int subscriptionId) throws SQLException {
         String sql = "SELECT COUNT(*) FROM CheckIns "
                 + "WHERE SubscriptionId = ? AND CAST(CheckedInAt AS DATE) = CAST(SYSDATETIME() AS DATE)";
 
         try (Connection conn = DBContext.getConnection();
-             PreparedStatement stmt = conn.prepareStatement(sql)) {
+                PreparedStatement stmt = conn.prepareStatement(sql)) {
             stmt.setInt(1, subscriptionId);
 
             try (ResultSet rs = stmt.executeQuery()) {
@@ -264,7 +271,7 @@ public class CheckInDAO {
     public boolean updateCheckInPhoto(int customerId, String photoPath) throws SQLException {
         String sql = "UPDATE Customers SET CheckInPhoto = ? WHERE CustomerId = ?";
         try (Connection conn = DBContext.getConnection();
-             PreparedStatement stmt = conn.prepareStatement(sql)) {
+                PreparedStatement stmt = conn.prepareStatement(sql)) {
             stmt.setString(1, photoPath);
             stmt.setInt(2, customerId);
             return stmt.executeUpdate() > 0;
@@ -274,7 +281,8 @@ public class CheckInDAO {
     // ===== Lịch sử Check-in ca này / hôm nay =====
 
     /**
-     * Lấy danh sách các lượt check-in trong ngày hôm nay (phục vụ panel "Lễ tân" theo dõi ca làm việc).
+     * Lấy danh sách các lượt check-in trong ngày hôm nay (phục vụ panel "Lễ tân"
+     * theo dõi ca làm việc).
      */
     public List<CheckInLogItem> findTodayCheckIns(int limit) throws SQLException {
         String sql = "SELECT TOP (?) c.CheckInId, c.CheckedInAt, p.FullName, cust.CustomerCode, pkg.PackageName, c.PhotoVerified "
@@ -289,7 +297,7 @@ public class CheckInDAO {
 
         List<CheckInLogItem> list = new ArrayList<>();
         try (Connection conn = DBContext.getConnection();
-             PreparedStatement stmt = conn.prepareStatement(sql)) {
+                PreparedStatement stmt = conn.prepareStatement(sql)) {
             stmt.setInt(1, limit > 0 ? limit : 20);
 
             try (ResultSet rs = stmt.executeQuery()) {
@@ -302,10 +310,100 @@ public class CheckInDAO {
                     String packageName = rs.getString("PackageName");
                     boolean photoVerified = rs.getBoolean("PhotoVerified");
 
-                    list.add(new CheckInLogItem(checkInId, fullName, customerCode, checkedInAt, packageName, photoVerified));
+                    list.add(new CheckInLogItem(checkInId, fullName, customerCode, checkedInAt, packageName,
+                            photoVerified));
                 }
             }
         }
         return list;
+    }
+
+    // ===== Tìm kiếm khách hàng theo phần tên (dùng cho Check-in) =====
+
+    /**
+     * Đếm tổng số khách hàng khớp từ khóa tìm kiếm theo tên hoặc 4 số cuối SĐT (phục vụ phân trang).
+     *
+     * @param keyword từ khóa tìm kiếm (tên hoặc 4 số cuối SĐT)
+     * @return tổng số khách hàng khớp
+     */
+    public long countCustomersByKeyword(String keyword) throws SQLException {
+        boolean isPhoneSuffix = keyword != null && keyword.trim().matches("\\d{4}");
+        String sql = "SELECT COUNT(*) "
+                + "FROM Customers cust "
+                + "JOIN Persons p ON cust.PersonId = p.PersonId "
+                + "WHERE cust.DeletedAt IS NULL AND "
+                + (isPhoneSuffix ? "p.Phone LIKE ?" : "p.FullName COLLATE Latin1_General_100_CI_AI LIKE ? ESCAPE '\\'");
+
+        String pattern = isPhoneSuffix ? ("%" + keyword.trim()) : SqlUtil.toContainsPattern(keyword);
+
+        try (Connection conn = DBContext.getConnection();
+                PreparedStatement stmt = conn.prepareStatement(sql)) {
+
+            stmt.setString(1, pattern);
+
+            try (ResultSet rs = stmt.executeQuery()) {
+                if (rs.next()) {
+                    return rs.getLong(1);
+                }
+            }
+        }
+        return 0;
+    }
+
+    /**
+     * Tìm kiếm khách hàng theo một phần tên hoặc 4 số cuối SĐT có phân trang (OFFSET ? ROWS FETCH NEXT ? ROWS ONLY).
+     *
+     * @param keyword    từ khóa tìm kiếm (tên hoặc 4 số cuối SĐT)
+     * @param pageNumber số trang hiện tại (bắt đầu từ 1)
+     * @param pageSize   số lượng dòng mỗi trang
+     * @return danh sách khách hàng của trang
+     */
+    public List<CustomerSearchItem> searchCustomersByKeyword(String keyword, int pageNumber, int pageSize)
+            throws SQLException {
+        int offset = Math.max(0, (pageNumber - 1) * pageSize);
+        boolean isPhoneSuffix = keyword != null && keyword.trim().matches("\\d{4}");
+        String sql = "SELECT cust.CustomerId, cust.CustomerCode, p.FullName, p.Phone, "
+                + "cust.Status AS CustomerStatus, cust.CheckInPhoto "
+                + "FROM Customers cust "
+                + "JOIN Persons p ON cust.PersonId = p.PersonId "
+                + "WHERE cust.DeletedAt IS NULL AND "
+                + (isPhoneSuffix ? "p.Phone LIKE ?" : "p.FullName COLLATE Latin1_General_100_CI_AI LIKE ? ESCAPE '\\'")
+                + " ORDER BY p.FullName, cust.CustomerId "
+                + "OFFSET ? ROWS FETCH NEXT ? ROWS ONLY";
+
+        List<CustomerSearchItem> list = new ArrayList<>();
+        String pattern = isPhoneSuffix ? ("%" + keyword.trim()) : SqlUtil.toContainsPattern(keyword);
+
+        try (Connection conn = DBContext.getConnection();
+                PreparedStatement stmt = conn.prepareStatement(sql)) {
+
+            stmt.setString(1, pattern);
+            stmt.setInt(2, offset);
+            stmt.setInt(3, pageSize);
+
+            try (ResultSet rs = stmt.executeQuery()) {
+                while (rs.next()) {
+                    CustomerSearchItem item = new CustomerSearchItem();
+                    item.setCustomerId(rs.getInt("CustomerId"));
+                    item.setCustomerCode(rs.getString("CustomerCode"));
+                    item.setFullName(rs.getString("FullName"));
+                    item.setPhone(rs.getString("Phone"));
+                    item.setCustomerStatus(rs.getString("CustomerStatus"));
+                    item.setCheckInPhoto(rs.getString("CheckInPhoto"));
+                    list.add(item);
+                }
+            }
+        }
+        return list;
+    }
+
+    /**
+     * Tìm kiếm khách hàng theo một phần tên (mặc định trang 1, tối đa 100 khách).
+     *
+     * @param keyword từ khóa tìm kiếm
+     * @return danh sách CustomerSearchItem khớp
+     */
+    public List<CustomerSearchItem> searchCustomersByKeyword(String keyword) throws SQLException {
+        return searchCustomersByKeyword(keyword, 1, 100);
     }
 }
