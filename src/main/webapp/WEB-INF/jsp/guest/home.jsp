@@ -5,9 +5,17 @@
 ================================================================================
  home.jsp — TRANG CHỦ CÔNG KHAI (GET /, màn #5, UC-06, luật 2.6). Chỉ hiển thị, không có ô nhập.
 
- DỮ LIỆU SERVLET GỬI SANG
-   home   HomePageView (HomeService.getHomePage): openingHours, gymPackages, ptPackages, pts, ptCount, latestPosts
-          Mọi con số (giá, số buổi đã dạy…) lấy từ DB.
+ AI GỬI DỮ LIỆU SANG?  HomeServlet.doGet gọi HomeService.getHomePage() MỘT lần → biến home (HomePageView).
+
+   Biến JSP            Ai tạo                                         DAO đọc bảng nào
+   ─────────────────── ────────────────────────────────────────────── ─────────────────────────────────────
+   home.gymPackages    DAO đọc gói, Service tính giá/tháng,           PackageDAO.findActiveForHomepage:
+                       % tiết kiệm, nhãn "Phổ biến nhất"/"Tiết kiệm"    Packages (IsActive = 1)
+   home.ptPackages     cùng câu DAO trên, Service tách nhóm gói PT     (như trên)
+   home.pts, ptCount   EmployeeDAO.findWorkingPts                      Employees + Persons + COUNT Sessions đã dạy
+   home.openingHours   Service đọc P-19 "05:30-22:00" → "05:30 – 22:00" SystemConfigs
+   home.latestPosts    BlogService.getLatestPosts(3)                   BlogPosts (Status = Active, 3 bài mới nhất)
+   Mọi con số (giá, số buổi đã dạy…) lấy từ DB.
 
  BỐ CỤC (từ trên xuống)
    1. Hero: "Mạnh hơn mỗi ngày." + giờ mở cửa + số huấn luyện viên, dải chữ chạy
@@ -51,6 +59,8 @@
           <a class="cine-btn cine-btn--hot" href="${ctx}/register">Bắt đầu tập <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" aria-hidden="true"><path d="M5 12h14m-7-7 7 7-7 7"/></svg></a>
           <a class="cine-btn cine-btn--ghost" href="#pricing">Xem bảng giá</a>
         </div>
+        <%-- 2 con số dưới nút: "Mở cửa mỗi ngày 05:30 – 22:00" (home.openingHours, P-19)
+             và "Huấn luyện viên 6" (home.ptCount = số PT đang làm). Thiếu dữ liệu thì ẩn ô đó. --%>
         <dl class="cine-meta" data-fade>
           <c:if test="${not empty home.openingHours}">
             <div><dt>Mở cửa mỗi ngày</dt><dd class="tabular"><c:out value="${home.openingHours}" /></dd></div>
@@ -117,6 +127,15 @@
           <h2 id="pricing-title" class="cine-h2" data-reveal-title>Đầu tư cho<br><em>phiên bản tốt hơn.</em></h2>
           <p class="cine-sub" data-fade>Giá đã gồm VAT, không phát sinh thêm phí.</p>
         </div>
+        <%-- ----- 4a. Thẻ gói tập (home.gymPackages, mỗi thẻ: card.pkg = Package do DAO đọc, còn lại Service tính) -----
+               card.badge          nhãn trên đầu thẻ "Phổ biến nhất" / "Tiết kiệm nhất" → thẻ viền cam (is-hot)
+               card.pkg.packageName  Packages.PackageName, VD "Gói 3 tháng"
+               card.pkg.price      Packages.Price → gms:formatMoney "1.200.000đ", chữ to
+               card.months         Service đổi thời hạn → "3 tháng" (0 = vé ngày → "1 ngày")
+               card.monthlyPrice   Service: giá ÷ số tháng → " · khoảng 400.000đ/tháng"
+               card.savingPercent  Service: so với gói 1 tháng → chip "Tiết kiệm 20%"
+               card.pkg.benefitLines Packages.Benefits tách dòng → danh sách ✓ quyền lợi
+             Nút "Chọn gói" → /customer/checkout?packageId=… --%>
         <c:choose>
           <c:when test="${empty home.gymPackages}">
             <p class="cine-empty">Hiện chưa có gói tập nào đang mở bán. Vui lòng quay lại sau.</p>
@@ -146,7 +165,8 @@
           </c:otherwise>
         </c:choose>
 
-        <%-- Gói PT: card cùng hệ với gói tập, tự căn giữa khi số gói lẻ --%>
+        <%-- ----- 4b. Gói PT (home.ptPackages) — mỗi gói 1 hàng: tên · "1 người / 2 người · 2 tháng / mỗi buổi" · giá.
+             Buổi lẻ (SINGLE_SESSION) có nút cam "Đặt trực tuyến"; gói PT dài hạn chỉ ghi "Đăng ký tại quầy". ----- --%>
         <c:if test="${not empty home.ptPackages}">
           <div class="cine-pt" id="pt-pricing">
             <h3 class="cine-h3">Tập cùng chuyên gia</h3>
@@ -179,6 +199,8 @@
         <div class="wrap">
           <h2 id="team-title" class="cine-h2" data-reveal-title><span class="cine-num tabular">${home.ptCount}</span> huấn luyện viên</h2>
           <div class="cine-coaches">
+            <%-- Mỗi PT 1 thẻ: số to "128 buổi đã dạy" (COUNT Sessions do EmployeeDAO đếm) / tên (Persons.FullName) /
+                 chuyên môn (Employees.Specialty) / "5 năm kinh nghiệm" (Employees.YearsOfExperience). Không ảnh, không SĐT. --%>
             <c:forEach var="pt" items="${home.pts}">
               <article class="cine-coach" data-fade>
                 <p class="cine-coach__sessions tabular">${pt.completedSessionCount}<span>buổi đã dạy</span></p>
@@ -201,6 +223,8 @@
             <a class="cine-link" href="${ctx}/blog">Xem tất cả bài viết <i class="fa-solid fa-arrow-right" aria-hidden="true"></i></a>
           </div>
           <div class="cine-posts">
+            <%-- Mỗi bài 1 thẻ: ảnh bìa (post.coverImage, lỗi ảnh → ảnh mặc định) / ngày đăng dd/MM/yyyy (post.publishedAt) /
+                 tiêu đề (post.title) / đoạn tóm tắt (post.excerpt). Bấm → /blog/detail?id=… --%>
             <c:forEach var="post" items="${home.latestPosts}">
               <a class="cine-post" href="${ctx}/blog/detail?id=${post.blogPostId}" data-fade>
                 <c:if test="${not empty post.coverImage}">

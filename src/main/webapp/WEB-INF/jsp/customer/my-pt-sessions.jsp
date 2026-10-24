@@ -8,6 +8,15 @@
 
  LUỒNG: GET → MyPtSessionServlet.doGet → MyPtSessionService.getWeek / getMonth → MyPtSessionDAO → JSP này.
 
+ AI GỬI DỮ LIỆU SANG?  MyPtSessionServlet.doGet gọi MyPtSessionService MỘT lần:
+   view = week  → getWeek(accountId, ngày)  → timetable
+   view = month → getMonth(accountId, ngày) → month
+ Service gọi DAO (MyPtSessionDAO) như sau:
+   findSessionsInRange   Sessions + TimeSlots + Subscriptions + Orders + Employees/Persons (tên, SĐT PT, tên khách)
+   findClosedDays        OperatingHourExceptions (ngày phòng nghỉ cả ngày)
+   hasGymPass / isFrozen Subscriptions (Membership / DayPass) + FreezeRecords — mỗi buổi sắp tới, để gắn "Cần chú ý"
+ Service tự tính: Sáng/Chiều/Tối (bandOf), chữ trạng thái + màu (statusKey), lời giải thích, link Zalo / Google Calendar.
+
  DỮ LIỆU SERVLET GỬI SANG
    view            "week" | "month"
    viewDate        ngày đang xem (từ ?date, không có thì hôm nay)
@@ -26,6 +35,7 @@
    4. Chú thích trạng thái (+ số buổi cả tháng ở lịch tháng)
    5. Hộp "Chi tiết buổi tập" dùng chung (my-pt-sessions.js chép chi tiết của thẻ vừa bấm vào)
 ================================================================================ --%>
+<%-- pageUrl = "/gms/customer/pt-sessions" — gốc của mọi link đổi tuần / tháng / ngày bên dưới. --%>
 <c:set var="pageUrl" value="${pageContext.request.contextPath}/customer/pt-sessions" />
 <!DOCTYPE html>
 <html lang="vi">
@@ -42,14 +52,18 @@
     <body class="dock ${themeClass}">
         <%@ include file="/WEB-INF/jsp/common/flash-toast.jspf" %>
         <div class="app">
+            <%-- Thanh menu trái của khách. --%>
             <%@ include file="/WEB-INF/jsp/common/layout-customer.jspf" %>
             <div class="main">
+                <%-- Topbar dùng chung: "Lịch tập" + (i) + nút "Đặt buổi lẻ" + chuông + tên/mã khách. --%>
                 <c:set var="scheduleTitle" value="Lịch tập" />
                 <%@ include file="_schedule-header.jspf" %>
 
+                <%-- data-focus-session = focusSessionId (?session= từ Gói của tôi) → JS mở sẵn hộp chi tiết của buổi đó. --%>
                 <main class="content my-pt-page" id="main-content" tabindex="-1" data-focus-session="${focusSessionId}">
                     <c:choose>
-                        <%-- Lỗi tải lịch: báo lỗi, KHÔNG vẽ lịch rỗng (khách sẽ tưởng "không có buổi nào"). --%>
+                        <%-- ===== TRƯỜNG HỢP LỖI: timetableError → hộp "Chưa tải được lịch tập" + nút Tải lại.
+                             KHÔNG vẽ lịch rỗng (khách sẽ tưởng "không có buổi nào"). ===== --%>
                         <c:when test="${not empty timetableError}">
                             <div class="empty-state" role="alert">
                                 <h2>Chưa tải được lịch tập</h2>
@@ -64,11 +78,18 @@
                                 <a class="schedule-back" href="${pageContext.request.contextPath}/customer/bookings?id=${backBookingId}"><i class="fa-solid fa-chevron-left" aria-hidden="true"></i> Quay lại Gói của tôi</a>
                             </c:if>
 
+                            <%-- ##################################################################
+                                 BẢNG LỊCH — BẮT ĐẦU
+                                 ################################################################## --%>
                             <section class="panel schedule-board" aria-label="Lịch tập">
 
-                                <%-- ===== 1. THANH CÔNG CỤ ===== --%>
+                                <%-- ==========================================================
+                                     KHỐI 1. THANH CÔNG CỤ — BẮT ĐẦU
+                                     ========================================================== --%>
                                 <div class="schedule-toolbar">
-                                    <%-- ‹ › giữ cách xem, chỉ đổi date. Service đã tính sẵn ngày kỳ trước / kỳ sau. --%>
+                                    <%-- ‹ › giữ cách xem, chỉ đổi date. Service đã tính sẵn ngày kỳ trước / kỳ sau
+                                         (month.prevMonth / nextMonth hoặc timetable.prevWeek / nextWeek).
+                                         Tiêu đề giữa: "Tháng 10/2026" hoặc "26/10/2026 – 01/11/2026" (timetable.weekStart / weekEnd). --%>
                                     <nav class="schedule-period" aria-label="Đổi khoảng thời gian">
                                         <a class="btn btn-outline schedule-step" aria-label="${view eq 'month' ? 'Tháng trước' : 'Tuần trước'}"
                                            href="${pageUrl}?view=${view}&amp;date=${view eq 'month' ? month.prevMonth : timetable.prevWeek}"><i class="fa-solid fa-chevron-left" aria-hidden="true"></i></a>
@@ -97,17 +118,21 @@
                                             </form>
                                         </details>
 
+                                        <%-- Công tắc Tuần / Tháng: giữ ngày đang xem (viewDate); link đang chọn có aria-current → nền cam. --%>
                                         <nav class="schedule-switch" aria-label="Cách xem lịch">
                                             <a href="${pageUrl}?view=week&amp;date=${viewDate}" aria-current="${view eq 'week' ? 'page' : 'false'}">Tuần</a>
                                             <a href="${pageUrl}?view=month&amp;date=${viewDate}" aria-current="${view eq 'month' ? 'page' : 'false'}">Tháng</a>
                                         </nav>
                                     </div>
                                 </div>
+                                <%-- KHỐI 1. THANH CÔNG CỤ — KẾT THÚC --%>
 
                                 <c:choose>
                                     <c:when test="${view eq 'week'}">
 
-                                        <%-- ===== 2. NGÀY HIỆN TRÊN ĐIỆN THOẠI (mobileDay = số cột 0..6) =====
+                                        <%-- ==========================================================
+                                             KHỐI 2. DÃY 7 NGÀY TRÊN ĐIỆN THOẠI — BẮT ĐẦU
+                                             mobileDay = số cột 0..6 được hiện trên điện thoại.
                                              Ưu tiên: ngày trên URL (?date) → hôm nay → Thứ 2. Màn rộng không dùng tới. --%>
                                         <c:set var="mobileDay" value="${0}" />
                                         <c:forEach var="d" items="${timetable.days}" varStatus="st">
@@ -117,7 +142,8 @@
                                             <c:if test="${d.date eq selectedDate}"><c:set var="mobileDay" value="${st.index}" /></c:if>
                                         </c:forEach>
 
-                                        <%-- Mỗi nút là 1 LINK ?date=… (giống link ngày ở lịch tháng) → Servlet đặt selectedDate → cột đó hiện. --%>
+                                        <%-- Mỗi nút là 1 LINK ?date=… (giống link ngày ở lịch tháng) → Servlet đặt selectedDate → cột đó hiện.
+                                             Hiện: "T2" nhỏ + số ngày to "26"; ngày đang hiện có nền cam (is-shown). --%>
                                         <nav class="schedule-mobile-days" aria-label="Chọn ngày trong tuần">
                                             <c:forEach var="d" items="${timetable.days}" varStatus="st">
                                                 <a href="${pageUrl}?view=week&amp;date=${d.date}"
@@ -129,10 +155,16 @@
                                                 </a>
                                             </c:forEach>
                                         </nav>
+                                        <%-- KHỐI 2. DÃY 7 NGÀY — KẾT THÚC --%>
 
-                                        <%-- ===== 3a. BẢNG TUẦN: 3 hàng Sáng/Chiều/Tối × 7 cột ngày =====
-                                             timetable.bands[hàng].cells[cột] = các buổi của ô đó (Service đã xếp sẵn).
-                                             data-week-column + is-mobile-day: trên điện thoại chỉ hiện cột mobileDay. --%>
+                                        <%-- ==========================================================
+                                             KHỐI 3a. BẢNG TUẦN — BẮT ĐẦU
+                                             3 hàng Sáng/Chiều/Tối × 7 cột ngày.
+                                             timetable.days[cột]  : d.name "Thứ 2", d.date, d.today (Service dựng 7 ngày)
+                                             timetable.bands[hàng]: band.name "Sáng" + band.range "06:00 – 12:00" (hằng số BANDS của Service)
+                                             band.cells[cột]      : các MyPtSessionRow của ô đó (DAO đọc, Service xếp theo giờ bắt đầu)
+                                             Ô trống → "—". data-week-column + is-mobile-day: trên điện thoại chỉ hiện cột mobileDay.
+                                             ========================================================== --%>
                                         <div class="schedule-scroll" tabindex="0" role="region" aria-label="Bảng lịch tuần, cuộn ngang được">
                                             <table class="schedule-grid schedule-week">
                                                 <caption class="visually-hidden">Lịch từ ${gms:formatDate(timetable.weekStart)} đến ${gms:formatDate(timetable.weekEnd)} · Giờ Việt Nam</caption>
@@ -142,6 +174,7 @@
                                                         <c:forEach var="d" items="${timetable.days}" varStatus="col">
                                                             <th scope="col" data-week-column="${col.index}"
                                                                 class="${d.today ? 'is-today' : ''} ${d.date eq selectedDate ? 'is-selected' : ''} ${col.index eq mobileDay ? 'is-mobile-day' : ''}">
+                                                                <%-- Đầu cột: "Thứ 2" / "26/10" đậm / nhãn "Hôm nay" (nền cam) / "Đang chọn" (viền xanh). --%>
                                                                 <span><c:out value="${d.name}" /></span>
                                                                 <strong>${d.date.dayOfMonth}/${d.date.monthValue}</strong>
                                                                 <c:if test="${d.today}"><small class="day-mark is-today-mark">Hôm nay</small></c:if>
@@ -159,6 +192,7 @@
                                                                 <td data-week-column="${col.index}"
                                                                     class="${day.today ? 'is-today' : ''} ${day.date eq selectedDate ? 'is-selected' : ''} ${col.index eq mobileDay ? 'is-mobile-day' : ''}">
                                                                     <c:if test="${empty cell}"><span class="schedule-vacant" aria-label="Không có buổi">—</span></c:if>
+                                                                    <%-- Mỗi buổi 1 thẻ bấm được (_session-card.jspf). --%>
                                                                     <c:forEach var="s" items="${cell}">
                                                                         <%@ include file="_session-card.jspf" %>
                                                                     </c:forEach>
@@ -169,11 +203,16 @@
                                                 </tbody>
                                             </table>
                                         </div>
+                                        <%-- KHỐI 3a. BẢNG TUẦN — KẾT THÚC --%>
                                     </c:when>
 
                                     <c:otherwise>
-                                        <%-- ===== 3b. BẢNG THÁNG: month.weeks = các hàng tuần, mỗi hàng 7 ô (Cell) =====
-                                             Ô ngoài tháng (inMonth = false) để trống. Bấm ngày / bấm buổi → sang lịch tuần chứa ngày đó. --%>
+                                        <%-- ==========================================================
+                                             KHỐI 3b. BẢNG THÁNG — BẮT ĐẦU
+                                             month.weeks = các hàng tuần, mỗi hàng 7 ô (Cell, Service dựng).
+                                             Ô ngoài tháng (cell.inMonth = false) để trống. Bấm ngày / bấm buổi → sang lịch tuần chứa ngày đó.
+                                             Mỗi ô: "26/10" + các dòng buổi "18:00  ● Sắp tới" (s.startTime ← TimeSlots, s.statusLabel ← Service).
+                                             ========================================================== --%>
                                         <div class="schedule-scroll" tabindex="0" role="region" aria-label="Bảng lịch tháng, cuộn ngang được">
                                             <table class="schedule-grid schedule-month no-gms-table">
                                                 <caption class="visually-hidden">Tháng ${month.month.monthValue}/${month.month.year} · Giờ Việt Nam</caption>
@@ -211,10 +250,14 @@
                                                 </tbody>
                                             </table>
                                         </div>
+                                        <%-- KHỐI 3b. BẢNG THÁNG — KẾT THÚC --%>
                                     </c:otherwise>
                                 </c:choose>
 
-                                <%-- ===== 4. CHÚ THÍCH (cùng data-status với thẻ buổi → cùng màu) ===== --%>
+                                <%-- ==========================================================
+                                     KHỐI 4. CHÚ THÍCH — BẮT ĐẦU
+                                     Chữ cố định, cùng data-status với thẻ buổi → cùng màu (session-status.css).
+                                     ========================================================== --%>
                                 <div class="schedule-legend">
                                     <span class="session-status" data-status="upcoming">Sắp tới</span>
                                     <span class="session-status" data-status="warn">Cần chú ý</span>
@@ -232,7 +275,8 @@
                                         </span>
                                     </span>
 
-                                    <%-- Lịch tháng: số buổi cả tháng theo trạng thái (Service đếm sẵn). --%>
+                                    <%-- Lịch tháng: số buổi cả tháng theo trạng thái (Service đếm sẵn: month.upcomingCount…),
+                                         VD "Tháng 10  3 sắp tới  12 đã check-in  2 vắng  0 đã hủy". --%>
                                     <c:if test="${view eq 'month'}">
                                         <p class="schedule-month-stats">
                                             <span class="schedule-month-stats-title">Tháng ${month.month.monthValue}</span>
@@ -244,11 +288,13 @@
                                         </p>
                                     </c:if>
                                 </div>
+                                <%-- KHỐI 4. CHÚ THÍCH — KẾT THÚC --%>
                             </section>
+                            <%-- BẢNG LỊCH — KẾT THÚC --%>
                         </c:otherwise>
                     </c:choose>
 
-                    <%-- ===== 5. HỘP CHI TIẾT BUỔI (1 hộp dùng chung cho mọi thẻ) ===== --%>
+                    <%-- ===== KHỐI 5. HỘP CHI TIẾT BUỔI (1 hộp dùng chung cho mọi thẻ, _session-drawer.jspf) ===== --%>
                     <%@ include file="_session-drawer.jspf" %>
                 </main>
             </div>

@@ -1,9 +1,17 @@
 <%@ page pageEncoding="UTF-8" %>
-<%-- ===== 1 THẺ BUỔI trong ô lịch tuần. Biến s (MyPtSessionRow) đến từ vòng lặp của my-pt-sessions.jsp. =====
+<%-- ===== 1 THẺ BUỔI TRONG Ô LỊCH TUẦN — BẮT ĐẦU =====
+     Biến s = MyPtSessionRow, đến từ vòng lặp của my-pt-sessions.jsp (DAO MyPtSessionDAO.findSessionsInRange,
+     Service MyPtSessionService gắn nhãn).
      <details> = có JS: my-pt-sessions.js chặn mở tại chỗ, chép phần [data-session-content] vào hộp chi tiết.
                  không JS: bấm thẻ vẫn xổ chi tiết ngay dưới (HTML thuần).
      is-ended (buổi đã qua): nền trầm nhưng vẫn bấm xem được. --%>
 <details class="session-card ${s.ended ? 'is-ended' : ''}" data-session-detail data-session-id="${s.sessionId}" data-status="${s.statusKey}">
+    <%-- Mặt thẻ (luôn thấy), 4 dòng:
+           "18:00 – 19:30"      s.startTime / endTime ← TimeSlots.StartTime / EndTime, chữ đậm
+           "PT Đinh Công Sơn"   s.ptName ← Persons.FullName của Sessions.PtEmployeeId
+           "PT cá nhân · 36/45" s.typeLabel (Service) + số buổi s.sessionNo (ROW_NUMBER) / s.totalSessions (GeneratedSessionCount);
+                                buổi lẻ không có phần số
+           nhãn trạng thái      s.statusLabel (Service), màu theo s.statusKey, VD "● Sắp tới" --%>
     <summary>
         <c:if test="${s.ended}"><span class="visually-hidden">Buổi đã kết thúc. </span></c:if>
         <strong>${gms:formatTime(s.startTime)} – ${gms:formatTime(s.endTime)}</strong>
@@ -11,5 +19,7 @@
         <small><c:out value="${s.typeLabel}" /><c:if test="${not s.singleSession}"> · ${s.sessionNo}/${s.totalSessions}</c:if></small>
         <span class="session-status" data-status="${s.statusKey}"><c:out value="${s.statusLabel}" /></span>
     </summary>
+    <%-- Phần chi tiết ẩn — JS chép vào hộp "Chi tiết buổi tập" khi bấm thẻ. --%>
     <div data-session-content><%@ include file="_session-detail.jspf" %></div>
 </details>
+<%-- ===== 1 THẺ BUỔI — KẾT THÚC ===== --%>

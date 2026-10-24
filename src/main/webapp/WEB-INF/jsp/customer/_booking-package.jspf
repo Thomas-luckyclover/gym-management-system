@@ -1,9 +1,15 @@
 <%@ page pageEncoding="UTF-8" %>
-<%-- Thẻ 1 gói ở cột trái (my-bookings.jsp lặp với biến p). Chỉ để nhận diện + chọn gói; chi tiết nằm ở cột phải.
-     "PT Sơn" = tên cuối của PT cho gọn. aria-current="page" = gói đang xem. --%>
+<%-- ===== THẺ 1 GÓI Ở CỘT TRÁI — BẮT ĐẦU =====
+     my-bookings.jsp lặp với biến p = MyPtPackageView (DAO MyPtSessionDAO.findMyPackages: Subscriptions + Orders + Persons).
+     Chỉ để nhận diện + chọn gói; chi tiết nằm ở cột phải. Bấm thẻ → /customer/bookings?id=<mã gói>.
+     Hiện:  "Gói PT 2 Tháng"            p.packageName ← Orders.PackageNameSnapshot, chữ đậm
+            "PT Sơn · còn 10 buổi"      tên CUỐI của p.ptName (Persons.FullName) cho gọn;
+                                        left = p.totalSessions − p.pastSessions, còn ≤ 3 thì chữ đổi màu (is-ending)
+     aria-current="page" = gói đang xem → thẻ có viền cam bên trái. --%>
 <c:set var="left" value="${p.totalSessions - p.pastSessions}" />
 <c:set var="ptWords" value="${fn:split(p.ptName, ' ')}" />
 <a class="booking-package" href="${pageUrl}?id=${p.subscriptionId}" aria-current="${booking.selectedPackage.subscriptionId eq p.subscriptionId ? 'page' : 'false'}">
     <strong class="booking-package-name"><c:out value="${p.packageName}" /></strong>
     <span class="booking-package-meta">PT <c:out value="${ptWords[fn:length(ptWords) - 1]}" /> · <b class="${left le 3 ? 'is-ending' : ''}">còn <c:out value="${left}" /> buổi</b></span>
 </a>
+<%-- ===== THẺ 1 GÓI — KẾT THÚC ===== --%>

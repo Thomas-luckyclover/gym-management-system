@@ -4,6 +4,13 @@
 ================================================================================
  forgot-password.jsp — QUÊN MẬT KHẨU (/forgot-password, màn #3). 3 bước trong 1 trang.
 
+ AI GỬI DỮ LIỆU SANG?  ForgotPasswordServlet. doGet mở trang; doPost đọc ô ẩn "action" rồi gọi
+ PasswordRecoveryService (requestCode / verifyCode / resetPassword), cuối cùng forwardStep đặt dữ liệu dưới đây.
+ DAO đọc / ghi:
+   AccountDAO.findByEmail          Accounts JOIN Persons (Persons.Email)        — bước 1 tìm tài khoản
+   VerificationCodeDAO             VerificationCodes (mã, SentAt, ExpiresAt, số lần sai, LockedUntil)
+   AccountDAO.updatePasswordHash   Accounts.PasswordHash (+ mở khóa tạm, ghi AuditLogs) — bước 3
+
  DỮ LIỆU SERVLET GỬI SANG (ForgotPasswordServlet.forwardStep)
    recoveryStep        "email" | "code" | "reset"   — Servlet suy ra từ SESSION, không từ URL
    recoveryEmail       email đang khôi phục (bước 2)
@@ -32,6 +39,7 @@
   <c:set var="ctx" value="${pageContext.request.contextPath}" />
   <c:set var="step" value="${empty recoveryStep ? 'email' : recoveryStep}" />
 
+  <%-- ##### KHUNG TRANG: ảnh nền + logo + link "Về đăng nhập" + thẻ form ở giữa ##### --%>
   <div class="auth-shell">
     <%@ include file="/WEB-INF/jsp/common/auth-artwork.jspf" %>
     <div class="auth-top">
@@ -41,13 +49,16 @@
     </div>
 
     <div class="auth-card">
-      <%-- Tiến trình 3 bước: bước đang làm = is-current, bước đã qua = is-done. --%>
+      <%-- ===== TIẾN TRÌNH 3 BƯỚC — BẮT ĐẦU =====
+           "① Email  ② Mã xác thực  ③ Mật khẩu mới": bước đang làm = is-current (cam), bước đã qua = is-done (dấu ✓). --%>
       <ol class="recovery-steps" aria-label="Các bước khôi phục mật khẩu">
         <li class="${step eq 'email' ? 'is-current' : 'is-done'}" ${step eq 'email' ? 'aria-current="step"' : ''}><span>1</span> Email</li>
         <li class="${step eq 'code' ? 'is-current' : (step eq 'reset' ? 'is-done' : '')}" ${step eq 'code' ? 'aria-current="step"' : ''}><span>2</span> Mã xác thực</li>
         <li class="${step eq 'reset' ? 'is-current' : ''}" ${step eq 'reset' ? 'aria-current="step"' : ''}><span>3</span> Mật khẩu mới</li>
       </ol>
+      <%-- ===== TIẾN TRÌNH 3 BƯỚC — KẾT THÚC ===== --%>
 
+      <%-- Lỗi chung (errorMessage, Service trả) → khung đỏ có ⚠, VD "Tài khoản này không thể đăng nhập. Vui lòng liên hệ quản trị viên." (MSG37). --%>
       <c:if test="${not empty errorMessage}">
         <div class="msg-banner error" role="alert">
           <i class="fa-solid fa-triangle-exclamation" aria-hidden="true"></i>
@@ -56,7 +67,9 @@
       </c:if>
 
       <c:choose>
-        <%-- ================= BƯỚC 1: NHẬP EMAIL ================= --%>
+        <%-- ================= BƯỚC 1: NHẬP EMAIL — BẮT ĐẦU =================
+             Ô email giữ lại chữ đã gõ (email) khi báo lỗi; lỗi gắn ô fieldErrors.email → chữ đỏ dưới ô,
+             VD "Không tìm thấy tài khoản với email này." (MSG41). Nút cam "Gửi mã xác thực". --%>
         <c:when test="${step eq 'email'}">
           <div class="auth-head"><h1>Quên mật khẩu</h1></div>
 
@@ -73,8 +86,12 @@
             <button class="btn btn-primary btn-block" type="submit">Gửi mã xác thực</button>
           </form>
         </c:when>
+        <%-- BƯỚC 1 — KẾT THÚC --%>
 
-        <%-- ================= BƯỚC 2: NHẬP MÃ ================= --%>
+        <%-- ================= BƯỚC 2: NHẬP MÃ — BẮT ĐẦU =================
+             recoveryEmail lấy từ SESSION (lưu ở bước 1) → dòng "Đã gửi tới ban@email.com".
+             codeSecondsLeft = VerificationCodes.ExpiresAt − bây giờ (Servlet tính) → "Mã hết hạn sau 14:59".
+             resendSecondsLeft = SentAt + 60 giây − bây giờ → nút "Gửi lại mã (0:59)" bị khóa tới khi về 0. --%>
         <c:when test="${step eq 'code'}">
           <div class="auth-head"><h1>Nhập mã xác thực</h1></div>
 
@@ -124,8 +141,11 @@
           <%-- Gợi ý khi chưa nhận được mail (Pumpy). --%>
           <%@ include file="/WEB-INF/jsp/common/pumpy-mail-hint.jspf" %>
         </c:when>
+        <%-- BƯỚC 2 — KẾT THÚC --%>
 
-        <%-- ================= BƯỚC 3: ĐẶT MẬT KHẨU MỚI ================= --%>
+        <%-- ================= BƯỚC 3: ĐẶT MẬT KHẨU MỚI — BẮT ĐẦU =================
+             2 ô mật khẩu có nút con mắt (common.js). Lỗi gắn ô: fieldErrors.password (MSG66: 8–64 ký tự, có chữ và số),
+             fieldErrors.confirmPassword (MSG47: không khớp). Lưu xong → về trang đăng nhập với toast MSG49. --%>
         <c:otherwise>
           <div class="auth-head"><h1>Đặt mật khẩu mới</h1></div>
 
@@ -158,6 +178,7 @@
             <p class="recovery-note"><i class="fa-solid fa-circle-info" aria-hidden="true"></i> Đổi xong, mọi thiết bị đang đăng nhập tài khoản này sẽ bị đăng xuất.</p>
           </form>
         </c:otherwise>
+        <%-- BƯỚC 3 — KẾT THÚC --%>
       </c:choose>
 
       <p class="auth-switch">Nhớ ra mật khẩu? <a href="${ctx}/login">Đăng nhập</a></p>
@@ -165,5 +186,6 @@
 
     <p class="auth-foot-note">© 2026 Super Gym</p>
   </div>
+  <%-- ##### KHUNG TRANG — KẾT THÚC ##### --%>
 </body>
 </html>

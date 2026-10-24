@@ -1,5 +1,10 @@
 <%@ page pageEncoding="UTF-8" %>
-<%-- ===== Thanh đầu trang dùng chung: scheduleTitle do JSP cha đặt; dashboard (CustomerDashboardView) do Servlet lấy từ Service ===== --%>
+<%-- ===== THANH ĐẦU TRANG (topbar) DÙNG CHUNG — BẮT ĐẦU =====
+     Dùng ở: my-bookings.jsp ("Gói của tôi") và my-pt-sessions.jsp ("Lịch tập").
+       scheduleTitle  JSP cha đặt → chữ to bên trái
+       activeSidebar  Servlet đặt ('bookings' | 'pt-sessions') → chọn nội dung nút (i) + có nút "Đặt buổi lẻ" không
+       dashboard      CustomerDashboardView ← CustomerDashboardService (Servlet gọi): initials, fullName, customerCode
+                      (DAO: Persons.FullName, Customers.CustomerCode) → góc phải "ĐM  Đỗ Thị Mai / KH-1006" --%>
 <header class="topbar">
     <div class="tb-left">
         <h1 class="tb-title">
@@ -53,4 +58,4 @@
         <%-- KẾT THÚC thông tin tài khoản góc phải. --%>
     </div>
 </header>
-<%-- ===== KẾT THÚC thanh đầu trang dùng chung ===== --%>
+<%-- ===== THANH ĐẦU TRANG — KẾT THÚC ===== --%>
