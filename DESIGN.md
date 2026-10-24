@@ -204,17 +204,17 @@ Motion gợn nền (48s), gió sidebar (3.4s) và thiên hà loading (12s) chỉ
 
 Phạm vi kiểm chứng của đợt này: static preview dựng từ source ở desktop/mobile, kiểm tra cú pháp JS, parse SVG và diff; kiểm tra biên dịch javac tập trung cho EmailGateway đã qua. Chưa xác nhận chạy Tomcat, kết nối DB, đăng nhập thật, thực thi POST hủy buổi hoặc gửi email thật; không coi preview là kiểm thử nghiệp vụ.
 
-## Arena (24/10, 4 màn + xác thực)
+## Arena (24/10, toàn bộ khu làm việc + xác thực)
 
-PT Dashboard, Lịch dạy PT, My PT Sessions và My Bookings dùng bảng màu đĩa tạ thi đấu (token `--arena-*` trong `tokens.css`, lớp áp dụng ở mục "ARENA" cuối `common.css` và mục Arena cuối CSS từng trang). Các khu Quản lý, Lễ tân, Admin và Trang cá nhân khách không đổi.
+Mọi màn nội bộ (`body.dock`, 5 zone PT · Hội viên · Lễ tân · Quản lý · Admin, 21 màn) dùng bảng màu đĩa tạ thi đấu: token `--arena-*` trong `tokens.css`, lớp chung ở mục "ARENA" cuối `common.css`, khối chào ở mục 6 `dashboard-hero.css`, chi tiết riêng ở mục Arena cuối CSS của PT Dashboard, Lịch dạy, My PT Sessions, My Bookings. Màn nào cần giữ kiểu cũ thì thêm class `no-arena` vào `<body>`. Trang chủ, Giới thiệu, Blog không đổi.
 
 - **Màu:** đĩa 20kg xanh `#24468F` là nền sân và topbar; đĩa 25kg đỏ `#FF4F2B` (cùng màu nút trang chủ và sidebar) chỉ cho một việc nặng nhất mỗi màn; chữ ember trên khối tối dùng `#FF7A5C`, trên nền sáng dùng `#C2361A` (nút chính, hôm nay, ô Cần chú ý); phấn magie `#EEF2F8` là khối đọc, ô con bên trong trắng; thép `#A7B3C9` là chữ phụ trên khối tối. Màu nghĩa xanh lá/vàng/đỏ giữ nguyên.
 - **Khối tối có đèn:** khối chào, Kết quả tháng, dải đầu gói và thanh Chờ công bố dùng `--arena-900` + vùng sáng xanh ở góc trên + vạch sáng 1px. Chế độ nhẹ bỏ vùng sáng.
-- **Điểm nhớ duy nhất:** vân nhám thanh đòn 8px trên đỉnh khối chào PT (hai lớp sọc chéo CSS). Không dùng ở chỗ khác.
+- **Điểm nhớ duy nhất:** vân nhám thanh đòn 8px trên đỉnh khối chào (PT Dashboard và Trang cá nhân khách, cùng một khối). Không dùng ở chỗ khác.
 - **Chữ:** tên người dùng trong khối chào to, đậm 800, kèm chấm vuông ember; "CHÀO," nhỏ màu thép. Tiêu đề khối Inter Tight 800.
 - **Hình:** khối 6px, ô 4px, chip/nhãn 2px; avatar vẫn tròn. Khe ghép 12px. Khối sáng không viền, dùng bóng tông xanh.
 - **Nhịp khoảng cách:** bước 4px; khe giữa khối 12px, khe giữa các ô 8px, lề trong khối 24px (điện thoại 16px). Tiêu đề topbar thẳng mép trái với khối nội dung ở mọi bề ngang.
-- **Tiếp cận (WCAG 2.1 AA):** quét axe-core 0 lỗi trên 5 màn ở 1440px và 390px; zoom 200% không tràn ngang. Vòng focus 2 tông (vạch xanh + viền trắng, trên khối tối là xanh nhạt). Điều khiển trên điện thoại cao tối thiểu 44px; nút (i) và nút hiện mật khẩu giữ cỡ nhỏ nhưng có vùng chạm 44px. Viền nút phụ `#7D8FAE` ≥ 3:1 trên trắng. Ô tài khoản thu gọn trên điện thoại vẫn giữ tên cho trình đọc màn hình. Chip trạng thái có viền cùng tông.
+- **Tiếp cận (WCAG 2.1 AA):** quét axe-core 0 lỗi màu/focus/tên trên các màn; còn lỗi thiếu nhãn ô lọc/ô ngày ở 5 màn Quản lý · Lễ tân · Admin cần sửa trong JSP; zoom 200% không tràn ngang. Vòng focus 2 tông (vạch xanh + viền trắng, trên khối tối là xanh nhạt). Điều khiển trên điện thoại cao tối thiểu 44px; nút (i) và nút hiện mật khẩu giữ cỡ nhỏ nhưng có vùng chạm 44px. Viền nút phụ `#7D8FAE` ≥ 3:1 trên trắng. Ô tài khoản thu gọn trên điện thoại vẫn giữ tên cho trình đọc màn hình. Chip trạng thái có viền cùng tông.
 - **Sidebar và chuyển động:** sidebar giữ nguyên (ember cũ `#FF4F2B` ghim ở `--arena-sidebar-ember`). Không thêm animation; hiệu ứng hiện dần, bấm lún và gió sidebar có sẵn giữ nguyên.
 - **Xác thực:** nền, thẻ form, ô nhập và focus đổi qua token `--auth-*`; đất nung và áo choàng của tranh gốm đổi sang màu đặc bằng đúng màu cũ để tranh không ngả tím trên nền mới.
 

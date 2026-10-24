@@ -505,10 +505,9 @@ body.pt-dashboard-page {
 
 
 /* ==================== 8. ARENA (24/10 tối) ====================
-   Màu + hình theo mục "ARENA" cuối common.css. Ở đây: bố cục ghép sát, khối chào và Kết quả tháng là
-   khối tối có đèn sân khấu, vân nhám thanh đòn trên đỉnh khối chào (chỗ duy nhất trong app),
-   tên người dùng to đậm. Bộ chọn bắt đầu bằng "html body.dock.pt-dashboard-page" để thắng
-   dashboard-hero.css (nạp sau) mà không ảnh hưởng Trang cá nhân khách dùng chung file đó. */
+   Màu + hình theo mục "ARENA" cuối common.css; khối chào (dùng chung với Trang cá nhân khách) ở
+   mục Arena cuối dashboard-hero.css. Ở đây: bố cục ghép sát, Kết quả tháng là khối tối có đèn,
+   ô "Cần chú ý" viền ember, lịch 7 ngày, thẻ khách. */
 
 html body.dock.pt-dashboard-page .pt-board { gap: var(--arena-gap); }
 /* Nhịp: lề trong khối 24px (điện thoại 16px), khe giữa các ô 8px */
@@ -523,9 +522,8 @@ html body.dock.pt-dashboard-page .pt-section-heading h2 {
   letter-spacing: -0.01em;
 }
 
-/* --- Khối tối dùng chung: khối chào + Kết quả tháng.
-   Đổi biến chữ/viền trong khối → mọi phần tử con (gợi ý i, ô tiền, chú thích) tự đổi theo. --- */
-html body.dock.pt-dashboard-page .pt-board :is(.pt-board__hero, .pt-board__summary) {
+/* --- Kết quả tháng: khối tối có đèn (khối chào: xem mục Arena trong dashboard-hero.css) --- */
+html body.dock.pt-dashboard-page .pt-board .pt-board__summary {
   --pt-text: var(--arena-surface);
   --pt-soft: var(--arena-steel);
   --pt-muted: var(--arena-steel);
@@ -546,89 +544,11 @@ html body.dock.pt-dashboard-page .pt-board :is(.pt-board__hero, .pt-board__summa
   color: var(--arena-surface);
   box-shadow: var(--arena-shadow-dark);
 }
-html.gms-lite body.dock.pt-dashboard-page .pt-board :is(.pt-board__hero, .pt-board__summary) { background: var(--arena-900); }
+html.gms-lite body.dock.pt-dashboard-page .pt-board .pt-board__summary { background: var(--arena-900); }
 
-/* --- Khối chào: vân nhám thanh đòn 8px trên đỉnh (2 lớp sọc chéo, không ảnh) --- */
-html body.dock.pt-dashboard-page .pt-board .pt-board__hero {
-  overflow: hidden;
-  padding: calc(var(--arena-pad) + var(--arena-knurl-height)) var(--arena-pad) var(--arena-pad);
-}
-html body.dock.pt-dashboard-page .pt-board .pt-board__hero::before {
-  content: "";
-  position: absolute;
-  inset: 0 0 auto;
-  height: var(--arena-knurl-height);
-  background:
-    repeating-linear-gradient(45deg, var(--arena-knurl) 0 1.5px, transparent 1.5px 5px),
-    repeating-linear-gradient(-45deg, var(--arena-knurl) 0 1.5px, transparent 1.5px 5px),
-    var(--arena-knurl-base);
-  pointer-events: none;
-}
-
-/* Lời chào 2 dòng, không sửa JSP: "CHÀO," là chữ của h2 (nhỏ, thép), tên là <span class="wx-name"> (to, trắng) */
-html body.dock.pt-dashboard-page .pt-board__hero .wx-greet h2 {
-  color: var(--arena-steel);
-  font-family: var(--font-brand-mono);
-  font-size: var(--font-size-sm);
-  font-style: normal;
-  font-weight: var(--font-weight-semibold);
-  line-height: 1.2;
-  letter-spacing: 0.14em;
-}
-html body.dock.pt-dashboard-page .pt-board__hero .wx-name {
-  display: block;
-  margin-top: var(--space-2);
-  color: var(--arena-surface);
-  font-family: var(--font-brand-display);
-  font-size: clamp(2.25rem, 3.3vw, 3.1rem);
-  font-weight: var(--font-weight-extrabold);
-  line-height: 0.98;
-  letter-spacing: -0.025em;
-}
-html body.dock.pt-dashboard-page .pt-board__hero .wx-name::after {
-  content: "";
-  display: inline-block;
-  width: 0.2em;
-  height: 0.2em;
-  margin-left: 0.08em;
-  background: var(--arena-ember);
-}
-
-/* Ba con số: 3 ô ghép, số to ở trên, nhãn thép ở dưới; "Cần chú ý" là ô có viền ember */
-html body.dock.pt-dashboard-page .pt-board__hero .pt-pulse {
-  display: grid;
-  grid-template-columns: repeat(3, minmax(0, 1fr));
-  gap: var(--arena-gap-tile);
-}
-html body.dock.pt-dashboard-page .pt-board__hero .pt-pulse div {
-  display: flex;
-  flex-direction: column-reverse;
-  justify-content: flex-end;
-  gap: var(--space-0-5);
-  padding: var(--space-2-5) var(--space-3);
-  border: var(--border-width) solid var(--arena-line-dark);
-  border-radius: var(--arena-radius-tile);
-  background: var(--arena-tile-dark);
-}
-html body.dock.pt-dashboard-page .pt-board__hero .pt-pulse dd {
-  color: var(--arena-surface);
-  font-family: var(--font-brand-display);
-  font-size: var(--font-size-2xl);
-  font-weight: var(--font-weight-extrabold);
-  line-height: 1.1;
-}
-html body.dock.pt-dashboard-page .pt-board__hero .pt-pulse dt { color: var(--arena-steel); font-size: var(--font-size-xs); }
+/* Ô "Cần chú ý" của PT: viền + số ember (khách không có ô này) */
 html body.dock.pt-dashboard-page .pt-board__hero .pt-pulse div:nth-child(3) { border-color: var(--arena-ember-line); }
 html body.dock.pt-dashboard-page .pt-board__hero .pt-pulse div:nth-child(3) dd { color: var(--arena-ember-on-dark); }
-
-@media (min-width: 1280px) {
-  html body.dock.pt-dashboard-page .pt-board__hero {
-    grid-template-columns: minmax(0, 1.1fr) minmax(0, 1.5fr) minmax(17rem, 1fr);
-  }
-}
-
-/* Tranh phòng tập + thẻ thời tiết giữ tranh comic, chỉ đổi góc */
-html body.dock.pt-dashboard-page .pt-board__hero :is(.wx-gym, .wx-card) { border-radius: var(--arena-radius-tile); }
 
 /* --- Lịch 7 ngày --- */
 html body.dock.pt-dashboard-page .pt-day {
@@ -688,11 +608,7 @@ html body.dock.pt-dashboard-page .pt-outcome-bar i:last-child { border-radius: 0
 html body.dock.pt-dashboard-page .pt-outcome-legend i { border-radius: 1px; }
 
 @media (max-width: 767px) {
-  html body.dock.pt-dashboard-page .pt-board__hero .wx-name { font-size: clamp(1.9rem, 9vw, 2.4rem); }
-  html body.dock.pt-dashboard-page .pt-board__hero .pt-pulse div { padding: var(--space-2) var(--space-2-5); }
-  html body.dock.pt-dashboard-page .pt-board__hero .pt-pulse dt { font-size: var(--font-size-xs); line-height: 1.25; }
   html body.dock.pt-dashboard-page .pt-board .panel { padding: var(--arena-pad-sm); }
-  html body.dock.pt-dashboard-page .pt-board .pt-board__hero { padding: calc(var(--arena-pad-sm) + var(--arena-knurl-height)) var(--arena-pad-sm) var(--arena-pad-sm); }
   html body.dock.pt-dashboard-page :is(.pt-contact-btn) { min-height: var(--arena-hit); }
 }
 
