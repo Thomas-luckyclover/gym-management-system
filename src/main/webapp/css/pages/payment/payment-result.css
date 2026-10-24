@@ -1,9 +1,41 @@
-/*
-Click nbfs://nbhost/SystemFileSystem/Templates/Licenses/license-default.txt to change this license
-Click nbfs://nbhost/SystemFileSystem/Templates/JSP_Servlet/CascadeStyleSheet.css to edit this template
-*/
-/* 
-    Created on : Oct 24, 2026, 3:33:46 PM
-    Author     : admin
-*/
+.payment-result {
+  display: grid;
+  gap: var(--space-4);
+  padding: var(--space-6);
+  border: var(--border-width) solid var(--color-border);
+  border-radius: var(--radius-lg);
+  background: var(--color-surface);
+  color: var(--color-text);
+  text-align: center;
+}
 
+.payment-result__logo {
+  width: calc(var(--space-8) * 3);
+  margin: auto;
+}
+
+.payment-result h2,
+.payment-result p,
+.payment-result dl {
+  margin: 0;
+}
+
+.payment-result dl {
+  display: grid;
+  gap: var(--space-3);
+}
+
+.payment-result dl div {
+  display: flex;
+  justify-content: space-between;
+  gap: var(--space-3);
+}
+
+.payment-result dd {
+  margin: 0;
+  font-weight: var(--font-weight-semibold);
+}
+
+.payment-result .btn-row {
+  justify-content: center;
+}
