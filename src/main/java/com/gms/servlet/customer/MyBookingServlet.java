@@ -71,7 +71,7 @@ public class MyBookingServlet extends HttpServlet {
      * Lỗi thì 2 chỗ đó tự ẩn, phần còn lại của màn vẫn hiện.
      *
      * JSP ĐỌC "dashboard" Ở ĐÂU:
-     *   _schedule-header.jspf dòng 43–53   tên, chữ cái đầu, mã khách ở topbar
+     *   _schedule-header.jspf dòng 34–44   tên, chữ cái đầu, mã khách ở topbar
      *                                      (jspf này được nhúng ở my-bookings.jsp dòng 76)
      *   my-bookings.jsp dòng 197–206       thẻ "Vào phòng tập": dashboard.canUseGym
      *   my-bookings.jsp dòng 305           customerCode = dashboard.customerCode (câu "báo mã KH-…" ở CTA)

@@ -75,7 +75,7 @@ public class MyPtSessionServlet extends HttpServlet {
     private void loadHeader(HttpServletRequest request, int accountId) {
         ServiceResult<CustomerDashboardView> result = dashboardService.getDashboard(accountId);
         if (result.isSuccess()) {
-            // → _schedule-header.jspf dòng 43–53 (tên, chữ cái đầu, mã khách); jspf nhúng ở my-pt-sessions.jsp dòng 60
+            // → _schedule-header.jspf dòng 34–44 (tên, chữ cái đầu, mã khách); jspf nhúng ở my-pt-sessions.jsp dòng 60
             request.setAttribute("dashboard", result.getData());
         }
     }

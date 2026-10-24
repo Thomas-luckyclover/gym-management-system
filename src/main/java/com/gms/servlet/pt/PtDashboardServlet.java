@@ -75,7 +75,7 @@ public class PtDashboardServlet extends HttpServlet {
     private void loadEmployeeCode(HttpServletRequest request, int accountId) {
         ServiceResult<String> employeeCode = dashboardService.getPtEmployeeCode(accountId);
         if (employeeCode.isSuccess()) {
-            // → _header.jspf dòng 69–71 "NV-0005" dưới tên PT (jspf nhúng ở dashboard.jsp dòng 60)
+            // → _header.jspf dòng 60–62 "NV-0005" dưới tên PT (jspf nhúng ở dashboard.jsp dòng 60)
             request.setAttribute("ptEmployeeCode", employeeCode.getData());
         }
     }
@@ -132,8 +132,8 @@ public class PtDashboardServlet extends HttpServlet {
     /** HÀM PHỤ — gọi ở B3 của doGet. Menu trái, tiêu đề topbar, ngày hôm nay. */
     private void setPageInfo(HttpServletRequest request) {
         request.setAttribute("activeNav", "dashboard");       // → layout-pt.jspf dòng 55–56 tô mục "Tổng quan" (nhúng ở dashboard.jsp dòng 57)
-        request.setAttribute("pageTitle", "Tổng quan PT");    // → dashboard.jsp dòng 42 (<title>); _header.jspf dòng 25, 31 (nhúng ở dashboard.jsp dòng 60)
-        request.setAttribute("today", DateTimeUtil.today());  // → _header.jspf dòng 38 ngày hôm nay ở topbar
+        request.setAttribute("pageTitle", "Tổng quan PT");    // → dashboard.jsp dòng 42 (<title>); _header.jspf dòng 24, 30 (nhúng ở dashboard.jsp dòng 60)
+        request.setAttribute("today", DateTimeUtil.today());  // → _header.jspf dòng 37 ngày hôm nay ở topbar
     }
 
     /**

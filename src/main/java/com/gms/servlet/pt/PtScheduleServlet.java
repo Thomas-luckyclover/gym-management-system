@@ -95,7 +95,7 @@ public class PtScheduleServlet extends HttpServlet {
         //   ?date= đến từ schedule.jsp dòng 74–75 (‹ tuần trước / tuần sau ›), 77–78 (công tắc Tuần / Danh sách giữ ngày).
         //   Nút "Tuần này" dòng 76 không gửi date → hôm nay.
         LocalDate date = PtScheduleService.parseDate(request.getParameter("date"), today);
-        request.setAttribute("today", today);      // → _header.jspf dòng 38 ngày ở topbar (nhúng ở schedule.jsp dòng 52)
+        request.setAttribute("today", today);      // → _header.jspf dòng 37 ngày ở topbar (nhúng ở schedule.jsp dòng 52)
         request.setAttribute("viewDate", date);    // → schedule.jsp dòng 77–78 (link Tuần / Danh sách giữ đúng ngày)
 
         // B3: Service dựng tuần. Lỗi thì JSP hiện thông báo, KHÔNG hiện lịch trống.
@@ -131,13 +131,13 @@ public class PtScheduleServlet extends HttpServlet {
         request.setAttribute("draftAccountId", accountId);
         // → layout-pt.jspf dòng 64–65 tô mục "Lịch dạy" (nhúng ở schedule.jsp dòng 49)
         request.setAttribute("activeNav", "schedule");
-        // → _header.jspf dòng 25, 31 tiêu đề topbar; dòng 29–32 nút (i) + chữ hướng dẫn (nhúng ở schedule.jsp dòng 52)
+        // → _header.jspf dòng 24, 30 tiêu đề topbar; dòng 28–31 nút (i) + chữ hướng dẫn (nhúng ở schedule.jsp dòng 52)
         request.setAttribute("pageTitle", "Lịch dạy");
         request.setAttribute("pageHelp", "Bấm vào chỗ trống trên lịch (hoặc nút Thêm khung) để thêm khung rảnh. "
                 + "Bấm vào khung Còn trống để đánh dấu gỡ. Khách chỉ thấy thay đổi sau khi bạn bấm Công bố.");
         ServiceResult<String> employeeCode = dashboardService.getPtEmployeeCode(accountId);
         if (employeeCode.isSuccess()) {
-            // → _header.jspf dòng 69–71 "NV-0005" dưới tên PT
+            // → _header.jspf dòng 60–62 "NV-0005" dưới tên PT
             request.setAttribute("ptEmployeeCode", employeeCode.getData());
         }
     }
