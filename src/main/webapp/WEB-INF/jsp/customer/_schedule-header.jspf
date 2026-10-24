@@ -1,0 +1,52 @@
+<%@ page pageEncoding="UTF-8" %>
+<%-- ===== THANH ĐẦU TRANG (topbar) DÙNG CHUNG — BẮT ĐẦU =====
+     Dùng ở: my-bookings.jsp ("Gói của tôi") và my-pt-sessions.jsp ("Lịch tập").
+       scheduleTitle  JSP cha đặt → chữ to bên trái
+       activeSidebar  Servlet đặt ('bookings' | 'pt-sessions') → chọn nội dung nút (i) + có nút "Đặt buổi lẻ" không
+       dashboard      CustomerDashboardView ← CustomerDashboardService (Servlet gọi): initials, fullName, customerCode
+                      (DAO: Persons.FullName, Customers.CustomerCode) → góc phải "ĐM  Đỗ Thị Mai / KH-1006" --%>
+<header class="topbar">
+    <div class="tb-left">
+        <h1 class="tb-title">
+            <c:out value="${scheduleTitle}" />
+        </h1>
+        <%-- Nút i cạnh tiêu đề: common.js điều khiển hint .pt-info; activeSidebar chọn nội dung đúng màn. --%>
+        <span class="pt-info">
+            <button type="button" class="pt-info-trigger" aria-label="Hướng dẫn ${scheduleTitle}" aria-describedby="schedule-page-help"><span aria-hidden="true">i</span></button>
+            <span id="schedule-page-help" class="pt-info-popover" role="tooltip">
+                <c:choose>
+                    <c:when test="${activeSidebar eq 'bookings'}">Chọn một gói ở cột trái: xem buổi tới, lịch cố định hằng tuần, các buổi đã qua và những buổi cần để ý. Xem từng buổi trên Lịch tập. Muốn hủy hoặc đổi buổi, hãy nhắn PT qua Zalo.</c:when>
+                    <c:otherwise>Lịch chia thành Sáng, Chiều, Tối theo giờ bắt đầu. Bấm một buổi để xem chi tiết; bấm ngoài, nút Đóng hoặc Escape để đóng. Cần đổi/hủy buổi, hãy liên hệ PT.</c:otherwise>
+                </c:choose>
+            </span>
+        </span>
+        <%-- KẾT THÚC hint hướng dẫn cạnh tiêu đề. --%>
+    </div>
+    <div class="top-right">
+        <%-- Chỉ màn Lịch tập có nút "Đặt buổi lẻ". Màn Gói của tôi KHÔNG có nút "Lịch tập" (đã có link "Xem trên lịch tập" đúng buổi).
+             Điện thoại hẹp: chữ trong nút ẩn (tb-action-text), chỉ còn icon → tiêu đề trang không bị đẩy mất; aria-label giữ tên nút. --%>
+        <c:if test="${activeSidebar ne 'bookings'}">
+            <a class="btn btn-primary btn-sm tb-action" href="${pageContext.request.contextPath}/customer/book-session" aria-label="Đặt buổi lẻ"><i class="fa-solid fa-calendar-plus" aria-hidden="true"></i><span class="tb-action-text">Đặt buổi lẻ</span></a>
+        </c:if>
+        <%-- Chuông thông báo dùng chung (notification-bell.js gọi /api/notifications): thông báo hệ thống, vd JOB-08 nhắc buổi PT ngày mai. --%>
+        <%@ include file="/WEB-INF/jsp/common/notification-bell.jspf" %>
+        <%-- Góc phải: chữ viết tắt, tên và mã khách; chỉ hiện nếu đã lấy được dashboard. --%>
+        <c:if test="${not empty dashboard}">
+            <a class="tb-user" href="${pageContext.request.contextPath}/account">
+                <span class="avatar">
+                    <c:out value="${dashboard.initials}" />
+                </span>
+                <span class="tb-user-text">
+                    <b>
+                        <c:out value="${dashboard.fullName}" />
+                    </b>
+                    <span>
+                        <c:out value="${dashboard.customerCode}" />
+                    </span>
+                </span>
+            </a>
+        </c:if>
+        <%-- KẾT THÚC thông tin tài khoản góc phải. --%>
+    </div>
+</header>
+<%-- ===== THANH ĐẦU TRANG — KẾT THÚC ===== --%>

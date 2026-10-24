@@ -3101,7 +3101,7 @@ INSERT INTO Sessions (SessionId, SubscriptionId, TimeSlotId, PtEmployeeId, Statu
  (80, 11, 83, 5, 'CheckedIn', 366667, 256667, '2026-09-18 00:05:00', 1, NULL, NULL, NULL, NULL, NULL, 0),
  (81, 11, 84, 5, 'Cancelled', 366667, 256667, NULL, 1, NULL, 'GymClosed', N'Phòng tập nghỉ cả ngày, buổi chưa được PT dời trước ngày nghỉ', '2026-09-19 00:05:00', NULL, 0),
  (82, 11, 85, 5, 'CheckedIn', 366667, 256667, '2026-09-22 00:05:00', 1, NULL, NULL, NULL, NULL, NULL, 0),
- (83, 11, 86, 5, 'Cancelled', 366667, 256667, NULL, 0, NULL, 'ByCustomer', N'Khách bận đột xuất', '2026-09-21 22:00:00', 5, 0),
+ (83, 11, 86, 5, 'Missed', 366667, 256667, '2026-09-23 00:05:00', 1, 'NoCheckIn', NULL, NULL, NULL, NULL, 0),
  (84, 11, 87, 5, 'CheckedIn', 366667, 256667, '2026-09-24 00:05:00', 1, NULL, NULL, NULL, NULL, NULL, 0),
  (85, 11, 88, 5, 'Missed', 366667, 256667, '2026-09-25 00:05:00', 1, 'NoCheckIn', NULL, NULL, NULL, NULL, 0),
  (86, 11, 89, 5, 'CheckedIn', 366667, 256667, '2026-09-26 00:05:00', 1, NULL, NULL, NULL, NULL, NULL, 0),

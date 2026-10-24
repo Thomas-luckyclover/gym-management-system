@@ -1,132 +1,161 @@
-// ===== Dải 7 ngày dạng tab =====
-// JSP render đủ 7 bảng ngày (tắt JS vẫn đọc được); JS chỉ hiện bảng của ngày đang chọn.
-// Bàn phím: ←/→ chuyển ngày, Home/End về ngày đầu/cuối (mẫu tab của WAI-ARIA).
+"use strict";
+
+/*
+ * TỔNG QUAN PT — dashboard.js
+ *
+ * JS CHỈ LÀM 2 VIỆC:
+ *   1. Dải 7 ngày dạng tab: bấm ngày nào thì hiện bảng buổi của ngày đó.
+ *   2. Hộp "Tùy chọn lịch buổi tập": mở khi bấm "Xử lý buổi" (lịch) hoặc "Dời buổi" (thẻ khách).
+ *
+ * NHỮNG VIỆC KHÔNG NẰM Ở ĐÂY:
+ *   - Nhãn "Đang diễn ra" / "Còn 20 phút": common.js (đọc data-start / data-end của từng buổi).
+ *   - Khối chào + thời tiết: gym-floor.js, weather-card.js.
+ *   - Nhắc khách thiếu membership: không còn nút, JOB-08 trên server tự gửi.
+ *
+ * MỤC LỤC
+ *   NHÓM 1. Dải 7 ngày        initPtDayTabs, selectPtDay, handlePtDayKey
+ *   NHÓM 2. Hộp xử lý buổi    initPtSessionDialog, openPtSessionDialog
+ */
+
 document.addEventListener("DOMContentLoaded", function () {
-    const strip = document.querySelector("[data-pt-days]");
-    if (!strip) {
-        return;
-    }
-    const tabs = Array.from(strip.querySelectorAll('[role="tab"]'));
-    if (!tabs.length) {
-        return;
-    }
+    initPtDayTabs();
+    initPtSessionDialog();
+});
 
-    // B1: chọn một ngày — đổi aria-selected, tabindex, ẩn/hiện bảng
-    function select(tab, moveFocus) {
-        tabs.forEach(function (item) {
-            const selected = item === tab;
-            item.setAttribute("aria-selected", selected ? "true" : "false");
-            item.tabIndex = selected ? 0 : -1;
-            const panel = document.getElementById(item.getAttribute("aria-controls"));
-            if (panel) {
-                panel.hidden = !selected;
-            }
-        });
-        if (moveFocus) {
-            tab.focus();
-        }
-        // Chỉ cuộn dải ngày ngang; không kéo cả trang khi đổi tab bằng bàn phím.
-        if (strip.scrollWidth > strip.clientWidth) {
-            strip.scrollTo({
-                left: Math.max(0, tab.offsetLeft - strip.offsetLeft - (strip.clientWidth - tab.offsetWidth) / 2),
-                behavior: window.matchMedia("(prefers-reduced-motion: reduce)").matches ? "instant" : "smooth"
-            });
-        }
+
+// ================================================================================================================
+// NHÓM 1. DẢI 7 NGÀY
+// JSP đã vẽ đủ 7 bảng (tắt JS vẫn đọc được). JS chỉ ẩn 6 bảng, hiện bảng của ngày đang chọn.
+// ================================================================================================================
+
+const ptDayStrip = document.querySelector("[data-pt-days]");                      // <div role="tablist">
+const ptDayTabs = ptDayStrip ? Array.from(ptDayStrip.querySelectorAll('[role="tab"]')) : [];
+
+// HÀM CHÍNH — gọi 1 lần khi trang tải xong (DOMContentLoaded ở đầu file).
+function initPtDayTabs() {
+    if (!ptDayTabs.length) {
+        return;   // lịch lỗi / không có dữ liệu → không có dải ngày
     }
 
-    // B2: mặc định chọn hôm nay (ngày có aria-selected="true" từ JSP), không có thì ngày đầu
-    const initial = tabs.find(function (tab) { return tab.getAttribute("aria-selected") === "true"; }) || tabs[0];
-    select(initial, false);
-    strip.classList.add("is-ready");
+    // B1: mở sẵn ngày JSP đánh dấu aria-selected="true" (hôm nay); không có thì ngày đầu tiên.
+    const today = ptDayTabs.find(function (tab) { return tab.getAttribute("aria-selected") === "true"; });
+    selectPtDay(today || ptDayTabs[0], false);
 
-    strip.addEventListener("click", function (event) {
+    // B2: báo CSS "JS đã chạy" → CSS mới tô nền xanh cho ngày đang chọn.
+    ptDayStrip.classList.add("is-ready");
+
+    // B3: bấm chuột vào 1 ngày.
+    ptDayStrip.addEventListener("click", function (event) {
         const tab = event.target.closest('[role="tab"]');
         if (tab) {
-            select(tab, false);
+            selectPtDay(tab, false);
         }
     });
 
-    strip.addEventListener("keydown", function (event) {
-        const index = tabs.indexOf(document.activeElement);
-        if (index < 0) {
-            return;
-        }
-        let next = -1;
-        if (event.key === "ArrowRight") {
-            next = (index + 1) % tabs.length;
-        } else if (event.key === "ArrowLeft") {
-            next = (index - 1 + tabs.length) % tabs.length;
-        } else if (event.key === "Home") {
-            next = 0;
-        } else if (event.key === "End") {
-            next = tabs.length - 1;
-        }
-        if (next >= 0) {
-            event.preventDefault();
-            select(tabs[next], true);
-        }
+    // B4: phím mũi tên / Home / End (chuẩn tab của WAI-ARIA).
+    ptDayStrip.addEventListener("keydown", handlePtDayKey);
+}
+
+// HÀM PHỤ — gọi ở B1, B3 của initPtDayTabs và trong handlePtDayKey.
+// Chọn 1 ngày: đổi aria-selected + tabindex, ẩn/hiện bảng, cuộn dải ngày để ô đó nằm giữa (điện thoại).
+function selectPtDay(tab, moveFocus) {
+    // B1: mỗi ô ngày — ô được chọn thì hiện bảng, các ô khác ẩn bảng.
+    ptDayTabs.forEach(function (item) {
+        const selected = item === tab;
+        item.setAttribute("aria-selected", selected ? "true" : "false");
+        item.tabIndex = selected ? 0 : -1;   // chỉ ô đang chọn nằm trong vòng Tab
+        document.getElementById(item.getAttribute("aria-controls")).hidden = !selected;
     });
-});
 
-// ===== Khởi tạo hộp xử lý buổi =====
-// Code bên trong chạy khi trình duyệt đã đọc xong HTML.
-document.addEventListener("DOMContentLoaded", function () {
+    // B2: điều khiển bằng bàn phím thì đưa focus theo.
+    if (moveFocus) {
+        tab.focus();
+    }
 
-    // JS tìm các thẻ JSP đã render
-    const sessionDialog = document.getElementById("ptSessionDialog"); // hộp xử lý
-    const dialogTitle = document.getElementById("ptSessionDialogTitle"); // tiêu đề hộp
-    const closeButton = document.getElementById("ptSessionDialogClose"); // nút close
-    const schedule = document.querySelector(".pt-schedule"); // Khối lịch 7 ngày
-    let openingButton = null; // Nút cần nhận lại focus sau khi đóng hộp.
+    // B3: dải ngày đang cuộn ngang (điện thoại) → cuộn ô được chọn vào giữa. Chỉ cuộn dải, không kéo cả trang.
+    if (ptDayStrip.scrollWidth > ptDayStrip.clientWidth) {
+        const reduceMotion = window.matchMedia("(prefers-reduced-motion: reduce)").matches;
+        ptDayStrip.scrollTo({
+            left: tab.offsetLeft - ptDayStrip.offsetLeft - (ptDayStrip.clientWidth - tab.offsetWidth) / 2,
+            behavior: reduceMotion ? "instant" : "smooth"
+        });
+    }
+}
 
-
-    // nếu thiếu 1 phần tử => ko tìm thấy
-    if (!sessionDialog || !dialogTitle || !closeButton || !schedule) {
+// HÀM PHỤ — gọi ở B4 của initPtDayTabs. ← → đổi ngày (vòng tròn), Home / End về ngày đầu / cuối.
+function handlePtDayKey(event) {
+    const index = ptDayTabs.indexOf(document.activeElement);
+    if (index < 0) {
         return;
     }
 
-    // ===== Mở hộp cho buổi được chọn =====
-    function openSessionDialog(button) {
-        // B1: bỏ qua nút bị khóa hoặc thiếu mã buổi.
-        if (button.disabled || !button.dataset.sessionId) {
-            return;
-        }
+    const last = ptDayTabs.length - 1;
+    let next = -1;
+    if (event.key === "ArrowRight") next = index === last ? 0 : index + 1;
+    if (event.key === "ArrowLeft") next = index === 0 ? last : index - 1;
+    if (event.key === "Home") next = 0;
+    if (event.key === "End") next = last;
 
-        // B2: gắn mã buổi và tiêu đề, không chèn HTML.
-        openingButton = button;
-        sessionDialog.dataset.sessionId = button.dataset.sessionId;
-        dialogTitle.textContent = button.dataset.sessionLabel || "Xử lý buổi tập";
+    if (next >= 0) {
+        event.preventDefault();   // không để trang cuộn theo phím
+        selectPtDay(ptDayTabs[next], true);
+    }
+}
 
-        // B3: mở hộp; trình duyệt giữ focus trong hộp.
-        if (!sessionDialog.open) {
-            sessionDialog.showModal();
-        }
+
+// ================================================================================================================
+// NHÓM 2. HỘP XỬ LÝ BUỔI
+// Nút "Xử lý buổi" / "Dời buổi" có data-pt-session-action, data-session-id, data-session-label.
+// Hộp hiện 4 phương án (đang khóa vì chưa có nghiệp vụ). Esc hoặc nút Đóng để đóng.
+// ================================================================================================================
+
+const ptSessionDialog = document.getElementById("ptSessionDialog");
+const ptSessionDialogTitle = document.getElementById("ptSessionDialogTitle");
+let ptOpeningButton = null;   // nút đã mở hộp → đóng hộp thì trả focus về đây
+
+// HÀM CHÍNH — gọi 1 lần khi trang tải xong (DOMContentLoaded ở đầu file).
+function initPtSessionDialog() {
+    if (!ptSessionDialog) {
+        return;
     }
 
-    // ===== Bắt nút xử lý trong lịch =====
-    // bắt đầu bấm nút xử lý, even.target = phần tử vừa bấm
-    schedule.addEventListener("click", function (event) {
-        // closest(...): tìm từ phần tử đó lên các thẻ cha để lấy nút có data-pt-session-action.
+    // B1: bấm bất kỳ nút nào có data-pt-session-action (trong lịch hoặc thẻ khách) → mở hộp.
+    document.addEventListener("click", function (event) {
         const button = event.target.closest("[data-pt-session-action]");
-        // Kiểm tra nút thuộc khối lịch. Đúng nút được click thì open SessionDialogue
-        if (button && schedule.contains(button)) {
-            openSessionDialog(button);
+        if (button) {
+            openPtSessionDialog(button);
         }
     });
 
-    // ===== Đóng bằng nút hoặc phím Escape =====
-    closeButton.addEventListener("click", function () {
-        sessionDialog.close();
+    // B2: nút Đóng.
+    document.getElementById("ptSessionDialogClose").addEventListener("click", function () {
+        ptSessionDialog.close();
     });
 
-    sessionDialog.addEventListener("close", function () {
-        // B1: xóa mã buổi để lần mở sau không dùng lại.
-        delete sessionDialog.dataset.sessionId;
-
-        // B2: đưa focus về nút đã mở hộp.
-        if (openingButton && openingButton.isConnected) {
-            openingButton.focus();
+    // B3: hộp đóng (nút Đóng hoặc phím Esc) → xóa mã buổi, trả focus về nút đã mở.
+    ptSessionDialog.addEventListener("close", function () {
+        delete ptSessionDialog.dataset.sessionId;
+        if (ptOpeningButton && ptOpeningButton.isConnected) {
+            ptOpeningButton.focus();
         }
-        openingButton = null;
+        ptOpeningButton = null;
     });
-});
+}
+
+// HÀM PHỤ — gọi ở B1 của initPtSessionDialog.
+function openPtSessionDialog(button) {
+    // B1: nút bị khóa hoặc thiếu mã buổi → bỏ qua.
+    if (button.disabled || !button.dataset.sessionId) {
+        return;
+    }
+
+    // B2: nhớ nút + mã buổi, đặt tiêu đề. textContent (không phải innerHTML) → không chèn HTML lạ.
+    ptOpeningButton = button;
+    ptSessionDialog.dataset.sessionId = button.dataset.sessionId;
+    ptSessionDialogTitle.textContent = button.dataset.sessionLabel || "Xử lý buổi tập";
+
+    // B3: mở hộp dạng modal — trình duyệt tự giữ focus trong hộp, Esc để đóng.
+    if (!ptSessionDialog.open) {
+        ptSessionDialog.showModal();
+    }
+}

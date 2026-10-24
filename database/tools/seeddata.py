@@ -243,14 +243,14 @@ o = order(4, PKG['pt2'], dt_(2026, 9, 4, 10, 0), 'Counter', method='Transfer')
 G.FREEZES[s_hong] = (d_(2026, 9, 28), d_(2026, 10, 27))
 pt_package(o, 7, d_(2026, 9, 7), (17, 0), freeze=(d_(2026, 9, 28), d_(2026, 10, 27)))
 
-# ---- Mai (6): gói tập 1 tháng (hết 04/10) + PT 2 tháng: swap, khách hủy, chuyển PT, vắng
+# ---- Mai (6): gói tập 1 tháng (hết 04/10) + PT 2 tháng: swap, chuyển PT, vắng
 o = order(6, PKG['m1'], dt_(2026, 9, 4, 8, 40), 'Counter', voucher=3)
 subscription(o, d_(2026, 9, 4), note='hết 04/10 trước gói PT → buổi sau đó gắn nhãn "Không có gói tập" (CBR-66)')
 o = order(6, PKG['pt2'], dt_(2026, 9, 4, 9, 0), 'Counter', method='Transfer')
 pt_package(o, 5, d_(2026, 9, 7), (18, 0), events={
     d_(2026, 9, 11): ('move', 'CustomerSwap', d_(2026, 9, 12), (9, 0), None, None),
     d_(2026, 9, 16): ('missed', 'NoCheckIn'),
-    d_(2026, 9, 22): ('cancel', 'ByCustomer', 'Khách bận đột xuất'),
+    d_(2026, 9, 22): ('missed', 'NoCheckIn'),
     d_(2026, 9, 29): ('move', 'PtTransfer', d_(2026, 9, 29), (18, 0), 13, 'PT Sơn ốm, khách chọn PT Long'),
 }, note='swap 1/6 (gói 2 tháng × 3); 1 buổi chuyển PT → hoa hồng cho PT mới (BR-68)')
 

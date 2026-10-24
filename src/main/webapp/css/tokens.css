@@ -825,28 +825,27 @@
   --sailor-shade: radial-gradient(ellipse 60% 55% at 70% 72%, rgba(5, 9, 18, 0.62), transparent 72%);
   --sailor-bubble-width: 248px;
   --my-pt-time-width: 168px;
-  --my-pt-cancel-bg: #352B35;
-  --my-pt-cancel-border: #A86761;
-  --my-pt-cancel-text: #FFB2A6;
-  /* Auth "Gymnasion Ink" (15/10): cùng nền mực trang chủ; 1 nhấn cam, kem cho nét vẽ, aqua chỉ cho focus. */
-  --auth-ocean-ground: #080F1E;
-  --auth-ocean-gradient: #080F1E;
+  /* Auth "Gymnasion Ink" (15/10), đổi nền sang Arena 24/10: tranh gốm giữ nguyên nét kem/cam,
+     nền + thẻ form + ô nhập theo xanh Arena đậm, focus xanh thép thay aqua. */
+  --auth-ocean-ground: var(--arena-950);
+  --auth-ocean-gradient: var(--arena-950);
   --auth-ink-line: #FFF7EF;
   --auth-ember-line: #FF4F2B;
   --auth-art-opacity: 1;
-  --auth-card-solid: #0E1A2C;
-  --auth-input-solid: #080F1B;
-  --auth-field-border: rgba(255, 247, 239, 0.2);
-  --auth-field-border-hover: rgba(255, 247, 239, 0.36);
-  --auth-panel-border: rgba(255, 247, 239, 0.14);
-  --auth-panel-shadow: 0 32px 64px -32px rgba(0, 0, 0, 0.7);
+  --auth-card-solid: var(--arena-900);
+  --auth-input-solid: #0A1638;
+  --auth-field-border: rgba(167, 179, 201, 0.32);
+  --auth-field-border-hover: rgba(200, 212, 232, 0.5);
+  --auth-panel-border: rgba(167, 179, 201, 0.22);
+  --auth-panel-shadow: 0 1px 0 rgba(255, 255, 255, 0.16) inset, 0 32px 64px -32px rgba(0, 0, 0, 0.75);
   --auth-link: #FF986B;
   --auth-link-hover: #FFF7EF;
-  --auth-focus: #23ACB4;
-  --auth-focus-ring: 0 0 0 3px rgba(35, 172, 180, 0.32);
+  --auth-focus: var(--arena-focus);
+  --auth-focus-ring: 0 0 0 3px rgba(159, 184, 236, 0.32);
   --auth-figure-ink: #03070F;
-  --auth-clay: rgba(255, 79, 43, 0.26);
-  --auth-cape: rgba(255, 79, 43, 0.55);
+  /* Đất nung + áo choàng: màu đặc bằng đúng màu cũ trộn trên nền mực, để tranh không ngả tím trên nền Arena */
+  --auth-clay: #482021;
+  --auth-cape: #903225;
   --auth-line-strong: 3.5px;
   --auth-column-opacity: 0.92;
   --auth-frieze-opacity: 0.14;
@@ -960,123 +959,210 @@
   --dock-active-text: #0B1418;
 }
 
-/* ---- Mọi màn nội bộ (PT, Hội viên, Lễ tân, Quản lý, Admin): nền tối đại dương mặc định ---- */
+/* ---- KHU LÀM VIỆC (PT, Hội viên, Lễ tân, Quản lý, Admin) — 3 màu, không gradient (24/10) ----
+   1. Xanh cobalt (mẫu VYRA): nền phẳng + sidebar (cùng một họ màu, đậm hơn).
+   2. Trắng + chữ mực: mọi thẻ nội dung, bảng, form.
+   3. Ember #FF4F2B (trang chủ): CHỈ cho nút chính, ngày hôm nay, cột cao nhất, vạch mục đang chọn.
+   Liên kết / số liệu / focus dùng chính màu cobalt — không thêm màu thứ tư.
+   Tương phản: mực/trắng 16:1 · cobalt #1D4793/trắng 8.6:1 · trắng/nền cobalt 8.6:1 · mực/ember 5.6:1. */
+:root {
+  --zone-cobalt-900: #0F2A5E;
+  --zone-cobalt-800: #15387A;
+  --zone-cobalt-700: #1A4189;
+  --zone-cobalt-600: #1D4793;
+  --zone-cobalt-500: #2E63B5;
+  --zone-silver: #C9D6EC;
+  --zone-sky: #2E63B5;
+  --zone-sky-deep: #1D4793;
+  --zone-accent: #FF4F2B;
+  --zone-accent-hover: #FF6A4A;
+  --zone-accent-ink: #C2361A;
+  --zone-ink: #0C1D33;
+  --zone-ink-soft: #33435C;
+  --zone-ink-muted: #5B6779;
+  --zone-card: #FFFFFF;
+  --zone-card-2: #F3F6FB;
+  --zone-card-line: #E3E8F0;
+}
+
+/* ---- ARENA (24/10 tối) — bảng màu đĩa tạ thi đấu, dùng cho PT Dashboard, Lịch dạy PT,
+   My PT Sessions, My Bookings và trang xác thực. Lớp áp dụng: mục "ARENA" cuối common.css.
+   20kg xanh = nền sân · 25kg đỏ = MỘT việc nặng nhất mỗi màn · phấn magie = khối đọc · thép = chữ phụ, vân nhám.
+   Tương phản (đã đo): mực/phấn 15.8:1 · trắng/arena-900 14.2:1 · mực/ember 5.4:1 · thép/arena-900 6.7:1 ·
+   thép đậm/phấn 5.4:1 · ember trên tối 5.6:1 · ember-ink/trắng 5.5:1 · chữ bạc/nền sân 6.1:1 · viền điều khiển/trắng 3.3:1. */
+:root {
+  --arena-950: #0D1A42;
+  --arena-900: #142660;
+  --arena-800: #1B3171;
+  --arena-700: #24468F;
+  /* Ember thống nhất với nút trang chủ + sidebar (#FF4F2B): một màu cam cho cả app */
+  --arena-ember: #FF4F2B;
+  --arena-ember-hi: #FF6A4A;        /* rê chuột nút chính */
+  --arena-ember-on-dark: #FF7A5C;   /* chữ/số ember trên khối tối (5.6:1) */
+  --arena-ember-ink: #C2361A;       /* chữ ember trên nền sáng (5.5:1 trên trắng) */
+  --arena-chalk: #EEF2F8;
+  --arena-chalk-2: #F7F9FC;
+  --arena-chalk-line: #CDD6E4;
+  --arena-chalk-line-strong: #B7C3D6;
+  --arena-steel: #A7B3C9;
+  --arena-steel-ink: #56637D;
+  --arena-ink: #0C1733;
+  --arena-ink-soft: #34405A;
+  --arena-focus: #9FB8EC;
+  --arena-glow: rgba(96, 146, 255, 0.34);
+  --arena-glow-soft: rgba(96, 146, 255, 0.18);   /* đèn sân khấu rất nhẹ trên nền sân */
+  --arena-knurl: rgba(220, 230, 248, 0.42);
+  --arena-shadow-light: 0 1px 0 rgba(255, 255, 255, 0.7) inset, 0 18px 34px -24px rgba(6, 18, 64, 0.75);
+  --arena-shadow-drop: 0 18px 34px -24px rgba(6, 18, 64, 0.75);
+  --arena-shadow-dark: 0 1px 0 rgba(255, 255, 255, 0.18) inset, 0 24px 40px -30px rgba(0, 0, 0, 0.8);
+  /* Đường, ô và kính trên khối tối */
+  --arena-line-dark: rgba(167, 179, 201, 0.24);
+  --arena-line-dark-strong: rgba(167, 179, 201, 0.42);
+  --arena-tile-dark: rgba(255, 255, 255, 0.04);
+  --arena-glass: rgba(255, 255, 255, 0.07);
+  --arena-glass-strong: rgba(255, 255, 255, 0.12);
+  --arena-glass-line: rgba(255, 255, 255, 0.18);
+  --arena-glass-line-hover: rgba(255, 255, 255, 0.42);
+  --arena-glass-edge: 0 1px 0 rgba(255, 255, 255, 0.12) inset;
+  --arena-on-dark-soft: #C9D6EC;
+  --arena-ember-line: rgba(255, 79, 43, 0.75);
+  --arena-error-on-dark: #FFB4A3;
+  --arena-warn-on-dark: #F2C46B;
+  /* Bề mặt và đường trên khối sáng */
+  --arena-surface: #FFFFFF;
+  --arena-card-line: #D5DDE9;
+  --arena-grid-line: #DCE3EE;
+  --arena-segment: #DFE6F1;
+  --arena-today-tint: #F5F8FD;
+  --arena-ended: #F5F7FA;
+  --arena-ended-edge: #A9B5CA;
+  --arena-hover-line: #9FB2D6;
+  --arena-closed: #F3F5F9;
+  --arena-closed-hatch: rgba(86, 99, 125, 0.09);
+  --arena-ember-tint: #FDEAE3;
+  --arena-ember-border: #F4B29E;
+  --arena-info-chip: #DDE6F7;
+  --arena-lift: 0 6px 14px -10px rgba(12, 23, 51, 0.5);
+  --arena-knurl-base: #2B3F78;
+  /* Nền doodle đồ tập (2 dải mép trái/phải, nét kem trong suốt, đĩa 25 viền cam) */
+  --arena-doodle-left: url("../images/brand/zone-doodle-left.webp?v=20261024a");
+  --arena-doodle-right: url("../images/brand/zone-doodle-right.webp?v=20261024a");
+  --arena-topbar-line: rgba(255, 255, 255, 0.1);
+  --arena-row-pinned: #FDF1EC;
+  --arena-float: 0 18px 36px -18px rgba(0, 0, 0, 0.6);
+  /* Ember sidebar: giữ nguyên (nay trùng --arena-ember) */
+  --arena-sidebar-ember: #FF4F2B;
+  /* Nhịp khoảng cách (bước 4px): khe giữa khối 12 · khe giữa ô 8 · lề trong khối 24 (điện thoại 16) */
+  --arena-gap: 12px;
+  --arena-gap-tile: 8px;
+  --arena-pad: 24px;
+  --arena-pad-sm: 16px;
+  /* Khả năng tiếp cận: viền điều khiển ≥ 3:1 trên trắng, vùng chạm 44px, vòng focus 2 tông */
+  --arena-control-line: #7789A9;   /* ≥ 3:1 trên cả trắng (3.5) lẫn phấn (3.2) */
+  --arena-hit: 44px;
+  /* Nút (i) gợi ý: một cỡ cho mọi màn; viền ≥ 3:1 trên nền của nó, chữ i đậm */
+  --arena-info-size: 26px;
+  --arena-info-line-dark: rgba(255, 255, 255, 0.62);
+  --arena-focus-ring: var(--arena-700);
+  --arena-mark: 3px;            /* vạch nhấn: hôm nay, gói đang xem, thẻ buổi */
+  --arena-segment-pad: 3px;     /* lề trong công tắc Tuần/Tháng, tab */
+  --arena-knurl-height: 8px;    /* dải vân nhám đỉnh khối chào */
+  --arena-radius-block: 6px;
+  --arena-radius-tile: 4px;
+  --arena-radius-chip: 2px;
+}
+
 body.dock,
 body.dock[class*="weather-"] {
-  color-scheme: dark;
-  --pt-bg: #0A1E31;
-  --pt-panel: #102A40;
-  --pt-panel-2: #18364F;
-  --ink-surface: var(--pt-panel);
-  --pt-line: rgba(234, 244, 246, 0.09);
-  --pt-line-strong: rgba(234, 244, 246, 0.2);
-  --pt-text: #F0F4F8;
-  --pt-soft: #B1C4D7;
-  --pt-muted: #94ADC5;
-  --pt-ember-text: var(--brand-sunset-hi);
-  --pt-lagoon-text: var(--brand-aqua);
-  --pt-shadow: 0 1px 0 rgba(255, 255, 255, 0.03) inset, 0 18px 40px -24px rgba(0, 0, 0, 0.8);
-  --color-primary: var(--brand-sunset);
-  --color-primary-hover: var(--brand-sunset-hi);
-  --color-primary-tint: rgba(242, 92, 27, 0.16);
-  --color-primary-border: rgba(255, 122, 61, 0.45);
-  --color-on-primary: var(--brand-ink);
-  --color-accent-ink: var(--pt-text);
-  --color-bg: var(--pt-bg);
+  color-scheme: light;
+  /* Nền và khung */
+  --ink-ground: var(--zone-cobalt-700);
+  /* Ảnh nền: đặt images/brand/zone-bg.jpg (1920×1080) rồi đổi none thành url("../images/brand/zone-bg.jpg") */
+  --ink-art: none;
+  --ink-overlay: none;
+  --ink-vignette: none;
+  --ink-ripples: none;
+  --ink-surface: var(--zone-card);
+  --ink-border: var(--zone-card-line);
+  --ink-header: var(--zone-card-2);
+  --ink-shadow: 0 1px 2px rgba(12, 29, 51, 0.08), 0 24px 48px -30px rgba(12, 29, 51, 0.55);
+  --ink-focus: var(--zone-sky);
+  --ink-row-hover: #F3F6FB;
+  --ink-table-head: var(--zone-card-2);
+  --ink-sidebar-bg: var(--zone-cobalt-800);
+  --ink-sidebar-top: var(--zone-silver);
+  --ink-sidebar-line: rgba(185, 204, 230, 0.16);
+  --ink-nav-hover: rgba(255, 255, 255, 0.08);
+  --ink-nav-active: rgba(255, 255, 255, 0.14);
+  --ink-nav-ink: #FFFFFF;
+  --ink-nav-edge: var(--zone-accent);
+  --ink-primary: var(--zone-accent);
+  --ink-primary-hover: var(--zone-accent-hover);
+  /* Thẻ nội dung (sáng) */
+  --pt-bg: var(--zone-cobalt-700);
+  --pt-panel: var(--zone-card);
+  --pt-panel-2: var(--zone-card-2);
+  --pt-line: var(--zone-card-line);
+  --pt-line-strong: #CFD7E3;
+  --pt-text: var(--zone-ink);
+  --pt-soft: var(--zone-ink-soft);
+  --pt-muted: var(--zone-ink-muted);
+  --pt-ember-text: var(--zone-accent-ink);
+  --pt-lagoon-text: var(--zone-sky-deep);
+  --pt-shadow: 0 1px 2px rgba(12, 29, 51, 0.08), 0 24px 48px -30px rgba(12, 29, 51, 0.55);
+  --color-primary: var(--zone-accent);
+  --color-primary-hover: var(--zone-accent-hover);
+  --color-primary-tint: #FFECE6;
+  --color-primary-border: #FFB8A6;
+  --color-on-primary: var(--zone-ink);
+  --color-accent-ink: var(--zone-ink);
+  --color-bg: var(--zone-cobalt-700);
   --color-surface: var(--pt-panel);
   --color-surface-muted: var(--pt-panel-2);
+  --color-surface-hover: #F3F6FB;
   --color-text: var(--pt-text);
   --color-text-soft: var(--pt-soft);
   --color-text-muted: var(--pt-muted);
   --color-border: var(--pt-line);
   --color-border-strong: var(--pt-line-strong);
-  --color-board: var(--brand-ocean-deep);
-  --color-board-text: #EAF4F6;
-  --color-surface-hover: var(--pt-panel-2);
+  --color-board: var(--zone-card);
+  --color-board-text: var(--zone-ink);
   --awning-h: 0px;
   --pt-awning-height: 0px;
-  /* Trạng thái trên nền tối: nền mờ trong suốt + chữ sáng, vẫn giữ đúng nghĩa xanh/vàng/đỏ */
-  --color-success-tint: rgba(76, 214, 140, 0.14);
-  --color-success-border: rgba(126, 226, 168, 0.36);
-  --color-success-ink: #8CE8B4;
-  --color-warning-tint: rgba(245, 183, 64, 0.14);
-  --color-warning-border: rgba(248, 207, 122, 0.38);
-  --color-warning-ink: #F8CF7A;
-  --color-danger-tint: rgba(255, 99, 115, 0.14);
-  --color-danger-border: rgba(255, 154, 165, 0.38);
-  --color-danger-ink: #FFA3AD;
-  --color-info-tint: rgba(43, 212, 222, 0.12);
-  --color-info-border: rgba(127, 230, 236, 0.36);
-  --color-info-ink: var(--brand-aqua-soft);
-  --color-neutral-tint: rgba(234, 244, 246, 0.07);
-  --color-neutral-border: var(--pt-line-strong);
-  --color-tag: rgba(234, 244, 246, 0.08);
-  --color-row-pinned: rgba(242, 92, 27, 0.08);
-  --color-text-disabled: #5E7A84;
-  --color-overlay: rgba(2, 10, 14, 0.72);
-  --color-link: var(--brand-aqua-soft);
-  --color-role-admin-tint: rgba(167, 139, 250, 0.16);
-  --color-role-manager-tint: rgba(129, 150, 255, 0.16);
-  --color-role-staff-tint: rgba(43, 212, 222, 0.14);
-  --color-role-customer-tint: rgba(255, 122, 61, 0.16);
-}
-
-/* ---- Nền sáng "kem bánh" (15/10): nền vàng kem, panel kem sáng, chữ nâu espresso, liên kết/focus cam đất.
-   Công tắc trên topbar, lựa chọn nhớ trong localStorage gms-theme. Màu trạng thái (xanh/vàng/đỏ) giữ nghĩa. ---- */
-html[data-theme="light"] body.dock,
-html[data-theme="light"] body.dock[class*="weather-"] {
-  color-scheme: light;
-  --ink-ground: #F8E9D2;
-  --ink-overlay: none;
-  --ink-vignette: none;
-  --ink-art: none;
-  --ink-surface: #FFF8EE;
-  --ink-border: #E3CCAA;
-  --ink-header: #FBEFDC;
-  --ink-shadow: 0 18px 48px -32px rgba(74, 46, 20, 0.3);
-  --ink-focus: #A8461F;
-  --ink-row-hover: rgba(168, 70, 31, 0.06);
-  --ink-table-head: #F4E3C8;
-  --pt-bg: #F8E9D2;
-  --pt-panel: #FFF8EE;
-  --pt-panel-2: #F4E3C8;
-  --my-pt-cancel-bg: #FBE6DC;
-  --my-pt-cancel-border: #D9A18C;
-  --my-pt-cancel-text: #8C3540;
-  --pt-line: rgba(58, 38, 22, 0.12);
-  --pt-line-strong: rgba(58, 38, 22, 0.26);
-  --pt-text: #2A1E14;
-  --pt-soft: #4E3B2B;
-  --pt-muted: #65503E;
-  --pt-ember-text: var(--brand-sunset-deep);
-  --pt-lagoon-text: #9A3F1C;
-  --pt-shadow: 0 1px 2px rgba(58, 38, 22, 0.06), 0 18px 36px -26px rgba(74, 46, 20, 0.4);
-  --color-primary-tint: #FCE0CC;
-  --color-primary-border: #EDAA86;
-  --color-surface-hover: #F6E4C8;
-  --color-success-tint: #E9F5EF;
-  --color-success-border: #BFE1CD;
-  --color-success-ink: #1F6B41;
-  --color-warning-tint: #FCF3DE;
+  /* Trạng thái trên thẻ sáng: giữ đúng nghĩa xanh/vàng/đỏ */
+  --color-success-tint: #E7F6EE;
+  --color-success-border: #B7E0C8;
+  --color-success-ink: #1D6A40;
+  --color-warning-tint: #FDF4DE;
   --color-warning-border: #F0D89A;
-  --color-warning-ink: #8A5A0E;
-  --color-danger-tint: #FBEAEC;
-  --color-danger-border: #F0BCC2;
-  --color-danger-ink: #9A2230;
-  --color-info-tint: #E2F2F5;
-  --color-info-border: #9FCFD9;
-  --color-info-ink: #0B5E70;
-  --color-neutral-tint: #F3E7D5;
-  --color-neutral-border: #E2D0B6;
-  --color-tag: #F3E7D5;
-  --color-row-pinned: #FDEBD6;
-  --color-text-disabled: #A8937C;
-  --color-overlay: rgba(42, 30, 20, 0.5);
-  --color-link: #A8461F;
+  --color-warning-ink: #85570C;
+  --color-danger-tint: #FDECEE;
+  --color-danger-border: #F2BDC4;
+  --color-danger-ink: #A0222F;
+  --color-info-tint: #EAF0FA;
+  --color-info-border: #BCCDEA;
+  --color-info-ink: var(--zone-sky-deep);
+  --color-neutral-tint: #F3F6FB;
+  --color-neutral-border: #DDE3EC;
+  --color-tag: #F3F6FB;
+  --color-row-pinned: #FFF4F0;
+  --color-text-disabled: #9AA9BF;
+  --color-overlay: rgba(12, 29, 51, 0.55);
+  --color-link: var(--zone-sky-deep);
   --color-role-admin-tint: #F1ECFB;
   --color-role-manager-tint: #EDEFFA;
-  --color-role-staff-tint: #E2F2F5;
-  --color-role-customer-tint: #FDEDEB;
+  --color-role-staff-tint: #EAF0FA;
+  --color-role-customer-tint: #FFE7DF;
+  /* Rule cũ gọi ember/sunset/aqua trong khu làm việc → dùng bộ màu khu làm việc */
+  --brand-ember: var(--zone-accent);
+  --brand-sunset: var(--zone-accent);
+  --brand-ember-hi: var(--zone-accent-ink);
+  --brand-sunset-hi: var(--zone-accent-ink);
+  --brand-lagoon: var(--zone-sky-deep);
+  --brand-aqua: var(--zone-sky);
+  /* Phòng tập hoạt hình: áo đấu xanh cobalt / ember */
+  --gym-shirt-1: var(--zone-cobalt-600);
+  --gym-shirt-4: var(--zone-accent);
 }
 
 /* Homepage: aqua gốc giữ nguyên hue, RGB đậm hơn khoảng 19%; Pumpy dùng palette navy riêng. */

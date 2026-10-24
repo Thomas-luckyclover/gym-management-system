@@ -1,0 +1,129 @@
+@charset "UTF-8";
+/* =====================================================================
+   THANH ĐẦU TRANG KHU PT — header.css
+   Dùng chung cho mọi màn include /WEB-INF/jsp/pt/_header.jspf (Tổng quan PT, Lịch dạy).
+   Trước đây nằm trong dashboard.css nên màn Lịch dạy bị lệch; nay tách ra để hai màn giống nhau.
+   Nạp TRƯỚC CSS riêng của màn.
+   ===================================================================== */
+
+/* Nền mờ đè lên ảnh nền, chữ theo bảng màu khu PT. */
+.theme-pt .topbar {
+  background: color-mix(in srgb, var(--pt-bg) 88%, transparent);
+  border-bottom: var(--border-width) solid var(--pt-line);
+  backdrop-filter: blur(var(--space-3));
+  color: var(--pt-text);
+}
+
+.theme-pt .tb-title {
+  color: var(--pt-text);
+  font-family: var(--font-body);
+  font-size: var(--font-size-2xl);
+  font-style: normal;
+  font-weight: var(--font-weight-semibold);
+  text-transform: none;
+  letter-spacing: var(--letter-spacing-normal);
+}
+
+.theme-pt .tb-left p {
+  margin: var(--space-0-5) 0 0;
+  color: var(--pt-muted);
+  font-size: var(--font-size-sm);
+  font-variant-numeric: tabular-nums;
+}
+
+/* Bên phải: công tắc sáng/tối + thẻ tài khoản (avatar, tên, mã NV). */
+.pt-top-actions {
+  display: flex;
+  align-items: center;
+  gap: var(--space-3);
+}
+
+.theme-pt .tb-user {
+  border: var(--border-width) solid var(--pt-line-strong);
+  background: var(--pt-panel);
+  color: var(--pt-text);
+}
+
+.pt-user-avatar {
+  position: relative;
+  flex: none;
+  display: grid;
+  place-items: center;
+  width: calc(var(--avatar-size-sm) + var(--space-2));
+  height: calc(var(--avatar-size-sm) + var(--space-2));
+  border-radius: var(--radius-circle);
+  background: var(--brand-lagoon);
+  color: var(--dock-text);
+}
+
+.pt-user-online {
+  position: absolute;
+  right: 0;
+  bottom: 0;
+  width: var(--space-3);
+  height: var(--space-3);
+  border: var(--border-width-thick) solid var(--pt-panel);
+  border-radius: var(--radius-circle);
+  background: var(--color-success);
+}
+
+.pt-user-details {
+  display: grid;
+  gap: var(--space-0-5);
+  min-width: 0;
+}
+
+.pt-user-details strong {
+  overflow: hidden;
+  font-size: var(--font-size-base);
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.pt-user-code {
+  width: fit-content;
+  color: var(--pt-muted);
+  font-size: var(--font-size-xs);
+  font-variant-numeric: tabular-nums;
+  letter-spacing: var(--letter-spacing-wide);
+}
+
+/* Máy tính bảng / điện thoại: ẩn tên và chữ "Tối", chỉ giữ avatar + công tắc. */
+@media (max-width: 767px) {
+  .theme-pt .tb-title {
+    font-size: var(--font-size-xl);
+    white-space: nowrap;
+  }
+
+  .theme-pt .pt-user-details {
+    display: none;
+  }
+
+  .theme-pt .tb-user {
+    padding: var(--space-1);
+  }
+}
+
+/* Điện thoại nhỏ: bỏ dòng ngày, tiêu đề co lại cho vừa một dòng. */
+@media (max-width: 480px) {
+  .theme-pt .pt-header-date {
+    display: none;
+  }
+
+  .theme-pt .tb-left {
+    flex: 1;
+    min-width: 0;
+  }
+
+  html body.theme-pt .tb-title {
+    overflow: hidden;
+    font-size: var(--font-size-base);
+    text-overflow: ellipsis;
+    white-space: nowrap;
+  }
+
+  .theme-pt .pt-top-actions {
+    flex: none;
+    gap: var(--space-2);
+  }
+}

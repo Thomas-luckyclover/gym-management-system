@@ -2,19 +2,37 @@
 <%@ taglib prefix="c" uri="jakarta.tags.core" %>
 <%@ taglib prefix="gms" uri="/WEB-INF/gms-functions.tld" %>
 <%--
-  Trang chủ (#5 Home, UC-06, luật 2.6). Dữ liệu: HomeServlet → request "home" (HomePageView).
-  Thiết kế thương hiệu EMBER × AQUA: khối cam đỏ có sức nặng, ảnh thể thao và đại dương sâu.
-  Tiêu đề Barlow Condensed, nội dung Be Vietnam Pro; khoảng dòng giữ đủ dấu tiếng Việt.
-  Chỉ hiển thị, không có ô nhập. Mọi con số lấy từ DB; ảnh trong images/brand là ảnh Unsplash (giấy phép tự do).
-  Hiệu ứng cuộn: js/pages/guest/home-motion.js (Web Animations API); linh vật: js/pages/guest/home.js.
---%>
+================================================================================
+ home.jsp — TRANG CHỦ CÔNG KHAI (GET /, màn #5, UC-06, luật 2.6). Chỉ hiển thị, không có ô nhập.
+
+ AI GỬI DỮ LIỆU SANG?  HomeServlet.doGet gọi HomeService.getHomePage() MỘT lần → biến home (HomePageView).
+
+   Biến JSP            Ai tạo                                         DAO đọc bảng nào
+   ─────────────────── ────────────────────────────────────────────── ─────────────────────────────────────
+   home.gymPackages    DAO đọc gói, Service tính giá/tháng,           PackageDAO.findActiveForHomepage:
+                       % tiết kiệm, nhãn "Phổ biến nhất"/"Tiết kiệm"    Packages (IsActive = 1)
+   home.ptPackages     cùng câu DAO trên, Service tách nhóm gói PT     (như trên)
+   home.pts, ptCount   EmployeeDAO.findWorkingPts                      Employees + Persons + COUNT Sessions đã dạy
+   home.openingHours   Service đọc P-19 "05:30-22:00" → "05:30 – 22:00" SystemConfigs
+   home.latestPosts    BlogService.getLatestPosts(3)                   BlogPosts (Status = Active, 3 bài mới nhất)
+   Mọi con số (giá, số buổi đã dạy…) lấy từ DB.
+
+ BỐ CỤC (từ trên xuống)
+   1. Hero: "Mạnh hơn mỗi ngày." + giờ mở cửa + số huấn luyện viên, dải chữ chạy
+   2. Dải 4 ảnh "Đánh thức bản năng"   (ảnh trong images/brand đã tô sẵn màu xanh-cam)
+   3. Dịch vụ                4. Bảng giá gói tập + gói PT      5. Đội ngũ (không ảnh thật, không liên hệ — luật 2.6)
+   6. 3 bài viết mới nhất    7. Hỏi đáp (<details>)             8. Kêu gọi đăng ký + linh vật Pumpy
+
+ JS: home-motion.js (hiệu ứng mở màn + cuộn, Web Animations API), home.js (Pumpy).
+ Ảnh images/brand: Unsplash / Pexels (giấy phép tự do, nguồn trong file .json cạnh ảnh).
+================================================================================ --%>
 <!DOCTYPE html>
 <html lang="vi">
 <head>
   <%@ include file="/WEB-INF/jsp/common/head.jspf" %>
   <title>Super Gym · Mạnh hơn mỗi ngày</title>
   <meta name="description" content="Super Gym — chọn gói tập, đặt lịch huấn luyện viên và theo dõi hành trình tập luyện của bạn.">
-  <link rel="stylesheet" href="${pageContext.request.contextPath}/css/pages/guest/home.css?v=20261014a">
+  <link rel="stylesheet" href="${pageContext.request.contextPath}/css/pages/guest/home.css?v=20261025a">
   <link rel="stylesheet" href="${pageContext.request.contextPath}/css/pages/guest/mascot.css?v=20261014f">
   <script src="${pageContext.request.contextPath}/js/pages/guest/home-motion.js?v=20261013c" defer></script>
   <script src="${pageContext.request.contextPath}/js/pages/guest/home.js?v=20261014f" defer></script>
@@ -25,7 +43,7 @@
   <%@ include file="/WEB-INF/jsp/common/guest-header.jspf" %>
 
   <main id="main-content">
-    <%-- ============================ HERO: một khung hình điện ảnh ============================ --%>
+    <%-- ============================ 1. HERO ============================ --%>
     <section class="cine-hero" aria-labelledby="hero-title">
       <div class="cine-hero__media" aria-hidden="true">
         <img class="cine-hero__photo" src="${ctx}/images/brand/hero-barbell.jpg" alt="" width="1600" height="1067" fetchpriority="high">
@@ -41,6 +59,8 @@
           <a class="cine-btn cine-btn--hot" href="${ctx}/register">Bắt đầu tập <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" aria-hidden="true"><path d="M5 12h14m-7-7 7 7-7 7"/></svg></a>
           <a class="cine-btn cine-btn--ghost" href="#pricing">Xem bảng giá</a>
         </div>
+        <%-- 2 con số dưới nút: "Mở cửa mỗi ngày 05:30 – 22:00" (home.openingHours, P-19)
+             và "Huấn luyện viên 6" (home.ptCount = số PT đang làm). Thiếu dữ liệu thì ẩn ô đó. --%>
         <dl class="cine-meta" data-fade>
           <c:if test="${not empty home.openingHours}">
             <div><dt>Mở cửa mỗi ngày</dt><dd class="tabular"><c:out value="${home.openingHours}" /></dd></div>
@@ -59,7 +79,7 @@
       </div>
     </section>
 
-    <%-- ============================ DẢI ẢNH CHUYỂN ĐỘNG ============================ --%>
+    <%-- ============================ 2. DẢI 4 ẢNH ============================ --%>
     <section class="cine-strip" aria-labelledby="strip-title">
       <div class="wrap">
         <div class="cine-row-head"><h2 id="strip-title" class="cine-h2" data-reveal-title>Đánh thức<br><em>bản năng.</em></h2></div>
@@ -67,12 +87,12 @@
       <div class="cine-strip__cards">
         <figure class="cine-card" data-card><img src="${ctx}/images/brand/strip-squat.jpg" alt="Học viên nữ squat với đòn tạ" loading="lazy" width="1600" height="1067"><figcaption>Sức mạnh</figcaption></figure>
         <figure class="cine-card" data-card><img src="${ctx}/images/brand/strip-curl.jpg" alt="Học viên nam tập tay với tạ" loading="lazy" width="1600" height="1067"><figcaption>Kiểm soát</figcaption></figure>
-        <figure class="cine-card" data-card><img src="${ctx}/images/brand/strip-endurance.jpg" alt="Vận động viên nữ nâng đòn tạ trong phòng tập" loading="lazy" width="1200" height="1600"><figcaption>Bền bỉ</figcaption></figure>
+        <figure class="cine-card" data-card><img src="${ctx}/images/brand/strip-endurance.jpg?v=20261025" alt="Vận động viên nữ nâng đòn tạ trong phòng tập" loading="lazy" width="1200" height="1600"><figcaption>Bền bỉ</figcaption></figure>
         <figure class="cine-card" data-card><img src="${ctx}/images/brand/strip-ropes.jpg" alt="Học viên tập thừng chiến" loading="lazy" width="1600" height="1067"><figcaption>Bùng nổ</figcaption></figure>
       </div>
     </section>
 
-    <%-- ============================ DỊCH VỤ ============================ --%>
+    <%-- ============================ 3. DỊCH VỤ ============================ --%>
     <section class="cine-section cine-section--services" id="dich-vu" aria-labelledby="svc-title">
       <div class="wrap cine-services">
         <div class="cine-services__head">
@@ -100,13 +120,22 @@
       </div>
     </section>
 
-    <%-- ============================ BẢNG GIÁ GÓI TẬP (khối đại dương sâu) ============================ --%>
+    <%-- ============================ 4. BẢNG GIÁ (khối đại dương sâu) ============================ --%>
     <section class="cine-ocean" id="pricing" aria-labelledby="pricing-title">
       <div class="wrap">
         <div class="cine-ocean__head">
           <h2 id="pricing-title" class="cine-h2" data-reveal-title>Đầu tư cho<br><em>phiên bản tốt hơn.</em></h2>
           <p class="cine-sub" data-fade>Giá đã gồm VAT, không phát sinh thêm phí.</p>
         </div>
+        <%-- ----- 4a. Thẻ gói tập (home.gymPackages, mỗi thẻ: card.pkg = Package do DAO đọc, còn lại Service tính) -----
+               card.badge          nhãn trên đầu thẻ "Phổ biến nhất" / "Tiết kiệm nhất" → thẻ viền cam (is-hot)
+               card.pkg.packageName  Packages.PackageName, VD "Gói 3 tháng"
+               card.pkg.price      Packages.Price → gms:formatMoney "1.200.000đ", chữ to
+               card.months         Service đổi thời hạn → "3 tháng" (0 = vé ngày → "1 ngày")
+               card.monthlyPrice   Service: giá ÷ số tháng → " · khoảng 400.000đ/tháng"
+               card.savingPercent  Service: so với gói 1 tháng → chip "Tiết kiệm 20%"
+               card.pkg.benefitLines Packages.Benefits tách dòng → danh sách ✓ quyền lợi
+             Nút "Chọn gói" → /customer/checkout?packageId=… --%>
         <c:choose>
           <c:when test="${empty home.gymPackages}">
             <p class="cine-empty">Hiện chưa có gói tập nào đang mở bán. Vui lòng quay lại sau.</p>
@@ -136,7 +165,8 @@
           </c:otherwise>
         </c:choose>
 
-        <%-- Gói PT: card cùng hệ với gói tập, tự căn giữa khi số gói lẻ --%>
+        <%-- ----- 4b. Gói PT (home.ptPackages) — mỗi gói 1 hàng: tên · "1 người / 2 người · 2 tháng / mỗi buổi" · giá.
+             Buổi lẻ (SINGLE_SESSION) có nút cam "Đặt trực tuyến"; gói PT dài hạn chỉ ghi "Đăng ký tại quầy". ----- --%>
         <c:if test="${not empty home.ptPackages}">
           <div class="cine-pt" id="pt-pricing">
             <h3 class="cine-h3">Tập cùng chuyên gia</h3>
@@ -163,12 +193,14 @@
       </div>
     </section>
 
-    <%-- ============================ ĐỘI NGŨ (luật 2.6: không dùng ảnh thật, không hiện liên hệ) ============================ --%>
+    <%-- ============================ 5. ĐỘI NGŨ (luật 2.6: không ảnh thật, không hiện liên hệ) ============================ --%>
     <c:if test="${not empty home.pts}">
       <section class="cine-section" id="doi-ngu" aria-labelledby="team-title">
         <div class="wrap">
           <h2 id="team-title" class="cine-h2" data-reveal-title><span class="cine-num tabular">${home.ptCount}</span> huấn luyện viên</h2>
           <div class="cine-coaches">
+            <%-- Mỗi PT 1 thẻ: số to "128 buổi đã dạy" (COUNT Sessions do EmployeeDAO đếm) / tên (Persons.FullName) /
+                 chuyên môn (Employees.Specialty) / "5 năm kinh nghiệm" (Employees.YearsOfExperience). Không ảnh, không SĐT. --%>
             <c:forEach var="pt" items="${home.pts}">
               <article class="cine-coach" data-fade>
                 <p class="cine-coach__sessions tabular">${pt.completedSessionCount}<span>buổi đã dạy</span></p>
@@ -182,7 +214,7 @@
       </section>
     </c:if>
 
-    <%-- ============================ BÀI VIẾT MỚI ============================ --%>
+    <%-- ============================ 6. BÀI VIẾT MỚI ============================ --%>
     <c:if test="${not empty home.latestPosts}">
       <section class="cine-section cine-section--tight" aria-labelledby="blog-title">
         <div class="wrap">
@@ -191,6 +223,8 @@
             <a class="cine-link" href="${ctx}/blog">Xem tất cả bài viết <i class="fa-solid fa-arrow-right" aria-hidden="true"></i></a>
           </div>
           <div class="cine-posts">
+            <%-- Mỗi bài 1 thẻ: ảnh bìa (post.coverImage, lỗi ảnh → ảnh mặc định) / ngày đăng dd/MM/yyyy (post.publishedAt) /
+                 tiêu đề (post.title) / đoạn tóm tắt (post.excerpt). Bấm → /blog/detail?id=… --%>
             <c:forEach var="post" items="${home.latestPosts}">
               <a class="cine-post" href="${ctx}/blog/detail?id=${post.blogPostId}" data-fade>
                 <c:if test="${not empty post.coverImage}">
@@ -206,7 +240,7 @@
       </section>
     </c:if>
 
-    <%-- ============================ HỎI ĐÁP ============================ --%>
+    <%-- ============================ 7. HỎI ĐÁP ============================ --%>
     <section class="cine-section cine-section--tight" id="faq" aria-labelledby="faq-title">
       <div class="wrap cine-faq">
         <h2 id="faq-title" class="cine-h2" data-reveal-title>Câu hỏi thường gặp</h2>
@@ -231,7 +265,7 @@
       </div>
     </section>
 
-    <%-- ============================ KÊU GỌI ĐĂNG KÝ + PUMPY ============================ --%>
+    <%-- ============================ 8. KÊU GỌI ĐĂNG KÝ + PUMPY ============================ --%>
     <section class="cta-band cine-cta">
       <div class="wrap cta-inner">
         <div class="cta-copy">

@@ -8,7 +8,7 @@
     <head>
         <%@ include file="/WEB-INF/jsp/common/head.jspf" %>
         <title>Mua gói · Super Gym</title>
-        <link rel="stylesheet" href="${pageContext.request.contextPath}/css/pages/customer/dashboard.css?v=7">
+        <link rel="stylesheet" href="${pageContext.request.contextPath}/css/pages/customer/dashboard.css?v=20261024flat">
         <link rel="stylesheet" href="${pageContext.request.contextPath}/css/pages/customer/package-selection.css?v=7">
         <script src="${pageContext.request.contextPath}/js/pages/customer/package-selection.js?v=2" defer></script>
     </head>

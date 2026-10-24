@@ -14,15 +14,28 @@ import java.util.ArrayList;
 import java.util.List;
 
 /**
- * DAO của JOB-04: (1) tìm mã buổi, (2) đọc dữ liệu một buổi, (3) ghi kết quả buổi đó.
- * Service gọi ba hàm theo thứ tự này và quản lý transaction; DAO chỉ đọc/ghi database.
+ * DAO CỦA JOB-04 — chỉ đọc / ghi database; luật chốt buổi nằm ở AutoCloseSessionService.
+ *
+ * AutoCloseSessionService gọi 3 hàm theo đúng thứ tự:
+ *   1. findOverdueSessionIds   (B1 của runJob)          đọc   Sessions + TimeSlots → danh sách SessionId
+ *   2. findDataForClosing      (B1 của closeOneSession) đọc   1 buổi + gói, bảo lưu, check-in → SessionAutoCloseData
+ *   3. closeScheduledSession   (B3 của closeOneSession) ghi   Status / MissedReason vào Sessions
+ *
+ * Kết nối (Connection) do Service mở và truyền vào → Service tự quản lý transaction (commit / rollback).
  */
 public class AutoCloseSessionDAO {
 
+    // =================================================================================================
+    // 1. TÌM BUỔI CẦN CHỐT
+    // =================================================================================================
+
     /**
-     * Hàm 1 — tìm các buổi cần xử lý; chỉ trả mã, chưa đọc điều kiện hay sửa buổi.
-     * @param today ngày hiện tại theo giờ VN, do Service lấy một lần
-     * @return List<Integer> gồm các SessionId; ví dụ [91, 105], hoặc [] nếu không có
+     * HÀM CHÍNH — AutoCloseSessionService.findOverdueSessionIds gọi (B1 của runJob).
+     * Chỉ trả MÃ buổi, chưa đọc điều kiện hay sửa buổi.
+     *
+     * Bảng đọc: Sessions (Status, SessionId) JOIN TimeSlots (SlotDate).
+     * @param today ngày hiện tại theo giờ VN, Service lấy một lần
+     * @return các SessionId, VD [91, 105]; không có buổi nào thì []
      */
     public List<Integer> findOverdueSessionIds(Connection connection, LocalDate today) throws SQLException {
         // B1: chọn buổi Scheduled có ngày tập trước today, kể cả buổi sót từ nhiều ngày trước.
@@ -52,10 +65,23 @@ public class AutoCloseSessionDAO {
     }
 
 
+    // =================================================================================================
+    // 2. ĐỌC DỮ KIỆN CỦA 1 BUỔI
+    // =================================================================================================
+
     /**
-     * Hàm 2 — Service đưa một SessionId từ hàm 1 vào; DAO tạo DTO của đúng buổi đó.
-     * DTO mang dữ liệu gói, bảo lưu và check-in; Service mới quyết định kết quả.
-     * Trả null khi buổi đã đổi trạng thái hoặc ngày tập chưa qua.
+     * HÀM CHÍNH — AutoCloseSessionService.closeOneSession gọi ở B1, mỗi buổi một lần.
+     * Đọc mọi dữ kiện của 1 buổi vào SessionAutoCloseData; Service mới quyết định kết quả.
+     *
+     * Bảng đọc:
+     *   Sessions + TimeSlots + Subscriptions (gói PT "pt") + Orders (PartnerCustomerId của gói đôi)
+     *   Subscriptions "gym" (Membership / DayPass)  → Holder/PartnerHasMembership, Holder/PartnerHasDayPass
+     *   FreezeRecords                               → HolderFrozen, PartnerFrozen
+     *   CheckIns                                    → HasCheckInOnSessionDate
+     * Mỗi cột CASE WHEN EXISTS trả 1 (có) / 0 (không) → Java đọc thành true / false.
+     *
+     * @return DTO của buổi; null khi buổi đã đổi trạng thái hoặc ngày tập chưa qua
+     * @throws SQLException loại gói không phải gói PT, hoặc gói đôi thiếu người tập cùng (dữ liệu hỏng)
      */
     public SessionAutoCloseData findDataForClosing(Connection connection, int sessionId, LocalDate today)
             throws SQLException {
@@ -171,10 +197,16 @@ public class AutoCloseSessionDAO {
     }
 
 
+    // =================================================================================================
+    // 3. GHI KẾT QUẢ
+    // =================================================================================================
+
     /**
-     * Hàm 3 — Service truyền kết quả đã quyết định; DAO ghi vào đúng một buổi.
-     * Trả true nếu UPDATE đổi được một buổi, false nếu buổi không còn Scheduled.
-     * Service dùng kết quả này để chọn commit và ghi AuditLog trong cùng transaction.
+     * HÀM CHÍNH — AutoCloseSessionService.closeOneSession gọi ở B3.
+     * Ghi kết quả Service đã chọn vào đúng 1 buổi: Status, MissedReason, IsAutoClosed = 1, AttendanceMarkedAt = bây giờ.
+     *
+     * Bảng ghi: Sessions (JOIN TimeSlots để kiểm tra lại ngày tập đã qua).
+     * @return true = UPDATE đổi đúng 1 buổi; false = buổi không còn Scheduled → Service rollback
      */
     public boolean closeScheduledSession(Connection connection, int sessionId, LocalDate today,
             Session.Status status, Session.MissedReason missedReason) throws SQLException {

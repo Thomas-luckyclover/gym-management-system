@@ -1,0 +1,44 @@
+@charset "UTF-8";
+/* =====================================================================
+   NHÃN TRẠNG THÁI BUỔI — dùng chung cho 2 màn của khách: Gói của tôi + Lịch tập.
+   Markup: <span class="session-status" data-status="checkedIn">Đã check-in</span>
+   data-status do MyPtSessionService đặt (statusKey): today | upcoming | checkedIn | warn | pending | missed | cancelled
+   Chấm tròn đứng trước chữ → không chỉ dựa vào màu (luôn có chữ đi kèm).
+   ===================================================================== */
+
+.session-status {
+  display: inline-flex;
+  align-items: center;
+  gap: var(--space-1);
+  color: var(--color-text-soft);
+  font-size: var(--font-size-xs);
+  line-height: var(--line-height-normal);
+}
+
+.session-status::before {
+  content: "";
+  flex: 0 0 var(--space-1-5);
+  width: var(--space-1-5);
+  height: var(--space-1-5);
+  border-radius: var(--radius-circle);
+  background: currentColor;
+}
+
+.session-status:is([data-status="today"], [data-status="upcoming"]) { color: var(--color-info-ink); }
+.session-status[data-status="checkedIn"]                           { color: var(--color-success-ink); }
+.session-status:is([data-status="warn"], [data-status="pending"])   { color: var(--color-warning-ink); }
+.session-status[data-status="missed"]                              { color: var(--color-danger-ink); }
+
+/* ARENA (24/10 tối): trong khu làm việc, nhãn trạng thái là chip góc 2px có nền nhạt; màu nghĩa giữ nguyên. */
+html body.dock:not(.no-arena) .session-status {
+  padding: 1px var(--space-1-5);
+  border: var(--border-width) solid var(--color-neutral-border);
+  border-radius: var(--arena-radius-chip);
+  background: var(--color-neutral-tint);
+  font-weight: var(--font-weight-semibold);
+}
+/* Chip có viền cùng tông: cạnh sắc, đọc được cả khi in đen trắng */
+html body.dock:not(.no-arena) .session-status:is([data-status="today"], [data-status="upcoming"]) { border-color: var(--color-info-border); background: var(--arena-info-chip); }
+html body.dock:not(.no-arena) .session-status[data-status="checkedIn"] { border-color: var(--color-success-border); background: var(--color-success-tint); }
+html body.dock:not(.no-arena) .session-status:is([data-status="warn"], [data-status="pending"]) { border-color: var(--color-warning-border); background: var(--color-warning-tint); }
+html body.dock:not(.no-arena) .session-status[data-status="missed"] { border-color: var(--color-danger-border); background: var(--color-danger-tint); }
