@@ -1058,8 +1058,11 @@
   --arena-pad: 24px;
   --arena-pad-sm: 16px;
   /* Khả năng tiếp cận: viền điều khiển ≥ 3:1 trên trắng, vùng chạm 44px, vòng focus 2 tông */
-  --arena-control-line: #7D8FAE;
+  --arena-control-line: #7789A9;   /* ≥ 3:1 trên cả trắng (3.5) lẫn phấn (3.2) */
   --arena-hit: 44px;
+  /* Nút (i) gợi ý: một cỡ cho mọi màn; viền ≥ 3:1 trên nền của nó, chữ i đậm */
+  --arena-info-size: 26px;
+  --arena-info-line-dark: rgba(255, 255, 255, 0.62);
   --arena-focus-ring: var(--arena-700);
   --arena-mark: 3px;            /* vạch nhấn: hôm nay, gói đang xem, thẻ buổi */
   --arena-segment-pad: 3px;     /* lề trong công tắc Tuần/Tháng, tab */

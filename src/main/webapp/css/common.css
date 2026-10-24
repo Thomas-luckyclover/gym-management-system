@@ -3205,3 +3205,45 @@ html body.dock:not(.no-arena)::after {
 @media (max-width: 1599px) {
   html body.dock:not(.no-arena)::after { display: none; }
 }
+
+/* --- Nút (i) gợi ý: rõ trên mọi nền (sửa 24/10) ---
+   Trước: chữ i màu mực trên topbar xanh (≈2:1, gần như vô hình), viền xám nhạt 1.6:1,
+   mỗi màn một cỡ (24/32/38px). Axe không bắt được vì chữ i có aria-hidden.
+   Nay: một cỡ 26px (vùng chạm vẫn 44px), chữ i đậm, viền ≥ 3:1. Trên nền sáng: nền trắng chữ mực;
+   trên nền tối (topbar, khối tối): viền + chữ trắng. Rê chuột / mở: đảo màu. */
+html body.dock:not(.no-arena) .pt-info-trigger {
+  width: var(--arena-info-size);
+  height: var(--arena-info-size);
+  min-width: var(--arena-info-size);
+  min-height: var(--arena-info-size);
+  border: 1.5px solid var(--arena-control-line);
+  background: var(--arena-surface);
+  color: var(--arena-ink);
+  font-family: var(--font-brand-display);
+  font-size: var(--font-size-sm);
+  font-weight: var(--font-weight-extrabold);
+  line-height: 1;
+  transition: background-color var(--duration-fast) var(--ease-standard), color var(--duration-fast) var(--ease-standard), border-color var(--duration-fast) var(--ease-standard);
+}
+html body.dock:not(.no-arena) .pt-info-trigger > span { color: inherit; }
+html body.dock:not(.no-arena) :is(.pt-info:hover, .pt-info.is-open) .pt-info-trigger,
+html body.dock:not(.no-arena) .pt-info-trigger:focus-visible {
+  border-color: var(--arena-700);
+  background: var(--arena-700);
+  color: var(--arena-surface);
+}
+/* Nền tối: topbar, khối chào, Kết quả tháng, đầu gói, thanh chờ công bố */
+html body.dock:not(.no-arena) :is(.topbar, .pt-board__hero, .pt-board__summary, .booking-overview, .pt-plan-pending) .pt-info-trigger {
+  border-color: var(--arena-info-line-dark);
+  background: var(--arena-glass);
+  color: var(--arena-surface);
+}
+html body.dock:not(.no-arena) :is(.topbar, .pt-board__hero, .pt-board__summary, .booking-overview, .pt-plan-pending) :is(.pt-info:hover, .pt-info.is-open) .pt-info-trigger,
+html body.dock:not(.no-arena) :is(.topbar, .pt-board__hero, .pt-board__summary, .booking-overview, .pt-plan-pending) .pt-info-trigger:focus-visible {
+  border-color: var(--arena-surface);
+  background: var(--arena-surface);
+  color: var(--arena-ink);
+}
+@media (prefers-reduced-motion: reduce) {
+  html body.dock:not(.no-arena) .pt-info-trigger { transition: none; }
+}
