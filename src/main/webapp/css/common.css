@@ -3184,10 +3184,10 @@ html body.dock:not(.no-arena) .notification-empty {
 html body.dock:not(.no-arena) .notification-empty { padding: var(--arena-pad); text-align: center; }
 
 /* --- Nền doodle đồ tập: 2 dải nét ở mép trái + phải, đứng yên, nằm dưới mọi khối ---
-   Không phủ lớp màu lên ảnh (lớp phủ làm nền đục, đĩa cam ngả tím): ảnh là nét kem trong suốt,
-   chỉ giảm độ hiện. Topbar nền đặc nên che nét phía trên. Ảnh tĩnh nên vẫn hiện ở chế độ nhẹ
-   (chế độ nhẹ chỉ tắt chuyển động/kính mờ). Tắt ở màn < 1024px: khối nội dung đã chiếm gần hết
-   bề ngang, nét chỉ còn là vệt rối. */
+   Màu thật, không làm mờ, không phủ màu (theo duyệt 24/10): nét kem + đĩa cam nằm thẳng trên nền sân
+   nhờ ảnh đã tách nền trong suốt. Topbar nền đặc nên che nét phía trên. Ảnh tĩnh nên vẫn hiện ở chế độ nhẹ.
+   Chỉ hiện từ 1600px: khi đó lề hai bên đủ rộng để đồ tập nằm ngoài vùng chữ; màn hẹp hơn thì nét
+   sẽ chạy sau chữ nằm trên nền (tiêu đề mục của Admin, Quản lý). */
 html body.dock:not(.no-arena)::after {
   content: "";
   position: fixed;
@@ -3195,11 +3195,12 @@ html body.dock:not(.no-arena)::after {
   z-index: 0;
   display: block;
   pointer-events: none;
-  opacity: var(--arena-doodle-opacity);
+  /* Mỗi dải rộng đúng bằng lề trống hai bên khối nội dung → nét không chạy sau chữ nằm trên nền */
+  --arena-doodle-w: calc((100% - var(--layout-content-width)) / 2);
   background:
-    var(--arena-doodle-left) left bottom / auto min(100%, 1144px) no-repeat,
-    var(--arena-doodle-right) right bottom / auto min(100%, 1144px) no-repeat;
+    var(--arena-doodle-left) left bottom / var(--arena-doodle-w) auto no-repeat,
+    var(--arena-doodle-right) right bottom / var(--arena-doodle-w) auto no-repeat;
 }
-@media (max-width: 1023px) {
+@media (max-width: 1599px) {
   html body.dock:not(.no-arena)::after { display: none; }
 }
