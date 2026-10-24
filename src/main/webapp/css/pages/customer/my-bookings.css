@@ -616,7 +616,8 @@ html body.dock .booking-page .booking-cta { margin: var(--arena-pad); }
 html body.dock .booking-page :is(.booking-week, .booking-tab-panel, .booking-contact) { gap: var(--arena-gap-tile); }
 html body.dock .booking-page .booking-next-link { min-height: var(--space-8); }
 
-html body.dock .booking-page .booking-box-head h2 {
+/* Chỉ tiêu đề khối (Gói của bạn); nhãn nhỏ in hoa .booking-box-label giữ cỡ cũ */
+html body.dock .booking-page .booking-box-head h2:not(.booking-box-label) {
   font-size: var(--font-size-xl);
   font-family: var(--font-brand-display);
   font-weight: var(--font-weight-extrabold);
