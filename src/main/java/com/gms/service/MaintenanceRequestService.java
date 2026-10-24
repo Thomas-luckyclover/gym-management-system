@@ -4,12 +4,14 @@ import com.gms.constant.Messages;
 import com.gms.constant.Role;
 import com.gms.dao.AccountDAO;
 import com.gms.dao.EmployeeDAO;
+import com.gms.dao.EquipmentItemDAO;
 import com.gms.dao.FacilityDAO;
 import com.gms.dao.MaintenanceRequestDAO;
 import com.gms.dto.PageResult;
 import com.gms.dto.ServiceResult;
 import com.gms.entity.Account;
 import com.gms.entity.Employee;
+import com.gms.entity.EquipmentItem;
 import com.gms.entity.Facility;
 import com.gms.entity.MaintenanceRequest;
 import com.gms.util.DBContext;
@@ -18,6 +20,7 @@ import com.gms.util.ValidationUtil;
 import java.sql.Connection;
 import java.sql.SQLException;
 import java.time.LocalDate;
+import java.util.ArrayList;
 import java.util.Collections;
 import java.util.List;
 import java.util.Map;
@@ -25,22 +28,12 @@ import java.util.Map;
 /**
  * Service Layer: Encapsulates the core business logic and transaction boundaries
  * for Facility Maintenance Workflows (BF-06 / UC-28, UC-29).
- *
- * <p><b>Architectural Responsibility:</b></p>
- * Sits between the Presentation Layer (Servlets) and the Persistence Layer (DAOs).
- * The Service layer is responsible for:
- * <ul>
- *   <li>Enforcing domain business rules and multi-step workflows.</li>
- *   <li>Managing database transaction lifecycles ({@code setAutoCommit(false)}, {@code commit()}, and {@code rollback()}).</li>
- *   <li>Authorizing employee position roles (Receptionist vs. Manager).</li>
- *   <li>Recording immutable audit logs for regulatory and compliance tracking.</li>
- *   <li>Emitting contextual system notifications.</li>
- * </ul>
  */
 public class MaintenanceRequestService {
 
     private final MaintenanceRequestDAO maintenanceRequestDAO;
     private final FacilityDAO facilityDAO;
+    private final EquipmentItemDAO equipmentItemDAO;
     private final AccountDAO accountDAO;
     private final EmployeeDAO employeeDAO;
     private final AuditLogService auditLogService;
@@ -49,11 +42,11 @@ public class MaintenanceRequestService {
     public MaintenanceRequestService() {
         maintenanceRequestDAO = new MaintenanceRequestDAO();
         facilityDAO = new FacilityDAO();
+        equipmentItemDAO = new EquipmentItemDAO();
         accountDAO = new AccountDAO();
         employeeDAO = new EmployeeDAO();
         auditLogService = new AuditLogService();
-        notificationService =
-                new NotificationService();
+        notificationService = new NotificationService();
     }
 
     /**
@@ -62,6 +55,7 @@ public class MaintenanceRequestService {
     MaintenanceRequestService(
             MaintenanceRequestDAO maintenanceRequestDAO,
             FacilityDAO facilityDAO,
+            EquipmentItemDAO equipmentItemDAO,
             AccountDAO accountDAO,
             EmployeeDAO employeeDAO,
             AuditLogService auditLogService,
@@ -69,10 +63,22 @@ public class MaintenanceRequestService {
     ) {
         this.maintenanceRequestDAO = maintenanceRequestDAO;
         this.facilityDAO = facilityDAO;
+        this.equipmentItemDAO = equipmentItemDAO;
         this.accountDAO = accountDAO;
         this.employeeDAO = employeeDAO;
         this.auditLogService = auditLogService;
         this.notificationService = notificationService;
+    }
+
+    MaintenanceRequestService(
+            MaintenanceRequestDAO maintenanceRequestDAO,
+            FacilityDAO facilityDAO,
+            AccountDAO accountDAO,
+            EmployeeDAO employeeDAO,
+            AuditLogService auditLogService,
+            NotificationService notificationService
+    ) {
+        this(maintenanceRequestDAO, facilityDAO, new EquipmentItemDAO(), accountDAO, employeeDAO, auditLogService, notificationService);
     }
 
     /**
@@ -86,41 +92,34 @@ public class MaintenanceRequestService {
     // ===== Tạo yêu cầu =====
 
     /**
-     * Receptionist creates a new maintenance request for gym equipment.
+     * Receptionist creates new maintenance requests for one or multiple individual equipment items in a single transaction.
      *
-     * <p><b>Business Rules & Constraints (BF-06):</b></p>
-     * <ul>
-     *   <li><b>Facility Status Rule:</b> Allowed for both {@code Available} and {@code UnderMaintenance}
-     *       facilities because equipment may have minor issues while already partially flagged. Only
-     *       {@code Retired} (permanently decommissioned) or non-existent facilities are rejected.</li>
-     *   <li><b>Zero Available Quantity Rule:</b> Creating requests is NOT blocked when {@code AvailableQuantity = 0}.
-     *       In a gym setting, multiple tickets may concern the same physical unit or batch. Front-end displays
-     *       a clear warning of existing unfinished requests, but the Receptionist can proceed.</li>
-     *   <li><b>Transaction Boundary:</b> All steps (code generation, insertion, audit logging, notification)
-     *       execute within a single database transaction. If any step fails, changes are rolled back.</li>
-     *   <li><b>Audit Trail:</b> The acting role is strictly recorded as {@code Role.RECEPTIONIST}.</li>
-     * </ul>
-     *
-     * @param accountId        authenticated receptionist account ID
-     * @param facilityId       targeted facility ID
-     * @param priorityValue    priority string ("Low", "Normal", "Urgent")
-     * @param description      detailed description of malfunction (10-500 characters)
-     * @param warningTagPlaced whether physical warning tag was placed on equipment
-     * @return ServiceResult containing generated request code (e.g. "BT-0001") or validation errors
+     * @param accountId          authenticated receptionist account ID
+     * @param equipmentItemIds   list of targeted individual equipment item IDs
+     * @param priorityValue      priority string ("Low", "Normal", "Urgent")
+     * @param incidentTypeValue  type of incident
+     * @param detectedByValue    detection source
+     * @param description        detailed description of malfunction (10-500 characters)
+     * @param warningTagPlaced   whether physical warning tag was placed on equipment
+     * @param attachedImages     optional image file paths or references
+     * @return ServiceResult containing generated request codes (e.g. ["BT-0001", "BT-0002"]) or validation errors
      */
-    public ServiceResult<String> createRequest(
+    public ServiceResult<List<String>> createRequests(
             int accountId,
-            int facilityId,
+            List<Integer> equipmentItemIds,
             String priorityValue,
+            String incidentTypeValue,
+            String detectedByValue,
             String description,
-            boolean warningTagPlaced
+            boolean warningTagPlaced,
+            String attachedImages
     ) {
 
-        // Step 1: Input validation before acquiring database resources
-        if (facilityId <= 0) {
+        // B1: Kiểm tra danh sách thiết bị
+        if (equipmentItemIds == null || equipmentItemIds.isEmpty()) {
             return ServiceResult.failField(
-                    "facilityId",
-                    String.format(Messages.MSG21_SELECT_REQUIRED, "thiết bị")
+                    "equipmentItemId",
+                    "Vui lòng chọn ít nhất một mã máy cụ thể cần báo hỏng."
             );
         }
 
@@ -134,6 +133,18 @@ public class MaintenanceRequestService {
             );
         }
 
+        MaintenanceRequest.IncidentType incidentType =
+                MaintenanceRequest.IncidentType.fromDbValue(incidentTypeValue);
+        if (incidentType == null) {
+            incidentType = MaintenanceRequest.IncidentType.NOT_WORKING;
+        }
+
+        MaintenanceRequest.DetectedBy detectedBy =
+                MaintenanceRequest.DetectedBy.fromDbValue(detectedByValue);
+        if (detectedBy == null) {
+            detectedBy = MaintenanceRequest.DetectedBy.RECEPTIONIST;
+        }
+
         if (!ValidationUtil.isLengthValid(description, 10, 500)) {
             return ServiceResult.failField(
                     "description",
@@ -141,12 +152,25 @@ public class MaintenanceRequestService {
             );
         }
 
-        // Step 2: Open transactional boundary (setAutoCommit = false)
+        // Loại bỏ trùng lặp id
+        List<Integer> uniqueItemIds = equipmentItemIds.stream()
+                .filter(id -> id != null && id > 0)
+                .distinct()
+                .toList();
+
+        if (uniqueItemIds.isEmpty()) {
+            return ServiceResult.failField(
+                    "equipmentItemId",
+                    "Vui lòng chọn ít nhất một mã máy cụ thể hợp lệ."
+            );
+        }
+
+        // B2: Mở Transaction boundary
         try (Connection connection = openConnection()) {
             connection.setAutoCommit(false);
 
             try {
-                // Verify the acting account belongs to an active Receptionist
+                // Xác minh tài khoản thuộc Lễ tân active
                 Employee receptionist =
                         findEmployeeForAccount(accountId, Role.RECEPTIONIST);
 
@@ -155,74 +179,81 @@ public class MaintenanceRequestService {
                     return ServiceResult.fail(Messages.MSG04_SYSTEM_BUSY);
                 }
 
-                // Verify facility exists and is not retired (Available and UnderMaintenance are both allowed)
-                Facility facility =
-                        facilityDAO.findById(connection, facilityId);
+                List<String> createdCodes = new ArrayList<>();
+                List<String> summaryItems = new ArrayList<>();
 
-                if (facility == null
-                        || facility.getStatus() == Facility.Status.RETIRED) {
+                for (int itemId : uniqueItemIds) {
+                    EquipmentItem equipmentItem =
+                            equipmentItemDAO.findById(connection, itemId);
 
-                    connection.rollback();
+                    if (equipmentItem == null
+                            || equipmentItem.getStatus() == EquipmentItem.Status.RETIRED) {
 
-                    return ServiceResult.failField(
-                            "facilityId",
-                            "Thiết bị không còn khả dụng để tạo yêu cầu bảo trì."
+                        connection.rollback();
+                        return ServiceResult.failField(
+                                "equipmentItemId",
+                                "Mã máy không tồn tại hoặc đã ngưng hoạt động."
+                        );
+                    }
+
+                    Facility facility =
+                            facilityDAO.findById(connection, equipmentItem.getFacilityId());
+                    String facilityName = facility != null ? facility.getFacilityName() : "Thiết bị";
+
+                    // Tạo đơn bảo trì Open
+                    MaintenanceRequest request = new MaintenanceRequest();
+                    request.setRequestCode(
+                            maintenanceRequestDAO.generateNextRequestCode(connection)
                     );
+                    request.setEquipmentItemId(itemId);
+                    request.setFacilityId(equipmentItem.getFacilityId());
+                    request.setReportedByEmployeeId(receptionist.getEmployeeId());
+                    request.setPriority(priority);
+                    request.setIncidentType(incidentType);
+                    request.setDetectedBy(detectedBy);
+                    request.setWarningTagPlaced(warningTagPlaced);
+                    request.setDescription(description.trim());
+                    request.setAttachedImages(attachedImages);
+                    request.setStatus(MaintenanceRequest.Status.OPEN);
+
+                    int requestId = maintenanceRequestDAO.insert(connection, request);
+
+                    // Ghi AuditLog
+                    auditLogService.logInTransaction(
+                            connection,
+                            accountId,
+                            Role.RECEPTIONIST,
+                            "Tạo yêu cầu bảo trì",
+                            "MaintenanceRequest",
+                            requestId,
+                            "Status",
+                            null,
+                            MaintenanceRequest.Status.OPEN.getDbValue(),
+                            "Báo hỏng máy " + equipmentItem.getItemCode()
+                    );
+
+                    createdCodes.add(request.getRequestCode());
+                    summaryItems.add(equipmentItem.getItemCode() + " (" + facilityName + ")");
                 }
 
-                // B4: tạo yêu cầu Open
-                MaintenanceRequest request =
-                        new MaintenanceRequest();
+                // Gửi Notification cho Manager
+                String notifTitle = createdCodes.size() == 1
+                        ? "Bảo trì · Yêu cầu mới " + createdCodes.get(0)
+                        : "Bảo trì · " + createdCodes.size() + " yêu cầu mới";
 
-                request.setRequestCode(
-                        maintenanceRequestDAO.generateNextRequestCode(connection)
-                );
-                request.setFacilityId(facilityId);
-                request.setReportedByEmployeeId(
-                        receptionist.getEmployeeId()
-                );
-                request.setPriority(priority);
-                request.setWarningTagPlaced(warningTagPlaced);
-                request.setDescription(description.trim());
-                request.setStatus(MaintenanceRequest.Status.OPEN);
+                String notifContent = createdCodes.size() == 1
+                        ? createdCodes.get(0) + " · " + summaryItems.get(0) + " vừa được Lễ tân báo hỏng."
+                        : "Lễ tân vừa báo hỏng " + createdCodes.size() + " máy: " + String.join(", ", summaryItems);
 
-                int requestId =
-                        maintenanceRequestDAO.insert(connection, request);
-
-                // B5: ghi AuditLog với vai trò Receptionist
-                auditLogService.logInTransaction(
-                        connection,
-                        accountId,
-                        Role.RECEPTIONIST,
-                        "Tạo yêu cầu bảo trì",
-                        "MaintenanceRequest",
-                        requestId,
-                        "Status",
-                        null,
-                        MaintenanceRequest.Status.OPEN.getDbValue(),
-                        null
-                );
-
-                /*
-                 * Gửi tới các Manager đang làm việc.
-                 *
-                 * Không ghi "đang chờ xử lý" để notification
-                 * không trở nên sai nghĩa sau khi một Manager
-                 * đã xử lý đơn.
-                 */
                 notificationService.notifyRoleInTransaction(
                         connection,
                         Role.MANAGER,
-                        "Bảo trì · Yêu cầu mới",
-                        request.getRequestCode()
-                                + " · "
-                                + facility.getFacilityName()
-                                + " vừa được Lễ tân báo hỏng."
+                        notifTitle,
+                        notifContent
                 );
 
                 connection.commit();
-
-                return ServiceResult.ok(request.getRequestCode());
+                return ServiceResult.ok(createdCodes);
 
             } catch (SQLException e) {
                 connection.rollback();
@@ -237,29 +268,79 @@ public class MaintenanceRequestService {
         }
     }
 
+    /**
+     * Receptionist creates a new maintenance request for an individual equipment item.
+     */
+    public ServiceResult<String> createRequest(
+            int accountId,
+            int equipmentItemId,
+            String priorityValue,
+            String incidentTypeValue,
+            String detectedByValue,
+            String description,
+            boolean warningTagPlaced,
+            String attachedImages
+    ) {
+        if (equipmentItemId <= 0) {
+            return ServiceResult.failField(
+                    "equipmentItemId",
+                    String.format(Messages.MSG21_SELECT_REQUIRED, "mã máy cụ thể")
+            );
+        }
+
+        ServiceResult<List<String>> multiResult = createRequests(
+                accountId,
+                List.of(equipmentItemId),
+                priorityValue,
+                incidentTypeValue,
+                detectedByValue,
+                description,
+                warningTagPlaced,
+                attachedImages
+        );
+
+        if (multiResult.isSuccess()) {
+            List<String> list = multiResult.getData();
+            return ServiceResult.ok(list != null && !list.isEmpty() ? list.get(0) : "");
+        }
+
+        if (!multiResult.getFieldErrors().isEmpty()) {
+            if (multiResult.getFieldErrors().size() == 1) {
+                var entry = multiResult.getFieldErrors().entrySet().iterator().next();
+                return ServiceResult.failField(entry.getKey(), entry.getValue());
+            }
+            return ServiceResult.failFields(multiResult.getFieldErrors());
+        }
+        return ServiceResult.fail(multiResult.getMessage());
+    }
+
+    public ServiceResult<String> createRequest(
+            int accountId,
+            int equipmentItemId,
+            String priorityValue,
+            String description,
+            boolean warningTagPlaced
+    ) {
+        return createRequest(
+                accountId,
+                equipmentItemId,
+                priorityValue,
+                null,
+                null,
+                description,
+                warningTagPlaced,
+                null
+        );
+    }
+
     // ===== Duyệt yêu cầu =====
 
     /**
      * Manager approves an Open maintenance request, transitioning it to InProgress (BR-49).
      *
-     * <p><b>Business Logic & State Transitions:</b></p>
-     * <ul>
-     *   <li><b>Role Verification:</b> Only active employees with {@code Role.MANAGER} can approve requests.</li>
-     *   <li><b>Pessimistic Row Locking:</b> Uses {@code findByIdForUpdate} to lock the request record,
-     *       preventing concurrent approvals or conflicting updates.</li>
-     *   <li><b>Precondition:</b> The request must currently be in {@code Status.OPEN}.</li>
-     *   <li><b>Facility State Transition (CBR-101):</b> If the manager specifies {@code setUnderMaintenance = true}
-     *       and the facility is currently {@code Available}, its status transitions to {@code UnderMaintenance}.</li>
-     *   <li><b>Separate Audit Logging:</b> When the facility status changes, a distinct {@code AuditLog} entry
-     *       is recorded for the {@code Facility} entity (with {@code Role.MANAGER}) alongside the request's
-     *       own status transition audit log.</li>
-     *   <li><b>Quantity Impact:</b> Transitioning from {@code Open} to {@code InProgress} maintains the request
-     *       within the unfinished set; thus {@code PendingQuantity} and {@code AvailableQuantity} remain stable.</li>
-     * </ul>
-     *
      * @param accountId           authenticated manager account ID
      * @param requestId           ID of the request to approve
-     * @param setUnderMaintenance whether to mark the physical facility as UnderMaintenance
+     * @param setUnderMaintenance whether to mark the physical individual equipment item as UnderMaintenance
      * @return ServiceResult indicating success or failure message
      */
     public ServiceResult<Void> approveRequest(
@@ -299,7 +380,7 @@ public class MaintenanceRequestService {
                     connection.rollback();
                     return ServiceResult.fail(
                             String.format(
-                                    Messages.MSG08_NOT_FOUND,
+                                     Messages.MSG08_NOT_FOUND,
                                     "yêu cầu bảo trì"
                             )
                     );
@@ -326,39 +407,39 @@ public class MaintenanceRequestService {
                     return ServiceResult.fail(Messages.MSG04_SYSTEM_BUSY);
                 }
 
-                // Step 4: Conditionally update physical Facility status if manager opted in (CBR-101)
+                // Step 4: Conditionally update physical individual EquipmentItem status if manager opted in
                 if (setUnderMaintenance) {
-                    Facility facility =
-                            facilityDAO.findById(connection, request.getFacilityId());
+                    EquipmentItem equipmentItem =
+                            equipmentItemDAO.findById(connection, request.getEquipmentItemId());
 
-                    if (facility != null
-                            && facility.getStatus() != Facility.Status.UNDER_MAINTENANCE) {
+                    if (equipmentItem != null
+                            && equipmentItem.getStatus() != EquipmentItem.Status.UNDER_MAINTENANCE) {
 
-                        Facility.Status oldStatus = facility.getStatus();
-                        boolean facilityUpdated =
-                                facilityDAO.updateStatus(
+                        EquipmentItem.Status oldStatus = equipmentItem.getStatus();
+                        boolean itemUpdated =
+                                equipmentItemDAO.updateStatus(
                                         connection,
-                                        request.getFacilityId(),
-                                        Facility.Status.UNDER_MAINTENANCE
+                                        request.getEquipmentItemId(),
+                                        EquipmentItem.Status.UNDER_MAINTENANCE
                                 );
 
-                        if (!facilityUpdated) {
+                        if (!itemUpdated) {
                             connection.rollback();
                             return ServiceResult.fail(Messages.MSG04_SYSTEM_BUSY);
                         }
 
-                        // Write a dedicated AuditLog entry for the Facility status transition
+                        // Write a dedicated AuditLog entry for the EquipmentItem status transition
                         auditLogService.logInTransaction(
                                 connection,
                                 accountId,
                                 Role.MANAGER,
-                                "Cập nhật trạng thái thiết bị",
-                                "Facility",
-                                request.getFacilityId(),
+                                "Cập nhật trạng thái máy con",
+                                "EquipmentItem",
+                                request.getEquipmentItemId(),
                                 "Status",
                                 oldStatus.getDbValue(),
-                                Facility.Status.UNDER_MAINTENANCE.getDbValue(),
-                                "Chuyển sang bảo trì khi duyệt yêu cầu " + request.getRequestCode()
+                                EquipmentItem.Status.UNDER_MAINTENANCE.getDbValue(),
+                                "Chuyển máy " + equipmentItem.getItemCode() + " sang bảo trì khi duyệt yêu cầu " + request.getRequestCode()
                         );
                     }
                 }
@@ -404,14 +485,6 @@ public class MaintenanceRequestService {
 
     /**
      * Manager rejects an Open maintenance request with a required justification reason (BR-49).
-     *
-     * <p><b>Quantity Impact:</b> Transitioning from {@code Open} to {@code Rejected} removes the request
-     * from the unfinished set, immediately restoring the facility's {@code AvailableQuantity} on next refresh.</p>
-     *
-     * @param accountId    authenticated manager account ID
-     * @param requestId    ID of the request to reject
-     * @param rejectReason justification reason (5-500 characters)
-     * @return ServiceResult indicating success or failure
      */
     public ServiceResult<Void> rejectRequest(
             int accountId,
@@ -523,19 +596,8 @@ public class MaintenanceRequestService {
     /**
      * Receptionist inspects and closes an InProgress maintenance request after physical verification (BR-48).
      *
-     * <p><b>Business Logic & State Transitions:</b></p>
-     * <ul>
-     *   <li><b>Role Verification:</b> Only active employees with {@code Role.RECEPTIONIST} can close requests.</li>
-     *   <li><b>Pessimistic Row Locking:</b> Uses {@code findByIdForUpdate} to lock the request record.</li>
-     *   <li><b>Precondition:</b> The request must currently be in {@code Status.IN_PROGRESS}.</li>
-     *   <li><b>Facility Status Recovery (CBR-102):</b> Checks if any OTHER active InProgress requests exist
-     *       for the same facility. If none remain ({@code !hasOtherInProgress}) and the facility is currently
-     *       {@code UnderMaintenance}, it is automatically restored to {@code Available}.</li>
-     *   <li><b>Separate Audit Logging:</b> If the facility is restored, a separate {@code AuditLog} entry
-     *       is written for the {@code Facility} entity with {@code Role.RECEPTIONIST}.</li>
-     *   <li><b>Quantity Impact:</b> Closing the request decrements {@code PendingQuantity} and restores
-     *       {@code AvailableQuantity} in subsequent catalog calculations.</li>
-     * </ul>
+     * <p><b>Equipment Item Recovery Logic:</b> Checks if any OTHER active InProgress requests exist
+     * for the same individual machine. If none remain, the machine is automatically restored to {@code Available}.</p>
      *
      * @param accountId      authenticated receptionist account ID
      * @param requestId      ID of the request to close
@@ -608,46 +670,47 @@ public class MaintenanceRequestService {
                     return ServiceResult.fail(Messages.MSG04_SYSTEM_BUSY);
                 }
 
-                // Step 4: Check if any other InProgress tickets exist for this facility (CBR-102)
+                // Step 4: Check if any other InProgress tickets exist for this individual machine
                 boolean hasOtherInProgress =
                         maintenanceRequestDAO.hasInProgressRequest(
                                 connection,
-                                request.getFacilityId()
+                                request.getEquipmentItemId()
                         );
 
-                // If no other in-progress tickets remain, restore the facility to Available
+                // If no other in-progress tickets remain for this individual item, restore it to Available
                 if (!hasOtherInProgress) {
-                    Facility facility =
-                            facilityDAO.findById(connection, request.getFacilityId());
+                    EquipmentItem equipmentItem =
+                            equipmentItemDAO.findById(connection, request.getEquipmentItemId());
 
-                    if (facility != null
-                            && facility.getStatus() != Facility.Status.AVAILABLE) {
+                    if (equipmentItem != null
+                            && equipmentItem.getStatus() != EquipmentItem.Status.AVAILABLE
+                            && equipmentItem.getStatus() != EquipmentItem.Status.RETIRED) {
 
-                        Facility.Status oldStatus = facility.getStatus();
-                        boolean facilityUpdated =
-                                facilityDAO.updateStatus(
+                        EquipmentItem.Status oldStatus = equipmentItem.getStatus();
+                        boolean itemUpdated =
+                                equipmentItemDAO.updateStatus(
                                         connection,
-                                        request.getFacilityId(),
-                                        Facility.Status.AVAILABLE
+                                        request.getEquipmentItemId(),
+                                        EquipmentItem.Status.AVAILABLE
                                 );
 
-                        if (!facilityUpdated) {
+                        if (!itemUpdated) {
                             connection.rollback();
                             return ServiceResult.fail(Messages.MSG04_SYSTEM_BUSY);
                         }
 
-                        // Write a dedicated AuditLog entry for the Facility status recovery
+                        // Write a dedicated AuditLog entry for the EquipmentItem status recovery
                         auditLogService.logInTransaction(
                                 connection,
                                 accountId,
                                 Role.RECEPTIONIST,
-                                "Khôi phục trạng thái thiết bị",
-                                "Facility",
-                                request.getFacilityId(),
+                                "Khôi phục trạng thái máy con",
+                                "EquipmentItem",
+                                request.getEquipmentItemId(),
                                 "Status",
                                 oldStatus.getDbValue(),
-                                Facility.Status.AVAILABLE.getDbValue(),
-                                "Khôi phục khả dụng sau khi đóng yêu cầu " + request.getRequestCode()
+                                EquipmentItem.Status.AVAILABLE.getDbValue(),
+                                "Khôi phục máy " + equipmentItem.getItemCode() + " khả dụng sau khi đóng yêu cầu " + request.getRequestCode()
                         );
                     }
                 }
@@ -700,6 +763,28 @@ public class MaintenanceRequestService {
         try {
             return ServiceResult.ok(
                     facilityDAO.findSelectableFacilities()
+            );
+        } catch (SQLException e) {
+            e.printStackTrace();
+            return ServiceResult.fail(Messages.MSG04_SYSTEM_BUSY);
+        }
+    }
+
+    public ServiceResult<List<EquipmentItem>> getSelectableEquipmentItems() {
+        try {
+            return ServiceResult.ok(
+                    equipmentItemDAO.findAllSelectable()
+            );
+        } catch (SQLException e) {
+            e.printStackTrace();
+            return ServiceResult.fail(Messages.MSG04_SYSTEM_BUSY);
+        }
+    }
+
+    public ServiceResult<List<EquipmentItem>> getEquipmentItemsByFacilityId(int facilityId) {
+        try {
+            return ServiceResult.ok(
+                    equipmentItemDAO.findByFacilityId(facilityId)
             );
         } catch (SQLException e) {
             e.printStackTrace();

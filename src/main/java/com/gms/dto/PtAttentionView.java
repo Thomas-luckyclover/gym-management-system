@@ -13,6 +13,18 @@ public class PtAttentionView {
 
     // ===== 1. FIELD: PtDashboardService truyền đủ giá trị vào constructor =====
 
+    // ----- 1.0. Mã khách + gói (JSP dùng để gắn nút Zalo / dời buổi đúng người) -----
+    private final int customerId;          // PtClientPackageView.getCustomerId()
+    private final int ptSubscriptionId;    // PtClientPackageView.getPtSubscriptionId()
+
+    // Service chọn membership/frozen theo frozenOnSessionDate, hoặc closedDay từ lịch nghỉ.
+    // JSP chọn màu và nút xử lý; closedDay không gửi nhắc khách.
+    private final String kind;
+
+    // DAO đọc Sessions.SessionId của buổi ngày nghỉ; null với hai loại cảnh báo cũ.
+    // JSP gắn data-session-id để hộp #ptSessionDialog nhận đúng buổi cần dời.
+    private final Integer sessionId;
+
     // ----- 1.1. Service lấy nguyên giá trị từ DTO do DAO tạo -----
 
     // PtDashboardService: lấy từ PtClientPackageView.getCustomerName().
@@ -79,11 +91,26 @@ public class PtAttentionView {
      * @param attentionTitle tiêu đề cảnh báo
      * @param attentionMessage lời nhắc cụ thể
      */
-    public PtAttentionView(String customerName, LocalDate ptEndDate, int scheduledSessionCount,
+    public PtAttentionView(int customerId, int ptSubscriptionId, String customerName, LocalDate ptEndDate, int scheduledSessionCount,
             LocalDate sessionDate, LocalDate membershipEndDate, LocalDate freezeEndDate,
             String ptSubscriptionTypeLabel, String membershipStatusLabel,
             String attentionTitle, String attentionMessage) {
+        this(customerId, ptSubscriptionId, customerName, ptEndDate, scheduledSessionCount,
+                sessionDate, membershipEndDate, freezeEndDate, ptSubscriptionTypeLabel,
+                membershipStatusLabel, attentionTitle, attentionMessage,
+                freezeEndDate == null ? "membership" : "frozen", null);
+    }
+
+    /** Service truyền thêm loại cảnh báo và mã buổi; các field cũ giữ nguyên. */
+    public PtAttentionView(int customerId, int ptSubscriptionId, String customerName, LocalDate ptEndDate,
+            int scheduledSessionCount, LocalDate sessionDate, LocalDate membershipEndDate,
+            LocalDate freezeEndDate, String ptSubscriptionTypeLabel, String membershipStatusLabel,
+            String attentionTitle, String attentionMessage, String kind, Integer sessionId) {
+        this.kind = kind;
+        this.sessionId = sessionId;
         // B1: nhận các giá trị Service lấy từ DTO của DAO.
+        this.customerId = customerId;
+        this.ptSubscriptionId = ptSubscriptionId;
         this.customerName = customerName;
         this.ptEndDate = ptEndDate;
         this.scheduledSessionCount = scheduledSessionCount;
@@ -101,6 +128,14 @@ public class PtAttentionView {
     }
 
     // ===== 3. GETTER: cùng thứ tự với field, JSP đọc trực tiếp từ item =====
+
+    public int getCustomerId() { return customerId; }
+    /** JSP phân biệt membership, frozen và closedDay. */
+    public String getKind() { return kind; }
+
+    /** Mã buổi để mở hộp dời; hai loại cảnh báo cũ nhận null. */
+    public Integer getSessionId() { return sessionId; }
+    public int getPtSubscriptionId() { return ptSubscriptionId; }
     // Không có setter vì Service truyền đủ dữ liệu khi tạo DTO.
 
     // ----- 3.1. Giá trị lấy từ DTO của DAO, tương ứng nhóm 1.1 -----

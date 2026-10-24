@@ -1,5 +1,122 @@
 # File notes — mâu thuẫn tài liệu & quyết định đã chốt
 
+## Làm gọn 7 màn + JOB-08 tự nhắc khách (24/10/2026, ĐÃ CHỐT)
+Mục tiêu: code dễ học, nội dung trên màn hình chỉ thêm, không mất. Quy ước comment: mỗi hàm mở đầu `HÀM CHÍNH` (ai gọi, lúc nào) hoặc `HÀM PHỤ` (gọi ở bước nào của hàm nào); trong hàm chỉ ghi B1, B2…; đầu file liệt kê nhóm + hàm chính, các nhóm ngăn bằng `// ====`.
+
+**JOB-08 — tự nhắc khách thiếu quyền vào gym (thay nút "Nhắc khách" của PT)**
+- `RemindMissingGymAccessJob` chạy trong lượt 00:05 (`BackgroundJobScheduler.DAILY_JOBS`), xét các buổi PT `Scheduled` của NGÀY MAI (giờ Việt Nam).
+- Luật "vào được gym" giống JOB-04 (`AutoCloseSessionService.canUseGym`): có Membership hoặc DayPass phủ ngày tập VÀ không bảo lưu ngày đó. Không vào được → 1 thông báo hệ thống ở chuông (`Notifications.SentByEmployeeId` = NULL, Audience = Individual).
+- Gói PT đôi xét cả người đứng tên lẫn người tập cùng (`Orders.PartnerCustomerId`). Chỉ gửi cho tài khoản Active.
+- Bỏ qua ngày phòng nghỉ cả ngày (CBR-56: PT phải dời trước ngày nghỉ; SRS ghi buổi còn sót do JOB-04 hủy GymClosed nhưng phần này JOB-04 **chưa code** — xem mục "Cần sửa tiếp code runtime" bên dưới). Đã chạy thử trên DB: ngày nghỉ 20/10/2026, câu SQL cũ sẽ nhắc nhầm 4 khách mua gói; câu mới trả 0 dòng.
+- Câu nhắc: thiếu gói → "mua gói thành viên hoặc vé ngày"; đang bảo lưu → "liên hệ lễ tân kiểm tra thời gian bảo lưu". KHÔNG khuyên mua vé ngày khi đang bảo lưu, vì theo JOB-04 có vé ngày mà đang bảo lưu vẫn không vào được.
+- Chống gửi trùng: tiêu đề "Nhắc buổi PT ngày dd/MM/yyyy"; tài khoản đã có thông báo hệ thống cùng tiêu đề thì bỏ qua (job chạy lại không gửi lần 2). Khách có 2 buổi cùng ngày → 1 lời nhắc, nêu buổi sớm nhất. Bước kiểm tra + 2 câu INSERT nằm trong 1 transaction.
+- PT Dashboard bỏ nút "Nhắc khách", bỏ `doPost` + CSRF; thẻ "Cần membership" ghi "Hệ thống tự nhắc khách trước buổi 1 ngày".
+
+**PT Dashboard**
+- Giữ khối chào + thời tiết; bố cục khối đầu trang tách ra `css/dashboard-hero.css`, dùng chung với Trang cá nhân của khách.
+- Mỗi khách phụ trách (và người tập cùng của gói đôi) có số gọi (`tel:`) + nút **Zalo**. `ZaloUtil.toUrl` giữ lại chữ số, đổi `84xxxxxxxxx` → `0xxxxxxxxx`, trả `https://zalo.me/<số>`; không có số thì không hiện nút. `MyPtSessionService` dùng chung hàm này.
+
+**Gói của tôi**
+- Chỉ còn 1 link "Xem trên lịch tập" (thẻ Buổi tới); topbar màn này bỏ nút "Lịch tập".
+- Cột trái hết trống: dưới danh sách gói có "PT buổi tới" (tên, gọi, Nhắn Zalo) và "Vào phòng tập" (hôm nay vào được không + link mua gói). Bỏ mục "Đi tới" cũ.
+- Bỏ dòng thứ/ngày/buổi lặp trên-dưới. Màu + hình trạng thái buổi dùng chung `css/pages/customer/session-status.css`.
+
+**Lịch tập (MyPTSession)**: viết lại JSP/CSS/JS, Java giữ nguyên. Mobile chọn ngày bằng link server dựng sẵn (không cần JS). Topbar chỉ còn "Đặt buổi lẻ"; màn ≤ 480px chỉ hiện icon (aria-label giữ tên nút) để tiêu đề không bị ép.
+
+**Quên mật khẩu / Đăng nhập / Đăng ký**
+- Bỏ sub-title dưới tiêu đề form; thông tin cần thiết chuyển thành gợi ý dưới ô (VD "Mã 6 số sẽ được gửi tới email này…"). Quên mật khẩu viết lại Servlet/Service/JSP/JS/CSS; luồng 3 bước giữ nguyên (bước suy ra từ session, không từ URL).
+- Sửa lỗi có sẵn trong `common.js` (`bindFieldValidation`): ô có lỗi do server in sẵn trước đây chỉ mất lỗi khi rời ô → dòng lỗi biến mất đúng lúc nhấn chuột, nút gửi bị đẩy lên ~27px, cú bấm trượt, phải bấm lần 2. Nay ô đó được đánh dấu `invalid` ngay khi mở trang nên lỗi mất trong lúc gõ.
+
+**Trang chủ**: dọn comment + mục lục CSS, giao diện giữ nguyên (đã so pixel). Ảnh `strip-endurance.jpg` được phủ duotone xanh–cam như các ảnh khác (`strip-endurance.jpg.json` ghi cách xử lý).
+
+## PT Dashboard nhắc dời buổi ngày phòng nghỉ (22/10/2026)
+- DAO lấy từng buổi Scheduled của PT rơi vào OperatingHourExceptions.IsClosedAllDay = 1 trong 14 ngày tới; Service tạo thẻ closedDay trước các cảnh báo membership/bảo lưu.
+- Thẻ ngày nghỉ có nút Dời buổi mở đúng SessionId trong hộp UC-35, không gửi nhắc khách. PT phải dời trước ngày nghỉ; buổi còn Scheduled sau ngày nghỉ do JOB-04 hủy GymClosed, không trừ buổi, không tính hoa hồng, không dạy bù hoặc gia hạn.
+- Seed của Mai ngày 22/09/2026 (Session 83) đổi từ khách tự hủy sang Missed/NoCheckIn, tự chốt lúc 00:05 ngày 23/09; giữ nguyên SessionValue/CommissionAmount. CBR-56 cập nhật theo quyết định 10/10, không sửa schema.
+
+## Gói của tôi v2 + PT Dashboard nhắc khách (22/10/2026, ĐÃ CHỐT theo góp ý mentor)
+Mentor chê: danh sách buổi quá dài, điều hướng cụt, thiếu CTA. Đã sửa:
+- **Bỏ bảng #1 → N, chip lọc, dòng gập** (thay cho mục 21/10 bên dưới). Xem từng buổi → màn Lịch tập (nút "Xem trên lịch tập" mở đúng tháng có buổi tới).
+- **Lịch cố định dạng tuần mẫu T2–T6** (BR-35, CBR-43, BR-41): mỗi ô = giờ có nhiều buổi nhất của thứ đó (≥ 50%, hòa → giờ sớm). Thứ cố định nhưng khác giờ chính (VD T4 07:00) → viền đứt. Buổi lệch (đổi buổi, PT dời, chuyển PT, xếp giờ khác từ đầu) → "Buổi khác giờ" kèm lý do đọc từ `SessionMoveLogs`. Hàm `MyBookingService.applyWeekTemplate` có unit test.
+- **Dải chấm "Các buổi của gói"**: 1 ô = 1 buổi, vạch = sang tuần; mỗi trạng thái có hình riêng (đặc / × / gạch chéo / viền) để không chỉ dựa vào màu. **"Cần để ý"** chỉ liệt kê buổi cảnh báo sắp tới + vắng + hủy, kèm lý do.
+- **CTA tối đa 1, chọn theo ưu tiên** (`chooseCta`): thiếu quyền vào gym → mua gói thành viên online; gói PT còn ≤ 3 buổi hoặc ≤ 14 ngày → **gia hạn TẠI QUẦY** (CBR-48: gói PT không bán online — nút Gọi lễ tân + Báo PT trước); gói đã kết thúc → đăng ký lại tại quầy; ≥ 3 buổi lẻ/30 ngày → gợi ý gói PT (tại quầy). Hotline lấy `AppConstants.GYM_HOTLINE` (giống chân trang), giờ mở cửa đọc P-19.
+- **Điều hướng**: cột trái có mục "Đi tới" (Gói thành viên & vé ngày, Lịch tập, Đặt buổi lẻ); buổi lẻ có "Đặt lại với PT này" → `/customer/book-session?pt=<EmployeeId>` (**màn Đặt buổi lẻ cần đọc tham số `pt` để chọn sẵn PT**). **(24/10: bỏ mục "Đi tới", thay bằng "PT buổi tới" + "Vào phòng tập"; "Đặt lại với PT này" vẫn giữ.)**
+- Chữ giải thích phụ chuyển vào nút (i) (hint box chung), màn chỉ giữ dữ liệu.
+- **PT Dashboard**: bỏ khối "Đánh giá PT"; khối "Cần chú ý" có nút **Nhắc khách** → POST `/pt/dashboard` (CSRF) → 1 thông báo cá nhân (`Notifications` Audience = Individual, `SentByEmployeeId` = PT). Service tính lại danh sách Cần chú ý của chính PT đó (không tin form), mỗi khách 1 lần/ngày, khách chưa có tài khoản → báo PT nhắn Zalo (GBR-15). **(24/10: đã bỏ nút Nhắc khách, thay bằng JOB-08 tự nhắc — xem mục 24/10.)**
+- Khách xem lời nhắc ở **chuông thông báo** đã thêm vào header Gói của tôi + Lịch tập; lời nhắc dẫn khách về Gói của tôi, nơi CTA "Mua gói thành viên" đang hiện → 3 màn nối thành 1 luồng. **(24/10: lời nhắc nay do JOB-08 gửi.)**
+
+## Gói của tôi — làm lại UX cột trái và bảng buổi (21/10/2026, đã thay bằng v2 ở trên)
+- Bỏ 2 dropdown Tình trạng + Loại gói: "Buổi lẻ" nằm ở cả 2 dropdown nên tạo tổ hợp vô nghĩa (VD Đã kết thúc + Buổi lẻ → rỗng), người dùng tưởng lọc bị lỗi.
+- Thay bằng 3 tab: Đang tập / Đã kết thúc / Buổi lẻ (có số đếm). Dùng `bindTabs()` chung của `common.js` (`data-tab` ↔ `data-tab-panel`); JSP mở sẵn tab chứa gói đang xem. Loại gói (cá nhân/đôi) hiện thành nhãn trên thẻ, không lọc.
+- Thẻ gói không hiện mã gói (#82) vì dễ nhầm với số thứ tự buổi #1, #2; tiến độ ghi "17/45 buổi đã qua · còn 28".
+- Ô đếm → chip lọc có chấm màu trạng thái; đổi "Còn lại" thành "Sắp tới" (vẫn gồm Hôm nay + Sắp tới + Cần chú ý); chip = 0 thì khóa.
+- Bảng: buổi lẻ bỏ cột #, thêm cột PT; lý do chỉ hiện với Cần chú ý / Vắng / Đã hủy, câu chung của các trạng thái khác nằm trong "Chi tiết"; dòng buổi sắp tới có nhãn "Buổi tới"; bảng co theo số dòng, không còn khoảng trống lớn.
+- Đầu cột phải có thẻ **"Buổi tới"** (ngày giờ, còn mấy ngày, PT + Nhắn Zalo / Sao chép số / Google Calendar / Xem trên lịch tập; buổi Cần chú ý thì nói lý do ngay trên thẻ) + vòng tiến độ 17/45. Service thêm `focusSession`, `daysUntilFocus`, `endedCount` vào `MyBookingView` (có unit test).
+- Buổi đã qua (gồm cả "Đang cập nhật") được gập thành 1 dòng đầu bảng "▸ 19 buổi đã qua · 16 đã check-in · 1 vắng…", bấm để mở; bỏ cách tự cuộn + vạch "Hôm nay" làm trước đó. Bấm chip lọc khác "Tất cả" thì hiện đủ các buổi khớp, không gập.
+- Thêm `MyPtSessionRow.getDayName()` để hiện "Thứ 6, 23/10/2026".
+
+## Lịch tập — gọn giao diện và sửa đóng chi tiết (19/10/2026, cập nhật theo phản hồi)
+
+- Lịch tháng chỉ lấy/hiện buổi trong đúng tháng đã chọn. Ô đệm của tháng trước/sau để trống, không có số ngày hoặc link. Mỗi ngày hiện dạng d/M (6/10, 6/11), ngày có/không có buổi đều căn phía trên. Quyết định này thay cách hiện ngày ngoài tháng ở các mục cũ bên dưới.
+- Ngày hôm nay và ngày người dùng chọn có hai dấu độc lập: hôm nay nền cam + nhãn, ngày chọn viền xanh + nhãn “Đang chọn”. Cùng ngày giữ cả hai; khác tuần/tháng chỉ đánh dấu các ngày có trong lưới. Áp dụng cả tuần, tháng và chọn ngày trên mobile.
+- Servlet giữ `viewDate` là ngày hợp lệ thực sự đang xem; `selectedDate` là ngày được chọn qua URL. Ô chọn ngày và link Tuần/Tháng giữ đúng ngày đó, không đổi thành Thứ 2/ngày đầu tháng.
+- `MyPtSessionRow.ended` do Service so sánh giờ kết thúc với `now` của request; nền buổi cũ trầm hơn nhưng không disabled, không giảm opacity của cả thẻ và không đổi nhãn kết quả đã lưu. Thời điểm đúng bằng giờ kết thúc được tính đã kết thúc.
+- Màn Gói của tôi trên desktop từ 1080px và cao từ 480px dùng chiều cao cửa sổ: header và ô đếm cố định, danh sách gói/bảng buổi cuộn riêng. Không ẩn scrollbar bằng CSS để che phần tràn; mobile hoặc cửa sổ rất thấp vẫn cuộn trang bình thường. Đã kiểm tra trang cao đúng 720px ở viewport 720px, bàn phím End tới được hàng cuối trong bảng dài.
+- Thay 5 khung trước đó bằng **Sáng 06:00–12:00 / Chiều 12:00–18:00 / Tối 18:00–22:00**, xếp theo giờ bắt đầu. Service và test cùng dùng 3 khung.
+- Chỉ giữ tiêu đề trang ở topbar; bỏ “Lịch của bạn”, “Theo dõi hành trình tập” và các đoạn hướng dẫn lặp. Hướng dẫn sử dụng/cách đếm/trạng thái nằm trong HintBox `.pt-info` dùng chung.
+- Thanh công cụ chỉ gồm điều hướng tuần/tháng, Hôm nay, Chọn ngày và Tuần/Tháng. Ngày trong tiêu đề cột rút gọn dd/MM; ô buổi không lặp “Xem chi tiết”.
+- Nút Đóng là `type=button`, gọi `dialog.close()` trực tiếp. Không dùng form dialog vì bộ xử lý submit chung sẽ bật loading “Đang xử lý…” dù không có request server.
+- Bấm ngoài khung, nút Đóng hoặc Escape đều đóng và trả focus về buổi vừa chọn. Khóa cuộn nền khi mở; chỉ thân chi tiết có thể cuộn, phần đầu và nút Đóng luôn nhìn thấy.
+- Chi tiết gom PT/SĐT/liên hệ vào một nhóm; cảnh báo hiện ngay dưới ngày giờ, thông tin gói dùng nhãn–giá trị; Google Calendar là liên kết phụ.
+- Kiểm tra: 32/32 test của hai Service qua; Jasper biên dịch hai JSP không lỗi. Đã kiểm thử thực tế trên fixture Tomcat: nút Đóng không loading sau mở lại, bấm ngoài/Escape đóng, focus và cuộn nền được trả lại, HintBox mở được, desktop và mobile 390px dùng 3 khung.
+
+## Giao diện Lịch tập và Gói của tôi — triển khai tiếp (19/10/2026)
+
+- Mẫu đối chiếu: artifact Claude `8B3PiEFhEu9LGgbx8jJLVq`, gồm lịch tuần, thanh chi tiết, lịch tháng, gói và mobile theo ngày. Giữ theme/token/layout hiện tại; dữ liệu minh họa của mẫu không thay cho DB.
+- Phạm vi: Customer đang đăng nhập, chỉ đọc các buổi của người đứng tên hoặc người đi kèm gói đôi. Không mở thêm quyền cho vai trò khác; không có phân tầng tenant/plan trong chức năng này.
+- Lịch tuần: 5 khung × 7 ngày; mobile chọn một ngày và vẫn đọc đủ 5 khung. Lịch tháng hiện giờ + nhãn ngắn; bấm ngày/buổi để mở tuần chứa ngày đó.
+- Hai màn dùng chung nội dung chi tiết, link Zalo/Google Calendar và sao chép số. Clipboard bị chặn thì hiện ô số đã chọn để khách tự sao chép. Không có JS vẫn đọc được qua details.
+- Hai dropdown chỉ lọc danh sách gói bên trái; không âm thầm thay gói đang xem bên phải. Ô trạng thái lọc bảng buổi; Còn lại gồm Hôm nay, Sắp tới, Cần chú ý. Đang cập nhật được tính riêng và chỉ hiện ô đếm khi có buổi.
+- Số buổi đã qua trên thẻ gói là số buổi có ngày tập trước hôm nay, không phải số buổi hoàn thành. CheckedIn chỉ ghi nhận vào gym.
+- Tiêu chí nghiệm thu (Given / When / Then):
+  - Có lịch trong tuần → đổi tuần/tháng hoặc chọn ngày → URL giữ đúng cách xem và dữ liệu đúng khoảng; ngày sai/cực trị trở về hôm nay.
+  - Có buổi cảnh báo → mở chi tiết → đọc được lý do, PT và gói; Escape đóng và trả focus về buổi đã chọn.
+  - Có gói cá nhân/đôi/buổi lẻ → kết hợp hai bộ lọc → chỉ thẻ khớp cả hai xuất hiện; không khớp hiện thông báo rỗng.
+  - Có nhiều trạng thái → chọn Còn lại → chỉ hiện today/upcoming/warn, không gồm buổi pending hoặc đã hủy.
+  - Tải thành công nhưng không có dữ liệu → hiện trạng thái rỗng; lỗi Service → hiện lỗi và nút tải lại, không báo nhầm là không có buổi.
+  - Tên/lý do chứa ký tự HTML → hiển thị dạng chữ, không thực thi mã; buổi thiếu số PT → hướng dẫn liên hệ lễ tân.
+- Kiểm tra: build WAR và 151 test có sẵn đã qua; thêm test ngày URL sai/cực trị, bộ test hai Service qua 31/31. Jasper biên dịch hai JSP không lỗi. Đã chạy JSP trên Tomcat riêng với fixture minh họa trong target; chưa xác nhận truy vấn bằng SQL Server thật.
+
+## My PT Sessions — đổi sang thời khóa biểu, khách chỉ xem (19/10/2026, ĐÃ CHỐT theo góp ý GVHD)
+
+- **Bỏ khách tự hủy buổi (UC-39) và khách tự đổi buổi (UC-38, màn #53 Swap Session).** Lý do: vận hành thực tế khách nhắn PT qua Zalo; PT dời / đổi buổi giúp khách qua UC-35 (`PtReschedule`). Hủy phía khách ít giá trị. Hai mục 17/10 bên dưới về hủy / đổi buổi phía khách **hết hiệu lực**.
+- Màn `/customer/pt-sessions` thành **Lịch tập** dạng thời khóa biểu như FAP: hàng = 5 khung giờ cố định (Sáng sớm 06–09, Sáng 09–12, Trưa 12–15, Chiều 15–18, Tối 18–22, xếp theo giờ bắt đầu), cột = Thứ 2 → Chủ nhật; có chế độ Tuần / Tháng. Bấm một buổi → thanh chi tiết dọc bên phải (PT, gói, trạng thái + lý do, Nhắn Zalo, Sao chép số).
+- **Màn mới #50 `/customer/bookings` "Gói của tôi"**: cột trái danh sách gói PT + buổi lẻ (nhóm Đang tập / Đã kết thúc / Buổi lẻ, 2 dropdown Tình trạng + Loại gói); cột phải chi tiết gói + 5 ô đếm (Tất cả, Đã check-in, Vắng, Đã hủy, Còn lại — "Còn lại" gồm cả buổi cần chú ý) kiêm nút lọc + bảng buổi đánh số #1→N theo thứ tự thời gian.
+- Bỏ bộ lọc 5 ô (gói, loại, buổi trong ngày, từ/đến ngày), tab trạng thái lịch sử và phân trang 8 ngày (phân trang bỏ ở giai đoạn thay bằng thời khóa biểu).
+- Liên hệ PT: link `https://zalo.me/<SĐT>` + sao chép số (laptop bấm `tel:` không ra gì khi demo).
+- Dữ liệu cũ vẫn có buổi `Cancelled / ByCustomer` → giữ câu giải thích khi hiển thị lịch sử; schema không đổi.
+- Code giai đoạn 1 (19/10): đã xóa `PtSessionSwapService`, `PtSessionSwapDAO`, `PtSwapSlotView`, `PtSessionInfo`, `MyPtSessionFilter`, test đổi buổi, phần POST / hộp thoại / bộ lọc trên màn và các mã MSG108–113 chỉ dùng cho bộ lọc / hủy / đổi buổi.
+- Code giai đoạn 2 (19/10, backend): `MyPtSessionDAO` dùng 1 câu SQL gốc (CTE + `ROW_NUMBER` đánh số buổi theo ngày giờ trong từng gói, JOIN sẵn tên/SĐT PT) cho 3 hàm `findSessionsInRange` / `findSessionsOfPackage` / `findSingleSessions`; `findMyPackages` 1 câu cho cột trái; `findClosedDays` cho cảnh báo phòng nghỉ. `MyPtSessionService.getWeek/getMonth` + `applyStatus` (7 trạng thái), `MyBookingService` + `MyBookingServlet` `/customer/bookings?id=`. Ô đếm: Tổng = Đã check-in + Vắng + Đã hủy + Còn lại + Đang cập nhật. Đã bỏ thẻ "Lượt đổi còn lại" (khách không tự đổi buổi). JSP hai màn đang là bảng thô, giao diện thật ở giai đoạn 3.
+- **Cần sửa SRS:** bỏ UC-38, UC-39 phía khách (giữ đổi hộ qua PT), bỏ màn #53, cập nhật mô tả màn #50, #51, BF-08 A3/A4, các BR-73…79 / CBR liên quan tới thao tác của khách.
+
+## Khách hủy buổi — lý do không bắt buộc (17/10/2026, HẾT HIỆU LỰC từ 19/10 — xem mục trên)
+
+- Khách tự hủy buổi **không bắt buộc nhập lý do** (theo SRS 9.2.1: hủy không có ô nhập). Có ô "Lý do hủy (không bắt buộc)", tối đa 500 ký tự; bỏ trống thì `Sessions.CancelReason` = NULL.
+- GBR-09 (bắt buộc lý do 5–500) chỉ áp cho nhân viên hủy / từ chối / void; cần sửa câu chữ GBR-09 cho rõ phạm vi.
+- Vẫn giữ: ghi AuditLog, thông báo PT + người tập cùng (CBR-46), 1 transaction, vẫn trừ buổi không hoàn tiền (BR-79).
+
+## Customer Swap UC-38 — mở rộng ngày được chọn (17/10/2026, HẾT HIỆU LỰC từ 19/10 — khách không tự đổi buổi)
+
+- Khách đổi buổi được chọn **bất kỳ slot thứ 7 / Chủ nhật** của cùng PT, từ hôm nay tới **hết hạn gói** (tuần sau, tháng sau đều được). Bỏ giới hạn "chỉ tuần này, từ thứ 7 mở tuần sau" của CBR-39 cho riêng thao tác đổi buổi.
+- CBR-39 vẫn giữ nguyên cho đặt buổi lẻ (UC-37).
+- Các điều kiện khác giữ nguyên: cùng PT, slot Free, cùng thời lượng, chưa bắt đầu, trong hạn gói, gym mở cửa, PT/khách không trùng buổi, ít nhất 1 người vào được gym, còn lượt đổi.
+- Code: `PtSessionSwapService.findValidSlots` lấy slot tới `PackageEndDate`; `isAllowedSlot` bỏ điều kiện cửa sổ tuần. Test `anyWeekendInsidePackageTermIsAllowed`.
+- Cần sửa SRS: CBR-39 (tách riêng UC-37 / UC-38), mô tả UC-38 và mục 9.2.4 "Limited to the current week...".
+
+## BF-05 — chỉ nhận hai loại nghỉ cho đơn mới (23/10/2026, ĐÃ CHỐT)
+
+Theo yêu cầu user, form gửi đơn và bộ lọc quản lý chỉ còn Phép năm / Không lương. StaffLeaveService từ chối Sick ngay khi validate đầu vào, kể cả gửi trực tiếp POST. Giữ giá trị Sick trong entity và schema để đọc đúng lịch sử, không xóa hay đổi loại các đơn cũ. Tách đơn là cách xử lý phần vượt phép, không phải loại nghỉ thứ ba; chưa triển khai trong bước này. User yêu cầu chưa commit đến khi làm xong các phần còn lại.
+
 ## BF-05 — thu gọn thanh lọc danh sách (22/10/2026, ĐÃ CHỐT)
 
 User xem ảnh đề xuất rồi yêu cầu áp dụng. Thanh trên gồm hàng tab trạng thái và hàng tìm nhân viên/khoảng ngày gửi/Bộ lọc/Tìm; chức vụ và loại nghỉ nằm trong details mở bằng Bộ lọc, số lựa chọn hiện trên nút. Ô ngày vẫn để trống khi chưa chọn, tab và phân trang tiếp tục giữ các điều kiện đã chọn. Xóa lọc trở về trạng thái không giới hạn ngày. Giữ form GET và bộ lọc Service/DAO hiện có; không thêm nghiệp vụ mới.
@@ -395,3 +512,26 @@ Theo agents.md Phần 5: **chưa ai sửa schema**. Trước khi sửa: copy sch
 
 `frontend-design-pipeline-SWP391-v4.md`, `shared-library-guide.md` — nếu nhóm còn dùng, thêm vào thư mục gốc.
 Hướng dẫn dùng tokens/common hiện có: `docs/frontend-shared-usage.md`.
+- 23/10/2026 — Gói của tôi: gộp đầu gói/Buổi tới, giữ vòng tròn, bỏ lịch sử vắng/hủy và field thừa; hint i nhỏ, chỉ mở khi bấm và kẹp trong màn hình; giải thích Buổi khác giờ gộp vào i Lịch cố định. PT Dashboard gộp cảnh báo vào thẻ gói theo SubscriptionId, thêm SĐT chủ gói/partner; giữ nhắc khách và dời buổi.
+- Kiểm tra: 243 test pass, Jasper 0 lỗi, JS hợp lệ; seed Gia Hương/Mai và PT Sơn, desktop 1440 và mobile 390/320; draw.io cập nhật luồng/màu và tách 5 file theo màn.
+- 23/10/2026 — MyPTSession, MyBookings và Lịch PT: xếp hàm chính trước, hàm phụ theo nhóm ngay dưới; ngăn nhóm bằng dòng dấu bằng dài. Đối chiếu AST giữ nguyên 121 định nghĩa Java, 15 thân hàm JS và thứ tự khởi tạo; 243 test pass, JS hợp lệ.
+- 23/10/2026 — Lịch PT bước dựng khung: JSP/Servlet chuyển view=week|list bằng GET, giữ ngày và kiểu xem khi điều hướng tuần; cùng HTML đổi bố cục bằng CSS Grid. Chỉ có ô minh họa và nút khóa, chưa nối dữ liệu, kéo thả hoặc ghi DB; 243 test pass, Jasper 0 lỗi, kiểm tra desktop/mobile trên Tomcat QA.
+- 23/10/2026 — Lịch PT bước 7: kéo vùng trống hoặc nhập ngày/giờ để xem trước một khung theo P-06/P-19, bám mốc 15 phút; CSS Grid đặt vị trí, link chuyển lịch tuần/danh sách giữ lựa chọn trong cùng tuần. Chọn lại thay khung cũ; Escape/thả ngoài cột hủy kéo, Bỏ xem trước chỉ xóa lựa chọn tạm.
+- Kiểm tra bước 7: 243 test Java và 6 test JS pass, JSP biên dịch 0 lỗi; HTTP hai view 200, đọc cấu hình seed 90 phút và 05:30–22:00. Chưa ghi DB, chưa kiểm tra trùng buổi/đơn nghỉ/ngoại lệ; công bố vẫn khóa. Kiểm tra kéo thả thực tế trên Chrome chưa thực hiện do xét duyệt tự động chặn truy cập cửa sổ đang mở Google Docs.
+- 23/10/2026 — Lịch PT bước 8: Servlet gọi getWeek(accountId, date, now), JSP lặp week.days/day.items thay ô mẫu; phân biệt lỗi tải với ngày trống, hiện nhãn nghỉ/phòng đóng cửa và các kết quả buổi. Giờ xem trước lấy theo từng ngày, gồm ngoại lệ; xử lý buổi, gỡ và công bố chưa nối, không ghi DB.
+- Kiểm tra bước 8: 243 test Java, 9 test JS pass; WAR build thành công, Jasper 0 lỗi. Tomcat QA seed PT Sơn trả cùng 40 khối ở Tuần/Danh sách, tuần trống đủ 7 ngày, tuần phòng nghỉ vẫn có buổi, URL sai quay về tuần hiện tại; tài khoản không có hồ sơ PT hiện lỗi và không tải JS chọn khung. Kiểm tra trực quan trên trình duyệt chưa xác nhận.
+- 23/10/2026 — Sửa UI Lịch PT: lịch chiếm đủ chiều ngang, form nhập tay mở/thu gọn bằng details, bỏ khối hướng dẫn lặp và chữ Khung giờ trên ô trống; thước giờ/đầu ngày giữ khi cuộn, màu theo token sáng/tối. Preview chuyển sang lớp Grid riêng để không chia đôi cột ngày; chặn chọn chữ khi kéo, giữ nút Bỏ xem trước ngoài form.
+- Kiểm tra UI bằng Chrome headless với profile riêng, chỉ mở localhost QA: 12 trường hợp Tuần/Danh sách × 1440/390/320px × sáng/tối không tràn ngang trang; kéo không co thẻ hoặc bôi chữ, chuyển view/nhập giờ/bỏ xem trước pass, form mở ở 390/320px không tràn. 9 test JS pass, WAR build thành công, Jasper 0 lỗi; ảnh và báo cáo trong target/pt-schedule-ui-evidence.
+- 23/10/2026 — Lịch PT bỏ sticky trong lịch và giới hạn chiều cao tạo thanh cuộn dọc phụ; giữ cuộn dọc mặc định của trang, chỉ cuộn ngang riêng khi màn hình hẹp. Nhãn phòng nghỉ có dòng riêng dưới ngày, tăng khoảng dòng và chừa khe giữa thẻ; kiểm tra 1440/390/320px ở Tuần/Danh sách: không có cuộn dọc trong lịch, chữ không tràn thẻ, wheel cuộn đúng trang. Đây là thay đổi thay thế cách cuộn riêng ghi ở mục UI trước.
+- 23/10/2026 — Lịch PT bước 9: kéo/nhập thêm nhiều nháp, bỏ riêng/bỏ tất cả; sessionStorage giữ nháp theo tài khoản và tuần khi chuyển view hoặc tải lại. Công bố gửi một POST có CSRF; Service tính EndTime theo P-06, kiểm tra giờ/ngày nghỉ/phép/trùng lịch rồi ghi tất cả trong một transaction; mở lại Withdrawn đúng giờ bằng mã cũ, giữ nguyên giờ lịch sử.
+- Kiểm tra bước 9: 259 test Java, 9 test JS pass; 4 test SQL chạy riêng xác nhận ghi danh sách, từ chối trùng, mở lại Withdrawn và khóa công bố đồng thời, toàn bộ dữ liệu thử rollback. Jasper 0 lỗi; QA headless kiểm tra kéo, giữ nháp, POST bị từ chối thật, quyền/CSRF và 12 trường hợp responsive không tràn trang/cuộn dọc phụ. Luồng thành công trên UI dùng phản hồi giả lập để không ghi dữ liệu QA; Chromium có cảnh báo ViewTransition khi điều hướng nhanh, không có lỗi JS ứng dụng. Ảnh/báo cáo tại target/pt-schedule-step9-evidence.
+- 23/10/2026 — Đồng bộ dev_mb1_MinhLC trước khi chia 10 commit: nhận nhóm cảnh báo cùng lý do từ remote, giữ Cần để ý thu gọn và không khôi phục lịch sử vắng/hủy đã bỏ. Bản hợp nhất qua 260 test Java, 9 test JS; MyBookings, MyPTSession và Lịch PT biên dịch JSP 0 lỗi. Lịch PT hiện hoàn tất bước 9; bước 10 gỡ khung mới thống nhất cách chờ Công bố, chưa triển khai.
+- 23/10/2026 — Lịch PT bước 10 (Gỡ khung): nút Gỡ khung trên khung Free chưa bắt đầu chỉ đánh dấu "chờ gỡ" (ptRemovals, lưu sessionStorage key riêng `.remove`); bấm lại = Giữ lại; Bỏ tất cả xóa cả nháp và chờ gỡ. Công bố gửi chung một POST (slotDate/startTime + removeSlotId). Service gỡ trước rồi thêm trong cùng transaction; DAO withdrawFreeSlot đổi Free → Withdrawn (DBR-36) chỉ khi đúng PT, đang Free, chưa tới giờ và không có buổi Scheduled; một khung không gỡ được thì rollback cả lần gửi. schedule.js sắp lại theo quy ước HÀM CHÍNH/HÀM PHỤ (hàm phụ ngay dưới, ghi rõ gọi ở bước nào).
+- Kiểm tra bước 10: 266 test Java (5 test SQL bỏ qua vì cần DB local, đã thêm ca gỡ/gỡ lại/mở lại), 10 test JS pass. Chưa kiểm tra trên trình duyệt thật.
+- 24/10/2026 — Lịch PT: Lịch tuần ẩn nút thao tác (thẻ nhỏ), nên bấm thẳng vào thẻ khung Còn trống (thẻ có nút Gỡ do Service cho canRemove) để đánh dấu/bỏ chờ gỡ; Danh sách vẫn có nút. Thẻ có khách/đang giữ/đã qua không phản hồi (Xử lý buổi là bước 11). Kiểm tra trên Tomcat + SQL Server thật bằng Chrome headless: gỡ + thêm, Công bố lỗi trùng buổi giữ nháp, Công bố lại → 773 Withdrawn, khung mới Free.
+- 24/10/2026 — Lịch PT viết lại toàn màn cho dễ đọc và gọn (đã chốt với PT: bấm để đặt khung, điện thoại tự chuyển danh sách, thanh Công bố dính đáy, Java giữ nghiệp vụ).
+  - UI: một panel giống màn Lịch tập của khách (‹ tuần ›, Thêm khung, Tuần | Danh sách gạch cam, chú thích màu). Bỏ kéo thả: rê chuột thấy bóng khung 90 phút (đỏ kèm lý do nếu trùng/ngoài giờ), bấm để thêm nháp; form "Thêm khung" (Ngày + Giờ bắt đầu) cho điện thoại và bàn phím.
+  - Ít JS hơn: gỡ khung là checkbox trong thẻ (cả thẻ là label) → CSS :has() đổi kiểu "Chờ gỡ"; CSS counter đếm "x khung mới · y khung gỡ" và tự hiện thanh Công bố; kiểu danh sách là mặc định (mobile-first), lưới tuần chỉ ở ≥701px; thẻ tự xếp theo giờ bằng order. JS còn: thêm/bỏ nháp (template), lưu tạm sessionStorage, Công bố bằng FormData. Lỗi thêm khung dùng toast chung.
+  - Service tính sẵn khoảng giờ được thêm khung mỗi ngày (firstStartMinute/lastStartMinute; hôm nay tính từ sau giờ hiện tại) thay cho JS; DTO thêm isBlocking/startOfDay/endOfDay. Tên ngày đổi T2/CN → Thứ 2/Chủ nhật cho giống màn khách.
+  - Header PT tách ra css/pages/pt/header.css (trước nằm trong dashboard.css nên Lịch dạy lệch); _header.jspf có nút i khi Servlet đặt pageHelp; Lịch dạy hiện mã NV như Dashboard. Bỏ nút "Xử lý buổi" đang khóa (bước 11 sẽ làm thật).
+  - Kiểm tra: 267 test Java + 5 test SQL thật (SQL Server, rollback) + 6 test JS pass; impeccable detect 0 lỗi. Chrome trên Tomcat + DB seed: thêm bằng bấm và form, gỡ, F5 giữ, Danh sách giữ, Công bố "2 khung, gỡ 1"; 1440 tối/sáng, 390/320 cảm ứng không tràn ngang; Tab + Space gỡ được.

@@ -156,7 +156,7 @@ public class StaffLeaveService {
      * của PT (CBR-83).
      *
      * @param accountId AccountId của nhân viên từ session
-     * @param leaveType loại nghỉ (Annual, Sick, Unpaid)
+     * @param leaveType loại nghỉ được gửi mới (Annual hoặc Unpaid)
      * @param leaveDate ngày nghỉ (phải > hôm nay)
      * @param shiftType ca nghỉ (Morning, Afternoon, FullDay)
      * @param reason    lý do nghỉ (5–500 ký tự)
@@ -179,6 +179,10 @@ public class StaffLeaveService {
         // B1: validate dữ liệu đầu vào cơ bản
         if (leaveType == null) {
             return ServiceResult.failField("leaveType", "Vui lòng chọn loại nghỉ.");
+        }
+        // Đơn mới chỉ nhận phép năm hoặc không lương; Sick chỉ giữ để đọc đơn cũ.
+        if (leaveType != LeaveRequest.LeaveType.ANNUAL && leaveType != LeaveRequest.LeaveType.UNPAID) {
+            return ServiceResult.failField("leaveType", "Chỉ hỗ trợ nghỉ phép năm hoặc nghỉ không lương.");
         }
         if (shiftType == null) {
             return ServiceResult.failField("shiftType", "Vui lòng chọn ca nghỉ.");

@@ -1,0 +1,699 @@
+<?xml version='1.0' encoding='utf-8'?>
+<mxfile host="Electron" agent="Codex" pages="6">
+  <diagram id="index-pt-dashboard-flow" name="00. Mục lục · cách học">
+    <mxGraphModel dx="1800" dy="1320" grid="1" gridSize="10" guides="1" tooltips="1" connect="1" arrows="1" fold="1" page="1" pageScale="1" pageWidth="1800" pageHeight="1320" math="0" shadow="0">
+      <root>
+        <mxCell id="0" />
+        <mxCell id="1" parent="0" />
+        <mxCell id="index-pt-dashboard-flow-title" value="PT Dashboard · Sơ đồ học code" style="rounded=1;whiteSpace=wrap;html=1;align=left;verticalAlign=middle;spacing=16;fontFamily=Arial;fontSize=31;fontColor=#172b4d;fillColor=none;strokeColor=none;fontStyle=1;arcSize=6;" vertex="1" parent="1">
+          <mxGeometry x="40" y="20" width="1720" height="65" as="geometry" />
+        </mxCell>
+        <mxCell id="index-pt-dashboard-flow-subtitle" value="Bấm tên trang để mở luồng. Mỗi ô dùng tên hàm thật; mũi tên chỉ thứ tự đọc, nhánh if/else ghi ngay trong ô." style="rounded=1;whiteSpace=wrap;html=1;align=left;verticalAlign=middle;spacing=16;fontFamily=Arial;fontSize=20;fontColor=#172b4d;fillColor=none;strokeColor=none;fontStyle=0;arcSize=6;" vertex="1" parent="1">
+          <mxGeometry x="40" y="92" width="1720" height="65" as="geometry" />
+        </mxCell>
+        <mxCell id="index-pt-dashboard-flow-nav" value="Về mục lục" style="rounded=1;whiteSpace=wrap;html=1;align=left;verticalAlign=middle;spacing=16;fontFamily=Arial;fontSize=18;fontColor=#172b4d;fillColor=#f5f5f5;strokeColor=#666666;fontStyle=1;arcSize=6;" vertex="1" parent="1" link="data:page/id,index-pt-dashboard-flow">
+          <mxGeometry x="40" y="164" width="210" height="43" as="geometry" />
+        </mxCell>
+        <mxCell id="index-pt-dashboard-flow-legend-servlet" value="Servlet" style="rounded=1;whiteSpace=wrap;html=1;align=center;verticalAlign=middle;spacing=16;fontFamily=Arial;fontSize=18;fontColor=#172b4d;fillColor=#dae8fc;strokeColor=#6c8ebf;fontStyle=0;arcSize=6;" vertex="1" parent="1">
+          <mxGeometry x="290" y="164" width="180" height="43" as="geometry" />
+        </mxCell>
+        <mxCell id="index-pt-dashboard-flow-legend-service" value="Service" style="rounded=1;whiteSpace=wrap;html=1;align=center;verticalAlign=middle;spacing=16;fontFamily=Arial;fontSize=18;fontColor=#172b4d;fillColor=#e1d5e7;strokeColor=#9673a6;fontStyle=0;arcSize=6;" vertex="1" parent="1">
+          <mxGeometry x="488" y="164" width="180" height="43" as="geometry" />
+        </mxCell>
+        <mxCell id="index-pt-dashboard-flow-legend-dao" value="DAO / SQL" style="rounded=1;whiteSpace=wrap;html=1;align=center;verticalAlign=middle;spacing=16;fontFamily=Arial;fontSize=18;fontColor=#172b4d;fillColor=#fff2cc;strokeColor=#d6b656;fontStyle=0;arcSize=6;" vertex="1" parent="1">
+          <mxGeometry x="686" y="164" width="180" height="43" as="geometry" />
+        </mxCell>
+        <mxCell id="index-pt-dashboard-flow-legend-dto" value="DTO" style="rounded=1;whiteSpace=wrap;html=1;align=center;verticalAlign=middle;spacing=16;fontFamily=Arial;fontSize=18;fontColor=#172b4d;fillColor=#d5e8d4;strokeColor=#82b366;fontStyle=0;arcSize=6;" vertex="1" parent="1">
+          <mxGeometry x="884" y="164" width="180" height="43" as="geometry" />
+        </mxCell>
+        <mxCell id="index-pt-dashboard-flow-legend-ui" value="JSP / JS" style="rounded=1;whiteSpace=wrap;html=1;align=center;verticalAlign=middle;spacing=16;fontFamily=Arial;fontSize=18;fontColor=#172b4d;fillColor=#f5f5f5;strokeColor=#666666;fontStyle=0;arcSize=6;" vertex="1" parent="1">
+          <mxGeometry x="1082" y="164" width="180" height="43" as="geometry" />
+        </mxCell>
+        <mxCell id="index-pt-dashboard-flow-group-0" value="" style="rounded=1;whiteSpace=wrap;html=1;align=left;verticalAlign=middle;spacing=16;fontFamily=Arial;fontSize=20;fontColor=#172b4d;fillColor=#f5f5f5;strokeColor=#666666;fontStyle=0;arcSize=6;" vertex="1" parent="1">
+          <mxGeometry x="40" y="245" width="1720" height="950" as="geometry" />
+        </mxCell>
+        <mxCell id="index-pt-dashboard-flow-label-0" value="PT Dashboard" style="rounded=1;whiteSpace=wrap;html=1;align=left;verticalAlign=middle;spacing=16;fontFamily=Arial;fontSize=24;fontColor=#172b4d;fillColor=none;strokeColor=none;fontStyle=1;arcSize=6;" vertex="1" parent="1">
+          <mxGeometry x="48" y="253" width="1704" height="52" as="geometry" />
+        </mxCell>
+        <mxCell id="index-pt-dashboard-flow-link-0-0" value="17. PT Dashboard · tổng quan và DTO" style="rounded=1;whiteSpace=wrap;html=1;align=left;verticalAlign=middle;spacing=16;fontFamily=Arial;fontSize=18;fontColor=#172b4d;fillColor=#dae8fc;strokeColor=#6c8ebf;fontStyle=1;arcSize=6;" vertex="1" parent="1" link="data:page/id,gms-learn-dash-1">
+          <mxGeometry x="60" y="321" width="1680" height="70" as="geometry" />
+        </mxCell>
+        <mxCell id="index-pt-dashboard-flow-link-0-1" value="18. PT Dashboard · lịch và khách phụ trách" style="rounded=1;whiteSpace=wrap;html=1;align=left;verticalAlign=middle;spacing=16;fontFamily=Arial;fontSize=18;fontColor=#172b4d;fillColor=#dae8fc;strokeColor=#6c8ebf;fontStyle=1;arcSize=6;" vertex="1" parent="1" link="data:page/id,gms-learn-dash-2">
+          <mxGeometry x="60" y="403" width="1680" height="70" as="geometry" />
+        </mxCell>
+        <mxCell id="index-pt-dashboard-flow-link-0-2" value="19. PT Dashboard · ba loại Cần chú ý" style="rounded=1;whiteSpace=wrap;html=1;align=left;verticalAlign=middle;spacing=16;fontFamily=Arial;fontSize=18;fontColor=#172b4d;fillColor=#dae8fc;strokeColor=#6c8ebf;fontStyle=1;arcSize=6;" vertex="1" parent="1" link="data:page/id,gms-learn-dash-3">
+          <mxGeometry x="60" y="485" width="1680" height="70" as="geometry" />
+        </mxCell>
+        <mxCell id="index-pt-dashboard-flow-link-0-3" value="20. PT Dashboard · nhắc khách an toàn" style="rounded=1;whiteSpace=wrap;html=1;align=left;verticalAlign=middle;spacing=16;fontFamily=Arial;fontSize=18;fontColor=#172b4d;fillColor=#dae8fc;strokeColor=#6c8ebf;fontStyle=1;arcSize=6;" vertex="1" parent="1" link="data:page/id,gms-learn-dash-4">
+          <mxGeometry x="60" y="567" width="1680" height="70" as="geometry" />
+        </mxCell>
+        <mxCell id="index-pt-dashboard-flow-link-0-4" value="21. PT Dashboard · hoa hồng trọng tâm" style="rounded=1;whiteSpace=wrap;html=1;align=left;verticalAlign=middle;spacing=16;fontFamily=Arial;fontSize=18;fontColor=#172b4d;fillColor=#dae8fc;strokeColor=#6c8ebf;fontStyle=1;arcSize=6;" vertex="1" parent="1" link="data:page/id,gms-learn-dash-5">
+          <mxGeometry x="60" y="649" width="1680" height="70" as="geometry" />
+        </mxCell>
+        <mxCell id="index-pt-dashboard-flow-note" value="Code đang có là nguồn chính. DAO đọc DB; Service quyết định nghiệp vụ; DTO mang dữ liệu; JSP/JS hiển thị và tương tác. PT Dashboard: nút Dời buổi hiện mới mở hộp thoại; thao tác nghiệp vụ&lt;br&gt;còn bị vô hiệu hóa." style="rounded=1;whiteSpace=wrap;html=1;align=left;verticalAlign=middle;spacing=16;fontFamily=Arial;fontSize=19;fontColor=#172b4d;fillColor=#d5e8d4;strokeColor=#82b366;fontStyle=0;arcSize=6;" vertex="1" parent="1">
+          <mxGeometry x="40" y="1220" width="1720" height="85" as="geometry" />
+        </mxCell>
+      </root>
+    </mxGraphModel>
+  </diagram>
+  <diagram id="gms-learn-dash-1" name="17. PT Dashboard · tổng quan và DTO">
+    <mxGraphModel dx="1800" dy="1320" grid="1" gridSize="10" guides="1" tooltips="1" connect="1" arrows="1" fold="1" page="1" pageScale="1" pageWidth="1800" pageHeight="1320" math="0" shadow="0">
+      <root>
+        <mxCell id="0" />
+        <mxCell id="1" parent="0" />
+        <mxCell id="gms-learn-dash-1-title" value="17. PT Dashboard · tổng quan và DTO" style="rounded=1;whiteSpace=wrap;html=1;align=left;verticalAlign=middle;spacing=16;fontFamily=Arial;fontSize=31;fontColor=#172b4d;fillColor=none;strokeColor=none;fontStyle=1;arcSize=6;" vertex="1" parent="1">
+          <mxGeometry x="40" y="20" width="1720" height="65" as="geometry" />
+        </mxCell>
+        <mxCell id="gms-learn-dash-1-subtitle" value="GET /pt/dashboard: cột chính có lịch và hoa hồng; cột bên là Khách phụ trách, cảnh báo nằm trong đúng thẻ gói." style="rounded=1;whiteSpace=wrap;html=1;align=left;verticalAlign=middle;spacing=16;fontFamily=Arial;fontSize=20;fontColor=#172b4d;fillColor=none;strokeColor=none;fontStyle=0;arcSize=6;" vertex="1" parent="1">
+          <mxGeometry x="40" y="92" width="1720" height="65" as="geometry" />
+        </mxCell>
+        <mxCell id="gms-learn-dash-1-nav" value="Về mục lục" style="rounded=1;whiteSpace=wrap;html=1;align=left;verticalAlign=middle;spacing=16;fontFamily=Arial;fontSize=18;fontColor=#172b4d;fillColor=#f5f5f5;strokeColor=#666666;fontStyle=1;arcSize=6;" vertex="1" parent="1" link="data:page/id,index-pt-dashboard-flow">
+          <mxGeometry x="40" y="164" width="210" height="43" as="geometry" />
+        </mxCell>
+        <mxCell id="gms-learn-dash-1-legend-servlet" value="Servlet" style="rounded=1;whiteSpace=wrap;html=1;align=center;verticalAlign=middle;spacing=16;fontFamily=Arial;fontSize=18;fontColor=#172b4d;fillColor=#dae8fc;strokeColor=#6c8ebf;fontStyle=0;arcSize=6;" vertex="1" parent="1">
+          <mxGeometry x="290" y="164" width="180" height="43" as="geometry" />
+        </mxCell>
+        <mxCell id="gms-learn-dash-1-legend-service" value="Service" style="rounded=1;whiteSpace=wrap;html=1;align=center;verticalAlign=middle;spacing=16;fontFamily=Arial;fontSize=18;fontColor=#172b4d;fillColor=#e1d5e7;strokeColor=#9673a6;fontStyle=0;arcSize=6;" vertex="1" parent="1">
+          <mxGeometry x="488" y="164" width="180" height="43" as="geometry" />
+        </mxCell>
+        <mxCell id="gms-learn-dash-1-legend-dao" value="DAO / SQL" style="rounded=1;whiteSpace=wrap;html=1;align=center;verticalAlign=middle;spacing=16;fontFamily=Arial;fontSize=18;fontColor=#172b4d;fillColor=#fff2cc;strokeColor=#d6b656;fontStyle=0;arcSize=6;" vertex="1" parent="1">
+          <mxGeometry x="686" y="164" width="180" height="43" as="geometry" />
+        </mxCell>
+        <mxCell id="gms-learn-dash-1-legend-dto" value="DTO" style="rounded=1;whiteSpace=wrap;html=1;align=center;verticalAlign=middle;spacing=16;fontFamily=Arial;fontSize=18;fontColor=#172b4d;fillColor=#d5e8d4;strokeColor=#82b366;fontStyle=0;arcSize=6;" vertex="1" parent="1">
+          <mxGeometry x="884" y="164" width="180" height="43" as="geometry" />
+        </mxCell>
+        <mxCell id="gms-learn-dash-1-legend-ui" value="JSP / JS" style="rounded=1;whiteSpace=wrap;html=1;align=center;verticalAlign=middle;spacing=16;fontFamily=Arial;fontSize=18;fontColor=#172b4d;fillColor=#f5f5f5;strokeColor=#666666;fontStyle=0;arcSize=6;" vertex="1" parent="1">
+          <mxGeometry x="1082" y="164" width="180" height="43" as="geometry" />
+        </mxCell>
+        <mxCell id="gms-learn-dash-1-card-0" value="" style="rounded=1;whiteSpace=wrap;html=1;align=left;verticalAlign=middle;spacing=16;fontFamily=Arial;fontSize=20;fontColor=#172b4d;fillColor=#dae8fc;strokeColor=#6c8ebf;fontStyle=0;arcSize=6;" vertex="1" parent="1">
+          <mxGeometry x="40" y="230" width="520" height="350" as="geometry" />
+        </mxCell>
+        <mxCell id="gms-learn-dash-1-role-0" value="1. SERVLET" style="rounded=1;whiteSpace=wrap;html=1;align=left;verticalAlign=middle;spacing=16;fontFamily=Arial;fontSize=14;fontColor=#172b4d;fillColor=none;strokeColor=none;fontStyle=1;arcSize=6;" vertex="1" parent="gms-learn-dash-1-card-0">
+          <mxGeometry x="8.0" y="8.0" width="504" height="38" as="geometry" />
+        </mxCell>
+        <mxCell id="gms-learn-dash-1-heading-0" value="PtDashboardServlet.doGet()" style="rounded=1;whiteSpace=wrap;html=1;align=left;verticalAlign=middle;spacing=16;fontFamily=Arial;fontSize=22;fontColor=#172b4d;fillColor=none;strokeColor=none;fontStyle=1;arcSize=6;" vertex="1" parent="gms-learn-dash-1-card-0">
+          <mxGeometry x="8.0" y="45.0" width="504" height="41" as="geometry" />
+        </mxCell>
+        <mxCell id="gms-learn-dash-1-body-0" value="Lấy ACCOUNT_ID từ session.&lt;br&gt;Gọi getPtEmployeeCode(), getSchedule(),&lt;br&gt;getAttentionItems(), getAssignedPackages(),&lt;br&gt;getCommissionSummary().&lt;br&gt;Tạo CSRF token cho form nhắc khách." style="rounded=1;whiteSpace=wrap;html=1;align=left;verticalAlign=middle;spacing=16;fontFamily=Arial;fontSize=20;fontColor=#172b4d;fillColor=none;strokeColor=none;fontStyle=0;arcSize=6;" vertex="1" parent="gms-learn-dash-1-card-0">
+          <mxGeometry x="8.0" y="78.0" width="504" height="151" as="geometry" />
+        </mxCell>
+        <mxCell id="gms-learn-dash-1-card-1" value="" style="rounded=1;whiteSpace=wrap;html=1;align=left;verticalAlign=middle;spacing=16;fontFamily=Arial;fontSize=20;fontColor=#172b4d;fillColor=#e1d5e7;strokeColor=#9673a6;fontStyle=0;arcSize=6;" vertex="1" parent="1">
+          <mxGeometry x="640" y="230" width="520" height="350" as="geometry" />
+        </mxCell>
+        <mxCell id="gms-learn-dash-1-role-1" value="2. SERVICE" style="rounded=1;whiteSpace=wrap;html=1;align=left;verticalAlign=middle;spacing=16;fontFamily=Arial;fontSize=14;fontColor=#172b4d;fillColor=none;strokeColor=none;fontStyle=1;arcSize=6;" vertex="1" parent="gms-learn-dash-1-card-1">
+          <mxGeometry x="8.0" y="8.0" width="504" height="38" as="geometry" />
+        </mxCell>
+        <mxCell id="gms-learn-dash-1-heading-1" value="Xác thực PT cho nghiệp vụ" style="rounded=1;whiteSpace=wrap;html=1;align=left;verticalAlign=middle;spacing=16;fontFamily=Arial;fontSize=22;fontColor=#172b4d;fillColor=none;strokeColor=none;fontStyle=1;arcSize=6;" vertex="1" parent="gms-learn-dash-1-card-1">
+          <mxGeometry x="8.0" y="45.0" width="504" height="41" as="geometry" />
+        </mxCell>
+        <mxCell id="gms-learn-dash-1-body-1" value="Account phải Active; employee phải đang Working và&lt;br&gt;thuộc vai trò PT.&lt;br&gt;Mỗi kết quả là ServiceResult.&lt;br&gt;Một khối lỗi có attribute lỗi riêng; các khối tải được&lt;br&gt;vẫn có dữ liệu." style="rounded=1;whiteSpace=wrap;html=1;align=left;verticalAlign=middle;spacing=16;fontFamily=Arial;fontSize=20;fontColor=#172b4d;fillColor=none;strokeColor=none;fontStyle=0;arcSize=6;" vertex="1" parent="gms-learn-dash-1-card-1">
+          <mxGeometry x="8.0" y="78.0" width="504" height="151" as="geometry" />
+        </mxCell>
+        <mxCell id="gms-learn-dash-1-card-2" value="" style="rounded=1;whiteSpace=wrap;html=1;align=left;verticalAlign=middle;spacing=16;fontFamily=Arial;fontSize=20;fontColor=#172b4d;fillColor=#d5e8d4;strokeColor=#82b366;fontStyle=0;arcSize=6;" vertex="1" parent="1">
+          <mxGeometry x="1240" y="230" width="520" height="350" as="geometry" />
+        </mxCell>
+        <mxCell id="gms-learn-dash-1-role-2" value="3. DTO / KẾT QUẢ" style="rounded=1;whiteSpace=wrap;html=1;align=left;verticalAlign=middle;spacing=16;fontFamily=Arial;fontSize=14;fontColor=#172b4d;fillColor=none;strokeColor=none;fontStyle=1;arcSize=6;" vertex="1" parent="gms-learn-dash-1-card-2">
+          <mxGeometry x="8.0" y="8.0" width="504" height="38" as="geometry" />
+        </mxCell>
+        <mxCell id="gms-learn-dash-1-heading-2" value="Lịch và khách phụ trách" style="rounded=1;whiteSpace=wrap;html=1;align=left;verticalAlign=middle;spacing=16;fontFamily=Arial;fontSize=22;fontColor=#172b4d;fillColor=none;strokeColor=none;fontStyle=1;arcSize=6;" vertex="1" parent="gms-learn-dash-1-card-2">
+          <mxGeometry x="8.0" y="45.0" width="504" height="41" as="geometry" />
+        </mxCell>
+        <mxCell id="gms-learn-dash-1-body-2" value="scheduleDays: List&amp;lt;PtScheduleDayView&amp;gt; →&lt;br&gt;List&amp;lt;PtSessionView&amp;gt;.&lt;br&gt;assignedPackages: mỗi DTO có SubscriptionId, tên,&lt;br&gt;SĐT chủ gói/partner, hạn gói, số buổi và&lt;br&gt;List&amp;lt;PtAttentionView&amp;gt;." style="rounded=1;whiteSpace=wrap;html=1;align=left;verticalAlign=middle;spacing=16;fontFamily=Arial;fontSize=20;fontColor=#172b4d;fillColor=none;strokeColor=none;fontStyle=0;arcSize=6;" vertex="1" parent="gms-learn-dash-1-card-2">
+          <mxGeometry x="8.0" y="78.0" width="504" height="151" as="geometry" />
+        </mxCell>
+        <mxCell id="gms-learn-dash-1-card-3" value="" style="rounded=1;whiteSpace=wrap;html=1;align=left;verticalAlign=middle;spacing=16;fontFamily=Arial;fontSize=20;fontColor=#172b4d;fillColor=#d5e8d4;strokeColor=#82b366;fontStyle=0;arcSize=6;" vertex="1" parent="1">
+          <mxGeometry x="1240" y="710" width="520" height="350" as="geometry" />
+        </mxCell>
+        <mxCell id="gms-learn-dash-1-role-3" value="4. DTO / KẾT QUẢ" style="rounded=1;whiteSpace=wrap;html=1;align=left;verticalAlign=middle;spacing=16;fontFamily=Arial;fontSize=14;fontColor=#172b4d;fillColor=none;strokeColor=none;fontStyle=1;arcSize=6;" vertex="1" parent="gms-learn-dash-1-card-3">
+          <mxGeometry x="8.0" y="8.0" width="504" height="38" as="geometry" />
+        </mxCell>
+        <mxCell id="gms-learn-dash-1-heading-3" value="Cảnh báo và hoa hồng" style="rounded=1;whiteSpace=wrap;html=1;align=left;verticalAlign=middle;spacing=16;fontFamily=Arial;fontSize=22;fontColor=#172b4d;fillColor=none;strokeColor=none;fontStyle=1;arcSize=6;" vertex="1" parent="gms-learn-dash-1-card-3">
+          <mxGeometry x="8.0" y="45.0" width="504" height="41" as="geometry" />
+        </mxCell>
+        <mxCell id="gms-learn-dash-1-body-3" value="attentionItems: List&amp;lt;PtAttentionView&amp;gt; có kind&lt;br&gt;membership / frozen / closedDay.&lt;br&gt;commissionSummary: PtCommissionSummaryView&lt;br&gt;chứa số tiền và số lượng theo trạng thái." style="rounded=1;whiteSpace=wrap;html=1;align=left;verticalAlign=middle;spacing=16;fontFamily=Arial;fontSize=20;fontColor=#172b4d;fillColor=none;strokeColor=none;fontStyle=0;arcSize=6;" vertex="1" parent="gms-learn-dash-1-card-3">
+          <mxGeometry x="8.0" y="78.0" width="504" height="124" as="geometry" />
+        </mxCell>
+        <mxCell id="gms-learn-dash-1-card-4" value="" style="rounded=1;whiteSpace=wrap;html=1;align=left;verticalAlign=middle;spacing=16;fontFamily=Arial;fontSize=20;fontColor=#172b4d;fillColor=#dae8fc;strokeColor=#6c8ebf;fontStyle=0;arcSize=6;" vertex="1" parent="1">
+          <mxGeometry x="640" y="710" width="520" height="350" as="geometry" />
+        </mxCell>
+        <mxCell id="gms-learn-dash-1-role-4" value="5. SERVLET" style="rounded=1;whiteSpace=wrap;html=1;align=left;verticalAlign=middle;spacing=16;fontFamily=Arial;fontSize=14;fontColor=#172b4d;fillColor=none;strokeColor=none;fontStyle=1;arcSize=6;" vertex="1" parent="gms-learn-dash-1-card-4">
+          <mxGeometry x="8.0" y="8.0" width="504" height="38" as="geometry" />
+        </mxCell>
+        <mxCell id="gms-learn-dash-1-heading-4" value="Weather và forward" style="rounded=1;whiteSpace=wrap;html=1;align=left;verticalAlign=middle;spacing=16;fontFamily=Arial;fontSize=22;fontColor=#172b4d;fillColor=none;strokeColor=none;fontStyle=1;arcSize=6;" vertex="1" parent="gms-learn-dash-1-card-4">
+          <mxGeometry x="8.0" y="45.0" width="504" height="41" as="geometry" />
+        </mxCell>
+        <mxCell id="gms-learn-dash-1-body-4" value="WeatherService có preview / dữ liệu hôm nay, cache&lt;br&gt;và dự phòng.&lt;br&gt;Servlet đặt today, activeNav, pageTitle rồi forward&lt;br&gt;pt/dashboard.jsp.&lt;br&gt;getRating() hiện không được gọi để dựng màn." style="rounded=1;whiteSpace=wrap;html=1;align=left;verticalAlign=middle;spacing=16;fontFamily=Arial;fontSize=20;fontColor=#172b4d;fillColor=none;strokeColor=none;fontStyle=0;arcSize=6;" vertex="1" parent="gms-learn-dash-1-card-4">
+          <mxGeometry x="8.0" y="78.0" width="504" height="151" as="geometry" />
+        </mxCell>
+        <mxCell id="gms-learn-dash-1-card-5" value="" style="rounded=1;whiteSpace=wrap;html=1;align=left;verticalAlign=middle;spacing=16;fontFamily=Arial;fontSize=20;fontColor=#172b4d;fillColor=#f5f5f5;strokeColor=#666666;fontStyle=0;arcSize=6;" vertex="1" parent="1">
+          <mxGeometry x="40" y="710" width="520" height="350" as="geometry" />
+        </mxCell>
+        <mxCell id="gms-learn-dash-1-role-5" value="6. JSP / TRÌNH DUYỆT" style="rounded=1;whiteSpace=wrap;html=1;align=left;verticalAlign=middle;spacing=16;fontFamily=Arial;fontSize=14;fontColor=#172b4d;fillColor=none;strokeColor=none;fontStyle=1;arcSize=6;" vertex="1" parent="gms-learn-dash-1-card-5">
+          <mxGeometry x="8.0" y="8.0" width="504" height="38" as="geometry" />
+        </mxCell>
+        <mxCell id="gms-learn-dash-1-heading-5" value="Một khối Khách phụ trách" style="rounded=1;whiteSpace=wrap;html=1;align=left;verticalAlign=middle;spacing=16;fontFamily=Arial;fontSize=22;fontColor=#172b4d;fillColor=none;strokeColor=none;fontStyle=1;arcSize=6;" vertex="1" parent="gms-learn-dash-1-card-5">
+          <mxGeometry x="8.0" y="45.0" width="504" height="41" as="geometry" />
+        </mxCell>
+        <mxCell id="gms-learn-dash-1-body-5" value="Mỗi gói hiện một thẻ: tên, SĐT bấm gọi, số buổi và&lt;br&gt;hạn gói.&lt;br&gt;Cảnh báo + nút nhắc/dời nằm ngay dưới gói.&lt;br&gt;Không còn thẻ Cần chú ý riêng hoặc hai ô&lt;br&gt;Membership/Gói PT trùng." style="rounded=1;whiteSpace=wrap;html=1;align=left;verticalAlign=middle;spacing=16;fontFamily=Arial;fontSize=20;fontColor=#172b4d;fillColor=none;strokeColor=none;fontStyle=0;arcSize=6;" vertex="1" parent="gms-learn-dash-1-card-5">
+          <mxGeometry x="8.0" y="78.0" width="504" height="151" as="geometry" />
+        </mxCell>
+        <mxCell id="gms-learn-dash-1-edge-0" value="" style="edgeStyle=orthogonalEdgeStyle;rounded=0;html=1;endArrow=block;endFill=1;strokeColor=#46566d;strokeWidth=2;fontFamily=Arial;fontSize=16;labelBackgroundColor=#ffffff;jettySize=auto;exitX=1.0;exitY=0.5;exitDx=0;exitDy=0;entryX=0.0;entryY=0.5;entryDx=0;entryDy=0;" edge="1" parent="1" source="gms-learn-dash-1-card-0" target="gms-learn-dash-1-card-1">
+          <mxGeometry relative="1" as="geometry" />
+        </mxCell>
+        <mxCell id="gms-learn-dash-1-edge-1" value="" style="edgeStyle=orthogonalEdgeStyle;rounded=0;html=1;endArrow=block;endFill=1;strokeColor=#46566d;strokeWidth=2;fontFamily=Arial;fontSize=16;labelBackgroundColor=#ffffff;jettySize=auto;exitX=1.0;exitY=0.5;exitDx=0;exitDy=0;entryX=0.0;entryY=0.5;entryDx=0;entryDy=0;" edge="1" parent="1" source="gms-learn-dash-1-card-1" target="gms-learn-dash-1-card-2">
+          <mxGeometry relative="1" as="geometry" />
+        </mxCell>
+        <mxCell id="gms-learn-dash-1-edge-2" value="" style="edgeStyle=orthogonalEdgeStyle;rounded=0;html=1;endArrow=block;endFill=1;strokeColor=#46566d;strokeWidth=2;fontFamily=Arial;fontSize=16;labelBackgroundColor=#ffffff;jettySize=auto;exitX=0.5;exitY=1.0;exitDx=0;exitDy=0;entryX=0.5;entryY=0.0;entryDx=0;entryDy=0;" edge="1" parent="1" source="gms-learn-dash-1-card-2" target="gms-learn-dash-1-card-3">
+          <mxGeometry relative="1" as="geometry" />
+        </mxCell>
+        <mxCell id="gms-learn-dash-1-edge-3" value="" style="edgeStyle=orthogonalEdgeStyle;rounded=0;html=1;endArrow=block;endFill=1;strokeColor=#46566d;strokeWidth=2;fontFamily=Arial;fontSize=16;labelBackgroundColor=#ffffff;jettySize=auto;exitX=0.0;exitY=0.5;exitDx=0;exitDy=0;entryX=1.0;entryY=0.5;entryDx=0;entryDy=0;" edge="1" parent="1" source="gms-learn-dash-1-card-3" target="gms-learn-dash-1-card-4">
+          <mxGeometry relative="1" as="geometry" />
+        </mxCell>
+        <mxCell id="gms-learn-dash-1-edge-4" value="" style="edgeStyle=orthogonalEdgeStyle;rounded=0;html=1;endArrow=block;endFill=1;strokeColor=#46566d;strokeWidth=2;fontFamily=Arial;fontSize=16;labelBackgroundColor=#ffffff;jettySize=auto;exitX=0.0;exitY=0.5;exitDx=0;exitDy=0;entryX=1.0;entryY=0.5;entryDx=0;entryDy=0;" edge="1" parent="1" source="gms-learn-dash-1-card-4" target="gms-learn-dash-1-card-5">
+          <mxGeometry relative="1" as="geometry" />
+        </mxCell>
+        <mxCell id="gms-learn-dash-1-read" value="Đọc theo số và mũi tên: hàng trên từ trái sang phải, hàng dưới từ phải sang trái. Mỗi ô giải thích một bước học." style="rounded=1;whiteSpace=wrap;html=1;align=left;verticalAlign=middle;spacing=16;fontFamily=Arial;fontSize=18;fontColor=#172b4d;fillColor=none;strokeColor=none;fontStyle=0;arcSize=6;" vertex="1" parent="1">
+          <mxGeometry x="40" y="1090" width="1720" height="45" as="geometry" />
+        </mxCell>
+        <mxCell id="gms-learn-dash-1-note" value="GHI NHỚ&lt;br&gt;Đừng nhầm PtScheduleDayView của Dashboard với DTO lịch public mới đang code dở. Sơ đồ này chỉ mô tả năm màn đã có trong yêu cầu." style="rounded=1;whiteSpace=wrap;html=1;align=left;verticalAlign=middle;spacing=16;fontFamily=Arial;fontSize=20;fontColor=#172b4d;fillColor=#d5e8d4;strokeColor=#82b366;fontStyle=0;arcSize=6;" vertex="1" parent="1">
+          <mxGeometry x="40" y="1150" width="1720" height="110" as="geometry" />
+        </mxCell>
+        <mxCell id="gms-learn-dash-1-source" value="Đối chiếu: PtDashboardServlet.java; PtDashboardService.java; DTO PtScheduleDayView/PtSessionView/PtAttentionView/PtCommissionSummaryView | Code hiện tại: 23/10/2026 (gồm thay đổi chưa commit)." style="rounded=1;whiteSpace=wrap;html=1;align=left;verticalAlign=middle;spacing=16;fontFamily=Arial;fontSize=14;fontColor=#172b4d;fillColor=none;strokeColor=none;fontStyle=0;arcSize=6;" vertex="1" parent="1">
+          <mxGeometry x="40" y="1267" width="1720" height="45" as="geometry" />
+        </mxCell>
+      </root>
+    </mxGraphModel>
+  </diagram>
+  <diagram id="gms-learn-dash-2" name="18. PT Dashboard · lịch và khách phụ trách">
+    <mxGraphModel dx="1800" dy="1320" grid="1" gridSize="10" guides="1" tooltips="1" connect="1" arrows="1" fold="1" page="1" pageScale="1" pageWidth="1800" pageHeight="1320" math="0" shadow="0">
+      <root>
+        <mxCell id="0" />
+        <mxCell id="1" parent="0" />
+        <mxCell id="gms-learn-dash-2-title" value="18. PT Dashboard · lịch và khách phụ trách" style="rounded=1;whiteSpace=wrap;html=1;align=left;verticalAlign=middle;spacing=16;fontFamily=Arial;fontSize=31;fontColor=#172b4d;fillColor=none;strokeColor=none;fontStyle=1;arcSize=6;" vertex="1" parent="1">
+          <mxGeometry x="40" y="20" width="1720" height="65" as="geometry" />
+        </mxCell>
+        <mxCell id="gms-learn-dash-2-subtitle" value="Hai danh sách khác mục đích: lịch theo buổi thật của PT, khách phụ trách theo gói được giao và buổi lẻ còn tới." style="rounded=1;whiteSpace=wrap;html=1;align=left;verticalAlign=middle;spacing=16;fontFamily=Arial;fontSize=20;fontColor=#172b4d;fillColor=none;strokeColor=none;fontStyle=0;arcSize=6;" vertex="1" parent="1">
+          <mxGeometry x="40" y="92" width="1720" height="65" as="geometry" />
+        </mxCell>
+        <mxCell id="gms-learn-dash-2-nav" value="Về mục lục" style="rounded=1;whiteSpace=wrap;html=1;align=left;verticalAlign=middle;spacing=16;fontFamily=Arial;fontSize=18;fontColor=#172b4d;fillColor=#f5f5f5;strokeColor=#666666;fontStyle=1;arcSize=6;" vertex="1" parent="1" link="data:page/id,index-pt-dashboard-flow">
+          <mxGeometry x="40" y="164" width="210" height="43" as="geometry" />
+        </mxCell>
+        <mxCell id="gms-learn-dash-2-legend-servlet" value="Servlet" style="rounded=1;whiteSpace=wrap;html=1;align=center;verticalAlign=middle;spacing=16;fontFamily=Arial;fontSize=18;fontColor=#172b4d;fillColor=#dae8fc;strokeColor=#6c8ebf;fontStyle=0;arcSize=6;" vertex="1" parent="1">
+          <mxGeometry x="290" y="164" width="180" height="43" as="geometry" />
+        </mxCell>
+        <mxCell id="gms-learn-dash-2-legend-service" value="Service" style="rounded=1;whiteSpace=wrap;html=1;align=center;verticalAlign=middle;spacing=16;fontFamily=Arial;fontSize=18;fontColor=#172b4d;fillColor=#e1d5e7;strokeColor=#9673a6;fontStyle=0;arcSize=6;" vertex="1" parent="1">
+          <mxGeometry x="488" y="164" width="180" height="43" as="geometry" />
+        </mxCell>
+        <mxCell id="gms-learn-dash-2-legend-dao" value="DAO / SQL" style="rounded=1;whiteSpace=wrap;html=1;align=center;verticalAlign=middle;spacing=16;fontFamily=Arial;fontSize=18;fontColor=#172b4d;fillColor=#fff2cc;strokeColor=#d6b656;fontStyle=0;arcSize=6;" vertex="1" parent="1">
+          <mxGeometry x="686" y="164" width="180" height="43" as="geometry" />
+        </mxCell>
+        <mxCell id="gms-learn-dash-2-legend-dto" value="DTO" style="rounded=1;whiteSpace=wrap;html=1;align=center;verticalAlign=middle;spacing=16;fontFamily=Arial;fontSize=18;fontColor=#172b4d;fillColor=#d5e8d4;strokeColor=#82b366;fontStyle=0;arcSize=6;" vertex="1" parent="1">
+          <mxGeometry x="884" y="164" width="180" height="43" as="geometry" />
+        </mxCell>
+        <mxCell id="gms-learn-dash-2-legend-ui" value="JSP / JS" style="rounded=1;whiteSpace=wrap;html=1;align=center;verticalAlign=middle;spacing=16;fontFamily=Arial;fontSize=18;fontColor=#172b4d;fillColor=#f5f5f5;strokeColor=#666666;fontStyle=0;arcSize=6;" vertex="1" parent="1">
+          <mxGeometry x="1082" y="164" width="180" height="43" as="geometry" />
+        </mxCell>
+        <mxCell id="gms-learn-dash-2-card-0" value="" style="rounded=1;whiteSpace=wrap;html=1;align=left;verticalAlign=middle;spacing=16;fontFamily=Arial;fontSize=20;fontColor=#172b4d;fillColor=#e1d5e7;strokeColor=#9673a6;fontStyle=0;arcSize=6;" vertex="1" parent="1">
+          <mxGeometry x="40" y="230" width="520" height="350" as="geometry" />
+        </mxCell>
+        <mxCell id="gms-learn-dash-2-role-0" value="1. SERVICE" style="rounded=1;whiteSpace=wrap;html=1;align=left;verticalAlign=middle;spacing=16;fontFamily=Arial;fontSize=14;fontColor=#172b4d;fillColor=none;strokeColor=none;fontStyle=1;arcSize=6;" vertex="1" parent="gms-learn-dash-2-card-0">
+          <mxGeometry x="8.0" y="8.0" width="504" height="38" as="geometry" />
+        </mxCell>
+        <mxCell id="gms-learn-dash-2-heading-0" value="getSchedule(): 7 ngày tới" style="rounded=1;whiteSpace=wrap;html=1;align=left;verticalAlign=middle;spacing=16;fontFamily=Arial;fontSize=22;fontColor=#172b4d;fillColor=none;strokeColor=none;fontStyle=1;arcSize=6;" vertex="1" parent="gms-learn-dash-2-card-0">
+          <mxGeometry x="8.0" y="45.0" width="504" height="41" as="geometry" />
+        </mxCell>
+        <mxCell id="gms-learn-dash-2-body-0" value="Lấy today từ now; khoảng today → today+6.&lt;br&gt;Đây không phải tuần luôn bắt đầu Thứ 2.&lt;br&gt;Gọi PtDashboardDAO.findSessions(ptEmployeeId,&lt;br&gt;from, to)." style="rounded=1;whiteSpace=wrap;html=1;align=left;verticalAlign=middle;spacing=16;fontFamily=Arial;fontSize=20;fontColor=#172b4d;fillColor=none;strokeColor=none;fontStyle=0;arcSize=6;" vertex="1" parent="gms-learn-dash-2-card-0">
+          <mxGeometry x="8.0" y="78.0" width="504" height="124" as="geometry" />
+        </mxCell>
+        <mxCell id="gms-learn-dash-2-card-1" value="" style="rounded=1;whiteSpace=wrap;html=1;align=left;verticalAlign=middle;spacing=16;fontFamily=Arial;fontSize=20;fontColor=#172b4d;fillColor=#e1d5e7;strokeColor=#9673a6;fontStyle=0;arcSize=6;" vertex="1" parent="1">
+          <mxGeometry x="640" y="230" width="520" height="350" as="geometry" />
+        </mxCell>
+        <mxCell id="gms-learn-dash-2-role-1" value="2. SERVICE" style="rounded=1;whiteSpace=wrap;html=1;align=left;verticalAlign=middle;spacing=16;fontFamily=Arial;fontSize=14;fontColor=#172b4d;fillColor=none;strokeColor=none;fontStyle=1;arcSize=6;" vertex="1" parent="gms-learn-dash-2-card-1">
+          <mxGeometry x="8.0" y="8.0" width="504" height="38" as="geometry" />
+        </mxCell>
+        <mxCell id="gms-learn-dash-2-heading-1" value="Dựng từng ngày và buổi" style="rounded=1;whiteSpace=wrap;html=1;align=left;verticalAlign=middle;spacing=16;fontFamily=Arial;fontSize=22;fontColor=#172b4d;fillColor=none;strokeColor=none;fontStyle=1;arcSize=6;" vertex="1" parent="gms-learn-dash-2-card-1">
+          <mxGeometry x="8.0" y="45.0" width="504" height="41" as="geometry" />
+        </mxCell>
+        <mxCell id="gms-learn-dash-2-body-1" value="prepareSessionDisplay() thêm nhãn trạng thái / lý&lt;br&gt;do.&lt;br&gt;Scheduled và start &amp;gt; now → canOpenActions=true.&lt;br&gt;For 7 ngày: gom các buổi cùng ngày, sắp theo giờ;&lt;br&gt;ngày trống vẫn có DTO." style="rounded=1;whiteSpace=wrap;html=1;align=left;verticalAlign=middle;spacing=16;fontFamily=Arial;fontSize=20;fontColor=#172b4d;fillColor=none;strokeColor=none;fontStyle=0;arcSize=6;" vertex="1" parent="gms-learn-dash-2-card-1">
+          <mxGeometry x="8.0" y="78.0" width="504" height="151" as="geometry" />
+        </mxCell>
+        <mxCell id="gms-learn-dash-2-card-2" value="" style="rounded=1;whiteSpace=wrap;html=1;align=left;verticalAlign=middle;spacing=16;fontFamily=Arial;fontSize=20;fontColor=#172b4d;fillColor=#f5f5f5;strokeColor=#666666;fontStyle=0;arcSize=6;" vertex="1" parent="1">
+          <mxGeometry x="1240" y="230" width="520" height="350" as="geometry" />
+        </mxCell>
+        <mxCell id="gms-learn-dash-2-role-2" value="3. JSP / TRÌNH DUYỆT" style="rounded=1;whiteSpace=wrap;html=1;align=left;verticalAlign=middle;spacing=16;fontFamily=Arial;fontSize=14;fontColor=#172b4d;fillColor=none;strokeColor=none;fontStyle=1;arcSize=6;" vertex="1" parent="gms-learn-dash-2-card-2">
+          <mxGeometry x="8.0" y="8.0" width="504" height="38" as="geometry" />
+        </mxCell>
+        <mxCell id="gms-learn-dash-2-heading-2" value="Hiển thị lịch ở Dashboard" style="rounded=1;whiteSpace=wrap;html=1;align=left;verticalAlign=middle;spacing=16;fontFamily=Arial;fontSize=22;fontColor=#172b4d;fillColor=none;strokeColor=none;fontStyle=1;arcSize=6;" vertex="1" parent="gms-learn-dash-2-card-2">
+          <mxGeometry x="8.0" y="45.0" width="504" height="41" as="geometry" />
+        </mxCell>
+        <mxCell id="gms-learn-dash-2-body-2" value="PtScheduleDayView → tab ngày → PtSessionView.&lt;br&gt;Các trạng thái Scheduled / CheckedIn / Missed /&lt;br&gt;Cancelled có nhãn riêng.&lt;br&gt;Mở Xử lý buổi chỉ mở hộp thoại với đúng SessionId." style="rounded=1;whiteSpace=wrap;html=1;align=left;verticalAlign=middle;spacing=16;fontFamily=Arial;fontSize=20;fontColor=#172b4d;fillColor=none;strokeColor=none;fontStyle=0;arcSize=6;" vertex="1" parent="gms-learn-dash-2-card-2">
+          <mxGeometry x="8.0" y="78.0" width="504" height="124" as="geometry" />
+        </mxCell>
+        <mxCell id="gms-learn-dash-2-card-3" value="" style="rounded=1;whiteSpace=wrap;html=1;align=left;verticalAlign=middle;spacing=16;fontFamily=Arial;fontSize=20;fontColor=#172b4d;fillColor=#fff2cc;strokeColor=#d6b656;fontStyle=0;arcSize=6;" vertex="1" parent="1">
+          <mxGeometry x="1240" y="710" width="520" height="350" as="geometry" />
+        </mxCell>
+        <mxCell id="gms-learn-dash-2-role-3" value="4. DAO / SQL" style="rounded=1;whiteSpace=wrap;html=1;align=left;verticalAlign=middle;spacing=16;fontFamily=Arial;fontSize=14;fontColor=#172b4d;fillColor=none;strokeColor=none;fontStyle=1;arcSize=6;" vertex="1" parent="gms-learn-dash-2-card-3">
+          <mxGeometry x="8.0" y="8.0" width="504" height="38" as="geometry" />
+        </mxCell>
+        <mxCell id="gms-learn-dash-2-heading-3" value="findAssignedPackages()" style="rounded=1;whiteSpace=wrap;html=1;align=left;verticalAlign=middle;spacing=16;fontFamily=Arial;fontSize=22;fontColor=#172b4d;fillColor=none;strokeColor=none;fontStyle=1;arcSize=6;" vertex="1" parent="gms-learn-dash-2-card-3">
+          <mxGeometry x="8.0" y="45.0" width="504" height="41" as="geometry" />
+        </mxCell>
+        <mxCell id="gms-learn-dash-2-body-3" value="Đọc gói Paid được giao và buổi lẻ sắp dạy; đọc thêm&lt;br&gt;các SubscriptionId đang có cảnh báo để không bỏ&lt;br&gt;sót buổi PT dạy thay.&lt;br&gt;SĐT lấy từ Persons.Phone; ID trong IN được bind&lt;br&gt;bằng PreparedStatement." style="rounded=1;whiteSpace=wrap;html=1;align=left;verticalAlign=middle;spacing=16;fontFamily=Arial;fontSize=20;fontColor=#172b4d;fillColor=none;strokeColor=none;fontStyle=0;arcSize=6;" vertex="1" parent="gms-learn-dash-2-card-3">
+          <mxGeometry x="8.0" y="78.0" width="504" height="151" as="geometry" />
+        </mxCell>
+        <mxCell id="gms-learn-dash-2-card-4" value="" style="rounded=1;whiteSpace=wrap;html=1;align=left;verticalAlign=middle;spacing=16;fontFamily=Arial;fontSize=20;fontColor=#172b4d;fillColor=#d5e8d4;strokeColor=#82b366;fontStyle=0;arcSize=6;" vertex="1" parent="1">
+          <mxGeometry x="640" y="710" width="520" height="350" as="geometry" />
+        </mxCell>
+        <mxCell id="gms-learn-dash-2-role-4" value="5. DTO / KẾT QUẢ" style="rounded=1;whiteSpace=wrap;html=1;align=left;verticalAlign=middle;spacing=16;fontFamily=Arial;fontSize=14;fontColor=#172b4d;fillColor=none;strokeColor=none;fontStyle=1;arcSize=6;" vertex="1" parent="gms-learn-dash-2-card-4">
+          <mxGeometry x="8.0" y="8.0" width="504" height="38" as="geometry" />
+        </mxCell>
+        <mxCell id="gms-learn-dash-2-heading-4" value="PtAssignedPackageView" style="rounded=1;whiteSpace=wrap;html=1;align=left;verticalAlign=middle;spacing=16;fontFamily=Arial;fontSize=22;fontColor=#172b4d;fillColor=none;strokeColor=none;fontStyle=1;arcSize=6;" vertex="1" parent="gms-learn-dash-2-card-4">
+          <mxGeometry x="8.0" y="45.0" width="504" height="41" as="geometry" />
+        </mxCell>
+        <mxCell id="gms-learn-dash-2-body-4" value="SubscriptionId, tên/SĐT chủ gói và partner, loại gói,&lt;br&gt;hạn gói và số Scheduled chưa bắt đầu.&lt;br&gt;Không còn totalSessionCount/remainingPercent&lt;br&gt;hoặc thanh tiến độ trong thẻ.&lt;br&gt;DTO có list cảnh báo của đúng gói." style="rounded=1;whiteSpace=wrap;html=1;align=left;verticalAlign=middle;spacing=16;fontFamily=Arial;fontSize=20;fontColor=#172b4d;fillColor=none;strokeColor=none;fontStyle=0;arcSize=6;" vertex="1" parent="gms-learn-dash-2-card-4">
+          <mxGeometry x="8.0" y="78.0" width="504" height="151" as="geometry" />
+        </mxCell>
+        <mxCell id="gms-learn-dash-2-card-5" value="" style="rounded=1;whiteSpace=wrap;html=1;align=left;verticalAlign=middle;spacing=16;fontFamily=Arial;fontSize=20;fontColor=#172b4d;fillColor=#e1d5e7;strokeColor=#9673a6;fontStyle=0;arcSize=6;" vertex="1" parent="1">
+          <mxGeometry x="40" y="710" width="520" height="350" as="geometry" />
+        </mxCell>
+        <mxCell id="gms-learn-dash-2-role-5" value="6. SERVICE" style="rounded=1;whiteSpace=wrap;html=1;align=left;verticalAlign=middle;spacing=16;fontFamily=Arial;fontSize=14;fontColor=#172b4d;fillColor=none;strokeColor=none;fontStyle=1;arcSize=6;" vertex="1" parent="gms-learn-dash-2-card-5">
+          <mxGeometry x="8.0" y="8.0" width="504" height="38" as="geometry" />
+        </mxCell>
+        <mxCell id="gms-learn-dash-2-heading-5" value="mergeClientAttention()" style="rounded=1;whiteSpace=wrap;html=1;align=left;verticalAlign=middle;spacing=16;fontFamily=Arial;fontSize=22;fontColor=#172b4d;fillColor=none;strokeColor=none;fontStyle=1;arcSize=6;" vertex="1" parent="gms-learn-dash-2-card-5">
+          <mxGeometry x="8.0" y="45.0" width="504" height="41" as="geometry" />
+        </mxCell>
+        <mxCell id="gms-learn-dash-2-body-5" value="For từng gói: xóa list cũ, gắn các cảnh báo cùng&lt;br&gt;SubscriptionId; không ghép theo tên.&lt;br&gt;Gói đôi giữ cảnh báo từng người.&lt;br&gt;Sắp thẻ có ngày nghỉ trước, rồi cảnh báo khác, cuối&lt;br&gt;cùng khách bình thường." style="rounded=1;whiteSpace=wrap;html=1;align=left;verticalAlign=middle;spacing=16;fontFamily=Arial;fontSize=20;fontColor=#172b4d;fillColor=none;strokeColor=none;fontStyle=0;arcSize=6;" vertex="1" parent="gms-learn-dash-2-card-5">
+          <mxGeometry x="8.0" y="78.0" width="504" height="151" as="geometry" />
+        </mxCell>
+        <mxCell id="gms-learn-dash-2-edge-0" value="" style="edgeStyle=orthogonalEdgeStyle;rounded=0;html=1;endArrow=block;endFill=1;strokeColor=#46566d;strokeWidth=2;fontFamily=Arial;fontSize=16;labelBackgroundColor=#ffffff;jettySize=auto;exitX=1.0;exitY=0.5;exitDx=0;exitDy=0;entryX=0.0;entryY=0.5;entryDx=0;entryDy=0;" edge="1" parent="1" source="gms-learn-dash-2-card-0" target="gms-learn-dash-2-card-1">
+          <mxGeometry relative="1" as="geometry" />
+        </mxCell>
+        <mxCell id="gms-learn-dash-2-edge-1" value="" style="edgeStyle=orthogonalEdgeStyle;rounded=0;html=1;endArrow=block;endFill=1;strokeColor=#46566d;strokeWidth=2;fontFamily=Arial;fontSize=16;labelBackgroundColor=#ffffff;jettySize=auto;exitX=1.0;exitY=0.5;exitDx=0;exitDy=0;entryX=0.0;entryY=0.5;entryDx=0;entryDy=0;" edge="1" parent="1" source="gms-learn-dash-2-card-1" target="gms-learn-dash-2-card-2">
+          <mxGeometry relative="1" as="geometry" />
+        </mxCell>
+        <mxCell id="gms-learn-dash-2-edge-2" value="" style="edgeStyle=orthogonalEdgeStyle;rounded=0;html=1;endArrow=block;endFill=1;strokeColor=#46566d;strokeWidth=2;fontFamily=Arial;fontSize=16;labelBackgroundColor=#ffffff;jettySize=auto;exitX=0.5;exitY=1.0;exitDx=0;exitDy=0;entryX=0.5;entryY=0.0;entryDx=0;entryDy=0;" edge="1" parent="1" source="gms-learn-dash-2-card-2" target="gms-learn-dash-2-card-3">
+          <mxGeometry relative="1" as="geometry" />
+        </mxCell>
+        <mxCell id="gms-learn-dash-2-edge-3" value="" style="edgeStyle=orthogonalEdgeStyle;rounded=0;html=1;endArrow=block;endFill=1;strokeColor=#46566d;strokeWidth=2;fontFamily=Arial;fontSize=16;labelBackgroundColor=#ffffff;jettySize=auto;exitX=0.0;exitY=0.5;exitDx=0;exitDy=0;entryX=1.0;entryY=0.5;entryDx=0;entryDy=0;" edge="1" parent="1" source="gms-learn-dash-2-card-3" target="gms-learn-dash-2-card-4">
+          <mxGeometry relative="1" as="geometry" />
+        </mxCell>
+        <mxCell id="gms-learn-dash-2-edge-4" value="" style="edgeStyle=orthogonalEdgeStyle;rounded=0;html=1;endArrow=block;endFill=1;strokeColor=#46566d;strokeWidth=2;fontFamily=Arial;fontSize=16;labelBackgroundColor=#ffffff;jettySize=auto;exitX=0.0;exitY=0.5;exitDx=0;exitDy=0;entryX=1.0;entryY=0.5;entryDx=0;entryDy=0;" edge="1" parent="1" source="gms-learn-dash-2-card-4" target="gms-learn-dash-2-card-5">
+          <mxGeometry relative="1" as="geometry" />
+        </mxCell>
+        <mxCell id="gms-learn-dash-2-read" value="Đọc theo số và mũi tên: hàng trên từ trái sang phải, hàng dưới từ phải sang trái. Mỗi ô giải thích một bước học." style="rounded=1;whiteSpace=wrap;html=1;align=left;verticalAlign=middle;spacing=16;fontFamily=Arial;fontSize=18;fontColor=#172b4d;fillColor=none;strokeColor=none;fontStyle=0;arcSize=6;" vertex="1" parent="1">
+          <mxGeometry x="40" y="1090" width="1720" height="45" as="geometry" />
+        </mxCell>
+        <mxCell id="gms-learn-dash-2-note" value="GHI NHỚ&lt;br&gt;Ví dụ hôm nay 23/10: lịch Dashboard là 23–29/10, còn cảnh báo dùng 23/10–05/11. Không dùng cùng khoảng ngày cho mọi khối." style="rounded=1;whiteSpace=wrap;html=1;align=left;verticalAlign=middle;spacing=16;fontFamily=Arial;fontSize=20;fontColor=#172b4d;fillColor=#d5e8d4;strokeColor=#82b366;fontStyle=0;arcSize=6;" vertex="1" parent="1">
+          <mxGeometry x="40" y="1150" width="1720" height="110" as="geometry" />
+        </mxCell>
+        <mxCell id="gms-learn-dash-2-source" value="Đối chiếu: PtDashboardService.getSchedule()/prepareSessionDisplay()/getAssignedPackages(); PtDashboardDAO.java | Code hiện tại: 23/10/2026 (gồm thay đổi chưa commit)." style="rounded=1;whiteSpace=wrap;html=1;align=left;verticalAlign=middle;spacing=16;fontFamily=Arial;fontSize=14;fontColor=#172b4d;fillColor=none;strokeColor=none;fontStyle=0;arcSize=6;" vertex="1" parent="1">
+          <mxGeometry x="40" y="1267" width="1720" height="45" as="geometry" />
+        </mxCell>
+      </root>
+    </mxGraphModel>
+  </diagram>
+  <diagram id="gms-learn-dash-3" name="19. PT Dashboard · ba loại Cần chú ý">
+    <mxGraphModel dx="1800" dy="1320" grid="1" gridSize="10" guides="1" tooltips="1" connect="1" arrows="1" fold="1" page="1" pageScale="1" pageWidth="1800" pageHeight="1320" math="0" shadow="0">
+      <root>
+        <mxCell id="0" />
+        <mxCell id="1" parent="0" />
+        <mxCell id="gms-learn-dash-3-title" value="19. PT Dashboard · ba loại Cần chú ý" style="rounded=1;whiteSpace=wrap;html=1;align=left;verticalAlign=middle;spacing=16;fontFamily=Arial;fontSize=31;fontColor=#172b4d;fillColor=none;strokeColor=none;fontStyle=1;arcSize=6;" vertex="1" parent="1">
+          <mxGeometry x="40" y="20" width="1720" height="65" as="geometry" />
+        </mxCell>
+        <mxCell id="gms-learn-dash-3-subtitle" value="getAttentionItems() dùng khoảng ATTENTION_DAYS=14, gồm cả hôm nay. closedDay đứng đầu và không đi qua nhắc khách." style="rounded=1;whiteSpace=wrap;html=1;align=left;verticalAlign=middle;spacing=16;fontFamily=Arial;fontSize=20;fontColor=#172b4d;fillColor=none;strokeColor=none;fontStyle=0;arcSize=6;" vertex="1" parent="1">
+          <mxGeometry x="40" y="92" width="1720" height="65" as="geometry" />
+        </mxCell>
+        <mxCell id="gms-learn-dash-3-nav" value="Về mục lục" style="rounded=1;whiteSpace=wrap;html=1;align=left;verticalAlign=middle;spacing=16;fontFamily=Arial;fontSize=18;fontColor=#172b4d;fillColor=#f5f5f5;strokeColor=#666666;fontStyle=1;arcSize=6;" vertex="1" parent="1" link="data:page/id,index-pt-dashboard-flow">
+          <mxGeometry x="40" y="164" width="210" height="43" as="geometry" />
+        </mxCell>
+        <mxCell id="gms-learn-dash-3-legend-servlet" value="Servlet" style="rounded=1;whiteSpace=wrap;html=1;align=center;verticalAlign=middle;spacing=16;fontFamily=Arial;fontSize=18;fontColor=#172b4d;fillColor=#dae8fc;strokeColor=#6c8ebf;fontStyle=0;arcSize=6;" vertex="1" parent="1">
+          <mxGeometry x="290" y="164" width="180" height="43" as="geometry" />
+        </mxCell>
+        <mxCell id="gms-learn-dash-3-legend-service" value="Service" style="rounded=1;whiteSpace=wrap;html=1;align=center;verticalAlign=middle;spacing=16;fontFamily=Arial;fontSize=18;fontColor=#172b4d;fillColor=#e1d5e7;strokeColor=#9673a6;fontStyle=0;arcSize=6;" vertex="1" parent="1">
+          <mxGeometry x="488" y="164" width="180" height="43" as="geometry" />
+        </mxCell>
+        <mxCell id="gms-learn-dash-3-legend-dao" value="DAO / SQL" style="rounded=1;whiteSpace=wrap;html=1;align=center;verticalAlign=middle;spacing=16;fontFamily=Arial;fontSize=18;fontColor=#172b4d;fillColor=#fff2cc;strokeColor=#d6b656;fontStyle=0;arcSize=6;" vertex="1" parent="1">
+          <mxGeometry x="686" y="164" width="180" height="43" as="geometry" />
+        </mxCell>
+        <mxCell id="gms-learn-dash-3-legend-dto" value="DTO" style="rounded=1;whiteSpace=wrap;html=1;align=center;verticalAlign=middle;spacing=16;fontFamily=Arial;fontSize=18;fontColor=#172b4d;fillColor=#d5e8d4;strokeColor=#82b366;fontStyle=0;arcSize=6;" vertex="1" parent="1">
+          <mxGeometry x="884" y="164" width="180" height="43" as="geometry" />
+        </mxCell>
+        <mxCell id="gms-learn-dash-3-legend-ui" value="JSP / JS" style="rounded=1;whiteSpace=wrap;html=1;align=center;verticalAlign=middle;spacing=16;fontFamily=Arial;fontSize=18;fontColor=#172b4d;fillColor=#f5f5f5;strokeColor=#666666;fontStyle=0;arcSize=6;" vertex="1" parent="1">
+          <mxGeometry x="1082" y="164" width="180" height="43" as="geometry" />
+        </mxCell>
+        <mxCell id="gms-learn-dash-3-card-0" value="" style="rounded=1;whiteSpace=wrap;html=1;align=left;verticalAlign=middle;spacing=16;fontFamily=Arial;fontSize=20;fontColor=#172b4d;fillColor=#fff2cc;strokeColor=#d6b656;fontStyle=0;arcSize=6;" vertex="1" parent="1">
+          <mxGeometry x="40" y="230" width="520" height="350" as="geometry" />
+        </mxCell>
+        <mxCell id="gms-learn-dash-3-role-0" value="1. DAO / SQL" style="rounded=1;whiteSpace=wrap;html=1;align=left;verticalAlign=middle;spacing=16;fontFamily=Arial;fontSize=14;fontColor=#172b4d;fillColor=none;strokeColor=none;fontStyle=1;arcSize=6;" vertex="1" parent="gms-learn-dash-3-card-0">
+          <mxGeometry x="8.0" y="8.0" width="504" height="38" as="geometry" />
+        </mxCell>
+        <mxCell id="gms-learn-dash-3-heading-0" value="Nguồn Membership / bảo lưu" style="rounded=1;whiteSpace=wrap;html=1;align=left;verticalAlign=middle;spacing=16;fontFamily=Arial;fontSize=22;fontColor=#172b4d;fillColor=none;strokeColor=none;fontStyle=1;arcSize=6;" vertex="1" parent="gms-learn-dash-3-card-0">
+          <mxGeometry x="8.0" y="45.0" width="504" height="41" as="geometry" />
+        </mxCell>
+        <mxCell id="gms-learn-dash-3-body-0" value="findClientPackages(): gói PT Active, Paid; buổi thuộc&lt;br&gt;PT, chưa bắt đầu trong 14 ngày.&lt;br&gt;Scheduled hoặc Missed do MembershipFrozen.&lt;br&gt;Chủ gói và partner được đọc thành từng khách." style="rounded=1;whiteSpace=wrap;html=1;align=left;verticalAlign=middle;spacing=16;fontFamily=Arial;fontSize=20;fontColor=#172b4d;fillColor=none;strokeColor=none;fontStyle=0;arcSize=6;" vertex="1" parent="gms-learn-dash-3-card-0">
+          <mxGeometry x="8.0" y="78.0" width="504" height="124" as="geometry" />
+        </mxCell>
+        <mxCell id="gms-learn-dash-3-card-1" value="" style="rounded=1;whiteSpace=wrap;html=1;align=left;verticalAlign=middle;spacing=16;fontFamily=Arial;fontSize=20;fontColor=#172b4d;fillColor=#e1d5e7;strokeColor=#9673a6;fontStyle=0;arcSize=6;" vertex="1" parent="1">
+          <mxGeometry x="640" y="230" width="520" height="350" as="geometry" />
+        </mxCell>
+        <mxCell id="gms-learn-dash-3-role-1" value="2. SERVICE" style="rounded=1;whiteSpace=wrap;html=1;align=left;verticalAlign=middle;spacing=16;fontFamily=Arial;fontSize=14;fontColor=#172b4d;fillColor=none;strokeColor=none;fontStyle=1;arcSize=6;" vertex="1" parent="gms-learn-dash-3-card-1">
+          <mxGeometry x="8.0" y="8.0" width="504" height="38" as="geometry" />
+        </mxCell>
+        <mxCell id="gms-learn-dash-3-heading-1" value="buildAttentionItems()" style="rounded=1;whiteSpace=wrap;html=1;align=left;verticalAlign=middle;spacing=16;fontFamily=Arial;fontSize=22;fontColor=#172b4d;fillColor=none;strokeColor=none;fontStyle=1;arcSize=6;" vertex="1" parent="gms-learn-dash-3-card-1">
+          <mxGeometry x="8.0" y="45.0" width="504" height="41" as="geometry" />
+        </mxCell>
+        <mxCell id="gms-learn-dash-3-body-1" value="Có Membership và không frozen → bỏ qua.&lt;br&gt;Thiếu / frozen → giữ cảnh báo; gom theo khách +&lt;br&gt;gói + frozen, lấy ngày gần nhất.&lt;br&gt;kind cũ là membership hoặc frozen." style="rounded=1;whiteSpace=wrap;html=1;align=left;verticalAlign=middle;spacing=16;fontFamily=Arial;fontSize=20;fontColor=#172b4d;fillColor=none;strokeColor=none;fontStyle=0;arcSize=6;" vertex="1" parent="gms-learn-dash-3-card-1">
+          <mxGeometry x="8.0" y="78.0" width="504" height="124" as="geometry" />
+        </mxCell>
+        <mxCell id="gms-learn-dash-3-card-2" value="" style="rounded=1;whiteSpace=wrap;html=1;align=left;verticalAlign=middle;spacing=16;fontFamily=Arial;fontSize=20;fontColor=#172b4d;fillColor=#fff2cc;strokeColor=#d6b656;fontStyle=0;arcSize=6;" vertex="1" parent="1">
+          <mxGeometry x="1240" y="230" width="520" height="350" as="geometry" />
+        </mxCell>
+        <mxCell id="gms-learn-dash-3-role-2" value="3. DAO / SQL" style="rounded=1;whiteSpace=wrap;html=1;align=left;verticalAlign=middle;spacing=16;fontFamily=Arial;fontSize=14;fontColor=#172b4d;fillColor=none;strokeColor=none;fontStyle=1;arcSize=6;" vertex="1" parent="gms-learn-dash-3-card-2">
+          <mxGeometry x="8.0" y="8.0" width="504" height="38" as="geometry" />
+        </mxCell>
+        <mxCell id="gms-learn-dash-3-heading-2" value="findClosedDaySessions()" style="rounded=1;whiteSpace=wrap;html=1;align=left;verticalAlign=middle;spacing=16;fontFamily=Arial;fontSize=22;fontColor=#172b4d;fillColor=none;strokeColor=none;fontStyle=1;arcSize=6;" vertex="1" parent="gms-learn-dash-3-card-2">
+          <mxGeometry x="8.0" y="45.0" width="504" height="41" as="geometry" />
+        </mxCell>
+        <mxCell id="gms-learn-dash-3-body-2" value="Scheduled + đúng Sessions.PtEmployeeId +&lt;br&gt;SlotDate trong khoảng.&lt;br&gt;EXISTS OperatingHourExceptions cùng ngày,&lt;br&gt;IsClosedAllDay=1.&lt;br&gt;Trả ClosedDaySession có SessionId và dữ liệu chủ&lt;br&gt;gói." style="rounded=1;whiteSpace=wrap;html=1;align=left;verticalAlign=middle;spacing=16;fontFamily=Arial;fontSize=20;fontColor=#172b4d;fillColor=none;strokeColor=none;fontStyle=0;arcSize=6;" vertex="1" parent="gms-learn-dash-3-card-2">
+          <mxGeometry x="8.0" y="78.0" width="504" height="178" as="geometry" />
+        </mxCell>
+        <mxCell id="gms-learn-dash-3-card-3" value="" style="rounded=1;whiteSpace=wrap;html=1;align=left;verticalAlign=middle;spacing=16;fontFamily=Arial;fontSize=20;fontColor=#172b4d;fillColor=#e1d5e7;strokeColor=#9673a6;fontStyle=0;arcSize=6;" vertex="1" parent="1">
+          <mxGeometry x="1240" y="710" width="520" height="350" as="geometry" />
+        </mxCell>
+        <mxCell id="gms-learn-dash-3-role-3" value="4. SERVICE" style="rounded=1;whiteSpace=wrap;html=1;align=left;verticalAlign=middle;spacing=16;fontFamily=Arial;fontSize=14;fontColor=#172b4d;fillColor=none;strokeColor=none;fontStyle=1;arcSize=6;" vertex="1" parent="gms-learn-dash-3-card-3">
+          <mxGeometry x="8.0" y="8.0" width="504" height="38" as="geometry" />
+        </mxCell>
+        <mxCell id="gms-learn-dash-3-heading-3" value="buildClosedDayItem(row)" style="rounded=1;whiteSpace=wrap;html=1;align=left;verticalAlign=middle;spacing=16;fontFamily=Arial;fontSize=22;fontColor=#172b4d;fillColor=none;strokeColor=none;fontStyle=1;arcSize=6;" vertex="1" parent="gms-learn-dash-3-card-3">
+          <mxGeometry x="8.0" y="45.0" width="504" height="41" as="geometry" />
+        </mxCell>
+        <mxCell id="gms-learn-dash-3-body-3" value="Mỗi buổi → một PtAttentionView kind=closedDay.&lt;br&gt;Tiêu đề: “Ngày phòng nghỉ — cần dời”.&lt;br&gt;Thông điệp có ngày / giờ, yêu cầu dời trước ngày&lt;br&gt;nghỉ và hậu quả hủy, không hoa hồng." style="rounded=1;whiteSpace=wrap;html=1;align=left;verticalAlign=middle;spacing=16;fontFamily=Arial;fontSize=20;fontColor=#172b4d;fillColor=none;strokeColor=none;fontStyle=0;arcSize=6;" vertex="1" parent="gms-learn-dash-3-card-3">
+          <mxGeometry x="8.0" y="78.0" width="504" height="124" as="geometry" />
+        </mxCell>
+        <mxCell id="gms-learn-dash-3-card-4" value="" style="rounded=1;whiteSpace=wrap;html=1;align=left;verticalAlign=middle;spacing=16;fontFamily=Arial;fontSize=20;fontColor=#172b4d;fillColor=#e1d5e7;strokeColor=#9673a6;fontStyle=0;arcSize=6;" vertex="1" parent="1">
+          <mxGeometry x="640" y="710" width="520" height="350" as="geometry" />
+        </mxCell>
+        <mxCell id="gms-learn-dash-3-role-4" value="5. SERVICE" style="rounded=1;whiteSpace=wrap;html=1;align=left;verticalAlign=middle;spacing=16;fontFamily=Arial;fontSize=14;fontColor=#172b4d;fillColor=none;strokeColor=none;fontStyle=1;arcSize=6;" vertex="1" parent="gms-learn-dash-3-card-4">
+          <mxGeometry x="8.0" y="8.0" width="504" height="38" as="geometry" />
+        </mxCell>
+        <mxCell id="gms-learn-dash-3-heading-4" value="Sắp thứ tự và đã nhắc" style="rounded=1;whiteSpace=wrap;html=1;align=left;verticalAlign=middle;spacing=16;fontFamily=Arial;fontSize=22;fontColor=#172b4d;fillColor=none;strokeColor=none;fontStyle=1;arcSize=6;" vertex="1" parent="gms-learn-dash-3-card-4">
+          <mxGeometry x="8.0" y="45.0" width="504" height="41" as="geometry" />
+        </mxCell>
+        <mxCell id="gms-learn-dash-3-body-4" value="Nếu có thẻ membership / frozen: đọc&lt;br&gt;findRemindedToday(), đánh dấu đã nhắc cho các thẻ&lt;br&gt;đó.&lt;br&gt;closedDayItems.addAll(thẻ cũ) → thẻ ngày nghỉ nằm&lt;br&gt;trước.&lt;br&gt;Không nhắc khách cho closedDay." style="rounded=1;whiteSpace=wrap;html=1;align=left;verticalAlign=middle;spacing=16;fontFamily=Arial;fontSize=20;fontColor=#172b4d;fillColor=none;strokeColor=none;fontStyle=0;arcSize=6;" vertex="1" parent="gms-learn-dash-3-card-4">
+          <mxGeometry x="8.0" y="78.0" width="504" height="178" as="geometry" />
+        </mxCell>
+        <mxCell id="gms-learn-dash-3-card-5" value="" style="rounded=1;whiteSpace=wrap;html=1;align=left;verticalAlign=middle;spacing=16;fontFamily=Arial;fontSize=20;fontColor=#172b4d;fillColor=#f5f5f5;strokeColor=#666666;fontStyle=0;arcSize=6;" vertex="1" parent="1">
+          <mxGeometry x="40" y="710" width="520" height="350" as="geometry" />
+        </mxCell>
+        <mxCell id="gms-learn-dash-3-role-5" value="6. JSP / TRÌNH DUYỆT" style="rounded=1;whiteSpace=wrap;html=1;align=left;verticalAlign=middle;spacing=16;fontFamily=Arial;fontSize=14;fontColor=#172b4d;fillColor=none;strokeColor=none;fontStyle=1;arcSize=6;" vertex="1" parent="gms-learn-dash-3-card-5">
+          <mxGeometry x="8.0" y="8.0" width="504" height="38" as="geometry" />
+        </mxCell>
+        <mxCell id="gms-learn-dash-3-heading-5" value="Cảnh báo trong thẻ gói" style="rounded=1;whiteSpace=wrap;html=1;align=left;verticalAlign=middle;spacing=16;fontFamily=Arial;fontSize=22;fontColor=#172b4d;fillColor=none;strokeColor=none;fontStyle=1;arcSize=6;" vertex="1" parent="gms-learn-dash-3-card-5">
+          <mxGeometry x="8.0" y="45.0" width="504" height="41" as="geometry" />
+        </mxCell>
+        <mxCell id="gms-learn-dash-3-body-5" value="JSP lặp client.attentionItems; hiện tiêu đề, ngày buổi&lt;br&gt;và tên người cần nhắc của gói đôi.&lt;br&gt;closedDay màu danger, Dời buổi giữ SessionId;&lt;br&gt;membership/frozen có Nhắc khách hoặc Đã nhắc&lt;br&gt;hôm nay." style="rounded=1;whiteSpace=wrap;html=1;align=left;verticalAlign=middle;spacing=16;fontFamily=Arial;fontSize=20;fontColor=#172b4d;fillColor=none;strokeColor=none;fontStyle=0;arcSize=6;" vertex="1" parent="gms-learn-dash-3-card-5">
+          <mxGeometry x="8.0" y="78.0" width="504" height="151" as="geometry" />
+        </mxCell>
+        <mxCell id="gms-learn-dash-3-edge-0" value="" style="edgeStyle=orthogonalEdgeStyle;rounded=0;html=1;endArrow=block;endFill=1;strokeColor=#46566d;strokeWidth=2;fontFamily=Arial;fontSize=16;labelBackgroundColor=#ffffff;jettySize=auto;exitX=1.0;exitY=0.5;exitDx=0;exitDy=0;entryX=0.0;entryY=0.5;entryDx=0;entryDy=0;" edge="1" parent="1" source="gms-learn-dash-3-card-0" target="gms-learn-dash-3-card-1">
+          <mxGeometry relative="1" as="geometry" />
+        </mxCell>
+        <mxCell id="gms-learn-dash-3-edge-1" value="" style="edgeStyle=orthogonalEdgeStyle;rounded=0;html=1;endArrow=block;endFill=1;strokeColor=#46566d;strokeWidth=2;fontFamily=Arial;fontSize=16;labelBackgroundColor=#ffffff;jettySize=auto;exitX=1.0;exitY=0.5;exitDx=0;exitDy=0;entryX=0.0;entryY=0.5;entryDx=0;entryDy=0;" edge="1" parent="1" source="gms-learn-dash-3-card-1" target="gms-learn-dash-3-card-2">
+          <mxGeometry relative="1" as="geometry" />
+        </mxCell>
+        <mxCell id="gms-learn-dash-3-edge-2" value="" style="edgeStyle=orthogonalEdgeStyle;rounded=0;html=1;endArrow=block;endFill=1;strokeColor=#46566d;strokeWidth=2;fontFamily=Arial;fontSize=16;labelBackgroundColor=#ffffff;jettySize=auto;exitX=0.5;exitY=1.0;exitDx=0;exitDy=0;entryX=0.5;entryY=0.0;entryDx=0;entryDy=0;" edge="1" parent="1" source="gms-learn-dash-3-card-2" target="gms-learn-dash-3-card-3">
+          <mxGeometry relative="1" as="geometry" />
+        </mxCell>
+        <mxCell id="gms-learn-dash-3-edge-3" value="" style="edgeStyle=orthogonalEdgeStyle;rounded=0;html=1;endArrow=block;endFill=1;strokeColor=#46566d;strokeWidth=2;fontFamily=Arial;fontSize=16;labelBackgroundColor=#ffffff;jettySize=auto;exitX=0.0;exitY=0.5;exitDx=0;exitDy=0;entryX=1.0;entryY=0.5;entryDx=0;entryDy=0;" edge="1" parent="1" source="gms-learn-dash-3-card-3" target="gms-learn-dash-3-card-4">
+          <mxGeometry relative="1" as="geometry" />
+        </mxCell>
+        <mxCell id="gms-learn-dash-3-edge-4" value="" style="edgeStyle=orthogonalEdgeStyle;rounded=0;html=1;endArrow=block;endFill=1;strokeColor=#46566d;strokeWidth=2;fontFamily=Arial;fontSize=16;labelBackgroundColor=#ffffff;jettySize=auto;exitX=0.0;exitY=0.5;exitDx=0;exitDy=0;entryX=1.0;entryY=0.5;entryDx=0;entryDy=0;" edge="1" parent="1" source="gms-learn-dash-3-card-4" target="gms-learn-dash-3-card-5">
+          <mxGeometry relative="1" as="geometry" />
+        </mxCell>
+        <mxCell id="gms-learn-dash-3-read" value="Đọc theo số và mũi tên: hàng trên từ trái sang phải, hàng dưới từ phải sang trái. Mỗi ô giải thích một bước học." style="rounded=1;whiteSpace=wrap;html=1;align=left;verticalAlign=middle;spacing=16;fontFamily=Arial;fontSize=18;fontColor=#172b4d;fillColor=none;strokeColor=none;fontStyle=0;arcSize=6;" vertex="1" parent="1">
+          <mxGeometry x="40" y="1090" width="1720" height="45" as="geometry" />
+        </mxCell>
+        <mxCell id="gms-learn-dash-3-note" value="GHI NHỚ&lt;br&gt;Buổi ngày nghỉ vẫn được sinh; PT cần dời trước ngày nghỉ (UC-35 chưa thực thi ở đây). Khối này đọc Membership riêng; Lịch tập khách còn xét DayPass. JOB-04 xử lý buổi còn&lt;br&gt;Scheduled sau ngày nghỉ." style="rounded=1;whiteSpace=wrap;html=1;align=left;verticalAlign=middle;spacing=16;fontFamily=Arial;fontSize=20;fontColor=#172b4d;fillColor=#d5e8d4;strokeColor=#82b366;fontStyle=0;arcSize=6;" vertex="1" parent="1">
+          <mxGeometry x="40" y="1150" width="1720" height="110" as="geometry" />
+        </mxCell>
+        <mxCell id="gms-learn-dash-3-source" value="Đối chiếu: PtDashboardDAO.findClientPackages()/findClosedDaySessions(); PtDashboardService.getAttentionItems()/buildClosedDayItem(); PtAttentionView.java | Code hiện tại: 23/10/2026 (gồm thay đổi chưa commit)." style="rounded=1;whiteSpace=wrap;html=1;align=left;verticalAlign=middle;spacing=16;fontFamily=Arial;fontSize=14;fontColor=#172b4d;fillColor=none;strokeColor=none;fontStyle=0;arcSize=6;" vertex="1" parent="1">
+          <mxGeometry x="40" y="1267" width="1720" height="45" as="geometry" />
+        </mxCell>
+      </root>
+    </mxGraphModel>
+  </diagram>
+  <diagram id="gms-learn-dash-4" name="20. PT Dashboard · nhắc khách an toàn">
+    <mxGraphModel dx="1800" dy="1320" grid="1" gridSize="10" guides="1" tooltips="1" connect="1" arrows="1" fold="1" page="1" pageScale="1" pageWidth="1800" pageHeight="1320" math="0" shadow="0">
+      <root>
+        <mxCell id="0" />
+        <mxCell id="1" parent="0" />
+        <mxCell id="gms-learn-dash-4-title" value="20. PT Dashboard · nhắc khách an toàn" style="rounded=1;whiteSpace=wrap;html=1;align=left;verticalAlign=middle;spacing=16;fontFamily=Arial;fontSize=31;fontColor=#172b4d;fillColor=none;strokeColor=none;fontStyle=1;arcSize=6;" vertex="1" parent="1">
+          <mxGeometry x="40" y="20" width="1720" height="65" as="geometry" />
+        </mxCell>
+        <mxCell id="gms-learn-dash-4-subtitle" value="POST /pt/dashboard là nhắc khách về quyền vào gym. Không dùng luồng này để dời buổi hoặc nhắc thẻ closedDay." style="rounded=1;whiteSpace=wrap;html=1;align=left;verticalAlign=middle;spacing=16;fontFamily=Arial;fontSize=20;fontColor=#172b4d;fillColor=none;strokeColor=none;fontStyle=0;arcSize=6;" vertex="1" parent="1">
+          <mxGeometry x="40" y="92" width="1720" height="65" as="geometry" />
+        </mxCell>
+        <mxCell id="gms-learn-dash-4-nav" value="Về mục lục" style="rounded=1;whiteSpace=wrap;html=1;align=left;verticalAlign=middle;spacing=16;fontFamily=Arial;fontSize=18;fontColor=#172b4d;fillColor=#f5f5f5;strokeColor=#666666;fontStyle=1;arcSize=6;" vertex="1" parent="1" link="data:page/id,index-pt-dashboard-flow">
+          <mxGeometry x="40" y="164" width="210" height="43" as="geometry" />
+        </mxCell>
+        <mxCell id="gms-learn-dash-4-legend-servlet" value="Servlet" style="rounded=1;whiteSpace=wrap;html=1;align=center;verticalAlign=middle;spacing=16;fontFamily=Arial;fontSize=18;fontColor=#172b4d;fillColor=#dae8fc;strokeColor=#6c8ebf;fontStyle=0;arcSize=6;" vertex="1" parent="1">
+          <mxGeometry x="290" y="164" width="180" height="43" as="geometry" />
+        </mxCell>
+        <mxCell id="gms-learn-dash-4-legend-service" value="Service" style="rounded=1;whiteSpace=wrap;html=1;align=center;verticalAlign=middle;spacing=16;fontFamily=Arial;fontSize=18;fontColor=#172b4d;fillColor=#e1d5e7;strokeColor=#9673a6;fontStyle=0;arcSize=6;" vertex="1" parent="1">
+          <mxGeometry x="488" y="164" width="180" height="43" as="geometry" />
+        </mxCell>
+        <mxCell id="gms-learn-dash-4-legend-dao" value="DAO / SQL" style="rounded=1;whiteSpace=wrap;html=1;align=center;verticalAlign=middle;spacing=16;fontFamily=Arial;fontSize=18;fontColor=#172b4d;fillColor=#fff2cc;strokeColor=#d6b656;fontStyle=0;arcSize=6;" vertex="1" parent="1">
+          <mxGeometry x="686" y="164" width="180" height="43" as="geometry" />
+        </mxCell>
+        <mxCell id="gms-learn-dash-4-legend-dto" value="DTO" style="rounded=1;whiteSpace=wrap;html=1;align=center;verticalAlign=middle;spacing=16;fontFamily=Arial;fontSize=18;fontColor=#172b4d;fillColor=#d5e8d4;strokeColor=#82b366;fontStyle=0;arcSize=6;" vertex="1" parent="1">
+          <mxGeometry x="884" y="164" width="180" height="43" as="geometry" />
+        </mxCell>
+        <mxCell id="gms-learn-dash-4-legend-ui" value="JSP / JS" style="rounded=1;whiteSpace=wrap;html=1;align=center;verticalAlign=middle;spacing=16;fontFamily=Arial;fontSize=18;fontColor=#172b4d;fillColor=#f5f5f5;strokeColor=#666666;fontStyle=0;arcSize=6;" vertex="1" parent="1">
+          <mxGeometry x="1082" y="164" width="180" height="43" as="geometry" />
+        </mxCell>
+        <mxCell id="gms-learn-dash-4-card-0" value="" style="rounded=1;whiteSpace=wrap;html=1;align=left;verticalAlign=middle;spacing=16;fontFamily=Arial;fontSize=20;fontColor=#172b4d;fillColor=#f5f5f5;strokeColor=#666666;fontStyle=0;arcSize=6;" vertex="1" parent="1">
+          <mxGeometry x="40" y="230" width="520" height="350" as="geometry" />
+        </mxCell>
+        <mxCell id="gms-learn-dash-4-role-0" value="1. JSP / TRÌNH DUYỆT" style="rounded=1;whiteSpace=wrap;html=1;align=left;verticalAlign=middle;spacing=16;fontFamily=Arial;fontSize=14;fontColor=#172b4d;fillColor=none;strokeColor=none;fontStyle=1;arcSize=6;" vertex="1" parent="gms-learn-dash-4-card-0">
+          <mxGeometry x="8.0" y="8.0" width="504" height="38" as="geometry" />
+        </mxCell>
+        <mxCell id="gms-learn-dash-4-heading-0" value="Khách cần được nhắc" style="rounded=1;whiteSpace=wrap;html=1;align=left;verticalAlign=middle;spacing=16;fontFamily=Arial;fontSize=22;fontColor=#172b4d;fillColor=none;strokeColor=none;fontStyle=1;arcSize=6;" vertex="1" parent="gms-learn-dash-4-card-0">
+          <mxGeometry x="8.0" y="45.0" width="504" height="41" as="geometry" />
+        </mxCell>
+        <mxCell id="gms-learn-dash-4-body-0" value="Thẻ membership / frozen có form gửi customerId,&lt;br&gt;subscriptionId và CSRF token.&lt;br&gt;Thẻ closedDay không có form này.&lt;br&gt;Bấm Nhắc khách tạo POST, không gửi email hoặc&lt;br&gt;Zalo tự động." style="rounded=1;whiteSpace=wrap;html=1;align=left;verticalAlign=middle;spacing=16;fontFamily=Arial;fontSize=20;fontColor=#172b4d;fillColor=none;strokeColor=none;fontStyle=0;arcSize=6;" vertex="1" parent="gms-learn-dash-4-card-0">
+          <mxGeometry x="8.0" y="78.0" width="504" height="151" as="geometry" />
+        </mxCell>
+        <mxCell id="gms-learn-dash-4-card-1" value="" style="rounded=1;whiteSpace=wrap;html=1;align=left;verticalAlign=middle;spacing=16;fontFamily=Arial;fontSize=20;fontColor=#172b4d;fillColor=#dae8fc;strokeColor=#6c8ebf;fontStyle=0;arcSize=6;" vertex="1" parent="1">
+          <mxGeometry x="640" y="230" width="520" height="350" as="geometry" />
+        </mxCell>
+        <mxCell id="gms-learn-dash-4-role-1" value="2. SERVLET" style="rounded=1;whiteSpace=wrap;html=1;align=left;verticalAlign=middle;spacing=16;fontFamily=Arial;fontSize=14;fontColor=#172b4d;fillColor=none;strokeColor=none;fontStyle=1;arcSize=6;" vertex="1" parent="gms-learn-dash-4-card-1">
+          <mxGeometry x="8.0" y="8.0" width="504" height="38" as="geometry" />
+        </mxCell>
+        <mxCell id="gms-learn-dash-4-heading-1" value="doPost(): kiểm tra đầu vào" style="rounded=1;whiteSpace=wrap;html=1;align=left;verticalAlign=middle;spacing=16;fontFamily=Arial;fontSize=22;fontColor=#172b4d;fillColor=none;strokeColor=none;fontStyle=1;arcSize=6;" vertex="1" parent="gms-learn-dash-4-card-1">
+          <mxGeometry x="8.0" y="45.0" width="504" height="41" as="geometry" />
+        </mxCell>
+        <mxCell id="gms-learn-dash-4-body-1" value="Kiểm tra CSRF; sai → HTTP 403.&lt;br&gt;Kiểm tra đăng nhập và các ID dương.&lt;br&gt;Gọi remindCustomer(accountId, customerId,&lt;br&gt;subscriptionId); không tin nội dung thẻ từ trình duyệt." style="rounded=1;whiteSpace=wrap;html=1;align=left;verticalAlign=middle;spacing=16;fontFamily=Arial;fontSize=20;fontColor=#172b4d;fillColor=none;strokeColor=none;fontStyle=0;arcSize=6;" vertex="1" parent="gms-learn-dash-4-card-1">
+          <mxGeometry x="8.0" y="78.0" width="504" height="124" as="geometry" />
+        </mxCell>
+        <mxCell id="gms-learn-dash-4-card-2" value="" style="rounded=1;whiteSpace=wrap;html=1;align=left;verticalAlign=middle;spacing=16;fontFamily=Arial;fontSize=20;fontColor=#172b4d;fillColor=#e1d5e7;strokeColor=#9673a6;fontStyle=0;arcSize=6;" vertex="1" parent="1">
+          <mxGeometry x="1240" y="230" width="520" height="350" as="geometry" />
+        </mxCell>
+        <mxCell id="gms-learn-dash-4-role-2" value="3. SERVICE" style="rounded=1;whiteSpace=wrap;html=1;align=left;verticalAlign=middle;spacing=16;fontFamily=Arial;fontSize=14;fontColor=#172b4d;fillColor=none;strokeColor=none;fontStyle=1;arcSize=6;" vertex="1" parent="gms-learn-dash-4-card-2">
+          <mxGeometry x="8.0" y="8.0" width="504" height="38" as="geometry" />
+        </mxCell>
+        <mxCell id="gms-learn-dash-4-heading-2" value="Đọc lại đúng cảnh báo" style="rounded=1;whiteSpace=wrap;html=1;align=left;verticalAlign=middle;spacing=16;fontFamily=Arial;fontSize=22;fontColor=#172b4d;fillColor=none;strokeColor=none;fontStyle=1;arcSize=6;" vertex="1" parent="gms-learn-dash-4-card-2">
+          <mxGeometry x="8.0" y="45.0" width="504" height="41" as="geometry" />
+        </mxCell>
+        <mxCell id="gms-learn-dash-4-body-2" value="remindCustomer() gọi lại getAttentionItems().&lt;br&gt;Chỉ tìm thẻ không phải closedDay, khớp khách + gói&lt;br&gt;của PT.&lt;br&gt;Không còn cảnh báo hoặc đã nhắc hôm nay → trả&lt;br&gt;lỗi, không insert." style="rounded=1;whiteSpace=wrap;html=1;align=left;verticalAlign=middle;spacing=16;fontFamily=Arial;fontSize=20;fontColor=#172b4d;fillColor=none;strokeColor=none;fontStyle=0;arcSize=6;" vertex="1" parent="gms-learn-dash-4-card-2">
+          <mxGeometry x="8.0" y="78.0" width="504" height="151" as="geometry" />
+        </mxCell>
+        <mxCell id="gms-learn-dash-4-card-3" value="" style="rounded=1;whiteSpace=wrap;html=1;align=left;verticalAlign=middle;spacing=16;fontFamily=Arial;fontSize=20;fontColor=#172b4d;fillColor=#e1d5e7;strokeColor=#9673a6;fontStyle=0;arcSize=6;" vertex="1" parent="1">
+          <mxGeometry x="1240" y="710" width="520" height="350" as="geometry" />
+        </mxCell>
+        <mxCell id="gms-learn-dash-4-role-3" value="4. SERVICE" style="rounded=1;whiteSpace=wrap;html=1;align=left;verticalAlign=middle;spacing=16;fontFamily=Arial;fontSize=14;fontColor=#172b4d;fillColor=none;strokeColor=none;fontStyle=1;arcSize=6;" vertex="1" parent="gms-learn-dash-4-card-3">
+          <mxGeometry x="8.0" y="8.0" width="504" height="38" as="geometry" />
+        </mxCell>
+        <mxCell id="gms-learn-dash-4-heading-3" value="Tìm tài khoản nhận" style="rounded=1;whiteSpace=wrap;html=1;align=left;verticalAlign=middle;spacing=16;fontFamily=Arial;fontSize=22;fontColor=#172b4d;fillColor=none;strokeColor=none;fontStyle=1;arcSize=6;" vertex="1" parent="gms-learn-dash-4-card-3">
+          <mxGeometry x="8.0" y="45.0" width="504" height="41" as="geometry" />
+        </mxCell>
+        <mxCell id="gms-learn-dash-4-body-3" value="Tìm account Active của khách.&lt;br&gt;Không có account nhận → thông báo lỗi, gợi ý PT&lt;br&gt;liên hệ Zalo.&lt;br&gt;Có → tạo nội dung nhắc từ dữ liệu Service đã kiểm&lt;br&gt;tra." style="rounded=1;whiteSpace=wrap;html=1;align=left;verticalAlign=middle;spacing=16;fontFamily=Arial;fontSize=20;fontColor=#172b4d;fillColor=none;strokeColor=none;fontStyle=0;arcSize=6;" vertex="1" parent="gms-learn-dash-4-card-3">
+          <mxGeometry x="8.0" y="78.0" width="504" height="151" as="geometry" />
+        </mxCell>
+        <mxCell id="gms-learn-dash-4-card-4" value="" style="rounded=1;whiteSpace=wrap;html=1;align=left;verticalAlign=middle;spacing=16;fontFamily=Arial;fontSize=20;fontColor=#172b4d;fillColor=#fff2cc;strokeColor=#d6b656;fontStyle=0;arcSize=6;" vertex="1" parent="1">
+          <mxGeometry x="640" y="710" width="520" height="350" as="geometry" />
+        </mxCell>
+        <mxCell id="gms-learn-dash-4-role-4" value="5. DAO / SQL" style="rounded=1;whiteSpace=wrap;html=1;align=left;verticalAlign=middle;spacing=16;fontFamily=Arial;fontSize=14;fontColor=#172b4d;fillColor=none;strokeColor=none;fontStyle=1;arcSize=6;" vertex="1" parent="gms-learn-dash-4-card-4">
+          <mxGeometry x="8.0" y="8.0" width="504" height="38" as="geometry" />
+        </mxCell>
+        <mxCell id="gms-learn-dash-4-heading-4" value="PtRemindDAO.insertReminder()" style="rounded=1;whiteSpace=wrap;html=1;align=left;verticalAlign=middle;spacing=16;fontFamily=Arial;fontSize=22;fontColor=#172b4d;fillColor=none;strokeColor=none;fontStyle=1;arcSize=6;" vertex="1" parent="gms-learn-dash-4-card-4">
+          <mxGeometry x="8.0" y="45.0" width="504" height="41" as="geometry" />
+        </mxCell>
+        <mxCell id="gms-learn-dash-4-body-4" value="Một transaction: INSERT Notifications → lấy ID →&lt;br&gt;INSERT NotificationRecipients.&lt;br&gt;SentByEmployeeId là PT, người nhận là tài khoản&lt;br&gt;khách.&lt;br&gt;Thành công commit; lỗi rollback cả hai." style="rounded=1;whiteSpace=wrap;html=1;align=left;verticalAlign=middle;spacing=16;fontFamily=Arial;fontSize=20;fontColor=#172b4d;fillColor=none;strokeColor=none;fontStyle=0;arcSize=6;" vertex="1" parent="gms-learn-dash-4-card-4">
+          <mxGeometry x="8.0" y="78.0" width="504" height="151" as="geometry" />
+        </mxCell>
+        <mxCell id="gms-learn-dash-4-card-5" value="" style="rounded=1;whiteSpace=wrap;html=1;align=left;verticalAlign=middle;spacing=16;fontFamily=Arial;fontSize=20;fontColor=#172b4d;fillColor=#f5f5f5;strokeColor=#666666;fontStyle=0;arcSize=6;" vertex="1" parent="1">
+          <mxGeometry x="40" y="710" width="520" height="350" as="geometry" />
+        </mxCell>
+        <mxCell id="gms-learn-dash-4-role-5" value="6. JSP / TRÌNH DUYỆT" style="rounded=1;whiteSpace=wrap;html=1;align=left;verticalAlign=middle;spacing=16;fontFamily=Arial;fontSize=14;fontColor=#172b4d;fillColor=none;strokeColor=none;fontStyle=1;arcSize=6;" vertex="1" parent="gms-learn-dash-4-card-5">
+          <mxGeometry x="8.0" y="8.0" width="504" height="38" as="geometry" />
+        </mxCell>
+        <mxCell id="gms-learn-dash-4-heading-5" value="PRG và thông báo cho khách" style="rounded=1;whiteSpace=wrap;html=1;align=left;verticalAlign=middle;spacing=16;fontFamily=Arial;fontSize=22;fontColor=#172b4d;fillColor=none;strokeColor=none;fontStyle=1;arcSize=6;" vertex="1" parent="gms-learn-dash-4-card-5">
+          <mxGeometry x="8.0" y="45.0" width="504" height="41" as="geometry" />
+        </mxCell>
+        <mxCell id="gms-learn-dash-4-body-5" value="Servlet lưu flash success / error rồi redirect GET&lt;br&gt;/pt/dashboard#alerts-title.&lt;br&gt;F5 không gửi lại POST.&lt;br&gt;Thẻ đổi Đã nhắc hôm nay; khách đọc thông báo qua&lt;br&gt;chuông dùng chung." style="rounded=1;whiteSpace=wrap;html=1;align=left;verticalAlign=middle;spacing=16;fontFamily=Arial;fontSize=20;fontColor=#172b4d;fillColor=none;strokeColor=none;fontStyle=0;arcSize=6;" vertex="1" parent="gms-learn-dash-4-card-5">
+          <mxGeometry x="8.0" y="78.0" width="504" height="151" as="geometry" />
+        </mxCell>
+        <mxCell id="gms-learn-dash-4-edge-0" value="" style="edgeStyle=orthogonalEdgeStyle;rounded=0;html=1;endArrow=block;endFill=1;strokeColor=#46566d;strokeWidth=2;fontFamily=Arial;fontSize=16;labelBackgroundColor=#ffffff;jettySize=auto;exitX=1.0;exitY=0.5;exitDx=0;exitDy=0;entryX=0.0;entryY=0.5;entryDx=0;entryDy=0;" edge="1" parent="1" source="gms-learn-dash-4-card-0" target="gms-learn-dash-4-card-1">
+          <mxGeometry relative="1" as="geometry" />
+        </mxCell>
+        <mxCell id="gms-learn-dash-4-edge-1" value="" style="edgeStyle=orthogonalEdgeStyle;rounded=0;html=1;endArrow=block;endFill=1;strokeColor=#46566d;strokeWidth=2;fontFamily=Arial;fontSize=16;labelBackgroundColor=#ffffff;jettySize=auto;exitX=1.0;exitY=0.5;exitDx=0;exitDy=0;entryX=0.0;entryY=0.5;entryDx=0;entryDy=0;" edge="1" parent="1" source="gms-learn-dash-4-card-1" target="gms-learn-dash-4-card-2">
+          <mxGeometry relative="1" as="geometry" />
+        </mxCell>
+        <mxCell id="gms-learn-dash-4-edge-2" value="" style="edgeStyle=orthogonalEdgeStyle;rounded=0;html=1;endArrow=block;endFill=1;strokeColor=#46566d;strokeWidth=2;fontFamily=Arial;fontSize=16;labelBackgroundColor=#ffffff;jettySize=auto;exitX=0.5;exitY=1.0;exitDx=0;exitDy=0;entryX=0.5;entryY=0.0;entryDx=0;entryDy=0;" edge="1" parent="1" source="gms-learn-dash-4-card-2" target="gms-learn-dash-4-card-3">
+          <mxGeometry relative="1" as="geometry" />
+        </mxCell>
+        <mxCell id="gms-learn-dash-4-edge-3" value="" style="edgeStyle=orthogonalEdgeStyle;rounded=0;html=1;endArrow=block;endFill=1;strokeColor=#46566d;strokeWidth=2;fontFamily=Arial;fontSize=16;labelBackgroundColor=#ffffff;jettySize=auto;exitX=0.0;exitY=0.5;exitDx=0;exitDy=0;entryX=1.0;entryY=0.5;entryDx=0;entryDy=0;" edge="1" parent="1" source="gms-learn-dash-4-card-3" target="gms-learn-dash-4-card-4">
+          <mxGeometry relative="1" as="geometry" />
+        </mxCell>
+        <mxCell id="gms-learn-dash-4-edge-4" value="" style="edgeStyle=orthogonalEdgeStyle;rounded=0;html=1;endArrow=block;endFill=1;strokeColor=#46566d;strokeWidth=2;fontFamily=Arial;fontSize=16;labelBackgroundColor=#ffffff;jettySize=auto;exitX=0.0;exitY=0.5;exitDx=0;exitDy=0;entryX=1.0;entryY=0.5;entryDx=0;entryDy=0;" edge="1" parent="1" source="gms-learn-dash-4-card-4" target="gms-learn-dash-4-card-5">
+          <mxGeometry relative="1" as="geometry" />
+        </mxCell>
+        <mxCell id="gms-learn-dash-4-read" value="Đọc theo số và mũi tên: hàng trên từ trái sang phải, hàng dưới từ phải sang trái. Mỗi ô giải thích một bước học." style="rounded=1;whiteSpace=wrap;html=1;align=left;verticalAlign=middle;spacing=16;fontFamily=Arial;fontSize=18;fontColor=#172b4d;fillColor=none;strokeColor=none;fontStyle=0;arcSize=6;" vertex="1" parent="1">
+          <mxGeometry x="40" y="1090" width="1720" height="45" as="geometry" />
+        </mxCell>
+        <mxCell id="gms-learn-dash-4-note" value="GHI NHỚ&lt;br&gt;findRemindedToday() kiểm tra theo PT, khách, tiêu đề nhắc và ngày DB. Đây là kiểm tra trạng thái hiện có; không diễn giải thành khóa chống gửi đồng thời tuyệt đối." style="rounded=1;whiteSpace=wrap;html=1;align=left;verticalAlign=middle;spacing=16;fontFamily=Arial;fontSize=20;fontColor=#172b4d;fillColor=#d5e8d4;strokeColor=#82b366;fontStyle=0;arcSize=6;" vertex="1" parent="1">
+          <mxGeometry x="40" y="1150" width="1720" height="110" as="geometry" />
+        </mxCell>
+        <mxCell id="gms-learn-dash-4-source" value="Đối chiếu: PtDashboardServlet.doPost(); PtDashboardService.remindCustomer(); PtRemindDAO.findRemindedToday()/insertReminder() | Code hiện tại: 23/10/2026 (gồm thay đổi chưa commit)." style="rounded=1;whiteSpace=wrap;html=1;align=left;verticalAlign=middle;spacing=16;fontFamily=Arial;fontSize=14;fontColor=#172b4d;fillColor=none;strokeColor=none;fontStyle=0;arcSize=6;" vertex="1" parent="1">
+          <mxGeometry x="40" y="1267" width="1720" height="45" as="geometry" />
+        </mxCell>
+      </root>
+    </mxGraphModel>
+  </diagram>
+  <diagram id="gms-learn-dash-5" name="21. PT Dashboard · hoa hồng trọng tâm">
+    <mxGraphModel dx="1800" dy="1320" grid="1" gridSize="10" guides="1" tooltips="1" connect="1" arrows="1" fold="1" page="1" pageScale="1" pageWidth="1800" pageHeight="1320" math="0" shadow="0">
+      <root>
+        <mxCell id="0" />
+        <mxCell id="1" parent="0" />
+        <mxCell id="gms-learn-dash-5-title" value="21. PT Dashboard · hoa hồng trọng tâm" style="rounded=1;whiteSpace=wrap;html=1;align=left;verticalAlign=middle;spacing=16;fontFamily=Arial;fontSize=31;fontColor=#172b4d;fillColor=none;strokeColor=none;fontStyle=1;arcSize=6;" vertex="1" parent="1">
+          <mxGeometry x="40" y="20" width="1720" height="65" as="geometry" />
+        </mxCell>
+        <mxCell id="gms-learn-dash-5-subtitle" value="getCommissionSummary(): tháng hiện tại, từ ngày đầu tháng đến trước ngày đầu tháng sau; theo ngày buổi và PT thực dạy." style="rounded=1;whiteSpace=wrap;html=1;align=left;verticalAlign=middle;spacing=16;fontFamily=Arial;fontSize=20;fontColor=#172b4d;fillColor=none;strokeColor=none;fontStyle=0;arcSize=6;" vertex="1" parent="1">
+          <mxGeometry x="40" y="92" width="1720" height="65" as="geometry" />
+        </mxCell>
+        <mxCell id="gms-learn-dash-5-nav" value="Về mục lục" style="rounded=1;whiteSpace=wrap;html=1;align=left;verticalAlign=middle;spacing=16;fontFamily=Arial;fontSize=18;fontColor=#172b4d;fillColor=#f5f5f5;strokeColor=#666666;fontStyle=1;arcSize=6;" vertex="1" parent="1" link="data:page/id,index-pt-dashboard-flow">
+          <mxGeometry x="40" y="164" width="210" height="43" as="geometry" />
+        </mxCell>
+        <mxCell id="gms-learn-dash-5-legend-servlet" value="Servlet" style="rounded=1;whiteSpace=wrap;html=1;align=center;verticalAlign=middle;spacing=16;fontFamily=Arial;fontSize=18;fontColor=#172b4d;fillColor=#dae8fc;strokeColor=#6c8ebf;fontStyle=0;arcSize=6;" vertex="1" parent="1">
+          <mxGeometry x="290" y="164" width="180" height="43" as="geometry" />
+        </mxCell>
+        <mxCell id="gms-learn-dash-5-legend-service" value="Service" style="rounded=1;whiteSpace=wrap;html=1;align=center;verticalAlign=middle;spacing=16;fontFamily=Arial;fontSize=18;fontColor=#172b4d;fillColor=#e1d5e7;strokeColor=#9673a6;fontStyle=0;arcSize=6;" vertex="1" parent="1">
+          <mxGeometry x="488" y="164" width="180" height="43" as="geometry" />
+        </mxCell>
+        <mxCell id="gms-learn-dash-5-legend-dao" value="DAO / SQL" style="rounded=1;whiteSpace=wrap;html=1;align=center;verticalAlign=middle;spacing=16;fontFamily=Arial;fontSize=18;fontColor=#172b4d;fillColor=#fff2cc;strokeColor=#d6b656;fontStyle=0;arcSize=6;" vertex="1" parent="1">
+          <mxGeometry x="686" y="164" width="180" height="43" as="geometry" />
+        </mxCell>
+        <mxCell id="gms-learn-dash-5-legend-dto" value="DTO" style="rounded=1;whiteSpace=wrap;html=1;align=center;verticalAlign=middle;spacing=16;fontFamily=Arial;fontSize=18;fontColor=#172b4d;fillColor=#d5e8d4;strokeColor=#82b366;fontStyle=0;arcSize=6;" vertex="1" parent="1">
+          <mxGeometry x="884" y="164" width="180" height="43" as="geometry" />
+        </mxCell>
+        <mxCell id="gms-learn-dash-5-legend-ui" value="JSP / JS" style="rounded=1;whiteSpace=wrap;html=1;align=center;verticalAlign=middle;spacing=16;fontFamily=Arial;fontSize=18;fontColor=#172b4d;fillColor=#f5f5f5;strokeColor=#666666;fontStyle=0;arcSize=6;" vertex="1" parent="1">
+          <mxGeometry x="1082" y="164" width="180" height="43" as="geometry" />
+        </mxCell>
+        <mxCell id="gms-learn-dash-5-card-0" value="" style="rounded=1;whiteSpace=wrap;html=1;align=left;verticalAlign=middle;spacing=16;fontFamily=Arial;fontSize=20;fontColor=#172b4d;fillColor=#fff2cc;strokeColor=#d6b656;fontStyle=0;arcSize=6;" vertex="1" parent="1">
+          <mxGeometry x="40" y="230" width="520" height="350" as="geometry" />
+        </mxCell>
+        <mxCell id="gms-learn-dash-5-role-0" value="1. DAO / SQL" style="rounded=1;whiteSpace=wrap;html=1;align=left;verticalAlign=middle;spacing=16;fontFamily=Arial;fontSize=14;fontColor=#172b4d;fillColor=none;strokeColor=none;fontStyle=1;arcSize=6;" vertex="1" parent="gms-learn-dash-5-card-0">
+          <mxGeometry x="8.0" y="8.0" width="504" height="38" as="geometry" />
+        </mxCell>
+        <mxCell id="gms-learn-dash-5-heading-0" value="Đọc số tiền snapshot" style="rounded=1;whiteSpace=wrap;html=1;align=left;verticalAlign=middle;spacing=16;fontFamily=Arial;fontSize=22;fontColor=#172b4d;fillColor=none;strokeColor=none;fontStyle=1;arcSize=6;" vertex="1" parent="gms-learn-dash-5-card-0">
+          <mxGeometry x="8.0" y="45.0" width="504" height="41" as="geometry" />
+        </mxCell>
+        <mxCell id="gms-learn-dash-5-body-0" value="Lọc Sessions.PtEmployeeId và SlotDate trong tháng.&lt;br&gt;Cộng Sessions.CommissionAmount đã lưu.&lt;br&gt;Không lấy tỷ lệ hiện tại nhân lại giá gói cho các buổi&lt;br&gt;lịch sử." style="rounded=1;whiteSpace=wrap;html=1;align=left;verticalAlign=middle;spacing=16;fontFamily=Arial;fontSize=20;fontColor=#172b4d;fillColor=none;strokeColor=none;fontStyle=0;arcSize=6;" vertex="1" parent="gms-learn-dash-5-card-0">
+          <mxGeometry x="8.0" y="78.0" width="504" height="124" as="geometry" />
+        </mxCell>
+        <mxCell id="gms-learn-dash-5-card-1" value="" style="rounded=1;whiteSpace=wrap;html=1;align=left;verticalAlign=middle;spacing=16;fontFamily=Arial;fontSize=20;fontColor=#172b4d;fillColor=#e1d5e7;strokeColor=#9673a6;fontStyle=0;arcSize=6;" vertex="1" parent="1">
+          <mxGeometry x="640" y="230" width="520" height="350" as="geometry" />
+        </mxCell>
+        <mxCell id="gms-learn-dash-5-role-1" value="2. SERVICE" style="rounded=1;whiteSpace=wrap;html=1;align=left;verticalAlign=middle;spacing=16;fontFamily=Arial;fontSize=14;fontColor=#172b4d;fillColor=none;strokeColor=none;fontStyle=1;arcSize=6;" vertex="1" parent="gms-learn-dash-5-card-1">
+          <mxGeometry x="8.0" y="8.0" width="504" height="38" as="geometry" />
+        </mxCell>
+        <mxCell id="gms-learn-dash-5-heading-1" value="Nhóm đã có kết quả" style="rounded=1;whiteSpace=wrap;html=1;align=left;verticalAlign=middle;spacing=16;fontFamily=Arial;fontSize=22;fontColor=#172b4d;fillColor=none;strokeColor=none;fontStyle=1;arcSize=6;" vertex="1" parent="gms-learn-dash-5-card-1">
+          <mxGeometry x="8.0" y="45.0" width="504" height="41" as="geometry" />
+        </mxCell>
+        <mxCell id="gms-learn-dash-5-body-1" value="CheckedIn / Missed → tiền đã chốt theo snapshot.&lt;br&gt;Cancelled ByPt / ByCustomer cũ → theo tiền đã lưu.&lt;br&gt;GymClosed / PackageExpired → không có hoa&lt;br&gt;hồng." style="rounded=1;whiteSpace=wrap;html=1;align=left;verticalAlign=middle;spacing=16;fontFamily=Arial;fontSize=20;fontColor=#172b4d;fillColor=none;strokeColor=none;fontStyle=0;arcSize=6;" vertex="1" parent="gms-learn-dash-5-card-1">
+          <mxGeometry x="8.0" y="78.0" width="504" height="124" as="geometry" />
+        </mxCell>
+        <mxCell id="gms-learn-dash-5-card-2" value="" style="rounded=1;whiteSpace=wrap;html=1;align=left;verticalAlign=middle;spacing=16;fontFamily=Arial;fontSize=20;fontColor=#172b4d;fillColor=#fff2cc;strokeColor=#d6b656;fontStyle=0;arcSize=6;" vertex="1" parent="1">
+          <mxGeometry x="1240" y="230" width="520" height="350" as="geometry" />
+        </mxCell>
+        <mxCell id="gms-learn-dash-5-role-2" value="3. ĐIỀU KIỆN" style="rounded=1;whiteSpace=wrap;html=1;align=left;verticalAlign=middle;spacing=16;fontFamily=Arial;fontSize=14;fontColor=#172b4d;fillColor=none;strokeColor=none;fontStyle=1;arcSize=6;" vertex="1" parent="gms-learn-dash-5-card-2">
+          <mxGeometry x="8.0" y="8.0" width="504" height="38" as="geometry" />
+        </mxCell>
+        <mxCell id="gms-learn-dash-5-heading-2" value="Scheduled chia hai nhánh" style="rounded=1;whiteSpace=wrap;html=1;align=left;verticalAlign=middle;spacing=16;fontFamily=Arial;fontSize=22;fontColor=#172b4d;fillColor=none;strokeColor=none;fontStyle=1;arcSize=6;" vertex="1" parent="gms-learn-dash-5-card-2">
+          <mxGeometry x="8.0" y="45.0" width="504" height="41" as="geometry" />
+        </mxCell>
+        <mxCell id="gms-learn-dash-5-body-2" value="Thời điểm kết thúc ≤ now → đang chờ chốt.&lt;br&gt;Chưa kết thúc → dự kiến.&lt;br&gt;Không chuyển Scheduled thành Missed chỉ vì đang&lt;br&gt;tính báo cáo Dashboard." style="rounded=1;whiteSpace=wrap;html=1;align=left;verticalAlign=middle;spacing=16;fontFamily=Arial;fontSize=20;fontColor=#172b4d;fillColor=none;strokeColor=none;fontStyle=0;arcSize=6;" vertex="1" parent="gms-learn-dash-5-card-2">
+          <mxGeometry x="8.0" y="78.0" width="504" height="124" as="geometry" />
+        </mxCell>
+        <mxCell id="gms-learn-dash-5-card-3" value="" style="rounded=1;whiteSpace=wrap;html=1;align=left;verticalAlign=middle;spacing=16;fontFamily=Arial;fontSize=20;fontColor=#172b4d;fillColor=#d5e8d4;strokeColor=#82b366;fontStyle=0;arcSize=6;" vertex="1" parent="1">
+          <mxGeometry x="1240" y="710" width="520" height="350" as="geometry" />
+        </mxCell>
+        <mxCell id="gms-learn-dash-5-role-3" value="4. DTO / KẾT QUẢ" style="rounded=1;whiteSpace=wrap;html=1;align=left;verticalAlign=middle;spacing=16;fontFamily=Arial;fontSize=14;fontColor=#172b4d;fillColor=none;strokeColor=none;fontStyle=1;arcSize=6;" vertex="1" parent="gms-learn-dash-5-card-3">
+          <mxGeometry x="8.0" y="8.0" width="504" height="38" as="geometry" />
+        </mxCell>
+        <mxCell id="gms-learn-dash-5-heading-3" value="PtCommissionSummaryView" style="rounded=1;whiteSpace=wrap;html=1;align=left;verticalAlign=middle;spacing=16;fontFamily=Arial;fontSize=22;fontColor=#172b4d;fillColor=none;strokeColor=none;fontStyle=1;arcSize=6;" vertex="1" parent="gms-learn-dash-5-card-3">
+          <mxGeometry x="8.0" y="45.0" width="504" height="41" as="geometry" />
+        </mxCell>
+        <mxCell id="gms-learn-dash-5-body-3" value="Chứa tiền đã chốt, chờ chốt, dự kiến; số CheckedIn,&lt;br&gt;Missed theo lý do và Cancelled.&lt;br&gt;Service thêm tỷ lệ hoa hồng hiện tại để hiển thị,&lt;br&gt;không để tính lại snapshot." style="rounded=1;whiteSpace=wrap;html=1;align=left;verticalAlign=middle;spacing=16;fontFamily=Arial;fontSize=20;fontColor=#172b4d;fillColor=none;strokeColor=none;fontStyle=0;arcSize=6;" vertex="1" parent="gms-learn-dash-5-card-3">
+          <mxGeometry x="8.0" y="78.0" width="504" height="124" as="geometry" />
+        </mxCell>
+        <mxCell id="gms-learn-dash-5-card-4" value="" style="rounded=1;whiteSpace=wrap;html=1;align=left;verticalAlign=middle;spacing=16;fontFamily=Arial;fontSize=20;fontColor=#172b4d;fillColor=#e1d5e7;strokeColor=#9673a6;fontStyle=0;arcSize=6;" vertex="1" parent="1">
+          <mxGeometry x="640" y="710" width="520" height="350" as="geometry" />
+        </mxCell>
+        <mxCell id="gms-learn-dash-5-role-4" value="5. SERVICE" style="rounded=1;whiteSpace=wrap;html=1;align=left;verticalAlign=middle;spacing=16;fontFamily=Arial;fontSize=14;fontColor=#172b4d;fillColor=none;strokeColor=none;fontStyle=1;arcSize=6;" vertex="1" parent="gms-learn-dash-5-card-4">
+          <mxGeometry x="8.0" y="8.0" width="504" height="38" as="geometry" />
+        </mxCell>
+        <mxCell id="gms-learn-dash-5-heading-4" value="Tỷ lệ của thanh kết quả" style="rounded=1;whiteSpace=wrap;html=1;align=left;verticalAlign=middle;spacing=16;fontFamily=Arial;fontSize=22;fontColor=#172b4d;fillColor=none;strokeColor=none;fontStyle=1;arcSize=6;" vertex="1" parent="gms-learn-dash-5-card-4">
+          <mxGeometry x="8.0" y="45.0" width="504" height="41" as="geometry" />
+        </mxCell>
+        <mxCell id="gms-learn-dash-5-body-4" value="prepareCommissionSummary() cộng các nhóm đã&lt;br&gt;có kết quả và tính tỷ lệ, làm tròn 2 chữ số.&lt;br&gt;Không có buổi đã chốt → các tỷ lệ bằng 0, không&lt;br&gt;chia cho 0." style="rounded=1;whiteSpace=wrap;html=1;align=left;verticalAlign=middle;spacing=16;fontFamily=Arial;fontSize=20;fontColor=#172b4d;fillColor=none;strokeColor=none;fontStyle=0;arcSize=6;" vertex="1" parent="gms-learn-dash-5-card-4">
+          <mxGeometry x="8.0" y="78.0" width="504" height="124" as="geometry" />
+        </mxCell>
+        <mxCell id="gms-learn-dash-5-card-5" value="" style="rounded=1;whiteSpace=wrap;html=1;align=left;verticalAlign=middle;spacing=16;fontFamily=Arial;fontSize=20;fontColor=#172b4d;fillColor=#f5f5f5;strokeColor=#666666;fontStyle=0;arcSize=6;" vertex="1" parent="1">
+          <mxGeometry x="40" y="710" width="520" height="350" as="geometry" />
+        </mxCell>
+        <mxCell id="gms-learn-dash-5-role-5" value="6. JSP / TRÌNH DUYỆT" style="rounded=1;whiteSpace=wrap;html=1;align=left;verticalAlign=middle;spacing=16;fontFamily=Arial;fontSize=14;fontColor=#172b4d;fillColor=none;strokeColor=none;fontStyle=1;arcSize=6;" vertex="1" parent="gms-learn-dash-5-card-5">
+          <mxGeometry x="8.0" y="8.0" width="504" height="38" as="geometry" />
+        </mxCell>
+        <mxCell id="gms-learn-dash-5-heading-5" value="JSP: ba số tiền + phân bố" style="rounded=1;whiteSpace=wrap;html=1;align=left;verticalAlign=middle;spacing=16;fontFamily=Arial;fontSize=22;fontColor=#172b4d;fillColor=none;strokeColor=none;fontStyle=1;arcSize=6;" vertex="1" parent="gms-learn-dash-5-card-5">
+          <mxGeometry x="8.0" y="45.0" width="504" height="41" as="geometry" />
+        </mxCell>
+        <mxCell id="gms-learn-dash-5-body-5" value="Ba thẻ tiền, thanh kết quả và chú giải.&lt;br&gt;Không còn dòng “19/34 buổi khách không&lt;br&gt;check-in…” đã bỏ.&lt;br&gt;Lịch tuần và cảnh báo giải thích việc cần làm; hoa&lt;br&gt;hồng phản ánh dữ liệu đã lưu." style="rounded=1;whiteSpace=wrap;html=1;align=left;verticalAlign=middle;spacing=16;fontFamily=Arial;fontSize=20;fontColor=#172b4d;fillColor=none;strokeColor=none;fontStyle=0;arcSize=6;" vertex="1" parent="gms-learn-dash-5-card-5">
+          <mxGeometry x="8.0" y="78.0" width="504" height="151" as="geometry" />
+        </mxCell>
+        <mxCell id="gms-learn-dash-5-edge-0" value="" style="edgeStyle=orthogonalEdgeStyle;rounded=0;html=1;endArrow=block;endFill=1;strokeColor=#46566d;strokeWidth=2;fontFamily=Arial;fontSize=16;labelBackgroundColor=#ffffff;jettySize=auto;exitX=1.0;exitY=0.5;exitDx=0;exitDy=0;entryX=0.0;entryY=0.5;entryDx=0;entryDy=0;" edge="1" parent="1" source="gms-learn-dash-5-card-0" target="gms-learn-dash-5-card-1">
+          <mxGeometry relative="1" as="geometry" />
+        </mxCell>
+        <mxCell id="gms-learn-dash-5-edge-1" value="" style="edgeStyle=orthogonalEdgeStyle;rounded=0;html=1;endArrow=block;endFill=1;strokeColor=#46566d;strokeWidth=2;fontFamily=Arial;fontSize=16;labelBackgroundColor=#ffffff;jettySize=auto;exitX=1.0;exitY=0.5;exitDx=0;exitDy=0;entryX=0.0;entryY=0.5;entryDx=0;entryDy=0;" edge="1" parent="1" source="gms-learn-dash-5-card-1" target="gms-learn-dash-5-card-2">
+          <mxGeometry relative="1" as="geometry" />
+        </mxCell>
+        <mxCell id="gms-learn-dash-5-edge-2" value="" style="edgeStyle=orthogonalEdgeStyle;rounded=0;html=1;endArrow=block;endFill=1;strokeColor=#46566d;strokeWidth=2;fontFamily=Arial;fontSize=16;labelBackgroundColor=#ffffff;jettySize=auto;exitX=0.5;exitY=1.0;exitDx=0;exitDy=0;entryX=0.5;entryY=0.0;entryDx=0;entryDy=0;" edge="1" parent="1" source="gms-learn-dash-5-card-2" target="gms-learn-dash-5-card-3">
+          <mxGeometry relative="1" as="geometry" />
+        </mxCell>
+        <mxCell id="gms-learn-dash-5-edge-3" value="" style="edgeStyle=orthogonalEdgeStyle;rounded=0;html=1;endArrow=block;endFill=1;strokeColor=#46566d;strokeWidth=2;fontFamily=Arial;fontSize=16;labelBackgroundColor=#ffffff;jettySize=auto;exitX=0.0;exitY=0.5;exitDx=0;exitDy=0;entryX=1.0;entryY=0.5;entryDx=0;entryDy=0;" edge="1" parent="1" source="gms-learn-dash-5-card-3" target="gms-learn-dash-5-card-4">
+          <mxGeometry relative="1" as="geometry" />
+        </mxCell>
+        <mxCell id="gms-learn-dash-5-edge-4" value="" style="edgeStyle=orthogonalEdgeStyle;rounded=0;html=1;endArrow=block;endFill=1;strokeColor=#46566d;strokeWidth=2;fontFamily=Arial;fontSize=16;labelBackgroundColor=#ffffff;jettySize=auto;exitX=0.0;exitY=0.5;exitDx=0;exitDy=0;entryX=1.0;entryY=0.5;entryDx=0;entryDy=0;" edge="1" parent="1" source="gms-learn-dash-5-card-4" target="gms-learn-dash-5-card-5">
+          <mxGeometry relative="1" as="geometry" />
+        </mxCell>
+        <mxCell id="gms-learn-dash-5-read" value="Đọc theo số và mũi tên: hàng trên từ trái sang phải, hàng dưới từ phải sang trái. Mỗi ô giải thích một bước học." style="rounded=1;whiteSpace=wrap;html=1;align=left;verticalAlign=middle;spacing=16;fontFamily=Arial;fontSize=18;fontColor=#172b4d;fillColor=none;strokeColor=none;fontStyle=0;arcSize=6;" vertex="1" parent="1">
+          <mxGeometry x="40" y="1090" width="1720" height="45" as="geometry" />
+        </mxCell>
+        <mxCell id="gms-learn-dash-5-note" value="GHI NHỚ&lt;br&gt;Tự nhớ: snapshot quyết định tiền; trạng thái và thời gian quyết định nhóm. Hủy do GymClosed không có hoa hồng, không trừ buổi và không sinh dạy bù." style="rounded=1;whiteSpace=wrap;html=1;align=left;verticalAlign=middle;spacing=16;fontFamily=Arial;fontSize=20;fontColor=#172b4d;fillColor=#d5e8d4;strokeColor=#82b366;fontStyle=0;arcSize=6;" vertex="1" parent="1">
+          <mxGeometry x="40" y="1150" width="1720" height="110" as="geometry" />
+        </mxCell>
+        <mxCell id="gms-learn-dash-5-source" value="Đối chiếu: PtDashboardService.getCommissionSummary()/prepareCommissionSummary(); PtDashboardDAO.java; PtCommissionSummaryView.java; pt/dashboard.jsp | Code hiện tại: 23/10/2026 (gồm thay đổi chưa commit)." style="rounded=1;whiteSpace=wrap;html=1;align=left;verticalAlign=middle;spacing=16;fontFamily=Arial;fontSize=14;fontColor=#172b4d;fillColor=none;strokeColor=none;fontStyle=0;arcSize=6;" vertex="1" parent="1">
+          <mxGeometry x="40" y="1267" width="1720" height="45" as="geometry" />
+        </mxCell>
+      </root>
+    </mxGraphModel>
+  </diagram>
+</mxfile>

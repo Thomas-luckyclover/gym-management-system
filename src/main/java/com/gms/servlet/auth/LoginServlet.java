@@ -88,6 +88,7 @@ public class LoginServlet extends HttpServlet {
             newSession.setAttribute(SessionKey.AVAILABLE_ROLES, SelectRoleServlet.joinRoles(loginResult.getAvailableRoles()));
             newSession.setAttribute(SessionKey.DISPLAY_NAME, loginResult.getFullName());
             newSession.setMaxInactiveInterval(SessionKey.SESSION_TIMEOUT_SECONDS);
+            RequestUtil.getOrCreateCsrfToken(newSession);
 
             String targetUrl;
             if (loginResult.isRoleChoiceRequired()) {

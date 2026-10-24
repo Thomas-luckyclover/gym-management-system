@@ -351,26 +351,51 @@ function initCommon() {
 // DOM: .pt-info > .pt-info-trigger + .pt-info-popover, dùng ở mọi zone.
 function bindHintBoxes() {
     const hints = document.querySelectorAll(".pt-info");
-    // Hộp vẫn thuộc nút i, nhưng luôn nằm trong mép màn hình khi mở.
+    // Hộp mở ra dùng position: fixed (toạ độ màn hình) nên KHÔNG bị cột cuộn nào cắt mất;
+    // canh phải theo nút i, luôn nằm trong mép màn hình, thiếu chỗ bên dưới thì lật lên trên.
+    const EDGE = 12;   // khoảng cách tối thiểu tới mép màn hình (px)
+    const GAP = 8;     // khoảng cách giữa nút i và hộp (px)
     function positionHint(hint) {
         const popover = hint.querySelector(".pt-info-popover");
         if (!popover) { return; }
-        if (window.matchMedia("(max-width: 700px)").matches) {
-            popover.style.removeProperty("left");
-            popover.style.removeProperty("right");
-            return;
+        const compact = hint.closest(".my-bookings-page") !== null;
+        for (const prop of ["position", "top", "left", "right", "bottom"]) { popover.style.removeProperty(prop); }
+        if (!compact && window.matchMedia("(max-width: 700px)").matches) {
+            return;   // mobile: CSS đã cho hộp nằm cố định ở đáy màn hình
         }
-        const bounds = hint.getBoundingClientRect();
-        // max-width đã được trình duyệt đổi từ token rem/calc sang px.
-        const maxWidth = parseFloat(getComputedStyle(popover).maxWidth);
-        const gutter = Number.isFinite(maxWidth) ? Math.max(0, (window.innerWidth - maxWidth) / 2) : 16;
+        const trigger = hint.querySelector(".pt-info-trigger") || hint;
+        const bounds = trigger.getBoundingClientRect();
         const viewportWidth = document.documentElement.clientWidth;
-        const width = popover.getBoundingClientRect().width;
-        const preferredLeft = bounds.right - width;
-        const left = Math.max(gutter, Math.min(preferredLeft, viewportWidth - width - gutter));
+        const viewportHeight = document.documentElement.clientHeight;
+
+        // B1: chuyển sang fixed ở (0,0) rồi đo — bù lệch nếu tổ tiên có transform/backdrop-filter (vd topbar)
+        popover.style.position = "fixed";
         popover.style.right = "auto";
-        popover.style.left = (left - bounds.left) + "px";
+        popover.style.bottom = "auto";
+        popover.style.left = "0px";
+        popover.style.top = "0px";
+        const origin = popover.getBoundingClientRect();
+        const width = origin.width;
+        const height = origin.height;
+
+        // B2: canh phải theo nút i, kẹp trong màn hình
+        const left = Math.max(EDGE, Math.min(compact ? bounds.left : bounds.right - width, viewportWidth - width - EDGE));
+        // B3: ưu tiên bên dưới nút; không đủ chỗ mà bên trên rộng hơn thì đặt lên trên
+        let top = bounds.bottom + GAP;
+        if (top + height > viewportHeight - EDGE && bounds.top - GAP - height >= EDGE) {
+            top = bounds.top - GAP - height;
+        }
+        popover.style.left = (left - origin.left) + "px";
+        popover.style.top = (Math.max(EDGE, Math.min(top, viewportHeight - height - EDGE)) - origin.top) + "px";
     }
+    // Cuộn / đổi cỡ cửa sổ khi hộp đang mở → đặt lại vị trí theo nút i
+    function repositionVisibleHints() {
+        for (const hint of hints) {
+            if (hint.matches(".is-open, :hover, :focus-within")) { positionHint(hint); }
+        }
+    }
+    window.addEventListener("scroll", repositionVisibleHints, { capture: true, passive: true });
+    window.addEventListener("resize", repositionVisibleHints);
     function closeHint(hint) {
         hint.classList.remove("is-open");
         hint.classList.add("is-dismissed");
@@ -409,9 +434,6 @@ function bindHintBoxes() {
         for (const hint of hints) {
             if (!hint.contains(event.target)) { closeHint(hint); }
         }
-    });
-    window.addEventListener("resize", function () {
-        for (const hint of hints) { positionHint(hint); }
     });
 }
 
@@ -829,7 +851,7 @@ function showFieldError(input, message) {
 
     // B2
     const errorElement = getFieldErrorElement(input);
-    input.setAttribute("aria-describedby", errorElement.id);
+    toggleDescribedBy(input, errorElement.id, true);
 
     // B3
     errorElement.innerHTML = '<i class="fa-solid fa-circle-xmark" aria-hidden="true"></i>';
@@ -845,10 +867,27 @@ function clearFieldError(input) {
     input.removeAttribute("aria-invalid");
 
     const errorId = input.id + "Error";
+    toggleDescribedBy(input, errorId, false);
     const errorElement = document.getElementById(errorId);
     if (errorElement !== null) {
         errorElement.hidden = true;
         errorElement.textContent = "";
+    }
+}
+
+// Thêm (on = true) hoặc bỏ 1 id trong aria-describedby, GIỮ các id khác (vd id dòng gợi ý dưới ô)
+// → trình đọc màn hình đọc cả gợi ý lẫn lỗi. VD "emailHint" + lỗi → "emailHint emailError".
+function toggleDescribedBy(input, id, on) {
+    const ids = (input.getAttribute("aria-describedby") || "").split(" ").filter(function (x) {
+        return x !== "" && x !== id;
+    });
+    if (on) {
+        ids.push(id);
+    }
+    if (ids.length > 0) {
+        input.setAttribute("aria-describedby", ids.join(" "));
+    } else {
+        input.removeAttribute("aria-describedby");
     }
 }
 
@@ -1100,6 +1139,17 @@ function getValidatableFields(form) {
 function bindFieldValidation(form) {
     // Tắt bong bóng kiểm tra mặc định của trình duyệt, dùng thông báo tiếng Việt của hệ thống
     form.noValidate = true;
+
+    // Ô có lỗi do SERVER in sẵn (ô báo lỗi đang hiện) → đánh dấu "invalid" ngay khi mở trang,
+    // để khách sửa ô là lỗi tự mất TRONG LÚC GÕ. Nếu đợi tới lúc rời ô thì dòng lỗi biến mất đúng lúc
+    // nhấn chuột vào nút gửi → nút bị đẩy lên → cú bấm trượt khỏi nút, phải bấm lần 2.
+    for (const field of getValidatableFields(form)) {
+        const serverError = document.getElementById(field.id + "Error");
+        if (serverError !== null && !serverError.hidden && serverError.textContent.trim() !== "") {
+            field.classList.add("invalid");
+            field.setAttribute("aria-invalid", "true");
+        }
+    }
 
     form.addEventListener("focusout", function (event) {
         const field = event.target;
@@ -2815,61 +2865,6 @@ document.addEventListener("DOMContentLoaded", function () {
 
 
 // =====================================================================
-// GIAO DIỆN SÁNG / TỐI — nút [data-theme-toggle]. Lưu lựa chọn vào localStorage "gms-theme";
-// head.jspf đọc lại trước khi vẽ trang nên không bị nháy. Mặc định: tối.
-// =====================================================================
-document.addEventListener("DOMContentLoaded", function () {
-    // B0: màn nội bộ chưa đặt công tắc trong topbar → tự gắn vào đầu khối bên phải (trước chuông, tài khoản)
-    if (document.body.classList.contains("dock") && !document.querySelector("[data-theme-toggle]")) {
-        const topbar = document.querySelector(".topbar");
-        if (topbar) {
-            const slot = topbar.querySelector(".top-right") || topbar;
-            const toggle = document.createElement("button");
-            toggle.type = "button";
-            toggle.className = "theme-toggle";
-            toggle.setAttribute("data-theme-toggle", "");
-            toggle.innerHTML = '<span class="theme-toggle__track" aria-hidden="true"><span class="theme-toggle__knob"></span></span>'
-                + '<span class="theme-toggle__label">Tối</span>';
-            slot.insertBefore(toggle, slot === topbar ? null : slot.firstChild);
-        }
-    }
-    const buttons = document.querySelectorAll("[data-theme-toggle]");
-    if (!buttons.length) {
-        return;
-    }
-    const root = document.documentElement;
-
-    // B1: cập nhật chữ, icon và aria-pressed theo chế độ hiện tại
-    function paint() {
-        const light = root.getAttribute("data-theme") === "light";
-        buttons.forEach(function (button) {
-            button.setAttribute("aria-pressed", light ? "true" : "false");
-            const label = button.querySelector(".theme-toggle__label");
-            if (label) {
-                label.textContent = light ? "Sáng" : "Tối";
-            }
-            button.setAttribute("aria-label", light ? "Chuyển sang nền tối" : "Chuyển sang nền sáng");
-        });
-    }
-
-    // B2: bấm → đổi chế độ, ghi nhớ
-    buttons.forEach(function (button) {
-        button.addEventListener("click", function () {
-            const next = root.getAttribute("data-theme") === "light" ? "dark" : "light";
-            root.setAttribute("data-theme", next);
-            try {
-                localStorage.setItem("gms-theme", next);
-            } catch (error) {
-                // Trình duyệt chặn lưu trữ: vẫn đổi được trong lần xem này
-            }
-            paint();
-        });
-    });
-    paint();
-});
-
-
-// =====================================================================
 // NÂNG CẤP 2026-10-13: biểu đồ màu thương hiệu + đường xu hướng, số đếm lên, Pumpy theo ngữ cảnh
 // =====================================================================
 document.addEventListener("DOMContentLoaded", function () {
@@ -2903,7 +2898,7 @@ document.addEventListener("DOMContentLoaded", function () {
         }).join(" ");
         const last = points[points.length - 1];
         const svg = '<svg class="stat-spark" viewBox="0 0 ' + width + " " + height + '" preserveAspectRatio="none" aria-hidden="true">'
-            + '<defs><linearGradient id="gmsSparkFill" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#2BD4DE" stop-opacity=".35"/><stop offset="1" stop-color="#2BD4DE" stop-opacity="0"/></linearGradient></defs>'
+            + '<defs><linearGradient id="gmsSparkFill" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#2E63B5" stop-opacity=".18"/><stop offset="1" stop-color="#2E63B5" stop-opacity="0"/></linearGradient></defs>'
             + '<path class="area" d="' + line + " L" + width + " " + height + " L0 " + height + ' Z"/>'
             + '<path class="line" d="' + line + '" vector-effect="non-scaling-stroke"/>'
             + '<circle cx="' + last[0].toFixed(1) + '" cy="' + last[1].toFixed(1) + '" r="3"/></svg>';

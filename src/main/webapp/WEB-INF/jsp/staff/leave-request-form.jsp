@@ -126,7 +126,6 @@
                     </label>
                     <select id="leaveType" name="leaveType" required>
                       <option value="Annual" ${paramLeaveType eq 'Annual' ? 'selected' : ''}>Nghỉ phép năm</option>
-                      <option value="Sick" ${paramLeaveType eq 'Sick' ? 'selected' : ''}>Nghỉ ốm</option>
                       <option value="Unpaid" ${paramLeaveType eq 'Unpaid' ? 'selected' : ''}>Nghỉ không lương</option>
                     </select>
                     <c:if test="${not empty fieldErrors.leaveType}">

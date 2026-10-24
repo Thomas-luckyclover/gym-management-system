@@ -115,7 +115,6 @@
                 <select id="leave-type" name="leaveType" class="filter-select">
                   <option value="">Tất cả loại nghỉ</option>
                   <option value="Annual" ${leaveTypeFilter == 'Annual' ? 'selected' : ''}>Phép năm</option>
-                  <option value="Sick" ${leaveTypeFilter == 'Sick' ? 'selected' : ''}>Nghỉ ốm</option>
                   <option value="Unpaid" ${leaveTypeFilter == 'Unpaid' ? 'selected' : ''}>Không lương</option>
                 </select>
               </div>

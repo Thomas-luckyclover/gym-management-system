@@ -3,8 +3,10 @@ package com.gms.service;
 import com.gms.dto.PtAttentionView;
 import com.gms.dto.PtClientPackageView;
 import com.gms.entity.Package;
+import com.gms.dao.PtDashboardDAO;
 import java.sql.SQLException;
 import java.time.LocalDate;
+import java.time.LocalTime;
 import java.util.List;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.params.ParameterizedTest;
@@ -17,6 +19,25 @@ class PtAttentionServiceTest {
     private static final LocalDate TODAY = LocalDate.of(2026, 10, 7);
     private static final LocalDate SESSION_DATE = TODAY.plusDays(5);
     private final PtDashboardService service = new PtDashboardService();
+
+    @Test
+    void closedDayCardKeepsExactSessionAndRescheduleWarning() {
+        PtDashboardDAO.ClosedDaySession row = new PtDashboardDAO.ClosedDaySession(
+                274, 6, "Đỗ Thị Mai", 11, Package.Type.PT_SINGLE,
+                LocalDate.of(2026, 11, 7), LocalDate.of(2026, 10, 23), LocalTime.of(18, 0));
+
+        PtAttentionView item = PtDashboardService.buildClosedDayItem(row);
+
+        assertEquals("closedDay", item.getKind());
+        assertEquals(274, item.getSessionId());
+        assertEquals(6, item.getCustomerId());
+        assertEquals(11, item.getPtSubscriptionId());
+        assertEquals(row.slotDate(), item.getSessionDate());
+        assertEquals(row.ptEndDate(), item.getPtEndDate());
+        assertEquals("Ngày phòng nghỉ — cần dời", item.getAttentionTitle());
+        assertEquals("Buổi 23/10/2026 18:00 rơi vào ngày phòng nghỉ. Dời buổi trước ngày này; nếu không, hệ thống sẽ hủy và không tính hoa hồng.", item.getAttentionMessage());
+        assertNull(item.getMembershipEndDate());
+    }
 
     @Test
     void validMembershipWithoutFreezeCreatesNoAttention() throws SQLException {

@@ -1,0 +1,17 @@
+<%@ page pageEncoding="UTF-8" %>
+<%-- ===== HỘP "CHI TIẾT BUỔI TẬP" — BẮT ĐẦU =====
+     1 hộp <dialog> dùng chung, trượt từ cạnh phải. Không có dữ liệu từ server.
+     Ban đầu rỗng. Bấm 1 thẻ buổi → my-pt-sessions.js chép chi tiết của thẻ đó vào #session-drawer-content rồi mở.
+     Đóng: nút Đóng, bấm ra ngoài, hoặc phím Esc (dialog tự lo). Không gọi server. --%>
+<dialog class="session-drawer" id="session-drawer" aria-labelledby="session-drawer-title">
+    <header class="session-drawer-header">
+        <h2 id="session-drawer-title">Chi tiết buổi tập</h2>
+        <button type="button" class="btn btn-ghost" data-close-session aria-label="Đóng chi tiết buổi tập">Đóng <i class="fa-solid fa-xmark" aria-hidden="true"></i></button>
+    </header>
+    <div class="session-drawer-body">
+        <div id="session-drawer-content"></div>
+        <%-- Kết quả "Sao chép số"; aria-live để trình đọc màn hình đọc lên. --%>
+        <p class="session-note" id="session-copy-message" role="status" aria-live="polite"></p>
+    </div>
+</dialog>
+<%-- ===== HỘP "CHI TIẾT BUỔI TẬP" — KẾT THÚC ===== --%>

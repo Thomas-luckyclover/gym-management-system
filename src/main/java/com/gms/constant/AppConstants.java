@@ -45,6 +45,14 @@ public final class AppConstants {
     /** CBR-94: đếm số lần xin mã trong khoảng thời gian này (60 phút); xin tới lần thứ 5 thì khóa. */
     public static final int CODE_REQUEST_WINDOW_MINUTES = 60;
 
+    // ===== Liên hệ phòng tập (giống chân trang công khai guest-footer.jspf) =====
+
+    /** Hotline quầy lễ tân — hiển thị. */
+    public static final String GYM_HOTLINE = "1900 6868";
+
+    /** Hotline cho href="tel:" (chỉ chữ số). */
+    public static final String GYM_HOTLINE_TEL = "19006868";
+
     // ===== Độ dài/định dạng dữ liệu (DBR-01 … DBR-15) =====
 
     public static final int FULL_NAME_MIN_LENGTH = 2;

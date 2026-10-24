@@ -48,7 +48,7 @@
         </svg>
         <span>Bán gói PT</span>
       </a>
-      <a href="#"
+      <a href="${pageContext.request.contextPath}/receptionist/shift"
          class="nav-link<c:if test="${activeNav == 'shifts'}"> active</c:if>"
          <c:if test="${activeNav == 'shifts'}">aria-current="page"</c:if>>
         <svg viewBox="0 0 24 24" aria-hidden="true">

@@ -55,7 +55,7 @@ def today_d(day=0): return Live('today', day, kind='date')
 TABLES = ['Persons', 'Employees', 'Customers', 'Accounts', 'VerificationCodes', 'Packages', 'Vouchers',
           'Shifts', 'Orders', 'Transactions', 'Subscriptions', 'FreezeRecords', 'CheckIns',
           'CustomerDeletionRequests', 'TimeSlots', 'Sessions', 'SessionMoveLogs', 'LeaveRequests',
-          'Facilities', 'MaintenanceRequests', 'StaffAttendances', 'PrivateNotes', 'TrainingPlans',
+          'Facilities', 'EquipmentItems', 'MaintenanceRequests', 'StaffAttendances', 'PrivateNotes', 'TrainingPlans',
           'Feedbacks', 'BlogPosts', 'Notifications', 'NotificationRecipients', 'SystemConfigs',
           'OperatingHourExceptions', 'AuditLogs']
 DB = {t: [] for t in TABLES}
@@ -79,7 +79,7 @@ PK = {'Persons': 'PersonId', 'Employees': 'EmployeeId', 'Customers': 'CustomerId
       'Subscriptions': 'SubscriptionId', 'FreezeRecords': 'FreezeRecordId', 'CheckIns': 'CheckInId',
       'CustomerDeletionRequests': 'CustomerDeletionRequestId', 'TimeSlots': 'TimeSlotId',
       'Sessions': 'SessionId', 'SessionMoveLogs': 'SessionMoveLogId', 'LeaveRequests': 'LeaveRequestId',
-      'Facilities': 'FacilityId', 'MaintenanceRequests': 'MaintenanceRequestId',
+      'Facilities': 'FacilityId', 'EquipmentItems': 'EquipmentItemId', 'MaintenanceRequests': 'MaintenanceRequestId',
       'StaffAttendances': 'StaffAttendanceId', 'PrivateNotes': 'PrivateNoteId',
       'TrainingPlans': 'TrainingPlanId', 'Feedbacks': 'FeedbackId', 'BlogPosts': 'BlogPostId',
       'Notifications': 'NotificationId', 'NotificationRecipients': 'NotificationRecipientId',

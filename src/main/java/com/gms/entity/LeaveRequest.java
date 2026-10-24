@@ -196,6 +196,7 @@ public class LeaveRequest {
     public enum LeaveType {
 
         ANNUAL("Annual", "Nghỉ phép năm"),
+        // Chỉ đọc đơn cũ; StaffLeaveService không cho gửi mới loại nghỉ này.
         SICK("Sick", "Nghỉ ốm"),
         UNPAID("Unpaid", "Nghỉ không lương");
 

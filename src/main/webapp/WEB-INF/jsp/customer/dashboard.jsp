@@ -11,14 +11,14 @@
                         <%@ include file="/WEB-INF/jsp/common/head.jspf" %>
                             <title>Trang cá nhân · Super Gym</title>
                             <link rel="stylesheet"
-                                href="${pageContext.request.contextPath}/css/pages/customer/dashboard.css?v=20261013c">
-                            <%-- Dải điểm nhấn dùng chung kiểu với PT Dashboard (.pt-board__hero) --%>
+                                href="${pageContext.request.contextPath}/css/pages/customer/dashboard.css?v=20261024flat">
+                            <link rel="stylesheet"
+                                href="${pageContext.request.contextPath}/css/dashboard-weather.css?v=20261014s">
+                            <link rel="stylesheet"
+                                href="${pageContext.request.contextPath}/css/dashboard-comic.css?v=20261015h">
+                            <%-- Khối chào + thời tiết dùng chung với PT Dashboard (.pt-board__hero) --%>
                                 <link rel="stylesheet"
-                                    href="${pageContext.request.contextPath}/css/pages/pt/dashboard.css?v=20261013g">
-                                <link rel="stylesheet"
-                                    href="${pageContext.request.contextPath}/css/dashboard-weather.css?v=20261014s">
-                                <link rel="stylesheet"
-                                    href="${pageContext.request.contextPath}/css/dashboard-comic.css?v=20261015h">
+                                    href="${pageContext.request.contextPath}/css/dashboard-hero.css?v=20261024flat">
                                 <link rel="stylesheet"
                                     href="https://fonts.googleapis.com/css2?family=Patrick+Hand&display=swap">
                     </head>
@@ -39,38 +39,29 @@
                                             </div>
                                             <c:if test="${not empty dashboard}">
                                                 <div class="top-right">
-                                                    <%-- Chuyển nền tối/sáng (common.js "Giao diện sáng / tối" ); mặc
-                                                        định tối --%>
-                                                        <button type="button" class="theme-toggle" data-theme-toggle
-                                                            aria-pressed="false" aria-label="Chuyển sang nền sáng">
-                                                            <span class="theme-toggle__track" aria-hidden="true"><span
-                                                                    class="theme-toggle__knob"></span></span>
-                                                            <span class="theme-toggle__label">Tối</span>
-                                                        </button>
-                                                        <a class="tb-user"
-                                                            href="${pageContext.request.contextPath}/account"
-                                                            title="Cài đặt tài khoản">
-                                                            <c:choose>
-                                                                <c:when test="${not empty dashboard.avatar}">
-                                                                    <img class="avatar"
-                                                                        src="${pageContext.request.contextPath}${dashboard.avatar}"
-                                                                        alt="Ảnh đại diện">
-                                                                </c:when>
-                                                                <c:otherwise>
-                                                                    <span class="avatar">
-                                                                        <c:out value="${dashboard.initials}" />
-                                                                    </span>
-                                                                </c:otherwise>
-                                                            </c:choose>
-                                                            <span class="tb-user-text">
-                                                                <b>
-                                                                    <c:out value="${dashboard.fullName}" />
-                                                                </b>
-                                                                <span>
-                                                                    <c:out value="${dashboard.customerCode}" />
+                                                    <a class="tb-user" href="${pageContext.request.contextPath}/account"
+                                                        title="Cài đặt tài khoản">
+                                                        <c:choose>
+                                                            <c:when test="${not empty dashboard.avatar}">
+                                                                <img class="avatar"
+                                                                    src="${pageContext.request.contextPath}${dashboard.avatar}"
+                                                                    alt="Ảnh đại diện">
+                                                            </c:when>
+                                                            <c:otherwise>
+                                                                <span class="avatar">
+                                                                    <c:out value="${dashboard.initials}" />
                                                                 </span>
+                                                            </c:otherwise>
+                                                        </c:choose>
+                                                        <span class="tb-user-text">
+                                                            <b>
+                                                                <c:out value="${dashboard.fullName}" />
+                                                            </b>
+                                                            <span>
+                                                                <c:out value="${dashboard.customerCode}" />
                                                             </span>
-                                                        </a>
+                                                        </span>
+                                                    </a>
                                                 </div>
                                             </c:if>
                                         </header>
