@@ -25,12 +25,12 @@
   gap: var(--space-3) var(--space-5);
   align-items: start;
   padding: var(--space-4);
-  border: var(--border-width) solid var(--pt-line);
-  border-radius: var(--radius-xs);
-  background:
-    linear-gradient(112deg, color-mix(in srgb, var(--brand-ember) 8%, transparent), transparent 35%),
-    var(--pt-panel);
-  color: var(--pt-text);
+  /* Thẻ trắng như mọi khối khác (24/10): chữ mực, tên người dùng màu cobalt */
+  border: var(--border-width) solid var(--zone-card-line);
+  border-radius: 18px;
+  background: var(--zone-card);
+  color: var(--zone-ink);
+  box-shadow: var(--ink-shadow);
 }
 
 /* Hai lớp bọc trong fragment không tạo hộp riêng → con của chúng thành ô lưới trực tiếp. */
@@ -231,4 +231,119 @@
   /* Số nhiệt độ là "con số lớn" duy nhất của thẻ comic — giữ cỡ cũ của thiết kế thời tiết. */
   .pt-board__hero .wx-card__temp { align-self: center; font-size: clamp(3.5rem, 5vw, 4.75rem); }
   .pt-board__hero .wx-card__more { align-self: end; }
+}
+
+/* ---------- 6. ARENA (24/10 tối) — khối chào cho cả PT Dashboard và Trang cá nhân khách ----------
+   Khối tối có đèn sân khấu, vân nhám thanh đòn 8px trên đỉnh (điểm nhấn duy nhất của khu làm việc),
+   "CHÀO," nhỏ màu thép + tên to đậm có chấm vuông ember, 3 con số thành 3 ô ghép.
+   Tranh comic phòng tập, thẻ thời tiết và mọi animation giữ nguyên. */
+/* --- Khối tối có đèn. Đổi biến chữ/viền trong khối → phần tử con tự đổi theo. --- */
+html body.dock:not(.no-arena) .pt-board__hero {
+  --pt-text: var(--arena-surface);
+  --pt-soft: var(--arena-steel);
+  --pt-muted: var(--arena-steel);
+  --pt-line: var(--arena-line-dark);
+  --pt-line-strong: var(--arena-line-dark-strong);
+  --pt-panel: var(--arena-900);
+  --pt-panel-2: var(--arena-800);
+  --pt-lagoon-text: var(--arena-focus);
+  --arena-focus-ring: var(--arena-focus);
+  --color-text: var(--arena-surface);
+  --color-text-soft: var(--arena-steel);
+  --color-surface-muted: var(--arena-800);
+  border: 0;
+  border-radius: var(--arena-radius-block);
+  background:
+    radial-gradient(120% 90% at 0% 0%, var(--arena-glow), transparent 55%),
+    var(--arena-900);
+  color: var(--arena-surface);
+  box-shadow: var(--arena-shadow-dark);
+}
+html.gms-lite body.dock:not(.no-arena) .pt-board__hero { background: var(--arena-900); }
+
+/* --- Khối chào: vân nhám thanh đòn 8px trên đỉnh (2 lớp sọc chéo, không ảnh) --- */
+html body.dock:not(.no-arena) .pt-board__hero {
+  overflow: hidden;
+  padding: calc(var(--arena-pad) + var(--arena-knurl-height)) var(--arena-pad) var(--arena-pad);
+}
+html body.dock:not(.no-arena) .pt-board__hero::before {
+  content: "";
+  position: absolute;
+  inset: 0 0 auto;
+  height: var(--arena-knurl-height);
+  background:
+    repeating-linear-gradient(45deg, var(--arena-knurl) 0 1.5px, transparent 1.5px 5px),
+    repeating-linear-gradient(-45deg, var(--arena-knurl) 0 1.5px, transparent 1.5px 5px),
+    var(--arena-knurl-base);
+  pointer-events: none;
+}
+
+/* Lời chào 2 dòng, không sửa JSP: "CHÀO," là chữ của h2 (nhỏ, thép), tên là <span class="wx-name"> (to, trắng) */
+html body.dock:not(.no-arena) .pt-board__hero .wx-greet h2 {
+  color: var(--arena-steel);
+  font-family: var(--font-brand-mono);
+  font-size: var(--font-size-sm);
+  font-style: normal;
+  font-weight: var(--font-weight-semibold);
+  line-height: 1.2;
+  letter-spacing: 0.14em;
+}
+html body.dock:not(.no-arena) .pt-board__hero .wx-name {
+  display: block;
+  margin-top: var(--space-2);
+  color: var(--arena-surface);
+  font-family: var(--font-brand-display);
+  font-size: clamp(2.25rem, 3.3vw, 3.1rem);
+  font-weight: var(--font-weight-extrabold);
+  line-height: 0.98;
+  letter-spacing: -0.025em;
+}
+html body.dock:not(.no-arena) .pt-board__hero .wx-name::after {
+  content: "";
+  display: inline-block;
+  width: 0.2em;
+  height: 0.2em;
+  margin-left: 0.08em;
+  background: var(--arena-ember);
+}
+
+/* Ba con số: 3 ô ghép, số to ở trên, nhãn thép ở dưới (ô ember "Cần chú ý" chỉ ở PT: pt/dashboard.css) */
+html body.dock:not(.no-arena) .pt-board__hero .pt-pulse {
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  gap: var(--arena-gap-tile);
+}
+html body.dock:not(.no-arena) .pt-board__hero .pt-pulse div {
+  display: flex;
+  flex-direction: column-reverse;
+  justify-content: flex-end;
+  gap: var(--space-0-5);
+  padding: var(--space-2-5) var(--space-3);
+  border: var(--border-width) solid var(--arena-line-dark);
+  border-radius: var(--arena-radius-tile);
+  background: var(--arena-tile-dark);
+}
+html body.dock:not(.no-arena) .pt-board__hero .pt-pulse dd {
+  color: var(--arena-surface);
+  font-family: var(--font-brand-display);
+  font-size: var(--font-size-2xl);
+  font-weight: var(--font-weight-extrabold);
+  line-height: 1.1;
+}
+html body.dock:not(.no-arena) .pt-board__hero .pt-pulse dt { color: var(--arena-steel); font-size: var(--font-size-xs); }
+
+@media (min-width: 1280px) {
+  html body.dock:not(.no-arena) .pt-board__hero {
+    grid-template-columns: minmax(0, 1.1fr) minmax(0, 1.5fr) minmax(17rem, 1fr);
+  }
+}
+
+/* Tranh phòng tập + thẻ thời tiết giữ tranh comic, chỉ đổi góc */
+html body.dock:not(.no-arena) .pt-board__hero :is(.wx-gym, .wx-card) { border-radius: var(--arena-radius-tile); }
+
+@media (max-width: 767px) {
+  html body.dock:not(.no-arena) .pt-board__hero { padding: calc(var(--arena-pad-sm) + var(--arena-knurl-height)) var(--arena-pad-sm) var(--arena-pad-sm); }
+  html body.dock:not(.no-arena) .pt-board__hero .wx-name { font-size: clamp(1.9rem, 9vw, 2.4rem); }
+  html body.dock:not(.no-arena) .pt-board__hero .pt-pulse div { padding: var(--space-2) var(--space-2-5); }
+  html body.dock:not(.no-arena) .pt-board__hero .pt-pulse dt { font-size: var(--font-size-xs); line-height: 1.25; }
 }

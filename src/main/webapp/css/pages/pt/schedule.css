@@ -11,6 +11,7 @@
      6. Chú thích màu
      7. Thanh "Chờ công bố" dính đáy        (CSS tự đếm, tự hiện)
      8. Điện thoại
+     9. Arena (24/10 tối): đầu ngày hôm nay tối, khung có khách xanh đặc, ngày nghỉ sọc chéo
 
    Mọi giá trị lấy từ tokens.css; không ghi cứng màu, px, font.
    ===================================================================== */
@@ -925,3 +926,93 @@
     font-size: var(--font-size-sm);
   }
 }
+
+
+/* ==================== 9. ARENA (24/10 tối) ====================
+   Màu + hình theo mục "ARENA" cuối common.css. Ở đây:
+   - lưới tuần nền trắng trên khối phấn; cột hôm nay đầu tối + gạch ember (ember duy nhất của lưới)
+   - khung đã có khách = khối xanh đặc; các loại còn lại giữ màu nghĩa (trống xanh lá, giữ chỗ vàng, khóa đỏ)
+   - ngày đóng cửa có sọc chéo; thanh "chờ công bố" là khối tối để nút Công bố là ember duy nhất. */
+
+html body.dock.pt-plan-page .pt-plan { gap: var(--arena-gap); }
+/* Nhịp: thanh công cụ và chú thích thẳng lề 24px như các khối khác */
+html body.dock.pt-plan-page :is(.pt-plan-toolbar, .pt-plan-legend) { padding: var(--arena-pad-sm) var(--arena-pad); }
+@media (max-width: 700px) {
+  html body.dock.pt-plan-page :is(.pt-plan-toolbar, .pt-plan-legend) { padding-inline: var(--arena-pad-sm); }
+  html body.dock.pt-plan-page .pt-plan-switch a { display: inline-flex; align-items: center; min-height: calc(var(--arena-hit) - 6px); }
+}
+
+html body.dock.pt-plan-page .pt-plan-period h2 { font-family: var(--font-brand-display); font-weight: var(--font-weight-bold); }
+
+/* Tuần | Danh sách: mục đang chọn là ô tối */
+html body.dock.pt-plan-page .pt-plan-switch {
+  gap: var(--space-0-5);
+  padding: var(--arena-segment-pad);
+  border: 0;
+  border-radius: var(--arena-radius-tile);
+  background: var(--arena-segment);
+}
+html body.dock.pt-plan-page .pt-plan-switch a {
+  border-radius: var(--arena-radius-chip);
+  font-weight: var(--font-weight-semibold);
+}
+html body.dock.pt-plan-page .pt-plan-switch a[aria-current="page"] {
+  background: var(--arena-900);
+  color: var(--arena-surface);
+  box-shadow: none;
+}
+
+html body.dock.pt-plan-page .pt-plan-grid { background: var(--arena-surface); }
+
+/* Đầu ngày */
+html body.dock.pt-plan-page .pt-day-date { font-family: var(--font-brand-display); font-weight: var(--font-weight-bold); }
+html body.dock.pt-plan-page .pt-plan .pt-day.is-today .pt-day-head {
+  background: var(--arena-900);
+  box-shadow: inset 0 calc(-1 * var(--arena-mark)) 0 var(--arena-ember);
+}
+html body.dock.pt-plan-page .pt-plan .pt-day.is-today :is(.pt-day-name, .pt-day-date) { color: var(--arena-surface); }
+html body.dock.pt-plan-page .pt-plan .pt-day.is-today .pt-day-note.is-today { color: var(--arena-ember-on-dark); }
+html body.dock.pt-plan-page .pt-plan .pt-day.is-today .pt-day-note:not(.is-today) { color: var(--arena-steel); }
+
+/* Khung đã có khách: xanh đặc, chữ trắng (buổi đã qua giữ màu trầm có sẵn) */
+html body.dock.pt-plan-page .pt-slot.is-booked:not(.is-past) {
+  --kind-tint: var(--arena-700);
+  --kind-line: var(--arena-700);
+  --kind-ink: var(--arena-on-dark-soft);
+  --color-text: var(--arena-surface);
+  --color-text-soft: var(--arena-on-dark-soft);
+  box-shadow: inset var(--arena-mark) 0 0 var(--arena-focus);
+}
+html body.dock.pt-plan-page .pt-plan-legend [data-kind="booked"] {
+  --swatch-tint: var(--arena-700);
+  --swatch-line: var(--arena-700);
+}
+
+@media (min-width: 701px) {
+  html body.dock.pt-plan-page .pt-plan:not(.is-list) .pt-day.is-today .pt-day-track { background-color: var(--arena-today-tint); }
+  /* Ngày đóng cửa: vạch giờ + sọc chéo */
+  html body.dock.pt-plan-page .pt-plan:not(.is-list) .pt-day.is-closed .pt-day-track {
+    background-color: var(--arena-closed);
+    background-image:
+      linear-gradient(var(--color-border) var(--border-width), transparent var(--border-width)),
+      repeating-linear-gradient(135deg, var(--arena-closed-hatch) 0 6px, transparent 6px 12px);
+    background-size: 100% var(--pt-hour), auto;
+  }
+}
+
+/* Thanh "chờ công bố": khối tối dính đáy */
+html body.dock.pt-plan-page .pt-plan-pending {
+  --color-text: var(--arena-surface);
+  --color-text-soft: var(--arena-steel);
+  --color-text-muted: var(--arena-steel);
+  --arena-focus-ring: var(--arena-focus);
+  border: 0;
+  border-radius: var(--arena-radius-tile);
+  background:
+    radial-gradient(80% 140% at 0% 0%, var(--arena-glow), transparent 60%),
+    var(--arena-900);
+  color: var(--arena-surface);
+  box-shadow: var(--arena-shadow-dark), var(--arena-float);
+}
+html.gms-lite body.dock.pt-plan-page .pt-plan-pending { background: var(--arena-900); }
+html body.dock.pt-plan-page .pt-plan-pending .pt-pending-error { color: var(--arena-error-on-dark); }

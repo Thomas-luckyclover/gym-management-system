@@ -11,6 +11,7 @@
      6. Dải ô "Các buổi của gói"
      7. Cần để ý
      8. Điện thoại
+     9. Arena (24/10 tối): dải tối đầu gói, tab công tắc, thẻ CTA vạch trái
 
    Nền / viền / bóng của các khối = lớp .panel chung (common.css).
    Nhãn trạng thái buổi = session-status.css (dùng chung với màn Lịch tập).
@@ -595,4 +596,148 @@
 @media (prefers-reduced-motion: reduce) {
   .booking-package,
   .booking-dots a.booking-dot { transition: none; }
+}
+
+
+/* ==================== 9. ARENA (24/10 tối) ====================
+   Màu + hình theo mục "ARENA" cuối common.css. Ở đây:
+   - đầu gói (tên, buổi tới, vòng còn N buổi) là dải tối có đèn ở mép trên khối chi tiết
+   - tab thành công tắc 3 ô, ô đang chọn tối; gói đang xem có vạch ember trái
+   - lời mời hành động là thẻ trắng có vạch trái: ember khi cần làm ngay, xanh khi chỉ gợi ý
+   Bố cục, thứ tự trên điện thoại và mọi chuyển động có sẵn giữ nguyên. */
+
+html body.dock .booking-page .booking-layout,
+html body.dock .booking-page .booking-rail { gap: var(--arena-gap); }
+/* Nhịp: lề trong 24px (điện thoại 16px), khe giữa các ô 8px */
+html body.dock .booking-page .booking-box { gap: var(--space-4); padding: var(--arena-pad); }
+html body.dock .booking-page .booking-overview { padding: var(--arena-pad); }
+html body.dock .booking-page .booking-section { padding: var(--space-5) var(--arena-pad); }
+html body.dock .booking-page .booking-cta { margin: var(--arena-pad); }
+html body.dock .booking-page :is(.booking-week, .booking-tab-panel, .booking-contact) { gap: var(--arena-gap-tile); }
+html body.dock .booking-page .booking-next-link { min-height: var(--space-8); }
+
+/* Chỉ tiêu đề khối (Gói của bạn); nhãn nhỏ in hoa .booking-box-label giữ cỡ cũ */
+html body.dock .booking-page .booking-box-head h2:not(.booking-box-label) {
+  font-size: var(--font-size-xl);
+  font-family: var(--font-brand-display);
+  font-weight: var(--font-weight-extrabold);
+  letter-spacing: -0.01em;
+}
+
+/* --- Tab: công tắc 3 ô --- */
+html body.dock .booking-page .booking-tabs {
+  gap: var(--space-0-5);
+  padding: var(--arena-segment-pad);
+  border-bottom: 0;
+  border-radius: var(--arena-radius-tile);
+  background: var(--arena-segment);
+}
+html body.dock .booking-page .booking-tabs [data-tab] {
+  min-height: var(--control-height-md);
+  margin: 0;
+  border: 0;
+  border-radius: var(--arena-radius-chip);
+  color: var(--arena-steel-ink);
+}
+html body.dock .booking-page .booking-tabs [data-tab][aria-selected="true"] {
+  background: var(--arena-900);
+  color: var(--arena-surface);
+}
+html body.dock .booking-page .booking-tab-count { border-radius: var(--arena-radius-chip); background: var(--arena-surface); }
+html body.dock .booking-page .booking-tabs [aria-selected="true"] .booking-tab-count { background: var(--arena-glass-strong); color: var(--arena-surface); }
+
+/* --- Thẻ gói --- */
+html body.dock .booking-page .booking-package {
+  border-color: var(--arena-chalk-line);
+  border-radius: var(--arena-radius-tile);
+  background: var(--arena-surface);
+}
+html body.dock .booking-page .booking-package:hover { border-color: var(--arena-hover-line); }
+html body.dock .booking-page .booking-package[aria-current="page"] {
+  border-color: var(--arena-900);
+  box-shadow: inset var(--arena-mark) 0 0 var(--arena-ember);
+}
+html body.dock .booking-page .booking-package-name { font-family: var(--font-brand-display); }
+
+/* --- PT + Vào phòng tập --- */
+html body.dock .booking-page .booking-pt-name { font-family: var(--font-brand-display); font-size: var(--font-size-lg); }
+html body.dock .booking-page .booking-contact-btn { border-color: var(--arena-chalk-line); border-radius: var(--arena-radius-chip); background: var(--arena-surface); }
+html body.dock .booking-page .booking-contact-btn:hover { border-color: var(--arena-700); }
+html body.dock .booking-page .booking-contact-btn.is-zalo { border-color: var(--arena-700); background: var(--arena-700); color: var(--arena-surface); }
+html body.dock .booking-page .booking-contact-btn.is-zalo:hover { border-color: var(--arena-800); background: var(--arena-800); }
+html body.dock .booking-page .booking-gym-status::before { border-radius: 1px; }
+
+/* --- Đầu gói: dải tối ở mép trên khối chi tiết (khối không cắt tràn để hộp gợi ý i vẫn bung ra được) --- */
+html body.dock .booking-page .booking-detail { box-shadow: var(--arena-shadow-drop); }
+html body.dock .booking-page .booking-overview {
+  --color-text: var(--arena-surface);
+  --color-text-soft: var(--arena-steel);
+  --color-link: var(--arena-focus);
+  --color-surface: var(--arena-900);
+  --color-surface-hover: var(--arena-line-dark);
+  --arena-focus-ring: var(--arena-focus);
+  border-radius: var(--arena-radius-block) var(--arena-radius-block) 0 0;
+  background:
+    radial-gradient(110% 120% at 0% 0%, var(--arena-glow), transparent 55%),
+    var(--arena-900);
+  color: var(--arena-surface);
+  box-shadow: var(--arena-glass-edge);
+}
+html.gms-lite body.dock .booking-page .booking-overview { background: var(--arena-900); }
+html body.dock .booking-page .booking-overview h2 {
+  color: var(--arena-surface);
+  font-family: var(--font-brand-display);
+  font-size: clamp(1.6rem, 2.4vw, 2.15rem);
+  font-weight: var(--font-weight-extrabold);
+  line-height: 1.05;
+  letter-spacing: -0.02em;
+}
+html body.dock .booking-page .booking-next {
+  margin-top: var(--space-3);
+  padding-top: var(--space-3);
+  border-top: var(--border-width) solid var(--arena-line-dark);
+}
+html body.dock .booking-page .booking-next-label strong { color: var(--arena-surface); }
+html body.dock .booking-page .booking-next-when { font-family: var(--font-brand-display); }
+html body.dock .booking-page .booking-next-warn { border-radius: var(--arena-radius-chip); }
+html body.dock .booking-page .booking-package-meta .is-ending { color: var(--color-warning-ink); font-weight: var(--font-weight-bold); }
+html body.dock .booking-page .booking-ring { background: conic-gradient(var(--arena-ember) calc(var(--p) * 1%), var(--arena-line-dark) 0); }
+html body.dock .booking-page .booking-ring.is-ending .booking-ring-text { color: var(--arena-warn-on-dark); }
+html body.dock .booking-page .booking-ring-text b { font-family: var(--font-brand-display); font-weight: var(--font-weight-extrabold); }
+html body.dock .booking-page .booking-overview :focus-visible { box-shadow: 0 0 0 2px var(--arena-focus); }
+
+/* --- Lời mời hành động --- */
+html body.dock .booking-page .booking-cta {
+  border: var(--border-width) solid var(--arena-chalk-line);
+  border-left: calc(var(--arena-mark) + 1px) solid var(--arena-ember);
+  border-radius: var(--arena-radius-tile);
+  background: var(--arena-surface);
+  box-shadow: var(--arena-lift);
+}
+html body.dock .booking-page .booking-cta.is-soft { border-left-color: var(--arena-700); }
+html body.dock .booking-page .booking-cta-icon {
+  border: 0;
+  border-radius: var(--arena-radius-tile);
+  background: var(--arena-ember-tint);
+  color: var(--arena-ember-ink);
+}
+html body.dock .booking-page .booking-cta.is-soft .booking-cta-icon { background: var(--color-info-tint); color: var(--arena-700); }
+html body.dock .booking-page .booking-cta-text h3 { font-family: var(--font-brand-display); font-weight: var(--font-weight-extrabold); }
+html body.dock .booking-page .booking-cta-phone { font-family: var(--font-brand-mono); }
+
+/* --- Lịch cố định + dải buổi --- */
+html body.dock .booking-page .booking-day {
+  border-color: var(--arena-chalk-line);
+  border-radius: var(--arena-radius-tile);
+  background: var(--arena-surface);
+}
+html body.dock .booking-page .booking-day.is-main { border-color: var(--arena-hover-line); box-shadow: inset 0 var(--arena-mark) 0 var(--arena-700); }
+html body.dock .booking-page .booking-day.is-today .booking-day-name::after { color: var(--arena-ember-ink); }
+html body.dock .booking-page .booking-subhead span { border-radius: var(--arena-radius-chip); }
+
+@media (max-width: 640px) {
+  html body.dock .booking-page :is(.booking-box, .booking-overview) { padding: var(--arena-pad-sm); }
+  html body.dock .booking-page .booking-section { padding-inline: var(--arena-pad-sm); }
+  html body.dock .booking-page .booking-cta { margin-inline: var(--arena-pad-sm); }
+  html body.dock .booking-page :is(.booking-contact-btn, .booking-tabs [data-tab]) { min-height: var(--arena-hit); }
 }

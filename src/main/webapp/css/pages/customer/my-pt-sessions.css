@@ -10,6 +10,7 @@
      5. Chú thích + số buổi cả tháng
      6. Hộp "Chi tiết buổi tập" (trượt từ phải)
      7. Điện thoại: dãy 7 ngày + chỉ hiện 1 cột
+     8. Arena (24/10 tối): đầu cột hôm nay tối, thẻ buổi sọc trái, công tắc Tuần/Tháng
         (nút topbar thu gọn trên điện thoại hẹp: xem customer/dashboard.css, dùng chung các trang khách)
 
    Nền / viền / bóng của panel = lớp .panel chung. Nhãn trạng thái = session-status.css (dùng chung).
@@ -428,3 +429,110 @@ body.session-detail-open { overflow: hidden; }
   .schedule-week thead th:first-child { width: 35%; }
 }
 
+
+
+/* ==================== 8. ARENA (24/10 tối) ====================
+   Màu + hình theo mục "ARENA" cuối common.css. Ở đây: bảng tuần nền trắng trên khối phấn,
+   đầu cột hôm nay tối + gạch ember, thẻ buổi có sọc trái xanh (buổi hôm nay sọc ember),
+   nhãn trạng thái thành chip 2px nhưng giữ đúng màu nghĩa. */
+
+html body.dock .my-pt-page .schedule-back { color: var(--arena-surface); min-height: var(--arena-hit); }
+/* Nhịp: thanh công cụ và chú thích thẳng lề 24px như các khối khác */
+html body.dock .my-pt-page :is(.schedule-toolbar, .schedule-legend) { padding: var(--arena-pad-sm) var(--arena-pad); }
+@media (max-width: 640px) {
+  html body.dock .my-pt-page :is(.schedule-toolbar, .schedule-legend) { padding-inline: var(--arena-pad-sm); }
+  html body.dock .my-pt-page .schedule-switch a { display: inline-flex; align-items: center; min-height: calc(var(--arena-hit) - 6px); }
+  html body.dock .my-pt-page .schedule-mobile-days a { min-height: var(--arena-hit); }
+}
+html body.dock .my-pt-page .schedule-period h2 { font-family: var(--font-brand-display); font-weight: var(--font-weight-bold); }
+
+/* Tuần | Tháng */
+html body.dock .my-pt-page .schedule-switch {
+  gap: var(--space-0-5);
+  padding: var(--arena-segment-pad);
+  border: 0;
+  border-radius: var(--arena-radius-tile);
+  background: var(--arena-segment);
+}
+html body.dock .my-pt-page .schedule-switch a {
+  border-radius: var(--arena-radius-chip);
+  font-weight: var(--font-weight-semibold);
+}
+html body.dock .my-pt-page .schedule-switch a[aria-current="page"] {
+  background: var(--arena-900);
+  color: var(--arena-surface);
+  box-shadow: none;
+}
+html body.dock .my-pt-page .schedule-date { border-radius: var(--arena-radius-tile); }
+
+/* Bảng */
+html body.dock .my-pt-page .schedule-grid { background: var(--arena-surface); }
+html body.dock .my-pt-page .schedule-grid :is(th, td) { border-color: var(--arena-grid-line); }
+html body.dock .my-pt-page .schedule-grid thead th { background: var(--arena-chalk-2); }
+html body.dock .my-pt-page .schedule-grid th strong {
+  color: var(--arena-ink);
+  font-family: var(--font-brand-display);
+  font-size: var(--font-size-base);
+  font-weight: var(--font-weight-bold);
+}
+html body.dock .my-pt-page .schedule-grid tbody th { background: var(--arena-chalk-2); color: var(--arena-ink); }
+
+/* Hôm nay: đầu cột tối + gạch ember, ô dưới tô xanh rất nhạt */
+html body.dock .my-pt-page .schedule-grid .is-today { background: var(--arena-today-tint); }
+html body.dock .my-pt-page .schedule-grid thead th.is-today {
+  background: var(--arena-900);
+  color: var(--arena-steel);
+  box-shadow: inset 0 calc(-1 * var(--arena-mark)) 0 var(--arena-ember);
+}
+html body.dock .my-pt-page .schedule-grid th.is-today strong {
+  display: block;
+  padding: 0;
+  border-radius: 0;
+  background: none;
+  color: var(--arena-surface);
+}
+html body.dock .my-pt-page .schedule-grid .is-today .schedule-day-number {
+  border-radius: var(--arena-radius-chip);
+  background: var(--arena-ember);
+  color: var(--arena-ink);
+}
+html body.dock .my-pt-page .day-mark.is-today-mark {
+  display: inline-block;
+  width: fit-content;
+  padding: 1px var(--space-1-5);
+  border-radius: var(--arena-radius-chip);
+  background: var(--arena-ember);
+  color: var(--arena-ink);
+}
+html body.dock .my-pt-page .schedule-grid .is-selected { box-shadow: inset 0 0 0 var(--border-width-thick) var(--arena-700); }
+html body.dock .my-pt-page .schedule-week td.is-selected {
+  box-shadow: inset var(--border-width-thick) 0 var(--arena-700), inset calc(-1 * var(--border-width-thick)) 0 var(--arena-700);
+}
+html body.dock .my-pt-page .schedule-grid thead th.is-today.is-selected { box-shadow: inset 0 calc(-1 * var(--arena-mark)) 0 var(--arena-ember); }
+html body.dock .my-pt-page .schedule-grid th.is-today .day-mark.is-selected-mark { color: var(--arena-on-dark-soft); }
+
+/* Thẻ buổi: sọc trái xanh; buổi hôm nay sọc ember; buổi đã qua trầm */
+html body.dock .my-pt-page .session-card {
+  border-color: var(--arena-card-line);
+  border-left: var(--arena-mark) solid var(--arena-700);
+  border-radius: var(--arena-radius-chip);
+  background: var(--arena-chalk);
+}
+html body.dock .my-pt-page .session-card:is(:hover, :focus-within) { border-color: var(--arena-hover-line); border-left-color: var(--arena-700); }
+html body.dock .my-pt-page .session-card[data-status="today"] {
+  border-left-color: var(--arena-ember);
+  background: var(--arena-surface);
+  box-shadow: var(--arena-lift);
+}
+html body.dock .my-pt-page .session-card.is-ended { border-left-color: var(--arena-ended-edge); background: var(--arena-ended); }
+html body.dock .my-pt-page .month-session { border-radius: var(--arena-radius-chip); box-shadow: inset var(--arena-mark) 0 0 var(--arena-700); }
+html body.dock .my-pt-page .month-session.is-ended { box-shadow: inset var(--arena-mark) 0 0 var(--arena-ended-edge); }
+
+/* Điện thoại: ô ngày đang hiện là ô tối */
+@media (max-width: 640px) {
+  html body.dock .my-pt-page .schedule-mobile-days a { border-radius: var(--arena-radius-tile); }
+  html body.dock .my-pt-page .schedule-mobile-days a.is-shown { border-color: var(--arena-900); background: var(--arena-900); color: var(--arena-steel); }
+  html body.dock .my-pt-page .schedule-mobile-days a.is-shown strong { color: var(--arena-surface); }
+  html body.dock .my-pt-page .schedule-mobile-days a.is-today strong { color: var(--arena-ember-ink); }
+  html body.dock .my-pt-page .schedule-mobile-days a.is-today.is-shown strong { color: var(--arena-ember-on-dark); }
+}

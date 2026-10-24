@@ -40,11 +40,11 @@
     <%@ include file="/WEB-INF/jsp/common/head.jspf" %>
     <%-- pageTitle = "Tổng quan PT" (Servlet B8) → tab trình duyệt hiện "Tổng quan PT · GMS". --%>
     <title><c:out value="${pageTitle}" /> · GMS</title>
-    <link rel="stylesheet" href="${pageContext.request.contextPath}/css/pages/pt/header.css?v=20261024a">
+    <link rel="stylesheet" href="${pageContext.request.contextPath}/css/pages/pt/header.css?v=20261024flat">
     <link rel="stylesheet" href="${pageContext.request.contextPath}/css/pages/pt/dashboard.css?v=20261025a">
     <link rel="stylesheet" href="${pageContext.request.contextPath}/css/dashboard-weather.css?v=20261014s">
     <link rel="stylesheet" href="${pageContext.request.contextPath}/css/dashboard-comic.css?v=20261015h">
-    <link rel="stylesheet" href="${pageContext.request.contextPath}/css/dashboard-hero.css?v=20261025a">
+    <link rel="stylesheet" href="${pageContext.request.contextPath}/css/dashboard-hero.css?v=20261024flat">
     <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Patrick+Hand&display=swap">
     <script src="${pageContext.request.contextPath}/js/pages/pt/dashboard.js?v=20261025a" defer></script>
 </head>

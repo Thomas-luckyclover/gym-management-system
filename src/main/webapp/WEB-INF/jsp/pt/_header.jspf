@@ -12,7 +12,6 @@
 
  THƯ VIỆN: trang cha đã khai báo c và gms trước khi include.
    c:out in dữ liệu có escape HTML; gms:formatDate đổi LocalDate sang dd/MM/yyyy.
- ĐIỂM NỐI JS: common.js nhận diện nút [data-theme-toggle] để chuyển sáng/tối.
 ================================================================================ --%>
 <%@ page pageEncoding="UTF-8" %>
 
@@ -42,14 +41,6 @@
 
     <%-- ===== Bên phải: chọn giao diện + tài khoản PT ===== --%>
     <div class="pt-top-actions">
-    <%-- Chuyển nền tối/sáng (common.js "Giao diện sáng / tối"); mặc định tối --%>
-    <%-- data-theme-toggle là dấu để common.js gắn sự kiện click, không phải dữ liệu từ Servlet.
-         JS lưu lựa chọn vào localStorage "gms-theme", cập nhật nhãn và aria-pressed.
-         aria-pressed=false và chữ "Tối" là trạng thái HTML ban đầu; JS đồng bộ với lựa chọn đã lưu. --%>
-    <button type="button" class="theme-toggle" data-theme-toggle aria-pressed="false" aria-label="Chuyển sang nền sáng">
-        <span class="theme-toggle__track" aria-hidden="true"><span class="theme-toggle__knob"></span></span>
-        <span class="theme-toggle__label">Tối</span>
-    </button>
 
     <%-- Link tài khoản: contextPath tự ghép gốc app, ví dụ /gms/account.
          Toàn bộ avatar + tên là một link để mở trang Cài đặt tài khoản. --%>

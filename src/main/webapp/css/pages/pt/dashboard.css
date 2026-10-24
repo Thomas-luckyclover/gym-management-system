@@ -10,6 +10,7 @@
      5. Khách phụ trách: thẻ khách, nút Gọi / Zalo, hộp cảnh báo
      6. Hộp "Tùy chọn lịch buổi tập"
      7. Điện thoại
+     8. Arena (24/10 tối): khối chào + Kết quả tháng tối, vân nhám, tên to, ô ghép 12px
 
    Khối chào + thời tiết nằm ở css/dashboard-hero.css (Customer Dashboard dùng chung).
    Nền / viền / bóng của panel do lớp .panel trong common.css lo (giống màn Lịch dạy).
@@ -500,4 +501,118 @@ body.pt-dashboard-page {
 @media (prefers-reduced-motion: reduce) {
   .pt-day,
   .pt-contact-btn { transition: none; }
+}
+
+
+/* ==================== 8. ARENA (24/10 tối) ====================
+   Màu + hình theo mục "ARENA" cuối common.css; khối chào (dùng chung với Trang cá nhân khách) ở
+   mục Arena cuối dashboard-hero.css. Ở đây: bố cục ghép sát, Kết quả tháng là khối tối có đèn,
+   ô "Cần chú ý" viền ember, lịch 7 ngày, thẻ khách. */
+
+html body.dock.pt-dashboard-page .pt-board { gap: var(--arena-gap); }
+/* Nhịp: lề trong khối 24px (điện thoại 16px), khe giữa các ô 8px */
+html body.dock.pt-dashboard-page .pt-board .panel { padding: var(--arena-pad); }
+html body.dock.pt-dashboard-page :is(.pt-days, .pt-money-tiles) { gap: var(--arena-gap-tile); }
+
+/* --- Tiêu đề khối: đậm, chặt --- */
+html body.dock.pt-dashboard-page .pt-section-heading h2 {
+  font-family: var(--font-brand-display);
+  font-size: var(--font-size-xl);
+  font-weight: var(--font-weight-extrabold);
+  letter-spacing: -0.01em;
+}
+
+/* --- Kết quả tháng: khối tối có đèn (khối chào: xem mục Arena trong dashboard-hero.css) --- */
+html body.dock.pt-dashboard-page .pt-board .pt-board__summary {
+  --pt-text: var(--arena-surface);
+  --pt-soft: var(--arena-steel);
+  --pt-muted: var(--arena-steel);
+  --pt-line: var(--arena-line-dark);
+  --pt-line-strong: var(--arena-line-dark-strong);
+  --pt-panel: var(--arena-900);
+  --pt-panel-2: var(--arena-800);
+  --pt-lagoon-text: var(--arena-focus);
+  --arena-focus-ring: var(--arena-focus);
+  --color-text: var(--arena-surface);
+  --color-text-soft: var(--arena-steel);
+  --color-surface-muted: var(--arena-800);
+  border: 0;
+  border-radius: var(--arena-radius-block);
+  background:
+    radial-gradient(120% 90% at 0% 0%, var(--arena-glow), transparent 55%),
+    var(--arena-900);
+  color: var(--arena-surface);
+  box-shadow: var(--arena-shadow-dark);
+}
+html.gms-lite body.dock.pt-dashboard-page .pt-board .pt-board__summary { background: var(--arena-900); }
+
+/* Ô "Cần chú ý" của PT: viền + số ember (khách không có ô này) */
+html body.dock.pt-dashboard-page .pt-board__hero .pt-pulse div:nth-child(3) { border-color: var(--arena-ember-line); }
+html body.dock.pt-dashboard-page .pt-board__hero .pt-pulse div:nth-child(3) dd { color: var(--arena-ember-on-dark); }
+
+/* --- Lịch 7 ngày --- */
+html body.dock.pt-dashboard-page .pt-day {
+  border-color: var(--arena-chalk-line);
+  border-radius: var(--arena-radius-tile);
+  background: var(--arena-surface);
+}
+html body.dock.pt-dashboard-page .pt-day:hover { border-color: var(--arena-chalk-line-strong); }
+html body.dock.pt-dashboard-page .pt-day__date { font-family: var(--font-brand-display); font-weight: var(--font-weight-bold); }
+html body.dock.pt-dashboard-page .pt-day.is-today { border-color: var(--arena-ember); }
+html body.dock.pt-dashboard-page .pt-day.is-today .pt-day__name { color: var(--arena-ember-ink); }
+html body.dock.pt-dashboard-page .pt-days.is-ready .pt-day[aria-selected="true"] {
+  border-color: var(--arena-900);
+  background: var(--arena-900);
+  color: var(--arena-surface);
+}
+html body.dock.pt-dashboard-page .pt-days.is-ready .pt-day[aria-selected="true"] :is(.pt-day__name, .pt-day__count) { color: var(--arena-steel); }
+html body.dock.pt-dashboard-page .pt-days.is-ready .pt-day[aria-selected="true"].is-today .pt-day__name { color: var(--arena-ember-on-dark); }
+html body.dock.pt-dashboard-page .pt-days.is-ready .pt-day[aria-selected="true"].is-today { box-shadow: inset 0 calc(-1 * var(--arena-mark)) 0 var(--arena-ember); }
+
+html body.dock.pt-dashboard-page .pt-session-time b { font-family: var(--font-brand-display); font-weight: var(--font-weight-extrabold); }
+/* "Tiếp theo": nhãn xanh — ember đã dành cho hôm nay */
+html body.dock.pt-dashboard-page .pt-chip-next {
+  border-radius: var(--arena-radius-chip);
+  background: var(--arena-700);
+  color: var(--arena-surface);
+}
+html body.dock.pt-dashboard-page .pt-session-time .pt-session-when { background: var(--arena-700); color: var(--arena-surface); }
+
+/* --- Khách phụ trách --- */
+html body.dock.pt-dashboard-page .pt-client-item h3 { font-family: var(--font-brand-display); font-size: var(--font-size-lg); font-weight: var(--font-weight-bold); }
+html body.dock.pt-dashboard-page .pt-contact-btn { border-color: var(--arena-chalk-line); border-radius: var(--arena-radius-chip); background: var(--arena-surface); }
+html body.dock.pt-dashboard-page .pt-contact-btn:hover { border-color: var(--arena-700); }
+html body.dock.pt-dashboard-page .pt-contact-btn.is-zalo { border-color: var(--arena-700); background: var(--arena-700); color: var(--arena-surface); }
+html body.dock.pt-dashboard-page .pt-contact-btn.is-zalo:hover { border-color: var(--arena-800); background: var(--arena-800); }
+html body.dock.pt-dashboard-page .pt-attn { border-left-width: var(--arena-mark); border-radius: var(--arena-radius-tile); }
+
+/* --- Kết quả tháng: ô tiền trên nền tối, ô chính có vạch ember mép trên --- */
+html body.dock.pt-dashboard-page .pt-money-tile {
+  border-color: var(--arena-line-dark);
+  border-radius: var(--arena-radius-tile);
+  background: var(--arena-800);
+}
+html body.dock.pt-dashboard-page .pt-money-tile strong {
+  color: var(--arena-surface);
+  font-family: var(--font-brand-display);
+  font-size: clamp(1.4rem, 2vw, 1.75rem);
+  font-weight: var(--font-weight-extrabold);
+  letter-spacing: -0.01em;
+}
+html body.dock.pt-dashboard-page .pt-money-tile.is-main {
+  border-color: var(--arena-line-dark);
+  box-shadow: inset 0 var(--arena-mark) 0 var(--arena-ember);
+}
+html body.dock.pt-dashboard-page .pt-outcome-bar i:first-child { border-radius: var(--arena-radius-chip) 0 0 var(--arena-radius-chip); }
+html body.dock.pt-dashboard-page .pt-outcome-bar i:last-child { border-radius: 0 var(--arena-radius-chip) var(--arena-radius-chip) 0; }
+html body.dock.pt-dashboard-page .pt-outcome-legend i { border-radius: 1px; }
+
+@media (max-width: 767px) {
+  html body.dock.pt-dashboard-page .pt-board .panel { padding: var(--arena-pad-sm); }
+  html body.dock.pt-dashboard-page :is(.pt-contact-btn) { min-height: var(--arena-hit); }
+}
+
+/* Topbar thẳng mép khối ở 768–900px (mục 7 đổi lề .content riêng cho trang này) */
+@media (min-width: 768px) and (max-width: 900px) {
+  html body.dock.pt-dashboard-page .topbar { padding-inline: calc(var(--layout-gutter-mobile) + var(--dock-handle-width)); }
 }

@@ -2851,61 +2851,6 @@ document.addEventListener("DOMContentLoaded", function () {
 
 
 // =====================================================================
-// GIAO DIỆN SÁNG / TỐI — nút [data-theme-toggle]. Lưu lựa chọn vào localStorage "gms-theme";
-// head.jspf đọc lại trước khi vẽ trang nên không bị nháy. Mặc định: tối.
-// =====================================================================
-document.addEventListener("DOMContentLoaded", function () {
-    // B0: màn nội bộ chưa đặt công tắc trong topbar → tự gắn vào đầu khối bên phải (trước chuông, tài khoản)
-    if (document.body.classList.contains("dock") && !document.querySelector("[data-theme-toggle]")) {
-        const topbar = document.querySelector(".topbar");
-        if (topbar) {
-            const slot = topbar.querySelector(".top-right") || topbar;
-            const toggle = document.createElement("button");
-            toggle.type = "button";
-            toggle.className = "theme-toggle";
-            toggle.setAttribute("data-theme-toggle", "");
-            toggle.innerHTML = '<span class="theme-toggle__track" aria-hidden="true"><span class="theme-toggle__knob"></span></span>'
-                + '<span class="theme-toggle__label">Tối</span>';
-            slot.insertBefore(toggle, slot === topbar ? null : slot.firstChild);
-        }
-    }
-    const buttons = document.querySelectorAll("[data-theme-toggle]");
-    if (!buttons.length) {
-        return;
-    }
-    const root = document.documentElement;
-
-    // B1: cập nhật chữ, icon và aria-pressed theo chế độ hiện tại
-    function paint() {
-        const light = root.getAttribute("data-theme") === "light";
-        buttons.forEach(function (button) {
-            button.setAttribute("aria-pressed", light ? "true" : "false");
-            const label = button.querySelector(".theme-toggle__label");
-            if (label) {
-                label.textContent = light ? "Sáng" : "Tối";
-            }
-            button.setAttribute("aria-label", light ? "Chuyển sang nền tối" : "Chuyển sang nền sáng");
-        });
-    }
-
-    // B2: bấm → đổi chế độ, ghi nhớ
-    buttons.forEach(function (button) {
-        button.addEventListener("click", function () {
-            const next = root.getAttribute("data-theme") === "light" ? "dark" : "light";
-            root.setAttribute("data-theme", next);
-            try {
-                localStorage.setItem("gms-theme", next);
-            } catch (error) {
-                // Trình duyệt chặn lưu trữ: vẫn đổi được trong lần xem này
-            }
-            paint();
-        });
-    });
-    paint();
-});
-
-
-// =====================================================================
 // NÂNG CẤP 2026-10-13: biểu đồ màu thương hiệu + đường xu hướng, số đếm lên, Pumpy theo ngữ cảnh
 // =====================================================================
 document.addEventListener("DOMContentLoaded", function () {
@@ -2939,7 +2884,7 @@ document.addEventListener("DOMContentLoaded", function () {
         }).join(" ");
         const last = points[points.length - 1];
         const svg = '<svg class="stat-spark" viewBox="0 0 ' + width + " " + height + '" preserveAspectRatio="none" aria-hidden="true">'
-            + '<defs><linearGradient id="gmsSparkFill" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#2BD4DE" stop-opacity=".35"/><stop offset="1" stop-color="#2BD4DE" stop-opacity="0"/></linearGradient></defs>'
+            + '<defs><linearGradient id="gmsSparkFill" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#2E63B5" stop-opacity=".18"/><stop offset="1" stop-color="#2E63B5" stop-opacity="0"/></linearGradient></defs>'
             + '<path class="area" d="' + line + " L" + width + " " + height + " L0 " + height + ' Z"/>'
             + '<path class="line" d="' + line + '" vector-effect="non-scaling-stroke"/>'
             + '<circle cx="' + last[0].toFixed(1) + '" cy="' + last[1].toFixed(1) + '" r="3"/></svg>';

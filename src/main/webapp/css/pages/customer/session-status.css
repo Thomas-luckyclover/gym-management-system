@@ -28,3 +28,17 @@
 .session-status[data-status="checkedIn"]                           { color: var(--color-success-ink); }
 .session-status:is([data-status="warn"], [data-status="pending"])   { color: var(--color-warning-ink); }
 .session-status[data-status="missed"]                              { color: var(--color-danger-ink); }
+
+/* ARENA (24/10 tối): trong khu làm việc, nhãn trạng thái là chip góc 2px có nền nhạt; màu nghĩa giữ nguyên. */
+html body.dock:not(.no-arena) .session-status {
+  padding: 1px var(--space-1-5);
+  border: var(--border-width) solid var(--color-neutral-border);
+  border-radius: var(--arena-radius-chip);
+  background: var(--color-neutral-tint);
+  font-weight: var(--font-weight-semibold);
+}
+/* Chip có viền cùng tông: cạnh sắc, đọc được cả khi in đen trắng */
+html body.dock:not(.no-arena) .session-status:is([data-status="today"], [data-status="upcoming"]) { border-color: var(--color-info-border); background: var(--arena-info-chip); }
+html body.dock:not(.no-arena) .session-status[data-status="checkedIn"] { border-color: var(--color-success-border); background: var(--color-success-tint); }
+html body.dock:not(.no-arena) .session-status:is([data-status="warn"], [data-status="pending"]) { border-color: var(--color-warning-border); background: var(--color-warning-tint); }
+html body.dock:not(.no-arena) .session-status[data-status="missed"] { border-color: var(--color-danger-border); background: var(--color-danger-tint); }
