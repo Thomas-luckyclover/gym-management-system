@@ -16,6 +16,7 @@ public class LeaveBalance {
         this.quota = quota;
         this.usedDays = usedDays != null ? usedDays : BigDecimal.ZERO;
         this.pendingDays = pendingDays != null ? pendingDays : BigDecimal.ZERO;
+        // BigDecimal giữ chính xác cả 0,5 ngày của lịch sử; quỹ còn = định mức - đã duyệt - đang chờ.
         BigDecimal remaining = BigDecimal.valueOf(quota).subtract(this.usedDays).subtract(this.pendingDays);
         if (remaining.compareTo(BigDecimal.ZERO) < 0) {
             remaining = BigDecimal.ZERO;

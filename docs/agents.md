@@ -72,7 +72,7 @@ Khi thực hiện bất kỳ nhiệm vụ nào, AI phải đối chiếu và bá
 
 - **SRS (Software Requirements Specification):** xây dựng **trước khi code**. Là nguồn chuẩn cho yêu cầu nghiệp vụ, use case, luồng chức năng, ràng buộc phi chức năng.
 - **SDS (Software Design Specification):** xây dựng **song song với quá trình code**. Mô tả thiết kế kỹ thuật: class diagram, sequence diagram, database schema, kiến trúc chi tiết.
-- **File notes (`docs/notes.md`):** ghi chú phát sinh trong quá trình làm việc, dùng để trace lại các quyết định, thay đổi thực tế so với thiết kế ban đầu. Mục A của file liệt kê các mâu thuẫn tài liệu **đang chờ nhóm chốt** — code phần liên quan phải kiểm tra mục này trước.
+- **Ghi chú cá nhân (nếu user cung cấp):** lưu ngoài repository, chỉ dùng bổ trợ khi đối chiếu quyết định và thay đổi thực tế. Không yêu cầu thành viên khác có tài liệu cá nhân này; các quyết định chung phải đối chiếu với SRS/SDS và xác nhận trong chat.
 - **Rule & tham số SRS:** đối chiếu tài liệu luật và quyết định mới trong chat. Bản v25 là nguồn nền; schema hiện tại là v26, đã bỏ P-07 và thêm P-22. Dẫn mã luật đã xác minh, không dùng phiên bản cũ để ghi đè quyết định mới.
 - **Hồ sơ module `docs/handoff/`:** nếu có, đọc file, rule và case test trước khi code. Nếu tài liệu đã chuyển/xóa thì tìm vị trí mới; không tự đoán quyết định nghiệp vụ còn thiếu.
 - **Database:** `database/1_Init_Schema.sql` (schema v26), `database/2_Seed_Data.sql` (sinh từ `database/tools/seeddata.py`), danh mục case + tài khoản test `docs/database/SEED_CASES.md`, thay đổi schema `docs/database/SCHEMA_CHANGES_v25.md`.
@@ -238,7 +238,7 @@ refactor: Extract ValidationUtil from Servlet into util package
 - Khi làm API/Integration mà thiếu key/tài khoản/quyền/tài liệu bên thứ 3: báo ngay, cụ thể (thiếu gì — vì sao cần — lấy ở đâu — mức độ gấp), không tự lách qua hay đoán đại.
 - User gõ "tôi muốn commit" → soát nội dung từ lần "tôi muốn commit" gần nhất đến hiện tại, viết commit message dạng `<loại>: <mô tả ngắn gọn>` (feat/fix/refactor/style/docs/test/chore), tách nhiều commit nếu có nhiều loại thay đổi khác nhau.
 - **Môi trường:** Java 17 · Tomcat 10.1 · `jakarta.*` (không `javax.*`) · package gốc `com.gms` · Servlet chia package con theo vai trò.
-- **Dùng lại trước khi viết mới:** tra Phần 12 (util Java + `common.js`); file dùng chung chỉ Leader sửa; quy ước kỹ thuật ở Phần 13; mâu thuẫn đang chờ chốt ở `docs/notes.md`.
+- **Dùng lại trước khi viết mới:** tra Phần 12 (util Java + `common.js`); file dùng chung chỉ Leader sửa; quy ước kỹ thuật ở Phần 13; đối chiếu các mâu thuẫn đang chờ chốt trong SRS/SDS và chat.
 - **Frontend — Design Tokens (siêu quan trọng):** mọi CSS (kể cả `common.css` và CSS riêng từng màn) bắt buộc dùng biến từ `tokens.css` (`var(--color-primary)`, `var(--space-3)`...) — **cấm hard-code** mã màu/px/font trực tiếp dưới mọi hình thức. Chi tiết đầy đủ (Rule Layout Header/Sidebar/Footer, cấu trúc CSS 3 lớp, Mega Prompt Ảnh→JSP/CSS/JS) ở `frontend-design-pipeline-SWP391-v4.md` và `shared-library-guide.md`.
 
 ## Phần 12: Thư Viện Dùng Chung — Dùng Lại, Không Viết Lại

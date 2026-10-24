@@ -16,7 +16,6 @@ gms/
 ├── docs/
 │   ├── project-structure.md         (file này)
 │   ├── team-plan.md                 Chia việc 5 người, quy trình Git
-│   ├── notes.md                     File notes: mâu thuẫn tài liệu, quyết định đã chốt
 │   ├── integration-guide.md         VNPay + Email: giải thích dễ hiểu, cần chuẩn bị gì
 │   └── frontend-shared-usage.md     Cách dùng tokens.css / common.css / common.js
 └── src/

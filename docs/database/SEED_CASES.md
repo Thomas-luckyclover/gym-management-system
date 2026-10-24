@@ -5,7 +5,7 @@
 - Gói PT sinh đủ mọi ngày T2–T6 trong kỳ, kể cả ngày phòng nghỉ đã khai báo. PT cần dời buổi qua `PtReschedule`, không tiêu lượt swap.
 - Mai KH-1006: gói 07/09–07/11/2026 có **45 buổi**; ngày **20/10/2026 giữ Scheduled**, slot Booked để thử cảnh báo và dời buổi.
 - Ngày nghỉ đã qua mốc lịch sử của seed mà buổi chưa dời: `Cancelled / GymClosed` lúc 00:05 ngày hôm sau, không có người hủy, không hoàn tiền và không tính hoa hồng. Ngày nghỉ tương lai không hủy sẵn.
-- Buổi lẻ không được sinh vào ngày phòng nghỉ. Seed mô phỏng chính sách mới; JOB-04 và cảnh báo runtime còn cần sửa theo `docs/notes.md`.
+- Buổi lẻ không được sinh vào ngày phòng nghỉ. Seed mô phỏng chính sách mới; JOB-04 và cảnh báo runtime còn cần sửa theo chính sách này.
 
 ## Cách chạy (SSMS hoặc sqlcmd)
 

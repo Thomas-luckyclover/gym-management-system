@@ -14,7 +14,7 @@ function openModal(id) {
     modalTrigger = document.activeElement;
     const modal = document.getElementById(id);
     modal.classList.add('show');
-    const firstControl = modal.querySelector('button, select, textarea');
+    const firstControl = modal.querySelector('textarea, select') || modal.querySelector('button');
     if (firstControl) {
         firstControl.focus();
     }

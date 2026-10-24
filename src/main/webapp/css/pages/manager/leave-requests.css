@@ -30,7 +30,6 @@
     font-size: var(--font-size-sm);
 }
 
-
 /* ===== Bảng danh sách ===== */
 
 .leave-table-wrap {
@@ -113,24 +112,6 @@
     flex-direction: column;
 }
 
-.leave-text-nowrap {
-    white-space: nowrap;
-}
-
-.leave-text-muted {
-    color: var(--color-text-soft);
-}
-
-/* Hàng khẩn cấp (deadline sắp đến) */
-.leave-row-urgent {
-    background: var(--color-warning-tint) !important;
-}
-
-.leave-row-urgent:hover {
-    background: var(--color-warning-tint) !important;
-}
-
-
 /* ===== Trống ===== */
 
 .leave-empty {
@@ -138,7 +119,6 @@
     text-align: center;
     color: var(--color-text-muted);
 }
-
 
 /* ===== Phân trang ===== */
 
@@ -150,175 +130,6 @@
     margin-top: var(--space-6);
     color: var(--color-text-soft);
     font-size: var(--font-size-sm);
-}
-
-
-/* ===== Trang duyệt đơn (màn #27) ===== */
-
-.leave-back {
-    display: inline-block;
-    margin-bottom: var(--space-4);
-    color: var(--color-primary);
-    text-decoration: none;
-    font-size: var(--font-size-sm);
-}
-
-.leave-back:hover {
-    text-decoration: underline;
-}
-
-.leave-review {
-    max-width: 900px;
-}
-
-/* Thông tin đơn */
-.leave-info-grid {
-    display: grid;
-    grid-template-columns: repeat(2, minmax(0, 1fr));
-    gap: var(--space-4);
-    margin-bottom: var(--space-5);
-}
-
-.leave-info-grid > div {
-    display: flex;
-    flex-direction: column;
-    gap: var(--space-1);
-    padding: var(--space-4);
-    border: var(--border-width) solid var(--color-border);
-    border-radius: var(--radius-md);
-    background: var(--color-bg);
-}
-
-.leave-info-label {
-    color: var(--color-text-soft);
-    font-size: var(--font-size-xs);
-    font-weight: 600;
-    text-transform: uppercase;
-    letter-spacing: 0.04em;
-}
-
-.leave-info-value {
-    font-weight: 500;
-    color: var(--color-text);
-}
-
-/* Hộp lý do */
-.leave-reason-box {
-    padding: var(--space-4);
-    margin-bottom: var(--space-5);
-    border: var(--border-width) solid var(--color-border);
-    border-radius: var(--radius-md);
-    background: var(--color-bg);
-}
-
-.leave-reason-box p {
-    margin: var(--space-2) 0 0;
-    line-height: 1.6;
-}
-
-/* Thông tin nhân sự ca bị ảnh hưởng */
-.leave-staffing-box {
-    display: flex;
-    align-items: flex-start;
-    gap: var(--space-3);
-    padding: var(--space-4);
-    margin-bottom: var(--space-5);
-    border: var(--border-width) solid var(--color-border);
-    border-radius: var(--radius-md);
-    background: var(--color-bg);
-}
-
-.leave-staffing-box.danger {
-    background: var(--color-danger-tint);
-    border-color: var(--color-danger-border);
-    color: var(--color-danger-ink);
-}
-
-.leave-staffing-box.warning {
-    background: var(--color-warning-tint);
-    border-color: var(--color-warning-border, var(--color-border));
-}
-
-.leave-staffing-numbers {
-    display: flex;
-    gap: var(--space-6);
-    margin-top: var(--space-2);
-}
-
-.leave-staffing-item {
-    display: flex;
-    flex-direction: column;
-    gap: var(--space-1);
-}
-
-.leave-staffing-item strong {
-    font-size: var(--font-size-xl);
-    font-weight: 700;
-}
-
-.leave-staffing-item small {
-    color: var(--color-text-soft);
-    font-size: var(--font-size-xs);
-}
-
-/* Khu vực quyết định */
-.leave-actions {
-    display: grid;
-    grid-template-columns: repeat(2, minmax(0, 1fr));
-    gap: var(--space-5);
-}
-
-.leave-action-card {
-    padding: var(--space-5);
-    border: var(--border-width) solid var(--color-border-strong);
-    border-radius: var(--radius-lg);
-    background: var(--color-surface);
-    box-shadow: var(--shadow-card);
-}
-
-.leave-action-card h3 {
-    margin: 0 0 var(--space-3);
-    font-size: var(--font-size-base);
-}
-
-.leave-action-card p {
-    margin: 0 0 var(--space-4);
-    color: var(--color-text-soft);
-    font-size: var(--font-size-sm);
-}
-
-.leave-action-card textarea {
-    width: 100%;
-    min-height: 120px;
-    resize: vertical;
-    box-sizing: border-box;
-}
-
-/* Badge trạng thái của đơn đã xử lý */
-.leave-reviewed-info {
-    padding: var(--space-4);
-    margin-bottom: var(--space-5);
-    border: var(--border-width) solid var(--color-border);
-    border-radius: var(--radius-md);
-    background: var(--color-bg);
-}
-
-.leave-reviewed-info .badge {
-    margin-bottom: var(--space-2);
-}
-
-
-/* ===== Responsive ===== */
-
-@media (max-width: 900px) {
-.leave-filter {
-        grid-template-columns: 1fr;
-    }
-
-    .leave-info-grid,
-    .leave-actions {
-        grid-template-columns: 1fr;
-    }
 }
 
 /* ===== Trang nhân viên nộp đơn (màn #25, UC-14) ===== */
@@ -337,6 +148,9 @@
 
 /* Dùng HintBox chung; các ID bên trong vẫn do leave-request-form.js cập nhật. */
 .staff-leave-page .pt-info-popover {
+  left: auto;
+  right: var(--space-2);
+  max-width: calc(100vw - var(--space-6));
   max-height: calc(100dvh - var(--space-6) * 2);
   overflow-y: auto;
 }
@@ -446,8 +260,8 @@
 
 .review-grid-2col {
     display: grid;
-    grid-template-columns: repeat(2, minmax(0, 1fr));
-    gap: var(--space-3);
+    grid-template-columns: minmax(0, 1.4fr) minmax(0, 1fr);
+    gap: var(--space-4);
     align-items: start;
 }
 
@@ -464,7 +278,7 @@
 }
 
 .review-card {
-    padding: var(--space-4);
+    padding: var(--space-4-5);
     background: var(--color-surface);
     border: var(--border-width) solid var(--color-border);
     border-radius: var(--radius-lg);
@@ -478,12 +292,14 @@
     justify-content: space-between;
     margin-bottom: var(--space-3);
     padding-bottom: var(--space-2);
-    border-bottom: 1px solid var(--color-border-subtle);
+    border-bottom: var(--border-width) solid var(--color-border);
+    gap: var(--space-2);
+    flex-wrap: wrap;
 }
 
 .review-card-title {
     font-size: var(--font-size-base);
-    font-weight: 600;
+    font-weight: var(--font-weight-semibold);
     margin: 0;
     display: flex;
     align-items: center;
@@ -497,25 +313,26 @@
     gap: var(--space-3);
     padding-bottom: var(--space-3);
     margin-bottom: var(--space-3);
-    border-bottom: 1px solid var(--color-border-subtle);
+    border-bottom: var(--border-width) solid var(--color-border);
 }
 
 .user-avatar-circle {
-    width: 44px;
-    height: 44px;
-    border-radius: 50%;
+    width: var(--avatar-size-sm);
+    height: var(--avatar-size-sm);
+    border-radius: var(--radius-circle);
+    flex-shrink: 0;
     object-fit: cover;
     background: var(--color-primary-tint);
     color: var(--color-primary);
     display: flex;
     align-items: center;
     justify-content: center;
-    font-weight: 700;
+    font-weight: var(--font-weight-semibold);
     font-size: var(--font-size-base);
 }
 
 .user-name-meta b {
-    font-size: var(--font-size-base);
+    font-size: var(--font-size-lg);
     display: block;
 }
 
@@ -524,46 +341,51 @@
     font-size: var(--font-size-xs);
 }
 
-/* Grid thông tin chi tiết */
+/* Bốn thông tin nghỉ xếp một cột; các giá trị dùng chung điểm bắt đầu. */
 .detail-prop-grid {
     display: grid;
-    grid-template-columns: repeat(2, 1fr);
-    gap: var(--space-3);
-    margin-bottom: var(--space-3);
+    grid-template-columns: minmax(0, 1fr);
+    margin-bottom: var(--space-4);
 }
 
 .detail-prop-item {
-    display: flex;
-    flex-direction: column;
-    gap: 2px;
+    display: grid;
+    grid-template-columns: minmax(0, 1fr) minmax(0, 1.8fr);
+    align-items: baseline;
+    gap: var(--space-3);
+    padding: var(--space-3) var(--space-0);
+    border-bottom: var(--border-width) solid var(--color-border);
+}
+
+.detail-prop-item:last-child {
+    border-bottom: none;
 }
 
 .detail-prop-label {
-    font-size: 11px;
-    text-transform: uppercase;
-    letter-spacing: 0.05em;
+    font-size: var(--font-size-xs);
     color: var(--color-text-soft);
-    font-weight: 600;
+    font-weight: var(--font-weight-regular);
 }
 
 .detail-prop-val {
     font-size: var(--font-size-sm);
-    font-weight: 600;
+    font-weight: var(--font-weight-medium);
     color: var(--color-text);
+    overflow-wrap: anywhere;
 }
 
 .reason-box-clamp {
     padding: var(--space-3);
     background: var(--color-bg);
-    border: 1px solid var(--color-border);
+    border: none;
     border-radius: var(--radius-md);
     margin-top: var(--space-2);
 }
 
 .reason-clamp-text {
     font-size: var(--font-size-sm);
-    line-height: 1.5;
-    margin: 0;
+    line-height: var(--line-height-normal);
+    margin: var(--space-2) var(--space-0) var(--space-0);
     display: -webkit-box;
     -webkit-line-clamp: 3;
     -webkit-box-orient: vertical;
@@ -579,48 +401,47 @@
     background: none;
     border: none;
     color: var(--color-primary);
-    font-size: 11px;
-    font-weight: 600;
+    font-size: var(--font-size-xs);
+    font-weight: var(--font-weight-medium);
     cursor: pointer;
-    padding: 4px 0 0;
+    padding: var(--space-1) var(--space-0) var(--space-0);
 }
 
 /* Review Checks (Kiểm tra điều kiện) */
 .review-check-list {
     display: flex;
     flex-direction: column;
-    gap: var(--space-2);
+    gap: var(--space-0);
 }
 
 .review-check-item {
     display: flex;
     align-items: flex-start;
-    gap: var(--space-2);
-    padding: var(--space-2) var(--space-3);
-    border-radius: var(--radius-md);
-    border: 1px solid var(--color-border);
-    background: var(--color-bg);
+    gap: var(--space-3);
+    padding: var(--space-4) var(--space-0);
+    border-bottom: var(--border-width) solid var(--color-border);
 }
 
 .review-check-item.pass {
-    border-left: var(--space-1) solid var(--color-success);
+    color: var(--color-text);
 }
 
 .review-check-item.fail {
-    border-left: var(--space-1) solid var(--color-danger);
     background: var(--color-danger-tint);
+    padding: var(--space-3);
+    border-radius: var(--radius-md);
 }
 
 .check-icon-badge {
-    width: 24px;
-    height: 24px;
-    border-radius: 50%;
+    width: var(--space-5);
+    height: var(--space-5);
+    border-radius: var(--radius-circle);
     display: flex;
     align-items: center;
     justify-content: center;
-    font-size: 12px;
+    font-size: var(--font-size-xs);
     flex-shrink: 0;
-    margin-top: 1px;
+    margin-top: var(--space-0);
 }
 
 .review-check-item.pass .check-icon-badge {
@@ -639,9 +460,9 @@
 
 .check-meta-title {
     font-size: var(--font-size-sm);
-    font-weight: 600;
+    font-weight: var(--font-weight-semibold);
     color: var(--color-text);
-    margin-bottom: 2px;
+    margin-bottom: var(--space-1);
 }
 
 .check-meta-msg {
@@ -666,23 +487,29 @@
   font-size: var(--font-size-xs);
 }
 
-.leave-review-page .review-extra summary,
-.leave-review-page .review-history > summary {
+.leave-review-page .review-extra summary {
   cursor: pointer;
   color: var(--color-text-soft);
 }
 
-.leave-review-page .review-check-notes {
-  border-top: var(--border-width) solid var(--color-border);
-  padding-top: var(--space-2);
+@media (max-width: 640px) {
+  .detail-prop-item {
+    grid-template-columns: minmax(0, 1fr);
+    gap: var(--space-1);
+  }
+
+  .leave-review-page .content {
+    padding: var(--space-4);
+  }
 }
 
 .leave-review-page .review-table-wrap {
-  overflow-x: auto;
+  min-width: 0;
 }
 
 .leave-review-page .review-staffing-table {
   width: 100%;
+  table-layout: fixed;
   border-collapse: collapse;
   margin-top: var(--space-2);
   font-size: var(--font-size-xs);
@@ -693,108 +520,35 @@
   padding: var(--space-2) var(--space-1);
   border-bottom: var(--border-width) solid var(--color-border);
   text-align: left;
+  vertical-align: middle;
+  white-space: normal;
+  overflow-wrap: anywhere;
 }
 
-.leave-review-page .review-history {
-  grid-column: 1 / -1;
-  padding: var(--space-3) var(--space-4);
+/* Cột ngày rộng hơn; ba cột số và kết quả luôn nằm gọn trong khối điều kiện duyệt. */
+.leave-review-page .review-staffing-table th:first-child {
+  width: 32%;
 }
 
-.leave-review-page .review-history > summary {
-  display: list-item;
-  font-size: var(--font-size-sm);
-  color: var(--color-text);
+.leave-review-page .review-staffing-table th:last-child {
+  width: 26%;
 }
 
-.leave-review-page .review-history[open] .timeline-list {
-  margin-top: var(--space-4);
+.leave-review-page .review-staffing-table th {
+  background: var(--color-surface-muted);
+  color: var(--color-text-soft);
+  font-weight: var(--font-weight-semibold);
+  text-transform: none;
+  letter-spacing: var(--letter-spacing-normal);
 }
 
-/* Timeline quy trình duyệt dọc */
-.timeline-list {
-    position: relative;
-    padding-left: 28px;
-    margin: var(--space-2) 0 0;
+.leave-review-page .review-staffing-table :is(th, td):not(:first-child) {
+  text-align: center;
 }
 
-.timeline-track-line {
-    position: absolute;
-    left: 10px;
-    top: 10px;
-    bottom: 10px;
-    width: 2px;
-    background: var(--color-border);
-}
-
-.timeline-step {
-    position: relative;
-    margin-bottom: var(--space-4);
-}
-
-.timeline-step:last-child {
-    margin-bottom: 0;
-}
-
-.timeline-dot {
-    position: absolute;
-    left: -28px;
-    top: 2px;
-    width: 22px;
-    height: 22px;
-    border-radius: 50%;
-    background: var(--color-surface);
-    border: 2px solid var(--color-border);
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    font-size: 10px;
-    z-index: 1;
-}
-
-.timeline-step.DONE .timeline-dot {
-    border-color: #10b981;
-    color: #10b981;
-    background: #ecfdf5;
-}
-
-.timeline-step.CURRENT .timeline-dot {
-    border-color: #f59e0b;
-    color: #f59e0b;
-    background: #fffbeb;
-}
-
-.timeline-step.FAILED .timeline-dot {
-    border-color: #ef4444;
-    color: #ef4444;
-    background: #fef2f2;
-}
-
-.timeline-step-title {
-    font-size: var(--font-size-sm);
-    font-weight: 600;
-    color: var(--color-text);
-    display: flex;
-    justify-content: space-between;
-    align-items: center;
-}
-
-.timeline-step-time {
-    font-size: 11px;
-    color: var(--color-text-soft);
-    font-weight: normal;
-}
-
-.timeline-step-actor {
-    font-size: var(--font-size-xs);
-    color: var(--color-text);
-    font-weight: 500;
-    margin-top: 2px;
-}
-
-.timeline-step-sub {
-    font-size: var(--font-size-xs);
-    color: var(--color-text-soft);
-    margin-top: 2px;
+.leave-review-page .review-staffing-table .badge {
+  max-width: 100%;
+  white-space: normal;
 }
 
 /* Modals */
@@ -875,16 +629,79 @@
     border-bottom-right-radius: var(--radius-lg);
 }
 
-
-/* Gợi ý và danh sách buổi chặn duyệt trên hai màn BF-05. */
-.leave-help {
-  color: var(--color-text-soft);
-  font-size: var(--font-size-xs);
-  margin: var(--space-3) var(--space-4);
+/* Kết quả cũ chỉ hiển thị người/thời gian xử lý và lý do từ chối đã lưu. */
+.review-result-reason {
+  margin: var(--space-2) var(--space-0) var(--space-0);
+  font-size: var(--font-size-sm);
+  white-space: pre-wrap;
+  overflow-wrap: anywhere;
 }
 
-.leave-conflicts {
-  margin: var(--space-3) 0;
-  padding-left: var(--space-5);
-  color: var(--color-danger-ink);
+/* Cùng đợt: xem hai phần riêng, giữ màu và khoảng cách theo tokens của dự án. */
+.leave-related {
+  margin-top: var(--space-2);
+  font-size: var(--font-size-xs);
+}
+.leave-related summary {
+  cursor: pointer;
+  color: var(--color-text-soft);
+  overflow-wrap: anywhere;
+}
+.leave-related-parts {
+  display: grid;
+  gap: var(--space-2);
+  padding-block: var(--space-2);
+}
+.leave-related-part {
+  display: grid;
+  justify-items: start;
+  gap: var(--space-1);
+  padding: var(--space-2);
+  border: var(--border-width) solid var(--color-border);
+  border-radius: var(--radius-sm);
+  overflow-wrap: anywhere;
+}
+.leave-review-page .leave-related-parts {
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+}
+.leave-review-page .leave-related-parts > small {
+  grid-column: 1 / -1;
+}
+.leave-submission-plan {
+  display: grid;
+  gap: var(--space-3);
+  padding: var(--space-4);
+  margin-block: var(--space-4);
+  border: var(--border-width) solid var(--color-border);
+  border-radius: var(--radius-md);
+  background: var(--color-surface);
+}
+.leave-submission-plan[hidden], .leave-submission-plan [hidden] {
+  display: none;
+}
+.leave-submission-plan > .btn {
+  justify-self: start;
+}
+.leave-plan-part {
+  display: flex;
+  justify-content: space-between;
+  flex-wrap: wrap;
+  gap: var(--space-2);
+  padding-block: var(--space-2);
+}
+.leave-consent {
+  display: flex;
+  align-items: start;
+  gap: var(--space-2);
+}
+.leave-history-group + .leave-history-group {
+  border-top: var(--border-width) solid var(--color-border);
+}
+.leave-group-heading {
+  display: flex;
+  justify-content: space-between;
+  flex-wrap: wrap;
+  gap: var(--space-2);
+  padding: var(--space-3) var(--space-4);
+  background: var(--color-surface);
 }

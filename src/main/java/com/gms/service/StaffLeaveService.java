@@ -7,6 +7,9 @@ import com.gms.dao.EmployeeDAO;
 import com.gms.dao.LeaveRequestDAO;
 import com.gms.dao.PersonDAO;
 import com.gms.dto.ServiceResult;
+import com.gms.dto.LeaveBalance;
+import com.gms.dto.LeaveSubmissionPreview;
+import com.gms.dto.LeaveRequestGroupView;
 import com.gms.dto.StaffLeaveFormView;
 import com.gms.dto.StaffingPreview;
 import com.gms.entity.Account;
@@ -24,6 +27,10 @@ import java.time.LocalDateTime;
 import java.time.LocalTime;
 import java.time.temporal.ChronoUnit;
 import java.util.List;
+import java.util.ArrayList;
+import java.util.LinkedHashMap;
+import java.util.Map;
+import java.util.UUID;
 
 /** Luồng của PT/Lễ tân: xem form, dự báo quân số, nộp đơn và rút đơn của mình. */
 public class StaffLeaveService {
@@ -77,7 +84,7 @@ public class StaffLeaveService {
             Person person = personDAO.findById(employee.getPersonId());
             String fullName = person == null ? "" : person.getFullName();
 
-            // B3: đọc giờ chốt nộp đơn P-12 và định biên P-13, P-14 từ SystemConfigs
+            // B3: đọc giờ chốt nộp đơn P-12 từ SystemConfigs.
             LocalTime submissionCutoff = LocalTime.parse(
                     systemConfigService.getString(
                             SystemConfigService.LEAVE_SUBMIT_DEADLINE));
@@ -87,47 +94,28 @@ public class StaffLeaveService {
             // B5: lấy 10 đơn gần nhất của chính nhân viên này
             List<LeaveRequest> myRequests = leaveRequestDAO.findByEmployeeId(employee.getEmployeeId(), 10);
 
-            return ServiceResult.ok(new StaffLeaveFormView(
-                    employee.getEmployeeId(),
-                    employee.getEmployeeCode(),
-                    fullName,
-                    employee.getPosition().getDbValue(),
-                    submissionCutoff,
-                    preview.getMinPt(),
-                    preview.getMinReceptionist(),
-                    preview.getRemainingPt(),
-                    preview.getRemainingReceptionist(),
-                    myRequests));
-
-        } catch (SQLException e) {
-            e.printStackTrace();
-            return ServiceResult.fail(Messages.MSG04_SYSTEM_BUSY);
-        }
-    }
-
-    /**
-     * Dự báo quân số của ca đã chọn nếu đơn của nhân viên này được duyệt (SRS 5.2.1).
-     * Chỉ trừ 1 người ở đúng chức vụ của người nộp.
-     *
-     * @param accountId AccountId của nhân viên từ session
-     * @param leaveDate ngày nghỉ đang chọn trên form
-     * @param shiftType ca nghỉ đang chọn (Morning, Afternoon, FullDay)
-     * @return số PT, Lễ tân còn lại và định biên tối thiểu; hoặc thông báo lỗi
-     */
-    public ServiceResult<StaffingPreview> previewStaffing(int accountId, LocalDate leaveDate, String shiftType) {
-        // B1: kiểm tra tham số
-        if (leaveDate == null || LeaveRequest.ShiftType.fromDbValue(shiftType) == null) {
-            return ServiceResult.fail("Ngày hoặc ca nghỉ không hợp lệ.");
-        }
-
-        try {
-            // B2: tìm nhân viên đang đăng nhập
-            Employee employee = findEmployeeForAccount(accountId);
-            if (employee == null) {
-                return ServiceResult.fail(String.format(Messages.MSG08_NOT_FOUND, "nhân viên"));
+            // Nhóm đủ hai phần kể cả khi phần thứ hai nằm ngoài 10 dòng mới nhất.
+            Map<String, LeaveRequestGroupView> groups = new LinkedHashMap<>();
+            for (LeaveRequest request : myRequests) {
+                String key = request.getLeaveGroupId();
+                if (key == null) {
+                    key = "single-" + request.getLeaveRequestId();
+                }
+                if (!groups.containsKey(key)) {
+                    List<LeaveRequest> parts;
+                    if (request.getLeaveGroupId() == null) {
+                        parts = new ArrayList<>();
+                        parts.add(request);
+                    } else {
+                        parts = leaveRequestDAO.findByLeaveGroup(request.getLeaveGroupId(), employee.getEmployeeId());
+                    }
+                    groups.put(key, new LeaveRequestGroupView(parts));
+                }
             }
-
-            return ServiceResult.ok(loadStaffingPreview(employee, leaveDate, shiftType));
+            StaffLeaveFormView view = new StaffLeaveFormView(employee.getEmployeeId(), employee.getEmployeeCode(),
+                    fullName, employee.getPosition().getDbValue(), submissionCutoff, preview,
+                    new ArrayList<>(groups.values()));
+            return ServiceResult.ok(view);
 
         } catch (SQLException e) {
             e.printStackTrace();
@@ -172,37 +160,21 @@ public class StaffLeaveService {
         return submitLeaveRequest(accountId, leaveType, leaveDate, leaveDate, shiftType, reason);
     }
 
-    /** Nộp đơn theo khoảng ngày gồm cả hai biên; nửa ngày chỉ áp dụng cho một ngày. */
+    /** Nộp đơn theo khoảng ngày gồm cả hai biên; ca sáng/chiều vẫn tính một ngày nghỉ. */
     public ServiceResult<Integer> submitLeaveRequest(int accountId, LeaveRequest.LeaveType leaveType,
             LocalDate leaveDate, LocalDate toDate, LeaveRequest.ShiftType shiftType, String reason) {
+        return submitLeaveRequest(accountId, leaveType, leaveDate, toDate, shiftType, reason, false, -1, -1);
+    }
 
-        // B1: validate dữ liệu đầu vào cơ bản
-        if (leaveType == null) {
-            return ServiceResult.failField("leaveType", "Vui lòng chọn loại nghỉ.");
-        }
-        // Đơn mới chỉ nhận phép năm hoặc không lương; Sick chỉ giữ để đọc đơn cũ.
-        if (leaveType != LeaveRequest.LeaveType.ANNUAL && leaveType != LeaveRequest.LeaveType.UNPAID) {
-            return ServiceResult.failField("leaveType", "Chỉ hỗ trợ nghỉ phép năm hoặc nghỉ không lương.");
-        }
-        if (shiftType == null) {
-            return ServiceResult.failField("shiftType", "Vui lòng chọn ca nghỉ.");
-        }
-        if (leaveDate == null) {
-            return ServiceResult.failField("leaveDate", "Vui lòng chọn ngày nghỉ.");
-        }
+    /** Hai phần chỉ được lưu khi người gửi đồng ý đúng phương án phân bổ vừa xem. */
+    public ServiceResult<Integer> submitLeaveRequest(int accountId, LeaveRequest.LeaveType leaveType,
+            LocalDate leaveDate, LocalDate toDate, LeaveRequest.ShiftType shiftType, String reason,
+            boolean acceptUnpaid, int expectedAnnualDays, int expectedUnpaidDays) {
 
-        if (toDate == null || toDate.isBefore(leaveDate)
-                || ChronoUnit.DAYS.between(leaveDate, toDate) >= 31
-                || leaveDate.getYear() != toDate.getYear()) {
-            return ServiceResult.failField("toDate", "Chọn ngày kết thúc từ ngày bắt đầu, tối đa 31 ngày trong cùng năm.");
-        }
-        if (!leaveDate.equals(toDate) && shiftType != LeaveRequest.ShiftType.FULL_DAY) {
-            return ServiceResult.failField("shiftType", "Đơn nhiều ngày phải chọn Cả ngày.");
-        }
-
-        LocalDate today = DateTimeUtil.today();
-        if (!leaveDate.isAfter(today)) {
-            return ServiceResult.failField("leaveDate", "Ngày nghỉ phải sau ngày hôm nay.");
+        // B1: kiểm tra ngày, ca, loại nghỉ và lý do trước khi truy vấn.
+        ServiceResult<Void> validation = validateLeavePeriod(leaveType, leaveDate, toDate, shiftType);
+        if (!validation.isSuccess()) {
+            return ServiceResult.failFields(validation.getFieldErrors());
         }
 
         if (!ValidationUtil.isLengthValid(reason, 5, 500)) {
@@ -232,85 +204,62 @@ public class StaffLeaveService {
                         submissionCutoff));
             }
 
-            // B4: kiểm tra trùng đơn nghỉ Pending hoặc Approved (cùng ca hoặc bao phủ
-            // FullDay)
-            boolean hasConflict;
             try (Connection connection = DBContext.getConnection()) {
-                hasConflict = leaveRequestDAO.hasConflictingLeave(connection,
-                        employee.getEmployeeId(), leaveDate, toDate, shiftType.getDbValue());
-            }
-            if (hasConflict) {
-                return ServiceResult.fail(
-                        "Bạn đã có đơn nghỉ trùng ngày và ca này đang chờ duyệt hoặc đã được duyệt.");
-            }
-
-            // B5: đối với PT, kiểm tra buổi dạy Scheduled trong ngày và ca xin nghỉ
-            // (CBR-83)
-            boolean isPt = Role.PT == employee.getPosition();
-            if (isPt) {
-                for (LocalDate date = leaveDate; !date.isAfter(toDate); date = date.plusDays(1)) {
-                    int clashCount = leaveRequestDAO.countScheduledSessions(
-                            employee.getEmployeeId(), date, shiftType.getDbValue());
-                    if (clashCount > 0) {
-                        return ServiceResult.fail(String.format(Messages.MSG78_LEAVE_BLOCKED_BY_SESSIONS, clashCount)
-                                + " (" + DateTimeUtil.formatDate(date) + ")");
-                    }
-                }
-            }
-
-            // B6: tạo entity và mở Transaction lưu đơn + ghi AuditLog + thông báo cho Manager (BF-05)
-            LeaveRequest request = new LeaveRequest();
-            request.setEmployeeId(employee.getEmployeeId());
-            request.setLeaveType(leaveType);
-            request.setFromDate(leaveDate);
-            request.setToDate(toDate);
-            request.setShiftType(shiftType);
-            request.setDays(requestedDays(request));
-            request.setReason(reason.trim());
-
-            try (Connection conn = DBContext.getConnection()) {
-                conn.setAutoCommit(false);
+                connection.setAutoCommit(false);
                 try {
-                    leaveRequestDAO.lockDecisionScope(conn);
-                    if (leaveRequestDAO.hasConflictingLeave(conn, employee.getEmployeeId(), leaveDate, toDate, shiftType.getDbValue())) {
-                        conn.rollback();
+                    leaveRequestDAO.lockDecisionScope(connection);
+                    String currentPosition = leaveRequestDAO.findWorkingPosition(connection, employee.getEmployeeId());
+                    if (!employee.getPosition().getDbValue().equals(currentPosition)) {
+                        connection.rollback();
+                        return ServiceResult.fail("Thông tin nhân viên đã thay đổi. Vui lòng đăng nhập lại.");
+                    }
+                    if (leaveRequestDAO.hasConflictingLeave(connection, employee.getEmployeeId(), leaveDate, toDate, shiftType.getDbValue())) {
+                        connection.rollback();
                         return ServiceResult.fail("Bạn đã có đơn nghỉ trùng ngày và ca này.");
                     }
-                    int newLeaveRequestId = leaveRequestDAO.insert(conn, request);
-                    if (newLeaveRequestId <= 0) {
-                        conn.rollback();
-                        return ServiceResult.fail(Messages.MSG04_SYSTEM_BUSY);
+                    // B4: khóa chung với duyệt/rút đơn, kiểm tra lại quỹ và lịch trong cùng transaction.
+                    if (DateTimeUtil.now().isAfter(deadline)) {
+                        connection.rollback();
+                        return ServiceResult.fail("Đã quá hạn gửi đơn. Vui lòng báo quản lý.");
+                    }
+                    int conflicts = countSessionConflicts(connection, employee, leaveDate, toDate, shiftType);
+                    if (conflicts > 0) {
+                        connection.rollback();
+                        return ServiceResult.failField("sessions", String.format(Messages.MSG78_LEAVE_BLOCKED_BY_SESSIONS, conflicts));
+                    }
+                    LeaveSubmissionPreview plan = calculateSubmission(connection, employee, leaveType, leaveDate, toDate, null);
+                    if (plan.isNeedsUnpaidConsent() && !acceptUnpaid) {
+                        connection.rollback();
+                        return ServiceResult.failField("acceptUnpaid", "Không đủ phép năm. Xem phương án chuyển phần vượt sang không lương và xác nhận trước khi gửi.");
+                    }
+                    if (acceptUnpaid && leaveType == LeaveRequest.LeaveType.ANNUAL
+                            && (expectedAnnualDays != plan.getAnnualDays() || expectedUnpaidDays != plan.getUnpaidDays())) {
+                        connection.rollback();
+                        return ServiceResult.failField("acceptUnpaid", "Quỹ phép đã thay đổi. Vui lòng xem lại số ngày và xác nhận phương án mới.");
                     }
 
-                    // B6.1: ghi nhật ký kiểm toán (Audit Log)
-                    auditLogService.logInTransaction(
-                            conn,
-                            accountId,
-                            employee.getPosition(),
-                            "Nộp đơn nghỉ phép",
-                            "LeaveRequests",
-                            newLeaveRequestId,
-                            "Status",
-                            null,
-                            "Pending",
-                            reason.trim());
-
-                    // B6.2: gửi thông báo đến chuông của tất cả Manager (theo sơ đồ BF-05)
-                    String notifTitle = "Đơn xin nghỉ phép mới";
-                    String notifContent = "Nhân viên " + employee.getEmployeeCode()
-                            + " xin nghỉ " + formatLeavePeriod(request)
+                    // B5: tạo một hoặc hai phần, sau đó lưu và ghi audit bằng cùng Connection.
+                    List<LeaveRequest> parts = createRequestParts(employee, plan, shiftType, reason);
+                    int newLeaveRequestId = saveRequestParts(connection, accountId, employee, parts);
+                    // B6: chỉ gửi một thông báo cho cả yêu cầu; lỗi bất kỳ bước nào rollback cả hai dòng.
+                    String content = "Nhân viên " + employee.getEmployeeCode() + " xin nghỉ "
+                            + DateTimeUtil.formatDate(leaveDate) + "–" + DateTimeUtil.formatDate(toDate)
                             + " (" + shiftType.getDisplayName() + ").";
-                    notificationService.notifyRoleInTransaction(
-                            conn, Role.MANAGER, notifTitle, notifContent);
+                    if (parts.size() > 1) {
+                        content += " Gồm " + plan.getAnnualDays() + " ngày phép năm và " + plan.getUnpaidDays() + " ngày không lương.";
+                    }
+                    notificationService.notifyRoleInTransaction(connection, Role.MANAGER, "Đơn xin nghỉ phép mới", content);
 
-                    conn.commit();
+                    connection.commit();
                     return ServiceResult.ok(newLeaveRequestId);
                 } catch (SQLException | RuntimeException e) {
-                    conn.rollback();
+                    connection.rollback();
                     throw e;
                 }
             }
 
+        } catch (IllegalStateException e) {
+            return ServiceResult.fail("Chưa cấu hình quỹ phép năm. Vui lòng liên hệ quản lý.");
         } catch (SQLException e) {
             // Lỗi trùng khóa duy nhất (2601/2627): đơn trùng ngày + ca vừa được tạo (bấm nộp 2 lần)
             if (e.getErrorCode() == 2601 || e.getErrorCode() == 2627) {
@@ -320,6 +269,158 @@ public class StaffLeaveService {
             e.printStackTrace();
             return ServiceResult.fail(Messages.MSG04_SYSTEM_BUSY);
         }
+    }
+
+    /** Xem số ngày từng phần và lịch PT trước khi gửi; không ghi hoặc giữ chỗ từ GET. */
+    public ServiceResult<LeaveSubmissionPreview> previewSubmission(int accountId, LeaveRequest.LeaveType leaveType,
+            LocalDate fromDate, LocalDate toDate, LeaveRequest.ShiftType shiftType) {
+        ServiceResult<Void> validation = validateLeavePeriod(leaveType, fromDate, toDate, shiftType);
+        if (!validation.isSuccess()) {
+            return ServiceResult.fail(validation.getMessage());
+        }
+        try {
+            Employee employee = findEmployeeForAccount(accountId);
+            if (employee == null) {
+                return ServiceResult.fail("Không tìm thấy nhân viên đang làm việc.");
+            }
+            StaffingPreview staffing = loadStaffingPreview(employee, fromDate, shiftType.getDbValue());
+            try (Connection connection = DBContext.getConnection()) {
+                LeaveSubmissionPreview plan = calculateSubmission(connection, employee, leaveType, fromDate, toDate, staffing);
+                int conflicts = countSessionConflicts(connection, employee, fromDate, toDate, shiftType);
+                return ServiceResult.ok(new LeaveSubmissionPreview(fromDate, toDate, plan.getAnnualDays(), plan.getUnpaidDays(),
+                        plan.getRemainingAnnualDays(), plan.isNeedsUnpaidConsent(), conflicts, staffing));
+            }
+        } catch (IllegalStateException e) {
+            return ServiceResult.fail("Chưa cấu hình quỹ phép năm. Vui lòng liên hệ quản lý.");
+        } catch (SQLException e) {
+            e.printStackTrace();
+            return ServiceResult.fail(Messages.MSG04_SYSTEM_BUSY);
+        }
+    }
+
+    /** Dùng cùng công thức cho preview và POST; POST truyền connection đã khóa. */
+    private LeaveSubmissionPreview calculateSubmission(Connection connection, Employee employee,
+            LeaveRequest.LeaveType leaveType, LocalDate fromDate, LocalDate toDate, StaffingPreview staffing) throws SQLException {
+        // B1: tính số ngày bao gồm cả ngày bắt đầu và ngày kết thúc.
+        int totalDays = (int) ChronoUnit.DAYS.between(fromDate, toDate) + 1;
+        int annualDays = 0;
+        BigDecimal remainingAnnualDays = BigDecimal.ZERO;
+        // B2: Annual dùng tối đa quỹ còn sau giữ chỗ; Unpaid không đọc quỹ phép.
+        if (leaveType == LeaveRequest.LeaveType.ANNUAL) {
+            int quota = systemConfigService.getInt(SystemConfigService.LEAVE_ANNUAL_QUOTA);
+            LeaveBalance balance = leaveRequestDAO.getAnnualBalance(connection, employee.getEmployeeId(), fromDate.getYear(), quota);
+            remainingAnnualDays = balance.getRemainingDays();
+            // Quy tắc mới dùng đơn vị nguyên ngày; số dư lịch sử 0,5 không đủ cho một ngày mới.
+            annualDays = Math.min(totalDays, remainingAnnualDays.intValue());
+        }
+        // B3: phần không dùng Annual chuyển sang đề nghị Unpaid; POST còn yêu cầu đồng ý.
+        int unpaidDays = totalDays - annualDays;
+        return new LeaveSubmissionPreview(fromDate, toDate, annualDays, unpaidDays, remainingAnnualDays,
+                leaveType == LeaveRequest.LeaveType.ANNUAL && unpaidDays > 0, 0, staffing);
+    }
+
+    /** PT cần giải quyết tất cả Scheduled trong khoảng nghỉ, không chỉ ngày đầu. */
+    private int countSessionConflicts(Connection connection, Employee employee, LocalDate fromDate, LocalDate toDate,
+            LeaveRequest.ShiftType shiftType) throws SQLException {
+        int total = 0;
+        if (employee.getPosition() == Role.PT) {
+            for (LocalDate date = fromDate; !date.isAfter(toDate); date = date.plusDays(1)) {
+                total += leaveRequestDAO.countScheduledSessions(connection, employee.getEmployeeId(), date, shiftType.getDbValue());
+            }
+        }
+        return total;
+    }
+
+    /** Từ phương án đã xác nhận, tạo Annual trước rồi Unpaid; chỉ gắn mã đợt nếu có hai phần. */
+    private List<LeaveRequest> createRequestParts(Employee employee, LeaveSubmissionPreview plan,
+            LeaveRequest.ShiftType shift, String reason) {
+        boolean split = plan.getAnnualDays() > 0 && plan.getUnpaidDays() > 0;
+        String groupId = null;
+        if (split) {
+            // UUID tạo mã đợt duy nhất; cả hai phần dùng cùng mã này, không tạo bảng mới.
+            groupId = UUID.randomUUID().toString();
+        }
+        List<LeaveRequest> parts = new ArrayList<>();
+        LocalDate firstDate = plan.getFromDate();
+        if (plan.getAnnualDays() > 0) {
+            LocalDate lastAnnualDate = firstDate.plusDays(plan.getAnnualDays() - 1L);
+            parts.add(createRequest(employee, LeaveRequest.LeaveType.ANNUAL, firstDate,
+                    lastAnnualDate, shift, reason, groupId));
+        }
+        if (plan.getUnpaidDays() > 0) {
+            LocalDate firstUnpaidDate = firstDate.plusDays(plan.getAnnualDays());
+            parts.add(createRequest(employee, LeaveRequest.LeaveType.UNPAID, firstUnpaidDate,
+                    plan.getToDate(), shift, reason, groupId));
+        }
+        return parts;
+    }
+
+    /** Lưu các phần và audit; trả mã phần đầu. Bên gọi chịu trách nhiệm commit hoặc rollback cả đợt. */
+    private int saveRequestParts(Connection connection, int accountId, Employee employee,
+            List<LeaveRequest> parts) throws SQLException {
+        int firstRequestId = 0;
+        for (LeaveRequest part : parts) {
+            int partId = leaveRequestDAO.insert(connection, part);
+            if (partId <= 0) {
+                throw new SQLException("Không lưu được phần đơn nghỉ phép.");
+            }
+            if (firstRequestId == 0) {
+                firstRequestId = partId;
+            }
+            auditLogService.logInTransaction(connection, accountId, employee.getPosition(), "Nộp đơn nghỉ phép",
+                    "LeaveRequests", partId, "Status", null, "Pending", part.getReason());
+        }
+        return firstRequestId;
+    }
+
+    /** Tạo một dòng Annual/Unpaid đã tính ngày; không thay đổi ngày/ca người gửi lựa chọn. */
+    private LeaveRequest createRequest(Employee employee, LeaveRequest.LeaveType type, LocalDate fromDate,
+            LocalDate toDate, LeaveRequest.ShiftType shift, String reason, String groupId) {
+        LeaveRequest request = new LeaveRequest();
+        request.setEmployeeId(employee.getEmployeeId());
+        request.setLeaveType(type);
+        request.setFromDate(fromDate);
+        request.setToDate(toDate);
+        request.setShiftType(shift);
+        request.setDays(requestedDays(request));
+        request.setReason(reason.trim());
+        request.setLeaveGroupId(groupId);
+        return request;
+    }
+
+    /** Kiểm tra loại, ngày và ca trước mọi truy vấn; không nhận đơn quá khứ hoặc khác năm. */
+    private ServiceResult<Void> validateLeavePeriod(LeaveRequest.LeaveType leaveType, LocalDate leaveDate,
+            LocalDate toDate, LeaveRequest.ShiftType shiftType) {
+        // B1: validate dữ liệu đầu vào cơ bản
+        if (leaveType == null) {
+            return ServiceResult.failField("leaveType", "Vui lòng chọn loại nghỉ.");
+        }
+        // Đơn mới chỉ nhận phép năm hoặc không lương; Sick chỉ giữ để đọc đơn cũ.
+        if (leaveType != LeaveRequest.LeaveType.ANNUAL && leaveType != LeaveRequest.LeaveType.UNPAID) {
+            return ServiceResult.failField("leaveType", "Chỉ hỗ trợ nghỉ phép năm hoặc nghỉ không lương.");
+        }
+        if (shiftType == null) {
+            return ServiceResult.failField("shiftType", "Vui lòng chọn ca nghỉ.");
+        }
+        if (leaveDate == null) {
+            return ServiceResult.failField("leaveDate", "Vui lòng chọn ngày nghỉ.");
+        }
+
+        if (toDate == null || toDate.isBefore(leaveDate)
+                || ChronoUnit.DAYS.between(leaveDate, toDate) >= 31
+                || leaveDate.getYear() != toDate.getYear()) {
+            return ServiceResult.failField("toDate", "Chọn ngày kết thúc từ ngày bắt đầu, tối đa 31 ngày trong cùng năm.");
+        }
+        if (!leaveDate.equals(toDate) && shiftType != LeaveRequest.ShiftType.FULL_DAY) {
+            return ServiceResult.failField("shiftType", "Đơn nhiều ngày phải chọn Cả ngày.");
+        }
+
+        LocalDate today = DateTimeUtil.today();
+        if (!leaveDate.isAfter(today)) {
+            return ServiceResult.failField("leaveDate", "Ngày nghỉ phải sau ngày hôm nay.");
+        }
+
+        return ServiceResult.ok(null);
     }
 
     /**
@@ -342,19 +443,19 @@ public class StaffLeaveService {
             }
 
             // B2: mở transaction để xóa đơn Pending và ghi Audit Log
-            try (Connection conn = DBContext.getConnection()) {
-                conn.setAutoCommit(false);
+            try (Connection connection = DBContext.getConnection()) {
+                connection.setAutoCommit(false);
                 try {
-                    leaveRequestDAO.lockDecisionScope(conn);
-                    boolean isDeleted = leaveRequestDAO.withdraw(conn, leaveRequestId, employee.getEmployeeId());
+                    leaveRequestDAO.lockDecisionScope(connection);
+                    boolean isDeleted = leaveRequestDAO.withdraw(connection, leaveRequestId, employee.getEmployeeId());
                     if (!isDeleted) {
-                        conn.rollback();
+                        connection.rollback();
                         return ServiceResult.fail("Không thể rút đơn (đơn không tồn tại, đã được xử lý hoặc không phải của bạn).");
                     }
 
                     // B2.1: ghi Audit Log ghi nhận nhân viên tự rút đơn
                     auditLogService.logInTransaction(
-                            conn,
+                            connection,
                             accountId,
                             employee.getPosition(),
                             "Rút đơn nghỉ phép",
@@ -365,11 +466,11 @@ public class StaffLeaveService {
                             "Withdrawn",
                             "Nhân viên tự rút đơn");
 
-                    conn.commit();
+                    connection.commit();
                     return ServiceResult.ok(null);
 
                 } catch (SQLException | RuntimeException e) {
-                    conn.rollback();
+                    connection.rollback();
                     throw e;
                 }
             }
@@ -380,30 +481,23 @@ public class StaffLeaveService {
         }
     }
 
-    /** Khoảng ngày dùng trong thông báo; không bỏ mất ngày kết thúc của đơn nhiều ngày. */
-    private String formatLeavePeriod(LeaveRequest request) {
-        String period = DateTimeUtil.formatDate(request.getFromDate());
-        if (!request.getFromDate().equals(request.getToDate())) {
-            period = period + "–" + DateTimeUtil.formatDate(request.getToDate());
-        }
-        return period;
-    }
-
-    /** Số ngày theo quy tắc hiện có: nửa ngày cho một ca, đủ ngày cho FullDay; tính cả hai ngày biên. */
+    /** Mỗi ngày trong khoảng nghỉ tính một ngày, không chia đôi theo ca sáng/chiều. */
     private BigDecimal requestedDays(LeaveRequest request) {
-        if (request.getShiftType() != LeaveRequest.ShiftType.FULL_DAY) {
-            return new BigDecimal("0.5");
-        }
         return BigDecimal.valueOf(ChronoUnit.DAYS.between(
                 request.getFromDate(), request.getToDate()) + 1);
     }
 
-    /** Tìm Employee đang Working theo AccountId (Manager duyệt đơn). */
+    /** Chỉ PT/Lễ tân còn Working, tài khoản Active mới được gửi/xem dữ liệu của chính mình. */
     private Employee findEmployeeForAccount(int accountId) throws SQLException {
         Account account = accountDAO.findById(accountId);
         if (account == null || account.getStatus() != Account.Status.ACTIVE) {
             return null;
         }
-        return employeeDAO.findByPersonId(account.getPersonId());
+        Employee employee = employeeDAO.findByPersonId(account.getPersonId());
+        if (employee == null || employee.getStatus() != Employee.Status.WORKING
+                || (employee.getPosition() != Role.PT && employee.getPosition() != Role.RECEPTIONIST)) {
+            return null;
+        }
+        return employee;
     }
 }

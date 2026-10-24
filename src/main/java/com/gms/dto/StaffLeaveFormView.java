@@ -1,9 +1,6 @@
 package com.gms.dto;
 
-import com.gms.entity.LeaveRequest;
-
 import java.time.LocalTime;
-import java.util.Collections;
 import java.util.List;
 
 /**
@@ -27,20 +24,11 @@ public class StaffLeaveFormView {
     // SystemConfigs: tham số P-12 (mặc định 15:00).
     private final LocalTime submissionCutoffTime;
 
-    // SystemConfigs: tham số P-13 (số PT tối thiểu mỗi ca, mặc định 2).
-    private final int minPtPerShift;
+    // Service: cùng DTO dự báo với API preview; JSP hiện trong chú thích nút i.
+    private final StaffingPreview staffing;
 
-    // SystemConfigs: tham số P-14 (số Lễ tân tối thiểu mỗi ca, mặc định 1).
-    private final int minReceptionistPerShift;
-
-    // Dự báo số PT còn trực ca nếu đơn nghỉ được duyệt (SRS 5.2.1 Staffing preview).
-    private final int remainingPt;
-
-    // Dự báo số Lễ tân còn trực ca nếu đơn nghỉ được duyệt (SRS 5.2.1 Staffing preview).
-    private final int remainingReceptionist;
-
-    // DAO: danh sách các đơn xin nghỉ gần đây của nhân viên này.
-    private final List<LeaveRequest> myRequests;
+    // Service: nhóm lịch sử đầy đủ, kể cả phần liên quan nằm ngoài giới hạn 10 dòng mới nhất.
+    private final List<LeaveRequestGroupView> requestGroups;
 
     public StaffLeaveFormView(
             int employeeId,
@@ -48,49 +36,17 @@ public class StaffLeaveFormView {
             String fullName,
             String position,
             LocalTime submissionCutoffTime,
-            List<LeaveRequest> myRequests
-    ) {
-        this(employeeId, employeeCode, fullName, position, submissionCutoffTime, 2, 1, 2, 1, myRequests);
-    }
-
-    public StaffLeaveFormView(
-            int employeeId,
-            String employeeCode,
-            String fullName,
-            String position,
-            LocalTime submissionCutoffTime,
-            int minPtPerShift,
-            int minReceptionistPerShift,
-            List<LeaveRequest> myRequests
-    ) {
-        this(employeeId, employeeCode, fullName, position, submissionCutoffTime,
-                minPtPerShift, minReceptionistPerShift, minPtPerShift, minReceptionistPerShift, myRequests);
-    }
-
-    public StaffLeaveFormView(
-            int employeeId,
-            String employeeCode,
-            String fullName,
-            String position,
-            LocalTime submissionCutoffTime,
-            int minPtPerShift,
-            int minReceptionistPerShift,
-            int remainingPt,
-            int remainingReceptionist,
-            List<LeaveRequest> myRequests
+            StaffingPreview staffing,
+            List<LeaveRequestGroupView> requestGroups
     ) {
         this.employeeId = employeeId;
         this.employeeCode = employeeCode;
         this.fullName = fullName;
         this.position = position;
         this.submissionCutoffTime = submissionCutoffTime;
-        this.minPtPerShift = minPtPerShift;
-        this.minReceptionistPerShift = minReceptionistPerShift;
-        this.remainingPt = remainingPt;
-        this.remainingReceptionist = remainingReceptionist;
-        this.myRequests = myRequests == null
-                ? Collections.emptyList()
-                : Collections.unmodifiableList(myRequests);
+        this.staffing = staffing;
+        // Tạo danh sách chỉ đọc: JSP được xem nhưng không thêm/xóa nhóm trong dữ liệu form.
+        this.requestGroups = List.copyOf(requestGroups);
     }
 
     public int getEmployeeId() {
@@ -113,23 +69,11 @@ public class StaffLeaveFormView {
         return submissionCutoffTime;
     }
 
-    public int getMinPtPerShift() {
-        return minPtPerShift;
+    public StaffingPreview getStaffing() {
+        return staffing;
     }
 
-    public int getMinReceptionistPerShift() {
-        return minReceptionistPerShift;
-    }
-
-    public int getRemainingPt() {
-        return remainingPt;
-    }
-
-    public int getRemainingReceptionist() {
-        return remainingReceptionist;
-    }
-
-    public List<LeaveRequest> getMyRequests() {
-        return myRequests;
+    public List<LeaveRequestGroupView> getRequestGroups() {
+        return requestGroups;
     }
 }

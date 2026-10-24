@@ -15,21 +15,11 @@ public class LeaveRequestItemView {
     private String checkSummary;
     private String checkMessage;
 
-    public String getCheckSummary() {
-        return checkSummary;
-    }
+    // Service: các điều kiện hiện tại đạt; xác nhận và quyền vẫn được kiểm lại khi POST.
+    private boolean approvalReady;
 
-    public void setCheckSummary(String summary) {
-        this.checkSummary = summary;
-    }
-
-    public String getCheckMessage() {
-        return checkMessage;
-    }
-
-    public void setCheckMessage(String message) {
-        this.checkMessage = message;
-    }
+    // Service đọc đầy đủ cả đợt, không bị giới hạn bởi tab/bộ lọc/trang của dòng hiện tại.
+    private LeaveRequestGroupView leaveGroup;
 
     // DAO: LeaveRequests.LeaveRequestId.
     private final int leaveRequestId;
@@ -53,13 +43,12 @@ public class LeaveRequestItemView {
     private final LeaveRequest.LeaveType leaveType;
 
     // Khoảng ngày và số ngày nghỉ theo schema hiện tại.
-    private LocalDate fromDate;
-    private LocalDate toDate;
-    private BigDecimal days;
+    private final LocalDate fromDate;
+    private final LocalDate toDate;
+    private final BigDecimal days;
 
-    // Người được giao xử lý và quyền của Manager đang xem.
-    private String assignedToName;
-    private boolean canAct = true;
+    // DAO: quyền thao tác của Manager đang xem; tên người xử lý chỉ đọc ở chi tiết.
+    private final boolean canAct;
 
     // DAO: LeaveRequests.ShiftType.
     private final LeaveRequest.ShiftType shiftType;
@@ -70,23 +59,17 @@ public class LeaveRequestItemView {
     // DAO: LeaveRequests.Status.
     private final LeaveRequest.Status status;
 
-    // DAO: LeaveRequests.RejectReason; NULL nếu không bị từ chối.
-    private final String rejectReason;
-
-    // Dữ liệu cũ: Rejected không có người xử lý thì hiển thị Hệ thống.
-    private final boolean autoRejected;
-
     // DAO: LeaveRequests.SubmittedAt.
     private final LocalDateTime submittedAt;
 
     // DAO: LeaveRequests.ReviewedAt; NULL nếu Pending.
     private final LocalDateTime reviewedAt;
 
-    // DAO: Persons.FullName của người duyệt; NULL khi Pending hoặc tự từ chối.
-    private final String reviewerName;
-
     // Service: đơn Pending bắt đầu nghỉ hôm nay hoặc ngày mai.
     private boolean nearLeaveDate;
+
+    // Service: đơn Pending bắt đầu trước hôm nay; phải xác nhận riêng, không duyệt hàng loạt.
+    private boolean lateApproval;
 
     /** Sao chép dữ liệu đã đọc; cờ sắp nghỉ và kết quả kiểm tra do Service đặt riêng. */
     public LeaveRequestItemView(LeaveRequestRow row) {
@@ -104,13 +87,49 @@ public class LeaveRequestItemView {
         this.shiftType = request.getShiftType();
         this.reason = request.getReason();
         this.status = request.getStatus();
-        this.rejectReason = request.getRejectReason();
-        this.autoRejected = request.isRejected() && request.getReviewedByEmployeeId() == null;
         this.submittedAt = request.getSubmittedAt();
         this.reviewedAt = request.getReviewedAt();
-        this.reviewerName = row.getReviewerName();
-        this.assignedToName = row.getAssignedToName();
         this.canAct = row.isCanAct();
+    }
+
+    public LeaveRequestGroupView getLeaveGroup() {
+        return leaveGroup;
+    }
+
+    public void setLeaveGroup(LeaveRequestGroupView leaveGroup) {
+        this.leaveGroup = leaveGroup;
+    }
+
+    public boolean isCanApprove() {
+        return approvalReady && canAct && status == LeaveRequest.Status.PENDING;
+    }
+
+    public void setApprovalReady(boolean approvalReady) {
+        this.approvalReady = approvalReady;
+    }
+
+    public String getCheckSummary() {
+        return checkSummary;
+    }
+
+    public void setCheckSummary(String summary) {
+        this.checkSummary = summary;
+    }
+
+    public String getCheckMessage() {
+        return checkMessage;
+    }
+
+    public void setCheckMessage(String message) {
+        this.checkMessage = message;
+    }
+
+    public boolean isLateApproval() {
+        return lateApproval;
+    }
+
+    public void setLateApproval(boolean lateApproval) {
+        this.lateApproval = lateApproval;
     }
 
     public boolean isNearLeaveDate() {
@@ -161,14 +180,6 @@ public class LeaveRequestItemView {
         return status;
     }
 
-    public String getRejectReason() {
-        return rejectReason;
-    }
-
-    public boolean isAutoRejected() {
-        return autoRejected;
-    }
-
     public LocalDateTime getSubmittedAt() {
         return submittedAt;
     }
@@ -177,47 +188,19 @@ public class LeaveRequestItemView {
         return reviewedAt;
     }
 
-    public String getReviewerName() {
-        return reviewerName;
-    }
-
     public LocalDate getFromDate() {
         return fromDate;
-    }
-
-    public void setFromDate(LocalDate fromDate) {
-        this.fromDate = fromDate;
     }
 
     public LocalDate getToDate() {
         return toDate;
     }
 
-    public void setToDate(LocalDate toDate) {
-        this.toDate = toDate;
-    }
-
     public BigDecimal getDays() {
         return days;
     }
 
-    public void setDays(BigDecimal days) {
-        this.days = days;
-    }
-
-    public String getAssignedToName() {
-        return assignedToName;
-    }
-
-    public void setAssignedToName(String assignedToName) {
-        this.assignedToName = assignedToName;
-    }
-
     public boolean isCanAct() {
         return canAct;
-    }
-
-    public void setCanAct(boolean canAct) {
-        this.canAct = canAct;
     }
 }

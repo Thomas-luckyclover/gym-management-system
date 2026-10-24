@@ -709,6 +709,7 @@ CREATE TABLE LeaveRequests (
     LeaveRequestId       INT IDENTITY(1,1) NOT NULL,
     EmployeeId           INT           NOT NULL,
     ReviewedByEmployeeId INT           NULL,
+    LeaveGroupId         UNIQUEIDENTIFIER NULL, -- Hai phần Annual/Unpaid cùng đợt; đơn độc lập/đơn cũ NULL.
     AssignedToEmployeeId INT           NULL,     -- Người được giao duyệt (NULL = Chưa giao, Quản lý chung)
     LeaveType            VARCHAR(10)   NOT NULL, -- Annual | Sick | Unpaid
     FromDate             DATE          NOT NULL,
@@ -860,6 +861,7 @@ GO
 
 -- Index cluster D
 CREATE INDEX IX_LeaveRequests_StatusDate  ON LeaveRequests(Status, FromDate);        -- hàng chờ duyệt + job tự từ chối
+CREATE INDEX IX_LeaveRequests_Group ON LeaveRequests(LeaveGroupId, EmployeeId) WHERE LeaveGroupId IS NOT NULL;
 CREATE INDEX IX_LeaveRequests_DateShift   ON LeaveRequests(FromDate, ToDate, ShiftType, Status); -- định biên (DBR-60)
 CREATE INDEX IX_EquipmentItems_Facility   ON EquipmentItems(FacilityId, Status);
 CREATE INDEX IX_Maintenance_Status        ON MaintenanceRequests(Status, ReportedAt);

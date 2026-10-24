@@ -1,5 +1,68 @@
 /* Danh sách BF-05: mỗi thành phần có một khối style, không ghi đè từ CSS màn khác. */
 
+/* Chỉ tên nhân viên là điểm mở tooltip; tên vẫn bấm được để vào chi tiết. */
+.leave-list-page .leave-reason-trigger {
+  display: inline-block;
+  max-width: 100%;
+  color: inherit;
+  text-decoration-line: underline;
+  text-decoration-style: dotted;
+  text-decoration-color: var(--color-text-soft);
+  text-underline-offset: var(--space-1);
+}
+
+/* JS đặt vị trí dưới tên; fixed giúp tooltip không bị khung cuộn của bảng cắt mất. */
+.leave-list-page .leave-reason-tooltip {
+  position: fixed;
+  z-index: var(--z-dropdown);
+  width: calc(var(--space-12) * 3 + var(--space-7));
+  max-width: calc(100vw - var(--space-4));
+  padding: var(--space-3);
+  border: var(--border-width) solid var(--color-border-strong);
+  border-radius: var(--radius-md);
+  background: var(--color-surface);
+  box-shadow: var(--shadow-pop);
+  color: var(--color-text);
+  font-size: var(--font-size-sm);
+  line-height: var(--line-height-normal);
+}
+
+.leave-list-page .leave-reason-tooltip::before {
+  content: "";
+  position: absolute;
+  left: var(--space-4);
+  top: calc(-1 * var(--space-1) - var(--border-width));
+  width: var(--space-2);
+  height: var(--space-2);
+  background: var(--color-surface);
+  border-top: var(--border-width) solid var(--color-border-strong);
+  border-left: var(--border-width) solid var(--color-border-strong);
+  transform: rotate(45deg);
+}
+
+.leave-list-page .leave-reason-tooltip[data-placement="above"]::before {
+  top: auto;
+  bottom: calc(-1 * var(--space-1) - var(--border-width));
+  transform: rotate(225deg);
+}
+
+.leave-list-page .leave-reason-title {
+  display: block;
+  margin-bottom: var(--space-1);
+  color: var(--color-text-soft);
+  font-size: var(--font-size-xs);
+}
+
+.leave-list-page .leave-reason-tooltip p {
+  margin: var(--space-0);
+  display: -webkit-box;
+  -webkit-box-orient: vertical;
+  -webkit-line-clamp: 3;
+  overflow: hidden;
+  overflow-wrap: anywhere;
+  white-space: pre-line;
+}
+
 .leave-list-page .leave-toolbar {
   display: flex;
   flex-wrap: wrap;
@@ -186,13 +249,13 @@
   width: 100%;
   border-collapse: collapse;
   font-size: var(--font-size-sm);
-  min-width: calc(var(--space-12) * 14);
+  min-width: calc(var(--space-12) * 10);
   table-layout: fixed;
   font-family: var(--font-body);
 }
 
 .leave-list-page .leave-table thead tr {
-  border-bottom: var(--border-width) solid var(--color-border-strong);
+  border-bottom: var(--border-width) solid var(--color-border);
 }
 
 .leave-list-page .leave-table th {
@@ -201,7 +264,7 @@
   color: var(--color-text-soft);
   font-weight: var(--font-weight-semibold);
   white-space: nowrap;
-  background: var(--color-surface-muted);
+  background: var(--color-surface);
   font-family: var(--font-body);
   font-size: var(--font-size-xs);
   letter-spacing: var(--letter-spacing-normal);
@@ -266,22 +329,22 @@
 .leave-list-page .leave-employee-meta {
   display: flex;
   flex-direction: column;
+  min-width: 0;
 }
 
-.leave-list-page .leave-text-nowrap {
-  white-space: nowrap;
-}
-
-.leave-list-page .leave-text-muted {
-  color: var(--color-text-soft);
+/* Checkbox đầu bảng thẳng với checkbox từng đơn; tên cột thẳng với avatar. */
+.leave-list-page .leave-employee-heading {
+  display: flex;
+  align-items: center;
+  gap: var(--space-2);
 }
 
 .leave-list-page .leave-row-near {
-  background: var(--color-warning-tint);
+  background: var(--color-surface);
 }
 
 .leave-list-page .leave-row-near:hover {
-  background: var(--color-warning-tint);
+  background: var(--color-bg);
 }
 
 .leave-list-page .leave-empty {
@@ -330,56 +393,84 @@
   font-size: var(--font-size-xs);
 }
 
-/* Lịch sử trong nhóm nhân viên có người xử lý; bảng theo đơn có tên nhân viên thay cột đó. */
-.leave-list-page .leave-table th:nth-child(1) {
-  width: 20%;
+/* Tên cột quyết định độ rộng; ẩn cột không dùng không làm lệch các cột còn lại. */
+.leave-list-page .leave-col-date {
+  width: 32%;
 }
-.leave-list-page .leave-table th:nth-child(2) {
+.leave-list-page .leave-col-type {
+  width: 16%;
+}
+.leave-list-page .leave-col-status {
+  width: 16%;
+}
+.leave-list-page .leave-col-check {
+  width: 14%;
+}
+.leave-list-page .leave-col-actions {
+  width: 22%;
+}
+
+.leave-list-page .leave-request-table .leave-col-employee {
+  width: 30%;
+}
+.leave-list-page .leave-request-table .leave-col-date {
+  width: 26%;
+}
+.leave-list-page .leave-request-table .leave-col-type {
   width: 12%;
 }
-.leave-list-page .leave-table th:nth-child(3) {
-  width: 18%;
-}
-.leave-list-page .leave-table th:nth-child(4) {
+.leave-list-page .leave-request-table .leave-col-check {
   width: 12%;
 }
-.leave-list-page .leave-table th:nth-child(5) {
-  width: 18%;
-}
-.leave-list-page .leave-table th:nth-child(6) {
+.leave-list-page .leave-request-table .leave-col-actions {
   width: 20%;
 }
 
-/* Các tab trạng thái có thêm cột nhân viên, tổng cộng sáu cột. */
-.leave-list-page .leave-request-table th:nth-child(1) {
-  width: 22%;
+/* Đơn đã xử lý không có cột kiểm tra/thao tác rỗng. */
+.leave-list-page .leave-decided-table {
+  min-width: 0;
 }
-.leave-list-page .leave-request-table th:nth-child(2) {
-  width: 21%;
+.leave-list-page .leave-decided-table .leave-col-date {
+  width: 50%;
 }
-.leave-list-page .leave-request-table th:nth-child(3) {
-  width: 12%;
+.leave-list-page .leave-decided-table .leave-col-type {
+  width: 25%;
 }
-.leave-list-page .leave-request-table th:nth-child(4) {
-  width: 17%;
+.leave-list-page .leave-decided-table .leave-col-status {
+  width: 25%;
 }
-.leave-list-page .leave-request-table th:nth-child(5) {
-  width: 10%;
+.leave-list-page .leave-request-table.leave-decided-table .leave-col-employee {
+  width: 40%;
 }
-.leave-list-page .leave-request-table th:nth-child(6) {
-  width: 18%;
+.leave-list-page .leave-request-table.leave-decided-table .leave-col-date {
+  width: 35%;
+}
+
+/* Ngày nghỉ, thời lượng và nhãn sắp nghỉ cùng một nhóm; không trộn với trạng thái đơn. */
+.leave-list-page .leave-date-cell {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-1);
+}
+
+.leave-list-page .leave-date-cell small,
+.leave-list-page .leave-date-cell .leave-near-label {
+  margin-top: var(--space-0);
 }
 
 .leave-date-range {
   display: flex;
-  flex-direction: column;
-  gap: var(--space-1);
+  flex-wrap: wrap;
+  gap: var(--space-1) var(--space-2);
   font-weight: var(--font-weight-medium);
   font-variant-numeric: var(--font-numeric);
 }
 
-.leave-type-label,
-.leave-handler-name {
+.leave-date-range span {
+  white-space: nowrap;
+}
+
+.leave-type-label {
   color: var(--color-text);
   font-weight: var(--font-weight-medium);
 }
@@ -407,6 +498,8 @@
 
 .leave-list-page .leave-actions-cell .btn {
   padding: var(--space-2);
+  min-width: calc(var(--space-8) + var(--space-4));
+  min-height: var(--control-height-sm);
   font-size: var(--font-size-xs);
   white-space: nowrap;
 }
@@ -424,12 +517,12 @@
 .leave-list-page .leave-row-actions {
   display: flex;
   justify-content: flex-end;
-  flex-wrap: wrap;
+  flex-wrap: nowrap;
   gap: var(--space-2);
   margin: var(--space-0);
 }
 
-/* Checkbox liên kết leave-bulk-form; bảng giữ sáu cột hiện tại. */
+/* Checkbox liên kết leave-bulk-form. */
 .leave-list-page .leave-selection-checkbox {
   flex-shrink: 0;
   margin: var(--space-0) var(--space-2) var(--space-0) var(--space-0);
@@ -590,7 +683,6 @@ summary.leave-employee-summary:focus-visible {
   border-top: var(--border-width) solid var(--color-border);
 }
 
-.leave-group-caption,
 .leave-group-empty {
   margin: var(--space-0);
   padding: var(--space-3) var(--space-4);
@@ -608,4 +700,29 @@ summary.leave-employee-summary:focus-visible {
   .leave-employee-counts {
     justify-content: flex-start;
   }
+}
+
+/* Cùng đợt: xem hai phần riêng, giữ màu và khoảng cách theo tokens của dự án. */
+.leave-related {
+  margin-top: var(--space-2);
+  font-size: var(--font-size-xs);
+}
+.leave-related summary {
+  cursor: pointer;
+  color: var(--color-text-soft);
+  overflow-wrap: anywhere;
+}
+.leave-related-parts {
+  display: grid;
+  gap: var(--space-2);
+  padding-block: var(--space-2);
+}
+.leave-related-part {
+  display: grid;
+  justify-items: start;
+  gap: var(--space-1);
+  padding: var(--space-2);
+  border: var(--border-width) solid var(--color-border);
+  border-radius: var(--radius-sm);
+  overflow-wrap: anywhere;
 }

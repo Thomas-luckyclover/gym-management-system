@@ -589,7 +589,8 @@ def LR(**kw):
     leave_date = kw.pop('LeaveDate')
     kw['FromDate'] = leave_date
     kw['ToDate'] = leave_date
-    kw['Days'] = 1.0 if kw['ShiftType'] == 'FullDay' else 0.5
+    # Quy tắc 24/10: đơn chờ tính 1 ngày mọi ca; đơn đã xử lý giữ số ngày cũ.
+    kw['Days'] = 1.0 if kw['Status'] == 'Pending' or kw['ShiftType'] == 'FullDay' else 0.5
     kw['AssignedToEmployeeId'] = None
     return add('LeaveRequests', kw)
 LR(EmployeeId=5, ReviewedByEmployeeId=2, LeaveType='Annual', LeaveDate=d_(2026, 9, 19), ShiftType='Morning', Reason='Về quê giỗ ông',

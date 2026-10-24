@@ -18,6 +18,17 @@ public class LeaveRequest {
     // DAO: LeaveRequests.EmployeeId, nhân viên nộp đơn; Service so với employeeId lấy từ session.
     private int employeeId;
 
+    // DAO: LeaveRequests.LeaveGroupId; hai phần tách dùng cùng UUID, đơn độc lập giữ NULL.
+    private String leaveGroupId;
+
+    public String getLeaveGroupId() {
+        return leaveGroupId;
+    }
+
+    public void setLeaveGroupId(String leaveGroupId) {
+        this.leaveGroupId = leaveGroupId;
+    }
+
     // DAO: LeaveRequests.ReviewedByEmployeeId; NULL khi đơn còn Pending hoặc hệ thống tự từ chối (CBR-85).
     private Integer reviewedByEmployeeId;
 
@@ -51,7 +62,7 @@ public class LeaveRequest {
     // DAO: LeaveRequests.ToDate, ngày kết thúc nghỉ.
     private LocalDate toDate;
 
-    // DAO: LeaveRequests.Days, số ngày nghỉ (0.5 hoặc số ngày nguyên).
+    // DAO: LeaveRequests.Days; đơn mới tính một ngày cho mỗi ngày nghỉ, bất kể ca.
     private BigDecimal days;
 
     // DAO: LeaveRequests.ReminderSentAt; job nhắc Manager đúng 1 lần, NULL nếu chưa nhắc.

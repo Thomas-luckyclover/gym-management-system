@@ -3,9 +3,7 @@ package com.gms.dto;
 import com.gms.entity.LeaveRequest;
 import com.gms.util.DateTimeUtil;
 import java.util.ArrayList;
-import java.util.LinkedHashMap;
 import java.util.List;
-import java.util.Map;
 
 /** Dữ liệu BF-05: DAO đọc, Service xử lý, JSP hiển thị. */
 public class LeaveReviewDetail {
@@ -17,12 +15,22 @@ public class LeaveReviewDetail {
     private final String avatarUrl;
     private final String reviewerName;
 
-    // Quân số trực dự kiến nếu duyệt và định biên tối thiểu theo cấu hình
-    private int remainingStaff;
-    private int minStaffRequired;
+    // Service: các phần cùng đợt để xem kết quả và mở từng đơn; không gộp quyết định duyệt.
+    private LeaveRequestGroupView leaveGroup;
 
     // Service: đơn Pending bắt đầu nghỉ hôm nay hoặc ngày mai.
     private boolean nearLeaveDate;
+
+    // Bảng dự báo định biên chi tiết từng ca (màn #27, UC-15)
+    private List<ShiftStaffingRow> staffingRows;
+
+    // DAO giữ tên người được giao trên dữ liệu cũ để giải thích quyền chỉ xem.
+    private String assignedToName;
+    private boolean canAct = true;
+    private String banner;
+    // Service lấy lý do khóa duyệt từ cùng bộ kiểm tra với POST; JSP dùng cho tooltip nút.
+    private String approvalBlockMessage;
+    private List<ReviewCheck> checks = new ArrayList<>();
 
     public LeaveReviewDetail(
             LeaveRequest leaveRequest,
@@ -38,6 +46,14 @@ public class LeaveReviewDetail {
         this.position = position;
         this.avatarUrl = avatarUrl;
         this.reviewerName = reviewerName;
+    }
+
+    public LeaveRequestGroupView getLeaveGroup() {
+        return leaveGroup;
+    }
+
+    public void setLeaveGroup(LeaveRequestGroupView leaveGroup) {
+        this.leaveGroup = leaveGroup;
     }
 
     public LeaveRequest getLeaveRequest() {
@@ -64,22 +80,6 @@ public class LeaveReviewDetail {
         return reviewerName;
     }
 
-    public int getRemainingStaff() {
-        return remainingStaff;
-    }
-
-    public void setRemainingStaff(int remainingStaff) {
-        this.remainingStaff = remainingStaff;
-    }
-
-    public int getMinStaffRequired() {
-        return minStaffRequired;
-    }
-
-    public void setMinStaffRequired(int minStaffRequired) {
-        this.minStaffRequired = minStaffRequired;
-    }
-
     public boolean isNearLeaveDate() {
         return nearLeaveDate;
     }
@@ -93,13 +93,9 @@ public class LeaveReviewDetail {
                 && leaveRequest.getFromDate().isBefore(DateTimeUtil.today());
     }
 
-    public boolean getLeaveDatePassed() {
-        return isLeaveDatePassed();
-    }
-
     /** Chỉ mở xác nhận khi tất cả kiểm tra hiện tại đạt; backend vẫn kiểm tra lại khi POST. */
     public boolean isCanApprove() {
-        if (!canAct || leaveRequest == null || !leaveRequest.isPending() || isLeaveDatePassed() || checks.isEmpty()) {
+        if (!canAct || leaveRequest == null || !leaveRequest.isPending() || checks.isEmpty()) {
             return false;
         }
         for (ReviewCheck check : checks) {
@@ -110,33 +106,9 @@ public class LeaveReviewDetail {
         return true;
     }
 
-    // DAO đọc Sessions/TimeSlots; Service gắn danh sách buổi chặn duyệt cho JSP.
-    private List<SessionConflict> sessionConflicts = new ArrayList<>();
-    // DAO đếm đơn cùng khoảng ngày/ca; Pending chỉ là thông tin, chưa tính là nghỉ chính thức.
-    private Map<String, Integer> overlappingCounts = new LinkedHashMap<>();
-
-    public List<SessionConflict> getSessionConflicts() {
-        return sessionConflicts;
-    }
-
-    public void setSessionConflicts(List<SessionConflict> conflicts) {
-        this.sessionConflicts = conflicts;
-    }
-
-    public Map<String, Integer> getOverlappingCounts() {
-        return overlappingCounts;
-    }
-
-    public void setOverlappingCounts(Map<String, Integer> counts) {
-        this.overlappingCounts = counts;
-    }
-
     public boolean isAutoRejected() {
         return leaveRequest != null && leaveRequest.isRejected() && leaveRequest.getReviewedByEmployeeId() == null;
     }
-
-    // Bảng dự báo định biên chi tiết từng ca (màn #27, UC-15)
-    private List<ShiftStaffingRow> staffingRows;
 
     public List<ShiftStaffingRow> getStaffingRows() {
         return staffingRows;
@@ -144,23 +116,6 @@ public class LeaveReviewDetail {
 
     public void setStaffingRows(List<ShiftStaffingRow> staffingRows) {
         this.staffingRows = staffingRows;
-    }
-
-    // BF-05: Người được giao duyệt, quyền thao tác, banner, timeline, checks, balance
-    private Integer assignedToEmployeeId;
-    private String assignedToName;
-    private boolean canAct = true;
-    private String banner;
-    private List<TimelineNode> timeline = new ArrayList<>();
-    private List<ReviewCheck> checks = new ArrayList<>();
-    private LeaveBalance leaveBalance;
-
-    public Integer getAssignedToEmployeeId() {
-        return assignedToEmployeeId;
-    }
-
-    public void setAssignedToEmployeeId(Integer assignedToEmployeeId) {
-        this.assignedToEmployeeId = assignedToEmployeeId;
     }
 
     public String getAssignedToName() {
@@ -187,12 +142,14 @@ public class LeaveReviewDetail {
         this.banner = banner;
     }
 
-    public List<TimelineNode> getTimeline() {
-        return timeline;
+    /** Lý do khóa nút duyệt, lấy từ bộ kiểm tra của Service. */
+    public String getApprovalBlockMessage() {
+        return approvalBlockMessage;
     }
 
-    public void setTimeline(List<TimelineNode> timeline) {
-        this.timeline = timeline;
+    /** Service gắn thông báo cho tooltip; null khi đủ điều kiện. */
+    public void setApprovalBlockMessage(String approvalBlockMessage) {
+        this.approvalBlockMessage = approvalBlockMessage;
     }
 
     public List<ReviewCheck> getChecks() {
@@ -202,13 +159,4 @@ public class LeaveReviewDetail {
     public void setChecks(List<ReviewCheck> checks) {
         this.checks = checks;
     }
-
-    public LeaveBalance getLeaveBalance() {
-        return leaveBalance;
-    }
-
-    public void setLeaveBalance(LeaveBalance leaveBalance) {
-        this.leaveBalance = leaveBalance;
-    }
-
 }
