@@ -827,12 +827,12 @@
   --my-pt-time-width: 168px;
   /* Auth "Gymnasion Ink" (15/10), đổi nền sang Arena 24/10: tranh gốm giữ nguyên nét kem/cam,
      nền + thẻ form + ô nhập theo xanh Arena đậm, focus xanh thép thay aqua. */
-  --auth-ocean-ground: #0D1A42;
-  --auth-ocean-gradient: #0D1A42;
+  --auth-ocean-ground: var(--arena-950);
+  --auth-ocean-gradient: var(--arena-950);
   --auth-ink-line: #FFF7EF;
   --auth-ember-line: #FF4F2B;
   --auth-art-opacity: 1;
-  --auth-card-solid: #142660;
+  --auth-card-solid: var(--arena-900);
   --auth-input-solid: #0A1638;
   --auth-field-border: rgba(167, 179, 201, 0.32);
   --auth-field-border-hover: rgba(200, 212, 232, 0.5);
@@ -840,7 +840,7 @@
   --auth-panel-shadow: 0 1px 0 rgba(255, 255, 255, 0.16) inset, 0 32px 64px -32px rgba(0, 0, 0, 0.75);
   --auth-link: #FF986B;
   --auth-link-hover: #FFF7EF;
-  --auth-focus: #9FB8EC;
+  --auth-focus: var(--arena-focus);
   --auth-focus-ring: 0 0 0 3px rgba(159, 184, 236, 0.32);
   --auth-figure-ink: #03070F;
   /* Đất nung + áo choàng: màu đặc bằng đúng màu cũ trộn trên nền mực, để tranh không ngả tím trên nền Arena */
@@ -988,16 +988,18 @@
 /* ---- ARENA (24/10 tối) — bảng màu đĩa tạ thi đấu, dùng cho PT Dashboard, Lịch dạy PT,
    My PT Sessions, My Bookings và trang xác thực. Lớp áp dụng: mục "ARENA" cuối common.css.
    20kg xanh = nền sân · 25kg đỏ = MỘT việc nặng nhất mỗi màn · phấn magie = khối đọc · thép = chữ phụ, vân nhám.
-   Tương phản (đã đo): mực/phấn 15.8:1 · trắng/arena-900 14.2:1 · mực/ember 4.9:1 · thép/arena-900 6.7:1 ·
-   thép đậm/phấn 5.4:1 · ember-hi/arena-900 4.7:1 · chữ bạc/nền sân 6.1:1. */
+   Tương phản (đã đo): mực/phấn 15.8:1 · trắng/arena-900 14.2:1 · mực/ember 5.4:1 · thép/arena-900 6.7:1 ·
+   thép đậm/phấn 5.4:1 · ember trên tối 5.6:1 · ember-ink/trắng 5.5:1 · chữ bạc/nền sân 6.1:1 · viền điều khiển/trắng 3.3:1. */
 :root {
   --arena-950: #0D1A42;
   --arena-900: #142660;
   --arena-800: #1B3171;
   --arena-700: #24468F;
-  --arena-ember: #E8552F;
-  --arena-ember-hi: #F46A45;
-  --arena-ember-ink: #B23A16;
+  /* Ember thống nhất với nút trang chủ + sidebar (#FF4F2B): một màu cam cho cả app */
+  --arena-ember: #FF4F2B;
+  --arena-ember-hi: #FF6A4A;        /* rê chuột nút chính */
+  --arena-ember-on-dark: #FF7A5C;   /* chữ/số ember trên khối tối (5.6:1) */
+  --arena-ember-ink: #C2361A;       /* chữ ember trên nền sáng (5.5:1 trên trắng) */
   --arena-chalk: #EEF2F8;
   --arena-chalk-2: #F7F9FC;
   --arena-chalk-line: #CDD6E4;
@@ -1008,6 +1010,7 @@
   --arena-ink-soft: #34405A;
   --arena-focus: #9FB8EC;
   --arena-glow: rgba(96, 146, 255, 0.34);
+  --arena-glow-soft: rgba(96, 146, 255, 0.18);   /* đèn sân khấu rất nhẹ trên nền sân */
   --arena-knurl: rgba(220, 230, 248, 0.42);
   --arena-shadow-light: 0 1px 0 rgba(255, 255, 255, 0.7) inset, 0 18px 34px -24px rgba(6, 18, 64, 0.75);
   --arena-shadow-drop: 0 18px 34px -24px rgba(6, 18, 64, 0.75);
@@ -1022,7 +1025,7 @@
   --arena-glass-line-hover: rgba(255, 255, 255, 0.42);
   --arena-glass-edge: 0 1px 0 rgba(255, 255, 255, 0.12) inset;
   --arena-on-dark-soft: #C9D6EC;
-  --arena-ember-line: rgba(232, 85, 47, 0.75);
+  --arena-ember-line: rgba(255, 79, 43, 0.75);
   --arena-error-on-dark: #FFB4A3;
   --arena-warn-on-dark: #F2C46B;
   /* Bề mặt và đường trên khối sáng */
@@ -1044,9 +1047,17 @@
   --arena-topbar-line: rgba(255, 255, 255, 0.1);
   --arena-row-pinned: #FDF1EC;
   --arena-float: 0 18px 36px -18px rgba(0, 0, 0, 0.6);
-  /* Ember cũ của sidebar (#FF4F2B): sidebar giữ nguyên, không theo ember Arena */
+  /* Ember sidebar: giữ nguyên (nay trùng --arena-ember) */
   --arena-sidebar-ember: #FF4F2B;
+  /* Nhịp khoảng cách (bước 4px): khe giữa khối 12 · khe giữa ô 8 · lề trong khối 24 (điện thoại 16) */
   --arena-gap: 12px;
+  --arena-gap-tile: 8px;
+  --arena-pad: 24px;
+  --arena-pad-sm: 16px;
+  /* Khả năng tiếp cận: viền điều khiển ≥ 3:1 trên trắng, vùng chạm 44px, vòng focus 2 tông */
+  --arena-control-line: #7D8FAE;
+  --arena-hit: 44px;
+  --arena-focus-ring: var(--arena-700);
   --arena-mark: 3px;            /* vạch nhấn: hôm nay, gói đang xem, thẻ buổi */
   --arena-segment-pad: 3px;     /* lề trong công tắc Tuần/Tháng, tab */
   --arena-knurl-height: 8px;    /* dải vân nhám đỉnh khối chào */

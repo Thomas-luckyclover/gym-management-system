@@ -935,6 +935,12 @@
    - ngày đóng cửa có sọc chéo; thanh "chờ công bố" là khối tối để nút Công bố là ember duy nhất. */
 
 html body.dock.pt-plan-page .pt-plan { gap: var(--arena-gap); }
+/* Nhịp: thanh công cụ và chú thích thẳng lề 24px như các khối khác */
+html body.dock.pt-plan-page :is(.pt-plan-toolbar, .pt-plan-legend) { padding: var(--arena-pad-sm) var(--arena-pad); }
+@media (max-width: 700px) {
+  html body.dock.pt-plan-page :is(.pt-plan-toolbar, .pt-plan-legend) { padding-inline: var(--arena-pad-sm); }
+  html body.dock.pt-plan-page .pt-plan-switch a { display: inline-flex; align-items: center; min-height: calc(var(--arena-hit) - 6px); }
+}
 
 html body.dock.pt-plan-page .pt-plan-period h2 { font-family: var(--font-brand-display); font-weight: var(--font-weight-bold); }
 
@@ -965,7 +971,7 @@ html body.dock.pt-plan-page .pt-plan .pt-day.is-today .pt-day-head {
   box-shadow: inset 0 calc(-1 * var(--arena-mark)) 0 var(--arena-ember);
 }
 html body.dock.pt-plan-page .pt-plan .pt-day.is-today :is(.pt-day-name, .pt-day-date) { color: var(--arena-surface); }
-html body.dock.pt-plan-page .pt-plan .pt-day.is-today .pt-day-note.is-today { color: var(--arena-ember-hi); }
+html body.dock.pt-plan-page .pt-plan .pt-day.is-today .pt-day-note.is-today { color: var(--arena-ember-on-dark); }
 html body.dock.pt-plan-page .pt-plan .pt-day.is-today .pt-day-note:not(.is-today) { color: var(--arena-steel); }
 
 /* Khung đã có khách: xanh đặc, chữ trắng (buổi đã qua giữ màu trầm có sẵn) */
@@ -999,6 +1005,7 @@ html body.dock.pt-plan-page .pt-plan-pending {
   --color-text: var(--arena-surface);
   --color-text-soft: var(--arena-steel);
   --color-text-muted: var(--arena-steel);
+  --arena-focus-ring: var(--arena-focus);
   border: 0;
   border-radius: var(--arena-radius-tile);
   background:

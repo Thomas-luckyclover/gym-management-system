@@ -3019,8 +3019,11 @@ html body.dock:is(.pt-dashboard-page, .pt-plan-page, :has(.my-pt-page, .booking-
 }
 /* Nền sân phẳng một màu; trong khối: nền phụ là trắng nhạt, không phải nền sân */
 html body.dock:is(.pt-dashboard-page, .pt-plan-page, :has(.my-pt-page, .booking-page))::before {
-  background: var(--arena-700);
+  background:
+    radial-gradient(70% 45% at 50% 0%, var(--arena-glow-soft), transparent 70%),
+    var(--arena-700);
 }
+html.gms-lite body.dock:is(.pt-dashboard-page, .pt-plan-page, :has(.my-pt-page, .booking-page))::before { background: var(--arena-700); }
 
 /* --- Topbar: cùng màu sân, tiêu đề đậm, ô tài khoản thành ô kính --- */
 html body.dock:is(.pt-dashboard-page, .pt-plan-page, :has(.my-pt-page, .booking-page)) .topbar {
@@ -3052,7 +3055,7 @@ html body.dock:is(.pt-dashboard-page, .pt-plan-page, :has(.my-pt-page, .booking-
 html body.dock:is(.pt-dashboard-page, .pt-plan-page, :has(.my-pt-page, .booking-page)) .tb-user :is(small, .tb-user-text span, .pt-user-code) {
   border-radius: var(--arena-radius-chip);
   background: var(--arena-glass-strong);
-  color: var(--arena-on-dark-soft);
+  color: var(--arena-surface);
 }
 html body.dock:is(.pt-dashboard-page, .pt-plan-page, :has(.my-pt-page, .booking-page)) :is(.tb-user .avatar, .tb-avatar, .pt-user-avatar) {
   background: var(--arena-800);
@@ -3096,3 +3099,73 @@ html body.dock:is(.pt-dashboard-page, .pt-plan-page, :has(.my-pt-page, .booking-
 html body.dock:is(.pt-dashboard-page, .pt-plan-page, :has(.my-pt-page, .booking-page)) .pt-info-popover {
   border-radius: var(--arena-radius-tile);
 }
+
+
+/* --- ARENA · lượt 2: nhịp khoảng cách + khả năng tiếp cận (WCAG 2.1 AA) ---
+   Kết quả quét axe-core + đo tay trên 4 màn (24/10): 1 lỗi tương phản (chip mã NV 3.75:1),
+   1 link không có tên trên điện thoại (ô tài khoản ẩn chữ bằng display:none), 1 nút mất vòng focus,
+   nhiều điều khiển 24–38px trên điện thoại, tiêu đề topbar lệch 47px so với khối ở màn ≥1300px. */
+
+/* Topbar thẳng mép với khối nội dung (main rộng tối đa --layout-content-width, lề trong 32px) */
+@media (min-width: 768px) {
+  html body.dock:is(.pt-dashboard-page, .pt-plan-page, :has(.my-pt-page, .booking-page)) .topbar {
+    padding-inline: max(var(--space-6), calc((100% - var(--layout-content-width)) / 2 + var(--space-6)));
+  }
+}
+
+/* Vòng focus 2 tông: vạch màu + viền trắng, thấy được trên cả khối sáng lẫn khối tối.
+   main (đích của link "Bỏ qua menu") không vẽ vòng. */
+html body.dock:is(.pt-dashboard-page, .pt-plan-page, :has(.my-pt-page, .booking-page)) .content :focus-visible:not(main) {
+  outline: 2px solid var(--arena-focus-ring);
+  outline-offset: 2px;
+  box-shadow: 0 0 0 2px var(--arena-surface);
+}
+html body.dock:is(.pt-dashboard-page, .pt-plan-page, :has(.my-pt-page, .booking-page)) .tb-user:focus-visible {
+  outline: 2px solid var(--arena-surface);
+  outline-offset: 2px;
+}
+
+/* Nút phụ, ô chọn: viền điều khiển ≥ 3:1 trên trắng (WCAG 1.4.11) */
+html body.dock:is(.pt-dashboard-page, .pt-plan-page, :has(.my-pt-page, .booking-page)) .content .btn:not(.btn-primary):not(.btn-danger):not(.btn-link) {
+  border-color: var(--arena-control-line);
+}
+
+/* Nút (i): giữ hình tròn nhỏ nhưng vùng chạm 44px (lớp vô hình bao quanh) */
+html body.dock:is(.pt-dashboard-page, .pt-plan-page, :has(.my-pt-page, .booking-page)) .pt-info-trigger { position: relative; }
+html body.dock:is(.pt-dashboard-page, .pt-plan-page, :has(.my-pt-page, .booking-page)) .pt-info-trigger::after {
+  content: "";
+  position: absolute;
+  top: 50%;
+  left: 50%;
+  width: var(--arena-hit);
+  height: var(--arena-hit);
+  transform: translate(-50%, -50%);
+}
+
+@media (max-width: 767px) {
+  /* Điện thoại: mọi nút, công tắc, liên hệ trong nội dung cao tối thiểu 44px */
+  html body.dock:is(.pt-dashboard-page, .pt-plan-page, :has(.my-pt-page, .booking-page)) .content :is(.btn, summary.btn) {
+    min-height: var(--arena-hit);
+  }
+  html body.dock:is(.pt-dashboard-page, .pt-plan-page, :has(.my-pt-page, .booking-page)) .content :is(.pt-plan-step, .schedule-step) {
+    min-width: var(--arena-hit);
+  }
+  /* Ô tài khoản thu gọn còn avatar: chữ vẫn còn cho trình đọc màn hình (trước đây display:none → link không tên) */
+  html body.dock:is(.pt-dashboard-page, .pt-plan-page, :has(.my-pt-page, .booking-page)) .tb-user :is(b, small, .tb-user-text, .pt-user-details) {
+    position: absolute;
+    display: block;
+    width: 1px;
+    height: 1px;
+    margin: -1px;
+    padding: 0;
+    overflow: hidden;
+    clip: rect(0 0 0 0);
+    white-space: nowrap;
+    border: 0;
+  }
+  html body.dock:is(.pt-dashboard-page, .pt-plan-page, :has(.my-pt-page, .booking-page)) .tb-user { position: relative; min-width: var(--arena-hit); min-height: var(--arena-hit); }
+  html body.dock:is(.pt-dashboard-page, .pt-plan-page, :has(.my-pt-page, .booking-page)) .topbar :is(.btn, .notif-btn, .bell-btn, button) { min-width: var(--arena-hit); min-height: var(--arena-hit); }
+}
+
+/* Nhãn trạng thái (.badge) trong 4 màn: góc 2px, viền cùng tông như chip trạng thái buổi */
+html body.dock:is(.pt-dashboard-page, .pt-plan-page, :has(.my-pt-page, .booking-page)) .badge { border-radius: var(--arena-radius-chip); }

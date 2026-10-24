@@ -436,7 +436,14 @@ body.session-detail-open { overflow: hidden; }
    đầu cột hôm nay tối + gạch ember, thẻ buổi có sọc trái xanh (buổi hôm nay sọc ember),
    nhãn trạng thái thành chip 2px nhưng giữ đúng màu nghĩa. */
 
-html body.dock .my-pt-page .schedule-back { color: var(--arena-surface); }
+html body.dock .my-pt-page .schedule-back { color: var(--arena-surface); min-height: var(--arena-hit); }
+/* Nhịp: thanh công cụ và chú thích thẳng lề 24px như các khối khác */
+html body.dock .my-pt-page :is(.schedule-toolbar, .schedule-legend) { padding: var(--arena-pad-sm) var(--arena-pad); }
+@media (max-width: 640px) {
+  html body.dock .my-pt-page :is(.schedule-toolbar, .schedule-legend) { padding-inline: var(--arena-pad-sm); }
+  html body.dock .my-pt-page .schedule-switch a { display: inline-flex; align-items: center; min-height: calc(var(--arena-hit) - 6px); }
+  html body.dock .my-pt-page .schedule-mobile-days a { min-height: var(--arena-hit); }
+}
 html body.dock .my-pt-page .schedule-period h2 { font-family: var(--font-brand-display); font-weight: var(--font-weight-bold); }
 
 /* Tuần | Tháng */
@@ -527,5 +534,5 @@ html body.dock .my-pt-page .month-session.is-ended { box-shadow: inset var(--are
   html body.dock .my-pt-page .schedule-mobile-days a.is-shown { border-color: var(--arena-900); background: var(--arena-900); color: var(--arena-steel); }
   html body.dock .my-pt-page .schedule-mobile-days a.is-shown strong { color: var(--arena-surface); }
   html body.dock .my-pt-page .schedule-mobile-days a.is-today strong { color: var(--arena-ember-ink); }
-  html body.dock .my-pt-page .schedule-mobile-days a.is-today.is-shown strong { color: var(--arena-ember-hi); }
+  html body.dock .my-pt-page .schedule-mobile-days a.is-today.is-shown strong { color: var(--arena-ember-on-dark); }
 }

@@ -32,11 +32,13 @@
 /* ARENA (24/10 tối): trên 2 màn khách, nhãn trạng thái là chip góc 2px có nền nhạt; màu nghĩa giữ nguyên. */
 html body.dock :is(.my-pt-page, .booking-page) .session-status {
   padding: 1px var(--space-1-5);
+  border: var(--border-width) solid var(--color-neutral-border);
   border-radius: var(--arena-radius-chip);
   background: var(--color-neutral-tint);
   font-weight: var(--font-weight-semibold);
 }
-html body.dock :is(.my-pt-page, .booking-page) .session-status:is([data-status="today"], [data-status="upcoming"]) { background: var(--arena-info-chip); }
-html body.dock :is(.my-pt-page, .booking-page) .session-status[data-status="checkedIn"] { background: var(--color-success-tint); }
-html body.dock :is(.my-pt-page, .booking-page) .session-status:is([data-status="warn"], [data-status="pending"]) { background: var(--color-warning-tint); }
-html body.dock :is(.my-pt-page, .booking-page) .session-status[data-status="missed"] { background: var(--color-danger-tint); }
+/* Chip có viền cùng tông: cạnh sắc, đọc được cả khi in đen trắng */
+html body.dock :is(.my-pt-page, .booking-page) .session-status:is([data-status="today"], [data-status="upcoming"]) { border-color: var(--color-info-border); background: var(--arena-info-chip); }
+html body.dock :is(.my-pt-page, .booking-page) .session-status[data-status="checkedIn"] { border-color: var(--color-success-border); background: var(--color-success-tint); }
+html body.dock :is(.my-pt-page, .booking-page) .session-status:is([data-status="warn"], [data-status="pending"]) { border-color: var(--color-warning-border); background: var(--color-warning-tint); }
+html body.dock :is(.my-pt-page, .booking-page) .session-status[data-status="missed"] { border-color: var(--color-danger-border); background: var(--color-danger-tint); }
