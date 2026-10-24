@@ -55,7 +55,7 @@ import java.util.TreeMap;
  */
 public class MyBookingService {
 
-    /** Giá trị ?id= khi khách chọn nhóm "Buổi lẻ". */
+    /** Giá trị ?package= khi khách chọn nhóm "Buổi lẻ". */
     public static final String SINGLE_KEY = "single";
 
     // ----- 4 loại CTA (mỗi màn hiện tối đa 1) -----
@@ -88,10 +88,10 @@ public class MyBookingService {
      * HÀM CHÍNH — MyBookingServlet.doGet gọi mỗi lần khách mở /customer/bookings.
      *
      * @param accountId  lấy từ session (không bao giờ từ URL)
-     * @param selectedId ?id= trên URL: mã gói, "single", hoặc rỗng / sai → tự chọn gói đầu tiên
+     * @param packageKey ?package= trên URL: mã gói (Subscriptions.SubscriptionId), "single", hoặc rỗng / sai → tự chọn gói đầu tiên
      * @param now        thời điểm hiện tại (giờ VN) — truyền vào để test cố định được thời gian
      */
-    public ServiceResult<MyBookingView> getMyBookings(int accountId, String selectedId, LocalDateTime now) {
+    public ServiceResult<MyBookingView> getMyBookings(int accountId, String packageKey, LocalDateTime now) {
         try {
             // B1: accountId → mã khách. Không phải khách → không có quyền.
             Integer customerId = sessionService.findCustomerId(accountId);
@@ -117,7 +117,7 @@ public class MyBookingService {
             view.setRecentSingleCount(countRecentSingles(singles, now.toLocalDate()));
 
             // B4: chọn thứ đang xem ở cột phải: 1 gói PT, hoặc nhóm buổi lẻ.
-            MyPtPackageView selected = pickPackage(view, selectedId);
+            MyPtPackageView selected = pickPackage(view, packageKey);
             List<MyPtSessionRow> sessions;
             if (selected != null) {
                 view.setSelectedPackage(selected);
@@ -203,20 +203,20 @@ public class MyBookingService {
     /**
      * HÀM PHỤ — gọi ở B4 của getMyBookings. Trả null = đang xem nhóm "Buổi lẻ".
      *
-     *   ?id=single (và có buổi lẻ)     → null
-     *   ?id=<mã gói CỦA KHÁCH NÀY>      → gói đó
-     *   ?id=<mã gói người khác> / sai   → coi như không có (không lộ dữ liệu người khác) → mặc định
+     *   ?package=single (và có buổi lẻ)  → null
+     *   ?package=<mã gói CỦA KHÁCH NÀY>  → gói đó
+     *   ?package=<mã gói người khác> / sai → coi như không có (không lộ dữ liệu người khác) → mặc định
      *   mặc định                        → gói đang tập đầu tiên → gói đã kết thúc đầu tiên → null
      */
-    static MyPtPackageView pickPackage(MyBookingView view, String selectedId) {
+    static MyPtPackageView pickPackage(MyBookingView view, String packageKey) {
         // B1: chọn nhóm buổi lẻ.
-        if (SINGLE_KEY.equals(selectedId) && view.getSingleSessionCount() > 0) {
+        if (SINGLE_KEY.equals(packageKey) && view.getSingleSessionCount() > 0) {
             return null;
         }
 
         // B2: tìm đúng mã gói trong danh sách gói CỦA KHÁCH (không đọc DB theo mã trên URL).
-        if (selectedId != null) {
-            String id = selectedId.trim();
+        if (packageKey != null) {
+            String id = packageKey.trim();
             for (MyPtPackageView p : view.getActivePackages()) {
                 if (String.valueOf(p.getSubscriptionId()).equals(id)) {
                     return p;
