@@ -9,8 +9,7 @@ import java.sql.Statement;
 import java.sql.Timestamp;
 
 /**
- * Đọc và lưu các lần thử thanh toán.
- * TransactionId là ID nội bộ.
+ * Đọc và lưu các lần thử thanh toán. TransactionId là ID nội bộ.
  * GatewayReference lưu merchant txnRef gửi sang VNPay.
  */
 public class TransactionDAO {
@@ -188,4 +187,37 @@ public class TransactionDAO {
         }
     }
 
+    /**
+     * Tìm lần thanh toán theo merchant txnRef đã gửi sang VNPay.
+     *
+     * @param conn kết nối của Service
+     * @param txnRef giá trị vnp_TxnRef nhận từ IPN
+     * @return giao dịch tìm được hoặc null
+     */
+    public Transaction findByGatewayReference(
+            Connection conn, String txnRef) throws SQLException {
+
+        String sql = "SELECT TransactionId "
+                + "FROM Transactions "
+                + "WHERE GatewayReference = ? "
+                + "AND PaymentMethod = 'OnlineGateway'";
+
+        Integer transactionId = null;
+
+        try (PreparedStatement statement = conn.prepareStatement(sql)) {
+            statement.setString(1, txnRef);
+
+            try (ResultSet resultSet = statement.executeQuery()) {
+                if (resultSet.next()) {
+                    transactionId = resultSet.getInt("TransactionId");
+                }
+            }
+        }
+
+        if (transactionId == null) {
+            return null;
+        }
+
+        return findById(conn, transactionId, false);
+    }
 }

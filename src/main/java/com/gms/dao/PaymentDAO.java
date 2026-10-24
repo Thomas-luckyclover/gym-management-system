@@ -66,4 +66,73 @@ public class PaymentDAO {
         }
     }
 
+    /**
+     * Khóa hồ sơ khách trước khi khóa đơn và giao dịch. Giữ cùng thứ tự khóa
+     * với tạo đơn, voucher và mở thanh toán.
+     *
+     * @param conn kết nối trong transaction của Service
+     * @param customerId chủ đơn lấy từ database
+     */
+    public void lockCustomer(Connection conn, int customerId)
+            throws SQLException {
+
+        String sql = "SELECT CustomerId "
+                + "FROM Customers WITH (UPDLOCK, HOLDLOCK) "
+                + "WHERE CustomerId = ?";
+
+        try (PreparedStatement statement = conn.prepareStatement(sql)) {
+            statement.setInt(1, customerId);
+
+            try (ResultSet resultSet = statement.executeQuery()) {
+                if (!resultSet.next()) {
+                    throw new SQLException("Không tìm thấy chủ đơn");
+                }
+            }
+        }
+    }
+
+    /**
+     * Chỉ chuyển hồ sơ New/Expired thành Active. Không tự mở Frozen hoặc khôi
+     * phục Inactive.
+     *
+     * @return số hồ sơ thay đổi; 0 có thể là khách đã Active
+     */
+    public int activateNewOrExpired(Connection conn, int customerId)
+            throws SQLException {
+
+        String sql = "UPDATE Customers "
+                + "SET Status = 'Active' "
+                + "WHERE CustomerId = ? AND Status IN ('New', 'Expired')";
+
+        try (PreparedStatement statement = conn.prepareStatement(sql)) {
+            statement.setInt(1, customerId);
+            return statement.executeUpdate();
+        }
+    }
+
+    /**
+     * Tìm tài khoản của chủ đơn để gửi thông báo trong ứng dụng.
+     *
+     * @return AccountId còn Active hoặc null nếu không có
+     */
+    public Integer findAccountForCustomer(Connection conn, int customerId)
+            throws SQLException {
+
+        String sql = "SELECT a.AccountId "
+                + "FROM Accounts a "
+                + "JOIN Customers c ON c.PersonId = a.PersonId "
+                + "WHERE c.CustomerId = ? AND a.Status = 'Active'";
+
+        try (PreparedStatement statement = conn.prepareStatement(sql)) {
+            statement.setInt(1, customerId);
+
+            try (ResultSet resultSet = statement.executeQuery()) {
+                if (resultSet.next()) {
+                    return resultSet.getInt("AccountId");
+                }
+            }
+        }
+
+        return null;
+    }
 }

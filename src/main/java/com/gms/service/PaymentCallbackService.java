@@ -19,6 +19,8 @@ import java.sql.SQLException;
 import java.time.LocalDate;
 import java.time.LocalDateTime;
 import java.util.Map;
+import com.gms.dto.ServiceResult;
+import com.gms.dto.PaymentResultView;
 
 /**
  * Nhận kết quả thanh toán từ VNPay qua IPN.
@@ -461,4 +463,154 @@ public class PaymentCallbackService {
     protected Connection openConnection() throws SQLException {
         return DBContext.getConnection();
     }
+    
+    /**
+ * Kiểm chữ ký Return và quyền sở hữu đơn.
+ * Chỉ trả TransactionId để chuyển sang URL kết quả gọn.
+ * Không cập nhật trạng thái thanh toán.
+ */
+public ServiceResult<Integer> resolveReturnTransaction(
+        int accountId, Map<String, String> params) {
+
+    if (accountId <= 0) {
+        return ServiceResult.fail("Phiên đăng nhập không hợp lệ.");
+    }
+
+    try {
+        // B1: không tin dữ liệu chưa được kiểm chữ ký.
+        if (!vnPayClient.verifySignature(params)) {
+            return ServiceResult.fail(
+                    "Không xác minh được dữ liệu trả về từ VNPay.");
+        }
+
+        String txnRef = parseTxnRef(params.get("vnp_TxnRef"));
+
+        if (txnRef == null) {
+            return ServiceResult.fail(
+                    "Mã lần thanh toán không hợp lệ.");
+        }
+
+        try (Connection conn = openConnection()) {
+            // B2: tìm lần thanh toán theo mã đã gửi sang VNPay.
+            Transaction payment =
+                    transactionDAO.findByGatewayReference(conn, txnRef);
+
+            if (payment == null || !payment.isOnlineGateway()) {
+                return ServiceResult.fail(
+                        "Không tìm thấy giao dịch.");
+            }
+
+            // B3: kiểm đơn thuộc khách đang đăng nhập.
+            Order order = orderDAO.findOnlineByIdAndAccount(
+                    conn, accountId, payment.getOrderId());
+
+            if (order == null) {
+                return ServiceResult.fail(
+                        "Không tìm thấy đơn hàng của bạn.");
+            }
+
+            return ServiceResult.ok(payment.getTransactionId());
+        }
+
+    } catch (SQLException | RuntimeException e) {
+        return ServiceResult.fail(
+                "Chưa đọc được kết quả thanh toán. Vui lòng thử lại.");
+    }
+}
+/**
+ * Đọc kết quả của đúng tài khoản.
+ * Không đánh Paid theo ResponseCode do trình duyệt gửi.
+ */
+public ServiceResult<PaymentResultView> getPaymentResult(
+        int accountId, Integer transactionId) {
+
+    if (accountId <= 0
+            || transactionId == null
+            || transactionId <= 0) {
+
+        return ServiceResult.fail("Mã giao dịch không hợp lệ.");
+    }
+
+    try (Connection conn = openConnection()) {
+        // B1: đọc giao dịch và kiểm chủ đơn.
+        Transaction payment =
+                transactionDAO.findById(conn, transactionId, false);
+
+        if (payment == null || !payment.isOnlineGateway()) {
+            return ServiceResult.fail("Không tìm thấy giao dịch.");
+        }
+
+        Order order = orderDAO.findOnlineByIdAndAccount(
+                conn, accountId, payment.getOrderId());
+
+        if (order == null) {
+            return ServiceResult.fail(
+                    "Không tìm thấy đơn hàng của bạn.");
+        }
+
+        // B2: hiển thị theo dữ liệu đã được ghi trong DB.
+        if (payment.isNeedsRefund()) {
+            return ServiceResult.ok(new PaymentResultView(
+                    order,
+                    "Giao dịch cần đối soát",
+                    "Giao dịch đã được đánh dấu cần hoàn tiền. "
+                    + "Vui lòng liên hệ lễ tân.",
+                    false,
+                    false,
+                    false));
+        }
+
+        if (order.isPaid()) {
+            return ServiceResult.ok(new PaymentResultView(
+                    order,
+                    "Thanh toán thành công",
+                    "GMS đã xác nhận thanh toán và cấp gói cho bạn.",
+                    true,
+                    false,
+                    false));
+        }
+
+        if (order.isCancelled()) {
+            return ServiceResult.ok(new PaymentResultView(
+                    order,
+                    "Đơn hàng đã hủy",
+                    "Bạn có thể quay lại chọn gói để tạo đơn mới.",
+                    false,
+                    false,
+                    false));
+        }
+
+        if (payment.isFailed() || payment.isExpired()) {
+            boolean retryable = order.isPending()
+                    && order.getPaymentDueAt() != null
+                    && DateTimeUtil.now().isBefore(order.getPaymentDueAt())
+                    && !paymentDAO.hasPendingTransaction(
+                            conn, order.getOrderId());
+
+            return ServiceResult.ok(new PaymentResultView(
+                    order,
+                    "Thanh toán chưa thành công",
+                    retryable
+                            ? "Bạn có thể thanh toán lại khi đơn còn hạn."
+                            : "Đơn hiện không được thanh toán lại.",
+                    false,
+                    false,
+                    retryable));
+        }
+
+        // Return có thể đến trước IPN; chưa có xác nhận thì chưa báo Paid.
+        return ServiceResult.ok(new PaymentResultView(
+                order,
+                "Đang chờ xác nhận thanh toán",
+                "GMS chưa ghi nhận kết quả qua IPN. "
+                + "Vui lòng kiểm tra lại sau.",
+                false,
+                true,
+                false));
+
+    } catch (SQLException | RuntimeException e) {
+        return ServiceResult.fail(
+                "Chưa đọc được kết quả thanh toán. Vui lòng thử lại.");
+    }
+}
 }
