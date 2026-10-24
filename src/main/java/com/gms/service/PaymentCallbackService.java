@@ -1,0 +1,464 @@
+package com.gms.service;
+
+import com.gms.dao.NotificationDAO;
+import com.gms.dao.OrderDAO;
+import com.gms.dao.PackageDAO;
+import com.gms.dao.PaymentDAO;
+import com.gms.dao.SubscriptionDAO;
+import com.gms.dao.TransactionDAO;
+import com.gms.dto.IpnResult;
+import com.gms.entity.Order;
+import com.gms.entity.Package;
+import com.gms.entity.Subscription;
+import com.gms.entity.Transaction;
+import com.gms.integration.VnPayClient;
+import com.gms.util.DBContext;
+import com.gms.util.DateTimeUtil;
+import java.sql.Connection;
+import java.sql.SQLException;
+import java.time.LocalDate;
+import java.time.LocalDateTime;
+import java.util.Map;
+
+/**
+ * Nhận kết quả thanh toán từ VNPay qua IPN.
+ * Không dùng session và không tin kết quả chưa kiểm tra chữ ký.
+ */
+public class PaymentCallbackService {
+
+    private final TransactionDAO transactionDAO;
+    private final OrderDAO orderDAO;
+    private final PaymentDAO paymentDAO;
+    private final PackageDAO packageDAO;
+    private final SubscriptionDAO subscriptionDAO;
+    private final SystemConfigService configService;
+    private final AuditLogService auditService;
+    private final NotificationDAO notificationDAO;
+    private final VnPayClient vnPayClient;
+
+    public PaymentCallbackService() {
+        this(
+                new TransactionDAO(),
+                new OrderDAO(),
+                new PaymentDAO(),
+                new PackageDAO(),
+                new SubscriptionDAO(),
+                new SystemConfigService(),
+                new AuditLogService(),
+                new NotificationDAO(),
+                new VnPayClient());
+    }
+
+    /**
+     * Cho phép thay dependency trong unit test.
+     * Các DAO vẫn sử dụng cùng Connection do Service quản lý.
+     */
+    public PaymentCallbackService(
+            TransactionDAO transactionDAO,
+            OrderDAO orderDAO,
+            PaymentDAO paymentDAO,
+            PackageDAO packageDAO,
+            SubscriptionDAO subscriptionDAO,
+            SystemConfigService configService,
+            AuditLogService auditService,
+            NotificationDAO notificationDAO,
+            VnPayClient vnPayClient) {
+
+        this.transactionDAO = transactionDAO;
+        this.orderDAO = orderDAO;
+        this.paymentDAO = paymentDAO;
+        this.packageDAO = packageDAO;
+        this.subscriptionDAO = subscriptionDAO;
+        this.configService = configService;
+        this.auditService = auditService;
+        this.notificationDAO = notificationDAO;
+        this.vnPayClient = vnPayClient;
+    }
+
+    /**
+     * Xác minh và xử lý một thông báo thanh toán.
+     *
+     * @param params các tham số vnp_* do Servlet đọc từ request
+     * @return mã để Servlet trả JSON cho VNPay
+     */
+    public IpnResult handleIpn(Map<String, String> params) {
+
+        // B1: kiểm chữ ký trước khi đọc hoặc cập nhật database.
+        try {
+            if (!vnPayClient.verifySignature(params)) {
+                return reply("97", "Invalid signature");
+            }
+        } catch (RuntimeException e) {
+            return reply("99", "Configuration error");
+        }
+
+        String responseCode = params.get("vnp_ResponseCode");
+        String transactionStatus = params.get("vnp_TransactionStatus");
+
+        if (responseCode == null
+                || transactionStatus == null
+                || !responseCode.matches("[0-9]{2}")
+                || !transactionStatus.matches("[0-9]{2}")) {
+
+            return reply("99", "Missing result fields");
+        }
+
+        String txnRef = parseTxnRef(params.get("vnp_TxnRef"));
+
+        if (txnRef == null) {
+            return reply("01", "Transaction not found");
+        }
+
+        try (Connection conn = openConnection()) {
+            conn.setAutoCommit(false);
+
+            try {
+                // B2: đọc tham chiếu để xác định chủ đơn.
+                Transaction first =
+                        transactionDAO.findByGatewayReference(conn, txnRef);
+
+                if (first == null || !first.isOnlineGateway()) {
+                    conn.rollback();
+                    return reply("01", "Transaction not found");
+                }
+
+                int transactionId = first.getTransactionId();
+
+                Order initialOrder = orderDAO.findForCallback(
+                        conn, first.getOrderId(), false);
+
+                if (initialOrder == null || !initialOrder.isOnline()) {
+                    conn.rollback();
+                    return reply("01", "Order not found");
+                }
+
+                // B3: khóa khách → đơn → giao dịch.
+                paymentDAO.lockCustomer(
+                        conn, initialOrder.getHolderCustomerId());
+
+                Order order = orderDAO.findForCallback(
+                        conn, first.getOrderId(), true);
+
+                Transaction payment = transactionDAO.findById(
+                        conn, transactionId, true);
+
+                if (order == null || payment == null) {
+                    conn.rollback();
+                    return reply("01", "Transaction not found");
+                }
+
+                // B4: kết quả đã xử lý thì không ghi/cấp gói lần nữa.
+                if (payment.isSuccess() || payment.isFailed()) {
+                    conn.rollback();
+                    return reply("02", "Order already confirmed");
+                }
+
+                LocalDateTime now = DateTimeUtil.now().withNano(0);
+                String reference = payment.getGatewayReference();
+
+                boolean success = vnPayClient.isPaymentSuccess(params);
+
+                // B5: thông báo thất bại không cấp gói.
+                if (!success) {
+                    if (!matchesAmount(
+                            params.get("vnp_Amount"), payment.getAmount())) {
+
+                        conn.rollback();
+                        return reply("04", "Invalid amount");
+                    }
+
+                    if (payment.isExpired()) {
+                        conn.rollback();
+                        return reply("02", "Order already confirmed");
+                    }
+
+                    requireOne(transactionDAO.recordResult(
+                            conn,
+                            transactionId,
+                            Transaction.Status.FAILED,
+                            reference,
+                            false,
+                            responseCode,
+                            now));
+
+                    auditService.logInTransaction(
+                            conn, null, null,
+                            "VNPay không thành công",
+                            "Transactions",
+                            transactionId,
+                            "Status",
+                            Transaction.Status.PENDING.getDbValue(),
+                            Transaction.Status.FAILED.getDbValue(),
+                            null);
+
+                    notifyCustomer(
+                            conn,
+                            order,
+                            "Thanh toán chưa thành công",
+                            "Bạn có thể thanh toán lại đơn "
+                            + order.getOrderCode()
+                            + " khi đơn còn hạn.");
+
+                    conn.commit();
+                    return reply("00", "Confirm Success");
+                }
+
+                // B6: so số xu chính xác, không chia 100 rồi làm mất phần lẻ.
+                boolean amountMatches =
+                        matchesAmount(
+                                params.get("vnp_Amount"),
+                                payment.getAmount())
+                        && payment.getAmount() == order.getFinalAmount();
+
+                boolean needsRefund =
+                        !order.isPending() || !amountMatches;
+
+                // Schema hiện tại không lưu được Success thứ hai của cùng đơn.
+                if (transactionDAO.hasOtherSuccess(
+                        conn, order.getOrderId(), transactionId)) {
+
+                    conn.rollback();
+
+                    System.err.println(
+                            "IPN cần đối soát: đơn đã có Success khác.");
+
+                    return reply("99", "Manual reconciliation required");
+                }
+
+                requireOne(transactionDAO.recordResult(
+                        conn,
+                        transactionId,
+                        Transaction.Status.SUCCESS,
+                        reference,
+                        needsRefund,
+                        null,
+                        now));
+
+                // B7: có tiền nhưng đơn không hợp lệ thì không cấp gói.
+                if (needsRefund) {
+                    if (order.isPending()) {
+                        requireOne(orderDAO.markCancelled(
+                                conn,
+                                order.getOrderId(),
+                                Order.CancelType.INVALID_PAYMENT,
+                                "VNPay thành công nhưng số tiền không khớp"));
+
+                        if (order.getVoucherId() != null) {
+                            requireOne(paymentDAO.returnVoucherUse(
+                                    conn, order.getVoucherId()));
+                        }
+                    }
+
+                    auditService.logInTransaction(
+                            conn, null, null,
+                            "VNPay cần hoàn tiền",
+                            "Transactions",
+                            transactionId,
+                            "NeedsRefund",
+                            "0",
+                            "1",
+                            null);
+
+                    notifyCustomer(
+                            conn,
+                            order,
+                            "Thanh toán cần đối soát",
+                            "Đơn " + order.getOrderCode()
+                            + " chưa được cấp gói. "
+                            + "Giao dịch đã đưa vào danh sách cần hoàn tiền.");
+
+                    conn.commit();
+
+                    if (!amountMatches) {
+                        return reply("04", "Invalid amount");
+                    }
+
+                    return reply("00", "Confirm Success");
+                }
+
+                // B8: ghi Paid và cấp quyền sử dụng trong cùng transaction.
+                requireOne(orderDAO.markPaid(
+                        conn, order.getOrderId(), now));
+
+                Subscription subscription = buildSubscription(
+                        conn, order, now.toLocalDate());
+
+                int subscriptionId =
+                        subscriptionDAO.insertOnline(conn, subscription);
+
+                paymentDAO.activateNewOrExpired(
+                        conn, order.getHolderCustomerId());
+
+                auditService.logInTransaction(
+                        conn, null, null,
+                        "VNPay xác nhận thanh toán",
+                        "Orders",
+                        order.getOrderId(),
+                        "Status",
+                        Order.Status.PENDING.getDbValue(),
+                        Order.Status.PAID.getDbValue(),
+                        null);
+
+                auditService.logInTransaction(
+                        conn, null, null,
+                        "Cấp gói sau IPN",
+                        "Subscriptions",
+                        subscriptionId,
+                        "Status",
+                        null,
+                        Subscription.Status.ACTIVE.getDbValue(),
+                        null);
+
+                notifyCustomer(
+                        conn,
+                        order,
+                        "Mua gói thành công",
+                        "Đơn " + order.getOrderCode()
+                        + " đã thanh toán. Gói "
+                        + order.getPackageNameSnapshot()
+                        + " đã được cấp.");
+
+                conn.commit();
+                return reply("00", "Confirm Success");
+
+            } catch (SQLException | RuntimeException e) {
+                conn.rollback();
+                throw e;
+            }
+
+        } catch (SQLException | RuntimeException e) {
+            // Không ghi query IPN hoặc dữ liệu chữ ký ra log.
+            System.err.println(
+                    "IPN chưa commit: " + e.getClass().getSimpleName());
+
+            return reply("99", "Unknown error");
+        }
+    }
+
+    /**
+     * Chuẩn bị quyền sử dụng cho Membership/DayPass.
+     * Membership nối tiếp gói còn Active/Frozen; DayPass dùng trong ngày xử lý.
+     */
+    private Subscription buildSubscription(
+            Connection conn, Order order, LocalDate today)
+            throws SQLException {
+
+        Package pkg = packageDAO.findById(conn, order.getPackageId());
+
+        if (pkg == null) {
+            throw new SQLException("Không tìm thấy gói để cấp quyền");
+        }
+
+        Subscription subscription = new Subscription(0);
+        subscription.setOrderId(order.getOrderId());
+        subscription.setCustomerId(order.getHolderCustomerId());
+
+        if (pkg.getPackageType() == Package.Type.MEMBERSHIP) {
+            LocalDate startDate = today;
+
+            LocalDate oldEnd = subscriptionDAO.findLastMembershipEnd(
+                    conn, order.getHolderCustomerId(), today);
+
+            if (oldEnd != null) {
+                startDate = oldEnd.plusDays(1);
+            }
+
+            int months = pkg.getDurationMonths();
+
+            int maxFreezes = configService.getInt(
+                    SystemConfigService.MAX_FREEZE_COUNT);
+
+            if (months <= 0 || maxFreezes < 0 || maxFreezes > 255) {
+                throw new SQLException(
+                        "Thời hạn hoặc giới hạn bảo lưu không hợp lệ");
+            }
+
+            subscription.setSubscriptionType(
+                    Subscription.Type.MEMBERSHIP);
+
+            subscription.setStartDate(startDate);
+            subscription.setEndDate(startDate.plusMonths(months));
+            subscription.setMaxFreezesSnapshot(maxFreezes);
+
+        } else if (pkg.getPackageType() == Package.Type.DAY_PASS) {
+            subscription.setSubscriptionType(
+                    Subscription.Type.DAY_PASS);
+
+            subscription.setStartDate(today);
+            subscription.setEndDate(today);
+
+        } else {
+            throw new SQLException(
+                    "IPN hiện chỉ cấp Membership và DayPass");
+        }
+
+        return subscription;
+    }
+
+    /**
+     * Tạo thông báo trong ứng dụng, cùng transaction thanh toán.
+     */
+    private void notifyCustomer(
+            Connection conn, Order order, String title, String content)
+            throws SQLException {
+
+        Integer accountId = paymentDAO.findAccountForCustomer(
+                conn, order.getHolderCustomerId());
+
+        if (accountId != null) {
+            int notificationId =
+                    notificationDAO.insertSystemNotification(
+                            conn, title, content);
+
+            notificationDAO.insertRecipient(
+                    conn, notificationId, accountId);
+        }
+    }
+
+    /**
+     * Một cập nhật quan trọng phải tác động đúng một dòng.
+     */
+    private void requireOne(int rows) throws SQLException {
+        if (rows != 1) {
+            throw new SQLException(
+                    "Dữ liệu đã thay đổi trong lúc xử lý IPN");
+        }
+    }
+
+    private IpnResult reply(String code, String message) {
+        return new IpnResult(code, message);
+    }
+
+    /**
+     * Merchant txnRef của GMS: mã đơn bỏ dấu gạch + A + số lần thử.
+     */
+    private String parseTxnRef(String ref) {
+        if (ref == null
+                || ref.length() > 50
+                || !ref.matches("[A-Za-z0-9]+A[1-9][0-9]*")) {
+            return null;
+        }
+
+        return ref;
+    }
+
+    /**
+     * So vnp_Amount với số tiền VND nhân 100.
+     * Giá trị lỗi hoặc tràn số đều không hợp lệ.
+     */
+    private boolean matchesAmount(String amountInXu, long expectedVnd) {
+        try {
+            return amountInXu != null
+                    && amountInXu.matches("[0-9]+")
+                    && Long.parseLong(amountInXu)
+                    == Math.multiplyExact(expectedVnd, 100L);
+
+        } catch (NumberFormatException | ArithmeticException e) {
+            return false;
+        }
+    }
+
+    protected Connection openConnection() throws SQLException {
+        return DBContext.getConnection();
+    }
+}
