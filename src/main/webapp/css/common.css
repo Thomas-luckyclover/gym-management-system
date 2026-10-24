@@ -3195,10 +3195,11 @@ html body.dock:not(.no-arena)::after {
   z-index: 0;
   display: block;
   pointer-events: none;
-  /* Mỗi dải rộng đúng bằng lề trống hai bên khối nội dung → nét không chạy sau chữ nằm trên nền */
-  --arena-doodle-w: calc((100% - var(--layout-content-width)) / 2);
+  /* Cỡ cố định như ở màn 1600px (duyệt 24/10): đồ tập gọn ở 2 góc dưới, không lên ngang tay nắm
+     mở menu (mũi tên ›) giữa mép trái; vẫn không vượt lề trống nên không chạy sau chữ. */
+  --arena-doodle-w: min(calc((100% - var(--layout-content-width)) / 2 - var(--space-2)), 150px);
   background:
-    var(--arena-doodle-left) left bottom / var(--arena-doodle-w) auto no-repeat,
+    var(--arena-doodle-left) var(--dock-handle-width) bottom / var(--arena-doodle-w) auto no-repeat,
     var(--arena-doodle-right) right bottom / var(--arena-doodle-w) auto no-repeat;
 }
 @media (max-width: 1599px) {
