@@ -3186,8 +3186,8 @@ html body.dock:not(.no-arena) .notification-empty { padding: var(--arena-pad); t
 /* --- Nền doodle đồ tập: 2 dải nét ở mép trái + phải, đứng yên, nằm dưới mọi khối ---
    Màu thật, không làm mờ, không phủ màu (theo duyệt 24/10): nét kem + đĩa cam nằm thẳng trên nền sân
    nhờ ảnh đã tách nền trong suốt. Topbar nền đặc nên che nét phía trên. Ảnh tĩnh nên vẫn hiện ở chế độ nhẹ.
-   Chỉ hiện từ 1600px: khi đó lề hai bên đủ rộng để đồ tập nằm ngoài vùng chữ; màn hẹp hơn thì nét
-   sẽ chạy sau chữ nằm trên nền (tiêu đề mục của Admin, Quản lý). */
+   Hiện từ 1500px (gồm laptop Windows 1920px để tỉ lệ 125% = 1536px): khi đó lề hai bên đủ rộng để
+   đồ tập nằm ngoài vùng chữ; màn hẹp hơn thì nét sẽ chạy sau chữ nằm trên nền. */
 html body.dock:not(.no-arena)::after {
   content: "";
   position: fixed;
@@ -3202,7 +3202,7 @@ html body.dock:not(.no-arena)::after {
     var(--arena-doodle-left) var(--dock-handle-width) bottom / var(--arena-doodle-w) auto no-repeat,
     var(--arena-doodle-right) right bottom / var(--arena-doodle-w) auto no-repeat;
 }
-@media (max-width: 1599px) {
+@media (max-width: 1499px) {
   html body.dock:not(.no-arena)::after { display: none; }
 }
 
