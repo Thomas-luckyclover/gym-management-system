@@ -1059,5 +1059,28 @@ CREATE INDEX IX_AuditLogs_Entity    ON AuditLogs(EntityName, EntityId);
 CREATE INDEX IX_AuditLogs_Account   ON AuditLogs(AccountId, CreatedAt DESC);
 GO
 
-PRINT N'>>> Tạo schema GMS v26 thành công: 30 bảng nghiệp vụ.';
+-- BodyMeasurements: khách tự ghi chỉ số cơ thể (đo tại phòng hoặc ở nhà) để xem thay đổi. Chỉ khách xem (25/10/2026).
+-- BMI KHÔNG lưu: Service tính = cân nặng ÷ (chiều cao m)². Mỗi khách 1 dòng / ngày: lưu lại cùng ngày = sửa dòng đó.
+CREATE TABLE BodyMeasurements (
+    BodyMeasurementId INT IDENTITY(1,1) NOT NULL,
+    CustomerId        INT            NOT NULL,
+    MeasuredOn        DATE           NOT NULL,   -- không ở tương lai (kiểm ở Service)
+    WeightKg          DECIMAL(4,1)   NOT NULL,   -- 20.0–300.0
+    HeightCm          DECIMAL(4,1)   NOT NULL,   -- 100.0–250.0
+    BodyFatPercent    DECIMAL(3,1)   NULL,       -- 3.0–70.0, không bắt buộc
+    WaistCm           DECIMAL(4,1)   NULL,       -- 40.0–200.0, không bắt buộc
+    Note              NVARCHAR(200)  NULL,
+    CreatedAt         DATETIME2(0)   NOT NULL CONSTRAINT DF_BodyMeasurements_CreatedAt DEFAULT (SYSDATETIME()),
+
+    CONSTRAINT PK_BodyMeasurements PRIMARY KEY (BodyMeasurementId),
+    CONSTRAINT UQ_BodyMeasurements_Day UNIQUE (CustomerId, MeasuredOn),
+    CONSTRAINT FK_BodyMeasurements_Customers FOREIGN KEY (CustomerId) REFERENCES Customers(CustomerId),
+    CONSTRAINT CK_BodyMeasurements_Weight CHECK (WeightKg BETWEEN 20 AND 300),
+    CONSTRAINT CK_BodyMeasurements_Height CHECK (HeightCm BETWEEN 100 AND 250),
+    CONSTRAINT CK_BodyMeasurements_Fat    CHECK (BodyFatPercent IS NULL OR BodyFatPercent BETWEEN 3 AND 70),
+    CONSTRAINT CK_BodyMeasurements_Waist  CHECK (WaistCm IS NULL OR WaistCm BETWEEN 40 AND 200)
+);
+GO
+
+PRINT N'>>> Tạo schema GMS v26 thành công: 31 bảng nghiệp vụ.';
 GO

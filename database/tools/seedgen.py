@@ -57,7 +57,7 @@ TABLES = ['Persons', 'Employees', 'Customers', 'Accounts', 'VerificationCodes', 
           'CustomerDeletionRequests', 'TimeSlots', 'Sessions', 'SessionMoveLogs', 'LeaveRequests',
           'Facilities', 'MaintenanceRequests', 'StaffAttendances', 'PrivateNotes', 'TrainingPlans',
           'Feedbacks', 'BlogPosts', 'Notifications', 'NotificationRecipients', 'SystemConfigs',
-          'OperatingHourExceptions', 'AuditLogs']
+          'OperatingHourExceptions', 'AuditLogs', 'BodyMeasurements']
 DB = {t: [] for t in TABLES}
 NEXT = {t: 1 for t in TABLES}
 
@@ -84,7 +84,7 @@ PK = {'Persons': 'PersonId', 'Employees': 'EmployeeId', 'Customers': 'CustomerId
       'TrainingPlans': 'TrainingPlanId', 'Feedbacks': 'FeedbackId', 'BlogPosts': 'BlogPostId',
       'Notifications': 'NotificationId', 'NotificationRecipients': 'NotificationRecipientId',
       'SystemConfigs': 'SystemConfigId', 'OperatingHourExceptions': 'OperatingHourExceptionId',
-      'AuditLogs': 'AuditLogId'}
+      'AuditLogs': 'AuditLogId', 'BodyMeasurements': 'BodyMeasurementId'}
 
 
 def get(table, rid):
@@ -536,6 +536,8 @@ def lit(v, now=None):
         return '1' if v else '0'
     if isinstance(v, int):
         return str(v)
+    if isinstance(v, float):
+        return f'{v:.1f}'
     if isinstance(v, datetime):
         return f"'{v:%Y-%m-%d %H:%M:%S}'"
     if isinstance(v, date):
