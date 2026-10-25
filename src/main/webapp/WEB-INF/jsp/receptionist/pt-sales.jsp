@@ -10,7 +10,7 @@
  LUỒNG (giống mua vé có giữ chỗ)
    1. Khách        ô tìm kiếm gợi ý (pt-sales.js gọi /receptionist/pt-sales/customers) → ?customer=12
    2. Gói & PT     ô gói, ô PT, ngày bắt đầu (form GET, đổi là tự gửi)
-   3. Lịch tập     bảng T2–T6 × giờ PT rảnh, mỗi ô "8/9 tuần" → chọn giờ cho từng thứ (t1..t5)
+   3. Lịch tập     pt-sale-plan.js: lịch mẫu hằng tuần (mỗi thứ Nghỉ hoặc 1 giờ) → xem từng tuần → sửa riêng 1 buổi
    4. Thu tiền     "Giữ lịch 15 phút" (POST hold) → ?order=… : đồng hồ đếm ngược, thu tiền / hủy giữ
  BỐ CỤC   thanh bước trên cùng · trái: các bước · phải: "Đơn bán" dính khi cuộn
  BIẾN     sale, pageError (Service lỗi), saleError (bấm Giữ lịch bị từ chối), csrfToken
@@ -22,8 +22,9 @@
 <head>
     <%@ include file="/WEB-INF/jsp/common/head.jspf" %>
     <title>Bán gói PT · Super Gym Lễ tân</title>
-    <link rel="stylesheet" href="${ctx}/css/pages/receptionist/pt-sales.css?v=20261025v3">
-    <script src="${ctx}/js/pages/receptionist/pt-sales.js?v=20261025v3" defer></script>
+    <link rel="stylesheet" href="${ctx}/css/pages/receptionist/pt-sales.css?v=20261026r">
+    <script src="${ctx}/js/pages/receptionist/pt-sales.js?v=20261026p" defer></script>
+    <script src="${ctx}/js/pages/receptionist/pt-sale-plan.js?v=20261026r" defer></script>
 </head>
 <body class="dock theme-staff pt-sale-page">
 <%@ include file="/WEB-INF/jsp/common/flash-toast.jspf" %>
@@ -126,11 +127,6 @@
             <form id="sale-form" class="sale-flow" method="get" action="${base}" data-auto-submit>
                 <input type="hidden" name="customer" value="${sale.customerId}">
                 <input type="hidden" name="partner" value="${sale.partnerId}" data-partner-field>
-                <%-- Bảng tuần chưa hiện → giờ đã chọn (t1..t5) đi theo ô ẩn; bảng hiện thì radio trong bảng mang giá trị. --%>
-                <c:if test="${empty sale.grid}">
-                    <c:forEach var="t" items="${sale.weekTimeTexts}" varStatus="loop"><input type="hidden" name="t${loop.index + 1}" value="${t}"></c:forEach>
-                </c:if>
-
                 <%-- ===== BƯỚC 2. GÓI, PT, NGÀY BẮT ĐẦU ===== --%>
                 <section class="sale-card" aria-labelledby="sale-h2">
                     <header class="sale-card-head"><h2 id="sale-h2">Gói &amp; PT</h2>
@@ -198,62 +194,68 @@
                     <noscript><button class="btn btn-outline" type="submit">Tiếp</button></noscript>
                 </section>
 
-                <%-- ===== BƯỚC 3. LỊCH TẬP HẰNG TUẦN ===== --%>
-                <c:if test="${done2}">
-                <section class="sale-card" aria-labelledby="sale-h3">
-                    <header class="sale-card-head"><h2 id="sale-h3">Lịch tập hằng tuần</h2>
-                        <p>Mỗi ô = số tuần trong kỳ còn trống giờ đó. Chọn 1 giờ cho mỗi thứ, hoặc bấm "Cả tuần".</p></header>
-                    <c:choose>
-                        <c:when test="${empty sale.grid}">
-                            <p class="sale-empty"><c:out value="${sale.ptName}" /> chưa công bố khung trống nào vào T2–T6 trong 2 tuần đầu kỳ.
-                                Nhờ PT công bố trên Lịch dạy, hoặc đổi ngày bắt đầu / PT.</p>
-                        </c:when>
-                        <c:otherwise>
-                            <div class="sale-week-wrap">
-                            <table class="sale-week">
-                                <caption class="visually-hidden">Số tuần còn trống theo giờ và thứ</caption>
-                                <thead><tr><th scope="col">Giờ</th>
-                                    <c:forEach var="n" begin="0" end="4"><th scope="col">Thứ <c:out value="${n + 2}" /><small><c:out value="${sale.weekdayTotals[n]}" /> tuần</small></th></c:forEach>
-                                </tr></thead>
-                                <tbody>
-                                <c:forEach var="row" items="${sale.grid}">
-                                    <tr>
-                                        <th scope="row"><span><c:out value="${row.label}" /></span>
-                                            <c:if test="${row.wholeWeekPossible}">
-                                                <c:url var="weekUrl" value="/receptionist/pt-sales"><c:param name="customer" value="${sale.customerId}" /><c:param name="partner" value="${sale.partnerId}" /><c:param name="package" value="${sale.packageId}" /><c:param name="pt" value="${sale.ptId}" /><c:param name="start" value="${sale.startDate}" /><c:param name="t1" value="${row.time}" /><c:param name="t2" value="${row.time}" /><c:param name="t3" value="${row.time}" /><c:param name="t4" value="${row.time}" /><c:param name="t5" value="${row.time}" /></c:url>
-                                                <a class="sale-whole" href="${weekUrl}">Cả tuần</a>
-                                            </c:if>
-                                        </th>
-                                        <c:forEach var="cell" items="${row.cells}">
-                                            <td class="is-${cell.level}">
-                                                <label class="sale-cell">
-                                                    <input type="radio" name="t${cell.weekday}" value="${row.time}" ${cell.selected ? 'checked' : ''} ${cell.level eq 'none' ? 'disabled' : ''}
-                                                           aria-label="Thứ ${cell.weekday + 1} lúc ${row.time}: trống ${cell.usable}/${cell.total} tuần">
-                                                    <span aria-hidden="true"><b><c:out value="${cell.usable}" /></b>/<c:out value="${cell.total}" /></span>
-                                                </label>
-                                            </td>
-                                        </c:forEach>
-                                    </tr>
-                                </c:forEach>
-                                </tbody>
-                            </table>
-                            </div>
-                            <ul class="sale-key" aria-label="Chú thích">
-                                <li class="is-full">Trống mọi tuần</li><li class="is-most">Trống ≥ 3/4 số tuần</li><li class="is-some">Trống ít</li><li class="is-pick">Đã chọn</li>
-                            </ul>
-                        </c:otherwise>
-                    </c:choose>
-                    <c:if test="${not empty sale.planError}"><p class="sale-msg is-error" role="alert"><c:out value="${sale.planError}" /></p></c:if>
-                    <noscript><button class="btn btn-outline" type="submit">Xem lịch</button></noscript>
-                </section>
-                </c:if>
             </form>
             </c:if>
 
             <%-- =====================================================================
-                 LỊCH DỰ KIẾN (đã chọn đủ 5 thứ, hoặc đang giữ chỗ): lưới 5 cột T2–T6, mỗi ô 1 ngày
+                 BƯỚC 3. LỊCH TẬP — nằm NGOÀI form các bước (chọn giờ không tải lại trang).
+                 Server gửi sale.planJson (PtSalePlan: mỗi ngày T2–T6 × mỗi giờ: tập được không + lý do);
+                 pt-sale-plan.js dựng: Lịch mẫu hằng tuần → Từng tuần (tab) → sửa riêng 1 buổi.
+                 Gson đã thoát < > & trong JSON nên in thẳng vào <script type="application/json"> an toàn.
                  ===================================================================== --%>
-            <c:if test="${not empty sale.days and (sale.weekComplete or sale.held)}">
+            <c:if test="${not sale.held and holderOk and done2}">
+            <section class="sale-card sale-plan" aria-labelledby="sale-h3">
+                <header class="sale-card-head">
+                    <h2 id="sale-h3">Lịch tập</h2>
+                    <p class="plan-total" data-plan-total aria-live="polite"></p>
+                </header>
+                <c:choose>
+                    <c:when test="${empty sale.planJson}">
+                        <p class="sale-empty"><c:out value="${sale.planError}" /></p>
+                    </c:when>
+                    <c:otherwise>
+                        <script type="application/json" id="sale-plan-data">${sale.planJson}</script>
+                        <noscript><p class="sale-msg is-error">Cần bật JavaScript để chọn lịch tập.</p></noscript>
+
+                        <div class="plan-block">
+                            <div class="plan-block-head">
+                                <h3 id="plan-pattern-title">Lịch mẫu hằng tuần</h3>
+                                <div class="plan-presets" role="group" aria-label="Mẫu nhanh">
+                                    <button type="button" class="plan-preset" data-preset="1,3,5">T2 · T4 · T6</button>
+                                    <button type="button" class="plan-preset" data-preset="2,4">T3 · T5</button>
+                                    <button type="button" class="plan-preset" data-preset="1,2,3,4,5">T2 → T6</button>
+                                    <button type="button" class="plan-preset is-quiet" data-preset="">Bỏ hết</button>
+                                </div>
+                            </div>
+                            <p class="plan-hint">Chọn giờ cho thứ khách tập, thứ không tập để <b>Nghỉ</b>. Giờ nào có ngày không xếp được sẽ ghi <b>còn mấy buổi</b> và lý do; rê chuột vào giờ để xem từng ngày.</p>
+                            <div class="plan-pattern" data-pattern aria-labelledby="plan-pattern-title"></div>
+                        </div>
+
+                        <div class="plan-block">
+                            <div class="plan-block-head">
+                                <h3 id="plan-week-title">Từng tuần</h3>
+                                <div class="plan-week-nav">
+                                    <button type="button" class="plan-nav" data-week-step="-1" aria-label="Tuần trước"><i class="fa-solid fa-chevron-left" aria-hidden="true"></i></button>
+                                    <p class="plan-week-label" data-week-label aria-live="polite"></p>
+                                    <button type="button" class="plan-nav" data-week-step="1" aria-label="Tuần sau"><i class="fa-solid fa-chevron-right" aria-hidden="true"></i></button>
+                                </div>
+                            </div>
+                            <div class="plan-tabs" role="tablist" aria-label="Chọn tuần" data-week-tabs></div>
+                            <div class="plan-week" role="tabpanel" aria-labelledby="plan-week-title" data-week></div>
+                            <div class="plan-editor" data-editor hidden></div>
+                            <ul class="plan-key" aria-label="Chú thích">
+                                <li class="is-ok">Có buổi</li><li class="is-edit">Đã sửa riêng</li><li class="is-warn">PT cần dời sau</li><li class="is-bad">Chưa xếp được</li>
+                            </ul>
+                        </div>
+                    </c:otherwise>
+                </c:choose>
+            </section>
+            </c:if>
+
+            <%-- =====================================================================
+                 LỊCH ĐANG GIỮ (bước 4): lưới 5 cột T2–T6, mỗi ô 1 buổi đã giữ
+                 ===================================================================== --%>
+            <c:if test="${sale.held and not empty sale.days}">
                 <section class="sale-card" aria-labelledby="sale-h-plan">
                     <header class="sale-card-head"><h2 id="sale-h-plan"><c:out value="${sale.sessionCount}" /> buổi tập
                         <c:if test="${sale.held}"><span class="sale-badge">Đang giữ</span></c:if></h2>
@@ -302,7 +304,7 @@
                     <div><dt>Gói</dt><dd><c:out value="${not empty sale.packageName ? sale.packageName : '—'}" /></dd></div>
                     <div><dt>PT</dt><dd><c:out value="${not empty sale.ptName ? sale.ptName : '—'}" /></dd></div>
                     <div><dt>Kỳ</dt><dd><c:choose><c:when test="${done2}"><c:out value="${gms:formatDate(sale.startDate)}" /> – <c:out value="${gms:formatDate(sale.endDate)}" /></c:when><c:otherwise>—</c:otherwise></c:choose></dd></div>
-                    <div><dt>Buổi</dt><dd><c:choose><c:when test="${sale.sessionCount gt 0}"><c:out value="${sale.sessionCount}" /> buổi · <c:out value="${gms:formatMoney(sale.sessionValue)}" />/buổi</c:when><c:otherwise>—</c:otherwise></c:choose></dd></div>
+                    <div><dt>Buổi</dt><dd data-plan-count><c:choose><c:when test="${sale.sessionCount gt 0}"><c:out value="${sale.sessionCount}" /> buổi · <c:out value="${gms:formatMoney(sale.sessionValue)}" />/buổi</c:when><c:otherwise>—</c:otherwise></c:choose></dd></div>
                 </dl>
                 <p class="sale-total"><span>Phải thu</span><strong><c:choose><c:when test="${sale.price gt 0}"><c:out value="${gms:formatMoney(sale.price)}" /></c:when><c:otherwise>—</c:otherwise></c:choose></strong></p>
 
@@ -334,9 +336,10 @@
                             <button class="btn btn-ghost sale-release" type="submit" data-confirm-message="Hủy giữ chỗ ${sale.heldCode}? Các khung sẽ trả lại cho PT." data-confirm-title="Hủy giữ chỗ" data-confirm-text="Hủy giữ chỗ">Hủy giữ chỗ</button>
                         </form>
                     </c:when>
-                    <%-- Bước 3 xong: giữ lịch (khung chuyển "Đang giữ" ngay, người khác không lấy được). --%>
-                    <c:when test="${sale.ready}">
-                        <form method="post" action="${base}">
+                    <%-- Bước 3: giữ lịch (khung chuyển "Đang giữ" ngay, người khác không lấy được).
+                         pt-sale-plan.js điền t1..t5 (lịch mẫu) + sessions (các buổi), mở nút khi có ít nhất 1 buổi. --%>
+                    <c:when test="${not empty sale.planJson}">
+                        <form method="post" action="${base}" data-plan-form>
                             <input type="hidden" name="csrfToken" value="<c:out value='${csrfToken}' />">
                             <input type="hidden" name="action" value="hold">
                             <input type="hidden" name="customer" value="${sale.customerId}">
@@ -344,10 +347,11 @@
                             <input type="hidden" name="package" value="${sale.packageId}">
                             <input type="hidden" name="pt" value="${sale.ptId}">
                             <input type="hidden" name="start" value="${sale.startDate}">
-                            <c:forEach var="t" items="${sale.weekTimeTexts}" varStatus="loop"><input type="hidden" name="t${loop.index + 1}" value="${t}"></c:forEach>
-                            <button class="btn btn-primary sale-main" type="submit"><i class="fa-solid fa-lock" aria-hidden="true"></i> Giữ lịch 15 phút</button>
+                            <c:forEach var="n" begin="1" end="5"><input type="hidden" name="t${n}" value="" data-plan-t="${n}"></c:forEach>
+                            <input type="hidden" name="sessions" value="" data-plan-sessions>
+                            <button class="btn btn-primary sale-main" type="submit" disabled data-plan-submit><i class="fa-solid fa-lock" aria-hidden="true"></i> Giữ lịch 15 phút</button>
                         </form>
-                        <p class="sale-msg">Giữ trước khi thu tiền: <c:out value="${sale.sessionCount}" /> khung chuyển "Đang giữ", lễ tân khác và PT không lấy được.</p>
+                        <p class="sale-msg" data-plan-note>Chọn lịch tập bên trái để giữ lịch.</p>
                     </c:when>
                     <c:otherwise>
                         <p class="sale-msg">Làm xong các bước bên trái để giữ lịch.</p>

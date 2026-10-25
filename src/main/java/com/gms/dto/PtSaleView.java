@@ -11,7 +11,8 @@ import java.util.List;
  *   Ai tạo?   PtSaleService.prepare (GET) — đi lần lượt 4 bước, bước sau chỉ có khi bước trước xong:
  *     1. Khách            holder (+ partner nếu gói đôi). Tìm bằng ô gợi ý; không JS thì searchResults.
  *     2. Gói, PT, ngày     packages / pts → packageName, ptName, startDate, endDate
- *     3. Lịch tập tuần     grid (T2–T6 × giờ PT rảnh), weekTimes = giờ đã chọn cho từng thứ → days (từng ngày)
+ *     3. Lịch tập          planJson (PtSalePlan: từng ngày × từng giờ có tập được không) → pt-sale-plan.js ghép lịch;
+ *                          khi Giữ lịch: days = các buổi đã kiểm tra lại
  *     4. Giữ chỗ + thu tiền   heldOrderId / heldCode / holdSeconds khi đã bấm "Giữ lịch 15 phút"
  */
 public class PtSaleView {
@@ -22,7 +23,7 @@ public class PtSaleView {
     private Integer packageId;
     private Integer ptId;
     private LocalDate startDate;
-    private LocalTime[] weekTimes = new LocalTime[5];   // [0] = Thứ 2 … [4] = Thứ 6; null = chưa chọn
+    private LocalTime[] weekTimes = new LocalTime[5];   // lịch mẫu: [0] = Thứ 2 … [4] = Thứ 6; null = Nghỉ
 
     // ===== Bước 1 =====
     private String searchQuery;                          // chữ gõ khi tìm không dùng gợi ý (tắt JS)
@@ -47,8 +48,7 @@ public class PtSaleView {
     private String choiceError;
 
     // ===== Bước 3 =====
-    private List<PtSaleGridRow> grid = new ArrayList<>();
-    private int[] weekdayTotals = new int[5];            // số Thứ 2 … Thứ 6 trong kỳ (tiêu đề cột)
+    private String planJson;                             // PtSalePlan dạng JSON (Gson đã thoát < > &, nhúng vào <script> an toàn)
     private List<PtSaleDay> days = new ArrayList<>();
     private int sessionCount;
     private int skipCount;
@@ -68,16 +68,6 @@ public class PtSaleView {
     /** Đang giữ chỗ (bước 4). */
     public boolean isHeld() {
         return heldOrderId != null;
-    }
-
-    /** Đã chọn giờ cho đủ 5 thứ. */
-    public boolean isWeekComplete() {
-        for (LocalTime time : weekTimes) {
-            if (time == null) {
-                return false;
-            }
-        }
-        return true;
     }
 
     /** Giờ đã chọn của thứ i (1 = Thứ 2) dạng "18:00"; chưa chọn → "". JSP dùng cho ô ẩn t1..t5. */
@@ -154,10 +144,8 @@ public class PtSaleView {
     public void setMaxStart(LocalDate maxStart) { this.maxStart = maxStart; }
     public String getChoiceError() { return choiceError; }
     public void setChoiceError(String choiceError) { this.choiceError = choiceError; }
-    public List<PtSaleGridRow> getGrid() { return grid; }
-    public void setGrid(List<PtSaleGridRow> grid) { this.grid = grid; }
-    public int[] getWeekdayTotals() { return weekdayTotals; }
-    public void setWeekdayTotals(int[] weekdayTotals) { this.weekdayTotals = weekdayTotals; }
+    public String getPlanJson() { return planJson; }
+    public void setPlanJson(String planJson) { this.planJson = planJson; }
     public List<PtSaleDay> getDays() { return days; }
     public void setDays(List<PtSaleDay> days) { this.days = days; }
     public int getSessionCount() { return sessionCount; }

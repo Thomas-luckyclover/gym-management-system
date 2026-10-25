@@ -3,20 +3,18 @@
 /*
  * BÁN GÓI PT — pt-sales.js
  *
- * JS LÀM 2 VIỆC, mọi tính toán vẫn ở PtSaleService:
+ * JS LÀM 2 VIỆC (bước 3 "Lịch tập" ở file riêng pt-sale-plan.js), mọi luật vẫn ở PtSaleService:
  *   1. Ô tìm khách kiểu Google (data-combobox): gõ ≥ 2 ký tự → chờ 200ms → getJson("/receptionist/pt-sales/customers", {q})
  *      → hiện tối đa 8 gợi ý (tên, mã, SĐT, gói thành viên). ↑ ↓ chọn, Enter mở, Esc đóng.
  *        data-combobox="customer"  chọn → mở ?customer=12
  *        data-combobox="partner"   chọn → ghi mã vào ô ẩn partner rồi gửi form các bước
  *      Tắt JS: Enter gửi ?q=… → server in danh sách kết quả.
- *   2. Form các bước (data-auto-submit): đổi gói / PT / ngày / ô giờ → tự gửi để server tính lại.
- *      Đổi gói, PT hoặc ngày → bỏ giờ đã chọn (giờ PT rảnh đã khác).
+ *   2. Form các bước (data-auto-submit): đổi gói / PT / ngày → tự gửi để server tính lại (lịch tập làm lại từ đầu).
  *      Ô ngày: ngoài min–max → báo lỗi dưới ô, không gửi; hợp lệ → chờ 0,7 giây (gõ xong) rồi mới gửi.
  */
 
 const SALE_SUGGEST_URL = "/receptionist/pt-sales/customers";
 const SALE_SUGGEST_DELAY = 200;
-const SALE_TIME_FIELD = /^t[1-5]$/;
 const SALE_DATE_DELAY = 700;   // ô ngày: chờ gõ xong (gõ "1" rồi "5" không gửi nhầm ngày 01)
 
 document.addEventListener("DOMContentLoaded", function () {
@@ -197,11 +195,11 @@ function initSaleAutoSubmit(form) {
             const isValid = field.value !== "" && field.checkValidity();
             showStartError(field, !isValid);
             if (isValid) {
-                dateTimer = setTimeout(function () { submitSteps(form, field); }, SALE_DATE_DELAY);
+                dateTimer = setTimeout(function () { submitSteps(form); }, SALE_DATE_DELAY);
             }
             return;
         }
-        submitSteps(form, field);
+        submitSteps(form);
     });
 
     const clearPartner = form.querySelector("[data-clear-partner]");
@@ -213,11 +211,8 @@ function initSaleAutoSubmit(form) {
     }
 }
 
-/** Gửi form các bước: đổi gói / PT / ngày thì bỏ giờ đã chọn. Mờ form chỉ khi chắc chắn gửi được. */
-function submitSteps(form, field) {
-    if (!SALE_TIME_FIELD.test(field.name)) {
-        clearTimes(form);
-    }
+/** Gửi form các bước (server tính lại bước sau). Mờ form chỉ khi chắc chắn gửi được. */
+function submitSteps(form) {
     if (!form.checkValidity()) {
         form.reportValidity();
         return;
@@ -232,18 +227,4 @@ function showStartError(field, hasError) {
     if (message) {
         message.hidden = !hasError;
     }
-}
-
-/** Bỏ giờ đã chọn t1..t5 (radio trong bảng tuần, hoặc ô ẩn khi bảng chưa hiện). */
-function clearTimes(form) {
-    form.querySelectorAll("input").forEach(function (input) {
-        if (!SALE_TIME_FIELD.test(input.name)) {
-            return;
-        }
-        if (input.type === "radio") {
-            input.checked = false;
-        } else {
-            input.value = "";
-        }
-    });
 }
