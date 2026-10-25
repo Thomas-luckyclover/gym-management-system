@@ -224,8 +224,8 @@
 
                   <div class="review-check-list">
                     <c:forEach var="c" items="${item.checks}">
-                      <%-- Lịch dạy xử lý ở form PT gửi đơn; backend vẫn kiểm tra lại khi duyệt. --%>
-                      <c:if test="${c.applicable and c.key != 'SESSIONS'}">
+                      <%-- Chỉ hiện lịch dạy nếu phát sinh xung đột mới sau khi gửi đơn. --%>
+                      <c:if test="${c.applicable and (c.key != 'SESSIONS' or not c.ok)}">
                         <div class="review-check-item ${c.ok ? 'pass' : 'fail'}">
                           <div class="check-icon-badge">
                             <i class="fa-solid ${c.ok ? 'fa-check' : 'fa-xmark'}" aria-hidden="true"></i>
@@ -308,7 +308,8 @@
   </div>
 
   <%-- ===== MODAL XÁC NHẬN DUYỆT ĐƠN ===== --%>
-  <div id="modalApproveDetail" class="gms-modal" role="dialog" aria-modal="true" aria-labelledby="modalApproveTitle">
+  <dialog id="modalApproveDetail" class="gms-modal" aria-labelledby="modalApproveTitle"
+          data-reopen="${not empty errors.lateApprovalReason}">
     <div class="gms-modal-dialog">
       <form action="${pageContext.request.contextPath}/manager/leave-requests/review" method="post">
         <input type="hidden" name="csrfToken" value="${csrfToken}">
@@ -346,10 +347,11 @@
         </div>
       </form>
     </div>
-  </div>
+  </dialog>
 
   <%-- ===== MODAL TỪ CHỐI ĐƠN ===== --%>
-  <div id="modalRejectDetail" class="gms-modal" role="dialog" aria-modal="true" aria-labelledby="modalRejectTitle">
+  <dialog id="modalRejectDetail" class="gms-modal" aria-labelledby="modalRejectTitle"
+          data-reopen="${not empty errors.rejectReason}">
     <div class="gms-modal-dialog">
       <form action="${pageContext.request.contextPath}/manager/leave-requests/review" method="post">
         <input type="hidden" name="csrfToken" value="${csrfToken}">
@@ -384,7 +386,7 @@
         </div>
       </form>
     </div>
-  </div>
+  </dialog>
 
 </body>
 </html>

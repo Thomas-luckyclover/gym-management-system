@@ -18,14 +18,9 @@ public class LeaveReviewDetail {
     // Service: các phần cùng đợt để xem kết quả và mở từng đơn; không gộp quyết định duyệt.
     private LeaveRequestGroupView leaveGroup;
 
-    // Service: đơn Pending bắt đầu nghỉ hôm nay hoặc ngày mai.
-    private boolean nearLeaveDate;
-
     // Bảng dự báo định biên chi tiết từng ca (màn #27, UC-15)
     private List<ShiftStaffingRow> staffingRows;
 
-    // DAO giữ tên người được giao trên dữ liệu cũ để giải thích quyền chỉ xem.
-    private String assignedToName;
     private boolean canAct = true;
     private String banner;
     // Service lấy lý do khóa duyệt từ cùng bộ kiểm tra với POST; JSP dùng cho tooltip nút.
@@ -80,14 +75,6 @@ public class LeaveReviewDetail {
         return reviewerName;
     }
 
-    public boolean isNearLeaveDate() {
-        return nearLeaveDate;
-    }
-
-    public void setNearLeaveDate(boolean nearLeaveDate) {
-        this.nearLeaveDate = nearLeaveDate;
-    }
-
     public boolean isLeaveDatePassed() {
         return leaveRequest != null && leaveRequest.getFromDate() != null
                 && leaveRequest.getFromDate().isBefore(DateTimeUtil.today());
@@ -116,14 +103,6 @@ public class LeaveReviewDetail {
 
     public void setStaffingRows(List<ShiftStaffingRow> staffingRows) {
         this.staffingRows = staffingRows;
-    }
-
-    public String getAssignedToName() {
-        return assignedToName;
-    }
-
-    public void setAssignedToName(String assignedToName) {
-        this.assignedToName = assignedToName;
     }
 
     public boolean isCanAct() {

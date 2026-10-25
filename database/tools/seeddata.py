@@ -880,9 +880,9 @@ CFG = [('P-01', '1', 'Số lần bảo lưu tối đa mỗi gói tập (lần)')
        ('P-17', '5', 'Số lần sai trước khi khóa tạm (đăng nhập và mã xác thực)'),
        ('P-18', '5', 'Thời gian khóa tạm (phút)'),
        ('P-19', '05:30-22:00', 'Giờ mở cửa mặc định hằng ngày'),
-       ('P-20', '20:00', 'Giờ chốt duyệt đơn nghỉ (ngày hôm trước)'),
        ('P-21', '1M,2M,3M', 'Thời hạn gói PT (tháng) — DBR-19'),
-       ('P-22', '3', "Minimum customers to show a PT's average rating (DBR-69)")]
+       ('P-22', '3', "Minimum customers to show a PT's average rating (DBR-69)"),
+       ('P-23', '14', 'Định mức phép năm demo (ngày/năm)')]
 for k, v, d in CFG:
     add('SystemConfigs', dict(ConfigKey=k, ConfigValue=v, Description=d,
                              UpdatedAt=dt_(2026, 10, 6, 9) if k == 'P-22' else dt_(2026, 9, 1, 9),

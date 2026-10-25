@@ -66,13 +66,14 @@ class StaffLeaveServiceTest {
         when(configs.getInt(SystemConfigService.MIN_PT_PER_SHIFT)).thenReturn(2);
         when(configs.getInt(SystemConfigService.MIN_RECEPTIONIST_PER_SHIFT)).thenReturn(1);
         var tomorrow = DateTimeUtil.today().plusDays(1);
-        when(dao.countOnDutyAfterApproval(tomorrow, "FullDay", "PT", 0)).thenReturn(5);
-        when(dao.countOnDutyAfterApproval(tomorrow, "FullDay", "Receptionist", 0)).thenReturn(3);
+        when(dao.countOnDuty(connection, tomorrow, "FullDay", "PT", 0)).thenReturn(6);
+        when(dao.countOnDuty(connection, tomorrow, "FullDay", "Receptionist", 0)).thenReturn(4);
 
-        var formResult = service.getStaffLeaveForm(10);
+        ServiceResult<com.gms.dto.StaffLeaveFormView> formResult;
         ServiceResult<LeaveSubmissionPreview> previewResult;
         try (MockedStatic<DBContext> database = mockStatic(DBContext.class)) {
             database.when(DBContext::getConnection).thenReturn(connection);
+            formResult = service.getStaffLeaveForm(10);
             previewResult = service.previewSubmission(10, LeaveRequest.LeaveType.UNPAID,
                     tomorrow, tomorrow, LeaveRequest.ShiftType.FULL_DAY);
         }
@@ -91,6 +92,24 @@ class StaffLeaveServiceTest {
     private void setRemaining(String days) throws Exception {
         when(dao.getAnnualBalance(connection, 50, first.getYear(), 14))
                 .thenReturn(new LeaveBalance(14, new BigDecimal("14").subtract(new BigDecimal(days)), BigDecimal.ZERO));
+    }
+
+    @Test
+    void previewUsesTheLowestStaffingOnTheLastDayWithoutInventingStaff() throws Exception {
+        when(configs.getInt(SystemConfigService.MIN_PT_PER_SHIFT)).thenReturn(2);
+        when(configs.getInt(SystemConfigService.MIN_RECEPTIONIST_PER_SHIFT)).thenReturn(1);
+        when(dao.countOnDuty(eq(connection), any(), eq("FullDay"), eq("PT"), eq(0))).thenReturn(4);
+        when(dao.countOnDuty(eq(connection), any(), eq("FullDay"), eq("Receptionist"), eq(0))).thenReturn(3);
+        when(dao.countOnDuty(connection, first.plusDays(2), "FullDay", "PT", 0)).thenReturn(0);
+        when(dao.countOnDuty(connection, first.plusDays(2), "FullDay", "Receptionist", 0)).thenReturn(1);
+        try (MockedStatic<DBContext> db = mockStatic(DBContext.class)) {
+            db.when(DBContext::getConnection).thenReturn(connection);
+            var result = service.previewSubmission(10, LeaveRequest.LeaveType.UNPAID,
+                    first, first.plusDays(2), LeaveRequest.ShiftType.FULL_DAY);
+            assertTrue(result.isSuccess());
+            assertEquals(0, result.getData().getStaffing().getRemainingPt());
+            assertEquals(0, result.getData().getStaffing().getRemainingReceptionist());
+        }
     }
 
     @Test

@@ -24,9 +24,6 @@ public class LeaveRequestItemView {
     // DAO: LeaveRequests.LeaveRequestId.
     private final int leaveRequestId;
 
-    // DAO: LeaveRequests.EmployeeId.
-    private final int employeeId;
-
     // DAO: Employees.EmployeeCode (VD NV-0005).
     private final String employeeCode;
 
@@ -62,9 +59,6 @@ public class LeaveRequestItemView {
     // DAO: LeaveRequests.SubmittedAt.
     private final LocalDateTime submittedAt;
 
-    // DAO: LeaveRequests.ReviewedAt; NULL nếu Pending.
-    private final LocalDateTime reviewedAt;
-
     // Service: đơn Pending bắt đầu nghỉ hôm nay hoặc ngày mai.
     private boolean nearLeaveDate;
 
@@ -75,7 +69,6 @@ public class LeaveRequestItemView {
     public LeaveRequestItemView(LeaveRequestRow row) {
         LeaveRequest request = row.getLeaveRequest();
         this.leaveRequestId = request.getLeaveRequestId();
-        this.employeeId = request.getEmployeeId();
         this.employeeCode = row.getEmployeeCode();
         this.fullName = row.getFullName();
         this.position = row.getPosition();
@@ -88,7 +81,6 @@ public class LeaveRequestItemView {
         this.reason = request.getReason();
         this.status = request.getStatus();
         this.submittedAt = request.getSubmittedAt();
-        this.reviewedAt = request.getReviewedAt();
         this.canAct = row.isCanAct();
     }
 
@@ -144,10 +136,6 @@ public class LeaveRequestItemView {
         return leaveRequestId;
     }
 
-    public int getEmployeeId() {
-        return employeeId;
-    }
-
     public String getEmployeeCode() {
         return employeeCode;
     }
@@ -182,10 +170,6 @@ public class LeaveRequestItemView {
 
     public LocalDateTime getSubmittedAt() {
         return submittedAt;
-    }
-
-    public LocalDateTime getReviewedAt() {
-        return reviewedAt;
     }
 
     public LocalDate getFromDate() {

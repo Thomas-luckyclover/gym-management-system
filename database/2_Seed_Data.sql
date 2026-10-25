@@ -5414,9 +5414,9 @@ INSERT INTO SystemConfigs (SystemConfigId, ConfigKey, ConfigValue, Description, 
  (17, 'P-17', '5', N'Số lần sai trước khi khóa tạm (đăng nhập và mã xác thực)', '2026-09-01 09:00:00', 2),
  (18, 'P-18', '5', N'Thời gian khóa tạm (phút)', '2026-09-01 09:00:00', 2),
  (19, 'P-19', '05:30-22:00', N'Giờ mở cửa mặc định hằng ngày', '2026-09-01 09:00:00', 2),
- (20, 'P-20', '20:00', N'Giờ chốt duyệt đơn nghỉ (ngày hôm trước)', '2026-09-01 09:00:00', 2),
  (21, 'P-21', '1M,2M,3M', N'Thời hạn gói PT (tháng) — DBR-19', '2026-09-01 09:00:00', 2),
- (22, 'P-22', '3', 'Minimum customers to show a PT''s average rating (DBR-69)', '2026-10-06 09:00:00', 2);
+ (22, 'P-22', '3', 'Minimum customers to show a PT''s average rating (DBR-69)', '2026-10-06 09:00:00', 2),
+ (23, 'P-23', '14', N'Định mức phép năm demo (ngày/năm)', '2026-09-01 09:00:00', 2);
 SET IDENTITY_INSERT SystemConfigs OFF;
 
 /* ============================================================================

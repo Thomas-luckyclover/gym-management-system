@@ -19,7 +19,7 @@ import java.io.IOException;
 import java.time.LocalDate;
 
 /**
- * API JSON trả phương án Annual/Unpaid, số buổi PT trùng và dự báo ngày đầu (màn #25).
+ * API JSON trả phương án Annual/Unpaid, số buổi PT trùng và dự báo toàn khoảng nghỉ (màn #25).
  *
  * <p>GET /pt/leave-requests/preview?date=yyyy-MM-dd&toDate=yyyy-MM-dd&shift=FullDay&leaveType=Annual
  * <p>GET /receptionist/leave-requests/preview dùng cùng tham số, chỉ đọc nhân viên từ session.

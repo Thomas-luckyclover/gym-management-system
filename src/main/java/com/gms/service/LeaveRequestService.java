@@ -98,6 +98,7 @@ public class LeaveRequestService {
             if (!employeeIds.isEmpty()) {
                 List<LeaveRequestRow> rows = leaveRequestDAO.findEmployeeRequests(filter, employeeIds, managerEmployeeId);
                 Map<String, LeaveRequestGroupView> requestGroups = new LinkedHashMap<>();
+                List<LeaveRequestItemView> items = new ArrayList<>();
                 for (LeaveRequestRow row : rows) {
                     LeaveEmployeeView employee = employeeById.get(row.getLeaveRequest().getEmployeeId());
                     if (employee == null) {
@@ -105,11 +106,10 @@ public class LeaveRequestService {
                     }
                     LeaveRequestItemView item = toItemView(row, today);
                     item.setLeaveGroup(loadLeaveGroup(row.getLeaveRequest(), requestGroups));
-                    if (row.getLeaveRequest().isPending()) {
-                        loadApprovalSummary(item, row.getLeaveRequest());
-                    }
+                    items.add(item);
                     employee.getRequests().add(item);
                 }
+                loadApprovalSummaries(rows, items);
             }
             return ServiceResult.ok(new PageResult<>(employees, currentPage, pageSize, totalEmployees));
         } catch (SQLException e) {
@@ -140,11 +140,9 @@ public class LeaveRequestService {
             for (LeaveRequestRow row : rows) {
                 LeaveRequestItemView item = toItemView(row, today);
                 item.setLeaveGroup(loadLeaveGroup(row.getLeaveRequest(), requestGroups));
-                if (row.getLeaveRequest().isPending()) {
-                    loadApprovalSummary(item, row.getLeaveRequest());
-                }
                 items.add(item);
             }
+            loadApprovalSummaries(rows, items);
             return ServiceResult.ok(new PageResult<>(items, currentPage, pageSize, totalRequests));
         } catch (SQLException e) {
             e.printStackTrace();
@@ -180,15 +178,7 @@ public class LeaveRequestService {
         return manager.getEmployeeId();
     }
 
-    /**
-     * Lấy số đơn cho các tab của màn #26 (UC-15).
-     *
-     * @return map có 4 khóa: All, Pending, Approved, Rejected; hoặc thông báo lỗi hệ thống
-     */
-    public ServiceResult<Map<String, Integer>> getStatusCounts() {
-        return getStatusCounts(null);
-    }
-
+    /** Số đơn trên bốn tab, giữ các bộ lọc và bỏ riêng trạng thái đang chọn. */
     public ServiceResult<Map<String, Integer>> getStatusCounts(LeaveRequestFilter filter) {
         if (hasReversedDateRange(filter)) {
             return ServiceResult.fail("Từ ngày phải trước hoặc trùng Đến ngày.");
@@ -275,25 +265,44 @@ public class LeaveRequestService {
         return groups.get(key);
     }
 
-    /** Đọc dữ liệu kiểm tra tách khỏi hàm đổi dòng DAO thành dữ liệu hiển thị. */
-    private void loadApprovalSummary(LeaveRequestItemView view, LeaveRequest request) throws SQLException {
-        try (Connection connection = DBContext.getConnection()) {
-            String workingPosition = leaveRequestDAO.findWorkingPosition(connection, request.getEmployeeId());
-            LeaveApprovalReview review = leaveApprovalService.review(connection, request, workingPosition);
-            String blockingMessage = review.getBlockingMessage();
-            view.setApprovalReady(blockingMessage == null);
-            if (blockingMessage == null) {
-                if (view.isLateApproval()) {
-                    view.setCheckSummary("Cần xác nhận");
-                    view.setCheckMessage("Xác nhận nhân viên nghỉ đúng đơn trong phần thời gian đã qua, kèm lý do.");
-                } else {
-                    view.setCheckSummary("Đạt");
-                    view.setCheckMessage("Chưa phát hiện vướng mắc. Mở chi tiết để kiểm tra trước khi duyệt.");
-                }
-            } else {
-                view.setCheckSummary("Cần xử lý");
-                view.setCheckMessage(blockingMessage);
+    /** Một connection cho các đơn Pending của trang; đơn đã xử lý không chạy lại kiểm tra. */
+    private void loadApprovalSummaries(List<LeaveRequestRow> rows, List<LeaveRequestItemView> items) throws SQLException {
+        Map<Integer, LeaveRequestItemView> pendingItems = new LinkedHashMap<>();
+        for (LeaveRequestItemView item : items) {
+            if (item.getStatus() == LeaveRequest.Status.PENDING) {
+                pendingItems.put(item.getLeaveRequestId(), item);
             }
+        }
+        if (pendingItems.isEmpty()) {
+            return;
+        }
+        try (Connection connection = DBContext.getConnection()) {
+            for (LeaveRequestRow row : rows) {
+                LeaveRequestItemView item = pendingItems.get(row.getLeaveRequest().getLeaveRequestId());
+                if (item != null) {
+                    loadApprovalSummary(connection, item, row.getLeaveRequest());
+                }
+            }
+        }
+    }
+
+    /** Đọc cùng điều kiện với trang chi tiết và POST, không tin kết quả GET khi duyệt thật. */
+    private void loadApprovalSummary(Connection connection, LeaveRequestItemView view, LeaveRequest request) throws SQLException {
+        String workingPosition = leaveRequestDAO.findWorkingPosition(connection, request.getEmployeeId());
+        LeaveApprovalReview review = leaveApprovalService.review(connection, request, workingPosition);
+        String blockingMessage = review.getBlockingMessage();
+        view.setApprovalReady(blockingMessage == null);
+        if (blockingMessage == null) {
+            if (view.isLateApproval()) {
+                view.setCheckSummary("Cần xác nhận");
+                view.setCheckMessage("Xác nhận nhân viên nghỉ đúng đơn trong phần thời gian đã qua, kèm lý do.");
+            } else {
+                view.setCheckSummary("Đạt");
+                view.setCheckMessage("Chưa phát hiện vướng mắc. Mở chi tiết để kiểm tra trước khi duyệt.");
+            }
+        } else {
+            view.setCheckSummary("Cần xử lý");
+            view.setCheckMessage(blockingMessage);
         }
     }
 
@@ -340,19 +349,10 @@ public class LeaveRequestService {
                 }
             }
 
-            // B2: chỉ đánh dấu ngày nghỉ gần để nhắc xử lý, không đặt hạn duyệt.
-            detail.setNearLeaveDate(isNearLeaveDate(req, DateTimeUtil.today()));
-
-            // B3: cảnh báo chỉ dành cho đơn đang chờ xử lý.
+            // B2: nhắc đơn sắp nghỉ/đã bắt đầu; không đặt hạn duyệt hoặc tự đổi trạng thái.
             if (req.isPending() && detail.isLeaveDatePassed()) {
                 detail.setBanner("Đơn đã bắt đầu nghỉ. Cần xác nhận phần thời gian nghỉ đã qua trước khi duyệt muộn.");
-            } else if (req.isPending() && !detail.isCanAct()) {
-                String assignedName = detail.getAssignedToName();
-                if (assignedName == null) {
-                    assignedName = "người khác";
-                }
-                detail.setBanner("Đơn này đang được giao cho " + assignedName + ". Bạn chỉ có quyền xem.");
-            } else if (detail.isNearLeaveDate()) {
+            } else if (isNearLeaveDate(req, DateTimeUtil.today())) {
                 detail.setBanner("Đơn sắp đến ngày nghỉ.");
             }
 
@@ -431,7 +431,7 @@ public class LeaveRequestService {
                 connection.setAutoCommit(false); // Bắt đầu transaction
 
                 try {
-                    // B2.1: khóa trước khi đọc lại trạng thái, phân công và quỹ phép.
+                    // B2.1: khóa trước khi đọc lại quyền, trạng thái và quỹ phép.
                     leaveRequestDAO.lockDecisionScope(connection);
                     ServiceResult<LeaveRequest> lockedResult = validateDecision(connection, leaveRequestId, manager.getEmployeeId());
                     if (!lockedResult.isSuccess()) {
@@ -593,7 +593,7 @@ public class LeaveRequestService {
                 && employee.getStatus() == Employee.Status.WORKING;
     }
 
-    /** Đọc lại quyền và trạng thái trên Connection đã khóa, tránh thao tác từ tab cũ. */
+    /** Đọc lại quyền Manager và trạng thái Pending trên Connection đã khóa. */
     private ServiceResult<LeaveRequest> validateDecision(Connection connection, int requestId, int managerEmployeeId)
             throws SQLException {
         if (!"Manager".equals(leaveRequestDAO.findWorkingPosition(connection, managerEmployeeId))) {
@@ -602,10 +602,6 @@ public class LeaveRequestService {
         LeaveRequest current = leaveRequestDAO.findById(connection, requestId);
         if (current == null || !current.isPending()) {
             return ServiceResult.fail("Đơn này đã thay đổi trạng thái. Vui lòng tải lại trang.");
-        }
-        Integer assignee = current.getAssignedToEmployeeId();
-        if (assignee != null && assignee != managerEmployeeId) {
-            return ServiceResult.fail("Đơn này đã được phân công cho người khác duyệt.");
         }
         return ServiceResult.ok(current);
     }

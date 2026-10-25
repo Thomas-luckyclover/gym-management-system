@@ -1,294 +1,292 @@
 <%@ page contentType="text/html; charset=UTF-8" pageEncoding="UTF-8" %>
 <%@ taglib prefix="c" uri="jakarta.tags.core" %>
 <%@ taglib prefix="fn" uri="jakarta.tags.functions" %>
-
+<%@ taglib prefix="gms" uri="/WEB-INF/gms-functions.tld" %>
+<c:set var="managerView" value="true" />
+<c:choose>
+    <c:when test="${managerView}">
+        <c:set var="roleTheme" value="theme-manager" />
+        <c:set var="roleName" value="Quản lý" />
+        <c:set var="roleInitials" value="QL" />
+    </c:when>
+    <c:otherwise>
+        <c:set var="roleTheme" value="theme-staff" />
+        <c:set var="roleName" value="Lễ tân" />
+        <c:set var="roleInitials" value="LT" />
+    </c:otherwise>
+</c:choose>
 <!DOCTYPE html>
 <html lang="vi">
-<head>
-  <%@ include file="/WEB-INF/jsp/common/head.jspf" %>
-  <title>Phê duyệt yêu cầu xóa hồ sơ · #<c:out value="${review.deletionRequest.customerDeletionRequestId}" /> · Super Gym Quản lý</title>
-  <link rel="stylesheet" href="${pageContext.request.contextPath}/css/pages/auth/account-settings.css">
-  <link rel="stylesheet" href="${pageContext.request.contextPath}/css/pages/receptionist/customer-list.css">
-  <link rel="stylesheet" href="${pageContext.request.contextPath}/css/pages/manager/member-list.css">
-  <link rel="stylesheet" href="${pageContext.request.contextPath}/css/pages/manager/member-deletion-review.css">
-  <link rel="stylesheet" href="${pageContext.request.contextPath}/css/pages/auth/notification-bell.css">
+    <head>
+        <%@ include file="/WEB-INF/jsp/common/head.jspf" %>
+        <title>Duyệt xóa hồ sơ · Super Gym</title>
+        <link rel="stylesheet" href="${pageContext.request.contextPath}/css/pages/auth/account-settings.css">
 
-  <script src="${pageContext.request.contextPath}/js/pages/auth/notification-bell.js" defer></script>
-  <script src="${pageContext.request.contextPath}/js/pages/manager/member-deletion-review.js" defer></script>
-</head>
-
-<body class="dock theme-manager">
-  <%@ include file="/WEB-INF/jsp/common/flash-toast.jspf" %>
-
-  <div class="app">
-    <%@ include file="/WEB-INF/jsp/common/layout-manager.jspf" %>
-
-    <div class="main">
-      <header class="topbar">
-        <div class="tb-left">
-          <h1 class="tb-title">Phê duyệt yêu cầu xóa hồ sơ</h1>
-        </div>
-
-        <div class="top-right">
-          <%@ include file="/WEB-INF/jsp/common/notification-bell.jspf" %>
-
-          <a class="tb-user" href="${pageContext.request.contextPath}/account">
-            <span class="avatar">QL</span>
-            <span>
-              <b><c:out value="${sessionScope.displayName}" default="Quản lý" /></b>
-              <small>Quản lý</small>
-            </span>
-          </a>
-        </div>
-      </header>
-
-      <main class="content review-page" id="main-content" tabindex="-1">
-        <%-- Breadcrumb --%>
-        <nav class="review-breadcrumb" aria-label="Đường dẫn">
-          <a href="${pageContext.request.contextPath}/manager/members?tab=pending-deletions">Chờ duyệt xóa</a>
-          <span>/</span>
-          <span>Yêu cầu #<c:out value="${review.deletionRequest.customerDeletionRequestId}" /></span>
-        </nav>
-
-        <%-- Cảnh báo vi phạm CBR-115: Tự duyệt chính mình --%>
-        <c:if test="${review.ownProfile}">
-          <div class="review-alert review-alert-danger">
-            <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-              <path d="M10.29 3.86L1.82 18a2 2 0 0 0 1.71 3h16.94a2 2 0 0 0 1.71-3L13.71 3.86a2 2 0 0 0-3.42 0z"></path>
-              <line x1="12" y1="9" x2="12" y2="13"></line>
-              <line x1="12" y1="17" x2="12.01" y2="17"></line>
-            </svg>
-            <div>
-              <strong>CBR-115:</strong> Hồ sơ khách hàng này thuộc về chính tài khoản của bạn.
-              Theo quy định phân quyền, bạn <b>không được phép tự phê duyệt hoặc từ chối</b> yêu cầu xóa hồ sơ của chính mình (MSG76). Vui lòng nhờ một Quản lý khác xử lý.
-            </div>
-          </div>
-        </c:if>
-
-        <%-- Cảnh báo nếu yêu cầu đã được xử lý trước đó --%>
-        <c:if test="${!review.deletionRequest.pending}">
-          <div class="review-alert review-alert-info">
-            <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-              <circle cx="12" cy="12" r="10"></circle>
-              <line x1="12" y1="16" x2="12" y2="12"></line>
-              <line x1="12" y1="8" x2="12.01" y2="8"></line>
-            </svg>
-            <div>
-              Yêu cầu này đã được <b><c:out value="${review.reviewerName}" default="Quản lý" /></b> xử lý vào lúc
-              <b><c:out value="${review.deletionRequest.reviewedAt}" /></b> với kết quả:
-              <c:choose>
-                <c:when test="${review.deletionRequest.approved}">
-                  <span class="m-badge m-badge-active" style="margin-left: var(--space-2);">ĐÃ PHÊ DUYỆT</span>
+        <%-- BF-07: hai vai trò dùng chung bố cục; token màu thay đổi theo theme. --%>
+        <link rel="stylesheet" href="${pageContext.request.contextPath}/css/pages/receptionist/customer-list.css?v=20261025-bf07">
+        <link rel="stylesheet" href="${pageContext.request.contextPath}/css/pages/auth/notification-bell.css">
+        <script src="${pageContext.request.contextPath}/js/pages/auth/notification-bell.js" defer>
+        </script>
+        <script src="${pageContext.request.contextPath}/js/pages/receptionist/customer-list.js?v=20261025-bf07" defer>
+        </script>
+    </head>
+    <body class="dock <c:out value="${roleTheme}" />">
+        <%@ include file="/WEB-INF/jsp/common/flash-toast.jspf" %>
+        <div class="app">
+            <c:choose>
+                <c:when test="${managerView}">
+                    <%@ include file="/WEB-INF/jsp/common/layout-manager.jspf" %>
                 </c:when>
                 <c:otherwise>
-                  <span class="m-badge m-badge-inactive" style="margin-left: var(--space-2); color: var(--color-danger);">ĐÃ TỪ CHỐI</span>
-                  <c:if test="${not empty review.deletionRequest.rejectReason}">
-                    <br /><b>Lý do từ chối:</b> <c:out value="${review.deletionRequest.rejectReason}" />
-                  </c:if>
+                    <%@ include file="/WEB-INF/jsp/common/layout-receptionist.jspf" %>
                 </c:otherwise>
-              </c:choose>
-            </div>
-          </div>
-        </c:if>
-
-        <%-- Cảnh báo khách còn gói hoặc buổi PT Scheduled (CBR-16) --%>
-        <c:if test="${review.hasActiveAssets()}">
-          <div class="review-alert review-alert-warning">
-            <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-              <circle cx="12" cy="12" r="10"></circle>
-              <polyline points="12 6 12 12 16 14"></polyline>
-            </svg>
-            <div>
-              <strong>Lưu ý:</strong> Khách hàng hiện còn <b><c:out value="${fn:length(review.activePackages)}" /> gói tập còn hạn</b>
-              và <b><c:out value="${fn:length(review.scheduledSessions)}" /> buổi PT đã xếp lịch</b>.
-              Nếu bạn phê duyệt xóa, toàn bộ hồ sơ sẽ chuyển sang <b>Inactive</b> và tài khoản khách sẽ bị đăng xuất ngay lập tức.
-            </div>
-          </div>
-        </c:if>
-
-        <div class="review-grid">
-          <%-- Cột trái: Chi tiết khách hàng, lý do xóa & danh sách gói --%>
-          <div style="display: flex; flex-direction: column; gap: var(--space-5);">
-            <%-- Thông tin hội viên --%>
-            <div class="review-card">
-              <div class="review-card-head">
-                <h3>Thông tin hội viên cần xóa</h3>
-                <span class="m-badge m-badge-active"><c:out value="${review.customerType}" /></span>
-              </div>
-
-              <div class="review-info-list">
-                <div class="review-info-item">
-                  <span class="review-info-label">Mã khách hàng</span>
-                  <span class="review-info-value"><b><c:out value="${review.customerCode}" /></b></span>
-                </div>
-                <div class="review-info-item">
-                  <span class="review-info-label">Họ và tên</span>
-                  <span class="review-info-value"><c:out value="${review.customerFullName}" /></span>
-                </div>
-                <div class="review-info-item">
-                  <span class="review-info-label">Số điện thoại</span>
-                  <span class="review-info-value"><c:out value="${review.customerPhone}" default="—" /></span>
-                </div>
-                <div class="review-info-item">
-                  <span class="review-info-label">Email</span>
-                  <span class="review-info-value"><c:out value="${review.customerEmail}" default="—" /></span>
-                </div>
-                <div class="review-info-item">
-                  <span class="review-info-label">Ngày tham gia</span>
-                  <span class="review-info-value"><c:out value="${review.customerJoinedAt}" /></span>
-                </div>
-              </div>
-            </div>
-
-            <%-- Thông tin yêu cầu từ Lễ tân --%>
-            <div class="review-card">
-              <div class="review-card-head">
-                <h3>Yêu cầu xóa từ Lễ tân</h3>
-                <span class="review-info-value" style="font-size: var(--font-size-xs); color: var(--color-text-muted);">
-                  Gửi lúc: <c:out value="${review.deletionRequest.requestedAt}" />
-                </span>
-              </div>
-
-              <div>
-                <span class="review-info-label">Lễ tân thực hiện</span>
-                <div style="margin-top: var(--space-1); font-size: var(--font-size-sm); font-weight: var(--font-weight-medium);">
-                  <c:out value="${review.requesterName}" /> (<c:out value="${review.requesterCode}" />)
-                </div>
-              </div>
-
-              <div>
-                <span class="review-info-label">Lý do yêu cầu xóa</span>
-                <div class="reason-box" style="margin-top: var(--space-1-5);">
-                  "<c:out value="${review.deletionRequest.reason}" />"
-                </div>
-              </div>
-            </div>
-
-            <%-- Danh sách tài sản còn hạn (Gói tập / Buổi PT) --%>
-            <div class="review-card">
-              <div class="review-card-head">
-                <h3>Tài sản đang hoạt động của khách</h3>
-              </div>
-
-              <c:choose>
-                <c:when test="${review.hasActiveAssets()}">
-                  <c:if test="${not empty review.activePackages}">
-                    <div>
-                      <h4 style="margin: 0 0 var(--space-2) 0; font-size: var(--font-size-sm); color: var(--color-text-secondary);">Gói tập đang chạy:</h4>
-                      <ul style="font-size: var(--font-size-sm); padding-left: var(--space-4); margin: 0;">
-                        <c:forEach var="pkg" items="${review.activePackages}">
-                          <li style="margin-bottom: var(--space-1);">
-                            <b><c:out value="${pkg.packageName}" /></b> (<c:out value="${pkg.packageType}" />)
-                            — Hạn đến: <c:out value="${pkg.endDate}" />
-                            <c:if test="${pkg.partner}"><span class="m-badge m-badge-package">Gói đôi</span></c:if>
-                          </li>
-                        </c:forEach>
-                      </ul>
+            </c:choose>
+            <div class="main">
+                <header class="topbar">
+                    <h1 class="tb-title">Duyệt xóa hồ sơ</h1>
+                    <div class="top-right">
+                        <%@ include file="/WEB-INF/jsp/common/notification-bell.jspf" %>
+                        <a class="tb-user" href="${pageContext.request.contextPath}/account">
+                            <span class="avatar">
+                                <c:out value="${roleInitials}" />
+                            </span>
+                            <span>
+                                <b>
+                                    <c:out value="${sessionScope.displayName}" />
+                                </b>
+                                <small>
+                                    <c:out value="${roleName}" />
+                                </small>
+                            </span>
+                        </a>
                     </div>
-                  </c:if>
+                </header>
+                <main class="content bf07-page" id="main-content" tabindex="-1">
 
-                  <c:if test="${not empty review.scheduledSessions}">
-                    <div style="margin-top: var(--space-3);">
-                      <h4 style="margin: 0 0 var(--space-2) 0; font-size: var(--font-size-sm); color: var(--color-text-secondary);">Buổi PT đã xếp lịch:</h4>
-                      <ul style="font-size: var(--font-size-sm); padding-left: var(--space-4); margin: 0;">
-                        <c:forEach var="sess" items="${review.scheduledSessions}">
-                          <li style="margin-bottom: var(--space-1);">
-                            Ngày <c:out value="${sess.slotDate}" /> lúc <c:out value="${sess.startTime}" /> — PT: <c:out value="${sess.ptName}" />
-                          </li>
-                        </c:forEach>
-                      </ul>
+                    <%-- ===== review: CustomerDeletionReviewView, tải gói/buổi khi mở yêu cầu ===== --%>
+                    <nav class="bf07-breadcrumb" aria-label="Đường dẫn">
+                        <a href="${pageContext.request.contextPath}/manager/members?tab=pending-deletions">← Chờ duyệt xóa</a>
+                        <span>
+                            Yêu cầu #
+                            <c:out value="${review.deletionRequest.customerDeletionRequestId}" />
+                        </span>
+                    </nav>
+                    <c:if test="${not empty actionError}">
+                        <p class="bf07-notice bf07-notice-danger" role="alert">
+                            <c:out value="${actionError}" />
+                        </p>
+                    </c:if>
+                    <c:if test="${review.ownProfile}">
+                        <p class="bf07-notice bf07-notice-warning">Đây là hồ sơ của bạn. Bạn không được duyệt hoặc từ chối; hãy nhờ quản lý khác xử lý.</p>
+                    </c:if>
+                    <c:if test="${not review.deletionRequest.pending}">
+                        <div class="bf07-notice">
+                            <c:choose>
+                                <c:when test="${review.deletionRequest.approved}">
+                                    <span class="badge badge-success">Đã duyệt</span>
+                                </c:when>
+                                <c:otherwise>
+                                    <span class="badge badge-danger">Đã từ chối</span>
+                                </c:otherwise>
+                            </c:choose>
+                            <c:out value="${review.reviewerName}" />
+                            ·
+                            <c:out value="${gms:formatDateTime(review.deletionRequest.reviewedAt)}" />
+                            <c:if test="${not empty review.deletionRequest.rejectReason}">
+                                <p class="bf07-reason"><c:out value="${review.deletionRequest.rejectReason}" /></p>
+                            </c:if>
+                        </div>
+                    </c:if>
+                    <div class="bf07-detail-grid">
+                        <section class="bf07-panel bf07-detail-card">
+                            <div class="bf07-person bf07-person-heading">
+                                <span class="bf07-avatar" aria-hidden="true">
+                                    <c:out value="${fn:substring(review.customerFullName, 0, 1)}" />
+                                </span>
+                                <div>
+                                    <h2>
+                                        <c:out value="${review.customerFullName}" />
+                                    </h2>
+                                    <span class="bf07-sub">
+                                        <c:out value="${review.customerCode}" />
+                                        ·
+                                        <c:out value="${review.customerTypeLabel}" />
+                                    </span>
+                                </div>
+                            </div>
+                            <dl class="bf07-metadata">
+                                <div>
+                                    <dt>Số điện thoại</dt>
+                                    <dd>
+                                        <c:out value="${review.customerPhone}" default="—" />
+                                    </dd>
+                                </div>
+                                <div>
+                                    <dt>Email</dt>
+                                    <dd class="bf07-wrap">
+                                        <c:out value="${review.customerEmail}" default="Chưa có email" />
+                                    </dd>
+                                </div>
+                                <div>
+                                    <dt>Ngày tham gia</dt>
+                                    <dd>
+                                        <c:out value="${gms:formatDateTime(review.customerJoinedAt)}" />
+                                    </dd>
+                                </div>
+                            </dl>
+                        </section>
+                        <section class="bf07-panel bf07-detail-card">
+                            <div class="bf07-section-heading">
+                                <h2>Yêu cầu xóa hồ sơ</h2>
+                                <c:if test="${review.deletionRequest.pending}">
+                                    <span class="badge badge-warning">Chờ duyệt</span>
+                                </c:if>
+                            </div>
+                            <p class="bf07-muted">
+                                <c:out value="${review.requesterName}" />
+                                ·
+                                <c:out value="${gms:formatDateTime(review.deletionRequest.requestedAt)}" />
+                            </p>
+                            <div class="bf07-reason"><c:out value="${review.deletionRequest.reason}" /></div>
+                            <c:if test="${review.deletionRequest.pending}">
+                                <p class="bf07-notice bf07-notice-warning">
+                                    <c:choose>
+                                        <c:when test="${review.hasActiveAssets()}">
+                                            Còn
+                                            <b>
+                                                <c:out value="${fn:length(review.activePackages)}" />
+                                                gói
+                                            </b>
+                                            và
+                                            <b>
+                                                <c:out value="${fn:length(review.scheduledSessions)}" />
+                                                buổi PT
+                                            </b>
+                                            .
+                                        </c:when>
+                                        <c:otherwise>Hiện không còn gói hoặc buổi PT đang chờ.</c:otherwise>
+                                    </c:choose>
+                                    Duyệt sẽ ngừng hồ sơ và đăng xuất tài khoản. Gói, buổi tập và giao dịch được giữ nguyên để tra cứu.
+                                </p>
+                                <c:if test="${review.canAct}">
+                                    <div class="bf07-decision-actions">
+                                        <form id="approveForm" action="${pageContext.request.contextPath}/manager/member-deletions/review" method="post" data-confirm-approve>
+                                            <input type="hidden" name="csrfToken" value="<c:out value="${csrfToken}" />">
+                                            <input type="hidden" name="action" value="approve">
+                                            <input type="hidden" name="id" value="${review.deletionRequest.customerDeletionRequestId}">
+                                            <button class="btn btn-danger" type="submit">Duyệt xóa hồ sơ</button>
+                                        </form>
+                                        <button class="btn btn-outline" type="button" id="openRejectDialog">Từ chối</button>
+                                    </div>
+                                </c:if>
+                            </c:if>
+                        </section>
                     </div>
-                  </c:if>
-                </c:when>
-                <c:otherwise>
-                  <p style="color: var(--color-text-muted); margin: 0; font-size: var(--font-size-sm);">
-                    Khách hàng không còn gói tập hay buổi PT nào đang hoạt động.
-                  </p>
-                </c:otherwise>
-              </c:choose>
+                    <section class="bf07-panel bf07-detail-card">
+                        <c:set var="packages" value="${review.activePackages}" />
+                        <c:set var="sessions" value="${review.scheduledSessions}" />
+                        <div class="bf07-section-heading">
+                            <h2>Gói tập và lịch PT</h2>
+                            <span class="bf07-muted">
+                                <c:out value="${fn:length(packages)}" />
+                                gói ·
+                                <c:out value="${fn:length(sessions)}" />
+                                buổi
+                            </span>
+                        </div>
+                        <c:choose>
+                            <c:when test="${empty packages and empty sessions}">
+                                <p class="bf07-muted">Không còn gói đang dùng hoặc buổi PT chờ tập.</p>
+                            </c:when>
+                            <c:otherwise>
+                                <c:if test="${not empty packages}">
+                                    <ul class="bf07-package-list">
+                                        <c:forEach var="pkg" items="${packages}">
+                                            <li>
+                                                <div>
+                                                    <strong>
+                                                        <c:out value="${pkg.packageName}" />
+                                                    </strong>
+                                                    <span class="bf07-sub">
+                                                        <c:out value="${pkg.packageTypeLabel}" />
+                                                        <c:if test="${pkg.partner}">· Người tập cùng</c:if>
+                                                        ·
+                                                        <c:out value="${pkg.statusLabel}" />
+                                                    </span>
+                                                </div>
+                                                <span class="bf07-package-date">
+                                                    Đến
+                                                    <c:out value="${gms:formatDate(pkg.endDate)}" />
+                                                </span>
+                                            </li>
+                                        </c:forEach>
+                                    </ul>
+                                </c:if>
+                                <c:if test="${not empty sessions}">
+                                    <details class="bf07-session-details">
+                                        <summary>
+                                            Xem
+                                            <c:out value="${fn:length(sessions)}" />
+                                            buổi PT đang chờ tập
+                                        </summary>
+                                        <ul class="bf07-session-list">
+                                            <c:forEach var="session" items="${sessions}">
+                                                <li>
+                                                    <span>
+                                                        <c:out value="${gms:formatDate(session.slotDate)}" />
+                                                        ·
+                                                        <c:out value="${gms:formatTime(session.startTime)}" />
+                                                    </span>
+                                                    <span class="bf07-muted">
+                                                        <c:out value="${session.ptName}" />
+                                                    </span>
+                                                </li>
+                                            </c:forEach>
+                                        </ul>
+                                    </details>
+                                </c:if>
+                            </c:otherwise>
+                        </c:choose>
+                    </section>
+                    <c:if test="${review.canAct}">
+                        <dialog class="bf07-dialog" id="rejectDialog" aria-labelledby="rejectDialogTitle" data-reopen="${reopenReject}">
+                            <form class="bf07-reason-form" action="${pageContext.request.contextPath}/manager/member-deletions/review" method="post" novalidate>
+                                <div class="bf07-dialog-heading">
+                                    <h2 id="rejectDialogTitle">Từ chối yêu cầu xóa</h2>
+                                    <button class="bf07-close" type="button" data-dialog-close aria-label="Đóng">×</button>
+                                </div>
+                                <p>
+                                    Hồ sơ của
+                                    <b>
+                                        <c:out value="${review.customerFullName}" />
+                                    </b>
+                                    sẽ được giữ nguyên.
+                                </p>
+                                <input type="hidden" name="csrfToken" value="<c:out value="${csrfToken}" />">
+                                <input type="hidden" name="action" value="reject">
+                                <input type="hidden" name="id" value="${review.deletionRequest.customerDeletionRequestId}">
+                                <c:if test="${not empty actionError}">
+                                    <p class="bf07-error" role="alert"><c:out value="${actionError}" /></p>
+                                </c:if>
+                                <label for="rejectReason">Lý do từ chối *</label>
+                                <textarea name="rejectReason" id="rejectReason" autofocus rows="3" maxlength="500" required aria-describedby="rejectReasonError"><c:out value="${rejectReason}" /></textarea>
+                                <span class="bf07-error" id="rejectReasonError" data-reason-error role="alert">
+                                    <c:out value="${errors.rejectReason}" />
+                                </span>
+                                <small class="bf07-muted">
+                                    5–500 ký tự ·
+                                    <span data-reason-count>0</span>
+                                    /500
+                                </small>
+                                <div class="bf07-dialog-actions">
+                                    <button class="btn btn-outline" type="button" data-dialog-close>Hủy</button>
+                                    <button type="submit" class="btn btn-primary">Xác nhận từ chối</button>
+                                </div>
+                            </form>
+                        </dialog>
+                    </c:if>
+                </main>
             </div>
-          </div>
-
-          <%-- Cột phải: Hộp thao tác Quản lý --%>
-          <div>
-            <div class="action-box">
-              <h4>Quyết định của Quản lý</h4>
-              <p style="font-size: var(--font-size-xs); color: var(--color-text-secondary); margin: 0; line-height: var(--line-height-relaxed);">
-                Kiểm tra kỹ thông tin trước khi thực hiện. Quyết định duyệt sẽ hủy bỏ các gói tập và chuyển hồ sơ sang Inactive.
-              </p>
-
-              <div class="action-buttons-stack">
-                <%-- Nút Phê duyệt --%>
-                <form id="approveForm" action="${pageContext.request.contextPath}/manager/member-deletions/review" method="post">
-                  <input type="hidden" name="action" value="approve" />
-                  <input type="hidden" name="id" value="<c:out value="${review.deletionRequest.customerDeletionRequestId}" />" />
-                  <button type="submit" class="btn-approve" style="width: 100%;" <c:if test="${!review.canAct}">disabled</c:if>>
-                    <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-                      <polyline points="20 6 9 17 4 12"></polyline>
-                    </svg>
-                    Phê duyệt xóa hồ sơ
-                  </button>
-                </form>
-
-                <%-- Nút Từ chối (mở modal) --%>
-                <button type="button" class="btn-reject" id="btnOpenRejectModal" <c:if test="${!review.canAct}">disabled</c:if>>
-                  <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-                    <line x1="18" y1="6" x2="6" y2="18"></line>
-                    <line x1="6" y1="6" x2="18" y2="18"></line>
-                  </svg>
-                  Từ chối yêu cầu
-                </button>
-              </div>
-            </div>
-          </div>
         </div>
-      </main>
-    </div>
-  </div>
-
-  <%-- ================= MODAL TỪ CHỐI YÊU CẦU XÓA ================= --%>
-  <div class="modal-overlay" id="rejectModal" aria-hidden="true" role="dialog" aria-labelledby="rejectModalTitle">
-    <div class="modal-box">
-      <div class="modal-head">
-        <h3 id="rejectModalTitle">Từ chối yêu cầu xóa hồ sơ</h3>
-        <button type="button" class="modal-close-btn btn-close-reject-modal" aria-label="Đóng">&times;</button>
-      </div>
-
-      <form id="rejectForm" action="${pageContext.request.contextPath}/manager/member-deletions/review" method="post">
-        <input type="hidden" name="action" value="reject" />
-        <input type="hidden" name="id" value="<c:out value="${review.deletionRequest.customerDeletionRequestId}" />" />
-
-        <div class="modal-body">
-          <div>
-            Bạn đang từ chối yêu cầu xóa hồ sơ của khách hàng
-            <b><c:out value="${review.customerFullName}" /></b> (<c:out value="${review.customerCode}" />).
-            <br />
-            Hồ sơ khách hàng sẽ được giữ nguyên trạng thái hiện tại.
-          </div>
-
-          <div class="form-group">
-            <label class="form-label" for="rejectReason">
-              Lý do từ chối <span style="color: var(--color-danger);">*</span>
-            </label>
-            <textarea id="rejectReason"
-                      name="rejectReason"
-                      class="form-textarea"
-                      placeholder="Nhập lý do từ chối gửi tới Lễ tân (tối thiểu 5 ký tự, tối đa 500 ký tự)..."
-                      required></textarea>
-            <div class="char-counter">
-              <span id="rejectCharCount">0</span>/500 ký tự
-            </div>
-          </div>
-        </div>
-
-        <div class="modal-foot">
-          <button type="button" class="btn-secondary btn-close-reject-modal">Hủy bỏ</button>
-          <button type="submit" class="btn-primary" id="btnSubmitReject" style="background-color: var(--color-danger);">
-            Xác nhận từ chối
-          </button>
-        </div>
-      </form>
-    </div>
-  </div>
-</body>
+    </body>
 </html>

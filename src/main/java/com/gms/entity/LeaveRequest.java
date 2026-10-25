@@ -7,8 +7,8 @@ import java.time.LocalDateTime;
 /**
  * Đơn xin nghỉ phép của nhân viên PT/Lễ tân (BF-05, UC-14, UC-15), ánh xạ bảng LeaveRequests.
  *
- * <p>DAO là nơi duy nhất tạo đối tượng này từ ResultSet; Service dùng để kiểm tra luật và
- * cập nhật trạng thái; không dùng trực tiếp để hiển thị JSP (JSP dùng DTO).</p>
+ * <p>DAO đọc từ ResultSet; Service tạo đơn mới và kiểm tra luật.
+ * JSP đọc đơn qua DTO của từng màn.</p>
  */
 public class LeaveRequest {
 
@@ -29,7 +29,7 @@ public class LeaveRequest {
         this.leaveGroupId = leaveGroupId;
     }
 
-    // DAO: LeaveRequests.ReviewedByEmployeeId; NULL khi đơn còn Pending hoặc hệ thống tự từ chối (CBR-85).
+    // DAO: LeaveRequests.ReviewedByEmployeeId; NULL khi Pending hoặc dữ liệu lịch sử chưa có người xử lý.
     private Integer reviewedByEmployeeId;
 
     // DAO: LeaveRequests.LeaveType (Annual | Sick | Unpaid).
@@ -50,11 +50,8 @@ public class LeaveRequest {
     // DAO: LeaveRequests.SubmittedAt, thời điểm nộp; dùng đối chiếu hạn nộp P-12 (CBR-84).
     private LocalDateTime submittedAt;
 
-    // DAO: LeaveRequests.ReviewedAt; có khi Approved hoặc Rejected (kể cả tự từ chối).
+    // DAO: LeaveRequests.ReviewedAt; có khi Approved hoặc Rejected.
     private LocalDateTime reviewedAt;
-
-    // DAO: LeaveRequests.AssignedToEmployeeId, người được giao duyệt (NULL = chưa phân công).
-    private Integer assignedToEmployeeId;
 
     // DAO: LeaveRequests.FromDate, ngày bắt đầu nghỉ.
     private LocalDate fromDate;
@@ -64,9 +61,6 @@ public class LeaveRequest {
 
     // DAO: LeaveRequests.Days; đơn mới tính một ngày cho mỗi ngày nghỉ, bất kể ca.
     private BigDecimal days;
-
-    // DAO: LeaveRequests.ReminderSentAt; job nhắc Manager đúng 1 lần, NULL nếu chưa nhắc.
-    private LocalDateTime reminderSentAt;
 
     public LeaveRequest() {
     }
@@ -127,14 +121,6 @@ public class LeaveRequest {
         this.days = days;
     }
 
-    public Integer getAssignedToEmployeeId() {
-        return assignedToEmployeeId;
-    }
-
-    public void setAssignedToEmployeeId(Integer assignedToEmployeeId) {
-        this.assignedToEmployeeId = assignedToEmployeeId;
-    }
-
     public ShiftType getShiftType() {
         return shiftType;
     }
@@ -181,14 +167,6 @@ public class LeaveRequest {
 
     public void setReviewedAt(LocalDateTime reviewedAt) {
         this.reviewedAt = reviewedAt;
-    }
-
-    public LocalDateTime getReminderSentAt() {
-        return reminderSentAt;
-    }
-
-    public void setReminderSentAt(LocalDateTime reminderSentAt) {
-        this.reminderSentAt = reminderSentAt;
     }
 
     public boolean isPending() {

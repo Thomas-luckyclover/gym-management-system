@@ -38,7 +38,6 @@ public class LeaveApprovalService {
         // B1: kiểm tra ngày/ca/số ngày trước khi dùng chúng trong các truy vấn.
         String inputError = validateRequest(request);
         if (inputError != null) {
-            review.setInputError(inputError);
             review.getChecks().add(new ReviewCheck("REQUEST", "Thông tin đơn", true, false, inputError));
             return review;
         }
@@ -146,7 +145,7 @@ public class LeaveApprovalService {
                 remaining = Math.min(remaining, after);
                 String shiftLabel = "Morning".equals(shift) ? "Ca sáng" : "Ca chiều";
                 review.getStaffingRows().add(new ShiftStaffingRow(DateTimeUtil.formatDate(date) + " · " + shiftLabel,
-                        position, after + 1, after, minRequired));
+                        after + 1, after, minRequired));
                 if (after < minRequired && firstShortage == null) {
                     firstShortage = DateTimeUtil.formatDate(date) + " · " + shiftLabel + ": còn " + after
                             + " người, tối thiểu " + minRequired + ". Cần bố trí người trước khi duyệt.";

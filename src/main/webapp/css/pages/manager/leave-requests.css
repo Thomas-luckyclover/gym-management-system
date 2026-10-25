@@ -30,106 +30,12 @@
     font-size: var(--font-size-sm);
 }
 
-/* ===== Bảng danh sách ===== */
-
-.leave-table-wrap {
-    overflow-x: auto;
-}
-
-.leave-table {
-    width: 100%;
-    border-collapse: collapse;
-    font-size: var(--font-size-sm);
-}
-
-.leave-table thead tr {
-    border-bottom: var(--border-width) solid var(--color-border-strong);
-}
-
-.leave-table th {
-    padding: var(--space-3) var(--space-4);
-    text-align: left;
-    color: var(--color-text-soft);
-    font-weight: 600;
-    white-space: nowrap;
-}
-
-.leave-table td {
-    padding: var(--space-3) var(--space-4);
-    border-bottom: var(--border-width) solid var(--color-border);
-    vertical-align: middle;
-}
-
-.leave-table td b {
-    display: block;
-    font-weight: 600;
-    color: var(--color-text);
-}
-
-.leave-table td small {
-    display: block;
-    color: var(--color-text-soft);
-    font-size: var(--font-size-xs);
-    margin-top: var(--space-1);
-}
-
-.leave-table tbody tr:hover {
-    background: var(--color-bg);
-}
-
-.leave-employee-cell {
-    display: flex;
-    align-items: center;
-    gap: var(--space-3);
-}
-
-.leave-employee-avatar {
-    width: 36px;
-    height: 36px;
-    border-radius: 50%;
-    object-fit: cover;
-    border: var(--border-width) solid var(--color-border);
-    flex-shrink: 0;
-}
-
-.leave-employee-initial {
-    width: 36px;
-    height: 36px;
-    border-radius: 50%;
-    background: var(--color-primary-light, #e0e7ff);
-    color: var(--color-primary, #3730a3);
-    display: inline-flex;
-    align-items: center;
-    justify-content: center;
-    font-weight: 600;
-    font-size: var(--font-size-xs, 12px);
-    border: var(--border-width) solid var(--color-border);
-    flex-shrink: 0;
-}
-
-.leave-employee-meta {
-    display: flex;
-    flex-direction: column;
-}
-
 /* ===== Trống ===== */
 
 .leave-empty {
     padding: var(--space-8);
     text-align: center;
     color: var(--color-text-muted);
-}
-
-/* ===== Phân trang ===== */
-
-.leave-pager {
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    gap: var(--space-4);
-    margin-top: var(--space-6);
-    color: var(--color-text-soft);
-    font-size: var(--font-size-sm);
 }
 
 /* ===== Trang nhân viên nộp đơn (màn #25, UC-14) ===== */
@@ -248,7 +154,7 @@
 
 .review-top-title {
     font-size: var(--font-size-lg);
-    font-weight: 700;
+    font-weight: var(--font-weight-bold);
     margin: 0;
 }
 
@@ -553,42 +459,24 @@
 
 /* Modals */
 .gms-modal {
-    display: none;
-    position: fixed;
-    top: 0;
-    left: 0;
-    right: 0;
-    bottom: 0;
-    z-index: 1000;
-    background: rgba(0, 0, 0, 0.45);
-    align-items: center;
-    justify-content: center;
-    backdrop-filter: blur(2px);
+    padding: var(--space-0);
+    width: min(calc(100vw - var(--space-6)), calc(var(--space-12) * 6));
+    max-height: calc(100dvh - var(--space-6));
+    overflow-y: auto;
+    border: var(--border-width) solid var(--color-border);
+    border-radius: var(--radius-lg);
+    background: var(--color-surface);
+    color: var(--color-text);
+    box-shadow: var(--shadow-pop);
 }
 
-.gms-modal.show {
-    display: flex;
+.gms-modal::backdrop {
+    background: var(--color-overlay);
 }
 
 .gms-modal-dialog {
     background: var(--color-surface);
-    border: 1px solid var(--color-border);
-    border-radius: var(--radius-lg);
     width: 100%;
-    max-width: 460px;
-    box-shadow: 0 20px 25px -5px rgba(0, 0, 0, 0.1), 0 10px 10px -5px rgba(0, 0, 0, 0.04);
-    animation: modalSlideIn 0.2s ease-out;
-}
-
-@keyframes modalSlideIn {
-    from {
-        opacity: 0;
-        transform: translateY(-12px);
-    }
-    to {
-        opacity: 1;
-        transform: translateY(0);
-    }
 }
 
 .gms-modal-header {
@@ -596,12 +484,12 @@
     align-items: center;
     justify-content: space-between;
     padding: var(--space-4) var(--space-5);
-    border-bottom: 1px solid var(--color-border);
+    border-bottom: var(--border-width) solid var(--color-border);
 }
 
 .gms-modal-title {
     font-size: var(--font-size-base);
-    font-weight: 600;
+    font-weight: var(--font-weight-semibold);
     margin: 0;
 }
 
@@ -623,7 +511,7 @@
     justify-content: flex-end;
     gap: var(--space-2);
     padding: var(--space-3) var(--space-5);
-    border-top: 1px solid var(--color-border);
+    border-top: var(--border-width) solid var(--color-border);
     background: var(--color-bg);
     border-bottom-left-radius: var(--radius-lg);
     border-bottom-right-radius: var(--radius-lg);

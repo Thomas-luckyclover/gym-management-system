@@ -246,11 +246,9 @@ const MESSAGES = {
     // EN: Submission deadline passed. Leave on %s had to be submitted before %s on the previous day.
     MSG77_LEAVE_SUBMISSION_DEADLINE: "Đã quá hạn nộp. Đơn nghỉ ngày %s phải nộp trước %s của ngày hôm trước.",
     // EN: You still have %d scheduled session(s) in this period. Reschedule, transfer or cancel them before submitting the request.
-    MSG78_LEAVE_BLOCKED_BY_SESSIONS: "Bạn vẫn còn %d buổi đã xếp lịch trong khoảng này. Hãy dời, chuyển hoặc hủy các buổi đó trước khi gửi đơn.",
+    MSG78_LEAVE_BLOCKED_BY_SESSIONS: "Bạn còn %d buổi dạy trùng lịch nghỉ. Xem lịch và liên hệ quản lý để giải quyết trước khi gửi đơn.",
     // EN: Cannot approve: the %s shift on %s would have fewer than %d %s(s) on duty.
     MSG79_LEAVE_BREAKS_MIN_STAFFING: "Không thể duyệt: ca %s ngày %s sẽ có ít hơn %d %s trực.",
-    // EN: Your leave request for %s was rejected: Approval deadline passed.
-    MSG80_LEAVE_AUTO_REJECTED: "Đơn nghỉ phép ngày %s của bạn đã bị từ chối: quá hạn duyệt.",
     // EN: %s needs a valid membership package before a PT package can be sold.
     MSG81_PT_REQUIRES_MEMBERSHIP: "%s cần có gói hội viên còn hiệu lực trước khi mua gói PT.",
     // EN: PT services are available only to customers aged %d or older.

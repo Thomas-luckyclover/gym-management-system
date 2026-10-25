@@ -1,204 +1,261 @@
 <%@ page contentType="text/html; charset=UTF-8" pageEncoding="UTF-8" %>
 <%@ taglib prefix="c" uri="jakarta.tags.core" %>
-
+<%@ taglib prefix="fn" uri="jakarta.tags.functions" %>
+<%@ taglib prefix="gms" uri="/WEB-INF/gms-functions.tld" %>
+<c:choose>
+    <c:when test="${managerView}">
+        <c:set var="roleTheme" value="theme-manager" />
+        <c:set var="roleName" value="Quản lý" />
+        <c:set var="roleInitials" value="QL" />
+    </c:when>
+    <c:otherwise>
+        <c:set var="roleTheme" value="theme-staff" />
+        <c:set var="roleName" value="Lễ tân" />
+        <c:set var="roleInitials" value="LT" />
+    </c:otherwise>
+</c:choose>
 <!DOCTYPE html>
 <html lang="vi">
-<head>
-  <%@ include file="/WEB-INF/jsp/common/head.jspf" %>
-  <title>Chi tiết hồ sơ · <c:out value="${customer.customerCode}" /> · Super Gym</title>
-  <link rel="stylesheet" href="${pageContext.request.contextPath}/css/pages/auth/account-settings.css">
-  <link rel="stylesheet" href="${pageContext.request.contextPath}/css/pages/receptionist/customer-list.css">
-  <link rel="stylesheet" href="${pageContext.request.contextPath}/css/pages/receptionist/customer-form.css">
-  <link rel="stylesheet" href="${pageContext.request.contextPath}/css/pages/auth/notification-bell.css">
+    <head>
+        <%@ include file="/WEB-INF/jsp/common/head.jspf" %>
+        <title>Chi tiết hội viên · Super Gym</title>
+        <link rel="stylesheet" href="${pageContext.request.contextPath}/css/pages/auth/account-settings.css">
 
-  <script src="${pageContext.request.contextPath}/js/pages/auth/notification-bell.js" defer></script>
-  <script src="${pageContext.request.contextPath}/js/pages/receptionist/customer-form.js" defer></script>
-</head>
-
-<body class="dock theme-staff">
-  <%@ include file="/WEB-INF/jsp/common/flash-toast.jspf" %>
-
-  <div class="app">
-    <%@ include file="/WEB-INF/jsp/common/layout-receptionist.jspf" %>
-
-    <div class="main">
-      <header class="topbar">
-        <div class="tb-left">
-          <h1 class="tb-title">Chi tiết hồ sơ khách hàng</h1>
-        </div>
-
-        <div class="top-right">
-          <%@ include file="/WEB-INF/jsp/common/notification-bell.jspf" %>
-
-          <a class="tb-user" href="${pageContext.request.contextPath}/account">
-            <span class="avatar">LT</span>
-            <span>
-              <b><c:out value="${sessionScope.displayName}" default="Lễ tân" /></b>
-              <small>Lễ tân</small>
-            </span>
-          </a>
-        </div>
-      </header>
-
-      <main class="content customer-form-page" id="main-content" tabindex="-1">
-        <%-- Breadcrumb --%>
-        <nav class="breadcrumb-nav" aria-label="Đường dẫn">
-          <a href="${pageContext.request.contextPath}/receptionist/customers">Hồ sơ khách hàng</a>
-          <span>/</span>
-          <span><c:out value="${customer.customerCode}" /></span>
-        </nav>
-
-        <div class="form-grid">
-          <%-- Cột trái: Thông tin hồ sơ & Tài sản hiện tại --%>
-          <div style="display: flex; flex-direction: column; gap: var(--space-5);">
-            <div class="info-card">
-              <div class="info-card-header">
-                <h3>Thông tin định danh</h3>
-                <span class="badge badge-active"><c:out value="${customer.status}" /></span>
-              </div>
-
-              <div class="detail-list">
-                <div class="detail-item">
-                  <span class="detail-label">Mã khách hàng</span>
-                  <span class="detail-value"><b><c:out value="${customer.customerCode}" /></b></span>
-                </div>
-                <div class="detail-item">
-                  <span class="detail-label">Họ và tên</span>
-                  <span class="detail-value"><c:out value="${person.fullName}" /></span>
-                </div>
-                <div class="detail-item">
-                  <span class="detail-label">Số điện thoại</span>
-                  <span class="detail-value"><c:out value="${person.phone}" default="—" /></span>
-                </div>
-                <div class="detail-item">
-                  <span class="detail-label">Email</span>
-                  <span class="detail-value"><c:out value="${person.email}" default="—" /></span>
-                </div>
-                <div class="detail-item">
-                  <span class="detail-label">Loại khách</span>
-                  <span class="detail-value">
-                    <c:choose>
-                      <c:when test="${customer.customerType == 'Dependent'}">Hồ sơ phụ thuộc (Dependent)</c:when>
-                      <c:otherwise>Hồ sơ cá nhân (Self)</c:otherwise>
-                    </c:choose>
-                  </span>
-                </div>
-                <div class="detail-item">
-                  <span class="detail-label">Thời điểm tham gia</span>
-                  <span class="detail-value"><c:out value="${customer.joinedAt}" /></span>
-                </div>
-              </div>
-            </div>
-
-            <%-- Thông tin gói tập còn hạn và buổi PT scheduled --%>
-            <div class="info-card">
-              <div class="info-card-header">
-                <h3>Gói tập &amp; Buổi PT còn hiệu lực</h3>
-              </div>
-
-              <c:choose>
-                <c:when test="${hasActiveAssets}">
-                  <c:if test="${not empty activePackages}">
-                    <div>
-                      <h4 style="margin: 0 0 var(--space-2) 0; font-size: var(--font-size-sm); color: var(--color-text-secondary);">Gói tập đang chạy:</h4>
-                      <ul class="active-assets-list">
-                        <c:forEach var="pkg" items="${activePackages}">
-                          <li>
-                            <b><c:out value="${pkg.packageName}" /></b> (<c:out value="${pkg.packageType}" />)
-                            — Hạn đến: <c:out value="${pkg.endDate}" />
-                            <c:if test="${pkg.partner}"><span class="badge badge-package">Gói đôi</span></c:if>
-                          </li>
-                        </c:forEach>
-                      </ul>
-                    </div>
-                  </c:if>
-
-                  <c:if test="${not empty scheduledSessions}">
-                    <div style="margin-top: var(--space-3);">
-                      <h4 style="margin: 0 0 var(--space-2) 0; font-size: var(--font-size-sm); color: var(--color-text-secondary);">Buổi PT đã xếp lịch:</h4>
-                      <ul class="active-assets-list">
-                        <c:forEach var="sess" items="${scheduledSessions}">
-                          <li>
-                            Ngày <c:out value="${sess.slotDate}" /> lúc <c:out value="${sess.startTime}" /> — PT: <c:out value="${sess.ptName}" />
-                          </li>
-                        </c:forEach>
-                      </ul>
-                    </div>
-                  </c:if>
+        <%-- BF-07: hai vai trò dùng chung bố cục; token màu thay đổi theo theme. --%>
+        <link rel="stylesheet" href="${pageContext.request.contextPath}/css/pages/receptionist/customer-list.css?v=20261025-bf07">
+        <link rel="stylesheet" href="${pageContext.request.contextPath}/css/pages/auth/notification-bell.css">
+        <script src="${pageContext.request.contextPath}/js/pages/auth/notification-bell.js" defer>
+        </script>
+        <script src="${pageContext.request.contextPath}/js/pages/receptionist/customer-list.js?v=20261025-bf07" defer>
+        </script>
+    </head>
+    <body class="dock <c:out value="${roleTheme}" />">
+        <%@ include file="/WEB-INF/jsp/common/flash-toast.jspf" %>
+        <div class="app">
+            <c:choose>
+                <c:when test="${managerView}">
+                    <%@ include file="/WEB-INF/jsp/common/layout-manager.jspf" %>
                 </c:when>
                 <c:otherwise>
-                  <p style="color: var(--color-text-muted); margin: 0; font-size: var(--font-size-sm);">
-                    Khách hàng hiện không còn gói tập đang hoạt động hoặc buổi PT nào.
-                  </p>
+                    <%@ include file="/WEB-INF/jsp/common/layout-receptionist.jspf" %>
                 </c:otherwise>
-              </c:choose>
+            </c:choose>
+            <div class="main">
+                <header class="topbar">
+                    <h1 class="tb-title">Chi tiết hội viên</h1>
+                    <div class="top-right">
+                        <%@ include file="/WEB-INF/jsp/common/notification-bell.jspf" %>
+                        <a class="tb-user" href="${pageContext.request.contextPath}/account">
+                            <span class="avatar">
+                                <c:out value="${roleInitials}" />
+                            </span>
+                            <span>
+                                <b>
+                                    <c:out value="${sessionScope.displayName}" />
+                                </b>
+                                <small>
+                                    <c:out value="${roleName}" />
+                                </small>
+                            </span>
+                        </a>
+                    </div>
+                </header>
+                <main class="content bf07-page" id="main-content" tabindex="-1">
+
+                    <%-- ===== detail: CustomerProfileDetailView do Service tạo cho cả hai vai trò ===== --%>
+                    <c:set var="profile" value="${detail.profile}" />
+                    <c:set var="showDeletionPanel" value="${not empty detail.pendingRequest or (not managerView and not profile.ownProfile and not profile.inactive)}" />
+                    <c:url var="listUrl" value="${listPath}" />
+                    <nav class="bf07-breadcrumb" aria-label="Đường dẫn">
+                        <a href="${listUrl}">← Danh sách hội viên</a>
+                        <span>
+                            <c:out value="${profile.customerCode}" />
+                        </span>
+                    </nav>
+                    <c:if test="${not empty actionError}">
+                        <p class="bf07-notice bf07-notice-danger" role="alert">
+                            <c:out value="${actionError}" />
+                        </p>
+                    </c:if>
+                    <div class="bf07-detail-grid">
+                        <section class="bf07-panel bf07-detail-card">
+                            <div class="bf07-person bf07-person-heading">
+                                <span class="bf07-avatar" aria-hidden="true">
+                                    <c:out value="${fn:substring(profile.fullName, 0, 1)}" />
+                                </span>
+                                <div>
+                                    <h2>
+                                        <c:out value="${profile.fullName}" />
+                                    </h2>
+                                    <span class="bf07-sub">
+                                        <c:out value="${profile.customerCode}" />
+                                        ·
+                                        <c:out value="${profile.customerTypeLabel}" />
+                                    </span>
+                                </div>
+                                <span class="badge badge-<c:out value="${profile.statusTone}" />">
+                                    <c:out value="${profile.statusLabel}" />
+                                </span>
+                            </div>
+                            <dl class="bf07-metadata">
+                                <div>
+                                    <dt>Số điện thoại</dt>
+                                    <dd>
+                                        <c:out value="${profile.phone}" default="—" />
+                                    </dd>
+                                </div>
+                                <div>
+                                    <dt>Email</dt>
+                                    <dd class="bf07-wrap">
+                                        <c:out value="${profile.email}" default="Chưa có email" />
+                                    </dd>
+                                </div>
+                                <div>
+                                    <dt>Ngày tham gia</dt>
+                                    <dd>
+                                        <c:out value="${gms:formatDateTime(profile.joinedAt)}" />
+                                    </dd>
+                                </div>
+                                <c:if test="${profile.inactive}">
+                                    <div>
+                                        <dt>Ngừng hoạt động lúc</dt>
+                                        <dd>
+                                            <c:out value="${gms:formatDateTime(profile.deletedAt)}" />
+                                        </dd>
+                                    </div>
+                                </c:if>
+                            </dl>
+                            <c:if test="${profile.inactive}">
+                                <p class="bf07-notice">Hồ sơ chỉ dùng để tra cứu. Giao dịch và lịch sử được giữ nguyên.</p>
+                            </c:if>
+                            <c:if test="${profile.ownProfile}">
+                                <p class="bf07-notice">Đây là hồ sơ của bạn. Hãy nhờ nhân viên khác xử lý yêu cầu xóa.</p>
+                            </c:if>
+                        </section>
+                        <c:if test="${showDeletionPanel}">
+                            <section class="bf07-panel bf07-detail-card">
+                                <c:choose>
+                                    <c:when test="${not empty detail.pendingRequest}">
+                                        <h2>Đang chờ duyệt xóa</h2>
+                                        <span class="badge badge-warning">
+                                            Yêu cầu #
+                                            <c:out value="${detail.pendingRequest.customerDeletionRequestId}" />
+                                        </span>
+                                        <p class="bf07-muted">
+                                            Gửi lúc
+                                            <c:out value="${gms:formatDateTime(detail.pendingRequest.requestedAt)}" />
+                                        </p>
+                                        <p class="bf07-reason"><c:out value="${detail.pendingRequest.reason}" /></p>
+                                        <c:if test="${managerView}">
+                                            <c:url var="reviewUrl" value="/manager/member-deletions/review">
+                                                <c:param name="id" value="${detail.pendingRequest.customerDeletionRequestId}" />
+                                            </c:url>
+                                            <a href="${reviewUrl}" class="btn btn-primary">Xem yêu cầu xóa</a>
+                                        </c:if>
+                                    </c:when>
+                                    <c:when test="${not managerView and not profile.ownProfile and not profile.inactive}">
+                                        <h2>Xóa hồ sơ</h2>
+                                        <p class="bf07-notice">
+                                            <c:choose>
+                                                <c:when test="${detail.hasActiveAssets}">Còn gói hoặc buổi PT. Yêu cầu sẽ gửi quản lý duyệt; hồ sơ chưa bị xóa ngay.</c:when>
+                                                <c:otherwise>Không còn gói hoặc buổi PT. Xác nhận sẽ ngừng hồ sơ ngay.</c:otherwise>
+                                            </c:choose>
+                                        </p>
+                                        <p class="bf07-muted">Lịch sử giao dịch vẫn được giữ lại.</p>
+                                        <form class="bf07-reason-form" action="${pageContext.request.contextPath}/receptionist/customers/form" method="post" data-confirm-delete data-unsaved-warning novalidate>
+                                            <input type="hidden" name="csrfToken" value="<c:out value="${csrfToken}" />">
+                                            <input type="hidden" name="action" value="delete">
+                                            <input type="hidden" name="customerId" value="${profile.customerId}">
+                                            <label for="profileDeleteReason">Lý do xóa *</label>
+                                            <textarea name="reason" id="profileDeleteReason" rows="3" maxlength="500" required aria-describedby="profileReasonError"><c:out value="${reason}" /></textarea>
+                                            <span class="bf07-error" id="profileReasonError" data-reason-error role="alert">
+                                                <c:out value="${errors.reason}" />
+                                            </span>
+                                            <small class="bf07-muted">
+                                                5–500 ký tự ·
+                                                <span data-reason-count>0</span>
+                                                /500
+                                            </small>
+                                            <button type="submit" class="btn btn-danger">
+                                                <c:choose>
+                                                    <c:when test="${detail.hasActiveAssets}">Gửi yêu cầu xóa</c:when>
+                                                    <c:otherwise>Xác nhận xóa hồ sơ</c:otherwise>
+                                                </c:choose>
+                                            </button>
+                                        </form>
+                                    </c:when>
+                                </c:choose>
+                            </section>
+                        </c:if>
+                        <section class="bf07-panel bf07-detail-card<c:if test="${showDeletionPanel}"> bf07-span-all</c:if>">
+                            <c:set var="packages" value="${detail.activePackages}" />
+                            <c:set var="sessions" value="${detail.scheduledSessions}" />
+                            <div class="bf07-section-heading">
+                                <h2>Gói tập và lịch PT</h2>
+                                <span class="bf07-muted">
+                                    <c:out value="${fn:length(packages)}" />
+                                    gói ·
+                                    <c:out value="${fn:length(sessions)}" />
+                                    buổi
+                                </span>
+                            </div>
+                            <c:choose>
+                                <c:when test="${empty packages and empty sessions}">
+                                    <p class="bf07-muted">Không còn gói đang dùng hoặc buổi PT chờ tập.</p>
+                                </c:when>
+                                <c:otherwise>
+                                    <c:if test="${not empty packages}">
+                                        <ul class="bf07-package-list">
+                                            <c:forEach var="pkg" items="${packages}">
+                                                <li>
+                                                    <div>
+                                                        <strong>
+                                                            <c:out value="${pkg.packageName}" />
+                                                        </strong>
+                                                        <span class="bf07-sub">
+                                                            <c:out value="${pkg.packageTypeLabel}" />
+                                                            <c:if test="${pkg.partner}">· Người tập cùng</c:if>
+                                                            ·
+                                                            <c:out value="${pkg.statusLabel}" />
+                                                        </span>
+                                                    </div>
+                                                    <span class="bf07-package-date">
+                                                        Đến
+                                                        <c:out value="${gms:formatDate(pkg.endDate)}" />
+                                                    </span>
+                                                </li>
+                                            </c:forEach>
+                                        </ul>
+                                    </c:if>
+                                    <c:if test="${not empty sessions}">
+                                        <details class="bf07-session-details">
+                                            <summary>
+                                                Xem
+                                                <c:out value="${fn:length(sessions)}" />
+                                                buổi PT đang chờ tập
+                                            </summary>
+                                            <ul class="bf07-session-list">
+                                                <c:forEach var="session" items="${sessions}">
+                                                    <li>
+                                                        <span>
+                                                            <c:out value="${gms:formatDate(session.slotDate)}" />
+                                                            ·
+                                                            <c:out value="${gms:formatTime(session.startTime)}" />
+                                                        </span>
+                                                        <span class="bf07-muted">
+                                                            <c:out value="${session.ptName}" />
+                                                        </span>
+                                                    </li>
+                                                </c:forEach>
+                                            </ul>
+                                        </details>
+                                    </c:if>
+                                </c:otherwise>
+                            </c:choose>
+                        </section>
+                    </div>
+                </main>
             </div>
-          </div>
-
-          <%-- Cột phải: Khu vực xóa hồ sơ (Danger Zone) --%>
-          <div>
-            <div class="danger-card">
-              <div class="danger-header">
-                <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-                  <path d="M10.29 3.86L1.82 18a2 2 0 0 0 1.71 3h16.94a2 2 0 0 0 1.71-3L13.71 3.86a2 2 0 0 0-3.42 0z"></path>
-                  <line x1="12" y1="9" x2="12" y2="13"></line>
-                  <line x1="12" y1="17" x2="12.01" y2="17"></line>
-                </svg>
-                Xóa hồ sơ khách hàng
-              </div>
-
-              <div class="danger-body">
-                <p class="danger-desc">
-                  Thao tác này sẽ chuyển trạng thái hồ sơ sang <b>Inactive</b>. Tài khoản liên kết sẽ bị đăng xuất ngay lập tức.
-                </p>
-
-                <c:choose>
-                  <c:when test="${hasActiveAssets}">
-                    <div class="asset-warning">
-                      <strong>CBR-16:</strong> Khách hàng còn gói tập/buổi PT hoạt động. Yêu cầu sẽ được chuyển đến <b>Quản lý phê duyệt</b>.
-                    </div>
-                  </c:when>
-                  <c:otherwise>
-                    <div style="font-size: var(--font-size-xs); color: var(--color-text-secondary); background-color: var(--color-bg-secondary); padding: var(--space-3); border-radius: var(--radius-sm);">
-                      Khách hàng không còn gói tập hay buổi PT. Thao tác xóa sẽ được thực hiện <b>ngay lập tức</b>.
-                    </div>
-                  </c:otherwise>
-                </c:choose>
-
-                <form id="deleteFormOnPage" action="${pageContext.request.contextPath}/receptionist/customers/form" method="post">
-                  <input type="hidden" name="action" value="delete" />
-                  <input type="hidden" name="customerId" value="<c:out value="${customer.customerId}" />" />
-
-                  <div class="form-group">
-                    <label class="form-label" for="deletionReasonPage">
-                      Lý do xóa <span style="color: var(--color-danger);">*</span>
-                    </label>
-                    <textarea id="deletionReasonPage"
-                              name="reason"
-                              class="form-textarea"
-                              placeholder="Nhập lý do chi tiết (5 - 500 ký tự)..."
-                              required></textarea>
-                    <div class="char-counter">
-                      <span id="charCountPage">0</span>/500 ký tự
-                    </div>
-                  </div>
-
-                  <button type="submit"
-                          id="btnSubmitDeletion"
-                          class="btn-primary"
-                          style="background-color: var(--color-danger); width: 100%; justify-content: center; margin-top: var(--space-2);">
-                    <c:choose>
-                      <c:when test="${hasActiveAssets}">Gửi yêu cầu Quản lý duyệt</c:when>
-                      <c:otherwise>Xác nhận xóa hồ sơ</c:otherwise>
-                    </c:choose>
-                  </button>
-                </form>
-              </div>
-            </div>
-          </div>
         </div>
-      </main>
-    </div>
-  </div>
-</body>
+    </body>
 </html>

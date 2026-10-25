@@ -9,9 +9,6 @@ import java.util.List;
  */
 public class StaffLeaveFormView {
 
-    // DAO: Employees.EmployeeId của nhân viên đang đăng nhập.
-    private final int employeeId;
-
     // DAO: Employees.EmployeeCode (ví dụ NV-0005).
     private final String employeeCode;
 
@@ -27,11 +24,10 @@ public class StaffLeaveFormView {
     // Service: cùng DTO dự báo với API preview; JSP hiện trong chú thích nút i.
     private final StaffingPreview staffing;
 
-    // Service: nhóm lịch sử đầy đủ, kể cả phần liên quan nằm ngoài giới hạn 10 dòng mới nhất.
+    // Service: mọi Pending và 10 đơn đã xử lý gần nhất; luôn lấy đủ các phần cùng đợt.
     private final List<LeaveRequestGroupView> requestGroups;
 
     public StaffLeaveFormView(
-            int employeeId,
             String employeeCode,
             String fullName,
             String position,
@@ -39,7 +35,6 @@ public class StaffLeaveFormView {
             StaffingPreview staffing,
             List<LeaveRequestGroupView> requestGroups
     ) {
-        this.employeeId = employeeId;
         this.employeeCode = employeeCode;
         this.fullName = fullName;
         this.position = position;
@@ -47,10 +42,6 @@ public class StaffLeaveFormView {
         this.staffing = staffing;
         // Tạo danh sách chỉ đọc: JSP được xem nhưng không thêm/xóa nhóm trong dữ liệu form.
         this.requestGroups = List.copyOf(requestGroups);
-    }
-
-    public int getEmployeeId() {
-        return employeeId;
     }
 
     public String getEmployeeCode() {

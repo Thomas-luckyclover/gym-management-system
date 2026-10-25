@@ -154,13 +154,14 @@ document.addEventListener("DOMContentLoaded", function () {
             scheduleLink.hidden = false;
         }
 
-        // Ô i chỉ dự báo quân số của ngày đầu, khác kiểm tra toàn khoảng khi duyệt.
+        // Ô i hiện quân số thấp nhất trong toàn khoảng ngày đang chọn.
         const staffing = plan.staffing;
         document.getElementById("pvPt").textContent = staffing.remainingPt;
         document.getElementById("pvRecep").textContent = staffing.remainingReceptionist;
         document.getElementById("pvMinPt").textContent = staffing.minPt;
         document.getElementById("pvMinRecep").textContent = staffing.minReceptionist;
-        document.getElementById("pvScope").textContent = formatDate(plan.fromDate) + " · ngày đầu";
+        document.getElementById("pvScope").textContent = formatDate(plan.fromDate)
+                + (plan.fromDate === plan.toDate ? "" : " → " + formatDate(plan.toDate));
     }
 
     // B2.3: gọi API, bỏ phản hồi cũ rồi chuyển dữ liệu mới cho renderPlan().

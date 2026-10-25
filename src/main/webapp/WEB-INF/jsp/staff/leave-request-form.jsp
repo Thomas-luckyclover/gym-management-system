@@ -100,7 +100,7 @@
                     <p class="leave-help-row"><span>Nộp trước:</span> <b id="infoDeadline"><c:out value="${formView.submissionCutoffTime}" default="—" /> · ngày hôm trước</b></p>
                     <p class="leave-help-note">Quá hạn hoặc nghỉ đột xuất: báo Quản lý.</p>
 
-                    <strong class="leave-help-title">Nhân sự còn lại nếu duyệt</strong>
+                    <strong class="leave-help-title">Nhân sự còn lại ít nhất nếu duyệt</strong>
                     <p id="pvScope" class="leave-help-note">Ngày mai · Cả ngày</p>
                     <p class="leave-help-row">
                       <span>PT:</span>
@@ -110,7 +110,7 @@
                       <span>Lễ tân:</span>
                       <b><span id="pvRecep"><c:out value="${formView.staffing.remainingReceptionist}" default="—" /></span> (tối thiểu <span id="pvMinRecep"><c:out value="${formView.staffing.minReceptionist}" default="—" /></span>)</b>
                     </p>
-                    <p class="leave-help-note">Chỉ xét ngày đầu; tạm tính nhân viên làm cả hai ca.</p>
+                    <p class="leave-help-note">Xét toàn khoảng nghỉ; tạm tính nhân viên làm cả hai ca.</p>
                   </div>
                 </div>
               </div>
@@ -228,7 +228,8 @@
             <section class="panel leave-panel">
               <div class="panel-head" style="display:flex;align-items:center;justify-content:space-between">
                 <div>
-                  <h2>Đơn đã nộp gần đây</h2>
+                  <h2>Đơn đã nộp</h2>
+                  <p>Tất cả đơn đang chờ và 10 đơn đã xử lý gần nhất.</p>
                 </div>
               </div>
 

@@ -9,7 +9,7 @@ import java.util.List;
 /** Đọc tham số nghiệp vụ v26 từ bảng SystemConfigs. */
 public class SystemConfigService {
 
-    // ===== Mã tham số P-01...P-22 =====
+    // ===== Tham số đang dùng; P-07 và P-20 đã bỏ =====
 
     // P-01: Số lần bảo lưu tối đa cho mỗi gói tập
     public static final String MAX_FREEZE_COUNT = "P-01";
@@ -67,8 +67,6 @@ public class SystemConfigService {
     // P-19: Giờ mở cửa mặc định hàng ngày (HH:mm-HH:mm)
     public static final String OPENING_HOURS = "P-19";
 
-    // P-20: Giờ chốt duyệt đơn nghỉ của ngày hôm trước (HH:mm)
-    public static final String LEAVE_APPROVED_DEADLINE = "P-20";
     // P-21: Thời hạn gói PT, VD "1M,2M,3M"
     public static final String PT_PACKAGE_DURATIONS = "P-21";
 
@@ -77,9 +75,6 @@ public class SystemConfigService {
 
     // P-23: Định mức phép năm mặc định cho nhân viên (ngày)
     public static final String LEAVE_ANNUAL_QUOTA = "P-23";
-
-    // P-24: Số ngày nghỉ tối đa cho một đơn nghỉ phép
-    public static final String LEAVE_MAX_DAYS_PER_REQUEST = "P-24";
 
     // DAO dùng chung
     private final SystemConfigDAO systemConfigDAO = new SystemConfigDAO();

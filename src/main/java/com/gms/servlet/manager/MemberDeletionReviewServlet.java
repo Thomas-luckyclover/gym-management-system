@@ -1,8 +1,6 @@
 package com.gms.servlet.manager;
 
-import com.gms.constant.Messages;
 import com.gms.constant.SessionKey;
-import com.gms.dto.CustomerDeletionReviewView;
 import com.gms.dto.ServiceResult;
 import com.gms.service.CustomerDeletionService;
 import com.gms.util.RequestUtil;
@@ -11,128 +9,63 @@ import jakarta.servlet.annotation.WebServlet;
 import jakarta.servlet.http.HttpServlet;
 import jakarta.servlet.http.HttpServletRequest;
 import jakarta.servlet.http.HttpServletResponse;
-import jakarta.servlet.http.HttpSession;
-
 import java.io.IOException;
+import com.gms.dto.CustomerDeletionReviewView;
 
-/**
- * Controller duyệt hoặc từ chối yêu cầu xóa hồ sơ hội viên cho Quản lý (Màn #32, UC-17, BF-07).
- * URL: /manager/member-deletions/review
- */
+/** BF-07: quản lý xem yêu cầu rồi duyệt hoặc từ chối; Service kiểm lại trạng thái khi ghi. */
 @WebServlet("/manager/member-deletions/review")
 public class MemberDeletionReviewServlet extends HttpServlet {
 
-    private static final String VIEW_NAME = "manager/member-deletion-review";
-    private static final String ACTION_APPROVE = "approve";
-    private static final String ACTION_REJECT = "reject";
+    private final CustomerDeletionService service = new CustomerDeletionService();
 
-    private final CustomerDeletionService customerDeletionService;
-
-    public MemberDeletionReviewServlet() {
-        this.customerDeletionService = new CustomerDeletionService();
-    }
-
-    MemberDeletionReviewServlet(CustomerDeletionService customerDeletionService) {
-        this.customerDeletionService = customerDeletionService;
+    @Override
+    protected void doGet(HttpServletRequest request, HttpServletResponse response) throws ServletException, IOException {
+        showPage(request, response, RequestUtil.getIntParam(request, "id", 0));
     }
 
     @Override
-    protected void doGet(HttpServletRequest request, HttpServletResponse response)
-            throws ServletException, IOException {
-
-        HttpSession session = request.getSession(false);
-        if (session == null || session.getAttribute(SessionKey.ACCOUNT_ID) == null) {
-            RequestUtil.redirect(request, response, "/login");
+    protected void doPost(HttpServletRequest request, HttpServletResponse response) throws ServletException, IOException {
+        if (!RequestUtil.isValidCsrfToken(request)) {
+            response.sendError(HttpServletResponse.SC_FORBIDDEN);
             return;
         }
-
-        int managerAccountId = (Integer) session.getAttribute(SessionKey.ACCOUNT_ID);
+        int accountId = (Integer) request.getSession(false).getAttribute(SessionKey.ACCOUNT_ID);
         int requestId = RequestUtil.getIntParam(request, "id", 0);
-
-        if (requestId <= 0) {
+        String action = RequestUtil.getTrimmedParam(request, "action");
+        String rejectReason = RequestUtil.getTrimmedParam(request, "rejectReason");
+        ServiceResult<String> result;
+        if ("approve".equals(action)) {
+            result = service.approveDeletion(accountId, requestId);
+        } else if ("reject".equals(action)) {
+            result = service.rejectDeletion(accountId, requestId, rejectReason);
+        } else {
+            response.sendError(HttpServletResponse.SC_BAD_REQUEST);
+            return;
+        }
+        if (result.isSuccess()) {
+            RequestUtil.setFlashToast(request, "success", result.getData());
             RequestUtil.redirect(request, response, "/manager/members?tab=pending-deletions");
             return;
         }
+        // Lỗi phải giữ nội dung, không redirect làm mất lý do đã nhập.
+        request.setAttribute("actionError", result.getMessage());
+        request.setAttribute("errors", result.getFieldErrors());
+        request.setAttribute("rejectReason", rejectReason);
+        request.setAttribute("reopenReject", "reject".equals(action));
+        showPage(request, response, requestId);
+    }
 
-        ServiceResult<CustomerDeletionReviewView> result =
-                customerDeletionService.getReviewDetail(managerAccountId, requestId);
-
+    private void showPage(HttpServletRequest request, HttpServletResponse response, int requestId) throws ServletException, IOException {
+        int accountId = (Integer) request.getSession(false).getAttribute(SessionKey.ACCOUNT_ID);
+        ServiceResult<CustomerDeletionReviewView> result = service.getReviewDetail(accountId, requestId);
         if (!result.isSuccess()) {
             RequestUtil.setFlashToast(request, "error", result.getMessage());
             RequestUtil.redirect(request, response, "/manager/members?tab=pending-deletions");
             return;
         }
-
         request.setAttribute("review", result.getData());
         request.setAttribute("activeNav", "members");
-
-        RequestUtil.forward(request, response, VIEW_NAME);
-    }
-
-    @Override
-    protected void doPost(HttpServletRequest request, HttpServletResponse response)
-            throws ServletException, IOException {
-
-        HttpSession session = request.getSession(false);
-        if (session == null || session.getAttribute(SessionKey.ACCOUNT_ID) == null) {
-            RequestUtil.redirect(request, response, "/login");
-            return;
-        }
-
-        int managerAccountId = (Integer) session.getAttribute(SessionKey.ACCOUNT_ID);
-        int requestId = RequestUtil.getIntParam(request, "id", 0);
-        String action = RequestUtil.getTrimmedParam(request, "action");
-
-        if (requestId <= 0) {
-            RequestUtil.setFlashToast(request, "error", "Không xác định được yêu cầu xóa.");
-            RequestUtil.redirect(request, response, "/manager/members?tab=pending-deletions");
-            return;
-        }
-
-        if (ACTION_APPROVE.equalsIgnoreCase(action)) {
-            handleApprove(request, response, managerAccountId, requestId);
-            return;
-        }
-
-        if (ACTION_REJECT.equalsIgnoreCase(action)) {
-            handleReject(request, response, managerAccountId, requestId);
-            return;
-        }
-
-        RequestUtil.setFlashToast(request, "error", Messages.MSG04_SYSTEM_BUSY);
-        RequestUtil.redirect(request, response, "/manager/member-deletions/review?id=" + requestId);
-    }
-
-    private void handleApprove(HttpServletRequest request, HttpServletResponse response, int managerAccountId, int requestId)
-            throws IOException {
-
-        ServiceResult<String> result = customerDeletionService.approveDeletion(managerAccountId, requestId);
-
-        if (result.isSuccess()) {
-            RequestUtil.setFlashToast(request, "success", result.getData());
-            RequestUtil.redirect(request, response, "/manager/members?tab=pending-deletions");
-        } else {
-            RequestUtil.setFlashToast(request, "error", result.getMessage());
-            RequestUtil.redirect(request, response, "/manager/member-deletions/review?id=" + requestId);
-        }
-    }
-
-    private void handleReject(HttpServletRequest request, HttpServletResponse response, int managerAccountId, int requestId)
-            throws IOException {
-
-        String rejectReason = RequestUtil.getTrimmedParam(request, "rejectReason");
-        ServiceResult<String> result = customerDeletionService.rejectDeletion(managerAccountId, requestId, rejectReason);
-
-        if (result.isSuccess()) {
-            RequestUtil.setFlashToast(request, "success", result.getData());
-            RequestUtil.redirect(request, response, "/manager/members?tab=pending-deletions");
-        } else {
-            String errorMsg = result.getMessage();
-            if (result.getFieldErrors() != null && result.getFieldErrors().containsKey("rejectReason")) {
-                errorMsg = result.getFieldErrors().get("rejectReason");
-            }
-            RequestUtil.setFlashToast(request, "error", errorMsg);
-            RequestUtil.redirect(request, response, "/manager/member-deletions/review?id=" + requestId);
-        }
+        request.setAttribute("csrfToken", RequestUtil.getOrCreateCsrfToken(request.getSession(false)));
+        RequestUtil.forward(request, response, "manager/member-deletion-review");
     }
 }

@@ -89,12 +89,13 @@ public class StaffLeaveService {
                     systemConfigService.getString(
                             SystemConfigService.LEAVE_SUBMIT_DEADLINE));
             // B4: cùng phép dự báo với khi người dùng đổi ngày/ca trên form.
-            StaffingPreview preview = loadStaffingPreview(employee, DateTimeUtil.today().plusDays(1), "FullDay");
+            LocalDate tomorrow = DateTimeUtil.today().plusDays(1);
+            StaffingPreview preview = loadStaffingPreview(employee, tomorrow, tomorrow, "FullDay");
 
-            // B5: lấy 10 đơn gần nhất của chính nhân viên này
+            // B5: mọi Pending và 10 đơn đã xử lý gần nhất của chính nhân viên.
             List<LeaveRequest> myRequests = leaveRequestDAO.findByEmployeeId(employee.getEmployeeId(), 10);
 
-            // Nhóm đủ hai phần kể cả khi phần thứ hai nằm ngoài 10 dòng mới nhất.
+            // Nhóm đủ hai phần kể cả khi phần đã xử lý nằm ngoài giới hạn gần đây.
             Map<String, LeaveRequestGroupView> groups = new LinkedHashMap<>();
             for (LeaveRequest request : myRequests) {
                 String key = request.getLeaveGroupId();
@@ -112,7 +113,7 @@ public class StaffLeaveService {
                     groups.put(key, new LeaveRequestGroupView(parts));
                 }
             }
-            StaffLeaveFormView view = new StaffLeaveFormView(employee.getEmployeeId(), employee.getEmployeeCode(),
+            StaffLeaveFormView view = new StaffLeaveFormView(employee.getEmployeeCode(),
                     fullName, employee.getPosition().getDbValue(), submissionCutoff, preview,
                     new ArrayList<>(groups.values()));
             return ServiceResult.ok(view);
@@ -123,15 +124,22 @@ public class StaffLeaveService {
         }
     }
 
-    /** Dự báo cùng một công thức cho lần mở form và khi đổi ngày/ca. */
-    private StaffingPreview loadStaffingPreview(Employee employee, LocalDate date, String shiftType) throws SQLException {
-        int remainingPt = leaveRequestDAO.countOnDutyAfterApproval(date, shiftType, "PT", 0);
-        int remainingReceptionist = leaveRequestDAO.countOnDutyAfterApproval(date, shiftType, "Receptionist", 0);
-        // DAO trừ người xin nghỉ; cộng lại ở chức vụ không phải của người nộp.
+    /** Lấy quân số thấp nhất toàn khoảng nghỉ; chỉ trừ người nộp ở đúng chức vụ. */
+    private StaffingPreview loadStaffingPreview(Employee employee, LocalDate fromDate, LocalDate toDate,
+            String shiftType) throws SQLException {
+        int remainingPt = Integer.MAX_VALUE;
+        int remainingReceptionist = Integer.MAX_VALUE;
+        try (Connection connection = DBContext.getConnection()) {
+            for (LocalDate date = fromDate; !date.isAfter(toDate); date = date.plusDays(1)) {
+                remainingPt = Math.min(remainingPt, leaveRequestDAO.countOnDuty(connection, date, shiftType, "PT", 0));
+                remainingReceptionist = Math.min(remainingReceptionist,
+                        leaveRequestDAO.countOnDuty(connection, date, shiftType, "Receptionist", 0));
+            }
+        }
         if (employee.getPosition() == Role.PT) {
-            remainingReceptionist += 1;
+            remainingPt = Math.max(0, remainingPt - 1);
         } else {
-            remainingPt += 1;
+            remainingReceptionist = Math.max(0, remainingReceptionist - 1);
         }
         int minPt = systemConfigService.getInt(SystemConfigService.MIN_PT_PER_SHIFT);
         int minReceptionist = systemConfigService.getInt(SystemConfigService.MIN_RECEPTIONIST_PER_SHIFT);
@@ -261,11 +269,6 @@ public class StaffLeaveService {
         } catch (IllegalStateException e) {
             return ServiceResult.fail("Chưa cấu hình quỹ phép năm. Vui lòng liên hệ quản lý.");
         } catch (SQLException e) {
-            // Lỗi trùng khóa duy nhất (2601/2627): đơn trùng ngày + ca vừa được tạo (bấm nộp 2 lần)
-            if (e.getErrorCode() == 2601 || e.getErrorCode() == 2627) {
-                return ServiceResult.fail(
-                        "Bạn đã có đơn nghỉ trùng ngày và ca này đang chờ duyệt hoặc đã được duyệt.");
-            }
             e.printStackTrace();
             return ServiceResult.fail(Messages.MSG04_SYSTEM_BUSY);
         }
@@ -283,7 +286,7 @@ public class StaffLeaveService {
             if (employee == null) {
                 return ServiceResult.fail("Không tìm thấy nhân viên đang làm việc.");
             }
-            StaffingPreview staffing = loadStaffingPreview(employee, fromDate, shiftType.getDbValue());
+            StaffingPreview staffing = loadStaffingPreview(employee, fromDate, toDate, shiftType.getDbValue());
             try (Connection connection = DBContext.getConnection()) {
                 LeaveSubmissionPreview plan = calculateSubmission(connection, employee, leaveType, fromDate, toDate, staffing);
                 int conflicts = countSessionConflicts(connection, employee, fromDate, toDate, shiftType);
@@ -382,7 +385,7 @@ public class StaffLeaveService {
         request.setFromDate(fromDate);
         request.setToDate(toDate);
         request.setShiftType(shift);
-        request.setDays(requestedDays(request));
+        request.setDays(BigDecimal.valueOf(ChronoUnit.DAYS.between(fromDate, toDate) + 1));
         request.setReason(reason.trim());
         request.setLeaveGroupId(groupId);
         return request;
@@ -479,12 +482,6 @@ public class StaffLeaveService {
             e.printStackTrace();
             return ServiceResult.fail(Messages.MSG04_SYSTEM_BUSY);
         }
-    }
-
-    /** Mỗi ngày trong khoảng nghỉ tính một ngày, không chia đôi theo ca sáng/chiều. */
-    private BigDecimal requestedDays(LeaveRequest request) {
-        return BigDecimal.valueOf(ChronoUnit.DAYS.between(
-                request.getFromDate(), request.getToDate()) + 1);
     }
 
     /** Chỉ PT/Lễ tân còn Working, tài khoản Active mới được gửi/xem dữ liệu của chính mình. */

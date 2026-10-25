@@ -9,7 +9,6 @@ public class LeaveSubmissionPreview {
     // Hai biên do Service xác thực, tính số ngày gồm cả hai biên.
     private final LocalDate fromDate;
     private final LocalDate toDate;
-    private final int totalDays;
     // Phần Annual luôn là những ngày đầu; 0 khi chủ động chọn Unpaid hoặc hết phép.
     private final int annualDays;
     private final int unpaidDays;
@@ -18,14 +17,13 @@ public class LeaveSubmissionPreview {
     private final boolean needsUnpaidConsent;
     // Scheduled trong toàn khoảng nghỉ; JS chặn gửi và dẫn PT tới lịch hiện có.
     private final int sessionConflicts;
-    // Chỉ là dự báo ngày đầu cho ô i hiện có; backend duyệt kiểm tra toàn khoảng.
+    // Quân số thấp nhất toàn khoảng nghỉ; chỉ là dự báo, khi duyệt sẽ kiểm tra lại.
     private final StaffingPreview staffing;
 
     public LeaveSubmissionPreview(LocalDate fromDate, LocalDate toDate, int annualDays, int unpaidDays,
             BigDecimal remainingAnnualDays, boolean needsUnpaidConsent, int sessionConflicts, StaffingPreview staffing) {
         this.fromDate = fromDate;
         this.toDate = toDate;
-        this.totalDays = annualDays + unpaidDays;
         this.annualDays = annualDays;
         this.unpaidDays = unpaidDays;
         this.remainingAnnualDays = remainingAnnualDays;
@@ -39,9 +37,6 @@ public class LeaveSubmissionPreview {
     }
     public LocalDate getToDate() {
         return toDate;
-    }
-    public int getTotalDays() {
-        return totalDays;
     }
     public int getAnnualDays() {
         return annualDays;

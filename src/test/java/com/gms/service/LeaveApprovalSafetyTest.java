@@ -191,15 +191,15 @@ class LeaveApprovalSafetyTest {
     }
 
     @Test
-    void changedAssigneeIsRejectedAfterTransactionLock() throws Exception {
+    void workingManagerApprovesAfterReadingTheLockedPendingRequest() throws Exception {
         stubManagerAndCurrentRequest();
-        request.setAssignedToEmployeeId(9);
+        when(dao.approve(connection, 12, 7)).thenReturn(true);
         try (MockedStatic<DBContext> database = mockStatic(DBContext.class)) {
             database.when(DBContext::getConnection).thenReturn(connection);
             var result = service.approveRequest(10, 12);
-            assertFalse(result.isSuccess());
-            verify(connection).rollback();
-            verify(dao, never()).approve(any(), anyInt(), anyInt());
+            assertTrue(result.isSuccess());
+            verify(connection).commit();
+            verify(dao).approve(connection, 12, 7);
             var order = inOrder(dao);
             order.verify(dao).lockDecisionScope(connection);
             order.verify(dao).findById(connection, 12);

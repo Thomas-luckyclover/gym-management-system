@@ -211,15 +211,11 @@ public final class Messages {
 
     /** CBR-83: nộp đơn nghỉ phép khi vẫn còn lịch tập PT. */
     // EN: You still have %d scheduled session(s) in this period. Reschedule, transfer or cancel them before submitting the request.
-    public static final String MSG78_LEAVE_BLOCKED_BY_SESSIONS = "Bạn vẫn còn %d buổi đã xếp lịch trong khoảng này. Hãy dời, chuyển hoặc hủy các buổi đó trước khi gửi đơn.";
+    public static final String MSG78_LEAVE_BLOCKED_BY_SESSIONS = "Bạn còn %d buổi dạy trùng lịch nghỉ. Xem lịch và liên hệ quản lý để giải quyết trước khi gửi đơn.";
 
     /** BR-14, CBR-88, CBR-90: duyệt nghỉ phép làm thiếu nhân sự tối thiểu của ca. */
     // EN: Cannot approve: the %s shift on %s would have fewer than %d %s(s) on duty.
     public static final String MSG79_LEAVE_BREAKS_MIN_STAFFING = "Không thể duyệt: ca %s ngày %s sẽ có ít hơn %d %s trực.";
-
-    /** CBR-85, P-20: đơn nghỉ phép tự động bị từ chối do quá hạn duyệt. */
-    // EN: Your leave request for %s was rejected: Approval deadline passed.
-    public static final String MSG80_LEAVE_AUTO_REJECTED = "Đơn nghỉ phép ngày %s của bạn đã bị từ chối: quá hạn duyệt.";
 
     /** CBR-59, BR-37: bán gói PT cho khách chưa có gói hội viên còn hạn. */
     // EN: %s needs a valid membership package before a PT package can be sold.
