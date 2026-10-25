@@ -21,7 +21,6 @@
 
 .sale {
   --sale-line: var(--arena-card-line);
-  color-scheme: light;   /* khối phấn sáng: ô tick / radio / lịch chọn ngày của trình duyệt vẽ theo nền sáng */
 }
 .sale :is(h2, h3, p, ul, ol, dl, dd, fieldset) {
   margin: 0;

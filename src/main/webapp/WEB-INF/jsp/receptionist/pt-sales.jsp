@@ -25,7 +25,7 @@
 <head>
     <%@ include file="/WEB-INF/jsp/common/head.jspf" %>
     <title>Bán gói PT · Super Gym Lễ tân</title>
-    <link rel="stylesheet" href="${pageContext.request.contextPath}/css/pages/receptionist/pt-sales.css?v=20261025b">
+    <link rel="stylesheet" href="${pageContext.request.contextPath}/css/pages/receptionist/pt-sales.css?v=20261025c">
     <script src="${pageContext.request.contextPath}/js/pages/receptionist/pt-sales.js?v=20261025a" defer></script>
 </head>
 <body class="dock theme-staff pt-sale-page">
