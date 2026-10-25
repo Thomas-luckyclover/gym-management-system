@@ -7,10 +7,10 @@ import java.time.LocalTime;
  * MỘT NGÀY T2–T6 trong kỳ gói, trên bảng "Lịch dự kiến".
  *
  *   Ai tạo?   PtSaleService.planDays (không đọc DB, test được).
- *   Ai dùng?  pt-sales.jsp in bảng; PtSaleService.sell ghi DB theo action.
+ *   Ai dùng?  pt-sales.jsp in lịch dự kiến; PtSaleService.hold giữ khung theo action.
  *
- *   action = "book"    PT đã công bố khung Free đúng giờ → khung đó thành Booked (slotId có giá trị)
- *            "create"  PT chưa có khung giờ này ngày đó → tạo khung mới Booked
+ *   action = "book"    PT đã công bố khung Free đúng giờ → giữ khung đó (slotId có giá trị)
+ *            "create"  PT chưa có khung giờ này ngày đó → tạo khung mới (Held)
  *            "skip"    không có buổi ngày đó (reason nói vì sao) — không bù, không gia hạn (BR-41)
  *   warning  có buổi nhưng PT cần để ý (ngày phòng nghỉ, PT có đơn nghỉ) → PT tự dời sau
  */

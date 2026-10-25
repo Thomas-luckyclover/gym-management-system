@@ -4,7 +4,7 @@ import com.gms.dto.HourException;
 import com.gms.dto.LeaveInfo;
 import com.gms.dto.PtSaleCustomer;
 import com.gms.dto.PtSaleDay;
-import com.gms.dto.PtSaleOption;
+import com.gms.dto.PtSaleGridRow;
 import com.gms.dto.PtScheduleItem;
 import com.gms.util.TimeRange;
 import java.time.LocalDate;
@@ -40,6 +40,10 @@ class PtSaleServiceTest {
         return s;
     }
 
+    private static LocalTime[] all(LocalTime time) {
+        return new LocalTime[] {time, time, time, time, time};
+    }
+
     @Test
     void customerRules() {
         assertNull(PtSaleService.whyCannotBuy(customer(), NOW.toLocalDate(), 10, 19));
@@ -59,17 +63,34 @@ class PtSaleServiceTest {
     }
 
     @Test
-    void fixedTimesComeFromPublishedFreeWeekdaySlotsInFirstTwoWeeks() {
-        List<PtSaleOption> times = PtSaleService.fixedTimeChoices(List.of(
+    void candidateTimesComeFromPublishedFreeWeekdaySlotsInFirstTwoWeeks() {
+        List<LocalTime> times = PtSaleService.candidateTimes(List.of(
                 slot(1, MON, "18:00", "Free"),
-                slot(2, MON.plusDays(1), "18:00", "Free"),
+                slot(2, MON.plusDays(1), "06:00", "Free"),
                 slot(3, MON.plusDays(2), "08:00", "Booked"),       // đã có khách → không tính
                 slot(4, MON.plusDays(5), "09:00", "Free"),         // Thứ 7 → không tính
                 slot(5, MON.plusDays(20), "10:00", "Free")),       // ngoài 14 ngày đầu → không tính
                 MON, 90, NOW);
-        assertEquals(1, times.size());
-        assertEquals("18:00", times.get(0).getValue());
-        assertEquals("PT trống 2/10 ngày đầu", times.get(0).getNote());
+        assertEquals(List.of(LocalTime.of(6, 0), SIX_PM), times);
+    }
+
+    @Test
+    void gridCountsUsableWeeksPerWeekdayAndMarksSelection() {
+        LocalDate end = MON.plusDays(11);   // 2 tuần: T2 26/10 → T6 06/11
+        List<PtScheduleItem> slots = List.of(slot(20, MON.plusDays(2), "18:00", "Booked"));   // T4 tuần 1 đã có khách
+        LocalTime[] selected = {SIX_PM, null, null, null, null};
+        List<PtSaleGridRow> grid = PtSaleService.buildGrid(List.of(SIX_PM), selected, MON, end, 90,
+                slots, List.of(), List.of(), List.of(), NOW);
+
+        PtSaleGridRow row = grid.get(0);
+        assertEquals("18:00", row.getTime());
+        assertEquals(2, row.getCells().get(0).getTotal());
+        assertEquals("full", row.getCells().get(0).getLevel());
+        assertTrue(row.getCells().get(0).isSelected());
+        assertEquals(1, row.getCells().get(2).getUsable());    // T4: còn 1/2 tuần
+        assertEquals("some", row.getCells().get(2).getLevel());
+        assertTrue(row.isWholeWeekPossible());
+        assertArrayEquals(new int[] {2, 2, 2, 2, 2}, PtSaleService.weekdayTotals(MON, end));
     }
 
     @Test
@@ -81,7 +102,7 @@ class PtSaleServiceTest {
                 slot(12, MON.plusDays(2), "17:00", "Free"),        // T4: khung khác chồng giờ
                 slot(13, MON.plusDays(3), "18:00", "Withdrawn"));  // T5: PT đã gỡ
         List<TimeRange> busy = List.of();
-        List<PtSaleDay> days = PtSaleService.planDays(MON, end, SIX_PM, 90, slots, List.of(), List.of(), busy, NOW);
+        List<PtSaleDay> days = PtSaleService.planDays(MON, end, all(SIX_PM), 90, slots, List.of(), List.of(), busy, NOW);
 
         assertEquals(5, days.size());
         assertEquals("book", days.get(0).getAction());
@@ -90,6 +111,15 @@ class PtSaleServiceTest {
         assertEquals("PT có khung khác chồng giờ", days.get(2).getReason());
         assertEquals("PT đã gỡ khung giờ này", days.get(3).getReason());
         assertEquals("create", days.get(4).getAction());   // T6: chưa có khung → tạo mới
+
+        // Mỗi thứ 1 giờ riêng; thứ chưa chọn giờ → không có buổi.
+        LocalTime[] mixed = {SIX_PM, LocalTime.of(6, 0), null, SIX_PM, SIX_PM};
+        List<PtSaleDay> week = PtSaleService.planDays(MON, end, mixed, 90, List.of(slot(30, MON.plusDays(1), "06:00", "Held")),
+                List.of(), List.of(), busy, NOW);
+        assertEquals("Đang được giữ cho đơn khác", week.get(1).getReason());
+        assertEquals("Chưa chọn giờ", week.get(2).getReason());
+        assertEquals(SIX_PM, PtSaleService.mostCommonStart(List.of(slot(1, MON, "18:00", "Held"),
+                slot(2, MON.plusDays(1), "06:00", "Held"), slot(3, MON.plusDays(3), "18:00", "Held"))));
     }
 
     @Test
@@ -106,7 +136,7 @@ class PtSaleServiceTest {
         leave.setShiftType("Afternoon");
         leave.setStatus("Approved");
 
-        List<PtSaleDay> days = PtSaleService.planDays(MON, end, SIX_PM, 90, List.of(), List.of(leave),
+        List<PtSaleDay> days = PtSaleService.planDays(MON, end, all(SIX_PM), 90, List.of(), List.of(leave),
                 List.of(closed), busy, NOW);
         assertTrue(days.get(0).isSession());
         assertTrue(days.get(0).getWarning().contains("đơn nghỉ"));
@@ -115,7 +145,7 @@ class PtSaleServiceTest {
 
         // Bắt đầu hôm nay sau giờ học → ngày hôm nay bị bỏ.
         LocalDateTime evening = LocalDateTime.of(2026, 10, 26, 19, 0);
-        List<PtSaleDay> today = PtSaleService.planDays(MON, MON, SIX_PM, 90, List.of(), List.of(), List.of(), List.of(), evening);
+        List<PtSaleDay> today = PtSaleService.planDays(MON, MON, all(SIX_PM), 90, List.of(), List.of(), List.of(), List.of(), evening);
         assertEquals("Đã qua giờ", today.get(0).getReason());
     }
 

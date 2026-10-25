@@ -6,7 +6,7 @@
    cust.blockReason   ← PtSaleService.whyCannotBuy; null = bán được
 --%>
 <div class="sale-customer ${empty cust.blockReason ? 'is-ok' : 'is-blocked'}">
-    <span class="sale-avatar" aria-hidden="true"><c:out value="${fn:substring(cust.fullName, 0, 1)}" /></span>
+    <span class="sale-avatar is-lg" aria-hidden="true"><c:out value="${fn:substring(cust.fullName, 0, 1)}" /></span>
     <div class="sale-customer-main">
         <p class="sale-customer-role"><c:out value="${custRole}" /></p>
         <p class="sale-customer-name"><c:out value="${cust.fullName}" /></p>
@@ -15,13 +15,13 @@
             <span><c:out value="${not empty cust.phone ? cust.phone : 'Hồ sơ phụ thuộc'}" /></span>
             <span><c:out value="${gms:formatDate(cust.dateOfBirth)}" /></span>
         </p>
-        <c:choose>
-            <c:when test="${empty cust.blockReason}">
-                <p class="sale-customer-status"><i class="fa-solid fa-circle-check" aria-hidden="true"></i> Gói thành viên tới <c:out value="${gms:formatDate(cust.membershipEnd)}" /></p>
-            </c:when>
-            <c:otherwise>
-                <p class="sale-customer-status" role="alert"><i class="fa-solid fa-circle-xmark" aria-hidden="true"></i> <c:out value="${cust.blockReason}" /></p>
-            </c:otherwise>
-        </c:choose>
     </div>
+    <c:choose>
+        <c:when test="${empty cust.blockReason}">
+            <p class="sale-customer-status"><i class="fa-solid fa-circle-check" aria-hidden="true"></i> Gói thành viên tới <c:out value="${gms:formatDate(cust.membershipEnd)}" /></p>
+        </c:when>
+        <c:otherwise>
+            <p class="sale-customer-status" role="alert"><i class="fa-solid fa-circle-xmark" aria-hidden="true"></i> <c:out value="${cust.blockReason}" /></p>
+        </c:otherwise>
+    </c:choose>
 </div>
