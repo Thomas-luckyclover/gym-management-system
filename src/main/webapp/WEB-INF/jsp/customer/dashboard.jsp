@@ -10,11 +10,11 @@
 <head>
     <%@ include file="/WEB-INF/jsp/common/head.jspf" %>
     <title>Trang cá nhân · Super Gym</title>
-    <link rel="stylesheet" href="${pageContext.request.contextPath}/css/pages/customer/dashboard.css?v=20261024flat">
+    <link rel="stylesheet" href="${pageContext.request.contextPath}/css/pages/customer/dashboard.css?v=20261025city">
     <link rel="stylesheet" href="${pageContext.request.contextPath}/css/dashboard-weather.css?v=20261014s">
     <link rel="stylesheet" href="${pageContext.request.contextPath}/css/dashboard-comic.css?v=20261015h">
     <%-- Khối chào + thời tiết dùng chung với PT Dashboard (.pt-board__hero) --%>
-    <link rel="stylesheet" href="${pageContext.request.contextPath}/css/dashboard-hero.css?v=20261024flat">
+    <link rel="stylesheet" href="${pageContext.request.contextPath}/css/dashboard-hero.css?v=20261025city">
     <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Patrick+Hand&display=swap">
 </head>
 

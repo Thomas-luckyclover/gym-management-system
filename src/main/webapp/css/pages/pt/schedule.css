@@ -959,7 +959,7 @@ html body.dock.pt-plan-page .pt-plan-switch a {
 }
 html body.dock.pt-plan-page .pt-plan-switch a[aria-current="page"] {
   background: var(--arena-900);
-  color: var(--arena-surface);
+  color: var(--arena-on-dark);
   box-shadow: none;
 }
 
@@ -971,22 +971,22 @@ html body.dock.pt-plan-page .pt-plan .pt-day.is-today .pt-day-head {
   background: var(--arena-900);
   box-shadow: inset 0 calc(-1 * var(--arena-mark)) 0 var(--arena-ember);
 }
-html body.dock.pt-plan-page .pt-plan .pt-day.is-today :is(.pt-day-name, .pt-day-date) { color: var(--arena-surface); }
+html body.dock.pt-plan-page .pt-plan .pt-day.is-today :is(.pt-day-name, .pt-day-date) { color: var(--arena-on-dark); }
 html body.dock.pt-plan-page .pt-plan .pt-day.is-today .pt-day-note.is-today { color: var(--arena-ember-on-dark); }
 html body.dock.pt-plan-page .pt-plan .pt-day.is-today .pt-day-note:not(.is-today) { color: var(--arena-steel); }
 
 /* Khung đã có khách: xanh đặc, chữ trắng (buổi đã qua giữ màu trầm có sẵn) */
 html body.dock.pt-plan-page .pt-slot.is-booked:not(.is-past) {
-  --kind-tint: var(--arena-700);
-  --kind-line: var(--arena-700);
+  --kind-tint: var(--arena-accent);
+  --kind-line: var(--arena-accent);
   --kind-ink: var(--arena-on-dark-soft);
-  --color-text: var(--arena-surface);
+  --color-text: var(--arena-on-dark);
   --color-text-soft: var(--arena-on-dark-soft);
   box-shadow: inset var(--arena-mark) 0 0 var(--arena-focus);
 }
 html body.dock.pt-plan-page .pt-plan-legend [data-kind="booked"] {
-  --swatch-tint: var(--arena-700);
-  --swatch-line: var(--arena-700);
+  --swatch-tint: var(--arena-accent);
+  --swatch-line: var(--arena-accent);
 }
 
 @media (min-width: 701px) {
@@ -1008,7 +1008,7 @@ html body.dock.pt-plan-page :is(.pt-plan-board, .pt-plan-error) {
 
 /* Thanh "chờ công bố": khối tối dính đáy */
 html body.dock.pt-plan-page .pt-plan-pending {
-  --color-text: var(--arena-surface);
+  --color-text: var(--arena-on-dark);
   --color-text-soft: var(--arena-steel);
   --color-text-muted: var(--arena-steel);
   --arena-focus-ring: var(--arena-focus);
@@ -1017,7 +1017,7 @@ html body.dock.pt-plan-page .pt-plan-pending {
   background:
     radial-gradient(80% 140% at 0% 0%, var(--arena-glow), transparent 60%),
     var(--arena-900);
-  color: var(--arena-surface);
+  color: var(--arena-on-dark);
   box-shadow: var(--arena-shadow-dark), var(--arena-float);
 }
 html.gms-lite body.dock.pt-plan-page .pt-plan-pending { background: var(--arena-900); }
@@ -1153,7 +1153,7 @@ html body.dock.pt-plan-page .pt-plan-pending .pt-pending-error { color: var(--ar
     radial-gradient(70% 160% at 0% 0%, var(--arena-glow), transparent 62%),
     var(--arena-900);
   box-shadow: inset 0 1px 0 var(--arena-glass-line);
-  color: var(--arena-surface);
+  color: var(--arena-on-dark);
 }
 .pt-handle-head h2 {
   font-family: var(--font-brand-display);
@@ -1166,7 +1166,7 @@ html body.dock.pt-plan-page .pt-plan-pending .pt-pending-error { color: var(--ar
 }
 /* common.css tô màu mọi h2 trong .content (html body.dock .content :is(h1, h2, h3)) → cần bộ chọn mạnh hơn để giữ chữ trắng. */
 html body.dock .pt-handle .pt-handle-head h2 {
-  color: var(--arena-surface);
+  color: var(--arena-on-dark);
 }
 .pt-handle-head h2:focus {
   outline: none;   /* tiêu đề chỉ nhận focus lúc mở hộp để trình đọc màn hình đọc đúng buổi */
@@ -1177,7 +1177,7 @@ html body.dock .pt-handle .pt-handle-head h2 {
   font-size: var(--font-size-sm);
 }
 .pt-handle-who strong {
-  color: var(--arena-surface);
+  color: var(--arena-on-dark);
   font-weight: var(--font-weight-semibold);
 }
 .pt-handle-chips {
@@ -1211,7 +1211,7 @@ html body.dock .pt-handle .pt-handle-head h2 {
 }
 .pt-handle-close:hover {
   background: var(--arena-glass-strong);
-  color: var(--arena-surface);
+  color: var(--arena-on-dark);
 }
 .pt-handle-close:focus-visible {
   outline-color: var(--arena-focus);
@@ -1306,10 +1306,10 @@ html body.dock .pt-handle .pt-handle-head h2 {
 /* Đang chọn: viền 2px xanh đĩa 20kg + icon cùng màu (cam để dành cho nút Lưu). */
 .pt-handle-option:has(input:checked) {
   background: var(--arena-today-tint);
-  box-shadow: inset 0 0 0 2px var(--arena-700);
+  box-shadow: inset 0 0 0 2px var(--arena-accent);
 }
 .pt-handle-option:has(input:checked) i {
-  color: var(--arena-700);
+  color: var(--arena-accent-text);
 }
 .pt-handle-option.is-danger:has(input:checked) {
   background: var(--color-danger-tint);
@@ -1423,9 +1423,9 @@ html body.dock .pt-handle .pt-handle-head h2 {
   white-space: nowrap;
 }
 .pt-handle-pill input:checked + span {
-  background: var(--arena-700);
+  background: var(--arena-accent);
   box-shadow: none;
-  color: var(--arena-surface);
+  color: var(--arena-on-dark);
 }
 .pt-handle-pill input:focus-visible + span {
   outline: var(--focus-outline-width) solid var(--arena-focus-ring);
@@ -1454,7 +1454,7 @@ html body.dock .pt-handle .pt-handle-head h2 {
 }
 .pt-handle-pt:has(input:checked) {
   background: var(--arena-today-tint);
-  box-shadow: inset 0 0 0 2px var(--arena-700);
+  box-shadow: inset 0 0 0 2px var(--arena-accent);
 }
 .pt-handle-pt:has(input:focus-visible) {
   outline: var(--focus-outline-width) solid var(--arena-focus-ring);
@@ -1478,13 +1478,13 @@ html body.dock .pt-handle .pt-handle-head h2 {
   height: 40px;
   border-radius: var(--radius-circle);
   background: var(--arena-info-chip);
-  color: var(--arena-700);
+  color: var(--arena-accent-text);
   font-family: var(--font-brand-display);
   font-weight: var(--font-weight-extrabold);
 }
 .pt-handle-pt:has(input:checked) .pt-handle-avatar {
-  background: var(--arena-700);
-  color: var(--arena-surface);
+  background: var(--arena-accent);
+  color: var(--arena-on-dark);
 }
 
 /* Hủy buổi */
@@ -1521,7 +1521,7 @@ html body.dock .pt-handle .pt-handle-head h2 {
   background: var(--arena-surface);
   box-shadow: inset 0 0 0 1px var(--arena-chalk-line-strong);
   color: var(--arena-ink);
-  caret-color: var(--arena-700);
+  caret-color: var(--arena-accent-text);
   font: inherit;
   font-weight: var(--font-weight-regular);
   line-height: var(--line-height-normal);
@@ -1536,7 +1536,7 @@ html body.dock .pt-handle .pt-handle-head h2 {
 }
 .pt-handle-field textarea:focus-visible {
   outline-offset: 0;
-  box-shadow: inset 0 0 0 1px var(--arena-700);
+  box-shadow: inset 0 0 0 1px var(--arena-accent);
 }
 .pt-handle-check {
   display: flex;

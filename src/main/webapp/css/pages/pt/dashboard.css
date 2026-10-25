@@ -480,7 +480,7 @@ html body.dock.pt-dashboard-page .pt-section-heading h2 {
 
 /* --- Kết quả tháng: khối tối có đèn (khối chào: xem mục Arena trong dashboard-hero.css) --- */
 html body.dock.pt-dashboard-page .pt-board .pt-board__summary {
-  --pt-text: var(--arena-surface);
+  --pt-text: var(--arena-on-dark);
   --pt-soft: var(--arena-steel);
   --pt-muted: var(--arena-steel);
   --pt-line: var(--arena-line-dark);
@@ -489,7 +489,7 @@ html body.dock.pt-dashboard-page .pt-board .pt-board__summary {
   --pt-panel-2: var(--arena-800);
   --pt-lagoon-text: var(--arena-focus);
   --arena-focus-ring: var(--arena-focus);
-  --color-text: var(--arena-surface);
+  --color-text: var(--arena-on-dark);
   --color-text-soft: var(--arena-steel);
   --color-surface-muted: var(--arena-800);
   border: 0;
@@ -497,7 +497,7 @@ html body.dock.pt-dashboard-page .pt-board .pt-board__summary {
   background:
     radial-gradient(120% 90% at 0% 0%, var(--arena-glow), transparent 55%),
     var(--arena-900);
-  color: var(--arena-surface);
+  color: var(--arena-on-dark);
   box-shadow: var(--arena-shadow-dark);
 }
 html.gms-lite body.dock.pt-dashboard-page .pt-board .pt-board__summary { background: var(--arena-900); }
@@ -519,7 +519,7 @@ html body.dock.pt-dashboard-page .pt-day.is-today .pt-day__name { color: var(--a
 html body.dock.pt-dashboard-page .pt-days.is-ready .pt-day[aria-selected="true"] {
   border-color: var(--arena-900);
   background: var(--arena-900);
-  color: var(--arena-surface);
+  color: var(--arena-on-dark);
 }
 html body.dock.pt-dashboard-page .pt-days.is-ready .pt-day[aria-selected="true"] :is(.pt-day__name, .pt-day__count) { color: var(--arena-steel); }
 html body.dock.pt-dashboard-page .pt-days.is-ready .pt-day[aria-selected="true"].is-today .pt-day__name { color: var(--arena-ember-on-dark); }
@@ -529,16 +529,16 @@ html body.dock.pt-dashboard-page .pt-session-time b { font-family: var(--font-br
 /* "Tiếp theo": nhãn xanh — ember đã dành cho hôm nay */
 html body.dock.pt-dashboard-page .pt-chip-next {
   border-radius: var(--arena-radius-chip);
-  background: var(--arena-700);
-  color: var(--arena-surface);
+  background: var(--arena-accent);
+  color: var(--arena-on-dark);
 }
-html body.dock.pt-dashboard-page .pt-session-time .pt-session-when { background: var(--arena-700); color: var(--arena-surface); }
+html body.dock.pt-dashboard-page .pt-session-time .pt-session-when { background: var(--arena-accent); color: var(--arena-on-dark); }
 
 /* --- Khách phụ trách --- */
 html body.dock.pt-dashboard-page .pt-client-item h3 { font-family: var(--font-brand-display); font-size: var(--font-size-lg); font-weight: var(--font-weight-bold); }
 html body.dock.pt-dashboard-page .pt-contact-btn { border-color: var(--arena-chalk-line); border-radius: var(--arena-radius-chip); background: var(--arena-surface); }
-html body.dock.pt-dashboard-page .pt-contact-btn:hover { border-color: var(--arena-700); }
-html body.dock.pt-dashboard-page .pt-contact-btn.is-zalo { border-color: var(--arena-700); background: var(--arena-700); color: var(--arena-surface); }
+html body.dock.pt-dashboard-page .pt-contact-btn:hover { border-color: var(--arena-accent-text); }
+html body.dock.pt-dashboard-page .pt-contact-btn.is-zalo { border-color: var(--arena-accent-text); background: var(--arena-accent); color: var(--arena-on-dark); }
 html body.dock.pt-dashboard-page .pt-contact-btn.is-zalo:hover { border-color: var(--arena-800); background: var(--arena-800); }
 html body.dock.pt-dashboard-page .pt-attn { border-left-width: var(--arena-mark); border-radius: var(--arena-radius-tile); }
 
@@ -549,7 +549,7 @@ html body.dock.pt-dashboard-page .pt-money-tile {
   background: var(--arena-800);
 }
 html body.dock.pt-dashboard-page .pt-money-tile strong {
-  color: var(--arena-surface);
+  color: var(--arena-on-dark);
   font-family: var(--font-brand-display);
   font-size: clamp(1.4rem, 2vw, 1.75rem);
   font-weight: var(--font-weight-extrabold);
