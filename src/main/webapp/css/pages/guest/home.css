@@ -1,6 +1,20 @@
 @charset "UTF-8";
-/* Trang chủ editorial: cam than hồng × đại dương sâu. home-motion.js dùng
-.cine-line, .cine-hero__photo, [data-card], [data-fade]; nội dung mặc định luôn hiện. */
+/* =====================================================================
+   TRANG CHỦ — home.css  (thiết kế "EMBER × AQUA": khối cam than hồng × đại dương sâu)
+
+   ĐỌC THEO THỨ TỰ (giống thứ tự khối trên trang):
+     1. Nền trang, nút, tiêu đề chung
+     2. Hero (chữ to bên trái, ảnh bên phải) + dải chữ cuối hero
+     3. Dải 4 ảnh "Đánh thức bản năng"   (ảnh đã tô sẵn màu xanh-cam trong file JPG)
+     4. Dịch vụ
+     5. Bảng giá gói tập + gói PT
+     6. Đội ngũ, bài viết
+     7. Hỏi đáp, kêu gọi đăng ký
+     8. Màn hẹp + giảm chuyển động
+
+   home-motion.js chỉ THÊM chuyển động cho .cine-line, .cine-hero__photo, [data-card], [data-fade];
+   tắt JS / giảm chuyển động thì nội dung vẫn hiện đủ.
+   ===================================================================== */
 .home-cine {
   background: var(--brand-warm-surface);
   color: var(--brand-paper);
@@ -93,13 +107,14 @@
   color: var(--brand-ember);
 }
 
-/* Tiêu đề có khoảng dòng đủ rộng cho dấu tiếng Việt. */
+/* Tiêu đề chữ in hoa: chừa đủ khoảng dòng để dấu dưới (Ạ) và dấu trên chồng (Ỗ, Ẫ) không chạm nhau.
+   Tiêu đề mục 1.2; tiêu đề hero 1 (mỗi dòng đã có padding riêng, xem .cine-line). */
 .cine-h2, .cine-h3, .cine-title {
   margin: 0;
   font-family: var(--font-cinematic);
   font-weight: var(--font-weight-bold);
-  line-height: var(--line-height-tight);
-  letter-spacing: var(--letter-spacing-normal);
+  line-height: 1.2;
+  letter-spacing: -0.005em;
   text-wrap: balance;
 }
 
@@ -201,12 +216,14 @@
   max-width: 60%;
   color: var(--brand-ink);
   font-size: var(--brand-hero-size);
+  line-height: 1;
   text-transform: uppercase;
 }
 
+/* Mỗi dòng tiêu đề hero: ~0.6em giữa chân chữ dòng trên và đỉnh chữ dòng dưới (đủ chỗ cho dấu). */
 .cine-line {
   display: block;
-  padding-block: var(--space-1);
+  padding-block: 0.14em 0.22em;
 }
 
 .cine-line > span {
@@ -955,9 +972,3 @@ Không phụ thuộc số gói DB; flex-basis lấy đúng chiều rộng sau kh
     transition: none;
   }
 }
-
-/* Inter Tight in hoa: mỗi dòng chừa ~0.6em giữa chân chữ dòng trên và đỉnh chữ dòng dưới,
-   đủ cho dấu dưới (Ạ) và dấu trên chồng (Ỗ, Ẫ) không chạm nhau; chữ giãn nhẹ cho thoáng */
-.cine-title { line-height: 1; letter-spacing: -0.005em; }
-.cine-line { padding-block: 0.14em 0.22em; }
-:is(.cine-h2, .cine-h3) { line-height: 1.2; letter-spacing: -0.005em; }

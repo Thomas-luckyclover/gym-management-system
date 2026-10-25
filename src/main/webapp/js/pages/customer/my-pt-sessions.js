@@ -1,290 +1,163 @@
+"use strict";
 
 /*
- * Mục đích JS:
- * Chuyển giữa 3 tab mà không tải lại trang
- * Chống bấm lọc 2 lần
+ * LỊCH TẬP CỦA KHÁCH — my-pt-sessions.js
  *
+ * JS CHỈ LÀM 3 VIỆC (không lấy dữ liệu, không gọi server — mọi chữ đã có sẵn trong HTML):
+ *   1. Bấm thẻ buổi → mở hộp "Chi tiết buổi tập" (chép phần chi tiết đang ẩn trong thẻ vào hộp).
+ *   2. Nút "Sao chép số" PT.
+ *   3. Đến từ "Gói của tôi" (?openSession=…) → mở sẵn chi tiết buổi đó.
+ *
+ * NHỮNG VIỆC KHÔNG CẦN JS:
+ *   - Đổi tuần / tháng, chọn ngày, "Hôm nay": đều là link hoặc form GET.
+ *   - Chọn ngày trên điện thoại: mỗi nút là link ?date=…, JSP đánh dấu cột cần hiện, CSS ẩn các cột khác.
+ *
+ * MỤC LỤC
+ *   NHÓM 1. Hộp chi tiết     initSessionDrawer, openSessionDrawer, closeWhenClickOutside, afterDrawerClosed
+ *   NHÓM 2. Sao chép số PT   copyPtPhone, showPhoneToCopyByHand
+ *   NHÓM 3. Mở sẵn 1 buổi    openFocusSession
  */
-// // Lịch PT: đổi vùng xem ở client; lọc và phân trang vẫn gửi GET tới Servlet.
-// JSP nối bằng [data-session-view], [data-session-panel], #sessionFilterForm.
-document.addEventListener("DOMContentLoaded", initializeSessionViews); // Nghĩa là: “khi trình duyệt dựng xong HTML, hãy chạy hàm initializeSessionViews”. Vì vậy JSP không cần viết initializeSessionViews() ở đâu cả.
-function initializeSessionViews() {
-    const page = document.querySelector(".my-pt-sessions");
-    if (!page) {
-        return;
-    }
-    const navigation = page.querySelector(".my-pt-view-tabs");
-    const buttons = page.querySelectorAll("[data-session-view]");
-    const panels = page.querySelectorAll("[data-session-panel]");
-    const filters = page.querySelector(".my-pt-filter-panel");
-    const form = document.getElementById("sessionFilterForm");
-    const viewInput = form.querySelector('input[name="view"]');
-    const clearFilters = form.querySelector("[data-clear-session-filters]");
 
-    // B1: Hàm chuyển tab, Tab được chọn thì aria-selected = true, các tab khác false.
-    //  chuyển vùng đọc, giữ URL để tải lại vẫn mở đúng vùng đang xem.
-    function selectView(view, updateUrl) {
-        for (let index = 0; index < buttons.length; index++) {
-            const button = buttons[index];
-            const selected = button.dataset.sessionView === view;
-            button.setAttribute("aria-selected", String(selected));
-            button.tabIndex = selected ? 0 : -1;
-        }
-        for (let index = 0; index < panels.length; index++) {
-            const panel = panels[index];
-            panel.hidden = panel.dataset.sessionPanel !== view; // Panel nào không khớp tên thì ẩn (panel.hidden = true)
-        }
-        filters.hidden = view === "packages";
-        viewInput.value = view;
-        const clearUrl = new URL(clearFilters.href);
-        clearUrl.search = "";
-        clearUrl.searchParams.set("view", view);
-        clearFilters.href = clearUrl;
-        if (updateUrl) {
-            const url = new URL(window.location.href);
-            url.searchParams.set("view", view);
-            url.hash = "";
-            window.history.replaceState(null, "", url); // cập nhật view=?
-        }
+document.addEventListener("DOMContentLoaded", function () {
+    initSessionDrawer();
+    openFocusSession();   // chạy sau initSessionDrawer vì cần hộp đã gắn sự kiện
+});
+
+
+// ================================================================================================================
+// NHÓM 1. HỘP CHI TIẾT
+// ================================================================================================================
+
+const sessionDrawer = document.getElementById("session-drawer");             // <dialog> dùng chung (_session-drawer.jspf)
+const drawerContent = document.getElementById("session-drawer-content");     // vùng rỗng trong hộp
+const copyMessage = document.getElementById("session-copy-message");         // dòng báo "Đã sao chép"
+let lastCard = null;                                                         // thẻ vừa bấm → đóng hộp thì trả focus về đây
+
+// HÀM CHÍNH — gọi 1 lần khi trang tải xong (DOMContentLoaded ở đầu file).
+function initSessionDrawer() {
+    if (!sessionDrawer) {
+        return;   // lịch lỗi → không có hộp; thẻ <details> vẫn tự xổ như HTML thường
     }
 
-    // B2: Gắn sự kiện cho tab + giúp tab dễ đọc
-    // tạo tab có phím mũi tên/Home/End; không dùng JS cho lọc dữ liệu.
-    // Thêm các thuộc tính role="tab", role="tabpanel" cho người dùng đọc màn hình (accessibility).
-    navigation.setAttribute("role", "tablist");
-    for (let index = 0; index < panels.length; index++) {
-        const panel = panels[index];
-        panel.setAttribute("role", "tabpanel");
-        panel.setAttribute("aria-labelledby", "session-tab-" + panel.dataset.sessionPanel);
-        panel.tabIndex = 0;
-    }
-    for (let index = 0; index < buttons.length; index++) {
-        const button = buttons[index];
-        button.setAttribute("role", "tab");
-        button.addEventListener("click", function () {
-            selectView(button.dataset.sessionView, true);
-        });
-        button.addEventListener("keydown", function (event) {
-            let nextIndex = index;
-            if (event.key === "ArrowRight") {
-                nextIndex = (index + 1) % buttons.length;
-            } else if (event.key === "ArrowLeft") {
-                nextIndex = (index + buttons.length - 1) % buttons.length;
-            } else if (event.key === "Home") {
-                nextIndex = 0;
-            } else if (event.key === "End") {
-                nextIndex = buttons.length - 1;
-            } else {
-                return;
-            }
-            event.preventDefault();
-            const nextButton = buttons[nextIndex];
-            selectView(nextButton.dataset.sessionView, true);
-            nextButton.focus();
-        });
-    }
-    let initialView = page.dataset.activeView;
-    if (window.location.hash === "#history-title") {
-        initialView = "history";
-    } else if (window.location.hash === "#pending-title") {
-        initialView = "upcoming";
-    }
-    selectView(initialView, false);
-    navigation.hidden = false;
-
-    // B3:
-    // phản hồi khi rời trang để lọc; không thay thế lỗi kiểm tra từ server.
-    // pageShow: khi khách bấm Back và trình duyệt khôi phục trang cũ, nút được trả về “Lọc lịch tập” và bấm lại được, tránh bị kẹt ở “Đang lọc…”.
-    form.addEventListener("submit", function () {
-        const submitButton = form.querySelector('button[type="submit"]');
-        form.setAttribute("aria-busy", "true");
-        setButtonLoading(submitButton, true);
-    });
-    window.addEventListener("pageshow", function () {
-        const submitButton = form.querySelector('button[type="submit"]');
-        form.removeAttribute("aria-busy");
-        setButtonLoading(submitButton, false);
+    // B1: mọi thẻ buổi — bấm phần nhìn thấy (summary) thì mở hộp.
+    document.querySelectorAll("[data-session-detail] > summary").forEach(function (summary) {
+        summary.setAttribute("aria-haspopup", "dialog");
+        summary.addEventListener("click", openSessionDrawer);
     });
 
-    // B4: HintBox dùng chung common.js (chạm, hover/focus và Escape).
-
-    // B5: Chỉ gửi yêu cầu khi khách xác nhận hủy; đóng hộp thoại không gửi form.
-    const cancelDialog = document.createElement("dialog");
-    cancelDialog.className = "my-pt-cancel-dialog";
-    cancelDialog.setAttribute("aria-labelledby", "cancelDialogTitle");
-    cancelDialog.setAttribute("aria-describedby", "cancelDialogDesc");
-    cancelDialog.innerHTML =
-        '<div class="my-pt-cancel-dialog-content">' +
-        '<h2 id="cancelDialogTitle">Hủy buổi tập này?</h2>' +
-        '<p id="cancelDialogDesc" class="my-pt-cancel-dialog-intro">Buổi tập sẽ chuyển sang Lịch sử sau khi hủy.</p>' +
-        '<p class="my-pt-cancel-dialog-warning"><strong>Vẫn trừ một buổi trong gói.</strong> Không hoàn tiền và không thể hoàn tác.</p>' +
-        '<div class="my-pt-dialog-actions">' +
-        '<button type="button" data-cancel-choice="keep" class="btn">Giữ buổi</button>' +
-        '<button type="button" data-cancel-choice="confirm" class="btn">Xác nhận hủy</button>' +
-        '</div></div>';
-    document.body.appendChild(cancelDialog);
-    initializeSwapDialog(page);
-
-    let pendingSessionId = null;
-    let cancelOpener = null;
-
-    page.addEventListener("click", function (event) {
-        const button = event.target.closest("[data-cancel-session-id]");
-        if (!button) {
-            return;
-        }
-        pendingSessionId = button.dataset.cancelSessionId; // Quan Trọng: lấy ID buổi
-        cancelOpener = button;
-        // Hiện đúng ngày, giờ và PT của hàng vừa chọn; không đổi dữ liệu gửi POST.
-        const session = button.closest(".my-pt-session");
-        const day = button.closest(".my-pt-day");
-        const sessionDetails = day.querySelector(".my-pt-day-label").textContent.trim()
-                + " · " + session.querySelector(".my-pt-session-hours").textContent.trim()
-                + " · " + session.querySelector("h3").textContent.trim();
-        cancelDialog.querySelector("#cancelDialogDesc").textContent = sessionDetails;
-        cancelDialog.returnValue = "";                      // xóa kết quả của lần mở trước
-        cancelDialog.showModal();
-        // Giữ buổi là lựa chọn an toàn khi dùng bàn phím.
-        setTimeout(() => {
-            cancelDialog.querySelector('[data-cancel-choice="keep"]')?.focus();
-        }, 0);
+    // B2: 3 cách đóng — nút Đóng, bấm ra vùng tối bên ngoài, phím Esc (<dialog> tự lo).
+    sessionDrawer.querySelector("[data-close-session]").addEventListener("click", function () {
+        sessionDrawer.close();
     });
+    sessionDrawer.addEventListener("click", closeWhenClickOutside);
+    sessionDrawer.addEventListener("close", afterDrawerClosed);
 
-    cancelDialog.addEventListener("click", function (event) {
-        const choice = event.target.closest("[data-cancel-choice]");
-        if (choice && cancelDialog.contains(choice)) {
-            cancelDialog.close(choice.dataset.cancelChoice);
+    // B3: nút "Sao chép số" nằm trong nội dung VỪA chép vào hộp → bắt click ở document (lúc này nút chưa tồn tại).
+    document.addEventListener("click", function (event) {
+        const button = event.target.closest("[data-copy-phone]");
+        if (button) {
+            copyPtPhone(button);
         }
     });
+}
 
-    cancelDialog.addEventListener("close", function () {
-        if (cancelDialog.returnValue === "confirm" && pendingSessionId) {
-            // Gửi POST để hủy buổi
-            submitCancelRequest(pendingSessionId);
-        }
-        pendingSessionId = null;
-        cancelOpener?.focus(); // trả focus về nút Hủy, giống B4
-    });
+// HÀM PHỤ — gọi ở B1 của initSessionDrawer, mỗi lần khách bấm 1 thẻ buổi.
+function openSessionDrawer(event) {
+    const summary = event.currentTarget;
+    const card = summary.parentElement;                                       // cả thẻ <details>
 
-    // B6: Gửi POST hủy buổi tập lên Servlet
-    function submitCancelRequest(sessionId) {
-        const form = document.createElement("form");
-        form.method = "POST";
-        form.action = window.location.pathname; // POST về chính trang hiện tại
+    // B1: không cho <details> xổ ngay trong ô lịch.
+    event.preventDefault();
 
-        const actionInput = document.createElement("input");
-        actionInput.type = "hidden";
-        actionInput.name = "action";
-        actionInput.value = "cancel";
-        form.appendChild(actionInput);
+    // B2: chép bản sao phần chi tiết đang ẩn trong thẻ vào hộp (replaceChildren = xóa nội dung cũ rồi đặt mới).
+    drawerContent.replaceChildren(card.querySelector("[data-session-content]").cloneNode(true));
+    copyMessage.textContent = "";
 
-        const sessionIdInput = document.createElement("input");
-        sessionIdInput.type = "hidden";
-        sessionIdInput.name = "sessionId";
-        sessionIdInput.value = sessionId;
-        form.appendChild(sessionIdInput);
+    // B3: nhớ thẻ để trả focus, mở hộp, cuộn nội dung lên đầu, khóa cuộn trang phía sau.
+    lastCard = summary;
+    summary.setAttribute("aria-expanded", "true");
+    sessionDrawer.showModal();
+    sessionDrawer.querySelector(".session-drawer-body").scrollTop = 0;
+    document.body.classList.add("session-detail-open");
+}
 
-        document.body.appendChild(form);
-        form.submit();
+// HÀM PHỤ — gọi ở B2 của initSessionDrawer. Bấm vào vùng tối ngoài khung thì đóng; bấm / bôi chữ bên trong thì không.
+function closeWhenClickOutside(event) {
+    const box = sessionDrawer.getBoundingClientRect();
+    const outside = event.clientX < box.left || event.clientX > box.right
+            || event.clientY < box.top || event.clientY > box.bottom;
+    if (event.target === sessionDrawer && outside) {
+        sessionDrawer.close();
     }
 }
 
-// UC-38: chỉ tải lựa chọn bằng AJAX; xác nhận gửi POST để refresh lịch và quota cùng nhau.
-function initializeSwapDialog(page) {
-    const dialog = document.createElement("dialog");
-    dialog.className = "my-pt-cancel-dialog my-pt-swap-dialog";
-    dialog.setAttribute("aria-labelledby", "swapDialogTitle");
-    dialog.innerHTML = '<div class="my-pt-cancel-dialog-content">'
-            + '<h2 id="swapDialogTitle">Đổi buổi tập</h2>'
-            + '<p data-swap-session></p>'
-            + '<p class="my-pt-swap-policy">Chọn slot thứ 7 hoặc Chủ nhật của cùng PT, trong hạn gói. Tuần sau mở từ thứ 7. Mỗi lần xác nhận sử dụng một lượt đổi.</p>'
-            + '<p data-swap-status role="status" aria-live="polite"></p>'
-            + '<label class="my-pt-swap-slot-label" hidden>Khung giờ mới<select data-swap-slots><option value="">Chọn khung giờ</option></select></label>'
-            + '<div class="my-pt-dialog-actions">'
-            + '<button type="button" class="btn btn-outline" data-swap-close>Giữ lịch cũ</button>'
-            + '<button type="button" class="btn btn-primary" data-swap-confirm disabled>Xác nhận đổi</button>'
-            + '</div></div>';
-    document.body.appendChild(dialog);
-    const select = dialog.querySelector("[data-swap-slots]");
-    const label = dialog.querySelector("label");
-    const status = dialog.querySelector("[data-swap-status]");
-    const confirm = dialog.querySelector("[data-swap-confirm]");
-    let sessionId = null;
-    let originalSlotId = null;
-    let opener = null;
-    let requestVersion = 0;
+// HÀM PHỤ — gọi ở B2 của initSessionDrawer, sau MỌI cách đóng: trả trang về như cũ.
+function afterDrawerClosed() {
+    document.body.classList.remove("session-detail-open");
+    if (lastCard) {
+        lastCard.setAttribute("aria-expanded", "false");
+        lastCard.focus({ preventScroll: true });
+    }
+}
 
-    page.addEventListener("click", async function (event) {
-        const button = event.target.closest("[data-swap-session-id]");
-        if (!button) return;
-        opener = button;
-        sessionId = button.dataset.swapSessionId;
-        originalSlotId = null;
-        const version = ++requestVersion;
-        confirm.disabled = true;
-        label.hidden = true;
-        select.replaceChildren(new Option("Chọn khung giờ", ""));
-        status.textContent = "Đang tìm khung giờ phù hợp…";
-        const row = button.closest(".my-pt-session");
-        dialog.querySelector("[data-swap-session]").textContent =
-                button.closest(".my-pt-day").querySelector(".my-pt-day-label").textContent.trim()
-                + " · " + row.querySelector(".my-pt-session-hours").textContent.trim()
-                + " · " + row.querySelector("h3").textContent.trim();
-        dialog.showModal();
-        dialog.querySelector("[data-swap-close]").focus();
-        try {
-            const result = await getJson(window.location.pathname, {action: "swapOptions", sessionId: sessionId});
-            if (version !== requestVersion || !dialog.open) return;
-            if (!result.success) {
-                status.textContent = result.message || "Không tải được khung giờ. Vui lòng thử lại.";
-                return;
-            }
-            originalSlotId = result.data.originalTimeSlotId;
-            const slots = result.data.slots;
-            if (!slots.length) {
-                status.textContent = "Chưa có slot cuối tuần phù hợp. Bạn có thể thử lại khi PT mở thêm lịch hoặc trao đổi trực tiếp với PT.";
-                return;
-            }
-            status.textContent = "Còn " + result.data.remainingSwaps + " lượt đổi trong gói · PT " + result.data.ptName;
-            for (const slot of slots) {
-                const date = slot.slotDate.split("-").reverse().join("/");
-                select.appendChild(new Option(date + " · " + slot.startTime + "–" + slot.endTime, slot.timeSlotId));
-            }
-            label.hidden = false;
-        } catch (error) {
-            if (version === requestVersion && dialog.open) status.textContent = "Không tải được khung giờ. Vui lòng đóng và thử lại.";
-        }
-    });
-    select.addEventListener("change", function () { confirm.disabled = !select.value; });
-    dialog.querySelector("[data-swap-close]").addEventListener("click", function () { dialog.close(); });
-    dialog.addEventListener("close", function () {
-        requestVersion++;
-        sessionId = null;
-        opener?.focus();
-    });
-    confirm.addEventListener("click", function () {
-        if (!sessionId || !select.value || !originalSlotId || confirm.disabled) return;
-        setButtonLoading(confirm, true);
-        dialog.querySelector("[data-swap-close]").disabled = true;
-        const form = document.createElement("form");
-        form.method = "POST";
-        form.action = window.location.pathname;
-        const values = {action: "swap", sessionId: sessionId,
-            targetTimeSlotId: select.value, originalTimeSlotId: originalSlotId,
-            csrfToken: page.dataset.csrfToken};
-        for (const name of Object.keys(values)) {
-            const input = document.createElement("input");
-            input.type = "hidden";
-            input.name = name;
-            input.value = values[name];
-            form.appendChild(input);
-        }
-        document.body.appendChild(form);
-        form.submit();
-    });
-    window.addEventListener("pageshow", function () {
-        setButtonLoading(confirm, false);
-        confirm.disabled = !select.value;
-        dialog.querySelector("[data-swap-close]").disabled = false;
-    });
+
+// ================================================================================================================
+// NHÓM 2. SAO CHÉP SỐ PT
+// ================================================================================================================
+
+// HÀM CHÍNH — gọi ở B3 của initSessionDrawer khi bấm nút có data-copy-phone (SĐT do JSP in vào thuộc tính).
+async function copyPtPhone(button) {
+    const phone = button.dataset.copyPhone;
+    try {
+        // B1: cách chính — Clipboard API.
+        await navigator.clipboard.writeText(phone);
+        button.textContent = "Đã sao chép";
+        copyMessage.textContent = "Đã sao chép số điện thoại PT.";
+    } catch (error) {
+        // B2: trình duyệt chặn → hiện ô chứa số, bôi đen sẵn để khách tự Ctrl+C. Không báo "thành công" giả.
+        showPhoneToCopyByHand(button, phone);
+        button.textContent = "Chọn số để sao chép";
+        copyMessage.textContent = "Trình duyệt chưa cho phép sao chép. Nhấn Ctrl+C hoặc giữ số để sao chép.";
+    }
+}
+
+// HÀM PHỤ — gọi ở B2 của copyPtPhone. Tạo ô chữ 1 lần, các lần sau dùng lại.
+function showPhoneToCopyByHand(button, phone) {
+    let input = button.parentElement.querySelector("[data-phone-fallback]");
+    if (!input) {
+        input = document.createElement("input");
+        input.type = "text";
+        input.readOnly = true;
+        input.dataset.phoneFallback = "true";
+        input.setAttribute("aria-label", "Số PT: nhấn Ctrl+C hoặc giữ để sao chép");
+        button.parentElement.appendChild(input);
+    }
+    input.value = phone;
+    input.focus();
+    input.select();
+}
+
+
+// ================================================================================================================
+// NHÓM 3. MỞ SẴN 1 BUỔI (đến từ "Gói của tôi" hoặc bấm 1 buổi ở lịch tháng: URL có ?openSession=…)
+// ================================================================================================================
+
+// HÀM CHÍNH — gọi 1 lần khi trang tải xong, SAU initSessionDrawer.
+function openFocusSession() {
+    // B1: mã buổi do JSP gắn trên <main data-open-session="…">; không có thì thôi.
+    const sessionId = document.getElementById("main-content").dataset.openSession;
+    if (!sessionId) {
+        return;
+    }
+
+    // B2: tìm thẻ buổi trong tuần đang xem. Không thấy (buổi ở tuần khác / không phải của mình) → bỏ qua.
+    const card = document.querySelector('[data-session-detail][data-session-id="' + CSS.escape(sessionId) + '"]');
+    if (!card) {
+        return;
+    }
+
+    // B3: tô viền thẻ, cuộn tới giữa màn hình, rồi "bấm" giúp để mở hộp chi tiết.
+    card.classList.add("is-focus");
+    card.scrollIntoView({ block: "center" });
+    card.querySelector("summary").click();
 }

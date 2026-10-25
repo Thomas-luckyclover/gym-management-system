@@ -1,0 +1,1645 @@
+@charset "UTF-8";
+/* =====================================================================
+   LỊCH DẠY PT — schedule.css
+
+   ĐỌC THEO THỨ TỰ:
+     1. Khung trang, panel, thanh công cụ   (cùng kiểu màn Lịch tập của khách)
+     2. Thẻ khung                           (dùng chung cho cả hai kiểu xem)
+     3. Gỡ khung và khung nháp              (CSS đổi kiểu thẻ, không cần JS)
+     4. KIỂU DANH SÁCH  = mặc định          (điện thoại LUÔN dùng kiểu này)
+     5. KIỂU LƯỚI TUẦN  = màn rộng ≥ 701px VÀ đang chọn "Tuần"
+     6. Chú thích màu
+     7. Thanh "Chờ công bố" dính đáy        (CSS tự đếm, tự hiện)
+     8. Điện thoại
+     9. Arena (24/10 tối): đầu ngày hôm nay tối, khung có khách xanh đặc, ngày nghỉ sọc chéo
+     10. Xử lý buổi (bước 11): thẻ buổi là link ?handle=, hộp 3 phương án đổi bằng radio + :has
+
+   Mọi giá trị lấy từ tokens.css; không ghi cứng màu, px, font.
+   ===================================================================== */
+
+
+/* ==================== 1. KHUNG TRANG, PANEL, THANH CÔNG CỤ ==================== */
+
+.pt-plan {
+  --pt-hour: var(--space-8);                  /* 1 giờ cao 48px trên lưới tuần */
+  --pt-minute: calc(var(--pt-hour) / 60);     /* 1 phút = 0.8px */
+  display: grid;
+  gap: var(--space-4);
+  counter-reset: pt-add pt-remove;            /* 2 bộ đếm cho thanh Chờ công bố (mục 7) */
+}
+
+.pt-plan h2,
+.pt-plan h3,
+.pt-plan p {
+  margin: 0;
+}
+
+/* Panel: lớp .panel dùng chung trong common.css lo nền, viền, góc bo, bóng. */
+.pt-plan-board {
+  position: relative;
+  min-width: 0;
+}
+
+.pt-plan-error {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  justify-content: space-between;
+  gap: var(--space-3);
+  padding: var(--space-4);
+}
+
+.pt-plan-toolbar {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  justify-content: space-between;
+  gap: var(--space-3);
+  padding: var(--space-3) var(--space-4);
+  border-bottom: var(--border-width) solid var(--color-border);
+}
+
+.pt-plan-period,
+.pt-plan-actions {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: var(--space-2);
+}
+
+.pt-plan-period h2 {
+  margin-inline: var(--space-1);
+  font-size: var(--font-size-base);
+  font-weight: var(--font-weight-semibold);
+  font-variant-numeric: tabular-nums;
+  white-space: nowrap;
+}
+
+/* Nút ‹ › vuông như màn Lịch tập. */
+.pt-plan-step {
+  min-width: var(--control-height-md);
+  padding: var(--space-2);
+}
+
+/* Tuần | Danh sách: gạch cam dưới mục đang chọn (giống Tuần | Tháng của khách). */
+.pt-plan-switch {
+  display: flex;
+  border: var(--border-width) solid var(--color-border-strong);
+  border-radius: var(--radius-sm);
+  overflow: hidden;
+}
+
+.pt-plan-switch a {
+  padding: var(--space-2) var(--space-4);
+  color: var(--color-text-soft);
+  font-size: var(--font-size-sm);
+  text-decoration: none;
+  transition: background-color var(--duration-base) var(--ease-out), color var(--duration-base) var(--ease-out);
+}
+
+.pt-plan-switch a:hover {
+  color: var(--color-text);
+  background: var(--color-surface-hover);
+}
+
+.pt-plan-switch a[aria-current="page"] {
+  color: var(--color-text);
+  background: var(--color-primary-tint);
+  box-shadow: inset 0 calc(-1 * var(--border-width-thick)) var(--color-primary);
+}
+
+/* Nút "Thêm khung" mở một ô nhỏ bên dưới (thẻ details có sẵn, không cần JS mở/đóng). */
+.pt-plan-add {
+  position: relative;
+}
+
+.pt-plan-add > summary {
+  list-style: none;
+}
+
+.pt-plan-add > summary::-webkit-details-marker {
+  display: none;
+}
+
+.pt-plan-add[open] > summary {
+  background: var(--color-surface-hover);
+}
+
+.pt-plan-add-form {
+  position: absolute;
+  top: calc(100% + var(--space-2));
+  right: 0;
+  z-index: var(--z-dropdown);
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: var(--space-3);
+  width: calc(var(--space-12) * 4);
+  max-width: calc(100vw - var(--space-4) * 2);
+  padding: var(--space-4);
+  border: var(--border-width) solid var(--color-border-strong);
+  border-radius: var(--radius-sm);
+  background: var(--color-surface);
+  box-shadow: var(--shadow-pop);
+}
+
+.pt-plan-add-form label {
+  display: grid;
+  gap: var(--space-1);
+  color: var(--color-text-soft);
+  font-size: var(--font-size-sm);
+}
+
+.pt-plan-add-form select,
+.pt-plan-add-form input {
+  min-width: 0;
+  min-height: var(--control-height-md);
+  padding: var(--space-2) var(--space-3);
+  border: var(--border-width) solid var(--color-border-strong);
+  border-radius: var(--radius-sm);
+  background: var(--color-surface);
+  color: var(--color-text);
+  font: inherit;
+  font-size: var(--font-size-sm);
+  font-variant-numeric: tabular-nums;
+}
+
+.pt-plan-add-end,
+.pt-plan-add-form .btn {
+  grid-column: 1 / -1;
+}
+
+.pt-plan-add-end {
+  color: var(--color-text-soft);
+  font-size: var(--font-size-sm);
+}
+
+.pt-plan-add-end output {
+  color: var(--color-text);
+  font-weight: var(--font-weight-semibold);
+  font-variant-numeric: tabular-nums;
+}
+
+.pt-plan-readonly {
+  color: var(--color-text-soft);
+  font-size: var(--font-size-sm);
+}
+
+
+/* ==================== 2. THẺ KHUNG — màu theo loại ====================
+   Mỗi loại chỉ đổi 3 biến: --kind-tint (nền), --kind-line (viền), --kind-ink (chữ trạng thái). */
+
+.pt-slot {
+  --kind-tint: var(--color-neutral-tint);
+  --kind-line: var(--color-neutral-border);
+  --kind-ink: var(--color-text-soft);
+  position: relative;
+  order: var(--start);                         /* kiểu danh sách: tự xếp theo giờ, kể cả nháp mới thêm */
+  min-width: 0;
+  border: var(--border-width) solid var(--kind-line);
+  border-radius: var(--radius-sm);
+  background: var(--kind-tint);
+  color: var(--color-text);
+  font-size: var(--font-size-sm);
+  line-height: var(--line-height-snug);
+  transition: background-color var(--duration-base) var(--ease-out), border-color var(--duration-base) var(--ease-out);
+}
+
+.pt-slot.is-free {
+  --kind-tint: var(--color-success-tint);
+  --kind-line: var(--color-success-border);
+  --kind-ink: var(--color-success-ink);
+}
+
+.pt-slot.is-booked {
+  --kind-tint: var(--color-info-tint);
+  --kind-line: var(--color-info-border);
+  --kind-ink: var(--color-info-ink);
+}
+
+.pt-slot.is-held {
+  --kind-tint: var(--color-warning-tint);
+  --kind-line: var(--color-warning-border);
+  --kind-ink: var(--color-warning-ink);
+}
+
+.pt-slot.is-locked {
+  --kind-tint: var(--color-danger-tint);
+  --kind-line: var(--color-danger-border);
+  --kind-ink: var(--color-danger-ink);
+}
+
+.pt-slot.is-past {
+  --kind-tint: var(--color-surface-muted);
+  --kind-line: var(--color-border);
+  --kind-ink: var(--color-text-muted);
+  color: var(--color-text-soft);
+}
+
+/* Hướng xếp chữ trong thẻ (ngang hay dọc) do mục 4 (danh sách) và mục 5 (lưới tuần) quyết định. */
+.pt-slot-body {
+  display: flex;
+  gap: var(--space-0-5);
+  min-width: 0;
+  height: 100%;
+  padding: var(--space-2) var(--space-3);
+}
+
+.pt-slot-time {
+  font-weight: var(--font-weight-semibold);
+  font-variant-numeric: tabular-nums;
+  white-space: nowrap;
+}
+
+.pt-slot-person {
+  font-weight: var(--font-weight-semibold);
+  overflow-wrap: anywhere;
+}
+
+.pt-slot-package {
+  color: var(--color-text-soft);
+}
+
+/* Chữ trạng thái có chấm màu phía trước, giống chú thích của màn Lịch tập. */
+.pt-slot-state,
+.pt-slot-flag {
+  display: inline-flex;
+  align-items: center;
+  gap: var(--space-1);
+  color: var(--kind-ink);
+  font-size: var(--font-size-xs);
+}
+
+.pt-slot-state::before,
+.pt-slot-flag::before {
+  content: "";
+  flex: 0 0 var(--space-1-5);
+  width: var(--space-1-5);
+  height: var(--space-1-5);
+  border-radius: var(--radius-circle);
+  background: currentColor;
+}
+
+
+/* ==================== 3. GỠ KHUNG VÀ KHUNG NHÁP ==================== */
+
+/* Khung trống gỡ được: cả thẻ là <label>, bấm thẻ = tích ô checkbox .pt-remove (ô ẩn đi nhưng vẫn Tab tới được). */
+.pt-slot-toggle {
+  cursor: pointer;
+}
+
+.pt-remove {
+  position: absolute;
+  width: 1px;
+  height: 1px;
+  margin: 0;
+  opacity: 0;
+  pointer-events: none;
+}
+
+.pt-slot:has(.pt-remove:focus-visible) {
+  outline: var(--focus-outline-width) solid var(--ink-focus);
+  outline-offset: var(--focus-outline-offset);
+}
+
+.pt-slot:has(.pt-slot-toggle):hover {
+  --kind-line: var(--kind-ink);
+}
+
+.pt-slot-hint {
+  color: var(--kind-ink);
+  font-size: var(--font-size-xs);
+  font-weight: var(--font-weight-medium);
+}
+
+.pt-slot-flag,
+.pt-slot-hint .when-on {
+  display: none;
+}
+
+/* ĐÃ TÍCH = chờ gỡ: viền đỏ nét đứt, giờ gạch ngang, chữ "Chờ gỡ" thay chữ trạng thái. */
+.pt-remove:checked {
+  counter-increment: pt-remove;
+}
+
+.pt-slot:has(.pt-remove:checked) {
+  --kind-tint: transparent;
+  --kind-line: var(--color-danger-ink);
+  --kind-ink: var(--color-danger-ink);
+  border-style: dashed;
+}
+
+.pt-slot:has(.pt-remove:checked) .pt-slot-time {
+  color: var(--color-text-soft);
+  text-decoration: line-through;
+}
+
+.pt-slot:has(.pt-remove:checked) .pt-slot-state,
+.pt-slot:has(.pt-remove:checked) .pt-slot-hint .when-off {
+  display: none;
+}
+
+.pt-slot:has(.pt-remove:checked) .pt-slot-flag {
+  display: inline-flex;
+}
+
+.pt-slot:has(.pt-remove:checked) .pt-slot-hint .when-on {
+  display: inline;
+}
+
+/* Khung nháp (JS sao chép từ <template>): viền cam nét đứt = thay đổi của bạn, chưa công bố. */
+.pt-draft {
+  --kind-tint: var(--color-primary-tint);
+  --kind-line: var(--color-primary);
+  --kind-ink: var(--color-primary);
+  border-style: dashed;
+  counter-increment: pt-add;
+  animation: pt-appear var(--duration-base) var(--ease-out);
+}
+
+.pt-draft .pt-slot-body {
+  padding-inline-end: calc(var(--control-height-sm) + var(--space-1));
+}
+
+.pt-draft-remove {
+  position: absolute;
+  top: var(--space-0-5);
+  right: var(--space-0-5);
+  display: grid;
+  place-items: center;
+  width: var(--control-height-sm);
+  height: var(--control-height-sm);
+  padding: 0;
+  border: 0;
+  border-radius: var(--radius-sm);
+  background: transparent;
+  color: var(--color-text-soft);
+  cursor: pointer;
+  transition: background-color var(--duration-base) var(--ease-out), color var(--duration-base) var(--ease-out);
+}
+
+.pt-draft-remove:hover {
+  background: var(--color-surface-hover);
+  color: var(--color-text);
+}
+
+@keyframes pt-appear {
+  from {
+    opacity: 0;
+    transform: scale(0.96);
+  }
+}
+
+/* Bóng khung đi theo chuột trên lưới tuần (JS đặt --start và chuyển vào cột đang trỏ). */
+.pt-ghost {
+  position: absolute;
+  inset-inline: var(--space-1);
+  top: calc(var(--start) * var(--pt-minute));
+  height: calc(var(--length) * var(--pt-minute));
+  z-index: var(--z-base);
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-0-5);
+  padding: var(--space-1) var(--space-2);
+  border: var(--border-width) dashed var(--color-primary);
+  border-radius: var(--radius-sm);
+  background: var(--color-primary-tint);
+  color: var(--color-text);
+  font-size: var(--font-size-xs);
+  line-height: var(--line-height-snug);
+  pointer-events: none;
+}
+
+.pt-ghost[hidden] {
+  display: none;
+}
+
+.pt-ghost-hint {
+  color: var(--color-primary);
+}
+
+.pt-ghost.is-blocked {
+  border-color: var(--color-danger-ink);
+  background: var(--color-danger-tint);
+}
+
+.pt-ghost.is-blocked .pt-ghost-hint {
+  color: var(--color-danger-ink);
+}
+
+
+/* ==================== 4. KIỂU DANH SÁCH (mặc định) ====================
+   Mỗi ngày là một khối: tiêu đề ngày, rồi các thẻ xếp dọc theo giờ. */
+
+.pt-plan-scroll {
+  min-width: 0;
+}
+
+.pt-plan-axis,
+.pt-plan-axis-head {
+  display: none;
+}
+
+.pt-day + .pt-day {
+  border-top: var(--border-width) solid var(--color-border);
+}
+
+.pt-day-head {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: baseline;
+  gap: var(--space-1) var(--space-2);
+  padding: var(--space-3) var(--space-4) var(--space-2);
+  font-size: var(--font-size-sm);
+  font-weight: var(--font-weight-regular);
+}
+
+.pt-day-name {
+  color: var(--color-text);
+  font-weight: var(--font-weight-semibold);
+}
+
+.pt-day-date {
+  color: var(--color-text-soft);
+  font-variant-numeric: tabular-nums;
+}
+
+.pt-day-note {
+  font-size: var(--font-size-xs);
+  font-weight: var(--font-weight-medium);
+}
+
+.pt-day-note.is-today {
+  color: var(--color-primary);
+}
+
+.pt-day-note.is-closed {
+  color: var(--color-danger-ink);
+}
+
+.pt-day-note.is-leave {
+  color: var(--color-warning-ink);
+}
+
+.pt-day.is-past .pt-day-name {
+  color: var(--color-text-soft);
+}
+
+.pt-day-track {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-2);
+  padding: 0 var(--space-4) var(--space-4);
+}
+
+.pt-day-empty {
+  color: var(--color-text-muted);
+  font-size: var(--font-size-sm);
+}
+
+.pt-day-track:has(.pt-slot) .pt-day-empty {
+  display: none;
+}
+
+/* Thẻ nằm ngang: giờ bên trái, trạng thái và gợi ý bấm bên phải. */
+.pt-slot-body {
+  flex-direction: row;
+  flex-wrap: wrap;
+  align-items: center;
+  column-gap: var(--space-4);
+}
+
+.pt-slot-time {
+  min-width: calc(var(--space-12) + var(--space-5));
+}
+
+.pt-slot-state,
+.pt-slot-flag {
+  margin-inline-start: auto;
+}
+
+/* Trên danh sách gợi ý bấm luôn hiện, trông như một nút nhỏ (màn cảm ứng không có hover). */
+.pt-slot-hint {
+  padding: var(--space-1) var(--space-2);
+  border: var(--border-width) solid var(--kind-line);
+  border-radius: var(--radius-sm);
+}
+
+/* Máy có chuột: chip chỉ hiện khi rê chuột / Tab tới / đã chọn gỡ, để danh sách đỡ rối.
+   Dùng visibility (không phải display) để thẻ không đổi chiều cao khi chip hiện ra. */
+@media (hover: hover) {
+  .pt-slot-hint {
+    visibility: hidden;
+  }
+
+  .pt-slot-toggle:hover .pt-slot-hint,
+  .pt-slot:has(.pt-remove:focus-visible) .pt-slot-hint,
+  .pt-slot:has(.pt-remove:checked) .pt-slot-hint {
+    visibility: visible;
+  }
+}
+
+.pt-draft-remove {
+  top: 50%;
+  transform: translateY(-50%);
+}
+
+
+/* ==================== 5. KIỂU LƯỚI TUẦN (màn rộng + chọn "Tuần") ====================
+   Lưới 2 hàng × 8 cột: hàng 1 là tiêu đề, hàng 2 là thân. Cột 1 là trục giờ, cột 2–8 là 7 ngày.
+   .pt-day dùng display: contents nên tiêu đề và thân của mỗi ngày nằm thẳng vào lưới:
+   nhờ vậy 7 tiêu đề luôn cao bằng nhau mà không cần chiều cao cố định. */
+
+@media (min-width: 701px) {
+  .pt-plan:not(.is-list) .pt-plan-scroll {
+    overflow-x: auto;
+  }
+
+  .pt-plan:not(.is-list) .pt-plan-grid {
+    display: grid;
+    grid-template-columns: var(--space-10) repeat(7, minmax(calc(var(--space-12) * 1.5), 1fr));
+    grid-template-rows: auto auto;
+    grid-auto-flow: column;
+    user-select: none;
+  }
+
+  .pt-plan:not(.is-list) .pt-day {
+    display: contents;
+  }
+
+  .pt-plan:not(.is-list) .pt-plan-axis-head {
+    display: block;
+    border-bottom: var(--border-width) solid var(--color-border);
+  }
+
+  .pt-plan:not(.is-list) .pt-plan-axis {
+    display: grid;
+    grid-template-rows: repeat(var(--axis-hours), var(--pt-hour));
+    padding-inline-end: var(--space-2);
+    color: var(--color-text-muted);
+    font-size: var(--font-size-xs);
+    font-variant-numeric: tabular-nums;
+    text-align: right;
+  }
+
+  .pt-plan:not(.is-list) .pt-plan-axis span {
+    padding-top: var(--space-1);
+  }
+
+  .pt-plan:not(.is-list) .pt-day-head {
+    flex-direction: column;
+    align-items: flex-start;
+    gap: 0;
+    min-width: 0;
+    padding: var(--space-2) var(--space-3);
+    border-bottom: var(--border-width) solid var(--color-border);
+    border-inline-start: var(--border-width) solid var(--color-border);
+  }
+
+  .pt-plan:not(.is-list) .pt-day-name {
+    color: var(--color-text-soft);
+    font-size: var(--font-size-xs);
+    font-weight: var(--font-weight-medium);
+  }
+
+  .pt-plan:not(.is-list) .pt-day-date {
+    color: var(--color-text);
+    font-size: var(--font-size-base);
+    font-weight: var(--font-weight-semibold);
+  }
+
+  .pt-plan:not(.is-list) .pt-day-note {
+    max-width: 100%;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+  }
+
+  .pt-plan:not(.is-list) .pt-day.is-today .pt-day-head {
+    background: var(--color-primary-tint);
+    box-shadow: inset 0 var(--border-width-thick) var(--color-primary);
+  }
+
+  /* Thân ngày: 1 hàng lưới = 1 phút; vạch giờ vẽ bằng nền lặp lại mỗi 48px. */
+  .pt-plan:not(.is-list) .pt-day-track {
+    position: relative;
+    display: grid;
+    grid-template-columns: minmax(0, 1fr);
+    grid-auto-columns: minmax(0, 1fr);
+    grid-template-rows: repeat(calc(var(--axis-hours) * 60), var(--pt-minute));
+    gap: 0;
+    padding: 0 var(--space-1);
+    border-inline-start: var(--border-width) solid var(--color-border);
+    background-image: linear-gradient(var(--color-border) var(--border-width), transparent var(--border-width));
+    background-size: 100% var(--pt-hour);
+  }
+
+  .pt-plan:not(.is-list) .pt-day.is-closed .pt-day-track {
+    background-color: var(--color-surface-muted);
+  }
+
+  .pt-plan:not(.is-list) .pt-day-track[data-first] {
+    cursor: pointer;
+  }
+
+  .pt-plan:not(.is-list) .pt-day-empty {
+    display: none;
+  }
+
+  /* Thẻ đặt theo giờ: hàng bắt đầu = --start + 1, cao --length hàng (phút). */
+  .pt-plan:not(.is-list) .pt-slot {
+    grid-row: calc(var(--start) + 1) / span var(--length);
+    margin-block: var(--border-width);
+    overflow: hidden;
+    font-size: var(--font-size-xs);
+  }
+
+  .pt-plan:not(.is-list) .pt-slot-body {
+    flex-direction: column;
+    flex-wrap: nowrap;
+    align-items: stretch;
+    gap: 0;
+    padding: var(--space-1) var(--space-2);
+  }
+
+  .pt-plan:not(.is-list) .pt-slot-time {
+    min-width: 0;
+  }
+
+  .pt-plan:not(.is-list) .pt-slot-package {
+    display: none;
+  }
+
+  .pt-plan:not(.is-list) :is(.pt-slot-person, .pt-slot-state, .pt-slot-flag) {
+    min-width: 0;
+    margin-inline-start: 0;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+  }
+
+  /* Trên lưới, gợi ý "Bấm để gỡ" chỉ hiện khi rê chuột hoặc Tab tới thẻ. */
+  .pt-plan:not(.is-list) .pt-slot-hint {
+    display: none;
+    padding: 0;
+    border: 0;
+  }
+
+  .pt-plan:not(.is-list) .pt-slot-toggle:hover .pt-slot-hint,
+  .pt-plan:not(.is-list) .pt-slot:has(.pt-remove:focus-visible) .pt-slot-hint {
+    display: block;
+  }
+
+  .pt-plan:not(.is-list) .pt-draft-remove {
+    top: var(--space-0-5);
+    transform: none;
+  }
+}
+
+
+/* ==================== 6. CHÚ THÍCH MÀU ==================== */
+
+.pt-plan-legend {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: var(--space-2) var(--space-4);
+  padding: var(--space-3) var(--space-4);
+  border-top: var(--border-width) solid var(--color-border);
+  color: var(--color-text-soft);
+  font-size: var(--font-size-xs);
+}
+
+.pt-plan-legend span {
+  display: inline-flex;
+  align-items: center;
+  gap: var(--space-1-5);
+}
+
+.pt-plan-legend span::before {
+  content: "";
+  width: var(--space-3);
+  height: var(--space-2-5);
+  border: var(--border-width) solid var(--swatch-line);
+  border-radius: var(--radius-xs);
+  background: var(--swatch-tint);
+}
+
+.pt-plan-legend [data-kind="free"] {
+  --swatch-tint: var(--color-success-tint);
+  --swatch-line: var(--color-success-ink);
+}
+
+.pt-plan-legend [data-kind="booked"] {
+  --swatch-tint: var(--color-info-tint);
+  --swatch-line: var(--color-info-ink);
+}
+
+.pt-plan-legend [data-kind="held"] {
+  --swatch-tint: var(--color-warning-tint);
+  --swatch-line: var(--color-warning-ink);
+}
+
+.pt-plan-legend [data-kind="locked"] {
+  --swatch-tint: var(--color-danger-tint);
+  --swatch-line: var(--color-danger-ink);
+}
+
+.pt-plan-legend [data-kind="draft"] {
+  --swatch-tint: var(--color-primary-tint);
+  --swatch-line: var(--color-primary);
+}
+
+.pt-plan-legend [data-kind="removing"] {
+  --swatch-tint: transparent;
+  --swatch-line: var(--color-danger-ink);
+}
+
+.pt-plan-legend [data-kind="draft"]::before,
+.pt-plan-legend [data-kind="removing"]::before {
+  border-style: dashed;
+}
+
+
+/* ==================== 7. THANH "CHỜ CÔNG BỐ" DÍNH ĐÁY ====================
+   Ẩn khi không có thay đổi. Có ít nhất 1 khung nháp HOẶC 1 ô gỡ được tích → CSS tự hiện.
+   Con số lấy từ 2 bộ đếm ở mục 1: mỗi .pt-draft cộng pt-add, mỗi .pt-remove:checked cộng pt-remove. */
+
+.pt-plan-pending {
+  position: sticky;
+  bottom: var(--space-4);
+  z-index: var(--z-sticky);
+  display: none;
+  flex-wrap: wrap;
+  align-items: center;
+  justify-content: space-between;
+  gap: var(--space-3) var(--space-4);
+  padding: var(--space-3) var(--space-4);
+  border: var(--border-width) solid var(--color-border-strong);
+  border-radius: var(--radius-lg);
+  background: var(--ink-surface, var(--color-surface));
+  box-shadow: var(--shadow-float);
+}
+
+.pt-plan:has(.pt-draft, .pt-remove:checked) .pt-plan-pending {
+  display: flex;
+  animation: pt-rise var(--duration-base) var(--ease-out);
+}
+
+.pt-pending-text {
+  display: grid;
+  gap: var(--space-0-5);
+}
+
+.pt-pending-count {
+  display: flex;
+  flex-wrap: wrap;
+  gap: var(--space-2);
+  font-weight: var(--font-weight-semibold);
+  font-variant-numeric: tabular-nums;
+}
+
+.pt-count-add::before {
+  content: counter(pt-add);
+}
+
+.pt-count-remove::before {
+  content: counter(pt-remove);
+}
+
+.pt-plan:not(:has(.pt-draft)) .pt-pending-add,
+.pt-plan:not(:has(.pt-remove:checked)) .pt-pending-remove {
+  display: none;
+}
+
+/* Có cả hai loại thì chèn dấu chấm giữa "2 khung mới · 1 khung gỡ". */
+.pt-plan:has(.pt-draft) .pt-pending-remove::before {
+  content: "·";
+  margin-inline-end: var(--space-2);
+  color: var(--color-text-muted);
+}
+
+.pt-pending-note {
+  color: var(--color-text-soft);
+  font-size: var(--font-size-sm);
+}
+
+.pt-pending-error {
+  color: var(--color-danger-ink);
+  font-size: var(--font-size-sm);
+}
+
+.pt-pending-error:empty {
+  display: none;
+}
+
+.pt-pending-actions {
+  display: flex;
+  gap: var(--space-2);
+}
+
+/* Đang gửi Công bố: khóa lịch để không sửa giữa chừng. */
+.pt-plan[aria-busy="true"] .pt-plan-board {
+  opacity: 0.6;
+  pointer-events: none;
+}
+
+@keyframes pt-rise {
+  from {
+    opacity: 0;
+    transform: translateY(var(--space-2));
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .pt-draft,
+  .pt-plan:has(.pt-draft, .pt-remove:checked) .pt-plan-pending {
+    animation: none;
+  }
+}
+
+
+/* ==================== 8. ĐIỆN THOẠI (≤ 700px): luôn là danh sách ==================== */
+
+@media (max-width: 700px) {
+  .pt-plan-switch {
+    display: none;
+  }
+
+  .pt-plan-toolbar,
+  .pt-plan-legend {
+    padding-inline: var(--space-3);
+  }
+
+  .pt-plan-actions,
+  .pt-plan-add {
+    width: 100%;
+  }
+
+  .pt-plan-add > summary {
+    width: 100%;
+  }
+
+  .pt-plan-add-form {
+    position: static;
+    width: auto;
+    max-width: none;
+    margin-top: var(--space-2);
+    box-shadow: none;
+  }
+
+  .pt-plan-add-form select,
+  .pt-plan-add-form input {
+    font-size: var(--font-size-base);          /* 16px: iPhone không tự phóng to khi bấm ô nhập */
+  }
+
+  .pt-day-head,
+  .pt-day-track {
+    padding-inline: var(--space-3);
+  }
+
+  /* Thẻ hẹp: giờ, trạng thái và chip "Bấm để gỡ" vẫn vừa một dòng. */
+  .pt-slot-body {
+    column-gap: var(--space-2);
+  }
+
+  .pt-slot-time {
+    min-width: 0;
+  }
+
+  .pt-plan-pending {
+    bottom: var(--space-3);
+    padding: var(--space-3);
+  }
+
+  .pt-pending-actions {
+    width: 100%;
+  }
+
+  .pt-pending-actions .btn {
+    flex: 1;
+  }
+}
+
+/* Điện thoại rất nhỏ (320px): chữ khoảng tuần nhỏ lại để ‹ 26/10 – 01/11/2026 › nằm một dòng. */
+@media (max-width: 380px) {
+  .pt-plan-period h2 {
+    margin-inline: 0;
+    font-size: var(--font-size-sm);
+  }
+}
+
+
+/* ==================== 9. ARENA (24/10 tối) ====================
+   Màu + hình theo mục "ARENA" cuối common.css. Ở đây:
+   - lưới tuần nền trắng trên khối phấn; cột hôm nay đầu tối + gạch ember (ember duy nhất của lưới)
+   - khung đã có khách = khối xanh đặc; các loại còn lại giữ màu nghĩa (trống xanh lá, giữ chỗ vàng, khóa đỏ)
+   - ngày đóng cửa có sọc chéo; thanh "chờ công bố" là khối tối để nút Công bố là ember duy nhất. */
+
+html body.dock.pt-plan-page .pt-plan { gap: var(--arena-gap); }
+/* Nhịp: thanh công cụ và chú thích thẳng lề 24px như các khối khác */
+html body.dock.pt-plan-page :is(.pt-plan-toolbar, .pt-plan-legend) { padding: var(--arena-pad-sm) var(--arena-pad); }
+@media (max-width: 700px) {
+  html body.dock.pt-plan-page :is(.pt-plan-toolbar, .pt-plan-legend) { padding-inline: var(--arena-pad-sm); }
+  html body.dock.pt-plan-page .pt-plan-switch a { display: inline-flex; align-items: center; min-height: calc(var(--arena-hit) - 6px); }
+}
+
+html body.dock.pt-plan-page .pt-plan-period h2 { font-family: var(--font-brand-display); font-weight: var(--font-weight-bold); }
+
+/* Tuần | Danh sách: mục đang chọn là ô tối */
+html body.dock.pt-plan-page .pt-plan-switch {
+  gap: var(--space-0-5);
+  padding: var(--arena-segment-pad);
+  border: 0;
+  border-radius: var(--arena-radius-tile);
+  background: var(--arena-segment);
+}
+html body.dock.pt-plan-page .pt-plan-switch a {
+  border-radius: var(--arena-radius-chip);
+  font-weight: var(--font-weight-semibold);
+}
+html body.dock.pt-plan-page .pt-plan-switch a[aria-current="page"] {
+  background: var(--arena-900);
+  color: var(--arena-on-dark);
+  box-shadow: none;
+}
+
+html body.dock.pt-plan-page .pt-plan-grid { background: var(--arena-surface); }
+
+/* Đầu ngày */
+html body.dock.pt-plan-page .pt-day-date { font-family: var(--font-brand-display); font-weight: var(--font-weight-bold); }
+html body.dock.pt-plan-page .pt-plan .pt-day.is-today .pt-day-head {
+  background: var(--arena-900);
+  box-shadow: inset 0 calc(-1 * var(--arena-mark)) 0 var(--arena-ember);
+}
+html body.dock.pt-plan-page .pt-plan .pt-day.is-today :is(.pt-day-name, .pt-day-date) { color: var(--arena-on-dark); }
+html body.dock.pt-plan-page .pt-plan .pt-day.is-today .pt-day-note.is-today { color: var(--arena-ember-on-dark); }
+html body.dock.pt-plan-page .pt-plan .pt-day.is-today .pt-day-note:not(.is-today) { color: var(--arena-steel); }
+
+/* Khung đã có khách: xanh đặc, chữ trắng (buổi đã qua giữ màu trầm có sẵn) */
+html body.dock.pt-plan-page .pt-slot.is-booked:not(.is-past) {
+  --kind-tint: var(--arena-accent);
+  --kind-line: var(--arena-accent);
+  --kind-ink: var(--arena-on-dark-soft);
+  --color-text: var(--arena-on-dark);
+  --color-text-soft: var(--arena-on-dark-soft);
+  box-shadow: inset var(--arena-mark) 0 0 var(--arena-focus);
+}
+html body.dock.pt-plan-page .pt-plan-legend [data-kind="booked"] {
+  --swatch-tint: var(--arena-accent);
+  --swatch-line: var(--arena-accent);
+}
+
+@media (min-width: 701px) {
+  html body.dock.pt-plan-page .pt-plan:not(.is-list) .pt-day.is-today .pt-day-track { background-color: var(--arena-today-tint); }
+  /* Ngày đóng cửa: vạch giờ + sọc chéo */
+  html body.dock.pt-plan-page .pt-plan:not(.is-list) .pt-day.is-closed .pt-day-track {
+    background-color: var(--arena-closed);
+    background-image:
+      linear-gradient(var(--color-border) var(--border-width), transparent var(--border-width)),
+      repeating-linear-gradient(135deg, var(--arena-closed-hatch) 0 6px, transparent 6px 12px);
+    background-size: 100% var(--pt-hour), auto;
+  }
+}
+
+/* Hộp bao ngoài của màn (panel lịch, khung lỗi) góc 2px thay cho 6px chung của Arena (yêu cầu 25/10). */
+html body.dock.pt-plan-page :is(.pt-plan-board, .pt-plan-error) {
+  border-radius: var(--arena-radius-chip);
+}
+
+/* Thanh "chờ công bố": khối tối dính đáy */
+html body.dock.pt-plan-page .pt-plan-pending {
+  --color-text: var(--arena-on-dark);
+  --color-text-soft: var(--arena-steel);
+  --color-text-muted: var(--arena-steel);
+  --arena-focus-ring: var(--arena-focus);
+  border: 0;
+  border-radius: var(--arena-radius-chip);   /* hộp bao ngoài: 2px (25/10) */
+  background:
+    radial-gradient(80% 140% at 0% 0%, var(--arena-glow), transparent 60%),
+    var(--arena-900);
+  color: var(--arena-on-dark);
+  box-shadow: var(--arena-shadow-dark), var(--arena-float);
+}
+html.gms-lite body.dock.pt-plan-page .pt-plan-pending { background: var(--arena-900); }
+html body.dock.pt-plan-page .pt-plan-pending .pt-pending-error { color: var(--arena-error-on-dark); }
+
+
+/* ==================== 10. XỬ LÝ BUỔI (bước 11) ====================
+   Thẻ buổi còn xử lý được là link ?handle= → hộp _handle-dialog.jspf.
+   Đổi phương án KHÔNG cần JS: radio trong .pt-handle-options + :has() hiện đúng 1 form.
+
+   Hộp theo hệ Arena (DESIGN.md mục Arena):
+     đầu hộp = khối tối có đèn (--arena-900 + vùng sáng góc trên + vạch sáng 1px), giờ buổi là chữ lớn nhất
+     thân    = phấn magie (--arena-chalk), ô con bên trong màu trắng
+     góc     = mọi hộp và ô 2px (yêu cầu 25/10); chỉ dùng bóng, không viền + bóng cùng lúc
+     màu     = xanh đĩa 20kg cho LỰA CHỌN, cam đĩa 25kg chỉ cho nút Lưu, đỏ chỉ cho Hủy buổi */
+
+.pt-handle {
+  --handle-pad: var(--arena-pad);
+  --handle-gap: var(--arena-gap);
+  --handle-tile-line: var(--arena-card-line);
+}
+
+/* --- 10.1 Thẻ buổi bấm được trên lịch --- */
+.pt-slot-link {
+  color: inherit;
+  text-decoration: none;
+  border-radius: inherit;
+}
+.pt-slot.is-handleable {
+  cursor: pointer;
+  transition: transform var(--duration-base) var(--ease-out), box-shadow var(--duration-base) var(--ease-out);
+}
+.pt-slot-link:focus-visible {
+  outline: var(--focus-outline-width) solid var(--arena-focus);
+  outline-offset: var(--focus-outline-offset);
+}
+@media (hover: hover) {
+  .pt-slot.is-handleable:hover {
+    transform: translateY(-1px);
+    box-shadow: var(--arena-lift);
+  }
+  .pt-slot-link:hover .pt-slot-hint,
+  .pt-slot-link:focus-visible .pt-slot-hint {
+    visibility: visible;
+  }
+}
+.pt-slot.is-handleable .pt-slot-hint {
+  border-color: var(--arena-glass-line);
+  color: var(--arena-on-dark-soft);
+}
+/* Sau khi dời / hủy: Servlet redirect về #session-120 → trình duyệt cuộn tới, thẻ có vòng cam. */
+.pt-slot:target {
+  outline: var(--focus-outline-width) solid var(--arena-ember);
+  outline-offset: var(--focus-outline-offset);
+  scroll-margin-block: var(--space-12);
+}
+
+.pt-plan-alert {
+  display: flex;
+  align-items: center;
+  gap: var(--space-2);
+  margin: var(--space-3) var(--space-4) 0;
+  padding: var(--space-2) var(--space-3);
+  border: var(--border-width) solid var(--color-danger-border);
+  border-radius: var(--arena-radius-chip);
+  background: var(--color-danger-tint);
+  color: var(--color-danger-ink);
+  font-size: var(--font-size-sm);
+}
+
+/* --- 10.2 Khung hộp: giữa màn trên máy tính, tấm trượt từ đáy trên điện thoại --- */
+.pt-handle {
+  width: min(100% - 2 * var(--space-4), 680px);
+  max-height: min(90vh, 800px);
+  padding: 0;
+  border: 0;
+  border-radius: var(--arena-radius-chip);
+  background: var(--arena-chalk);
+  color: var(--arena-ink);
+  box-shadow: var(--arena-shadow-drop), var(--arena-float);
+  overflow: hidden;
+}
+.pt-handle[open] {
+  display: flex;
+  flex-direction: column;
+}
+/* Tắt JS: hộp mở dạng thường (không modal) → tự đặt cố định giữa màn. */
+.pt-handle[open]:not(:modal) {
+  position: fixed;
+  inset: 0;
+  z-index: 50;
+  margin: auto;
+}
+.pt-handle::backdrop {
+  background: var(--color-overlay);
+  backdrop-filter: blur(2px);
+}
+.pt-handle :is(h2, p, ul, fieldset) {
+  margin: 0;
+}
+.pt-handle ::selection {
+  background: var(--arena-info-chip);
+  color: var(--arena-ink);
+}
+.pt-handle :focus-visible {
+  outline: var(--focus-outline-width) solid var(--arena-focus-ring);
+  outline-offset: var(--focus-outline-offset);
+}
+
+/* Chuyển động duy nhất: hộp nổi lên khi mở (trình duyệt cũ bỏ qua @starting-style = hiện ngay). */
+@media (prefers-reduced-motion: no-preference) {
+  .pt-handle[open] {
+    transition: opacity var(--duration-slow) var(--ease-out-expo), transform var(--duration-slow) var(--ease-out-expo);
+  }
+  @starting-style {
+    .pt-handle[open] {
+      opacity: 0;
+      transform: translateY(var(--space-3)) scale(0.985);
+    }
+  }
+}
+
+/* --- 10.3 Đầu hộp: khối tối có đèn --- */
+.pt-handle-head {
+  position: relative;
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: var(--space-4);
+  padding: var(--handle-pad);
+  background:
+    radial-gradient(70% 160% at 0% 0%, var(--arena-glow), transparent 62%),
+    var(--arena-900);
+  box-shadow: inset 0 1px 0 var(--arena-glass-line);
+  color: var(--arena-on-dark);
+}
+.pt-handle-head h2 {
+  font-family: var(--font-brand-display);
+  font-size: var(--font-size-2xl);
+  font-weight: var(--font-weight-extrabold);
+  font-variant-numeric: tabular-nums;
+  letter-spacing: -0.02em;
+  line-height: var(--line-height-snug);
+  text-wrap: balance;
+}
+/* common.css tô màu mọi h2 trong .content (html body.dock .content :is(h1, h2, h3)) → cần bộ chọn mạnh hơn để giữ chữ trắng. */
+html body.dock .pt-handle .pt-handle-head h2 {
+  color: var(--arena-on-dark);
+}
+html body.dock .pt-handle .pt-handle-head h2:focus,
+.pt-handle-head h2:focus {
+  outline: none;
+  box-shadow: none;   /* tiêu đề chỉ nhận focus lúc mở hộp để trình đọc màn hình đọc đúng buổi */
+}
+.pt-handle-who {
+  margin-top: var(--space-1);
+  color: var(--arena-on-dark-soft);
+  font-size: var(--font-size-sm);
+}
+.pt-handle-who strong {
+  color: var(--arena-on-dark);
+  font-weight: var(--font-weight-semibold);
+}
+.pt-handle-chips {
+  display: flex;
+  flex-wrap: wrap;
+  gap: var(--space-1);
+  margin-top: var(--space-3);
+}
+.pt-handle-chips span {
+  padding: 3px var(--space-2);
+  border-radius: var(--arena-radius-chip);
+  background: var(--arena-glass);
+  box-shadow: inset 0 0 0 1px var(--arena-glass-line);
+  color: var(--arena-on-dark-soft);
+  font-family: var(--font-brand-mono);
+  font-size: var(--font-size-2xs);
+  font-variant-numeric: tabular-nums;
+  letter-spacing: var(--letter-spacing-wide);
+}
+.pt-handle-close {
+  display: grid;
+  flex: none;
+  place-items: center;
+  width: 44px;
+  height: 44px;
+  margin: calc(-1 * var(--space-2)) calc(-1 * var(--space-2)) 0 0;
+  border-radius: var(--arena-radius-chip);
+  color: var(--arena-steel);
+  text-decoration: none;
+  transition: background-color var(--duration-base) var(--ease-out), color var(--duration-base) var(--ease-out);
+}
+.pt-handle-close:hover {
+  background: var(--arena-glass-strong);
+  color: var(--arena-on-dark);
+}
+.pt-handle-close:focus-visible {
+  outline-color: var(--arena-focus);
+}
+
+/* --- 10.4 Thân hộp --- */
+.pt-handle-body {
+  display: grid;
+  gap: var(--space-4);
+  padding: var(--space-5) var(--handle-pad) var(--handle-pad);
+  overflow-y: auto;
+  overscroll-behavior: contain;
+  scrollbar-width: thin;
+  scrollbar-color: var(--arena-chalk-line-strong) transparent;
+}
+.pt-handle-error {
+  display: flex;
+  align-items: flex-start;
+  gap: var(--space-2);
+  padding: var(--space-3);
+  border-radius: var(--arena-radius-chip);
+  background: var(--color-danger-tint);
+  box-shadow: inset 0 0 0 1px var(--color-danger-border);
+  color: var(--color-danger-ink);
+  font-size: var(--font-size-sm);
+  font-weight: var(--font-weight-medium);
+}
+.pt-handle-error i {
+  margin-top: 2px;
+}
+
+/* --- 10.5 Ba ô chọn phương án (ô trắng trên nền phấn) --- */
+.pt-handle-options {
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  gap: var(--arena-gap-tile);
+  min-width: 0;
+  padding: 0;
+  border: 0;
+}
+.pt-handle-option {
+  position: relative;
+  display: grid;
+  grid-template-columns: auto 1fr;
+  align-content: start;
+  column-gap: var(--space-2);
+  row-gap: 2px;
+  padding: var(--space-3);
+  border-radius: var(--arena-radius-chip);
+  background: var(--arena-surface);
+  box-shadow: inset 0 0 0 1px var(--handle-tile-line);
+  cursor: pointer;
+  transition: box-shadow var(--duration-base) var(--ease-out), background-color var(--duration-base) var(--ease-out);
+}
+.pt-handle-option input {
+  position: absolute;
+  opacity: 0;
+  pointer-events: none;
+}
+.pt-handle-option i {
+  grid-row: span 3;
+  width: 1.25em;
+  margin-top: 2px;
+  color: var(--arena-steel-ink);
+  text-align: center;
+}
+.pt-handle-option strong {
+  font-size: var(--font-size-md);
+  font-weight: var(--font-weight-bold);
+}
+.pt-handle-option span,
+.pt-handle-option small {
+  grid-column: 2;
+  color: var(--arena-steel-ink);
+  font-size: var(--font-size-xs);
+  line-height: var(--line-height-snug);
+}
+.pt-handle-option small {
+  margin-top: var(--space-2);
+  color: var(--arena-ink-soft);
+  font-family: var(--font-brand-mono);
+  font-variant-numeric: tabular-nums;
+  letter-spacing: var(--letter-spacing-wide);
+}
+.pt-handle-option:hover {
+  box-shadow: inset 0 0 0 1px var(--arena-hover-line);
+}
+.pt-handle-option:has(input:focus-visible) {
+  outline: var(--focus-outline-width) solid var(--arena-focus-ring);
+  outline-offset: var(--focus-outline-offset);
+}
+/* Đang chọn: viền 2px xanh đĩa 20kg + icon cùng màu (cam để dành cho nút Lưu). */
+.pt-handle-option:has(input:checked) {
+  background: var(--arena-today-tint);
+  box-shadow: inset 0 0 0 2px var(--arena-accent);
+}
+.pt-handle-option:has(input:checked) i {
+  color: var(--arena-accent-text);
+}
+.pt-handle-option.is-danger:has(input:checked) {
+  background: var(--color-danger-tint);
+  box-shadow: inset 0 0 0 2px var(--color-danger);
+}
+.pt-handle-option.is-danger:has(input:checked) i {
+  color: var(--color-danger);
+}
+
+/* --- 10.6 Chỉ hiện form của phương án đang chọn --- */
+.pt-handle-panel {
+  display: none;
+  gap: var(--space-3);
+}
+.pt-handle:has([value="reschedule"]:checked) [data-panel="reschedule"],
+.pt-handle:has([value="transfer"]:checked) [data-panel="transfer"],
+.pt-handle:has([value="cancel"]:checked) [data-panel="cancel"] {
+  display: grid;
+}
+
+.pt-handle-note,
+.pt-handle-effect {
+  color: var(--arena-steel-ink);
+  font-size: var(--font-size-xs);
+  line-height: var(--line-height-normal);
+}
+.pt-handle-empty {
+  padding: var(--space-6) var(--space-5);
+  border-radius: var(--arena-radius-chip);
+  background: var(--arena-surface);
+  box-shadow: inset 0 0 0 1px var(--handle-tile-line);
+  color: var(--arena-ink-soft);
+  font-size: var(--font-size-sm);
+  text-align: center;
+  text-wrap: pretty;
+}
+
+/* Bộ chọn khung: 1 ô trắng, mỗi ngày 1 hàng, giờ là ô nhỏ xếp tràn dòng. */
+.pt-handle-days {
+  display: grid;
+  max-height: 248px;
+  border-radius: var(--arena-radius-chip);
+  background: var(--arena-surface);
+  box-shadow: inset 0 0 0 1px var(--handle-tile-line);
+  overflow-y: auto;
+  scrollbar-width: thin;
+  scrollbar-color: var(--arena-chalk-line-strong) transparent;
+}
+.pt-handle-day {
+  display: grid;
+  grid-template-columns: 7.5rem 1fr;
+  align-items: start;
+  gap: var(--space-2);
+  padding: var(--space-2) var(--space-3);
+}
+.pt-handle-day + .pt-handle-day {
+  border-top: var(--border-width) solid var(--arena-grid-line);
+}
+.pt-handle-day-name {
+  padding-top: 7px;
+  color: var(--arena-ink-soft);
+  font-family: var(--font-brand-mono);
+  font-size: var(--font-size-2xs);
+  font-variant-numeric: tabular-nums;
+  letter-spacing: var(--letter-spacing-wide);
+  white-space: nowrap;
+}
+.pt-handle-times {
+  display: flex;
+  flex-wrap: wrap;
+  gap: var(--space-1);
+}
+.pt-handle-pill input,
+.pt-handle-pt input {
+  position: absolute;
+  opacity: 0;
+  pointer-events: none;
+}
+.pt-handle-pill span {
+  display: inline-grid;
+  place-items: center;
+  min-width: 4.5rem;
+  min-height: 34px;
+  padding: 0 var(--space-2);
+  border-radius: var(--arena-radius-chip);
+  background: var(--color-success-tint);
+  box-shadow: inset 0 0 0 1px var(--color-success-border);
+  color: var(--color-success-ink);
+  font-size: var(--font-size-sm);
+  font-variant-numeric: tabular-nums;
+  font-weight: var(--font-weight-semibold);
+  cursor: pointer;
+  transition: background-color var(--duration-fast) var(--ease-out), box-shadow var(--duration-fast) var(--ease-out), color var(--duration-fast) var(--ease-out);
+}
+.pt-handle-pill:hover span {
+  box-shadow: inset 0 0 0 1px var(--color-success);
+}
+.pt-handle-pill.is-warn span,
+.pt-handle-warn-key {
+  background: var(--color-warning-tint);
+  box-shadow: inset 0 0 0 1px var(--color-warning-border);
+  color: var(--color-warning-ink);
+}
+.pt-handle-pill.is-warn:hover span {
+  box-shadow: inset 0 0 0 1px var(--color-warning);
+}
+.pt-handle-warn-key {
+  padding: 1px var(--space-1);
+  border-radius: var(--arena-radius-chip);
+  font-weight: var(--font-weight-semibold);
+  white-space: nowrap;
+}
+.pt-handle-pill input:checked + span {
+  background: var(--arena-accent);
+  box-shadow: none;
+  color: var(--arena-on-dark);
+}
+.pt-handle-pill input:focus-visible + span {
+  outline: var(--focus-outline-width) solid var(--arena-focus-ring);
+  outline-offset: var(--focus-outline-offset);
+}
+
+/* Chuyển PT: mỗi PT 1 ô trắng, chữ cái đầu trong vòng tròn. */
+.pt-handle-pts {
+  display: grid;
+  gap: var(--arena-gap-tile);
+}
+.pt-handle-pt {
+  position: relative;
+  display: flex;
+  align-items: center;
+  gap: var(--space-3);
+  padding: var(--space-3);
+  border-radius: var(--arena-radius-chip);
+  background: var(--arena-surface);
+  box-shadow: inset 0 0 0 1px var(--handle-tile-line);
+  cursor: pointer;
+  transition: box-shadow var(--duration-base) var(--ease-out), background-color var(--duration-base) var(--ease-out);
+}
+.pt-handle-pt:hover {
+  box-shadow: inset 0 0 0 1px var(--arena-hover-line);
+}
+.pt-handle-pt:has(input:checked) {
+  background: var(--arena-today-tint);
+  box-shadow: inset 0 0 0 2px var(--arena-accent);
+}
+.pt-handle-pt:has(input:focus-visible) {
+  outline: var(--focus-outline-width) solid var(--arena-focus-ring);
+  outline-offset: var(--focus-outline-offset);
+}
+.pt-handle-pt strong {
+  display: block;
+  font-weight: var(--font-weight-semibold);
+}
+.pt-handle-pt small {
+  display: block;
+  color: var(--arena-steel-ink);
+  font-size: var(--font-size-xs);
+  font-variant-numeric: tabular-nums;
+}
+.pt-handle-avatar {
+  display: grid;
+  flex: none;
+  place-items: center;
+  width: 40px;
+  height: 40px;
+  border-radius: var(--radius-circle);
+  background: var(--arena-info-chip);
+  color: var(--arena-accent-text);
+  font-family: var(--font-brand-display);
+  font-weight: var(--font-weight-extrabold);
+}
+.pt-handle-pt:has(input:checked) .pt-handle-avatar {
+  background: var(--arena-accent);
+  color: var(--arena-on-dark);
+}
+
+/* Hủy buổi */
+.pt-handle-warning {
+  display: grid;
+  gap: var(--space-1);
+  padding: var(--space-3) var(--space-3) var(--space-3) var(--space-6);
+  border-radius: var(--arena-radius-chip);
+  background: var(--color-danger-tint);
+  box-shadow: inset 0 0 0 1px var(--color-danger-border);
+  color: var(--color-danger-ink);
+  font-size: var(--font-size-sm);
+}
+.pt-handle-warning li::marker {
+  color: var(--color-danger);
+}
+
+.pt-handle-field {
+  display: grid;
+  gap: var(--space-1-5);
+  font-size: var(--font-size-sm);
+  font-weight: var(--font-weight-semibold);
+}
+.pt-handle-field small {
+  color: var(--arena-steel-ink);
+  font-weight: var(--font-weight-regular);
+}
+.pt-handle-field textarea {
+  width: 100%;
+  min-height: 0;
+  padding: var(--space-2) var(--space-3);
+  border: 0;
+  border-radius: var(--arena-radius-chip);
+  background: var(--arena-surface);
+  box-shadow: inset 0 0 0 1px var(--arena-chalk-line-strong);
+  color: var(--arena-ink);
+  caret-color: var(--arena-accent-text);
+  font: inherit;
+  font-weight: var(--font-weight-regular);
+  line-height: var(--line-height-normal);
+  resize: vertical;
+  transition: box-shadow var(--duration-base) var(--ease-out);
+}
+.pt-handle-field textarea::placeholder {
+  color: var(--arena-steel-ink);
+}
+.pt-handle-field textarea:hover {
+  box-shadow: inset 0 0 0 1px var(--arena-hover-line);
+}
+.pt-handle-field textarea:focus-visible {
+  outline-offset: 0;
+  box-shadow: inset 0 0 0 1px var(--arena-accent);
+}
+.pt-handle-check {
+  display: flex;
+  align-items: flex-start;
+  gap: var(--space-2);
+  min-height: 44px;
+  padding-top: var(--space-1);
+  font-size: var(--font-size-sm);
+  cursor: pointer;
+}
+.pt-handle-check input {
+  flex: none;
+  width: 18px;
+  height: 18px;
+  margin: 1px 0 0;
+  accent-color: var(--color-danger);
+}
+
+/* Nút Lưu luôn thấy được: dính đáy vùng cuộn (bù đúng padding đáy của .pt-handle-body). */
+.pt-handle-actions {
+  position: sticky;
+  bottom: calc(-1 * var(--handle-pad));
+  z-index: 1;
+  display: flex;
+  justify-content: flex-end;
+  gap: var(--space-2);
+  margin: var(--space-1) calc(-1 * var(--handle-pad)) calc(-1 * var(--handle-pad));
+  padding: var(--space-3) var(--handle-pad) var(--handle-pad);
+  border-top: var(--border-width) solid var(--arena-chalk-line);
+  background: var(--arena-chalk);
+}
+
+/* --- 10.7 Điện thoại: tấm trượt từ đáy, 3 phương án xếp 1 cột gọn --- */
+@media (max-width: 700px) {
+  .pt-handle {
+    --handle-pad: var(--arena-pad-sm);
+    width: 100%;
+    max-width: 100%;
+    max-height: 92vh;
+    margin: auto 0 0;
+    border-radius: var(--arena-radius-chip) var(--arena-radius-chip) 0 0;
+  }
+  .pt-handle[open]:not(:modal) {
+    inset: auto 0 0 0;
+  }
+  .pt-handle-head h2 {
+    font-size: var(--font-size-xl);
+  }
+  .pt-handle-body {
+    padding-top: var(--space-4);
+  }
+  .pt-handle-options {
+    grid-template-columns: 1fr;
+    gap: var(--space-1);
+  }
+  .pt-handle-option {
+    grid-template-columns: auto 1fr auto;
+    align-items: center;
+    min-height: 48px;
+    padding-block: var(--space-2);
+  }
+  .pt-handle-option i {
+    grid-row: auto;
+    margin: 0;
+  }
+  .pt-handle-option span {
+    display: none;
+  }
+  .pt-handle-option small {
+    grid-column: 3;
+    margin: 0;
+  }
+  .pt-handle-day {
+    grid-template-columns: 1fr;
+    gap: var(--space-1);
+  }
+  .pt-handle-day-name {
+    padding-top: 0;
+  }
+  .pt-handle-pill span {
+    min-height: 40px;
+  }
+  .pt-handle-actions .btn {
+    flex: 1;
+  }
+  @media (prefers-reduced-motion: no-preference) {
+    @starting-style {
+      .pt-handle[open] {
+        transform: translateY(var(--space-8));
+      }
+    }
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .pt-handle-option,
+  .pt-handle-pt,
+  .pt-handle-pill span,
+  .pt-slot.is-handleable {
+    transition: none;
+  }
+  .pt-slot.is-handleable:hover {
+    transform: none;
+  }
+}

@@ -1,176 +1,99 @@
 package com.gms.dto;
 
-import com.gms.entity.Package;
 import java.time.LocalDate;
 
 /**
- * Dữ liệu một thẻ trong khối Gói PT của bạn.
- * DAO điền dữ liệu gốc; Service bổ sung nhãn loại gói và lượt đổi còn lại.
- * Servlet sẽ truyền List<MyPtPackageView> bằng attribute ptPackages cho JSP.
+ * 1 GÓI PT (cá nhân / đôi) của khách — 1 thẻ ở cột trái màn "Gói của tôi".
+ *   Phần 1: DAO đọc từ DB (MyPtSessionDAO.findMyPackages).
+ *   Phần 2: Service tính thêm (MyBookingService).
  */
 public class MyPtPackageView {
 
-    // ===== 1. FIELD: DAO đọc từ database =====
+    // ---------------- Phần 1: DAO đọc từ DB ----------------
+    private int subscriptionId;          // mã gói
+    private String type;                 // PTSingle | PTCouple
+    private String status;               // Subscriptions.Status: Active = đang tập, còn lại = đã kết thúc
+    private String packageName;          // tên gói lúc mua
+    private LocalDate startDate;         // thời hạn gói
+    private LocalDate endDate;
+    private int totalSessions;           // tổng số buổi (GeneratedSessionCount)
+    private int pastSessions;            // số buổi có ngày tập trước hôm nay → thanh tiến độ
+    private int holderCustomerId;        // người đứng tên
+    private Integer partnerCustomerId;   // người đi kèm (gói đôi)
+    private String ptName;               // tên PT phụ trách
+    private String ptPhone;              // SĐT PT
+    private String holderName;           // tên người đứng tên
+    private String partnerFullName;      // tên người đi kèm
 
-    // Subscriptions.SubscriptionId: nhận diện gói khi lọc lịch, không in mã số này.
-    private final int subscriptionId;
+    // ---------------- Phần 2: Service tính thêm ----------------
+    private String typeLabel;            // "PT cá nhân" | "PT đôi"
+    private String partnerName;          // "người tập cùng" = người còn lại so với người đang xem
+    private String zaloUrl;              // https://zalo.me/<SĐT PT>
 
-    // Orders.PackageNameSnapshot: tên lúc mua, JSP in tiêu đề thẻ.
-    private final String packageName;
-
-    // Subscriptions.SubscriptionType: Service chọn nhãn PT cá nhân hoặc PT đôi.
-    private final Package.Type subscriptionType;
-
-    // Subscriptions.PtEmployeeId → Employees → Persons.FullName: JSP in PT phụ trách gói.
-    // PT thực tế của từng buổi sẽ được lấy riêng từ Sessions ở khối lịch.
-    private final String ptName;
-
-    // DAO chọn tên thành viên còn lại của gói đôi qua Customers → Persons.FullName.
-    // Khách đứng tên thấy người đi cùng; khách đi cùng thấy người đứng tên. Gói cá nhân: null.
-    private final String partnerName;
-
-    // Subscriptions.StartDate: JSP in ngày bắt đầu bằng gms:formatDate.
-    private final LocalDate startDate;
-
-    // Subscriptions.EndDate: JSP in hạn gói; ngày này vẫn còn hiệu lực (GBR-03).
-    private final LocalDate endDate;
-
-    // Subscriptions.GeneratedSessionCount: tổng buổi thực sinh lúc Paid (BR-40, DBR-53).
-    // JSP in tổng ban đầu, không dùng số ước tính của danh mục Packages.
-    private final int generatedSessionCount;
-
-    // COUNT Sessions cùng SubscriptionId còn Scheduled: JSP in “Buổi chưa chốt”.
-    // Gồm cả buổi đã kết thúc nhưng chờ JOB-04, không chỉ buổi tương lai.
-    private final int scheduledSessionCount;
-    // COUNT Scheduled có SlotDate + StartTime sau thời điểm xem.
-    // JSP in Buổi sắp tới; không gồm buổi đang diễn ra hoặc đang chờ JOB-04.
-    private int upcomingSessionCount;
-
-    // Subscriptions.MaxSwapsSnapshot: Service dùng giới hạn đã lưu lúc bán (GBR-04).
-    private final int maxSwapsSnapshot;
-
-    // Subscriptions.SwapsUsed: Service dùng số lượt đổi đã sử dụng của cả gói (BR-73).
-    private final int swapsUsed;
-
-    // ===== 2. FIELD: Service bổ sung để JSP hiển thị =====
-
-    // Service đọc subscriptionType: JSP in “PT cá nhân” hoặc “PT đôi”.
-    private String subscriptionTypeLabel;
-
-    // Service tính maxSwapsSnapshot - swapsUsed: JSP in số lượt đổi còn lại.
-    private int remainingSwaps;
-
-    // ===== 3. CONSTRUCTOR: nhận một dòng gói mà DAO truy vấn =====
-
-    /** Nhận dữ liệu một gói cá nhân/đôi; partnerName có thể null với gói cá nhân. */
-    public MyPtPackageView(int subscriptionId, String packageName,
-            Package.Type subscriptionType, String ptName, String partnerName,
-            LocalDate startDate, LocalDate endDate, int generatedSessionCount,
-            int scheduledSessionCount, int maxSwapsSnapshot, int swapsUsed) {
-        // B1: nhận thông tin định danh, tên và người liên quan đến gói.
-        this.subscriptionId = subscriptionId;
-        this.packageName = packageName;
-        this.subscriptionType = subscriptionType;
-        this.ptName = ptName;
-        this.partnerName = partnerName;
-
-        // B2: nhận thời hạn và số buổi; DTO không tự tính hay sửa dữ liệu DB.
-        this.startDate = startDate;
-        this.endDate = endDate;
-        this.generatedSessionCount = generatedSessionCount;
-        this.scheduledSessionCount = scheduledSessionCount;
-
-        // B3: giữ dữ liệu lượt đổi để Service tính phần còn lại.
-        this.maxSwapsSnapshot = maxSwapsSnapshot;
-        this.swapsUsed = swapsUsed;
+    /** Gói đôi? */
+    public boolean isCouple() {
+        return "PTCouple".equals(type);
     }
 
-    // ===== 4. GETTER: dữ liệu gốc do DAO điền =====
-
-    /** Mã gói dùng cho bộ lọc lịch. */
-    public int getSubscriptionId() {
-        return subscriptionId;
+    /** Gói còn đang tập? (Subscriptions.Status = Active) */
+    public boolean isActive() {
+        return "Active".equals(status);
     }
 
-    /** Tên gói đã lưu lúc mua, dùng làm tiêu đề thẻ. */
-    public String getPackageName() {
-        return packageName;
+    /** % thanh tiến độ (0–100). */
+    public int getProgressPercent() {
+        return totalSessions == 0 ? 0 : Math.min(100, pastSessions * 100 / totalSessions);
     }
 
-    /** Loại gói để Service chọn nhãn hiển thị. */
-    public Package.Type getSubscriptionType() {
-        return subscriptionType;
-    }
+    // ---------------- Getter / Setter ----------------
+    public int getSubscriptionId() { return subscriptionId; }
+    public void setSubscriptionId(int subscriptionId) { this.subscriptionId = subscriptionId; }
 
-    /** Tên PT phụ trách chung của gói. */
-    public String getPtName() {
-        return ptName;
-    }
+    public String getType() { return type; }
+    public void setType(String type) { this.type = type; }
 
-    /** Tên người đi cùng trong đơn gói đôi; null thì JSP không hiện. */
-    public String getPartnerName() {
-        return partnerName;
-    }
+    public String getStatus() { return status; }
+    public void setStatus(String status) { this.status = status; }
 
-    /** Ngày bắt đầu gói, có thể là ngày tương lai. */
-    public LocalDate getStartDate() {
-        return startDate;
-    }
+    public String getPackageName() { return packageName; }
+    public void setPackageName(String packageName) { this.packageName = packageName; }
 
-    /** Ngày cuối gói còn hiệu lực. */
-    public LocalDate getEndDate() {
-        return endDate;
-    }
+    public LocalDate getStartDate() { return startDate; }
+    public void setStartDate(LocalDate startDate) { this.startDate = startDate; }
 
-    /** Tổng số buổi thực sinh khi thanh toán, không phải số còn lại. */
-    public int getGeneratedSessionCount() {
-        return generatedSessionCount;
-    }
+    public LocalDate getEndDate() { return endDate; }
+    public void setEndDate(LocalDate endDate) { this.endDate = endDate; }
 
-    /** Số buổi Scheduled chưa có kết quả cuối cùng. */
-    public int getScheduledSessionCount() {
-        return scheduledSessionCount;
-    }
+    public int getTotalSessions() { return totalSessions; }
+    public void setTotalSessions(int totalSessions) { this.totalSessions = totalSessions; }
 
-    /** Số buổi còn Scheduled và chưa bắt đầu trong từng lần mua gói. */
-    public int getUpcomingSessionCount() {
-        return upcomingSessionCount;
-    }
+    public int getPastSessions() { return pastSessions; }
+    public void setPastSessions(int pastSessions) { this.pastSessions = pastSessions; }
 
-    /** DAO gán số đếm từ lịch thực tế, không lấy tổng ban đầu trừ số buổi đã dùng. */
-    public void setUpcomingSessionCount(int upcomingSessionCount) {
-        this.upcomingSessionCount = upcomingSessionCount;
-    }
+    public int getHolderCustomerId() { return holderCustomerId; }
+    public void setHolderCustomerId(int holderCustomerId) { this.holderCustomerId = holderCustomerId; }
 
-    /** Giới hạn đổi của gói lúc bán, không lấy cấu hình mới thay thế. */
-    public int getMaxSwapsSnapshot() {
-        return maxSwapsSnapshot;
-    }
+    public Integer getPartnerCustomerId() { return partnerCustomerId; }
+    public void setPartnerCustomerId(Integer partnerCustomerId) { this.partnerCustomerId = partnerCustomerId; }
 
-    /** Số lượt đổi đã dùng của cả gói; gói đôi dùng chung. */
-    public int getSwapsUsed() {
-        return swapsUsed;
-    }
+    public String getPtName() { return ptName; }
+    public void setPtName(String ptName) { this.ptName = ptName; }
 
-    // ===== 5. GETTER / SETTER: Service điền trước khi trả DTO cho Servlet =====
+    public String getPtPhone() { return ptPhone; }
+    public void setPtPhone(String ptPhone) { this.ptPhone = ptPhone; }
 
-    /** Nhãn loại gói để JSP in trực tiếp. */
-    public String getSubscriptionTypeLabel() {
-        return subscriptionTypeLabel;
-    }
+    public String getHolderName() { return holderName; }
+    public void setHolderName(String holderName) { this.holderName = holderName; }
 
-    /** Gán nhãn do Service chọn; không cập nhật database. */
-    public void setSubscriptionTypeLabel(String subscriptionTypeLabel) {
-        this.subscriptionTypeLabel = subscriptionTypeLabel;
-    }
+    public String getPartnerFullName() { return partnerFullName; }
+    public void setPartnerFullName(String partnerFullName) { this.partnerFullName = partnerFullName; }
 
-    /** Số lượt đổi còn lại do Service tính. */
-    public int getRemainingSwaps() {
-        return remainingSwaps;
-    }
+    public String getTypeLabel() { return typeLabel; }
+    public void setTypeLabel(String typeLabel) { this.typeLabel = typeLabel; }
 
-    /** Gán kết quả tính của Service; setter chỉ nhận giá trị. */
-    public void setRemainingSwaps(int remainingSwaps) {
-        this.remainingSwaps = remainingSwaps;
-    }
+    public String getPartnerName() { return partnerName; }
+    public void setPartnerName(String partnerName) { this.partnerName = partnerName; }
+
+    public String getZaloUrl() { return zaloUrl; }
+    public void setZaloUrl(String zaloUrl) { this.zaloUrl = zaloUrl; }
 }

@@ -24,6 +24,11 @@
             </a>
 
             <div class="nav-group">Gói tập</div>
+            <a href="${pageContext.request.contextPath}/customer/bookings"
+               class="nav-link <c:if test="${activeSidebar == 'bookings'}">active</c:if>"
+               <c:if test="${activeSidebar == 'bookings'}">aria-current="page"</c:if>>
+                <svg viewBox="0 0 24 24" aria-hidden="true"><rect x="3" y="5" width="18" height="16" rx="2"></rect><path d="M3 10h18M8 3v4M16 3v4M8 15h8"></path></svg> Gói của tôi
+            </a>
             <a href="${pageContext.request.contextPath}/customer/packages/purchase"
                class="nav-link <c:if test="${activeSidebar == 'buy-package'}">active</c:if>"
                <c:if test="${activeSidebar == 'buy-package'}">aria-current="page"</c:if>>
@@ -50,6 +55,12 @@
                class="nav-link <c:if test="${activeSidebar == 'training-plans'}">active</c:if>"
                <c:if test="${activeSidebar == 'training-plans'}">aria-current="page"</c:if>>
                 <svg viewBox="0 0 24 24" aria-hidden="true"><rect x="6" y="4" width="14" height="17" rx="2"></rect><rect x="9" y="2" width="8" height="4" rx="1"></rect><path d="M10 10h6M10 14h6M10 18h4"></path></svg> Giáo án của tôi
+            </a>
+
+            <a href="${pageContext.request.contextPath}/customer/body-stats"
+               class="nav-link <c:if test="${activeSidebar == 'body-stats'}">active</c:if>"
+               <c:if test="${activeSidebar == 'body-stats'}">aria-current="page"</c:if>>
+                <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M3 20h18"></path><path d="m4 16 5-5 4 3 7-8"></path><path d="M16 6h4v4"></path></svg> Chỉ số cơ thể
             </a>
 
             <div class="nav-group">Tài khoản</div>

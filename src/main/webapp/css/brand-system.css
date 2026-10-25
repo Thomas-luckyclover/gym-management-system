@@ -345,3 +345,21 @@ html body.auth-dark .recovery-timer { background: var(--color-primary-tint); }
 }
 html.gms-lite .auth-engraving * { animation: none; }
 html.gms-lite .auth-muse { animation: none; }
+
+/* Lượt 2 (tiếp cận): nút Đăng nhập cao 46px như ô nhập; nút Hiện mật khẩu giữ cỡ nhưng vùng chạm 44px;
+   liên kết nhỏ (Quên mật khẩu, Đăng ký, Về trang chủ) có vùng chạm ≥ 24px. */
+html body.auth-dark .auth-card .btn-primary { min-height: var(--control-height-lg); }
+html body.auth-dark :is(.password-toggle, .pw-toggle)::after {
+  content: "";
+  position: absolute;
+  top: 50%;
+  left: 50%;
+  width: var(--arena-hit);
+  height: var(--arena-hit);
+  transform: translate(-50%, -50%);
+}
+html body.auth-dark :is(.auth-forgot a, .auth-switch a, .auth-back) {
+  display: inline-flex;
+  align-items: center;
+  min-height: var(--space-6);
+}

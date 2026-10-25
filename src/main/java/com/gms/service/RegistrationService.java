@@ -21,6 +21,11 @@ import java.util.Map;
 
 /**
  * Xử lý nghiệp vụ đăng ký tài khoản khách hàng trực tuyến (UC-05, UC-IDENT, UC-Claim).
+ *
+ * THAM SỐ CẤU HÌNH (giá trị hiện tại)
+ *   PASSWORD_MIN_LENGTH / MAX = 8 / 64     mật khẩu 8–64 ký tự, có cả chữ và số   (AppConstants)
+ *   FULL_NAME_MIN_LENGTH / MAX = 2 / 50    họ tên 2–50 ký tự                       (AppConstants)
+ *   Mã OTP: luật gửi / nhập mã (P-15 = 15 phút, P-17 = 5 lần, P-18 = 5 phút, cách 60 giây) nằm ở VerificationCodeService.
  */
 public class RegistrationService {
 

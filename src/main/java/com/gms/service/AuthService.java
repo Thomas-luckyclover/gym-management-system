@@ -24,6 +24,11 @@ import java.util.Map;
 
 /**
  * Nghiệp vụ đăng nhập và lấy vai trò của tài khoản (màn #1 Sign In, CBR-113).
+ *
+ * THAM SỐ CẤU HÌNH (giá trị hiện tại — bảng SystemConfigs)
+ *   P-17 = 5   sai mật khẩu 5 lần liên tiếp → khóa tạm tài khoản   (biến maxFailedAttempts)
+ *   P-18 = 5   khóa tạm 5 phút (khóa xong tự mở; Quên mật khẩu cũng mở khóa ngay)  (biến lockMinutes)
+ *   SELECT_ROLE_PATH = "/select-role"   tài khoản có nhiều vai trò thì chuyển tới trang chọn vai trò
  */
 public class AuthService {
 

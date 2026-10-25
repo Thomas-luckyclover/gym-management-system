@@ -1,0 +1,367 @@
+@charset "UTF-8";
+/* =====================================================================
+   CHỈ SỐ CƠ THỂ (khách) — body-stats.css
+
+   ĐỌC THEO THỨ TỰ:
+     1. Khung trang: 5 ô số → (biểu đồ | form) → lịch sử
+     2. 5 ô số (link chọn biểu đồ)
+     3. Biểu đồ SVG (toạ độ do Service tính)
+     4. Form ghi lần đo
+     5. Bảng lịch sử
+     6. Điện thoại
+
+   Hệ Arena: khối phấn (--arena-chalk), ô con --arena-surface; theme sáng/tối tự đổi qua token.
+   Hộp bao ngoài góc 2px (quy ước 25/10). Cam đĩa 25kg chỉ cho đường biểu đồ + nút Lưu.
+   ===================================================================== */
+
+
+/* ==================== 1. KHUNG TRANG ==================== */
+
+.stats {
+  display: grid;
+  gap: var(--arena-gap);
+}
+.stats :is(h2, p, table) {
+  margin: 0;
+}
+/* Ô lưới không bị nội dung rộng (bảng) kéo giãn ra ngoài màn: bảng tự cuộn ngang trong khung của nó. */
+.stats > *,
+.stats-main > * {
+  min-width: 0;
+}
+html body.dock.body-stats-page :is(.stats-chart, .stats-form, .stats-history, .stats-error) {
+  padding: var(--arena-pad);
+  border-radius: var(--arena-radius-chip);
+}
+.stats-error {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  justify-content: space-between;
+  gap: var(--space-3);
+}
+.stats-main {
+  display: grid;
+  grid-template-columns: minmax(0, 1.7fr) minmax(280px, 1fr);
+  align-items: start;
+  gap: var(--arena-gap);
+}
+.stats-head {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: baseline;
+  justify-content: space-between;
+  gap: var(--space-1) var(--space-3);
+  margin-bottom: var(--space-4);
+}
+.stats-head h2 {
+  font-family: var(--font-brand-display);
+  font-size: var(--font-size-lg);
+  font-weight: var(--font-weight-extrabold);
+}
+.stats-head p {
+  color: var(--arena-steel-ink);
+  font-size: var(--font-size-sm);
+}
+.stats-empty {
+  padding: var(--space-6) var(--space-4);
+  border-radius: var(--arena-radius-chip);
+  background: var(--arena-surface);
+  box-shadow: inset 0 0 0 1px var(--arena-card-line);
+  color: var(--arena-ink-soft);
+  font-size: var(--font-size-sm);
+  text-align: center;
+  text-wrap: pretty;
+}
+
+
+/* ==================== 2. 5 Ô SỐ ==================== */
+
+.stats-tiles {
+  display: grid;
+  grid-template-columns: repeat(5, minmax(0, 1fr));
+  gap: var(--arena-gap);
+}
+.stats-tile {
+  display: grid;
+  align-content: start;
+  gap: var(--space-1);
+  min-height: 132px;
+  padding: var(--space-4) var(--space-5);
+  border-radius: var(--arena-radius-chip);
+  background: var(--arena-chalk);
+  box-shadow: var(--arena-shadow-light);
+  color: var(--arena-ink);
+  text-decoration: none;
+  transition: box-shadow var(--duration-base) var(--ease-out), transform var(--duration-base) var(--ease-out);
+}
+.stats-tile-label {
+  color: var(--arena-steel-ink);
+  font-family: var(--font-brand-mono);
+  font-size: var(--font-size-2xs);
+  letter-spacing: var(--letter-spacing-wide);
+  text-transform: uppercase;
+}
+.stats-tile-value {
+  font-family: var(--font-brand-display);
+  font-size: var(--font-size-3xl);
+  font-weight: var(--font-weight-extrabold);
+  font-variant-numeric: tabular-nums;
+  letter-spacing: -0.02em;
+  line-height: 1.1;
+}
+.stats-tile-value small {
+  color: var(--arena-steel-ink);
+  font-family: var(--font-body);
+  font-size: var(--font-size-sm);
+  font-weight: var(--font-weight-semibold);
+  letter-spacing: 0;
+}
+.stats-tile-change {
+  margin-top: auto;
+  color: var(--arena-steel-ink);
+  font-size: var(--font-size-xs);
+  font-variant-numeric: tabular-nums;
+}
+.stats-chip {
+  justify-self: start;
+  padding: 2px var(--space-2);
+  border-radius: var(--arena-radius-chip);
+  font-size: var(--font-size-xs);
+  font-weight: var(--font-weight-semibold);
+}
+.stats-chip.is-ok {
+  background: var(--color-success-tint);
+  box-shadow: inset 0 0 0 1px var(--color-success-border);
+  color: var(--color-success-ink);
+}
+.stats-chip.is-warn {
+  background: var(--color-warning-tint);
+  box-shadow: inset 0 0 0 1px var(--color-warning-border);
+  color: var(--color-warning-ink);
+}
+.stats-chip.is-bad {
+  background: var(--color-danger-tint);
+  box-shadow: inset 0 0 0 1px var(--color-danger-border);
+  color: var(--color-danger-ink);
+}
+@media (hover: hover) {
+  .stats-tile:hover {
+    transform: translateY(-1px);
+    box-shadow: var(--arena-shadow-light), var(--arena-lift);
+  }
+}
+/* Ô đang vẽ biểu đồ: vạch cam 3px trên đỉnh (không dùng viền trái dày). */
+.stats-tile.is-active {
+  box-shadow: inset 0 3px 0 var(--arena-ember), var(--arena-shadow-light);
+}
+.stats-tile:focus-visible {
+  outline: var(--focus-outline-width) solid var(--arena-focus-ring);
+  outline-offset: var(--focus-outline-offset);
+}
+
+
+/* ==================== 3. BIỂU ĐỒ ==================== */
+
+.stats-svg {
+  display: block;
+  width: 100%;
+  height: auto;
+  overflow: visible;
+}
+.stats-svg .grid {
+  stroke: var(--arena-chalk-line);
+  stroke-width: 1;
+  stroke-dasharray: 3 4;
+}
+.stats-svg .axis {
+  fill: var(--arena-steel-ink);
+  font-family: var(--font-brand-mono);
+  font-size: 11px;
+  font-variant-numeric: tabular-nums;
+}
+.stats-svg .area {
+  fill: color-mix(in srgb, var(--arena-ember) 14%, transparent);
+  stroke: none;
+}
+.stats-svg .line {
+  fill: none;
+  stroke: var(--arena-ember);
+  stroke-width: 2.5;
+  stroke-linejoin: round;
+  stroke-linecap: round;
+}
+.stats-svg .dot circle {
+  fill: var(--arena-chalk);
+  stroke: var(--arena-ember);
+  stroke-width: 2;
+  transition: r var(--duration-fast) var(--ease-out);
+}
+.stats-svg .dot.is-last circle {
+  fill: var(--arena-ember);
+}
+.stats-svg .dot:hover circle {
+  r: 7;
+}
+
+
+/* ==================== 4. FORM GHI LẦN ĐO ==================== */
+
+.stats-fields {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: var(--space-3);
+}
+.stats-field {
+  display: grid;
+  align-content: start;
+  gap: var(--space-1-5);
+  font-size: var(--font-size-sm);
+  font-weight: var(--font-weight-semibold);
+}
+.stats-field small {
+  color: var(--arena-steel-ink);
+  font-weight: var(--font-weight-regular);
+}
+.stats-fields .is-wide {
+  grid-column: 1 / -1;
+}
+.stats-field input {
+  width: 100%;
+  min-height: 44px;
+  padding: 0 var(--space-3);
+  border: 0;
+  border-radius: var(--arena-radius-chip);
+  background: var(--arena-surface);
+  box-shadow: inset 0 0 0 1px var(--arena-chalk-line-strong);
+  color: var(--arena-ink);
+  caret-color: var(--arena-ember);
+  font: inherit;
+  font-weight: var(--font-weight-regular);
+  font-variant-numeric: tabular-nums;
+}
+.stats-field input::placeholder {
+  color: var(--arena-steel-ink);
+}
+.stats-field input:focus-visible {
+  outline: var(--focus-outline-width) solid var(--arena-focus-ring);
+  outline-offset: var(--focus-outline-offset);
+}
+.stats-fields .btn {
+  min-height: 46px;
+  margin-top: var(--space-1);
+}
+
+
+/* ==================== 5. BẢNG LỊCH SỬ ==================== */
+
+.stats-table-wrap {
+  position: relative;   /* chữ ẩn (visually-hidden, position:absolute) trong bảng phải nằm trong khung cuộn, không kéo rộng trang */
+  overflow-x: auto;
+  border-radius: var(--arena-radius-chip);
+  background: var(--arena-surface);
+  box-shadow: inset 0 0 0 1px var(--arena-card-line);
+}
+.stats-table {
+  width: 100%;
+  border-collapse: collapse;
+  font-size: var(--font-size-sm);
+}
+.stats-table th {
+  padding: var(--space-2) var(--space-3);
+  color: var(--arena-steel-ink);
+  font-size: var(--font-size-xs);
+  font-weight: var(--font-weight-semibold);
+  text-align: left;
+  white-space: nowrap;
+}
+.stats-table td {
+  padding: var(--space-2) var(--space-3);
+  border-top: var(--border-width) solid var(--arena-grid-line);
+  vertical-align: middle;
+}
+.stats-table :is(.num, .date) {
+  font-variant-numeric: tabular-nums;
+  white-space: nowrap;
+}
+.stats-table .date {
+  text-align: left;
+}
+/* Tiêu đề cột số thẳng mép phải với số bên dưới. Phải đủ mạnh để thắng
+   "html body.dock table:not(.no-gms-table) thead th { text-align: left }" của common.css. */
+html body.dock .stats-table thead th.num {
+  text-align: right;
+}
+.stats-table .is-down {
+  color: var(--color-success-ink);
+  font-weight: var(--font-weight-semibold);
+}
+.stats-table .is-up {
+  color: var(--color-warning-ink);
+  font-weight: var(--font-weight-semibold);
+}
+.stats-table .note {
+  color: var(--arena-steel-ink);
+  min-width: 12rem;
+}
+.stats-table form {
+  margin: 0;
+}
+.stats-delete {
+  display: grid;
+  place-items: center;
+  width: 36px;
+  height: 36px;
+  border: 0;
+  border-radius: var(--arena-radius-chip);
+  background: transparent;
+  color: var(--arena-steel-ink);
+  cursor: pointer;
+}
+.stats-delete:hover {
+  background: var(--color-danger-tint);
+  color: var(--color-danger-ink);
+}
+.stats-delete:focus-visible {
+  outline: var(--focus-outline-width) solid var(--arena-focus-ring);
+}
+
+
+/* ==================== 6. ĐIỆN THOẠI ==================== */
+
+@media (max-width: 1080px) {
+  .stats-main {
+    grid-template-columns: minmax(0, 1fr);
+  }
+  .stats-tiles {
+    grid-template-columns: repeat(3, minmax(0, 1fr));
+  }
+}
+@media (max-width: 760px) {
+  .stats-tiles {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+  /* 5 ô / 2 cột: ô cuối (Vòng eo) trải hết hàng, không để lỗ trống. */
+  .stats-tile:last-child {
+    grid-column: 1 / -1;
+  }
+  .stats-tile {
+    min-height: 112px;
+    padding: var(--space-3) var(--space-4);
+  }
+  .stats-tile-value {
+    font-size: var(--font-size-2xl);
+  }
+  html body.dock.body-stats-page :is(.stats-chart, .stats-form, .stats-history) {
+    padding: var(--arena-pad-sm);
+  }
+}
+@media (prefers-reduced-motion: reduce) {
+  .stats-tile,
+  .stats-svg .dot circle {
+    transition: none;
+  }
+  .stats-tile:hover {
+    transform: none;
+  }
+}

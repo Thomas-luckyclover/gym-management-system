@@ -10,11 +10,11 @@
 <head>
     <%@ include file="/WEB-INF/jsp/common/head.jspf" %>
     <title>Trang cá nhân · Super Gym</title>
-    <link rel="stylesheet" href="${pageContext.request.contextPath}/css/pages/customer/dashboard.css?v=20261013c">
-    <%-- Dải điểm nhấn dùng chung kiểu với PT Dashboard (.pt-board__hero) --%>
-    <link rel="stylesheet" href="${pageContext.request.contextPath}/css/pages/pt/dashboard.css?v=20261013g">
+    <link rel="stylesheet" href="${pageContext.request.contextPath}/css/pages/customer/dashboard.css?v=20261025city">
     <link rel="stylesheet" href="${pageContext.request.contextPath}/css/dashboard-weather.css?v=20261014s">
     <link rel="stylesheet" href="${pageContext.request.contextPath}/css/dashboard-comic.css?v=20261015h">
+    <%-- Khối chào + thời tiết dùng chung với PT Dashboard (.pt-board__hero) --%>
+    <link rel="stylesheet" href="${pageContext.request.contextPath}/css/dashboard-hero.css?v=20261025city">
     <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Patrick+Hand&display=swap">
 </head>
 
@@ -34,11 +34,6 @@
             </div>
             <c:if test="${not empty dashboard}">
                 <div class="top-right">
-                    <%-- Chuyển nền tối/sáng (common.js "Giao diện sáng / tối"); mặc định tối --%>
-                    <button type="button" class="theme-toggle" data-theme-toggle aria-pressed="false" aria-label="Chuyển sang nền sáng">
-                        <span class="theme-toggle__track" aria-hidden="true"><span class="theme-toggle__knob"></span></span>
-                        <span class="theme-toggle__label">Tối</span>
-                    </button>
                     <a class="tb-user" href="${pageContext.request.contextPath}/account" title="Cài đặt tài khoản">
                         <c:choose>
                             <c:when test="${not empty dashboard.avatar}">

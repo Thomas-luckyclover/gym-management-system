@@ -2553,49 +2553,7 @@ html body.auth-dark .field select:focus {
   box-shadow: 0 0 0 3px rgba(43, 212, 222, 0.22);
 }
 
-/* Công tắc nền sáng / tối (mọi màn nội bộ; common.js tự gắn vào topbar nếu trang chưa có) */
-.theme-toggle {
-  display: inline-flex;
-  align-items: center;
-  gap: var(--space-2);
-  min-height: 40px;
-  padding: var(--space-1-5) var(--space-3);
-  border: var(--border-width) solid var(--pt-line-strong);
-  border-radius: var(--radius-pill);
-  background: transparent;
-  color: var(--pt-text);
-  font: inherit;
-  font-size: var(--font-size-sm);
-  font-weight: var(--font-weight-semibold);
-  cursor: pointer;
-}
-.theme-toggle:hover { border-color: var(--pt-text); }
-/* Công tắc gạt: rãnh đại dương, núm là "mặt trời" cam (sáng) / "trăng khuyết" (tối) */
-.theme-toggle { padding: var(--space-1) var(--space-3) var(--space-1) var(--space-1-5); }
-.theme-toggle__track {
-  position: relative;
-  width: 44px;
-  height: 24px;
-  border-radius: var(--radius-pill);
-  background: var(--brand-ocean-deep);
-  box-shadow: inset 0 0 0 var(--border-width) rgba(43, 212, 222, 0.35);
-}
-.theme-toggle__knob {
-  position: absolute;
-  top: 3px;
-  left: 3px;
-  width: 18px;
-  height: 18px;
-  border-radius: var(--radius-circle);
-  background: #EAF4F6;
-  box-shadow: inset -5px -2px 0 0 #C9D6DA;
-  transition: transform var(--duration-base) var(--ease-out-expo), background var(--duration-base), box-shadow var(--duration-base);
-}
-.theme-toggle[aria-pressed="true"] .theme-toggle__track { background: #FDE4D8; box-shadow: inset 0 0 0 var(--border-width) rgba(194, 65, 12, 0.4); }
-.theme-toggle[aria-pressed="true"] .theme-toggle__knob { transform: translateX(20px); background: var(--brand-sunset); box-shadow: 0 0 0 3px rgba(242, 92, 27, 0.25); }
-.theme-toggle__label { min-width: 3ch; }
-.top-right .theme-toggle { margin-right: var(--space-1); }
-@media (max-width: 767px) { .theme-toggle__label { display: none; } }
+
 
 /* Nhãn trạng thái: chấm màu phát sáng nhẹ phía trước (nhãn không có icon riêng), chữ đậm vừa, giãn chữ */
 .badge { padding: var(--space-1) var(--space-2-5); letter-spacing: 0.02em; line-height: 1.3; }
@@ -2622,69 +2580,94 @@ html body.auth-dark .field select:focus {
 
 
 /* =====================================================================
-   KHU LÀM VIỆC — "KÍNH THỦY CUNG" (2026-10-13)
-   Tham khảo các site đạt giải trên webdesignawards.io (UI/UX):
-     · Khung lưới mảnh, nhãn nhỏ kiểu mã [ ... ] giãn chữ, màu nhấn dùng có tiết chế
-     · Khoảng thở rộng và phân cấp số liệu rõ ràng
-   Nền: nghệ thuật trừu tượng gang, phấn tập và pigment ember. Ảnh tĩnh lùi sau surface đặc.
+   KHU LÀM VIỆC — "COBALT × EMBER" (24/10, xanh cobalt theo mẫu VYRA; một tông, không còn sáng/tối)
+   Nền: gradient cobalt (+ ảnh --ink-art khi có). Nội dung nằm trên thẻ giấy kem chữ mực; chữ nằm thẳng trên nền
+   dùng trắng/xanh bạc. Màu hành động: ember của trang chủ (chữ mực trên nút); aqua trang chủ cho dữ liệu.
    ===================================================================== */
 /* Nền nghệ thuật tĩnh: ảnh macro gang/phấn ở mép phải, trung tâm tối để đọc. */
-html body.dock { background-color: var(--ink-ground); }
-html body.dock::before {
+html:where(:not([data-theme="dark"])) body.dock { background-color: var(--ink-ground); }
+html:where(:not([data-theme="dark"])) body.dock::before {
   content: "";
   position: fixed;
   inset: 0;
   z-index: 0;
   pointer-events: none;
-  background: var(--ink-overlay), var(--ink-vignette), var(--ink-art) right center / cover no-repeat;
+  /* Nền phẳng một màu cobalt; ảnh --ink-art (nếu đặt) chỉ hiện rất nhạt dưới lớp cobalt */
+  background:
+    linear-gradient(var(--zone-cobalt-600), var(--zone-cobalt-600)) 0 0 / 100% 100% no-repeat,
+    var(--ink-art) center / cover no-repeat;
+  opacity: 1;
   animation: none;
 }
-html body.dock::after {
+html:where(:not([data-theme="dark"])) body.dock::after {
   content: "";
   position: fixed;
   inset: 0;
   z-index: 0;
   pointer-events: none;
-  background: var(--ink-ripples) 0 0 / var(--ink-ripple-size) repeat;
-  opacity: var(--ink-ripple-opacity);
-  mask-image: var(--ink-ripple-mask);
-  -webkit-mask-image: var(--ink-ripple-mask);
-  animation: ink-ripple-drift var(--ink-ripple-duration) linear infinite;
+  display: none;
 }
-html[data-theme="light"] body.dock { background: var(--ink-ground); }
-html[data-theme="light"] body.dock::before,
-html[data-theme="light"] body.dock::after,
-html[data-theme="light"] body.dock .weather-scene { display: none; }
 @keyframes ink-ripple-drift {
   to { background-position: var(--ink-ripple-travel); }
 }
-html body.dock .app { position: relative; z-index: 1; }
+html:where(:not([data-theme="dark"])) body.dock .app { position: relative; z-index: 1; }
+
+/* Chữ mặc định trong khu làm việc là chữ mực (vì gần như mọi nội dung nằm trên thẻ trắng).
+   Chỉ những chữ nằm THẲNG trên nền cobalt (tiêu đề mục ngoài thẻ, dòng giới thiệu, nhãn bộ lọc của Quản lý)
+   mới đổi sang trắng / xanh bạc. Cách này an toàn: khối lạ chưa liệt kê vẫn đọc được trên thẻ trắng. */
+html:where(:not([data-theme="dark"])) body.dock .content :is(h1, h2, h3):not(:is(.panel, .side-card, .gms-panel, .report-card, .card, .stat, .metric-card, .account-card, .facility-panel, .status-hero, .pt-schedule, .pt-alerts, .pt-clients, .pt-rating, .pt-summary, .pt-board__hero, .my-pt-panel, .package-card, .empty-state, table, dialog) *),
+html:where(:not([data-theme="dark"])) body.dock .content .page-intro > p,
+html:where(:not([data-theme="dark"])) body.dock:not(.theme-admin) .content .report-filter .field-label {
+  color: #FFFFFF;
+}
+html:where(:not([data-theme="dark"])) body.dock .content .page-intro > p { color: var(--zone-silver); }
+/* Khối nổi bật cũ (ô dẫn đầu bảng điểm, trạng thái gói hội viên, ô audit Admin) cũng là thẻ trắng,
+   nhấn bằng vạch ember mép trên thay cho nền xanh đen */
+html:where(:not([data-theme="dark"])) body.dock .content :is(.status-hero, .scoreboard .stat.is-lead, .metric-card-primary, .metric-card.audit-highlight) {
+  --color-board: var(--zone-card);
+  --color-board-text: var(--zone-ink);
+  --color-board-soft: var(--zone-ink-muted);
+  --color-on-primary: var(--zone-ink);
+  background: var(--zone-card);
+  color: var(--zone-ink);
+  box-shadow: inset 0 4px 0 var(--zone-accent), var(--ink-shadow);
+}
+html:where(:not([data-theme="dark"])) body.dock .content .status-hero::after { display: none; }
+html:where(:not([data-theme="dark"])) body.dock .content :is(.scoreboard .stat.is-lead, .metric-card-primary, .metric-card.audit-highlight) :is(.stat-value, .metric-value, .stat-label, .metric-label, .stat-note, .metric-note) {
+  color: var(--zone-ink);
+}
+/* Ô nhập, chọn trong thẻ: nền trắng, viền xám xanh */
+html:where(:not([data-theme="dark"])) body.dock .content :is(input:not([type="checkbox"]):not([type="radio"]), select, textarea) {
+  background-color: var(--zone-card);
+  border-color: var(--pt-line-strong);
+  color: var(--zone-ink);
+}
 
 /* Bảng, form và khối tác vụ là lớp đặc ở tiền cảnh; không xuyên ảnh qua chữ. */
-html body.dock :is(.panel, .side-card, .gms-panel, .report-card, .card, .stat, .pt-schedule, .pt-alerts, .pt-clients, .pt-rating, .pt-summary, .my-pt-panel, .package-card) {
+html:where(:not([data-theme="dark"])) body.dock :is(.panel, .side-card, .gms-panel, .report-card, .card, .stat, .pt-schedule, .pt-alerts, .pt-clients, .pt-rating, .pt-summary, .my-pt-panel, .package-card) {
   border: var(--border-width) solid var(--ink-border);
-  border-radius: var(--radius-lg);
+  border-radius: 18px;
   background: var(--ink-surface);
   color: var(--pt-text);
   box-shadow: var(--ink-shadow);
   -webkit-backdrop-filter: none;
   backdrop-filter: none;
 }
-html body.dock :is(.pt-board__hero, .wx-hero) {
+html:where(:not([data-theme="dark"])) body.dock :is(.pt-board__hero, .wx-hero) {
   border-color: var(--pt-line);
   box-shadow: none;
 }
 
 /* Sidebar đại dương đặc; ánh xanh theo --mx/--my và gió nét mảnh chỉ chạy khi hover. */
-html body.dock .sidebar {
+html:where(:not([data-theme="dark"])) body.dock .sidebar {
   padding: var(--space-6) var(--space-4) var(--space-5);
   background: var(--ink-sidebar-bg);
   border-right: var(--border-width) solid var(--ink-sidebar-line);
 }
-html body.dock .sidebar::before {
+html:where(:not([data-theme="dark"])) body.dock .sidebar::before {
   background: radial-gradient(var(--dock-glow-size) circle at var(--mx, 50%) var(--my, -30%), var(--ink-sidebar-light-core), var(--ink-sidebar-light-edge) 48%, transparent 72%);
 }
-html body.dock .sidebar::after {
+html:where(:not([data-theme="dark"])) body.dock .sidebar::after {
   content: "";
   position: absolute;
   top: calc(var(--my, 50%) - var(--ink-breeze-height) / 2);
@@ -2697,7 +2680,7 @@ html body.dock .sidebar::after {
   z-index: 0;
 }
 /* Chế độ nhẹ vẫn thấy nét gió tĩnh; chỉ chuyển động được tắt theo tùy chọn. */
-html body.dock .sidebar:hover::after { opacity: var(--ink-breeze-opacity); }
+html:where(:not([data-theme="dark"])) body.dock .sidebar:hover::after { opacity: var(--ink-breeze-opacity); }
 @media (hover: hover) and (prefers-reduced-motion: no-preference) {
   html:not(.gms-lite) body.dock .sidebar:hover::after {
     animation: sidebar-sea-breeze var(--ink-breeze-duration) ease-in-out infinite alternate;
@@ -2708,133 +2691,346 @@ html body.dock .sidebar:hover::after { opacity: var(--ink-breeze-opacity); }
   50% { opacity: var(--ink-breeze-opacity); }
   100% { opacity: calc(var(--ink-breeze-opacity) * 0.6); transform: translateX(var(--ink-breeze-travel)); }
 }
-html body.dock .sidebar > .brand {
+html:where(:not([data-theme="dark"])) body.dock .sidebar > .brand {
   gap: var(--space-3);
   padding-bottom: var(--space-5);
   border-bottom: var(--border-width) solid var(--ink-sidebar-line);
 }
-html body.dock .brand-mark {
+html:where(:not([data-theme="dark"])) body.dock .brand-mark {
   width: var(--logo-mark-size);
   height: var(--logo-mark-size);
   background: transparent;
   border-radius: var(--radius-md);
 }
-html body.dock .brand-mark img { object-fit: contain; }
-html body.dock .brand-name {
+html:where(:not([data-theme="dark"])) body.dock .brand-mark img { object-fit: contain; }
+html:where(:not([data-theme="dark"])) body.dock .brand-name {
   font-family: var(--font-brand-display);
   letter-spacing: var(--letter-spacing-normal);
   font-size: var(--font-size-lg);
 }
-html body.dock .brand-role { color: var(--ink-sidebar-top); }
-html body.dock .nav { gap: var(--space-1); }
-html body.dock .nav-group {
+html:where(:not([data-theme="dark"])) body.dock .brand-role { color: var(--ink-sidebar-top); }
+html:where(:not([data-theme="dark"])) body.dock .nav { gap: var(--space-1); }
+html:where(:not([data-theme="dark"])) body.dock .nav-group {
   margin: var(--space-5) var(--space-3) var(--space-1-5);
   font-family: var(--font-body);
   font-size: var(--font-size-xs);
   letter-spacing: var(--letter-spacing-wide);
   color: var(--ink-sidebar-top);
 }
-html body.dock .nav-link {
+html:where(:not([data-theme="dark"])) body.dock .nav-link {
   min-height: var(--brand-control-height);
   padding: var(--space-2-5) var(--space-3);
   border: var(--border-width) solid transparent;
   border-radius: var(--radius-xs);
   font-size: var(--font-size-sm);
 }
-html body.dock .nav-link:hover {
+html:where(:not([data-theme="dark"])) body.dock .nav-link:hover {
   background: var(--ink-nav-hover);
   border-color: var(--ink-sidebar-line);
   transform: none;
 }
-html body.dock .nav-link.active,
-html body.dock .nav-link[aria-current="page"] {
+html:where(:not([data-theme="dark"])) body.dock .nav-link.active,
+html:where(:not([data-theme="dark"])) body.dock .nav-link[aria-current="page"] {
   background: var(--ink-nav-active);
   border-color: color-mix(in srgb, var(--ink-nav-edge) 32%, transparent);
   color: var(--ink-nav-ink);
   box-shadow: var(--ink-inset-edge);
 }
-html body.dock .nav-link:is(.active, [aria-current="page"]) :is(svg, i) { color: var(--ink-nav-edge); }
-html body.dock .dock-handle {
+html:where(:not([data-theme="dark"])) body.dock .nav-link:is(.active, [aria-current="page"]) :is(svg, i) { color: var(--ink-nav-edge); }
+html:where(:not([data-theme="dark"])) body.dock .dock-handle {
   background: var(--ink-sidebar-bg);
   color: var(--brand-paper);
   border: var(--border-width) solid var(--ink-sidebar-line);
   border-left: 0;
 }
-html body.dock .dock-handle::after { background: var(--brand-sunset); }
-html body.dock .dock-handle:hover { background: var(--ink-nav-active); color: var(--ink-nav-ink); }
-html body.dock .side-foot { border-color: var(--ink-sidebar-line); }
-html body.dock .nav-link:focus-visible,
-html body.dock .logout:focus-visible { outline-color: var(--ink-sidebar-top); }
-html body.dock .dock-handle:focus-visible { outline-color: var(--ink-focus); }
+html:where(:not([data-theme="dark"])) body.dock .dock-handle::after { background: var(--zone-accent); }
+html:where(:not([data-theme="dark"])) body.dock .dock-handle:hover { background: var(--ink-nav-active); color: var(--ink-nav-ink); }
+html:where(:not([data-theme="dark"])) body.dock .side-foot { border-color: var(--ink-sidebar-line); }
+html:where(:not([data-theme="dark"])) body.dock .nav-link:focus-visible,
+html:where(:not([data-theme="dark"])) body.dock .logout:focus-visible { outline-color: var(--ink-sidebar-top); }
+html:where(:not([data-theme="dark"])) body.dock .dock-handle:focus-visible { outline-color: var(--ink-focus); }
 
 /* Cụm tài khoản: viền bạc lạnh, avatar gradient aqua → đại dương, mã nhân viên chip aqua (bỏ ánh nâu cam) */
-html body.dock .tb-user {
+html:where(:not([data-theme="dark"])) body.dock .tb-user {
   border-color: var(--ink-border);
   background: var(--ink-surface);
   -webkit-backdrop-filter: none;
   backdrop-filter: none;
 }
-html[data-theme="light"] body.dock .tb-user { background: var(--ink-surface); border-color: var(--ink-border); }
-html body.dock .tb-user:hover,
-html body.dock .tb-user:focus-visible { border-color: var(--ink-focus); box-shadow: var(--ink-shadow); }
-html body.dock :is(.tb-user .avatar, .tb-avatar, .pt-user-avatar) {
-  background: linear-gradient(140deg, var(--brand-aqua) 0%, var(--brand-ocean) 100%);
-  color: var(--brand-ink);
+html:where(:not([data-theme="dark"])) body.dock .tb-user:hover,
+html:where(:not([data-theme="dark"])) body.dock .tb-user:focus-visible { border-color: var(--ink-focus); box-shadow: var(--ink-shadow); }
+html:where(:not([data-theme="dark"])) body.dock :is(.tb-user .avatar, .tb-avatar, .pt-user-avatar) {
+  background: var(--zone-cobalt-600);
+  color: #FFFFFF;
 }
 /* Avatar PT dùng đúng vòng mảnh của avatar chung ở các zone còn lại. */
-html body.dock .pt-user-avatar {
+html:where(:not([data-theme="dark"])) body.dock .pt-user-avatar {
   border: var(--border-width-thick) solid var(--color-surface);
   outline: var(--border-width) solid var(--color-primary-border);
 }
-html body.dock :is(.tb-user small, .tb-user-text span, .tb-user .pt-user-code) {
+html:where(:not([data-theme="dark"])) body.dock :is(.tb-user small, .tb-user-text span, .tb-user .pt-user-code) {
   background: var(--color-info-tint);
   color: var(--pt-lagoon-text);
   letter-spacing: 0.04em;
 }
 /* Topbar trong suốt trên cảnh, chỉ mờ kính */
-html body.dock .topbar {
-  background: var(--ink-header);
-  border-bottom-color: var(--ink-border);
+html:where(:not([data-theme="dark"])) body.dock .topbar {
+  background: var(--zone-cobalt-600);
+  border-bottom-color: rgba(255, 255, 255, 0.12);
+  color: #FFFFFF;
   -webkit-backdrop-filter: none;
   backdrop-filter: none;
 }
-html[data-theme="light"] body.dock .topbar { background: var(--ink-header); }
+html:where(:not([data-theme="dark"])) body.dock .topbar :is(.tb-title, .tb-left h1) { color: #FFFFFF; }
+html:where(:not([data-theme="dark"])) body.dock .topbar :is(.tb-left p, .pt-header-date) { color: var(--zone-silver); }
+html:where(:not([data-theme="dark"])) body.dock .topbar .notif-btn,
+html:where(:not([data-theme="dark"])) body.dock .topbar .bell-btn { color: #FFFFFF; }
 
 /* Nội dung tác vụ: nhãn dễ đọc, số liệu đặc màu, không gradient chữ. */
-html body.dock :is(.pt-section-caption, .gms-panel-head p, .report-card-subtitle) {
+html:where(:not([data-theme="dark"])) body.dock :is(.pt-section-caption, .gms-panel-head p, .report-card-subtitle) {
   font-family: var(--font-body);
   font-size: var(--font-size-sm);
   letter-spacing: var(--letter-spacing-normal);
   text-transform: none;
   color: var(--pt-soft);
 }
-html body.dock :is(.pt-section-caption, .gms-panel-head p, .report-card-subtitle)::before,
-html body.dock :is(.pt-section-caption, .gms-panel-head p, .report-card-subtitle)::after { content: none; }
-html body.dock :is(.pt-summary-money strong, .wx-card__temp) {
+html:where(:not([data-theme="dark"])) body.dock :is(.pt-section-caption, .gms-panel-head p, .report-card-subtitle)::before,
+html:where(:not([data-theme="dark"])) body.dock :is(.pt-section-caption, .gms-panel-head p, .report-card-subtitle)::after { content: none; }
+html:where(:not([data-theme="dark"])) body.dock :is(.pt-summary-money strong, .wx-card__temp) {
   background: none;
   color: var(--pt-text);
   -webkit-text-fill-color: currentColor;
 }
-html body.dock .btn-primary {
+html:where(:not([data-theme="dark"])) body.dock .btn-primary {
   background: var(--ink-primary);
-  border-color: var(--brand-sunset);
-  color: var(--brand-ink);
+  border-color: var(--ink-primary);
+  color: var(--zone-ink);
+  border-radius: var(--radius-pill);
+  font-weight: var(--font-weight-semibold);
   box-shadow: none;
 }
-html body.dock .btn-primary:hover:not(:disabled) { background: var(--ink-primary-hover); }
-html body.dock :is(input, textarea, select) { caret-color: var(--pt-text); }
-html body.dock :is(input, textarea, select)::placeholder { color: var(--pt-muted); opacity: 1; }
-html body.dock :focus-visible { outline-color: var(--ink-focus); }
-html body.dock .sidebar :focus-visible { outline-color: var(--ink-sidebar-top); }
-html body.dock .stat-value { color: var(--pt-text); }
-html body.dock :is(.tb-title, .gms-panel-head h2, .panel-head h2) {
+html:where(:not([data-theme="dark"])) body.dock .btn-primary:hover:not(:disabled) { background: var(--ink-primary-hover); }
+html:where(:not([data-theme="dark"])) body.dock :is(input, textarea, select) { caret-color: var(--pt-text); }
+html:where(:not([data-theme="dark"])) body.dock :is(input, textarea, select)::placeholder { color: var(--pt-muted); opacity: 1; }
+html:where(:not([data-theme="dark"])) body.dock :focus-visible { outline-color: var(--ink-focus); }
+html:where(:not([data-theme="dark"])) body.dock .sidebar :focus-visible { outline-color: var(--ink-sidebar-top); }
+html:where(:not([data-theme="dark"])) body.dock .stat-value { color: var(--pt-text); }
+html:where(:not([data-theme="dark"])) body.dock :is(.tb-title, .gms-panel-head h2, .panel-head h2) {
   letter-spacing: var(--letter-spacing-normal);
   text-transform: none;
 }
 
 @media (prefers-reduced-motion: reduce) {
-  html body.dock::before,
-  html body.dock::after { animation: none; }
+  html:where(:not([data-theme="dark"])) body.dock::before,
+  html:where(:not([data-theme="dark"])) body.dock::after { animation: none; }
+}
+
+/* =====================================================================
+   KHU LÀM VIỆC · CHẾ ĐỘ TỐI — "KÍNH THỦY CUNG" (2026-10-13, khôi phục 25/10 cho công tắc Sáng/Tối)
+   Mặc định là sáng (Arena). Mục này chỉ áp khi <html data-theme="dark">; giữ nguyên quy tắc bản trước 24/10.
+   Tham khảo các site đạt giải trên webdesignawards.io (UI/UX):
+     · Khung lưới mảnh, nhãn nhỏ kiểu mã [ ... ] giãn chữ, màu nhấn dùng có tiết chế
+     · Khoảng thở rộng và phân cấp số liệu rõ ràng
+   Nền: nghệ thuật trừu tượng gang, phấn tập và pigment ember. Ảnh tĩnh lùi sau surface đặc.
+   ===================================================================== */
+/* Nền nghệ thuật tĩnh: ảnh macro gang/phấn ở mép phải, trung tâm tối để đọc. */
+html:where([data-theme="dark"]) body.dock { background-color: var(--ink-ground); }
+html:where([data-theme="dark"]) body.dock::before {
+  content: "";
+  position: fixed;
+  inset: 0;
+  z-index: 0;
+  pointer-events: none;
+  background: var(--ink-overlay), var(--ink-vignette), var(--ink-art) right center / cover no-repeat;
+  animation: none;
+}
+html:where([data-theme="dark"]) body.dock::after {
+  content: "";
+  position: fixed;
+  inset: 0;
+  z-index: 0;
+  pointer-events: none;
+  background: var(--ink-ripples) 0 0 / var(--ink-ripple-size) repeat;
+  opacity: var(--ink-ripple-opacity);
+  mask-image: var(--ink-ripple-mask);
+  -webkit-mask-image: var(--ink-ripple-mask);
+  animation: ink-ripple-drift var(--ink-ripple-duration) linear infinite;
+}
+html:where([data-theme="dark"]) body.dock .app { position: relative; z-index: 1; }
+
+/* Bảng, form và khối tác vụ là lớp đặc ở tiền cảnh; không xuyên ảnh qua chữ. */
+html:where([data-theme="dark"]) body.dock :is(.panel, .side-card, .gms-panel, .report-card, .card, .stat, .pt-schedule, .pt-alerts, .pt-clients, .pt-rating, .pt-summary, .my-pt-panel, .package-card) {
+  border: var(--border-width) solid var(--ink-border);
+  border-radius: var(--radius-lg);
+  background: var(--ink-surface);
+  color: var(--pt-text);
+  box-shadow: var(--ink-shadow);
+  -webkit-backdrop-filter: none;
+  backdrop-filter: none;
+}
+html:where([data-theme="dark"]) body.dock :is(.pt-board__hero, .wx-hero) {
+  border-color: var(--pt-line);
+  box-shadow: none;
+}
+
+/* Sidebar đại dương đặc; ánh xanh theo --mx/--my và gió nét mảnh chỉ chạy khi hover. */
+html:where([data-theme="dark"]) body.dock .sidebar {
+  padding: var(--space-6) var(--space-4) var(--space-5);
+  background: var(--ink-sidebar-bg);
+  border-right: var(--border-width) solid var(--ink-sidebar-line);
+}
+html:where([data-theme="dark"]) body.dock .sidebar::before {
+  background: radial-gradient(var(--dock-glow-size) circle at var(--mx, 50%) var(--my, -30%), var(--ink-sidebar-light-core), var(--ink-sidebar-light-edge) 48%, transparent 72%);
+}
+html:where([data-theme="dark"]) body.dock .sidebar::after {
+  content: "";
+  position: absolute;
+  top: calc(var(--my, 50%) - var(--ink-breeze-height) / 2);
+  left: calc(-1 * var(--ink-breeze-travel));
+  width: calc(100% + var(--ink-breeze-travel) * 2);
+  height: var(--ink-breeze-height);
+  background: var(--ink-sidebar-breeze) center / cover no-repeat;
+  opacity: 0;
+  pointer-events: none;
+  z-index: 0;
+}
+/* Chế độ nhẹ vẫn thấy nét gió tĩnh; chỉ chuyển động được tắt theo tùy chọn. */
+html:where([data-theme="dark"]) body.dock .sidebar:hover::after { opacity: var(--ink-breeze-opacity); }
+@media (hover: hover) and (prefers-reduced-motion: no-preference) {
+  html:not(.gms-lite) body.dock .sidebar:hover::after {
+    animation: sidebar-sea-breeze var(--ink-breeze-duration) ease-in-out infinite alternate;
+  }
+}
+@keyframes sidebar-sea-breeze {
+  0% { opacity: calc(var(--ink-breeze-opacity) * 0.6); transform: translateX(calc(-1 * var(--ink-breeze-travel))); }
+  50% { opacity: var(--ink-breeze-opacity); }
+  100% { opacity: calc(var(--ink-breeze-opacity) * 0.6); transform: translateX(var(--ink-breeze-travel)); }
+}
+html:where([data-theme="dark"]) body.dock .sidebar > .brand {
+  gap: var(--space-3);
+  padding-bottom: var(--space-5);
+  border-bottom: var(--border-width) solid var(--ink-sidebar-line);
+}
+html:where([data-theme="dark"]) body.dock .brand-mark {
+  width: var(--logo-mark-size);
+  height: var(--logo-mark-size);
+  background: transparent;
+  border-radius: var(--radius-md);
+}
+html:where([data-theme="dark"]) body.dock .brand-mark img { object-fit: contain; }
+html:where([data-theme="dark"]) body.dock .brand-name {
+  font-family: var(--font-brand-display);
+  letter-spacing: var(--letter-spacing-normal);
+  font-size: var(--font-size-lg);
+}
+html:where([data-theme="dark"]) body.dock .brand-role { color: var(--ink-sidebar-top); }
+html:where([data-theme="dark"]) body.dock .nav { gap: var(--space-1); }
+html:where([data-theme="dark"]) body.dock .nav-group {
+  margin: var(--space-5) var(--space-3) var(--space-1-5);
+  font-family: var(--font-body);
+  font-size: var(--font-size-xs);
+  letter-spacing: var(--letter-spacing-wide);
+  color: var(--ink-sidebar-top);
+}
+html:where([data-theme="dark"]) body.dock .nav-link {
+  min-height: var(--brand-control-height);
+  padding: var(--space-2-5) var(--space-3);
+  border: var(--border-width) solid transparent;
+  border-radius: var(--radius-xs);
+  font-size: var(--font-size-sm);
+}
+html:where([data-theme="dark"]) body.dock .nav-link:hover {
+  background: var(--ink-nav-hover);
+  border-color: var(--ink-sidebar-line);
+  transform: none;
+}
+html:where([data-theme="dark"]) body.dock .nav-link.active,
+html:where([data-theme="dark"]) body.dock .nav-link[aria-current="page"] {
+  background: var(--ink-nav-active);
+  border-color: color-mix(in srgb, var(--ink-nav-edge) 32%, transparent);
+  color: var(--ink-nav-ink);
+  box-shadow: var(--ink-inset-edge);
+}
+html:where([data-theme="dark"]) body.dock .nav-link:is(.active, [aria-current="page"]) :is(svg, i) { color: var(--ink-nav-edge); }
+html:where([data-theme="dark"]) body.dock .dock-handle {
+  background: var(--ink-sidebar-bg);
+  color: var(--brand-paper);
+  border: var(--border-width) solid var(--ink-sidebar-line);
+  border-left: 0;
+}
+html:where([data-theme="dark"]) body.dock .dock-handle::after { background: var(--brand-sunset); }
+html:where([data-theme="dark"]) body.dock .dock-handle:hover { background: var(--ink-nav-active); color: var(--ink-nav-ink); }
+html:where([data-theme="dark"]) body.dock .side-foot { border-color: var(--ink-sidebar-line); }
+html:where([data-theme="dark"]) body.dock .nav-link:focus-visible,
+html:where([data-theme="dark"]) body.dock .logout:focus-visible { outline-color: var(--ink-sidebar-top); }
+html:where([data-theme="dark"]) body.dock .dock-handle:focus-visible { outline-color: var(--ink-focus); }
+
+/* Cụm tài khoản: viền bạc lạnh, avatar gradient aqua → đại dương, mã nhân viên chip aqua (bỏ ánh nâu cam) */
+html:where([data-theme="dark"]) body.dock .tb-user {
+  border-color: var(--ink-border);
+  background: var(--ink-surface);
+  -webkit-backdrop-filter: none;
+  backdrop-filter: none;
+}
+html:where([data-theme="dark"]) body.dock .tb-user:hover,
+html:where([data-theme="dark"]) body.dock .tb-user:focus-visible { border-color: var(--ink-focus); box-shadow: var(--ink-shadow); }
+html:where([data-theme="dark"]) body.dock :is(.tb-user .avatar, .tb-avatar, .pt-user-avatar) {
+  background: linear-gradient(140deg, var(--brand-aqua) 0%, var(--brand-ocean) 100%);
+  color: var(--brand-ink);
+}
+/* Avatar PT dùng đúng vòng mảnh của avatar chung ở các zone còn lại. */
+html:where([data-theme="dark"]) body.dock .pt-user-avatar {
+  border: var(--border-width-thick) solid var(--color-surface);
+  outline: var(--border-width) solid var(--color-primary-border);
+}
+html:where([data-theme="dark"]) body.dock :is(.tb-user small, .tb-user-text span, .tb-user .pt-user-code) {
+  background: var(--color-info-tint);
+  color: var(--pt-lagoon-text);
+  letter-spacing: 0.04em;
+}
+/* Topbar trong suốt trên cảnh, chỉ mờ kính */
+html:where([data-theme="dark"]) body.dock .topbar {
+  background: var(--ink-header);
+  border-bottom-color: var(--ink-border);
+  -webkit-backdrop-filter: none;
+  backdrop-filter: none;
+}
+
+/* Nội dung tác vụ: nhãn dễ đọc, số liệu đặc màu, không gradient chữ. */
+html:where([data-theme="dark"]) body.dock :is(.pt-section-caption, .gms-panel-head p, .report-card-subtitle) {
+  font-family: var(--font-body);
+  font-size: var(--font-size-sm);
+  letter-spacing: var(--letter-spacing-normal);
+  text-transform: none;
+  color: var(--pt-soft);
+}
+html:where([data-theme="dark"]) body.dock :is(.pt-section-caption, .gms-panel-head p, .report-card-subtitle)::before,
+html:where([data-theme="dark"]) body.dock :is(.pt-section-caption, .gms-panel-head p, .report-card-subtitle)::after { content: none; }
+html:where([data-theme="dark"]) body.dock :is(.pt-summary-money strong, .wx-card__temp) {
+  background: none;
+  color: var(--pt-text);
+  -webkit-text-fill-color: currentColor;
+}
+html:where([data-theme="dark"]) body.dock .btn-primary {
+  background: var(--ink-primary);
+  border-color: var(--brand-sunset);
+  color: var(--brand-ink);
+  box-shadow: none;
+}
+html:where([data-theme="dark"]) body.dock .btn-primary:hover:not(:disabled) { background: var(--ink-primary-hover); }
+html:where([data-theme="dark"]) body.dock :is(input, textarea, select) { caret-color: var(--pt-text); }
+html:where([data-theme="dark"]) body.dock :is(input, textarea, select)::placeholder { color: var(--pt-muted); opacity: 1; }
+html:where([data-theme="dark"]) body.dock :focus-visible { outline-color: var(--ink-focus); }
+html:where([data-theme="dark"]) body.dock .sidebar :focus-visible { outline-color: var(--ink-sidebar-top); }
+html:where([data-theme="dark"]) body.dock .stat-value { color: var(--pt-text); }
+html:where([data-theme="dark"]) body.dock :is(.tb-title, .gms-panel-head h2, .panel-head h2) {
+  letter-spacing: var(--letter-spacing-normal);
+  text-transform: none;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  html:where([data-theme="dark"]) body.dock::before,
+  html:where([data-theme="dark"]) body.dock::after { animation: none; }
 }
 
 /* =====================================================================
@@ -2952,3 +3148,426 @@ html.gms-lite::view-transition-new(root) { animation: none; }
   ::view-transition-old(root),
   ::view-transition-new(root) { animation: none; }
 }
+
+/* Khu làm việc: nút phụ luôn là nền giấy kem chữ mực (đọc được cả khi nằm thẳng trên nền cobalt);
+   thanh thao tác trong Cài đặt tài khoản không tô nền riêng. */
+html:where(:not([data-theme="dark"])) body.dock .content .btn:not(.btn-primary):not(.btn-danger):not(.btn-link) {
+  background: var(--zone-card);
+  border-color: var(--zone-card-line);
+  color: var(--zone-ink);
+}
+html:where(:not([data-theme="dark"])) body.dock .content .btn:not(.btn-primary):not(.btn-danger):not(.btn-link):hover:not(:disabled) {
+  background: var(--zone-card-2);
+  border-color: var(--zone-accent);
+}
+html:where(:not([data-theme="dark"])) body.dock .content .account-form-actions { background: transparent; border-color: var(--zone-card-line); }
+/* Bảng điểm: các ô tách nhau bằng khoảng trống, không lộ nền tối giữa các ô */
+html:where(:not([data-theme="dark"])) body.dock .scoreboard { gap: var(--space-3); background: transparent; box-shadow: none; overflow: visible; }
+/* Trong thẻ, "nền trang" (--color-bg) của các ô con là xám xanh rất nhạt, không phải cobalt */
+html:where(:not([data-theme="dark"])) body.dock .content :is(.panel, .side-card, .gms-panel, .report-card, .card, .metric-card, .account-card, .facility-panel, .status-hero, .pt-schedule, .pt-alerts, .pt-clients, .pt-rating, .pt-summary, .pt-board__hero, .my-pt-panel, .package-card, dialog) {
+  --color-bg: var(--zone-card-2);
+  --color-surface-muted: var(--zone-card-2);
+}
+html:where(:not([data-theme="dark"])) body.dock .content .status-hero :is(h2, h3, p, span, strong, b, .section-label, .status-meta, .status-meta *) { color: var(--zone-ink); }
+html:where(:not([data-theme="dark"])) body.dock .content .status-hero :is(.section-label, .status-meta span) { color: var(--zone-ink-muted); }
+html:where(:not([data-theme="dark"])) body.dock .content .status-hero .status-expiring { color: var(--zone-accent-ink); }
+
+/* =====================================================================
+   ARENA (24/10 tối) — toàn bộ khu làm việc (5 zone: PT, Hội viên, Lễ tân, Quản lý, Admin).
+   Bảng màu đĩa tạ thi đấu (token --arena-* trong tokens.css):
+     đĩa 20kg xanh  = nền sân + topbar
+     đĩa 25kg đỏ    = MỘT việc nặng nhất mỗi màn (nút chính, hôm nay, ô cần chú ý)
+     phấn magie     = khối đọc sáng; ô con bên trong là trắng
+     thép thanh đòn = chữ phụ trên khối tối, vân nhám (chỉ đỉnh khối chào PT)
+   Hình: góc sắc theo cấp — khối 6px, ô 4px, chip/nhãn 2px; avatar vẫn tròn. Khe ghép 12px.
+   Phạm vi: mọi <body class="dock …"> (21 màn nội bộ). Trang chủ, Giới thiệu, Blog không đổi; trang xác thực đổi qua token --auth-*.
+   Bộ chọn "html body.dock:not(.no-arena)": đủ mạnh để thắng body.dock[class*="weather-"] trong tokens.css;
+   màn nào cần giữ kiểu cũ thì thêm class no-arena vào <body> (không màn nào đang dùng).
+   Sidebar giữ nguyên: không đổi --ink-sidebar-*, --ink-nav-* (ember cũ ghim lại ở --ink-nav-edge = --arena-sidebar-ember).
+   Animation có sẵn giữ nguyên; mục này chỉ đổi màu, hình, cỡ chữ.
+   ===================================================================== */
+html body.dock:not(.no-arena) {
+  --zone-accent: var(--arena-ember);
+  --zone-accent-hover: var(--arena-ember-hi);
+  --zone-accent-ink: var(--arena-ember-ink);
+  --ink-nav-edge: var(--arena-sidebar-ember);
+  --zone-ink: var(--arena-ink);
+  --zone-ink-soft: var(--arena-ink-soft);
+  --zone-ink-muted: var(--arena-steel-ink);
+  --zone-card-2: var(--arena-chalk-2);
+  --zone-card-line: var(--arena-chalk-line);
+  --ink-ground: var(--arena-ground);
+  --ink-surface: var(--arena-chalk);
+  --ink-border: var(--arena-chalk-line);
+  --ink-shadow: var(--arena-shadow-light);
+  --ink-focus: var(--arena-accent);
+  --ink-table-head: var(--arena-chalk-2);
+  --ink-row-hover: var(--arena-chalk-2);
+  --pt-bg: var(--arena-ground);
+  --pt-panel: var(--arena-chalk);
+  --pt-panel-2: var(--arena-surface);
+  --pt-line: var(--arena-card-line);
+  --pt-line-strong: var(--arena-chalk-line-strong);
+  --pt-shadow: var(--arena-shadow-light);
+  --pt-lagoon-text: var(--arena-accent-text);
+  --color-bg: var(--arena-ground);
+  --color-primary-tint: var(--arena-ember-tint);
+  --color-primary-border: var(--arena-ember-border);
+  --color-link: var(--arena-accent-text);
+  --color-info-ink: var(--arena-accent-text);
+  --color-row-pinned: var(--arena-row-pinned);
+  --brand-lagoon: var(--arena-accent);
+  --brand-ocean: var(--arena-800);
+  --radius-xs: var(--arena-radius-chip);
+  --radius-sm: var(--arena-radius-chip);
+  --radius-md: var(--arena-radius-tile);
+  --radius-lg: var(--arena-radius-block);
+  --radius-button: var(--arena-radius-tile);
+  --radius-pill: var(--arena-radius-chip);
+  background-color: var(--arena-ground);
+}
+/* Nền sân + bản đồ thành phố nét mực cũ (khôi phục 25/10 theo yêu cầu, thay doodle đồ tập):
+   ảnh nằm mép phải, phủ màu sân đặc ở trên rồi tan dần để không đè tiêu đề / khối chào đầu trang.
+   Hai chế độ dùng chung ảnh; chỉ màu sân đổi theo token. */
+html body.dock:not(.no-arena)::before {
+  background:
+    radial-gradient(70% 45% at 50% 0%, var(--arena-glow-soft), transparent 70%),
+    linear-gradient(180deg, var(--arena-ground) 0, transparent 45%),
+    var(--arena-city) right center / cover no-repeat,
+    var(--arena-ground);
+  opacity: 1;
+}
+html.gms-lite body.dock:not(.no-arena)::before {
+  background:
+    linear-gradient(180deg, var(--arena-ground) 0, transparent 45%),
+    var(--arena-city) right center / cover no-repeat,
+    var(--arena-ground);
+}
+
+/* --- Topbar: cùng màu sân, tiêu đề đậm, ô tài khoản thành ô kính --- */
+html body.dock:not(.no-arena) .topbar {
+  background: var(--arena-ground);
+  border-bottom-color: var(--arena-topbar-line);
+}
+html body.dock:not(.no-arena) .topbar :is(.tb-title, .tb-left h1) {
+  font-family: var(--font-brand-display);
+  font-size: var(--font-size-2xl);
+  font-weight: var(--font-weight-extrabold);
+  letter-spacing: -0.015em;
+}
+html body.dock:not(.no-arena) .topbar :is(.tb-left p, .pt-header-date) {
+  color: var(--arena-on-dark-soft);
+}
+html body.dock:not(.no-arena) .tb-user {
+  border-color: var(--arena-glass-line);
+  border-radius: var(--arena-radius-tile);
+  background: var(--arena-glass);
+  color: var(--arena-on-dark);
+  box-shadow: var(--arena-glass-edge);
+}
+html body.dock:not(.no-arena) .tb-user:is(:hover, :focus-visible) {
+  border-color: var(--arena-glass-line-hover);
+  background: var(--arena-glass-strong);
+  box-shadow: var(--arena-glass-edge);
+}
+html body.dock:not(.no-arena) .tb-user :is(b, strong) { color: var(--arena-on-dark); }
+html body.dock:not(.no-arena) .tb-user :is(small, .tb-user-text span, .pt-user-code) {
+  border-radius: var(--arena-radius-chip);
+  background: var(--arena-glass-strong);
+  color: var(--arena-on-dark);
+}
+html body.dock:not(.no-arena) :is(.tb-user .avatar, .tb-avatar, .pt-user-avatar) {
+  background: var(--arena-800);
+  color: var(--arena-on-dark);
+}
+
+/* --- Khối sáng: phấn magie, góc 6px, bóng tông xanh thay viền --- */
+html body.dock:not(.no-arena) :is(.panel, .side-card, .gms-panel, .report-card, .card, .stat, .metric-card, .account-card, .facility-panel, .pt-schedule, .pt-alerts, .pt-clients, .pt-rating, .pt-summary, .my-pt-panel, .package-card) {
+  border: 0;
+  border-radius: var(--arena-radius-block);
+  background: var(--arena-chalk);
+  box-shadow: var(--arena-shadow-light);
+}
+
+/* --- Nút: góc 4px; ember chỉ cho nút chính; nút phụ rê chuột viền xanh (không thêm ember) --- */
+html body.dock:not(.no-arena) .btn { border-radius: var(--arena-radius-tile); }
+html body.dock:not(.no-arena) .btn-primary {
+  border-color: var(--arena-ember);
+  border-radius: var(--arena-radius-tile);
+  background: var(--arena-ember);
+  color: var(--arena-ink-on-bright);
+}
+html body.dock:not(.no-arena) .btn-primary:hover:not(:disabled) {
+  border-color: var(--arena-ember-hi);
+  background: var(--arena-ember-hi);
+}
+html body.dock:not(.no-arena) .content .btn:not(.btn-primary):not(.btn-danger):not(.btn-link) {
+  border-color: var(--arena-chalk-line);
+  background: var(--arena-surface);
+  color: var(--arena-ink);
+}
+html body.dock:not(.no-arena) .content .btn:not(.btn-primary):not(.btn-danger):not(.btn-link):hover:not(:disabled) {
+  border-color: var(--arena-accent-text);
+  background: var(--arena-chalk-2);
+}
+
+/* --- Bảng: đầu cột góc 4px như ô --- */
+html body.dock:not(.no-arena) table:not(.no-gms-table) thead th:first-child { border-top-left-radius: var(--arena-radius-tile); }
+html body.dock:not(.no-arena) table:not(.no-gms-table) thead th:last-child { border-top-right-radius: var(--arena-radius-tile); }
+
+/* --- Hộp gợi ý (i): góc 4px --- */
+html body.dock:not(.no-arena) .pt-info-popover {
+  border-radius: var(--arena-radius-tile);
+}
+
+
+/* --- ARENA · lượt 2: nhịp khoảng cách + khả năng tiếp cận (WCAG 2.1 AA) ---
+   Kết quả quét axe-core + đo tay (24/10, 4 màn đầu tiên; áp chung cho mọi màn): 1 lỗi tương phản (chip mã NV 3.75:1),
+   1 link không có tên trên điện thoại (ô tài khoản ẩn chữ bằng display:none), 1 nút mất vòng focus,
+   nhiều điều khiển 24–38px trên điện thoại, tiêu đề topbar lệch 47px so với khối ở màn ≥1300px. */
+
+/* Topbar thẳng mép với khối nội dung (main rộng tối đa --layout-content-width, lề trong 32px) */
+@media (min-width: 768px) {
+  html body.dock:not(.no-arena) .topbar {
+    padding-inline: max(var(--space-6), calc((100% - var(--layout-content-width)) / 2 + var(--space-6)));
+  }
+}
+
+/* Vòng focus 2 tông: vạch màu + viền trắng, thấy được trên cả khối sáng lẫn khối tối.
+   main (đích của link "Bỏ qua menu") không vẽ vòng. */
+html body.dock:not(.no-arena) .content :focus-visible:not(main) {
+  outline: 2px solid var(--arena-focus-ring);
+  outline-offset: 2px;
+  box-shadow: 0 0 0 2px var(--arena-surface);
+}
+html body.dock:not(.no-arena) .tb-user:focus-visible {
+  outline: 2px solid var(--arena-on-dark);
+  outline-offset: 2px;
+}
+
+/* Nút phụ, ô chọn: viền điều khiển ≥ 3:1 trên trắng (WCAG 1.4.11) */
+html body.dock:not(.no-arena) .content .btn:not(.btn-primary):not(.btn-danger):not(.btn-link) {
+  border-color: var(--arena-control-line);
+}
+
+/* Nút (i): giữ hình tròn nhỏ nhưng vùng chạm 44px (lớp vô hình bao quanh) */
+html body.dock:not(.no-arena) .pt-info-trigger { position: relative; }
+html body.dock:not(.no-arena) .pt-info-trigger::after {
+  content: "";
+  position: absolute;
+  top: 50%;
+  left: 50%;
+  width: var(--arena-hit);
+  height: var(--arena-hit);
+  transform: translate(-50%, -50%);
+}
+
+@media (max-width: 767px) {
+  /* Điện thoại: mọi nút, công tắc, liên hệ trong nội dung cao tối thiểu 44px */
+  html body.dock:not(.no-arena) .content :is(.btn, summary.btn) {
+    min-height: var(--arena-hit);
+  }
+  html body.dock:not(.no-arena) .content :is(.pt-plan-step, .schedule-step) {
+    min-width: var(--arena-hit);
+  }
+  /* Ô tài khoản thu gọn còn avatar: chữ vẫn còn cho trình đọc màn hình (trước đây display:none → link không tên) */
+  html body.dock:not(.no-arena) .tb-user :is(b, small, .tb-user-text, .pt-user-details) {
+    position: absolute;
+    display: block;
+    width: 1px;
+    height: 1px;
+    margin: -1px;
+    padding: 0;
+    overflow: hidden;
+    clip: rect(0 0 0 0);
+    white-space: nowrap;
+    border: 0;
+  }
+  html body.dock:not(.no-arena) .tb-user { position: relative; min-width: var(--arena-hit); min-height: var(--arena-hit); }
+  html body.dock:not(.no-arena) .topbar :is(.btn, .notif-btn, .bell-btn, button) { min-width: var(--arena-hit); min-height: var(--arena-hit); }
+}
+
+/* Nhãn trạng thái (.badge): góc 2px, viền cùng tông như chip trạng thái buổi */
+html body.dock:not(.no-arena) .badge { border-radius: var(--arena-radius-chip); }
+
+/* Khối nằm thẳng trên nền sân mà trước đây chữ mực (tương phản 2:1, axe báo lỗi):
+   thanh lọc của khung danh sách và ô "Chưa có thông báo" thành khối phấn như mọi khối khác. */
+html body.dock:not(.no-arena) .content > .gms-toolbar,
+html body.dock:not(.no-arena) .notification-empty {
+  padding: var(--arena-pad-sm) var(--arena-pad);
+  border-radius: var(--arena-radius-block);
+  background: var(--arena-chalk);
+  color: var(--arena-ink-soft);
+  box-shadow: var(--arena-shadow-light);
+}
+html body.dock:not(.no-arena) .notification-empty { padding: var(--arena-pad); text-align: center; }
+
+
+/* --- Nút (i) gợi ý: rõ trên mọi nền (sửa 24/10) ---
+   Trước: chữ i màu mực trên topbar xanh (≈2:1, gần như vô hình), viền xám nhạt 1.6:1,
+   mỗi màn một cỡ (24/32/38px). Axe không bắt được vì chữ i có aria-hidden.
+   Nay: một cỡ 26px (vùng chạm vẫn 44px), chữ i đậm, viền ≥ 3:1. Trên nền sáng: nền trắng chữ mực;
+   trên nền tối (topbar, khối tối): viền + chữ trắng. Rê chuột / mở: đảo màu. */
+html body.dock:not(.no-arena) .pt-info-trigger {
+  width: var(--arena-info-size);
+  height: var(--arena-info-size);
+  min-width: var(--arena-info-size);
+  min-height: var(--arena-info-size);
+  border: 1.5px solid var(--arena-control-line);
+  background: var(--arena-surface);
+  color: var(--arena-ink);
+  font-family: var(--font-brand-display);
+  font-size: var(--font-size-sm);
+  font-weight: var(--font-weight-extrabold);
+  line-height: 1;
+  transition: background-color var(--duration-fast) var(--ease-standard), color var(--duration-fast) var(--ease-standard), border-color var(--duration-fast) var(--ease-standard);
+}
+html body.dock:not(.no-arena) .pt-info-trigger > span { color: inherit; }
+html body.dock:not(.no-arena) :is(.pt-info:hover, .pt-info.is-open) .pt-info-trigger,
+html body.dock:not(.no-arena) .pt-info-trigger:focus-visible {
+  border-color: var(--arena-accent-text);
+  background: var(--arena-accent);
+  color: var(--arena-on-dark);
+}
+/* Nền tối: topbar, khối chào, Kết quả tháng, đầu gói, thanh chờ công bố */
+html body.dock:not(.no-arena) :is(.topbar, .pt-board__hero, .pt-board__summary, .booking-overview, .pt-plan-pending) .pt-info-trigger {
+  border-color: var(--arena-info-line-dark);
+  background: var(--arena-glass);
+  color: var(--arena-on-dark);
+}
+html body.dock:not(.no-arena) :is(.topbar, .pt-board__hero, .pt-board__summary, .booking-overview, .pt-plan-pending) :is(.pt-info:hover, .pt-info.is-open) .pt-info-trigger,
+html body.dock:not(.no-arena) :is(.topbar, .pt-board__hero, .pt-board__summary, .booking-overview, .pt-plan-pending) .pt-info-trigger:focus-visible {
+  border-color: var(--arena-on-dark);
+  background: var(--arena-on-dark);
+  color: var(--arena-ink-on-bright);
+}
+@media (prefers-reduced-motion: reduce) {
+  html body.dock:not(.no-arena) .pt-info-trigger { transition: none; }
+}
+
+
+/* --- Ô nhập "trần" (không class, vd. ô tìm của danh sách đơn nghỉ phép) ---
+   Không có rule nào thì trình duyệt tô xám #3B3B3B theo color-scheme: dark, lệch tông sân.
+   :where() = độ ưu tiên 0: mọi style có class của từng màn vẫn thắng. */
+:where(html body.dock:not(.no-arena)) :where(input:not([type="checkbox"], [type="radio"], [type="range"], [type="hidden"], [type="file"]), select, textarea) {
+  border: var(--border-width) solid var(--arena-control-line);
+  border-radius: var(--arena-radius-chip);
+  background-color: var(--arena-surface);
+  color: var(--arena-ink);
+}
+:where(html body.dock:not(.no-arena)) :where(input, textarea)::placeholder { color: var(--arena-steel-ink); opacity: 1; }
+
+/* --- Hộp thoại, ngăn kéo, popover: cùng ngôn ngữ với khối (cả 2 chế độ, 25/10) ---
+   Thân = khối phấn (tối: panel navy), đầu = dải tối có đèn + chữ trắng (như đầu hộp Xử lý buổi),
+   góc 2px như hộp bao ngoài, bóng nổi; nền mờ phía sau theo tông sân. Popover nhỏ = ô nổi viền mảnh. */
+html body.dock:not(.no-arena) :is(.modal-box, .session-drawer, .package-dialog) {
+  --color-surface: var(--arena-chalk);
+  --color-text: var(--arena-ink);
+  --color-text-soft: var(--arena-ink-soft);
+  --color-text-muted: var(--arena-steel-ink);
+  --color-border: var(--arena-chalk-line);
+  border: 0;
+  border-radius: var(--arena-radius-chip);
+  background: var(--arena-chalk);
+  color: var(--arena-ink);
+  box-shadow: var(--arena-shadow-light), var(--arena-float);
+}
+html body.dock:not(.no-arena) .modal-backdrop > .modal-box { box-shadow: inset 0 var(--arena-mark) 0 var(--arena-accent), var(--arena-float); }
+html body.dock:not(.no-arena) :is(.modal-backdrop, .modal-overlay) { background: var(--arena-overlay); }
+html body.dock:not(.no-arena) :is(.session-drawer, .package-dialog)::backdrop { background: var(--arena-overlay); }
+html body.dock:not(.no-arena) :is(.session-drawer-header, .package-dialog__header, .modal-overlay .modal-head, .notification-popover-head) {
+  --color-text: var(--arena-on-dark);
+  --color-text-soft: var(--arena-steel);
+  --color-text-muted: var(--arena-steel);
+  --arena-focus-ring: var(--arena-focus);
+  border-bottom: 0;
+  background:
+    radial-gradient(120% 160% at 0% 0%, var(--arena-glow), transparent 60%),
+    var(--arena-900);
+  color: var(--arena-on-dark);
+  box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.14);
+}
+html body.dock:not(.no-arena) :is(.session-drawer-header, .package-dialog__header, .modal-overlay .modal-head, .notification-popover-head) :is(h2, h3, strong) {
+  color: var(--arena-on-dark);
+  font-family: var(--font-brand-display);
+  font-weight: var(--font-weight-extrabold);
+  letter-spacing: -0.01em;
+}
+html body.dock:not(.no-arena) :is(.session-drawer-header, .package-dialog__header, .modal-overlay .modal-head, .notification-popover-head) :is(small, p, .package-dialog__close, button:not(.btn-primary)) { color: var(--arena-steel); }
+html body.dock:not(.no-arena) .modal-title {
+  font-family: var(--font-brand-display);
+  font-weight: var(--font-weight-extrabold);
+  letter-spacing: -0.01em;
+}
+/* Popover nhỏ: thông báo, chọn ngày, thêm khung, gợi ý (i) */
+html body.dock:not(.no-arena) :is(.notification-popover, .schedule-date, .pt-plan-add-form, .pt-info-popover) {
+  border: var(--border-width) solid var(--arena-chalk-line);
+  border-radius: var(--arena-radius-chip);
+  background: var(--arena-surface);
+  color: var(--arena-ink);
+  box-shadow: var(--arena-lift), var(--arena-float);
+}
+html.gms-lite body.dock:not(.no-arena) :is(.session-drawer-header, .package-dialog__header, .modal-overlay .modal-head, .notification-popover-head) { background: var(--arena-900); }
+
+/* =====================================================================
+   CÔNG TẮC SÁNG / TỐI (khôi phục 25/10) — common.js gắn vào topbar mọi màn nội bộ, lưu localStorage "gms-theme".
+   Mặc định SÁNG (Arena). Tối = giao diện cũ "Kính thủy cung". head.jspf áp lựa chọn trước khi vẽ nên không nháy.
+   Gạt: rãnh + núm; núm "mặt trời" cam khi sáng, "trăng khuyết" khi tối.
+   ===================================================================== */
+.theme-toggle {
+  display: inline-flex;
+  align-items: center;
+  gap: var(--space-2);
+  min-height: 40px;
+  padding: var(--space-1) var(--space-3) var(--space-1) var(--space-1-5);
+  border: var(--border-width) solid var(--pt-line-strong);
+  border-radius: var(--radius-pill);
+  background: transparent;
+  color: var(--pt-text);
+  font: inherit;
+  font-size: var(--font-size-sm);
+  font-weight: var(--font-weight-semibold);
+  cursor: pointer;
+}
+.theme-toggle:hover { border-color: var(--pt-text); }
+.theme-toggle__track {
+  position: relative;
+  width: 44px;
+  height: 24px;
+  border-radius: var(--radius-pill);
+  background: var(--brand-ocean-deep);
+  box-shadow: inset 0 0 0 var(--border-width) rgba(43, 212, 222, 0.35);
+}
+.theme-toggle__knob {
+  position: absolute;
+  top: 3px;
+  left: 3px;
+  width: 18px;
+  height: 18px;
+  border-radius: var(--radius-circle);
+  background: #EAF4F6;
+  box-shadow: inset -5px -2px 0 0 #C9D6DA;
+  transition: transform var(--duration-base) var(--ease-out-expo), background var(--duration-base), box-shadow var(--duration-base);
+}
+/* aria-pressed="true" = đang SÁNG: núm sang phải thành mặt trời cam */
+.theme-toggle[aria-pressed="true"] .theme-toggle__track { background: #FDE4D8; box-shadow: inset 0 0 0 var(--border-width) rgba(194, 65, 12, 0.4); }
+.theme-toggle[aria-pressed="true"] .theme-toggle__knob { transform: translateX(20px); background: var(--brand-sunset); box-shadow: 0 0 0 3px rgba(242, 92, 27, 0.25); }
+.theme-toggle__label { min-width: 3ch; }
+.top-right .theme-toggle,
+.pt-top-actions .theme-toggle { margin-right: var(--space-1); }
+@media (max-width: 767px) {
+  .theme-toggle__label { display: none; }
+  .theme-toggle { min-width: 44px; min-height: 44px; padding-inline: var(--space-1-5); }
+}
+@media (prefers-reduced-motion: reduce) { .theme-toggle__knob { transition: none; } }
+/* Arena (cả 2 chế độ): công tắc là ô kính trên topbar; rãnh ice khi đang sáng */
+html body.dock:not(.no-arena) .theme-toggle {
+  border-color: var(--arena-glass-line);
+  border-radius: var(--arena-radius-tile);
+  background: var(--arena-glass);
+  color: var(--arena-on-dark);
+  box-shadow: var(--arena-glass-edge);
+}
+html body.dock:not(.no-arena) .theme-toggle:hover { border-color: var(--arena-glass-line-hover); }
+html body.dock:not(.no-arena) .theme-toggle[aria-pressed="true"] .theme-toggle__track { background: var(--arena-ice-soft); box-shadow: inset 0 0 0 var(--border-width) var(--arena-ice); }
+html body.dock:not(.no-arena) .theme-toggle:focus-visible { outline: 2px solid var(--arena-on-dark); outline-offset: 2px; }

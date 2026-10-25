@@ -12,19 +12,19 @@ import jakarta.servlet.http.HttpServletResponse;
 import java.io.IOException;
 
 /**
- * Servlet xử lý trang chủ công khai (URL "" — root context, GET /).
+ * TRANG CHỦ CÔNG KHAI — GET / (màn #5, UC-06). Chỉ xem.
  *
- * <p>Nạp dữ liệu tổng quan (gói tập, huấn luyện viên, blog nổi bật…) rồi forward sang JSP /WEB-INF/views/guest/home.jsp.</p>
+ *   doGet   HÀM CHÍNH: HomeService.getHomePage → attribute "home" → JSP WEB-INF/jsp/guest/home.jsp
  */
 @WebServlet("")
 public class HomeServlet extends HttpServlet {
 
     private final HomeService homeService = new HomeService();
 
-    // ===== GET: Trang chủ =====
 
     /**
-     * GET / — mở trang chủ; gọi HomeService lấy dữ liệu, lỗi Service thì trả 500.
+     * HÀM CHÍNH — trình duyệt gọi khi mở trang gốc "/" (hoặc bấm logo / "Trang chủ").
+     * Lỗi DB → trang lỗi 500 (trang chủ không có dữ liệu thì không có gì để hiện).
      */
     @Override
     protected void doGet(HttpServletRequest request, HttpServletResponse response)
@@ -38,7 +38,13 @@ public class HomeServlet extends HttpServlet {
             return;
         }
 
-        // B3: đưa dữ liệu cho JSP
+        // B3: đưa dữ liệu cho JSP. "home" (HomePageView) được đọc ở home.jsp:
+        //   dòng 65–69    giờ mở cửa + số huấn luyện viên (home.openingHours, home.ptCount)
+        //   dòng 140–145  thẻ gói tập (home.gymPackages)
+        //   dòng 170–175  thẻ gói PT (home.ptPackages)
+        //   dòng 197–204  đội ngũ PT (home.pts)
+        //   dòng 218–228  3 bài blog mới nhất (home.latestPosts)
+        //   dòng 282      giờ mở cửa cho chân trang → guest-footer.jspf dòng 10 (nhúng ở home.jsp dòng 283)
         request.setAttribute("home", result.getData());
         RequestUtil.forward(request, response, "guest/home");
     }

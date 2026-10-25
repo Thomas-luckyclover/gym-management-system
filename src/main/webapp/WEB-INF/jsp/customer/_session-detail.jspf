@@ -1,0 +1,59 @@
+<%@ page pageEncoding="UTF-8" %>
+<%-- ===== NỘI DUNG CHI TIẾT 1 BUỔI — BẮT ĐẦU =====
+     Nằm ẩn trong thẻ buổi; JS chép vào hộp chi tiết khi bấm. Biến s = MyPtSessionRow.
+     Mọi chữ trạng thái / lời giải thích do MyPtSessionService điền sẵn vào s; JSP chỉ in ra (c:out chống XSS). --%>
+
+<%-- 1. Trạng thái + gói + ngày giờ:
+       nhãn "● Sắp tới" (s.statusLabel) / tiêu đề "PT cá nhân · 36/45" /
+       "26/10/2026 · 18:00 – 19:30" (TimeSlots.SlotDate, StartTime, EndTime) --%>
+<div class="session-detail-heading">
+    <span class="session-status" data-status="${s.statusKey}"><c:out value="${s.statusLabel}" /></span>
+    <h3><c:out value="${s.typeLabel}" /><c:if test="${not s.singleSession}"> · ${s.sessionNo}/${s.totalSessions}</c:if></h3>
+    <p>${gms:formatDate(s.slotDate)} · ${gms:formatTime(s.startTime)} – ${gms:formatTime(s.endTime)}</p>
+</div>
+
+<%-- 2. Lời giải thích s.explanation (Service viết, khung màu theo trạng thái). Không có thì ẩn.
+       VD "Chưa có Membership hoặc DayPass cho ngày này. Mua trước ngày tập để không bị tính vắng." --%>
+<c:if test="${not empty s.explanation}">
+    <p class="session-explanation" data-status="${s.statusKey}"><c:out value="${s.explanation}" /></p>
+</c:if>
+
+<%-- 3. Liên hệ PT: "PT Đinh Công Sơn" + số s.ptPhone (Persons.Phone) +
+       nút cam "Nhắn Zalo" (s.zaloUrl, Service: ZaloUtil) + nút viền "Sao chép số" (data-copy-phone → JS chép vào bộ nhớ tạm).
+       Không có số → "Chưa có số PT. Vui lòng liên hệ lễ tân." --%>
+<div class="session-contact">
+    <strong class="session-trainer">PT <c:out value="${s.ptName}" default="Chưa cập nhật" /></strong>
+    <c:choose>
+        <c:when test="${not empty s.ptPhone}">
+            <p class="session-phone"><c:out value="${s.ptPhone}" /></p>
+            <div class="session-actions">
+                <c:if test="${not empty s.zaloUrl}"><a class="btn btn-primary btn-sm" href="${fn:escapeXml(s.zaloUrl)}" target="_blank" rel="noopener noreferrer">Nhắn Zalo</a></c:if>
+                <button class="btn btn-outline btn-sm" type="button" data-copy-phone="${fn:escapeXml(s.ptPhone)}">Sao chép số</button>
+            </div>
+        </c:when>
+        <c:otherwise><p class="session-note">Chưa có số PT. Vui lòng liên hệ lễ tân.</p></c:otherwise>
+    </c:choose>
+</div>
+
+<%-- 4. Bảng thông tin (mỗi dòng: nhãn trái – giá trị phải):
+       Gói tập   s.packageName ← Orders.PackageNameSnapshot
+       Thời hạn  s.packageStartDate – packageEndDate ← Subscriptions.StartDate / EndDate (buổi lẻ không có)
+       Tập cùng  s.partnerName (Service: người còn lại của gói đôi)
+       Lý do hủy / Hủy lúc  ← Sessions.CancelReason / CancelledAt (chỉ buổi đã hủy) --%>
+<dl class="session-facts">
+    <div><dt>Gói tập</dt><dd><c:out value="${s.packageName}" /></dd></div>
+    <c:if test="${not s.singleSession}"><div><dt>Thời hạn</dt><dd>${gms:formatDate(s.packageStartDate)} – ${gms:formatDate(s.packageEndDate)}</dd></div></c:if>
+    <c:if test="${not empty s.partnerName}"><div><dt>Tập cùng</dt><dd><c:out value="${s.partnerName}" /></dd></div></c:if>
+    <c:if test="${not empty s.cancelReason}"><div><dt>Lý do hủy</dt><dd><c:out value="${s.cancelReason}" /></dd></div></c:if>
+    <c:if test="${not empty s.cancelledAt}"><div><dt>Hủy lúc</dt><dd>${gms:formatDateTime(s.cancelledAt)}</dd></div></c:if>
+</dl>
+
+<%-- 5. Link cuối: "Thêm vào Google Calendar" (s.calendarUrl, Service chỉ cấp cho buổi Scheduled chưa hết giờ)
+       + "Xem toàn bộ gói →" sang Gói của tôi đúng gói (s.subscriptionId ← Subscriptions.SubscriptionId) --%>
+<c:if test="${not empty s.calendarUrl or not s.singleSession}">
+    <div class="session-detail-links">
+        <c:if test="${not empty s.calendarUrl}"><a href="${fn:escapeXml(s.calendarUrl)}" target="_blank" rel="noopener noreferrer"><i class="fa-regular fa-calendar-plus" aria-hidden="true"></i> Thêm vào Google Calendar</a></c:if>
+        <c:if test="${not s.singleSession}"><a href="${pageContext.request.contextPath}/customer/bookings?package=${s.subscriptionId}">Xem toàn bộ gói <i class="fa-solid fa-arrow-right" aria-hidden="true"></i></a></c:if>
+    </div>
+</c:if>
+<%-- ===== NỘI DUNG CHI TIẾT 1 BUỔI — KẾT THÚC ===== --%>

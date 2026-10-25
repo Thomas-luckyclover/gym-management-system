@@ -31,6 +31,14 @@ import java.time.LocalDateTime;
  * - 2 lần xin mã phải cách nhau ít nhất 60 giây
  * - Xin mã lần thứ 5 trong vòng 60 phút → email bị khóa P-18 phút (5)
  *
+ * THAM SỐ CẤU HÌNH (giá trị hiện tại — đổi ở đâu)
+ *   P-15 = 15   mã sống 15 phút                                     (bảng SystemConfigs, biến validMinutes)
+ *   P-17 = 5    sai mã 5 lần → khóa; xin mã lần thứ 5 / 60 phút → khóa (SystemConfigs, biến maxAttempts)
+ *   P-18 = 5    khóa xác thực 5 phút                                (SystemConfigs, biến lockMinutes)
+ *   CODE_RESEND_GAP_SECONDS    = 60   2 lần xin mã cách nhau ≥ 60 giây  (AppConstants)
+ *   CODE_REQUEST_WINDOW_MINUTES = 60  cửa sổ đếm số lần xin mã          (AppConstants)
+ *   VERIFICATION_CODE_LENGTH   = 6    mã 6 chữ số                       (AppConstants)
+ *
  * @author Le Cong Minh
  */
 public class VerificationCodeService {
