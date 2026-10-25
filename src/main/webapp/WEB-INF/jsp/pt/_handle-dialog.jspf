@@ -27,8 +27,9 @@
     <%-- ----- Đầu hộp: "Thứ 3 · 27/10 · 18:00 – 19:30" + khách + gói ----- --%>
     <header class="pt-handle-head">
         <div>
-            <p class="pt-handle-kicker">Xử lý buổi</p>
-            <h2 id="pt-handle-title"><c:out value="${handle.dayLabel}" /> · <c:out value="${sessionTime}" /></h2>
+            <%-- tabindex="-1" + autofocus: mở hộp thì focus vào tiêu đề (trình đọc màn hình đọc "Xử lý buổi Thứ 3 …"),
+                 không nhảy vòng focus lên nút Đóng. --%>
+            <h2 id="pt-handle-title" tabindex="-1" autofocus><span class="visually-hidden">Xử lý buổi </span><c:out value="${handle.dayLabel}" /> · <c:out value="${sessionTime}" /></h2>
             <p class="pt-handle-who"><strong><c:out value="${handle.customerNames}" /></strong> · <c:out value="${handle.packageName}" /></p>
             <%-- Hạn gói = Subscriptions.EndDate: buổi chỉ dời được tới ngày này. --%>
             <p class="pt-handle-chips">
