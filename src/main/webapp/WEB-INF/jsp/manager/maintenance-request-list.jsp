@@ -7,8 +7,7 @@
 <head>
   <%@ include file="/WEB-INF/jsp/common/head.jspf" %>
   <title>Yêu cầu bảo trì · Super Gym</title>
-  <link rel="stylesheet" href="${pageContext.request.contextPath}/css/pages/auth/account-settings.css">
-  <link rel="stylesheet" href="${pageContext.request.contextPath}/css/pages/manager/maintenance-requests.css">
+  <link rel="stylesheet" href="${pageContext.request.contextPath}/css/pages/manager/maintenance-requests.css?v=20261023fix1">
   <link rel="stylesheet"
         href="${pageContext.request.contextPath}/css/pages/auth/notification-bell.css">
 
@@ -54,6 +53,12 @@
             <c:if test="${not empty keyword}">
               <c:param name="keyword" value="${keyword}" />
             </c:if>
+            <c:if test="${not empty priorityFilter}">
+              <c:param name="priority" value="${priorityFilter}" />
+            </c:if>
+            <c:if test="${not empty reportedDateFilter}">
+              <c:param name="reportedDate" value="${reportedDateFilter}" />
+            </c:if>
           </c:url>
 
           <a href="${allStatusUrl}"
@@ -74,6 +79,12 @@
               <c:if test="${not empty keyword}">
                 <c:param name="keyword"
                          value="${keyword}" />
+              </c:if>
+              <c:if test="${not empty priorityFilter}">
+                <c:param name="priority" value="${priorityFilter}" />
+              </c:if>
+              <c:if test="${not empty reportedDateFilter}">
+                <c:param name="reportedDate" value="${reportedDateFilter}" />
               </c:if>
 
             </c:url>
@@ -126,12 +137,28 @@
               </c:forEach>
             </select>
 
+            <select name="priority">
+              <option value="">Tất cả mức ưu tiên</option>
+
+              <c:forEach var="p" items="${priorityOptions}">
+                <option value="${p.dbValue}"
+                        <c:if test="${priorityFilter == p.dbValue}">selected</c:if>>
+                  <c:out value="${p.displayName}" />
+                </option>
+              </c:forEach>
+            </select>
+
+            <input type="date"
+                   name="reportedDate"
+                   value="<c:out value='${reportedDateFilter}' />"
+                   title="Lọc theo ngày báo"
+                   aria-label="Ngày báo">
+
             <select name="pageSize">
               <option value="10" ${requestPage.pageSize == 10 ? 'selected' : ''}>10</option>
               <option value="20" ${requestPage.pageSize == 20 ? 'selected' : ''}>20</option>
               <option value="50" ${requestPage.pageSize == 50 ? 'selected' : ''}>50</option>
             </select>
-
             <button class="btn btn-primary" type="submit">
               Lọc
             </button>
@@ -153,7 +180,8 @@
                         <strong>
                           <c:out value="${item.request.requestCode}" />
                           ·
-                          <c:out value="${item.facilityName}" />
+                          <c:out value="${item.itemCode}" />
+                          (<c:out value="${item.facilityName}" />)
                         </strong>
 
                         <span class="badge
@@ -167,20 +195,39 @@
 
                       <div class="maintenance-meta">
                         <span>
-                          Người báo:
-                          <b><c:out value="${item.reporterName}" /></b>
+                          Ngày báo: <b>${gms:formatDate(item.request.reportedAt.toLocalDate())}</b>
                         </span>
 
                         <span>
-                          ${gms:formatDate(item.request.reportedAt.toLocalDate())}
+                          Ưu tiên: <b><c:out value="${item.request.priority.displayName}" /></b>
+                        </span>
+
+                        <c:if test="${not empty item.facilityLocation}">
+                          <span>
+                            Khu vực: <b><c:out value="${item.facilityLocation}" /></b>
+                          </span>
+                        </c:if>
+
+                        <span>
+                          Sự cố: <b><c:out value="${item.request.incidentType.displayName}" /></b>
                         </span>
 
                         <span>
-                          <c:out value="${item.request.priority.displayName}" />
+                          Phát hiện: <b><c:out value="${item.request.detectedBy.displayName}" /></b>
                         </span>
+
+                        <span>
+                          Người báo: <b><c:out value="${item.reporterName}" /></b>
+                        </span>
+
+                        <c:if test="${item.request.warningTagPlaced}">
+                          <span class="badge badge-danger">
+                            Đã đặt cảnh báo
+                          </span>
+                        </c:if>
                       </div>
 
-                      <p>
+                      <p class="maintenance-description" style="margin-top: var(--space-2);">
                         <c:out value="${item.request.description}" />
                       </p>
                     </div>
@@ -216,6 +263,8 @@
                   <c:param name="pageSize" value="${requestPage.pageSize}" />
                   <c:param name="keyword" value="${keyword}" />
                   <c:param name="status" value="${statusFilter}" />
+                  <c:param name="priority" value="${priorityFilter}" />
+                  <c:param name="reportedDate" value="${reportedDateFilter}" />
                 </c:url>
 
                 <a class="btn btn-ghost btn-sm"
@@ -236,6 +285,8 @@
                   <c:param name="pageSize" value="${requestPage.pageSize}" />
                   <c:param name="keyword" value="${keyword}" />
                   <c:param name="status" value="${statusFilter}" />
+                  <c:param name="priority" value="${priorityFilter}" />
+                  <c:param name="reportedDate" value="${reportedDateFilter}" />
                 </c:url>
 
                 <a class="btn btn-ghost btn-sm"

@@ -10,6 +10,9 @@ import com.gms.integration.EmailSendException;
 import com.gms.listener.SessionRegistryListener;
 import com.gms.util.ValidationUtil;
 
+import com.gms.dao.AccountDAO;
+import com.gms.entity.Account;
+
 import java.sql.SQLException;
 
 /**
@@ -25,9 +28,22 @@ public class ContactChangeService {
         EMAIL, PHONE
     }
 
-    private final PersonDAO personDAO = new PersonDAO();
-    private final VerificationCodeService verificationCodeService = new VerificationCodeService();
-    private final EmailGateway emailGateway = new EmailGateway();
+    private final AccountDAO accountDAO;
+    private final PersonDAO personDAO;
+    private final VerificationCodeService verificationCodeService;
+    private final EmailGateway emailGateway;
+
+    public ContactChangeService() {
+        this(new AccountDAO(), new PersonDAO(), new VerificationCodeService(), new EmailGateway());
+    }
+
+    ContactChangeService(AccountDAO accountDAO, PersonDAO personDAO,
+                         VerificationCodeService verificationCodeService, EmailGateway emailGateway) {
+        this.accountDAO = accountDAO;
+        this.personDAO = personDAO;
+        this.verificationCodeService = verificationCodeService;
+        this.emailGateway = emailGateway;
+    }
 
     // ===== 1. Yêu cầu đổi thông tin (Gửi mã OTP) =====
 
@@ -49,6 +65,14 @@ public class ContactChangeService {
         String trimmedEmail = newEmail.trim();
 
         try {
+            Account account = accountDAO.findById(accountId);
+            if (account != null) {
+                Person currentPerson = personDAO.findById(account.getPersonId());
+                if (currentPerson != null && trimmedEmail.equalsIgnoreCase(currentPerson.getEmail())) {
+                    return ServiceResult.failField("email", "Email mới phải khác email hiện tại.");
+                }
+            }
+
             // B2: kiểm tra trùng lặp email với người khác (DBR-23)
             if (personDAO.existsByEmail(trimmedEmail)) {
                 return ServiceResult.failField("email", Messages.MSG12_EMAIL_USED);
@@ -86,11 +110,19 @@ public class ContactChangeService {
             return ServiceResult.failField("phone", Messages.MSG13_INVALID_PHONE);
         }
         if (ValidationUtil.isNullOrEmpty(currentEmail)) {
-            return ServiceResult.fail(Messages.MSG04_SYSTEM_BUSY);
+            return ServiceResult.fail(Messages.MSG53_PROFILE_NO_EMAIL);
         }
         String trimmedPhone = newPhone.trim();
 
         try {
+            Account account = accountDAO.findById(accountId);
+            if (account != null) {
+                Person currentPerson = personDAO.findById(account.getPersonId());
+                if (currentPerson != null && trimmedPhone.equals(currentPerson.getPhone())) {
+                    return ServiceResult.failField("phone", "Số điện thoại mới phải khác số điện thoại hiện tại.");
+                }
+            }
+
             // B2: kiểm tra trùng lặp số điện thoại với người khác (DBR-22)
             if (personDAO.existsByPhone(trimmedPhone)) {
                 return ServiceResult.failField("phone", Messages.MSG14_PHONE_USED);

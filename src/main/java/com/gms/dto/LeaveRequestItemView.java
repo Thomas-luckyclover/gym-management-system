@@ -1,15 +1,35 @@
 package com.gms.dto;
 
 import com.gms.entity.LeaveRequest;
-
+import java.math.BigDecimal;
 import java.time.LocalDate;
 import java.time.LocalDateTime;
 
 /**
  * Dòng đơn nghỉ phép hiển thị trên danh sách Manager (màn #26, UC-15).
- * Service tạo từ LeaveRequestDAO.LeaveRequestRow; JSP không làm tính toán.
+ * Service tạo từ LeaveRequestRow; JSP không làm tính toán.
  */
 public class LeaveRequestItemView {
+
+    // Service kiểm tra snapshot của đơn Pending; JSP hiển thị trong cột Kiểm tra, không dùng làm quyền duyệt.
+    private String checkSummary;
+    private String checkMessage;
+
+    public String getCheckSummary() {
+        return checkSummary;
+    }
+
+    public void setCheckSummary(String summary) {
+        this.checkSummary = summary;
+    }
+
+    public String getCheckMessage() {
+        return checkMessage;
+    }
+
+    public void setCheckMessage(String message) {
+        this.checkMessage = message;
+    }
 
     // DAO: LeaveRequests.LeaveRequestId.
     private final int leaveRequestId;
@@ -32,8 +52,14 @@ public class LeaveRequestItemView {
     // DAO: LeaveRequests.LeaveType.
     private final LeaveRequest.LeaveType leaveType;
 
-    // DAO: LeaveRequests.LeaveDate.
-    private final LocalDate leaveDate;
+    // Khoảng ngày và số ngày nghỉ theo schema hiện tại.
+    private LocalDate fromDate;
+    private LocalDate toDate;
+    private BigDecimal days;
+
+    // Người được giao xử lý và quyền của Manager đang xem.
+    private String assignedToName;
+    private boolean canAct = true;
 
     // DAO: LeaveRequests.ShiftType.
     private final LeaveRequest.ShiftType shiftType;
@@ -47,7 +73,7 @@ public class LeaveRequestItemView {
     // DAO: LeaveRequests.RejectReason; NULL nếu không bị từ chối.
     private final String rejectReason;
 
-    // Service: true khi Rejected mà ReviewedByEmployeeId IS NULL (quá hạn duyệt – CBR-85).
+    // Dữ liệu cũ: Rejected không có người xử lý thì hiển thị Hệ thống.
     private final boolean autoRejected;
 
     // DAO: LeaveRequests.SubmittedAt.
@@ -59,55 +85,40 @@ public class LeaveRequestItemView {
     // DAO: Persons.FullName của người duyệt; NULL khi Pending hoặc tự từ chối.
     private final String reviewerName;
 
-    // Service: giờ P-20 vào ngày liền trước ngày nghỉ — hạn Manager phải duyệt.
-    private final LocalDateTime approvalDeadline;
+    // Service: đơn Pending bắt đầu nghỉ hôm nay hoặc ngày mai.
+    private boolean nearLeaveDate;
 
-    // Service: chuỗi đếm ngược dễ đọc (VD "Còn 3 giờ 20 phút"); rỗng nếu đơn đã xử lý.
-    private final String deadlineCountdownText;
+    /** Sao chép dữ liệu đã đọc; cờ sắp nghỉ và kết quả kiểm tra do Service đặt riêng. */
+    public LeaveRequestItemView(LeaveRequestRow row) {
+        LeaveRequest request = row.getLeaveRequest();
+        this.leaveRequestId = request.getLeaveRequestId();
+        this.employeeId = request.getEmployeeId();
+        this.employeeCode = row.getEmployeeCode();
+        this.fullName = row.getFullName();
+        this.position = row.getPosition();
+        this.avatarUrl = row.getAvatarUrl();
+        this.leaveType = request.getLeaveType();
+        this.fromDate = request.getFromDate();
+        this.toDate = request.getToDate();
+        this.days = request.getDays();
+        this.shiftType = request.getShiftType();
+        this.reason = request.getReason();
+        this.status = request.getStatus();
+        this.rejectReason = request.getRejectReason();
+        this.autoRejected = request.isRejected() && request.getReviewedByEmployeeId() == null;
+        this.submittedAt = request.getSubmittedAt();
+        this.reviewedAt = request.getReviewedAt();
+        this.reviewerName = row.getReviewerName();
+        this.assignedToName = row.getAssignedToName();
+        this.canAct = row.isCanAct();
+    }
 
-    // Service: true khi đơn Pending và còn dưới ngưỡng URGENT_WITHIN_MINUTES đến hạn duyệt.
-    private final boolean urgent;
+    public boolean isNearLeaveDate() {
+        return nearLeaveDate;
+    }
 
-    public LeaveRequestItemView(
-            int leaveRequestId,
-            int employeeId,
-            String employeeCode,
-            String fullName,
-            String position,
-            String avatarUrl,
-            LeaveRequest.LeaveType leaveType,
-            LocalDate leaveDate,
-            LeaveRequest.ShiftType shiftType,
-            String reason,
-            LeaveRequest.Status status,
-            String rejectReason,
-            boolean autoRejected,
-            LocalDateTime submittedAt,
-            LocalDateTime reviewedAt,
-            String reviewerName,
-            LocalDateTime approvalDeadline,
-            String deadlineCountdownText,
-            boolean urgent
-    ) {
-        this.leaveRequestId = leaveRequestId;
-        this.employeeId = employeeId;
-        this.employeeCode = employeeCode;
-        this.fullName = fullName;
-        this.position = position;
-        this.avatarUrl = avatarUrl;
-        this.leaveType = leaveType;
-        this.leaveDate = leaveDate;
-        this.shiftType = shiftType;
-        this.reason = reason;
-        this.status = status;
-        this.rejectReason = rejectReason;
-        this.autoRejected = autoRejected;
-        this.submittedAt = submittedAt;
-        this.reviewedAt = reviewedAt;
-        this.reviewerName = reviewerName;
-        this.approvalDeadline = approvalDeadline;
-        this.deadlineCountdownText = deadlineCountdownText;
-        this.urgent = urgent;
+    public void setNearLeaveDate(boolean nearLeaveDate) {
+        this.nearLeaveDate = nearLeaveDate;
     }
 
     public int getLeaveRequestId() {
@@ -136,10 +147,6 @@ public class LeaveRequestItemView {
 
     public LeaveRequest.LeaveType getLeaveType() {
         return leaveType;
-    }
-
-    public LocalDate getLeaveDate() {
-        return leaveDate;
     }
 
     public LeaveRequest.ShiftType getShiftType() {
@@ -174,15 +181,43 @@ public class LeaveRequestItemView {
         return reviewerName;
     }
 
-    public LocalDateTime getApprovalDeadline() {
-        return approvalDeadline;
+    public LocalDate getFromDate() {
+        return fromDate;
     }
 
-    public String getDeadlineCountdownText() {
-        return deadlineCountdownText;
+    public void setFromDate(LocalDate fromDate) {
+        this.fromDate = fromDate;
     }
 
-    public boolean isUrgent() {
-        return urgent;
+    public LocalDate getToDate() {
+        return toDate;
+    }
+
+    public void setToDate(LocalDate toDate) {
+        this.toDate = toDate;
+    }
+
+    public BigDecimal getDays() {
+        return days;
+    }
+
+    public void setDays(BigDecimal days) {
+        this.days = days;
+    }
+
+    public String getAssignedToName() {
+        return assignedToName;
+    }
+
+    public void setAssignedToName(String assignedToName) {
+        this.assignedToName = assignedToName;
+    }
+
+    public boolean isCanAct() {
+        return canAct;
+    }
+
+    public void setCanAct(boolean canAct) {
+        this.canAct = canAct;
     }
 }

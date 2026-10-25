@@ -7,8 +7,7 @@
 <head>
   <%@ include file="/WEB-INF/jsp/common/head.jspf" %>
   <title>Xử lý yêu cầu bảo trì · Super Gym</title>
-  <link rel="stylesheet" href="${pageContext.request.contextPath}/css/pages/auth/account-settings.css">
-  <link rel="stylesheet" href="${pageContext.request.contextPath}/css/pages/manager/maintenance-requests.css">
+  <link rel="stylesheet" href="${pageContext.request.contextPath}/css/pages/manager/maintenance-requests.css?v=20261023fix1">
   <link rel="stylesheet"
         href="${pageContext.request.contextPath}/css/pages/auth/notification-bell.css">
 
@@ -75,11 +74,11 @@
           <div class="panel-head">
             <div>
               <h2>
-                <c:out value="${item.facilityName}" />
+                <c:out value="${item.itemCode}" /> · <c:out value="${item.facilityName}" />
               </h2>
 
               <p>
-                <c:out value="${item.facilityLocation}" />
+                Khu vực: <c:out value="${item.facilityLocation}" />
               </p>
             </div>
 
@@ -93,6 +92,11 @@
           </div>
 
           <div class="maintenance-detail-grid">
+            <div>
+              <span class="maintenance-label">Mã máy cụ thể</span>
+              <strong><c:out value="${item.itemCode}" /></strong>
+            </div>
+
             <div>
               <span class="maintenance-label">Người báo</span>
               <strong><c:out value="${item.reporterName}" /></strong>
@@ -109,6 +113,20 @@
               <span class="maintenance-label">Mức ưu tiên</span>
               <strong>
                 <c:out value="${item.request.priority.displayName}" />
+              </strong>
+            </div>
+
+            <div>
+              <span class="maintenance-label">Loại sự cố</span>
+              <strong>
+                <c:out value="${item.request.incidentType.displayName}" />
+              </strong>
+            </div>
+
+            <div>
+              <span class="maintenance-label">Nguồn phát hiện</span>
+              <strong>
+                <c:out value="${item.request.detectedBy.displayName}" />
               </strong>
             </div>
 
@@ -140,6 +158,10 @@
                     class="maintenance-action-card">
 
                 <input type="hidden"
+                       name="csrfToken"
+                       value="${sessionScope.csrfToken}">
+
+                <input type="hidden"
                        name="requestId"
                        value="${item.request.maintenanceRequestId}">
 
@@ -156,9 +178,9 @@
                          checked>
 
                   <span>
-                    <b>Chuyển thiết bị sang Đang bảo trì</b>
+                    <b>Chuyển riêng máy <c:out value="${item.itemCode}" /> sang Đang bảo trì</b>
                     <small>
-                      Bỏ chọn nếu thiết bị vẫn có thể sử dụng an toàn trong lúc chờ sửa.
+                      Chỉ đổi trạng thái máy con này, các máy khác thuộc dòng <c:out value="${item.facilityName}" /> vẫn sử dụng bình thường.
                     </small>
                   </span>
                 </label>
@@ -173,7 +195,13 @@
 
               <form action="${pageContext.request.contextPath}/manager/maintenance-requests/review"
                     method="post"
-                    class="maintenance-action-card">
+                    class="maintenance-action-card"
+                    data-validate
+                    novalidate>
+
+                <input type="hidden"
+                       name="csrfToken"
+                       value="${sessionScope.csrfToken}">
 
                 <input type="hidden"
                        name="requestId"
@@ -195,9 +223,15 @@
                             name="rejectReason"
                             minlength="5"
                             maxlength="500"
+                            data-min-length="5"
+                            data-max-length="500"
+                            data-label="Lý do từ chối"
+                            data-rule="reason"
                             required><c:out value="${rejectReason}" /></textarea>
 
-                  <div class="field-error">
+                  <div class="field-error"
+                       id="rejectReasonError"
+                       <c:if test="${empty errors.rejectReason}">hidden</c:if>>
                     <c:out value="${errors.rejectReason}" />
                   </div>
                 </div>

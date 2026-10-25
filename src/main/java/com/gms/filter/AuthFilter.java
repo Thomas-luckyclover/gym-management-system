@@ -71,6 +71,9 @@ public class AuthFilter implements Filter {
         HttpSession session = httpRequest.getSession(false);
         boolean isLoggedIn = session != null && session.getAttribute(SessionKey.ACCOUNT_ID) != null;
         if (isLoggedIn) {
+            // Đảm bảo CSRF token luôn tồn tại trong session của người dùng đã đăng nhập (TC-17A)
+            RequestUtil.getOrCreateCsrfToken(session);
+
             // B2b: chưa chọn vai trò → chỉ vào /select-role, /logout (CBR-113)
             boolean isRoleChosen = session.getAttribute(SessionKey.ROLE) != null;
             boolean isRoleChoicePath = "/select-role".equals(path) || "/logout".equals(path);

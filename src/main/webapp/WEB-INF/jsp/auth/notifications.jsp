@@ -21,9 +21,11 @@
 </head>
 
 <body class="dock
-${sessionScope.role == 'Manager'
-        ? 'theme-manager'
-        : 'theme-staff'}">
+<c:choose>
+  <c:when test="${sessionScope.role == 'Manager'}">theme-manager</c:when>
+  <c:when test="${sessionScope.role == 'PT'}">theme-pt</c:when>
+  <c:otherwise>theme-staff</c:otherwise>
+</c:choose>">
 
 <%@ include file="/WEB-INF/jsp/common/flash-toast.jspf" %>
 
@@ -33,6 +35,10 @@ ${sessionScope.role == 'Manager'
 
     <c:when test="${sessionScope.role == 'Manager'}">
       <%@ include file="/WEB-INF/jsp/common/layout-manager.jspf" %>
+    </c:when>
+
+    <c:when test="${sessionScope.role == 'PT'}">
+      <%@ include file="/WEB-INF/jsp/common/layout-pt.jspf" %>
     </c:when>
 
     <c:otherwise>
@@ -68,9 +74,11 @@ ${sessionScope.role == 'Manager'
             </b>
 
             <small>
-              ${sessionScope.role == 'Manager'
-                      ? 'Quản lý'
-                      : 'Lễ tân'}
+              <c:choose>
+                <c:when test="${sessionScope.role == 'Manager'}">Quản lý</c:when>
+                <c:when test="${sessionScope.role == 'PT'}">Huấn luyện viên PT</c:when>
+                <c:otherwise>Lễ tân</c:otherwise>
+              </c:choose>
             </small>
 
           </span>

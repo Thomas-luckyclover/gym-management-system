@@ -1,51 +1,7 @@
 /* ===================================================
-   BF-05 – Leave Request Screens (màn #26 & #27)
-   leave-request-list.jsp | leave-request-review.jsp
+   BF-05 – CSS dùng cho form nhân viên và màn duyệt chi tiết
+   Danh sách có file riêng: leave-request-list.css
    =================================================== */
-
-/* ===== Tab thống kê ===== */
-
-.leave-stats {
-    display: grid;
-    grid-template-columns: repeat(4, minmax(0, 1fr));
-    gap: var(--space-4);
-    margin-bottom: var(--space-6);
-}
-
-.leave-stat {
-    display: flex;
-    align-items: center;
-    justify-content: space-between;
-    gap: var(--space-3);
-    min-height: 80px;
-    padding: var(--space-4) var(--space-5);
-    border: var(--border-width) solid var(--color-border-strong);
-    border-radius: var(--radius-lg);
-    background: var(--color-surface);
-    box-shadow: var(--shadow-card);
-    color: var(--color-text);
-    text-decoration: none;
-    transition:
-        border-color var(--duration-base),
-        background var(--duration-base),
-        transform var(--duration-base);
-}
-
-.leave-stat:hover {
-    transform: translateY(-1px);
-    border-color: var(--color-primary-border);
-}
-
-.leave-stat.active {
-    border: var(--border-width-thick) solid var(--color-primary);
-    background: var(--color-primary-tint);
-}
-
-.leave-stat strong {
-    font-size: var(--font-size-xl);
-    font-weight: 700;
-}
-
 
 /* ===== Panel danh sách ===== */
 
@@ -72,25 +28,6 @@
     margin: 0;
     color: var(--color-text-soft);
     font-size: var(--font-size-sm);
-}
-
-
-/* ===== Bộ lọc ===== */
-
-.leave-filter {
-    display: grid;
-    grid-template-columns: minmax(240px, 1fr) 90px auto auto;
-    gap: var(--space-3);
-    padding: var(--space-4);
-    margin-bottom: var(--space-5);
-    border: var(--border-width) solid var(--color-border);
-    border-radius: var(--radius-md);
-    background: var(--color-bg);
-}
-
-.leave-filter input,
-.leave-filter select {
-    min-height: 42px;
 }
 
 
@@ -139,6 +76,49 @@
 
 .leave-table tbody tr:hover {
     background: var(--color-bg);
+}
+
+.leave-employee-cell {
+    display: flex;
+    align-items: center;
+    gap: var(--space-3);
+}
+
+.leave-employee-avatar {
+    width: 36px;
+    height: 36px;
+    border-radius: 50%;
+    object-fit: cover;
+    border: var(--border-width) solid var(--color-border);
+    flex-shrink: 0;
+}
+
+.leave-employee-initial {
+    width: 36px;
+    height: 36px;
+    border-radius: 50%;
+    background: var(--color-primary-light, #e0e7ff);
+    color: var(--color-primary, #3730a3);
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    font-weight: 600;
+    font-size: var(--font-size-xs, 12px);
+    border: var(--border-width) solid var(--color-border);
+    flex-shrink: 0;
+}
+
+.leave-employee-meta {
+    display: flex;
+    flex-direction: column;
+}
+
+.leave-text-nowrap {
+    white-space: nowrap;
+}
+
+.leave-text-muted {
+    color: var(--color-text-soft);
 }
 
 /* Hàng khẩn cấp (deadline sắp đến) */
@@ -331,11 +311,7 @@
 /* ===== Responsive ===== */
 
 @media (max-width: 900px) {
-    .leave-stats {
-        grid-template-columns: repeat(2, minmax(0, 1fr));
-    }
-
-    .leave-filter {
+.leave-filter {
         grid-template-columns: 1fr;
     }
 
@@ -345,8 +321,570 @@
     }
 }
 
-@media (max-width: 600px) {
-    .leave-stats {
-        grid-template-columns: repeat(2, minmax(0, 1fr));
+/* ===== Trang nhân viên nộp đơn (màn #25, UC-14) ===== */
+
+.staff-leave-page .leave-staff-content {
+  max-width: calc(var(--space-12) * 12);
+  margin-inline: auto;
+}
+
+.staff-leave-page .leave-form-heading {
+  display: flex;
+  justify-content: space-between;
+  align-items: flex-start;
+  gap: var(--space-3);
+}
+
+/* Dùng HintBox chung; các ID bên trong vẫn do leave-request-form.js cập nhật. */
+.staff-leave-page .pt-info-popover {
+  max-height: calc(100dvh - var(--space-6) * 2);
+  overflow-y: auto;
+}
+
+.staff-leave-page .leave-help-title {
+  display: block;
+  margin-bottom: var(--space-2);
+}
+
+.staff-leave-page .leave-help-row {
+  display: flex;
+  flex-wrap: wrap;
+  justify-content: space-between;
+  gap: var(--space-1) var(--space-3);
+  margin: var(--space-0) var(--space-0) var(--space-2);
+}
+
+.staff-leave-page .leave-help-note {
+  margin: var(--space-0) var(--space-0) var(--space-3);
+  color: var(--color-text-soft);
+}
+
+.staff-leave-page .leave-help-note:last-child {
+  margin-bottom: var(--space-0);
+}
+
+.leave-form-grid {
+    display: grid;
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+    gap: var(--space-4);
+    margin-bottom: var(--space-4);
+}
+
+.leave-history-list {
+    display: flex;
+    flex-direction: column;
+    gap: var(--space-3);
+}
+
+.leave-history-row {
+    display: flex;
+    justify-content: space-between;
+    align-items: flex-start;
+    gap: var(--space-3);
+    padding: var(--space-3) var(--space-4);
+    border: var(--border-width) solid var(--color-border);
+    border-radius: var(--radius-md);
+    background: var(--color-bg);
+}
+
+@media (max-width: 960px) {
+    .leave-form-grid {
+        grid-template-columns: 1fr;
     }
+}
+
+/* ===================================================
+   BF-05 Redesign (Màn #26 & Màn #27)
+   =================================================== */
+
+/* ===== Màn #27 (Duyệt chi tiết) Layout 1366x768 ===== */
+.leave-review-page .content {
+  padding: var(--space-4) var(--space-6);
+}
+
+.leave-review-page .review-alert {
+  display: flex;
+  align-items: center;
+  gap: var(--space-2);
+  margin-bottom: var(--space-3);
+  padding: var(--space-2) var(--space-3);
+  border-radius: var(--radius-md);
+  font-size: var(--font-size-sm);
+}
+
+.review-top-bar {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: var(--space-4);
+    margin-bottom: var(--space-3);
+    padding: var(--space-3) var(--space-4);
+    background: var(--color-surface);
+    border: var(--border-width) solid var(--color-border);
+    border-radius: var(--radius-lg);
+    box-shadow: var(--shadow-card);
+}
+
+.review-top-left {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: center;
+    gap: var(--space-3);
+}
+
+.review-top-title {
+    font-size: var(--font-size-lg);
+    font-weight: 700;
+    margin: 0;
+}
+
+.review-top-actions {
+    display: flex;
+    align-items: center;
+    gap: var(--space-2);
+}
+
+.review-grid-2col {
+    display: grid;
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+    gap: var(--space-3);
+    align-items: start;
+}
+
+@media (max-width: 900px) {
+    .review-grid-2col {
+        grid-template-columns: 1fr;
+    }
+    .leave-review-page .review-top-bar {
+      flex-wrap: wrap;
+    }
+    .leave-review-page .review-top-actions {
+      flex-wrap: wrap;
+    }
+}
+
+.review-card {
+    padding: var(--space-4);
+    background: var(--color-surface);
+    border: var(--border-width) solid var(--color-border);
+    border-radius: var(--radius-lg);
+    box-shadow: var(--shadow-card);
+    margin: var(--space-0);
+}
+
+.review-card-head {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    margin-bottom: var(--space-3);
+    padding-bottom: var(--space-2);
+    border-bottom: 1px solid var(--color-border-subtle);
+}
+
+.review-card-title {
+    font-size: var(--font-size-base);
+    font-weight: 600;
+    margin: 0;
+    display: flex;
+    align-items: center;
+    gap: var(--space-2);
+}
+
+/* User header trong Card thông tin chung */
+.user-info-row {
+    display: flex;
+    align-items: center;
+    gap: var(--space-3);
+    padding-bottom: var(--space-3);
+    margin-bottom: var(--space-3);
+    border-bottom: 1px solid var(--color-border-subtle);
+}
+
+.user-avatar-circle {
+    width: 44px;
+    height: 44px;
+    border-radius: 50%;
+    object-fit: cover;
+    background: var(--color-primary-tint);
+    color: var(--color-primary);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-weight: 700;
+    font-size: var(--font-size-base);
+}
+
+.user-name-meta b {
+    font-size: var(--font-size-base);
+    display: block;
+}
+
+.user-name-meta small {
+    color: var(--color-text-soft);
+    font-size: var(--font-size-xs);
+}
+
+/* Grid thông tin chi tiết */
+.detail-prop-grid {
+    display: grid;
+    grid-template-columns: repeat(2, 1fr);
+    gap: var(--space-3);
+    margin-bottom: var(--space-3);
+}
+
+.detail-prop-item {
+    display: flex;
+    flex-direction: column;
+    gap: 2px;
+}
+
+.detail-prop-label {
+    font-size: 11px;
+    text-transform: uppercase;
+    letter-spacing: 0.05em;
+    color: var(--color-text-soft);
+    font-weight: 600;
+}
+
+.detail-prop-val {
+    font-size: var(--font-size-sm);
+    font-weight: 600;
+    color: var(--color-text);
+}
+
+.reason-box-clamp {
+    padding: var(--space-3);
+    background: var(--color-bg);
+    border: 1px solid var(--color-border);
+    border-radius: var(--radius-md);
+    margin-top: var(--space-2);
+}
+
+.reason-clamp-text {
+    font-size: var(--font-size-sm);
+    line-height: 1.5;
+    margin: 0;
+    display: -webkit-box;
+    -webkit-line-clamp: 3;
+    -webkit-box-orient: vertical;
+    overflow: hidden;
+}
+
+.reason-clamp-text.expanded {
+    -webkit-line-clamp: unset;
+    display: block;
+}
+
+.btn-toggle-reason {
+    background: none;
+    border: none;
+    color: var(--color-primary);
+    font-size: 11px;
+    font-weight: 600;
+    cursor: pointer;
+    padding: 4px 0 0;
+}
+
+/* Review Checks (Kiểm tra điều kiện) */
+.review-check-list {
+    display: flex;
+    flex-direction: column;
+    gap: var(--space-2);
+}
+
+.review-check-item {
+    display: flex;
+    align-items: flex-start;
+    gap: var(--space-2);
+    padding: var(--space-2) var(--space-3);
+    border-radius: var(--radius-md);
+    border: 1px solid var(--color-border);
+    background: var(--color-bg);
+}
+
+.review-check-item.pass {
+    border-left: var(--space-1) solid var(--color-success);
+}
+
+.review-check-item.fail {
+    border-left: var(--space-1) solid var(--color-danger);
+    background: var(--color-danger-tint);
+}
+
+.check-icon-badge {
+    width: 24px;
+    height: 24px;
+    border-radius: 50%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 12px;
+    flex-shrink: 0;
+    margin-top: 1px;
+}
+
+.review-check-item.pass .check-icon-badge {
+    background: var(--color-success-tint);
+    color: var(--color-success-ink);
+}
+
+.review-check-item.fail .check-icon-badge {
+    background: var(--color-danger-tint);
+    color: var(--color-danger-ink);
+}
+
+.check-meta-content {
+    flex: 1;
+}
+
+.check-meta-title {
+    font-size: var(--font-size-sm);
+    font-weight: 600;
+    color: var(--color-text);
+    margin-bottom: 2px;
+}
+
+.check-meta-msg {
+    font-size: var(--font-size-xs);
+    color: var(--color-text-soft);
+}
+
+.review-check-item.fail .check-meta-msg {
+    color: var(--color-danger-ink);
+    font-weight: var(--font-weight-medium);
+}
+
+/* Chi tiết phụ dùng details/summary của trình duyệt, không thêm JS đóng/mở. */
+.leave-review-page .review-col-left,
+.leave-review-page .review-col-right,
+.leave-review-page .check-meta-content {
+  min-width: 0;
+}
+
+.leave-review-page .review-extra {
+  margin-top: var(--space-2);
+  font-size: var(--font-size-xs);
+}
+
+.leave-review-page .review-extra summary,
+.leave-review-page .review-history > summary {
+  cursor: pointer;
+  color: var(--color-text-soft);
+}
+
+.leave-review-page .review-check-notes {
+  border-top: var(--border-width) solid var(--color-border);
+  padding-top: var(--space-2);
+}
+
+.leave-review-page .review-table-wrap {
+  overflow-x: auto;
+}
+
+.leave-review-page .review-staffing-table {
+  width: 100%;
+  border-collapse: collapse;
+  margin-top: var(--space-2);
+  font-size: var(--font-size-xs);
+}
+
+.leave-review-page .review-staffing-table th,
+.leave-review-page .review-staffing-table td {
+  padding: var(--space-2) var(--space-1);
+  border-bottom: var(--border-width) solid var(--color-border);
+  text-align: left;
+}
+
+.leave-review-page .review-history {
+  grid-column: 1 / -1;
+  padding: var(--space-3) var(--space-4);
+}
+
+.leave-review-page .review-history > summary {
+  display: list-item;
+  font-size: var(--font-size-sm);
+  color: var(--color-text);
+}
+
+.leave-review-page .review-history[open] .timeline-list {
+  margin-top: var(--space-4);
+}
+
+/* Timeline quy trình duyệt dọc */
+.timeline-list {
+    position: relative;
+    padding-left: 28px;
+    margin: var(--space-2) 0 0;
+}
+
+.timeline-track-line {
+    position: absolute;
+    left: 10px;
+    top: 10px;
+    bottom: 10px;
+    width: 2px;
+    background: var(--color-border);
+}
+
+.timeline-step {
+    position: relative;
+    margin-bottom: var(--space-4);
+}
+
+.timeline-step:last-child {
+    margin-bottom: 0;
+}
+
+.timeline-dot {
+    position: absolute;
+    left: -28px;
+    top: 2px;
+    width: 22px;
+    height: 22px;
+    border-radius: 50%;
+    background: var(--color-surface);
+    border: 2px solid var(--color-border);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 10px;
+    z-index: 1;
+}
+
+.timeline-step.DONE .timeline-dot {
+    border-color: #10b981;
+    color: #10b981;
+    background: #ecfdf5;
+}
+
+.timeline-step.CURRENT .timeline-dot {
+    border-color: #f59e0b;
+    color: #f59e0b;
+    background: #fffbeb;
+}
+
+.timeline-step.FAILED .timeline-dot {
+    border-color: #ef4444;
+    color: #ef4444;
+    background: #fef2f2;
+}
+
+.timeline-step-title {
+    font-size: var(--font-size-sm);
+    font-weight: 600;
+    color: var(--color-text);
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+}
+
+.timeline-step-time {
+    font-size: 11px;
+    color: var(--color-text-soft);
+    font-weight: normal;
+}
+
+.timeline-step-actor {
+    font-size: var(--font-size-xs);
+    color: var(--color-text);
+    font-weight: 500;
+    margin-top: 2px;
+}
+
+.timeline-step-sub {
+    font-size: var(--font-size-xs);
+    color: var(--color-text-soft);
+    margin-top: 2px;
+}
+
+/* Modals */
+.gms-modal {
+    display: none;
+    position: fixed;
+    top: 0;
+    left: 0;
+    right: 0;
+    bottom: 0;
+    z-index: 1000;
+    background: rgba(0, 0, 0, 0.45);
+    align-items: center;
+    justify-content: center;
+    backdrop-filter: blur(2px);
+}
+
+.gms-modal.show {
+    display: flex;
+}
+
+.gms-modal-dialog {
+    background: var(--color-surface);
+    border: 1px solid var(--color-border);
+    border-radius: var(--radius-lg);
+    width: 100%;
+    max-width: 460px;
+    box-shadow: 0 20px 25px -5px rgba(0, 0, 0, 0.1), 0 10px 10px -5px rgba(0, 0, 0, 0.04);
+    animation: modalSlideIn 0.2s ease-out;
+}
+
+@keyframes modalSlideIn {
+    from {
+        opacity: 0;
+        transform: translateY(-12px);
+    }
+    to {
+        opacity: 1;
+        transform: translateY(0);
+    }
+}
+
+.gms-modal-header {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    padding: var(--space-4) var(--space-5);
+    border-bottom: 1px solid var(--color-border);
+}
+
+.gms-modal-title {
+    font-size: var(--font-size-base);
+    font-weight: 600;
+    margin: 0;
+}
+
+.gms-modal-close {
+    background: none;
+    border: none;
+    font-size: var(--font-size-lg);
+    color: var(--color-text-soft);
+    cursor: pointer;
+}
+
+.gms-modal-body {
+    padding: var(--space-4) var(--space-5);
+}
+
+.gms-modal-footer {
+    display: flex;
+    align-items: center;
+    justify-content: flex-end;
+    gap: var(--space-2);
+    padding: var(--space-3) var(--space-5);
+    border-top: 1px solid var(--color-border);
+    background: var(--color-bg);
+    border-bottom-left-radius: var(--radius-lg);
+    border-bottom-right-radius: var(--radius-lg);
+}
+
+
+/* Gợi ý và danh sách buổi chặn duyệt trên hai màn BF-05. */
+.leave-help {
+  color: var(--color-text-soft);
+  font-size: var(--font-size-xs);
+  margin: var(--space-3) var(--space-4);
+}
+
+.leave-conflicts {
+  margin: var(--space-3) 0;
+  padding-left: var(--space-5);
+  color: var(--color-danger-ink);
 }

@@ -11,6 +11,7 @@ import com.gms.dto.DependentCustomerRow;
 import com.gms.dto.DependentCustomerView;
 import com.gms.dto.ServiceResult;
 import com.gms.entity.Account;
+import com.gms.entity.Customer;
 import com.gms.entity.Employee;
 import com.gms.entity.Person;
 import com.gms.listener.SessionRegistryListener;
@@ -45,12 +46,17 @@ public class AccountSettingsService {
         private final SystemConfigService systemConfigService;
 
         public AccountSettingsService() {
-                accountDAO = new AccountDAO();
-                customerDAO = new CustomerDAO();
-                personDAO = new PersonDAO();
-                employeeDAO = new EmployeeDAO();
-                auditLogService = new AuditLogService();
-                systemConfigService = new SystemConfigService();
+                this(new AccountDAO(), new CustomerDAO(), new PersonDAO(), new EmployeeDAO(), new AuditLogService(), new SystemConfigService());
+        }
+
+        AccountSettingsService(AccountDAO accountDAO, CustomerDAO customerDAO, PersonDAO personDAO,
+                               EmployeeDAO employeeDAO, AuditLogService auditLogService, SystemConfigService systemConfigService) {
+                this.accountDAO = accountDAO;
+                this.customerDAO = customerDAO;
+                this.personDAO = personDAO;
+                this.employeeDAO = employeeDAO;
+                this.auditLogService = auditLogService;
+                this.systemConfigService = systemConfigService;
         }
 
         /**
@@ -87,10 +93,19 @@ public class AccountSettingsService {
                         }
 
                         Employee employee = null;
+                        Customer customer = null;
 
                         boolean isCustomer = sessionRole == Role.CUSTOMER;
 
-                        if (!isCustomer) {
+                        if (isCustomer) {
+                                // Chỉ tìm theo PersonId của Account, không theo số điện thoại giám hộ.
+                                // DAO ưu tiên hồ sơ chưa Inactive; schema chỉ cho một hồ sơ còn hiệu lực.
+                                customer = customerDAO.findByPersonId(person.getPersonId());
+                                if (customer != null && customer.getDeletedAt() != null) {
+                                        // Không đưa hồ sơ cũ đã xóa lên Profile khi không còn hồ sơ hiện hành.
+                                        customer = null;
+                                }
+                        } else {
                                 employee = employeeDAO.findByPersonId(
                                         person.getPersonId());
                         }
@@ -118,7 +133,15 @@ public class AccountSettingsService {
                                 sessionRole,
                                 employeeCode,
                                 hireDate,
-                                employmentStatus);
+                                employmentStatus,
+                                employee == null ? null : employee.getPosition(),
+                                employee == null || sessionRole != Role.PT ? null : employee.getSpecialty(),
+                                employee == null || sessionRole != Role.PT ? null : employee.getYearsOfExperience(),
+                                employee == null || sessionRole != Role.PT ? null : employee.getCommissionRate(),
+                                customer == null ? null : customer.getCustomerCode(),
+                                customer == null ? null : customer.getCustomerType(),
+                                customer == null ? null : customer.getStatus(),
+                                customer == null ? null : customer.getJoinedAt());
 
                         return ServiceResult.ok(view);
 
@@ -306,8 +329,8 @@ public class AccountSettingsService {
 
                 try {
                         Account account = accountDAO.findById(accountId);
-
                         if (account == null) {
+                                //Dừng hàm đổi mật khẩu và trả về kết quả thất bại, kèm thông báo không tìm thấy tài khoản.
                                 return ServiceResult.fail(
                                         String.format(Messages.MSG08_NOT_FOUND, "tài khoản"));
                         }
@@ -379,7 +402,7 @@ public class AccountSettingsService {
                         // B8: Cập nhật mật khẩu và ghi AuditLog
                         // trong cùng một transaction
                         try (Connection conn = DBContext.getConnection()) {
-
+                        //Tắt chế độ tự động chốt thay đổi vào database
                                 conn.setAutoCommit(false);
 
                                 try {
@@ -545,6 +568,7 @@ public class AccountSettingsService {
                         String avatarPath = "/uploads/avatar/"
                                 + fileName;
 
+                        String oldAvatar = person.getAvatar();
                         boolean isUpdated = personDAO.updateAvatar(
                                 person.getPersonId(),
                                 avatarPath);
@@ -559,8 +583,18 @@ public class AccountSettingsService {
                         }
 
                         deleteOldAvatarFile(
-                                person.getAvatar(),
+                                oldAvatar,
                                 uploadDirectory);
+
+                        auditLogService.log(
+                                accountId,
+                                "Cập nhật ảnh đại diện cá nhân",
+                                "Person",
+                                person.getPersonId(),
+                                "Avatar",
+                                oldAvatar,
+                                avatarPath,
+                                null);
 
                         return ServiceResult.ok(null);
 
@@ -582,6 +616,62 @@ public class AccountSettingsService {
 
                         return ServiceResult.fail(
                                 Messages.MSG04_SYSTEM_BUSY);
+                }
+        }
+
+        /**
+         * Xóa ảnh đại diện của tài khoản hiện tại, đưa Persons.Avatar về null và xóa file cũ an toàn.
+         *
+         * @param accountId       id tài khoản hiện tại
+         * @param uploadDirectory thư mục chứa avatar vật lý
+         * @return kết quả xóa
+         */
+        public ServiceResult<Void> removeAvatar(
+                int accountId,
+                Path uploadDirectory) {
+
+                try {
+                        Account account = accountDAO.findById(accountId);
+                        if (account == null) {
+                                return ServiceResult.fail(
+                                        String.format(Messages.MSG08_NOT_FOUND, "tài khoản"));
+                        }
+
+                        Person person = personDAO.findById(account.getPersonId());
+                        if (person == null) {
+                                return ServiceResult.fail(
+                                        String.format(Messages.MSG08_NOT_FOUND, "hồ sơ"));
+                        }
+
+                        String currentAvatar = person.getAvatar();
+                        if (ValidationUtil.isNullOrEmpty(currentAvatar)) {
+                                return ServiceResult.fail("Tài khoản chưa có ảnh đại diện.");
+                        }
+
+                        boolean isUpdated = personDAO.updateAvatar(person.getPersonId(), null);
+                        if (!isUpdated) {
+                                return ServiceResult.fail(Messages.MSG04_SYSTEM_BUSY);
+                        }
+
+                        if (uploadDirectory != null) {
+                                deleteOldAvatarFile(currentAvatar, uploadDirectory);
+                        }
+
+                        auditLogService.log(
+                                accountId,
+                                "Xóa ảnh đại diện cá nhân",
+                                "Person",
+                                person.getPersonId(),
+                                "Avatar",
+                                currentAvatar,
+                                null,
+                                null);
+
+                        return ServiceResult.ok(null, Messages.MSG58_AVATAR_REMOVED);
+
+                } catch (SQLException e) {
+                        e.printStackTrace();
+                        return ServiceResult.fail(Messages.MSG04_SYSTEM_BUSY);
                 }
         }
 

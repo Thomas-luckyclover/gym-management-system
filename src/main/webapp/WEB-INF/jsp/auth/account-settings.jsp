@@ -97,18 +97,26 @@
                             <c:when test="${not empty accountSettings.avatar}">
 
                                 <img
+                                    id="topbarAvatarImg"
                                     class="avatar"
                                     src="${pageContext.request.contextPath}${accountSettings.avatar}"
                                     alt="Ảnh đại diện"
+                                    data-original-src="${pageContext.request.contextPath}${accountSettings.avatar}"
+                                    onerror="this.classList.add('is-hidden'); this.style.display='none'; var fb = document.getElementById('topbarAvatarFallback'); if (fb) { fb.classList.remove('is-hidden'); fb.style.display=''; }"
                                 >
+                                <span id="topbarAvatarFallback" class="avatar is-hidden" aria-hidden="true" style="display: none;">
+                                    <c:out
+                                        value="${accountSettings.initials}"
+                                    />
+                                </span>
 
                             </c:when>
 
                             <c:otherwise>
 
-                                <span class="avatar">
+                                <span id="topbarAvatarFallback" class="avatar">
                                     <c:out
-                                        value="${accountSettings.fullName.substring(0, 1)}"
+                                        value="${accountSettings.initials}"
                                     />
                                 </span>
 
@@ -300,7 +308,7 @@
 
 
 <script
-    src="${pageContext.request.contextPath}/js/pages/auth/account-settings.js?v=2"
+    src="${pageContext.request.contextPath}/js/pages/auth/account-settings.js?v=3"
     defer>
 </script>
 

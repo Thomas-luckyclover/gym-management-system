@@ -139,6 +139,8 @@ public final class Messages {
     public static final String MSG57_PHONE_CHANGED = "Đã cập nhật số điện thoại.";
     // EN: Profile picture updated.
     public static final String MSG58_AVATAR_CHANGED = "Đã cập nhật ảnh đại diện.";
+    // EN: Profile picture removed.
+    public static final String MSG58_AVATAR_REMOVED = "Đã xóa ảnh đại diện.";
     // EN: All other devices have been signed out.
     public static final String MSG59_OTHER_DEVICES_SIGNED_OUT = "Đã đăng xuất khỏi tất cả thiết bị khác.";
     // EN: This information is updated by the front desk. Please bring your ID to the counter.

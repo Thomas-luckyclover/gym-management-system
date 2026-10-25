@@ -5002,45 +5002,192 @@ SET IDENTITY_INSERT SessionMoveLogs OFF;
    LeaveRequests — 7 dòng.
    ============================================================================ */
 SET IDENTITY_INSERT LeaveRequests ON;
-INSERT INTO LeaveRequests (LeaveRequestId, EmployeeId, ReviewedByEmployeeId, LeaveType, LeaveDate, ShiftType, Reason, Status, RejectReason, SubmittedAt, ReviewedAt, ReminderSentAt) VALUES
- (1, 5, 2, 'Annual', '2026-09-19', 'Morning', N'Về quê giỗ ông', 'Approved', NULL, '2026-09-17 10:00:00', '2026-09-17 15:30:00', NULL),
- (2, 7, 2, 'Unpaid', '2026-09-19', 'Afternoon', N'Có việc cá nhân', 'Rejected', N'Ca chiều chỉ còn 2 PT, duyệt sẽ thiếu người (CBR-88)', '2026-09-18 09:00:00', '2026-09-18 17:00:00', NULL),
- (3, 4, NULL, 'Annual', '2026-09-16', 'Morning', N'Đưa con đi khám', 'Rejected', N'Quá hạn duyệt', '2026-09-15 14:00:00', '2026-09-15 20:00:00', '2026-09-15 19:00:00'),
- (4, 3, 2, 'Annual', '2026-10-14', 'Afternoon', N'Đi đám cưới bạn', 'Approved', NULL, '2026-10-01 09:30:00', '2026-10-01 11:00:00', NULL),
- (5, 6, NULL, 'Sick', '2026-10-10', 'FullDay', N'Lịch tái khám định kỳ', 'Pending', NULL, '2026-10-02 08:00:00', NULL, NULL),
- (6, 13, NULL, 'Annual', '2026-10-12', 'Morning', N'Thi chứng chỉ huấn luyện', 'Pending', NULL, '2026-10-02 14:00:00', NULL, NULL),
- (7, 9, 2, 'Sick', '2026-09-24', 'FullDay', N'Sốt cao, có giấy khám', 'Approved', NULL, '2026-09-23 11:00:00', '2026-09-23 16:00:00', NULL);
+INSERT INTO LeaveRequests (LeaveRequestId, EmployeeId, ReviewedByEmployeeId, AssignedToEmployeeId, LeaveType, FromDate, ToDate, ShiftType, Days, Reason, Status, RejectReason, SubmittedAt, ReviewedAt) VALUES
+ (1, 5, 2, 2, 'Annual', '2026-10-18', '2026-10-18', 'Morning', 0.5, N'Về quê có việc gia đình', 'Approved', NULL, '2026-10-16 09:00:00', '2026-10-17 15:30:00'),
+ (2, 4, 2, 2, 'Sick', '2026-10-19', '2026-10-19', 'Afternoon', 0.5, N'Nghỉ khám sức khỏe ca chiều', 'Rejected', N'Ca chiều thiếu lễ tân trực quầy, vui lòng đổi ca khác', '2026-10-18 08:30:00', '2026-10-18 16:00:00'),
+ (3, 6, NULL, 2, 'Annual', '2026-10-22', '2026-10-22', 'Morning', 0.5, N'Tham gia hội thảo chuyên môn fitness buổi sáng', 'Pending', NULL, '2026-10-20 08:30:00', NULL),
+ (4, 3, NULL, 2, 'Annual', '2026-10-23', '2026-10-24', 'FullDay', 2.0, N'Nghỉ phép thường niên cùng gia đình 2 ngày', 'Pending', NULL, '2026-10-20 09:15:00', NULL),
+ (5, 7, NULL, 2, 'Sick', '2026-10-24', '2026-10-24', 'Morning', 0.5, N'Khám chấn thương cổ tay tại bệnh viện thể thao', 'Pending', NULL, '2026-10-20 10:00:00', NULL),
+ (6, 9, NULL, NULL, 'Unpaid', '2026-10-25', '2026-10-25', 'Afternoon', 0.5, N'Xin nghỉ giải quyết thủ tục giấy tờ hành chính cá nhân', 'Pending', NULL, '2026-10-20 11:30:00', NULL),
+ (7, 8, NULL, 2, 'Annual', '2026-10-26', '2026-10-26', 'FullDay', 1.0, N'Nghỉ giải quyết việc gia đình đột xuất', 'Pending', NULL, '2026-10-20 13:45:00', NULL);
 SET IDENTITY_INSERT LeaveRequests OFF;
 
+INSERT INTO LeaveRequestTransfers (LeaveRequestId, FromEmployeeId, ToEmployeeId, Note, CreatedAt) VALUES
+ (5, 1, 2, N'Chuyển Quản lý Việt duyệt đơn phép bộ phận PT', '2026-10-20 10:15:00');
+
 /* ============================================================================
-   Facilities — 10 dòng.
+   Facilities — 10 dòng danh mục máy.
    ============================================================================ */
 SET IDENTITY_INSERT Facilities ON;
-INSERT INTO Facilities (FacilityId, FacilityName, Category, Location, Quantity, Status) VALUES
- (1, N'Máy chạy bộ Technogym', 'Cardio', N'Khu cardio tầng 1', 8, 'Available'),
- (2, N'Xe đạp tập', 'Cardio', N'Khu cardio tầng 1', 6, 'Available'),
- (3, N'Giàn tạ đa năng', 'Machines', N'Khu tạ tầng 2', 3, 'Available'),
- (4, N'Bộ tạ đơn 2–40kg', 'FreeWeights', N'Khu tạ tầng 2', 20, 'Available'),
- (5, N'Máy ép ngực', 'Machines', N'Khu tạ tầng 2', 2, 'UnderMaintenance'),
- (6, N'Ghế đẩy vai', 'Machines', N'Khu tạ tầng 2', 2, 'Available'),
- (7, N'Tủ khóa cá nhân', 'Amenities', N'Phòng thay đồ', 60, 'Available'),
- (8, N'Máy leo cầu thang cũ', 'Cardio', 'Kho', 1, 'Retired'),
- (9, N'Máy kéo cáp', 'Machines', N'Khu tạ tầng 2', 2, 'Available'),
- (10, N'Thảm yoga', 'Amenities', N'Phòng tập nhóm', 30, 'Available');
+INSERT INTO Facilities (FacilityId, FacilityName, Category, Location) VALUES
+ (1, N'Máy chạy bộ Technogym', 'Cardio', N'Khu cardio tầng 1'),
+ (2, N'Xe đạp tập', 'Cardio', N'Khu cardio tầng 1'),
+ (3, N'Giàn tạ đa năng', 'Machines', N'Khu tạ tầng 2'),
+ (4, N'Bộ tạ đơn 2–40kg', 'FreeWeights', N'Khu tạ tầng 2'),
+ (5, N'Máy ép ngực', 'Machines', N'Khu tạ tầng 2'),
+ (6, N'Ghế đẩy vai', 'Machines', N'Khu tạ tầng 2'),
+ (7, N'Tủ khóa cá nhân', 'Amenities', N'Phòng thay đồ'),
+ (8, N'Máy leo cầu thang cũ', 'Cardio', 'Kho'),
+ (9, N'Máy kéo cáp', 'Machines', N'Khu tạ tầng 2'),
+ (10, N'Thảm yoga', 'Amenities', N'Phòng tập nhóm');
 SET IDENTITY_INSERT Facilities OFF;
 
 /* ============================================================================
-   MaintenanceRequests — 7 dòng.
+   EquipmentItems — 134 cá thể máy vật lý.
+   ============================================================================ */
+SET IDENTITY_INSERT EquipmentItems ON;
+INSERT INTO EquipmentItems (EquipmentItemId, FacilityId, ItemCode, Status) VALUES
+ (1, 1, 'TM-001', 'Available'),
+ (2, 1, 'TM-002', 'Available'),
+ (3, 1, 'TM-003', 'Available'),
+ (4, 1, 'TM-004', 'Available'),
+ (5, 1, 'TM-005', 'Broken'),
+ (6, 1, 'TM-006', 'Available'),
+ (7, 1, 'TM-007', 'Available'),
+ (8, 1, 'TM-008', 'Available'),
+ (9, 2, 'EB-001', 'Available'),
+ (10, 2, 'EB-002', 'Broken'),
+ (11, 2, 'EB-003', 'Available'),
+ (12, 2, 'EB-004', 'Available'),
+ (13, 2, 'EB-005', 'Available'),
+ (14, 2, 'EB-006', 'Available'),
+ (15, 3, 'MS-001', 'Available'),
+ (16, 3, 'MS-002', 'Broken'),
+ (17, 3, 'MS-003', 'Available'),
+ (18, 4, 'DB-001', 'Available'),
+ (19, 4, 'DB-002', 'Available'),
+ (20, 4, 'DB-003', 'Available'),
+ (21, 4, 'DB-004', 'Available'),
+ (22, 4, 'DB-005', 'Available'),
+ (23, 4, 'DB-006', 'Available'),
+ (24, 4, 'DB-007', 'Available'),
+ (25, 4, 'DB-008', 'Available'),
+ (26, 4, 'DB-009', 'Available'),
+ (27, 4, 'DB-010', 'Available'),
+ (28, 4, 'DB-011', 'Available'),
+ (29, 4, 'DB-012', 'Available'),
+ (30, 4, 'DB-013', 'Available'),
+ (31, 4, 'DB-014', 'Available'),
+ (32, 4, 'DB-015', 'Available'),
+ (33, 4, 'DB-016', 'Available'),
+ (34, 4, 'DB-017', 'Available'),
+ (35, 4, 'DB-018', 'Available'),
+ (36, 4, 'DB-019', 'Available'),
+ (37, 4, 'DB-020', 'Available'),
+ (38, 5, 'CP-001', 'UnderMaintenance'),
+ (39, 5, 'CP-002', 'UnderMaintenance'),
+ (40, 6, 'SP-001', 'Available'),
+ (41, 6, 'SP-002', 'Available'),
+ (42, 7, 'LK-001', 'Available'),
+ (43, 7, 'LK-002', 'Available'),
+ (44, 7, 'LK-003', 'Available'),
+ (45, 7, 'LK-004', 'Available'),
+ (46, 7, 'LK-005', 'Available'),
+ (47, 7, 'LK-006', 'Available'),
+ (48, 7, 'LK-007', 'Available'),
+ (49, 7, 'LK-008', 'Available'),
+ (50, 7, 'LK-009', 'Available'),
+ (51, 7, 'LK-010', 'Available'),
+ (52, 7, 'LK-011', 'Available'),
+ (53, 7, 'LK-012', 'Broken'),
+ (54, 7, 'LK-013', 'Available'),
+ (55, 7, 'LK-014', 'Available'),
+ (56, 7, 'LK-015', 'Available'),
+ (57, 7, 'LK-016', 'Available'),
+ (58, 7, 'LK-017', 'Available'),
+ (59, 7, 'LK-018', 'Available'),
+ (60, 7, 'LK-019', 'Available'),
+ (61, 7, 'LK-020', 'Available'),
+ (62, 7, 'LK-021', 'Available'),
+ (63, 7, 'LK-022', 'Available'),
+ (64, 7, 'LK-023', 'Available'),
+ (65, 7, 'LK-024', 'Available'),
+ (66, 7, 'LK-025', 'Available'),
+ (67, 7, 'LK-026', 'Available'),
+ (68, 7, 'LK-027', 'Available'),
+ (69, 7, 'LK-028', 'Available'),
+ (70, 7, 'LK-029', 'Available'),
+ (71, 7, 'LK-030', 'Available'),
+ (72, 7, 'LK-031', 'Available'),
+ (73, 7, 'LK-032', 'Available'),
+ (74, 7, 'LK-033', 'Available'),
+ (75, 7, 'LK-034', 'Available'),
+ (76, 7, 'LK-035', 'Available'),
+ (77, 7, 'LK-036', 'Available'),
+ (78, 7, 'LK-037', 'Available'),
+ (79, 7, 'LK-038', 'Available'),
+ (80, 7, 'LK-039', 'Available'),
+ (81, 7, 'LK-040', 'Available'),
+ (82, 7, 'LK-041', 'Available'),
+ (83, 7, 'LK-042', 'Available'),
+ (84, 7, 'LK-043', 'Available'),
+ (85, 7, 'LK-044', 'Available'),
+ (86, 7, 'LK-045', 'Available'),
+ (87, 7, 'LK-046', 'Available'),
+ (88, 7, 'LK-047', 'Available'),
+ (89, 7, 'LK-048', 'Available'),
+ (90, 7, 'LK-049', 'Available'),
+ (91, 7, 'LK-050', 'Available'),
+ (92, 7, 'LK-051', 'Available'),
+ (93, 7, 'LK-052', 'Available'),
+ (94, 7, 'LK-053', 'Available'),
+ (95, 7, 'LK-054', 'Available'),
+ (96, 7, 'LK-055', 'Available'),
+ (97, 7, 'LK-056', 'Available'),
+ (98, 7, 'LK-057', 'Available'),
+ (99, 7, 'LK-058', 'Available'),
+ (100, 7, 'LK-059', 'Available'),
+ (101, 7, 'LK-060', 'Available'),
+ (102, 8, 'SM-001', 'Retired'),
+ (103, 9, 'CC-001', 'Available'),
+ (104, 9, 'CC-002', 'Available'),
+ (105, 10, 'YM-001', 'Available'),
+ (106, 10, 'YM-002', 'Available'),
+ (107, 10, 'YM-003', 'Available'),
+ (108, 10, 'YM-004', 'Available'),
+ (109, 10, 'YM-005', 'Available'),
+ (110, 10, 'YM-006', 'Available'),
+ (111, 10, 'YM-007', 'Available'),
+ (112, 10, 'YM-008', 'Available'),
+ (113, 10, 'YM-009', 'Available'),
+ (114, 10, 'YM-010', 'Available'),
+ (115, 10, 'YM-011', 'Available'),
+ (116, 10, 'YM-012', 'Available'),
+ (117, 10, 'YM-013', 'Available'),
+ (118, 10, 'YM-014', 'Available'),
+ (119, 10, 'YM-015', 'Available'),
+ (120, 10, 'YM-016', 'Available'),
+ (121, 10, 'YM-017', 'Available'),
+ (122, 10, 'YM-018', 'Available'),
+ (123, 10, 'YM-019', 'Available'),
+ (124, 10, 'YM-020', 'Available'),
+ (125, 10, 'YM-021', 'Available'),
+ (126, 10, 'YM-022', 'Available'),
+ (127, 10, 'YM-023', 'Available'),
+ (128, 10, 'YM-024', 'Available'),
+ (129, 10, 'YM-025', 'Available'),
+ (130, 10, 'YM-026', 'Available'),
+ (131, 10, 'YM-027', 'Available'),
+ (132, 10, 'YM-028', 'Available'),
+ (133, 10, 'YM-029', 'Available'),
+ (134, 10, 'YM-030', 'Available');
+SET IDENTITY_INSERT EquipmentItems OFF;
+
+/* ============================================================================
+   MaintenanceRequests — 10 dòng gắn đích danh EquipmentItemId.
    ============================================================================ */
 SET IDENTITY_INSERT MaintenanceRequests ON;
-INSERT INTO MaintenanceRequests (MaintenanceRequestId, RequestCode, FacilityId, ReportedByEmployeeId, ReviewedByEmployeeId, ClosedByEmployeeId, Priority, WarningTagPlaced, Description, Status, SetUnderMaintenance, RejectReason, AcceptanceNote, ReportedAt, ReviewedAt, ClosedAt) VALUES
- (1, 'BT-0001', 5, 3, 2, NULL, 'Urgent', 1, N'Máy ép ngực kêu to khi đẩy, nghi hỏng bạc đạn', 'InProgress', 1, NULL, NULL, '2026-09-20 09:00:00', '2026-09-20 11:00:00', NULL), -- thiết bị chuyển Under maintenance (CBR-101)
- (2, 'BT-0002', 1, 4, 2, 3, 'Normal', 1, N'Máy chạy số 3 bị giật khi tăng tốc', 'Closed', 1, NULL, N'Đã thay dây curoa, chạy thử 30 phút ổn định', '2026-09-10 08:00:00', '2026-09-10 10:00:00', '2026-09-14 16:00:00'),
- (3, 'BT-0003', 4, 3, 2, NULL, 'Low', 0, N'Xin mua thêm tạ đơn 45kg cho khu tạ', 'Rejected', NULL, N'Ngoài phạm vi bảo trì, chuyển sang kế hoạch mua sắm quý sau', NULL, '2026-09-12 14:00:00', '2026-09-12 17:30:00', NULL),
- (4, 'BT-0004', 2, 3, NULL, NULL, 'Normal', 1, N'Xe đạp số 2 kẹt bàn đạp, không xoay được', 'Open', NULL, NULL, NULL, '2026-10-02 08:30:00', NULL, NULL),
- (5, 'BT-0005', 7, 4, NULL, NULL, 'Low', 0, N'Tủ khóa số 12 hỏng chốt, không khóa được', 'Open', NULL, NULL, NULL, '2026-10-01 20:00:00', NULL, NULL),
- (6, 'BT-0006', 9, 9, 2, NULL, 'Normal', 1, N'Dây cáp máy kéo bị sờn ở đầu nối', 'InProgress', 0, NULL, NULL, '2026-09-29 19:00:00', '2026-09-30 09:00:00', NULL), -- duyệt nhưng KHÔNG chuyển Under maintenance (CBR-101 bỏ tick)
- (7, 'BT-0007', 10, 11, 2, 11, 'Low', 0, N'Thảm yoga số 4 bị rách góc', 'Closed', 0, NULL, N'Đã thay thảm mới', '2026-09-05 18:00:00', '2026-09-06 09:00:00', '2026-09-08 15:00:00');
+INSERT INTO MaintenanceRequests (MaintenanceRequestId, RequestCode, EquipmentItemId, ReportedByEmployeeId, ReviewedByEmployeeId, ClosedByEmployeeId, Priority, IncidentType, DetectedBy, WarningTagPlaced, Description, Status, SetUnderMaintenance, RejectReason, AcceptanceNote, ReportedAt, ReviewedAt, ClosedAt) VALUES
+ (1, 'BT-0001', 38, 3, 2, NULL, 'Urgent', 'StrangeNoise', 'Receptionist', 1, N'Máy ép ngực kêu to khi đẩy, nghi hỏng bạc đạn', 'InProgress', 1, NULL, NULL, '2026-09-20 09:00:00', '2026-09-20 11:00:00', NULL),
+ (2, 'BT-0002', 3, 4, 2, 3, 'Normal', 'NotWorking', 'Customer', 1, N'Máy chạy số 3 bị giật khi tăng tốc', 'Closed', 1, NULL, N'Đã thay dây curoa, chạy thử 30 phút ổn định', '2026-09-10 08:00:00', '2026-09-10 10:00:00', '2026-09-14 16:00:00'),
+ (3, 'BT-0003', 27, 3, 2, NULL, 'Low', 'BrokenOrWorn', 'PT', 0, N'Tạ đơn 10kg bị lỏng ốc siết, nguy cơ rơi đĩa tạ khi tập', 'Rejected', NULL, N'Đã chuyển bộ phận bảo dưỡng vặn chặt ốc, không cần thay mới', NULL, '2026-09-12 14:00:00', '2026-09-12 17:30:00', NULL),
+ (4, 'BT-0004', 10, 3, NULL, NULL, 'Normal', 'NotWorking', 'Customer', 1, N'Xe đạp số 2 kẹt bàn đạp, không xoay được', 'Open', NULL, NULL, NULL, '2026-10-02 08:30:00', NULL, NULL),
+ (5, 'BT-0005', 53, 4, NULL, NULL, 'Low', 'BrokenOrWorn', 'Customer', 0, N'Tủ khóa số 12 hỏng chốt, không khóa được', 'Open', NULL, NULL, NULL, '2026-10-01 20:00:00', NULL, NULL),
+ (6, 'BT-0006', 103, 9, 2, NULL, 'Normal', 'SafetyHazard', 'Technician', 1, N'Dây cáp máy kéo bị sờn ở đầu nối', 'InProgress', 0, NULL, NULL, '2026-09-29 19:00:00', '2026-09-30 09:00:00', NULL),
+ (7, 'BT-0007', 108, 11, 2, 11, 'Low', 'BrokenOrWorn', 'PT', 0, N'Thảm yoga số 4 bị rách góc', 'Closed', 0, NULL, N'Đã thay thảm mới', '2026-09-05 18:00:00', '2026-09-06 09:00:00', '2026-09-08 15:00:00'),
+ (8, 'BT-0008', 5, 3, NULL, NULL, 'Normal', 'StrangeNoise', 'Customer', 1, N'Băng tải máy chạy số 5 phát tiếng rít chói tai khi chạy ở tốc độ cao', 'Open', NULL, NULL, NULL, '2026-10-03 09:15:00', NULL, NULL),
+ (9, 'BT-0009', 16, 4, NULL, NULL, 'Urgent', 'BrokenOrWorn', 'PT', 1, N'Ròng rọc giàn tạ số 2 bị nứt và kẹt dây cáp khi nâng tạ nặng', 'Open', NULL, NULL, NULL, '2026-10-03 14:00:00', NULL, NULL),
+ (10, 'BT-0010', 39, 3, 2, NULL, 'Normal', 'Hygiene', 'Receptionist', 1, N'Đệm ghế máy ép ngực số 2 bị bong tróc da, cần bọc lại da mới', 'InProgress', 1, NULL, NULL, '2026-10-02 16:30:00', '2026-10-02 17:00:00', NULL);
 SET IDENTITY_INSERT MaintenanceRequests OFF;
 
 /* ============================================================================

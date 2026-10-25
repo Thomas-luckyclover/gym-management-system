@@ -7,8 +7,7 @@
 <head>
   <%@ include file="/WEB-INF/jsp/common/head.jspf" %>
   <title>Yêu cầu bảo trì · Super Gym Lễ tân</title>
-  <link rel="stylesheet" href="${pageContext.request.contextPath}/css/pages/auth/account-settings.css">
-  <link rel="stylesheet" href="${pageContext.request.contextPath}/css/pages/receptionist/maintenance-requests.css">
+  <link rel="stylesheet" href="${pageContext.request.contextPath}/css/pages/receptionist/maintenance-requests.css?v=20261023fix1">
   <link rel="stylesheet"
         href="${pageContext.request.contextPath}/css/pages/auth/notification-bell.css">
 
@@ -30,6 +29,11 @@
 
         <div class="top-right">
 
+          <a class="btn btn-outline"
+             href="${pageContext.request.contextPath}/receptionist/facilities">
+            ‹ Cơ sở vật chất / Báo hỏng mới
+          </a>
+
           <%@ include file="/WEB-INF/jsp/common/notification-bell.jspf" %>
 
           <a class="tb-user"
@@ -45,113 +49,59 @@
 
       <main class="content" id="main-content" tabindex="-1">
 
-        <%-- ===== Form gửi yêu cầu ===== --%>
-        <section class="panel maintenance-panel">
-          <div class="panel-head">
-            <div>
-              <h2>Gửi yêu cầu mới</h2>
-            </div>
-          </div>
+        <%-- ===== Thống kê trạng thái ===== --%>
+        <div class="maintenance-stats">
 
-          <c:if test="${not empty formMessage}">
-            <div class="alert-banner danger">
-              <c:out value="${formMessage}" />
-            </div>
-          </c:if>
+          <%-- Tất cả --%>
+          <c:url var="allStatusUrl"
+                 value="/receptionist/maintenance-requests">
+            <c:if test="${not empty keyword}">
+              <c:param name="keyword" value="${keyword}" />
+            </c:if>
+            <c:if test="${not empty priorityFilter}">
+              <c:param name="priority" value="${priorityFilter}" />
+            </c:if>
+            <c:if test="${not empty reportedDateFilter}">
+              <c:param name="reportedDate" value="${reportedDateFilter}" />
+            </c:if>
+          </c:url>
 
-          <form action="${pageContext.request.contextPath}/receptionist/maintenance-requests"
-                method="post"
-                data-validate>
+          <a href="${allStatusUrl}"
+             class="maintenance-stat ${empty statusFilter ? 'active' : ''}">
+            <span>Tất cả</span>
+            <strong><c:out value="${totalStatusCount}" default="0" /></strong>
+          </a>
 
-            <input type="hidden" name="action" value="create">
+          <%-- Theo từng trạng thái --%>
+          <c:forEach var="status" items="${statusOptions}">
+            <c:url var="statusUrl"
+                   value="/receptionist/maintenance-requests">
+              <c:param name="status" value="${status.dbValue}" />
+              <c:if test="${not empty keyword}">
+                <c:param name="keyword" value="${keyword}" />
+              </c:if>
+              <c:if test="${not empty priorityFilter}">
+                <c:param name="priority" value="${priorityFilter}" />
+              </c:if>
+              <c:if test="${not empty reportedDateFilter}">
+                <c:param name="reportedDate" value="${reportedDateFilter}" />
+              </c:if>
+            </c:url>
 
-            <div class="maintenance-form-grid">
-              <div class="field">
-                <label class="field-label" for="facilityId">Thiết bị *</label>
+            <a href="${statusUrl}"
+               class="maintenance-stat ${statusFilter == status.dbValue ? 'active' : ''}">
+              <span><c:out value="${status.displayName}" /></span>
+              <strong><c:out value="${statusCounts[status.dbValue]}" default="0" /></strong>
+            </a>
+          </c:forEach>
 
-                <select id="facilityId" name="facilityId" required>
-                  <option value="">Chọn thiết bị...</option>
-
-                  <c:forEach var="facility" items="${facilities}">
-                    <option value="${facility.facilityId}"
-                            <c:if test="${formFacilityId == facility.facilityId}">selected</c:if>>
-                      <c:out value="${facility.facilityName}" />
-                      <c:if test="${not empty facility.location}">
-                        · <c:out value="${facility.location}" />
-                      </c:if>
-                    </option>
-                  </c:forEach>
-                </select>
-
-                <div class="field-error">
-                  <c:out value="${errors.facilityId}" />
-                </div>
-              </div>
-
-              <div class="field">
-                <label class="field-label" for="priority">Mức ưu tiên *</label>
-
-                <select id="priority" name="priority" required>
-                  <c:forEach var="priority" items="${priorityOptions}">
-                    <option value="${priority.dbValue}"
-                            <c:if test="${formPriority == priority.dbValue
-                                    or (empty formPriority and priority.dbValue == 'Normal')}">
-                              selected
-                            </c:if>>
-                      <c:out value="${priority.displayName}" />
-                    </option>
-                  </c:forEach>
-                </select>
-
-                <div class="field-error">
-                  <c:out value="${errors.priority}" />
-                </div>
-              </div>
-            </div>
-
-            <div class="field">
-              <label class="field-label" for="description">
-                Mô tả hỏng hóc *
-              </label>
-
-              <textarea id="description"
-                        name="description"
-                        rows="4"
-                        minlength="10"
-                        maxlength="500"
-                        required
-                        placeholder="Hỏng ở đâu, xảy ra khi nào, đã xử lý tạm thế nào"><c:out value="${formDescription}" /></textarea>
-
-              <div class="field-error">
-                <c:out value="${errors.description}" />
-              </div>
-            </div>
-
-            <label class="maintenance-check">
-              <input type="checkbox"
-                     name="warningTagPlaced"
-                     value="true"
-                     <c:if test="${formWarningTagPlaced}">checked</c:if>>
-
-              <span>
-                <b>Đã dán cảnh báo, ngừng cho khách dùng</b>
-                <small>Chọn khi thiết bị không còn an toàn.</small>
-              </span>
-            </label>
-
-            <div class="btn-row">
-              <button class="btn btn-primary" type="submit">
-                Gửi yêu cầu
-              </button>
-            </div>
-          </form>
-        </section>
+        </div>
 
         <%-- ===== Danh sách yêu cầu ===== --%>
         <section class="panel maintenance-panel">
           <div class="panel-head">
             <div>
-              <h2>Yêu cầu bảo trì</h2>
+              <h2>Danh sách yêu cầu</h2>
             </div>
           </div>
 
@@ -163,11 +113,10 @@
                    name="keyword"
                    maxlength="100"
                    value="<c:out value='${keyword}' />"
-                   placeholder="Tìm mã yêu cầu hoặc tên thiết bị">
+                   placeholder="Mã yêu cầu hoặc tên thiết bị">
 
             <select name="status">
               <option value="">Tất cả trạng thái</option>
-
               <c:forEach var="status" items="${statusOptions}">
                 <option value="${status.dbValue}"
                         <c:if test="${statusFilter == status.dbValue}">selected</c:if>>
@@ -176,18 +125,35 @@
               </c:forEach>
             </select>
 
+            <select name="priority">
+              <option value="">Tất cả mức ưu tiên</option>
+              <c:forEach var="p" items="${priorityOptions}">
+                <option value="${p.dbValue}"
+                        <c:if test="${priorityFilter == p.dbValue}">selected</c:if>>
+                  <c:out value="${p.displayName}" />
+                </option>
+              </c:forEach>
+            </select>
+
+            <input type="date"
+                   name="reportedDate"
+                   value="<c:out value='${reportedDateFilter}' />"
+                   title="Lọc theo ngày báo"
+                   aria-label="Ngày báo">
+
             <select name="pageSize">
               <option value="10" ${requestPage.pageSize == 10 ? 'selected' : ''}>10</option>
               <option value="20" ${requestPage.pageSize == 20 ? 'selected' : ''}>20</option>
               <option value="50" ${requestPage.pageSize == 50 ? 'selected' : ''}>50</option>
             </select>
-
-            <button class="btn btn-primary" type="submit">Lọc</button>
-
-            <a class="btn btn-ghost"
-               href="${pageContext.request.contextPath}/receptionist/maintenance-requests">
-              Xóa lọc
-            </a>
+            <button class="btn btn-primary" type="submit">
+              Lọc
+            </button>
+            <c:if test="${not empty keyword || not empty statusFilter || not empty priorityFilter || not empty reportedDateFilter}">
+              <a class="btn btn-ghost" href="${pageContext.request.contextPath}/receptionist/maintenance-requests">
+                Xóa lọc
+              </a>
+            </c:if>
           </form>
 
           <c:choose>
@@ -201,7 +167,8 @@
                         <strong>
                           <c:out value="${item.request.requestCode}" />
                           ·
-                          <c:out value="${item.facilityName}" />
+                          <c:out value="${item.itemCode}" />
+                          (<c:out value="${item.facilityName}" />)
                         </strong>
 
                         <span class="badge
@@ -214,11 +181,29 @@
 
                       <div class="maintenance-meta">
                         <span>
-                          ${gms:formatDate(item.request.reportedAt.toLocalDate())}
+                          Ngày báo: <b>${gms:formatDate(item.request.reportedAt.toLocalDate())}</b>
                         </span>
 
                         <span>
-                          <c:out value="${item.request.priority.displayName}" />
+                          Ưu tiên: <b><c:out value="${item.request.priority.displayName}" /></b>
+                        </span>
+
+                        <c:if test="${not empty item.facilityLocation}">
+                          <span>
+                            Khu vực: <b><c:out value="${item.facilityLocation}" /></b>
+                          </span>
+                        </c:if>
+
+                        <span>
+                          Sự cố: <b><c:out value="${item.request.incidentType.displayName}" /></b>
+                        </span>
+
+                        <span>
+                          Phát hiện: <b><c:out value="${item.request.detectedBy.displayName}" /></b>
+                        </span>
+
+                        <span>
+                          Người báo: <b><c:out value="${item.reporterName}" /></b>
                         </span>
 
                         <c:if test="${item.request.warningTagPlaced}">
@@ -261,11 +246,17 @@
                     <c:if test="${item.request.inProgress}">
                       <form action="${pageContext.request.contextPath}/receptionist/maintenance-requests"
                             method="post"
-                            class="maintenance-close-form">
+                            class="maintenance-close-form"
+                            data-validate
+                            novalidate>
 
                         <input type="hidden"
                                name="action"
                                value="close">
+
+                        <input type="hidden"
+                               name="csrfToken"
+                               value="${sessionScope.csrfToken}">
 
                         <input type="hidden"
                                name="requestId"
@@ -280,8 +271,15 @@
                                   name="acceptanceNote"
                                   minlength="5"
                                   maxlength="500"
+                                  data-min-length="5"
+                                  data-max-length="500"
+                                  data-label="Ghi chú nghiệm thu"
                                   required
                                   placeholder="Đã kiểm tra thiết bị hoạt động bình thường..."></textarea>
+
+                        <div class="field-error"
+                             id="acceptance-${item.request.maintenanceRequestId}Error"
+                             hidden></div>
 
                         <button class="btn btn-primary btn-sm"
                                 type="submit"
@@ -315,6 +313,8 @@
                   <c:param name="pageSize" value="${requestPage.pageSize}" />
                   <c:param name="keyword" value="${keyword}" />
                   <c:param name="status" value="${statusFilter}" />
+                  <c:param name="priority" value="${priorityFilter}" />
+                  <c:param name="reportedDate" value="${reportedDateFilter}" />
                 </c:url>
 
                 <a class="btn btn-ghost btn-sm"
@@ -335,6 +335,8 @@
                   <c:param name="pageSize" value="${requestPage.pageSize}" />
                   <c:param name="keyword" value="${keyword}" />
                   <c:param name="status" value="${statusFilter}" />
+                  <c:param name="priority" value="${priorityFilter}" />
+                  <c:param name="reportedDate" value="${reportedDateFilter}" />
                 </c:url>
 
                 <a class="btn btn-ghost btn-sm"
@@ -351,5 +353,6 @@
       </main>
     </div>
   </div>
+
 </body>
 </html>

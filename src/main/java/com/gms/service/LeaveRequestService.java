@@ -5,49 +5,46 @@ import com.gms.constant.Role;
 import com.gms.dao.AccountDAO;
 import com.gms.dao.EmployeeDAO;
 import com.gms.dao.LeaveRequestDAO;
-import com.gms.dao.PersonDAO;
+import com.gms.dto.EligibleReviewer;
+import com.gms.dto.LeaveApprovalReview;
+import com.gms.dto.LeaveBulkApprovalResult;
+import com.gms.dto.LeaveEmployeeView;
 import com.gms.dto.LeaveRequestFilter;
 import com.gms.dto.LeaveRequestItemView;
+import com.gms.dto.LeaveRequestRow;
+import com.gms.dto.LeaveReviewDetail;
 import com.gms.dto.PageResult;
 import com.gms.dto.ServiceResult;
-import com.gms.dto.StaffLeaveFormView;
+import com.gms.dto.TimelineNode;
+import com.gms.entity.Account;
 import com.gms.entity.Employee;
 import com.gms.entity.LeaveRequest;
-import com.gms.entity.Person;
+import com.gms.entity.LeaveRequestTransfer;
 import com.gms.util.DBContext;
 import com.gms.util.DateTimeUtil;
 import com.gms.util.PaginationUtil;
 import com.gms.util.ValidationUtil;
 import java.sql.Connection;
 import java.sql.SQLException;
-import java.time.Duration;
 import java.time.LocalDate;
-import java.time.LocalDateTime;
-import java.time.LocalTime;
 import java.util.ArrayList;
+import java.util.LinkedHashMap;
+import java.util.LinkedHashSet;
 import java.util.List;
 import java.util.Map;
 
 /**
- * Nghiệp vụ đơn xin nghỉ phép của nhân viên (BF-05, UC-14, UC-15, JOB-07).
+ * Luồng của Manager: xem danh sách/chi tiết, duyệt, từ chối và chuyển người duyệt (BF-05).
  */
 public class LeaveRequestService {
 
-    // Đơn còn dưới số phút này đến hạn duyệt thì đánh dấu khẩn cấp (tô nổi trên danh sách)
-    private static final long URGENT_WITHIN_MINUTES = 180;
-
     // DAO truy vấn bảng LeaveRequests; Service không tự viết SQL
     private final LeaveRequestDAO leaveRequestDAO;
+    private final LeaveApprovalService leaveApprovalService;
 
     // DAO đọc Employees (lấy EmployeeId từ AccountId khi Manager duyệt)
     private final AccountDAO accountDAO;
     private final EmployeeDAO employeeDAO;
-
-    // DAO đọc Persons (lấy họ tên nhân viên hiển thị trên form nộp đơn)
-    private final PersonDAO personDAO;
-
-    // Đọc tham số P-20 (giờ chốt duyệt đơn), P-13/P-14 (min staffing)
-    private final SystemConfigService systemConfigService;
 
     // Ghi audit log mỗi khi Manager duyệt / từ chối
     private final AuditLogService auditLogService;
@@ -55,58 +52,131 @@ public class LeaveRequestService {
     // Thông báo cho nhân viên sau khi đơn được xử lý
     private final NotificationService notificationService;
 
-    public LeaveRequestService() {
-        leaveRequestDAO = new LeaveRequestDAO();
-        accountDAO = new AccountDAO();
-        employeeDAO = new EmployeeDAO();
-        personDAO = new PersonDAO();
-        systemConfigService = new SystemConfigService();
-        auditLogService = new AuditLogService();
-        notificationService = new NotificationService();
+    /** Constructor cho test: truyền DAO/Service giả vào. */
+    LeaveRequestService(
+            LeaveRequestDAO leaveRequestDAO,
+            AccountDAO accountDAO,
+            EmployeeDAO employeeDAO,
+            SystemConfigService systemConfigService,
+            AuditLogService auditLogService,
+            NotificationService notificationService) {
+        this.leaveRequestDAO = leaveRequestDAO;
+        this.leaveApprovalService = new LeaveApprovalService(leaveRequestDAO, systemConfigService);
+        this.accountDAO = accountDAO;
+        this.employeeDAO = employeeDAO;
+        this.auditLogService = auditLogService;
+        this.notificationService = notificationService;
     }
 
-    /**
-     * Lấy một trang đơn nghỉ phép cho màn danh sách của Manager (màn #26, UC-15).
-     *
-     * @param keyword  từ khóa tên nhân viên từ URL, có thể null/rỗng
-     * @param status   tab trạng thái từ URL (Pending, Approved, Rejected, All), có thể null
-     * @param page     số trang, bắt đầu từ 1
-     * @param pageSize số dòng mỗi trang
-     * @return trang các dòng đã tính hạn duyệt và đếm ngược, hoặc thông báo lỗi hệ thống
-     */
-    public ServiceResult<PageResult<LeaveRequestItemView>> getManagerPage(
-            String keyword, String status, int page, int pageSize) {
+    public LeaveRequestService() {
+        this(new LeaveRequestDAO(), new AccountDAO(), new EmployeeDAO(),
+                new SystemConfigService(), new AuditLogService(), new NotificationService());
+    }
 
+    /** Danh sách cha phân trang theo nhân viên; mỗi người giữ đầy đủ đơn phù hợp bộ lọc. */
+    public ServiceResult<PageResult<LeaveEmployeeView>> getEmployeePage(
+            LeaveRequestFilter filter, Integer managerAccountId, int page, int pageSize) {
+        if (hasReversedDateRange(filter)) {
+            return ServiceResult.fail("Từ ngày phải trước hoặc trùng Đến ngày.");
+        }
         try {
-            // B1: chuẩn hóa tham số URL thành bộ lọc hợp lệ
-            String trimmedKeyword = keyword == null ? "" : keyword.trim();
-            LeaveRequestFilter filter = new LeaveRequestFilter(
-                    parseStatusFilter(status), trimmedKeyword);
-
-            // B2: đếm tổng và lấy đúng một trang (DAO cắt bằng OFFSET/FETCH)
-            int totalItems = leaveRequestDAO.countByFilter(filter);
-            int offset = PaginationUtil.calculateOffset(page, pageSize);
-            List<LeaveRequestDAO.LeaveRequestRow> rows
-                    = leaveRequestDAO.findManagerPage(filter, offset, pageSize);
-
-            // B3: đổi từng dòng DAO sang view, thêm hạn duyệt P-20 và đếm ngược
-            LocalTime approvalTime = LocalTime.parse(
-                    systemConfigService.getString(
-                            SystemConfigService.LEAVE_APPROVED_DEADLINE));
-            LocalDateTime now = DateTimeUtil.now();
-
-            List<LeaveRequestItemView> items = new ArrayList<>();
-            for (LeaveRequestDAO.LeaveRequestRow row : rows) {
-                items.add(toItemView(row, approvalTime, now));
+            // B1: lấy trang nhân viên; khi chọn ngày, SQL chỉ giữ người có đơn phù hợp.
+            Integer managerEmployeeId = findWorkingManagerId(managerAccountId);
+            int totalEmployees = leaveRequestDAO.countEmployees(filter);
+            int totalPages = Math.max(1, (totalEmployees + pageSize - 1) / pageSize);
+            int currentPage = Math.max(1, Math.min(page, totalPages));
+            int offset = PaginationUtil.calculateOffset(currentPage, pageSize);
+            List<LeaveEmployeeView> employees = leaveRequestDAO.findEmployeePage(filter, offset, pageSize);
+            List<Integer> employeeIds = new ArrayList<>();
+            Map<Integer, LeaveEmployeeView> employeeById = new LinkedHashMap<>();
+            LocalDate today = DateTimeUtil.today();
+            for (LeaveEmployeeView employee : employees) {
+                employeeIds.add(employee.getEmployeeId());
+                employeeById.put(employee.getEmployeeId(), employee);
+                LocalDate nextDate = employee.getNextPendingDate();
+                employee.setNearLeaveDate(nextDate != null && !nextDate.isBefore(today) && !nextDate.isAfter(today.plusDays(1)));
             }
 
-            return ServiceResult.ok(
-                    new PageResult<>(items, page, pageSize, totalItems));
-
+            // B2: đọc đơn của cả trang một lần rồi gắn về đúng nhân viên bằng EmployeeId.
+            if (!employeeIds.isEmpty()) {
+                List<LeaveRequestRow> rows = leaveRequestDAO.findEmployeeRequests(filter, employeeIds, managerEmployeeId);
+                for (LeaveRequestRow row : rows) {
+                    LeaveEmployeeView employee = employeeById.get(row.getLeaveRequest().getEmployeeId());
+                    if (employee == null) {
+                        continue;
+                    }
+                    LeaveRequestItemView item = toItemView(row, today);
+                    if (row.getLeaveRequest().isPending()) {
+                        loadApprovalSummary(item, row.getLeaveRequest());
+                    }
+                    employee.getRequests().add(item);
+                }
+            }
+            return ServiceResult.ok(new PageResult<>(employees, currentPage, pageSize, totalEmployees));
         } catch (SQLException e) {
             e.printStackTrace();
             return ServiceResult.fail(Messages.MSG04_SYSTEM_BUSY);
         }
+    }
+
+    /** Trang từng đơn cho các tab trạng thái; kiểm tra Pending giống tab Tất cả và trang chi tiết. */
+    public ServiceResult<PageResult<LeaveRequestItemView>> getRequestPage(
+            LeaveRequestFilter filter, Integer managerAccountId, int page, int pageSize) {
+        if (hasReversedDateRange(filter)) {
+            return ServiceResult.fail("Từ ngày phải trước hoặc trùng Đến ngày.");
+        }
+        try {
+            // B1: đếm và phân trang theo đơn, không lấy trang nhân viên rồi lọc lại trong Java.
+            Integer managerEmployeeId = findWorkingManagerId(managerAccountId);
+            int totalRequests = leaveRequestDAO.countRequests(filter);
+            int totalPages = Math.max(1, (totalRequests + pageSize - 1) / pageSize);
+            int currentPage = Math.max(1, Math.min(page, totalPages));
+            int offset = PaginationUtil.calculateOffset(currentPage, pageSize);
+            List<LeaveRequestRow> rows = leaveRequestDAO.findRequestPage(filter, offset, pageSize, managerEmployeeId);
+
+            // B2: giữ thứ tự SQL, đánh dấu sắp nghỉ và đọc cùng bộ kiểm tra điều kiện duyệt.
+            List<LeaveRequestItemView> items = new ArrayList<>();
+            LocalDate today = DateTimeUtil.today();
+            for (LeaveRequestRow row : rows) {
+                LeaveRequestItemView item = toItemView(row, today);
+                if (row.getLeaveRequest().isPending()) {
+                    loadApprovalSummary(item, row.getLeaveRequest());
+                }
+                items.add(item);
+            }
+            return ServiceResult.ok(new PageResult<>(items, currentPage, pageSize, totalRequests));
+        } catch (SQLException e) {
+            e.printStackTrace();
+            return ServiceResult.fail(Messages.MSG04_SYSTEM_BUSY);
+        }
+    }
+
+    /** Chuẩn hóa một lần để bảng và số lượng trên tab luôn dùng cùng điều kiện. */
+    public LeaveRequestFilter createManagerFilter(String keyword, String status, String position, String leaveType,
+            String fromDate, String toDate) {
+        String searchText = keyword == null ? "" : keyword.trim();
+        String selectedPosition = null;
+        if ("PT".equals(position) || "Receptionist".equals(position)) {
+            selectedPosition = position;
+        }
+        LeaveRequest.LeaveType selectedType = null;
+        if (leaveType != null) {
+            selectedType = LeaveRequest.LeaveType.fromDbValue(leaveType.trim());
+        }
+        return new LeaveRequestFilter(parseStatusFilter(status), searchText, selectedPosition, selectedType,
+                DateTimeUtil.parseHtmlDate(fromDate), DateTimeUtil.parseHtmlDate(toDate));
+    }
+
+    /** null nghĩa là khách chưa đăng nhập hoặc tài khoản không còn là Manager đang làm việc. */
+    private Integer findWorkingManagerId(Integer managerAccountId) throws SQLException {
+        if (managerAccountId == null) {
+            return null;
+        }
+        Employee manager = findEmployeeForAccount(managerAccountId);
+        if (!isWorkingManager(manager)) {
+            return null;
+        }
+        return manager.getEmployeeId();
     }
 
     /**
@@ -115,11 +185,15 @@ public class LeaveRequestService {
      * @return map có 4 khóa: All, Pending, Approved, Rejected; hoặc thông báo lỗi hệ thống
      */
     public ServiceResult<Map<String, Integer>> getStatusCounts() {
-        try {
-            // B1: DAO trả số đơn của 3 trạng thái thật
-            Map<String, Integer> counts = leaveRequestDAO.getStatusCounts();
+        return getStatusCounts(null);
+    }
 
-            // B2: tab "Tất cả" = tổng 3 trạng thái, thêm vào đầu map để JSP đọc theo khóa All
+    public ServiceResult<Map<String, Integer>> getStatusCounts(LeaveRequestFilter filter) {
+        if (hasReversedDateRange(filter)) {
+            return ServiceResult.fail("Từ ngày phải trước hoặc trùng Đến ngày.");
+        }
+        try {
+            Map<String, Integer> counts = leaveRequestDAO.getStatusCounts(filter);
             int total = 0;
             for (int count : counts.values()) {
                 total += count;
@@ -137,14 +211,22 @@ public class LeaveRequestService {
         }
     }
 
+    /** Kiểm tra khoảng ngày nhập từ bộ lọc; cho phép bỏ trống một hoặc cả hai ngày. */
+    private boolean hasReversedDateRange(LeaveRequestFilter filter) {
+        return filter != null && filter.getFromDate() != null && filter.getToDate() != null
+                && filter.getFromDate().isAfter(filter.getToDate());
+    }
+
     /**
-     * Đổi tham số tab trạng thái trên URL thành Status để lọc danh sách của Manager.
+     * Đổi tham số tab trạng thái trên URL thành Status để lọc danh sách của
+     * Manager.
      *
-     * @param statusParam giá trị param "status" (Pending, Approved, Rejected, All) hoặc null/rỗng
-     * @return Status tương ứng; null nghĩa là tab "Tất cả"; URL trống thì mặc định PENDING
+     * @param statusParam giá trị param "status" (Pending, Approved, Rejected, All)
+     *                    hoặc null/rỗng
+     * @return Status tương ứng; null là tab Tất cả khi statusParam là "All"
      */
     LeaveRequest.Status parseStatusFilter(String statusParam) {
-        // B1: URL không có status thì màn mặc định mở tab "Chờ duyệt"
+        // B1: mở danh sách không có status thì vào Chờ duyệt.
         if (statusParam == null || statusParam.isBlank()) {
             return LeaveRequest.Status.PENDING;
         }
@@ -158,65 +240,34 @@ public class LeaveRequestService {
         return LeaveRequest.Status.fromDbValue(statusParam.trim());
     }
 
-    /**
-     * Đổi một dòng DAO sang LeaveRequestItemView: tính hạn duyệt (P-20 của ngày
-     * liền trước ngày nghỉ, CBR-85), chữ đếm ngược và cờ khẩn cấp cho đơn Pending.
-     */
-    private LeaveRequestItemView toItemView(
-            LeaveRequestDAO.LeaveRequestRow row,
-            LocalTime approvalTime,
-            LocalDateTime now) {
-
-        LeaveRequest request = row.getLeaveRequest();
-
-        // B1: hạn duyệt = giờ P-20 vào ngày liền trước ngày nghỉ
-        LocalDateTime approvalDeadline
-                = request.getLeaveDate().minusDays(1).atTime(approvalTime);
-
-        // B2: đơn đã xử lý không cần đếm ngược; đơn Pending thì tính số phút còn lại
-        String countdownText = "";
-        boolean isUrgent = false;
-        if (request.isPending()) {
-            long minutesLeft = Duration.between(now, approvalDeadline).toMinutes();
-            countdownText = formatCountdown(minutesLeft);
-            isUrgent = minutesLeft < URGENT_WITHIN_MINUTES;
-        }
-
-        // B3: tự từ chối = Rejected mà không có người duyệt (CBR-85)
-        boolean isAutoRejected = request.isRejected()
-                && request.getReviewedByEmployeeId() == null;
-
-        return new LeaveRequestItemView(
-                request.getLeaveRequestId(),
-                request.getEmployeeId(),
-                row.getEmployeeCode(),
-                row.getFullName(),
-                row.getPosition(),
-                row.getAvatarUrl(),
-                request.getLeaveType(),
-                request.getLeaveDate(),
-                request.getShiftType(),
-                request.getReason(),
-                request.getStatus(),
-                request.getRejectReason(),
-                isAutoRejected,
-                request.getSubmittedAt(),
-                request.getReviewedAt(),
-                row.getReviewerName(),
-                approvalDeadline,
-                countdownText,
-                isUrgent);
+    /** Đơn chờ có ngày bắt đầu hôm nay hoặc ngày mai cần ưu tiên xử lý. */
+    boolean isNearLeaveDate(LeaveRequest request, LocalDate today) {
+        LocalDate fromDate = request.getFromDate();
+        return request.isPending() && fromDate != null
+                && !fromDate.isBefore(today) && !fromDate.isAfter(today.plusDays(1));
     }
 
-    /** Đổi số phút còn lại thành chữ hiển thị; số âm nghĩa là đã quá hạn duyệt. */
-    private String formatCountdown(long minutesLeft) {
-        if (minutesLeft < 0) {
-            return "Đã quá hạn duyệt";
+    /** Chỉ đổi dữ liệu hiển thị; các kiểm tra database nằm ở loadApprovalSummary(). */
+    private LeaveRequestItemView toItemView(LeaveRequestRow row, LocalDate today) {
+        LeaveRequestItemView view = new LeaveRequestItemView(row);
+        view.setNearLeaveDate(isNearLeaveDate(row.getLeaveRequest(), today));
+        return view;
+    }
+
+    /** Đọc dữ liệu kiểm tra tách khỏi hàm đổi dòng DAO thành dữ liệu hiển thị. */
+    private void loadApprovalSummary(LeaveRequestItemView view, LeaveRequest request) throws SQLException {
+        try (Connection connection = DBContext.getConnection()) {
+            String workingPosition = leaveRequestDAO.findWorkingPosition(connection, request.getEmployeeId());
+            LeaveApprovalReview review = leaveApprovalService.review(connection, request, workingPosition);
+            String blockingMessage = review.getBlockingMessage();
+            if (blockingMessage == null) {
+                view.setCheckSummary("Đạt");
+                view.setCheckMessage("Chưa phát hiện vướng mắc. Mở chi tiết để kiểm tra trước khi duyệt.");
+            } else {
+                view.setCheckSummary("Cần xử lý");
+                view.setCheckMessage(blockingMessage);
+            }
         }
-        if (minutesLeft < 60) {
-            return "Còn " + minutesLeft + " phút";
-        }
-        return "Còn " + (minutesLeft / 60) + " giờ " + (minutesLeft % 60) + " phút";
     }
 
     // ===== Màn duyệt đơn (màn #27, UC-15) =====
@@ -227,17 +278,64 @@ public class LeaveRequestService {
      * @param leaveRequestId mã đơn
      * @return view đơn, hoặc thông báo lỗi nếu không tìm thấy / lỗi hệ thống
      */
-    public ServiceResult<LeaveRequestDAO.LeaveReviewDetail> getReviewDetail(int leaveRequestId) {
+    public ServiceResult<LeaveReviewDetail> getReviewDetail(int leaveRequestId) {
+        return getReviewDetail(leaveRequestId, null);
+    }
+
+    /**
+     * Lấy thông tin đầy đủ 1 đơn để hiện trên màn duyệt của Manager (#27, BF-05).
+     *
+     * @param leaveRequestId   mã đơn
+     * @param managerAccountId accountId của Manager đang xem (có thể null)
+     * @return view đơn, hoặc thông báo lỗi nếu không tìm thấy / lỗi hệ thống
+     */
+    public ServiceResult<LeaveReviewDetail> getReviewDetail(int leaveRequestId, Integer managerAccountId) {
         if (leaveRequestId <= 0) {
             return ServiceResult.fail(String.format(Messages.MSG08_NOT_FOUND, "đơn nghỉ phép"));
         }
         try {
-            LeaveRequestDAO.LeaveReviewDetail detail =
-                    leaveRequestDAO.findReviewDetail(leaveRequestId);
+            Integer managerEmployeeId = findWorkingManagerId(managerAccountId);
+            LeaveReviewDetail detail = leaveRequestDAO.findReviewDetail(leaveRequestId, managerEmployeeId);
             if (detail == null) {
-                return ServiceResult.fail(
-                        String.format(Messages.MSG08_NOT_FOUND, "đơn nghỉ phép"));
+                return ServiceResult.fail(String.format(Messages.MSG08_NOT_FOUND, "đơn nghỉ phép"));
             }
+            LeaveRequest req = detail.getLeaveRequest();
+
+            // B1: dùng đúng bộ kiểm tra của danh sách và POST duyệt.
+            try (Connection connection = DBContext.getConnection()) {
+                String workingPosition = leaveRequestDAO.findWorkingPosition(connection, req.getEmployeeId());
+                LeaveApprovalReview review = leaveApprovalService.review(connection, req, workingPosition);
+                detail.setLeaveBalance(review.getBalance());
+                detail.setMinStaffRequired(review.getMinStaffRequired());
+                detail.setRemainingStaff(review.getRemainingStaff());
+                detail.setStaffingRows(review.getStaffingRows());
+                detail.setChecks(review.getChecks());
+                if (review.getInputError() == null && "PT".equals(workingPosition)) {
+                    detail.setSessionConflicts(leaveRequestDAO.findSessionConflicts(connection, req.getEmployeeId(),
+                            req.getFromDate(), req.getToDate(), req.getShiftType().getDbValue()));
+                }
+            }
+
+            // B2: chỉ đánh dấu ngày nghỉ gần để nhắc xử lý, không đặt hạn duyệt.
+            detail.setNearLeaveDate(isNearLeaveDate(req, DateTimeUtil.today()));
+
+            // B3: lịch sử chuyển duyệt và các đơn trùng khoảng nghỉ.
+            List<LeaveRequestTransfer> transfers = leaveRequestDAO.findTransfers(leaveRequestId);
+            detail.setTimeline(buildTimeline(detail, transfers));
+
+            if (req.getFromDate() != null && req.getToDate() != null && req.getShiftType() != null) {
+                detail.setOverlappingCounts(leaveRequestDAO.countOverlappingRequests(req));
+            }
+
+            // B4: chọn thông báo chính của trang.
+            if (detail.isLeaveDatePassed()) {
+                detail.setBanner("Ngày xin nghỉ đã qua. Không thể duyệt đơn này.");
+            } else if (req.isPending() && !detail.isCanAct()) {
+                detail.setBanner("Đơn này đang được giao cho " + (detail.getAssignedToName() != null ? detail.getAssignedToName() : "người khác") + ". Bạn chỉ có quyền xem.");
+            } else if (detail.isNearLeaveDate()) {
+                detail.setBanner("Đơn sắp đến ngày nghỉ. Vui lòng ưu tiên xử lý để bố trí nhân sự.");
+            }
+
             return ServiceResult.ok(detail);
         } catch (SQLException e) {
             e.printStackTrace();
@@ -245,83 +343,270 @@ public class LeaveRequestService {
         }
     }
 
+    private List<TimelineNode> buildTimeline(
+            LeaveReviewDetail detail,
+            List<LeaveRequestTransfer> transfers) {
+        List<TimelineNode> list = new ArrayList<>();
+        LeaveRequest req = detail.getLeaveRequest();
+
+        // 1. Nộp đơn
+        list.add(new TimelineNode(
+                "SUBMITTED",
+                "Nộp đơn",
+                detail.getFullName(),
+                null,
+                "PT".equals(detail.getPosition()) ? "PT" : "Lễ tân",
+                req.getSubmittedAt(),
+                "DONE"));
+
+        // 2. Chuyển người duyệt (nếu có)
+        if (transfers != null) {
+            for (LeaveRequestTransfer t : transfers) {
+                list.add(new TimelineNode(
+                        "TRANSFERRED",
+                        "Chuyển người duyệt",
+                        t.getFromEmployeeName(),
+                        t.getToEmployeeName(),
+                        t.getNote(),
+                        t.getCreatedAt(),
+                        "DONE"));
+            }
+        }
+
+        // 3. Trạng thái hiện tại
+        if (req.isApproved()) {
+            list.add(new TimelineNode(
+                    "APPROVED",
+                    "Đã duyệt",
+                    detail.getReviewerName(),
+                    null,
+                    "Đơn đã được phê duyệt thành công",
+                    req.getReviewedAt(),
+                    "DONE"));
+        } else if (req.isRejected()) {
+            String reviewer = detail.getReviewerName();
+            if (reviewer == null) {
+                reviewer = detail.isAutoRejected() ? "Hệ thống" : "Quản lý";
+            }
+            list.add(new TimelineNode(
+                    "REJECTED",
+                    "Từ chối",
+                    reviewer,
+                    null,
+                    req.getRejectReason(),
+                    req.getReviewedAt(),
+                    "FAILED"));
+        } else {
+            list.add(new TimelineNode(
+                    "PENDING",
+                    "Chờ duyệt",
+                    detail.getAssignedToName() != null ? detail.getAssignedToName() : "Chưa phân công",
+                    null,
+                    "Ngày bắt đầu nghỉ: " + DateTimeUtil.formatDate(req.getFromDate()),
+                    null,
+                    "CURRENT"));
+        }
+
+        return list;
+    }
+
+    /**
+     * Chuyển quyền duyệt đơn cho Manager khác (Màn #27, BF-05).
+     */
+    public ServiceResult<Void> transferReviewer(
+            int managerAccountId, int leaveRequestId, int toEmployeeId, String note) {
+        if (leaveRequestId <= 0 || toEmployeeId <= 0) {
+            return ServiceResult.fail("Dữ liệu chuyển người duyệt không hợp lệ.");
+        }
+        if (note != null && note.length() > 200) {
+            return ServiceResult.failField("note", "Ghi chú không được vượt quá 200 ký tự.");
+        }
+        try {
+            Employee currentManager = findEmployeeForAccount(managerAccountId);
+            if (!isWorkingManager(currentManager)) {
+                return ServiceResult.fail("Bạn không có quyền xử lý đơn nghỉ phép.");
+            }
+            if (currentManager.getEmployeeId() == toEmployeeId) {
+                return ServiceResult.fail("Không thể chuyển quyền duyệt cho chính bạn.");
+            }
+
+            try (Connection conn = DBContext.getConnection()) {
+                conn.setAutoCommit(false);
+                try {
+                    leaveRequestDAO.lockDecisionScope(conn);
+                    ServiceResult<LeaveRequest> lockedResult = validateDecision(conn, leaveRequestId, currentManager.getEmployeeId());
+                    if (!lockedResult.isSuccess()) {
+                        conn.rollback();
+                        return ServiceResult.fail(lockedResult.getMessage());
+                    }
+                    if (!"Manager".equals(leaveRequestDAO.findWorkingPosition(conn, toEmployeeId))) {
+                        conn.rollback();
+                        return ServiceResult.fail("Người nhận phải là Quản lý đang làm việc.");
+                    }
+                    boolean updated = leaveRequestDAO.assign(conn, leaveRequestId, toEmployeeId);
+                    if (!updated) {
+                        conn.rollback();
+                        return ServiceResult.fail(Messages.MSG04_SYSTEM_BUSY);
+                    }
+
+                    LeaveRequestTransfer transfer = new LeaveRequestTransfer(
+                            leaveRequestId, currentManager.getEmployeeId(), toEmployeeId, note != null ? note.trim() : null);
+                    leaveRequestDAO.insertTransfer(conn, transfer);
+
+                    auditLogService.logInTransaction(
+                            conn,
+                            managerAccountId,
+                            Role.MANAGER,
+                            "Chuyển người duyệt đơn nghỉ phép",
+                            "LeaveRequests",
+                            leaveRequestId,
+                            "AssignedToEmployeeId",
+                            String.valueOf(currentManager.getEmployeeId()),
+                            String.valueOf(toEmployeeId),
+                            note);
+
+                    notificationService.notifyEmployeeInTransaction(
+                            conn,
+                            toEmployeeId,
+                            "Đơn nghỉ phép được giao cho bạn",
+                            currentManager.getEmployeeCode() + " đã chuyển quyền duyệt đơn #" + leaveRequestId + " cho bạn.");
+
+                    conn.commit();
+                    return ServiceResult.ok(null);
+                } catch (SQLException | RuntimeException e) {
+                    conn.rollback();
+                    throw e;
+                }
+            }
+        } catch (SQLException e) {
+            e.printStackTrace();
+            return ServiceResult.fail(Messages.MSG04_SYSTEM_BUSY);
+        }
+    }
+
+    /**
+     * Lấy danh sách Manager đủ điều kiện nhận chuyển duyệt (Màn #27, BF-05).
+     */
+    public ServiceResult<List<EligibleReviewer>> getEligibleReviewers(int managerAccountId) {
+        try {
+            Employee manager = findEmployeeForAccount(managerAccountId);
+            int excludeId = manager != null ? manager.getEmployeeId() : 0;
+            List<EligibleReviewer> list = leaveRequestDAO.findEligibleReviewers(excludeId);
+            return ServiceResult.ok(list);
+        } catch (SQLException e) {
+            e.printStackTrace();
+            return ServiceResult.fail(Messages.MSG04_SYSTEM_BUSY);
+        }
+    }
+
+    /**
+     * Duyệt tối đa một trang (50 đơn), giữ thứ tự mã được gửi và bỏ mã trùng.
+     * Mỗi đơn dùng transaction riêng của approveRequest, kiểm tra lại trên dữ liệu sau đơn trước.
+     * @param managerAccountId tài khoản từ session
+     * @param requestIds các mã đơn trên trang; rỗng hoặc mã sai thì không ghi gì
+     * @return số đã duyệt và lỗi từng đơn; lỗi một đơn không hoàn tác các đơn đã thành công
+     */
+    public ServiceResult<LeaveBulkApprovalResult> approveRequests(int managerAccountId, List<Integer> requestIds) {
+        if (requestIds == null || requestIds.isEmpty() || requestIds.size() > 50) {
+            return ServiceResult.fail("Chọn từ 1 đến 50 đơn để duyệt.");
+        }
+        for (Integer requestId : requestIds) {
+            if (requestId == null || requestId <= 0) {
+                return ServiceResult.fail("Danh sách đơn không hợp lệ. Vui lòng tải lại trang.");
+            }
+        }
+
+        int approvedCount = 0;
+        Map<Integer, String> failedRequests = new LinkedHashMap<>();
+        for (Integer requestId : new LinkedHashSet<>(requestIds)) {
+            ServiceResult<Void> result = approveRequest(managerAccountId, requestId);
+            if (result.isSuccess()) {
+                approvedCount++;
+            } else {
+                failedRequests.put(requestId, result.getMessage());
+            }
+        }
+        return ServiceResult.ok(new LeaveBulkApprovalResult(approvedCount, failedRequests));
+    }
+
     /**
      * Manager duyệt đơn nghỉ phép (UC-15).
      * Kiểm tra: đơn phải Pending, không vi phạm min-staffing (CBR-88, CBR-90, BR-14).
+     * Mọi thao tác: duyệt đơn, ghi nhật ký kiểm toán (audit log) và gửi thông báo
+     * được thực hiện trong cùng một transaction để bảo toàn tính toàn vẹn dữ liệu.
      *
      * @param managerAccountId AccountId của Manager từ session
-     * @param leaveRequestId   mã đơn cần duyệt
+     * @param leaveRequestId mã đơn cần duyệt
      * @return ok() nếu thành công, fail() kèm thông báo lỗi nếu không được
      */
     public ServiceResult<Void> approveRequest(int managerAccountId, int leaveRequestId) {
         try {
-            // B1: lấy thông tin đơn
-            LeaveRequestDAO.LeaveReviewDetail detail =
-                    leaveRequestDAO.findReviewDetail(leaveRequestId);
-            if (detail == null) {
-                return ServiceResult.fail(
-                        String.format(Messages.MSG08_NOT_FOUND, "đơn nghỉ phép"));
-            }
-            LeaveRequest request = detail.getLeaveRequest();
-
-            // B2: chỉ duyệt đơn Pending
-            if (!request.isPending()) {
-                return ServiceResult.fail("Đơn này đã được xử lý rồi.");
-            }
-
-            // B3: tìm Employee của Manager (lấy EmployeeId để ghi ReviewedByEmployeeId)
+            // B1: lấy Manager từ tài khoản đăng nhập; không lấy EmployeeId từ form.
             Employee manager = findEmployeeForAccount(managerAccountId);
-            if (manager == null) {
-                return ServiceResult.fail(Messages.MSG04_SYSTEM_BUSY);
+            if (!isWorkingManager(manager)) {
+                return ServiceResult.fail("Bạn không có quyền xử lý đơn nghỉ phép.");
             }
 
-            // B4: kiểm tra min-staffing sau khi duyệt (CBR-88, CBR-90)
-            String position = detail.getPosition();
-            String shiftType = request.getShiftType().getDbValue();
-            int remaining = leaveRequestDAO.countOnDutyAfterApproval(
-                    request.getLeaveDate(), shiftType, position, leaveRequestId);
-
-            int minRequired = "PT".equalsIgnoreCase(position)
-                    ? systemConfigService.getInt(SystemConfigService.MIN_PT_PER_SHIFT)
-                    : systemConfigService.getInt(SystemConfigService.MIN_RECEPTIONIST_PER_SHIFT);
-
-            if (remaining < minRequired) {
-                String roleLabel = "PT".equalsIgnoreCase(position) ? "PT" : "lễ tân";
-                return ServiceResult.fail(String.format(
-                        Messages.MSG79_LEAVE_BREAKS_MIN_STAFFING,
-                        request.getShiftType().getDisplayName(),
-                        request.getLeaveDate(),
-                        minRequired,
-                        roleLabel));
-            }
-
-            // B5: ghi DB
-            leaveRequestDAO.approve(leaveRequestId, manager.getEmployeeId());
-
-            // B6: ghi audit log
-            auditLogService.log(
-                    managerAccountId,
-                    "Duyệt đơn nghỉ phép",
-                    "LeaveRequests",
-                    leaveRequestId,
-                    "Status",
-                    "Pending",
-                    "Approved",
-                    null);
-
-            // B7: thông báo cho nhân viên (non-blocking, lỗi không rollback)
+            // B2: mở Transaction để đảm bảo duyệt đơn + ghi audit log + gửi thông báo diễn ra đồng thời
             try (Connection conn = DBContext.getConnection()) {
-                notificationService.notifyEmployeeInTransaction(
-                        conn,
-                        detail.getLeaveRequest().getEmployeeId(),
-                        "Nghỉ phép được duyệt",
-                        "Đơn nghỉ ngày " + request.getLeaveDate()
-                                + " (đã duyệt)");
-            } catch (Exception ignored) {
-                // thông báo thất bại không nên chặn luồng chính
-            }
+                conn.setAutoCommit(false); // Bắt đầu transaction
 
-            return ServiceResult.ok(null);
+                try {
+                    // B2.1: khóa trước khi đọc lại trạng thái, phân công và quỹ phép.
+                    leaveRequestDAO.lockDecisionScope(conn);
+                    ServiceResult<LeaveRequest> lockedResult = validateDecision(conn, leaveRequestId, manager.getEmployeeId());
+                    if (!lockedResult.isSuccess()) {
+                        conn.rollback();
+                        return ServiceResult.fail(lockedResult.getMessage());
+                    }
+                    LeaveRequest request = lockedResult.getData();
+                    String position = leaveRequestDAO.findWorkingPosition(conn, request.getEmployeeId());
+                    ServiceResult<Void> checks = validateApproval(conn, request, position);
+                    if (!checks.isSuccess()) {
+                        conn.rollback();
+                        return checks;
+                    }
+
+                    // B2.2: cập nhật trạng thái đơn thành Approved (WHERE Status = 'Pending')
+                    boolean isApproved = leaveRequestDAO.approve(conn, leaveRequestId, manager.getEmployeeId());
+                    if (!isApproved) {
+                        // Nếu 0 dòng bị ảnh hưởng, có nghĩa người khác đã duyệt/từ chối đơn này trước đó
+                        conn.rollback();
+                        return ServiceResult.fail("Đơn này đã được xử lý bởi người khác.");
+                    }
+
+                    // B2.3: ghi nhật ký kiểm toán (Audit Log)
+                    auditLogService.logInTransaction(
+                            conn,
+                            managerAccountId,
+                            Role.MANAGER,
+                            "Duyệt đơn nghỉ phép",
+                            "LeaveRequests",
+                            leaveRequestId,
+                            "Status",
+                            "Pending",
+                            "Approved",
+                            null);
+
+                    // B2.4: gửi thông báo đến chuông của nhân viên
+                    String notifTitle = "Nghỉ phép được duyệt";
+                    String notifContent = "Đơn nghỉ " + formatLeavePeriod(request)
+                            + " (ca " + request.getShiftType().getDisplayName() + ") đã được duyệt.";
+                    notificationService.notifyEmployeeInTransaction(
+                            conn,
+                            request.getEmployeeId(),
+                            notifTitle,
+                            notifContent);
+
+                    // B2.5: xác nhận mọi thay đổi thành công
+                    conn.commit();
+                    return ServiceResult.ok(null);
+
+                } catch (SQLException | RuntimeException e) {
+                    conn.rollback(); // Hoàn tác nếu có lỗi
+                    throw e;
+                }
+            }
 
         } catch (SQLException e) {
             e.printStackTrace();
@@ -332,6 +617,7 @@ public class LeaveRequestService {
     /**
      * Manager từ chối đơn nghỉ phép (UC-15).
      * Kiểm tra: đơn phải Pending, lý do 5-500 ký tự.
+     * Mọi thao tác: từ chối, ghi audit log và thông báo nằm trong cùng một transaction.
      *
      * @param managerAccountId AccountId của Manager từ session
      * @param leaveRequestId   mã đơn cần từ chối
@@ -347,204 +633,156 @@ public class LeaveRequestService {
                         "rejectReason", "Lý do từ chối phải từ 5 đến 500 ký tự.");
             }
 
-            // B2: kiểm tra đơn tồn tại và còn Pending
-            LeaveRequestDAO.LeaveReviewDetail detail =
-                    leaveRequestDAO.findReviewDetail(leaveRequestId);
-            if (detail == null) {
-                return ServiceResult.fail(
-                        String.format(Messages.MSG08_NOT_FOUND, "đơn nghỉ phép"));
-            }
-            if (!detail.getLeaveRequest().isPending()) {
-                return ServiceResult.fail("Đơn này đã được xử lý rồi.");
-            }
-
-            // B3: tìm Employee của Manager
+            // B2: lấy Manager đang đăng nhập.
             Employee manager = findEmployeeForAccount(managerAccountId);
-            if (manager == null) {
-                return ServiceResult.fail(Messages.MSG04_SYSTEM_BUSY);
+            if (!isWorkingManager(manager)) {
+                return ServiceResult.fail("Bạn không có quyền xử lý đơn nghỉ phép.");
             }
 
-            // B4: ghi DB
-            leaveRequestDAO.reject(leaveRequestId, manager.getEmployeeId(), rejectReason);
-
-            // B5: ghi audit log
-            auditLogService.log(
-                    managerAccountId,
-                    "Từ chối đơn nghỉ phép",
-                    "LeaveRequests",
-                    leaveRequestId,
-                    "Status",
-                    "Pending",
-                    "Rejected",
-                    rejectReason);
-
-            // B6: thông báo cho nhân viên
+            // B3: mở Transaction để từ chối + ghi audit log + gửi thông báo
             try (Connection conn = DBContext.getConnection()) {
-                notificationService.notifyEmployeeInTransaction(
-                        conn,
-                        detail.getLeaveRequest().getEmployeeId(),
-                        "Nghỉ phép bị từ chối",
-                        "Đơn nghỉ ngày "
-                                + detail.getLeaveRequest().getLeaveDate()
-                                + " bị từ chối. Lý do: " + rejectReason);
-            } catch (Exception ignored) {
-                // lỗi thông báo không chặn luồng chính
-            }
+                conn.setAutoCommit(false); // Bắt đầu transaction
 
-            return ServiceResult.ok(null);
+                try {
+                    leaveRequestDAO.lockDecisionScope(conn);
+                    ServiceResult<LeaveRequest> lockedResult = validateDecision(conn, leaveRequestId, manager.getEmployeeId());
+                    if (!lockedResult.isSuccess()) {
+                        conn.rollback();
+                        return ServiceResult.fail(lockedResult.getMessage());
+                    }
+                    LeaveRequest request = lockedResult.getData();
+                    // B3.1: cập nhật trạng thái đơn thành Rejected
+                    boolean isRejected = leaveRequestDAO.reject(
+                            conn, leaveRequestId, manager.getEmployeeId(), rejectReason);
+                    if (!isRejected) {
+                        conn.rollback();
+                        return ServiceResult.fail("Đơn này đã được xử lý bởi người khác.");
+                    }
 
-        } catch (SQLException e) {
-            e.printStackTrace();
-            return ServiceResult.fail(Messages.MSG04_SYSTEM_BUSY);
-        }
-    }
+                    // B3.2: ghi nhật ký kiểm toán (Audit Log)
+                    auditLogService.logInTransaction(
+                            conn,
+                            managerAccountId,
+                            Role.MANAGER,
+                            "Từ chối đơn nghỉ phép",
+                            "LeaveRequests",
+                            leaveRequestId,
+                            "Status",
+                            "Pending",
+                            "Rejected",
+                            rejectReason);
 
-    // ===== Màn nộp đơn của nhân viên (màn #25, UC-14) =====
+                    // B3.3: gửi thông báo đến chuông của nhân viên
+                    String notifTitle = "Nghỉ phép bị từ chối";
+                    String notifContent = "Đơn nghỉ " + formatLeavePeriod(request)
+                            + " bị từ chối. Lý do: " + rejectReason.trim();
+                    if (notifContent.length() > 500) {
+                        notifContent = notifContent.substring(0, 497) + "...";
+                    }
+                    notificationService.notifyEmployeeInTransaction(
+                            conn,
+                            request.getEmployeeId(),
+                            notifTitle,
+                            notifContent);
 
-    /**
-     * Lấy dữ liệu để hiện form nộp đơn nghỉ phép của PT/Lễ tân (màn #25).
-     *
-     * @param accountId AccountId của nhân viên từ session, không lấy từ request parameter
-     * @return view gồm thông tin nhân viên, hạn nộp P-12 và các đơn đã nộp; hoặc thông báo lỗi
-     */
-    public ServiceResult<StaffLeaveFormView> getStaffLeaveForm(int accountId) {
-        try {
-            // B1: tìm nhân viên từ tài khoản đăng nhập
-            Employee employee = findEmployeeForAccount(accountId);
-            if (employee == null) {
-                return ServiceResult.fail(
-                        String.format(Messages.MSG08_NOT_FOUND, "nhân viên"));
-            }
+                    // B3.4: xác nhận giao dịch thành công
+                    conn.commit();
+                    return ServiceResult.ok(null);
 
-            // B2: lấy họ tên từ Persons để hiện trên form
-            Person person = personDAO.findById(employee.getPersonId());
-            String fullName = person == null ? "" : person.getFullName();
-
-            // B3: đọc giờ chốt nộp đơn P-12 (mặc định 15:00 ngày liền trước ngày nghỉ)
-            LocalTime submissionCutoff = LocalTime.parse(
-                    systemConfigService.getString(
-                            SystemConfigService.LEAVE_SUBMIT_DEADLINE));
-
-            // B4: lấy 10 đơn gần nhất của chính nhân viên này
-            List<LeaveRequest> myRequests
-                    = leaveRequestDAO.findByEmployeeId(employee.getEmployeeId(), 10);
-
-            return ServiceResult.ok(new StaffLeaveFormView(
-                    employee.getEmployeeId(),
-                    employee.getEmployeeCode(),
-                    fullName,
-                    employee.getPosition().getDbValue(),
-                    submissionCutoff,
-                    myRequests));
-
-        } catch (SQLException e) {
-            e.printStackTrace();
-            return ServiceResult.fail(Messages.MSG04_SYSTEM_BUSY);
-        }
-    }
-
-    /**
-     * Nhân viên nộp đơn xin nghỉ phép (màn #25, UC-14).
-     * Kiểm tra: hạn chốt nộp P-12 (CBR-84), trùng lịch nghỉ, và buổi dạy Scheduled của PT (CBR-83).
-     *
-     * @param accountId AccountId của nhân viên từ session
-     * @param leaveType loại nghỉ (Annual, Sick, Unpaid)
-     * @param leaveDate ngày nghỉ (phải > hôm nay)
-     * @param shiftType ca nghỉ (Morning, Afternoon, FullDay)
-     * @param reason lý do nghỉ (5–500 ký tự)
-     * @return mã đơn mới tạo (LeaveRequestId), hoặc thông báo lỗi cụ thể
-     */
-    public ServiceResult<Integer> submitLeaveRequest(
-            int accountId,
-            LeaveRequest.LeaveType leaveType,
-            LocalDate leaveDate,
-            LeaveRequest.ShiftType shiftType,
-            String reason) {
-
-        // B1: validate dữ liệu đầu vào cơ bản
-        if (leaveType == null) {
-            return ServiceResult.failField("leaveType", "Vui lòng chọn loại nghỉ.");
-        }
-        if (shiftType == null) {
-            return ServiceResult.failField("shiftType", "Vui lòng chọn ca nghỉ.");
-        }
-        if (leaveDate == null) {
-            return ServiceResult.failField("leaveDate", "Vui lòng chọn ngày nghỉ.");
-        }
-
-        LocalDate today = DateTimeUtil.today();
-        if (!leaveDate.isAfter(today)) {
-            return ServiceResult.failField("leaveDate", "Ngày nghỉ phải sau ngày hôm nay.");
-        }
-
-        if (!ValidationUtil.isLengthValid(reason, 5, 500)) {
-            return ServiceResult.failField("reason", "Lý do nghỉ phải từ 5 đến 500 ký tự.");
-        }
-
-        try {
-            // B2: tìm thông tin nhân viên theo tài khoản
-            Employee employee = findEmployeeForAccount(accountId);
-            if (employee == null) {
-                return ServiceResult.fail(
-                        String.format(Messages.MSG08_NOT_FOUND, "nhân viên"));
-            }
-
-            // B3: kiểm tra hạn chốt nộp đơn P-12 (CBR-84: mặc định 15:00 ngày liền trước ngày nghỉ)
-            LocalTime submissionCutoff = LocalTime.parse(
-                    systemConfigService.getString(
-                            SystemConfigService.LEAVE_SUBMIT_DEADLINE));
-            LocalDateTime deadline = leaveDate.minusDays(1).atTime(submissionCutoff);
-            LocalDateTime now = DateTimeUtil.now();
-
-            if (now.isAfter(deadline)) {
-                return ServiceResult.fail(
-                        "Đã quá hạn nộp đơn cho ngày này. Nghỉ đột xuất vui lòng báo trực tiếp Quản lý.");
-            }
-
-            // B4: kiểm tra trùng đơn nghỉ Pending hoặc Approved (cùng ca hoặc bao phủ FullDay)
-            boolean hasConflict = leaveRequestDAO.hasConflictingLeave(
-                    employee.getEmployeeId(), leaveDate, shiftType.getDbValue());
-            if (hasConflict) {
-                return ServiceResult.fail(
-                        "Bạn đã có đơn nghỉ trùng ngày và ca này đang chờ duyệt hoặc đã được duyệt.");
-            }
-
-            // B5: đối với PT, kiểm tra buổi dạy Scheduled trong ngày và ca xin nghỉ (CBR-83)
-            boolean isPt = Role.PT == employee.getPosition();
-            if (isPt) {
-                int clashCount = leaveRequestDAO.countScheduledSessions(
-                        employee.getEmployeeId(), leaveDate, shiftType.getDbValue());
-                if (clashCount > 0) {
-                    return ServiceResult.fail(
-                            "Bạn còn " + clashCount + " buổi dạy đã xếp trong khoảng nghỉ này. Vui lòng xử lý các buổi dạy trước khi nộp đơn.");
+                } catch (SQLException | RuntimeException e) {
+                    conn.rollback();
+                    throw e;
                 }
             }
 
-            // B6: tạo entity và lưu đơn mới vào DB
-            LeaveRequest request = new LeaveRequest();
-            request.setEmployeeId(employee.getEmployeeId());
-            request.setLeaveType(leaveType);
-            request.setLeaveDate(leaveDate);
-            request.setShiftType(shiftType);
-            request.setReason(reason.trim());
-
-            int newLeaveRequestId = leaveRequestDAO.insert(request);
-            if (newLeaveRequestId <= 0) {
-                return ServiceResult.fail(Messages.MSG04_SYSTEM_BUSY);
-            }
-
-            return ServiceResult.ok(newLeaveRequestId);
-
         } catch (SQLException e) {
             e.printStackTrace();
             return ServiceResult.fail(Messages.MSG04_SYSTEM_BUSY);
+        }
+    }
+
+    /** Chỉ nhân viên Working ở vị trí Manager mới được xử lý đơn. */
+    private boolean isWorkingManager(Employee employee) {
+        return employee != null && employee.getPosition() == Role.MANAGER
+                && employee.getStatus() == Employee.Status.WORKING;
+    }
+
+    /** Đọc lại quyền và trạng thái trên Connection đã khóa, tránh thao tác từ tab cũ. */
+    private ServiceResult<LeaveRequest> validateDecision(Connection connection, int requestId, int managerEmployeeId)
+            throws SQLException {
+        if (!"Manager".equals(leaveRequestDAO.findWorkingPosition(connection, managerEmployeeId))) {
+            return ServiceResult.fail("Bạn không có quyền xử lý đơn nghỉ phép.");
+        }
+        LeaveRequest current = leaveRequestDAO.findById(connection, requestId);
+        if (current == null || !current.isPending()) {
+            return ServiceResult.fail("Đơn này đã thay đổi trạng thái. Vui lòng tải lại trang.");
+        }
+        Integer assignee = current.getAssignedToEmployeeId();
+        if (assignee != null && assignee != managerEmployeeId) {
+            return ServiceResult.fail("Đơn này đã được phân công cho người khác duyệt.");
+        }
+        return ServiceResult.ok(current);
+    }
+
+    /**
+     * Kiểm tra toàn bộ ngày/ca trong transaction duyệt. Không tin Days hoặc dữ liệu kiểm tra từ trình duyệt.
+     * Pending khác giữ chỗ quỹ phép; đơn hiện tại được loại ra rồi cộng đúng một lần.
+     */
+    ServiceResult<Void> validateApproval(Connection connection, LeaveRequest request, String position) throws SQLException {
+        LeaveApprovalReview review = leaveApprovalService.review(connection, request, position);
+        String blockingMessage = review.getBlockingMessage();
+        if (blockingMessage != null) {
+            return ServiceResult.fail(blockingMessage);
+        }
+        return ServiceResult.ok(null);
+    }
+
+    /** Khoảng ngày dùng trong thông báo; không bỏ mất ngày kết thúc của đơn nhiều ngày. */
+    private String formatLeavePeriod(LeaveRequest request) {
+        String period = DateTimeUtil.formatDate(request.getFromDate());
+        if (!request.getFromDate().equals(request.getToDate())) {
+            period = period + "–" + DateTimeUtil.formatDate(request.getToDate());
+        }
+        return period;
+    }
+
+    // ===== Background Job (JOB-07) =====
+
+    /** Nhắc một lần cho đơn Pending nghỉ ngày mai; không tự duyệt/từ chối hoặc đặt hạn theo giờ. */
+    public void sendDueReminders() throws SQLException {
+        LocalDate tomorrow = DateTimeUtil.today().plusDays(1);
+        List<LeaveRequest> requests = leaveRequestDAO.findPendingNeedingReminder(tomorrow);
+        if (requests.isEmpty()) {
+            return;
+        }
+        try (Connection connection = DBContext.getConnection()) {
+            connection.setAutoCommit(false);
+            try {
+                // Đánh dấu chỉ khi còn Pending và chưa nhắc; hai lượt job không gửi trùng.
+                int remindedCount = 0;
+                for (LeaveRequest request : requests) {
+                    if (leaveRequestDAO.markReminded(connection, request.getLeaveRequestId())) {
+                        remindedCount += 1;
+                    }
+                }
+                if (remindedCount > 0) {
+                    String content = "Có " + remindedCount + " đơn nghỉ từ ngày mai đang chờ xử lý. "
+                            + "Vui lòng kiểm tra và bố trí nhân sự.";
+                    notificationService.notifyRoleInTransaction(connection, Role.MANAGER,
+                            "Đơn sắp đến ngày nghỉ", content);
+                }
+                connection.commit();
+            } catch (SQLException | RuntimeException e) {
+                connection.rollback();
+                throw e;
+            }
         }
     }
 
     /** Tìm Employee đang Working theo AccountId (Manager duyệt đơn). */
     private Employee findEmployeeForAccount(int accountId) throws SQLException {
-        com.gms.entity.Account account = accountDAO.findById(accountId);
-        if (account == null) {
+        Account account = accountDAO.findById(accountId);
+        if (account == null || account.getStatus() != Account.Status.ACTIVE) {
             return null;
         }
         return employeeDAO.findByPersonId(account.getPersonId());

@@ -290,6 +290,48 @@ public class AccountDAO {
         }
     }
 
+    /**
+     * Tìm tài khoản theo PersonId trong transaction.
+     */
+    public Account findByPersonId(Connection conn, int personId) throws SQLException {
+        String sql = """
+                SELECT a.AccountId, a.PersonId, a.PasswordHash, a.Status, a.FailedLoginCount, a.LockedUntil, a.LastLoginAt, a.CreatedAt
+                FROM Accounts a
+                WHERE a.PersonId = ?
+                """;
+        try (PreparedStatement stmt = conn.prepareStatement(sql)) {
+            stmt.setInt(1, personId);
+            try (ResultSet rs = stmt.executeQuery()) {
+                if (rs.next()) {
+                    return mapResultSetToAccount(rs);
+                }
+            }
+        }
+        return null;
+    }
+
+    /**
+     * Chuyển trạng thái tài khoản thành Inactive chỉ khi Person không còn bất kỳ vai trò nào hoạt động
+     * (không còn khách hàng chưa Inactive, không còn nhân viên Working) - CBR-86, DBR-28.
+     *
+     * @param conn     Connection tham gia transaction
+     * @param personId mã Person
+     * @return true nếu tài khoản được chuyển sang Inactive
+     * @throws SQLException khi truy vấn gặp lỗi
+     */
+    public boolean deactivateAccountIfNoActiveRoles(Connection conn, int personId) throws SQLException {
+        String sql = """
+                UPDATE Accounts SET Status = 'Inactive'
+                WHERE PersonId = ? AND Status <> 'Inactive'
+                  AND NOT EXISTS (SELECT 1 FROM Customers WHERE PersonId = Accounts.PersonId AND Status <> 'Inactive')
+                  AND NOT EXISTS (SELECT 1 FROM Employees WHERE PersonId = Accounts.PersonId AND Status = 'Working')
+                """;
+        try (PreparedStatement stmt = conn.prepareStatement(sql)) {
+            stmt.setInt(1, personId);
+            return stmt.executeUpdate() > 0;
+        }
+    }
+
     // ===== Map ResultSet =====
 
     /**

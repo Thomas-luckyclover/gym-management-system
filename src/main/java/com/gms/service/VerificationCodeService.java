@@ -339,7 +339,7 @@ public class VerificationCodeService {
      * @return cụm chữ tương ứng, VD RECOVERY → "khôi phục mật khẩu"
      *         (tiêu đề mail thành "[Super Gym] Mã xác thực khôi phục mật khẩu").
      */
-    private String getPurposeLabel(VerificationCode.Purpose purpose) {
+    String getPurposeLabel(VerificationCode.Purpose purpose) {
         switch (purpose) {
             case SIGN_UP:
                 return "đăng ký tài khoản";
@@ -349,6 +349,8 @@ public class VerificationCodeService {
                 return "khôi phục mật khẩu";
             case EMAIL_CHANGE:
                 return "đổi email";
+            case PHONE_CHANGE:
+                return "đổi số điện thoại";
             default:
                 return "xác thực tài khoản";
         }

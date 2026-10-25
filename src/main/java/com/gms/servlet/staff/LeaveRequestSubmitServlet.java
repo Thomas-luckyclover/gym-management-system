@@ -1,3 +1,4 @@
+
 package com.gms.servlet.staff;
 
 import jakarta.servlet.ServletException;
@@ -9,7 +10,7 @@ import jakarta.servlet.http.HttpServletResponse;
 import java.io.IOException;
 
 /**
- * Controller nhân viên (PT/Lễ tân) nộp đơn xin nghỉ phép.
+ * Controller nhân viên (PT/Lễ tân) nộp đơn xin nghỉ phép (UC-14, màn #25).
  *
  * <p>GET  /staff/leave-requests — hiện form nộp đơn.
  * <p>POST /staff/leave-requests — xử lý submit đơn.

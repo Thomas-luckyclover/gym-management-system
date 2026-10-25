@@ -38,10 +38,30 @@
 }
 
 .maintenance-filter {
-    display: grid;
-    grid-template-columns: minmax(240px, 1fr) 180px 90px auto;
+    display: flex;
+    flex-wrap: wrap;
     gap: var(--space-3);
+    align-items: center;
     margin-bottom: var(--space-5);
+}
+
+.maintenance-filter input[type="search"] {
+    flex: 2;
+    min-width: 220px;
+}
+
+.maintenance-filter select {
+    flex: 1;
+    min-width: 140px;
+}
+
+.maintenance-filter input[type="date"] {
+    min-width: 130px;
+}
+
+.maintenance-filter .btn-primary {
+    flex-shrink: 0;
+    min-width: 80px;
 }
 
 .maintenance-list {

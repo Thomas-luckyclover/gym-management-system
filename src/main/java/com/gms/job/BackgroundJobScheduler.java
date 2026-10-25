@@ -52,7 +52,7 @@ public class BackgroundJobScheduler implements ServletContextListener {
     private static final List<BackgroundJob> MINUTE_JOBS = List.of(
             new CancelOverdueOnlineOrdersJob(),       // JOB-05: hủy đơn online quá hạn thanh toán (khung TODO)
             new ExpireTimedOutTransactionsJob(),      // JOB-06: giao dịch quá thời gian chờ (khung TODO)
-            new AutoRejectOverdueLeaveRequestsJob()   // JOB-07: tự từ chối đơn nghỉ quá hạn duyệt (khung TODO)
+            new LeaveRequestReminderJob()             // JOB-07: nhắc Manager đơn nghỉ đến hạn (không tự quyết thay Manager)
     );
 
     private ScheduledExecutorService dailyExecutor;

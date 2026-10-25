@@ -1,3 +1,42 @@
+/* ===== Thống kê KPI ===== */
+
+.maintenance-stats {
+    display: grid;
+    grid-template-columns: repeat(5, minmax(0, 1fr));
+    gap: var(--space-4);
+    margin-bottom: var(--space-6);
+}
+
+@media (max-width: 900px) {
+    .maintenance-stats {
+        grid-template-columns: repeat(auto-fit, minmax(130px, 1fr));
+    }
+}
+
+.maintenance-stat {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: var(--space-3);
+    padding: var(--space-4);
+    border: var(--border-width) solid var(--color-border);
+    border-radius: var(--radius-lg);
+    background: var(--color-surface);
+    color: var(--color-text);
+    text-decoration: none;
+    transition: all 0.15s ease;
+}
+
+.maintenance-stat:hover,
+.maintenance-stat.active {
+    border-color: var(--color-primary);
+    background: var(--color-primary-tint);
+}
+
+.maintenance-stat strong {
+    font-size: var(--font-size-xl);
+}
+
 /* ===== Khung chính ===== */
 
 .maintenance-panel {
@@ -57,10 +96,30 @@
 /* ===== Bộ lọc ===== */
 
 .maintenance-filter {
-    display: grid;
-    grid-template-columns: minmax(240px, 1fr) 180px 90px auto auto;
+    display: flex;
+    flex-wrap: wrap;
     gap: var(--space-3);
+    align-items: center;
     margin-bottom: var(--space-5);
+}
+
+.maintenance-filter input[type="search"] {
+    flex: 2;
+    min-width: 220px;
+}
+
+.maintenance-filter select {
+    flex: 1;
+    min-width: 140px;
+}
+
+.maintenance-filter input[type="date"] {
+    min-width: 130px;
+}
+
+.maintenance-filter .btn-primary {
+    flex-shrink: 0;
+    min-width: 80px;
 }
 
 
@@ -194,6 +253,54 @@
 .maintenance-panel > form > .field textarea {
     margin-top: var(--space-2);
     background: var(--color-surface);
+}
+
+/* ===== BF-06: Thông tin tóm tắt thiết bị sau khi chọn ===== */
+
+.facility-selected-info {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: center;
+    gap: var(--space-2) var(--space-3);
+    margin-top: var(--space-2);
+    padding: var(--space-2) var(--space-3);
+    border: var(--border-width) solid var(--color-border);
+    border-radius: var(--radius-md);
+    background: var(--color-surface);
+    font-size: var(--font-size-sm);
+    color: var(--color-text-soft);
+}
+
+.facility-info-item {
+    display: inline-flex;
+    align-items: center;
+    gap: var(--space-1);
+}
+
+.facility-info-label {
+    color: var(--color-text-soft);
+}
+
+.facility-info-value {
+    color: var(--color-text);
+    font-weight: var(--font-weight-semibold);
+}
+
+.facility-info-separator {
+    color: var(--color-border-strong);
+    user-select: none;
+}
+
+@media (max-width: 600px) {
+    .facility-selected-info {
+        flex-direction: column;
+        align-items: flex-start;
+        gap: var(--space-1);
+    }
+
+    .facility-info-separator {
+        display: none;
+    }
 }
 
 .maintenance-check {

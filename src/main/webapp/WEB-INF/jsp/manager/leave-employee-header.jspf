@@ -1,0 +1,41 @@
+<%@ page pageEncoding="UTF-8" %>
+<%-- employee: LeaveEmployeeView; dùng chung cho hàng mở rộng và nhân viên chưa có đơn. --%>
+<span class="leave-employee-cell">
+  <c:choose>
+    <c:when test="${not empty employee.avatarUrl}">
+      <img src="${pageContext.request.contextPath}<c:out value='${employee.avatarUrl}' />" alt="" class="leave-employee-avatar">
+    </c:when>
+    <c:otherwise>
+      <span class="leave-employee-initial" aria-hidden="true"><c:out value="${fn:substring(employee.fullName, 0, 1)}" /></span>
+    </c:otherwise>
+  </c:choose>
+  <span class="leave-employee-meta">
+    <span class="leave-employee-name"><c:out value="${employee.fullName}" /></span>
+    <span class="leave-employee-description">
+      <c:out value="${employee.employeeCode}" /> · ${employee.position == 'PT' ? 'PT' : 'Lễ tân'}
+      <c:if test="${employee.employmentStatus == 'Resigned'}"> · Đã nghỉ việc</c:if>
+    </span>
+  </span>
+</span>
+<span class="leave-employee-counts">
+  <c:choose>
+    <c:when test="${employee.totalRequestCount == 0}">
+      <span class="leave-zero-count">Chưa có đơn</span>
+    </c:when>
+    <c:otherwise>
+      <span class="leave-total-count"><c:out value="${employee.totalRequestCount}" /> đơn</span>
+      <c:choose>
+        <c:when test="${employee.pendingCount > 0}">
+          <span class="badge badge-warning"><c:out value="${employee.pendingCount}" /> đơn chờ</span>
+        </c:when>
+        <c:otherwise><span class="leave-zero-count">Không có đơn chờ</span></c:otherwise>
+      </c:choose>
+    </c:otherwise>
+  </c:choose>
+  <c:if test="${employee.nearLeaveDate}">
+    <span class="leave-near-label"><i class="fa-solid fa-calendar-days" aria-hidden="true"></i> Sắp đến ngày nghỉ</span>
+  </c:if>
+  <c:if test="${employee.totalRequestCount > 0}">
+    <i class="fa-solid fa-chevron-down leave-expand-icon" aria-hidden="true"></i>
+  </c:if>
+</span>
