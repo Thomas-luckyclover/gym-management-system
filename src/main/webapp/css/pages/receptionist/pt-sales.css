@@ -534,6 +534,12 @@ html body.dock.pt-sale-page .sale-card {
   display: grid;
   max-width: 240px;
 }
+.sale .sale-start input[aria-invalid="true"] {
+  box-shadow: inset 0 0 0 2px var(--color-danger-border);
+}
+.sale-start + .sale-msg {
+  max-width: 420px;
+}
 
 
 /* ==================== 6. BẢNG LỊCH TẬP HẰNG TUẦN ==================== */

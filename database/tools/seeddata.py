@@ -510,16 +510,19 @@ single_session(2, 5, d_(2026, 10, 30), (9, 30), 'Online', dt_(2026, 10, 24, 20, 
 single_session(6, 13, d_(2026, 10, 31), (9, 0), 'Online', dt_(2026, 10, 24, 22, 0), note='Mai: buổi lẻ cuối tuần PT Long')
 
 # ---- chỉ số cơ thể khách tự ghi (màn /customer/body-stats). BMI không lưu, Service tự tính.
+# Mỗi lần đo: (ngày, cân nặng, % mỡ, % cơ, vòng eo). Lần tự cân ở nhà chỉ có cân nặng.
 BODY = {
-    6: (160.0, [(d_(2026, 9, 5), 62.4, 31.0, 78.0), (d_(2026, 9, 19), 61.5, 30.4, 77.0), (d_(2026, 10, 3), 60.6, 29.6, 75.5),
-                (d_(2026, 10, 10), 60.1, None, None), (d_(2026, 10, 17), 59.3, 28.5, 74.0), (d_(2026, 10, 24), 58.6, 27.9, 73.0)]),
-    1: (172.0, [(d_(2026, 7, 10), 79.8, 24.5, 92.0), (d_(2026, 8, 7), 78.6, 23.8, 90.5), (d_(2026, 9, 4), 77.1, 22.9, 89.0),
-                (d_(2026, 10, 2), 76.4, 22.1, 88.0), (d_(2026, 10, 23), 75.2, 21.4, 86.5)]),
+    6: (160.0, [(d_(2026, 9, 5), 62.4, 31.0, 36.2, 78.0), (d_(2026, 9, 19), 61.5, 30.4, 36.6, 77.0),
+                (d_(2026, 10, 3), 60.6, 29.6, 37.1, 75.5), (d_(2026, 10, 10), 60.1, None, None, None),
+                (d_(2026, 10, 17), 59.3, 28.5, 37.8, 74.0), (d_(2026, 10, 24), 58.6, 27.9, 38.3, 73.0)]),
+    1: (172.0, [(d_(2026, 7, 10), 79.8, 24.5, 40.1, 92.0), (d_(2026, 8, 7), 78.6, 23.8, 40.6, 90.5),
+                (d_(2026, 9, 4), 77.1, 22.9, 41.2, 89.0), (d_(2026, 10, 2), 76.4, 22.1, 41.8, 88.0),
+                (d_(2026, 10, 23), 75.2, 21.4, 42.5, 86.5)]),
 }
 for cid, (height, rows) in BODY.items():
-    for day, weight, fat, waist in rows:
+    for day, weight, fat, muscle, waist in rows:
         add('BodyMeasurements', dict(CustomerId=cid, MeasuredOn=day, WeightKg=weight, HeightCm=height,
-                                     BodyFatPercent=fat, WaistCm=waist,
+                                     BodyFatPercent=fat, MusclePercent=muscle, WaistCm=waist,
                                      Note='Đo InBody tại phòng' if fat is not None else 'Tự cân ở nhà',
                                      CreatedAt=datetime.combine(day, time(21, 0))))
 

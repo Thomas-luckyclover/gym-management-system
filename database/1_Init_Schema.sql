@@ -1068,6 +1068,7 @@ CREATE TABLE BodyMeasurements (
     WeightKg          DECIMAL(4,1)   NOT NULL,   -- 20.0–300.0
     HeightCm          DECIMAL(4,1)   NOT NULL,   -- 100.0–250.0
     BodyFatPercent    DECIMAL(3,1)   NULL,       -- 3.0–70.0, không bắt buộc
+    MusclePercent     DECIMAL(3,1)   NULL,       -- tỷ lệ cơ 10.0–70.0, không bắt buộc (máy InBody)
     WaistCm           DECIMAL(4,1)   NULL,       -- 40.0–200.0, không bắt buộc
     Note              NVARCHAR(200)  NULL,
     CreatedAt         DATETIME2(0)   NOT NULL CONSTRAINT DF_BodyMeasurements_CreatedAt DEFAULT (SYSDATETIME()),
@@ -1078,6 +1079,7 @@ CREATE TABLE BodyMeasurements (
     CONSTRAINT CK_BodyMeasurements_Weight CHECK (WeightKg BETWEEN 20 AND 300),
     CONSTRAINT CK_BodyMeasurements_Height CHECK (HeightCm BETWEEN 100 AND 250),
     CONSTRAINT CK_BodyMeasurements_Fat    CHECK (BodyFatPercent IS NULL OR BodyFatPercent BETWEEN 3 AND 70),
+    CONSTRAINT CK_BodyMeasurements_Muscle CHECK (MusclePercent IS NULL OR MusclePercent BETWEEN 10 AND 70),
     CONSTRAINT CK_BodyMeasurements_Waist  CHECK (WaistCm IS NULL OR WaistCm BETWEEN 40 AND 200)
 );
 GO

@@ -19,7 +19,7 @@ import java.io.IOException;
 /**
  * SERVLET MÀN CHỈ SỐ CƠ THỂ — URL /customer/body-stats (chỉ khách, CustomerAreaFilter kiểm tra trước).
  *
- *   GET  /customer/body-stats?metric=weight|bmi|fat|waist   mở trang, biểu đồ vẽ chỉ số đang chọn
+ *   GET  /customer/body-stats?metric=weight|bmi|fat|muscle|waist   mở trang, biểu đồ vẽ chỉ số đang chọn
  *   POST /customer/body-stats  action=save    ghi 1 lần đo (form "Ghi lần đo")
  *                              action=delete  xóa 1 lần đo (nút Xóa trong bảng lịch sử)
  *
@@ -84,8 +84,8 @@ public class BodyStatsServlet extends HttpServlet {
             result = id == null ? ServiceResult.fail("Không tìm thấy lần đo này.") : statsService.delete(accountId, id);
         } else {
             result = statsService.save(accountId, request.getParameter("measuredOn"), request.getParameter("weight"),
-                    request.getParameter("height"), request.getParameter("fat"), request.getParameter("waist"),
-                    request.getParameter("note"), DateTimeUtil.today());
+                    request.getParameter("height"), request.getParameter("fat"), request.getParameter("muscle"),
+                    request.getParameter("waist"), request.getParameter("note"), DateTimeUtil.today());
         }
 
         // B2: toast + về trang (giữ biểu đồ đang xem).
