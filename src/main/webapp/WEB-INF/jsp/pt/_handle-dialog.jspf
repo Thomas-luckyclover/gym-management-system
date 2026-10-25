@@ -1,0 +1,186 @@
+<%@ page pageEncoding="UTF-8" %>
+<%--
+================================================================================
+ _handle-dialog.jspf — HỘP "XỬ LÝ BUỔI" (nhúng ở schedule.jsp KHỐI 4)
+
+ CÓ KHI NÀO?   URL có ?handle=<mã buổi> VÀ PtSessionHandleService.getHandleForm trả "handle" (PtHandleView).
+ BIẾN DÙNG     handle            ← Service: buổi + gói + khách + các lựa chọn hợp lệ
+               handleFormError   ← Servlet: câu lỗi khi bấm Lưu bị từ chối (VD MSG103 khung vừa bị lấy)
+               handleAction      ← Servlet: phương án PT vừa gửi → chọn sẵn lại; mặc định "reschedule"
+               handleReason      ← Servlet: chữ PT đã gõ → điền lại vào ô
+               viewDate, view, csrfToken  ← có sẵn trong schedule.jsp
+
+ BỐ CỤC
+   Đầu hộp: ngày giờ, khách, gói, hạn gói, nút Đóng (link về URL không có handle)
+   3 thẻ chọn phương án (radio, không gửi lên server) → CSS :has(:checked) hiện đúng 1 khung bên dưới
+   3 khung, mỗi khung 1 <form method="post"> riêng: Dời buổi · Chuyển PT · Hủy buổi
+
+ JS (schedule.js initPtHandleDialog) chỉ: mở hộp dạng modal, Esc / Đóng thì bỏ ?handle khỏi URL.
+ Tắt JS: hộp vẫn hiện (thuộc tính open), mọi form vẫn gửi được.
+================================================================================ --%>
+<c:set var="chosen" value="${empty handleAction ? 'reschedule' : handleAction}" />
+<c:set var="sessionTime" value="${gms:formatTime(handle.startTime)} – ${gms:formatTime(handle.endTime)}" />
+<c:url var="closeUrl" value="/pt/schedule"><c:param name="date" value="${viewDate}" /><c:param name="view" value="${view}" /></c:url>
+
+<dialog class="pt-handle" id="pt-handle" open aria-labelledby="pt-handle-title" data-close-url="${closeUrl}">
+
+    <%-- ----- Đầu hộp: "Thứ 3 · 27/10 · 18:00 – 19:30" + khách + gói ----- --%>
+    <header class="pt-handle-head">
+        <div>
+            <p class="pt-handle-kicker">Xử lý buổi</p>
+            <h2 id="pt-handle-title"><c:out value="${handle.dayLabel}" /> · <c:out value="${sessionTime}" /></h2>
+            <p class="pt-handle-who"><strong><c:out value="${handle.customerNames}" /></strong> · <c:out value="${handle.packageName}" /></p>
+            <%-- Hạn gói = Subscriptions.EndDate: buổi chỉ dời được tới ngày này. --%>
+            <p class="pt-handle-chips">
+                <span>Hạn gói đến <c:out value="${gms:formatDate(handle.termEnd)}" /></span>
+                <c:if test="${handle.couple}"><span>Gói đôi</span></c:if>
+            </p>
+        </div>
+        <a class="pt-handle-close" href="${closeUrl}" data-handle-close aria-label="Đóng hộp xử lý buổi"><i class="fa-solid fa-xmark" aria-hidden="true"></i></a>
+    </header>
+
+    <div class="pt-handle-body">
+        <c:if test="${not empty handleFormError}">
+            <p class="pt-handle-error" role="alert"><i class="fa-solid fa-circle-exclamation" aria-hidden="true"></i> <c:out value="${handleFormError}" /></p>
+        </c:if>
+
+        <%-- ----- 3 thẻ chọn phương án. name="pt-handle-option" KHÔNG nằm trong form nào nên không gửi lên server. ----- --%>
+        <fieldset class="pt-handle-options">
+            <legend class="visually-hidden">Chọn cách xử lý</legend>
+            <label class="pt-handle-option">
+                <input type="radio" name="pt-handle-option" value="reschedule" ${chosen eq 'reschedule' ? 'checked' : ''}>
+                <i class="fa-solid fa-calendar-days" aria-hidden="true"></i>
+                <strong>Dời buổi</strong>
+                <span>Sang khung trống khác của bạn</span>
+                <small><c:out value="${handle.moveSlotCount}" /> khung</small>
+            </label>
+            <label class="pt-handle-option">
+                <input type="radio" name="pt-handle-option" value="transfer" ${chosen eq 'transfer' ? 'checked' : ''}>
+                <i class="fa-solid fa-user-pen" aria-hidden="true"></i>
+                <strong>Chuyển PT</strong>
+                <span>Giữ giờ, PT khác dạy thay</span>
+                <small><c:out value="${fn:length(handle.transferSlots)}" /> PT trống</small>
+            </label>
+            <label class="pt-handle-option is-danger">
+                <input type="radio" name="pt-handle-option" value="cancel" ${chosen eq 'cancel' ? 'checked' : ''}>
+                <i class="fa-solid fa-ban" aria-hidden="true"></i>
+                <strong>Hủy buổi</strong>
+                <span>Vẫn tính buổi, hoàn tiền mặt</span>
+            </label>
+        </fieldset>
+
+        <%-- ==========================================================================
+             KHUNG 1. DỜI BUỔI → doPost action=reschedule → handleService.reschedule
+             handle.moveDays ← Service findMoveDays: khung Free của bạn từ hôm nay tới handle.moveUntil,
+             đã bỏ khung ngoài hạn gói, ngày phòng nghỉ, trùng ca nghỉ phép, khách trùng giờ.
+             Khách thiếu membership ngày đó KHÔNG bị bỏ, chỉ tô vàng.
+             ========================================================================== --%>
+        <form class="pt-handle-panel" data-panel="reschedule" method="post" action="${pageContext.request.contextPath}/pt/schedule">
+            <input type="hidden" name="csrfToken" value="<c:out value='${csrfToken}' />">
+            <input type="hidden" name="action" value="reschedule">
+            <input type="hidden" name="sessionId" value="${handle.sessionId}">
+            <input type="hidden" name="date" value="${viewDate}">
+            <input type="hidden" name="view" value="${view}">
+            <c:choose>
+                <c:when test="${handle.moveSlotCount gt 0}">
+                    <p class="pt-handle-note"><c:out value="${handle.moveSlotCount}" /> khung hợp lệ tới <c:out value="${fn:substring(gms:formatDate(handle.moveUntil), 0, 5)}" />
+                        · đã lọc theo hạn gói, ngày nghỉ, đơn nghỉ và lịch của khách.
+                        <span class="pt-handle-warn-key">Viên vàng</span> = khách chưa có gói thành viên ngày đó (buổi sẽ hiện Cần chú ý, hệ thống tự nhắc khách).</p>
+                    <div class="pt-handle-days">
+                        <c:forEach var="moveDay" items="${handle.moveDays}">
+                            <div class="pt-handle-day">
+                                <span class="pt-handle-day-name"><c:out value="${moveDay.label}" /></span>
+                                <div class="pt-handle-times">
+                                    <c:forEach var="slot" items="${moveDay.slots}">
+                                        <%-- slot.hasGymAccess = false → viên vàng: khách chưa có gói thành viên / vé ngày ngày đó (vẫn chọn được). --%>
+                                        <label class="pt-handle-pill ${slot.hasGymAccess ? '' : 'is-warn'}"
+                                               title="${slot.hasGymAccess ? '' : 'Khách chưa có gói thành viên / vé ngày ngày này'}">
+                                            <input type="radio" name="timeSlotId" value="${slot.timeSlotId}" required
+                                                   aria-label="${moveDay.label} ${gms:formatTime(slot.startTime)}${slot.hasGymAccess ? '' : ', khách chưa có gói thành viên ngày này'}">
+                                            <span><c:out value="${gms:formatTime(slot.startTime)}" /></span>
+                                        </label>
+                                    </c:forEach>
+                                </div>
+                            </div>
+                        </c:forEach>
+                    </div>
+                    <label class="pt-handle-field"><span>Ghi chú gửi khách <small>(không bắt buộc)</small></span>
+                        <textarea name="reason" rows="2" maxlength="500" placeholder="VD: Mình bận việc đột xuất, dời giúp bạn sang giờ này nhé."><c:if test="${chosen eq 'reschedule'}"><c:out value="${handleReason}" /></c:if></textarea>
+                    </label>
+                    <p class="pt-handle-effect">Khách nhận thông báo · không tính lượt đổi · khung cũ trở lại Còn trống.</p>
+                    <div class="pt-handle-actions">
+                        <a class="btn btn-ghost" href="${closeUrl}" data-handle-close>Để sau</a>
+                        <button class="btn btn-primary" type="submit">Dời buổi</button>
+                    </div>
+                </c:when>
+                <c:otherwise>
+                    <p class="pt-handle-empty">Chưa có khung trống phù hợp tới <c:out value="${gms:formatDate(handle.moveUntil)}" />.
+                        Thêm khung rảnh trên lịch rồi Công bố, sau đó mở lại buổi này.</p>
+                </c:otherwise>
+            </c:choose>
+        </form>
+
+        <%-- ==========================================================================
+             KHUNG 2. CHUYỂN PT → doPost action=transfer → handleService.transfer
+             handle.transferSlots ← DAO findTransferSlots: PT khác có khung Free ĐÚNG ngày giờ này, không nghỉ phép.
+             Gửi timeSlotId = khung của PT nhận. Hoa hồng tính lại theo tỷ lệ PT nhận.
+             ========================================================================== --%>
+        <form class="pt-handle-panel" data-panel="transfer" method="post" action="${pageContext.request.contextPath}/pt/schedule">
+            <input type="hidden" name="csrfToken" value="<c:out value='${csrfToken}' />">
+            <input type="hidden" name="action" value="transfer">
+            <input type="hidden" name="sessionId" value="${handle.sessionId}">
+            <input type="hidden" name="date" value="${viewDate}">
+            <input type="hidden" name="view" value="${view}">
+            <c:choose>
+                <c:when test="${not empty handle.transferSlots}">
+                    <div class="pt-handle-pts">
+                        <c:forEach var="slot" items="${handle.transferSlots}">
+                            <label class="pt-handle-pt">
+                                <input type="radio" name="timeSlotId" value="${slot.timeSlotId}" required>
+                                <span class="pt-handle-avatar" aria-hidden="true"><c:out value="${fn:substring(slot.ptName, 0, 1)}" /></span>
+                                <span><strong><c:out value="${slot.ptName}" /></strong><small>Trống <c:out value="${sessionTime}" /></small></span>
+                            </label>
+                        </c:forEach>
+                    </div>
+                    <p class="pt-handle-effect">Giữ nguyên ngày giờ · khách và PT nhận đều được báo · hoa hồng buổi này thuộc PT nhận.</p>
+                    <div class="pt-handle-actions">
+                        <a class="btn btn-ghost" href="${closeUrl}" data-handle-close>Để sau</a>
+                        <button class="btn btn-primary" type="submit">Chuyển PT</button>
+                    </div>
+                </c:when>
+                <c:otherwise>
+                    <p class="pt-handle-empty">Không PT nào đang trống đúng <c:out value="${sessionTime}" /> ngày này.
+                        Nhờ PT khác công bố khung giờ này, hoặc chọn Dời buổi.</p>
+                </c:otherwise>
+            </c:choose>
+        </form>
+
+        <%-- ==========================================================================
+             KHUNG 3. HỦY BUỔI → doPost action=cancel → handleService.cancel
+             reason 5–500 ký tự + refundAgreed bắt buộc (DB cũng CHECK: CK_Sessions_PtCancel).
+             ========================================================================== --%>
+        <form class="pt-handle-panel" data-panel="cancel" method="post" action="${pageContext.request.contextPath}/pt/schedule">
+            <input type="hidden" name="csrfToken" value="<c:out value='${csrfToken}' />">
+            <input type="hidden" name="action" value="cancel">
+            <input type="hidden" name="sessionId" value="${handle.sessionId}">
+            <input type="hidden" name="date" value="${viewDate}">
+            <input type="hidden" name="view" value="${view}">
+            <ul class="pt-handle-warning">
+                <li>Buổi vẫn tính là đã dùng, bạn vẫn nhận hoa hồng.</li>
+                <li>Bạn tự hoàn tiền mặt cho khách ngoài hệ thống.</li>
+                <li>Không hoàn tác được.</li>
+            </ul>
+            <label class="pt-handle-field"><span>Lý do hủy <small>(5–500 ký tự, khách sẽ đọc)</small></span>
+                <textarea name="reason" rows="3" minlength="5" maxlength="500" required><c:if test="${chosen eq 'cancel'}"><c:out value="${handleReason}" /></c:if></textarea>
+            </label>
+            <label class="pt-handle-check">
+                <input type="checkbox" name="refundAgreed" required>
+                <span>Khách đã đồng ý nhận lại tiền mặt cho buổi này.</span>
+            </label>
+            <div class="pt-handle-actions">
+                <a class="btn btn-ghost" href="${closeUrl}" data-handle-close>Để sau</a>
+                <button class="btn btn-danger" type="submit">Hủy buổi</button>
+            </div>
+        </form>
+    </div>
+</dialog>

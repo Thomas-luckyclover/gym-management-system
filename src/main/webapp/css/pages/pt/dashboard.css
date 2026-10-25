@@ -8,9 +8,8 @@
      3. Lịch 7 ngày: dải ngày (tab) và danh sách buổi
      4. Kết quả tháng: 3 ô tiền + thanh tỷ lệ
      5. Khách phụ trách: thẻ khách, nút Gọi / Zalo, hộp cảnh báo
-     6. Hộp "Tùy chọn lịch buổi tập"
-     7. Điện thoại
-     8. Arena (24/10 tối): khối chào + Kết quả tháng tối, vân nhám, tên to, ô ghép 12px
+     6. Điện thoại
+     7. Arena (24/10 tối): khối chào + Kết quả tháng tối, vân nhám, tên to, ô ghép 12px
 
    Khối chào + thời tiết nằm ở css/dashboard-hero.css (Customer Dashboard dùng chung).
    Nền / viền / bóng của panel do lớp .panel trong common.css lo (giống màn Lịch dạy).
@@ -419,51 +418,8 @@ body.pt-dashboard-page {
 .pt-attn.is-closed { border-color: var(--color-danger-border); background: var(--color-danger-tint); color: var(--color-danger-ink); }
 
 
-/* ==================== 6. HỘP TÙY CHỌN BUỔI ==================== */
 
-.pt-session-dialog {
-  width: min(90vw, calc(var(--space-12) * 6.75));
-  max-height: 88vh;
-  padding: var(--space-6);
-  border: var(--border-width) solid var(--pt-line-strong);
-  border-radius: var(--radius-sm);
-  background: var(--pt-panel);
-  color: var(--pt-text);
-  box-shadow: var(--shadow-pop);
-}
-.pt-session-dialog::backdrop { background: var(--color-overlay); }
-.pt-session-dialog h2 {
-  margin: 0 0 var(--space-2);
-  font-family: var(--font-body);
-  font-size: var(--font-size-2xl);
-  font-style: normal;
-  letter-spacing: var(--letter-spacing-normal);
-  text-transform: none;
-}
-.pt-session-dialog > p { margin: 0 0 var(--space-4); color: var(--pt-soft); }
-
-.pt-session-options { display: grid; gap: var(--space-2); }
-.pt-session-option {
-  display: flex;
-  align-items: flex-start;
-  gap: var(--space-3);
-  width: 100%;
-  padding: var(--space-3);
-  border: var(--border-width) solid var(--pt-line);
-  border-radius: var(--radius-sm);
-  background: var(--pt-panel-2);
-  color: var(--pt-text);
-  text-align: left;
-}
-.pt-session-option:disabled { cursor: not-allowed; opacity: var(--opacity-disabled); }
-.pt-session-option > span { display: grid; gap: var(--space-1); }
-.pt-session-option > span > span { color: var(--pt-soft); font-size: var(--font-size-sm); }
-
-.pt-session-dialog .pt-session-availability { margin: var(--space-4) 0; font-size: var(--font-size-sm); }
-.pt-session-dialog-actions { display: flex; justify-content: flex-end; }
-
-
-/* ==================== 7. ĐIỆN THOẠI ==================== */
+/* ==================== 6. ĐIỆN THOẠI ==================== */
 
 @media (max-width: 900px) {
   .pt-dashboard-page .content { padding-inline: calc(var(--layout-gutter-mobile) + var(--dock-handle-width)); }
@@ -504,7 +460,7 @@ body.pt-dashboard-page {
 }
 
 
-/* ==================== 8. ARENA (24/10 tối) ====================
+/* ==================== 7. ARENA (24/10 tối) ====================
    Màu + hình theo mục "ARENA" cuối common.css; khối chào (dùng chung với Trang cá nhân khách) ở
    mục Arena cuối dashboard-hero.css. Ở đây: bố cục ghép sát, Kết quả tháng là khối tối có đèn,
    ô "Cần chú ý" viền ember, lịch 7 ngày, thẻ khách. */
