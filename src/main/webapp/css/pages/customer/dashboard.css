@@ -408,6 +408,7 @@ body.customer-dashboard-page { background: var(--pt-bg); color: var(--pt-text); 
   .customer-dashboard-page .tb-left { gap: var(--space-2); }
   .customer-dashboard-page .tb-left .pt-info-trigger { width: var(--control-height-sm); height: var(--control-height-sm); min-width: var(--control-height-sm); min-height: var(--control-height-sm); }
   .customer-dashboard-page .top-right { gap: var(--space-2); }
+  .customer-dashboard-page .top-right .theme-toggle { margin-right: 0; padding: var(--space-1); }
   .customer-dashboard-page .tb-user { padding: 0; border-color: transparent; background: transparent; }
   .tb-action-text { display: none; }
 }

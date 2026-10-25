@@ -1,5 +1,21 @@
 # File notes — mâu thuẫn tài liệu & quyết định đã chốt
 
+## Bước 11 — PT xử lý buổi trên Lịch dạy (25/10/2026, ĐÃ CHỐT + ĐÃ CODE)
+Đổi so với SRS (SRS cập nhật sau): khách KHÔNG còn tự đổi buổi → gộp "Dời buổi (PT bận)" và "Đổi hộ khách không có tài khoản" thành **một** phương án "Dời buổi". Không tính lượt đổi (`SwapsUsed` không đổi), không xác minh SĐT người yêu cầu. Còn 3 phương án: Dời buổi · Chuyển PT · Hủy buổi.
+
+- **Vào hộp**: thẻ buổi `canHandle` (Scheduled + chưa bắt đầu) trên `/pt/schedule` là link `?date=…&view=…&handle=<SessionId>`. PT Dashboard: nút "Xử lý buổi" / "Dời buổi" thành link tới đúng URL này; hộp 4 nút khóa + nhóm JS cũ của Dashboard đã bỏ.
+- **Code**: `PtScheduleServlet` (GET đọc `handle` → `loadHandle`; POST có `action` → `handleSession`, POST thường + PRG, bị từ chối thì dựng lại trang, hộp mở đúng phương án, giữ chữ đã nhập) → `PtSessionHandleService` (`getHandleForm`, `reschedule`, `transfer`, `cancel`) → `PtSessionHandleDAO`. JSP `pt/_handle-dialog.jspf`; đổi phương án bằng radio + CSS `:has`, JS chỉ `showModal` + bỏ `?handle` khỏi URL khi đóng.
+- **Khung đích hợp lệ** (một câu SQL `SLOT_SQL` dùng cho cả lúc mở hộp và lúc Lưu): Free, không bị đơn giữ, chưa có buổi Scheduled, PT đang làm việc **và tài khoản Active**; Service xét thêm: chưa tới giờ, trong hạn gói, không phải ngày phòng nghỉ, PT không có đơn nghỉ trùng ca, khách/người tập cùng không có buổi khác chồng giờ.
+- **Khách thiếu Membership/DayPass ngày đích KHÔNG chặn** (chặn thì buổi đang "Cần chú ý" không dời được): khung đó tô vàng; sau khi dời buổi vẫn hiện "Cần chú ý", JOB-08 tự nhắc khách.
+- **Dời buổi**: chỉ sang khung Free của chính PT, tìm từ hôm nay tới 14 ngày sau (không quá hạn gói). Giữ PT, giữ hoa hồng. Log `SessionMoveLogs.MoveType = PtReschedule`.
+- **Chuyển PT**: giữ nguyên ngày + giờ, chỉ PT khác có khung Free đúng giờ đó. `Sessions.PtEmployeeId` + `TimeSlotId` đổi sang PT nhận; `CommissionAmount = round(SessionValue × CommissionRate PT nhận / 100)`. `Subscriptions.PtEmployeeId` (PT phụ trách gói) KHÔNG đổi. Log `PtTransfer`. Báo khách + PT nhận.
+- **Hủy buổi**: lý do 5–500 ký tự + tích "khách đồng ý nhận lại tiền mặt" (CHECK `CK_Sessions_PtCancel`). `CancelType = ByPt`, vẫn tính buổi, PT vẫn có hoa hồng.
+- **Khung cũ** sau cả 3 phương án → Free (hiện Còn trống trên lịch PT).
+- **Chống tranh chấp**: Lưu chạy 1 transaction: `lockPtForPublish` (xếp hàng với Công bố) → khóa dòng buổi → khóa khung đích (UPDLOCK) → kiểm tra lại → `bookSlot` có điều kiện `Status = 'Free'`. Khung vừa bị lấy → MSG103; buổi đã bắt đầu / không còn Scheduled → MSG91.
+- **Thông báo** (chuông, thông báo hệ thống): khách + người tập cùng có tài khoản Active; hồ sơ phụ thuộc không có tài khoản thì không nhận.
+- Đã chạy thật trên DB seed (PT Sơn): dời buổi 275, thử khung vừa bị lấy (MSG103), chuyển buổi 277 cho PT 14 (hoa hồng 366.667 × 60% = 220.000), hủy buổi 276; `?handle=` của PT khác → "Không tìm thấy buổi này trong lịch của bạn." **DB local đã bị đổi bởi các lần thử này** (chạy lại seed nếu cần dữ liệu gốc). Phát hiện khi thử: PT 14 có tài khoản Locked nhưng vẫn Working → đã chặn nhận chuyển.
+- Chưa làm: buổi đã hủy và khung Còn trống cùng giờ nằm cạnh nhau trên lưới tuần (giống mọi buổi Cancelled trước đây).
+
 ## Làm gọn 7 màn + JOB-08 tự nhắc khách (24/10/2026, ĐÃ CHỐT)
 Mục tiêu: code dễ học, nội dung trên màn hình chỉ thêm, không mất. Quy ước comment: mỗi hàm mở đầu `HÀM CHÍNH` (ai gọi, lúc nào) hoặc `HÀM PHỤ` (gọi ở bước nào của hàm nào); trong hàm chỉ ghi B1, B2…; đầu file liệt kê nhóm + hàm chính, các nhóm ngăn bằng `// ====`.
 

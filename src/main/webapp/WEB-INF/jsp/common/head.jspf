@@ -20,8 +20,9 @@
 <meta name="context-path" content="${pageContext.request.contextPath}">
 
 <%-- Bộ chữ: Inter Tight (tiêu đề) + Inter (nội dung) + JetBrains Mono (chữ phụ: ngày, mã, nhãn); đều có dấu tiếng Việt. --%>
-<%-- Khu làm việc chỉ còn một tông (24/10): xoá lựa chọn sáng/tối cũ còn lưu trong trình duyệt --%>
-<script>try{localStorage.removeItem("gms-theme");}catch(e){}</script>
+<%-- Chế độ Tối (mặc định, bảng màu cũ) / Sáng (Arena). Công tắc ở topbar (common.js) lưu "gms-theme" = "dark" | "light".
+     Áp ngay trước khi vẽ để không nháy: gắn data-theme="dark" trừ khi người dùng đã chọn sáng. --%>
+<script>var gmsTheme=null;try{gmsTheme=localStorage.getItem("gms-theme");}catch(e){}if(gmsTheme!=="light"){document.documentElement.setAttribute("data-theme","dark");}</script>
 <%-- Chế độ nhẹ: máy ít nhân CPU / ít RAM / bật tiết kiệm dữ liệu thì tắt nền động + kính mờ; người dùng chọn lại được bằng nút "Tạm dừng hiệu ứng" --%>
 <script>try{var gmsFx=localStorage.getItem("gms-fx"),gmsNav=navigator,gmsWeak=(gmsNav.hardwareConcurrency&&gmsNav.hardwareConcurrency<=2)||(gmsNav.deviceMemory&&gmsNav.deviceMemory<=2)||(gmsNav.connection&&gmsNav.connection.saveData);if(gmsFx==="lite"||(gmsFx!=="full"&&gmsWeak)){document.documentElement.classList.add("gms-lite");}}catch(e){}</script>
 <link rel="preconnect" href="https://fonts.googleapis.com">

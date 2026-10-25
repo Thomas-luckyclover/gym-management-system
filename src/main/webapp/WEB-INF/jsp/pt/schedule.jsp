@@ -25,12 +25,15 @@
    1. Panel lịch: thanh công cụ (‹ tuần ›, Thêm khung, Tuần/Danh sách) → lưới 7 ngày → chú thích màu
    2. Thanh "Chờ công bố" dính đáy: CSS tự hiện khi có nháp hoặc khung chờ gỡ
    3. <template> khung nháp: JS sao chép khi PT thêm khung
+   4. Hộp "Xử lý buổi" (_handle-dialog.jspf): có khi URL có ?handle=<mã buổi>; biến "handle" ← PtSessionHandleService
 
  AI LÀM GÌ
    Gỡ khung   = ô checkbox trong thẻ khung trống. Không cần JS: CSS đổi kiểu thẻ khi được tích.
    Thêm khung = JS (schedule.js) sao chép <template>, thẻ nháp có 2 ô ẩn slotDate + startTime.
    Công bố    = JS gửi mọi ô thuộc form #pt-publish-form (kể cả ô nằm ngoài form nhờ form="pt-publish-form")
                 → PtScheduleServlet.doPost → PtScheduleService.publish (1 transaction).
+   Xử lý buổi = thẻ buổi là link ?handle= → hộp 3 phương án; mỗi phương án 1 form POST thường
+                → doPost (action=reschedule|transfer|cancel) → PtSessionHandleService.
 ================================================================================ --%>
 <!DOCTYPE html>
 <html lang="vi">
@@ -38,9 +41,9 @@
         <%@ include file="/WEB-INF/jsp/common/head.jspf" %>
         <title>Lịch dạy · Super Gym</title>
         <link rel="stylesheet" href="${pageContext.request.contextPath}/css/pages/pt/header.css?v=20261024a">
-        <link rel="stylesheet" href="${pageContext.request.contextPath}/css/pages/pt/schedule.css?v=20261024b">
+        <link rel="stylesheet" href="${pageContext.request.contextPath}/css/pages/pt/schedule.css?v=20261025d">
         <%-- Chỉ nạp JS khi có lịch (lỗi tải thì trang không cần JS). --%>
-        <c:if test="${not empty week}"><script src="${pageContext.request.contextPath}/js/pages/pt/schedule.js?v=20261024b" defer></script></c:if>
+        <c:if test="${not empty week}"><script src="${pageContext.request.contextPath}/js/pages/pt/schedule.js?v=20261025a" defer></script></c:if>
     </head>
     <body class="dock theme-pt pt-plan-page">
         <%@ include file="/WEB-INF/jsp/common/flash-toast.jspf" %>
@@ -148,6 +151,13 @@
                                     </div>
                                 </header>
 
+                                <%-- ----- 1.1b Buổi trên ?handle= không xử lý được (không phải buổi của bạn, đã bắt đầu…)
+                                     handleError ← PtScheduleServlet.loadHandle; handleFormError ← Lưu bị từ chối mà hộp không mở lại được. ----- --%>
+                                <c:if test="${not empty handleError}">
+                                    <p class="pt-plan-alert" role="alert"><i class="fa-solid fa-circle-exclamation" aria-hidden="true"></i>
+                                        <c:out value="${not empty handleFormError ? handleFormError : handleError}" /></p>
+                                </c:if>
+
                                 <%-- ----- 1.2 Thông báo cho trình đọc màn hình (ẩn khỏi mắt). Lỗi thì JS hiện thêm toast chung. ----- --%>
                                 <p class="visually-hidden" id="pt-plan-status" role="status"></p>
 
@@ -194,7 +204,9 @@
                                                              --start / --length: vị trí + chiều cao thẻ trên lưới (Service tính bằng phút).
                                                              data-start / data-end chỉ có ở thẻ CHIẾM giờ: JS dùng để báo trùng khi thêm khung.
                                                              title (rê chuột): "18:00 – 19:30 · Đỗ Thị Mai · Sắp tới". --%>
-                                                        <article class="pt-slot is-${item.kind} ${item.past ? 'is-past' : ''}"
+                                                        <%-- id="session-120": sau khi dời / hủy, Servlet redirect về #session-120 → trình duyệt cuộn tới, CSS :target tô viền. --%>
+                                                        <article class="pt-slot is-${item.kind} ${item.past ? 'is-past' : ''} ${item.canHandle ? 'is-handleable' : ''}"
+                                                                 <c:if test="${item.booked}">id="session-${item.sessionId}"</c:if>
                                                                  style="--start: ${item.startMinute}; --length: ${item.lengthMinutes}"
                                                                  <c:if test="${item.blocking}">data-start="${item.startOfDay}" data-end="${item.endOfDay}"</c:if>
                                                                  title="${fn:escapeXml(timeText)}${item.booked ? ' · ' : ''}${fn:escapeXml(item.customerNames)} · ${fn:escapeXml(item.statusLabel)}">
@@ -221,6 +233,19 @@
                                                                        item.packageName   ← Orders.PackageNameSnapshot (tên gói lúc mua)
                                                                        "Buổi 20/45"       ← sessionNo (ROW_NUMBER trong SQL) / totalSessions (Subscriptions.GeneratedSessionCount)
                                                                      item.statusLabel (Service): "Còn trống", "Sắp tới", "Đã check-in", "Vắng"… --%>
+                                                                <%-- Buổi có khách còn xử lý được (item.canHandle: Scheduled + chưa tới giờ) → cả thẻ là LINK
+                                                                     ?date=…&view=…&handle=<mã buổi> → doGet mở hộp Xử lý buổi (_handle-dialog.jspf). Không cần JS. --%>
+                                                                <c:when test="${item.canHandle}">
+                                                                    <c:url var="handleUrl" value="/pt/schedule"><c:param name="date" value="${day.date}" /><c:param name="view" value="${view}" /><c:param name="handle" value="${item.sessionId}" /></c:url>
+                                                                    <a class="pt-slot-body pt-slot-link" href="${handleUrl}" aria-label="Xử lý buổi ${timeText}, ${dayLabel}, ${fn:escapeXml(item.customerNames)}">
+                                                                        <span class="pt-slot-time"><c:out value="${timeText}" /></span>
+                                                                        <strong class="pt-slot-person"><c:out value="${item.customerNames}" /></strong>
+                                                                        <span class="pt-slot-package"><c:out value="${item.packageName}" /> · Buổi <c:out value="${item.sessionNo}" />/<c:out value="${item.totalSessions}" /></span>
+                                                                        <span class="pt-slot-state"><c:out value="${item.statusLabel}" /></span>
+                                                                        <span class="pt-slot-hint" aria-hidden="true">Bấm để xử lý</span>
+                                                                    </a>
+                                                                </c:when>
+
                                                                 <c:otherwise>
                                                                     <div class="pt-slot-body">
                                                                         <span class="pt-slot-time"><c:out value="${timeText}" /></span>
@@ -306,6 +331,11 @@
                                 </article>
                             </template>
                             <%-- KHỐI 3. MẪU KHUNG NHÁP — KẾT THÚC --%>
+
+                            <%-- KHỐI 4. HỘP XỬ LÝ BUỔI — chỉ có khi URL có ?handle= và Service trả "handle". --%>
+                            <c:if test="${not empty handle}">
+                                <%@ include file="/WEB-INF/jsp/pt/_handle-dialog.jspf" %>
+                            </c:if>
                         </main>
                     </c:otherwise>
                 </c:choose>
