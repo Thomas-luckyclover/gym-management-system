@@ -436,7 +436,7 @@ body.session-detail-open { overflow: hidden; }
    đầu cột hôm nay tối + gạch ember, thẻ buổi có sọc trái xanh (buổi hôm nay sọc ember),
    nhãn trạng thái thành chip 2px nhưng giữ đúng màu nghĩa. */
 
-html body.dock .my-pt-page .schedule-back { color: var(--arena-surface); min-height: var(--arena-hit); }
+html body.dock .my-pt-page .schedule-back { color: var(--arena-on-dark); min-height: var(--arena-hit); }
 /* Nhịp: thanh công cụ và chú thích thẳng lề 24px như các khối khác */
 html body.dock .my-pt-page :is(.schedule-toolbar, .schedule-legend) { padding: var(--arena-pad-sm) var(--arena-pad); }
 @media (max-width: 640px) {
@@ -460,7 +460,7 @@ html body.dock .my-pt-page .schedule-switch a {
 }
 html body.dock .my-pt-page .schedule-switch a[aria-current="page"] {
   background: var(--arena-900);
-  color: var(--arena-surface);
+  color: var(--arena-on-dark);
   box-shadow: none;
 }
 html body.dock .my-pt-page .schedule-date { border-radius: var(--arena-radius-tile); }
@@ -489,12 +489,12 @@ html body.dock .my-pt-page .schedule-grid th.is-today strong {
   padding: 0;
   border-radius: 0;
   background: none;
-  color: var(--arena-surface);
+  color: var(--arena-on-dark);
 }
 html body.dock .my-pt-page .schedule-grid .is-today .schedule-day-number {
   border-radius: var(--arena-radius-chip);
   background: var(--arena-ember);
-  color: var(--arena-ink);
+  color: var(--arena-ink-on-bright);
 }
 html body.dock .my-pt-page .day-mark.is-today-mark {
   display: inline-block;
@@ -502,11 +502,11 @@ html body.dock .my-pt-page .day-mark.is-today-mark {
   padding: 1px var(--space-1-5);
   border-radius: var(--arena-radius-chip);
   background: var(--arena-ember);
-  color: var(--arena-ink);
+  color: var(--arena-ink-on-bright);
 }
-html body.dock .my-pt-page .schedule-grid .is-selected { box-shadow: inset 0 0 0 var(--border-width-thick) var(--arena-700); }
+html body.dock .my-pt-page .schedule-grid .is-selected { box-shadow: inset 0 0 0 var(--border-width-thick) var(--arena-accent); }
 html body.dock .my-pt-page .schedule-week td.is-selected {
-  box-shadow: inset var(--border-width-thick) 0 var(--arena-700), inset calc(-1 * var(--border-width-thick)) 0 var(--arena-700);
+  box-shadow: inset var(--border-width-thick) 0 var(--arena-accent), inset calc(-1 * var(--border-width-thick)) 0 var(--arena-accent);
 }
 html body.dock .my-pt-page .schedule-grid thead th.is-today.is-selected { box-shadow: inset 0 calc(-1 * var(--arena-mark)) 0 var(--arena-ember); }
 html body.dock .my-pt-page .schedule-grid th.is-today .day-mark.is-selected-mark { color: var(--arena-on-dark-soft); }
@@ -514,25 +514,25 @@ html body.dock .my-pt-page .schedule-grid th.is-today .day-mark.is-selected-mark
 /* Thẻ buổi: sọc trái xanh; buổi hôm nay sọc ember; buổi đã qua trầm */
 html body.dock .my-pt-page .session-card {
   border-color: var(--arena-card-line);
-  border-left: var(--arena-mark) solid var(--arena-700);
+  border-left: var(--arena-mark) solid var(--arena-accent);
   border-radius: var(--arena-radius-chip);
   background: var(--arena-chalk);
 }
-html body.dock .my-pt-page .session-card:is(:hover, :focus-within) { border-color: var(--arena-hover-line); border-left-color: var(--arena-700); }
+html body.dock .my-pt-page .session-card:is(:hover, :focus-within) { border-color: var(--arena-hover-line); border-left-color: var(--arena-accent-text); }
 html body.dock .my-pt-page .session-card[data-status="today"] {
   border-left-color: var(--arena-ember);
   background: var(--arena-surface);
   box-shadow: var(--arena-lift);
 }
 html body.dock .my-pt-page .session-card.is-ended { border-left-color: var(--arena-ended-edge); background: var(--arena-ended); }
-html body.dock .my-pt-page .month-session { border-radius: var(--arena-radius-chip); box-shadow: inset var(--arena-mark) 0 0 var(--arena-700); }
+html body.dock .my-pt-page .month-session { border-radius: var(--arena-radius-chip); box-shadow: inset var(--arena-mark) 0 0 var(--arena-accent); }
 html body.dock .my-pt-page .month-session.is-ended { box-shadow: inset var(--arena-mark) 0 0 var(--arena-ended-edge); }
 
 /* Điện thoại: ô ngày đang hiện là ô tối */
 @media (max-width: 640px) {
   html body.dock .my-pt-page .schedule-mobile-days a { border-radius: var(--arena-radius-tile); }
   html body.dock .my-pt-page .schedule-mobile-days a.is-shown { border-color: var(--arena-900); background: var(--arena-900); color: var(--arena-steel); }
-  html body.dock .my-pt-page .schedule-mobile-days a.is-shown strong { color: var(--arena-surface); }
+  html body.dock .my-pt-page .schedule-mobile-days a.is-shown strong { color: var(--arena-on-dark); }
   html body.dock .my-pt-page .schedule-mobile-days a.is-today strong { color: var(--arena-ember-ink); }
   html body.dock .my-pt-page .schedule-mobile-days a.is-today.is-shown strong { color: var(--arena-ember-on-dark); }
 }
