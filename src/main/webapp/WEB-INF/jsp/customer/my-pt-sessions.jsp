@@ -42,9 +42,9 @@
     <head>
         <%@ include file="/WEB-INF/jsp/common/head.jspf" %>
         <title>Lịch tập · Super Gym</title>
-        <link rel="stylesheet" href="${pageContext.request.contextPath}/css/pages/customer/dashboard.css?v=20261024flat">
+        <link rel="stylesheet" href="${pageContext.request.contextPath}/css/pages/customer/dashboard.css?v=20261025city">
         <link rel="stylesheet" href="${pageContext.request.contextPath}/css/pages/customer/session-status.css?v=20261025a">
-        <link rel="stylesheet" href="${pageContext.request.contextPath}/css/pages/customer/my-pt-sessions.css?v=20261025a">
+        <link rel="stylesheet" href="${pageContext.request.contextPath}/css/pages/customer/my-pt-sessions.css?v=20261025city">
         <link rel="stylesheet" href="${pageContext.request.contextPath}/css/pages/auth/notification-bell.css">
         <script src="${pageContext.request.contextPath}/js/pages/customer/my-pt-sessions.js?v=20261025a" defer></script>
         <script src="${pageContext.request.contextPath}/js/pages/auth/notification-bell.js" defer></script>
