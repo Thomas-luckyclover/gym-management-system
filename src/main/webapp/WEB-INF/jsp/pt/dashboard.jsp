@@ -29,7 +29,7 @@
    2. Lịch 7 ngày
    3. Khách phụ trách (gọi, Zalo, cảnh báo của từng khách)
    4. Kết quả tháng và hoa hồng
-   5. Hộp "Tùy chọn lịch buổi tập" (dashboard.js mở khi bấm "Xử lý buổi" / "Dời buổi")
+   (Nút "Xử lý buổi" / "Dời buổi" là link sang Lịch dạy ?handle=…, hộp xử lý nằm ở màn đó.)
    Màn rộng: CSS xếp 2 cột — trái: Lịch + Kết quả tháng, phải: Khách phụ trách (dashboard.css mục 1).
 
  NHẮC KHÁCH: không có nút. JOB-08 tự gửi thông báo cho khách thiếu membership trước buổi 1 ngày.
@@ -38,15 +38,15 @@
 <html lang="vi">
 <head>
     <%@ include file="/WEB-INF/jsp/common/head.jspf" %>
-    <%-- pageTitle = "Tổng quan PT" (Servlet B8) → tab trình duyệt hiện "Tổng quan PT · GMS". --%>
+    <%-- pageTitle = "Tổng quan PT" (Servlet setPageInfo) → tab trình duyệt hiện "Tổng quan PT · GMS". --%>
     <title><c:out value="${pageTitle}" /> · GMS</title>
-    <link rel="stylesheet" href="${pageContext.request.contextPath}/css/pages/pt/header.css?v=20261024flat">
-    <link rel="stylesheet" href="${pageContext.request.contextPath}/css/pages/pt/dashboard.css?v=20261025a">
+    <link rel="stylesheet" href="${pageContext.request.contextPath}/css/pages/pt/header.css?v=20261025city">
+    <link rel="stylesheet" href="${pageContext.request.contextPath}/css/pages/pt/dashboard.css?v=20261025city">
     <link rel="stylesheet" href="${pageContext.request.contextPath}/css/dashboard-weather.css?v=20261014s">
     <link rel="stylesheet" href="${pageContext.request.contextPath}/css/dashboard-comic.css?v=20261015h">
-    <link rel="stylesheet" href="${pageContext.request.contextPath}/css/dashboard-hero.css?v=20261024flat">
+    <link rel="stylesheet" href="${pageContext.request.contextPath}/css/dashboard-hero.css?v=20261025city">
     <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Patrick+Hand&display=swap">
-    <script src="${pageContext.request.contextPath}/js/pages/pt/dashboard.js?v=20261025a" defer></script>
+    <script src="${pageContext.request.contextPath}/js/pages/pt/dashboard.js?v=20261025b" defer></script>
 </head>
 <%-- weatherType đã được Servlet lọc (resolveWeatherType): chỉ là 1 trong 8 tên cố định, VD "rainy" → nền mưa. --%>
 <body class="dock theme-pt pt-dashboard-page weather-${weatherType}">
@@ -56,7 +56,7 @@
         <%-- Thanh menu trái của PT (dùng chung các màn PT). --%>
         <%@ include file="/WEB-INF/jsp/common/layout-pt.jspf" %>
         <div class="main">
-            <%-- Topbar: "Tổng quan PT" + ngày hôm nay + tên PT + mã NV (ptEmployeeCode, Servlet B2). --%>
+            <%-- Topbar: "Tổng quan PT" + ngày hôm nay + tên PT + mã NV (ptEmployeeCode, Servlet loadEmployeeCode). --%>
             <%@ include file="/WEB-INF/jsp/pt/_header.jspf" %>
 
             <main class="content pt-board" id="main-content" tabindex="-1">
@@ -177,13 +177,13 @@
                                                         <c:if test="${s.status ne 'SCHEDULED'}">
                                                             <span class="badge ${s.statusBadgeClass}"><c:out value="${s.statusLabel}" /></span>
                                                         </c:if>
-                                                        <%-- s.canOpenActions (Service: còn Scheduled + chưa tới giờ) → nút "Xử lý buổi" mở hộp ở khối 5. --%>
+                                                        <%-- s.canOpenActions (Service: còn Scheduled + chưa tới giờ) → link "Xử lý buổi" sang Lịch dạy:
+                                                             /pt/schedule?date=<ngày buổi>&handle=<mã buổi> → Lịch dạy mở đúng tuần + mở sẵn hộp Xử lý buổi. --%>
                                                         <c:if test="${s.canOpenActions}">
-                                                            <button type="button" class="btn pt-session-action" data-pt-session-action
-                                                                    data-session-id="${s.sessionId}"
-                                                                    data-session-label="Buổi ${gms:formatTime(s.startTime)} – ${gms:formatTime(s.endTime)} · ${day.dayLabel}">
+                                                            <c:url var="handleUrl" value="/pt/schedule"><c:param name="date" value="${s.slotDate}" /><c:param name="handle" value="${s.sessionId}" /></c:url>
+                                                            <a class="btn pt-session-action" href="${handleUrl}">
                                                                 <i class="fa-solid fa-screwdriver-wrench" aria-hidden="true"></i> Xử lý buổi
-                                                            </button>
+                                                            </a>
                                                         </c:if>
                                                     </div>
                                                 </article>
@@ -268,9 +268,10 @@
                                                 <%-- item.attentionMessage (Service viết câu dài) — chỉ hiện với ngày nghỉ hoặc gói đôi. --%>
                                                 <c:if test="${item.kind eq 'closedDay' or not empty client.partnerName}"><p class="pt-attn__note"><c:out value="${item.attentionMessage}" /></p></c:if>
                                                 <c:choose>
-                                                    <%-- Ngày phòng nghỉ → nút cam "Dời buổi" (item.sessionId ← DAO Sessions.SessionId), mở hộp khối 5. --%>
+                                                    <%-- Ngày phòng nghỉ → link cam "Dời buổi" (item.sessionId ← DAO Sessions.SessionId) sang Lịch dạy, mở sẵn hộp Xử lý buổi. --%>
                                                     <c:when test="${item.kind eq 'closedDay'}">
-                                                        <button type="button" class="btn btn-primary btn-sm" data-pt-session-action data-session-id="${item.sessionId}" data-session-label="Dời buổi ${gms:formatDate(item.sessionDate)} · ${fn:escapeXml(item.customerName)}">Dời buổi</button>
+                                                        <c:url var="moveUrl" value="/pt/schedule"><c:param name="date" value="${item.sessionDate}" /><c:param name="handle" value="${item.sessionId}" /></c:url>
+                                                        <a class="btn btn-primary btn-sm" href="${moveUrl}">Dời buổi</a>
                                                     </c:when>
                                                     <%-- Thiếu membership / bảo lưu → chỉ báo cho PT biết: JOB-08 tự nhắc khách. --%>
                                                     <c:otherwise><p class="pt-attn__auto"><i class="fa-solid fa-bell" aria-hidden="true"></i> Hệ thống tự nhắc khách trước buổi 1 ngày.</p></c:otherwise>
@@ -362,23 +363,5 @@
         </div>
     </div>
 
-    <%-- ==========================================================================
-         KHỐI 5. HỘP TÙY CHỌN BUỔI — BẮT ĐẦU
-         Không có dữ liệu từ server. dashboard.js mở hộp khi bấm "Xử lý buổi" / "Dời buổi".
-         Chỉ giới thiệu 4 cách xử lý; nghiệp vụ chưa có Service nên các nút bị khóa (disabled).
-         ========================================================================== --%>
-    <dialog id="ptSessionDialog" class="pt-session-dialog" aria-labelledby="ptSessionDialogTitle" aria-describedby="ptSessionDialogHint">
-        <h2 id="ptSessionDialogTitle">Tùy chọn lịch buổi tập</h2>
-        <p id="ptSessionDialogHint">Các phương án dành cho buổi chưa bắt đầu.</p>
-        <div class="pt-session-options">
-            <button type="button" class="pt-session-option" disabled><i class="fa-solid fa-calendar-days" aria-hidden="true"></i><span><strong>Dời buổi</strong><span>Chuyển sang slot khác của bạn, không tính lượt đổi của khách.</span></span></button>
-            <button type="button" class="pt-session-option" disabled><i class="fa-solid fa-user-pen" aria-hidden="true"></i><span><strong>Chuyển PT</strong><span>Chọn PT khác có slot phù hợp để tiếp nhận buổi.</span></span></button>
-            <button type="button" class="pt-session-option" disabled><i class="fa-solid fa-ban" aria-hidden="true"></i><span><strong>Hủy buổi</strong><span>Xem điều kiện hủy trước khi xác nhận.</span></span></button>
-            <button type="button" class="pt-session-option" disabled><i class="fa-solid fa-user-shield" aria-hidden="true"></i><span><strong>Đổi lịch theo yêu cầu khách</strong><span>Dành cho khách phụ thuộc, có tính lượt đổi của gói.</span></span></button>
-        </div>
-        <p class="pt-session-availability">Các lựa chọn hiện chưa khả dụng.</p>
-        <div class="pt-session-dialog-actions"><button type="button" class="btn btn-primary" id="ptSessionDialogClose" autofocus>Đóng</button></div>
-    </dialog>
-    <%-- KHỐI 5. HỘP TÙY CHỌN BUỔI — KẾT THÚC --%>
 </body>
 </html>

@@ -1,5 +1,54 @@
 # File notes — mâu thuẫn tài liệu & quyết định đã chốt
 
+## Chỉ số cơ thể của khách — /customer/body-stats (25/10/2026, ĐÃ CODE) + làm mới seed
+- **DB (đã báo người dùng)**: bảng mới `BodyMeasurements` (CustomerId, MeasuredOn, WeightKg, HeightCm, BodyFatPercent?, WaistCm?, Note?). UNIQUE (CustomerId, MeasuredOn): 1 lần đo / ngày, lưu lại cùng ngày = ghi đè (MERGE). BMI **không lưu**, Service tính. Ngoài SRS, chỉ khách xem; PT đo ở phòng theo dõi riêng (không nối dữ liệu).
+- **Màn**: 4 ô số (cân nặng, BMI + nhóm BMI châu Á: <18,5 / 18,5–22,9 / 23–24,9 / ≥25, % mỡ, vòng eo; thay đổi so với lần đầu), biểu đồ đường SVG do Service tính toạ độ (trục ngang theo ngày thật, chọn chỉ số bằng `?metric=`, không JS), form ghi lần đo (chiều cao điền sẵn lần trước), bảng lịch sử + xóa (hộp xác nhận chung của common.js). Menu khách: "Chỉ số cơ thể".
+- **Seed**: giữ mốc lịch sử 03/10 (SEED_CASES.md không đổi), thêm mục 8b "làm mới cho demo": gia hạn gói tập 21–23/10 (Bích, Quân, Mai, Hà + 12 khách thường) → Active; gói PT mới từ 26/10 (An PT Sơn 07:00, Quân PT Long 11:00 từ 02/11, Hưng & Hà gói đôi PT Trang 19:30, Mai gói PT 2 tháng nối tiếp từ 09/11); 4 buổi lẻ tuần 26/10; chỉ số cơ thể của Mai (6 lần) và An (5 lần). Khung PT công bố kéo tới 31/12. runtest / negtest / bizcheck đều qua.
+
+## Merge develop vào dev_mb1_MinhLC (26/10/2026)
+- `develop` đổi `LeaveRequests`: bỏ `LeaveDate`, thay bằng khoảng `FromDate`..`ToDate` (+ `Days`, `AssignedToEmployeeId`). 2 câu SQL của nhánh này còn đọc `LeaveDate` → màn Lịch dạy, Xử lý buổi, Bán gói PT lỗi "Hệ thống đang bận". Đã sửa:
+  - `PtScheduleDAO.findLeaves`: lấy đơn có khoảng chạm [from, to], tách thành 1 `LeaveInfo` / ngày (`isOnLeave` giữ nguyên).
+  - `PtSessionHandleDAO.SLOT_SQL`: `t.SlotDate BETWEEN lr.FromDate AND lr.ToDate`.
+- `2_Seed_Data.sql` trên develop đã được sửa tay phần LeaveRequests / LeaveRequestTransfers, **chưa khớp `tools/seeddata.py`** → KHÔNG chạy lại `seeddata.py` cho tới khi người sửa phần nghỉ phép cập nhật generator (chạy lại sẽ xóa dữ liệu của họ).
+
+## Chỉ số cơ thể: thêm Tỷ lệ cơ + hint box 2 màn + sửa lỗi ngày Bán gói PT (25/10/2026, ĐÃ CODE)
+- **DB đổi**: `BodyMeasurements.MusclePercent DECIMAL(3,1) NULL` + `CK_BodyMeasurements_Muscle` (10–70). Seed: các lần đo InBody có % cơ, lần "Tự cân ở nhà" để trống. DB đang chạy chỉ cần thêm cột (không phải nạp lại seed):
+  `IF COL_LENGTH('BodyMeasurements', 'MusclePercent') IS NULL ALTER TABLE BodyMeasurements ADD MusclePercent DECIMAL(3,1) NULL CONSTRAINT CK_BodyMeasurements_Muscle CHECK (MusclePercent IS NULL OR MusclePercent BETWEEN 10 AND 70);`
+- **Code**: form thêm ô "Tỷ lệ cơ" (không bắt buộc) → `BodyStatsService.save` → `checkInput` (10–70%) → `BodyStatsDAO.save` (MERGE thêm cột). Thêm ô số thứ 5 "Tỷ lệ cơ" (bấm = biểu đồ `?metric=muscle`) và cột "Cơ" trong lịch sử. `checkInput` bỏ 2 tham số chữ không dùng.
+- **Bảng lịch sử**: cột số căn phải cả tiêu đề lẫn giá trị (quy ước `th.num` của common.css; trang cần selector mạnh hơn `thead th` chung), Ngày + Ghi chú căn trái.
+- **Hint box** (`.pt-info` dùng chung) cạnh tiêu đề màn Chỉ số cơ thể và Bán gói PT.
+- **Lỗi Bán gói PT**: gõ ngày bắt đầu ngoài hôm nay → +30 ngày thì trình duyệt chặn gửi (`min`/`max`) nhưng JS đã làm mờ + khóa form (`is-busy`) → kẹt. Nay: ngày sai → câu lỗi đỏ dưới ô, không gửi, không khóa; ngày đúng → chờ 0,7 giây (gõ xong) mới gửi.
+
+## Lễ tân bán gói PT — /receptionist/pt-sales (25/10/2026, bản 2 — ĐÃ CHỐT + ĐÃ CODE)
+UC-21 bản **đơn giản hóa** (SRS cập nhật sau). Bản 2 thay bản 1 (bỏ "giờ cố định 1 giờ cho cả kỳ", bỏ "thu tiền ngay không giữ chỗ").
+
+- **Luồng 4 bước** (thanh bước trên cùng, cột phải "Đơn bán" dính khi cuộn):
+  1. **Khách** — ô tìm kiểu Google: gõ ≥ 2 ký tự → `pt-sales.js` gọi `GET /receptionist/pt-sales/customers?q=` → `PtSaleService.search` → `PtSaleDAO.searchCustomers` (tối đa 8). Khớp **tên không dấu theo thứ tự từ** ("do mai" → "Đỗ Thị Mai"), **SĐT / SĐT giám hộ**, **mã KH**. Dùng collation `Latin1_General_CI_AI` (bản `Vietnamese_CI_AI` coi ă, ê, đ là chữ riêng → "van" không khớp "Văn"). Gợi ý ghi luôn "Gói tập tới …" hoặc lý do không bán được. Chọn → `?customer=<CustomerId>`. Tắt JS: Enter → `?q=` → danh sách link.
+  2. **Gói & PT** — ô gói, ô PT, ngày bắt đầu (mặc định ngày mai, tối đa +30 ngày). Gói đôi: ô tìm người tập cùng (cùng API, bỏ chính người đứng tên). Đổi lựa chọn → JS tự gửi form GET; đổi gói/PT/ngày thì bỏ giờ đã chọn.
+  3. **Lịch tập hằng tuần** (thay "giờ cố định"): bảng T2–T6 × các giờ PT đã công bố khung Free trong 14 ngày đầu kỳ. Mỗi ô "8/9" = số tuần trong kỳ thứ đó lúc giờ đó **thật sự có buổi** (cùng luật `planDays`) / tổng số tuần; tô màu đủ / ≥ 3/4 / ít / không (khóa). **Mỗi thứ chọn 1 giờ riêng** (`t1..t5`), hoặc link "Cả tuần". Chọn đủ 5 thứ → lịch từng ngày + lý do ngày không có buổi.
+  4. **Giữ chỗ & thu tiền** — xem dưới.
+- **Giữ chỗ 15 phút** (giống mua vé): nút "Giữ lịch 15 phút" (POST `action=hold`) → trong 1 transaction có khóa PT, làm lại đủ 3 bước rồi tạo đơn **`Pending`** tại quầy (`PaymentDueAt` NULL, ca tự mở như bản 1) và đặt mọi khung của kỳ sang **`Held`** (`HeldByOrderId`, `HoldExpiresAt` = +15 phút); ngày PT chưa có khung → tạo khung `Held`. Từ lúc này lễ tân khác / PT không lấy được các khung đó (bảng tuần của họ ghi "Đang được giữ cho đơn khác"). Trang chuyển sang `?order=<OrderId>`: đồng hồ đếm ngược (common.js `data-countdown-seconds`, hết giờ tự tải lại).
+  - **Thu tiền** (`action=pay`): Cash / Transfer (ô mã giao dịch chỉ hiện khi Chuyển khoản, CSS `:has`) + tích "Đã nhận đủ". Kiểm tra đơn còn giữ, chưa quá hạn → đơn `Paid` + giao dịch `Success` + Subscription + khung `Held → Booked` + Sessions. `FixedStartTime` = giờ xuất hiện nhiều nhất. Báo khách + người tập cùng + PT như bản 1.
+  - **Hủy giữ chỗ** (`action=release`, có hộp xác nhận) hoặc **quá 15 phút**: đơn `Cancelled` (lý do ghi sẵn), khung do lần giữ này tạo ra bị xóa, khung có sẵn trả về `Free`. Quá hạn được dọn **lười**: mỗi lần mở màn / bấm giữ, `releaseExpired` nhả mọi đơn giữ đã quá hạn (chưa có job nền).
+- **Giữ nguyên từ bản 1**: điều kiện khách mua được (gói thành viên phủ hôm nay, không bảo lưu, đủ P-05 tuổi, không phải chính lễ tân); luật ngày không có buổi; ngày phòng nghỉ / PT có đơn nghỉ vẫn sinh buổi + tô vàng; công thức tiền (VAT, SessionValue, hoa hồng, MaxSwapsSnapshot); không voucher; bỏ nhánh bán buổi lẻ.
+- Đã chạy thật (lễ tân `tam.le@gms.vn`, Chrome 1440 + 390): tìm "do mai", "0901234501", "KH-100"; gói 1 tháng giữ 24 buổi → đồng hồ 14:59; gói đôi KH-1001 + KH-1006 giữ 23 buổi → chuyển khoản → Paid; hủy giữ → Cancelled, 0 khung còn giữ; ép hết hạn → "Đơn này không còn giữ chỗ…". **DB local đã đổi** bởi các lần thử này.
+
+## Bước 11 — PT xử lý buổi trên Lịch dạy (25/10/2026, ĐÃ CHỐT + ĐÃ CODE)
+Đổi so với SRS (SRS cập nhật sau): khách KHÔNG còn tự đổi buổi → gộp "Dời buổi (PT bận)" và "Đổi hộ khách không có tài khoản" thành **một** phương án "Dời buổi". Không tính lượt đổi (`SwapsUsed` không đổi), không xác minh SĐT người yêu cầu. Còn 3 phương án: Dời buổi · Chuyển PT · Hủy buổi.
+
+- **Vào hộp**: thẻ buổi `canHandle` (Scheduled + chưa bắt đầu) trên `/pt/schedule` là link `?date=…&view=…&handle=<SessionId>`. PT Dashboard: nút "Xử lý buổi" / "Dời buổi" thành link tới đúng URL này; hộp 4 nút khóa + nhóm JS cũ của Dashboard đã bỏ.
+- **Code**: `PtScheduleServlet` (GET đọc `handle` → `loadHandle`; POST có `action` → `handleSession`, POST thường + PRG, bị từ chối thì dựng lại trang, hộp mở đúng phương án, giữ chữ đã nhập) → `PtSessionHandleService` (`getHandleForm`, `reschedule`, `transfer`, `cancel`) → `PtSessionHandleDAO`. JSP `pt/_handle-dialog.jspf`; đổi phương án bằng radio + CSS `:has`, JS chỉ `showModal` + bỏ `?handle` khỏi URL khi đóng.
+- **Khung đích hợp lệ** (một câu SQL `SLOT_SQL` dùng cho cả lúc mở hộp và lúc Lưu): Free, không bị đơn giữ, chưa có buổi Scheduled, PT đang làm việc **và tài khoản Active**; Service xét thêm: chưa tới giờ, trong hạn gói, không phải ngày phòng nghỉ, PT không có đơn nghỉ trùng ca, khách/người tập cùng không có buổi khác chồng giờ.
+- **Khách thiếu Membership/DayPass ngày đích KHÔNG chặn** (chặn thì buổi đang "Cần chú ý" không dời được): khung đó tô vàng; sau khi dời buổi vẫn hiện "Cần chú ý", JOB-08 tự nhắc khách.
+- **Dời buổi**: chỉ sang khung Free của chính PT, tìm từ hôm nay tới 14 ngày sau (không quá hạn gói). Giữ PT, giữ hoa hồng. Log `SessionMoveLogs.MoveType = PtReschedule`.
+- **Chuyển PT**: giữ nguyên ngày + giờ, chỉ PT khác có khung Free đúng giờ đó. `Sessions.PtEmployeeId` + `TimeSlotId` đổi sang PT nhận; `CommissionAmount = round(SessionValue × CommissionRate PT nhận / 100)`. `Subscriptions.PtEmployeeId` (PT phụ trách gói) KHÔNG đổi. Log `PtTransfer`. Báo khách + PT nhận.
+- **Hủy buổi**: lý do 5–500 ký tự + tích "khách đồng ý nhận lại tiền mặt" (CHECK `CK_Sessions_PtCancel`). `CancelType = ByPt`, vẫn tính buổi, PT vẫn có hoa hồng.
+- **Khung cũ** sau cả 3 phương án → Free (hiện Còn trống trên lịch PT).
+- **Chống tranh chấp**: Lưu chạy 1 transaction: `lockPtForPublish` (xếp hàng với Công bố) → khóa dòng buổi → khóa khung đích (UPDLOCK) → kiểm tra lại → `bookSlot` có điều kiện `Status = 'Free'`. Khung vừa bị lấy → MSG103; buổi đã bắt đầu / không còn Scheduled → MSG91.
+- **Thông báo** (chuông, thông báo hệ thống): khách + người tập cùng có tài khoản Active; hồ sơ phụ thuộc không có tài khoản thì không nhận.
+- Đã chạy thật trên DB seed (PT Sơn): dời buổi 275, thử khung vừa bị lấy (MSG103), chuyển buổi 277 cho PT 14 (hoa hồng 366.667 × 60% = 220.000), hủy buổi 276; `?handle=` của PT khác → "Không tìm thấy buổi này trong lịch của bạn." **DB local đã bị đổi bởi các lần thử này** (chạy lại seed nếu cần dữ liệu gốc). Phát hiện khi thử: PT 14 có tài khoản Locked nhưng vẫn Working → đã chặn nhận chuyển.
+- Chưa làm: buổi đã hủy và khung Còn trống cùng giờ nằm cạnh nhau trên lưới tuần (giống mọi buổi Cancelled trước đây).
+
 ## Làm gọn 7 màn + JOB-08 tự nhắc khách (24/10/2026, ĐÃ CHỐT)
 Mục tiêu: code dễ học, nội dung trên màn hình chỉ thêm, không mất. Quy ước comment: mỗi hàm mở đầu `HÀM CHÍNH` (ai gọi, lúc nào) hoặc `HÀM PHỤ` (gọi ở bước nào của hàm nào); trong hàm chỉ ghi B1, B2…; đầu file liệt kê nhóm + hàm chính, các nhóm ngăn bằng `// ====`.
 
@@ -535,3 +584,8 @@ Hướng dẫn dùng tokens/common hiện có: `docs/frontend-shared-usage.md`.
   - Service tính sẵn khoảng giờ được thêm khung mỗi ngày (firstStartMinute/lastStartMinute; hôm nay tính từ sau giờ hiện tại) thay cho JS; DTO thêm isBlocking/startOfDay/endOfDay. Tên ngày đổi T2/CN → Thứ 2/Chủ nhật cho giống màn khách.
   - Header PT tách ra css/pages/pt/header.css (trước nằm trong dashboard.css nên Lịch dạy lệch); _header.jspf có nút i khi Servlet đặt pageHelp; Lịch dạy hiện mã NV như Dashboard. Bỏ nút "Xử lý buổi" đang khóa (bước 11 sẽ làm thật).
   - Kiểm tra: 267 test Java + 5 test SQL thật (SQL Server, rollback) + 6 test JS pass; impeccable detect 0 lỗi. Chrome trên Tomcat + DB seed: thêm bằng bấm và form, gỡ, F5 giữ, Danh sách giữ, Công bố "2 khung, gỡ 1"; 1440 tối/sáng, 390/320 cảm ứng không tràn ngang; Tab + Space gỡ được.
+- 25/10/2026 — Đặt tên tham số URL rõ nghĩa + Servlet ghi số dòng JSP:
+  - Gói của tôi: `?id=` → `?package=` (Subscriptions.SubscriptionId hoặc "single"); Service đổi `selectedId` → `packageKey`.
+  - Lịch tập: `?session=` → `?openSession=` (attribute `openSessionId`, `data-open-session`); `?from=` → `?backPackage=` (attribute `backPackageKey`). Bỏ attribute `dashboardError` vì không JSP nào đọc.
+  - Quy ước mới: mỗi `getParameter` trong Servlet ghi JSP + dòng GỬI lên; mỗi `setAttribute` ghi JSP + dòng ĐỌC. Chỗ đọc nằm trong .jspf thì ghi thêm dòng của JSP cha nhúng jspf đó. Sửa JSP làm lệch số dòng thì phải sửa comment Servlet cùng commit.
+  - Servlet 6 màn tách hàm phụ để doGet/doPost chỉ còn các bước (getAccountId, loadHeader, loadBookings, loadTimetable, loadBlocks, loadWeather, setPageInfo, isPtWithValidToken…). Hành vi giữ nguyên: 271 test pass; Tomcat + SQL Server: link gói, "Xem trên lịch tập", "Quay lại Gói của tôi", "Xem toàn bộ gói", lịch tháng mở đúng buổi; URL sai (`?package=abc`, `?openSession=-1`) vẫn 200.

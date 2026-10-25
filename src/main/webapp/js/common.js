@@ -2865,6 +2865,70 @@ document.addEventListener("DOMContentLoaded", function () {
 
 
 // =====================================================================
+// GIAO DIỆN SÁNG / TỐI (khôi phục 25/10) — công tắc [data-theme-toggle] trên topbar mọi màn nội bộ.
+// Tối là mặc định: <html data-theme="dark"> (head.jspf gắn sẵn). Sáng (Arena): <html> không có data-theme.
+// Lựa chọn lưu localStorage "gms-theme"; head.jspf đọc lại trước khi vẽ nên không nháy.
+// =====================================================================
+document.addEventListener("DOMContentLoaded", function () {
+    const root = document.documentElement;
+    // B0: màn nội bộ chưa có công tắc → tự gắn vào đầu khối bên phải của topbar (trước chuông, tài khoản)
+    if (document.body.classList.contains("dock") && !document.querySelector("[data-theme-toggle]")) {
+        const topbar = document.querySelector(".topbar");
+        if (topbar) {
+            const slot = topbar.querySelector(".top-right, .pt-top-actions") || topbar;
+            const toggle = document.createElement("button");
+            toggle.type = "button";
+            toggle.className = "theme-toggle";
+            toggle.setAttribute("data-theme-toggle", "");
+            toggle.innerHTML = '<span class="theme-toggle__track" aria-hidden="true"><span class="theme-toggle__knob"></span></span>'
+                + '<span class="theme-toggle__label">Sáng</span>';
+            slot.insertBefore(toggle, slot === topbar ? null : slot.firstChild);
+        }
+    }
+    const buttons = document.querySelectorAll("[data-theme-toggle]");
+    if (!buttons.length) {
+        return;
+    }
+
+    function isDark() {
+        return root.getAttribute("data-theme") === "dark";
+    }
+
+    // B1: chữ, trạng thái gạt và nhãn đọc màn hình theo chế độ hiện tại (aria-pressed = đang sáng)
+    function paint() {
+        const dark = isDark();
+        buttons.forEach(function (button) {
+            button.setAttribute("aria-pressed", dark ? "false" : "true");
+            const label = button.querySelector(".theme-toggle__label");
+            if (label) {
+                label.textContent = dark ? "Tối" : "Sáng";
+            }
+            button.setAttribute("aria-label", dark ? "Đang ở nền tối. Chuyển sang nền sáng" : "Đang ở nền sáng. Chuyển sang nền tối");
+        });
+    }
+
+    // B2: bấm → đổi chế độ và ghi nhớ
+    buttons.forEach(function (button) {
+        button.addEventListener("click", function () {
+            const next = isDark() ? "light" : "dark";
+            if (next === "dark") {
+                root.setAttribute("data-theme", "dark");
+            } else {
+                root.removeAttribute("data-theme");
+            }
+            try {
+                localStorage.setItem("gms-theme", next);
+            } catch (error) {
+                // Trình duyệt chặn lưu trữ: vẫn đổi được trong lần xem này
+            }
+            paint();
+        });
+    });
+    paint();
+});
+
+
+// =====================================================================
 // NÂNG CẤP 2026-10-13: biểu đồ màu thương hiệu + đường xu hướng, số đếm lên, Pumpy theo ngữ cảnh
 // =====================================================================
 document.addEventListener("DOMContentLoaded", function () {
@@ -2897,8 +2961,12 @@ document.addEventListener("DOMContentLoaded", function () {
             return (index ? "L" : "M") + point[0].toFixed(1) + " " + point[1].toFixed(1);
         }).join(" ");
         const last = points[points.length - 1];
+        // Màu vùng dưới đường xu hướng theo chế độ: sáng = xanh cobalt nhạt, tối = aqua như giao diện cũ
+        const darkMode = document.documentElement.getAttribute("data-theme") === "dark";
+        const sparkColor = darkMode ? "#2BD4DE" : "#2E63B5";
+        const sparkOpacity = darkMode ? ".35" : ".18";
         const svg = '<svg class="stat-spark" viewBox="0 0 ' + width + " " + height + '" preserveAspectRatio="none" aria-hidden="true">'
-            + '<defs><linearGradient id="gmsSparkFill" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#2E63B5" stop-opacity=".18"/><stop offset="1" stop-color="#2E63B5" stop-opacity="0"/></linearGradient></defs>'
+            + '<defs><linearGradient id="gmsSparkFill" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="' + sparkColor + '" stop-opacity="' + sparkOpacity + '"/><stop offset="1" stop-color="' + sparkColor + '" stop-opacity="0"/></linearGradient></defs>'
             + '<path class="area" d="' + line + " L" + width + " " + height + " L0 " + height + ' Z"/>'
             + '<path class="line" d="' + line + '" vector-effect="non-scaling-stroke"/>'
             + '<circle cx="' + last[0].toFixed(1) + '" cy="' + last[1].toFixed(1) + '" r="3"/></svg>';

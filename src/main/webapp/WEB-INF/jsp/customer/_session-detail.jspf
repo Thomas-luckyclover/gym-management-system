@@ -53,7 +53,7 @@
 <c:if test="${not empty s.calendarUrl or not s.singleSession}">
     <div class="session-detail-links">
         <c:if test="${not empty s.calendarUrl}"><a href="${fn:escapeXml(s.calendarUrl)}" target="_blank" rel="noopener noreferrer"><i class="fa-regular fa-calendar-plus" aria-hidden="true"></i> Thêm vào Google Calendar</a></c:if>
-        <c:if test="${not s.singleSession}"><a href="${pageContext.request.contextPath}/customer/bookings?id=${s.subscriptionId}">Xem toàn bộ gói <i class="fa-solid fa-arrow-right" aria-hidden="true"></i></a></c:if>
+        <c:if test="${not s.singleSession}"><a href="${pageContext.request.contextPath}/customer/bookings?package=${s.subscriptionId}">Xem toàn bộ gói <i class="fa-solid fa-arrow-right" aria-hidden="true"></i></a></c:if>
     </div>
 </c:if>
 <%-- ===== NỘI DUNG CHI TIẾT 1 BUỔI — KẾT THÚC ===== --%>

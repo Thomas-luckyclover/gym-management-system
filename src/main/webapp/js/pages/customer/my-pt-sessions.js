@@ -6,7 +6,7 @@
  * JS CHỈ LÀM 3 VIỆC (không lấy dữ liệu, không gọi server — mọi chữ đã có sẵn trong HTML):
  *   1. Bấm thẻ buổi → mở hộp "Chi tiết buổi tập" (chép phần chi tiết đang ẩn trong thẻ vào hộp).
  *   2. Nút "Sao chép số" PT.
- *   3. Đến từ "Gói của tôi" (?session=…) → mở sẵn chi tiết buổi đó.
+ *   3. Đến từ "Gói của tôi" (?openSession=…) → mở sẵn chi tiết buổi đó.
  *
  * NHỮNG VIỆC KHÔNG CẦN JS:
  *   - Đổi tuần / tháng, chọn ngày, "Hôm nay": đều là link hoặc form GET.
@@ -139,13 +139,13 @@ function showPhoneToCopyByHand(button, phone) {
 
 
 // ================================================================================================================
-// NHÓM 3. MỞ SẴN 1 BUỔI (đến từ "Gói của tôi" hoặc bấm 1 buổi ở lịch tháng: URL có ?session=…)
+// NHÓM 3. MỞ SẴN 1 BUỔI (đến từ "Gói của tôi" hoặc bấm 1 buổi ở lịch tháng: URL có ?openSession=…)
 // ================================================================================================================
 
 // HÀM CHÍNH — gọi 1 lần khi trang tải xong, SAU initSessionDrawer.
 function openFocusSession() {
-    // B1: mã buổi do JSP gắn trên <main data-focus-session="…">; không có thì thôi.
-    const sessionId = document.getElementById("main-content").dataset.focusSession;
+    // B1: mã buổi do JSP gắn trên <main data-open-session="…">; không có thì thôi.
+    const sessionId = document.getElementById("main-content").dataset.openSession;
     if (!sessionId) {
         return;
     }

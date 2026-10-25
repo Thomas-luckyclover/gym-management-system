@@ -8,9 +8,8 @@
      3. Lịch 7 ngày: dải ngày (tab) và danh sách buổi
      4. Kết quả tháng: 3 ô tiền + thanh tỷ lệ
      5. Khách phụ trách: thẻ khách, nút Gọi / Zalo, hộp cảnh báo
-     6. Hộp "Tùy chọn lịch buổi tập"
-     7. Điện thoại
-     8. Arena (24/10 tối): khối chào + Kết quả tháng tối, vân nhám, tên to, ô ghép 12px
+     6. Điện thoại
+     7. Arena (24/10 tối): khối chào + Kết quả tháng tối, vân nhám, tên to, ô ghép 12px
 
    Khối chào + thời tiết nằm ở css/dashboard-hero.css (Customer Dashboard dùng chung).
    Nền / viền / bóng của panel do lớp .panel trong common.css lo (giống màn Lịch dạy).
@@ -419,51 +418,8 @@ body.pt-dashboard-page {
 .pt-attn.is-closed { border-color: var(--color-danger-border); background: var(--color-danger-tint); color: var(--color-danger-ink); }
 
 
-/* ==================== 6. HỘP TÙY CHỌN BUỔI ==================== */
 
-.pt-session-dialog {
-  width: min(90vw, calc(var(--space-12) * 6.75));
-  max-height: 88vh;
-  padding: var(--space-6);
-  border: var(--border-width) solid var(--pt-line-strong);
-  border-radius: var(--radius-sm);
-  background: var(--pt-panel);
-  color: var(--pt-text);
-  box-shadow: var(--shadow-pop);
-}
-.pt-session-dialog::backdrop { background: var(--color-overlay); }
-.pt-session-dialog h2 {
-  margin: 0 0 var(--space-2);
-  font-family: var(--font-body);
-  font-size: var(--font-size-2xl);
-  font-style: normal;
-  letter-spacing: var(--letter-spacing-normal);
-  text-transform: none;
-}
-.pt-session-dialog > p { margin: 0 0 var(--space-4); color: var(--pt-soft); }
-
-.pt-session-options { display: grid; gap: var(--space-2); }
-.pt-session-option {
-  display: flex;
-  align-items: flex-start;
-  gap: var(--space-3);
-  width: 100%;
-  padding: var(--space-3);
-  border: var(--border-width) solid var(--pt-line);
-  border-radius: var(--radius-sm);
-  background: var(--pt-panel-2);
-  color: var(--pt-text);
-  text-align: left;
-}
-.pt-session-option:disabled { cursor: not-allowed; opacity: var(--opacity-disabled); }
-.pt-session-option > span { display: grid; gap: var(--space-1); }
-.pt-session-option > span > span { color: var(--pt-soft); font-size: var(--font-size-sm); }
-
-.pt-session-dialog .pt-session-availability { margin: var(--space-4) 0; font-size: var(--font-size-sm); }
-.pt-session-dialog-actions { display: flex; justify-content: flex-end; }
-
-
-/* ==================== 7. ĐIỆN THOẠI ==================== */
+/* ==================== 6. ĐIỆN THOẠI ==================== */
 
 @media (max-width: 900px) {
   .pt-dashboard-page .content { padding-inline: calc(var(--layout-gutter-mobile) + var(--dock-handle-width)); }
@@ -504,7 +460,7 @@ body.pt-dashboard-page {
 }
 
 
-/* ==================== 8. ARENA (24/10 tối) ====================
+/* ==================== 7. ARENA (24/10 tối) ====================
    Màu + hình theo mục "ARENA" cuối common.css; khối chào (dùng chung với Trang cá nhân khách) ở
    mục Arena cuối dashboard-hero.css. Ở đây: bố cục ghép sát, Kết quả tháng là khối tối có đèn,
    ô "Cần chú ý" viền ember, lịch 7 ngày, thẻ khách. */
@@ -524,7 +480,7 @@ html body.dock.pt-dashboard-page .pt-section-heading h2 {
 
 /* --- Kết quả tháng: khối tối có đèn (khối chào: xem mục Arena trong dashboard-hero.css) --- */
 html body.dock.pt-dashboard-page .pt-board .pt-board__summary {
-  --pt-text: var(--arena-surface);
+  --pt-text: var(--arena-on-dark);
   --pt-soft: var(--arena-steel);
   --pt-muted: var(--arena-steel);
   --pt-line: var(--arena-line-dark);
@@ -533,7 +489,7 @@ html body.dock.pt-dashboard-page .pt-board .pt-board__summary {
   --pt-panel-2: var(--arena-800);
   --pt-lagoon-text: var(--arena-focus);
   --arena-focus-ring: var(--arena-focus);
-  --color-text: var(--arena-surface);
+  --color-text: var(--arena-on-dark);
   --color-text-soft: var(--arena-steel);
   --color-surface-muted: var(--arena-800);
   border: 0;
@@ -541,7 +497,7 @@ html body.dock.pt-dashboard-page .pt-board .pt-board__summary {
   background:
     radial-gradient(120% 90% at 0% 0%, var(--arena-glow), transparent 55%),
     var(--arena-900);
-  color: var(--arena-surface);
+  color: var(--arena-on-dark);
   box-shadow: var(--arena-shadow-dark);
 }
 html.gms-lite body.dock.pt-dashboard-page .pt-board .pt-board__summary { background: var(--arena-900); }
@@ -563,7 +519,7 @@ html body.dock.pt-dashboard-page .pt-day.is-today .pt-day__name { color: var(--a
 html body.dock.pt-dashboard-page .pt-days.is-ready .pt-day[aria-selected="true"] {
   border-color: var(--arena-900);
   background: var(--arena-900);
-  color: var(--arena-surface);
+  color: var(--arena-on-dark);
 }
 html body.dock.pt-dashboard-page .pt-days.is-ready .pt-day[aria-selected="true"] :is(.pt-day__name, .pt-day__count) { color: var(--arena-steel); }
 html body.dock.pt-dashboard-page .pt-days.is-ready .pt-day[aria-selected="true"].is-today .pt-day__name { color: var(--arena-ember-on-dark); }
@@ -573,16 +529,16 @@ html body.dock.pt-dashboard-page .pt-session-time b { font-family: var(--font-br
 /* "Tiếp theo": nhãn xanh — ember đã dành cho hôm nay */
 html body.dock.pt-dashboard-page .pt-chip-next {
   border-radius: var(--arena-radius-chip);
-  background: var(--arena-700);
-  color: var(--arena-surface);
+  background: var(--arena-accent);
+  color: var(--arena-on-dark);
 }
-html body.dock.pt-dashboard-page .pt-session-time .pt-session-when { background: var(--arena-700); color: var(--arena-surface); }
+html body.dock.pt-dashboard-page .pt-session-time .pt-session-when { background: var(--arena-accent); color: var(--arena-on-dark); }
 
 /* --- Khách phụ trách --- */
 html body.dock.pt-dashboard-page .pt-client-item h3 { font-family: var(--font-brand-display); font-size: var(--font-size-lg); font-weight: var(--font-weight-bold); }
 html body.dock.pt-dashboard-page .pt-contact-btn { border-color: var(--arena-chalk-line); border-radius: var(--arena-radius-chip); background: var(--arena-surface); }
-html body.dock.pt-dashboard-page .pt-contact-btn:hover { border-color: var(--arena-700); }
-html body.dock.pt-dashboard-page .pt-contact-btn.is-zalo { border-color: var(--arena-700); background: var(--arena-700); color: var(--arena-surface); }
+html body.dock.pt-dashboard-page .pt-contact-btn:hover { border-color: var(--arena-accent-text); }
+html body.dock.pt-dashboard-page .pt-contact-btn.is-zalo { border-color: var(--arena-accent-text); background: var(--arena-accent); color: var(--arena-on-dark); }
 html body.dock.pt-dashboard-page .pt-contact-btn.is-zalo:hover { border-color: var(--arena-800); background: var(--arena-800); }
 html body.dock.pt-dashboard-page .pt-attn { border-left-width: var(--arena-mark); border-radius: var(--arena-radius-tile); }
 
@@ -593,7 +549,7 @@ html body.dock.pt-dashboard-page .pt-money-tile {
   background: var(--arena-800);
 }
 html body.dock.pt-dashboard-page .pt-money-tile strong {
-  color: var(--arena-surface);
+  color: var(--arena-on-dark);
   font-family: var(--font-brand-display);
   font-size: clamp(1.4rem, 2vw, 1.75rem);
   font-weight: var(--font-weight-extrabold);
