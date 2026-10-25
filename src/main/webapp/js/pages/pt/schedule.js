@@ -8,11 +8,13 @@
  *   2. Bỏ khung nháp (nút ×) và "Bỏ tất cả".
  *   3. Lưu tạm nháp + lựa chọn gỡ vào trình duyệt, để F5 / đổi kiểu xem không mất.
  *   4. Gửi Công bố (AJAX) rồi tải lại trang.
+ *   5. Hộp "Xử lý buổi": mở dạng modal; Esc / Đóng thì bỏ ?handle khỏi URL (không tải lại trang).
  *
  * NHỮNG VIỆC CSS ĐÃ LÀM (không có trong file này):
  *   - Gỡ khung: thẻ khung trống chứa ô checkbox; tích ô thì CSS tự đổi kiểu thẻ "Chờ gỡ".
  *   - Đếm "2 khung mới · 1 khung gỡ" và hiện/ẩn thanh Chờ công bố.
  *   - Xếp thẻ theo giờ trong kiểu danh sách; chuyển sang danh sách trên điện thoại.
+ *   - Hộp Xử lý buổi: thẻ buổi là link ?handle=, đổi phương án bằng radio + CSS :has, 3 form POST thường.
  *
  * MỤC LỤC
  *   NHÓM 1. Khởi tạo                    initPtSchedule
@@ -22,6 +24,7 @@
  *   NHÓM 5. Lưu tạm trong trình duyệt   savePtChanges, restorePtChanges
  *   NHÓM 6. Công bố                     publishPtChanges
  *   NHÓM 7. Hàm phụ dùng chung          ptMinuteAtPointer, ptClock, ptMinutes, showPtStatus
+ *   NHÓM 8. Hộp Xử lý buổi              initPtHandleDialog
  */
 
 // ===== Đọc một lần từ JSP =====
@@ -61,6 +64,9 @@ function initPtSchedule() {
 
     // B4: F5 hoặc đổi kiểu xem: lấy lại nháp + lựa chọn gỡ của đúng tuần này.
     restorePtChanges();
+
+    // B5: URL có ?handle= → JSP đã in sẵn hộp Xử lý buổi; JS chỉ đổi sang dạng modal.
+    initPtHandleDialog();
 }
 
 
@@ -409,6 +415,41 @@ function showPtStatus(text, isError) {
     if (isError === true) {
         showToast("error", text);
     }
+}
+
+
+// ================================================================================================================
+// NHÓM 8. HỘP XỬ LÝ BUỔI — dữ liệu và form do server in sẵn (_handle-dialog.jspf), JS không gửi gì
+// ================================================================================================================
+
+/**
+ * HÀM CHÍNH — gọi ở B5 của initPtSchedule.
+ * B1: JSP in <dialog open> (tắt JS vẫn dùng được) → đóng rồi showModal() để có nền mờ, giữ focus, Esc để đóng.
+ * B2: nút Đóng / "Để sau" là link về URL không có ?handle → có JS thì chỉ đóng hộp, khỏi tải lại trang.
+ * B3: hộp đóng (kể cả Esc) → thay URL bằng data-close-url để F5 không mở lại hộp.
+ */
+function initPtHandleDialog() {
+    const dialog = document.getElementById("pt-handle");
+    if (!dialog) {
+        return;
+    }
+
+    // B1
+    dialog.close();
+    dialog.showModal();
+
+    // B2
+    dialog.addEventListener("click", function (event) {
+        if (event.target.closest("[data-handle-close]")) {
+            event.preventDefault();
+            dialog.close();
+        }
+    });
+
+    // B3
+    dialog.addEventListener("close", function () {
+        history.replaceState(null, "", dialog.dataset.closeUrl);
+    });
 }
 
 document.addEventListener("DOMContentLoaded", initPtSchedule);

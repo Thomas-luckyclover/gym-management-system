@@ -462,6 +462,70 @@ for cid in BULK:
         made += 1
         break
 
+# ============================================================ 8b. LÀM MỚI CHO DEMO (25/10/2026)
+# Mốc lịch sử vẫn là 03/10 (SEED_CASES.md giữ nguyên). Mục này chỉ THÊM: gia hạn gói tập 21–23/10 để các khách
+# chính còn dùng được gym từ tuần 26/10, gói PT mới bắt đầu từ 26/10 (mọi buổi = Scheduled), buổi lẻ tuần tới.
+DEMO = d_(2026, 10, 26)        # Thứ 2 tuần demo
+DEMO_SALES = []
+
+
+def demo_membership(cid, key, sold, note=None):
+    """Gia hạn gói tập tại quầy; bắt đầu ngay ngày mua, hoặc nối tiếp gói đang còn hạn (DBR-52)."""
+    current = [x for x in subs_of(cid, ('Membership',)) if not isinstance(x['EndDate'], Live) and x['EndDate'] >= sold.date()]
+    start = max([x['EndDate'] for x in current]) + timedelta(days=1) if current else sold.date()
+    o = order(cid, PKG[key], sold, 'Counter', note=note)
+    DEMO_SALES.append(cid)
+    return subscription(o, start, note=note)
+
+
+# ---- gói tập: Bích, Quân, Mai, Hà gia hạn → dùng được gym từ tuần demo
+demo_membership(2, 'm3', dt_(2026, 10, 21, 9, 10), 'gia hạn sau khi hết 03/10')
+demo_membership(3, 'm3', dt_(2026, 10, 21, 18, 20), 'quay lại tập sau 3 tháng nghỉ')
+demo_membership(6, 'm3', dt_(2026, 10, 22, 8, 50), 'Mai gia hạn: từ 22/10 các buổi PT hết "Cần chú ý"')
+demo_membership(8, 'm3', dt_(2026, 10, 22, 17, 30), 'Hà gia hạn để mua tiếp gói đôi')
+
+# ---- gói PT mới, bắt đầu từ tuần demo (khung cố định không trùng lịch PT đã có)
+o = order(1, PKG['pt1'], dt_(2026, 10, 23, 9, 30), 'Counter', method='Transfer')
+pt_package(o, 5, DEMO, (7, 0), note='An: PT Sơn 07:00, bắt đầu 26/10')
+o = order(3, PKG['pt1'], dt_(2026, 10, 23, 10, 15), 'Counter')
+pt_package(o, 13, d_(2026, 11, 2), (11, 0), note='Quân: PT Long 11:00, bắt đầu 02/11')
+o = order(7, PKG['c1'], dt_(2026, 10, 23, 18, 0), 'Counter', partner=8, method='Transfer')
+pt_package(o, 6, DEMO, (19, 30), note='Hưng & Hà mua tiếp gói đôi 1 tháng với PT Trang')
+o = order(6, PKG['pt2'], dt_(2026, 10, 23, 19, 0), 'Counter', method='Transfer')
+pt_package(o, 5, d_(2026, 11, 9), (18, 0), note='Mai: gói PT 2 tháng nối tiếp gói cũ (hết 07/11), cùng giờ 18:00')
+
+# ---- khách thường: gia hạn ~12 người hết gói tập trước tuần demo (danh sách / check-in / báo cáo có khách Active)
+renewed = 0
+for i, cid in enumerate(BULK):
+    if renewed >= 12 or i % 10 == 9 or membership_valid(cid, DEMO):
+        continue
+    sold = datetime.combine(d_(2026, 10, 21) + timedelta(days=renewed % 3), time(8 + renewed, 15))
+    demo_membership(cid, 'm1' if renewed % 2 else 'm3', sold)
+    renewed += 1
+
+# ---- buổi lẻ tuần demo (online đặt từ Thứ 7 24/10 → được đặt tuần sau — CBR-39)
+single_session(1, 7, d_(2026, 10, 29), (10, 0), 'Online', dt_(2026, 10, 24, 21, 0), note='An: buổi lẻ PT Phúc')
+single_session(2, 6, d_(2026, 10, 27), (14, 0), 'Online', dt_(2026, 10, 24, 20, 30), note='Bích: buổi lẻ PT Trang')
+single_session(2, 5, d_(2026, 10, 30), (9, 30), 'Online', dt_(2026, 10, 24, 20, 40), note='Bích: buổi lẻ PT Sơn')
+single_session(6, 13, d_(2026, 10, 31), (9, 0), 'Online', dt_(2026, 10, 24, 22, 0), note='Mai: buổi lẻ cuối tuần PT Long')
+
+# ---- chỉ số cơ thể khách tự ghi (màn /customer/body-stats). BMI không lưu, Service tự tính.
+# Mỗi lần đo: (ngày, cân nặng, % mỡ, % cơ, vòng eo). Lần tự cân ở nhà chỉ có cân nặng.
+BODY = {
+    6: (160.0, [(d_(2026, 9, 5), 62.4, 31.0, 36.2, 78.0), (d_(2026, 9, 19), 61.5, 30.4, 36.6, 77.0),
+                (d_(2026, 10, 3), 60.6, 29.6, 37.1, 75.5), (d_(2026, 10, 10), 60.1, None, None, None),
+                (d_(2026, 10, 17), 59.3, 28.5, 37.8, 74.0), (d_(2026, 10, 24), 58.6, 27.9, 38.3, 73.0)]),
+    1: (172.0, [(d_(2026, 7, 10), 79.8, 24.5, 40.1, 92.0), (d_(2026, 8, 7), 78.6, 23.8, 40.6, 90.5),
+                (d_(2026, 9, 4), 77.1, 22.9, 41.2, 89.0), (d_(2026, 10, 2), 76.4, 22.1, 41.8, 88.0),
+                (d_(2026, 10, 23), 75.2, 21.4, 42.5, 86.5)]),
+}
+for cid, (height, rows) in BODY.items():
+    for day, weight, fat, muscle, waist in rows:
+        add('BodyMeasurements', dict(CustomerId=cid, MeasuredOn=day, WeightKg=weight, HeightCm=height,
+                                     BodyFatPercent=fat, MusclePercent=muscle, WaistCm=waist,
+                                     Note='Đo InBody tại phòng' if fat is not None else 'Tự cân ở nhà',
+                                     CreatedAt=datetime.combine(day, time(21, 0))))
+
 # ============================================================ 9. LỊCH TRỐNG PT CÔNG BỐ (dày, có cuối tuần)
 PUBLISH = {5: [(8, 0), (9, 30), (11, 0), (15, 0), (20, 0)],
            6: [(8, 0), (9, 30), (14, 0), (16, 0), (17, 30)],
@@ -469,7 +533,7 @@ PUBLISH = {5: [(8, 0), (9, 30), (11, 0), (15, 0), (20, 0)],
            13: [(6, 0), (7, 30), (9, 0), (16, 0), (17, 30), (19, 0)],
            14: [(10, 0), (15, 0)]}
 day = d_(2026, 10, 5)
-while day <= d_(2026, 10, 31):
+while day <= d_(2026, 12, 31):   # 25/10: kéo tới hết tháng 12 để bán gói / dời buổi có chỗ trống
     for pt, times in PUBLISH.items():
         for st in times:
             if day in CLOSED:
@@ -540,6 +604,10 @@ for c in DB['Customers']:
     frozen = any(s['Status'] == 'Frozen' for s in mem)
     cover = any(s['StartDate'] <= SEED <= s['EndDate'] for s in mem if s['SubscriptionType'] == 'Membership')
     c['Status'] = 'Frozen' if frozen else ('Active' if cover else 'Expired')
+# 25/10: khách gia hạn ở mục 8b dùng được gym tuần demo → Active (dù ngày mốc 03/10 chưa có gói).
+for c in DB['Customers']:
+    if c['Status'] in ('Expired', 'New') and c['CustomerId'] in DEMO_SALES and membership_valid(c['CustomerId'], DEMO):
+        c['Status'] = 'Active'
 for s in DB['Subscriptions']:
     if isinstance(s['EndDate'], Live) or s['Status'] in ('Frozen', 'Cancelled', 'Used'):
         continue

@@ -4,10 +4,10 @@
 <%@ taglib prefix="gms" uri="/WEB-INF/gms-functions.tld" %>
 <%--
 ================================================================================
- my-bookings.jsp — MÀN "GÓI CỦA TÔI" (/customer/bookings?id=<mã gói | single>). CHỈ XEM.
+ my-bookings.jsp — MÀN "GÓI CỦA TÔI" (/customer/bookings?package=<mã gói | single>). CHỈ XEM.
 
  AI GỬI DỮ LIỆU SANG?  MyBookingServlet.doGet gọi 2 Service, mỗi Service 1 lần:
-   1) MyBookingService.getMyBookings(accountId, id)  → booking (MyBookingView)  — lỗi thì bookingError
+   1) MyBookingService.getMyBookings(accountId, packageKey) → booking (MyBookingView)  — lỗi thì bookingError
    2) CustomerDashboardService.getDashboard(...)     → dashboard (tên, mã khách, canUseGym)
 
    Biến JSP                Ai tạo                                  DAO đọc bảng nào
@@ -47,10 +47,10 @@
 <c:set var="f" value="${booking.focusSession}" />
 <c:set var="cta" value="${booking.ctaKind}" />
 
-<%-- Link sang Lịch tập tuần: from = gói đang xem (để có nút quay về đúng gói); các dòng bên dưới nối thêm date + session.
-     VD /customer/pt-sessions?view=week&from=82 --%>
-<c:set var="fromKey" value="${booking.singleSelected ? 'single' : sp.subscriptionId}" />
-<c:set var="weekLink" value="${ctx}/customer/pt-sessions?view=week&amp;from=${fromKey}" />
+<%-- Link sang Lịch tập tuần: backPackage = gói đang xem (để Lịch tập có nút quay về đúng gói); các dòng bên dưới nối thêm date + openSession.
+     VD /customer/pt-sessions?view=week&backPackage=82 --%>
+<c:set var="backPackageKey" value="${booking.singleSelected ? 'single' : sp.subscriptionId}" />
+<c:set var="weekLink" value="${ctx}/customer/pt-sessions?view=week&amp;backPackage=${backPackageKey}" />
 
 <%-- Tab mở sẵn = tab chứa thứ đang xem ở cột phải: 'single' | 'ended' (sp.active = false) | 'active'. --%>
 <c:set var="openTab" value="${booking.singleSelected ? 'single' : (not empty sp and not sp.active ? 'ended' : 'active')}" />
@@ -59,9 +59,9 @@
     <head>
         <%@ include file="/WEB-INF/jsp/common/head.jspf" %>
         <title>Gói của tôi · Super Gym</title>
-        <link rel="stylesheet" href="${ctx}/css/pages/customer/dashboard.css?v=20261024flat">
+        <link rel="stylesheet" href="${ctx}/css/pages/customer/dashboard.css?v=20261025city">
         <link rel="stylesheet" href="${ctx}/css/pages/customer/session-status.css?v=20261025a">
-        <link rel="stylesheet" href="${ctx}/css/pages/customer/my-bookings.css?v=20261025a">
+        <link rel="stylesheet" href="${ctx}/css/pages/customer/my-bookings.css?v=20261025city">
         <link rel="stylesheet" href="${ctx}/css/pages/auth/notification-bell.css">
         <script src="${ctx}/js/pages/auth/notification-bell.js" defer></script>
     </head>
@@ -148,7 +148,7 @@
                                         <div class="booking-tab-panel" role="tabpanel" id="panel-single" aria-labelledby="tab-single" data-tab-panel="single" ${openTab eq 'single' ? '' : 'hidden'}>
                                             <c:choose>
                                                 <c:when test="${booking.singleSessionCount gt 0}">
-                                                    <a class="booking-package" href="${pageUrl}?id=single" aria-current="${booking.singleSelected ? 'page' : 'false'}">
+                                                    <a class="booking-package" href="${pageUrl}?package=single" aria-current="${booking.singleSelected ? 'page' : 'false'}">
                                                         <strong class="booking-package-name">Tất cả buổi lẻ</strong>
                                                         <span class="booking-package-meta">${booking.singleSessionCount} buổi · mỗi buổi đặt riêng</span>
                                                     </a>
@@ -262,13 +262,13 @@
                                                     </c:otherwise>
                                                 </c:choose>
                                                 <%-- Link DUY NHẤT sang Lịch tập "Xem trên lịch tập ›": mở đúng tuần + đúng buổi tới.
-                                                     VD /customer/pt-sessions?view=week&from=82&date=2026-10-26&session=120 --%>
+                                                     VD /customer/pt-sessions?view=week&backPackage=82&date=2026-10-26&openSession=120 --%>
                                                 <c:url var="nextUrl" value="/customer/pt-sessions">
                                                     <c:param name="view" value="week" />
-                                                    <c:param name="from" value="${fromKey}" />
+                                                    <c:param name="backPackage" value="${backPackageKey}" />
                                                     <c:if test="${not empty f}">
                                                         <c:param name="date" value="${f.slotDate}" />
-                                                        <c:param name="session" value="${f.sessionId}" />
+                                                        <c:param name="openSession" value="${f.sessionId}" />
                                                     </c:if>
                                                 </c:url>
                                                 <a class="booking-next-link" href="${fn:escapeXml(nextUrl)}">Xem trên lịch tập <i class="fa-solid fa-chevron-right" aria-hidden="true"></i></a>
@@ -401,7 +401,7 @@
                                                     <ul class="booking-rows">
                                                         <c:forEach var="s" items="${booking.offPattern}">
                                                             <li>
-                                                                <a class="booking-rows-date" href="${weekLink}&amp;date=${s.slotDate}&amp;session=${s.sessionId}"><c:out value="${s.dayName}" />, ${gms:formatDate(s.slotDate)}</a>
+                                                                <a class="booking-rows-date" href="${weekLink}&amp;date=${s.slotDate}&amp;openSession=${s.sessionId}"><c:out value="${s.dayName}" />, ${gms:formatDate(s.slotDate)}</a>
                                                                 <span class="booking-rows-time">${gms:formatTime(s.startTime)} – ${gms:formatTime(s.endTime)}</span>
                                                                 <span class="booking-rows-note"><c:out value="${s.moveNote}" /></span>
                                                                 <span class="session-status" data-status="${s.statusKey}"><c:out value="${s.statusLabel}" /></span>
@@ -431,9 +431,9 @@
                                                             <c:if test="${s.firstOfWeek}"><span class="booking-dot-week" aria-hidden="true"></span></c:if>
                                                             <c:url var="sessionUrl" value="/customer/pt-sessions">
                                                                 <c:param name="view" value="week" />
-                                                                <c:param name="from" value="${fromKey}" />
+                                                                <c:param name="backPackage" value="${backPackageKey}" />
                                                                 <c:param name="date" value="${s.slotDate}" />
-                                                                <c:param name="session" value="${s.sessionId}" />
+                                                                <c:param name="openSession" value="${s.sessionId}" />
                                                             </c:url>
                                                             <a class="booking-dot ${s.sessionId eq booking.focusSessionId ? 'is-next' : ''}"
                                                                data-status="${fn:escapeXml(s.statusKey)}" href="${fn:escapeXml(sessionUrl)}"
@@ -470,7 +470,7 @@
                                                 <ul class="booking-rows is-single">
                                                     <c:forEach var="s" items="${booking.sessions}">
                                                         <li>
-                                                            <a class="booking-rows-date" href="${weekLink}&amp;date=${s.slotDate}&amp;session=${s.sessionId}"><c:out value="${s.dayName}" />, ${gms:formatDate(s.slotDate)}</a>
+                                                            <a class="booking-rows-date" href="${weekLink}&amp;date=${s.slotDate}&amp;openSession=${s.sessionId}"><c:out value="${s.dayName}" />, ${gms:formatDate(s.slotDate)}</a>
                                                             <span class="booking-rows-time">${gms:formatTime(s.startTime)} – ${gms:formatTime(s.endTime)}</span>
                                                             <span class="booking-rows-note">PT <strong><c:out value="${s.ptName}" /></strong></span>
                                                             <span class="session-status" data-status="${s.statusKey}"><c:out value="${s.statusLabel}" /></span>

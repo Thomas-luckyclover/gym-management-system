@@ -239,7 +239,7 @@
    Tranh comic phòng tập, thẻ thời tiết và mọi animation giữ nguyên. */
 /* --- Khối tối có đèn. Đổi biến chữ/viền trong khối → phần tử con tự đổi theo. --- */
 html body.dock:not(.no-arena) .pt-board__hero {
-  --pt-text: var(--arena-surface);
+  --pt-text: var(--arena-on-dark);
   --pt-soft: var(--arena-steel);
   --pt-muted: var(--arena-steel);
   --pt-line: var(--arena-line-dark);
@@ -248,7 +248,7 @@ html body.dock:not(.no-arena) .pt-board__hero {
   --pt-panel-2: var(--arena-800);
   --pt-lagoon-text: var(--arena-focus);
   --arena-focus-ring: var(--arena-focus);
-  --color-text: var(--arena-surface);
+  --color-text: var(--arena-on-dark);
   --color-text-soft: var(--arena-steel);
   --color-surface-muted: var(--arena-800);
   border: 0;
@@ -256,7 +256,7 @@ html body.dock:not(.no-arena) .pt-board__hero {
   background:
     radial-gradient(120% 90% at 0% 0%, var(--arena-glow), transparent 55%),
     var(--arena-900);
-  color: var(--arena-surface);
+  color: var(--arena-on-dark);
   box-shadow: var(--arena-shadow-dark);
 }
 html.gms-lite body.dock:not(.no-arena) .pt-board__hero { background: var(--arena-900); }
@@ -291,7 +291,7 @@ html body.dock:not(.no-arena) .pt-board__hero .wx-greet h2 {
 html body.dock:not(.no-arena) .pt-board__hero .wx-name {
   display: block;
   margin-top: var(--space-2);
-  color: var(--arena-surface);
+  color: var(--arena-on-dark);
   font-family: var(--font-brand-display);
   font-size: clamp(2.25rem, 3.3vw, 3.1rem);
   font-weight: var(--font-weight-extrabold);
@@ -324,7 +324,7 @@ html body.dock:not(.no-arena) .pt-board__hero .pt-pulse div {
   background: var(--arena-tile-dark);
 }
 html body.dock:not(.no-arena) .pt-board__hero .pt-pulse dd {
-  color: var(--arena-surface);
+  color: var(--arena-on-dark);
   font-family: var(--font-brand-display);
   font-size: var(--font-size-2xl);
   font-weight: var(--font-weight-extrabold);

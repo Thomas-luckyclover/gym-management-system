@@ -226,17 +226,19 @@ public class PtScheduleDAO {
     /**
      * HÀM CHÍNH — bản dùng connection có sẵn: Service gọi ở B3 của publishInTransaction (trong transaction).
      * Đơn nghỉ Pending / Approved của PT trong khoảng ngày. Đơn Rejected không lấy.
+     * Một đơn nghỉ là KHOẢNG ngày FromDate..ToDate (schema develop 26/10) → tách thành 1 LeaveInfo cho MỖI ngày
+     * nằm trong [fromDate, toDate], để isOnLeave vẫn so từng ngày như cũ.
      * HOLDLOCK: giữ dữ liệu đơn nghỉ không đổi tới khi transaction kết thúc.
      */
     public List<LeaveInfo> findLeaves(Connection connection, int employeeId, LocalDate fromDate, LocalDate toDate)
             throws SQLException {
         String sql = """
-                SELECT lr.LeaveDate, lr.ShiftType, lr.Status
+                SELECT lr.FromDate, lr.ToDate, lr.ShiftType, lr.Status
                 FROM LeaveRequests lr WITH (HOLDLOCK)
                 WHERE lr.EmployeeId = ?
-                  AND lr.LeaveDate BETWEEN ? AND ?
+                  AND lr.FromDate <= ? AND lr.ToDate >= ?
                   AND lr.Status IN ('Pending', 'Approved')
-                ORDER BY lr.LeaveDate, lr.ShiftType
+                ORDER BY lr.FromDate, lr.ShiftType
                 """;
 
         List<LeaveInfo> rows = new ArrayList<>();
@@ -244,22 +246,28 @@ public class PtScheduleDAO {
         try (PreparedStatement statement = connection.prepareStatement(sql)) {
 
             statement.setInt(1, employeeId);
-            statement.setDate(2, Date.valueOf(fromDate));
-            statement.setDate(3, Date.valueOf(toDate));
+            statement.setDate(2, Date.valueOf(toDate));      // đơn bắt đầu trước khi khoảng xem kết thúc
+            statement.setDate(3, Date.valueOf(fromDate));    // và kết thúc sau khi khoảng xem bắt đầu
 
             try (ResultSet rs = statement.executeQuery()) {
                 while (rs.next()) {
-                    rows.add(readLeave(rs));
+                    LocalDate first = rs.getDate("FromDate").toLocalDate();
+                    LocalDate last = rs.getDate("ToDate").toLocalDate();
+                    LocalDate day = first.isBefore(fromDate) ? fromDate : first;
+                    LocalDate end = last.isAfter(toDate) ? toDate : last;
+                    for (; !day.isAfter(end); day = day.plusDays(1)) {
+                        rows.add(readLeave(rs, day));
+                    }
                 }
             }
         }
         return rows;
     }
 
-    /** HÀM PHỤ — findLeaves gọi cho mỗi dòng. Một dòng LeaveRequests → một LeaveInfo. */
-    private LeaveInfo readLeave(ResultSet rs) throws SQLException {
+    /** HÀM PHỤ — findLeaves gọi cho MỖI NGÀY của 1 đơn nghỉ → một LeaveInfo. */
+    private LeaveInfo readLeave(ResultSet rs, LocalDate day) throws SQLException {
         LeaveInfo row = new LeaveInfo();
-        row.setLeaveDate(rs.getDate("LeaveDate").toLocalDate());
+        row.setLeaveDate(day);
         row.setShiftType(rs.getString("ShiftType"));      // Morning / Afternoon / FullDay
         row.setStatus(rs.getString("Status"));            // Pending / Approved
         return row;

@@ -95,7 +95,8 @@
     white-space: nowrap;
   }
 
-  .theme-pt .pt-user-details {
+  .theme-pt .pt-user-details,
+  .theme-pt .theme-toggle__label {
     display: none;
   }
 
@@ -125,5 +126,9 @@
   .theme-pt .pt-top-actions {
     flex: none;
     gap: var(--space-2);
+  }
+
+  .theme-pt .theme-toggle {
+    padding-inline: var(--space-1);
   }
 }

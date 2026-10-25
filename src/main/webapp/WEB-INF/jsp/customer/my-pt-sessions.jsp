@@ -24,8 +24,8 @@
    timetable       TimetableView (khi view = week): 7 ngày × 3 khung Sáng/Chiều/Tối
    month           MonthView (khi view = month): các tuần × 7 ô ngày + số đếm cả tháng
    timetableError  lỗi tải lịch (khi đó KHÔNG có timetable / month)
-   focusSessionId  ?session= (đến từ "Gói của tôi") → JS mở sẵn chi tiết buổi đó
-   backBookingId   ?from= → link "Quay lại Gói của tôi" phía trên lịch
+   openSessionId   ?openSession= (đến từ "Gói của tôi" / lịch tháng) → JS mở sẵn chi tiết buổi đó
+   backPackageKey  ?backPackage= → link "Quay lại Gói của tôi" phía trên lịch
    dashboard       tên + mã khách ở topbar
 
  BỐ CỤC
@@ -42,9 +42,9 @@
     <head>
         <%@ include file="/WEB-INF/jsp/common/head.jspf" %>
         <title>Lịch tập · Super Gym</title>
-        <link rel="stylesheet" href="${pageContext.request.contextPath}/css/pages/customer/dashboard.css?v=20261024flat">
+        <link rel="stylesheet" href="${pageContext.request.contextPath}/css/pages/customer/dashboard.css?v=20261025city">
         <link rel="stylesheet" href="${pageContext.request.contextPath}/css/pages/customer/session-status.css?v=20261025a">
-        <link rel="stylesheet" href="${pageContext.request.contextPath}/css/pages/customer/my-pt-sessions.css?v=20261025a">
+        <link rel="stylesheet" href="${pageContext.request.contextPath}/css/pages/customer/my-pt-sessions.css?v=20261025city">
         <link rel="stylesheet" href="${pageContext.request.contextPath}/css/pages/auth/notification-bell.css">
         <script src="${pageContext.request.contextPath}/js/pages/customer/my-pt-sessions.js?v=20261025a" defer></script>
         <script src="${pageContext.request.contextPath}/js/pages/auth/notification-bell.js" defer></script>
@@ -59,8 +59,8 @@
                 <c:set var="scheduleTitle" value="Lịch tập" />
                 <%@ include file="_schedule-header.jspf" %>
 
-                <%-- data-focus-session = focusSessionId (?session= từ Gói của tôi) → JS mở sẵn hộp chi tiết của buổi đó. --%>
-                <main class="content my-pt-page" id="main-content" tabindex="-1" data-focus-session="${focusSessionId}">
+                <%-- data-open-session = openSessionId (?openSession= từ Gói của tôi / lịch tháng) → JS mở sẵn hộp chi tiết của buổi đó. --%>
+                <main class="content my-pt-page" id="main-content" tabindex="-1" data-open-session="${openSessionId}">
                     <c:choose>
                         <%-- ===== TRƯỜNG HỢP LỖI: timetableError → hộp "Chưa tải được lịch tập" + nút Tải lại.
                              KHÔNG vẽ lịch rỗng (khách sẽ tưởng "không có buổi nào"). ===== --%>
@@ -73,9 +73,9 @@
                         </c:when>
 
                         <c:otherwise>
-                            <%-- Đến từ "Gói của tôi" (?from=…) → link quay về ĐÚNG gói đó (Servlet đã kiểm tra from là số / "single"). --%>
-                            <c:if test="${not empty backBookingId}">
-                                <a class="schedule-back" href="${pageContext.request.contextPath}/customer/bookings?id=${backBookingId}"><i class="fa-solid fa-chevron-left" aria-hidden="true"></i> Quay lại Gói của tôi</a>
+                            <%-- Đến từ "Gói của tôi" (?backPackage=…) → link quay về ĐÚNG gói đó (Servlet đã kiểm tra backPackage là số / "single"). --%>
+                            <c:if test="${not empty backPackageKey}">
+                                <a class="schedule-back" href="${pageContext.request.contextPath}/customer/bookings?package=${backPackageKey}"><i class="fa-solid fa-chevron-left" aria-hidden="true"></i> Quay lại Gói của tôi</a>
                             </c:if>
 
                             <%-- ##################################################################
@@ -236,7 +236,7 @@
                                                                                 <c:if test="${cell.date eq selectedDate}"><small class="day-mark is-selected-mark">Đang chọn</small></c:if>
                                                                             </a>
                                                                             <c:forEach var="s" items="${cell.sessions}">
-                                                                                <a class="month-session ${s.ended ? 'is-ended' : ''}" href="${pageUrl}?view=week&amp;date=${cell.date}&amp;session=${s.sessionId}">
+                                                                                <a class="month-session ${s.ended ? 'is-ended' : ''}" href="${pageUrl}?view=week&amp;date=${cell.date}&amp;openSession=${s.sessionId}">
                                                                                     <strong>${gms:formatTime(s.startTime)}</strong>
                                                                                     <span class="session-status" data-status="${s.statusKey}"><c:out value="${s.statusLabel}" /></span>
                                                                                 </a>

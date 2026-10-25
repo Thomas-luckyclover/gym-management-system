@@ -91,7 +91,7 @@ public class PtDashboardService {
     // =================================================================================================
 
     /**
-     * HÀM CHÍNH — PtDashboardServlet gọi ở B2 khi PT mở trang.
+     * HÀM CHÍNH — PtDashboardServlet.loadBlocks gọi ở B1 khi PT mở trang.
      * Trả đúng 7 ngày (kể cả ngày không có buổi), mỗi ngày chứa các buổi của ngày đó.
      */
     public ServiceResult<List<PtScheduleDayView>> getSchedule(int accountId) {
@@ -223,7 +223,7 @@ public class PtDashboardService {
     //   Khách thiếu membership KHÔNG cần PT bấm gì: JOB-08 tự nhắc khách trước buổi 1 ngày.
 
     /**
-     * HÀM CHÍNH — PtDashboardServlet gọi ở B3 khi PT mở trang.
+     * HÀM CHÍNH — PtDashboardServlet.loadBlocks gọi ở B2 khi PT mở trang.
      * Trả danh sách cảnh báo: thẻ ngày nghỉ đứng trước, thẻ membership / bảo lưu đứng sau. Rỗng = không có gì cần chú ý.
      */
     public ServiceResult<List<PtAttentionView>> getAttentionItems(int accountId) {
@@ -398,7 +398,7 @@ public class PtDashboardService {
     // =================================================================================================
 
     /**
-     * HÀM CHÍNH — PtDashboardServlet gọi ở B4, SAU getAttentionItems (cần attentionItems để gắn vào từng khách).
+     * HÀM CHÍNH — PtDashboardServlet.loadBlocks gọi ở B3, SAU getAttentionItems (cần attentionItems để gắn vào từng khách).
      * Mỗi gói PT / buổi lẻ = 1 thẻ khách. SĐT và link Zalo do DTO tự tính từ SĐT (PtAssignedPackageView).
      */
     public ServiceResult<List<PtAssignedPackageView>> getAssignedPackages(int accountId, List<PtAttentionView> attentionItems) {
@@ -461,7 +461,7 @@ public class PtDashboardService {
     // =================================================================================================
 
     /**
-     * HÀM CHÍNH — PtDashboardServlet gọi ở B5 khi PT mở trang.
+     * HÀM CHÍNH — PtDashboardServlet.loadBlocks gọi ở B4 khi PT mở trang.
      * DAO đếm buổi + cộng tiền trong tháng; Service thêm tỷ lệ hoa hồng và tính % từng loại kết quả.
      */
     public ServiceResult<PtCommissionSummaryView> getCommissionSummary(int accountId) {

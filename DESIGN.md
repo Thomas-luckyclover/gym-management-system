@@ -204,7 +204,7 @@ Motion gợn nền (48s), gió sidebar (3.4s) và thiên hà loading (12s) chỉ
 
 Phạm vi kiểm chứng của đợt này: static preview dựng từ source ở desktop/mobile, kiểm tra cú pháp JS, parse SVG và diff; kiểm tra biên dịch javac tập trung cho EmailGateway đã qua. Chưa xác nhận chạy Tomcat, kết nối DB, đăng nhập thật, thực thi POST hủy buổi hoặc gửi email thật; không coi preview là kiểm thử nghiệp vụ.
 
-## Arena (24/10, toàn bộ khu làm việc + xác thực)
+## Arena (24/10, cập nhật 25/10 — toàn bộ khu làm việc)
 
 Mọi màn nội bộ (`body.dock`, 5 zone PT · Hội viên · Lễ tân · Quản lý · Admin, 21 màn) dùng bảng màu đĩa tạ thi đấu: token `--arena-*` trong `tokens.css`, lớp chung ở mục "ARENA" cuối `common.css`, khối chào ở mục 6 `dashboard-hero.css`, chi tiết riêng ở mục Arena cuối CSS của PT Dashboard, Lịch dạy, My PT Sessions, My Bookings. Màn nào cần giữ kiểu cũ thì thêm class `no-arena` vào `<body>`. Trang chủ, Giới thiệu, Blog không đổi.
 
@@ -215,9 +215,12 @@ Mọi màn nội bộ (`body.dock`, 5 zone PT · Hội viên · Lễ tân · Qu�
 - **Hình:** khối 6px, ô 4px, chip/nhãn 2px; avatar vẫn tròn. Khe ghép 12px. Khối sáng không viền, dùng bóng tông xanh.
 - **Nhịp khoảng cách:** bước 4px; khe giữa khối 12px, khe giữa các ô 8px, lề trong khối 24px (điện thoại 16px). Tiêu đề topbar thẳng mép trái với khối nội dung ở mọi bề ngang.
 - **Tiếp cận (WCAG 2.1 AA):** quét axe-core 0 lỗi màu/focus/tên trên các màn; còn lỗi thiếu nhãn ô lọc/ô ngày ở 5 màn Quản lý · Lễ tân · Admin cần sửa trong JSP; zoom 200% không tràn ngang. Vòng focus 2 tông (vạch xanh + viền trắng, trên khối tối là xanh nhạt). Điều khiển trên điện thoại cao tối thiểu 44px; nút (i) và nút hiện mật khẩu giữ cỡ nhỏ nhưng có vùng chạm 44px. Viền nút phụ và nút (i) `#7789A9` ≥ 3:1 trên trắng và phấn. Ô tài khoản thu gọn trên điện thoại vẫn giữ tên cho trình đọc màn hình. Chip trạng thái có viền cùng tông.
-- **Nền doodle đồ tập:** hai dải nét kem trong suốt (`images/brand/zone-doodle-left|right.webp`, ~280KB), màu thật, không làm mờ; đĩa 25 viền cam. Là nền của vùng nội dung `.main`, ở hai góc dưới, rộng 150–220px: nằm dưới mọi khối nên chỉ lộ ở khoảng trống, không đè chữ, topbar hay tay nắm menu. Hiện từ 1024px (laptop Windows tỉ lệ 125–150% vẫn thấy).
+- **Nền bản đồ thành phố (khôi phục 25/10):** dùng lại `images/brand/city-map-ink.webp` (nét kem trong suốt, sông cam) ở mép phải `body.dock::before`, phủ màu sân đặc ở trên rồi tan dần tới 45% để không đè tiêu đề/khối chào. Cả hai chế độ dùng chung ảnh (token `--arena-city`), chỉ màu sân đổi. Chế độ tối giữ thêm lớp gợn nước 48s cũ. Doodle đồ tập 24/10 đã gỡ.
 - **Sidebar và chuyển động:** sidebar giữ nguyên (ember cũ `#FF4F2B` ghim ở `--arena-sidebar-ember`). Không thêm animation; hiệu ứng hiện dần, bấm lún và gió sidebar có sẵn giữ nguyên.
-- **Xác thực:** nền, thẻ form, ô nhập và focus đổi qua token `--auth-*`; đất nung và áo choàng của tranh gốm đổi sang màu đặc bằng đúng màu cũ để tranh không ngả tím trên nền mới.
+- **Hai chế độ (25/10):** **Tối là mặc định** (`<html data-theme="dark">` đặt sẵn trong `head.jspf` trước khi vẽ, trừ khi `localStorage["gms-theme"]="light"`). Tối = cấu trúc Arena với màu Aegean Ink cũ (sân `#0A1E31`, khối `#102A40`/`#18364F`, nhấn teal `#11697A`, chữ nhấn `#7FD3DA`). Sáng = Arena cobalt + chút băng (`--arena-ice #BFE6F5`): khối `#EAF5FB`, ô `#F7FBFE`, chữ `#0E1B3F`. Cùng bố cục, khoảng cách, góc, focus; chỉ token đổi. Token tách vai: `--arena-ground` (sân), `--arena-accent` (nền nhấn), `--arena-accent-text` (chữ nhấn), `--arena-on-dark` (chữ trên khối tối), `--arena-ink-on-bright` (chữ trên ember/trắng), `--arena-overlay` (màn che hộp thoại).
+- **Công tắc Sáng/Tối:** `common.js` tự chèn vào `.top-right` / `.pt-top-actions`; `aria-pressed="true"` = đang sáng; lưu `gms-theme`.
+- **Hộp thoại, ngăn kéo, popover:** thân `--arena-chalk`, góc 2px, bóng nổi; đầu ngăn kéo/hộp gói/popover thông báo là khối tối 900 + đèn; hộp xác nhận có vạch nhấn trên; màn che `--arena-overlay`. Ô nhập không class nhận nền `--arena-surface` + viền `--arena-control-line` (độ ưu tiên 0).
+- **Xác thực:** Đăng nhập, Quên mật khẩu, Đăng ký giữ màu cũ (token `--auth-*` gốc), không theo Arena.
 
 ## Do's and Don'ts
 
@@ -231,6 +234,6 @@ Mọi màn nội bộ (`body.dock`, 5 zone PT · Hội viên · Lễ tân · Qu�
 ### Don't:
 
 - Don't thêm gradient hoặc halo vào nút chính hay nền/active sidebar.
-- Don't thêm artwork, sóng hoặc weather nền vào light mode.
+- Don't thêm artwork nền nào khác ngoài bản đồ thành phố; sóng gợn chỉ ở chế độ tối.
 - Don't dùng lại logo PNG, dấu mặt trời trong logo hoặc vòng avatar PT cam dày.
 - Don't đổi hero/hiệu ứng homepage đã khôi phục hoặc biến ảnh minh họa thành bằng chứng sản phẩm.
