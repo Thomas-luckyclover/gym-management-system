@@ -21,6 +21,16 @@
 
 const PLAN_DAY_NAMES = ["Thứ 2", "Thứ 3", "Thứ 4", "Thứ 5", "Thứ 6"];
 const PLAN_DAY_SHORT = ["T2", "T3", "T4", "T5", "T6"];
+// Lý do (server gửi) → chữ ngắn ghi dưới nút giờ. Lý do đầy đủ vẫn hiện khi rê chuột và ở phần Từng tuần.
+const PLAN_SHORT_REASON = {
+    "Khách có buổi khác trùng giờ": "Khách trùng giờ",
+    "PT đã có khách giờ này": "PT có khách",
+    "Đang được giữ cho đơn khác": "Đơn khác đang giữ",
+    "PT đã gỡ khung giờ này": "PT đã gỡ khung",
+    "PT có khung khác chồng giờ": "PT chồng giờ",
+    "Khung cũ khác thời lượng": "Khung khác thời lượng",
+    "Đã qua giờ": "Đã qua giờ"
+};
 
 document.addEventListener("DOMContentLoaded", function () {
     const dataNode = document.getElementById("sale-plan-data");
@@ -213,10 +223,14 @@ function initPlan(root, data) {
         return { kind: option.warning ? "warn" : "ok", time: time, end: option.end, warning: option.warning, edited: edited };
     }
 
-    /** Lịch mẫu "Thứ X lúc giờ Y" bị kẹt bao nhiêu ngày trong kỳ (để ghi dưới nút giờ). */
+    /**
+     * Lịch mẫu "Thứ X lúc giờ Y": trong kỳ có bao nhiêu ngày Thứ X (total), bao nhiêu ngày không xếp được (blocked),
+     * và từng ngày đó vì sao (misses). Ví dụ Thứ 3 20:00: total 9, blocked 5 → "Còn 4/9 buổi · Khách trùng giờ".
+     */
     function blockedCount(weekday, time) {
         let blocked = 0;
         let total = 0;
+        const misses = [];
         for (const day of days) {
             if (day.weekday !== weekday) {
                 continue;
@@ -225,9 +239,48 @@ function initPlan(root, data) {
             const option = day.options.find(function (item) { return item.time === time; });
             if (!option || !option.ok) {
                 blocked++;
+                misses.push({ date: day.date, reason: option ? option.reason : "PT không có khung giờ này" });
             }
         }
-        return { blocked: blocked, total: total };
+        return { blocked: blocked, total: total, misses: misses };
+    }
+
+    /**
+     * Chữ ghi dưới 1 nút giờ của lịch mẫu.
+     *   meta    "Còn 4/9 buổi" (hết thì "Không còn buổi"); đủ mọi tuần → không ghi gì
+     *   sub     lý do gặp nhiều nhất, viết ngắn ("Khách trùng giờ")
+     *   detail  câu đầy đủ khi rê chuột: "Không xếp được 5 ngày: 03/11, 10/11 (Khách có buổi khác trùng giờ) …"
+     */
+    function patternNote(weekday, time) {
+        const count = blockedCount(weekday, time);
+        const left = count.total - count.blocked;
+        if (count.blocked === 0) {
+            return { meta: "", sub: "", detail: "Đủ " + count.total + "/" + count.total + " buổi trong kỳ", full: false };
+        }
+        const byReason = new Map();
+        for (const miss of count.misses) {
+            if (!byReason.has(miss.reason)) {
+                byReason.set(miss.reason, []);
+            }
+            byReason.get(miss.reason).push(shortDate(miss.date));
+        }
+        let topReason = "";
+        let topCount = 0;
+        const parts = [];
+        byReason.forEach(function (dates, reason) {
+            parts.push(dates.join(", ") + " (" + reason + ")");
+            if (dates.length > topCount) {
+                topReason = reason;
+                topCount = dates.length;
+            }
+        });
+        const sub = (PLAN_SHORT_REASON[topReason] || topReason) + (byReason.size > 1 ? " …" : "");
+        return {
+            meta: left === 0 ? "Không còn buổi" : "Còn " + left + "/" + count.total + " buổi",
+            sub: sub,
+            detail: "Còn " + left + "/" + count.total + " buổi. Không xếp được " + count.blocked + " ngày: " + parts.join("; "),
+            full: left === 0
+        };
     }
 
     function bestTime(weekday) {
@@ -281,7 +334,7 @@ function initPlan(root, data) {
             const row = el("div", "plan-row");
             const head = el("div", "plan-row-day");
             head.append(el("strong", "", PLAN_DAY_NAMES[weekday - 1]));
-            head.append(el("small", "", countWeekday(weekday) + " ngày trong kỳ"));
+            head.append(el("small", "", "Tối đa " + countWeekday(weekday) + " buổi"));
 
             const chips = el("div", "plan-chips");
             chips.setAttribute("role", "radiogroup");
@@ -289,11 +342,16 @@ function initPlan(root, data) {
             chips.append(chip("plan-wd-" + weekday, "", "Nghỉ", "", pattern[weekday - 1] === "", false,
                     "p-" + weekday + "-off", weekday, "is-rest"));
             for (const time of data.times) {
-                const count = blockedCount(weekday, time);
-                const full = count.blocked === count.total;
-                const meta = full ? "kín" : (count.blocked > 0 ? "kẹt " + count.blocked : "");
-                chips.append(chip("plan-wd-" + weekday, time, time, meta, pattern[weekday - 1] === time,
-                        full, "p-" + weekday + "-" + time, weekday, count.blocked > 0 ? "has-meta" : ""));
+                const note = patternNote(weekday, time);
+                const item = chip("plan-wd-" + weekday, time, time, note.meta, pattern[weekday - 1] === time,
+                        note.full, "p-" + weekday + "-" + time, weekday, note.meta ? "has-meta" : "");
+                if (note.sub) {
+                    item.append(el("small", "plan-chip-sub", note.sub));
+                }
+                // Rê chuột: danh sách ngày; trình đọc màn hình đọc cùng câu đó.
+                item.title = note.detail;
+                item.append(el("span", "visually-hidden", note.detail));
+                chips.append(item);
             }
             row.append(head, chips);
             patternBox.append(row);

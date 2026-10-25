@@ -22,9 +22,9 @@
 <head>
     <%@ include file="/WEB-INF/jsp/common/head.jspf" %>
     <title>Bán gói PT · Super Gym Lễ tân</title>
-    <link rel="stylesheet" href="${ctx}/css/pages/receptionist/pt-sales.css?v=20261026q">
+    <link rel="stylesheet" href="${ctx}/css/pages/receptionist/pt-sales.css?v=20261026r">
     <script src="${ctx}/js/pages/receptionist/pt-sales.js?v=20261026p" defer></script>
-    <script src="${ctx}/js/pages/receptionist/pt-sale-plan.js?v=20261026p" defer></script>
+    <script src="${ctx}/js/pages/receptionist/pt-sale-plan.js?v=20261026r" defer></script>
 </head>
 <body class="dock theme-staff pt-sale-page">
 <%@ include file="/WEB-INF/jsp/common/flash-toast.jspf" %>
@@ -227,7 +227,7 @@
                                     <button type="button" class="plan-preset is-quiet" data-preset="">Bỏ hết</button>
                                 </div>
                             </div>
-                            <p class="plan-hint">Chọn giờ cho thứ khách tập, thứ không tập để <b>Nghỉ</b>. Số nhỏ dưới giờ = số buổi bị kẹt trong kỳ.</p>
+                            <p class="plan-hint">Chọn giờ cho thứ khách tập, thứ không tập để <b>Nghỉ</b>. Giờ nào có ngày không xếp được sẽ ghi <b>còn mấy buổi</b> và lý do; rê chuột vào giờ để xem từng ngày.</p>
                             <div class="plan-pattern" data-pattern aria-labelledby="plan-pattern-title"></div>
                         </div>
 

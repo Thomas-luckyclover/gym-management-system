@@ -712,6 +712,19 @@ html body.dock.pt-sale-page .sale-card {
   font-weight: var(--font-weight-semibold);
   line-height: 1.2;
 }
+.plan-chip-sub {
+  color: var(--arena-steel-ink);
+  font-size: var(--font-size-2xs);
+  line-height: 1.2;
+  white-space: nowrap;
+}
+.plan-chip:has(input:checked) .plan-chip-sub {
+  color: var(--arena-on-dark);
+  opacity: 0.8;
+}
+.plan-chip.is-disabled .plan-chip-sub {
+  color: var(--arena-steel-ink);
+}
 .plan-chip.is-rest .plan-chip-text {
   color: var(--arena-steel-ink);
 }
