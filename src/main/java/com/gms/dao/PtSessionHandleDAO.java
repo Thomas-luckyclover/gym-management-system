@@ -124,7 +124,7 @@ public class PtSessionHandleDAO {
                                      WHERE x.ApplyDate = t.SlotDate AND x.IsClosedAllDay = 1)
                         THEN 1 ELSE 0 END AS GymClosed,
                    CASE WHEN EXISTS (SELECT 1 FROM LeaveRequests lr
-                                     WHERE lr.EmployeeId = t.PtEmployeeId AND lr.LeaveDate = t.SlotDate
+                                     WHERE lr.EmployeeId = t.PtEmployeeId AND t.SlotDate BETWEEN lr.FromDate AND lr.ToDate
                                        AND lr.Status IN ('Pending', 'Approved')
                                        AND (lr.ShiftType = 'FullDay'
                                             OR (lr.ShiftType = 'Morning' AND t.StartTime < '12:00')
