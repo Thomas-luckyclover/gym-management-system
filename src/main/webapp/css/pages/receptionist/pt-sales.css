@@ -1,0 +1,590 @@
+@charset "UTF-8";
+/* =====================================================================
+   BÁN GÓI PT (Lễ tân) — pt-sales.css
+
+   ĐỌC THEO THỨ TỰ:
+     1. Khung trang: 2 cột (các bước | tóm tắt dính bên phải), điện thoại 1 cột
+     2. Khối bước: số bước, trạng thái đang làm / đã xong
+     3. Ô nhập: tìm khách, chọn PT, ngày
+     4. Thẻ khách
+     5. Ô chọn gói, giờ cố định (radio dạng ô)
+     6. Lịch dự kiến: lưới ngày + chú thích + ghi chú lý do
+     7. Tóm tắt đơn + thu tiền
+     8. Điện thoại
+
+   Hệ Arena (DESIGN.md): khối phấn, ô con trắng, xanh đĩa 20kg cho LỰA CHỌN, cam chỉ cho nút thu tiền.
+   Hộp bao ngoài góc 2px (yêu cầu 25/10). Chỉ dùng var(--…) từ tokens.css.
+   ===================================================================== */
+
+
+/* ==================== 1. KHUNG TRANG ==================== */
+
+.sale {
+  --sale-line: var(--arena-card-line);
+  color-scheme: light;   /* khối phấn sáng: ô tick / radio / lịch chọn ngày của trình duyệt vẽ theo nền sáng */
+}
+.sale :is(h2, h3, p, ul, ol, dl, dd, fieldset) {
+  margin: 0;
+}
+.sale fieldset {
+  min-width: 0;
+  padding: 0;
+  border: 0;
+}
+
+.sale-grid {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) minmax(300px, 360px);
+  align-items: start;
+  gap: var(--arena-gap);
+}
+.sale-steps {
+  display: grid;
+  gap: var(--arena-gap);
+  min-width: 0;
+}
+
+/* Hộp bao ngoài: 2px thay cho 6px chung (cùng quy ước màn Lịch dạy). */
+html body.dock.pt-sale-page :is(.sale-step, .sale-summary, .sale-error) {
+  border-radius: var(--arena-radius-chip);
+}
+
+.sale-error {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  justify-content: space-between;
+  gap: var(--space-3);
+}
+
+
+/* ==================== 2. KHỐI BƯỚC ==================== */
+
+.sale-step {
+  display: grid;
+  gap: var(--space-4);
+  padding: var(--arena-pad);
+}
+.sale-step > h2 {
+  display: flex;
+  align-items: center;
+  gap: var(--space-3);
+  font-family: var(--font-brand-display);
+  font-size: var(--font-size-lg);
+  font-weight: var(--font-weight-extrabold);
+  letter-spacing: -0.01em;
+}
+/* Số bước: ô vuông nhỏ. Đang làm = xanh đặc; đã xong = dấu tích xanh lá. */
+.sale-step-no {
+  display: inline-grid;
+  flex: none;
+  place-items: center;
+  width: 28px;
+  height: 28px;
+  border-radius: var(--arena-radius-chip);
+  background: var(--arena-700);
+  color: var(--arena-surface);
+  font-family: var(--font-brand-mono);
+  font-size: var(--font-size-sm);
+  font-variant-numeric: tabular-nums;
+}
+.sale-step.is-done .sale-step-no {
+  background: var(--color-success-tint);
+  box-shadow: inset 0 0 0 1px var(--color-success-border);
+  color: var(--color-success-ink);
+}
+
+.sale-msg {
+  color: var(--arena-steel-ink);
+  font-size: var(--font-size-sm);
+  line-height: var(--line-height-normal);
+}
+.sale-msg strong {
+  color: var(--arena-ink);
+  font-variant-numeric: tabular-nums;
+}
+.sale-msg.is-error {
+  padding: var(--space-2) var(--space-3);
+  border-radius: var(--arena-radius-chip);
+  background: var(--color-danger-tint);
+  box-shadow: inset 0 0 0 1px var(--color-danger-border);
+  color: var(--color-danger-ink);
+  font-weight: var(--font-weight-medium);
+}
+.sale-empty {
+  padding: var(--space-5);
+  border-radius: var(--arena-radius-chip);
+  background: var(--arena-surface);
+  box-shadow: inset 0 0 0 1px var(--sale-line);
+  color: var(--arena-ink-soft);
+  font-size: var(--font-size-sm);
+  text-align: center;
+  text-wrap: pretty;
+}
+.sale-next {
+  display: flex;
+  justify-content: flex-end;
+}
+
+
+/* ==================== 3. Ô NHẬP ==================== */
+
+.sale-search {
+  display: flex;
+  gap: var(--space-2);
+}
+.sale input[type="search"],
+.sale input[type="text"],
+.sale input[type="date"],
+.sale select {
+  width: 100%;
+  min-height: 44px;
+  padding: 0 var(--space-3);
+  border: 0;
+  border-radius: var(--arena-radius-chip);
+  background: var(--arena-surface);
+  box-shadow: inset 0 0 0 1px var(--arena-chalk-line-strong);
+  color: var(--arena-ink);
+  caret-color: var(--arena-700);
+  font: inherit;
+  font-variant-numeric: tabular-nums;
+  transition: box-shadow var(--duration-base) var(--ease-out);
+}
+.sale input::placeholder {
+  color: var(--arena-steel-ink);
+}
+.sale :is(input[type="search"], input[type="text"], input[type="date"], select):hover {
+  box-shadow: inset 0 0 0 1px var(--arena-hover-line);
+}
+.sale :is(input[type="search"], input[type="text"], input[type="date"], select):focus-visible {
+  outline: var(--focus-outline-width) solid var(--arena-focus-ring);
+  outline-offset: var(--focus-outline-offset);
+  box-shadow: inset 0 0 0 1px var(--arena-700);
+}
+.sale-search .btn {
+  flex: none;
+}
+
+.sale-row {
+  display: grid;
+  grid-template-columns: minmax(0, 1.4fr) minmax(0, 1fr);
+  gap: var(--space-3);
+}
+.sale-field {
+  display: grid;
+  gap: var(--space-1-5);
+  font-size: var(--font-size-sm);
+  font-weight: var(--font-weight-semibold);
+}
+.sale-field small,
+.sale-choices legend small {
+  color: var(--arena-steel-ink);
+  font-weight: var(--font-weight-regular);
+}
+
+
+/* ==================== 4. THẺ KHÁCH ==================== */
+
+.sale-customer {
+  display: flex;
+  align-items: flex-start;
+  gap: var(--space-3);
+  padding: var(--space-3) var(--space-4);
+  border-radius: var(--arena-radius-chip);
+  background: var(--arena-surface);
+  box-shadow: inset 0 0 0 1px var(--sale-line);
+}
+.sale-customer.is-blocked {
+  box-shadow: inset 0 0 0 1px var(--color-danger-border);
+}
+.sale-avatar {
+  display: grid;
+  flex: none;
+  place-items: center;
+  width: 44px;
+  height: 44px;
+  border-radius: var(--radius-circle);
+  background: var(--arena-info-chip);
+  color: var(--arena-700);
+  font-family: var(--font-brand-display);
+  font-size: var(--font-size-lg);
+  font-weight: var(--font-weight-extrabold);
+}
+.sale-customer-main {
+  display: grid;
+  gap: 2px;
+  min-width: 0;
+}
+.sale-customer-role {
+  color: var(--arena-steel-ink);
+  font-family: var(--font-brand-mono);
+  font-size: var(--font-size-2xs);
+  letter-spacing: var(--letter-spacing-wide);
+  text-transform: uppercase;
+}
+.sale-customer-name {
+  font-size: var(--font-size-base);
+  font-weight: var(--font-weight-bold);
+  overflow-wrap: anywhere;
+}
+.sale-customer-meta {
+  display: flex;
+  flex-wrap: wrap;
+  gap: var(--space-1) var(--space-3);
+  color: var(--arena-steel-ink);
+  font-size: var(--font-size-sm);
+  font-variant-numeric: tabular-nums;
+}
+.sale-customer-status {
+  display: flex;
+  align-items: flex-start;
+  gap: var(--space-1-5);
+  margin-top: var(--space-1);
+  color: var(--color-success-ink);
+  font-size: var(--font-size-sm);
+  font-weight: var(--font-weight-semibold);
+}
+.sale-customer-status i {
+  margin-top: 3px;
+}
+.sale-customer.is-blocked .sale-customer-status {
+  color: var(--color-danger-ink);
+}
+
+
+/* ==================== 5. Ô CHỌN GÓI, GIỜ CỐ ĐỊNH ==================== */
+
+.sale-choices,
+.sale-times {
+  display: grid;
+  gap: var(--arena-gap-tile);
+}
+.sale-choices {
+  grid-template-columns: repeat(auto-fill, minmax(200px, 1fr));
+}
+.sale-times {
+  grid-template-columns: repeat(auto-fill, minmax(150px, 1fr));
+}
+.sale-choices legend {
+  margin-bottom: var(--space-2);
+  font-size: var(--font-size-sm);
+  font-weight: var(--font-weight-semibold);
+}
+.sale-choice,
+.sale-time {
+  position: relative;
+  display: grid;
+  gap: 2px;
+  padding: var(--space-3);
+  border-radius: var(--arena-radius-chip);
+  background: var(--arena-surface);
+  box-shadow: inset 0 0 0 1px var(--sale-line);
+  cursor: pointer;
+  transition: box-shadow var(--duration-base) var(--ease-out), background-color var(--duration-base) var(--ease-out);
+}
+.sale-choice input,
+.sale-time input {
+  position: absolute;
+  opacity: 0;
+  pointer-events: none;
+}
+.sale-choice strong,
+.sale-time strong {
+  font-size: var(--font-size-md);
+  font-weight: var(--font-weight-bold);
+  font-variant-numeric: tabular-nums;
+}
+.sale-choice small,
+.sale-time small {
+  color: var(--arena-steel-ink);
+  font-size: var(--font-size-xs);
+  font-variant-numeric: tabular-nums;
+}
+.sale-choice:hover,
+.sale-time:hover {
+  box-shadow: inset 0 0 0 1px var(--arena-hover-line);
+}
+.sale-choice:has(input:checked),
+.sale-time:has(input:checked) {
+  background: var(--arena-today-tint);
+  box-shadow: inset 0 0 0 2px var(--arena-700);
+}
+.sale-choice:has(input:focus-visible),
+.sale-time:has(input:focus-visible) {
+  outline: var(--focus-outline-width) solid var(--arena-focus-ring);
+  outline-offset: var(--focus-outline-offset);
+}
+
+
+/* ==================== 6. LỊCH DỰ KIẾN ==================== */
+
+.sale-plan {
+  display: grid;
+  gap: var(--space-3);
+  padding-top: var(--space-4);
+  border-top: var(--border-width) solid var(--arena-chalk-line);
+}
+.sale-plan h3 {
+  font-family: var(--font-brand-display);
+  font-size: var(--font-size-xl);
+  font-weight: var(--font-weight-extrabold);
+  font-variant-numeric: tabular-nums;
+}
+.sale-plan h3 small {
+  color: var(--arena-steel-ink);
+  font-family: var(--font-body);
+  font-size: var(--font-size-sm);
+  font-weight: var(--font-weight-medium);
+}
+
+/* 5 cột = 1 tuần T2–T6; ô đầu tiên có grid-column-start theo thứ (JSP), các ô sau tự xếp đúng cột. */
+.sale-days {
+  display: grid;
+  grid-template-columns: repeat(5, minmax(0, 1fr));
+  gap: var(--space-1);
+  padding: 0;
+  list-style: none;
+}
+.sale-day {
+  display: flex;
+  align-items: baseline;
+  justify-content: space-between;
+  gap: var(--space-1);
+  padding: 6px var(--space-2);
+  border-radius: var(--arena-radius-chip);
+  font-size: var(--font-size-xs);
+  font-variant-numeric: tabular-nums;
+}
+.sale-day span {
+  color: inherit;
+  opacity: 0.8;
+}
+.sale-day b {
+  font-weight: var(--font-weight-semibold);
+}
+.sale-day.is-on,
+.sale-legend .is-on::before {
+  background: var(--color-success-tint);
+  box-shadow: inset 0 0 0 1px var(--color-success-border);
+  color: var(--color-success-ink);
+}
+.sale-day.is-warn,
+.sale-legend .is-warn::before {
+  background: var(--color-warning-tint);
+  box-shadow: inset 0 0 0 1px var(--color-warning-border);
+  color: var(--color-warning-ink);
+}
+.sale-day.is-off,
+.sale-legend .is-off::before {
+  background: var(--arena-closed);
+  box-shadow: inset 0 0 0 1px var(--arena-chalk-line);
+  color: var(--arena-steel-ink);
+}
+.sale-day.is-off b {
+  text-decoration: line-through;
+}
+
+.sale-legend {
+  display: flex;
+  flex-wrap: wrap;
+  gap: var(--space-1) var(--space-4);
+  padding: 0;
+  color: var(--arena-steel-ink);
+  font-size: var(--font-size-xs);
+  list-style: none;
+}
+.sale-legend li {
+  display: flex;
+  align-items: center;
+  gap: var(--space-1-5);
+}
+.sale-legend li::before {
+  content: "";
+  width: 12px;
+  height: 12px;
+  border-radius: var(--arena-radius-chip);
+}
+
+.sale-notes {
+  display: grid;
+  gap: var(--space-1);
+  padding: var(--space-3) var(--space-3) var(--space-3) var(--space-6);
+  border-radius: var(--arena-radius-chip);
+  background: var(--arena-surface);
+  box-shadow: inset 0 0 0 1px var(--sale-line);
+  font-size: var(--font-size-sm);
+}
+.sale-notes b {
+  font-variant-numeric: tabular-nums;
+}
+.sale-notes .is-off::marker {
+  color: var(--arena-steel);
+}
+.sale-notes .is-warn::marker {
+  color: var(--color-warning);
+}
+
+
+/* ==================== 7. TÓM TẮT ĐƠN + THU TIỀN ==================== */
+
+.sale-summary {
+  position: sticky;
+  top: var(--space-4);
+  display: grid;
+  gap: var(--space-4);
+  padding: var(--arena-pad);
+}
+.sale-summary > h2 {
+  font-family: var(--font-brand-display);
+  font-size: var(--font-size-lg);
+  font-weight: var(--font-weight-extrabold);
+}
+.sale-facts {
+  display: grid;
+  border-radius: var(--arena-radius-chip);
+  background: var(--arena-surface);
+  box-shadow: inset 0 0 0 1px var(--sale-line);
+}
+.sale-facts > div {
+  display: grid;
+  grid-template-columns: 72px minmax(0, 1fr);
+  gap: var(--space-2);
+  padding: var(--space-2) var(--space-3);
+  font-size: var(--font-size-sm);
+}
+.sale-facts > div + div {
+  border-top: var(--border-width) solid var(--arena-grid-line);
+}
+.sale-facts dt {
+  color: var(--arena-steel-ink);
+}
+.sale-facts dd {
+  font-weight: var(--font-weight-semibold);
+  font-variant-numeric: tabular-nums;
+  overflow-wrap: anywhere;
+}
+.sale-total {
+  display: flex;
+  align-items: baseline;
+  justify-content: space-between;
+  gap: var(--space-3);
+}
+.sale-total span {
+  color: var(--arena-steel-ink);
+  font-size: var(--font-size-sm);
+}
+.sale-total strong {
+  font-family: var(--font-brand-display);
+  font-size: var(--font-size-2xl);
+  font-weight: var(--font-weight-extrabold);
+  font-variant-numeric: tabular-nums;
+  letter-spacing: -0.02em;
+}
+
+.sale-pay {
+  display: grid;
+  gap: var(--space-3);
+}
+.sale-method {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: var(--space-1);
+}
+.sale-method legend {
+  margin-bottom: var(--space-2);
+  font-size: var(--font-size-sm);
+  font-weight: var(--font-weight-semibold);
+}
+.sale-method label {
+  display: flex;
+  align-items: center;
+  gap: var(--space-2);
+  min-height: 44px;
+  padding: 0 var(--space-3);
+  border-radius: var(--arena-radius-chip);
+  background: var(--arena-surface);
+  box-shadow: inset 0 0 0 1px var(--sale-line);
+  font-size: var(--font-size-sm);
+  font-weight: var(--font-weight-semibold);
+  cursor: pointer;
+}
+.sale-method label:has(input:checked) {
+  background: var(--arena-today-tint);
+  box-shadow: inset 0 0 0 2px var(--arena-700);
+}
+.sale-method input,
+.sale-confirm input {
+  accent-color: var(--arena-700);
+}
+
+/* Ô mã chuyển khoản + câu "đã kiểm tra tiền vào tài khoản": chỉ khi chọn Chuyển khoản (CBR-77). */
+.sale-ref,
+.sale-ref-note {
+  display: none;
+}
+.sale-pay:has(input[value="Transfer"]:checked) .sale-ref {
+  display: grid;
+}
+.sale-pay:has(input[value="Transfer"]:checked) .sale-ref-note {
+  display: inline;
+}
+
+.sale-confirm {
+  display: flex;
+  align-items: flex-start;
+  gap: var(--space-2);
+  font-size: var(--font-size-sm);
+  cursor: pointer;
+}
+.sale-confirm input {
+  flex: none;
+  width: 18px;
+  height: 18px;
+  margin: 1px 0 0;
+}
+.sale-confirm b {
+  font-variant-numeric: tabular-nums;
+}
+.sale-submit {
+  width: 100%;
+  min-height: 48px;
+}
+
+
+/* ==================== 8. ĐIỆN THOẠI ==================== */
+
+@media (max-width: 1080px) {
+  .sale-grid {
+    grid-template-columns: minmax(0, 1fr);
+  }
+  .sale-summary {
+    position: static;
+  }
+}
+
+@media (max-width: 640px) {
+  .sale-step,
+  .sale-summary {
+    padding: var(--arena-pad-sm);
+  }
+  .sale-row {
+    grid-template-columns: minmax(0, 1fr);
+  }
+  /* Vẫn 5 cột T2–T6 cho thẳng tuần, chỉ bỏ tên thứ cho vừa ô. */
+  .sale-day {
+    justify-content: center;
+    padding-inline: var(--space-1);
+  }
+  .sale-day span {
+    display: none;
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .sale-choice,
+  .sale-time,
+  .sale input,
+  .sale select {
+    transition: none;
+  }
+}

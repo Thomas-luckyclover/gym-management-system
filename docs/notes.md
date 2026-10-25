@@ -1,5 +1,23 @@
 # File notes — mâu thuẫn tài liệu & quyết định đã chốt
 
+## Lễ tân bán gói PT — /receptionist/pt-sales (25/10/2026, ĐÃ CHỐT + ĐÃ CODE)
+UC-21 bản **đơn giản hóa** (SRS cập nhật sau). Menu "Bán gói PT" trong sidebar Lễ tân đã trỏ tới màn này.
+
+- **Luồng**: 1 trang, 3 bước bằng 1 form GET (`q`, `partner`, `package`, `pt`, `start`, `time`) — mỗi lần bấm "Tiếp" (hoặc đổi lựa chọn, JS tự gửi) `PtSaleServlet.doGet` gọi `PtSaleService.prepare` **1 lần**. Cột phải "Đơn bán" là form POST riêng: `doPost` gọi `PtSaleService.sell` **1 lần** → toast + redirect trang trống (PRG); bị từ chối thì dựng lại trang đúng lựa chọn cũ.
+- **Đơn giản hóa đã chốt**:
+  1. **Thu tiền ngay**: đơn tạo ra là `Paid` + 1 giao dịch `Success` (Cash/Transfer, người nhận = lễ tân). Không có đơn Pending, không có khung `Held`.
+  2. **Ngày giờ cố định không dùng được → không có buổi** (không chọn giờ thay — BR-41 rút gọn). Lý do từng ngày hiện ngay dưới lịch dự kiến.
+  3. **Bỏ nhánh** bán 1 buổi lẻ cho khách vãng lai.
+  4. **Ca làm việc tự mở**: trước 14:00 là ca sáng, từ 14:00 ca chiều; chưa có dòng ca → tạo `Open`; `NotOpened` → mở; `Closed` → từ chối ("ca đã chốt két"). Chưa có màn Ca làm việc.
+  5. Không voucher (CBR-76).
+- **Khách mua được** (người đứng tên, và người tập cùng nếu gói đôi): có gói thành viên Active/Frozen phủ hôm nay và hôm nay không bảo lưu (vé ngày không tính — CBR-59, BR-37); đủ P-05 tuổi; không phải hồ sơ khách của chính lễ tân. PT chọn được: đang làm việc + tài khoản Active, không phải chính khách.
+- **Ngày bắt đầu**: hôm nay → +30 ngày. Ngày kết thúc = `calculateEndDateByMonths(start, months)` (tính cả ngày cuối, như seed).
+- **Giờ cố định** chỉ chọn trong các giờ PT **đã công bố khung Free** vào T2–T6 trong 14 ngày đầu kỳ (CBR-52). Các ngày sau đó: PT có khung Free đúng giờ → dùng (`Booked`); chưa có khung → **tạo khung mới `Booked`**; PT đã có khách / đã gỡ khung đúng giờ / có khung khác chồng giờ / khách có buổi khác trùng giờ / đã qua giờ → ngày đó không có buổi. Ngày phòng nghỉ hoặc PT có đơn nghỉ: **vẫn sinh buổi** (theo quyết định ngày nghỉ cũ) + tô vàng "PT cần dời".
+- **Tiền**: giá đã gồm VAT; `VatAmount = round(giá × P-10 ÷ (100 + P-10))`; `SessionValue = round(giá ÷ số buổi)` (DBR-59); `CommissionAmount = round(SessionValue × tỷ lệ PT ÷ 100)`; `MaxSwapsSnapshot = P-08 × số tháng`.
+- **Chống tranh chấp**: `sell` khóa dòng PT (`UPDLOCK`), đọc lại khung của PT trong cả kỳ có khóa, **làm lại đủ 3 bước** rồi mới ghi. Mã đơn lấy `MAX(OrderCode)` có khóa. Đã thử 2 lễ tân bán cùng lịch: người sau bị báo "PT chưa công bố khung trống" ở bước giờ, không ghi gì.
+- **Thông báo**: khách + người tập cùng có tài khoản ("Gói PT mới đã kích hoạt") và PT ("Bạn có khách gói PT mới").
+- Đã chạy thật (lễ tân `tam.le@gms.vn`): bán Gói PT 2 Tháng cho KH-1001 với PT Sơn, bắt đầu 26/10 lúc 08:00 → kết quả DH-2026-0157: 44 buổi, 375.000đ/buổi, hoa hồng 262.500đ, VAT 1.500.000đ, ca chiều 25/10 tự mở. **DB local đã đổi** bởi lần thử này.
+
 ## Bước 11 — PT xử lý buổi trên Lịch dạy (25/10/2026, ĐÃ CHỐT + ĐÃ CODE)
 Đổi so với SRS (SRS cập nhật sau): khách KHÔNG còn tự đổi buổi → gộp "Dời buổi (PT bận)" và "Đổi hộ khách không có tài khoản" thành **một** phương án "Dời buổi". Không tính lượt đổi (`SwapsUsed` không đổi), không xác minh SĐT người yêu cầu. Còn 3 phương án: Dời buổi · Chuyển PT · Hủy buổi.
 

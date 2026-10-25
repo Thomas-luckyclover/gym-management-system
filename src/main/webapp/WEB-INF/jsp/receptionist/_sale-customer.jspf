@@ -1,0 +1,27 @@
+<%@ page pageEncoding="UTF-8" %>
+<%--
+ _sale-customer.jspf — THẺ 1 KHÁCH trên màn Bán gói PT (nhúng 2 lần trong pt-sales.jsp: người đứng tên, người tập cùng).
+ Trang cha đặt trước khi nhúng:  cust = PtSaleCustomer, custRole = "Người đứng tên" | "Người tập cùng".
+   cust.membershipEnd ← gói thành viên Active/Frozen phủ hôm nay (PtSaleDAO.findCustomer); null = không có
+   cust.blockReason   ← PtSaleService.whyCannotBuy; null = bán được
+--%>
+<div class="sale-customer ${empty cust.blockReason ? 'is-ok' : 'is-blocked'}">
+    <span class="sale-avatar" aria-hidden="true"><c:out value="${fn:substring(cust.fullName, 0, 1)}" /></span>
+    <div class="sale-customer-main">
+        <p class="sale-customer-role"><c:out value="${custRole}" /></p>
+        <p class="sale-customer-name"><c:out value="${cust.fullName}" /></p>
+        <p class="sale-customer-meta">
+            <span><c:out value="${cust.customerCode}" /></span>
+            <span><c:out value="${not empty cust.phone ? cust.phone : 'Hồ sơ phụ thuộc'}" /></span>
+            <span><c:out value="${gms:formatDate(cust.dateOfBirth)}" /></span>
+        </p>
+        <c:choose>
+            <c:when test="${empty cust.blockReason}">
+                <p class="sale-customer-status"><i class="fa-solid fa-circle-check" aria-hidden="true"></i> Gói thành viên tới <c:out value="${gms:formatDate(cust.membershipEnd)}" /></p>
+            </c:when>
+            <c:otherwise>
+                <p class="sale-customer-status" role="alert"><i class="fa-solid fa-circle-xmark" aria-hidden="true"></i> <c:out value="${cust.blockReason}" /></p>
+            </c:otherwise>
+        </c:choose>
+    </div>
+</div>

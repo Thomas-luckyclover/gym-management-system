@@ -1090,6 +1090,7 @@ html body.dock.pt-plan-page .pt-plan-pending .pt-pending-error { color: var(--ar
 
 /* --- 10.2 Khung hộp: giữa màn trên máy tính, tấm trượt từ đáy trên điện thoại --- */
 .pt-handle {
+  color-scheme: light;   /* thân hộp sáng: ô tick của trình duyệt vẽ theo nền sáng */
   width: min(100% - 2 * var(--space-4), 680px);
   max-height: min(90vh, 800px);
   padding: 0;
