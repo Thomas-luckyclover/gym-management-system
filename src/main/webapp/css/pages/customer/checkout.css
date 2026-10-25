@@ -4,9 +4,19 @@
 }
 
 .checkout-back {
-  display: inline-block;
+  display: inline-flex;
+  align-items: center;
+  gap: var(--space-2);
   margin-bottom: var(--space-5);
-  color: var(--color-text-muted);
+  color: rgba(255, 255, 255, 0.88);
+  font-weight: var(--font-weight-medium);
+  text-decoration: none;
+  transition: color var(--duration-fast) var(--ease-standard);
+}
+
+.checkout-back:hover {
+  color: #FFFFFF;
+  text-decoration: underline;
 }
 
 .checkout-heading {
@@ -22,21 +32,26 @@
   margin: 0 0 var(--space-2);
   font-size: var(--font-size-3xl);
   font-weight: var(--font-weight-bold);
+  color: #FFFFFF;
 }
 
 .checkout-heading p {
   margin: 0;
-  color: var(--color-text-muted);
+  color: rgba(255, 255, 255, 0.78);
+  font-size: var(--font-size-md);
 }
 
 .checkout-clock {
   display: flex;
   gap: var(--space-2);
   align-items: center;
-  background: var(--color-warning-tint);
-  color: var(--color-warning-ink);
-  padding: var(--space-3);
+  background: #FFF8E6;
+  color: #92400E;
+  border: 1px solid #FCD34D;
+  padding: var(--space-2-5) var(--space-4);
   border-radius: var(--radius-md);
+  font-weight: var(--font-weight-semibold);
+  box-shadow: var(--shadow-card);
 }
 
 .checkout-grid {
@@ -145,14 +160,19 @@
 }
 
 .checkout-details div span {
-  color: var(--color-text-muted);
+  color: #4A5568;
   font-size: var(--font-size-sm);
+  font-weight: var(--font-weight-medium);
 }
 
 .checkout-prices {
   display: grid;
   gap: var(--space-3);
   margin: 0;
+}
+
+.checkout-prices dt {
+  color: #2D3748;
 }
 
 .checkout-prices div {
@@ -259,11 +279,17 @@
 .checkout-total p {
   margin-top: var(--space-2);
   text-align: right;
-  color: var(--color-text-muted);
+  color: #4A5568;
   font-size: var(--font-size-sm);
 }
 
+.checkout-total p span {
+  color: #1A202C;
+  font-weight: var(--font-weight-semibold);
+}
+
 /* Cùng kiểu nút Mua ngay; chỉ áp dụng tại checkout. */
+:root,
 .checkout-page {
   --checkout-buy-top: #F7C948;
   --checkout-buy-bottom: #E0A01C;
@@ -271,29 +297,45 @@
   --checkout-buy-edge: #B8800F;
 }
 
-.checkout-page .checkout-pay {
+/* Nút thanh toán: ưu tiên cao nhất, không để common.css line 3085 ghi đè */
+html body.dock .content button.checkout-pay,
+html body.dock .content .checkout-pay,
+.checkout-page .checkout-pay,
+.checkout-pay {
   width: 100%;
+  display: inline-flex;
+  align-items: center;
   justify-content: center;
   gap: var(--space-3);
-  padding: var(--space-3);
-  border: 0;
-  border-radius: var(--radius-xs);
+  padding: var(--space-3) var(--space-4);
+  border: 0 !important;
+  border-radius: var(--radius-xs) !important;
   font-family: var(--font-body);
   font-size: var(--font-size-md);
   font-weight: var(--font-weight-semibold);
-  background: linear-gradient(var(--checkout-buy-top), var(--checkout-buy-bottom));
-  color: var(--checkout-buy-ink);
-  box-shadow: 0 var(--border-width-thick) 0 var(--checkout-buy-edge), var(--shadow-card);
+  background: linear-gradient(var(--checkout-buy-top), var(--checkout-buy-bottom)) !important;
+  color: var(--checkout-buy-ink) !important;
+  box-shadow: 0 var(--border-width-thick) 0 var(--checkout-buy-edge), var(--shadow-card) !important;
   cursor: pointer;
+  transition: filter var(--duration-fast) var(--ease-standard), transform var(--duration-fast) var(--ease-standard);
 }
 
-.checkout-page .checkout-pay:hover:not(:disabled) {
-  filter: brightness(1.06);
+html body.dock .content button.checkout-pay:hover:not(:disabled),
+html body.dock .content .checkout-pay:hover:not(:disabled),
+.checkout-page .checkout-pay:hover:not(:disabled),
+.checkout-pay:hover:not(:disabled) {
+  filter: brightness(1.08);
+  background: linear-gradient(var(--checkout-buy-top), var(--checkout-buy-bottom)) !important;
+  color: var(--checkout-buy-ink) !important;
 }
 
-.checkout-page .checkout-pay:disabled {
+html body.dock .content button.checkout-pay:disabled,
+html body.dock .content .checkout-pay:disabled,
+.checkout-page .checkout-pay:disabled,
+.checkout-pay:disabled {
   opacity: var(--opacity-disabled);
   cursor: not-allowed;
+  filter: grayscale(0.2);
 }
 
 .checkout-provider {
@@ -313,14 +355,15 @@
 }
 
 .checkout-provider p {
-  color: var(--color-text-muted);
+  color: #4A5568;
   font-size: var(--font-size-sm);
+  font-weight: var(--font-weight-medium);
 }
 
 .checkout-footer {
   margin-top: var(--space-4);
   text-align: center;
-  color: var(--color-text-muted);
+  color: rgba(255, 255, 255, 0.78);
   font-size: var(--font-size-sm);
 }
 

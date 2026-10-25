@@ -85,17 +85,30 @@ public class PaymentCallbackService {
      * @return mã để Servlet trả JSON cho VNPay
      */
     public IpnResult handleIpn(Map<String, String> params) {
-
-        // B1: kiểm chữ ký trước khi đọc hoặc cập nhật database.
         try {
-            if (!vnPayClient.verifySignature(params)) {
+            if (params == null || !vnPayClient.verifySignature(params)) {
                 return reply("97", "Invalid signature");
             }
-        } catch (RuntimeException e) {
-            return reply("99", "Configuration error");
-        }
 
-        return processVerifiedResult(params);
+            String expectedMerchant = AppConfig.get("vnpay.tmn-code");
+
+            if (expectedMerchant == null || expectedMerchant.isBlank()) {
+                return reply("99", "Configuration error");
+            }
+
+            if (!expectedMerchant.equals(params.get("vnp_TmnCode"))) {
+                return reply("97", "Invalid merchant");
+            }
+
+            return processVerifiedResult(params);
+
+        } catch (RuntimeException e) {
+            System.err.println(
+                    "[IPN] Processing error: "
+                    + e.getClass().getSimpleName());
+
+            return reply("99", "Processing error");
+        }
     }
 
     /**

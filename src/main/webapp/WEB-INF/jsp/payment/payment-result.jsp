@@ -87,12 +87,7 @@
                                     </div>
                                 </dl>
 
-                                <c:if test="${result.waiting}">
-                                    <a class="btn btn-outline"
-                                       href="${pageContext.request.contextPath}/customer/payment-result?transaction=${transactionId}">
-                                        Kiểm tra lại
-                                    </a>
-                                </c:if>
+
 
                                 <c:if test="${result.retryable}">
                                     <a class="btn btn-outline"
@@ -112,6 +107,15 @@
                             <a class="btn btn-outline"
                                href="${pageContext.request.contextPath}/customer/dashboard">
                                 Trang cá nhân
+                            </a>
+                            <a class="btn btn-outline"
+                               href="${pageContext.request.contextPath}/customer/bookings">
+                                Gói của tôi
+                            </a>
+
+                            <a class="btn btn-outline"
+                               href="${pageContext.request.contextPath}/customer/transactions">
+                                Lịch sử giao dịch
                             </a>
                         </div>
                     </section>

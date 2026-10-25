@@ -7,10 +7,10 @@
         <%@ include file="/WEB-INF/jsp/common/head.jspf" %>
         <title>Thanh toán · Super Gym</title>
         <link rel="stylesheet" href="${pageContext.request.contextPath}/css/pages/customer/dashboard.css?v=7">
-        <link rel="stylesheet" href="${pageContext.request.contextPath}/css/pages/customer/checkout.css?v=5">
+        <link rel="stylesheet" href="${pageContext.request.contextPath}/css/pages/customer/checkout.css?v=6">
         <script src="${pageContext.request.contextPath}/js/pages/customer/checkout.js?v=5" defer></script>
     </head>
-    <body class="dock ${themeClass}">
+    <body class="dock checkout-page ${themeClass}">
         <%@ include file="/WEB-INF/jsp/common/flash-toast.jspf" %>
         <div class="app">
             <%@ include file="/WEB-INF/jsp/common/layout-customer.jspf" %>
@@ -125,7 +125,7 @@
                                                value="<c:out value='${csrfToken}' />">
 
                                         <button id="payButton"
-                                                class="btn checkout-pay"
+                                                class="btn btn-primary checkout-pay"
                                                 type="submit"
                                                 ${checkout.voucherEditable ? '' : 'disabled'}>
 

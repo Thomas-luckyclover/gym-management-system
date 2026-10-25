@@ -5,7 +5,7 @@
    ===================================================================== */
 .package-selection-page .tb-subtitle {
   margin: 0.35rem 0 0;
-  color: var(--color-text-soft);
+  color: rgba(255, 255, 255, 0.88) !important;
   font-size: var(--font-size-sm);
 }
 
@@ -142,7 +142,7 @@
   width: 100%;
   margin-bottom: var(--space-2);
   padding: 0;
-  color: var(--color-text-muted);
+  color: #2D3748;
   font-size: var(--font-size-xs);
   font-weight: var(--font-weight-bold);
   letter-spacing: var(--letter-spacing-wide);
@@ -196,9 +196,12 @@
 
 .filter-chip small {
   margin-left: auto;
-  color: var(--color-text-muted);
+  color: #4A5568;
   font-size: var(--font-size-xs);
-  font-weight: var(--font-weight-regular);
+  font-weight: var(--font-weight-semibold);
+  background: #EDF2F7;
+  padding: 1px 6px;
+  border-radius: 10px;
 }
 
 .filter-chip:hover span {
@@ -378,9 +381,36 @@
 }
 
 .package-count {
-  margin: 0;
-  color: var(--color-text-soft);
+  display: inline-flex;
+  align-items: center;
+  gap: var(--space-2);
+  align-self: start;
+  margin: 0 0 var(--space-1);
+  padding: var(--space-1-5) var(--space-3-5);
+  border-radius: var(--radius-pill);
+  background: rgba(255, 255, 255, 0.08);
+  border: 1px solid rgba(255, 255, 255, 0.18);
+  backdrop-filter: blur(8px);
+  color: #FFFFFF;
   font-size: var(--font-size-sm);
+  font-weight: var(--font-weight-medium);
+  box-shadow: 0 2px 6px rgba(0, 0, 0, 0.2);
+}
+
+.package-count i {
+  color: #F7C948;
+  font-size: var(--font-size-sm);
+}
+
+.package-count strong {
+  color: #F7C948;
+  font-weight: var(--font-weight-bold);
+  font-size: 1.05em;
+}
+
+.package-count__divider {
+  color: rgba(255, 255, 255, 0.4);
+  margin: 0 var(--space-1);
 }
 
 .package-empty {
@@ -543,8 +573,9 @@
 }
 
 .package-card__was {
-  color: var(--color-text-muted);
+  color: #718096;
   font-size: var(--font-size-sm);
+  font-weight: var(--font-weight-medium);
 }
 
 .package-card__price {
@@ -557,10 +588,10 @@
 }
 
 .package-card__price small {
-  color: var(--color-text-soft);
+  color: #4A5568;
   font-family: var(--font-body);
   font-size: var(--font-size-sm);
-  font-weight: var(--font-weight-regular);
+  font-weight: var(--font-weight-medium);
 }
 
 .package-card__sub {
@@ -875,15 +906,20 @@ a.package-pager__item:hover {
   opacity: 1;
   text-shadow: 0 2px 4px #000;
 }
+html body.dock .package-dialog__footer .btn-primary,
 .package-dialog__footer .btn-primary {
-  background: #f4c430 !important;
-  border-color: #f4c430 !important;
-  color: #221a00 !important;
+  background: linear-gradient(#F7C948, #E0A01C) !important;
+  border: 0 !important;
+  color: #2A1D04 !important;
+  font-weight: var(--font-weight-bold) !important;
+  box-shadow: 0 2px 0 #B8800F, 0 6px 12px rgba(224, 160, 28, 0.35) !important;
 }
 
-.package-dialog__footer .btn-primary:hover {
-  background: #e5b422 !important;
-  border-color: #e5b422 !important;
+html body.dock .package-dialog__footer .btn-primary:hover:not(:disabled),
+.package-dialog__footer .btn-primary:hover:not(:disabled) {
+  filter: brightness(1.08);
+  background: linear-gradient(#F7C948, #E0A01C) !important;
+  color: #2A1D04 !important;
 }
 /* Link Chọn buổi dùng cùng kiểu nút Mua ngay. */
 a.package-card__buy {

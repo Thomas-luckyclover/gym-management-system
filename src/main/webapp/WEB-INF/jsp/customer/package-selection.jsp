@@ -12,7 +12,7 @@
         <link rel="stylesheet"
               href="${pageContext.request.contextPath}/css/pages/customer/dashboard.css?v=20261024flat">
         <link rel="stylesheet"
-              href="${pageContext.request.contextPath}/css/pages/customer/package-selection.css?v=7">
+              href="${pageContext.request.contextPath}/css/pages/customer/package-selection.css?v=9">
         <script src="${pageContext.request.contextPath}/js/pages/customer/package-selection.js?v=2"
         defer></script>
     </head>
@@ -394,13 +394,8 @@
                                     <c:otherwise>
                                         <p class="package-count"
                                            aria-live="polite">
-                                            Tìm thấy
-                                            ${package1.filteredCount}
-                                            gói<c:if
-                                                test="${package1.totalPages > 1}">
-                                                · trang
-                                                ${package1.page}/${package1.totalPages}
-                                            </c:if>
+                                            <i class="fa-solid fa-layer-group" aria-hidden="true"></i>
+                                            <span>Tìm thấy <strong>${package1.filteredCount}</strong> gói
                                         </p>
 
                                         <%-- Lưới thẻ gói

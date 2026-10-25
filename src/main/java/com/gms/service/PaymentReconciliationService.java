@@ -17,29 +17,32 @@ import java.util.List;
 import java.util.Map;
 
 /**
- * Tự hỏi lại VNPay về giao dịch chưa có kết quả chắc chắn.
- * Không cần session và không giữ khóa DB khi chờ API.
+ * Tự hỏi lại VNPay về giao dịch chưa có kết quả chắc chắn. Không cần session và
+ * không giữ khóa DB khi chờ API.
  */
 public class PaymentReconciliationService {
 
     // Cấu hình vận hành bản thử nghiệm của GMS.
     private static final int FIRST_QUERY_DELAY_MINUTES = 1;
-    private static final long QUERY_INTERVAL_MILLIS = 5 * 60 * 1000L;
+    // Mỗi giao dịch chờ ít nhất 1 phút trước khi truy vấn lại.
+    private static final long QUERY_INTERVAL_MILLIS = 60 * 1000L;
     private static final int MAX_QUERIES_PER_RUN = 20;
 
-    private final TransactionDAO transactionDAO =
-            new TransactionDAO();
+    private final TransactionDAO transactionDAO
+            = new TransactionDAO();
 
-    private final VnPayClient vnPayClient =
-            new VnPayClient();
+    private final VnPayClient vnPayClient
+            = new VnPayClient();
 
-    private final PaymentCallbackService callbackService =
-            new PaymentCallbackService();
+    private final PaymentCallbackService callbackService
+            = new PaymentCallbackService();
 
     // Thời điểm truy vấn gần nhất, giữ trong bộ nhớ của Tomcat.
     private final Map<Integer, Long> lastQueryAt = new HashMap<>();
 
-    /** Scheduler gọi một lượt; không chạy chồng trên cùng instance. */
+    /**
+     * Scheduler gọi một lượt; không chạy chồng trên cùng instance.
+     */
     public synchronized void runOnce() throws SQLException {
         if (!Boolean.parseBoolean(
                 AppConfig.get("vnpay.query-enabled", "false"))) {
@@ -61,8 +64,8 @@ public class PaymentReconciliationService {
 
         // Ưu tiên giao dịch chưa hỏi hoặc lâu chưa hỏi.
         ids.sort(Comparator
-                .comparingLong((Integer id) ->
-                        lastQueryAt.getOrDefault(id, 0L))
+                .comparingLong((Integer id)
+                        -> lastQueryAt.getOrDefault(id, 0L))
                 .thenComparingInt(Integer::intValue));
 
         int queried = 0;
@@ -92,7 +95,9 @@ public class PaymentReconciliationService {
         }
     }
 
-    /** Lỗi của một giao dịch không chặn những giao dịch còn lại. */
+    /**
+     * Lỗi của một giao dịch không chặn những giao dịch còn lại.
+     */
     private void reconcileOne(int transactionId) {
         Transaction payment;
 
@@ -105,8 +110,8 @@ public class PaymentReconciliationService {
                 return;
             }
 
-            boolean unresolved =
-                    payment.getStatus() == Transaction.Status.PENDING
+            boolean unresolved
+                    = payment.getStatus() == Transaction.Status.PENDING
                     || payment.getStatus() == Transaction.Status.EXPIRED;
 
             if (!unresolved) {
