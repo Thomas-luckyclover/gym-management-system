@@ -26,11 +26,11 @@ import java.util.Map;
 /**
  * SERVLET MÀN LỄ TÂN BÁN GÓI PT — /receptionist/pt-sales (UC-21, bản đơn giản hóa). ReceptionistAreaFilter kiểm quyền.
  *
- *   GET  /receptionist/pt-sales?customer=12&partner=&package=9&pt=5&start=2026-10-26&t1=18:00…&t5=18:00
- *        mỗi lần đổi lựa chọn: Service đi 4 bước → pt-sales.jsp
+ *   GET  /receptionist/pt-sales?customer=12&partner=&package=9&pt=5&start=2026-10-26&t1=18:00…&t5=
+ *        mỗi lần đổi khách / gói / PT / ngày: Service đi các bước → pt-sales.jsp (t1..t5 = lịch mẫu, trống = Nghỉ)
  *   GET  /receptionist/pt-sales?order=1001&start=…    đang giữ chỗ: đồng hồ 15 phút + thu tiền
  *   GET  /receptionist/pt-sales/customers?q=mai       ô tìm kiếm gợi ý (pt-sales.js gọi) → JSON tối đa 8 khách
- *   POST action=hold     "Giữ lịch 15 phút"   → redirect ?order=…
+ *   POST action=hold     "Giữ lịch 15 phút" + sessions=2026-10-27@09:30,…   → redirect ?order=…
  *   POST action=pay      "Xác nhận đã thu tiền" → toast + trang trống
  *   POST action=release  "Hủy giữ chỗ"        → toast + trang trống
  */
@@ -127,6 +127,7 @@ public class PtSaleServlet extends HttpServlet {
         input.pt = request.getParameter("pt");
         input.start = request.getParameter("start");
         input.query = request.getParameter("q");
+        input.sessions = request.getParameter("sessions");
         for (int i = 0; i < 5; i++) {
             input.times[i] = request.getParameter("t" + (i + 1));
         }
