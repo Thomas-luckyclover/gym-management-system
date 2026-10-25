@@ -5,6 +5,20 @@
 - **Màn**: 4 ô số (cân nặng, BMI + nhóm BMI châu Á: <18,5 / 18,5–22,9 / 23–24,9 / ≥25, % mỡ, vòng eo; thay đổi so với lần đầu), biểu đồ đường SVG do Service tính toạ độ (trục ngang theo ngày thật, chọn chỉ số bằng `?metric=`, không JS), form ghi lần đo (chiều cao điền sẵn lần trước), bảng lịch sử + xóa (hộp xác nhận chung của common.js). Menu khách: "Chỉ số cơ thể".
 - **Seed**: giữ mốc lịch sử 03/10 (SEED_CASES.md không đổi), thêm mục 8b "làm mới cho demo": gia hạn gói tập 21–23/10 (Bích, Quân, Mai, Hà + 12 khách thường) → Active; gói PT mới từ 26/10 (An PT Sơn 07:00, Quân PT Long 11:00 từ 02/11, Hưng & Hà gói đôi PT Trang 19:30, Mai gói PT 2 tháng nối tiếp từ 09/11); 4 buổi lẻ tuần 26/10; chỉ số cơ thể của Mai (6 lần) và An (5 lần). Khung PT công bố kéo tới 31/12. runtest / negtest / bizcheck đều qua.
 
+## Merge develop vào dev_mb1_MinhLC (26/10/2026)
+- `develop` đổi `LeaveRequests`: bỏ `LeaveDate`, thay bằng khoảng `FromDate`..`ToDate` (+ `Days`, `AssignedToEmployeeId`). 2 câu SQL của nhánh này còn đọc `LeaveDate` → màn Lịch dạy, Xử lý buổi, Bán gói PT lỗi "Hệ thống đang bận". Đã sửa:
+  - `PtScheduleDAO.findLeaves`: lấy đơn có khoảng chạm [from, to], tách thành 1 `LeaveInfo` / ngày (`isOnLeave` giữ nguyên).
+  - `PtSessionHandleDAO.SLOT_SQL`: `t.SlotDate BETWEEN lr.FromDate AND lr.ToDate`.
+- `2_Seed_Data.sql` trên develop đã được sửa tay phần LeaveRequests / LeaveRequestTransfers, **chưa khớp `tools/seeddata.py`** → KHÔNG chạy lại `seeddata.py` cho tới khi người sửa phần nghỉ phép cập nhật generator (chạy lại sẽ xóa dữ liệu của họ).
+
+## Chỉ số cơ thể: thêm Tỷ lệ cơ + hint box 2 màn + sửa lỗi ngày Bán gói PT (25/10/2026, ĐÃ CODE)
+- **DB đổi**: `BodyMeasurements.MusclePercent DECIMAL(3,1) NULL` + `CK_BodyMeasurements_Muscle` (10–70). Seed: các lần đo InBody có % cơ, lần "Tự cân ở nhà" để trống. DB đang chạy chỉ cần thêm cột (không phải nạp lại seed):
+  `IF COL_LENGTH('BodyMeasurements', 'MusclePercent') IS NULL ALTER TABLE BodyMeasurements ADD MusclePercent DECIMAL(3,1) NULL CONSTRAINT CK_BodyMeasurements_Muscle CHECK (MusclePercent IS NULL OR MusclePercent BETWEEN 10 AND 70);`
+- **Code**: form thêm ô "Tỷ lệ cơ" (không bắt buộc) → `BodyStatsService.save` → `checkInput` (10–70%) → `BodyStatsDAO.save` (MERGE thêm cột). Thêm ô số thứ 5 "Tỷ lệ cơ" (bấm = biểu đồ `?metric=muscle`) và cột "Cơ" trong lịch sử. `checkInput` bỏ 2 tham số chữ không dùng.
+- **Bảng lịch sử**: cột số căn phải cả tiêu đề lẫn giá trị (quy ước `th.num` của common.css; trang cần selector mạnh hơn `thead th` chung), Ngày + Ghi chú căn trái.
+- **Hint box** (`.pt-info` dùng chung) cạnh tiêu đề màn Chỉ số cơ thể và Bán gói PT.
+- **Lỗi Bán gói PT**: gõ ngày bắt đầu ngoài hôm nay → +30 ngày thì trình duyệt chặn gửi (`min`/`max`) nhưng JS đã làm mờ + khóa form (`is-busy`) → kẹt. Nay: ngày sai → câu lỗi đỏ dưới ô, không gửi, không khóa; ngày đúng → chờ 0,7 giây (gõ xong) mới gửi.
+
 ## Lễ tân bán gói PT — /receptionist/pt-sales (25/10/2026, bản 2 — ĐÃ CHỐT + ĐÃ CODE)
 UC-21 bản **đơn giản hóa** (SRS cập nhật sau). Bản 2 thay bản 1 (bỏ "giờ cố định 1 giờ cho cả kỳ", bỏ "thu tiền ngay không giữ chỗ").
 

@@ -24,7 +24,7 @@ import java.util.function.Function;
  * SERVICE MÀN CHỈ SỐ CƠ THỂ (/customer/body-stats). Chỉ khách xem dữ liệu của chính mình.
  *
  * Servlet gọi 3 hàm chính, mỗi lần 1 hàm:
- *   getPage  mở trang: đọc mọi lần đo → 4 ô số, biểu đồ 1 chỉ số, lịch sử
+ *   getPage  mở trang: đọc mọi lần đo → 5 ô số, biểu đồ 1 chỉ số, lịch sử
  *   save     ghi 1 lần đo (cùng ngày thì ghi đè)
  *   delete   xóa 1 lần đo
  *
@@ -41,6 +41,8 @@ public class BodyStatsService {
     static final BigDecimal HEIGHT_MAX = new BigDecimal("250");
     static final BigDecimal FAT_MIN = new BigDecimal("3");
     static final BigDecimal FAT_MAX = new BigDecimal("70");
+    static final BigDecimal MUSCLE_MIN = new BigDecimal("10");
+    static final BigDecimal MUSCLE_MAX = new BigDecimal("70");
     static final BigDecimal WAIST_MIN = new BigDecimal("40");
     static final BigDecimal WAIST_MAX = new BigDecimal("200");
 
@@ -77,7 +79,7 @@ public class BodyStatsService {
             BodyStatsView view = new BodyStatsView();
             view.setToday(today);
 
-            // B2: 4 ô số + biểu đồ (cần danh sách cũ trước).
+            // B2: 5 ô số + biểu đồ (cần danh sách cũ trước).
             view.setTiles(buildTiles(rows));
             buildChart(view, rows, normalizeMetric(metric));
 
@@ -101,7 +103,7 @@ public class BodyStatsService {
      * Số được nhập "58,6" hoặc "58.6".
      */
     public ServiceResult<Void> save(int accountId, String dateText, String weightText, String heightText,
-            String fatText, String waistText, String noteText, LocalDate today) {
+            String fatText, String muscleText, String waistText, String noteText, LocalDate today) {
         // B1: đọc + kiểm tra chữ trên form.
         LocalDate day;
         try {
@@ -112,9 +114,10 @@ public class BodyStatsService {
         BigDecimal weight = parseNumber(weightText);
         BigDecimal height = parseNumber(heightText);
         BigDecimal fat = parseNumber(fatText);
+        BigDecimal muscle = parseNumber(muscleText);
         BigDecimal waist = parseNumber(waistText);
         String note = noteText == null || noteText.isBlank() ? null : noteText.trim();
-        String problem = checkInput(day, today, weight, height, fat, waist, fatText, waistText, note);
+        String problem = checkInput(day, today, weight, height, fat, muscle, waist, note);
         if (problem != null) {
             return ServiceResult.fail(problem);
         }
@@ -125,7 +128,7 @@ public class BodyStatsService {
             if (customerId == null) {
                 return ServiceResult.fail(Messages.MSG07_NO_PERMISSION);
             }
-            statsDAO.save(customerId, day, weight, height, fat, waist, note);
+            statsDAO.save(customerId, day, weight, height, fat, muscle, waist, note);
             return ServiceResult.ok(null, "Đã lưu lần đo ngày " + DateTimeUtil.formatDate(day)
                     + " · BMI " + format(bmi(weight, height)) + ".");
         } catch (SQLException exception) {
@@ -181,12 +184,13 @@ public class BodyStatsService {
         return new String[]{"Béo phì", "bad"};
     }
 
-    /** 4 ô số: giá trị mới nhất có của từng chỉ số + thay đổi so với lần đầu có chỉ số đó. */
+    /** 5 ô số: giá trị mới nhất có của từng chỉ số + thay đổi so với lần đầu có chỉ số đó. */
     static List<BodyStatTile> buildTiles(List<BodyStatRow> rows) {
         List<BodyStatTile> tiles = new ArrayList<>();
         tiles.add(tile("weight", "Cân nặng", "kg", rows, BodyStatRow::getWeightKg));
         tiles.add(tile("bmi", "BMI", "", rows, BodyStatRow::getBmi));
         tiles.add(tile("fat", "Tỷ lệ mỡ", "%", rows, BodyStatRow::getBodyFatPercent));
+        tiles.add(tile("muscle", "Tỷ lệ cơ", "%", rows, BodyStatRow::getMusclePercent));
         tiles.add(tile("waist", "Vòng eo", "cm", rows, BodyStatRow::getWaistCm));
         return tiles;
     }
@@ -231,12 +235,13 @@ public class BodyStatsService {
         Function<BodyStatRow, BigDecimal> getter = switch (metric) {
             case "bmi" -> BodyStatRow::getBmi;
             case "fat" -> BodyStatRow::getBodyFatPercent;
+            case "muscle" -> BodyStatRow::getMusclePercent;
             case "waist" -> BodyStatRow::getWaistCm;
             default -> BodyStatRow::getWeightKg;
         };
         String unit = switch (metric) {
             case "bmi" -> "";
-            case "fat" -> "%";
+            case "fat", "muscle" -> "%";
             case "waist" -> "cm";
             default -> "kg";
         };
@@ -244,6 +249,7 @@ public class BodyStatsService {
         view.setMetricLabel(switch (metric) {
             case "bmi" -> "BMI";
             case "fat" -> "Tỷ lệ mỡ (%)";
+            case "muscle" -> "Tỷ lệ cơ (%)";
             case "waist" -> "Vòng eo (cm)";
             default -> "Cân nặng (kg)";
         });
@@ -322,7 +328,7 @@ public class BodyStatsService {
 
     /** Kiểm tra 1 lần đo. null = hợp lệ; còn lại là câu báo cho khách. */
     static String checkInput(LocalDate day, LocalDate today, BigDecimal weight, BigDecimal height, BigDecimal fat,
-            BigDecimal waist, String fatText, String waistText, String note) {
+            BigDecimal muscle, BigDecimal waist, String note) {
         if (day.isAfter(today)) {
             return "Ngày đo không được ở tương lai.";
         }
@@ -337,6 +343,9 @@ public class BodyStatsService {
         }
         if (fat != null && outside(fat, FAT_MIN, FAT_MAX)) {
             return "Tỷ lệ mỡ phải từ 3 đến 70% (bỏ trống nếu không đo).";
+        }
+        if (muscle != null && outside(muscle, MUSCLE_MIN, MUSCLE_MAX)) {
+            return "Tỷ lệ cơ phải từ 10 đến 70% (bỏ trống nếu không đo).";
         }
         if (waist != null && outside(waist, WAIST_MIN, WAIST_MAX)) {
             return "Vòng eo phải từ 40 đến 200 cm (bỏ trống nếu không đo).";
@@ -368,7 +377,7 @@ public class BodyStatsService {
 
     private static String normalizeMetric(String metric) {
         return switch (metric == null ? "" : metric) {
-            case "bmi", "fat", "waist" -> metric;
+            case "bmi", "fat", "muscle", "waist" -> metric;
             default -> "weight";
         };
     }

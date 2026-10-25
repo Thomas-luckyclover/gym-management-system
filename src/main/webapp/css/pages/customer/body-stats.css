@@ -3,8 +3,8 @@
    CHỈ SỐ CƠ THỂ (khách) — body-stats.css
 
    ĐỌC THEO THỨ TỰ:
-     1. Khung trang: 4 ô số → (biểu đồ | form) → lịch sử
-     2. 4 ô số (link chọn biểu đồ)
+     1. Khung trang: 5 ô số → (biểu đồ | form) → lịch sử
+     2. 5 ô số (link chọn biểu đồ)
      3. Biểu đồ SVG (toạ độ do Service tính)
      4. Form ghi lần đo
      5. Bảng lịch sử
@@ -75,11 +75,11 @@ html body.dock.body-stats-page :is(.stats-chart, .stats-form, .stats-history, .s
 }
 
 
-/* ==================== 2. 4 Ô SỐ ==================== */
+/* ==================== 2. 5 Ô SỐ ==================== */
 
 .stats-tiles {
   display: grid;
-  grid-template-columns: repeat(4, minmax(0, 1fr));
+  grid-template-columns: repeat(5, minmax(0, 1fr));
   gap: var(--arena-gap);
 }
 .stats-tile {
@@ -280,9 +280,17 @@ html body.dock.body-stats-page :is(.stats-chart, .stats-form, .stats-history, .s
   border-top: var(--border-width) solid var(--arena-grid-line);
   vertical-align: middle;
 }
-.stats-table .num {
+.stats-table :is(.num, .date) {
   font-variant-numeric: tabular-nums;
   white-space: nowrap;
+}
+.stats-table .date {
+  text-align: left;
+}
+/* Tiêu đề cột số thẳng mép phải với số bên dưới. Phải đủ mạnh để thắng
+   "html body.dock table:not(.no-gms-table) thead th { text-align: left }" của common.css. */
+html body.dock .stats-table thead th.num {
+  text-align: right;
 }
 .stats-table .is-down {
   color: var(--color-success-ink);
@@ -325,10 +333,17 @@ html body.dock.body-stats-page :is(.stats-chart, .stats-form, .stats-history, .s
   .stats-main {
     grid-template-columns: minmax(0, 1fr);
   }
+  .stats-tiles {
+    grid-template-columns: repeat(3, minmax(0, 1fr));
+  }
 }
 @media (max-width: 760px) {
   .stats-tiles {
     grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+  /* 5 ô / 2 cột: ô cuối (Vòng eo) trải hết hàng, không để lỗ trống. */
+  .stats-tile:last-child {
+    grid-column: 1 / -1;
   }
   .stats-tile {
     min-height: 112px;

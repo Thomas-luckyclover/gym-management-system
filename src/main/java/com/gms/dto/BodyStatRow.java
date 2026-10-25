@@ -17,6 +17,7 @@ public class BodyStatRow {
     private BigDecimal weightKg;       // 58.6
     private BigDecimal heightCm;       // 160.0
     private BigDecimal bodyFatPercent; // null = lần này không đo
+    private BigDecimal musclePercent;  // tỷ lệ cơ; null = lần này không đo
     private BigDecimal waistCm;        // null = lần này không đo
     private String note;
 
@@ -34,6 +35,9 @@ public class BodyStatRow {
 
     /** "27,9 %" hoặc "—" khi lần này không đo. */
     public String getFatText() { return bodyFatPercent == null ? "—" : text(bodyFatPercent) + " %"; }
+
+    /** "38,3 %" hoặc "—". */
+    public String getMuscleText() { return musclePercent == null ? "—" : text(musclePercent) + " %"; }
 
     /** "73 cm" hoặc "—". */
     public String getWaistText() { return waistCm == null ? "—" : text(waistCm) + " cm"; }
@@ -73,6 +77,9 @@ public class BodyStatRow {
 
     public BigDecimal getBodyFatPercent() { return bodyFatPercent; }
     public void setBodyFatPercent(BigDecimal bodyFatPercent) { this.bodyFatPercent = bodyFatPercent; }
+
+    public BigDecimal getMusclePercent() { return musclePercent; }
+    public void setMusclePercent(BigDecimal musclePercent) { this.musclePercent = musclePercent; }
 
     public BigDecimal getWaistCm() { return waistCm; }
     public void setWaistCm(BigDecimal waistCm) { this.waistCm = waistCm; }

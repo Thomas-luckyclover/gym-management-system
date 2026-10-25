@@ -11,11 +11,13 @@
  *      Tắt JS: Enter gửi ?q=… → server in danh sách kết quả.
  *   2. Form các bước (data-auto-submit): đổi gói / PT / ngày / ô giờ → tự gửi để server tính lại.
  *      Đổi gói, PT hoặc ngày → bỏ giờ đã chọn (giờ PT rảnh đã khác).
+ *      Ô ngày: ngoài min–max → báo lỗi dưới ô, không gửi; hợp lệ → chờ 0,7 giây (gõ xong) rồi mới gửi.
  */
 
 const SALE_SUGGEST_URL = "/receptionist/pt-sales/customers";
 const SALE_SUGGEST_DELAY = 200;
 const SALE_TIME_FIELD = /^t[1-5]$/;
+const SALE_DATE_DELAY = 700;   // ô ngày: chờ gõ xong (gõ "1" rồi "5" không gửi nhầm ngày 01)
 
 document.addEventListener("DOMContentLoaded", function () {
     document.querySelectorAll("[data-combobox]").forEach(initSaleCombobox);
@@ -181,16 +183,25 @@ function initSaleAutoSubmit(form) {
     if (!form) {
         return;
     }
+    let dateTimer = 0;
+    // Quay lại bằng nút Back (trang lấy từ bộ nhớ đệm) → bỏ trạng thái mờ "đang gửi".
+    window.addEventListener("pageshow", function () { form.classList.remove("is-busy"); });
     form.addEventListener("change", function (event) {
         const field = event.target;
-        if (!field.matches("input[type=radio], input[type=date]") || !field.value) {
+        if (!field.matches("input[type=radio], input[type=date]")) {
             return;
         }
-        if (!SALE_TIME_FIELD.test(field.name)) {
-            clearTimes(form);
+        clearTimeout(dateTimer);
+        if (field.matches("[data-start-field]")) {
+            // Ngày sai (trống, trước hôm nay, quá 30 ngày) → báo dưới ô, KHÔNG gửi, form không bị khóa.
+            const isValid = field.value !== "" && field.checkValidity();
+            showStartError(field, !isValid);
+            if (isValid) {
+                dateTimer = setTimeout(function () { submitSteps(form, field); }, SALE_DATE_DELAY);
+            }
+            return;
         }
-        form.classList.add("is-busy");
-        form.requestSubmit();
+        submitSteps(form, field);
     });
 
     const clearPartner = form.querySelector("[data-clear-partner]");
@@ -199,6 +210,27 @@ function initSaleAutoSubmit(form) {
             form.querySelector("[data-partner-field]").value = "";
             form.requestSubmit();
         });
+    }
+}
+
+/** Gửi form các bước: đổi gói / PT / ngày thì bỏ giờ đã chọn. Mờ form chỉ khi chắc chắn gửi được. */
+function submitSteps(form, field) {
+    if (!SALE_TIME_FIELD.test(field.name)) {
+        clearTimes(form);
+    }
+    if (!form.checkValidity()) {
+        form.reportValidity();
+        return;
+    }
+    form.classList.add("is-busy");
+    form.requestSubmit();
+}
+
+function showStartError(field, hasError) {
+    const message = document.getElementById("sale-start-error");
+    field.setAttribute("aria-invalid", String(hasError));
+    if (message) {
+        message.hidden = !hasError;
     }
 }
 

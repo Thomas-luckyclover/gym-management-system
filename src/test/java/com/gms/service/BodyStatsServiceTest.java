@@ -40,11 +40,15 @@ class BodyStatsServiceTest {
         assertNull(BodyStatsService.parseNumber(""));
         BigDecimal w = new BigDecimal("58.6");
         BigDecimal h = new BigDecimal("160");
-        assertNull(BodyStatsService.checkInput(TODAY, TODAY, w, h, null, null, "", "", null));
-        assertNotNull(BodyStatsService.checkInput(TODAY.plusDays(1), TODAY, w, h, null, null, "", "", null));
-        assertNotNull(BodyStatsService.checkInput(TODAY, TODAY, new BigDecimal("400"), h, null, null, "", "", null));
-        assertNotNull(BodyStatsService.checkInput(TODAY, TODAY, w, new BigDecimal("90"), null, null, "", "", null));
-        assertNotNull(BodyStatsService.checkInput(TODAY, TODAY, w, h, new BigDecimal("-1"), null, "abc", "", null));
+        assertNull(BodyStatsService.checkInput(TODAY, TODAY, w, h, null, null, null, null));
+        assertNotNull(BodyStatsService.checkInput(TODAY.plusDays(1), TODAY, w, h, null, null, null, null));
+        assertNotNull(BodyStatsService.checkInput(TODAY, TODAY, new BigDecimal("400"), h, null, null, null, null));
+        assertNotNull(BodyStatsService.checkInput(TODAY, TODAY, w, new BigDecimal("90"), null, null, null, null));
+        assertNotNull(BodyStatsService.checkInput(TODAY, TODAY, w, h, new BigDecimal("-1"), null, null, null));
+        // Tỷ lệ cơ: bỏ trống được; có nhập thì 10–70%.
+        assertNull(BodyStatsService.checkInput(TODAY, TODAY, w, h, null, new BigDecimal("38.3"), null, null));
+        assertNotNull(BodyStatsService.checkInput(TODAY, TODAY, w, h, null, new BigDecimal("80"), null, null));
+        assertNotNull(BodyStatsService.checkInput(TODAY, TODAY, w, h, null, BodyStatsService.parseNumber("abc"), null, null));
     }
 
     @Test
@@ -55,7 +59,8 @@ class BodyStatsServiceTest {
         assertEquals("−3,8 kg so với 05/09", tiles.get(0).getChange());
         assertEquals("Bình thường", tiles.get(1).getNote());
         assertEquals("27,9", tiles.get(2).getValue());
-        assertEquals("—", tiles.get(3).getValue());   // chưa đo vòng eo lần nào
+        assertEquals("—", tiles.get(3).getValue());   // chưa đo tỷ lệ cơ lần nào
+        assertEquals("—", tiles.get(4).getValue());   // chưa đo vòng eo lần nào
     }
 
     @Test

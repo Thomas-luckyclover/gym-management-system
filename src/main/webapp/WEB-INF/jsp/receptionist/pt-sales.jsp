@@ -22,8 +22,8 @@
 <head>
     <%@ include file="/WEB-INF/jsp/common/head.jspf" %>
     <title>Bán gói PT · Super Gym Lễ tân</title>
-    <link rel="stylesheet" href="${ctx}/css/pages/receptionist/pt-sales.css?v=20261025v2">
-    <script src="${ctx}/js/pages/receptionist/pt-sales.js?v=20261025v2" defer></script>
+    <link rel="stylesheet" href="${ctx}/css/pages/receptionist/pt-sales.css?v=20261025v3">
+    <script src="${ctx}/js/pages/receptionist/pt-sales.js?v=20261025v3" defer></script>
 </head>
 <body class="dock theme-staff pt-sale-page">
 <%@ include file="/WEB-INF/jsp/common/flash-toast.jspf" %>
@@ -31,7 +31,19 @@
     <%@ include file="/WEB-INF/jsp/common/layout-receptionist.jspf" %>
     <div class="main">
         <header class="topbar">
-            <div class="tb-left"><h1 class="tb-title">Bán gói PT</h1></div>
+            <div class="tb-left">
+                <h1 class="tb-title">Bán gói PT</h1>
+                <%-- Hint box chung (.pt-info, common.js điều khiển): bấm / di chuột vào nút i để đọc. --%>
+                <span class="pt-info">
+                    <button type="button" class="pt-info-trigger" aria-label="Hướng dẫn Bán gói PT" aria-describedby="sale-help"><span aria-hidden="true">i</span></button>
+                    <span id="sale-help" class="pt-info-popover" role="tooltip">
+                        <strong>1. Khách:</strong> gõ tên (không cần dấu), số điện thoại hoặc mã KH. Khách phải có gói thành viên còn hạn hôm nay.<br>
+                        <strong>2. Gói &amp; PT:</strong> gói đôi cần thêm người tập cùng. Ngày bắt đầu từ hôm nay tới 30 ngày sau.<br>
+                        <strong>3. Lịch tập:</strong> mỗi ô "8/9" = 8 trong 9 tuần của kỳ còn trống giờ đó. Chọn 1 giờ cho mỗi thứ, hoặc "Cả tuần".<br>
+                        <strong>4. Giữ chỗ:</strong> bấm "Giữ lịch 15 phút" trước khi thu tiền để không ai lấy mất khung. Quá 15 phút chưa thu tiền thì lịch tự trả lại cho PT.
+                    </span>
+                </span>
+            </div>
             <div class="top-right">
                 <a class="tb-user" href="${ctx}/account" title="Cài đặt tài khoản">
                     <span class="avatar">LT</span>
@@ -176,8 +188,11 @@
                             </div>
                         </fieldset>
                         <label class="sale-field sale-start"><span class="sale-field-label">Ngày bắt đầu kỳ</span>
-                            <input name="start" type="date" value="${sale.startDate}" min="${sale.minStart}" max="${sale.maxStart}">
+                            <input name="start" type="date" value="${sale.startDate}" min="${sale.minStart}" max="${sale.maxStart}"
+                                   aria-describedby="sale-start-error" data-start-field>
                         </label>
+                        <%-- pt-sales.js hiện câu này khi ngày gõ vào nằm ngoài min–max (form KHÔNG gửi đi). --%>
+                        <p class="sale-msg is-error" id="sale-start-error" role="alert" hidden>Ngày bắt đầu phải từ <c:out value="${gms:formatDate(sale.minStart)}" /> đến <c:out value="${gms:formatDate(sale.maxStart)}" />.</p>
                     </c:if>
                     <c:if test="${not empty sale.choiceError}"><p class="sale-msg is-error" role="alert"><c:out value="${sale.choiceError}" /></p></c:if>
                     <noscript><button class="btn btn-outline" type="submit">Tiếp</button></noscript>
