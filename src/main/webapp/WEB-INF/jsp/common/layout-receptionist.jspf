@@ -40,7 +40,7 @@
         </svg>
         <span>Bán hàng</span>
       </a>
-      <a href="#"
+      <a href="${pageContext.request.contextPath}/receptionist/pt-sales"
          class="nav-link<c:if test="${activeNav == 'pt-sales'}"> active</c:if>"
          <c:if test="${activeNav == 'pt-sales'}">aria-current="page"</c:if>>
         <svg viewBox="0 0 24 24" aria-hidden="true">

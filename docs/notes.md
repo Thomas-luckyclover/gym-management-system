@@ -1,5 +1,24 @@
 # File notes — mâu thuẫn tài liệu & quyết định đã chốt
 
+## Chỉ số cơ thể của khách — /customer/body-stats (25/10/2026, ĐÃ CODE) + làm mới seed
+- **DB (đã báo người dùng)**: bảng mới `BodyMeasurements` (CustomerId, MeasuredOn, WeightKg, HeightCm, BodyFatPercent?, WaistCm?, Note?). UNIQUE (CustomerId, MeasuredOn): 1 lần đo / ngày, lưu lại cùng ngày = ghi đè (MERGE). BMI **không lưu**, Service tính. Ngoài SRS, chỉ khách xem; PT đo ở phòng theo dõi riêng (không nối dữ liệu).
+- **Màn**: 4 ô số (cân nặng, BMI + nhóm BMI châu Á: <18,5 / 18,5–22,9 / 23–24,9 / ≥25, % mỡ, vòng eo; thay đổi so với lần đầu), biểu đồ đường SVG do Service tính toạ độ (trục ngang theo ngày thật, chọn chỉ số bằng `?metric=`, không JS), form ghi lần đo (chiều cao điền sẵn lần trước), bảng lịch sử + xóa (hộp xác nhận chung của common.js). Menu khách: "Chỉ số cơ thể".
+- **Seed**: giữ mốc lịch sử 03/10 (SEED_CASES.md không đổi), thêm mục 8b "làm mới cho demo": gia hạn gói tập 21–23/10 (Bích, Quân, Mai, Hà + 12 khách thường) → Active; gói PT mới từ 26/10 (An PT Sơn 07:00, Quân PT Long 11:00 từ 02/11, Hưng & Hà gói đôi PT Trang 19:30, Mai gói PT 2 tháng nối tiếp từ 09/11); 4 buổi lẻ tuần 26/10; chỉ số cơ thể của Mai (6 lần) và An (5 lần). Khung PT công bố kéo tới 31/12. runtest / negtest / bizcheck đều qua.
+
+## Lễ tân bán gói PT — /receptionist/pt-sales (25/10/2026, bản 2 — ĐÃ CHỐT + ĐÃ CODE)
+UC-21 bản **đơn giản hóa** (SRS cập nhật sau). Bản 2 thay bản 1 (bỏ "giờ cố định 1 giờ cho cả kỳ", bỏ "thu tiền ngay không giữ chỗ").
+
+- **Luồng 4 bước** (thanh bước trên cùng, cột phải "Đơn bán" dính khi cuộn):
+  1. **Khách** — ô tìm kiểu Google: gõ ≥ 2 ký tự → `pt-sales.js` gọi `GET /receptionist/pt-sales/customers?q=` → `PtSaleService.search` → `PtSaleDAO.searchCustomers` (tối đa 8). Khớp **tên không dấu theo thứ tự từ** ("do mai" → "Đỗ Thị Mai"), **SĐT / SĐT giám hộ**, **mã KH**. Dùng collation `Latin1_General_CI_AI` (bản `Vietnamese_CI_AI` coi ă, ê, đ là chữ riêng → "van" không khớp "Văn"). Gợi ý ghi luôn "Gói tập tới …" hoặc lý do không bán được. Chọn → `?customer=<CustomerId>`. Tắt JS: Enter → `?q=` → danh sách link.
+  2. **Gói & PT** — ô gói, ô PT, ngày bắt đầu (mặc định ngày mai, tối đa +30 ngày). Gói đôi: ô tìm người tập cùng (cùng API, bỏ chính người đứng tên). Đổi lựa chọn → JS tự gửi form GET; đổi gói/PT/ngày thì bỏ giờ đã chọn.
+  3. **Lịch tập hằng tuần** (thay "giờ cố định"): bảng T2–T6 × các giờ PT đã công bố khung Free trong 14 ngày đầu kỳ. Mỗi ô "8/9" = số tuần trong kỳ thứ đó lúc giờ đó **thật sự có buổi** (cùng luật `planDays`) / tổng số tuần; tô màu đủ / ≥ 3/4 / ít / không (khóa). **Mỗi thứ chọn 1 giờ riêng** (`t1..t5`), hoặc link "Cả tuần". Chọn đủ 5 thứ → lịch từng ngày + lý do ngày không có buổi.
+  4. **Giữ chỗ & thu tiền** — xem dưới.
+- **Giữ chỗ 15 phút** (giống mua vé): nút "Giữ lịch 15 phút" (POST `action=hold`) → trong 1 transaction có khóa PT, làm lại đủ 3 bước rồi tạo đơn **`Pending`** tại quầy (`PaymentDueAt` NULL, ca tự mở như bản 1) và đặt mọi khung của kỳ sang **`Held`** (`HeldByOrderId`, `HoldExpiresAt` = +15 phút); ngày PT chưa có khung → tạo khung `Held`. Từ lúc này lễ tân khác / PT không lấy được các khung đó (bảng tuần của họ ghi "Đang được giữ cho đơn khác"). Trang chuyển sang `?order=<OrderId>`: đồng hồ đếm ngược (common.js `data-countdown-seconds`, hết giờ tự tải lại).
+  - **Thu tiền** (`action=pay`): Cash / Transfer (ô mã giao dịch chỉ hiện khi Chuyển khoản, CSS `:has`) + tích "Đã nhận đủ". Kiểm tra đơn còn giữ, chưa quá hạn → đơn `Paid` + giao dịch `Success` + Subscription + khung `Held → Booked` + Sessions. `FixedStartTime` = giờ xuất hiện nhiều nhất. Báo khách + người tập cùng + PT như bản 1.
+  - **Hủy giữ chỗ** (`action=release`, có hộp xác nhận) hoặc **quá 15 phút**: đơn `Cancelled` (lý do ghi sẵn), khung do lần giữ này tạo ra bị xóa, khung có sẵn trả về `Free`. Quá hạn được dọn **lười**: mỗi lần mở màn / bấm giữ, `releaseExpired` nhả mọi đơn giữ đã quá hạn (chưa có job nền).
+- **Giữ nguyên từ bản 1**: điều kiện khách mua được (gói thành viên phủ hôm nay, không bảo lưu, đủ P-05 tuổi, không phải chính lễ tân); luật ngày không có buổi; ngày phòng nghỉ / PT có đơn nghỉ vẫn sinh buổi + tô vàng; công thức tiền (VAT, SessionValue, hoa hồng, MaxSwapsSnapshot); không voucher; bỏ nhánh bán buổi lẻ.
+- Đã chạy thật (lễ tân `tam.le@gms.vn`, Chrome 1440 + 390): tìm "do mai", "0901234501", "KH-100"; gói 1 tháng giữ 24 buổi → đồng hồ 14:59; gói đôi KH-1001 + KH-1006 giữ 23 buổi → chuyển khoản → Paid; hủy giữ → Cancelled, 0 khung còn giữ; ép hết hạn → "Đơn này không còn giữ chỗ…". **DB local đã đổi** bởi các lần thử này.
+
 ## Bước 11 — PT xử lý buổi trên Lịch dạy (25/10/2026, ĐÃ CHỐT + ĐÃ CODE)
 Đổi so với SRS (SRS cập nhật sau): khách KHÔNG còn tự đổi buổi → gộp "Dời buổi (PT bận)" và "Đổi hộ khách không có tài khoản" thành **một** phương án "Dời buổi". Không tính lượt đổi (`SwapsUsed` không đổi), không xác minh SĐT người yêu cầu. Còn 3 phương án: Dời buổi · Chuyển PT · Hủy buổi.
 
