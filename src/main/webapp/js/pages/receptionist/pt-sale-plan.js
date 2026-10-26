@@ -11,6 +11,7 @@
  * DỮ LIỆU: server tính sẵn (PtSaleService.buildPlan → <script id="sale-plan-data">):
  *   days[]  mỗi ngày T2–T6 trong kỳ: {date, weekday 1–5, label, options[{time, end, ok, reason, warning}]}
  *   times[] giờ của lịch mẫu · pattern[5] lịch mẫu ban đầu · requested[] buổi gửi lên lần trước (khi bị từ chối)
+ *   unpublished[] Thứ PT chưa công bố khung rảnh (1 = Thứ 2 …) → buổi vào Thứ đó cần tích "Đã xác nhận với PT"
  * TRẠNG THÁI (chỉ 2 thứ):
  *   pattern[0..4]  giờ của Thứ 2..Thứ 6, "" = Nghỉ
  *   overrides      Map ngày → giờ sửa riêng ("" = bỏ buổi ngày đó)
@@ -68,6 +69,15 @@ function initPlan(root, data) {
     const weekLabel = root.querySelector("[data-week-label]");
     const totalBox = root.querySelector("[data-plan-total]");
     const form = document.querySelector("[data-plan-form]");
+    const unpublished = data.unpublished || [];
+    // Tích / bỏ tích "Đã xác nhận với PT" → tính lại nút Giữ lịch.
+    if (form) {
+        form.addEventListener("change", function (event) {
+            if (event.target.name === "confirmPt") {
+                renderSummary();
+            }
+        });
+    }
 
     // ===== Sự kiện (gắn 1 lần, ủy quyền theo data-*) =====
     root.addEventListener("change", function (event) {
@@ -335,6 +345,9 @@ function initPlan(root, data) {
             const head = el("div", "plan-row-day");
             head.append(el("strong", "", PLAN_DAY_NAMES[weekday - 1]));
             head.append(el("small", "", "Tối đa " + countWeekday(weekday) + " buổi"));
+            if (unpublished.includes(weekday)) {
+                head.append(el("small", "plan-row-flag", "PT chưa công bố"));
+            }
 
             const chips = el("div", "plan-chips");
             chips.setAttribute("role", "radiogroup");
@@ -520,9 +533,23 @@ function initPlan(root, data) {
             form.querySelector("[data-plan-t='" + weekday + "']").value = pattern[weekday - 1];
         }
         form.querySelector("[data-plan-sessions]").value = result.picked.join(",");
-        // Giữ lịch cần đủ 2 thứ: ít nhất 1 buổi + khách (server ghi data-customer-ready khi khách mua được).
+        // Buổi vào Thứ PT chưa công bố → hiện ô "Đã xác nhận với PT" (server cũng kiểm tra lại lúc giữ).
+        const unconfirmed = result.picked.filter(function (key) {
+            return unpublished.includes(dayByDate.get(key.split("@")[0]).weekday);
+        }).length;
+        const confirmBox = form.querySelector("[data-plan-confirm]");
+        const confirmInput = confirmBox.querySelector("input");
+        confirmBox.hidden = unconfirmed === 0;
+        confirmInput.required = unconfirmed > 0;
+        if (unconfirmed === 0) {
+            confirmInput.checked = false;
+        }
+        form.querySelector("[data-plan-confirm-text]").textContent =
+                unconfirmed + " buổi vào thứ PT chưa công bố — PT đã đồng ý dạy.";
+        const needConfirm = unconfirmed > 0 && !confirmInput.checked;
+        // Giữ lịch cần đủ: ít nhất 1 buổi + khách (server ghi data-customer-ready) + đã xác nhận với PT (nếu cần).
         const customerReady = form.dataset.customerReady === "true";
-        form.querySelector("[data-plan-submit]").disabled = result.sessions === 0 || !customerReady;
+        form.querySelector("[data-plan-submit]").disabled = result.sessions === 0 || !customerReady || needConfirm;
         const stepPlan = document.querySelector("[data-step-plan]");
         if (stepPlan) {
             stepPlan.classList.toggle("is-done", result.sessions > 0);
@@ -535,6 +562,8 @@ function initPlan(root, data) {
                 text = "Chọn ít nhất 1 buổi ở Lịch tập bên trái.";
             } else if (!customerReady) {
                 text = "Lịch đã sẵn sàng. Chọn khách ở trên để giữ lịch.";
+            } else if (needConfirm) {
+                text = "Có " + unconfirmed + " buổi vào thứ PT chưa công bố. Hỏi PT rồi tích \"Đã xác nhận với PT\" để giữ lịch.";
             } else {
                 text = "Giữ trước khi thu tiền: " + result.sessions + " khung chuyển \"Đang giữ\", lễ tân khác và PT không lấy được."
                         + (result.bad > 0 ? " " + result.bad + " ngày chưa xếp được sẽ không có buổi." : "");

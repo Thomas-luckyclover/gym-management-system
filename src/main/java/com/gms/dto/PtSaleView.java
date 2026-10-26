@@ -54,6 +54,7 @@ public class PtSaleView {
     private int skipCount;
     private long sessionValue;
     private String planError;
+    private List<Integer> unpublishedWeekdays = new ArrayList<>();  // Thứ PT chưa công bố khung rảnh (1 = Thứ 2 … 5 = Thứ 6)
 
     // ===== Bước 4: đơn đang giữ =====
     private Integer heldOrderId;
@@ -144,6 +145,16 @@ public class PtSaleView {
     public void setMaxStart(LocalDate maxStart) { this.maxStart = maxStart; }
     public String getChoiceError() { return choiceError; }
     public void setChoiceError(String choiceError) { this.choiceError = choiceError; }
+    public List<Integer> getUnpublishedWeekdays() { return unpublishedWeekdays; }
+    public void setUnpublishedWeekdays(List<Integer> unpublishedWeekdays) { this.unpublishedWeekdays = unpublishedWeekdays; }
+    /** "Thứ 3, Thứ 5" — cho hộp nhắc trên JSP; rỗng = PT đã công bố đủ T2–T6. */
+    public String getUnpublishedText() {
+        StringBuilder text = new StringBuilder();
+        for (int weekday : unpublishedWeekdays) {
+            text.append(text.length() == 0 ? "" : ", ").append("Thứ ").append(weekday + 1);
+        }
+        return text.toString();
+    }
     public String getPlanJson() { return planJson; }
     public void setPlanJson(String planJson) { this.planJson = planJson; }
     public List<PtSaleDay> getDays() { return days; }

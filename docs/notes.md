@@ -1,5 +1,15 @@
 # File notes — mâu thuẫn tài liệu & quyết định đã chốt
 
+## Bán gói PT: nhắc + chặn mềm khi PT chưa công bố đủ T2–T6 (26/10/2026, ĐÃ CODE)
+- **Vấn đề**: buổi rơi vào ngày PT chưa có khung → `hold()` tự tạo khung mới (`insertHeldSlot`) → lễ tân có thể xếp vào giờ PT không rảnh mà không biết.
+- **Đã chốt (chặn mềm, không đổi DB, không đổi cách tính lịch)**:
+  - `PtSaleService.unpublishedWeekdays(slots, start, now)`: Thứ (1 = T2 … 5 = T6) **không có khung Free nào** (chưa qua giờ) trong 14 ngày đầu kỳ. `loadPlan` ghi vào `view.unpublishedWeekdays` + `plan.unpublished` (JSON).
+  - JSP: hộp vàng `.plan-alert` đầu phần Lịch tập ("PT Sơn chưa công bố khung rảnh Thứ 3, Thứ 5 trong 2 tuần đầu…"); Lịch mẫu ghi nhãn "PT chưa công bố" dưới tên Thứ đó.
+  - Form Giữ lịch: ô tích **"Đã xác nhận với PT"** (`confirmPt`) chỉ hiện khi lịch đang chọn có buổi vào các Thứ đó; chưa tích → nút Giữ lịch khóa (pt-sale-plan.js).
+  - Server kiểm tra lại trong `hold()`: `countOnUnpublishedDays(view.days, unpublished) > 0` mà không có `confirmPt` → từ chối "Có N buổi vào Thứ PT chưa công bố khung rảnh. Hỏi PT rồi tích…".
+- **Giới hạn đã biết**: xét theo Thứ, không theo giờ (PT mở T5 09:00, lễ tân chọn T5 18:00 → không nhắc). Người dùng chọn cách đơn giản này.
+- Đã thử: PT Sơn tạm gỡ khung T3/T5 → hộp nhắc + 2 nhãn; mẫu T2·T4·T6 không hiện ô tích; T3·T5 → ô tích, nút khóa; gửi thiếu tích (gỡ chặn JS) → server từ chối; tích → giữ 14 buổi, hủy giữ; trả lại dữ liệu.
+
 ## Chỉ số cơ thể của khách — /customer/body-stats (25/10/2026, ĐÃ CODE) + làm mới seed
 - **DB (đã báo người dùng)**: bảng mới `BodyMeasurements` (CustomerId, MeasuredOn, WeightKg, HeightCm, BodyFatPercent?, WaistCm?, Note?). UNIQUE (CustomerId, MeasuredOn): 1 lần đo / ngày, lưu lại cùng ngày = ghi đè (MERGE). BMI **không lưu**, Service tính. Ngoài SRS, chỉ khách xem; PT đo ở phòng theo dõi riêng (không nối dữ liệu).
 - **Màn**: 4 ô số (cân nặng, BMI + nhóm BMI châu Á: <18,5 / 18,5–22,9 / 23–24,9 / ≥25, % mỡ, vòng eo; thay đổi so với lần đầu), biểu đồ đường SVG do Service tính toạ độ (trục ngang theo ngày thật, chọn chỉ số bằng `?metric=`, không JS), form ghi lần đo (chiều cao điền sẵn lần trước), bảng lịch sử + xóa (hộp xác nhận chung của common.js). Menu khách: "Chỉ số cơ thể".

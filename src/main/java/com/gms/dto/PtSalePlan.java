@@ -66,6 +66,7 @@ public class PtSalePlan {
     private String[] pattern = new String[5];            // lịch mẫu ban đầu (t1..t5 trên URL); null = Nghỉ
     private List<String> requested = new ArrayList<>();  // "2026-10-27@09:30" — buổi đã gửi lên khi Giữ lịch bị từ chối
     private List<Day> days = new ArrayList<>();
+    private List<Integer> unpublished = new ArrayList<>(); // Thứ PT chưa công bố (1–5) → buổi vào Thứ đó cần "Đã xác nhận với PT"
 
     public String getStart() { return start; }
     public void setStart(String start) { this.start = start; }
@@ -81,4 +82,6 @@ public class PtSalePlan {
     public void setRequested(List<String> requested) { this.requested = requested; }
     public List<Day> getDays() { return days; }
     public void setDays(List<Day> days) { this.days = days; }
+    public List<Integer> getUnpublished() { return unpublished; }
+    public void setUnpublished(List<Integer> unpublished) { this.unpublished = unpublished; }
 }

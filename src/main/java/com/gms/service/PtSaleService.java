@@ -71,6 +71,7 @@ public class PtSaleService {
     public static class Input {
         public String customer, partner, packageId, pt, start, query;
         public String[] times = new String[5];   // t1..t5 = lịch mẫu Thứ 2..Thứ 6 (trống = Nghỉ)
+        public boolean confirmPt;                // ô tích "Đã xác nhận với PT" (bắt buộc khi có buổi vào Thứ PT chưa công bố)
         public String sessions;                  // "2026-10-27@09:30,…" — các buổi đã chọn (chỉ khi Giữ lịch)
     }
 
@@ -151,6 +152,11 @@ public class PtSaleService {
             String problem = firstProblem(view);
             if (problem != null) {
                 throw new IllegalArgumentException(problem);
+            }
+            int unconfirmed = countOnUnpublishedDays(view.getDays(), view.getUnpublishedWeekdays());
+            if (unconfirmed > 0 && !input.confirmPt) {
+                throw new IllegalArgumentException("Có " + unconfirmed + " buổi vào Thứ PT chưa công bố khung rảnh. "
+                        + "Hỏi PT rồi tích \"Đã xác nhận với PT\" trước khi giữ lịch.");
             }
 
             // Ca hiện tại (đơn tại quầy bắt buộc thuộc 1 ca — tự mở nếu chưa mở).
@@ -501,6 +507,9 @@ public class PtSaleService {
         List<HourException> exceptions = scheduleDAO.findHourExceptions(connection, start, end);
         List<LocalTime> candidates = candidateTimes(slots, start, minutes, now);
         Map<LocalDate, LocalTime> requested = parseSessions(input.sessions);
+        // Thứ PT chưa công bố khung nào → hộp nhắc + buổi vào Thứ đó cần tích "Đã xác nhận với PT" (hold kiểm tra).
+        List<Integer> unpublished = unpublishedWeekdays(slots, start, now);
+        view.setUnpublishedWeekdays(unpublished);
 
         if (!lock) {
             if (candidates.isEmpty()) {
@@ -509,6 +518,7 @@ public class PtSaleService {
                 return;
             }
             PtSalePlan plan = buildPlan(start, end, minutes, view.getPrice(), candidates, slots, leaves, exceptions, busy, now);
+            plan.setUnpublished(unpublished);
             for (int i = 0; i < 5; i++) {
                 LocalTime time = view.getWeekTimes()[i];
                 plan.getPattern()[i] = time != null && candidates.contains(time) ? DateTimeUtil.formatTime(time) : null;
@@ -674,6 +684,35 @@ public class PtSaleService {
             }
         }
         return new ArrayList<>(times.keySet());
+    }
+
+    /**
+     * Thứ (1 = Thứ 2 … 5 = Thứ 6) mà PT CHƯA công bố khung Free nào (chưa qua giờ) trong 14 ngày đầu kỳ.
+     * Ví dụ PT chỉ mở Thứ 2, 4, 6 → [2, 4]. Buổi rơi vào các Thứ này hệ thống sẽ tự tạo khung → lễ tân phải hỏi PT trước.
+     */
+    static List<Integer> unpublishedWeekdays(List<PtScheduleItem> slots, LocalDate start, LocalDateTime now) {
+        LocalDate windowEnd = start.plusDays(TIME_WINDOW_DAYS - 1);
+        List<Integer> missing = new ArrayList<>(List.of(1, 2, 3, 4, 5));
+        for (PtScheduleItem slot : slots) {
+            boolean inWindow = !slot.getSlotDate().isAfter(windowEnd);
+            boolean free = "Free".equals(slot.getKind());
+            boolean future = slot.getSlotDate().atTime(slot.getStartTime()).isAfter(now);
+            if (inWindow && free && future) {
+                missing.remove(Integer.valueOf(slot.getSlotDate().getDayOfWeek().getValue()));
+            }
+        }
+        return missing;
+    }
+
+    /** Đếm số buổi rơi vào các Thứ PT chưa công bố (hold dùng để bắt tích "Đã xác nhận với PT"). */
+    static int countOnUnpublishedDays(List<PtSaleDay> days, List<Integer> unpublished) {
+        int count = 0;
+        for (PtSaleDay day : days) {
+            if (unpublished.contains(day.getDate().getDayOfWeek().getValue())) {
+                count++;
+            }
+        }
+        return count;
     }
 
     /** Gom khung của PT theo ngày (buildPlan + checkRequested dùng). */
