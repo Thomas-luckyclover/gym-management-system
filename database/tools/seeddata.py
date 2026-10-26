@@ -677,60 +677,65 @@ LR(EmployeeId=13, ReviewedByEmployeeId=None, LeaveType='Annual', LeaveDate=d_(20
 LR(EmployeeId=9, ReviewedByEmployeeId=2, LeaveType='Sick', LeaveDate=d_(2026, 9, 24), ShiftType='FullDay', Reason='Sốt cao, có giấy khám',
    Status='Approved', RejectReason=None, SubmittedAt=dt_(2026, 9, 23, 11, 0), ReviewedAt=dt_(2026, 9, 23, 16, 0), ReminderSentAt=None)
 
-FAC = [('Máy chạy bộ Technogym', 'Cardio', 'Khu cardio tầng 1'),
-       ('Xe đạp tập', 'Cardio', 'Khu cardio tầng 1'),
-       ('Giàn tạ đa năng', 'Machines', 'Khu tạ tầng 2'),
-       ('Bộ tạ đơn 2–40kg', 'FreeWeights', 'Khu tạ tầng 2'),
-       ('Máy ép ngực', 'Machines', 'Khu tạ tầng 2'),
-       ('Ghế đẩy vai', 'Machines', 'Khu tạ tầng 2'),
-       ('Tủ khóa cá nhân', 'Amenities', 'Phòng thay đồ'),
-       ('Máy leo cầu thang cũ', 'Cardio', 'Kho'),
-       ('Máy kéo cáp', 'Machines', 'Khu tạ tầng 2'),
-       ('Thảm yoga', 'Amenities', 'Phòng tập nhóm')]
-for f in FAC:
-    add('Facilities', dict(FacilityName=f[0], Category=f[1], Location=f[2]))
-
-EQ_SPECS = [
-    (1, 'TM', 8, {5: 'Broken'}),
-    (2, 'EB', 6, {2: 'Broken'}),
-    (3, 'MS', 3, {2: 'Broken'}),
-    (4, 'DB', 20, {}),
-    (5, 'CP', 2, {1: 'UnderMaintenance', 2: 'UnderMaintenance'}),
-    (6, 'SP', 2, {}),
-    (7, 'LK', 60, {12: 'Broken'}),
-    (8, 'SM', 1, {1: 'Retired'}),
-    (9, 'CC', 2, {}),
-    (10, 'YM', 30, {}),
+FAC = [
+    ('Máy chạy bộ Technogym', 'Cardio', 'Khu cardio tầng 1', '/images/facilities/treadmill.jpg', 'máy', 1),
+    ('Xe đạp tập', 'Cardio', 'Khu cardio tầng 1', '/images/facilities/exercise-bike.jpg', 'máy', 1),
+    ('Giàn tạ đa năng', 'Machines', 'Khu tạ tầng 2', '/images/facilities/multi-gym.jpg', 'máy', 1),
+    ('Bộ tạ đơn 2–40kg', 'FreeWeights', 'Khu tạ tầng 2', '/images/facilities/dumbbells.jpg', 'bộ', 1),
+    ('Máy ép ngực', 'Machines', 'Khu tạ tầng 2', '/images/facilities/chest-press.jpg', 'máy', 1),
+    ('Ghế đẩy vai', 'Machines', 'Khu tạ tầng 2', '/images/facilities/shoulder-press.jpg', 'máy', 1),
+    ('Tủ khóa cá nhân', 'Amenities', 'Phòng thay đồ', '/images/facilities/lockers.jpg', 'tủ', 1),
+    ('Máy leo cầu thang cũ', 'Cardio', 'Kho', '/images/facilities/stair-climber.jpg', 'máy', 0),
+    ('Máy kéo cáp', 'Machines', 'Khu tạ tầng 2', '/images/facilities/cable-machine.jpg', 'máy', 1),
+    ('Thảm yoga', 'Amenities', 'Phòng tập nhóm', '/images/facilities/yoga-mat.jpg', 'thảm', 1),
 ]
-for fac_id, prefix, count, status_map in EQ_SPECS:
+for f in FAC:
+    add('Facilities', dict(FacilityName=f[0], Category=f[1], Location=f[2], ImageUrl=f[3], UnitLabel=f[4], IsActive=f[5]))
+
+EQ_CONFIGS = [
+    (1, 'TM', 8, {5: 'UnderMaintenance'}, lambda i: (f"Số {i}", 'Dãy cửa sổ' if i <= 4 else 'Dãy gương')),
+    (2, 'EB', 6, {2: 'UnderMaintenance'}, lambda i: (f"Số {i}", 'Dãy giữa')),
+    (3, 'MS', 3, {2: 'UnderMaintenance'}, lambda i: (f"Số {i}", 'Góc trong')),
+    (4, 'DB', 20, {}, lambda i: (f"{i*2} kg", 'Giá tạ tầng 1' if i <= 10 else 'Giá tạ tầng 2')),
+    (5, 'CP', 2, {1: 'UnderMaintenance', 2: 'UnderMaintenance'}, lambda i: (f"Số {i}", 'Dãy máy ngực')),
+    (6, 'SP', 2, {}, lambda i: (f"Số {i}", 'Dãy máy vai')),
+    (7, 'LK', 60, {12: 'UnderMaintenance'}, lambda i: (f"Tủ {i}", 'Khu nam' if i <= 30 else 'Khu nữ')),
+    (8, 'SM', 1, {1: 'Retired'}, lambda i: (f"Số {i}", 'Kho thanh lý')),
+    (9, 'CC', 2, {}, lambda i: (f"Số {i}", 'Góc tạ')),
+    (10, 'YM', 30, {}, lambda i: (f"Thảm {i}", 'Kệ thảm A' if i <= 15 else 'Kệ thảm B')),
+]
+for fac_id, prefix, count, status_map, label_fn in EQ_CONFIGS:
     for idx in range(1, count + 1):
         code = f"{prefix}-{idx:03d}"
         status = status_map.get(idx, 'Available')
-        add('EquipmentItems', dict(FacilityId=fac_id, ItemCode=code, Status=status))
+        label, placement = label_fn(idx)
+        add('EquipmentItems', dict(FacilityId=fac_id, ItemCode=code, ItemLabel=label, PlacementNote=placement, Status=status))
 
 
-def mreq(item_id, rep, desc, status, inc='NotWorking', det='Receptionist', pri='Normal', tag=0,
-         rev=None, rev_at=None, setum=None, rej=None, closer=None,
-         closed=None, accept=None, rep_at=None, note=None):
+def mreq(item_id, rep, desc, status, inc='NotWorking', pri='Normal', tag=0,
+         rev=None, rev_at=None, setum=None, rej=None, man_note=None, closer=None,
+         closed=None, accept=None, rep_at=None, aff=None, note=None):
     n = NEXT['MaintenanceRequests']
     add('MaintenanceRequests', dict(RequestCode=f'BT-{n:04d}', EquipmentItemId=item_id, ReportedByEmployeeId=rep,
                                     ReviewedByEmployeeId=rev, ClosedByEmployeeId=closer, Priority=pri,
-                                    IncidentType=inc, DetectedBy=det,
+                                    IncidentType=inc, AffectedItemsNote=aff,
                                     WarningTagPlaced=tag, Description=desc, Status=status, SetUnderMaintenance=setum,
-                                    RejectReason=rej, AcceptanceNote=accept, ReportedAt=rep_at, ReviewedAt=rev_at,
+                                    RejectReason=rej, ManagerNote=man_note, AcceptanceNote=accept, ReportedAt=rep_at, ReviewedAt=rev_at,
                                     ClosedAt=closed), note)
 
 
-mreq(38, 3, 'Máy ép ngực kêu to khi đẩy, nghi hỏng bạc đạn', 'InProgress', inc='StrangeNoise', det='Receptionist', pri='Urgent', tag=1, rev=2, rev_at=dt_(2026, 9, 20, 11, 0), setum=1, rep_at=dt_(2026, 9, 20, 9, 0), note='thiết bị chuyển Under maintenance (CBR-101)')
-mreq(3, 4, 'Máy chạy số 3 bị giật khi tăng tốc', 'Closed', inc='NotWorking', det='Customer', pri='Normal', tag=1, rev=2, rev_at=dt_(2026, 9, 10, 10, 0), setum=1, closer=3, closed=dt_(2026, 9, 14, 16, 0), accept='Đã thay dây curoa, chạy thử 30 phút ổn định', rep_at=dt_(2026, 9, 10, 8, 0))
-mreq(27, 3, 'Tạ đơn 10kg bị lỏng ốc siết, nguy cơ rơi đĩa tạ khi tập', 'Rejected', inc='BrokenOrWorn', det='PT', pri='Low', tag=0, rev=2, rev_at=dt_(2026, 9, 12, 17, 30), rej='Đã chuyển bộ phận bảo dưỡng vặn chặt ốc, không cần thay mới', rep_at=dt_(2026, 9, 12, 14, 0))
-mreq(10, 3, 'Xe đạp số 2 kẹt bàn đạp, không xoay được', 'Open', inc='NotWorking', det='Customer', pri='Normal', tag=1, rep_at=dt_(2026, 10, 2, 8, 30))
-mreq(53, 4, 'Tủ khóa số 12 hỏng chốt, không khóa được', 'Open', inc='BrokenOrWorn', det='Customer', pri='Low', tag=0, rep_at=dt_(2026, 10, 1, 20, 0))
-mreq(103, 9, 'Dây cáp máy kéo bị sờn ở đầu nối', 'InProgress', inc='SafetyHazard', det='Technician', pri='Normal', tag=1, rev=2, rev_at=dt_(2026, 9, 30, 9, 0), setum=0, rep_at=dt_(2026, 9, 29, 19, 0), note='duyệt nhưng KHÔNG chuyển Under maintenance (CBR-101 bỏ tick)')
-mreq(108, 11, 'Thảm yoga số 4 bị rách góc', 'Closed', inc='BrokenOrWorn', det='PT', pri='Low', tag=0, rev=2, rev_at=dt_(2026, 9, 6, 9, 0), setum=0, closer=11, closed=dt_(2026, 9, 8, 15, 0), accept='Đã thay thảm mới', rep_at=dt_(2026, 9, 5, 18, 0))
-mreq(5, 3, 'Băng tải máy chạy số 5 phát tiếng rít chói tai khi chạy ở tốc độ cao', 'Open', inc='StrangeNoise', det='Customer', pri='Normal', tag=1, rep_at=dt_(2026, 10, 3, 9, 15))
-mreq(16, 4, 'Ròng rọc giàn tạ số 2 bị nứt và kẹt dây cáp khi nâng tạ nặng', 'Open', inc='BrokenOrWorn', det='PT', pri='Urgent', tag=1, rep_at=dt_(2026, 10, 3, 14, 0))
-mreq(39, 3, 'Đệm ghế máy ép ngực số 2 bị bong tróc da, cần bọc lại da mới', 'InProgress', inc='Hygiene', det='Receptionist', pri='Normal', tag=1, rev=2, rev_at=dt_(2026, 10, 2, 17, 0), setum=1, rep_at=dt_(2026, 10, 2, 16, 30))
+mreq(38, 3, 'Máy ép ngực kêu to khi đẩy, nghi hỏng bạc đạn', 'InProgress', inc='StrangeNoise', pri='Urgent', tag=1, rev=2, rev_at=dt_(2026, 9, 20, 11, 0), setum=1, man_note='Đã liên hệ hãng bảo hành Technogym', rep_at=dt_(2026, 9, 20, 9, 0), note='thiết bị chuyển Under maintenance (CBR-101)')
+mreq(3, 4, 'Máy chạy số 3 bị giật khi tăng tốc', 'Closed', inc='NotWorking', pri='Normal', tag=1, rev=2, rev_at=dt_(2026, 9, 10, 10, 0), setum=1, closer=3, closed=dt_(2026, 9, 14, 16, 0), accept='Đã thay dây curoa, chạy thử 30 phút ổn định', rep_at=dt_(2026, 9, 10, 8, 0))
+mreq(27, 3, 'Tạ đơn 20kg bị lỏng ốc siết, nguy cơ rơi đĩa tạ khi tập', 'Rejected', inc='BrokenOrWorn', pri='Low', tag=0, rev=2, rev_at=dt_(2026, 9, 12, 17, 30), rej='Đã chuyển bộ phận bảo dưỡng vặn chặt ốc, không cần thay mới', aff='Quả 20 kg', rep_at=dt_(2026, 9, 12, 14, 0))
+mreq(10, 3, 'Xe đạp số 2 kẹt bàn đạp, không xoay được', 'Open', inc='NotWorking', pri='Normal', tag=1, rep_at=dt_(2026, 10, 2, 8, 30))
+mreq(53, 4, 'Tủ khóa số 12 hỏng chốt, không khóa được', 'Open', inc='BrokenOrWorn', pri='Low', tag=0, rep_at=dt_(2026, 10, 1, 20, 0))
+mreq(103, 9, 'Dây cáp máy kéo bị sờn ở đầu nối', 'InProgress', inc='SafetyHazard', pri='Normal', tag=1, rev=2, rev_at=dt_(2026, 9, 30, 9, 0), setum=0, man_note='Đang chờ thợ thay cáp mới', rep_at=dt_(2026, 9, 29, 19, 0), note='duyệt nhưng KHÔNG chuyển Under maintenance (CBR-101 bỏ tick)')
+mreq(108, 11, 'Thảm yoga số 4 bị rách góc', 'Closed', inc='BrokenOrWorn', pri='Low', tag=0, rev=2, rev_at=dt_(2026, 9, 6, 9, 0), setum=0, closer=11, closed=dt_(2026, 9, 8, 15, 0), accept='Đã thay thảm mới', rep_at=dt_(2026, 9, 5, 18, 0))
+mreq(5, 3, 'Băng tải máy chạy số 5 phát tiếng rít chói tai khi chạy ở tốc độ cao', 'Open', inc='StrangeNoise', pri='Normal', tag=1, rep_at=dt_(2026, 10, 3, 9, 15))
+mreq(16, 4, 'Ròng rọc giàn tạ số 2 bị nứt và kẹt dây cáp khi nâng tạ nặng', 'Open', inc='BrokenOrWorn', pri='Urgent', tag=1, rep_at=dt_(2026, 10, 3, 14, 0))
+mreq(39, 3, 'Đệm ghế máy ép ngực số 2 bị bong tróc da, cần bọc lại da mới', 'InProgress', inc='Hygiene', pri='Normal', tag=1, rev=2, rev_at=dt_(2026, 10, 2, 17, 0), setum=1, man_note='Đã liên hệ xưởng bọc nệm', rep_at=dt_(2026, 10, 2, 16, 30))
+mreq(3, 3, 'Băng chạy dừng đột ngột khi chạy 8 km/h, màn hình báo lỗi E05; đã rút điện.', 'Open', inc='NotWorking', pri='Normal', tag=1, rep_at=dt_(2026, 10, 23, 9, 15))
+mreq(20, 3, 'Hai quả tạ bị nứt lớp bọc cao su bên ngoài, có nguy cơ bong tróc rơi vào chân khách.', 'Open', inc='NotWorking', pri='Normal', tag=1, aff='Quả 6 kg, 8 kg', rep_at=dt_(2026, 10, 23, 9, 30))
 
 for i, (e, d, st, ci, co, stt, note) in enumerate([
     (3, d_(2026, 10, 2), 'Morning', dt_(2026, 10, 2, 5, 25), dt_(2026, 10, 2, 13, 5), 'Present', None),
