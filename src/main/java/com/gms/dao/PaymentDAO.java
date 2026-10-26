@@ -135,4 +135,18 @@ public class PaymentDAO {
 
         return null;
     }
+
+    /**
+     * JOB-05 (DBR-36): slot đang Held bởi đơn này trở về Free. Đơn online hiện
+     * chưa giữ slot nên thường trả 0.
+     */
+    public int releaseHeldSlots(Connection conn, int orderId) throws SQLException {
+        String sql = "UPDATE TimeSlots SET Status = 'Free', HeldByOrderId = NULL, HoldExpiresAt = NULL "
+                + "WHERE HeldByOrderId = ? AND Status = 'Held'";
+
+        try (PreparedStatement statement = conn.prepareStatement(sql)) {
+            statement.setInt(1, orderId);
+            return statement.executeUpdate();
+        }
+    }
 }
