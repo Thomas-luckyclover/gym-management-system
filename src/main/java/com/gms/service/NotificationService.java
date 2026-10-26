@@ -115,6 +115,39 @@ public class NotificationService {
         );
     }
 
+    public void notifyCustomerInTransaction(
+            Connection connection,
+            int customerId,
+            String title,
+            String content
+    ) throws SQLException {
+
+        Integer accountId =
+                notificationDAO
+                        .findActiveAccountIdByCustomerId(
+                                connection,
+                                customerId
+                        );
+
+        if (accountId == null) {
+            return;
+        }
+
+        int notificationId =
+                notificationDAO
+                        .insertSystemNotification(
+                                connection,
+                                title,
+                                content
+                        );
+
+        notificationDAO.insertRecipient(
+                connection,
+                notificationId,
+                accountId
+        );
+    }
+
     // ===== Dữ liệu chuông =====
 
     public ServiceResult<Map<String, Object>>
@@ -262,45 +295,68 @@ public class NotificationService {
     ) {
 
         /*
-         * Chỉ tự suy ra URL cho notification bảo trì
-         * do HỆ THỐNG tạo.
-         *
-         * Manager tự gửi một notification có chữ
-         * "Bảo trì" cũng không bị điều hướng nhầm.
+         * Tự suy ra URL cho các notification do HỆ THỐNG tạo
+         * để điều hướng người dùng trực tiếp tới trang nghiệp vụ.
          */
         if (notification == null
                 || currentRole == null
                 || !notification.isSystemGenerated()
-                || notification.getTitle() == null
-                || !notification.getTitle()
-                .startsWith(
-                        MAINTENANCE_TITLE_PREFIX
-                )) {
+                || notification.getTitle() == null) {
 
             return null;
         }
 
-        String requestCode =
-                extractMaintenanceRequestCode(
-                        notification.getContent()
-                );
+        String title = notification.getTitle().trim();
+        String titleLower = title.toLowerCase();
 
-        if (requestCode == null) {
+        // 1. Luồng Bảo trì thiết bị (BF-06)
+        if (title.startsWith(MAINTENANCE_TITLE_PREFIX) || titleLower.contains("bảo trì")) {
+            String requestCode =
+                    extractMaintenanceRequestCode(
+                            notification.getContent()
+                    );
+
+            if (currentRole == Role.MANAGER) {
+                return "/manager/maintenance-requests"
+                        + (requestCode != null ? "?keyword=" + requestCode : "");
+            }
+
+            if (currentRole == Role.RECEPTIONIST) {
+                return "/receptionist/maintenance-requests"
+                        + (requestCode != null ? "?keyword=" + requestCode : "");
+            }
+
             return null;
         }
 
-        if (currentRole == Role.MANAGER) {
-            return "/manager/maintenance-requests"
-                    + "?keyword="
-                    + requestCode;
+        // 2. Luồng Đơn xin / duyệt nghỉ phép (BF-05)
+        if (titleLower.contains("nghỉ phép") || titleLower.contains("ngày nghỉ") || titleLower.contains("đơn nghỉ")) {
+            if (currentRole == Role.MANAGER) {
+                return "/manager/leave-requests";
+            }
+            return "/staff/leave-request";
         }
 
-        if (currentRole
-                == Role.RECEPTIONIST) {
+        // 3. Luồng Yêu cầu xóa hồ sơ hội viên (BR-15)
+        if (titleLower.contains("xóa hồ sơ")) {
+            if (currentRole == Role.MANAGER) {
+                return "/manager/member-deletion-review";
+            }
+            if (currentRole == Role.RECEPTIONIST) {
+                return "/receptionist/customer-list";
+            }
+            return null;
+        }
 
-            return "/receptionist/maintenance-requests"
-                    + "?keyword="
-                    + requestCode;
+        // 4. Luồng Lịch tập / Đặt lịch PT
+        if (titleLower.contains("buổi tập") || titleLower.contains("lịch tập") || titleLower.contains("đặt lịch")) {
+            if (currentRole == Role.CUSTOMER) {
+                return "/customer/my-bookings";
+            }
+            if (currentRole == Role.PT) {
+                return "/pt/schedule";
+            }
+            return null;
         }
 
         return null;
