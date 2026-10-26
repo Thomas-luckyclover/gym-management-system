@@ -238,7 +238,7 @@ class MaintenanceRequestServiceTest {
     }
 
     @Test
-    @DisplayName("Tạo yêu cầu: Hỗ trợ truyền IncidentType, DetectedBy và AttachedImages")
+    @DisplayName("Tạo yêu cầu: Hỗ trợ truyền IncidentType, AffectedItemsNote và AttachedImages")
     void createRequest_withIncidentTypeAndDetectedBy_success() {
         ServiceResult<String> result = service.createRequest(
                 RECEPTIONIST_ACCOUNT_ID,
@@ -248,14 +248,15 @@ class MaintenanceRequestServiceTest {
                 "Customer",
                 "Thành viên phản ánh gãy bàn đạp bên trái",
                 true,
-                "/uploads/broken.jpg"
+                "/uploads/broken.jpg",
+                "Quả 6 kg, 8 kg"
         );
 
         assertTrue(result.isSuccess());
         MaintenanceRequest saved = fakeMaintenanceRequestDAO.requests.get(1);
         assertNotNull(saved);
         assertEquals(MaintenanceRequest.IncidentType.BROKEN_OR_WORN, saved.getIncidentType());
-        assertEquals(MaintenanceRequest.DetectedBy.CUSTOMER, saved.getDetectedBy());
+        assertEquals("Quả 6 kg, 8 kg", saved.getAffectedItemsNote());
         assertEquals("/uploads/broken.jpg", saved.getAttachedImages());
     }
 
@@ -692,10 +693,16 @@ class MaintenanceRequestServiceTest {
 
         @Override
         public boolean approve(Connection connection, int requestId, int managerEmployeeId, boolean setUnderMaintenance) {
+            return approve(connection, requestId, managerEmployeeId, setUnderMaintenance, null);
+        }
+
+        @Override
+        public boolean approve(Connection connection, int requestId, int managerEmployeeId, boolean setUnderMaintenance, String managerNote) {
             MaintenanceRequest req = requests.get(requestId);
             if (req == null) return false;
             req.setStatus(MaintenanceRequest.Status.IN_PROGRESS);
             req.setReviewedByEmployeeId(managerEmployeeId);
+            req.setManagerNote(managerNote);
             return true;
         }
 

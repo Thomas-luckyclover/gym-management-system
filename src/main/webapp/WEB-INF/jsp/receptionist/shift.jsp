@@ -55,13 +55,7 @@
             </c:otherwise>
           </c:choose>
 
-          <a class="tb-user" href="${pageContext.request.contextPath}/account" title="Cài đặt tài khoản">
-            <span class="avatar">LT</span>
-            <span class="tb-user-text">
-              <b><c:out value="${sessionScope.displayName}" default="Lễ tân"/></b>
-              <small>Lễ tân quầy</small>
-            </span>
-          </a>
+          <%@ include file="/WEB-INF/jsp/common/topbar-user.jspf" %>
         </div>
       </header>
 

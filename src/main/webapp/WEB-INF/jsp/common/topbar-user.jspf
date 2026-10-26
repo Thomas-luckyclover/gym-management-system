@@ -1,0 +1,27 @@
+<%@ page pageEncoding="UTF-8" %>
+<%@ taglib prefix="c" uri="jakarta.tags.core" %>
+
+<a class="tb-user" href="${pageContext.request.contextPath}/account" title="Cài đặt tài khoản">
+  <c:choose>
+    <c:when test="${not empty sessionScope.avatar}">
+      <img class="avatar" src="${pageContext.request.contextPath}${sessionScope.avatar}" alt="Avatar" onerror="this.style.display='none';if(this.nextElementSibling)this.nextElementSibling.style.display='';" style="object-fit:cover;">
+      <span class="avatar" style="display:none;"><c:out value="${not empty sessionScope.displayName ? sessionScope.displayName.substring(0, 1) : 'U'}" /></span>
+    </c:when>
+    <c:otherwise>
+      <span class="avatar"><c:out value="${not empty sessionScope.displayName ? sessionScope.displayName.substring(0, 1) : 'U'}" /></span>
+    </c:otherwise>
+  </c:choose>
+  <span>
+    <b><c:out value="${sessionScope.displayName}" default="Người dùng" /></b>
+    <small>
+      <c:choose>
+        <c:when test="${sessionScope.role == 'Admin'}">Quản trị hệ thống</c:when>
+        <c:when test="${sessionScope.role == 'Manager'}">Quản lý</c:when>
+        <c:when test="${sessionScope.role == 'PT'}">Huấn luyện viên PT</c:when>
+        <c:when test="${sessionScope.role == 'Receptionist'}">Lễ tân</c:when>
+        <c:when test="${sessionScope.role == 'Customer'}">Hội viên</c:when>
+        <c:otherwise>Tài khoản</c:otherwise>
+      </c:choose>
+    </small>
+  </span>
+</a>

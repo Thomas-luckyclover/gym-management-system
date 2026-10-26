@@ -82,73 +82,10 @@
             </div>
 
 
-            <c:if test="${not empty accountSettings}">
-
-                <div class="top-right">
-
-                    <a
-                        class="tb-user"
-                        href="${pageContext.request.contextPath}/account"
-                        title="Cài đặt tài khoản"
-                    >
-
-                        <c:choose>
-
-                            <c:when test="${not empty accountSettings.avatar}">
-
-                                <img
-                                    id="topbarAvatarImg"
-                                    class="avatar"
-                                    src="${pageContext.request.contextPath}${accountSettings.avatar}"
-                                    alt="Ảnh đại diện"
-                                    data-original-src="${pageContext.request.contextPath}${accountSettings.avatar}"
-                                    onerror="this.classList.add('is-hidden'); this.style.display='none'; var fb = document.getElementById('topbarAvatarFallback'); if (fb) { fb.classList.remove('is-hidden'); fb.style.display=''; }"
-                                >
-                                <span id="topbarAvatarFallback" class="avatar is-hidden" aria-hidden="true" style="display: none;">
-                                    <c:out
-                                        value="${accountSettings.initials}"
-                                    />
-                                </span>
-
-                            </c:when>
-
-                            <c:otherwise>
-
-                                <span id="topbarAvatarFallback" class="avatar">
-                                    <c:out
-                                        value="${accountSettings.initials}"
-                                    />
-                                </span>
-
-                            </c:otherwise>
-
-                        </c:choose>
-
-                        <span class="tb-user-text">
-
-                            <b>
-
-                                <c:out
-                                    value="${accountSettings.fullName}"
-                                />
-
-                            </b>
-
-                            <small>
-
-                                <c:out
-                                    value="${currentRole.displayName}"
-                                />
-
-                            </small>
-
-                        </span>
-
-                    </a>
-
-                </div>
-
-            </c:if>
+            <div class="top-right">
+                <%@ include file="/WEB-INF/jsp/common/notification-bell.jspf" %>
+                <%@ include file="/WEB-INF/jsp/common/topbar-user.jspf" %>
+            </div>
 
         </header>
 

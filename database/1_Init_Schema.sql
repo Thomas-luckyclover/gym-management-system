@@ -765,7 +765,10 @@ CREATE TABLE Facilities (
     FacilityId   INT IDENTITY(1,1) NOT NULL,
     FacilityName NVARCHAR(100) NOT NULL,
     Category     VARCHAR(15)   NOT NULL,  -- Cardio | FreeWeights | Machines | Amenities
-    Location     NVARCHAR(100) NULL,
+    Location     NVARCHAR(100) NOT NULL,
+    ImageUrl     NVARCHAR(255) NULL,
+    UnitLabel    NVARCHAR(15)  NOT NULL CONSTRAINT DF_Facilities_UnitLabel DEFAULT (N'máy'),
+    IsActive     BIT           NOT NULL CONSTRAINT DF_Facilities_IsActive  DEFAULT (1),
     RowVer       ROWVERSION,
 
     CONSTRAINT PK_Facilities PRIMARY KEY (FacilityId),
@@ -779,13 +782,16 @@ CREATE TABLE EquipmentItems (
     EquipmentItemId INT IDENTITY(1,1) NOT NULL,
     FacilityId      INT           NOT NULL,
     ItemCode        VARCHAR(20)   NOT NULL,
+    ItemLabel       NVARCHAR(50)  NOT NULL,
+    PlacementNote   NVARCHAR(100) NULL,
     Status          VARCHAR(20)   NOT NULL CONSTRAINT DF_EquipmentItems_Status DEFAULT ('Available'),
     RowVer          ROWVERSION,
 
     CONSTRAINT PK_EquipmentItems PRIMARY KEY (EquipmentItemId),
     CONSTRAINT UQ_EquipmentItems_ItemCode UNIQUE (ItemCode),
+    CONSTRAINT UQ_EquipmentItems_FacilityLabel UNIQUE (FacilityId, ItemLabel),
     CONSTRAINT FK_EquipmentItems_Facilities FOREIGN KEY (FacilityId) REFERENCES Facilities(FacilityId),
-    CONSTRAINT CK_EquipmentItems_Status CHECK (Status IN ('Available','UnderMaintenance','Broken','Retired'))
+    CONSTRAINT CK_EquipmentItems_Status CHECK (Status IN ('Available','UnderMaintenance','Retired'))
 );
 GO
 
@@ -799,13 +805,14 @@ CREATE TABLE MaintenanceRequests (
     ClosedByEmployeeId   INT           NULL,      -- Lễ tân đóng (BR-48)
     Priority             VARCHAR(10)   NOT NULL CONSTRAINT DF_Maintenance_Priority   DEFAULT ('Normal'), -- Urgent | Normal | Low
     IncidentType         VARCHAR(30)   NOT NULL CONSTRAINT DF_Maintenance_IncidentType DEFAULT ('NotWorking'), -- NotWorking | StrangeNoise | BrokenOrWorn | SafetyHazard | Hygiene
-    DetectedBy           VARCHAR(30)   NOT NULL CONSTRAINT DF_Maintenance_DetectedBy DEFAULT ('Receptionist'), -- Receptionist | Customer | Technician | PT
+    AffectedItemsNote    NVARCHAR(100) NULL,      -- Dùng khi chọn nhiều mức tạ (VD: N'Quả 6 kg, 8 kg')
     WarningTagPlaced     BIT           NOT NULL CONSTRAINT DF_Maintenance_WarningTag DEFAULT (0),        -- đã treo biển cảnh báo
     Description          NVARCHAR(500) NOT NULL,  -- DBR-15: 10–500
     AttachedImages       NVARCHAR(1000) NULL,     -- đường dẫn ảnh/video đính kèm
     Status               VARCHAR(12)   NOT NULL CONSTRAINT DF_Maintenance_Status     DEFAULT ('Open'),
     SetUnderMaintenance  BIT           NULL,      -- Manager có chuyển riêng thiết bị sang Under maintenance không (CBR-101)
     RejectReason         NVARCHAR(500) NULL,
+    ManagerNote          NVARCHAR(500) NULL,      -- Ghi chú cho lễ tân khi duyệt
     AcceptanceNote       NVARCHAR(500) NULL,      -- ghi chú nghiệm thu khi đóng
     ReportedAt           DATETIME2(0)  NOT NULL CONSTRAINT DF_Maintenance_ReportedAt DEFAULT (SYSDATETIME()),
     ReviewedAt           DATETIME2(0)  NULL,
@@ -820,16 +827,16 @@ CREATE TABLE MaintenanceRequests (
     CONSTRAINT CK_Maintenance_Code          CHECK (RequestCode LIKE 'BT-[0-9][0-9][0-9][0-9]'),
     CONSTRAINT CK_Maintenance_Priority      CHECK (Priority IN ('Urgent','Normal','Low')),
     CONSTRAINT CK_Maintenance_IncidentType  CHECK (IncidentType IN ('NotWorking','StrangeNoise','BrokenOrWorn','SafetyHazard','Hygiene')),
-    CONSTRAINT CK_Maintenance_DetectedBy    CHECK (DetectedBy IN ('Receptionist','Customer','Technician','PT')),
     CONSTRAINT CK_Maintenance_Description   CHECK (LEN(LTRIM(RTRIM(Description))) BETWEEN 10 AND 500),
     CONSTRAINT CK_Maintenance_Status        CHECK (Status IN ('Open','InProgress','Rejected','Closed')),
     CONSTRAINT CK_Maintenance_Flow CHECK (
         (Status = 'Open' AND ReviewedByEmployeeId IS NULL AND ReviewedAt IS NULL AND SetUnderMaintenance IS NULL
-            AND ClosedByEmployeeId IS NULL AND RejectReason IS NULL)
+            AND ManagerNote IS NULL AND AcceptanceNote IS NULL AND ClosedByEmployeeId IS NULL AND RejectReason IS NULL)
         OR (Status = 'InProgress' AND ReviewedByEmployeeId IS NOT NULL AND ReviewedAt IS NOT NULL
-            AND SetUnderMaintenance IS NOT NULL AND ClosedByEmployeeId IS NULL AND RejectReason IS NULL)
+            AND SetUnderMaintenance IS NOT NULL AND AcceptanceNote IS NULL AND ClosedByEmployeeId IS NULL AND RejectReason IS NULL)
         OR (Status = 'Rejected' AND ReviewedByEmployeeId IS NOT NULL AND ReviewedAt IS NOT NULL
-            AND SetUnderMaintenance IS NULL AND ClosedByEmployeeId IS NULL AND RejectReason IS NOT NULL AND LEN(LTRIM(RTRIM(RejectReason))) >= 5)
+            AND SetUnderMaintenance IS NULL AND ManagerNote IS NULL AND AcceptanceNote IS NULL AND ClosedByEmployeeId IS NULL
+            AND RejectReason IS NOT NULL AND LEN(LTRIM(RTRIM(RejectReason))) >= 5)
         OR (Status = 'Closed' AND ReviewedByEmployeeId IS NOT NULL AND ReviewedAt IS NOT NULL
             AND SetUnderMaintenance IS NOT NULL AND ClosedByEmployeeId IS NOT NULL AND ClosedAt IS NOT NULL
             AND RejectReason IS NULL)

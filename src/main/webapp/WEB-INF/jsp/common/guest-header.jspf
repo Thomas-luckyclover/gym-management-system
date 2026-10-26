@@ -35,7 +35,15 @@
             </button>
           </form>
           <a class="guest-account" href="${ctx}/login" aria-label="Mở khu vực tài khoản">
-            <span class="guest-account__avatar" aria-hidden="true"><i class="fa-solid fa-user"></i></span>
+            <c:choose>
+              <c:when test="${not empty sessionScope.avatar}">
+                <img class="guest-account__avatar avatar" src="${pageContext.request.contextPath}${sessionScope.avatar}" alt="Avatar" onerror="this.style.display='none';if(this.nextElementSibling)this.nextElementSibling.style.display='';" style="width:34px;height:34px;border-radius:50%;object-fit:cover;">
+                <span class="guest-account__avatar" aria-hidden="true" style="display:none;"><i class="fa-solid fa-user"></i></span>
+              </c:when>
+              <c:otherwise>
+                <span class="guest-account__avatar" aria-hidden="true"><i class="fa-solid fa-user"></i></span>
+              </c:otherwise>
+            </c:choose>
             <span class="guest-account__text"><strong><c:out value="${sessionScope.displayName}" default="Tài khoản của tôi" /></strong><small>Khu vực ${sessionScope.role eq 'Customer' ? 'hội viên' : 'tài khoản'}</small></span>
             <i class="fa-solid fa-chevron-right guest-account__arrow" aria-hidden="true"></i>
           </a>
@@ -65,7 +73,15 @@
     <c:choose>
       <c:when test="${not empty sessionScope.accountId}">
         <a class="guest-account" href="${ctx}/login">
-          <span class="guest-account__avatar" aria-hidden="true"><i class="fa-solid fa-user"></i></span>
+          <c:choose>
+            <c:when test="${not empty sessionScope.avatar}">
+              <img class="guest-account__avatar avatar" src="${pageContext.request.contextPath}${sessionScope.avatar}" alt="Avatar" onerror="this.style.display='none';if(this.nextElementSibling)this.nextElementSibling.style.display='';" style="width:34px;height:34px;border-radius:50%;object-fit:cover;">
+              <span class="guest-account__avatar" aria-hidden="true" style="display:none;"><i class="fa-solid fa-user"></i></span>
+            </c:when>
+            <c:otherwise>
+              <span class="guest-account__avatar" aria-hidden="true"><i class="fa-solid fa-user"></i></span>
+            </c:otherwise>
+          </c:choose>
           <span class="guest-account__text"><strong><c:out value="${sessionScope.displayName}" default="Tài khoản của tôi" /></strong><small>Về khu vực tài khoản</small></span>
         </a>
         <form action="${ctx}/logout" method="post">

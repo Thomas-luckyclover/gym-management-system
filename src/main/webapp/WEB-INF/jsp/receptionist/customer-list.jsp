@@ -45,19 +45,7 @@
                     <h1 class="tb-title">Hồ sơ hội viên</h1>
                     <div class="top-right">
                         <%@ include file="/WEB-INF/jsp/common/notification-bell.jspf" %>
-                        <a class="tb-user" href="${pageContext.request.contextPath}/account">
-                            <span class="avatar">
-                                <c:out value="${roleInitials}" />
-                            </span>
-                            <span>
-                                <b>
-                                    <c:out value="${sessionScope.displayName}" />
-                                </b>
-                                <small>
-                                    <c:out value="${roleName}" />
-                                </small>
-                            </span>
-                        </a>
+                        <%@ include file="/WEB-INF/jsp/common/topbar-user.jspf" %>
                     </div>
                 </header>
                 <main class="content bf07-page" id="main-content" tabindex="-1">

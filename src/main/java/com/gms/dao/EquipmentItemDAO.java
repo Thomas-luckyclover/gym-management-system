@@ -7,6 +7,7 @@ import java.sql.Connection;
 import java.sql.PreparedStatement;
 import java.sql.ResultSet;
 import java.sql.SQLException;
+import java.sql.Statement;
 import java.util.ArrayList;
 import java.util.LinkedHashMap;
 import java.util.List;
@@ -18,11 +19,11 @@ import java.util.Map;
 public class EquipmentItemDAO {
 
     /**
-     * Lấy danh sách cá thể máy theo FacilityId, kèm thông tin đơn bảo trì đang mở nếu có.
+     * Lấy danh sách cá thể máy theo FacilityId, kèm thông tin đơn bảo trì đang mở nếu có (không lấy Retired).
      */
     public List<EquipmentItem> findByFacilityId(int facilityId) throws SQLException {
         String sql = """
-            SELECT ei.EquipmentItemId, ei.FacilityId, ei.ItemCode, ei.Status,
+            SELECT ei.EquipmentItemId, ei.FacilityId, ei.ItemCode, ei.ItemLabel, ei.PlacementNote, ei.Status,
                    f.FacilityName, f.Location,
                    mr.RequestCode AS ActiveRequestCode, mr.MaintenanceRequestId AS ActiveRequestId
             FROM EquipmentItems ei
@@ -48,17 +49,48 @@ public class EquipmentItemDAO {
     }
 
     /**
-     * Lấy tất cả cá thể máy có thể báo hỏng (chưa Retired), gom theo thứ tự dòng máy và mã máy.
+     * Lấy toàn bộ cá thể máy theo FacilityId (bao gồm cả cá thể đã Retired) phục vụ màn hình Quản lý của Manager.
      */
-    public List<EquipmentItem> findAllSelectable() throws SQLException {
+    public List<EquipmentItem> findByFacilityIdForManagement(int facilityId) throws SQLException {
         String sql = """
-            SELECT ei.EquipmentItemId, ei.FacilityId, ei.ItemCode, ei.Status,
+            SELECT ei.EquipmentItemId, ei.FacilityId, ei.ItemCode, ei.ItemLabel, ei.PlacementNote, ei.Status,
                    f.FacilityName, f.Location,
                    mr.RequestCode AS ActiveRequestCode, mr.MaintenanceRequestId AS ActiveRequestId
             FROM EquipmentItems ei
             JOIN Facilities f ON f.FacilityId = ei.FacilityId
             LEFT JOIN MaintenanceRequests mr ON mr.EquipmentItemId = ei.EquipmentItemId AND mr.Status IN ('Open', 'InProgress')
-            WHERE ei.Status <> ?
+            WHERE ei.FacilityId = ?
+            ORDER BY 
+                CASE WHEN ei.Status = 'Retired' THEN 1 ELSE 0 END,
+                ei.ItemCode
+            """;
+
+        List<EquipmentItem> list = new ArrayList<>();
+        try (Connection conn = DBContext.getConnection();
+             PreparedStatement ps = conn.prepareStatement(sql)) {
+            ps.setInt(1, facilityId);
+
+            try (ResultSet rs = ps.executeQuery()) {
+                while (rs.next()) {
+                    list.add(mapResultSetToItem(rs));
+                }
+            }
+        }
+        return list;
+    }
+
+    /**
+     * Lấy tất cả cá thể máy có thể báo hỏng (chưa Retired), gom theo thứ tự dòng máy và mã máy.
+     */
+    public List<EquipmentItem> findAllSelectable() throws SQLException {
+        String sql = """
+            SELECT ei.EquipmentItemId, ei.FacilityId, ei.ItemCode, ei.ItemLabel, ei.PlacementNote, ei.Status,
+                   f.FacilityName, f.Location,
+                   mr.RequestCode AS ActiveRequestCode, mr.MaintenanceRequestId AS ActiveRequestId
+            FROM EquipmentItems ei
+            JOIN Facilities f ON f.FacilityId = ei.FacilityId
+            LEFT JOIN MaintenanceRequests mr ON mr.EquipmentItemId = ei.EquipmentItemId AND mr.Status IN ('Open', 'InProgress')
+            WHERE ei.Status <> ? AND f.IsActive = 1
             ORDER BY f.FacilityName, ei.ItemCode
             """;
 
@@ -81,13 +113,15 @@ public class EquipmentItemDAO {
      */
     public Map<Integer, List<EquipmentItem>> findAllGroupedByFacility() throws SQLException {
         String sql = """
-            SELECT ei.EquipmentItemId, ei.FacilityId, ei.ItemCode, ei.Status,
+            SELECT ei.EquipmentItemId, ei.FacilityId, ei.ItemCode, ei.ItemLabel, ei.PlacementNote, ei.Status,
                    f.FacilityName, f.Location,
                    mr.RequestCode AS ActiveRequestCode, mr.MaintenanceRequestId AS ActiveRequestId
             FROM EquipmentItems ei
             JOIN Facilities f ON f.FacilityId = ei.FacilityId
             LEFT JOIN MaintenanceRequests mr ON mr.EquipmentItemId = ei.EquipmentItemId AND mr.Status IN ('Open', 'InProgress')
-            ORDER BY ei.FacilityId, ei.ItemCode
+            ORDER BY ei.FacilityId, 
+                     CASE WHEN ei.Status = 'Retired' THEN 1 ELSE 0 END,
+                     ei.ItemCode
             """;
 
         Map<Integer, List<EquipmentItem>> map = new LinkedHashMap<>();
@@ -107,7 +141,7 @@ public class EquipmentItemDAO {
      */
     public EquipmentItem findById(Connection conn, int equipmentItemId) throws SQLException {
         String sql = """
-            SELECT ei.EquipmentItemId, ei.FacilityId, ei.ItemCode, ei.Status,
+            SELECT ei.EquipmentItemId, ei.FacilityId, ei.ItemCode, ei.ItemLabel, ei.PlacementNote, ei.Status,
                    f.FacilityName, f.Location,
                    mr.RequestCode AS ActiveRequestCode, mr.MaintenanceRequestId AS ActiveRequestId
             FROM EquipmentItems ei
@@ -125,6 +159,114 @@ public class EquipmentItemDAO {
             }
         }
         return null;
+    }
+
+    public EquipmentItem findById(int equipmentItemId) throws SQLException {
+        try (Connection conn = DBContext.getConnection()) {
+            return findById(conn, equipmentItemId);
+        }
+    }
+
+    /**
+     * Thêm mới một cá thể máy vật lý vào nhóm máy (Manager).
+     */
+    public int create(EquipmentItem item) throws SQLException {
+        String sql = """
+            INSERT INTO EquipmentItems (FacilityId, ItemCode, ItemLabel, PlacementNote, Status)
+            VALUES (?, ?, ?, ?, ?)
+            """;
+
+        try (Connection conn = DBContext.getConnection();
+             PreparedStatement ps = conn.prepareStatement(sql, Statement.RETURN_GENERATED_KEYS)) {
+            ps.setInt(1, item.getFacilityId());
+            ps.setString(2, item.getItemCode().trim());
+            ps.setString(3, item.getItemLabel() != null ? item.getItemLabel().trim() : "");
+            ps.setString(4, item.getPlacementNote() != null ? item.getPlacementNote().trim() : null);
+            ps.setString(5, item.getStatus() != null ? item.getStatus().getDbValue() : EquipmentItem.Status.AVAILABLE.getDbValue());
+
+            int affected = ps.executeUpdate();
+            if (affected > 0) {
+                try (ResultSet rs = ps.getGeneratedKeys()) {
+                    if (rs.next()) {
+                        return rs.getInt(1);
+                    }
+                }
+            }
+        }
+        return 0;
+    }
+
+    /**
+     * Sửa nhãn máy và ghi chú vị trí của cá thể máy (Manager).
+     */
+    public boolean update(EquipmentItem item) throws SQLException {
+        String sql = """
+            UPDATE EquipmentItems
+            SET ItemLabel = ?, PlacementNote = ?
+            WHERE EquipmentItemId = ?
+            """;
+
+        try (Connection conn = DBContext.getConnection();
+             PreparedStatement ps = conn.prepareStatement(sql)) {
+            ps.setString(1, item.getItemLabel() != null ? item.getItemLabel().trim() : "");
+            ps.setString(2, item.getPlacementNote() != null ? item.getPlacementNote().trim() : null);
+            ps.setInt(3, item.getEquipmentItemId());
+            return ps.executeUpdate() > 0;
+        }
+    }
+
+    /**
+     * Thanh lý một cá thể máy (chuyển sang trạng thái 'Retired').
+     */
+    public boolean retire(int equipmentItemId) throws SQLException {
+        String sql = "UPDATE EquipmentItems SET Status = 'Retired' WHERE EquipmentItemId = ?";
+        try (Connection conn = DBContext.getConnection();
+             PreparedStatement ps = conn.prepareStatement(sql)) {
+            ps.setInt(1, equipmentItemId);
+            return ps.executeUpdate() > 0;
+        }
+    }
+
+    /**
+     * Kiểm tra ItemCode đã tồn tại trong hệ thống hay chưa (unique constraint).
+     */
+    public boolean isItemCodeExists(String itemCode, Integer excludeItemId) throws SQLException {
+        StringBuilder sql = new StringBuilder("SELECT COUNT(*) FROM EquipmentItems WHERE ItemCode = ?");
+        if (excludeItemId != null) {
+            sql.append(" AND EquipmentItemId <> ?");
+        }
+        try (Connection conn = DBContext.getConnection();
+             PreparedStatement ps = conn.prepareStatement(sql.toString())) {
+            ps.setString(1, itemCode.trim());
+            if (excludeItemId != null) {
+                ps.setInt(2, excludeItemId);
+            }
+            try (ResultSet rs = ps.executeQuery()) {
+                return rs.next() && rs.getInt(1) > 0;
+            }
+        }
+    }
+
+    /**
+     * Lấy danh sách các ghi chú vị trí (PlacementNote) không trùng lặp để gợi ý qua thẻ <datalist>.
+     */
+    public List<String> findDistinctPlacementNotes() throws SQLException {
+        String sql = """
+            SELECT DISTINCT PlacementNote 
+            FROM EquipmentItems 
+            WHERE PlacementNote IS NOT NULL AND LTRIM(RTRIM(PlacementNote)) <> ''
+            ORDER BY PlacementNote
+            """;
+
+        List<String> notes = new ArrayList<>();
+        try (Connection conn = DBContext.getConnection();
+             PreparedStatement ps = conn.prepareStatement(sql);
+             ResultSet rs = ps.executeQuery()) {
+            while (rs.next()) {
+                notes.add(rs.getString("PlacementNote"));
+            }
+        }
+        return notes;
     }
 
     /**
@@ -150,6 +292,8 @@ public class EquipmentItemDAO {
         item.setEquipmentItemId(rs.getInt("EquipmentItemId"));
         item.setFacilityId(rs.getInt("FacilityId"));
         item.setItemCode(rs.getString("ItemCode"));
+        item.setItemLabel(rs.getString("ItemLabel"));
+        item.setPlacementNote(rs.getString("PlacementNote"));
         item.setStatus(EquipmentItem.Status.fromDbValue(rs.getString("Status")));
         item.setFacilityName(rs.getString("FacilityName"));
         item.setLocation(rs.getString("Location"));
