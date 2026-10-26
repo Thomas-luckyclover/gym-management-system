@@ -124,6 +124,11 @@ html body.dock.pt-sale-page .sale-card {
   box-shadow: var(--arena-shadow-light);
   color: var(--arena-ink);
 }
+/* Tiêu đề trong thẻ luôn màu mực của thẻ. common.css (theme sáng) tô TRẮNG mọi h1–h3 không nằm trong .panel/.card…
+   (dành cho tiêu đề đặt trên nền ảnh) → "Gói & PT", "Lịch tập", "Từng tuần", "Đơn bán" bị mất chữ trên thẻ sáng. */
+html body.dock.pt-sale-page .content .sale-card :is(h2, h3) {
+  color: var(--arena-ink);
+}
 .sale-alert {
   grid-auto-flow: column;
   justify-content: space-between;
@@ -594,6 +599,7 @@ html body.dock.pt-sale-page .sale-card {
 }
 .plan-block-head h3 {
   margin: 0;
+  color: var(--arena-ink);
   font-family: var(--font-brand-display);
   font-size: var(--font-size-base);
   font-weight: var(--font-weight-bold);

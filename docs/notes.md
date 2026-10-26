@@ -5,6 +5,14 @@
 - **Màn**: 4 ô số (cân nặng, BMI + nhóm BMI châu Á: <18,5 / 18,5–22,9 / 23–24,9 / ≥25, % mỡ, vòng eo; thay đổi so với lần đầu), biểu đồ đường SVG do Service tính toạ độ (trục ngang theo ngày thật, chọn chỉ số bằng `?metric=`, không JS), form ghi lần đo (chiều cao điền sẵn lần trước), bảng lịch sử + xóa (hộp xác nhận chung của common.js). Menu khách: "Chỉ số cơ thể".
 - **Seed**: giữ mốc lịch sử 03/10 (SEED_CASES.md không đổi), thêm mục 8b "làm mới cho demo": gia hạn gói tập 21–23/10 (Bích, Quân, Mai, Hà + 12 khách thường) → Active; gói PT mới từ 26/10 (An PT Sơn 07:00, Quân PT Long 11:00 từ 02/11, Hưng & Hà gói đôi PT Trang 19:30, Mai gói PT 2 tháng nối tiếp từ 09/11); 4 buổi lẻ tuần 26/10; chỉ số cơ thể của Mai (6 lần) và An (5 lần). Khung PT công bố kéo tới 31/12. runtest / negtest / bizcheck đều qua.
 
+## Lịch dạy PT: Gỡ hết khung trống · Chép sang tuần sau · Chọn ngày (26/10/2026, ĐÃ CODE)
+- Cả 3 chỉ tạo **nháp** (thanh "Chờ công bố"); DB chỉ đổi khi PT bấm Công bố — server (`PtScheduleService.publish`) kiểm tra lại toàn bộ như cũ. Không đổi Java / DB.
+- **Gỡ hết khung trống** (`removeAllPtFree`): tích mọi ô gỡ của tuần — JSP chỉ in ô gỡ cho khung `canRemove` (Còn trống, chưa có khách, không bị đơn giữ, chưa qua) — và bỏ mọi khung nháp. Hoàn tác: "Bỏ tất cả" hoặc bấm từng thẻ. Nút chỉ hiện khi tuần có khung gỡ được.
+- **Chép sang tuần sau** (`copyPtWeekToNext`): mọi khung đang chiếm giờ của tuần (Còn trống, Có khách, Đang giữ, Tạm khóa, Nháp; trừ khung Chờ gỡ) → nháp cùng thứ, cùng giờ của tuần sau (ghi vào lưu tạm của tuần sau), rồi mở tuần sau. Tuần sau khôi phục nháp bằng `addPtDraft` nên khung trùng giờ / ngày không thêm được tự bị bỏ; toast báo "Đã chép N khung … M khung bỏ qua". Đã thử: tuần 28/12 → 04/01/2027: 20 khung chép, 5 bỏ qua, Công bố → 20 khung Còn trống.
+- **Chọn ngày**: ô date cạnh khoảng tuần (form GET `?date=…&view=…`, chọn là tự mở tuần chứa ngày đó; tắt JS có nút Xem).
+- Icon: dự án đổi `fa-*` sang SVG Lucide qua `js/icons.js` (chỉ icon đã khai báo). Thêm `copy`, `lock`, `user-plus`, `money-bill-wave`, `building-columns` (màn Bán gói PT trước đó thiếu icon nút Giữ lịch, ô người tập cùng, cách thu tiền); `icons.js?v=3`.
+- Bán gói PT, theme sáng: `common.css` tô trắng mọi h1–h3 không nằm trong `.panel/.card…` → tiêu đề trong `.sale-card` ("Từng tuần", "Gói & PT"…) mất chữ. Sửa bằng `html body.dock.pt-sale-page .content .sale-card :is(h2, h3) { color: var(--arena-ink) }`.
+
 ## Merge develop vào dev_mb1_MinhLC (26/10/2026)
 - `develop` đổi `LeaveRequests`: bỏ `LeaveDate`, thay bằng khoảng `FromDate`..`ToDate` (+ `Days`, `AssignedToEmployeeId`). 2 câu SQL của nhánh này còn đọc `LeaveDate` → màn Lịch dạy, Xử lý buổi, Bán gói PT lỗi "Hệ thống đang bận". Đã sửa:
   - `PtScheduleDAO.findLeaves`: lấy đơn có khoảng chạm [from, to], tách thành 1 `LeaveInfo` / ngày (`isOnLeave` giữ nguyên).
