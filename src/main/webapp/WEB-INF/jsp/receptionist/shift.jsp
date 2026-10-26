@@ -160,9 +160,19 @@
               </c:choose>
             </c:if>
             <c:if test="${detail.shift.open}">
-              <button class="btn btn-primary" type="button" id="btnCloseShiftModal">
-                <i class="fa-solid fa-cash-register"></i> Chốt ca
-              </button>
+              <c:choose>
+                <c:when test="${detail.hasPendingOrders()}">
+                  <button class="btn btn-primary" type="button" id="btnCloseShiftModal" disabled
+                          title="Không thể chốt ca: còn ${detail.pendingOrders.size()} đơn quầy chờ xử lý (CBR-78)">
+                    <i class="fa-solid fa-cash-register"></i> Chốt ca
+                  </button>
+                </c:when>
+                <c:otherwise>
+                  <button class="btn btn-primary" type="button" id="btnCloseShiftModal">
+                    <i class="fa-solid fa-cash-register"></i> Chốt ca
+                  </button>
+                </c:otherwise>
+              </c:choose>
             </c:if>
             <c:if test="${detail.shift.closed}">
               <span class="badge badge-muted badge-lg">
@@ -434,6 +444,12 @@
           <input type="hidden" id="expectedCashRaw" value="${detail.metrics.cashTotal}">
 
           <div class="modal-body">
+            <c:if test="${detail.hasPendingOrders()}">
+              <div class="alert-banner danger" style="margin-bottom: var(--space-4);">
+                <i class="fa-solid fa-circle-exclamation"></i>
+                <span>Không thể chốt ca: còn <b>${detail.pendingOrders.size()}</b> đơn hàng quầy đang chờ xử lý. Vui lòng xác nhận hoặc hủy đơn trước khi chốt ca (CBR-78).</span>
+              </div>
+            </c:if>
             <p class="modal-desc">Đếm số tiền mặt thực tế trong két quầy Lễ tân và nhập vào bên dưới. Nếu có chênh lệch so với số liệu sổ sách, bắt buộc phải nêu rõ lý do giải trình.</p>
 
             <div class="reconcile-card">
@@ -470,7 +486,7 @@
 
           <div class="modal-foot">
             <button class="btn btn-ghost" type="button" data-close-modal>Bỏ qua</button>
-            <button class="btn btn-primary" type="submit" id="btnSubmitCloseShift">
+            <button class="btn btn-primary" type="submit" id="btnSubmitCloseShift" ${detail.hasPendingOrders() ? 'disabled' : ''}>
               <i class="fa-solid fa-lock"></i> Xác nhận chốt ca
             </button>
           </div>
