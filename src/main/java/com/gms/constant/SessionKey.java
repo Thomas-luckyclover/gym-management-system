@@ -31,6 +31,12 @@ public final class SessionKey {
     public static final String DISPLAY_NAME = "displayName";
 
     /**
+     * Đường dẫn ảnh đại diện hiển thị trên header/sidebar (/uploads/avatar/...).
+     * Đồng bộ với cột Persons.Avatar trong DB khi đăng nhập hoặc khi đổi avatar.
+     */
+    public static final String AVATAR = "avatar";
+
+    /**
      * Thông báo toast mang qua lần redirect (mẫu Post/Redirect/Get).
      * Servlet gọi RequestUtil.setFlashToast(...), trang JSP kế tiếp hiện toast rồi xóa (common/flash-toast.jspf).
      */
