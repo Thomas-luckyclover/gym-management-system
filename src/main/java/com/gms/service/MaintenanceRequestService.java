@@ -114,6 +114,20 @@ public class MaintenanceRequestService {
             boolean warningTagPlaced,
             String attachedImages
     ) {
+        return createRequests(accountId, equipmentItemIds, priorityValue, incidentTypeValue, detectedByValue, description, warningTagPlaced, attachedImages, null);
+    }
+
+    public ServiceResult<List<String>> createRequests(
+            int accountId,
+            List<Integer> equipmentItemIds,
+            String priorityValue,
+            String incidentTypeValue,
+            String detectedByValue,
+            String description,
+            boolean warningTagPlaced,
+            String attachedImages,
+            String affectedItemsNote
+    ) {
 
         // B1: Kiểm tra danh sách thiết bị
         if (equipmentItemIds == null || equipmentItemIds.isEmpty()) {
@@ -211,6 +225,7 @@ public class MaintenanceRequestService {
                     request.setPriority(priority);
                     request.setIncidentType(incidentType);
                     request.setDetectedBy(detectedBy);
+                    request.setAffectedItemsNote(affectedItemsNote);
                     request.setWarningTagPlaced(warningTagPlaced);
                     request.setDescription(description.trim());
                     request.setAttachedImages(attachedImages);
@@ -281,6 +296,20 @@ public class MaintenanceRequestService {
             boolean warningTagPlaced,
             String attachedImages
     ) {
+        return createRequest(accountId, equipmentItemId, priorityValue, incidentTypeValue, detectedByValue, description, warningTagPlaced, attachedImages, null);
+    }
+
+    public ServiceResult<String> createRequest(
+            int accountId,
+            int equipmentItemId,
+            String priorityValue,
+            String incidentTypeValue,
+            String detectedByValue,
+            String description,
+            boolean warningTagPlaced,
+            String attachedImages,
+            String affectedItemsNote
+    ) {
         if (equipmentItemId <= 0) {
             return ServiceResult.failField(
                     "equipmentItemId",
@@ -296,7 +325,8 @@ public class MaintenanceRequestService {
                 detectedByValue,
                 description,
                 warningTagPlaced,
-                attachedImages
+                attachedImages,
+                affectedItemsNote
         );
 
         if (multiResult.isSuccess()) {
@@ -347,6 +377,15 @@ public class MaintenanceRequestService {
             int accountId,
             int requestId,
             boolean setUnderMaintenance
+    ) {
+        return approveRequest(accountId, requestId, setUnderMaintenance, null);
+    }
+
+    public ServiceResult<Void> approveRequest(
+            int accountId,
+            int requestId,
+            boolean setUnderMaintenance,
+            String managerNote
     ) {
 
         if (requestId <= 0) {
@@ -399,7 +438,8 @@ public class MaintenanceRequestService {
                                 connection,
                                 requestId,
                                 manager.getEmployeeId(),
-                                setUnderMaintenance
+                                setUnderMaintenance,
+                                managerNote
                         );
 
                 if (!updated) {
@@ -1039,6 +1079,48 @@ public class MaintenanceRequestService {
     ) {
         // Obsolete category and status filters are intentionally ignored per BF-06 search simplification
         return getFacilityCatalogPage(keyword, page, pageSize);
+    }
+
+    /**
+     * Tra cứu phiếu bảo trì đã đóng (Closed) gần nhất của thiết bị con.
+     */
+    public ServiceResult<MaintenanceRequestDAO.MaintenanceRequestView> getLastClosedRequest(int equipmentItemId, int currentRequestId) {
+        try {
+            MaintenanceRequestDAO.MaintenanceRequestView view =
+                    maintenanceRequestDAO.findLastClosedRequest(equipmentItemId, currentRequestId);
+            return ServiceResult.ok(view);
+        } catch (SQLException e) {
+            e.printStackTrace();
+            return ServiceResult.fail(Messages.MSG04_SYSTEM_BUSY);
+        }
+    }
+
+    /**
+     * Lấy thông tin dòng máy theo FacilityId kèm thống kê khả dụng.
+     */
+    public ServiceResult<Facility> getFacilityById(int facilityId) {
+        try {
+            Facility facility = facilityDAO.findById(facilityId);
+            if (facility == null) {
+                return ServiceResult.fail(String.format(Messages.MSG08_NOT_FOUND, "thiết bị"));
+            }
+            return ServiceResult.ok(facility);
+        } catch (SQLException e) {
+            e.printStackTrace();
+            return ServiceResult.fail(Messages.MSG04_SYSTEM_BUSY);
+        }
+    }
+
+    /**
+     * Lấy danh sách các vị trí / khu vực duy nhất đang có.
+     */
+    public ServiceResult<List<String>> getDistinctLocations() {
+        try {
+            return ServiceResult.ok(facilityDAO.findDistinctLocations());
+        } catch (SQLException e) {
+            e.printStackTrace();
+            return ServiceResult.fail(Messages.MSG04_SYSTEM_BUSY);
+        }
     }
 
     private Employee findEmployeeForAccount(
