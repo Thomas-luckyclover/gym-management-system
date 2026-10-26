@@ -43,10 +43,25 @@ public class ShiftDetailView {
     // Request filter: Trạng thái đơn được chọn (All, Paid, Pending, Cancelled).
     private final String statusFilter;
 
+    // Quy tắc nghiệp vụ: Ca có được phép mở tại thời điểm hiện tại hay không.
+    private final boolean canOpen;
+
+    // Lý do không cho phép mở ca (khi notOpened = true và canOpen = false).
+    private final String shiftNotOpenedReason;
+
     public ShiftDetailView(Shift shift, String openedByEmployeeName, String closedByEmployeeName,
                            ShiftMetrics metrics, PageResult<ShiftTransactionItem> transactionsPage,
                            List<ShiftTransactionItem> pendingOrders, List<Shift> todayShifts,
                            String searchKeyword, String methodFilter, String statusFilter) {
+        this(shift, openedByEmployeeName, closedByEmployeeName, metrics, transactionsPage,
+                pendingOrders, todayShifts, searchKeyword, methodFilter, statusFilter, true, null);
+    }
+
+    public ShiftDetailView(Shift shift, String openedByEmployeeName, String closedByEmployeeName,
+                           ShiftMetrics metrics, PageResult<ShiftTransactionItem> transactionsPage,
+                           List<ShiftTransactionItem> pendingOrders, List<Shift> todayShifts,
+                           String searchKeyword, String methodFilter, String statusFilter,
+                           boolean canOpen, String shiftNotOpenedReason) {
         this.shift = shift;
         this.openedByEmployeeName = openedByEmployeeName;
         this.closedByEmployeeName = closedByEmployeeName;
@@ -57,6 +72,8 @@ public class ShiftDetailView {
         this.searchKeyword = searchKeyword;
         this.methodFilter = methodFilter;
         this.statusFilter = statusFilter;
+        this.canOpen = canOpen;
+        this.shiftNotOpenedReason = shiftNotOpenedReason;
     }
 
     public Shift getShift() {
@@ -101,5 +118,13 @@ public class ShiftDetailView {
 
     public boolean hasPendingOrders() {
         return !pendingOrders.isEmpty();
+    }
+
+    public boolean isCanOpen() {
+        return canOpen;
+    }
+
+    public String getShiftNotOpenedReason() {
+        return shiftNotOpenedReason;
     }
 }

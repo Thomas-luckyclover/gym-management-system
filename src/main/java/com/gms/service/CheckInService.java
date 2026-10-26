@@ -71,7 +71,7 @@ public class CheckInService {
                         "Không tìm thấy hồ sơ. Kiểm tra lại mã khách hoặc số điện thoại. Khách chưa từng đến thì tạo hồ sơ mới.");
                 return ServiceResult.ok(notFoundResult);
             }
-            // CustomerLookupInfo là dữ liệu thô được lấy từ database
+            // CustomerLookupInfo là dữ liệu sơ thô được lấy từ database
             // CheckInLookupResult là kết quả sau khi xử lý nghiệp vụ từ dữ liệu thô kia
             // Lý do tách k cho CheckInLookupResult gọi thẳng checkinDAO hoặc các DAO khác
             // là để đảm bảo tính đóng gói và tuân thủ
@@ -80,6 +80,7 @@ public class CheckInService {
             // dto là dữ liệu đc mang sang giao diện
 
             CheckInLookupResult result = new CheckInLookupResult();
+            //CheckinLookupResult là kết quả đã được xử lý nghiệp vụ từ dữ liệu thô CustomerLookupInfo
             result.setCustomerId(customer.customerId);
             result.setPersonId(customer.personId);
             result.setCustomerCode(customer.customerCode);

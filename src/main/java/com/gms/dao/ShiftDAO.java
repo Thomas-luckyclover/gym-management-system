@@ -49,6 +49,11 @@ public class ShiftDAO {
      * @throws SQLException khi truy vấn lỗi
      */
     public void ensureShiftsForDate(Connection conn, LocalDate date) throws SQLException {
+        // CBR-104: Không sinh ca làm việc vào ngày đóng cửa cả ngày
+        if (isGymClosedOnDate(conn, date)) {
+            return;
+        }
+
         String selectSql = "SELECT ShiftType FROM Shifts WHERE WorkDate = ?";
         boolean hasMorning = false;
         boolean hasAfternoon = false;
@@ -145,8 +150,39 @@ public class ShiftDAO {
     }
 
     /**
+     * Kiểm tra xem ngày có phải là ngày đóng cửa cả ngày theo OperatingHourExceptions hay không (BR-12, CBR-104).
+     *
+     * @param conn Connection tham gia transaction
+     * @param date ngày cần kiểm tra
+     * @return true nếu đóng cửa cả ngày, false nếu mở cửa bình thường
+     * @throws SQLException khi truy vấn lỗi
+     */
+    public boolean isGymClosedOnDate(Connection conn, LocalDate date) throws SQLException {
+        String sql = "SELECT 1 FROM OperatingHourExceptions WHERE ApplyDate = ? AND IsClosedAllDay = 1";
+        try (PreparedStatement stmt = conn.prepareStatement(sql)) {
+            stmt.setDate(1, Date.valueOf(date));
+            try (ResultSet rs = stmt.executeQuery()) {
+                return rs.next();
+            }
+        }
+    }
+
+    /**
+     * Phiên bản tự mở kết nối của isGymClosedOnDate.
+     */
+    public boolean isGymClosedOnDate(LocalDate date) throws SQLException {
+        try (Connection conn = DBContext.getConnection()) {
+            return isGymClosedOnDate(conn, date);
+        }
+    }
+
+    /**
      * Tìm ca đang Open hiện tại của ngày hôm nay, hoặc nếu không có ca nào Open thì tìm ca phù hợp nhất.
-     * (Trước 13:00 ưu tiên ca Sáng, từ 13:00 trở đi ưu tiên ca Chiều).
+     * Quy tắc ưu tiên:
+     * 1. Ca đang Open: Luôn ưu tiên hiển thị ca đang trực tiếp mở.
+     * 2. Nếu Ca sáng đã chốt và Ca chiều chưa mở: Ưu tiên Ca chiều (ca tiếp theo cần mở).
+     * 3. Nếu Ca chiều đã chốt: Hiển thị Ca chiều (ca gần nhất đã hoàn tất).
+     * 4. Nếu cả 2 đều chưa mở: Xét theo giờ hiện tại (trước 13:00 là Ca sáng, từ 13:00 trở đi là Ca chiều).
      *
      * @param today ngày hiện tại
      * @return đối tượng Shift phù hợp nhất
@@ -165,19 +201,39 @@ public class ShiftDAO {
             }
         }
 
-        // B2: Nếu không có ca nào Open, xét theo giờ hiện tại
-        LocalDateTime now = LocalDateTime.now(DateTimeUtil.GYM_ZONE);
-        boolean isAfternoonTime = now.getHour() >= 13;
-
+        // B2: Tìm ca Sáng và ca Chiều
+        Shift morning = null;
+        Shift afternoon = null;
         for (Shift s : shifts) {
-            if (isAfternoonTime && s.getShiftType() == Shift.ShiftType.AFTERNOON) {
-                return s;
-            } else if (!isAfternoonTime && s.getShiftType() == Shift.ShiftType.MORNING) {
-                return s;
+            if (s.getShiftType() == Shift.ShiftType.MORNING) {
+                morning = s;
+            } else if (s.getShiftType() == Shift.ShiftType.AFTERNOON) {
+                afternoon = s;
             }
         }
 
-        // B3: Fallback lấy phần tử đầu tiên
+        // B3: Nếu Ca sáng đã chốt và Ca chiều chưa mở -> Ca chiều là ca tiếp theo cần làm việc
+        if (morning != null && morning.isClosed() && afternoon != null && afternoon.isNotOpened()) {
+            return afternoon;
+        }
+
+        // B4: Nếu Ca chiều đã chốt -> hiển thị Ca chiều (ca gần nhất đã hoàn tất trong ngày)
+        if (afternoon != null && afternoon.isClosed()) {
+            return afternoon;
+        }
+
+        // B5: Nếu cả 2 đều chưa mở, xét theo giờ hiện tại (trước 13:00 là Sáng, từ 13:00 là Chiều)
+        LocalDateTime now = LocalDateTime.now(DateTimeUtil.GYM_ZONE);
+        boolean isAfternoonTime = now.getHour() >= 13;
+
+        if (isAfternoonTime && afternoon != null) {
+            return afternoon;
+        }
+        if (!isAfternoonTime && morning != null) {
+            return morning;
+        }
+
+        // B6: Fallback lấy phần tử đầu tiên
         return shifts.get(0);
     }
 

@@ -48,6 +48,11 @@
                 <i class="fa-solid fa-lock"></i> <c:out value="${detail.shift.shiftType.displayName}"/> đã chốt
               </span>
             </c:when>
+            <c:when test="${detail.shift.notOpened and not detail.canOpen}">
+              <span class="badge badge-muted">
+                <i class="fa-solid fa-clock-rotate-left"></i> <c:out value="${detail.shift.shiftType.displayName}"/> đã qua
+              </span>
+            </c:when>
             <c:otherwise>
               <span class="badge badge-warn">
                 <i class="fa-solid fa-hourglass-start"></i> <c:out value="${detail.shift.shiftType.displayName}"/> chưa mở
@@ -124,6 +129,12 @@
                   </c:choose>
                 </p>
               </c:when>
+              <c:when test="${detail.shift.notOpened and not detail.canOpen}">
+                <h2>Ca trực đã qua (không mở)</h2>
+                <p class="muted">
+                  <c:out value="${detail.shiftNotOpenedReason}"/>
+                </p>
+              </c:when>
               <c:otherwise>
                 <h2>Ca trực chưa mở</h2>
                 <p class="muted">
@@ -135,9 +146,18 @@
 
           <div class="hero-actions">
             <c:if test="${detail.shift.notOpened}">
-              <button class="btn btn-primary" type="button" id="btnOpenShiftModal">
-                <i class="fa-solid fa-door-open"></i> Mở ca
-              </button>
+              <c:choose>
+                <c:when test="${detail.canOpen}">
+                  <button class="btn btn-primary" type="button" id="btnOpenShiftModal">
+                    <i class="fa-solid fa-door-open"></i> Mở ca
+                  </button>
+                </c:when>
+                <c:otherwise>
+                  <span class="badge badge-muted badge-lg" title="<c:out value='${detail.shiftNotOpenedReason}'/>">
+                    <i class="fa-solid fa-clock-rotate-left"></i> Ca trực đã qua (không thể mở)
+                  </span>
+                </c:otherwise>
+              </c:choose>
             </c:if>
             <c:if test="${detail.shift.open}">
               <button class="btn btn-primary" type="button" id="btnCloseShiftModal">
@@ -371,6 +391,7 @@
   </div>
 
   <%-- ===== MODAL 1: MỞ CA LÀM VIỆC ===== --%>
+  <c:if test="${detail.shift.notOpened and detail.canOpen}">
   <div class="modal" id="modalOpenShift" role="dialog" aria-modal="true" aria-labelledby="modalOpenTitle">
     <div class="modal-dialog">
       <div class="modal-content">
@@ -397,6 +418,7 @@
       </div>
     </div>
   </div>
+  </c:if>
 
   <%-- ===== MODAL 2: ĐỐI SOÁT & CHỐT CA LÀM VIỆC ===== --%>
   <div class="modal" id="modalCloseShift" role="dialog" aria-modal="true" aria-labelledby="modalCloseTitle">
