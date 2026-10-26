@@ -197,7 +197,10 @@ document.addEventListener('DOMContentLoaded', function () {
     // Lắng nghe sự kiện người dùng gõ vào ô tiền mặt thực tế
     if (inputCountedCash) {
         inputCountedCash.addEventListener('input', function () {
-            // Tự động format phân cách hàng nghìn khi rời hoặc gõ
+            if (countedCashError) {
+                countedCashError.hidden = true;
+                countedCashError.textContent = '';
+            }
             recalculateVariance();
         });
 
@@ -205,6 +208,26 @@ document.addEventListener('DOMContentLoaded', function () {
             const val = parseNumericOnly(this.value);
             this.value = val.toLocaleString('vi-VN');
             recalculateVariance();
+        });
+    }
+
+    // Xóa lỗi inline khi người dùng gõ lý do chênh lệch
+    if (inputVarianceReason) {
+        inputVarianceReason.addEventListener('input', function () {
+            if (varianceReasonError) {
+                varianceReasonError.hidden = true;
+                varianceReasonError.textContent = '';
+            }
+        });
+    }
+
+    // Xóa lỗi inline khi người dùng gõ lý do hủy đơn
+    if (inputCancelReason) {
+        inputCancelReason.addEventListener('input', function () {
+            if (cancelReasonError) {
+                cancelReasonError.hidden = true;
+                cancelReasonError.textContent = '';
+            }
         });
     }
 
