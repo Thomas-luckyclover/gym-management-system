@@ -29,10 +29,16 @@ import java.time.format.DateTimeParseException;
 import java.util.List;
 
 /**
- * Servlet màn hình Bảo lưu thẻ hội viên tại quầy Lễ tân (URL /receptionist/freeze).
+ * Servlet màn hình Bảo lưu thẻ hội viên tại quầy Lễ tân (URL
+ * /receptionist/freeze).
  *
- * <p>GET: Tra cứu hội viên (mã/tên/SĐT), xem thông tin gói tập và xem danh sách bảo lưu gần đây.</p>
- * <p>POST: Xác nhận bảo lưu gói tập hoặc mở lại thẻ trước hạn (hủy bảo lưu sớm).</p>
+ * <p>
+ * GET: Tra cứu hội viên (mã/tên/SĐT), xem thông tin gói tập và xem danh sách
+ * bảo lưu gần đây.
+ * </p>
+ * <p>
+ * POST: Xác nhận bảo lưu gói tập hoặc mở lại thẻ trước hạn (hủy bảo lưu sớm).
+ * </p>
  */
 @WebServlet("/receptionist/freeze")
 public class FreezeMembershipServlet extends HttpServlet {
@@ -84,7 +90,8 @@ public class FreezeMembershipServlet extends HttpServlet {
                 request.setAttribute("freezeCustomer", lookupResult.getData());
             } else {
                 // Nếu tìm chính xác không ra, tìm theo một phần tên có phân trang
-                PageResult<CustomerSearchItem> searchResultsPage = freezeService.searchCustomersPage(query, page, pageSize);
+                PageResult<CustomerSearchItem> searchResultsPage = freezeService.searchCustomersPage(query, page,
+                        pageSize);
                 if (!searchResultsPage.isEmpty()) {
                     request.setAttribute("searchResultsPage", searchResultsPage);
                     request.setAttribute("searchResults", searchResultsPage.getItems());
@@ -146,9 +153,11 @@ public class FreezeMembershipServlet extends HttpServlet {
         String q = RequestUtil.getTrimmedParam(request, "q");
 
         String redirectUrl = "/receptionist/freeze" + (!ValidationUtil.isNullOrEmpty(q)
-                ? "?q=" + URLEncoder.encode(q, StandardCharsets.UTF_8) : "");
+                ? "?q=" + URLEncoder.encode(q, StandardCharsets.UTF_8)
+                : "");
 
-        if (subscriptionId <= 0 || ValidationUtil.isNullOrEmpty(startDateStr) || ValidationUtil.isNullOrEmpty(plannedEndDateStr)) {
+        if (subscriptionId <= 0 || ValidationUtil.isNullOrEmpty(startDateStr)
+                || ValidationUtil.isNullOrEmpty(plannedEndDateStr)) {
             RequestUtil.setFlashToast(request, "error", "Vui lòng chọn đầy đủ thời gian bảo lưu.");
             RequestUtil.redirect(request, response, redirectUrl);
             return;
@@ -172,7 +181,8 @@ public class FreezeMembershipServlet extends HttpServlet {
         }
 
         // Thực hiện bảo lưu thông qua service
-        ServiceResult<Void> result = freezeService.applyFreeze(accountId, subscriptionId, startDate, plannedEndDate, reason);
+        ServiceResult<Void> result = freezeService.applyFreeze(accountId, subscriptionId, startDate, plannedEndDate,
+                reason);
         RequestUtil.setFlashToast(request, result.isSuccess() ? "success" : "error", result.getMessage());
         RequestUtil.redirect(request, response, redirectUrl);
     }
@@ -187,7 +197,8 @@ public class FreezeMembershipServlet extends HttpServlet {
         String q = RequestUtil.getTrimmedParam(request, "q");
 
         String redirectUrl = "/receptionist/freeze" + (!ValidationUtil.isNullOrEmpty(q)
-                ? "?q=" + URLEncoder.encode(q, StandardCharsets.UTF_8) : "");
+                ? "?q=" + URLEncoder.encode(q, StandardCharsets.UTF_8)
+                : "");
 
         if (freezeRecordId <= 0) {
             RequestUtil.setFlashToast(request, "error", "Mã đợt bảo lưu không hợp lệ.");
@@ -211,18 +222,20 @@ public class FreezeMembershipServlet extends HttpServlet {
         String startDateStr = RequestUtil.getTrimmedParam(request, "startDate");
         String plannedEndDateStr = RequestUtil.getTrimmedParam(request, "plannedEndDate");
 
-        if (customerId <= 0 || ValidationUtil.isNullOrEmpty(startDateStr) || ValidationUtil.isNullOrEmpty(plannedEndDateStr)) {
-            JsonUtil.writeJson(response, JsonResponse.success("OK", List.of()));
+        if (customerId <= 0 || ValidationUtil.isNullOrEmpty(startDateStr)
+                || ValidationUtil.isNullOrEmpty(plannedEndDateStr)) {
+            JsonUtil.writeJson(response, JsonResponse.success(List.of()));
             return;
         }
 
         try {
             LocalDate startDate = LocalDate.parse(startDateStr);
             LocalDate plannedEndDate = LocalDate.parse(plannedEndDateStr);
-            List<FreezeSessionImpactView> sessions = freezeService.previewAffectedSessions(customerId, startDate, plannedEndDate);
-            JsonUtil.writeJson(response, JsonResponse.success("OK", sessions));
+            List<FreezeSessionImpactView> sessions = freezeService.previewAffectedSessions(customerId, startDate,
+                    plannedEndDate);
+            JsonUtil.writeJson(response, JsonResponse.success(sessions));
         } catch (DateTimeParseException e) {
-            JsonUtil.writeJson(response, JsonResponse.success("OK", List.of()));
+            JsonUtil.writeJson(response, JsonResponse.success(List.of()));
         }
     }
 }
