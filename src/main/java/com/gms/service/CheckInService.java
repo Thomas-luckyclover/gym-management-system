@@ -24,15 +24,18 @@ import java.time.LocalDateTime;
 import java.util.List;
 
 /**
- * Nghiệp vụ kiểm tra điều kiện và thực hiện Check-in hội viên tại quầy Lễ tân
- * (UC-19).
- * Bám sát tuyệt đối bộ rule:
- * - CBR-37, CBR-38: Ảnh check-in thuộc hồ sơ hội viên do Lễ tân quản lý, không
- * dùng Avatar
- * - DBR-47, DBR-48, CBR-58: canUseService (gói Membership hoặc DayPass)
- * - DBR-34: Trạng thái hội viên (Active, Frozen, Expired, New, Inactive)
- * - GBR-03: Ngày hết hạn tính trọn cả ngày đó
- * - GBR-19: Chuỗi tìm kiếm luôn được trim
+ * Nghiệp vụ kiểm tra điều kiện và thực hiện Check-in hội viên tại quầy Lễ tân (UC-19, Business Flow BF-10 & BF-13).
+ *
+ * <p>Quy tắc nghiệp vụ tuân thủ triệt để:</p>
+ * <ul>
+ *   <li>CBR-37, CBR-38: Ảnh check-in thuộc hồ sơ hội viên do Lễ tân quản lý tại quầy, không dùng Avatar cá nhân.</li>
+ *   <li>DBR-47, DBR-48, CBR-58: canUseService - chỉ gói Membership hoặc DayPass mới được quyền vào tập tự do.</li>
+ *   <li>DBR-34: Trạng thái hội viên (Active, Frozen, Expired, New, Inactive).</li>
+ *   <li>GBR-03: Ngày hết hạn tính trọn vẹn cả ngày đó (23:59:59).</li>
+ *   <li>GBR-19: Chuỗi tìm kiếm luôn được trim để tránh khoảng trắng thừa.</li>
+ *   <li>BR-27 & MSG83: Từ chối check-in nếu không có gói tập hoặc vé ngày hợp lệ hôm nay.</li>
+ *   <li>CBR-36 & BR-29, MSG84: Mỗi vé ngày chỉ được check-in 1 lần duy nhất trong ngày.</li>
+ * </ul>
  */
 public class CheckInService {
 
