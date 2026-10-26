@@ -47,7 +47,15 @@
     <a class="tb-user" href="${pageContext.request.contextPath}/account">
         <%-- Avatar và chấm trang trí, không phải kết quả truy vấn trạng thái online của PT. --%>
         <span class="pt-user-avatar">
-            <i class="fa-solid fa-user" aria-hidden="true"></i>
+            <c:choose>
+                <c:when test="${not empty sessionScope.avatar}">
+                    <img class="avatar" src="${pageContext.request.contextPath}${sessionScope.avatar}" alt="Avatar" onerror="this.style.display='none';if(this.nextElementSibling)this.nextElementSibling.style.display='';" style="width:100%;height:100%;object-fit:cover;border-radius:50%;">
+                    <i class="fa-solid fa-user" aria-hidden="true" style="display:none;"></i>
+                </c:when>
+                <c:otherwise>
+                    <i class="fa-solid fa-user" aria-hidden="true"></i>
+                </c:otherwise>
+            </c:choose>
             <span class="pt-user-online" aria-hidden="true"></span>
         </span>
         <span class="pt-user-details">
