@@ -28,18 +28,17 @@ import java.util.ArrayList;
 import java.util.List;
 
 /**
- * Lớp xử lý nghiệp vụ Ca làm việc và Đối soát tiền mặt tại quầy Lễ tân (Màn #39 - UC-25).
+ * Lớp xử lý nghiệp vụ Ca làm việc và Đối soát tiền mặt tại quầy Lễ tân (Màn #39 - UC-25, Business Flow BF-03).
  *
- * <p>Quy tắc nghiệp vụ được triển khai triệt để:</p>
+ * <p>Triển khai đầy đủ các nhánh trong sơ đồ luồng nghiệp vụ BF-03 (SRS 2.3 & 7.3.1):</p>
  * <ul>
- *   <li>CBR-104: Mỗi ngày có đúng 2 ca (Sáng & Chiều), tự động sinh theo giờ mở cửa.</li>
- *   <li>CBR-105: Hóa đơn lập tại quầy gắn với ca trực đang mở.</li>
- *   <li>DBR-55: ExpectedCash = Tổng tiền các hóa đơn tiền mặt thành công không bị hủy.</li>
- *   <li>CBR-78: Chặn chốt ca nếu còn đơn hàng Pending tại quầy (MSG87).</li>
- *   <li>BR-46 & GBR-09: Chốt ca bắt buộc nhập tiền đếm được; nếu chênh lệch phải nhập lý do ≥ 5 ký tự.</li>
- *   <li>CBR-11 & MSG97: Lễ tân chỉ được hủy đơn quầy trong ca mở đã tạo nó trước khi ca đóng.</li>
- *   <li>CBR-115: Chặn Lễ tân thao tác trên đơn hàng của chính mình (SelfServiceGuard).</li>
- *   <li>GBR-07 & GBR-08: Ghi nhật ký mọi thao tác nhạy cảm kèm ActingRole RECEPTIONIST qua AuditLogService.</li>
+ *   <li><b>Trigger / Node 1:</b> Mở ca trực (openShift -> Shift: Open, UC-25).</li>
+ *   <li><b>Node 2 / Main Flow:</b> Ghi nhận giao dịch tiền mặt vào ca trực (CBR-105).</li>
+ *   <li><b>Node 2 / Alternative Flow A1:</b> Xác nhận tiền chuyển khoản đã về tài khoản quầy (confirmBankTransfer, CBR-77, CBR-105).</li>
+ *   <li><b>Node 3 / Exception Flow E2:</b> Hủy đơn hàng tạo nhầm tại quầy trong ca mở, hoàn tiền, khôi phục voucher/slot (cancelOrder, CBR-11).</li>
+ *   <li><b>Node 4 / Exception Flow E1:</b> Chặn chốt ca khi còn đơn quầy ở trạng thái Pending (CBR-78, MSG87).</li>
+ *   <li><b>Node 5 / Main Flow:</b> Chốt ca khớp tiền 100% (closeShift, DBR-55).</li>
+ *   <li><b>Node 5 / Alternative Flow A2:</b> Chốt ca lệch tiền kèm lý do giải trình bắt buộc (closeShift, BR-46).</li>
  * </ul>
  *
  * @author Antigravity
@@ -251,7 +250,7 @@ public class ShiftService {
     // ===== 2. Nghiệp vụ Mở ca làm việc =====
 
     /**
-     * Mở ca làm việc được chỉ định (CBR-105).
+     * Mở ca làm việc được chỉ định (BF-03: Trigger & Node 1 - Open shift -> Shift Open, CBR-104, CBR-105).
      *
      * <p>Quy tắc kiểm soát chặt chẽ:</p>
      * <ul>
@@ -396,7 +395,14 @@ public class ShiftService {
     // ===== 3. Nghiệp vụ Đối soát & Chốt ca làm việc =====
 
     /**
-     * Đối soát tiền mặt và chốt ca làm việc (UC-25, CBR-78, BR-46).
+     * Đối soát tiền mặt và chốt ca làm việc (BF-03: Node 4, 5 & 6; UC-25, CBR-78, DBR-55, BR-46).
+     *
+     * <p>Xử lý các nhánh luồng chốt ca:</p>
+     * <ul>
+     *   <li><b>BF-03 Exception Flow E1:</b> Kiểm tra đơn Pending trong ca. Nếu còn -> Chặn chốt ca, trả về MSG87 (CBR-78).</li>
+     *   <li><b>BF-03 Main Flow:</b> Tiền đếm được khớp tiền sổ sách (discrepancy == 0) -> Chốt ca thành công, lưu trạng thái Closed.</li>
+     *   <li><b>BF-03 Alternative Flow A2:</b> Tiền đếm được bị chênh lệch -> Bắt buộc nhập lý do giải trình 5–500 ký tự (BR-46).</li>
+     * </ul>
      *
      * @param accountId ID tài khoản Lễ tân thực hiện
      * @param shiftId ID ca làm việc cần chốt
@@ -510,7 +516,7 @@ public class ShiftService {
     // ===== 4. Xác nhận Đơn chuyển khoản tại quầy =====
 
     /**
-     * Xác nhận đơn chuyển khoản đã nhận được tiền (CBR-77).
+     * Xác nhận đơn chuyển khoản đã nhận được tiền (BF-03: Alternative Flow A1 - Confirm transfer once money has arrived, CBR-77, CBR-105).
      *
      * @param accountId ID tài khoản Lễ tân thực hiện
      * @param orderId ID đơn hàng
@@ -565,7 +571,7 @@ public class ShiftService {
     // ===== 5. Nghiệp vụ Hủy đơn hàng tại quầy =====
 
     /**
-     * Hủy đơn hàng tại quầy trong ca mở (CBR-11, CBR-115, BR-44, DBR-36).
+     * Hủy đơn hàng tại quầy trong ca mở (BF-03: Exception Flow E2 - Cancel wrongly sold order in shift, CBR-11, CBR-115, BR-44, DBR-36).
      *
      * @param accountId ID tài khoản Lễ tân thực hiện
      * @param orderId ID đơn hàng cần hủy

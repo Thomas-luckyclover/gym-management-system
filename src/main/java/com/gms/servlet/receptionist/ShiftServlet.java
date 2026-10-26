@@ -18,9 +18,18 @@ import jakarta.servlet.http.HttpSession;
 import java.io.IOException;
 
 /**
- * Controller màn hình Ca làm việc và Đối soát tiền mặt của Lễ tân (Màn #39 - UC-25).
+ * Controller màn hình Ca làm việc và Đối soát tiền mặt của Lễ tân (Màn #39 - UC-25, Business Flow BF-03).
  *
  * <p>Mapping URL: {@code @WebServlet("/receptionist/shift")}</p>
+ *
+ * <p>Triển khai toàn diện theo sơ đồ Business Flow BF-03 trong SRS:</p>
+ * <ul>
+ *   <li><b>Trigger & Main Flow:</b> Lễ tân mở ca trực đúng giờ (openShift: Shift -> Open, UC-25).</li>
+ *   <li><b>Alternative Flow A1:</b> Lễ tân xác nhận đã nhận tiền chuyển khoản ngân hàng (confirmTransfer, CBR-77, CBR-105).</li>
+ *   <li><b>Alternative Flow A2:</b> Chốt ca khi có chênh lệch tiền mặt thực tế vs sổ sách, yêu cầu lý do (closeShift, BR-46, DBR-55).</li>
+ *   <li><b>Exception Flow E1:</b> Chặn chốt ca và cảnh báo khi còn đơn hàng quầy đang Pending (CBR-78, MSG87).</li>
+ *   <li><b>Exception Flow E2:</b> Hủy đơn hàng lập nhầm tại quầy trong ca mở, hoàn tiền mặt và phục hồi quyền lợi (cancelOrder, CBR-11).</li>
+ * </ul>
  *
  * <p>GET: Lấy thông tin ca hiện tại, 4 thẻ KPI, danh sách giao dịch có phân trang và bộ lọc.</p>
  * <p>POST: Xử lý các thao tác mở ca, chốt ca, xác nhận chuyển khoản và hủy đơn quầy theo mô hình PRG (Post/Redirect/Get).</p>
