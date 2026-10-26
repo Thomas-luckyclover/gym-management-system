@@ -162,4 +162,40 @@ public class ShiftTransactionItem {
     public boolean isTransfer() {
         return "Transfer".equalsIgnoreCase(paymentMethod);
     }
+
+    /**
+     * Tên hiển thị tiếng Việt của trạng thái đơn hàng.
+     */
+    public String getStatusDisplayName() {
+        if (isPaid()) return "Đã thanh toán";
+        if (isPending()) return "Chờ xác nhận";
+        if (isCancelled()) return "Đã hủy";
+        return orderStatus != null ? orderStatus : "Chưa rõ";
+    }
+
+    /**
+     * Tên hiển thị tiếng Việt của phương thức thanh toán.
+     */
+    public String getPaymentMethodDisplayName() {
+        if (isCash()) return "Tiền mặt";
+        if (isTransfer()) return "Chuyển khoản";
+        return paymentMethod != null ? paymentMethod : "Khác";
+    }
+
+    /**
+     * Class CSS tương ứng cho badge trạng thái theo Design System GBR-28.
+     */
+    public String getStatusBadgeClass() {
+        if (isPaid()) return "badge-ok";
+        if (isPending()) return "badge-warn";
+        if (isCancelled()) return "badge-danger";
+        return "badge-muted";
+    }
+
+    /**
+     * Kiểm tra đơn có phải bị hủy bởi Lễ tân tại quầy hay không (CBR-11).
+     */
+    public boolean isCancelledByReceptionist() {
+        return "CancelledByReceptionist".equalsIgnoreCase(cancelType);
+    }
 }
