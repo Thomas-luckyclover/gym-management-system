@@ -325,11 +325,20 @@ public class ShiftDAO {
     /**
      * Tính toán 4 chỉ số KPI trong ca: Tiền mặt, Chuyển khoản, Tổng thu và Đơn chờ xử lý (DBR-55).
      *
+     * <p>Quy tắc phái sinh DBR-55 & SRS 7.3.1:</p>
+     * <ul>
+     *   <li><b>ExpectedCash:</b> Tổng tiền các giao dịch tiền mặt thành công (Cash & Success) của các đơn hợp lệ (Paid).</li>
+     *   <li><b>BankTotal:</b> Tổng tiền các giao dịch chuyển khoản thành công (Transfer & Success) của các đơn hợp lệ (Paid).</li>
+     *   <li><b>TotalRevenue:</b> CashTotal + BankTotal. Đơn bị hủy (Cancelled) và chờ xác nhận (Pending) bị loại bỏ khỏi tổng.</li>
+     *   <li><b>PendingCount:</b> Đếm số lượng đơn tại quầy có Status = 'Pending' trong ca (cần giải quyết trước khi chốt ca, CBR-78).</li>
+     * </ul>
+     *
      * @param shiftId mã ca cần tính toán
      * @return đối tượng ShiftMetrics chứa các số liệu
      * @throws SQLException khi truy vấn lỗi
      */
     public ShiftMetrics calculateShiftMetrics(int shiftId) throws SQLException {
+        // DBR-55: Chỉ cộng các giao dịch có trạng thái Success thuộc các đơn hàng Paid trong ca
         String sql = """
                 SELECT 
                     COALESCE(SUM(CASE WHEN t.PaymentMethod = 'Cash' AND t.Status = 'Success' AND o.Status = 'Paid' THEN t.Amount ELSE 0 END), 0) AS CashTotal,
