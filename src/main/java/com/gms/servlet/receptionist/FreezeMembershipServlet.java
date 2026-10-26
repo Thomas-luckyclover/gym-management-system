@@ -29,15 +29,10 @@ import java.time.format.DateTimeParseException;
 import java.util.List;
 
 /**
- * Controller điều phối nghiệp vụ Bảo lưu thẻ hội viên (Màn #34, UC-18, Workflow BF-09).
+ * Servlet màn hình Bảo lưu thẻ hội viên tại quầy Lễ tân (URL /receptionist/freeze).
  *
- * <p>Triển khai theo mô hình MVC:
- * <ul>
- *   <li><b>GET:</b> Tra cứu hội viên (theo mã/SĐT/tên), hiển thị hồ sơ, gói tập, xem trước buổi PT qua AJAX.</li>
- *   <li><b>POST applyFreeze:</b> Tiếp nhận tạo phiếu bảo lưu mới theo mô hình PRG.</li>
- *   <li><b>POST cancelFreezeEarly:</b> Tiếp nhận mở lại thẻ trước hạn (hủy bảo lưu sớm).</li>
- * </ul>
- * </p>
+ * <p>GET: Tra cứu hội viên (mã/tên/SĐT), xem thông tin gói tập và xem danh sách bảo lưu gần đây.</p>
+ * <p>POST: Xác nhận bảo lưu gói tập hoặc mở lại thẻ trước hạn (hủy bảo lưu sớm).</p>
  */
 @WebServlet("/receptionist/freeze")
 public class FreezeMembershipServlet extends HttpServlet {
@@ -61,31 +56,35 @@ public class FreezeMembershipServlet extends HttpServlet {
     protected void doGet(HttpServletRequest request, HttpServletResponse response)
             throws ServletException, IOException {
 
+        // B1: Lấy tài khoản đăng nhập từ session để kiểm tra quyền
         HttpSession session = request.getSession(false);
         if (session == null || session.getAttribute(SessionKey.ACCOUNT_ID) == null) {
             RequestUtil.redirect(request, response, "/login");
             return;
         }
-
         int accountId = (Integer) session.getAttribute(SessionKey.ACCOUNT_ID);
 
-        // 1. Phục vụ AJAX xem trước danh sách buổi PT bị ảnh hưởng
+        // B2: Nếu là yêu cầu AJAX xem trước buổi PT bị ảnh hưởng thì trả JSON về luôn
         String action = RequestUtil.getTrimmedParam(request, "action");
         if (ACTION_PREVIEW_SESSIONS.equalsIgnoreCase(action)) {
             handleAjaxPreviewSessions(request, response);
             return;
         }
 
-        // 2. Tra cứu hội viên theo từ khóa (Mã KH, Số điện thoại hoặc Họ tên)
+        // B3: Lấy từ khóa q người dùng nhập trong ô tìm kiếm
         String query = RequestUtil.getTrimmedParam(request, "q");
-        if (!ValidationUtil.isNullOrEmpty(query)) {
+        int page = PaginationUtil.getPageNumber(request); // Lấy số trang hiện tại phục vụ phân trang
+        int pageSize = 10; // Phân trang 10 khách mỗi trang để vừa vặn giao diện
+
+        if (!ValidationUtil.isNullOrEmpty(query)) { // Nếu từ khóa tìm kiếm không rỗng
+            // Gọi hàm lookupCustomerForFreeze để tra cứu khách hàng và gói tập
             ServiceResult<FreezeCustomerView> lookupResult = freezeService.lookupCustomerForFreeze(query, accountId);
 
-            if (lookupResult.isSuccess()) {
+            if (lookupResult.isSuccess()) { // Nếu tìm thấy chính xác theo mã hoặc SĐT
                 request.setAttribute("freezeCustomer", lookupResult.getData());
             } else {
-                int page = PaginationUtil.getPageNumber(request);
-                PageResult<CustomerSearchItem> searchResultsPage = freezeService.searchCustomersPage(query, page, 10);
+                // Nếu tìm chính xác không ra, tìm theo một phần tên có phân trang
+                PageResult<CustomerSearchItem> searchResultsPage = freezeService.searchCustomersPage(query, page, pageSize);
                 if (!searchResultsPage.isEmpty()) {
                     request.setAttribute("searchResultsPage", searchResultsPage);
                     request.setAttribute("searchResults", searchResultsPage.getItems());
@@ -93,14 +92,15 @@ public class FreezeMembershipServlet extends HttpServlet {
                     request.setAttribute("searchError", lookupResult.getMessage());
                 }
             }
-            request.setAttribute("query", query);
+            request.setAttribute("query", query); // Gửi lại từ khóa ra JSP
         }
 
-        // 3. Tải danh sách các đợt bảo lưu gần đây của phòng tập
-        List<FreezeRecordItemView> recentFreezes = freezeService.getRecentFreezes(20);
+        // B4: Lấy danh sách các đợt bảo lưu gần đây để hiển thị ở cột bên phải
+        List<FreezeRecordItemView> recentFreezes = freezeService.getRecentFreezes(15);
         request.setAttribute("recentFreezes", recentFreezes);
         request.setAttribute("activeNav", "freeze");
 
+        // B5: Chuyển tiếp dữ liệu từ servlet sang jsp để hiển thị giao diện
         RequestUtil.forward(request, response, VIEW_NAME);
     }
 
@@ -108,6 +108,7 @@ public class FreezeMembershipServlet extends HttpServlet {
     protected void doPost(HttpServletRequest request, HttpServletResponse response)
             throws ServletException, IOException {
 
+        // Kiểm tra phiên đăng nhập của nhân viên Lễ tân
         HttpSession session = request.getSession(false);
         if (session == null || session.getAttribute(SessionKey.ACCOUNT_ID) == null) {
             RequestUtil.redirect(request, response, "/login");
@@ -115,24 +116,25 @@ public class FreezeMembershipServlet extends HttpServlet {
         }
 
         int accountId = (Integer) session.getAttribute(SessionKey.ACCOUNT_ID);
-        String action = RequestUtil.getTrimmedParam(request, "action");
+        String action = RequestUtil.getTrimmedParam(request, "action"); // Đọc action để biết người dùng muốn làm gì
 
-        if (ACTION_APPLY_FREEZE.equalsIgnoreCase(action)) {
+        if (ACTION_APPLY_FREEZE.equalsIgnoreCase(action)) { // Nếu là xác nhận bảo lưu
             handleApplyFreeze(request, response, accountId);
             return;
         }
 
-        if (ACTION_CANCEL_FREEZE_EARLY.equalsIgnoreCase(action)) {
+        if (ACTION_CANCEL_FREEZE_EARLY.equalsIgnoreCase(action)) { // Nếu là mở lại thẻ trước hạn
             handleCancelFreezeEarly(request, response, accountId);
             return;
         }
 
+        // Trường hợp action không hợp lệ
         RequestUtil.setFlashToast(request, "error", Messages.MSG04_SYSTEM_BUSY);
         RequestUtil.redirect(request, response, "/receptionist/freeze");
     }
 
     /**
-     * Xử lý POST tạo mới phiếu bảo lưu thẻ tập.
+     * Xử lý xác nhận bảo lưu gói tập.
      */
     private void handleApplyFreeze(HttpServletRequest request, HttpServletResponse response, int accountId)
             throws IOException {
@@ -169,13 +171,14 @@ public class FreezeMembershipServlet extends HttpServlet {
             return;
         }
 
+        // Thực hiện bảo lưu thông qua service
         ServiceResult<Void> result = freezeService.applyFreeze(accountId, subscriptionId, startDate, plannedEndDate, reason);
         RequestUtil.setFlashToast(request, result.isSuccess() ? "success" : "error", result.getMessage());
         RequestUtil.redirect(request, response, redirectUrl);
     }
 
     /**
-     * Xử lý POST mở lại thẻ trước hạn (hủy bảo lưu sớm tại quầy).
+     * Xử lý mở lại thẻ tập trước hạn (hủy bảo lưu sớm tại quầy).
      */
     private void handleCancelFreezeEarly(HttpServletRequest request, HttpServletResponse response, int accountId)
             throws IOException {
@@ -187,18 +190,19 @@ public class FreezeMembershipServlet extends HttpServlet {
                 ? "?q=" + URLEncoder.encode(q, StandardCharsets.UTF_8) : "");
 
         if (freezeRecordId <= 0) {
-            RequestUtil.setFlashToast(request, "error", "Mã phiếu bảo lưu không hợp lệ.");
+            RequestUtil.setFlashToast(request, "error", "Mã đợt bảo lưu không hợp lệ.");
             RequestUtil.redirect(request, response, redirectUrl);
             return;
         }
 
+        // Thực hiện mở lại thẻ trước hạn thông qua service
         ServiceResult<Void> result = freezeService.cancelFreezeEarly(accountId, freezeRecordId);
         RequestUtil.setFlashToast(request, result.isSuccess() ? "success" : "error", result.getMessage());
         RequestUtil.redirect(request, response, redirectUrl);
     }
 
     /**
-     * AJAX xem trước danh sách buổi PT bị ảnh hưởng (dùng JsonUtil chuẩn hóa).
+     * AJAX xem trước danh sách buổi PT bị ảnh hưởng (dùng JsonUtil).
      */
     private void handleAjaxPreviewSessions(HttpServletRequest request, HttpServletResponse response)
             throws IOException {
