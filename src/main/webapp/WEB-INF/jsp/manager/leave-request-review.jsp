@@ -32,13 +32,7 @@
         <div class="top-right">
           <%@ include file="/WEB-INF/jsp/common/notification-bell.jspf" %>
 
-          <a class="tb-user" href="${pageContext.request.contextPath}/account">
-            <span class="avatar">QL</span>
-            <span>
-              <b><c:out value="${sessionScope.displayName}" default="Quản lý" /></b>
-              <small>Quản lý</small>
-            </span>
-          </a>
+          <%@ include file="/WEB-INF/jsp/common/topbar-user.jspf" %>
         </div>
       </header>
 
