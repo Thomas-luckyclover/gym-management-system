@@ -45,7 +45,7 @@
                         </c:choose>
                         <span class="tb-user-text">
                             <b><c:out value="${dashboard.fullName}" /></b>
-                            <span><c:out value="${dashboard.customerCode}" /></span>
+                            <%@ include file="/WEB-INF/jsp/common/_user-badge-line.jspf" %>
                         </span>
                     </a>
                 </div>

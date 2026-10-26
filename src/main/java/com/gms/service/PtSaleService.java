@@ -372,7 +372,23 @@ public class PtSaleService {
         LocalDate today = now.toLocalDate();
         int minAge = configService.getInt(SystemConfigService.MIN_AGE_FOR_PT);
 
-        // Bước 1: người đứng tên (chưa chọn mà có chữ tìm → danh sách kết quả cho trường hợp tắt JS).
+        // Lễ tân TƯ VẤN TRƯỚC: gói, PT, ngày bắt đầu, lịch tập chọn được khi chưa biết khách (cô góp ý 26/10).
+        // Khách (+ người tập cùng của gói đôi) chọn lúc nào cũng được ở cột "Đơn bán"; có khách thì lịch
+        // tính thêm giờ trùng buổi khác của khách. Giữ lịch bắt buộc đủ cả hai (firstProblem).
+        loadHolder(connection, view, today, minAge, receptionistPersonId);
+        boolean packageOk = loadPackage(connection, view);
+        if (packageOk && view.isCouple()) {
+            loadPartner(connection, view, today, minAge, receptionistPersonId);
+        }
+        if (!packageOk || !loadPt(connection, view)) {
+            return;
+        }
+        loadPlan(connection, view, input, now, lock);
+    }
+
+    /** Người đứng tên: đã chọn (?customer=) → hồ sơ + lý do không bán được; chưa chọn mà có chữ tìm (tắt JS) → danh sách. */
+    private void loadHolder(Connection connection, PtSaleView view, LocalDate today, int minAge, int receptionistPersonId)
+            throws SQLException {
         if (view.getCustomerId() == null) {
             if (view.getSearchQuery() != null) {
                 String digits = view.getSearchQuery().replaceAll("\\D", "");
@@ -393,23 +409,6 @@ public class PtSaleService {
         }
         holder.setBlockReason(whyCannotBuy(holder, today, minAge, receptionistPersonId));
         view.setHolder(holder);
-        if (holder.getBlockReason() != null) {
-            return;
-        }
-
-        // Bước 2: gói (+ người tập cùng nếu gói đôi), PT, ngày bắt đầu.
-        if (!loadPackage(connection, view)) {
-            return;
-        }
-        if (view.isCouple() && !loadPartner(connection, view, today, minAge, receptionistPersonId)) {
-            return;
-        }
-        if (!loadPt(connection, view)) {
-            return;
-        }
-
-        // Bước 3: bảng tuần + lịch từng ngày.
-        loadPlan(connection, view, input, now, lock);
     }
 
     private boolean loadPackage(Connection connection, PtSaleView view) throws SQLException {
@@ -442,7 +441,9 @@ public class PtSaleService {
             return false;
         }
         PtSaleCustomer partner = saleDAO.findCustomer(connection, view.getPartnerId(), today);
-        if (partner == null || partner.getCustomerId() == view.getHolder().getCustomerId()) {
+        boolean sameAsHolder = partner != null && view.getHolder() != null
+                && partner.getCustomerId() == view.getHolder().getCustomerId();
+        if (partner == null || sameAsHolder) {
             view.setPartnerError("Người tập cùng phải là một khách khác.");
             return false;
         }
@@ -488,10 +489,14 @@ public class PtSaleService {
         int minutes = configService.getInt(SystemConfigService.SESSION_DURATION_MINUTES);
         LocalDate start = view.getStartDate();
         LocalDate end = view.getEndDate();
-        int partnerId = view.getPartner() == null ? view.getHolder().getCustomerId() : view.getPartner().getCustomerId();
-
         List<PtScheduleItem> slots = saleDAO.findPtSlots(connection, view.getPtId(), start, end, lock);
-        List<TimeRange> busy = saleDAO.findCustomerBusy(connection, view.getHolder().getCustomerId(), partnerId, start, end);
+        // Giờ bận của khách chỉ tính khi đã chọn khách (tư vấn trước → chưa có khách → chỉ xét lịch PT).
+        List<TimeRange> busy = new ArrayList<>();
+        PtSaleCustomer holder = view.getHolder();
+        if (holder != null) {
+            int partnerId = view.getPartner() == null ? holder.getCustomerId() : view.getPartner().getCustomerId();
+            busy = saleDAO.findCustomerBusy(connection, holder.getCustomerId(), partnerId, start, end);
+        }
         List<LeaveInfo> leaves = scheduleDAO.findLeaves(connection, view.getPtId(), start, end);
         List<HourException> exceptions = scheduleDAO.findHourExceptions(connection, start, end);
         List<LocalTime> candidates = candidateTimes(slots, start, minutes, now);

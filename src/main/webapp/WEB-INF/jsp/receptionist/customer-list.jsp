@@ -31,10 +31,10 @@
           <%@ include file="/WEB-INF/jsp/common/notification-bell.jspf" %>
 
           <a class="tb-user" href="${pageContext.request.contextPath}/account">
-            <span class="avatar">LT</span>
+            <span class="avatar"><c:out value="${sessionScope.userInitials}" /></span>
             <span>
               <b><c:out value="${sessionScope.displayName}" default="Lễ tân" /></b>
-              <small>Lễ tân</small>
+              <%@ include file="/WEB-INF/jsp/common/_user-badge-line.jspf" %>
             </span>
           </a>
         </div>

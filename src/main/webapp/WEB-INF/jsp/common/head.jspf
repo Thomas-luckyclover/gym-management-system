@@ -35,10 +35,10 @@
 <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/7.3.1/css/all.min.css">
 
 <link rel="stylesheet" href="${pageContext.request.contextPath}/css/tokens.css?v=20261025city">
-<link rel="stylesheet" href="${pageContext.request.contextPath}/css/common.css?v=20261025city">
+<link rel="stylesheet" href="${pageContext.request.contextPath}/css/common.css?v=20261026badge2">
 <link rel="stylesheet" href="${pageContext.request.contextPath}/css/brand-system.css?v=20261025city">
 <script src="${pageContext.request.contextPath}/js/common.js?v=20261025city" defer></script>
-<script src="${pageContext.request.contextPath}/js/icons.js?v=2" defer></script>
+<script src="${pageContext.request.contextPath}/js/icons.js?v=3" defer></script>
 <%-- Nạp nền cho cả URL Servlet lẫn đường dẫn JSP sau khi forward, không tác động role khác. --%>
 <c:if test="${pageContext.request.requestURI.contains('/customer/') or pageContext.request.requestURI.contains('/pt/')}">
     <link rel="stylesheet" href="${pageContext.request.contextPath}/css/pt-customer-zone.css?v=20261014p">

@@ -43,9 +43,7 @@
         <a class="tb-user"
            href="${pageContext.request.contextPath}/account">
 
-          <span class="avatar">
-            LT
-          </span>
+          <span class="avatar"><c:out value="${sessionScope.userInitials}" /></span>
 
           <span>
             <b>
@@ -54,7 +52,7 @@
                       default="Lễ tân" />
             </b>
 
-            <small>Lễ tân</small>
+            <%@ include file="/WEB-INF/jsp/common/_user-badge-line.jspf" %>
           </span>
 
         </a>

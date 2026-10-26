@@ -2485,11 +2485,48 @@ body.dock.nav-open { overflow: hidden; }
   backdrop-filter: blur(var(--space-1));
   cursor: pointer;
 }
+/* Dòng phụ thẻ tài khoản (common/_user-badge-line.jspf, mọi màn mọi vai trò): chip mã theo vai trò + chữ vai trò.
+   VD "LT-0003 · Lễ tân". Selector có .tb-user-meta để thắng 2 kiểu chip cũ (.tb-user small, .tb-user-text span). */
+.dock .tb-user .tb-user-meta {
+  display: inline-flex;
+  align-items: baseline;
+  gap: var(--space-1);
+  width: auto;
+  margin-top: var(--space-0-5);
+  padding: 0;
+  background: transparent;
+  color: var(--color-text-muted);
+  font-family: var(--font-body);
+  font-size: var(--font-size-xs);
+  font-weight: var(--font-weight-regular);
+  letter-spacing: 0;
+  text-transform: none;
+  white-space: nowrap;
+}
+.dock .tb-user .tb-user-code {
+  padding: 1px var(--space-1-5);
+  border-radius: var(--radius-sm);
+  background: var(--color-primary-tint);
+  color: var(--color-accent-ink);
+  font-family: var(--font-brand-mono);
+  font-size: var(--font-size-xs);
+  font-weight: var(--font-weight-semibold);
+  font-variant-numeric: tabular-nums;
+  letter-spacing: 0.02em;
+}
+.dock .tb-user .tb-user-dot {
+  display: inline;
+  margin: 0;
+  padding: 0;
+  background: none;
+  color: inherit;
+}
 @media (max-width: 767px) {
   .dock .content { padding: var(--space-5) var(--space-4) var(--space-10); }
   .dock .topbar { gap: var(--space-2); padding-right: var(--space-4); }
   .dock .tb-user b,
   .dock .tb-user small,
+  .dock .tb-user .tb-user-meta,
   .dock .tb-user-text { display: none; }
   .dock .gms-form { grid-template-columns: minmax(0, 1fr); }
   .dock .gms-form-actions { flex-wrap: wrap; }

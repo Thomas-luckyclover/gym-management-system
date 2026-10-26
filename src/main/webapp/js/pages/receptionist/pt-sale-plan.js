@@ -459,7 +459,7 @@ function initPlan(root, data) {
 
         const head = el("div", "plan-editor-head");
         const title = el("p", "plan-editor-title");
-        title.append(el("strong", "", day.label), el("span", "", " · chỉ sửa ngày này, các tuần khác giữ lịch mẫu"));
+        title.append(el("strong", "", "Sửa riêng " + day.label));
         const close = el("button", "plan-nav");
         close.type = "button";
         close.dataset.closeEditor = "";
@@ -520,13 +520,26 @@ function initPlan(root, data) {
             form.querySelector("[data-plan-t='" + weekday + "']").value = pattern[weekday - 1];
         }
         form.querySelector("[data-plan-sessions]").value = result.picked.join(",");
-        form.querySelector("[data-plan-submit]").disabled = result.sessions === 0;
+        // Giữ lịch cần đủ 2 thứ: ít nhất 1 buổi + khách (server ghi data-customer-ready khi khách mua được).
+        const customerReady = form.dataset.customerReady === "true";
+        form.querySelector("[data-plan-submit]").disabled = result.sessions === 0 || !customerReady;
+        const stepPlan = document.querySelector("[data-step-plan]");
+        if (stepPlan) {
+            stepPlan.classList.toggle("is-done", result.sessions > 0);
+            stepPlan.classList.toggle("is-current", result.sessions === 0);
+        }
         const note = document.querySelector("[data-plan-note]");
         if (note) {
-            note.textContent = result.sessions === 0
-                    ? "Chọn ít nhất 1 buổi ở Lịch tập bên trái."
-                    : "Giữ trước khi thu tiền: " + result.sessions + " khung chuyển \"Đang giữ\", lễ tân khác và PT không lấy được."
+            let text;
+            if (result.sessions === 0) {
+                text = "Chọn ít nhất 1 buổi ở Lịch tập bên trái.";
+            } else if (!customerReady) {
+                text = "Lịch đã sẵn sàng. Chọn khách ở trên để giữ lịch.";
+            } else {
+                text = "Giữ trước khi thu tiền: " + result.sessions + " khung chuyển \"Đang giữ\", lễ tân khác và PT không lấy được."
                         + (result.bad > 0 ? " " + result.bad + " ngày chưa xếp được sẽ không có buổi." : "");
+            }
+            note.textContent = text;
         }
         syncUrl();
     }

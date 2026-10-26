@@ -41,15 +41,10 @@
           <%@ include file="/WEB-INF/jsp/common/notification-bell.jspf" %>
 
           <a class="tb-user" href="${pageContext.request.contextPath}/account">
-            <span class="avatar">${isReceptionist ? 'LT' : 'PT'}</span>
+            <span class="avatar"><c:out value="${sessionScope.userInitials}" /></span>
             <span>
               <b><c:out value="${not empty formView.fullName ? formView.fullName : sessionScope.displayName}" default="Nhân viên" /></b>
-              <small>
-                ${isReceptionist ? 'Lễ tân' : 'Huấn luyện viên'}
-                <c:if test="${not empty formView.employeeCode}">
-                  · <c:out value="${formView.employeeCode}" />
-                </c:if>
-              </small>
+              <%@ include file="/WEB-INF/jsp/common/_user-badge-line.jspf" %>
             </span>
           </a>
         </div>

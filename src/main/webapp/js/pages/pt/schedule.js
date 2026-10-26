@@ -9,6 +9,7 @@
  *   3. Lưu tạm nháp + lựa chọn gỡ vào trình duyệt, để F5 / đổi kiểu xem không mất.
  *   4. Gửi Công bố (AJAX) rồi tải lại trang.
  *   5. Hộp "Xử lý buổi": mở dạng modal; Esc / Đóng thì bỏ ?handle khỏi URL (không tải lại trang).
+ *   6. Thao tác nhanh (26/10): Gỡ hết khung trống · Chép sang tuần sau (thành nháp) · chọn ngày để nhảy tới tuần đó.
  *
  * NHỮNG VIỆC CSS ĐÃ LÀM (không có trong file này):
  *   - Gỡ khung: thẻ khung trống chứa ô checkbox; tích ô thì CSS tự đổi kiểu thẻ "Chờ gỡ".
@@ -25,6 +26,7 @@
  *   NHÓM 6. Công bố                     publishPtChanges
  *   NHÓM 7. Hàm phụ dùng chung          ptMinuteAtPointer, ptClock, ptMinutes, showPtStatus
  *   NHÓM 8. Hộp Xử lý buổi              initPtHandleDialog
+ *   NHÓM 9. Thao tác nhanh              initPtTools, removeAllPtFree, copyPtWeekToNext, showPtCopyNotice
  */
 
 // ===== Đọc một lần từ JSP =====
@@ -35,6 +37,7 @@ const ptDuration = Number(ptPlan.dataset.duration);              // P-06, ví d�
 const ptAxisStart = Number(ptPlan.dataset.axisStart);            // phút đầu trục, ví dụ 300 = 05:00
 const ptAxisEnd = Number(ptPlan.dataset.axisEnd);                // phút cuối trục, ví dụ 1320 = 22:00
 const ptStorageKey = "gms.pt-plan." + ptPlan.dataset.draftKey;   // khóa lưu tạm: theo tài khoản + tuần
+const ptCopyNoticeKey = "gms.pt-plan.copied";                    // ghi chú "vừa chép sang" để tuần sau báo kết quả
 
 
 // ================================================================================================================
@@ -67,6 +70,10 @@ function initPtSchedule() {
 
     // B5: URL có ?handle= → JSP đã in sẵn hộp Xử lý buổi; JS chỉ đổi sang dạng modal.
     initPtHandleDialog();
+
+    // B6: thao tác nhanh + báo kết quả nếu vừa chép từ tuần trước sang.
+    initPtTools();
+    showPtCopyNotice();
 }
 
 
@@ -450,6 +457,137 @@ function initPtHandleDialog() {
     dialog.addEventListener("close", function () {
         history.replaceState(null, "", dialog.dataset.closeUrl);
     });
+}
+
+
+
+// ================================================================================================================
+// NHÓM 9. THAO TÁC NHANH — chỉ tạo NHÁP; DB chỉ đổi khi PT bấm Công bố (server kiểm tra lại toàn bộ)
+// ================================================================================================================
+
+/** HÀM PHỤ — gọi ở B6 của initPtSchedule. Gắn 2 nút thao tác nhanh + ô chọn ngày. */
+function initPtTools() {
+    const clearButton = ptPlan.querySelector('[data-plan-action="clear-free"]');
+    if (clearButton) {
+        clearButton.addEventListener("click", removeAllPtFree);
+    }
+    const copyButton = ptPlan.querySelector('[data-plan-action="copy-next"]');
+    if (copyButton) {
+        copyButton.addEventListener("click", copyPtWeekToNext);
+    }
+
+    // Chọn ngày → mở tuần chứa ngày đó (form GET ?date=…&view=…). Ngày gõ dở / sai thì chưa gửi.
+    const jumpInput = ptPlan.querySelector("[data-jump-date]");
+    if (jumpInput) {
+        jumpInput.addEventListener("change", function () {
+            if (jumpInput.value && jumpInput.checkValidity()) {
+                jumpInput.form.requestSubmit();
+            }
+        });
+    }
+}
+
+/**
+ * HÀM CHÍNH — trình duyệt gọi khi bấm "Gỡ hết khung trống".
+ * Tích MỌI ô gỡ của tuần (JSP chỉ in ô gỡ cho khung Còn trống, chưa có khách, không bị đơn giữ, chưa qua)
+ * và bỏ mọi khung nháp → thanh Chờ công bố hiện "N khung gỡ". Hoàn tác: "Bỏ tất cả" hoặc bấm từng thẻ.
+ */
+function removeAllPtFree() {
+    let count = 0;
+    for (const box of ptPlan.querySelectorAll(".pt-remove:not(:checked)")) {
+        box.checked = true;
+        count++;
+    }
+    for (const draft of ptPlan.querySelectorAll(".pt-draft")) {
+        draft.remove();
+    }
+    savePtChanges();
+    if (count === 0) {
+        showPtStatus("Không còn khung trống nào để gỡ trong tuần này.", true);
+        return;
+    }
+    showPtStatus("Đã đánh dấu " + count + " khung trống chờ gỡ. Bấm Công bố để gỡ thật, hoặc Bỏ tất cả để thôi.");
+    showToast("success", "Đã đánh dấu " + count + " khung trống chờ gỡ. Kiểm tra rồi bấm Công bố.");
+}
+
+/**
+ * HÀM CHÍNH — trình duyệt gọi khi bấm "Chép sang tuần sau".
+ * Mọi khung đang chiếm giờ của tuần này (còn trống, có khách, đang giữ, tạm khóa, nháp — trừ khung Chờ gỡ)
+ * → nháp CÙNG THỨ, CÙNG GIỜ của tuần sau, ghi vào chỗ lưu tạm của tuần sau rồi mở tuần sau.
+ * Tuần sau khôi phục nháp bằng addPtDraft nên khung trùng / ngày không thêm được tự bị bỏ (showPtCopyNotice báo).
+ * Ví dụ: Thứ 3 27/10 07:00 có khách → nháp Thứ 3 03/11 07:00.
+ */
+function copyPtWeekToNext() {
+    // B1: gom khung của tuần này (bỏ khung đang Chờ gỡ), dời +7 ngày.
+    const copies = [];
+    for (const track of ptPlan.querySelectorAll(".pt-day-track")) {
+        for (const card of track.querySelectorAll(".pt-slot[data-start]")) {
+            if (card.querySelector(".pt-remove:checked")) {
+                continue;
+            }
+            copies.push({ date: ptAddDays(track.dataset.date, 7), start: ptClock(Number(card.dataset.start)) });
+        }
+    }
+    if (copies.length === 0) {
+        showPtStatus("Tuần này chưa có khung nào để chép.", true);
+        return;
+    }
+
+    // B2: gộp vào nháp sẵn có của tuần sau (không trùng ngày + giờ).
+    const nextKey = "gms.pt-plan." + ptPlan.dataset.nextKey;
+    let saved;
+    try {
+        saved = JSON.parse(sessionStorage.getItem(nextKey) || "{}");
+    } catch (error) {
+        saved = {};
+    }
+    const drafts = saved.drafts || [];
+    const before = drafts.length;
+    for (const copy of copies) {
+        const exists = drafts.some(function (draft) { return draft.date === copy.date && draft.start === copy.start; });
+        if (!exists) {
+            drafts.push(copy);
+        }
+    }
+
+    // B3: lưu cho tuần sau + ghi chú để tuần sau báo kết quả, rồi mở tuần sau.
+    try {
+        sessionStorage.setItem(nextKey, JSON.stringify({ drafts: drafts, removals: saved.removals || [] }));
+        sessionStorage.setItem(ptCopyNoticeKey, JSON.stringify({ key: ptPlan.dataset.nextKey, before: before, added: drafts.length - before }));
+    } catch (error) {
+        showPtStatus("Trình duyệt không cho lưu tạm nên chưa chép được.", true);
+        return;
+    }
+    location.href = ptPlan.dataset.nextUrl;
+}
+
+/** HÀM PHỤ — gọi ở B6 của initPtSchedule. Vừa chép từ tuần trước sang → báo chép được bao nhiêu, bỏ qua bao nhiêu. */
+function showPtCopyNotice() {
+    let notice;
+    try {
+        notice = JSON.parse(sessionStorage.getItem(ptCopyNoticeKey) || "null");
+        sessionStorage.removeItem(ptCopyNoticeKey);
+    } catch (error) {
+        return;
+    }
+    if (!notice || notice.key !== ptPlan.dataset.draftKey) {
+        return;
+    }
+    const added = Math.max(0, ptPlan.querySelectorAll(".pt-draft").length - notice.before);
+    const skipped = Math.max(0, notice.added - added);
+    let text = "Đã chép " + added + " khung từ tuần trước sang tuần này (nháp). Kiểm tra rồi bấm Công bố.";
+    if (skipped > 0) {
+        text += " " + skipped + " khung bỏ qua vì đã có khung trùng giờ hoặc ngày đó không thêm được.";
+    }
+    showPtStatus(text);
+    showToast(added > 0 ? "success" : "warning", text);
+}
+
+/** HÀM PHỤ — "2026-10-27" + n ngày → "2026-11-03" (tính theo UTC để không lệch múi giờ). */
+function ptAddDays(isoDate, count) {
+    const date = new Date(isoDate + "T00:00:00Z");
+    date.setUTCDate(date.getUTCDate() + count);
+    return date.toISOString().slice(0, 10);
 }
 
 document.addEventListener("DOMContentLoaded", initPtSchedule);

@@ -41,9 +41,7 @@
           <a class="tb-user"
              href="${pageContext.request.contextPath}/account">
 
-            <span class="avatar">
-              QL
-            </span>
+            <span class="avatar"><c:out value="${sessionScope.userInitials}" /></span>
 
             <span>
 
@@ -53,7 +51,7 @@
                         default="Quản lý" />
               </b>
 
-              <small>Quản lý</small>
+              <%@ include file="/WEB-INF/jsp/common/_user-badge-line.jspf" %>
 
             </span>
 

@@ -56,7 +56,7 @@
                             <c:otherwise>
 
                                 <span class="avatar">
-                                    <c:out value="${accountSettings.fullName.substring(0, 1)}" />
+                                    <c:out value="${sessionScope.userInitials}" />
                                 </span>
 
                             </c:otherwise>
@@ -70,9 +70,7 @@
                                 <c:out value="${accountSettings.fullName}" />
                             </b>
 
-                            <small>
-                                <c:out value="${currentRole.displayName}" />
-                            </small>
+                            <%@ include file="/WEB-INF/jsp/common/_user-badge-line.jspf" %>
 
                         </span>
 
