@@ -85,6 +85,9 @@ public class PaymentCallbackService {
      * @return mã để Servlet trả JSON cho VNPay
      */
     public IpnResult handleIpn(Map<String, String> params) {
+        String ref = params == null ? null : params.get("vnp_TxnRef");
+        System.out.println("[IPN] nhận txnRef=" + shorten(ref));
+
         try {
             if (params == null || !vnPayClient.verifySignature(params)) {
                 return reply("97", "Invalid signature");
@@ -109,6 +112,18 @@ public class PaymentCallbackService {
 
             return reply("99", "Processing error");
         }
+    }
+
+    /**
+     * Rút gọn mã giao dịch để ghi log, không lộ đầy đủ.
+     */
+    private String shorten(String ref) {
+        if (ref == null) {
+            return "null";
+        }
+        return ref.length() <= 8
+                ? ref
+                : ref.substring(0, 4) + "..." + ref.substring(ref.length() - 4);
     }
 
     /**
