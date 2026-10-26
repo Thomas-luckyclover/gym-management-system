@@ -347,17 +347,121 @@ class ShiftServiceTest {
         assertEquals(Messages.MSG07_NO_PERMISSION, resInvalid.getMessage());
     }
 
+    @Test
+    @DisplayName("BF-03 Main Flow: Chốt ca thành công khi tiền mặt thực tế khớp 100% với sổ sách (discrepancy = 0)")
+    void testCloseShift_SuccessWhenDiscrepancyZero() {
+        Shift shift = new Shift(3, LocalDate.now(), Shift.ShiftType.MORNING,
+                30, null, Shift.Status.OPEN, LocalDateTime.now(), null, null, null, null);
+        fakeShiftDAO.setShift(shift);
+        fakeShiftDAO.clearPendingOrders();
+        fakeShiftDAO.setMetrics(new ShiftMetrics(2500000, 3, 1000000, 2, 3500000, 5, 0));
+
+        // Nhập tiền thực tế đúng 2.500.000, không cần lý do
+        ServiceResult<Void> result = shiftService.closeShift(10, 3, 2500000, null);
+
+        assertTrue(result.isSuccess(), "Chốt ca khớp tiền phải thành công");
+        assertEquals(Shift.Status.CLOSED, shift.getStatus());
+        assertEquals(2500000L, shift.getExpectedCash());
+        assertEquals(2500000L, shift.getCountedCash());
+        assertNull(shift.getVarianceReason());
+    }
+
+    @Test
+    @DisplayName("BF-03 A2 Flow: Chốt ca thành công khi có chênh lệch tiền nhưng có lý do hợp lệ >= 5 ký tự (BR-46)")
+    void testCloseShift_SuccessWhenVarianceReasonValid() {
+        Shift shift = new Shift(4, LocalDate.now(), Shift.ShiftType.MORNING,
+                30, null, Shift.Status.OPEN, LocalDateTime.now(), null, null, null, null);
+        fakeShiftDAO.setShift(shift);
+        fakeShiftDAO.clearPendingOrders();
+        fakeShiftDAO.setMetrics(new ShiftMetrics(1500000, 2, 500000, 1, 2000000, 3, 0));
+
+        // Nhập tiền đếm được 1.450.000 (thiếu 50.000) và lý do >= 5 ký tự
+        ServiceResult<Void> result = shiftService.closeShift(10, 4, 1450000, "Khách thanh toán thiếu tiền lẻ đã ghi nợ");
+
+        assertTrue(result.isSuccess(), "Chốt ca lệch tiền có lý do hợp lệ phải thành công");
+        assertEquals(Shift.Status.CLOSED, shift.getStatus());
+        assertEquals(1500000L, shift.getExpectedCash());
+        assertEquals(1450000L, shift.getCountedCash());
+        assertNotNull(shift.getVarianceReason());
+        assertTrue(shift.getVarianceReason().contains("thiếu tiền lẻ"));
+    }
+
+    @Test
+    @DisplayName("BR-46: Chốt ca thất bại khi số tiền đếm được là số âm")
+    void testCloseShift_BlockedWhenNegativeCountedCash() {
+        Shift shift = new Shift(5, LocalDate.now(), Shift.ShiftType.MORNING,
+                30, null, Shift.Status.OPEN, LocalDateTime.now(), null, null, null, null);
+        fakeShiftDAO.setShift(shift);
+
+        ServiceResult<Void> result = shiftService.closeShift(10, 5, -50000, null);
+
+        assertFalse(result.isSuccess(), "Tiền đếm được là số âm phải bị từ chối");
+        assertEquals(Messages.MSG17_POSITIVE_NUMBER, result.getMessage());
+    }
+
+    @Test
+    @DisplayName("BF-03 A1 Flow & CBR-77: Xác nhận chuyển khoản ngân hàng thành công trong ca đang mở")
+    void testConfirmBankTransfer_Success() {
+        Shift shift = new Shift(6, LocalDate.now(), Shift.ShiftType.MORNING,
+                30, null, Shift.Status.OPEN, LocalDateTime.now(), null, null, null, null);
+        ((TestableShiftService) shiftService).setOrderShift(shift);
+
+        ServiceResult<Void> result = shiftService.confirmBankTransfer(10, 201);
+
+        assertTrue(result.isSuccess(), "Xác nhận chuyển khoản cho đơn trong ca mở phải thành công");
+    }
+
+    @Test
+    @DisplayName("CBR-77: Chặn xác nhận chuyển khoản khi ca đã chốt hoặc không ở trạng thái Open")
+    void testConfirmBankTransfer_BlockedWhenShiftNotOpen() {
+        Shift closedShift = new Shift(7, LocalDate.now(), Shift.ShiftType.MORNING,
+                30, 30, Shift.Status.CLOSED, LocalDateTime.now().minusHours(4), LocalDateTime.now(), 1000000L, 1000000L, null);
+        ((TestableShiftService) shiftService).setOrderShift(closedShift);
+
+        ServiceResult<Void> result = shiftService.confirmBankTransfer(10, 202);
+
+        assertFalse(result.isSuccess(), "Không thể xác nhận chuyển khoản cho ca đã chốt");
+        assertTrue(result.getMessage().contains("đang mở"));
+    }
+
+    @Test
+    @DisplayName("CBR-115: Chặn Lễ tân tự hủy đơn hàng thuộc hồ sơ khách của chính mình")
+    void testCancelOrder_BlockedForStaffOwnProfile() {
+        ((TestableShiftService) shiftService).setOwnCustomerProfile(true);
+
+        ServiceResult<Void> result = shiftService.cancelOrder(10, 301, "Khách hàng muốn hủy đơn quầy");
+
+        assertFalse(result.isSuccess(), "Không được phép tự hủy đơn của chính mình");
+        assertEquals(Messages.MSG76_STAFF_OWN_CUSTOMER_PROFILE, result.getMessage());
+    }
+
     // ===== Lớp Testable & Fake DAOs hỗ trợ Unit Test =====
 
     static class TestableShiftService extends ShiftService {
+        private Shift orderShift;
+        private boolean isOwnCustomerProfile = false;
+
         TestableShiftService(ShiftDAO shiftDAO, AccountDAO accountDAO, EmployeeDAO employeeDAO,
                              SelfServiceGuard selfServiceGuard, AuditLogService auditLogService) {
             super(shiftDAO, accountDAO, employeeDAO, selfServiceGuard, auditLogService);
         }
 
+        void setOrderShift(Shift s) { this.orderShift = s; }
+        void setOwnCustomerProfile(boolean own) { this.isOwnCustomerProfile = own; }
+
         @Override
         protected Connection getConnection() throws SQLException {
             return null; // Không cần kết nối SQL thật trong unit test
+        }
+
+        @Override
+        protected Shift getShiftOfOrder(int orderId) {
+            return orderShift != null ? orderShift : super.getShiftOfOrder(orderId);
+        }
+
+        @Override
+        protected boolean isOrderOfStaff(int staffAccountId, int orderId) {
+            return isOwnCustomerProfile;
         }
     }
 
@@ -498,6 +602,16 @@ class ShiftServiceTest {
                 currentShift.setCountedCash(countedCash);
                 currentShift.setVarianceReason(varianceReason);
             }
+            return 1;
+        }
+
+        @Override
+        public int confirmBankTransfer(Connection conn, int orderId, int employeeId, LocalDateTime completedAt) {
+            return 1;
+        }
+
+        @Override
+        public int cancelCounterOrder(Connection conn, int orderId, String reason, LocalDateTime now) {
             return 1;
         }
     }

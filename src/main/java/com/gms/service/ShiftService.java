@@ -658,7 +658,7 @@ public class ShiftService {
     /**
      * Kiểm tra xem đơn hàng có thuộc hồ sơ khách của chính tài khoản nhân viên đang đăng nhập không (CBR-115).
      */
-    private boolean isOrderOfStaff(int staffAccountId, int orderId) {
+    protected boolean isOrderOfStaff(int staffAccountId, int orderId) {
         String sql = "SELECT HolderCustomerId FROM Orders WHERE OrderId = ?";
         try (Connection conn = DBContext.getConnection();
              PreparedStatement stmt = conn.prepareStatement(sql)) {
@@ -678,7 +678,7 @@ public class ShiftService {
     /**
      * Lấy thông tin ca làm việc gắn với đơn hàng.
      */
-    private Shift getShiftOfOrder(int orderId) {
+    protected Shift getShiftOfOrder(int orderId) {
         String sql = "SELECT ShiftId FROM Orders WHERE OrderId = ? AND Channel = 'Counter'";
         try (Connection conn = DBContext.getConnection();
              PreparedStatement stmt = conn.prepareStatement(sql)) {
