@@ -55,10 +55,10 @@
                           <div class="panel-head">
                             <div>
                               <h2>Tìm khách</h2>
-                              <p>Nhập mã khách, số điện thoại hoặc tên (một phần tên hoặc 4 số cuối SĐT đều được). Khách không cần thẻ,
-                                không cần đăng nhập.</p>
+                              <p>Nhập mã khách, số điện thoại hoặc tên để tìm hồ sơ. Hệ thống hỗ trợ tìm theo một phần tên hoặc 4 số cuối SĐT.</p>
                             </div>
                           </div>
+
                           <%-- Form tìm kiếm hội viên theo mã khách, số điện thoại hoặc họ tên --%>
                             <form id="ciForm" action="${pageContext.request.contextPath}/receptionist/check-in"
                               method="GET" class="toolbar" novalidate>
