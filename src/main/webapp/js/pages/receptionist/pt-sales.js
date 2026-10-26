@@ -6,8 +6,10 @@
  * JS LÀM 2 VIỆC (bước 3 "Lịch tập" ở file riêng pt-sale-plan.js), mọi luật vẫn ở PtSaleService:
  *   1. Ô tìm khách kiểu Google (data-combobox): gõ ≥ 2 ký tự → chờ 200ms → getJson("/receptionist/pt-sales/customers", {q})
  *      → hiện tối đa 8 gợi ý (tên, mã, SĐT, gói thành viên). ↑ ↓ chọn, Enter mở, Esc đóng.
- *        data-combobox="customer"  chọn → mở ?customer=12
- *        data-combobox="partner"   chọn → ghi mã vào ô ẩn partner rồi gửi form các bước
+ *        data-combobox="customer"  chọn → mở lại trang với customer=12
+ *        data-combobox="partner"   chọn → mở lại trang với partner=15 (gói đôi)
+ *      Cả hai GIỮ NGUYÊN gói, PT, ngày, lịch mẫu (t1..t5) và các buổi đã chọn (sessions) — lễ tân tư vấn trước,
+ *      chọn khách sau không mất gì (withPlan). Link "Đổi khách" / kết quả tìm (data-keep-plan) cũng vậy.
  *      Tắt JS: Enter gửi ?q=… → server in danh sách kết quả.
  *   2. Form các bước (data-auto-submit): đổi gói / PT / ngày → tự gửi để server tính lại (lịch tập làm lại từ đầu).
  *      Ô ngày: ngoài min–max → báo lỗi dưới ô, không gửi; hợp lệ → chờ 0,7 giây (gõ xong) rồi mới gửi.
@@ -20,6 +22,13 @@ const SALE_DATE_DELAY = 700;   // ô ngày: chờ gõ xong (gõ "1" rồi "5" kh
 document.addEventListener("DOMContentLoaded", function () {
     document.querySelectorAll("[data-combobox]").forEach(initSaleCombobox);
     initSaleAutoSubmit(document.querySelector("form[data-auto-submit]"));
+    document.addEventListener("click", function (event) {
+        const link = event.target.closest("a[data-keep-plan]");
+        if (link) {
+            event.preventDefault();
+            window.location.href = withPlan(link.href);
+        }
+    });
 });
 
 
@@ -92,8 +101,8 @@ function initSaleCombobox(box) {
         box.classList.remove("is-loading");
         rows = result.success && Array.isArray(result.data) ? result.data : [];
         if (mode === "partner") {
-            // Người tập cùng không thể là chính người đứng tên (ô ẩn customer trong form các bước).
-            const holderId = Number(input.closest("form").elements.customer.value);
+            // Người tập cùng không thể là chính người đứng tên (customer trên URL).
+            const holderId = Number(new URL(window.location.href).searchParams.get("customer"));
             rows = rows.filter(function (row) { return row.id !== holderId; });
         }
         render(query, result.success ? "" : result.message);
@@ -144,13 +153,11 @@ function initSaleCombobox(box) {
     function choose(row) {
         close();
         input.value = row.name;
-        if (mode === "customer") {
-            window.location.href = buildUrl("/receptionist/pt-sales?customer=" + row.id);
-            return;
-        }
-        const form = input.closest("form");
-        form.querySelector("[data-partner-field]").value = row.id;
-        form.requestSubmit();
+        const url = new URL(window.location.href);
+        url.searchParams.set(mode === "customer" ? "customer" : "partner", String(row.id));
+        url.searchParams.delete("q");
+        url.searchParams.delete("order");
+        window.location.href = withPlan(url.toString());
     }
 
     function open() {
@@ -163,6 +170,26 @@ function initSaleCombobox(box) {
         input.setAttribute("aria-expanded", "false");
         input.removeAttribute("aria-activedescendant");
     }
+}
+
+/**
+ * URL mới GIỮ NGUYÊN lịch đang chọn: t1..t5 (pt-sale-plan.js đã ghi lên URL) + sessions (các buổi, kể cả buổi sửa riêng,
+ * ô ẩn của form Giữ lịch). Server đọc sessions → pt-sale-plan.js khôi phục đúng các buổi sửa riêng.
+ */
+function withPlan(href) {
+    const url = new URL(href, window.location.href);
+    const current = new URL(window.location.href);
+    for (let n = 1; n <= 5; n++) {
+        const time = current.searchParams.get("t" + n);
+        if (time !== null) {
+            url.searchParams.set("t" + n, time);
+        }
+    }
+    const sessions = document.querySelector("[data-plan-sessions]");
+    if (sessions && sessions.value) {
+        url.searchParams.set("sessions", sessions.value);
+    }
+    return url.toString();
 }
 
 function textElement(tag, className, text) {
@@ -202,13 +229,6 @@ function initSaleAutoSubmit(form) {
         submitSteps(form);
     });
 
-    const clearPartner = form.querySelector("[data-clear-partner]");
-    if (clearPartner) {
-        clearPartner.addEventListener("click", function () {
-            form.querySelector("[data-partner-field]").value = "";
-            form.requestSubmit();
-        });
-    }
 }
 
 /** Gửi form các bước (server tính lại bước sau). Mờ form chỉ khi chắc chắn gửi được. */

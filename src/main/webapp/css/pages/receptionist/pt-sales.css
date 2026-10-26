@@ -1135,6 +1135,44 @@ html body.dock.pt-sale-page .sale-summary {
   position: sticky;
   top: var(--space-4);
 }
+/* Khách trong cột Đơn bán (cột hẹp): thẻ khách 2 cột, trạng thái gói xuống dòng; ô tìm gọn. */
+.sale-who {
+  display: grid;
+  gap: var(--space-2);
+  padding-bottom: var(--space-4);
+  border-bottom: var(--border-width) solid var(--arena-chalk-line);
+}
+.sale-who .sale-field-label {
+  margin: 0;
+}
+.sale-summary .sale-customer {
+  grid-template-columns: auto minmax(0, 1fr);
+  gap: var(--space-2) var(--space-3);
+  padding: var(--space-3);
+}
+.sale-summary .sale-avatar.is-lg {
+  width: 40px;
+  height: 40px;
+  font-size: var(--font-size-base);
+}
+.sale-summary .sale-customer-status {
+  grid-column: 1 / -1;
+  justify-self: start;
+  max-width: none;
+}
+.sale-summary .sale-search-box input {
+  padding-right: var(--space-3);
+}
+.sale-summary .sale-suggest em,
+.sale-summary .sale-results em {
+  grid-column: 2;
+  max-width: none;
+  text-align: left;
+}
+.sale-summary .sale-suggest [role="option"],
+.sale-summary .sale-results a {
+  grid-template-columns: auto minmax(0, 1fr);
+}
 .sale-code {
   font-family: var(--font-brand-mono);
 }
