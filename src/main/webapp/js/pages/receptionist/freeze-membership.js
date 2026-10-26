@@ -1,6 +1,5 @@
 /**
- * Client script cho màn hình Bảo lưu thẻ hội viên Lễ tân (UC-18, BF-09).
- * Phong cách code tương tự màn check-in.js.
+ * Client script cho màn hình Bảo lưu gói tập Lễ tân (UC-18, BF-09, Prototype bao-luu.html).
  */
 document.addEventListener('DOMContentLoaded', function () {
     const startInput = document.getElementById('startDate');
