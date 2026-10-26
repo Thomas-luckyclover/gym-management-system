@@ -83,13 +83,13 @@ class PtSaleServiceTest {
     }
 
     @Test
-    void sessionsOnUnpublishedWeekdaysAreCounted() {
+    void sessionsThatCreateANewSlotAreCounted() {
         List<PtSaleDay> days = List.of(
                 new PtSaleDay(MON, "Thứ 2", SIX_PM, SIX_PM.plusMinutes(90), "book", null, null, null),
                 new PtSaleDay(MON.plusDays(1), "Thứ 3", SIX_PM, SIX_PM.plusMinutes(90), "create", null, null, null),
                 new PtSaleDay(MON.plusDays(8), "Thứ 3", SIX_PM, SIX_PM.plusMinutes(90), "create", null, null, null));
-        assertEquals(2, PtSaleService.countOnUnpublishedDays(days, List.of(2)));
-        assertEquals(0, PtSaleService.countOnUnpublishedDays(days, List.of()));
+        assertEquals(2, PtSaleService.countNewSlots(days));        // 2 buổi "create" = PT chưa mở khung
+        assertEquals(0, PtSaleService.countNewSlots(days.subList(0, 1)));
     }
 
     /** checkDay cho 1 ngày: tự lọc khung cùng ngày như buildPlan / checkRequested làm. */
@@ -165,6 +165,8 @@ class PtSaleServiceTest {
         assertEquals("14:00", thursday.getOptions().get(0).getTime());   // giờ riêng ngày đó, xếp trước 18:00
         assertEquals("19:30", thursday.getOptions().get(1).getEnd());
         assertTrue(thursday.getOptions().get(1).isOk());
+        assertFalse(thursday.getOptions().get(0).isFresh());               // 14:00 PT đã mở sẵn
+        assertTrue(thursday.getOptions().get(1).isFresh());                // 18:00 ngày đó chưa có khung → tự tạo
     }
 
     @Test

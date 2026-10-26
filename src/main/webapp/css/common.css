@@ -1771,7 +1771,10 @@ body.dock ::-webkit-scrollbar-thumb {
   position: absolute;
   z-index: var(--z-dropdown);
   top: calc(100% + var(--space-2));
-  left: 0;
+  /* Canh mép PHẢI theo nút (i): hộp ẩn có lòi ra thì lòi sang trái (không tạo thanh cuộn ngang).
+     left: 0 cũ → nút sát mép phải màn làm trang rộng thêm ~20px. Mở ra thì common.js tự đặt lại vị trí. */
+  right: 0;
+  left: auto;
   width: min(72vw, calc(var(--space-12) * 4));
   max-width: calc(100vw - var(--space-4) * 2);
   box-sizing: border-box;

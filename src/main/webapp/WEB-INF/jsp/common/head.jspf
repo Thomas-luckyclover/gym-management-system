@@ -35,7 +35,7 @@
 <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/7.3.1/css/all.min.css">
 
 <link rel="stylesheet" href="${pageContext.request.contextPath}/css/tokens.css?v=20261025city">
-<link rel="stylesheet" href="${pageContext.request.contextPath}/css/common.css?v=20261026badge2">
+<link rel="stylesheet" href="${pageContext.request.contextPath}/css/common.css?v=20261026hint">
 <link rel="stylesheet" href="${pageContext.request.contextPath}/css/brand-system.css?v=20261025city">
 <script src="${pageContext.request.contextPath}/js/common.js?v=20261025city" defer></script>
 <script src="${pageContext.request.contextPath}/js/icons.js?v=3" defer></script>

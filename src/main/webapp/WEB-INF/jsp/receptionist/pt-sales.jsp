@@ -22,9 +22,9 @@
 <head>
     <%@ include file="/WEB-INF/jsp/common/head.jspf" %>
     <title>Bán gói PT · Super Gym Lễ tân</title>
-    <link rel="stylesheet" href="${ctx}/css/pages/receptionist/pt-sales.css?v=20261026w">
+    <link rel="stylesheet" href="${ctx}/css/pages/receptionist/pt-sales.css?v=20261026x">
     <script src="${ctx}/js/pages/receptionist/pt-sales.js?v=20261026s" defer></script>
-    <script src="${ctx}/js/pages/receptionist/pt-sale-plan.js?v=20261026w" defer></script>
+    <script src="${ctx}/js/pages/receptionist/pt-sale-plan.js?v=20261026x" defer></script>
 </head>
 <body class="dock theme-staff pt-sale-page">
 <%@ include file="/WEB-INF/jsp/common/flash-toast.jspf" %>
@@ -149,12 +149,12 @@
                     <c:otherwise>
                         <script type="application/json" id="sale-plan-data">${sale.planJson}</script>
                         <noscript><p class="sale-msg is-error">Cần bật JavaScript để chọn lịch tập.</p></noscript>
-                        <%-- Nhắc (chặn mềm): Thứ PT chưa công bố khung rảnh → buổi vào Thứ đó cần tích "Đã xác nhận với PT". --%>
+                        <%-- Nhắc: Thứ PT chưa công bố khung nào. Việc bắt tích "Đã xác nhận với PT" xét từng buổi (ô "PT chưa mở"). --%>
                         <c:if test="${not empty sale.unpublishedText}">
                             <div class="plan-alert" role="note">
                                 <i class="fa-solid fa-triangle-exclamation" aria-hidden="true"></i>
                                 <p><b><c:out value="${sale.ptName}" /> chưa công bố khung rảnh <c:out value="${sale.unpublishedText}" /></b> trong 2 tuần đầu.
-                                    Nên hỏi PT trước khi thanh toán — buổi vào các thứ này cần tích <b>"Đã xác nhận với PT"</b> mới giữ lịch được.</p>
+                                    Nên hỏi PT trước khi thanh toán — buổi ghi <b>"PT chưa mở"</b> cần tích <b>"Đã xác nhận với PT"</b> mới giữ lịch được.</p>
                             </div>
                         </c:if>
 
@@ -190,7 +190,7 @@
                             <div class="plan-week" role="tabpanel" aria-labelledby="plan-week-title" data-week></div>
                             <div class="plan-editor" data-editor hidden></div>
                             <ul class="plan-key" aria-label="Chú thích">
-                                <li class="is-ok">Có buổi</li><li class="is-edit">Đã sửa riêng</li><li class="is-warn">PT cần dời sau</li><li class="is-bad">Chưa xếp được</li>
+                                <li class="is-ok">Có buổi</li><li class="is-edit">Đã sửa riêng</li><li class="is-warn">PT cần dời sau</li><li class="is-fresh">PT chưa mở — cần hỏi PT</li><li class="is-bad">Chưa xếp được</li>
                             </ul>
                         </div>
                     </c:otherwise>
@@ -371,11 +371,11 @@
                             <input type="hidden" name="start" value="${sale.startDate}">
                             <c:forEach var="n" begin="1" end="5"><input type="hidden" name="t${n}" value="" data-plan-t="${n}"></c:forEach>
                             <input type="hidden" name="sessions" value="" data-plan-sessions>
-                            <%-- Chỉ hiện khi lịch có buổi vào Thứ PT chưa công bố (pt-sale-plan.js bật / tắt). --%>
+                            <%-- Chỉ hiện khi lịch có buổi "PT chưa mở" (pt-sale-plan.js bật / tắt; PtSaleService.hold kiểm tra lại). --%>
                             <label class="sale-confirm sale-pt-confirm" data-plan-confirm hidden>
                                 <input type="checkbox" name="confirmPt" value="1">
                                 <span><b>Đã xác nhận với PT</b>
-                                    <small data-plan-confirm-text>PT đồng ý dạy các buổi vào thứ chưa công bố.</small></span>
+                                    <small data-plan-confirm-text>PT đồng ý dạy các buổi PT chưa mở khung.</small></span>
                             </label>
                             <button class="btn btn-primary sale-main" type="submit" disabled data-plan-submit><i class="fa-solid fa-lock" aria-hidden="true"></i> Giữ lịch 15 phút</button>
                         </form>

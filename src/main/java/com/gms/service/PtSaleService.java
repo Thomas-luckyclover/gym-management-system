@@ -71,7 +71,7 @@ public class PtSaleService {
     public static class Input {
         public String customer, partner, packageId, pt, start, query;
         public String[] times = new String[5];   // t1..t5 = lịch mẫu Thứ 2..Thứ 6 (trống = Nghỉ)
-        public boolean confirmPt;                // ô tích "Đã xác nhận với PT" (bắt buộc khi có buổi vào Thứ PT chưa công bố)
+        public boolean confirmPt;                // ô tích "Đã xác nhận với PT" (bắt buộc khi có buổi PT chưa mở khung)
         public String sessions;                  // "2026-10-27@09:30,…" — các buổi đã chọn (chỉ khi Giữ lịch)
     }
 
@@ -153,9 +153,10 @@ public class PtSaleService {
             if (problem != null) {
                 throw new IllegalArgumentException(problem);
             }
-            int unconfirmed = countOnUnpublishedDays(view.getDays(), view.getUnpublishedWeekdays());
+            // Buổi PT chưa mở khung (giữ lịch sẽ tự tạo khung mới) → lễ tân phải hỏi PT rồi tích xác nhận.
+            int unconfirmed = countNewSlots(view.getDays());
             if (unconfirmed > 0 && !input.confirmPt) {
-                throw new IllegalArgumentException("Có " + unconfirmed + " buổi vào Thứ PT chưa công bố khung rảnh. "
+                throw new IllegalArgumentException("Có " + unconfirmed + " buổi PT chưa mở khung giờ đó. "
                         + "Hỏi PT rồi tích \"Đã xác nhận với PT\" trước khi giữ lịch.");
             }
 
@@ -507,7 +508,7 @@ public class PtSaleService {
         List<HourException> exceptions = scheduleDAO.findHourExceptions(connection, start, end);
         List<LocalTime> candidates = candidateTimes(slots, start, minutes, now);
         Map<LocalDate, LocalTime> requested = parseSessions(input.sessions);
-        // Thứ PT chưa công bố khung nào → hộp nhắc + buổi vào Thứ đó cần tích "Đã xác nhận với PT" (hold kiểm tra).
+        // Thứ PT chưa công bố khung nào → hộp nhắc vàng trên JSP.
         List<Integer> unpublished = unpublishedWeekdays(slots, start, now);
         view.setUnpublishedWeekdays(unpublished);
 
@@ -688,7 +689,7 @@ public class PtSaleService {
 
     /**
      * Thứ (1 = Thứ 2 … 5 = Thứ 6) mà PT CHƯA công bố khung Free nào (chưa qua giờ) trong 14 ngày đầu kỳ.
-     * Ví dụ PT chỉ mở Thứ 2, 4, 6 → [2, 4]. Buổi rơi vào các Thứ này hệ thống sẽ tự tạo khung → lễ tân phải hỏi PT trước.
+     * Ví dụ PT chỉ mở Thứ 2, 4, 6 → [2, 4]. Chỉ để in hộp nhắc; việc bắt tích xác nhận xét theo TỪNG BUỔI (countNewSlots).
      */
     static List<Integer> unpublishedWeekdays(List<PtScheduleItem> slots, LocalDate start, LocalDateTime now) {
         LocalDate windowEnd = start.plusDays(TIME_WINDOW_DAYS - 1);
@@ -704,11 +705,14 @@ public class PtSaleService {
         return missing;
     }
 
-    /** Đếm số buổi rơi vào các Thứ PT chưa công bố (hold dùng để bắt tích "Đã xác nhận với PT"). */
-    static int countOnUnpublishedDays(List<PtSaleDay> days, List<Integer> unpublished) {
+    /**
+     * Đếm số buổi "create" = ngày đó PT CHƯA có khung đúng giờ này → giữ lịch sẽ tự tạo khung mới.
+     * Ví dụ PT Thứ 5 chỉ mở 09:00, lễ tân chọn Thứ 5 18:00 → mỗi Thứ 5 là 1 buổi "create". hold() bắt tích "Đã xác nhận với PT".
+     */
+    static int countNewSlots(List<PtSaleDay> days) {
         int count = 0;
         for (PtSaleDay day : days) {
-            if (unpublished.contains(day.getDate().getDayOfWeek().getValue())) {
+            if ("create".equals(day.getAction())) {
                 count++;
             }
         }
@@ -790,8 +794,10 @@ public class PtSaleService {
                     PtSessionHandleService.dayLabel(date));
             for (LocalTime time : dayTimes(candidates, sameDay, minutes)) {
                 PtSaleDay check = checkDay(date, time, minutes, sameDay, leaves, exceptions, busy, now);
+                boolean fresh = "create".equals(check.getAction());   // PT chưa có khung giờ này ngày đó → sẽ tạo mới
                 day.getOptions().add(new PtSalePlan.Option(DateTimeUtil.formatTime(time),
-                        DateTimeUtil.formatTime(check.getEndTime()), check.isSession(), check.getReason(), check.getWarning()));
+                        DateTimeUtil.formatTime(check.getEndTime()), check.isSession(), check.getReason(), check.getWarning(),
+                        fresh));
             }
             plan.getDays().add(day);
         }
