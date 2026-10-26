@@ -182,6 +182,10 @@ public class FreezeCustomerView {
         return subscriptionStatus;
     }
 
+    public String getPackageStatus() {
+        return subscriptionStatus;
+    }
+
     public void setSubscriptionStatus(String subscriptionStatus) {
         this.subscriptionStatus = subscriptionStatus;
     }

@@ -3,10 +3,10 @@
 <%@ taglib prefix="gms" uri="/WEB-INF/gms-functions.tld" %>
 <%--
   freeze-membership.jsp — Màn hình Bảo lưu gói tập của Lễ tân (Màn #34, UC-18, Workflow BF-09).
-  Thiết kế tối ưu theo phong cách hệ thống quản lý phòng tập GymMaster:
+  Thiết kế tối ưu theo phong cách hệ thống quản lý phòng tập:
   - Khối 1: Thanh tra cứu hội viên & lọc nhanh.
   - Khối 2: Chi tiết thao tác bảo lưu / mở lại thẻ (khi đã chọn hội viên).
-  - Khối 3: Bảng dữ liệu GymMaster toàn màn hình (Full-width Tabs: Danh sách hội viên & Hợp đồng, Lịch sử bảo lưu).
+  - Khối 3: Bảng dữ liệu quản lý hội viên chuẩn nghiệp vụ phòng gym (5 cột tinh gọn, không cuộn ngang).
 --%>
 <!DOCTYPE html>
 <html lang="vi">
@@ -14,9 +14,9 @@
 <head>
     <%@ include file="/WEB-INF/jsp/common/head.jspf" %>
     <title>Bảo lưu gói tập · Super Gym Lễ tân</title>
-    <link rel="stylesheet" href="${pageContext.request.contextPath}/css/pages/receptionist/freeze-membership.css?v=20261027_v4">
+    <link rel="stylesheet" href="${pageContext.request.contextPath}/css/pages/receptionist/freeze-membership.css?v=20261027_v5">
     <link rel="stylesheet" href="${pageContext.request.contextPath}/css/pages/auth/notification-bell.css">
-    <script src="${pageContext.request.contextPath}/js/pages/receptionist/freeze-membership.js?v=20261027_v4" defer></script>
+    <script src="${pageContext.request.contextPath}/js/pages/receptionist/freeze-membership.js?v=20261027_v5" defer></script>
     <script src="${pageContext.request.contextPath}/js/pages/auth/notification-bell.js" defer></script>
 </head>
 
@@ -284,8 +284,8 @@
                                     <div class="current-pkg-box">
                                         <div class="pkg-top-title">
                                             <h4><c:out value="${freezeCustomer.packageName}" /></h4>
-                                            <span class="badge ${freezeCustomer.packageStatus == 'Active' ? 'badge-ok' : (freezeCustomer.packageStatus == 'Frozen' ? 'badge-warn' : 'badge-muted')}">
-                                                <c:out value="${freezeCustomer.packageStatus == 'Active' ? 'Hoạt động' : (freezeCustomer.packageStatus == 'Frozen' ? 'Bảo lưu' : freezeCustomer.packageStatus)}" />
+                                            <span class="badge ${freezeCustomer.subscriptionStatus == 'Active' ? 'badge-ok' : (freezeCustomer.subscriptionStatus == 'Frozen' ? 'badge-warn' : 'badge-muted')}">
+                                                <c:out value="${freezeCustomer.subscriptionStatus == 'Active' ? 'Hoạt động' : (freezeCustomer.subscriptionStatus == 'Frozen' ? 'Bảo lưu' : freezeCustomer.subscriptionStatus)}" />
                                             </span>
                                         </div>
                                         <div class="pkg-info-rows">
@@ -340,7 +340,7 @@
             <section class="freeze-tabs-card" style="margin-top:var(--space-4);">
                 <div class="freeze-tabs-nav">
                     <button type="button" class="freeze-tab-btn active" data-target="#tabMembers">
-                        <i class="fa-solid fa-users"></i> Danh sách hội viên & Hợp đồng
+                        <i class="fa-solid fa-users"></i> Danh sách hội viên & Gói tập
                         <span class="tab-badge"><c:out value="${membershipsPage.totalItems}" default="0" /></span>
                     </button>
                     <button type="button" class="freeze-tab-btn" data-target="#tabHistory">
@@ -349,16 +349,16 @@
                     </button>
                 </div>
 
-                <%-- TAB 1: DANH SÁCH HỘI VIÊN & GÓI TẬP (PHONG CÁCH GYMMASTER CHUYÊN NGHIỆP) --%>
+                <%-- TAB 1: DANH SÁCH HỘI VIÊN & GÓI TẬP (5 CỘT CHUẨN NGHIỆP VỤ GYM, KHÔNG CUỘN NGANG) --%>
                 <div class="freeze-tab-pane active" id="tabMembers">
                     <div class="gym-table-header-bar">
                         <div class="header-titles">
-                            <h3><i class="fa-solid fa-table-list text-primary"></i> Quản lý hợp đồng hội viên</h3>
+                            <h3><i class="fa-solid fa-table-list text-primary"></i> Quản lý gói tập hội viên</h3>
                             <p>Nhấp vào bất kỳ dòng nào để chọn hội viên và thực hiện bảo lưu hoặc mở lại thẻ.</p>
                         </div>
                         <c:if test="${not empty query}">
                             <div class="filter-indicator">
-                                <span>Đang lọc theo: <b>"<c:out value='${query}' />"</b></span>
+                                <span>Đang lọc: <b>"<c:out value='${query}' />"</b></span>
                                 <a href="${pageContext.request.contextPath}/receptionist/freeze" class="btn btn-ghost btn-xs">Xóa bộ lọc</a>
                             </div>
                         </c:if>
@@ -368,16 +368,11 @@
                         <table class="gym-table">
                             <thead>
                                 <tr>
-                                    <th style="width:40px; text-align:center;">
-                                        <input type="checkbox" aria-label="Chọn tất cả" disabled>
-                                    </th>
-                                    <th>Thông tin khách hàng</th>
-                                    <th>Thông tin hợp đồng</th>
-                                    <th>Loại hợp đồng</th>
-                                    <th>Gói dịch vụ</th>
-                                    <th>Thời gian gói tập</th>
-                                    <th>Tình trạng bảo lưu</th>
-                                    <th style="text-align:center; width:110px;">Thao tác</th>
+                                    <th style="width: 32%;">Hội viên</th>
+                                    <th style="width: 24%;">Gói tập & Trạng thái</th>
+                                    <th style="width: 20%;">Thời hạn gói tập</th>
+                                    <th style="width: 14%;">Tình trạng bảo lưu</th>
+                                    <th style="width: 10%; text-align: right;">Thao tác</th>
                                 </tr>
                             </thead>
                             <tbody>
@@ -385,9 +380,6 @@
                                     <c:when test="${not empty customerMemberships}">
                                         <c:forEach var="row" items="${customerMemberships}">
                                             <tr class="row-clickable" data-href="${pageContext.request.contextPath}/receptionist/freeze?q=${row.customerCode}">
-                                                <td style="text-align:center;">
-                                                    <input type="checkbox" aria-label="Chọn dòng" onclick="event.stopPropagation();">
-                                                </td>
                                                 <td>
                                                     <div class="gym-cust-cell">
                                                         <div class="common-user-avatar sm">
@@ -396,29 +388,12 @@
                                                         <div class="gym-cust-info">
                                                             <span class="cust-name"><c:out value="${row.fullName}" /></span>
                                                             <div class="cust-meta">
-                                                                <span><i class="fa-solid fa-id-card"></i> <c:out value="${row.customerCode}" /></span>
-                                                                <span><i class="fa-solid fa-phone"></i> <c:out value="${row.phone}" /></span>
+                                                                <span class="cust-code"><c:out value="${row.customerCode}" /></span>
+                                                                <span class="cust-dot">·</span>
+                                                                <span class="cust-phone"><i class="fa-solid fa-phone"></i> <c:out value="${row.phone}" /></span>
                                                             </div>
                                                         </div>
                                                     </div>
-                                                </td>
-                                                <td>
-                                                    <div class="gym-contract-cell">
-                                                        <c:choose>
-                                                            <c:when test="${row.hasMembership()}">
-                                                                <span class="contract-code"><i class="fa-solid fa-file-contract text-primary"></i> HD${row.subscriptionId}</span>
-                                                                <span class="contract-meta"><i class="fa-solid fa-location-dot"></i> SUPER GYM 2026</span>
-                                                            </c:when>
-                                                            <c:otherwise>
-                                                                <span class="muted">--</span>
-                                                            </c:otherwise>
-                                                        </c:choose>
-                                                    </div>
-                                                </td>
-                                                <td>
-                                                    <span class="contract-type-tag">
-                                                        <c:out value="${row.hasMembership() ? 'Thẻ Hội Viên' : 'Chưa đăng ký'}" />
-                                                    </span>
                                                 </td>
                                                 <td>
                                                     <div class="gym-pkg-cell">
@@ -428,13 +403,12 @@
                                                                     <i class="fa-solid fa-box-archive text-warning"></i> <c:out value="${row.packageName}" />
                                                                 </span>
                                                                 <span class="pkg-sub-status">
-                                                                    <i class="fa-solid fa-square-check text-ok"></i> 
                                                                     <c:choose>
                                                                         <c:when test="${row.subscriptionStatus == 'Frozen'}">
-                                                                            <span class="status-pill warn">Đang bảo lưu</span>
+                                                                            <span class="status-pill warn"><i class="fa-solid fa-snowflake"></i> Đang bảo lưu</span>
                                                                         </c:when>
                                                                         <c:when test="${row.subscriptionStatus == 'Active'}">
-                                                                            <span class="status-pill ok">Đã kích hoạt</span>
+                                                                            <span class="status-pill ok"><i class="fa-solid fa-circle-check"></i> Đang hoạt động</span>
                                                                         </c:when>
                                                                         <c:otherwise>
                                                                             <span class="status-pill">${row.subscriptionStatus}</span>
@@ -466,7 +440,7 @@
                                                         <c:out value="${row.freezeStatusLabel}" />
                                                     </span>
                                                 </td>
-                                                <td class="gym-action-cell" style="text-align:center;">
+                                                <td class="gym-action-cell" style="text-align: right;">
                                                     <a href="${pageContext.request.contextPath}/receptionist/freeze?q=${row.customerCode}"
                                                        class="btn btn-ghost btn-sm" title="Chọn khách hàng">
                                                         <c:choose>
@@ -487,7 +461,7 @@
                                     </c:when>
                                     <c:otherwise>
                                         <tr>
-                                            <td colspan="8" style="text-align:center; padding:var(--space-6); color:var(--color-text-muted);">
+                                            <td colspan="5" style="text-align:center; padding:var(--space-6); color:var(--color-text-muted);">
                                                 <i class="fa-solid fa-circle-info" style="font-size:24px; display:block; margin-bottom:var(--space-2);"></i>
                                                 Không tìm thấy hội viên nào phù hợp với từ khóa tra cứu.
                                             </td>
@@ -541,13 +515,13 @@
                         <table class="gym-table">
                             <thead>
                                 <tr>
-                                    <th>Hội viên</th>
-                                    <th>Gói tập áp dụng</th>
-                                    <th>Thời gian bảo lưu</th>
-                                    <th>Số ngày</th>
-                                    <th>Trạng thái</th>
-                                    <th>Lý do bảo lưu</th>
-                                    <th>Lễ tân tiếp nhận</th>
+                                    <th style="width: 24%;">Hội viên</th>
+                                    <th style="width: 16%;">Gói tập áp dụng</th>
+                                    <th style="width: 18%;">Thời gian bảo lưu</th>
+                                    <th style="width: 9%; text-align: center;">Số ngày</th>
+                                    <th style="width: 11%; text-align: center;">Trạng thái</th>
+                                    <th style="width: 12%;">Lý do bảo lưu</th>
+                                    <th style="width: 10%;">Lễ tân tiếp nhận</th>
                                 </tr>
                             </thead>
                             <tbody>
@@ -556,15 +530,16 @@
                                         <c:forEach var="item" items="${freezeHistoryList}">
                                             <tr class="row-clickable" data-href="${pageContext.request.contextPath}/receptionist/freeze?q=${item.customerCode}">
                                                 <td>
-                                                    <div class="gym-cust-cell" style="min-width:180px;">
+                                                    <div class="gym-cust-cell">
                                                         <div class="common-user-avatar sm">
                                                             <i class="fa-solid fa-user"></i>
                                                         </div>
                                                         <div class="gym-cust-info">
                                                             <span class="cust-name"><c:out value="${item.customerName}" /></span>
                                                             <div class="cust-meta">
-                                                                <span><i class="fa-solid fa-id-card"></i> <c:out value="${item.customerCode}" /></span>
-                                                                <span><i class="fa-solid fa-phone"></i> <c:out value="${item.customerPhone}" /></span>
+                                                                <span class="cust-code"><c:out value="${item.customerCode}" /></span>
+                                                                <span class="cust-dot">·</span>
+                                                                <span class="cust-phone"><i class="fa-solid fa-phone"></i> <c:out value="${item.customerPhone}" /></span>
                                                             </div>
                                                         </div>
                                                     </div>
@@ -589,13 +564,13 @@
                                                         </div>
                                                     </div>
                                                 </td>
-                                                <td>
+                                                <td style="text-align: center;">
                                                     <span class="badge badge-info" style="font-size:12px;">${item.daysFrozen} ngày</span>
                                                 </td>
-                                                <td>
+                                                <td style="text-align: center;">
                                                     <span class="badge ${item.statusBadgeClass}"><c:out value="${item.statusLabel}" /></span>
                                                 </td>
-                                                <td style="max-width:240px; word-break:break-word;">
+                                                <td style="word-break:break-word;">
                                                     <c:out value="${item.reason}" />
                                                 </td>
                                                 <td>

@@ -702,10 +702,10 @@
   display: block;
 }
 
-/* Lưới bảng dữ liệu phong cách GymMaster */
+/* Lưới bảng dữ liệu phong cách GymMaster tinh gọn chuẩn phòng gym */
 .gym-table-wrap {
   width: 100%;
-  overflow-x: auto;
+  overflow-x: hidden;
   border: 1px solid var(--color-border);
   border-radius: var(--radius-md);
   background: var(--color-surface);
@@ -716,6 +716,7 @@
   border-collapse: collapse;
   font-size: var(--font-size-sm);
   text-align: left;
+  table-layout: fixed;
 }
 
 .gym-table th {
@@ -728,6 +729,8 @@
   padding: var(--space-3) var(--space-4);
   border-bottom: 1px solid var(--color-border);
   white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
 }
 
 .gym-table td {
@@ -735,6 +738,7 @@
   border-bottom: 1px solid var(--color-border);
   vertical-align: middle;
   color: var(--color-text);
+  overflow: hidden;
 }
 
 .gym-table tbody tr {
@@ -753,59 +757,92 @@
   border-bottom: none;
 }
 
-/* Ô thông tin khách hàng */
+/* Ô thông tin khách hàng - hiển thị gọn gàng, không bị ngắt dòng mã KH */
 .gym-cust-cell {
   display: flex;
   align-items: center;
   gap: var(--space-3);
-  min-width: 220px;
+  min-width: 0;
 }
 
 .gym-cust-cell .gym-cust-info {
   display: flex;
   flex-direction: column;
   gap: 2px;
+  min-width: 0;
+  overflow: hidden;
 }
 
 .gym-cust-cell .cust-name {
   font-weight: var(--font-weight-bold);
+  font-size: var(--font-size-sm);
   color: var(--color-accent-ink);
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
 }
 
 .gym-cust-cell .cust-meta {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
   font-size: var(--font-size-xs);
   color: var(--color-text-soft);
-  display: flex;
-  gap: var(--space-2);
+  white-space: nowrap;
 }
 
-/* Ô hợp đồng / gói dịch vụ */
+.gym-cust-cell .cust-code {
+  font-weight: var(--font-weight-bold);
+  color: var(--color-primary);
+  white-space: nowrap;
+}
+
+.gym-cust-cell .cust-dot {
+  color: var(--color-text-muted);
+}
+
+.gym-cust-cell .cust-phone {
+  color: var(--color-text-soft);
+  white-space: nowrap;
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+}
+
+/* Ô gói dịch vụ */
 .gym-pkg-cell {
   display: flex;
   flex-direction: column;
   gap: 2px;
-  min-width: 180px;
+  min-width: 0;
+  overflow: hidden;
 }
 
 .gym-pkg-cell .pkg-name {
   font-weight: var(--font-weight-semibold);
+  font-size: var(--font-size-sm);
   color: var(--color-text);
   display: flex;
   align-items: center;
   gap: var(--space-2);
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
 }
 
 .gym-pkg-cell .pkg-meta {
   font-size: var(--font-size-xs);
   color: var(--color-text-soft);
+  white-space: nowrap;
 }
 
 /* Ô thời gian gói tập */
 .gym-dates-cell {
   font-size: var(--font-size-xs);
   color: var(--color-text-soft);
-  line-height: 1.5;
-  min-width: 150px;
+  line-height: 1.4;
+  white-space: nowrap;
+  min-width: 0;
 }
 
 .gym-dates-cell b {
@@ -814,13 +851,14 @@
 
 /* Ô trạng thái bảo lưu */
 .gym-status-cell {
-  min-width: 130px;
+  min-width: 0;
+  white-space: nowrap;
 }
 
 /* Ô thao tác */
 .gym-action-cell {
   text-align: right;
-  min-width: 110px;
+  min-width: 0;
   white-space: nowrap;
 }
 
