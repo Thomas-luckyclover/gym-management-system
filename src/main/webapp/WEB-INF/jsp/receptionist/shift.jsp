@@ -431,7 +431,7 @@
   </c:if>
 
   <%-- ===== MODAL 2: ĐỐI SOÁT & CHỐT CA LÀM VIỆC ===== --%>
-  <div class="modal" id="modalCloseShift" role="dialog" aria-modal="true" aria-labelledby="modalCloseTitle">
+  <div class="modal" id="modalCloseShift" role="dialog" aria-modal="true" aria-labelledby="modalCloseTitle" aria-describedby="modalCloseDesc">
     <div class="modal-dialog">
       <div class="modal-content">
         <div class="modal-head">
@@ -450,7 +450,7 @@
                 <span>Không thể chốt ca: còn <b>${detail.pendingOrders.size()}</b> đơn hàng quầy đang chờ xử lý. Vui lòng xác nhận hoặc hủy đơn trước khi chốt ca (CBR-78).</span>
               </div>
             </c:if>
-            <p class="modal-desc">Đếm số tiền mặt thực tế trong két quầy Lễ tân và nhập vào bên dưới. Nếu có chênh lệch so với số liệu sổ sách, bắt buộc phải nêu rõ lý do giải trình.</p>
+            <p class="modal-desc" id="modalCloseDesc">Đếm số tiền mặt thực tế trong két quầy Lễ tân và nhập vào bên dưới. Nếu có chênh lệch so với số liệu sổ sách, bắt buộc phải nêu rõ lý do giải trình.</p>
 
             <div class="reconcile-card">
               <div class="reconcile-item">
@@ -468,7 +468,7 @@
             </div>
 
             <%-- Khung hiển thị chênh lệch --%>
-            <div class="variance-result" id="varianceBox">
+            <div class="variance-result" id="varianceBox" aria-live="polite">
               <span class="variance-label">Chênh lệch:</span>
               <b class="variance-value tabular" id="varianceVal">0đ</b>
               <span class="badge badge-ok" id="varianceBadge">Khớp sổ sách</span>
