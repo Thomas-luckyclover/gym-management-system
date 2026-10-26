@@ -860,6 +860,96 @@
   white-space: nowrap;
 }
 
+/* Căn thẳng tiêu đề cột Hội viên với khối text tên khách */
+.th-cust-flex {
+  display: flex;
+  align-items: center;
+  gap: var(--space-3);
+}
+
+.th-avatar-space {
+  width: 40px;
+  flex-shrink: 0;
+  display: inline-block;
+}
+
+/* Ô lý do bảo lưu: Chống bể giao diện khi có 400 - 500 ký tự */
+.gym-reason-cell {
+  vertical-align: middle;
+}
+
+.reason-content {
+  display: flex;
+  flex-direction: column;
+  gap: 3px;
+  max-width: 100%;
+}
+
+.reason-text {
+  display: -webkit-box;
+  -webkit-line-clamp: 2;
+  -webkit-box-orient: vertical;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  line-height: 1.45;
+  font-size: var(--font-size-xs);
+  color: var(--color-text);
+  word-break: break-word;
+  transition: all var(--duration-fast) var(--ease-standard);
+}
+
+.reason-text.expanded {
+  display: block;
+  -webkit-line-clamp: unset;
+  overflow: visible;
+  background: var(--color-surface-soft, rgba(255, 255, 255, 0.05));
+  padding: 4px 6px;
+  border-radius: var(--radius-sm);
+  border-left: 2px solid var(--color-primary);
+}
+
+.btn-toggle-reason {
+  background: none;
+  border: none;
+  padding: 0;
+  margin: 0;
+  font-size: 11px;
+  font-weight: var(--font-weight-medium);
+  color: var(--color-primary);
+  cursor: pointer;
+  text-align: left;
+  display: inline-flex;
+  align-items: center;
+  gap: 3px;
+  width: fit-content;
+  user-select: none;
+}
+
+.btn-toggle-reason:hover {
+  text-decoration: underline;
+  color: var(--color-primary-hover, #1d4ed8);
+}
+
+/* Ô lễ tân tiếp nhận: Luôn hiển thị đầy đủ, không bị khuất hay rớt dòng */
+.gym-staff-cell {
+  white-space: nowrap;
+  vertical-align: middle;
+}
+
+.gym-staff-info {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  font-size: var(--font-size-xs);
+  color: var(--color-text-soft);
+  white-space: nowrap;
+}
+
+.gym-staff-info i {
+  color: var(--color-primary);
+  font-size: 12px;
+}
+
 /* Header & Cell bổ sung cho lưới GymMaster chuyên nghiệp */
 .freeze-search-panel {
   background: var(--color-surface);

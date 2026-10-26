@@ -14,9 +14,9 @@
 <head>
     <%@ include file="/WEB-INF/jsp/common/head.jspf" %>
     <title>Bảo lưu gói tập · Super Gym Lễ tân</title>
-    <link rel="stylesheet" href="${pageContext.request.contextPath}/css/pages/receptionist/freeze-membership.css?v=20261027_v6">
+    <link rel="stylesheet" href="${pageContext.request.contextPath}/css/pages/receptionist/freeze-membership.css?v=20261027_v7">
     <link rel="stylesheet" href="${pageContext.request.contextPath}/css/pages/auth/notification-bell.css">
-    <script src="${pageContext.request.contextPath}/js/pages/receptionist/freeze-membership.js?v=20261027_v6" defer></script>
+    <script src="${pageContext.request.contextPath}/js/pages/receptionist/freeze-membership.js?v=20261027_v7" defer></script>
     <script src="${pageContext.request.contextPath}/js/pages/auth/notification-bell.js" defer></script>
 </head>
 
@@ -368,7 +368,12 @@
                         <table class="gym-table">
                             <thead>
                                 <tr>
-                                    <th style="width: 28%;">Hội viên</th>
+                                    <th style="width: 28%;">
+                                        <div class="th-cust-flex">
+                                            <span class="th-avatar-space"></span>
+                                            <span>Hội viên</span>
+                                        </div>
+                                    </th>
                                     <th style="width: 22%;">Gói tập & Trạng thái</th>
                                     <th style="width: 19%;">Thời hạn gói tập</th>
                                     <th style="width: 18%;">Tình trạng bảo lưu</th>
@@ -515,13 +520,18 @@
                         <table class="gym-table">
                             <thead>
                                 <tr>
-                                    <th style="width: 20%;">Hội viên</th>
-                                    <th style="width: 12%;">Gói tập</th>
-                                    <th style="width: 15%;">Thời gian bảo lưu</th>
-                                    <th style="width: 8%; text-align: center;">Số ngày</th>
-                                    <th style="width: 10%; text-align: center;">Trạng thái</th>
-                                    <th style="width: 18%;">Lý do bảo lưu</th>
-                                    <th style="width: 17%;">Lễ tân tiếp nhận</th>
+                                    <th style="width: 20%;">
+                                        <div class="th-cust-flex">
+                                            <span class="th-avatar-space"></span>
+                                            <span>Hội viên</span>
+                                        </div>
+                                    </th>
+                                    <th style="width: 11%;">Gói tập</th>
+                                    <th style="width: 14%;">Thời gian bảo lưu</th>
+                                    <th style="width: 7%; text-align: center;">Số ngày</th>
+                                    <th style="width: 9%; text-align: center;">Trạng thái</th>
+                                    <th style="width: 21%;">Lý do bảo lưu</th>
+                                    <th style="width: 18%;">Lễ tân tiếp nhận</th>
                                 </tr>
                             </thead>
                             <tbody>
@@ -570,13 +580,19 @@
                                                 <td style="text-align: center;">
                                                     <span class="badge ${item.statusBadgeClass}"><c:out value="${item.statusLabel}" /></span>
                                                 </td>
-                                                <td style="word-break:break-word;">
-                                                    <c:out value="${item.reason}" />
+                                                <td class="gym-reason-cell">
+                                                    <div class="reason-content" title="<c:out value='${item.reason}' />">
+                                                        <span class="reason-text"><c:out value="${item.reason}" /></span>
+                                                        <c:if test="${not empty item.reason and item.reason.length() > 50}">
+                                                            <button type="button" class="btn-toggle-reason" title="Bấm để xem toàn bộ lý do">Xem thêm</button>
+                                                        </c:if>
+                                                    </div>
                                                 </td>
-                                                <td>
-                                                    <span style="font-size:var(--font-size-xs); color:var(--color-text-soft);">
-                                                        <i class="fa-solid fa-user-tie"></i> <c:out value="${item.handledByEmployeeName}" />
-                                                    </span>
+                                                <td class="gym-staff-cell">
+                                                    <div class="gym-staff-info">
+                                                        <i class="fa-solid fa-user-tie"></i>
+                                                        <span><c:out value="${item.handledByEmployeeName}" /></span>
+                                                    </div>
                                                 </td>
                                             </tr>
                                         </c:forEach>

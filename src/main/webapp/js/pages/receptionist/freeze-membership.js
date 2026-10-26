@@ -172,6 +172,17 @@ document.addEventListener('DOMContentLoaded', function () {
         });
     });
 
+    // 6. Xử lý mở rộng / thu gọn lý do bảo lưu dài (chống vỡ bảng khi lý do dài tới 400 - 500 ký tự)
+    document.querySelectorAll('.btn-toggle-reason').forEach(btn => {
+        btn.addEventListener('click', function (e) {
+            e.stopPropagation();
+            const textSpan = this.parentElement.querySelector('.reason-text');
+            if (!textSpan) return;
+            const isExpanded = textSpan.classList.toggle('expanded');
+            this.textContent = isExpanded ? 'Thu gọn' : 'Xem thêm';
+        });
+    });
+
     // Hàm tiện ích định dạng ngày
     function formatDate(d) {
         if (!d || isNaN(d.getTime())) return '--/--/----';
