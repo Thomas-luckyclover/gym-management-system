@@ -16,7 +16,6 @@ import java.io.IOException;
 import java.net.URLEncoder;
 import java.nio.charset.StandardCharsets;
 import com.gms.dto.PaymentResultView;
-import com.gms.service.PaymentReconciliationService;
 
 /**
  * Nhận trình duyệt quay về từ VNPay. Kiểm chữ ký và chủ đơn rồi chuyển sang URL
@@ -29,8 +28,6 @@ public class VnPayReturnServlet extends HttpServlet {
 
     private final PaymentCallbackService callbackService
             = new PaymentCallbackService();
-    private final PaymentReconciliationService reconciliationService
-            = new PaymentReconciliationService();
 
     @Override
     protected void doGet(
@@ -80,11 +77,8 @@ public class VnPayReturnServlet extends HttpServlet {
         if (result.isSuccess()) {
             int transactionId = result.getData();
 
-            // Chủ động truy vấn VNPay sau khi đã kiểm chữ ký
-            // Return và quyền sở hữu giao dịch.
-            reconciliationService.reconcileAfterReturn(transactionId);
-
-            // Trang kết quả chỉ đọc dữ liệu đã ghi trong DB.
+            // Trang return chỉ xác minh chữ ký + chủ đơn (SRS 14.1). Kết quả thật
+            // do IPN ghi; trang kết quả chỉ đọc DB, không đổi đơn/giao dịch/slot.
             RequestUtil.redirect(
                     request,
                     response,
