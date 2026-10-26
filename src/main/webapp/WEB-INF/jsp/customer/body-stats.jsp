@@ -50,7 +50,7 @@
                 <c:if test="${not empty dashboard}">
                     <a class="tb-user" href="${ctx}/account">
                         <span class="avatar"><c:out value="${dashboard.initials}" /></span>
-                        <span class="tb-user-text"><b><c:out value="${dashboard.fullName}" /></b><span><c:out value="${dashboard.customerCode}" /></span></span>
+                        <span class="tb-user-text"><b><c:out value="${dashboard.fullName}" /></b><%@ include file="/WEB-INF/jsp/common/_user-badge-line.jspf" %></span>
                     </a>
                 </c:if>
             </div>

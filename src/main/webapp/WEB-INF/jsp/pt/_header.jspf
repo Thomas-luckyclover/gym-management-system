@@ -55,12 +55,8 @@
                  Tên được c:out escape để ký tự HTML không chạy thành mã.
                  default chỉ dùng khi giá trị null, hiện chữ "Huấn luyện viên". --%>
             <strong><c:out value="${sessionScope.displayName}" default="Huấn luyện viên" /></strong>
-            <%-- Mã nhân viên chỉ hiện nếu trang đã tải được ptEmployeeCode.
-                 Màn Lịch dạy hiện chưa tải mã: bỏ qua khối này, không in mã giả. --%>
-            <c:if test="${not empty ptEmployeeCode}">
-                <%-- Employees.EmployeeCode, ví dụ NV-0005; không phải AccountId. --%>
-                <small class="pt-user-code" title="M&#227; nh&#226;n vi&#234;n"><c:out value="${ptEmployeeCode}" /></small>
-            </c:if>
+            <%-- Dòng phụ chung mọi màn: "PT-0005 · Huấn luyện viên" (mã lấy theo tài khoản đăng nhập, mọi màn PT đều có). --%>
+            <%@ include file="/WEB-INF/jsp/common/_user-badge-line.jspf" %>
         </span>
     </a>
     </div>

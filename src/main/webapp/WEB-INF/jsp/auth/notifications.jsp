@@ -73,13 +73,7 @@
                       value="${sessionScope.displayName}" />
             </b>
 
-            <small>
-              <c:choose>
-                <c:when test="${sessionScope.role == 'Manager'}">Quản lý</c:when>
-                <c:when test="${sessionScope.role == 'PT'}">Huấn luyện viên PT</c:when>
-                <c:otherwise>Lễ tân</c:otherwise>
-              </c:choose>
-            </small>
+            <%@ include file="/WEB-INF/jsp/common/_user-badge-line.jspf" %>
 
           </span>
 

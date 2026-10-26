@@ -459,7 +459,7 @@ function initPlan(root, data) {
 
         const head = el("div", "plan-editor-head");
         const title = el("p", "plan-editor-title");
-        title.append(el("strong", "", day.label), el("span", "", " · chỉ sửa ngày này, các tuần khác giữ lịch mẫu"));
+        title.append(el("strong", "", "Sửa riêng " + day.label));
         const close = el("button", "plan-nav");
         close.type = "button";
         close.dataset.closeEditor = "";

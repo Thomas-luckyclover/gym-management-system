@@ -5,6 +5,13 @@
 - **Màn**: 4 ô số (cân nặng, BMI + nhóm BMI châu Á: <18,5 / 18,5–22,9 / 23–24,9 / ≥25, % mỡ, vòng eo; thay đổi so với lần đầu), biểu đồ đường SVG do Service tính toạ độ (trục ngang theo ngày thật, chọn chỉ số bằng `?metric=`, không JS), form ghi lần đo (chiều cao điền sẵn lần trước), bảng lịch sử + xóa (hộp xác nhận chung của common.js). Menu khách: "Chỉ số cơ thể".
 - **Seed**: giữ mốc lịch sử 03/10 (SEED_CASES.md không đổi), thêm mục 8b "làm mới cho demo": gia hạn gói tập 21–23/10 (Bích, Quân, Mai, Hà + 12 khách thường) → Active; gói PT mới từ 26/10 (An PT Sơn 07:00, Quân PT Long 11:00 từ 02/11, Hưng & Hà gói đôi PT Trang 19:30, Mai gói PT 2 tháng nối tiếp từ 09/11); 4 buổi lẻ tuần 26/10; chỉ số cơ thể của Mai (6 lần) và An (5 lần). Khung PT công bố kéo tới 31/12. runtest / negtest / bizcheck đều qua.
 
+## Thẻ tài khoản góc phải: mã theo vai trò cho mọi màn (26/10/2026, ĐÃ CODE)
+- Dòng phụ dưới tên ở **mọi màn, mọi vai trò** = `common/_user-badge-line.jspf`: **mã theo vai trò + chữ vai trò** — `KH-1006 · Hội viên`, `PT-0005 · Huấn luyện viên`, `LT-0003 · Lễ tân`, `QL-0002 · Quản lý`, `QT-0001 · Quản trị viên`. Avatar chữ = chữ viết tắt họ + tên ("Lê Thị Thanh Tâm" → "LT"), không còn "LT"/"QL" cứng.
+- **Mã trong DB giữ nguyên** (Employees.EmployeeCode NV-xxxx, Customers.CustomerCode KH-xxxx): chỉ đổi tiền tố khi hiển thị, phần số giữ nguyên (`UserBadgeService.displayCode`). Không đổi schema, không đổi chỗ khác đang dùng NV-xxxx.
+- Luồng: `AuthFilter` (mỗi request đã đăng nhập + đã chọn vai trò) → `UserBadgeService.ensure(session)` → chỉ đọc DB (`UserBadgeDAO.findCode`) khi vai trò khác lần trước → session `userCode`, `userRoleLabel`, `userInitials`. Lỗi DB không chặn trang (thẻ chỉ hiện vai trò).
+- Đã đổi 24 màn (24 chỗ vẽ `.tb-user`, gồm màn của các bạn: manager, admin, nghỉ phép, cơ sở vật chất…): chỉ thay dòng phụ + avatar chữ cứng, giữ nguyên ảnh đại diện / link. Màn mới thêm `.tb-user` thì include file trên cho dòng phụ.
+- Bán gói PT: bỏ các dòng chữ phụ cố định (gợi ý tìm khách, hướng dẫn lịch mẫu, câu dưới tiêu đề ô sửa riêng) → nút (i) hint box chung `.pt-info` cạnh "Khách mua gói", "Lịch mẫu hằng tuần", "Từng tuần". Dòng trạng thái động (số buổi, câu dưới nút Giữ lịch) giữ lại.
+
 ## Lịch dạy PT: Gỡ hết khung trống · Chép sang tuần sau · Chọn ngày (26/10/2026, ĐÃ CODE)
 - Cả 3 chỉ tạo **nháp** (thanh "Chờ công bố"); DB chỉ đổi khi PT bấm Công bố — server (`PtScheduleService.publish`) kiểm tra lại toàn bộ như cũ. Không đổi Java / DB.
 - **Gỡ hết khung trống** (`removeAllPtFree`): tích mọi ô gỡ của tuần — JSP chỉ in ô gỡ cho khung `canRemove` (Còn trống, chưa có khách, không bị đơn giữ, chưa qua) — và bỏ mọi khung nháp. Hoàn tác: "Bỏ tất cả" hoặc bấm từng thẻ. Nút chỉ hiện khi tuần có khung gỡ được.

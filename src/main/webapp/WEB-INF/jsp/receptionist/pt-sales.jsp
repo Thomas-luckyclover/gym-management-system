@@ -22,9 +22,9 @@
 <head>
     <%@ include file="/WEB-INF/jsp/common/head.jspf" %>
     <title>Bán gói PT · Super Gym Lễ tân</title>
-    <link rel="stylesheet" href="${ctx}/css/pages/receptionist/pt-sales.css?v=20261026u">
+    <link rel="stylesheet" href="${ctx}/css/pages/receptionist/pt-sales.css?v=20261026v">
     <script src="${ctx}/js/pages/receptionist/pt-sales.js?v=20261026s" defer></script>
-    <script src="${ctx}/js/pages/receptionist/pt-sale-plan.js?v=20261026s" defer></script>
+    <script src="${ctx}/js/pages/receptionist/pt-sale-plan.js?v=20261026v" defer></script>
 </head>
 <body class="dock theme-staff pt-sale-page">
 <%@ include file="/WEB-INF/jsp/common/flash-toast.jspf" %>
@@ -47,8 +47,8 @@
             </div>
             <div class="top-right">
                 <a class="tb-user" href="${ctx}/account" title="Cài đặt tài khoản">
-                    <span class="avatar">LT</span>
-                    <span class="tb-user-text"><b><c:out value="${sessionScope.displayName}" default="Lễ tân" /></b><small>Lễ tân quầy</small></span>
+                    <span class="avatar"><c:out value="${sessionScope.userInitials}" /></span>
+                    <span class="tb-user-text"><b><c:out value="${sessionScope.displayName}" default="Lễ tân" /></b><%@ include file="/WEB-INF/jsp/common/_user-badge-line.jspf" %></span>
                 </a>
             </div>
         </header>
@@ -152,7 +152,10 @@
 
                         <div class="plan-block">
                             <div class="plan-block-head">
-                                <h3 id="plan-pattern-title">Lịch mẫu hằng tuần</h3>
+                                <div class="sale-label-row">
+                                    <h3 id="plan-pattern-title">Lịch mẫu hằng tuần</h3>
+                                    <span class="pt-info"><button type="button" class="pt-info-trigger" aria-label="Cách chọn lịch mẫu" aria-describedby="plan-pattern-help"><span aria-hidden="true">i</span></button><span id="plan-pattern-help" class="pt-info-popover" role="tooltip">Mỗi thứ chọn <b>Nghỉ</b> hoặc 1 giờ (1–5 buổi/tuần). Giờ nào có ngày không xếp được sẽ ghi <b>"Còn x/9 buổi"</b> và lý do chính; rê chuột vào giờ để xem từng ngày. Mẫu nhanh chọn sẵn giờ ít bị kẹt nhất.</span></span>
+                                </div>
                                 <div class="plan-presets" role="group" aria-label="Mẫu nhanh">
                                     <button type="button" class="plan-preset" data-preset="1,3,5">T2 · T4 · T6</button>
                                     <button type="button" class="plan-preset" data-preset="2,4">T3 · T5</button>
@@ -160,13 +163,15 @@
                                     <button type="button" class="plan-preset is-quiet" data-preset="">Bỏ hết</button>
                                 </div>
                             </div>
-                            <p class="plan-hint">Chọn giờ cho thứ khách tập, thứ không tập để <b>Nghỉ</b>. Giờ nào có ngày không xếp được sẽ ghi <b>còn mấy buổi</b> và lý do; rê chuột vào giờ để xem từng ngày.</p>
                             <div class="plan-pattern" data-pattern aria-labelledby="plan-pattern-title"></div>
                         </div>
 
                         <div class="plan-block">
                             <div class="plan-block-head">
-                                <h3 id="plan-week-title">Từng tuần</h3>
+                                <div class="sale-label-row">
+                                    <h3 id="plan-week-title">Từng tuần</h3>
+                                    <span class="pt-info"><button type="button" class="pt-info-trigger" aria-label="Cách xem và sửa từng tuần" aria-describedby="plan-week-help"><span aria-hidden="true">i</span></button><span id="plan-week-help" class="pt-info-popover" role="tooltip">Bấm số tuần hoặc ‹ › để xem. <b>Bấm 1 ô ngày</b> để đổi giờ hoặc bỏ buổi <b>chỉ ngày đó</b>; các tuần khác giữ lịch mẫu. Chấm đỏ trên số tuần = có ngày chưa xếp được.</span></span>
+                                </div>
                                 <div class="plan-week-nav">
                                     <button type="button" class="plan-nav" data-week-step="-1" aria-label="Tuần trước"><i class="fa-solid fa-chevron-left" aria-hidden="true"></i></button>
                                     <p class="plan-week-label" data-week-label aria-live="polite"></p>
@@ -240,7 +245,10 @@
                     <c:if test="${done2}"><c:param name="start" value="${sale.startDate}" /></c:if>
                 </c:url>
                 <section class="sale-who" aria-labelledby="sale-h1">
-                    <h3 id="sale-h1" class="sale-field-label">Khách mua gói</h3>
+                    <div class="sale-label-row">
+                        <h3 id="sale-h1" class="sale-field-label">Khách mua gói</h3>
+                        <span class="pt-info"><button type="button" class="pt-info-trigger" aria-label="Cách tìm khách" aria-describedby="sale-q-help"><span aria-hidden="true">i</span></button><span id="sale-q-help" class="pt-info-popover" role="tooltip">Gõ tên <b>không cần dấu</b> ("bui thu ha"), số điện thoại ("0901…") hoặc mã khách ("KH-1001"). Tư vấn gói, PT, lịch trước rồi chọn khách sau cũng được — lịch đang xếp giữ nguyên.</span></span>
+                    </div>
                     <c:choose>
                         <c:when test="${empty sale.holder}">
                             <%-- Gõ → gợi ý (JS). Tắt JS: Enter → ?q=… (ô ẩn giữ gói / PT / ngày) → danh sách bên dưới. --%>
@@ -253,10 +261,9 @@
                                     <input id="sale-q" name="q" type="search" value="<c:out value='${sale.searchQuery}' />"
                                            placeholder="Tên, SĐT hoặc mã khách" autocomplete="off" spellcheck="false"
                                            role="combobox" aria-autocomplete="list" aria-expanded="false" aria-controls="sale-q-list"
-                                           aria-describedby="sale-q-hint">
+                                           aria-describedby="sale-q-help">
                                     <ul class="sale-suggest" id="sale-q-list" role="listbox" aria-label="Khách gợi ý" hidden></ul>
                                 </div>
-                                <p class="sale-hint" id="sale-q-hint">Tên không cần dấu, "0901…", "KH-1001". Tư vấn gói trước rồi chọn khách sau cũng được.</p>
                             </form>
                             <c:if test="${not empty sale.holderError}"><p class="sale-msg is-error" role="alert"><c:out value="${sale.holderError}" /></p></c:if>
                             <c:if test="${not empty sale.searchResults}">

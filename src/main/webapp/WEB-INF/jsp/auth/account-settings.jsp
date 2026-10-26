@@ -105,9 +105,7 @@
                                     onerror="this.classList.add('is-hidden'); this.style.display='none'; var fb = document.getElementById('topbarAvatarFallback'); if (fb) { fb.classList.remove('is-hidden'); fb.style.display=''; }"
                                 >
                                 <span id="topbarAvatarFallback" class="avatar is-hidden" aria-hidden="true" style="display: none;">
-                                    <c:out
-                                        value="${accountSettings.initials}"
-                                    />
+                                    <c:out value="${sessionScope.userInitials}" />
                                 </span>
 
                             </c:when>
@@ -115,9 +113,7 @@
                             <c:otherwise>
 
                                 <span id="topbarAvatarFallback" class="avatar">
-                                    <c:out
-                                        value="${accountSettings.initials}"
-                                    />
+                                    <c:out value="${sessionScope.userInitials}" />
                                 </span>
 
                             </c:otherwise>
@@ -134,13 +130,7 @@
 
                             </b>
 
-                            <small>
-
-                                <c:out
-                                    value="${currentRole.displayName}"
-                                />
-
-                            </small>
+                            <%@ include file="/WEB-INF/jsp/common/_user-badge-line.jspf" %>
 
                         </span>
 
