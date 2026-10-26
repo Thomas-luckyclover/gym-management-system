@@ -652,31 +652,79 @@ vcode(None, 'khach.moi@gmail.com', 'SignUp', '112233', now_(-1), now_(14), note=
 vcode(None, 'yen.doan@gmail.com', 'Claim', '445566', now_(-1), now_(14), note='kích hoạt hồ sơ Yến, mã 445566')
 
 # ============================================================ 13. NHÂN SỰ, THIẾT BỊ
-def LR(**kw):
-    """Map mẫu đơn một ngày sang schema FromDate/ToDate/Days hiện tại."""
-    leave_date = kw.pop('LeaveDate')
-    kw['FromDate'] = leave_date
-    kw['ToDate'] = leave_date
-    # Quy tắc 24/10: đơn chờ tính 1 ngày mọi ca; đơn đã xử lý giữ số ngày cũ.
-    kw['Days'] = 1.0 if kw['Status'] == 'Pending' or kw['ShiftType'] == 'FullDay' else 0.5
-    kw['AssignedToEmployeeId'] = None
-    return add('LeaveRequests', kw)
-LR(EmployeeId=5, ReviewedByEmployeeId=2, LeaveType='Annual', LeaveDate=d_(2026, 9, 19), ShiftType='Morning', Reason='Về quê giỗ ông',
-   Status='Approved', RejectReason=None, SubmittedAt=dt_(2026, 9, 17, 10, 0), ReviewedAt=dt_(2026, 9, 17, 15, 30), ReminderSentAt=None)
-LR(EmployeeId=7, ReviewedByEmployeeId=2, LeaveType='Unpaid', LeaveDate=d_(2026, 9, 19), ShiftType='Afternoon', Reason='Có việc cá nhân',
-   Status='Rejected', RejectReason='Ca chiều chỉ còn 2 PT, duyệt sẽ thiếu người (CBR-88)', SubmittedAt=dt_(2026, 9, 18, 9, 0),
-   ReviewedAt=dt_(2026, 9, 18, 17, 0), ReminderSentAt=None)
-LR(EmployeeId=4, ReviewedByEmployeeId=None, LeaveType='Annual', LeaveDate=d_(2026, 9, 16), ShiftType='Morning', Reason='Đưa con đi khám',
-   Status='Rejected', RejectReason='Quá hạn duyệt', SubmittedAt=dt_(2026, 9, 15, 14, 0), ReviewedAt=dt_(2026, 9, 15, 20, 0),
-   ReminderSentAt=dt_(2026, 9, 15, 19, 0))
-LR(EmployeeId=3, ReviewedByEmployeeId=2, LeaveType='Annual', LeaveDate=d_(2026, 10, 14), ShiftType='Afternoon', Reason='Đi đám cưới bạn',
-   Status='Approved', RejectReason=None, SubmittedAt=dt_(2026, 10, 1, 9, 30), ReviewedAt=dt_(2026, 10, 1, 11, 0), ReminderSentAt=None)
-LR(EmployeeId=6, ReviewedByEmployeeId=None, LeaveType='Sick', LeaveDate=d_(2026, 10, 10), ShiftType='FullDay', Reason='Lịch tái khám định kỳ',
-   Status='Pending', RejectReason=None, SubmittedAt=dt_(2026, 10, 2, 8, 0), ReviewedAt=None, ReminderSentAt=None)
-LR(EmployeeId=13, ReviewedByEmployeeId=None, LeaveType='Annual', LeaveDate=d_(2026, 10, 12), ShiftType='Morning', Reason='Thi chứng chỉ huấn luyện',
-   Status='Pending', RejectReason=None, SubmittedAt=dt_(2026, 10, 2, 14, 0), ReviewedAt=None, ReminderSentAt=None)
-LR(EmployeeId=9, ReviewedByEmployeeId=2, LeaveType='Sick', LeaveDate=d_(2026, 9, 24), ShiftType='FullDay', Reason='Sốt cao, có giấy khám',
-   Status='Approved', RejectReason=None, SubmittedAt=dt_(2026, 9, 23, 11, 0), ReviewedAt=dt_(2026, 9, 23, 16, 0), ReminderSentAt=None)
+# BF-05: dữ liệu có cùng cấu trúc với bảng LeaveRequests.
+# Ngày mẫu cố định quanh 26/10/2026 để mở lại được đúng các tình huống đã chốt.
+def leave_request(employee, leave_type, from_date, to_date, shift, days, reason,
+                  status='Pending', reviewer=None, reject_reason=None,
+                  submitted=None, reviewed=None, assigned=None, group=None):
+    return add('LeaveRequests', dict(
+        EmployeeId=employee, ReviewedByEmployeeId=reviewer, AssignedToEmployeeId=assigned,
+        LeaveType=leave_type, FromDate=from_date, ToDate=to_date, ShiftType=shift,
+        Days=days, Reason=reason, Status=status, RejectReason=reject_reason,
+        SubmittedAt=submitted, ReviewedAt=reviewed, ReminderSentAt=None, LeaveGroupId=group))
+
+# Bảy đơn gốc: giữ số ngày lịch sử đã xử lý, đơn chờ tính 1 ngày cho mỗi ngày nghỉ.
+leave_request(5, 'Annual', d_(2026, 10, 18), d_(2026, 10, 18), 'Morning', 0.5,
+    'Về quê có việc gia đình',
+    status='Approved', reviewer=2, submitted=dt_(2026, 10, 16, 9, 0), reviewed=dt_(2026, 10, 17, 15, 30), assigned=2)
+leave_request(4, 'Sick', d_(2026, 10, 19), d_(2026, 10, 19), 'Afternoon', 0.5,
+    'Nghỉ khám sức khỏe ca chiều',
+    status='Rejected', reviewer=2, reject_reason='Ca chiều thiếu lễ tân trực quầy, vui lòng đổi ca khác', submitted=dt_(2026, 10, 18, 8, 30), reviewed=dt_(2026, 10, 18, 16, 0), assigned=2)
+leave_request(6, 'Annual', d_(2026, 10, 22), d_(2026, 10, 22), 'Morning', 1.0,
+    'Tham gia hội thảo chuyên môn fitness buổi sáng',
+    submitted=dt_(2026, 10, 20, 8, 30), assigned=2)
+leave_request(3, 'Annual', d_(2026, 10, 23), d_(2026, 10, 24), 'FullDay', 2.0,
+    'Nghỉ phép thường niên cùng gia đình 2 ngày',
+    submitted=dt_(2026, 10, 20, 9, 15), assigned=2)
+leave_request(7, 'Sick', d_(2026, 10, 24), d_(2026, 10, 24), 'Morning', 1.0,
+    'Khám chấn thương cổ tay tại bệnh viện thể thao',
+    submitted=dt_(2026, 10, 20, 10, 0), assigned=2)
+leave_request(9, 'Unpaid', d_(2026, 10, 25), d_(2026, 10, 25), 'Afternoon', 1.0,
+    'Xin nghỉ giải quyết thủ tục giấy tờ hành chính cá nhân',
+    submitted=dt_(2026, 10, 20, 11, 30))
+leave_request(8, 'Annual', d_(2026, 10, 26), d_(2026, 10, 26), 'FullDay', 1.0,
+    'Nghỉ giải quyết việc gia đình đột xuất',
+    submitted=dt_(2026, 10, 20, 13, 45), assigned=2)
+
+# Tám mẫu độc lập: sắp nghỉ, một ca, không lương, đã duyệt, từ chối, duyệt muộn, nhiều ngày, thiếu phép.
+leave_request(3, 'Unpaid', d_(2026, 10, 27), d_(2026, 10, 27), 'Morning', 1.0,
+    '[DEMO-01] Sắp nghỉ: xin nghỉ ca sáng để giải quyết việc gia đình.',
+    submitted=dt_(2026, 10, 26, 8, 0))
+leave_request(5, 'Annual', d_(2026, 10, 28), d_(2026, 10, 28), 'Morning', 1.0,
+    '[DEMO-02] Phép năm một ca: đưa người thân đi làm thủ tục buổi sáng.',
+    submitted=dt_(2026, 10, 26, 8, 10))
+leave_request(5, 'Unpaid', d_(2026, 11, 1), d_(2026, 11, 1), 'Morning', 1.0,
+    '[DEMO-03] Chủ động xin nghỉ không lương dù vẫn còn phép năm.',
+    submitted=dt_(2026, 10, 26, 8, 20))
+leave_request(5, 'Annual', d_(2026, 10, 21), d_(2026, 10, 21), 'Morning', 1.0,
+    '[DEMO-04] Đơn đã duyệt: nghỉ giải quyết thủ tục cá nhân.',
+    status='Approved', reviewer=2, submitted=dt_(2026, 10, 18, 8, 0), reviewed=dt_(2026, 10, 19, 8, 0))
+leave_request(5, 'Unpaid', d_(2026, 10, 30), d_(2026, 10, 30), 'Afternoon', 1.0,
+    '[DEMO-05] Đơn từ chối: xin nghỉ để tham gia lớp học cá nhân.',
+    status='Rejected', reviewer=2, reject_reason='[DEMO] Chưa bố trí được người thay ca, vui lòng chọn ngày khác.', submitted=dt_(2026, 10, 26, 8, 30), reviewed=dt_(2026, 10, 26, 9, 0))
+leave_request(6, 'Unpaid', d_(2026, 10, 25), d_(2026, 10, 25), 'FullDay', 1.0,
+    '[DEMO-06] Ngày nghỉ đã qua nhưng đơn vẫn đang chờ xử lý.',
+    submitted=dt_(2026, 10, 23, 8, 0))
+leave_request(9, 'Annual', d_(2026, 11, 3), d_(2026, 11, 5), 'FullDay', 3.0,
+    '[DEMO-07] Nghỉ nhiều ngày: về quê dự việc gia đình trong ba ngày.',
+    submitted=dt_(2026, 10, 26, 8, 40))
+leave_request(14, 'Annual', d_(2026, 11, 18), d_(2026, 12, 2), 'FullDay', 15.0,
+    '[DEMO-08] Thiếu phép: xin 15 ngày khi quỹ phép năm được cấu hình 14 ngày.',
+    submitted=dt_(2026, 10, 26, 8, 50))
+
+# Hai cặp cùng đợt nghỉ: A cùng chờ; B phép năm đã duyệt, không lương bị từ chối.
+leave_request(3, 'Annual', d_(2026, 11, 8), d_(2026, 11, 12), 'FullDay', 5.0,
+    '[DEMO-SPLIT-A] Đợt nghỉ 9 ngày, phần phép năm đang chờ.',
+    submitted=dt_(2026, 10, 26, 9, 0), group='11111111-0524-4620-8000-000000000001')
+leave_request(3, 'Unpaid', d_(2026, 11, 13), d_(2026, 11, 16), 'FullDay', 4.0,
+    '[DEMO-SPLIT-A] Cùng đợt nghỉ 9 ngày, phần không lương đang chờ.',
+    submitted=dt_(2026, 10, 26, 9, 0), group='11111111-0524-4620-8000-000000000001')
+leave_request(3, 'Annual', d_(2026, 11, 20), d_(2026, 11, 24), 'FullDay', 5.0,
+    '[DEMO-SPLIT-B] Phần phép năm đã được duyệt trong đợt 9 ngày.',
+    status='Approved', reviewer=2, submitted=dt_(2026, 10, 26, 9, 0), reviewed=dt_(2026, 10, 26, 10, 0), group='22222222-0524-4620-8000-000000000002')
+leave_request(3, 'Unpaid', d_(2026, 11, 25), d_(2026, 11, 28), 'FullDay', 4.0,
+    '[DEMO-SPLIT-B] Phần không lương bị từ chối trong cùng đợt.',
+    status='Rejected', reviewer=2, reject_reason='[DEMO] Chưa bố trí được nhân sự cho phần không lương.', submitted=dt_(2026, 10, 26, 9, 0), reviewed=dt_(2026, 10, 26, 10, 0), group='22222222-0524-4620-8000-000000000002')
 
 FAC = [('Máy chạy bộ Technogym', 'Cardio', 'Khu cardio tầng 1'),
        ('Xe đạp tập', 'Cardio', 'Khu cardio tầng 1'),

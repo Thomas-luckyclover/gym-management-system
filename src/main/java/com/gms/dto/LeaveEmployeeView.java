@@ -19,7 +19,7 @@ public class LeaveEmployeeView {
     private LocalDate nextPendingDate;
     // Service đánh dấu khi có đơn chờ nghỉ hôm nay/ngày mai.
     private boolean nearLeaveDate;
-    private final List<LeaveRequestItemView> requests = new ArrayList<>();
+    private List<LeaveRequestItemView> requests = new ArrayList<>();
 
     public LeaveEmployeeView(int employeeId, String employeeCode, String fullName, String position,
             String avatarUrl, String employmentStatus) {
@@ -89,6 +89,10 @@ public class LeaveEmployeeView {
 
     public List<LeaveRequestItemView> getRequests() {
         return requests;
+    }
+
+    public void setRequests(List<LeaveRequestItemView> requests) {
+        this.requests = requests;
     }
 
 }

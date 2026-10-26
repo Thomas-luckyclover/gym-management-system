@@ -8,11 +8,14 @@ package com.gms.dto;
  */
 public class ReviewCheck {
 
-    private final String key;    // REQUEST (dữ liệu lỗi) | ANNUAL_QUOTA | STAFFING | SESSIONS
-    private final String label;  // "Phép năm", "Định biên", "Lịch dạy"
+    private String key;          // REQUEST (dữ liệu lỗi) | ANNUAL_QUOTA | STAFFING | SESSIONS
+    private String label;        // "Phép năm", "Định biên", "Lịch dạy"
     private boolean applicable;  // false thì không áp dụng
     private boolean ok;          // true nếu đạt, false nếu vi phạm
     private String message;      // câu tóm tắt điều kiện
+
+    public ReviewCheck() {
+    }
 
     public ReviewCheck(String key, String label, boolean applicable, boolean ok, String message) {
         this.key = key;
@@ -26,8 +29,16 @@ public class ReviewCheck {
         return key;
     }
 
+    public void setKey(String key) {
+        this.key = key;
+    }
+
     public String getLabel() {
         return label;
+    }
+
+    public void setLabel(String label) {
+        this.label = label;
     }
 
     public boolean isApplicable() {

@@ -53,6 +53,9 @@ public class LeaveRequest {
     // DAO: LeaveRequests.ReviewedAt; có khi Approved hoặc Rejected.
     private LocalDateTime reviewedAt;
 
+    // DAO: LeaveRequests.ReminderSentAt; JOB-07 dùng để không nhắc cùng một đơn hai lần.
+    private LocalDateTime reminderSentAt;
+
     // DAO: LeaveRequests.FromDate, ngày bắt đầu nghỉ.
     private LocalDate fromDate;
 
@@ -167,6 +170,14 @@ public class LeaveRequest {
 
     public void setReviewedAt(LocalDateTime reviewedAt) {
         this.reviewedAt = reviewedAt;
+    }
+
+    public LocalDateTime getReminderSentAt() {
+        return reminderSentAt;
+    }
+
+    public void setReminderSentAt(LocalDateTime reminderSentAt) {
+        this.reminderSentAt = reminderSentAt;
     }
 
     public boolean isPending() {

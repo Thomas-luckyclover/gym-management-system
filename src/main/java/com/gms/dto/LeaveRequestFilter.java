@@ -26,6 +26,11 @@ public class LeaveRequestFilter {
     private final LocalDate fromDate;
     private final LocalDate toDate;
 
+    /** Bộ lọc đơn giản theo tab và từ khóa; các điều kiện khác để trống. */
+    public LeaveRequestFilter(LeaveRequest.Status status, String keyword) {
+        this(status, keyword, null, null, null, null);
+    }
+
     /** Service gọi sau khi chuẩn hóa tham số URL; constructor chỉ nhận dữ liệu. */
     public LeaveRequestFilter(
             LeaveRequest.Status status,

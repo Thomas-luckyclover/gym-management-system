@@ -29,7 +29,7 @@ public class LeaveRequestDAO {
     private static final String REQUEST_COLUMNS
             = "LeaveRequestId, EmployeeId, ReviewedByEmployeeId, LeaveType, "
             + "FromDate, ToDate, Days, ShiftType, Reason, Status, RejectReason, "
-            + "SubmittedAt, ReviewedAt, LeaveGroupId ";
+            + "SubmittedAt, ReviewedAt, ReminderSentAt, LeaveGroupId ";
 
     private static final String SELECT_COLUMNS = "SELECT " + REQUEST_COLUMNS + "FROM LeaveRequests ";
 
@@ -37,7 +37,7 @@ public class LeaveRequestDAO {
     private static final String MANAGER_REQUEST_SELECT = "SELECT "
             + "lr.LeaveRequestId, lr.EmployeeId, lr.ReviewedByEmployeeId, "
             + "lr.LeaveType, lr.FromDate, lr.ToDate, lr.Days, lr.ShiftType, lr.Reason, lr.Status, lr.RejectReason, "
-            + "lr.SubmittedAt, lr.ReviewedAt, lr.LeaveGroupId, e.EmployeeCode, e.Position, "
+            + "lr.SubmittedAt, lr.ReviewedAt, lr.ReminderSentAt, lr.LeaveGroupId, e.EmployeeCode, e.Position, "
             + "p.FullName AS EmployeeName, p.Avatar "
             + "FROM LeaveRequests lr "
             + "JOIN Employees e ON e.EmployeeId = lr.EmployeeId "
@@ -350,7 +350,7 @@ public class LeaveRequestDAO {
                 + "lr.ReviewedByEmployeeId, lr.LeaveType, "
                 + "lr.FromDate, lr.ToDate, lr.Days, "
                 + "lr.ShiftType, lr.Reason, lr.Status, lr.RejectReason, "
-                + "lr.SubmittedAt, lr.ReviewedAt, lr.LeaveGroupId, "
+                + "lr.SubmittedAt, lr.ReviewedAt, lr.ReminderSentAt, lr.LeaveGroupId, "
                 + "e.EmployeeCode, e.Position, "
                 + "p.FullName AS EmployeeName, p.Avatar, "
                 + "rp.FullName AS ReviewerName "
@@ -777,6 +777,8 @@ public class LeaveRequestDAO {
                 toLocalDateTime(resultSet.getTimestamp("SubmittedAt")));
         leaveRequest.setReviewedAt(
                 toLocalDateTime(resultSet.getTimestamp("ReviewedAt")));
+        leaveRequest.setReminderSentAt(
+                toLocalDateTime(resultSet.getTimestamp("ReminderSentAt")));
         return leaveRequest;
     }
 

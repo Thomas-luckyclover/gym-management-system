@@ -224,8 +224,8 @@
 
                   <div class="review-check-list">
                     <c:forEach var="c" items="${item.checks}">
-                      <%-- Chỉ hiện lịch dạy nếu phát sinh xung đột mới sau khi gửi đơn. --%>
-                      <c:if test="${c.applicable and (c.key != 'SESSIONS' or not c.ok)}">
+                      <%-- Manager xem quỹ phép và nhân sự; lịch PT được xử lý ở màn gửi đơn. --%>
+                      <c:if test="${c.applicable and c.key != 'SESSIONS'}">
                         <div class="review-check-item ${c.ok ? 'pass' : 'fail'}">
                           <div class="check-icon-badge">
                             <i class="fa-solid ${c.ok ? 'fa-check' : 'fa-xmark'}" aria-hidden="true"></i>
