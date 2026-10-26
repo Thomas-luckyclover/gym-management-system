@@ -87,6 +87,7 @@ public class LoginServlet extends HttpServlet {
             newSession.setAttribute(SessionKey.ACCOUNT_ID, loginResult.getAccountId());
             newSession.setAttribute(SessionKey.AVAILABLE_ROLES, SelectRoleServlet.joinRoles(loginResult.getAvailableRoles()));
             newSession.setAttribute(SessionKey.DISPLAY_NAME, loginResult.getFullName());
+            newSession.setAttribute(SessionKey.AVATAR, loginResult.getAvatar());
             newSession.setMaxInactiveInterval(SessionKey.SESSION_TIMEOUT_SECONDS);
             RequestUtil.getOrCreateCsrfToken(newSession);
 
