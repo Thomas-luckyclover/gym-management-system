@@ -224,4 +224,72 @@ public class TransactionDAO {
         return findById(conn, transactionId, false);
     }
 
+    /**
+     * JOB-06: mã các giao dịch online còn Pending nhưng đã quá ExpiresAt.
+     */
+    public List<Integer> findExpiredPendingIds(Connection conn, LocalDateTime now) throws SQLException {
+        String sql = """
+            SELECT TransactionId
+            FROM Transactions
+            WHERE PaymentMethod = 'OnlineGateway'
+              AND Status = 'Pending'
+              AND ExpiresAt < ?
+            ORDER BY TransactionId
+            """;
+
+        List<Integer> ids = new ArrayList<>();
+
+        try (PreparedStatement statement = conn.prepareStatement(sql)) {
+            statement.setTimestamp(1, Timestamp.valueOf(now));
+
+            try (ResultSet rows = statement.executeQuery()) {
+                while (rows.next()) {
+                    ids.add(rows.getInt("TransactionId"));
+                }
+            }
+        }
+
+        return ids;
+    }
+
+    /**
+     * Pending -> Expired (CompletedAt giữ NULL). Điều kiện Status nằm trong
+     * WHERE: nếu IPN hoặc JOB-05 vừa xử lý trước thì trả 0 và Service bỏ qua.
+     */
+    public int markExpired(Connection conn, int transactionId) throws SQLException {
+        String sql = "UPDATE Transactions SET Status = 'Expired' "
+                + "WHERE TransactionId = ? AND Status = 'Pending'";
+
+        try (PreparedStatement statement = conn.prepareStatement(sql)) {
+            statement.setInt(1, transactionId);
+            return statement.executeUpdate();
+        }
+    }
+
+    /**
+     * JOB-05: mọi giao dịch Pending của đơn -> Expired. Trả 0 cũng hợp lệ.
+     */
+    public int expirePendingByOrder(Connection conn, int orderId) throws SQLException {
+        String sql = "UPDATE Transactions SET Status = 'Expired' "
+                + "WHERE OrderId = ? AND Status = 'Pending'";
+
+        try (PreparedStatement statement = conn.prepareStatement(sql)) {
+            statement.setInt(1, orderId);
+            return statement.executeUpdate();
+        }
+    }
+
+    /**
+     * Đơn đã có giao dịch Success chưa (JOB-05 không được hủy đơn đã có tiền).
+     */
+    public boolean hasSuccess(Connection conn, int orderId) throws SQLException {
+        try (PreparedStatement statement = conn.prepareStatement(
+                "SELECT TOP (1) TransactionId FROM Transactions WHERE OrderId = ? AND Status = 'Success'")) {
+            statement.setInt(1, orderId);
+
+            try (ResultSet resultSet = statement.executeQuery()) {
+                return resultSet.next();
+            }
+        }
+    }
 }
