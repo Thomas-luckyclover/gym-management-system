@@ -197,6 +197,42 @@ html body.dock.pt-sale-page .content .sale-card :is(h2, h3) {
   color: var(--color-danger-ink);
   font-weight: var(--font-weight-medium);
 }
+/* Hộp nhắc PT chưa công bố đủ T2–T6 (đầu phần Lịch tập). */
+.plan-alert {
+  display: flex;
+  align-items: flex-start;
+  gap: var(--space-3);
+  margin-bottom: var(--space-4);
+  padding: var(--space-3) var(--space-4);
+  border-radius: var(--arena-radius-chip);
+  background: var(--color-warning-tint);
+  box-shadow: inset 0 0 0 1px var(--color-warning-border);
+  color: var(--color-warning-ink);
+  font-size: var(--font-size-sm);
+  line-height: var(--line-height-normal);
+}
+.plan-alert > i,
+.plan-alert > svg {
+  flex: none;
+  width: 18px;
+  height: 18px;
+  margin-top: 2px;
+}
+.plan-alert p {
+  margin: 0;
+  text-wrap: pretty;
+}
+/* Tên thứ PT chưa công bố trong Lịch mẫu: thêm nhãn vàng nhỏ. */
+.plan-row-day .plan-row-flag {
+  justify-self: start;
+  padding: 1px var(--space-1-5);
+  border-radius: var(--arena-radius-chip);
+  background: var(--color-warning-tint);
+  box-shadow: inset 0 0 0 1px var(--color-warning-border);
+  color: var(--color-warning-ink);
+  font-weight: var(--font-weight-semibold);
+  white-space: nowrap;
+}
 .sale-empty {
   padding: var(--space-5);
   border-radius: var(--arena-radius-chip);
@@ -959,6 +995,21 @@ button.plan-day:hover {
   color: var(--arena-steel-ink);
   font-size: var(--font-size-sm);
 }
+/* Nhãn "PT chưa mở": buổi sẽ tự tạo khung mới → vàng, cùng màu hộp nhắc + ô "Đã xác nhận với PT". */
+.plan-day-fresh,
+.plan-key .is-fresh::before {
+  background: var(--color-warning-tint);
+  box-shadow: inset 0 0 0 1px var(--color-warning-border);
+  color: var(--color-warning-ink);
+}
+.plan-day-fresh {
+  justify-self: start;
+  padding: 1px var(--space-1-5);
+  border-radius: var(--arena-radius-chip);
+  font-size: var(--font-size-2xs);
+  font-weight: var(--font-weight-semibold);
+  white-space: nowrap;
+}
 .plan-day-flag {
   justify-self: start;
   margin-top: auto;
@@ -1298,6 +1349,35 @@ html body.dock.pt-sale-page .sale-summary {
   height: 18px;
   margin-top: 1px;
   accent-color: var(--arena-700);
+}
+/* Ô "Đã xác nhận với PT": khung vàng giống hộp nhắc bên trái → lễ tân thấy 2 chỗ là 1 việc. */
+.sale-pt-confirm {
+  padding: var(--space-3);
+  border-radius: var(--arena-radius-chip);
+  background: var(--color-warning-tint);
+  box-shadow: inset 0 0 0 1px var(--color-warning-border);
+  color: var(--color-warning-ink);
+  transition: background-color 160ms ease, box-shadow 160ms ease;
+}
+.sale-pt-confirm[hidden] {
+  display: none;
+}
+.sale-pt-confirm span {
+  display: grid;
+  gap: 2px;
+}
+.sale-pt-confirm small {
+  font-size: var(--font-size-xs);
+  opacity: 0.9;
+}
+.sale-pt-confirm:has(input:checked) {
+  background: var(--color-success-tint);
+  box-shadow: inset 0 0 0 1px var(--color-success-border);
+  color: var(--color-success-ink);
+}
+.sale-pt-confirm:has(input:focus-visible) {
+  outline: 2px solid var(--arena-700);
+  outline-offset: 2px;
 }
 .sale-main {
   width: 100%;

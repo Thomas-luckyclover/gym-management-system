@@ -1,5 +1,17 @@
 # File notes — mâu thuẫn tài liệu & quyết định đã chốt
 
+## Bán gói PT: nhắc + chặn mềm khi PT chưa mở khung (26/10/2026, ĐÃ CODE)
+- **Vấn đề**: buổi rơi vào ngày PT chưa có khung đúng giờ → `hold()` tự tạo khung mới (`insertHeldSlot`) → lễ tân có thể xếp vào giờ PT không rảnh mà không biết.
+- **Đã chốt (chặn mềm, giữ nguyên cách tính lịch cũ, không đổi DB)** — xét **theo TỪNG BUỔI**, không theo Thứ:
+  - `buildPlan`: mỗi giờ của 1 ngày có thêm cờ `fresh` = `checkDay` trả `"create"` (ngày đó PT chưa có khung giờ này). Ví dụ PT Thứ 5 chỉ mở 09:00, lễ tân chọn Thứ 5 18:00 → các buổi Thứ 5 đều `fresh`.
+  - Màn hình: ô buổi + nút giờ trong "Sửa riêng" ghi nhãn vàng **"PT chưa mở"**; chú thích thêm "PT chưa mở — cần hỏi PT".
+  - Form Giữ lịch: có buổi `fresh` → hiện ô tích **"Đã xác nhận với PT"** ("N buổi PT chưa mở khung — PT đã đồng ý dạy"); chưa tích → nút Giữ lịch khóa.
+  - Server kiểm tra lại trong `hold()`: `countNewSlots(view.days)` (đếm buổi `"create"`) > 0 mà không có `confirmPt` → từ chối.
+  - Thêm: hộp vàng đầu Lịch tập + nhãn "PT chưa công bố" trong Lịch mẫu khi có Thứ PT không mở khung nào trong 14 ngày đầu (`unpublishedWeekdays`) — chỉ để nhắc.
+- Bản đầu (cùng ngày) bắt tích theo Thứ → sót trường hợp "Thứ có công bố nhưng sai giờ" → đã đổi sang theo buổi như trên.
+- Đã thử: gói 3 tháng từ 25/11 (tuần cuối kỳ PT chưa công bố) → 22 buổi "PT chưa mở", ô tích + nút khóa, tích → mở; trước đó (bản theo Thứ) đã thử server từ chối khi thiếu tích.
+- Sửa kèm: hint box `.pt-info-popover` lúc ẩn đặt `left: 0` → nút (i) sát mép phải làm trang cuộn ngang ~22px ở 1440. Nay canh `right: 0` (common.css); mở ra common.js vẫn tự đặt vị trí như cũ.
+
 ## Chỉ số cơ thể của khách — /customer/body-stats (25/10/2026, ĐÃ CODE) + làm mới seed
 - **DB (đã báo người dùng)**: bảng mới `BodyMeasurements` (CustomerId, MeasuredOn, WeightKg, HeightCm, BodyFatPercent?, WaistCm?, Note?). UNIQUE (CustomerId, MeasuredOn): 1 lần đo / ngày, lưu lại cùng ngày = ghi đè (MERGE). BMI **không lưu**, Service tính. Ngoài SRS, chỉ khách xem; PT đo ở phòng theo dõi riêng (không nối dữ liệu).
 - **Màn**: 4 ô số (cân nặng, BMI + nhóm BMI châu Á: <18,5 / 18,5–22,9 / 23–24,9 / ≥25, % mỡ, vòng eo; thay đổi so với lần đầu), biểu đồ đường SVG do Service tính toạ độ (trục ngang theo ngày thật, chọn chỉ số bằng `?metric=`, không JS), form ghi lần đo (chiều cao điền sẵn lần trước), bảng lịch sử + xóa (hộp xác nhận chung của common.js). Menu khách: "Chỉ số cơ thể".

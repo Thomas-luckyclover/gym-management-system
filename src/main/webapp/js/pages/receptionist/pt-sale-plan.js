@@ -9,8 +9,10 @@
  *   3. Sửa riêng 1 buổi     bấm 1 ô ngày → chọn giờ khác hoặc Không tập, CHỈ cho ngày đó ("chỉ sự kiện này").
  *
  * DỮ LIỆU: server tính sẵn (PtSaleService.buildPlan → <script id="sale-plan-data">):
- *   days[]  mỗi ngày T2–T6 trong kỳ: {date, weekday 1–5, label, options[{time, end, ok, reason, warning}]}
+ *   days[]  mỗi ngày T2–T6 trong kỳ: {date, weekday 1–5, label, options[{time, end, ok, reason, warning, fresh}]}
+ *           fresh = PT chưa mở khung giờ đó ngày đó → giữ lịch sẽ tự tạo khung → phải tích "Đã xác nhận với PT"
  *   times[] giờ của lịch mẫu · pattern[5] lịch mẫu ban đầu · requested[] buổi gửi lên lần trước (khi bị từ chối)
+ *   unpublished[] Thứ PT chưa công bố khung nào (1 = Thứ 2 …) → nhãn "PT chưa công bố" trong Lịch mẫu
  * TRẠNG THÁI (chỉ 2 thứ):
  *   pattern[0..4]  giờ của Thứ 2..Thứ 6, "" = Nghỉ
  *   overrides      Map ngày → giờ sửa riêng ("" = bỏ buổi ngày đó)
@@ -68,6 +70,15 @@ function initPlan(root, data) {
     const weekLabel = root.querySelector("[data-week-label]");
     const totalBox = root.querySelector("[data-plan-total]");
     const form = document.querySelector("[data-plan-form]");
+    const unpublished = data.unpublished || [];
+    // Tích / bỏ tích "Đã xác nhận với PT" → tính lại nút Giữ lịch.
+    if (form) {
+        form.addEventListener("change", function (event) {
+            if (event.target.name === "confirmPt") {
+                renderSummary();
+            }
+        });
+    }
 
     // ===== Sự kiện (gắn 1 lần, ủy quyền theo data-*) =====
     root.addEventListener("change", function (event) {
@@ -220,7 +231,8 @@ function initPlan(root, data) {
         if (!option.ok) {
             return { kind: "bad", time: time, reason: option.reason, edited: edited };
         }
-        return { kind: option.warning ? "warn" : "ok", time: time, end: option.end, warning: option.warning, edited: edited };
+        return { kind: option.warning ? "warn" : "ok", time: time, end: option.end, warning: option.warning, edited: edited,
+            fresh: option.fresh };
     }
 
     /**
@@ -300,12 +312,14 @@ function initPlan(root, data) {
         let sessions = 0;
         let bad = 0;
         let edited = 0;
+        let fresh = 0;      // buổi PT chưa mở khung (giữ lịch sẽ tự tạo)
         const picked = [];
         for (const day of days) {
             const state = stateOf(day);
             if (state.kind === "ok" || state.kind === "warn") {
                 sessions++;
                 picked.push(day.date + "@" + state.time);
+                fresh += state.fresh ? 1 : 0;
             }
             if (state.kind === "bad") {
                 bad++;
@@ -315,7 +329,7 @@ function initPlan(root, data) {
             }
         }
         const perWeek = pattern.filter(function (time) { return time !== ""; }).length;
-        return { sessions: sessions, bad: bad, edited: edited, perWeek: perWeek, picked: picked };
+        return { sessions: sessions, bad: bad, edited: edited, fresh: fresh, perWeek: perWeek, picked: picked };
     }
 
 
@@ -335,6 +349,9 @@ function initPlan(root, data) {
             const head = el("div", "plan-row-day");
             head.append(el("strong", "", PLAN_DAY_NAMES[weekday - 1]));
             head.append(el("small", "", "Tối đa " + countWeekday(weekday) + " buổi"));
+            if (unpublished.includes(weekday)) {
+                head.append(el("small", "plan-row-flag", "PT chưa công bố"));
+            }
 
             const chips = el("div", "plan-chips");
             chips.setAttribute("role", "radiogroup");
@@ -420,6 +437,10 @@ function initPlan(root, data) {
                 cell.append(el("span", "plan-day-note", state.warning));
                 text += ". " + state.warning;
             }
+            if (state.fresh) {
+                cell.append(el("span", "plan-day-fresh", "PT chưa mở"));
+                text += ". PT chưa mở khung giờ này, cần hỏi PT";
+            }
         } else if (state.kind === "bad") {
             cell.append(el("span", "plan-day-time", state.time));
             cell.append(el("span", "plan-day-note", state.reason));
@@ -473,10 +494,10 @@ function initPlan(root, data) {
         chips.append(chip("plan-edit", "", "Không tập", "", current === "", false,
                 current === "" ? "edit-current" : "edit-off", 0, "is-rest"));
         for (const option of day.options) {
-            const meta = option.ok ? (option.warning ? "PT cần dời" : "") : option.reason;
+            const meta = option.ok ? (option.warning ? "PT cần dời" : (option.fresh ? "PT chưa mở" : "")) : option.reason;
             chips.append(chip("plan-edit", option.time, option.time + " – " + option.end, meta, current === option.time,
                     !option.ok, current === option.time ? "edit-current" : "edit-" + option.time, 0,
-                    option.ok ? (option.warning ? "has-meta" : "") : "is-blocked"));
+                    option.ok ? (meta ? "has-meta" : "") : "is-blocked"));
         }
         editorBox.append(head, chips);
 
@@ -520,9 +541,21 @@ function initPlan(root, data) {
             form.querySelector("[data-plan-t='" + weekday + "']").value = pattern[weekday - 1];
         }
         form.querySelector("[data-plan-sessions]").value = result.picked.join(",");
-        // Giữ lịch cần đủ 2 thứ: ít nhất 1 buổi + khách (server ghi data-customer-ready khi khách mua được).
+        // Có buổi PT chưa mở khung → hiện ô "Đã xác nhận với PT" (server cũng đếm lại lúc giữ).
+        const unconfirmed = result.fresh;
+        const confirmBox = form.querySelector("[data-plan-confirm]");
+        const confirmInput = confirmBox.querySelector("input");
+        confirmBox.hidden = unconfirmed === 0;
+        confirmInput.required = unconfirmed > 0;
+        if (unconfirmed === 0) {
+            confirmInput.checked = false;
+        }
+        form.querySelector("[data-plan-confirm-text]").textContent =
+                unconfirmed + " buổi PT chưa mở khung — PT đã đồng ý dạy.";
+        const needConfirm = unconfirmed > 0 && !confirmInput.checked;
+        // Giữ lịch cần đủ: ít nhất 1 buổi + khách (server ghi data-customer-ready) + đã xác nhận với PT (nếu cần).
         const customerReady = form.dataset.customerReady === "true";
-        form.querySelector("[data-plan-submit]").disabled = result.sessions === 0 || !customerReady;
+        form.querySelector("[data-plan-submit]").disabled = result.sessions === 0 || !customerReady || needConfirm;
         const stepPlan = document.querySelector("[data-step-plan]");
         if (stepPlan) {
             stepPlan.classList.toggle("is-done", result.sessions > 0);
@@ -535,6 +568,8 @@ function initPlan(root, data) {
                 text = "Chọn ít nhất 1 buổi ở Lịch tập bên trái.";
             } else if (!customerReady) {
                 text = "Lịch đã sẵn sàng. Chọn khách ở trên để giữ lịch.";
+            } else if (needConfirm) {
+                text = "Có " + unconfirmed + " buổi PT chưa mở khung. Hỏi PT rồi tích \"Đã xác nhận với PT\" để giữ lịch.";
             } else {
                 text = "Giữ trước khi thu tiền: " + result.sessions + " khung chuyển \"Đang giữ\", lễ tân khác và PT không lấy được."
                         + (result.bad > 0 ? " " + result.bad + " ngày chưa xếp được sẽ không có buổi." : "");

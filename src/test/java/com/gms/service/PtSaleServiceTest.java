@@ -71,6 +71,27 @@ class PtSaleServiceTest {
         assertEquals(List.of(LocalTime.of(6, 0), SIX_PM), times);
     }
 
+    @Test
+    void unpublishedWeekdaysAreWeekdaysWithoutAnyFreeSlotInFirstTwoWeeks() {
+        List<Integer> missing = PtSaleService.unpublishedWeekdays(List.of(
+                slot(1, MON, "18:00", "Free"),                     // Thứ 2 có khung
+                slot(2, MON.plusDays(2), "08:00", "Booked"),       // Thứ 4 chỉ có khung đã có khách → vẫn thiếu
+                slot(3, MON.plusDays(11), "09:00", "Free"),        // Thứ 6 tuần 2 → có
+                slot(4, MON.plusDays(15), "10:00", "Free")),       // Thứ 3 tuần 3, ngoài 14 ngày → không tính
+                MON, NOW);
+        assertEquals(List.of(2, 3, 4), missing);                   // Thứ 3, Thứ 4, Thứ 5
+    }
+
+    @Test
+    void sessionsThatCreateANewSlotAreCounted() {
+        List<PtSaleDay> days = List.of(
+                new PtSaleDay(MON, "Thứ 2", SIX_PM, SIX_PM.plusMinutes(90), "book", null, null, null),
+                new PtSaleDay(MON.plusDays(1), "Thứ 3", SIX_PM, SIX_PM.plusMinutes(90), "create", null, null, null),
+                new PtSaleDay(MON.plusDays(8), "Thứ 3", SIX_PM, SIX_PM.plusMinutes(90), "create", null, null, null));
+        assertEquals(2, PtSaleService.countNewSlots(days));        // 2 buổi "create" = PT chưa mở khung
+        assertEquals(0, PtSaleService.countNewSlots(days.subList(0, 1)));
+    }
+
     /** checkDay cho 1 ngày: tự lọc khung cùng ngày như buildPlan / checkRequested làm. */
     private PtSaleDay check(LocalDate date, LocalTime time, List<PtScheduleItem> slots, List<LeaveInfo> leaves,
             List<HourException> exceptions, List<TimeRange> busy, LocalDateTime now) {
@@ -144,6 +165,8 @@ class PtSaleServiceTest {
         assertEquals("14:00", thursday.getOptions().get(0).getTime());   // giờ riêng ngày đó, xếp trước 18:00
         assertEquals("19:30", thursday.getOptions().get(1).getEnd());
         assertTrue(thursday.getOptions().get(1).isOk());
+        assertFalse(thursday.getOptions().get(0).isFresh());               // 14:00 PT đã mở sẵn
+        assertTrue(thursday.getOptions().get(1).isFresh());                // 18:00 ngày đó chưa có khung → tự tạo
     }
 
     @Test

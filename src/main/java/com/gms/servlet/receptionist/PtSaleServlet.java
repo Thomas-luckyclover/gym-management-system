@@ -128,6 +128,7 @@ public class PtSaleServlet extends HttpServlet {
         input.start = request.getParameter("start");
         input.query = request.getParameter("q");
         input.sessions = request.getParameter("sessions");
+        input.confirmPt = request.getParameter("confirmPt") != null;   // ô tích "Đã xác nhận với PT"
         for (int i = 0; i < 5; i++) {
             input.times[i] = request.getParameter("t" + (i + 1));
         }
