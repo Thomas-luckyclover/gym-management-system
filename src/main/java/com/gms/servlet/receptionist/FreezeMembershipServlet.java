@@ -6,9 +6,11 @@ import com.gms.dto.CustomerSearchItem;
 import com.gms.dto.FreezeCustomerView;
 import com.gms.dto.FreezeRecordItemView;
 import com.gms.dto.FreezeSessionImpactView;
+import com.gms.dto.JsonResponse;
 import com.gms.dto.PageResult;
 import com.gms.dto.ServiceResult;
 import com.gms.service.FreezeService;
+import com.gms.util.JsonUtil;
 import com.gms.util.PaginationUtil;
 import com.gms.util.RequestUtil;
 import com.gms.util.ValidationUtil;
@@ -27,31 +29,20 @@ import java.time.format.DateTimeParseException;
 import java.util.List;
 
 /**
- * Controller màn hình Bảo lưu gói tập của Lễ tân (Màn #34 - UC-18, Workflow BF-09).
+ * Controller điều phối nghiệp vụ Bảo lưu thẻ hội viên (Màn #34, UC-18, Workflow BF-09).
  *
- * <p>Mapping URL: {@code @WebServlet("/receptionist/freeze")}</p>
- *
- * <p>Triển khai toàn diện theo nghiệp vụ SRS:
+ * <p>Triển khai theo mô hình MVC:
  * <ul>
- *   <li><b>Main Flow (Tạo bảo lưu):</b> Tra cứu khách hàng, kiểm tra điều kiện gói Membership,
- *       nhập kỳ bảo lưu và lý do, xem trước các buổi PT Scheduled bị chuyển sang Missed (CBR-62),
- *       chuyển gói và hồ sơ sang Frozen (BR-20).</li>
- *   <li><b>Alternative Flow (Hủy bảo lưu sớm):</b> Mở lại gói ngay lập tức (Frozen -> Active),
- *       cộng số ngày bảo lưu thực tế vào EndDate của gói (BR-26, DBR-51). Lượt bảo lưu vẫn bị tính (BR-24).</li>
- *   <li><b>Exception Flows:</b> Chặn bảo lưu gói PT / gói ngày (BR-21), gói hết hạn (BR-23),
- *       hết lượt bảo lưu (BR-24, MSG99), vượt quá thời lượng tối đa P-02 (MSG100), hoặc nhân viên
- *       tự thao tác trên hồ sơ của chính mình (CBR-115).</li>
+ *   <li><b>GET:</b> Tra cứu hội viên (theo mã/SĐT/tên), hiển thị hồ sơ, gói tập, xem trước buổi PT qua AJAX.</li>
+ *   <li><b>POST applyFreeze:</b> Tiếp nhận tạo phiếu bảo lưu mới theo mô hình PRG.</li>
+ *   <li><b>POST cancelFreezeEarly:</b> Tiếp nhận mở lại thẻ trước hạn (hủy bảo lưu sớm).</li>
  * </ul>
  * </p>
- *
- * <p>GET: Tra cứu hội viên, nạp thông tin gói tập hiện tại, xem trước buổi PT, xem danh sách bảo lưu gần đây.</p>
- * <p>POST: Tiếp nhận tạo phiếu bảo lưu mới hoặc hủy bảo lưu sớm theo mô hình PRG (Post/Redirect/Get).</p>
  */
 @WebServlet("/receptionist/freeze")
 public class FreezeMembershipServlet extends HttpServlet {
 
     public static final String VIEW_NAME = "receptionist/freeze-membership";
-
     public static final String ACTION_APPLY_FREEZE = "applyFreeze";
     public static final String ACTION_CANCEL_FREEZE_EARLY = "cancelFreezeEarly";
     public static final String ACTION_PREVIEW_SESSIONS = "previewSessions";
@@ -78,27 +69,23 @@ public class FreezeMembershipServlet extends HttpServlet {
 
         int accountId = (Integer) session.getAttribute(SessionKey.ACCOUNT_ID);
 
-        // B1: Xử lý yêu cầu AJAX xem trước các buổi PT bị ảnh hưởng khi người dùng thay đổi ngày
+        // 1. Phục vụ AJAX xem trước danh sách buổi PT bị ảnh hưởng
         String action = RequestUtil.getTrimmedParam(request, "action");
         if (ACTION_PREVIEW_SESSIONS.equalsIgnoreCase(action)) {
             handleAjaxPreviewSessions(request, response);
             return;
         }
 
-        // B2: Đọc từ khóa tìm kiếm (Mã KH KH-xxxx, SĐT hoặc Tên)
+        // 2. Tra cứu hội viên theo từ khóa (Mã KH, Số điện thoại hoặc Họ tên)
         String query = RequestUtil.getTrimmedParam(request, "q");
-        int page = PaginationUtil.getPageNumber(request);
-        int pageSize = 10;
-
         if (!ValidationUtil.isNullOrEmpty(query)) {
-            // Tra cứu thông tin chi tiết hội viên và gói tập
             ServiceResult<FreezeCustomerView> lookupResult = freezeService.lookupCustomerForFreeze(query, accountId);
 
             if (lookupResult.isSuccess()) {
                 request.setAttribute("freezeCustomer", lookupResult.getData());
             } else {
-                // Nếu tìm chính xác mã/SĐT không thấy, thử tìm theo một phần tên có phân trang
-                PageResult<CustomerSearchItem> searchResultsPage = freezeService.searchCustomersPage(query, page, pageSize);
+                int page = PaginationUtil.getPageNumber(request);
+                PageResult<CustomerSearchItem> searchResultsPage = freezeService.searchCustomersPage(query, page, 10);
                 if (!searchResultsPage.isEmpty()) {
                     request.setAttribute("searchResultsPage", searchResultsPage);
                     request.setAttribute("searchResults", searchResultsPage.getItems());
@@ -109,11 +96,11 @@ public class FreezeMembershipServlet extends HttpServlet {
             request.setAttribute("query", query);
         }
 
-        // B3: Nạp danh sách các đợt bảo lưu gần đây phục vụ đối soát và quản lý tại quầy
+        // 3. Tải danh sách các đợt bảo lưu gần đây của phòng tập
         List<FreezeRecordItemView> recentFreezes = freezeService.getRecentFreezes(20);
         request.setAttribute("recentFreezes", recentFreezes);
-
         request.setAttribute("activeNav", "freeze");
+
         RequestUtil.forward(request, response, VIEW_NAME);
     }
 
@@ -145,7 +132,7 @@ public class FreezeMembershipServlet extends HttpServlet {
     }
 
     /**
-     * Xử lý POST tạo mới phiếu bảo lưu gói tập.
+     * Xử lý POST tạo mới phiếu bảo lưu thẻ tập.
      */
     private void handleApplyFreeze(HttpServletRequest request, HttpServletResponse response, int accountId)
             throws IOException {
@@ -157,11 +144,10 @@ public class FreezeMembershipServlet extends HttpServlet {
         String q = RequestUtil.getTrimmedParam(request, "q");
 
         String redirectUrl = "/receptionist/freeze" + (!ValidationUtil.isNullOrEmpty(q)
-                ? "?q=" + URLEncoder.encode(q, StandardCharsets.UTF_8)
-                : "");
+                ? "?q=" + URLEncoder.encode(q, StandardCharsets.UTF_8) : "");
 
         if (subscriptionId <= 0 || ValidationUtil.isNullOrEmpty(startDateStr) || ValidationUtil.isNullOrEmpty(plannedEndDateStr)) {
-            RequestUtil.setFlashToast(request, "error", "Vui lòng nhập đầy đủ thông tin thời gian bảo lưu.");
+            RequestUtil.setFlashToast(request, "error", "Vui lòng chọn đầy đủ thời gian bảo lưu.");
             RequestUtil.redirect(request, response, redirectUrl);
             return;
         }
@@ -183,20 +169,13 @@ public class FreezeMembershipServlet extends HttpServlet {
             return;
         }
 
-        ServiceResult<Void> result = freezeService.applyFreeze(
-                accountId, subscriptionId, startDate, plannedEndDate, reason);
-
-        if (result.isSuccess()) {
-            RequestUtil.setFlashToast(request, "success", result.getMessage());
-        } else {
-            RequestUtil.setFlashToast(request, "error", result.getMessage());
-        }
-
+        ServiceResult<Void> result = freezeService.applyFreeze(accountId, subscriptionId, startDate, plannedEndDate, reason);
+        RequestUtil.setFlashToast(request, result.isSuccess() ? "success" : "error", result.getMessage());
         RequestUtil.redirect(request, response, redirectUrl);
     }
 
     /**
-     * Xử lý POST hủy bảo lưu sớm cho gói tập.
+     * Xử lý POST mở lại thẻ trước hạn (hủy bảo lưu sớm tại quầy).
      */
     private void handleCancelFreezeEarly(HttpServletRequest request, HttpServletResponse response, int accountId)
             throws IOException {
@@ -205,85 +184,41 @@ public class FreezeMembershipServlet extends HttpServlet {
         String q = RequestUtil.getTrimmedParam(request, "q");
 
         String redirectUrl = "/receptionist/freeze" + (!ValidationUtil.isNullOrEmpty(q)
-                ? "?q=" + URLEncoder.encode(q, StandardCharsets.UTF_8)
-                : "");
+                ? "?q=" + URLEncoder.encode(q, StandardCharsets.UTF_8) : "");
 
         if (freezeRecordId <= 0) {
-            RequestUtil.setFlashToast(request, "error", "Mã đợt bảo lưu không hợp lệ.");
+            RequestUtil.setFlashToast(request, "error", "Mã phiếu bảo lưu không hợp lệ.");
             RequestUtil.redirect(request, response, redirectUrl);
             return;
         }
 
         ServiceResult<Void> result = freezeService.cancelFreezeEarly(accountId, freezeRecordId);
-
-        if (result.isSuccess()) {
-            RequestUtil.setFlashToast(request, "success", result.getMessage());
-        } else {
-            RequestUtil.setFlashToast(request, "error", result.getMessage());
-        }
-
+        RequestUtil.setFlashToast(request, result.isSuccess() ? "success" : "error", result.getMessage());
         RequestUtil.redirect(request, response, redirectUrl);
     }
 
     /**
-     * Xử lý AJAX trả về danh sách các buổi PT bị ảnh hưởng dưới định dạng JSON.
+     * AJAX xem trước danh sách buổi PT bị ảnh hưởng (dùng JsonUtil chuẩn hóa).
      */
     private void handleAjaxPreviewSessions(HttpServletRequest request, HttpServletResponse response)
             throws IOException {
-
-        response.setContentType("application/json;charset=UTF-8");
 
         int customerId = RequestUtil.getIntParam(request, "customerId", 0);
         String startDateStr = RequestUtil.getTrimmedParam(request, "startDate");
         String plannedEndDateStr = RequestUtil.getTrimmedParam(request, "plannedEndDate");
 
         if (customerId <= 0 || ValidationUtil.isNullOrEmpty(startDateStr) || ValidationUtil.isNullOrEmpty(plannedEndDateStr)) {
-            response.getWriter().write("[]");
+            JsonUtil.writeJson(response, JsonResponse.success("OK", List.of()));
             return;
         }
 
-        LocalDate startDate;
-        LocalDate plannedEndDate;
         try {
-            startDate = LocalDate.parse(startDateStr);
-            plannedEndDate = LocalDate.parse(plannedEndDateStr);
+            LocalDate startDate = LocalDate.parse(startDateStr);
+            LocalDate plannedEndDate = LocalDate.parse(plannedEndDateStr);
+            List<FreezeSessionImpactView> sessions = freezeService.previewAffectedSessions(customerId, startDate, plannedEndDate);
+            JsonUtil.writeJson(response, JsonResponse.success("OK", sessions));
         } catch (DateTimeParseException e) {
-            response.getWriter().write("[]");
-            return;
+            JsonUtil.writeJson(response, JsonResponse.success("OK", List.of()));
         }
-
-        List<FreezeSessionImpactView> sessions = freezeService.previewAffectedSessions(customerId, startDate, plannedEndDate);
-
-        StringBuilder sb = new StringBuilder();
-        sb.append("[");
-        for (int i = 0; i < sessions.size(); i++) {
-            FreezeSessionImpactView s = sessions.get(i);
-            if (i > 0) sb.append(",");
-            sb.append("{");
-            sb.append("\"sessionId\":").append(s.getSessionId()).append(",");
-            sb.append("\"slotDate\":\"").append(s.getSlotDate()).append("\",");
-            sb.append("\"startTime\":\"").append(s.getStartTime()).append("\",");
-            sb.append("\"endTime\":\"").append(s.getEndTime()).append("\",");
-            sb.append("\"ptName\":\"").append(escapeJson(s.getPtName())).append("\",");
-            sb.append("\"packageType\":\"").append(escapeJson(s.getPackageType())).append("\",");
-            sb.append("\"partnerName\":").append(s.getPartnerName() != null ? "\"" + escapeJson(s.getPartnerName()) + "\"" : "null").append(",");
-            sb.append("\"willBeMissed\":").append(s.isWillBeMissed()).append(",");
-            sb.append("\"impactExplanation\":\"").append(escapeJson(s.getImpactExplanation())).append("\"");
-            sb.append("}");
-        }
-        sb.append("]");
-
-        response.getWriter().write(sb.toString());
-    }
-
-    private String escapeJson(String input) {
-        if (input == null) return "";
-        return input.replace("\\", "\\\\")
-                    .replace("\"", "\\\"")
-                    .replace("\b", "\\b")
-                    .replace("\f", "\\f")
-                    .replace("\n", "\\n")
-                    .replace("\r", "\\r")
-                    .replace("\t", "\\t");
     }
 }
