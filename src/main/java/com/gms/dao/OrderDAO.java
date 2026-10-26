@@ -508,5 +508,36 @@ public class OrderDAO {
             return statement.executeUpdate();
         }
     }
-       
+
+    /**
+     * JOB-05: mã các đơn online còn Pending, quá PaymentDueAt và chưa có giao
+     * dịch Success. Chọn theo trạng thái nên lượt chạy bị lỡ sẽ được lượt sau
+     * xử lý bù.
+     */
+    public List<Integer> findOverdueOnlineIds(Connection conn, LocalDateTime now) throws SQLException {
+        String sql = """
+            SELECT o.OrderId
+            FROM Orders o
+            WHERE o.Channel = 'Online'
+              AND o.Status = 'Pending'
+              AND o.PaymentDueAt < ?
+              AND NOT EXISTS (SELECT 1 FROM Transactions t
+                              WHERE t.OrderId = o.OrderId AND t.Status = 'Success')
+            ORDER BY o.OrderId
+            """;
+
+        List<Integer> ids = new ArrayList<>();
+
+        try (PreparedStatement statement = conn.prepareStatement(sql)) {
+            statement.setTimestamp(1, Timestamp.valueOf(now));
+
+            try (ResultSet rows = statement.executeQuery()) {
+                while (rows.next()) {
+                    ids.add(rows.getInt("OrderId"));
+                }
+            }
+        }
+
+        return ids;
+    }
 }

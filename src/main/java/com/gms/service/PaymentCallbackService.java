@@ -466,6 +466,7 @@ public class PaymentCallbackService {
     }
 
     private IpnResult reply(String code, String message) {
+        System.out.println("[IPN] trả " + code + " - " + message);
         return new IpnResult(code, message);
     }
 
