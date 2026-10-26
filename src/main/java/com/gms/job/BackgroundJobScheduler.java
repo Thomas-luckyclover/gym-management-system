@@ -57,7 +57,6 @@ public class BackgroundJobScheduler implements ServletContextListener {
             new CancelOverdueOnlineOrdersJob(),
             new ExpireTimedOutTransactionsJob(),
             new LeaveRequestReminderJob(),
-            new ReconcileVnPayTransactionsJob());
 
     private ScheduledExecutorService dailyExecutor;
     private ScheduledExecutorService minuteExecutor;
