@@ -330,6 +330,7 @@ function initCommon() {
     bindCountdowns();
     bindArticleImageFallbacks();
     bindHintBoxes();
+    syncHeaderUserAvatar();
 
     // B3
     bindPageSizeSelects();
@@ -344,6 +345,42 @@ function initCommon() {
     const unsavedForms = document.querySelectorAll("form[data-unsaved-warning]");
     for (const form of unsavedForms) {
         bindUnsavedChangesWarning(form);
+    }
+}
+
+// Đồng bộ avatar người dùng trên header từ session / meta tag
+function syncHeaderUserAvatar() {
+    const avatarMeta = document.querySelector('meta[name="user-avatar"]');
+    const avatarUrl = avatarMeta ? avatarMeta.getAttribute("content") : null;
+    const userContainers = document.querySelectorAll(".tb-user, .guest-account, .pt-top-actions .pt-user-badge, .pt-header-user");
+    if (!userContainers.length) {
+        return;
+    }
+    for (const container of userContainers) {
+        if (avatarUrl && avatarUrl.trim() !== "") {
+            let img = container.querySelector("img.avatar, img.pt-user-avatar, img.tb-avatar");
+            const initialSpan = container.querySelector("span.avatar, span.pt-user-avatar, span.tb-avatar, i.fa-user");
+            if (!img) {
+                img = document.createElement("img");
+                img.className = "avatar";
+                img.alt = "Avatar";
+                img.style.objectFit = "cover";
+                img.onerror = function() {
+                    this.style.display = "none";
+                    if (initialSpan) { initialSpan.style.display = ""; }
+                };
+                if (initialSpan) {
+                    initialSpan.parentNode.insertBefore(img, initialSpan);
+                } else {
+                    container.insertBefore(img, container.firstChild);
+                }
+            }
+            img.src = avatarUrl;
+            img.style.display = "";
+            if (initialSpan) {
+                initialSpan.style.display = "none";
+            }
+        }
     }
 }
 
@@ -2932,6 +2969,46 @@ document.addEventListener("DOMContentLoaded", function () {
 // NÂNG CẤP 2026-10-13: biểu đồ màu thương hiệu + đường xu hướng, số đếm lên, Pumpy theo ngữ cảnh
 // =====================================================================
 document.addEventListener("DOMContentLoaded", function () {
+    // B0: Đồng bộ ảnh đại diện ở Header/Topbar với cơ sở dữ liệu
+    (function syncHeaderUserAvatar() {
+        const metaAvatar = document.querySelector('meta[name="user-avatar"]');
+        const avatarUrl = metaAvatar ? metaAvatar.getAttribute("content") : null;
+        if (!avatarUrl) {
+            return;
+        }
+        const userContainers = document.querySelectorAll(".tb-user, .guest-account, .pt-top-actions");
+        userContainers.forEach(function (container) {
+            const avatarEl = container.querySelector(".avatar, .pt-user-avatar, .guest-account__avatar");
+            if (!avatarEl) {
+                return;
+            }
+            if (avatarEl.tagName === "IMG") {
+                if (avatarEl.getAttribute("src") !== avatarUrl) {
+                    avatarEl.src = avatarUrl;
+                }
+                return;
+            }
+            const existingImg = container.querySelector("img.avatar");
+            if (existingImg) {
+                existingImg.src = avatarUrl;
+                existingImg.style.display = "";
+                avatarEl.style.display = "none";
+                return;
+            }
+            const img = document.createElement("img");
+            img.className = avatarEl.className;
+            img.src = avatarUrl;
+            img.alt = "Ảnh đại diện";
+            img.style.objectFit = "cover";
+            img.onerror = function () {
+                img.style.display = "none";
+                avatarEl.style.display = "";
+            };
+            avatarEl.style.display = "none";
+            avatarEl.parentNode.insertBefore(img, avatarEl);
+        });
+    })();
+
     const calm = prefersReducedMotion() || document.documentElement.classList.contains("gms-lite");
 
     // B1: biểu đồ cột — đánh dấu cột cao nhất; vẽ đường xu hướng từ các cột vào ô dẫn đầu của bảng điểm
