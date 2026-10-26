@@ -15,6 +15,8 @@ import java.util.HashMap;
 import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
+import java.util.Set;
+import java.util.concurrent.ConcurrentHashMap;
 
 /**
  * Tự hỏi lại VNPay về giao dịch chưa có kết quả chắc chắn. Không cần session và
@@ -38,18 +40,22 @@ public class PaymentReconciliationService {
             = new PaymentCallbackService();
 
     // Thời điểm truy vấn gần nhất, giữ trong bộ nhớ của Tomcat.
-    private final Map<Integer, Long> lastQueryAt = new HashMap<>();
+    // Dùng chung giữa servlet Return và job trong cùng ứng dụng Tomcat.
+    private static final Map<Integer, Long> lastQueryAt
+            = new ConcurrentHashMap<>();
+
+// Không cho hai luồng cùng gọi QueryDR cho một giao dịch.
+    private static final Set<Integer> querying
+            = ConcurrentHashMap.newKeySet();
 
     /**
      * Scheduler gọi một lượt; không chạy chồng trên cùng instance.
      */
     public synchronized void runOnce() throws SQLException {
-        if (!Boolean.parseBoolean(
-                AppConfig.get("vnpay.query-enabled", "false"))) {
+        if (!isQueryEnabled()) {
             return;
         }
 
-        // B1: đọc danh sách rồi đóng connection.
         List<Integer> ids;
 
         try (Connection conn = DBContext.getConnection()) {
@@ -59,13 +65,24 @@ public class PaymentReconciliationService {
                             .minusMinutes(FIRST_QUERY_DELAY_MINUTES));
         }
 
-        // B2: xóa thông tin theo dõi của giao dịch đã xử lý xong.
-        lastQueryAt.keySet().retainAll(new HashSet<>(ids));
+        // Dọn thông tin giới hạn tần suất đã cũ.
+        // Giữ nguyên thông tin của giao dịch đang được truy vấn.
+        long cleanupBefore
+                = System.currentTimeMillis() - 24 * 60 * 60 * 1000L;
 
-        // Ưu tiên giao dịch chưa hỏi hoặc lâu chưa hỏi.
+        lastQueryAt.forEach((id, timestamp) -> {
+            if (timestamp < cleanupBefore && !querying.contains(id)) {
+                lastQueryAt.remove(id, timestamp);
+            }
+        });
+
+        // Chụp thời điểm để thứ tự sắp xếp không đổi
+        // khi servlet Return đồng thời cập nhật lastQueryAt.
+        Map<Integer, Long> queryTimes = new HashMap<>(lastQueryAt);
+
         ids.sort(Comparator
                 .comparingLong((Integer id)
-                        -> lastQueryAt.getOrDefault(id, 0L))
+                        -> queryTimes.getOrDefault(id, 0L))
                 .thenComparingInt(Integer::intValue));
 
         int queried = 0;
@@ -79,19 +96,9 @@ public class PaymentReconciliationService {
                 break;
             }
 
-            long nowMillis = System.currentTimeMillis();
-            Long previous = lastQueryAt.get(transactionId);
-
-            if (previous != null
-                    && nowMillis - previous < QUERY_INTERVAL_MILLIS) {
-                continue;
+            if (tryReconcile(transactionId)) {
+                queried++;
             }
-
-            // Lỗi mạng cũng phải chờ trước khi thử lại.
-            lastQueryAt.put(transactionId, nowMillis);
-            queried++;
-
-            reconcileOne(transactionId);
         }
     }
 
@@ -181,6 +188,64 @@ public class PaymentReconciliationService {
                     "[QueryDR] Chưa xác minh được transaction "
                     + transactionId + ": "
                     + e.getClass().getSimpleName());
+        }
+    }
+
+    /**
+     * Gọi từ servlet Return sau khi đã xác minh chữ ký và kiểm tra giao dịch
+     * thuộc tài khoản đăng nhập.
+     *
+     * Không áp dụng điều kiện phải tạo được 1 phút như job. Vẫn chống gọi đồng
+     * thời và giới hạn tần suất.
+     */
+    public void reconcileAfterReturn(int verifiedTransactionId) {
+        if (verifiedTransactionId <= 0) {
+            return;
+        }
+
+        if (!isQueryEnabled()) {
+            System.err.println(
+                    "[QueryDR] Bỏ qua Return vì query-enabled=false");
+            return;
+        }
+
+        tryReconcile(verifiedTransactionId);
+    }
+
+    private boolean isQueryEnabled() {
+        return Boolean.parseBoolean(
+                AppConfig.get("vnpay.query-enabled", "false"));
+    }
+
+    /**
+     * Trả true nếu đã nhận lượt xử lý. Không giữ khóa toàn bộ service trong lúc
+     * chờ VNPay.
+     */
+    private boolean tryReconcile(int transactionId) {
+        if (!querying.add(transactionId)) {
+            return false;
+        }
+
+        try {
+            long now = System.currentTimeMillis();
+            Long previous = lastQueryAt.get(transactionId);
+
+            if (previous != null
+                    && now - previous < QUERY_INTERVAL_MILLIS) {
+                return false;
+            }
+
+            // Ghi trước khi gọi để lỗi mạng cũng không bị gọi liên tục.
+            lastQueryAt.put(transactionId, now);
+
+            // Hàm này đọc lại trạng thái DB:
+            // đã Success/Failed thì không gọi API nữa.
+            reconcileOne(transactionId);
+
+            return true;
+
+        } finally {
+            querying.remove(transactionId);
         }
     }
 }
