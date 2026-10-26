@@ -2,6 +2,7 @@ package com.gms.servlet.receptionist;
 
 import com.gms.constant.Messages;
 import com.gms.constant.SessionKey;
+import com.gms.dto.CustomerMembershipRow;
 import com.gms.dto.CustomerSearchItem;
 import com.gms.dto.FreezeCustomerView;
 import com.gms.dto.FreezeRecordItemView;
@@ -102,12 +103,18 @@ public class FreezeMembershipServlet extends HttpServlet {
             request.setAttribute("query", query); // Gửi lại từ khóa ra JSP
         }
 
-        // B4: Lấy danh sách các đợt bảo lưu gần đây để hiển thị ở cột bên phải
-        List<FreezeRecordItemView> recentFreezes = freezeService.getRecentFreezes(15);
-        request.setAttribute("recentFreezes", recentFreezes);
+        // B4: Lấy danh sách hội viên & hợp đồng hiển thị ở bảng phong cách GymMaster
+        PageResult<CustomerMembershipRow> membershipsPage = freezeService.getCustomerMembershipsPage(query, page, pageSize);
+        request.setAttribute("membershipsPage", membershipsPage);
+        request.setAttribute("customerMemberships", membershipsPage.getItems());
+
+        // B5: Lấy toàn bộ lịch sử các đợt bảo lưu hiển thị ở tab "Lịch sử bảo lưu"
+        List<FreezeRecordItemView> freezeHistoryList = freezeService.getRecentFreezes(50);
+        request.setAttribute("freezeHistoryList", freezeHistoryList);
+        request.setAttribute("recentFreezes", freezeHistoryList); // tương thích ngược
         request.setAttribute("activeNav", "freeze");
 
-        // B5: Chuyển tiếp dữ liệu từ servlet sang jsp để hiển thị giao diện
+        // B6: Chuyển tiếp dữ liệu từ servlet sang jsp để hiển thị giao diện
         RequestUtil.forward(request, response, VIEW_NAME);
     }
 

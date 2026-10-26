@@ -8,6 +8,7 @@ import com.gms.dao.CheckInDAO;
 import com.gms.dao.CustomerDAO;
 import com.gms.dao.EmployeeDAO;
 import com.gms.dao.FreezeRecordDAO;
+import com.gms.dto.CustomerMembershipRow;
 import com.gms.dto.CustomerSearchItem;
 import com.gms.dto.FreezeCustomerView;
 import com.gms.dto.FreezeRecordItemView;
@@ -742,6 +743,23 @@ public class FreezeService {
         } catch (SQLException e) {
             LOGGER.log(Level.SEVERE, "Lỗi khi lấy danh sách bảo lưu gần đây", e);
             return List.of();
+        }
+    }
+
+    /**
+     * Lấy danh sách hội viên kèm gói tập Membership phục vụ hiển thị lưới dữ liệu tương tự GymMaster.
+     */
+    public PageResult<CustomerMembershipRow> getCustomerMembershipsPage(String keyword, int pageNumber, int pageSize) {
+        try {
+            long total = freezeRecordDAO.countCustomerMemberships(keyword);
+            if (total == 0) {
+                return new PageResult<>(List.of(), pageNumber, pageSize, 0);
+            }
+            List<CustomerMembershipRow> items = freezeRecordDAO.findCustomerMemberships(keyword, pageNumber, pageSize);
+            return new PageResult<>(items, pageNumber, pageSize, total);
+        } catch (SQLException e) {
+            LOGGER.log(Level.SEVERE, "Lỗi khi lấy danh sách hội viên và gói tập", e);
+            return new PageResult<>(List.of(), pageNumber, pageSize, 0);
         }
     }
 }

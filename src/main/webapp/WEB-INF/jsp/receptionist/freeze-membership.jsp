@@ -3,9 +3,10 @@
 <%@ taglib prefix="gms" uri="/WEB-INF/gms-functions.tld" %>
 <%--
   freeze-membership.jsp — Màn hình Bảo lưu gói tập của Lễ tân (Màn #34, UC-18, Workflow BF-09).
-  Thiết kế theo đúng Prototype gốc bao-luu.html:
-  - Cột trái (col-main): Tra cứu, Lập phiếu bảo lưu / Mở lại thẻ trước hạn, Lịch sử bảo lưu.
-  - Cột phải (col-side): Thông tin gói hiện tại, Quy tắc bảo lưu, Đợt bảo lưu gần đây.
+  Thiết kế tối ưu theo phong cách hệ thống quản lý phòng tập GymMaster:
+  - Khối 1: Thanh tra cứu hội viên & lọc nhanh.
+  - Khối 2: Chi tiết thao tác bảo lưu / mở lại thẻ (khi đã chọn hội viên).
+  - Khối 3: Bảng dữ liệu GymMaster toàn màn hình (Full-width Tabs: Danh sách hội viên & Hợp đồng, Lịch sử bảo lưu).
 --%>
 <!DOCTYPE html>
 <html lang="vi">
@@ -13,9 +14,9 @@
 <head>
     <%@ include file="/WEB-INF/jsp/common/head.jspf" %>
     <title>Bảo lưu gói tập · Super Gym Lễ tân</title>
-    <link rel="stylesheet" href="${pageContext.request.contextPath}/css/pages/receptionist/freeze-membership.css?v=20261027_v2">
+    <link rel="stylesheet" href="${pageContext.request.contextPath}/css/pages/receptionist/freeze-membership.css?v=20261027_v4">
     <link rel="stylesheet" href="${pageContext.request.contextPath}/css/pages/auth/notification-bell.css">
-    <script src="${pageContext.request.contextPath}/js/pages/receptionist/freeze-membership.js?v=20261027_v2" defer></script>
+    <script src="${pageContext.request.contextPath}/js/pages/receptionist/freeze-membership.js?v=20261027_v4" defer></script>
     <script src="${pageContext.request.contextPath}/js/pages/auth/notification-bell.js" defer></script>
 </head>
 
@@ -43,109 +44,45 @@
         </header>
 
         <main class="content" id="main-content" tabindex="-1">
-            <div class="split">
 
-                <%-- CỘT TRÁI (col-main): Tra cứu & Thao tác nghiệp vụ bảo lưu --%>
-                <div class="col-main">
+            <%-- KHỐI 1: THANH TRA CỨU HỘI VIÊN & ĐIỀU HƯỚNG NHANH --%>
+            <section class="panel freeze-search-panel">
+                <div class="search-panel-inner">
+                    <div class="search-title-wrap">
+                        <h2><i class="fa-solid fa-snowflake text-primary"></i> Quản lý bảo lưu gói tập</h2>
+                        <p class="search-subtitle">Tra cứu theo mã hội viên (KH-xxxx), số điện thoại hoặc họ tên để thực hiện bảo lưu hoặc mở lại thẻ.</p>
+                    </div>
 
-                    <%-- KHỐI 1: TRA CỨU HỘI VIÊN --%>
-                    <section class="panel freeze-panel">
-                        <div class="panel-head">
-                            <div>
-                                <h2>Tra cứu hội viên</h2>
-                                <p>Nhập mã hội viên (KH-xxxx), số điện thoại hoặc họ tên để bảo lưu gói tập.</p>
-                            </div>
+                    <form id="freezeSearchForm" action="${pageContext.request.contextPath}/receptionist/freeze" method="GET" class="toolbar search-toolbar" novalidate>
+                        <div class="search" style="flex:1;">
+                            <i class="fa-solid fa-magnifying-glass"></i>
+                            <input id="freezeQueryInput" name="q" type="search" value="<c:out value='${query}' />"
+                                   placeholder="Nhập mã khách (KH-...), họ tên hoặc 4 số cuối SĐT..."
+                                   autocomplete="off" aria-label="Mã khách, số điện thoại hoặc tên" autofocus>
                         </div>
+                        <button class="btn btn-primary" type="submit"><i class="fa-solid fa-search"></i> Tìm kiếm</button>
+                        <c:if test="${not empty query}">
+                            <a href="${pageContext.request.contextPath}/receptionist/freeze" class="btn btn-ghost" title="Xóa tìm kiếm"><i class="fa-solid fa-xmark"></i> Xóa lọc</a>
+                        </c:if>
+                    </form>
+                </div>
 
-                        <form id="freezeSearchForm" action="${pageContext.request.contextPath}/receptionist/freeze" method="GET" class="toolbar" novalidate>
-                            <div class="search" style="flex:1;">
-                                <i class="fa-solid fa-magnifying-glass"></i>
-                                <input id="freezeQueryInput" name="q" type="search" value="<c:out value='${query}' />"
-                                       placeholder="Nhập mã khách (KH-...), họ tên hoặc 4 số cuối SĐT..."
-                                       autocomplete="off" aria-label="Mã khách, số điện thoại hoặc tên" required autofocus>
-                            </div>
-                            <button class="btn btn-primary" type="submit">Tìm kiếm</button>
-                            <c:if test="${not empty query}">
-                                <a href="${pageContext.request.contextPath}/receptionist/freeze" class="btn btn-ghost" title="Xóa tìm kiếm">Xóa Lọc</a>
-                            </c:if>
-                        </form>
-                    </section>
+                <%-- Thông báo không tìm thấy --%>
+                <c:if test="${not empty searchError}">
+                    <div class="alert-banner danger" style="margin-top:var(--space-3);">
+                        <i class="fa-solid fa-circle-xmark"></i>
+                        <span><b>Không tìm thấy:</b> <c:out value="${searchError}" /></span>
+                    </div>
+                </c:if>
+            </section>
 
-                    <%-- Thông báo không tìm thấy --%>
-                    <c:if test="${not empty searchError}">
-                        <div class="alert-banner danger" style="margin-top:var(--space-3);">
-                            <i class="fa-solid fa-circle-xmark"></i>
-                            <span><b>Không tìm thấy:</b> <c:out value="${searchError}" /></span>
-                        </div>
-                    </c:if>
+            <%-- KHỐI 2: CHI TIẾT & THAO TÁC NGHIỆP VỤ (HIỂN THỊ KHI ĐÃ CHỌN HỘI VIÊN) --%>
+            <c:if test="${not empty freezeCustomer}">
+                <div class="split customer-action-split" style="margin-top:var(--space-4);">
 
-                    <%-- KHỐI 2: KẾT QUẢ TÌM THEO TÊN (nếu có nhiều người trùng tên) --%>
-                    <c:if test="${not empty searchResults}">
-                        <section class="panel freeze-panel" style="margin-top:var(--space-4);">
-                            <div class="panel-head">
-                                <div>
-                                    <h2>Danh sách khách hàng tìm thấy</h2>
-                                    <p>Tìm thấy <b><c:out value="${searchResultsPage.totalItems}" /></b> hội viên. Chọn hội viên cần thao tác.</p>
-                                </div>
-                            </div>
-
-                            <div class="freeze-search-list">
-                                <c:forEach var="cust" items="${searchResults}">
-                                    <a href="${pageContext.request.contextPath}/receptionist/freeze?q=${cust.customerCode}" class="freeze-search-row">
-                                        <div class="common-user-avatar sm">
-                                            <i class="fa-solid fa-user"></i>
-                                        </div>
-                                        <div class="search-row-info">
-                                            <div class="cust-title"><c:out value="${cust.fullName}" /></div>
-                                            <div class="cust-sub">
-                                                <span><i class="fa-solid fa-id-card"></i> <c:out value="${cust.customerCode}" /></span>
-                                                <span><i class="fa-solid fa-phone"></i> <c:out value="${cust.phone}" /></span>
-                                            </div>
-                                        </div>
-                                        <div class="cust-tag">
-                                            <span class="badge ${cust.customerStatus == 'Active' ? 'badge-ok' : (cust.customerStatus == 'Frozen' ? 'badge-warn' : 'badge-muted')}">
-                                                <c:out value="${cust.customerStatus == 'Active' ? 'Đang hoạt động' : (cust.customerStatus == 'Frozen' ? 'Đang bảo lưu' : cust.customerStatus)}" />
-                                            </span>
-                                        </div>
-                                        <i class="fa-solid fa-chevron-right search-row-arrow"></i>
-                                    </a>
-                                </c:forEach>
-                            </div>
-
-                            <%-- Phân trang --%>
-                            <c:if test="${searchResultsPage.totalPages > 1}">
-                                <div class="freeze-pagination" style="margin-top:var(--space-3);">
-                                    <c:choose>
-                                        <c:when test="${searchResultsPage.hasPrevious}">
-                                            <a class="btn btn-ghost btn-sm" href="${pageContext.request.contextPath}/receptionist/freeze?q=${query}&page=${searchResultsPage.pageNumber - 1}">
-                                                <i class="fa-solid fa-chevron-left"></i> Trang trước
-                                            </a>
-                                        </c:when>
-                                        <c:otherwise>
-                                            <button class="btn btn-ghost btn-sm" type="button" disabled><i class="fa-solid fa-chevron-left"></i> Trang trước</button>
-                                        </c:otherwise>
-                                    </c:choose>
-
-                                    <span class="freeze-pagination-info">Trang <b>${searchResultsPage.pageNumber}</b> / <b>${searchResultsPage.totalPages}</b></span>
-
-                                    <c:choose>
-                                        <c:when test="${searchResultsPage.hasNext}">
-                                            <a class="btn btn-ghost btn-sm" href="${pageContext.request.contextPath}/receptionist/freeze?q=${query}&page=${searchResultsPage.pageNumber + 1}">
-                                                Trang sau <i class="fa-solid fa-chevron-right"></i>
-                                            </a>
-                                        </c:when>
-                                        <c:otherwise>
-                                            <button class="btn btn-ghost btn-sm" type="button" disabled>Trang sau <i class="fa-solid fa-chevron-right"></i></button>
-                                        </c:otherwise>
-                                    </c:choose>
-                                </div>
-                            </c:if>
-                        </section>
-                    </c:if>
-
-                    <%-- KHỐI 3: THÔNG TIN BẢO LƯU --%>
-                    <c:if test="${not empty freezeCustomer}">
-                        <section class="panel freeze-panel" style="margin-top:var(--space-4);">
+                    <%-- CỘT CHÍNH: HỒ SƠ & BIỂU MẪU THAO TÁC --%>
+                    <div class="col-main">
+                        <section class="panel freeze-panel">
                             <%-- Header hội viên (Dùng hình người chung cho tất cả hội viên) --%>
                             <div class="freeze-cust-header">
                                 <div class="common-user-avatar lg">
@@ -157,6 +94,9 @@
                                         <span class="badge ${freezeCustomer.customerStatus == 'Active' ? 'badge-ok' : (freezeCustomer.customerStatus == 'Frozen' ? 'badge-warn' : 'badge-muted')}">
                                             <c:out value="${freezeCustomer.customerStatus == 'Active' ? 'Đang hoạt động' : (freezeCustomer.customerStatus == 'Frozen' ? 'Đang bảo lưu' : freezeCustomer.customerStatus)}" />
                                         </span>
+                                        <a href="${pageContext.request.contextPath}/receptionist/freeze" class="btn btn-ghost btn-sm" style="margin-left:auto;" title="Đóng chi tiết và xem toàn bộ danh sách">
+                                            <i class="fa-solid fa-xmark"></i> Đóng chi tiết
+                                        </a>
                                     </div>
                                     <div class="cust-meta-line">
                                         <span><i class="fa-solid fa-id-card"></i> Mã: <b><c:out value="${freezeCustomer.customerCode}" /></b></span>
@@ -297,12 +237,12 @@
                             </c:if>
                         </section>
 
-                        <%-- KHỐI 4: LỊCH SỬ BẢO LƯU CỦA HỘI VIÊN NÀY --%>
+                        <%-- LỊCH SỬ BẢO LƯU CỦA RIÊNG HỘI VIÊN NÀY --%>
                         <c:if test="${not empty freezeCustomer.freezeHistory}">
                             <section class="panel freeze-panel" style="margin-top:var(--space-4);">
                                 <div class="panel-head">
                                     <div>
-                                        <h3>Lịch sử bảo lưu của hội viên</h3>
+                                        <h3>Lịch sử bảo lưu của hội viên này</h3>
                                         <p>Các đợt bảo lưu đã từng thực hiện trên hồ sơ này.</p>
                                     </div>
                                 </div>
@@ -333,112 +273,354 @@
                                 </div>
                             </section>
                         </c:if>
-                    </c:if>
+                    </div>
 
-                </div>
-
-                <%-- CỘT PHẢI (col-side): Đúng chuẩn Prototype bao-luu.html (Gói hiện tại, Quy tắc, Bảo lưu gần đây) --%>
-                <aside class="col-side">
-
-                    <%-- Card 1: GÓI HIỆN TẠI (Đúng Prototype #fzInfo) --%>
-                    <div class="side-card">
-                        <span class="section-label">Gói hiện tại</span>
-                        <c:choose>
-                            <c:when test="${not empty freezeCustomer and freezeCustomer.hasMembership}">
-                                <div class="current-pkg-box">
-                                    <div class="pkg-top-title">
-                                        <h4><c:out value="${freezeCustomer.packageName}" /></h4>
-                                        <span class="badge ${freezeCustomer.subscriptionStatus == 'Active' ? 'badge-ok' : (freezeCustomer.subscriptionStatus == 'Frozen' ? 'badge-warn' : 'badge-muted')}">
-                                            <c:out value="${freezeCustomer.subscriptionStatus == 'Active' ? 'Hoạt động' : (freezeCustomer.subscriptionStatus == 'Frozen' ? 'Bảo lưu' : freezeCustomer.subscriptionStatus)}" />
-                                        </span>
-                                    </div>
-                                    <div class="pkg-info-rows">
-                                        <div class="info-row">
-                                            <span class="lbl">Bắt đầu:</span>
-                                            <span class="val"><c:out value="${gms:formatDate(freezeCustomer.packageStartDate)}" /></span>
-                                        </div>
-                                        <div class="info-row">
-                                            <span class="lbl">Hết hạn:</span>
-                                            <span class="val"><b><c:out value="${gms:formatDate(freezeCustomer.packageEndDate)}" /></b></span>
-                                        </div>
-                                        <div class="info-row">
-                                            <span class="lbl">Lượt bảo lưu:</span>
-                                            <span class="val">
-                                                <b><c:out value="${freezeCustomer.freezeUsed}" /> / <c:out value="${freezeCustomer.maxFreezesSnapshot}" /></b> lần
-                                                <c:if test="${freezeCustomer.freezeUsed >= freezeCustomer.maxFreezesSnapshot}">
-                                                    <span class="text-danger" style="font-size:11px;">(Đã hết)</span>
-                                                </c:if>
+                    <%-- CỘT PHẢI: GÓI HIỆN TẠI & QUY TẮC NGHIỆP VỤ --%>
+                    <aside class="col-side">
+                        <div class="side-card">
+                            <span class="section-label">Gói hiện tại</span>
+                            <c:choose>
+                                <c:when test="${not empty freezeCustomer and freezeCustomer.hasMembership}">
+                                    <div class="current-pkg-box">
+                                        <div class="pkg-top-title">
+                                            <h4><c:out value="${freezeCustomer.packageName}" /></h4>
+                                            <span class="badge ${freezeCustomer.packageStatus == 'Active' ? 'badge-ok' : (freezeCustomer.packageStatus == 'Frozen' ? 'badge-warn' : 'badge-muted')}">
+                                                <c:out value="${freezeCustomer.packageStatus == 'Active' ? 'Hoạt động' : (freezeCustomer.packageStatus == 'Frozen' ? 'Bảo lưu' : freezeCustomer.packageStatus)}" />
                                             </span>
                                         </div>
-                                        <div class="info-row">
-                                            <span class="lbl">Mã thẻ:</span>
-                                            <span class="val">#${freezeCustomer.subscriptionId}</span>
+                                        <div class="pkg-info-rows">
+                                            <div class="info-row">
+                                                <span class="lbl">Bắt đầu:</span>
+                                                <span class="val"><c:out value="${gms:formatDate(freezeCustomer.packageStartDate)}" /></span>
+                                            </div>
+                                            <div class="info-row">
+                                                <span class="lbl">Hết hạn:</span>
+                                                <span class="val"><b><c:out value="${gms:formatDate(freezeCustomer.packageEndDate)}" /></b></span>
+                                            </div>
+                                            <div class="info-row">
+                                                <span class="lbl">Lượt bảo lưu:</span>
+                                                <span class="val">
+                                                    <b><c:out value="${freezeCustomer.freezeUsed}" /> / <c:out value="${freezeCustomer.maxFreezesSnapshot}" /></b> lần
+                                                    <c:if test="${freezeCustomer.freezeUsed >= freezeCustomer.maxFreezesSnapshot}">
+                                                        <span class="text-danger" style="font-size:11px;">(Đã hết)</span>
+                                                    </c:if>
+                                                </span>
+                                            </div>
+                                            <div class="info-row">
+                                                <span class="lbl">Mã thẻ:</span>
+                                                <span class="val">#${freezeCustomer.subscriptionId}</span>
+                                            </div>
                                         </div>
                                     </div>
-                                </div>
-                            </c:when>
-                            <c:when test="${not empty freezeCustomer and not freezeCustomer.hasMembership}">
-                                <p class="muted" style="margin:var(--space-2) 0 0 0; font-size:var(--font-size-sm); color:var(--color-danger);">
-                                    <i class="fa-solid fa-triangle-exclamation"></i> Hội viên không có gói tập nào đang chạy.
-                                </p>
-                            </c:when>
-                            <c:otherwise>
-                                <p class="muted" style="margin:var(--space-2) 0 0 0; font-size:var(--font-size-sm);">
-                                    Tìm kiếm hội viên để xem gói đang chạy.
-                                </p>
-                            </c:otherwise>
-                        </c:choose>
-                    </div>
-
-                    <%-- Card 2: QUY TẮC BẢO LƯU (Đúng Prototype rule-list) --%>
-                    <div class="side-card">
-                        <span class="section-label">Quy tắc bảo lưu</span>
-                        <ul class="rule-list">
-                            <li>Hạn gói dời đúng bằng số ngày bảo lưu thực tế.</li>
-                            <li>Ngày bắt đầu từ mai trở đi, không hồi tố.</li>
-                            <li>Đang bảo lưu thì khách không check-in vào tập được.</li>
-                            <li>Hủy sớm thì hạn tính lại theo ngày hủy thực tế.</li>
-                            <li>Buổi tập PT trong kỳ tự động ghi nhận vắng (không hoàn buổi).</li>
-                        </ul>
-                    </div>
-
-                    <%-- Card 3: CÁC ĐỢT BẢO LƯU GẦN ĐÂY CỦA PHÒNG TẬP --%>
-                    <div class="side-card">
-                        <span class="section-label">Đợt bảo lưu gần đây</span>
-                        <div class="data-list plain" id="freezeRecentList">
-                            <c:choose>
-                                <c:when test="${not empty recentFreezes}">
-                                    <c:forEach var="item" items="${recentFreezes}">
-                                        <a href="${pageContext.request.contextPath}/receptionist/freeze?q=${item.customerCode}" class="data-row" style="text-decoration:none; color:inherit;">
-                                            <div class="row-main">
-                                                <div class="row-title">
-                                                    <c:out value="${item.customerName}" />
-                                                </div>
-                                                <div class="row-sub">
-                                                    <c:out value="${item.customerCode}" /> · <c:out value="${item.packageName}" />
-                                                </div>
-                                                <div class="row-sub" style="font-size:11px; color:var(--color-text-soft);">
-                                                    <c:out value="${gms:formatDate(item.startDate)}" /> - <c:out value="${gms:formatDate(item.plannedEndDate)}" />
-                                                </div>
-                                            </div>
-                                            <div style="flex-shrink:0;">
-                                                <span class="badge ${item.statusBadgeClass}"><c:out value="${item.statusLabel}" /></span>
-                                            </div>
-                                        </a>
-                                    </c:forEach>
                                 </c:when>
                                 <c:otherwise>
-                                    <div style="font-size:var(--font-size-md);color:var(--color-text-muted);padding:var(--space-2) 0;">
-                                        Chưa có đợt bảo lưu nào gần đây.
-                                    </div>
+                                    <p class="muted" style="margin:var(--space-2) 0 0 0; font-size:var(--font-size-sm); color:var(--color-danger);">
+                                        <i class="fa-solid fa-triangle-exclamation"></i> Hội viên không có gói tập nào đang chạy.
+                                    </p>
                                 </c:otherwise>
                             </c:choose>
                         </div>
+
+                        <div class="side-card" style="margin-top:var(--space-4);">
+                            <span class="section-label">Quy tắc bảo lưu</span>
+                            <ul class="rule-list">
+                                <li>Hạn gói dời đúng bằng số ngày bảo lưu thực tế.</li>
+                                <li>Ngày bắt đầu từ mai trở đi, không hồi tố.</li>
+                                <li>Đang bảo lưu thì khách không check-in vào tập được.</li>
+                                <li>Hủy sớm thì hạn tính lại theo ngày hủy thực tế.</li>
+                                <li>Buổi tập PT trong kỳ tự động ghi nhận vắng (không hoàn buổi).</li>
+                            </ul>
+                        </div>
+                    </aside>
+
+                </div>
+            </c:if>
+
+            <%-- KHỐI 3: TOÀN BỘ BẢNG DỮ LIỆU GYMMASTER & LỊCH SỬ TOÀN HỆ THỐNG (FULL-WIDTH) --%>
+            <section class="freeze-tabs-card" style="margin-top:var(--space-4);">
+                <div class="freeze-tabs-nav">
+                    <button type="button" class="freeze-tab-btn active" data-target="#tabMembers">
+                        <i class="fa-solid fa-users"></i> Danh sách hội viên & Hợp đồng
+                        <span class="tab-badge"><c:out value="${membershipsPage.totalItems}" default="0" /></span>
+                    </button>
+                    <button type="button" class="freeze-tab-btn" data-target="#tabHistory">
+                        <i class="fa-solid fa-clock-rotate-left"></i> Lịch sử bảo lưu
+                        <span class="tab-badge"><c:out value="${freezeHistoryList.size()}" default="0" /></span>
+                    </button>
+                </div>
+
+                <%-- TAB 1: DANH SÁCH HỘI VIÊN & GÓI TẬP (PHONG CÁCH GYMMASTER CHUYÊN NGHIỆP) --%>
+                <div class="freeze-tab-pane active" id="tabMembers">
+                    <div class="gym-table-header-bar">
+                        <div class="header-titles">
+                            <h3><i class="fa-solid fa-table-list text-primary"></i> Quản lý hợp đồng hội viên</h3>
+                            <p>Nhấp vào bất kỳ dòng nào để chọn hội viên và thực hiện bảo lưu hoặc mở lại thẻ.</p>
+                        </div>
+                        <c:if test="${not empty query}">
+                            <div class="filter-indicator">
+                                <span>Đang lọc theo: <b>"<c:out value='${query}' />"</b></span>
+                                <a href="${pageContext.request.contextPath}/receptionist/freeze" class="btn btn-ghost btn-xs">Xóa bộ lọc</a>
+                            </div>
+                        </c:if>
                     </div>
 
-                </aside>
+                    <div class="gym-table-wrap">
+                        <table class="gym-table">
+                            <thead>
+                                <tr>
+                                    <th style="width:40px; text-align:center;">
+                                        <input type="checkbox" aria-label="Chọn tất cả" disabled>
+                                    </th>
+                                    <th>Thông tin khách hàng</th>
+                                    <th>Thông tin hợp đồng</th>
+                                    <th>Loại hợp đồng</th>
+                                    <th>Gói dịch vụ</th>
+                                    <th>Thời gian gói tập</th>
+                                    <th>Tình trạng bảo lưu</th>
+                                    <th style="text-align:center; width:110px;">Thao tác</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                <c:choose>
+                                    <c:when test="${not empty customerMemberships}">
+                                        <c:forEach var="row" items="${customerMemberships}">
+                                            <tr class="row-clickable" data-href="${pageContext.request.contextPath}/receptionist/freeze?q=${row.customerCode}">
+                                                <td style="text-align:center;">
+                                                    <input type="checkbox" aria-label="Chọn dòng" onclick="event.stopPropagation();">
+                                                </td>
+                                                <td>
+                                                    <div class="gym-cust-cell">
+                                                        <div class="common-user-avatar sm">
+                                                            <i class="fa-solid fa-user"></i>
+                                                        </div>
+                                                        <div class="gym-cust-info">
+                                                            <span class="cust-name"><c:out value="${row.fullName}" /></span>
+                                                            <div class="cust-meta">
+                                                                <span><i class="fa-solid fa-id-card"></i> <c:out value="${row.customerCode}" /></span>
+                                                                <span><i class="fa-solid fa-phone"></i> <c:out value="${row.phone}" /></span>
+                                                            </div>
+                                                        </div>
+                                                    </div>
+                                                </td>
+                                                <td>
+                                                    <div class="gym-contract-cell">
+                                                        <c:choose>
+                                                            <c:when test="${row.hasMembership()}">
+                                                                <span class="contract-code"><i class="fa-solid fa-file-contract text-primary"></i> HD${row.subscriptionId}</span>
+                                                                <span class="contract-meta"><i class="fa-solid fa-location-dot"></i> SUPER GYM 2026</span>
+                                                            </c:when>
+                                                            <c:otherwise>
+                                                                <span class="muted">--</span>
+                                                            </c:otherwise>
+                                                        </c:choose>
+                                                    </div>
+                                                </td>
+                                                <td>
+                                                    <span class="contract-type-tag">
+                                                        <c:out value="${row.hasMembership() ? 'Thẻ Hội Viên' : 'Chưa đăng ký'}" />
+                                                    </span>
+                                                </td>
+                                                <td>
+                                                    <div class="gym-pkg-cell">
+                                                        <c:choose>
+                                                            <c:when test="${row.hasMembership()}">
+                                                                <span class="pkg-name">
+                                                                    <i class="fa-solid fa-box-archive text-warning"></i> <c:out value="${row.packageName}" />
+                                                                </span>
+                                                                <span class="pkg-sub-status">
+                                                                    <i class="fa-solid fa-square-check text-ok"></i> 
+                                                                    <c:choose>
+                                                                        <c:when test="${row.subscriptionStatus == 'Frozen'}">
+                                                                            <span class="status-pill warn">Đang bảo lưu</span>
+                                                                        </c:when>
+                                                                        <c:when test="${row.subscriptionStatus == 'Active'}">
+                                                                            <span class="status-pill ok">Đã kích hoạt</span>
+                                                                        </c:when>
+                                                                        <c:otherwise>
+                                                                            <span class="status-pill">${row.subscriptionStatus}</span>
+                                                                        </c:otherwise>
+                                                                    </c:choose>
+                                                                </span>
+                                                            </c:when>
+                                                            <c:otherwise>
+                                                                <span class="muted" style="font-size:var(--font-size-xs);">Chưa có gói tập</span>
+                                                            </c:otherwise>
+                                                        </c:choose>
+                                                    </div>
+                                                </td>
+                                                <td>
+                                                    <div class="gym-dates-cell">
+                                                        <c:choose>
+                                                            <c:when test="${row.hasMembership() and not empty row.startDate}">
+                                                                <div>Bắt đầu: <b><c:out value="${gms:formatDate(row.startDate)}" /></b></div>
+                                                                <div>Hết hạn: <b><c:out value="${gms:formatDate(row.endDate)}" /></b></div>
+                                                            </c:when>
+                                                            <c:otherwise>
+                                                                <span class="muted">--</span>
+                                                            </c:otherwise>
+                                                        </c:choose>
+                                                    </div>
+                                                </td>
+                                                <td class="gym-status-cell">
+                                                    <span class="badge ${row.freezeStatusBadgeClass}">
+                                                        <c:out value="${row.freezeStatusLabel}" />
+                                                    </span>
+                                                </td>
+                                                <td class="gym-action-cell" style="text-align:center;">
+                                                    <a href="${pageContext.request.contextPath}/receptionist/freeze?q=${row.customerCode}"
+                                                       class="btn btn-ghost btn-sm" title="Chọn khách hàng">
+                                                        <c:choose>
+                                                            <c:when test="${row.isCurrentlyFrozen()}">
+                                                                <i class="fa-solid fa-unlock text-warn"></i> Mở lại
+                                                            </c:when>
+                                                            <c:when test="${row.isEligibleToFreeze()}">
+                                                                <i class="fa-solid fa-snowflake text-primary"></i> Bảo lưu
+                                                            </c:when>
+                                                            <c:otherwise>
+                                                                <i class="fa-solid fa-eye"></i> Xem
+                                                            </c:otherwise>
+                                                        </c:choose>
+                                                    </a>
+                                                </td>
+                                            </tr>
+                                        </c:forEach>
+                                    </c:when>
+                                    <c:otherwise>
+                                        <tr>
+                                            <td colspan="8" style="text-align:center; padding:var(--space-6); color:var(--color-text-muted);">
+                                                <i class="fa-solid fa-circle-info" style="font-size:24px; display:block; margin-bottom:var(--space-2);"></i>
+                                                Không tìm thấy hội viên nào phù hợp với từ khóa tra cứu.
+                                            </td>
+                                        </tr>
+                                    </c:otherwise>
+                                </c:choose>
+                            </tbody>
+                        </table>
+                    </div>
 
-            </div>
+                    <%-- Phân trang danh sách hội viên --%>
+                    <c:if test="${membershipsPage.totalPages > 1}">
+                        <div class="freeze-pagination" style="margin-top:var(--space-3);">
+                            <c:choose>
+                                <c:when test="${membershipsPage.hasPrevious}">
+                                    <a class="btn btn-ghost btn-sm" href="${pageContext.request.contextPath}/receptionist/freeze?q=${query}&page=${membershipsPage.pageNumber - 1}">
+                                        <i class="fa-solid fa-chevron-left"></i> Trang trước
+                                    </a>
+                                </c:when>
+                                <c:otherwise>
+                                    <button class="btn btn-ghost btn-sm" type="button" disabled><i class="fa-solid fa-chevron-left"></i> Trang trước</button>
+                                </c:otherwise>
+                            </c:choose>
+
+                            <span class="freeze-pagination-info">Trang <b>${membershipsPage.pageNumber}</b> / <b>${membershipsPage.totalPages}</b> (Tổng <b>${membershipsPage.totalItems}</b> hội viên)</span>
+
+                            <c:choose>
+                                <c:when test="${membershipsPage.hasNext}">
+                                    <a class="btn btn-ghost btn-sm" href="${pageContext.request.contextPath}/receptionist/freeze?q=${query}&page=${membershipsPage.pageNumber + 1}">
+                                        Trang sau <i class="fa-solid fa-chevron-right"></i>
+                                    </a>
+                                </c:when>
+                                <c:otherwise>
+                                    <button class="btn btn-ghost btn-sm" type="button" disabled>Trang sau <i class="fa-solid fa-chevron-right"></i></button>
+                                </c:otherwise>
+                            </c:choose>
+                        </div>
+                    </c:if>
+                </div>
+
+                <%-- TAB 2: LỊCH SỬ BẢO LƯU TOÀN HỆ THỐNG --%>
+                <div class="freeze-tab-pane" id="tabHistory">
+                    <div class="gym-table-header-bar">
+                        <div class="header-titles">
+                            <h3><i class="fa-solid fa-clock-rotate-left text-primary"></i> Nhật ký lịch sử bảo lưu phòng tập</h3>
+                            <p>Toàn bộ các đợt bảo lưu đã và đang diễn ra tại phòng tập.</p>
+                        </div>
+                    </div>
+
+                    <div class="gym-table-wrap">
+                        <table class="gym-table">
+                            <thead>
+                                <tr>
+                                    <th>Hội viên</th>
+                                    <th>Gói tập áp dụng</th>
+                                    <th>Thời gian bảo lưu</th>
+                                    <th>Số ngày</th>
+                                    <th>Trạng thái</th>
+                                    <th>Lý do bảo lưu</th>
+                                    <th>Lễ tân tiếp nhận</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                <c:choose>
+                                    <c:when test="${not empty freezeHistoryList}">
+                                        <c:forEach var="item" items="${freezeHistoryList}">
+                                            <tr class="row-clickable" data-href="${pageContext.request.contextPath}/receptionist/freeze?q=${item.customerCode}">
+                                                <td>
+                                                    <div class="gym-cust-cell" style="min-width:180px;">
+                                                        <div class="common-user-avatar sm">
+                                                            <i class="fa-solid fa-user"></i>
+                                                        </div>
+                                                        <div class="gym-cust-info">
+                                                            <span class="cust-name"><c:out value="${item.customerName}" /></span>
+                                                            <div class="cust-meta">
+                                                                <span><i class="fa-solid fa-id-card"></i> <c:out value="${item.customerCode}" /></span>
+                                                                <span><i class="fa-solid fa-phone"></i> <c:out value="${item.customerPhone}" /></span>
+                                                            </div>
+                                                        </div>
+                                                    </div>
+                                                </td>
+                                                <td>
+                                                    <span class="pkg-name">
+                                                        <i class="fa-solid fa-box-archive text-warning"></i> <c:out value="${item.packageName}" />
+                                                    </span>
+                                                </td>
+                                                <td>
+                                                    <div class="gym-dates-cell">
+                                                        <div>Từ: <b><c:out value="${gms:formatDate(item.startDate)}" /></b></div>
+                                                        <div>Đến: 
+                                                            <c:choose>
+                                                                <c:when test="${not empty item.actualEndDate}">
+                                                                    <b><c:out value="${gms:formatDate(item.actualEndDate)}" /></b> (Thực tế)
+                                                                </c:when>
+                                                                <c:otherwise>
+                                                                    <b><c:out value="${gms:formatDate(item.plannedEndDate)}" /></b> (Dự kiến)
+                                                                </c:otherwise>
+                                                            </c:choose>
+                                                        </div>
+                                                    </div>
+                                                </td>
+                                                <td>
+                                                    <span class="badge badge-info" style="font-size:12px;">${item.daysFrozen} ngày</span>
+                                                </td>
+                                                <td>
+                                                    <span class="badge ${item.statusBadgeClass}"><c:out value="${item.statusLabel}" /></span>
+                                                </td>
+                                                <td style="max-width:240px; word-break:break-word;">
+                                                    <c:out value="${item.reason}" />
+                                                </td>
+                                                <td>
+                                                    <span style="font-size:var(--font-size-xs); color:var(--color-text-soft);">
+                                                        <i class="fa-solid fa-user-tie"></i> <c:out value="${item.handledByEmployeeName}" />
+                                                    </span>
+                                                </td>
+                                            </tr>
+                                        </c:forEach>
+                                    </c:when>
+                                    <c:otherwise>
+                                        <tr>
+                                            <td colspan="7" style="text-align:center; padding:var(--space-6); color:var(--color-text-muted);">
+                                                <i class="fa-solid fa-circle-info" style="font-size:24px; display:block; margin-bottom:var(--space-2);"></i>
+                                                Chưa có dữ liệu lịch sử bảo lưu nào trong hệ thống.
+                                            </td>
+                                        </tr>
+                                    </c:otherwise>
+                                </c:choose>
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+
+            </section>
         </main>
     </div>
 </div>

@@ -1,10 +1,12 @@
 package com.gms.dao;
 
+import com.gms.dto.CustomerMembershipRow;
 import com.gms.dto.FreezeRecordItemView;
 import com.gms.dto.FreezeSessionImpactView;
 import com.gms.entity.FreezeRecord;
 import com.gms.entity.Subscription;
 import com.gms.util.DBContext;
+import com.gms.util.SqlUtil;
 
 import java.sql.Connection;
 import java.sql.Date;
@@ -628,6 +630,117 @@ public class FreezeRecordDAO {
         return list;
     }
 
+    /**
+     * Đếm tổng số khách hàng khớp từ khóa phục vụ phân trang lưới quản lý hội viên.
+     */
+    public long countCustomerMemberships(String keyword) throws SQLException {
+        boolean hasKeyword = keyword != null && !keyword.trim().isEmpty();
+        String sql;
+        if (!hasKeyword) {
+            sql = "SELECT COUNT(*) FROM Customers c WHERE c.DeletedAt IS NULL";
+        } else {
+            sql = """
+                    SELECT COUNT(*)
+                    FROM Customers c
+                    JOIN Persons p ON p.PersonId = c.PersonId
+                    WHERE c.DeletedAt IS NULL
+                      AND (p.FullName COLLATE Latin1_General_100_CI_AI LIKE ? ESCAPE '\\'
+                           OR c.CustomerCode LIKE ?
+                           OR p.Phone LIKE ?)
+                    """;
+        }
+
+        try (Connection conn = DBContext.getConnection();
+             PreparedStatement stmt = conn.prepareStatement(sql)) {
+            if (hasKeyword) {
+                String trimmed = keyword.trim();
+                stmt.setString(1, SqlUtil.toContainsPattern(trimmed));
+                stmt.setString(2, "%" + trimmed + "%");
+                stmt.setString(3, "%" + trimmed + "%");
+            }
+            try (ResultSet rs = stmt.executeQuery()) {
+                if (rs.next()) {
+                    return rs.getLong(1);
+                }
+            }
+        }
+        return 0;
+    }
+
+    /**
+     * Lấy danh sách hội viên kèm gói tập Membership tương ứng phục vụ hiển thị lưới GymMaster.
+     */
+    public List<CustomerMembershipRow> findCustomerMemberships(String keyword, int pageNumber, int pageSize)
+            throws SQLException {
+        boolean hasKeyword = keyword != null && !keyword.trim().isEmpty();
+        int offset = Math.max(0, (pageNumber - 1) * pageSize);
+
+        String sql = """
+                SELECT 
+                    c.CustomerId,
+                    c.CustomerCode,
+                    p.FullName,
+                    p.Phone,
+                    c.Status AS CustomerStatus,
+                    s.SubscriptionId,
+                    pkg.PackageName,
+                    s.SubscriptionType,
+                    s.StartDate,
+                    s.EndDate,
+                    COALESCE(s.FreezeUsed, 0) AS FreezeUsed,
+                    s.MaxFreezesSnapshot,
+                    s.Status AS SubscriptionStatus,
+                    openFr.FreezeRecordId AS OpenFreezeId,
+                    openFr.StartDate AS OpenFreezeStart,
+                    openFr.PlannedEndDate AS OpenFreezeEnd
+                FROM Customers c
+                JOIN Persons p ON p.PersonId = c.PersonId
+                OUTER APPLY (
+                    SELECT TOP 1 sub.*, o.PackageId
+                    FROM Subscriptions sub
+                    JOIN Orders o ON o.OrderId = sub.OrderId
+                    WHERE sub.CustomerId = c.CustomerId 
+                      AND sub.SubscriptionType = 'Membership'
+                    ORDER BY 
+                        CASE sub.Status WHEN 'Frozen' THEN 1 WHEN 'Active' THEN 2 ELSE 3 END,
+                        sub.EndDate DESC
+                ) s
+                LEFT JOIN Packages pkg ON pkg.PackageId = s.PackageId
+                LEFT JOIN FreezeRecords openFr ON openFr.SubscriptionId = s.SubscriptionId AND openFr.ActualEndDate IS NULL
+                WHERE c.DeletedAt IS NULL
+                """
+                + (hasKeyword ? " AND (p.FullName COLLATE Latin1_General_100_CI_AI LIKE ? ESCAPE '\\' OR c.CustomerCode LIKE ? OR p.Phone LIKE ?) " : "")
+                + """
+                ORDER BY 
+                    CASE WHEN openFr.FreezeRecordId IS NOT NULL THEN 0 
+                         WHEN s.SubscriptionId IS NOT NULL AND s.Status = 'Active' THEN 1 
+                         ELSE 2 END,
+                    c.CustomerId DESC
+                OFFSET ? ROWS FETCH NEXT ? ROWS ONLY
+                """;
+
+        List<CustomerMembershipRow> list = new ArrayList<>();
+        try (Connection conn = DBContext.getConnection();
+             PreparedStatement stmt = conn.prepareStatement(sql)) {
+            int paramIndex = 1;
+            if (hasKeyword) {
+                String trimmed = keyword.trim();
+                stmt.setString(paramIndex++, SqlUtil.toContainsPattern(trimmed));
+                stmt.setString(paramIndex++, "%" + trimmed + "%");
+                stmt.setString(paramIndex++, "%" + trimmed + "%");
+            }
+            stmt.setInt(paramIndex++, offset);
+            stmt.setInt(paramIndex, pageSize > 0 ? pageSize : 15);
+
+            try (ResultSet rs = stmt.executeQuery()) {
+                while (rs.next()) {
+                    list.add(mapResultSetToCustomerMembershipRow(rs));
+                }
+            }
+        }
+        return list;
+    }
+
     // ===== 5. Ánh xạ ResultSet thành Entity / DTO (đặt cuối class) =====
 
     private FreezeRecord mapResultSetToFreezeRecord(ResultSet rs) throws SQLException {
@@ -786,5 +899,44 @@ public class FreezeRecordDAO {
         }
         return "Lễ tân quầy";
     }
+
+    private CustomerMembershipRow mapResultSetToCustomerMembershipRow(ResultSet rs) throws SQLException {
+        CustomerMembershipRow row = new CustomerMembershipRow();
+        row.setCustomerId(rs.getInt("CustomerId"));
+        row.setCustomerCode(rs.getString("CustomerCode"));
+        row.setFullName(rs.getString("FullName"));
+        row.setPhone(rs.getString("Phone"));
+        row.setCustomerStatus(rs.getString("CustomerStatus"));
+
+        int subId = rs.getInt("SubscriptionId");
+        if (!rs.wasNull() && subId > 0) {
+            row.setSubscriptionId(subId);
+            row.setPackageName(rs.getString("PackageName"));
+            row.setSubscriptionType(rs.getString("SubscriptionType"));
+
+            Date start = rs.getDate("StartDate");
+            row.setStartDate(start != null ? start.toLocalDate() : null);
+
+            Date end = rs.getDate("EndDate");
+            row.setEndDate(end != null ? end.toLocalDate() : null);
+
+            row.setFreezeUsed(rs.getInt("FreezeUsed"));
+            int maxF = rs.getInt("MaxFreezesSnapshot");
+            row.setMaxFreezesSnapshot(rs.wasNull() ? null : maxF);
+            row.setSubscriptionStatus(rs.getString("SubscriptionStatus"));
+        }
+
+        int openFrId = rs.getInt("OpenFreezeId");
+        if (!rs.wasNull() && openFrId > 0) {
+            row.setOpenFreezeId(openFrId);
+            Date fStart = rs.getDate("OpenFreezeStart");
+            row.setOpenFreezeStart(fStart != null ? fStart.toLocalDate() : null);
+            Date fEnd = rs.getDate("OpenFreezeEnd");
+            row.setOpenFreezeEnd(fEnd != null ? fEnd.toLocalDate() : null);
+        }
+
+        return row;
+    }
 }
+
 

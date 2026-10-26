@@ -126,6 +126,52 @@ document.addEventListener('DOMContentLoaded', function () {
         }
     });
 
+    // 4. Quản lý Tabs (Danh sách hội viên & Gói tập vs Lịch sử bảo lưu)
+    const tabButtons = document.querySelectorAll('.freeze-tab-btn');
+    const tabPanes = document.querySelectorAll('.freeze-tab-pane');
+
+    function switchTab(targetId) {
+        if (!targetId) return;
+        tabButtons.forEach(b => {
+            if (b.dataset.target === targetId || b.getAttribute('data-target') === targetId) {
+                b.classList.add('active');
+            } else {
+                b.classList.remove('active');
+            }
+        });
+        tabPanes.forEach(p => {
+            if ('#' + p.id === targetId || p.id === targetId.replace('#', '')) {
+                p.classList.add('active');
+            } else {
+                p.classList.remove('active');
+            }
+        });
+    }
+
+    tabButtons.forEach(btn => {
+        btn.addEventListener('click', function (e) {
+            e.preventDefault();
+            const targetId = this.dataset.target || this.getAttribute('data-target');
+            switchTab(targetId);
+            if (history.replaceState) {
+                history.replaceState(null, null, targetId);
+            }
+        });
+    });
+
+    if (window.location.hash) {
+        switchTab(window.location.hash);
+    }
+
+    // 5. Cho phép click vào cả dòng bảng để chọn khách hàng
+    document.querySelectorAll('.gym-table tr[data-href]').forEach(row => {
+        row.addEventListener('click', function (e) {
+            if (e.target.closest('a') || e.target.closest('button') || e.target.closest('input[type="checkbox"]')) return;
+            const href = this.getAttribute('data-href');
+            if (href) window.location.href = href;
+        });
+    });
+
     // Hàm tiện ích định dạng ngày
     function formatDate(d) {
         if (!d || isNaN(d.getTime())) return '--/--/----';

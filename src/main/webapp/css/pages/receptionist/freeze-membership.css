@@ -633,52 +633,339 @@
   line-height: 1.5;
 }
 
-/* Card 3: Đợt bảo lưu gần đây */
-.data-list.plain {
-  display: flex;
-  flex-direction: column;
-  gap: 0;
+/* ===== 9. KHỐI TABS VÀ BẢNG QUẢN LÝ (GYMMASTER STYLE) ===== */
+.freeze-tabs-card {
+  background: var(--color-surface);
   border: 1px solid var(--color-border);
-  border-radius: var(--radius-md);
+  border-radius: var(--radius-lg);
+  box-shadow: var(--shadow-card);
   overflow: hidden;
+  margin-top: var(--space-4);
+}
+
+.freeze-tabs-nav {
+  display: flex;
+  background: var(--color-surface-muted, #f8fafc);
+  border-bottom: 1px solid var(--color-border);
+  padding: 0 var(--space-4);
+  gap: var(--space-2);
+}
+
+.freeze-tab-btn {
+  display: inline-flex;
+  align-items: center;
+  gap: var(--space-2);
+  padding: var(--space-3) var(--space-4);
+  background: transparent;
+  border: none;
+  border-bottom: 2px solid transparent;
+  color: var(--color-text-soft);
+  font-size: var(--font-size-sm);
+  font-weight: var(--font-weight-semibold);
+  cursor: pointer;
+  transition: all var(--duration-fast) var(--ease-standard);
+}
+
+.freeze-tab-btn:hover {
+  color: var(--color-text);
+}
+
+.freeze-tab-btn.active {
+  color: var(--color-primary);
+  border-bottom-color: var(--color-primary);
   background: var(--color-surface);
 }
 
-.data-list.plain .data-row {
+.freeze-tab-btn .tab-badge {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  padding: 1px 7px;
+  border-radius: 12px;
+  background: var(--color-border);
+  color: var(--color-text-soft);
+  font-size: 11px;
+  font-weight: var(--font-weight-bold);
+}
+
+.freeze-tab-btn.active .tab-badge {
+  background: var(--color-primary);
+  color: #fff;
+}
+
+.freeze-tab-pane {
+  display: none;
+  padding: var(--space-4);
+}
+
+.freeze-tab-pane.active {
+  display: block;
+}
+
+/* Lưới bảng dữ liệu phong cách GymMaster */
+.gym-table-wrap {
+  width: 100%;
+  overflow-x: auto;
+  border: 1px solid var(--color-border);
+  border-radius: var(--radius-md);
+  background: var(--color-surface);
+}
+
+.gym-table {
+  width: 100%;
+  border-collapse: collapse;
+  font-size: var(--font-size-sm);
+  text-align: left;
+}
+
+.gym-table th {
+  background: var(--color-surface-muted, #f8fafc);
+  color: var(--color-text-soft);
+  font-size: var(--font-size-xs);
+  font-weight: var(--font-weight-semibold);
+  text-transform: uppercase;
+  letter-spacing: 0.04em;
+  padding: var(--space-3) var(--space-4);
+  border-bottom: 1px solid var(--color-border);
+  white-space: nowrap;
+}
+
+.gym-table td {
+  padding: var(--space-3) var(--space-4);
+  border-bottom: 1px solid var(--color-border);
+  vertical-align: middle;
+  color: var(--color-text);
+}
+
+.gym-table tbody tr {
+  transition: background var(--duration-fast) var(--ease-standard);
+}
+
+.gym-table tbody tr.row-clickable {
+  cursor: pointer;
+}
+
+.gym-table tbody tr:hover {
+  background: rgba(37, 99, 235, 0.05);
+}
+
+.gym-table tbody tr:last-child td {
+  border-bottom: none;
+}
+
+/* Ô thông tin khách hàng */
+.gym-cust-cell {
+  display: flex;
+  align-items: center;
+  gap: var(--space-3);
+  min-width: 220px;
+}
+
+.gym-cust-cell .gym-cust-info {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+}
+
+.gym-cust-cell .cust-name {
+  font-weight: var(--font-weight-bold);
+  color: var(--color-accent-ink);
+}
+
+.gym-cust-cell .cust-meta {
+  font-size: var(--font-size-xs);
+  color: var(--color-text-soft);
+  display: flex;
+  gap: var(--space-2);
+}
+
+/* Ô hợp đồng / gói dịch vụ */
+.gym-pkg-cell {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+  min-width: 180px;
+}
+
+.gym-pkg-cell .pkg-name {
+  font-weight: var(--font-weight-semibold);
+  color: var(--color-text);
+  display: flex;
+  align-items: center;
+  gap: var(--space-2);
+}
+
+.gym-pkg-cell .pkg-meta {
+  font-size: var(--font-size-xs);
+  color: var(--color-text-soft);
+}
+
+/* Ô thời gian gói tập */
+.gym-dates-cell {
+  font-size: var(--font-size-xs);
+  color: var(--color-text-soft);
+  line-height: 1.5;
+  min-width: 150px;
+}
+
+.gym-dates-cell b {
+  color: var(--color-text);
+}
+
+/* Ô trạng thái bảo lưu */
+.gym-status-cell {
+  min-width: 130px;
+}
+
+/* Ô thao tác */
+.gym-action-cell {
+  text-align: right;
+  min-width: 110px;
+  white-space: nowrap;
+}
+
+/* Header & Cell bổ sung cho lưới GymMaster chuyên nghiệp */
+.freeze-search-panel {
+  background: var(--color-surface);
+  border: 1px solid var(--color-border);
+  border-radius: var(--radius-lg);
+  padding: var(--space-5);
+  box-shadow: var(--shadow-card);
+}
+
+.search-panel-inner {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-3);
+}
+
+.search-title-wrap h2 {
+  margin: 0;
+  font-size: var(--font-size-lg);
+  font-weight: var(--font-weight-bold);
+  color: var(--color-accent-ink);
+  display: flex;
+  align-items: center;
+  gap: var(--space-2);
+}
+
+.search-subtitle {
+  margin: 4px 0 0 0;
+  font-size: var(--font-size-sm);
+  color: var(--color-text-soft);
+}
+
+.search-toolbar {
+  display: flex;
+  align-items: center;
+  gap: var(--space-3);
+  flex-wrap: wrap;
+}
+
+.customer-action-split {
+  display: grid;
+  grid-template-columns: 1fr 340px;
+  gap: var(--space-5);
+  align-items: start;
+}
+
+@media (max-width: 992px) {
+  .customer-action-split {
+    grid-template-columns: 1fr;
+  }
+}
+
+.gym-table-header-bar {
   display: flex;
   align-items: center;
   justify-content: space-between;
   gap: var(--space-3);
-  padding: var(--space-3);
-  border-bottom: 1px solid var(--color-border);
-  text-decoration: none;
-  color: inherit;
-  transition: background var(--duration-fast) var(--ease-standard);
+  margin-bottom: var(--space-3);
+  flex-wrap: wrap;
 }
 
-.data-list.plain .data-row:last-child {
-  border-bottom: none;
+.header-titles h3 {
+  margin: 0;
+  font-size: var(--font-size-md);
+  font-weight: var(--font-weight-bold);
+  color: var(--color-accent-ink);
+  display: flex;
+  align-items: center;
+  gap: var(--space-2);
 }
 
-.data-list.plain .data-row:hover {
-  background: var(--color-surface-muted);
-}
-
-.data-list.plain .row-main {
-  flex: 1;
-  min-width: 0;
-}
-
-.data-list.plain .row-title {
-  font-size: var(--font-size-sm);
-  font-weight: var(--font-weight-semibold);
-  color: var(--color-text);
-}
-
-.data-list.plain .row-sub {
+.header-titles p {
+  margin: 2px 0 0 0;
   font-size: var(--font-size-xs);
   color: var(--color-text-soft);
-  margin-top: 1px;
+}
+
+.filter-indicator {
+  display: flex;
+  align-items: center;
+  gap: var(--space-2);
+  font-size: var(--font-size-xs);
+  color: var(--color-text-soft);
+}
+
+.gym-contract-cell {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+  min-width: 130px;
+}
+
+.gym-contract-cell .contract-code {
+  font-weight: var(--font-weight-bold);
+  color: var(--color-primary);
+  font-size: var(--font-size-sm);
+  display: flex;
+  align-items: center;
+  gap: 6px;
+}
+
+.gym-contract-cell .contract-meta {
+  font-size: 11px;
+  color: var(--color-text-muted);
+  display: flex;
+  align-items: center;
+  gap: 4px;
+}
+
+.contract-type-tag {
+  display: inline-block;
+  padding: 2px 8px;
+  border-radius: var(--radius-sm);
+  background: rgba(37, 99, 235, 0.08);
+  color: var(--color-primary);
+  font-size: 11px;
+  font-weight: var(--font-weight-semibold);
+  white-space: nowrap;
+}
+
+.pkg-sub-status {
+  font-size: 11px;
+  display: flex;
+  align-items: center;
+  gap: 4px;
+  margin-top: 2px;
+}
+
+.status-pill {
+  padding: 1px 6px;
+  border-radius: 4px;
+  font-size: 10px;
+  font-weight: var(--font-weight-bold);
+}
+
+.status-pill.ok {
+  background: rgba(16, 185, 129, 0.12);
+  color: #10b981;
+}
+
+.status-pill.warn {
+  background: rgba(245, 158, 11, 0.12);
+  color: #f59e0b;
 }
 
 /* ===== 10. MODAL POPUP MỞ LẠI TRƯỚC HẠN ===== */
@@ -738,3 +1025,4 @@
 .text-success { color: var(--color-success) !important; }
 .text-danger  { color: var(--color-danger) !important; }
 .text-warn    { color: var(--color-warning) !important; }
+.text-ok      { color: #10b981 !important; }
