@@ -59,6 +59,43 @@
 }
 
 
+/* Không có bài khớp bộ lọc: khung giữa lưới, cùng kiểu màn khóa nhưng nhẹ hơn (viền đứt, không nút) */
+.ex-empty {
+  display: grid;
+  justify-items: center;
+  gap: var(--space-2);
+  padding: var(--space-8) var(--arena-pad);
+  border: 2px dashed var(--arena-hover-line);
+  border-radius: var(--arena-radius-chip);
+  background: var(--arena-chalk);
+  color: var(--arena-ink);
+  text-align: center;
+}
+.ex-empty__icon {
+  width: 40px;
+  height: 40px;
+  fill: none;
+  stroke: var(--arena-accent);
+  stroke-width: 1.8;
+  stroke-linecap: round;
+}
+html body.dock .content.exercise-library .ex-empty h2 {
+  color: var(--arena-ink);            /* đè luật common.css (~dòng 2658), như h3 của thẻ bài */
+}
+.ex-empty h2 {
+  font-family: var(--font-brand-display);
+  font-size: var(--font-size-lg);
+  font-weight: var(--font-weight-extrabold);
+  overflow-wrap: anywhere;
+  text-wrap: balance;
+}
+.ex-empty p {
+  max-width: 52ch;
+  color: var(--arena-ink-soft);
+  font-size: var(--font-size-sm);
+  text-wrap: pretty;
+}
+
 /* ==================== 2. MÀN KHÓA ==================== */
 
 .ex-locked {
@@ -278,6 +315,19 @@ html body.dock .content.exercise-library .ex-card__body h3 {
   font-size: var(--font-size-sm);
   line-height: 1.55;
 }
+.ex-card__source {
+  display: inline-block;
+  margin-top: var(--space-2);
+  color: var(--arena-accent-text);
+  font-size: var(--font-size-sm);
+  font-weight: var(--font-weight-semibold);
+  text-decoration: underline;
+  text-underline-offset: 2px;
+}
+.ex-card__source:hover,
+.ex-card__source:focus-visible {
+  text-decoration-thickness: 2px;
+}
 
 
 /* ==================== 5. PHÂN TRANG + GHI NGUỒN ==================== */
@@ -314,13 +364,6 @@ html body.dock .content.exercise-library .ex-card__body h3 {
   background: var(--color-primary);
   box-shadow: none;
   color: var(--color-on-primary);
-}
-.ex-credit {
-  color: var(--arena-on-dark-soft);
-  font-size: var(--font-size-xs);
-}
-.ex-credit a {
-  color: inherit;
 }
 
 @media (hover: hover) {

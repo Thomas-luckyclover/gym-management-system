@@ -58,7 +58,8 @@ public class ExerciseLibraryServlet extends HttpServlet {
             request.setAttribute("activeNav", "exercises");         // → layout-pt.jspf tô mục "Thư viện bài tập"
             request.setAttribute("pageTitle", "Thư viện bài tập");   // → pt/_header.jspf
             request.setAttribute("pageHelp", "Tra bài theo nhóm cơ, dụng cụ hoặc tên tiếng Anh khi soạn giáo án. "
-                    + "Dữ liệu lấy từ wger.de, cập nhật mỗi ngày.");
+                    + "Nguồn: dữ liệu và hình từ wger.de (CC BY-SA 4.0), cập nhật mỗi ngày; "
+                    + "ảnh nhóm cơ từ free-exercise-db (public domain).");
             request.setAttribute("today", DateTimeUtil.today());
             RequestUtil.forward(request, response, "pt/exercises");
         } else {
