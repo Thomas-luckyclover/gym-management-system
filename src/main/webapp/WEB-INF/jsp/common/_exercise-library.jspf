@@ -124,6 +124,11 @@
                                             <img src="<c:out value='${ex.imageUrl}' />" alt="Minh họa bài <c:out value='${ex.name}' />"
                                                  loading="lazy" decoding="async" referrerpolicy="no-referrer">
                                         </c:when>
+                                        <%-- wger không có ảnh → ảnh chụp chung của nhóm cơ (public domain, lưu trong dự án), ghi rõ là ảnh nhóm --%>
+                                        <c:when test="${not empty ex.fallbackImage}">
+                                            <img class="is-photo" src="${ctx}${ex.fallbackImage}" alt="" loading="lazy" decoding="async">
+                                            <span class="ex-card__badge">Ảnh minh họa nhóm <c:out value="${ex.categoryLabel}" /></span>
+                                        </c:when>
                                         <c:otherwise>
                                             <span class="ex-card__noimg">Chưa có hình minh họa</span>
                                         </c:otherwise>
@@ -170,7 +175,7 @@
             </c:choose>
 
             <%-- 3.6 Ghi nguồn: dữ liệu wger dùng giấy phép CC BY-SA 4.0, bắt buộc ghi nguồn --%>
-            <p class="ex-credit">Dữ liệu bài tập và hình minh họa: <a href="https://wger.de" target="_blank" rel="noopener">wger.de</a> · giấy phép CC BY-SA 4.0.</p>
+            <p class="ex-credit">Dữ liệu bài tập và hình minh họa: <a href="https://wger.de" target="_blank" rel="noopener">wger.de</a> · giấy phép CC BY-SA 4.0. Ảnh nhóm cơ: <a href="https://github.com/yuhonas/free-exercise-db" target="_blank" rel="noopener">free-exercise-db</a> · public domain.</p>
         </c:otherwise>
     </c:choose>
 </main>

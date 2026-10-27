@@ -42,6 +42,10 @@ public class ExerciseItem {
     // Service: cơ chính tiếng Việt nối bằng ", ", ví dụ "Ngực, Tay sau". Không có → chuỗi rỗng (JSP ẩn dòng).
     private String muscleText;
 
+    // Service: ảnh dự phòng theo nhóm cơ khi wger không có ảnh, ví dụ "/images/exercises/chest.jpg"
+    // (ảnh public domain từ free-exercise-db, lưu trong dự án). JSP ghép contextPath + ghi chữ "Ảnh minh họa nhóm …".
+    private String fallbackImage;
+
     // Mã bài tập wger
     public int getExerciseId() {
         return exerciseId;
@@ -140,5 +144,15 @@ public class ExerciseItem {
     // Gán cơ chính tiếng Việt (Service)
     public void setMuscleText(String muscleText) {
         this.muscleText = muscleText;
+    }
+
+    // Ảnh dự phòng theo nhóm cơ (chỉ có khi imageUrl null)
+    public String getFallbackImage() {
+        return fallbackImage;
+    }
+
+    // Gán ảnh dự phòng (Service)
+    public void setFallbackImage(String fallbackImage) {
+        this.fallbackImage = fallbackImage;
     }
 }

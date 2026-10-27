@@ -225,6 +225,22 @@
   object-fit: contain;
   padding: var(--space-2);
 }
+/* Ảnh chụp dự phòng theo nhóm cơ: phủ kín khung (cover), không đệm như hình vẽ wger */
+.ex-card__media img.is-photo {
+  object-fit: cover;
+  padding: 0;
+}
+.ex-card__badge {
+  position: absolute;
+  left: var(--space-2);
+  bottom: var(--space-2);
+  padding: 2px var(--space-2);
+  border-radius: var(--arena-radius-chip);
+  background: rgba(10, 30, 49, 0.78);
+  color: #FFFFFF;
+  font-size: var(--font-size-2xs);
+  font-weight: var(--font-weight-semibold);
+}
 .ex-card__noimg {
   color: #6B7686;
   font-size: var(--font-size-xs);

@@ -173,6 +173,25 @@ class ExerciseLibraryServiceTest {
     }
 
     @Test
+    void missingWgerImageGetsCategoryPhotoButRealImageIsKept() {
+        ExerciseItem noImage = new ExerciseItem();
+        noImage.setCategoryId(9);
+        ExerciseLibraryService.fillLabels(noImage);
+        assertEquals("/images/exercises/legs.jpg", noImage.getFallbackImage());
+
+        ExerciseItem withImage = new ExerciseItem();
+        withImage.setCategoryId(9);
+        withImage.setImageUrl("https://wger.de/media/exercise-images/91/squat.png");
+        ExerciseLibraryService.fillLabels(withImage);
+        assertNull(withImage.getFallbackImage());
+
+        ExerciseItem unknown = new ExerciseItem();
+        unknown.setCategoryId(42);
+        ExerciseLibraryService.fillLabels(unknown);
+        assertNull(unknown.getFallbackImage());
+    }
+
+    @Test
     void categoryChipsKeepFixedOrderAndShowZeroCounts() {
         List<Option> chips = ExerciseLibraryService.categoryOptions(Map.of(11, 78, 12, 105), 12);
 
