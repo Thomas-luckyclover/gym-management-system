@@ -62,6 +62,8 @@ public class PaymentResultServlet extends HttpServlet {
                 "customerName",
                 session.getAttribute(SessionKey.DISPLAY_NAME));
 
+        // Token cho nút "Đổi ngày" bắt đầu gói sau khi thanh toán xong.
+        request.setAttribute("csrfToken", RequestUtil.getOrCreateCsrfToken(session));
         request.setAttribute("activeSidebar", "buy-package");
 
         request.setAttribute(
