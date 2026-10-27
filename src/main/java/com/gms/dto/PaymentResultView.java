@@ -36,6 +36,17 @@ public class PaymentResultView {
         this.retryable = retryable;
     }
 
+    // Ô "Đổi ngày" sau khi đơn Paid; null nếu không phải gói Membership hoặc không đọc được.
+    private StartDatePicker startPicker;
+
+    public StartDatePicker getStartPicker() {
+        return startPicker;
+    }
+
+    public void setStartPicker(StartDatePicker startPicker) {
+        this.startPicker = startPicker;
+    }
+
     public Order getOrder() {
         return order;
     }
