@@ -1,4 +1,4 @@
-﻿/* ============================================================================
+/* ============================================================================
    GMS — FILE: 2_Seed_Data.sql  ·  v26
    SINH TỰ ĐỘNG bởi database/tools/seeddata.py — muốn sửa dữ liệu thì sửa file .py rồi sinh lại.
    v26    : CheckedIn/Used, tự chốt JOB-04, đánh giá PT theo tháng, P-22 thay P-07.
