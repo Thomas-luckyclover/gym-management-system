@@ -237,7 +237,7 @@
                                             <%-- Ảnh check-in --%>
                                               <div
                                                 class="ci-photo<c:if test='${empty lookupResult.checkInPhoto}'> is-empty</c:if>"
-                                                data-ci-face>
+                                                data-ci-face data-ci-photo style="cursor: pointer;" title="Nhấp để chụp hoặc đổi ảnh check-in">
                                                 <c:choose>
                                                   <c:when test="${not empty lookupResult.checkInPhoto}">
                                                     <c:set var="ciPhoto" value="${lookupResult.checkInPhoto}" />
@@ -373,12 +373,19 @@
                                                   </form>
                                                 </c:if>
 
-                                                <c:if
-                                                  test="${lookupResult.requiresPhoto or empty lookupResult.checkInPhoto}">
-                                                  <button class="btn btn-outline" type="button" data-ci-photo>
-                                                    <i class="fa-solid fa-camera"></i> Chụp ảnh tại quầy
-                                                  </button>
-                                                </c:if>
+                                                <c:choose>
+                                                  <c:when test="${lookupResult.requiresPhoto or empty lookupResult.checkInPhoto}">
+                                                    <button class="btn btn-outline" type="button" data-ci-photo>
+                                                      <i class="fa-solid fa-camera"></i> Chụp ảnh tại quầy
+                                                    </button>
+                                                  </c:when>
+                                                  <c:otherwise>
+                                                    <button class="btn btn-outline" type="button" data-ci-photo
+                                                      title="Chụp lại ảnh check-in nếu ảnh cũ bị mờ hoặc đổi nhận diện">
+                                                      <i class="fa-solid fa-camera-rotate"></i> Chụp lại ảnh
+                                                    </button>
+                                                  </c:otherwise>
+                                                </c:choose>
                                               </div>
                                         </section>
                                       </c:otherwise>
@@ -433,7 +440,12 @@
                 <div class="modal-overlay" id="photoModal" role="dialog" aria-modal="true" aria-labelledby="modalTitle">
                   <div class="modal-box">
                     <div class="modal-head">
-                      <h3 id="modalTitle">Chụp ảnh check-in tại quầy</h3>
+                      <h3 id="modalTitle">
+                        <c:choose>
+                          <c:when test="${not empty lookupResult.checkInPhoto}">Chụp lại ảnh check-in tại quầy</c:when>
+                          <c:otherwise>Chụp ảnh check-in tại quầy</c:otherwise>
+                        </c:choose>
+                      </h3>
                       <button class="btn btn-ghost btn-sm" type="button" data-close-modal
                         aria-label="Đóng">&times;</button>
                     </div>

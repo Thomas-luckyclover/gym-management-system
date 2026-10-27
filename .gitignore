@@ -27,3 +27,5 @@ design-preview/
 design-preview.html
 .impeccable/
 __pycache__/
+src/main/webapp/uploads/checkin/
+
