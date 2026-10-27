@@ -39,3 +39,8 @@
 .payment-result .btn-row {
   justify-content: center;
 }
+
+/* common.css ép h1-h3 màu trắng (cho nền xanh); thẻ này nền sáng nên đặt lại màu chữ */
+html body.dock .content .payment-result > h2 {
+  color: var(--color-text);
+}
