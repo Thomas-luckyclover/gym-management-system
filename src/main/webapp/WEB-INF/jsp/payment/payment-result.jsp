@@ -12,6 +12,10 @@
 
         <link rel="stylesheet"
               href="${pageContext.request.contextPath}/css/pages/payment/payment-result.css?v=1">
+
+<link rel="stylesheet"
+href="${pageContext.request.contextPath}/css/pages/customer/start-date-picker.css?v=1">
+<script src="${pageContext.request.contextPath}/js/pages/customer/start-date-picker.js?v=1" defer></script>
     </head>
     <%-- Chỉ đọc lại kết quả từ DB; không gọi QueryDR tại JSP. --%>
     <c:if test="${empty resultError and not empty result and result.waiting}">
@@ -80,7 +84,23 @@
                                 </div>
                             </dl>
 
-
+                            <%-- Gói Membership đã cấp: hiện ngày bắt đầu/hết hạn, còn đổi được thì có nút "Đổi ngày". --%>
+                            <c:if test="${result.success and not empty result.startPicker}">
+                                <c:set var="picker" value="${result.startPicker}" />
+                                <div class="sdp-anchor" data-sdp data-sdp-url="/customer/subscription/start-date"
+                                     data-sdp-sub="${picker.subscriptionId}" data-sdp-csrf="<c:out value='${csrfToken}' />">
+                                    <div class="sdp-box">
+                                        <div class="sdp-box__item"><span>Bắt đầu</span><strong data-sdp-start><c:out value="${picker.startText}" /></strong></div>
+                                        <div class="sdp-box__item"><span>Hết hạn</span><strong data-sdp-end><c:out value="${picker.endText}" /></strong></div>
+                                        <c:if test="${picker.editable}">
+                                            <button type="button" class="sdp-btn" data-sdp-toggle aria-expanded="false">Đổi ngày</button>
+                                        </c:if>
+                                    </div>
+                                    <c:if test="${picker.editable}">
+                                        <%@ include file="/WEB-INF/jsp/customer/_start-date-picker.jspf" %>
+                                    </c:if>
+                                </div>
+                            </c:if>
 
                             <c:if test="${result.retryable}">
                                 <a class="btn btn-outline"
