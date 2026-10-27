@@ -77,9 +77,11 @@ BEN_MEM = 'Tập không giới hạn giờ mở cửa\nDùng đủ thiết bị 
 
 
 def pkg(pid, name, desc, ben, ptype, unit, val, est, price, active=1, key=None):
+    # Đặc quyền Thư viện bài tập (27/10): gói tập tháng + gói PT mở khóa; vé ngày, buổi lẻ thì không.
+    unlocks = 1 if ptype in ('Membership', 'PTSingle', 'PTCouple') else 0
     add('Packages', dict(PackageName=name, Description=desc, Benefits=ben, PackageType=ptype, DurationUnit=unit,
                          DurationValue=val, EstimatedSessionCount=est, Price=price, IsActive=active,
-                         CreatedAt=dt_(2025, 1, 10, 9, 0)), None, pid)
+                         UnlocksExerciseLibrary=unlocks, CreatedAt=dt_(2025, 1, 10, 9, 0)), None, pid)
     if key:
         G.PKG[key] = pid
 
@@ -652,85 +654,139 @@ vcode(None, 'khach.moi@gmail.com', 'SignUp', '112233', now_(-1), now_(14), note=
 vcode(None, 'yen.doan@gmail.com', 'Claim', '445566', now_(-1), now_(14), note='kích hoạt hồ sơ Yến, mã 445566')
 
 # ============================================================ 13. NHÂN SỰ, THIẾT BỊ
-def LR(**kw):
-    """Map mẫu đơn một ngày sang schema FromDate/ToDate/Days hiện tại."""
-    leave_date = kw.pop('LeaveDate')
-    kw['FromDate'] = leave_date
-    kw['ToDate'] = leave_date
-    kw['Days'] = 1.0 if kw['ShiftType'] == 'FullDay' else 0.5
-    kw['AssignedToEmployeeId'] = None
-    return add('LeaveRequests', kw)
-LR(EmployeeId=5, ReviewedByEmployeeId=2, LeaveType='Annual', LeaveDate=d_(2026, 9, 19), ShiftType='Morning', Reason='Về quê giỗ ông',
-   Status='Approved', RejectReason=None, SubmittedAt=dt_(2026, 9, 17, 10, 0), ReviewedAt=dt_(2026, 9, 17, 15, 30), ReminderSentAt=None)
-LR(EmployeeId=7, ReviewedByEmployeeId=2, LeaveType='Unpaid', LeaveDate=d_(2026, 9, 19), ShiftType='Afternoon', Reason='Có việc cá nhân',
-   Status='Rejected', RejectReason='Ca chiều chỉ còn 2 PT, duyệt sẽ thiếu người (CBR-88)', SubmittedAt=dt_(2026, 9, 18, 9, 0),
-   ReviewedAt=dt_(2026, 9, 18, 17, 0), ReminderSentAt=None)
-LR(EmployeeId=4, ReviewedByEmployeeId=None, LeaveType='Annual', LeaveDate=d_(2026, 9, 16), ShiftType='Morning', Reason='Đưa con đi khám',
-   Status='Rejected', RejectReason='Quá hạn duyệt', SubmittedAt=dt_(2026, 9, 15, 14, 0), ReviewedAt=dt_(2026, 9, 15, 20, 0),
-   ReminderSentAt=dt_(2026, 9, 15, 19, 0))
-LR(EmployeeId=3, ReviewedByEmployeeId=2, LeaveType='Annual', LeaveDate=d_(2026, 10, 14), ShiftType='Afternoon', Reason='Đi đám cưới bạn',
-   Status='Approved', RejectReason=None, SubmittedAt=dt_(2026, 10, 1, 9, 30), ReviewedAt=dt_(2026, 10, 1, 11, 0), ReminderSentAt=None)
-LR(EmployeeId=6, ReviewedByEmployeeId=None, LeaveType='Sick', LeaveDate=d_(2026, 10, 10), ShiftType='FullDay', Reason='Lịch tái khám định kỳ',
-   Status='Pending', RejectReason=None, SubmittedAt=dt_(2026, 10, 2, 8, 0), ReviewedAt=None, ReminderSentAt=None)
-LR(EmployeeId=13, ReviewedByEmployeeId=None, LeaveType='Annual', LeaveDate=d_(2026, 10, 12), ShiftType='Morning', Reason='Thi chứng chỉ huấn luyện',
-   Status='Pending', RejectReason=None, SubmittedAt=dt_(2026, 10, 2, 14, 0), ReviewedAt=None, ReminderSentAt=None)
-LR(EmployeeId=9, ReviewedByEmployeeId=2, LeaveType='Sick', LeaveDate=d_(2026, 9, 24), ShiftType='FullDay', Reason='Sốt cao, có giấy khám',
-   Status='Approved', RejectReason=None, SubmittedAt=dt_(2026, 9, 23, 11, 0), ReviewedAt=dt_(2026, 9, 23, 16, 0), ReminderSentAt=None)
+# BF-05: dữ liệu có cùng cấu trúc với bảng LeaveRequests.
+# Ngày mẫu cố định quanh 26/10/2026 để mở lại được đúng các tình huống đã chốt.
+def leave_request(employee, leave_type, from_date, to_date, shift, days, reason,
+                  status='Pending', reviewer=None, reject_reason=None,
+                  submitted=None, reviewed=None, assigned=None, group=None):
+    return add('LeaveRequests', dict(
+        EmployeeId=employee, ReviewedByEmployeeId=reviewer, AssignedToEmployeeId=assigned,
+        LeaveType=leave_type, FromDate=from_date, ToDate=to_date, ShiftType=shift,
+        Days=days, Reason=reason, Status=status, RejectReason=reject_reason,
+        SubmittedAt=submitted, ReviewedAt=reviewed, ReminderSentAt=None, LeaveGroupId=group))
 
-FAC = [('Máy chạy bộ Technogym', 'Cardio', 'Khu cardio tầng 1'),
-       ('Xe đạp tập', 'Cardio', 'Khu cardio tầng 1'),
-       ('Giàn tạ đa năng', 'Machines', 'Khu tạ tầng 2'),
-       ('Bộ tạ đơn 2–40kg', 'FreeWeights', 'Khu tạ tầng 2'),
-       ('Máy ép ngực', 'Machines', 'Khu tạ tầng 2'),
-       ('Ghế đẩy vai', 'Machines', 'Khu tạ tầng 2'),
-       ('Tủ khóa cá nhân', 'Amenities', 'Phòng thay đồ'),
-       ('Máy leo cầu thang cũ', 'Cardio', 'Kho'),
-       ('Máy kéo cáp', 'Machines', 'Khu tạ tầng 2'),
-       ('Thảm yoga', 'Amenities', 'Phòng tập nhóm')]
-for f in FAC:
-    add('Facilities', dict(FacilityName=f[0], Category=f[1], Location=f[2]))
+# Bảy đơn gốc: giữ số ngày lịch sử đã xử lý, đơn chờ tính 1 ngày cho mỗi ngày nghỉ.
+leave_request(5, 'Annual', d_(2026, 10, 18), d_(2026, 10, 18), 'Morning', 0.5,
+    'Về quê có việc gia đình',
+    status='Approved', reviewer=2, submitted=dt_(2026, 10, 16, 9, 0), reviewed=dt_(2026, 10, 17, 15, 30), assigned=2)
+leave_request(4, 'Sick', d_(2026, 10, 19), d_(2026, 10, 19), 'Afternoon', 0.5,
+    'Nghỉ khám sức khỏe ca chiều',
+    status='Rejected', reviewer=2, reject_reason='Ca chiều thiếu lễ tân trực quầy, vui lòng đổi ca khác', submitted=dt_(2026, 10, 18, 8, 30), reviewed=dt_(2026, 10, 18, 16, 0), assigned=2)
+leave_request(6, 'Annual', d_(2026, 10, 22), d_(2026, 10, 22), 'Morning', 1.0,
+    'Tham gia hội thảo chuyên môn fitness buổi sáng',
+    submitted=dt_(2026, 10, 20, 8, 30), assigned=2)
+leave_request(3, 'Annual', d_(2026, 10, 23), d_(2026, 10, 24), 'FullDay', 2.0,
+    'Nghỉ phép thường niên cùng gia đình 2 ngày',
+    submitted=dt_(2026, 10, 20, 9, 15), assigned=2)
+leave_request(7, 'Sick', d_(2026, 10, 24), d_(2026, 10, 24), 'Morning', 1.0,
+    'Khám chấn thương cổ tay tại bệnh viện thể thao',
+    submitted=dt_(2026, 10, 20, 10, 0), assigned=2)
+leave_request(9, 'Unpaid', d_(2026, 10, 25), d_(2026, 10, 25), 'Afternoon', 1.0,
+    'Xin nghỉ giải quyết thủ tục giấy tờ hành chính cá nhân',
+    submitted=dt_(2026, 10, 20, 11, 30))
+leave_request(8, 'Annual', d_(2026, 10, 26), d_(2026, 10, 26), 'FullDay', 1.0,
+    'Nghỉ giải quyết việc gia đình đột xuất',
+    submitted=dt_(2026, 10, 20, 13, 45), assigned=2)
 
-EQ_SPECS = [
-    (1, 'TM', 8, {5: 'Broken'}),
-    (2, 'EB', 6, {2: 'Broken'}),
-    (3, 'MS', 3, {2: 'Broken'}),
-    (4, 'DB', 20, {}),
-    (5, 'CP', 2, {1: 'UnderMaintenance', 2: 'UnderMaintenance'}),
-    (6, 'SP', 2, {}),
-    (7, 'LK', 60, {12: 'Broken'}),
-    (8, 'SM', 1, {1: 'Retired'}),
-    (9, 'CC', 2, {}),
-    (10, 'YM', 30, {}),
+# Tám mẫu độc lập: sắp nghỉ, một ca, không lương, đã duyệt, từ chối, duyệt muộn, nhiều ngày, thiếu phép.
+leave_request(3, 'Unpaid', d_(2026, 10, 27), d_(2026, 10, 27), 'Morning', 1.0,
+    '[DEMO-01] Sắp nghỉ: xin nghỉ ca sáng để giải quyết việc gia đình.',
+    submitted=dt_(2026, 10, 26, 8, 0))
+leave_request(5, 'Annual', d_(2026, 10, 28), d_(2026, 10, 28), 'Morning', 1.0,
+    '[DEMO-02] Phép năm một ca: đưa người thân đi làm thủ tục buổi sáng.',
+    submitted=dt_(2026, 10, 26, 8, 10))
+leave_request(5, 'Unpaid', d_(2026, 11, 1), d_(2026, 11, 1), 'Morning', 1.0,
+    '[DEMO-03] Chủ động xin nghỉ không lương dù vẫn còn phép năm.',
+    submitted=dt_(2026, 10, 26, 8, 20))
+leave_request(5, 'Annual', d_(2026, 10, 21), d_(2026, 10, 21), 'Morning', 1.0,
+    '[DEMO-04] Đơn đã duyệt: nghỉ giải quyết thủ tục cá nhân.',
+    status='Approved', reviewer=2, submitted=dt_(2026, 10, 18, 8, 0), reviewed=dt_(2026, 10, 19, 8, 0))
+leave_request(5, 'Unpaid', d_(2026, 10, 30), d_(2026, 10, 30), 'Afternoon', 1.0,
+    '[DEMO-05] Đơn từ chối: xin nghỉ để tham gia lớp học cá nhân.',
+    status='Rejected', reviewer=2, reject_reason='[DEMO] Chưa bố trí được người thay ca, vui lòng chọn ngày khác.', submitted=dt_(2026, 10, 26, 8, 30), reviewed=dt_(2026, 10, 26, 9, 0))
+leave_request(6, 'Unpaid', d_(2026, 10, 25), d_(2026, 10, 25), 'FullDay', 1.0,
+    '[DEMO-06] Ngày nghỉ đã qua nhưng đơn vẫn đang chờ xử lý.',
+    submitted=dt_(2026, 10, 23, 8, 0))
+leave_request(9, 'Annual', d_(2026, 11, 3), d_(2026, 11, 5), 'FullDay', 3.0,
+    '[DEMO-07] Nghỉ nhiều ngày: về quê dự việc gia đình trong ba ngày.',
+    submitted=dt_(2026, 10, 26, 8, 40))
+leave_request(14, 'Annual', d_(2026, 11, 18), d_(2026, 12, 2), 'FullDay', 15.0,
+    '[DEMO-08] Thiếu phép: xin 15 ngày khi quỹ phép năm được cấu hình 14 ngày.',
+    submitted=dt_(2026, 10, 26, 8, 50))
+
+# Hai cặp cùng đợt nghỉ: A cùng chờ; B phép năm đã duyệt, không lương bị từ chối.
+leave_request(3, 'Annual', d_(2026, 11, 8), d_(2026, 11, 12), 'FullDay', 5.0,
+    '[DEMO-SPLIT-A] Đợt nghỉ 9 ngày, phần phép năm đang chờ.',
+    submitted=dt_(2026, 10, 26, 9, 0), group='11111111-0524-4620-8000-000000000001')
+leave_request(3, 'Unpaid', d_(2026, 11, 13), d_(2026, 11, 16), 'FullDay', 4.0,
+    '[DEMO-SPLIT-A] Cùng đợt nghỉ 9 ngày, phần không lương đang chờ.',
+    submitted=dt_(2026, 10, 26, 9, 0), group='11111111-0524-4620-8000-000000000001')
+leave_request(3, 'Annual', d_(2026, 11, 20), d_(2026, 11, 24), 'FullDay', 5.0,
+    '[DEMO-SPLIT-B] Phần phép năm đã được duyệt trong đợt 9 ngày.',
+    status='Approved', reviewer=2, submitted=dt_(2026, 10, 26, 9, 0), reviewed=dt_(2026, 10, 26, 10, 0), group='22222222-0524-4620-8000-000000000002')
+leave_request(3, 'Unpaid', d_(2026, 11, 25), d_(2026, 11, 28), 'FullDay', 4.0,
+    '[DEMO-SPLIT-B] Phần không lương bị từ chối trong cùng đợt.',
+    status='Rejected', reviewer=2, reject_reason='[DEMO] Chưa bố trí được nhân sự cho phần không lương.', submitted=dt_(2026, 10, 26, 9, 0), reviewed=dt_(2026, 10, 26, 10, 0), group='22222222-0524-4620-8000-000000000002')
+
+FAC = [
+    ('Máy chạy bộ Technogym', 'Cardio', 'Khu cardio tầng 1', '/images/facilities/treadmill.jpg', 'máy', 1),
+    ('Xe đạp tập', 'Cardio', 'Khu cardio tầng 1', '/images/facilities/exercise-bike.jpg', 'máy', 1),
+    ('Giàn tạ đa năng', 'Machines', 'Khu tạ tầng 2', '/images/facilities/multi-gym.jpg', 'máy', 1),
+    ('Bộ tạ đơn 2–40kg', 'FreeWeights', 'Khu tạ tầng 2', '/images/facilities/dumbbells.jpg', 'bộ', 1),
+    ('Máy ép ngực', 'Machines', 'Khu tạ tầng 2', '/images/facilities/chest-press.jpg', 'máy', 1),
+    ('Ghế đẩy vai', 'Machines', 'Khu tạ tầng 2', '/images/facilities/shoulder-press.jpg', 'máy', 1),
+    ('Tủ khóa cá nhân', 'Amenities', 'Phòng thay đồ', '/images/facilities/lockers.jpg', 'tủ', 1),
+    ('Máy leo cầu thang cũ', 'Cardio', 'Kho', '/images/facilities/stair-climber.jpg', 'máy', 0),
+    ('Máy kéo cáp', 'Machines', 'Khu tạ tầng 2', '/images/facilities/cable-machine.jpg', 'máy', 1),
+    ('Thảm yoga', 'Amenities', 'Phòng tập nhóm', '/images/facilities/yoga-mat.jpg', 'thảm', 1),
 ]
-for fac_id, prefix, count, status_map in EQ_SPECS:
+for f in FAC:
+    add('Facilities', dict(FacilityName=f[0], Category=f[1], Location=f[2], ImageUrl=f[3], UnitLabel=f[4], IsActive=f[5]))
+
+EQ_CONFIGS = [
+    (1, 'TM', 8, {5: 'UnderMaintenance'}, lambda i: (f"Số {i}", 'Dãy cửa sổ' if i <= 4 else 'Dãy gương')),
+    (2, 'EB', 6, {2: 'UnderMaintenance'}, lambda i: (f"Số {i}", 'Dãy giữa')),
+    (3, 'MS', 3, {2: 'UnderMaintenance'}, lambda i: (f"Số {i}", 'Góc trong')),
+    (4, 'DB', 20, {}, lambda i: (f"{i*2} kg", 'Giá tạ tầng 1' if i <= 10 else 'Giá tạ tầng 2')),
+    (5, 'CP', 2, {1: 'UnderMaintenance', 2: 'UnderMaintenance'}, lambda i: (f"Số {i}", 'Dãy máy ngực')),
+    (6, 'SP', 2, {}, lambda i: (f"Số {i}", 'Dãy máy vai')),
+    (7, 'LK', 60, {12: 'UnderMaintenance'}, lambda i: (f"Tủ {i}", 'Khu nam' if i <= 30 else 'Khu nữ')),
+    (8, 'SM', 1, {1: 'Retired'}, lambda i: (f"Số {i}", 'Kho thanh lý')),
+    (9, 'CC', 2, {}, lambda i: (f"Số {i}", 'Góc tạ')),
+    (10, 'YM', 30, {}, lambda i: (f"Thảm {i}", 'Kệ thảm A' if i <= 15 else 'Kệ thảm B')),
+]
+for fac_id, prefix, count, status_map, label_fn in EQ_CONFIGS:
     for idx in range(1, count + 1):
         code = f"{prefix}-{idx:03d}"
         status = status_map.get(idx, 'Available')
-        add('EquipmentItems', dict(FacilityId=fac_id, ItemCode=code, Status=status))
+        label, placement = label_fn(idx)
+        add('EquipmentItems', dict(FacilityId=fac_id, ItemCode=code, ItemLabel=label, PlacementNote=placement, Status=status))
 
 
-def mreq(item_id, rep, desc, status, inc='NotWorking', det='Receptionist', pri='Normal', tag=0,
-         rev=None, rev_at=None, setum=None, rej=None, closer=None,
-         closed=None, accept=None, rep_at=None, note=None):
+def mreq(item_id, rep, desc, status, inc='NotWorking', pri='Normal', tag=0,
+         rev=None, rev_at=None, setum=None, rej=None, man_note=None, closer=None,
+         closed=None, accept=None, rep_at=None, aff=None, note=None):
     n = NEXT['MaintenanceRequests']
     add('MaintenanceRequests', dict(RequestCode=f'BT-{n:04d}', EquipmentItemId=item_id, ReportedByEmployeeId=rep,
                                     ReviewedByEmployeeId=rev, ClosedByEmployeeId=closer, Priority=pri,
-                                    IncidentType=inc, DetectedBy=det,
+                                    IncidentType=inc, AffectedItemsNote=aff,
                                     WarningTagPlaced=tag, Description=desc, Status=status, SetUnderMaintenance=setum,
-                                    RejectReason=rej, AcceptanceNote=accept, ReportedAt=rep_at, ReviewedAt=rev_at,
+                                    RejectReason=rej, ManagerNote=man_note, AcceptanceNote=accept, ReportedAt=rep_at, ReviewedAt=rev_at,
                                     ClosedAt=closed), note)
 
 
-mreq(38, 3, 'Máy ép ngực kêu to khi đẩy, nghi hỏng bạc đạn', 'InProgress', inc='StrangeNoise', det='Receptionist', pri='Urgent', tag=1, rev=2, rev_at=dt_(2026, 9, 20, 11, 0), setum=1, rep_at=dt_(2026, 9, 20, 9, 0), note='thiết bị chuyển Under maintenance (CBR-101)')
-mreq(3, 4, 'Máy chạy số 3 bị giật khi tăng tốc', 'Closed', inc='NotWorking', det='Customer', pri='Normal', tag=1, rev=2, rev_at=dt_(2026, 9, 10, 10, 0), setum=1, closer=3, closed=dt_(2026, 9, 14, 16, 0), accept='Đã thay dây curoa, chạy thử 30 phút ổn định', rep_at=dt_(2026, 9, 10, 8, 0))
-mreq(27, 3, 'Tạ đơn 10kg bị lỏng ốc siết, nguy cơ rơi đĩa tạ khi tập', 'Rejected', inc='BrokenOrWorn', det='PT', pri='Low', tag=0, rev=2, rev_at=dt_(2026, 9, 12, 17, 30), rej='Đã chuyển bộ phận bảo dưỡng vặn chặt ốc, không cần thay mới', rep_at=dt_(2026, 9, 12, 14, 0))
-mreq(10, 3, 'Xe đạp số 2 kẹt bàn đạp, không xoay được', 'Open', inc='NotWorking', det='Customer', pri='Normal', tag=1, rep_at=dt_(2026, 10, 2, 8, 30))
-mreq(53, 4, 'Tủ khóa số 12 hỏng chốt, không khóa được', 'Open', inc='BrokenOrWorn', det='Customer', pri='Low', tag=0, rep_at=dt_(2026, 10, 1, 20, 0))
-mreq(103, 9, 'Dây cáp máy kéo bị sờn ở đầu nối', 'InProgress', inc='SafetyHazard', det='Technician', pri='Normal', tag=1, rev=2, rev_at=dt_(2026, 9, 30, 9, 0), setum=0, rep_at=dt_(2026, 9, 29, 19, 0), note='duyệt nhưng KHÔNG chuyển Under maintenance (CBR-101 bỏ tick)')
-mreq(108, 11, 'Thảm yoga số 4 bị rách góc', 'Closed', inc='BrokenOrWorn', det='PT', pri='Low', tag=0, rev=2, rev_at=dt_(2026, 9, 6, 9, 0), setum=0, closer=11, closed=dt_(2026, 9, 8, 15, 0), accept='Đã thay thảm mới', rep_at=dt_(2026, 9, 5, 18, 0))
-mreq(5, 3, 'Băng tải máy chạy số 5 phát tiếng rít chói tai khi chạy ở tốc độ cao', 'Open', inc='StrangeNoise', det='Customer', pri='Normal', tag=1, rep_at=dt_(2026, 10, 3, 9, 15))
-mreq(16, 4, 'Ròng rọc giàn tạ số 2 bị nứt và kẹt dây cáp khi nâng tạ nặng', 'Open', inc='BrokenOrWorn', det='PT', pri='Urgent', tag=1, rep_at=dt_(2026, 10, 3, 14, 0))
-mreq(39, 3, 'Đệm ghế máy ép ngực số 2 bị bong tróc da, cần bọc lại da mới', 'InProgress', inc='Hygiene', det='Receptionist', pri='Normal', tag=1, rev=2, rev_at=dt_(2026, 10, 2, 17, 0), setum=1, rep_at=dt_(2026, 10, 2, 16, 30))
+mreq(38, 3, 'Máy ép ngực kêu to khi đẩy, nghi hỏng bạc đạn', 'InProgress', inc='StrangeNoise', pri='Urgent', tag=1, rev=2, rev_at=dt_(2026, 9, 20, 11, 0), setum=1, man_note='Đã liên hệ hãng bảo hành Technogym', rep_at=dt_(2026, 9, 20, 9, 0), note='thiết bị chuyển Under maintenance (CBR-101)')
+mreq(3, 4, 'Máy chạy số 3 bị giật khi tăng tốc', 'Closed', inc='NotWorking', pri='Normal', tag=1, rev=2, rev_at=dt_(2026, 9, 10, 10, 0), setum=1, closer=3, closed=dt_(2026, 9, 14, 16, 0), accept='Đã thay dây curoa, chạy thử 30 phút ổn định', rep_at=dt_(2026, 9, 10, 8, 0))
+mreq(27, 3, 'Tạ đơn 20kg bị lỏng ốc siết, nguy cơ rơi đĩa tạ khi tập', 'Rejected', inc='BrokenOrWorn', pri='Low', tag=0, rev=2, rev_at=dt_(2026, 9, 12, 17, 30), rej='Đã chuyển bộ phận bảo dưỡng vặn chặt ốc, không cần thay mới', aff='Quả 20 kg', rep_at=dt_(2026, 9, 12, 14, 0))
+mreq(10, 3, 'Xe đạp số 2 kẹt bàn đạp, không xoay được', 'Open', inc='NotWorking', pri='Normal', tag=1, rep_at=dt_(2026, 10, 2, 8, 30))
+mreq(53, 4, 'Tủ khóa số 12 hỏng chốt, không khóa được', 'Open', inc='BrokenOrWorn', pri='Low', tag=0, rep_at=dt_(2026, 10, 1, 20, 0))
+mreq(103, 9, 'Dây cáp máy kéo bị sờn ở đầu nối', 'InProgress', inc='SafetyHazard', pri='Normal', tag=1, rev=2, rev_at=dt_(2026, 9, 30, 9, 0), setum=0, man_note='Đang chờ thợ thay cáp mới', rep_at=dt_(2026, 9, 29, 19, 0), note='duyệt nhưng KHÔNG chuyển Under maintenance (CBR-101 bỏ tick)')
+mreq(108, 11, 'Thảm yoga số 4 bị rách góc', 'Closed', inc='BrokenOrWorn', pri='Low', tag=0, rev=2, rev_at=dt_(2026, 9, 6, 9, 0), setum=0, closer=11, closed=dt_(2026, 9, 8, 15, 0), accept='Đã thay thảm mới', rep_at=dt_(2026, 9, 5, 18, 0))
+mreq(5, 3, 'Băng tải máy chạy số 5 phát tiếng rít chói tai khi chạy ở tốc độ cao', 'Open', inc='StrangeNoise', pri='Normal', tag=1, rep_at=dt_(2026, 10, 3, 9, 15))
+mreq(16, 4, 'Ròng rọc giàn tạ số 2 bị nứt và kẹt dây cáp khi nâng tạ nặng', 'Open', inc='BrokenOrWorn', pri='Urgent', tag=1, rep_at=dt_(2026, 10, 3, 14, 0))
+mreq(39, 3, 'Đệm ghế máy ép ngực số 2 bị bong tróc da, cần bọc lại da mới', 'InProgress', inc='Hygiene', pri='Normal', tag=1, rev=2, rev_at=dt_(2026, 10, 2, 17, 0), setum=1, man_note='Đã liên hệ xưởng bọc nệm', rep_at=dt_(2026, 10, 2, 16, 30))
+mreq(3, 3, 'Băng chạy dừng đột ngột khi chạy 8 km/h, màn hình báo lỗi E05; đã rút điện.', 'Open', inc='NotWorking', pri='Normal', tag=1, rep_at=dt_(2026, 10, 23, 9, 15))
+mreq(20, 3, 'Hai quả tạ bị nứt lớp bọc cao su bên ngoài, có nguy cơ bong tróc rơi vào chân khách.', 'Open', inc='NotWorking', pri='Normal', tag=1, aff='Quả 6 kg, 8 kg', rep_at=dt_(2026, 10, 23, 9, 30))
 
 for i, (e, d, st, ci, co, stt, note) in enumerate([
     (3, d_(2026, 10, 2), 'Morning', dt_(2026, 10, 2, 5, 25), dt_(2026, 10, 2, 13, 5), 'Present', None),
@@ -879,9 +935,9 @@ CFG = [('P-01', '1', 'Số lần bảo lưu tối đa mỗi gói tập (lần)')
        ('P-17', '5', 'Số lần sai trước khi khóa tạm (đăng nhập và mã xác thực)'),
        ('P-18', '5', 'Thời gian khóa tạm (phút)'),
        ('P-19', '05:30-22:00', 'Giờ mở cửa mặc định hằng ngày'),
-       ('P-20', '20:00', 'Giờ chốt duyệt đơn nghỉ (ngày hôm trước)'),
        ('P-21', '1M,2M,3M', 'Thời hạn gói PT (tháng) — DBR-19'),
-       ('P-22', '3', "Minimum customers to show a PT's average rating (DBR-69)")]
+       ('P-22', '3', "Minimum customers to show a PT's average rating (DBR-69)"),
+       ('P-23', '14', 'Định mức phép năm demo (ngày/năm)')]
 for k, v, d in CFG:
     add('SystemConfigs', dict(ConfigKey=k, ConfigValue=v, Description=d,
                              UpdatedAt=dt_(2026, 10, 6, 9) if k == 'P-22' else dt_(2026, 9, 1, 9),

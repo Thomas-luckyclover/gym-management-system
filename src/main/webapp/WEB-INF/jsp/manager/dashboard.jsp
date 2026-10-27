@@ -37,46 +37,7 @@
                 <%@ include file="/WEB-INF/jsp/common/notification-bell.jspf" %>
 
 
-                <c:if test="${not empty accountSettings}">
-
-                    <a class="tb-user"
-                       href="${pageContext.request.contextPath}/account"
-                       title="Cài đặt tài khoản">
-
-                        <c:choose>
-
-                            <c:when test="${not empty accountSettings.avatar}">
-
-                                <img class="avatar"
-                                     src="${pageContext.request.contextPath}${accountSettings.avatar}"
-                                     alt="Ảnh đại diện">
-
-                            </c:when>
-
-                            <c:otherwise>
-
-                                <span class="avatar">
-                                    <c:out value="${sessionScope.userInitials}" />
-                                </span>
-
-                            </c:otherwise>
-
-                        </c:choose>
-
-
-                        <span class="tb-user-text">
-
-                            <b>
-                                <c:out value="${accountSettings.fullName}" />
-                            </b>
-
-                            <%@ include file="/WEB-INF/jsp/common/_user-badge-line.jspf" %>
-
-                        </span>
-
-                    </a>
-
-                </c:if>
+                <%@ include file="/WEB-INF/jsp/common/topbar-user.jspf" %>
 
             </div>
         </header>

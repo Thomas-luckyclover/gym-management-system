@@ -106,12 +106,14 @@ public class MaintenanceRequestReviewServlet extends HttpServlet {
                     request.getParameter(
                             "setUnderMaintenance"
                     ) != null;
+            String managerNote = RequestUtil.getTrimmedParam(request, "managerNote");
 
             ServiceResult<Void> result =
                     maintenanceRequestService.approveRequest(
                             accountId,
                             requestId,
-                            setUnderMaintenance
+                            setUnderMaintenance,
+                            managerNote
                     );
 
             if (result.isSuccess()) {
@@ -229,10 +231,24 @@ public class MaintenanceRequestReviewServlet extends HttpServlet {
             return;
         }
 
-        request.setAttribute(
-                "item",
-                result.getData()
-        );
+        MaintenanceRequestDAO.MaintenanceRequestView viewItem = result.getData();
+        request.setAttribute("item", viewItem);
+
+        // Tra cứu lần hỏng trước của máy này (Closed gần nhất)
+        if (viewItem.getRequest() != null) {
+            ServiceResult<MaintenanceRequestDAO.MaintenanceRequestView> prevResult =
+                    maintenanceRequestService.getLastClosedRequest(viewItem.getRequest().getEquipmentItemId(), requestId);
+            if (prevResult.isSuccess()) {
+                request.setAttribute("lastClosedRequest", prevResult.getData());
+            }
+
+            // Tải thông tin dòng máy để biết số máy khả dụng trong dòng
+            ServiceResult<com.gms.entity.Facility> facilityResult =
+                    maintenanceRequestService.getFacilityById(viewItem.getFacilityId());
+            if (facilityResult.isSuccess()) {
+                request.setAttribute("facility", facilityResult.getData());
+            }
+        }
 
         request.setAttribute(
                 "activeNav",

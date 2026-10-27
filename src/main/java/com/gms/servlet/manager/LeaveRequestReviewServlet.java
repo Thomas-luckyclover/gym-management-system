@@ -22,7 +22,7 @@ import java.util.List;
  * URL: /manager/leave-requests/review
  *
  * <p>GET  — hiển thị chi tiết đơn cần duyệt, quân số trực dự kiến.
- * <p>POST — duyệt một/nhiều đơn, từ chối hoặc chuyển người duyệt.
+ * <p>POST — duyệt một/nhiều đơn hoặc từ chối kèm lý do.
  */
 @WebServlet("/manager/leave-requests/review")
 public class LeaveRequestReviewServlet extends HttpServlet {
@@ -89,22 +89,23 @@ public class LeaveRequestReviewServlet extends HttpServlet {
             return;
         }
 
-        // B4: xử lý theo hành động Duyệt (approve), Từ chối (reject) hoặc Chuyển người duyệt (transfer)
+        // B4: duyệt hoặc từ chối; hành động khác không được gọi Service ghi dữ liệu.
         ServiceResult<Void> result;
         String successMessage;
         String rejectReason = RequestUtil.getTrimmedParam(request, "rejectReason");
 
         if ("approve".equalsIgnoreCase(action)) {
-            result = leaveRequestService.approveRequest(managerAccountId, leaveRequestId);
+            String lateApprovalReason = RequestUtil.getTrimmedParam(request, "lateApprovalReason");
+            // Giữ đường gọi thường cho duyệt nhanh; Service tự xác định muộn từ ngày lưu trong DB.
+            if (lateApprovalReason == null || lateApprovalReason.isEmpty()) {
+                result = leaveRequestService.approveRequest(managerAccountId, leaveRequestId);
+            } else {
+                result = leaveRequestService.approveRequest(managerAccountId, leaveRequestId, lateApprovalReason);
+            }
             successMessage = "Đã duyệt đơn nghỉ phép thành công.";
         } else if ("reject".equalsIgnoreCase(action)) {
             result = leaveRequestService.rejectRequest(managerAccountId, leaveRequestId, rejectReason);
             successMessage = "Đã từ chối đơn nghỉ phép.";
-        } else if ("transfer".equalsIgnoreCase(action)) {
-            int toEmployeeId = RequestUtil.getIntParam(request, "toEmployeeId", 0);
-            String note = RequestUtil.getTrimmedParam(request, "note");
-            result = leaveRequestService.transferReviewer(managerAccountId, leaveRequestId, toEmployeeId, note);
-            successMessage = "Đã chuyển người duyệt thành công.";
         } else {
             RequestUtil.redirect(request, response, "/manager/leave-requests");
             return;
@@ -121,8 +122,7 @@ public class LeaveRequestReviewServlet extends HttpServlet {
         // B6: giữ dữ liệu nhập và lỗi, sau đó dùng lại bước tải trang của GET.
         request.setAttribute("formMessage", result.getMessage());
         request.setAttribute("rejectReason", rejectReason);
-        request.setAttribute("note", RequestUtil.getTrimmedParam(request, "note"));
-        request.setAttribute("toEmployeeId", RequestUtil.getIntParam(request, "toEmployeeId", 0));
+        request.setAttribute("lateApprovalReason", RequestUtil.getTrimmedParam(request, "lateApprovalReason"));
         request.setAttribute("errors", result.getFieldErrors());
         showReview(request, response, leaveRequestId, managerAccountId);
     }

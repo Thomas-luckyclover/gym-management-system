@@ -8,6 +8,8 @@ public class EquipmentItem {
     private int equipmentItemId;
     private int facilityId;
     private String itemCode;
+    private String itemLabel;
+    private String placementNote;
     private Status status;
 
     // Các trường bổ trợ hiển thị (không lưu trực tiếp bảng EquipmentItems)
@@ -23,6 +25,15 @@ public class EquipmentItem {
         this.equipmentItemId = equipmentItemId;
         this.facilityId = facilityId;
         this.itemCode = itemCode;
+        this.status = status;
+    }
+
+    public EquipmentItem(int equipmentItemId, int facilityId, String itemCode, String itemLabel, String placementNote, Status status) {
+        this.equipmentItemId = equipmentItemId;
+        this.facilityId = facilityId;
+        this.itemCode = itemCode;
+        this.itemLabel = itemLabel;
+        this.placementNote = placementNote;
         this.status = status;
     }
 
@@ -48,6 +59,22 @@ public class EquipmentItem {
 
     public void setItemCode(String itemCode) {
         this.itemCode = itemCode;
+    }
+
+    public String getItemLabel() {
+        return itemLabel;
+    }
+
+    public void setItemLabel(String itemLabel) {
+        this.itemLabel = itemLabel;
+    }
+
+    public String getPlacementNote() {
+        return placementNote;
+    }
+
+    public void setPlacementNote(String placementNote) {
+        this.placementNote = placementNote;
     }
 
     public Status getStatus() {
@@ -105,14 +132,13 @@ public class EquipmentItem {
     public String getBadgeClass() {
         if (status == Status.RETIRED) return "badge-neutral";
         if (status == Status.UNDER_MAINTENANCE) return "badge-warning";
-        if (status == Status.BROKEN || activeRequestCode != null) return "badge-danger";
+        if (activeRequestCode != null) return "badge-danger";
         return "badge-success";
     }
 
     public enum Status {
         AVAILABLE("Available", "Khả dụng"),
         UNDER_MAINTENANCE("UnderMaintenance", "Đang bảo trì"),
-        BROKEN("Broken", "Hỏng hóc"),
         RETIRED("Retired", "Ngừng sử dụng");
 
         private final String dbValue;

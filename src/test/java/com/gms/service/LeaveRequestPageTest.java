@@ -94,6 +94,6 @@ class LeaveRequestPageTest {
         request.setFromDate(DateTimeUtil.today());
         request.setToDate(request.getFromDate());
         request.setDays(new BigDecimal("0.5"));
-        return new LeaveRequestRow(request, "NV-0050", "Nhân viên test", "PT", null, "Quản lý");
+        return new LeaveRequestRow(request, "NV-0050", "Nhân viên test", "PT", null);
     }
 }

@@ -31,9 +31,6 @@ public class CustomerDeletionReviewView {
     // DAO: Persons.Email, email khách hàng.
     private final String customerEmail;
 
-    // DAO: Persons.Avatar, ảnh đại diện khách hàng.
-    private final String customerAvatar;
-
     // DAO: Customers.CustomerType (Self | Dependent).
     private final String customerType;
 
@@ -43,23 +40,20 @@ public class CustomerDeletionReviewView {
     // DAO: Persons.FullName của Lễ tân gửi yêu cầu.
     private final String requesterName;
 
-    // DAO: Employees.EmployeeCode của Lễ tân gửi yêu cầu.
-    private final String requesterCode;
-
     // DAO: Persons.FullName của Quản lý đã duyệt/từ chối (nếu đã xử lý).
     private final String reviewerName;
 
     // Service: danh sách các gói tập đang chạy (Active/Frozen, EndDate >= hôm nay).
-    private final List<ActiveSubscriptionSummary> activePackages;
+    private List<ActiveSubscriptionSummary> activePackages;
 
     // Service: danh sách các buổi PT đang lên lịch (Scheduled).
-    private final List<ScheduledSessionSummary> scheduledSessions;
+    private List<ScheduledSessionSummary> scheduledSessions;
 
-    // Service: true nếu khách hàng trùng PersonId với Quản lý đang đăng nhập (CBR-115).
+    // DAO: true nếu khách hàng trùng PersonId với Quản lý đang đăng nhập (CBR-115).
     // Nếu true, Quản lý không được tự duyệt xóa hồ sơ của chính mình (báo MSG76).
     private final boolean ownProfile;
 
-    // Service: true nếu yêu cầu đang ở trạng thái Pending và không phải ownProfile.
+    // DTO: true nếu yêu cầu đang ở trạng thái Pending và không phải ownProfile.
     private final boolean canAct;
 
     public CustomerDeletionReviewView(
@@ -69,11 +63,9 @@ public class CustomerDeletionReviewView {
             String customerFullName,
             String customerPhone,
             String customerEmail,
-            String customerAvatar,
             String customerType,
             LocalDateTime customerJoinedAt,
             String requesterName,
-            String requesterCode,
             String reviewerName,
             List<ActiveSubscriptionSummary> activePackages,
             List<ScheduledSessionSummary> scheduledSessions,
@@ -85,11 +77,9 @@ public class CustomerDeletionReviewView {
         this.customerFullName = customerFullName;
         this.customerPhone = customerPhone;
         this.customerEmail = customerEmail;
-        this.customerAvatar = customerAvatar;
         this.customerType = customerType;
         this.customerJoinedAt = customerJoinedAt;
         this.requesterName = requesterName;
-        this.requesterCode = requesterCode;
         this.reviewerName = reviewerName;
         this.activePackages = activePackages != null ? Collections.unmodifiableList(activePackages) : Collections.emptyList();
         this.scheduledSessions = scheduledSessions != null ? Collections.unmodifiableList(scheduledSessions) : Collections.emptyList();
@@ -97,24 +87,80 @@ public class CustomerDeletionReviewView {
         this.canAct = deletionRequest != null && deletionRequest.isPending() && !ownProfile;
     }
 
-    public CustomerDeletionRequest getDeletionRequest() { return deletionRequest; }
-    public int getCustomerId() { return customerId; }
-    public String getCustomerCode() { return customerCode; }
-    public String getCustomerFullName() { return customerFullName; }
-    public String getCustomerPhone() { return customerPhone; }
-    public String getCustomerEmail() { return customerEmail; }
-    public String getCustomerAvatar() { return customerAvatar; }
-    public String getCustomerType() { return customerType; }
-    public LocalDateTime getCustomerJoinedAt() { return customerJoinedAt; }
-    public String getRequesterName() { return requesterName; }
-    public String getRequesterCode() { return requesterCode; }
-    public String getReviewerName() { return reviewerName; }
-    public List<ActiveSubscriptionSummary> getActivePackages() { return activePackages; }
-    public List<ScheduledSessionSummary> getScheduledSessions() { return scheduledSessions; }
-    public boolean isOwnProfile() { return ownProfile; }
-    public boolean isCanAct() { return canAct; }
+    public CustomerDeletionRequest getDeletionRequest() {
+        return deletionRequest;
+    }
+
+    public int getCustomerId() {
+        return customerId;
+    }
+
+    public String getCustomerCode() {
+        return customerCode;
+    }
+
+    public String getCustomerFullName() {
+        return customerFullName;
+    }
+
+    public String getCustomerPhone() {
+        return customerPhone;
+    }
+
+    public String getCustomerEmail() {
+        return customerEmail;
+    }
+
+    public String getCustomerType() {
+        return customerType;
+    }
+
+    public LocalDateTime getCustomerJoinedAt() {
+        return customerJoinedAt;
+    }
+
+    public String getRequesterName() {
+        return requesterName;
+    }
+
+    public String getReviewerName() {
+        return reviewerName;
+    }
+
+    public List<ActiveSubscriptionSummary> getActivePackages() {
+        return activePackages;
+    }
+
+    public List<ScheduledSessionSummary> getScheduledSessions() {
+        return scheduledSessions;
+    }
+
+    public boolean isOwnProfile() {
+        return ownProfile;
+    }
+
+    public boolean isCanAct() {
+        return canAct;
+    }
+
 
     public boolean hasActiveAssets() {
         return !activePackages.isEmpty() || !scheduledSessions.isEmpty();
+    }
+
+    /** Chỉ Service tải phần gói/buổi khi mở màn duyệt, danh sách không tải phần này. */
+    public void setActivePackages(List<ActiveSubscriptionSummary> activePackages) {
+        this.activePackages = List.copyOf(activePackages);
+    }
+
+    public void setScheduledSessions(List<ScheduledSessionSummary> scheduledSessions) {
+        this.scheduledSessions = List.copyOf(scheduledSessions);
+    }
+
+    public String getCustomerTypeLabel() {
+        if ("Dependent".equals(customerType)) {
+            return "Phụ thuộc";
+        }
+        return "Cá nhân";
     }
 }

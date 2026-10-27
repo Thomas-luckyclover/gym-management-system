@@ -47,12 +47,7 @@
             </div>
             <div class="top-right">
                 <%@ include file="/WEB-INF/jsp/common/notification-bell.jspf" %>
-                <c:if test="${not empty dashboard}">
-                    <a class="tb-user" href="${ctx}/account">
-                        <span class="avatar"><c:out value="${dashboard.initials}" /></span>
-                        <span class="tb-user-text"><b><c:out value="${dashboard.fullName}" /></b><%@ include file="/WEB-INF/jsp/common/_user-badge-line.jspf" %></span>
-                    </a>
-                </c:if>
+                <%@ include file="/WEB-INF/jsp/common/topbar-user.jspf" %>
             </div>
         </header>
 

@@ -6,13 +6,10 @@
 <html lang="vi">
 <head>
   <%@ include file="/WEB-INF/jsp/common/head.jspf" %>
-  <title>Yêu cầu bảo trì · Super Gym</title>
-  <link rel="stylesheet" href="${pageContext.request.contextPath}/css/pages/manager/maintenance-requests.css?v=20261023fix1">
-  <link rel="stylesheet"
-        href="${pageContext.request.contextPath}/css/pages/auth/notification-bell.css">
-
-  <script src="${pageContext.request.contextPath}/js/pages/auth/notification-bell.js"
-          defer></script>
+  <title>Yêu cầu bảo trì · Super Gym Quản lý</title>
+  <link rel="stylesheet" href="${pageContext.request.contextPath}/css/pages/manager/maintenance-requests.css?v=20261026v1">
+  <link rel="stylesheet" href="${pageContext.request.contextPath}/css/pages/auth/notification-bell.css">
+  <script src="${pageContext.request.contextPath}/js/pages/auth/notification-bell.js" defer></script>
 </head>
 
 <body class="dock theme-manager">
@@ -25,280 +22,250 @@
       <header class="topbar">
         <div class="tb-left">
           <h1 class="tb-title">Yêu cầu bảo trì</h1>
+          <span class="tb-subtitle">Duyệt hoặc từ chối yêu cầu lễ tân gửi lên; theo dõi đến khi máy sửa xong.</span>
         </div>
 
         <div class="top-right">
-
           <%@ include file="/WEB-INF/jsp/common/notification-bell.jspf" %>
 
-          <a class="tb-user"
-             href="${pageContext.request.contextPath}/account">
-            <span class="avatar"><c:out value="${sessionScope.userInitials}" /></span>
-            <span>
-              <b><c:out value="${sessionScope.displayName}" default="Quản lý" /></b>
-              <%@ include file="/WEB-INF/jsp/common/_user-badge-line.jspf" %>
-            </span>
-          </a>
+          <%@ include file="/WEB-INF/jsp/common/topbar-user.jspf" %>
         </div>
       </header>
 
-      <main class="content" id="main-content" tabindex="-1">
+      <main class="content maintenance-list-content" id="main-content" tabindex="-1">
 
-        <%-- ===== Thống kê trạng thái ===== --%>
-        <div class="maintenance-stats">
-
-          <%-- Tất cả --%>
-          <c:url var="allStatusUrl"
-                 value="/manager/maintenance-requests">
-            <c:if test="${not empty keyword}">
-              <c:param name="keyword" value="${keyword}" />
-            </c:if>
-            <c:if test="${not empty priorityFilter}">
-              <c:param name="priority" value="${priorityFilter}" />
-            </c:if>
-            <c:if test="${not empty reportedDateFilter}">
-              <c:param name="reportedDate" value="${reportedDateFilter}" />
-            </c:if>
+        <%-- ===== 5 THẺ ĐẾM TRẠNG THÁI ===== --%>
+        <div class="maintenance-stats-bar">
+          <c:url var="allUrl" value="/manager/maintenance-requests">
+            <c:if test="${not empty keyword}"><c:param name="keyword" value="${keyword}" /></c:if>
+            <c:if test="${not empty priorityFilter}"><c:param name="priority" value="${priorityFilter}" /></c:if>
+            <c:if test="${not empty reportedDateFilter}"><c:param name="reportedDate" value="${reportedDateFilter}" /></c:if>
           </c:url>
-
-          <a href="${allStatusUrl}"
-             class="maintenance-stat ${empty statusFilter ? 'active' : ''}">
-            <span>Tất cả</span>
-            <strong>${totalStatusCount}</strong>
+          <a href="${allUrl}" class="stat-card ${empty statusFilter ? 'active' : ''}">
+            <span class="stat-name">Tất cả</span>
+            <strong class="stat-count"><c:out value="${totalStatusCount}" default="0" /></strong>
           </a>
 
-          <%-- Theo trạng thái --%>
-          <c:forEach var="status" items="${statusOptions}">
+          <%-- Chờ duyệt (Open) --%>
+          <c:url var="openUrl" value="/manager/maintenance-requests">
+            <c:param name="status" value="Open" />
+            <c:if test="${not empty keyword}"><c:param name="keyword" value="${keyword}" /></c:if>
+            <c:if test="${not empty priorityFilter}"><c:param name="priority" value="${priorityFilter}" /></c:if>
+            <c:if test="${not empty reportedDateFilter}"><c:param name="reportedDate" value="${reportedDateFilter}" /></c:if>
+          </c:url>
+          <a href="${openUrl}" class="stat-card ${statusFilter == 'Open' ? 'active' : ''}">
+            <span class="stat-name"><span class="dot dot-open"></span> Chờ duyệt</span>
+            <strong class="stat-count"><c:out value="${statusCounts['Open']}" default="0" /></strong>
+          </a>
 
-            <c:url var="statusUrl"
-                   value="/manager/maintenance-requests">
+          <%-- Đang xử lý (InProgress) --%>
+          <c:url var="progUrl" value="/manager/maintenance-requests">
+            <c:param name="status" value="InProgress" />
+            <c:if test="${not empty keyword}"><c:param name="keyword" value="${keyword}" /></c:if>
+            <c:if test="${not empty priorityFilter}"><c:param name="priority" value="${priorityFilter}" /></c:if>
+            <c:if test="${not empty reportedDateFilter}"><c:param name="reportedDate" value="${reportedDateFilter}" /></c:if>
+          </c:url>
+          <a href="${progUrl}" class="stat-card ${statusFilter == 'InProgress' ? 'active' : ''}">
+            <span class="stat-name"><span class="dot dot-progress"></span> Đang xử lý</span>
+            <strong class="stat-count"><c:out value="${statusCounts['InProgress']}" default="0" /></strong>
+          </a>
 
-              <c:param name="status"
-                       value="${status.dbValue}" />
+          <%-- Từ chối (Rejected) --%>
+          <c:url var="rejUrl" value="/manager/maintenance-requests">
+            <c:param name="status" value="Rejected" />
+            <c:if test="${not empty keyword}"><c:param name="keyword" value="${keyword}" /></c:if>
+            <c:if test="${not empty priorityFilter}"><c:param name="priority" value="${priorityFilter}" /></c:if>
+            <c:if test="${not empty reportedDateFilter}"><c:param name="reportedDate" value="${reportedDateFilter}" /></c:if>
+          </c:url>
+          <a href="${rejUrl}" class="stat-card ${statusFilter == 'Rejected' ? 'active' : ''}">
+            <span class="stat-name"><span class="dot dot-rejected"></span> Từ chối</span>
+            <strong class="stat-count"><c:out value="${statusCounts['Rejected']}" default="0" /></strong>
+          </a>
 
-              <c:if test="${not empty keyword}">
-                <c:param name="keyword"
-                         value="${keyword}" />
-              </c:if>
-              <c:if test="${not empty priorityFilter}">
-                <c:param name="priority" value="${priorityFilter}" />
-              </c:if>
-              <c:if test="${not empty reportedDateFilter}">
-                <c:param name="reportedDate" value="${reportedDateFilter}" />
-              </c:if>
-
-            </c:url>
-
-            <a href="${statusUrl}"
-               class="maintenance-stat
-               ${statusFilter == status.dbValue ? 'active' : ''}">
-
-              <span>
-                <c:out value="${status.displayName}" />
-              </span>
-
-              <strong>
-                <c:out value="${statusCounts[status.dbValue]}"
-                       default="0" />
-              </strong>
-
-            </a>
-
-          </c:forEach>
-
+          <%-- Đã đóng (Closed) --%>
+          <c:url var="closeUrl" value="/manager/maintenance-requests">
+            <c:param name="status" value="Closed" />
+            <c:if test="${not empty keyword}"><c:param name="keyword" value="${keyword}" /></c:if>
+            <c:if test="${not empty priorityFilter}"><c:param name="priority" value="${priorityFilter}" /></c:if>
+            <c:if test="${not empty reportedDateFilter}"><c:param name="reportedDate" value="${reportedDateFilter}" /></c:if>
+          </c:url>
+          <a href="${closeUrl}" class="stat-card ${statusFilter == 'Closed' ? 'active' : ''}">
+            <span class="stat-name"><span class="dot dot-closed"></span> Đã đóng</span>
+            <strong class="stat-count"><c:out value="${statusCounts['Closed']}" default="0" /></strong>
+          </a>
         </div>
 
-        <%-- ===== Danh sách ===== --%>
-        <section class="panel maintenance-panel">
-          <div class="panel-head">
-            <div>
-              <h2>Danh sách yêu cầu</h2>
-            </div>
+        <%-- ===== BẢNG DANH SÁCH & BỘ LỌC ===== --%>
+        <section class="maintenance-table-card">
+          <div class="card-header-row">
+            <h2 class="card-heading">Danh sách yêu cầu</h2>
           </div>
 
-          <form action="${pageContext.request.contextPath}/manager/maintenance-requests"
-                method="get"
-                class="maintenance-filter">
+          <%-- Bộ lọc tìm kiếm --%>
+          <form method="get" action="${pageContext.request.contextPath}/manager/maintenance-requests" class="filter-controls-row">
+            <c:if test="${not empty statusFilter}">
+              <input type="hidden" name="status" value="${statusFilter}">
+            </c:if>
 
-            <input type="search"
-                   name="keyword"
-                   maxlength="100"
-                   value="<c:out value='${keyword}' />"
-                   placeholder="Mã yêu cầu hoặc tên thiết bị">
+            <div class="filter-field filter-search">
+              <label class="filter-label">Tìm yêu cầu</label>
+              <input type="search"
+                     name="keyword"
+                     maxlength="100"
+                     value="<c:out value='${keyword}' />"
+                     placeholder="Mã yêu cầu, mã máy hoặc tên thiết bị">
+            </div>
 
-            <select name="status">
-              <option value="">Tất cả trạng thái</option>
+            <div class="filter-field filter-priority">
+              <label class="filter-label">Mức ưu tiên</label>
+              <select name="priority">
+                <option value="">Tất cả</option>
+                <c:forEach var="p" items="${priorityOptions}">
+                  <option value="${p.dbValue}" <c:if test="${priorityFilter == p.dbValue}">selected</c:if>>
+                    <c:out value="${p.displayName}" />
+                  </option>
+                </c:forEach>
+              </select>
+            </div>
 
-              <c:forEach var="status" items="${statusOptions}">
-                <option value="${status.dbValue}"
-                        <c:if test="${statusFilter == status.dbValue}">selected</c:if>>
-                  <c:out value="${status.displayName}" />
-                </option>
-              </c:forEach>
-            </select>
+            <div class="filter-field filter-date">
+              <label class="filter-label">Ngày báo</label>
+              <input type="date" name="reportedDate" value="<c:out value='${reportedDateFilter}' />">
+            </div>
 
-            <select name="priority">
-              <option value="">Tất cả mức ưu tiên</option>
-
-              <c:forEach var="p" items="${priorityOptions}">
-                <option value="${p.dbValue}"
-                        <c:if test="${priorityFilter == p.dbValue}">selected</c:if>>
-                  <c:out value="${p.displayName}" />
-                </option>
-              </c:forEach>
-            </select>
-
-            <input type="date"
-                   name="reportedDate"
-                   value="<c:out value='${reportedDateFilter}' />"
-                   title="Lọc theo ngày báo"
-                   aria-label="Ngày báo">
-
-            <select name="pageSize">
-              <option value="10" ${requestPage.pageSize == 10 ? 'selected' : ''}>10</option>
-              <option value="20" ${requestPage.pageSize == 20 ? 'selected' : ''}>20</option>
-              <option value="50" ${requestPage.pageSize == 50 ? 'selected' : ''}>50</option>
-            </select>
-            <button class="btn btn-primary" type="submit">
-              Lọc
-            </button>
-            <a class="btn btn-ghost"
-               href="${pageContext.request.contextPath}/manager/maintenance-requests">
-              Xóa lọc
-            </a>
+            <div class="filter-actions-col">
+              <button class="btn btn-primary btn-filter-submit" type="submit">Lọc</button>
+              <c:if test="${not empty keyword || not empty statusFilter || not empty priorityFilter || not empty reportedDateFilter}">
+                <a class="btn btn-ghost" href="${pageContext.request.contextPath}/manager/maintenance-requests">Xóa lọc</a>
+              </c:if>
+            </div>
           </form>
 
-          <c:choose>
-            <c:when test="${not empty requestPage.items}">
-              <div class="maintenance-list">
+          <%-- Bảng dữ liệu --%>
+          <div class="table-responsive-wrapper">
+            <table class="maintenance-data-table">
+              <thead>
+                <tr>
+                  <th style="width: 110px;">MÃ</th>
+                  <th style="width: 220px;">THIẾT BỊ · MÁY</th>
+                  <th>SỰ CỐ</th>
+                  <th style="width: 110px;">ƯU TIÊN</th>
+                  <th style="width: 170px;">NGÀY BÁO · NGƯỜI BÁO</th>
+                  <th style="width: 140px;">TRẠNG THÁI</th>
+                  <th style="width: 130px; text-align: right;">THAO TÁC</th>
+                </tr>
+              </thead>
+              <tbody>
+                <c:choose>
+                  <c:when test="${not empty requestPage.items}">
+                    <c:forEach var="item" items="${requestPage.items}">
+                      <tr>
+                        <%-- Cột MÃ --%>
+                        <td>
+                          <strong class="request-code"><c:out value="${item.request.requestCode}" /></strong>
+                        </td>
 
-                <c:forEach var="item" items="${requestPage.items}">
-                  <article class="maintenance-card">
+                        <%-- Cột THIẾT BỊ · MÁY --%>
+                        <td>
+                          <div class="cell-device-info">
+                            <strong class="device-name"><c:out value="${item.facilityName}" /></strong>
+                            <span class="device-item-code">
+                              <c:choose>
+                                <c:when test="${not empty item.request.affectedItemsNote}">
+                                  <c:out value="${item.request.affectedItemsNote}" /> · <c:out value="${item.itemCode}" />
+                                </c:when>
+                                <c:otherwise>
+                                  <c:out value="${item.itemLabel}" /><c:if test="${not empty item.placementNote}"> · <c:out value="${item.placementNote}" /></c:if> (<c:out value="${item.itemCode}" />)
+                                </c:otherwise>
+                              </c:choose>
+                            </span>
+                            <span class="device-location"><c:out value="${item.facilityLocation}" /></span>
+                          </div>
+                        </td>
 
-                    <div>
-                      <div class="maintenance-card-head">
-                        <strong>
-                          <c:out value="${item.request.requestCode}" />
-                          ·
-                          <c:out value="${item.itemCode}" />
-                          (<c:out value="${item.facilityName}" />)
-                        </strong>
+                        <%-- Cột SỰ CỐ --%>
+                        <td>
+                          <div class="cell-incident-info">
+                            <strong class="incident-title"><c:out value="${item.request.incidentType.displayName}" /></strong>
+                            <p class="incident-desc"><c:out value="${item.request.description}" /></p>
+                            <span class="incident-detected">Phát hiện: <c:out value="${item.request.detectedBy.displayName}" /></span>
+                            <c:if test="${item.request.warningTagPlaced}">
+                              <span class="warning-tag-pill">Đã treo biển ngừng dùng</span>
+                            </c:if>
+                          </div>
+                        </td>
 
-                        <span class="badge
-                          ${item.request.open ? 'badge-warning' :
-                            item.request.inProgress ? 'badge-info' :
-                            item.request.closed ? 'badge-success' : 'badge-neutral'}">
-
-                          <c:out value="${item.request.status.displayName}" />
-                        </span>
-                      </div>
-
-                      <div class="maintenance-meta">
-                        <span>
-                          Ngày báo: <b>${gms:formatDate(item.request.reportedAt.toLocalDate())}</b>
-                        </span>
-
-                        <span>
-                          Ưu tiên: <b><c:out value="${item.request.priority.displayName}" /></b>
-                        </span>
-
-                        <c:if test="${not empty item.facilityLocation}">
-                          <span>
-                            Khu vực: <b><c:out value="${item.facilityLocation}" /></b>
+                        <%-- Cột ƯU TIÊN --%>
+                        <td>
+                          <span class="priority-label priority-${item.request.priority.dbValue.toLowerCase()}">
+                            <c:out value="${item.request.priority.displayName}" />
                           </span>
-                        </c:if>
+                        </td>
 
-                        <span>
-                          Sự cố: <b><c:out value="${item.request.incidentType.displayName}" /></b>
-                        </span>
+                        <%-- Cột NGÀY BÁO · NGƯỜI BÁO --%>
+                        <td>
+                          <div class="cell-reporter-info">
+                            <span class="report-date">${gms:formatDate(item.request.reportedAt.toLocalDate())}</span>
+                            <span class="reporter-name"><c:out value="${item.reporterName}" /></span>
+                          </div>
+                        </td>
 
-                        <span>
-                          Phát hiện: <b><c:out value="${item.request.detectedBy.displayName}" /></b>
-                        </span>
+                        <%-- Cột TRẠNG THÁI --%>
+                        <td>
+                          <c:choose>
+                            <c:when test="${item.request.open}">
+                              <span class="status-badge badge-open">● Chờ duyệt</span>
+                            </c:when>
+                            <c:when test="${item.request.inProgress}">
+                              <span class="status-badge badge-progress">● Đang xử lý</span>
+                            </c:when>
+                            <c:when test="${item.request.rejected}">
+                              <span class="status-badge badge-rejected">● Từ chối</span>
+                            </c:when>
+                            <c:when test="${item.request.closed}">
+                              <span class="status-badge badge-closed">● Đã đóng</span>
+                            </c:when>
+                          </c:choose>
+                        </td>
 
-                        <span>
-                          Người báo: <b><c:out value="${item.reporterName}" /></b>
-                        </span>
+                        <%-- Cột THAO TÁC --%>
+                        <td style="text-align: right;">
+                          <a class="btn ${item.request.open ? 'btn-primary' : 'btn-outline'} btn-sm"
+                             href="${pageContext.request.contextPath}/manager/maintenance-requests/review?id=${item.request.maintenanceRequestId}">
+                            ${item.request.open ? 'Xem & duyệt' : 'Xem chi tiết'}
+                          </a>
+                        </td>
+                      </tr>
+                    </c:forEach>
+                  </c:when>
+                  <c:otherwise>
+                    <tr>
+                      <td colspan="7" class="table-empty-message">
+                        Không có yêu cầu bảo trì nào phù hợp với bộ lọc hiện tại.
+                      </td>
+                    </tr>
+                  </c:otherwise>
+                </c:choose>
+              </tbody>
+            </table>
+          </div>
 
-                        <c:if test="${item.request.warningTagPlaced}">
-                          <span class="badge badge-danger">
-                            Đã đặt cảnh báo
-                          </span>
-                        </c:if>
-                      </div>
-
-                      <p class="maintenance-description" style="margin-top: var(--space-2);">
-                        <c:out value="${item.request.description}" />
-                      </p>
-                    </div>
-
-                    <a class="btn
-                       ${item.request.open ? 'btn-primary' : 'btn-outline'}
-                       btn-sm"
-                       href="${pageContext.request.contextPath}/manager/maintenance-requests/review?id=${item.request.maintenanceRequestId}">
-
-                      ${item.request.open ? 'Xử lý' : 'Xem'}
-                    </a>
-
-                  </article>
-                </c:forEach>
-
-              </div>
-            </c:when>
-
-            <c:otherwise>
-              <div class="maintenance-empty">
-                Không có yêu cầu nào.
-              </div>
-            </c:otherwise>
-          </c:choose>
-
+          <%-- Phân trang --%>
           <c:if test="${requestPage.totalPages > 1}">
-            <div class="maintenance-pager">
-
-              <c:if test="${requestPage.hasPrevious}">
-                <c:url var="previousUrl"
-                       value="/manager/maintenance-requests">
-                  <c:param name="page" value="${requestPage.pageNumber - 1}" />
-                  <c:param name="pageSize" value="${requestPage.pageSize}" />
-                  <c:param name="keyword" value="${keyword}" />
-                  <c:param name="status" value="${statusFilter}" />
-                  <c:param name="priority" value="${priorityFilter}" />
-                  <c:param name="reportedDate" value="${reportedDateFilter}" />
-                </c:url>
-
-                <a class="btn btn-ghost btn-sm"
-                   href="${previousUrl}">
-                  Trang trước
-                </a>
-              </c:if>
-
-              <span>
-                Trang ${requestPage.pageNumber}
-                / ${requestPage.totalPages}
-              </span>
-
-              <c:if test="${requestPage.hasNext}">
-                <c:url var="nextUrl"
-                       value="/manager/maintenance-requests">
-                  <c:param name="page" value="${requestPage.pageNumber + 1}" />
-                  <c:param name="pageSize" value="${requestPage.pageSize}" />
-                  <c:param name="keyword" value="${keyword}" />
-                  <c:param name="status" value="${statusFilter}" />
-                  <c:param name="priority" value="${priorityFilter}" />
-                  <c:param name="reportedDate" value="${reportedDateFilter}" />
-                </c:url>
-
-                <a class="btn btn-ghost btn-sm"
-                   href="${nextUrl}">
-                  Trang sau
-                </a>
-              </c:if>
-
+            <div class="table-pagination-row">
+              <span class="page-counter">Trang ${requestPage.pageNumber} / ${requestPage.totalPages}</span>
+              <div class="pagination-buttons">
+                <c:if test="${requestPage.hasPrevious}">
+                  <a class="btn btn-outline btn-sm" href="?page=${requestPage.pageNumber - 1}&keyword=${keyword}&status=${statusFilter}">‹ Trang trước</a>
+                </c:if>
+                <c:if test="${requestPage.hasNext}">
+                  <a class="btn btn-outline btn-sm" href="?page=${requestPage.pageNumber + 1}&keyword=${keyword}&status=${statusFilter}">Trang sau ›</a>
+                </c:if>
+              </div>
             </div>
           </c:if>
-
         </section>
+
       </main>
     </div>
   </div>

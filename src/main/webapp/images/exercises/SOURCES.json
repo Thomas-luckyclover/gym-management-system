@@ -1,0 +1,14 @@
+{
+  "origin": "free-exercise-db (github.com/yuhonas/free-exercise-db), phát hành public domain (Unlicense) — dùng tự do, không cần ghi nguồn; vẫn ghi ở cuối trang Thư viện bài tập cho minh bạch. Tải 27/10/2026, thu nhỏ còn 640px.",
+  "use": "Ảnh dự phòng theo nhóm cơ khi bài tập lấy từ wger.de không có hình (ExerciseLibraryService.FALLBACK_IMAGES).",
+  "files": {
+    "chest.jpg": "exercises/Barbell_Bench_Press_-_Medium_Grip/0.jpg (Ngực, category 11)",
+    "back.jpg": "exercises/Wide-Grip_Lat_Pulldown/0.jpg (Lưng, category 12)",
+    "shoulders.jpg": "exercises/Dumbbell_Shoulder_Press/0.jpg (Vai, category 13)",
+    "arms.jpg": "exercises/Dumbbell_Bicep_Curl/0.jpg (Tay, category 8)",
+    "abs.jpg": "exercises/Crunches/0.jpg (Bụng, category 10)",
+    "legs.jpg": "exercises/Barbell_Squat/0.jpg (Chân, category 9)",
+    "calves.jpg": "exercises/Standing_Calf_Raises/0.jpg (Bắp chân, category 14)",
+    "cardio.jpg": "exercises/Running_Treadmill/0.jpg (Cardio, category 15)"
+  }
+}

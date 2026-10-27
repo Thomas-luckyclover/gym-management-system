@@ -28,24 +28,10 @@
                         <p class="tb-subtitle">Chọn gói tập hoặc vé ngày, giá đã gồm VAT.</p>
                     </div>
 
-                    <c:if test="${not empty dashboard}">
-                        <div class="top-right">
-                            <a class="tb-user" href="${pageContext.request.contextPath}/account" title="Cài đặt tài khoản">
-                                <c:choose>
-                                    <c:when test="${not empty dashboard.avatar}">
-                                        <img class="avatar" src="${pageContext.request.contextPath}${dashboard.avatar}" alt="Ảnh đại diện">
-                                    </c:when>
-                                    <c:otherwise>
-                                        <span class="avatar"><c:out value="${dashboard.initials}" /></span>
-                                    </c:otherwise>
-                                </c:choose>
-                                <span class="tb-user-text">
-                                    <b><c:out value="${dashboard.fullName}" /></b>
-                                    <%@ include file="/WEB-INF/jsp/common/_user-badge-line.jspf" %>
-                                </span>
-                            </a>
-                        </div>
-                    </c:if>
+                    <div class="top-right">
+                        <%@ include file="/WEB-INF/jsp/common/notification-bell.jspf" %>
+                        <%@ include file="/WEB-INF/jsp/common/topbar-user.jspf" %>
+                    </div>
                 </header>
 
                 <main class="content package-selection">

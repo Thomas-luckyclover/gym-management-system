@@ -18,6 +18,12 @@
 <meta name="viewport" content="width=device-width, initial-scale=1">
 <%-- common.js đọc thẻ này (hàm getContextPath) để ghép URL AJAX đúng khi app chạy dưới /gms --%>
 <meta name="context-path" content="${pageContext.request.contextPath}">
+<c:if test="${not empty sessionScope.avatar}">
+<meta name="user-avatar" content="${pageContext.request.contextPath}${sessionScope.avatar}">
+</c:if>
+<c:if test="${not empty sessionScope.displayName}">
+<meta name="user-display-name" content="<c:out value='${sessionScope.displayName}' />">
+</c:if>
 
 <%-- Bộ chữ: Inter Tight (tiêu đề) + Inter (nội dung) + JetBrains Mono (chữ phụ: ngày, mã, nhãn); đều có dấu tiếng Việt. --%>
 <%-- Chế độ Tối (mặc định, bảng màu cũ) / Sáng (Arena). Công tắc ở topbar (common.js) lưu "gms-theme" = "dark" | "light".
@@ -37,8 +43,13 @@
 <link rel="stylesheet" href="${pageContext.request.contextPath}/css/tokens.css?v=20261025city">
 <link rel="stylesheet" href="${pageContext.request.contextPath}/css/common.css?v=20261026hint">
 <link rel="stylesheet" href="${pageContext.request.contextPath}/css/brand-system.css?v=20261025city">
-<script src="${pageContext.request.contextPath}/js/common.js?v=20261025city" defer></script>
+<script src="${pageContext.request.contextPath}/js/common.js?v=20261027m" defer></script>
 <script src="${pageContext.request.contextPath}/js/icons.js?v=3" defer></script>
+<%-- Chuông thông báo dùng chung cho mọi vai trò đăng nhập có quyền nhận thông báo (SRS 11.2) --%>
+<c:if test="${not empty sessionScope.role or not empty sessionScope.account}">
+    <link rel="stylesheet" href="${pageContext.request.contextPath}/css/pages/auth/notification-bell.css?v=20261026">
+    <script src="${pageContext.request.contextPath}/js/pages/auth/notification-bell.js?v=20261026" defer></script>
+</c:if>
 <%-- Nạp nền cho cả URL Servlet lẫn đường dẫn JSP sau khi forward, không tác động role khác. --%>
 <c:if test="${pageContext.request.requestURI.contains('/customer/') or pageContext.request.requestURI.contains('/pt/')}">
     <link rel="stylesheet" href="${pageContext.request.contextPath}/css/pt-customer-zone.css?v=20261014p">

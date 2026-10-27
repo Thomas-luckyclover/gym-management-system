@@ -46,10 +46,7 @@
                 </span>
             </div>
             <div class="top-right">
-                <a class="tb-user" href="${ctx}/account" title="Cài đặt tài khoản">
-                    <span class="avatar"><c:out value="${sessionScope.userInitials}" /></span>
-                    <span class="tb-user-text"><b><c:out value="${sessionScope.displayName}" default="Lễ tân" /></b><%@ include file="/WEB-INF/jsp/common/_user-badge-line.jspf" %></span>
-                </a>
+                <%@ include file="/WEB-INF/jsp/common/topbar-user.jspf" %>
             </div>
         </header>
 

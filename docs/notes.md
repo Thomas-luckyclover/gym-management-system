@@ -1,5 +1,18 @@
 # File notes — mâu thuẫn tài liệu & quyết định đã chốt
 
+## Thư viện bài tập — /customer/exercises + /pt/exercises (27/10/2026, ĐÃ CODE, CÓ SỬA DB)
+- **Nghiệp vụ**: thư viện bài tập là **đặc quyền hội viên**. Khách xem được khi đang có gói **tập (Membership)** hoặc **gói PT** còn hiệu lực hôm nay (Active hoặc Frozen, StartDate ≤ hôm nay ≤ EndDate; gói đôi tính cả người đi kèm). PT luôn xem được (tra bài khi soạn giáo án). Màn chỉ xem, không lưu gì của người dùng.
+- **Khóa** có 3 câu: chưa từng mua (NEVER) · hết hạn ngày X (EXPIRED) · gói bắt đầu từ ngày Y (NOT_STARTED); kèm danh sách gói đang bán có đặc quyền + nút "Xem các gói". Kiểm ở Service, gõ thẳng URL vẫn bị khóa.
+- **Sửa DB (đã báo user, user báo nhóm)**:
+  - `Packages.UnlocksExerciseLibrary BIT NOT NULL DEFAULT 0` — seed: gói tập tháng + gói PT = 1; vé ngày, buổi lẻ = 0. `Package.getBenefitLines` tự thêm dòng "Mở khóa Thư viện bài tập…" (trang chủ + màn Mua gói), quản lý không phải gõ tay.
+  - Bảng mới `Exercises` (bộ đệm dữ liệu wger, không khóa ngoại). Seed không có dòng nào: lần mở trang đầu tiên tự tải.
+- **API wger.de** (miễn phí, không key, dữ liệu CC BY-SA 4.0 → bắt buộc ghi nguồn cuối trang): `GET /api/v2/exerciseinfo/?language__code=en&limit=100` theo link `next`. Lấy tên + mô tả tiếng Anh (language = 2), nhóm cơ, cơ chính, dụng cụ, ảnh chính. Tên bài giữ tiếng Anh; 8 nhóm cơ, 12 dụng cụ, 16 cơ dịch tiếng Việt bằng bảng cố định trong Service.
+- **Đồng bộ**: bảng trống hoặc quá 1 ngày → tải lại, xóa + ghi cả bảng trong 1 transaction. API lỗi → giữ bản cũ, in dòng vàng "Chưa cập nhật được từ wger…", 5 phút sau mới thử lại. Bảng trống mà API lỗi → báo lỗi + nút Tải lại.
+- **Ảnh**: dùng ảnh của wger; bài không có ảnh → ảnh chụp chung theo nhóm cơ (8 ảnh trong `webapp/images/exercises/`, lấy từ free-exercise-db — public domain, xem `SOURCES.json`), có nhãn "Ảnh minh họa nhóm …" để không bị hiểu là ảnh đúng bài.
+- **Lọc**: ?q= (tên, ≤ 50 ký tự, LIKE có escape) · ?category= (chỉ 8 mã) · ?equipment= (chỉ 12 mã) · ?sort= (whitelist name|image → ORDER BY cố định, chống SQL injection) · ?page= (12 bài/trang, kẹp 1..tổng trang). Lọc, đếm, phân trang ở SQL.
+- **Test**: ExerciseLibraryServiceTest (quyền, bộ lọc, sort whitelist, phân trang, nhãn, lịch đồng bộ), WgerClientTest (đọc JSON mẫu theo ExerciseInfoSerializer của wger), PackageBenefitTest. Chưa gọi được wger thật từ máy dev của AI → lần chạy thật đầu tiên trên máy nhóm.
+- Lưu ý `tools/runtest.py` đang lỗi sẵn từ trước (SQLite không có hàm YEAR ở CHECK của LeaveRequests), không do thay đổi này. `2_Seed_Data.sql` chỉ sửa tay khối Packages (sinh lại từ seeddata.py sẽ làm mất các dòng LeaveRequests đã sửa tay trong file .sql).
+
 ## Bán gói PT: nhắc + chặn mềm khi PT chưa mở khung (26/10/2026, ĐÃ CODE)
 - **Vấn đề**: buổi rơi vào ngày PT chưa có khung đúng giờ → `hold()` tự tạo khung mới (`insertHeldSlot`) → lễ tân có thể xếp vào giờ PT không rảnh mà không biết.
 - **Đã chốt (chặn mềm, giữ nguyên cách tính lịch cũ, không đổi DB)** — xét **theo TỪNG BUỔI**, không theo Thứ:

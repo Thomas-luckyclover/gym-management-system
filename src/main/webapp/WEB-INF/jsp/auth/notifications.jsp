@@ -61,23 +61,7 @@
 
       <div class="top-right">
 
-        <a class="tb-user"
-           href="${pageContext.request.contextPath}/account">
-
-          <span class="avatar"><i class="fa-solid fa-user" aria-hidden="true"></i></span>
-
-          <span>
-
-            <b>
-              <c:out
-                      value="${sessionScope.displayName}" />
-            </b>
-
-            <%@ include file="/WEB-INF/jsp/common/_user-badge-line.jspf" %>
-
-          </span>
-
-        </a>
+        <%@ include file="/WEB-INF/jsp/common/topbar-user.jspf" %>
 
       </div>
 

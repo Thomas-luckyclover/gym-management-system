@@ -1,799 +1,348 @@
-<%@ page contentType="text/html; charset=UTF-8"
-         pageEncoding="UTF-8" %>
-<%@ taglib prefix="c"
-           uri="jakarta.tags.core" %>
+<%@ page contentType="text/html; charset=UTF-8" pageEncoding="UTF-8" %>
+<%@ taglib prefix="c" uri="jakarta.tags.core" %>
 
 <!DOCTYPE html>
 <html lang="vi">
-
 <head>
   <%@ include file="/WEB-INF/jsp/common/head.jspf" %>
-
-  <title>Cơ sở vật chất · Super Gym Lễ tân</title>
-
-  <link rel="stylesheet"
-        href="${pageContext.request.contextPath}/css/pages/receptionist/facility-catalog.css?v=20261023v5">
+  <title>Báo hỏng thiết bị · Bước 1/2 · Super Gym</title>
+  <link rel="stylesheet" href="${pageContext.request.contextPath}/css/pages/receptionist/facility-catalog.css?v=20261026v1">
 </head>
 
 <body class="dock theme-staff">
+  <%@ include file="/WEB-INF/jsp/common/flash-toast.jspf" %>
 
-<%@ include file="/WEB-INF/jsp/common/flash-toast.jspf" %>
+  <div class="app">
+    <%@ include file="/WEB-INF/jsp/common/layout-receptionist.jspf" %>
 
-<div class="app">
-
-  <%@ include file="/WEB-INF/jsp/common/layout-receptionist.jspf" %>
-
-  <div class="main">
-
-    <header class="topbar">
-
-      <div class="tb-left">
-        <h1 class="tb-title">
-          <i class="fa-solid fa-boxes-stacked" style="color: var(--color-primary); font-size: 1.25rem; margin-right: 8px;"></i> Cơ sở vật chất
-        </h1>
-      </div>
-
-      <div class="top-right">
-
-        <a class="btn btn-outline"
-           href="${pageContext.request.contextPath}/receptionist/maintenance-requests">
-          <i class="fa-solid fa-clipboard-list"></i> Danh sách yêu cầu bảo trì
-        </a>
-
-        <a class="tb-user"
-           href="${pageContext.request.contextPath}/account">
-
-          <span class="avatar"><c:out value="${sessionScope.userInitials}" /></span>
-
-          <span>
-            <b>
-              <c:out
-                      value="${sessionScope.displayName}"
-                      default="Lễ tân" />
-            </b>
-
-            <%@ include file="/WEB-INF/jsp/common/_user-badge-line.jspf" %>
-          </span>
-
-        </a>
-
-      </div>
-
-    </header>
-
-    <main class="content" id="main-content" tabindex="-1">
-
-      <%-- ===== 1. TÍNH TOÁN & HIỂN THỊ KPI THỐNG KÊ NHANH ===== --%>
-      <c:set var="calcTotalUnits" value="0" />
-      <c:set var="calcAvailUnits" value="0" />
-      <c:set var="calcPendingUnits" value="0" />
-      <c:forEach var="f" items="${facilityPage.items}">
-        <c:set var="calcTotalUnits" value="${calcTotalUnits + f.totalQuantity}" />
-        <c:set var="calcAvailUnits" value="${calcAvailUnits + f.availableQuantity}" />
-        <c:set var="calcPendingUnits" value="${calcPendingUnits + f.pendingQuantity}" />
-      </c:forEach>
-
-      <div class="facility-kpi-banner">
-        <div class="kpi-card">
-          <div class="kpi-icon kpi-blue">
-            <i class="fa-solid fa-layer-group"></i>
-          </div>
-          <div class="kpi-content">
-            <span class="kpi-label">Dòng thiết bị</span>
-            <span class="kpi-value"><c:out value="${facilityPage.totalItems}" default="0" /></span>
-          </div>
+    <div class="main">
+      <header class="topbar">
+        <div class="tb-left">
+          <h1 class="tb-title">Báo hỏng thiết bị</h1>
+          <span class="tb-subtitle">Bước 1/2 · Chọn đúng thiết bị đang hỏng</span>
         </div>
 
-        <div class="kpi-card">
-          <div class="kpi-icon kpi-green">
-            <i class="fa-solid fa-circle-check"></i>
-          </div>
-          <div class="kpi-content">
-            <span class="kpi-label">Máy đang khả dụng</span>
-            <span class="kpi-value"><c:out value="${calcAvailUnits}" default="0" /></span>
-          </div>
+        <div class="top-right">
+          <a class="btn btn-outline" href="${pageContext.request.contextPath}/receptionist/maintenance-requests">
+            Yêu cầu đã gửi (${openRequestsCount} đang mở)
+          </a>
+
+          <%@ include file="/WEB-INF/jsp/common/notification-bell.jspf" %>
+
+          <%@ include file="/WEB-INF/jsp/common/topbar-user.jspf" %>
         </div>
+      </header>
 
-        <div class="kpi-card">
-          <div class="kpi-icon kpi-warning">
-            <i class="fa-solid fa-screwdriver-wrench"></i>
-          </div>
-          <div class="kpi-content">
-            <span class="kpi-label">Yêu cầu bảo trì</span>
-            <span class="kpi-value"><c:out value="${calcPendingUnits}" default="0" /></span>
-          </div>
-        </div>
+      <main class="content catalog-step1-content" id="main-content" tabindex="-1">
 
-        <div class="kpi-card">
-          <div class="kpi-icon kpi-danger">
-            <i class="fa-solid fa-server"></i>
-          </div>
-          <div class="kpi-content">
-            <span class="kpi-label">Tổng cá thể máy</span>
-            <span class="kpi-value"><c:out value="${calcTotalUnits}" default="0" /></span>
-          </div>
-        </div>
-      </div>
-
-      <%-- ===== 2. KHUNG TÌM KIẾM & BỘ LỌC ===== --%>
-      <section class="facility-panel">
-        <div class="facility-search-wrapper">
-          <form method="get"
-                action="${pageContext.request.contextPath}/receptionist/facilities"
-                class="facility-filter">
-
-            <div class="search-input-box">
-              <i class="fa-solid fa-magnifying-glass search-icon"></i>
+        <%-- ===== KHUNG TÌM KIẾM & BỘ LỌC KHU VỰC ===== --%>
+        <section class="catalog-filter-box">
+          <form method="get" action="${pageContext.request.contextPath}/receptionist/facilities" class="search-form">
+            <label class="filter-label" for="catalogSearchInput">Tìm theo tên máy hoặc số trên tem dán</label>
+            <div class="search-bar-row">
               <input type="search"
+                     id="catalogSearchInput"
                      name="keyword"
                      maxlength="100"
                      value="<c:out value='${keyword}' />"
-                     placeholder="Tìm tên thiết bị, mã máy con (DB-001...), danh mục hoặc vị trí...">
-            </div>
-
-            <div class="search-actions">
-              <button class="btn btn-primary" type="submit">
-                <i class="fa-solid fa-magnifying-glass"></i> Tìm kiếm
-              </button>
-
-              <c:if test="${not empty keyword}">
-                <a class="btn btn-ghost"
-                   href="${pageContext.request.contextPath}/receptionist/facilities">
-                  <i class="fa-solid fa-xmark"></i> Xóa lọc
-                </a>
+                     placeholder="VD: máy chạy, ghế đẩy vai, tạ 10kg, số 3"
+                     autocomplete="off">
+              <button class="btn btn-primary" type="submit">Tìm kiếm</button>
+              <c:if test="${not empty keyword || not empty selectedLocation}">
+                <a class="btn btn-ghost" href="${pageContext.request.contextPath}/receptionist/facilities">Xóa lọc</a>
               </c:if>
             </div>
           </form>
 
-          <div class="catalog-quick-hint">
-            <i class="fa-solid fa-circle-info" style="color: var(--color-primary);"></i>
-            <span><strong>Mẹo thao tác:</strong> Bấm trực tiếp vào các mã máy con (ví dụ: DB-001, TM-005) để chọn nhiều máy và báo hỏng hàng loạt, hoặc bấm nút <strong>Báo hỏng</strong> ở từng dòng máy.</span>
+          <%-- Chip lọc khu vực --%>
+          <div class="location-chips-row">
+            <c:url var="allLocUrl" value="/receptionist/facilities">
+              <c:if test="${not empty keyword}"><c:param name="keyword" value="${keyword}" /></c:if>
+            </c:url>
+            <a href="${allLocUrl}" class="loc-chip ${empty selectedLocation ? 'active' : ''}">Tất cả khu vực</a>
+
+            <c:forEach var="loc" items="${locationOptions}">
+              <c:url var="locUrl" value="/receptionist/facilities">
+                <c:param name="location" value="${loc}" />
+                <c:if test="${not empty keyword}"><c:param name="keyword" value="${keyword}" /></c:if>
+              </c:url>
+              <a href="${locUrl}" class="loc-chip ${selectedLocation == loc ? 'active' : ''}">
+                <c:out value="${loc}" />
+              </a>
+            </c:forEach>
           </div>
-        </div>
-      </section>
+        </section>
 
-      <%-- ===== 3. DANH SÁCH CÁC DÒNG THIẾT BỊ ===== --%>
-      <c:choose>
+        <%-- ===== LƯỚI THẺ CÁC DÒNG MÁY ===== --%>
+        <section class="facility-grid-section">
+          <c:choose>
+            <c:when test="${not empty facilityPage.items}">
+              <div class="facility-cards-grid" id="facilityCardsGrid">
+                <c:forEach var="facility" items="${facilityPage.items}" varStatus="status">
+                  <c:set var="isLocMatch" value="${empty selectedLocation || facility.location == selectedLocation}" />
+                  <c:if test="${isLocMatch}">
+                    <div class="facility-card-item ${status.first ? 'selected' : ''}"
+                         data-facility-id="${facility.facilityId}"
+                         data-facility-name="<c:out value='${facility.facilityName}' />"
+                         data-facility-location="<c:out value='${facility.location}' />"
+                         data-category="<c:out value='${facility.category.displayName}' />"
+                         tabindex="0"
+                         role="button">
 
-        <c:when test="${not empty facilityPage.items}">
+                      <div class="card-media">
+                        <c:choose>
+                          <c:when test="${not empty facility.imageUrl}">
+                            <img src="${facility.imageUrl.startsWith('/') ? pageContext.request.contextPath += facility.imageUrl : facility.imageUrl}"
+                                 alt="<c:out value='${facility.facilityName}' />"
+                                 class="facility-thumb-img"
+                                 onerror="this.onerror=null; this.src='${pageContext.request.contextPath}/images/brand/facility.jpg';">
+                          </c:when>
+                          <c:otherwise>
+                            <img src="${pageContext.request.contextPath}/images/brand/facility.jpg"
+                                 alt="<c:out value='${facility.facilityName}' />"
+                                 class="facility-thumb-img">
+                          </c:otherwise>
+                        </c:choose>
+                      </div>
 
-          <div class="facility-list">
-
-            <c:forEach var="facility" items="${facilityPage.items}">
-
-              <article class="facility-card" data-facility-row-id="${facility.facilityId}">
-
-                <div class="facility-header">
-
-                  <div class="facility-title-wrap">
-                    <div class="facility-icon-badge cat-${facility.category.dbValue}">
-                      <c:choose>
-                        <c:when test="${facility.category.dbValue == 'Cardio'}">
-                          <i class="fa-solid fa-person-running"></i>
-                        </c:when>
-                        <c:when test="${facility.category.dbValue == 'FreeWeights'}">
-                          <i class="fa-solid fa-dumbbell"></i>
-                        </c:when>
-                        <c:when test="${facility.category.dbValue == 'Machines'}">
-                          <i class="fa-solid fa-gears"></i>
-                        </c:when>
-                        <c:otherwise>
-                          <i class="fa-solid fa-box-archive"></i>
-                        </c:otherwise>
-                      </c:choose>
-                    </div>
-
-                    <div>
-                      <h3 class="facility-title">
-                        <c:out value="${facility.facilityName}" />
-                      </h3>
-
-                      <div class="facility-sub-meta">
-                        <span class="meta-pill">
-                          <i class="fa-solid fa-tag"></i>
-                          <c:out value="${facility.category.displayName}" />
-                        </span>
-
-                        <c:if test="${not empty facility.location}">
-                          <span class="meta-pill">
-                            <i class="fa-solid fa-location-dot"></i>
-                            <c:out value="${facility.location}" />
-                          </span>
-                        </c:if>
+                      <div class="card-body">
+                        <h3 class="card-title"><c:out value="${facility.facilityName}" /></h3>
+                        <p class="card-location"><c:out value="${facility.location}" /> · <c:out value="${facility.category.displayName}" /></p>
+                        <p class="card-stats">
+                          <strong><c:out value="${facility.availableQuantity}" /> / <c:out value="${facility.totalQuantity}" /></strong> <c:out value="${facility.unitLabel}" /> dùng được
+                        </p>
                       </div>
                     </div>
-                  </div>
+                  </c:if>
+                </c:forEach>
+              </div>
+            </c:when>
+            <c:otherwise>
+              <div class="catalog-empty-box">
+                <p>Không tìm thấy thiết bị nào khớp với từ khóa tìm kiếm.</p>
+                <a class="btn btn-outline" href="${pageContext.request.contextPath}/receptionist/facilities">Xem tất cả thiết bị</a>
+              </div>
+            </c:otherwise>
+          </c:choose>
+        </section>
 
-                  <div class="facility-status-action">
-                    <div class="facility-availability-pill">
-                      <c:choose>
-                        <c:when test="${facility.status.dbValue == 'Retired'}">
-                          <span class="badge badge-neutral">
-                            <i class="fa-solid fa-ban"></i> Ngừng sử dụng
-                          </span>
-                        </c:when>
-                        <c:when test="${facility.availableQuantity == facility.totalQuantity && facility.totalQuantity > 0}">
-                          <span class="badge badge-success">
-                            <i class="fa-solid fa-circle-check"></i> Khả dụng: ${facility.availableQuantity}/${facility.totalQuantity} máy
-                          </span>
-                        </c:when>
-                        <c:when test="${facility.availableQuantity > 0}">
-                          <span class="badge badge-warning">
-                            <i class="fa-solid fa-triangle-exclamation"></i> Khả dụng: ${facility.availableQuantity}/${facility.totalQuantity} (${facility.pendingQuantity} đang sửa)
-                          </span>
-                        </c:when>
-                        <c:otherwise>
-                          <span class="badge badge-danger">
-                            <i class="fa-solid fa-circle-xmark"></i> Không khả dụng (0/${facility.totalQuantity})
-                          </span>
-                        </c:otherwise>
-                      </c:choose>
-                    </div>
+        <%-- ===== KHỐI CHỌN CÁ THỂ MÁY CON (CHIẾC NÀO BỊ HỎNG?) ===== --%>
+        <section class="equipment-items-section" id="equipmentItemsSection">
+          <div class="section-header">
+            <div class="section-header-left">
+              <h2 class="section-title">Chiếc nào bị hỏng?</h2>
+              <p class="section-subtitle">Có thể chọn một hoặc nhiều thiết bị cùng dòng · Sơ đồ sắp xếp theo vị trí sàn tập</p>
+            </div>
+            <div class="section-header-actions">
+              <button type="button" class="btn btn-sm btn-outline" id="btnSelectAllItems">Chọn tất cả</button>
+              <button type="button" class="btn btn-sm btn-ghost" id="btnClearAllItems">Bỏ chọn</button>
+            </div>
+          </div>
 
-                    <c:if test="${facility.status.dbValue != 'Retired'}">
+          <c:forEach var="facility" items="${facilityPage.items}">
+            <div class="items-list-container" id="facilityItems_${facility.facilityId}" style="display: none;">
+              <c:choose>
+                <c:when test="${not empty facility.items}">
+                  <div class="items-buttons-grid">
+                    <c:forEach var="item" items="${facility.items}" varStatus="itemStatus">
+                      <c:set var="isMaintenance" value="${item.underMaintenance || not empty item.activeRequestCode}" />
+
                       <button type="button"
-                              class="btn btn-outline btn-report-row"
+                              class="item-select-btn ${isMaintenance ? 'disabled-maintenance' : ''}"
+                              data-item-id="${item.equipmentItemId}"
+                              data-item-code="<c:out value='${item.itemCode}' />"
+                              data-item-label="<c:out value='${empty item.itemLabel ? (\"Số \" += itemStatus.count) : item.itemLabel}' />"
                               data-facility-id="${facility.facilityId}"
-                              data-facility-name="<c:out value='${facility.facilityName}' />">
-                        <i class="fa-solid fa-screwdriver-wrench"></i> Báo hỏng
+                              <c:if test="${isMaintenance}">disabled title="Thiết bị đang trong quá trình bảo trì"</c:if>>
+
+                        <span class="btn-check-icon"><i class="fa-solid fa-check"></i></span>
+                        <span class="btn-main-label"><c:out value="${empty item.itemLabel ? ('Số ' += itemStatus.count) : item.itemLabel}" /></span>
+                        <c:choose>
+                          <c:when test="${isMaintenance}">
+                            <span class="btn-sub-label text-warning">Đang bảo trì</span>
+                          </c:when>
+                          <c:otherwise>
+                            <span class="btn-sub-label"><c:out value="${item.itemCode}" /></span>
+                          </c:otherwise>
+                        </c:choose>
+                        <c:if test="${not empty item.placementNote}">
+                          <span class="btn-note-label"><c:out value="${item.placementNote}" /></span>
+                        </c:if>
                       </button>
-                    </c:if>
+                    </c:forEach>
                   </div>
-
-                </div>
-
-                <%-- Danh sách chip mã máy con (Multi-select) --%>
-                <c:if test="${not empty facility.items}">
-                  <div class="facility-chips-section">
-                    <div class="chips-label-row">
-                      <span class="chips-label">
-                        <i class="fa-solid fa-barcode"></i> Mã máy con (${facility.items.size()}):
-                      </span>
-                      <span class="chips-hint">
-                        (Bấm để chọn / bỏ chọn mã máy cần báo hỏng)
-                      </span>
-                    </div>
-
-                    <div class="equipment-chips"
-                         id="chips-group-${facility.facilityId}">
-                      <c:forEach var="item" items="${facility.items}" varStatus="loop">
-                        <c:set var="isUnderMaint" value="${item.status.dbValue == 'UnderMaintenance' || not empty item.activeRequestCode}" />
-
-                        <button type="button"
-                                class="equipment-chip ${item.badgeClass} ${loop.index >= 12 && not isUnderMaint ? 'chip-overflow is-hidden' : ''}"
-                                data-item-id="${item.equipmentItemId}"
-                                data-item-code="${item.itemCode}"
-                                data-facility-id="${facility.facilityId}"
-                                data-facility-name="<c:out value='${facility.facilityName}' />"
-                                data-location="<c:out value='${facility.location}' />"
-                                data-status="${item.status.dbValue}"
-                                data-active-request="${item.activeRequestCode}"
-                                title="Máy ${item.itemCode} (${item.status.displayName})<c:if test='${not empty item.activeRequestCode}'> · Đơn ${item.activeRequestCode}</c:if> · Bấm để chọn báo hỏng">
-                          <span class="chip-status-dot"></span>
-                          <span class="chip-text"><c:out value="${item.itemCode}" /></span>
-                          <c:if test="${not empty item.activeRequestCode}">
-                            <span class="chip-sub-tag">BT</span>
-                          </c:if>
-                        </button>
-                      </c:forEach>
-
-                      <c:if test="${facility.items.size() > 12}">
-                        <button type="button"
-                                class="btn-toggle-chips"
-                                data-target="chips-group-${facility.facilityId}">
-                          <i class="fa-solid fa-chevron-down"></i> Xem thêm (+${facility.items.size() - 12})
-                        </button>
-                      </c:if>
-                    </div>
-                  </div>
-                </c:if>
-
-              </article>
-
-            </c:forEach>
-
-          </div>
-
-        </c:when>
-
-        <c:otherwise>
-
-          <div class="facility-panel">
-            <div class="facility-empty">
-              <i class="fa-solid fa-box-open" style="font-size: 2.5rem; color: var(--color-text-muted); margin-bottom: 12px; display: block;"></i>
-              <p>Không tìm thấy thiết bị nào phù hợp với từ khóa <strong>"<c:out value='${keyword}' />"</strong>.</p>
-              <a class="btn btn-outline btn-sm" href="${pageContext.request.contextPath}/receptionist/facilities" style="margin-top: 8px;">
-                Xem tất cả thiết bị
-              </a>
+                </c:when>
+                <c:otherwise>
+                  <p class="no-items-text">Dòng thiết bị này chưa có cá thể máy nào được gán trong hệ thống.</p>
+                </c:otherwise>
+              </c:choose>
             </div>
+          </c:forEach>
+        </section>
+
+      </main>
+
+      <%-- ===== THANH BOTTOM BAR DÍNH ĐÁY ===== --%>
+      <footer class="catalog-sticky-bottom">
+        <div class="bottom-bar-inner">
+          <div class="bottom-info">
+            <span>Dòng máy: </span>
+            <strong id="stickyFacilityName">Chưa chọn dòng máy</strong>
+            <span class="separator"> · </span>
+            <span id="stickyItemText" class="text-muted">Chưa chọn chiếc nào</span>
           </div>
 
-        </c:otherwise>
-
-      </c:choose>
-
-      <%-- Phân trang --%>
-      <c:if test="${facilityPage.totalPages > 1}">
-
-        <div class="facility-pager">
-
-          <c:if test="${facilityPage.hasPrevious}">
-
-            <c:url var="previousUrl"
-                   value="/receptionist/facilities">
-
-              <c:param name="page"
-                       value="${facilityPage.pageNumber - 1}" />
-
-              <c:param name="pageSize"
-                       value="${facilityPage.pageSize}" />
-
-              <c:if test="${not empty keyword}">
-                <c:param name="keyword"
-                         value="${keyword}" />
-              </c:if>
-
-            </c:url>
-
-            <a class="btn btn-ghost btn-sm"
-               href="${previousUrl}">
-              <i class="fa-solid fa-arrow-left"></i> Trang trước
-            </a>
-
-          </c:if>
-
-          <span style="font-size: var(--font-size-sm); color: var(--color-text-soft);">
-            Trang <b>${facilityPage.pageNumber}</b> / <b>${facilityPage.totalPages}</b>
-          </span>
-
-          <c:if test="${facilityPage.hasNext}">
-
-            <c:url var="nextUrl"
-                   value="/receptionist/facilities">
-
-              <c:param name="page"
-                       value="${facilityPage.pageNumber + 1}" />
-
-              <c:param name="pageSize"
-                       value="${facilityPage.pageSize}" />
-
-              <c:if test="${not empty keyword}">
-                <c:param name="keyword"
-                         value="${keyword}" />
-              </c:if>
-
-            </c:url>
-
-            <a class="btn btn-ghost btn-sm"
-               href="${nextUrl}">
-              Trang sau <i class="fa-solid fa-arrow-right"></i>
-            </a>
-
-          </c:if>
-
-        </div>
-
-      </c:if>
-
-      <%-- ===== 4. FLOATING STICKY SELECTION BAR ===== --%>
-      <div id="stickySelectionBar" class="sticky-selection-bar" style="display: none;">
-        <div class="sticky-bar-inner">
-          <div class="sticky-bar-info">
-            <div class="sticky-bar-badge">
-              <i class="fa-solid fa-circle-check" style="color: var(--color-primary);"></i>
-              <span>Đã chọn <strong id="selectedCountText">0</strong> máy:</span>
-            </div>
-            <div id="selectedChipsList" class="selected-chips-list"></div>
-          </div>
-          <div class="sticky-bar-actions">
-            <button type="button" id="btnClearSelection" class="btn btn-ghost btn-sm">
-              <i class="fa-solid fa-xmark"></i> Bỏ chọn
-            </button>
-            <button type="button" id="btnOpenReportModal" class="btn btn-primary">
-              <i class="fa-solid fa-screwdriver-wrench"></i> Báo hỏng (<span id="btnReportCount">0</span> máy)
-            </button>
+          <div class="bottom-action">
+            <form id="goToStep2Form" method="get" action="${pageContext.request.contextPath}/receptionist/facilities/report">
+              <input type="hidden" name="facilityId" id="selectedFacilityId" value="">
+              <input type="hidden" name="equipmentItemIds" id="selectedEquipmentItemIds" value="">
+              <button type="submit" id="btnNextStep" class="btn btn-primary btn-next-step" disabled>
+                Tiếp: mô tả sự cố <i class="fa-solid fa-arrow-right"></i>
+              </button>
+            </form>
           </div>
         </div>
-      </div>
+      </footer>
 
-    </main>
-
+    </div>
   </div>
 
-</div>
+  <%-- Script tương tác chọn nhiều máy & đồng bộ Bước 1 --%>
+  <script>
+    document.addEventListener('DOMContentLoaded', function () {
+      var facilityCards = document.querySelectorAll('.facility-card-item');
+      var itemContainers = document.querySelectorAll('.items-list-container');
+      var stickyFacilityName = document.getElementById('stickyFacilityName');
+      var stickyItemText = document.getElementById('stickyItemText');
+      var selectedFacilityIdInput = document.getElementById('selectedFacilityId');
+      var selectedEquipmentItemIdsInput = document.getElementById('selectedEquipmentItemIds');
+      var btnNextStep = document.getElementById('btnNextStep');
+      var btnSelectAll = document.getElementById('btnSelectAllItems');
+      var btnClearAll = document.getElementById('btnClearAllItems');
 
-<%-- ================= 5. MODAL BÁO HỎNG THIẾT BỊ ================= --%>
-<div class="modal-overlay" id="reportModal" aria-hidden="true" role="dialog" aria-labelledby="reportModalTitle">
-  <form class="modal-box"
-        action="${pageContext.request.contextPath}/receptionist/maintenance-requests"
-        method="post"
-        id="reportMaintenanceForm">
-    <input type="hidden" name="action" value="create">
-    <input type="hidden" name="csrfToken" value="<c:out value='${sessionScope.csrfToken}' default='${csrfToken}' />">
-    <input type="hidden" name="equipmentItemIds" id="modalEquipmentItemIds" value="">
+      var currentFacilityId = null;
+      var currentFacilityName = '';
 
-    <div class="modal-head">
-      <div class="modal-title-group">
-        <div class="modal-title-icon">
-          <i class="fa-solid fa-screwdriver-wrench"></i>
-        </div>
-        <div>
-          <h3 id="reportModalTitle">Báo hỏng thiết bị</h3>
-          <p class="modal-subtitle">Gửi yêu cầu bảo trì đến Quản lý để duyệt và phân công xử lý</p>
-        </div>
-      </div>
-      <button type="button" class="modal-close-btn" id="btnCloseReportModal" aria-label="Đóng">&times;</button>
-    </div>
+      function updateSelectionState() {
+        if (!currentFacilityId) return;
+        var activeContainer = document.getElementById('facilityItems_' + currentFacilityId);
+        if (!activeContainer) return;
 
-    <div class="modal-body">
-        <%-- Danh sách máy được chọn --%>
-        <div class="field">
-          <label class="field-label">Mã máy gặp sự cố *</label>
-          <div id="modalSelectedChipsContainer" class="modal-chips-container">
-            <%-- Rendered by JS --%>
-          </div>
-          <span class="field-hint">
-            <i class="fa-solid fa-circle-info"></i> Bấm vào dấu &times; trên chip nếu muốn bỏ bớt máy khỏi đợt báo hỏng này.
-          </span>
-        </div>
+        var selectedButtons = activeContainer.querySelectorAll('.item-select-btn.active');
+        var selectedIds = [];
+        var selectedLabels = [];
 
-        <%-- Loại sự cố (IncidentType) --%>
-        <div class="field">
-          <label class="field-label">Loại sự cố *</label>
-          <div class="incident-pills">
-            <c:forEach var="inc" items="${incidentTypeOptions}" varStatus="loop">
-              <label class="pill-radio">
-                <input type="radio" name="incidentType" value="${inc.dbValue}" ${loop.first ? 'checked' : ''} required>
-                <span class="pill-label">
-                  <c:choose>
-                    <c:when test="${inc.dbValue == 'Broken'}"><i class="fa-solid fa-ban"></i></c:when>
-                    <c:when test="${inc.dbValue == 'NotWorking'}"><i class="fa-solid fa-power-off"></i></c:when>
-                    <c:when test="${inc.dbValue == 'StrangeNoise'}"><i class="fa-solid fa-volume-high"></i></c:when>
-                    <c:when test="${inc.dbValue == 'WearAndTear'}"><i class="fa-solid fa-wrench"></i></c:when>
-                    <c:when test="${inc.dbValue == 'SafetyHazard'}"><i class="fa-solid fa-triangle-exclamation"></i></c:when>
-                    <c:otherwise><i class="fa-solid fa-circle-exclamation"></i></c:otherwise>
-                  </c:choose>
-                  <c:out value="${inc.displayName}" />
-                </span>
-              </label>
-            </c:forEach>
-          </div>
-        </div>
-
-        <%-- Mức ưu tiên (Priority) 3 thẻ chọn ngang --%>
-        <div class="field">
-          <label class="field-label">Mức ưu tiên xử lý *</label>
-          <div class="priority-cards">
-            <label class="priority-card">
-              <input type="radio" name="priority" value="Low">
-              <div class="priority-box priority-low">
-                <div class="priority-top">
-                  <i class="fa-solid fa-clock"></i>
-                  <strong>Thấp</strong>
-                </div>
-                <small>Vẫn dùng được, lỗi nhỏ</small>
-              </div>
-            </label>
-            <label class="priority-card">
-              <input type="radio" name="priority" value="Normal" checked>
-              <div class="priority-box priority-normal">
-                <div class="priority-top">
-                  <i class="fa-solid fa-circle-check"></i>
-                  <strong>Thường</strong>
-                </div>
-                <small>Ảnh hưởng trải nghiệm</small>
-              </div>
-            </label>
-            <label class="priority-card">
-              <input type="radio" name="priority" value="Urgent">
-              <div class="priority-box priority-urgent">
-                <div class="priority-top">
-                  <i class="fa-solid fa-triangle-exclamation"></i>
-                  <strong>Khẩn cấp</strong>
-                </div>
-                <small>Nguy cơ mất an toàn / hỏng nặng</small>
-              </div>
-            </label>
-          </div>
-        </div>
-
-        <%-- Mô tả sự cố (10 - 500 ký tự) --%>
-        <div class="field">
-          <div class="field-label-row">
-            <label class="field-label" for="modalDescription">Mô tả sự cố *</label>
-            <span id="descCharCount" class="char-count">0 / 500</span>
-          </div>
-          <textarea id="modalDescription"
-                    name="description"
-                    rows="3"
-                    minlength="10"
-                    maxlength="500"
-                    required
-                    placeholder="Mô tả cụ thể biểu hiện hư hỏng, vị trí hoặc bộ phận gặp sự cố (tối thiểu 10 ký tự)..."></textarea>
-          <span class="field-hint" id="descHint">
-            <i class="fa-solid fa-circle-info"></i> Tối thiểu 10 ký tự để mô tả rõ cho Quản lý và thợ sửa chữa.
-          </span>
-        </div>
-
-        <%-- Ai phát hiện? --%>
-        <div class="field">
-          <label class="field-label" for="modalDetectedBy">Ai phát hiện sự cố? *</label>
-          <select id="modalDetectedBy" name="detectedBy" required>
-            <c:forEach var="det" items="${detectedByOptions}">
-              <option value="${det.dbValue}" ${det.dbValue == 'Receptionist' ? 'selected' : ''}>
-                <c:out value="${det.displayName}" />
-              </option>
-            </c:forEach>
-          </select>
-        </div>
-
-        <%-- Checkbox Cảnh báo --%>
-        <div class="field warning-tag-field">
-          <label class="warning-tag-label">
-            <input type="checkbox" name="warningTagPlaced" value="true">
-            <div class="warning-tag-content">
-              <strong><i class="fa-solid fa-triangle-exclamation"></i> Đã dán cảnh báo / khóa máy, ngừng cho khách dùng</strong>
-              <small>Khuyên dùng khi máy hỏng nặng hoặc nguy hiểm để đảm bảo an toàn cho hội viên.</small>
-            </div>
-          </label>
-        </div>
-      </div>
-
-      <div class="modal-foot">
-        <button type="button" class="btn btn-ghost" id="btnCancelReportModal">
-          <i class="fa-solid fa-xmark"></i> Hủy
-        </button>
-        <button type="submit" class="btn btn-primary" id="btnSubmitReportModal">
-          <i class="fa-solid fa-screwdriver-wrench"></i> Gửi báo hỏng (<span id="modalSubmitBtnCount">0</span> máy)
-        </button>
-      </div>
-  </form>
-</div>
-
-<%-- Script xử lý Multi-Select, Sticky Bar và Modal --%>
-<script>
-  document.addEventListener('DOMContentLoaded', function () {
-    var selectedItems = new Map();
-
-    var stickyBar = document.getElementById('stickySelectionBar');
-    var selectedCountText = document.getElementById('selectedCountText');
-    var btnReportCount = document.getElementById('btnReportCount');
-    var selectedChipsList = document.getElementById('selectedChipsList');
-    var btnClearSelection = document.getElementById('btnClearSelection');
-    var btnOpenReportModal = document.getElementById('btnOpenReportModal');
-
-    var reportModal = document.getElementById('reportModal');
-    var btnCloseReportModal = document.getElementById('btnCloseReportModal');
-    var btnCancelReportModal = document.getElementById('btnCancelReportModal');
-    var modalEquipmentItemIds = document.getElementById('modalEquipmentItemIds');
-    var modalSelectedChipsContainer = document.getElementById('modalSelectedChipsContainer');
-    var modalDescription = document.getElementById('modalDescription');
-    var descCharCount = document.getElementById('descCharCount');
-    var descHint = document.getElementById('descHint');
-    var reportForm = document.getElementById('reportMaintenanceForm');
-
-    // Cập nhật giao diện Sticky Selection Bar
-    function updateStickyBar() {
-      var count = selectedItems.size;
-      if (count > 0) {
-        stickyBar.style.display = 'flex';
-        selectedCountText.textContent = count;
-        btnReportCount.textContent = count;
-
-        selectedChipsList.innerHTML = '';
-        selectedItems.forEach(function (item) {
-          var span = document.createElement('span');
-          span.className = 'sticky-mini-chip';
-          span.textContent = item.code;
-          selectedChipsList.appendChild(span);
-        });
-      } else {
-        stickyBar.style.display = 'none';
-        selectedChipsList.innerHTML = '';
-      }
-    }
-
-    // Toggle chọn chip
-    function toggleChip(btn) {
-      var itemId = btn.getAttribute('data-item-id');
-      var itemCode = btn.getAttribute('data-item-code');
-      var facilityId = btn.getAttribute('data-facility-id');
-      var facilityName = btn.getAttribute('data-facility-name');
-      var location = btn.getAttribute('data-location');
-      var status = btn.getAttribute('data-status');
-      var activeReq = btn.getAttribute('data-active-request');
-
-      if (selectedItems.has(itemId)) {
-        selectedItems.delete(itemId);
-        btn.classList.remove('is-selected');
-      } else {
-        selectedItems.set(itemId, {
-          id: itemId,
-          code: itemCode,
-          facilityId: facilityId,
-          facilityName: facilityName,
-          location: location,
-          status: status,
-          activeReq: activeReq
-        });
-        btn.classList.add('is-selected');
-      }
-      updateStickyBar();
-    }
-
-    // Gắn sự kiện click vào các chip mã máy
-    document.querySelectorAll('.equipment-chip').forEach(function (btn) {
-      btn.addEventListener('click', function (e) {
-        e.preventDefault();
-        toggleChip(this);
-      });
-    });
-
-    // Nút Xem thêm / Thu gọn các chip ẩn
-    document.querySelectorAll('.btn-toggle-chips').forEach(function (btn) {
-      btn.addEventListener('click', function () {
-        var targetId = this.getAttribute('data-target');
-        var container = document.getElementById(targetId);
-        if (!container) return;
-
-        var overflows = container.querySelectorAll('.chip-overflow');
-        var isCurrentlyHidden = overflows.length > 0 && overflows[0].classList.contains('is-hidden');
-
-        overflows.forEach(function (chip) {
-          if (isCurrentlyHidden) {
-            chip.classList.remove('is-hidden');
-          } else {
-            chip.classList.add('is-hidden');
-          }
+        selectedButtons.forEach(function (btn) {
+          selectedIds.push(btn.getAttribute('data-item-id'));
+          var label = btn.getAttribute('data-item-label') || btn.getAttribute('data-item-code');
+          selectedLabels.push(label);
         });
 
-        if (isCurrentlyHidden) {
-          this.innerHTML = '<i class="fa-solid fa-chevron-up"></i> Thu gọn';
+        selectedEquipmentItemIdsInput.value = selectedIds.join(',');
+
+        if (selectedIds.length === 0) {
+          stickyItemText.textContent = 'Chưa chọn chiếc nào';
+          stickyItemText.className = 'text-muted';
+          btnNextStep.disabled = true;
+        } else if (selectedIds.length === 1) {
+          stickyItemText.textContent = 'Đã chọn: ' + selectedLabels[0];
+          stickyItemText.className = 'text-highlight';
+          btnNextStep.disabled = false;
         } else {
-          this.innerHTML = '<i class="fa-solid fa-chevron-down"></i> Xem thêm (+' + overflows.length + ')';
+          stickyItemText.textContent = 'Đã chọn ' + selectedIds.length + ' chiếc (' + selectedLabels.slice(0, 3).join(', ') + (selectedLabels.length > 3 ? '...' : '') + ')';
+          stickyItemText.className = 'text-highlight';
+          btnNextStep.disabled = false;
         }
-      });
-    });
-
-    // Nút Bỏ chọn toàn bộ
-    btnClearSelection.addEventListener('click', function () {
-      selectedItems.clear();
-      document.querySelectorAll('.equipment-chip.is-selected').forEach(function (btn) {
-        btn.classList.remove('is-selected');
-      });
-      updateStickyBar();
-    });
-
-    // Mở Modal báo hỏng
-    function openReportModal() {
-      if (selectedItems.size === 0) {
-        alert('Vui lòng chọn ít nhất một máy con cần báo hỏng.');
-        return;
       }
 
-      var ids = Array.from(selectedItems.keys()).join(',');
-      modalEquipmentItemIds.value = ids;
+      function selectFacility(card) {
+        if (!card) return;
+        facilityCards.forEach(function (c) { c.classList.remove('selected'); });
+        card.classList.add('selected');
 
-      var modalSubmitBtnCount = document.getElementById('modalSubmitBtnCount');
-      if (modalSubmitBtnCount) {
-        modalSubmitBtnCount.textContent = selectedItems.size;
+        currentFacilityId = card.getAttribute('data-facility-id');
+        currentFacilityName = card.getAttribute('data-facility-name');
+        stickyFacilityName.textContent = currentFacilityName;
+        selectedFacilityIdInput.value = currentFacilityId;
+
+        // Reset lựa chọn máy con ở tất cả các container
+        document.querySelectorAll('.item-select-btn').forEach(function (b) {
+          b.classList.remove('active');
+        });
+
+        // Ẩn tất cả container item và hiện container của dòng máy này
+        itemContainers.forEach(function (cont) {
+          cont.style.display = 'none';
+        });
+
+        var activeContainer = document.getElementById('facilityItems_' + currentFacilityId);
+        if (activeContainer) {
+          activeContainer.style.display = 'block';
+        }
+
+        updateSelectionState();
       }
 
-      // Render danh sách chip trong modal
-      modalSelectedChipsContainer.innerHTML = '';
-      selectedItems.forEach(function (item) {
-        var chipEl = document.createElement('div');
-        chipEl.className = 'modal-chip-item';
-        chipEl.innerHTML = '<span>' + item.code + ' · ' + item.facilityName + '</span>' +
-          '<button type="button" class="modal-chip-remove" data-remove-id="' + item.id + '" title="Bỏ chọn">&times;</button>';
-        modalSelectedChipsContainer.appendChild(chipEl);
-      });
+      function toggleItem(btn) {
+        if (!btn || btn.disabled) return;
+        btn.classList.toggle('active');
+        updateSelectionState();
+      }
 
-      // Gắn sự kiện xóa chip ngay trong modal
-      modalSelectedChipsContainer.querySelectorAll('.modal-chip-remove').forEach(function (btn) {
-        btn.addEventListener('click', function () {
-          var removeId = this.getAttribute('data-remove-id');
-          selectedItems.delete(removeId);
-
-          var chipOnPage = document.querySelector('.equipment-chip[data-item-id="' + removeId + '"]');
-          if (chipOnPage) {
-            chipOnPage.classList.remove('is-selected');
-          }
-
-          updateStickyBar();
-
-          if (selectedItems.size === 0) {
-            closeReportModal();
-          } else {
-            openReportModal();
+      // Gắn sự kiện click card dòng máy
+      facilityCards.forEach(function (card) {
+        card.addEventListener('click', function () {
+          selectFacility(this);
+        });
+        card.addEventListener('keydown', function (e) {
+          if (e.key === 'Enter' || e.key === ' ') {
+            e.preventDefault();
+            selectFacility(this);
           }
         });
       });
 
-      reportModal.classList.add('open');
-      reportModal.setAttribute('aria-hidden', 'false');
-      setTimeout(function () {
-        modalDescription.focus();
-      }, 100);
-    }
-
-    function closeReportModal() {
-      reportModal.classList.remove('open');
-      reportModal.setAttribute('aria-hidden', 'true');
-    }
-
-    // Sự kiện mở modal từ sticky bar
-    btnOpenReportModal.addEventListener('click', openReportModal);
-
-    // Nút "Báo hỏng" trên từng dòng thiết bị
-    document.querySelectorAll('.btn-report-row').forEach(function (btn) {
-      btn.addEventListener('click', function () {
-        var facId = this.getAttribute('data-facility-id');
-        var row = document.querySelector('.facility-card[data-facility-row-id="' + facId + '"]');
-        if (!row) return;
-
-        // Kiểm tra xem dòng này đã có chip nào được chọn chưa
-        var selectedInRow = row.querySelectorAll('.equipment-chip.is-selected');
-        if (selectedInRow.length === 0) {
-          // Chưa có -> tự động chọn chip khả dụng đầu tiên
-          var firstAvailable = row.querySelector('.equipment-chip:not(.badge-danger):not(.badge-neutral)') || row.querySelector('.equipment-chip');
-          if (firstAvailable) {
-            toggleChip(firstAvailable);
-          } else {
-            alert('Dòng thiết bị này hiện không có máy con nào có thể báo hỏng.');
-            return;
-          }
-        }
-        openReportModal();
+      // Gắn sự kiện click chọn cá thể máy con (Multi-select)
+      document.querySelectorAll('.item-select-btn:not(.disabled-maintenance)').forEach(function (btn) {
+        btn.addEventListener('click', function () {
+          toggleItem(this);
+        });
       });
-    });
 
-    // Đóng modal
-    btnCloseReportModal.addEventListener('click', closeReportModal);
-    btnCancelReportModal.addEventListener('click', closeReportModal);
-
-    reportModal.addEventListener('click', function (e) {
-      if (e.target === reportModal) {
-        closeReportModal();
-      }
-    });
-
-    document.addEventListener('keydown', function (e) {
-      if (e.key === 'Escape' && reportModal.classList.contains('open')) {
-        closeReportModal();
-      }
-    });
-
-    // Đếm ký tự mô tả
-    modalDescription.addEventListener('input', function () {
-      var len = this.value.length;
-      descCharCount.textContent = len + ' / 500';
-      if (len < 10) {
-        descCharCount.style.color = 'var(--color-danger)';
-        descHint.style.color = 'var(--color-danger)';
-      } else {
-        descCharCount.style.color = 'var(--color-success)';
-        descHint.style.color = 'var(--color-text-soft)';
-      }
-    });
-
-    // Validate trước khi submit
-    reportForm.addEventListener('submit', function (e) {
-      if (!modalEquipmentItemIds.value || modalEquipmentItemIds.value.trim() === '') {
-        e.preventDefault();
-        alert('Vui lòng chọn ít nhất một máy con cần báo hỏng.');
-        return;
+      // Nút Chọn tất cả máy trong dòng hiện tại
+      if (btnSelectAll) {
+        btnSelectAll.addEventListener('click', function () {
+          if (!currentFacilityId) return;
+          var activeContainer = document.getElementById('facilityItems_' + currentFacilityId);
+          if (activeContainer) {
+            activeContainer.querySelectorAll('.item-select-btn:not(.disabled-maintenance)').forEach(function (b) {
+              b.classList.add('active');
+            });
+            updateSelectionState();
+          }
+        });
       }
 
-      if (modalDescription.value.trim().length < 10) {
-        e.preventDefault();
-        alert('Mô tả hỏng hóc phải có ít nhất 10 ký tự.');
-        modalDescription.focus();
-        return;
+      // Nút Bỏ chọn tất cả máy trong dòng hiện tại
+      if (btnClearAll) {
+        btnClearAll.addEventListener('click', function () {
+          if (!currentFacilityId) return;
+          var activeContainer = document.getElementById('facilityItems_' + currentFacilityId);
+          if (activeContainer) {
+            activeContainer.querySelectorAll('.item-select-btn').forEach(function (b) {
+              b.classList.remove('active');
+            });
+            updateSelectionState();
+          }
+        });
+      }
+
+      // Tự động kích hoạt thẻ đầu tiên khi tải trang
+      var firstCard = document.querySelector('.facility-card-item');
+      if (firstCard) {
+        selectFacility(firstCard);
       }
     });
-  });
-</script>
-
+  </script>
 </body>
 </html>

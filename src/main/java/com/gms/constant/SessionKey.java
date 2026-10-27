@@ -31,6 +31,12 @@ public final class SessionKey {
     public static final String DISPLAY_NAME = "displayName";
 
     /**
+     * Đường dẫn ảnh đại diện hiển thị trên header/sidebar (/uploads/avatar/...).
+     * Đồng bộ với cột Persons.Avatar trong DB khi đăng nhập hoặc khi đổi avatar.
+     */
+    public static final String AVATAR = "avatar";
+
+    /**
      * Thẻ tài khoản góc phải mọi màn (common/_user-badge.jspf), AuthFilter → UserBadgeService.ensure điền 1 lần / vai trò:
      *   USER_CODE        mã hiển thị theo vai trò: KH-1006, PT-0005, LT-0003, QL-0002, QT-0001 (số lấy từ mã gốc trong DB)
      *   USER_ROLE_LABEL  chữ vai trò: Hội viên, Huấn luyện viên, Lễ tân, Quản lý, Quản trị viên

@@ -151,6 +151,6 @@ class LeaveEmployeePageTest {
         request.setFromDate(DateTimeUtil.today().plusDays(2));
         request.setToDate(request.getFromDate());
         request.setDays(new BigDecimal("0.5"));
-        return new LeaveRequestRow(request, "NV-" + employeeId, "Nhân viên " + employeeId, "PT", null, "Quản lý");
+        return new LeaveRequestRow(request, "NV-" + employeeId, "Nhân viên " + employeeId, "PT", null);
     }
 }

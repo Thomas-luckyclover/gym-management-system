@@ -52,6 +52,31 @@ class LeaveRequestReviewServletTest {
     }
 
     @Test
+    void lateApprovalForwardsTheConfirmationReason() throws Exception {
+        when(request.getParameter("lateApprovalReason")).thenReturn("  Đã xác nhận ngày và ca nghỉ  ");
+        when(service.approveRequest(10, 12, "Đã xác nhận ngày và ca nghỉ")).thenReturn(ServiceResult.ok(null));
+        servlet.doPost(request, response);
+        verify(service).approveRequest(10, 12, "Đã xác nhận ngày và ca nghỉ");
+        verify(service, never()).approveRequest(10, 12);
+        verify(response).sendRedirect("/gms/manager/leave-requests");
+    }
+
+    @Test
+    void failedLateApprovalKeepsReasonAndFieldError() throws Exception {
+        when(request.getParameter("lateApprovalReason")).thenReturn("abc");
+        when(service.approveRequest(10, 12, "abc")).thenReturn(
+                ServiceResult.failField("lateApprovalReason", "Cần nhập lý do từ 5 đến 500 ký tự."));
+        when(service.getReviewDetail(12, 10)).thenReturn(ServiceResult.ok(
+                new LeaveReviewDetail(new LeaveRequest(), "NV-0050", "Nhân viên test", "PT", null, null)));
+        RequestDispatcher dispatcher = mock(RequestDispatcher.class);
+        when(request.getRequestDispatcher("/WEB-INF/jsp/manager/leave-request-review.jsp")).thenReturn(dispatcher);
+        servlet.doPost(request, response);
+        verify(request).setAttribute("lateApprovalReason", "abc");
+        verify(request).setAttribute("errors", Map.of("lateApprovalReason", "Cần nhập lý do từ 5 đến 500 ký tự."));
+        verify(dispatcher).forward(request, response);
+    }
+
+    @Test
     void rejectionSendsTheEnteredReasonToTheExistingService() throws Exception {
         when(request.getParameter("action")).thenReturn("reject");
         when(request.getParameter("rejectReason")).thenReturn("  Không đủ nhân sự trực ca  ");
@@ -64,6 +89,15 @@ class LeaveRequestReviewServletTest {
     @Test
     void invalidCsrfCannotReachTheDecisionService() throws Exception {
         when(request.getParameter("csrfToken")).thenReturn("wrong-token");
+        servlet.doPost(request, response);
+        verifyNoInteractions(service);
+        verify(response).sendRedirect("/gms/manager/leave-requests");
+    }
+
+    @ParameterizedTest
+    @ValueSource(strings = {"transfer", "unknown"})
+    void removedOrUnknownActionsCannotReachTheService(String action) throws Exception {
+        when(request.getParameter("action")).thenReturn(action);
         servlet.doPost(request, response);
         verifyNoInteractions(service);
         verify(response).sendRedirect("/gms/manager/leave-requests");

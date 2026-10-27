@@ -3,7 +3,8 @@ package com.gms.servlet.staff;
 import com.gms.constant.SessionKey;
 import com.gms.dto.JsonResponse;
 import com.gms.dto.ServiceResult;
-import com.gms.dto.StaffingPreview;
+import com.gms.dto.LeaveSubmissionPreview;
+import com.gms.entity.LeaveRequest;
 import com.gms.service.StaffLeaveService;
 import com.gms.util.JsonUtil;
 import com.gms.util.RequestUtil;
@@ -18,10 +19,10 @@ import java.io.IOException;
 import java.time.LocalDate;
 
 /**
- * API JSON trả dự báo quân số theo ngày và ca nghỉ đang chọn (màn #25, SRS 5.2.1).
+ * API JSON trả phương án Annual/Unpaid, số buổi PT trùng và dự báo toàn khoảng nghỉ (màn #25).
  *
- * <p>GET /pt/leave-requests/preview?date=yyyy-MM-dd&shift=Morning|Afternoon|FullDay
- * <p>GET /receptionist/leave-requests/preview?date=...&shift=...
+ * <p>GET /pt/leave-requests/preview?date=yyyy-MM-dd&toDate=yyyy-MM-dd&shift=FullDay&leaveType=Annual
+ * <p>GET /receptionist/leave-requests/preview dùng cùng tham số, chỉ đọc nhân viên từ session.
  */
 @WebServlet({"/pt/leave-requests/preview", "/receptionist/leave-requests/preview"})
 public class LeaveRequestPreviewServlet extends HttpServlet {
@@ -34,6 +35,7 @@ public class LeaveRequestPreviewServlet extends HttpServlet {
 
     @Override
     protected void doGet(HttpServletRequest request, HttpServletResponse response) throws IOException {
+        response.setHeader("Cache-Control", "no-store");
         // B1: lấy accountId từ session (giống LeaveRequestFormServlet)
         HttpSession session = request.getSession(false);
         Integer accountId = session == null
@@ -50,7 +52,14 @@ public class LeaveRequestPreviewServlet extends HttpServlet {
         String shiftType = RequestUtil.getTrimmedParam(request, "shift");
 
         // B3: trả JSON
-        ServiceResult<StaffingPreview> result = staffLeaveService.previewStaffing(accountId, leaveDate, shiftType);
+        String toDateValue = RequestUtil.getTrimmedParam(request, "toDate");
+        LocalDate toDate = leaveDate;
+        if (toDateValue != null && !toDateValue.isBlank()) {
+            toDate = DateTimeUtil.parseHtmlDate(toDateValue);
+        }
+        LeaveRequest.LeaveType type = LeaveRequest.LeaveType.fromDbValue(RequestUtil.getTrimmedParam(request, "leaveType"));
+        ServiceResult<LeaveSubmissionPreview> result = staffLeaveService.previewSubmission(accountId, type,
+                leaveDate, toDate, LeaveRequest.ShiftType.fromDbValue(shiftType));
         JsonUtil.writeJson(response, JsonResponse.from(result));
     }
 }

@@ -36,14 +36,7 @@
 
           <%@ include file="/WEB-INF/jsp/common/notification-bell.jspf" %>
 
-          <a class="tb-user"
-             href="${pageContext.request.contextPath}/account">
-            <span class="avatar"><c:out value="${sessionScope.userInitials}" /></span>
-            <span>
-              <b><c:out value="${sessionScope.displayName}" default="Lễ tân" /></b>
-              <%@ include file="/WEB-INF/jsp/common/_user-badge-line.jspf" %>
-            </span>
-          </a>
+          <%@ include file="/WEB-INF/jsp/common/topbar-user.jspf" %>
         </div>
       </header>
 
@@ -165,10 +158,15 @@
                     <div class="maintenance-card-main">
                       <div class="maintenance-card-head">
                         <strong>
-                          <c:out value="${item.request.requestCode}" />
-                          ·
-                          <c:out value="${item.itemCode}" />
-                          (<c:out value="${item.facilityName}" />)
+                          <c:out value="${item.request.requestCode}" /> · <c:out value="${item.facilityName}" />
+                          <c:choose>
+                            <c:when test="${not empty item.request.affectedItemsNote}">
+                              · <c:out value="${item.request.affectedItemsNote}" /> · <c:out value="${item.itemCode}" />
+                            </c:when>
+                            <c:otherwise>
+                              · <c:out value="${item.itemLabel}" /><c:if test="${not empty item.placementNote}"> · <c:out value="${item.placementNote}" /></c:if> (<c:out value="${item.itemCode}" />)
+                            </c:otherwise>
+                          </c:choose>
                         </strong>
 
                         <span class="badge
@@ -224,9 +222,12 @@
                           </c:when>
 
                           <c:when test="${item.request.inProgress}">
-                            Quản lý
-                            <b><c:out value="${item.reviewerName}" /></b>
-                            đã duyệt.
+                            <div>Quản lý <b><c:out value="${item.reviewerName}" /></b> đã duyệt.</div>
+                            <c:if test="${not empty item.request.managerNote}">
+                              <div class="manager-note" style="margin-top: 4px; font-size: 12.5px; color: var(--color-text-subtle);">
+                                <i class="fa-solid fa-clipboard-check" aria-hidden="true"></i> Ghi chú của Quản lý: <b><c:out value="${item.request.managerNote}" /></b>
+                              </div>
+                            </c:if>
                           </c:when>
 
                           <c:when test="${item.request.rejected}">
@@ -235,9 +236,17 @@
                           </c:when>
 
                           <c:when test="${item.request.closed}">
-                            Đã nghiệm thu bởi
-                            <b><c:out value="${item.closerName}" /></b>.
-                            <c:out value="${item.request.acceptanceNote}" />
+                            <div>Quản lý <b><c:out value="${item.reviewerName}" /></b> đã duyệt.</div>
+                            <c:if test="${not empty item.request.managerNote}">
+                              <div class="manager-note" style="margin-top: 2px; font-size: 12px; color: var(--color-text-subtle);">
+                                <i class="fa-solid fa-clipboard-check" aria-hidden="true"></i> Ghi chú của Quản lý: <b><c:out value="${item.request.managerNote}" /></b>
+                              </div>
+                            </c:if>
+                            <div style="margin-top: 4px;">
+                              Đã nghiệm thu bởi
+                              <b><c:out value="${item.closerName}" /></b>.
+                              <c:out value="${item.request.acceptanceNote}" />
+                            </div>
                           </c:when>
                         </c:choose>
                       </div>
