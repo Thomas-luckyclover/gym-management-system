@@ -594,10 +594,17 @@
   text-transform: uppercase;
 }
 
+/* Tên gói đã nằm trong banner (chữ lớn) nên ẩn khỏi chân thẻ cho khỏi lặp; vẫn giữ cho trình đọc màn hình */
 .package-card__name {
-  margin: 0;
-  font-size: var(--font-size-base);
-  font-weight: var(--font-weight-medium);
+  position: absolute;
+  width: 1px;
+  height: 1px;
+  margin: -1px;
+  padding: 0;
+  overflow: hidden;
+  clip: rect(0, 0, 0, 0);
+  white-space: nowrap;
+  border: 0;
 }
 
 .package-card__was {
@@ -798,10 +805,28 @@
 }
 
 .package-dialog__image {
+  position: relative;
   width: 100%;
   aspect-ratio: 16 / 9;
-  object-fit: cover;
+  overflow: hidden;
   border-radius: var(--radius-md);
+  background: #07090D;
+}
+
+.package-dialog__image::before {
+  content: "";
+  position: absolute;
+  inset: 0;
+  background: var(--art) right center / cover no-repeat;
+  filter: var(--art-filter);
+}
+
+.package-dialog__image::after {
+  content: "";
+  position: absolute;
+  inset: 0;
+  background: linear-gradient(90deg, rgba(5, 7, 10, 0.55), transparent 55%);
+  box-shadow: inset 0 2px 0 var(--tone);
 }
 
 .package-dialog__note {
@@ -928,11 +953,14 @@ a.package-pager__item:hover {
   }
 }
 .package-card__banner .package-card__brand,
-.package-card__banner .package-card__headline,
-.package-card__banner .package-card__kind {
+.package-card__banner .package-card__headline {
   color: #fff !important;
   opacity: 1;
-  text-shadow: 0 2px 4px #000;
+}
+.package-card__banner .package-card__kind {
+  color: var(--tone) !important;
+  opacity: 1;
+  text-shadow: 0 2px 8px rgba(0, 0, 0, 0.7);
 }
 html body.dock .package-dialog__footer .btn-primary,
 .package-dialog__footer .btn-primary {
@@ -957,4 +985,11 @@ a.package-card__buy {
   text-align: center;
   text-decoration: none;
   box-sizing: border-box;
+}
+/* Giao diện sáng: giá dùng cam đậm (đủ tương phản trên nền sáng); giao diện tối: nhãn -% trong popup dùng chữ tối trên nền xanh nhạt */
+html:where(:not([data-theme="dark"])) .package-card__price {
+  color: var(--arena-ember-ink, var(--color-primary));
+}
+html:where([data-theme="dark"]) .package-dialog .package-card__deal b {
+  color: #04200F;
 }
