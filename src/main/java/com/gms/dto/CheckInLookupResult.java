@@ -17,6 +17,7 @@ public class CheckInLookupResult {
         ELIGIBLE("Đủ điều kiện vào tập", "ok"),
         ELIGIBLE_DAYPASS("Đủ điều kiện vào tập (Vé ngày)", "ok"),
         WARN_MISSING_PHOTO("Thiếu ảnh check-in", "warn"),
+        DENIED_NOT_STARTED("Từ chối vào tập — Gói chưa đến ngày kích hoạt", "danger"),
         DENIED_FROZEN("Từ chối vào tập — Gói đang bảo lưu", "danger"),
         DENIED_EXPIRED("Từ chối vào tập — Gói đã hết hạn", "danger"),
         DENIED_DAYPASS_USED("Từ chối vào tập — Vé ngày đã dùng", "danger"),

@@ -336,8 +336,19 @@ public class CheckInDAO {
                 + "JOIN Persons p ON cust.PersonId = p.PersonId "
                 + "WHERE cust.DeletedAt IS NULL AND "
                 + (isPhoneSuffix ? "p.Phone LIKE ?" : "p.FullName COLLATE Latin1_General_100_CI_AI LIKE ? ESCAPE '\\'");
+        //COLLATE Latin1_General_100_CI_AI LIKE không phân bệt chữ hoa/chữ thường,
+        // không phân biệt dấu tiếng Việt
+        //ESCAPE '\\' cho phép sử dụng ký tự thoát trong pattern, ví dụ: nếu keyword chứa ký tự '%' hoặc '_',
+        // chúng sẽ được coi là ký tự bình thường thay vì ký tự đại diện trong LIKE.
+        //Nếu không có thì hệ thống sẽ gặp 3 lỗi sau:
+        //
+        //Sập trang (Crash web): Người dùng chỉ cần gõ một dấu ngoặc vuông [ vào ô tìm kiếm là SQL Server báo lỗi cú pháp $\rightarrow$ Web bị văng lỗi 500 ngay lập tức.
+        //Tìm sai người: Người dùng tìm mã có dấu gạch dưới (vd: KH_01) thì SQL sẽ hiểu _ là ký tự bất kỳ $\rightarrow$ Trả về lung tung cả KHA01, KHB01... (lẫn lộn hồ sơ khách).
+        //Treo máy chủ (Lag database): Người dùng gõ một dấu % $\rightarrow$ SQL sẽ load toàn bộ hàng chục nghìn khách hàng ra ngoài $\rightarrow$ Gây đơ và nghẽn hệ thống.
 
         String pattern = isPhoneSuffix ? ("%" + keyword.trim()) : SqlUtil.toContainsPattern(keyword);
+        //Nếu là SĐT: Thêm % vào đằng trước $\rightarrow$ "%5678" (số điện thoại có đuôi là 5678).
+        //Nếu là Họ tên: SqlUtil.toContainsPattern(keyword) sẽ tạo ra "%tên%" (tên chứa từ khóa đó) và tự động xử lý an toàn các ký tự đặc biệt.
 
         try (Connection conn = DBContext.getConnection();
                 PreparedStatement stmt = conn.prepareStatement(sql)) {

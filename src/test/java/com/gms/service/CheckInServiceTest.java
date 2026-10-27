@@ -203,6 +203,27 @@ class CheckInServiceTest {
         sDayPass.endDate = LocalDate.now();
         fakeCheckInDAO.addSubscription(16, sDayPass);
 
+        // KH-1020: Có gói Membership nhưng startDate ở tương lai (chưa kích hoạt)
+        CheckInDAO.CustomerLookupInfo c1020 = new CheckInDAO.CustomerLookupInfo();
+        c1020.customerId = 20;
+        c1020.personId = 20;
+        c1020.customerCode = "KH-1020";
+        c1020.fullName = "Đặng Quang Huy";
+        c1020.phone = "0901234520";
+        c1020.checkInPhoto = "/uploads/checkin/kh-1020.jpg";
+        c1020.customerStatus = "Active";
+        fakeCheckInDAO.addCustomer("KH-1020", c1020);
+
+        CheckInDAO.CustomerSubscriptionInfo sFuture = new CheckInDAO.CustomerSubscriptionInfo();
+        sFuture.subscriptionId = 20;
+        sFuture.customerId = 20;
+        sFuture.subscriptionType = "Membership";
+        sFuture.packageName = "Gói 1 Tháng Hẹn Ngày";
+        sFuture.status = "Active";
+        sFuture.startDate = LocalDate.now().plusDays(3);
+        sFuture.endDate = LocalDate.now().plusMonths(1).plusDays(3);
+        fakeCheckInDAO.addSubscription(20, sFuture);
+
         // Employee Lễ tân
         Account ltAccount = new Account(10, 20, "hash", Account.Status.ACTIVE, 0, null, null, LocalDateTime.now());
         fakeAccountDAO.addAccount(10, ltAccount);
@@ -331,6 +352,19 @@ class CheckInServiceTest {
         assertEquals("KH-1016", data.getCustomerCode());
         assertEquals(Decision.ELIGIBLE_DAYPASS, data.getDecision());
         assertTrue(data.isCanCheckIn());
+    }
+
+    @Test
+    @DisplayName("Gói Active nhưng chưa tới ngày bắt đầu (startDate > today) -> Từ chối vào tập (DENIED_NOT_STARTED)")
+    void testLookupFutureStartDateCustomer() {
+        ServiceResult<CheckInLookupResult> result = checkInService.lookupCustomer("KH-1020");
+        assertTrue(result.isSuccess());
+        CheckInLookupResult data = result.getData();
+        assertNotNull(data);
+        assertEquals("KH-1020", data.getCustomerCode());
+        assertEquals(Decision.DENIED_NOT_STARTED, data.getDecision());
+        assertFalse(data.isCanCheckIn());
+        assertTrue(data.getMessage().contains("chưa đến ngày kích hoạt"));
     }
 
     @Test

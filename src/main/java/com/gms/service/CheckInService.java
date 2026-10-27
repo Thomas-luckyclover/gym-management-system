@@ -110,6 +110,7 @@ public class CheckInService {
             List<CustomerSubscriptionInfo> subs = checkInDAO.findSubscriptionsByCustomerId(customer.customerId);
 
             CustomerSubscriptionInfo activeGymSub = null;
+            CustomerSubscriptionInfo notStartedGymSub = null;
             CustomerSubscriptionInfo frozenGymSub = null;
             CustomerSubscriptionInfo expiredGymSub = null;
             CustomerSubscriptionInfo usedDayPassSub = null;
@@ -123,8 +124,13 @@ public class CheckInService {
 
                 if (isGymAccess) {
                     if ("Active".equalsIgnoreCase(sub.status)) {
-                        // GBR-03: Ngày hết hạn tính trọn vẹn cả ngày (endDate >= today là còn hạn)
-                        if (sub.endDate != null && !sub.endDate.isBefore(today)) {
+                        // Kiểm tra chưa đến ngày bắt đầu (startDate > today)
+                        if (sub.startDate != null && sub.startDate.isAfter(today)) {
+                            if (notStartedGymSub == null) {
+                                notStartedGymSub = sub;
+                            }
+                        } else if (sub.endDate != null && !sub.endDate.isBefore(today)) {
+                            // GBR-03: Ngày hết hạn tính trọn vẹn cả ngày (endDate >= today là còn hạn)
                             // Nếu là DayPass, kiểm tra đã dùng trong ngày chưa
                             if ("DayPass".equalsIgnoreCase(sub.subscriptionType)) {
                                 boolean usedToday = checkInDAO.isDayPassUsedToday(sub.subscriptionId);
@@ -205,6 +211,20 @@ public class CheckInService {
                 result.setDecision(Decision.DENIED_FROZEN);
                 String freezeText = freezeEnd != null ? " tới " + DateTimeUtil.formatDate(freezeEnd) : "";
                 result.setMessage("Gói đang bảo lưu" + freezeText + ". Khách phải huỷ bảo lưu trước khi vào tập.");
+                result.setCanCheckIn(false);
+            } else if (notStartedGymSub != null) {
+                result.setSubscriptionId(notStartedGymSub.subscriptionId);
+                result.setSubscriptionType(notStartedGymSub.subscriptionType);
+                result.setPackageName(notStartedGymSub.packageName);
+                result.setStartDate(notStartedGymSub.startDate);
+                result.setEndDate(notStartedGymSub.endDate);
+                result.setSubscriptionStatus(notStartedGymSub.status);
+
+                result.setDecision(Decision.DENIED_NOT_STARTED);
+                String startText = notStartedGymSub.startDate != null
+                        ? "bắt đầu từ ngày " + DateTimeUtil.formatDate(notStartedGymSub.startDate)
+                        : "chưa đến ngày kích hoạt";
+                result.setMessage("Gói tập chưa đến ngày kích hoạt (" + startText + "). Chưa thể vào tập.");
                 result.setCanCheckIn(false);
             } else if (usedDayPassSub != null) {
                 result.setSubscriptionId(usedDayPassSub.subscriptionId);
@@ -322,7 +342,7 @@ public class CheckInService {
             return new PageResult<>(List.of(), pageNumber, pageSize, 0);
         }
         try {
-            long totalItems = checkInDAO.countCustomersByKeyword(keyword.trim());
+            long totalItems = checkInDAO.countCustomersByKeyword(keyword.trim()); //lấy tổng số khách hàng khớp từ khóa để tính phân trang
             if (totalItems == 0) {
                 return new PageResult<>(List.of(), pageNumber, pageSize, 0);
             }
