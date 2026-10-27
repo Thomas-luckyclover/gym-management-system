@@ -21,6 +21,8 @@ import java.time.LocalDateTime;
 import java.util.Map;
 import com.gms.dto.ServiceResult;
 import com.gms.dto.PaymentResultView;
+import com.gms.dto.StartDatePicker;
+import com.gms.util.PackagePeriod;
 import com.gms.util.AppConfig;
 
 /**
@@ -38,6 +40,8 @@ public class PaymentCallbackService {
     private final AuditLogService auditService;
     private final NotificationDAO notificationDAO;
     private final VnPayClient vnPayClient;
+    // Chỉ đọc để trang kết quả hiện nút "Đổi ngày" sau khi đơn Paid.
+    private final SubscriptionStartDateService startDateService = new SubscriptionStartDateService();
 
     public PaymentCallbackService() {
         this(
@@ -320,8 +324,9 @@ public class PaymentCallbackService {
                 requireOne(orderDAO.markPaid(
                         conn, order.getOrderId(), now));
 
+                // Ngày thanh toán theo giờ VNPay ghi nhận: IPN về sau nửa đêm không làm ngày bắt đầu nhảy sang hôm sau.
                 Subscription subscription = buildSubscription(
-                        conn, order, now.toLocalDate());
+                        conn, order, PackagePeriod.paymentDay(params.get("vnp_PayDate"), now));
 
                 int subscriptionId
                         = subscriptionDAO.insertOnline(conn, subscription);
@@ -600,13 +605,15 @@ public class PaymentCallbackService {
             }
 
             if (order.isPaid()) {
-                return ServiceResult.ok(new PaymentResultView(
+                PaymentResultView paid = new PaymentResultView(
                         order,
                         "Thanh toán thành công",
                         "GMS đã xác nhận thanh toán và cấp gói cho bạn.",
                         true,
                         false,
-                        false));
+                        false);
+                paid.setStartPicker(readStartPicker(conn, order));
+                return ServiceResult.ok(paid);
             }
 
             if (order.isCancelled()) {
@@ -650,6 +657,15 @@ public class PaymentCallbackService {
         } catch (SQLException | RuntimeException e) {
             return ServiceResult.fail(
                     "Chưa đọc được kết quả thanh toán. Vui lòng thử lại.");
+        }
+    }
+
+    /** Lỗi đọc ngày bắt đầu không được làm hỏng trang kết quả; chỉ ẩn ô chọn ngày. */
+    private StartDatePicker readStartPicker(Connection conn, Order order) {
+        try {
+            return startDateService.pickerForPaidOrder(conn, order);
+        } catch (SQLException | RuntimeException e) {
+            return null;
         }
     }
 
