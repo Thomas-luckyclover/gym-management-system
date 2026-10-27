@@ -142,7 +142,7 @@
   width: 100%;
   margin-bottom: var(--space-2);
   padding: 0;
-  color: #2D3748;
+  color: var(--color-text);
   font-size: var(--font-size-xs);
   font-weight: var(--font-weight-bold);
   letter-spacing: var(--letter-spacing-wide);
@@ -196,7 +196,7 @@
 
 .filter-chip small {
   margin-left: auto;
-  color: #4A5568;
+  color: var(--color-text-soft);
   font-size: var(--font-size-xs);
   font-weight: var(--font-weight-semibold);
   background: #EDF2F7;
@@ -573,7 +573,7 @@
 }
 
 .package-card__was {
-  color: #718096;
+  color: var(--color-text-muted);
   font-size: var(--font-size-sm);
   font-weight: var(--font-weight-medium);
 }
@@ -588,7 +588,7 @@
 }
 
 .package-card__price small {
-  color: #4A5568;
+  color: var(--color-text-soft);
   font-family: var(--font-body);
   font-size: var(--font-size-sm);
   font-weight: var(--font-weight-medium);
@@ -619,7 +619,7 @@
   padding: 2px var(--space-1-5);
   border-radius: var(--radius-xs);
   background: var(--color-success-ink);
-  color: #ffffff;
+  color: var(--color-success-tint);
 }
 
 .package-card__actions {
@@ -792,7 +792,7 @@
 }
 
 .package-dialog__benefits i {
-  color: var(--color-success);
+  color: var(--color-success-ink);
 }
 
 .package-dialog__howto {
