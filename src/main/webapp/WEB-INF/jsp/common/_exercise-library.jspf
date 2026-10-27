@@ -126,7 +126,7 @@
                                         </c:when>
                                         <%-- wger không có ảnh → ảnh chụp chung của nhóm cơ (public domain, lưu trong dự án), ghi rõ là ảnh nhóm --%>
                                         <c:when test="${not empty ex.fallbackImage}">
-                                            <img class="is-photo" src="${ctx}${ex.fallbackImage}" alt="" loading="lazy" decoding="async">
+                                            <img class="is-photo" src="${ctx}${ex.fallbackImage}?v=2" alt="" loading="lazy" decoding="async">
                                             <span class="ex-card__badge">Ảnh minh họa nhóm <c:out value="${ex.categoryLabel}" /></span>
                                         </c:when>
                                         <c:otherwise>

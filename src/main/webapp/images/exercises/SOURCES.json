@@ -3,12 +3,13 @@
   "use": "Ảnh dự phòng theo nhóm cơ khi bài tập lấy từ wger.de không có hình (ExerciseLibraryService.FALLBACK_IMAGES).",
   "files": {
     "chest.jpg": "exercises/Barbell_Bench_Press_-_Medium_Grip/0.jpg (Ngực, category 11)",
-    "back.jpg": "exercises/Wide-Grip_Lat_Pulldown/0.jpg (Lưng, category 12)",
-    "shoulders.jpg": "exercises/Dumbbell_Shoulder_Press/0.jpg (Vai, category 13)",
+    "back.jpg": "exercises/Bent_Over_Barbell_Row/0.jpg (Lưng, category 12)",
+    "shoulders.jpg": "exercises/Standing_Military_Press/0.jpg (Vai, category 13)",
     "arms.jpg": "exercises/Dumbbell_Bicep_Curl/0.jpg (Tay, category 8)",
     "abs.jpg": "exercises/Crunches/0.jpg (Bụng, category 10)",
     "legs.jpg": "exercises/Barbell_Squat/0.jpg (Chân, category 9)",
-    "calves.jpg": "exercises/Standing_Calf_Raises/0.jpg (Bắp chân, category 14)",
-    "cardio.jpg": "exercises/Running_Treadmill/0.jpg (Cardio, category 15)"
-  }
+    "calves.jpg": "exercises/Standing_Barbell_Calf_Raise/0.jpg (Bắp chân, category 14)",
+    "cardio.jpg": "exercises/One-Arm_Kettlebell_Swings/1.jpg (Cardio, category 15)"
+  },
+  "style": "27/10/2026: đổi 4 ảnh Lưng/Vai/Bắp chân/Cardio để cả 8 ảnh cùng một phòng tập (tường đỏ, sàn gỗ) cho đồng bộ."
 }
