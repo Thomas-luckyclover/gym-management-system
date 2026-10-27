@@ -146,6 +146,9 @@
                                             <p lang="en"><c:out value="${ex.description}" /></p>
                                         </details>
                                     </c:if>
+                                    <%-- Trang gốc của bài trên wger (route /exercise/{id}/view): video, nhiều ảnh, mô tả đầy đủ. Mở tab mới. --%>
+                                    <a class="ex-card__source" href="https://wger.de/en/exercise/${ex.exerciseId}/view"
+                                       target="_blank" rel="noopener noreferrer">Xem hướng dẫn đầy đủ trên wger ↗</a>
                                 </div>
                             </li>
                         </c:forEach>

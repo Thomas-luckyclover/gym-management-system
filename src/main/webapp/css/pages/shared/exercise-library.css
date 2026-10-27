@@ -278,6 +278,19 @@ html body.dock .content.exercise-library .ex-card__body h3 {
   font-size: var(--font-size-sm);
   line-height: 1.55;
 }
+.ex-card__source {
+  display: inline-block;
+  margin-top: var(--space-2);
+  color: var(--arena-accent-text);
+  font-size: var(--font-size-sm);
+  font-weight: var(--font-weight-semibold);
+  text-decoration: underline;
+  text-underline-offset: 2px;
+}
+.ex-card__source:hover,
+.ex-card__source:focus-visible {
+  text-decoration-thickness: 2px;
+}
 
 
 /* ==================== 5. PHÂN TRANG + GHI NGUỒN ==================== */
