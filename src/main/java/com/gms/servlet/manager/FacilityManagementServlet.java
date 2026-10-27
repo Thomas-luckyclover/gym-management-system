@@ -13,14 +13,24 @@ import jakarta.servlet.http.HttpServletRequest;
 import jakarta.servlet.http.HttpServletResponse;
 import jakarta.servlet.http.HttpSession;
 
+import jakarta.servlet.annotation.MultipartConfig;
+import jakarta.servlet.http.Part;
+import java.io.File;
 import java.io.IOException;
+import java.nio.file.Paths;
 import java.util.List;
+import java.util.UUID;
 
 /**
  * Controller: Quản lý danh mục cơ sở vật chất & cá thể thiết bị vật lý (Dành cho Quản lý phòng gym).
  * Hỗ trợ Master - Detail: Nhóm máy bên trái, danh sách cá thể máy bên phải.
  */
 @WebServlet(urlPatterns = {"/manager/facilities", "/facilities"})
+@MultipartConfig(
+        fileSizeThreshold = 1024 * 1024,      // 1 MB
+        maxFileSize = 10 * 1024 * 1024,       // 10 MB
+        maxRequestSize = 25 * 1024 * 1024     // 25 MB
+)
 public class FacilityManagementServlet extends HttpServlet {
 
     private final FacilityService facilityService = new FacilityService();
@@ -120,6 +130,31 @@ public class FacilityManagementServlet extends HttpServlet {
         String location = RequestUtil.getTrimmedParam(request, "location");
         String unitLabel = RequestUtil.getTrimmedParam(request, "unitLabel");
         String imageUrl = RequestUtil.getTrimmedParam(request, "imageUrl");
+
+        // Xử lý upload ảnh nếu người dùng chọn file
+        try {
+            Part filePart = request.getPart("imageFile");
+            if (filePart != null && filePart.getSize() > 0) {
+                String submittedName = Paths.get(filePart.getSubmittedFileName()).getFileName().toString();
+                String ext = "";
+                int dotIdx = submittedName.lastIndexOf('.');
+                if (dotIdx >= 0) {
+                    ext = submittedName.substring(dotIdx).toLowerCase();
+                }
+                if (ext.equals(".jpg") || ext.equals(".jpeg") || ext.equals(".png") || ext.equals(".webp")) {
+                    String uploadDir = getServletContext().getRealPath("/uploads/facilities");
+                    File dir = new File(uploadDir);
+                    if (!dir.exists()) {
+                        dir.mkdirs();
+                    }
+                    String newFilename = "fac_" + UUID.randomUUID().toString().substring(0, 8) + ext;
+                    filePart.write(uploadDir + File.separator + newFilename);
+                    imageUrl = "/uploads/facilities/" + newFilename;
+                }
+            }
+        } catch (Exception ignored) {
+            // Fallback giữ imageUrl cũ nếu không upload hoặc có lỗi đọc part
+        }
 
         Facility f = new Facility();
         f.setFacilityId(facilityId);
