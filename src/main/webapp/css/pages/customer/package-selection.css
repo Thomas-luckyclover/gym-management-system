@@ -533,15 +533,15 @@
 }
 
 .package-card__sash.is-saving {
-  background: linear-gradient(#1D4A37, #0F2B20);
-  color: #FFFFFF;
-  box-shadow: 0 3px 8px rgba(0, 0, 0, 0.5);
+  background: linear-gradient(#5BEA8E, #1FB35B);
+  color: #04200F;
+  box-shadow: 0 3px 10px rgba(0, 0, 0, 0.55), 0 0 14px rgba(91, 234, 142, 0.45);
 }
 
 .package-card__sash.is-new {
-  background: linear-gradient(#9B2A43, #661629);
-  color: #FFFFFF;
-  box-shadow: 0 3px 8px rgba(0, 0, 0, 0.45);
+  background: linear-gradient(#FFFFFF, #DDE3EC);
+  color: #0B0D11;
+  box-shadow: 0 3px 10px rgba(0, 0, 0, 0.55), 0 0 14px rgba(255, 255, 255, 0.35);
 }
 
 .package-card__brand {
@@ -558,12 +558,13 @@
   font-family: var(--font-banner);
   font-size: clamp(1.5rem, 2.4vw, 2rem);
   font-weight: var(--font-weight-bold);
-  line-height: 1.15;
-  text-shadow: 0 2px 0 color-mix(in srgb, var(--package-brown-ink) 40%, transparent);
+  font-style: italic;
+  line-height: 1.1;
+  text-shadow: 0 2px 12px rgba(0, 0, 0, 0.6);
 }
 
 .package-card__kind {
-  color: var(--package-gold-light);
+  color: var(--tone);
   font-family: var(--font-banner);
   font-size: var(--font-size-md);
   font-weight: var(--font-weight-semibold);
