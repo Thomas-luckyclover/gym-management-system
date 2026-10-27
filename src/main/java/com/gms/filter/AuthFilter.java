@@ -45,6 +45,7 @@ public class AuthFilter implements Filter {
             "/css/",
             "/js/",
             "/images/",
+            "/uploads/",
             "/blog",
             "/payment/vnpay-return",
             "/api/v1/commerce/payment/webhook/"

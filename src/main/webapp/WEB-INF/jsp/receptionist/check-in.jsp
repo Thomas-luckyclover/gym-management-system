@@ -109,7 +109,15 @@
                                       <div class="sr-photo">
                                         <c:choose>
                                           <c:when test="${not empty item.checkInPhoto}">
-                                            <img src="<c:out value='${item.checkInPhoto}' />" loading="lazy">
+                                            <c:set var="srPhoto" value="${item.checkInPhoto}" />
+                                            <c:choose>
+                                              <c:when test="${srPhoto.startsWith('http://') or srPhoto.startsWith('https://')}">
+                                                <img src="<c:out value='${srPhoto}' />" loading="lazy">
+                                              </c:when>
+                                              <c:otherwise>
+                                                <img src="${pageContext.request.contextPath}${srPhoto.startsWith('/') ? '' : '/'}<c:out value='${srPhoto}' />" loading="lazy">
+                                              </c:otherwise>
+                                            </c:choose>
                                           </c:when>
                                           <c:otherwise>
                                             <i class="fa-solid fa-user"></i>
@@ -221,9 +229,19 @@
                                                 data-ci-face>
                                                 <c:choose>
                                                   <c:when test="${not empty lookupResult.checkInPhoto}">
-                                                    <img src="<c:out value='${lookupResult.checkInPhoto}' />"
-                                                      alt="Ảnh check-in của <c:out value='${lookupResult.fullName}' />"
-                                                      loading="lazy">
+                                                    <c:set var="ciPhoto" value="${lookupResult.checkInPhoto}" />
+                                                    <c:choose>
+                                                      <c:when test="${ciPhoto.startsWith('http://') or ciPhoto.startsWith('https://')}">
+                                                        <img src="<c:out value='${ciPhoto}' />"
+                                                          alt="Ảnh check-in của <c:out value='${lookupResult.fullName}' />"
+                                                          loading="lazy">
+                                                      </c:when>
+                                                      <c:otherwise>
+                                                        <img src="${pageContext.request.contextPath}${ciPhoto.startsWith('/') ? '' : '/'}<c:out value='${ciPhoto}' />"
+                                                          alt="Ảnh check-in của <c:out value='${lookupResult.fullName}' />"
+                                                          loading="lazy">
+                                                      </c:otherwise>
+                                                    </c:choose>
                                                   </c:when>
                                                   <c:otherwise>
                                                     <span>Chưa có<br>ảnh</span>
