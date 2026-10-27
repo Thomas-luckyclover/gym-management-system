@@ -160,12 +160,15 @@ public class CheckInDAO {
      */
     public boolean hasPendingDeletionRequest(int customerId) throws SQLException {
         String sql = "SELECT COUNT(*) FROM CustomerDeletionRequests WHERE CustomerId = ? AND Status = 'Pending'";
+        //count đếm số dòng, luôn trả về 1 dòng hoặc 0 dòng, nên dùng rs.getInt(1) > 0 để kiểm tra có tồn tại hay không
         try (Connection conn = DBContext.getConnection();
                 PreparedStatement stmt = conn.prepareStatement(sql)) {
             stmt.setInt(1, customerId);
             try (ResultSet rs = stmt.executeQuery()) {
                 if (rs.next()) {
                     return rs.getInt(1) > 0;
+                    //lấy dữ liệu từ cột đầu tiên (COUNT(*)) và kiểm tra xem có lớn hơn 0 hay không,
+                    // nếu có thì có yêu cầu xóa đang chờ duyệt
                 }
             }
         }

@@ -27,6 +27,8 @@ design-preview/
 design-preview.html
 .impeccable/
 __pycache__/
-
 # File cookie do curl/test sinh ra (chứa JSESSIONID) — không commit
 cookies.txt
+
+# Upload ảnh checkin
+src/main/webapp/uploads/checkin/

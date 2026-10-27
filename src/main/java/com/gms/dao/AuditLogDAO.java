@@ -60,8 +60,8 @@ public class AuditLogDAO {
                 stmt.setString(2, auditLog.getActingRole().getDbValue());
             }
 
-            stmt.setString(3, auditLog.getAction());
-            stmt.setString(4, auditLog.getEntityName());
+            stmt.setString(3, safeTruncate(auditLog.getAction(), 100));
+            stmt.setString(4, safeTruncate(auditLog.getEntityName(), 50));
 
             if (auditLog.getEntityId() == null) {
                 stmt.setNull(5, Types.INTEGER);
@@ -69,12 +69,19 @@ public class AuditLogDAO {
                 stmt.setInt(5, auditLog.getEntityId());
             }
 
-            stmt.setString(6, auditLog.getFieldChanged());
-            stmt.setString(7, auditLog.getOldValue());
-            stmt.setString(8, auditLog.getNewValue());
-            stmt.setString(9, auditLog.getReason());
+            stmt.setString(6, safeTruncate(auditLog.getFieldChanged(), 50));
+            stmt.setString(7, safeTruncate(auditLog.getOldValue(), 1000));
+            stmt.setString(8, safeTruncate(auditLog.getNewValue(), 1000));
+            stmt.setString(9, safeTruncate(auditLog.getReason(), 500));
 
             return stmt.executeUpdate() == 1;
         }
+    }
+
+    private static String safeTruncate(String val, int maxLen) {
+        if (val == null || val.length() <= maxLen) {
+            return val;
+        }
+        return val.substring(0, maxLen);
     }
 }
