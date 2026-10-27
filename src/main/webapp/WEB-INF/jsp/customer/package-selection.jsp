@@ -12,7 +12,7 @@
                         <link rel="stylesheet"
                             href="${pageContext.request.contextPath}/css/pages/customer/dashboard.css?v=20261025city">
                         <link rel="stylesheet"
-                            href="${pageContext.request.contextPath}/css/pages/customer/package-selection.css?v=7">
+                            href="${pageContext.request.contextPath}/css/pages/customer/package-selection.css?v=8">
                         <script src="${pageContext.request.contextPath}/js/pages/customer/package-selection.js?v=2"
                             defer></script>
                 </head>
@@ -462,6 +462,7 @@
                                                                                                                     --%>
                                                                                                                     <article
                                                                                                                         class="package-card"
+                                                                                                                        data-tone="${fn:toLowerCase(fn:replace(pkg.packageType, '_', '-'))}"
                                                                                                                         id="packageCard-${pkg.packageId}">
 
                                                                                                                         <div
@@ -516,11 +517,14 @@
                                                                                                                                         </h2>
                                                                                                                                     </c:otherwise>
                                                                                                                                 </c:choose>
+                                                                                                                                <%-- Bỏ dòng loại gói khi trùng tiêu đề (ví dụ "Buổi PT lẻ") cho khỏi lặp --%>
+                                                                                                                                <c:if test="${fn:toUpperCase(option.typeLabel) ne fn:toUpperCase(pkg.packageName)}">
                                                                                                                                 <span
                                                                                                                                     class="package-card__kind">
                                                                                                                                     <c:out
                                                                                                                                         value="${fn:toUpperCase(option.typeLabel)}" />
                                                                                                                                 </span>
+                                                                                                                                </c:if>
                                                                                                                         </div>
 
                                                                                                                         <div
@@ -723,6 +727,7 @@
                                                                                                                         --%>
                                                                                                                         <dialog
                                                                                                                             class="package-dialog"
+                                                                                                                            data-tone="${fn:toLowerCase(fn:replace(pkg.packageType, '_', '-'))}"
                                                                                                                             id="packageDialog-${pkg.packageId}"
                                                                                                                             aria-labelledby="packageDialogTitle-${pkg.packageId}">
                                                                                                                             <div
@@ -753,12 +758,8 @@
 
                                                                                                                                 <div
                                                                                                                                     class="package-dialog__body">
-                                                                                                                                    <c:if
-                                                                                                                                        test="${not empty option.imagePath}">
-                                                                                                                                        <img class="package-dialog__image"
-                                                                                                                                            src="${pageContext.request.contextPath}${option.imagePath}"
-                                                                                                                                            alt="">
-                                                                                                                                    </c:if>
+                                                                                                                                    <%-- Ảnh minh họa theo loại gói (CSS vẽ theo data-tone của hộp thoại) --%>
+                                                                                                                                    <div class="package-dialog__image" aria-hidden="true"></div>
 
                                                                                                                                     <c:if
                                                                                                                                         test="${not empty option.originalPrice}">

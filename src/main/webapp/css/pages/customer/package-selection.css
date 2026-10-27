@@ -479,7 +479,6 @@
 :is(.package-card, .package-dialog)[data-tone="pt-couple"] { --tone: #FF5FA2; --tone-deep: rgba(170, 30, 100, 0.75); --art: url("../../../images/packages/art-gloves.png"); --art-filter: hue-rotate(110deg) saturate(1.3); }
 :is(.package-card, .package-dialog)[data-tone="single-session"] { --tone: #9B7BFF; --tone-deep: rgba(80, 50, 190, 0.75); --art: url("../../../images/packages/art-dumbbell.png"); --art-filter: hue-rotate(45deg) saturate(1.2); }
 
-
 /* Lớp ảnh minh họa, đặt bên phải banner */
 .package-card__banner::before {
   content: "";
@@ -508,13 +507,12 @@
   box-shadow: inset 0 2px 0 var(--tone);
   pointer-events: none;
 }
-
 .package-card__banner > *:not(.package-card__bg):not(.package-card__sash) {
   position: relative;
   z-index: 1;
 }
 
-/* Dải chéo nhãn ở góc trên phải banner: "Tiết kiệm hơn" xanh lá than, "Mới ra mắt" đỏ đô (banner có overflow hidden nên phần thừa tự bị cắt) */
+/* Dải chéo nhãn ở góc trên phải banner: "Tiết kiệm hơn" xanh lá sáng, "Mới ra mắt" trắng (đủ sáng để nổi trên nền đen) (banner có overflow hidden nên phần thừa tự bị cắt) */
 .package-card__sash {
   position: absolute;
   top: 28px;
@@ -990,6 +988,8 @@ a.package-card__buy {
 html:where(:not([data-theme="dark"])) .package-card__price {
   color: var(--arena-ember-ink, var(--color-primary));
 }
+html:where([data-theme="dark"]) .package-card__deal b,
 html:where([data-theme="dark"]) .package-dialog .package-card__deal b {
+  background: #8CE8B4;
   color: #04200F;
 }
