@@ -13,6 +13,7 @@ import com.gms.dto.CustomerDashboardView.NotificationRow;
 import com.gms.dto.CustomerDashboardView.SubscriptionRow;
 import com.gms.dto.CustomerDashboardView.UpcomingSessionRow;
 import com.gms.dto.ServiceResult;
+import com.gms.dto.StartDatePicker;
 import com.gms.entity.Account;
 import com.gms.entity.Customer;
 import com.gms.entity.Person;
@@ -69,6 +70,7 @@ public class CustomerDashboardService {
     private final CustomerDAO customerDAO = new CustomerDAO();
     private final CustomerDashboardDAO dashboardDAO = new CustomerDashboardDAO();
     private final SystemConfigService systemConfigService = new SystemConfigService();
+    private final SubscriptionStartDateService startDateService = new SubscriptionStartDateService();
 
     public ServiceResult<CustomerDashboardView> getDashboard(int accountId) {
         try {
@@ -150,6 +152,16 @@ public class CustomerDashboardService {
                     notifications,
                     unreadCount,
                     membershipCardState);
+
+            // Thẻ Gói tập: hiện ô "Đổi ngày" nếu gói còn đổi được. Lỗi ở đây chỉ ẩn ô, không hỏng Dashboard.
+            SubscriptionRow activeMembership = view.getActiveMembership();
+            if (activeMembership != null && "Membership".equals(activeMembership.getSubscriptionType())) {
+                ServiceResult<StartDatePicker> picker
+                        = startDateService.getPicker(accountId, activeMembership.getSubscriptionId());
+                if (picker.isSuccess()) {
+                    view.setStartPicker(picker.getData());
+                }
+            }
 
             return ServiceResult.ok(view);
 
