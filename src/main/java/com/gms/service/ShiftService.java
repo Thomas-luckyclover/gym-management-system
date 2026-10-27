@@ -146,7 +146,7 @@ public class ShiftService {
                     canCancel = !isOwnProfile;
                 }
 
-                boolean canConfirmTransfer = shift.isOpen() && item.isPending() && item.isTransfer();
+                boolean canConfirmTransfer = shift.isOpen() && item.isPending();
 
                 finalItems.add(new ShiftTransactionItem(
                         item.getOrderId(), item.getOrderCode(), item.getCustomerName(),

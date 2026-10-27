@@ -67,10 +67,11 @@ public class CheckInServlet extends HttpServlet {
                                                                                              // khach hang
             if (result.isSuccess()) {// neu tim kiem thanh cong
                 CheckInLookupResult lookupData = result.getData();
+                //lấy dữ liệu kèm theo khi thực hiện tra cứu (CheckInLookupResult) từ ServiceResult
 
                 // Nếu exact match không tìm thấy (Mã KH / SĐT) → tìm theo một phần tên có phân
                 // trang
-                if (lookupData.getDecision() == CheckInLookupResult.Decision.NOT_FOUND) {
+                if (lookupData.getDecision() == CheckInLookupResult.Decision.NOT_FOUND) {//dòng 73 service
                     PageResult<CustomerSearchItem> searchResultsPage = checkInService.searchCustomersPage(query, page,
                             pageSize);
 

@@ -466,7 +466,7 @@ public class ShiftDAO {
 
         // B2: Bộ lọc phương thức thanh toán
         if (method != null && !"all".equalsIgnoreCase(method)) {
-            sql.append(" AND COALESCE(t.PaymentMethod, 'Cash') = ? ");
+            sql.append(" AND COALESCE(t.PaymentMethod, CASE WHEN o.Status = 'Pending' THEN 'Transfer' ELSE 'Cash' END) = ? ");
             params.add("cash".equalsIgnoreCase(method) ? "Cash" : "Transfer");
         }
 
@@ -508,7 +508,7 @@ public class ShiftDAO {
                     p.Phone AS CustomerPhone,
                     o.PackageNameSnapshot,
                     o.CreatedAt,
-                    COALESCE(t.PaymentMethod, 'Cash') AS PaymentMethod,
+                    COALESCE(t.PaymentMethod, CASE WHEN o.Status = 'Pending' THEN 'Transfer' ELSE 'Cash' END) AS PaymentMethod,
                     (o.UnitPriceSnapshot - o.DiscountAmount) AS Amount,
                     o.Status AS OrderStatus,
                     o.CancelType,
