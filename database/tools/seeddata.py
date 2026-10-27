@@ -77,9 +77,11 @@ BEN_MEM = 'Tập không giới hạn giờ mở cửa\nDùng đủ thiết bị 
 
 
 def pkg(pid, name, desc, ben, ptype, unit, val, est, price, active=1, key=None):
+    # Đặc quyền Thư viện bài tập (27/10): gói tập tháng + gói PT mở khóa; vé ngày, buổi lẻ thì không.
+    unlocks = 1 if ptype in ('Membership', 'PTSingle', 'PTCouple') else 0
     add('Packages', dict(PackageName=name, Description=desc, Benefits=ben, PackageType=ptype, DurationUnit=unit,
                          DurationValue=val, EstimatedSessionCount=est, Price=price, IsActive=active,
-                         CreatedAt=dt_(2025, 1, 10, 9, 0)), None, pid)
+                         UnlocksExerciseLibrary=unlocks, CreatedAt=dt_(2025, 1, 10, 9, 0)), None, pid)
     if key:
         G.PKG[key] = pid
 

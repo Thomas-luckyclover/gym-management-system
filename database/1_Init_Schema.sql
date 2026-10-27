@@ -217,6 +217,7 @@ CREATE TABLE Packages (
     EstimatedSessionCount TINYINT        NULL,     -- CHỈ để hiển thị "khoảng n buổi" cho gói PT (DBR-53)
     Price                 INT            NOT NULL, -- VND, đã gồm VAT (GBR-02)
     IsActive              BIT            NOT NULL CONSTRAINT DF_Packages_IsActive  DEFAULT (1), -- 0 = ngừng bán (CBR-97)
+    UnlocksExerciseLibrary BIT           NOT NULL CONSTRAINT DF_Packages_UnlocksExercise DEFAULT (0), -- 1 = đặc quyền: mở khóa Thư viện bài tập khi gói còn hiệu lực (27/10/2026)
     CreatedAt             DATETIME2(0)   NOT NULL CONSTRAINT DF_Packages_CreatedAt DEFAULT (SYSDATETIME()),
     RowVer                ROWVERSION,
 
@@ -1122,5 +1123,25 @@ CREATE TABLE BodyMeasurements (
 );
 GO
 
-PRINT N'>>> Tạo schema GMS v26 thành công: 31 bảng nghiệp vụ.';
+-- Exercises: Thư viện bài tập lấy từ API wger.de (miễn phí, dữ liệu CC BY-SA 4.0) — 27/10/2026.
+-- Bảng này là BỘ ĐỆM: ExerciseLibraryService tải lại toàn bộ khi bản cũ quá 1 ngày; API lỗi thì vẫn đọc bản cũ.
+-- Không có khóa ngoại: dữ liệu bên ngoài, không gắn với bản ghi nghiệp vụ nào. Xóa/ghi lại cả bảng mỗi lần đồng bộ.
+CREATE TABLE Exercises (
+    ExerciseId    INT            NOT NULL,   -- id bài tập bên wger (không tự tăng)
+    Name          NVARCHAR(200)  NOT NULL,   -- tên tiếng Anh, ví dụ "Bench Press"
+    CategoryId    INT            NOT NULL,   -- nhóm cơ của wger: 8 Arms · 9 Legs · 10 Abs · 11 Chest · 12 Back · 13 Shoulders · 14 Calves · 15 Cardio
+    MuscleIds     VARCHAR(100)   NOT NULL,   -- cơ chính dạng ",4,5," để lọc LIKE; rỗng = ","
+    EquipmentIds  VARCHAR(100)   NOT NULL,   -- dụng cụ dạng ",1,8,"; rỗng = ","
+    ImageUrl      NVARCHAR(500)  NULL,       -- ảnh chính trên wger.de, không có ảnh = NULL
+    Description   NVARCHAR(MAX)  NULL,       -- mô tả tiếng Anh đã bỏ thẻ HTML
+    SyncedAt      DATETIME2(0)   NOT NULL,   -- lần tải từ API (giờ Việt Nam)
+
+    CONSTRAINT PK_Exercises PRIMARY KEY (ExerciseId),
+    CONSTRAINT CK_Exercises_Name CHECK (LEN(LTRIM(RTRIM(Name))) >= 1)
+);
+GO
+CREATE INDEX IX_Exercises_Category ON Exercises(CategoryId, Name);
+GO
+
+PRINT N'>>> Tạo schema GMS v26 thành công: 32 bảng nghiệp vụ.';
 GO

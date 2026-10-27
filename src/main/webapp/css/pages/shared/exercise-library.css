@@ -1,0 +1,338 @@
+@charset "UTF-8";
+/* =====================================================================
+   THƯ VIỆN BÀI TẬP (khách + PT) — exercise-library.css (27/10/2026)
+
+   ĐỌC THEO THỨ TỰ:
+     1. Khung trang + dòng tóm tắt + khung báo lỗi / trống
+     2. Màn khóa (khách chưa có gói mở khóa)
+     3. Bộ lọc (form GET) + chip nhóm cơ
+     4. Lưới thẻ bài
+     5. Phân trang + ghi nguồn
+     6. Điện thoại
+
+   Màu, bo góc, khoảng cách lấy hết từ token Arena (tokens.css) → sáng/tối tự đổi theo data-theme.
+   ===================================================================== */
+
+
+/* ==================== 1. KHUNG TRANG ==================== */
+
+.exercise-library {
+  display: grid;
+  gap: var(--arena-gap);
+}
+.exercise-library > * {
+  min-width: 0;
+}
+.exercise-library :is(h2, h3, p, ul) {
+  margin: 0;
+}
+.ex-summary {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: baseline;
+  gap: var(--space-1) var(--space-3);
+  color: var(--arena-on-dark-soft);   /* nằm thẳng trên nền trang (xanh / tối) */
+  font-size: var(--font-size-sm);
+  font-variant-numeric: tabular-nums;
+}
+/* API lỗi → đang xem bản cũ: dòng vàng, không chặn trang */
+.ex-stale {
+  padding: 2px var(--space-2);
+  border-radius: var(--arena-radius-chip);
+  background: var(--color-warning-tint);
+  box-shadow: inset 0 0 0 1px var(--color-warning-border);
+  color: var(--color-warning-ink);
+}
+.ex-message {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  justify-content: space-between;
+  gap: var(--space-3);
+  padding: var(--arena-pad);
+  border-radius: var(--arena-radius-chip);
+  background: var(--arena-chalk);
+  color: var(--arena-ink);
+}
+.ex-message.is-error {
+  box-shadow: inset 4px 0 0 var(--color-danger-border);
+}
+
+
+/* ==================== 2. MÀN KHÓA ==================== */
+
+.ex-locked {
+  display: grid;
+  justify-items: center;
+  gap: var(--space-3);
+  max-width: 560px;
+  margin: var(--space-6) auto;
+  padding: var(--space-8) var(--arena-pad);
+  border-radius: var(--arena-radius-chip);
+  background: var(--arena-chalk);
+  box-shadow: var(--arena-shadow-light);
+  color: var(--arena-ink);
+  text-align: center;
+}
+.ex-locked__icon {
+  width: 44px;
+  height: 44px;
+  fill: none;
+  stroke: var(--arena-accent);
+  stroke-width: 1.8;
+  stroke-linecap: round;
+}
+.ex-locked h2 {
+  font-family: var(--font-brand-display);
+  font-size: var(--font-size-xl);
+  font-weight: var(--font-weight-extrabold);
+  text-wrap: balance;
+}
+.ex-locked p {
+  color: var(--arena-ink-soft);
+  text-wrap: pretty;
+}
+.ex-locked__sub {
+  font-size: var(--font-size-sm);
+}
+.ex-locked__packages {
+  display: grid;
+  gap: var(--space-1);
+  padding: 0;
+  list-style: none;
+  font-size: var(--font-size-sm);
+  font-variant-numeric: tabular-nums;
+}
+
+
+/* ==================== 3. BỘ LỌC + CHIP NHÓM CƠ ==================== */
+
+.ex-filters {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: flex-end;
+  gap: var(--space-3);
+  padding: var(--arena-pad-sm) var(--arena-pad);
+  border-radius: var(--arena-radius-chip);
+  background: var(--arena-chalk);
+}
+.ex-field {
+  display: grid;
+  gap: var(--space-1);
+  min-width: 160px;
+  font-size: var(--font-size-sm);
+  font-weight: var(--font-weight-semibold);
+  color: var(--arena-ink);
+}
+.ex-field--grow {
+  flex: 1 1 240px;
+}
+.ex-field :is(input, select) {
+  width: 100%;
+  min-height: 44px;
+  padding: 0 var(--space-3);
+  border: 0;
+  border-radius: var(--arena-radius-chip);
+  background: var(--arena-surface);
+  box-shadow: inset 0 0 0 1px var(--arena-chalk-line-strong);
+  color: var(--arena-ink);
+  font: inherit;
+  font-weight: var(--font-weight-regular);
+}
+.ex-field :is(input, select):focus-visible {
+  outline: var(--focus-outline-width) solid var(--arena-focus-ring);
+  outline-offset: var(--focus-outline-offset);
+}
+.ex-filters__actions {
+  display: flex;
+  gap: var(--space-2);
+}
+.ex-filters__actions .btn {
+  min-height: 44px;
+}
+.ex-chips {
+  display: flex;
+  flex-wrap: wrap;
+  gap: var(--space-2);
+}
+.ex-chip {
+  display: inline-flex;
+  align-items: baseline;
+  gap: var(--space-1);
+  padding: var(--space-1-5) var(--space-3);
+  border-radius: var(--radius-pill);
+  background: var(--arena-chalk);
+  box-shadow: inset 0 0 0 1px var(--arena-card-line);
+  color: var(--arena-ink);
+  font-size: var(--font-size-sm);
+  font-weight: var(--font-weight-semibold);
+  text-decoration: none;
+}
+.ex-chip small {
+  color: var(--arena-steel-ink);
+  font-variant-numeric: tabular-nums;
+}
+.ex-chip.is-active {
+  background: var(--color-primary);   /* cùng màu nút Lọc: nổi trên cả nền sáng lẫn tối */
+  box-shadow: none;
+  color: var(--color-on-primary);
+}
+.ex-chip.is-active small {
+  color: inherit;
+  opacity: 0.85;
+}
+.ex-chip:focus-visible,
+.ex-page:focus-visible {
+  outline: var(--focus-outline-width) solid var(--arena-focus-ring);
+  outline-offset: 2px;
+}
+
+
+/* ==================== 4. LƯỚI THẺ BÀI ==================== */
+
+.ex-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(240px, 1fr));
+  gap: var(--arena-gap);
+  padding: 0;
+  list-style: none;
+}
+.ex-card {
+  display: grid;
+  grid-template-rows: auto 1fr;
+  overflow: hidden;
+  border-radius: var(--arena-radius-chip);
+  background: var(--arena-chalk);
+  box-shadow: var(--arena-shadow-light);
+  color: var(--arena-ink);
+}
+/* Ảnh wger nền trắng, tỉ lệ khác nhau → khung 4:3 nền trắng, ảnh nằm gọn (contain) */
+.ex-card__media {
+  position: relative;                 /* ảnh absolute bên trong: ảnh cao/dài cỡ nào cũng không kéo giãn thẻ */
+  display: grid;
+  place-items: center;
+  aspect-ratio: 4 / 3;
+  overflow: hidden;
+  max-width: 100%;
+  background: #FFFFFF;
+  box-shadow: inset 0 -1px 0 var(--arena-card-line);
+}
+.ex-card__media img {
+  position: absolute;
+  inset: 0;
+  width: 100%;
+  height: 100%;
+  object-fit: contain;
+  padding: var(--space-2);
+}
+.ex-card__noimg {
+  color: #6B7686;
+  font-size: var(--font-size-xs);
+}
+.ex-card__body {
+  display: grid;
+  align-content: start;
+  gap: var(--space-1-5);
+  padding: var(--space-3) var(--space-4) var(--space-4);
+}
+html body.dock .content.exercise-library .ex-card__body h3 {
+  color: var(--arena-ink);            /* đè luật common.css (~dòng 2658): h3 nằm ngoài .panel/.card bị tô trắng ở nền sáng */
+  font-size: var(--font-size-md);
+  font-weight: var(--font-weight-extrabold);
+  line-height: 1.25;
+  overflow-wrap: anywhere;
+}
+.ex-card__meta,
+.ex-card__muscles {
+  color: var(--arena-ink-soft);
+  font-size: var(--font-size-sm);
+}
+.ex-card__meta b {
+  color: var(--arena-accent-text);
+}
+.ex-card__how summary {
+  cursor: pointer;
+  color: var(--arena-accent-text);
+  font-size: var(--font-size-sm);
+  font-weight: var(--font-weight-semibold);
+}
+.ex-card__how p {
+  margin-top: var(--space-1-5);
+  color: var(--arena-ink-soft);
+  font-size: var(--font-size-sm);
+  line-height: 1.55;
+}
+
+
+/* ==================== 5. PHÂN TRANG + GHI NGUỒN ==================== */
+
+.ex-pager {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  justify-content: space-between;
+  gap: var(--space-3);
+  color: var(--arena-on-dark-soft);
+  font-size: var(--font-size-sm);
+  font-variant-numeric: tabular-nums;
+}
+.ex-pager__links {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: var(--space-1-5);
+}
+.ex-page {
+  display: inline-grid;
+  place-items: center;
+  min-width: 38px;
+  min-height: 38px;
+  border-radius: var(--arena-radius-chip);
+  background: var(--arena-chalk);
+  box-shadow: inset 0 0 0 1px var(--arena-card-line);
+  color: var(--arena-ink);
+  font-weight: var(--font-weight-semibold);
+  text-decoration: none;
+}
+.ex-page.is-active {
+  background: var(--color-primary);
+  box-shadow: none;
+  color: var(--color-on-primary);
+}
+.ex-credit {
+  color: var(--arena-on-dark-soft);
+  font-size: var(--font-size-xs);
+}
+.ex-credit a {
+  color: inherit;
+}
+
+@media (hover: hover) {
+  .ex-chip:hover,
+  .ex-page:hover {
+    box-shadow: inset 0 0 0 1px var(--arena-hover-line);
+  }
+}
+
+
+/* ==================== 6. ĐIỆN THOẠI ==================== */
+
+@media (max-width: 760px) {
+  .ex-filters {
+    padding: var(--arena-pad-sm);
+  }
+  .ex-field {
+    flex: 1 1 100%;
+    min-width: 0;
+  }
+  .ex-grid {
+    grid-template-columns: repeat(auto-fill, minmax(160px, 1fr));
+  }
+  .ex-card__body {
+    padding: var(--space-2-5) var(--space-3) var(--space-3);
+  }
+  .ex-locked {
+    margin: var(--space-3) 0;
+    padding: var(--space-6) var(--arena-pad-sm);
+  }
+}
