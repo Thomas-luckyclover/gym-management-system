@@ -63,6 +63,8 @@ public class CustomerDashboardServlet extends HttpServlet {
             }
         }
 
+        // Token cho nút "Đổi ngày" bắt đầu gói trên thẻ Gói tập (POST kiểm CSRF).
+        request.setAttribute("csrfToken", RequestUtil.getOrCreateCsrfToken(session));
         request.setAttribute("activeSidebar", "dashboard");
         request.setAttribute("themeClass", "theme-pt customer-dashboard-page customer-weather-page");
 
