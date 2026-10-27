@@ -49,12 +49,15 @@ public class ShiftDetailView {
     // Lý do không cho phép mở ca (khi notOpened = true và canOpen = false).
     private final String shiftNotOpenedReason;
 
+    // Đánh dấu ca thực sự đã qua trong quá khứ (không thể mở lại).
+    private final boolean pastShift;
+
     public ShiftDetailView(Shift shift, String openedByEmployeeName, String closedByEmployeeName,
                            ShiftMetrics metrics, PageResult<ShiftTransactionItem> transactionsPage,
                            List<ShiftTransactionItem> pendingOrders, List<Shift> todayShifts,
                            String searchKeyword, String methodFilter, String statusFilter) {
         this(shift, openedByEmployeeName, closedByEmployeeName, metrics, transactionsPage,
-                pendingOrders, todayShifts, searchKeyword, methodFilter, statusFilter, true, null);
+                pendingOrders, todayShifts, searchKeyword, methodFilter, statusFilter, true, null, false);
     }
 
     public ShiftDetailView(Shift shift, String openedByEmployeeName, String closedByEmployeeName,
@@ -62,6 +65,15 @@ public class ShiftDetailView {
                            List<ShiftTransactionItem> pendingOrders, List<Shift> todayShifts,
                            String searchKeyword, String methodFilter, String statusFilter,
                            boolean canOpen, String shiftNotOpenedReason) {
+        this(shift, openedByEmployeeName, closedByEmployeeName, metrics, transactionsPage,
+                pendingOrders, todayShifts, searchKeyword, methodFilter, statusFilter, canOpen, shiftNotOpenedReason, false);
+    }
+
+    public ShiftDetailView(Shift shift, String openedByEmployeeName, String closedByEmployeeName,
+                           ShiftMetrics metrics, PageResult<ShiftTransactionItem> transactionsPage,
+                           List<ShiftTransactionItem> pendingOrders, List<Shift> todayShifts,
+                           String searchKeyword, String methodFilter, String statusFilter,
+                           boolean canOpen, String shiftNotOpenedReason, boolean pastShift) {
         this.shift = shift;
         this.openedByEmployeeName = openedByEmployeeName;
         this.closedByEmployeeName = closedByEmployeeName;
@@ -74,6 +86,7 @@ public class ShiftDetailView {
         this.statusFilter = statusFilter;
         this.canOpen = canOpen;
         this.shiftNotOpenedReason = shiftNotOpenedReason;
+        this.pastShift = pastShift;
     }
 
     public Shift getShift() {
@@ -126,5 +139,9 @@ public class ShiftDetailView {
 
     public String getShiftNotOpenedReason() {
         return shiftNotOpenedReason;
+    }
+
+    public boolean isPastShift() {
+        return pastShift;
     }
 }

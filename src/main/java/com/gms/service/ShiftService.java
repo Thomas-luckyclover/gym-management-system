@@ -163,6 +163,7 @@ public class ShiftService {
             // B10: Đánh giá khả năng mở ca nếu ca đang ở trạng thái NotOpened
             boolean canOpen = false;
             String shiftNotOpenedReason = null;
+            boolean pastShift = false;
 
             if (shift.isNotOpened()) {
                 LocalDateTime now = LocalDateTime.now(DateTimeUtil.GYM_ZONE);
@@ -170,12 +171,15 @@ public class ShiftService {
                     canOpen = false;
                     if (shift.getWorkDate().isBefore(today)) {
                         shiftNotOpenedReason = "Ca làm việc của ngày đã qua trong quá khứ, không thể mở lại.";
+                        pastShift = true;
                     } else {
                         shiftNotOpenedReason = "Ca làm việc thuộc ngày trong tương lai, chưa thể mở.";
+                        pastShift = false;
                     }
                 } else if (shiftDAO.isGymClosedOnDate(today)) {
                     canOpen = false;
                     shiftNotOpenedReason = "Hôm nay phòng tập đóng cửa cả ngày theo lịch nghỉ, không thể mở ca làm việc.";
+                    pastShift = false;
                 } else {
                     // Kiểm tra xem có ca nào khác đang Open không
                     Shift otherOpenShift = null;
@@ -190,6 +194,7 @@ public class ShiftService {
                         canOpen = false;
                         shiftNotOpenedReason = "Hiện đang có " + otherOpenShift.getShiftType().getDisplayName()
                                 + " đang mở. Vui lòng chốt ca trước.";
+                        pastShift = false;
                     } else if (shift.getShiftType() == Shift.ShiftType.MORNING) {
                         // Ca sáng: kiểm tra xem Ca chiều đã từng được mở hoặc đã chốt chưa
                         Shift afternoonShift = null;
@@ -202,14 +207,18 @@ public class ShiftService {
                         if (afternoonShift != null && afternoonShift.isOpen()) {
                             canOpen = false;
                             shiftNotOpenedReason = "Ca chiều đang mở. Ca sáng hôm nay đã kết thúc và không thể mở lại.";
+                            pastShift = true;
                         } else if (afternoonShift != null && afternoonShift.isClosed()) {
                             canOpen = false;
                             shiftNotOpenedReason = "Ca chiều hôm nay đã chốt. Ca sáng đã kết thúc và không thể mở lại.";
+                            pastShift = true;
                         } else if (now.getHour() >= 13) {
                             canOpen = false;
                             shiftNotOpenedReason = "Đã quá thời gian ca sáng (kết thúc lúc 13:00). Vui lòng mở Ca chiều.";
+                            pastShift = true;
                         } else {
                             canOpen = true;
+                            pastShift = false;
                         }
                     } else if (shift.getShiftType() == Shift.ShiftType.AFTERNOON) {
                         // Ca chiều: nếu Ca sáng đang mở thì phải chốt ca sáng trước
@@ -223,21 +232,25 @@ public class ShiftService {
                         if (morningShift != null && morningShift.isOpen()) {
                             canOpen = false;
                             shiftNotOpenedReason = "Ca sáng đang mở. Vui lòng chốt ca sáng trước khi mở ca chiều.";
+                            pastShift = false;
                         } else if (morningShift != null && morningShift.isNotOpened() && now.getHour() < 13) {
                             canOpen = false;
                             shiftNotOpenedReason = "Chưa đến giờ bắt đầu Ca chiều (từ 13:00). Vui lòng mở Ca sáng.";
+                            pastShift = false;
                         } else {
                             canOpen = true;
+                            pastShift = false;
                         }
                     } else {
                         canOpen = true;
+                        pastShift = false;
                     }
                 }
             }
 
             ShiftDetailView view = new ShiftDetailView(shift, openedByName, closedByName,
                     metrics, transactionsPage, pendingOrders, todayShifts,
-                    search, method, status, canOpen, shiftNotOpenedReason);
+                    search, method, status, canOpen, shiftNotOpenedReason, pastShift);
 
             return ServiceResult.ok(view);
 

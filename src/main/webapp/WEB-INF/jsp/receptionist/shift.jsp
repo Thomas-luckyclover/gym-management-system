@@ -129,7 +129,7 @@
                   </c:choose>
                 </p>
               </c:when>
-              <c:when test="${detail.shift.notOpened and not detail.canOpen}">
+              <c:when test="${detail.shift.notOpened and detail.pastShift}">
                 <h2>Ca trực đã qua (không mở)</h2>
                 <p class="muted">
                   <c:out value="${detail.shiftNotOpenedReason}"/>
@@ -138,7 +138,14 @@
               <c:otherwise>
                 <h2>Ca trực chưa mở</h2>
                 <p class="muted">
-                  Bấm <b>Mở ca</b> để bắt đầu ca làm việc. Màn hình bán hàng tại quầy yêu cầu ca phải mở trước khi thanh toán.
+                  <c:choose>
+                    <c:when test="${not empty detail.shiftNotOpenedReason}">
+                      <c:out value="${detail.shiftNotOpenedReason}"/>
+                    </c:when>
+                    <c:otherwise>
+                      Bấm <b>Mở ca</b> để bắt đầu ca làm việc. Màn hình bán hàng tại quầy yêu cầu ca phải mở trước khi thanh toán.
+                    </c:otherwise>
+                  </c:choose>
                 </p>
               </c:otherwise>
             </c:choose>
@@ -152,9 +159,14 @@
                     <i class="fa-solid fa-door-open"></i> Mở ca
                   </button>
                 </c:when>
-                <c:otherwise>
+                <c:when test="${detail.pastShift}">
                   <span class="badge badge-muted badge-lg" title="<c:out value='${detail.shiftNotOpenedReason}'/>">
-                    <i class="fa-solid fa-clock-rotate-left"></i> Ca trực đã qua (không thể mở)
+                    <i class="fa-solid fa-clock-rotate-left"></i> Ca trực đã qua
+                  </span>
+                </c:when>
+                <c:otherwise>
+                  <span class="badge badge-warn badge-lg" title="<c:out value='${detail.shiftNotOpenedReason}'/>">
+                    <i class="fa-solid fa-hourglass-start"></i> Chưa thể mở ca
                   </span>
                 </c:otherwise>
               </c:choose>
@@ -163,7 +175,7 @@
               <c:choose>
                 <c:when test="${detail.hasPendingOrders()}">
                   <button class="btn btn-primary" type="button" id="btnCloseShiftModal" disabled
-                          title="Không thể chốt ca: còn ${detail.pendingOrders.size()} đơn quầy chờ xử lý (CBR-78)">
+                          title="Không thể chốt ca: còn ${detail.pendingOrders.size()} đơn quầy chờ xử lý">
                     <i class="fa-solid fa-cash-register"></i> Chốt ca
                   </button>
                 </c:when>

@@ -1,5 +1,6 @@
 package com.gms.dao;
 
+import com.gms.dto.ClosedShiftHistoryItem;
 import com.gms.dto.ShiftMetrics;
 import com.gms.dto.ShiftTransactionItem;
 import com.gms.entity.Shift;
@@ -728,6 +729,141 @@ public class ShiftDAO {
         }
 
         return rowsUpdated;
+    }
+
+    // ===== Tab 2: Lịch sử chốt ca của Quản lý (Màn #41 - UC-26, SRS 7.4.2) =====
+
+    /**
+     * Đếm tổng số ca làm việc đã đóng khớp với khoảng ngày lọc.
+     *
+     * @param fromDate ngày bắt đầu (có thể null)
+     * @param toDate   ngày kết thúc (có thể null)
+     * @return số ca đã chốt thỏa mãn
+     * @throws SQLException khi truy vấn lỗi
+     */
+    public int countClosedShiftsHistory(LocalDate fromDate, LocalDate toDate) throws SQLException {
+        StringBuilder sql = new StringBuilder("SELECT COUNT(s.ShiftId) FROM Shifts s WHERE s.Status = 'Closed' ");
+        List<Object> params = new ArrayList<>();
+
+        if (fromDate != null) {
+            sql.append(" AND s.WorkDate >= ? ");
+            params.add(Date.valueOf(fromDate));
+        }
+        if (toDate != null) {
+            sql.append(" AND s.WorkDate <= ? ");
+            params.add(Date.valueOf(toDate));
+        }
+
+        try (Connection conn = DBContext.getConnection();
+             PreparedStatement stmt = conn.prepareStatement(sql.toString())) {
+            for (int i = 0; i < params.size(); i++) {
+                stmt.setObject(i + 1, params.get(i));
+            }
+            try (ResultSet rs = stmt.executeQuery()) {
+                if (rs.next()) {
+                    return rs.getInt(1);
+                }
+            }
+        }
+        return 0;
+    }
+
+    /**
+     * Lấy danh sách ca làm việc đã đóng có phân trang và tính toán đối soát (SRS 7.4.2).
+     *
+     * @param fromDate ngày bắt đầu
+     * @param toDate   ngày kết thúc
+     * @param offset   vị trí bắt đầu
+     * @param pageSize số bản ghi mỗi trang
+     * @return danh sách ClosedShiftHistoryItem
+     * @throws SQLException khi truy vấn lỗi
+     */
+    public List<ClosedShiftHistoryItem> findClosedShiftsHistoryPage(LocalDate fromDate, LocalDate toDate,
+                                                                   int offset, int pageSize) throws SQLException {
+        StringBuilder sql = new StringBuilder("""
+                SELECT 
+                    s.ShiftId, s.WorkDate, s.ShiftType,
+                    pOpen.FullName AS OpenedByName,
+                    pClose.FullName AS ClosedByName,
+                    s.OpenedAt, s.ClosedAt,
+                    s.ExpectedCash, s.CountedCash, s.VarianceReason,
+                    COALESCE((
+                        SELECT SUM(t.Amount)
+                        FROM Orders o
+                        JOIN Transactions t ON t.OrderId = o.OrderId
+                        WHERE o.ShiftId = s.ShiftId 
+                          AND t.PaymentMethod = 'Transfer' 
+                          AND t.Status = 'Success'
+                          AND o.Status <> 'Cancelled'
+                    ), 0) AS TotalBankTransfer,
+                    (
+                        SELECT COUNT(o.OrderId)
+                        FROM Orders o
+                        WHERE o.ShiftId = s.ShiftId
+                    ) AS TotalInvoiceCount
+                FROM Shifts s
+                LEFT JOIN Employees eOpen ON eOpen.EmployeeId = s.OpenedByEmployeeId
+                LEFT JOIN Persons pOpen ON pOpen.PersonId = eOpen.PersonId
+                LEFT JOIN Employees eClose ON eClose.EmployeeId = s.ClosedByEmployeeId
+                LEFT JOIN Persons pClose ON pClose.PersonId = eClose.PersonId
+                WHERE s.Status = 'Closed'
+                """);
+
+        List<Object> params = new ArrayList<>();
+        if (fromDate != null) {
+            sql.append(" AND s.WorkDate >= ? ");
+            params.add(Date.valueOf(fromDate));
+        }
+        if (toDate != null) {
+            sql.append(" AND s.WorkDate <= ? ");
+            params.add(Date.valueOf(toDate));
+        }
+
+        sql.append(" ORDER BY s.WorkDate DESC, s.ShiftId DESC ");
+        sql.append(" OFFSET ? ROWS FETCH NEXT ? ROWS ONLY ");
+        params.add(offset);
+        params.add(pageSize);
+
+        List<ClosedShiftHistoryItem> list = new ArrayList<>();
+        try (Connection conn = DBContext.getConnection();
+             PreparedStatement stmt = conn.prepareStatement(sql.toString())) {
+            for (int i = 0; i < params.size(); i++) {
+                stmt.setObject(i + 1, params.get(i));
+            }
+            try (ResultSet rs = stmt.executeQuery()) {
+                while (rs.next()) {
+                    long expectedCash = rs.getLong("ExpectedCash");
+                    long countedCash = rs.getLong("CountedCash");
+                    long variance = countedCash - expectedCash;
+
+                    Date workDateSql = rs.getDate("WorkDate");
+                    LocalDate workDate = workDateSql != null ? workDateSql.toLocalDate() : null;
+
+                    Timestamp openedTs = rs.getTimestamp("OpenedAt");
+                    LocalDateTime openedAt = openedTs != null ? openedTs.toLocalDateTime() : null;
+
+                    Timestamp closedTs = rs.getTimestamp("ClosedAt");
+                    LocalDateTime closedAt = closedTs != null ? closedTs.toLocalDateTime() : null;
+
+                    list.add(new ClosedShiftHistoryItem(
+                            rs.getInt("ShiftId"),
+                            workDate,
+                            rs.getString("ShiftType"),
+                            rs.getString("OpenedByName"),
+                            rs.getString("ClosedByName"),
+                            openedAt,
+                            closedAt,
+                            expectedCash,
+                            countedCash,
+                            variance,
+                            rs.getString("VarianceReason"),
+                            rs.getLong("TotalBankTransfer"),
+                            rs.getInt("TotalInvoiceCount")
+                    ));
+                }
+            }
+        }
+        return list;
     }
 
     // ===== Hàm hỗ trợ map ResultSet =====
