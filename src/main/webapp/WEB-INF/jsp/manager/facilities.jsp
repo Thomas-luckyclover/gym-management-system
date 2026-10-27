@@ -7,9 +7,7 @@
 <head>
   <%@ include file="/WEB-INF/jsp/common/head.jspf" %>
   <title>Cơ sở vật chất · Super Gym Quản lý</title>
-  <link rel="stylesheet" href="${pageContext.request.contextPath}/css/pages/manager/facilities.css?v=20261026v1">
-  <link rel="stylesheet" href="${pageContext.request.contextPath}/css/pages/auth/notification-bell.css">
-  <script src="${pageContext.request.contextPath}/js/pages/auth/notification-bell.js" defer></script>
+  <link rel="stylesheet" href="${pageContext.request.contextPath}/css/pages/manager/facilities.css?v=20261027v1">
 </head>
 
 <body class="dock theme-manager">
@@ -282,10 +280,11 @@
         <h3 class="modal-title" id="facilityModalTitle">Thêm nhóm máy mới</h3>
         <button type="button" class="modal-close-btn" onclick="closeModal('facilityModal')">&times;</button>
       </div>
-      <form method="post" action="${pageContext.request.contextPath}/manager/facilities">
+      <form method="post" action="${pageContext.request.contextPath}/manager/facilities" enctype="multipart/form-data">
         <input type="hidden" name="csrfToken" value="${csrfToken}">
         <input type="hidden" name="action" value="saveFacility">
         <input type="hidden" name="facilityId" id="modalFacilityId" value="0">
+        <input type="hidden" name="imageUrl" id="imageUrlInput" value="">
 
         <div class="modal-body">
           <div class="form-field">
@@ -313,8 +312,27 @@
           </div>
 
           <div class="form-field">
-            <label class="form-label" for="imageUrlInput">Đường dẫn ảnh đại diện</label>
-            <input type="text" id="imageUrlInput" name="imageUrl" class="form-input" maxlength="255" placeholder="/images/facilities/treadmill.jpg">
+            <label class="form-label">Ảnh đại diện nhóm máy</label>
+            <div class="image-upload-wrapper">
+              <div class="image-preview-box" id="facilityImagePreviewBox">
+                <img id="facilityImagePreview" src="" alt="Xem trước ảnh" style="display:none; width:100%; height:100%; object-fit:cover; border-radius: 6px;">
+                <div id="facilityImagePlaceholder" class="image-preview-placeholder">
+                  <i class="fa-solid fa-image" style="font-size: 1.5rem; color: var(--text-secondary, #64748b);"></i>
+                  <span style="font-size: 11px; color: var(--text-secondary, #64748b); margin-top: 2px;">Chưa có ảnh</span>
+                </div>
+              </div>
+              <div class="image-upload-controls">
+                <label class="btn btn-sm btn-outline btn-upload" for="facilityImageFileInput" style="cursor:pointer; display:inline-flex; align-items:center; gap:6px; width:fit-content;">
+                  <i class="fa-solid fa-cloud-arrow-up"></i>
+                  <span>Chọn file ảnh</span>
+                </label>
+                <input type="file" id="facilityImageFileInput" name="imageFile" accept="image/png,image/jpeg,image/webp" style="display:none;" onchange="previewFacilityImage(this)">
+                <span id="facilityImageFileName" style="font-size: 12px; color: var(--color-primary, #0284c7); display:none; word-break:break-all;"></span>
+                <small class="form-hint" style="display:block; margin-top:2px; color:var(--text-secondary, #64748b); font-size:11px;">
+                  Hỗ trợ JPG, PNG, WEBP. Tự lưu vào thư mục và sinh đường dẫn.
+                </small>
+              </div>
+            </div>
           </div>
         </div>
 
@@ -378,6 +396,12 @@
       document.getElementById('locationInput').value = '';
       document.getElementById('unitLabelInput').value = 'máy';
       document.getElementById('imageUrlInput').value = '';
+      document.getElementById('facilityImageFileInput').value = '';
+      const nameSpan = document.getElementById('facilityImageFileName');
+      if (nameSpan) { nameSpan.style.display = 'none'; nameSpan.textContent = ''; }
+      document.getElementById('facilityImagePreview').style.display = 'none';
+      document.getElementById('facilityImagePreview').src = '';
+      document.getElementById('facilityImagePlaceholder').style.display = 'flex';
       document.getElementById('facilityModal').classList.add('show');
     }
 
@@ -388,8 +412,44 @@
       document.getElementById('categorySelect').value = '${selectedFacility.category.dbValue}';
       document.getElementById('locationInput').value = '<c:out value="${selectedFacility.location}" />';
       document.getElementById('unitLabelInput').value = '<c:out value="${selectedFacility.unitLabel}" />';
-      document.getElementById('imageUrlInput').value = '<c:out value="${selectedFacility.imageUrl}" />';
+      const currentImg = '<c:out value="${selectedFacility.imageUrl}" />';
+      document.getElementById('imageUrlInput').value = currentImg;
+      document.getElementById('facilityImageFileInput').value = '';
+      const nameSpan = document.getElementById('facilityImageFileName');
+      if (nameSpan) { nameSpan.style.display = 'none'; nameSpan.textContent = ''; }
+      if (currentImg && currentImg.trim() !== '') {
+        const fullImgUrl = currentImg.startsWith('http') || currentImg.startsWith('/')
+          ? (currentImg.startsWith('/') ? '${pageContext.request.contextPath}' + currentImg : currentImg)
+          : '${pageContext.request.contextPath}/' + currentImg;
+        document.getElementById('facilityImagePreview').src = fullImgUrl;
+        document.getElementById('facilityImagePreview').style.display = 'block';
+        document.getElementById('facilityImagePlaceholder').style.display = 'none';
+      } else {
+        document.getElementById('facilityImagePreview').style.display = 'none';
+        document.getElementById('facilityImagePreview').src = '';
+        document.getElementById('facilityImagePlaceholder').style.display = 'flex';
+      }
       document.getElementById('facilityModal').classList.add('show');
+    }
+
+    function previewFacilityImage(input) {
+      if (input.files && input.files[0]) {
+        const file = input.files[0];
+        const nameSpan = document.getElementById('facilityImageFileName');
+        if (nameSpan) {
+          nameSpan.textContent = file.name + ' (' + Math.round(file.size / 1024) + ' KB)';
+          nameSpan.style.display = 'block';
+        }
+        const reader = new FileReader();
+        reader.onload = function(e) {
+          const img = document.getElementById('facilityImagePreview');
+          const placeholder = document.getElementById('facilityImagePlaceholder');
+          img.src = e.target.result;
+          img.style.display = 'block';
+          placeholder.style.display = 'none';
+        };
+        reader.readAsDataURL(file);
+      }
     }
 
     function openAddItemModal() {
