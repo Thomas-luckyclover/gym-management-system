@@ -7,7 +7,7 @@
         <%@ include file="/WEB-INF/jsp/common/head.jspf" %>
         <title>Thanh toán · Super Gym</title>
         <link rel="stylesheet" href="${pageContext.request.contextPath}/css/pages/customer/dashboard.css?v=7">
-        <link rel="stylesheet" href="${pageContext.request.contextPath}/css/pages/customer/checkout.css?v=6">
+        <link rel="stylesheet" href="${pageContext.request.contextPath}/css/pages/customer/checkout.css?v=7">
         <script src="${pageContext.request.contextPath}/js/pages/customer/checkout.js?v=5" defer></script>
     </head>
     <body class="dock checkout-page ${themeClass}">
@@ -47,7 +47,6 @@
                                         <div class="checkout-banner__brand"><i class="fa-solid fa-dumbbell" aria-hidden="true"></i> SUPER GYM</div>
                                         <h3><c:out value="${order.packageNameSnapshot}" /></h3>
                                     </div>
-                                    <h3 class="checkout-package__name"><c:out value="${order.packageNameSnapshot}" /></h3>
                                     <c:if test="${not empty order.packageDescriptionSnapshot}"><p class="checkout-muted"><c:out value="${order.packageDescriptionSnapshot}" /></p></c:if>
                                         <ul class="checkout-benefits">
                                         <c:forEach var="benefit" items="${checkout.benefitLines}">
