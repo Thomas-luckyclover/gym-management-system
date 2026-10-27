@@ -480,8 +480,19 @@
 :is(.package-card, .package-dialog)[data-tone="single-session"] { --tone: #9B7BFF; --tone-deep: rgba(80, 50, 190, 0.75); --art: url("../../../images/packages/art-dumbbell.png"); --art-filter: hue-rotate(45deg) saturate(1.2); }
 
 
+/* Lớp ảnh minh họa, đặt bên phải banner */
+.package-card__banner::before {
+  content: "";
+  position: absolute;
+  inset: 0;
+  background: var(--art) right center / cover no-repeat;
+  filter: var(--art-filter);
+  pointer-events: none;
+}
+
 /* Ảnh gói (hoặc ảnh nền mặc định) nằm dưới chữ; lớp phủ tối ở dưới để chữ luôn đọc được */
 .package-card__bg {
+  display: none;
   position: absolute;
   inset: 0;
   width: 100%;
@@ -493,7 +504,9 @@
   content: "";
   position: absolute;
   inset: 0;
-  background: linear-gradient(180deg, transparent 20%, color-mix(in srgb, #000 62%, transparent));
+  background: linear-gradient(90deg, rgba(5, 7, 10, 0.78), transparent 62%);
+  box-shadow: inset 0 2px 0 var(--tone);
+  pointer-events: none;
 }
 
 .package-card__banner > *:not(.package-card__bg):not(.package-card__sash) {
