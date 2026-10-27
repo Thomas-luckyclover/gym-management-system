@@ -23,9 +23,7 @@
 
         <%-- BF-07: hai vai trò dùng chung bố cục; token màu thay đổi theo theme. --%>
         <link rel="stylesheet" href="${pageContext.request.contextPath}/css/pages/receptionist/customer-list.css?v=20261025-bf07">
-        <link rel="stylesheet" href="${pageContext.request.contextPath}/css/pages/auth/notification-bell.css">
-        <script src="${pageContext.request.contextPath}/js/pages/auth/notification-bell.js" defer>
-        </script>
+
         <script src="${pageContext.request.contextPath}/js/pages/receptionist/customer-list.js?v=20261025-bf07" defer>
         </script>
     </head>

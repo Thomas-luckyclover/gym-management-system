@@ -1244,7 +1244,7 @@ public class AccountSettingsServlet extends HttpServlet {
 
                                 profileFragment = "/WEB-INF/jsp/auth/account/profile-receptionist.jspf";
 
-                                themeClass = "theme-receptionist";
+                                themeClass = "theme-staff";
 
                                 break;
 

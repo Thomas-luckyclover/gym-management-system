@@ -8,11 +8,7 @@
   <%@ include file="/WEB-INF/jsp/common/head.jspf" %>
   <title>Yêu cầu bảo trì · Super Gym Lễ tân</title>
   <link rel="stylesheet" href="${pageContext.request.contextPath}/css/pages/receptionist/maintenance-requests.css?v=20261023fix1">
-  <link rel="stylesheet"
-        href="${pageContext.request.contextPath}/css/pages/auth/notification-bell.css">
 
-  <script src="${pageContext.request.contextPath}/js/pages/auth/notification-bell.js"
-          defer></script>
 </head>
 
 <body class="dock theme-staff">

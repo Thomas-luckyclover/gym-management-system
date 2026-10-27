@@ -1179,13 +1179,13 @@ body.dock ::-webkit-scrollbar-thumb {
   left: 0;
   display: grid;
   place-items: center;
-  width: var(--dock-handle-width);
-  height: var(--dock-handle-height);
+  width: var(--dock-handle-width, 26px);
+  height: var(--dock-handle-height, 76px);
   padding: 0;
   border: 0;
-  border-radius: 0 var(--radius-md) var(--radius-md) 0;
-  background: var(--dock-bg);
-  color: var(--dock-text);
+  border-radius: 0 var(--radius-md, 4px) var(--radius-md, 4px) 0;
+  background: var(--dock-bg, #0B0D10);
+  color: var(--dock-text, #F5F7FA);
   cursor: pointer;
   transform: translateY(-50%);
   box-shadow: var(--shadow-lift);
