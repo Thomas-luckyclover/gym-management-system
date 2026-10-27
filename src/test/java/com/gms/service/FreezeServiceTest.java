@@ -364,6 +364,33 @@ class FreezeServiceTest {
         assertEquals("Frozen", log.getNewValue());
     }
 
+    @Test
+    @DisplayName("applyFreeze: Lý do dài tới 500 ký tự được xử lý an toàn, không làm tràn cột AuditLogs.Reason")
+    void testApplyFreeze_LongReasonCapsSafely() {
+        LocalDate today = LocalDate.now();
+        Subscription sub = createSubscription(SUB_ID, CUST_ID, Subscription.Type.MEMBERSHIP,
+                Subscription.Status.ACTIVE, today.minusMonths(1), today.plusMonths(5), 0, 1);
+        fakeFreezeRecordDAO.setSubscription(sub);
+        fakeSystemConfigService.setInt(SystemConfigService.MAX_FREEZE_MONTHS, 1);
+
+        LocalDate start = today.plusDays(1);
+        LocalDate end = start.plusDays(20);
+
+        String longReason = "A".repeat(550); // 550 ký tự
+
+        ServiceResult<Void> res = freezeService.applyFreeze(
+                STAFF_ACCOUNT_ID, SUB_ID, start, end, longReason);
+
+        assertTrue(res.isSuccess(), "Lỗi applyFreeze: " + res.getMessage());
+        FreezeRecord record = fakeFreezeRecordDAO.getLastInsertedRecord();
+        assertNotNull(record);
+        assertEquals(500, record.getReason().length(), "Lý do trong FreezeRecords bị giới hạn tối đa 500 ký tự");
+
+        AuditLog log = fakeAuditLogDAO.getLastLog();
+        assertNotNull(log);
+        assertTrue(log.getReason().length() <= 500, "Reason trong AuditLog không được vượt quá 500 ký tự");
+    }
+
     // ===== 3. KIỂM THỬ HỦY BẢO LƯU SỚM (cancelFreezeEarly) =====
 
     @Test

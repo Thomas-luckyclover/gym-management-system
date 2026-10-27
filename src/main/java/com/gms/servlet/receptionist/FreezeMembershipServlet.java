@@ -176,6 +176,12 @@ public class FreezeMembershipServlet extends HttpServlet {
             return;
         }
 
+        if (reason.length() > 500) {
+            RequestUtil.setFlashToast(request, "error", "Lý do bảo lưu không được vượt quá 500 ký tự.");
+            RequestUtil.redirect(request, response, redirectUrl);
+            return;
+        }
+
         LocalDate startDate;
         LocalDate plannedEndDate;
         try {

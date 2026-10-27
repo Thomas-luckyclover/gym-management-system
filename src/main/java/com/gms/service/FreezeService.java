@@ -450,13 +450,18 @@ public class FreezeService {
                             maxMonths, DateTimeUtil.formatDate(maxAllowedEnd)));
                 }
 
-                // B3: Thêm bản ghi mới vào FreezeRecords
+                // B3: Thêm bản ghi mới vào FreezeRecords (giới hạn tối đa 500 ký tự)
+                String cleanReason = reason != null ? reason.trim() : "";
+                if (cleanReason.length() > 500) {
+                    cleanReason = cleanReason.substring(0, 500);
+                }
+
                 FreezeRecord freezeRecord = new FreezeRecord(
                         subscriptionId,
                         employee.getEmployeeId(),
                         startDate,
                         plannedEndDate,
-                        reason.trim()
+                        cleanReason
                 );
                 int freezeRecordId = freezeRecordDAO.insert(conn, freezeRecord);
 
@@ -480,7 +485,13 @@ public class FreezeService {
                     freezeRecordDAO.markSessionsMissedDueToFreeze(conn, sessionIdsToMiss);
                 }
 
-                // B7: Ghi AuditLog
+                // B7: Ghi AuditLog (đảm bảo Reason không vượt quá 500 ký tự cột DB)
+                String auditReason = "Lập phiếu bảo lưu #" + freezeRecordId + " (" + DateTimeUtil.formatDate(startDate)
+                        + " - " + DateTimeUtil.formatDate(plannedEndDate) + "): " + cleanReason;
+                if (auditReason.length() > 500) {
+                    auditReason = auditReason.substring(0, 497) + "...";
+                }
+
                 AuditLog log = new AuditLog(
                         staffAccountId,
                         Role.RECEPTIONIST,
@@ -490,8 +501,7 @@ public class FreezeService {
                         "Status",
                         "Active",
                         "Frozen",
-                        "Lập phiếu bảo lưu #" + freezeRecordId + " (" + DateTimeUtil.formatDate(startDate)
-                                + " - " + DateTimeUtil.formatDate(plannedEndDate) + "): " + reason.trim()
+                        auditReason
                 );
                 auditLogDAO.insert(conn, log);
 
