@@ -140,6 +140,18 @@ document.addEventListener("DOMContentLoaded", function () {
         updateSelection();
     }
 
+    // Dropdown hai đơn: dữ liệu đã có trong JSP, chỉ đổi hidden và nhãn nút.
+    for (const toggle of document.querySelectorAll(".leave-group-toggle")) {
+        toggle.addEventListener("click", function () {
+            const detailsRow = document.getElementById(toggle.dataset.groupTarget);
+            const open = detailsRow.hidden;
+            detailsRow.hidden = !open;
+            toggle.setAttribute("aria-expanded", String(open));
+            toggle.textContent = open ? "Thu gọn ▴" : "Xem 2 đơn ▾";
+            toggle.closest(".leave-request-row").classList.toggle("leave-row-selected", open);
+        });
+    }
+
     // Ghi nhớ nút mở hộp xác nhận để trả focus khi đóng hộp.
     document.addEventListener("click", function (event) {
         const trigger = event.target.closest("button[data-confirm-message]");
@@ -147,7 +159,16 @@ document.addEventListener("DOMContentLoaded", function () {
             decisionTrigger = trigger;
         }
     }, true);
-    const rows = document.querySelectorAll(".leave-request-row[data-review-url]");
+    function openRequestRow(row) {
+        const groupToggle = row.querySelector(".leave-group-toggle");
+        if (groupToggle) {
+            groupToggle.click();
+        } else {
+            window.location.href = row.dataset.reviewUrl;
+        }
+    }
+
+    const rows = document.querySelectorAll(".leave-request-row");
     for (const row of rows) {
         // B1: bấm phần thông tin của hàng để mở đơn. Bỏ qua form/nút và thao tác bôi đen chữ.
         row.addEventListener("click", function (event) {
@@ -157,14 +178,14 @@ document.addEventListener("DOMContentLoaded", function () {
             if (window.getSelection().toString()) {
                 return;
             }
-            window.location.href = row.dataset.reviewUrl;
+            openRequestRow(row);
         });
 
         // B2: Enter trên hàng mở chi tiết; Enter trên nút vẫn là thao tác của nút đó.
         row.addEventListener("keydown", function (event) {
             if (event.key === "Enter" && event.target === row) {
                 event.preventDefault();
-                window.location.href = row.dataset.reviewUrl;
+                openRequestRow(row);
             }
         });
     }

@@ -75,12 +75,17 @@ document.addEventListener('DOMContentLoaded', function () {
     // Gắn sự kiện mở modal Chốt ca
     if (btnCloseShiftModal) {
         btnCloseShiftModal.addEventListener('click', function () {
+            if (this.disabled || this.getAttribute('aria-disabled') === 'true') {
+                return;
+            }
             openModal(modalCloseShift);
-            recalculateVariance();
             if (inputCountedCash) {
+                const val = parseNumericOnly(inputCountedCash.value);
+                inputCountedCash.value = val > 0 ? val.toLocaleString('vi-VN') : '0';
                 inputCountedCash.focus();
                 inputCountedCash.select();
             }
+            recalculateVariance();
         });
     }
 
@@ -192,7 +197,10 @@ document.addEventListener('DOMContentLoaded', function () {
     // Lắng nghe sự kiện người dùng gõ vào ô tiền mặt thực tế
     if (inputCountedCash) {
         inputCountedCash.addEventListener('input', function () {
-            // Tự động format phân cách hàng nghìn khi rời hoặc gõ
+            if (countedCashError) {
+                countedCashError.hidden = true;
+                countedCashError.textContent = '';
+            }
             recalculateVariance();
         });
 
@@ -203,6 +211,26 @@ document.addEventListener('DOMContentLoaded', function () {
         });
     }
 
+    // Xóa lỗi inline khi người dùng gõ lý do chênh lệch
+    if (inputVarianceReason) {
+        inputVarianceReason.addEventListener('input', function () {
+            if (varianceReasonError) {
+                varianceReasonError.hidden = true;
+                varianceReasonError.textContent = '';
+            }
+        });
+    }
+
+    // Xóa lỗi inline khi người dùng gõ lý do hủy đơn
+    if (inputCancelReason) {
+        inputCancelReason.addEventListener('input', function () {
+            if (cancelReasonError) {
+                cancelReasonError.hidden = true;
+                cancelReasonError.textContent = '';
+            }
+        });
+    }
+
     // ===== 5. Validate form Chốt ca trước khi gửi server =====
     if (formCloseShift) {
         formCloseShift.addEventListener('submit', function (e) {
@@ -210,13 +238,33 @@ document.addEventListener('DOMContentLoaded', function () {
             const expected = parseNumericOnly(expectedCashRaw ? expectedCashRaw.value : '0');
             const diff = counted - expected;
 
-            // Nếu có chênh lệch, bắt buộc lý do ≥ 5 ký tự (GBR-09, BR-46)
+            if (counted < 0) {
+                e.preventDefault();
+                if (countedCashError) {
+                    countedCashError.textContent = 'Số tiền đếm được không thể là số âm.';
+                    countedCashError.hidden = false;
+                }
+                return false;
+            }
+
+            // Nếu có chênh lệch, bắt buộc lý do ≥ 5 ký tự và ≤ 500 ký tự (GBR-09, BR-46)
             if (diff !== 0) {
                 const reason = inputVarianceReason ? inputVarianceReason.value.trim() : '';
                 if (reason.length < 5) {
                     e.preventDefault();
                     if (varianceReasonError) {
                         varianceReasonError.textContent = 'Vui lòng giải trình rõ lý do chênh lệch (tối thiểu 5 ký tự).';
+                        varianceReasonError.hidden = false;
+                    }
+                    if (inputVarianceReason) {
+                        inputVarianceReason.focus();
+                    }
+                    return false;
+                }
+                if (reason.length > 500) {
+                    e.preventDefault();
+                    if (varianceReasonError) {
+                        varianceReasonError.textContent = 'Lý do chênh lệch không được vượt quá 500 ký tự.';
                         varianceReasonError.hidden = false;
                     }
                     if (inputVarianceReason) {

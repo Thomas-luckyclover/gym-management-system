@@ -46,6 +46,11 @@
                 <i class="fa-solid fa-lock"></i> <c:out value="${detail.shift.shiftType.displayName}"/> đã chốt
               </span>
             </c:when>
+            <c:when test="${detail.shift.notOpened and not detail.canOpen}">
+              <span class="badge badge-muted">
+                <i class="fa-solid fa-clock-rotate-left"></i> <c:out value="${detail.shift.shiftType.displayName}"/> đã qua
+              </span>
+            </c:when>
             <c:otherwise>
               <span class="badge badge-warn">
                 <i class="fa-solid fa-hourglass-start"></i> <c:out value="${detail.shift.shiftType.displayName}"/> chưa mở
@@ -116,10 +121,23 @@
                   </c:choose>
                 </p>
               </c:when>
+              <c:when test="${detail.shift.notOpened and detail.pastShift}">
+                <h2>Ca trực đã qua (không mở)</h2>
+                <p class="muted">
+                  <c:out value="${detail.shiftNotOpenedReason}"/>
+                </p>
+              </c:when>
               <c:otherwise>
                 <h2>Ca trực chưa mở</h2>
                 <p class="muted">
-                  Bấm <b>Mở ca</b> để bắt đầu ca làm việc. Màn hình bán hàng tại quầy yêu cầu ca phải mở trước khi thanh toán.
+                  <c:choose>
+                    <c:when test="${not empty detail.shiftNotOpenedReason}">
+                      <c:out value="${detail.shiftNotOpenedReason}"/>
+                    </c:when>
+                    <c:otherwise>
+                      Bấm <b>Mở ca</b> để bắt đầu ca làm việc. Màn hình bán hàng tại quầy yêu cầu ca phải mở trước khi thanh toán.
+                    </c:otherwise>
+                  </c:choose>
                 </p>
               </c:otherwise>
             </c:choose>
@@ -127,14 +145,38 @@
 
           <div class="hero-actions">
             <c:if test="${detail.shift.notOpened}">
-              <button class="btn btn-primary" type="button" id="btnOpenShiftModal">
-                <i class="fa-solid fa-door-open"></i> Mở ca
-              </button>
+              <c:choose>
+                <c:when test="${detail.canOpen}">
+                  <button class="btn btn-primary" type="button" id="btnOpenShiftModal">
+                    <i class="fa-solid fa-door-open"></i> Mở ca
+                  </button>
+                </c:when>
+                <c:when test="${detail.pastShift}">
+                  <span class="badge badge-muted badge-lg" title="<c:out value='${detail.shiftNotOpenedReason}'/>">
+                    <i class="fa-solid fa-clock-rotate-left"></i> Ca trực đã qua
+                  </span>
+                </c:when>
+                <c:otherwise>
+                  <span class="badge badge-warn badge-lg" title="<c:out value='${detail.shiftNotOpenedReason}'/>">
+                    <i class="fa-solid fa-hourglass-start"></i> Chưa thể mở ca
+                  </span>
+                </c:otherwise>
+              </c:choose>
             </c:if>
             <c:if test="${detail.shift.open}">
-              <button class="btn btn-primary" type="button" id="btnCloseShiftModal">
-                <i class="fa-solid fa-cash-register"></i> Chốt ca
-              </button>
+              <c:choose>
+                <c:when test="${detail.hasPendingOrders()}">
+                  <button class="btn btn-primary" type="button" id="btnCloseShiftModal" disabled
+                          title="Không thể chốt ca: còn ${detail.pendingOrders.size()} đơn quầy chờ xử lý">
+                    <i class="fa-solid fa-cash-register"></i> Chốt ca
+                  </button>
+                </c:when>
+                <c:otherwise>
+                  <button class="btn btn-primary" type="button" id="btnCloseShiftModal">
+                    <i class="fa-solid fa-cash-register"></i> Chốt ca
+                  </button>
+                </c:otherwise>
+              </c:choose>
             </c:if>
             <c:if test="${detail.shift.closed}">
               <span class="badge badge-muted badge-lg">
@@ -363,6 +405,7 @@
   </div>
 
   <%-- ===== MODAL 1: MỞ CA LÀM VIỆC ===== --%>
+  <c:if test="${detail.shift.notOpened and detail.canOpen}">
   <div class="modal" id="modalOpenShift" role="dialog" aria-modal="true" aria-labelledby="modalOpenTitle">
     <div class="modal-dialog">
       <div class="modal-content">
@@ -389,9 +432,10 @@
       </div>
     </div>
   </div>
+  </c:if>
 
   <%-- ===== MODAL 2: ĐỐI SOÁT & CHỐT CA LÀM VIỆC ===== --%>
-  <div class="modal" id="modalCloseShift" role="dialog" aria-modal="true" aria-labelledby="modalCloseTitle">
+  <div class="modal" id="modalCloseShift" role="dialog" aria-modal="true" aria-labelledby="modalCloseTitle" aria-describedby="modalCloseDesc">
     <div class="modal-dialog">
       <div class="modal-content">
         <div class="modal-head">
@@ -404,7 +448,13 @@
           <input type="hidden" id="expectedCashRaw" value="${detail.metrics.cashTotal}">
 
           <div class="modal-body">
-            <p class="modal-desc">Đếm số tiền mặt thực tế trong két quầy Lễ tân và nhập vào bên dưới. Nếu có chênh lệch so với số liệu sổ sách, bắt buộc phải nêu rõ lý do giải trình.</p>
+            <c:if test="${detail.hasPendingOrders()}">
+              <div class="alert-banner danger" style="margin-bottom: var(--space-4);">
+                <i class="fa-solid fa-circle-exclamation"></i>
+                <span>Không thể chốt ca: còn <b>${detail.pendingOrders.size()}</b> đơn hàng quầy đang chờ xử lý. Vui lòng xác nhận hoặc hủy đơn trước khi chốt ca (CBR-78).</span>
+              </div>
+            </c:if>
+            <p class="modal-desc" id="modalCloseDesc">Đếm số tiền mặt thực tế trong két quầy Lễ tân và nhập vào bên dưới. Nếu có chênh lệch so với số liệu sổ sách, bắt buộc phải nêu rõ lý do giải trình.</p>
 
             <div class="reconcile-card">
               <div class="reconcile-item">
@@ -422,7 +472,7 @@
             </div>
 
             <%-- Khung hiển thị chênh lệch --%>
-            <div class="variance-result" id="varianceBox">
+            <div class="variance-result" id="varianceBox" aria-live="polite">
               <span class="variance-label">Chênh lệch:</span>
               <b class="variance-value tabular" id="varianceVal">0đ</b>
               <span class="badge badge-ok" id="varianceBadge">Khớp sổ sách</span>
@@ -440,7 +490,7 @@
 
           <div class="modal-foot">
             <button class="btn btn-ghost" type="button" data-close-modal>Bỏ qua</button>
-            <button class="btn btn-primary" type="submit" id="btnSubmitCloseShift">
+            <button class="btn btn-primary" type="submit" id="btnSubmitCloseShift" ${detail.hasPendingOrders() ? 'disabled' : ''}>
               <i class="fa-solid fa-lock"></i> Xác nhận chốt ca
             </button>
           </div>
