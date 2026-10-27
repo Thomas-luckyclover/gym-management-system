@@ -630,13 +630,60 @@ public class FreezeRecordDAO {
         return list;
     }
 
+    // ===== Search Helper =====
+
+    private static class SearchCondition {
+        final String sqlCondition;
+        final List<String> params;
+
+        SearchCondition(String sqlCondition, List<String> params) {
+            this.sqlCondition = sqlCondition;
+            this.params = params;
+        }
+    }
+
+    private SearchCondition buildSearchCondition(String keyword) {
+        if (keyword == null || keyword.trim().isEmpty()) {
+            return null;
+        }
+        String trimmed = keyword.trim();
+        String upper = trimmed.toUpperCase();
+        boolean isNumeric = trimmed.matches("\\d+");
+        boolean startsWithKh = upper.startsWith("KH");
+
+        List<String> params = new ArrayList<>();
+        String namePattern = SqlUtil.toContainsPattern(trimmed);
+
+        if (startsWithKh) {
+            // Khách nhập mã hội viên (ví dụ KH-1001, KH-20,...) hoặc tên bắt đầu bằng Kh
+            String sql = "(p.FullName COLLATE Latin1_General_100_CI_AI LIKE ? ESCAPE '\\' OR c.CustomerCode LIKE ?)";
+            params.add(namePattern);
+            params.add("%" + trimmed + "%");
+            return new SearchCondition(sql, params);
+        } else if (isNumeric) {
+            // Khách nhập số điện thoại hoặc đuôi số mã hội viên (ví dụ 0901234504, 2038,...)
+            String sql = "(p.FullName COLLATE Latin1_General_100_CI_AI LIKE ? ESCAPE '\\' OR c.CustomerCode LIKE ? OR p.Phone LIKE ?)";
+            params.add(namePattern);
+            params.add("%" + trimmed + "%");
+            params.add("%" + trimmed + "%");
+            return new SearchCondition(sql, params);
+        } else {
+            // Khách nhập chữ cái/tên thông thường (ví dụ 'h', 'an', 'long', 'hồng',...)
+            // TUYỆT ĐỐI KHÔNG tìm kiếm 'c.CustomerCode LIKE %h%' vì mã khách hàng luôn bắt đầu bằng 'KH-',
+            // chứa chữ 'H' và 'K', dẫn đến LIKE '%h%' khớp 100% tất cả khách hàng trong phòng gym.
+            String sql = "(p.FullName COLLATE Latin1_General_100_CI_AI LIKE ? ESCAPE '\\')";
+            params.add(namePattern);
+            return new SearchCondition(sql, params);
+        }
+    }
+
     /**
      * Đếm tổng số khách hàng khớp từ khóa phục vụ phân trang lưới quản lý hội viên.
      */
     public long countCustomerMemberships(String keyword) throws SQLException {
-        boolean hasKeyword = keyword != null && !keyword.trim().isEmpty();
+        SearchCondition cond = buildSearchCondition(keyword);
         String sql;
-        if (!hasKeyword) {
+        if (cond == null) {
             sql = "SELECT COUNT(*) FROM Customers c WHERE c.DeletedAt IS NULL";
         } else {
             sql = """
@@ -644,19 +691,15 @@ public class FreezeRecordDAO {
                     FROM Customers c
                     JOIN Persons p ON p.PersonId = c.PersonId
                     WHERE c.DeletedAt IS NULL
-                      AND (p.FullName COLLATE Latin1_General_100_CI_AI LIKE ? ESCAPE '\\'
-                           OR c.CustomerCode LIKE ?
-                           OR p.Phone LIKE ?)
-                    """;
+                      AND """ + cond.sqlCondition;
         }
 
         try (Connection conn = DBContext.getConnection();
              PreparedStatement stmt = conn.prepareStatement(sql)) {
-            if (hasKeyword) {
-                String trimmed = keyword.trim();
-                stmt.setString(1, SqlUtil.toContainsPattern(trimmed));
-                stmt.setString(2, "%" + trimmed + "%");
-                stmt.setString(3, "%" + trimmed + "%");
+            if (cond != null) {
+                for (int i = 0; i < cond.params.size(); i++) {
+                    stmt.setString(i + 1, cond.params.get(i));
+                }
             }
             try (ResultSet rs = stmt.executeQuery()) {
                 if (rs.next()) {
@@ -672,7 +715,7 @@ public class FreezeRecordDAO {
      */
     public List<CustomerMembershipRow> findCustomerMemberships(String keyword, int pageNumber, int pageSize)
             throws SQLException {
-        boolean hasKeyword = keyword != null && !keyword.trim().isEmpty();
+        SearchCondition cond = buildSearchCondition(keyword);
         int offset = Math.max(0, (pageNumber - 1) * pageSize);
 
         String sql = """
@@ -709,7 +752,7 @@ public class FreezeRecordDAO {
                 LEFT JOIN FreezeRecords openFr ON openFr.SubscriptionId = s.SubscriptionId AND openFr.ActualEndDate IS NULL
                 WHERE c.DeletedAt IS NULL
                 """
-                + (hasKeyword ? " AND (p.FullName COLLATE Latin1_General_100_CI_AI LIKE ? ESCAPE '\\' OR c.CustomerCode LIKE ? OR p.Phone LIKE ?) " : "")
+                + (cond != null ? " AND " + cond.sqlCondition + " " : "")
                 + """
                 ORDER BY 
                     CASE WHEN openFr.FreezeRecordId IS NOT NULL THEN 0 
@@ -723,11 +766,10 @@ public class FreezeRecordDAO {
         try (Connection conn = DBContext.getConnection();
              PreparedStatement stmt = conn.prepareStatement(sql)) {
             int paramIndex = 1;
-            if (hasKeyword) {
-                String trimmed = keyword.trim();
-                stmt.setString(paramIndex++, SqlUtil.toContainsPattern(trimmed));
-                stmt.setString(paramIndex++, "%" + trimmed + "%");
-                stmt.setString(paramIndex++, "%" + trimmed + "%");
+            if (cond != null) {
+                for (String param : cond.params) {
+                    stmt.setString(paramIndex++, param);
+                }
             }
             stmt.setInt(paramIndex++, offset);
             stmt.setInt(paramIndex, pageSize > 0 ? pageSize : 15);

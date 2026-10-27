@@ -14,9 +14,9 @@
 <head>
     <%@ include file="/WEB-INF/jsp/common/head.jspf" %>
     <title>Bảo lưu gói tập · Super Gym Lễ tân</title>
-    <link rel="stylesheet" href="${pageContext.request.contextPath}/css/pages/receptionist/freeze-membership.css?v=20261027_v7">
+    <link rel="stylesheet" href="${pageContext.request.contextPath}/css/pages/receptionist/freeze-membership.css?v=20261027_v8">
     <link rel="stylesheet" href="${pageContext.request.contextPath}/css/pages/auth/notification-bell.css">
-    <script src="${pageContext.request.contextPath}/js/pages/receptionist/freeze-membership.js?v=20261027_v7" defer></script>
+    <script src="${pageContext.request.contextPath}/js/pages/receptionist/freeze-membership.js?v=20261027_v8" defer></script>
     <script src="${pageContext.request.contextPath}/js/pages/auth/notification-bell.js" defer></script>
 </head>
 
@@ -520,18 +520,18 @@
                         <table class="gym-table">
                             <thead>
                                 <tr>
-                                    <th style="width: 20%;">
+                                    <th style="width: 23%;">
                                         <div class="th-cust-flex">
                                             <span class="th-avatar-space"></span>
                                             <span>Hội viên</span>
                                         </div>
                                     </th>
-                                    <th style="width: 11%;">Gói tập</th>
-                                    <th style="width: 14%;">Thời gian bảo lưu</th>
+                                    <th style="width: 12%;">Gói tập</th>
+                                    <th style="width: 16%;">Thời gian bảo lưu</th>
                                     <th style="width: 7%; text-align: center;">Số ngày</th>
-                                    <th style="width: 9%; text-align: center;">Trạng thái</th>
-                                    <th style="width: 21%;">Lý do bảo lưu</th>
-                                    <th style="width: 18%;">Lễ tân tiếp nhận</th>
+                                    <th style="width: 11%; text-align: center;">Trạng thái</th>
+                                    <th style="width: 16%;">Lý do bảo lưu</th>
+                                    <th style="width: 15%;">Lễ tân tiếp nhận</th>
                                 </tr>
                             </thead>
                             <tbody>
