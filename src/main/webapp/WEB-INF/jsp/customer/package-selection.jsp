@@ -12,7 +12,7 @@
                         <link rel="stylesheet"
                             href="${pageContext.request.contextPath}/css/pages/customer/dashboard.css?v=20261025city">
                         <link rel="stylesheet"
-                            href="${pageContext.request.contextPath}/css/pages/customer/package-selection.css?v=8">
+                            href="${pageContext.request.contextPath}/css/pages/customer/package-selection.css?v=9">
                         <script src="${pageContext.request.contextPath}/js/pages/customer/package-selection.js?v=2"
                             defer></script>
                 </head>

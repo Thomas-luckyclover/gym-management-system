@@ -22,7 +22,7 @@
         <link rel="stylesheet"
               href="https://fonts.googleapis.com/css2?family=Patrick+Hand&display=swap">
         <link rel="stylesheet"
-              href="${pageContext.request.contextPath}/css/pages/customer/start-date-picker.css?v=1">
+              href="${pageContext.request.contextPath}/css/pages/customer/start-date-picker.css?v=4">
         <script src="${pageContext.request.contextPath}/js/pages/customer/start-date-picker.js?v=1" defer></script>
     </head>
 
@@ -291,14 +291,23 @@
                                             <div class="kpi-bar">
                                                 <i style="width: 100%"></i>
                                             </div>
-                                            <div class="side-row${picker.editable ? ' sdp-anchor' : ''}"><span>Bắt đầu</span><b><span data-sdp-start><c:out value="${gms:formatDate(am.startDate)}" /></span>
-                                                    <c:if test="${picker.editable}"><button type="button" class="sdp-btn" data-sdp-toggle aria-expanded="false">Đổi ngày</button></c:if></b>
+                                                <%-- Hiệu lực gói: ngày bắt đầu → hết hạn, còn lại bao nhiêu ngày. JS đổi ngày chỉ dùng data-sdp-*. --%>
+                                                <div class="validity${picker.editable ? ' sdp-anchor' : ''}">
+                                                    <div class="validity__dates">
+                                                        <div class="validity__col">
+                                                            <span class="validity__label">Bắt đầu</span>
+                                                            <strong class="validity__date" data-sdp-start><c:out value="${gms:formatDate(am.startDate)}" /></strong>
+                                                        </div>
+                                                        <i class="validity__arrow" aria-hidden="true"></i>
+                                                        <div class="validity__col validity__col--end">
+                                                            <span class="validity__label">Hết hạn</span>
+                                                            <strong class="validity__date" data-sdp-end><c:out value="${gms:formatDate(am.endDate)}" /></strong>
+                                                        </div>
+                                                    </div>
+                                                    <c:if test="${picker.editable}"><button type="button" class="sdp-btn validity__change" data-sdp-toggle aria-expanded="false">Đổi ngày bắt đầu</button></c:if>
                                                     <c:if test="${picker.editable}"><%@ include file="/WEB-INF/jsp/customer/_start-date-picker.jspf" %></c:if>
+                                                    <div class="validity__left"><span>Còn lại</span><b>${am.daysRemaining} ngày</b></div>
                                                 </div>
-                                                <div class="side-row"><span>Hết hạn</span><b data-sdp-end><c:out value="${gms:formatDate(am.endDate)}" /></b></div>
-                                            <div class="side-row"><span>Còn
-                                                    lại</span><b>${am.daysRemaining}
-                                                    ngày</b></div>
                                         </div>
                                     </c:when>
                                     <c:otherwise>

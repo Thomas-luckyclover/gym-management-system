@@ -11,22 +11,12 @@
               href="${pageContext.request.contextPath}/css/pages/customer/dashboard.css?v=7">
 
         <link rel="stylesheet"
-              href="${pageContext.request.contextPath}/css/pages/payment/payment-result.css?v=1">
+              href="${pageContext.request.contextPath}/css/pages/payment/payment-result.css?v=2">
 
 <link rel="stylesheet"
-href="${pageContext.request.contextPath}/css/pages/customer/start-date-picker.css?v=1">
+href="${pageContext.request.contextPath}/css/pages/customer/start-date-picker.css?v=4">
 <script src="${pageContext.request.contextPath}/js/pages/customer/start-date-picker.js?v=1" defer></script>
     </head>
-    <%-- Chỉ đọc lại kết quả từ DB; không gọi QueryDR tại JSP. --%>
-    <c:if test="${empty resultError and not empty result and result.waiting}">
-        <script>
-            window.setTimeout(function () {
-                window.location.reload();
-            }, 15000);
-        </script>
-    </c:if>
-</body>
-</html>
 <body class="dock ${themeClass}">
     <%@ include file="/WEB-INF/jsp/common/flash-toast.jspf" %>
 
@@ -89,12 +79,10 @@ href="${pageContext.request.contextPath}/css/pages/customer/start-date-picker.cs
                                 <c:set var="picker" value="${result.startPicker}" />
                                 <div class="sdp-anchor" data-sdp data-sdp-url="/customer/subscription/start-date"
                                      data-sdp-sub="${picker.subscriptionId}" data-sdp-csrf="<c:out value='${csrfToken}' />">
-                                    <div class="sdp-box">
-                                        <div class="sdp-box__item"><span>Bắt đầu</span><strong data-sdp-start><c:out value="${picker.startText}" /></strong></div>
-                                        <div class="sdp-box__item"><span>Hết hạn</span><strong data-sdp-end><c:out value="${picker.endText}" /></strong></div>
-                                        <c:if test="${picker.editable}">
-                                            <button type="button" class="sdp-btn" data-sdp-toggle aria-expanded="false">Đổi ngày</button>
-                                        </c:if>
+                                    <div class="validity-line">
+                                        <span class="validity-line__label">Hiệu lực<c:if test="${not picker.editable and not empty picker.lockReason}"><span class="hint-tip" tabindex="0" role="note" aria-label="<c:out value='${picker.lockReason}' />" data-tip="<c:out value='${picker.lockReason}' />">i</span></c:if></span>
+                                        <b class="validity-line__range"><span data-sdp-start><c:out value="${picker.startText}" /></span> – <span data-sdp-end><c:out value="${picker.endText}" /></span></b>
+                                        <c:if test="${picker.editable}"><button type="button" class="sdp-btn" data-sdp-toggle aria-expanded="false">Đổi ngày</button></c:if>
                                     </div>
                                     <c:if test="${picker.editable}">
                                         <%@ include file="/WEB-INF/jsp/customer/_start-date-picker.jspf" %>
