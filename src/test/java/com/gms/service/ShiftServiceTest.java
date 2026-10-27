@@ -13,6 +13,7 @@ import com.gms.dto.ShiftTransactionItem;
 import com.gms.entity.Account;
 import com.gms.entity.Employee;
 import com.gms.entity.Shift;
+import com.gms.util.DateTimeUtil;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
@@ -278,6 +279,40 @@ class ShiftServiceTest {
         Shift active3 = dao3.findCurrentOrActiveShift(today);
         assertNotNull(active3);
         assertEquals(Shift.ShiftType.MORNING, active3.getShiftType(), "Phải trả về ca đang Open");
+
+        // Case 4: Có ca hôm qua vẫn đang Open -> phải ưu tiên ca hôm qua
+        Shift yesterdayMorningOpen = new Shift(99, today.minusDays(1), Shift.ShiftType.MORNING,
+                30, null, Shift.Status.OPEN, today.minusDays(1).atTime(5, 30), null, null, null, null);
+        ShiftDAO dao4 = new ShiftDAO() {
+            @Override
+            public Shift findUnclosedPastShift(LocalDate d) {
+                return yesterdayMorningOpen;
+            }
+
+            @Override
+            public List<Shift> findTodayShifts(LocalDate date) {
+                return List.of(morningClosed, afternoonNotOpened);
+            }
+        };
+        Shift active4 = dao4.findCurrentOrActiveShift(today);
+        assertNotNull(active4);
+        assertEquals(99, active4.getShiftId(), "Phải ưu tiên ca hôm qua chưa chốt");
+    }
+
+    @Test
+    @DisplayName("Chặn mở ca ngày mới khi có ca hôm trước chưa chốt sổ")
+    void testOpenShift_BlockedWhenPastShiftStillOpen() {
+        LocalDate today = DateTimeUtil.today();
+        Shift yesterdayShift = new Shift(10, today.minusDays(1), Shift.ShiftType.MORNING,
+                30, null, Shift.Status.OPEN, today.minusDays(1).atTime(5, 30), null, null, null, null);
+        Shift todayShift = new Shift(11, today, Shift.ShiftType.MORNING,
+                null, null, Shift.Status.NOT_OPENED, null, null, null, null, null);
+
+        fakeShiftDAO.setTodayShifts(List.of(yesterdayShift, todayShift));
+
+        ServiceResult<Void> result = shiftService.openShift(10, 11);
+        assertFalse(result.isSuccess(), "Không được mở ca mới khi ca hôm trước chưa chốt");
+        assertTrue(result.getMessage().contains("chưa được chốt sổ"), "Thông báo phải nhắc nhở ca cũ chưa chốt sổ");
     }
 
     // ===== 2. Kiểm thử nghiệp vụ CHỐT CA (closeShift) =====
@@ -561,6 +596,28 @@ class ShiftServiceTest {
             List<Shift> list = new ArrayList<>();
             if (currentShift != null) list.add(currentShift);
             return list;
+        }
+
+        @Override
+        public Shift findOtherOpenShift(int exceptShiftId) {
+            for (Shift s : shiftsList) {
+                if (s.getShiftId() != exceptShiftId && s.isOpen()) return s;
+            }
+            if (currentShift != null && currentShift.getShiftId() != exceptShiftId && currentShift.isOpen()) {
+                return currentShift;
+            }
+            return null;
+        }
+
+        @Override
+        public Shift findUnclosedPastShift(LocalDate today) {
+            for (Shift s : shiftsList) {
+                if (s.isOpen() && s.getWorkDate().isBefore(today)) return s;
+            }
+            if (currentShift != null && currentShift.isOpen() && currentShift.getWorkDate().isBefore(today)) {
+                return currentShift;
+            }
+            return null;
         }
 
         @Override

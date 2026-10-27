@@ -52,6 +52,15 @@ public class ShiftDetailView {
     // Đánh dấu ca thực sự đã qua trong quá khứ (không thể mở lại).
     private final boolean pastShift;
 
+    // Đánh dấu ca này thuộc về ngày trong quá khứ nhưng vẫn đang Open (bị bỏ quên qua đêm).
+    private final boolean unclosedPastShift;
+
+    // Đánh dấu ca sáng hôm nay đang Open nhưng đã quá 13:00 (quá giờ quy định).
+    private final boolean overdue;
+
+    // Ca khác đang Open khiến ca hiện tại bị chặn không mở được (để hiển thị link chuyển nhanh).
+    private final Shift blockingOpenShift;
+
     public ShiftDetailView(Shift shift, String openedByEmployeeName, String closedByEmployeeName,
                            ShiftMetrics metrics, PageResult<ShiftTransactionItem> transactionsPage,
                            List<ShiftTransactionItem> pendingOrders, List<Shift> todayShifts,
@@ -74,6 +83,17 @@ public class ShiftDetailView {
                            List<ShiftTransactionItem> pendingOrders, List<Shift> todayShifts,
                            String searchKeyword, String methodFilter, String statusFilter,
                            boolean canOpen, String shiftNotOpenedReason, boolean pastShift) {
+        this(shift, openedByEmployeeName, closedByEmployeeName, metrics, transactionsPage,
+                pendingOrders, todayShifts, searchKeyword, methodFilter, statusFilter,
+                canOpen, shiftNotOpenedReason, pastShift, false, false, null);
+    }
+
+    public ShiftDetailView(Shift shift, String openedByEmployeeName, String closedByEmployeeName,
+                           ShiftMetrics metrics, PageResult<ShiftTransactionItem> transactionsPage,
+                           List<ShiftTransactionItem> pendingOrders, List<Shift> todayShifts,
+                           String searchKeyword, String methodFilter, String statusFilter,
+                           boolean canOpen, String shiftNotOpenedReason, boolean pastShift,
+                           boolean unclosedPastShift, boolean overdue, Shift blockingOpenShift) {
         this.shift = shift;
         this.openedByEmployeeName = openedByEmployeeName;
         this.closedByEmployeeName = closedByEmployeeName;
@@ -87,6 +107,9 @@ public class ShiftDetailView {
         this.canOpen = canOpen;
         this.shiftNotOpenedReason = shiftNotOpenedReason;
         this.pastShift = pastShift;
+        this.unclosedPastShift = unclosedPastShift;
+        this.overdue = overdue;
+        this.blockingOpenShift = blockingOpenShift;
     }
 
     public Shift getShift() {
@@ -143,5 +166,22 @@ public class ShiftDetailView {
 
     public boolean isPastShift() {
         return pastShift;
+    }
+
+    public boolean isUnclosedPastShift() {
+        return unclosedPastShift;
+    }
+
+    public boolean isOverdue() {
+        return overdue;
+    }
+
+    public Shift getBlockingOpenShift() {
+        return blockingOpenShift;
+    }
+
+    public boolean isPastDate() {
+        return shift != null && shift.getWorkDate() != null
+                && shift.getWorkDate().isBefore(com.gms.util.DateTimeUtil.today());
     }
 }

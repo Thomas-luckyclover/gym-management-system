@@ -119,7 +119,10 @@ document.addEventListener("DOMContentLoaded", function () {
         document.getElementById("modalCreatedAt").textContent = formatDateTimeVal(order.createdAt);
         document.getElementById("modalCustomerName").textContent = order.customerName || "Khách lẻ / Chưa cập nhật";
         document.getElementById("modalCustomerPhone").textContent = order.customerPhone || "---";
-        document.getElementById("modalCustomerEmail").textContent = order.customerEmail || "---";
+        const emailEl = document.getElementById("modalCustomerEmail");
+        if (emailEl) {
+            emailEl.textContent = order.customerEmail || "---";
+        }
 
         // Gói tập & Voucher
         document.getElementById("modalPackageName").textContent = order.packageName || "---";

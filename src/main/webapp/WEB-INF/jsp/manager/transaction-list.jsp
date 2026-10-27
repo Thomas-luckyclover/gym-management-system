@@ -12,7 +12,7 @@
   <link rel="stylesheet" href="${pageContext.request.contextPath}/css/pages/manager/transaction-list.css">
 
   <script src="${pageContext.request.contextPath}/js/pages/auth/notification-bell.js" defer></script>
-  <script src="${pageContext.request.contextPath}/js/pages/manager/transaction-list.js" defer></script>
+  <script src="${pageContext.request.contextPath}/js/pages/manager/transaction-list.js?v=20261027_v2" defer></script>
 </head>
 
 <body class="dock theme-manager">

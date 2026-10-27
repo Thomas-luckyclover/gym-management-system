@@ -178,8 +178,67 @@ public class ShiftDAO {
     }
 
     /**
+     * Tìm ca làm việc sớm nhất trong quá khứ còn đang ở trạng thái Open (chưa chốt sổ).
+     *
+     * @param today ngày hiện tại
+     * @return đối tượng Shift trong quá khứ đang Open, hoặc null nếu không có
+     * @throws SQLException khi truy vấn lỗi
+     */
+    public Shift findUnclosedPastShift(LocalDate today) throws SQLException {
+        try (Connection conn = DBContext.getConnection()) {
+            if (conn == null) {
+                return null;
+            }
+            String sql = "SELECT TOP 1 " + SHIFT_COLUMNS + " FROM Shifts "
+                    + "WHERE Status = 'Open' AND WorkDate < ? "
+                    + "ORDER BY WorkDate ASC, CASE WHEN ShiftType = 'Morning' THEN 1 ELSE 2 END";
+            try (PreparedStatement stmt = conn.prepareStatement(sql)) {
+                stmt.setDate(1, Date.valueOf(today));
+                try (ResultSet rs = stmt.executeQuery()) {
+                    if (rs.next()) {
+                        return mapResultSetToShift(rs);
+                    }
+                }
+            }
+        } catch (Exception e) {
+            return null;
+        }
+        return null;
+    }
+
+    /**
+     * Tìm bất kỳ ca nào khác đang ở trạng thái Open trên toàn hệ thống (ngoại trừ shiftId chỉ định).
+     *
+     * @param exceptShiftId ID ca cần loại trừ
+     * @return đối tượng Shift đang Open khác, hoặc null nếu không có
+     * @throws SQLException khi truy vấn lỗi
+     */
+    public Shift findOtherOpenShift(int exceptShiftId) throws SQLException {
+        try (Connection conn = DBContext.getConnection()) {
+            if (conn == null) {
+                return null;
+            }
+            String sql = "SELECT TOP 1 " + SHIFT_COLUMNS + " FROM Shifts "
+                    + "WHERE Status = 'Open' AND ShiftId <> ? "
+                    + "ORDER BY WorkDate ASC, CASE WHEN ShiftType = 'Morning' THEN 1 ELSE 2 END";
+            try (PreparedStatement stmt = conn.prepareStatement(sql)) {
+                stmt.setInt(1, exceptShiftId);
+                try (ResultSet rs = stmt.executeQuery()) {
+                    if (rs.next()) {
+                        return mapResultSetToShift(rs);
+                    }
+                }
+            }
+        } catch (Exception e) {
+            return null;
+        }
+        return null;
+    }
+
+    /**
      * Tìm ca đang Open hiện tại của ngày hôm nay, hoặc nếu không có ca nào Open thì tìm ca phù hợp nhất.
      * Quy tắc ưu tiên:
+     * 0. Ưu tiên tuyệt đối: Nếu có ca của ngày hôm trước bị bỏ quên chưa chốt sổ (Status = 'Open').
      * 1. Ca đang Open: Luôn ưu tiên hiển thị ca đang trực tiếp mở.
      * 2. Nếu Ca sáng đã chốt và Ca chiều chưa mở: Ưu tiên Ca chiều (ca tiếp theo cần mở).
      * 3. Nếu Ca chiều đã chốt: Hiển thị Ca chiều (ca gần nhất đã hoàn tất).
@@ -190,6 +249,12 @@ public class ShiftDAO {
      * @throws SQLException khi truy vấn lỗi
      */
     public Shift findCurrentOrActiveShift(LocalDate today) throws SQLException {
+        // B0: Ưu tiên tuyệt đối ca quá khứ bị bỏ quên chưa chốt sổ
+        Shift unclosedPast = findUnclosedPastShift(today);
+        if (unclosedPast != null) {
+            return unclosedPast;
+        }
+
         List<Shift> shifts = findTodayShifts(today);
         if (shifts.isEmpty()) {
             return null;
