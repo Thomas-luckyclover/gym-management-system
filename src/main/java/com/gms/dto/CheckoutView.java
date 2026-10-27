@@ -26,16 +26,54 @@ public class CheckoutView {
     // Service tạo lý do khóa form; JSP in thông báo thay vì chỉ vô hiệu hóa nút.
     private final String voucherLockReason;
 
+    // Chỉ có khi khách mua Membership lúc đang có gói còn hạn (DBR-52): gói mới nối sau gói đó.
+    // Ngày dạng dd/MM/yyyy để JSP in thẳng; null nghĩa là gói bắt đầu ngay, không nối tiếp.
+    private final String chainCurrentEndText;
+    private final String chainStartText;
+    private final String chainEndText;
+
     /**
-     * Nhận snapshot đơn và dữ liệu phụ do Service đã chuẩn bị.
+     * Nhận snapshot đơn và dữ liệu phụ do Service đã chuẩn bị (không nối tiếp).
      */
     public CheckoutView(Order order, String voucherCode, long secondsLeft,
             boolean voucherEditable, String voucherLockReason) {
+        this(order, voucherCode, secondsLeft, voucherEditable, voucherLockReason, null, null, null);
+    }
+
+    /**
+     * Như trên, kèm thông tin gói nối tiếp để báo khách trước khi thanh toán.
+     */
+    public CheckoutView(Order order, String voucherCode, long secondsLeft,
+            boolean voucherEditable, String voucherLockReason,
+            String chainCurrentEndText, String chainStartText, String chainEndText) {
         this.order = order;
         this.voucherCode = voucherCode;
         this.secondsLeft = secondsLeft;
         this.voucherEditable = voucherEditable;
         this.voucherLockReason = voucherLockReason;
+        this.chainCurrentEndText = chainCurrentEndText;
+        this.chainStartText = chainStartText;
+        this.chainEndText = chainEndText;
+    }
+
+    /** Gói này sẽ chạy nối sau gói đang dùng. */
+    public boolean isChained() {
+        return chainStartText != null;
+    }
+
+    /** Ngày hết hạn của gói đang dùng. */
+    public String getChainCurrentEndText() {
+        return chainCurrentEndText;
+    }
+
+    /** Ngày gói mới bắt đầu (hôm sau ngày hết hạn gói cũ). */
+    public String getChainStartText() {
+        return chainStartText;
+    }
+
+    /** Ngày gói mới hết hạn. */
+    public String getChainEndText() {
+        return chainEndText;
     }
 
     /**
