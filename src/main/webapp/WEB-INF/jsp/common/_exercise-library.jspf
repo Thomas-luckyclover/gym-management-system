@@ -109,9 +109,16 @@
             <%-- 3.4 Lưới thẻ bài. Ảnh lấy thẳng từ wger.de (loading=lazy: chỉ tải khi cuộn tới) --%>
             <c:choose>
                 <c:when test="${empty library.items}">
-                    <section class="panel ex-message">
-                        <p>Không có bài nào khớp bộ lọc. Thử bỏ bớt điều kiện hoặc gõ tên khác.</p>
-                        <a class="btn btn-outline" href="${libBase}">Xóa lọc</a>
+                    <%-- Không có bài khớp: chỉ gợi ý, nút "Xóa lọc" đã có sẵn ở thanh lọc phía trên --%>
+                    <section class="ex-empty" role="status">
+                        <svg class="ex-empty__icon" viewBox="0 0 24 24" aria-hidden="true"><circle cx="11" cy="11" r="7"/><path d="m20 20-3.5-3.5M8.5 11h5"/></svg>
+                        <h2>
+                            <c:choose>
+                                <c:when test="${not empty library.query}">Không tìm thấy bài nào cho “<c:out value="${library.query}" />”</c:when>
+                                <c:otherwise>Chưa có bài nào khớp bộ lọc</c:otherwise>
+                            </c:choose>
+                        </h2>
+                        <p>Thử chọn nhóm cơ <strong>Tất cả</strong>, đổi dụng cụ, hoặc gõ tên tiếng Anh ngắn hơn (ví dụ <em>press</em> thay cho <em>bench press</em>).</p>
                     </section>
                 </c:when>
                 <c:otherwise>
@@ -177,8 +184,6 @@
                 </c:otherwise>
             </c:choose>
 
-            <%-- 3.6 Ghi nguồn: dữ liệu wger dùng giấy phép CC BY-SA 4.0, bắt buộc ghi nguồn --%>
-            <p class="ex-credit">Dữ liệu bài tập và hình minh họa: <a href="https://wger.de" target="_blank" rel="noopener">wger.de</a> · giấy phép CC BY-SA 4.0. Ảnh nhóm cơ: <a href="https://github.com/yuhonas/free-exercise-db" target="_blank" rel="noopener">free-exercise-db</a> · public domain.</p>
         </c:otherwise>
     </c:choose>
 </main>

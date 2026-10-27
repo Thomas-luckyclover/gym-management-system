@@ -19,7 +19,7 @@
         <%@ include file="/WEB-INF/jsp/common/head.jspf" %>
         <title>Thư viện bài tập · Super Gym</title>
         <link rel="stylesheet" href="${ctx}/css/pages/pt/header.css?v=20261025city">
-        <link rel="stylesheet" href="${ctx}/css/pages/shared/exercise-library.css?v=20261027b">
+        <link rel="stylesheet" href="${ctx}/css/pages/shared/exercise-library.css?v=20261027c">
     </head>
     <body class="dock theme-pt exercise-page">
         <%@ include file="/WEB-INF/jsp/common/flash-toast.jspf" %>
