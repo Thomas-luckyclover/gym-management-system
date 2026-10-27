@@ -1,0 +1,178 @@
+/* Lịch chọn ngày bắt đầu gói (trang kết quả thanh toán và Dashboard). Màu xanh info, vàng dành cho nút mua. */
+.sdp-box {
+  display: flex;
+  align-items: center;
+  gap: var(--space-4);
+  margin-top: var(--space-4);
+  padding: var(--space-3) var(--space-4);
+  border: var(--border-width) solid var(--color-border);
+  border-radius: var(--radius-md);
+  text-align: left;
+}
+
+.sdp-box__item {
+  display: grid;
+  gap: 2px;
+}
+
+.sdp-box__item span {
+  color: var(--color-text-muted);
+  font-size: var(--font-size-sm);
+}
+
+.sdp-box__item strong {
+  color: var(--color-text);
+  font-variant-numeric: tabular-nums;
+}
+
+.sdp-anchor {
+  position: relative;
+}
+
+.sdp-btn {
+  margin-left: auto;
+  padding: var(--space-1) var(--space-3);
+  border: var(--border-width) solid var(--color-info);
+  border-radius: var(--radius-sm);
+  background: transparent;
+  color: var(--color-info-ink);
+  font: inherit;
+  font-size: var(--font-size-sm);
+  font-weight: var(--font-weight-semibold);
+  cursor: pointer;
+}
+
+.sdp-btn:hover,
+.sdp-btn[aria-expanded="true"] {
+  background: var(--color-info-tint);
+}
+
+.side-row .sdp-btn {
+  margin-left: var(--space-2);
+  padding: 2px var(--space-2);
+}
+
+.sdp-cal {
+  position: absolute;
+  z-index: 30;
+  top: calc(100% + var(--space-2));
+  left: 0;
+  right: 0;
+  box-sizing: border-box;
+  padding: var(--space-3) var(--space-2);
+  border: var(--border-width) solid var(--color-border);
+  border-radius: var(--radius-md);
+  background: var(--color-surface);
+  color: var(--color-text);
+  box-shadow: var(--shadow-card), 0 8px 24px rgba(0, 0, 0, 0.18);
+  text-align: center;
+}
+
+.sdp-cal[hidden] {
+  display: none;
+}
+
+.sdp-cal__title {
+  margin: 0;
+  font-size: var(--font-size-sm);
+  font-weight: var(--font-weight-semibold);
+  color: var(--color-text);
+}
+
+.sdp-cal__sub {
+  margin: 2px 0 var(--space-2);
+  color: var(--color-text-muted);
+  font-size: var(--font-size-sm);
+}
+
+.sdp-cal__sub b {
+  color: var(--color-text);
+  font-weight: var(--font-weight-semibold);
+}
+
+.sdp-cal__grid {
+  display: grid;
+  grid-template-columns: repeat(7, 1fr);
+  gap: var(--space-1);
+}
+
+.sdp-cal__dow {
+  color: var(--color-text-muted);
+  font-size: 0.7rem;
+}
+
+.sdp-cal__day {
+  aspect-ratio: 1;
+  min-width: 0;
+  max-height: 38px;
+  padding: 0;
+  border: 0;
+  border-radius: var(--radius-sm);
+  background: transparent;
+  color: var(--color-text);
+  font: inherit;
+  font-size: 0.8rem;
+  cursor: pointer;
+}
+
+.sdp-cal__day:disabled {
+  opacity: 0.28;
+  cursor: default;
+}
+
+.sdp-cal__day:not(:disabled):hover {
+  background: var(--color-info-tint);
+}
+
+.sdp-cal__day.is-today {
+  outline: var(--border-width) dashed var(--color-info);
+  outline-offset: -2px;
+}
+
+.sdp-cal__day.is-selected,
+.sdp-cal__day.is-selected:hover {
+  background: var(--color-info);
+  color: #FFFFFF;
+  font-weight: var(--font-weight-bold);
+}
+
+.sdp-cal__save {
+  width: 100%;
+  margin-top: var(--space-3);
+  padding: var(--space-2) var(--space-3);
+  border: 0;
+  border-radius: var(--radius-sm);
+  background: var(--color-info);
+  color: #FFFFFF;
+  font: inherit;
+  font-weight: var(--font-weight-semibold);
+  cursor: pointer;
+}
+
+.sdp-cal__save:disabled {
+  opacity: var(--opacity-disabled);
+  cursor: not-allowed;
+}
+
+.sdp-cal__note {
+  margin: var(--space-2) 0 0;
+  color: var(--color-text-muted);
+  font-size: 0.75rem;
+}
+
+.sdp-cal__error {
+  margin: var(--space-2) 0 0;
+  color: var(--color-danger);
+  font-size: var(--font-size-sm);
+}
+
+.sdp-cal__error:empty {
+  display: none;
+}
+
+@media (max-width: 640px) {
+  .sdp-box {
+    gap: var(--space-3);
+    padding: var(--space-3);
+  }
+}
