@@ -13,9 +13,7 @@
     <title>Báo cáo vận hành &amp; doanh thu - GMS</title>
     <%-- Khung dock/sidebar/topbar dùng chung ở common.css (mục 11) --%>
     <link rel="stylesheet" href="${pageContext.request.contextPath}/css/pages/manager/manager-dashboard.css?v=20261025city">
-    <link rel="stylesheet" href="${pageContext.request.contextPath}/css/pages/auth/notification-bell.css">
 
-    <script src="${pageContext.request.contextPath}/js/pages/auth/notification-bell.js" defer></script>
 </head>
 <body class="dock ${themeClass}">
 

@@ -498,12 +498,38 @@ public class MaintenanceRequestService {
                         null
                 );
 
+                EquipmentItem notifItem = equipmentItemDAO.findById(connection, request.getEquipmentItemId());
+                Facility notifFac = (notifItem != null) ? facilityDAO.findById(connection, notifItem.getFacilityId()) : null;
+                String deviceDetail = "";
+                if (notifItem != null) {
+                    String facName = (notifFac != null && notifFac.getFacilityName() != null)
+                            ? notifFac.getFacilityName() : "";
+                    String itemCode = notifItem.getItemCode() != null ? notifItem.getItemCode() : "";
+                    String itemLabel = notifItem.getItemLabel() != null ? notifItem.getItemLabel() : "";
+                    if (!itemLabel.isBlank() && !itemLabel.equalsIgnoreCase(itemCode)) {
+                        deviceDetail = facName + " (" + itemCode + " - " + itemLabel + ")";
+                    } else {
+                        deviceDetail = facName + " (" + itemCode + ")";
+                    }
+                }
+                if (deviceDetail.isBlank()) {
+                    deviceDetail = "Mã máy #" + request.getEquipmentItemId();
+                }
+
+                StringBuilder notifContent = new StringBuilder();
+                notifContent.append(request.getRequestCode())
+                        .append(" · ")
+                        .append(deviceDetail)
+                        .append(": Quản lý đã duyệt yêu cầu, chuyển sang trạng thái Đang xử lý.");
+                if (managerNote != null && !managerNote.isBlank()) {
+                    notifContent.append(" Ghi chú: ").append(managerNote.trim());
+                }
+
                 notificationService.notifyEmployeeInTransaction(
                         connection,
                         request.getReportedByEmployeeId(),
                         "Bảo trì · Đã được duyệt",
-                        request.getRequestCode()
-                                + " · Yêu cầu đã chuyển sang trạng thái Đang xử lý."
+                        notifContent.toString()
                 );
 
                 connection.commit();
@@ -605,13 +631,22 @@ public class MaintenanceRequestService {
                         rejectReason.trim()
                 );
 
+                EquipmentItem rejectItem = equipmentItemDAO.findById(connection, request.getEquipmentItemId());
+                Facility rejectFac = (rejectItem != null) ? facilityDAO.findById(connection, rejectItem.getFacilityId()) : null;
+                String rejectDeviceDetail = "";
+                if (rejectItem != null) {
+                    String facName = (rejectFac != null && rejectFac.getFacilityName() != null) ? rejectFac.getFacilityName() : "";
+                    rejectDeviceDetail = facName + " (" + rejectItem.getItemCode() + ")";
+                } else {
+                    rejectDeviceDetail = "Mã máy #" + request.getEquipmentItemId();
+                }
+
                 notificationService.notifyEmployeeInTransaction(
                         connection,
                         request.getReportedByEmployeeId(),
                         "Bảo trì · Bị từ chối",
-                        request.getRequestCode()
-                                + " · Yêu cầu đã bị từ chối. "
-                                + "Mở yêu cầu để xem lý do."
+                        request.getRequestCode() + " · " + rejectDeviceDetail
+                                + ": Quản lý đã từ chối yêu cầu. Lý do: " + rejectReason.trim()
                 );
 
                 connection.commit();
@@ -770,13 +805,30 @@ public class MaintenanceRequestService {
                 );
 
                 if (request.getReviewedByEmployeeId() != null) {
+                    EquipmentItem closeItem = equipmentItemDAO.findById(connection, request.getEquipmentItemId());
+                    Facility closeFac = (closeItem != null) ? facilityDAO.findById(connection, closeItem.getFacilityId()) : null;
+                    String closeDeviceDetail = "";
+                    if (closeItem != null) {
+                        String facName = (closeFac != null && closeFac.getFacilityName() != null) ? closeFac.getFacilityName() : "";
+                        closeDeviceDetail = facName + " (" + closeItem.getItemCode() + ")";
+                    } else {
+                        closeDeviceDetail = "Mã máy #" + request.getEquipmentItemId();
+                    }
+
+                    StringBuilder closeContent = new StringBuilder();
+                    closeContent.append(request.getRequestCode())
+                            .append(" · ")
+                            .append(closeDeviceDetail)
+                            .append(": Yêu cầu đã được Lễ tân nghiệm thu và đóng.");
+                    if (acceptanceNote != null && !acceptanceNote.isBlank()) {
+                        closeContent.append(" Nghiệm thu: ").append(acceptanceNote.trim());
+                    }
 
                     notificationService.notifyEmployeeInTransaction(
                             connection,
                             request.getReviewedByEmployeeId(),
                             "Bảo trì · Đã hoàn tất",
-                            request.getRequestCode()
-                                    + " · Yêu cầu đã được Lễ tân nghiệm thu và đóng."
+                            closeContent.toString()
                     );
                 }
 

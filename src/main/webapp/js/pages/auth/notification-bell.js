@@ -1,10 +1,13 @@
-document.addEventListener(
-    "DOMContentLoaded",
-    function () {
-        ensureNotificationBellMarkup();
-        setupNotificationBell();
-    }
-);
+if (document.readyState === "loading") {
+    document.addEventListener("DOMContentLoaded", initNotificationBell);
+} else {
+    initNotificationBell();
+}
+
+function initNotificationBell() {
+    ensureNotificationBellMarkup();
+    setupNotificationBell();
+}
 
 function ensureNotificationBellMarkup() {
     if (document.getElementById("notificationBell")) {
@@ -39,30 +42,34 @@ function ensureNotificationBellMarkup() {
 }
 
 function setupNotificationBell() {
-
     const root =
         document.getElementById(
             "notificationBell"
         );
 
-    if (root === null) {
+    if (root === null || root.dataset.bellInitialized === "true") {
         return;
     }
-
 
     const button =
         document.getElementById(
             "notificationBellButton"
         );
 
-    const count =
-        document.getElementById(
-            "notificationBellCount"
-        );
-
     const popover =
         document.getElementById(
             "notificationPopover"
+        );
+
+    if (button === null || popover === null) {
+        return;
+    }
+
+    root.dataset.bellInitialized = "true";
+
+    const count =
+        document.getElementById(
+            "notificationBellCount"
         );
 
     const unreadText =

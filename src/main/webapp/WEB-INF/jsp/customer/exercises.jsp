@@ -20,7 +20,7 @@
 <head>
     <%@ include file="/WEB-INF/jsp/common/head.jspf" %>
     <title>Thư viện bài tập · Super Gym</title>
-    <link rel="stylesheet" href="${ctx}/css/pages/shared/exercise-library.css?v=20261027b">
+    <link rel="stylesheet" href="${ctx}/css/pages/shared/exercise-library.css?v=20261027c">
     <link rel="stylesheet" href="${ctx}/css/pages/auth/notification-bell.css">
     <script src="${ctx}/js/pages/auth/notification-bell.js" defer></script>
 </head>
@@ -37,7 +37,9 @@
                     <span id="exercise-help" class="pt-info-popover" role="tooltip">
                         <strong>Đặc quyền hội viên:</strong> mở khi bạn có gói tập hoặc gói PT còn hiệu lực (kể cả đang bảo lưu).<br>
                         <strong>Tìm bài:</strong> chọn nhóm cơ, dụng cụ hoặc gõ tên tiếng Anh (ví dụ squat, press).<br>
-                        Dữ liệu lấy từ wger.de, cập nhật mỗi ngày. Hỏi PT trước khi tập bài mới.
+                        Hỏi PT trước khi tập bài mới.<br>
+                        <%-- Ghi nguồn bắt buộc của wger (CC BY-SA 4.0) --%>
+                        <strong>Nguồn:</strong> dữ liệu và hình từ wger.de (CC BY-SA 4.0), cập nhật mỗi ngày · ảnh nhóm cơ từ free-exercise-db (public domain).
                     </span>
                 </span>
             </div>

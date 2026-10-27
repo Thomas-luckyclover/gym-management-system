@@ -12,8 +12,7 @@
   <title>Quản lý đơn nghỉ phép · Super Gym</title>
   <link rel="stylesheet" href="${pageContext.request.contextPath}/css/pages/auth/account-settings.css">
   <link rel="stylesheet" href="${pageContext.request.contextPath}/css/pages/manager/leave-request-list.css?v=20261025-compact">
-  <link rel="stylesheet" href="${pageContext.request.contextPath}/css/pages/auth/notification-bell.css">
-  <script src="${pageContext.request.contextPath}/js/pages/auth/notification-bell.js" defer></script>
+
   <script src="${pageContext.request.contextPath}/js/pages/manager/leave-request-list.js?v=20261025-readable" defer></script>
 </head>
 
