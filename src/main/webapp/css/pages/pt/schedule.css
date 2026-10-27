@@ -75,6 +75,55 @@
   white-space: nowrap;
 }
 
+/* Ô chọn ngày cạnh khoảng tuần: icon lịch + ô date gọn, chọn là mở tuần đó (schedule.js). */
+.pt-plan-jump {
+  display: flex;
+  align-items: center;
+  gap: var(--space-2);
+  margin: 0;
+}
+.pt-plan-jump-field {
+  display: inline-flex;
+  align-items: center;
+  gap: var(--space-2);
+  min-height: var(--control-height-md);
+  padding: 0 var(--space-2) 0 var(--space-3);
+  border: var(--border-width) solid var(--color-border-strong);
+  border-radius: var(--radius-sm);
+  color: var(--color-text-muted);
+  cursor: pointer;
+}
+.pt-plan-jump-field:hover {
+  border-color: var(--color-text-muted);
+}
+.pt-plan-jump-field:focus-within {
+  outline: var(--focus-outline-width) solid var(--ink-focus);
+  outline-offset: var(--focus-outline-offset);
+}
+.pt-plan-jump-field input {
+  min-width: 0;
+  padding: 0;
+  border: 0;
+  background: transparent;
+  color: var(--color-text);
+  font: inherit;
+  font-size: var(--font-size-sm);
+  font-variant-numeric: tabular-nums;
+}
+.pt-plan-jump-field input:focus {
+  outline: none;
+}
+
+/* Thao tác nhanh: nút chữ nhẹ, không tranh chỗ với "Thêm khung". */
+.pt-plan-tools {
+  display: flex;
+  flex-wrap: wrap;
+  gap: var(--space-1);
+}
+.pt-plan-tools .btn {
+  gap: var(--space-2);
+}
+
 /* Nút ‹ › vuông như màn Lịch tập. */
 .pt-plan-step {
   min-width: var(--control-height-md);
@@ -925,6 +974,12 @@
   .pt-plan-period h2 {
     margin-inline: 0;
     font-size: var(--font-size-sm);
+  }
+  .pt-plan-tools {
+    width: 100%;
+  }
+  .pt-plan-tools .btn {
+    flex: 1 1 auto;
   }
 }
 

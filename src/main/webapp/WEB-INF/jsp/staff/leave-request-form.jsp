@@ -41,26 +41,7 @@
         <div class="top-right">
           <%@ include file="/WEB-INF/jsp/common/notification-bell.jspf" %>
 
-          <a class="tb-user" href="${pageContext.request.contextPath}/account">
-            <c:choose>
-              <c:when test="${not empty sessionScope.avatar}">
-                <img class="avatar" src="${pageContext.request.contextPath}${sessionScope.avatar}" alt="Avatar" onerror="this.style.display='none';if(this.nextElementSibling)this.nextElementSibling.style.display='';" style="object-fit:cover;">
-                <span class="avatar" style="display:none;">${isReceptionist ? 'LT' : 'PT'}</span>
-              </c:when>
-              <c:otherwise>
-                <span class="avatar">${isReceptionist ? 'LT' : 'PT'}</span>
-              </c:otherwise>
-            </c:choose>
-            <span>
-              <b><c:out value="${not empty formView.fullName ? formView.fullName : sessionScope.displayName}" default="Nhân viên" /></b>
-              <small>
-                ${isReceptionist ? 'Lễ tân' : 'Huấn luyện viên'}
-                <c:if test="${not empty formView.employeeCode}">
-                  · <c:out value="${formView.employeeCode}" />
-                </c:if>
-              </small>
-            </span>
-          </a>
+          <%@ include file="/WEB-INF/jsp/common/topbar-user.jspf" %>
         </div>
       </header>
 

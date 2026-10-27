@@ -319,43 +319,43 @@ SET IDENTITY_INSERT VerificationCodes OFF;
    Packages — 13 dòng.
    ============================================================================ */
 SET IDENTITY_INSERT Packages ON;
-INSERT INTO Packages (PackageId, PackageName, Description, Benefits, PackageType, DurationUnit, DurationValue, EstimatedSessionCount, Price, IsActive, CreatedAt) VALUES
+INSERT INTO Packages (PackageId, PackageName, Description, Benefits, PackageType, DurationUnit, DurationValue, EstimatedSessionCount, Price, IsActive, UnlocksExerciseLibrary, CreatedAt) VALUES
  (1, N'Gói Ngày', N'Vé vào tập một lượt trong ngày.', N'Vào tập 1 lượt trong ngày
-Dùng đủ thiết bị khu chung', 'DayPass', 'Day', 1, NULL, 120000, 1, '2025-01-10 09:00:00'),
+Dùng đủ thiết bị khu chung', 'DayPass', 'Day', 1, NULL, 120000, 1, 0, '2025-01-10 09:00:00'),
  (2, N'Gói 1 Tháng', N'Bắt đầu xây thói quen tập luyện.', N'Tập không giới hạn giờ mở cửa
 Dùng đủ thiết bị khu cardio và khu tạ
-Miễn phí nước uống', 'Membership', 'Month', 1, NULL, 799000, 1, '2025-01-10 09:00:00'),
+Miễn phí nước uống', 'Membership', 'Month', 1, NULL, 799000, 1, 1, '2025-01-10 09:00:00'),
  (3, N'Gói 3 Tháng', N'Đủ thời gian thấy chuyển biến thể lực.', N'Tập không giới hạn giờ mở cửa
 Dùng đủ thiết bị khu cardio và khu tạ
 Miễn phí nước uống
-Tặng 1 buổi đo InBody', 'Membership', 'Month', 3, NULL, 2190000, 1, '2025-01-10 09:00:00'),
+Tặng 1 buổi đo InBody', 'Membership', 'Month', 3, NULL, 2190000, 1, 1, '2025-01-10 09:00:00'),
  (4, N'Gói 9 Tháng', N'Cam kết dài hạn, giá tốt.', N'Tập không giới hạn giờ mở cửa
 Dùng đủ thiết bị khu cardio và khu tạ
 Miễn phí nước uống
-Tặng 3 buổi đo InBody', 'Membership', 'Month', 9, NULL, 5490000, 1, '2025-01-10 09:00:00'),
+Tặng 3 buổi đo InBody', 'Membership', 'Month', 9, NULL, 5490000, 1, 1, '2025-01-10 09:00:00'),
  (5, N'Gói 12 Tháng', N'Mức giá tốt nhất cho người tập lâu dài.', N'Tập không giới hạn giờ mở cửa
 Dùng đủ thiết bị khu cardio và khu tạ
 Miễn phí nước uống
-Tặng 4 buổi đo InBody', 'Membership', 'Month', 12, NULL, 6990000, 1, '2025-01-10 09:00:00'),
+Tặng 4 buổi đo InBody', 'Membership', 'Month', 12, NULL, 6990000, 1, 1, '2025-01-10 09:00:00'),
  (6, N'Gói 12 Tháng', N'Bảng giá cũ — đã thay bằng gói 12 tháng mới.', N'Tập không giới hạn giờ mở cửa
 Dùng đủ thiết bị khu cardio và khu tạ
-Miễn phí nước uống', 'Membership', 'Month', 12, NULL, 6490000, 0, '2025-01-10 09:00:00'),
+Miễn phí nước uống', 'Membership', 'Month', 12, NULL, 6490000, 0, 1, '2025-01-10 09:00:00'),
  (7, N'Gói 6 Tháng', N'Đã ngừng bán (P-04 không còn 6 tháng).', N'Tập không giới hạn giờ mở cửa
 Dùng đủ thiết bị khu cardio và khu tạ
-Miễn phí nước uống', 'Membership', 'Month', 6, NULL, 3990000, 0, '2025-01-10 09:00:00'),
+Miễn phí nước uống', 'Membership', 'Month', 6, NULL, 3990000, 0, 1, '2025-01-10 09:00:00'),
  (8, N'Gói PT 1 Tháng', N'Gói PT theo kỳ hạn, tập T2–T6 một khung giờ cố định.', N'Huấn luyện viên riêng
-Giáo án và thực đơn cá nhân hóa', 'PTSingle', 'Month', 1, 22, 8800000, 1, '2025-01-10 09:00:00'),
+Giáo án và thực đơn cá nhân hóa', 'PTSingle', 'Month', 1, 22, 8800000, 1, 1, '2025-01-10 09:00:00'),
  (9, N'Gói PT 2 Tháng', N'Gói PT theo kỳ hạn 2 tháng.', N'Huấn luyện viên riêng
 Giáo án và thực đơn cá nhân hóa
-Đo InBody mỗi 2 tuần', 'PTSingle', 'Month', 2, 43, 16500000, 1, '2025-01-10 09:00:00'),
+Đo InBody mỗi 2 tuần', 'PTSingle', 'Month', 2, 43, 16500000, 1, 1, '2025-01-10 09:00:00'),
  (10, N'Gói PT 3 Tháng', N'Gói PT theo kỳ hạn 3 tháng.', N'Huấn luyện viên riêng
 Giáo án và thực đơn cá nhân hóa
-Đo InBody mỗi 2 tuần', 'PTSingle', 'Month', 3, 65, 23900000, 1, '2025-01-10 09:00:00'),
+Đo InBody mỗi 2 tuần', 'PTSingle', 'Month', 3, 65, 23900000, 1, 1, '2025-01-10 09:00:00'),
  (11, N'Gói PT Couple 1 Tháng', N'Hai người tập chung một huấn luyện viên.', N'Chung hạn mức buổi cho 2 người
-Giáo án riêng cho từng người', 'PTCouple', 'Month', 1, 22, 13200000, 1, '2025-01-10 09:00:00'),
+Giáo án riêng cho từng người', 'PTCouple', 'Month', 1, 22, 13200000, 1, 1, '2025-01-10 09:00:00'),
  (12, N'Gói PT Couple 2 Tháng', N'Hai người tập chung 2 tháng.', N'Chung hạn mức buổi cho 2 người
-Giáo án riêng cho từng người', 'PTCouple', 'Month', 2, 43, 24900000, 1, '2025-01-10 09:00:00'),
- (13, N'Buổi PT Lẻ', N'Một buổi tập cùng huấn luyện viên.', N'Không ràng buộc kỳ hạn', 'SingleSession', NULL, NULL, NULL, 450000, 1, '2025-01-10 09:00:00');
+Giáo án riêng cho từng người', 'PTCouple', 'Month', 2, 43, 24900000, 1, 1, '2025-01-10 09:00:00'),
+ (13, N'Buổi PT Lẻ', N'Một buổi tập cùng huấn luyện viên.', N'Không ràng buộc kỳ hạn', 'SingleSession', NULL, NULL, NULL, 450000, 1, 0, '2025-01-10 09:00:00');
 SET IDENTITY_INSERT Packages OFF;
 
 /* ============================================================================
