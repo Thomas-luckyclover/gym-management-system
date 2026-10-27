@@ -129,6 +129,17 @@ public class CustomerDashboardView {
      * Tìm gói Membership (hoặc DayPass) đang Active để hiện trên Hero card.
      * @return gói tập chính đang active, hoặc null nếu không có.
      */
+    // Ô "Đổi ngày" trên thẻ Gói tập; null khi gói không đổi được hoặc không phải Membership.
+    private StartDatePicker startPicker;
+
+    public StartDatePicker getStartPicker() {
+        return startPicker;
+    }
+
+    public void setStartPicker(StartDatePicker startPicker) {
+        this.startPicker = startPicker;
+    }
+
     public SubscriptionRow getActiveMembership() {
         if (subscriptions == null) return null;
         for (SubscriptionRow sub : subscriptions) {
