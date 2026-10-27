@@ -5,6 +5,7 @@ import com.gms.constant.Role;
 import com.gms.dao.OrderDAO;
 import com.gms.dao.PackageDAO;
 import com.gms.dao.PaymentDAO;
+import com.gms.dao.SubscriptionDAO;
 import com.gms.dao.VoucherDAO;
 import com.gms.dto.PaymentCustomerView;
 import com.gms.dto.CheckoutView;
@@ -15,6 +16,7 @@ import com.gms.entity.Voucher;
 import com.gms.util.DBContext;
 import com.gms.util.DateTimeUtil;
 import com.gms.util.MoneyUtil;
+import com.gms.util.PackagePeriod;
 import com.gms.util.ValidationUtil;
 import java.sql.Connection;
 import java.sql.SQLException;
@@ -47,6 +49,9 @@ public class PaymentService {
 
     // Đọc và lưu các lần thử thanh toán.
     private final TransactionDAO transactionDAO = new TransactionDAO();
+
+    // Đọc ngày hết hạn gói đang dùng để báo gói nối tiếp trên trang thanh toán.
+    private final SubscriptionDAO subscriptionDAO = new SubscriptionDAO();
 
     // Tạo URL thanh toán có chữ ký theo quy định VNPay.
     private final VnPayClient vnPayClient = new VnPayClient();
@@ -220,7 +225,26 @@ public class PaymentService {
             } else if (hasPendingPayment) {
                 lockReason = Messages.MSG86_VOUCHER_PAYMENT_PENDING;
             }
-            return ServiceResult.ok(new CheckoutView(order, code, secondsLeft, lockReason == null, lockReason));
+            // Gói Membership mua lúc đang có gói còn hạn sẽ nối sau gói đó (DBR-52): báo khách trước khi trả tiền.
+            String chainCurrentEnd = null;
+            String chainStart = null;
+            String chainEnd = null;
+            if (order.isPending()) {
+                Package pkg = packageDAO.findById(conn, order.getPackageId());
+                if (pkg != null && pkg.getPackageType() == Package.Type.MEMBERSHIP && pkg.getDurationMonths() > 0) {
+                    LocalDate today = DateTimeUtil.today();
+                    LocalDate currentEnd = subscriptionDAO.findLastMembershipEndExcluding(
+                            conn, order.getHolderCustomerId(), today, 0);
+                    if (currentEnd != null) {
+                        LocalDate start = currentEnd.plusDays(1);
+                        chainCurrentEnd = DateTimeUtil.formatDate(currentEnd);
+                        chainStart = DateTimeUtil.formatDate(start);
+                        chainEnd = DateTimeUtil.formatDate(PackagePeriod.endDate(start, pkg.getDurationMonths()));
+                    }
+                }
+            }
+            return ServiceResult.ok(new CheckoutView(order, code, secondsLeft, lockReason == null, lockReason,
+                    chainCurrentEnd, chainStart, chainEnd));
         } catch (SQLException e) {
             e.printStackTrace();
             return ServiceResult.fail(Messages.MSG04_SYSTEM_BUSY);

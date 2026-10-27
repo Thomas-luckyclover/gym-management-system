@@ -71,6 +71,27 @@ public class SubscriptionStartDateService {
     }
 
     /**
+     * Như getPicker nhưng dùng customerId đã biết, không khóa hồ sơ khách. Dashboard chỉ đọc nên không được
+     * giữ khóa chung với luồng thanh toán.
+     *
+     * @return picker, hoặc null khi gói không thuộc khách hoặc không phải Membership đang Active
+     */
+    public ServiceResult<StartDatePicker> getPickerForCustomer(int customerId, Integer subscriptionId) {
+        if (customerId <= 0 || subscriptionId == null || subscriptionId <= 0) {
+            return ServiceResult.fail("Mã gói không hợp lệ.");
+        }
+        try (Connection conn = openConnection()) {
+            Subscription subscription = subscriptionDAO.findById(conn, subscriptionId);
+            if (subscription == null || subscription.getCustomerId() != customerId) {
+                return ServiceResult.ok(null);
+            }
+            return ServiceResult.ok(buildPicker(conn, subscription, DateTimeUtil.today()));
+        } catch (SQLException | RuntimeException e) {
+            return ServiceResult.fail("Chưa đọc được thông tin gói. Vui lòng thử lại.");
+        }
+    }
+
+    /**
      * Giao diện chọn ngày cho đơn vừa thanh toán (trang kết quả thanh toán). Chỉ gọi khi đơn là của khách
      * đang đăng nhập và đã Paid; nhận connection của người gọi để cùng đọc một lần.
      *
@@ -189,6 +210,11 @@ public class SubscriptionStartDateService {
             LocalDate otherEnd = subscriptionDAO.findLastMembershipEndExcluding(
                     conn, subscription.getCustomerId(), today, id);
             options = PackagePeriod.optionsForPurchased(today, subscription.getStartDate(), otherEnd);
+            if (options.size() <= 1) {
+                // Gói này nối sau gói khác còn hạn lâu hơn 7 ngày: không còn ngày nào khác để chọn.
+                reason = "Gói này tự nối sau gói đang dùng nên không đổi được ngày bắt đầu.";
+                options = List.of();
+            }
         }
         return new StartDatePicker(id, subscription.getStartDate(), subscription.getEndDate(), today, options, reason);
     }
