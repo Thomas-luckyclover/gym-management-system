@@ -1,0 +1,18 @@
+<%-- Lịch chọn ngày bắt đầu gói. Trang nhúng đặt biến `picker` (StartDatePicker) trước khi include,
+     và bọc fragment này trong phần tử có data-sdp, data-sdp-url, data-sdp-sub, data-sdp-csrf.
+     start-date-picker.js điều khiển; mọi ngày do server tính sẵn. --%>
+<div class="sdp-cal" data-sdp-cal role="group" aria-label="Chọn ngày bắt đầu" hidden>
+    <h4 class="sdp-cal__title"><c:out value="${picker.calendarTitle}" /></h4>
+    <p class="sdp-cal__sub"><b>Chọn ngày bắt đầu tập</b> (trong 7 ngày tới)</p>
+    <div class="sdp-cal__grid">
+        <span class="sdp-cal__dow">T2</span><span class="sdp-cal__dow">T3</span><span class="sdp-cal__dow">T4</span><span class="sdp-cal__dow">T5</span><span class="sdp-cal__dow">T6</span><span class="sdp-cal__dow">T7</span><span class="sdp-cal__dow">CN</span>
+        <c:forEach var="cell" items="${picker.calendarCells}">
+            <button type="button" class="sdp-cal__day${cell.selected ? ' is-selected' : ''}${cell.today ? ' is-today' : ''}"
+                    data-date="${cell.iso}" data-start="${cell.startText}" data-end="${cell.endText}"
+                    ${cell.enabled ? '' : 'disabled'}><c:out value="${cell.label}" /></button>
+        </c:forEach>
+    </div>
+    <button type="button" class="sdp-cal__save" data-sdp-save disabled>Lưu ngày bắt đầu</button>
+    <p class="sdp-cal__note">Chỉ chọn được 1 lần.</p>
+    <p class="sdp-cal__error" data-sdp-error role="alert"></p>
+</div>
