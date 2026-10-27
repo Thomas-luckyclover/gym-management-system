@@ -988,6 +988,7 @@ a.package-card__buy {
 html:where(:not([data-theme="dark"])) .package-card__price {
   color: var(--arena-ember-ink, var(--color-primary));
 }
+/* Nhãn -% trong giao diện tối: tự đặt cả nền lẫn chữ, không phụ thuộc token của thẻ (thẻ/popup có thể sáng hoặc tối) */
 html:where([data-theme="dark"]) .package-card__deal b,
 html:where([data-theme="dark"]) .package-dialog .package-card__deal b {
   background: #8CE8B4;
