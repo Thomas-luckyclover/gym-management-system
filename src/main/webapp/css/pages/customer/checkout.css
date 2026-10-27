@@ -86,7 +86,15 @@
   padding: var(--space-5);
   border-radius: var(--radius-sm);
   color: var(--color-text-inverse);
-  background: linear-gradient(110deg, var(--brand-ink), color-mix(in srgb, var(--color-warning) 70%, var(--brand-ink)));
+  background: #07090D;
+}
+
+.checkout-banner::before {
+  content: "";
+  position: absolute;
+  inset: 0;
+  background: url("../../../images/packages/art-dumbbell.png") right 80% / cover no-repeat;
+  pointer-events: none;
 }
 
 .checkout-banner::after {
@@ -94,7 +102,8 @@
   position: absolute;
   inset: 0;
   pointer-events: none;
-  background: repeating-linear-gradient(135deg, transparent 0, transparent var(--space-8), color-mix(in srgb, var(--color-warning) 35%, transparent) var(--space-8), transparent calc(var(--space-8) + var(--border-width)));
+  background: linear-gradient(90deg, rgba(5, 7, 10, 0.78), transparent 62%);
+  box-shadow: inset 0 2px 0 #4C8DFF;
 }
 
 .checkout-banner__brand {
@@ -109,7 +118,7 @@
 }
 
 .checkout-banner__brand i {
-  color: var(--color-warning);
+  color: #4C8DFF;
   font-size: var(--font-size-xl);
 }
 
@@ -118,6 +127,8 @@
   z-index: 1;
   color: var(--color-text-inverse);
   font-size: var(--font-size-3xl);
+  font-style: italic;
+  text-shadow: 0 2px 12px rgba(0, 0, 0, 0.6);
   text-transform: uppercase;
 }
 
@@ -160,7 +171,7 @@
 }
 
 .checkout-details div span {
-  color: #4A5568;
+  color: var(--color-text-soft);
   font-size: var(--font-size-sm);
   font-weight: var(--font-weight-medium);
 }
@@ -172,7 +183,7 @@
 }
 
 .checkout-prices dt {
-  color: #2D3748;
+  color: var(--color-text);
 }
 
 .checkout-prices div {
@@ -279,12 +290,12 @@
 .checkout-total p {
   margin-top: var(--space-2);
   text-align: right;
-  color: #4A5568;
+  color: var(--color-text-soft);
   font-size: var(--font-size-sm);
 }
 
 .checkout-total p span {
-  color: #1A202C;
+  color: var(--color-text);
   font-weight: var(--font-weight-semibold);
 }
 
@@ -355,7 +366,7 @@ html body.dock .content .checkout-pay:disabled,
 }
 
 .checkout-provider p {
-  color: #4A5568;
+  color: var(--color-text-soft);
   font-size: var(--font-size-sm);
   font-weight: var(--font-weight-medium);
 }
@@ -369,4 +380,52 @@ html body.dock .content .checkout-pay:disabled,
 
 .checkout-page [hidden] {
   display: none;
+}
+
+/* Tiêu đề trong thẻ thanh toán: common.css ép h1-h3 màu trắng (cho nền xanh), thẻ này nền sáng nên đặt lại màu chữ */
+html body.dock .content .checkout-card.checkout-card > :is(h2, h3) {
+  color: var(--color-text);
+}
+
+/* Làm đẹp thêm (chỉ đổi màu, đệm, ảnh; không đổi cấu trúc) */
+.checkout-banner {
+  min-height: 170px;
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+}
+.checkout-banner__brand {
+  font-weight: var(--font-weight-semibold);
+  letter-spacing: 0.18em;
+  color: rgba(255, 255, 255, 0.85);
+}
+/* Tick vẽ bằng CSS (không phụ thuộc Font Awesome), ẩn icon cũ trong JSP */
+.checkout-benefits li > i {
+  display: none;
+}
+.checkout-benefits li::before {
+  content: "\2713";
+  flex: 0 0 22px;
+  width: 22px;
+  height: 22px;
+  display: grid;
+  place-items: center;
+  border-radius: 50%;
+  background: var(--color-success-ink);
+  color: var(--color-surface);
+  font-size: 13px;
+  font-weight: 700;
+  line-height: 1;
+}
+.checkout-benefits li {
+  padding: var(--space-2) var(--space-3);
+  border-radius: var(--radius-sm);
+  background: var(--color-success-tint);
+}
+html body.dock .content .checkout-total strong {
+  color: var(--arena-ember-ink, var(--color-primary));
+  font-size: var(--font-size-3xl);
+}
+html[data-theme="dark"] body.dock .content .checkout-total strong {
+  color: var(--color-text);
 }
