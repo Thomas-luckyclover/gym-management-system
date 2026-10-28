@@ -40,11 +40,11 @@
         </c:when>
 
         <c:when test="${currentRole.dbValue eq 'Manager'}">
-
+            <c:set var="activeNav" value="account" />
             <%@ include file="/WEB-INF/jsp/common/layout-manager.jspf" %>
-
         </c:when>
         <c:when test="${currentRole.dbValue eq 'Receptionist'}">
+            <c:set var="activeNav" value="account" />
             <%@ include file="/WEB-INF/jsp/common/layout-receptionist.jspf" %>
         </c:when>
 

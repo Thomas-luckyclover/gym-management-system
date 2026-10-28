@@ -6,7 +6,7 @@ import java.time.LocalTime;
 /**
  * MỘT NGÀY T2–T6 trong kỳ gói, trên bảng "Lịch dự kiến".
  *
- *   Ai tạo?   PtSaleService.planDays (không đọc DB, test được).
+ *   Ai tạo?   PtSaleService.checkDay (không đọc DB, test được) — 1 ngày + 1 giờ.
  *   Ai dùng?  pt-sales.jsp in lịch dự kiến; PtSaleService.hold giữ khung theo action.
  *
  *   action = "book"    PT đã công bố khung Free đúng giờ → giữ khung đó (slotId có giá trị)

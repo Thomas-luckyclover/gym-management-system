@@ -18,9 +18,7 @@
   <%@ include file="/WEB-INF/jsp/common/head.jspf" %>
   <title>Ca làm việc · Super Gym Lễ tân</title>
   <link rel="stylesheet" href="${pageContext.request.contextPath}/css/pages/receptionist/shift.css?v=20261021b">
-  <link rel="stylesheet" href="${pageContext.request.contextPath}/css/pages/auth/notification-bell.css">
   <script src="${pageContext.request.contextPath}/js/pages/receptionist/shift.js?v=20261021b" defer></script>
-  <script src="${pageContext.request.contextPath}/js/pages/auth/notification-bell.js" defer></script>
 </head>
 
 <body class="dock theme-staff">
