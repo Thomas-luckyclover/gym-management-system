@@ -5,9 +5,7 @@ import java.sql.Connection;
 import java.sql.PreparedStatement;
 import java.sql.ResultSet;
 import java.sql.SQLException;
-import java.sql.Date;
 import java.sql.Timestamp;
-import java.time.LocalDate;
 import java.time.LocalDateTime;
 import java.util.ArrayList;
 import java.util.List;
@@ -35,14 +33,19 @@ public class TransactionHistoryDAO {
                     t.NeedsRefund,
                     t.RefundedAt,
                     s.SubscriptionId,
-                    s.StartDate,
-                    s.EndDate,
-                    pk.PackageType
+                    pk.PackageType,
+                    o.UnitPriceSnapshot,
+                    o.DiscountAmount,
+                    v.VoucherCode,
+                    o.VatRateSnapshot,
+                    o.VatAmount
                 FROM Transactions t
                 JOIN Orders o
                     ON o.OrderId = t.OrderId
                 JOIN Packages pk
                     ON pk.PackageId = o.PackageId
+                LEFT JOIN Vouchers v
+                    ON v.VoucherId = o.VoucherId
                 JOIN Customers c
                     ON c.CustomerId = o.HolderCustomerId
                 JOIN Accounts a
@@ -97,17 +100,16 @@ public class TransactionHistoryDAO {
                             toLocalDateTime(rows.getTimestamp("RefundedAt")),
                             subscriptionId,
                             rows.getString("PackageType"),
-                            toLocalDate(rows.getDate("StartDate")),
-                            toLocalDate(rows.getDate("EndDate"))));
+                            rows.getLong("UnitPriceSnapshot"),
+                            rows.getLong("DiscountAmount"),
+                            rows.getString("VoucherCode"),
+                            rows.getInt("VatRateSnapshot"),
+                            rows.getLong("VatAmount")));
                 }
             }
         }
 
         return items;
-    }
-
-    private LocalDate toLocalDate(Date value) {
-        return value == null ? null : value.toLocalDate();
     }
 
     private LocalDateTime toLocalDateTime(Timestamp value) {

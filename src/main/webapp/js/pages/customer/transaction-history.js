@@ -2,8 +2,8 @@
 (function () {
     'use strict';
 
-    // Mở popup: nút có data-th-open="id của dialog"
     document.addEventListener('click', function (event) {
+        // Mở popup: nút có data-th-open="id của dialog"
         var opener = event.target.closest('[data-th-open]');
         if (opener) {
             var dialog = document.getElementById(opener.getAttribute('data-th-open'));
