@@ -10,57 +10,9 @@
 
         <link rel="stylesheet"
               href="${pageContext.request.contextPath}/css/pages/customer/dashboard.css?v=7">
-
-        <style>
-            .history-panel {
-                padding: 24px;
-                background: #fff;
-                border: 1px solid #ddd;
-                border-radius: 16px;
-            }
-
-            .history-filter,
-            .history-pagination {
-                display: flex;
-                flex-wrap: wrap;
-                align-items: center;
-                gap: 12px;
-                margin: 16px 0;
-            }
-
-            .history-table-wrap {
-                overflow-x: auto;
-            }
-
-            .history-table {
-                width: 100%;
-                border-collapse: collapse;
-            }
-
-            .history-table th,
-            .history-table td {
-                padding: 14px 12px;
-                border-bottom: 1px solid #e5e5e5;
-                text-align: left;
-                vertical-align: top;
-            }
-
-            .history-table small {
-                display: block;
-                margin-top: 6px;
-                color: #666;
-                overflow-wrap: anywhere;
-            }
-
-            .history-actions a {
-                display: block;
-                margin-bottom: 8px;
-            }
-
-            .history-error {
-                color: #b42318;
-            }
-        </style>
+        <link rel="stylesheet"
+              href="${pageContext.request.contextPath}/css/pages/customer/transaction-history.css?v=1">
+        <script src="${pageContext.request.contextPath}/js/pages/customer/transaction-history.js?v=1" defer></script>
     </head>
 
     <body class="dock ${themeClass}">
@@ -74,47 +26,37 @@
 
                 <main class="content" id="main-content">
                     <section class="history-panel">
-                        <p>
-                            Theo dõi từng lần thanh toán và gói đã được cấp.
-                            Bạn không cần xác nhận thanh toán tại đây.
-                        </p>
 
-                        <c:url var="historyUrl" value="/customer/transactions"/>
+                        <%-- Bộ lọc: các nút chọn nhanh, mỗi nút là một link GET --%>
+                        <nav class="history-chips" aria-label="Lọc theo trạng thái">
+                            <c:url var="allUrl" value="/customer/transactions"/>
+                            <a class="history-chip ${empty selectedStatus ? 'is-active' : ''}"
+                               href="${allUrl}">Tất cả</a>
 
-                        <form class="history-filter"
-                              method="get"
-                              action="${historyUrl}">
+                            <c:url var="successUrl" value="/customer/transactions">
+                                <c:param name="status" value="Success"/>
+                            </c:url>
+                            <a class="history-chip ${selectedStatus eq 'Success' ? 'is-active' : ''}"
+                               href="${successUrl}">Thành công</a>
 
-                            <label for="status">Trạng thái</label>
+                            <c:url var="pendingUrl" value="/customer/transactions">
+                                <c:param name="status" value="Pending"/>
+                            </c:url>
+                            <a class="history-chip ${selectedStatus eq 'Pending' ? 'is-active' : ''}"
+                               href="${pendingUrl}">Đang chờ</a>
 
-                            <select name="status" id="status">
-                                <option value="">Tất cả</option>
+                            <c:url var="failedUrl" value="/customer/transactions">
+                                <c:param name="status" value="Failed"/>
+                            </c:url>
+                            <a class="history-chip ${selectedStatus eq 'Failed' ? 'is-active' : ''}"
+                               href="${failedUrl}">Thất bại</a>
 
-                                <option value="Pending"
-                                    ${selectedStatus eq 'Pending' ? 'selected' : ''}>
-                                    Đang chờ kết quả
-                                </option>
-
-                                <option value="Success"
-                                    ${selectedStatus eq 'Success' ? 'selected' : ''}>
-                                    Thành công
-                                </option>
-
-                                <option value="Failed"
-                                    ${selectedStatus eq 'Failed' ? 'selected' : ''}>
-                                    Thất bại
-                                </option>
-
-                                <option value="Expired"
-                                    ${selectedStatus eq 'Expired' ? 'selected' : ''}>
-                                    Hết hạn lần thanh toán
-                                </option>
-                            </select>
-
-                            <button type="submit" class="btn btn-outline">
-                                Lọc
-                            </button>
-                        </form>
+                            <c:url var="expiredUrl" value="/customer/transactions">
+                                <c:param name="status" value="Expired"/>
+                            </c:url>
+                            <a class="history-chip ${selectedStatus eq 'Expired' ? 'is-active' : ''}"
+                               href="${expiredUrl}">Hết hạn</a>
+                        </nav>
 
                         <c:choose>
                             <c:when test="${not empty historyError}">
@@ -126,107 +68,108 @@
                             <c:otherwise>
                                 <c:choose>
                                     <c:when test="${empty historyItems}">
-                                        <p>Không có giao dịch ở trang này.</p>
+                                        <p class="history-empty">Chưa có giao dịch nào.</p>
                                     </c:when>
 
                                     <c:otherwise>
-                                        <div class="history-table-wrap">
-                                            <table class="history-table">
-                                                <thead>
-                                                    <tr>
-                                                        <th>Đơn / gói</th>
-                                                        <th>Số tiền</th>
-                                                        <th>Phương thức</th>
-                                                        <th>Thời gian</th>
-                                                        <th>Trạng thái</th>
-                                                        <th>Hoàn tiền</th>
-                                                        <th>Chi tiết</th>
-                                                    </tr>
-                                                </thead>
+                                        <%-- Danh sách nhóm theo tháng: gặp tháng mới thì đóng <ul> cũ và mở nhóm mới --%>
+                                        <c:set var="currentMonth" value=""/>
+                                        <c:forEach var="item" items="${historyItems}">
 
-                                                <tbody>
-                                                    <c:forEach var="item"
-                                                               items="${historyItems}">
-                                                        <tr>
-                                                            <td>
-                                                                <strong>
-                                                                    <c:out value="${item.orderCode}"/>
-                                                                </strong>
+                                            <c:if test="${item.monthLabel ne currentMonth}">
+                                                <c:if test="${not empty currentMonth}"></ul></c:if>
+                                                <p class="history-month" role="heading" aria-level="2">
+                                                    <c:out value="${item.monthLabel}"/>
+                                                </p>
+                                                <ul class="history-list">
+                                                <c:set var="currentMonth" value="${item.monthLabel}"/>
+                                            </c:if>
 
-                                                                <div>
-                                                                    <c:out value="${item.packageName}"/>
-                                                                </div>
+                                            <li>
+                                                <%-- Dòng: bấm để mở popup chi tiết (js/pages/customer/transaction-history.js) --%>
+                                                <button type="button" class="th-row"
+                                                        data-th-open="th-dialog-${item.transactionId}"
+                                                        data-status="${item.displayStatus}"
+                                                        data-tone="${item.tone}">
+                                                    <span class="th-row__thumb">
+                                                        <i class="th-badge" data-status="${item.displayStatus}" aria-hidden="true"></i>
+                                                    </span>
+                                                    <span>
+                                                        <span class="th-row__title"><c:out value="${item.packageName}"/></span>
+                                                        <span class="th-row__date">
+                                                            <c:out value="${item.createdDateText}"/> · <c:out value="${item.paymentMethodLabel}"/>
+                                                        </span>
+                                                        <c:if test="${item.hasValidity}">
+                                                            <span class="th-row__valid">Đến <c:out value="${item.validUntilText}"/></span>
+                                                        </c:if>
+                                                    </span>
+                                                    <span class="th-row__side">
+                                                        <strong class="th-row__amount"><c:out value="${gms:formatMoney(item.amount)}"/></strong>
+                                                        <span class="th-status" data-status="${item.displayStatus}"><c:out value="${item.shortStatusLabel}"/></span>
+                                                    </span>
+                                                    <span class="th-row__go"><span>Chi tiết</span></span>
+                                                </button>
 
-                                                                <small>
-                                                                    Mã tham chiếu:
-                                                                    <c:out value="${item.gatewayReference}"
-                                                                           default="—"/>
-                                                                </small>
-                                                            </td>
+                                                <%-- Popup chi tiết của giao dịch này --%>
+                                                <dialog class="th-dialog" id="th-dialog-${item.transactionId}"
+                                                        data-tone="${item.tone}" data-status="${item.displayStatus}"
+                                                        aria-label="Chi tiết giao dịch">
+                                                    <div class="th-dialog__banner">
+                                                        <button type="button" class="th-dialog__close" data-th-close aria-label="Đóng">&#10005;</button>
+                                                    </div>
+                                                    <div class="th-dialog__body">
+                                                        <div class="th-dialog__head">
+                                                            <div>
+                                                                <h2 class="th-dialog__title"><c:out value="${item.packageName}"/></h2>
+                                                                <span class="th-status" data-status="${item.displayStatus}"><c:out value="${item.shortStatusLabel}"/></span>
+                                                            </div>
+                                                            <strong class="th-dialog__amount"><c:out value="${gms:formatMoney(item.amount)}"/></strong>
+                                                        </div>
 
-                                                            <td>
-                                                                <c:out value="${gms:formatMoney(item.amount)}"/>
-                                                            </td>
+                                                        <dl class="th-dialog__list">
+                                                            <c:if test="${item.hasValidity}">
+                                                                <div><dt>Hiệu lực</dt><dd><c:out value="${item.validityText}"/></dd></div>
+                                                            </c:if>
+                                                            <div><dt>Thời gian</dt><dd><c:out value="${item.createdAtText}"/></dd></div>
+                                                            <div><dt>Thanh toán</dt><dd><c:out value="${item.paymentMethodLabel}"/></dd></div>
+                                                            <c:if test="${not empty item.refundRowText}">
+                                                                <div><dt>Hoàn tiền</dt><dd><c:out value="${item.refundRowText}"/></dd></div>
+                                                            </c:if>
+                                                            <div><dt>Mã đơn</dt><dd><c:out value="${item.orderCode}"/></dd></div>
+                                                            <c:if test="${not empty item.gatewayReference}">
+                                                                <div><dt>Mã tham chiếu</dt><dd><c:out value="${item.gatewayReference}"/></dd></div>
+                                                            </c:if>
+                                                        </dl>
 
-                                                            <td>
-                                                                <c:out value="${item.paymentMethodLabel}"/>
-                                                            </td>
+                                                        <div class="th-dialog__actions">
+                                                            <button type="button" class="btn btn-outline" data-th-close>Đóng</button>
 
-                                                            <td>
-                                                                Tạo:
-                                                                <c:out value="${item.createdAtText}"/>
-
-                                                                <small>
-                                                                    GMS xử lý:
-                                                                    <c:out value="${item.completedAtText}"/>
-                                                                </small>
-                                                            </td>
-
-                                                            <td>
-                                                                <c:out value="${item.statusLabel}"/>
-
-                                                                <c:if test="${item.status eq 'Expired'}">
-                                                                    <small>
-                                                                        Hết hạn không đồng nghĩa
-                                                                        đã xác nhận tiền chưa về.
-                                                                    </small>
-                                                                </c:if>
-                                                            </td>
-
-                                                            <td>
-                                                                <c:out value="${item.refundLabel}"/>
-                                                            </td>
-
-                                                            <td class="history-actions">
-                                                                <c:if test="${item.onlineGateway}">
-                                                                    <c:url var="resultUrl"
-                                                                           value="/customer/payment-result">
-                                                                        <c:param name="transaction"
-                                                                                 value="${item.transactionId}"/>
+                                                            <c:choose>
+                                                                <c:when test="${item.canViewPackage}">
+                                                                    <c:url var="packageUrl" value="/customer/bookings">
+                                                                        <c:param name="id" value="${item.subscriptionId}"/>
                                                                     </c:url>
+                                                                    <a class="btn btn-outline" href="${packageUrl}">Xem gói</a>
+                                                                </c:when>
 
-                                                                    <a href="${resultUrl}">
-                                                                        Xem kết quả
-                                                                    </a>
-                                                                </c:if>
+                                                                <c:when test="${item.canBuyAgain}">
+                                                                    <c:url var="buyAgainUrl" value="/customer/packages"/>
+                                                                    <a class="btn btn-buy" href="${buyAgainUrl}">Mua lại</a>
+                                                                </c:when>
 
-                                                                <c:if test="${item.canViewPackage}">
-                                                                    <c:url var="packageUrl"
-                                                                           value="/customer/bookings">
-                                                                        <c:param name="id"
-                                                                                 value="${item.subscriptionId}"/>
+                                                                <c:when test="${item.onlineGateway and item.status eq 'Pending'}">
+                                                                    <c:url var="resultUrl" value="/customer/payment-result">
+                                                                        <c:param name="transaction" value="${item.transactionId}"/>
                                                                     </c:url>
-
-                                                                    <a href="${packageUrl}">
-                                                                        Xem gói
-                                                                    </a>
-                                                                </c:if>
-                                                            </td>
-                                                        </tr>
-                                                    </c:forEach>
-                                                </tbody>
-                                            </table>
-                                        </div>
+                                                                    <a class="btn btn-outline" href="${resultUrl}">Xem kết quả</a>
+                                                                </c:when>
+                                                            </c:choose>
+                                                        </div>
+                                                    </div>
+                                                </dialog>
+                                            </li>
+                                        </c:forEach>
+                                        </ul>
                                     </c:otherwise>
                                 </c:choose>
 
@@ -234,30 +177,20 @@
                                      aria-label="Phân trang lịch sử giao dịch">
 
                                     <c:if test="${currentPage > 1}">
-                                        <c:url var="previousUrl"
-                                               value="/customer/transactions">
-                                            <c:param name="page"
-                                                     value="${currentPage - 1}"/>
-                                            <c:param name="status"
-                                                     value="${selectedStatus}"/>
+                                        <c:url var="previousUrl" value="/customer/transactions">
+                                            <c:param name="page" value="${currentPage - 1}"/>
+                                            <c:param name="status" value="${selectedStatus}"/>
                                         </c:url>
-
                                         <a href="${previousUrl}">Trang trước</a>
                                     </c:if>
 
-                                    <span>
-                                        Trang <c:out value="${currentPage}"/>
-                                    </span>
+                                    <span>Trang <c:out value="${currentPage}"/></span>
 
                                     <c:if test="${hasNext}">
-                                        <c:url var="nextUrl"
-                                               value="/customer/transactions">
-                                            <c:param name="page"
-                                                     value="${currentPage + 1}"/>
-                                            <c:param name="status"
-                                                     value="${selectedStatus}"/>
+                                        <c:url var="nextUrl" value="/customer/transactions">
+                                            <c:param name="page" value="${currentPage + 1}"/>
+                                            <c:param name="status" value="${selectedStatus}"/>
                                         </c:url>
-
                                         <a href="${nextUrl}">Trang sau</a>
                                     </c:if>
                                 </nav>
