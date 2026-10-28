@@ -5,7 +5,9 @@ import java.sql.Connection;
 import java.sql.PreparedStatement;
 import java.sql.ResultSet;
 import java.sql.SQLException;
+import java.sql.Date;
 import java.sql.Timestamp;
+import java.time.LocalDate;
 import java.time.LocalDateTime;
 import java.util.ArrayList;
 import java.util.List;
@@ -32,10 +34,15 @@ public class TransactionHistoryDAO {
                     t.CompletedAt,
                     t.NeedsRefund,
                     t.RefundedAt,
-                    s.SubscriptionId
+                    s.SubscriptionId,
+                    s.StartDate,
+                    s.EndDate,
+                    pk.PackageType
                 FROM Transactions t
                 JOIN Orders o
                     ON o.OrderId = t.OrderId
+                JOIN Packages pk
+                    ON pk.PackageId = o.PackageId
                 JOIN Customers c
                     ON c.CustomerId = o.HolderCustomerId
                 JOIN Accounts a
@@ -88,12 +95,19 @@ public class TransactionHistoryDAO {
                             toLocalDateTime(rows.getTimestamp("CompletedAt")),
                             rows.getBoolean("NeedsRefund"),
                             toLocalDateTime(rows.getTimestamp("RefundedAt")),
-                            subscriptionId));
+                            subscriptionId,
+                            rows.getString("PackageType"),
+                            toLocalDate(rows.getDate("StartDate")),
+                            toLocalDate(rows.getDate("EndDate"))));
                 }
             }
         }
 
         return items;
+    }
+
+    private LocalDate toLocalDate(Date value) {
+        return value == null ? null : value.toLocalDate();
     }
 
     private LocalDateTime toLocalDateTime(Timestamp value) {
