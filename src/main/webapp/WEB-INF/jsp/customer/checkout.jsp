@@ -110,10 +110,9 @@
                                     <%-- Gói Membership mua lúc đang có gói còn hạn: báo trước ngày thật sự bắt đầu (DBR-52). --%>
                                     <c:if test="${checkout.chained}">
                                         <div class="checkout-chain">
-                                            <span class="checkout-chain__title">Gói mới nối tiếp gói đang dùng, không mất ngày nào</span>
+                                            <span class="checkout-chain__title">Gói mới nối tiếp gói đang dùng</span>
                                             <p>Gói đang dùng của bạn còn hạn đến <b><c:out value="${checkout.chainCurrentEndText}" /></b>.
-                                                Gói này sẽ bắt đầu từ <b><c:out value="${checkout.chainStartText}" /></b> và dùng đến <b><c:out value="${checkout.chainEndText}" /></b>.</p>
-                                            <p class="checkout-chain__tip">Muốn bắt đầu muộn hơn? Bạn có thể mua sau, gần ngày muốn dùng.</p>
+                                                Gói này sẽ bắt đầu từ <b><c:out value="${checkout.chainStartText}" /></b> và dùng đến <b><c:out value="${checkout.chainEndText}" /></b>.</p> 
                                         </div>
                                     </c:if>
                                     <form id="paymentForm"

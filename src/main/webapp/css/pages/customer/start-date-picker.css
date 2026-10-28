@@ -394,4 +394,19 @@ html body .validity__lock {
   font-weight: 800;
   font-variant-numeric: tabular-nums;
 }
-
+@media (max-width: 520px) {
+  .validity-line {
+    padding: var(--space-2) var(--space-3);
+  }
+  .validity-line__label {
+    font-size: 0.68rem;
+  }
+  .validity-line__range {
+    font-size: 0.95rem;
+    white-space: nowrap;
+  }
+  .validity-line .sdp-btn {
+    padding: 3px var(--space-2);
+    font-size: 0.78rem;
+  }
+}
