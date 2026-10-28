@@ -85,7 +85,7 @@ public class MaintenanceRequestDAO {
 
         String sql = "INSERT INTO MaintenanceRequests "
                 + "(RequestCode, EquipmentItemId, ReportedByEmployeeId, Priority, "
-                + "IncidentType, DetectedBy, WarningTagPlaced, Description, AttachedImages, Status) "
+                + "IncidentType, AffectedItemsNote, WarningTagPlaced, Description, AttachedImages, Status) "
                 + "VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?)";
 
         try (PreparedStatement statement = connection.prepareStatement(
@@ -98,7 +98,7 @@ public class MaintenanceRequestDAO {
             statement.setInt(3, request.getReportedByEmployeeId());
             statement.setString(4, request.getPriority().getDbValue());
             statement.setString(5, request.getIncidentType() != null ? request.getIncidentType().getDbValue() : MaintenanceRequest.IncidentType.NOT_WORKING.getDbValue());
-            statement.setString(6, request.getDetectedBy() != null ? request.getDetectedBy().getDbValue() : MaintenanceRequest.DetectedBy.RECEPTIONIST.getDbValue());
+            statement.setString(6, request.getAffectedItemsNote());
             statement.setBoolean(7, request.isWarningTagPlaced());
             statement.setString(8, request.getDescription());
             statement.setString(9, request.getAttachedImages());
@@ -139,8 +139,8 @@ public class MaintenanceRequestDAO {
 
         String sql = "SELECT mr.MaintenanceRequestId, mr.RequestCode, mr.EquipmentItemId, "
                 + "mr.ReportedByEmployeeId, mr.ReviewedByEmployeeId, mr.ClosedByEmployeeId, "
-                + "mr.Priority, mr.IncidentType, mr.DetectedBy, mr.WarningTagPlaced, mr.Description, "
-                + "mr.AttachedImages, mr.Status, mr.SetUnderMaintenance, mr.RejectReason, mr.AcceptanceNote, "
+                + "mr.Priority, mr.IncidentType, mr.AffectedItemsNote, mr.WarningTagPlaced, mr.Description, "
+                + "mr.AttachedImages, mr.Status, mr.SetUnderMaintenance, mr.RejectReason, mr.ManagerNote, mr.AcceptanceNote, "
                 + "mr.ReportedAt, mr.ReviewedAt, mr.ClosedAt, ei.FacilityId "
                 + "FROM MaintenanceRequests mr WITH (UPDLOCK, HOLDLOCK) "
                 + "JOIN EquipmentItems ei ON ei.EquipmentItemId = mr.EquipmentItemId "
@@ -381,13 +381,24 @@ public class MaintenanceRequestDAO {
             int managerEmployeeId,
             boolean setUnderMaintenance
     ) throws SQLException {
+        return approve(connection, requestId, managerEmployeeId, setUnderMaintenance, null);
+    }
+
+    public boolean approve(
+            Connection connection,
+            int requestId,
+            int managerEmployeeId,
+            boolean setUnderMaintenance,
+            String managerNote
+    ) throws SQLException {
 
         String sql = "UPDATE MaintenanceRequests "
                 + "SET Status = ?, "
                 + "ReviewedByEmployeeId = ?, "
                 + "ReviewedAt = SYSDATETIME(), "
                 + "SetUnderMaintenance = ?, "
-                + "RejectReason = NULL "
+                + "RejectReason = NULL, "
+                + "ManagerNote = ? "
                 + "WHERE MaintenanceRequestId = ? "
                 + "AND Status = ?";
 
@@ -395,8 +406,9 @@ public class MaintenanceRequestDAO {
             statement.setString(1, MaintenanceRequest.Status.IN_PROGRESS.getDbValue());
             statement.setInt(2, managerEmployeeId);
             statement.setBoolean(3, setUnderMaintenance);
-            statement.setInt(4, requestId);
-            statement.setString(5, MaintenanceRequest.Status.OPEN.getDbValue());
+            statement.setString(4, managerNote != null && !managerNote.isBlank() ? managerNote.trim() : null);
+            statement.setInt(5, requestId);
+            statement.setString(6, MaintenanceRequest.Status.OPEN.getDbValue());
 
             return statement.executeUpdate() == 1;
         }
@@ -500,10 +512,10 @@ public class MaintenanceRequestDAO {
         return "SELECT "
                 + "mr.MaintenanceRequestId, mr.RequestCode, mr.EquipmentItemId, "
                 + "mr.ReportedByEmployeeId, mr.ReviewedByEmployeeId, mr.ClosedByEmployeeId, "
-                + "mr.Priority, mr.IncidentType, mr.DetectedBy, mr.WarningTagPlaced, mr.Description, "
-                + "mr.AttachedImages, mr.Status, mr.SetUnderMaintenance, mr.RejectReason, mr.AcceptanceNote, "
+                + "mr.Priority, mr.IncidentType, mr.AffectedItemsNote, mr.WarningTagPlaced, mr.Description, "
+                + "mr.AttachedImages, mr.Status, mr.SetUnderMaintenance, mr.RejectReason, mr.ManagerNote, mr.AcceptanceNote, "
                 + "mr.ReportedAt, mr.ReviewedAt, mr.ClosedAt, "
-                + "ei.ItemCode, f.FacilityId, f.FacilityName, f.Location AS FacilityLocation, "
+                + "ei.ItemCode, ei.ItemLabel, ei.PlacementNote, f.FacilityId, f.FacilityName, f.Location AS FacilityLocation, "
                 + "reporter.FullName AS ReporterName, "
                 + "reviewer.FullName AS ReviewerName, "
                 + "closer.FullName AS CloserName "
@@ -765,11 +777,8 @@ public class MaintenanceRequestDAO {
                 )
         );
 
-        request.setDetectedBy(
-                MaintenanceRequest.DetectedBy.fromDbValue(
-                        resultSet.getString("DetectedBy")
-                )
-        );
+        request.setAffectedItemsNote(resultSet.getString("AffectedItemsNote"));
+        request.setManagerNote(resultSet.getString("ManagerNote"));
 
         request.setWarningTagPlaced(resultSet.getBoolean("WarningTagPlaced"));
         request.setDescription(resultSet.getString("Description"));
@@ -820,12 +829,59 @@ public class MaintenanceRequestDAO {
         }
     }
 
+    /**
+     * Tra cứu phiếu bảo trì đã đóng (Closed) gần nhất của thiết bị cá thể này.
+     * Dùng hiển thị khối 'Lần hỏng trước của máy này' trên màn hình Quản lý duyệt.
+     */
+    public MaintenanceRequestView findLastClosedRequest(int equipmentItemId, int excludeRequestId)
+            throws SQLException {
+
+        String sql = """
+            SELECT TOP 1 mr.MaintenanceRequestId, mr.RequestCode, mr.EquipmentItemId,
+                   ei.ItemCode, ei.ItemLabel, ei.PlacementNote, f.FacilityId, f.FacilityName, f.Location AS FacilityLocation,
+                   mr.ReportedByEmployeeId, mr.ReviewedByEmployeeId, mr.ClosedByEmployeeId,
+                   mr.Priority, mr.IncidentType, mr.AffectedItemsNote, mr.WarningTagPlaced,
+                   mr.Description, mr.AttachedImages, mr.Status, mr.SetUnderMaintenance,
+                   mr.RejectReason, mr.ManagerNote, mr.AcceptanceNote, mr.ReportedAt, mr.ReviewedAt, mr.ClosedAt,
+                   reporter.FullName AS ReporterName,
+                   reviewer.FullName AS ReviewerName,
+                   closer.FullName AS CloserName
+            FROM MaintenanceRequests mr
+            JOIN EquipmentItems ei ON ei.EquipmentItemId = mr.EquipmentItemId
+            JOIN Facilities f ON f.FacilityId = ei.FacilityId
+            JOIN Employees re ON re.EmployeeId = mr.ReportedByEmployeeId
+            JOIN Persons reporter ON reporter.PersonId = re.PersonId
+            LEFT JOIN Employees rv ON rv.EmployeeId = mr.ReviewedByEmployeeId
+            LEFT JOIN Persons reviewer ON reviewer.PersonId = rv.PersonId
+            LEFT JOIN Employees cl ON cl.EmployeeId = mr.ClosedByEmployeeId
+            LEFT JOIN Persons closer ON closer.PersonId = cl.PersonId
+            WHERE mr.EquipmentItemId = ? AND mr.Status = 'Closed' AND mr.MaintenanceRequestId <> ?
+            ORDER BY mr.ClosedAt DESC, mr.MaintenanceRequestId DESC
+            """;
+
+        try (Connection connection = DBContext.getConnection();
+             PreparedStatement statement = connection.prepareStatement(sql)) {
+
+            statement.setInt(1, equipmentItemId);
+            statement.setInt(2, excludeRequestId);
+
+            try (ResultSet resultSet = statement.executeQuery()) {
+                if (resultSet.next()) {
+                    return mapResultSetToView(resultSet);
+                }
+            }
+        }
+        return null;
+    }
+
     private MaintenanceRequestView mapResultSetToView(ResultSet resultSet)
             throws SQLException {
 
         return new MaintenanceRequestView(
                 mapResultSetToRequest(resultSet),
                 resultSet.getString("ItemCode"),
+                resultSet.getString("ItemLabel"),
+                resultSet.getString("PlacementNote"),
                 resultSet.getInt("FacilityId"),
                 resultSet.getString("FacilityName"),
                 resultSet.getString("FacilityLocation"),
@@ -842,6 +898,8 @@ public class MaintenanceRequestDAO {
 
         private final MaintenanceRequest request;
         private final String itemCode;
+        private final String itemLabel;
+        private final String placementNote;
         private final int facilityId;
         private final String facilityName;
         private final String facilityLocation;
@@ -852,6 +910,8 @@ public class MaintenanceRequestDAO {
         public MaintenanceRequestView(
                 MaintenanceRequest request,
                 String itemCode,
+                String itemLabel,
+                String placementNote,
                 int facilityId,
                 String facilityName,
                 String facilityLocation,
@@ -861,6 +921,8 @@ public class MaintenanceRequestDAO {
         ) {
             this.request = request;
             this.itemCode = itemCode;
+            this.itemLabel = itemLabel;
+            this.placementNote = placementNote;
             this.facilityId = facilityId;
             this.facilityName = facilityName;
             this.facilityLocation = facilityLocation;
@@ -875,6 +937,14 @@ public class MaintenanceRequestDAO {
 
         public String getItemCode() {
             return itemCode;
+        }
+
+        public String getItemLabel() {
+            return itemLabel;
+        }
+
+        public String getPlacementNote() {
+            return placementNote;
         }
 
         public int getFacilityId() {
@@ -899,6 +969,30 @@ public class MaintenanceRequestDAO {
 
         public String getCloserName() {
             return closerName;
+        }
+
+        public String getEquipmentDisplay() {
+            if (request != null && request.getAffectedItemsNote() != null && !request.getAffectedItemsNote().isBlank()) {
+                return request.getAffectedItemsNote().trim() + (itemCode != null && !itemCode.isBlank() ? " · " + itemCode : "");
+            }
+            StringBuilder sb = new StringBuilder();
+            if (itemLabel != null && !itemLabel.isBlank()) {
+                sb.append(itemLabel.trim());
+            }
+            if (placementNote != null && !placementNote.isBlank()) {
+                if (!sb.isEmpty()) {
+                    sb.append(" · ");
+                }
+                sb.append(placementNote.trim());
+            }
+            if (itemCode != null && !itemCode.isBlank()) {
+                if (!sb.isEmpty()) {
+                    sb.append(" (").append(itemCode.trim()).append(")");
+                } else {
+                    sb.append(itemCode.trim());
+                }
+            }
+            return sb.toString();
         }
     }
 

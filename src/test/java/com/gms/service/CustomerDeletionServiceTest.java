@@ -10,6 +10,14 @@ import com.gms.dao.PersonDAO;
 import com.gms.dto.ServiceResult;
 import com.gms.entity.Account;
 import com.gms.entity.Employee;
+import com.gms.entity.Customer;
+import com.gms.entity.CustomerDeletionRequest;
+import com.gms.entity.Person;
+import com.gms.dto.CustomerProfileRowView;
+import com.gms.util.DBContext;
+import java.sql.Connection;
+import java.util.List;
+import org.mockito.MockedStatic;
 import java.sql.SQLException;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.DisplayName;
@@ -185,5 +193,230 @@ class CustomerDeletionServiceTest {
 
         assertFalse(result.isSuccess());
         assertEquals(Messages.MSG07_NO_PERMISSION, result.getMessage());
+    }
+
+    // ===== Các nhánh ghi dữ liệu phải commit/rollback toàn bộ nghiệp vụ =====
+
+    @Test
+    void noAssetsDeletesImmediatelyAndKeepsHistoryTablesUntouched() throws Exception {
+        mockActor(2, Role.RECEPTIONIST);
+        Connection connection = mock(Connection.class);
+        when(customerDAO.findById(connection, 15, true)).thenReturn(activeCustomer());
+        when(customerDAO.softDeleteCustomer(connection, 15)).thenReturn(true);
+        try (MockedStatic<DBContext> database = mockStatic(DBContext.class)) {
+            database.when(DBContext::getConnection).thenReturn(connection);
+            assertTrue(service.requestOrDeleteCustomer(2, 15, "Khách yêu cầu ngừng hồ sơ").isSuccess());
+        }
+        verify(connection).commit();
+        verify(connection, never()).rollback();
+        verify(customerDeletionRequestDAO, never()).insert(any(), any());
+        verify(personDAO).releasePersonContactIfNoActiveRoles(connection, 400);
+        verify(accountDAO).deactivateAccountIfNoActiveRoles(connection, 400);
+        verify(auditLogService).logInTransaction(eq(connection), eq(2), eq(Role.RECEPTIONIST),
+                anyString(), eq("Customers"), eq(15), eq("Status"), eq("Active"), eq("Inactive"), anyString());
+    }
+
+    @Test
+    void remainingPackageCreatesPendingAndDoesNotDeleteCustomer() throws Exception {
+        mockActor(2, Role.RECEPTIONIST);
+        Connection connection = mock(Connection.class);
+        when(customerDAO.findById(connection, 15, true)).thenReturn(activeCustomer());
+        when(customerDAO.countActiveSubscriptions(connection, 15)).thenReturn(1);
+        when(customerDeletionRequestDAO.insert(eq(connection), any())).thenReturn(88);
+        try (MockedStatic<DBContext> database = mockStatic(DBContext.class)) {
+            database.when(DBContext::getConnection).thenReturn(connection);
+            assertTrue(service.requestOrDeleteCustomer(2, 15, "Khách muốn ngừng sử dụng dịch vụ").isSuccess());
+        }
+        verify(connection).commit();
+        verify(customerDAO, never()).softDeleteCustomer(any(), anyInt());
+        verify(notificationService).notifyRoleInTransaction(eq(connection), eq(Role.MANAGER), anyString(), anyString());
+    }
+
+    @Test
+    void scheduledSessionAlsoRequiresManagerApproval() throws Exception {
+        mockActor(2, Role.RECEPTIONIST);
+        Connection connection = mock(Connection.class);
+        when(customerDAO.findById(connection, 15, true)).thenReturn(activeCustomer());
+        when(customerDAO.countScheduledSessions(connection, 15)).thenReturn(2);
+        when(customerDeletionRequestDAO.insert(eq(connection), any())).thenReturn(89);
+        try (MockedStatic<DBContext> database = mockStatic(DBContext.class)) {
+            database.when(DBContext::getConnection).thenReturn(connection);
+            assertTrue(service.requestOrDeleteCustomer(2, 15, "Khách yêu cầu xóa hồ sơ").isSuccess());
+        }
+        verify(customerDAO, never()).softDeleteCustomer(any(), anyInt());
+        verify(connection).commit();
+    }
+
+    @Test
+    void duplicateRequestRollsBackWithoutCreatingAnotherRequest() throws Exception {
+        mockActor(2, Role.RECEPTIONIST);
+        Connection connection = mock(Connection.class);
+        when(customerDAO.findById(connection, 15, true)).thenReturn(activeCustomer());
+        when(customerDeletionRequestDAO.hasPendingRequest(connection, 15)).thenReturn(true);
+        try (MockedStatic<DBContext> database = mockStatic(DBContext.class)) {
+            database.when(DBContext::getConnection).thenReturn(connection);
+            assertFalse(service.requestOrDeleteCustomer(2, 15, "Khách yêu cầu xóa hồ sơ").isSuccess());
+        }
+        verify(connection).rollback();
+        verify(connection, never()).commit();
+        verify(customerDeletionRequestDAO, never()).insert(any(), any());
+    }
+
+    @Test
+    void auditFailureRollsBackTheDeletion() throws Exception {
+        mockActor(2, Role.RECEPTIONIST);
+        Connection connection = mock(Connection.class);
+        when(customerDAO.findById(connection, 15, true)).thenReturn(activeCustomer());
+        when(customerDAO.softDeleteCustomer(connection, 15)).thenReturn(true);
+        doThrow(new SQLException("Test rollback"))
+                .when(auditLogService).logInTransaction(eq(connection), anyInt(), any(), anyString(),
+                        anyString(), anyInt(), anyString(), any(), any(), anyString());
+        try (MockedStatic<DBContext> database = mockStatic(DBContext.class)) {
+            database.when(DBContext::getConnection).thenReturn(connection);
+            assertFalse(service.requestOrDeleteCustomer(2, 15, "Khách yêu cầu xóa hồ sơ").isSuccess());
+        }
+        verify(connection).rollback();
+        verify(connection, never()).commit();
+    }
+
+    @Test
+    void managerApprovesPendingAndDeactivatesCustomerInOneTransaction() throws Exception {
+        mockActor(1, Role.MANAGER);
+        Connection connection = mock(Connection.class);
+        when(customerDeletionRequestDAO.findById(connection, 7, true)).thenReturn(pendingRequest());
+        when(customerDAO.findById(connection, 15, true)).thenReturn(activeCustomer());
+        when(customerDeletionRequestDAO.approve(connection, 7, 1)).thenReturn(true);
+        when(customerDAO.softDeleteCustomer(connection, 15)).thenReturn(true);
+        try (MockedStatic<DBContext> database = mockStatic(DBContext.class)) {
+            database.when(DBContext::getConnection).thenReturn(connection);
+            assertTrue(service.approveDeletion(1, 7).isSuccess());
+        }
+        verify(connection).commit();
+        verify(customerDAO).softDeleteCustomer(connection, 15);
+        verify(notificationService).notifyEmployeeInTransaction(eq(connection), eq(3), anyString(), anyString());
+    }
+
+    @Test
+    void processedRequestCannotBeApprovedTwice() throws Exception {
+        mockActor(1, Role.MANAGER);
+        Connection connection = mock(Connection.class);
+        CustomerDeletionRequest request = pendingRequest();
+        request.setStatus(CustomerDeletionRequest.Status.APPROVED);
+        when(customerDeletionRequestDAO.findById(connection, 7, true)).thenReturn(request);
+        try (MockedStatic<DBContext> database = mockStatic(DBContext.class)) {
+            database.when(DBContext::getConnection).thenReturn(connection);
+            assertFalse(service.approveDeletion(1, 7).isSuccess());
+        }
+        verify(connection).rollback();
+        verify(customerDeletionRequestDAO, never()).approve(any(), anyInt(), anyInt());
+    }
+
+    @Test
+    void ownProfileCannotBeApprovedOrRejected() throws Exception {
+        mockActor(1, Role.MANAGER);
+        Connection connection = mock(Connection.class);
+        when(customerDeletionRequestDAO.findById(connection, 7, true)).thenReturn(pendingRequest());
+        when(selfServiceGuard.isOwnCustomerProfile(1, 15)).thenReturn(true);
+        try (MockedStatic<DBContext> database = mockStatic(DBContext.class)) {
+            database.when(DBContext::getConnection).thenReturn(connection);
+            assertFalse(service.approveDeletion(1, 7).isSuccess());
+            assertFalse(service.rejectDeletion(1, 7, "Không tự xử lý hồ sơ của mình").isSuccess());
+        }
+        verify(connection, times(2)).rollback();
+        verify(customerDeletionRequestDAO, never()).approve(any(), anyInt(), anyInt());
+        verify(customerDeletionRequestDAO, never()).reject(any(), anyInt(), anyInt(), anyString());
+    }
+
+    @Test
+    void rejectingRequestDoesNotDeactivateCustomer() throws Exception {
+        mockActor(1, Role.MANAGER);
+        Connection connection = mock(Connection.class);
+        when(customerDeletionRequestDAO.findById(connection, 7, true)).thenReturn(pendingRequest());
+        when(customerDeletionRequestDAO.reject(connection, 7, 1, "Khách vẫn tiếp tục sử dụng gói")).thenReturn(true);
+        try (MockedStatic<DBContext> database = mockStatic(DBContext.class)) {
+            database.when(DBContext::getConnection).thenReturn(connection);
+            assertTrue(service.rejectDeletion(1, 7, "Khách vẫn tiếp tục sử dụng gói").isSuccess());
+        }
+        verify(connection).commit();
+        verify(customerDAO, never()).softDeleteCustomer(any(), anyInt());
+    }
+
+    // ===== Trạng thái, phân trang và dữ liệu dùng trên giao diện =====
+
+    @Test
+    void receptionistListIncludesFrozenExpiredAndNewProfiles() throws Exception {
+        when(customerDAO.countCustomerProfiles(null, "ALL", false)).thenReturn(1);
+        CustomerProfileRowView row = new CustomerProfileRowView(15, "KH-0015", 400,
+                "Hội viên đang bảo lưu", null, null, "Self", "Frozen", null, true, false, null, null, null);
+        when(customerDAO.findCustomerProfiles(null, "ALL", false, 0, 10)).thenReturn(List.of(row));
+        when(accountDAO.findById(2)).thenReturn(new Account(102, null, Account.Status.ACTIVE));
+        var result = service.getProfilesPage(2, null, null, false, 1, 10);
+        assertTrue(result.isSuccess());
+        assertEquals("Đang bảo lưu", result.getData().getItems().get(0).getStatusLabel());
+        assertFalse(row.isOwnProfile());
+    }
+
+    @Test
+    void databaseFailureIsReportedAsErrorRatherThanEmptyList() throws Exception {
+        when(customerDAO.countCustomerProfiles(null, "ALL", true)).thenThrow(new SQLException("Test list error"));
+        var result = service.getProfilesPage(1, null, null, true, 1, 10);
+        assertFalse(result.isSuccess());
+        assertNull(result.getData());
+        assertEquals(Messages.MSG04_SYSTEM_BUSY, result.getMessage());
+    }
+
+    @Test
+    void excessivePageNumberLoadsLastPage() throws Exception {
+        when(customerDeletionRequestDAO.countPending()).thenReturn(12);
+        when(customerDeletionRequestDAO.findPendingViews(1, 10, 10)).thenReturn(List.of());
+        var result = service.getPendingPage(1, 999, 10);
+        assertTrue(result.isSuccess());
+        assertEquals(2, result.getData().getPageNumber());
+    }
+
+    @Test
+    void receptionistCannotReadInactiveProfileEvenWithDirectUrl() throws Exception {
+        Connection connection = mock(Connection.class);
+        Customer customer = activeCustomer();
+        customer.setStatus("Inactive");
+        when(customerDAO.findById(connection, 15, false)).thenReturn(customer);
+        try (MockedStatic<DBContext> database = mockStatic(DBContext.class)) {
+            database.when(DBContext::getConnection).thenReturn(connection);
+            assertFalse(service.getProfileDetail(2, 15, false).isSuccess());
+        }
+        verifyNoInteractions(personDAO);
+    }
+
+    @Test
+    void statusFilterCannotBeUsedToExposeInactiveProfilesToReceptionist() {
+        assertEquals("ALL", service.normalizeStatus("Inactive", false));
+        assertEquals("Inactive", service.normalizeStatus("Inactive", true));
+        assertEquals("Frozen", service.normalizeStatus("Frozen", false));
+        assertEquals("ALL", service.normalizeStatus("Unknown", true));
+    }
+
+    private void mockActor(int accountId, Role role) throws SQLException {
+        int personId = 100 + accountId;
+        when(accountDAO.findById(accountId)).thenReturn(
+                new Account(accountId, personId, "hash", Account.Status.ACTIVE, 0, null, null, null));
+        when(employeeDAO.findByPersonId(personId)).thenReturn(new Employee(
+                accountId, personId, "NV-000" + accountId, role,
+                null, null, null, null, Employee.Status.WORKING, null, null));
+    }
+
+    private Customer activeCustomer() {
+        Customer customer = new Customer(400, "KH-0015", "Self", "Active");
+        customer.setCustomerId(15);
+        return customer;
+    }
+
+    private CustomerDeletionRequest pendingRequest() {
+        CustomerDeletionRequest request = new CustomerDeletionRequest();
+        request.setCustomerDeletionRequestId(7);
+        request.setCustomerId(15);
+        request.setRequestedByEmployeeId(3);
+        request.setStatus(CustomerDeletionRequest.Status.PENDING);
+        request.setReason("Khách yêu cầu xóa hồ sơ");
+        return request;
     }
 }

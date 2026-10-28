@@ -51,6 +51,9 @@ public class CustomerProfileRowView {
     // DAO: Customers.DeletedAt, thời điểm xóa (chỉ có khi Inactive).
     private final LocalDateTime deletedAt;
 
+    // Service so PersonId với người đăng nhập; khóa thao tác trên hồ sơ của chính mình.
+    private boolean ownProfile;
+
     public CustomerProfileRowView(
             int customerId,
             String customerCode,
@@ -83,22 +86,106 @@ public class CustomerProfileRowView {
         this.deletedAt = deletedAt;
     }
 
-    public int getCustomerId() { return customerId; }
-    public String getCustomerCode() { return customerCode; }
-    public int getPersonId() { return personId; }
-    public String getFullName() { return fullName; }
-    public String getPhone() { return phone; }
-    public String getEmail() { return email; }
-    public String getCustomerType() { return customerType; }
-    public String getStatus() { return status; }
-    public String getCurrentPackageName() { return currentPackageName; }
-    public boolean isHasActivePackage() { return hasActivePackage; }
-    public boolean isHasPendingDeletion() { return hasPendingDeletion; }
-    public Integer getPendingRequestId() { return pendingRequestId; }
-    public LocalDateTime getJoinedAt() { return joinedAt; }
-    public LocalDateTime getDeletedAt() { return deletedAt; }
+    public int getCustomerId() {
+        return customerId;
+    }
+
+    public String getCustomerCode() {
+        return customerCode;
+    }
+
+    public int getPersonId() {
+        return personId;
+    }
+
+    public String getFullName() {
+        return fullName;
+    }
+
+    public String getPhone() {
+        return phone;
+    }
+
+    public String getEmail() {
+        return email;
+    }
+
+    public String getCustomerType() {
+        return customerType;
+    }
+
+    public String getStatus() {
+        return status;
+    }
+
+    public String getCurrentPackageName() {
+        return currentPackageName;
+    }
+
+    public boolean isHasActivePackage() {
+        return hasActivePackage;
+    }
+
+    public boolean isHasPendingDeletion() {
+        return hasPendingDeletion;
+    }
+
+    public Integer getPendingRequestId() {
+        return pendingRequestId;
+    }
+
+    public LocalDateTime getJoinedAt() {
+        return joinedAt;
+    }
+
+    public LocalDateTime getDeletedAt() {
+        return deletedAt;
+    }
+
 
     public boolean isInactive() {
         return "Inactive".equalsIgnoreCase(status);
+    }
+
+    /** Nhãn trạng thái hồ sơ, dùng ở cả danh sách và chi tiết BF-07. */
+    public String getStatusLabel() {
+        if ("New".equals(status)) {
+            return "Chưa có gói";
+        }
+        if ("Active".equals(status)) {
+            return "Hoạt động";
+        }
+        if ("Frozen".equals(status)) {
+            return "Đang bảo lưu";
+        }
+        if ("Expired".equals(status)) {
+            return "Hết hạn";
+        }
+        return "Ngừng hoạt động";
+    }
+
+    public String getStatusTone() {
+        if ("Active".equals(status)) {
+            return "success";
+        }
+        if ("Frozen".equals(status)) {
+            return "warning";
+        }
+        return "neutral";
+    }
+
+    public String getCustomerTypeLabel() {
+        if ("Dependent".equals(customerType)) {
+            return "Phụ thuộc";
+        }
+        return "Cá nhân";
+    }
+
+    public boolean isOwnProfile() {
+        return ownProfile;
+    }
+
+    public void setOwnProfile(boolean ownProfile) {
+        this.ownProfile = ownProfile;
     }
 }

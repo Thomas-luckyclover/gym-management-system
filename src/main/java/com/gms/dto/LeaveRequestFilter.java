@@ -4,8 +4,8 @@ import com.gms.entity.LeaveRequest;
 import java.time.LocalDate;
 
 /**
- * Điều kiện lọc ĐÃ HỢP LỆ cho danh sách đơn nghỉ phép của Manager (màn #26, UC-15).
- * Chỉ Service tạo sau khi kiểm tra tham số URL; dữ liệu thô người dùng nhập giữ ở ${param.*}.
+ * Bộ lọc danh sách nghỉ phép: Service chuẩn hóa tham số URL, DAO áp dụng vào SQL.
+ * Khoảng ngày bị đảo được Service báo lỗi trước khi truy vấn.
  * Field null nghĩa là không lọc theo điều kiện đó.
  */
 public class LeaveRequestFilter {
@@ -26,11 +26,12 @@ public class LeaveRequestFilter {
     private final LocalDate fromDate;
     private final LocalDate toDate;
 
-    /** Service gọi sau khi đã kiểm tra hợp lệ; không tự validate trong constructor. */
+    /** Bộ lọc đơn giản theo tab và từ khóa; các điều kiện khác để trống. */
     public LeaveRequestFilter(LeaveRequest.Status status, String keyword) {
         this(status, keyword, null, null, null, null);
     }
 
+    /** Service gọi sau khi chuẩn hóa tham số URL; constructor chỉ nhận dữ liệu. */
     public LeaveRequestFilter(
             LeaveRequest.Status status,
             String keyword,

@@ -61,29 +61,7 @@
 
       <div class="top-right">
 
-        <a class="tb-user"
-           href="${pageContext.request.contextPath}/account">
-
-          <span class="avatar"><i class="fa-solid fa-user" aria-hidden="true"></i></span>
-
-          <span>
-
-            <b>
-              <c:out
-                      value="${sessionScope.displayName}" />
-            </b>
-
-            <small>
-              <c:choose>
-                <c:when test="${sessionScope.role == 'Manager'}">Quản lý</c:when>
-                <c:when test="${sessionScope.role == 'PT'}">Huấn luyện viên PT</c:when>
-                <c:otherwise>Lễ tân</c:otherwise>
-              </c:choose>
-            </small>
-
-          </span>
-
-        </a>
+        <%@ include file="/WEB-INF/jsp/common/topbar-user.jspf" %>
 
       </div>
 

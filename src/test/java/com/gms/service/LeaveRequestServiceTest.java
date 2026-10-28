@@ -1,5 +1,9 @@
 package com.gms.service;
 
+import com.gms.dto.LeaveRequestRow;
+import com.gms.dto.LeaveReviewDetail;
+import java.math.BigDecimal;
+import java.util.UUID;
 import com.gms.dao.AccountDAO;
 import com.gms.dao.EmployeeDAO;
 import com.gms.dao.LeaveRequestDAO;
@@ -294,5 +298,49 @@ class LeaveRequestServiceTest {
 
         var resultNegative = staffService.withdrawRequest(1, -1);
         assertFalse(resultNegative.isSuccess());
+    }
+    // ===== Đọc đủ các phần cùng đợt, kể cả khác tab lọc =====
+    @Test
+    void approvedTabStillShowsTheRejectedCompanionOutsideItsFilter() throws Exception {
+        var pair = createSplitPair();
+        when(leaveRequestDAO.countRequests(any())).thenReturn(1);
+        when(leaveRequestDAO.findRequestPage(any(), eq(0), eq(20), isNull())).thenReturn(List.of(
+                new LeaveRequestRow(pair.get(0), "NV-0050", "Nhân viên test", "Receptionist", null)));
+        when(leaveRequestDAO.findByLeaveGroup(pair.get(0).getLeaveGroupId(), 50)).thenReturn(pair);
+        var result = service.getRequestPage(service.createManagerFilter("", "Approved", null, null, null, null), null, 1, 20);
+        assertTrue(result.isSuccess());
+        var group = result.getData().getItems().get(0).getLeaveGroup();
+        assertEquals(2, group.getRequests().size());
+        assertEquals(new BigDecimal("5"), group.getApprovedDays());
+        assertEquals(new BigDecimal("9"), group.getTotalDays());
+        verify(leaveRequestDAO).findByLeaveGroup(pair.get(0).getLeaveGroupId(), 50);
+    }
+
+    @Test
+    void processedDetailHasBothPartsButNoLiveApprovalChecks() throws Exception {
+        var pair = createSplitPair();
+        when(leaveRequestDAO.findReviewDetail(101, null)).thenReturn(new LeaveReviewDetail(pair.get(0), "NV-0050", "Nhân viên test", "Receptionist", null, "Quản lý"));
+        when(leaveRequestDAO.findByLeaveGroup(pair.get(0).getLeaveGroupId(), 50)).thenReturn(pair);
+        var detail = service.getReviewDetail(101).getData();
+        assertEquals(2, detail.getLeaveGroup().getRequests().size());
+        assertTrue(detail.getChecks().isEmpty());
+        assertFalse(detail.isCanApprove());
+    }
+
+    private List<LeaveRequest> createSplitPair() {
+        String groupId = UUID.randomUUID().toString();
+        LeaveRequest annual = new LeaveRequest();
+        annual.setLeaveRequestId(101);
+        annual.setEmployeeId(50);
+        annual.setLeaveGroupId(groupId);
+        annual.setDays(new BigDecimal("5"));
+        annual.setStatus(LeaveRequest.Status.APPROVED);
+        LeaveRequest unpaid = new LeaveRequest();
+        unpaid.setLeaveRequestId(102);
+        unpaid.setEmployeeId(50);
+        unpaid.setLeaveGroupId(groupId);
+        unpaid.setDays(new BigDecimal("4"));
+        unpaid.setStatus(LeaveRequest.Status.REJECTED);
+        return List.of(annual, unpaid);
     }
 }

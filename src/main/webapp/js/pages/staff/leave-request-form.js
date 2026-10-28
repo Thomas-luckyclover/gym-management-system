@@ -1,179 +1,230 @@
-/**
- * Script xử lý client-side cho màn hình nộp đơn xin nghỉ phép (màn #25, UC-14).
- * Kiểm tra hạn chốt nộp P-12 khi nhân viên thay đổi ngày nghỉ.
- */
+/** BF-05: xem quỹ/lịch trước khi gửi, xác nhận phần không lương; backend luôn tính lại khi POST. */
 document.addEventListener("DOMContentLoaded", function () {
-    // B1: lấy các phần tử DOM cần thao tác
-    const leaveDateInput = document.getElementById("leaveDate");
-    const submitBtn = document.getElementById("leaveSubmit");
-    const clientErrDiv = document.getElementById("leaveDateClientErr");
-    const infoDateEl = document.getElementById("infoDate");
-    const infoDeadlineEl = document.getElementById("infoDeadline");
-
-    if (!leaveDateInput || !submitBtn) {
+    const form = document.getElementById("leaveForm");
+    if (!form) {
         return;
     }
+    const fromInput = document.getElementById("leaveDate");
+    const toInput = document.getElementById("toDate");
+    const typeInput = document.getElementById("leaveType");
+    const shiftInput = document.getElementById("shiftType");
+    const submitButton = document.getElementById("leaveSubmit");
+    const planBox = document.getElementById("leavePlan");
+    const planParts = document.getElementById("leavePlanParts");
+    const planError = document.getElementById("leavePlanError");
+    const consent = document.getElementById("acceptUnpaid");
+    const consentRow = document.getElementById("unpaidConsentRow");
+    const consentHint = document.getElementById("unpaidConsentHint");
+    const scheduleLink = document.getElementById("leaveScheduleLink");
+    const dateError = document.getElementById("leaveDateClientErr");
+    const planTitle = document.getElementById("leavePlanTitle");
+    const balanceText = document.getElementById("leaveBalanceText");
+    const expectedAnnualInput = document.getElementById("expectedAnnualDays");
+    const expectedUnpaidInput = document.getElementById("expectedUnpaidDays");
+    const deadlineText = document.getElementById("infoDeadline");
+    const dateText = document.getElementById("infoDate");
+    let currentPlan = null;
+    // Mỗi lần đổi ngày/ca tăng số này; bỏ phản hồi API cũ nếu người dùng đã đổi lựa chọn.
+    let requestVersion = 0;
+    let deadlineValid = false;
+    let submitting = false;
 
-    // B1.1: giờ chốt do Service gửi trong data-cutoff; không tự đoán chính sách.
-    const cutoffStr = leaveDateInput.getAttribute("data-cutoff");
-    if (!cutoffStr) {
-        submitBtn.disabled = true;
-        if (clientErrDiv) {
-            clientErrDiv.textContent = "Chưa tải được hạn nộp. Vui lòng tải lại trang.";
-            clientErrDiv.hidden = false;
-        }
-        return;
+    // B1: đổi Date thành yyyy-MM-dd. padStart(2, "0") thêm số 0 trước tháng/ngày một chữ số.
+    function formatInputDate(date) {
+        const year = date.getFullYear();
+        const month = String(date.getMonth() + 1).padStart(2, "0");
+        const day = String(date.getDate()).padStart(2, "0");
+        return year + "-" + month + "-" + day;
     }
-    const cutoffParts = cutoffStr.split(":");
-    const cutoffHour = Number(cutoffParts[0]);
-    const cutoffMinute = Number(cutoffParts[1]);
-    const cutoffLabel = String(cutoffHour).padStart(2, "0") + ":" + String(cutoffMinute).padStart(2, "0");
 
-    // B1.2: đặt thuộc tính min cho ô chọn ngày là ngày mai (GBR-26: chỉ chọn ngày sau hôm nay)
-    const tomorrow = new Date();
-    tomorrow.setDate(tomorrow.getDate() + 1);
-    leaveDateInput.min = tomorrow.getFullYear() + "-"
-            + String(tomorrow.getMonth() + 1).padStart(2, "0") + "-"
-            + String(tomorrow.getDate()).padStart(2, "0");
+    // Cộng/trừ ngày tại giữa trưa để không lệch ngày khi chuyển đổi múi giờ.
+    function addDays(isoDate, days) {
+        const date = new Date(isoDate + "T12:00:00");
+        date.setDate(date.getDate() + days);
+        return formatInputDate(date);
+    }
 
-    // B2: hàm cập nhật hiển thị hạn nộp và kiểm tra hợp lệ
-    function checkDeadline() {
-        const val = leaveDateInput.value;
+    const todayIso = formatInputDate(new Date());
+    fromInput.min = addDays(todayIso, 1);
 
-        // Nếu chưa chọn ngày thì xóa thông tin và trả về
-        if (!val) {
-            if (infoDateEl) {
-                infoDateEl.textContent = "—";
-            }
-            if (infoDeadlineEl) {
-                infoDeadlineEl.textContent = cutoffLabel + " · ngày hôm trước";
-            }
-            if (clientErrDiv) {
-                clientErrDiv.textContent = "";
-                clientErrDiv.hidden = true;
-            }
-            submitBtn.disabled = false;
+    // Chỉ mở nút gửi sau khi có dự báo mới nhất và người gửi đã đồng ý nếu cần.
+    function updateSubmit() {
+        submitButton.disabled = true;
+        if (submitting || !deadlineValid || !currentPlan) {
             return;
         }
-
-        // Tạo mốc ngày nghỉ từ input YYYY-MM-DD
-        const parts = val.split("-");
-        const leaveYear = parseInt(parts[0], 10);
-        const leaveMonth = parseInt(parts[1], 10) - 1;
-        const leaveDay = parseInt(parts[2], 10);
-        const leaveDate = new Date(leaveYear, leaveMonth, leaveDay);
-
-        // Hiển thị ngày nghỉ trong chú thích ở góc trên bên phải form.
-        if (infoDateEl) {
-            infoDateEl.textContent = formatDate(leaveDate);
+        if (currentPlan.sessionConflicts > 0) {
+            return;
         }
-
-        // Tính mốc deadline: ngày hôm trước lúc P-12 (cutoffHour:cutoffMinute)
-        const cutoffDate = new Date(leaveYear, leaveMonth, leaveDay - 1, cutoffHour, cutoffMinute, 0);
-
-        if (infoDeadlineEl) {
-            const cutoffDay = String(cutoffDate.getDate()).padStart(2, "0");
-            const cutoffMonth = String(cutoffDate.getMonth() + 1).padStart(2, "0");
-            infoDeadlineEl.textContent = cutoffLabel + " · " + cutoffDay + "/" + cutoffMonth;
+        if (currentPlan.needsUnpaidConsent && !consent.checked) {
+            return;
         }
+        submitButton.disabled = false;
+    }
 
-        // So sánh thời điểm hiện tại với deadline
-        const now = new Date();
-        const isPastDeadline = now.getTime() > cutoffDate.getTime();
+    function updateDeadline() {
+        const cutoff = fromInput.dataset.cutoff;
+        deadlineValid = false;
+        dateError.hidden = true;
+        if (!cutoff) {
+            dateError.textContent = "Chưa tải được hạn nộp. Vui lòng tải lại trang.";
+            dateError.hidden = false;
+            return;
+        }
+        const cutoffLabel = cutoff.substring(0, 5);
+        deadlineText.textContent = cutoffLabel + " · ngày hôm trước";
+        dateText.textContent = "—";
+        if (fromInput.value) {
+            dateText.textContent = formatDate(fromInput.value);
+        }
+        if (!fromInput.value) {
+            return;
+        }
+        toInput.min = fromInput.value;
+        const deadline = new Date(addDays(fromInput.value, -1) + "T" + cutoff);
+        deadlineValid = fromInput.value > todayIso && new Date() <= deadline;
+        if (!deadlineValid) {
+            dateError.textContent = "Đã quá hạn gửi cho ngày này. Nghỉ đột xuất vui lòng báo quản lý.";
+            dateError.hidden = false;
+        }
+    }
 
-        if (isPastDeadline) {
-            if (clientErrDiv) {
-                clientErrDiv.textContent = "Đã quá hạn nộp đơn cho ngày này (hạn chốt "
-                        + cutoffLabel + " ngày hôm trước). Nghỉ đột xuất vui lòng báo trực tiếp Quản lý.";
-                clientErrDiv.hidden = false;
-            }
-            submitBtn.disabled = true;
+    // B2: tạo nội dung bằng textContent; không chèn HTML từ dữ liệu ngày/lý do.
+    function addPlanPart(label, days, start, end) {
+        if (!days) {
+            return;
+        }
+        const part = document.createElement("div");
+        part.className = "leave-plan-part";
+        const title = document.createElement("b");
+        title.textContent = label + " · " + days + " ngày";
+        const period = document.createElement("span");
+        period.textContent = formatDate(start) + (start === end ? "" : " → " + formatDate(end));
+        part.appendChild(title);
+        part.appendChild(period);
+        planParts.appendChild(part);
+    }
+
+    // B2.1: bỏ dự báo và xác nhận cũ trước khi kiểm tra lựa chọn mới.
+    function resetPlan() {
+        currentPlan = null;
+        consent.checked = false;
+        consent.required = false;
+        consentRow.hidden = true;
+        consentHint.hidden = true;
+        scheduleLink.hidden = true;
+        planError.hidden = true;
+        planParts.textContent = "";
+        balanceText.textContent = "";
+        expectedAnnualInput.value = "-1";
+        expectedUnpaidInput.value = "-1";
+    }
+
+    // B2.2: chỉ hiển thị dữ liệu server trả về; hàm này không gọi API hoặc lưu đơn.
+    function renderPlan(plan) {
+        let partCount = 0;
+        if (plan.annualDays > 0) {
+            partCount++;
+            const lastAnnualDate = addDays(plan.fromDate, plan.annualDays - 1);
+            addPlanPart("Phép năm", plan.annualDays, plan.fromDate, lastAnnualDate);
+        }
+        if (plan.unpaidDays > 0) {
+            partCount++;
+            const firstUnpaidDate = addDays(plan.fromDate, plan.annualDays);
+            addPlanPart("Không lương", plan.unpaidDays, firstUnpaidDate, plan.toDate);
+        }
+        planTitle.textContent = "Dự kiến gửi " + partCount + " đơn";
+        if (partCount === 2) {
+            planTitle.textContent += " cùng đợt";
+        }
+        expectedAnnualInput.value = plan.annualDays;
+        expectedUnpaidInput.value = plan.unpaidDays;
+
+        if (typeInput.value === "Annual") {
+            balanceText.textContent = "Còn " + plan.remainingAnnualDays + " ngày phép năm (đã tính các đơn đang chờ).";
         } else {
-            if (clientErrDiv) {
-                clientErrDiv.textContent = "";
-                clientErrDiv.hidden = true;
-            }
-            submitBtn.disabled = false;
+            balanceText.textContent = "Không sử dụng quỹ phép năm.";
         }
+        consentRow.hidden = !plan.needsUnpaidConsent;
+        consentHint.hidden = !plan.needsUnpaidConsent;
+        consent.required = plan.needsUnpaidConsent;
+        if (plan.sessionConflicts > 0) {
+            planError.textContent = "Trùng " + plan.sessionConflicts + " buổi dạy. Xử lý lịch trước khi gửi đơn.";
+            planError.hidden = false;
+            scheduleLink.hidden = false;
+        }
+
+        // Ô i hiện quân số thấp nhất trong toàn khoảng ngày đang chọn.
+        const staffing = plan.staffing;
+        document.getElementById("pvPt").textContent = staffing.remainingPt;
+        document.getElementById("pvRecep").textContent = staffing.remainingReceptionist;
+        document.getElementById("pvMinPt").textContent = staffing.minPt;
+        document.getElementById("pvMinRecep").textContent = staffing.minReceptionist;
+        document.getElementById("pvScope").textContent = formatDate(plan.fromDate)
+                + (plan.fromDate === plan.toDate ? "" : " → " + formatDate(plan.toDate));
     }
 
-    // B2.1: gọi server lấy dự báo quân số cho ngày + ca đang chọn (SRS 5.2.1)
-    const leaveForm = document.getElementById("leaveForm");
-    const shiftTypeSelect = document.getElementById("shiftType");
-    const pvPt = document.getElementById("pvPt");
-    const pvRecep = document.getElementById("pvRecep");
-    const pvMinPt = document.getElementById("pvMinPt");
-    const pvMinRecep = document.getElementById("pvMinRecep");
-    const pvScope = document.getElementById("pvScope");
-
-    function setPreviewText(pt, recep, minPt, minRecep) {
-        if (pvPt) {
-            pvPt.textContent = pt;
-        }
-        if (pvRecep) {
-            pvRecep.textContent = recep;
-        }
-        if (pvMinPt) {
-            pvMinPt.textContent = minPt;
-        }
-        if (pvMinRecep) {
-            pvMinRecep.textContent = minRecep;
-        }
-    }
-
-    async function refreshStaffingPreview() {
-        const leaveDateValue = leaveDateInput.value;
-        const shiftValue = shiftTypeSelect ? shiftTypeSelect.value : "";
-        if (!leaveForm || !leaveDateValue || !shiftValue) {
-            setPreviewText("—", "—", "—", "—");
-            if (pvScope) {
-                pvScope.textContent = "Chọn ngày và ca nghỉ.";
-            }
+    // B2.3: gọi API, bỏ phản hồi cũ rồi chuyển dữ liệu mới cho renderPlan().
+    async function refreshPlan() {
+        requestVersion++;
+        const version = requestVersion;
+        resetPlan();
+        updateDeadline();
+        updateSubmit();
+        planBox.hidden = !fromInput.value;
+        if (!fromInput.value) {
             return;
         }
-
-        if (pvScope) {
-            pvScope.textContent = "Đang tải...";
+        planTitle.textContent = "Đang kiểm tra...";
+        let toDate = toInput.value;
+        if (!toDate) {
+            toDate = fromInput.value;
         }
-        const result = await getJson(leaveForm.dataset.previewUrl, {date: leaveDateValue, shift: shiftValue});
-        // Người dùng có thể đổi lựa chọn trong lúc chờ; bỏ kết quả của lựa chọn cũ.
-        if (leaveDateInput.value !== leaveDateValue || shiftTypeSelect.value !== shiftValue) {
+        const params = {
+            date: fromInput.value,
+            toDate: toDate,
+            shift: shiftInput.value,
+            leaveType: typeInput.value
+        };
+        let result;
+        try {
+            result = await getJson(form.dataset.previewUrl, params);
+        } catch (error) {
+            result = {success: false, message: "Không tải được kiểm tra. Vui lòng thử lại."};
+        }
+        if (version !== requestVersion) {
             return;
         }
         if (!result.success) {
-            setPreviewText("—", "—", "—", "—");
-            if (pvScope) {
-                pvScope.textContent = result.message || "Chưa tải được. Vui lòng thử lại.";
-            }
+            planTitle.textContent = "Chưa thể gửi";
+            planError.textContent = result.message || "Vui lòng kiểm tra ngày và ca nghỉ.";
+            planError.hidden = false;
             return;
         }
-        const data = result.data;
-        setPreviewText(data.remainingPt, data.remainingReceptionist, data.minPt, data.minReceptionist);
-        if (pvScope) {
-            const shiftLabel = shiftTypeSelect.options[shiftTypeSelect.selectedIndex].text;
-            pvScope.textContent = formatDate(leaveDateValue) + " · " + shiftLabel;
-        }
+        currentPlan = result.data;
+        renderPlan(currentPlan);
+        updateSubmit();
     }
 
-    // B3: lắng nghe sự kiện thay đổi ngày
-    leaveDateInput.addEventListener("change", checkDeadline);
-    leaveDateInput.addEventListener("input", checkDeadline);
-    leaveDateInput.addEventListener("change", refreshStaffingPreview);
-    if (shiftTypeSelect) {
-        shiftTypeSelect.addEventListener("change", refreshStaffingPreview);
-    }
-
-    // B3.1: khóa nút sau lần bấm đầu để không nộp đơn hai lần
-    if (leaveForm) {
-        leaveForm.addEventListener("submit", function () {
-            submitBtn.disabled = true;
-            submitBtn.textContent = "Đang gửi...";
+    // B3: chỉ thay đổi nội dung đơn mới xóa xác nhận; gõ lý do không làm mất lựa chọn.
+    for (const input of [fromInput, toInput, typeInput, shiftInput]) {
+        input.addEventListener("input", function () {
+            ++requestVersion;
+            currentPlan = null;
+            consent.checked = false;
+            updateSubmit();
         });
+        input.addEventListener("change", refreshPlan);
     }
-
-    // Kiểm tra ngay khi tải trang (nếu có giá trị sẵn)
-    if (leaveDateInput.value) {
-        checkDeadline();
-        refreshStaffingPreview();
-    }
+    consent.addEventListener("change", updateSubmit);
+    form.addEventListener("submit", function (event) {
+        if (submitButton.disabled) {
+            event.preventDefault();
+            return;
+        }
+        submitting = true;
+        updateSubmit();
+        submitButton.textContent = "Đang gửi...";
+    });
+    refreshPlan();
 });

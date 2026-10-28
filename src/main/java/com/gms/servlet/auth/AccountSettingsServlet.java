@@ -930,6 +930,15 @@ public class AccountSettingsServlet extends HttpServlet {
                         return;
                 }
 
+                String roleValue = (String) session.getAttribute(SessionKey.ROLE);
+                Role role = Role.fromDbValue(roleValue);
+                if (role != null) {
+                        ServiceResult<AccountSettingsView> updatedView = accountSettingsService.getAccountSettings(accountId, role);
+                        if (updatedView.isSuccess() && updatedView.getData() != null) {
+                                session.setAttribute(SessionKey.AVATAR, updatedView.getData().getAvatar());
+                        }
+                }
+
                 RequestUtil.setFlashToast(
                         request,
                         "success",
@@ -1006,6 +1015,8 @@ public class AccountSettingsServlet extends HttpServlet {
                                 response);
                         return;
                 }
+
+                session.removeAttribute(SessionKey.AVATAR);
 
                 RequestUtil.setFlashToast(
                         request,
@@ -1122,6 +1133,9 @@ public class AccountSettingsServlet extends HttpServlet {
                 request.setAttribute(
                         "accountSettings",
                         result.getData());
+                if (result.getData() != null) {
+                        session.setAttribute(SessionKey.AVATAR, result.getData().getAvatar());
+                }
 
                 // Khôi phục trạng thái xác thực đang chờ (CBR-110) nếu phiên có pending contact
                 if (request.getAttribute("contactVerificationPending") == null) {
@@ -1230,7 +1244,7 @@ public class AccountSettingsServlet extends HttpServlet {
 
                                 profileFragment = "/WEB-INF/jsp/auth/account/profile-receptionist.jspf";
 
-                                themeClass = "theme-receptionist";
+                                themeClass = "theme-staff";
 
                                 break;
 

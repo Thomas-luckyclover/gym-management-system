@@ -8,6 +8,8 @@ import com.gms.dao.CustomerDeletionRequestDAO;
 import com.gms.dao.EmployeeDAO;
 import com.gms.dao.PersonDAO;
 import com.gms.dto.CustomerDeletionReviewView;
+import com.gms.dto.CustomerProfileDetailView;
+import com.gms.dto.PageResult;
 import com.gms.dto.CustomerProfileRowView;
 import com.gms.dto.ServiceResult;
 import com.gms.entity.Account;
@@ -19,7 +21,7 @@ import com.gms.listener.SessionRegistryListener;
 import com.gms.util.DBContext;
 import java.sql.Connection;
 import java.sql.SQLException;
-import java.util.Collections;
+import com.gms.util.PaginationUtil;
 import java.util.List;
 
 /**
@@ -99,7 +101,7 @@ public class CustomerDeletionService {
                 return ServiceResult.fail(Messages.MSG06_SESSION_EXPIRED);
             }
             Employee receptionistEmployee = employeeDAO.findByPersonId(receptionistAccount.getPersonId());
-            if (receptionistEmployee == null) {
+            if (receptionistEmployee == null || receptionistEmployee.getPosition() != Role.RECEPTIONIST) {
                 return ServiceResult.fail(Messages.MSG07_NO_PERMISSION);
             }
 
@@ -110,39 +112,39 @@ public class CustomerDeletionService {
 
             // B4: Mở transaction, khóa dòng khách hàng chống tranh chấp dữ liệu
             Integer customerAccountIdToInvalidate = null;
-            try (Connection conn = DBContext.getConnection()) {
-                conn.setAutoCommit(false);
+            try (Connection connection = DBContext.getConnection()) {
+                connection.setAutoCommit(false);
                 try {
-                    Customer customer = customerDAO.findById(conn, customerId, true);
+                    Customer customer = customerDAO.findById(connection, customerId, true);
                     if (customer == null) {
-                        conn.rollback();
+                        connection.rollback();
                         return ServiceResult.fail(String.format(Messages.MSG08_NOT_FOUND, "hồ sơ khách hàng"));
                     }
                     if ("Inactive".equalsIgnoreCase(customer.getStatus())) {
-                        conn.rollback();
+                        connection.rollback();
                         return ServiceResult.fail("Hồ sơ khách hàng này đã ngừng hoạt động (Inactive).");
                     }
-                    if (customerDeletionRequestDAO.hasPendingRequest(conn, customerId)) {
-                        conn.rollback();
+                    if (customerDeletionRequestDAO.hasPendingRequest(connection, customerId)) {
+                        connection.rollback();
                         return ServiceResult.fail(Messages.MSG101_PROFILE_PENDING_DELETION);
                     }
 
                     // B5: Đếm số gói đang chạy (Active, Frozen) và số buổi PT Scheduled (Q1, Q2, DBR-54)
-                    int activeSubCount = customerDAO.countActiveSubscriptions(conn, customerId);
-                    int scheduledSessionCount = customerDAO.countScheduledSessions(conn, customerId);
+                    int activeSubCount = customerDAO.countActiveSubscriptions(connection, customerId);
+                    int scheduledSessionCount = customerDAO.countScheduledSessions(connection, customerId);
 
                     if (activeSubCount > 0 || scheduledSessionCount > 0) {
                         // Luồng A (CBR-16): Còn gói hoặc buổi tập -> Tạo yêu cầu Pending chờ Quản lý duyệt
-                        CustomerDeletionRequest req = new CustomerDeletionRequest();
-                        req.setCustomerId(customerId);
-                        req.setRequestedByEmployeeId(receptionistEmployee.getEmployeeId());
-                        req.setReason(reason.trim());
-                        req.setStatus(CustomerDeletionRequest.Status.PENDING);
-                        int requestId = customerDeletionRequestDAO.insert(conn, req);
+                        CustomerDeletionRequest deletionRequest = new CustomerDeletionRequest();
+                        deletionRequest.setCustomerId(customerId);
+                        deletionRequest.setRequestedByEmployeeId(receptionistEmployee.getEmployeeId());
+                        deletionRequest.setReason(reason.trim());
+                        deletionRequest.setStatus(CustomerDeletionRequest.Status.PENDING);
+                        int requestId = customerDeletionRequestDAO.insert(connection, deletionRequest);
 
                         // Ghi AuditLog
                         auditLogService.logInTransaction(
-                                conn,
+                                connection,
                                 receptionistAccountId,
                                 Role.RECEPTIONIST,
                                 "Gửi yêu cầu xóa hồ sơ",
@@ -158,28 +160,21 @@ public class CustomerDeletionService {
                         Person customerPerson = personDAO.findById(customer.getPersonId());
                         String customerName = customerPerson != null ? customerPerson.getFullName() : customer.getCustomerCode();
                         notificationService.notifyRoleInTransaction(
-                                conn,
+                                connection,
                                 Role.MANAGER,
                                 "Yêu cầu xóa hồ sơ · " + customer.getCustomerCode(),
                                 "Lễ tân đã gửi yêu cầu xóa hồ sơ cho khách hàng " + customerName + " (" + customer.getCustomerCode() + "). Lý do: " + reason.trim()
                         );
 
-                        conn.commit();
+                        connection.commit();
                         return ServiceResult.ok(Messages.MSG96_DELETION_REQUEST_SENT);
                     } else {
                         // Luồng B (BR-15): Không còn gói và không còn buổi tập -> Soft delete ngay lập tức
-                        customerDAO.softDeleteCustomer(conn, customerId);
-                        personDAO.releasePersonContactIfNoActiveRoles(conn, customer.getPersonId());
-                        accountDAO.deactivateAccountIfNoActiveRoles(conn, customer.getPersonId());
-
-                        Account customerAccount = accountDAO.findByPersonId(conn, customer.getPersonId());
-                        if (customerAccount != null) {
-                            customerAccountIdToInvalidate = customerAccount.getAccountId();
-                        }
+                        customerAccountIdToInvalidate = deactivateCustomer(connection, customer);
 
                         // Ghi AuditLog
                         auditLogService.logInTransaction(
-                                conn,
+                                connection,
                                 receptionistAccountId,
                                 Role.RECEPTIONIST,
                                 "Xóa hồ sơ khách hàng",
@@ -191,10 +186,10 @@ public class CustomerDeletionService {
                                 reason.trim()
                         );
 
-                        conn.commit();
+                        connection.commit();
                     }
                 } catch (SQLException e) {
-                    conn.rollback();
+                    connection.rollback();
                     if (e.getMessage() != null && e.getMessage().contains("UX_DeletionRequests_OnePending")) {
                         return ServiceResult.fail(Messages.MSG101_PROFILE_PENDING_DELETION);
                     }
@@ -239,48 +234,45 @@ public class CustomerDeletionService {
 
             // B2: Thực hiện phê duyệt trong Transaction với khóa dòng
             Integer customerAccountIdToInvalidate = null;
-            try (Connection conn = DBContext.getConnection()) {
-                conn.setAutoCommit(false);
+            try (Connection connection = DBContext.getConnection()) {
+                connection.setAutoCommit(false);
                 try {
-                    CustomerDeletionRequest req = customerDeletionRequestDAO.findById(conn, requestId, true);
-                    if (req == null) {
-                        conn.rollback();
+                    CustomerDeletionRequest deletionRequest = customerDeletionRequestDAO.findById(connection, requestId, true);
+                    if (deletionRequest == null) {
+                        connection.rollback();
                         return ServiceResult.fail(String.format(Messages.MSG08_NOT_FOUND, "yêu cầu xóa"));
                     }
-                    if (req.getStatus() != CustomerDeletionRequest.Status.PENDING) {
-                        conn.rollback();
+                    if (deletionRequest.getStatus() != CustomerDeletionRequest.Status.PENDING) {
+                        connection.rollback();
                         return ServiceResult.fail("Yêu cầu này đã được xử lý bởi người khác.");
                     }
 
                     // Chặn tự duyệt hồ sơ của chính mình (CBR-115, MSG76)
-                    if (selfServiceGuard.isOwnCustomerProfile(managerAccountId, req.getCustomerId())) {
-                        conn.rollback();
+                    if (selfServiceGuard.isOwnCustomerProfile(managerAccountId, deletionRequest.getCustomerId())) {
+                        connection.rollback();
                         return ServiceResult.fail(Messages.MSG76_STAFF_OWN_CUSTOMER_PROFILE);
                     }
 
-                    // Cập nhật trạng thái yêu cầu sang Approved
-                    boolean approved = customerDeletionRequestDAO.approve(conn, requestId, managerEmployee.getEmployeeId());
+                    // B2.1: đọc lại hồ sơ trong transaction trước khi chấp nhận yêu cầu.
+                    Customer customer = customerDAO.findById(connection, deletionRequest.getCustomerId(), true);
+                    if (customer == null || "Inactive".equals(customer.getStatus())) {
+                        connection.rollback();
+                        return ServiceResult.fail("Hồ sơ không còn hoạt động. Vui lòng tải lại danh sách.");
+                    }
+
+                    // B2.2: chỉ duyệt khi yêu cầu vẫn Pending.
+                    boolean approved = customerDeletionRequestDAO.approve(connection, requestId, managerEmployee.getEmployeeId());
                     if (!approved) {
-                        conn.rollback();
+                        connection.rollback();
                         return ServiceResult.fail("Yêu cầu này đã được xử lý bởi người khác.");
                     }
 
-                    // Soft delete hồ sơ khách hàng
-                    Customer customer = customerDAO.findById(conn, req.getCustomerId(), true);
-                    if (customer != null) {
-                        customerDAO.softDeleteCustomer(conn, customer.getCustomerId());
-                        personDAO.releasePersonContactIfNoActiveRoles(conn, customer.getPersonId());
-                        accountDAO.deactivateAccountIfNoActiveRoles(conn, customer.getPersonId());
-
-                        Account customerAccount = accountDAO.findByPersonId(conn, customer.getPersonId());
-                        if (customerAccount != null) {
-                            customerAccountIdToInvalidate = customerAccount.getAccountId();
-                        }
-                    }
+                    // B2.3: ngừng hồ sơ, giữ nguyên giao dịch, gói và buổi tập để tra cứu.
+                    customerAccountIdToInvalidate = deactivateCustomer(connection, customer);
 
                     // Ghi AuditLog
                     auditLogService.logInTransaction(
-                            conn,
+                            connection,
                             managerAccountId,
                             Role.MANAGER,
                             "Duyệt yêu cầu xóa hồ sơ",
@@ -289,21 +281,21 @@ public class CustomerDeletionService {
                             "Status",
                             "Pending",
                             "Approved",
-                            req.getReason()
+                            deletionRequest.getReason()
                     );
 
                     // Gửi Notification chuông thông báo kết quả cho Lễ tân đã gửi yêu cầu (Q7)
-                    String customerCode = customer != null ? customer.getCustomerCode() : "";
+                    String customerCode = customer.getCustomerCode();
                     notificationService.notifyEmployeeInTransaction(
-                            conn,
-                            req.getRequestedByEmployeeId(),
+                            connection,
+                            deletionRequest.getRequestedByEmployeeId(),
                             "Yêu cầu xóa hồ sơ đã được duyệt · " + customerCode,
                             "Quản lý đã duyệt yêu cầu xóa hồ sơ khách hàng " + customerCode + " (Mã yêu cầu #" + requestId + ")."
                     );
 
-                    conn.commit();
+                    connection.commit();
                 } catch (SQLException e) {
-                    conn.rollback();
+                    connection.rollback();
                     throw e;
                 }
             }
@@ -351,35 +343,35 @@ public class CustomerDeletionService {
             }
 
             // B3: Thực hiện từ chối trong Transaction với khóa dòng
-            try (Connection conn = DBContext.getConnection()) {
-                conn.setAutoCommit(false);
+            try (Connection connection = DBContext.getConnection()) {
+                connection.setAutoCommit(false);
                 try {
-                    CustomerDeletionRequest req = customerDeletionRequestDAO.findById(conn, requestId, true);
-                    if (req == null) {
-                        conn.rollback();
+                    CustomerDeletionRequest deletionRequest = customerDeletionRequestDAO.findById(connection, requestId, true);
+                    if (deletionRequest == null) {
+                        connection.rollback();
                         return ServiceResult.fail(String.format(Messages.MSG08_NOT_FOUND, "yêu cầu xóa"));
                     }
-                    if (req.getStatus() != CustomerDeletionRequest.Status.PENDING) {
-                        conn.rollback();
+                    if (deletionRequest.getStatus() != CustomerDeletionRequest.Status.PENDING) {
+                        connection.rollback();
                         return ServiceResult.fail("Yêu cầu này đã được xử lý bởi người khác.");
                     }
 
                     // Chặn thao tác trên hồ sơ của chính mình (CBR-115, MSG76)
-                    if (selfServiceGuard.isOwnCustomerProfile(managerAccountId, req.getCustomerId())) {
-                        conn.rollback();
+                    if (selfServiceGuard.isOwnCustomerProfile(managerAccountId, deletionRequest.getCustomerId())) {
+                        connection.rollback();
                         return ServiceResult.fail(Messages.MSG76_STAFF_OWN_CUSTOMER_PROFILE);
                     }
 
                     // Cập nhật trạng thái sang Rejected
-                    boolean rejected = customerDeletionRequestDAO.reject(conn, requestId, managerEmployee.getEmployeeId(), rejectReason.trim());
+                    boolean rejected = customerDeletionRequestDAO.reject(connection, requestId, managerEmployee.getEmployeeId(), rejectReason.trim());
                     if (!rejected) {
-                        conn.rollback();
+                        connection.rollback();
                         return ServiceResult.fail("Yêu cầu này đã được xử lý bởi người khác.");
                     }
 
                     // Ghi AuditLog
                     auditLogService.logInTransaction(
-                            conn,
+                            connection,
                             managerAccountId,
                             Role.MANAGER,
                             "Từ chối yêu cầu xóa hồ sơ",
@@ -392,21 +384,21 @@ public class CustomerDeletionService {
                     );
 
                     // Gửi Notification chuông kèm lý do từ chối cho Lễ tân đã gửi yêu cầu (Q7)
-                    Customer customer = customerDAO.findById(conn, req.getCustomerId(), false);
+                    Customer customer = customerDAO.findById(connection, deletionRequest.getCustomerId(), false);
                     String customerCode = customer != null ? customer.getCustomerCode() : "";
                     notificationService.notifyEmployeeInTransaction(
-                            conn,
-                            req.getRequestedByEmployeeId(),
+                            connection,
+                            deletionRequest.getRequestedByEmployeeId(),
                             "Yêu cầu xóa hồ sơ bị từ chối · " + customerCode,
                             "Quản lý đã từ chối yêu cầu xóa hồ sơ khách hàng " + customerCode
                                     + " (Mã yêu cầu #" + requestId + "). Lý do: " + rejectReason.trim()
                     );
 
-                    conn.commit();
+                    connection.commit();
                     return ServiceResult.ok("Đã từ chối yêu cầu xóa hồ sơ.");
 
                 } catch (SQLException e) {
-                    conn.rollback();
+                    connection.rollback();
                     throw e;
                 }
             }
@@ -417,120 +409,155 @@ public class CustomerDeletionService {
         }
     }
 
-    // ===== Truy vấn dữ liệu hiển thị (Màn #28, #30, #31, #32) =====
+    /** Hai nhánh xóa dùng chung phần ngừng hồ sơ; mọi DAO đều nhận cùng connection. */
+    private Integer deactivateCustomer(Connection connection, Customer customer) throws SQLException {
+        boolean deleted = customerDAO.softDeleteCustomer(connection, customer.getCustomerId());
+        if (!deleted) {
+            throw new SQLException("Hồ sơ đã thay đổi trong lúc xử lý xóa.");
+        }
+        personDAO.releasePersonContactIfNoActiveRoles(connection, customer.getPersonId());
+        accountDAO.deactivateAccountIfNoActiveRoles(connection, customer.getPersonId());
+        Account account = accountDAO.findByPersonId(connection, customer.getPersonId());
+        if (account == null) {
+            return null;
+        }
+        return account.getAccountId();
+    }
 
-    /**
-     * Lấy chi tiết thông tin yêu cầu xóa cho Quản lý xem xét và phê duyệt (Màn #32).
-     *
-     * @param managerAccountId mã tài khoản Quản lý đang duyệt (để tính cờ isOwnProfile theo CBR-115)
-     * @param requestId        mã yêu cầu xóa
-     * @return ServiceResult chứa CustomerDeletionReviewView
-     */
-    public ServiceResult<CustomerDeletionReviewView> getReviewDetail(int managerAccountId, int requestId) {
+    // ===== Đọc dữ liệu: Servlet không gọi DAO hoặc tự mở connection =====
+
+    /** Chi tiết duyệt: thông tin yêu cầu và hai danh sách chỉ được tải khi người dùng mở đơn. */
+    public ServiceResult<CustomerDeletionReviewView> getReviewDetail(int accountId, int requestId) {
         try {
-            CustomerDeletionReviewView view = customerDeletionRequestDAO.findReviewDetail(requestId, managerAccountId);
-            if (view == null) {
+            CustomerDeletionReviewView review = customerDeletionRequestDAO.findReviewDetail(requestId, accountId);
+            if (review == null) {
                 return ServiceResult.fail(String.format(Messages.MSG08_NOT_FOUND, "yêu cầu xóa"));
             }
-            return ServiceResult.ok(view);
-        } catch (SQLException e) {
-            e.printStackTrace();
+            try (Connection connection = DBContext.getConnection()) {
+                review.setActivePackages(customerDAO.findActiveSubscriptionsByCustomer(connection, review.getCustomerId()));
+                review.setScheduledSessions(customerDAO.findScheduledSessionsByCustomer(connection, review.getCustomerId()));
+            }
+            return ServiceResult.ok(review);
+        } catch (SQLException exception) {
+            exception.printStackTrace();
             return ServiceResult.fail(Messages.MSG04_SYSTEM_BUSY);
         }
     }
 
-    /**
-     * Lấy danh sách phân trang các yêu cầu xóa Pending cho Quản lý duyệt (#32 hoặc Tab trên #30).
-     */
-    public ServiceResult<List<CustomerDeletionReviewView>> getPendingReviewList(int managerAccountId, int page, int pageSize) {
-        try {
-            int offset = Math.max(0, (page - 1) * pageSize);
-            List<CustomerDeletionReviewView> list = customerDeletionRequestDAO.findPendingViews(managerAccountId, offset, pageSize);
-            return ServiceResult.ok(list != null ? list : Collections.emptyList());
-        } catch (SQLException e) {
-            e.printStackTrace();
+    /** Một DTO chi tiết cho cả hai vai trò; lễ tân không được xem hồ sơ Inactive. */
+    public ServiceResult<CustomerProfileDetailView> getProfileDetail(int accountId, int customerId, boolean isManager) {
+        try (Connection connection = DBContext.getConnection()) {
+            // B1: đọc và kiểm tra hồ sơ được phép xem.
+            Customer customer = customerDAO.findById(connection, customerId, false);
+            if (customer == null || (!isManager && "Inactive".equals(customer.getStatus()))) {
+                return ServiceResult.fail(String.format(Messages.MSG08_NOT_FOUND, "hồ sơ khách hàng"));
+            }
+            Person person = personDAO.findById(customer.getPersonId());
+            Account account = accountDAO.findById(accountId);
+            if (person == null || account == null) {
+                return ServiceResult.fail(Messages.MSG06_SESSION_EXPIRED);
+            }
+
+            // B2: đọc gói, buổi PT và yêu cầu đang chờ để quyết định nút thao tác.
+            List<CustomerDAO.ActiveSubscriptionSummary> packages = customerDAO.findActiveSubscriptionsByCustomer(connection, customerId);
+            List<CustomerDAO.ScheduledSessionSummary> sessions = customerDAO.findScheduledSessionsByCustomer(connection, customerId);
+            CustomerDeletionRequest pending = customerDeletionRequestDAO.findPendingByCustomerId(connection, customerId);
+            Integer pendingId = null;
+            if (pending != null) {
+                pendingId = pending.getCustomerDeletionRequestId();
+            }
+            CustomerProfileRowView profile = new CustomerProfileRowView(
+                    customerId, customer.getCustomerCode(), customer.getPersonId(), person.getFullName(),
+                    person.getPhone(), person.getEmail(), customer.getCustomerType(), customer.getStatus(),
+                    null, !packages.isEmpty() || !sessions.isEmpty(), pending != null, pendingId,
+                    customer.getJoinedAt(), customer.getDeletedAt());
+            profile.setOwnProfile(account.getPersonId() == customer.getPersonId());
+            return ServiceResult.ok(new CustomerProfileDetailView(profile, packages, sessions, pending));
+        } catch (SQLException exception) {
+            exception.printStackTrace();
             return ServiceResult.fail(Messages.MSG04_SYSTEM_BUSY);
         }
     }
 
-    /**
-     * Đếm tổng số lượng yêu cầu xóa đang Pending (để gắn huy hiệu badge trên sidebar Quản lý).
-     */
-    public int countPendingReviews() {
+    /** Đếm và lấy trang trong cùng một nhánh xử lý lỗi, không biến lỗi DB thành danh sách rỗng. */
+    public ServiceResult<PageResult<CustomerProfileRowView>> getProfilesPage(
+            int accountId, String keyword, String status, boolean isManager, int page, int pageSize) {
         try {
-            return customerDeletionRequestDAO.countPending();
-        } catch (SQLException e) {
-            e.printStackTrace();
-            return 0;
-        }
-    }
+            // B1: chỉ chấp nhận những trạng thái thật trong hệ thống.
+            String statusFilter = normalizeStatus(status, isManager);
+            int total = customerDAO.countCustomerProfiles(keyword, statusFilter, isManager);
+            int currentPage = clampPage(page, pageSize, total);
+            int offset = PaginationUtil.calculateOffset(currentPage, pageSize);
+            List<CustomerProfileRowView> profiles = customerDAO.findCustomerProfiles(
+                    keyword, statusFilter, isManager, offset, pageSize);
 
-    /**
-     * Lấy danh sách các yêu cầu xóa do chính Lễ tân gửi (Q8 - Tab Yêu cầu của tôi trên Màn #28).
-     */
-    public ServiceResult<List<CustomerDeletionReviewView>> getMyRequestsList(int receptionistAccountId, int page, int pageSize) {
-        try {
-            int offset = Math.max(0, (page - 1) * pageSize);
-            List<CustomerDeletionReviewView> list = customerDeletionRequestDAO.findByRequesterAccountViews(receptionistAccountId, offset, pageSize);
-            return ServiceResult.ok(list != null ? list : Collections.emptyList());
-        } catch (SQLException e) {
-            e.printStackTrace();
+            // B2: chỉ đọc tài khoản một lần; không truy vấn thêm cho từng dòng.
+            Account account = accountDAO.findById(accountId);
+            if (account == null) {
+                return ServiceResult.fail(Messages.MSG06_SESSION_EXPIRED);
+            }
+            for (CustomerProfileRowView profile : profiles) {
+                profile.setOwnProfile(profile.getPersonId() == account.getPersonId());
+            }
+            return ServiceResult.ok(new PageResult<>(profiles, currentPage, pageSize, total));
+        } catch (SQLException exception) {
+            exception.printStackTrace();
             return ServiceResult.fail(Messages.MSG04_SYSTEM_BUSY);
         }
     }
 
-    /**
-     * Đếm tổng số lượng yêu cầu xóa do chính Lễ tân gửi.
-     */
-    public int countMyRequests(int receptionistAccountId) {
+    /** Trang chờ duyệt của quản lý; gửi trước được xem trước. */
+    public ServiceResult<PageResult<CustomerDeletionReviewView>> getPendingPage(int accountId, int page, int pageSize) {
         try {
-            return customerDeletionRequestDAO.countByRequesterAccountId(receptionistAccountId);
-        } catch (SQLException e) {
-            e.printStackTrace();
-            return 0;
-        }
-    }
-
-    /**
-     * Tìm kiếm và phân trang danh sách hồ sơ khách hàng cho Lễ tân (#28) và Quản lý (#30).
-     */
-    public ServiceResult<List<CustomerProfileRowView>> getCustomerProfiles(
-            String keyword,
-            String statusFilter,
-            Boolean pendingOnly,
-            boolean isManager,
-            int page,
-            int pageSize) {
-        try {
-            int offset = Math.max(0, (page - 1) * pageSize);
-            List<CustomerProfileRowView> list = customerDAO.findCustomerProfiles(
-                    keyword,
-                    statusFilter,
-                    pendingOnly,
-                    isManager,
-                    offset,
-                    pageSize
-            );
-            return ServiceResult.ok(list != null ? list : Collections.emptyList());
-        } catch (SQLException e) {
-            e.printStackTrace();
+            int total = customerDeletionRequestDAO.countPending();
+            int currentPage = clampPage(page, pageSize, total);
+            List<CustomerDeletionReviewView> requests = customerDeletionRequestDAO.findPendingViews(
+                    accountId, PaginationUtil.calculateOffset(currentPage, pageSize), pageSize);
+            return ServiceResult.ok(new PageResult<>(requests, currentPage, pageSize, total));
+        } catch (SQLException exception) {
+            exception.printStackTrace();
             return ServiceResult.fail(Messages.MSG04_SYSTEM_BUSY);
         }
     }
 
-    /**
-     * Đếm tổng số lượng hồ sơ khách hàng thỏa mãn bộ lọc.
-     */
-    public int countCustomerProfiles(
-            String keyword,
-            String statusFilter,
-            Boolean pendingOnly,
-            boolean isManager) {
+    /** Trang lịch sử của lễ tân, gồm cả chờ duyệt, đã duyệt và từ chối. */
+    public ServiceResult<PageResult<CustomerDeletionReviewView>> getMyRequestsPage(int accountId, int page, int pageSize) {
         try {
-            return customerDAO.countCustomerProfiles(keyword, statusFilter, pendingOnly, isManager);
-        } catch (SQLException e) {
-            e.printStackTrace();
-            return 0;
+            int total = customerDeletionRequestDAO.countByRequesterAccountId(accountId);
+            int currentPage = clampPage(page, pageSize, total);
+            List<CustomerDeletionReviewView> requests = customerDeletionRequestDAO.findByRequesterAccountViews(
+                    accountId, PaginationUtil.calculateOffset(currentPage, pageSize), pageSize);
+            return ServiceResult.ok(new PageResult<>(requests, currentPage, pageSize, total));
+        } catch (SQLException exception) {
+            exception.printStackTrace();
+            return ServiceResult.fail(Messages.MSG04_SYSTEM_BUSY);
         }
+    }
+
+    /** Badge không hiển thị số 0 giả khi truy vấn thất bại. */
+    public ServiceResult<Integer> getPendingCount() {
+        try {
+            return ServiceResult.ok(customerDeletionRequestDAO.countPending());
+        } catch (SQLException exception) {
+            exception.printStackTrace();
+            return ServiceResult.fail(Messages.MSG04_SYSTEM_BUSY);
+        }
+    }
+
+    /** Bộ lọc dùng cho cả Service và Servlet để giá trị hiển thị khớp dữ liệu truy vấn. */
+    public String normalizeStatus(String status, boolean isManager) {
+        if ("New".equals(status) || "Active".equals(status) || "Frozen".equals(status) || "Expired".equals(status)) {
+            return status;
+        }
+        if (isManager && "Inactive".equals(status)) {
+            return status;
+        }
+        return "ALL";
+    }
+
+    /** URL trang quá lớn được đưa về trang cuối, tránh màn rỗng dù vẫn còn kết quả. */
+    private int clampPage(int page, int pageSize, int total) {
+        int totalPages = Math.max(1, (int) Math.ceil((double) total / pageSize));
+        return Math.max(1, Math.min(page, totalPages));
     }
 }

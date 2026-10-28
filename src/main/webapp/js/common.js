@@ -246,11 +246,9 @@ const MESSAGES = {
     // EN: Submission deadline passed. Leave on %s had to be submitted before %s on the previous day.
     MSG77_LEAVE_SUBMISSION_DEADLINE: "Đã quá hạn nộp. Đơn nghỉ ngày %s phải nộp trước %s của ngày hôm trước.",
     // EN: You still have %d scheduled session(s) in this period. Reschedule, transfer or cancel them before submitting the request.
-    MSG78_LEAVE_BLOCKED_BY_SESSIONS: "Bạn vẫn còn %d buổi đã xếp lịch trong khoảng này. Hãy dời, chuyển hoặc hủy các buổi đó trước khi gửi đơn.",
+    MSG78_LEAVE_BLOCKED_BY_SESSIONS: "Bạn còn %d buổi dạy trùng lịch nghỉ. Xem lịch và liên hệ quản lý để giải quyết trước khi gửi đơn.",
     // EN: Cannot approve: the %s shift on %s would have fewer than %d %s(s) on duty.
     MSG79_LEAVE_BREAKS_MIN_STAFFING: "Không thể duyệt: ca %s ngày %s sẽ có ít hơn %d %s trực.",
-    // EN: Your leave request for %s was rejected: Approval deadline passed.
-    MSG80_LEAVE_AUTO_REJECTED: "Đơn nghỉ phép ngày %s của bạn đã bị từ chối: quá hạn duyệt.",
     // EN: %s needs a valid membership package before a PT package can be sold.
     MSG81_PT_REQUIRES_MEMBERSHIP: "%s cần có gói hội viên còn hiệu lực trước khi mua gói PT.",
     // EN: PT services are available only to customers aged %d or older.
@@ -330,6 +328,7 @@ function initCommon() {
     bindCountdowns();
     bindArticleImageFallbacks();
     bindHintBoxes();
+    syncHeaderUserAvatar();
 
     // B3
     bindPageSizeSelects();
@@ -344,6 +343,42 @@ function initCommon() {
     const unsavedForms = document.querySelectorAll("form[data-unsaved-warning]");
     for (const form of unsavedForms) {
         bindUnsavedChangesWarning(form);
+    }
+}
+
+// Đồng bộ avatar người dùng trên header từ session / meta tag
+function syncHeaderUserAvatar() {
+    const avatarMeta = document.querySelector('meta[name="user-avatar"]');
+    const avatarUrl = avatarMeta ? avatarMeta.getAttribute("content") : null;
+    const userContainers = document.querySelectorAll(".tb-user, .guest-account, .pt-top-actions .pt-user-badge, .pt-header-user");
+    if (!userContainers.length) {
+        return;
+    }
+    for (const container of userContainers) {
+        if (avatarUrl && avatarUrl.trim() !== "") {
+            let img = container.querySelector("img.avatar, img.pt-user-avatar, img.tb-avatar");
+            const initialSpan = container.querySelector("span.avatar, span.pt-user-avatar, span.tb-avatar, i.fa-user");
+            if (!img) {
+                img = document.createElement("img");
+                img.className = "avatar";
+                img.alt = "Avatar";
+                img.style.objectFit = "cover";
+                img.onerror = function() {
+                    this.style.display = "none";
+                    if (initialSpan) { initialSpan.style.display = ""; }
+                };
+                if (initialSpan) {
+                    initialSpan.parentNode.insertBefore(img, initialSpan);
+                } else {
+                    container.insertBefore(img, container.firstChild);
+                }
+            }
+            img.src = avatarUrl;
+            img.style.display = "";
+            if (initialSpan) {
+                initialSpan.style.display = "none";
+            }
+        }
     }
 }
 
@@ -2932,6 +2967,46 @@ document.addEventListener("DOMContentLoaded", function () {
 // NÂNG CẤP 2026-10-13: biểu đồ màu thương hiệu + đường xu hướng, số đếm lên, Pumpy theo ngữ cảnh
 // =====================================================================
 document.addEventListener("DOMContentLoaded", function () {
+    // B0: Đồng bộ ảnh đại diện ở Header/Topbar với cơ sở dữ liệu
+    (function syncHeaderUserAvatar() {
+        const metaAvatar = document.querySelector('meta[name="user-avatar"]');
+        const avatarUrl = metaAvatar ? metaAvatar.getAttribute("content") : null;
+        if (!avatarUrl) {
+            return;
+        }
+        const userContainers = document.querySelectorAll(".tb-user, .guest-account, .pt-top-actions");
+        userContainers.forEach(function (container) {
+            const avatarEl = container.querySelector(".avatar, .pt-user-avatar, .guest-account__avatar");
+            if (!avatarEl) {
+                return;
+            }
+            if (avatarEl.tagName === "IMG") {
+                if (avatarEl.getAttribute("src") !== avatarUrl) {
+                    avatarEl.src = avatarUrl;
+                }
+                return;
+            }
+            const existingImg = container.querySelector("img.avatar");
+            if (existingImg) {
+                existingImg.src = avatarUrl;
+                existingImg.style.display = "";
+                avatarEl.style.display = "none";
+                return;
+            }
+            const img = document.createElement("img");
+            img.className = avatarEl.className;
+            img.src = avatarUrl;
+            img.alt = "Ảnh đại diện";
+            img.style.objectFit = "cover";
+            img.onerror = function () {
+                img.style.display = "none";
+                avatarEl.style.display = "";
+            };
+            avatarEl.style.display = "none";
+            avatarEl.parentNode.insertBefore(img, avatarEl);
+        });
+    })();
+
     const calm = prefersReducedMotion() || document.documentElement.classList.contains("gms-lite");
 
     // B1: biểu đồ cột — đánh dấu cột cao nhất; vẽ đường xu hướng từ các cột vào ô dẫn đầu của bảng điểm

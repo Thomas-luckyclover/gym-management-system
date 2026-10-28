@@ -28,7 +28,6 @@
         <c:when test="${employee.pendingCount > 0}">
           <span class="badge badge-warning"><c:out value="${employee.pendingCount}" /> đơn chờ</span>
         </c:when>
-        <c:otherwise><span class="leave-zero-count">Không có đơn chờ</span></c:otherwise>
       </c:choose>
     </c:otherwise>
   </c:choose>

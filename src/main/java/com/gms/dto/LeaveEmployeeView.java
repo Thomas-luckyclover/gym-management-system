@@ -94,4 +94,5 @@ public class LeaveEmployeeView {
     public void setRequests(List<LeaveRequestItemView> requests) {
         this.requests = requests;
     }
+
 }

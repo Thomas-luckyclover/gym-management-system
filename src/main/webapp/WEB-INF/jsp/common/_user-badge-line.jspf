@@ -1,0 +1,6 @@
+<%@ page pageEncoding="UTF-8" %>
+<%-- ===== DÒNG PHỤ THẺ TÀI KHOẢN (góc phải mọi màn) =====
+     "LT-0003 · Lễ tân" / "PT-0005 · Huấn luyện viên" / "KH-1006 · Hội viên" / "QL-0002 · Quản lý" / "QT-0001 · Quản trị viên"
+     sessionScope.userCode / userRoleLabel ← UserBadgeService.ensure (AuthFilter gọi mỗi request; chỉ đọc DB khi đổi vai trò).
+     Mã gốc trong DB giữ nguyên (NV-0003, KH-1006): chỉ đổi tiền tố theo vai trò. Chưa đọc được mã → chỉ hiện vai trò. --%>
+<small class="tb-user-meta"><c:if test="${not empty sessionScope.userCode}"><code class="tb-user-code"><c:out value="${sessionScope.userCode}" /></code><span class="tb-user-dot" aria-hidden="true">·</span></c:if><c:out value="${sessionScope.userRoleLabel}" /></small>

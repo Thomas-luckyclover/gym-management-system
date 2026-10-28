@@ -37,6 +37,9 @@ public class Facility {
     private String facilityName;
     private Category category;
     private String location;
+    private String imageUrl;
+    private String unitLabel = "máy";
+    private boolean isActive = true;
     private int quantity;
     private Status status;
 
@@ -127,6 +130,30 @@ public class Facility {
 
     public void setLocation(String location) {
         this.location = location;
+    }
+
+    public String getImageUrl() {
+        return imageUrl;
+    }
+
+    public void setImageUrl(String imageUrl) {
+        this.imageUrl = imageUrl;
+    }
+
+    public String getUnitLabel() {
+        return unitLabel;
+    }
+
+    public void setUnitLabel(String unitLabel) {
+        this.unitLabel = unitLabel;
+    }
+
+    public boolean isActive() {
+        return isActive;
+    }
+
+    public void setActive(boolean active) {
+        isActive = active;
     }
 
     public int getQuantity() {

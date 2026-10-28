@@ -41,9 +41,9 @@
         <%@ include file="/WEB-INF/jsp/common/head.jspf" %>
         <title>Lịch dạy · Super Gym</title>
         <link rel="stylesheet" href="${pageContext.request.contextPath}/css/pages/pt/header.css?v=20261025city">
-        <link rel="stylesheet" href="${pageContext.request.contextPath}/css/pages/pt/schedule.css?v=20261025g">
+        <link rel="stylesheet" href="${pageContext.request.contextPath}/css/pages/pt/schedule.css?v=20261026t">
         <%-- Chỉ nạp JS khi có lịch (lỗi tải thì trang không cần JS). --%>
-        <c:if test="${not empty week}"><script src="${pageContext.request.contextPath}/js/pages/pt/schedule.js?v=20261025a" defer></script></c:if>
+        <c:if test="${not empty week}"><script src="${pageContext.request.contextPath}/js/pages/pt/schedule.js?v=20261026t" defer></script></c:if>
     </head>
     <body class="dock theme-pt pt-plan-page">
         <%@ include file="/WEB-INF/jsp/common/flash-toast.jspf" %>
@@ -83,8 +83,13 @@
                         <%-- canAddAny: tuần này còn ngày nào thêm được khung không?
                              (Service để day.firstStartMinute = null cho ngày đã qua / nghỉ / hết giờ.) --%>
                         <c:set var="canAddAny" value="false" />
+                        <%-- canRemoveAny: tuần này có khung trống gỡ được không (item.canRemove ← Service) → nút "Gỡ hết khung trống". --%>
+                        <c:set var="canRemoveAny" value="false" />
                         <c:forEach var="day" items="${week.days}">
                             <c:if test="${not empty day.firstStartMinute}"><c:set var="canAddAny" value="true" /></c:if>
+                            <c:forEach var="item" items="${day.items}">
+                                <c:if test="${item.canRemove}"><c:set var="canRemoveAny" value="true" /></c:if>
+                            </c:forEach>
                         </c:forEach>
 
                         <%-- data-… cho schedule.js: duration = P-06 (90), trục giờ tính bằng phút (VD 300 = 05:00),
@@ -92,7 +97,8 @@
                         <main class="content pt-plan ${view eq 'list' ? 'is-list' : ''}" id="main-content" tabindex="-1"
                               data-duration="${week.sessionMinutes}"
                               data-axis-start="${week.axisStartHour * 60}" data-axis-end="${week.axisEndHour * 60}"
-                              data-draft-key="${draftAccountId}:${week.weekStart}">
+                              data-draft-key="${draftAccountId}:${week.weekStart}"
+                              data-next-key="${draftAccountId}:${week.nextWeek}" data-next-url="${nextWeekUrl}">
 
                             <%-- ==========================================================================
                                  KHỐI 1. PANEL LỊCH — BẮT ĐẦU
@@ -106,6 +112,17 @@
                                         <%-- Khoảng tuần: week.weekStart cắt "dd/MM" + " – " + week.weekEnd đủ "dd/MM/yyyy" → "26/10 – 01/11/2026". --%>
                                         <h2 id="pt-plan-range"><c:out value="${fn:substring(gms:formatDate(week.weekStart), 0, 5)}" /> – <c:out value="${gms:formatDate(week.weekEnd)}" /></h2>
                                         <a class="btn btn-outline pt-plan-step" href="${nextWeekUrl}" aria-label="Tuần sau"><i class="fa-solid fa-chevron-right" aria-hidden="true"></i></a>
+                                        <%-- Nhảy thẳng tới ngày bất kỳ (khỏi bấm ‹ › nhiều lần): chọn ngày → schedule.js gửi form GET
+                                             ?date=…&view=… → Service dựng tuần chứa ngày đó. Tắt JS: nút "Xem". --%>
+                                        <form class="pt-plan-jump" method="get" action="${pageContext.request.contextPath}/pt/schedule">
+                                            <input type="hidden" name="view" value="${view}">
+                                            <label class="pt-plan-jump-field" title="Chọn ngày để xem tuần đó">
+                                                <i class="fa-regular fa-calendar" aria-hidden="true"></i>
+                                                <span class="visually-hidden">Xem tuần của ngày</span>
+                                                <input type="date" name="date" value="${viewDate}" required data-jump-date>
+                                            </label>
+                                            <noscript><button class="btn btn-outline" type="submit">Xem</button></noscript>
+                                        </form>
                                         <%-- week.currentWeek = false (đang xem tuần khác) → hiện nút "Tuần này". --%>
                                         <c:if test="${not week.currentWeek}"><a class="btn btn-ghost" href="${thisWeekUrl}">Tuần này</a></c:if>
                                     </nav>
@@ -142,6 +159,16 @@
                                                 <p class="pt-plan-readonly">Tuần này chỉ xem: không còn ngày nào thêm được khung.</p>
                                             </c:otherwise>
                                         </c:choose>
+
+                                        <%-- Thao tác nhanh — chỉ tạo NHÁP (thanh Chờ công bố), PT xem lại rồi mới Công bố:
+                                               Gỡ hết khung trống  tích mọi ô gỡ (chỉ khung Còn trống, không khách, không bị giữ) + bỏ nháp
+                                               Chép sang tuần sau  khung của tuần này → nháp tuần sau (cùng thứ, cùng giờ), rồi mở tuần sau --%>
+                                        <div class="pt-plan-tools" role="group" aria-label="Thao tác nhanh">
+                                            <c:if test="${canRemoveAny}">
+                                                <button type="button" class="btn btn-ghost" data-plan-action="clear-free"><i class="fa-solid fa-calendar-xmark" aria-hidden="true"></i> Gỡ hết khung trống</button>
+                                            </c:if>
+                                            <button type="button" class="btn btn-ghost" data-plan-action="copy-next"><i class="fa-regular fa-copy" aria-hidden="true"></i> Chép sang tuần sau</button>
+                                        </div>
 
                                         <%-- Công tắc kiểu xem: link đang chọn có aria-current="page" → CSS tô nền. --%>
                                         <nav class="pt-plan-switch" aria-label="Kiểu xem">

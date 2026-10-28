@@ -20,11 +20,7 @@ public class LeaveRequestRow {
     // DAO: Persons.Avatar; NULL thì JSP hiện chữ viết tắt.
     private final String avatarUrl;
 
-    // DAO: Persons.FullName của người duyệt; NULL khi Pending hoặc tự từ chối.
-    private final String reviewerName;
-
-    // V2: Người được giao duyệt và quyền thao tác
-    private String assignedToName;
+    // DAO tính từ người đang xem và AssignedToEmployeeId của đơn Pending.
     private boolean canAct = true;
 
     public LeaveRequestRow(
@@ -32,15 +28,13 @@ public class LeaveRequestRow {
             String employeeCode,
             String fullName,
             String position,
-            String avatarUrl,
-            String reviewerName
+            String avatarUrl
     ) {
         this.leaveRequest = leaveRequest;
         this.employeeCode = employeeCode;
         this.fullName = fullName;
         this.position = position;
         this.avatarUrl = avatarUrl;
-        this.reviewerName = reviewerName;
     }
 
     public LeaveRequest getLeaveRequest() {
@@ -61,18 +55,6 @@ public class LeaveRequestRow {
 
     public String getAvatarUrl() {
         return avatarUrl;
-    }
-
-    public String getReviewerName() {
-        return reviewerName;
-    }
-
-    public String getAssignedToName() {
-        return assignedToName;
-    }
-
-    public void setAssignedToName(String assignedToName) {
-        this.assignedToName = assignedToName;
     }
 
     public boolean isCanAct() {

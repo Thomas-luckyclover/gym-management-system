@@ -74,4 +74,40 @@ public class ShiftMetrics {
     public int getPendingCount() {
         return pendingCount;
     }
+
+    /**
+     * Kiểm tra ca làm việc có đơn hàng chờ thanh toán hay không (CBR-78).
+     *
+     * @return true nếu còn ít nhất 1 đơn Pending, ngược lại false
+     */
+    public boolean hasPendingOrders() {
+        return pendingCount > 0;
+    }
+
+    /**
+     * Kiểm tra ca làm việc đã phát sinh giao dịch nào chưa (bao gồm cả hợp lệ và chờ xử lý).
+     *
+     * @return true nếu có giao dịch, ngược lại false
+     */
+    public boolean hasTransactions() {
+        return totalValidCount > 0 || pendingCount > 0;
+    }
+
+    /**
+     * Tỷ lệ phần trăm doanh thu tiền mặt trên tổng thu (0.0 đến 100.0).
+     *
+     * @return tỷ lệ phần trăm tiền mặt
+     */
+    public double getCashPercentage() {
+        return totalRevenue > 0 ? ((double) cashTotal / totalRevenue) * 100.0 : 0.0;
+    }
+
+    /**
+     * Tỷ lệ phần trăm doanh thu chuyển khoản trên tổng thu (0.0 đến 100.0).
+     *
+     * @return tỷ lệ phần trăm chuyển khoản
+     */
+    public double getBankPercentage() {
+        return totalRevenue > 0 ? ((double) bankTotal / totalRevenue) * 100.0 : 0.0;
+    }
 }

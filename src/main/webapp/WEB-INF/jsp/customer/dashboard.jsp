@@ -36,6 +36,7 @@
 
             <div class="main">
 
+<<<<<<< HEAD
                 <header class="topbar">
                     <div class="tb-left">
                         <h1 class="tb-title">Trang cá nhân</h1>
@@ -68,6 +69,17 @@
                         </div>
                     </c:if>
                 </header>
+=======
+        <header class="topbar">
+            <div class="tb-left">
+                <h1 class="tb-title">Trang cá nhân</h1>
+            </div>
+            <div class="top-right">
+                <%@ include file="/WEB-INF/jsp/common/notification-bell.jspf" %>
+                <%@ include file="/WEB-INF/jsp/common/topbar-user.jspf" %>
+            </div>
+        </header>
+>>>>>>> 8f61f90f076024d743c657adbc79e50f041d5364
 
                 <main class="content" id="main-content" tabindex="-1">
 

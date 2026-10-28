@@ -1,36 +1,75 @@
-document.addEventListener(
-    "DOMContentLoaded",
-    function () {
-        setupNotificationBell();
-    }
-);
+if (document.readyState === "loading") {
+    document.addEventListener("DOMContentLoaded", initNotificationBell);
+} else {
+    initNotificationBell();
+}
 
+function initNotificationBell() {
+    ensureNotificationBellMarkup();
+    setupNotificationBell();
+}
+
+function ensureNotificationBellMarkup() {
+    if (document.getElementById("notificationBell")) {
+        return;
+    }
+    // Tìm vị trí trên header (ngay trước thẻ thông tin user)
+    const targetUser = document.querySelector(".tb-user, .pt-user-badge, .guest-account");
+    if (!targetUser || !targetUser.parentNode) {
+        return;
+    }
+    const bell = document.createElement("div");
+    bell.className = "notification-bell";
+    bell.id = "notificationBell";
+    bell.innerHTML =
+        '<button type="button" class="notification-bell-button" id="notificationBellButton" aria-label="Thông báo" aria-expanded="false" aria-controls="notificationPopover">' +
+        '  <i class="fa-solid fa-bell" aria-hidden="true"></i>' +
+        '  <span class="notification-bell-count" id="notificationBellCount" hidden></span>' +
+        '</button>' +
+        '<div class="notification-popover" id="notificationPopover" hidden>' +
+        '  <div class="notification-popover-head">' +
+        '    <div>' +
+        '      <strong>Thông báo</strong>' +
+        '      <small id="notificationUnreadText">Không có thông báo chưa đọc</small>' +
+        '    </div>' +
+        '    <button type="button" class="notification-read-all" id="notificationReadAllButton" hidden>Đánh dấu tất cả đã đọc</button>' +
+        '  </div>' +
+        '  <div class="notification-popover-list" id="notificationPopoverList">' +
+        '    <div class="notification-state">Đang tải...</div>' +
+        '  </div>' +
+        '</div>';
+    targetUser.parentNode.insertBefore(bell, targetUser);
+}
 
 function setupNotificationBell() {
-
     const root =
         document.getElementById(
             "notificationBell"
         );
 
-    if (root === null) {
+    if (root === null || root.dataset.bellInitialized === "true") {
         return;
     }
-
 
     const button =
         document.getElementById(
             "notificationBellButton"
         );
 
-    const count =
-        document.getElementById(
-            "notificationBellCount"
-        );
-
     const popover =
         document.getElementById(
             "notificationPopover"
+        );
+
+    if (button === null || popover === null) {
+        return;
+    }
+
+    root.dataset.bellInitialized = "true";
+
+    const count =
+        document.getElementById(
+            "notificationBellCount"
         );
 
     const unreadText =

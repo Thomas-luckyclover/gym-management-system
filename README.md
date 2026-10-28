@@ -23,7 +23,6 @@ Hệ thống quản lý phòng gym: khách vãng lai, hội viên, PT, lễ tân
 | `agents.md` | Bối cảnh + toàn bộ quy tắc (AI đọc file này đầu tiên) |
 | `docs/project-structure.md` | File nào đặt ở đâu; bảng 67 màn → Servlet → URL → JSP |
 | `docs/team-plan.md` | Ai làm gì, quy trình Git, checklist review |
-| `docs/notes.md` | Mâu thuẫn tài liệu đang chờ chốt + quyết định kỹ thuật |
 | `docs/frontend-shared-usage.md` | Cách dùng tokens.css / common.css / common.js |
 | `docs/integration-guide.md` | VNPay + Email: luồng, lỗi, cần chuẩn bị gì |
 | `NamingConvention.md`, `codeImplementationBackend.md`, `codeImplementationFrontend.md` | Quy tắc đặt tên & viết code |

@@ -2,6 +2,8 @@ package com.gms.servlet.manager;
 
 import com.gms.constant.SessionKey;
 import com.gms.dto.LeaveEmployeeView;
+import java.net.URLEncoder;
+import java.nio.charset.StandardCharsets;
 import com.gms.dto.LeaveRequestFilter;
 import com.gms.dto.LeaveRequestItemView;
 import com.gms.dto.PageResult;
@@ -104,10 +106,18 @@ public class LeaveRequestListServlet extends HttpServlet {
         request.setAttribute("listPage", listPage);
         request.setAttribute("employeeView", isEmployeeView);
         request.setAttribute("csrfToken", RequestUtil.getOrCreateCsrfToken(session));
-        String listReturnUrl = "/manager/leave-requests";
-        if (request.getQueryString() != null && !request.getQueryString().isBlank()) {
-            listReturnUrl += "?" + request.getQueryString();
+        // URL thu gọn nhóm chỉ chứa bộ lọc/phân trang, không lặp reviewId khi mở đợt khác.
+        StringBuilder listUrl = new StringBuilder("/manager/leave-requests");
+        String separator = "?";
+        for (String name : new String[]{"status", "keyword", "position", "leaveType", "fromDate", "toDate", "page", "pageSize"}) {
+            String value = RequestUtil.getTrimmedParam(request, name);
+            if (value != null && !value.isEmpty()) {
+                listUrl.append(separator).append(name).append("=")
+                        .append(URLEncoder.encode(value, StandardCharsets.UTF_8));
+                separator = "&";
+            }
         }
+        String listReturnUrl = listUrl.toString();
         request.setAttribute("listReturnUrl", listReturnUrl);
 
         request.setAttribute(
@@ -131,7 +141,10 @@ public class LeaveRequestListServlet extends HttpServlet {
             request.setAttribute("pageError", countResult.getMessage());
         }
 
-        // B4: chuyển sang JSP danh sách
+        // Chỉ dùng reviewId để mở lại đúng nhóm sau khi duyệt/từ chối và redirect về danh sách.
+        request.setAttribute("reviewId", RequestUtil.getIntParam(request, "reviewId", 0));
+
+        // B5: chuyển sang JSP danh sách
         RequestUtil.forward(request, response, VIEW_NAME);
     }
 }

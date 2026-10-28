@@ -23,6 +23,9 @@ public class Package {
     private Integer estimatedSessionCount;
     private int price;
     private boolean active;
+    // DAO: Packages.UnlocksExerciseLibrary (27/10/2026). true = gói này mở khóa Thư viện bài tập khi còn hiệu lực.
+    // getBenefitLines tự thêm 1 dòng quyền lợi, quản lý không phải gõ tay vào ô Benefits.
+    private boolean unlocksExerciseLibrary;
     private LocalDateTime createdAt;
 
     /**
@@ -73,21 +76,38 @@ public class Package {
         this.benefits = benefits;
     }
 
-    // Tách chuỗi benefits thành danh sách dòng để JSP hiển thị
+    // Dòng quyền lợi thêm cho gói có đặc quyền Thư viện bài tập (in ở trang chủ và màn Mua gói).
+    public static final String EXERCISE_LIBRARY_BENEFIT = "Mở khóa Thư viện bài tập (hơn 800 bài có hình minh họa)";
+
+    // Tách chuỗi benefits thành danh sách dòng để JSP hiển thị; gói có đặc quyền thì thêm dòng Thư viện bài tập ở cuối
     public List<String> getBenefitLines() {
         List<String> lines = new ArrayList<>();
-        if (benefits == null) {
-            return lines;
-        }
 
         // Duyệt từng dòng sau khi split, bỏ qua dòng trống
-        for (String line : benefits.split("\\r?\\n")) {
-            String trimmedLine = line.trim();
-            if (!trimmedLine.isEmpty()) {
-                lines.add(trimmedLine);
+        if (benefits != null) {
+            for (String line : benefits.split("\\r?\\n")) {
+                String trimmedLine = line.trim();
+                if (!trimmedLine.isEmpty()) {
+                    lines.add(trimmedLine);
+                }
             }
         }
+
+        // Quyền lợi lấy từ cột UnlocksExerciseLibrary, không phụ thuộc chữ quản lý gõ
+        if (unlocksExerciseLibrary) {
+            lines.add(EXERCISE_LIBRARY_BENEFIT);
+        }
         return lines;
+    }
+
+    // Gói này có mở khóa Thư viện bài tập không (Packages.UnlocksExerciseLibrary)
+    public boolean isUnlocksExerciseLibrary() {
+        return unlocksExerciseLibrary;
+    }
+
+    // Gán cờ đặc quyền Thư viện bài tập (PackageDAO đọc từ DB)
+    public void setUnlocksExerciseLibrary(boolean unlocksExerciseLibrary) {
+        this.unlocksExerciseLibrary = unlocksExerciseLibrary;
     }
 
     // Lấy loại gói

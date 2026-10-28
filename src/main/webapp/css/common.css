@@ -1179,13 +1179,13 @@ body.dock ::-webkit-scrollbar-thumb {
   left: 0;
   display: grid;
   place-items: center;
-  width: var(--dock-handle-width);
-  height: var(--dock-handle-height);
+  width: var(--dock-handle-width, 26px);
+  height: var(--dock-handle-height, 76px);
   padding: 0;
   border: 0;
-  border-radius: 0 var(--radius-md) var(--radius-md) 0;
-  background: var(--dock-bg);
-  color: var(--dock-text);
+  border-radius: 0 var(--radius-md, 4px) var(--radius-md, 4px) 0;
+  background: var(--dock-bg, #0B0D10);
+  color: var(--dock-text, #F5F7FA);
   cursor: pointer;
   transform: translateY(-50%);
   box-shadow: var(--shadow-lift);
@@ -1771,7 +1771,10 @@ body.dock ::-webkit-scrollbar-thumb {
   position: absolute;
   z-index: var(--z-dropdown);
   top: calc(100% + var(--space-2));
-  left: 0;
+  /* Canh mép PHẢI theo nút (i): hộp ẩn có lòi ra thì lòi sang trái (không tạo thanh cuộn ngang).
+     left: 0 cũ → nút sát mép phải màn làm trang rộng thêm ~20px. Mở ra thì common.js tự đặt lại vị trí. */
+  right: 0;
+  left: auto;
   width: min(72vw, calc(var(--space-12) * 4));
   max-width: calc(100vw - var(--space-4) * 2);
   box-sizing: border-box;
@@ -2485,11 +2488,48 @@ body.dock.nav-open { overflow: hidden; }
   backdrop-filter: blur(var(--space-1));
   cursor: pointer;
 }
+/* Dòng phụ thẻ tài khoản (common/_user-badge-line.jspf, mọi màn mọi vai trò): chip mã theo vai trò + chữ vai trò.
+   VD "LT-0003 · Lễ tân". Selector có .tb-user-meta để thắng 2 kiểu chip cũ (.tb-user small, .tb-user-text span). */
+.dock .tb-user .tb-user-meta {
+  display: inline-flex;
+  align-items: baseline;
+  gap: var(--space-1);
+  width: auto;
+  margin-top: var(--space-0-5);
+  padding: 0;
+  background: transparent;
+  color: var(--color-text-muted);
+  font-family: var(--font-body);
+  font-size: var(--font-size-xs);
+  font-weight: var(--font-weight-regular);
+  letter-spacing: 0;
+  text-transform: none;
+  white-space: nowrap;
+}
+.dock .tb-user .tb-user-code {
+  padding: 1px var(--space-1-5);
+  border-radius: var(--radius-sm);
+  background: var(--color-primary-tint);
+  color: var(--color-accent-ink);
+  font-family: var(--font-brand-mono);
+  font-size: var(--font-size-xs);
+  font-weight: var(--font-weight-semibold);
+  font-variant-numeric: tabular-nums;
+  letter-spacing: 0.02em;
+}
+.dock .tb-user .tb-user-dot {
+  display: inline;
+  margin: 0;
+  padding: 0;
+  background: none;
+  color: inherit;
+}
 @media (max-width: 767px) {
   .dock .content { padding: var(--space-5) var(--space-4) var(--space-10); }
   .dock .topbar { gap: var(--space-2); padding-right: var(--space-4); }
   .dock .tb-user b,
   .dock .tb-user small,
+  .dock .tb-user .tb-user-meta,
   .dock .tb-user-text { display: none; }
   .dock .gms-form { grid-template-columns: minmax(0, 1fr); }
   .dock .gms-form-actions { flex-wrap: wrap; }
@@ -2614,11 +2654,32 @@ html:where(:not([data-theme="dark"])) body.dock .app { position: relative; z-ind
 
 /* Chữ mặc định trong khu làm việc là chữ mực (vì gần như mọi nội dung nằm trên thẻ trắng).
    Chỉ những chữ nằm THẲNG trên nền cobalt (tiêu đề mục ngoài thẻ, dòng giới thiệu, nhãn bộ lọc của Quản lý)
-   mới đổi sang trắng / xanh bạc. Cách này an toàn: khối lạ chưa liệt kê vẫn đọc được trên thẻ trắng. */
-html:where(:not([data-theme="dark"])) body.dock .content :is(h1, h2, h3):not(:is(.panel, .side-card, .gms-panel, .report-card, .card, .stat, .metric-card, .account-card, .facility-panel, .status-hero, .pt-schedule, .pt-alerts, .pt-clients, .pt-rating, .pt-summary, .pt-board__hero, .my-pt-panel, .package-card, .empty-state, table, dialog) *),
+   mới đổi sang trắng / xanh bạc. */
+html:where(:not([data-theme="dark"])) body.dock .content :is(h1, h2, h3):not(:is(
+  .panel, .side-card, .gms-panel, .report-card, .card, .stat, .metric-card, .account-card,
+  .facility-panel, .facility-master-panel, .facility-detail-panel, .catalog-filter-box,
+  .equipment-items-section, .facility-grid-section, .status-hero, .pt-schedule, .pt-alerts,
+  .pt-clients, .pt-rating, .pt-summary, .pt-board__hero, .my-pt-panel, .package-card,
+  .empty-state, [class*="-panel"], [class*="-card"], [class*="-box"], [class*="-section"],
+  table, dialog
+) *),
 html:where(:not([data-theme="dark"])) body.dock .content .page-intro > p,
 html:where(:not([data-theme="dark"])) body.dock:not(.theme-admin) .content .report-filter .field-label {
   color: #FFFFFF;
+}
+
+/* Đảm bảo tiêu đề trong mọi thẻ/panel ở light mode luôn có độ tương phản tối cao, sắc nét */
+html:where(:not([data-theme="dark"])) body.dock :is(
+  .facility-master-panel,
+  .facility-detail-panel,
+  .equipment-items-section,
+  .catalog-filter-box,
+  .facility-cards-grid,
+  .panel,
+  .card,
+  .gms-panel
+) :is(h1, h2, h3, h4, h5, h6, .panel-title, .section-title, .card-title, .detail-title, .items-section-title) {
+  color: #0F172A !important;
 }
 html:where(:not([data-theme="dark"])) body.dock .content .page-intro > p { color: var(--zone-silver); }
 /* Khối nổi bật cũ (ô dẫn đầu bảng điểm, trạng thái gói hội viên, ô audit Admin) cũng là thẻ trắng,
@@ -2804,12 +2865,40 @@ html:where(:not([data-theme="dark"])) body.dock :is(.pt-summary-money strong, .w
 html:where(:not([data-theme="dark"])) body.dock .btn-primary {
   background: var(--ink-primary);
   border-color: var(--ink-primary);
-  color: var(--zone-ink);
+  color: #FFFFFF !important;
   border-radius: var(--radius-pill);
   font-weight: var(--font-weight-semibold);
-  box-shadow: none;
+  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.15);
+  text-shadow: 0 1px 1px rgba(0, 0, 0, 0.2);
 }
-html:where(:not([data-theme="dark"])) body.dock .btn-primary:hover:not(:disabled) { background: var(--ink-primary-hover); }
+html:where(:not([data-theme="dark"])) body.dock .btn-primary:hover:not(:disabled) {
+  background: var(--ink-primary-hover);
+  border-color: var(--ink-primary-hover);
+  color: #FFFFFF !important;
+}
+
+/* Nút viền trong topbar nền tối cobalt */
+html:where(:not([data-theme="dark"])) body.dock .topbar :is(.btn-outline, .btn-ghost) {
+  color: #FFFFFF !important;
+  border-color: rgba(255, 255, 255, 0.35) !important;
+  background: rgba(255, 255, 255, 0.08);
+}
+html:where(:not([data-theme="dark"])) body.dock .topbar :is(.btn-outline, .btn-ghost):hover {
+  background: rgba(255, 255, 255, 0.2) !important;
+  border-color: #FFFFFF !important;
+  color: #FFFFFF !important;
+}
+
+html:where(:not([data-theme="dark"])) body.dock table th {
+  background-color: #F8FAFC;
+  color: #334155;
+  border-bottom: 1px solid #CBD5E1;
+  font-weight: 600;
+}
+html:where(:not([data-theme="dark"])) body.dock table td {
+  color: #0F172A;
+}
+
 html:where(:not([data-theme="dark"])) body.dock :is(input, textarea, select) { caret-color: var(--pt-text); }
 html:where(:not([data-theme="dark"])) body.dock :is(input, textarea, select)::placeholder { color: var(--pt-muted); opacity: 1; }
 html:where(:not([data-theme="dark"])) body.dock :focus-visible { outline-color: var(--ink-focus); }
