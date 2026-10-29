@@ -6,9 +6,8 @@ import java.time.LocalDate;
 /**
  * MỘT DÒNG KHÁCH trong bảng "Chọn khách" (/receptionist/sales?package=…).
  *
- * Ai tạo: CounterSaleDAO.searchCustomers / findCustomer, đọc từng cột ngay
- * trong vòng while. Ai dùng: counter-sale-customers.jsp (bảng),
- * counter-sale-next.jsp (khách đã chọn).
+ * Ai tạo: CounterSaleDAO.searchCustomers / findCustomer, đọc từng cột ngay trong vòng while.
+ * Ai dùng: counter-sale-customers.jsp (bảng), counter-sale-next.jsp (khách đã chọn).
  */
 public class CounterCustomerRow {
 
@@ -38,11 +37,13 @@ public class CounterCustomerRow {
 
     // DAO: Subscriptions.EndDate của gói tập đó (ngày cuối còn dùng). null khi chưa có gói.
     private final LocalDate currentPackageEnd;
-  
+
+    // DAO: true khi hồ sơ này cùng Person với lễ tân đang đăng nhập (CBR-115: không được bán cho hồ sơ của chính mình).
+    private final boolean isOwnProfile;
 
     public CounterCustomerRow(int customerId, String customerCode, String fullName, String phone,
             boolean isDependent, boolean hasAccount, Customer.Status status,
-            String currentPackageName, LocalDate currentPackageEnd) {
+            String currentPackageName, LocalDate currentPackageEnd, boolean isOwnProfile) {
         this.customerId = customerId;
         this.customerCode = customerCode;
         this.fullName = fullName;
@@ -52,6 +53,7 @@ public class CounterCustomerRow {
         this.status = status;
         this.currentPackageName = currentPackageName;
         this.currentPackageEnd = currentPackageEnd;
+        this.isOwnProfile = isOwnProfile;
     }
 
     // Mã khách trong DB, dùng trên URL.
@@ -75,9 +77,8 @@ public class CounterCustomerRow {
     }
 
     /**
-     * SĐT chia nhóm cho dễ đọc: 0912345678 thành "0912 345 678". Chỉ để hiển
-     * thị; không dùng để so sánh hay lưu. Số không đủ 10 chữ số thì trả nguyên
-     * chuỗi.
+     * SĐT chia nhóm cho dễ đọc: 0912345678 thành "0912 345 678". Chỉ để hiển thị; không dùng để so sánh hay lưu.
+     * Số không đủ 10 chữ số thì trả nguyên chuỗi.
      */
     public String getPhoneText() {
         boolean isTenDigits = phone != null && phone.length() == 10;
@@ -106,9 +107,8 @@ public class CounterCustomerRow {
     }
 
     /**
-     * Class màu của thẻ trạng thái (GBR-28): Active xanh lá, New xanh dương,
-     * Frozen vàng, còn lại xám. JSP ghép vào class="badge …" nên không phải so
-     * sánh chữ trạng thái trong JSP.
+     * Class màu của thẻ trạng thái (GBR-28): Active xanh lá, New xanh dương, Frozen vàng, còn lại xám.
+     * JSP ghép vào class="badge …" nên không phải so sánh chữ trạng thái trong JSP.
      */
     public String getStatusBadgeClass() {
         if (status == Customer.Status.ACTIVE) {
@@ -131,5 +131,10 @@ public class CounterCustomerRow {
     // Ngày cuối của gói tập còn hạn, có thể null.
     public LocalDate getCurrentPackageEnd() {
         return currentPackageEnd;
+    }
+
+    // JSP đọc ${row.ownProfile}: true thì khóa nút "Chọn" (CBR-115).
+    public boolean isOwnProfile() {
+        return isOwnProfile;
     }
 }

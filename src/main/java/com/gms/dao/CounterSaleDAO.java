@@ -26,7 +26,7 @@ import java.util.List;
 public class CounterSaleDAO {
 
     // Cột Subscriptions đọc chung cho searchCustomers và findCustomer: gói tập còn hạn hôm nay (Active hoặc Frozen).
-    // Tham số "?" đầu tiên của câu SQL là ngày hôm nay.
+    // Tham số "?" của đoạn này là ngày hôm nay.
     private static final String CURRENT_MEMBERSHIP_APPLY = """
             OUTER APPLY (
                 SELECT TOP 1 o.PackageNameSnapshot AS PackageName, s.EndDate
@@ -121,13 +121,15 @@ public class CounterSaleDAO {
      * @param text chữ lễ tân gõ (đã trim, từ 2 ký tự)
      * @param digits chỉ phần chữ số của text ("090 123" thành "090123"); rỗng thì không xét SĐT
      * @param today ngày hôm nay, dùng để biết gói tập nào còn hạn
+     * @param receptionistPersonId mã Person của lễ tân đang đăng nhập, để đánh dấu hồ sơ của chính họ (CBR-115)
      * @return danh sách khách, xếp: khớp đúng mã hoặc SĐT trước, rồi tên bắt đầu bằng chữ gõ, rồi theo tên
      */
-    public List<CounterCustomerRow> searchCustomers(Connection connection, String text, String digits, LocalDate today)
-            throws SQLException {
+    public List<CounterCustomerRow> searchCustomers(Connection connection, String text, String digits, LocalDate today,
+            int receptionistPersonId) throws SQLException {
         String sql = """
                 SELECT TOP 20 c.CustomerId, c.CustomerCode, c.CustomerType, c.Status, c.GuardianPhone,
                        p.FullName, p.Phone,
+                       CASE WHEN c.PersonId = ? THEN 1 ELSE 0 END AS IsOwnProfile,
                        CASE WHEN EXISTS (SELECT 1 FROM Accounts a WHERE a.PersonId = c.PersonId)
                             THEN 1 ELSE 0 END AS HasAccount,
                        m.PackageName, m.EndDate
@@ -154,17 +156,18 @@ public class CounterSaleDAO {
 
         List<CounterCustomerRow> rows = new ArrayList<>();
         try (PreparedStatement statement = connection.prepareStatement(sql)) {
-            // B2: truyền tham số theo đúng thứ tự dấu "?" trong câu SQL.
-            statement.setDate(1, Date.valueOf(today));
-            statement.setNString(2, nameLike);
-            statement.setString(3, codeLike);
-            statement.setString(4, digits);
-            statement.setString(5, digitsLike);
+            // B2: truyền tham số theo đúng thứ tự dấu "?" trong câu SQL (dấu đầu tiên nằm ở cột IsOwnProfile).
+            statement.setInt(1, receptionistPersonId);
+            statement.setDate(2, Date.valueOf(today));
+            statement.setNString(3, nameLike);
+            statement.setString(4, codeLike);
+            statement.setString(5, digits);
             statement.setString(6, digitsLike);
             statement.setString(7, digitsLike);
-            statement.setString(8, text.toUpperCase());
-            statement.setString(9, digits);
-            statement.setNString(10, startsWithLike);
+            statement.setString(8, digitsLike);
+            statement.setString(9, text.toUpperCase());
+            statement.setString(10, digits);
+            statement.setNString(11, startsWithLike);
 
             try (ResultSet resultSet = statement.executeQuery()) {
                 while (resultSet.next()) {
@@ -181,13 +184,15 @@ public class CounterSaleDAO {
      * @param connection kết nối do Service mở
      * @param customerId mã khách từ URL
      * @param today ngày hôm nay
+     * @param receptionistPersonId mã Person của lễ tân đang đăng nhập (CBR-115)
      * @return khách, hoặc null nếu hồ sơ không có / đã xóa / Inactive
      */
-    public CounterCustomerRow findCustomer(Connection connection, int customerId, LocalDate today)
-            throws SQLException {
+    public CounterCustomerRow findCustomer(Connection connection, int customerId, LocalDate today,
+            int receptionistPersonId) throws SQLException {
         String sql = """
                 SELECT c.CustomerId, c.CustomerCode, c.CustomerType, c.Status, c.GuardianPhone,
                        p.FullName, p.Phone,
+                       CASE WHEN c.PersonId = ? THEN 1 ELSE 0 END AS IsOwnProfile,
                        CASE WHEN EXISTS (SELECT 1 FROM Accounts a WHERE a.PersonId = c.PersonId)
                             THEN 1 ELSE 0 END AS HasAccount,
                        m.PackageName, m.EndDate
@@ -199,8 +204,9 @@ public class CounterSaleDAO {
                   AND c.CustomerId = ?
                 """;
         try (PreparedStatement statement = connection.prepareStatement(sql)) {
-            statement.setDate(1, Date.valueOf(today));
-            statement.setInt(2, customerId);
+            statement.setInt(1, receptionistPersonId);
+            statement.setDate(2, Date.valueOf(today));
+            statement.setInt(3, customerId);
             try (ResultSet resultSet = statement.executeQuery()) {
                 if (resultSet.next()) {
                     return readCustomerRow(resultSet);
@@ -220,6 +226,7 @@ public class CounterSaleDAO {
         String fullName = resultSet.getString("FullName");
         boolean isDependent = "Dependent".equals(resultSet.getString("CustomerType"));
         boolean hasAccount = resultSet.getInt("HasAccount") == 1;
+        boolean isOwnProfile = resultSet.getInt("IsOwnProfile") == 1;
         Customer.Status status = Customer.Status.fromDbValue(resultSet.getString("Status"));
 
         // Hồ sơ Dependent không có SĐT riêng, hiện SĐT người giám hộ.
@@ -236,7 +243,7 @@ public class CounterSaleDAO {
         }
 
         return new CounterCustomerRow(customerId, customerCode, fullName, phone, isDependent, hasAccount,
-                status, currentPackageName, currentPackageEnd);
+                status, currentPackageName, currentPackageEnd, isOwnProfile);
     }
 
     /** Ký tự đặc biệt của LIKE (% _ [) được hiểu là chữ thường, không phải ký tự đại diện. */
