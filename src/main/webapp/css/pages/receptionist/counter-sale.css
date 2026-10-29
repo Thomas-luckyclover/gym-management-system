@@ -1,0 +1,661 @@
+@charset "UTF-8";
+/* =====================================================================
+   BÁN GÓI TẠI QUẦY (Lễ tân) — counter-sale.css, SRS #37, đợt 1: Chọn gói + Chọn khách
+
+   ĐỌC THEO THỨ TỰ:
+     1. Khung trang và khối nền
+     2. Ô tìm kiếm
+     3. Tab + thanh công cụ + tooltip
+     4. Lưới thẻ gói (4 cột, 3 cột dưới 1200px, 2 cột dưới 900px, 1 cột dưới 640px)
+     5. Thanh "Đang chọn" ở dưới
+     6. Màn Chọn khách: bảng khách, nhãn, nút
+     7. Cột "Tóm tắt đơn"
+     8. Điện thoại + giảm chuyển động
+
+   Dùng token hệ Arena như pt-sales.css, sáng / tối tự đổi. Cam chỉ cho thẻ đang chọn và nút chính.
+   Nhãn có chữ Việt dùng font body (JetBrains Mono thiếu glyph tiếng Việt); mono chỉ dùng cho số.
+   ===================================================================== */
+
+
+/* ==================== 1. KHUNG TRANG ==================== */
+
+.counter-sale {
+  display: grid;
+  gap: var(--arena-gap);
+  color: var(--arena-ink);
+}
+.counter-sale :is(p, ul, dl, dd, table) {
+  margin: 0;
+}
+
+/* Khối nền sáng chứa nội dung (ô tìm, bảng, tóm tắt) */
+.counter-block {
+  min-width: 0;
+  padding: var(--arena-pad);
+  border: 2px solid var(--arena-chalk-line-strong);
+  border-radius: var(--arena-radius-block);
+  background: var(--arena-chalk);
+  display: grid;
+  gap: var(--arena-gap);
+}
+
+/* Màn Chọn khách và trang tạm: cột trái nội dung, cột phải Tóm tắt đơn */
+.counter-layout {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) 320px;
+  align-items: start;
+  gap: var(--arena-gap);
+}
+
+.counter-alert {
+  justify-items: start;
+}
+
+.counter-muted {
+  color: var(--arena-steel-ink);
+}
+
+
+/* ==================== 2. Ô TÌM KIẾM ====================
+   #packageSearch: counter-sale.js hàm filterPackageCards() đọc giá trị mỗi lần gõ.
+   #customerSearch: counter-sale.js hàm handleCustomerInput() gọi AJAX /receptionist/sales/customers?q=… sau mỗi lần gõ. */
+
+/* Ô tìm: chính ô nhập là cái hộp (viền, nền, vòng focus), biểu tượng kính lúp nằm đè bên trái.
+   Làm giống ô tìm của pt-sales.css để không bị viền kép khi focus. */
+.counter-search {
+  position: relative;
+  display: flex;
+  align-items: center;
+}
+.counter-search > i {
+  position: absolute;
+  left: var(--space-4);
+  color: var(--arena-steel-ink);
+  pointer-events: none;
+}
+.counter-sale .counter-search input[type="search"] {
+  width: 100%;
+  min-height: 56px;
+  padding: 0 var(--space-4) 0 calc(var(--space-4) + 28px);
+  border: 0;
+  border-radius: var(--arena-radius-chip);
+  background: var(--arena-surface);
+  box-shadow: inset 0 0 0 1px var(--arena-chalk-line-strong);
+  color: var(--arena-ink);
+  font-family: var(--font-body);
+  font-size: var(--font-size-md);
+  transition: box-shadow var(--duration-base) var(--ease-out);
+}
+.counter-sale .counter-search input[type="search"]::placeholder {
+  color: var(--arena-steel-ink);
+}
+.counter-sale .counter-search input[type="search"]:hover {
+  box-shadow: inset 0 0 0 1px var(--arena-hover-line);
+}
+.counter-sale .counter-search input[type="search"]:focus-visible {
+  outline: var(--focus-outline-width) solid var(--arena-focus-ring);
+  outline-offset: var(--focus-outline-offset);
+  box-shadow: inset 0 0 0 1px var(--arena-700);
+}
+
+
+/* ==================== 3. TAB + THANH CÔNG CỤ + TOOLTIP ====================
+   common.js bindTabs() đổi aria-selected và ẩn / hiện [data-tab-panel]. */
+
+/* common.css có luật [role="tablist"] [data-tab] (nền trong, chữ xám, gạch chân) mạnh hơn .counter-tab,
+   nên các luật dưới đây viết kèm .counter-sale .counter-tabs để thắng. */
+.counter-sale .counter-tabs,
+.counter-tabs {
+  display: flex;
+  flex-wrap: wrap;
+  gap: var(--space-2);
+  overflow: visible;
+  border-bottom: 0;
+}
+.counter-tabs .counter-tab,
+.counter-sale .counter-tabs .counter-tab,
+[role="tablist"].counter-tabs [data-tab],
+.counter-sale [role="tablist"] [data-tab] {
+  display: inline-flex;
+  align-items: center;
+  gap: var(--space-2, 8px);
+  min-height: 40px;
+  margin-bottom: 0;
+  padding: 6px 16px;
+  border: 1.5px solid rgba(255, 255, 255, 0.4) !important;
+  border-radius: 6px !important;
+  background: #ffffff !important;
+  color: #0f2a5e !important;
+  font-family: var(--font-body, system-ui);
+  font-size: 14px !important;
+  font-weight: 700 !important;
+  cursor: pointer;
+  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.15) !important;
+  transition: all 0.15s ease-in-out;
+}
+.counter-tabs .counter-tab:hover,
+.counter-sale .counter-tabs .counter-tab:hover,
+[role="tablist"].counter-tabs [data-tab]:hover,
+.counter-sale [role="tablist"] [data-tab]:hover {
+  background: #f1f5f9 !important;
+  color: #051636 !important;
+  border-color: #ffffff !important;
+  transform: translateY(-1px);
+}
+/* Tab đang chọn màu cam (nền trang là xanh nên màu accent cam nổi bật nhất) */
+.counter-tabs .counter-tab[aria-selected="true"],
+.counter-sale .counter-tabs .counter-tab[aria-selected="true"],
+[role="tablist"].counter-tabs [data-tab][aria-selected="true"],
+.counter-sale [role="tablist"] [data-tab][aria-selected="true"] {
+  border-color: #ff4f2b !important;
+  background: #ff4f2b !important;
+  color: #ffffff !important;
+  box-shadow: 0 3px 10px rgba(255, 79, 43, 0.45) !important;
+}
+.counter-tab-count {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  min-width: 20px;
+  height: 20px;
+  padding: 0 6px;
+  border-radius: 10px;
+  background: #e2e8f0;
+  color: #0f2a5e;
+  font-family: var(--font-brand-mono, monospace);
+  font-size: 12px;
+  font-weight: 700;
+  margin-left: 6px;
+}
+.counter-tabs .counter-tab[aria-selected="true"] .counter-tab-count,
+.counter-sale .counter-tabs .counter-tab[aria-selected="true"] .counter-tab-count,
+[role="tablist"].counter-tabs [data-tab][aria-selected="true"] .counter-tab-count {
+  background: rgba(255, 255, 255, 0.28) !important;
+  color: #ffffff !important;
+}
+.counter-tab-info {
+  margin-left: 4px;
+  font-size: 13px;
+  opacity: 0.85;
+}
+
+/* Thanh công cụ: tab bên trái, ô tìm gói bên phải, cùng một hàng cùng chiều cao */
+.counter-toolbar {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  justify-content: space-between;
+  gap: var(--space-3) var(--space-4);
+}
+.counter-toolbar .counter-search {
+  flex: 0 1 360px;
+  min-width: 240px;
+}
+.counter-sale .counter-toolbar .counter-search input[type="search"] {
+  min-height: var(--arena-hit);
+}
+
+/* Tab có lời nhắc: biểu tượng (i) trong tab, chữ nhắc hiện bên dưới khi rê chuột hoặc focus bằng bàn phím */
+.counter-tab-info {
+  font-size: var(--font-size-xs);
+  opacity: 0.7;
+}
+.counter-sale .counter-tabs .counter-tab[data-tip] {
+  position: relative;
+}
+.counter-sale .counter-tabs .counter-tab[data-tip]::after {
+  content: attr(data-tip);
+  position: absolute;
+  top: calc(100% + var(--space-2));
+  left: 0;
+  z-index: 5;
+  width: max-content;
+  max-width: 280px;
+  padding: var(--space-2) var(--space-3);
+  border: 1px solid var(--arena-on-dark-soft);
+  border-radius: var(--arena-radius-chip);
+  background: var(--arena-900);
+  color: var(--arena-on-dark);
+  font-size: var(--font-size-sm);
+  font-weight: var(--font-weight-regular);
+  line-height: var(--line-height-normal);
+  text-align: left;
+  white-space: normal;
+  box-shadow: var(--arena-float);
+  opacity: 0;
+  visibility: hidden;
+  pointer-events: none;
+  transition: opacity var(--duration-fast) var(--ease-standard);
+}
+.counter-sale .counter-tabs .counter-tab[data-tip]:hover::after,
+.counter-sale .counter-tabs .counter-tab[data-tip]:focus-visible::after {
+  opacity: 1;
+  visibility: visible;
+}
+
+.counter-panel {
+  display: grid;
+  gap: var(--arena-gap);
+}
+.counter-panel[hidden] {
+  display: none;
+}
+
+/* Chữ báo "chưa có gói" và "không có gói nào khớp" (counter-sale.js hàm showFilterEmpty() ghi vào [data-filter-empty]) */
+.counter-empty {
+  padding: var(--space-6) var(--space-4);
+  text-align: center;
+  color: var(--arena-steel-ink);
+}
+.counter-empty[hidden] {
+  display: none;
+}
+.counter-hint {
+  display: block;
+  margin-top: var(--space-1);
+  font-size: var(--font-size-sm);
+}
+
+
+/* ==================== 4. LƯỚI THẺ GÓI ====================
+   Thẻ là <label> bọc radio .counter-card-radio (ẩn, vẫn focus được bằng bàn phím).
+   counter-sale.js hàm handlePackageChange() thêm / bỏ class .is-selected trên thẻ. */
+
+.counter-grid {
+  display: grid;
+  grid-template-columns: repeat(4, minmax(0, 1fr));
+  gap: var(--arena-gap);
+}
+
+.counter-card {
+  position: relative;
+  display: flex;
+  flex-direction: column;
+  overflow: hidden;
+  border: 2px solid var(--arena-card-line);
+  border-radius: var(--arena-radius-tile);
+  background: var(--arena-surface);
+  cursor: pointer;
+  transition: border-color var(--duration-fast) var(--ease-standard);
+}
+.counter-card[hidden] {
+  display: none;
+}
+.counter-card:hover {
+  border-color: var(--arena-hover-line);
+}
+.counter-card:focus-within {
+  box-shadow: var(--shadow-focus);
+}
+
+.counter-card-radio {
+  position: absolute;
+  opacity: 0;
+  pointer-events: none;
+}
+
+/* Dải đầu thẻ: nền xanh đậm; thẻ đang chọn đổi sang cam */
+.counter-card-head {
+  position: relative;
+  display: flex;
+  flex-wrap: wrap;
+  align-items: flex-start;
+  gap: var(--space-1) var(--space-2);
+  padding: var(--space-3) var(--space-4);
+  background: var(--arena-900);
+  color: var(--arena-on-dark);
+}
+.counter-card-type {
+  flex: 0 0 100%;
+  font-family: var(--font-body);
+  font-size: var(--font-size-2xs);
+  letter-spacing: 0.08em;
+  color: var(--arena-on-dark-soft);
+}
+.counter-card-name {
+  flex: 1;
+  min-width: 0;
+  font-family: var(--font-heading);
+  font-size: var(--font-size-lg);
+  font-weight: var(--font-weight-bold);
+  line-height: var(--line-height-tight);
+}
+.counter-card-saving {
+  padding: 2px var(--space-2);
+  border-radius: var(--radius-pill);
+  background: var(--arena-ember);
+  color: var(--arena-ink-on-bright);
+  font-family: var(--font-brand-mono);
+  font-size: var(--font-size-xs);
+  font-weight: var(--font-weight-bold);
+}
+.counter-card-check {
+  display: none;
+  align-items: center;
+  justify-content: center;
+  width: 24px;
+  height: 24px;
+  border-radius: var(--radius-circle);
+  background: var(--arena-ink-on-bright);
+  color: var(--arena-ember);
+  font-size: var(--font-size-xs);
+}
+
+.counter-card-body {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-1);
+  padding: var(--space-4);
+}
+.counter-card-price {
+  font-family: var(--font-heading);
+  font-size: var(--font-size-2xl);
+  font-weight: var(--font-weight-extrabold);
+  font-variant-numeric: tabular-nums;
+  color: var(--arena-ember-ink);
+}
+.counter-card-duration {
+  color: var(--arena-ink-soft);
+  font-size: var(--font-size-sm);
+  font-variant-numeric: tabular-nums;
+}
+.counter-card-label {
+  margin-top: var(--space-3);
+  font-family: var(--font-body);
+  font-size: var(--font-size-2xs);
+  letter-spacing: 0.08em;
+  color: var(--arena-steel-ink);
+}
+.counter-card-list {
+  margin: 0;
+  padding: 0;
+  list-style: none;
+  display: grid;
+  gap: var(--space-1);
+  font-size: var(--font-size-sm);
+}
+.counter-card-list li {
+  position: relative;
+  padding-left: var(--space-4);
+}
+.counter-card-list li::before {
+  content: "✓";
+  position: absolute;
+  left: 0;
+  color: var(--arena-accent-text);
+  font-weight: var(--font-weight-bold);
+}
+.counter-card-list.is-rules {
+  color: var(--arena-ink-soft);
+}
+.counter-card-list.is-rules li::before {
+  content: "•";
+}
+
+/* Thẻ đang chọn (class do counter-sale.js thêm) */
+.counter-card.is-selected {
+  border-color: var(--arena-ember);
+  background: var(--arena-ember-tint);
+}
+.counter-card.is-selected .counter-card-head {
+  background: var(--arena-ember);
+  color: var(--arena-ink-on-bright);
+}
+.counter-card.is-selected .counter-card-type {
+  color: var(--arena-ink-on-bright);
+}
+.counter-card.is-selected .counter-card-saving {
+  background: var(--arena-ink-on-bright);
+  color: var(--arena-ember);
+}
+.counter-card.is-selected .counter-card-check {
+  display: inline-flex;
+}
+
+/* Thẻ không bán được tại quầy: mờ, không bấm được; ô .counter-card-lock giữ tooltip */
+.counter-card.is-blocked {
+  cursor: not-allowed;
+}
+.counter-card.is-blocked .counter-card-head,
+.counter-card.is-blocked .counter-card-price,
+.counter-card.is-blocked .counter-card-duration,
+.counter-card.is-blocked .counter-card-list {
+  opacity: 0.55;
+}
+.counter-card-lock {
+  align-self: flex-start;
+  margin-top: var(--space-3);
+  padding: var(--space-1) var(--space-2);
+  border: 1px dashed var(--arena-control-line);
+  border-radius: var(--arena-radius-chip);
+  color: var(--arena-steel-ink);
+  font-size: var(--font-size-xs);
+}
+
+
+/* ==================== 5. THANH "ĐANG CHỌN" ====================
+   #selectedSummary và #continueButton do counter-sale.js hàm updateSelectedBar() ghi. */
+
+.counter-bar {
+  position: sticky;
+  bottom: var(--space-3);
+  z-index: 2;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: var(--space-3);
+  padding: var(--space-3) var(--space-4);
+  border-radius: var(--arena-radius-block);
+  background: var(--arena-900);
+  color: var(--arena-on-dark);
+  box-shadow: var(--arena-float);
+}
+/* Nút Tiếp tục khi chưa chọn gói: viền nét đứt, chữ nhạt (không còn đỏ mờ) */
+html body.dock .counter-bar .btn:disabled {
+  border: 1px dashed var(--arena-on-dark-soft);
+  background: transparent;
+  color: var(--arena-on-dark-soft);
+  opacity: 1;
+  cursor: not-allowed;
+}
+.counter-bar-text {
+  min-width: 0;
+  font-family: var(--font-heading);
+  font-weight: var(--font-weight-semibold);
+}
+
+
+/* ==================== 6. MÀN CHỌN KHÁCH ==================== */
+
+.counter-table-wrap {
+  overflow-x: auto;
+}
+.counter-table {
+  width: 100%;
+  border-collapse: collapse;
+}
+.counter-sale .counter-table thead th {
+  padding: var(--space-3) var(--space-3-5);
+  text-align: left;
+  background: var(--arena-900);
+  color: var(--arena-on-dark);
+  font-family: var(--font-body);
+  font-size: var(--font-size-2xs);
+  font-weight: var(--font-weight-medium);
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+}
+.counter-table td {
+  padding: var(--space-3);
+  vertical-align: middle;
+  border-bottom: 1px solid var(--arena-grid-line);
+}
+/* Thẻ trạng thái đặc màu, chữ trắng (class badge-* do CounterCustomerRow.getStatusBadgeClass() chọn) */
+.counter-table .badge {
+  border-color: transparent;
+  color: var(--arena-on-dark);
+  font-weight: var(--font-weight-bold);
+}
+.counter-table .badge::before {
+  display: none;
+}
+.counter-table .badge-success {
+  background: var(--color-success);
+}
+.counter-table .badge-info {
+  background: var(--arena-accent);
+}
+.counter-table .badge-warning {
+  background: var(--color-warning-dark);
+}
+.counter-table .badge-neutral {
+  background: var(--arena-steel-ink);
+}
+
+.counter-cell-action {
+  text-align: right;
+  white-space: nowrap;
+}
+/* Nút "Chọn" to và đậm như bản đã chốt (counter-sale.js hàm createCustomerRow() tạo nút) */
+html body.dock .counter-sale .counter-cell-action .btn.btn-primary {
+  min-width: 88px;
+  min-height: 40px;
+  color: var(--arena-on-dark);
+  font-weight: var(--font-weight-extrabold);
+}
+
+.counter-customer-name {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: var(--space-2);
+  font-weight: var(--font-weight-semibold);
+}
+.counter-customer-sub {
+  display: block;
+  color: var(--arena-ink-soft);
+  font-size: var(--font-size-sm);
+  font-variant-numeric: tabular-nums;
+}
+
+/* Nhãn viền: "Hồ sơ phụ thuộc" (xám), "Chưa có tài khoản" (hổ phách, vẫn mua được) */
+.counter-flag {
+  padding: 1px var(--space-2);
+  border: 1px solid var(--arena-control-line);
+  border-radius: var(--radius-pill);
+  color: var(--arena-steel-ink);
+  font-size: var(--font-size-xs);
+  font-weight: var(--font-weight-medium);
+}
+.counter-flag.is-amber {
+  border-color: var(--color-warning-border);
+  color: var(--color-warning-ink);
+}
+
+/* Hàng nút dưới bảng: Đổi gói (trái), Tạo hồ sơ (phải) */
+.counter-actions {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: var(--space-3);
+}
+
+
+/* ==================== 7. TÓM TẮT ĐƠN ====================
+   Giống bản đã chốt: khung viền dày, dải tiêu đề xanh đậm, mỗi dòng kẻ ngang, dòng "Phải thu" to và nổi. */
+
+.counter-summary {
+  position: sticky;
+  top: var(--space-4);
+  min-width: 0;
+  border: 2px solid var(--arena-chalk-line-strong);
+  border-radius: var(--arena-radius-block);
+  background: var(--arena-chalk);
+  overflow: hidden;
+}
+.counter-summary-title {
+  padding: var(--space-3) var(--space-4);
+  background: var(--arena-900);
+  color: var(--arena-on-dark);
+  font-family: var(--font-body);
+  font-size: var(--font-size-xs);
+  font-weight: var(--font-weight-bold);
+  letter-spacing: 0.1em;
+  text-transform: uppercase;
+}
+.counter-summary-list {
+  display: grid;
+}
+.counter-summary-list > div {
+  display: flex;
+  justify-content: space-between;
+  gap: var(--space-3);
+  padding: var(--space-2-5) var(--space-4);
+  border-bottom: 1px solid var(--arena-chalk-line-strong);
+}
+.counter-summary-list dt {
+  color: var(--arena-ink-soft);
+}
+.counter-summary-list dd {
+  text-align: right;
+  font-weight: var(--font-weight-extrabold);
+  font-variant-numeric: tabular-nums;
+}
+/* Dòng "Phải thu": nền sáng cố định nên chữ cũng phải là màu tối cố định (không dùng --arena-ink vì chế độ tối đổi nó thành màu sáng) */
+.counter-summary-list .is-total {
+  align-items: baseline;
+  border-top: 2px solid var(--arena-ember);
+  border-bottom: 0;
+  background: var(--arena-ice-soft);
+}
+.counter-summary-list .is-total dt,
+.counter-summary-list .is-total dd {
+  color: var(--arena-ink-on-bright);
+}
+.counter-summary-list .is-total dd {
+  font-family: var(--font-heading);
+  font-size: var(--font-size-2xl);
+}
+
+
+/* ==================== 8. ĐIỆN THOẠI + GIẢM CHUYỂN ĐỘNG ==================== */
+
+@media (max-width: 1200px) {
+  .counter-grid {
+    grid-template-columns: repeat(3, minmax(0, 1fr));
+  }
+}
+
+@media (max-width: 1000px) {
+  .counter-layout {
+    grid-template-columns: minmax(0, 1fr);
+  }
+  .counter-summary {
+    position: static;
+  }
+}
+
+@media (max-width: 900px) {
+  .counter-grid {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+}
+
+@media (max-width: 640px) {
+  .counter-grid {
+    grid-template-columns: minmax(0, 1fr);
+  }
+  .counter-block {
+    padding: var(--arena-pad-sm);
+  }
+  .counter-bar {
+    flex-direction: column;
+    align-items: stretch;
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .counter-card {
+    transition: none;
+  }
+}
