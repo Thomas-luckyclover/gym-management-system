@@ -44,3 +44,138 @@
 html body.dock .content .payment-result > h2 {
   color: var(--color-text);
 }
+
+/* ==================== ĐỒNG BỘ PHONG CÁCH GYM THỂ THAO & VUÔNG GÓC ==================== */
+.payment-result {
+  max-width: 680px !important;
+  margin: 1.5rem auto 3rem !important;
+  border-radius: 0 !important;
+  border: 1px solid rgba(226, 232, 240, 0.8) !important;
+  box-shadow: 0 10px 25px -5px rgba(0, 0, 0, 0.08) !important;
+  padding: 2rem 2.5rem !important;
+}
+
+.payment-result h2 {
+  font-family: "Inter Tight", "Montserrat", system-ui, sans-serif !important;
+  font-size: 1.35rem !important;
+  font-weight: 800 !important;
+  color: #0f2a5e !important;
+  letter-spacing: -0.01em !important;
+}
+
+.sdp-box {
+  border-radius: 0 !important;
+  border: 1px solid #cbd5e1 !important;
+  background: #f8fafc !important;
+  padding: 0.85rem 1.25rem !important;
+}
+
+.sdp-box__item strong {
+  font-family: "Inter Tight", "Montserrat", system-ui, sans-serif !important;
+  font-size: 1.1rem !important;
+  font-weight: 800 !important;
+  color: #0f2a5e !important;
+}
+
+/* Nút Đổi ngày: Vuông góc, màu cam/xanh thể thao dứt khoát */
+.sdp-btn {
+  border-radius: 0 !important;
+  background: #0f2a5e !important;
+  border: 1px solid #0f2a5e !important;
+  color: #ffffff !important;
+  font-family: "Inter Tight", "Montserrat", system-ui, sans-serif !important;
+  font-weight: 700 !important;
+  font-size: 0.82rem !important;
+  padding: 0.45rem 1rem !important;
+  cursor: pointer !important;
+  display: inline-flex !important;
+  align-items: center !important;
+  gap: 0.4rem !important;
+}
+
+.sdp-btn:hover {
+  background: #1e3a8a !important;
+}
+
+/* ==================== POPUP LỊCH CHỌN NGÀY (SDP CALENDAR) ==================== */
+.sdp-cal {
+  border-radius: 0 !important;
+  border: 1px solid #cbd5e1 !important;
+  box-shadow: 0 20px 25px -5px rgba(0, 0, 0, 0.2) !important;
+  background: #ffffff !important;
+  padding: 1.25rem !important;
+}
+
+.sdp-cal__title {
+  font-family: "Inter Tight", sans-serif !important;
+  font-size: 0.95rem !important;
+  font-weight: 800 !important;
+  color: #0f2a5e !important;
+  margin-bottom: 0.25rem !important;
+}
+
+.sdp-cal__sub {
+  font-size: 0.8rem !important;
+  color: #64748b !important;
+}
+
+.sdp-cal__day {
+  border-radius: 0 !important;
+  font-family: "Inter Tight", system-ui, sans-serif !important;
+  font-weight: 700 !important;
+  font-size: 0.85rem !important;
+}
+
+.sdp-cal__day.is-selected {
+  background: #0f2a5e !important;
+  color: #ffffff !important;
+}
+
+/* Nút Lưu ngày bắt đầu */
+.sdp-cal__save {
+  border-radius: 0 !important;
+  height: 38px !important;
+  background: #ea580c !important;
+  border: 1px solid #c2410c !important;
+  color: #ffffff !important;
+  font-family: "Inter Tight", sans-serif !important;
+  font-size: 0.85rem !important;
+  font-weight: 800 !important;
+  text-transform: uppercase !important;
+  letter-spacing: 0.03em !important;
+  cursor: pointer !important;
+}
+
+.sdp-cal__save:hover:not(:disabled) {
+  background: #c2410c !important;
+}
+
+/* ==================== HỖ TRỢ DARK MODE CHO KẾT QUẢ THANH TOÁN ==================== */
+html[data-theme="dark"] .payment-result {
+  background: #111827 !important;
+  border-color: #1f2937 !important;
+  color: #f1f5f9 !important;
+}
+
+html[data-theme="dark"] .payment-result h2 {
+  color: #ffffff !important;
+}
+
+html[data-theme="dark"] .sdp-box {
+  background: #0f172a !important;
+  border-color: #1e293b !important;
+}
+
+html[data-theme="dark"] .sdp-box__item strong {
+  color: #38bdf8 !important;
+}
+
+html[data-theme="dark"] .sdp-cal {
+  background: #111827 !important;
+  border-color: #1f2937 !important;
+  color: #f1f5f9 !important;
+}
+
+html[data-theme="dark"] .sdp-cal__title {
+  color: #ffffff !important;
+}

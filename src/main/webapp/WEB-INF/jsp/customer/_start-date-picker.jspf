@@ -1,6 +1,8 @@
+<%@ page pageEncoding="UTF-8" %>
+<%@ taglib prefix="c" uri="jakarta.tags.core" %>
 <%-- Lịch chọn ngày bắt đầu gói. Trang nhúng đặt biến `picker` (StartDatePicker) trước khi include,
      và bọc fragment này trong phần tử có data-sdp, data-sdp-url, data-sdp-sub, data-sdp-csrf.
-     start-date-picker.js điều khiển; mọi ngày do server tính sẵn. --%>
+     start-date-picker.js điều khiển; mỗi ngày do server tính sẵn. --%>
 <div class="sdp-cal" data-sdp-cal role="group" aria-label="Chọn ngày bắt đầu" hidden>
     <h4 class="sdp-cal__title"><c:out value="${picker.calendarTitle}" /></h4>
     <p class="sdp-cal__sub"><b>Chọn ngày bắt đầu tập</b> (trong 7 ngày tới)</p>
