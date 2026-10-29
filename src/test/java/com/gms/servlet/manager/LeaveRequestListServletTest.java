@@ -86,4 +86,14 @@ class LeaveRequestListServletTest {
         assertNull(captor.getValue().getFromDate());
         assertNull(captor.getValue().getToDate());
     }
+    @Test
+    void returningAfterDecisionKeepsFiltersAndOnlyMarksGroupToReopen() throws Exception {
+        when(request.getParameter("status")).thenReturn("Pending");
+        when(request.getParameter("keyword")).thenReturn("Lê Tâm");
+        when(request.getParameter("reviewId")).thenReturn("16");
+        servlet.doGet(request, response);
+        verify(request).setAttribute("reviewId", 16);
+        verify(request).setAttribute("listReturnUrl", "/manager/leave-requests?status=Pending&keyword=L%C3%AA+T%C3%A2m");
+        verify(service, never()).getReviewParts(anyInt(), any());
+    }
 }

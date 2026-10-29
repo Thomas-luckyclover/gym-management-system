@@ -124,8 +124,8 @@
               <div class="detail-prop-grid">
                 <%-- item.leaveGroup: Service đã đọc đủ các phần của cùng nhân viên, không phụ thuộc bộ lọc hiện tại. --%>
                 <c:if test="${not empty item.leaveGroup}">
-                    <details class="leave-related">
-                        <summary>Cùng đợt <c:out value="${item.leaveGroup.code}" /></summary>
+                    <details class="leave-related" open>
+                        <summary>Các đơn cùng đợt nghỉ</summary>
                         <div class="leave-related-parts">
                             <small>Được duyệt <fmt:formatNumber value="${item.leaveGroup.approvedDays}" maxFractionDigits="1" />/<fmt:formatNumber value="${item.leaveGroup.totalDays}" maxFractionDigits="1" /> ngày</small>
                             <c:forEach var="part" items="${item.leaveGroup.requests}">

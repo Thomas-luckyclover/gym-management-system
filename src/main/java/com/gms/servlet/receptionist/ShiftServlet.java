@@ -18,9 +18,18 @@ import jakarta.servlet.http.HttpSession;
 import java.io.IOException;
 
 /**
- * Controller màn hình Ca làm việc và Đối soát tiền mặt của Lễ tân (Màn #39 - UC-25).
+ * Controller màn hình Ca làm việc và Đối soát tiền mặt của Lễ tân (Màn #39 - UC-25, Business Flow BF-03).
  *
  * <p>Mapping URL: {@code @WebServlet("/receptionist/shift")}</p>
+ *
+ * <p>Triển khai toàn diện theo sơ đồ Business Flow BF-03 trong SRS:</p>
+ * <ul>
+ *   <li><b>Trigger & Main Flow:</b> Lễ tân mở ca trực đúng giờ (openShift: Shift -> Open, UC-25).</li>
+ *   <li><b>Alternative Flow A1:</b> Lễ tân xác nhận đã nhận tiền chuyển khoản ngân hàng (confirmTransfer, CBR-77, CBR-105).</li>
+ *   <li><b>Alternative Flow A2:</b> Chốt ca khi có chênh lệch tiền mặt thực tế vs sổ sách, yêu cầu lý do (closeShift, BR-46, DBR-55).</li>
+ *   <li><b>Exception Flow E1:</b> Chặn chốt ca và cảnh báo khi còn đơn hàng quầy đang Pending (CBR-78, MSG87).</li>
+ *   <li><b>Exception Flow E2:</b> Hủy đơn hàng lập nhầm tại quầy trong ca mở, hoàn tiền mặt và phục hồi quyền lợi (cancelOrder, CBR-11).</li>
+ * </ul>
  *
  * <p>GET: Lấy thông tin ca hiện tại, 4 thẻ KPI, danh sách giao dịch có phân trang và bộ lọc.</p>
  * <p>POST: Xử lý các thao tác mở ca, chốt ca, xác nhận chuyển khoản và hủy đơn quầy theo mô hình PRG (Post/Redirect/Get).</p>
@@ -30,12 +39,24 @@ import java.io.IOException;
 @WebServlet("/receptionist/shift")
 public class ShiftServlet extends HttpServlet {
 
-    private static final String VIEW_NAME = "receptionist/shift";
+    public static final String VIEW_NAME = "receptionist/shift";
 
-    private static final String ACTION_OPEN_SHIFT = "openShift";
-    private static final String ACTION_CLOSE_SHIFT = "closeShift";
-    private static final String ACTION_CONFIRM_TRANSFER = "confirmTransfer";
-    private static final String ACTION_CANCEL_ORDER = "cancelOrder";
+    public static final String ACTION_OPEN_SHIFT = "openShift";
+    public static final String ACTION_CLOSE_SHIFT = "closeShift";
+    public static final String ACTION_CONFIRM_TRANSFER = "confirmTransfer";
+    public static final String ACTION_CANCEL_ORDER = "cancelOrder";
+
+    /**
+     * Tiện ích chuẩn hóa chuỗi tiền mặt đếm được (loại bỏ dấu phân cách . , khoảng trắng).
+     *
+     * @param rawCash chuỗi thô người dùng nhập
+     * @return chuỗi chỉ chứa số, hoặc "0" nếu rỗng
+     */
+    public static String cleanNumericCash(String rawCash) {
+        if (rawCash == null) return "0";
+        String cleanNum = rawCash.replaceAll("[^0-9]", "");
+        return cleanNum.isEmpty() ? "0" : cleanNum;
+    }
 
     private final ShiftService shiftService = new ShiftService();
 
@@ -150,11 +171,8 @@ public class ShiftServlet extends HttpServlet {
         long countedCash = 0;
         try {
             if (countedCashStr != null) {
-                // Loại bỏ dấu chấm, phẩy phân cách phần nghìn nếu người dùng nhập
-                String cleanNum = countedCashStr.replaceAll("[^0-9]", "");
-                if (!cleanNum.isEmpty()) {
-                    countedCash = Long.parseLong(cleanNum);
-                }
+                String cleanNum = cleanNumericCash(countedCashStr);
+                countedCash = Long.parseLong(cleanNum);
             }
         } catch (NumberFormatException e) {
             RequestUtil.setFlashToast(request, "error", "Số tiền mặt đếm được không hợp lệ.");

@@ -125,7 +125,7 @@ public class LeaveRequestService {
             return ServiceResult.fail("Từ ngày phải trước hoặc trùng Đến ngày.");
         }
         try {
-            // B1: đếm và phân trang theo đơn, không lấy trang nhân viên rồi lọc lại trong Java.
+            // B1: phân trang theo đợt/đơn độc lập; số trên tab vẫn đếm từng đơn.
             Integer managerEmployeeId = findWorkingManagerId(managerAccountId);
             int totalRequests = leaveRequestDAO.countRequests(filter);
             int totalPages = Math.max(1, (totalRequests + pageSize - 1) / pageSize);
@@ -143,6 +143,18 @@ public class LeaveRequestService {
                 items.add(item);
             }
             loadApprovalSummaries(rows, items);
+            // B3: nạp sẵn hai phần cùng đợt; trình duyệt chỉ ẩn/hiện HTML khi bấm dropdown.
+            for (LeaveRequestItemView item : items) {
+                LeaveRequestGroupView group = item.getLeaveGroup();
+                if (group != null && group.getRequests().size() > 1) {
+                    ServiceResult<List<LeaveReviewDetail>> parts = getReviewParts(item.getLeaveRequestId(), managerAccountId);
+                    if (parts.isSuccess()) {
+                        group.setReviewParts(parts.getData());
+                    } else {
+                        group.setReviewError(parts.getMessage());
+                    }
+                }
+            }
             return ServiceResult.ok(new PageResult<>(items, currentPage, pageSize, totalRequests));
         } catch (SQLException e) {
             e.printStackTrace();
@@ -361,6 +373,32 @@ public class LeaveRequestService {
             e.printStackTrace();
             return ServiceResult.fail(Messages.MSG04_SYSTEM_BUSY);
         }
+    }
+
+    /** Nhóm mở rộng: đọc đầy đủ từng đơn cùng đợt, dùng lại kiểm tra của trang chi tiết. */
+    public ServiceResult<List<LeaveReviewDetail>> getReviewParts(int requestId, Integer managerAccountId) {
+        ServiceResult<LeaveReviewDetail> selected = getReviewDetail(requestId, managerAccountId);
+        if (!selected.isSuccess()) {
+            return ServiceResult.fail(selected.getMessage());
+        }
+        LeaveReviewDetail detail = selected.getData();
+        List<LeaveReviewDetail> parts = new ArrayList<>();
+        if (detail.getLeaveGroup() == null) {
+            parts.add(detail);
+            return ServiceResult.ok(parts);
+        }
+        for (LeaveRequest request : detail.getLeaveGroup().getRequests()) {
+            if (request.getLeaveRequestId() == requestId) {
+                parts.add(detail);
+                continue;
+            }
+            ServiceResult<LeaveReviewDetail> result = getReviewDetail(request.getLeaveRequestId(), managerAccountId);
+            if (!result.isSuccess()) {
+                return ServiceResult.fail(result.getMessage());
+            }
+            parts.add(result.getData());
+        }
+        return ServiceResult.ok(parts);
     }
 
     /**

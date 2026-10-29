@@ -11,9 +11,10 @@
   <%@ include file="/WEB-INF/jsp/common/head.jspf" %>
   <title>Quản lý đơn nghỉ phép · Super Gym</title>
   <link rel="stylesheet" href="${pageContext.request.contextPath}/css/pages/auth/account-settings.css">
-  <link rel="stylesheet" href="${pageContext.request.contextPath}/css/pages/manager/leave-request-list.css?v=20261025-compact">
-
-  <script src="${pageContext.request.contextPath}/js/pages/manager/leave-request-list.js?v=20261025-readable" defer></script>
+  <link rel="stylesheet" href="${pageContext.request.contextPath}/css/pages/manager/leave-request-list.css?v=20261027-local-dropdown">
+  <link rel="stylesheet" href="${pageContext.request.contextPath}/css/pages/auth/notification-bell.css">
+  <script src="${pageContext.request.contextPath}/js/pages/auth/notification-bell.js" defer></script>
+  <script src="${pageContext.request.contextPath}/js/pages/manager/leave-request-list.js?v=20261027-local-dropdown" defer></script>
 </head>
 
 <body class="dock theme-manager leave-list-page">
@@ -229,7 +230,7 @@
                 <a class="btn btn-ghost btn-sm" href="${previousUrl}">Trang trước</a>
               </c:if>
 
-              <span>Trang ${listPage.pageNumber} / ${listPage.totalPages} (${listPage.totalItems} ${employeeView ? 'nhân viên' : 'đơn'})</span>
+              <span>Trang ${listPage.pageNumber} / ${listPage.totalPages} (${listPage.totalItems} ${employeeView ? 'nhân viên' : 'mục'})</span>
 
               <c:if test="${listPage.hasNext}">
                 <c:url var="nextUrl" value="/manager/leave-requests">
@@ -248,6 +249,7 @@
           </c:if>
 
         </section>
+
 
       </main>
     </div>

@@ -1,5 +1,105 @@
 /* Danh sách BF-05: mỗi thành phần có một khối style, không ghi đè từ CSS màn khác. */
 
+/* Hai đơn mở ngay dưới hàng cha; bảng giữ nguyên chiều rộng, không có khung bên cạnh. */
+.leave-list-page .leave-expanded-row[hidden] {
+  display: none;
+}
+
+.leave-list-page .leave-row-selected {
+  background: var(--color-warning-tint);
+  box-shadow: inset var(--space-1) 0 var(--color-primary);
+}
+
+.leave-list-page .leave-group-note {
+  color: var(--color-text-soft);
+  font-size: var(--font-size-xs);
+}
+
+.leave-list-page .leave-table .leave-expanded-row > td {
+  padding: var(--space-0) var(--space-4) var(--space-4);
+  background: var(--color-surface);
+}
+
+.leave-list-page .leave-group-detail {
+  border-left: var(--space-1) solid var(--color-primary);
+  padding-left: var(--space-4);
+}
+
+.leave-list-page .leave-group-reason {
+  padding: var(--space-3) var(--space-0);
+}
+
+.leave-list-page .leave-group-reason p {
+  margin: var(--space-1) var(--space-0);
+  white-space: pre-wrap;
+  overflow-wrap: anywhere;
+}
+
+.leave-list-page .leave-detail-part {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) minmax(0, 1.4fr) minmax(0, 1.4fr) auto;
+  align-items: center;
+  gap: var(--space-4);
+  padding: var(--space-3) var(--space-0);
+  border-top: var(--border-width) solid var(--color-border);
+  overflow-wrap: anywhere;
+}
+
+.leave-list-page .leave-detail-part h3 {
+  margin: var(--space-0) var(--space-0) var(--space-2);
+  font-size: var(--font-size-sm);
+}
+
+.leave-list-page .leave-detail-part small,
+.leave-list-page .leave-group-reason small {
+  display: block;
+  color: var(--color-text-soft);
+  font-size: var(--font-size-xs);
+}
+
+.leave-list-page .leave-detail-actions {
+  display: flex;
+  flex-wrap: wrap;
+  justify-content: flex-end;
+  gap: var(--space-2);
+}
+
+.leave-list-page .leave-detail-check {
+  font-size: var(--font-size-xs);
+}
+
+.leave-list-page .leave-detail-check.pass {
+  color: var(--color-success-ink);
+}
+
+.leave-list-page .leave-detail-check.fail,
+.leave-list-page .leave-detail-error {
+  color: var(--color-danger);
+}
+
+.leave-list-page .leave-detail-error {
+  padding: var(--space-4);
+}
+
+.leave-list-page .leave-detail-result {
+  grid-column: span 2;
+}
+
+.leave-list-page .leave-date-cell > .badge {
+  align-self: flex-start;
+  max-width: 100%;
+  white-space: normal;
+}
+
+@media (max-width: 900px) {
+  .leave-list-page .leave-detail-part {
+    grid-template-columns: minmax(0, 1fr) minmax(0, 1fr);
+  }
+  .leave-list-page .leave-detail-actions {
+    justify-content: flex-start;
+  }
+}
+
 /* Chỉ tên nhân viên là điểm mở tooltip; tên vẫn bấm được để vào chi tiết. */
 .leave-list-page .leave-reason-trigger {
   display: inline-block;
@@ -411,19 +511,19 @@
 }
 
 .leave-list-page .leave-request-table .leave-col-employee {
-  width: 30%;
+  width: 28%;
 }
 .leave-list-page .leave-request-table .leave-col-date {
-  width: 26%;
+  width: 25%;
 }
 .leave-list-page .leave-request-table .leave-col-type {
-  width: 12%;
+  width: 18%;
 }
 .leave-list-page .leave-request-table .leave-col-check {
-  width: 12%;
+  width: 11%;
 }
 .leave-list-page .leave-request-table .leave-col-actions {
-  width: 20%;
+  width: 18%;
 }
 
 /* Đơn đã xử lý không có cột kiểm tra/thao tác rỗng. */
@@ -451,6 +551,27 @@
   display: flex;
   flex-direction: column;
   gap: var(--space-1);
+}
+
+/* Hai loại nghỉ cùng đợt: nền nhãn ôm đủ chữ, màn hẹp thì xuống dòng trong ô. */
+.leave-list-page .leave-group-types {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-start;
+  gap: var(--space-1);
+  min-width: 0;
+}
+
+.leave-list-page .leave-group-types .badge {
+  width: fit-content;
+  max-width: 100%;
+  box-sizing: border-box;
+  white-space: normal;
+  overflow-wrap: anywhere;
+}
+
+.leave-list-page .leave-group-types .badge::before {
+  flex-shrink: 0;
 }
 
 .leave-list-page .leave-date-cell small,

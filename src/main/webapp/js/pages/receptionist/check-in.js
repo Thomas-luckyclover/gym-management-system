@@ -19,7 +19,7 @@ document.addEventListener('DOMContentLoaded', function () {
 
     // Xử lý Modal chụp ảnh tại quầy
     const photoModal = document.getElementById('photoModal');
-    const openPhotoBtn = document.querySelector('[data-ci-photo]');
+    const openPhotoBtns = document.querySelectorAll('[data-ci-photo]');
     const closePhotoBtns = document.querySelectorAll('[data-close-modal]');
     const captureBtn = document.getElementById('captureBtn');
     const cameraVideo = document.getElementById('cameraVideo');
@@ -39,9 +39,9 @@ document.addEventListener('DOMContentLoaded', function () {
         stopCamera();
     }
 
-    if (openPhotoBtn) {
-        openPhotoBtn.addEventListener('click', openModal);
-    }
+    openPhotoBtns.forEach(btn => {
+        btn.addEventListener('click', openModal);
+    });
 
     closePhotoBtns.forEach(btn => {
         btn.addEventListener('click', closeModal);
