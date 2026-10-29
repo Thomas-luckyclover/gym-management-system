@@ -22,9 +22,9 @@
 <head>
     <%@ include file="/WEB-INF/jsp/common/head.jspf" %>
     <title>Bán gói PT · Super Gym Lễ tân</title>
-    <link rel="stylesheet" href="${ctx}/css/pages/receptionist/pt-sales.css?v=20261026x">
+    <link rel="stylesheet" href="${ctx}/css/pages/receptionist/pt-sales.css?v=20261030v5">
     <script src="${ctx}/js/pages/receptionist/pt-sales.js?v=20261026s" defer></script>
-    <script src="${ctx}/js/pages/receptionist/pt-sale-plan.js?v=20261026x" defer></script>
+    <script src="${ctx}/js/pages/receptionist/pt-sale-plan.js?v=20261030v4" defer></script>
 </head>
 <body class="dock theme-staff pt-sale-page">
 <%@ include file="/WEB-INF/jsp/common/flash-toast.jspf" %>
@@ -64,6 +64,24 @@
             <c:set var="holderOk" value="${not empty sale.holder and empty sale.holder.blockReason}" />
             <c:set var="customerReady" value="${holderOk and (not sale.couple or (not empty sale.partner and empty sale.partner.blockReason))}" />
             <c:set var="done2" value="${not empty sale.endDate}" />
+
+            <%-- ===== ĐƠN ĐANG GIỮ CHỖ (lễ tân bấm Back / đăng xuất rồi quay lại vẫn tìm được đơn chưa thu tiền) ===== --%>
+            <c:if test="${not empty sale.pendingHolds}">
+                <section class="sale-holds" aria-label="Đơn đang giữ chỗ">
+                    <p class="sale-holds-title"><i class="fa-solid fa-hourglass-half" aria-hidden="true"></i> Đơn đang giữ chỗ — tiếp tục thu tiền trước khi hết 15 phút:</p>
+                    <ul class="sale-holds-list">
+                        <c:forEach var="hold" items="${sale.pendingHolds}">
+                            <li>
+                                <span class="sale-holds-info">
+                                    <span class="sale-holds-code"><c:out value="${hold.orderCode}" /></span>
+                                    <span class="sale-holds-time">còn <b data-countdown-seconds="${hold.secondsLeft}">--:--</b></span>
+                                </span>
+                                <a class="btn btn-primary btn-sm" href="${base}?order=${hold.orderId}">Tiếp tục thu tiền</a>
+                            </li>
+                        </c:forEach>
+                    </ul>
+                </section>
+            </c:if>
 
             <%-- ===== THANH BƯỚC ===== --%>
             <ol class="sale-stepper" aria-label="Các bước bán gói">
@@ -159,13 +177,7 @@
                             <div class="plan-block-head">
                                 <div class="sale-label-row">
                                     <h3 id="plan-pattern-title">Lịch mẫu hằng tuần</h3>
-                                    <span class="pt-info"><button type="button" class="pt-info-trigger" aria-label="Cách chọn lịch mẫu" aria-describedby="plan-pattern-help"><span aria-hidden="true">i</span></button><span id="plan-pattern-help" class="pt-info-popover" role="tooltip">Mỗi thứ chọn <b>Nghỉ</b> hoặc 1 giờ (1–5 buổi/tuần). Giờ nào có ngày không xếp được sẽ ghi <b>"Còn x/9 buổi"</b> và lý do chính; rê chuột vào giờ để xem từng ngày. Mẫu nhanh chọn sẵn giờ ít bị kẹt nhất.</span></span>
-                                </div>
-                                <div class="plan-presets" role="group" aria-label="Mẫu nhanh">
-                                    <button type="button" class="plan-preset" data-preset="1,3,5">T2 · T4 · T6</button>
-                                    <button type="button" class="plan-preset" data-preset="2,4">T3 · T5</button>
-                                    <button type="button" class="plan-preset" data-preset="1,2,3,4,5">T2 → T6</button>
-                                    <button type="button" class="plan-preset is-quiet" data-preset="">Bỏ hết</button>
+                                    <span class="pt-info"><button type="button" class="pt-info-trigger" aria-label="Cách chọn lịch mẫu" aria-describedby="plan-pattern-help"><span aria-hidden="true">i</span></button><span id="plan-pattern-help" class="pt-info-popover" role="tooltip">Mỗi thứ chọn <b>Nghỉ</b> hoặc 1 giờ (1–5 buổi/tuần). Giờ nào có ngày không xếp được sẽ ghi <b>"Còn x/9 buổi"</b> và lý do chính; rê chuột vào giờ để xem từng ngày.</span></span>
                                 </div>
                             </div>
                             <div class="plan-pattern" data-pattern aria-labelledby="plan-pattern-title"></div>
@@ -372,11 +384,23 @@
                             <label class="sale-confirm sale-pt-confirm" data-plan-confirm hidden>
                                 <input type="checkbox" name="confirmPt" value="1">
                                 <span><b>Đã xác nhận với PT</b>
-                                    <small data-plan-confirm-text>PT đồng ý dạy các buổi PT chưa mở khung.</small></span>
+                                    <small data-plan-confirm-text>PT đã đồng ý dạy các buổi chưa mở khung.</small></span>
                             </label>
                             <button class="btn btn-primary sale-main" type="submit" disabled data-plan-submit><i class="fa-solid fa-lock" aria-hidden="true"></i> Giữ lịch 15 phút</button>
                         </form>
-                        <p class="sale-msg" data-plan-note>Chọn lịch tập bên trái và khách ở trên để giữ lịch.</p>
+                        <div class="sale-note">
+                            <%-- Pumpy nhỏ cổ vũ lễ tân (trang trí, màu giống Pumpy ở guest/_mascot.jspf) --%>
+                            <svg class="sale-pumpy" viewBox="0 0 120 120" role="img" aria-label="Pumpy cổ vũ lễ tân">
+                                <circle cx="60" cy="64" r="42" fill="#D6F55B" stroke="#141414" stroke-width="5"/>
+                                <path d="M30 44 L33 20 L48 34 Z M90 44 L87 20 L72 34 Z" fill="#D6F55B" stroke="#141414" stroke-width="4" stroke-linejoin="round"/>
+                                <circle cx="46" cy="58" r="5" fill="#141414"/><circle cx="74" cy="58" r="5" fill="#141414"/>
+                                <circle cx="47.5" cy="56.5" r="1.6" fill="#fff"/><circle cx="75.5" cy="56.5" r="1.6" fill="#fff"/>
+                                <path d="M50 72 Q60 80 70 72" fill="none" stroke="#141414" stroke-width="4" stroke-linecap="round"/>
+                                <ellipse cx="42" cy="70" rx="6" ry="3.5" fill="#fff" opacity="0.5"/>
+                                <ellipse cx="78" cy="70" rx="6" ry="3.5" fill="#fff" opacity="0.5"/>
+                            </svg>
+                            <p class="sale-msg" data-plan-note>Chọn lịch tập bên trái và khách ở cột Đơn bán để giữ lịch.</p>
+                        </div>
                     </c:when>
                     <c:otherwise>
                         <p class="sale-msg">Chọn gói, PT và ngày bắt đầu bên trái để xếp lịch.</p>

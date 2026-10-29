@@ -34,6 +34,53 @@
   padding: 0;
   border: 0;
 }
+/* Đơn đang giữ chỗ — danh sách để lễ tân tìm lại sau khi mất URL ?order= (bấm Back / đăng xuất). 30/10/2026. */
+.sale-holds {
+  display: grid;
+  gap: var(--space-2);
+  padding: var(--space-2) var(--space-3);
+  border-radius: var(--arena-radius-chip);
+  background: var(--arena-chalk);
+  box-shadow: inset 0 0 0 1px var(--color-warning-ink);
+  margin-bottom: var(--space-2);
+}
+.sale-holds-title {
+  color: var(--color-warning-ink);
+  font-weight: var(--font-weight-semibold);
+}
+.sale-holds-list {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
+  gap: var(--space-2);
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+.sale-holds-list li {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: var(--space-2);
+  padding: var(--space-2);
+  border-radius: var(--arena-radius-chip);
+  box-shadow: inset 0 0 0 1px var(--arena-chalk-line-strong);
+}
+.sale-holds-info {
+  display: flex;
+  align-items: center;
+  gap: var(--space-2);
+  min-width: 0;
+}
+.sale-holds-code {
+  font-variant-numeric: tabular-nums;
+  font-weight: var(--font-weight-semibold);
+  color: var(--arena-ink);
+}
+.sale-holds-time {
+  color: var(--arena-steel-ink);
+  white-space: nowrap;
+}
+
 .sale-layout {
   display: grid;
   grid-template-columns: minmax(0, 1fr) var(--sale-aside);
@@ -499,8 +546,9 @@ html body.dock.pt-sale-page .content .sale-card :is(h2, h3) {
 }
 .sale-customer-status {
   display: flex;
-  align-items: center;
+  align-items: flex-start;   /* icon dính dòng đầu khi lý do (Chưa có gói / Chưa đủ tuổi) xuống 2 dòng */
   gap: var(--space-1-5);
+  min-width: 0;
   max-width: 18rem;
   padding: var(--space-1) var(--space-2);
   border-radius: var(--arena-radius-chip);
@@ -509,6 +557,11 @@ html body.dock.pt-sale-page .content .sale-card :is(h2, h3) {
   font-size: var(--font-size-xs);
   font-weight: var(--font-weight-semibold);
   font-variant-numeric: tabular-nums;
+  overflow-wrap: anywhere;    /* lý do dài / không dấu cách cũng không tràn ra ngoài thẻ */
+}
+.sale-customer-status > i {
+  flex: none;
+  margin-top: 2px;           /* canh icon ngang dòng chữ đầu tiên */
 }
 .sale-customer.is-blocked .sale-customer-status {
   background: var(--color-danger-tint);
@@ -664,41 +717,6 @@ html body.dock.pt-sale-page .content .sale-card :is(h2, h3) {
   color: var(--arena-ink);
 }
 
-/* Mẫu nhanh: nút chữ nhỏ, viền mảnh. */
-.plan-presets {
-  display: flex;
-  flex-wrap: wrap;
-  gap: var(--space-1-5);
-}
-.plan-preset {
-  min-height: 32px;
-  padding: 0 var(--space-3);
-  border: 0;
-  border-radius: var(--arena-radius-chip);
-  background: var(--arena-surface);
-  box-shadow: inset 0 0 0 1px var(--arena-chalk-line-strong);
-  color: var(--arena-ink);
-  font: inherit;
-  font-size: var(--font-size-xs);
-  font-weight: var(--font-weight-semibold);
-  font-variant-numeric: tabular-nums;
-  cursor: pointer;
-  transition: box-shadow var(--duration-fast) var(--ease-out), background-color var(--duration-fast) var(--ease-out);
-}
-.plan-preset:hover {
-  box-shadow: inset 0 0 0 1px var(--arena-700);
-}
-.plan-preset.is-quiet {
-  background: transparent;
-  box-shadow: none;
-  color: var(--arena-steel-ink);
-}
-.plan-preset.is-quiet:hover {
-  color: var(--arena-ink);
-  text-decoration: underline;
-  text-underline-offset: 2px;
-}
-
 /* Lịch mẫu: mỗi thứ 1 hàng = tên thứ | dãy chip giờ. */
 .plan-pattern {
   display: grid;
@@ -835,6 +853,89 @@ html body.dock.pt-sale-page .content .sale-card :is(h2, h3) {
   white-space: normal;
 }
 
+/* ===== Ô "+ Thêm giờ" (lễ tân tự nhập giờ PT chưa công bố) — 30/10/2026 ===== */
+.plan-add-time {
+  display: inline-flex;
+  align-items: center;
+  gap: var(--space-2);
+  flex-wrap: wrap;
+}
+/* Nút/ô bên trong có display:inline-flex nên đè mất thuộc tính hidden → buộc ẩn lại khi đóng. */
+.plan-add-time [hidden] {
+  display: none;
+}
+.plan-chip-add {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  box-sizing: border-box;
+  min-height: 44px;               /* chạm tay ≥ 44px */
+  padding: var(--space-1) var(--space-3);
+  border: 1px dashed var(--arena-700);
+  border-radius: var(--arena-radius-chip);
+  background: transparent;
+  color: var(--arena-700);
+  font: inherit;
+  font-weight: var(--font-weight-semibold);
+  cursor: pointer;
+  transition: background-color var(--duration-fast) var(--ease-out), color var(--duration-fast) var(--ease-out);
+}
+.plan-chip-add:hover {
+  background: var(--arena-700);
+  color: var(--arena-on-dark);
+}
+.plan-time-input {
+  box-sizing: border-box;
+  width: 132px;
+  height: 44px;
+  padding: 0 var(--space-3);
+  border: 1px solid var(--arena-700);
+  border-radius: var(--arena-radius-chip);
+  background: var(--arena-chalk);
+  color: var(--arena-ink);
+  font: inherit;
+  font-variant-numeric: tabular-nums;
+}
+.plan-time-confirm,
+.plan-time-cancel {
+  box-sizing: border-box;
+  height: 44px;                   /* chạm tay ≥ 44px */
+  padding: 0 var(--space-3);
+  border: 0;
+  border-radius: var(--arena-radius-chip);
+  font: inherit;
+  font-weight: var(--font-weight-semibold);
+  cursor: pointer;
+}
+.plan-time-confirm {
+  background: var(--arena-700);
+  color: var(--arena-on-dark);
+}
+.plan-time-cancel {
+  background: transparent;
+  box-shadow: inset 0 0 0 1px var(--arena-chalk-line-strong);
+  color: var(--arena-ink);
+}
+.plan-time-input:focus-visible,
+.plan-time-confirm:focus-visible,
+.plan-time-cancel:focus-visible,
+.plan-chip-add:focus-visible {
+  outline: var(--focus-outline-width) solid var(--arena-focus-ring);
+  outline-offset: var(--focus-outline-offset);
+}
+
+/* Pumpy nhỏ cạnh dòng nhắc dưới nút Giữ lịch (trang trí). */
+.sale-note {
+  display: flex;
+  align-items: center;
+  gap: var(--space-2);
+}
+.sale-pumpy {
+  width: 54px;
+  height: 54px;
+  flex-shrink: 0;
+}
+
 /* Từng tuần: điều hướng ‹ Tuần 3/9 › + dãy tab tuần. */
 .plan-week-nav {
   display: flex;
@@ -871,7 +972,6 @@ html body.dock.pt-sale-page .content .sale-card :is(h2, h3) {
 .plan-nav:focus-visible,
 .plan-tab:focus-visible,
 .plan-day:focus-visible,
-.plan-preset:focus-visible,
 .plan-reset:focus-visible,
 .plan-issue:focus-visible {
   outline: var(--focus-outline-width) solid var(--arena-focus-ring);

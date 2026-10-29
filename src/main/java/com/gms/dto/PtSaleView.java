@@ -60,6 +60,7 @@ public class PtSaleView {
     private Integer heldOrderId;
     private String heldCode;
     private long holdSeconds;                            // số giây giữ chỗ còn lại (đồng hồ đếm ngược)
+    private List<PendingHold> pendingHolds = new ArrayList<>();  // đơn tại quầy đang giữ chỗ chưa hết hạn (lễ tân tìm lại sau khi mất URL ?order=)
 
     /** Đủ để bấm "Giữ lịch 15 phút". */
     public boolean isReady() {
@@ -173,4 +174,23 @@ public class PtSaleView {
     public void setHeldCode(String heldCode) { this.heldCode = heldCode; }
     public long getHoldSeconds() { return holdSeconds; }
     public void setHoldSeconds(long holdSeconds) { this.holdSeconds = holdSeconds; }
+    public List<PendingHold> getPendingHolds() { return pendingHolds; }
+    public void setPendingHolds(List<PendingHold> pendingHolds) { this.pendingHolds = pendingHolds; }
+
+    /** 1 đơn tại quầy đang giữ chỗ (tóm tắt cho danh sách "Đơn đang giữ" ở đầu màn Bán gói PT). */
+    public static class PendingHold {
+        private final int orderId;
+        private final String orderCode;
+        private final long secondsLeft;   // số giây giữ chỗ còn lại (đồng hồ đếm ngược)
+
+        public PendingHold(int orderId, String orderCode, long secondsLeft) {
+            this.orderId = orderId;
+            this.orderCode = orderCode;
+            this.secondsLeft = secondsLeft;
+        }
+
+        public int getOrderId() { return orderId; }
+        public String getOrderCode() { return orderCode; }
+        public long getSecondsLeft() { return secondsLeft; }
+    }
 }

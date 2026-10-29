@@ -10,6 +10,7 @@ import com.gms.util.TimeRange;
 import java.time.LocalDate;
 import java.time.LocalDateTime;
 import java.time.LocalTime;
+import java.util.Arrays;
 import java.util.List;
 import java.util.Map;
 import org.junit.jupiter.api.Test;
@@ -167,6 +168,38 @@ class PtSaleServiceTest {
         assertTrue(thursday.getOptions().get(1).isOk());
         assertFalse(thursday.getOptions().get(0).isFresh());               // 14:00 PT đã mở sẵn
         assertTrue(thursday.getOptions().get(1).isFresh());                // 18:00 ngày đó chưa có khung → tự tạo
+    }
+
+    @Test
+    void customTimesMergeOnlyValidTimesWithinOpeningHours() {
+        LocalTime open = LocalTime.of(5, 30);
+        LocalTime close = LocalTime.of(22, 0);
+        // 17:00 hợp lệ (trong giờ mở cửa, đúng mốc 15 phút, 90 phút kết thúc trước 22:00) → được gộp.
+        // null (bỏ qua), 04:00 (trước giờ mở), 21:00 và 20:45 (kết thúc quá 22:00) → bị loại.
+        List<LocalTime> customTimes = Arrays.asList(null, LocalTime.of(17, 0), LocalTime.of(4, 0),
+                LocalTime.of(21, 0), LocalTime.of(20, 45));
+        assertEquals(List.of(LocalTime.of(17, 0), SIX_PM),
+                PtSaleService.mergeCustomTimes(List.of(SIX_PM), customTimes, 90, open, close));
+
+        // Giờ ngoài giờ mở cửa / sai mốc 15 phút / null → không hợp lệ.
+        assertFalse(PtSaleService.isValidStartTime(LocalTime.of(4, 0), 90, open, close));
+        assertFalse(PtSaleService.isValidStartTime(LocalTime.of(17, 10), 90, open, close));
+        assertFalse(PtSaleService.isValidStartTime(null, 90, open, close));
+        // LocalTime.plusMinutes tự quay về ngày mới; ca 23:00–00:30 vẫn phải bị chặn.
+        assertFalse(PtSaleService.isValidStartTime(LocalTime.of(23, 0), 90, open, close));
+        assertFalse(PtSaleService.isValidStartTime(LocalTime.of(17, 0), 0, open, close));
+    }
+
+    @Test
+    void requestedSessionsAcceptCustomTimeAsCreateSession() {
+        LocalDate end = MON.plusDays(11);
+        // PT chỉ công bố 18:00; lễ tân tự nhập 17:00 (hợp lệ) → checkRequested chấp nhận, action = "create" (sẽ tạo khung mới).
+        List<PtSaleDay> days = PtSaleService.checkRequested(
+                PtSaleService.parseSessions("2026-10-26@17:00"), MON, end, 90,
+                List.of(SIX_PM, LocalTime.of(17, 0)), List.of(), List.of(), List.of(), List.of(), NOW);
+        assertEquals(1, days.size());
+        assertEquals("create", days.get(0).getAction());
+        assertTrue(days.get(0).isSession());
     }
 
     @Test

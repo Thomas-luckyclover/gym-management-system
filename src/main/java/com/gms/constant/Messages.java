@@ -325,6 +325,11 @@ public final class Messages {
     // EN: Your PT rating has been updated.
     public static final String MSG107_PT_RATING_UPDATED = "Đã cập nhật đánh giá PT của bạn.";
 
+    /** Đơn giữ chỗ tại quầy không còn hiệu lực (đã thu tiền / hủy / quá hạn giữ). */
+    // EN: This order no longer holds a slot (paid, cancelled, or expired after %d minutes).
+    public static final String MSG108_HOLD_NO_LONGER_VALID =
+            "Đơn này không còn giữ chỗ (đã thu tiền, đã hủy hoặc quá %d phút). Bán lại từ đầu.";
+
     private Messages() {
     }
 }

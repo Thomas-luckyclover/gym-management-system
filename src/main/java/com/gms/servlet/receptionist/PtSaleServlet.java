@@ -110,6 +110,12 @@ public class PtSaleServlet extends HttpServlet {
         ServiceResult<PtSaleView> result = saleService.prepare(accountId, readInput(request), orderId, DateTimeUtil.now());
         if (result.isSuccess()) {
             request.setAttribute("sale", result.getData());          // → pt-sales.jsp mọi khối
+        } else if (orderId != null) {
+            // Mở ?order=<id> mà đơn không còn giữ (đã thu tiền / hủy / quá hạn) → về thẳng trang bán gói + toast,
+            // không hiện khung lỗi (lễ tân bán lại từ đầu).
+            RequestUtil.setFlashToast(request, "warning", result.getMessage());
+            RequestUtil.redirect(request, response, PAGE_URL);
+            return;
         } else {
             request.setAttribute("pageError", result.getMessage());  // → pt-sales.jsp khung báo lỗi
         }

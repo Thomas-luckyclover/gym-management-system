@@ -4,7 +4,7 @@
  * BÁN GÓI PT — BƯỚC 3 "LỊCH TẬP" — pt-sale-plan.js
  *
  * Cách làm giống "sự kiện lặp lại" của Google Calendar và đặt lịch PT định kỳ của Mindbody / Glofox:
- *   1. Lịch mẫu hằng tuần   mỗi thứ T2–T6: Nghỉ hoặc 1 giờ. Mẫu nhanh: T2·T4·T6, T3·T5, T2→T6.
+ *   1. Lịch mẫu hằng tuần   mỗi thứ T2–T6: chọn Nghỉ hoặc 1 giờ.
  *   2. Từng tuần            tab Tuần 1…N, mỗi tuần 5 ô ngày. Ô đỏ = ngày đó giờ mẫu không xếp được (+ lý do).
  *   3. Sửa riêng 1 buổi     bấm 1 ô ngày → chọn giờ khác hoặc Không tập, CHỈ cho ngày đó ("chỉ sự kiện này").
  *
@@ -94,9 +94,7 @@ function initPlan(root, data) {
         if (!target || !root.contains(target)) {
             return;
         }
-        if (target.dataset.preset !== undefined) {
-            applyPreset(target.dataset.preset);
-        } else if (target.dataset.weekStep) {
+        if (target.dataset.weekStep) {
             showWeek(weekIndex + Number(target.dataset.weekStep));
         } else if (target.dataset.weekTab) {
             showWeek(Number(target.dataset.weekTab));
@@ -157,23 +155,6 @@ function initPlan(root, data) {
         }
         render();
         focusKey("edit-current");
-    }
-
-    /** Mẫu nhanh: thứ trong mẫu giữ giờ đang chọn, chưa có thì lấy giờ xếp được nhiều buổi nhất; thứ khác → Nghỉ. */
-    function applyPreset(text) {
-        const chosen = text === "" ? [] : text.split(",").map(Number);
-        for (let weekday = 1; weekday <= 5; weekday++) {
-            if (!chosen.includes(weekday)) {
-                pattern[weekday - 1] = "";
-            } else if (!pattern[weekday - 1]) {
-                pattern[weekday - 1] = bestTime(weekday);
-            }
-        }
-        if (chosen.length === 0) {
-            overrides.clear();
-            editingDate = null;
-        }
-        render();
     }
 
     function showWeek(index) {
@@ -295,19 +276,6 @@ function initPlan(root, data) {
         };
     }
 
-    function bestTime(weekday) {
-        let best = "";
-        let bestBlocked = Infinity;
-        for (const time of data.times) {
-            const count = blockedCount(weekday, time);
-            if (count.blocked < bestBlocked && count.blocked < count.total) {
-                best = time;
-                bestBlocked = count.blocked;
-            }
-        }
-        return best;
-    }
-
     function summary() {
         let sessions = 0;
         let bad = 0;
@@ -360,8 +328,11 @@ function initPlan(root, data) {
                     "p-" + weekday + "-off", weekday, "is-rest"));
             for (const time of data.times) {
                 const note = patternNote(weekday, time);
-                const item = chip("plan-wd-" + weekday, time, time, note.meta, pattern[weekday - 1] === time,
-                        note.full, "p-" + weekday + "-" + time, weekday, note.meta ? "has-meta" : "");
+                // Giờ lễ tân tự nhập (không nằm trong published) → ghi thêm "PT chưa mở" để biết phải tick "Đã xác nhận với PT".
+                const custom = !data.published.includes(time);
+                const meta = custom ? (note.meta ? note.meta + " · PT chưa mở" : "PT chưa mở") : note.meta;
+                const item = chip("plan-wd-" + weekday, time, time, meta, pattern[weekday - 1] === time,
+                        note.full, "p-" + weekday + "-" + time, weekday, meta ? "has-meta" : "");
                 if (note.sub) {
                     item.append(el("small", "plan-chip-sub", note.sub));
                 }
@@ -370,9 +341,106 @@ function initPlan(root, data) {
                 item.append(el("span", "visually-hidden", note.detail));
                 chips.append(item);
             }
+            // Nút "+ Thêm giờ": lễ tân tự nhập giờ PT chưa công bố → tick "Đã xác nhận với PT" rồi Giữ lịch.
+            chips.append(addTimeButton(weekday));
             row.append(head, chips);
             patternBox.append(row);
         }
+    }
+
+    /**
+     * Nút "+ Thêm giờ" + ô nhập giờ tự do cho 1 thứ (T2..T6). Bấm → hiện ô nhập + nút Xác nhận/Hủy.
+     * Xác nhận → addCustomTime (thêm giờ vào data.times + từng ngày) + setPatternDay → vẽ lại NGAY, KHÔNG tải lại trang.
+     * Server vẫn kiểm tra lại lúc Giữ lịch (checkRequested) nên không sợ lệch.
+     */
+    function addTimeButton(weekday) {
+        const wrap = el("span", "plan-add-time");
+
+        const button = el("button", "plan-chip plan-chip-add", "+ Thêm giờ");
+        button.type = "button";
+        button.setAttribute("aria-label", "Thêm giờ tập " + PLAN_DAY_NAMES[weekday - 1]);
+        button.setAttribute("aria-expanded", "false");
+
+        const input = document.createElement("input");
+        input.type = "time";
+        input.className = "plan-time-input";
+        input.hidden = true;
+        if (data.open) {
+            input.min = data.open;
+        }
+        if (data.close) {
+            input.max = data.close;
+        }
+        input.step = 900;   // mốc 15 phút, cùng lưới khung PT công bố
+        input.setAttribute("aria-label", "Giờ tập tự do " + PLAN_DAY_NAMES[weekday - 1]);
+
+        const confirm = el("button", "plan-time-confirm", "Xác nhận");
+        confirm.type = "button";
+        confirm.hidden = true;
+        const cancel = el("button", "plan-time-cancel", "Hủy");
+        cancel.type = "button";
+        cancel.hidden = true;
+
+        function open() {
+            input.hidden = false;
+            confirm.hidden = false;
+            cancel.hidden = false;
+            button.hidden = true;
+            button.setAttribute("aria-expanded", "true");
+            input.value = pattern[weekday - 1] || "";
+            input.focus();
+        }
+        function close() {
+            input.hidden = true;
+            confirm.hidden = true;
+            cancel.hidden = true;
+            button.hidden = false;
+            button.setAttribute("aria-expanded", "false");
+        }
+
+        button.addEventListener("click", open);
+        cancel.addEventListener("click", close);
+        confirm.addEventListener("click", function () {
+            // Dùng min/max/step của ô giờ để chặn giờ ngoài giờ mở cửa hoặc lệch mốc 15 phút.
+            if (!input.reportValidity()) {
+                return;
+            }
+            const time = input.value;
+            close();
+            if (!time) {
+                return;
+            }
+            addCustomTime(time);            // thêm giờ vào data.times + từng ngày (client-side)
+            setPatternDay(weekday, time);   // chọn giờ này cho thứ này rồi vẽ lại
+        });
+
+        wrap.append(button, input, confirm, cancel);
+        return wrap;
+    }
+
+    /**
+     * Thêm 1 giờ lễ tân tự nhập vào dữ liệu hiện tại (data.times + mỗi ngày 1 option "create" fresh)
+     * để vẽ lại NGAY mà KHÔNG tải lại trang. Server vẫn kiểm tra lại lúc Giữ lịch (checkRequested).
+     */
+    function addCustomTime(time) {
+        if (!data.times.includes(time)) {
+            data.times.push(time);
+            data.times.sort();
+        }
+        const end = endTime(time);
+        for (const day of days) {
+            if (!day.options.some(function (o) { return o.time === time; })) {
+                day.options.push({ time: time, end: end, ok: true, reason: "", warning: "", fresh: true });
+            }
+        }
+    }
+
+    /** "17:00" + data.minutes phút → "18:30". */
+    function endTime(time) {
+        const minutes = data.minutes || 90;
+        const parts = time.split(":").map(Number);
+        const total = parts[0] * 60 + parts[1] + minutes;
+        return String(Math.floor(total / 60)).padStart(2, "0") + ":" + String(total % 60).padStart(2, "0");
     }
 
     function renderWeek() {
@@ -499,6 +567,8 @@ function initPlan(root, data) {
                     !option.ok, current === option.time ? "edit-current" : "edit-" + option.time, 0,
                     option.ok ? (meta ? "has-meta" : "") : "is-blocked"));
         }
+        // Nút "+ Thêm giờ" cho RIÊNG ngày này: lễ tân tự nhập giờ PT chưa công bố → tick "Đã xác nhận với PT".
+        chips.append(editorAddTimeButton(day));
         editorBox.append(head, chips);
 
         if (state.edited) {
@@ -508,6 +578,71 @@ function initPlan(root, data) {
             reset.dataset.reset = "1";
             editorBox.append(reset);
         }
+    }
+
+    /**
+     * Nút "+ Thêm giờ" trong ô sửa riêng 1 ngày: lễ tân tự nhập giờ PT chưa công bố cho RIÊNG ngày này.
+     * Bấm → hiện ô nhập + Xác nhận/Hủy. Xác nhận → addCustomTime + setOverride → vẽ lại NGAY, KHÔNG tải lại trang.
+     */
+    function editorAddTimeButton(day) {
+        const wrap = el("span", "plan-add-time");
+
+        const button = el("button", "plan-chip plan-chip-add", "+ Thêm giờ");
+        button.type = "button";
+        button.setAttribute("aria-label", "Thêm giờ tập " + day.label);
+        button.setAttribute("aria-expanded", "false");
+
+        const input = document.createElement("input");
+        input.type = "time";
+        input.className = "plan-time-input";
+        input.hidden = true;
+        if (data.open) {
+            input.min = data.open;
+        }
+        if (data.close) {
+            input.max = data.close;
+        }
+        input.step = 900;   // mốc 15 phút, cùng lưới khung PT công bố
+        input.setAttribute("aria-label", "Giờ tập tự do " + day.label);
+
+        const confirm = el("button", "plan-time-confirm", "Xác nhận");
+        confirm.type = "button";
+        confirm.hidden = true;
+        const cancel = el("button", "plan-time-cancel", "Hủy");
+        cancel.type = "button";
+        cancel.hidden = true;
+
+        function open() {
+            input.hidden = false;
+            confirm.hidden = false;
+            cancel.hidden = false;
+            button.hidden = true;
+            button.setAttribute("aria-expanded", "true");
+            input.value = overrides.has(day.date) ? overrides.get(day.date) : "";
+            input.focus();
+        }
+        function close() {
+            input.hidden = true;
+            confirm.hidden = true;
+            cancel.hidden = true;
+            button.hidden = false;
+            button.setAttribute("aria-expanded", "false");
+        }
+
+        button.addEventListener("click", open);
+        cancel.addEventListener("click", close);
+        confirm.addEventListener("click", function () {
+            const time = input.value;
+            close();
+            if (!time) {
+                return;
+            }
+            addCustomTime(time);            // thêm giờ vào từng ngày (client-side)
+            setOverride(day.date, time);    // sửa riêng ngày này rồi vẽ lại
+        });
+
+        wrap.append(button, input, confirm, cancel);
+        return wrap;
     }
 
     function renderSummary() {
@@ -551,7 +686,7 @@ function initPlan(root, data) {
             confirmInput.checked = false;
         }
         form.querySelector("[data-plan-confirm-text]").textContent =
-                unconfirmed + " buổi PT chưa mở khung — PT đã đồng ý dạy.";
+                unconfirmed + " buổi PT chưa mở khung — đã hỏi PT và PT đồng ý dạy.";
         const needConfirm = unconfirmed > 0 && !confirmInput.checked;
         // Giữ lịch cần đủ: ít nhất 1 buổi + khách (server ghi data-customer-ready) + đã xác nhận với PT (nếu cần).
         const customerReady = form.dataset.customerReady === "true";
@@ -565,14 +700,14 @@ function initPlan(root, data) {
         if (note) {
             let text;
             if (result.sessions === 0) {
-                text = "Chọn ít nhất 1 buổi ở Lịch tập bên trái.";
+                text = "Chưa có buổi nào. Bấm vào lịch bên trái để chọn giờ tập.";
             } else if (!customerReady) {
-                text = "Lịch đã sẵn sàng. Chọn khách ở trên để giữ lịch.";
+                text = "Lịch xong rồi. Chọn khách ở cột Đơn bán là giữ được.";
             } else if (needConfirm) {
-                text = "Có " + unconfirmed + " buổi PT chưa mở khung. Hỏi PT rồi tích \"Đã xác nhận với PT\" để giữ lịch.";
+                text = "Có " + unconfirmed + " buổi PT chưa mở khung giờ này. Hỏi PT rồi tick \"Đã xác nhận với PT\".";
             } else {
-                text = "Giữ trước khi thu tiền: " + result.sessions + " khung chuyển \"Đang giữ\", lễ tân khác và PT không lấy được."
-                        + (result.bad > 0 ? " " + result.bad + " ngày chưa xếp được sẽ không có buổi." : "");
+                text = result.sessions + " buổi sẽ được giữ 15 phút để thu tiền, không ai giành được."
+                        + (result.bad > 0 ? " Còn " + result.bad + " ngày chưa xếp được — bấm ô đỏ ở lịch để đổi giờ." : "");
             }
             note.textContent = text;
         }
