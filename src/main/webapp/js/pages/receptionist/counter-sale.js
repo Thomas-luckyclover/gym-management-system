@@ -254,12 +254,16 @@ function renderCustomerRows(rows) {
 function createCustomerRow(row, packageId) {
     const tableRow = document.createElement("tr");
 
-    // Ô 1: tên + nhãn "Chưa có tài khoản" / "Hồ sơ phụ thuộc", dòng phụ "mã · SĐT"
+    // Ô 1: tên + nhãn "Chưa có tài khoản" / "Hồ sơ của bạn" / "Hồ sơ phụ thuộc", dòng phụ "mã · SĐT"
     const customerCell = document.createElement("td");
     const nameBox = createElementWithText("span", "counter-customer-name", row.fullName);
     if (!row.hasAccount) {
         const noAccountFlag = createElementWithText("span", "counter-flag is-amber", "Chưa có tài khoản");
         nameBox.appendChild(noAccountFlag);
+    }
+    if (row.isOwnProfile) {
+        const ownProfileFlag = createElementWithText("span", "counter-flag", "Hồ sơ của bạn");
+        nameBox.appendChild(ownProfileFlag);
     }
     if (row.isDependent) {
         const dependentFlag = createElementWithText("span", "counter-flag", "Hồ sơ phụ thuộc");
@@ -298,14 +302,21 @@ function createCustomerRow(row, packageId) {
     // Ô 4: nút Chọn, sang bước tiếp theo kèm gói và khách
     const actionCell = document.createElement("td");
     actionCell.className = "counter-cell-action";
-    const chooseLink = createElementWithText("a", "btn btn-primary btn-sm", "Chọn");
-    chooseLink.href = getContextPath() + "/receptionist/sales?package=" + packageId + "&customer=" + row.customerId;
-    actionCell.appendChild(chooseLink);
+    if (row.isOwnProfile) {
+        // CBR-115: hồ sơ của chính lễ tân, không bán được. Nút mờ, không phải liên kết, có tooltip giải thích.
+        const blockedButton = createElementWithText("span", "btn btn-outline btn-sm is-blocked", "Chọn");
+        blockedButton.title = "Không thể bán cho hồ sơ của chính bạn. Vui lòng nhờ đồng nghiệp khác.";
+        blockedButton.setAttribute("aria-disabled", "true");
+        actionCell.appendChild(blockedButton);
+    } else {
+        const chooseLink = createElementWithText("a", "btn btn-primary btn-sm", "Chọn");
+        chooseLink.href = getContextPath() + "/receptionist/sales?package=" + packageId + "&customer=" + row.customerId;
+        actionCell.appendChild(chooseLink);
+    }
     tableRow.appendChild(actionCell);
 
     return tableRow;
 }
-
 // Tạo một phần tử có class và chữ (chữ gán bằng textContent, an toàn với dữ liệu người dùng).
 function createElementWithText(tagName, className, text) {
     const element = document.createElement(tagName);

@@ -119,64 +119,69 @@
   display: inline-flex;
   align-items: center;
   gap: var(--space-2, 8px);
-  min-height: 40px;
+  min-height: 38px;
   margin-bottom: 0;
-  padding: 6px 16px;
-  border: 1.5px solid rgba(255, 255, 255, 0.4) !important;
-  border-radius: 6px !important;
-  background: #ffffff !important;
-  color: #0f2a5e !important;
+  padding: 5px 18px;
+  border: 1.5px solid rgba(255,255,255,0.55) !important;
+  border-radius: 999px !important;
+  background: rgba(255,255,255,0.18) !important;
+  color: #ffffff !important;
   font-family: var(--font-body, system-ui);
-  font-size: 14px !important;
-  font-weight: 700 !important;
+  font-size: 13px !important;
+  font-weight: 600 !important;
+  letter-spacing: 0.01em;
   cursor: pointer;
-  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.15) !important;
-  transition: all 0.15s ease-in-out;
+  backdrop-filter: blur(4px);
+  box-shadow: none !important;
+  transition: background 0.15s, border-color 0.15s, color 0.15s;
+  text-decoration: none !important;
 }
 .counter-tabs .counter-tab:hover,
 .counter-sale .counter-tabs .counter-tab:hover,
 [role="tablist"].counter-tabs [data-tab]:hover,
 .counter-sale [role="tablist"] [data-tab]:hover {
-  background: #f1f5f9 !important;
-  color: #051636 !important;
-  border-color: #ffffff !important;
-  transform: translateY(-1px);
+  background: rgba(255,255,255,0.30) !important;
+  border-color: rgba(255,255,255,0.80) !important;
+  color: #ffffff !important;
+  box-shadow: none !important;
+  transform: none;
 }
-/* Tab đang chọn màu cam (nền trang là xanh nên màu accent cam nổi bật nhất) */
+/* Tab đang chọn: nền trắng đục, chữ navy — dễ nhận ra, không lòe loẹt */
 .counter-tabs .counter-tab[aria-selected="true"],
 .counter-sale .counter-tabs .counter-tab[aria-selected="true"],
 [role="tablist"].counter-tabs [data-tab][aria-selected="true"],
 .counter-sale [role="tablist"] [data-tab][aria-selected="true"] {
-  border-color: #ff4f2b !important;
-  background: #ff4f2b !important;
-  color: #ffffff !important;
-  box-shadow: 0 3px 10px rgba(255, 79, 43, 0.45) !important;
+  background: #ffffff !important;
+  border-color: #ffffff !important;
+  color: #0f2a5e !important;
+  font-weight: 700 !important;
+  box-shadow: 0 2px 8px rgba(0,0,0,0.18) !important;
 }
 .counter-tab-count {
   display: inline-flex;
   align-items: center;
   justify-content: center;
-  min-width: 20px;
-  height: 20px;
-  padding: 0 6px;
-  border-radius: 10px;
-  background: #e2e8f0;
-  color: #0f2a5e;
+  min-width: 18px;
+  height: 18px;
+  padding: 0 5px;
+  border-radius: 999px;
+  background: rgba(255,255,255,0.25);
+  color: inherit;
   font-family: var(--font-brand-mono, monospace);
-  font-size: 12px;
+  font-size: 11px;
   font-weight: 700;
-  margin-left: 6px;
+  margin-left: 4px;
 }
 .counter-tabs .counter-tab[aria-selected="true"] .counter-tab-count,
 .counter-sale .counter-tabs .counter-tab[aria-selected="true"] .counter-tab-count,
 [role="tablist"].counter-tabs [data-tab][aria-selected="true"] .counter-tab-count {
-  background: rgba(255, 255, 255, 0.28) !important;
-  color: #ffffff !important;
+  background: #e8edf5 !important;
+  color: #0f2a5e !important;
 }
 .counter-tab-info {
   margin-left: 4px;
-  font-size: 13px;
-  opacity: 0.85;
+  font-size: 12px;
+  opacity: 0.70;
 }
 
 /* Thanh công cụ: tab bên trái, ô tìm gói bên phải, cùng một hàng cùng chiều cao */
@@ -294,7 +299,7 @@
   pointer-events: none;
 }
 
-/* Dải đầu thẻ: nền xanh đậm; thẻ đang chọn đổi sang cam */
+/* Dải đầu thẻ: nền navy nhẹ, gradient sang navy vừa — clean, không quá đậm */
 .counter-card-head {
   position: relative;
   display: flex;
@@ -302,15 +307,16 @@
   align-items: flex-start;
   gap: var(--space-1) var(--space-2);
   padding: var(--space-3) var(--space-4);
-  background: var(--arena-900);
-  color: var(--arena-on-dark);
+  background: linear-gradient(135deg, #1e3a6e 0%, #162d58 100%);
+  color: #ffffff;
 }
 .counter-card-type {
   flex: 0 0 100%;
   font-family: var(--font-body);
   font-size: var(--font-size-2xs);
-  letter-spacing: 0.08em;
-  color: var(--arena-on-dark-soft);
+  letter-spacing: 0.10em;
+  color: rgba(255,255,255,0.60);
+  text-transform: uppercase;
 }
 .counter-card-name {
   flex: 1;
@@ -319,12 +325,14 @@
   font-size: var(--font-size-lg);
   font-weight: var(--font-weight-bold);
   line-height: var(--line-height-tight);
+  color: #ffffff;
 }
 .counter-card-saving {
   padding: 2px var(--space-2);
   border-radius: var(--radius-pill);
-  background: var(--arena-ember);
-  color: var(--arena-ink-on-bright);
+  background: rgba(255,255,255,0.20);
+  border: 1px solid rgba(255,255,255,0.40);
+  color: #ffffff;
   font-family: var(--font-brand-mono);
   font-size: var(--font-size-xs);
   font-weight: var(--font-weight-bold);
@@ -333,12 +341,12 @@
   display: none;
   align-items: center;
   justify-content: center;
-  width: 24px;
-  height: 24px;
+  width: 22px;
+  height: 22px;
   border-radius: var(--radius-circle);
-  background: var(--arena-ink-on-bright);
-  color: var(--arena-ember);
-  font-size: var(--font-size-xs);
+  background: #ffffff;
+  color: #ff5a2c;
+  font-size: 11px;
 }
 
 .counter-card-body {
@@ -346,25 +354,30 @@
   flex-direction: column;
   gap: var(--space-1);
   padding: var(--space-4);
+  background: #ffffff;
 }
+/* Giá: xanh navy đậm — nổi bật nhưng không gây mỏi mắt như đỏ */
 .counter-card-price {
   font-family: var(--font-heading);
   font-size: var(--font-size-2xl);
   font-weight: var(--font-weight-extrabold);
   font-variant-numeric: tabular-nums;
-  color: var(--arena-ember-ink);
+  color: #1e3a6e;
 }
 .counter-card-duration {
   color: var(--arena-ink-soft);
   font-size: var(--font-size-sm);
   font-variant-numeric: tabular-nums;
 }
+/* Label "QUYỀN LỢI" / "QUY ĐỊNH": xanh cobalt nhẹ thay vì xám nhạt */
 .counter-card-label {
   margin-top: var(--space-3);
   font-family: var(--font-body);
-  font-size: var(--font-size-2xs);
-  letter-spacing: 0.08em;
-  color: var(--arena-steel-ink);
+  font-size: 10px;
+  font-weight: 700;
+  letter-spacing: 0.10em;
+  text-transform: uppercase;
+  color: #3b6ab5;
 }
 .counter-card-list {
   margin: 0;
@@ -373,40 +386,50 @@
   display: grid;
   gap: var(--space-1);
   font-size: var(--font-size-sm);
+  color: #2c3e5a;
 }
 .counter-card-list li {
   position: relative;
   padding-left: var(--space-4);
 }
+/* Dấu tích: xanh tươi nhẹ thay vì accent-text có thể bị token tối */
 .counter-card-list li::before {
   content: "✓";
   position: absolute;
   left: 0;
-  color: var(--arena-accent-text);
+  color: #2563eb;
   font-weight: var(--font-weight-bold);
 }
 .counter-card-list.is-rules {
-  color: var(--arena-ink-soft);
+  color: #64748b;
 }
 .counter-card-list.is-rules li::before {
   content: "•";
+  color: #94a3b8;
 }
 
-/* Thẻ đang chọn (class do counter-sale.js thêm) */
+/* Thẻ đang chọn: viền cam, header đổi sang gradient cam, body tint cam cực nhẹ */
 .counter-card.is-selected {
-  border-color: var(--arena-ember);
-  background: var(--arena-ember-tint);
+  border-color: #ff5a2c;
+  box-shadow: 0 0 0 3px rgba(255, 90, 44, 0.18);
 }
 .counter-card.is-selected .counter-card-head {
-  background: var(--arena-ember);
-  color: var(--arena-ink-on-bright);
+  background: linear-gradient(135deg, #ff5a2c 0%, #e84a1e 100%);
+  color: #ffffff;
 }
 .counter-card.is-selected .counter-card-type {
-  color: var(--arena-ink-on-bright);
+  color: rgba(255,255,255,0.70);
 }
 .counter-card.is-selected .counter-card-saving {
-  background: var(--arena-ink-on-bright);
-  color: var(--arena-ember);
+  background: rgba(255,255,255,0.25);
+  border-color: rgba(255,255,255,0.50);
+  color: #ffffff;
+}
+.counter-card.is-selected .counter-card-body {
+  background: #fff8f6;
+}
+.counter-card.is-selected .counter-card-price {
+  color: #c93e12;
 }
 .counter-card.is-selected .counter-card-check {
   display: inline-flex;
@@ -522,6 +545,12 @@ html body.dock .counter-sale .counter-cell-action .btn.btn-primary {
   min-height: 40px;
   color: var(--arena-on-dark);
   font-weight: var(--font-weight-extrabold);
+}
+
+/* Nút "Chọn" bị khóa (hồ sơ của chính lễ tân, CBR-115): mờ, con trỏ cấm */
+.counter-cell-action .btn.is-blocked {
+  opacity: 0.5;
+  cursor: not-allowed;
 }
 
 .counter-customer-name {
