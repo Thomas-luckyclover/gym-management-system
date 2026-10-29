@@ -13,9 +13,7 @@
     <title>Báo cáo vận hành &amp; doanh thu - GMS</title>
     <%-- Khung dock/sidebar/topbar dùng chung ở common.css (mục 11) --%>
     <link rel="stylesheet" href="${pageContext.request.contextPath}/css/pages/manager/manager-dashboard.css?v=20261025city">
-    <link rel="stylesheet" href="${pageContext.request.contextPath}/css/pages/auth/notification-bell.css">
 
-    <script src="${pageContext.request.contextPath}/js/pages/auth/notification-bell.js" defer></script>
 </head>
 <body class="dock ${themeClass}">
 
@@ -37,48 +35,7 @@
                 <%@ include file="/WEB-INF/jsp/common/notification-bell.jspf" %>
 
 
-                <c:if test="${not empty accountSettings}">
-
-                    <a class="tb-user"
-                       href="${pageContext.request.contextPath}/account"
-                       title="Cài đặt tài khoản">
-
-                        <c:choose>
-
-                            <c:when test="${not empty accountSettings.avatar}">
-
-                                <img class="avatar"
-                                     src="${pageContext.request.contextPath}${accountSettings.avatar}"
-                                     alt="Ảnh đại diện">
-
-                            </c:when>
-
-                            <c:otherwise>
-
-                                <span class="avatar">
-                                    <c:out value="${accountSettings.fullName.substring(0, 1)}" />
-                                </span>
-
-                            </c:otherwise>
-
-                        </c:choose>
-
-
-                        <span class="tb-user-text">
-
-                            <b>
-                                <c:out value="${accountSettings.fullName}" />
-                            </b>
-
-                            <small>
-                                <c:out value="${currentRole.displayName}" />
-                            </small>
-
-                        </span>
-
-                    </a>
-
-                </c:if>
+                <%@ include file="/WEB-INF/jsp/common/topbar-user.jspf" %>
 
             </div>
         </header>

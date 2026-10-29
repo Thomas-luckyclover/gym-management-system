@@ -90,14 +90,24 @@ public class NotificationDAO {
             Role role
     ) throws SQLException {
 
-        String sql =
-                "SELECT DISTINCT a.AccountId "
-                        + "FROM Employees e "
-                        + "JOIN Accounts a "
-                        + "ON a.PersonId = e.PersonId "
-                        + "WHERE e.Position = ? "
-                        + "AND e.Status = ? "
-                        + "AND a.Status = ?";
+        String sql;
+        if (role == Role.CUSTOMER) {
+            sql = "SELECT DISTINCT a.AccountId "
+                    + "FROM Customers c "
+                    + "JOIN Accounts a "
+                    + "ON a.PersonId = c.PersonId "
+                    + "WHERE c.Status <> 'Inactive' "
+                    + "AND a.Role = ? "
+                    + "AND a.Status = ?";
+        } else {
+            sql = "SELECT DISTINCT a.AccountId "
+                    + "FROM Employees e "
+                    + "JOIN Accounts a "
+                    + "ON a.PersonId = e.PersonId "
+                    + "WHERE e.Position = ? "
+                    + "AND e.Status = ? "
+                    + "AND a.Status = ?";
+        }
 
         List<Integer> accountIds =
                 new ArrayList<>();
@@ -105,20 +115,29 @@ public class NotificationDAO {
         try (PreparedStatement statement =
                      connection.prepareStatement(sql)) {
 
-            statement.setString(
-                    1,
-                    role.getDbValue()
-            );
-
-            statement.setString(
-                    2,
-                    Employee.Status.WORKING.getDbValue()
-            );
-
-            statement.setString(
-                    3,
-                    Account.Status.ACTIVE.getDbValue()
-            );
+            if (role == Role.CUSTOMER) {
+                statement.setString(
+                        1,
+                        role.getDbValue()
+                );
+                statement.setString(
+                        2,
+                        Account.Status.ACTIVE.getDbValue()
+                );
+            } else {
+                statement.setString(
+                        1,
+                        role.getDbValue()
+                );
+                statement.setString(
+                        2,
+                        Employee.Status.WORKING.getDbValue()
+                );
+                statement.setString(
+                        3,
+                        Account.Status.ACTIVE.getDbValue()
+                );
+            }
 
             try (ResultSet resultSet =
                          statement.executeQuery()) {
@@ -132,6 +151,41 @@ public class NotificationDAO {
         }
 
         return accountIds;
+    }
+
+    public Integer findActiveAccountIdByCustomerId(
+            Connection connection,
+            int customerId
+    ) throws SQLException {
+
+        String sql =
+                "SELECT a.AccountId "
+                        + "FROM Customers c "
+                        + "JOIN Accounts a "
+                        + "ON a.PersonId = c.PersonId "
+                        + "WHERE c.CustomerId = ? "
+                        + "AND c.Status <> 'Inactive' "
+                        + "AND a.Status = ?";
+
+        try (PreparedStatement statement =
+                     connection.prepareStatement(sql)) {
+
+            statement.setInt(1, customerId);
+            statement.setString(
+                    2,
+                    Account.Status.ACTIVE.getDbValue()
+            );
+
+            try (ResultSet resultSet =
+                         statement.executeQuery()) {
+
+                if (resultSet.next()) {
+                    return resultSet.getInt("AccountId");
+                }
+            }
+        }
+
+        return null;
     }
 
     public Integer findActiveAccountIdByEmployeeId(

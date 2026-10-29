@@ -1,98 +1,41 @@
 package com.gms.servlet.manager;
 
-import com.gms.constant.Messages;
 import com.gms.constant.SessionKey;
-import com.gms.dao.CustomerDAO;
-import com.gms.dao.CustomerDeletionRequestDAO;
-import com.gms.dao.PersonDAO;
-import com.gms.entity.Customer;
-import com.gms.entity.CustomerDeletionRequest;
-import com.gms.entity.Person;
-import com.gms.util.DBContext;
+import com.gms.dto.ServiceResult;
+import com.gms.service.CustomerDeletionService;
 import com.gms.util.RequestUtil;
 import jakarta.servlet.ServletException;
 import jakarta.servlet.annotation.WebServlet;
 import jakarta.servlet.http.HttpServlet;
 import jakarta.servlet.http.HttpServletRequest;
 import jakarta.servlet.http.HttpServletResponse;
-import jakarta.servlet.http.HttpSession;
-
 import java.io.IOException;
-import java.sql.Connection;
-import java.sql.SQLException;
-import java.util.Collections;
-import java.util.List;
+import com.gms.dto.CustomerProfileDetailView;
 
-/**
- * Controller xem chi tiết hồ sơ hội viên cho Quản lý (Màn #31, UC-41, BF-07).
- * Hiển thị đầy đủ thông tin định danh, trạng thái Inactive (nếu đã bị xóa), gói tập, và nút duyệt xóa nếu có yêu cầu Pending.
- */
+/** BF-07: chi tiết hồ sơ; dữ liệu và quyền thao tác được Service chuẩn bị. */
 @WebServlet("/manager/members/detail")
 public class MemberDetailServlet extends HttpServlet {
 
-    private static final String VIEW_NAME = "manager/member-detail";
-
-    private final CustomerDAO customerDAO;
-    private final PersonDAO personDAO;
-    private final CustomerDeletionRequestDAO customerDeletionRequestDAO;
-
-    public MemberDetailServlet() {
-        this.customerDAO = new CustomerDAO();
-        this.personDAO = new PersonDAO();
-        this.customerDeletionRequestDAO = new CustomerDeletionRequestDAO();
-    }
-
-    MemberDetailServlet(CustomerDAO customerDAO, PersonDAO personDAO, CustomerDeletionRequestDAO customerDeletionRequestDAO) {
-        this.customerDAO = customerDAO;
-        this.personDAO = personDAO;
-        this.customerDeletionRequestDAO = customerDeletionRequestDAO;
-    }
+    private final CustomerDeletionService service = new CustomerDeletionService();
 
     @Override
-    protected void doGet(HttpServletRequest request, HttpServletResponse response)
-            throws ServletException, IOException {
+    protected void doGet(HttpServletRequest request, HttpServletResponse response) throws ServletException, IOException {
+        showPage(request, response, RequestUtil.getIntParam(request, "id", 0));
+    }
 
-        HttpSession session = request.getSession(false);
-        if (session == null || session.getAttribute(SessionKey.ACCOUNT_ID) == null) {
-            RequestUtil.redirect(request, response, "/login");
-            return;
-        }
-
-        int customerId = RequestUtil.getIntParam(request, "id", 0);
-        if (customerId <= 0) {
+    private void showPage(HttpServletRequest request, HttpServletResponse response, int customerId) throws ServletException, IOException {
+        int accountId = (Integer) request.getSession(false).getAttribute(SessionKey.ACCOUNT_ID);
+        ServiceResult<CustomerProfileDetailView> result = service.getProfileDetail(accountId, customerId, true);
+        if (!result.isSuccess()) {
+            RequestUtil.setFlashToast(request, "error", result.getMessage());
             RequestUtil.redirect(request, response, "/manager/members");
             return;
         }
-
-        try (Connection conn = DBContext.getConnection()) {
-            Customer customer = customerDAO.findById(customerId);
-            if (customer == null) {
-                RequestUtil.setFlashToast(request, "error", String.format(Messages.MSG08_NOT_FOUND, "hội viên"));
-                RequestUtil.redirect(request, response, "/manager/members");
-                return;
-            }
-
-            Person person = personDAO.findById(customer.getPersonId());
-            CustomerDeletionRequest pendingRequest = customerDeletionRequestDAO.findPendingByCustomerId(conn, customerId);
-
-            List<CustomerDAO.ActiveSubscriptionSummary> activePackages =
-                    customerDAO.findActiveSubscriptionsByCustomer(conn, customerId);
-            List<CustomerDAO.ScheduledSessionSummary> scheduledSessions =
-                    customerDAO.findScheduledSessionsByCustomer(conn, customerId);
-
-            request.setAttribute("customer", customer);
-            request.setAttribute("person", person);
-            request.setAttribute("pendingRequest", pendingRequest);
-            request.setAttribute("activePackages", activePackages != null ? activePackages : Collections.emptyList());
-            request.setAttribute("scheduledSessions", scheduledSessions != null ? scheduledSessions : Collections.emptyList());
-            request.setAttribute("activeNav", "members");
-
-            RequestUtil.forward(request, response, VIEW_NAME);
-
-        } catch (SQLException e) {
-            e.printStackTrace();
-            RequestUtil.setFlashToast(request, "error", Messages.MSG04_SYSTEM_BUSY);
-            RequestUtil.redirect(request, response, "/manager/members");
-        }
+        request.setAttribute("detail", result.getData());
+        request.setAttribute("managerView", true);
+        request.setAttribute("listPath", "/manager/members");
+        request.setAttribute("activeNav", "members");
+        request.setAttribute("csrfToken", RequestUtil.getOrCreateCsrfToken(request.getSession(false)));
+        RequestUtil.forward(request, response, "manager/member-detail");
     }
 }

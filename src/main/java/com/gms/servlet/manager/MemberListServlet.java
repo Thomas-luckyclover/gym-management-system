@@ -1,8 +1,6 @@
 package com.gms.servlet.manager;
 
 import com.gms.constant.SessionKey;
-import com.gms.dto.CustomerDeletionReviewView;
-import com.gms.dto.CustomerProfileRowView;
 import com.gms.dto.ServiceResult;
 import com.gms.service.CustomerDeletionService;
 import com.gms.util.PaginationUtil;
@@ -12,87 +10,59 @@ import jakarta.servlet.annotation.WebServlet;
 import jakarta.servlet.http.HttpServlet;
 import jakarta.servlet.http.HttpServletRequest;
 import jakarta.servlet.http.HttpServletResponse;
-import jakarta.servlet.http.HttpSession;
-
 import java.io.IOException;
-import java.util.Collections;
-import java.util.List;
+import com.gms.dto.CustomerDeletionReviewView;
+import com.gms.dto.CustomerProfileRowView;
+import com.gms.dto.PageResult;
 
-/**
- * Controller danh sách hội viên cho Quản lý (Màn #30, UC-41, BF-07).
- * Hỗ trợ tìm kiếm, lọc theo trạng thái (Active/Inactive), và tab riêng hiển thị các yêu cầu xóa chờ duyệt.
- */
+/** BF-07: đọc bộ lọc, gọi Service và đưa một trang kết quả sang JSP. */
 @WebServlet("/manager/members")
 public class MemberListServlet extends HttpServlet {
 
-    private static final String VIEW_NAME = "manager/member-list";
-
-    private final CustomerDeletionService customerDeletionService;
-
-    public MemberListServlet() {
-        this.customerDeletionService = new CustomerDeletionService();
-    }
-
-    MemberListServlet(CustomerDeletionService customerDeletionService) {
-        this.customerDeletionService = customerDeletionService;
-    }
+    private final CustomerDeletionService service = new CustomerDeletionService();
 
     @Override
-    protected void doGet(HttpServletRequest request, HttpServletResponse response)
-            throws ServletException, IOException {
-
-        HttpSession session = request.getSession(false);
-        if (session == null || session.getAttribute(SessionKey.ACCOUNT_ID) == null) {
-            RequestUtil.redirect(request, response, "/login");
-            return;
-        }
-
-        int managerAccountId = (Integer) session.getAttribute(SessionKey.ACCOUNT_ID);
-        String tab = RequestUtil.getTrimmedParam(request, "tab");
-        if (tab == null || (!"pending-deletions".equals(tab) && !"all".equals(tab))) {
-            tab = "all";
-        }
-
+    protected void doGet(HttpServletRequest request, HttpServletResponse response) throws ServletException, IOException {
+        // B1: đăng nhập và vai trò đã được AuthFilter/ManagerAreaFilter kiểm tra.
+        int accountId = (Integer) request.getSession(false).getAttribute(SessionKey.ACCOUNT_ID);
         int page = PaginationUtil.getPageNumber(request);
         int pageSize = PaginationUtil.getPageSize(request);
-        int pendingBadgeCount = customerDeletionService.countPendingReviews();
+        String tab = RequestUtil.getTrimmedParam(request, "tab");
+        String keyword = RequestUtil.getTrimmedParam(request, "keyword");
+        String status = service.normalizeStatus(RequestUtil.getTrimmedParam(request, "status"), true);
 
+        // B2: mỗi tab nhận một PageResult; lỗi được hiển thị riêng với danh sách rỗng.
         if ("pending-deletions".equals(tab)) {
-            // Tab 2: Danh sách các yêu cầu xóa chờ Quản lý duyệt (#32 tóm tắt)
-            ServiceResult<List<CustomerDeletionReviewView>> pendingResult =
-                    customerDeletionService.getPendingReviewList(managerAccountId, page, pageSize);
-            int totalCount = pendingBadgeCount;
-            int totalPages = (int) Math.ceil((double) totalCount / pageSize);
-
-            request.setAttribute("pendingRequests", pendingResult.isSuccess() ? pendingResult.getData() : Collections.emptyList());
-            request.setAttribute("totalCount", totalCount);
-            request.setAttribute("totalPages", Math.max(1, totalPages));
-        } else {
-            // Tab 1: Toàn bộ danh sách hội viên (xem được cả Inactive)
-            String keyword = RequestUtil.getTrimmedParam(request, "keyword");
-            String status = RequestUtil.getTrimmedParam(request, "status");
-            if (status == null || status.isBlank()) {
-                status = "ALL";
+            ServiceResult<PageResult<CustomerDeletionReviewView>> result = service.getPendingPage(accountId, page, pageSize);
+            if (result.isSuccess()) {
+                request.setAttribute("pageData", result.getData());
+                request.setAttribute("pendingCount", result.getData().getTotalItems());
+            } else {
+                request.setAttribute("loadError", result.getMessage());
             }
-
-            ServiceResult<List<CustomerProfileRowView>> profilesResult =
-                    customerDeletionService.getCustomerProfiles(keyword, status, false, true, page, pageSize);
-            int totalCount = customerDeletionService.countCustomerProfiles(keyword, status, false, true);
-            int totalPages = (int) Math.ceil((double) totalCount / pageSize);
-
-            request.setAttribute("customers", profilesResult.isSuccess() ? profilesResult.getData() : Collections.emptyList());
-            request.setAttribute("keyword", keyword);
-            request.setAttribute("statusFilter", status);
-            request.setAttribute("totalCount", totalCount);
-            request.setAttribute("totalPages", Math.max(1, totalPages));
+        } else {
+            tab = "all";
+            ServiceResult<PageResult<CustomerProfileRowView>> result = service.getProfilesPage(accountId, keyword, status, true, page, pageSize);
+            if (result.isSuccess()) {
+                request.setAttribute("pageData", result.getData());
+            } else {
+                request.setAttribute("loadError", result.getMessage());
+            }
+            ServiceResult<Integer> count = service.getPendingCount();
+            if (count.isSuccess()) {
+                request.setAttribute("pendingCount", count.getData());
+            }
         }
 
-        request.setAttribute("pendingBadgeCount", pendingBadgeCount);
+        // B3: các đường dẫn do Servlet đặt, JSP không tự đoán vai trò theo URL.
+        request.setAttribute("managerView", true);
         request.setAttribute("currentTab", tab);
-        request.setAttribute("page", page);
+        request.setAttribute("keyword", keyword);
+        request.setAttribute("statusFilter", status);
         request.setAttribute("pageSize", pageSize);
+        request.setAttribute("listPath", "/manager/members");
+        request.setAttribute("detailPath", "/manager/members/detail");
         request.setAttribute("activeNav", "members");
-
-        RequestUtil.forward(request, response, VIEW_NAME);
+        RequestUtil.forward(request, response, "manager/member-list");
     }
 }

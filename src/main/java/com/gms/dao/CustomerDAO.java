@@ -4,6 +4,7 @@ import com.gms.dto.CustomerProfileRowView;
 import com.gms.dto.DependentCustomerRow;
 import com.gms.entity.Customer;
 import com.gms.util.DBContext;
+import com.gms.util.SqlUtil;
 import com.gms.util.DateTimeUtil;
 import java.sql.Connection;
 import java.sql.Date;
@@ -130,11 +131,12 @@ public class CustomerDAO {
                 + "JOIN Orders o ON o.OrderId = s.OrderId "
                 + "WHERE (s.CustomerId = ? OR o.PartnerCustomerId = ?) "
                 + "AND s.Status IN ('Active', 'Frozen') "
-                + "AND s.EndDate >= CAST(SYSDATETIME() AS DATE)";
+                + "AND s.EndDate >= ?";
 
         try (PreparedStatement stmt = conn.prepareStatement(sql)) {
             stmt.setInt(1, customerId);
             stmt.setInt(2, customerId);
+            stmt.setDate(3, Date.valueOf(DateTimeUtil.today()));
             try (ResultSet rs = stmt.executeQuery()) {
                 if (rs.next()) {
                     return rs.getInt(1);
@@ -172,7 +174,7 @@ public class CustomerDAO {
     }
 
     /**
-     * Xóa mềm hồ sơ khách hàng: đổi Status = 'Inactive', ghi nhận DeletedAt = SYSDATETIME().
+     * Xóa mềm hồ sơ khách hàng: đổi Status = 'Inactive', ghi nhận DeletedAt = ?.
      * Chỉ cập nhật khi hồ sơ chưa Inactive.
      *
      * @param conn       Connection tham gia transaction
@@ -182,11 +184,12 @@ public class CustomerDAO {
      */
     public boolean softDeleteCustomer(Connection conn, int customerId) throws SQLException {
         String sql = "UPDATE Customers "
-                + "SET Status = 'Inactive', DeletedAt = SYSDATETIME() "
+                + "SET Status = 'Inactive', DeletedAt = ? "
                 + "WHERE CustomerId = ? AND Status <> 'Inactive'";
 
         try (PreparedStatement stmt = conn.prepareStatement(sql)) {
-            stmt.setInt(1, customerId);
+            stmt.setTimestamp(1, Timestamp.valueOf(DateTimeUtil.now()));
+            stmt.setInt(2, customerId);
             int rows = stmt.executeUpdate();
             return rows > 0;
         }
@@ -204,13 +207,14 @@ public class CustomerDAO {
                 + "JOIN Packages p ON p.PackageId = o.PackageId "
                 + "WHERE (s.CustomerId = ? OR o.PartnerCustomerId = ?) "
                 + "AND s.Status IN ('Active', 'Frozen') "
-                + "AND s.EndDate >= CAST(SYSDATETIME() AS DATE) "
+                + "AND s.EndDate >= ? "
                 + "ORDER BY s.EndDate ASC";
 
         try (PreparedStatement stmt = conn.prepareStatement(sql)) {
             stmt.setInt(1, customerId);
             stmt.setInt(2, customerId);
             stmt.setInt(3, customerId);
+            stmt.setDate(4, Date.valueOf(DateTimeUtil.today()));
             try (ResultSet rs = stmt.executeQuery()) {
                 while (rs.next()) {
                     list.add(new ActiveSubscriptionSummary(
@@ -288,6 +292,21 @@ public class CustomerDAO {
         public LocalDate getEndDate() { return endDate; }
         public String getStatus() { return status; }
         public boolean isPartner() { return partner; }
+        public String getStatusLabel() {
+            if ("Frozen".equals(status)) {
+                return "Đang bảo lưu";
+            }
+            return "Đang dùng";
+        }
+        public String getPackageTypeLabel() {
+            if ("Membership".equals(packageType)) {
+                return "Gói tập";
+            }
+            if ("DayPass".equals(packageType)) {
+                return "Vé ngày";
+            }
+            return "Gói PT";
+        }
     }
 
     public static class ScheduledSessionSummary {
@@ -449,8 +468,7 @@ public class CustomerDAO {
      *
      * @param keyword      từ khóa tìm kiếm (theo tên, SĐT, email, mã KH), có thể null
      * @param statusFilter bộ lọc trạng thái (Active, Inactive, v.v.), có thể null hoặc ALL
-     * @param pendingOnly  chỉ lấy các hồ sơ đang có yêu cầu xóa Pending (dành cho Quản lý)
-     * @param isManager    true nếu là Quản lý (xem được Inactive); false nếu là Lễ tân (chỉ xem Active, CBR-04)
+     * @param isManager    true nếu là Quản lý (xem được Inactive); false nếu là Lễ tân (ẩn Inactive, CBR-04)
      * @param offset       vị trí dòng bắt đầu
      * @param limit        số lượng dòng tối đa
      * @return danh sách các dòng hồ sơ khách hàng
@@ -459,7 +477,6 @@ public class CustomerDAO {
     public List<CustomerProfileRowView> findCustomerProfiles(
             String keyword,
             String statusFilter,
-            Boolean pendingOnly,
             boolean isManager,
             int offset,
             int limit) throws SQLException {
@@ -481,7 +498,7 @@ public class CustomerDAO {
                 JOIN Orders o ON o.OrderId = s.OrderId
                 WHERE (s.CustomerId = c.CustomerId OR o.PartnerCustomerId = c.CustomerId)
                   AND s.Status IN ('Active', 'Frozen')
-                  AND s.EndDate >= CAST(GETDATE() AS DATE)
+                  AND s.EndDate >= ?
                 ORDER BY s.EndDate DESC
             ) latestSub
             OUTER APPLY (
@@ -490,7 +507,7 @@ public class CustomerDAO {
                 LEFT JOIN Orders o ON o.OrderId = s.OrderId
                 WHERE (s.CustomerId = c.CustomerId OR o.PartnerCustomerId = c.CustomerId)
                   AND s.Status IN ('Active', 'Frozen')
-                  AND s.EndDate >= CAST(GETDATE() AS DATE)
+                  AND s.EndDate >= ?
             ) activeSubs
             OUTER APPLY (
                 SELECT COUNT(*) AS SessionCount
@@ -503,7 +520,10 @@ public class CustomerDAO {
             WHERE 1 = 1
             """);
 
-        List<Object> params = new ArrayList<>();
+        List<Object> parameters = new ArrayList<>();
+        // Hai dấu ? đầu thuộc hai truy vấn gói còn hạn, dùng ngày giờ Việt Nam.
+        parameters.add(Date.valueOf(DateTimeUtil.today()));
+        parameters.add(Date.valueOf(DateTimeUtil.today()));
 
         if (!isManager) {
             sql.append(" AND c.Status <> 'Inactive' ");
@@ -511,31 +531,27 @@ public class CustomerDAO {
 
         if (statusFilter != null && !statusFilter.isBlank() && !"ALL".equalsIgnoreCase(statusFilter)) {
             sql.append(" AND c.Status = ? ");
-            params.add(statusFilter.trim());
-        }
-
-        if (Boolean.TRUE.equals(pendingOnly)) {
-            sql.append(" AND cdr.CustomerDeletionRequestId IS NOT NULL ");
+            parameters.add(statusFilter.trim());
         }
 
         if (keyword != null && !keyword.isBlank()) {
-            sql.append(" AND (p.FullName LIKE ? OR p.Phone LIKE ? OR p.Email LIKE ? OR c.CustomerCode LIKE ?) ");
-            String kw = "%" + keyword.trim() + "%";
-            params.add(kw);
-            params.add(kw);
-            params.add(kw);
-            params.add(kw);
+            sql.append(" AND (p.FullName COLLATE Vietnamese_CI_AI LIKE ? ESCAPE '\\' OR p.Phone LIKE ? ESCAPE '\\' OR p.Email LIKE ? ESCAPE '\\' OR c.CustomerCode LIKE ? ESCAPE '\\') ");
+            String keywordPattern = SqlUtil.toContainsPattern(keyword);
+            parameters.add(keywordPattern);
+            parameters.add(keywordPattern);
+            parameters.add(keywordPattern);
+            parameters.add(keywordPattern);
         }
 
         sql.append(" ORDER BY CASE WHEN cdr.CustomerDeletionRequestId IS NOT NULL THEN 0 ELSE 1 END, c.CustomerId DESC ");
         sql.append(" OFFSET ? ROWS FETCH NEXT ? ROWS ONLY ");
-        params.add(offset);
-        params.add(limit);
+        parameters.add(offset);
+        parameters.add(limit);
 
         try (Connection conn = DBContext.getConnection();
              PreparedStatement stmt = conn.prepareStatement(sql.toString())) {
-            for (int i = 0; i < params.size(); i++) {
-                stmt.setObject(i + 1, params.get(i));
+            for (int i = 0; i < parameters.size(); i++) {
+                stmt.setObject(i + 1, parameters.get(i));
             }
             try (ResultSet rs = stmt.executeQuery()) {
                 while (rs.next()) {
@@ -571,7 +587,6 @@ public class CustomerDAO {
      *
      * @param keyword      từ khóa tìm kiếm (theo tên, SĐT, email, mã KH)
      * @param statusFilter bộ lọc trạng thái (Active, Inactive, v.v.)
-     * @param pendingOnly  chỉ lấy các hồ sơ đang có yêu cầu xóa Pending
      * @param isManager    true nếu là Quản lý; false nếu là Lễ tân (CBR-04)
      * @return số lượng hồ sơ thỏa mãn
      * @throws SQLException khi truy vấn gặp lỗi
@@ -579,7 +594,6 @@ public class CustomerDAO {
     public int countCustomerProfiles(
             String keyword,
             String statusFilter,
-            Boolean pendingOnly,
             boolean isManager) throws SQLException {
 
         StringBuilder sql = new StringBuilder("""
@@ -590,7 +604,7 @@ public class CustomerDAO {
             WHERE 1 = 1
             """);
 
-        List<Object> params = new ArrayList<>();
+        List<Object> parameters = new ArrayList<>();
 
         if (!isManager) {
             sql.append(" AND c.Status <> 'Inactive' ");
@@ -598,26 +612,22 @@ public class CustomerDAO {
 
         if (statusFilter != null && !statusFilter.isBlank() && !"ALL".equalsIgnoreCase(statusFilter)) {
             sql.append(" AND c.Status = ? ");
-            params.add(statusFilter.trim());
-        }
-
-        if (Boolean.TRUE.equals(pendingOnly)) {
-            sql.append(" AND cdr.CustomerDeletionRequestId IS NOT NULL ");
+            parameters.add(statusFilter.trim());
         }
 
         if (keyword != null && !keyword.isBlank()) {
-            sql.append(" AND (p.FullName LIKE ? OR p.Phone LIKE ? OR p.Email LIKE ? OR c.CustomerCode LIKE ?) ");
-            String kw = "%" + keyword.trim() + "%";
-            params.add(kw);
-            params.add(kw);
-            params.add(kw);
-            params.add(kw);
+            sql.append(" AND (p.FullName COLLATE Vietnamese_CI_AI LIKE ? ESCAPE '\\' OR p.Phone LIKE ? ESCAPE '\\' OR p.Email LIKE ? ESCAPE '\\' OR c.CustomerCode LIKE ? ESCAPE '\\') ");
+            String keywordPattern = SqlUtil.toContainsPattern(keyword);
+            parameters.add(keywordPattern);
+            parameters.add(keywordPattern);
+            parameters.add(keywordPattern);
+            parameters.add(keywordPattern);
         }
 
         try (Connection conn = DBContext.getConnection();
              PreparedStatement stmt = conn.prepareStatement(sql.toString())) {
-            for (int i = 0; i < params.size(); i++) {
-                stmt.setObject(i + 1, params.get(i));
+            for (int i = 0; i < parameters.size(); i++) {
+                stmt.setObject(i + 1, parameters.get(i));
             }
             try (ResultSet rs = stmt.executeQuery()) {
                 if (rs.next()) {

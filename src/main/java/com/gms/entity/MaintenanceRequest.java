@@ -16,13 +16,14 @@ public class MaintenanceRequest {
     private Integer closedByEmployeeId;
     private Priority priority;
     private IncidentType incidentType = IncidentType.NOT_WORKING;
-    private DetectedBy detectedBy = DetectedBy.RECEPTIONIST;
+    private String affectedItemsNote;
     private boolean warningTagPlaced;
     private String description;
     private String attachedImages;
     private Status status;
     private Boolean setUnderMaintenance;
     private String rejectReason;
+    private String managerNote;
     private String acceptanceNote;
     private LocalDateTime reportedAt;
     private LocalDateTime reviewedAt;
@@ -103,12 +104,22 @@ public class MaintenanceRequest {
         this.incidentType = incidentType != null ? incidentType : IncidentType.NOT_WORKING;
     }
 
-    public DetectedBy getDetectedBy() {
-        return detectedBy;
+    public String getAffectedItemsNote() {
+        return affectedItemsNote;
     }
 
+    public void setAffectedItemsNote(String affectedItemsNote) {
+        this.affectedItemsNote = affectedItemsNote;
+    }
+
+    @Deprecated
+    public DetectedBy getDetectedBy() {
+        return DetectedBy.RECEPTIONIST;
+    }
+
+    @Deprecated
     public void setDetectedBy(DetectedBy detectedBy) {
-        this.detectedBy = detectedBy != null ? detectedBy : DetectedBy.RECEPTIONIST;
+        // Deprecated: field removed from database schema
     }
 
     public boolean isWarningTagPlaced() {
@@ -157,6 +168,14 @@ public class MaintenanceRequest {
 
     public void setRejectReason(String rejectReason) {
         this.rejectReason = rejectReason;
+    }
+
+    public String getManagerNote() {
+        return managerNote;
+    }
+
+    public void setManagerNote(String managerNote) {
+        this.managerNote = managerNote;
     }
 
     public String getAcceptanceNote() {

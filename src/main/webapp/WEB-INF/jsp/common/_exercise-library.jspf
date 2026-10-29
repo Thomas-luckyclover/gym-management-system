@@ -1,0 +1,189 @@
+<%@ page pageEncoding="UTF-8" %>
+<%--
+================================================================================
+ _exercise-library.jspf — NỘI DUNG THƯ VIỆN BÀI TẬP, dùng chung cho customer/exercises.jsp và pt/exercises.jsp.
+ Trang cha đã khai báo c, fn và biến ctx trước khi include.
+
+ DỮ LIỆU ĐỌC (ExerciseLibraryServlet đặt):
+   library       ExerciseLibraryView (null khi lỗi)
+   libraryError  câu lỗi, ví dụ "Chưa tải được thư viện bài tập từ wger…"
+   libraryUrl    "/customer/exercises" hoặc "/pt/exercises"
+
+ BA TRƯỜNG HỢP
+   1. Lỗi            → khung đỏ + nút Tải lại
+   2. Màn khóa       → library.open = false (chỉ khách): câu giải thích + gói mở khóa + nút Xem các gói
+   3. Thư viện       → bộ lọc (form GET) · chip nhóm cơ (link) · lưới thẻ bài · phân trang · ghi nguồn wger
+ Mọi lọc là link / form GET: URL giữ trạng thái, bấm Back của trình duyệt quay lại đúng bộ lọc, không cần JS.
+================================================================================ --%>
+<c:set var="libBase" value="${ctx}${libraryUrl}" />
+<main class="content exercise-library" id="main-content" tabindex="-1">
+    <c:choose>
+        <%-- ===== 1. LỖI ===== --%>
+        <c:when test="${not empty libraryError}">
+            <section class="panel ex-message is-error" role="alert">
+                <p><c:out value="${libraryError}" /></p>
+                <a class="btn btn-outline" href="${libBase}">Tải lại</a>
+            </section>
+        </c:when>
+
+        <%-- ===== 2. MÀN KHÓA (khách chưa có gói mở khóa còn hiệu lực) ===== --%>
+        <c:when test="${not library.open}">
+            <section class="panel ex-locked" aria-labelledby="ex-locked-title">
+                <svg class="ex-locked__icon" viewBox="0 0 24 24" aria-hidden="true"><rect x="5" y="11" width="14" height="10" rx="2"></rect><path d="M8 11V7a4 4 0 0 1 8 0v4"></path></svg>
+                <h2 id="ex-locked-title">Thư viện bài tập dành cho hội viên</h2>
+                <p><c:out value="${library.lockMessage}" /></p>
+                <c:if test="${not empty library.unlockingPackages}">
+                    <p class="ex-locked__sub">Các gói có đặc quyền này:</p>
+                    <ul class="ex-locked__packages">
+                        <c:forEach var="line" items="${library.unlockingPackages}">
+                            <li><c:out value="${line}" /></li>
+                        </c:forEach>
+                    </ul>
+                </c:if>
+                <a class="btn btn-primary" href="${ctx}/customer/packages/purchase">Xem các gói</a>
+            </section>
+        </c:when>
+
+        <%-- ===== 3. THƯ VIỆN ===== --%>
+        <c:otherwise>
+            <%-- 3.1 Dòng tóm tắt: tổng số bài + giờ cập nhật; API lỗi thì báo đang xem bản cũ --%>
+            <p class="ex-summary">
+                <c:out value="${library.libraryTotal}" /> bài · cập nhật <c:out value="${library.syncedAtText}" />
+                <c:if test="${library.stale}">
+                    <span class="ex-stale" role="status">Chưa cập nhật được từ wger, đang hiện dữ liệu lúc <c:out value="${library.syncedAtText}" />.</span>
+                </c:if>
+            </p>
+
+            <%-- 3.2 Bộ lọc: form GET. Ô ẩn category giữ chip nhóm cơ đang chọn khi bấm Lọc. --%>
+            <form class="ex-filters" method="get" action="${libBase}" role="search">
+                <c:if test="${not empty library.categoryId}">
+                    <input type="hidden" name="category" value="${library.categoryId}">
+                </c:if>
+                <label class="ex-field ex-field--grow"><span>Tên bài (tiếng Anh)</span>
+                    <input type="search" name="q" maxlength="50" value="<c:out value='${library.query}' />" placeholder="squat, bench press…" autocomplete="off">
+                </label>
+                <label class="ex-field"><span>Dụng cụ</span>
+                    <select name="equipment">
+                        <option value="">Tất cả</option>
+                        <c:forEach var="opt" items="${library.equipments}">
+                            <option value="${opt.value}" ${opt.selected ? 'selected' : ''}><c:out value="${opt.label}" /></option>
+                        </c:forEach>
+                    </select>
+                </label>
+                <label class="ex-field"><span>Sắp xếp</span>
+                    <select name="sort">
+                        <c:forEach var="opt" items="${library.sorts}">
+                            <option value="${opt.value}" ${opt.selected ? 'selected' : ''}><c:out value="${opt.label}" /></option>
+                        </c:forEach>
+                    </select>
+                </label>
+                <div class="ex-filters__actions">
+                    <button type="submit" class="btn btn-primary">Lọc</button>
+                    <c:if test="${library.filtered}">
+                        <a class="btn btn-ghost" href="${libBase}">Xóa lọc</a>
+                    </c:if>
+                </div>
+            </form>
+
+            <%-- 3.3 Chip nhóm cơ: mỗi chip là link giữ nguyên tên bài, dụng cụ, sắp xếp; về trang 1 --%>
+            <nav class="ex-chips" aria-label="Lọc theo nhóm cơ">
+                <c:url var="allUrl" value="${libraryUrl}">
+                    <c:if test="${not empty library.query}"><c:param name="q" value="${library.query}" /></c:if>
+                    <c:if test="${not empty library.equipmentId}"><c:param name="equipment" value="${library.equipmentId}" /></c:if>
+                    <c:if test="${library.sort ne 'name'}"><c:param name="sort" value="${library.sort}" /></c:if>
+                </c:url>
+                <a class="ex-chip ${empty library.categoryId ? 'is-active' : ''}" href="${allUrl}"
+                   aria-current="${empty library.categoryId ? 'true' : 'false'}">Tất cả <small><c:out value="${library.libraryTotal}" /></small></a>
+                <c:forEach var="cat" items="${library.categories}">
+                    <c:url var="catUrl" value="${libraryUrl}">
+                        <c:param name="category" value="${cat.value}" />
+                        <c:if test="${not empty library.query}"><c:param name="q" value="${library.query}" /></c:if>
+                        <c:if test="${not empty library.equipmentId}"><c:param name="equipment" value="${library.equipmentId}" /></c:if>
+                        <c:if test="${library.sort ne 'name'}"><c:param name="sort" value="${library.sort}" /></c:if>
+                    </c:url>
+                    <a class="ex-chip ${cat.selected ? 'is-active' : ''}" href="${catUrl}"
+                       aria-current="${cat.selected ? 'true' : 'false'}"><c:out value="${cat.label}" /> <small><c:out value="${cat.count}" /></small></a>
+                </c:forEach>
+            </nav>
+
+            <%-- 3.4 Lưới thẻ bài. Ảnh lấy thẳng từ wger.de (loading=lazy: chỉ tải khi cuộn tới) --%>
+            <c:choose>
+                <c:when test="${empty library.items}">
+                    <%-- Không có bài khớp: chỉ gợi ý, nút "Xóa lọc" đã có sẵn ở thanh lọc phía trên --%>
+                    <section class="ex-empty" role="status">
+                        <svg class="ex-empty__icon" viewBox="0 0 24 24" aria-hidden="true"><circle cx="11" cy="11" r="7"/><path d="m20 20-3.5-3.5M8.5 11h5"/></svg>
+                        <h2>
+                            <c:choose>
+                                <c:when test="${not empty library.query}">Không tìm thấy bài nào cho “<c:out value="${library.query}" />”</c:when>
+                                <c:otherwise>Chưa có bài nào khớp bộ lọc</c:otherwise>
+                            </c:choose>
+                        </h2>
+                        <p>Thử chọn nhóm cơ <strong>Tất cả</strong>, đổi dụng cụ, hoặc gõ tên tiếng Anh ngắn hơn (ví dụ <em>press</em> thay cho <em>bench press</em>).</p>
+                    </section>
+                </c:when>
+                <c:otherwise>
+                    <ul class="ex-grid">
+                        <c:forEach var="ex" items="${library.items}">
+                            <li class="ex-card">
+                                <div class="ex-card__media">
+                                    <c:choose>
+                                        <c:when test="${not empty ex.imageUrl}">
+                                            <img src="<c:out value='${ex.imageUrl}' />" alt="Minh họa bài <c:out value='${ex.name}' />"
+                                                 loading="lazy" decoding="async" referrerpolicy="no-referrer">
+                                        </c:when>
+                                        <%-- wger không có ảnh → ảnh chụp chung của nhóm cơ (public domain, lưu trong dự án), ghi rõ là ảnh nhóm --%>
+                                        <c:when test="${not empty ex.fallbackImage}">
+                                            <img class="is-photo" src="${ctx}${ex.fallbackImage}?v=2" alt="" loading="lazy" decoding="async">
+                                            <span class="ex-card__badge">Ảnh minh họa nhóm <c:out value="${ex.categoryLabel}" /></span>
+                                        </c:when>
+                                        <c:otherwise>
+                                            <span class="ex-card__noimg">Chưa có hình minh họa</span>
+                                        </c:otherwise>
+                                    </c:choose>
+                                </div>
+                                <div class="ex-card__body">
+                                    <h3><c:out value="${ex.name}" /></h3>
+                                    <p class="ex-card__meta"><b><c:out value="${ex.categoryLabel}" /></b> · <c:out value="${ex.equipmentText}" /></p>
+                                    <c:if test="${not empty ex.muscleText}">
+                                        <p class="ex-card__muscles">Cơ chính: <c:out value="${ex.muscleText}" /></p>
+                                    </c:if>
+                                    <c:if test="${not empty ex.description}">
+                                        <details class="ex-card__how">
+                                            <summary>Cách tập</summary>
+                                            <p lang="en"><c:out value="${ex.description}" /></p>
+                                        </details>
+                                    </c:if>
+                                    <%-- Trang gốc của bài trên wger (route /exercise/{id}/view): video, nhiều ảnh, mô tả đầy đủ. Mở tab mới. --%>
+                                    <a class="ex-card__source" href="https://wger.de/en/exercise/${ex.exerciseId}/view"
+                                       target="_blank" rel="noopener noreferrer">Xem hướng dẫn đầy đủ trên wger ↗</a>
+                                </div>
+                            </li>
+                        </c:forEach>
+                    </ul>
+
+                    <%-- 3.5 Phân trang: STT tính theo trang đang xem (Service), link giữ mọi bộ lọc --%>
+                    <nav class="ex-pager" aria-label="Phân trang">
+                        <span class="ex-pager__info">Hiện <c:out value="${library.firstIndex}" />–<c:out value="${library.lastIndex}" /> / <c:out value="${library.total}" /> bài</span>
+                        <c:if test="${library.totalPages > 1}">
+                            <div class="ex-pager__links">
+                                <c:forEach var="pg" items="${library.pageLinks}">
+                                    <c:url var="pageUrl" value="${libraryUrl}">
+                                        <c:param name="page" value="${pg.value}" />
+                                        <c:if test="${not empty library.categoryId}"><c:param name="category" value="${library.categoryId}" /></c:if>
+                                        <c:if test="${not empty library.query}"><c:param name="q" value="${library.query}" /></c:if>
+                                        <c:if test="${not empty library.equipmentId}"><c:param name="equipment" value="${library.equipmentId}" /></c:if>
+                                        <c:if test="${library.sort ne 'name'}"><c:param name="sort" value="${library.sort}" /></c:if>
+                                    </c:url>
+                                    <a class="ex-page ${pg.selected ? 'is-active' : ''}" href="${pageUrl}"
+                                       aria-current="${pg.selected ? 'page' : 'false'}"><c:out value="${pg.label}" /></a>
+                                </c:forEach>
+                                <span class="ex-pager__total">/ <c:out value="${library.totalPages}" /> trang</span>
+                            </div>
+                        </c:if>
+                    </nav>
+                </c:otherwise>
+            </c:choose>
+
+        </c:otherwise>
+    </c:choose>
+</main>

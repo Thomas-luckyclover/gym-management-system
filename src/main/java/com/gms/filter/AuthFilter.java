@@ -3,6 +3,7 @@ package com.gms.filter;
 import com.gms.constant.Messages;
 import com.gms.constant.SessionKey;
 import com.gms.dto.JsonResponse;
+import com.gms.service.UserBadgeService;
 import com.gms.util.JsonUtil;
 import com.gms.util.RequestUtil;
 import jakarta.servlet.Filter;
@@ -29,6 +30,8 @@ import java.util.Set;
 @WebFilter("/*")
 public class AuthFilter implements Filter {
 
+    private final UserBadgeService badgeService = new UserBadgeService();
+
     /** Đường dẫn công khai khớp CHÍNH XÁC (trang chủ phải so khớp tuyệt đối, vì mọi URL đều bắt đầu bằng "/"). */
     private static final Set<String> PUBLIC_EXACT_PATHS = Set.of(
             "",
@@ -45,6 +48,7 @@ public class AuthFilter implements Filter {
             "/css/",
             "/js/",
             "/images/",
+            "/uploads/",
             "/blog",
             "/payment/vnpay-return",
             "/api/v1/commerce/payment/webhook/"
@@ -85,6 +89,10 @@ public class AuthFilter implements Filter {
                 }
                 httpResponse.sendRedirect(httpRequest.getContextPath() + "/select-role");
                 return;
+            }
+            // B2c: thẻ tài khoản góc phải (mã LT-0003 · Lễ tân…) — chỉ đọc DB khi vừa chọn / đổi vai trò.
+            if (isRoleChosen) {
+                badgeService.ensure(session);
             }
             chain.doFilter(request, response);
             return;

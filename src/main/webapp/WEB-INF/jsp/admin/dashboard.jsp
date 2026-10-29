@@ -22,20 +22,7 @@
         </div>
 
         <div class="top-right">
-          <a class="tb-user" href="${pageContext.request.contextPath}/account" title="Cài đặt tài khoản">
-            <span class="avatar" aria-hidden="true">
-              <c:choose>
-                <c:when test="${not empty sessionScope.displayName}">
-                  <c:out value="${sessionScope.displayName.substring(0, 1)}" />
-                </c:when>
-                <c:otherwise>A</c:otherwise>
-              </c:choose>
-            </span>
-            <span class="tb-user-text">
-              <b><c:out value="${sessionScope.displayName}" default="Admin" /></b>
-              <small>Admin</small>
-            </span>
-          </a>
+          <%@ include file="/WEB-INF/jsp/common/topbar-user.jspf" %>
         </div>
       </header>
 

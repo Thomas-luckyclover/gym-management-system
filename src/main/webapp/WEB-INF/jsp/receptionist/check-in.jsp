@@ -12,9 +12,7 @@
             <title>Check-in hội viên · Super Gym Lễ tân</title>
             <link rel="stylesheet"
               href="${pageContext.request.contextPath}/css/pages/receptionist/check-in.css?v=20261013c">
-            <link rel="stylesheet" href="${pageContext.request.contextPath}/css/pages/auth/notification-bell.css">
             <script src="${pageContext.request.contextPath}/js/pages/receptionist/check-in.js" defer></script>
-            <script src="${pageContext.request.contextPath}/js/pages/auth/notification-bell.js" defer></script>
         </head>
 
         <body class="dock theme-staff">
@@ -35,15 +33,7 @@
                         <span class="badge badge-ok">
                           <i class="fa-solid fa-circle-check"></i> Ca làm việc đang mở
                         </span>
-                        <a class="tb-user" href="${pageContext.request.contextPath}/account" title="Cài đặt tài khoản">
-                          <span class="avatar">LT</span>
-                          <span class="tb-user-text">
-                            <b>
-                              <c:out value="${sessionScope.displayName}" default="Lễ tân" />
-                            </b>
-                            <small>Lễ tân quầy</small>
-                          </span>
-                        </a>
+                        <%@ include file="/WEB-INF/jsp/common/topbar-user.jspf" %>
                     </div>
                   </header>
 
@@ -55,19 +45,20 @@
                           <div class="panel-head">
                             <div>
                               <h2>Tìm khách</h2>
-                              <p>Nhập mã khách, số điện thoại hoặc tên (một phần tên hoặc 4 số cuối SĐT đều được). Khách không cần thẻ,
-                                không cần đăng nhập.</p>
+                              <p>Nhập mã khách, số điện thoại hoặc tên để tìm hồ sơ. Hệ thống hỗ trợ tìm theo một phần
+                                tên hoặc 4 số cuối SĐT.</p>
                             </div>
                           </div>
+
                           <%-- Form tìm kiếm hội viên theo mã khách, số điện thoại hoặc họ tên --%>
                             <form id="ciForm" action="${pageContext.request.contextPath}/receptionist/check-in"
                               method="GET" class="toolbar" novalidate>
                               <div class="search" style="flex:1;">
                                 <i class="fa-solid fa-magnifying-glass"></i>
                                 <input id="ciq" name="q" type="search" value="<c:out value='${query}' />"
-                                  placeholder="Nhập mã khách (KH-...), họ tên hoặc 4 số cuối SĐT..."
-                                  autocomplete="off" aria-label="Mã khách, số điện thoại hoặc tên" required
-                                  <c:if test="${not lookupResult.canCheckIn}">autofocus</c:if>>
+                                  placeholder="Nhập mã khách (KH-...), họ tên hoặc 4 số cuối SĐT..." autocomplete="off"
+                                  aria-label="Mã khách, số điện thoại hoặc tên" required <c:if
+                                  test="${not lookupResult.canCheckIn}">autofocus</c:if>>
                               </div>
                               <button class="btn btn-primary" type="submit">Tìm</button>
                               <c:if test="${not empty query}">
@@ -93,9 +84,14 @@
                                 <div class="panel-head">
                                   <div>
                                     <h2>Kết quả tìm kiếm</h2>
-                                    <p>Tìm thấy <b><c:out value="${not empty searchResultsPage ? searchResultsPage.totalItems : searchResults.size()}" /></b> khách hàng phù hợp với từ khóa "<c:out value='${query}' />".
+                                    <p>Tìm thấy <b>
+                                        <c:out
+                                          value="${not empty searchResultsPage ? searchResultsPage.totalItems : searchResults.size()}" />
+                                      </b> khách hàng phù hợp với từ khóa "
+                                      <c:out value='${query}' />".
                                       <c:if test="${not empty searchResultsPage and searchResultsPage.totalPages > 1}">
-                                        (Trang <b>${searchResultsPage.pageNumber}</b> / <b>${searchResultsPage.totalPages}</b>)
+                                        (Trang <b>${searchResultsPage.pageNumber}</b> /
+                                        <b>${searchResultsPage.totalPages}</b>)
                                       </c:if>
                                       Chọn khách cần check-in.
                                     </p>
@@ -106,87 +102,103 @@
                                     <a href="${pageContext.request.contextPath}/receptionist/check-in?q=<c:out value='${item.customerCode}' />"
                                       class="search-result-row">
                                       <%-- Chọn khách hàng để chuyển thẳng sang màn hình xác nhận check-in --%>
-                                      <div class="sr-photo">
-                                        <c:choose>
-                                          <c:when test="${not empty item.checkInPhoto}">
-                                            <img src="<c:out value='${item.checkInPhoto}' />" loading="lazy">
-                                          </c:when>
-                                          <c:otherwise>
-                                            <i class="fa-solid fa-user"></i>
-                                          </c:otherwise>
-                                        </c:choose>
-                                      </div>
-                                      <div class="sr-info">
-                                        <div class="sr-name">
-                                          <c:out value="${item.fullName}" />
+                                        <div class="sr-photo">
+                                          <c:choose>
+                                            <c:when test="${not empty item.checkInPhoto}">
+                                              <c:set var="srPhoto" value="${item.checkInPhoto}" />
+                                              <c:choose>
+                                                <c:when
+                                                  test="${srPhoto.startsWith('http://') or srPhoto.startsWith('https://')}">
+                                                  <img src="<c:out value='${srPhoto}' />" loading="lazy">
+                                                </c:when>
+                                                <c:otherwise>
+                                                  <img
+                                                    src="${pageContext.request.contextPath}${srPhoto.startsWith('/') ? '' : '/'}<c:out value='${srPhoto}' />"
+                                                    loading="lazy">
+                                                </c:otherwise>
+                                              </c:choose>
+                                            </c:when>
+                                            <c:otherwise>
+                                              <i class="fa-solid fa-user"></i>
+                                            </c:otherwise>
+                                          </c:choose>
                                         </div>
-                                        <div class="sr-meta">
-                                          <span><i class="fa-solid fa-id-card"></i>
-                                            <c:out value="${item.customerCode}" />
-                                          </span>
-                                          <span><i class="fa-solid fa-phone"></i>
-                                            <c:out value="${item.phone}" />
-                                          </span>
-                                        </div>
-                                      </div>
-                                      <div class="sr-status">
-                                        <c:choose>
-                                          <c:when test="${item.customerStatus eq 'Active'}">
-                                            <span class="badge badge-ok">Đang hoạt động</span>
-                                          </c:when>
-                                          <c:when test="${item.customerStatus eq 'New'}">
-                                            <span class="badge badge-info">Mới tạo</span>
-                                          </c:when>
-                                          <c:when test="${item.customerStatus eq 'Frozen'}">
-                                            <span class="badge badge-warn">Đang bảo lưu</span>
-                                          </c:when>
-                                          <c:when test="${item.customerStatus eq 'Expired'}">
-                                            <span class="badge badge-muted">Hết hạn</span>
-                                          </c:when>
-                                          <c:otherwise>
-                                            <span class="badge badge-muted">
-                                              <c:out value="${item.customerStatus}" />
+                                        <div class="sr-info">
+                                          <div class="sr-name">
+                                            <c:out value="${item.fullName}" />
+                                          </div>
+                                          <div class="sr-meta">
+                                            <span><i class="fa-solid fa-id-card"></i>
+                                              <c:out value="${item.customerCode}" />
                                             </span>
-                                          </c:otherwise>
-                                        </c:choose>
-                                      </div>
-                                      <i class="fa-solid fa-chevron-right sr-arrow"></i>
+                                            <span><i class="fa-solid fa-phone"></i>
+                                              <c:out value="${item.phone}" />
+                                            </span>
+                                          </div>
+                                        </div>
+                                        <div class="sr-status">
+                                          <c:choose>
+                                            <c:when test="${item.customerStatus eq 'Active'}">
+                                              <span class="badge badge-ok">Đang hoạt động</span>
+                                            </c:when>
+                                            <c:when test="${item.customerStatus eq 'New'}">
+                                              <span class="badge badge-info">Mới tạo</span>
+                                            </c:when>
+                                            <c:when test="${item.customerStatus eq 'Frozen'}">
+                                              <span class="badge badge-warn">Đang bảo lưu</span>
+                                            </c:when>
+                                            <c:when test="${item.customerStatus eq 'Expired'}">
+                                              <span class="badge badge-muted">Hết hạn</span>
+                                            </c:when>
+                                            <c:otherwise>
+                                              <span class="badge badge-muted">
+                                                <c:out value="${item.customerStatus}" />
+                                              </span>
+                                            </c:otherwise>
+                                          </c:choose>
+                                        </div>
+                                        <i class="fa-solid fa-chevron-right sr-arrow"></i>
                                     </a>
                                   </c:forEach>
                                 </div>
 
                                 <%-- Thanh phân trang --%>
-                                <c:if test="${not empty searchResultsPage and searchResultsPage.totalPages > 1}">
-                                  <div class="ci-pagination">
-                                    <c:choose>
-                                      <c:when test="${searchResultsPage.hasPrevious}">
-                                        <c:url var="prevUrl" value="/receptionist/check-in">
-                                          <c:param name="q" value="${query}" />
-                                          <c:param name="page" value="${searchResultsPage.pageNumber - 1}" />
-                                        </c:url>
-                                        <a class="btn btn-ghost btn-sm" href="${prevUrl}"><i class="fa-solid fa-chevron-left"></i> Trang trước</a>
-                                      </c:when>
-                                      <c:otherwise>
-                                        <button class="btn btn-ghost btn-sm" type="button" disabled><i class="fa-solid fa-chevron-left"></i> Trang trước</button>
-                                      </c:otherwise>
-                                    </c:choose>
+                                  <c:if test="${not empty searchResultsPage and searchResultsPage.totalPages > 1}">
+                                    <div class="ci-pagination">
+                                      <c:choose>
+                                        <c:when test="${searchResultsPage.hasPrevious}">
+                                          <c:url var="prevUrl" value="/receptionist/check-in">
+                                            <c:param name="q" value="${query}" />
+                                            <c:param name="page" value="${searchResultsPage.pageNumber - 1}" />
+                                          </c:url>
+                                          <a class="btn btn-ghost btn-sm" href="${prevUrl}"><i
+                                              class="fa-solid fa-chevron-left"></i> Trang trước</a>
+                                        </c:when>
+                                        <c:otherwise>
+                                          <button class="btn btn-ghost btn-sm" type="button" disabled><i
+                                              class="fa-solid fa-chevron-left"></i> Trang trước</button>
+                                        </c:otherwise>
+                                      </c:choose>
 
-                                    <span class="ci-pagination-info">Trang <b>${searchResultsPage.pageNumber}</b> / <b>${searchResultsPage.totalPages}</b></span>
+                                      <span class="ci-pagination-info">Trang <b>${searchResultsPage.pageNumber}</b> /
+                                        <b>${searchResultsPage.totalPages}</b></span>
 
-                                    <c:choose>
-                                      <c:when test="${searchResultsPage.hasNext}">
-                                        <c:url var="nextUrl" value="/receptionist/check-in">
-                                          <c:param name="q" value="${query}" />
-                                          <c:param name="page" value="${searchResultsPage.pageNumber + 1}" />
-                                        </c:url>
-                                        <a class="btn btn-ghost btn-sm" href="${nextUrl}">Trang sau <i class="fa-solid fa-chevron-right"></i></a>
-                                      </c:when>
-                                      <c:otherwise>
-                                        <button class="btn btn-ghost btn-sm" type="button" disabled>Trang sau <i class="fa-solid fa-chevron-right"></i></button>
-                                      </c:otherwise>
-                                    </c:choose>
-                                  </div>
-                                </c:if>
+                                      <c:choose>
+                                        <c:when test="${searchResultsPage.hasNext}">
+                                          <c:url var="nextUrl" value="/receptionist/check-in">
+                                            <c:param name="q" value="${query}" />
+                                            <c:param name="page" value="${searchResultsPage.pageNumber + 1}" />
+                                          </c:url>
+                                          <a class="btn btn-ghost btn-sm" href="${nextUrl}">Trang sau <i
+                                              class="fa-solid fa-chevron-right"></i></a>
+                                        </c:when>
+                                        <c:otherwise>
+                                          <button class="btn btn-ghost btn-sm" type="button" disabled>Trang sau <i
+                                              class="fa-solid fa-chevron-right"></i></button>
+                                        </c:otherwise>
+                                      </c:choose>
+                                    </div>
+                                  </c:if>
                               </section>
                             </c:if>
 
@@ -218,12 +230,24 @@
                                             <%-- Ảnh check-in --%>
                                               <div
                                                 class="ci-photo<c:if test='${empty lookupResult.checkInPhoto}'> is-empty</c:if>"
-                                                data-ci-face>
+                                                data-ci-face data-ci-photo style="cursor: pointer;" title="Nhấp để chụp hoặc đổi ảnh check-in">
                                                 <c:choose>
                                                   <c:when test="${not empty lookupResult.checkInPhoto}">
-                                                    <img src="<c:out value='${lookupResult.checkInPhoto}' />"
-                                                      alt="Ảnh check-in của <c:out value='${lookupResult.fullName}' />"
-                                                      loading="lazy">
+                                                    <c:set var="ciPhoto" value="${lookupResult.checkInPhoto}" />
+                                                    <c:choose>
+                                                      <c:when
+                                                        test="${ciPhoto.startsWith('http://') or ciPhoto.startsWith('https://')}">
+                                                        <img src="<c:out value='${ciPhoto}' />"
+                                                          alt="Ảnh check-in của <c:out value='${lookupResult.fullName}' />"
+                                                          loading="lazy">
+                                                      </c:when>
+                                                      <c:otherwise>
+                                                        <img
+                                                          src="${pageContext.request.contextPath}${ciPhoto.startsWith('/') ? '' : '/'}<c:out value='${ciPhoto}' />"
+                                                          alt="Ảnh check-in của <c:out value='${lookupResult.fullName}' />"
+                                                          loading="lazy">
+                                                      </c:otherwise>
+                                                    </c:choose>
                                                   </c:when>
                                                   <c:otherwise>
                                                     <span>Chưa có<br>ảnh</span>
@@ -342,12 +366,19 @@
                                                   </form>
                                                 </c:if>
 
-                                                <c:if
-                                                  test="${lookupResult.requiresPhoto or empty lookupResult.checkInPhoto}">
-                                                  <button class="btn btn-outline" type="button" data-ci-photo>
-                                                    <i class="fa-solid fa-camera"></i> Chụp ảnh tại quầy
-                                                  </button>
-                                                </c:if>
+                                                <c:choose>
+                                                  <c:when test="${lookupResult.requiresPhoto or empty lookupResult.checkInPhoto}">
+                                                    <button class="btn btn-outline" type="button" data-ci-photo>
+                                                      <i class="fa-solid fa-camera"></i> Chụp ảnh tại quầy
+                                                    </button>
+                                                  </c:when>
+                                                  <c:otherwise>
+                                                    <button class="btn btn-outline" type="button" data-ci-photo
+                                                      title="Chụp lại ảnh check-in nếu ảnh cũ bị mờ hoặc đổi nhận diện">
+                                                      <i class="fa-solid fa-camera-rotate"></i> Chụp lại ảnh
+                                                    </button>
+                                                  </c:otherwise>
+                                                </c:choose>
                                               </div>
                                         </section>
                                       </c:otherwise>
@@ -402,7 +433,12 @@
                 <div class="modal-overlay" id="photoModal" role="dialog" aria-modal="true" aria-labelledby="modalTitle">
                   <div class="modal-box">
                     <div class="modal-head">
-                      <h3 id="modalTitle">Chụp ảnh check-in tại quầy</h3>
+                      <h3 id="modalTitle">
+                        <c:choose>
+                          <c:when test="${not empty lookupResult.checkInPhoto}">Chụp lại ảnh check-in tại quầy</c:when>
+                          <c:otherwise>Chụp ảnh check-in tại quầy</c:otherwise>
+                        </c:choose>
+                      </h3>
                       <button class="btn btn-ghost btn-sm" type="button" data-close-modal
                         aria-label="Đóng">&times;</button>
                     </div>

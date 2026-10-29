@@ -11,10 +11,10 @@
   <%@ include file="/WEB-INF/jsp/common/head.jspf" %>
   <title>Quản lý đơn nghỉ phép · Super Gym</title>
   <link rel="stylesheet" href="${pageContext.request.contextPath}/css/pages/auth/account-settings.css">
-  <link rel="stylesheet" href="${pageContext.request.contextPath}/css/pages/manager/leave-request-list.css?v=20261022-filters">
+  <link rel="stylesheet" href="${pageContext.request.contextPath}/css/pages/manager/leave-request-list.css?v=20261027-local-dropdown">
   <link rel="stylesheet" href="${pageContext.request.contextPath}/css/pages/auth/notification-bell.css">
   <script src="${pageContext.request.contextPath}/js/pages/auth/notification-bell.js" defer></script>
-  <script src="${pageContext.request.contextPath}/js/pages/manager/leave-request-list.js?v=20261022-selected" defer></script>
+  <script src="${pageContext.request.contextPath}/js/pages/manager/leave-request-list.js?v=20261027-local-dropdown" defer></script>
 </head>
 
 <body class="dock theme-manager leave-list-page">
@@ -32,13 +32,7 @@
         <div class="top-right">
           <%@ include file="/WEB-INF/jsp/common/notification-bell.jspf" %>
 
-          <a class="tb-user" href="${pageContext.request.contextPath}/account">
-            <span class="avatar">QL</span>
-            <span>
-              <b><c:out value="${sessionScope.displayName}" default="Quản lý" /></b>
-              <small>Quản lý</small>
-            </span>
-          </a>
+          <%@ include file="/WEB-INF/jsp/common/topbar-user.jspf" %>
         </div>
       </header>
 
@@ -153,24 +147,18 @@
 
         <%-- ===== Bảng danh sách đơn nghỉ phép ===== --%>
         <section class="panel leave-panel leave-list-panel" aria-label="Nhân viên và đơn nghỉ phép">
-          <c:if test="${employeeView or (statusFilter == 'Pending' and not empty requestPage.items)}">
-          <div class="leave-list-caption">
-            <c:choose>
-              <c:when test="${employeeView}"><span>Bấm nhân viên để xem đơn</span></c:when>
-              <c:when test="${statusFilter == 'Pending' and not empty requestPage.items}">
-                <%-- Checkbox trong bảng liên kết form này, không lồng form từng hàng. --%>
-                <form id="leave-bulk-form" class="leave-bulk-actions" action="${pageContext.request.contextPath}/manager/leave-requests/review" method="post">
-                  <input type="hidden" name="csrfToken" value="<c:out value='${csrfToken}' />">
-                  <input type="hidden" name="action" value="approveMany">
-                  <input type="hidden" name="returnUrl" value="<c:out value='${listReturnUrl}' />">
-                  <span id="leave-selection-count" aria-live="polite">Đã chọn 0 đơn</span>
-                  <button id="leave-approve-selected" type="submit" class="btn btn-sm btn-primary" disabled
-                          data-confirm-title="Duyệt các đơn đã chọn" data-confirm-text="Duyệt"
-                          data-confirm-message="Duyệt các đơn đã chọn?">Duyệt đã chọn</button>
-                </form>
-              </c:when>
-            </c:choose>
-          </div>
+          <c:if test="${statusFilter == 'Pending' and not empty requestPage.items}">
+            <div class="leave-list-caption">
+              <form id="leave-bulk-form" class="leave-bulk-actions" action="${pageContext.request.contextPath}/manager/leave-requests/review" method="post">
+                <input type="hidden" name="csrfToken" value="<c:out value='${csrfToken}' />">
+                <input type="hidden" name="action" value="approveMany">
+                <input type="hidden" name="returnUrl" value="<c:out value='${listReturnUrl}' />">
+                <span id="leave-selection-count" aria-live="polite" hidden>Đã chọn 0 đơn</span>
+                <button id="leave-approve-selected" type="submit" class="btn btn-sm btn-primary" disabled
+                        data-confirm-title="Duyệt các đơn đã chọn" data-confirm-text="Duyệt"
+                        data-confirm-message="Duyệt các đơn đã chọn?">Duyệt đã chọn</button>
+              </form>
+            </div>
           </c:if>
 
           <c:if test="${not empty pageError}">
@@ -191,7 +179,6 @@
                         <div class="leave-employee-requests">
                           <c:choose>
                             <c:when test="${not empty employee.requests}">
-                              <p class="leave-group-caption"><c:out value="${fn:length(employee.requests)}" /> đơn phù hợp bộ lọc</p>
                               <c:set var="requestItems" value="${employee.requests}" />
                               <c:set var="showEmployee" value="${false}" />
                               <%@ include file="/WEB-INF/jsp/manager/leave-request-table.jspf" %>
@@ -243,7 +230,7 @@
                 <a class="btn btn-ghost btn-sm" href="${previousUrl}">Trang trước</a>
               </c:if>
 
-              <span>Trang ${listPage.pageNumber} / ${listPage.totalPages} (${listPage.totalItems} ${employeeView ? 'nhân viên' : 'đơn'})</span>
+              <span>Trang ${listPage.pageNumber} / ${listPage.totalPages} (${listPage.totalItems} ${employeeView ? 'nhân viên' : 'mục'})</span>
 
               <c:if test="${listPage.hasNext}">
                 <c:url var="nextUrl" value="/manager/leave-requests">
@@ -263,9 +250,15 @@
 
         </section>
 
+
       </main>
     </div>
   </div>
 
+  <%-- Một tooltip dùng chung: JS lấy Reason đã escape của tên đang hover/focus. --%>
+  <div id="leave-reason-tooltip" class="leave-reason-tooltip" role="tooltip" hidden>
+    <span class="leave-reason-title">Lý do xin nghỉ</span>
+    <p id="leave-reason-text"></p>
+  </div>
 </body>
 </html>

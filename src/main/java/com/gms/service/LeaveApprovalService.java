@@ -38,13 +38,12 @@ public class LeaveApprovalService {
         // B1: kiểm tra ngày/ca/số ngày trước khi dùng chúng trong các truy vấn.
         String inputError = validateRequest(request);
         if (inputError != null) {
-            review.setInputError(inputError);
             review.getChecks().add(new ReviewCheck("REQUEST", "Thông tin đơn", true, false, inputError));
             return review;
         }
 
         // B2: gom đủ ba điều kiện để màn chi tiết giải thích từng mục bị chặn.
-        review.getChecks().add(checkAnnualBalance(connection, request, review));
+        review.getChecks().add(checkAnnualBalance(connection, request));
         review.getChecks().add(checkStaffing(connection, request, workingPosition, review));
         review.getChecks().add(checkSessions(connection, request, workingPosition));
         return review;
@@ -64,13 +63,8 @@ public class LeaveApprovalService {
         if (!fromDate.equals(toDate) && request.getShiftType() != LeaveRequest.ShiftType.FULL_DAY) {
             return "Đơn nhiều ngày phải nghỉ cả ngày.";
         }
-        if (fromDate.isBefore(DateTimeUtil.today())) {
-            return "Không thể duyệt đơn nghỉ phép của ngày đã qua.";
-        }
-        BigDecimal expectedDays = new BigDecimal("0.5");
-        if (request.getShiftType() == LeaveRequest.ShiftType.FULL_DAY) {
-            expectedDays = BigDecimal.valueOf(ChronoUnit.DAYS.between(fromDate, toDate) + 1);
-        }
+        // Ca sáng/chiều và cả ngày dùng cùng đơn vị một ngày; không chia đôi quỹ phép.
+        BigDecimal expectedDays = BigDecimal.valueOf(ChronoUnit.DAYS.between(fromDate, toDate) + 1);
         if (request.getDays() == null || request.getDays().compareTo(expectedDays) != 0) {
             return "Số ngày nghỉ không khớp ngày và ca. Vui lòng kiểm tra lại đơn.";
         }
@@ -78,7 +72,7 @@ public class LeaveApprovalService {
     }
 
     /** Phép năm: Approved và Pending khác cùng giữ quỹ; đơn hiện tại không bị trừ hai lần. */
-    private ReviewCheck checkAnnualBalance(Connection connection, LeaveRequest request, LeaveApprovalReview review)
+    private ReviewCheck checkAnnualBalance(Connection connection, LeaveRequest request)
             throws SQLException {
         ReviewCheck check = new ReviewCheck("ANNUAL_QUOTA", "Quỹ phép năm", true, false, null);
         if (request.getLeaveType() != LeaveRequest.LeaveType.ANNUAL) {
@@ -94,10 +88,12 @@ public class LeaveApprovalService {
             check.setMessage("Chưa cấu hình quỹ phép năm P-23. Cần thiết lập chính sách trước khi duyệt.");
             return check;
         }
-        int excludedRequestId = request.isPending() ? request.getLeaveRequestId() : 0;
+        int excludedRequestId = 0;
+        if (request.isPending()) {
+            excludedRequestId = request.getLeaveRequestId();
+        }
         LeaveBalance balance = leaveRequestDAO.getAnnualBalance(connection, request.getEmployeeId(),
                 request.getFromDate().getYear(), quota, excludedRequestId);
-        review.setBalance(balance);
         boolean enough = balance.getRemainingDays().compareTo(request.getDays()) >= 0;
         check.setOk(enough);
         if (enough) {
@@ -117,13 +113,23 @@ public class LeaveApprovalService {
             check.setMessage("Nhân viên đã nghỉ việc hoặc không còn ở vị trí PT/Lễ tân đang làm việc.");
             return check;
         }
+        // Ngày đã qua không dùng quân số hiện tại để suy ra nhân viên có nghỉ thật.
+        LocalDate today = DateTimeUtil.today();
+        LocalDate firstDateToCheck = request.getFromDate();
+        if (firstDateToCheck.isBefore(today)) {
+            firstDateToCheck = today;
+        }
+        if (firstDateToCheck.isAfter(request.getToDate())) {
+            check.setApplicable(false);
+            check.setOk(true);
+            return check;
+        }
         int minRequired;
         if ("PT".equals(position)) {
             minRequired = systemConfigService.getInt(SystemConfigService.MIN_PT_PER_SHIFT);
         } else {
             minRequired = systemConfigService.getInt(SystemConfigService.MIN_RECEPTIONIST_PER_SHIFT);
         }
-        review.setMinStaffRequired(minRequired);
         List<String> shifts = new ArrayList<>();
         if (request.getShiftType() == LeaveRequest.ShiftType.FULL_DAY) {
             shifts.add("Morning");
@@ -133,25 +139,24 @@ public class LeaveApprovalService {
         }
         int remaining = Integer.MAX_VALUE;
         String firstShortage = null;
-        for (LocalDate date = request.getFromDate(); !date.isAfter(request.getToDate()); date = date.plusDays(1)) {
+        for (LocalDate date = firstDateToCheck; !date.isAfter(request.getToDate()); date = date.plusDays(1)) {
             for (String shift : shifts) {
                 int after = leaveRequestDAO.countOnDutyAfterApproval(connection, date, shift, position, request.getLeaveRequestId());
                 remaining = Math.min(remaining, after);
                 String shiftLabel = "Morning".equals(shift) ? "Ca sáng" : "Ca chiều";
                 review.getStaffingRows().add(new ShiftStaffingRow(DateTimeUtil.formatDate(date) + " · " + shiftLabel,
-                        position, after + 1, after, minRequired));
+                        after + 1, after, minRequired));
                 if (after < minRequired && firstShortage == null) {
                     firstShortage = DateTimeUtil.formatDate(date) + " · " + shiftLabel + ": còn " + after
                             + " người, tối thiểu " + minRequired + ". Cần bố trí người trước khi duyệt.";
                 }
             }
         }
-        review.setRemainingStaff(remaining);
         check.setOk(firstShortage == null);
         if (firstShortage != null) {
             check.setMessage(firstShortage);
         } else {
-            check.setMessage("Đạt trên toàn khoảng nghỉ: còn ít nhất " + remaining + " người, tối thiểu " + minRequired
+            check.setMessage("Đạt từ " + DateTimeUtil.formatDate(firstDateToCheck) + ": còn ít nhất " + remaining + " người, tối thiểu " + minRequired
                     + ". Tạm tính nhân viên đang làm việc làm cả hai ca.");
         }
         return check;
@@ -164,9 +169,18 @@ public class LeaveApprovalService {
             check.setMessage("Chỉ áp dụng cho PT đang làm việc.");
             return check;
         }
+        LocalDate today = DateTimeUtil.today();
+        LocalDate firstDateToCheck = request.getFromDate();
+        if (firstDateToCheck.isBefore(today)) {
+            firstDateToCheck = today;
+        }
+        if (firstDateToCheck.isAfter(request.getToDate())) {
+            check.setApplicable(false);
+            return check;
+        }
         int total = 0;
         LocalDate firstConflictDate = null;
-        for (LocalDate date = request.getFromDate(); !date.isAfter(request.getToDate()); date = date.plusDays(1)) {
+        for (LocalDate date = firstDateToCheck; !date.isAfter(request.getToDate()); date = date.plusDays(1)) {
             int count = leaveRequestDAO.countScheduledSessions(connection, request.getEmployeeId(), date,
                     request.getShiftType().getDbValue());
             total += count;

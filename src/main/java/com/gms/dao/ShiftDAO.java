@@ -1,5 +1,6 @@
 package com.gms.dao;
 
+import com.gms.dto.ClosedShiftHistoryItem;
 import com.gms.dto.ShiftMetrics;
 import com.gms.dto.ShiftTransactionItem;
 import com.gms.entity.Shift;
@@ -49,6 +50,11 @@ public class ShiftDAO {
      * @throws SQLException khi truy vấn lỗi
      */
     public void ensureShiftsForDate(Connection conn, LocalDate date) throws SQLException {
+        // CBR-104: Không sinh ca làm việc vào ngày đóng cửa cả ngày
+        if (isGymClosedOnDate(conn, date)) {
+            return;
+        }
+
         String selectSql = "SELECT ShiftType FROM Shifts WHERE WorkDate = ?";
         boolean hasMorning = false;
         boolean hasAfternoon = false;
@@ -145,8 +151,39 @@ public class ShiftDAO {
     }
 
     /**
+     * Kiểm tra xem ngày có phải là ngày đóng cửa cả ngày theo OperatingHourExceptions hay không (BR-12, CBR-104).
+     *
+     * @param conn Connection tham gia transaction
+     * @param date ngày cần kiểm tra
+     * @return true nếu đóng cửa cả ngày, false nếu mở cửa bình thường
+     * @throws SQLException khi truy vấn lỗi
+     */
+    public boolean isGymClosedOnDate(Connection conn, LocalDate date) throws SQLException {
+        String sql = "SELECT 1 FROM OperatingHourExceptions WHERE ApplyDate = ? AND IsClosedAllDay = 1";
+        try (PreparedStatement stmt = conn.prepareStatement(sql)) {
+            stmt.setDate(1, Date.valueOf(date));
+            try (ResultSet rs = stmt.executeQuery()) {
+                return rs.next();
+            }
+        }
+    }
+
+    /**
+     * Phiên bản tự mở kết nối của isGymClosedOnDate.
+     */
+    public boolean isGymClosedOnDate(LocalDate date) throws SQLException {
+        try (Connection conn = DBContext.getConnection()) {
+            return isGymClosedOnDate(conn, date);
+        }
+    }
+
+    /**
      * Tìm ca đang Open hiện tại của ngày hôm nay, hoặc nếu không có ca nào Open thì tìm ca phù hợp nhất.
-     * (Trước 13:00 ưu tiên ca Sáng, từ 13:00 trở đi ưu tiên ca Chiều).
+     * Quy tắc ưu tiên:
+     * 1. Ca đang Open: Luôn ưu tiên hiển thị ca đang trực tiếp mở.
+     * 2. Nếu Ca sáng đã chốt và Ca chiều chưa mở: Ưu tiên Ca chiều (ca tiếp theo cần mở).
+     * 3. Nếu Ca chiều đã chốt: Hiển thị Ca chiều (ca gần nhất đã hoàn tất).
+     * 4. Nếu cả 2 đều chưa mở: Xét theo giờ hiện tại (trước 13:00 là Ca sáng, từ 13:00 trở đi là Ca chiều).
      *
      * @param today ngày hiện tại
      * @return đối tượng Shift phù hợp nhất
@@ -165,19 +202,39 @@ public class ShiftDAO {
             }
         }
 
-        // B2: Nếu không có ca nào Open, xét theo giờ hiện tại
-        LocalDateTime now = LocalDateTime.now(DateTimeUtil.GYM_ZONE);
-        boolean isAfternoonTime = now.getHour() >= 13;
-
+        // B2: Tìm ca Sáng và ca Chiều
+        Shift morning = null;
+        Shift afternoon = null;
         for (Shift s : shifts) {
-            if (isAfternoonTime && s.getShiftType() == Shift.ShiftType.AFTERNOON) {
-                return s;
-            } else if (!isAfternoonTime && s.getShiftType() == Shift.ShiftType.MORNING) {
-                return s;
+            if (s.getShiftType() == Shift.ShiftType.MORNING) {
+                morning = s;
+            } else if (s.getShiftType() == Shift.ShiftType.AFTERNOON) {
+                afternoon = s;
             }
         }
 
-        // B3: Fallback lấy phần tử đầu tiên
+        // B3: Nếu Ca sáng đã chốt và Ca chiều chưa mở -> Ca chiều là ca tiếp theo cần làm việc
+        if (morning != null && morning.isClosed() && afternoon != null && afternoon.isNotOpened()) {
+            return afternoon;
+        }
+
+        // B4: Nếu Ca chiều đã chốt -> hiển thị Ca chiều (ca gần nhất đã hoàn tất trong ngày)
+        if (afternoon != null && afternoon.isClosed()) {
+            return afternoon;
+        }
+
+        // B5: Nếu cả 2 đều chưa mở, xét theo giờ hiện tại (trước 13:00 là Sáng, từ 13:00 là Chiều)
+        LocalDateTime now = LocalDateTime.now(DateTimeUtil.GYM_ZONE);
+        boolean isAfternoonTime = now.getHour() >= 13;
+
+        if (isAfternoonTime && afternoon != null) {
+            return afternoon;
+        }
+        if (!isAfternoonTime && morning != null) {
+            return morning;
+        }
+
+        // B6: Fallback lấy phần tử đầu tiên
         return shifts.get(0);
     }
 
@@ -269,11 +326,20 @@ public class ShiftDAO {
     /**
      * Tính toán 4 chỉ số KPI trong ca: Tiền mặt, Chuyển khoản, Tổng thu và Đơn chờ xử lý (DBR-55).
      *
+     * <p>Quy tắc phái sinh DBR-55 & SRS 7.3.1:</p>
+     * <ul>
+     *   <li><b>ExpectedCash:</b> Tổng tiền các giao dịch tiền mặt thành công (Cash & Success) của các đơn hợp lệ (Paid).</li>
+     *   <li><b>BankTotal:</b> Tổng tiền các giao dịch chuyển khoản thành công (Transfer & Success) của các đơn hợp lệ (Paid).</li>
+     *   <li><b>TotalRevenue:</b> CashTotal + BankTotal. Đơn bị hủy (Cancelled) và chờ xác nhận (Pending) bị loại bỏ khỏi tổng.</li>
+     *   <li><b>PendingCount:</b> Đếm số lượng đơn tại quầy có Status = 'Pending' trong ca (cần giải quyết trước khi chốt ca, CBR-78).</li>
+     * </ul>
+     *
      * @param shiftId mã ca cần tính toán
      * @return đối tượng ShiftMetrics chứa các số liệu
      * @throws SQLException khi truy vấn lỗi
      */
     public ShiftMetrics calculateShiftMetrics(int shiftId) throws SQLException {
+        // DBR-55: Chỉ cộng các giao dịch có trạng thái Success thuộc các đơn hàng Paid trong ca
         String sql = """
                 SELECT 
                     COALESCE(SUM(CASE WHEN t.PaymentMethod = 'Cash' AND t.Status = 'Success' AND o.Status = 'Paid' THEN t.Amount ELSE 0 END), 0) AS CashTotal,
@@ -663,6 +729,141 @@ public class ShiftDAO {
         }
 
         return rowsUpdated;
+    }
+
+    // ===== Tab 2: Lịch sử chốt ca của Quản lý (Màn #41 - UC-26, SRS 7.4.2) =====
+
+    /**
+     * Đếm tổng số ca làm việc đã đóng khớp với khoảng ngày lọc.
+     *
+     * @param fromDate ngày bắt đầu (có thể null)
+     * @param toDate   ngày kết thúc (có thể null)
+     * @return số ca đã chốt thỏa mãn
+     * @throws SQLException khi truy vấn lỗi
+     */
+    public int countClosedShiftsHistory(LocalDate fromDate, LocalDate toDate) throws SQLException {
+        StringBuilder sql = new StringBuilder("SELECT COUNT(s.ShiftId) FROM Shifts s WHERE s.Status = 'Closed' ");
+        List<Object> params = new ArrayList<>();
+
+        if (fromDate != null) {
+            sql.append(" AND s.WorkDate >= ? ");
+            params.add(Date.valueOf(fromDate));
+        }
+        if (toDate != null) {
+            sql.append(" AND s.WorkDate <= ? ");
+            params.add(Date.valueOf(toDate));
+        }
+
+        try (Connection conn = DBContext.getConnection();
+             PreparedStatement stmt = conn.prepareStatement(sql.toString())) {
+            for (int i = 0; i < params.size(); i++) {
+                stmt.setObject(i + 1, params.get(i));
+            }
+            try (ResultSet rs = stmt.executeQuery()) {
+                if (rs.next()) {
+                    return rs.getInt(1);
+                }
+            }
+        }
+        return 0;
+    }
+
+    /**
+     * Lấy danh sách ca làm việc đã đóng có phân trang và tính toán đối soát (SRS 7.4.2).
+     *
+     * @param fromDate ngày bắt đầu
+     * @param toDate   ngày kết thúc
+     * @param offset   vị trí bắt đầu
+     * @param pageSize số bản ghi mỗi trang
+     * @return danh sách ClosedShiftHistoryItem
+     * @throws SQLException khi truy vấn lỗi
+     */
+    public List<ClosedShiftHistoryItem> findClosedShiftsHistoryPage(LocalDate fromDate, LocalDate toDate,
+                                                                   int offset, int pageSize) throws SQLException {
+        StringBuilder sql = new StringBuilder("""
+                SELECT 
+                    s.ShiftId, s.WorkDate, s.ShiftType,
+                    pOpen.FullName AS OpenedByName,
+                    pClose.FullName AS ClosedByName,
+                    s.OpenedAt, s.ClosedAt,
+                    s.ExpectedCash, s.CountedCash, s.VarianceReason,
+                    COALESCE((
+                        SELECT SUM(t.Amount)
+                        FROM Orders o
+                        JOIN Transactions t ON t.OrderId = o.OrderId
+                        WHERE o.ShiftId = s.ShiftId 
+                          AND t.PaymentMethod = 'Transfer' 
+                          AND t.Status = 'Success'
+                          AND o.Status <> 'Cancelled'
+                    ), 0) AS TotalBankTransfer,
+                    (
+                        SELECT COUNT(o.OrderId)
+                        FROM Orders o
+                        WHERE o.ShiftId = s.ShiftId
+                    ) AS TotalInvoiceCount
+                FROM Shifts s
+                LEFT JOIN Employees eOpen ON eOpen.EmployeeId = s.OpenedByEmployeeId
+                LEFT JOIN Persons pOpen ON pOpen.PersonId = eOpen.PersonId
+                LEFT JOIN Employees eClose ON eClose.EmployeeId = s.ClosedByEmployeeId
+                LEFT JOIN Persons pClose ON pClose.PersonId = eClose.PersonId
+                WHERE s.Status = 'Closed'
+                """);
+
+        List<Object> params = new ArrayList<>();
+        if (fromDate != null) {
+            sql.append(" AND s.WorkDate >= ? ");
+            params.add(Date.valueOf(fromDate));
+        }
+        if (toDate != null) {
+            sql.append(" AND s.WorkDate <= ? ");
+            params.add(Date.valueOf(toDate));
+        }
+
+        sql.append(" ORDER BY s.WorkDate DESC, s.ShiftId DESC ");
+        sql.append(" OFFSET ? ROWS FETCH NEXT ? ROWS ONLY ");
+        params.add(offset);
+        params.add(pageSize);
+
+        List<ClosedShiftHistoryItem> list = new ArrayList<>();
+        try (Connection conn = DBContext.getConnection();
+             PreparedStatement stmt = conn.prepareStatement(sql.toString())) {
+            for (int i = 0; i < params.size(); i++) {
+                stmt.setObject(i + 1, params.get(i));
+            }
+            try (ResultSet rs = stmt.executeQuery()) {
+                while (rs.next()) {
+                    long expectedCash = rs.getLong("ExpectedCash");
+                    long countedCash = rs.getLong("CountedCash");
+                    long variance = countedCash - expectedCash;
+
+                    Date workDateSql = rs.getDate("WorkDate");
+                    LocalDate workDate = workDateSql != null ? workDateSql.toLocalDate() : null;
+
+                    Timestamp openedTs = rs.getTimestamp("OpenedAt");
+                    LocalDateTime openedAt = openedTs != null ? openedTs.toLocalDateTime() : null;
+
+                    Timestamp closedTs = rs.getTimestamp("ClosedAt");
+                    LocalDateTime closedAt = closedTs != null ? closedTs.toLocalDateTime() : null;
+
+                    list.add(new ClosedShiftHistoryItem(
+                            rs.getInt("ShiftId"),
+                            workDate,
+                            rs.getString("ShiftType"),
+                            rs.getString("OpenedByName"),
+                            rs.getString("ClosedByName"),
+                            openedAt,
+                            closedAt,
+                            expectedCash,
+                            countedCash,
+                            variance,
+                            rs.getString("VarianceReason"),
+                            rs.getLong("TotalBankTransfer"),
+                            rs.getInt("TotalInvoiceCount")
+                    ));
+                }
+            }
+        }
+        return list;
     }
 
     // ===== Hàm hỗ trợ map ResultSet =====

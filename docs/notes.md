@@ -1,9 +1,49 @@
 # File notes — mâu thuẫn tài liệu & quyết định đã chốt
 
+## Thư viện bài tập — /customer/exercises + /pt/exercises (27/10/2026, ĐÃ CODE, CÓ SỬA DB)
+- **Nghiệp vụ**: thư viện bài tập là **đặc quyền hội viên**. Khách xem được khi đang có gói **tập (Membership)** hoặc **gói PT** còn hiệu lực hôm nay (Active hoặc Frozen, StartDate ≤ hôm nay ≤ EndDate; gói đôi tính cả người đi kèm). PT luôn xem được (tra bài khi soạn giáo án). Màn chỉ xem, không lưu gì của người dùng.
+- **Khóa** có 3 câu: chưa từng mua (NEVER) · hết hạn ngày X (EXPIRED) · gói bắt đầu từ ngày Y (NOT_STARTED); kèm danh sách gói đang bán có đặc quyền + nút "Xem các gói". Kiểm ở Service, gõ thẳng URL vẫn bị khóa.
+- **Sửa DB (đã báo user, user báo nhóm)**:
+  - `Packages.UnlocksExerciseLibrary BIT NOT NULL DEFAULT 0` — seed: gói tập tháng + gói PT = 1; vé ngày, buổi lẻ = 0. `Package.getBenefitLines` tự thêm dòng "Mở khóa Thư viện bài tập…" (trang chủ + màn Mua gói), quản lý không phải gõ tay.
+  - Bảng mới `Exercises` (bộ đệm dữ liệu wger, không khóa ngoại). Seed không có dòng nào: lần mở trang đầu tiên tự tải.
+- **API wger.de** (miễn phí, không key, dữ liệu CC BY-SA 4.0 → bắt buộc ghi nguồn cuối trang): `GET /api/v2/exerciseinfo/?language__code=en&limit=100` theo link `next`. Lấy tên + mô tả tiếng Anh (language = 2), nhóm cơ, cơ chính, dụng cụ, ảnh chính. Tên bài giữ tiếng Anh; 8 nhóm cơ, 12 dụng cụ, 16 cơ dịch tiếng Việt bằng bảng cố định trong Service.
+- **Đồng bộ**: bảng trống hoặc quá 1 ngày → tải lại, xóa + ghi cả bảng trong 1 transaction. API lỗi → giữ bản cũ, in dòng vàng "Chưa cập nhật được từ wger…", 5 phút sau mới thử lại. Bảng trống mà API lỗi → báo lỗi + nút Tải lại.
+- **Ảnh**: dùng ảnh của wger; bài không có ảnh → ảnh chụp chung theo nhóm cơ (8 ảnh trong `webapp/images/exercises/`, lấy từ free-exercise-db — public domain, xem `SOURCES.json`), có nhãn "Ảnh minh họa nhóm …" để không bị hiểu là ảnh đúng bài.
+- **Lọc**: ?q= (tên, ≤ 50 ký tự, LIKE có escape) · ?category= (chỉ 8 mã) · ?equipment= (chỉ 12 mã) · ?sort= (whitelist name|image → ORDER BY cố định, chống SQL injection) · ?page= (12 bài/trang, kẹp 1..tổng trang). Lọc, đếm, phân trang ở SQL.
+- **Test**: ExerciseLibraryServiceTest (quyền, bộ lọc, sort whitelist, phân trang, nhãn, lịch đồng bộ), WgerClientTest (đọc JSON mẫu theo ExerciseInfoSerializer của wger), PackageBenefitTest. Chưa gọi được wger thật từ máy dev của AI → lần chạy thật đầu tiên trên máy nhóm.
+- Lưu ý `tools/runtest.py` đang lỗi sẵn từ trước (SQLite không có hàm YEAR ở CHECK của LeaveRequests), không do thay đổi này. `2_Seed_Data.sql` chỉ sửa tay khối Packages (sinh lại từ seeddata.py sẽ làm mất các dòng LeaveRequests đã sửa tay trong file .sql).
+
+## Bán gói PT: nhắc + chặn mềm khi PT chưa mở khung (26/10/2026, ĐÃ CODE)
+- **Vấn đề**: buổi rơi vào ngày PT chưa có khung đúng giờ → `hold()` tự tạo khung mới (`insertHeldSlot`) → lễ tân có thể xếp vào giờ PT không rảnh mà không biết.
+- **Đã chốt (chặn mềm, giữ nguyên cách tính lịch cũ, không đổi DB)** — xét **theo TỪNG BUỔI**, không theo Thứ:
+  - `buildPlan`: mỗi giờ của 1 ngày có thêm cờ `fresh` = `checkDay` trả `"create"` (ngày đó PT chưa có khung giờ này). Ví dụ PT Thứ 5 chỉ mở 09:00, lễ tân chọn Thứ 5 18:00 → các buổi Thứ 5 đều `fresh`.
+  - Màn hình: ô buổi + nút giờ trong "Sửa riêng" ghi nhãn vàng **"PT chưa mở"**; chú thích thêm "PT chưa mở — cần hỏi PT".
+  - Form Giữ lịch: có buổi `fresh` → hiện ô tích **"Đã xác nhận với PT"** ("N buổi PT chưa mở khung — PT đã đồng ý dạy"); chưa tích → nút Giữ lịch khóa.
+  - Server kiểm tra lại trong `hold()`: `countNewSlots(view.days)` (đếm buổi `"create"`) > 0 mà không có `confirmPt` → từ chối.
+  - Thêm: hộp vàng đầu Lịch tập + nhãn "PT chưa công bố" trong Lịch mẫu khi có Thứ PT không mở khung nào trong 14 ngày đầu (`unpublishedWeekdays`) — chỉ để nhắc.
+- Bản đầu (cùng ngày) bắt tích theo Thứ → sót trường hợp "Thứ có công bố nhưng sai giờ" → đã đổi sang theo buổi như trên.
+- Đã thử: gói 3 tháng từ 25/11 (tuần cuối kỳ PT chưa công bố) → 22 buổi "PT chưa mở", ô tích + nút khóa, tích → mở; trước đó (bản theo Thứ) đã thử server từ chối khi thiếu tích.
+- Sửa kèm: hint box `.pt-info-popover` lúc ẩn đặt `left: 0` → nút (i) sát mép phải làm trang cuộn ngang ~22px ở 1440. Nay canh `right: 0` (common.css); mở ra common.js vẫn tự đặt vị trí như cũ.
+
 ## Chỉ số cơ thể của khách — /customer/body-stats (25/10/2026, ĐÃ CODE) + làm mới seed
 - **DB (đã báo người dùng)**: bảng mới `BodyMeasurements` (CustomerId, MeasuredOn, WeightKg, HeightCm, BodyFatPercent?, WaistCm?, Note?). UNIQUE (CustomerId, MeasuredOn): 1 lần đo / ngày, lưu lại cùng ngày = ghi đè (MERGE). BMI **không lưu**, Service tính. Ngoài SRS, chỉ khách xem; PT đo ở phòng theo dõi riêng (không nối dữ liệu).
 - **Màn**: 4 ô số (cân nặng, BMI + nhóm BMI châu Á: <18,5 / 18,5–22,9 / 23–24,9 / ≥25, % mỡ, vòng eo; thay đổi so với lần đầu), biểu đồ đường SVG do Service tính toạ độ (trục ngang theo ngày thật, chọn chỉ số bằng `?metric=`, không JS), form ghi lần đo (chiều cao điền sẵn lần trước), bảng lịch sử + xóa (hộp xác nhận chung của common.js). Menu khách: "Chỉ số cơ thể".
 - **Seed**: giữ mốc lịch sử 03/10 (SEED_CASES.md không đổi), thêm mục 8b "làm mới cho demo": gia hạn gói tập 21–23/10 (Bích, Quân, Mai, Hà + 12 khách thường) → Active; gói PT mới từ 26/10 (An PT Sơn 07:00, Quân PT Long 11:00 từ 02/11, Hưng & Hà gói đôi PT Trang 19:30, Mai gói PT 2 tháng nối tiếp từ 09/11); 4 buổi lẻ tuần 26/10; chỉ số cơ thể của Mai (6 lần) và An (5 lần). Khung PT công bố kéo tới 31/12. runtest / negtest / bizcheck đều qua.
+
+## Thẻ tài khoản góc phải: mã theo vai trò cho mọi màn (26/10/2026, ĐÃ CODE)
+- Dòng phụ dưới tên ở **mọi màn, mọi vai trò** = `common/_user-badge-line.jspf`: **mã theo vai trò + chữ vai trò** — `KH-1006 · Hội viên`, `PT-0005 · Huấn luyện viên`, `LT-0003 · Lễ tân`, `QL-0002 · Quản lý`, `QT-0001 · Quản trị viên`. Avatar chữ = chữ viết tắt họ + tên ("Lê Thị Thanh Tâm" → "LT"), không còn "LT"/"QL" cứng.
+- **Mã trong DB giữ nguyên** (Employees.EmployeeCode NV-xxxx, Customers.CustomerCode KH-xxxx): chỉ đổi tiền tố khi hiển thị, phần số giữ nguyên (`UserBadgeService.displayCode`). Không đổi schema, không đổi chỗ khác đang dùng NV-xxxx.
+- Luồng: `AuthFilter` (mỗi request đã đăng nhập + đã chọn vai trò) → `UserBadgeService.ensure(session)` → chỉ đọc DB (`UserBadgeDAO.findCode`) khi vai trò khác lần trước → session `userCode`, `userRoleLabel`, `userInitials`. Lỗi DB không chặn trang (thẻ chỉ hiện vai trò).
+- Đã đổi 24 màn (24 chỗ vẽ `.tb-user`, gồm màn của các bạn: manager, admin, nghỉ phép, cơ sở vật chất…): chỉ thay dòng phụ + avatar chữ cứng, giữ nguyên ảnh đại diện / link. Màn mới thêm `.tb-user` thì include file trên cho dòng phụ.
+- Bán gói PT: bỏ các dòng chữ phụ cố định (gợi ý tìm khách, hướng dẫn lịch mẫu, câu dưới tiêu đề ô sửa riêng) → nút (i) hint box chung `.pt-info` cạnh "Khách mua gói", "Lịch mẫu hằng tuần", "Từng tuần". Dòng trạng thái động (số buổi, câu dưới nút Giữ lịch) giữ lại.
+
+## Lịch dạy PT: Gỡ hết khung trống · Chép sang tuần sau · Chọn ngày (26/10/2026, ĐÃ CODE)
+- Cả 3 chỉ tạo **nháp** (thanh "Chờ công bố"); DB chỉ đổi khi PT bấm Công bố — server (`PtScheduleService.publish`) kiểm tra lại toàn bộ như cũ. Không đổi Java / DB.
+- **Gỡ hết khung trống** (`removeAllPtFree`): tích mọi ô gỡ của tuần — JSP chỉ in ô gỡ cho khung `canRemove` (Còn trống, chưa có khách, không bị đơn giữ, chưa qua) — và bỏ mọi khung nháp. Hoàn tác: "Bỏ tất cả" hoặc bấm từng thẻ. Nút chỉ hiện khi tuần có khung gỡ được.
+- **Chép sang tuần sau** (`copyPtWeekToNext`): mọi khung đang chiếm giờ của tuần (Còn trống, Có khách, Đang giữ, Tạm khóa, Nháp; trừ khung Chờ gỡ) → nháp cùng thứ, cùng giờ của tuần sau (ghi vào lưu tạm của tuần sau), rồi mở tuần sau. Tuần sau khôi phục nháp bằng `addPtDraft` nên khung trùng giờ / ngày không thêm được tự bị bỏ; toast báo "Đã chép N khung … M khung bỏ qua". Đã thử: tuần 28/12 → 04/01/2027: 20 khung chép, 5 bỏ qua, Công bố → 20 khung Còn trống.
+- **Chọn ngày**: ô date cạnh khoảng tuần (form GET `?date=…&view=…`, chọn là tự mở tuần chứa ngày đó; tắt JS có nút Xem).
+- Icon: dự án đổi `fa-*` sang SVG Lucide qua `js/icons.js` (chỉ icon đã khai báo). Thêm `copy`, `lock`, `user-plus`, `money-bill-wave`, `building-columns` (màn Bán gói PT trước đó thiếu icon nút Giữ lịch, ô người tập cùng, cách thu tiền); `icons.js?v=3`.
+- Bán gói PT, theme sáng: `common.css` tô trắng mọi h1–h3 không nằm trong `.panel/.card…` → tiêu đề trong `.sale-card` ("Từng tuần", "Gói & PT"…) mất chữ. Sửa bằng `html body.dock.pt-sale-page .content .sale-card :is(h2, h3) { color: var(--arena-ink) }`.
 
 ## Merge develop vào dev_mb1_MinhLC (26/10/2026)
 - `develop` đổi `LeaveRequests`: bỏ `LeaveDate`, thay bằng khoảng `FromDate`..`ToDate` (+ `Days`, `AssignedToEmployeeId`). 2 câu SQL của nhánh này còn đọc `LeaveDate` → màn Lịch dạy, Xử lý buổi, Bán gói PT lỗi "Hệ thống đang bận". Đã sửa:
@@ -22,10 +62,15 @@
 ## Lễ tân bán gói PT — /receptionist/pt-sales (25/10/2026, bản 2 — ĐÃ CHỐT + ĐÃ CODE)
 UC-21 bản **đơn giản hóa** (SRS cập nhật sau). Bản 2 thay bản 1 (bỏ "giờ cố định 1 giờ cho cả kỳ", bỏ "thu tiền ngay không giữ chỗ").
 
-- **Luồng 4 bước** (thanh bước trên cùng, cột phải "Đơn bán" dính khi cuộn):
+- **Đổi thứ tự 26/10 (góp ý của cô): tư vấn trước, chọn khách sau.** Lễ tân thường chưa biết tư vấn gói nào nên không bắt chọn khách trước. Bố cục kiểu máy POS: **trái** = Gói & PT → Lịch tập (chọn được khi chưa có khách, lịch chỉ xét lịch PT); **phải** "Đơn bán" = ô tìm khách (+ người tập cùng nếu gói đôi) ở trên cùng, chọn lúc nào cũng được. Chọn / đổi khách → URL đổi `customer` (`partner`) nhưng **giữ nguyên** gói, PT, ngày, lịch mẫu `t1..t5` và các buổi `sessions` (kể cả buổi sửa riêng); có khách thì lịch tính thêm giờ trùng buổi khác của khách. Nút Giữ lịch chỉ mở khi có ≥ 1 buổi **và** đủ khách (`data-customer-ready`); server vẫn chặn ở `firstProblem`. Thanh bước: 1 Gói & PT · 2 Lịch tập · 3 Khách · 4 Giữ chỗ & thu tiền.
+- **Luồng (bản 2, trước 26/10 — thứ tự cũ là Khách → Gói & PT → Lịch → Thu tiền):**
   1. **Khách** — ô tìm kiểu Google: gõ ≥ 2 ký tự → `pt-sales.js` gọi `GET /receptionist/pt-sales/customers?q=` → `PtSaleService.search` → `PtSaleDAO.searchCustomers` (tối đa 8). Khớp **tên không dấu theo thứ tự từ** ("do mai" → "Đỗ Thị Mai"), **SĐT / SĐT giám hộ**, **mã KH**. Dùng collation `Latin1_General_CI_AI` (bản `Vietnamese_CI_AI` coi ă, ê, đ là chữ riêng → "van" không khớp "Văn"). Gợi ý ghi luôn "Gói tập tới …" hoặc lý do không bán được. Chọn → `?customer=<CustomerId>`. Tắt JS: Enter → `?q=` → danh sách link.
   2. **Gói & PT** — ô gói, ô PT, ngày bắt đầu (mặc định ngày mai, tối đa +30 ngày). Gói đôi: ô tìm người tập cùng (cùng API, bỏ chính người đứng tên). Đổi lựa chọn → JS tự gửi form GET; đổi gói/PT/ngày thì bỏ giờ đã chọn.
-  3. **Lịch tập hằng tuần** (thay "giờ cố định"): bảng T2–T6 × các giờ PT đã công bố khung Free trong 14 ngày đầu kỳ. Mỗi ô "8/9" = số tuần trong kỳ thứ đó lúc giờ đó **thật sự có buổi** (cùng luật `planDays`) / tổng số tuần; tô màu đủ / ≥ 3/4 / ít / không (khóa). **Mỗi thứ chọn 1 giờ riêng** (`t1..t5`), hoặc link "Cả tuần". Chọn đủ 5 thứ → lịch từng ngày + lý do ngày không có buổi.
+  3. **Lịch tập** (bản 3, 26/10 — thay bảng "8/9 tuần"): làm theo kiểu sự kiện lặp lại của Google Calendar / đặt PT định kỳ của Mindbody, Glofox.
+     - **Lịch mẫu hằng tuần**: mỗi thứ T2–T6 chọn **Nghỉ** hoặc 1 giờ (1–5 buổi/tuần). Mẫu nhanh: T2·T4·T6, T3·T5, T2→T6, Bỏ hết. Dưới mỗi giờ: "Còn 4/9 buổi" + lý do gặp nhiều nhất viết ngắn ("Khách trùng giờ", "PT có khách"…); đủ mọi tuần thì không ghi; hết buổi → "Không còn buổi" và khóa. Rê chuột: danh sách ngày không xếp được kèm lý do đầy đủ.
+     - **Từng tuần**: tab Tuần 1…N (chấm đỏ = có ngày chưa xếp được, chấm xanh = có ngày sửa riêng), ‹ › đổi tuần. 5 ô ngày: xanh lá có buổi · vàng PT cần dời sau · đỏ chưa xếp được (kèm lý do) · xám Nghỉ.
+     - **Sửa riêng 1 buổi**: bấm ô ngày → chọn giờ khác (gồm cả khung PT mở riêng ngày đó) hoặc Không tập, chỉ ngày đó; "Về lịch mẫu" để hoàn tác.
+     - Kỹ thuật: server tính sẵn mọi ngày × giờ (`PtSaleService.buildPlan` → `PtSalePlan` JSON trong trang), `pt-sale-plan.js` ghép lịch ngay trong trình duyệt (không tải lại trang). Nút Giữ lịch gửi `sessions=2026-10-27@09:30,…`; `checkRequested` **kiểm tra lại từng buổi có khóa** bằng cùng luật `checkDay`, sai ngày nào báo đúng ngày đó. Lịch mẫu lưu trên URL (t1..t5, trống = Nghỉ); buổi sửa riêng mất khi đổi khách/gói/PT/ngày bắt đầu.
   4. **Giữ chỗ & thu tiền** — xem dưới.
 - **Giữ chỗ 15 phút** (giống mua vé): nút "Giữ lịch 15 phút" (POST `action=hold`) → trong 1 transaction có khóa PT, làm lại đủ 3 bước rồi tạo đơn **`Pending`** tại quầy (`PaymentDueAt` NULL, ca tự mở như bản 1) và đặt mọi khung của kỳ sang **`Held`** (`HeldByOrderId`, `HoldExpiresAt` = +15 phút); ngày PT chưa có khung → tạo khung `Held`. Từ lúc này lễ tân khác / PT không lấy được các khung đó (bảng tuần của họ ghi "Đang được giữ cho đơn khác"). Trang chuyển sang `?order=<OrderId>`: đồng hồ đếm ngược (common.js `data-countdown-seconds`, hết giờ tự tải lại).
   - **Thu tiền** (`action=pay`): Cash / Transfer (ô mã giao dịch chỉ hiện khi Chuyển khoản, CSS `:has`) + tích "Đã nhận đủ". Kiểm tra đơn còn giữ, chưa quá hạn → đơn `Paid` + giao dịch `Success` + Subscription + khung `Held → Booked` + Sessions. `FixedStartTime` = giờ xuất hiện nhiều nhất. Báo khách + người tập cùng + PT như bản 1.

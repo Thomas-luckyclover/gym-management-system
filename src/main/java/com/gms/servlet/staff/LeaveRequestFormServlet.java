@@ -122,7 +122,10 @@ public class LeaveRequestFormServlet extends HttpServlet {
 
         // B3: gọi Service nộp đơn
         ServiceResult<Integer> submitResult = staffLeaveService.submitLeaveRequest(
-                accountId, leaveType, leaveDate, toDate, shiftType, reason);
+                accountId, leaveType, leaveDate, toDate, shiftType, reason,
+                "true".equals(request.getParameter("acceptUnpaid")),
+                RequestUtil.getIntParam(request, "expectedAnnualDays", -1),
+                RequestUtil.getIntParam(request, "expectedUnpaidDays", -1));
 
         // B4: nếu thất bại, nạp lại form kèm thông báo lỗi và giữ lại giá trị đã nhập
         if (!submitResult.isSuccess()) {
@@ -148,7 +151,7 @@ public class LeaveRequestFormServlet extends HttpServlet {
 
         // B5: nếu thành công, gắn flash toast và redirect (PRG pattern) về lại trang hiện tại
         RequestUtil.setFlashToast(request, "success",
-                "Đã nộp đơn xin nghỉ phép thành công. Đơn đang chờ Quản lý duyệt.");
+                "Đã gửi yêu cầu nghỉ. Xem kết quả từng phần trong Đơn đã nộp.");
         RequestUtil.redirect(request, response, RequestUtil.getPathWithinApp(request));
     }
 }

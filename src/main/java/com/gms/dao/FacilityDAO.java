@@ -9,6 +9,7 @@ import java.sql.Connection;
 import java.sql.PreparedStatement;
 import java.sql.ResultSet;
 import java.sql.SQLException;
+import java.sql.Statement;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
@@ -21,36 +22,35 @@ public class FacilityDAO {
     private final EquipmentItemDAO equipmentItemDAO = new EquipmentItemDAO();
 
     /**
-     * Lấy danh sách các dòng máy khả dụng (chưa ngừng sử dụng hoàn toàn) để lễ tân chọn.
+     * Lấy danh sách các dòng máy khả dụng (chưa ngừng sử dụng hoàn toàn và IsActive = 1) để lễ tân chọn.
      */
     public List<Facility> findSelectableFacilities() throws SQLException {
         String sql = """
-            SELECT f.FacilityId, f.FacilityName, f.Category, f.Location,
+            SELECT f.FacilityId, f.FacilityName, f.Category, f.Location, f.ImageUrl, f.UnitLabel, f.IsActive,
                    ISNULL(ei_stats.TotalCount, 0) AS TotalQuantity,
                    ISNULL(ei_stats.AvailableCount, 0) AS AvailableQuantity,
-                   ISNULL(mr_stats.PendingCount, 0) AS PendingQuantity,
+                   ISNULL(ei_stats.MaintenanceCount, 0) AS PendingQuantity,
                    CASE 
-                       WHEN ISNULL(ei_stats.TotalCount, 0) = 0 THEN 'Retired'
+                       WHEN f.IsActive = 0 OR ISNULL(ei_stats.TotalCount, 0) = 0 THEN 'Retired'
                        WHEN ISNULL(ei_stats.AvailableCount, 0) > 0 THEN 'Available'
                        ELSE 'UnderMaintenance'
                    END AS ComputedStatus
             FROM Facilities f
             LEFT JOIN (
-                SELECT FacilityId,
+                SELECT ei.FacilityId,
                        COUNT(*) AS TotalCount,
-                       SUM(CASE WHEN Status = 'Available' THEN 1 ELSE 0 END) AS AvailableCount
-                FROM EquipmentItems
-                WHERE Status <> 'Retired'
-                GROUP BY FacilityId
-            ) ei_stats ON ei_stats.FacilityId = f.FacilityId
-            LEFT JOIN (
-                SELECT ei.FacilityId, COUNT(DISTINCT mr.MaintenanceRequestId) AS PendingCount
-                FROM MaintenanceRequests mr
-                JOIN EquipmentItems ei ON ei.EquipmentItemId = mr.EquipmentItemId
-                WHERE mr.Status IN ('Open', 'InProgress')
+                       SUM(CASE WHEN ei.Status = 'Available' AND active_mr.EquipmentItemId IS NULL THEN 1 ELSE 0 END) AS AvailableCount,
+                       SUM(CASE WHEN ei.Status = 'UnderMaintenance' OR active_mr.EquipmentItemId IS NOT NULL THEN 1 ELSE 0 END) AS MaintenanceCount
+                FROM EquipmentItems ei
+                LEFT JOIN (
+                    SELECT DISTINCT EquipmentItemId
+                    FROM MaintenanceRequests
+                    WHERE Status IN ('Open', 'InProgress') AND EquipmentItemId IS NOT NULL
+                ) active_mr ON active_mr.EquipmentItemId = ei.EquipmentItemId
+                WHERE ei.Status <> 'Retired'
                 GROUP BY ei.FacilityId
-            ) mr_stats ON mr_stats.FacilityId = f.FacilityId
-            WHERE ISNULL(ei_stats.TotalCount, 0) > 0
+            ) ei_stats ON ei_stats.FacilityId = f.FacilityId
+            WHERE f.IsActive = 1 AND ISNULL(ei_stats.TotalCount, 0) > 0
             ORDER BY f.FacilityName, f.FacilityId
             """;
 
@@ -66,10 +66,10 @@ public class FacilityDAO {
     }
 
     /**
-     * Đếm tổng số dòng máy theo từ khóa tìm kiếm.
+     * Đếm tổng số dòng máy theo từ khóa tìm kiếm (dành cho lễ tân: chỉ IsActive = 1).
      */
     public long countCatalog(String keyword) throws SQLException {
-        StringBuilder sql = new StringBuilder("SELECT COUNT(*) FROM Facilities f WHERE 1 = 1 ");
+        StringBuilder sql = new StringBuilder("SELECT COUNT(*) FROM Facilities f WHERE f.IsActive = 1 ");
         List<Object> parameters = new ArrayList<>();
         appendCatalogFilters(sql, parameters, keyword);
 
@@ -94,32 +94,31 @@ public class FacilityDAO {
      */
     public List<Facility> findCatalogPage(String keyword, int page, int pageSize) throws SQLException {
         StringBuilder sql = new StringBuilder("""
-            SELECT f.FacilityId, f.FacilityName, f.Category, f.Location,
+            SELECT f.FacilityId, f.FacilityName, f.Category, f.Location, f.ImageUrl, f.UnitLabel, f.IsActive,
                    ISNULL(ei_stats.TotalCount, 0) AS TotalQuantity,
                    ISNULL(ei_stats.AvailableCount, 0) AS AvailableQuantity,
-                   ISNULL(mr_stats.PendingCount, 0) AS PendingQuantity,
+                   ISNULL(ei_stats.MaintenanceCount, 0) AS PendingQuantity,
                    CASE 
-                       WHEN ISNULL(ei_stats.TotalCount, 0) = 0 THEN 'Retired'
+                       WHEN f.IsActive = 0 OR ISNULL(ei_stats.TotalCount, 0) = 0 THEN 'Retired'
                        WHEN ISNULL(ei_stats.AvailableCount, 0) > 0 THEN 'Available'
                        ELSE 'UnderMaintenance'
                    END AS ComputedStatus
             FROM Facilities f
             LEFT JOIN (
-                SELECT FacilityId,
+                SELECT ei.FacilityId,
                        COUNT(*) AS TotalCount,
-                       SUM(CASE WHEN Status = 'Available' THEN 1 ELSE 0 END) AS AvailableCount
-                FROM EquipmentItems
-                WHERE Status <> 'Retired'
-                GROUP BY FacilityId
-            ) ei_stats ON ei_stats.FacilityId = f.FacilityId
-            LEFT JOIN (
-                SELECT ei.FacilityId, COUNT(DISTINCT mr.MaintenanceRequestId) AS PendingCount
-                FROM MaintenanceRequests mr
-                JOIN EquipmentItems ei ON ei.EquipmentItemId = mr.EquipmentItemId
-                WHERE mr.Status IN ('Open', 'InProgress')
+                       SUM(CASE WHEN ei.Status = 'Available' AND active_mr.EquipmentItemId IS NULL THEN 1 ELSE 0 END) AS AvailableCount,
+                       SUM(CASE WHEN ei.Status = 'UnderMaintenance' OR active_mr.EquipmentItemId IS NOT NULL THEN 1 ELSE 0 END) AS MaintenanceCount
+                FROM EquipmentItems ei
+                LEFT JOIN (
+                    SELECT DISTINCT EquipmentItemId
+                    FROM MaintenanceRequests
+                    WHERE Status IN ('Open', 'InProgress') AND EquipmentItemId IS NOT NULL
+                ) active_mr ON active_mr.EquipmentItemId = ei.EquipmentItemId
+                WHERE ei.Status <> 'Retired'
                 GROUP BY ei.FacilityId
-            ) mr_stats ON mr_stats.FacilityId = f.FacilityId
-            WHERE 1 = 1 
+            ) ei_stats ON ei_stats.FacilityId = f.FacilityId
+            WHERE f.IsActive = 1 
             """);
 
         List<Object> parameters = new ArrayList<>();
@@ -166,6 +165,132 @@ public class FacilityDAO {
 
     public List<Facility> findCatalogPage(String keyword, Facility.Category category, Facility.Status status, int page, int pageSize) throws SQLException {
         return findCatalogPage(keyword, page, pageSize);
+    }
+
+    /**
+     * Lấy toàn bộ danh sách dòng máy (bao gồm cả ẩn/ngừng hoạt động) phục vụ màn hình Quản lý của Manager.
+     */
+    public List<Facility> findAllForManagement() throws SQLException {
+        String sql = """
+            SELECT f.FacilityId, f.FacilityName, f.Category, f.Location, f.ImageUrl, f.UnitLabel, f.IsActive,
+                   ISNULL(ei_stats.TotalCount, 0) AS TotalQuantity,
+                   ISNULL(ei_stats.AvailableCount, 0) AS AvailableQuantity,
+                   ISNULL(ei_stats.MaintenanceCount, 0) AS PendingQuantity,
+                   CASE 
+                       WHEN f.IsActive = 0 OR ISNULL(ei_stats.TotalCount, 0) = 0 THEN 'Retired'
+                       WHEN ISNULL(ei_stats.AvailableCount, 0) > 0 THEN 'Available'
+                       ELSE 'UnderMaintenance'
+                   END AS ComputedStatus
+            FROM Facilities f
+            LEFT JOIN (
+                SELECT ei.FacilityId,
+                       COUNT(*) AS TotalCount,
+                       SUM(CASE WHEN ei.Status = 'Available' AND active_mr.EquipmentItemId IS NULL THEN 1 ELSE 0 END) AS AvailableCount,
+                       SUM(CASE WHEN ei.Status = 'UnderMaintenance' OR active_mr.EquipmentItemId IS NOT NULL THEN 1 ELSE 0 END) AS MaintenanceCount
+                FROM EquipmentItems ei
+                LEFT JOIN (
+                    SELECT DISTINCT EquipmentItemId
+                    FROM MaintenanceRequests
+                    WHERE Status IN ('Open', 'InProgress') AND EquipmentItemId IS NOT NULL
+                ) active_mr ON active_mr.EquipmentItemId = ei.EquipmentItemId
+                WHERE ei.Status <> 'Retired'
+                GROUP BY ei.FacilityId
+            ) ei_stats ON ei_stats.FacilityId = f.FacilityId
+            ORDER BY f.IsActive DESC, f.FacilityName, f.FacilityId
+            """;
+
+        List<Facility> facilities = new ArrayList<>();
+        try (Connection connection = DBContext.getConnection();
+             PreparedStatement statement = connection.prepareStatement(sql);
+             ResultSet resultSet = statement.executeQuery()) {
+            while (resultSet.next()) {
+                facilities.add(mapResultSetToFacility(resultSet));
+            }
+        }
+
+        if (!facilities.isEmpty()) {
+            Map<Integer, List<EquipmentItem>> itemsMap = equipmentItemDAO.findAllGroupedByFacility();
+            for (Facility f : facilities) {
+                List<EquipmentItem> items = itemsMap.get(f.getFacilityId());
+                if (items != null) {
+                    f.setItems(items);
+                }
+            }
+        }
+        return facilities;
+    }
+
+    /**
+     * Cập nhật trạng thái Facility (hỗ trợ tương thích ngược).
+     */
+    public boolean updateStatus(Connection connection, int facilityId, Facility.Status status) throws SQLException {
+        return true;
+    }
+
+    /**
+     * Thêm mới một nhóm máy / cơ sở vật chất (Manager).
+     */
+    public int create(Facility facility) throws SQLException {
+        String sql = """
+            INSERT INTO Facilities (FacilityName, Category, Location, ImageUrl, UnitLabel, IsActive)
+            VALUES (?, ?, ?, ?, ?, ?)
+            """;
+
+        try (Connection connection = DBContext.getConnection();
+             PreparedStatement ps = connection.prepareStatement(sql, Statement.RETURN_GENERATED_KEYS)) {
+            ps.setString(1, facility.getFacilityName());
+            ps.setString(2, facility.getCategory() != null ? facility.getCategory().getDbValue() : Facility.Category.MACHINES.getDbValue());
+            ps.setString(3, facility.getLocation());
+            ps.setString(4, facility.getImageUrl());
+            ps.setString(5, facility.getUnitLabel() != null && !facility.getUnitLabel().isBlank() ? facility.getUnitLabel() : "máy");
+            ps.setBoolean(6, facility.isActive());
+
+            int affected = ps.executeUpdate();
+            if (affected > 0) {
+                try (ResultSet rs = ps.getGeneratedKeys()) {
+                    if (rs.next()) {
+                        return rs.getInt(1);
+                    }
+                }
+            }
+        }
+        return 0;
+    }
+
+    /**
+     * Cập nhật thông tin một nhóm máy (Manager).
+     */
+    public boolean update(Facility facility) throws SQLException {
+        String sql = """
+            UPDATE Facilities
+            SET FacilityName = ?, Category = ?, Location = ?, ImageUrl = ?, UnitLabel = ?, IsActive = ?
+            WHERE FacilityId = ?
+            """;
+
+        try (Connection connection = DBContext.getConnection();
+             PreparedStatement ps = connection.prepareStatement(sql)) {
+            ps.setString(1, facility.getFacilityName());
+            ps.setString(2, facility.getCategory() != null ? facility.getCategory().getDbValue() : Facility.Category.MACHINES.getDbValue());
+            ps.setString(3, facility.getLocation());
+            ps.setString(4, facility.getImageUrl());
+            ps.setString(5, facility.getUnitLabel() != null && !facility.getUnitLabel().isBlank() ? facility.getUnitLabel() : "máy");
+            ps.setBoolean(6, facility.isActive());
+            ps.setInt(7, facility.getFacilityId());
+            return ps.executeUpdate() > 0;
+        }
+    }
+
+    /**
+     * Ẩn hoặc Hiện một nhóm máy (IsActive: 1 = hoạt động, 0 = ẩn/tạm dừng).
+     */
+    public boolean toggleActive(int facilityId, boolean isActive) throws SQLException {
+        String sql = "UPDATE Facilities SET IsActive = ? WHERE FacilityId = ?";
+        try (Connection connection = DBContext.getConnection();
+             PreparedStatement ps = connection.prepareStatement(sql)) {
+            ps.setBoolean(1, isActive);
+            ps.setInt(2, facilityId);
+            return ps.executeUpdate() > 0;
+        }
     }
 
     private void appendCatalogFilters(StringBuilder sql, List<Object> parameters, String keyword) {
@@ -222,31 +347,30 @@ public class FacilityDAO {
      */
     public Facility findById(Connection connection, int facilityId) throws SQLException {
         String sql = """
-            SELECT f.FacilityId, f.FacilityName, f.Category, f.Location,
+            SELECT f.FacilityId, f.FacilityName, f.Category, f.Location, f.ImageUrl, f.UnitLabel, f.IsActive,
                    ISNULL(ei_stats.TotalCount, 0) AS TotalQuantity,
                    ISNULL(ei_stats.AvailableCount, 0) AS AvailableQuantity,
-                   ISNULL(mr_stats.PendingCount, 0) AS PendingQuantity,
+                   ISNULL(ei_stats.MaintenanceCount, 0) AS PendingQuantity,
                    CASE 
-                       WHEN ISNULL(ei_stats.TotalCount, 0) = 0 THEN 'Retired'
+                       WHEN f.IsActive = 0 OR ISNULL(ei_stats.TotalCount, 0) = 0 THEN 'Retired'
                        WHEN ISNULL(ei_stats.AvailableCount, 0) > 0 THEN 'Available'
                        ELSE 'UnderMaintenance'
                    END AS ComputedStatus
             FROM Facilities f
             LEFT JOIN (
-                SELECT FacilityId,
+                SELECT ei.FacilityId,
                        COUNT(*) AS TotalCount,
-                       SUM(CASE WHEN Status = 'Available' THEN 1 ELSE 0 END) AS AvailableCount
-                FROM EquipmentItems
-                WHERE Status <> 'Retired'
-                GROUP BY FacilityId
-            ) ei_stats ON ei_stats.FacilityId = f.FacilityId
-            LEFT JOIN (
-                SELECT ei.FacilityId, COUNT(DISTINCT mr.MaintenanceRequestId) AS PendingCount
-                FROM MaintenanceRequests mr
-                JOIN EquipmentItems ei ON ei.EquipmentItemId = mr.EquipmentItemId
-                WHERE mr.Status IN ('Open', 'InProgress')
+                       SUM(CASE WHEN ei.Status = 'Available' AND active_mr.EquipmentItemId IS NULL THEN 1 ELSE 0 END) AS AvailableCount,
+                       SUM(CASE WHEN ei.Status = 'UnderMaintenance' OR active_mr.EquipmentItemId IS NOT NULL THEN 1 ELSE 0 END) AS MaintenanceCount
+                FROM EquipmentItems ei
+                LEFT JOIN (
+                    SELECT DISTINCT EquipmentItemId
+                    FROM MaintenanceRequests
+                    WHERE Status IN ('Open', 'InProgress') AND EquipmentItemId IS NOT NULL
+                ) active_mr ON active_mr.EquipmentItemId = ei.EquipmentItemId
+                WHERE ei.Status <> 'Retired'
                 GROUP BY ei.FacilityId
-            ) mr_stats ON mr_stats.FacilityId = f.FacilityId
+            ) ei_stats ON ei_stats.FacilityId = f.FacilityId
             WHERE f.FacilityId = ?
             """;
 
@@ -262,10 +386,28 @@ public class FacilityDAO {
     }
 
     /**
-     * Phương thức tương thích ngược khi cập nhật trạng thái dòng máy.
+     * Lấy thông tin một dòng máy theo ID (tự quản lý connection).
      */
-    public boolean updateStatus(Connection connection, int facilityId, Facility.Status status) throws SQLException {
-        return true;
+    public Facility findById(int facilityId) throws SQLException {
+        try (Connection conn = DBContext.getConnection()) {
+            return findById(conn, facilityId);
+        }
+    }
+
+    /**
+     * Lấy danh sách các vị trí / khu vực duy nhất đang có trong hệ thống để phục vụ lọc thẻ tag.
+     */
+    public List<String> findDistinctLocations() throws SQLException {
+        String sql = "SELECT DISTINCT Location FROM Facilities WHERE Location IS NOT NULL AND LTRIM(RTRIM(Location)) <> '' ORDER BY Location";
+        List<String> list = new ArrayList<>();
+        try (Connection conn = DBContext.getConnection();
+             PreparedStatement ps = conn.prepareStatement(sql);
+             ResultSet rs = ps.executeQuery()) {
+            while (rs.next()) {
+                list.add(rs.getString("Location"));
+            }
+        }
+        return list;
     }
 
     private Facility mapResultSetToFacility(ResultSet resultSet) throws SQLException {
@@ -278,7 +420,7 @@ public class FacilityDAO {
             status = availableQuantity > 0 ? Facility.Status.AVAILABLE : Facility.Status.UNDER_MAINTENANCE;
         }
 
-        return new Facility(
+        Facility facility = new Facility(
                 resultSet.getInt("FacilityId"),
                 resultSet.getString("FacilityName"),
                 Facility.Category.fromDbValue(resultSet.getString("Category")),
@@ -288,5 +430,9 @@ public class FacilityDAO {
                 pendingQuantity,
                 availableQuantity
         );
+        facility.setImageUrl(resultSet.getString("ImageUrl"));
+        facility.setUnitLabel(resultSet.getString("UnitLabel"));
+        facility.setActive(resultSet.getBoolean("IsActive"));
+        return facility;
     }
 }

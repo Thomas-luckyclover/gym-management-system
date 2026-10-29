@@ -1,14 +1,11 @@
 package com.gms.dao;
 
-import com.gms.dto.EligibleReviewer;
 import com.gms.dto.LeaveBalance;
 import com.gms.dto.LeaveEmployeeView;
 import com.gms.dto.LeaveRequestFilter;
 import com.gms.dto.LeaveRequestRow;
 import com.gms.dto.LeaveReviewDetail;
-import com.gms.dto.SessionConflict;
 import com.gms.entity.LeaveRequest;
-import com.gms.entity.LeaveRequestTransfer;
 import com.gms.util.DBContext;
 import com.gms.util.DateTimeUtil;
 import com.gms.util.SqlUtil;
@@ -30,55 +27,21 @@ public class LeaveRequestDAO {
 
     /** Danh sách cột LeaveRequests dùng chung cho mọi câu SELECT có map sang entity. */
     private static final String REQUEST_COLUMNS
-            = "LeaveRequestId, EmployeeId, ReviewedByEmployeeId, AssignedToEmployeeId, LeaveType, "
+            = "LeaveRequestId, EmployeeId, ReviewedByEmployeeId, LeaveType, "
             + "FromDate, ToDate, Days, ShiftType, Reason, Status, RejectReason, "
-            + "SubmittedAt, ReviewedAt, ReminderSentAt ";
+            + "SubmittedAt, ReviewedAt, ReminderSentAt, LeaveGroupId ";
 
     private static final String SELECT_COLUMNS = "SELECT " + REQUEST_COLUMNS + "FROM LeaveRequests ";
 
-    /** Cùng thông tin đơn/người nộp/người xử lý cho bảng theo đơn và lịch sử trong nhóm nhân viên. */
+    /** Thông tin đơn và người nộp cho danh sách; tên người xử lý chỉ đọc ở findReviewDetail. */
     private static final String MANAGER_REQUEST_SELECT = "SELECT "
-            + "lr.LeaveRequestId, lr.EmployeeId, lr.ReviewedByEmployeeId, lr.AssignedToEmployeeId, "
+            + "lr.LeaveRequestId, lr.EmployeeId, lr.ReviewedByEmployeeId, "
             + "lr.LeaveType, lr.FromDate, lr.ToDate, lr.Days, lr.ShiftType, lr.Reason, lr.Status, lr.RejectReason, "
-            + "lr.SubmittedAt, lr.ReviewedAt, lr.ReminderSentAt, e.EmployeeCode, e.Position, "
-            + "p.FullName AS EmployeeName, p.Avatar, rp.FullName AS ReviewerName, ap.FullName AS AssignedToName "
+            + "lr.SubmittedAt, lr.ReviewedAt, lr.ReminderSentAt, lr.LeaveGroupId, e.EmployeeCode, e.Position, "
+            + "p.FullName AS EmployeeName, p.Avatar "
             + "FROM LeaveRequests lr "
             + "JOIN Employees e ON e.EmployeeId = lr.EmployeeId "
-            + "JOIN Persons p ON p.PersonId = e.PersonId "
-            + "LEFT JOIN Employees re ON re.EmployeeId = lr.ReviewedByEmployeeId "
-            + "LEFT JOIN Persons rp ON rp.PersonId = re.PersonId "
-            + "LEFT JOIN Employees ae ON ae.EmployeeId = lr.AssignedToEmployeeId "
-            + "LEFT JOIN Persons ap ON ap.PersonId = ae.PersonId ";
-
-    /**
-     * Tìm một đơn nghỉ phép theo mã đơn.
-     *
-     * @param leaveRequestId mã đơn LeaveRequests.LeaveRequestId
-     * @return entity LeaveRequest, hoặc null nếu không tìm thấy
-     * @throws SQLException lỗi kết nối hoặc lỗi câu SQL
-     */
-    public LeaveRequest findById(int leaveRequestId) throws SQLException {
-        // B1: câu SQL chỉ lấy đúng 1 đơn theo khóa chính
-        String sql = SELECT_COLUMNS
-                + "WHERE LeaveRequestId = ?";
-
-        // B2: mở kết nối, truyền tham số và đọc kết quả
-        try (Connection connection = DBContext.getConnection();
-                PreparedStatement statement
-                = connection.prepareStatement(sql)) {
-
-            statement.setInt(1, leaveRequestId);
-
-            try (ResultSet resultSet = statement.executeQuery()) {
-                if (resultSet.next()) {
-                    return mapResultSetToLeaveRequest(resultSet);
-                }
-            }
-        }
-
-        // B3: không có dòng nào khớp
-        return null;
-    }
+            + "JOIN Persons p ON p.PersonId = e.PersonId ";
 
     /** Đọc lại đơn trong transaction quyết định; giữ khóa đến khi commit/rollback. */
     public LeaveRequest findById(Connection connection, int leaveRequestId) throws SQLException {
@@ -94,7 +57,7 @@ public class LeaveRequestDAO {
 
     /**
      * Tuần tự hóa quyết định BF-05 trên mọi khoảng ngày và quỹ phép.
-     * Khóa bảng phù hợp quy mô đồ án; cả chuyển/rút/nộp đơn đều dùng cùng thứ tự khóa.
+     * Khóa bảng phù hợp quy mô đồ án; duyệt/từ chối/rút/nộp đơn dùng cùng thứ tự khóa.
      */
     public void lockDecisionScope(Connection connection) throws SQLException {
         try (PreparedStatement statement = connection.prepareStatement(
@@ -115,64 +78,66 @@ public class LeaveRequestDAO {
         }
     }
 
+    /** Phần WHERE và các giá trị ứng với dấu ? theo đúng thứ tự; không chứa lệnh thực thi SQL. */
     private static class FilterSql {
         final String whereClause;
-        final List<Object> params;
-        FilterSql(String whereClause, List<Object> params) {
+        final List<Object> parameters;
+        FilterSql(String whereClause, List<Object> parameters) {
             this.whereClause = whereClause;
-            this.params = params;
+            this.parameters = parameters;
         }
     }
 
+    /** Ghép điều kiện có được chọn; các giá trị vẫn truyền qua PreparedStatement, không nối vào SQL. */
     private FilterSql buildFilterSql(LeaveRequestFilter filter, boolean includeStatus) {
         StringBuilder where = new StringBuilder(" WHERE e.Position IN ('PT', 'Receptionist') ");
-        List<Object> params = new ArrayList<>();
+        List<Object> parameters = new ArrayList<>();
 
         if (filter != null) {
             if (includeStatus && filter.getStatus() != null) {
                 where.append(" AND lr.Status = ? ");
-                params.add(filter.getStatus().getDbValue());
+                parameters.add(filter.getStatus().getDbValue());
             }
             if (filter.getKeyword() != null && !filter.getKeyword().isBlank()) {
                 where.append(" AND (p.FullName COLLATE Vietnamese_CI_AI LIKE ? ESCAPE '\\' "
                         + "OR p.FullName COLLATE Latin1_General_100_CI_AI LIKE ? ESCAPE '\\' "
                         + "OR e.EmployeeCode LIKE ? ESCAPE '\\') ");
-                String kw = SqlUtil.toContainsPattern(filter.getKeyword());
-                params.add(kw);
-                params.add(kw);
-                params.add(kw);
+                String keywordPattern = SqlUtil.toContainsPattern(filter.getKeyword());
+                parameters.add(keywordPattern);
+                parameters.add(keywordPattern);
+                parameters.add(keywordPattern);
             }
             if (filter.getPosition() != null && !filter.getPosition().isBlank()) {
                 where.append(" AND e.Position = ? ");
-                params.add(filter.getPosition());
+                parameters.add(filter.getPosition());
             }
             if (filter.getLeaveType() != null) {
                 where.append(" AND lr.LeaveType = ? ");
-                params.add(filter.getLeaveType().getDbValue());
+                parameters.add(filter.getLeaveType().getDbValue());
             }
             // Lọc lúc gửi đơn: từ 00:00 ngày đầu đến trước 00:00 ngày sau ngày cuối.
             if (filter.getFromDate() != null) {
                 where.append(" AND lr.SubmittedAt >= ? ");
-                params.add(java.sql.Date.valueOf(filter.getFromDate()));
+                parameters.add(java.sql.Date.valueOf(filter.getFromDate()));
             }
             if (filter.getToDate() != null) {
                 where.append(" AND lr.SubmittedAt < DATEADD(DAY, 1, CAST(? AS date)) ");
-                params.add(java.sql.Date.valueOf(filter.getToDate()));
+                parameters.add(java.sql.Date.valueOf(filter.getToDate()));
             }
         }
-        return new FilterSql(where.toString(), params);
+        return new FilterSql(where.toString(), parameters);
     }
 
-    /** Khi chọn ngày, chỉ giữ nhân viên có đơn khớp toàn bộ bộ lọc; không chọn ngày thì giữ cả người chưa có đơn. */
+    /** Lọc ngày/loại nghỉ thì chỉ lấy nhân viên có đơn khớp; không lọc đơn thì giữ cả người chưa có đơn. */
     private FilterSql buildEmployeeFilterSql(LeaveRequestFilter filter) {
         if (filter == null) {
             return buildFilterSql(null, false);
         }
-        if (filter.getFromDate() != null || filter.getToDate() != null) {
+        if (filter.getFromDate() != null || filter.getToDate() != null || filter.getLeaveType() != null) {
             // EXISTS kiểm tra có ít nhất một đơn phù hợp, dùng cùng điều kiện với bảng đơn bên trong.
             FilterSql requestFilter = buildFilterSql(filter, true);
             return new FilterSql(" WHERE EXISTS (SELECT 1 FROM LeaveRequests lr "
-                    + requestFilter.whereClause + " AND lr.EmployeeId = e.EmployeeId) ", requestFilter.params);
+                    + requestFilter.whereClause + " AND lr.EmployeeId = e.EmployeeId) ", requestFilter.parameters);
         }
         LeaveRequestFilter employeeFilter = new LeaveRequestFilter(null, filter.getKeyword(), filter.getPosition(),
                 null, null, null);
@@ -186,7 +151,7 @@ public class LeaveRequestDAO {
                 + employeeFilter.whereClause;
         try (Connection connection = DBContext.getConnection();
                 PreparedStatement statement = connection.prepareStatement(sql)) {
-            bindFilterParameters(statement, employeeFilter.params, 1);
+            bindFilterParameters(statement, employeeFilter.parameters, 1);
             try (ResultSet resultSet = statement.executeQuery()) {
                 return resultSet.next() ? resultSet.getInt(1) : 0;
             }
@@ -217,7 +182,7 @@ public class LeaveRequestDAO {
         try (Connection connection = DBContext.getConnection();
                 PreparedStatement statement = connection.prepareStatement(sql)) {
             statement.setDate(1, java.sql.Date.valueOf(DateTimeUtil.today()));
-            int paramIndex = bindFilterParameters(statement, employeeFilter.params, 2);
+            int paramIndex = bindFilterParameters(statement, employeeFilter.parameters, 2);
             statement.setInt(paramIndex++, offset);
             statement.setInt(paramIndex, pageSize);
             try (ResultSet resultSet = statement.executeQuery()) {
@@ -250,15 +215,19 @@ public class LeaveRequestDAO {
         return index;
     }
 
-    /** Đếm từng đơn cho tab Chờ duyệt/Đã duyệt/Từ chối, áp dụng đầy đủ bộ lọc. */
+    /** Đếm hàng (một đợt hoặc một đơn độc lập) cho các tab trạng thái, áp dụng đầy đủ bộ lọc. */
     public int countRequests(LeaveRequestFilter filter) throws SQLException {
         FilterSql requestFilter = buildFilterSql(filter, true);
-        String sql = "SELECT COUNT(*) FROM LeaveRequests lr "
+        String sql = "SELECT COUNT(*) FROM (SELECT lr.EmployeeId, "
+                + "COALESCE(CONVERT(nvarchar(36), lr.LeaveGroupId), CONVERT(nvarchar(36), lr.LeaveRequestId)) AS GroupKey "
+                + "FROM LeaveRequests lr "
                 + "JOIN Employees e ON e.EmployeeId = lr.EmployeeId "
-                + "JOIN Persons p ON p.PersonId = e.PersonId " + requestFilter.whereClause;
+                + "JOIN Persons p ON p.PersonId = e.PersonId " + requestFilter.whereClause
+                + " GROUP BY lr.EmployeeId, COALESCE(CONVERT(nvarchar(36), lr.LeaveGroupId), "
+                + "CONVERT(nvarchar(36), lr.LeaveRequestId))) groupedRequests";
         try (Connection connection = DBContext.getConnection();
                 PreparedStatement statement = connection.prepareStatement(sql)) {
-            bindFilterParameters(statement, requestFilter.params, 1);
+            bindFilterParameters(statement, requestFilter.parameters, 1);
             try (ResultSet resultSet = statement.executeQuery()) {
                 return resultSet.next() ? resultSet.getInt(1) : 0;
             }
@@ -266,7 +235,7 @@ public class LeaveRequestDAO {
     }
 
     /**
-     * Phân trang từng đơn tại SQL. Pending: sắp nghỉ hôm nay/ngày mai trước, sau đó nộp trước xếp trước.
+     * Phân trang theo đợt/đơn độc lập tại SQL. Pending: sắp nghỉ hôm nay/ngày mai trước, sau đó nộp trước xếp trước.
      * Đơn đã xử lý: lần xử lý mới nhất trước. Bộ lọc theo ngày gửi đơn, tính cả hai biên.
      */
     public List<LeaveRequestRow> findRequestPage(LeaveRequestFilter filter, int offset, int pageSize,
@@ -278,11 +247,17 @@ public class LeaveRequestDAO {
             orderBy = " ORDER BY CASE WHEN lr.FromDate BETWEEN ? AND ? THEN 0 ELSE 1 END, "
                     + "lr.SubmittedAt ASC, lr.LeaveRequestId ASC ";
         }
-        String sql = MANAGER_REQUEST_SELECT + requestFilter.whereClause + orderBy
-                + "OFFSET ? ROWS FETCH NEXT ? ROWS ONLY";
+        // Chọn một đơn phù hợp làm đại diện cho mỗi đợt trước khi phân trang.
+        String sql = "WITH FilteredRequests AS (SELECT lr.*, ROW_NUMBER() OVER (PARTITION BY lr.EmployeeId, "
+                + "COALESCE(CONVERT(nvarchar(36), lr.LeaveGroupId), CONVERT(nvarchar(36), lr.LeaveRequestId)) "
+                + "ORDER BY lr.FromDate, lr.LeaveRequestId) AS GroupRow "
+                + "FROM LeaveRequests lr JOIN Employees e ON e.EmployeeId = lr.EmployeeId "
+                + "JOIN Persons p ON p.PersonId = e.PersonId " + requestFilter.whereClause + ") "
+                + MANAGER_REQUEST_SELECT.replace("FROM LeaveRequests lr", "FROM FilteredRequests lr")
+                + "WHERE lr.GroupRow = 1 " + orderBy + "OFFSET ? ROWS FETCH NEXT ? ROWS ONLY";
         try (Connection connection = DBContext.getConnection();
                 PreparedStatement statement = connection.prepareStatement(sql)) {
-            int paramIndex = bindFilterParameters(statement, requestFilter.params, 1);
+            int paramIndex = bindFilterParameters(statement, requestFilter.parameters, 1);
             if (isPendingTab) {
                 LocalDate today = DateTimeUtil.today();
                 statement.setDate(paramIndex++, java.sql.Date.valueOf(today));
@@ -300,7 +275,7 @@ public class LeaveRequestDAO {
         if (employeeIds.isEmpty()) {
             return new ArrayList<>();
         }
-        FilterSql fs = buildFilterSql(filter, true);
+        FilterSql requestFilter = buildFilterSql(filter, true);
         StringBuilder employeeIdsSql = new StringBuilder();
         for (int index = 0; index < employeeIds.size(); index++) {
             if (index > 0) {
@@ -308,7 +283,7 @@ public class LeaveRequestDAO {
             }
             employeeIdsSql.append("?");
         }
-        String sql = MANAGER_REQUEST_SELECT + fs.whereClause
+        String sql = MANAGER_REQUEST_SELECT + requestFilter.whereClause
                 + " AND e.EmployeeId IN (" + employeeIdsSql + ") "
                 + "ORDER BY "
                 + "  CASE WHEN lr.Status = 'Pending' AND lr.FromDate >= ? THEN 0 "
@@ -319,7 +294,7 @@ public class LeaveRequestDAO {
         try (Connection connection = DBContext.getConnection();
                 PreparedStatement statement = connection.prepareStatement(sql)) {
 
-            int paramIndex = bindFilterParameters(statement, fs.params, 1);
+            int paramIndex = bindFilterParameters(statement, requestFilter.parameters, 1);
             for (Integer employeeId : employeeIds) {
                 statement.setInt(paramIndex++, employeeId);
             }
@@ -340,28 +315,14 @@ public class LeaveRequestDAO {
                         resultSet.getString("EmployeeCode"),
                         resultSet.getString("EmployeeName"),
                         resultSet.getString("Position"),
-                        resultSet.getString("Avatar"),
-                        resultSet.getString("ReviewerName"));
+                        resultSet.getString("Avatar"));
 
-                row.setAssignedToName(resultSet.getString("AssignedToName"));
-                boolean canAct = false;
-                if (lr.isPending() && currentManagerEmployeeId != null) {
-                    if (lr.getAssignedToEmployeeId() == null) {
-                        canAct = true;
-                    } else if (lr.getAssignedToEmployeeId().equals(currentManagerEmployeeId)) {
-                        canAct = true;
-                    }
-                }
-                row.setCanAct(canAct);
+                row.setCanAct(lr.isPending() && currentManagerEmployeeId != null);
                 rows.add(row);
             }
         }
 
         return rows;
-    }
-
-    public Map<String, Integer> getStatusCounts() throws SQLException {
-        return getStatusCounts(null);
     }
 
     public Map<String, Integer> getStatusCounts(LeaveRequestFilter filter) throws SQLException {
@@ -370,25 +331,18 @@ public class LeaveRequestDAO {
         counts.put(LeaveRequest.Status.APPROVED.getDbValue(), 0);
         counts.put(LeaveRequest.Status.REJECTED.getDbValue(), 0);
 
-        FilterSql fs = buildFilterSql(filter, false);
+        FilterSql requestFilter = buildFilterSql(filter, false);
         String sql = "SELECT lr.Status, COUNT(*) AS Total "
                 + "FROM LeaveRequests lr "
                 + "  JOIN Employees e ON e.EmployeeId = lr.EmployeeId "
                 + "  JOIN Persons p ON p.PersonId = e.PersonId "
-                + fs.whereClause
+                + requestFilter.whereClause
                 + "GROUP BY lr.Status";
 
         try (Connection connection = DBContext.getConnection();
                 PreparedStatement statement = connection.prepareStatement(sql)) {
 
-            for (int i = 0; i < fs.params.size(); i++) {
-                Object p = fs.params.get(i);
-                if (p instanceof java.sql.Date) {
-                    statement.setDate(i + 1, (java.sql.Date) p);
-                } else {
-                    statement.setString(i + 1, (String) p);
-                }
-            }
+            bindFilterParameters(statement, requestFilter.parameters, 1);
 
             try (ResultSet resultSet = statement.executeQuery()) {
                 while (resultSet.next()) {
@@ -401,27 +355,20 @@ public class LeaveRequestDAO {
         return counts;
     }
 
-    public LeaveReviewDetail findReviewDetail(int leaveRequestId) throws SQLException {
-        return findReviewDetail(leaveRequestId, null);
-    }
-
     public LeaveReviewDetail findReviewDetail(int leaveRequestId, Integer currentManagerEmployeeId) throws SQLException {
         String sql = "SELECT lr.LeaveRequestId, lr.EmployeeId, "
-                + "lr.ReviewedByEmployeeId, lr.AssignedToEmployeeId, lr.LeaveType, "
+                + "lr.ReviewedByEmployeeId, lr.LeaveType, "
                 + "lr.FromDate, lr.ToDate, lr.Days, "
                 + "lr.ShiftType, lr.Reason, lr.Status, lr.RejectReason, "
-                + "lr.SubmittedAt, lr.ReviewedAt, lr.ReminderSentAt, "
+                + "lr.SubmittedAt, lr.ReviewedAt, lr.ReminderSentAt, lr.LeaveGroupId, "
                 + "e.EmployeeCode, e.Position, "
                 + "p.FullName AS EmployeeName, p.Avatar, "
-                + "rp.FullName AS ReviewerName, "
-                + "ap.FullName AS AssignedToName "
+                + "rp.FullName AS ReviewerName "
                 + "FROM LeaveRequests lr "
                 + "JOIN Employees e ON e.EmployeeId = lr.EmployeeId "
                 + "JOIN Persons p ON p.PersonId = e.PersonId "
                 + "LEFT JOIN Employees re ON re.EmployeeId = lr.ReviewedByEmployeeId "
                 + "LEFT JOIN Persons rp ON rp.PersonId = re.PersonId "
-                + "LEFT JOIN Employees ae ON ae.EmployeeId = lr.AssignedToEmployeeId "
-                + "LEFT JOIN Persons ap ON ap.PersonId = ae.PersonId "
                 + "WHERE lr.LeaveRequestId = ?";
 
         try (Connection connection = DBContext.getConnection();
@@ -440,45 +387,13 @@ public class LeaveRequestDAO {
                             resultSet.getString("Avatar"),
                             resultSet.getString("ReviewerName"));
 
-                    detail.setAssignedToEmployeeId(lr.getAssignedToEmployeeId());
-                    detail.setAssignedToName(resultSet.getString("AssignedToName"));
-
-                    boolean canAct = false;
-                    if (lr.isPending() && currentManagerEmployeeId != null) {
-                        if (lr.getAssignedToEmployeeId() == null) {
-                            canAct = true;
-                        } else if (currentManagerEmployeeId != null && lr.getAssignedToEmployeeId().equals(currentManagerEmployeeId)) {
-                            canAct = true;
-                        }
-                    }
-                    detail.setCanAct(canAct);
+                    detail.setCanAct(lr.isPending() && currentManagerEmployeeId != null);
                     return detail;
                 }
             }
         }
 
         return null;
-    }
-
-    /**
-     * Đếm số nhân viên theo chức vụ còn trực ca trong ngày sau khi trừ các đơn nghỉ Approved.
-     * Dùng để kiểm tra min-staffing trước khi Manager duyệt thêm (CBR-88, CBR-90, BR-14).
-     *
-     * @param leaveDate ngày nghỉ cần kiểm tra
-     * @param shiftType ca cần kiểm tra (Morning/Afternoon/FullDay)
-     * @param position  chức vụ (PT/Receptionist)
-     * @return số nhân viên sẽ còn trực nếu đơn này được duyệt
-     * @throws SQLException lỗi kết nối hoặc lỗi câu SQL
-     */
-    public int countOnDutyAfterApproval(
-            LocalDate leaveDate,
-            String shiftType,
-            String position,
-            int excludeLeaveRequestId
-    ) throws SQLException {
-        try (Connection connection = DBContext.getConnection()) {
-            return countOnDutyAfterApproval(connection, leaveDate, shiftType, position, excludeLeaveRequestId);
-        }
     }
 
     /**
@@ -492,9 +407,15 @@ public class LeaveRequestDAO {
             String position,
             int excludeLeaveRequestId
     ) throws SQLException {
+        return Math.max(0, countOnDuty(connection, leaveDate, shiftType, position, excludeLeaveRequestId) - 1);
+    }
+
+    /** Quân số hiện tại, chưa trừ người nộp; FullDay lấy ca ít người hơn. */
+    public int countOnDuty(Connection connection, LocalDate leaveDate, String shiftType,
+            String position, int excludeLeaveRequestId) throws SQLException {
         // B1: Neu don xin nghi Ca ngay (FullDay) -> kiem tra doc lap ca Sang va ca Chieu,
         // lay moc quan so thap nhat (Math.min) theo dung DBR-60 & BR-14
-        if (LeaveRequest.ShiftType.FULL_DAY.getDbValue().equalsIgnoreCase(shiftType) || "FullDay".equalsIgnoreCase(shiftType)) {
+        if ("FullDay".equals(shiftType)) {
             int morningRem = countOnDutySingleShift(
                     connection, leaveDate, LeaveRequest.ShiftType.MORNING.getDbValue(), position, excludeLeaveRequestId);
             int afternoonRem = countOnDutySingleShift(
@@ -507,8 +428,7 @@ public class LeaveRequestDAO {
     }
 
     /**
-     * Ham phu tro: Dem so nhan su dang Working con truc cua 1 ca don le (Morning hoac Afternoon)
-     * sau khi tru di nhung nguoi da duoc Approved nghi trung ca do va tru them 1 cho don dang xet.
+     * Số nhân viên Working chưa được duyệt nghỉ trùng ca; chưa trừ người nộp đơn.
      */
     private int countOnDutySingleShift(
             Connection connection,
@@ -517,46 +437,21 @@ public class LeaveRequestDAO {
             String position,
             int excludeLeaveRequestId) throws SQLException {
 
-        // B1: Giả định đã chốt: mọi nhân viên Working làm cả hai ca; đây không phải lịch phân ca thực tế.
-        String sqlTotal = "SELECT COUNT(*) FROM Employees WITH (HOLDLOCK) WHERE Position = ? AND Status = 'Working'";
-
-        // B2: Dem so nhan su (DISTINCT EmployeeId) dang Working da duoc duyet nghi trung vao ca targetShift
-        // (Bao gom nguoi nghi dung ca targetShift HOAC nguoi nghi FullDay)
-        String sqlApproved = "SELECT COUNT(DISTINCT lr.EmployeeId) "
-                + "FROM LeaveRequests lr "
-                + "INNER JOIN Employees e ON e.EmployeeId = lr.EmployeeId "
-                + "WHERE ? BETWEEN lr.FromDate AND lr.ToDate "
-                + "  AND lr.Status = 'Approved' "
-                + "  AND e.Position = ? "
-                + "  AND e.Status = 'Working' "
-                + "  AND lr.LeaveRequestId <> ? "
-                + "  AND (lr.ShiftType = 'FullDay' OR lr.ShiftType = ?)";
-
-        int totalWorking = 0;
-        try (PreparedStatement ps = connection.prepareStatement(sqlTotal)) {
+        // Working và không có đơn đã duyệt trùng ca; một nhân viên chỉ đếm một lần.
+        String sql = "SELECT COUNT(*) FROM Employees e WITH (HOLDLOCK) "
+                + "WHERE e.Position = ? AND e.Status = 'Working' AND NOT EXISTS ("
+                + " SELECT 1 FROM LeaveRequests lr WHERE lr.EmployeeId = e.EmployeeId "
+                + " AND lr.Status = 'Approved' AND ? BETWEEN lr.FromDate AND lr.ToDate "
+                + " AND lr.LeaveRequestId <> ? AND (lr.ShiftType = 'FullDay' OR lr.ShiftType = ?))";
+        try (PreparedStatement ps = connection.prepareStatement(sql)) {
             ps.setString(1, position);
-            try (ResultSet rs = ps.executeQuery()) {
-                if (rs.next()) {
-                    totalWorking = rs.getInt(1);
-                }
-            }
-        }
-
-        int approvedSameShift = 0;
-        try (PreparedStatement ps = connection.prepareStatement(sqlApproved)) {
-            ps.setDate(1, java.sql.Date.valueOf(leaveDate));
-            ps.setString(2, position);
+            ps.setDate(2, java.sql.Date.valueOf(leaveDate));
             ps.setInt(3, excludeLeaveRequestId);
             ps.setString(4, targetShift);
             try (ResultSet rs = ps.executeQuery()) {
-                if (rs.next()) {
-                    approvedSameShift = rs.getInt(1);
-                }
+                return rs.next() ? rs.getInt(1) : 0;
             }
         }
-
-        // B3: Quan so con lai neu duyet them don hien tai (-1)
-        return Math.max(0, totalWorking - approvedSameShift - 1);
     }
 
     /**
@@ -573,12 +468,13 @@ public class LeaveRequestDAO {
         String sql = "UPDATE LeaveRequests "
                 + "SET Status = 'Approved', "
                 + "ReviewedByEmployeeId = ?, "
-                + "ReviewedAt = SYSDATETIME() "
+                + "ReviewedAt = ? "
                 + "WHERE LeaveRequestId = ? AND Status = 'Pending'";
 
         try (PreparedStatement statement = connection.prepareStatement(sql)) {
             statement.setInt(1, reviewerEmployeeId);
-            statement.setInt(2, leaveRequestId);
+            statement.setTimestamp(2, Timestamp.valueOf(DateTimeUtil.now()));
+            statement.setInt(3, leaveRequestId);
             return statement.executeUpdate() > 0;
         }
     }
@@ -599,14 +495,15 @@ public class LeaveRequestDAO {
         String sql = "UPDATE LeaveRequests "
                 + "SET Status = 'Rejected', "
                 + "ReviewedByEmployeeId = ?, "
-                + "ReviewedAt = SYSDATETIME(), "
+                + "ReviewedAt = ?, "
                 + "RejectReason = ? "
                 + "WHERE LeaveRequestId = ? AND Status = 'Pending'";
 
         try (PreparedStatement statement = connection.prepareStatement(sql)) {
             statement.setInt(1, reviewerEmployeeId);
-            statement.setString(2, rejectReason);
-            statement.setInt(3, leaveRequestId);
+            statement.setTimestamp(2, Timestamp.valueOf(DateTimeUtil.now()));
+            statement.setString(3, rejectReason.trim());
+            statement.setInt(4, leaveRequestId);
             return statement.executeUpdate() > 0;
         }
     }
@@ -625,8 +522,8 @@ public class LeaveRequestDAO {
         LocalDate toDate = leaveRequest.getToDate();
         BigDecimal days = leaveRequest.getDays();
 
-        String sql = "INSERT INTO LeaveRequests (EmployeeId, LeaveType, FromDate, ToDate, Days, ShiftType, Reason, Status, SubmittedAt) "
-                + "VALUES (?, ?, ?, ?, ?, ?, ?, 'Pending', SYSDATETIME())";
+        String sql = "INSERT INTO LeaveRequests (EmployeeId, LeaveType, FromDate, ToDate, Days, ShiftType, Reason, LeaveGroupId, Status, SubmittedAt) "
+                + "VALUES (?, ?, ?, ?, ?, ?, ?, ?, 'Pending', ?)";
 
         try (PreparedStatement statement = connection.prepareStatement(sql, PreparedStatement.RETURN_GENERATED_KEYS)) {
             statement.setInt(1, leaveRequest.getEmployeeId());
@@ -636,6 +533,8 @@ public class LeaveRequestDAO {
             statement.setBigDecimal(5, days);
             statement.setString(6, leaveRequest.getShiftType().getDbValue());
             statement.setString(7, leaveRequest.getReason());
+            statement.setString(8, leaveRequest.getLeaveGroupId());
+            statement.setTimestamp(9, Timestamp.valueOf(DateTimeUtil.now()));
 
             statement.executeUpdate();
 
@@ -646,96 +545,6 @@ public class LeaveRequestDAO {
             }
         }
         return 0;
-    }
-
-    public boolean assign(Connection connection, int leaveRequestId, int toEmployeeId) throws SQLException {
-        String sql = "UPDATE LeaveRequests SET AssignedToEmployeeId = ? WHERE LeaveRequestId = ? AND Status = 'Pending'";
-        try (PreparedStatement ps = connection.prepareStatement(sql)) {
-            ps.setInt(1, toEmployeeId);
-            ps.setInt(2, leaveRequestId);
-            return ps.executeUpdate() > 0;
-        }
-    }
-
-    public void insertTransfer(Connection connection, LeaveRequestTransfer transfer) throws SQLException {
-        if (transfer != null) {
-            insertTransfer(connection, transfer.getLeaveRequestId(), transfer.getFromEmployeeId(), transfer.getToEmployeeId(), transfer.getNote());
-        }
-    }
-
-    public void insertTransfer(Connection connection, int leaveRequestId, int fromEmployeeId, int toEmployeeId, String note) throws SQLException {
-        String sql = "INSERT INTO LeaveRequestTransfers (LeaveRequestId, FromEmployeeId, ToEmployeeId, Note) VALUES (?, ?, ?, ?)";
-        try (PreparedStatement ps = connection.prepareStatement(sql)) {
-            ps.setInt(1, leaveRequestId);
-            ps.setInt(2, fromEmployeeId);
-            ps.setInt(3, toEmployeeId);
-            ps.setString(4, note);
-            ps.executeUpdate();
-        }
-    }
-
-    public List<com.gms.entity.LeaveRequestTransfer> findTransfers(int leaveRequestId) throws SQLException {
-        List<com.gms.entity.LeaveRequestTransfer> list = new ArrayList<>();
-        String sql = "SELECT t.TransferId, t.LeaveRequestId, t.FromEmployeeId, fp.FullName AS FromName, "
-                + "t.ToEmployeeId, tp.FullName AS ToName, t.Note, t.CreatedAt "
-                + "FROM LeaveRequestTransfers t "
-                + "JOIN Employees fe ON fe.EmployeeId = t.FromEmployeeId "
-                + "JOIN Persons fp ON fp.PersonId = fe.PersonId "
-                + "JOIN Employees te ON te.EmployeeId = t.ToEmployeeId "
-                + "JOIN Persons tp ON tp.PersonId = te.PersonId "
-                + "WHERE t.LeaveRequestId = ? "
-                + "ORDER BY t.CreatedAt ASC, t.TransferId ASC";
-
-        try (Connection conn = DBContext.getConnection();
-             PreparedStatement ps = conn.prepareStatement(sql)) {
-            ps.setInt(1, leaveRequestId);
-            try (ResultSet rs = ps.executeQuery()) {
-                while (rs.next()) {
-                    list.add(new com.gms.entity.LeaveRequestTransfer(
-                            rs.getInt("TransferId"),
-                            rs.getInt("LeaveRequestId"),
-                            rs.getInt("FromEmployeeId"),
-                            rs.getString("FromName"),
-                            rs.getInt("ToEmployeeId"),
-                            rs.getString("ToName"),
-                            rs.getString("Note"),
-                            rs.getTimestamp("CreatedAt").toLocalDateTime()
-                    ));
-                }
-            }
-        }
-        return list;
-    }
-
-    public List<EligibleReviewer> findEligibleReviewers(int currentEmployeeId) throws SQLException {
-        List<EligibleReviewer> list = new ArrayList<>();
-        String sql = "SELECT e.EmployeeId, e.EmployeeCode, e.Position, p.FullName, p.Avatar "
-                + "FROM Employees e "
-                + "JOIN Persons p ON p.PersonId = e.PersonId "
-                + "WHERE e.Position = 'Manager' AND e.Status = 'Working' AND e.EmployeeId <> ? "
-                + "ORDER BY p.FullName ASC";
-
-        try (Connection conn = DBContext.getConnection();
-             PreparedStatement ps = conn.prepareStatement(sql)) {
-            ps.setInt(1, currentEmployeeId);
-            try (ResultSet rs = ps.executeQuery()) {
-                while (rs.next()) {
-                    list.add(new EligibleReviewer(
-                            rs.getInt("EmployeeId"),
-                            rs.getString("EmployeeCode"),
-                            rs.getString("FullName"),
-                            rs.getString("Position"),
-                            rs.getString("Avatar")));
-                }
-            }
-        }
-        return list;
-    }
-
-    public LeaveBalance getAnnualBalance(int employeeId, int year, int quota) throws SQLException {
-        try (Connection conn = DBContext.getConnection()) {
-            return getAnnualBalance(conn, employeeId, year, quota);
-        }
     }
 
     public LeaveBalance getAnnualBalance(Connection connection, int employeeId, int year, int quota) throws SQLException {
@@ -784,32 +593,6 @@ public class LeaveRequestDAO {
         }
     }
 
-    /**
-     * Thêm mới một đơn xin nghỉ phép vào database.
-     *
-     * @param leaveRequest entity đơn xin nghỉ
-     * @return mã đơn vừa tạo (LeaveRequestId)
-     * @throws SQLException lỗi kết nối hoặc truy vấn DB
-     */
-    public int insert(LeaveRequest leaveRequest) throws SQLException {
-        try (Connection connection = DBContext.getConnection()) {
-            return insert(connection, leaveRequest);
-        }
-    }
-
-    /**
-     * Kiểm tra nhân viên đã có đơn nghỉ Pending hoặc Approved trùng ngày và ca chưa.
-     */
-    public boolean hasConflictingLeave(int employeeId, LocalDate leaveDate, String shiftType) throws SQLException {
-        try (Connection connection = DBContext.getConnection()) {
-            return hasConflictingLeave(connection, employeeId, leaveDate, shiftType);
-        }
-    }
-
-    public boolean hasConflictingLeave(Connection connection, int employeeId, LocalDate leaveDate, String shiftType) throws SQLException {
-        return hasConflictingLeave(connection, employeeId, leaveDate, leaveDate, shiftType);
-    }
-
     /** Kiểm tra giao khoảng ngày, kể cả khi ngày bắt đầu khác nhau. */
     public boolean hasConflictingLeave(Connection connection, int employeeId, LocalDate fromDate, LocalDate toDate,
             String shiftType) throws SQLException {
@@ -833,15 +616,6 @@ public class LeaveRequestDAO {
             }
         }
         return false;
-    }
-
-    /**
-     * Đếm số buổi dạy Scheduled của PT trong ngày và ca xin nghỉ.
-     */
-    public int countScheduledSessions(int ptEmployeeId, LocalDate leaveDate, String shiftType) throws SQLException {
-        try (Connection connection = DBContext.getConnection()) {
-            return countScheduledSessions(connection, ptEmployeeId, leaveDate, shiftType);
-        }
     }
 
     /**
@@ -872,75 +646,21 @@ public class LeaveRequestDAO {
         return 0;
     }
 
-    /** Các buổi Scheduled trùng toàn khoảng nghỉ; dùng giờ từ TimeSlots để hiện trên trang review. */
-    public List<SessionConflict> findSessionConflicts(int employeeId, LocalDate fromDate, LocalDate toDate,
-            String shiftType) throws SQLException {
-        try (Connection connection = DBContext.getConnection()) {
-            return findSessionConflicts(connection, employeeId, fromDate, toDate, shiftType);
-        }
-    }
-
-    public List<SessionConflict> findSessionConflicts(Connection connection, int employeeId, LocalDate fromDate,
-            LocalDate toDate, String shiftType) throws SQLException {
-        String sql = "SELECT s.SessionId, ts.SlotDate, ts.StartTime, ts.EndTime "
-                + "FROM Sessions s JOIN TimeSlots ts ON ts.TimeSlotId = s.TimeSlotId "
-                + "WHERE s.PtEmployeeId = ? AND s.Status = 'Scheduled' AND ts.SlotDate BETWEEN ? AND ? "
-                + "AND (? = 'FullDay' OR (? = 'Morning' AND ts.StartTime < '12:00:00') "
-                + "OR (? = 'Afternoon' AND ts.EndTime > '12:00:00')) ORDER BY ts.SlotDate, ts.StartTime, s.SessionId";
-        List<SessionConflict> conflicts = new ArrayList<>();
-        try (PreparedStatement statement = connection.prepareStatement(sql)) {
-            statement.setInt(1, employeeId);
-            statement.setDate(2, java.sql.Date.valueOf(fromDate));
-            statement.setDate(3, java.sql.Date.valueOf(toDate));
-            statement.setString(4, shiftType);
-            statement.setString(5, shiftType);
-            statement.setString(6, shiftType);
-            try (ResultSet resultSet = statement.executeQuery()) {
-                while (resultSet.next()) {
-                    conflicts.add(new SessionConflict(resultSet.getInt("SessionId"),
-                            resultSet.getDate("SlotDate").toLocalDate(),
-                            resultSet.getTime("StartTime").toLocalTime(), resultSet.getTime("EndTime").toLocalTime()));
-                }
-            }
-        }
-        return conflicts;
-    }
-
-    /** Đếm riêng Approved và Pending của đơn khác có ngày/ca giao với đơn đang xem. */
-    public Map<String, Integer> countOverlappingRequests(LeaveRequest request) throws SQLException {
-        String sql = "SELECT Status, COUNT(*) AS Total FROM LeaveRequests "
-                + "WHERE LeaveRequestId <> ? AND FromDate <= ? AND ToDate >= ? AND Status IN ('Pending', 'Approved') "
-                + "AND (ShiftType = 'FullDay' OR ? = 'FullDay' OR ShiftType = ?) GROUP BY Status";
-        Map<String, Integer> counts = new LinkedHashMap<>();
-        try (Connection connection = DBContext.getConnection(); PreparedStatement statement = connection.prepareStatement(sql)) {
-            statement.setInt(1, request.getLeaveRequestId());
-            statement.setDate(2, java.sql.Date.valueOf(request.getToDate()));
-            statement.setDate(3, java.sql.Date.valueOf(request.getFromDate()));
-            statement.setString(4, request.getShiftType().getDbValue());
-            statement.setString(5, request.getShiftType().getDbValue());
-            try (ResultSet resultSet = statement.executeQuery()) {
-                while (resultSet.next()) {
-                    counts.put(resultSet.getString("Status"), resultSet.getInt("Total"));
-                }
-            }
-        }
-        return counts;
-    }
-
     /**
-     * Lấy danh sách đơn xin nghỉ gần đây của một nhân viên (màn #25, UC-14).
+     * Lấy mọi đơn Pending và các đơn đã xử lý gần đây của nhân viên (màn #25).
      *
      * @param employeeId mã nhân viên
-     * @param limit số đơn tối đa cần lấy
-     * @return danh sách entity LeaveRequest xếp theo SubmittedAt giảm dần
+     * @param limit số đơn đã xử lý tối đa; Pending không bị giới hạn
+     * @return Pending trước, sau đó các đơn đã xử lý; mỗi nhóm xếp mới nhất trước
      * @throws SQLException lỗi kết nối hoặc truy vấn DB
      */
     public List<LeaveRequest> findByEmployeeId(int employeeId, int limit) throws SQLException {
         // B1: câu SQL lấy danh sách đơn của nhân viên theo ngày nộp mới nhất
         String sql = SELECT_COLUMNS
-                + "WHERE EmployeeId = ? "
-                + "ORDER BY SubmittedAt DESC "
-                + "OFFSET 0 ROWS FETCH NEXT ? ROWS ONLY";
+                + "WHERE EmployeeId = ? AND (Status = 'Pending' OR LeaveRequestId IN ("
+                + " SELECT TOP (?) LeaveRequestId FROM LeaveRequests WHERE EmployeeId = ? AND Status <> 'Pending' "
+                + " ORDER BY SubmittedAt DESC, LeaveRequestId DESC)) "
+                + "ORDER BY CASE WHEN Status = 'Pending' THEN 0 ELSE 1 END, SubmittedAt DESC, LeaveRequestId DESC";
 
         List<LeaveRequest> list = new ArrayList<>();
 
@@ -950,6 +670,7 @@ public class LeaveRequestDAO {
 
             statement.setInt(1, employeeId);
             statement.setInt(2, limit);
+            statement.setInt(3, employeeId);
 
             try (ResultSet resultSet = statement.executeQuery()) {
                 while (resultSet.next()) {
@@ -959,6 +680,23 @@ public class LeaveRequestDAO {
         }
 
         return list;
+    }
+
+    /** Đọc đầy đủ một đợt, luôn giới hạn EmployeeId để không ghép nhầm đơn người khác. */
+    public List<LeaveRequest> findByLeaveGroup(String leaveGroupId, int employeeId) throws SQLException {
+        List<LeaveRequest> requests = new ArrayList<>();
+        String sql = SELECT_COLUMNS + "WHERE LeaveGroupId = ? AND EmployeeId = ? ORDER BY FromDate, LeaveRequestId";
+        try (Connection connection = DBContext.getConnection();
+             PreparedStatement statement = connection.prepareStatement(sql)) {
+            statement.setString(1, leaveGroupId);
+            statement.setInt(2, employeeId);
+            try (ResultSet resultSet = statement.executeQuery()) {
+                while (resultSet.next()) {
+                    requests.add(mapResultSetToLeaveRequest(resultSet));
+                }
+            }
+        }
+        return requests;
     }
 
     /**
@@ -1005,24 +743,13 @@ public class LeaveRequestDAO {
     public boolean markReminded(Connection connection, int leaveRequestId) throws SQLException {
         // B1: Cập nhật cột ReminderSentAt trên cùng Connection của Transaction
         String sql = "UPDATE LeaveRequests "
-                + "SET ReminderSentAt = SYSDATETIME() "
+                + "SET ReminderSentAt = ? "
                 + "WHERE LeaveRequestId = ? AND Status = 'Pending' AND ReminderSentAt IS NULL";
 
         try (PreparedStatement statement = connection.prepareStatement(sql)) {
-            statement.setInt(1, leaveRequestId);
+            statement.setTimestamp(1, Timestamp.valueOf(DateTimeUtil.now()));
+            statement.setInt(2, leaveRequestId);
             return statement.executeUpdate() > 0;
-        }
-    }
-
-    /**
-     * Đánh dấu đơn đã được gửi thông báo nhắc Manager (bản tự mở kết nối đơn lẻ).
-     *
-     * @param leaveRequestId mã đơn xin nghỉ
-     * @throws SQLException lỗi kết nối hoặc truy vấn DB
-     */
-    public void markReminded(int leaveRequestId) throws SQLException {
-        try (Connection connection = DBContext.getConnection()) {
-            markReminded(connection, leaveRequestId);
         }
     }
 
@@ -1036,8 +763,9 @@ public class LeaveRequestDAO {
 
         leaveRequest.setLeaveRequestId(resultSet.getInt("LeaveRequestId"));
         leaveRequest.setEmployeeId(resultSet.getInt("EmployeeId"));
+        leaveRequest.setLeaveGroupId(resultSet.getString("LeaveGroupId"));
 
-        // ReviewedByEmployeeId NULL khi đơn Pending hoặc hệ thống tự từ chối (CBR-85)
+        // NULL ở Pending hoặc dữ liệu lịch sử chưa có người xử lý.
         int reviewerId = resultSet.getInt("ReviewedByEmployeeId");
         leaveRequest.setReviewedByEmployeeId(
                 resultSet.wasNull() ? null : reviewerId);
@@ -1047,8 +775,6 @@ public class LeaveRequestDAO {
         leaveRequest.setFromDate(resultSet.getDate("FromDate").toLocalDate());
         leaveRequest.setToDate(resultSet.getDate("ToDate").toLocalDate());
         leaveRequest.setDays(resultSet.getBigDecimal("Days"));
-        int assigneeId = resultSet.getInt("AssignedToEmployeeId");
-        leaveRequest.setAssignedToEmployeeId(resultSet.wasNull() ? null : assigneeId);
 
         leaveRequest.setShiftType(LeaveRequest.ShiftType
                 .fromDbValue(resultSet.getString("ShiftType")));
@@ -1061,11 +787,12 @@ public class LeaveRequestDAO {
                 toLocalDateTime(resultSet.getTimestamp("SubmittedAt")));
         leaveRequest.setReviewedAt(
                 toLocalDateTime(resultSet.getTimestamp("ReviewedAt")));
-        leaveRequest.setReminderSentAt(toLocalDateTime(resultSet.getTimestamp("ReminderSentAt")));
+        leaveRequest.setReminderSentAt(
+                toLocalDateTime(resultSet.getTimestamp("ReminderSentAt")));
         return leaveRequest;
     }
 
-    /** Timestamp có thể NULL (ReviewedAt, ReminderSentAt) nên đổi có kiểm tra null. */
+    /** ReviewedAt có thể NULL khi đơn chưa xử lý. */
     private LocalDateTime toLocalDateTime(Timestamp timestamp) {
         return timestamp == null ? null : timestamp.toLocalDateTime();
     }

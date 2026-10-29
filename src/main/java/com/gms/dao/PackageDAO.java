@@ -38,7 +38,7 @@ public class PackageDAO {
     public List<Package> findActiveForHomepage() throws SQLException {
         // B1: lấy gói đang bán, sắp theo thời hạn rồi theo giá
         String sql = "SELECT PackageId, PackageName, Description, Benefits, PackageType, "
-                + "DurationUnit, DurationValue, EstimatedSessionCount, Price, IsActive, CreatedAt "
+                + "DurationUnit, DurationValue, EstimatedSessionCount, Price, IsActive, UnlocksExerciseLibrary, CreatedAt "
                 + "FROM Packages "
                 + "WHERE IsActive = 1 "
                 + "ORDER BY CASE DurationUnit WHEN 'Day' THEN 0 WHEN 'Month' THEN 1 ELSE -1 END, DurationValue, Price";
@@ -61,7 +61,7 @@ public class PackageDAO {
    /** Đọc gói tại lúc mua, giữ giá tới cuối transaction; null nếu không tồn tại. */
     public Package findById(Connection conn, int packageId) throws SQLException {
         String sql = "SELECT PackageId, PackageName, Description, Benefits, PackageType, "
-                + "DurationUnit, DurationValue, EstimatedSessionCount, Price, IsActive, CreatedAt "
+                + "DurationUnit, DurationValue, EstimatedSessionCount, Price, IsActive, UnlocksExerciseLibrary, CreatedAt "
                 + "FROM Packages WITH (HOLDLOCK) WHERE PackageId = ?";
         try (PreparedStatement statement = conn.prepareStatement(sql)) {
             statement.setInt(1, packageId);
@@ -76,7 +76,7 @@ public class PackageDAO {
     // ===== Hàm phụ =====
 
     /**
-     * Chép 1 dòng kết quả SELECT thành object Package (dòng phải có đủ 11 cột như câu SELECT ở trên).
+     * Chép 1 dòng kết quả SELECT thành object Package (dòng phải có đủ 12 cột như câu SELECT ở trên).
      */
     private Package mapResultSetToPackage(ResultSet rs) throws SQLException {
         // B1: Id là final → chỉ gán được qua constructor
@@ -92,6 +92,7 @@ public class PackageDAO {
         pkg.setEstimatedSessionCount(getNullableInteger(rs, "EstimatedSessionCount"));
         pkg.setPrice(rs.getInt("Price"));
         pkg.setActive(rs.getBoolean("IsActive"));
+        pkg.setUnlocksExerciseLibrary(rs.getBoolean("UnlocksExerciseLibrary"));
 
         // B3: JDBC trả Timestamp, entity dùng LocalDateTime → đổi kiểu (NULL thì giữ null)
         Timestamp createdAt = rs.getTimestamp("CreatedAt");
