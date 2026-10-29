@@ -3,7 +3,31 @@
 <%@ taglib prefix="fn" uri="jakarta.tags.functions" %>
 <%@ taglib prefix="fmt" uri="jakarta.tags.fmt" %>
 <%@ taglib prefix="gms" uri="/WEB-INF/gms-functions.tld" %>
+<%--
+================================================================================
+ dashboard.jsp — TRANG CÁ NHÂN CỦA KHÁCH (/customer/dashboard, UC-41, SRS 9.1.1).
 
+ AI GỬI DỮ LIỆU SANG?  CustomerDashboardServlet.doGet gọi CustomerDashboardService.getDashboard(accountId)
+ → biến JSP "dashboard" (CustomerDashboardView). Lỗi thì dashboardError.
+
+ Biến JSP                 Ai tạo / DAO đọc bảng nào
+ ──────────────────────── ───────────────────────────────────────────────────────────────
+ dashboard.fullName       DAO Persons.FullName
+ dashboard.customerCode   DAO Customers.CustomerCode
+ dashboard.customerStatus DAO Customers.Status (New | Active | Frozen | Expired)
+ dashboard.canUseGym      CustomerDashboardDAO.canUseGymToday:
+                          Subscriptions Membership/DayPass Active phủ hôm nay (không bảo lưu)
+ dashboard.subscriptions  DAO Subscriptions (+ tên gói; FreezeRecords khi bảo lưu)
+ dashboard.upcomingSessions  DAO Sessions + TimeSlots + Persons(tên PT) — 5 buổi PT gần nhất
+ dashboard.banners        Service tính 5 loại cảnh báo ([CHỐT-D1]), không đọc bảng riêng
+
+ BỐ CỤC
+   1. Hero card: chào + ảnh đại diện + tên/mã khách + trạng thái + "vào được phòng tập không"
+   2. Gói đang dùng + buổi PT sắp tới
+   3. Banner cảnh báo (đỏ/vàng)
+   4. Thời tiết (trang trí) + chuông thông báo (dùng chung common/*.jspf)
+================================================================================
+--%>
 <!DOCTYPE html>
 <html lang="vi">
 

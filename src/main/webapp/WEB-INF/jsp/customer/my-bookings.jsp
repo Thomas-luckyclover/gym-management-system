@@ -515,3 +515,66 @@
         </div>
     </body>
 </html>
+
+
+
+  <%--
+  my-bookings.jsp
+├─ dòng 60   head.jspf               → <head>: nạp CSS, common.js (không hiện chữ)
+├─ dòng 69   flash-toast.jspf        → thẻ ẩn cho toast (chỉ khi có)
+├─ dòng 72   layout-customer.jspf    → menu trái
+├─ dòng 76   _schedule-header.jspf   → thanh trên cùng: tiêu đề + tên khách
+│              └─ dòng 32  notification-bell.jspf → cái chuông
+├─ dòng 134  _booking-package.jspf   → 1 thẻ gói (lặp cho mỗi gói Đang tập)
+├─ dòng 142  _booking-package.jspf   → 1 thẻ gói (lặp cho mỗi gói Đã kết thúc)
+└─ dòng 504  _booking-groups.jspf    → các nhóm "Cần để ý"
+
+  --%>
+
+
+
+  <%--
+================================================================================================
+ BẢN ĐỒ MÀN HÌNH → FILE : DÒNG   (đọc từ trên xuống, trái sang phải)
+ jspf = mảnh được dán vào JSP cha; cột "nhúng ở" = dòng <%@ include %> trong my-bookings.jsp
+================================================================================================
+
+ ── VIỀN NGOÀI (giống mọi màn của khách) ─────────────────────────────────────────────────────
+   Thấy trên màn                                   File : dòng                      Nhúng ở
+   Menu trái, mục "Gói của tôi" tô sáng            layout-customer.jspf : 16–70     dòng 72
+   Tiêu đề "Gói của tôi" + nút (i)                 _schedule-header.jspf : 10–25    dòng 76
+   Nút "Đặt buổi lẻ" (chỉ màn Lịch tập, ở đây ẩn)  _schedule-header.jspf : 28       dòng 76
+   Cái chuông thông báo                            notification-bell.jspf           dòng 76
+                                                   (nhúng ở _schedule-header.jspf : 32)
+   "ĐM · Đỗ Thị Mai · KH-1006" góc phải            _schedule-header.jspf : 34–44    dòng 76
+   Toast xanh/đỏ góc màn (common.js hiện lên)      flash-toast.jspf                 dòng 69
+
+ ── CỘT TRÁI ─────────────────────────────────────────────────────────────────────────────────
+   "Gói của bạn" + 3 tab "Đang tập · Đã kết thúc · Buổi lẻ"     my-bookings.jsp : 111–129
+   Thẻ gói "Gói PT 2 Tháng / PT Sơn · còn 10 buổi"             _booking-package.jspf : 11–14
+                                                                (nhúng ở dòng 134 tab Đang tập,
+                                                                 dòng 142 tab Đã kết thúc)
+   "Bạn không có gói PT nào đang tập."                          my-bookings.jsp : 136
+   Thẻ "Tất cả buổi lẻ / 5 buổi"                                my-bookings.jsp : 150–156
+   "PT BUỔI TỚI / Đinh Công Sơn / 📞 / Nhắn Zalo"               my-bookings.jsp : 171–188
+   "Vào phòng tập · ● Hôm nay chưa vào được" + link mua gói     my-bookings.jsp : 197–212
+
+ ── CỘT PHẢI ─────────────────────────────────────────────────────────────────────────────────
+   Tên gói to "Gói PT 2 Tháng"                                  my-bookings.jsp : 229
+   "PT cá nhân · 07/09/2026 – 07/11/2026"                       my-bookings.jsp : 234–239
+   "Buổi tới · Hôm nay / Thứ 2, 26/10 · 18:00 – 19:30" + nhãn   my-bookings.jsp : 247–263
+   Link "Xem trên lịch tập ›"                                   my-bookings.jsp : 266–275
+   Vòng tròn "còn 10 buổi / 35/45 đã qua"                       my-bookings.jsp : 282–290
+   Hộp lời mời (⚠ "Buổi sắp tới chưa vào được…" + nút)          my-bookings.jsp : 304–356
+   "Lịch cố định" + 5 ô T2–T6 + "44/45 buổi theo lịch này"      my-bookings.jsp : 371–392
+   "Buổi khác giờ 2" + từng dòng lý do                          my-bookings.jsp : 399–411
+   "Các buổi của gói": dải ô màu + chú thích số đếm             my-bookings.jsp : 423–453
+   (khi chọn Buổi lẻ) "Các buổi lẻ của bạn" + "Đặt lại…"        my-bookings.jsp : 465–483
+   "▸ CẦN ĐỂ Ý … 10 buổi" (dòng thu gọn)                        my-bookings.jsp : 495–501
+   Bên trong Cần để ý: "● Cần chú ý · 10 buổi · lý do"          _booking-groups.jspf : 9–25
+     + chip ngày "T2 26/10"                                     (nhúng ở dòng 504)
+
+ MẸO: thứ LẶP nhiều lần hoặc DÙNG CHUNG 2 màn → nằm trong jspf; còn lại viết thẳng ở file này.
+ LƯU Ý: sửa phía trên file này làm lệch dòng thì cập nhật lại số dòng trong bảng.
+================================================================================================
+--%>

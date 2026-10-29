@@ -52,6 +52,19 @@ import java.util.TreeMap;
  *   SINGLE_SUGGEST_DAYS  = 30   … trong 30 ngày gần nhất ┘
  *   P-19 = "05:30-22:00"        giờ mở cửa, hiện thành "05:30 – 22:00" cạnh hotline  (bảng SystemConfigs)
  *   GYM_HOTLINE = "1900 6868"   số hiện trên màn; GYM_HOTLINE_TEL = "19006868" dùng cho link tel:  (AppConstants)
+ *
+ * ❓ VẤN ĐÁP (mỗi câu kèm luồng file để mở theo khi trả lời):
+ *   1) Màn này hiển thị gì? → 2 cột. TRÁI = gói PT đang tập / đã kết thúc + nhóm "Buổi lẻ" (tab).
+ *      PHẢI = chi tiết gói đang chọn: buổi tới + vòng tiến độ, 1 lời mời (CTA), lịch cố định T2–T6, dải buổi, "Cần để ý".
+ *      File: servlet/customer/MyBookingServlet.java → service/MyBookingService.java → dao/MyBookingDAO.java → WEB-INF/jsp/customer/my-bookings.jsp.
+ *   2) "Lịch cố định T2–T6" tính thế nào? → applyWeekTemplate: mỗi thứ lấy giờ bắt đầu xuất hiện NHIỀU NHẤT (≥ 50% số buổi);
+ *      hòa thì lấy giờ sớm nhất. Buổi lệch giờ mẫu → gom vào "Buổi khác giờ" kèm lý do (moveNote từ SessionMoveLogs).
+ *      File: service/MyBookingService.java (applyWeekTemplate) — đọc buổi chung từ dao/MyPtSessionDAO.java.
+ *   3) "Lời mời (CTA)" có mấy loại? → 4 loại, chooseCta chọn đúng 1 theo độ ưu tiên:
+ *      buyMembership (buổi sắp tới chưa có gói tập) > ptPackage (≥3 buổi lẻ/30 ngày) > rejoin (gói đã hết) > renewAtCounter (còn ≤3 buổi hoặc ≤14 ngày).
+ *      File: service/MyBookingService.java (chooseCta) → WEB-INF/jsp/customer/_booking-package.jspf (hiện nút CTA).
+ *   4) Vì sao có nút "Xem trên lịch tập" chứ không tự in chi tiết? → màn này chỉ là BẢN TÓM TẮT; chi tiết từng buổi (đổi/hủy/trạng thái) nằm ở Lịch tập (MyPtSessionService).
+ *      File: service/MyPtSessionService.java → dao/MyPtSessionDAO.java → WEB-INF/jsp/customer/my-pt-sessions.jsp.
  */
 public class MyBookingService {
 

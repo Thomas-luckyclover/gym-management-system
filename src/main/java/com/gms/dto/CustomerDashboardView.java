@@ -7,7 +7,12 @@ import java.time.temporal.ChronoUnit;
 import java.util.List;
 
 /**
- * Dữ liệu hiển thị trên Customer Dashboard (UC-41, SRS 9.1.1).
+ * Dữ liệu hiển thị trên Customer Dashboard (UC-41, SRS 9.1.1), biến JSP "dashboard".
+ *
+ *   Ai tạo?   CustomerDashboardService.getDashboard (CustomerDashboardServlet gọi) — DAO đọc, Service gom 1 lần.
+ *   Ai in?    customer/dashboard.jsp (+ _schedule-header.jspf hiện tên/mã khách ở topbar).
+ *   Bảng đọc: Customers + Persons (hồ sơ), Subscriptions (+ tên gói, FreezeRecords khi bảo lưu),
+ *             Sessions + TimeSlots + Persons (5 buổi PT sắp tới). Banner do Service tính từ các dữ liệu trên.
  *
  * Thiết kế bất biến (immutable): tất cả field lấy từ DB qua Service, không có setter.
  * DAO chỉ đọc trạng thái đang lưu; Dashboard không tự tính lại trạng thái (GBR-14).
@@ -16,23 +21,23 @@ import java.util.List;
  */
 public class CustomerDashboardView {
 
-    // ===== Thông tin hồ sơ =====
-    private final String fullName;
-    private final String avatar;
-    private final String customerCode;
-    private final String customerStatus;
+    // ===== Thông tin hồ sơ (DAO: Customers + Persons) =====
+    private final String fullName;         // Persons.FullName
+    private final String avatar;           // Persons.Avatar; null thì JSP hiện initials
+    private final String customerCode;     // Customers.CustomerCode
+    private final String customerStatus;   // Customers.Status (New | Active | Frozen | Expired)
 
+    // DAO: CustomerDashboardDAO.canUseGymToday — có Subscriptions Membership/DayPass Active phủ hôm nay, không bảo lưu.
     private final boolean canUseGym;
 
-    /** Danh sách gói tập/PT đang có hiệu lực hoặc chưa bắt đầu. */
+    // DAO: CustomerDashboardDAO — Subscriptions (+ tên gói); mỗi dòng là 1 gói đang dùng / chưa bắt đầu.
     private final List<SubscriptionRow> subscriptions;
 
-    // ===== Buổi PT sắp tới ([CHỐT-D3]: 5 buổi Scheduled gần nhất từ bây giờ) =====
-
+    // ===== Buổi PT sắp tới (DAO: Sessions + TimeSlots + Persons tên PT) =====
+    // [CHỐT-D3]: 5 buổi Scheduled gần nhất từ bây giờ.
     private final List<UpcomingSessionRow> upcomingSessions;
 
-    // ===== Banners cảnh báo ([CHỐT-D1]) =====
-
+    // ===== Banners cảnh báo (Service tính — [CHỐT-D1], không đọc bảng riêng) =====
     private final List<BannerItem> banners;
 
     // ===== Constructor =====
@@ -126,21 +131,22 @@ public class CustomerDashboardView {
 
     public static class SubscriptionRow {
 
-        private final int subscriptionId;
-        private final String subscriptionType;
-        private final String packageName;
-        private final LocalDate startDate;
-        private final LocalDate endDate;
-        private final String status;
+        // DAO đọc bảng Subscriptions (+ Packages.PackageName / Orders.PackageNameSnapshot cho tên gói).
+        private final int subscriptionId;          // Subscriptions.SubscriptionId
+        private final String subscriptionType;     // Subscriptions.SubscriptionType: Membership | DayPass | PTSingle | PTCouple | SingleSession
+        private final String packageName;          // tên gói lúc mua
+        private final LocalDate startDate;         // Subscriptions.StartDate
+        private final LocalDate endDate;           // Subscriptions.EndDate (ngày cuối còn dùng, GBR-03)
+        private final String status;               // Subscriptions.Status: Active | Frozen | Pending | ...
 
         // --- Chỉ có với gói PT (DBR-53, [CHỐT-D2]) ---
-        private final Integer totalSessions;
-        private final Integer remainingSessions;
-        private final Integer usedSessions;
+        private final Integer totalSessions;       // tổng số buổi của gói (chỉ gói PT)
+        private final Integer remainingSessions;   // số buổi còn lại
+        private final Integer usedSessions;        // số buổi đã qua
 
         // --- Bảo lưu nếu Frozen (DBR-51) ---
-        private final LocalDate freezeStart;
-        private final LocalDate freezeEnd;
+        private final LocalDate freezeStart;       // FreezeRecords.StartDate — ngày bắt đầu bảo lưu
+        private final LocalDate freezeEnd;         // FreezeRecords.EndDate — ngày hết bảo lưu
 
         public SubscriptionRow(
                 int subscriptionId,
@@ -240,14 +246,16 @@ public class CustomerDashboardView {
      */
     public static class UpcomingSessionRow {
 
-        private final int sessionId;
-        private final LocalDate slotDate;
-        private final LocalTime startTime;
-        private final LocalTime endTime;
-        private final String ptName;
+        // DAO đọc: Sessions + TimeSlots (ngày/giờ) + Persons (tên PT) + tên gói.
+        private final int sessionId;               // Sessions.SessionId
+        private final LocalDate slotDate;          // TimeSlots.SlotDate
+        private final LocalTime startTime;         // TimeSlots.StartTime
+        private final LocalTime endTime;           // TimeSlots.EndTime
+        private final String ptName;               // Persons.FullName của PT dạy buổi này
 
         /** Tên gói (VD: "Gói PT cá nhân 10 buổi"). */
         private final String packageName;
+        // Service tính: buổi này khách chưa có Membership/DayPass phủ ngày → tô nhãn "Chưa có gói tập".
         private final boolean missingMembership;
 
         public UpcomingSessionRow(

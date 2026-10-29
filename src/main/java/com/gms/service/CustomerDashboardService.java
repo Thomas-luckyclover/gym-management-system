@@ -35,6 +35,14 @@ import java.util.List;
  * - Banner cảnh báo (5 loại — [CHỐT-D1])
  *
  * @author Nguyen Tuan Minh
+ *
+ * ❓ VẤN ĐÁP (mỗi câu kèm luồng file để mở theo khi trả lời):
+ *   1) Dashboard khách hiển thị gì? → hồ sơ (tên/mã/avatar), "vào phòng tập được không" (canUseGym), gói tập đang dùng, 5 buổi PT sắp tới, banner cảnh báo.
+ *      File: servlet/customer/CustomerDashboardServlet.java → service/CustomerDashboardService.java → dao/CustomerDashboardDAO.java → WEB-INF/jsp/customer/dashboard.jsp.
+ *   2) canUseGym tính thế nào? → CustomerDashboardDAO.canUseGymToday: có Membership/DayPass Active phủ hôm nay và không bảo lưu.
+ *      File: service/CustomerDashboardService.java → dao/CustomerDashboardDAO.java (canUseGymToday).
+ *   3) Dashboard có tự đổi trạng thái gói không? → KHÔNG (GBR-14, chỉ đọc): hết hạn / bảo lưu / tự đóng buổi là việc của JOB-01…04.
+ *      File: dao/CustomerDashboardDAO.java (chỉ SELECT) — việc đổi trạng thái nằm ở job/*.java (JOB-01…04).
  */
 public class CustomerDashboardService {
 

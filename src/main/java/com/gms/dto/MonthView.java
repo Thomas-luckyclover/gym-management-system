@@ -9,6 +9,9 @@ import java.util.List;
  * [TKB] Lịch 1 THÁNG của khách: lưới 7 cột (Thứ 2 → Chủ nhật), mỗi hàng 1 tuần.
  * Ô ngoài tháng chỉ là ô đệm để giữ đúng cột thứ; JSP không hiện ngày hoặc buổi của ô này.
  *
+ *   Ai tạo?   MyPtSessionService.getMonth — gom các MyPtSessionRow (DAO MyPtSessionDAO.findSessionsInRange).
+ *   Ai in?    my-pt-sessions.jsp khi view = month.
+ *
  * JSP đọc: ${month.weeks} → week (List<Cell>) → cell.sessions.
  */
 public class MonthView {

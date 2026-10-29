@@ -40,6 +40,16 @@ import java.util.Set;
  *     (chữ hiện cạnh tên hàng: "06:00 – 12:00", "12:00 – 18:00", "18:00 – 22:00" — buổi 05:30 vẫn nằm hàng Sáng)
  *   Độ dài 1 buổi KHÔNG đọc P-06 ở đây: giờ kết thúc lấy thẳng từ TimeSlots.EndTime (hiện P-06 = 90 phút).
  *   Luật vào gym giống JOB-04: Membership hoặc DayPass phủ ngày tập, và không bảo lưu ngày đó.
+ *
+ * ❓ VẤN ĐÁP (mỗi câu kèm luồng file để mở theo khi trả lời):
+ *   1) Màn Lịch tập hiển thị gì? → thời khóa biểu TUẦN (3 hàng Sáng/Chiều/Tối) hoặc lịch THÁNG; bấm buổi → hộp chi tiết (trạng thái, PT, link Zalo, Google Calendar).
+ *      File: servlet/customer/MyPtSessionServlet.java → service/MyPtSessionService.java → dao/MyPtSessionDAO.java → WEB-INF/jsp/customer/my-pt-sessions.jsp.
+ *   2) Khách tự hủy / đổi buổi được không? → KHÔNG (chốt 19/10): chỉ XEM; muốn đổi/hủy thì nhắn PT qua Zalo, PT xử lý ở Lịch dạy.
+ *      File: service/MyPtSessionService.java → service/PtScheduleService.java (PT đổi ở Lịch dạy).
+ *   3) 3 hàng Sáng/Chiều/Tối chia thế nào? → bandOf theo giờ BẮT ĐẦU: trước 12:00 = Sáng · 12:00–17:59 = Chiều · từ 18:00 = Tối.
+ *      File: service/MyPtSessionService.java (bandOf) → WEB-INF/jsp/customer/my-pt-sessions.jsp.
+ *   4) "Vào được phòng tập" tính thế nào? → giống JOB-04: có Membership/DayPass phủ ngày tập và không bảo lưu; thiếu thì tô nhãn "Chưa có gói tập".
+ *      File: service/MyPtSessionService.java → service/AutoCloseSessionService.java (cùng luật vào gym JOB-04).
  */
 public class MyPtSessionService {
 
