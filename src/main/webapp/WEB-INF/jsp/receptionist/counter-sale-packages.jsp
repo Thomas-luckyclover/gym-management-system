@@ -17,7 +17,7 @@
 <head>
     <%@ include file="/WEB-INF/jsp/common/head.jspf" %>
     <title>Bán hàng · Super Gym Lễ tân</title>
-    <link rel="stylesheet" href="${ctx}/css/pages/receptionist/counter-sale.css?v=20261029c">
+    <link rel="stylesheet" href="${ctx}/css/pages/receptionist/counter-sale.css?v=20261030a">
     <script src="${ctx}/js/pages/receptionist/counter-sale.js?v=20261029b" defer></script>
 </head>
 <body class="dock theme-staff counter-sale-page">
