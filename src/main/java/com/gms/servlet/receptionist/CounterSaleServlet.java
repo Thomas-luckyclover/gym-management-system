@@ -23,15 +23,18 @@ import java.util.List;
 import java.util.Map;
 
 /**
- * SERVLET MÀN LỄ TÂN BÁN GÓI TẠI QUẦY — /receptionist/sales (SRS #37, đợt 1). ReceptionistAreaFilter kiểm quyền.
- * Chỉ có GET: đợt này chưa ghi dữ liệu nào, nên chưa cần CSRF.
+ * SERVLET MÀN LỄ TÂN BÁN GÓI TẠI QUẦY — /receptionist/sales (SRS #37, đợt 1).
+ * ReceptionistAreaFilter kiểm quyền. Chỉ có GET: đợt này chưa ghi dữ liệu nào,
+ * nên chưa cần CSRF.
  *
- *   GET /receptionist/sales                          Chọn gói         → counter-sale-packages.jsp
- *   GET /receptionist/sales?package=3                Chọn khách       → counter-sale-customers.jsp
- *   GET /receptionist/sales/customers?q=mai          ô tìm khách (counter-sale.js gọi AJAX) → JSON tối đa 20 khách
- *   GET /receptionist/sales?package=3&customer=12    bước Voucher     → counter-sale-next.jsp (tạm)
+ * GET /receptionist/sales Chọn gói → counter-sale-packages.jsp GET
+ * /receptionist/sales?package=3 Chọn khách → counter-sale-customers.jsp GET
+ * /receptionist/sales/customers?q=mai ô tìm khách (counter-sale.js gọi AJAX) →
+ * JSON tối đa 20 khách GET /receptionist/sales?package=3&customer=12 bước
+ * Voucher → counter-sale-next.jsp (tạm)
  *
- * Gói PT đi sang /receptionist/pt-sales (PtSaleServlet), buổi PT lẻ chưa có màn nên thẻ bị khóa ở JSP.
+ * Gói PT đi sang /receptionist/pt-sales (PtSaleServlet), buổi PT lẻ chưa có màn
+ * nên thẻ bị khóa ở JSP.
  */
 @WebServlet(urlPatterns = {"/receptionist/sales", "/receptionist/sales/customers"})
 public class CounterSaleServlet extends HttpServlet {
@@ -89,7 +92,9 @@ public class CounterSaleServlet extends HttpServlet {
         showNext(request, response, accountId, customerId, packageId);
     }
 
-    /** HÀM PHỤ — màn Chọn gói: Service dựng 3 tab thẻ gói rồi forward JSP. */
+    /**
+     * HÀM PHỤ — màn Chọn gói: Service dựng 3 tab thẻ gói rồi forward JSP.
+     */
     private void showPackages(HttpServletRequest request, HttpServletResponse response, int accountId)
             throws ServletException, IOException {
         ServiceResult<CounterPackageView> result = counterSaleService.getPackageView(accountId);
@@ -101,17 +106,21 @@ public class CounterSaleServlet extends HttpServlet {
         RequestUtil.forward(request, response, VIEW_PACKAGES);
     }
 
-    /** HÀM PHỤ — màn Chọn khách: chỉ vẽ khung, bảng khách do counter-sale.js đổ vào sau mỗi lần gõ. */
+    /**
+     * HÀM PHỤ — màn Chọn khách: chỉ vẽ khung, bảng khách do counter-sale.js đổ
+     * vào sau mỗi lần gõ.
+     */
     private void showCustomers(HttpServletRequest request, HttpServletResponse response)
             throws ServletException, IOException {
         RequestUtil.forward(request, response, VIEW_CUSTOMERS);
     }
 
     /**
-     * HÀM PHỤ — JSON cho ô tìm khách. Mỗi khách là một object:
-     * {customerId, customerCode, fullName, phoneText, isDependent, hasAccount, statusText, statusBadgeClass,
-     *  currentPackageName, currentPackageEndText}. Không trả ngày sinh, mã Person hay SĐT thô.
-     * currentPackageName và currentPackageEndText là chuỗi rỗng khi khách chưa có gói tập.
+     * HÀM PHỤ — JSON cho ô tìm khách. Mỗi khách là một object: {customerId,
+     * customerCode, fullName, phoneText, isDependent, hasAccount, statusText,
+     * statusBadgeClass, currentPackageName, currentPackageEndText}. Không trả
+     * ngày sinh, mã Person hay SĐT thô. currentPackageName và
+     * currentPackageEndText là chuỗi rỗng khi khách chưa có gói tập.
      */
     private void writeCustomers(HttpServletResponse response, int accountId, String keyword) throws IOException {
         ServiceResult<List<CounterCustomerRow>> result = counterSaleService.searchCustomers(accountId, keyword);
@@ -138,6 +147,8 @@ public class CounterSaleServlet extends HttpServlet {
             row.put("phoneText", customer.getPhoneText());
             row.put("isDependent", customer.isDependent());
             row.put("hasAccount", customer.isHasAccount());
+            row.put("hasAccount", customer.isHasAccount());
+            row.put("isOwnProfile", customer.isOwnProfile());
             row.put("statusText", customer.getStatus().getDisplayName());
             row.put("statusBadgeClass", customer.getStatusBadgeClass());
             row.put("currentPackageName", currentPackageName);
@@ -147,7 +158,10 @@ public class CounterSaleServlet extends HttpServlet {
         JsonUtil.writeJson(response, JsonResponse.success(rows));
     }
 
-    /** HÀM PHỤ — bước sau Chọn khách (Voucher, chưa làm): hiện tóm tắt gói + khách đã chọn. */
+    /**
+     * HÀM PHỤ — bước sau Chọn khách (Voucher, chưa làm): hiện tóm tắt gói +
+     * khách đã chọn.
+     */
     private void showNext(HttpServletRequest request, HttpServletResponse response, int accountId,
             int customerId, int packageId) throws ServletException, IOException {
         ServiceResult<CounterCustomerRow> result = counterSaleService.getCustomer(accountId, customerId);
@@ -160,7 +174,9 @@ public class CounterSaleServlet extends HttpServlet {
         RequestUtil.forward(request, response, VIEW_NEXT);
     }
 
-    /** HÀM PHỤ — mã tài khoản trong session; chưa đăng nhập trả null. */
+    /**
+     * HÀM PHỤ — mã tài khoản trong session; chưa đăng nhập trả null.
+     */
     private Integer getAccountId(HttpServletRequest request) {
         HttpSession session = request.getSession(false);
         if (session == null) {
