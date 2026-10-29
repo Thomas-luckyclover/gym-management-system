@@ -60,41 +60,6 @@
 
             <div class="main">
 
-<<<<<<< HEAD
-                <header class="topbar">
-                    <div class="tb-left">
-                        <h1 class="tb-title">Trang cá nhân</h1>
-                    </div>
-                    <div class="top-right">
-                        <%@ include file="/WEB-INF/jsp/common/notification-bell.jspf" %>
-                        <c:if test="${not empty dashboard}">
-                            <a class="tb-user" href="${pageContext.request.contextPath}/account"
-                               title="Cài đặt tài khoản">
-                                <c:choose>
-                                    <c:when test="${not empty dashboard.avatar}">
-                                        <img class="avatar"
-                                             src="${pageContext.request.contextPath}${dashboard.avatar}"
-                                             alt="Ảnh đại diện">
-                                    </c:when>
-                                    <c:otherwise>
-                                        <span class="avatar">
-                                            <c:out value="${dashboard.initials}" />
-                                        </span>
-                                    </c:otherwise>
-                                </c:choose>
-                                <span class="tb-user-text">
-                                    <b>
-                                        <c:out value="${dashboard.fullName}" />
-                                    </b>
-                                    <span>
-                                        <c:out value="${dashboard.customerCode}" />
-                                    </span>
-                                </span>
-                            </a>
-                        </c:if>
-                    </div>
-                </header>
-=======
         <header class="topbar">
             <div class="tb-left">
                 <h1 class="tb-title">Trang cá nhân</h1>
@@ -104,7 +69,6 @@
                 <%@ include file="/WEB-INF/jsp/common/topbar-user.jspf" %>
             </div>
         </header>
->>>>>>> 8f61f90f076024d743c657adbc79e50f041d5364
 
                 <main class="content" id="main-content" tabindex="-1">
 
