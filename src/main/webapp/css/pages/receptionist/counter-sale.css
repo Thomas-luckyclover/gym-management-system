@@ -688,3 +688,284 @@ html body.dock .counter-sale .counter-cell-action .btn.btn-primary {
     transition: none;
   }
 }
+/* ==================== ĐỒNG BỘ PHONG CÁCH GYM THỂ THAO CHO MÀN LỄ TÂN ==================== */
+/* 1. Vuông góc toàn bộ các khối bao ngoài (Thẻ, Block, Thanh chọn) */
+.counter-block,
+.counter-card,
+.counter-card-head,
+.counter-bar,
+.counter-summary {
+  border-radius: 0 !important;
+}
+
+/* 2. Tiêu đề gói trong thẻ (GÓI PT 1 THÁNG, GÓI 3 THÁNG) */
+.counter-card-name {
+  font-family: "Inter Tight", "Montserrat", system-ui, sans-serif !important;
+  font-size: 1.15rem !important;
+  font-weight: 800 !important;
+  font-style: italic !important;
+  letter-spacing: 0.01em !important;
+  text-transform: uppercase !important;
+}
+
+/* 3. Giá tiền: đanh thép, số dứt khoát */
+.counter-card-price {
+  font-family: "Inter Tight", "Montserrat", system-ui, sans-serif !important;
+  font-size: 1.45rem !important;
+  font-weight: 800 !important;
+  letter-spacing: -0.03em !important;
+  color: #0f2a5e !important;
+}
+
+/* 4. Nhãn QUYỀN LỢI / QUY ĐỊNH */
+.counter-card-label {
+  font-family: "Inter Tight", sans-serif !important;
+  font-size: 0.75rem !important;
+  font-weight: 800 !important;
+  letter-spacing: 0.08em !important;
+  text-transform: uppercase !important;
+  color: #2563eb !important;
+}
+
+/* 5. Nút Tiếp tục ở thanh bar dưới đáy */
+.counter-bar .btn.btn-primary {
+  height: 38px !important;
+  padding: 0 1.25rem !important;
+  border-radius: 4px !important;
+  background: #f59e0b !important;
+  border: 1px solid #d97706 !important;
+  color: #000000 !important;
+  font-family: "Inter Tight", "Montserrat", system-ui, sans-serif !important;
+  font-size: 0.85rem !important;
+  font-weight: 800 !important;
+  text-transform: uppercase !important;
+  letter-spacing: 0.04em !important;
+  box-shadow: 0 1px 2px rgba(0, 0, 0, 0.2) !important;
+}
+
+.counter-bar .btn.btn-primary:hover:not(:disabled) {
+  background: #d97706 !important;
+  color: #ffffff !important;
+}
+
+/* 6. Thẻ đang chọn (is-selected): Viền vàng Amber thể thao mạnh mẽ */
+.counter-card.is-selected {
+  border-color: #f59e0b !important;
+  box-shadow: 0 0 0 2px #f59e0b !important;
+}
+
+.counter-card.is-selected .counter-card-head {
+  background: #f59e0b !important;
+  color: #000000 !important;
+}
+
+.counter-card.is-selected .counter-card-name {
+  color: #000000 !important;
+}
+
+.counter-card.is-selected .counter-card-type {
+  color: rgba(0, 0, 0, 0.7) !important;
+}
+
+/* 7. Tab trên cùng: Phẳng, dứt khoát */
+.counter-tabs .counter-tab,
+.counter-sale .counter-tabs .counter-tab {
+  border-radius: 4px !important;
+  font-family: "Inter Tight", "Montserrat", system-ui, sans-serif !important;
+  font-weight: 700 !important;
+  text-transform: uppercase !important;
+  letter-spacing: 0.03em !important;
+}
+
+.counter-tabs .counter-tab[aria-selected="true"],
+.counter-sale .counter-tabs .counter-tab[aria-selected="true"] {
+  background: #ffffff !important;
+  color: #0f2a5e !important;
+  font-weight: 800 !important;
+}
+
+/* ==================== CHỈNH LẠI MÀU CAM & PHÂN CẤP CHỮ MÀN LỄ TÂN ==================== */
+/* 1. Tên gói: ĐỨNG THẲNG (BỎ NGHIÊNG), phân cấp rõ ràng */
+.counter-card-name {
+  font-family: "Inter Tight", "Montserrat", system-ui, sans-serif !important;
+  font-size: 1.15rem !important;
+  font-weight: 800 !important;
+  font-style: normal !important; /* Đứng thẳng dứt khoát */
+  letter-spacing: -0.01em !important;
+  text-transform: none !important; /* Không viết hoa toàn bộ để dễ đọc */
+  color: #ffffff !important;
+  line-height: 1.25 !important;
+}
+
+/* Cấp bậc 2: Nhãn loại gói (nhỏ, mờ, làm nền) */
+.counter-card-type {
+  font-size: 0.68rem !important;
+  font-weight: 600 !important;
+  letter-spacing: 0.12em !important;
+  text-transform: uppercase !important;
+  color: rgba(255, 255, 255, 0.65) !important;
+  margin-bottom: 2px !important;
+}
+
+/* Cấp bậc 3: Giá tiền (TÂM ĐIỂM CỦA THẺ - TO & NỔI NHẤT) */
+.counter-card-price {
+  font-family: "Inter Tight", "Montserrat", system-ui, sans-serif !important;
+  font-size: 1.5rem !important;
+  font-weight: 800 !important;
+  font-style: normal !important;
+  letter-spacing: -0.03em !important;
+  color: #0f2a5e !important;
+  margin-top: 0.25rem !important;
+}
+
+/* Cấp bậc 4: Thời hạn (nhỏ nhẹ đi kèm) */
+.counter-card-duration {
+  font-size: 0.8rem !important;
+  color: #64748b !important;
+  font-weight: 500 !important;
+}
+
+/* Cấp bậc 5: Tiêu đề QUYỀN LỢI / QUY ĐỊNH (nhỏ, nét đanh, màu nhấn) */
+.counter-card-label {
+  font-family: "Inter Tight", sans-serif !important;
+  font-size: 0.72rem !important;
+  font-weight: 800 !important;
+  letter-spacing: 0.08em !important;
+  text-transform: uppercase !important;
+  color: #ea580c !important; /* Đổi sang cam thể thao */
+  margin-top: 0.75rem !important;
+}
+
+/* Cấp bậc 6: Nội dung danh sách quyền lợi (dễ đọc, thư thái) */
+.counter-card-list {
+  font-size: 0.8rem !important;
+  line-height: 1.4 !important;
+  color: #334155 !important;
+  gap: 0.35rem !important;
+}
+
+.counter-card-list li::before {
+  color: #ea580c !important; /* Dấu tick màu cam */
+}
+
+/* 2. NÚT VÀ ĐIỂM NHẤN MÀU CAM THỂ THAO ĐẸP MẮT */
+.counter-bar .btn.btn-primary {
+  background: #ea580c !important;
+  border: 1px solid #c2410c !important;
+  color: #ffffff !important;
+  font-family: "Inter Tight", "Montserrat", system-ui, sans-serif !important;
+  font-size: 0.85rem !important;
+  font-weight: 700 !important;
+  font-style: normal !important;
+  text-transform: uppercase !important;
+  letter-spacing: 0.03em !important;
+  border-radius: 4px !important;
+}
+
+.counter-bar .btn.btn-primary:hover:not(:disabled) {
+  background: #c2410c !important;
+}
+
+/* Thẻ đang chọn (is-selected): Viền Cam và Header Cam thể thao */
+.counter-card.is-selected {
+  border-color: #ea580c !important;
+  box-shadow: 0 0 0 2px #ea580c !important;
+}
+
+.counter-card.is-selected .counter-card-head {
+  background: #ea580c !important;
+  color: #ffffff !important;
+}
+
+.counter-card.is-selected .counter-card-name {
+  color: #ffffff !important;
+}
+
+.counter-card.is-selected .counter-card-type {
+  color: rgba(255, 255, 255, 0.85) !important;
+}
+
+/* Tab đang chọn: Viền cam dứt khoát */
+.counter-tabs .counter-tab[aria-selected="true"],
+.counter-sale .counter-tabs .counter-tab[aria-selected="true"] {
+  border-bottom: 2px solid #ea580c !important;
+}
+
+/* ==================== SỬA TRIỆT ĐỂ TOOLTIP BỊ CHÌM DƯỚI THẺ ==================== */
+/* 1. Đảm bảo thanh toolbar và tablist có stacking context cao */
+.counter-toolbar {
+  position: relative !important;
+  z-index: 50 !important;
+}
+
+.counter-sale .counter-tabs,
+.counter-tabs {
+  position: relative !important;
+  z-index: 55 !important;
+}
+
+.counter-sale .counter-tabs .counter-tab[data-tip] {
+  position: relative !important;
+}
+
+/* 2. Tooltip popup: z-index cực cao (100), nền đen tương phản, bóng nổi khối rõ nét */
+.counter-sale .counter-tabs .counter-tab[data-tip]::after {
+  content: attr(data-tip) !important;
+  position: absolute !important;
+  top: calc(100% + 8px) !important;
+  left: 0 !important;
+  z-index: 9999 !important; /* Luôn đè lên trên tất cả các thẻ gói */
+  width: max-content !important;
+  max-width: 300px !important;
+  padding: 0.5rem 0.75rem !important;
+  border-radius: 6px !important;
+  border: 1px solid rgba(255, 255, 255, 0.25) !important;
+  background: #0f172a !important; /* Nền Slate 900 tối thẫm sắc nét */
+  color: #ffffff !important;
+  font-family: "Inter", system-ui, sans-serif !important;
+  font-size: 0.78rem !important;
+  font-weight: 500 !important;
+  line-height: 1.4 !important;
+  text-align: left !important;
+  text-transform: none !important; /* Không in hoa tooltip */
+  white-space: normal !important;
+  box-shadow: 0 10px 25px -3px rgba(0, 0, 0, 0.5), 0 4px 6px -4px rgba(0, 0, 0, 0.4) !important;
+  pointer-events: none !important;
+  opacity: 0 !important;
+  visibility: hidden !important;
+  transition: opacity 0.15s ease-in-out !important;
+}
+
+.counter-sale .counter-tabs .counter-tab[data-tip]:hover::after,
+.counter-sale .counter-tabs .counter-tab[data-tip]:focus-visible::after {
+  opacity: 1 !important;
+  visibility: visible !important;
+}
+
+/* ==================== VUÔNG GÓC TOÀN BỘ CÁC KHUNG BAO NGOÀI MÀN CHỌN KHÁCH ==================== */
+/* 1. Khung lớn bao ngoài bên trái (chứa ô tìm khách + bảng khách hàng) */
+.counter-block,
+.counter-sale .counter-block {
+  border-radius: 0 !important;
+}
+
+/* 2. Cột "Tóm tắt đơn" bên phải */
+.counter-summary,
+.counter-sale .counter-summary {
+  border-radius: 0 !important;
+}
+
+/* 3. Ô tìm kiếm khách hàng */
+.counter-search,
+.counter-sale .counter-search,
+.counter-sale .counter-search input[type="search"] {
+  border-radius: 0 !important;
+}
+
+/* 4. Nút Chọn và các nhãn trạng thái trong bảng */
+.counter-cell-action .btn,
+.counter-sale .counter-cell-action .btn,
+.counter-table .badge,
+.counter-flag {
+  border-radius: 0 !important;
+}
