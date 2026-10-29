@@ -56,6 +56,7 @@ class CheckInDTOTest {
         assertEquals("warn", CheckInLookupResult.Decision.WARN_MISSING_PHOTO.getAlertType());
 
         // danger alerts
+        assertEquals("danger", CheckInLookupResult.Decision.DENIED_NOT_STARTED.getAlertType());
         assertEquals("danger", CheckInLookupResult.Decision.DENIED_FROZEN.getAlertType());
         assertEquals("danger", CheckInLookupResult.Decision.DENIED_EXPIRED.getAlertType());
         assertEquals("danger", CheckInLookupResult.Decision.DENIED_DAYPASS_USED.getAlertType());

@@ -70,6 +70,28 @@
           </div>
         </c:if>
 
+        <%-- ===== BANNER CẢNH BÁO CA QUÁ KHỨ CHƯA CHỐT SỔ ===== --%>
+        <c:if test="${detail.unclosedPastShift}">
+          <div class="alert-banner danger" data-reveal style="margin-bottom: 16px;">
+            <div class="alert-icon"><i class="fa-solid fa-triangle-exclamation"></i></div>
+            <div class="alert-text">
+              <b>CẢNH BÁO: Ca trực ngày <c:out value="${gms:formatDate(detail.shift.workDate)}"/> chưa được chốt ca!</b>
+              <div>Ca làm việc này đã bị để quên qua đêm. Vui lòng kiểm kê tiền mặt thực tế trong két và bấm <b>Chốt ca</b> ngay trước khi có thể mở ca ngày mới.</div>
+            </div>
+          </div>
+        </c:if>
+
+        <%-- ===== BANNER CẢNH BÁO CA SÁNG QUÁ GIỜ (13:00) ===== --%>
+        <c:if test="${detail.overdue}">
+          <div class="alert-banner warn" data-reveal style="margin-bottom: 16px;">
+            <div class="alert-icon"><i class="fa-solid fa-clock"></i></div>
+            <div class="alert-text">
+              <b>Đã quá thời gian ca sáng (kết thúc lúc 13:00):</b>
+              <div>Vui lòng kiểm kê tiền trong két, xử lý dứt điểm các đơn hàng và bấm <b>Chốt ca</b> để bàn giao cho Ca chiều.</div>
+            </div>
+          </div>
+        </c:if>
+
         <%-- ===== KHỐI 1: HERO TRẠNG THÁI CA LÀM VIỆC ===== --%>
         <section class="status-hero" data-reveal>
           <div class="hero-info">
@@ -120,6 +142,14 @@
                     </c:otherwise>
                   </c:choose>
                 </p>
+                <c:if test="${detail.pastDate}">
+                  <div style="margin-top: 10px;">
+                    <a href="${pageContext.request.contextPath}/receptionist/shift"
+                       class="btn btn-primary btn-sm" style="display: inline-flex; align-items: center; gap: 6px;">
+                      <i class="fa-solid fa-calendar-day"></i> Chuyển sang ca làm việc hôm nay
+                    </a>
+                  </div>
+                </c:if>
               </c:when>
               <c:when test="${detail.shift.notOpened and detail.pastShift}">
                 <h2>Ca trực đã qua (không mở)</h2>
@@ -139,6 +169,14 @@
                     </c:otherwise>
                   </c:choose>
                 </p>
+                <c:if test="${not empty detail.blockingOpenShift}">
+                  <div style="margin-top: 10px;">
+                    <a href="${pageContext.request.contextPath}/receptionist/shift?shiftId=${detail.blockingOpenShift.shiftId}"
+                       class="btn btn-secondary btn-sm" style="display: inline-flex; align-items: center; gap: 6px;">
+                      <i class="fa-solid fa-arrow-right"></i> Đi đến <c:out value="${detail.blockingOpenShift.shiftType.displayName}"/> (<c:out value="${gms:formatDate(detail.blockingOpenShift.workDate)}"/>) để chốt ca
+                    </a>
+                  </div>
+                </c:if>
               </c:otherwise>
             </c:choose>
           </div>
