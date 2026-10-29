@@ -183,7 +183,7 @@ public class ExerciseLibraryService {
 
             // B4: đếm + lấy 1 trang (kẹp số trang vào 1..totalPages: gõ ?page=999 → trang cuối).
             int total = libraryDAO.countFiltered(namePattern, categoryId, equipmentId);
-            int totalPages = totalPages(total, PAGE_SIZE);
+            int totalPages = totalPages(total);
             int pageNumber = Math.min(parsePage(page), totalPages);
             int offset = (pageNumber - 1) * PAGE_SIZE;
             List<ExerciseItem> items = libraryDAO.findPage(namePattern, categoryId, equipmentId,
@@ -197,7 +197,6 @@ public class ExerciseLibraryService {
             view.setTotalPages(totalPages);
             view.setFirstIndex(total == 0 ? 0 : offset + 1);
             view.setLastIndex(offset + items.size());
-            view.setPageLinks(pageLinks(pageNumber, totalPages));
 
             // B5: các lựa chọn của bộ lọc + tổng số bài.
             view.setLibraryTotal(libraryDAO.countAll());
@@ -382,21 +381,13 @@ public class ExerciseLibraryService {
         return page == null || page < 1 ? 1 : page;
     }
 
-    /** Số trang: 0 bài vẫn là 1 trang (trang trống). */
-    static int totalPages(int total, int pageSize) {
-        return Math.max(1, (total + pageSize - 1) / pageSize);
-    }
-
-    /** Tối đa 5 số trang quanh trang hiện tại, ví dụ trang 6/20 → 4 5 6 7 8. */
-    static List<Option> pageLinks(int page, int totalPages) {
-        int start = Math.max(1, page - 2);
-        int end = Math.min(totalPages, start + 4);
-        start = Math.max(1, end - 4);
-        List<Option> links = new ArrayList<>();
-        for (int number = start; number <= end; number++) {
-            links.add(new Option(String.valueOf(number), String.valueOf(number), -1, number == page));
-        }
-        return links;
+    /**
+     * Số trang: 0 bài vẫn là 1 trang (trang trống).
+     * Công thức làm tròn lên: (tổng + cỡ_trang − 1) ÷ cỡ_trang.
+     * Muốn đổi số bài mỗi trang → sửa 1 hằng PAGE_SIZE ở đầu file này.
+     */
+    static int totalPages(int total) {
+        return Math.max(1, (total + PAGE_SIZE - 1) / PAGE_SIZE);
     }
 
     /** Điền 3 nhãn tiếng Việt cho 1 bài; bài không có ảnh wger → ảnh dự phòng theo nhóm cơ. */

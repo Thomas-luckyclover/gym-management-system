@@ -128,20 +128,7 @@ class ExerciseLibraryServiceTest {
     @ParameterizedTest
     @CsvSource({"0, 1", "1, 1", "12, 1", "13, 2", "78, 7", "812, 68"})
     void totalPagesRoundsUpAndEmptyIsOnePage(int total, int expected) {
-        assertEquals(expected, ExerciseLibraryService.totalPages(total, 12));
-    }
-
-    @Test
-    void pageLinksShowFiveAroundCurrentAndStayInsideRange() {
-        assertEquals(List.of("4", "5", "6", "7", "8"), values(ExerciseLibraryService.pageLinks(6, 20)));
-        assertEquals(List.of("1", "2", "3", "4", "5"), values(ExerciseLibraryService.pageLinks(1, 20)));
-        assertEquals(List.of("16", "17", "18", "19", "20"), values(ExerciseLibraryService.pageLinks(20, 20)));
-        assertEquals(List.of("1", "2"), values(ExerciseLibraryService.pageLinks(2, 2)));
-        assertTrue(ExerciseLibraryService.pageLinks(6, 20).get(2).isSelected());
-    }
-
-    private static List<String> values(List<Option> options) {
-        return options.stream().map(Option::getValue).toList();
+        assertEquals(expected, ExerciseLibraryService.totalPages(total));
     }
 
     // ===== Nhãn tiếng Việt =====

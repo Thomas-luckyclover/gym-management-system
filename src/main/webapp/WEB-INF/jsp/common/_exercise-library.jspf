@@ -161,24 +161,49 @@
                         </c:forEach>
                     </ul>
 
-                    <%-- 3.5 Phân trang: STT tính theo trang đang xem (Service), link giữ mọi bộ lọc --%>
+                    <%-- 3.5 Link Trước/Sau + form GET nhảy thẳng trang; giữ nguyên bộ lọc, không cần JS. --%>
                     <nav class="ex-pager" aria-label="Phân trang">
                         <span class="ex-pager__info">Hiện <c:out value="${library.firstIndex}" />–<c:out value="${library.lastIndex}" /> / <c:out value="${library.total}" /> bài</span>
                         <c:if test="${library.totalPages > 1}">
                             <div class="ex-pager__links">
-                                <c:forEach var="pg" items="${library.pageLinks}">
-                                    <c:url var="pageUrl" value="${libraryUrl}">
-                                        <c:param name="page" value="${pg.value}" />
-                                        <c:if test="${not empty library.categoryId}"><c:param name="category" value="${library.categoryId}" /></c:if>
-                                        <c:if test="${not empty library.query}"><c:param name="q" value="${library.query}" /></c:if>
-                                        <c:if test="${not empty library.equipmentId}"><c:param name="equipment" value="${library.equipmentId}" /></c:if>
-                                        <c:if test="${library.sort ne 'name'}"><c:param name="sort" value="${library.sort}" /></c:if>
-                                    </c:url>
-                                    <a class="ex-page ${pg.selected ? 'is-active' : ''}" href="${pageUrl}"
-                                       aria-current="${pg.selected ? 'page' : 'false'}"><c:out value="${pg.label}" /></a>
-                                </c:forEach>
-                                <span class="ex-pager__total">/ <c:out value="${library.totalPages}" /> trang</span>
+                                <c:choose>
+                                    <c:when test="${library.page > 1}">
+                                        <c:url var="prevUrl" value="${libraryUrl}">
+                                            <c:param name="page" value="${library.page - 1}" />
+                                            <c:if test="${not empty library.categoryId}"><c:param name="category" value="${library.categoryId}" /></c:if>
+                                            <c:if test="${not empty library.query}"><c:param name="q" value="${library.query}" /></c:if>
+                                            <c:if test="${not empty library.equipmentId}"><c:param name="equipment" value="${library.equipmentId}" /></c:if>
+                                            <c:if test="${library.sort ne 'name'}"><c:param name="sort" value="${library.sort}" /></c:if>
+                                        </c:url>
+                                        <a class="ex-page" href="${prevUrl}">‹ Trước</a>
+                                    </c:when>
+                                    <c:otherwise><span class="ex-page is-disabled">‹ Trước</span></c:otherwise>
+                                </c:choose>
+                                <span class="ex-pager__total">Trang <c:out value="${library.page}" /> / <c:out value="${library.totalPages}" /></span>
+                                <c:choose>
+                                    <c:when test="${library.page < library.totalPages}">
+                                        <c:url var="nextUrl" value="${libraryUrl}">
+                                            <c:param name="page" value="${library.page + 1}" />
+                                            <c:if test="${not empty library.categoryId}"><c:param name="category" value="${library.categoryId}" /></c:if>
+                                            <c:if test="${not empty library.query}"><c:param name="q" value="${library.query}" /></c:if>
+                                            <c:if test="${not empty library.equipmentId}"><c:param name="equipment" value="${library.equipmentId}" /></c:if>
+                                            <c:if test="${library.sort ne 'name'}"><c:param name="sort" value="${library.sort}" /></c:if>
+                                        </c:url>
+                                        <a class="ex-page" href="${nextUrl}">Sau ›</a>
+                                    </c:when>
+                                    <c:otherwise><span class="ex-page is-disabled">Sau ›</span></c:otherwise>
+                                </c:choose>
                             </div>
+                            <form class="ex-pager__jump" method="get" action="${libBase}">
+                                <c:if test="${not empty library.categoryId}"><input type="hidden" name="category" value="${library.categoryId}"></c:if>
+                                <c:if test="${not empty library.query}"><input type="hidden" name="q" value="<c:out value='${library.query}' />"></c:if>
+                                <c:if test="${not empty library.equipmentId}"><input type="hidden" name="equipment" value="${library.equipmentId}"></c:if>
+                                <c:if test="${library.sort ne 'name'}"><input type="hidden" name="sort" value="${library.sort}"></c:if>
+                                <label for="ex-jump-page">Đến trang</label>
+                                <input id="ex-jump-page" name="page" type="number" inputmode="numeric"
+                                       min="1" max="${library.totalPages}" value="${library.page}" required>
+                                <button class="ex-page" type="submit">Đi</button>
+                            </form>
                         </c:if>
                     </nav>
                 </c:otherwise>

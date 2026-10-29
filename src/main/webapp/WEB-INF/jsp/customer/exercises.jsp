@@ -20,7 +20,7 @@
 <head>
     <%@ include file="/WEB-INF/jsp/common/head.jspf" %>
     <title>Thư viện bài tập · Super Gym</title>
-    <link rel="stylesheet" href="${ctx}/css/pages/shared/exercise-library.css?v=20261027c">
+    <link rel="stylesheet" href="${ctx}/css/pages/shared/exercise-library.css?v=20261030jump">
     <link rel="stylesheet" href="${ctx}/css/pages/auth/notification-bell.css">
     <script src="${ctx}/js/pages/auth/notification-bell.js" defer></script>
 </head>
