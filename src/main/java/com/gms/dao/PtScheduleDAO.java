@@ -233,7 +233,7 @@ public class PtScheduleDAO {
     public List<LeaveInfo> findLeaves(Connection connection, int employeeId, LocalDate fromDate, LocalDate toDate)
             throws SQLException {
         String sql = """
-                SELECT lr.FromDate, lr.ToDate, lr.ShiftType, lr.Status
+                SELECT lr.FromDate, lr.ToDate, lr.ShiftType, lr.Status, lr.Reason
                 FROM LeaveRequests lr WITH (HOLDLOCK)
                 WHERE lr.EmployeeId = ?
                   AND lr.FromDate <= ? AND lr.ToDate >= ?
@@ -270,6 +270,7 @@ public class PtScheduleDAO {
         row.setLeaveDate(day);
         row.setShiftType(rs.getString("ShiftType"));      // Morning / Afternoon / FullDay
         row.setStatus(rs.getString("Status"));            // Pending / Approved
+        row.setReason(rs.getString("Reason"));
         return row;
     }
 
@@ -466,10 +467,15 @@ public class PtScheduleDAO {
             }
         }
 
-        // Cách 2: thêm khung mới.
+        // Cách 2: thêm khung mới (DBR-33: chặn chồng giờ ngay trong SQL — lớp cuối chống 2 khung đè nhau).
         String insertSql = """
                 INSERT INTO TimeSlots (PtEmployeeId, SlotDate, StartTime, EndTime, Status)
-                VALUES (?, ?, CAST(? AS time), CAST(? AS time), 'Free')
+                SELECT ?, ?, CAST(? AS time), CAST(? AS time), 'Free'
+                WHERE NOT EXISTS (
+                    SELECT 1 FROM TimeSlots t
+                    WHERE t.PtEmployeeId = ? AND t.SlotDate = ? AND t.Status <> 'Withdrawn'
+                      AND t.StartTime < CAST(? AS time) AND t.EndTime > CAST(? AS time)
+                )
                 """;
 
         try (PreparedStatement statement = connection.prepareStatement(insertSql)) {
@@ -477,7 +483,17 @@ public class PtScheduleDAO {
             statement.setDate(2, Date.valueOf(draft.getSlotDate()));
             statement.setString(3, draft.getStartTime().toString());
             statement.setString(4, draft.getEndTime().toString());
-            statement.executeUpdate();
+            // Các dấu ? trong NOT EXISTS (theo đúng thứ tự xuất hiện trong SQL):
+            statement.setInt(5, ptId);                                       // t.PtEmployeeId = ?
+            statement.setDate(6, Date.valueOf(draft.getSlotDate()));         // t.SlotDate = ?
+            statement.setString(7, draft.getEndTime().toString());           // t.StartTime < @end
+            statement.setString(8, draft.getStartTime().toString());         // t.EndTime  > @start
+            int inserted = statement.executeUpdate();
+            if (inserted == 0) {
+                // IllegalArgumentException để Service trả đúng câu lỗi cho PT (không phải lỗi kết nối DB).
+                throw new IllegalArgumentException("Khung giờ này trùng với khung giờ đã có ("
+                        + draft.getStartTime() + "–" + draft.getEndTime() + ").");
+            }
         }
     }
 }

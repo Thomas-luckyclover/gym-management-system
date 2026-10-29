@@ -112,10 +112,10 @@ public class PtScheduleServlet extends HttpServlet {
      */
     private void loadWeek(HttpServletRequest request, int accountId) {
         // B1: giờ Việt Nam lấy MỘT lần, dùng chung cho cả trang.
-        LocalDateTime now = DateTimeUtil.now();
-        LocalDate today = now.toLocalDate();
+        LocalDateTime now = DateTimeUtil.now(); // thời gian hiện taik
+        LocalDate today = now.toLocalDate(); // Ngày hôm nay
 
-        // B2: ngày muốn xem; thiếu hoặc sai → hôm nay.
+        // B2: ngày muốn xem; Nếu thiếu hoặc sai trả về today: hôm nay.
         //   ?date= đến từ schedule.jsp dòng 77–78 (‹ tuần trước / tuần sau ›), 80–81 (công tắc Tuần / Danh sách giữ ngày).
         //   Nút "Tuần này" dòng 79 không gửi date → hôm nay.
         LocalDate date = PtScheduleService.parseDate(request.getParameter("date"), today);

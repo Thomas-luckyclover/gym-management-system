@@ -15,6 +15,7 @@ public class LeaveInfo {
     private LocalDate leaveDate;     // ngày nghỉ
     private String shiftType;        // Morning | Afternoon | FullDay
     private String status;           // Pending | Approved
+    private String reason;
 
 
     // ===== Getter / Setter: chỉ đọc và gán, không có nghiệp vụ =====
@@ -27,4 +28,7 @@ public class LeaveInfo {
 
     public String getStatus() { return status; }
     public void setStatus(String status) { this.status = status; }
+
+    public String getReason() { return reason; }
+    public void setReason(String reason) { this.reason = reason; }
 }

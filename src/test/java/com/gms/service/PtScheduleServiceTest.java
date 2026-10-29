@@ -130,7 +130,7 @@ class PtScheduleServiceTest {
 
     /** Buổi có khách luôn là booked; trạng thái đã chốt không bị đổi thành khung Free. */
     @ParameterizedTest
-    @CsvSource({"Scheduled,Hôm nay,true", "CheckedIn,Đã check-in,false", "Missed,Vắng,false", "Cancelled,Đã hủy,false"})
+    @CsvSource({"Scheduled,Sắp tới,true", "CheckedIn,Đã check-in,false", "Missed,Vắng,false", "Cancelled,Đã hủy,false"})
     void sessionKeepsItsResultAndActionPermission(String status, String label, boolean canHandle) {
         PtScheduleItem item = session(TODAY, "10:00", "11:30", status);
 
@@ -144,7 +144,7 @@ class PtScheduleServiceTest {
 
     /** Buổi chưa chốt đổi nhãn đúng ở giờ bắt đầu và giờ kết thúc. */
     @ParameterizedTest
-    @CsvSource({"07:30,09:00,Đang cập nhật,true", "08:00,09:30,Đang diễn ra,false", "09:00,10:30,Đang diễn ra,false"})
+    @CsvSource({"07:30,09:00,Chưa chốt,true", "08:00,09:30,Đang diễn ra,false", "09:00,10:30,Đang diễn ra,false"})
     void scheduledSessionUsesTimeBoundaries(LocalTime start, LocalTime end, String label, boolean past) {
         PtScheduleItem item = session(TODAY, start.toString(), end.toString(), "Scheduled");
 
@@ -244,6 +244,48 @@ class PtScheduleServiceTest {
     }
 
     /** Nhãn ca nghỉ giữ cả chờ duyệt/đã duyệt, bỏ đơn bị từ chối và đơn khác ngày. */
+    @Test
+    void wednesdayMorningLeaveExplainsExistingBookingAndAfternoonRemainsAvailable() {
+        LocalDate date = LocalDate.of(2026, 10, 28);
+        LocalDateTime now = date.atTime(15, 30);
+        LeaveInfo request = leave(date, "Morning", "Pending");
+        request.setReason("Đưa người thân đi làm thủ tục buổi sáng.");
+        PtScheduleWeek week = PtScheduleService.buildEmptyWeek(date.minusDays(2), now, List.of(),
+                List.of(request), 90, LocalTime.of(5, 30), LocalTime.of(22, 0));
+        PtScheduleItem morning = session(date, "07:00", "08:30", "Scheduled");
+        morning.setCustomerNames("Nguyễn Văn An");
+        PtScheduleItem locked = slot(date, "09:30", "11:00", "Free");
+        PtScheduleItem noon = slot(date, "11:00", "12:30", "Free");
+        PtScheduleItem running = session(date, "15:00", "16:30", "Scheduled");
+        PtScheduleItem upcoming = session(date, "18:00", "19:30", "Scheduled");
+        PtScheduleItem free = slot(date, "20:00", "21:30", "Free");
+        PtScheduleService.fillWeek(week, List.of(morning, locked, noon, running, upcoming, free), List.of(request), now);
+
+        PtScheduleDay day = week.getDays().get(2);
+        assertEquals("Nghỉ phép ca sáng · chờ duyệt", day.getLeaveLabel());
+        assertTrue(day.getLeaveDetails().contains(request.getReason()));
+        assertEquals(1, day.getLeaveBookings().size());
+        assertTrue(day.getLeaveBookings().get(0).contains("07:00 – 08:30 · Nguyễn Văn An"));
+        assertEquals("booked", morning.getKind());
+        assertEquals("Chưa chốt", morning.getStatusLabel());
+        assertEquals("Chờ duyệt nghỉ", locked.getStatusLabel());
+        assertEquals("locked", noon.getKind());
+        assertEquals("Đang diễn ra", running.getStatusLabel());
+        assertEquals("Sắp tới", upcoming.getStatusLabel());
+        assertEquals("free", free.getKind());
+        assertTrue(free.isCanRemove());
+    }
+
+    @Test
+    void leaveDetailsExcludeRejectedRequestsAndApprovedLabelIsClear() {
+        LeaveInfo rejected = leave(TODAY, "Morning", "Rejected");
+        rejected.setReason("Không được hiển thị");
+        assertEquals("", PtScheduleService.buildLeaveDetails(TODAY, List.of(rejected)));
+        PtScheduleItem item = slot(TODAY, "10:00", "11:30", "Free");
+        PtScheduleService.classify(item, List.of(leave(TODAY, "Morning", "Approved")), NOW);
+        assertEquals("Đã duyệt nghỉ", item.getStatusLabel());
+    }
+
     @Test
     void leaveLabelContainsOnlyActiveLeavesOfTheDay() {
         List<LeaveInfo> leaves = List.of(leave(TODAY, "Morning", "Pending"),

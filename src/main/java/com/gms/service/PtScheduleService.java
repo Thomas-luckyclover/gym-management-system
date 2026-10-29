@@ -78,15 +78,16 @@ public class PtScheduleService {
             LocalTime[] hours = parseOpeningHours(configService.getString(SystemConfigService.OPENING_HOURS));
 
             // B4: đọc 4 nhóm dữ liệu của CẢ TUẦN, mỗi nhóm đúng 1 lần.
-            List<PtScheduleItem> sessions = scheduleDAO.findSessions(ptId, monday, sunday);
-            List<PtScheduleItem> openSlots = scheduleDAO.findOpenSlots(ptId, monday, sunday);
-            List<LeaveInfo> leaves = scheduleDAO.findLeaves(ptId, monday, sunday);
-            List<HourException> exceptions = scheduleDAO.findHourExceptions(monday, sunday);
+            List<PtScheduleItem> sessions = scheduleDAO.findSessions(ptId, monday, sunday); // các buổi PT dạy từ fromDate => ToDate
+            List<PtScheduleItem> openSlots = scheduleDAO.findOpenSlots(ptId, monday, sunday); // các buổi Free/Held, chưa Scheduled
+            List<LeaveInfo> leaves = scheduleDAO.findLeaves(ptId, monday, sunday); // Đơn nghỉ Pending / Approved của PT trong khoảng ngày.
+            List<HourException> exceptions = scheduleDAO.findHourExceptions(monday, sunday); // Các ngày đổi ngày/nghỉ cả ngày
 
             // B5: dựng 7 ngày trống, rồi xếp từng thẻ vào đúng ngày.
             PtScheduleWeek week = buildEmptyWeek(monday, now, exceptions, leaves, minutes, hours[0], hours[1]);
-            List<PtScheduleItem> allItems = merge(sessions, openSlots);
-            fillWeek(week, allItems, leaves, now);
+            List<PtScheduleItem> allItems = merge(sessions, openSlots); // Ghép buổi có khách + buổi trống thành một danh sách, xếp theo ngày rồi giờ.
+
+            fillWeek(week, allItems, leaves, now); // phân loại từng thẻ: free/held/locked/booked
 
             return ServiceResult.ok(week);
 
@@ -127,9 +128,10 @@ public class PtScheduleService {
         // B3: dựng từng ngày, i = 0 là Thứ 2 ... i = 6 là Chủ nhật.
         List<PtScheduleDay> days = new ArrayList<>();
         for (int i = 0; i < 7; i++) {
-            PtScheduleDay day = buildDay(monday.plusDays(i), now.toLocalDate(), open, close, exceptions);
-            day.setLeaveLabel(buildLeaveLabel(day.getDate(), leaves));
-            setAddRange(day, now, sessionMinutes);
+            PtScheduleDay day = buildDay(monday.plusDays(i), now.toLocalDate(), open, close, exceptions); // 1 ngày giờ mặc định + ngày ngoại lệ/đóng cửa
+            day.setLeaveLabel(buildLeaveLabel(day.getDate(), leaves)); // nhãn nghỉ phép của một ngày, ko có thì chuỗi rỗng
+            day.setLeaveDetails(buildLeaveDetails(day.getDate(), leaves)); // Lý do nghỉ chi tiết
+            setAddRange(day, now, sessionMinutes); //mở 05:30–22:00, khung 90 phút → first = 330 (05:30), last = 1170 (19:30).
             days.add(day);
 
             // Ngày mở sớm hơn / đóng muộn hơn P-19 thì nới trục chung để không cắt mất khung.
@@ -242,6 +244,18 @@ public class PtScheduleService {
         return String.join("; ", labels);
     }
 
+    static String buildLeaveDetails(LocalDate date, List<LeaveInfo> leaves) {
+        List<String> details = new ArrayList<>();
+        for (LeaveInfo leave : leaves) {
+            if (date.equals(leave.getLeaveDate()) && isActiveLeave(leave)) {
+                String reason = leave.getReason();
+                details.add(buildLeaveLabel(date, List.of(leave)) + "\nLý do: "
+                        + (reason == null || reason.isBlank() ? "Không có thông tin." : reason));
+            }
+        }
+        return String.join("\n\n", details);
+    }
+
     /** HÀM PHỤ — gọi ở B1 của buildDay. Thứ 2 ... Thứ 7, Chủ nhật (Java đánh số Thứ 2 = 1). */
     private static String dayName(LocalDate date) {
         DayOfWeek dayOfWeek = date.getDayOfWeek();
@@ -291,6 +305,10 @@ public class PtScheduleService {
             for (PtScheduleDay day : week.getDays()) {
                 if (day.getDate().equals(item.getSlotDate())) {
                     day.getItems().add(item);
+                    if ("Scheduled".equals(item.getSessionStatus()) && isOnLeave(item, leaves)) {
+                        day.getLeaveBookings().add(item.getStartTime() + " – " + item.getEndTime()
+                                + " · " + item.getCustomerNames() + " · " + item.getStatusLabel());
+                    }
                     break;
                 }
             }
@@ -340,7 +358,9 @@ public class PtScheduleService {
         // B4: trùng ca nghỉ phép → locked (chỉ hiển thị, không sửa DB).
         if (isOnLeave(item, leaves)) {
             item.setKind("locked");
-            item.setStatusLabel("Tạm khóa · đơn nghỉ");
+            boolean approved = leaves.stream().anyMatch(leave -> "Approved".equals(leave.getStatus())
+                    && isOnLeave(item, List.of(leave)));
+            item.setStatusLabel(approved ? "Đã duyệt nghỉ" : "Chờ duyệt nghỉ");
             return;
         }
 
@@ -353,7 +373,7 @@ public class PtScheduleService {
     /**
      * HÀM PHỤ — gọi ở B2 của classify.
      * Chữ trạng thái của buổi có khách. Buổi đã có kết quả giữ nguyên kết quả;
-     * buổi còn Scheduled thì đổi chữ theo giờ: Sắp tới → Hôm nay → Đang diễn ra → Đang cập nhật.
+     * buổi còn Scheduled thì đổi chữ theo giờ: Sắp tới → Đang diễn ra → Chưa chốt.
      */
     private static String sessionLabel(PtScheduleItem item, LocalDateTime start,
             LocalDateTime end, LocalDateTime now) {
@@ -365,13 +385,12 @@ public class PtScheduleService {
 
         if (status == Session.Status.SCHEDULED) {
             if (!end.isAfter(now)) {
-                return "Đang cập nhật";      // đã hết giờ nhưng hệ thống chưa chốt kết quả
+                return "Chưa chốt";      // đã hết giờ nhưng hệ thống chưa chốt kết quả
             }
             if (!start.isAfter(now)) {
                 return "Đang diễn ra";
             }
-            boolean isToday = item.getSlotDate().equals(now.toLocalDate());
-            return isToday ? "Hôm nay" : "Sắp tới";
+            return "Sắp tới";
         }
 
         return switch (status) {
@@ -687,9 +706,9 @@ public class PtScheduleService {
 
             // Thử lùi 1 tuần và tiến 13 ngày: vượt giới hạn năm của Java thì cũng vào catch.
             // Nhờ vậy nút ‹ › không bao giờ gây lỗi 500.
-            LocalDate weekStart = weekStartOf(date);
-            weekStart.minusWeeks(1);
-            weekStart.plusDays(13);
+            LocalDate weekStart = weekStartOf(date); // thứ 2 đầu tuần hiện tại
+            weekStart.minusWeeks(1); // thứ 2 tuần trước
+            weekStart.plusDays(13); // tiến 13 ngày
 
             return date;
         } catch (DateTimeException exception) {
