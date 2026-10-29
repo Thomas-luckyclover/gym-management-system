@@ -7,7 +7,7 @@
         <%@ include file="/WEB-INF/jsp/common/head.jspf" %>
         <title>Thanh toán · Super Gym</title>
         <link rel="stylesheet" href="${pageContext.request.contextPath}/css/pages/customer/dashboard.css?v=7">
-        <link rel="stylesheet" href="${pageContext.request.contextPath}/css/pages/customer/checkout.css?v=7">
+        <link rel="stylesheet" href="${pageContext.request.contextPath}/css/pages/customer/checkout.css?v=20261030_vGymCheckout">
         <script src="${pageContext.request.contextPath}/js/pages/customer/checkout.js?v=5" defer></script>
     </head>
     <body class="dock checkout-page ${themeClass}">

@@ -11,7 +11,7 @@
         <link rel="stylesheet"
               href="${pageContext.request.contextPath}/css/pages/customer/dashboard.css?v=7">
         <link rel="stylesheet"
-              href="${pageContext.request.contextPath}/css/pages/customer/transaction-history.css?v=1">
+              href="${pageContext.request.contextPath}/css/pages/customer/transaction-history.css?v=11">
         <script src="${pageContext.request.contextPath}/js/pages/customer/transaction-history.js?v=1" defer></script>
     </head>
 
@@ -72,6 +72,11 @@
                                     </c:when>
 
                                     <c:otherwise>
+                                        <%-- Tiêu đề cột (chỉ hiện ở màn lớn) --%>
+                                        <div class="history-head" aria-hidden="true">
+                                            <span>Gói</span><span>Ngày mua</span><span>Thanh toán</span><span>Mã đơn</span><span>Trạng thái</span><span>Số tiền</span><span></span>
+                                        </div>
+
                                         <%-- Danh sách nhóm theo tháng: gặp tháng mới thì đóng <ul> cũ và mở nhóm mới --%>
                                         <c:set var="currentMonth" value=""/>
                                         <c:forEach var="item" items="${historyItems}">
@@ -89,28 +94,19 @@
                                                 <%-- Dòng: bấm để mở popup chi tiết (js/pages/customer/transaction-history.js) --%>
                                                 <button type="button" class="th-row"
                                                         data-th-open="th-dialog-${item.transactionId}"
-                                                        data-status="${item.displayStatus}"
-                                                        data-tone="${item.tone}">
-                                                    <span class="th-row__thumb">
-                                                        <i class="th-badge" data-status="${item.displayStatus}" aria-hidden="true"></i>
+                                                        data-status="${item.displayStatus}">
+                                                    <span class="th-row__title"><c:out value="${item.packageName}"/></span>
+                                                    <span class="th-row__meta">
+                                                        <span class="th-row__date"><c:out value="${item.createdDateText}"/></span>
+                                                        <span class="th-row__method"><c:out value="${item.paymentMethodLabel}"/></span>
                                                     </span>
-                                                    <span>
-                                                        <span class="th-row__title"><c:out value="${item.packageName}"/></span>
-                                                        <span class="th-row__date">
-                                                            <c:out value="${item.createdDateText}"/> · <c:out value="${item.paymentMethodLabel}"/>
-                                                        </span>
-                                                        <c:if test="${item.hasValidity}">
-                                                            <span class="th-row__valid">Đến <c:out value="${item.validUntilText}"/></span>
-                                                        </c:if>
-                                                    </span>
-                                                    <span class="th-row__side">
-                                                        <strong class="th-row__amount"><c:out value="${gms:formatMoney(item.amount)}"/></strong>
-                                                        <span class="th-status" data-status="${item.displayStatus}"><c:out value="${item.shortStatusLabel}"/></span>
-                                                    </span>
+                                                    <span class="th-row__code"><span class="th-row__code-pre">Mã đơn </span><c:out value="${item.orderCode}"/></span>
+                                                    <span class="th-status" data-status="${item.displayStatus}"><c:out value="${item.shortStatusLabel}"/></span>
+                                                    <strong class="th-row__amount"><c:out value="${gms:formatMoney(item.amount)}"/></strong>
                                                     <span class="th-row__go"><span>Chi tiết</span></span>
                                                 </button>
 
-                                                <%-- Popup chi tiết của giao dịch này --%>
+                                                <%-- Popup chi tiết (dạng hóa đơn) của giao dịch này --%>
                                                 <dialog class="th-dialog" id="th-dialog-${item.transactionId}"
                                                         data-tone="${item.tone}" data-status="${item.displayStatus}"
                                                         aria-label="Chi tiết giao dịch">
@@ -118,20 +114,35 @@
                                                         <button type="button" class="th-dialog__close" data-th-close aria-label="Đóng">&#10005;</button>
                                                     </div>
                                                     <div class="th-dialog__body">
-                                                        <div class="th-dialog__head">
-                                                            <div>
-                                                                <h2 class="th-dialog__title"><c:out value="${item.packageName}"/></h2>
-                                                                <span class="th-status" data-status="${item.displayStatus}"><c:out value="${item.shortStatusLabel}"/></span>
-                                                            </div>
-                                                            <strong class="th-dialog__amount"><c:out value="${gms:formatMoney(item.amount)}"/></strong>
+                                                        <h2 class="th-dialog__title"><c:out value="${item.packageName}"/></h2>
+                                                        <span class="th-status" data-status="${item.displayStatus}"><c:out value="${item.shortStatusLabel}"/></span>
+
+                                                        <p class="th-dialog__section">Thanh toán</p>
+                                                        <dl class="th-dialog__list">
+                                                            <div><dt>Giá gốc</dt><dd><c:out value="${gms:formatMoney(item.originalPrice)}"/></dd></div>
+                                                            <c:if test="${item.hasDiscount}">
+                                                                <div>
+                                                                    <dt>Giảm giá<c:if test="${not empty item.voucherCode}"> (<c:out value="${item.voucherCode}"/>)</c:if></dt>
+                                                                    <dd class="is-discount">− <c:out value="${gms:formatMoney(item.discountAmount)}"/></dd>
+                                                                </div>
+                                                            </c:if>
+                                                            <div><dt>Đã gồm VAT <c:out value="${item.vatRate}"/>%</dt><dd><c:out value="${gms:formatMoney(item.vatAmount)}"/></dd></div>
+                                                        </dl>
+                                                        <div class="th-dialog__total">
+                                                            <span>Tổng thanh toán</span>
+                                                            <strong><c:out value="${gms:formatMoney(item.amount)}"/></strong>
                                                         </div>
 
+                                                        <p class="th-dialog__section">Giao dịch</p>
                                                         <dl class="th-dialog__list">
-                                                            <c:if test="${item.hasValidity}">
-                                                                <div><dt>Hiệu lực</dt><dd><c:out value="${item.validityText}"/></dd></div>
+                                                            <div><dt>Tạo lúc</dt><dd><c:out value="${item.createdAtText}"/></dd></div>
+                                                            <c:if test="${item.hasCompleted}">
+                                                                <div>
+                                                                    <dt><c:out value="${item.status eq 'Success' ? 'Hoàn tất lúc' : 'Xử lý lúc'}"/></dt>
+                                                                    <dd><c:out value="${item.completedAtText}"/></dd>
+                                                                </div>
                                                             </c:if>
-                                                            <div><dt>Thời gian</dt><dd><c:out value="${item.createdAtText}"/></dd></div>
-                                                            <div><dt>Thanh toán</dt><dd><c:out value="${item.paymentMethodLabel}"/></dd></div>
+                                                            <div><dt>Phương thức</dt><dd><c:out value="${item.paymentMethodLabel}"/></dd></div>
                                                             <c:if test="${not empty item.refundRowText}">
                                                                 <div><dt>Hoàn tiền</dt><dd><c:out value="${item.refundRowText}"/></dd></div>
                                                             </c:if>

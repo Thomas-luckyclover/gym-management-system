@@ -30,7 +30,7 @@
         </svg>
         <span>Check-in</span>
       </a>
-      <a href="#"
+      <a href="${pageContext.request.contextPath}/receptionist/sales"
          class="nav-link<c:if test="${activeNav == 'sales'}"> active</c:if>"
          <c:if test="${activeNav == 'sales'}">aria-current="page"</c:if>>
         <svg viewBox="0 0 24 24" aria-hidden="true">

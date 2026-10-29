@@ -61,7 +61,7 @@ public class PackageDAO {
    /** Đọc gói tại lúc mua, giữ giá tới cuối transaction; null nếu không tồn tại. */
     public Package findById(Connection conn, int packageId) throws SQLException {
         String sql = "SELECT PackageId, PackageName, Description, Benefits, PackageType, "
-                + "DurationUnit, DurationValue, EstimatedSessionCount, Price, IsActive, CreatedAt "
+                + "DurationUnit, DurationValue, EstimatedSessionCount, Price, IsActive, UnlocksExerciseLibrary, CreatedAt "
                 + "FROM Packages WITH (HOLDLOCK) WHERE PackageId = ?";
         try (PreparedStatement statement = conn.prepareStatement(sql)) {
             statement.setInt(1, packageId);

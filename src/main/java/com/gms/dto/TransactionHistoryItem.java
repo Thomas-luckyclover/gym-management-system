@@ -1,6 +1,5 @@
 package com.gms.dto;
 
-import java.time.LocalDate;
 import java.time.LocalDateTime;
 import java.time.format.DateTimeFormatter;
 
@@ -26,8 +25,11 @@ public class TransactionHistoryItem {
     private final LocalDateTime refundedAt;
     private final Integer subscriptionId;
     private final String packageType;
-    private final LocalDate validFrom;
-    private final LocalDate validTo;
+    private final long originalPrice;
+    private final long discountAmount;
+    private final String voucherCode;
+    private final int vatRate;
+    private final long vatAmount;
 
     public TransactionHistoryItem(
             int transactionId,
@@ -43,8 +45,11 @@ public class TransactionHistoryItem {
             LocalDateTime refundedAt,
             Integer subscriptionId,
             String packageType,
-            LocalDate validFrom,
-            LocalDate validTo) {
+            long originalPrice,
+            long discountAmount,
+            String voucherCode,
+            int vatRate,
+            long vatAmount) {
 
         this.transactionId = transactionId;
         this.orderCode = orderCode;
@@ -59,8 +64,11 @@ public class TransactionHistoryItem {
         this.refundedAt = refundedAt;
         this.subscriptionId = subscriptionId;
         this.packageType = packageType;
-        this.validFrom = validFrom;
-        this.validTo = validTo;
+        this.originalPrice = originalPrice;
+        this.discountAmount = discountAmount;
+        this.voucherCode = voucherCode;
+        this.vatRate = vatRate;
+        this.vatAmount = vatAmount;
     }
 
     public int getTransactionId() {
@@ -102,17 +110,9 @@ public class TransactionHistoryItem {
                 && refundedAt == null;
     }
 
+    /** Chỉ có 2 hình thức hiển thị cho khách: VNPay (online) hoặc Tại quầy (tiền mặt/chuyển khoản do lễ tân thu). */
     public String getPaymentMethodLabel() {
-        if ("OnlineGateway".equals(paymentMethod)) {
-            return "VNPay";
-        }
-        if ("Cash".equals(paymentMethod)) {
-            return "Tiền mặt";
-        }
-        if ("Transfer".equals(paymentMethod)) {
-            return "Chuyển khoản";
-        }
-        return paymentMethod;
+        return "OnlineGateway".equals(paymentMethod) ? "VNPay" : "Tại quầy";
     }
 
     public String getStatusLabel() {
@@ -145,7 +145,37 @@ public class TransactionHistoryItem {
 
     // ===== Dùng cho giao diện danh sách + popup chi tiết =====
 
-    /** Tên màu/ảnh của thẻ gói (khớp data-tone ở trang Mua gói). */
+    public long getOriginalPrice() {
+        return originalPrice;
+    }
+
+    public long getDiscountAmount() {
+        return discountAmount;
+    }
+
+    /** % VAT lúc mua (đã nằm trong giá, không cộng thêm). */
+    public int getVatRate() {
+        return vatRate;
+    }
+
+    public long getVatAmount() {
+        return vatAmount;
+    }
+
+    public boolean isHasCompleted() {
+        return completedAt != null;
+    }
+
+    public String getVoucherCode() {
+        return voucherCode;
+    }
+
+    /** Đơn có giảm giá thì popup hiện thêm dòng Giảm giá. */
+    public boolean isHasDiscount() {
+        return discountAmount > 0;
+    }
+
+    /** Tên màu/ảnh của banner popup (khớp data-tone ở trang Mua gói). */
     public String getTone() {
         if (packageType == null) {
             return "membership";
@@ -171,7 +201,7 @@ public class TransactionHistoryItem {
         return "Pending";
     }
 
-    /** Nhãn ngắn dưới số tiền. */
+    /** Nhãn ngắn của trạng thái. */
     public String getShortStatusLabel() {
         if (refundedAt != null) {
             return "Đã hoàn tiền";
@@ -187,7 +217,7 @@ public class TransactionHistoryItem {
         }
     }
 
-    /** Dòng "Hoàn tiền" trong popup; null nếu không liên quan thì JSP không in. */
+    /** Dòng "Hoàn tiền" trong popup; null thì JSP không in. */
     public String getRefundRowText() {
         if (refundedAt != null) {
             return refundedAt.format(DISPLAY_DATE);
@@ -199,22 +229,6 @@ public class TransactionHistoryItem {
     public boolean isCanBuyAgain() {
         return ("Failed".equals(status) || "Expired".equals(status))
                 && refundedAt == null && !needsRefund;
-    }
-
-    /** Chỉ giao dịch thành công có gói còn hợp lệ mới hiện hiệu lực. */
-    public boolean isHasValidity() {
-        return isCanViewPackage() && validFrom != null && validTo != null;
-    }
-
-    public String getValidUntilText() {
-        return validTo == null ? "" : validTo.format(DISPLAY_DATE);
-    }
-
-    public String getValidityText() {
-        if (validFrom == null || validTo == null) {
-            return "";
-        }
-        return validFrom.format(DISPLAY_DATE) + " – " + validTo.format(DISPLAY_DATE);
     }
 
     public String getCreatedDateText() {

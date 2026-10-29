@@ -65,8 +65,9 @@
                     <div class="tb-left">
                         <h1 class="tb-title">Trang cá nhân</h1>
                     </div>
-                    <c:if test="${not empty dashboard}">
-                        <div class="top-right">
+                    <div class="top-right">
+                        <%@ include file="/WEB-INF/jsp/common/notification-bell.jspf" %>
+                        <c:if test="${not empty dashboard}">
                             <a class="tb-user" href="${pageContext.request.contextPath}/account"
                                title="Cài đặt tài khoản">
                                 <c:choose>
@@ -90,8 +91,8 @@
                                     </span>
                                 </span>
                             </a>
-                        </div>
-                    </c:if>
+                        </c:if>
+                    </div>
                 </header>
 =======
         <header class="topbar">
