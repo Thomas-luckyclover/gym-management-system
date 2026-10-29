@@ -3,11 +3,13 @@ package com.gms.service;
 import com.gms.constant.Messages;
 import com.gms.dao.CounterSaleDAO;
 import com.gms.dao.PtSaleDAO;
+import com.gms.dao.ShiftDAO;
 import com.gms.dto.CounterCustomerRow;
 import com.gms.dto.CounterPackageCard;
 import com.gms.dto.CounterPackageView;
 import com.gms.dto.ServiceResult;
 import com.gms.entity.Package;
+import com.gms.entity.Shift;
 import com.gms.util.DBContext;
 import com.gms.util.DateTimeUtil;
 import com.gms.util.MoneyUtil;
@@ -38,6 +40,7 @@ public class CounterSaleService {
 
     private final CounterSaleDAO counterSaleDAO = new CounterSaleDAO();
     private final PtSaleDAO ptSaleDAO = new PtSaleDAO();
+    private final ShiftDAO shiftDAO = new ShiftDAO();
     private final SystemConfigService configService = new SystemConfigService();
 
     /**
@@ -135,9 +138,11 @@ public class CounterSaleService {
             }
 
             // B3: lấy riêng phần chữ số để tìm theo SĐT ("090 123" thành "090123").
+            // receptionist[1] là mã Person của lễ tân, để đánh dấu hồ sơ của chính họ (CBR-115).
             String digits = text.replaceAll("\\D", "");
             LocalDate today = DateTimeUtil.today();
-            List<CounterCustomerRow> rows = counterSaleDAO.searchCustomers(connection, text, digits, today);
+            List<CounterCustomerRow> rows = counterSaleDAO.searchCustomers(connection, text, digits, today,
+                    receptionist[1]);
             return ServiceResult.ok(rows);
         } catch (SQLException e) {
             e.printStackTrace();
@@ -149,7 +154,7 @@ public class CounterSaleService {
      * Lấy khách đã chọn (URL có ?customer=…).
      * @param accountId mã tài khoản từ session
      * @param customerId mã khách từ URL
-     * @return khách, hoặc lỗi nếu hồ sơ không có / đã xóa
+     * @return khách, hoặc lỗi nếu chưa mở ca / hồ sơ không có / là hồ sơ của chính lễ tân
      */
     public ServiceResult<CounterCustomerRow> getCustomer(int accountId, int customerId) {
         try (Connection connection = DBContext.getConnection()) {
@@ -158,10 +163,21 @@ public class CounterSaleService {
                 return ServiceResult.fail(Messages.MSG07_NO_PERMISSION);
             }
 
+            // SRS 7.2.1 ghi chú 1: phải có ca đang mở thì mới bán (doanh thu tính vào ca đó).
+            Shift currentShift = shiftDAO.findCurrentOrActiveShift(DateTimeUtil.today());
+            if (currentShift == null || !currentShift.isOpen()) {
+                return ServiceResult.fail("Chưa mở ca làm việc. Vui lòng mở ca ở màn Ca làm việc trước khi bán gói.");
+            }
+
             LocalDate today = DateTimeUtil.today();
-            CounterCustomerRow row = counterSaleDAO.findCustomer(connection, customerId, today);
+            CounterCustomerRow row = counterSaleDAO.findCustomer(connection, customerId, today, receptionist[1]);
             if (row == null) {
                 return ServiceResult.fail(String.format(Messages.MSG08_NOT_FOUND, "khách hàng"));
+            }
+
+            // CBR-115: lễ tân không được bán cho hồ sơ của chính mình (chặn cả khi gõ thẳng ?customer=… lên URL).
+            if (row.isOwnProfile()) {
+                return ServiceResult.fail(Messages.MSG76_STAFF_OWN_CUSTOMER_PROFILE);
             }
             return ServiceResult.ok(row);
         } catch (SQLException e) {
