@@ -115,4 +115,9 @@ public class PackageOptionView {
     public String getImagePath() {
         return imagePath;
     }
+    /** JSP nhận biết buổi PT lẻ để hiện link chọn lịch, không tạo đơn ngay. */
+    public boolean isSingleSession() {
+        return card.getPkg().getPackageType()
+                == com.gms.entity.Package.Type.SINGLE_SESSION;
+    }
 }
