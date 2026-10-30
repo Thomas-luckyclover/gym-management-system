@@ -4,69 +4,44 @@
 document.addEventListener('DOMContentLoaded', function () {
     // Xử lý Modal chụp ảnh tại quầy
     const photoModal = document.getElementById('photoModal');
-    const openPhotoBtns = document.querySelectorAll('[data-ci-photo]');
-    const closePhotoBtns = document.querySelectorAll('[data-close-modal]');
-    const captureBtn = document.getElementById('captureBtn');
+    if (!photoModal) return; // Chưa tra cứu hội viên thì không cần xử lý camera
+
     const cameraVideo = document.getElementById('cameraVideo');
     const cameraCanvas = document.getElementById('cameraCanvas');
     const photoFileInput = document.getElementById('photoFileInput');
+    const captureBtn = document.getElementById('captureBtn');
     let videoStream = null;
 
     function openModal() {
-        if (!photoModal) return;
         photoModal.classList.add('open');
-        startCamera();
-    }
-
-    function closeModal() {
-        if (!photoModal) return;
-        photoModal.classList.remove('open');
-        stopCamera();
-    }
-
-    openPhotoBtns.forEach(btn => {
-        btn.addEventListener('click', openModal);
-    });
-
-    closePhotoBtns.forEach(btn => {
-        btn.addEventListener('click', closeModal);
-    });
-
-    if (photoModal) {
-        photoModal.addEventListener('click', function (e) {
-            if (e.target === photoModal) {
-                closeModal();
-            }
-        });
-    }
-
-    function startCamera() {
         if (navigator.mediaDevices && navigator.mediaDevices.getUserMedia) {
             navigator.mediaDevices.getUserMedia({ video: { width: 640, height: 480 } })
                 .then(stream => {
                     videoStream = stream;
-                    if (cameraVideo) {
-                        cameraVideo.srcObject = stream;
-                        cameraVideo.style.display = 'block';
-                        if (cameraCanvas) cameraCanvas.style.display = 'none';
-                        if (captureBtn) captureBtn.disabled = false;
-                    }
+                    cameraVideo.srcObject = stream;
+                    cameraVideo.style.display = 'block';
+                    cameraCanvas.style.display = 'none';
                 })
-                .catch(err => {
-                    console.warn('Không thể truy cập camera:', err);
-                    if (cameraVideo) cameraVideo.style.display = 'none';
-                });
+                .catch(err => console.warn('Không thể truy cập camera:', err));
         }
     }
 
-    function stopCamera() {
+    function closeModal() {
+        photoModal.classList.remove('open');
         if (videoStream) {
             videoStream.getTracks().forEach(track => track.stop());
             videoStream = null;
         }
     }
 
-    if (captureBtn && cameraCanvas && cameraVideo) {
+    // Mở modal khi bấm nút chụp ảnh
+    document.querySelectorAll('[data-ci-photo]').forEach(btn => btn.addEventListener('click', openModal));
+
+    // Đóng modal: chỉ đóng khi bấm nút [X] (data-close-modal)
+    document.querySelectorAll('[data-close-modal]').forEach(btn => btn.addEventListener('click', closeModal));
+
+    // Bấm nút "Chụp từ webcam"
+    if (captureBtn) {
         captureBtn.addEventListener('click', function () {
             if (!videoStream) return;
             const ctx = cameraCanvas.getContext('2d');
@@ -77,15 +52,13 @@ document.addEventListener('DOMContentLoaded', function () {
             cameraCanvas.style.display = 'block';
             cameraVideo.style.display = 'none';
 
-            // Chuyển canvas sang Blob rồi gắn vào FileInput để submit form
+            // Chuyển ảnh webcam sang file để submit form
             cameraCanvas.toBlob(blob => {
                 if (blob) {
                     const file = new File([blob], 'captured-checkin.jpg', { type: 'image/jpeg' });
                     const container = new DataTransfer();
                     container.items.add(file);
-                    if (photoFileInput) {
-                        photoFileInput.files = container.files;
-                    }
+                    photoFileInput.files = container.files;
                 }
             }, 'image/jpeg', 0.9);
         });
