@@ -2,20 +2,7 @@
  * Client script cho màn hình Check-in Lễ tân (UC-19).
  */
 document.addEventListener('DOMContentLoaded', function () {
-    const ciForm = document.getElementById('ciForm');
     const ciInput = document.getElementById('ciq');
-
-    // Nút thử nhanh: điền mã và submit form tìm kiếm
-    const tryButtons = document.querySelectorAll('[data-try]');
-    tryButtons.forEach(btn => {
-        btn.addEventListener('click', function () {
-            const code = this.getAttribute('data-try');
-            if (ciInput && code) {
-                ciInput.value = code;
-                ciForm.submit();
-            }
-        });
-    });
 
     // Xử lý Modal chụp ảnh tại quầy
     const photoModal = document.getElementById('photoModal');
