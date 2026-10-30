@@ -433,7 +433,7 @@
                       <input type="hidden" name="action" value="savePhoto">
                       <input type="hidden" name="customerId" value="${lookupResult.customerId}">
                       <input type="hidden" name="customerCode" value="<c:out value='${lookupResult.customerCode}' />">
-                      <input type="file" id="photoFileInput" name="photoFile" accept="image/jpeg,image/png"
+                      <input type="file" id="photoFileInput" name="photoFile" accept="image/jpeg,image/png" required
                         style="margin-bottom:var(--space-3);font-size:var(--font-size-md);">
                       <div class="btn-row" style="justify-content:flex-end;">
                         <button class="btn btn-outline" type="button" id="captureBtn">Chụp từ webcam</button>

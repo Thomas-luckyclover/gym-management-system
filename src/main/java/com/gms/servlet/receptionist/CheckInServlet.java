@@ -193,41 +193,41 @@ public class CheckInServlet extends HttpServlet {
             return;
         }
 
+        String redirectUrl = "/receptionist/check-in"
+                + (!ValidationUtil.isNullOrEmpty(customerCode) ? "?q=" + customerCode : "");
+
         Part photoPart = request.getPart("photoFile");
-        String photoPath;
-
-        if (photoPart != null && photoPart.getSize() > 0) {
-            String uploadDirectoryValue = getServletContext().getRealPath("/uploads/checkin");
-            if (uploadDirectoryValue == null) {
-                uploadDirectoryValue = System.getProperty("java.io.tmpdir") + "/uploads/checkin";
-            }
-
-            Path uploadDirectory = Path.of(uploadDirectoryValue);
-            Files.createDirectories(uploadDirectory);
-
-            String fileName = "checkin-" + customerId + "-" + UUID.randomUUID() + ".jpg";
-            Path newFilePath = uploadDirectory.resolve(fileName).normalize();
-
-            try (InputStream is = photoPart.getInputStream()) {
-                Files.copy(is, newFilePath, StandardCopyOption.REPLACE_EXISTING);
-            }
-
-            photoPath = "/uploads/checkin/" + fileName;
-        } else {
-            // Ảnh mẫu dự phòng khi máy thực hành không có camera vật lý
-            photoPath = "https://images.unsplash.com/photo-1524504388940-b1c1722653e1?w=240&h=300&fit=crop&q=80";
+        if (photoPart == null || photoPart.getSize() == 0) {
+            RequestUtil.setFlashToast(request, "error", "Vui lòng chụp ảnh từ webcam hoặc chọn tệp ảnh trước khi lưu.");
+            RequestUtil.redirect(request, response, redirectUrl);
+            return;
         }
+
+        String uploadDirectoryValue = getServletContext().getRealPath("/uploads/checkin");
+        if (uploadDirectoryValue == null) {
+            uploadDirectoryValue = System.getProperty("java.io.tmpdir") + "/uploads/checkin";
+        }
+
+        Path uploadDirectory = Path.of(uploadDirectoryValue);
+        Files.createDirectories(uploadDirectory);
+
+        String fileName = "checkin-" + customerId + "-" + UUID.randomUUID() + ".jpg";
+        Path newFilePath = uploadDirectory.resolve(fileName).normalize();
+
+        try (InputStream is = photoPart.getInputStream()) {
+            Files.copy(is, newFilePath, StandardCopyOption.REPLACE_EXISTING);
+        }
+
+        String photoPath = "/uploads/checkin/" + fileName;
 
         ServiceResult<Void> updateResult = checkInService.updateCheckInPhoto(customerId, photoPath);
 
         if (updateResult.isSuccess()) {
             RequestUtil.setFlashToast(request, "success", "Đã lưu ảnh check-in vào hồ sơ hội viên.");
-            String redirectUrl = "/receptionist/check-in"
-                    + (!ValidationUtil.isNullOrEmpty(customerCode) ? "?q=" + customerCode : "");
             RequestUtil.redirect(request, response, redirectUrl);
         } else {
             RequestUtil.setFlashToast(request, "error", updateResult.getMessage());
-            RequestUtil.redirect(request, response, "/receptionist/check-in");
+            RequestUtil.redirect(request, response, redirectUrl);
         }
     }
 }
