@@ -12,7 +12,7 @@
             <title>Check-in hội viên · Super Gym Lễ tân</title>
             <link rel="stylesheet"
               href="${pageContext.request.contextPath}/css/pages/receptionist/check-in.css?v=20261028a">
-            <script src="${pageContext.request.contextPath}/js/pages/receptionist/check-in.js" defer></script>
+            <script src="${pageContext.request.contextPath}/js/pages/receptionist/check-in.js?v=20261030a" defer></script>
         </head>
 
         <body class="dock theme-staff">
