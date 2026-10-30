@@ -203,19 +203,13 @@ public class CheckInServlet extends HttpServlet {
             return;
         }
 
-        String uploadDirectoryValue = getServletContext().getRealPath("/uploads/checkin");
-        if (uploadDirectoryValue == null) {
-            uploadDirectoryValue = System.getProperty("java.io.tmpdir") + "/uploads/checkin";
-        }
-
-        Path uploadDirectory = Path.of(uploadDirectoryValue);
+        Path uploadDirectory = Path.of(getServletContext().getRealPath("/uploads/checkin"));
         Files.createDirectories(uploadDirectory);
 
         String fileName = "checkin-" + customerId + "-" + UUID.randomUUID() + ".jpg";
-        Path newFilePath = uploadDirectory.resolve(fileName).normalize();
 
         try (InputStream is = photoPart.getInputStream()) {
-            Files.copy(is, newFilePath, StandardCopyOption.REPLACE_EXISTING);
+            Files.copy(is, uploadDirectory.resolve(fileName), StandardCopyOption.REPLACE_EXISTING);
         }
 
         String photoPath = "/uploads/checkin/" + fileName;
@@ -224,10 +218,9 @@ public class CheckInServlet extends HttpServlet {
 
         if (updateResult.isSuccess()) {
             RequestUtil.setFlashToast(request, "success", "Đã lưu ảnh check-in vào hồ sơ hội viên.");
-            RequestUtil.redirect(request, response, redirectUrl);
         } else {
             RequestUtil.setFlashToast(request, "error", updateResult.getMessage());
-            RequestUtil.redirect(request, response, redirectUrl);
         }
+        RequestUtil.redirect(request, response, redirectUrl);
     }
 }
