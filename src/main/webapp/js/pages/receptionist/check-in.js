@@ -2,8 +2,6 @@
  * Client script cho màn hình Check-in Lễ tân (UC-19).
  */
 document.addEventListener('DOMContentLoaded', function () {
-    const ciInput = document.getElementById('ciq');
-
     // Xử lý Modal chụp ảnh tại quầy
     const photoModal = document.getElementById('photoModal');
     const openPhotoBtns = document.querySelectorAll('[data-ci-photo]');
@@ -91,9 +89,5 @@ document.addEventListener('DOMContentLoaded', function () {
                 }
             }, 'image/jpeg', 0.9);
         });
-    }
-
-    if (ciInput && !ciInput.value) {
-        ciInput.focus();
     }
 });
