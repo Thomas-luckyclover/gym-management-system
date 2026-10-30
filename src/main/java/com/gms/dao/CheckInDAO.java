@@ -11,7 +11,6 @@ import java.sql.Date;
 import java.sql.PreparedStatement;
 import java.sql.ResultSet;
 import java.sql.SQLException;
-import java.sql.Statement;
 import java.sql.Timestamp;
 import java.time.LocalDate;
 import java.time.LocalDateTime;
@@ -59,61 +58,32 @@ public class CheckInDAO {
     // ===== Ghi nhận lượt Check-in =====
 
     /**
-     * Ghi một lượt check-in mới dùng Connection có sẵn (dùng trong transaction).
+     * Ghi một lượt check-in mới.
      */
-    public int insertCheckIn(Connection conn, CheckIn checkIn) throws SQLException {
+    public int insertCheckIn(CheckIn checkIn) throws SQLException {
         String sql = "INSERT INTO CheckIns (SubscriptionId, VerifiedByEmployeeId, CheckedInAt, PhotoVerified) "
                 + "VALUES (?, ?, ?, ?)";
 
-        try (PreparedStatement stmt = conn.prepareStatement(sql, Statement.RETURN_GENERATED_KEYS)) {
+        try (Connection conn = DBContext.getConnection();
+                PreparedStatement stmt = conn.prepareStatement(sql)) {
             stmt.setInt(1, checkIn.getSubscriptionId());
             stmt.setInt(2, checkIn.getVerifiedByEmployeeId());
-
-            LocalDateTime checkedInAt = checkIn.getCheckedInAt() != null
-                    ? checkIn.getCheckedInAt()
-                    : LocalDateTime.now();
-            stmt.setTimestamp(3, Timestamp.valueOf(checkedInAt)); // Chuyển đổi LocalDateTime sang java.sql.Timestamp
+            stmt.setTimestamp(3, Timestamp.valueOf(checkIn.getCheckedInAt())); // Chuyển đổi LocalDateTime sang java.sql.Timestamp
             stmt.setBoolean(4, checkIn.isPhotoVerified());
 
-            stmt.executeUpdate();
-
-            try (ResultSet rs = stmt.getGeneratedKeys()) {
-                if (rs.next()) {
-                    int generatedId = rs.getInt(1);
-                    checkIn.setCheckInId(generatedId);
-                    return generatedId;
-                }
-            }
-        }
-        throw new SQLException("Thêm CheckIn thất bại, không nhận được CheckInId");
-    }
-
-    /**
-     * Ghi một lượt check-in mới bằng Connection riêng.
-     */
-    public int insertCheckIn(CheckIn checkIn) throws SQLException {
-        try (Connection conn = DBContext.getConnection()) {
-            return insertCheckIn(conn, checkIn);
+            return stmt.executeUpdate();
         }
     }
 
     /**
      * Đánh dấu vé ngày đã được sử dụng sau khi check-in thành công.
      */
-    public void markSubscriptionUsed(Connection conn, int subscriptionId) throws SQLException {
-        String sql = "UPDATE Subscriptions SET Status = 'Used' WHERE SubscriptionId = ?";
-        try (PreparedStatement stmt = conn.prepareStatement(sql)) {
+    public void markSubscriptionUsed(int subscriptionId) throws SQLException {
+        String sql = "UPDATE Subscriptions SET Status = 'Used' WHERE SubscriptionId = ? AND SubscriptionType = 'DayPass'";
+        try (Connection conn = DBContext.getConnection();
+                PreparedStatement stmt = conn.prepareStatement(sql)) {
             stmt.setInt(1, subscriptionId);
             stmt.executeUpdate();
-        }
-    }
-
-    /**
-     * Đánh dấu vé ngày đã sử dụng, dùng Connection riêng.
-     */
-    public void markSubscriptionUsed(int subscriptionId) throws SQLException {
-        try (Connection conn = DBContext.getConnection()) {
-            markSubscriptionUsed(conn, subscriptionId);
         }
     }
 
@@ -128,13 +98,14 @@ public class CheckInDAO {
                 + "cust.CustomerType, cust.Status AS CustomerStatus, p.FullName, p.Phone, p.Avatar "
                 + "FROM Customers cust "
                 + "JOIN Persons p ON cust.PersonId = p.PersonId "
-                + "WHERE (UPPER(cust.CustomerCode) = UPPER(?) OR p.Phone = ?) "
+                + "WHERE (UPPER(cust.CustomerCode) = UPPER(?) OR p.Phone = ?)"
                 + "  AND cust.DeletedAt IS NULL";
 
         try (Connection conn = DBContext.getConnection();
                 PreparedStatement stmt = conn.prepareStatement(sql)) {
             stmt.setString(1, keyword.trim());
             stmt.setString(2, keyword.trim());
+
             try (ResultSet rs = stmt.executeQuery()) {
                 if (rs.next()) {
                     CustomerLookupInfo info = new CustomerLookupInfo();
@@ -188,6 +159,8 @@ public class CheckInDAO {
                 + "JOIN Packages pkg ON o.PackageId = pkg.PackageId "
                 + "WHERE s.CustomerId = ? "
                 + "ORDER BY CASE WHEN s.Status = 'Active' THEN 1 WHEN s.Status = 'Frozen' THEN 2 ELSE 3 END, s.EndDate DESC";
+        //Sắp xếp theo thứ tự: Active trước, Frozen sau, các trạng thái khác cuối cùng.
+        // Trong mỗi nhóm, sắp xếp theo ngày kết thúc muộn nhất.
 
         List<CustomerSubscriptionInfo> list = new ArrayList<>();
         try (Connection conn = DBContext.getConnection();
@@ -203,9 +176,13 @@ public class CheckInDAO {
                     sub.subscriptionType = rs.getString("SubscriptionType");
                     int ptEmpId = rs.getInt("PtEmployeeId");
                     sub.ptEmployeeId = rs.wasNull() ? null : ptEmpId;
+                    //không phải gói tập PT thì PtEmployeeId sẽ là null,
+                    // nên cần kiểm tra rs.wasNull() để tránh gán giá trị mặc định 0.
 
                     Date start = rs.getDate("StartDate");
                     sub.startDate = start != null ? start.toLocalDate() : null;
+                    //kiểm tra null trước khi chuyển đổi sang LocalDate để tránh NullPointerException
+                    //Dùng localdate dễ hơn cho việc so sánh ngày trong Java 8+.
 
                     Date end = rs.getDate("EndDate");
                     sub.endDate = end != null ? end.toLocalDate() : null;
@@ -232,7 +209,7 @@ public class CheckInDAO {
         String sql = "SELECT TOP 1 PlannedEndDate FROM FreezeRecords "
                 + "WHERE SubscriptionId = ? AND ActualEndDate IS NULL "
                 + "ORDER BY CreatedAt DESC";
-
+        //lấy 1
         try (Connection conn = DBContext.getConnection();
                 PreparedStatement stmt = conn.prepareStatement(sql)) {
             stmt.setInt(1, subscriptionId);
@@ -254,7 +231,9 @@ public class CheckInDAO {
     public boolean isDayPassUsedToday(int subscriptionId) throws SQLException {
         String sql = "SELECT COUNT(*) FROM CheckIns "
                 + "WHERE SubscriptionId = ? AND CAST(CheckedInAt AS DATE) = CAST(SYSDATETIME() AS DATE)";
-
+        //Kiểm tra xem đã có lượt check-in nào trong ngày hôm nay chưa, nếu có thì vé ngày đã được dùng
+        //Cast: cắt bỏ phần giờ
+        //Sysdatetime(): lấy ngày giờ hiện tại
         try (Connection conn = DBContext.getConnection();
                 PreparedStatement stmt = conn.prepareStatement(sql)) {
             stmt.setInt(1, subscriptionId);
@@ -295,13 +274,13 @@ public class CheckInDAO {
                 + "JOIN Persons p ON cust.PersonId = p.PersonId "
                 + "JOIN Orders o ON s.OrderId = o.OrderId "
                 + "JOIN Packages pkg ON o.PackageId = pkg.PackageId "
-                + "WHERE CAST(c.CheckedInAt AS DATE) = CAST(SYSDATETIME() AS DATE) "
-                + "ORDER BY c.CheckedInAt DESC";
+                + "WHERE CAST(c.CheckedInAt AS DATE) = CAST(SYSDATETIME() AS DATE) "//CAST: cắt bỏ phần giờ, chỉ lấy lượt check-in trong ngày hôm nay
+                + "ORDER BY c.CheckedInAt DESC"; //xếp theo thời gian check-in mới nhất trước, để hiển thị trên cùng
 
         List<CheckInLogItem> list = new ArrayList<>();
         try (Connection conn = DBContext.getConnection();
                 PreparedStatement stmt = conn.prepareStatement(sql)) {
-            stmt.setInt(1, limit > 0 ? limit : 20);
+            stmt.setInt(1, limit > 0 ? limit : 20);//ngăn ngừa truyền top 0 hoặc âm, mặc định 20 nếu limit <= 0
 
             try (ResultSet rs = stmt.executeQuery()) {
                 while (rs.next()) {
@@ -336,12 +315,11 @@ public class CheckInDAO {
                 + "JOIN Persons p ON cust.PersonId = p.PersonId "
                 + "WHERE cust.DeletedAt IS NULL AND "
                 + (isPhoneSuffix ? "p.Phone LIKE ?" : "p.FullName COLLATE Latin1_General_100_CI_AI LIKE ? ESCAPE '\\'");
-        //COLLATE Latin1_General_100_CI_AI LIKE không phân bệt chữ hoa/chữ thường,
+        //COLLATE Latin1_General_100_CI_AI LIKE không phân biệt chữ hoa/chữ thường,
         // không phân biệt dấu tiếng Việt
         //ESCAPE '\\' cho phép sử dụng ký tự thoát trong pattern, ví dụ: nếu keyword chứa ký tự '%' hoặc '_',
         // chúng sẽ được coi là ký tự bình thường thay vì ký tự đại diện trong LIKE.
         //Nếu không có thì hệ thống sẽ gặp 3 lỗi sau:
-        //
         //Sập trang (Crash web): Người dùng chỉ cần gõ một dấu ngoặc vuông [ vào ô tìm kiếm là SQL Server báo lỗi cú pháp $\rightarrow$ Web bị văng lỗi 500 ngay lập tức.
         //Tìm sai người: Người dùng tìm mã có dấu gạch dưới (vd: KH_01) thì SQL sẽ hiểu _ là ký tự bất kỳ $\rightarrow$ Trả về lung tung cả KHA01, KHB01... (lẫn lộn hồ sơ khách).
         //Treo máy chủ (Lag database): Người dùng gõ một dấu % $\rightarrow$ SQL sẽ load toàn bộ hàng chục nghìn khách hàng ra ngoài $\rightarrow$ Gây đơ và nghẽn hệ thống.

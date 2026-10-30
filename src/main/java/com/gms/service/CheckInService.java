@@ -121,49 +121,47 @@ public class CheckInService {
             for (CustomerSubscriptionInfo sub : subs) {
                 boolean isGymAccess = "Membership".equalsIgnoreCase(sub.subscriptionType)
                         || "DayPass".equalsIgnoreCase(sub.subscriptionType);
-
+                //Kiểm tra xem phải là membership hoặc daypass hay không, vì chỉ những gói này mới được quyền vào tập tự do
                 if (isGymAccess) {
                     if ("Active".equalsIgnoreCase(sub.status)) {
                         // Kiểm tra chưa đến ngày bắt đầu (startDate > today)
                         if (sub.startDate != null && sub.startDate.isAfter(today)) {
+                            //kiểm tra null trước khi gọi isAfter để tránh NullPointerException
+                            //kiểm tra ngày bắt đầu sau ngày hôm nay, nghĩa là gói chưa đến ngày kích hoạt
                             if (notStartedGymSub == null) {
+                                //chỉ lấy gói chưa đến ngày kích hoạt đầu tiên
+                                //vì hàm dao đã sắp xếp theo ngày kết thúc muộn nhất cho các gói cùng status
                                 notStartedGymSub = sub;
                             }
-                        } else if (sub.endDate != null && !sub.endDate.isBefore(today)) {
-                            // GBR-03: Ngày hết hạn tính trọn vẹn cả ngày (endDate >= today là còn hạn)
-                            // Nếu là DayPass, kiểm tra đã dùng trong ngày chưa
-                            if ("DayPass".equalsIgnoreCase(sub.subscriptionType)) {
-                                boolean usedToday = checkInDAO.isDayPassUsedToday(sub.subscriptionId);
-                                if (usedToday) {
-                                    if (usedDayPassSub == null)
-                                        usedDayPassSub = sub;
-                                } else if (activeGymSub == null) {
-                                    activeGymSub = sub;
-                                }
-                            } else if (activeGymSub == null) {
-                                activeGymSub = sub;
-                            }
-                        } else if (expiredGymSub == null) {
-                            expiredGymSub = sub;
+                        } else if (activeGymSub == null) {
+                            activeGymSub = sub;
+                            //gắn cờ gói đang Active (có thể là Membership hoặc DayPass)
+                            // đầu tiên, vì đã sắp xếp theo ngày kết thúc muộn nhất
                         }
                     } else if ("Frozen".equalsIgnoreCase(sub.status)) {
                         if (frozenGymSub == null)
                             frozenGymSub = sub;
+                        //gắn cờ gói đang bảo lưu
                     } else if ("Used".equalsIgnoreCase(sub.status)) {
                         if (usedDayPassSub == null)
                             usedDayPassSub = sub;
+                        //gắn cờ gói vé ngày đã dùng hôm nay
                     } else if ("Expired".equalsIgnoreCase(sub.status)) {
                         if (expiredGymSub == null)
                             expiredGymSub = sub;
+                        //gắn cờ gói đã hết hạn
                     }
                 } else {
-                    // Gói PT (PTSingle, PTCouple, SingleSession)
+                    // Gói PT (PTSingle, PTCouple, SingleSession) không có quyền vào gym khi chưa có membership
                     if ("Active".equalsIgnoreCase(sub.status) && ptSub == null) {
                         ptSub = sub;
                     }
                 }
             }
 
+            //Đoạn dưới đây ra quyết định khách có được vào tập theo độ ưu tiên
+            //Thứ tự ưu tiên: Active Gym > Frozen Gym > Not Started Gym > Used DayPass > Expired Gym > PT Only > No Package
+            //Sắp xếp thứ tự ưu tiên: vào tập ngay > mở bảo lưu > chờ đến ngày kích hoạt > đã dùng vé ngày > hết hạn > chỉ có PT > không có gói tập
             // Ghi nhận thông tin gói PT nếu có
             if (ptSub != null) {
                 result.setHasPtPackage(true);
@@ -207,9 +205,11 @@ public class CheckInService {
                 result.setSubscriptionStatus(frozenGymSub.status);
 
                 LocalDate freezeEnd = checkInDAO.getPlannedFreezeEndDate(frozenGymSub.subscriptionId);
+                //hàm lấy ngày kết thúc bảo lưu dự kiến (nếu có) từ bảng FreezeRequests
                 result.setFreezeEndDate(freezeEnd);
                 result.setDecision(Decision.DENIED_FROZEN);
                 String freezeText = freezeEnd != null ? " tới " + DateTimeUtil.formatDate(freezeEnd) : "";
+                //kiểm tra null trước khi gọi formatDate để tránh NullPointerException
                 result.setMessage("Gói đang bảo lưu" + freezeText + ". Khách phải huỷ bảo lưu trước khi vào tập.");
                 result.setCanCheckIn(false);
             } else if (notStartedGymSub != null) {
@@ -279,12 +279,14 @@ public class CheckInService {
     public ServiceResult<Void> performCheckIn(int subscriptionId, int employeeAccountId, boolean photoVerified) {
         try {
             Account account = accountDAO.findById(employeeAccountId);
-            if (account == null) {
-                return ServiceResult.fail(String.format(Messages.MSG08_NOT_FOUND, "tài khoản nhân viên"));
+            //tìm tài khoản lễ tân
+            if (account == null) {//tài khoản có thể bị xóa, session cũ vẫn còn lưu, nên phải kiểm tra null
+                return ServiceResult.fail(String.format(Messages.MSG08_NOT_FOUND, "tài khoản nhân viên"));//hiển thị flashtoast bên servlet
             }
 
             Employee employee = employeeDAO.findByPersonId(account.getPersonId());
-            if (employee == null) {
+            //tìm thông tin nhân viên lễ tân theo personId của tài khoản
+            if (employee == null) {//tg tự account
                 return ServiceResult.fail(String.format(Messages.MSG08_NOT_FOUND, "hồ sơ nhân viên lễ tân"));
             }
 
@@ -295,6 +297,7 @@ public class CheckInService {
             checkIn.setPhotoVerified(photoVerified);
 
             checkInDAO.insertCheckIn(checkIn);
+            checkInDAO.markSubscriptionUsed(subscriptionId);//đánh dấu vé ngày đã dùng, k cho check in lại
 
             return ServiceResult.ok(null);
 

@@ -75,11 +75,11 @@ public class CheckInServlet extends HttpServlet {
                     PageResult<CustomerSearchItem> searchResultsPage = checkInService.searchCustomersPage(query, page,
                             pageSize);
 
-                    if (!searchResultsPage.isEmpty()) {// neu danh sach ket qua tim kiem khong rong
+                    if (!searchResultsPage.isEmpty()) {//nếu danh sách kết quả tìm kiếm theo 1 phần tên không rỗng thì không đóng gói lookupResult
+                        //ở đây lookupResult sẽ là null, chỉ có searchResultsPage được set vào request để jsp hiển thị danh sách khách hàng
+                        //
                         request.setAttribute("searchResultsPage", searchResultsPage);
-                        // dong goi thong tin phan trang
-                        request.setAttribute("searchResults", searchResultsPage.getItems());
-                        // dong goi danh sach cua cac khach hang tim thay
+                        // dong goi thong tin ket qua tim kiem va phan trang (jsp dung searchResultsPage.items)
                     } else {// neu danh sach ket qua tim kiem rong
                         // Không tìm thấy khách nào
                         request.setAttribute("lookupResult", lookupData);
@@ -164,8 +164,7 @@ public class CheckInServlet extends HttpServlet {
         // check-in xác thực đã hợp lệ
         if (result.isSuccess()) {// nếu checkin thành công
             String nameText = !ValidationUtil.isNullOrEmpty(customerName) ? customerName : "Hội viên";
-            // nếu tên khách không rỗng thì sử dụng tên khách, nếu rỗng thì sử dụng "Hội
-            // viên"
+            // nếu tên khách không rỗng thì sử dụng tên khách, nếu rỗng thì sử dụng "Hội viên"
             RequestUtil.setFlashToast(request, "success", nameText + " đã vào tập thành công.");// thông báo thành công
             RequestUtil.redirect(request, response, "/receptionist/check-in");
         } else {// nếu checkin thất bại

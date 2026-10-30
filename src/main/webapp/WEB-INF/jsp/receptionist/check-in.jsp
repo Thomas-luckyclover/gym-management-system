@@ -11,7 +11,7 @@
           <%@ include file="/WEB-INF/jsp/common/head.jspf" %>
             <title>Check-in hội viên · Super Gym Lễ tân</title>
             <link rel="stylesheet"
-              href="${pageContext.request.contextPath}/css/pages/receptionist/check-in.css?v=20261013c">
+              href="${pageContext.request.contextPath}/css/pages/receptionist/check-in.css?v=20261028a">
             <script src="${pageContext.request.contextPath}/js/pages/receptionist/check-in.js" defer></script>
         </head>
 
@@ -27,13 +27,8 @@
                       <h1 class="tb-title">Check-in hội viên</h1>
                     </div>
                     <div class="top-right">
-
                       <%@ include file="/WEB-INF/jsp/common/notification-bell.jspf" %>
-
-                        <span class="badge badge-ok">
-                          <i class="fa-solid fa-circle-check"></i> Ca làm việc đang mở
-                        </span>
-                        <%@ include file="/WEB-INF/jsp/common/topbar-user.jspf" %>
+                      <%@ include file="/WEB-INF/jsp/common/topbar-user.jspf" %>
                     </div>
                   </header>
 
@@ -45,18 +40,21 @@
                           <div class="panel-head">
                             <div>
                               <h2>Tìm khách</h2>
-                              <p>Nhập mã khách, số điện thoại hoặc tên để tìm hồ sơ. Hệ thống hỗ trợ tìm theo một phần
-                                tên hoặc 4 số cuối SĐT.</p>
                             </div>
                           </div>
 
                           <%-- Form tìm kiếm hội viên theo mã khách, số điện thoại hoặc họ tên --%>
+                          <%-- q: tham số gửi lên servlet --%>
+                          <%-- <c:out value='${query}' /> giữ lại từ khóa khi tải lại trang,đồng thời dùng c:out để tránh XSS --%>
+                          <%-- Bấm nút "Tìm" bằng phương thức GET, từ khóa sẽ đc gắn lên thanh địa chỉ nên mỗi lần bấm Reload trình duyệt
+                           sẽ gửi đúng đường link này kèm tham số q lên servlet --%>
+                          <%-- Action: là địa chỉ mà trình duyệt gửi dữ liệu tới khi bấm submit --%>
                             <form id="ciForm" action="${pageContext.request.contextPath}/receptionist/check-in"
                               method="GET" class="toolbar" novalidate>
                               <div class="search" style="flex:1;">
                                 <i class="fa-solid fa-magnifying-glass"></i>
                                 <input id="ciq" name="q" type="search" value="<c:out value='${query}' />"
-                                  placeholder="Nhập mã khách (KH-...), họ tên hoặc 4 số cuối SĐT..." autocomplete="off"
+                                  placeholder="Tên, mã khách hoặc số điện thoại" autocomplete="off"
                                   aria-label="Mã khách, số điện thoại hoặc tên" required <c:if
                                   test="${not lookupResult.canCheckIn}">autofocus</c:if>>
                               </div>
@@ -78,62 +76,56 @@
                             </div>
                           </c:if>
 
-                          <%-- Danh sách kết quả tìm kiếm (khi tìm theo tên, trả về nhiều khách có phân trang) --%>
-                            <c:if test="${not empty searchResults}">
+                          <%-- Danh sách kết quả tìm kiếm (dùng trực tiếp searchResultsPage.items để đồng bộ với phân trang) --%>
+                            <c:if test="${not empty searchResultsPage.items}">
                               <section class="panel ci-search-results" data-reveal>
                                 <div class="panel-head">
                                   <div>
                                     <h2>Kết quả tìm kiếm</h2>
                                     <p>Tìm thấy <b>
                                         <c:out
-                                          value="${not empty searchResultsPage ? searchResultsPage.totalItems : searchResults.size()}" />
-                                      </b> khách hàng phù hợp với từ khóa "
-                                      <c:out value='${query}' />".
-                                      <c:if test="${not empty searchResultsPage and searchResultsPage.totalPages > 1}">
-                                        (Trang <b>${searchResultsPage.pageNumber}</b> /
-                                        <b>${searchResultsPage.totalPages}</b>)
-                                      </c:if>
-                                      Chọn khách cần check-in.
+                                          value="${searchResultsPage.totalItems}" />
+                                      </b> khách hàng · Chọn khách cần check-in.
                                     </p>
                                   </div>
+
                                 </div>
                                 <div class="search-results-list">
-                                  <c:forEach var="item" items="${searchResults}">
+                                  <c:forEach var="item" items="${searchResultsPage.items}">
                                     <a href="${pageContext.request.contextPath}/receptionist/check-in?q=<c:out value='${item.customerCode}' />"
                                       class="search-result-row">
                                       <%-- Chọn khách hàng để chuyển thẳng sang màn hình xác nhận check-in --%>
-                                        <div class="sr-photo">
+                                        <%-- Khối hiển thị ảnh check-in ở danh sach tìm kiếm --%>
+                                        <div class="sr-photo${empty item.checkInPhoto ? ' is-empty' : ''}">
                                           <c:choose>
                                             <c:when test="${not empty item.checkInPhoto}">
-                                              <c:set var="srPhoto" value="${item.checkInPhoto}" />
-                                              <c:choose>
-                                                <c:when
-                                                  test="${srPhoto.startsWith('http://') or srPhoto.startsWith('https://')}">
-                                                  <img src="<c:out value='${srPhoto}' />" loading="lazy">
-                                                </c:when>
-                                                <c:otherwise>
-                                                  <img
-                                                    src="${pageContext.request.contextPath}${srPhoto.startsWith('/') ? '' : '/'}<c:out value='${srPhoto}' />"
-                                                    loading="lazy">
-                                                </c:otherwise>
-                                              </c:choose>
+                                              <img src="<c:url value='${item.checkInPhoto}' />" alt="Ảnh khách" loading="lazy">
                                             </c:when>
                                             <c:otherwise>
                                               <i class="fa-solid fa-user"></i>
+                                              <%-- Có ảnh hiện ảnh, chưa có ảnh hiện icon hình người --%>
                                             </c:otherwise>
                                           </c:choose>
                                         </div>
+                                        <%-- Khối hiển thị thông tin khách hàng ở danh sach tìm kiếm --%>
                                         <div class="sr-info">
                                           <div class="sr-name">
                                             <c:out value="${item.fullName}" />
                                           </div>
                                           <div class="sr-meta">
-                                            <span><i class="fa-solid fa-id-card"></i>
+                                            <span class="sr-code"><i class="fa-solid fa-id-card"></i>
                                               <c:out value="${item.customerCode}" />
                                             </span>
-                                            <span><i class="fa-solid fa-phone"></i>
-                                              <c:out value="${item.phone}" />
-                                            </span>
+                                            <c:choose>
+                                              <c:when test="${not empty item.phone}">
+                                                <span class="sr-phone"><i class="fa-solid fa-phone"></i>
+                                                  <c:out value="${item.phone}" />
+                                                </span>
+                                              </c:when>
+                                              <c:otherwise>
+                                                <span class="sr-phone is-muted"><i class="fa-solid fa-phone"></i> Chưa có SĐT</span>
+                                              </c:otherwise>
+                                            </c:choose>
                                           </div>
                                         </div>
                                         <div class="sr-status">
@@ -150,20 +142,23 @@
                                             <c:when test="${item.customerStatus eq 'Expired'}">
                                               <span class="badge badge-muted">Hết hạn</span>
                                             </c:when>
-                                            <c:otherwise>
+                                            <c:otherwise> <%-- Trường hợp trạng thái khác nhánh default của switch case mặc dù k đc chạy đến --%>
                                               <span class="badge badge-muted">
                                                 <c:out value="${item.customerStatus}" />
                                               </span>
                                             </c:otherwise>
                                           </c:choose>
                                         </div>
-                                        <i class="fa-solid fa-chevron-right sr-arrow"></i>
+                                        <span class="sr-arrow" aria-hidden="true">
+                                          <i class="fa-solid fa-chevron-right"></i> <%-- biểu tượng mũi tên --%>
+                                        </span>
                                     </a>
                                   </c:forEach>
                                 </div>
 
                                 <%-- Thanh phân trang --%>
                                   <c:if test="${not empty searchResultsPage and searchResultsPage.totalPages > 1}">
+                                  <%-- hiển thị thanh phân trang nếu có số page > 1, kiểm tra empty tránh nullpointex --%>
                                     <div class="ci-pagination">
                                       <c:choose>
                                         <c:when test="${searchResultsPage.hasPrevious}">
@@ -178,10 +173,11 @@
                                           <button class="btn btn-ghost btn-sm" type="button" disabled><i
                                               class="fa-solid fa-chevron-left"></i> Trang trước</button>
                                         </c:otherwise>
+                                        <%-- ẩn nút Trang trước nếu pageNumber = 1 --%>
                                       </c:choose>
 
                                       <span class="ci-pagination-info">Trang <b>${searchResultsPage.pageNumber}</b> /
-                                        <b>${searchResultsPage.totalPages}</b></span>
+                                        <b>${searchResultsPage.totalPages}</b></span> <%-- hiển thị trang hiện tại / tổng số trang --%>
 
                                       <c:choose>
                                         <c:when test="${searchResultsPage.hasNext}">
@@ -204,6 +200,7 @@
 
                             <%-- Kết quả tra cứu --%>
                               <c:if test="${not empty lookupResult}">
+                              <%-- nếu tìm thấy danh sách thì chạy block 79--%>
                                 <c:choose>
                                   <%-- Trường hợp không tìm thấy hồ sơ --%>
                                     <c:when test="${lookupResult.decision.name() eq 'NOT_FOUND'}">
@@ -228,26 +225,10 @@
                                         <section class="panel ci-card" data-reveal>
                                           <div class="ci-top">
                                             <%-- Ảnh check-in --%>
-                                              <div
-                                                class="ci-photo<c:if test='${empty lookupResult.checkInPhoto}'> is-empty</c:if>"
-                                                data-ci-face data-ci-photo style="cursor: pointer;" title="Nhấp để chụp hoặc đổi ảnh check-in">
+                                              <div class="ci-photo${empty lookupResult.checkInPhoto ? ' is-empty' : ''}">
                                                 <c:choose>
                                                   <c:when test="${not empty lookupResult.checkInPhoto}">
-                                                    <c:set var="ciPhoto" value="${lookupResult.checkInPhoto}" />
-                                                    <c:choose>
-                                                      <c:when
-                                                        test="${ciPhoto.startsWith('http://') or ciPhoto.startsWith('https://')}">
-                                                        <img src="<c:out value='${ciPhoto}' />"
-                                                          alt="Ảnh check-in của <c:out value='${lookupResult.fullName}' />"
-                                                          loading="lazy">
-                                                      </c:when>
-                                                      <c:otherwise>
-                                                        <img
-                                                          src="${pageContext.request.contextPath}${ciPhoto.startsWith('/') ? '' : '/'}<c:out value='${ciPhoto}' />"
-                                                          alt="Ảnh check-in của <c:out value='${lookupResult.fullName}' />"
-                                                          loading="lazy">
-                                                      </c:otherwise>
-                                                    </c:choose>
+                                                    <img src="<c:url value='${lookupResult.checkInPhoto}' />" alt="Ảnh hội viên">
                                                   </c:when>
                                                   <c:otherwise>
                                                     <span>Chưa có<br>ảnh</span>
@@ -315,7 +296,7 @@
                                                       <span>
                                                         <i class="fa-solid fa-user-check"></i>
                                                         <c:out value="${lookupResult.ptPackageName}" />
-                                                        <c:if test="${not empty lookupResult.ptTotalSessions}">
+                                                        <c:if test="${not empty lookupResult.ptTotalSessions}"> <%-- kiểm tra null vì có thể chưa đc xếp lịch --%>
                                                           · tổng ${lookupResult.ptTotalSessions} buổi
                                                         </c:if>
                                                       </span>
@@ -327,19 +308,20 @@
                                           <%-- Alert Banner đánh giá điều kiện theo GBR-28 --%>
                                             <div
                                               class="alert-banner <c:out value='${lookupResult.decision.alertType}' />">
+                                              <%-- alertType: ok, warn, danger, các class tương ứng màu xanh, vàng, đỏ --%>
                                               <c:choose>
-                                                <c:when test="${lookupResult.decision.alertType eq 'ok'}">
+                                                <c:when test="${lookupResult.decision.alertType eq 'ok'}"> <%-- đủ điều kiện vào tập, icon v --%>
                                                   <i class="fa-solid fa-circle-check"></i>
                                                 </c:when>
-                                                <c:when test="${lookupResult.decision.alertType eq 'warn'}">
+                                                <c:when test="${lookupResult.decision.alertType eq 'warn'}"><%-- thiếu ảnh checkin, icon camera --%>
                                                   <i class="fa-solid fa-camera"></i>
                                                 </c:when>
                                                 <c:otherwise>
-                                                  <i class="fa-solid fa-circle-xmark"></i>
+                                                  <i class="fa-solid fa-circle-xmark"></i><%-- không đủ điều kiện vào tập, icon x --%>
                                                 </c:otherwise>
                                               </c:choose>
                                               <span>
-                                                <b>
+                                                <b> <%-- decision: quyết định hệ thống, message: hướng dẫn lễ tân --%>
                                                   <c:out value="${lookupResult.decision.title}" />.
                                                 </b>
                                                 <c:out value="${lookupResult.message}" />
@@ -348,26 +330,23 @@
 
                                             <%-- Nút hành động --%>
                                               <div class="btn-row">
-                                                <c:if test="${lookupResult.canCheckIn}">
+                                                <c:if test="${lookupResult.canCheckIn}"> <%-- đủ điều kiện vào tập, hiển thị nút xác nhận --%>
                                                   <form
                                                     action="${pageContext.request.contextPath}/receptionist/check-in"
                                                     method="POST" style="margin:0;">
-                                                    <input type="hidden" name="action" value="confirmCheckIn">
-                                                    <input type="hidden" name="subscriptionId"
-                                                      value="${lookupResult.subscriptionId}">
-                                                    <input type="hidden" name="customerName"
-                                                      value="<c:out value='${lookupResult.fullName}' />">
-                                                    <input type="hidden" name="photoVerified" value="true">
+                                                    <input type="hidden" name="action" value="confirmCheckIn"> <%-- type=hiden ẩn đi vì là 1 thẻ chứa dữ liệu, thay vì type=text gioongs ô tìm kiếm --%>
+                                                    <input type="hidden" name="subscriptionId" value="${lookupResult.subscriptionId}">
+                                                    <input type="hidden" name="customerName" value="<c:out value='${lookupResult.fullName}' />">
+                                                    <input type="hidden" name="photoVerified" value="${not empty lookupResult.checkInPhoto}">
                                                     <%-- autofocus: gõ mã → Enter (tìm) → Enter (vào tập) --%>
-                                                      <button class="btn btn-primary" type="submit" data-ci-go
-                                                        autofocus>
+                                                      <button class="btn btn-primary" type="submit" autofocus>
                                                         <i class="fa-solid fa-door-open"></i> Xác nhận vào tập
                                                       </button>
                                                   </form>
                                                 </c:if>
 
                                                 <c:choose>
-                                                  <c:when test="${lookupResult.requiresPhoto or empty lookupResult.checkInPhoto}">
+                                                  <c:when test="${empty lookupResult.checkInPhoto}">
                                                     <button class="btn btn-outline" type="button" data-ci-photo>
                                                       <i class="fa-solid fa-camera"></i> Chụp ảnh tại quầy
                                                     </button>
@@ -387,7 +366,7 @@
 
                       </div>
 
-                      <%-- Cột bên phải: Nhật ký ca & Nút thử nhanh theo dữ liệu seed thật --%>
+                      <%-- Cột bên phải: Nhật ký ca --%>
                         <aside class="col-side">
                           <div class="side-card">
                             <span class="section-label">Lượt vào ca này</span>
@@ -406,9 +385,7 @@
                                         </div>
                                       </div>
                                       <b class="tabular">
-                                        <c:if test="${not empty item.checkedInAt}">
-                                          <c:out value="${gms:formatTime(item.checkedInAt.toLocalTime())}" />
-                                        </c:if>
+                                        <c:out value="${gms:formatTime(item.checkedInAt.toLocalTime())}" /> <%-- hiển thị giờ phút dạng HH:mm --%>
                                       </b>
                                     </div>
                                   </c:forEach>
