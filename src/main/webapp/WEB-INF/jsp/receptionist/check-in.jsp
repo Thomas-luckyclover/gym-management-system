@@ -407,17 +407,18 @@
 
             <%-- Modal chụp ảnh tại quầy (CBR-38) --%>
               <c:if test="${not empty lookupResult}">
-                <div class="modal-overlay" id="photoModal" role="dialog" aria-modal="true" aria-labelledby="modalTitle">
+                <div class="modal-overlay" id="photoModal">
+                <%-- modal-overlay tàng hình và không bấm được, khi gọi đến data-ci-photo thì openModal, --%>
+                <%-- photoModal.classList.add('open') sẽ thêm open sau modal-overlay để giải trừ tàng hình (opacity = 0) --%>
                   <div class="modal-box">
                     <div class="modal-head">
-                      <h3 id="modalTitle">
+                      <h3>
                         <c:choose>
                           <c:when test="${not empty lookupResult.checkInPhoto}">Chụp lại ảnh check-in tại quầy</c:when>
                           <c:otherwise>Chụp ảnh check-in tại quầy</c:otherwise>
                         </c:choose>
                       </h3>
-                      <button class="btn btn-ghost btn-sm" type="button" data-close-modal
-                        aria-label="Đóng">&times;</button>
+                      <button class="btn btn-ghost btn-sm" type="button" data-close-modal>&times;</button>
                     </div>
                     <p style="font-size:var(--font-size-md);color:var(--color-text-soft);margin-bottom:var(--space-3);">
                       Camera quầy sẽ chụp và lưu vào hồ sơ của <b>
