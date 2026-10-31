@@ -33,8 +33,8 @@
 <head>
     <%@ include file="/WEB-INF/jsp/common/head.jspf" %>
     <title>Xác nhận thanh toán · Super Gym Lễ tân</title>
-    <link rel="stylesheet" href="${ctx}/css/pages/receptionist/counter-sale.css?v=20261031_vTidy">
-    <script src="${ctx}/js/pages/receptionist/counter-sale.js?v=20261030_vVoucherClean" defer></script>
+    <link rel="stylesheet" href="${ctx}/css/pages/receptionist/counter-sale.css?v=20261031_vVoucherDone">
+    <script src="${ctx}/js/pages/receptionist/counter-sale.js?v=20261031_vVoucherDone" defer></script>
 </head>
 <body class="dock theme-staff counter-sale-page">
 <%@ include file="/WEB-INF/jsp/common/flash-toast.jspf" %>
@@ -63,10 +63,14 @@
             </div>
 
             <%-- Form thu tiền tại quầy: counter-sale.js hàm initCheckoutSubmit() gắn sự kiện submit chống bấm đúp --%>
-            <form method="post" action="${ctx}/receptionist/sales" id="checkoutForm">
+            <form method="post" action="${ctx}/receptionist/sales" id="checkoutForm"
+                  data-package-id="<c:out value='${selectedCard.packageId}' />"
+                  data-customer-id="<c:out value='${selectedCustomer.customerId}' />"
+                  data-base-price="<c:out value='${selectedCard.price}' />"
+                  data-vat-rate="<c:out value='${selectedCard.vatRate}' />">
                 <input type="hidden" name="csrfToken" value="<c:out value='${csrfToken}' />">
-                <input type="hidden" name="packageId" value="<c:out value='${selectedCard.packageId}' />">
-                <input type="hidden" name="customerId" value="<c:out value='${selectedCustomer.customerId}' />">
+                <input type="hidden" name="packageId" id="checkoutPackageId" value="<c:out value='${selectedCard.packageId}' />">
+                <input type="hidden" name="customerId" id="checkoutCustomerId" value="<c:out value='${selectedCustomer.customerId}' />">
 
                 <div class="counter-layout">
 
@@ -256,9 +260,11 @@
                             <div class="counter-summary-voucher">
                                 <label for="voucherCode" class="voucher-label">Mã ưu đãi / Voucher</label>
                                 <div class="counter-voucher-input-wrap">
-                                    <input type="text" id="voucherCode" name="voucher" placeholder="NHẬP MÃ NẾU CÓ..." autocomplete="off">
+                                    <input type="text" id="voucherCode" name="voucher" placeholder="Nhập mã ưu đãi..." autocomplete="off" maxlength="20" spellcheck="false">
+                                    <i id="voucherValidIcon" class="fa-solid fa-circle-check voucher-valid-icon" aria-hidden="true" hidden></i>
                                     <button type="button" id="voucherClearBtn" class="voucher-clear-btn" aria-label="Xóa mã" title="Xóa mã" hidden>&times;</button>
                                 </div>
+                                <p id="voucherStatus" class="voucher-status" role="status" aria-live="polite" hidden></p>
                             </div>
 
                             <div class="counter-summary-separator"></div>
@@ -267,19 +273,23 @@
                             <dl class="counter-summary-list">
                                 <div>
                                     <dt>Giá niêm yết</dt>
-                                    <dd><c:out value="${gms:formatMoney(selectedCard.price)}" /></dd>
+                                    <dd id="summaryListPrice"><c:out value="${gms:formatMoney(selectedCard.price)}" /></dd>
+                                </div>
+                                <div id="discountRow" class="is-discount" hidden>
+                                    <dt>Giảm giá (<span id="voucherCodeSummary"></span>)</dt>
+                                    <dd class="discount-amount">-<span id="summaryDiscountAmount">0 đ</span></dd>
                                 </div>
                                 <div>
                                     <dt>Trước thuế VAT</dt>
-                                    <dd><c:out value="${gms:formatMoney(selectedCard.preTaxAmount)}" /></dd>
+                                    <dd id="summaryPreTaxAmount"><c:out value="${gms:formatMoney(selectedCard.preTaxAmount)}" /></dd>
                                 </div>
                                 <div>
                                     <dt>Thuế VAT <c:out value="${selectedCard.vatRate}" />% (đã gồm)</dt>
-                                    <dd><c:out value="${gms:formatMoney(selectedCard.vatAmount)}" /></dd>
+                                    <dd id="summaryVatAmount"><c:out value="${gms:formatMoney(selectedCard.vatAmount)}" /></dd>
                                 </div>
                                 <div class="is-total">
                                     <dt>Tổng phải thu</dt>
-                                    <dd class="total-amount"><c:out value="${gms:formatMoney(selectedCard.price)}" /></dd>
+                                    <dd class="total-amount" id="summaryTotalAmount"><c:out value="${gms:formatMoney(selectedCard.price)}" /></dd>
                                 </div>
                             </dl>
                         </div>
@@ -287,7 +297,7 @@
                         <div class="counter-summary-footer">
                             <%-- id="confirmPaymentBtn" được dùng trong counter-sale.js, hàm initCheckoutSubmit() để khóa nút và hiện spinner --%>
                             <button class="counter-summary-btn" type="submit" id="confirmPaymentBtn">
-                                <i class="fa-solid fa-circle-check"></i> Xác nhận đã thu <c:out value="${gms:formatMoney(selectedCard.price)}" />
+                                <i class="fa-solid fa-circle-check"></i> <span id="confirmPaymentText">Xác nhận đã thu <c:out value="${gms:formatMoney(selectedCard.price)}" /></span>
                             </button>
                         </div>
                     </aside>

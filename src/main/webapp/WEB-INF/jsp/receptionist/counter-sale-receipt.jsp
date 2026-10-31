@@ -15,7 +15,7 @@
 <head>
     <%@ include file="/WEB-INF/jsp/common/head.jspf" %>
     <title>Phiếu thu dịch vụ #<c:out value="${receipt.orderCode}" /> · Super Gym Lễ tân</title>
-    <link rel="stylesheet" href="${ctx}/css/pages/receptionist/counter-sale.css?v=20261031_vTidy">
+    <link rel="stylesheet" href="${ctx}/css/pages/receptionist/counter-sale.css?v=20261031_vVoucherDone">
 </head>
 <body class="dock theme-staff counter-sale-page">
 <%@ include file="/WEB-INF/jsp/common/flash-toast.jspf" %>
@@ -94,6 +94,12 @@
                             <span class="receipt-label">Hiệu lực gói:</span>
                             <span class="receipt-val"><c:out value="${receipt.startDateText}" /> → <c:out value="${receipt.endDateText}" /></span>
                         </div>
+                        <c:if test="${receipt.discountAmount > 0}">
+                            <div class="receipt-row">
+                                <span class="receipt-label">Giảm giá (<c:out value="${receipt.voucherCode}" />):</span>
+                                <span class="receipt-val receipt-val-discount">-<c:out value="${gms:formatMoney(receipt.discountAmount)}" /></span>
+                            </div>
+                        </c:if>
                     </div>
 
                     <div class="receipt-dashed-line"></div>
