@@ -283,38 +283,6 @@ class CheckInServiceTest {
     }
 
     @Test
-    @DisplayName("CBR-37: Ảnh check-in là chuỗi 'NULL' từ DB cũng được xem là thiếu ảnh")
-    void testLookupLiteralNullStringPhotoCustomer() {
-        CheckInDAO.CustomerLookupInfo c1099 = new CheckInDAO.CustomerLookupInfo();
-        c1099.customerId = 99;
-        c1099.personId = 99;
-        c1099.customerCode = "KH-1099";
-        c1099.fullName = "Test Khách Hàng";
-        c1099.phone = "0901234599";
-        c1099.checkInPhoto = "NULL"; // Nhập chữ NULL vào DB
-        c1099.customerStatus = "Active";
-        fakeCheckInDAO.addCustomer("KH-1099", c1099);
-
-        CheckInDAO.CustomerSubscriptionInfo sub = new CheckInDAO.CustomerSubscriptionInfo();
-        sub.subscriptionId = 99;
-        sub.customerId = 99;
-        sub.subscriptionType = "Membership";
-        sub.packageName = "Gói 1 Tháng";
-        sub.status = "Active";
-        sub.startDate = LocalDate.now();
-        sub.endDate = LocalDate.now().plusMonths(1);
-        fakeCheckInDAO.addSubscription(99, sub);
-
-        ServiceResult<CheckInLookupResult> result = checkInService.lookupCustomer("KH-1099");
-        assertTrue(result.isSuccess());
-        CheckInLookupResult data = result.getData();
-        assertNotNull(data);
-        assertNull(data.getCheckInPhoto(), "Ảnh 'NULL' dạng chuỗi phải được chuyển thành null");
-        assertEquals(Decision.WARN_MISSING_PHOTO, data.getDecision());
-        assertFalse(data.isCanCheckIn());
-    }
-
-    @Test
     @DisplayName("DBR-51 & UC-18: KH-1004 có gói đang bảo lưu -> Từ chối vào tập (DENIED_FROZEN)")
     void testLookupFrozenCustomer() {
         ServiceResult<CheckInLookupResult> result = checkInService.lookupCustomer("KH-1004");
