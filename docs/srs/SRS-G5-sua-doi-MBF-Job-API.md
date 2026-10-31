@@ -16,7 +16,7 @@ title: "SRS G5 — Nội dung cần sửa (Main Business Flow, Rules, Job Invent
 | 31/10/2026 | M | Le Cong Minh | Reorganize Main Business Flows into 11 cross-actor flows drawn in BPMN (one pool, lanes per actor, solid sequence flows); split into core and supporting flows |
 | 31/10/2026 | A | Le Cong Minh | Add BF-02 Gym Check-in and BF-11 Gym Closure & Opening Hours Change; add CBR-124 (opening hours change) |
 | 31/10/2026 | D | Le Cong Minh | Remove BF Customer Onboarding (sign-up is described in UC-05); merge Day Pass Check-in into BF-02 and Feedback Reading into BF-10 |
-| 31/10/2026 | M | Le Cong Minh | Update CBR-42, CBR-56, GBR-04, GBR-11, UC-11, DBR-36, Entity OperatingHourException, JOB-04, JOB-08; rewrite Background Job Inventory (16) and External API Inventory (17) |
+| 31/10/2026 | M | Le Cong Minh | Update CBR-42, CBR-56, GBR-04, GBR-11, UC-11, DBR-36, Entity OperatingHourException, Entity Order, JOB-04, JOB-05, JOB-08; withdraw MSG135; rewrite Background Job Inventory (16) and External API Inventory (17) |
 
 # B. Definition and Acronyms — Thay dòng #5
 
@@ -181,9 +181,9 @@ Steps 8–11 repeat for each session until none is Scheduled.
 
 ## 2.5 Single PT Session (BF-05)
 
-**Trigger:** A customer wants one PT session and books it online.
+**Trigger:** A customer wants one PT session and books it online, or asks for one at the counter (A3).
 
-**Pre-condition:** The customer is signed in with a Self profile.
+**Pre-condition:** Online: the customer is signed in with a Self profile. At the counter: a Receptionist shift is open (CBR-105).
 
 **Main flow:**
 
@@ -201,11 +201,12 @@ Steps 8–11 repeat for each session until none is Scheduled.
 
 - A1 – At step 4 the payment fails or the link expires: the order stays Pending, the slot stays Held and the customer pays again before the deadline (CBR-69, CBR-40). Returns to step 3.
 - A2 – At step 7 the customer does not check in, or cannot use the gym that day: JOB-04 closes the session as Missed (NoCheckIn, NoMembership or MembershipFrozen) (CBR-42, BR-52).
+- A3 – At the start the customer is at the counter: the Receptionist sells a single session for today (UC-20): chooses the PT and a free slot today and finds or quick-creates the customer; a walk-in without a membership buys today's day pass first (CBR-60, BF-01). The system creates a Pending counter order and holds the slot until the payment deadline P-09, shown as an mm:ss countdown; the Receptionist collects cash or confirms the bank transfer in the open shift (CBR-54, CBR-49, CBR-77, CBR-105). Continues at step 5.
 
 **Exception flows:**
 
-- E1 – At step 1 the customer cannot use the gym on that date or is under P-05 (BR-72, CBR-60, CBR-15): booking is blocked. The flow ends.
-- E2 – In A1 the payment deadline passes: JOB-05 cancels the order (PaymentTimeout) and the slot returns to Free (CBR-70, DBR-36). The flow ends.
+- E1 – At step 1, or in A3, the customer cannot use the gym on that date or is under P-05 (BR-72, CBR-60, CBR-15): booking is blocked. The flow ends.
+- E2 – In A1, or in A3 before the money is collected, the payment deadline passes: JOB-05 cancels the order (PaymentTimeout) and the slot returns to Free (CBR-70, CBR-54, DBR-36). The flow ends.
 - E3 – At step 4 VNPay reports success but the order is already cancelled or the amount differs: the transaction is flagged for refund and the slot returns to Free (CBR-72); the refund follows BF-06. The flow ends.
 
 **End conditions:**
@@ -431,6 +432,18 @@ Thay cụm *"a session on a date declared closed all day → Cancelled / GymClos
 
 > Apply date is unique — at most one exception per date; either closed all day (no times) or open with closing time after opening time. PT package sessions are still generated on a closed day; sessions on a closed day or outside the hours of the date are rescheduled by the PT (CBR-56, CBR-124). No new PT slot can be published and no check-in or shift can be opened on a closed day.
 
+## E9. Entity Order — Thay câu về hạn thanh toán trong dòng Business identity
+
+Thay câu *"A Counter order has no payment deadline; a PT-sale order holds its slots for 15 minutes (BR-93) and is cancelled if not paid in time"* bằng:
+
+> A Counter order has no payment deadline, except a single-session order, which copies P-09 as the hold time of its slot and is cancelled by JOB-05 if not paid in time (CBR-54); a PT-sale order holds its slots for 15 minutes (BR-93) and is cancelled if not paid in time.
+
+## E10. System Messages — Thay dòng MSG135
+
+| # | Message code | Message Type | Context | Content |
+|---|---|---|---|---|
+| 135 | MSG135 | — | Withdrawn — selling a single PT session at the counter is part of UC-20 (CBR-54), so a message saying it is unavailable is not used. | — |
+
 # F. Section I.5.2 External API — Thay toàn bộ bảng
 
 | # | API Name | Calling Path | Description |
@@ -449,7 +462,7 @@ Thay cụm *"a session on a date declared closed all day → Cancelled / GymClos
 | 2 | JOB-02: Expire membership and PT packages | Scheduled | Runs: daily, right after JOB-01. Threshold: package End Date is before today. Result: membership → Expired, a customer with no valid membership or day pass left → Expired (CBR-03); PT package → Expired and its leftover Scheduled sessions → Cancelled (PackageExpired, CBR-55). |
 | 3 | JOB-03: Expire unused day passes | Scheduled | Runs: daily, right after JOB-02. Threshold: the pass's valid day has ended without a check-in. Result: day pass → Expired; a customer with no valid package left → Expired (BR-32). |
 | 4 | JOB-04: Auto-close PT sessions | Scheduled | Runs: daily, right after JOB-03. Threshold: session still Scheduled whose date is before today (any number of days late). Result per session, in its own transaction with an audit line: date closed all day or session outside that date's opening hours → Cancelled (GymClosed, no commission — CBR-56, CBR-124); nobody can use the gym and someone is frozen → Missed (MembershipFrozen); nobody can use the gym → Missed (NoMembership); someone checked in that day → CheckedIn; otherwise → Missed (NoCheckIn) (CBR-42). Slot and commission are not changed. |
-| 5 | JOB-05: Cancel overdue online orders | Scheduled | Runs: every minute. Threshold: online order still Pending past the payment deadline stored on the order (creation + P-09, default 20 minutes) with no Success transaction. Result: order → Cancelled (PaymentTimeout); Pending transactions → Expired; voucher use returned; Held slot → Free; the customer is notified (CBR-70, BR-44). |
+| 5 | JOB-05: Cancel overdue online orders | Scheduled | Runs: every minute. Threshold: online order, or counter single-session order (CBR-54), still Pending past the payment deadline stored on the order (creation + P-09, default 20 minutes) with no Success transaction. Result: order → Cancelled (PaymentTimeout); Pending transactions → Expired; voucher use returned; Held slot → Free; the customer is notified (CBR-70, BR-44). |
 | 6 | JOB-06: Expire timed-out payment transactions | Scheduled | Runs: every minute. Threshold: transaction still Pending past its own deadline — 5 minutes after its payment link is created, never beyond the order's deadline. Result: transaction → Expired; the order stays Pending so the customer can pay again (CBR-69). |
 | 7 | JOB-07: Remind Managers of leave requests starting tomorrow | Scheduled | Runs: every minute. Threshold: Pending leave request starting tomorrow that has not been reminded yet. Result: ReminderSentAt is set and the Managers receive one bell notification "N leave requests from tomorrow are waiting". No automatic rejection (CBR-85). |
 | 8 | JOB-08: Remind customers without gym access | Scheduled | Runs: daily, after JOB-04 (last in the chain). Threshold: PT sessions Scheduled for tomorrow whose customer cannot use the gym tomorrow (CBR-117), excluding sessions on a closed day or outside that day's opening hours (CBR-56, CBR-124). Result: one bell notification per customer per day ("Nhắc buổi PT ngày dd/MM/yyyy", earliest session of that day, advice depends on missing package or freeze), only for Active accounts, both members of a couple; never sent twice. |
@@ -597,19 +610,19 @@ Failure behavior:
 
 **Trigger:** Scheduled — every minute.
 
-**Purpose:** Cancels online orders that were not paid by their payment deadline, so the held slot and the voucher use are released (CBR-70).
+**Purpose:** Cancels online orders, and counter single-session orders, that were not paid by their payment deadline, so the held slot and the voucher use are released (CBR-70, CBR-54).
 
-**Related:** UC-22, UC-37, UC-PAY · Rules CBR-70, CBR-40, BR-44, DBR-36, DBR-43
+**Related:** UC-20, UC-22, UC-37, UC-PAY · Rules CBR-70, CBR-54, CBR-40, BR-44, DBR-36, DBR-43
 
 **Parameters:** P-09 (payment deadline, copied into Orders.PaymentDueAt when the order is created — GBR-04).
 
 Processing steps:
 
-1. Find online orders that are still Pending and whose PaymentDueAt is before now.
-2. For each order, in its own transaction, lock the customer and then the order, and re-check that the order is still Pending, still overdue and has no Success transaction (the IPN may have arrived in between).
+1. Find online orders, and counter single-session orders (CBR-54), that are still Pending and whose PaymentDueAt is before now. Other counter orders have no deadline and are never cancelled by this job.
+2. For each order, in its own transaction, lock the customer and then the order, and re-check that the order is still Pending, still overdue and has no Success transaction (the IPN or the Receptionist may have completed it in between).
 3. Set the order Cancelled with CancelType = PaymentTimeout.
 4. Set its Pending transactions Expired, return its Held slot to Free (DBR-36) and return one use of its voucher, if any (BR-44). If the voucher use cannot be returned, the whole cancellation is rolled back.
-5. Write the audit line and send the customer a bell notification, in the same transaction.
+5. Write the audit line and, if the customer's account is Active, send a bell notification, in the same transaction.
 
 Failure behavior:
 
@@ -784,14 +797,18 @@ Failure behavior:
 | 5 | Màn #16 Operating Hours (UC-11) | Chưa có màn; không chỗ nào ghi vào bảng OperatingHourExceptions | UC-11, CBR-124 |
 | 6 | Check-in ngày đóng cửa | `CheckInService` không kiểm tra ngày đóng cửa hoặc giờ mở cửa | GBR-11 |
 | 7 | VNPay QueryDR | `VnPayClient.queryTransaction()` và `PaymentCallbackService.handleQueryResult()` có sẵn nhưng không job nào gọi | Không có trong SRS (không thêm API mới) |
+| 8 | Bán buổi PT lẻ tại quầy | `CounterSaleService.java:562` từ chối và trả MSG135 "Chưa có màn bán buổi PT lẻ tại quầy" | UC-20, CBR-54, CBR-49, CBR-60; BF-05 A3. MSG135 rút khỏi SRS (E10) |
+| 9 | JOB-05 với đơn buổi lẻ tại quầy | `CancelOverdueOnlineOrdersJob` chỉ hủy đơn online | 16.5, CBR-54, Entity Order (E9) |
 
-## Z2. Mâu thuẫn trong SRS cần nhóm chốt: bán buổi PT lẻ tại quầy
+## Z2. Đã chốt: bán buổi PT lẻ tại quầy — hướng (b)
 
-- SRS nói lễ tân bán buổi PT lẻ tại quầy: UC-20, CBR-49, CBR-54, CBR-60, CBR-32.
-- Code từ chối việc này: `CounterSaleService.java:562` trả MSG135 "Chưa có màn bán buổi PT lẻ tại quầy".
-- BF-05 hiện chỉ vẽ nhánh online.
+Nhóm chọn **giữ SRS**: lễ tân vẫn bán buổi PT lẻ trong ngày tại quầy (UC-20, CBR-49, CBR-54, CBR-60, CBR-32). Đây là **chức năng chưa làm** (Z1 dòng 8, 9).
 
-Hai hướng: (a) bỏ bán buổi lẻ tại quầy khỏi SRS (rút CBR-54, sửa UC-20, CBR-49, CBR-60, CBR-32), hoặc (b) giữ SRS và ghi đây là chức năng chưa làm. Nhóm chọn xong thì sửa đúng các rule trên.
+Để SRS không tự mâu thuẫn, file này đã sửa sẵn:
+- BF-05 thêm nhánh **A3** (bán tại quầy), sửa Trigger, Pre-condition, E1, E2.
+- Entity Order (E9): đơn buổi lẻ tại quầy có hạn thanh toán P-09.
+- JOB-05 (bảng 5.3 và mục 16.5) hủy cả đơn buổi lẻ tại quầy quá hạn.
+- MSG135 rút khỏi SRS (E10), vì message này nói chức năng không có.
 
 ## Z3. Sơ đồ
 
