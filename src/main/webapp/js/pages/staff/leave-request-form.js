@@ -22,7 +22,6 @@ document.addEventListener("DOMContentLoaded", function () {
     const balanceText = document.getElementById("leaveBalanceText");
     const expectedAnnualInput = document.getElementById("expectedAnnualDays");
     const expectedUnpaidInput = document.getElementById("expectedUnpaidDays");
-    const deadlineText = document.getElementById("infoDeadline");
     let currentPlan = null;
     // Mỗi lần đổi ngày/ca tăng số này; bỏ phản hồi API cũ nếu người dùng đã đổi lựa chọn.
     let requestVersion = 0;
@@ -71,8 +70,6 @@ document.addEventListener("DOMContentLoaded", function () {
             dateError.hidden = false;
             return;
         }
-        const cutoffLabel = cutoff.substring(0, 5);
-        deadlineText.textContent = cutoffLabel + " · ngày hôm trước";
         if (!fromInput.value) {
             return;
         }
@@ -152,14 +149,6 @@ document.addEventListener("DOMContentLoaded", function () {
             scheduleWarning.hidden = false;
         }
 
-        // Ô i hiện quân số thấp nhất trong toàn khoảng ngày đang chọn.
-        const staffing = plan.staffing;
-        document.getElementById("pvPt").textContent = staffing.remainingPt;
-        document.getElementById("pvRecep").textContent = staffing.remainingReceptionist;
-        document.getElementById("pvMinPt").textContent = staffing.minPt;
-        document.getElementById("pvMinRecep").textContent = staffing.minReceptionist;
-        document.getElementById("pvScope").textContent = formatDate(plan.fromDate)
-                + (plan.fromDate === plan.toDate ? "" : " → " + formatDate(plan.toDate));
     }
 
     // B2.3: gọi API, bỏ phản hồi cũ rồi chuyển dữ liệu mới cho renderPlan().

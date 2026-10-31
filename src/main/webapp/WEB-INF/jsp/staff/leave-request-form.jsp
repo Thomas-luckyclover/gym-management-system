@@ -11,7 +11,7 @@
   <%@ include file="/WEB-INF/jsp/common/head.jspf" %>
   <title>Nghỉ phép · Super Gym</title>
   <link rel="stylesheet" href="${pageContext.request.contextPath}/css/pages/auth/account-settings.css?v=20261018">
-  <link rel="stylesheet" href="${pageContext.request.contextPath}/css/pages/manager/leave-requests.css?v=20261031-compact-form">
+  <link rel="stylesheet" href="${pageContext.request.contextPath}/css/pages/manager/leave-requests.css?v=20261031-help">
   <link rel="stylesheet" href="${pageContext.request.contextPath}/css/pages/auth/notification-bell.css?v=20261018">
   <script src="${pageContext.request.contextPath}/js/pages/auth/notification-bell.js" defer></script>
 </head>
@@ -84,21 +84,9 @@
                     <span aria-hidden="true">i</span>
                   </button>
                   <div id="leaveFormHelp" class="pt-info-popover" role="tooltip">
-                    <strong class="leave-help-title">Lưu ý gửi đơn</strong>
-                    <p class="leave-help-row"><span>Nộp trước:</span> <b id="infoDeadline"><c:out value="${formView.submissionCutoffTime}" default="—" /> · ngày hôm trước</b></p>
-                    <p class="leave-help-note">Quá hạn/đột xuất: báo quản lý.</p>
-
-                    <strong class="leave-help-title">Nhân sự dự kiến (còn / tối thiểu)</strong>
-                    <p id="pvScope" class="leave-help-note">Chọn ngày và ca nghỉ</p>
-                    <p class="leave-help-row">
-                      <span>PT:</span>
-                      <b><span id="pvPt"><c:out value="${formView.staffing.remainingPt}" default="—" /></span> / <span id="pvMinPt"><c:out value="${formView.staffing.minPt}" default="—" /></span></b>
-                    </p>
-                    <p class="leave-help-row">
-                      <span>Lễ tân:</span>
-                      <b><span id="pvRecep"><c:out value="${formView.staffing.remainingReceptionist}" default="—" /></span> / <span id="pvMinRecep"><c:out value="${formView.staffing.minReceptionist}" default="—" /></span></b>
-                    </p>
-                    <p class="leave-help-note">Quân số thấp nhất trong khoảng đã chọn.</p>
+                    <p class="leave-help-note">Gửi đơn trước <c:out value="${formView.submissionCutoffTime}" default="giờ chốt" /> ngày liền trước ngày nghỉ.</p>
+                    <p class="leave-help-note">Nghỉ đột xuất hoặc quá hạn: liên hệ quản lý.</p>
+                    <p class="leave-help-note">Đơn chỉ có hiệu lực sau khi được duyệt.</p>
                   </div>
                 </div>
               </div>
@@ -305,6 +293,6 @@
     </div>
   </div>
 
-  <script src="${pageContext.request.contextPath}/js/pages/staff/leave-request-form.js?v=20261031-compact-form"></script>
+  <script src="${pageContext.request.contextPath}/js/pages/staff/leave-request-form.js?v=20261031-help"></script>
 </body>
 </html>
