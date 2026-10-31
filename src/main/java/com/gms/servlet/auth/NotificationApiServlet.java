@@ -127,7 +127,7 @@ public class NotificationApiServlet
 
             result =
                     ServiceResult.fail(
-                            "Thao tác thông báo không hợp lệ."
+                            Messages.MSG303_NOTIFICATION_ACTION_INVALID
                     );
         }
 

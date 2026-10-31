@@ -211,8 +211,7 @@ public class PtSaleService {
                             orderId, expires, now);
                 }
             }
-            return ServiceResult.ok(orderId, "Đã giữ " + view.getSessionCount() + " buổi trong " + HOLD_MINUTES
-                    + " phút · đơn " + code + ". Thu tiền để chốt.");
+            return ServiceResult.ok(orderId, String.format(Messages.MSG307_PT_SALE_HELD, view.getSessionCount(), HOLD_MINUTES, code));
         });
     }
 
@@ -223,11 +222,11 @@ public class PtSaleService {
     public ServiceResult<Integer> pay(int accountId, int orderId, String startText, String method, String reference,
             LocalDateTime now) {
         if (!"Cash".equals(method) && !"Transfer".equals(method)) {
-            return ServiceResult.fail("Chọn cách thu tiền: tiền mặt hoặc chuyển khoản.");
+            return ServiceResult.fail(Messages.MSG308_PT_SALE_METHOD_REQUIRED);
         }
         String ref = reference == null || reference.isBlank() || "Cash".equals(method) ? null : reference.trim();
         if (ref != null && ref.length() > 50) {
-            return ServiceResult.fail("Mã giao dịch chuyển khoản tối đa 50 ký tự.");
+            return ServiceResult.fail(Messages.MSG309_PT_SALE_REFERENCE_LENGTH);
         }
         LocalDate start = parseDate(startText);
 
@@ -270,8 +269,7 @@ public class PtSaleService {
 
             // B4: thông báo khách (+ người tập cùng) và PT.
             notifySale(connection, held, pkg, pt == null ? "PT" : pt.fullName, start, end, count, now);
-            return ServiceResult.ok(orderId, "Đã thu " + money(held.price) + " · đơn " + held.orderCode + " · "
-                    + count + " buổi đã vào lịch PT.");
+            return ServiceResult.ok(orderId, String.format(Messages.MSG310_PT_SALE_PAID, money(held.price), held.orderCode, count));
         });
     }
 
@@ -284,7 +282,7 @@ public class PtSaleService {
                 throw new IllegalArgumentException("Đơn này không còn giữ chỗ.");
             }
             saleDAO.releaseHold(connection, orderId, held.createdAt, RELEASE_REASON, now);
-            return ServiceResult.ok(orderId, "Đã hủy giữ chỗ đơn " + held.orderCode + ", các khung đã trả lại cho PT.");
+            return ServiceResult.ok(orderId, String.format(Messages.MSG311_PT_SALE_RELEASED, held.orderCode));
         });
     }
 

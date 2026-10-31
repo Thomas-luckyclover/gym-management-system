@@ -452,7 +452,7 @@ public class PtScheduleService {
         boolean hasRemovals = removeIds != null && removeIds.length > 0;
         boolean pairsBroken = hasDrafts && (starts == null || dates.length != starts.length);
         if ((!hasDrafts && !hasRemovals) || pairsBroken) {
-            return ServiceResult.fail("Chọn ít nhất một khung nháp hoặc khung cần gỡ trước khi công bố.");
+            return ServiceResult.fail(Messages.MSG320_PT_PUBLISH_NOTHING);
         }
 
         try (Connection connection = DBContext.getConnection()) {
@@ -508,7 +508,7 @@ public class PtScheduleService {
             throw new IllegalStateException("P-06 không hợp lệ");
         }
         if (minutes != expectedMinutes) {
-            return ServiceResult.fail("Thời lượng buổi đã thay đổi. Tải lại lịch và kiểm tra nháp trước khi công bố.");
+            return ServiceResult.fail(Messages.MSG321_PT_DURATION_CHANGED);
         }
 
         // B2: GỠ khung (DBR-36: chỉ Free → Withdrawn, giữ dòng làm lịch sử).
@@ -524,7 +524,7 @@ public class PtScheduleService {
 
         boolean onlyRemovals = dates == null || dates.length == 0;
         if (onlyRemovals) {
-            return ServiceResult.ok(slotIds.size(), "Đã gỡ " + slotIds.size() + " khung giờ.");
+            return ServiceResult.ok(slotIds.size(), String.format(Messages.MSG322_PT_SLOTS_REMOVED, slotIds.size()));
         }
 
         // B3: THÊM khung: Service tự tính giờ kết thúc, rồi đọc dữ liệu cần để kiểm tra (một lần).

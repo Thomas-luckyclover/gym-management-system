@@ -154,7 +154,7 @@ public class ExerciseLibraryService {
             // B2: dữ liệu quá 1 ngày → tải lại từ wger (lỗi thì giữ bản cũ).
             LocalDateTime lastSynced = syncIfNeeded(now);
             if (lastSynced == null) {
-                return ServiceResult.fail("Chưa tải được thư viện bài tập từ wger. Vui lòng thử lại sau ít phút.");
+                return ServiceResult.fail(Messages.MSG306_EXERCISE_LIBRARY_UNAVAILABLE);
             }
             view.setSyncedAtText(DateTimeUtil.formatDateTime(lastSynced));
             view.setStale(lastFailureAt != null && needsSync(lastSynced, now));

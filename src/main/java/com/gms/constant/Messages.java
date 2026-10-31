@@ -903,6 +903,83 @@ public final class Messages {
     /** Lưu ảnh check-in xong. */
     public static final String MSG297_CHECKIN_PHOTO_SAVED = "Đã lưu ảnh check-in vào hồ sơ hội viên.";
 
+    // ===== 6.6 PT, chỉ số cơ thể, tài khoản, thông báo, phản hồi, thư viện bài tập =====
+
+    /** Chỉ số cơ thể: lần đo không có / không thuộc khách. */
+    public static final String MSG298_MEASUREMENT_NOT_FOUND = "Không tìm thấy lần đo này.";
+
+    /** Chỉ số cơ thể: thiếu ngày đo. */
+    public static final String MSG299_MEASUREMENT_DATE_REQUIRED = "Chọn ngày đo.";
+
+    /** Lưu lần đo xong. %s = ngày, BMI. */
+    public static final String MSG300_MEASUREMENT_SAVED = "Đã lưu lần đo ngày %s · BMI %s.";
+
+    /** Xóa lần đo xong. */
+    public static final String MSG301_MEASUREMENT_DELETED = "Đã xóa lần đo.";
+
+    /** Lưu được nhưng ghi nhật ký lỗi. */
+    public static final String MSG302_SAVED_BUT_AUDIT_FAILED = "Thông tin đã được cập nhật nhưng chưa ghi được nhật ký thao tác.";
+
+    /** API thông báo nhận action lạ. */
+    public static final String MSG303_NOTIFICATION_ACTION_INVALID = "Thao tác thông báo không hợp lệ.";
+
+    /** Đổi email trùng email cũ. */
+    public static final String MSG304_NEW_EMAIL_SAME = "Email mới phải khác email hiện tại.";
+
+    /** Đổi SĐT trùng SĐT cũ. */
+    public static final String MSG305_NEW_PHONE_SAME = "Số điện thoại mới phải khác số điện thoại hiện tại.";
+
+    /** wger lỗi và chưa có dữ liệu cũ. */
+    public static final String MSG306_EXERCISE_LIBRARY_UNAVAILABLE = "Chưa tải được thư viện bài tập từ wger. Vui lòng thử lại sau ít phút.";
+
+    /** Bán gói PT: giữ lịch xong. %d = số buổi, phút; %s = mã đơn. */
+    public static final String MSG307_PT_SALE_HELD = "Đã giữ %d buổi trong %d phút · đơn %s. Thu tiền để chốt.";
+
+    /** Bán gói PT: chưa chọn cách thu. */
+    public static final String MSG308_PT_SALE_METHOD_REQUIRED = "Chọn cách thu tiền: tiền mặt hoặc chuyển khoản.";
+
+    /** Bán gói PT: mã giao dịch quá dài. */
+    public static final String MSG309_PT_SALE_REFERENCE_LENGTH = "Mã giao dịch chuyển khoản tối đa 50 ký tự.";
+
+    /** Bán gói PT: thu tiền xong. %s = số tiền, mã đơn; %d = số buổi. */
+    public static final String MSG310_PT_SALE_PAID = "Đã thu %s · đơn %s · %d buổi đã vào lịch PT.";
+
+    /** Bán gói PT: hủy giữ chỗ. %s = mã đơn. */
+    public static final String MSG311_PT_SALE_RELEASED = "Đã hủy giữ chỗ đơn %s, các khung đã trả lại cho PT.";
+
+    /** Phản hồi sai độ dài. */
+    public static final String MSG312_FEEDBACK_CONTENT_LENGTH = "Nội dung phản hồi phải từ 10 đến 1000 ký tự.";
+
+    /** Dời buổi chưa chọn khung. */
+    public static final String MSG313_PT_NEW_SLOT_REQUIRED = "Chọn một khung giờ mới cho buổi này.";
+
+    /** Ghi chú quá dài. %d = số ký tự tối đa. */
+    public static final String MSG314_NOTE_MAX_LENGTH = "Ghi chú tối đa %d ký tự.";
+
+    /** Dời buổi xong. %s = giờ mới. */
+    public static final String MSG315_PT_SESSION_MOVED = "Đã dời buổi sang %s.";
+
+    /** Chuyển buổi chưa chọn PT. */
+    public static final String MSG316_PT_TARGET_REQUIRED = "Chọn PT nhận buổi này.";
+
+    /** Chuyển buổi xong. %s = thời gian, tên PT. */
+    public static final String MSG317_PT_SESSION_TRANSFERRED = "Đã chuyển buổi %s cho %s.";
+
+    /** Hủy buổi xong. %s = thời gian. */
+    public static final String MSG318_PT_SESSION_CANCELLED = "Đã hủy buổi %s.";
+
+    /** Xóa ảnh đại diện khi chưa có ảnh. */
+    public static final String MSG319_AVATAR_EMPTY = "Tài khoản chưa có ảnh đại diện.";
+
+    /** Công bố lịch khi không có thay đổi. */
+    public static final String MSG320_PT_PUBLISH_NOTHING = "Chọn ít nhất một khung nháp hoặc khung cần gỡ trước khi công bố.";
+
+    /** Thời lượng buổi đổi giữa lúc soạn và lúc công bố. */
+    public static final String MSG321_PT_DURATION_CHANGED = "Thời lượng buổi đã thay đổi. Tải lại lịch và kiểm tra nháp trước khi công bố.";
+
+    /** Công bố chỉ gỡ khung. %d = số khung. */
+    public static final String MSG322_PT_SLOTS_REMOVED = "Đã gỡ %d khung giờ.";
+
     private Messages() {
     }
 }
