@@ -696,20 +696,24 @@ function initPlan(root, data) {
             stepPlan.classList.toggle("is-done", result.sessions > 0);
             stepPlan.classList.toggle("is-current", result.sessions === 0);
         }
+        // Bong bóng của Pumpy: nói BƯỚC KẾ TIẾP bằng tên phần trên màn ("Lịch tập", "Khách mua gói"),
+        // không nói "bên trái / bên phải" vì iPad / điện thoại xếp 1 cột. innerHTML chỉ ghép số + chữ cố định (không có dữ liệu người dùng).
         const note = document.querySelector("[data-plan-note]");
         if (note) {
-            let text;
+            let html;
             if (result.sessions === 0) {
-                text = "Chưa có buổi nào. Bấm vào lịch bên trái để chọn giờ tập.";
+                html = "Chưa có buổi nào. Chọn giờ tập cho từng thứ ở phần <b>Lịch tập</b> nhé.";
             } else if (!customerReady) {
-                text = "Lịch xong rồi. Chọn khách ở cột Đơn bán là giữ được.";
+                html = "Lịch xong rồi! Giờ tìm khách ở ô <b>Khách mua gói</b> là giữ lịch được.";
             } else if (needConfirm) {
-                text = "Có " + unconfirmed + " buổi PT chưa mở khung giờ này. Hỏi PT rồi tick \"Đã xác nhận với PT\".";
+                html = "Có <b>" + unconfirmed + " buổi</b> PT chưa mở giờ này. Hỏi PT trước, rồi tích <b>Đã xác nhận với PT</b> nhé.";
             } else {
-                text = result.sessions + " buổi sẽ được giữ 15 phút để thu tiền, không ai giành được."
-                        + (result.bad > 0 ? " Còn " + result.bad + " ngày chưa xếp được — bấm ô đỏ ở lịch để đổi giờ." : "");
+                html = "Sẵn sàng! Bấm <b>Giữ lịch</b> để giữ " + result.sessions + " buổi trong 15 phút, rồi thu tiền.";
+                if (result.bad > 0) {
+                    html += " Còn " + result.bad + " ngày chưa xếp được (ô đỏ) — bấm vào ô đó để đổi giờ.";
+                }
             }
-            note.textContent = text;
+            note.innerHTML = html;
         }
         syncUrl();
     }

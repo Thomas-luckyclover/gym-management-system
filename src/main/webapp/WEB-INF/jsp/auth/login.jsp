@@ -13,7 +13,7 @@
         sai mật khẩu thì ghi lại FailedLoginCount / LockedUntil (P-17 = 5 lần, P-18 = 5 phút).
 
  BIẾN JSP
-   loginStep        "form" | "blocked-no-password" (MSG38) | "blocked-lock" (MSG35); GET mặc định là form
+   loginStep        "form" | "blocked-lock" (MSG35); GET mặc định là form
    errorMessage     lỗi chung → khung đỏ / vàng
    fieldErrors      lỗi gắn ô (identifier, password) → chữ đỏ dưới ô
    identifier       chữ khách đã gõ ở ô đầu (giữ lại khi báo lỗi; mật khẩu thì KHÔNG giữ)
@@ -127,38 +127,13 @@
                         Chưa có tài khoản?
                         <a href="${pageContext.request.contextPath}/register">Đăng ký</a>
                     </p>
+
+                    <%-- Hộp gợi ý Pumpy (giống màn Quên mật khẩu): khách được lễ tân tạo tài khoản tại quầy nhận MẬT KHẨU TẠM qua email
+                         (CounterAccountService, thay CBR-31). pumpyHintMode = "login" → pumpy-mail-hint.jspf in chữ cho màn này. --%>
+                    <c:set var="pumpyHintMode" value="login" />
+                    <%@ include file="/WEB-INF/jsp/common/pumpy-mail-hint.jspf" %>
                 </div>
                 <%-- BẢNG 1. FORM ĐĂNG NHẬP — KẾT THÚC --%>
-
-                <%-- ==========================================================
-                     BẢNG 2. TÀI KHOẢN CHƯA CÓ MẬT KHẨU — BẮT ĐẦU   (loginStep = "blocked-no-password", MSG38)
-                     Tài khoản do lễ tân tạo tại quầy (Accounts.PasswordHash = NULL) → khung vàng + nút "Đặt mật khẩu"
-                     dẫn sang Quên mật khẩu (đặt mật khẩu lần đầu qua email).
-                     ========================================================== --%>
-                <div class="step-panel" data-step="blocked-no-password" <c:if test="${loginStep ne 'blocked-no-password'}">hidden</c:if>>
-                    <div class="auth-head">
-                        <h1>Chưa thể đăng nhập</h1>
-                    </div>
-                    <div class="msg-banner warning" role="alert">
-                        <i class="fa-solid fa-triangle-exclamation"></i>
-                        <span>
-                            <c:choose>
-                                <c:when test="${not empty errorMessage}">
-                                    <c:out value="${errorMessage}" />
-                                </c:when>
-                                <c:otherwise>
-                                    Tài khoản chưa có mật khẩu. Hãy dùng Quên mật khẩu để đặt mật khẩu.
-                                </c:otherwise>
-                            </c:choose>
-                        </span>
-                    </div>
-                    <div class="btn-row">
-                        <a class="btn btn-primary" href="${pageContext.request.contextPath}/forgot-password">Đặt mật khẩu</a>
-                        <%-- "Thử lại": login.js chuyển về bảng 1, không gọi server. --%>
-                        <button class="btn btn-outline" type="button" data-back-form>Thử lại</button>
-                    </div>
-                </div>
-                <%-- BẢNG 2 — KẾT THÚC --%>
 
                 <%-- ==========================================================
                      BẢNG 3. TÀI KHOẢN TẠM KHÓA — BẮT ĐẦU   (loginStep = "blocked-lock", MSG35)

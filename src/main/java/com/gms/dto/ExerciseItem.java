@@ -42,9 +42,13 @@ public class ExerciseItem {
     // Service: cơ chính tiếng Việt nối bằng ", ", ví dụ "Ngực, Tay sau". Không có → chuỗi rỗng (JSP ẩn dòng).
     private String muscleText;
 
-    // Service: ảnh dự phòng theo nhóm cơ khi wger không có ảnh, ví dụ "/images/exercises/chest.jpg"
-    // (ảnh public domain từ free-exercise-db, lưu trong dự án). JSP ghép contextPath + ghi chữ "Ảnh minh họa nhóm …".
+    // ExerciseImagePool: ảnh minh họa khi wger không có ảnh, ví dụ "/images/exercises/library/chest/barbell-bench-press-medium-grip.jpg"
+    // (kho 194 ảnh public domain từ free-exercise-db, lưu trong dự án). JSP ghép contextPath + ghi nhãn ảnh minh họa.
     private String fallbackImage;
+
+    // ExerciseImagePool: true = ảnh khớp đúng TÊN động tác → JSP ghi "Ảnh minh họa";
+    // false = ảnh cùng nhóm cơ → JSP ghi "Ảnh minh họa nhóm Ngực".
+    private boolean fallbackExact;
 
     // Mã bài tập wger
     public int getExerciseId() {
@@ -154,5 +158,13 @@ public class ExerciseItem {
     // Gán ảnh dự phòng (Service)
     public void setFallbackImage(String fallbackImage) {
         this.fallbackImage = fallbackImage;
+    }
+
+    public boolean isFallbackExact() {
+        return fallbackExact;
+    }
+
+    public void setFallbackExact(boolean fallbackExact) {
+        this.fallbackExact = fallbackExact;
     }
 }

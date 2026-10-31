@@ -1,5 +1,6 @@
 package com.gms.constant;
 
+import java.time.LocalTime;
 import java.util.List;
 
 /**
@@ -72,6 +73,17 @@ public final class AppConstants {
     /** DBR-08: ảnh JPG/PNG tối đa 5 MB, tối đa 2000 x 2000 px. */
     public static final long IMAGE_MAX_BYTES = 5L * 1024 * 1024;
     public static final int IMAGE_MAX_DIMENSION_PX = 2000;
+
+    /**
+     * Mốc chia ca sáng / ca chiều — dùng chung cho ca lễ tân, đơn nghỉ của PT và khung giờ PT.
+     * Khung / buổi BẮT ĐẦU trước 13:00 thuộc ca sáng (05:30–13:00), từ 13:00 thuộc ca chiều (13:00–22:00).
+     * SRS chỉ nói "mỗi ngày mở cửa tự chia ca sáng và ca chiều" (UC-11, CBR-104), không nêu giờ chia:
+     * nhóm chốt 13:00 ngày 31/10/2026 cho khớp giờ mở / đóng ca lễ tân (docs/notes.md).
+     */
+    public static final LocalTime AFTERNOON_SHIFT_START = LocalTime.of(13, 0);
+
+    /** Cùng mốc trên, dạng chữ để ghép vào câu SQL so với cột TIME (TimeSlots.StartTime). */
+    public static final String AFTERNOON_SHIFT_START_SQL = "'13:00:00'";
 
     private AppConstants() { // để chặn constructor tự tạo mặc định
     }

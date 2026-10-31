@@ -19,8 +19,8 @@
 <head>
     <%@ include file="/WEB-INF/jsp/common/head.jspf" %>
     <title>Chọn khách · Super Gym Lễ tân</title>
-    <link rel="stylesheet" href="${ctx}/css/pages/receptionist/counter-sale.css?v=20261030_vSquareCustomer">
-    <script src="${ctx}/js/pages/receptionist/counter-sale.js?v=20261029a" defer></script>
+    <link rel="stylesheet" href="${ctx}/css/pages/receptionist/counter-sale.css?v=20261031_quickmodal">
+    <script src="${ctx}/js/pages/receptionist/counter-sale.js?v=20261031_tempPwd" defer></script>
 </head>
 <body class="dock theme-staff counter-sale-page">
 <%@ include file="/WEB-INF/jsp/common/flash-toast.jspf" %>
@@ -72,10 +72,10 @@
                         </table>
                     </div>
 
-                    <%-- Hàng nút dưới bảng: Đổi gói (trái) · Tạo hồ sơ mới (phải, mở màn hồ sơ ở tab mới) --%>
+                    <%-- Hàng nút dưới bảng: Đổi gói (trái) · Tạo hồ sơ mới (phải, mở popup tạo nhanh) --%>
                     <div class="counter-actions">
                         <a class="btn btn-ghost" href="${base}">← Đổi gói</a>
-                        <a class="btn btn-outline" href="${ctx}/receptionist/customers/form" target="_blank" rel="noopener">+ Tạo hồ sơ</a>
+                        <button type="button" class="btn btn-outline" id="btnOpenQuickCustomerModal">+ Tạo hồ sơ</button>
                     </div>
                 </section>
 
@@ -93,6 +93,101 @@
                 </aside>
             </div>
         </main>
+    </div>
+</div>
+
+<%-- ===== MODAL TẠO NHANH HỒ SƠ KHÁCH HÀNG ===== --%>
+<div class="quick-modal-backdrop" id="quickCustomerBackdrop" hidden>
+    <div class="quick-modal" role="dialog" aria-modal="true" aria-labelledby="quickModalTitle">
+        <header class="quick-modal-header">
+            <h2 class="quick-modal-title" id="quickModalTitle">
+                <i class="fa-solid fa-user-plus" aria-hidden="true"></i> Tạo hồ sơ khách hàng
+            </h2>
+            <button type="button" class="quick-modal-close" id="btnCloseQuickModal" aria-label="Đóng popup">×</button>
+        </header>
+
+        <form id="formQuickCustomer" novalidate>
+            <input type="hidden" name="csrfToken" id="quickCsrfToken" value="${csrfToken}">
+            <input type="hidden" name="packageId" id="quickPackageId" value="${selectedCard.packageId}">
+
+            <div class="quick-modal-body">
+                <div class="quick-form-alert" id="quickModalAlert" hidden></div>
+
+                <div class="quick-form-group">
+                    <label class="quick-label">Loại hồ sơ <span class="quick-req">*</span></label>
+                    <div class="quick-radio-group">
+                        <label class="quick-radio-label">
+                            <input type="radio" name="customerType" value="Self" checked>
+                            <span>Tự sở hữu (Độc lập)</span>
+                        </label>
+                        <label class="quick-radio-label">
+                            <input type="radio" name="customerType" value="Dependent">
+                            <span>Phụ thuộc (Trẻ em/Người thân)</span>
+                        </label>
+                    </div>
+                    <p class="quick-hint">Loại hồ sơ không thể thay đổi sau khi tạo (BR-18).</p>
+                </div>
+
+                <div class="quick-form-group">
+                    <label class="quick-label" for="qcFullName">Họ và tên <span class="quick-req">*</span></label>
+                    <input type="text" id="qcFullName" name="fullName" class="quick-input" placeholder="Ví dụ: Nguyễn Văn An" maxlength="50" required>
+                    <span class="quick-field-error" id="err_fullName" hidden></span>
+                </div>
+
+                <div class="quick-form-row">
+                    <div class="quick-form-group quick-col-6" id="wrapPhone">
+                        <label class="quick-label" for="qcPhone">Số điện thoại <span class="quick-req">*</span></label>
+                        <input type="tel" id="qcPhone" name="phone" class="quick-input" placeholder="0901234567" maxlength="10" required>
+                        <span class="quick-field-error" id="err_phone" hidden></span>
+                    </div>
+
+                    <div class="quick-form-group quick-col-6">
+                        <label class="quick-label" for="qcDob">Ngày sinh <span class="quick-req">*</span></label>
+                        <input type="date" id="qcDob" name="dateOfBirth" class="quick-input" min="1924-01-01" required>
+                        <span class="quick-field-error" id="err_dateOfBirth" hidden></span>
+                    </div>
+                </div>
+
+                <%-- Email (chỉ hồ sơ Self): CounterSaleService tạo tài khoản + gửi mật khẩu tạm tới email này (thay CBR-31).
+                     counter-sale.js ẩn ô và bỏ required khi chọn Dependent (hồ sơ phụ thuộc không có tài khoản — CBR-21). --%>
+                <div class="quick-form-group" id="wrapEmail">
+                    <label class="quick-label" for="qcEmail">Email <span class="quick-req">*</span></label>
+                    <input type="email" id="qcEmail" name="email" class="quick-input" placeholder="ten@gmail.com" maxlength="100" autocomplete="off" required aria-describedby="qcEmailHint">
+                    <p class="quick-hint" id="qcEmailHint">Hệ thống tạo tài khoản và gửi <b>mật khẩu tạm</b> tới email này. Nhắc khách kiểm tra cả mục Spam.</p>
+                    <span class="quick-field-error" id="err_email" hidden></span>
+                </div>
+
+                <%-- Nhóm thông tin người giám hộ (Chỉ hiện khi chọn Dependent) --%>
+                <div class="quick-guardian-box" id="wrapGuardian" hidden>
+                    <p class="quick-guardian-title"><i class="fa-solid fa-shield-halved" aria-hidden="true"></i> Thông tin Người giám hộ</p>
+                    <div class="quick-form-group">
+                        <label class="quick-label" for="qcGuardianName">Tên người giám hộ <span class="quick-req">*</span></label>
+                        <input type="text" id="qcGuardianName" name="guardianName" class="quick-input" placeholder="Ví dụ: Trần Thị Bình" maxlength="50">
+                        <span class="quick-field-error" id="err_guardianName" hidden></span>
+                    </div>
+                    <div class="quick-form-row">
+                        <div class="quick-form-group quick-col-6">
+                            <label class="quick-label" for="qcGuardianRel">Mối quan hệ <span class="quick-req">*</span></label>
+                            <input type="text" id="qcGuardianRel" name="guardianRelationship" class="quick-input" placeholder="Bố, Mẹ, Anh..." maxlength="30">
+                            <span class="quick-field-error" id="err_guardianRelationship" hidden></span>
+                        </div>
+                        <div class="quick-form-group quick-col-6">
+                            <label class="quick-label" for="qcGuardianPhone">SĐT người giám hộ <span class="quick-req">*</span></label>
+                            <input type="tel" id="qcGuardianPhone" name="guardianPhone" class="quick-input" placeholder="0912345678" maxlength="10">
+                            <span class="quick-field-error" id="err_guardianPhone" hidden></span>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <footer class="quick-modal-footer">
+                <button type="button" class="btn btn-ghost" id="btnCancelQuickModal">Hủy</button>
+                <button type="submit" class="btn btn-primary" id="btnSubmitQuickCustomer">
+                    <span class="btn-text">Tạo & Chọn mua gói</span>
+                    <i class="fa-solid fa-arrow-right" aria-hidden="true"></i>
+                </button>
+            </footer>
+        </form>
     </div>
 </div>
 </body>

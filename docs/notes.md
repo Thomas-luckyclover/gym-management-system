@@ -1,5 +1,32 @@
 # File notes — mâu thuẫn tài liệu & quyết định đã chốt
 
+## Thư viện bài tập: kho 194 ảnh minh họa thay 8 ảnh chung (31/10/2026, ĐÃ CODE)
+- **Vấn đề**: bài wger không có ảnh → 1 trong 8 ảnh chung theo nhóm cơ → cả trang lặp vài tấm.
+- **Đã làm**: chọn tay 194 ảnh free-exercise-db (public domain; bỏ bài giãn cơ, ảnh dọc, quá tối, ngoài trời), 640px, `webapp/images/exercises/library/<nhóm>/` (~8,3 MB); danh sách `src/main/resources/exercise-images.json`. `ExerciseImagePool.assign` (gọi trong `ExerciseLibraryService.getPage`): khớp **tên động tác** trước (nhãn "Ảnh minh họa"), không khớp thì ảnh **cùng nhóm cơ** (nhãn "Ảnh minh họa nhóm …"), vị trí theo ExerciseId và **không trùng ảnh trên 1 trang**. Xóa 8 ảnh cũ, `SOURCES.json` ghi lại cách chọn. Không đổi DB.
+
+## Tài khoản tạo tại quầy: gửi mật khẩu tạm qua email — THAY CBR-31 (31/10/2026, ĐÃ CODE)
+- **SRS cũ (CBR-31)**: tài khoản Lễ tân tạo không có mật khẩu, không gửi email; khách đăng nhập gặp MSG38 rồi phải qua Quên mật khẩu. **Đã bỏ** theo quyết định của nhóm.
+- **Mới**: màn Bán hàng tại quầy (`/receptionist/sales`, nhánh dev_mb3_NhanLTT đã merge) → "Tạo hồ sơ khách hàng": hồ sơ **Self** bắt buộc email (đúng định dạng, không trùng Person đang hoạt động — DBR-23). Cùng transaction tạo Person + Customer + **Account Active** với mật khẩu tạm 10 ký tự (có chữ + số, bỏ ký tự dễ nhầm 0/O/1/l/I), chỉ lưu BCrypt; gửi email "[Super Gym] Tài khoản và mật khẩu tạm của bạn" **trước khi commit** → gửi lỗi thì rollback hết, báo MSG04. Hồ sơ **Dependent**: không email, không tài khoản (CBR-21).
+- Lễ tân thấy toast "Đã tạo hồ sơ KH-… và tài khoản. Mật khẩu tạm đã gửi tới ab***@gmail.com." Khách đăng nhập bằng email hoặc SĐT + mật khẩu tạm, tự đổi ở Tài khoản → Mật khẩu (không ép đổi, **không thêm cột DB**).
+- **Code**: `CounterAccountService` (mới), `AccountDAO.insert`, `EmailGateway.sendTemporaryPassword`, `CounterSaleService.quickCreateCustomer` (B4.5), ô `email` ở form + JS ẩn khi Dependent. Bỏ MSG38: `AuthService` B6, `LoginServlet`, bảng "Chưa thể đăng nhập" ở login.jsp, `SessionKey.RECOVERY_PREFILL_EMAIL`. Hash NULL còn sót → tính như sai mật khẩu.
+- **Seed**: 3 tài khoản tại quầy (Account 9, 25, 113) trước để NULL, nay dùng mật khẩu chung Gms@2026 (đóng vai mật khẩu tạm đã gửi). Sửa cả `tools/seeddata.py` cho khớp.
+
+## Mốc chia ca sáng / ca chiều = 13:00 (31/10/2026, ĐÃ CODE)
+- **Vì sao**: SRS chỉ nói "mỗi ngày mở cửa tự chia ca sáng và ca chiều" (UC-11, CBR-104), không nêu giờ. Code đang lệch 4 mốc: khóa khung khi PT nghỉ 12:00 (`PtScheduleService.isOnLeave`, `PtSessionHandleDAO`), kiểm CBR-83 khi nộp đơn "buổi kết thúc sau 12:00" (`LeaveRequestDAO.countScheduledSessions`), ca lễ tân 13:00 (`ShiftDAO`, seed mở/đóng ca 05:30–13:00 / 13:00–22:00), gán ca đơn bán PT 14:00 (`PtSaleService`).
+- **Đã chốt**: 1 hằng số `AppConstants.AFTERNOON_SHIFT_START = 13:00`. Khung / buổi thuộc ca theo **giờ bắt đầu**: trước 13:00 = ca sáng, từ 13:00 = ca chiều. 5 chỗ trên dùng chung hằng số (SQL dùng `'13:00'` kèm comment trỏ về hằng số).
+- **Giao diện**: Lịch dạy PT — lưới tuần có vạch đứt 13:00, nền ca chiều nhạt, nhãn "Ca sáng / Ca chiều" trên trục giờ; kiểu danh sách có dòng ngăn "CA SÁNG / CA CHIỀU". Lịch tập của khách: 3 hàng Sáng 05:30–13:00 · Chiều 13:00–18:00 · Tối 18:00–22:00.
+- **Seed**: đơn nghỉ 9 (PT Sơn, sáng 28/10) trước đây trùng buổi 07:00 của Nguyễn Văn An (sai CBR-83). Nay buổi 367 được dời sang 31/10 08:00 (SessionMoveLogs 5, 25/10) trước khi nộp đơn 26/10. Kiểm lại: không còn đơn Pending/Approved nào trùng buổi Scheduled.
+
+## Soát giao diện điện thoại / iPad / máy tính + con mắt mật khẩu + Pumpy Bán gói PT (31/10/2026, ĐÃ CODE)
+- **Cách soát**: chạy app thật (Tomcat 10.1 + SQL Server seed), chụp 6 màn ở 390 / 768 / 1024 / 1440: Lịch tập, Gói của tôi, Chỉ số cơ thể (khách) · Lịch dạy, Tổng quan (PT) · Bán gói PT (lễ tân). Không đổi Java / DB.
+- **Topbar chung (common.css, cuối file)**: ≤900px topbar được xuống dòng — tiêu đề đủ chữ ở hàng trên, cụm nút dồn phải hàng dưới (trước: ≤480px tiêu đề bị cắt "Bá…", "L…"). Tên + mã tài khoản trên điện thoại vẫn ẩn kiểu chỉ trình đọc màn hình (quy tắc Arena cũ, giữ nguyên).
+- **Lịch tập (khách)**: ≤900px (cả iPad dọc) dùng kiểu xem 1 ngày + dải chọn ngày như điện thoại (trước: 7 cột ~90px, thẻ buổi tràn sang cột bên). 901–1100px: 7 cột thu gọn, giờ / nhãn được xuống dòng. Máy tính: nhãn trạng thái giữ 1 dòng.
+- **Gói của tôi**: điện thoại — vạch ngăn tuần trong "Các buổi của gói" thành chỗ ngắt hàng → mỗi tuần 1 hàng.
+- **Chỉ số cơ thể**: ≤600px bảng lịch sử thành thẻ (Ngày · Cân nặng · Thay đổi / BMI · Mỡ · Cơ · Vòng eo / Ghi chú), nhãn lấy từ `data-label` JSP gắn; ≤760px chữ trục biểu đồ to hơn (trước ~5px).
+- **Bán gói PT**: thanh bước iPad được xuống dòng; Pumpy vẽ lại đúng mẫu linh vật (`receptionist/_sale-pumpy.jspf`: mèo tròn xanh, bụng xoáy, vẫy tay) + bong bóng nhắc bước kế tiếp. Câu nhắc không nói "bên trái / cột phải" (iPad / điện thoại 1 cột) mà gọi tên phần: "Lịch tập", "Khách mua gói", "Gói & PT".
+- **Con mắt mật khẩu (common.js `bindPasswordToggles`)**: lỗi bấm 1 lần là icon biến mất (icons.js đã đổi `<i>` thành SVG, code cũ chỉ đổi class). Nay mỗi lần bấm thay bằng `<i>` mới để icons.js vẽ lại mắt mở / mắt gạch. Đã thử: Đăng nhập, Đăng ký, Đổi mật khẩu (Tài khoản); Quên mật khẩu dùng cùng markup + CSS với Đăng nhập.
+- **Giữ nguyên (đã cân nhắc)**: Lịch dạy PT trên iPad cuộn ngang trong khung lịch (CSS ghi rõ chủ ý, có chế độ Danh sách); dải ngày Tổng quan PT trên điện thoại cuộn ngang.
+
 ## Thư viện bài tập — /customer/exercises + /pt/exercises (27/10/2026, ĐÃ CODE, CÓ SỬA DB)
 - **Nghiệp vụ**: thư viện bài tập là **đặc quyền hội viên**. Khách xem được khi đang có gói **tập (Membership)** hoặc **gói PT** còn hiệu lực hôm nay (Active hoặc Frozen, StartDate ≤ hôm nay ≤ EndDate; gói đôi tính cả người đi kèm). PT luôn xem được (tra bài khi soạn giáo án). Màn chỉ xem, không lưu gì của người dùng.
 - **Khóa** có 3 câu: chưa từng mua (NEVER) · hết hạn ngày X (EXPIRED) · gói bắt đầu từ ngày Y (NOT_STARTED); kèm danh sách gói đang bán có đặc quyền + nút "Xem các gói". Kiểm ở Service, gõ thẳng URL vẫn bị khóa.

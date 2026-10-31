@@ -1,0 +1,45 @@
+<%@ page pageEncoding="UTF-8" %>
+<%--
+ _sale-pumpy.jspf — Pumpy nhỏ vẫy tay cổ vũ lễ tân, đặt cạnh bong bóng nhắc việc dưới nút "Giữ lịch" (pt-sales.jsp).
+ Dáng giống Pumpy gốc (guest/_mascot.jspf, common/pumpy-coach.jspf): mèo tròn xanh #294F78, tai nhọn,
+ bụng trắng có xoáy, viền mực #141414, má hồng. Chỉ trang trí → aria-hidden; chữ nhắc nằm ở <p data-plan-note>.
+ Màu cố định theo linh vật (không theo theme) giống 2 file gốc. CSS: .sale-pumpy trong pt-sales.css.
+--%>
+<svg class="sale-pumpy" viewBox="0 0 120 112" aria-hidden="true" focusable="false">
+    <%-- Bóng dưới chân --%>
+    <ellipse cx="56" cy="106" rx="34" ry="4" fill="#141414" opacity="0.18"/>
+    <%-- Tai --%>
+    <path d="M24 44 L26 14 L46 30 Z" fill="#294F78" stroke="#141414" stroke-width="3.5" stroke-linejoin="round"/>
+    <path d="M88 44 L86 14 L66 30 Z" fill="#294F78" stroke="#141414" stroke-width="3.5" stroke-linejoin="round"/>
+    <path d="M29 36 L30 23 L39 30 Z" fill="#F4A6B8"/>
+    <path d="M83 36 L82 23 L73 30 Z" fill="#F4A6B8"/>
+    <%-- Tay trái (cạnh thân) --%>
+    <circle cx="16" cy="72" r="9" fill="#294F78" stroke="#141414" stroke-width="3"/>
+    <%-- Thân tròn kiểu mochi --%>
+    <path d="M12 66 C12 36 32 24 56 24 C80 24 100 36 100 66 C100 88 82 100 56 100 C30 100 12 88 12 66 Z" fill="#294F78" stroke="#141414" stroke-width="3.5"/>
+    <path d="M22 50 Q27 37 40 31" fill="none" stroke="#FFFFFF" stroke-width="3" stroke-linecap="round" opacity="0.7"/>
+    <%-- Bụng trắng + xoáy --%>
+    <ellipse cx="56" cy="76" rx="22" ry="17" fill="#F2FBF8"/>
+    <path transform="translate(56 78) scale(0.34) translate(-150 -280)" d="M150.0 278.0 L150.3 278.2 L150.4 278.5 L150.5 278.9 L150.5 279.3 L150.4 279.7 L150.2 280.1 L149.9 280.5 L149.4 280.8 L148.9 281.0 L148.3 281.1 L147.7 281.1 L147.0 281.0 L146.3 280.7 L145.7 280.3 L145.0 279.8 L144.5 279.1 L144.0 278.3 L143.7 277.4 L143.5 276.4 L143.5 275.3 L143.7 274.2 L144.0 273.1 L144.5 272.0 L145.3 271.0 L146.2 270.1 L147.3 269.3 L148.5 268.6 L149.9 268.1 L151.4 267.9 L153.0 267.9 L154.6 268.1 L156.2 268.6 L157.7 269.3 L159.2 270.3 L160.5 271.5 L161.6 273.0 L162.6 274.7 L163.3 276.5 L163.7 278.5 L163.8 280.5 L163.7 282.6 L163.1 284.7 L162.3 286.8 L161.1 288.8 L159.7 290.5 L157.9 292.1 L155.9 293.5 L153.6 294.5 L151.2 295.2 L148.7 295.5 L146.0 295.5 L143.4 295.1 L140.8 294.2 L138.3 293.0 L136.0 291.4 L133.9 289.4 L132.1 287.0 L130.6 284.4 L129.6 281.6 L128.9 278.6 L128.7 275.5 L128.9 272.3 L129.7 269.1 L130.9 266.1 L132.6 263.2 L134.7 260.5 L137.2 258.2 L140.1 256.2 L143.3 254.7 L146.7 253.6 L150.3 253.0 L154.0 253.0 L157.8 253.5 L161.4 254.6 L164.9 256.2 L168.2 258.4 L171.1 261.0 L173.7 264.1 L175.8 267.6 L177.4 271.4 L178.4 275.4 L178.8 279.6 L178.6 283.9 L177.8 288.1 L176.3 292.2 L174.2 296.1 L171.6 299.7 L168.4 302.9 L164.7 305.6 L160.6 307.8" fill="none" stroke="#24496E" stroke-width="6.5" stroke-linecap="round"/>
+    <%-- Mắt to long lanh --%>
+    <ellipse cx="43" cy="52" rx="4.6" ry="5.4" fill="#141414"/>
+    <ellipse cx="69" cy="52" rx="4.6" ry="5.4" fill="#141414"/>
+    <circle cx="44.8" cy="49.8" r="1.8" fill="#FFFFFF"/>
+    <circle cx="70.8" cy="49.8" r="1.8" fill="#FFFFFF"/>
+    <circle cx="41.8" cy="54.6" r="0.9" fill="#FFFFFF"/>
+    <circle cx="67.8" cy="54.6" r="0.9" fill="#FFFFFF"/>
+    <%-- Má hồng + miệng chữ "w" --%>
+    <ellipse cx="34" cy="61" rx="5" ry="3" fill="#F4A6B8" opacity="0.85"/>
+    <ellipse cx="78" cy="61" rx="5" ry="3" fill="#F4A6B8" opacity="0.85"/>
+    <path d="M50 60 Q53 64 56 60.5 Q59 64 62 60" fill="none" stroke="#141414" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"/>
+    <%-- Chân --%>
+    <ellipse cx="40" cy="100" rx="10" ry="6" fill="#294F78" stroke="#141414" stroke-width="3"/>
+    <ellipse cx="72" cy="100" rx="10" ry="6" fill="#294F78" stroke="#141414" stroke-width="3"/>
+    <%-- Tay phải giơ lên vẫy (nhóm .sale-pumpy-wave: CSS lắc nhẹ) + vệt vẫy --%>
+    <g class="sale-pumpy-wave">
+        <path d="M96 58 Q106 46 104 34" fill="none" stroke="#141414" stroke-width="12" stroke-linecap="round"/>
+        <path d="M96 58 Q106 46 104 34" fill="none" stroke="#294F78" stroke-width="6" stroke-linecap="round"/>
+        <circle cx="104" cy="31" r="7.5" fill="#294F78" stroke="#141414" stroke-width="3"/>
+    </g>
+    <path d="M112 20 L117 15 M115 28 L120 26" stroke="#F25A32" stroke-width="2.4" stroke-linecap="round"/>
+</svg>
