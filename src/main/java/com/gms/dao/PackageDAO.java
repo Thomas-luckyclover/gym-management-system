@@ -1,5 +1,6 @@
 package com.gms.dao;
 
+import com.gms.dto.ManagerPackageRowView;
 import com.gms.entity.Package;
 import com.gms.util.DBContext;
 import java.sql.Connection;
@@ -173,6 +174,90 @@ public class PackageDAO {
             }
         }
         return 0;
+    }
+
+    /**
+     * Lấy danh sách gói cho Quản lý (#17, #19) kèm số đơn đang chạy (running orders).
+     *
+     * @param category "MEMBERSHIP" hoặc "PT"
+     * @param keyword từ khóa tìm kiếm (theo tên tiếng Việt không dấu/có dấu)
+     * @param status "all", "active", hoặc "inactive"
+     * @param ptType null hoặc loại gói PT cụ thể ("PTSingle", "PTCouple", "SingleSession")
+     * @return danh sách ManagerPackageRowView
+     * @throws SQLException lỗi truy vấn
+     */
+    public List<ManagerPackageRowView> findManagerPackages(String category, String keyword, String status, String ptType) throws SQLException {
+        StringBuilder sql = new StringBuilder();
+        sql.append("SELECT p.PackageId, p.PackageName, p.Description, p.Benefits, p.PackageType, ")
+           .append("p.DurationUnit, p.DurationValue, p.EstimatedSessionCount, p.Price, ")
+           .append("p.IsActive, p.UnlocksExerciseLibrary, p.RowVer, ")
+           .append("COALESCE(ro.RunningCount, 0) AS RunningOrdersCount ")
+           .append("FROM Packages p ")
+           .append("OUTER APPLY ( ")
+           .append("    SELECT COUNT(DISTINCT s.SubscriptionId) AS RunningCount ")
+           .append("    FROM Subscriptions s ")
+           .append("    JOIN Orders o ON o.OrderId = s.OrderId ")
+           .append("    WHERE o.PackageId = p.PackageId ")
+           .append("      AND s.Status IN ('Active', 'Frozen') ")
+           .append("      AND s.EndDate >= CAST(GETDATE() AS DATE) ")
+           .append(") ro ")
+           .append("WHERE 1=1 ");
+
+        List<Object> params = new ArrayList<>();
+
+        if ("MEMBERSHIP".equalsIgnoreCase(category)) {
+            sql.append("AND p.PackageType IN ('Membership', 'DayPass') ");
+        } else if ("PT".equalsIgnoreCase(category)) {
+            if (ptType != null && !ptType.isBlank() && !"ALL".equalsIgnoreCase(ptType)) {
+                sql.append("AND p.PackageType = ? ");
+                params.add(ptType.trim());
+            } else {
+                sql.append("AND p.PackageType IN ('PTSingle', 'PTCouple', 'SingleSession') ");
+            }
+        }
+
+        if (status != null && "active".equalsIgnoreCase(status)) {
+            sql.append("AND p.IsActive = 1 ");
+        } else if (status != null && "inactive".equalsIgnoreCase(status)) {
+            sql.append("AND p.IsActive = 0 ");
+        }
+
+        if (keyword != null && !keyword.isBlank()) {
+            sql.append("AND p.PackageName COLLATE Vietnamese_CI_AI LIKE ? ");
+            params.add("%" + keyword.trim() + "%");
+        }
+
+        sql.append("ORDER BY p.IsActive DESC, ")
+           .append("CASE p.DurationUnit WHEN 'Day' THEN 0 WHEN 'Month' THEN 1 ELSE -1 END, ")
+           .append("p.DurationValue, p.Price");
+
+        List<ManagerPackageRowView> result = new ArrayList<>();
+        try (Connection conn = DBContext.getConnection();
+             PreparedStatement stmt = conn.prepareStatement(sql.toString())) {
+            for (int i = 0; i < params.size(); i++) {
+                stmt.setObject(i + 1, params.get(i));
+            }
+            try (ResultSet rs = stmt.executeQuery()) {
+                while (rs.next()) {
+                    ManagerPackageRowView row = new ManagerPackageRowView();
+                    row.setPackageId(rs.getInt("PackageId"));
+                    row.setName(rs.getString("PackageName"));
+                    row.setDescription(rs.getString("Description"));
+                    row.setBenefits(rs.getString("Benefits"));
+                    row.setType(rs.getString("PackageType"));
+                    row.setDurationUnit(rs.getString("DurationUnit"));
+                    row.setDurationValue(getNullableInteger(rs, "DurationValue"));
+                    row.setEstimatedSessionCount(getNullableInteger(rs, "EstimatedSessionCount"));
+                    row.setPrice(rs.getBigDecimal("Price"));
+                    row.setActive(rs.getBoolean("IsActive"));
+                    row.setUnlocksExerciseLibrary(rs.getBoolean("UnlocksExerciseLibrary"));
+                    row.setRowVersion(rs.getBytes("RowVer"));
+                    row.setRunningOrdersCount(rs.getInt("RunningOrdersCount"));
+                    result.add(row);
+                }
+            }
+        }
+        return result;
     }
 
     // ===== Hàm phụ =====
