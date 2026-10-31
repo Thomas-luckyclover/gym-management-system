@@ -16,7 +16,7 @@
     <title>Bảo lưu gói tập · Super Gym Lễ tân</title>
     <link rel="stylesheet" href="${pageContext.request.contextPath}/css/pages/receptionist/freeze-membership.css?v=20261031_v12">
     <link rel="stylesheet" href="${pageContext.request.contextPath}/css/pages/auth/notification-bell.css">
-    <script src="${pageContext.request.contextPath}/js/pages/receptionist/freeze-membership.js?v=20261031_v11" defer></script>
+    <script src="${pageContext.request.contextPath}/js/pages/receptionist/freeze-membership.js?v=20261031_v12" defer></script>
     <script src="${pageContext.request.contextPath}/js/pages/auth/notification-bell.js" defer></script>
 </head>
 
@@ -141,6 +141,7 @@
                                             <label for="startDate">Ngày bắt đầu: <span class="req">*</span></label>
                                             <input type="date" id="startDate" name="startDate" class="form-control"
                                                    min="${freezeCustomer.minStartDate}"
+                                                   max="${freezeCustomer.packageEndDate}"
                                                    value="${freezeCustomer.minStartDate}" required>
                                             <small class="hint">Sớm nhất từ ngày mai (<c:out value="${gms:formatDate(freezeCustomer.minStartDate)}" />).</small>
                                         </div>

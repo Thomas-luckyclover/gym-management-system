@@ -7,38 +7,77 @@ document.addEventListener('DOMContentLoaded', function () {
     const customerIdHidden = document.getElementById('customerIdHidden');
     const pkgEndHidden = document.getElementById('packageEndDateHidden');
 
+    function parseDate(str) {
+        if (!str) return null;
+        const parts = str.split('-');
+        if (parts.length !== 3) return null;
+        const y = parseInt(parts[0], 10);
+        const m = parseInt(parts[1], 10) - 1;
+        const d = parseInt(parts[2], 10);
+        const date = new Date(y, m, d);
+        return isNaN(date.getTime()) ? null : date;
+    }
+
+    function toIsoDate(d) {
+        if (!d || isNaN(d.getTime())) return '';
+        const y = d.getFullYear();
+        const m = String(d.getMonth() + 1).padStart(2, '0');
+        const day = String(d.getDate()).padStart(2, '0');
+        return `${y}-${m}-${day}`;
+    }
+
+    function addMonthsAndDays(baseDate, months, days) {
+        return new Date(baseDate.getFullYear(), baseDate.getMonth() + months, baseDate.getDate() + days);
+    }
+
     // Chặn ngày nằm ngoài khoảng min/max cho phép và tự động đưa về ngày hợp lệ
     function enforceDateBounds() {
         if (!startInput || !endInput) return;
 
-        // Ngày bắt đầu không được trước ngày mai
+        const pkgEndStr = pkgEndHidden ? pkgEndHidden.value : (startInput.max || '');
+
+        // 1. Ngày bắt đầu: tối thiểu là min (ngày mai), tối đa là ngày hết hạn gói tập
         if (startInput.min && startInput.value && startInput.value < startInput.min) {
             startInput.value = startInput.min;
         }
+        if (pkgEndStr && startInput.value && startInput.value > pkgEndStr) {
+            startInput.value = pkgEndStr;
+        }
 
-        // Cập nhật min cho ngày kết thúc theo ngày bắt đầu
+        // 2. Tính ngày kết thúc tối đa: tối đa 1 tháng kể từ ngày bắt đầu nhưng không vượt quá hạn gói
+        let maxAllowedEndStr = '';
+        if (startInput.value) {
+            const startDate = parseDate(startInput.value);
+            if (startDate) {
+                const maxByDuration = addMonthsAndDays(startDate, 1, -1);
+                const maxByDurationStr = toIsoDate(maxByDuration);
+
+                if (pkgEndStr && pkgEndStr < maxByDurationStr) {
+                    maxAllowedEndStr = pkgEndStr;
+                } else {
+                    maxAllowedEndStr = maxByDurationStr;
+                }
+            }
+        }
+
+        if (maxAllowedEndStr) {
+            endInput.max = maxAllowedEndStr;
+            const hint = document.getElementById('plannedEndDateHint');
+            if (hint) {
+                hint.textContent = 'Tối đa 1 tháng (đến ngày ' + formatDateStr(maxAllowedEndStr) + ').';
+            }
+        }
+
         if (startInput.value) {
             endInput.min = startInput.value;
         }
 
-        // Ngày kết thúc không được trước ngày bắt đầu
+        // 3. Ngày kết thúc: không được trước ngày bắt đầu và không vượt quá maxAllowedEndStr
         if (startInput.value && endInput.value && endInput.value < startInput.value) {
             endInput.value = startInput.value;
         }
-
-        // Ngày kết thúc không được vượt quá ngày tối đa cho phép (hạn gói tập hoặc P-02)
         if (endInput.max && endInput.value && endInput.value > endInput.max) {
             endInput.value = endInput.max;
-
-            const hint = document.getElementById('plannedEndDateHint');
-            if (hint) {
-                hint.classList.add('text-danger');
-                hint.textContent = 'Ngày kết thúc không được vượt quá ngày ' + formatDateStr(endInput.max) + ' (hạn gói tập hiện tại).';
-                setTimeout(function () {
-                    hint.classList.remove('text-danger');
-                    hint.textContent = 'Tối đa 1 tháng (đến ngày ' + formatDateStr(endInput.max) + ').';
-                }, 3500);
-            }
         }
     }
 
@@ -48,8 +87,9 @@ document.addEventListener('DOMContentLoaded', function () {
         enforceDateBounds();
         if (!startInput.value || !endInput.value) return;
 
-        const start = new Date(startInput.value + 'T00:00:00');
-        const end = new Date(endInput.value + 'T00:00:00');
+        const start = parseDate(startInput.value);
+        const end = parseDate(endInput.value);
+        if (!start || !end) return;
 
         if (end < start) {
             endInput.value = startInput.value;
@@ -57,7 +97,7 @@ document.addEventListener('DOMContentLoaded', function () {
         }
 
         // Số ngày bảo lưu = (end - start) + 1 ngày
-        const diffDays = Math.round((end - start) / (1000 * 60 * 60 * 24)) + 1;
+        const diffDays = Math.max(1, Math.round((end.getTime() - start.getTime()) / (1000 * 60 * 60 * 24)) + 1);
         const displayDays = document.getElementById('displayDaysCount');
         if (displayDays) {
             displayDays.textContent = diffDays + ' ngày';
@@ -65,11 +105,13 @@ document.addEventListener('DOMContentLoaded', function () {
 
         // Tính ngày hết hạn thẻ mới
         if (pkgEndHidden && pkgEndHidden.value) {
-            const pkgEnd = new Date(pkgEndHidden.value + 'T00:00:00');
-            const newExpiry = new Date(pkgEnd.getTime() + (diffDays * 24 * 60 * 60 * 1000));
-            const displayExpiry = document.getElementById('displayNewExpiryDate');
-            if (displayExpiry) {
-                displayExpiry.textContent = formatDate(newExpiry);
+            const pkgEnd = parseDate(pkgEndHidden.value);
+            if (pkgEnd) {
+                const newExpiry = new Date(pkgEnd.getFullYear(), pkgEnd.getMonth(), pkgEnd.getDate() + diffDays);
+                const displayExpiry = document.getElementById('displayNewExpiryDate');
+                if (displayExpiry) {
+                    displayExpiry.textContent = formatDate(newExpiry);
+                }
             }
         }
 
@@ -106,6 +148,19 @@ document.addEventListener('DOMContentLoaded', function () {
             if (startInput && startInput.min && startInput.value < startInput.min) {
                 e.preventDefault();
                 startInput.value = startInput.min;
+                calculateFreezeDays();
+                return false;
+            }
+            const pkgEndStr = pkgEndHidden ? pkgEndHidden.value : (startInput.max || '');
+            if (pkgEndStr && startInput.value && startInput.value > pkgEndStr) {
+                e.preventDefault();
+                startInput.value = pkgEndStr;
+                calculateFreezeDays();
+                return false;
+            }
+            if (startInput.value && endInput.value && endInput.value < startInput.value) {
+                e.preventDefault();
+                endInput.value = startInput.value;
                 calculateFreezeDays();
                 return false;
             }
