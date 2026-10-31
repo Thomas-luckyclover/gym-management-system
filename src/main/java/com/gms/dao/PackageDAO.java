@@ -354,6 +354,26 @@ public class PackageDAO {
         }
     }
 
+    /**
+     * Bật / Tắt trạng thái kinh doanh của gói tập (Mở bán / Ngừng bán) kèm RowVer.
+     *
+     * @param conn kết nối cơ sở dữ liệu
+     * @param packageId ID gói tập
+     * @param isActive trạng thái mới (true = mở bán, false = ngừng bán)
+     * @param expectedRowVer phiên bản dòng mong đợi (optimistic locking)
+     * @return true nếu cập nhật thành công 1 bản ghi, false nếu bị xung đột sửa đổi đồng thời
+     * @throws SQLException lỗi cập nhật cơ sở dữ liệu
+     */
+    public boolean updateActiveStatus(Connection conn, int packageId, boolean isActive, byte[] expectedRowVer) throws SQLException {
+        String sql = "UPDATE Packages SET IsActive = ? WHERE PackageId = ? AND RowVer = ?";
+        try (PreparedStatement stmt = conn.prepareStatement(sql)) {
+            stmt.setBoolean(1, isActive);
+            stmt.setInt(2, packageId);
+            stmt.setBytes(3, expectedRowVer);
+            return stmt.executeUpdate() > 0;
+        }
+    }
+
     // ===== Hàm phụ =====
 
     /**
