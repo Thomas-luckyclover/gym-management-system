@@ -7,9 +7,46 @@ document.addEventListener('DOMContentLoaded', function () {
     const customerIdHidden = document.getElementById('customerIdHidden');
     const pkgEndHidden = document.getElementById('packageEndDateHidden');
 
+    // Chặn ngày nằm ngoài khoảng min/max cho phép và tự động đưa về ngày hợp lệ
+    function enforceDateBounds() {
+        if (!startInput || !endInput) return;
+
+        // Ngày bắt đầu không được trước ngày mai
+        if (startInput.min && startInput.value && startInput.value < startInput.min) {
+            startInput.value = startInput.min;
+        }
+
+        // Cập nhật min cho ngày kết thúc theo ngày bắt đầu
+        if (startInput.value) {
+            endInput.min = startInput.value;
+        }
+
+        // Ngày kết thúc không được trước ngày bắt đầu
+        if (startInput.value && endInput.value && endInput.value < startInput.value) {
+            endInput.value = startInput.value;
+        }
+
+        // Ngày kết thúc không được vượt quá ngày tối đa cho phép (hạn gói tập hoặc P-02)
+        if (endInput.max && endInput.value && endInput.value > endInput.max) {
+            endInput.value = endInput.max;
+
+            const hint = document.getElementById('plannedEndDateHint');
+            if (hint) {
+                hint.classList.add('text-danger');
+                hint.textContent = 'Ngày kết thúc không được vượt quá ngày ' + formatDateStr(endInput.max) + ' (hạn gói tập hiện tại).';
+                setTimeout(function () {
+                    hint.classList.remove('text-danger');
+                    hint.textContent = 'Tối đa 1 tháng (đến ngày ' + formatDateStr(endInput.max) + ').';
+                }, 3500);
+            }
+        }
+    }
+
     // 1. Tự động tính toán số ngày bảo lưu và hạn mới khi chọn ngày
     function calculateFreezeDays() {
-        if (!startInput || !endInput || !startInput.value || !endInput.value) return;
+        if (!startInput || !endInput) return;
+        enforceDateBounds();
+        if (!startInput.value || !endInput.value) return;
 
         const start = new Date(startInput.value + 'T00:00:00');
         const end = new Date(endInput.value + 'T00:00:00');
@@ -44,8 +81,35 @@ document.addEventListener('DOMContentLoaded', function () {
 
     if (startInput && endInput) {
         startInput.addEventListener('change', calculateFreezeDays);
+        startInput.addEventListener('input', calculateFreezeDays);
+        startInput.addEventListener('blur', calculateFreezeDays);
+
         endInput.addEventListener('change', calculateFreezeDays);
+        endInput.addEventListener('input', calculateFreezeDays);
+        endInput.addEventListener('blur', calculateFreezeDays);
         calculateFreezeDays(); // Tính toán ban đầu
+    }
+
+    // Chặn submit form nếu ngày vượt quá giới hạn
+    const formApplyFreeze = document.getElementById('formApplyFreeze');
+    if (formApplyFreeze) {
+        formApplyFreeze.addEventListener('submit', function (e) {
+            enforceDateBounds();
+            calculateFreezeDays();
+
+            if (endInput && endInput.max && endInput.value > endInput.max) {
+                e.preventDefault();
+                endInput.value = endInput.max;
+                calculateFreezeDays();
+                return false;
+            }
+            if (startInput && startInput.min && startInput.value < startInput.min) {
+                e.preventDefault();
+                startInput.value = startInput.min;
+                calculateFreezeDays();
+                return false;
+            }
+        });
     }
 
     // 2. Gửi AJAX lấy danh sách buổi PT bị ảnh hưởng
