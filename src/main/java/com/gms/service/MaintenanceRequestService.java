@@ -224,7 +224,6 @@ public class MaintenanceRequestService {
                     request.setReportedByEmployeeId(receptionist.getEmployeeId());
                     request.setPriority(priority);
                     request.setIncidentType(incidentType);
-                    request.setDetectedBy(detectedBy);
                     request.setAffectedItemsNote(affectedItemsNote);
                     request.setWarningTagPlaced(warningTagPlaced);
                     request.setDescription(description.trim());
@@ -1101,9 +1100,18 @@ public class MaintenanceRequestService {
             int page,
             int pageSize
     ) {
+        return getFacilityCatalogPage(keyword, null, page, pageSize);
+    }
+
+    public ServiceResult<PageResult<Facility>> getFacilityCatalogPage(
+            String keyword,
+            String location,
+            int page,
+            int pageSize
+    ) {
         try {
-            long totalItems = facilityDAO.countCatalog(keyword);
-            List<Facility> facilities = facilityDAO.findCatalogPage(keyword, page, pageSize);
+            long totalItems = facilityDAO.countCatalog(keyword, location);
+            List<Facility> facilities = facilityDAO.findCatalogPage(keyword, location, page, pageSize);
 
             return ServiceResult.ok(
                     new PageResult<>(
