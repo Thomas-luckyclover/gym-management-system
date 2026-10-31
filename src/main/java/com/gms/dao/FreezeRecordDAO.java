@@ -303,26 +303,30 @@ public class FreezeRecordDAO {
     public Subscription findActiveOrFrozenMembershipByCustomerId(Connection conn, int customerId) throws SQLException {
         String sql = """
                 SELECT TOP 1
-                    SubscriptionId,
-                    OrderId,
-                    CustomerId,
-                    SubscriptionType,
-                    PtEmployeeId,
-                    StartDate,
-                    EndDate,
-                    FixedStartTime,
-                    GeneratedSessionCount,
-                    SwapsUsed,
-                    MaxSwapsSnapshot,
-                    FreezeUsed,
-                    MaxFreezesSnapshot,
-                    Status
-                FROM Subscriptions WITH (UPDLOCK, HOLDLOCK)
-                WHERE CustomerId = ?
-                  AND SubscriptionType = 'Membership'
-                  AND Status IN ('Active', 'Frozen')
-                ORDER BY CASE WHEN Status = 'Frozen' THEN 1 WHEN Status = 'Active' THEN 2 ELSE 3 END,
-                         EndDate DESC
+                    s.SubscriptionId,
+                    s.OrderId,
+                    s.CustomerId,
+                    s.SubscriptionType,
+                    s.PtEmployeeId,
+                    s.StartDate,
+                    s.EndDate,
+                    s.FixedStartTime,
+                    s.GeneratedSessionCount,
+                    s.SwapsUsed,
+                    s.MaxSwapsSnapshot,
+                    s.FreezeUsed,
+                    s.MaxFreezesSnapshot,
+                    s.Status
+                FROM Subscriptions s WITH (UPDLOCK, HOLDLOCK)
+                JOIN Orders o ON o.OrderId = s.OrderId
+                JOIN Packages pkg ON pkg.PackageId = o.PackageId
+                WHERE s.CustomerId = ?
+                  AND s.SubscriptionType = 'Membership'
+                  AND pkg.PackageType = 'Membership'
+                  AND o.Status != 'Cancelled'
+                  AND s.Status IN ('Active', 'Frozen')
+                ORDER BY CASE WHEN s.Status = 'Frozen' THEN 1 WHEN s.Status = 'Active' THEN 2 ELSE 3 END,
+                         s.EndDate DESC
                 """;
 
         try (PreparedStatement stmt = conn.prepareStatement(sql)) {
@@ -684,22 +688,49 @@ public class FreezeRecordDAO {
         }
     }
 
-    /**
-     * Đếm tổng số khách hàng khớp từ khóa phục vụ phân trang lưới quản lý hội viên.
-     */
-    public long countCustomerMemberships(String keyword) throws SQLException {
-        SearchCondition cond = buildSearchCondition(keyword);
-        String sql;
-        if (cond == null) {
-            sql = "SELECT COUNT(*) FROM Customers c WHERE c.DeletedAt IS NULL";
-        } else {
-            sql = """
-                    SELECT COUNT(*)
-                    FROM Customers c
-                    JOIN Persons p ON p.PersonId = c.PersonId
-                    WHERE c.DeletedAt IS NULL
-                      AND """ + cond.sqlCondition;
+    private String buildFilterCondition(String filter) {
+        if (filter == null || filter.trim().isEmpty() || "ALL".equalsIgnoreCase(filter.trim())) {
+            return "";
         }
+        String upper = filter.trim().toUpperCase();
+        if ("FROZEN".equals(upper)) {
+            return " AND openFr.FreezeRecordId IS NOT NULL ";
+        } else if ("ELIGIBLE".equals(upper)) {
+            return " AND s.SubscriptionId IS NOT NULL AND s.Status = 'Active' AND openFr.FreezeRecordId IS NULL AND COALESCE(s.FreezeUsed, 0) < COALESCE(s.MaxFreezesSnapshot, 1) AND s.EndDate >= CAST(SYSDATETIME() AS DATE) ";
+        } else if ("ACTIVE".equals(upper)) {
+            return " AND s.SubscriptionId IS NOT NULL AND s.Status = 'Active' ";
+        }
+        return "";
+    }
+
+    /**
+     * Đếm tổng số khách hàng khớp từ khóa và bộ lọc trạng thái phục vụ phân trang lưới quản lý hội viên.
+     */
+    public long countCustomerMemberships(String keyword, String filter) throws SQLException {
+        SearchCondition cond = buildSearchCondition(keyword);
+        String filterCond = buildFilterCondition(filter);
+        String sql = """
+                SELECT COUNT(*)
+                FROM Customers c
+                JOIN Persons p ON p.PersonId = c.PersonId
+                OUTER APPLY (
+                    SELECT TOP 1 sub.*, o.PackageId
+                    FROM Subscriptions sub
+                    JOIN Orders o ON o.OrderId = sub.OrderId
+                    JOIN Packages pkg ON pkg.PackageId = o.PackageId
+                    WHERE sub.CustomerId = c.CustomerId 
+                      AND sub.SubscriptionType = 'Membership'
+                      AND pkg.PackageType = 'Membership'
+                      AND o.Status != 'Cancelled'
+                    ORDER BY 
+                        CASE sub.Status WHEN 'Frozen' THEN 1 WHEN 'Active' THEN 2 ELSE 3 END,
+                        sub.EndDate DESC
+                ) s
+                LEFT JOIN FreezeRecords openFr ON openFr.SubscriptionId = s.SubscriptionId AND openFr.ActualEndDate IS NULL
+                WHERE c.DeletedAt IS NULL
+                """
+                + (cond != null ? " AND " + cond.sqlCondition + " " : "")
+                + filterCond;
 
         try (Connection conn = DBContext.getConnection();
              PreparedStatement stmt = conn.prepareStatement(sql)) {
@@ -717,12 +748,17 @@ public class FreezeRecordDAO {
         return 0;
     }
 
+    public long countCustomerMemberships(String keyword) throws SQLException {
+        return countCustomerMemberships(keyword, "ALL");
+    }
+
     /**
      * Lấy danh sách hội viên kèm gói tập Membership tương ứng phục vụ hiển thị lưới GymMaster.
      */
-    public List<CustomerMembershipRow> findCustomerMemberships(String keyword, int pageNumber, int pageSize)
+    public List<CustomerMembershipRow> findCustomerMemberships(String keyword, String filter, int pageNumber, int pageSize)
             throws SQLException {
         SearchCondition cond = buildSearchCondition(keyword);
+        String filterCond = buildFilterCondition(filter);
         int offset = Math.max(0, (pageNumber - 1) * pageSize);
 
         String sql = """
@@ -749,8 +785,11 @@ public class FreezeRecordDAO {
                     SELECT TOP 1 sub.*, o.PackageId
                     FROM Subscriptions sub
                     JOIN Orders o ON o.OrderId = sub.OrderId
+                    JOIN Packages pkg ON pkg.PackageId = o.PackageId
                     WHERE sub.CustomerId = c.CustomerId 
                       AND sub.SubscriptionType = 'Membership'
+                      AND pkg.PackageType = 'Membership'
+                      AND o.Status != 'Cancelled'
                     ORDER BY 
                         CASE sub.Status WHEN 'Frozen' THEN 1 WHEN 'Active' THEN 2 ELSE 3 END,
                         sub.EndDate DESC
@@ -760,6 +799,7 @@ public class FreezeRecordDAO {
                 WHERE c.DeletedAt IS NULL
                 """
                 + (cond != null ? " AND " + cond.sqlCondition + " " : "")
+                + filterCond
                 + """
                 ORDER BY 
                     CASE WHEN openFr.FreezeRecordId IS NOT NULL THEN 0 
@@ -788,6 +828,11 @@ public class FreezeRecordDAO {
             }
         }
         return list;
+    }
+
+    public List<CustomerMembershipRow> findCustomerMemberships(String keyword, int pageNumber, int pageSize)
+            throws SQLException {
+        return findCustomerMemberships(keyword, "ALL", pageNumber, pageSize);
     }
 
     // ===== 5. Ánh xạ ResultSet thành Entity / DTO (đặt cuối class) =====
