@@ -621,7 +621,7 @@ public class FreezeService {
                         "ActualEndDate",
                         "NULL (Planned=" + DateTimeUtil.formatDate(freeze.getPlannedEndDate()) + ")",
                         DateTimeUtil.formatDate(actualEnd) + " (Gia hạn +" + daysFrozen + " ngày)",
-                        "Hủy bảo lưu sớm tại quầy Lễ tân (BR-26)"
+                        "Hủy bảo lưu sớm tại quầy Lễ tân"
                 );
                 auditLogDAO.insert(conn, log);
 

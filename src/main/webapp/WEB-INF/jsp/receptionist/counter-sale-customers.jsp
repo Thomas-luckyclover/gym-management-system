@@ -125,7 +125,7 @@
                             <span>Phụ thuộc (Trẻ em/Người thân)</span>
                         </label>
                     </div>
-                    <p class="quick-hint">Loại hồ sơ không thể thay đổi sau khi tạo (BR-18).</p>
+                    <p class="quick-hint">Loại hồ sơ không thể thay đổi sau khi tạo.</p>
                 </div>
 
                 <div class="quick-form-group">
