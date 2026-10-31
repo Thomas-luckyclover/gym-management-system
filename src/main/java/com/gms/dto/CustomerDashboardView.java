@@ -26,6 +26,13 @@ public class CustomerDashboardView {
     // Service tạo đủ 7 ngày; DAO đọc PT từ các gói thuộc hội viên đang đăng nhập.
     private List<ScheduleDay> scheduleDays = List.of();
     private List<TrainerContact> trainers = List.of();
+    // Service chọn các gói chưa hết hạn cho panel; subscriptions gốc vẫn dùng kiểm tra/cảnh báo.
+    private List<SubscriptionRow> visibleSubscriptions = List.of();
+
+    public List<SubscriptionRow> getVisibleSubscriptions() { return visibleSubscriptions; }
+    public void setVisibleSubscriptions(List<SubscriptionRow> visibleSubscriptions) {
+        this.visibleSubscriptions = visibleSubscriptions;
+    }
 
     public List<ScheduleDay> getScheduleDays() { return scheduleDays; }
     public void setScheduleDays(List<ScheduleDay> scheduleDays) { this.scheduleDays = scheduleDays; }

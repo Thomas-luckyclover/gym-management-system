@@ -202,7 +202,7 @@
                                 <section class="panel customer-packages" aria-label="Gói tập của bạn">
                                     <div class="panel-head"><h2>Gói tập của bạn</h2></div>
                                     <div class="customer-package-grid">
-                                        <c:forEach var="subscription" items="${dashboard.subscriptions}">
+                                        <c:forEach var="subscription" items="${dashboard.visibleSubscriptions}">
                                             <c:set var="picker" value="${not subscription.ptPackage and subscription.subscriptionId == dashboard.activeMembership.subscriptionId ? dashboard.startPicker : null}" />
                                             <article class="customer-package-card" <c:if test="${picker.editable}">data-sdp data-sdp-url="/customer/subscription/start-date" data-sdp-sub="${picker.subscriptionId}" data-sdp-csrf="<c:out value='${csrfToken}' />"</c:if>>
                                                 <small><c:out value="${subscription.ptPackage ? 'Gói tập cùng PT' : 'Gói tập gym'}" /> · <c:out value="${subscription.statusLabel}" /></small>
@@ -229,7 +229,7 @@
                                                 </c:if>
                                             </article>
                                         </c:forEach>
-                                        <c:if test="${empty dashboard.subscriptions}"><p>Bạn chưa có gói tập.</p></c:if>
+                                        <c:if test="${empty dashboard.visibleSubscriptions}"><p>Bạn chưa có gói tập còn hạn.</p></c:if>
                                     </div>
                                     <a class="btn btn-outline btn-sm" href="${pageContext.request.contextPath}/customer/packages/purchase">Xem gói tập</a>
                                 </section>

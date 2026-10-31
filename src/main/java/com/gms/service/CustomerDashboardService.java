@@ -164,6 +164,14 @@ public class CustomerDashboardService {
                     unreadCount,
                     membershipCardState);
 
+            List<SubscriptionRow> visibleSubscriptions = new ArrayList<>();
+            for (SubscriptionRow subscription : subscriptions) {
+                if (!subscription.isExpiredForDisplay()) {
+                    visibleSubscriptions.add(subscription);
+                }
+            }
+            view.setVisibleSubscriptions(visibleSubscriptions);
+
             // Lịch 7 ngày độc lập với TOP 5 buổi sắp tới; mỗi ngày có danh sách riêng, kể cả ngày trống.
             List<UpcomingSessionRow> weekSessions = dashboardDAO.findWeekSessions(customerId, now);
             view.setScheduleDays(buildScheduleDays(now.toLocalDate(), weekSessions));
