@@ -60,6 +60,12 @@ function loadFreezeDOM(options = {}) {
         max: options.maxEndDate || '2026-11-30',
         value: options.plannedEndDate || '2026-11-30'
     });
+    const startDisplay = createMockElement('startDateDisplay', {
+        value: options.startDateDisplay || ''
+    });
+    const endDisplay = createMockElement('plannedEndDateDisplay', {
+        value: options.plannedEndDateDisplay || ''
+    });
     const customerIdHidden = createMockElement('customerIdHidden', { value: options.customerId || '101' });
     const pkgEndHidden = createMockElement('packageEndDateHidden', { value: options.packageEndDate || '2027-06-19' });
     const hint = createMockElement('plannedEndDateHint', { textContent: '' });
@@ -69,6 +75,8 @@ function loadFreezeDOM(options = {}) {
 
     elements.set('startDate', startInput);
     elements.set('plannedEndDate', endInput);
+    elements.set('startDateDisplay', startDisplay);
+    elements.set('plannedEndDateDisplay', endDisplay);
     elements.set('customerIdHidden', customerIdHidden);
     elements.set('packageEndDateHidden', pkgEndHidden);
     elements.set('plannedEndDateHint', hint);
@@ -118,6 +126,8 @@ function loadFreezeDOM(options = {}) {
         context,
         startInput,
         endInput,
+        startDisplay,
+        endDisplay,
         pkgEndHidden,
         hint,
         displayDaysCount,
@@ -126,7 +136,7 @@ function loadFreezeDOM(options = {}) {
     };
 }
 
-test("TC1 - Tải trang ban đầu: Ngày kết thúc mặc định 1 tháng, số ngày bảo lưu được tính đúng", () => {
+test("TC1 - Tải trang ban đầu: Ngày kết thúc mặc định 1 tháng, số ngày bảo lưu được tính đúng, hiển thị chuẩn dd/mm/yyyy", () => {
     const dom = loadFreezeDOM({
         minStartDate: '2026-11-01',
         packageEndDate: '2027-06-19',
@@ -137,6 +147,9 @@ test("TC1 - Tải trang ban đầu: Ngày kết thúc mặc định 1 tháng, s�
     assert.equal(dom.endInput.min, '2026-11-01');
     assert.equal(dom.endInput.max, '2026-11-30');
     assert.equal(dom.endInput.value, '2026-11-30');
+    // Hiển thị chuẩn ngày trước tháng sau (dd/mm/yyyy): 01/11/2026 và 30/11/2026
+    assert.equal(dom.startDisplay.value, '01/11/2026');
+    assert.equal(dom.endDisplay.value, '30/11/2026');
     assert.match(dom.hint.textContent, /30\/11\/2026/);
     assert.equal(dom.displayDaysCount.textContent, '30 ngày');
     assert.equal(dom.displayNewExpiryDate.textContent, '19/07/2027');
@@ -161,6 +174,8 @@ test("TC2 - Sửa lỗi: Đổi ngày bắt đầu sang 19/12/2026 thì ngày k�
 
     // Điểm mấu chốt fix bug: ngày kết thúc tự động chuyển sang 18/01/2027, KHÔNG bị co về 12/19/2026 (1 ngày)
     assert.equal(dom.endInput.value, '2027-01-18');
+    assert.equal(dom.startDisplay.value, '19/12/2026');
+    assert.equal(dom.endDisplay.value, '18/01/2027');
     assert.equal(dom.displayDaysCount.textContent, '31 ngày');
     // Hạn gói tập 21/05/2027 + 31 ngày = 21/06/2027
     assert.equal(dom.displayNewExpiryDate.textContent, '21/06/2027');
@@ -259,4 +274,26 @@ test("TC7 - Chặn submit form nếu ngày kết thúc vượt quá maxAllowedEn
     // Form submit phải bị chặn và giá trị endInput bị clamp về max hợp lệ
     assert.equal(submitEvent.defaultPrevented, true);
     assert.equal(dom.endInput.value, '2026-11-30');
+});
+
+test("TC8 - Đảo vị trí Ngày/Tháng: Hiển thị chuẩn dd/mm/yyyy (26/11/2026 thay vì 11/26/2026), gõ dd/mm/yyyy đồng bộ đúng", () => {
+    const dom = loadFreezeDOM({
+        minStartDate: '2026-11-01',
+        packageEndDate: '2026-11-26',
+        startDate: '2026-11-01',
+        plannedEndDate: '2026-11-26'
+    });
+
+    // Ngày kết thúc hiển thị phải là 26/11/2026 (ngày đứng trước, tháng đứng sau), TUYỆT ĐỐI KHÔNG phải 11/26/2026
+    assert.equal(dom.endDisplay.value, '26/11/2026');
+    assert.notEqual(dom.endDisplay.value, '11/26/2026');
+    assert.equal(dom.startDisplay.value, '01/11/2026');
+
+    // Người dùng gõ '20/11/2026' vào ô hiển thị ngày kết thúc
+    dom.endDisplay.value = '20/11/2026';
+    dom.endDisplay.dispatchEvent('change');
+
+    assert.equal(dom.endInput.value, '2026-11-20');
+    assert.equal(dom.endDisplay.value, '20/11/2026');
+    assert.equal(dom.displayDaysCount.textContent, '20 ngày');
 });

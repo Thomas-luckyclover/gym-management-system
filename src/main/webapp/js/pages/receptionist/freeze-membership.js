@@ -4,6 +4,8 @@
 document.addEventListener('DOMContentLoaded', function () {
     const startInput = document.getElementById('startDate');
     const endInput = document.getElementById('plannedEndDate');
+    const startDisplay = document.getElementById('startDateDisplay');
+    const endDisplay = document.getElementById('plannedEndDateDisplay');
     const customerIdHidden = document.getElementById('customerIdHidden');
     const pkgEndHidden = document.getElementById('packageEndDateHidden');
 
@@ -24,6 +26,39 @@ document.addEventListener('DOMContentLoaded', function () {
         const m = String(d.getMonth() + 1).padStart(2, '0');
         const day = String(d.getDate()).padStart(2, '0');
         return `${y}-${m}-${day}`;
+    }
+
+    function parseVietnameseDate(val) {
+        if (!val) return null;
+        val = val.trim();
+        const match = /^(\d{1,2})[\/\-\.](\d{1,2})[\/\-\.](\d{4})$/.exec(val);
+        if (!match) return null;
+        const d = parseInt(match[1], 10);
+        const m = parseInt(match[2], 10);
+        const y = parseInt(match[3], 10);
+        if (y < 1900 || y > 2100 || m < 1 || m > 12 || d < 1 || d > 31) return null;
+        const date = new Date(y, m - 1, d);
+        if (date.getFullYear() !== y || date.getMonth() !== m - 1 || date.getDate() !== d) return null;
+        return {
+            iso: `${y}-${String(m).padStart(2, '0')}-${String(d).padStart(2, '0')}`,
+            date: date
+        };
+    }
+
+    function formatVietnameseDate(isoStr) {
+        if (!isoStr) return '';
+        const parts = isoStr.split('-');
+        if (parts.length !== 3) return isoStr;
+        return `${parts[2]}/${parts[1]}/${parts[0]}`;
+    }
+
+    function syncDisplayInputs() {
+        if (startDisplay && startInput && startInput.value) {
+            startDisplay.value = formatVietnameseDate(startInput.value);
+        }
+        if (endDisplay && endInput && endInput.value) {
+            endDisplay.value = formatVietnameseDate(endInput.value);
+        }
     }
 
     function addMonthsAndDays(baseDate, months, days) {
@@ -88,6 +123,7 @@ document.addEventListener('DOMContentLoaded', function () {
         }
 
         updateEndDateConstraints(true);
+        syncDisplayInputs();
         calculateFreezeDays();
     }
 
@@ -106,6 +142,7 @@ document.addEventListener('DOMContentLoaded', function () {
             endInput.value = endInput.max;
         }
 
+        syncDisplayInputs();
         calculateFreezeDays();
     }
 
@@ -172,8 +209,72 @@ document.addEventListener('DOMContentLoaded', function () {
         endInput.addEventListener('input', handleDateInput);
 
         updateEndDateConstraints(false);
+        syncDisplayInputs();
         calculateFreezeDays(); // Tính toán ban đầu
     }
+
+    // Xử lý ô hiển thị Ngày bắt đầu (định dạng Việt Nam dd/mm/yyyy)
+    if (startDisplay) {
+        startDisplay.addEventListener('change', function () {
+            const parsed = parseVietnameseDate(this.value);
+            if (parsed && startInput) {
+                startInput.value = parsed.iso;
+                handleStartDateChange();
+            } else if (startInput && startInput.value) {
+                this.value = formatVietnameseDate(startInput.value);
+            }
+        });
+        startDisplay.addEventListener('blur', function () {
+            const parsed = parseVietnameseDate(this.value);
+            if (parsed && startInput) {
+                startInput.value = parsed.iso;
+                handleStartDateChange();
+            } else if (startInput && startInput.value) {
+                this.value = formatVietnameseDate(startInput.value);
+            }
+        });
+    }
+
+    // Xử lý ô hiển thị Ngày kết thúc (định dạng Việt Nam dd/mm/yyyy)
+    if (endDisplay) {
+        endDisplay.addEventListener('change', function () {
+            const parsed = parseVietnameseDate(this.value);
+            if (parsed && endInput) {
+                endInput.value = parsed.iso;
+                handleEndDateChange();
+            } else if (endInput && endInput.value) {
+                this.value = formatVietnameseDate(endInput.value);
+            }
+        });
+        endDisplay.addEventListener('blur', function () {
+            const parsed = parseVietnameseDate(this.value);
+            if (parsed && endInput) {
+                endInput.value = parsed.iso;
+                handleEndDateChange();
+            } else if (endInput && endInput.value) {
+                this.value = formatVietnameseDate(endInput.value);
+            }
+        });
+    }
+
+    // Mở lịch popup khi nhấn nút lịch
+    document.querySelectorAll('.freeze-calendar-button').forEach(btn => {
+        btn.addEventListener('click', function (e) {
+            e.preventDefault();
+            const targetId = this.getAttribute('data-picker-target');
+            const picker = document.getElementById(targetId);
+            if (!picker) return;
+            if (typeof picker.showPicker === 'function') {
+                try {
+                    picker.showPicker();
+                } catch (err) {
+                    picker.focus();
+                }
+            } else {
+                picker.focus();
+            }
+        });
+    });
 
     // Chặn submit form nếu ngày vượt quá giới hạn
     const formApplyFreeze = document.getElementById('formApplyFreeze');
@@ -399,6 +500,9 @@ document.addEventListener('DOMContentLoaded', function () {
         window._freezeMembership = {
             parseDate,
             toIsoDate,
+            parseVietnameseDate,
+            formatVietnameseDate,
+            syncDisplayInputs,
             addMonthsAndDays,
             calculateMaxAllowedEnd,
             updateEndDateConstraints,

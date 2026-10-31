@@ -24,6 +24,11 @@ import static org.junit.jupiter.api.Assertions.*;
 @DisplayName("Kiểm thử DOM Giao diện Bảo lưu gói tập (freeze-membership.jsp)")
 class FreezeMembershipDOMTest {
 
+    private String formatVietnameseDate(LocalDate d) {
+        if (d == null) return "";
+        return String.format("%02d/%02d/%04d", d.getDayOfMonth(), d.getMonthValue(), d.getYear());
+    }
+
     /**
      * Mô phỏng render HTML khối thao tác bảo lưu từ freeze-membership.jsp (lines 125-196).
      */
@@ -45,23 +50,39 @@ class FreezeMembershipDOMTest {
 
             sb.append("<div class=\"freeze-dates-grid\">");
 
-            // Ô Ngày bắt đầu
+            // Ô Ngày bắt đầu (gồm input text hiển thị dd/mm/yyyy và input date picker)
             sb.append("<div class=\"form-group\">");
-            sb.append("<label for=\"startDate\">Ngày bắt đầu:</label>");
-            sb.append("<input type=\"date\" id=\"startDate\" name=\"startDate\" class=\"form-control\" ")
+            sb.append("<label for=\"startDateDisplay\">Ngày bắt đầu:</label>");
+            sb.append("<div class=\"freeze-date-control\">");
+            sb.append("<input type=\"text\" id=\"startDateDisplay\" class=\"form-control freeze-date-input\" ")
+                    .append("value=\"").append(formatVietnameseDate(view.getMinStartDate())).append("\" ")
+                    .append("placeholder=\"dd/mm/yyyy\" autocomplete=\"off\" required=\"true\"/>");
+            sb.append("<button type=\"button\" class=\"freeze-calendar-button\" data-picker-target=\"startDate\" aria-label=\"Chọn ngày bắt đầu\">");
+            sb.append("<i class=\"fa-regular fa-calendar\"></i>");
+            sb.append("</button>");
+            sb.append("<input type=\"date\" id=\"startDate\" name=\"startDate\" class=\"freeze-native-date\" ")
                     .append("min=\"").append(view.getMinStartDate()).append("\" ")
                     .append("max=\"").append(view.getPackageEndDate()).append("\" ")
-                    .append("value=\"").append(view.getMinStartDate()).append("\" required=\"true\"/>");
+                    .append("value=\"").append(view.getMinStartDate()).append("\" required=\"true\" tabindex=\"-1\"/>");
+            sb.append("</div>");
             sb.append("<small class=\"hint\">Sớm nhất từ ngày mai.</small>");
             sb.append("</div>");
 
-            // Ô Ngày kết thúc dự kiến
+            // Ô Ngày kết thúc dự kiến (gồm input text hiển thị dd/mm/yyyy và input date picker)
             sb.append("<div class=\"form-group\">");
-            sb.append("<label for=\"plannedEndDate\">Ngày kết thúc dự kiến:</label>");
-            sb.append("<input type=\"date\" id=\"plannedEndDate\" name=\"plannedEndDate\" class=\"form-control\" ")
+            sb.append("<label for=\"plannedEndDateDisplay\">Ngày kết thúc dự kiến:</label>");
+            sb.append("<div class=\"freeze-date-control\">");
+            sb.append("<input type=\"text\" id=\"plannedEndDateDisplay\" class=\"form-control freeze-date-input\" ")
+                    .append("value=\"").append(formatVietnameseDate(view.getMaxEndDate())).append("\" ")
+                    .append("placeholder=\"dd/mm/yyyy\" autocomplete=\"off\" required=\"true\"/>");
+            sb.append("<button type=\"button\" class=\"freeze-calendar-button\" data-picker-target=\"plannedEndDate\" aria-label=\"Chọn ngày kết thúc dự kiến\">");
+            sb.append("<i class=\"fa-regular fa-calendar\"></i>");
+            sb.append("</button>");
+            sb.append("<input type=\"date\" id=\"plannedEndDate\" name=\"plannedEndDate\" class=\"freeze-native-date\" ")
                     .append("min=\"").append(view.getMinStartDate()).append("\" ")
                     .append("max=\"").append(view.getMaxEndDate()).append("\" ")
-                    .append("value=\"").append(view.getMaxEndDate()).append("\" required=\"true\"/>");
+                    .append("value=\"").append(view.getMaxEndDate()).append("\" required=\"true\" tabindex=\"-1\"/>");
+            sb.append("</div>");
             sb.append("<small class=\"hint\" id=\"plannedEndDateHint\">Tối đa 1 tháng (đến ngày ").append(view.getMaxEndDate()).append(").</small>");
             sb.append("</div>");
 
@@ -125,18 +146,32 @@ class FreezeMembershipDOMTest {
         assertEquals("formApplyFreeze", form.getAttribute("id"));
         assertEquals("POST", form.getAttribute("method"));
 
-        // 2. Kiểm tra các trường ẩn
+        // 2. Kiểm tra các trường input ngày (cả hiển thị dd/mm/yyyy và native picker)
         NodeList inputs = doc.getElementsByTagName("input");
         Element startInput = null;
         Element endInput = null;
+        Element startDisplay = null;
+        Element endDisplay = null;
         for (int i = 0; i < inputs.getLength(); i++) {
             Element input = (Element) inputs.item(i);
             if ("startDate".equals(input.getAttribute("id"))) {
                 startInput = input;
             } else if ("plannedEndDate".equals(input.getAttribute("id"))) {
                 endInput = input;
+            } else if ("startDateDisplay".equals(input.getAttribute("id"))) {
+                startDisplay = input;
+            } else if ("plannedEndDateDisplay".equals(input.getAttribute("id"))) {
+                endDisplay = input;
             }
         }
+
+        assertNotNull(startDisplay, "Phải tồn tại ô startDateDisplay trong DOM");
+        assertEquals("text", startDisplay.getAttribute("type"));
+        assertEquals("01/11/2026", startDisplay.getAttribute("value"), "Ngày bắt đầu hiển thị phải theo định dạng dd/mm/yyyy");
+
+        assertNotNull(endDisplay, "Phải tồn tại ô plannedEndDateDisplay trong DOM");
+        assertEquals("text", endDisplay.getAttribute("type"));
+        assertEquals("30/11/2026", endDisplay.getAttribute("value"), "Ngày kết thúc hiển thị phải theo định dạng dd/mm/yyyy (ngày đứng trước, tháng đứng sau)");
 
         assertNotNull(startInput, "Phải tồn tại ô startDate trong DOM");
         assertEquals("date", startInput.getAttribute("type"));
@@ -152,10 +187,19 @@ class FreezeMembershipDOMTest {
 
         // 3. Kiểm tra nút submit và khối hiển thị số ngày
         NodeList buttons = doc.getElementsByTagName("button");
-        assertEquals(1, buttons.getLength());
-        Element submitBtn = (Element) buttons.item(0);
-        assertEquals("btnSubmitFreeze", submitBtn.getAttribute("id"));
+        Element submitBtn = null;
+        int calendarBtnCount = 0;
+        for (int i = 0; i < buttons.getLength(); i++) {
+            Element b = (Element) buttons.item(i);
+            if ("btnSubmitFreeze".equals(b.getAttribute("id"))) {
+                submitBtn = b;
+            } else if (b.getAttribute("class").contains("freeze-calendar-button")) {
+                calendarBtnCount++;
+            }
+        }
+        assertNotNull(submitBtn, "Phải tồn tại nút submit #btnSubmitFreeze");
         assertEquals("submit", submitBtn.getAttribute("type"));
+        assertEquals(2, calendarBtnCount, "Phải tồn tại 2 nút mở popup lịch cho startDate và plannedEndDate");
 
         NodeList bElements = doc.getElementsByTagName("b");
         boolean foundDisplayDays = false;
@@ -186,16 +230,22 @@ class FreezeMembershipDOMTest {
 
         NodeList inputs = doc.getElementsByTagName("input");
         Element endInput = null;
+        Element endDisplay = null;
         for (int i = 0; i < inputs.getLength(); i++) {
             Element input = (Element) inputs.item(i);
             if ("plannedEndDate".equals(input.getAttribute("id"))) {
                 endInput = input;
-                break;
+            } else if ("plannedEndDateDisplay".equals(input.getAttribute("id"))) {
+                endDisplay = input;
             }
         }
+
+        assertNotNull(endDisplay);
+        assertEquals("26/11/2026", endDisplay.getAttribute("value"), "Ngày kết thúc hiển thị phải là 26/11/2026 (ngày trước tháng sau)");
 
         assertNotNull(endInput);
         assertEquals("2026-11-26", endInput.getAttribute("max"), "max của plannedEndDate phải bị chặn đúng ngày 2026-11-26");
         assertEquals("2026-11-26", endInput.getAttribute("value"));
     }
 }
+

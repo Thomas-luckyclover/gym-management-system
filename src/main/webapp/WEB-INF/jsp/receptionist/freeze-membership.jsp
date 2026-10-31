@@ -14,9 +14,9 @@
 <head>
     <%@ include file="/WEB-INF/jsp/common/head.jspf" %>
     <title>Bảo lưu gói tập · Super Gym Lễ tân</title>
-    <link rel="stylesheet" href="${pageContext.request.contextPath}/css/pages/receptionist/freeze-membership.css?v=20261031_v13">
+    <link rel="stylesheet" href="${pageContext.request.contextPath}/css/pages/receptionist/freeze-membership.css?v=20261101_v14">
     <link rel="stylesheet" href="${pageContext.request.contextPath}/css/pages/auth/notification-bell.css">
-    <script src="${pageContext.request.contextPath}/js/pages/receptionist/freeze-membership.js?v=20261031_v13" defer></script>
+    <script src="${pageContext.request.contextPath}/js/pages/receptionist/freeze-membership.js?v=20261101_v14" defer></script>
     <script src="${pageContext.request.contextPath}/js/pages/auth/notification-bell.js" defer></script>
 </head>
 
@@ -138,20 +138,36 @@
 
                                     <div class="freeze-dates-grid">
                                         <div class="form-group">
-                                            <label for="startDate">Ngày bắt đầu: <span class="req">*</span></label>
-                                            <input type="date" id="startDate" name="startDate" class="form-control"
-                                                   min="${freezeCustomer.minStartDate}"
-                                                   max="${freezeCustomer.packageEndDate}"
-                                                   value="${freezeCustomer.minStartDate}" required>
+                                            <label for="startDateDisplay">Ngày bắt đầu: <span class="req">*</span></label>
+                                            <div class="freeze-date-control">
+                                                <input type="text" id="startDateDisplay" class="form-control freeze-date-input"
+                                                       value="<c:out value='${gms:formatDate(freezeCustomer.minStartDate)}' />"
+                                                       placeholder="dd/mm/yyyy" autocomplete="off" required>
+                                                <button type="button" class="freeze-calendar-button" data-picker-target="startDate" aria-label="Chọn ngày bắt đầu">
+                                                    <i class="fa-regular fa-calendar" aria-hidden="true"></i>
+                                                </button>
+                                                <input type="date" id="startDate" name="startDate" class="freeze-native-date"
+                                                       min="${freezeCustomer.minStartDate}"
+                                                       max="${freezeCustomer.packageEndDate}"
+                                                       value="${freezeCustomer.minStartDate}" required tabindex="-1">
+                                            </div>
                                             <small class="hint">Sớm nhất từ ngày mai (<c:out value="${gms:formatDate(freezeCustomer.minStartDate)}" />).</small>
                                         </div>
 
                                         <div class="form-group">
-                                            <label for="plannedEndDate">Ngày kết thúc dự kiến: <span class="req">*</span></label>
-                                            <input type="date" id="plannedEndDate" name="plannedEndDate" class="form-control"
-                                                   min="${freezeCustomer.minStartDate}"
-                                                   max="${freezeCustomer.maxEndDate}"
-                                                   value="${freezeCustomer.maxEndDate}" required>
+                                            <label for="plannedEndDateDisplay">Ngày kết thúc dự kiến: <span class="req">*</span></label>
+                                            <div class="freeze-date-control">
+                                                <input type="text" id="plannedEndDateDisplay" class="form-control freeze-date-input"
+                                                       value="<c:out value='${gms:formatDate(freezeCustomer.maxEndDate)}' />"
+                                                       placeholder="dd/mm/yyyy" autocomplete="off" required>
+                                                <button type="button" class="freeze-calendar-button" data-picker-target="plannedEndDate" aria-label="Chọn ngày kết thúc dự kiến">
+                                                    <i class="fa-regular fa-calendar" aria-hidden="true"></i>
+                                                </button>
+                                                <input type="date" id="plannedEndDate" name="plannedEndDate" class="freeze-native-date"
+                                                       min="${freezeCustomer.minStartDate}"
+                                                       max="${freezeCustomer.maxEndDate}"
+                                                       value="${freezeCustomer.maxEndDate}" required tabindex="-1">
+                                            </div>
                                             <small class="hint" id="plannedEndDateHint">Tối đa 1 tháng (đến ngày <c:out value="${gms:formatDate(freezeCustomer.maxEndDate)}" />).</small>
                                         </div>
                                     </div>

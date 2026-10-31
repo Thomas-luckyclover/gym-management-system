@@ -26,6 +26,7 @@ import java.io.IOException;
 import java.net.URLEncoder;
 import java.nio.charset.StandardCharsets;
 import java.time.LocalDate;
+import java.time.format.DateTimeFormatter;
 import java.time.format.DateTimeParseException;
 import java.util.List;
 
@@ -195,8 +196,8 @@ public class FreezeMembershipServlet extends HttpServlet {
         LocalDate startDate;
         LocalDate plannedEndDate;
         try {
-            startDate = LocalDate.parse(startDateStr);
-            plannedEndDate = LocalDate.parse(plannedEndDateStr);
+            startDate = parseFlexibleDate(startDateStr);
+            plannedEndDate = parseFlexibleDate(plannedEndDateStr);
         } catch (DateTimeParseException e) {
             RequestUtil.setFlashToast(request, "error", "Định dạng ngày không hợp lệ.");
             RequestUtil.redirect(request, response, redirectUrl);
@@ -250,14 +251,25 @@ public class FreezeMembershipServlet extends HttpServlet {
         }
 
         try {
-            LocalDate startDate = LocalDate.parse(startDateStr);
-            LocalDate plannedEndDate = LocalDate.parse(plannedEndDateStr);
+            LocalDate startDate = parseFlexibleDate(startDateStr);
+            LocalDate plannedEndDate = parseFlexibleDate(plannedEndDateStr);
             List<FreezeSessionImpactView> sessions = freezeService.previewAffectedSessions(customerId, startDate,
                     plannedEndDate);
             JsonUtil.writeJson(response, JsonResponse.success(sessions));
         } catch (DateTimeParseException e) {
             JsonUtil.writeJson(response, JsonResponse.success(List.of()));
         }
+    }
+
+    private LocalDate parseFlexibleDate(String dateStr) {
+        if (dateStr == null || dateStr.trim().isEmpty()) {
+            throw new DateTimeParseException("Date string is empty", "", 0);
+        }
+        dateStr = dateStr.trim();
+        if (dateStr.contains("/")) {
+            return LocalDate.parse(dateStr, DateTimeFormatter.ofPattern("d/M/yyyy"));
+        }
+        return LocalDate.parse(dateStr);
     }
 
     private String buildRedirectUrl(String q, String filter) {

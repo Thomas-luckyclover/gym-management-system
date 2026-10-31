@@ -455,6 +455,58 @@
   box-shadow: 0 0 0 3px rgba(37, 99, 235, 0.12);
 }
 
+/* Điều khiển ngày tháng định dạng Việt Nam (dd/mm/yyyy) kèm nút mở lịch popup */
+.freeze-date-control {
+  position: relative;
+  display: flex;
+  align-items: center;
+  width: 100%;
+}
+
+.freeze-date-control .freeze-date-input {
+  width: 100%;
+  padding-right: 42px;
+}
+
+.freeze-calendar-button {
+  position: absolute;
+  top: 50%;
+  right: var(--space-2);
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 28px;
+  height: 28px;
+  padding: 0;
+  border: 0;
+  border-radius: var(--radius-sm);
+  background: transparent;
+  color: var(--color-text-soft);
+  cursor: pointer;
+  transform: translateY(-50%);
+  transition: color var(--duration-fast), background var(--duration-fast);
+}
+
+.freeze-calendar-button:hover {
+  background: rgba(37, 99, 235, 0.1);
+  color: var(--color-primary);
+}
+
+.freeze-calendar-button:focus-visible {
+  outline: 2px solid var(--color-primary);
+  outline-offset: 1px;
+}
+
+.freeze-native-date {
+  position: absolute;
+  right: 0;
+  bottom: 0;
+  width: 1px;
+  height: 1px;
+  opacity: 0;
+  pointer-events: none;
+}
+
 /* Thanh tự động tính toán ngày */
 .freeze-calc-bar {
   display: flex;
