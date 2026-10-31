@@ -306,10 +306,6 @@
                                                     </c:if>
                                                 </span>
                                             </div>
-                                            <div class="info-row">
-                                                <span class="lbl">Mã thẻ:</span>
-                                                <span class="val">#${freezeCustomer.subscriptionId}</span>
-                                            </div>
                                         </div>
                                     </div>
                                 </c:when>
