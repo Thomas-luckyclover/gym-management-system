@@ -668,6 +668,11 @@ class FreezeServiceTest {
         }
 
         @Override
+        public List<FreezeSessionImpactView> findScheduledSessionsInPeriod(Connection conn, int customerId, LocalDate startDate, LocalDate plannedEndDate) {
+            return scheduledSessions;
+        }
+
+        @Override
         public List<FreezeSessionImpactView> findScheduledSessionsInPeriod(int customerId, LocalDate startDate, LocalDate plannedEndDate) {
             return scheduledSessions;
         }
