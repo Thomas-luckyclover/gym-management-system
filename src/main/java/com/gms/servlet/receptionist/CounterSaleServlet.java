@@ -1,5 +1,6 @@
 package com.gms.servlet.receptionist;
 
+import com.gms.constant.Messages;
 import com.gms.constant.SessionKey;
 import com.gms.dto.CounterCheckoutInput;
 import com.gms.dto.CounterCustomerCreateInput;
@@ -147,7 +148,7 @@ public class CounterSaleServlet extends HttpServlet {
         boolean noPackage = packageId == null;
         boolean noCustomer = customerId == null;
         if (noPackage || noCustomer) {
-            RequestUtil.setFlashToast(request, "error", "Dữ liệu đơn hàng không hợp lệ.");
+            RequestUtil.setFlashToast(request, "error", Messages.MSG112_ORDER_DATA_INVALID);
             RequestUtil.redirect(request, response, PAGE_URL);
             return;
         }

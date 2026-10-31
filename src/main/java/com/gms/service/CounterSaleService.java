@@ -194,7 +194,7 @@ public class CounterSaleService {
             boolean noShift = currentShift == null;
             boolean shiftClosed = !noShift && !currentShift.isOpen();
             if (noShift || shiftClosed) {
-                return ServiceResult.fail("Chưa mở ca làm việc. Vui lòng mở ca ở màn Ca làm việc trước khi bán gói.");
+                return ServiceResult.fail(Messages.MSG109_SHIFT_NOT_OPEN_FOR_SALE);
             }
 
             LocalDate today = DateTimeUtil.today();
@@ -227,18 +227,18 @@ public class CounterSaleService {
     public ServiceResult<CounterCustomerRow> quickCreateCustomer(int accountId, CounterCustomerCreateInput input) {
         // B1: kiểm tra input hợp lệ
         if (input == null) {
-            return ServiceResult.fail("Dữ liệu khách hàng không hợp lệ.");
+            return ServiceResult.fail(Messages.MSG111_CUSTOMER_DATA_INVALID);
         }
 
         String fullName = input.getFullName() == null ? "" : input.getFullName().trim();
         if (!ValidationUtil.isValidFullName(fullName)) {
-            return ServiceResult.failField("fullName", "Họ và tên từ 2 đến 50 ký tự, chỉ chứa chữ cái và khoảng trắng.");
+            return ServiceResult.failField("fullName", Messages.MSG113_QUICK_FULL_NAME_RULE);
         }
 
         LocalDate today = DateTimeUtil.today();
         LocalDate dob = input.getDateOfBirth();
         if (dob == null || !ValidationUtil.isValidDateOfBirth(dob, today)) {
-            return ServiceResult.failField("dateOfBirth", "Ngày sinh không hợp lệ hoặc vượt quá 100 tuổi.");
+            return ServiceResult.failField("dateOfBirth", Messages.MSG114_QUICK_DOB_INVALID);
         }
 
         String rawType = input.getCustomerType();
@@ -255,25 +255,25 @@ public class CounterSaleService {
             // Dependent: Phone cá nhân là NULL, bắt buộc thông tin giám hộ
             phone = null;
             if (guardianName.length() < 2 || guardianName.length() > 50) {
-                return ServiceResult.failField("guardianName", "Tên người giám hộ từ 2 đến 50 ký tự.");
+                return ServiceResult.failField("guardianName", Messages.MSG115_GUARDIAN_NAME_RULE);
             }
             if (guardianRel.isEmpty() || guardianRel.length() > 30) {
-                return ServiceResult.failField("guardianRelationship", "Mối quan hệ người giám hộ không được để trống (tối đa 30 ký tự).");
+                return ServiceResult.failField("guardianRelationship", Messages.MSG116_GUARDIAN_RELATIONSHIP_RULE);
             }
             if (!ValidationUtil.isValidPhone(guardianPhone)) {
-                return ServiceResult.failField("guardianPhone", "Số điện thoại người giám hộ phải gồm 10 chữ số bắt đầu bằng 0.");
+                return ServiceResult.failField("guardianPhone", Messages.MSG117_GUARDIAN_PHONE_RULE);
             }
         } else {
             // Self: Bắt buộc Phone cá nhân (10 số, bắt đầu bằng 0)
             if (!ValidationUtil.isValidPhone(phone)) {
-                return ServiceResult.failField("phone", "Số điện thoại phải gồm 10 chữ số bắt đầu bằng 0.");
+                return ServiceResult.failField("phone", Messages.MSG118_PHONE_TEN_DIGITS);
             }
             guardianName = null;
             guardianRel = null;
             guardianPhone = null;
             // Hồ sơ Self tại quầy luôn có tài khoản (thay CBR-31) → email bắt buộc để gửi mật khẩu tạm (DBR-23).
             if (!ValidationUtil.isValidEmail(email)) {
-                return ServiceResult.failField("email", "Nhập email đúng định dạng (VD: ten@gmail.com) để gửi mật khẩu tạm cho khách.");
+                return ServiceResult.failField("email", Messages.MSG119_TEMP_PASSWORD_EMAIL_REQUIRED);
             }
         }
         if (isDependent) {
@@ -291,11 +291,11 @@ public class CounterSaleService {
             if (!isDependent) {
                 Person existingPerson = personDAO.findByPhone(phone);
                 if (existingPerson != null) {
-                    return ServiceResult.failField("phone", "Số điện thoại " + phone + " đã tồn tại trong hệ thống với khách: " + existingPerson.getFullName() + ".");
+                    return ServiceResult.failField("phone", String.format(Messages.MSG120_PHONE_EXISTS_FOR_CUSTOMER, phone, existingPerson.getFullName()));
                 }
                 // DBR-23: email không trùng Person đang hoạt động; chỉ báo "đã dùng", không lộ của ai.
                 if (personDAO.findByEmail(email) != null) {
-                    return ServiceResult.failField("email", "Email này đã được dùng cho một tài khoản khác.");
+                    return ServiceResult.failField("email", Messages.MSG12_EMAIL_USED);
                 }
             }
 
@@ -342,14 +342,14 @@ public class CounterSaleService {
 
                 // B4.5: hồ sơ Self → tạo tài khoản + gửi mật khẩu tạm qua email (thay CBR-31, 31/10/2026).
                 //       Gửi TRƯỚC commit: email lỗi → rollback cả hồ sơ, lễ tân thử lại (không có hồ sơ "mồ côi" thiếu tài khoản).
-                String doneMessage = "Đã tạo hồ sơ khách hàng " + customerCode + ".";
+                String doneMessage = String.format(Messages.MSG121_PROFILE_CREATED, customerCode);
                 if (!isDependent) {
                     int newAccountId = counterAccountService.createWithTempPassword(connection, personId, email, fullName, customerCode);
                     auditLogService.logInTransaction(connection, accountId, Role.RECEPTIONIST,
                             "Tạo tài khoản tại quầy, gửi mật khẩu tạm qua email", "Accounts", newAccountId,
                             "PersonId", null, String.valueOf(personId), fullName);
-                    doneMessage = "Đã tạo hồ sơ " + customerCode + " và tài khoản. Mật khẩu tạm đã gửi tới "
-                            + CounterAccountService.maskEmail(email) + ".";
+                    doneMessage = String.format(Messages.MSG122_PROFILE_AND_ACCOUNT_CREATED, customerCode,
+                            CounterAccountService.maskEmail(email));
                 }
 
                 connection.commit();
@@ -384,10 +384,10 @@ public class CounterSaleService {
         // B1: chuẩn hóa mã voucher
         String code = rawCode == null ? "" : rawCode.trim().toUpperCase(Locale.ROOT);
         if (code.isEmpty()) {
-            return ServiceResult.failField("voucherCode", "Vui lòng nhập mã giảm giá.");
+            return ServiceResult.failField("voucherCode", Messages.MSG123_VOUCHER_CODE_REQUIRED);
         }
         if (!ValidationUtil.isValidVoucherCode(code)) {
-            return ServiceResult.failField("voucherCode", "Mã voucher phải có 4-20 ký tự chữ A-Z hoặc số.");
+            return ServiceResult.failField("voucherCode", Messages.MSG124_VOUCHER_CODE_FORMAT);
         }
 
         try (Connection connection = DBContext.getConnection()) {
@@ -420,37 +420,37 @@ public class CounterSaleService {
             }
 
             if (selected == null) {
-                return ServiceResult.failField("voucherCode", "Mã giảm giá không tồn tại.");
+                return ServiceResult.failField("voucherCode", Messages.MSG125_VOUCHER_NOT_FOUND);
             }
             if (!selected.isActive()) {
-                return ServiceResult.failField("voucherCode", "Mã giảm giá đã ngừng áp dụng.");
+                return ServiceResult.failField("voucherCode", Messages.MSG126_VOUCHER_INACTIVE);
             }
             if (!selected.isValidOnDate(today)) {
-                return ServiceResult.failField("voucherCode", "Mã giảm giá chưa đến ngày bắt đầu hoặc đã hết hạn.");
+                return ServiceResult.failField("voucherCode", Messages.MSG127_VOUCHER_OUT_OF_DATE);
             }
             if (!selected.hasRemainingUsage()) {
-                return ServiceResult.failField("voucherCode", "Mã giảm giá đã hết lượt sử dụng.");
+                return ServiceResult.failField("voucherCode", Messages.MSG128_VOUCHER_USED_UP);
             }
 
             boolean isMembership = pkg.getPackageType() == Package.Type.MEMBERSHIP;
             boolean isDayPass = pkg.getPackageType() == Package.Type.DAY_PASS;
             if (!isMembership && !isDayPass) {
-                return ServiceResult.failField("voucherCode", "Mã chỉ áp dụng cho gói tập hoặc vé ngày.");
+                return ServiceResult.failField("voucherCode", Messages.MSG129_VOUCHER_SCOPE_PACKAGE_OR_DAY_PASS);
             }
             if (selected.getApplicableScope() == Voucher.ApplicableScope.MEMBERSHIP_ONLY && !isMembership) {
-                return ServiceResult.failField("voucherCode", "Mã giảm giá chỉ áp dụng cho gói hội viên.");
+                return ServiceResult.failField("voucherCode", Messages.MSG130_VOUCHER_SCOPE_MEMBERSHIP);
             }
 
             long unitPrice = pkg.getPrice();
             if (unitPrice < selected.getMinOrderValue()) {
-                return ServiceResult.failField("voucherCode", "Đơn hàng phải từ "
-                        + MoneyUtil.formatMoney(selected.getMinOrderValue()) + " mới được áp dụng mã này.");
+                return ServiceResult.failField("voucherCode", String.format(Messages.MSG131_VOUCHER_MIN_ORDER,
+                        MoneyUtil.formatMoney(selected.getMinOrderValue())));
             }
 
             if (selected.getMaxUsagePerCustomer() != null) {
                 int usedByCustomer = voucherDAO.countCustomerUses(connection, selected.getVoucherId(), customerId, 0);
                 if (usedByCustomer >= selected.getMaxUsagePerCustomer()) {
-                    return ServiceResult.failField("voucherCode", "Khách hàng đã dùng hết số lượt của mã này.");
+                    return ServiceResult.failField("voucherCode", Messages.MSG132_VOUCHER_CUSTOMER_LIMIT);
                 }
             }
 
@@ -510,12 +510,12 @@ public class CounterSaleService {
         // B1: kiểm tra đầu vào cơ bản và hình thức thu tiền.
         boolean isNullInput = input == null;
         if (isNullInput) {
-            return ServiceResult.fail("Thông tin đơn hàng không hợp lệ.");
+            return ServiceResult.fail(Messages.MSG112_ORDER_DATA_INVALID);
         }
         boolean isInvalidPackage = input.getPackageId() <= 0;
         boolean isInvalidCustomer = input.getCustomerId() <= 0;
         if (isInvalidPackage || isInvalidCustomer) {
-            return ServiceResult.fail("Thông tin đơn hàng không hợp lệ.");
+            return ServiceResult.fail(Messages.MSG112_ORDER_DATA_INVALID);
         }
 
         String method = input.getPaymentMethod();
@@ -523,7 +523,7 @@ public class CounterSaleService {
         boolean isTransfer = "Transfer".equals(method);
         boolean isValidMethod = isCash || isTransfer;
         if (!isValidMethod) {
-            return ServiceResult.fail("Vui lòng chọn hình thức thu tiền: Tiền mặt hoặc Chuyển khoản.");
+            return ServiceResult.fail(Messages.MSG134_PAYMENT_METHOD_REQUIRED);
         }
 
         try (Connection connection = DBContext.getConnection()) {
@@ -538,7 +538,7 @@ public class CounterSaleService {
             boolean noShift = currentShift == null;
             boolean shiftClosed = !noShift && !currentShift.isOpen();
             if (noShift || shiftClosed) {
-                return ServiceResult.fail("Chưa mở ca làm việc. Vui lòng mở ca trước khi thu tiền.");
+                return ServiceResult.fail(Messages.MSG110_SHIFT_NOT_OPEN_FOR_PAYMENT);
             }
             int shiftId = currentShift.getShiftId();
 
@@ -559,7 +559,7 @@ public class CounterSaleService {
                 return ServiceResult.fail(String.format(Messages.MSG08_NOT_FOUND, "gói tập"));
             }
             if (pkg.getPackageType() == Package.Type.SINGLE_SESSION) {
-                return ServiceResult.fail("Chưa có màn bán buổi PT lẻ tại quầy.");
+                return ServiceResult.fail(Messages.MSG135_PT_SINGLE_NOT_AT_COUNTER);
             }
 
             // B4: tính toán ngày bắt đầu và ngày hết hạn theo DBR-52.
@@ -579,8 +579,8 @@ public class CounterSaleService {
                     boolean isAfterMaxDate = input.getStartDate().isAfter(maxAllowedStartDate);
                     boolean isOutOfRange = isBeforeToday || isAfterMaxDate;
                     if (isOutOfRange) {
-                        return ServiceResult.fail("Ngày bắt đầu chỉ được chọn trong vòng 7 ngày tới (từ "
-                                + DateTimeUtil.formatDate(today) + " đến " + DateTimeUtil.formatDate(maxAllowedStartDate) + ").");
+                        return ServiceResult.fail(String.format(Messages.MSG136_COUNTER_START_DATE_RANGE,
+                                DateTimeUtil.formatDate(today), DateTimeUtil.formatDate(maxAllowedStartDate)));
                     }
                     startDate = input.getStartDate();
                 } else {
@@ -606,7 +606,7 @@ public class CounterSaleService {
             if (hasVoucherInput) {
                 String voucherCode = rawVoucher.trim().toUpperCase(Locale.ROOT);
                 if (!ValidationUtil.isValidVoucherCode(voucherCode)) {
-                    return ServiceResult.fail("Mã voucher không đúng định dạng (4-20 ký tự chữ và số).");
+                    return ServiceResult.fail(Messages.MSG124_VOUCHER_CODE_FORMAT);
                 }
                 List<Voucher> vouchers = voucherDAO.findForChange(connection, voucherCode, null);
                 Voucher selectedVoucher = null;
@@ -617,33 +617,33 @@ public class CounterSaleService {
                     }
                 }
                 if (selectedVoucher == null) {
-                    return ServiceResult.fail("Mã voucher không tồn tại.");
+                    return ServiceResult.fail(Messages.MSG125_VOUCHER_NOT_FOUND);
                 }
                 if (!selectedVoucher.isActive()) {
-                    return ServiceResult.fail("Mã voucher đã ngừng áp dụng.");
+                    return ServiceResult.fail(Messages.MSG126_VOUCHER_INACTIVE);
                 }
                 if (!selectedVoucher.isValidOnDate(today)) {
-                    return ServiceResult.fail("Mã voucher chưa đến ngày bắt đầu hoặc đã hết hạn.");
+                    return ServiceResult.fail(Messages.MSG127_VOUCHER_OUT_OF_DATE);
                 }
                 if (!selectedVoucher.hasRemainingUsage()) {
-                    return ServiceResult.fail("Mã voucher đã hết lượt sử dụng.");
+                    return ServiceResult.fail(Messages.MSG128_VOUCHER_USED_UP);
                 }
                 boolean isMembership = pkg.getPackageType() == Package.Type.MEMBERSHIP;
                 boolean isDayPass = pkg.getPackageType() == Package.Type.DAY_PASS;
                 if (!isMembership && !isDayPass) {
-                    return ServiceResult.fail("Mã chỉ áp dụng cho gói tập hoặc vé ngày.");
+                    return ServiceResult.fail(Messages.MSG129_VOUCHER_SCOPE_PACKAGE_OR_DAY_PASS);
                 }
                 if (selectedVoucher.getApplicableScope() == Voucher.ApplicableScope.MEMBERSHIP_ONLY && !isMembership) {
-                    return ServiceResult.fail("Mã giảm giá chỉ áp dụng cho gói hội viên.");
+                    return ServiceResult.fail(Messages.MSG130_VOUCHER_SCOPE_MEMBERSHIP);
                 }
                 if (unitPrice < selectedVoucher.getMinOrderValue()) {
-                    return ServiceResult.fail("Đơn hàng chưa đạt giá trị tối thiểu "
-                            + MoneyUtil.formatMoney(selectedVoucher.getMinOrderValue()) + " để dùng voucher này.");
+                    return ServiceResult.fail(String.format(Messages.MSG131_VOUCHER_MIN_ORDER,
+                            MoneyUtil.formatMoney(selectedVoucher.getMinOrderValue())));
                 }
                 if (selectedVoucher.getMaxUsagePerCustomer() != null) {
                     int usedCount = voucherDAO.countCustomerUses(connection, selectedVoucher.getVoucherId(), customer.getCustomerId(), 0);
                     if (usedCount >= selectedVoucher.getMaxUsagePerCustomer()) {
-                        return ServiceResult.fail("Khách hàng đã dùng hết số lượt của mã giảm giá này.");
+                        return ServiceResult.fail(Messages.MSG132_VOUCHER_CUSTOMER_LIMIT);
                     }
                 }
 
@@ -664,7 +664,7 @@ public class CounterSaleService {
                     int reserved = voucherDAO.reserveUse(connection, voucherId);
                     if (reserved != 1) {
                         connection.rollback();
-                        return ServiceResult.fail("Mã giảm giá vừa hết lượt sử dụng. Vui lòng thử lại.");
+                        return ServiceResult.fail(Messages.MSG133_VOUCHER_JUST_USED_UP);
                     }
                 }
 
@@ -768,7 +768,7 @@ public class CounterSaleService {
                         discountAmount,
                         appliedVoucherCode
                 );
-                return ServiceResult.ok(receipt, "Đã thu " + MoneyUtil.formatMoney(finalAmount) + " · Đơn " + orderCode + " hoàn tất!");
+                return ServiceResult.ok(receipt, String.format(Messages.MSG137_COUNTER_PAID, MoneyUtil.formatMoney(finalAmount), orderCode));
             } catch (SQLException | RuntimeException e) {
                 connection.rollback();
                 throw e;

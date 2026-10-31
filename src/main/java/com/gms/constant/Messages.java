@@ -328,6 +328,95 @@ public final class Messages {
     public static final String MSG108_HOLD_NO_LONGER_VALID =
             "Đơn này không còn giữ chỗ (đã thu tiền, đã hủy hoặc quá %d phút). Bán lại từ đầu.";
 
+    // ===== 6.1 Bán hàng tại quầy (CounterSaleService, CounterSaleServlet) =====
+
+    /** Bán gói tại quầy khi ca chưa mở. */
+    public static final String MSG109_SHIFT_NOT_OPEN_FOR_SALE = "Chưa mở ca làm việc. Vui lòng mở ca ở màn Ca làm việc trước khi bán gói.";
+
+    /** Thu tiền tại quầy khi ca chưa mở. */
+    public static final String MSG110_SHIFT_NOT_OPEN_FOR_PAYMENT = "Chưa mở ca làm việc. Vui lòng mở ca trước khi thu tiền.";
+
+    /** Form tạo nhanh hồ sơ gửi lên rỗng / hỏng. */
+    public static final String MSG111_CUSTOMER_DATA_INVALID = "Dữ liệu khách hàng không hợp lệ.";
+
+    /** Dữ liệu thanh toán tại quầy gửi lên rỗng / hỏng. */
+    public static final String MSG112_ORDER_DATA_INVALID = "Thông tin đơn hàng không hợp lệ.";
+
+    /** Tạo nhanh hồ sơ: họ tên sai. */
+    public static final String MSG113_QUICK_FULL_NAME_RULE = "Họ và tên từ 2 đến 50 ký tự, chỉ chứa chữ cái và khoảng trắng.";
+
+    /** Tạo nhanh hồ sơ: ngày sinh sai. */
+    public static final String MSG114_QUICK_DOB_INVALID = "Ngày sinh không hợp lệ hoặc vượt quá 100 tuổi.";
+
+    /** Hồ sơ phụ thuộc: tên người giám hộ sai. */
+    public static final String MSG115_GUARDIAN_NAME_RULE = "Tên người giám hộ từ 2 đến 50 ký tự.";
+
+    /** Hồ sơ phụ thuộc: thiếu mối quan hệ. */
+    public static final String MSG116_GUARDIAN_RELATIONSHIP_RULE = "Mối quan hệ người giám hộ không được để trống (tối đa 30 ký tự).";
+
+    /** Hồ sơ phụ thuộc: SĐT người giám hộ sai. */
+    public static final String MSG117_GUARDIAN_PHONE_RULE = "Số điện thoại người giám hộ phải gồm 10 chữ số bắt đầu bằng 0.";
+
+    /** Tạo nhanh hồ sơ: SĐT sai định dạng. */
+    public static final String MSG118_PHONE_TEN_DIGITS = "Số điện thoại phải gồm 10 chữ số bắt đầu bằng 0.";
+
+    /** Tạo nhanh hồ sơ Self: thiếu / sai email nhận mật khẩu tạm. */
+    public static final String MSG119_TEMP_PASSWORD_EMAIL_REQUIRED = "Nhập email đúng định dạng (VD: ten@gmail.com) để gửi mật khẩu tạm cho khách.";
+
+    /** Tạo nhanh hồ sơ: SĐT đã có. %s = SĐT, tên khách. */
+    public static final String MSG120_PHONE_EXISTS_FOR_CUSTOMER = "Số điện thoại %s đã tồn tại trong hệ thống với khách: %s.";
+
+    /** Tạo nhanh hồ sơ phụ thuộc xong. %s = mã KH. */
+    public static final String MSG121_PROFILE_CREATED = "Đã tạo hồ sơ khách hàng %s.";
+
+    /** Tạo nhanh hồ sơ Self xong. %s = mã KH, email đã che. */
+    public static final String MSG122_PROFILE_AND_ACCOUNT_CREATED = "Đã tạo hồ sơ %s và tài khoản. Mật khẩu tạm đã gửi tới %s.";
+
+    /** Bấm áp mã khi ô mã trống. */
+    public static final String MSG123_VOUCHER_CODE_REQUIRED = "Vui lòng nhập mã giảm giá.";
+
+    /** Mã giảm giá sai định dạng. */
+    public static final String MSG124_VOUCHER_CODE_FORMAT = "Mã giảm giá phải có 4–20 ký tự chữ A–Z hoặc số.";
+
+    /** Không có mã giảm giá này. */
+    public static final String MSG125_VOUCHER_NOT_FOUND = "Mã giảm giá không tồn tại.";
+
+    /** Mã giảm giá đã tắt. */
+    public static final String MSG126_VOUCHER_INACTIVE = "Mã giảm giá đã ngừng áp dụng.";
+
+    /** Ngoài thời gian áp dụng của mã. */
+    public static final String MSG127_VOUCHER_OUT_OF_DATE = "Mã giảm giá chưa đến ngày bắt đầu hoặc đã hết hạn.";
+
+    /** Mã hết lượt dùng chung. */
+    public static final String MSG128_VOUCHER_USED_UP = "Mã giảm giá đã hết lượt sử dụng.";
+
+    /** Phạm vi mã không khớp loại gói. */
+    public static final String MSG129_VOUCHER_SCOPE_PACKAGE_OR_DAY_PASS = "Mã chỉ áp dụng cho gói tập hoặc vé ngày.";
+
+    /** Mã chỉ dành cho gói hội viên. */
+    public static final String MSG130_VOUCHER_SCOPE_MEMBERSHIP = "Mã giảm giá chỉ áp dụng cho gói hội viên.";
+
+    /** Đơn chưa đạt giá trị tối thiểu. %s = số tiền. */
+    public static final String MSG131_VOUCHER_MIN_ORDER = "Đơn hàng phải từ %s mới được áp dụng mã này.";
+
+    /** Khách đã dùng hết lượt của mã. */
+    public static final String MSG132_VOUCHER_CUSTOMER_LIMIT = "Khách hàng đã dùng hết số lượt của mã giảm giá này.";
+
+    /** Mã hết lượt ngay lúc thanh toán (người khác vừa dùng). */
+    public static final String MSG133_VOUCHER_JUST_USED_UP = "Mã giảm giá vừa hết lượt sử dụng. Vui lòng thử lại.";
+
+    /** Chưa chọn cách thu tiền. */
+    public static final String MSG134_PAYMENT_METHOD_REQUIRED = "Vui lòng chọn hình thức thu tiền: Tiền mặt hoặc Chuyển khoản.";
+
+    /** Gói buổi PT lẻ chưa bán ở màn này. */
+    public static final String MSG135_PT_SINGLE_NOT_AT_COUNTER = "Chưa có màn bán buổi PT lẻ tại quầy.";
+
+    /** Ngày bắt đầu gói ngoài khoảng cho phép. %s = từ ngày, đến ngày. */
+    public static final String MSG136_COUNTER_START_DATE_RANGE = "Ngày bắt đầu chỉ được chọn trong vòng 7 ngày tới (từ %s đến %s).";
+
+    /** Thu tiền tại quầy xong. %s = số tiền, mã đơn. */
+    public static final String MSG137_COUNTER_PAID = "Đã thu %s · Đơn %s hoàn tất!";
+
     private Messages() {
     }
 }
