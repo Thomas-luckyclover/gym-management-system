@@ -59,6 +59,47 @@ public class PackageDAO {
         return packages;
     }
 
+    /**
+     * Tìm gói theo ID kèm RowVer để phục vụ kiểm soát đồng thời (optimistic concurrency - MSG22).
+     *
+     * @param packageId ID gói cần tìm
+     * @return đối tượng Package đầy đủ hoặc null nếu không tìm thấy
+     * @throws SQLException lỗi truy vấn cơ sở dữ liệu
+     */
+    public Package findById(int packageId) throws SQLException {
+        try (Connection conn = DBContext.getConnection()) {
+            return findById(conn, packageId);
+        }
+    }
+
+    /**
+     * Tìm gói theo ID trong một transaction hiện hành.
+     *
+     * @param conn kết nối cơ sở dữ liệu
+     * @param packageId ID gói cần tìm
+     * @return đối tượng Package đầy đủ kèm RowVer hoặc null nếu không tồn tại
+     * @throws SQLException lỗi truy vấn cơ sở dữ liệu
+     */
+    public Package findById(Connection conn, int packageId) throws SQLException {
+        String sql = "SELECT PackageId, PackageName, Description, Benefits, PackageType, "
+                + "DurationUnit, DurationValue, EstimatedSessionCount, Price, IsActive, "
+                + "UnlocksExerciseLibrary, CreatedAt, RowVer "
+                + "FROM Packages "
+                + "WHERE PackageId = ?";
+
+        try (PreparedStatement stmt = conn.prepareStatement(sql)) {
+            stmt.setInt(1, packageId);
+            try (ResultSet rs = stmt.executeQuery()) {
+                if (rs.next()) {
+                    Package pkg = mapResultSetToPackage(rs);
+                    pkg.setRowVersion(rs.getBytes("RowVer"));
+                    return pkg;
+                }
+            }
+        }
+        return null;
+    }
+
     // ===== Hàm phụ =====
 
     /**
