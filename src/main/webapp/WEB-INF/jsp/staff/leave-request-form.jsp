@@ -11,7 +11,7 @@
   <%@ include file="/WEB-INF/jsp/common/head.jspf" %>
   <title>Nghỉ phép · Super Gym</title>
   <link rel="stylesheet" href="${pageContext.request.contextPath}/css/pages/auth/account-settings.css?v=20261018">
-  <link rel="stylesheet" href="${pageContext.request.contextPath}/css/pages/manager/leave-requests.css?v=20261025-compact">
+  <link rel="stylesheet" href="${pageContext.request.contextPath}/css/pages/manager/leave-requests.css?v=20261031-compact-form">
   <link rel="stylesheet" href="${pageContext.request.contextPath}/css/pages/auth/notification-bell.css?v=20261018">
   <script src="${pageContext.request.contextPath}/js/pages/auth/notification-bell.js" defer></script>
 </head>
@@ -47,7 +47,7 @@
 
       <main class="content" id="main-content" tabindex="-1">
         <%-- Thông báo lỗi nộp đơn từ server + Nút dẫn sang màn xử lý lịch dạy (BF-08 / CBR-83) --%>
-        <c:if test="${not empty submitError}">
+        <c:if test="${not empty submitError and (isReceptionist or empty fieldErrors.sessions)}">
           <div class="alert-banner danger" style="margin-bottom:var(--space-4);display:flex;align-items:center;justify-content:space-between;gap:var(--space-3);flex-wrap:wrap">
             <div>
               <i class="fa-solid fa-circle-exclamation" aria-hidden="true"></i>
@@ -84,22 +84,21 @@
                     <span aria-hidden="true">i</span>
                   </button>
                   <div id="leaveFormHelp" class="pt-info-popover" role="tooltip">
-                    <strong class="leave-help-title">Hạn nộp</strong>
-                    <p class="leave-help-row"><span>Ngày nghỉ:</span> <b id="infoDate">—</b></p>
+                    <strong class="leave-help-title">Lưu ý gửi đơn</strong>
                     <p class="leave-help-row"><span>Nộp trước:</span> <b id="infoDeadline"><c:out value="${formView.submissionCutoffTime}" default="—" /> · ngày hôm trước</b></p>
-                    <p class="leave-help-note">Quá hạn hoặc nghỉ đột xuất: báo Quản lý.</p>
+                    <p class="leave-help-note">Quá hạn/đột xuất: báo quản lý.</p>
 
-                    <strong class="leave-help-title">Nhân sự còn lại ít nhất nếu duyệt</strong>
-                    <p id="pvScope" class="leave-help-note">Ngày mai · Cả ngày</p>
+                    <strong class="leave-help-title">Nhân sự dự kiến (còn / tối thiểu)</strong>
+                    <p id="pvScope" class="leave-help-note">Chọn ngày và ca nghỉ</p>
                     <p class="leave-help-row">
                       <span>PT:</span>
-                      <b><span id="pvPt"><c:out value="${formView.staffing.remainingPt}" default="—" /></span> (tối thiểu <span id="pvMinPt"><c:out value="${formView.staffing.minPt}" default="—" /></span>)</b>
+                      <b><span id="pvPt"><c:out value="${formView.staffing.remainingPt}" default="—" /></span> / <span id="pvMinPt"><c:out value="${formView.staffing.minPt}" default="—" /></span></b>
                     </p>
                     <p class="leave-help-row">
                       <span>Lễ tân:</span>
-                      <b><span id="pvRecep"><c:out value="${formView.staffing.remainingReceptionist}" default="—" /></span> (tối thiểu <span id="pvMinRecep"><c:out value="${formView.staffing.minReceptionist}" default="—" /></span>)</b>
+                      <b><span id="pvRecep"><c:out value="${formView.staffing.remainingReceptionist}" default="—" /></span> / <span id="pvMinRecep"><c:out value="${formView.staffing.minReceptionist}" default="—" /></span></b>
                     </p>
-                    <p class="leave-help-note">Xét toàn khoảng nghỉ; tạm tính nhân viên làm cả hai ca.</p>
+                    <p class="leave-help-note">Quân số thấp nhất trong khoảng đã chọn.</p>
                   </div>
                 </div>
               </div>
@@ -143,40 +142,50 @@
                   </div>
                 </div>
 
-                <div class="field" style="margin-bottom:var(--space-4)">
-                  <label class="field-label" for="leaveDate">
-                    Từ ngày <span aria-hidden="true">*</span>
-                  </label>
-                  <input id="leaveDate"
-                         name="leaveDate"
-                         type="date"
-                         data-cutoff="<c:out value='${formView.submissionCutoffTime}' default='' />"
-                         value="<c:out value='${paramLeaveDate}' />"
-                         required>
-                  <div class="field-error" id="leaveDateClientErr" hidden></div>
-                  <c:if test="${not empty fieldErrors.leaveDate}">
-                    <div class="field-error">
-                      <c:out value="${fieldErrors.leaveDate}" />
-                    </div>
-                  </c:if>
-                </div>
+                <div class="leave-form-grid leave-date-grid">
+                  <div class="field">
+                    <label class="field-label" for="leaveDate">
+                      Từ ngày <span aria-hidden="true">*</span>
+                    </label>
+                    <input id="leaveDate"
+                           name="leaveDate"
+                           type="date"
+                           data-cutoff="<c:out value='${formView.submissionCutoffTime}' default='' />"
+                           value="<c:out value='${paramLeaveDate}' />"
+                           required>
+                    <div class="field-error" id="leaveDateClientErr" hidden></div>
+                    <c:if test="${not empty fieldErrors.leaveDate}">
+                      <div class="field-error">
+                        <c:out value="${fieldErrors.leaveDate}" />
+                      </div>
+                    </c:if>
+                  </div>
 
-                <div class="field">
-                  <label class="field-label" for="toDate">Đến ngày (bỏ trống nếu nghỉ một ngày)</label>
-                  <input id="toDate" name="toDate" type="date" value="<c:out value='${paramToDate}' />">
-                  <span class="field-hint">Đơn nhiều ngày chọn Cả ngày, tối đa 31 ngày trong cùng năm.</span>
-                  <c:if test="${not empty fieldErrors.toDate}">
-                    <div class="field-error"><c:out value="${fieldErrors.toDate}" /></div>
-                  </c:if>
-                </div>
+                  <div class="field">
+                    <label class="field-label" for="toDate">Đến ngày</label>
+                    <input id="toDate" name="toDate" type="date" value="<c:out value='${paramToDate}' />">
 
-                <div class="field" style="margin-bottom:var(--space-5)">
+                    <c:if test="${not empty fieldErrors.toDate}">
+                      <div class="field-error"><c:out value="${fieldErrors.toDate}" /></div>
+                    </c:if>
+                  </div>
+
+                </div>
+                <p class="field-hint leave-date-hint">Để trống Đến ngày nếu nghỉ một ngày. Nhiều ngày chọn Cả ngày, tối đa 31 ngày trong cùng năm.</p>
+                <%-- PT: JS renderPlan/resetPlan cập nhật cảnh báo lịch ngay dưới ngày; lễ tân không có khối này. --%>
+                <c:if test="${not isReceptionist}">
+                  <div id="leaveScheduleWarning" class="leave-schedule-warning" role="alert" ${empty fieldErrors.sessions ? 'hidden' : ''}>
+                    <span><i class="fa-solid fa-circle-exclamation" aria-hidden="true"></i> <span id="leaveScheduleMessage"><c:out value="${fieldErrors.sessions}" /></span></span>
+                    <a id="leaveScheduleLink" class="btn btn-sm btn-outline" href="${pageContext.request.contextPath}/pt/dashboard">Xem lịch dạy →</a>
+                  </div>
+                </c:if>
+                <div class="field leave-reason-field">
                   <label class="field-label" for="leaveReason">
                     Lý do nghỉ <span aria-hidden="true">*</span>
                   </label>
                   <textarea id="leaveReason"
                             name="reason"
-                            rows="4"
+                            rows="3"
                             minlength="5"
                             maxlength="500"
                             placeholder="Nêu ngắn gọn lý do nghỉ (5–500 ký tự)…"
@@ -204,7 +213,7 @@
                     <div class="field-error"><c:out value="${fieldErrors.acceptUnpaid}" /></div>
                   </c:if>
                   <p id="leavePlanError" class="field-error" hidden></p>
-                  <a id="leaveScheduleLink" class="btn btn-sm btn-outline" href="${pageContext.request.contextPath}/pt/dashboard" hidden>Xem lịch dạy →</a>
+
                 </div>
 
                 <button class="btn btn-primary" type="submit" id="leaveSubmit">
@@ -296,6 +305,6 @@
     </div>
   </div>
 
-  <script src="${pageContext.request.contextPath}/js/pages/staff/leave-request-form.js?v=20261025-readable"></script>
+  <script src="${pageContext.request.contextPath}/js/pages/staff/leave-request-form.js?v=20261031-compact-form"></script>
 </body>
 </html>
