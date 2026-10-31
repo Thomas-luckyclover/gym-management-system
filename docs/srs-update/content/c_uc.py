@@ -35,7 +35,7 @@ UC_OVR = {
 "UC-28":["UC-28","Create Facility Maintenance Request","Receptionist","Report one or more broken equipment items of a facility group in two steps (BR-105); each item gets its own request and the Managers are notified. Close an In Progress request after checking the repair, with an acceptance note (BR-48)."],
 "UC-29":["UC-29","Process Facility Maintenance Requests","Manager","Review maintenance requests (status tabs, 10 / 20 / 50 per page), approve with an optional note and the \"set under maintenance\" choice, or reject with a reason; the reporting Receptionist is notified (BR-106)."],
 "UC-30":["UC-30","Declare Available Time Slots","PT","On the weekly PT schedule (week or list view), add draft slots of P-06 minutes on a 15-minute grid within opening hours, withdraw free slots, copy a week to the next week, then publish all changes in one step (BR-94, BR-95). Slots in a shift covered by the PT's leave request are locked. Slots may be published for any future date and any day of the week."],
-"UC-31":["UC-31","Auto-Close PT Sessions","System (JOB-04)","Every day at 00:05 the system closes every PT session still Scheduled whose date has passed: CheckedIn, Missed / NoCheckIn, Missed / NoMembership or Missed / MembershipFrozen (CBR-42). The PT does not mark attendance."],
+"UC-31":["UC-31","Mark Session No-Show","PT","Withdrawn — the PT does not mark attendance; sessions are closed automatically by the background job JOB-04 (CBR-42), which is not a use case."],
 "UC-32":["UC-32","Track Teaching Schedule & Assigned Clients","PT","View the PT dashboard (7-day schedule, needs-attention list for 14 days, assigned packages with phone and Zalo, monthly result and commission, weather — BR-101) and the weekly PT schedule with every session and its status (BR-100)."],
 "UC-33":["UC-33","Write Private Notes On Clients","PT",old('UC-33')+NI],
 "UC-34":["UC-34","Draft Training Plans & Meal Plans","PT",old('UC-34')+NI],
@@ -76,7 +76,6 @@ A["Manager"][2] = A["Manager"][2] + " Also confirms refunds of the refund list a
 A["Payment Gateway"][2] = "External system. Receives online payment requests for self-service membership and day-pass purchases (UC-22) and single PT session bookings (UC-37), and returns the payment result through the IPN. Not used for PT packages sold at the counter (UC-21)."
 A["Email / OTP Service"][2] = "External system (SMTP). Delivers 6-digit verification codes (registration, claim, recovery, email or phone change), temporary passwords of accounts created at the counter and the security notice to the old email. Not used for sign-in — login is email/phone plus password only, no OTP."
 ACT.append(["11","Exercise Data Provider (wger)","External system. Public wger.de API providing exercises, muscles, equipment and images for the Exercise Library (API-05); read-only, no key."])
-ACT.append(["12","Scheduler (System Time)","Internal timer that runs the background jobs JOB-01…JOB-08 (GBR-14) and owns UC-31."])
 
 SCR_COLS = ["#", "Screen Name", "Feature", "Description"]
 SCR_OVR = {
