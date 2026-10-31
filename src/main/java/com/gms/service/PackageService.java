@@ -1,5 +1,6 @@
 package com.gms.service;
 
+import com.gms.constant.Messages;
 import com.gms.constant.Role;
 import com.gms.dao.PackageDAO;
 import com.gms.dto.ManagerPackageRowView;
@@ -147,6 +148,95 @@ public class PackageService {
             } catch (SQLException e) {
                 conn.rollback();
                 return ServiceResult.fail("Lỗi khi thêm gói dịch vụ: " + e.getMessage());
+            } finally {
+                conn.setAutoCommit(true);
+            }
+        } catch (SQLException e) {
+            return ServiceResult.fail("Lỗi kết nối cơ sở dữ liệu: " + e.getMessage());
+        }
+    }
+
+    // ===== Chỉnh sửa gói dịch vụ (Commit 16) =====
+
+    /**
+     * Cập nhật thông tin gói hội viên / vé ngày (#18).
+     */
+    public ServiceResult<Integer> updateMembershipPackage(int accountId, PackageFormInput input) {
+        return updatePackageInternal(accountId, input, false);
+    }
+
+    /**
+     * Cập nhật thông tin gói PT / buổi lẻ (#20).
+     */
+    public ServiceResult<Integer> updatePtPackage(int accountId, PackageFormInput input) {
+        return updatePackageInternal(accountId, input, true);
+    }
+
+    private ServiceResult<Integer> updatePackageInternal(int accountId, PackageFormInput input, boolean isPt) {
+        if (input.getPackageId() == null || input.getPackageId() <= 0) {
+            return ServiceResult.fail("Mã gói dịch vụ không hợp lệ.");
+        }
+        if (input.getRowVersion() == null || input.getRowVersion().isBlank()) {
+            return ServiceResult.fail("Thiếu thông tin phiên bản dữ liệu (RowVer).");
+        }
+
+        try (Connection conn = getConnection()) {
+            conn.setAutoCommit(false);
+            try {
+                Map<String, String> errors = isPt ? validatePtForm(input, conn) : validateMembershipForm(input, conn);
+                if (!errors.isEmpty()) {
+                    conn.rollback();
+                    return ServiceResult.failFields(errors);
+                }
+
+                Package oldPkg = packageDAO.findById(conn, input.getPackageId());
+                if (oldPkg == null) {
+                    conn.rollback();
+                    return ServiceResult.fail("Gói dịch vụ không tồn tại hoặc đã bị xóa.");
+                }
+
+                Package pkg = mapInputToPackage(input);
+                boolean updated = packageDAO.update(conn, pkg);
+
+                if (!updated) {
+                    conn.rollback();
+                    return ServiceResult.fail(Messages.MSG22_CONCURRENT_EDIT);
+                }
+
+                // Ghi nhận AuditLog: Nếu đổi giá → ghi log giá, nếu đổi trường khác → ghi log cập nhật
+                if (oldPkg.getPrice() != pkg.getPrice()) {
+                    auditLogService.logInTransaction(
+                            conn,
+                            accountId,
+                            Role.MANAGER,
+                            "UPDATE_PRICE",
+                            "Packages",
+                            pkg.getPackageId(),
+                            "Price",
+                            String.valueOf(oldPkg.getPrice()),
+                            String.valueOf(pkg.getPrice()),
+                            "Quản lý điều chỉnh giá gói"
+                    );
+                }
+
+                auditLogService.logInTransaction(
+                        conn,
+                        accountId,
+                        Role.MANAGER,
+                        "UPDATE",
+                        "Packages",
+                        pkg.getPackageId(),
+                        null,
+                        oldPkg.getPackageName(),
+                        pkg.getPackageName(),
+                        "Quản lý cập nhật thông tin gói"
+                );
+
+                conn.commit();
+                return ServiceResult.ok(pkg.getPackageId(), Messages.MSG23_SAVED);
+            } catch (SQLException e) {
+                conn.rollback();
+                return ServiceResult.fail("Lỗi khi cập nhật gói dịch vụ: " + e.getMessage());
             } finally {
                 conn.setAutoCommit(true);
             }
