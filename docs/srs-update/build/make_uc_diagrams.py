@@ -12,6 +12,7 @@ DEP = "html=1;rounded=0;strokeColor=#000000;endArrow=open;endFill=0;dashed=1;lab
 GEN = "html=1;rounded=0;strokeColor=#000000;endArrow=block;endFill=0;endSize=12;"
 DOT = "html=1;rounded=0;strokeColor=#000000;endArrow=none;dashed=1;dashPattern=1 3;"
 SX, SY, UW, UH, NW = 300, 40, 210, 54, 300
+PAGES = []
 
 def pin(ex, ey, nx, ny):
     return f"exitX={ex};exitY={ey};exitDx=0;exitDy=0;entryX={nx};entryY={ny};entryDx=0;entryDy=0;"
@@ -61,8 +62,9 @@ def build(name, ucs, row=72, left=(), right=(), assoc=(), deps=(), gens=(), note
         aid, text, x, y = actor_note
         V("an", html.escape(text), NOTE, x, y, 230, note_h(text))
         Ed("anl", DOT + pin(0.5, 0, 0.5, 1), aid, "an")
-    xml = ('<mxfile host="app.diagrams.net"><diagram name="%s" id="%s"><mxGraphModel dx="1400" dy="1000" grid="0" gridSize="10" guides="1" tooltips="1" connect="1" arrows="1" fold="1" page="1" pageScale="1" pageWidth="1600" pageHeight="1400" background="#FFFFFF" math="0" shadow="0"><root><mxCell id="0"/><mxCell id="1" parent="0"/>%s</root></mxGraphModel></diagram></mxfile>' % (name, name, ''.join(C)))
-    open(os.path.join(OUT, name + '.drawio'), 'w', encoding='utf-8').write(xml)
+    PAGES.append('<diagram name="%s" id="%s"><mxGraphModel dx="1400" dy="1000" grid="0" gridSize="10" guides="1" tooltips="1" connect="1" arrows="1" fold="1" page="1" pageScale="1" pageWidth="1600" pageHeight="1400" background="#FFFFFF" math="0" shadow="0"><root><mxCell id="0"/><mxCell id="1" parent="0"/>%s</root></mxGraphModel></diagram>' % (name, name, ''.join(C)))
+    # single-page copy for the geometry checker only
+    open(f'/tmp/{name}.drawio', 'w', encoding='utf-8').write('<mxfile host="app.diagrams.net">' + PAGES[-1] + '</mxfile>')
 
 # ---------------------------------------------------------------- System User
 build('UC_System_Actor',
@@ -144,4 +146,5 @@ build('UC_Admin', [('acc', 'Manage System Accounts', 0, 0), ('audit', 'View Audi
  notes={'acc': 'Create Staff Account (Admin, Manager, PT, Receptionist), View Account List / Detail, Change Position, Lock / Unlock Account, Unlock Locked Customer Account',
         'audit': 'Search & Filter Sensitive Actions, View Action Detail',
         'rep': 'View Report For A Date Range, View Audit Metrics, Export CSV'})
-print('ok')
+open(os.path.join(OUT, 'GMS_UC_Diagrams.drawio'), 'w', encoding='utf-8').write('<mxfile host="app.diagrams.net">' + ''.join(PAGES) + '</mxfile>')
+print('ok', len(PAGES), 'tabs')
