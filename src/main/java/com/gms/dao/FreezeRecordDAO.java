@@ -551,9 +551,10 @@ public class FreezeRecordDAO {
     // ===== 4. Lịch sử và danh sách bảo lưu hiển thị trên giao diện =====
 
     /**
-     * Lấy danh sách các lượt bảo lưu mới nhất của hệ thống phục vụ hiển thị trên màn hình Lễ tân.
+     * Lấy danh sách các lượt bảo lưu mới nhất của hệ thống có hỗ trợ lọc theo từ khóa (tên, mã khách, SĐT...).
      */
-    public List<FreezeRecordItemView> findRecentFreezes(int limit) throws SQLException {
+    public List<FreezeRecordItemView> findRecentFreezes(String keyword, int limit) throws SQLException {
+        SearchCondition cond = buildSearchCondition(keyword);
         String sql = """
                 SELECT TOP (?)
                     fr.FreezeRecordId,
@@ -578,13 +579,23 @@ public class FreezeRecordDAO {
                 JOIN Packages pkg ON pkg.PackageId = o.PackageId
                 JOIN Employees emp ON emp.EmployeeId = fr.HandledByEmployeeId
                 JOIN Persons empP ON empP.PersonId = emp.PersonId
+                WHERE c.DeletedAt IS NULL
+                """
+                + (cond != null ? " AND " + cond.sqlCondition + " " : "")
+                + """
                 ORDER BY fr.CreatedAt DESC
                 """;
 
         List<FreezeRecordItemView> list = new ArrayList<>();
         try (Connection conn = DBContext.getConnection();
              PreparedStatement stmt = conn.prepareStatement(sql)) {
-            stmt.setInt(1, limit > 0 ? limit : 20);
+            stmt.setInt(1, limit > 0 ? limit : 50);
+            int paramIndex = 2;
+            if (cond != null) {
+                for (String param : cond.params) {
+                    stmt.setString(paramIndex++, param);
+                }
+            }
 
             try (ResultSet rs = stmt.executeQuery()) {
                 while (rs.next()) {
@@ -593,6 +604,10 @@ public class FreezeRecordDAO {
             }
         }
         return list;
+    }
+
+    public List<FreezeRecordItemView> findRecentFreezes(int limit) throws SQLException {
+        return findRecentFreezes(null, limit);
     }
 
     /**

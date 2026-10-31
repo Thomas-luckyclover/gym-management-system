@@ -712,6 +712,11 @@ class FreezeServiceTest {
         }
 
         @Override
+        public List<FreezeRecordItemView> findRecentFreezes(String keyword, int limit) {
+            return List.of();
+        }
+
+        @Override
         public List<FreezeRecordItemView> findRecentFreezes(int limit) {
             return List.of();
         }

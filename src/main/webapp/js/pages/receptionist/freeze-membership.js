@@ -195,6 +195,41 @@ document.addEventListener('DOMContentLoaded', function () {
         });
     }
 
+    // 8. Giữ đúng tab #tabHistory khi tìm kiếm
+    const freezeSearchForm = document.getElementById('freezeSearchForm');
+    if (freezeSearchForm) {
+        freezeSearchForm.addEventListener('submit', function () {
+            const activeTab = document.querySelector('.freeze-tab-pane.active');
+            if (activeTab && activeTab.id === 'tabHistory') {
+                freezeSearchForm.action = freezeSearchForm.action.split('#')[0] + '#tabHistory';
+            }
+        });
+    }
+
+    const historySearchForm = document.getElementById('historySearchForm');
+    if (historySearchForm) {
+        historySearchForm.addEventListener('submit', function () {
+            historySearchForm.action = historySearchForm.action.split('#')[0] + '#tabHistory';
+        });
+    }
+
+    // 9. Lọc nhanh real-time trực tiếp trên bảng Lịch sử bảo lưu
+    const historySearchInput = document.getElementById('historySearchInput');
+    if (historySearchInput) {
+        historySearchInput.addEventListener('input', function () {
+            const term = this.value.trim().toLowerCase();
+            const rows = document.querySelectorAll('#tabHistory .gym-table tbody tr');
+            rows.forEach(row => {
+                const text = row.textContent.toLowerCase();
+                if (!term || text.includes(term)) {
+                    row.style.display = '';
+                } else {
+                    row.style.display = 'none';
+                }
+            });
+        });
+    }
+
     // Hàm tiện ích định dạng ngày
     function formatDate(d) {
         if (!d || isNaN(d.getTime())) return '--/--/----';

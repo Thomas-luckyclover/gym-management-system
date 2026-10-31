@@ -745,15 +745,19 @@ public class FreezeService {
     // =========================================================================
 
     /**
-     * Lấy danh sách các đợt bảo lưu gần đây phục vụ hiển thị trên bảng dữ liệu quầy Lễ tân.
+     * Lấy danh sách các đợt bảo lưu gần đây phục vụ hiển thị trên bảng dữ liệu quầy Lễ tân (có hỗ trợ lọc theo từ khóa).
      */
-    public List<FreezeRecordItemView> getRecentFreezes(int limit) {
+    public List<FreezeRecordItemView> getRecentFreezes(String keyword, int limit) {
         try {
-            return freezeRecordDAO.findRecentFreezes(limit);
+            return freezeRecordDAO.findRecentFreezes(keyword, limit);
         } catch (SQLException e) {
             LOGGER.log(Level.SEVERE, "Lỗi khi lấy danh sách bảo lưu gần đây", e);
             return List.of();
         }
+    }
+
+    public List<FreezeRecordItemView> getRecentFreezes(int limit) {
+        return getRecentFreezes(null, limit);
     }
 
     /**

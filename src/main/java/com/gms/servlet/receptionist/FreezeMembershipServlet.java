@@ -113,8 +113,8 @@ public class FreezeMembershipServlet extends HttpServlet {
         request.setAttribute("membershipsPage", membershipsPage);
         request.setAttribute("customerMemberships", membershipsPage.getItems());
 
-        // B5: Lấy toàn bộ lịch sử các đợt bảo lưu hiển thị ở tab "Lịch sử bảo lưu"
-        List<FreezeRecordItemView> freezeHistoryList = freezeService.getRecentFreezes(50);
+        // B5: Lấy toàn bộ lịch sử các đợt bảo lưu hiển thị ở tab "Lịch sử bảo lưu" (lọc theo từ khóa tìm kiếm)
+        List<FreezeRecordItemView> freezeHistoryList = freezeService.getRecentFreezes(query, 50);
         request.setAttribute("freezeHistoryList", freezeHistoryList);
         request.setAttribute("recentFreezes", freezeHistoryList); // tương thích ngược
         request.setAttribute("activeNav", "freeze");
