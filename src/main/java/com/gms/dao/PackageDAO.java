@@ -260,6 +260,55 @@ public class PackageDAO {
         return result;
     }
 
+    /**
+     * Thêm mới gói dịch vụ trong một transaction.
+     *
+     * @param conn kết nối cơ sở dữ liệu
+     * @param pkg đối tượng Package chứa thông tin cần thêm
+     * @return PackageId vừa được sinh tự động
+     * @throws SQLException lỗi thêm dữ liệu
+     */
+    public int insert(Connection conn, Package pkg) throws SQLException {
+        String sql = "INSERT INTO Packages (PackageName, Description, Benefits, PackageType, "
+                + "DurationUnit, DurationValue, EstimatedSessionCount, Price, IsActive, "
+                + "UnlocksExerciseLibrary, CreatedAt) "
+                + "VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, GETDATE())";
+
+        try (PreparedStatement stmt = conn.prepareStatement(sql, PreparedStatement.RETURN_GENERATED_KEYS)) {
+            stmt.setString(1, pkg.getPackageName());
+            stmt.setString(2, pkg.getDescription());
+            stmt.setString(3, pkg.getBenefits());
+            stmt.setString(4, pkg.getPackageType() != null ? pkg.getPackageType().getDbValue() : null);
+            stmt.setString(5, pkg.getDurationUnit());
+            if (pkg.getDurationValue() != null) {
+                stmt.setInt(6, pkg.getDurationValue());
+            } else {
+                stmt.setNull(6, Types.INTEGER);
+            }
+            if (pkg.getEstimatedSessionCount() != null) {
+                stmt.setInt(7, pkg.getEstimatedSessionCount());
+            } else {
+                stmt.setNull(7, Types.INTEGER);
+            }
+            stmt.setInt(8, pkg.getPrice());
+            stmt.setBoolean(9, pkg.isActive());
+            stmt.setBoolean(10, pkg.isUnlocksExerciseLibrary());
+
+            int affectedRows = stmt.executeUpdate();
+            if (affectedRows == 0) {
+                throw new SQLException("Thêm gói tập thất bại, không có bản ghi nào được tạo.");
+            }
+
+            try (ResultSet generatedKeys = stmt.getGeneratedKeys()) {
+                if (generatedKeys.next()) {
+                    return generatedKeys.getInt(1);
+                } else {
+                    throw new SQLException("Thêm gói tập thất bại, không lấy được mã PackageId sinh tự động.");
+                }
+            }
+        }
+    }
+
     // ===== Hàm phụ =====
 
     /**
