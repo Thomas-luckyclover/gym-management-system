@@ -2084,3 +2084,1029 @@ html[data-theme="dark"] .package-card__detail:hover {
   font-weight: 800 !important;
   border-radius: 4px !important;
 }
+
+/* ==================== PHONG CÁCH SUPER GYM CINEMATIC (ĐỒNG BỘ TRANG CHỦ & HỆ DOCK NỘI BỘ) ==================== */
+.package-card {
+  position: relative !important;
+  display: flex !important;
+  flex-direction: column !important;
+  border-radius: 8px !important;
+  border: 1px solid rgba(255, 255, 255, 0.12) !important;
+  background: linear-gradient(180deg, #090e17 0%, #0d1522 100%) !important;
+  box-shadow: 0 10px 30px rgba(0, 0, 0, 0.45) !important;
+  transition: transform 0.25s ease, border-color 0.25s ease, box-shadow 0.25s ease !important;
+  overflow: hidden !important;
+}
+
+.package-card:hover {
+  transform: translateY(-4px) !important;
+  border-color: #0284c7 !important;
+  box-shadow: 0 16px 36px rgba(0, 0, 0, 0.6), 0 0 20px rgba(2, 132, 199, 0.25) !important;
+}
+
+.package-card__banner {
+  min-height: 155px !important;
+  padding: 1.25rem 1.25rem 0.75rem !important;
+  background: transparent !important;
+  border-bottom: 1px solid rgba(255, 255, 255, 0.08) !important;
+}
+
+.package-card__banner::before {
+  opacity: 0.9 !important;
+}
+
+.package-card__brand {
+  font-family: "Inter Tight", "Montserrat", sans-serif !important;
+  letter-spacing: 0.2em !important;
+  font-size: 0.65rem !important;
+  font-weight: 800 !important;
+  color: #38bdf8 !important;
+  text-transform: uppercase !important;
+}
+
+.package-card__headline {
+  font-family: "Montserrat", "Inter Tight", sans-serif !important;
+  font-size: 1.4rem !important;
+  font-weight: 900 !important;
+  font-style: italic !important;
+  letter-spacing: 0.01em !important;
+  text-transform: uppercase !important;
+  color: #ffffff !important;
+  text-shadow: 0 2px 10px rgba(0, 0, 0, 0.7) !important;
+}
+
+.package-card__foot {
+  padding: 1.25rem 1.35rem 1.35rem !important;
+  background: #0d1522 !important;
+  display: flex !important;
+  flex-direction: column !important;
+  gap: 0.85rem !important;
+  flex: 1 !important;
+  text-align: left !important;
+  align-items: stretch !important;
+}
+
+.package-card__info {
+  display: flex !important;
+  flex-direction: column !important;
+  align-items: flex-start !important;
+  text-align: left !important;
+  gap: 0.35rem !important;
+  width: 100% !important;
+}
+
+.package-card__price {
+  color: #38bdf8 !important;
+  font-family: "Montserrat", sans-serif !important;
+  font-size: 1.85rem !important;
+  font-weight: 900 !important;
+  font-style: italic !important;
+  letter-spacing: -0.02em !important;
+  text-align: left !important;
+  align-self: flex-start !important;
+  line-height: 1.1 !important;
+  text-shadow: 0 0 20px rgba(56, 189, 248, 0.3) !important;
+}
+
+.package-card__price small {
+  color: #94adc5 !important;
+  font-family: "Inter", sans-serif !important;
+  font-size: 0.85rem !important;
+  font-weight: 500 !important;
+  font-style: normal !important;
+  text-shadow: none !important;
+}
+
+.package-card__was {
+  color: #64748b !important;
+  font-family: "JetBrains Mono", monospace !important;
+  text-align: left !important;
+  align-self: flex-start !important;
+}
+
+.package-card__deal {
+  align-self: flex-start !important;
+  margin-top: 0.15rem !important;
+  background: rgba(16, 185, 129, 0.12) !important;
+  border: 1px solid rgba(16, 185, 129, 0.25) !important;
+  color: #34d399 !important;
+}
+
+.package-card__deal b {
+  background: #059669 !important;
+  color: #ffffff !important;
+}
+
+.package-card__benefits {
+  display: flex !important;
+  flex-direction: column !important;
+  gap: 0.65rem !important;
+  padding: 0.85rem 0 0.5rem 0 !important;
+  margin: 0 !important;
+  list-style: none !important;
+  border-top: 1px dashed rgba(255, 255, 255, 0.1) !important;
+  min-height: 96px !important;
+  text-align: left !important;
+  width: 100% !important;
+}
+
+.package-card__benefits li {
+  display: flex !important;
+  align-items: flex-start !important;
+  gap: 0.65rem !important;
+  font-family: "Inter", sans-serif !important;
+  font-size: 0.88rem !important;
+  color: #f1f5f9 !important;
+  line-height: 1.45 !important;
+  text-align: left !important;
+}
+
+.package-card__benefits li::before {
+  display: none !important;
+}
+
+.package-card__benefits li i {
+  color: #10b981 !important;
+  font-size: 1rem !important;
+  flex-shrink: 0 !important;
+  margin-top: 0.15rem !important;
+}
+
+.package-card__benefits li span {
+  flex: 1 !important;
+  text-align: left !important;
+}
+
+.package-card__benefits li.is-more {
+  font-size: 0.78rem !important;
+  font-style: italic !important;
+  color: #94adc5 !important;
+  padding-left: 1.65rem !important;
+  margin-top: -0.15rem !important;
+}
+
+.package-card__actions {
+  display: grid !important;
+  grid-template-columns: 1.2fr 1fr !important;
+  gap: 0.75rem !important;
+  margin-top: auto !important;
+  width: 100% !important;
+}
+
+.package-card__actions form {
+  display: flex !important;
+  width: 100% !important;
+}
+
+html[data-theme="dark"] .package-card__buy,
+.package-card__buy {
+  width: 100% !important;
+  height: 44px !important;
+  background: linear-gradient(135deg, #0284c7 0%, #0369a1 100%) !important;
+  border: 1px solid #38bdf8 !important;
+  color: #ffffff !important;
+  font-family: "Inter Tight", "Montserrat", sans-serif !important;
+  font-size: 0.88rem !important;
+  font-weight: 800 !important;
+  text-transform: uppercase !important;
+  letter-spacing: 0.05em !important;
+  border-radius: 6px !important;
+  cursor: pointer !important;
+  transition: all 0.2s ease !important;
+  box-shadow: 0 4px 14px rgba(2, 132, 199, 0.4) !important;
+  display: inline-flex !important;
+  align-items: center !important;
+  justify-content: center !important;
+  padding: 0 0.85rem !important;
+}
+
+html[data-theme="dark"] .package-card__buy:hover,
+.package-card__buy:hover {
+  background: linear-gradient(135deg, #0369a1 0%, #075985 100%) !important;
+  color: #ffffff !important;
+  transform: translateY(-2px) !important;
+  box-shadow: 0 6px 18px rgba(2, 132, 199, 0.5) !important;
+}
+
+.package-card__detail {
+  width: 100% !important;
+  height: 44px !important;
+  background: rgba(255, 255, 255, 0.06) !important;
+  border: 1px solid rgba(255, 255, 255, 0.25) !important;
+  color: #f1f5f9 !important;
+  font-family: "Inter Tight", "Montserrat", sans-serif !important;
+  font-size: 0.82rem !important;
+  font-weight: 700 !important;
+  text-transform: uppercase !important;
+  letter-spacing: 0.04em !important;
+  border-radius: 6px !important;
+  cursor: pointer !important;
+  transition: all 0.2s ease !important;
+  display: inline-flex !important;
+  align-items: center !important;
+  justify-content: center !important;
+  padding: 0 0.85rem !important;
+}
+
+.package-card__detail:hover {
+  background: rgba(255, 255, 255, 0.15) !important;
+  border-color: rgba(255, 255, 255, 0.5) !important;
+  color: #ffffff !important;
+  transform: translateY(-2px) !important;
+}
+
+/* Nút Xem chi tiết ở gói không mua được online (is-solid): To rõ, viền xanh neon nổi bật */
+.package-card__actions--single,
+.package-card__actions--single .package-tip {
+  width: 100% !important;
+  display: block !important;
+}
+
+.package-card__actions--single .package-card__detail,
+.package-card__actions--single .package-card__detail.is-solid,
+.package-card__detail.is-solid {
+  display: flex !important;
+  width: 100% !important;
+  min-width: 100% !important;
+  height: 44px !important;
+  background: #1e293b !important;
+  border: 1.5px solid #38bdf8 !important;
+  color: #ffffff !important;
+  font-family: "Inter Tight", "Montserrat", sans-serif !important;
+  font-size: 0.88rem !important;
+  font-weight: 800 !important;
+  text-transform: uppercase !important;
+  letter-spacing: 0.05em !important;
+  border-radius: 6px !important;
+  box-shadow: 0 4px 14px rgba(56, 189, 248, 0.2) !important;
+  align-items: center !important;
+  justify-content: center !important;
+  cursor: pointer !important;
+  transition: all 0.2s ease !important;
+}
+
+.package-card__actions--single .package-card__detail:hover,
+.package-card__actions--single .package-card__detail.is-solid:hover,
+.package-card__detail.is-solid:hover {
+  background: #0284c7 !important;
+  border-color: #38bdf8 !important;
+  color: #ffffff !important;
+  box-shadow: 0 6px 18px rgba(2, 132, 199, 0.4) !important;
+  transform: translateY(-2px) !important;
+}
+
+/* ==================== TỐI ƯU CẢ KHI DÙNG LIGHT THEME TRÊN TOÀN APP ==================== */
+html:not([data-theme="dark"]) .package-card {
+  background: linear-gradient(180deg, #0a101d 0%, #0f172a 100%) !important;
+  border: 1px solid #1e293b !important;
+  box-shadow: 0 10px 25px rgba(15, 23, 42, 0.2) !important;
+}
+
+html:not([data-theme="dark"]) .package-card__foot {
+  background: #0f172a !important;
+}
+
+html:not([data-theme="dark"]) .package-card__price {
+  color: #38bdf8 !important;
+}
+
+html:not([data-theme="dark"]) .package-card__price small {
+  color: #94a3b8 !important;
+}
+
+html:not([data-theme="dark"]) .package-card__was {
+  color: #64748b !important;
+}
+
+html:not([data-theme="dark"]) .package-card__benefits {
+  border-top-color: rgba(255, 255, 255, 0.1) !important;
+}
+
+html:not([data-theme="dark"]) .package-card__benefits li {
+  color: #f8fafc !important;
+}
+
+html:not([data-theme="dark"]) .package-card__benefits li i {
+  color: #10b981 !important;
+}
+
+html:not([data-theme="dark"]) .package-card__benefits li.is-more {
+  color: #94a3b8 !important;
+}
+
+html:not([data-theme="dark"]) .package-card__detail {
+  background: rgba(255, 255, 255, 0.05) !important;
+  border: 1px solid rgba(255, 255, 255, 0.2) !important;
+  color: #f8fafc !important;
+}
+
+html:not([data-theme="dark"]) .package-card__detail:hover {
+  background: rgba(255, 255, 255, 0.12) !important;
+  color: #ffffff !important;
+  border-color: rgba(255, 255, 255, 0.45) !important;
+}
+
+/* ==================== 1. FIX RESPONSIVE TOPBAR TRÊN MÀN HÌNH NHỎ (HẾT BỊ CO RÚT "M..") ==================== */
+.package-selection-page .topbar {
+  display: flex !important;
+  flex-wrap: wrap !important;
+  min-height: auto !important;
+  padding-top: 0.75rem !important;
+  padding-bottom: 0.75rem !important;
+  gap: 0.75rem !important;
+}
+
+.package-selection-page .tb-left {
+  display: flex !important;
+  flex-direction: column !important;
+  align-items: flex-start !important;
+  gap: 0.2rem !important;
+  min-width: 0 !important;
+  flex: 1 1 auto !important;
+}
+
+.package-selection-page .tb-title {
+  font-size: 1.5rem !important;
+  font-weight: 800 !important;
+  color: #ffffff !important;
+  line-height: 1.2 !important;
+  white-space: normal !important;
+  overflow: visible !important;
+  text-overflow: clip !important;
+  flex-shrink: 0 !important;
+}
+
+.package-selection-page .tb-subtitle {
+  margin: 0 !important;
+  color: rgba(255, 255, 255, 0.8) !important;
+  font-size: 0.82rem !important;
+  line-height: 1.35 !important;
+  white-space: normal !important;
+}
+
+@media (max-width: 480px) {
+  .package-selection-page .topbar {
+    padding: 0.65rem 0.85rem !important;
+  }
+  .package-selection-page .tb-title {
+    font-size: 1.3rem !important;
+  }
+  .package-selection-page .tb-subtitle {
+    font-size: 0.76rem !important;
+  }
+}
+
+/* ==================== 2. TÁI THIẾT KẾ POPUP CHI TIẾT GÓI (PACKAGE DIALOG) ==================== */
+.package-dialog {
+  border: 0 !important;
+  padding: 0 !important;
+  background: transparent !important;
+  max-width: calc(100vw - 2rem) !important;
+  max-height: 90vh !important;
+}
+
+.package-dialog::backdrop {
+  background: rgba(4, 7, 13, 0.75) !important;
+  backdrop-filter: blur(6px) !important;
+}
+
+.package-dialog__panel {
+  display: flex !important;
+  flex-direction: column !important;
+  width: min(520px, calc(100vw - 2rem)) !important;
+  max-height: 85vh !important;
+  background: #0d1522 !important;
+  border: 1px solid rgba(255, 255, 255, 0.12) !important;
+  border-radius: 12px !important;
+  box-shadow: 0 25px 60px -15px rgba(0, 0, 0, 0.75), 0 0 25px rgba(2, 132, 199, 0.15) !important;
+  overflow: hidden !important;
+  color: #f1f5f9 !important;
+}
+
+.package-dialog__header {
+  flex-shrink: 0 !important;
+  padding: 1.1rem 1.35rem !important;
+  background: linear-gradient(180deg, #101c2e 0%, #0d1522 100%) !important;
+  border-bottom: 1px solid rgba(255, 255, 255, 0.08) !important;
+  display: flex !important;
+  justify-content: space-between !important;
+  align-items: center !important;
+}
+
+.package-dialog__header .package-card__type {
+  color: #38bdf8 !important;
+  font-size: 0.72rem !important;
+  font-weight: 700 !important;
+  letter-spacing: 0.1em !important;
+  text-transform: uppercase !important;
+  margin-bottom: 0.2rem !important;
+  display: block !important;
+}
+
+.package-dialog__header h2 {
+  color: #ffffff !important;
+  font-family: "Montserrat", sans-serif !important;
+  font-size: 1.35rem !important;
+  font-weight: 800 !important;
+  letter-spacing: -0.01em !important;
+  margin: 0 !important;
+}
+
+.package-dialog__close {
+  width: 32px !important;
+  height: 32px !important;
+  display: flex !important;
+  align-items: center !important;
+  justify-content: center !important;
+  border-radius: 6px !important;
+  background: rgba(255, 255, 255, 0.06) !important;
+  border: 1px solid rgba(255, 255, 255, 0.12) !important;
+  color: #94a3b8 !important;
+  cursor: pointer !important;
+  transition: all 0.2s ease !important;
+}
+
+.package-dialog__close:hover {
+  background: rgba(239, 68, 68, 0.2) !important;
+  border-color: #ef4444 !important;
+  color: #ffffff !important;
+  transform: rotate(90deg) !important;
+}
+
+.package-dialog__body {
+  flex: 1 1 auto !important;
+  overflow-y: auto !important;
+  overscroll-behavior: contain !important;
+  padding: 1.35rem !important;
+  display: flex !important;
+  flex-direction: column !important;
+  gap: 1rem !important;
+  background: #0d1522 !important;
+}
+
+.package-dialog__image {
+  height: 125px !important;
+  border-radius: 8px !important;
+  overflow: hidden !important;
+  border: 1px solid rgba(255, 255, 255, 0.08) !important;
+}
+
+.package-dialog__body .package-card__price {
+  font-size: 1.85rem !important;
+  font-weight: 900 !important;
+  color: #38bdf8 !important;
+  text-shadow: 0 0 15px rgba(56, 189, 248, 0.3) !important;
+  line-height: 1.1 !important;
+}
+
+.package-dialog__body h3 {
+  font-family: "Montserrat", sans-serif !important;
+  font-size: 0.95rem !important;
+  font-weight: 700 !important;
+  color: #ffffff !important;
+  text-transform: uppercase !important;
+  letter-spacing: 0.03em !important;
+  margin-top: 0.35rem !important;
+}
+
+.package-dialog__benefits {
+  display: flex !important;
+  flex-direction: column !important;
+  gap: 0.6rem !important;
+  list-style: none !important;
+  padding: 0 !important;
+  margin: 0 !important;
+}
+
+.package-dialog__benefits li {
+  display: flex !important;
+  align-items: flex-start !important;
+  gap: 0.65rem !important;
+  font-size: 0.88rem !important;
+  color: #f1f5f9 !important;
+  line-height: 1.45 !important;
+}
+
+.package-dialog__benefits li i {
+  color: #10b981 !important;
+  font-size: 0.95rem !important;
+  margin-top: 0.2rem !important;
+  flex-shrink: 0 !important;
+}
+
+.package-dialog__howto {
+  background: rgba(2, 132, 199, 0.08) !important;
+  border: 1px solid rgba(56, 189, 248, 0.2) !important;
+  border-radius: 8px !important;
+  padding: 0.85rem 1rem !important;
+}
+
+.package-dialog__howto h3 {
+  color: #38bdf8 !important;
+  font-size: 0.82rem !important;
+  margin: 0 0 0.3rem 0 !important;
+}
+
+.package-dialog__howto p {
+  color: #cbd5e1 !important;
+  font-size: 0.82rem !important;
+  line-height: 1.4 !important;
+  margin: 0 !important;
+}
+
+.package-dialog__footer {
+  flex-shrink: 0 !important;
+  padding: 1rem 1.35rem !important;
+  background: #090e17 !important;
+  border-top: 1px solid rgba(255, 255, 255, 0.08) !important;
+  display: flex !important;
+  justify-content: flex-end !important;
+}
+
+.package-dialog__footer .btn-primary {
+  height: 44px !important;
+  min-height: 44px !important;
+  padding: 0 1.5rem !important;
+  background: linear-gradient(135deg, #0284c7 0%, #0369a1 100%) !important;
+  border: 1px solid #38bdf8 !important;
+  color: #ffffff !important;
+  font-family: "Inter Tight", "Montserrat", sans-serif !important;
+  font-size: 0.88rem !important;
+  font-weight: 800 !important;
+  text-transform: uppercase !important;
+  letter-spacing: 0.05em !important;
+  border-radius: 6px !important;
+  cursor: pointer !important;
+  display: inline-flex !important;
+  align-items: center !important;
+  gap: 0.5rem !important;
+  box-shadow: 0 4px 14px rgba(2, 132, 199, 0.35) !important;
+  transition: all 0.2s ease !important;
+}
+
+.package-dialog__footer .btn-primary:hover {
+  background: linear-gradient(135deg, #0369a1 0%, #075985 100%) !important;
+  box-shadow: 0 6px 18px rgba(2, 132, 199, 0.5) !important;
+  transform: translateY(-2px) !important;
+}/* ==================== POLISH THEO YEU CAU: POPUP CHI TIET & PHAN CAP ==================== */
+.package-dialog[open] {
+  width: min(540px, calc(100vw - 2.5rem)) !important;
+  max-height: 82vh !important;
+}
+
+.package-dialog__panel {
+  width: 100% !important;
+  max-height: 82vh !important;
+  border-radius: 0 !important;
+  border: 1px solid rgba(255, 255, 255, 0.14) !important;
+  background: #0d1522 !important;
+  box-shadow: 0 25px 50px rgba(0, 0, 0, 0.8) !important;
+}
+
+.package-dialog__header {
+  padding: 1.25rem 1.75rem !important;
+  background: #090e17 !important;
+  border-bottom: 1px solid rgba(255, 255, 255, 0.08) !important;
+}
+
+.package-dialog__header .package-card__type {
+  font-size: 0.72rem !important;
+  letter-spacing: 0.1em !important;
+  color: #38bdf8 !important;
+  margin-bottom: 0.35rem !important;
+}
+
+.package-dialog__header h2 {
+  font-size: 1.25rem !important;
+  color: #ffffff !important;
+  font-weight: 800 !important;
+}
+
+.package-dialog__body {
+  padding: 1.75rem !important;
+  gap: 1.25rem !important;
+  background: #0d1522 !important;
+}
+
+/* Anh minh hoa: Giu nguyen ty le, khong bi crop chat choi */
+.package-dialog__image {
+  height: 140px !important;
+  max-height: 140px !important;
+  border-radius: 0 !important;
+  background: #05080f !important;
+  border: 1px solid rgba(56, 189, 248, 0.25) !important;
+}
+
+.package-dialog__image::before {
+  background-size: contain !important;
+  background-position: right center !important;
+  background-repeat: no-repeat !important;
+  opacity: 0.85 !important;
+}
+
+.package-dialog__image::after {
+  background: linear-gradient(90deg, #05080f 20%, rgba(5, 8, 15, 0.4) 60%, transparent 100%) !important;
+}
+
+/* Phan cap lai gia tien & text trong popup */
+.package-dialog__body .package-card__price {
+  font-size: 1.5rem !important;
+  font-weight: 800 !important;
+  color: #38bdf8 !important;
+  line-height: 1.2 !important;
+  margin: 0.25rem 0 0 0 !important;
+}
+
+.package-dialog__body .package-card__price small {
+  font-size: 0.85rem !important;
+  color: #94adc5 !important;
+  font-weight: 500 !important;
+}
+
+.package-dialog__body .package-card__sub {
+  font-size: 0.85rem !important;
+  color: #94adc5 !important;
+  margin-top: 0.2rem !important;
+}
+
+.package-dialog__body .package-card__deal {
+  align-self: flex-start !important;
+  font-size: 0.8rem !important;
+  padding: 0.3rem 0.65rem !important;
+  border-radius: 0 !important;
+  margin-top: 0.35rem !important;
+}
+
+.package-dialog__body > p {
+  color: #94adc5 !important;
+  font-size: 0.88rem !important;
+  line-height: 1.5 !important;
+  margin: 0.25rem 0 !important;
+}
+
+.package-dialog__body h3 {
+  font-size: 0.88rem !important;
+  font-weight: 800 !important;
+  letter-spacing: 0.05em !important;
+  color: #cbd5e1 !important;
+  text-transform: uppercase !important;
+  margin: 0.5rem 0 0.25rem 0 !important;
+}
+
+.package-dialog__benefits {
+  gap: 0.65rem !important;
+  margin: 0.25rem 0 !important;
+}
+
+.package-dialog__benefits li {
+  font-size: 0.85rem !important;
+  color: #e2e8f0 !important;
+  gap: 0.65rem !important;
+}
+
+.package-dialog__benefits li i {
+  color: #10b981 !important;
+  font-size: 0.9rem !important;
+}
+
+.package-dialog__howto {
+  background: rgba(2, 132, 199, 0.08) !important;
+  border: 1px solid rgba(56, 189, 248, 0.2) !important;
+  border-radius: 0 !important;
+  padding: 0.85rem 1.15rem !important;
+  margin-top: 0.5rem !important;
+}
+
+.package-dialog__howto h3 {
+  color: #38bdf8 !important;
+  font-size: 0.8rem !important;
+  margin: 0 0 0.3rem 0 !important;
+}
+
+.package-dialog__howto p {
+  color: #94adc5 !important;
+  font-size: 0.82rem !important;
+  line-height: 1.45 !important;
+  margin: 0 !important;
+}
+
+/* Footer & Nut thanh toan ngay: Electric Blue vuong vuc */
+.package-dialog__footer {
+  padding: 1.25rem 1.75rem !important;
+  background: #090e17 !important;
+  border-top: 1px solid rgba(255, 255, 255, 0.08) !important;
+}
+
+.package-dialog__footer .btn-primary {
+  height: 44px !important;
+  padding: 0 1.75rem !important;
+  background: linear-gradient(135deg, #0284c7 0%, #0369a1 100%) !important;
+  border: 1px solid #38bdf8 !important;
+  color: #ffffff !important;
+  font-size: 0.88rem !important;
+  font-weight: 800 !important;
+  text-transform: uppercase !important;
+  letter-spacing: 0.05em !important;
+  border-radius: 0 !important;
+  box-shadow: 0 4px 14px rgba(2, 132, 199, 0.4) !important;
+  cursor: pointer !important;
+}
+
+.package-dialog__footer .btn-primary:hover {
+  background: linear-gradient(135deg, #0369a1 0%, #075985 100%) !important;
+  border-color: #7dd3fc !important;
+  box-shadow: 0 6px 20px rgba(2, 132, 199, 0.6) !important;
+  transform: translateY(-2px) !important;
+}
+
+/* GIU NGUYEN NUT SANG TOI BO GOC TREN TOPBAR */
+.topbar .theme-toggle,
+.top-right .theme-toggle,
+.theme-toggle {
+  border-radius: 999px !important;
+}
+.theme-toggle__track {
+  border-radius: 999px !important;
+}
+.theme-toggle__knob {
+  border-radius: 50% !important;
+}
+.topbar .tb-user,
+.top-right .tb-user,
+.tb-user {
+  border-radius: 999px !important;
+}
+
+/* =====================================================================
+   POLISH DIALOG CHI TIẾT GÓI & PHÂN CẤP RÕ RÀNG (SUPER GYM ATHLETIC)
+   ===================================================================== */
+
+/* 1. Kích thước và Khung Dialog: Vuông góc, nền tối đồng bộ, có độ thoáng */
+.package-dialog[open] {
+  width: min(560px, calc(100vw - 2.5rem)) !important;
+  max-height: 84vh !important;
+  border-radius: 0 !important;
+  border: 1px solid rgba(255, 255, 255, 0.14) !important;
+  background: #0d1522 !important;
+  box-shadow: 0 25px 60px rgba(0, 0, 0, 0.85) !important;
+  padding: 0 !important;
+  overflow: hidden !important;
+}
+
+.package-dialog::backdrop {
+  background: rgba(4, 9, 18, 0.75) !important;
+  backdrop-filter: blur(4px) !important;
+}
+
+.package-dialog__panel {
+  display: flex !important;
+  flex-direction: column !important;
+  max-height: 84vh !important;
+  background: #0d1522 !important;
+  border-radius: 0 !important;
+}
+
+/* 2. Header: Tiêu đề to, phân cấp rõ loại gói và tên gói */
+.package-dialog__header {
+  display: flex !important;
+  justify-content: space-between !important;
+  align-items: flex-start !important;
+  padding: 1.5rem 1.75rem 1.25rem !important;
+  background: #090e17 !important;
+  border-bottom: 1px solid rgba(255, 255, 255, 0.08) !important;
+}
+
+.package-dialog__header .package-card__type {
+  display: inline-block !important;
+  font-family: "Inter Tight", "Montserrat", sans-serif !important;
+  font-size: 0.75rem !important;
+  font-weight: 800 !important;
+  letter-spacing: 0.15em !important;
+  text-transform: uppercase !important;
+  color: #38bdf8 !important;
+  margin-bottom: 0.35rem !important;
+}
+
+.package-dialog__header h2 {
+  margin: 0 !important;
+  font-family: "Inter Tight", "Montserrat", system-ui, sans-serif !important;
+  font-size: 1.5rem !important;
+  font-weight: 800 !important;
+  color: #ffffff !important;
+  letter-spacing: -0.01em !important;
+}
+
+.package-dialog__close {
+  background: rgba(255, 255, 255, 0.06) !important;
+  border: 1px solid rgba(255, 255, 255, 0.1) !important;
+  color: #94adc5 !important;
+  width: 32px !important;
+  height: 32px !important;
+  border-radius: 4px !important;
+  display: inline-flex !important;
+  align-items: center !important;
+  justify-content: center !important;
+  cursor: pointer !important;
+  transition: all 0.15s ease !important;
+}
+
+.package-dialog__close:hover {
+  background: rgba(255, 255, 255, 0.15) !important;
+  color: #ffffff !important;
+}
+
+/* 3. Body: Cuộn mượt, padding rộng thoáng, không dính sát lề */
+.package-dialog__body {
+  padding: 1.5rem 1.75rem !important;
+  display: flex !important;
+  flex-direction: column !important;
+  gap: 1.25rem !important;
+  overflow-y: auto !important;
+  background: #0d1522 !important;
+}
+
+/* 4. Ảnh Banner trong Dialog: Giữ nguyên tỷ lệ, không bị crop méo */
+.package-dialog__image {
+  height: 150px !important;
+  max-height: 150px !important;
+  border-radius: 0 !important;
+  background: #05080f !important;
+  border: 1px solid rgba(56, 189, 248, 0.25) !important;
+  position: relative !important;
+  overflow: hidden !important;
+}
+
+.package-dialog__image::before {
+  content: "" !important;
+  position: absolute !important;
+  inset: 0 !important;
+  background-size: contain !important;
+  background-position: right center !important;
+  background-repeat: no-repeat !important;
+  opacity: 0.9 !important;
+}
+
+.package-dialog__image::after {
+  content: "" !important;
+  position: absolute !important;
+  inset: 0 !important;
+  background: linear-gradient(90deg, #05080f 25%, rgba(5, 8, 15, 0.35) 65%, transparent 100%) !important;
+}
+
+/* 5. Phân cấp Giá tiền & Tiết kiệm */
+.package-dialog__body .package-card__was {
+  font-family: "JetBrains Mono", monospace !important;
+  font-size: 0.85rem !important;
+  color: #64748b !important;
+  text-decoration: line-through !important;
+}
+
+.package-dialog__body .package-card__price {
+  font-family: "Montserrat", "Inter Tight", sans-serif !important;
+  font-size: 1.85rem !important;
+  font-weight: 900 !important;
+  font-style: italic !important;
+  color: #38bdf8 !important;
+  line-height: 1.1 !important;
+  margin: 0.2rem 0 !important;
+}
+
+.package-dialog__body .package-card__price small {
+  font-family: "Inter", sans-serif !important;
+  font-size: 0.9rem !important;
+  color: #94adc5 !important;
+  font-style: normal !important;
+  font-weight: 500 !important;
+}
+
+.package-dialog__body .package-card__sub {
+  font-family: "Inter", sans-serif !important;
+  font-size: 0.88rem !important;
+  color: #94adc5 !important;
+  margin-top: 0.15rem !important;
+}
+
+.package-dialog__body .package-card__deal {
+  align-self: flex-start !important;
+  display: inline-flex !important;
+  align-items: center !important;
+  gap: 0.4rem !important;
+  padding: 0.3rem 0.65rem !important;
+  border-radius: 0 !important;
+  background: rgba(16, 185, 129, 0.12) !important;
+  border: 1px solid rgba(16, 185, 129, 0.3) !important;
+  color: #34d399 !important;
+  font-size: 0.82rem !important;
+  font-weight: 600 !important;
+  margin-top: 0.35rem !important;
+}
+
+.package-dialog__body .package-card__deal b {
+  background: #059669 !important;
+  color: #ffffff !important;
+  padding: 1px 5px !important;
+}
+
+.package-dialog__body > p {
+  color: #cbd5e1 !important;
+  font-size: 0.92rem !important;
+  line-height: 1.55 !important;
+  margin: 0.25rem 0 !important;
+}
+
+/* 6. Tiêu đề mục: Quyền lợi & Cách mua */
+.package-dialog__body h3 {
+  font-family: "Inter Tight", "Montserrat", system-ui, sans-serif !important;
+  font-size: 0.95rem !important;
+  font-weight: 800 !important;
+  letter-spacing: 0.06em !important;
+  color: #ffffff !important;
+  text-transform: uppercase !important;
+  margin: 0.75rem 0 0.35rem 0 !important;
+}
+
+/* 7. Danh sách Quyền lợi: Rõ ràng, icon xanh nổi bật */
+.package-dialog__benefits {
+  display: flex !important;
+  flex-direction: column !important;
+  gap: 0.75rem !important;
+  padding: 0 !important;
+  margin: 0.25rem 0 0.5rem 0 !important;
+  list-style: none !important;
+}
+
+.package-dialog__benefits li {
+  display: flex !important;
+  align-items: flex-start !important;
+  gap: 0.65rem !important;
+  font-family: "Inter", system-ui, sans-serif !important;
+  font-size: 0.9rem !important;
+  color: #f1f5f9 !important;
+  line-height: 1.45 !important;
+}
+
+.package-dialog__benefits li i {
+  color: #10b981 !important;
+  font-size: 0.95rem !important;
+  margin-top: 0.15rem !important;
+  flex-shrink: 0 !important;
+}
+
+/* 8. Khối Cách mua */
+.package-dialog__howto {
+  background: rgba(2, 132, 199, 0.08) !important;
+  border: 1px solid rgba(56, 189, 248, 0.2) !important;
+  border-radius: 0 !important;
+  padding: 1rem 1.25rem !important;
+  margin-top: 0.5rem !important;
+}
+
+.package-dialog__howto h3 {
+  color: #38bdf8 !important;
+  font-size: 0.85rem !important;
+  margin: 0 0 0.35rem 0 !important;
+}
+
+.package-dialog__howto p {
+  color: #94adc5 !important;
+  font-size: 0.85rem !important;
+  line-height: 1.5 !important;
+  margin: 0 !important;
+}
+
+/* 9. Footer & Nút Thanh toán ngay: Vàng Amber nổi bật hoặc Electric Blue dứt khoát */
+.package-dialog__footer {
+  padding: 1.25rem 1.75rem !important;
+  background: #090e17 !important;
+  border-top: 1px solid rgba(255, 255, 255, 0.08) !important;
+  display: flex !important;
+  justify-content: flex-end !important;
+}
+
+.package-dialog__footer .btn-primary {
+  height: 44px !important;
+  padding: 0 1.85rem !important;
+  background: #f59e0b !important;
+  border: 1px solid #d97706 !important;
+  color: #000000 !important;
+  font-family: "Inter Tight", "Montserrat", system-ui, sans-serif !important;
+  font-size: 0.9rem !important;
+  font-weight: 800 !important;
+  text-transform: uppercase !important;
+  letter-spacing: 0.05em !important;
+  border-radius: 0 !important;
+  box-shadow: 0 2px 8px rgba(245, 158, 11, 0.35) !important;
+  cursor: pointer !important;
+  display: inline-flex !important;
+  align-items: center !important;
+  justify-content: center !important;
+  gap: 0.5rem !important;
+  transition: all 0.2s ease !important;
+}
+
+.package-dialog__footer .btn-primary:hover {
+  background: #d97706 !important;
+  color: #ffffff !important;
+  transform: translateY(-2px) !important;
+  box-shadow: 0 4px 12px rgba(245, 158, 11, 0.5) !important;
+}
