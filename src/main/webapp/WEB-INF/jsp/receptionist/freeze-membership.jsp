@@ -515,27 +515,6 @@
                             <h3><i class="fa-solid fa-clock-rotate-left text-primary"></i> Nhật ký lịch sử bảo lưu phòng tập</h3>
                             <p>Toàn bộ các đợt bảo lưu đã và đang diễn ra tại phòng tập.</p>
                         </div>
-
-                        <div class="history-table-toolbar">
-                            <form id="historySearchForm" action="${pageContext.request.contextPath}/receptionist/freeze" method="GET" class="history-search-form" novalidate>
-                                <div class="search history-search-wrap">
-                                    <i class="fa-solid fa-magnifying-glass"></i>
-                                    <input id="historySearchInput" name="q" type="search" value="<c:out value='${query}' />"
-                                           placeholder="Tìm theo tên hội viên, mã KH, SĐT..."
-                                           autocomplete="off" aria-label="Tìm kiếm lịch sử bảo lưu">
-                                </div>
-                                <button class="btn btn-primary btn-sm" type="submit"><i class="fa-solid fa-search"></i> Tìm</button>
-                                <c:if test="${not empty query}">
-                                    <a href="${pageContext.request.contextPath}/receptionist/freeze#tabHistory" class="btn btn-ghost btn-sm" title="Xóa tìm kiếm"><i class="fa-solid fa-xmark"></i> Xóa lọc</a>
-                                </c:if>
-                            </form>
-                            <c:if test="${not empty query}">
-                                <div class="filter-indicator">
-                                    <span>Đang lọc: <b>"<c:out value='${query}' />"</b></span>
-                                    <a href="${pageContext.request.contextPath}/receptionist/freeze#tabHistory" class="btn btn-ghost btn-xs">Xóa bộ lọc</a>
-                                </div>
-                            </c:if>
-                        </div>
                     </div>
 
                     <div class="gym-table-wrap">
