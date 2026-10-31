@@ -19,6 +19,7 @@ import static org.junit.jupiter.api.Assertions.*;
 /**
  * Unit Test Suite cho PackageService kiểm tra các ràng buộc nghiệp vụ:
  * - Gói hội viên & Vé ngày (DBR-06, DBR-11, DBR-15, P-04).
+ * - Gói PT & Buổi lẻ (DBR-06, DBR-11, DBR-15, P-21, CK_Packages_EstSession).
  */
 class PackageServiceTest {
 
@@ -171,6 +172,122 @@ class PackageServiceTest {
         ServiceResult<Integer> result = service.createMembershipPackage(MANAGER_ACCOUNT_ID, input);
         assertFalse(result.isSuccess());
         assertTrue(result.getFieldErrors().containsKey("name"));
+    }
+
+    // ===== Tests cho Gói PT & Buổi lẻ (Commit 19) =====
+
+    @Test
+    @DisplayName("Tạo mới gói PT 1:1 chuẩn (3 tháng, 65 buổi, 12.000.000 đ) thành công")
+    void testCreatePtPackageSuccess() {
+        PackageFormInput input = new PackageFormInput();
+        input.setName("PT 1:1 Tăng Cơ Giảm Mỡ 3 Tháng");
+        input.setType("PTSingle");
+        input.setPrice("12000000");
+        input.setDurationUnit("Month");
+        input.setDurationValue("3");
+        input.setEstimatedSessionCount("65");
+        input.setActive(true);
+        input.setBenefits("1 Huấn luyện viên kèm riêng 1:1\nLên giáo án dinh dưỡng cá nhân hóa\nĐo chỉ số InBody định kỳ");
+
+        ServiceResult<Integer> result = service.createPtPackage(MANAGER_ACCOUNT_ID, input);
+        assertTrue(result.isSuccess());
+        assertNotNull(result.getData());
+        assertEquals("Thêm gói dịch vụ thành công.", result.getMessage());
+    }
+
+    @Test
+    @DisplayName("Không cho phép tạo mới trực tiếp gói Buổi PT lẻ để tránh trùng gói đơn lẻ")
+    void testCannotCreateSingleSessionDirectly() {
+        PackageFormInput input = new PackageFormInput();
+        input.setName("Buổi PT Lẻ Thứ Hai");
+        input.setType("SingleSession");
+        input.setPrice("300000");
+
+        ServiceResult<Integer> result = service.createPtPackage(MANAGER_ACCOUNT_ID, input);
+        assertFalse(result.isSuccess());
+        assertTrue(result.getFieldErrors().containsKey("type"));
+    }
+
+    @Test
+    @DisplayName("Thời hạn gói PT không thuộc P-21 (1, 3, 6, 12 tháng) bị từ chối")
+    void testPtDurationWhitelistValidation() {
+        PackageFormInput input = new PackageFormInput();
+        input.setName("PT 24 Tháng");
+        input.setType("PTSingle");
+        input.setPrice("50000000");
+        input.setDurationUnit("Month");
+        input.setDurationValue("24"); // 24 tháng không có trong P-21
+        input.setEstimatedSessionCount("200");
+
+        ServiceResult<Integer> result = service.createPtPackage(MANAGER_ACCOUNT_ID, input);
+        assertFalse(result.isSuccess());
+        assertTrue(result.getFieldErrors().containsKey("durationValue"));
+    }
+
+    @Test
+    @DisplayName("Số buổi PT ước tính ngoài khoảng 1 - 255 bị từ chối (DB TINYINT & CK_Packages_EstSession)")
+    void testPtEstimatedSessionCountValidation() {
+        // 0 buổi
+        PackageFormInput inputZero = new PackageFormInput();
+        inputZero.setName("PT 1 Tháng Không Có Buổi");
+        inputZero.setType("PTSingle");
+        inputZero.setPrice("4000000");
+        inputZero.setDurationUnit("Month");
+        inputZero.setDurationValue("1");
+        inputZero.setEstimatedSessionCount("0");
+
+        ServiceResult<Integer> resZero = service.createPtPackage(MANAGER_ACCOUNT_ID, inputZero);
+        assertFalse(resZero.isSuccess());
+        assertTrue(resZero.getFieldErrors().containsKey("estimatedSessionCount"));
+
+        // 300 buổi (> 255)
+        PackageFormInput inputTooHigh = new PackageFormInput();
+        inputTooHigh.setName("PT 12 Tháng Quá Nhiều Buổi");
+        inputTooHigh.setType("PTCouple");
+        inputTooHigh.setPrice("45000000");
+        inputTooHigh.setDurationUnit("Month");
+        inputTooHigh.setDurationValue("12");
+        inputTooHigh.setEstimatedSessionCount("300");
+
+        ServiceResult<Integer> resTooHigh = service.createPtPackage(MANAGER_ACCOUNT_ID, inputTooHigh);
+        assertFalse(resTooHigh.isSuccess());
+        assertTrue(resTooHigh.getFieldErrors().containsKey("estimatedSessionCount"));
+    }
+
+    @Test
+    @DisplayName("Quyền lợi vượt quá 10 dòng hoặc mỗi dòng ngoài 3-100 ký tự bị từ chối (DBR-15)")
+    void testBenefitsValidationRules() {
+        // Dòng quá ngắn (< 3 ký tự)
+        PackageFormInput inputShortLine = new PackageFormInput();
+        inputShortLine.setName("Gói PT Lỗi Quyền Lợi");
+        inputShortLine.setType("PTSingle");
+        inputShortLine.setPrice("5000000");
+        inputShortLine.setDurationUnit("Month");
+        inputShortLine.setDurationValue("1");
+        inputShortLine.setEstimatedSessionCount("20");
+        inputShortLine.setBenefits("OK\nDòng thứ hai hợp lệ");
+
+        ServiceResult<Integer> resShort = service.createPtPackage(MANAGER_ACCOUNT_ID, inputShortLine);
+        assertFalse(resShort.isSuccess());
+        assertTrue(resShort.getFieldErrors().containsKey("benefits"));
+
+        // Hơn 10 dòng
+        StringBuilder sb = new StringBuilder();
+        for (int i = 1; i <= 11; i++) {
+            sb.append("Dòng quyền lợi số ").append(i).append("\n");
+        }
+        PackageFormInput input11Lines = new PackageFormInput();
+        input11Lines.setName("Gói PT 11 Dòng Quyền Lợi");
+        input11Lines.setType("PTSingle");
+        input11Lines.setPrice("5000000");
+        input11Lines.setDurationUnit("Month");
+        input11Lines.setDurationValue("1");
+        input11Lines.setEstimatedSessionCount("20");
+        input11Lines.setBenefits(sb.toString());
+
+        ServiceResult<Integer> res11 = service.createPtPackage(MANAGER_ACCOUNT_ID, input11Lines);
+        assertFalse(res11.isSuccess());
+        assertTrue(res11.getFieldErrors().containsKey("benefits"));
     }
 
     // ===== Lớp giả lập (Fakes & Test Doubles) =====
