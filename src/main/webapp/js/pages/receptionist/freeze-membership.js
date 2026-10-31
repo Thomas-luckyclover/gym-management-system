@@ -163,7 +163,7 @@ document.addEventListener('DOMContentLoaded', function () {
     });
 
     const urlParams = new URLSearchParams(window.location.search);
-    if (urlParams.has('hq') || window.location.hash === '#tabHistory') {
+    if (urlParams.has('hq') || urlParams.has('hfilter') || window.location.hash === '#tabHistory') {
         switchTab('#tabHistory');
     } else if (window.location.hash) {
         switchTab(window.location.hash);
@@ -198,7 +198,16 @@ document.addEventListener('DOMContentLoaded', function () {
         });
     }
 
-    // 8. Tìm kiếm nhanh thời gian thực ở Tab 2 (Lịch sử bảo lưu)
+    // 8. Tự động áp dụng bộ lọc trạng thái khi thay đổi lựa chọn ở Tab 2
+    const historyFilterSelect = document.getElementById('historyFilterSelect');
+    if (historyFilterSelect) {
+        historyFilterSelect.addEventListener('change', function () {
+            const form = document.getElementById('historySearchForm');
+            if (form) form.submit();
+        });
+    }
+
+    // 9. Tìm kiếm nhanh thời gian thực ở Tab 2 (Lịch sử bảo lưu)
     const historyInput = document.getElementById('historyQueryInput');
     if (historyInput) {
         historyInput.addEventListener('input', function () {

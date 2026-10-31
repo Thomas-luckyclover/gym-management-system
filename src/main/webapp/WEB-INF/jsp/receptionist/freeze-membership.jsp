@@ -16,7 +16,7 @@
     <title>Bảo lưu gói tập · Super Gym Lễ tân</title>
     <link rel="stylesheet" href="${pageContext.request.contextPath}/css/pages/receptionist/freeze-membership.css?v=20261031_v12">
     <link rel="stylesheet" href="${pageContext.request.contextPath}/css/pages/auth/notification-bell.css">
-    <script src="${pageContext.request.contextPath}/js/pages/receptionist/freeze-membership.js?v=20261031_v9" defer></script>
+    <script src="${pageContext.request.contextPath}/js/pages/receptionist/freeze-membership.js?v=20261031_v10" defer></script>
     <script src="${pageContext.request.contextPath}/js/pages/auth/notification-bell.js" defer></script>
 </head>
 
@@ -494,11 +494,19 @@
                             <div class="search">
                                 <i class="fa-solid fa-magnifying-glass"></i>
                                 <input id="historyQueryInput" name="hq" type="search" value="<c:out value='${historyQuery}' />"
-                                       placeholder="Tìm kiếm trong lịch sử bảo lưu..."
-                                       autocomplete="off" aria-label="Tìm kiếm trong lịch sử bảo lưu">
+                                       placeholder="Nhập tên, mã khách hoặc số điện thoại"
+                                       autocomplete="off" aria-label="Mã khách, số điện thoại hoặc tên">
+                            </div>
+                            <div class="search-filter-wrap">
+                                <select id="historyFilterSelect" name="hfilter" class="form-control freeze-filter-select" aria-label="Lọc theo trạng thái bảo lưu">
+                                    <option value="ALL" <c:if test="${empty historyFilter or historyFilter == 'ALL'}">selected</c:if>>Tất cả trạng thái</option>
+                                    <option value="FROZEN" <c:if test="${historyFilter == 'FROZEN'}">selected</c:if>>Đang bảo lưu</option>
+                                    <option value="COMPLETED" <c:if test="${historyFilter == 'COMPLETED'}">selected</c:if>>Đã hoàn thành</option>
+                                    <option value="CANCELLED" <c:if test="${historyFilter == 'CANCELLED'}">selected</c:if>>Hủy sớm</option>
+                                </select>
                             </div>
                             <button class="btn btn-primary" type="submit"><i class="fa-solid fa-search"></i> Tìm kiếm</button>
-                            <c:if test="${not empty historyQuery}">
+                            <c:if test="${not empty historyQuery or (not empty historyFilter and historyFilter != 'ALL')}">
                                 <a href="${pageContext.request.contextPath}/receptionist/freeze#tabHistory" class="btn btn-ghost" title="Xóa tìm kiếm lịch sử"><i class="fa-solid fa-xmark"></i> Xóa lọc</a>
                             </c:if>
                         </form>
@@ -590,8 +598,8 @@
                                             <td colspan="7" style="text-align:center; padding:var(--space-6); color:var(--color-text-muted);">
                                                 <i class="fa-solid fa-circle-info" style="font-size:24px; display:block; margin-bottom:var(--space-2);"></i>
                                                 <c:choose>
-                                                    <c:when test="${not empty historyQuery}">
-                                                        Không tìm thấy lịch sử bảo lưu phù hợp với từ khóa "<b><c:out value='${historyQuery}' /></b>".
+                                                    <c:when test="${not empty historyQuery or (not empty historyFilter and historyFilter != 'ALL')}">
+                                                        Không tìm thấy lịch sử bảo lưu phù hợp với điều kiện tìm kiếm/lọc đã chọn.
                                                     </c:when>
                                                     <c:otherwise>
                                                         Chưa có dữ liệu lịch sử bảo lưu nào trong hệ thống.

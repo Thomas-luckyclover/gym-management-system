@@ -81,6 +81,10 @@ public class FreezeMembershipServlet extends HttpServlet {
         // B3: Lấy từ khóa q (Tab 1), hq (Tab 2) và bộ lọc filter người dùng chọn
         String query = RequestUtil.getTrimmedParam(request, "q");
         String historyQuery = RequestUtil.getTrimmedParam(request, "hq");
+        String historyFilter = RequestUtil.getTrimmedParam(request, "hfilter");
+        if (ValidationUtil.isNullOrEmpty(historyFilter)) {
+            historyFilter = "ALL";
+        }
         String filter = RequestUtil.getTrimmedParam(request, "filter");
         if (ValidationUtil.isNullOrEmpty(filter)) {
             filter = "ALL";
@@ -114,11 +118,12 @@ public class FreezeMembershipServlet extends HttpServlet {
         request.setAttribute("membershipsPage", membershipsPage);
         request.setAttribute("customerMemberships", membershipsPage.getItems());
 
-        // B5: Lấy toàn bộ lịch sử các đợt bảo lưu hiển thị ở tab "Lịch sử bảo lưu" (chỉ lọc theo historyQuery của Tab 2)
-        List<FreezeRecordItemView> freezeHistoryList = freezeService.getRecentFreezes(historyQuery, 50);
+        // B5: Lấy toàn bộ lịch sử các đợt bảo lưu hiển thị ở tab "Lịch sử bảo lưu" (lọc theo historyQuery và historyFilter của Tab 2)
+        List<FreezeRecordItemView> freezeHistoryList = freezeService.getRecentFreezes(historyQuery, historyFilter, 50);
         request.setAttribute("freezeHistoryList", freezeHistoryList);
         request.setAttribute("recentFreezes", freezeHistoryList); // tương thích ngược
         request.setAttribute("historyQuery", historyQuery);
+        request.setAttribute("historyFilter", historyFilter);
         request.setAttribute("activeNav", "freeze");
 
         // B6: Chuyển tiếp dữ liệu từ servlet sang jsp để hiển thị giao diện

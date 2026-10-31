@@ -554,7 +554,23 @@ public class FreezeRecordDAO {
      * Lấy danh sách các lượt bảo lưu mới nhất của hệ thống có hỗ trợ lọc theo từ khóa (tên, mã khách, SĐT...).
      */
     public List<FreezeRecordItemView> findRecentFreezes(String keyword, int limit) throws SQLException {
+        return findRecentFreezes(keyword, null, limit);
+    }
+
+    /**
+     * Lấy danh sách các lượt bảo lưu có hỗ trợ lọc theo từ khóa và trạng thái bảo lưu.
+     */
+    public List<FreezeRecordItemView> findRecentFreezes(String keyword, String statusFilter, int limit) throws SQLException {
         SearchCondition cond = buildSearchCondition(keyword);
+        String statusSql = "";
+        if ("FROZEN".equalsIgnoreCase(statusFilter)) {
+            statusSql = " AND fr.ActualEndDate IS NULL ";
+        } else if ("CANCELLED".equalsIgnoreCase(statusFilter)) {
+            statusSql = " AND fr.ActualEndDate IS NOT NULL AND fr.ActualEndDate < fr.PlannedEndDate ";
+        } else if ("COMPLETED".equalsIgnoreCase(statusFilter)) {
+            statusSql = " AND fr.ActualEndDate IS NOT NULL AND fr.ActualEndDate >= fr.PlannedEndDate ";
+        }
+
         String sql = """
                 SELECT TOP (?)
                     fr.FreezeRecordId,
@@ -582,6 +598,7 @@ public class FreezeRecordDAO {
                 WHERE c.DeletedAt IS NULL
                 """
                 + (cond != null ? " AND " + cond.sqlCondition + " " : "")
+                + statusSql
                 + """
                 ORDER BY fr.CreatedAt DESC
                 """;
