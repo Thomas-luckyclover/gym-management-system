@@ -50,7 +50,6 @@
                 <div class="search-panel-inner">
                     <div class="search-title-wrap">
                         <h2><i class="fa-solid fa-snowflake text-primary"></i> Quản lý bảo lưu gói tập</h2>
-                        <p class="search-subtitle">Tra cứu theo mã hội viên (KH-xxxx), số điện thoại hoặc họ tên để thực hiện bảo lưu hoặc mở lại thẻ.</p>
                     </div>
 
                     <form id="freezeSearchForm" action="${pageContext.request.contextPath}/receptionist/freeze" method="GET" class="toolbar search-toolbar" novalidate>
@@ -60,9 +59,17 @@
                                    placeholder="Nhập mã khách (KH-...), họ tên hoặc 4 số cuối SĐT..."
                                    autocomplete="off" aria-label="Mã khách, số điện thoại hoặc tên" autofocus>
                         </div>
+                        <div class="search-filter-wrap">
+                            <select id="freezeFilterSelect" name="filter" class="form-control freeze-filter-select" aria-label="Lọc theo trạng thái bảo lưu">
+                                <option value="ALL" <c:if test="${empty currentFilter or currentFilter == 'ALL'}">selected</c:if>>Tất cả hội viên</option>
+                                <option value="FROZEN" <c:if test="${currentFilter == 'FROZEN'}">selected</c:if>>Đang bảo lưu</option>
+                                <option value="ELIGIBLE" <c:if test="${currentFilter == 'ELIGIBLE'}">selected</c:if>>Đủ điều kiện bảo lưu</option>
+                                <option value="ACTIVE" <c:if test="${currentFilter == 'ACTIVE'}">selected</c:if>>Gói đang hoạt động</option>
+                            </select>
+                        </div>
                         <button class="btn btn-primary" type="submit"><i class="fa-solid fa-search"></i> Tìm kiếm</button>
-                        <c:if test="${not empty query}">
-                            <a href="${pageContext.request.contextPath}/receptionist/freeze" class="btn btn-ghost" title="Xóa tìm kiếm"><i class="fa-solid fa-xmark"></i> Xóa lọc</a>
+                        <c:if test="${not empty query or (not empty currentFilter and currentFilter != 'ALL')}">
+                            <a href="${pageContext.request.contextPath}/receptionist/freeze" class="btn btn-ghost" title="Xóa tất cả bộ lọc"><i class="fa-solid fa-xmark"></i> Xóa lọc</a>
                         </c:if>
                     </form>
                 </div>
@@ -163,6 +170,7 @@
                                     <input type="hidden" name="action" value="applyFreeze">
                                     <input type="hidden" name="subscriptionId" value="${freezeCustomer.subscriptionId}">
                                     <input type="hidden" name="q" value="<c:out value='${query}' />">
+                                    <input type="hidden" name="filter" value="<c:out value='${currentFilter}' />">
                                     <input type="hidden" id="customerIdHidden" value="${freezeCustomer.customerId}">
                                     <input type="hidden" id="packageEndDateHidden" value="${freezeCustomer.packageEndDate}">
 
@@ -341,9 +349,17 @@
                             <h3><i class="fa-solid fa-table-list text-primary"></i> Quản lý gói tập hội viên</h3>
                             <p>Nhấp vào bất kỳ dòng nào để chọn hội viên và thực hiện bảo lưu hoặc mở lại thẻ.</p>
                         </div>
-                        <c:if test="${not empty query}">
+                        <c:if test="${not empty query or (not empty currentFilter and currentFilter != 'ALL')}">
                             <div class="filter-indicator">
-                                <span>Đang lọc: <b>"<c:out value='${query}' />"</b></span>
+                                <span>Đang lọc:
+                                    <c:if test="${not empty query}"><b>"<c:out value='${query}' />"</b></c:if>
+                                    <c:if test="${not empty query and not empty currentFilter and currentFilter != 'ALL'}"> · </c:if>
+                                    <c:choose>
+                                        <c:when test="${currentFilter == 'FROZEN'}"><b class="text-warn">Đang bảo lưu</b></c:when>
+                                        <c:when test="${currentFilter == 'ELIGIBLE'}"><b class="text-success">Đủ điều kiện</b></c:when>
+                                        <c:when test="${currentFilter == 'ACTIVE'}"><b class="text-primary">Đang hoạt động</b></c:when>
+                                    </c:choose>
+                                </span>
                                 <a href="${pageContext.request.contextPath}/receptionist/freeze" class="btn btn-ghost btn-xs">Xóa bộ lọc</a>
                             </div>
                         </c:if>
@@ -467,7 +483,7 @@
                         <div class="freeze-pagination" style="margin-top:var(--space-3);">
                             <c:choose>
                                 <c:when test="${membershipsPage.hasPrevious}">
-                                    <a class="btn btn-ghost btn-sm" href="${pageContext.request.contextPath}/receptionist/freeze?q=${query}&page=${membershipsPage.pageNumber - 1}">
+                                    <a class="btn btn-ghost btn-sm" href="${pageContext.request.contextPath}/receptionist/freeze?q=${query}&filter=${currentFilter}&page=${membershipsPage.pageNumber - 1}">
                                         <i class="fa-solid fa-chevron-left"></i> Trang trước
                                     </a>
                                 </c:when>
@@ -480,7 +496,7 @@
 
                             <c:choose>
                                 <c:when test="${membershipsPage.hasNext}">
-                                    <a class="btn btn-ghost btn-sm" href="${pageContext.request.contextPath}/receptionist/freeze?q=${query}&page=${membershipsPage.pageNumber + 1}">
+                                    <a class="btn btn-ghost btn-sm" href="${pageContext.request.contextPath}/receptionist/freeze?q=${query}&filter=${currentFilter}&page=${membershipsPage.pageNumber + 1}">
                                         Trang sau <i class="fa-solid fa-chevron-right"></i>
                                     </a>
                                 </c:when>
@@ -613,6 +629,7 @@
                 <input type="hidden" name="action" value="cancelFreezeEarly">
                 <input type="hidden" name="freezeRecordId" value="${freezeCustomer.openFreezeRecordId}">
                 <input type="hidden" name="q" value="<c:out value='${query}' />">
+                <input type="hidden" name="filter" value="<c:out value='${currentFilter}' />">
 
                 <p style="font-size:var(--font-size-md);color:var(--color-text);margin-bottom:var(--space-3);">
                     Xác nhận mở lại thẻ tập cho hội viên <b><c:out value="${freezeCustomer.fullName}" /></b> (Mã: <b><c:out value="${freezeCustomer.customerCode}" /></b>)?

@@ -186,6 +186,15 @@ document.addEventListener('DOMContentLoaded', function () {
         });
     });
 
+    // 7. Tự động áp dụng bộ lọc khi thay đổi lựa chọn ở thanh tìm kiếm
+    const filterSelect = document.getElementById('freezeFilterSelect');
+    if (filterSelect) {
+        filterSelect.addEventListener('change', function () {
+            const form = document.getElementById('freezeSearchForm');
+            if (form) form.submit();
+        });
+    }
+
     // Hàm tiện ích định dạng ngày
     function formatDate(d) {
         if (!d || isNaN(d.getTime())) return '--/--/----';

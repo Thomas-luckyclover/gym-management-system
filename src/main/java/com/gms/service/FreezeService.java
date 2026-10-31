@@ -759,18 +759,22 @@ public class FreezeService {
     /**
      * Lấy danh sách hội viên kèm gói tập Membership phục vụ hiển thị lưới dữ liệu tương tự GymMaster.
      */
-    public PageResult<CustomerMembershipRow> getCustomerMembershipsPage(String keyword, int pageNumber, int pageSize) {
+    public PageResult<CustomerMembershipRow> getCustomerMembershipsPage(String keyword, String filter, int pageNumber, int pageSize) {
         try {
-            long total = freezeRecordDAO.countCustomerMemberships(keyword);
+            long total = freezeRecordDAO.countCustomerMemberships(keyword, filter);
             if (total == 0) {
                 return new PageResult<>(List.of(), pageNumber, pageSize, 0);
             }
-            List<CustomerMembershipRow> items = freezeRecordDAO.findCustomerMemberships(keyword, pageNumber, pageSize);
+            List<CustomerMembershipRow> items = freezeRecordDAO.findCustomerMemberships(keyword, filter, pageNumber, pageSize);
             return new PageResult<>(items, pageNumber, pageSize, total);
         } catch (SQLException e) {
             LOGGER.log(Level.SEVERE, "Lỗi khi lấy danh sách hội viên và gói tập", e);
             return new PageResult<>(List.of(), pageNumber, pageSize, 0);
         }
+    }
+
+    public PageResult<CustomerMembershipRow> getCustomerMembershipsPage(String keyword, int pageNumber, int pageSize) {
+        return getCustomerMembershipsPage(keyword, "ALL", pageNumber, pageSize);
     }
 }
 
