@@ -127,6 +127,11 @@
                         Chưa có tài khoản?
                         <a href="${pageContext.request.contextPath}/register">Đăng ký</a>
                     </p>
+
+                    <%-- Hộp gợi ý Pumpy (giống màn Quên mật khẩu): khách được lễ tân tạo tài khoản tại quầy nhận MẬT KHẨU TẠM qua email
+                         (CounterAccountService, thay CBR-31). pumpyHintMode = "login" → pumpy-mail-hint.jspf in chữ cho màn này. --%>
+                    <c:set var="pumpyHintMode" value="login" />
+                    <%@ include file="/WEB-INF/jsp/common/pumpy-mail-hint.jspf" %>
                 </div>
                 <%-- BẢNG 1. FORM ĐĂNG NHẬP — KẾT THÚC --%>
 
