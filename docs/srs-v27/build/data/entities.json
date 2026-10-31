@@ -1,0 +1,542 @@
+{
+ "Person": [
+  [
+   "Purpose",
+   "The real human behind every profile. Holds the identity data shared by the Customer and Employee roles, so someone who both works at the gym and trains there is stored once, with one phone number and one email."
+  ],
+  [
+   "Key business attributes",
+   "Full name, date of birth, phone, email, avatar, released flag, created time"
+  ],
+  [
+   "Business identity",
+   "A Person has at most one customer profile that is not Inactive, at most one employee record with status Working, and at most one login Account that serves every non-Inactive role (DBR-65); an Inactive role does not block creating a new role of the same kind (CBR-114). Phone and email must be unique among Persons that are not released (DBR-22, DBR-23, DBR-27, DBR-30); the phone is empty for a Dependent customer, who is reached through the guardian numbers on the Customer profile (DBR-24). Email is mandatory for anyone with a login account (DBR-23). The avatar is for display only and never used for check-in (CBR-37): JPG or PNG, max 2 MB, 200 × 200 to 2000 × 2000 px, stored as a 256 × 256 centre crop (DBR-64). Customers and staff change only their own avatar, email, phone and password (CBR-30, CBR-108); a new email or phone needs a verification code (CBR-110)."
+  ],
+  [
+   "Status / lifecycle",
+   "No status field. A Person stays held while at least one of their roles is not Inactive; once every role is Inactive the Person is marked released and the phone and email can be reused by someone else (DBR-28)."
+  ]
+ ],
+ "Customer": [
+  [
+   "Purpose",
+   "A customer's profile — the member role of a Person — created for every registered visitor, even one who has never purchased anything yet. Name, date of birth, email and avatar are kept on the Person."
+  ],
+  [
+   "Key business attributes",
+   "Customer Code (system-generated, read at check-in), customer type (Self / Dependent), check-in photo, guardian full name, relationship and up to two guardian phone numbers (Dependent only), joined date, deleted date"
+  ],
+  [
+   "Business identity",
+   "Identified by a system-generated Customer Code (KH-nnnn) that never changes, not by any card or user-chosen ID. At most one customer profile that is not Inactive per Person; after a profile becomes Inactive a new one can be created on the same Person (DBR-65, CBR-114). A Self profile uses the phone number on its Person, which is mandatory. A Dependent profile has no phone of its own (DBR-24) and no login account (CBR-21); an email is optional (DBR-26). It is reached only through the guardian numbers recorded on the profile, which siblings may share (DBR-24, DBR-25). A Self profile has no guardian data. A Dependent profile must have guardian full name, relationship and Guardian Phone; Guardian Phone 2 is optional and must differ from Guardian Phone; both follow DBR-17 (DBR-25). The type cannot change after creation (BR-18). The check-in photo belongs to the profile and only the Receptionist can take or retake it (CBR-35, CBR-38)."
+  ],
+  [
+   "Status / lifecycle",
+   "New (registered, no purchase yet) · Active (has a valid subscription) · Frozen (subscription frozen) · Expired (subscription lapsed) · Inactive (deleted — final state, the profile can no longer be edited; its phone and email are released once the Person has no other active role). Deleting sets Status Inactive and Deleted At; orders, transactions, subscriptions, check-ins and sessions are kept, and revenue reports do not filter out Inactive customers (GBR-05)."
+  ]
+ ],
+ "Account": [
+  [
+   "Purpose",
+   "The single login credential of a Person, shared by every role the Person holds (customer and/or staff). Not every Person has one: Dependents and day-pass-only customers have no account (CBR-17, CBR-18)."
+  ],
+  [
+   "Key business attributes",
+   "Password (stored hashed), status, failed login count, locked-until time, last login time, created time"
+  ],
+  [
+   "Business identity",
+   "Belongs to exactly one Person and serves every role of that Person that is not Inactive (DBR-65). The user signs in with email or phone number; an account with two or more roles chooses the working role on Select Role (/select-role), and the session holds exactly one role that can be switched from the account menu without signing in again (CBR-113). The login email is always the Person's own email — there is no separate email field to keep in sync (DBR-23, DBR-65). Staff accounts are created only by the Admin; customer accounts come from self sign-up or from the Receptionist (CBR-95). If the Person already has an account, no second account is created: the existing account also serves the new role (CBR-24, CBR-95). A Receptionist-created account has no password and no email is sent; the customer sets a password through Forgot Password, and until then every sign-in attempt points to Forgot Password (CBR-31). Role and account status are never editable in Account Settings, only by the Admin (CBR-109). When the email changes, the old email is notified and every session of the account except the one that made the change is signed out (CBR-29); email, phone and password changes are written to the audit log, never the password or code itself (CBR-112, DBR-02)."
+  ],
+  [
+   "Status / lifecycle",
+   "Active · Locked (disabled by the Admin) · Inactive (final; set only when every role of the Person is Inactive — a deleted customer profile or a resigned employee alone does not make the account Inactive while another role remains, CBR-86). A temporary lockout after repeated wrong passwords applies to customer accounts only (BR-01) and is tracked in Locked Until, not by changing Status."
+  ]
+ ],
+ "VerificationCode": [
+  [
+   "Purpose",
+   "A one-time 6-digit code proving that someone controls an email address, for sign-up, claiming an existing profile, password recovery, email change or phone change."
+  ],
+  [
+   "Key business attributes",
+   "Email the code was sent to, purpose (SignUp / Claim / Recovery / EmailChange / PhoneChange), 6-digit code, sent time, expiry time, failed attempts, locked-until time, used time"
+  ],
+  [
+   "Business identity",
+   "Identified by system ID. Recovery, EmailChange and PhoneChange codes are tied to an Account; SignUp and Claim codes have no Account. Valid for 15 minutes (P-15). For a new email the code goes to the new email; for a new phone number it goes to the current email (CBR-110). A new code always cancels the previous one (CBR-94)."
+  ],
+  [
+   "Status / lifecycle",
+   "No status field — a code is usable (not used, not expired, not cancelled), used, or expired. 5 wrong entries cancel the code and lock verification for that email for 5 minutes (P-17, P-18); a new code can be requested 60 seconds after the previous one, and the 5th request within an hour triggers the same lock (CBR-94)."
+  ]
+ ],
+ "Employee": [
+  [
+   "Purpose",
+   "A staff member's profile — the staff role of a Person — covering Admin, Manager, PT and Receptionist in one entity, distinguished by Position. Name, date of birth, phone, email and avatar are kept on the Person."
+  ],
+  [
+   "Key business attributes",
+   "Employee Code, position, hire date, commission rate (PT only, mandatory for a PT), specialty and years of experience 0–60 (PT only, shown on the home page), employment status, resignation date and reason"
+  ],
+  [
+   "Business identity",
+   "Identified by a system-generated Employee Code (NV-nnnn). At most one employee record with status Working per Person; a Resigned record does not block re-hiring on the same Person (DBR-65). Phone and email are the Person's and are unique among all active Persons, staff included — there is no separate staff phone list (DBR-27, DBR-30). Commission rate is mandatory for a PT and empty for every other position; specialty and experience are allowed only for a PT; the default commission rate comes from P-11. Personnel details (full name, date of birth, specialty, years of experience, hire date, commission rate, employment status) are view-only for the staff member and changed by the Manager (CBR-108). The employee code never changes (DBR-09). Only the Admin changes a position (CBR-109), and only when no unfinished work remains in the old position (CBR-87); changes to or from Admin follow BR-08, and the last active Admin cannot be demoted or set to Resigned (BR-07)."
+  ],
+  [
+   "Status / lifecycle",
+   "Active (stored as Working) · Inactive (stored as Resigned, with Deleted At and a reason of 5–500 characters): every session of the account is signed out; the account stays Active if the Person still has a non-Inactive role, otherwise it becomes Inactive (CBR-86); phone and email are released only when every role is Inactive (DBR-28)."
+  ]
+ ],
+ "Package": [
+  [
+   "Purpose",
+   "The catalog of purchasable offerings — memberships, day passes, personal-training packages and single PT sessions — that orders are created from."
+  ],
+  [
+   "Key business attributes",
+   "Package name, description (≤ 500 characters), benefits (≤ 1000 characters, at most 10 lines of 3–100 characters, one benefit per line, DBR-15), package type, duration unit (Day / Month) and duration unit (Day / Month) and duration value: Day Pass = 1 Day; Membership = months from P-04; PT Single / PT Couple = months from P-21; Single Session has no duration. End dates are computed by calendar month, never as 30 days (DBR-19, GBR-03)."
+  ],
+  [
+   "Business identity",
+   "Five package types: Membership, Day Pass, PT Single, PT Couple and Single Session; stored values Membership, DayPass, PTSingle, PTCouple, SingleSession (GBR-01). Duration: Day Pass = 1 Day; Membership = months from P-04; PT Single / PT Couple = months from P-21; Single Session has no duration. End dates are computed by calendar month, never as 30 days (DBR-19, GBR-03). Estimated session count is mandatory for PT types and empty for every other type. A single drop-in PT session is modeled as its own package type rather than a standalone price, so every training session always traces back through a Subscription. PT packages are sold by term, not by number of sessions: the session count here is only an approximation, and the real count is fixed on the order when it is paid (DBR-53). The name is 3–100 characters and unique among active packages (DBR-11). Prices include VAT, and a catalogue change never applies to existing orders (CBR-09)."
+  ],
+  [
+   "Status / lifecycle",
+   "Active vs Inactive via Is Active flag; an Inactive package is no longer sold, but retired packages stay on file for existing orders (CBR-97)."
+  ]
+ ],
+ "Voucher": [
+  [
+   "Purpose",
+   "A discount code a customer can apply to an order, subject to usage limits and scope restrictions."
+  ],
+  [
+   "Key business attributes",
+   "Voucher code, discount type (Percent / Amount), discount value, start/end date, max usage (total), max usage per customer (empty = unlimited), applies-to scope (MembershipAndDayPass — default / MembershipOnly), used count, minimum order value, is-active flag"
+  ],
+  [
+   "Business identity",
+   "Voucher Code is unique (4–20 uppercase letters and digits) and cannot be edited after first use. An order can use at most one voucher, and the scope is either membership packages and day passes, or membership packages only — PT packages and single sessions never accept a voucher (CBR-76). Used Count increments when the voucher is applied and decrements when the order is cancelled, the voucher is removed or the code is changed (BR-43–BR-45); the database check Used Count ≤ Max Usage keeps the cap correct under simultaneous use (GBR-13)."
+  ],
+  [
+   "Status / lifecycle",
+   "Active vs Inactive via Is Active flag; also bounded by Start Date/End Date (last day inclusive). A voucher used at least once can only be deactivated, never deleted (CBR-98)."
+  ]
+ ],
+ "Order": [
+  [
+   "Purpose",
+   "A purchase record for one package, snapshotting the terms at time of purchase so later price or config changes never alter existing orders."
+  ],
+  [
+   "Key business attributes",
+   "Order Code (lookup code shown to customer & staff), holder customer (and partner for a couple package), package, voucher, package name/description/benefits/unit price snapshot, discount amount, VAT rate & amount snapshot, channel (Counter/Online), creating Receptionist and shift (Counter only), payment due time, created time, paid time, cancel type/time/reason"
+  ],
+  [
+   "Business identity",
+   "Identified by a system-generated Order Code (DH-yyyy-nnnn). Total amount is never stored — always derived as Unit Price Snapshot minus Discount Amount; the VAT amount is the part of that total that is tax (total × VAT% ÷ (100 + VAT%)) and is stored at creation (DBR-57). Payment details live on Transaction, not here. The price of an existing order cannot be edited — a wrong order is cancelled and a new one created (CBR-10). A Counter order always has its creator and shift; an Online order has neither. An Online order copies the payment deadline (P-09) and uses it as the slot hold time (CBR-40). A Counter order has no payment deadline; its slot stays Held until the order is paid or cancelled, and the shift cannot close while it is Pending (CBR-78)."
+  ],
+  [
+   "Status / lifecycle",
+   "Pending (awaiting payment) · Paid (payment completed) · Cancelled (final; cancel type PaymentTimeout or ReplacedByNewOrder for Online orders only, InvalidPayment, or CancelledByReceptionist for Counter orders only with a reason of at least 5 characters). Allowed moves: Pending → Paid, Pending → Cancelled, and Paid → Cancelled only for a counter order within its own open shift (CBR-11)."
+  ]
+ ],
+ "Transaction": [
+  [
+   "Purpose",
+   "A single payment attempt against an order — kept separate from Order because one online order can involve several attempts (retry after failure or an expired link)."
+  ],
+  [
+   "Key business attributes",
+   "Amount (snapshot of amount due at creation), payment method (Cash / Transfer / OnlineGateway), gateway reference, received by (Receptionist, required for a successful Cash or Transfer payment, CBR-77), status, failure reason, needs-refund flag, refunded time, refunded by (Manager), refund note, created time, expiry time, completed time"
+  ],
+  [
+   "Business identity",
+   "An order has at most one Success transaction and at most one Pending transaction at a time, enforced by the database. A counter order generates one Success transaction immediately. The online payment link lasts 5 minutes and never beyond the order deadline."
+  ],
+  [
+   "Status / lifecycle",
+   "Pending · Success · Failed · Expired. A Failed or Expired transaction leaves the order Pending so the customer can pay again (CBR-69). A Success transaction on a Cancelled order, or with the wrong amount, is flagged as needing a refund outside the system (CBR-72). The Manager pays the refund outside the system and then marks the transaction refunded, recording the time, the Manager and an optional note; only a Success transaction flagged Needs Refund can be marked (BR-47)."
+  ]
+ ],
+ "Shift": [
+  [
+   "Purpose",
+   "A receptionist's work shift, used to reconcile cash and transactions at open and close."
+  ],
+  [
+   "Key business attributes",
+   "Work date, shift type (Morning/Afternoon), opening and closing Receptionist, opened/closed time, expected cash (sum of successful cash transactions of the shift), counted cash, variance reason (required when counts mismatch)"
+  ],
+  [
+   "Business identity",
+   "Every open day has exactly two shifts, generated automatically from the opening hours — one per (work date, shift type) (CBR-104). Tied to the Receptionist who opened it and the one who closed it. Every payment taken while the shift is open is recorded in it (CBR-105). Variance itself isn't stored — always Counted Cash minus Expected Cash. A shift cannot be closed while one of its counter orders is still Pending (CBR-78)."
+  ],
+  [
+   "Status / lifecycle",
+   "NotOpened · Open · Closed"
+  ]
+ ],
+ "Subscription": [
+  [
+   "Purpose",
+   "The usable entitlement a customer holds once an order is paid — the record actually consumed by check-ins and training sessions."
+  ],
+  [
+   "Key business attributes",
+   "Subscription type, holder customer, PT in charge (PT Single, PT Couple and Single Session only), start date, end date, fixed start time (PT packages, CBR-43), generated session count, swaps used, max swaps snapshot (P-08 at sale, PT packages), freezes used, max freezes snapshot (P-01 at sale, memberships)"
+  ],
+  [
+   "Business identity",
+   "Created when the Order is paid, at most one per order, and tied to the Order (and, through it, the Package) that created it. The end date is the last valid day (GBR-03). The generated session count is fixed when the order is paid (BR-40). Swaps used and freezes used count against the snapshots of P-08 and P-01 taken when the order was paid; later parameter changes do not apply (GBR-04). A couple PT package produces a single shared Subscription with one common quota; the partner is recorded on the Order."
+  ],
+  [
+   "Status / lifecycle",
+   "Status by type: Membership — Active, Frozen, Expired, Cancelled; Day Pass — Active, Used, Expired, Cancelled; PT Single / PT Couple — Active, Expired, Cancelled (CBR-55); Single Session — Active, Completed, Expired, Cancelled. Cancelled means the underlying order was cancelled. Day passes and single sessions have Start Date = End Date."
+  ]
+ ],
+ "FreezeRecord": [
+  [
+   "Purpose",
+   "A single freeze (temporary pause) applied to a customer's membership subscription."
+  ],
+  [
+   "Key business attributes",
+   "Start date, planned end date, actual end date, reason (5–500 characters)"
+  ],
+  [
+   "Business identity",
+   "Always tied to exactly one subscription being frozen and one receptionist who processed it. No independent identity of its own. The planned end cannot be later than the maximum freeze length (P-02, default 1 month) or the days remaining on the package, and the number of freezes per package is capped by P-01 (default 1). Freezing is free (P-03). Cancelling a freeze early still counts as a freeze used. Both Start Date and End Date are frozen days; days frozen = Actual End Date − Start Date + 1, added to the subscription end date (DBR-51). A subscription has at most one freeze in progress. When cancelled early, Actual End Date is earlier than Planned End Date but never earlier than Start Date. Open issue: how to record a freeze cancelled before its start date."
+  ],
+  [
+   "Status / lifecycle",
+   "No stored status field — inferred as in-progress when Actual End Date is null, completed once it's set. In progress (actual end date not yet set) · Completed (actual end date recorded). No delete — kept permanently for history."
+  ]
+ ],
+ "CheckIn": [
+  [
+   "Purpose",
+   "A single gym-entry record created each time a customer checks in."
+  ],
+  [
+   "Key business attributes",
+   "Check-in time, photo verified (yes/no)"
+  ],
+  [
+   "Business identity",
+   "Tied to exactly one subscription (only Membership or Day Pass subscriptions can produce a check-in) and one receptionist who verified it. A membership allows unlimited check-ins within its validity; a day pass gives exactly one entry and needs no photo, so Photo Verified is no for it (BR-30, CBR-36)."
+  ],
+  [
+   "Status / lifecycle",
+   "No status — a one-time event, fixed once created, never edited or deleted."
+  ]
+ ],
+ "CustomerDeletionRequest": [
+  [
+   "Purpose",
+   "A request to delete a customer profile that still has a running package or unused PT sessions; it waits for Manager approval (CBR-16). A profile with nothing remaining is deleted immediately without a request, and the deletion is written to the audit log (BR-15)."
+  ],
+  [
+   "Key business attributes",
+   "Reason (5–500 characters), status, reject reason (5–500 characters, Rejected only), requested time, reviewed time"
+  ],
+  [
+   "Business identity",
+   "Tied to the customer, the Receptionist who filed it and the Manager who reviewed it; the reviewer must not be the same Person as the customer (CBR-115). A customer has at most one Pending request."
+  ],
+  [
+   "Status / lifecycle",
+   "Pending · Approved (by a Manager; the profile becomes Inactive) · Rejected (by a Manager, reject reason 5–500 characters; the profile is unchanged). Never deleted."
+  ]
+ ],
+ "TimeSlot": [
+  [
+   "Purpose",
+   "A time slot a personal trainer publishes as available for customers to book."
+  ],
+  [
+   "Key business attributes",
+   "Date, start time (15-minute grid), end time (start time + P-06 minutes, default 90), status, order currently holding the slot, hold expiry time"
+  ],
+  [
+   "Business identity",
+   "Tied to the trainer who published it. A trainer cannot publish two slots with the same start time on one date, and published slots must not overlap (DBR-33). A slot belongs to one customer, or to one pair of customers for a couple package (DBR-32). The hold is placed by the Pending order that selected the slot and lasts until the Online order's payment deadline (CBR-40); a Counter order's hold has no expiry time and ends when the order is paid or cancelled."
+  ],
+  [
+   "Status / lifecycle",
+   "Free (available) · Held (a Pending order has selected it) · Booked (the order is Paid) · Withdrawn (the PT removed a Free slot; it is kept for history instead of being deleted, GBR-05). The slot returns to Free when the order is cancelled for any reason, or when its session is cancelled or becomes Missed (DBR-36, CBR-68)."
+  ]
+ ],
+ "Session": [
+  [
+   "Purpose",
+   "A single training session a customer books against a trainer's time slot."
+  ],
+  [
+   "Key business attributes",
+   "Status, session value, commission amount, PT who teaches, attendance marked time, auto-closed flag, missed reason (NoCheckIn / NoMembership / MembershipFrozen / MarkedAbsent — required when Missed), cancel type (ByPt / ByCustomer / GymClosed / PackageExpired — required when Cancelled), cancel reason, cancelled time, cancelled by (account), refund agreed"
+  ],
+  [
+   "Business identity",
+   "Tied to the subscription it was generated from and the time slot it occupies. The customer is derived from the subscription (a couple package also has the partner on the order). The PT who teaches is stored on the session: it changes when the session is transferred, and the commission follows the new PT (BR-68). Session value = (price − discount) ÷ sessions generated, fixed when the order is paid; commission = the PT's rate × session value (DBR-58, DBR-59). Cancelled By is the account that pressed Cancel: required for ByPt and ByCustomer, empty for GymClosed and PackageExpired. A ByPt cancellation also requires a reason (≥ 5 characters) and Refund Agreed = yes (BR-66)."
+  ],
+  [
+   "Status / lifecycle",
+   "Scheduled (booked, upcoming) · Completed (customer attended; couple: at least one member) · Missed (no check-in, no valid membership package, membership frozen, or marked absent by the PT) · Cancelled (by the PT with a cash refund, by the customer, or by the system when the PT package expires or the gym is closed that day). Completed, Missed and Cancelled are final (DBR-38)."
+  ]
+ ],
+ "SessionMoveLog": [
+  [
+   "Purpose",
+   "A record of every move of a session to another slot or PT."
+  ],
+  [
+   "Key business attributes",
+   "Move type (CustomerSwap / PtOnBehalfSwap / PtReschedule / PtTransfer), old and new time slot, old and new PT, requested by (account — the customer for CustomerSwap, otherwise the PT), reason, moved time"
+  ],
+  [
+   "Business identity",
+   "Tied to one session; old and new slots differ; the PT changes only for PtTransfer. Only a Scheduled session that has not started can be moved. CustomerSwap targets only Saturday or Sunday slots (BR-75); PtOnBehalfSwap may target any weekday (BR-62)."
+  ],
+  [
+   "Status / lifecycle",
+   "No status — append-only history. CustomerSwap and PtOnBehalfSwap count toward the package swap limit (max swaps snapshot, BR-73); PtReschedule and PtTransfer do not (BR-64, BR-65)."
+  ]
+ ],
+ "LeaveRequest": [
+  [
+   "Purpose",
+   "A staff member's request for time off, subject to manager approval."
+  ],
+  [
+   "Key business attributes",
+   "Leave type (Annual/Sick/Unpaid), leave date, shift (Morning/Afternoon/FullDay), reason, reject reason, submitted date, reviewed date, reminder-sent time"
+  ],
+  [
+   "Business identity",
+   "Tied to the staff member (PT or Receptionist) who submitted it and the manager who reviewed it; an auto-rejected request has no reviewer. It must be submitted before 15:00 the day before the leave (P-12), a PT cannot request leave while still having a Scheduled session that day (CBR-83), and approval cannot drop a shift below the minimum staffing (P-13, P-14). An employee has at most one non-rejected request per (leave date, shift). Open issue: whether the Manager submits leave requests (UC-15) is not decided yet."
+  ],
+  [
+   "Status / lifecycle",
+   "Pending (awaiting review) · Approved (granted by a manager) · Rejected (denied by a manager with a reason, or automatically with the reason 'Approval deadline passed' if not decided by 20:00 the day before the leave, P-20)"
+  ]
+ ],
+ "Facility": [
+  [
+   "Purpose",
+   "A piece of equipment or an area in the gym that can be reported for maintenance."
+  ],
+  [
+   "Key business attributes",
+   "Facility name, category (Cardio / FreeWeights / Machines / Amenities), location, quantity"
+  ],
+  [
+   "Business identity",
+   "Identified by system ID; the name, category and location are descriptive and not required to be unique. Quantity is at least 1. A facility cannot be removed while it has a maintenance request that is not Closed (CBR-99)."
+  ],
+  [
+   "Status / lifecycle",
+   "Available (in normal use) · UnderMaintenance (currently being fixed) · Retired (taken out of service — the result of deleting the item, kept for history, GBR-05). Approving a maintenance request sets it to UnderMaintenance unless the Manager opts out; closing the request returns it to Available when no other request is InProgress (CBR-101, CBR-102)."
+  ]
+ ],
+ "MaintenanceRequest": [
+  [
+   "Purpose",
+   "A report that a facility needs repair, tracked from report through approval to close-out."
+  ],
+  [
+   "Key business attributes",
+   "Request code (BT-nnnn, system-generated, unique), priority (Urgent / Normal — default / Low), warning tag placed (yes/no), description (10–500 characters), set under maintenance (chosen by the Manager on approval, CBR-101), reject reason, acceptance note (entered when closing), reported time, reviewed time, closed time"
+  ],
+  [
+   "Business identity",
+   "Identified by its Request Code. Tied to the facility being reported, the receptionist who reported it, the manager who reviewed it, and the receptionist who closed it."
+  ],
+  [
+   "Status / lifecycle",
+   "Open (just reported) · InProgress (approved by a manager) · Rejected (denied by a manager, with a reason) · Closed (receptionist confirms the fix, enters an acceptance note and closes it). Allowed moves: Open → InProgress → Closed, or Open → Rejected (DBR-46)."
+  ]
+ ],
+ "StaffAttendance": [
+  [
+   "Purpose",
+   "A staff member's clock-in and clock-out record for one shift. Modeled for later use only — staff timekeeping is out of scope for this release (DBR-63)."
+  ],
+  [
+   "Key business attributes",
+   "Work date, shift type (Morning/Afternoon), check-in time, check-in photo, check-out time, status, note"
+  ],
+  [
+   "Business identity",
+   "Tied to the employee. At most one record per (employee, work date, shift type), and check-out must be later than check-in. Kept separate from CheckIn because a member's check-in belongs to a subscription while staff attendance belongs to a shift. The photo only verifies staff attendance and is never used for member check-in."
+  ],
+  [
+   "Status / lifecycle",
+   "Present · Late · Absent · OnLeave"
+  ]
+ ],
+ "PrivateNote": [
+  [
+   "Purpose",
+   "A PT's private note about a specific client, visible and editable only by the PT who wrote it."
+  ],
+  [
+   "Key business attributes",
+   "Content (1–2000 characters), last updated date, deleted date"
+  ],
+  [
+   "Business identity",
+   "At most one active PrivateNote per (PT, Customer) combination; a deleted note does not count, so a new one can be written afterwards (DBR-61). The note stays invisible to any other PT, even after the customer moves to another PT (CBR-92)."
+  ],
+  [
+   "Status / lifecycle",
+   "Active · Deleted (soft delete — hidden permanently). The PT can edit an active note at any time; saving overwrites it (BR-58, BR-59)."
+  ]
+ ],
+ "TrainingPlan": [
+  [
+   "Purpose",
+   "A workout or meal plan authored by a PT for a specific client."
+  ],
+  [
+   "Key business attributes",
+   "Plan type (Workout / Meal), draft title, draft content (≤ 10 000 characters), published title, published content, published time (empty = never published), created time, last updated time, deleted time."
+  ],
+  [
+   "Business identity",
+   "At most one active plan per (PT, Customer, Plan Type) combination; a deleted plan does not count (DBR-62). The PT can edit or delete their own plans at any time (BR-60, BR-61)."
+  ],
+  [
+   "Status / lifecycle",
+   "Never published (Published At empty, client sees nothing) → Published. Publishing copies the draft into Published Title / Content and sets Published At; the client always reads the published copy, so editing the draft changes nothing for the client until the PT publishes again (BR-60). Deleted (soft delete) plans disappear from My Plan immediately (BR-61)."
+  ]
+ ],
+ "Feedback": [
+  [
+   "Purpose",
+   "A message submitted by a Customer through the suggestion box — the system's sole feedback channel."
+  ],
+  [
+   "Key business attributes",
+   "Content (10–1000 characters), submitted date, read date, read by (Manager)"
+  ],
+  [
+   "Business identity",
+   "No natural unique key; identified by system ID. Only the Manager can read feedback (CBR-106); there is no reply or resolution workflow (CBR-107)."
+  ],
+  [
+   "Status / lifecycle",
+   "Unread → Read (one-way)"
+  ]
+ ],
+ "BlogPost": [
+  [
+   "Purpose",
+   "Public marketing content published by Manager for visitors and customers to read."
+  ],
+  [
+   "Key business attributes",
+   "Title, category (Training/Nutrition/News), excerpt, content, cover image, published date"
+  ],
+  [
+   "Business identity",
+   "No natural unique key stated; titles are not required to be unique. Written by a Manager."
+  ],
+  [
+   "Status / lifecycle",
+   "Inactive (not shown on the public site — a new post or one taken down) · Active (published; requires a published date). Switching to Inactive removes the post from the public site immediately (CBR-100)."
+  ]
+ ],
+ "Notification": [
+  [
+   "Purpose",
+   "A broadcast message sent by Manager — or automatically by the system — to a defined audience."
+  ],
+  [
+   "Key business attributes",
+   "Title (5–100 characters), content (10–500 characters), audience (AllCustomers / ActiveMembers / PTs / Receptionists / AllStaff / Individual), scheduled time (empty = send now), sent time (empty = not sent yet), created time, sender (empty only for system notifications, which always target Individual)"
+  ],
+  [
+   "Business identity",
+   "No natural unique key; identified by system ID."
+  ],
+  [
+   "Status / lifecycle",
+   "Scheduled (Sent At empty, waiting for Scheduled At) → Sent (Sent At set; recipients created). No further change after sending."
+  ]
+ ],
+ "NotificationRecipient": [
+  [
+   "Purpose",
+   "Tracks whether a specific Account has read a specific Notification; resolves the many-to-many relationship between them."
+  ],
+  [
+   "Key business attributes",
+   "Read date"
+  ],
+  [
+   "Business identity",
+   "Unique per (Notification, Account) combination. Only people with an account receive in-app notifications; dependants are informed outside the system (GBR-15)."
+  ],
+  [
+   "Status / lifecycle",
+   "Unread → Read (Read At null vs set)"
+  ]
+ ],
+ "SystemConfig": [
+  [
+   "Purpose",
+   "A key-value store of the adjustable business parameters P-01…P-21 (e.g., freeze limits, VAT %, default commission %, PT package durations).\""
+  ],
+  [
+   "Key business attributes",
+   "Config key, config value, description, last updated time, updated by"
+  ],
+  [
+   "Business identity",
+   "Config Key is unique across the system. A change applies only to records created afterwards (GBR-04)."
+  ],
+  [
+   "Status / lifecycle",
+   "N/A"
+  ]
+ ],
+ "OperatingHourException": [
+  [
+   "Purpose",
+   "Overrides the default operating hours for one specific date (e.g., Tet, public holidays)."
+  ],
+  [
+   "Key business attributes",
+   "Apply date, open time, close time, closed-all-day flag, note, set by (Manager)"
+  ],
+  [
+   "Business identity",
+   "Apply Date is unique — at most one exception entry per date. No PT session is generated on a day declared closed (CBR-56)."
+  ],
+  [
+   "Status / lifecycle",
+   "N/A"
+  ]
+ ],
+ "AuditLog": [
+  [
+   "Purpose",
+   "An immutable record of every sensitive action performed in the system, for traceability."
+  ],
+  [
+   "Key business attributes",
+   "Acting account (empty when a system job acted), acting role (Admin / Manager / PT / Receptionist / Customer — the role the user was working in; empty for jobs), action, entity name, entity ID, field changed, old value, new value, reason, created time"
+  ],
+  [
+   "Business identity",
+   "No natural unique key; identified by system ID. Only the Admin can read it (CBR-103). Passwords and verification codes are never written to it (CBR-112, DBR-02)."
+  ],
+  [
+   "Status / lifecycle",
+   "N/A — records are append-only, never updated or deleted"
+  ]
+ ]
+}
