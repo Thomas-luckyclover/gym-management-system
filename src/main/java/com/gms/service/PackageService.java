@@ -97,11 +97,6 @@ public class PackageService {
 
     /**
      * Kiểm tra tính hợp lệ của biểu mẫu gói hội viên / vé ngày.
-     *
-     * @param input dữ liệu biểu mẫu
-     * @param conn kết nối cơ sở dữ liệu để kiểm tra duy nhất tên gói
-     * @return Map chứa các lỗi theo từng ô nhập (rỗng nếu dữ liệu hợp lệ)
-     * @throws SQLException lỗi truy vấn DB
      */
     public Map<String, String> validateMembershipForm(PackageFormInput input, Connection conn) throws SQLException {
         Map<String, String> errors = new LinkedHashMap<>();
@@ -133,6 +128,80 @@ public class PackageService {
             }
             if (durationVal == null || !ALLOWED_MEMBERSHIP_MONTHS.contains(durationVal)) {
                 errors.put("durationValue", "Thời hạn gói hội viên chỉ chấp nhận: 1, 3, 6, 12, 24 hoặc 36 tháng (P-04).");
+            }
+        }
+
+        return errors;
+    }
+
+    // ===== Validate nghiệp vụ cho Gói PT & Buổi lẻ (DBR-06, DBR-11, DBR-15, P-21, CK_Packages_EstSession) =====
+
+    /**
+     * Kiểm tra tính hợp lệ của biểu mẫu gói PT / buổi lẻ.
+     */
+    public Map<String, String> validatePtForm(PackageFormInput input, Connection conn) throws SQLException {
+        Map<String, String> errors = new LinkedHashMap<>();
+
+        validateCommonFields(input, errors, conn);
+
+        String type = input.getType();
+        if (type == null || type.isBlank()) {
+            errors.put("type", "Vui lòng chọn loại gói PT.");
+            return errors;
+        }
+
+        boolean isNew = (input.getPackageId() == null || input.getPackageId() == 0);
+
+        if (isNew) {
+            // Thêm mới: chỉ cho phép tạo PTSingle hoặc PTCouple
+            if (!"PTSingle".equalsIgnoreCase(type) && !"PTCouple".equalsIgnoreCase(type)) {
+                errors.put("type", "Chỉ được phép tạo mới gói PT 1:1 hoặc PT 1:2.");
+                return errors;
+            }
+        } else {
+            // Chỉnh sửa: chấp nhận PTSingle, PTCouple hoặc SingleSession
+            if (!"PTSingle".equalsIgnoreCase(type) && !"PTCouple".equalsIgnoreCase(type) && !"SingleSession".equalsIgnoreCase(type)) {
+                errors.put("type", "Loại gói PT không hợp lệ.");
+                return errors;
+            }
+        }
+
+        if ("SingleSession".equalsIgnoreCase(type)) {
+            // Buổi PT lẻ: durationUnit/durationValue và estimatedSessionCount phải để trống
+            if (input.getDurationUnit() != null && !input.getDurationUnit().isBlank()) {
+                input.setDurationUnit(null);
+            }
+            if (input.getDurationValue() != null && !input.getDurationValue().isBlank()) {
+                input.setDurationValue(null);
+            }
+            if (input.getEstimatedSessionCount() != null && !input.getEstimatedSessionCount().isBlank()) {
+                input.setEstimatedSessionCount(null);
+            }
+        } else {
+            // PTSingle hoặc PTCouple: thời hạn theo P-21 (1, 3, 6, 12 tháng)
+            String durationUnit = input.getDurationUnit();
+            if (!"Month".equalsIgnoreCase(durationUnit)) {
+                errors.put("durationUnit", "Gói PT bắt buộc tính thời hạn theo tháng.");
+            }
+
+            Integer durationVal = input.parseDurationValue();
+            if (durationVal == null || !ALLOWED_PT_MONTHS.contains(durationVal)) {
+                errors.put("durationValue", "Thời hạn gói PT chỉ chấp nhận: 1, 3, 6 hoặc 12 tháng (P-21).");
+            }
+
+            // Số buổi tập ước tính: 1 - 255 buổi (DB TINYINT, CK_Packages_EstSession)
+            String sessionStr = input.getEstimatedSessionCount();
+            if (sessionStr == null || sessionStr.isBlank()) {
+                errors.put("estimatedSessionCount", "Vui lòng nhập số buổi tập ước tính cho gói PT.");
+            } else {
+                try {
+                    int sessions = Integer.parseInt(sessionStr.trim());
+                    if (sessions < 1 || sessions > 255) {
+                        errors.put("estimatedSessionCount", "Số buổi tập ước tính phải từ 1 đến 255 buổi.");
+                    }
+                } catch (NumberFormatException e) {
+                    errors.put("estimatedSessionCount", "Số buổi tập ước tính phải là số nguyên hợp lệ.");
+                }
             }
         }
 
