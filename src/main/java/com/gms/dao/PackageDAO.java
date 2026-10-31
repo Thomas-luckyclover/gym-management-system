@@ -140,6 +140,41 @@ public class PackageDAO {
         return false;
     }
 
+    /**
+     * Đếm số lượt đăng ký đang chạy hoặc tạm dừng (Active, Frozen) của gói.
+     * Dùng để cảnh báo Quản lý khi sửa giá hoặc ngừng bán gói (#18, #20, GBR-08).
+     *
+     * @param packageId ID gói tập
+     * @return số hợp đồng đăng ký đang hiệu lực
+     * @throws SQLException lỗi truy vấn
+     */
+    public int countRunningOrders(int packageId) throws SQLException {
+        try (Connection conn = DBContext.getConnection()) {
+            return countRunningOrders(conn, packageId);
+        }
+    }
+
+    /**
+     * Đếm số lượt đăng ký trong một transaction hiện hành.
+     */
+    public int countRunningOrders(Connection conn, int packageId) throws SQLException {
+        String sql = "SELECT COUNT(DISTINCT s.SubscriptionId) "
+                + "FROM Subscriptions s "
+                + "JOIN Orders o ON o.OrderId = s.OrderId "
+                + "WHERE o.PackageId = ? "
+                + "  AND s.Status IN ('Active', 'Frozen') "
+                + "  AND s.EndDate >= CAST(GETDATE() AS DATE)";
+        try (PreparedStatement stmt = conn.prepareStatement(sql)) {
+            stmt.setInt(1, packageId);
+            try (ResultSet rs = stmt.executeQuery()) {
+                if (rs.next()) {
+                    return rs.getInt(1);
+                }
+            }
+        }
+        return 0;
+    }
+
     // ===== Hàm phụ =====
 
     /**
