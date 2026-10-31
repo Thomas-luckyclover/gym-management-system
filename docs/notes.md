@@ -1,5 +1,11 @@
 # File notes — mâu thuẫn tài liệu & quyết định đã chốt
 
+## Mốc chia ca sáng / ca chiều = 13:00 (31/10/2026, ĐÃ CODE)
+- **Vì sao**: SRS chỉ nói "mỗi ngày mở cửa tự chia ca sáng và ca chiều" (UC-11, CBR-104), không nêu giờ. Code đang lệch 4 mốc: khóa khung khi PT nghỉ 12:00 (`PtScheduleService.isOnLeave`, `PtSessionHandleDAO`), kiểm CBR-83 khi nộp đơn "buổi kết thúc sau 12:00" (`LeaveRequestDAO.countScheduledSessions`), ca lễ tân 13:00 (`ShiftDAO`, seed mở/đóng ca 05:30–13:00 / 13:00–22:00), gán ca đơn bán PT 14:00 (`PtSaleService`).
+- **Đã chốt**: 1 hằng số `AppConstants.AFTERNOON_SHIFT_START = 13:00`. Khung / buổi thuộc ca theo **giờ bắt đầu**: trước 13:00 = ca sáng, từ 13:00 = ca chiều. 5 chỗ trên dùng chung hằng số (SQL dùng `'13:00'` kèm comment trỏ về hằng số).
+- **Giao diện**: Lịch dạy PT — lưới tuần có vạch đứt 13:00, nền ca chiều nhạt, nhãn "Ca sáng / Ca chiều" trên trục giờ; kiểu danh sách có dòng ngăn "CA SÁNG / CA CHIỀU". Lịch tập của khách: 3 hàng Sáng 05:30–13:00 · Chiều 13:00–18:00 · Tối 18:00–22:00.
+- **Seed**: đơn nghỉ 9 (PT Sơn, sáng 28/10) trước đây trùng buổi 07:00 của Nguyễn Văn An (sai CBR-83). Nay buổi 367 được dời sang 31/10 08:00 (SessionMoveLogs 5, 25/10) trước khi nộp đơn 26/10. Kiểm lại: không còn đơn Pending/Approved nào trùng buổi Scheduled.
+
 ## Soát giao diện điện thoại / iPad / máy tính + con mắt mật khẩu + Pumpy Bán gói PT (31/10/2026, ĐÃ CODE)
 - **Cách soát**: chạy app thật (Tomcat 10.1 + SQL Server seed), chụp 6 màn ở 390 / 768 / 1024 / 1440: Lịch tập, Gói của tôi, Chỉ số cơ thể (khách) · Lịch dạy, Tổng quan (PT) · Bán gói PT (lễ tân). Không đổi Java / DB.
 - **Topbar chung (common.css, cuối file)**: ≤900px topbar được xuống dòng — tiêu đề đủ chữ ở hàng trên, cụm nút dồn phải hàng dưới (trước: ≤480px tiêu đề bị cắt "Bá…", "L…"). Tên + mã tài khoản trên điện thoại vẫn ẩn kiểu chỉ trình đọc màn hình (quy tắc Arena cũ, giữ nguyên).

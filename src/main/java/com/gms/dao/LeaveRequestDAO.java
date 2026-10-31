@@ -1,5 +1,6 @@
 package com.gms.dao;
 
+import com.gms.constant.AppConstants;
 import com.gms.dto.LeaveBalance;
 import com.gms.dto.LeaveEmployeeView;
 import com.gms.dto.LeaveRequestFilter;
@@ -617,10 +618,11 @@ public class LeaveRequestDAO {
                 .append("JOIN TimeSlots ts WITH (HOLDLOCK) ON s.TimeSlotId = ts.TimeSlotId ")
                 .append("WHERE s.PtEmployeeId = ? AND ts.SlotDate = ? AND s.Status = 'Scheduled' ");
 
+        // Buổi thuộc ca theo GIỜ BẮT ĐẦU, cùng mốc với khóa khung ở màn Lịch dạy (AppConstants.AFTERNOON_SHIFT_START).
         if ("Morning".equalsIgnoreCase(shiftType)) {
-            sql.append("AND ts.StartTime < '12:00:00' ");
+            sql.append("AND ts.StartTime < ").append(AppConstants.AFTERNOON_SHIFT_START_SQL).append(' ');
         } else if ("Afternoon".equalsIgnoreCase(shiftType)) {
-            sql.append("AND ts.EndTime > '12:00:00' ");
+            sql.append("AND ts.StartTime >= ").append(AppConstants.AFTERNOON_SHIFT_START_SQL).append(' ');
         }
 
         try (PreparedStatement statement = connection.prepareStatement(sql.toString())) {

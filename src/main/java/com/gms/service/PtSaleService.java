@@ -1,5 +1,6 @@
 package com.gms.service;
 
+import com.gms.constant.AppConstants;
 import com.gms.constant.Messages;
 import com.gms.dao.NotificationDAO;
 import com.gms.dao.PtSaleDAO;
@@ -69,7 +70,7 @@ public class PtSaleService {
     static final int START_DAYS_AHEAD = 30;                  // ngày bắt đầu: hôm nay → +30 ngày
     static final int TIME_WINDOW_DAYS = 14;                  // giờ trên bảng tuần: khung PT công bố trong 14 ngày đầu kỳ
     static final int HOLD_MINUTES = 15;                      // giữ chỗ bao lâu
-    static final LocalTime AFTERNOON_FROM = LocalTime.of(14, 0);
+    static final LocalTime AFTERNOON_FROM = AppConstants.AFTERNOON_SHIFT_START;   // mốc ca chung 13:00
     static final String EXPIRED_REASON = "Hết 15 phút giữ chỗ, chưa thu tiền";
     static final String RELEASE_REASON = "Lễ tân hủy giữ chỗ, chưa thu tiền";
 
@@ -1014,7 +1015,7 @@ public class PtSaleService {
         return Math.round(price * (double) vatRate / (100 + vatRate));
     }
 
-    /** Ca theo giờ: trước 14:00 là ca sáng (Morning), từ 14:00 là ca chiều (Afternoon). */
+    /** Ca theo giờ: trước 13:00 là ca sáng (Morning), từ 13:00 là ca chiều (Afternoon) — AppConstants.AFTERNOON_SHIFT_START. */
     static String shiftTypeAt(LocalTime time) {
         return time.isBefore(AFTERNOON_FROM) ? "Morning" : "Afternoon";
     }

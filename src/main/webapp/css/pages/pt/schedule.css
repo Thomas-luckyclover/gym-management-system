@@ -1632,3 +1632,71 @@ html body.dock .pt-handle .pt-handle-head h2:focus,
     transform: none;
   }
 }
+
+
+/* ==================== CA SÁNG / CA CHIỀU (31/10/2026) ====================
+   Mốc chung 13:00 = AppConstants.AFTERNOON_SHIFT_START (ca sáng 05:30–13:00, ca chiều 13:00–22:00).
+   JSP đặt --shift-split trên .pt-plan-grid = số giờ từ đầu trục tới 13:00 (VD trục 05:00 → 8).
+     Lưới tuần : vạch đứt ngang + nền ca chiều nhạt hơn trong mỗi cột (::before / ::after của .pt-day-track,
+                 không bắt chuột), nhãn "Ca sáng" / "Ca chiều" trên trục giờ (.pt-plan-shift).
+     Danh sách : dòng ngăn .pt-list-shift trước khung đầu tiên của mỗi ca (order do JSP gán). */
+.pt-plan-shift { display: none; }
+.pt-list-shift {
+  margin: var(--space-1) 0 0;
+  padding-bottom: var(--space-1);
+  border-bottom: var(--border-width) dashed var(--color-border-strong);
+  color: var(--color-warning-ink);
+  font-size: var(--font-size-xs);
+  font-weight: var(--font-weight-semibold);
+  letter-spacing: var(--letter-spacing-wide);
+  text-transform: uppercase;
+}
+.pt-list-shift.is-pm { color: var(--arena-accent-text); }
+
+@media (min-width: 701px) {
+  .pt-plan:not(.is-list) .pt-list-shift { display: none; }
+
+  /* Nhãn ca trên trục giờ: nằm ngoài lưới hàng giờ (position absolute), ở nửa sau của giờ đầu ca. */
+  .pt-plan:not(.is-list) .pt-plan-axis { position: relative; }
+  .pt-plan:not(.is-list) .pt-plan-shift {
+    position: absolute;
+    right: var(--space-1);
+    display: block;
+    padding: 0 var(--space-1);
+    border-radius: var(--arena-radius-chip);
+    font-size: var(--font-size-2xs);
+    font-weight: var(--font-weight-semibold);
+    line-height: 1.6;
+    text-align: right;
+    white-space: nowrap;
+  }
+  .pt-plan:not(.is-list) .pt-plan-shift.is-am {
+    top: calc(var(--pt-hour) * 0.5);
+    background: var(--color-warning-tint);
+    color: var(--color-warning-ink);
+  }
+  .pt-plan:not(.is-list) .pt-plan-shift.is-pm {
+    top: calc(var(--pt-hour) * (var(--shift-split) + 0.5));
+    background: color-mix(in srgb, var(--arena-accent) 18%, transparent);
+    color: var(--arena-accent-text);
+  }
+
+  /* Nền ca chiều + vạch 13:00 trong từng cột ngày. Thẻ khung (.pt-slot, position: relative) nằm trên. */
+  .pt-plan:not(.is-list) .pt-day-track::before,
+  .pt-plan:not(.is-list) .pt-day-track::after {
+    content: "";
+    position: absolute;
+    left: 0;
+    right: 0;
+    top: calc(var(--pt-hour) * var(--shift-split));
+    pointer-events: none;
+  }
+  .pt-plan:not(.is-list) .pt-day-track::before {
+    bottom: 0;
+    background: color-mix(in srgb, var(--arena-accent) 6%, transparent);
+  }
+  .pt-plan:not(.is-list) .pt-day-track::after {
+    border-top: 2px dashed color-mix(in srgb, var(--arena-accent-text) 70%, transparent);
+  }
+  .pt-plan:not(.is-list) .pt-slot { z-index: 1; }
+}

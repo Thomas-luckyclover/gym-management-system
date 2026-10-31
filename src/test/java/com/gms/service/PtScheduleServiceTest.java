@@ -79,11 +79,11 @@ class PtScheduleServiceTest {
         assertFalse(item.isPast());
     }
 
-    /** Đơn nghỉ khóa theo giờ bắt đầu; 12:00 thuộc ca chiều, kể cả khung trước đó vắt qua trưa. */
+    /** Đơn nghỉ khóa theo giờ bắt đầu; mốc ca 13:00 (AppConstants): 12:45 còn ca sáng, 13:00 thuộc ca chiều. */
     @ParameterizedTest
-    @CsvSource({"Morning,10:00,Pending,true", "Morning,11:45,Approved,true",
-        "Morning,12:00,Pending,false", "Morning,14:00,Approved,false",
-        "Afternoon,11:45,Pending,false", "Afternoon,12:00,Approved,true",
+    @CsvSource({"Morning,10:00,Pending,true", "Morning,12:45,Approved,true",
+        "Morning,13:00,Pending,false", "Morning,14:00,Approved,false",
+        "Afternoon,12:45,Pending,false", "Afternoon,13:00,Approved,true",
         "FullDay,10:00,Pending,true", "FullDay,15:00,Approved,true",
         "Morning,10:00,Rejected,false"})
     void leaveLocksOnlyItsShift(String shift, LocalTime start, String status, boolean locked) {

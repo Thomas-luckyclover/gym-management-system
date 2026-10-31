@@ -1,5 +1,6 @@
 package com.gms.service;
 
+import com.gms.constant.AppConstants;
 import com.gms.constant.Messages;
 import com.gms.dao.PtScheduleDAO;
 import com.gms.dto.HourException;
@@ -403,10 +404,11 @@ public class PtScheduleService {
 
     /**
      * HÀM PHỤ — gọi ở B4 của classify; validateDrafts cũng gọi để chặn khung mới trùng ca nghỉ.
-     * Ca sáng = khung BẮT ĐẦU trước 12:00, ca chiều = bắt đầu từ 12:00. Chỉ đơn Pending/Approved mới khóa.
+     * Ca sáng = khung BẮT ĐẦU trước 13:00, ca chiều = bắt đầu từ 13:00 (AppConstants.AFTERNOON_SHIFT_START).
+     * Chỉ đơn Pending/Approved mới khóa.
      */
     static boolean isOnLeave(PtScheduleItem item, List<LeaveInfo> leaves) {
-        boolean morning = item.getStartTime().isBefore(LocalTime.NOON);
+        boolean morning = item.getStartTime().isBefore(AppConstants.AFTERNOON_SHIFT_START);
 
         for (LeaveInfo leave : leaves) {
             boolean sameDay = item.getSlotDate().equals(leave.getLeaveDate());
