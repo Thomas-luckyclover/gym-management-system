@@ -538,3 +538,8 @@
   gap: var(--space-1);
 }
 }
+
+/* BF-07: cố định 10 dòng; cụm phân trang ở giữa như màn nghỉ phép. */
+.bf07-pagination {
+  justify-content: center;
+}
