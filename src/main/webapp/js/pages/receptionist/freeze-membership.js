@@ -67,14 +67,17 @@ document.addEventListener('DOMContentLoaded', function () {
     function renderPtSessions(sessions) {
         const container = document.getElementById('impactSessionsContainer');
         const countSpan = document.getElementById('impactCount');
+        const ptBox = document.getElementById('ptImpactBox');
         if (!container) return;
 
         if (!sessions || sessions.length === 0) {
             if (countSpan) countSpan.textContent = '0';
+            if (ptBox) ptBox.style.display = 'none';
             container.innerHTML = '<div class="empty-pt-note"><i class="fa-solid fa-circle-check"></i> Không có buổi tập PT nào trong khoảng thời gian này.</div>';
             return;
         }
 
+        if (ptBox) ptBox.style.display = 'block';
         if (countSpan) countSpan.textContent = sessions.length;
         let html = '<div class="table-responsive"><table class="data-table pt-table">';
         html += '<thead><tr><th>Ngày tập</th><th>Giờ tập</th><th>Huấn luyện viên</th><th>Loại gói</th><th>Tác động</th></tr></thead><tbody>';
@@ -183,7 +186,26 @@ document.addEventListener('DOMContentLoaded', function () {
         });
     });
 
-    // Hàm tiện ích định dạng ngày
+    // 7. Tự động áp dụng bộ lọc khi thay đổi lựa chọn ở thanh tìm kiếm
+    const filterSelect = document.getElementById('freezeFilterSelect');
+    if (filterSelect) {
+        filterSelect.addEventListener('change', function () {
+            const form = document.getElementById('freezeSearchForm');
+            if (form) form.submit();
+        });
+    }
+
+    // 8. Giữ đúng tab #tabHistory khi tìm kiếm
+    const freezeSearchForm = document.getElementById('freezeSearchForm');
+    if (freezeSearchForm) {
+        freezeSearchForm.addEventListener('submit', function () {
+            const activeTab = document.querySelector('.freeze-tab-pane.active');
+            if (activeTab && activeTab.id === 'tabHistory') {
+                freezeSearchForm.action = freezeSearchForm.action.split('#')[0] + '#tabHistory';
+            }
+        });
+    }
+
     function formatDate(d) {
         if (!d || isNaN(d.getTime())) return '--/--/----';
         return String(d.getDate()).padStart(2, '0') + '/' + String(d.getMonth() + 1).padStart(2, '0') + '/' + d.getFullYear();

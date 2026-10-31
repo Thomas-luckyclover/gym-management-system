@@ -188,7 +188,6 @@
                           <div class="cell-incident-info">
                             <strong class="incident-title"><c:out value="${item.request.incidentType.displayName}" /></strong>
                             <p class="incident-desc"><c:out value="${item.request.description}" /></p>
-                            <span class="incident-detected">Phát hiện: <c:out value="${item.request.detectedBy.displayName}" /></span>
                             <c:if test="${item.request.warningTagPlaced}">
                               <span class="warning-tag-pill">Đã treo biển ngừng dùng</span>
                             </c:if>
@@ -253,15 +252,41 @@
           <%-- Phân trang --%>
           <c:if test="${requestPage.totalPages > 1}">
             <div class="table-pagination-row">
+              <c:choose>
+                <c:when test="${requestPage.hasPrevious}">
+                  <c:url var="prevUrl" value="/manager/maintenance-requests">
+                    <c:param name="page" value="${requestPage.pageNumber - 1}" />
+                    <c:param name="pageSize" value="${requestPage.pageSize}" />
+                    <c:param name="keyword" value="${keyword}" />
+                    <c:param name="status" value="${statusFilter}" />
+                    <c:param name="priority" value="${priorityFilter}" />
+                    <c:param name="reportedDate" value="${reportedDateFilter}" />
+                  </c:url>
+                  <a class="btn btn-outline btn-sm" href="${prevUrl}">‹ Trang trước</a>
+                </c:when>
+                <c:otherwise>
+                  <button type="button" class="btn btn-outline btn-sm" disabled>‹ Trang trước</button>
+                </c:otherwise>
+              </c:choose>
+
               <span class="page-counter">Trang ${requestPage.pageNumber} / ${requestPage.totalPages}</span>
-              <div class="pagination-buttons">
-                <c:if test="${requestPage.hasPrevious}">
-                  <a class="btn btn-outline btn-sm" href="?page=${requestPage.pageNumber - 1}&keyword=${keyword}&status=${statusFilter}">‹ Trang trước</a>
-                </c:if>
-                <c:if test="${requestPage.hasNext}">
-                  <a class="btn btn-outline btn-sm" href="?page=${requestPage.pageNumber + 1}&keyword=${keyword}&status=${statusFilter}">Trang sau ›</a>
-                </c:if>
-              </div>
+
+              <c:choose>
+                <c:when test="${requestPage.hasNext}">
+                  <c:url var="nextUrl" value="/manager/maintenance-requests">
+                    <c:param name="page" value="${requestPage.pageNumber + 1}" />
+                    <c:param name="pageSize" value="${requestPage.pageSize}" />
+                    <c:param name="keyword" value="${keyword}" />
+                    <c:param name="status" value="${statusFilter}" />
+                    <c:param name="priority" value="${priorityFilter}" />
+                    <c:param name="reportedDate" value="${reportedDateFilter}" />
+                  </c:url>
+                  <a class="btn btn-outline btn-sm" href="${nextUrl}">Trang sau ›</a>
+                </c:when>
+                <c:otherwise>
+                  <button type="button" class="btn btn-outline btn-sm" disabled>Trang sau ›</button>
+                </c:otherwise>
+              </c:choose>
             </div>
           </c:if>
         </section>

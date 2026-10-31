@@ -823,10 +823,13 @@ function bindConfirmButtons() {
             const reasonName = trigger.dataset.confirmReasonName;
             const needsReason = reasonName !== undefined;
 
+            const isDanger = trigger.dataset.confirmDanger !== "false";
+
             openConfirmDialog({
                 title: dialogTitle,
                 message: trigger.dataset.confirmMessage,
                 confirmText: trigger.dataset.confirmText,
+                isDanger: isDanger,
                 requireReason: needsReason,
                 onConfirm: function (reason) {
                     // B3
@@ -3140,3 +3143,62 @@ document.addEventListener("DOMContentLoaded", function () {
         }
     });
 });
+
+// =====================================================================
+// 13. Lightbox xem ảnh trực tiếp trên trang (GBR - Mở ngay tại trang, không mở tab mới)
+// =====================================================================
+window.openImageLightbox = function(imageUrl, title) {
+    if (!imageUrl) return;
+    let overlay = document.getElementById("gmsImageLightbox");
+    if (!overlay) {
+        overlay = document.createElement("div");
+        overlay.id = "gmsImageLightbox";
+        overlay.className = "gms-lightbox-overlay";
+        overlay.innerHTML = 
+            '<div class="gms-lightbox-backdrop"></div>' +
+            '<div class="gms-lightbox-content" role="dialog" aria-modal="true" aria-label="Xem ảnh phóng to">' +
+                '<button type="button" class="gms-lightbox-close" title="Đóng (Esc)" aria-label="Đóng">&times;</button>' +
+                '<div class="gms-lightbox-img-wrapper">' +
+                    '<img class="gms-lightbox-img" src="" alt="Ảnh phóng to" />' +
+                '</div>' +
+                '<div class="gms-lightbox-caption"></div>' +
+            '</div>';
+        document.body.appendChild(overlay);
+
+        const closeLightbox = function() {
+            overlay.classList.remove("active");
+            document.body.classList.remove("gms-lightbox-open");
+        };
+
+        overlay.querySelector(".gms-lightbox-close").addEventListener("click", closeLightbox);
+        overlay.querySelector(".gms-lightbox-backdrop").addEventListener("click", closeLightbox);
+        document.addEventListener("keydown", function(e) {
+            if (e.key === "Escape" && overlay.classList.contains("active")) {
+                closeLightbox();
+            }
+        });
+    }
+
+    const img = overlay.querySelector(".gms-lightbox-img");
+    const caption = overlay.querySelector(".gms-lightbox-caption");
+    img.src = imageUrl;
+    caption.textContent = title || "";
+    caption.style.display = title ? "block" : "none";
+
+    overlay.classList.add("active");
+    document.body.classList.add("gms-lightbox-open");
+};
+
+// Global click delegation cho các thẻ ảnh xem phóng to
+document.addEventListener("click", function(e) {
+    const trigger = e.target.closest("[data-lightbox-image], .image-lightbox-trigger, .maintenance-image-thumb-card, .incident-image-thumb-card");
+    if (trigger) {
+        e.preventDefault();
+        const src = trigger.getAttribute("data-lightbox-image") || trigger.getAttribute("href") || (trigger.querySelector("img") ? trigger.querySelector("img").src : null);
+        const title = trigger.getAttribute("data-lightbox-title") || trigger.getAttribute("title") || (trigger.querySelector("img") ? trigger.querySelector("img").alt : "");
+        if (src && !src.startsWith("#")) {
+            window.openImageLightbox(src, title);
+        }
+    }
+});
+

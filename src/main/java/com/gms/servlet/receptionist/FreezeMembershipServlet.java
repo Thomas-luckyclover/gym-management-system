@@ -78,8 +78,12 @@ public class FreezeMembershipServlet extends HttpServlet {
             return;
         }
 
-        // B3: Lấy từ khóa q người dùng nhập trong ô tìm kiếm
+        // B3: Lấy từ khóa q và bộ lọc filter người dùng chọn
         String query = RequestUtil.getTrimmedParam(request, "q");
+        String filter = RequestUtil.getTrimmedParam(request, "filter");
+        if (ValidationUtil.isNullOrEmpty(filter)) {
+            filter = "ALL";
+        }
         int page = PaginationUtil.getPageNumber(request); // Lấy số trang hiện tại phục vụ phân trang
         int pageSize = 10; // Phân trang 10 khách mỗi trang để vừa vặn giao diện
 
@@ -102,14 +106,15 @@ public class FreezeMembershipServlet extends HttpServlet {
             }
             request.setAttribute("query", query); // Gửi lại từ khóa ra JSP
         }
+        request.setAttribute("currentFilter", filter);
 
-        // B4: Lấy danh sách hội viên & hợp đồng hiển thị ở bảng phong cách GymMaster
-        PageResult<CustomerMembershipRow> membershipsPage = freezeService.getCustomerMembershipsPage(query, page, pageSize);
+        // B4: Lấy danh sách hội viên & hợp đồng hiển thị ở bảng phong cách GymMaster (có hỗ trợ lọc theo trạng thái)
+        PageResult<CustomerMembershipRow> membershipsPage = freezeService.getCustomerMembershipsPage(query, filter, page, pageSize);
         request.setAttribute("membershipsPage", membershipsPage);
         request.setAttribute("customerMemberships", membershipsPage.getItems());
 
-        // B5: Lấy toàn bộ lịch sử các đợt bảo lưu hiển thị ở tab "Lịch sử bảo lưu"
-        List<FreezeRecordItemView> freezeHistoryList = freezeService.getRecentFreezes(50);
+        // B5: Lấy toàn bộ lịch sử các đợt bảo lưu hiển thị ở tab "Lịch sử bảo lưu" (lọc theo từ khóa tìm kiếm)
+        List<FreezeRecordItemView> freezeHistoryList = freezeService.getRecentFreezes(query, 50);
         request.setAttribute("freezeHistoryList", freezeHistoryList);
         request.setAttribute("recentFreezes", freezeHistoryList); // tương thích ngược
         request.setAttribute("activeNav", "freeze");
@@ -163,10 +168,8 @@ public class FreezeMembershipServlet extends HttpServlet {
         String plannedEndDateStr = RequestUtil.getTrimmedParam(request, "plannedEndDate");
         String reason = RequestUtil.getTrimmedParam(request, "reason");
         String q = RequestUtil.getTrimmedParam(request, "q");
-
-        String redirectUrl = "/receptionist/freeze" + (!ValidationUtil.isNullOrEmpty(q)
-                ? "?q=" + URLEncoder.encode(q, StandardCharsets.UTF_8)
-                : "");
+        String filter = RequestUtil.getTrimmedParam(request, "filter");
+        String redirectUrl = buildRedirectUrl(q, filter);
 
         if (subscriptionId <= 0 || ValidationUtil.isNullOrEmpty(startDateStr)
                 || ValidationUtil.isNullOrEmpty(plannedEndDateStr)) {
@@ -213,10 +216,8 @@ public class FreezeMembershipServlet extends HttpServlet {
 
         int freezeRecordId = RequestUtil.getIntParam(request, "freezeRecordId", 0);
         String q = RequestUtil.getTrimmedParam(request, "q");
-
-        String redirectUrl = "/receptionist/freeze" + (!ValidationUtil.isNullOrEmpty(q)
-                ? "?q=" + URLEncoder.encode(q, StandardCharsets.UTF_8)
-                : "");
+        String filter = RequestUtil.getTrimmedParam(request, "filter");
+        String redirectUrl = buildRedirectUrl(q, filter);
 
         if (freezeRecordId <= 0) {
             RequestUtil.setFlashToast(request, "error", Messages.MSG288_FREEZE_ID_INVALID);
@@ -255,5 +256,18 @@ public class FreezeMembershipServlet extends HttpServlet {
         } catch (DateTimeParseException e) {
             JsonUtil.writeJson(response, JsonResponse.success(List.of()));
         }
+    }
+
+    private String buildRedirectUrl(String q, String filter) {
+        StringBuilder sb = new StringBuilder("/receptionist/freeze");
+        boolean hasParam = false;
+        if (!ValidationUtil.isNullOrEmpty(q)) {
+            sb.append("?q=").append(URLEncoder.encode(q, StandardCharsets.UTF_8));
+            hasParam = true;
+        }
+        if (!ValidationUtil.isNullOrEmpty(filter) && !"ALL".equalsIgnoreCase(filter)) {
+            sb.append(hasParam ? "&" : "?").append("filter=").append(URLEncoder.encode(filter, StandardCharsets.UTF_8));
+        }
+        return sb.toString();
     }
 }

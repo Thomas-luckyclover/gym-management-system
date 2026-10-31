@@ -63,27 +63,18 @@ public class CheckInService {
      * @return kết quả đánh giá điều kiện vào tập
      */
     public ServiceResult<CheckInLookupResult> lookupCustomer(String query) {
-        if (ValidationUtil.isNullOrEmpty(query)) {// nếu từ khóa null hoặc rỗng
+        if (ValidationUtil.isNullOrEmpty(query)) {
             return ServiceResult.fail(String.format(Messages.MSG09_REQUIRED, "Mã khách hoặc số điện thoại"));
         }
 
         try {
             CustomerLookupInfo customer = checkInDAO.findCustomerByKeyword(query.trim());
-            if (customer == null) {// nếu không tìm thấy khách hàng
-                CheckInLookupResult notFoundResult = CheckInLookupResult.notFound(
-                        "Không tìm thấy hồ sơ. Kiểm tra lại mã khách hoặc số điện thoại. Khách chưa từng đến thì tạo hồ sơ mới.");
-                return ServiceResult.ok(notFoundResult);
+            if (customer == null) {
+                return ServiceResult.ok(CheckInLookupResult.notFound(
+                        "Không tìm thấy hồ sơ. Kiểm tra lại mã khách hoặc số điện thoại. Khách chưa từng đến thì tạo hồ sơ mới."));
             }
-            // CustomerLookupInfo là dữ liệu sơ thô được lấy từ database
-            // CheckInLookupResult là kết quả sau khi xử lý nghiệp vụ từ dữ liệu thô kia
-            // Lý do tách k cho CheckInLookupResult gọi thẳng checkinDAO hoặc các DAO khác
-            // là để đảm bảo tính đóng gói và tuân thủ
-            // nguyên lý đơn trách nhiệm (SRP), mỗi class chỉ làm duy nhất 1 vc mà nó giỏi
-            // nhất ko ôm việc class khác
-            // dto là dữ liệu đc mang sang giao diện
 
             CheckInLookupResult result = new CheckInLookupResult();
-            //CheckinLookupResult là kết quả đã được xử lý nghiệp vụ từ dữ liệu thô CustomerLookupInfo
             result.setCustomerId(customer.customerId);
             result.setPersonId(customer.personId);
             result.setCustomerCode(customer.customerCode);
@@ -96,167 +87,82 @@ public class CheckInService {
             // Kiểm tra yêu cầu xoá đang chờ Quản lý duyệt (UC-17)
             boolean hasPendingDeletion = checkInDAO.hasPendingDeletionRequest(customer.customerId);
             result.setHasPendingDeletion(hasPendingDeletion);
-
             if (hasPendingDeletion) {
                 result.setDecision(Decision.DENIED_DELETION_PENDING);
                 result.setMessage("Hồ sơ đang chờ Quản lý duyệt xoá — không cho vào tập trong thời gian chờ duyệt.");
                 result.setCanCheckIn(false);
                 return ServiceResult.ok(result);
             }
-            // Decision phân loại kết quả bao gồm title và alertType (xanh đỏ vàng)
-            // Message giải thích chi tiết và hướng dẫn hành động cho lễ tân
 
-            // Lấy danh sách gói tập của hội viên
+            // Lấy gói tập có độ ưu tiên cao nhất (đã được câu lệnh SQL ở CheckInDAO sắp xếp)
             List<CustomerSubscriptionInfo> subs = checkInDAO.findSubscriptionsByCustomerId(customer.customerId);
+            CustomerSubscriptionInfo sub = (subs != null && !subs.isEmpty()) ? subs.get(0) : null;
 
-            CustomerSubscriptionInfo activeGymSub = null;
-            CustomerSubscriptionInfo notStartedGymSub = null;
-            CustomerSubscriptionInfo frozenGymSub = null;
-            CustomerSubscriptionInfo expiredGymSub = null;
-            CustomerSubscriptionInfo usedDayPassSub = null;
-            CustomerSubscriptionInfo ptSub = null;
+            if (sub == null) {
+                result.setDecision(Decision.DENIED_NO_PACKAGE);
+                result.setMessage("Hồ sơ chưa có gói tập nào.");
+                result.setCanCheckIn(false);
+                return ServiceResult.ok(result);
+            }
 
+            boolean isGymAccess = "Membership".equalsIgnoreCase(sub.subscriptionType)
+                    || "DayPass".equalsIgnoreCase(sub.subscriptionType);
+
+            if (!isGymAccess) {
+                // CBR-58: Khách chỉ có gói PT thì không được vào phòng tập tự do
+                result.setDecision(Decision.DENIED_PT_ONLY);
+                result.setMessage("Khách chỉ có gói PT, không có gói tập tự do.");
+                result.setCanCheckIn(false);
+                return ServiceResult.ok(result);
+            }
+
+            // Gán thông tin gói tập được chọn
+            result.setSubscriptionId(sub.subscriptionId);
+            result.setSubscriptionType(sub.subscriptionType);
+            result.setPackageName(sub.packageName);
+            result.setStartDate(sub.startDate);
+            result.setEndDate(sub.endDate);
+            result.setSubscriptionStatus(sub.status);
+
+            // Đánh giá điều kiện check-in
             LocalDate today = LocalDate.now();
-
-            for (CustomerSubscriptionInfo sub : subs) {
-                boolean isGymAccess = "Membership".equalsIgnoreCase(sub.subscriptionType)
-                        || "DayPass".equalsIgnoreCase(sub.subscriptionType);
-
-                if (isGymAccess) {
-                    if ("Active".equalsIgnoreCase(sub.status)) {
-                        // Kiểm tra chưa đến ngày bắt đầu (startDate > today)
-                        if (sub.startDate != null && sub.startDate.isAfter(today)) {
-                            if (notStartedGymSub == null) {
-                                notStartedGymSub = sub;
-                            }
-                        } else if (sub.endDate != null && !sub.endDate.isBefore(today)) {
-                            // GBR-03: Ngày hết hạn tính trọn vẹn cả ngày (endDate >= today là còn hạn)
-                            // Nếu là DayPass, kiểm tra đã dùng trong ngày chưa
-                            if ("DayPass".equalsIgnoreCase(sub.subscriptionType)) {
-                                boolean usedToday = checkInDAO.isDayPassUsedToday(sub.subscriptionId);
-                                if (usedToday) {
-                                    if (usedDayPassSub == null)
-                                        usedDayPassSub = sub;
-                                } else if (activeGymSub == null) {
-                                    activeGymSub = sub;
-                                }
-                            } else if (activeGymSub == null) {
-                                activeGymSub = sub;
-                            }
-                        } else if (expiredGymSub == null) {
-                            expiredGymSub = sub;
-                        }
-                    } else if ("Frozen".equalsIgnoreCase(sub.status)) {
-                        if (frozenGymSub == null)
-                            frozenGymSub = sub;
-                    } else if ("Used".equalsIgnoreCase(sub.status)) {
-                        if (usedDayPassSub == null)
-                            usedDayPassSub = sub;
-                    } else if ("Expired".equalsIgnoreCase(sub.status)) {
-                        if (expiredGymSub == null)
-                            expiredGymSub = sub;
-                    }
-                } else {
-                    // Gói PT (PTSingle, PTCouple, SingleSession)
-                    if ("Active".equalsIgnoreCase(sub.status) && ptSub == null) {
-                        ptSub = sub;
-                    }
-                }
-            }
-
-            // Ghi nhận thông tin gói PT nếu có
-            if (ptSub != null) {
-                result.setHasPtPackage(true);
-                result.setPtPackageName(ptSub.packageName);
-                result.setPtTotalSessions(ptSub.generatedSessionCount);
-            }
-
-            // Đánh giá điều kiện vào tập dựa trên các rule:
-            if (activeGymSub != null) {
-                result.setSubscriptionId(activeGymSub.subscriptionId);
-                result.setSubscriptionType(activeGymSub.subscriptionType);
-                result.setPackageName(activeGymSub.packageName);
-                result.setStartDate(activeGymSub.startDate);
-                result.setEndDate(activeGymSub.endDate);
-                result.setSubscriptionStatus(activeGymSub.status);
-
-                if ("DayPass".equalsIgnoreCase(activeGymSub.subscriptionType)) {
+            if ("Active".equalsIgnoreCase(sub.status)) {
+                if (sub.startDate != null && sub.startDate.isAfter(today)) {
+                    result.setDecision(Decision.DENIED_NOT_STARTED);
+                    String startText = "bắt đầu từ ngày " + DateTimeUtil.formatDate(sub.startDate);
+                    result.setMessage("Gói tập chưa đến ngày kích hoạt (" + startText + "). Chưa thể vào tập.");
+                    result.setCanCheckIn(false);
+                } else if ("DayPass".equalsIgnoreCase(sub.subscriptionType)) {
                     result.setDecision(Decision.ELIGIBLE_DAYPASS);
                     result.setMessage("Vé ngày chỉ vào được một lượt. Xác nhận là dùng hết vé.");
                     result.setCanCheckIn(true);
+                } else if (ValidationUtil.isNullOrEmpty(customer.checkInPhoto)) {
+                    // CBR-38: Khách mua online chưa có ảnh check-in tại quầy
+                    result.setDecision(Decision.WARN_MISSING_PHOTO);
+                    result.setMessage("Khách mua online, chưa có ảnh check-in. Chụp ảnh tại quầy rồi mới cho vào.");
+                    result.setCanCheckIn(false);
+                    result.setRequiresPhoto(true);
                 } else {
-                    // Gói Membership: Phải có ảnh check-in tại quầy (CBR-37, CBR-38)
-                    if (ValidationUtil.isNullOrEmpty(customer.checkInPhoto)) {
-                        result.setDecision(Decision.WARN_MISSING_PHOTO);
-                        result.setMessage("Khách mua online, chưa có ảnh check-in. Chụp ảnh tại quầy rồi mới cho vào.");
-                        result.setCanCheckIn(false);
-                        result.setRequiresPhoto(true);
-                    } else {
-                        result.setDecision(Decision.ELIGIBLE);
-                        String formattedEndDate = DateTimeUtil.formatDate(activeGymSub.endDate);
-                        result.setMessage("Gói còn hạn tới " + formattedEndDate + ". Mời khách vào tập.");
-                        result.setCanCheckIn(true);
-                    }
+                    result.setDecision(Decision.ELIGIBLE);
+                    String formattedEndDate = DateTimeUtil.formatDate(sub.endDate);
+                    result.setMessage("Gói còn hạn tới " + formattedEndDate + ". Mời khách vào tập.");
+                    result.setCanCheckIn(true);
                 }
-            } else if (frozenGymSub != null) {
-                result.setSubscriptionId(frozenGymSub.subscriptionId);
-                result.setSubscriptionType(frozenGymSub.subscriptionType);
-                result.setPackageName(frozenGymSub.packageName);
-                result.setStartDate(frozenGymSub.startDate);
-                result.setEndDate(frozenGymSub.endDate);
-                result.setSubscriptionStatus(frozenGymSub.status);
-
-                LocalDate freezeEnd = checkInDAO.getPlannedFreezeEndDate(frozenGymSub.subscriptionId);
+            } else if ("Frozen".equalsIgnoreCase(sub.status)) {
+                LocalDate freezeEnd = checkInDAO.getPlannedFreezeEndDate(sub.subscriptionId);
                 result.setFreezeEndDate(freezeEnd);
                 result.setDecision(Decision.DENIED_FROZEN);
                 String freezeText = freezeEnd != null ? " tới " + DateTimeUtil.formatDate(freezeEnd) : "";
                 result.setMessage("Gói đang bảo lưu" + freezeText + ". Khách phải huỷ bảo lưu trước khi vào tập.");
                 result.setCanCheckIn(false);
-            } else if (notStartedGymSub != null) {
-                result.setSubscriptionId(notStartedGymSub.subscriptionId);
-                result.setSubscriptionType(notStartedGymSub.subscriptionType);
-                result.setPackageName(notStartedGymSub.packageName);
-                result.setStartDate(notStartedGymSub.startDate);
-                result.setEndDate(notStartedGymSub.endDate);
-                result.setSubscriptionStatus(notStartedGymSub.status);
-
-                result.setDecision(Decision.DENIED_NOT_STARTED);
-                String startText = notStartedGymSub.startDate != null
-                        ? "bắt đầu từ ngày " + DateTimeUtil.formatDate(notStartedGymSub.startDate)
-                        : "chưa đến ngày kích hoạt";
-                result.setMessage("Gói tập chưa đến ngày kích hoạt (" + startText + "). Chưa thể vào tập.");
-                result.setCanCheckIn(false);
-            } else if (usedDayPassSub != null) {
-                result.setSubscriptionId(usedDayPassSub.subscriptionId);
-                result.setSubscriptionType(usedDayPassSub.subscriptionType);
-                result.setPackageName(usedDayPassSub.packageName);
+            } else if ("Used".equalsIgnoreCase(sub.status)) {
                 result.setDecision(Decision.DENIED_DAYPASS_USED);
-                result.setMessage(
-                        "Vé ngày đã dùng hôm nay. Mỗi vé chỉ vào được một lượt. Bán vé mới nếu khách muốn quay lại.");
+                result.setMessage("Vé ngày đã dùng hôm nay. Mỗi vé chỉ vào được một lượt. Bán vé mới nếu khách muốn quay lại.");
                 result.setCanCheckIn(false);
-            } else if (expiredGymSub != null) {
-                result.setSubscriptionId(expiredGymSub.subscriptionId);
-                result.setSubscriptionType(expiredGymSub.subscriptionType);
-                result.setPackageName(expiredGymSub.packageName);
-                result.setStartDate(expiredGymSub.startDate);
-                result.setEndDate(expiredGymSub.endDate);
-                result.setSubscriptionStatus(expiredGymSub.status);
-
+            } else if ("Expired".equalsIgnoreCase(sub.status)) {
                 result.setDecision(Decision.DENIED_EXPIRED);
-                String expiredText = expiredGymSub.endDate != null
-                        ? " " + DateTimeUtil.formatDate(expiredGymSub.endDate)
-                        : "";
-                result.setMessage("Gói " + expiredGymSub.packageName + " hết hạn" + expiredText
-                        + ". Gia hạn hoặc bán gói mới để khách vào tập.");
-                result.setCanCheckIn(false);
-            } else if (ptSub != null) {
-                // CBR-58: Khách chỉ có gói PT thì không được vào phòng tập tự do
-                result.setDecision(Decision.DENIED_PT_ONLY);
-                result.setMessage("Khách chỉ có gói PT, không có gói tập tự do.");
-                result.setCanCheckIn(false);
-            } else {
-                result.setDecision(Decision.DENIED_NO_PACKAGE);
-                result.setMessage("Hồ sơ chưa có gói tập nào.");
+                String expiredText = sub.endDate != null ? " " + DateTimeUtil.formatDate(sub.endDate) : "";
+                result.setMessage("Gói " + sub.packageName + " hết hạn" + expiredText + ". Gia hạn hoặc bán gói mới để khách vào tập.");
                 result.setCanCheckIn(false);
             }
 
@@ -279,12 +185,14 @@ public class CheckInService {
     public ServiceResult<Void> performCheckIn(int subscriptionId, int employeeAccountId, boolean photoVerified) {
         try {
             Account account = accountDAO.findById(employeeAccountId);
-            if (account == null) {
-                return ServiceResult.fail(String.format(Messages.MSG08_NOT_FOUND, "tài khoản nhân viên"));
+            //tìm tài khoản lễ tân
+            if (account == null) {//tài khoản có thể bị xóa, session cũ vẫn còn lưu, nên phải kiểm tra null
+                return ServiceResult.fail(String.format(Messages.MSG08_NOT_FOUND, "tài khoản nhân viên"));//hiển thị flashtoast bên servlet
             }
 
             Employee employee = employeeDAO.findByPersonId(account.getPersonId());
-            if (employee == null) {
+            //tìm thông tin nhân viên lễ tân theo personId của tài khoản
+            if (employee == null) {//tg tự account
                 return ServiceResult.fail(String.format(Messages.MSG08_NOT_FOUND, "hồ sơ nhân viên lễ tân"));
             }
 
@@ -295,6 +203,7 @@ public class CheckInService {
             checkIn.setPhotoVerified(photoVerified);
 
             checkInDAO.insertCheckIn(checkIn);
+            checkInDAO.markSubscriptionUsed(subscriptionId);//đánh dấu vé ngày đã dùng, k cho check in lại
 
             return ServiceResult.ok(null);
 

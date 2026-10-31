@@ -148,13 +148,16 @@
                       Sửa nhóm
                     </button>
 
-                    <form method="post" action="${pageContext.request.contextPath}/manager/facilities" style="display:inline;"
-                          onsubmit="return confirm('${selectedFacility.active ? 'Bạn có chắc chắn muốn ẨN nhóm máy này khỏi danh mục báo hỏng?' : 'Bạn muốn HIỆN lại nhóm máy này?'}');">
+                    <form method="post" action="${pageContext.request.contextPath}/manager/facilities" style="display:inline;">
                       <input type="hidden" name="csrfToken" value="${csrfToken}">
                       <input type="hidden" name="action" value="toggleFacility">
                       <input type="hidden" name="facilityId" value="${selectedFacility.facilityId}">
                       <input type="hidden" name="isActive" value="${!selectedFacility.active}">
-                      <button type="submit" class="btn btn-sm ${selectedFacility.active ? 'btn-ghost' : 'btn-success'}">
+                      <button type="submit" class="btn btn-sm ${selectedFacility.active ? 'btn-ghost' : 'btn-success'}"
+                              data-confirm-title="${selectedFacility.active ? 'Ẩn nhóm máy' : 'Hiện nhóm máy'}"
+                              data-confirm-message="${selectedFacility.active ? 'Bạn có chắc chắn muốn ẨN nhóm máy này khỏi danh mục báo hỏng?' : 'Bạn muốn HIỆN lại nhóm máy này?'}"
+                              data-confirm-text="${selectedFacility.active ? 'Ẩn nhóm' : 'Hiện nhóm'}"
+                              data-confirm-danger="${selectedFacility.active ? 'true' : 'false'}">
                         ${selectedFacility.active ? 'Ẩn nhóm' : 'Hiện nhóm'}
                       </button>
                     </form>
@@ -209,7 +212,18 @@
                           <c:forEach var="item" items="${selectedFacility.items}">
                             <tr class="${item.retired ? 'row-retired' : ''}">
                               <td>
-                                <span class="code-badge"><c:out value="${item.itemCode}" /></span>
+                                <c:choose>
+                                  <c:when test="${(item.underMaintenance || not empty item.activeRequestCode) && not empty item.activeRequestId}">
+                                    <a href="${pageContext.request.contextPath}/manager/maintenance-requests/review?id=${item.activeRequestId}"
+                                       class="code-badge code-badge-maintenance"
+                                       title="Máy đang bảo trì - Bấm để chuyển tới trang bảo trì xem đơn ${item.activeRequestCode}">
+                                      <c:out value="${item.itemCode}" />
+                                    </a>
+                                  </c:when>
+                                  <c:otherwise>
+                                    <span class="code-badge"><c:out value="${item.itemCode}" /></span>
+                                  </c:otherwise>
+                                </c:choose>
                               </td>
                               <td>
                                 <strong><c:out value="${item.itemLabel}" default="-" /></strong>
@@ -223,7 +237,22 @@
                                     <span class="badge badge-neutral">Đã thanh lý</span>
                                   </c:when>
                                   <c:when test="${item.underMaintenance || not empty item.activeRequestCode}">
-                                    <span class="badge badge-warning" title="${item.activeRequestCode}">Đang bảo trì (${item.activeRequestCode})</span>
+                                    <c:choose>
+                                      <c:when test="${not empty item.activeRequestId}">
+                                        <a href="${pageContext.request.contextPath}/manager/maintenance-requests/review?id=${item.activeRequestId}"
+                                           class="badge badge-warning badge-maintenance-link"
+                                           title="Bấm để chuyển tới trang bảo trì xem đơn ${item.activeRequestCode}">
+                                          <i class="fa-solid fa-screwdriver-wrench me-1"></i>Đang bảo trì (${item.activeRequestCode})
+                                        </a>
+                                      </c:when>
+                                      <c:otherwise>
+                                        <a href="${pageContext.request.contextPath}/manager/maintenance-requests?keyword=${item.itemCode}"
+                                           class="badge badge-warning badge-maintenance-link"
+                                           title="Bấm để tìm đơn bảo trì của máy ${item.itemCode} trên trang bảo trì">
+                                          <i class="fa-solid fa-screwdriver-wrench me-1"></i>Đang bảo trì (${item.activeRequestCode})
+                                        </a>
+                                      </c:otherwise>
+                                    </c:choose>
                                   </c:when>
                                   <c:otherwise>
                                     <span class="badge badge-success">Khả dụng</span>
@@ -238,13 +267,16 @@
                                       Sửa
                                     </button>
 
-                                    <form method="post" action="${pageContext.request.contextPath}/manager/facilities" style="display:inline;"
-                                          onsubmit="return confirm('Bạn có chắc chắn muốn thanh lý máy ${item.itemCode}? Máy sẽ chuyển sang trạng thái Ngừng sử dụng vĩnh viễn.');">
+                                    <form method="post" action="${pageContext.request.contextPath}/manager/facilities" style="display:inline;">
                                       <input type="hidden" name="csrfToken" value="${csrfToken}">
                                       <input type="hidden" name="action" value="retireItem">
                                       <input type="hidden" name="facilityId" value="${selectedFacility.facilityId}">
                                       <input type="hidden" name="equipmentItemId" value="${item.equipmentItemId}">
-                                      <button type="submit" class="btn btn-xs btn-danger">Thanh lý</button>
+                                      <button type="submit" class="btn btn-xs btn-danger"
+                                              data-confirm-title="Thanh lý máy ${item.itemCode}"
+                                              data-confirm-message="Bạn có chắc chắn muốn thanh lý máy ${item.itemCode}? Máy sẽ chuyển sang trạng thái Ngừng sử dụng vĩnh viễn."
+                                              data-confirm-text="Thanh lý"
+                                              data-confirm-danger="true">Thanh lý</button>
                                     </form>
                                   </c:if>
                                 </div>

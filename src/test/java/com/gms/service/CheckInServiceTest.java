@@ -485,9 +485,8 @@ class CheckInServiceTest {
         }
 
         @Override
-        public int insertCheckIn(Connection conn, CheckIn checkIn) {
-            insertedCheckIns.add(checkIn);
-            return insertedCheckIns.size();
+        public void markSubscriptionUsed(int subscriptionId) {
+            // Giả lập đánh dấu Used cho vé ngày
         }
 
         @Override

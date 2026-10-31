@@ -69,17 +69,16 @@ public class CheckInServlet extends HttpServlet {
                 CheckInLookupResult lookupData = result.getData();
                 //lấy dữ liệu kèm theo khi thực hiện tra cứu (CheckInLookupResult) từ ServiceResult
 
-                // Nếu exact match không tìm thấy (Mã KH / SĐT) → tìm theo một phần tên có phân
-                // trang
+                // Nếu exact match không tìm thấy (Mã KH / SĐT) → tìm theo một phần tên có phân trang
                 if (lookupData.getDecision() == CheckInLookupResult.Decision.NOT_FOUND) {//dòng 73 service
                     PageResult<CustomerSearchItem> searchResultsPage = checkInService.searchCustomersPage(query, page,
                             pageSize);
 
-                    if (!searchResultsPage.isEmpty()) {// neu danh sach ket qua tim kiem khong rong
+                    if (!searchResultsPage.isEmpty()) {//nếu danh sách kết quả tìm kiếm theo 1 phần tên không rỗng thì không đóng gói lookupResult
+                        //ở đây lookupResult sẽ là null, chỉ có searchResultsPage được set vào request để jsp hiển thị danh sách khách hàng
+
                         request.setAttribute("searchResultsPage", searchResultsPage);
-                        // dong goi thong tin phan trang
-                        request.setAttribute("searchResults", searchResultsPage.getItems());
-                        // dong goi danh sach cua cac khach hang tim thay
+                        // dong goi thong tin ket qua tim kiem va phan trang (jsp dung searchResultsPage.items)
                     } else {// neu danh sach ket qua tim kiem rong
                         // Không tìm thấy khách nào
                         request.setAttribute("lookupResult", lookupData);
@@ -199,41 +198,36 @@ public class CheckInServlet extends HttpServlet {
             return;
         }
 
+        String redirectUrl = "/receptionist/check-in"
+                + (!ValidationUtil.isNullOrEmpty(customerCode) ? "?q=" + customerCode : "");
+
         Part photoPart = request.getPart("photoFile");
-        String photoPath;
-
-        if (photoPart != null && photoPart.getSize() > 0) {
-            String uploadDirectoryValue = getServletContext().getRealPath("/uploads/checkin");
-            if (uploadDirectoryValue == null) {
-                uploadDirectoryValue = System.getProperty("java.io.tmpdir") + "/uploads/checkin";
-            }
-
-            Path uploadDirectory = Path.of(uploadDirectoryValue);
-            Files.createDirectories(uploadDirectory);
-
-            String fileName = "checkin-" + customerId + "-" + UUID.randomUUID() + ".jpg";
-            Path newFilePath = uploadDirectory.resolve(fileName).normalize();
-
-            try (InputStream is = photoPart.getInputStream()) {
-                Files.copy(is, newFilePath, StandardCopyOption.REPLACE_EXISTING);
-            }
-
-            photoPath = "/uploads/checkin/" + fileName;
-        } else {
-            // Ảnh mẫu dự phòng khi máy thực hành không có camera vật lý
-            photoPath = "https://images.unsplash.com/photo-1524504388940-b1c1722653e1?w=240&h=300&fit=crop&q=80";
+        //Nhận file ảnh được gửi từ <input name="photoFile">
+        if (photoPart == null || photoPart.getSize() == 0) {
+            RequestUtil.setFlashToast(request, "error", "Vui lòng chụp ảnh từ webcam hoặc chọn tệp ảnh trước khi lưu.");
+            RequestUtil.redirect(request, response, redirectUrl);
+            return;
         }
+
+        Path uploadDirectory = Path.of(getServletContext().getRealPath("/uploads/checkin"));//đường dẫn thư mục lưu ảnh check-in trên server
+        Files.createDirectories(uploadDirectory);//
+
+        String fileName = "checkin-" + customerId + "-" + UUID.randomUUID() + ".jpg";
+        //đặt tên file ảnh để tránh trùng tên
+
+        try (InputStream is = photoPart.getInputStream()) { //Lệnh này lấy bức ảnh đó tải về và lưu vào một thư mục trên ổ cứng của server.
+            Files.copy(is, uploadDirectory.resolve(fileName), StandardCopyOption.REPLACE_EXISTING);
+        }
+
+        String photoPath = "/uploads/checkin/" + fileName;
 
         ServiceResult<Void> updateResult = checkInService.updateCheckInPhoto(customerId, photoPath);
 
         if (updateResult.isSuccess()) {
             RequestUtil.setFlashToast(request, "success", Messages.MSG297_CHECKIN_PHOTO_SAVED);
-            String redirectUrl = "/receptionist/check-in"
-                    + (!ValidationUtil.isNullOrEmpty(customerCode) ? "?q=" + customerCode : "");
-            RequestUtil.redirect(request, response, redirectUrl);
         } else {
             RequestUtil.setFlashToast(request, "error", updateResult.getMessage());
-            RequestUtil.redirect(request, response, "/receptionist/check-in");
         }
+        RequestUtil.redirect(request, response, redirectUrl);
     }
 }

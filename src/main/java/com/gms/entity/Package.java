@@ -27,6 +27,10 @@ public class Package {
     // getBenefitLines tự thêm 1 dòng quyền lợi, quản lý không phải gõ tay vào ô Benefits.
     private boolean unlocksExerciseLibrary;
     private LocalDateTime createdAt;
+    // DAO: Packages.RowVer (ROWVERSION, 8 byte). Chỉ PackageDAO.findById đọc cột này;
+    // màn sửa gói (UC-10) gửi lại giá trị cũ để UPDATE ... WHERE RowVer = ? chặn 2 Quản lý ghi đè nhau (MSG22).
+    // Các câu SELECT khác (trang chủ, Mua gói) không đọc → để null.
+    private byte[] rowVersion;
 
     /**
      * Constructor tối thiểu: chỉ nhận Id (final, bắt buộc gán ở đây), các trường còn lại gán bằng setter.
@@ -184,6 +188,16 @@ public class Package {
     // Gán thời điểm tạo gói
     public void setCreatedAt(LocalDateTime createdAt) {
         this.createdAt = createdAt;
+    }
+
+    // Phiên bản dòng (RowVer) lúc đọc — màn sửa gói dùng để phát hiện người khác vừa lưu trước
+    public byte[] getRowVersion() {
+        return rowVersion;
+    }
+
+    // Gán phiên bản dòng (PackageDAO.findById đọc từ cột RowVer)
+    public void setRowVersion(byte[] rowVersion) {
+        this.rowVersion = rowVersion;
     }
 
     // Chuỗi mô tả ngắn gọn cho debug/log

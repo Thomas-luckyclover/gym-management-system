@@ -5,11 +5,8 @@ import com.gms.constant.SessionKey;
 import com.gms.dao.MaintenanceRequestDAO;
 import com.gms.dto.PageResult;
 import com.gms.dto.ServiceResult;
-import com.gms.entity.EquipmentItem;
-import com.gms.entity.Facility;
 import com.gms.entity.MaintenanceRequest;
 import com.gms.service.MaintenanceRequestService;
-import com.gms.util.JsonUtil;
 import com.gms.util.PaginationUtil;
 import com.gms.util.RequestUtil;
 import jakarta.servlet.ServletException;
@@ -22,7 +19,6 @@ import jakarta.servlet.http.HttpSession;
 import java.io.IOException;
 import java.time.LocalDate;
 import java.util.Collections;
-import java.util.List;
 import java.util.Map;
 
 /**
@@ -35,7 +31,6 @@ public class MaintenanceRequestServlet extends HttpServlet {
     private static final String VIEW_NAME =
             "receptionist/maintenance-requests";
 
-    private static final String ACTION_CREATE = "create";
     private static final String ACTION_CLOSE = "close";
 
     private final MaintenanceRequestService maintenanceRequestService =
@@ -90,11 +85,6 @@ public class MaintenanceRequestServlet extends HttpServlet {
         String action =
                 RequestUtil.getTrimmedParam(request, "action");
 
-        if (ACTION_CREATE.equals(action)) {
-            handleCreate(request, response, accountId);
-            return;
-        }
-
         if (ACTION_CLOSE.equals(action)) {
             handleClose(request, response, accountId);
             return;
@@ -111,131 +101,6 @@ public class MaintenanceRequestServlet extends HttpServlet {
                 request,
                 response,
                 "/receptionist/maintenance-requests"
-        );
-    }
-
-    // ===== Tạo yêu cầu =====
-
-    private void handleCreate(
-            HttpServletRequest request,
-            HttpServletResponse response,
-            int accountId
-    ) throws ServletException, IOException {
-
-        String equipmentItemIdsParam =
-                RequestUtil.getTrimmedParam(
-                        request,
-                        "equipmentItemIds"
-                );
-
-        List<Integer> itemIds = new java.util.ArrayList<>();
-        if (equipmentItemIdsParam != null && !equipmentItemIdsParam.isEmpty()) {
-            for (String part : equipmentItemIdsParam.split(",")) {
-                try {
-                    int id = Integer.parseInt(part.trim());
-                    if (id > 0) {
-                        itemIds.add(id);
-                    }
-                } catch (NumberFormatException ignored) {
-                }
-            }
-        }
-
-        if (itemIds.isEmpty()) {
-            int singleId =
-                    RequestUtil.getIntParam(
-                            request,
-                            "equipmentItemId",
-                            0
-                    );
-            if (singleId > 0) {
-                itemIds.add(singleId);
-            }
-        }
-
-        String priority =
-                RequestUtil.getTrimmedParam(
-                        request,
-                        "priority"
-                );
-
-        String incidentType =
-                RequestUtil.getTrimmedParam(
-                        request,
-                        "incidentType"
-                );
-
-        String detectedBy =
-                RequestUtil.getTrimmedParam(
-                        request,
-                        "detectedBy"
-                );
-
-        String description =
-                RequestUtil.getTrimmedParam(
-                        request,
-                        "description"
-                );
-
-        boolean warningTagPlaced =
-                request.getParameter("warningTagPlaced") != null;
-
-        String attachedImages =
-                RequestUtil.getTrimmedParam(
-                        request,
-                        "attachedImages"
-                );
-
-        ServiceResult<List<String>> result =
-                maintenanceRequestService.createRequests(
-                        accountId,
-                        itemIds,
-                        priority,
-                        incidentType,
-                        detectedBy,
-                        description,
-                        warningTagPlaced,
-                        attachedImages
-                );
-
-        if (result.isSuccess()) {
-            List<String> codes = result.getData();
-            String msg = (codes != null && codes.size() == 1)
-                    ? "Đã gửi yêu cầu bảo trì " + codes.get(0) + "."
-                    : "Đã gửi thành công " + (codes != null ? codes.size() : 0) + " yêu cầu bảo trì.";
-
-            RequestUtil.setFlashToast(
-                    request,
-                    "success",
-                    msg
-            );
-
-            RequestUtil.redirect(
-                    request,
-                    response,
-                    "/receptionist/facilities"
-            );
-            return;
-        }
-
-        String errorMsg = result.getMessage();
-        if (errorMsg == null && !result.getFieldErrors().isEmpty()) {
-            errorMsg = result.getFieldErrors().values().iterator().next();
-        }
-        if (errorMsg == null) {
-            errorMsg = Messages.MSG04_SYSTEM_BUSY;
-        }
-
-        RequestUtil.setFlashToast(
-                request,
-                "error",
-                errorMsg
-        );
-
-        RequestUtil.redirect(
-                request,
-                response,
-                "/receptionist/facilities"
         );
     }
 
@@ -343,39 +208,6 @@ public class MaintenanceRequestServlet extends HttpServlet {
             }
         }
 
-        // Support pre-selecting a facility or equipment item (?facilityId=... / ?equipmentItemId=...)
-        if (request.getAttribute("formFacilityId") == null) {
-            int preselectedFacilityId =
-                    RequestUtil.getIntParam(
-                            request,
-                            "facilityId",
-                            0
-                    );
-
-            if (preselectedFacilityId > 0) {
-                request.setAttribute(
-                        "formFacilityId",
-                        preselectedFacilityId
-                );
-            }
-        }
-
-        if (request.getAttribute("formEquipmentItemId") == null) {
-            int preselectedItemId =
-                    RequestUtil.getIntParam(
-                            request,
-                            "equipmentItemId",
-                            0
-                    );
-
-            if (preselectedItemId > 0) {
-                request.setAttribute(
-                        "formEquipmentItemId",
-                        preselectedItemId
-                );
-            }
-        }
-
         int page =
                 PaginationUtil.getPageNumber(request);
 
@@ -407,14 +239,6 @@ public class MaintenanceRequestServlet extends HttpServlet {
                 totalStatusCount
         );
 
-        // Fetch selectable facilities with derived quantities
-        ServiceResult<List<Facility>> facilityResult =
-                maintenanceRequestService.getSelectableFacilities();
-
-        // Fetch selectable individual equipment items
-        ServiceResult<List<EquipmentItem>> equipmentItemsResult =
-                maintenanceRequestService.getSelectableEquipmentItems();
-
         // Fetch paginated requests visible to receptionist
         ServiceResult<PageResult<MaintenanceRequestDAO.MaintenanceRequestView>>
                 pageResult =
@@ -428,31 +252,7 @@ public class MaintenanceRequestServlet extends HttpServlet {
                         pageSize
                 );
 
-        // Fetch active requests map for client-side warning banners
-        ServiceResult<Map<Integer, List<MaintenanceRequestDAO.UnfinishedRequestSummary>>>
-                unfinishedResult =
-                maintenanceRequestService.getUnfinishedRequestsMap();
-
-        Map<Integer, List<MaintenanceRequestDAO.UnfinishedRequestSummary>> unfinishedMap =
-                unfinishedResult.isSuccess() && unfinishedResult.getData() != null
-                        ? unfinishedResult.getData()
-                        : Collections.emptyMap();
-
         // Set request attributes for JSP view rendering
-        request.setAttribute(
-                "facilities",
-                facilityResult.isSuccess()
-                        ? facilityResult.getData()
-                        : Collections.emptyList()
-        );
-
-        request.setAttribute(
-                "equipmentItems",
-                equipmentItemsResult.isSuccess()
-                        ? equipmentItemsResult.getData()
-                        : Collections.emptyList()
-        );
-
         request.setAttribute(
                 "requestPage",
                 pageResult.isSuccess()
@@ -464,9 +264,6 @@ public class MaintenanceRequestServlet extends HttpServlet {
                         0
                 )
         );
-
-        request.setAttribute("unfinishedMap", unfinishedMap);
-        request.setAttribute("unfinishedJson", JsonUtil.toJson(unfinishedMap));
 
         if (!pageResult.isSuccess()) {
             request.setAttribute(
@@ -482,14 +279,6 @@ public class MaintenanceRequestServlet extends HttpServlet {
         request.setAttribute(
                 "priorityOptions",
                 MaintenanceRequest.Priority.values()
-        );
-        request.setAttribute(
-                "incidentTypeOptions",
-                MaintenanceRequest.IncidentType.values()
-        );
-        request.setAttribute(
-                "detectedByOptions",
-                MaintenanceRequest.DetectedBy.values()
         );
         request.setAttribute(
                 "statusOptions",

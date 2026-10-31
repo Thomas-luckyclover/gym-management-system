@@ -474,7 +474,7 @@ public class FreezeService {
 
                 // B6: Chuyển các buổi PT Scheduled trong kỳ thành Missed (MembershipFrozen) (CBR-62, CBR-67, CBR-68)
                 List<FreezeSessionImpactView> impactedSessions = freezeRecordDAO.findScheduledSessionsInPeriod(
-                        sub.getCustomerId(), startDate, plannedEndDate);
+                        conn, sub.getCustomerId(), startDate, plannedEndDate);
 
                 List<Integer> sessionIdsToMiss = impactedSessions.stream()
                         .filter(FreezeSessionImpactView::isWillBeMissed)
@@ -745,32 +745,40 @@ public class FreezeService {
     // =========================================================================
 
     /**
-     * Lấy danh sách các đợt bảo lưu gần đây phục vụ hiển thị trên bảng dữ liệu quầy Lễ tân.
+     * Lấy danh sách các đợt bảo lưu gần đây phục vụ hiển thị trên bảng dữ liệu quầy Lễ tân (có hỗ trợ lọc theo từ khóa).
      */
-    public List<FreezeRecordItemView> getRecentFreezes(int limit) {
+    public List<FreezeRecordItemView> getRecentFreezes(String keyword, int limit) {
         try {
-            return freezeRecordDAO.findRecentFreezes(limit);
+            return freezeRecordDAO.findRecentFreezes(keyword, limit);
         } catch (SQLException e) {
             LOGGER.log(Level.SEVERE, "Lỗi khi lấy danh sách bảo lưu gần đây", e);
             return List.of();
         }
     }
 
+    public List<FreezeRecordItemView> getRecentFreezes(int limit) {
+        return getRecentFreezes(null, limit);
+    }
+
     /**
      * Lấy danh sách hội viên kèm gói tập Membership phục vụ hiển thị lưới dữ liệu tương tự GymMaster.
      */
-    public PageResult<CustomerMembershipRow> getCustomerMembershipsPage(String keyword, int pageNumber, int pageSize) {
+    public PageResult<CustomerMembershipRow> getCustomerMembershipsPage(String keyword, String filter, int pageNumber, int pageSize) {
         try {
-            long total = freezeRecordDAO.countCustomerMemberships(keyword);
+            long total = freezeRecordDAO.countCustomerMemberships(keyword, filter);
             if (total == 0) {
                 return new PageResult<>(List.of(), pageNumber, pageSize, 0);
             }
-            List<CustomerMembershipRow> items = freezeRecordDAO.findCustomerMemberships(keyword, pageNumber, pageSize);
+            List<CustomerMembershipRow> items = freezeRecordDAO.findCustomerMemberships(keyword, filter, pageNumber, pageSize);
             return new PageResult<>(items, pageNumber, pageSize, total);
         } catch (SQLException e) {
             LOGGER.log(Level.SEVERE, "Lỗi khi lấy danh sách hội viên và gói tập", e);
             return new PageResult<>(List.of(), pageNumber, pageSize, 0);
         }
+    }
+
+    public PageResult<CustomerMembershipRow> getCustomerMembershipsPage(String keyword, int pageNumber, int pageSize) {
+        return getCustomerMembershipsPage(keyword, "ALL", pageNumber, pageSize);
     }
 }
 
