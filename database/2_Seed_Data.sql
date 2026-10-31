@@ -5004,25 +5004,25 @@ SET IDENTITY_INSERT SessionMoveLogs OFF;
    ============================================================================ */
 SET IDENTITY_INSERT LeaveRequests ON;
 INSERT INTO LeaveRequests (LeaveRequestId, EmployeeId, ReviewedByEmployeeId, AssignedToEmployeeId, LeaveType, FromDate, ToDate, ShiftType, Days, Reason, Status, RejectReason, SubmittedAt, ReviewedAt, ReminderSentAt, LeaveGroupId) VALUES
- (1, 5, 2, 2, 'Annual', '2026-10-18', '2026-10-18', 'Morning', 0.5, N'Về quê có việc gia đình', 'Approved', NULL, '2026-10-16 09:00:00', '2026-10-17 15:30:00', NULL, NULL),
- (2, 4, 2, 2, 'Sick', '2026-10-19', '2026-10-19', 'Afternoon', 0.5, N'Nghỉ khám sức khỏe ca chiều', 'Rejected', N'Ca chiều thiếu lễ tân trực quầy, vui lòng đổi ca khác', '2026-10-18 08:30:00', '2026-10-18 16:00:00', NULL, NULL),
- (3, 6, NULL, 2, 'Annual', '2026-10-22', '2026-10-22', 'Morning', 1.0, N'Tham gia hội thảo chuyên môn fitness buổi sáng', 'Pending', NULL, '2026-10-20 08:30:00', NULL, NULL, NULL),
- (4, 3, NULL, 2, 'Annual', '2026-10-23', '2026-10-24', 'FullDay', 2.0, N'Nghỉ phép thường niên cùng gia đình 2 ngày', 'Pending', NULL, '2026-10-20 09:15:00', NULL, NULL, NULL),
- (5, 7, NULL, 2, 'Sick', '2026-10-24', '2026-10-24', 'Morning', 1.0, N'Khám chấn thương cổ tay tại bệnh viện thể thao', 'Pending', NULL, '2026-10-20 10:00:00', NULL, NULL, NULL),
- (6, 9, NULL, NULL, 'Unpaid', '2026-10-25', '2026-10-25', 'Afternoon', 1.0, N'Xin nghỉ giải quyết thủ tục giấy tờ hành chính cá nhân', 'Pending', NULL, '2026-10-20 11:30:00', NULL, NULL, NULL),
- (7, 8, NULL, 2, 'Annual', '2026-10-26', '2026-10-26', 'FullDay', 1.0, N'Nghỉ giải quyết việc gia đình đột xuất', 'Pending', NULL, '2026-10-20 13:45:00', NULL, NULL, NULL),
- (8, 3, NULL, NULL, 'Unpaid', '2026-10-27', '2026-10-27', 'Morning', 1.0, N'Sắp nghỉ: xin nghỉ ca sáng để giải quyết việc gia đình.', 'Pending', NULL, '2026-10-26 08:00:00', NULL, NULL, NULL),
- (9, 5, NULL, NULL, 'Annual', '2026-10-28', '2026-10-28', 'Morning', 1.0, N'Phép năm một ca: đưa người thân đi làm thủ tục buổi sáng.', 'Pending', NULL, '2026-10-26 08:10:00', NULL, NULL, NULL),
- (10, 5, NULL, NULL, 'Unpaid', '2026-11-01', '2026-11-01', 'Morning', 1.0, N'Chủ động xin nghỉ không lương dù vẫn còn phép năm.', 'Pending', NULL, '2026-10-26 08:20:00', NULL, NULL, NULL),
- (11, 5, 2, NULL, 'Annual', '2026-10-21', '2026-10-21', 'Morning', 1.0, N'Đơn đã duyệt: nghỉ giải quyết thủ tục cá nhân.', 'Approved', NULL, '2026-10-18 08:00:00', '2026-10-19 08:00:00', NULL, NULL),
- (12, 5, 2, NULL, 'Unpaid', '2026-10-30', '2026-10-30', 'Afternoon', 1.0, N'Đơn từ chối: xin nghỉ để tham gia lớp học cá nhân.', 'Rejected', N'Chưa bố trí được người thay ca, vui lòng chọn ngày khác.', '2026-10-26 08:30:00', '2026-10-26 09:00:00', NULL, NULL),
- (13, 6, NULL, NULL, 'Unpaid', '2026-10-25', '2026-10-25', 'FullDay', 1.0, N'Ngày nghỉ đã qua nhưng đơn vẫn đang chờ xử lý.', 'Pending', NULL, '2026-10-23 08:00:00', NULL, NULL, NULL),
- (14, 9, NULL, NULL, 'Annual', '2026-11-03', '2026-11-05', 'FullDay', 3.0, N'Nghỉ nhiều ngày: về quê dự việc gia đình trong ba ngày.', 'Pending', NULL, '2026-10-26 08:40:00', NULL, NULL, NULL),
- (15, 14, NULL, NULL, 'Annual', '2026-11-18', '2026-12-02', 'FullDay', 15.0, N'Thiếu phép: xin 15 ngày khi quỹ phép năm được cấu hình 14 ngày.', 'Pending', NULL, '2026-10-26 08:50:00', NULL, NULL, NULL),
- (16, 3, NULL, NULL, 'Annual', '2026-11-08', '2026-11-12', 'FullDay', 5.0, N'Đợt nghỉ 9 ngày, phần phép năm đang chờ.', 'Pending', NULL, '2026-10-26 09:00:00', NULL, NULL, '11111111-0524-4620-8000-000000000001'),
- (17, 3, NULL, NULL, 'Unpaid', '2026-11-13', '2026-11-16', 'FullDay', 4.0, N'Cùng đợt nghỉ 9 ngày, phần không lương đang chờ.', 'Pending', NULL, '2026-10-26 09:00:00', NULL, NULL, '11111111-0524-4620-8000-000000000001'),
- (18, 3, 2, NULL, 'Annual', '2026-11-20', '2026-11-24', 'FullDay', 5.0, N'Phần phép năm đã được duyệt trong đợt 9 ngày.', 'Approved', NULL, '2026-10-26 09:00:00', '2026-10-26 10:00:00', NULL, '22222222-0524-4620-8000-000000000002'),
- (19, 3, 2, NULL, 'Unpaid', '2026-11-25', '2026-11-28', 'FullDay', 4.0, N'Phần không lương bị từ chối trong cùng đợt.', 'Rejected', N'Chưa bố trí được nhân sự cho phần không lương.', '2026-10-26 09:00:00', '2026-10-26 10:00:00', NULL, '22222222-0524-4620-8000-000000000002');
+ (1, 5, 2, 2, 'Annual', '2026-10-28', '2026-10-28', 'Morning', 0.5, N'Về quê có việc gia đình', 'Approved', NULL, '2026-10-26 09:00:00', '2026-10-27 15:30:00', NULL, NULL),
+ (2, 4, 2, 2, 'Sick', '2026-10-29', '2026-10-29', 'Afternoon', 0.5, N'Nghỉ khám sức khỏe ca chiều', 'Rejected', N'Ca chiều thiếu lễ tân trực quầy, vui lòng đổi ca khác', '2026-10-28 08:30:00', '2026-10-28 16:00:00', NULL, NULL),
+ (3, 6, NULL, 2, 'Annual', '2026-11-04', '2026-11-04', 'Morning', 1.0, N'Tham gia hội thảo chuyên môn fitness buổi sáng', 'Pending', NULL, '2026-11-01 08:30:00', NULL, NULL, NULL),
+ (4, 3, NULL, 2, 'Annual', '2026-11-09', '2026-11-10', 'FullDay', 2.0, N'Nghỉ phép thường niên cùng gia đình 2 ngày', 'Pending', NULL, '2026-11-02 09:15:00', NULL, NULL, NULL),
+ (5, 7, NULL, 2, 'Sick', '2026-11-10', '2026-11-10', 'Morning', 1.0, N'Khám chấn thương cổ tay tại bệnh viện thể thao', 'Pending', NULL, '2026-11-03 10:00:00', NULL, NULL, NULL),
+ (6, 9, NULL, NULL, 'Unpaid', '2026-11-11', '2026-11-11', 'Afternoon', 1.0, N'Xin nghỉ giải quyết thủ tục giấy tờ hành chính cá nhân', 'Pending', NULL, '2026-11-03 11:30:00', NULL, NULL, NULL),
+ (7, 5, NULL, 2, 'Annual', '2026-11-12', '2026-11-12', 'FullDay', 1.0, N'Nghỉ giải quyết việc gia đình đột xuất', 'Pending', NULL, '2026-11-03 13:45:00', NULL, NULL, NULL),
+ (8, 9, NULL, NULL, 'Annual', '2026-11-05', '2026-11-05', 'Morning', 1.0, N'Cần duyệt muộn: ngày nghỉ hôm qua nhưng Manager chưa kịp duyệt.', 'Pending', NULL, '2026-11-04 08:00:00', NULL, NULL, NULL),
+ (9, 5, NULL, NULL, 'Annual', '2026-11-06', '2026-11-06', 'Morning', 1.0, N'Sắp đến ngày nghỉ: xin nghỉ ca sáng hôm nay để đưa người thân đi khám.', 'Pending', NULL, '2026-11-05 14:00:00', NULL, NULL, NULL),
+ (10, 5, NULL, NULL, 'Unpaid', '2026-11-07', '2026-11-07', 'Morning', 1.0, N'Sắp đến ngày nghỉ: xin nghỉ ngày mai để giải quyết việc cá nhân.', 'Pending', NULL, '2026-11-05 15:30:00', NULL, NULL, NULL),
+ (11, 5, 2, NULL, 'Annual', '2026-11-02', '2026-11-02', 'Morning', 1.0, N'Đơn đã duyệt: nghỉ giải quyết thủ tục cá nhân.', 'Approved', NULL, '2026-10-30 08:00:00', '2026-10-31 08:00:00', NULL, NULL),
+ (12, 5, 2, NULL, 'Unpaid', '2026-11-03', '2026-11-03', 'Afternoon', 1.0, N'Đơn từ chối: xin nghỉ để tham gia lớp học cá nhân.', 'Rejected', N'Chưa bố trí được người thay ca, vui lòng chọn ngày khác.', '2026-11-01 08:30:00', '2026-11-01 09:00:00', NULL, NULL),
+ (13, 6, NULL, NULL, 'Unpaid', '2026-11-04', '2026-11-04', 'FullDay', 1.0, N'Ngày nghỉ đã qua nhưng đơn vẫn đang chờ xử lý (Duyệt muộn).', 'Pending', NULL, '2026-11-02 08:00:00', NULL, NULL, NULL),
+ (14, 9, NULL, NULL, 'Annual', '2026-11-16', '2026-11-18', 'FullDay', 3.0, N'Nghỉ nhiều ngày: về quê dự việc gia đình trong ba ngày.', 'Pending', NULL, '2026-11-04 08:40:00', NULL, NULL, NULL),
+ (15, 14, NULL, NULL, 'Annual', '2026-11-18', '2026-12-02', 'FullDay', 15.0, N'Thiếu phép: xin 15 ngày khi quỹ phép năm chỉ còn 12 ngày (Bị khóa nút duyệt).', 'Pending', NULL, '2026-11-04 08:50:00', NULL, NULL, NULL),
+ (16, 13, NULL, NULL, 'Annual', '2026-11-09', '2026-11-10', 'FullDay', 2.0, N'Đợt nghỉ 4 ngày Lý Hoàng Long: phần 1 Phép năm 2 ngày.', 'Pending', NULL, '2026-11-04 09:00:00', NULL, NULL, '33333333-0524-4620-8000-000000000003'),
+ (17, 13, NULL, NULL, 'Unpaid', '2026-11-11', '2026-11-12', 'FullDay', 2.0, N'Đợt nghỉ 4 ngày Lý Hoàng Long: phần 2 Không lương 2 ngày.', 'Pending', NULL, '2026-11-04 09:00:00', NULL, NULL, '33333333-0524-4620-8000-000000000003'),
+ (18, 3, 2, NULL, 'Annual', '2026-11-23', '2026-11-25', 'FullDay', 3.0, N'Phần phép năm đã được duyệt trong đợt 5 ngày.', 'Approved', NULL, '2026-11-04 09:00:00', '2026-11-04 10:00:00', NULL, '44444444-0524-4620-8000-000000000004'),
+ (19, 3, 2, NULL, 'Unpaid', '2026-11-26', '2026-11-27', 'FullDay', 2.0, N'Phần không lương bị từ chối trong cùng đợt.', 'Rejected', N'Chưa bố trí được nhân sự cho phần không lương.', '2026-11-04 09:00:00', '2026-11-04 10:00:00', NULL, '44444444-0524-4620-8000-000000000004');
 SET IDENTITY_INSERT LeaveRequests OFF;
 
 INSERT INTO LeaveRequestTransfers (LeaveRequestId, FromEmployeeId, ToEmployeeId, Note, CreatedAt) VALUES
