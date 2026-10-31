@@ -7,6 +7,7 @@ import java.sql.PreparedStatement;
 import java.sql.ResultSet;
 import java.sql.SQLException;
 import java.sql.Timestamp;
+import java.sql.Types;
 import java.util.ArrayList;
 import java.util.List;
 
@@ -98,6 +99,45 @@ public class PackageDAO {
             }
         }
         return null;
+    }
+
+    /**
+     * Kiểm tra xem tên gói có bị trùng với một gói KHÁC đang bán (IsActive = 1) hay không.
+     * Áp dụng chỉ mục unique có lọc UX_Packages_Name_Active (DBR-06).
+     *
+     * @param packageName tên gói cần kiểm tra
+     * @param excludePackageId ID gói bỏ qua (khi chỉnh sửa chính nó), truyền null khi thêm mới
+     * @return true nếu tên gói đã tồn tại ở trạng thái đang bán
+     * @throws SQLException lỗi truy vấn
+     */
+    public boolean existsActiveByName(String packageName, Integer excludePackageId) throws SQLException {
+        try (Connection conn = DBContext.getConnection()) {
+            return existsActiveByName(conn, packageName, excludePackageId);
+        }
+    }
+
+    /**
+     * Kiểm tra tên gói trùng lặp trong một transaction hiện hành.
+     */
+    public boolean existsActiveByName(Connection conn, String packageName, Integer excludePackageId) throws SQLException {
+        String sql = "SELECT COUNT(*) FROM Packages "
+                + "WHERE PackageName = ? AND IsActive = 1 AND (? IS NULL OR PackageId <> ?)";
+        try (PreparedStatement stmt = conn.prepareStatement(sql)) {
+            stmt.setString(1, packageName != null ? packageName.trim() : "");
+            if (excludePackageId != null) {
+                stmt.setInt(2, excludePackageId);
+                stmt.setInt(3, excludePackageId);
+            } else {
+                stmt.setNull(2, Types.INTEGER);
+                stmt.setNull(3, Types.INTEGER);
+            }
+            try (ResultSet rs = stmt.executeQuery()) {
+                if (rs.next()) {
+                    return rs.getInt(1) > 0;
+                }
+            }
+        }
+        return false;
     }
 
     // ===== Hàm phụ =====
