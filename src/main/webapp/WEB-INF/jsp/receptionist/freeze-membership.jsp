@@ -316,17 +316,6 @@
                                 </c:otherwise>
                             </c:choose>
                         </div>
-
-                        <div class="side-card" style="margin-top:var(--space-4);">
-                            <span class="section-label">Quy tắc bảo lưu</span>
-                            <ul class="rule-list">
-                                <li>Hạn gói dời đúng bằng số ngày bảo lưu thực tế.</li>
-                                <li>Ngày bắt đầu từ mai trở đi, không hồi tố.</li>
-                                <li>Đang bảo lưu thì khách không check-in vào tập được.</li>
-                                <li>Hủy sớm thì hạn tính lại theo ngày hủy thực tế.</li>
-                                <li>Buổi tập PT trong kỳ tự động ghi nhận vắng (không hoàn buổi).</li>
-                            </ul>
-                        </div>
                     </aside>
 
                 </div>
