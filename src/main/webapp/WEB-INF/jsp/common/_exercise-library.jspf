@@ -133,8 +133,9 @@
                                         </c:when>
                                         <%-- wger không có ảnh → ảnh chụp chung của nhóm cơ (public domain, lưu trong dự án), ghi rõ là ảnh nhóm --%>
                                         <c:when test="${not empty ex.fallbackImage}">
-                                            <img class="is-photo" src="${ctx}${ex.fallbackImage}?v=2" alt="" loading="lazy" decoding="async">
-                                            <span class="ex-card__badge">Ảnh minh họa nhóm <c:out value="${ex.categoryLabel}" /></span>
+                                            <img class="is-photo" src="${ctx}${ex.fallbackImage}" alt="" loading="lazy" decoding="async">
+                                            <%-- fallbackExact: ảnh đúng tên động tác; không thì ảnh cùng nhóm cơ (ExerciseImagePool). --%>
+                                            <span class="ex-card__badge"><c:choose><c:when test="${ex.fallbackExact}">Ảnh minh họa</c:when><c:otherwise>Ảnh minh họa nhóm <c:out value="${ex.categoryLabel}" /></c:otherwise></c:choose></span>
                                         </c:when>
                                         <c:otherwise>
                                             <span class="ex-card__noimg">Chưa có hình minh họa</span>

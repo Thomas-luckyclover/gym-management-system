@@ -1,5 +1,9 @@
 # File notes — mâu thuẫn tài liệu & quyết định đã chốt
 
+## Thư viện bài tập: kho 194 ảnh minh họa thay 8 ảnh chung (31/10/2026, ĐÃ CODE)
+- **Vấn đề**: bài wger không có ảnh → 1 trong 8 ảnh chung theo nhóm cơ → cả trang lặp vài tấm.
+- **Đã làm**: chọn tay 194 ảnh free-exercise-db (public domain; bỏ bài giãn cơ, ảnh dọc, quá tối, ngoài trời), 640px, `webapp/images/exercises/library/<nhóm>/` (~8,3 MB); danh sách `src/main/resources/exercise-images.json`. `ExerciseImagePool.assign` (gọi trong `ExerciseLibraryService.getPage`): khớp **tên động tác** trước (nhãn "Ảnh minh họa"), không khớp thì ảnh **cùng nhóm cơ** (nhãn "Ảnh minh họa nhóm …"), vị trí theo ExerciseId và **không trùng ảnh trên 1 trang**. Xóa 8 ảnh cũ, `SOURCES.json` ghi lại cách chọn. Không đổi DB.
+
 ## Tài khoản tạo tại quầy: gửi mật khẩu tạm qua email — THAY CBR-31 (31/10/2026, ĐÃ CODE)
 - **SRS cũ (CBR-31)**: tài khoản Lễ tân tạo không có mật khẩu, không gửi email; khách đăng nhập gặp MSG38 rồi phải qua Quên mật khẩu. **Đã bỏ** theo quyết định của nhóm.
 - **Mới**: màn Bán hàng tại quầy (`/receptionist/sales`, nhánh dev_mb3_NhanLTT đã merge) → "Tạo hồ sơ khách hàng": hồ sơ **Self** bắt buộc email (đúng định dạng, không trùng Person đang hoạt động — DBR-23). Cùng transaction tạo Person + Customer + **Account Active** với mật khẩu tạm 10 ký tự (có chữ + số, bỏ ký tự dễ nhầm 0/O/1/l/I), chỉ lưu BCrypt; gửi email "[Super Gym] Tài khoản và mật khẩu tạm của bạn" **trước khi commit** → gửi lỗi thì rollback hết, báo MSG04. Hồ sơ **Dependent**: không email, không tài khoản (CBR-21).
