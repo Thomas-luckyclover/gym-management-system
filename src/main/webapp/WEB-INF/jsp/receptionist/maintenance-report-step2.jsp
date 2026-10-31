@@ -378,28 +378,81 @@
         });
       }
 
+      function formatShortFilename(name, maxLen) {
+        if (!name) return '';
+        var limit = maxLen || 26;
+        if (name.length <= limit) return name;
+        var dotIdx = name.lastIndexOf('.');
+        if (dotIdx > 0 && (name.length - dotIdx) < 8) {
+          var ext = name.substring(dotIdx);
+          var keep = limit - ext.length - 3;
+          if (keep > 6) {
+            return name.substring(0, Math.floor(keep / 2)) + '...' + name.substring(dotIdx - Math.ceil(keep / 2), dotIdx) + ext;
+          }
+        }
+        return name.substring(0, limit - 3) + '...';
+      }
+
+      function clearUploadedImage(e) {
+        if (e) {
+          e.preventDefault();
+          e.stopPropagation();
+        }
+        fileInput.value = '';
+        imagePreview.innerHTML = '';
+        imagePreview.style.display = 'none';
+        dropContent.style.display = 'flex';
+        if (dropArea) {
+          dropArea.classList.remove('has-preview');
+        }
+      }
+
       // Xem trước ảnh upload (gọn gàng, cân đối trong khung)
       fileInput.addEventListener('change', function () {
         if (this.files && this.files[0]) {
           var file = this.files[0];
           var reader = new FileReader();
           reader.onload = function (e) {
+            var shortName = formatShortFilename(file.name, 26);
             imagePreview.innerHTML =
               '<div class="preview-inner">' +
                 '<img src="' + e.target.result + '" alt="Preview" class="preview-img">' +
                 '<div class="preview-meta">' +
-                  '<span class="preview-filename">' + escapeHtml(file.name) + '</span>' +
-                  '<span class="preview-change"><i class="fa-solid fa-arrows-rotate"></i> Bấm để đổi ảnh</span>' +
+                  '<span class="preview-filename" title="' + escapeHtml(file.name) + '">' + escapeHtml(shortName) + '</span>' +
+                  '<div class="preview-actions-row">' +
+                    '<button type="button" class="preview-change-btn" id="btnChangeUploadedImage" title="Chọn ảnh khác">' +
+                      '<i class="fa-solid fa-arrows-rotate"></i> Đổi ảnh' +
+                    '</button>' +
+                    '<span class="preview-sep">·</span>' +
+                    '<button type="button" class="preview-remove-btn" id="btnRemoveUploadedImage" title="Gỡ bỏ ảnh này">' +
+                      '<i class="fa-solid fa-trash-can"></i> Gỡ ảnh' +
+                    '</button>' +
+                  '</div>' +
                 '</div>' +
               '</div>';
             imagePreview.style.display = 'flex';
             dropContent.style.display = 'none';
+            if (dropArea) {
+              dropArea.classList.add('has-preview');
+            }
+
+            var btnChange = document.getElementById('btnChangeUploadedImage');
+            if (btnChange) {
+              btnChange.addEventListener('click', function (ev) {
+                ev.preventDefault();
+                ev.stopPropagation();
+                fileInput.click();
+              });
+            }
+
+            var btnRemove = document.getElementById('btnRemoveUploadedImage');
+            if (btnRemove) {
+              btnRemove.addEventListener('click', clearUploadedImage);
+            }
           };
           reader.readAsDataURL(file);
         } else {
-          imagePreview.innerHTML = '';
-          imagePreview.style.display = 'none';
-          dropContent.style.display = 'flex';
+          clearUploadedImage();
         }
       });
     });
