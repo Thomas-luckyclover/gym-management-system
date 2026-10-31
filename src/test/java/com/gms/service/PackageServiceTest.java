@@ -161,6 +161,10 @@ class PackageServiceTest {
     @Test
     @DisplayName("Trùng tên gói đang bán bị từ chối (DBR-06)")
     void testDuplicateActivePackageName() {
+        Package active = new Package(90);
+        active.setPackageName("Gói Tập Gym 1 Tháng");
+        active.setActive(true);
+        fakePackageDAO.packages.put(90, active);
         fakePackageDAO.activeNames.add("Gói Tập Gym 1 Tháng");
 
         PackageFormInput input = new PackageFormInput();
@@ -386,10 +390,14 @@ class PackageServiceTest {
     @Test
     @DisplayName("Mở bán lại gói bị từ chối nếu tên gói trùng với một gói khác đang bán")
     void testReactivateDuplicateNameFails() {
-        // Gói đang active
+        // Gói đang active khác trên hệ thống
+        Package activePkg = new Package(99);
+        activePkg.setPackageName("Gói Tập Gym 1 Tháng");
+        activePkg.setActive(true);
+        fakePackageDAO.packages.put(99, activePkg);
         fakePackageDAO.activeNames.add("Gói Tập Gym 1 Tháng");
 
-        // Gói đang inactive trùng tên muốn mở lại
+        // Gói đang inactive trùng tên muốn mở lại (id = 4)
         Package inactivePkg = new Package(4);
         inactivePkg.setPackageName("Gói Tập Gym 1 Tháng");
         inactivePkg.setPackageType(Package.Type.MEMBERSHIP);
@@ -453,10 +461,10 @@ class PackageServiceTest {
 
         @Override
         public boolean existsActiveByName(Connection conn, String packageName, Integer excludePackageId) {
-            if (excludePackageId != null && packages.containsKey(excludePackageId)) {
-                Package existing = packages.get(excludePackageId);
-                if (existing.getPackageName().equalsIgnoreCase(packageName)) {
-                    return false;
+            for (Package p : packages.values()) {
+                if (p.isActive() && (excludePackageId == null || p.getPackageId() != excludePackageId)
+                        && p.getPackageName().equalsIgnoreCase(packageName)) {
+                    return true;
                 }
             }
             return activeNames.contains(packageName);
