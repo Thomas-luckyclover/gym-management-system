@@ -30,36 +30,27 @@ document.addEventListener('DOMContentLoaded', function () {
         return new Date(baseDate.getFullYear(), baseDate.getMonth() + months, baseDate.getDate() + days);
     }
 
-    // Chặn ngày nằm ngoài khoảng min/max cho phép và tự động đưa về ngày hợp lệ
-    function enforceDateBounds() {
-        if (!startInput || !endInput) return;
+    // Tính ngày kết thúc tối đa (tối đa 1 tháng kể từ ngày bắt đầu nhưng không vượt quá hạn gói tập)
+    function calculateMaxAllowedEnd(startIsoStr) {
+        if (!startIsoStr) return '';
+        const startDate = parseDate(startIsoStr);
+        if (!startDate) return '';
+
+        const maxByDuration = addMonthsAndDays(startDate, 1, -1);
+        const maxByDurationStr = toIsoDate(maxByDuration);
 
         const pkgEndStr = pkgEndHidden ? pkgEndHidden.value : (startInput.max || '');
-
-        // 1. Ngày bắt đầu: tối thiểu là min (ngày mai), tối đa là ngày hết hạn gói tập
-        if (startInput.min && startInput.value && startInput.value < startInput.min) {
-            startInput.value = startInput.min;
+        if (pkgEndStr && pkgEndStr < maxByDurationStr) {
+            return pkgEndStr;
         }
-        if (pkgEndStr && startInput.value && startInput.value > pkgEndStr) {
-            startInput.value = pkgEndStr;
-        }
+        return maxByDurationStr;
+    }
 
-        // 2. Tính ngày kết thúc tối đa: tối đa 1 tháng kể từ ngày bắt đầu nhưng không vượt quá hạn gói
-        let maxAllowedEndStr = '';
-        if (startInput.value) {
-            const startDate = parseDate(startInput.value);
-            if (startDate) {
-                const maxByDuration = addMonthsAndDays(startDate, 1, -1);
-                const maxByDurationStr = toIsoDate(maxByDuration);
+    // Cập nhật min, max và hint cho ô Ngày kết thúc dựa trên Ngày bắt đầu
+    function updateEndDateConstraints(isStartChange) {
+        if (!startInput || !endInput || !startInput.value) return;
 
-                if (pkgEndStr && pkgEndStr < maxByDurationStr) {
-                    maxAllowedEndStr = pkgEndStr;
-                } else {
-                    maxAllowedEndStr = maxByDurationStr;
-                }
-            }
-        }
-
+        const maxAllowedEndStr = calculateMaxAllowedEnd(startInput.value);
         if (maxAllowedEndStr) {
             endInput.max = maxAllowedEndStr;
             const hint = document.getElementById('plannedEndDateHint');
@@ -67,24 +58,75 @@ document.addEventListener('DOMContentLoaded', function () {
                 hint.textContent = 'Tối đa 1 tháng (đến ngày ' + formatDateStr(maxAllowedEndStr) + ').';
             }
         }
+        endInput.min = startInput.value;
 
-        if (startInput.value) {
-            endInput.min = startInput.value;
+        if (isStartChange) {
+            // Khi thay đổi ngày bắt đầu:
+            // Nếu ngày kết thúc chưa có, hoặc trước ngày bắt đầu mới, hoặc vượt quá ngày tối đa cho phép,
+            // hoặc người dùng chưa từng chỉnh sửa thủ công ngày kết thúc:
+            // -> Tự động đưa ngày kết thúc về ngày tối đa 1 tháng (maxAllowedEndStr) thay vì co về 1 ngày!
+            const wasCustomModified = endInput.dataset && endInput.dataset.userModified === 'true';
+            if (!wasCustomModified || !endInput.value || endInput.value < startInput.value || (endInput.max && endInput.value > endInput.max)) {
+                endInput.value = maxAllowedEndStr || startInput.value;
+                if (endInput.dataset) {
+                    endInput.dataset.userModified = 'false';
+                }
+            }
+        }
+    }
+
+    // Xử lý khi Ngày bắt đầu thay đổi (change, blur)
+    function handleStartDateChange() {
+        if (!startInput) return;
+        const pkgEndStr = pkgEndHidden ? pkgEndHidden.value : (startInput.max || '');
+
+        if (startInput.min && startInput.value && startInput.value < startInput.min) {
+            startInput.value = startInput.min;
+        }
+        if (pkgEndStr && startInput.value && startInput.value > pkgEndStr) {
+            startInput.value = pkgEndStr;
         }
 
-        // 3. Ngày kết thúc: không được trước ngày bắt đầu và không vượt quá maxAllowedEndStr
-        if (startInput.value && endInput.value && endInput.value < startInput.value) {
+        updateEndDateConstraints(true);
+        calculateFreezeDays();
+    }
+
+    // Xử lý khi Ngày kết thúc thay đổi (change, blur)
+    function handleEndDateChange() {
+        if (!endInput) return;
+
+        if (endInput.dataset) {
+            endInput.dataset.userModified = 'true';
+        }
+
+        if (startInput && startInput.value && endInput.value && endInput.value < startInput.value) {
             endInput.value = startInput.value;
         }
         if (endInput.max && endInput.value && endInput.value > endInput.max) {
             endInput.value = endInput.max;
+        }
+
+        calculateFreezeDays();
+    }
+
+    // Xử lý khi đang gõ phím trên ô input (input event):
+    // KHÔNG can thiệp / clamp giữa chừng để tránh kẹt phím spinbox
+    function handleDateInput() {
+        if (!startInput || !endInput) return;
+        if (!startInput.value || !endInput.value) return;
+
+        // Chỉ tính toán hiển thị nếu cả 2 ngày hợp lệ và trong khoảng hợp lệ
+        if (startInput.value <= endInput.value) {
+            const maxAllowedEndStr = calculateMaxAllowedEnd(startInput.value);
+            if (!maxAllowedEndStr || endInput.value <= maxAllowedEndStr) {
+                calculateFreezeDays();
+            }
         }
     }
 
     // 1. Tự động tính toán số ngày bảo lưu và hạn mới khi chọn ngày
     function calculateFreezeDays() {
         if (!startInput || !endInput) return;
-        enforceDateBounds();
         if (!startInput.value || !endInput.value) return;
 
         const start = parseDate(startInput.value);
@@ -92,8 +134,7 @@ document.addEventListener('DOMContentLoaded', function () {
         if (!start || !end) return;
 
         if (end < start) {
-            endInput.value = startInput.value;
-            return calculateFreezeDays();
+            return;
         }
 
         // Số ngày bảo lưu = (end - start) + 1 ngày
@@ -122,13 +163,15 @@ document.addEventListener('DOMContentLoaded', function () {
     }
 
     if (startInput && endInput) {
-        startInput.addEventListener('change', calculateFreezeDays);
-        startInput.addEventListener('input', calculateFreezeDays);
-        startInput.addEventListener('blur', calculateFreezeDays);
+        startInput.addEventListener('change', handleStartDateChange);
+        startInput.addEventListener('blur', handleStartDateChange);
+        startInput.addEventListener('input', handleDateInput);
 
-        endInput.addEventListener('change', calculateFreezeDays);
-        endInput.addEventListener('input', calculateFreezeDays);
-        endInput.addEventListener('blur', calculateFreezeDays);
+        endInput.addEventListener('change', handleEndDateChange);
+        endInput.addEventListener('blur', handleEndDateChange);
+        endInput.addEventListener('input', handleDateInput);
+
+        updateEndDateConstraints(false);
         calculateFreezeDays(); // Tính toán ban đầu
     }
 
@@ -136,32 +179,21 @@ document.addEventListener('DOMContentLoaded', function () {
     const formApplyFreeze = document.getElementById('formApplyFreeze');
     if (formApplyFreeze) {
         formApplyFreeze.addEventListener('submit', function (e) {
-            enforceDateBounds();
-            calculateFreezeDays();
+            const rawStart = startInput ? startInput.value : '';
+            const rawEnd = endInput ? endInput.value : '';
+            const pkgEndStr = pkgEndHidden ? pkgEndHidden.value : (startInput ? (startInput.max || '') : '');
 
-            if (endInput && endInput.max && endInput.value > endInput.max) {
+            let hasError = false;
+            if (startInput && startInput.min && rawStart && rawStart < startInput.min) hasError = true;
+            if (pkgEndStr && rawStart && rawStart > pkgEndStr) hasError = true;
+            if (endInput && endInput.max && rawEnd && rawEnd > endInput.max) hasError = true;
+            if (rawStart && rawEnd && rawEnd < rawStart) hasError = true;
+
+            handleStartDateChange();
+            handleEndDateChange();
+
+            if (hasError) {
                 e.preventDefault();
-                endInput.value = endInput.max;
-                calculateFreezeDays();
-                return false;
-            }
-            if (startInput && startInput.min && startInput.value < startInput.min) {
-                e.preventDefault();
-                startInput.value = startInput.min;
-                calculateFreezeDays();
-                return false;
-            }
-            const pkgEndStr = pkgEndHidden ? pkgEndHidden.value : (startInput.max || '');
-            if (pkgEndStr && startInput.value && startInput.value > pkgEndStr) {
-                e.preventDefault();
-                startInput.value = pkgEndStr;
-                calculateFreezeDays();
-                return false;
-            }
-            if (startInput.value && endInput.value && endInput.value < startInput.value) {
-                e.preventDefault();
-                endInput.value = startInput.value;
-                calculateFreezeDays();
                 return false;
             }
         });
@@ -169,7 +201,8 @@ document.addEventListener('DOMContentLoaded', function () {
 
     // 2. Gửi AJAX lấy danh sách buổi PT bị ảnh hưởng
     function fetchPtSessions(customerId, startDate, endDate) {
-        const url = window.location.pathname + '?action=previewSessions&customerId='
+        if (typeof window === 'undefined' || !window.location || typeof fetch !== 'function') return;
+        const url = (window.location.pathname || '') + '?action=previewSessions&customerId='
             + encodeURIComponent(customerId)
             + '&startDate=' + encodeURIComponent(startDate)
             + '&plannedEndDate=' + encodeURIComponent(endDate);
@@ -360,5 +393,19 @@ document.addEventListener('DOMContentLoaded', function () {
         const div = document.createElement('div');
         div.textContent = str;
         return div.innerHTML;
+    }
+
+    if (typeof window !== 'undefined') {
+        window._freezeMembership = {
+            parseDate,
+            toIsoDate,
+            addMonthsAndDays,
+            calculateMaxAllowedEnd,
+            updateEndDateConstraints,
+            handleStartDateChange,
+            handleEndDateChange,
+            handleDateInput,
+            calculateFreezeDays
+        };
     }
 });
