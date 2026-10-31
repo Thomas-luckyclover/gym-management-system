@@ -2593,7 +2593,7 @@ INSERT INTO TimeSlots (TimeSlotId, PtEmployeeId, SlotDate, StartTime, EndTime, S
  (370, 6, '2026-09-11', '10:00:00', '11:30:00', 'Booked', NULL, NULL, '2026-09-08 09:00:00'),
  (371, 5, '2026-10-26', '07:00:00', '08:30:00', 'Booked', NULL, NULL, '2026-10-16 21:00:00'),
  (372, 5, '2026-10-27', '07:00:00', '08:30:00', 'Booked', NULL, NULL, '2026-10-17 21:00:00'),
- (373, 5, '2026-10-28', '07:00:00', '08:30:00', 'Booked', NULL, NULL, '2026-10-18 21:00:00'),
+ (373, 5, '2026-10-28', '07:00:00', '08:30:00', 'Free', NULL, NULL, '2026-10-18 21:00:00'), -- buổi 367 đã dời sang khung 964 (SessionMoveLogs 5) trước khi PT nộp đơn nghỉ 9 (CBR-83)
  (374, 5, '2026-10-29', '07:00:00', '08:30:00', 'Booked', NULL, NULL, '2026-10-19 21:00:00'),
  (375, 5, '2026-10-30', '07:00:00', '08:30:00', 'Booked', NULL, NULL, '2026-10-20 21:00:00'),
  (376, 5, '2026-11-02', '07:00:00', '08:30:00', 'Booked', NULL, NULL, '2026-10-23 21:00:00'),
@@ -3186,7 +3186,7 @@ INSERT INTO TimeSlots (TimeSlotId, PtEmployeeId, SlotDate, StartTime, EndTime, S
  (961, 13, '2026-10-30', '19:00:00', '20:30:00', 'Free', NULL, NULL, '2026-10-01 21:00:00'),
  (962, 14, '2026-10-30', '10:00:00', '11:30:00', 'Free', NULL, NULL, '2026-10-01 21:00:00'),
  (963, 14, '2026-10-30', '15:00:00', '16:30:00', 'Free', NULL, NULL, '2026-10-01 21:00:00'),
- (964, 5, '2026-10-31', '08:00:00', '09:30:00', 'Free', NULL, NULL, '2026-10-01 21:00:00'),
+ (964, 5, '2026-10-31', '08:00:00', '09:30:00', 'Booked', NULL, NULL, '2026-10-01 21:00:00'), -- nhận buổi 367 dời từ 28/10 07:00
  (965, 5, '2026-10-31', '09:30:00', '11:00:00', 'Free', NULL, NULL, '2026-10-01 21:00:00'),
  (966, 5, '2026-10-31', '11:00:00', '12:30:00', 'Free', NULL, NULL, '2026-10-01 21:00:00'),
  (967, 5, '2026-10-31', '15:00:00', '16:30:00', 'Free', NULL, NULL, '2026-10-01 21:00:00'),
@@ -4866,7 +4866,7 @@ INSERT INTO Sessions (SessionId, SubscriptionId, TimeSlotId, PtEmployeeId, Statu
  (364, 149, 370, 6, 'CheckedIn', 450000, 292500, '2026-09-12 00:05:00', 1, NULL, NULL, NULL, NULL, NULL, 0),
  (365, 154, 371, 5, 'Scheduled', 366667, 256667, NULL, 0, NULL, NULL, NULL, NULL, NULL, 0),
  (366, 154, 372, 5, 'Scheduled', 366667, 256667, NULL, 0, NULL, NULL, NULL, NULL, NULL, 0),
- (367, 154, 373, 5, 'Scheduled', 366667, 256667, NULL, 0, NULL, NULL, NULL, NULL, NULL, 0),
+ (367, 154, 964, 5, 'Scheduled', 366667, 256667, NULL, 0, NULL, NULL, NULL, NULL, NULL, 0),
  (368, 154, 374, 5, 'Scheduled', 366667, 256667, NULL, 0, NULL, NULL, NULL, NULL, NULL, 0),
  (369, 154, 375, 5, 'Scheduled', 366667, 256667, NULL, 0, NULL, NULL, NULL, NULL, NULL, 0),
  (370, 154, 376, 5, 'Scheduled', 366667, 256667, NULL, 0, NULL, NULL, NULL, NULL, NULL, 0),
@@ -4988,14 +4988,15 @@ INSERT INTO Sessions (SessionId, SubscriptionId, TimeSlotId, PtEmployeeId, Statu
 SET IDENTITY_INSERT Sessions OFF;
 
 /* ============================================================================
-   SessionMoveLogs — 4 dòng.
+   SessionMoveLogs — 5 dòng.
    ============================================================================ */
 SET IDENTITY_INSERT SessionMoveLogs ON;
 INSERT INTO SessionMoveLogs (SessionMoveLogId, SessionId, MoveType, OldTimeSlotId, NewTimeSlotId, OldPtEmployeeId, NewPtEmployeeId, RequestedByAccountId, Reason, MovedAt) VALUES
  (1, 76, 'CustomerSwap', 78, 79, 5, 5, 5, NULL, '2026-09-09 20:15:00'),
  (2, 88, 'PtTransfer', 91, 92, 5, 13, 15, N'PT Sơn ốm, khách chọn PT Long', '2026-09-27 20:15:00'),
  (3, 133, 'PtReschedule', 137, 138, 6, 6, 16, N'PT bận họp chuyên môn', '2026-09-13 20:15:00'),
- (4, 193, 'PtOnBehalfSwap', 198, 199, 5, 5, 15, N'Khách gọi điện nhờ PT dời buổi', '2026-09-22 20:15:00');
+ (4, 193, 'PtOnBehalfSwap', 198, 199, 5, 5, 15, N'Khách gọi điện nhờ PT dời buổi', '2026-09-22 20:15:00'),
+ (5, 367, 'PtReschedule', 373, 964, 5, 5, 15, N'Dời buổi sáng 28/10 sang 31/10 để nộp đơn nghỉ ca sáng (CBR-83)', '2026-10-25 19:30:00');
 SET IDENTITY_INSERT SessionMoveLogs OFF;
 
 /* ============================================================================
