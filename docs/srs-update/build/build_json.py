@@ -158,7 +158,7 @@ for i, (a, b) in enumerate(extra, start=len(DEF) + 1):
     DEF.append([str(i), a, b])
 LOG = [
  ['31/10/2026','M','Le Cong Minh','Align the SRS with the code on develop (67f59e8): GBR, CBR, BR, DBR, Entities, System Parameters, Data Dictionary, System Messages (MSG01–MSG322), Other Requirements, Use Case list, Actors, Business Flows'],
- ['31/10/2026','A','Le Cong Minh','Add UC-48 Exercise Library, UC-49 Body Measurements, UC-50 Notifications; JOB-08; API-05; GBR-36…39; CBR-116…122; BR-81…108; DBR-66…77; NFR-09, NFR-10; parameters P-22, P-23'],
+ ['31/10/2026','A','Le Cong Minh','Add UC-48 Exercise Library, UC-49 Body Measurements, UC-50 Notifications; JOB-08; API-05; GBR-36…39; CBR-116…123; BR-81…108; DBR-66…77; NFR-09, NFR-10; parameters P-22, P-23'],
  ['31/10/2026','D','Le Cong Minh','Withdraw UC-38, UC-39, screens #53, #56; CBR-44, CBR-45, CBR-57, CBR-82; BR-54…56, BR-62, BR-73…79; P-07, P-20; MSG38, MSG80'],
 ]
 def short(t, n=230):

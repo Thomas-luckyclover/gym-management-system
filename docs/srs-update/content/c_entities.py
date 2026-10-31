@@ -65,7 +65,7 @@ OVR = {
 "Shift": [
  [P,"A Receptionist's work shift, used to reconcile cash and transactions at open and close."],
  [K,"Work date, shift type (Morning: opening–13:00 / Afternoon: 13:00–closing), opening and closing Receptionist, opened / closed time, expected cash, counted cash, variance reason"],
- [B,"Every open day has exactly two shifts split at 13:00 (GBR-38, CBR-104). Every payment taken while the shift is open is recorded in it (CBR-105)."],
+ [B,"One record per work date and shift type, split at 13:00 (GBR-38, CBR-104), shared by every Receptionist on duty — one cash drawer per shift. Only one shift is open at a time. Every counter payment is recorded in the shift open at that moment (CBR-105); each payment keeps the Receptionist who received it."],
  [S,"NotOpened · Open · Closed"]],
 "BodyMeasurement": [
  [P,"A body measurement a customer records for themselves to follow their progress."],

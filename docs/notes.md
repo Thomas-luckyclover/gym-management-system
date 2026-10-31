@@ -1,5 +1,13 @@
 # File notes — mâu thuẫn tài liệu & quyết định đã chốt
 
+## Ca làm việc dùng chung + không tự mở ca (31/10/2026, ĐÃ CHỐT)
+- Mỗi ngày 2 ca (sáng trước 13:00, chiều từ 13:00), mỗi ca là **1 két dùng chung** cho mọi lễ tân đang trực: 1 người mở thì người khác làm chung, không mở lại. Mỗi lúc chỉ 1 ca mở; ca trước chưa chốt thì ca sau không mở được.
+- Lễ tân nào đang trực cũng mở / chốt được; hệ thống ghi người mở, người chốt, người nhận từng khoản tiền. Người chốt đếm toàn bộ tiền mặt của ca; lệch phải ghi lý do. Ca bị bỏ quên → lễ tân ca sau chốt hộ khi bàn giao (có ghi nhật ký).
+- Mọi màn bán tại quầy (gói tập, vé ngày, gói PT, buổi lẻ) cần ca đang mở ở bước giữ chỗ / thu tiền; tư vấn, xếp lịch, check-in, mua online không cần ca. **Hệ thống không tự mở ca thay người**: màn hiện thanh "Chưa mở ca" + nút Mở ca. → Bán gói PT phải bỏ `findOrOpenShift` tự mở ca.
+- Không tự chốt ca (không đếm được tiền thật). Quá giờ kết thúc mà ca còn mở → mọi màn lễ tân hiện cảnh báo "Ca … chưa chốt" (CBR-123).
+- Màn không tự cập nhật theo thời gian thực; mọi thao tác được server kiểm lại lúc lưu (trang cũ bấm thu tiền vào ca đã chốt → MSG110). Thu tiền và chốt ca phải khóa dòng ca để không lọt khoản vào ca vừa chốt.
+- SRS: CBR-104, CBR-105, CBR-123 (mới), BR-46, BR-93, NFR-07, UC-25, entity Shift; việc code ở Mục 4 file `docs/srs-update/SRS-G5-update-31-10-2026.docx`.
+
 ## Cập nhật SRS — viết lại SRS cho khớp code develop (31/10/2026, ĐÃ CHỐT)
 - File: `docs/srs-update/SRS-G5-update-31-10-2026.docx` (bảng FULL GBR / CBR / BR / DBR / Entity / UC / Actor / Tham số / Data Dictionary / MSG01–MSG322 / NFR, bảng theo dõi, mâu thuẫn UC, code cần sửa). Mục II (prototype từng màn) giữ nguyên.
 - Quyết định khi viết: UC-31 viết lại thành JOB-04 tự chốt buổi (bỏ BR-54…56, P-07); thời hạn gói theo code + DB (gói tập 1/3/6/12/24/36 tháng, vé ngày 1 ngày, PT 1/3/6/12 tháng; DB 1–36 / 1–12); phân trang ghi theo từng màn (GBR-18); CBR-62 theo quyết định 09/10 (bảo lưu không đổi buổi, JOB-04 chốt sau).
