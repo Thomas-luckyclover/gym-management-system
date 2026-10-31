@@ -204,8 +204,8 @@
                                                   minlength="5" maxlength="500" required></textarea>
                                     </div>
 
-                                    <%-- Cảnh báo buổi tập PT trong kỳ bảo lưu --%>
-                                    <div class="pt-impact-box">
+                                    <%-- Cảnh báo buổi tập PT trong kỳ bảo lưu (chỉ hiển thị khi có buổi PT bị ảnh hưởng) --%>
+                                    <div class="pt-impact-box" id="ptImpactBox" style="display:none;">
                                         <div class="pt-impact-head">
                                             <h4><i class="fa-solid fa-calendar-xmark text-danger"></i> Buổi tập PT trong thời gian bảo lưu (<span id="impactCount">0</span> buổi)</h4>
                                         </div>
