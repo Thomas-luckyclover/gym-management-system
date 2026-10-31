@@ -58,6 +58,37 @@ public class EmailGateway {
     }
 
     /**
+     * Gửi mật khẩu tạm cho tài khoản Lễ tân vừa tạo tại quầy (CounterAccountService, thay CBR-31 từ 31/10/2026).
+     * @param toEmail      email trên hồ sơ khách
+     * @param fullName     họ tên khách, in lời chào
+     * @param customerCode mã KH-nnnn, khách đối chiếu với lễ tân
+     * @param tempPassword mật khẩu tạm dạng thô — chỉ có trong thư này, DB chỉ lưu bản băm
+     */
+    public void sendTemporaryPassword(String toEmail, String fullName, String customerCode, String tempPassword)
+            throws EmailSendException {
+        // B1: tiêu đề + ruột thư HTML (ô mật khẩu cùng kiểu ô mã xác thực); mọi chuỗi đưa vào đều escape
+        String subject = SUBJECT_PREFIX + "Tài khoản và mật khẩu tạm của bạn";
+        String html = "<p>Xin chào " + escapeHtml(fullName) + ",</p>"
+                + "<p>Lễ tân Super Gym đã tạo hồ sơ <b>" + escapeHtml(customerCode) + "</b> và tài khoản đăng nhập cho bạn.</p>"
+                + "<p>Đăng nhập bằng <b>email này</b> hoặc <b>số điện thoại</b> trên hồ sơ, với mật khẩu tạm:</p>"
+                + "<p style=\"margin:20px 0;font-family:'Courier New',monospace;font-size:26px;font-weight:800;letter-spacing:4px;color:#080F1B;"
+                + "background:#FF4F2B;display:inline-block;padding:10px 18px;border-radius:6px\">"
+                + escapeHtml(tempPassword) + "</p>"
+                + "<p>Sau khi đăng nhập, hãy vào <b>Tài khoản → Mật khẩu</b> để đổi sang mật khẩu của riêng bạn.</p>"
+                + "<p style=\"color:#4C6670\">Nếu bạn không đăng ký tại Super Gym, hãy bỏ qua email này hoặc báo cho lễ tân.</p>";
+
+        // B2: bản chữ thường cùng nội dung
+        String text = "Xin chào " + fullName + ",\n\n"
+                + "Lễ tân Super Gym đã tạo hồ sơ " + customerCode + " và tài khoản đăng nhập cho bạn.\n"
+                + "Đăng nhập bằng email này hoặc số điện thoại trên hồ sơ, mật khẩu tạm: " + tempPassword + "\n\n"
+                + "Sau khi đăng nhập, hãy vào Tài khoản → Mật khẩu để đổi sang mật khẩu của riêng bạn.\n"
+                + "Nếu bạn không đăng ký tại Super Gym, hãy bỏ qua email này hoặc báo cho lễ tân.";
+
+        // B3: gửi đi (lỗi → EmailSendException → CounterSaleService rollback)
+        send(toEmail, subject, html, text);
+    }
+
+    /**
      * Gửi thông báo ngắn 1 đoạn (VD báo cho email cũ khi bị đổi).
      */
     public void sendNotice(String toEmail, String subject, String plainMessage) throws EmailSendException {

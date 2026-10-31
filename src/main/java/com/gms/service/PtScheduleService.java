@@ -1,5 +1,6 @@
 package com.gms.service;
 
+import com.gms.constant.AppConstants;
 import com.gms.constant.Messages;
 import com.gms.dao.PtScheduleDAO;
 import com.gms.dto.HourException;
@@ -403,10 +404,11 @@ public class PtScheduleService {
 
     /**
      * HÀM PHỤ — gọi ở B4 của classify; validateDrafts cũng gọi để chặn khung mới trùng ca nghỉ.
-     * Ca sáng = khung BẮT ĐẦU trước 12:00, ca chiều = bắt đầu từ 12:00. Chỉ đơn Pending/Approved mới khóa.
+     * Ca sáng = khung BẮT ĐẦU trước 13:00, ca chiều = bắt đầu từ 13:00 (AppConstants.AFTERNOON_SHIFT_START).
+     * Chỉ đơn Pending/Approved mới khóa.
      */
     static boolean isOnLeave(PtScheduleItem item, List<LeaveInfo> leaves) {
-        boolean morning = item.getStartTime().isBefore(LocalTime.NOON);
+        boolean morning = item.getStartTime().isBefore(AppConstants.AFTERNOON_SHIFT_START);
 
         for (LeaveInfo leave : leaves) {
             boolean sameDay = item.getSlotDate().equals(leave.getLeaveDate());
@@ -450,7 +452,7 @@ public class PtScheduleService {
         boolean hasRemovals = removeIds != null && removeIds.length > 0;
         boolean pairsBroken = hasDrafts && (starts == null || dates.length != starts.length);
         if ((!hasDrafts && !hasRemovals) || pairsBroken) {
-            return ServiceResult.fail("Chọn ít nhất một khung nháp hoặc khung cần gỡ trước khi công bố.");
+            return ServiceResult.fail(Messages.MSG320_PT_PUBLISH_NOTHING);
         }
 
         try (Connection connection = DBContext.getConnection()) {
@@ -506,7 +508,7 @@ public class PtScheduleService {
             throw new IllegalStateException("P-06 không hợp lệ");
         }
         if (minutes != expectedMinutes) {
-            return ServiceResult.fail("Thời lượng buổi đã thay đổi. Tải lại lịch và kiểm tra nháp trước khi công bố.");
+            return ServiceResult.fail(Messages.MSG321_PT_DURATION_CHANGED);
         }
 
         // B2: GỠ khung (DBR-36: chỉ Free → Withdrawn, giữ dòng làm lịch sử).
@@ -522,7 +524,7 @@ public class PtScheduleService {
 
         boolean onlyRemovals = dates == null || dates.length == 0;
         if (onlyRemovals) {
-            return ServiceResult.ok(slotIds.size(), "Đã gỡ " + slotIds.size() + " khung giờ.");
+            return ServiceResult.ok(slotIds.size(), String.format(Messages.MSG322_PT_SLOTS_REMOVED, slotIds.size()));
         }
 
         // B3: THÊM khung: Service tự tính giờ kết thúc, rồi đọc dữ liệu cần để kiểm tra (một lần).

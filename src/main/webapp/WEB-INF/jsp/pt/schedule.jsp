@@ -41,7 +41,7 @@
         <%@ include file="/WEB-INF/jsp/common/head.jspf" %>
         <title>Lịch dạy · Super Gym</title>
         <link rel="stylesheet" href="${pageContext.request.contextPath}/css/pages/pt/header.css?v=20261025city">
-        <link rel="stylesheet" href="${pageContext.request.contextPath}/css/pages/pt/schedule.css?v=20261029handle">
+        <link rel="stylesheet" href="${pageContext.request.contextPath}/css/pages/pt/schedule.css?v=20261031shift">
         <%-- Chỉ nạp JS khi có lịch (lỗi tải thì trang không cần JS). --%>
         <c:if test="${not empty week}"><script src="${pageContext.request.contextPath}/js/pages/pt/schedule.js?v=20261026t" defer></script></c:if>
     </head>
@@ -202,9 +202,10 @@
 
                                 <%-- ----- 1.3 Lưới 7 ngày -----
                                      Màn rộng + kiểu Tuần: lưới giờ (thẻ đặt theo phút). Còn lại: danh sách theo ngày (CSS quyết định).
-                                     --axis-hours = số giờ trên trục, VD 22 − 5 = 17 hàng giờ. --%>
+                                     --axis-hours = số giờ trên trục, VD 22 − 5 = 17 hàng giờ.
+                                     --shift-split = số giờ từ đầu trục tới mốc ca chiều (week.shiftSplitHour = 13), VD 13 − 5 = 8 → CSS vẽ vạch "Ca chiều". --%>
                                 <div class="pt-plan-scroll">
-                                    <div class="pt-plan-grid" style="--axis-hours: ${week.axisEndHour - week.axisStartHour}">
+                                    <div class="pt-plan-grid" style="--axis-hours: ${week.axisEndHour - week.axisStartHour}; --shift-split: ${week.shiftSplitHour - week.axisStartHour}">
 
                                         <%-- Cột trục giờ bên trái: "05:00", "06:00", … (thêm số 0 trước giờ < 10). --%>
                                         <div class="pt-plan-axis-head" aria-hidden="true"></div>
@@ -212,6 +213,9 @@
                                             <c:forEach var="hour" begin="${week.axisStartHour}" end="${week.axisEndHour - 1}">
                                                 <span><c:out value="${hour lt 10 ? '0' += hour : hour}" />:00</span>
                                             </c:forEach>
+                                            <%-- Nhãn ca trên trục giờ (chỉ hiện ở lưới tuần): "Sáng" ở đầu trục, "Chiều" ngay dưới vạch 13:00. --%>
+                                            <b class="pt-plan-shift is-am">Ca sáng</b>
+                                            <b class="pt-plan-shift is-pm">Ca chiều</b>
                                         </div>
 
                                         <%-- Mỗi ngày 1 cột. --%>
@@ -250,6 +254,18 @@
                                                      VD 330 = 05:30, 1230 = 20:30); thiếu 2 thuộc tính này = ngày không thêm được. --%>
                                                 <div class="pt-day-track" data-date="${day.date}" data-label="${fn:escapeXml(dayLabel)}"
                                                      <c:if test="${not empty day.firstStartMinute}">data-first="${day.firstStartMinute}" data-last="${day.lastStartMinute}"</c:if>>
+                                                    <%-- Kiểu danh sách (điện thoại / nút Danh sách): dòng ngăn "Ca sáng" / "Ca chiều".
+                                                         Khung trong danh sách xếp bằng CSS order = --start (phút từ đầu trục), nên dòng ngăn cũng dùng order:
+                                                         "Ca sáng" order −1 (luôn đầu), "Ca chiều" order = phút của mốc 13:00 (đứng trước khung 13:00 vì nằm trước trong HTML).
+                                                         Chỉ in ca nào ngày đó có khung. Lưới tuần ẩn 2 dòng này (CSS) vì đã có vạch ca. --%>
+                                                    <c:set var="hasAm" value="false" />
+                                                    <c:set var="hasPm" value="false" />
+                                                    <c:forEach var="item" items="${day.items}">
+                                                        <c:if test="${item.startTime.hour lt week.shiftSplitHour}"><c:set var="hasAm" value="true" /></c:if>
+                                                        <c:if test="${item.startTime.hour ge week.shiftSplitHour}"><c:set var="hasPm" value="true" /></c:if>
+                                                    </c:forEach>
+                                                    <c:if test="${hasAm}"><p class="pt-list-shift" style="order: -1">Ca sáng</p></c:if>
+                                                    <c:if test="${hasPm}"><p class="pt-list-shift is-pm" style="order: ${(week.shiftSplitHour - week.axisStartHour) * 60}">Ca chiều</p></c:if>
 
                                                     <c:forEach var="item" items="${day.items}">
                                                         <%-- timeText "18:00 – 19:30" ← item.startTime / endTime (DAO TimeSlots.StartTime / EndTime). --%>

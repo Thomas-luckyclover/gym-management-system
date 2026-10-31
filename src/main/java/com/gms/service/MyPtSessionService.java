@@ -1,5 +1,6 @@
 package com.gms.service;
 
+import com.gms.constant.AppConstants;
 import com.gms.constant.Messages;
 import com.gms.dao.AccountDAO;
 import com.gms.dao.CustomerDAO;
@@ -36,8 +37,8 @@ import java.util.Set;
  *
  * THAM SỐ CẤU HÌNH (giá trị hiện tại)
  *   BANDS: 3 hàng thời khóa biểu, xếp theo giờ BẮT ĐẦU (bandOf):
- *     bắt đầu trước 12:00 → "Sáng" · 12:00–17:59 → "Chiều" · từ 18:00 → "Tối"
- *     (chữ hiện cạnh tên hàng: "06:00 – 12:00", "12:00 – 18:00", "18:00 – 22:00" — buổi 05:30 vẫn nằm hàng Sáng)
+ *     bắt đầu trước 13:00 → "Sáng" · 13:00–17:59 → "Chiều" · từ 18:00 → "Tối" (13:00 = mốc ca chung, AppConstants)
+ *     (chữ hiện cạnh tên hàng: "05:30 – 13:00", "13:00 – 18:00", "18:00 – 22:00")
  *   Độ dài 1 buổi KHÔNG đọc P-06 ở đây: giờ kết thúc lấy thẳng từ TimeSlots.EndTime (hiện P-06 = 90 phút).
  *   Luật vào gym giống JOB-04: Membership hoặc DayPass phủ ngày tập, và không bảo lưu ngày đó.
  *
@@ -46,7 +47,7 @@ import java.util.Set;
  *      File: servlet/customer/MyPtSessionServlet.java → service/MyPtSessionService.java → dao/MyPtSessionDAO.java → WEB-INF/jsp/customer/my-pt-sessions.jsp.
  *   2) Khách tự hủy / đổi buổi được không? → KHÔNG (chốt 19/10): chỉ XEM; muốn đổi/hủy thì nhắn PT qua Zalo, PT xử lý ở Lịch dạy.
  *      File: service/MyPtSessionService.java → service/PtScheduleService.java (PT đổi ở Lịch dạy).
- *   3) 3 hàng Sáng/Chiều/Tối chia thế nào? → bandOf theo giờ BẮT ĐẦU: trước 12:00 = Sáng · 12:00–17:59 = Chiều · từ 18:00 = Tối.
+ *   3) 3 hàng Sáng/Chiều/Tối chia thế nào? → bandOf theo giờ BẮT ĐẦU: trước 13:00 = Sáng · 13:00–17:59 = Chiều · từ 18:00 = Tối.
  *      File: service/MyPtSessionService.java (bandOf) → WEB-INF/jsp/customer/my-pt-sessions.jsp.
  *   4) "Vào được phòng tập" tính thế nào? → giống JOB-04: có Membership/DayPass phủ ngày tập và không bảo lưu; thiếu thì tô nhãn "Chưa có gói tập".
  *      File: service/MyPtSessionService.java → service/AutoCloseSessionService.java (cùng luật vào gym JOB-04).
@@ -70,8 +71,8 @@ public class MyPtSessionService {
 
     /** 3 khung giờ = 3 hàng của thời khóa biểu (xếp theo giờ BẮT ĐẦU, xem bandOf). */
     private static final String[][] BANDS = {
-        {"Sáng", "06:00 – 12:00"},
-        {"Chiều", "12:00 – 18:00"},
+        {"Sáng", "05:30 – 13:00"},
+        {"Chiều", "13:00 – 18:00"},
         {"Tối", "18:00 – 22:00"}
     };
 
@@ -131,7 +132,7 @@ public class MyPtSessionService {
             // Mỗi Band khi tạo đã tự có 7 ô rỗng (constructor của Band tạo 7 ArrayList).
             for (String[] band : BANDS) {
                 String bandName = band[0];                  // "Sáng"
-                String bandRange = band[1];                 // "06:00 – 12:00"
+                String bandRange = band[1];                 // "05:30 – 13:00"
                 view.getBands().add(new TimetableView.Band(bandName, bandRange));
             }
             // → Lưới 3 × 7 ô, ô nào cũng rỗng. Ngày không có buổi vẫn có ô (JSP hiện "—").
@@ -142,7 +143,7 @@ public class MyPtSessionService {
                 //      vd buổi 21/10 (Thứ 4): 3 − 1 = 2
                 int dayIndex = row.getSlotDate().getDayOfWeek().getValue() - 1;
 
-                // HÀNG: theo GIỜ BẮT ĐẦU: < 12h → 0 Sáng | < 18h → 1 Chiều | còn lại → 2 Tối
+                // HÀNG: theo GIỜ BẮT ĐẦU: < 13h → 0 Sáng | < 18h → 1 Chiều | còn lại → 2 Tối
                 //      vd 18:00 → 2
                 int bandIndex = bandOf(row.getStartTime());
 
@@ -163,9 +164,9 @@ public class MyPtSessionService {
         }
     }
 
-    /** Xếp theo giờ bắt đầu: trước 12h là Sáng, trước 18h là Chiều, còn lại là Tối. */
+    /** Xếp theo giờ bắt đầu: trước 13:00 (mốc ca chung) là Sáng, trước 18h là Chiều, còn lại là Tối. */
     static int bandOf(LocalTime startTime) {
-        if (startTime.getHour() < 12) {
+        if (startTime.isBefore(AppConstants.AFTERNOON_SHIFT_START)) {
             return 0;
         }
         return startTime.getHour() < 18 ? 1 : 2;

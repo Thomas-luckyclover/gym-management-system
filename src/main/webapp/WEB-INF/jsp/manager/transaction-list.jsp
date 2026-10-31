@@ -12,7 +12,7 @@
   <link rel="stylesheet" href="${pageContext.request.contextPath}/css/pages/manager/transaction-list.css">
 
   <script src="${pageContext.request.contextPath}/js/pages/auth/notification-bell.js" defer></script>
-  <script src="${pageContext.request.contextPath}/js/pages/manager/transaction-list.js?v=20261027_v2" defer></script>
+  <script src="${pageContext.request.contextPath}/js/pages/manager/transaction-list.js?v=20261031csrf" defer></script>
 </head>
 
 <body class="dock theme-manager">
@@ -683,7 +683,7 @@
 
         <div class="trans-modal-body">
           <p style="font-size: var(--font-size-sm); color: var(--color-text-soft); line-height: 1.5;">
-            Thao tác này xác nhận rằng bạn đã thực hiện hoàn trả tiền mặt hoặc chuyển khoản trực tiếp cho khách hàng ngoài quầy do đơn hàng bị hủy (BR-47).
+            Thao tác này xác nhận rằng bạn đã thực hiện hoàn trả tiền mặt hoặc chuyển khoản trực tiếp cho khách hàng ngoài quầy do đơn hàng bị hủy.
           </p>
 
           <div class="price-breakdown-card">

@@ -1,5 +1,6 @@
 package com.gms.servlet.manager;
 
+import com.gms.constant.Messages;
 import com.gms.dto.LeaveReviewDetailView;
 import com.gms.dto.LeaveBulkApprovalResult;
 import com.gms.constant.SessionKey;
@@ -70,7 +71,7 @@ public class LeaveRequestReviewServlet extends HttpServlet {
 
         // B2: kiểm tra tính hợp lệ của CSRF token chống tấn công giả mạo yêu cầu
         if (!RequestUtil.isValidCsrfToken(request)) {
-            RequestUtil.setFlashToast(request, "danger", "Phiên làm việc không hợp lệ hoặc đã hết hạn. Vui lòng thử lại.");
+            RequestUtil.setFlashToast(request, "danger", Messages.MSG214_FORM_SESSION_EXPIRED);
             RequestUtil.redirect(request, response, "/manager/leave-requests");
             return;
         }
@@ -138,7 +139,7 @@ public class LeaveRequestReviewServlet extends HttpServlet {
                     requestIds.add(Integer.valueOf(value));
                 }
             } catch (NumberFormatException e) {
-                RequestUtil.setFlashToast(request, "danger", "Danh sách đơn không hợp lệ. Vui lòng tải lại trang.");
+                RequestUtil.setFlashToast(request, "danger", Messages.MSG208_LEAVE_LIST_INVALID_RELOAD);
                 returnToList(request, response);
                 return;
             }

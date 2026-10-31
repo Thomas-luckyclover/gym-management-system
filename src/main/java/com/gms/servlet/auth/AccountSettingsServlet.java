@@ -668,7 +668,7 @@ public class AccountSettingsServlet extends HttpServlet {
                         RequestUtil.setFlashToast(
                                 request,
                                 "warning",
-                                "Thông tin đã được cập nhật nhưng chưa ghi được Audit Log.");
+                                Messages.MSG302_SAVED_BUT_AUDIT_FAILED);
 
                 } else {
 

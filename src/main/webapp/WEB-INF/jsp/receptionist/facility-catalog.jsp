@@ -19,7 +19,8 @@
       <header class="topbar">
         <div class="tb-left">
           <h1 class="tb-title">Báo hỏng thiết bị</h1>
-          <span class="tb-subtitle">Bước 1/2 · Chọn đúng thiết bị đang hỏng</span>
+          <%-- Câu giải thích chuyển vào hint box chung (.pt-info, common.css / common.js) thay cho dòng chữ phụ dưới tiêu đề. --%>
+          <span class="pt-info"><button type="button" class="pt-info-trigger" aria-label="Hướng dẫn Báo hỏng thiết bị" aria-describedby="report-help"><span aria-hidden="true">i</span></button><span id="report-help" class="pt-info-popover" role="tooltip"><b>Bước 1/2:</b> chọn đúng thiết bị đang hỏng.</span></span>
         </div>
 
         <div class="top-right">
@@ -130,8 +131,10 @@
         <section class="equipment-items-section" id="equipmentItemsSection">
           <div class="section-header">
             <div class="section-header-left">
-              <h2 class="section-title">Chiếc nào bị hỏng?</h2>
-              <p class="section-subtitle">Có thể chọn một hoặc nhiều thiết bị cùng dòng · Sơ đồ sắp xếp theo vị trí sàn tập</p>
+              <div class="title-hint-row">
+                <h2 class="section-title">Chiếc nào bị hỏng?</h2>
+                <span class="pt-info"><button type="button" class="pt-info-trigger" aria-label="Cách chọn thiết bị hỏng" aria-describedby="pick-help"><span aria-hidden="true">i</span></button><span id="pick-help" class="pt-info-popover" role="tooltip">Có thể chọn một hoặc nhiều thiết bị cùng dòng. Sơ đồ sắp xếp theo vị trí sàn tập.</span></span>
+              </div>
             </div>
             <div class="section-header-actions">
               <button type="button" class="btn btn-sm btn-outline" id="btnSelectAllItems">Chọn tất cả</button>

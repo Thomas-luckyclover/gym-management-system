@@ -18,6 +18,11 @@
 <meta name="viewport" content="width=device-width, initial-scale=1">
 <%-- common.js đọc thẻ này (hàm getContextPath) để ghép URL AJAX đúng khi app chạy dưới /gms --%>
 <meta name="context-path" content="${pageContext.request.contextPath}">
+<%-- CSRF token của phiên (LoginServlet tạo lúc đăng nhập). common.js đọc thẻ này để tự gắn ô ẩn csrfToken vào mọi form POST
+     và mọi postData; Servlet kiểm bằng RequestUtil.isValidCsrfToken / rejectInvalidCsrf. Chưa đăng nhập thì không in. --%>
+<c:if test="${not empty sessionScope.csrfToken}">
+<meta name="csrf-token" content="<c:out value='${sessionScope.csrfToken}' />">
+</c:if>
 <c:if test="${not empty sessionScope.avatar}">
 <meta name="user-avatar" content="${pageContext.request.contextPath}${sessionScope.avatar}">
 </c:if>
@@ -41,9 +46,9 @@
 <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/7.3.1/css/all.min.css">
 
 <link rel="stylesheet" href="${pageContext.request.contextPath}/css/tokens.css?v=20261025city">
-<link rel="stylesheet" href="${pageContext.request.contextPath}/css/common.css?v=20261026hint">
+<link rel="stylesheet" href="${pageContext.request.contextPath}/css/common.css?v=20261031hint">
 <link rel="stylesheet" href="${pageContext.request.contextPath}/css/brand-system.css?v=20261025city">
-<script src="${pageContext.request.contextPath}/js/common.js?v=20261027m" defer></script>
+<script src="${pageContext.request.contextPath}/js/common.js?v=20261031csrf" defer></script>
 <script src="${pageContext.request.contextPath}/js/icons.js?v=3" defer></script>
 <%-- Chuông thông báo dùng chung cho mọi vai trò đăng nhập có quyền nhận thông báo (SRS 11.2) --%>
 <c:if test="${not empty sessionScope.role or not empty sessionScope.accountId or not empty sessionScope.account}">

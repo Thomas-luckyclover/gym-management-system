@@ -20,7 +20,8 @@
       <header class="topbar">
         <div class="tb-left">
           <h1 class="tb-title">Cơ sở vật chất & Thiết bị</h1>
-          <span class="tb-subtitle">Quản lý nhóm thiết bị, định danh mã máy vật lý và quy cách vị trí đặt máy.</span>
+          <%-- Câu giải thích chuyển vào hint box chung (.pt-info, common.css / common.js) thay cho dòng chữ phụ dưới tiêu đề. --%>
+          <span class="pt-info"><button type="button" class="pt-info-trigger" aria-label="Hướng dẫn Cơ sở vật chất" aria-describedby="facilities-help"><span aria-hidden="true">i</span></button><span id="facilities-help" class="pt-info-popover" role="tooltip">Quản lý nhóm thiết bị, định danh mã máy vật lý và quy cách vị trí đặt máy.</span></span>
         </div>
 
         <div class="top-right">

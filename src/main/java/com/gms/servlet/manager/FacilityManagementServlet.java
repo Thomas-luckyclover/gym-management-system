@@ -1,5 +1,6 @@
 package com.gms.servlet.manager;
 
+import com.gms.constant.Messages;
 import com.gms.constant.SessionKey;
 import com.gms.dto.ServiceResult;
 import com.gms.entity.EquipmentItem;
@@ -100,7 +101,7 @@ public class FacilityManagementServlet extends HttpServlet {
 
         // B2: Kiểm tra CSRF token
         if (!RequestUtil.isValidCsrfToken(request)) {
-            RequestUtil.setFlashToast(request, "danger", "Phiên làm việc đã hết hạn hoặc không hợp lệ.");
+            RequestUtil.setFlashToast(request, "danger", Messages.MSG214_FORM_SESSION_EXPIRED);
             response.sendRedirect(request.getContextPath() + "/manager/facilities");
             return;
         }
@@ -116,7 +117,7 @@ public class FacilityManagementServlet extends HttpServlet {
             case "saveItem" -> handleSaveEquipmentItem(request, response);
             case "retireItem" -> handleRetireEquipmentItem(request, response);
             default -> {
-                RequestUtil.setFlashToast(request, "warning", "Thao tác không được hỗ trợ.");
+                RequestUtil.setFlashToast(request, "warning", Messages.MSG244_ACTION_UNSUPPORTED);
                 response.sendRedirect(request.getContextPath() + "/manager/facilities");
             }
         }
@@ -169,7 +170,7 @@ public class FacilityManagementServlet extends HttpServlet {
         if (result.isSuccess()) {
             int savedId = result.getData();
             RequestUtil.setFlashToast(request, "success",
-                    facilityId > 0 ? "Cập nhật nhóm máy thành công!" : "Thêm mới nhóm máy thành công!");
+                    facilityId > 0 ? Messages.MSG245_FACILITY_UPDATED : Messages.MSG246_FACILITY_CREATED);
             response.sendRedirect(request.getContextPath() + "/manager/facilities?selectedId=" + savedId);
         } else {
             RequestUtil.setFlashToast(request, "danger", result.getMessage());
@@ -186,7 +187,7 @@ public class FacilityManagementServlet extends HttpServlet {
         ServiceResult<Void> result = facilityService.toggleFacilityActive(facilityId, isActive);
         if (result.isSuccess()) {
             RequestUtil.setFlashToast(request, "success",
-                    isActive ? "Đã hiển thị nhóm máy vào danh mục vận hành." : "Đã tạm dừng / ẩn nhóm máy.");
+                    isActive ? Messages.MSG247_FACILITY_SHOWN : Messages.MSG248_FACILITY_HIDDEN);
         } else {
             RequestUtil.setFlashToast(request, "danger", result.getMessage());
         }
@@ -211,7 +212,7 @@ public class FacilityManagementServlet extends HttpServlet {
         ServiceResult<Integer> result = facilityService.saveEquipmentItem(item);
         if (result.isSuccess()) {
             RequestUtil.setFlashToast(request, "success",
-                    itemId > 0 ? "Cập nhật cá thể máy " + itemCode + " thành công!" : "Thêm cá thể máy " + itemCode + " thành công!");
+                    String.format(itemId > 0 ? Messages.MSG249_ITEM_UPDATED : Messages.MSG250_ITEM_CREATED, itemCode));
         } else {
             RequestUtil.setFlashToast(request, "danger", result.getMessage());
         }
@@ -225,7 +226,7 @@ public class FacilityManagementServlet extends HttpServlet {
 
         ServiceResult<Void> result = facilityService.retireEquipmentItem(itemId);
         if (result.isSuccess()) {
-            RequestUtil.setFlashToast(request, "success", "Đã thanh lý cá thể máy.");
+            RequestUtil.setFlashToast(request, "success", Messages.MSG251_ITEM_RETIRED);
         } else {
             RequestUtil.setFlashToast(request, "danger", result.getMessage());
         }

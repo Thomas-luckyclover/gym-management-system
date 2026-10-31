@@ -1,5 +1,6 @@
 package com.gms.servlet.manager;
 
+import com.gms.constant.Messages;
 import com.gms.constant.Role;
 import com.gms.constant.SessionKey;
 import com.gms.dto.AccountSettingsView;
@@ -81,6 +82,11 @@ public class SystemTransactionServlet extends HttpServlet {
         HttpSession session = request.getSession(false);
         if (session == null || session.getAttribute(SessionKey.ACCOUNT_ID) == null) {
             RequestUtil.redirect(request, response, "/login");
+            return;
+        }
+
+        // CSRF: token sai / thiếu → chặn (form: toast + quay lại; AJAX: JSON 403).
+        if (RequestUtil.rejectInvalidCsrf(request, response, "/manager/transactions")) {
             return;
         }
 
@@ -202,7 +208,7 @@ public class SystemTransactionServlet extends HttpServlet {
         int orderId = RequestUtil.getIntParam(request, "orderId", 0);
         if (orderId <= 0) {
             JsonUtil.writeJson(response, HttpServletResponse.SC_BAD_REQUEST,
-                    JsonResponse.error("Mã đơn hàng không hợp lệ."));
+                    JsonResponse.error(Messages.MSG170_ORDER_CODE_INVALID_FULL));
             return;
         }
 
@@ -240,7 +246,7 @@ public class SystemTransactionServlet extends HttpServlet {
 
         // Xử lý submit form thông thường (Fallback)
         if (result.isSuccess()) {
-            RequestUtil.setFlashToast(request, "success", "Đã xác nhận hoàn tiền thành công.");
+            RequestUtil.setFlashToast(request, "success", Messages.MSG174_REFUND_CONFIRMED);
         } else {
             RequestUtil.setFlashToast(request, "error", result.getMessage());
         }

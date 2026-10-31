@@ -198,4 +198,28 @@ public final class RequestUtil {
                 requestToken.getBytes(StandardCharsets.UTF_8)
         );
     }
+
+    /**
+     * Chặn POST có CSRF token sai / thiếu. Servlet gọi ở đầu doPost (sau bước kiểm đăng nhập):
+     *     if (RequestUtil.rejectInvalidCsrf(request, response, "/receptionist/shift")) { return; }
+     * Token đúng → trả false, Servlet làm tiếp. Token sai → tự trả lời rồi trả true:
+     *   AJAX (header X-Requested-With) → JSON 403 kèm MSG214; form thường → toast lỗi MSG214 + quay lại backPath.
+     * Token được common.js tự gắn vào mọi form POST và mọi postData (đọc từ meta csrf-token trong head.jspf).
+     * @param backPath đường dẫn tính từ context path để quay lại khi token sai, VD "/receptionist/check-in"
+     * @return true nếu đã chặn (Servlet phải return ngay)
+     */
+    public static boolean rejectInvalidCsrf(HttpServletRequest request, HttpServletResponse response, String backPath)
+            throws IOException {
+        if (isValidCsrfToken(request)) {
+            return false;
+        }
+        if (isAjaxRequest(request)) {
+            JsonUtil.writeJson(response, HttpServletResponse.SC_FORBIDDEN,
+                    com.gms.dto.JsonResponse.error(com.gms.constant.Messages.MSG214_FORM_SESSION_EXPIRED));
+        } else {
+            setFlashToast(request, "error", com.gms.constant.Messages.MSG214_FORM_SESSION_EXPIRED);
+            redirect(request, response, backPath);
+        }
+        return true;
+    }
 }

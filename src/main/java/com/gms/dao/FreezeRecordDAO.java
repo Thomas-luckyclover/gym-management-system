@@ -484,9 +484,9 @@ public class FreezeRecordDAO {
                     item.setWillBeMissed(willMiss);
 
                     if (willMiss) {
-                        item.setImpactExplanation("Chuyển sang Vắng (Bảo lưu gói tập) — trừ buổi, không hoàn tiền (CBR-62)");
+                        item.setImpactExplanation("Chuyển sang Vắng (Bảo lưu gói tập) — trừ buổi, không hoàn tiền");
                     } else {
-                        item.setImpactExplanation("Vẫn giữ lịch tập — bạn tập vẫn còn thẻ tập hợp lệ (CBR-67)");
+                        item.setImpactExplanation("Vẫn giữ lịch tập — bạn tập vẫn còn thẻ tập hợp lệ");
                     }
 
                     list.add(item);

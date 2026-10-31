@@ -239,7 +239,7 @@ class PtSaleServiceTest {
     void moneyAndShift() {
         assertEquals(375000, PtSaleService.sessionValue(16_500_000, 44));
         assertEquals(1_500_000, PtSaleService.vatAmount(16_500_000, 10));
-        assertEquals("Morning", PtSaleService.shiftTypeAt(LocalTime.of(13, 59)));
-        assertEquals("Afternoon", PtSaleService.shiftTypeAt(LocalTime.of(14, 0)));
+        assertEquals("Morning", PtSaleService.shiftTypeAt(LocalTime.of(12, 59)));
+        assertEquals("Afternoon", PtSaleService.shiftTypeAt(LocalTime.of(13, 0)));
     }
 }

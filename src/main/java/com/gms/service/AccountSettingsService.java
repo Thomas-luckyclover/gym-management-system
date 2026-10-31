@@ -645,7 +645,7 @@ public class AccountSettingsService {
 
                         String currentAvatar = person.getAvatar();
                         if (ValidationUtil.isNullOrEmpty(currentAvatar)) {
-                                return ServiceResult.fail("Tài khoản chưa có ảnh đại diện.");
+                                return ServiceResult.fail(Messages.MSG319_AVATAR_EMPTY);
                         }
 
                         boolean isUpdated = personDAO.updateAvatar(person.getPersonId(), null);

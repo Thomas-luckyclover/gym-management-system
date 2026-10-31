@@ -1748,6 +1748,9 @@ body.dock ::-webkit-scrollbar-thumb {
 }
 
 /* HintBox chung: mẫu PT Dashboard, dùng .pt-info/.pt-info-trigger/.pt-info-popover. */
+/* Tiêu đề khối + nút (i) cùng 1 hàng (thay cho dòng chữ phụ dưới tiêu đề, 31/10/2026). Tiêu đề giữ cỡ chữ của trang. */
+.title-hint-row { display: flex; flex-wrap: wrap; align-items: center; gap: var(--space-2); }
+.title-hint-row > :is(h1, h2, h3) { margin: 0; }
 .pt-info { position: relative; display: inline-flex; flex: none; }
 .pt-info-trigger {
   display: grid;
@@ -3660,3 +3663,31 @@ html body.dock:not(.no-arena) .theme-toggle {
 html body.dock:not(.no-arena) .theme-toggle:hover { border-color: var(--arena-glass-line-hover); }
 html body.dock:not(.no-arena) .theme-toggle[aria-pressed="true"] .theme-toggle__track { background: var(--arena-ice-soft); box-shadow: inset 0 0 0 var(--border-width) var(--arena-ice); }
 html body.dock:not(.no-arena) .theme-toggle:focus-visible { outline: 2px solid var(--arena-on-dark); outline-offset: 2px; }
+
+/* =====================================================================
+   TOPBAR MÀN HẸP (31/10/2026) — đặt cuối file để thắng các lớp Arena / Cobalt phía trên.
+   Lỗi cũ: ≤480px tiêu đề bị ép 1 dòng + "…" → còn "Bá…", "L…" vì nút bên phải chiếm gần hết hàng.
+   Cách sửa: topbar được xuống dòng — tiêu đề giữ đủ chữ ở hàng trên, cụm nút dồn phải ở hàng dưới
+   (chỉ xuống dòng khi KHÔNG đủ chỗ; máy tính / iPad ngang vẫn 1 hàng như cũ).
+   ===================================================================== */
+@media (max-width: 900px) {
+  html body.dock .topbar {
+    flex-wrap: wrap;
+    row-gap: var(--space-2);
+  }
+  /* flex-basis auto + không co: tiêu đề giữ bề rộng chữ thật; hết chỗ thì cụm nút tự xuống hàng dưới. */
+  html body.dock .topbar .tb-left {
+    flex: 1 0 auto;
+    max-width: 100%;
+  }
+  /* .top-right: màn khách / lễ tân; .pt-top-actions: màn PT (pt/_header.jspf). */
+  html body.dock .topbar :is(.top-right, .pt-top-actions) {
+    margin-left: auto;
+  }
+  html body.dock .topbar :is(.tb-title, .tb-left h1) {
+    overflow: visible;
+    text-overflow: clip;
+    white-space: nowrap;
+    font-size: var(--font-size-xl);
+  }
+}

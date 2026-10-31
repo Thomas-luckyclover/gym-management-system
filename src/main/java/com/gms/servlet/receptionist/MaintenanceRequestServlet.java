@@ -77,7 +77,7 @@ public class MaintenanceRequestServlet extends HttpServlet {
             RequestUtil.setFlashToast(
                     request,
                     "error",
-                    "Yêu cầu không hợp lệ hoặc đã hết hạn (CSRF)."
+                    Messages.MSG214_FORM_SESSION_EXPIRED
             );
             RequestUtil.redirect(
                     request,
@@ -271,7 +271,7 @@ public class MaintenanceRequestServlet extends HttpServlet {
             RequestUtil.setFlashToast(
                     request,
                     "success",
-                    "Đã nghiệm thu và đóng yêu cầu bảo trì."
+                    Messages.MSG254_MAINTENANCE_CLOSED
             );
         } else {
             RequestUtil.setFlashToast(

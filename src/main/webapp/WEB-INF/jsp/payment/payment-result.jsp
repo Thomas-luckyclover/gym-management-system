@@ -11,7 +11,7 @@
               href="${pageContext.request.contextPath}/css/pages/customer/dashboard.css?v=7">
 
         <link rel="stylesheet"
-              href="${pageContext.request.contextPath}/css/pages/payment/payment-result.css?v=2">
+              href="${pageContext.request.contextPath}/css/pages/payment/payment-result.css?v=20261030_vGymPay">
 
 <link rel="stylesheet"
 href="${pageContext.request.contextPath}/css/pages/customer/start-date-picker.css?v=4">

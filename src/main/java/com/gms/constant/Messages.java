@@ -97,8 +97,6 @@ public final class Messages {
     public static final String MSG36_LOCK_EXPIRED = "Đã hết thời gian khóa. Bạn có thể đăng nhập lại.";
     // EN: This account cannot be used to sign in. Please contact an administrator.
     public static final String MSG37_ACCOUNT_INACTIVE = "Tài khoản này không thể đăng nhập. Vui lòng liên hệ quản trị viên.";
-    // EN: This account has no password yet. Please use Forgot password to set your password
-    public static final String MSG38_NO_PASSWORD_YET = "Tài khoản này chưa có mật khẩu. Vui lòng dùng Quên mật khẩu để đặt mật khẩu.";
     // EN: Enter your email or phone number.
     public static final String MSG39_IDENTIFIER_REQUIRED = "Nhập email hoặc số điện thoại của bạn.";
     // EN: Signed out.
@@ -329,6 +327,658 @@ public final class Messages {
     // EN: This order no longer holds a slot (paid, cancelled, or expired after %d minutes).
     public static final String MSG108_HOLD_NO_LONGER_VALID =
             "Đơn này không còn giữ chỗ (đã thu tiền, đã hủy hoặc quá %d phút). Bán lại từ đầu.";
+
+    // ===== 6.1 Bán hàng tại quầy (CounterSaleService, CounterSaleServlet) =====
+
+    /** Bán gói tại quầy khi ca chưa mở. */
+    public static final String MSG109_SHIFT_NOT_OPEN_FOR_SALE = "Chưa mở ca làm việc. Vui lòng mở ca ở màn Ca làm việc trước khi bán gói.";
+
+    /** Thu tiền tại quầy khi ca chưa mở. */
+    public static final String MSG110_SHIFT_NOT_OPEN_FOR_PAYMENT = "Chưa mở ca làm việc. Vui lòng mở ca trước khi thu tiền.";
+
+    /** Form tạo nhanh hồ sơ gửi lên rỗng / hỏng. */
+    public static final String MSG111_CUSTOMER_DATA_INVALID = "Dữ liệu khách hàng không hợp lệ.";
+
+    /** Dữ liệu thanh toán tại quầy gửi lên rỗng / hỏng. */
+    public static final String MSG112_ORDER_DATA_INVALID = "Thông tin đơn hàng không hợp lệ.";
+
+    /** Tạo nhanh hồ sơ: họ tên sai. */
+    public static final String MSG113_QUICK_FULL_NAME_RULE = "Họ và tên từ 2 đến 50 ký tự, chỉ chứa chữ cái và khoảng trắng.";
+
+    /** Tạo nhanh hồ sơ: ngày sinh sai. */
+    public static final String MSG114_QUICK_DOB_INVALID = "Ngày sinh không hợp lệ hoặc vượt quá 100 tuổi.";
+
+    /** Hồ sơ phụ thuộc: tên người giám hộ sai. */
+    public static final String MSG115_GUARDIAN_NAME_RULE = "Tên người giám hộ từ 2 đến 50 ký tự.";
+
+    /** Hồ sơ phụ thuộc: thiếu mối quan hệ. */
+    public static final String MSG116_GUARDIAN_RELATIONSHIP_RULE = "Mối quan hệ người giám hộ không được để trống (tối đa 30 ký tự).";
+
+    /** Hồ sơ phụ thuộc: SĐT người giám hộ sai. */
+    public static final String MSG117_GUARDIAN_PHONE_RULE = "Số điện thoại người giám hộ phải gồm 10 chữ số bắt đầu bằng 0.";
+
+    /** Tạo nhanh hồ sơ: SĐT sai định dạng. */
+    public static final String MSG118_PHONE_TEN_DIGITS = "Số điện thoại phải gồm 10 chữ số bắt đầu bằng 0.";
+
+    /** Tạo nhanh hồ sơ Self: thiếu / sai email nhận mật khẩu tạm. */
+    public static final String MSG119_TEMP_PASSWORD_EMAIL_REQUIRED = "Nhập email đúng định dạng (VD: ten@gmail.com) để gửi mật khẩu tạm cho khách.";
+
+    /** Tạo nhanh hồ sơ: SĐT đã có. %s = SĐT, tên khách. */
+    public static final String MSG120_PHONE_EXISTS_FOR_CUSTOMER = "Số điện thoại %s đã tồn tại trong hệ thống với khách: %s.";
+
+    /** Tạo nhanh hồ sơ phụ thuộc xong. %s = mã KH. */
+    public static final String MSG121_PROFILE_CREATED = "Đã tạo hồ sơ khách hàng %s.";
+
+    /** Tạo nhanh hồ sơ Self xong. %s = mã KH, email đã che. */
+    public static final String MSG122_PROFILE_AND_ACCOUNT_CREATED = "Đã tạo hồ sơ %s và tài khoản. Mật khẩu tạm đã gửi tới %s.";
+
+    /** Bấm áp mã khi ô mã trống. */
+    public static final String MSG123_VOUCHER_CODE_REQUIRED = "Vui lòng nhập mã giảm giá.";
+
+    /** Mã giảm giá sai định dạng. */
+    public static final String MSG124_VOUCHER_CODE_FORMAT = "Mã giảm giá phải có 4–20 ký tự chữ A–Z hoặc số.";
+
+    /** Không có mã giảm giá này. */
+    public static final String MSG125_VOUCHER_NOT_FOUND = "Mã giảm giá không tồn tại.";
+
+    /** Mã giảm giá đã tắt. */
+    public static final String MSG126_VOUCHER_INACTIVE = "Mã giảm giá đã ngừng áp dụng.";
+
+    /** Ngoài thời gian áp dụng của mã. */
+    public static final String MSG127_VOUCHER_OUT_OF_DATE = "Mã giảm giá chưa đến ngày bắt đầu hoặc đã hết hạn.";
+
+    /** Mã hết lượt dùng chung. */
+    public static final String MSG128_VOUCHER_USED_UP = "Mã giảm giá đã hết lượt sử dụng.";
+
+    /** Phạm vi mã không khớp loại gói. */
+    public static final String MSG129_VOUCHER_SCOPE_PACKAGE_OR_DAY_PASS = "Mã chỉ áp dụng cho gói tập hoặc vé ngày.";
+
+    /** Mã chỉ dành cho gói hội viên. */
+    public static final String MSG130_VOUCHER_SCOPE_MEMBERSHIP = "Mã giảm giá chỉ áp dụng cho gói hội viên.";
+
+    /** Đơn chưa đạt giá trị tối thiểu. %s = số tiền. */
+    public static final String MSG131_VOUCHER_MIN_ORDER = "Đơn hàng phải từ %s mới được áp dụng mã này.";
+
+    /** Khách đã dùng hết lượt của mã. */
+    public static final String MSG132_VOUCHER_CUSTOMER_LIMIT = "Khách hàng đã dùng hết số lượt của mã giảm giá này.";
+
+    /** Mã hết lượt ngay lúc thanh toán (người khác vừa dùng). */
+    public static final String MSG133_VOUCHER_JUST_USED_UP = "Mã giảm giá vừa hết lượt sử dụng. Vui lòng thử lại.";
+
+    /** Chưa chọn cách thu tiền. */
+    public static final String MSG134_PAYMENT_METHOD_REQUIRED = "Vui lòng chọn hình thức thu tiền: Tiền mặt hoặc Chuyển khoản.";
+
+    /** Gói buổi PT lẻ chưa bán ở màn này. */
+    public static final String MSG135_PT_SINGLE_NOT_AT_COUNTER = "Chưa có màn bán buổi PT lẻ tại quầy.";
+
+    /** Ngày bắt đầu gói ngoài khoảng cho phép. %s = từ ngày, đến ngày. */
+    public static final String MSG136_COUNTER_START_DATE_RANGE = "Ngày bắt đầu chỉ được chọn trong vòng 7 ngày tới (từ %s đến %s).";
+
+    /** Thu tiền tại quầy xong. %s = số tiền, mã đơn. */
+    public static final String MSG137_COUNTER_PAID = "Đã thu %s · Đơn %s hoàn tất!";
+
+    // ===== 6.2 Mua gói online, thanh toán, hoàn tiền (PaymentService, PaymentCallbackService, ManagerTransactionService, TransactionHistoryService, SubscriptionStartDateService) =====
+
+    /** Mua online: mã gói sai. */
+    public static final String MSG138_PACKAGE_INVALID_CHOOSE_AGAIN = "Gói tập không hợp lệ. Vui lòng chọn lại.";
+
+    /** Mua online: tài khoản không có hồ sơ khách còn hiệu lực. */
+    public static final String MSG139_NO_ACTIVE_CUSTOMER_PROFILE = "Không tìm thấy hồ sơ khách hàng còn hiệu lực.";
+
+    /** Mua online khi hồ sơ đang đóng băng. */
+    public static final String MSG140_PROFILE_FROZEN_CANNOT_BUY = "Hồ sơ đang đóng băng. Bạn chưa thể mua gói tập.";
+
+    /** Gói đã ngừng bán / chỉ bán tại quầy. */
+    public static final String MSG141_PACKAGE_NOT_SOLD_ONLINE = "Gói này không còn bán hoặc không hỗ trợ mua online.";
+
+    /** Mã đơn trên URL sai. */
+    public static final String MSG142_ORDER_CODE_INVALID = "Mã đơn không hợp lệ.";
+
+    /** Đơn không có hoặc không thuộc khách đang đăng nhập. */
+    public static final String MSG143_ORDER_NOT_FOUND = "Không tìm thấy đơn hàng của bạn.";
+
+    /** Thanh toán khi hồ sơ không dùng được. */
+    public static final String MSG144_PROFILE_INACTIVE_OR_FROZEN = "Hồ sơ không còn hiệu lực hoặc đang đóng băng.";
+
+    /** Không còn đơn Pending để áp mã / thanh toán. */
+    public static final String MSG145_PENDING_ORDER_NOT_FOUND = "Không tìm thấy đơn chờ thanh toán của bạn.";
+
+    /** Quá hạn thanh toán online. */
+    public static final String MSG146_ORDER_PAYMENT_EXPIRED = "Đơn đã hết hạn thanh toán. Vui lòng tạo đơn mới.";
+
+    /** Bấm gỡ mã khi đơn chưa có mã. */
+    public static final String MSG147_ORDER_HAS_NO_VOUCHER = "Đơn chưa áp dụng voucher.";
+
+    /** Gỡ mã giảm giá xong. */
+    public static final String MSG148_VOUCHER_REMOVED = "Đã gỡ voucher.";
+
+    /** Áp mã giảm giá xong. */
+    public static final String MSG149_VOUCHER_APPLIED = "Đã áp dụng voucher.";
+
+    /** Đã có giao dịch Pending cho đơn. */
+    public static final String MSG150_PAYMENT_IN_PROGRESS = "Đơn đang có giao dịch thanh toán xử lý. Không tạo thêm giao dịch.";
+
+    /** Giảm giá làm đơn còn 0đ. */
+    public static final String MSG151_VNPAY_AMOUNT_ZERO = "VNPay yêu cầu số tiền lớn hơn 0đ. Vui lòng gỡ hoặc đổi mã giảm giá.";
+
+    /** Tạo link VNPay lỗi. */
+    public static final String MSG152_VNPAY_UNAVAILABLE = "Chưa mở được VNPay. Vui lòng kiểm tra cấu hình merchant và kết nối hệ thống.";
+
+    /** Không đọc được tài khoản trong session. */
+    public static final String MSG153_SESSION_INVALID = "Phiên đăng nhập không hợp lệ.";
+
+    /** Chữ ký VNPay trả về không khớp. */
+    public static final String MSG154_VNPAY_SIGNATURE_INVALID = "Không xác minh được dữ liệu trả về từ VNPay.";
+
+    /** Mã lần thanh toán trên URL sai. */
+    public static final String MSG155_PAYMENT_ATTEMPT_INVALID = "Mã lần thanh toán không hợp lệ.";
+
+    /** Không có giao dịch này. */
+    public static final String MSG156_TRANSACTION_NOT_FOUND = "Không tìm thấy giao dịch.";
+
+    /** Đọc kết quả thanh toán lỗi. */
+    public static final String MSG157_PAYMENT_RESULT_UNREADABLE = "Chưa đọc được kết quả thanh toán. Vui lòng thử lại.";
+
+    /** Mã giao dịch trên URL / form sai. */
+    public static final String MSG158_TRANSACTION_ID_INVALID = "Mã giao dịch không hợp lệ.";
+
+    /** Tiêu đề màn kết quả: giao dịch cần hoàn tiền. */
+    public static final String MSG159_RESULT_NEEDS_RECONCILE_TITLE = "Giao dịch cần đối soát";
+
+    /** Nội dung màn kết quả: giao dịch cần hoàn tiền. */
+    public static final String MSG160_RESULT_NEEDS_RECONCILE_TEXT = "Giao dịch đã được đánh dấu cần hoàn tiền. Vui lòng liên hệ lễ tân.";
+
+    /** Tiêu đề màn kết quả: đơn đã hủy. */
+    public static final String MSG161_RESULT_CANCELLED_TITLE = "Đơn hàng đã hủy";
+
+    /** Nội dung màn kết quả: đơn đã hủy. */
+    public static final String MSG162_RESULT_CANCELLED_TEXT = "Bạn có thể quay lại chọn gói để tạo đơn mới.";
+
+    /** Tiêu đề màn kết quả / thông báo: thanh toán lỗi. */
+    public static final String MSG163_RESULT_FAILED_TITLE = "Thanh toán chưa thành công";
+
+    /** Thanh toán lỗi, còn thanh toán lại được. */
+    public static final String MSG164_RESULT_FAILED_RETRY = "Bạn có thể thanh toán lại khi đơn còn hạn.";
+
+    /** Thanh toán lỗi, không thanh toán lại được. */
+    public static final String MSG165_RESULT_FAILED_NO_RETRY = "Đơn hiện không được thanh toán lại.";
+
+    /** Thông báo cho khách khi thanh toán lỗi. %s = mã đơn. */
+    public static final String MSG166_NOTIFY_PAYMENT_FAILED_RETRY = "Bạn có thể thanh toán lại đơn %s khi đơn còn hạn.";
+
+    /** Tiêu đề màn kết quả: chờ VNPay xác nhận. */
+    public static final String MSG167_RESULT_PENDING_TITLE = "Đang chờ xác nhận thanh toán";
+
+    /** Nội dung màn kết quả: chờ VNPay xác nhận. */
+    public static final String MSG168_RESULT_PENDING_TEXT = "Hệ thống đang tự xác minh kết quả với VNPay. Trang sẽ tự cập nhật.";
+
+    /** Bộ lọc ngày: từ ngày sau đến ngày. */
+    public static final String MSG169_DATE_RANGE_REVERSED = "Ngày bắt đầu không được lớn hơn ngày kết thúc.";
+
+    /** Mã đơn hàng nhập vào sai. */
+    public static final String MSG170_ORDER_CODE_INVALID_FULL = "Mã đơn hàng không hợp lệ.";
+
+    /** Xác nhận hoàn tiền: ghi chú sai độ dài. */
+    public static final String MSG171_REFUND_NOTE_LENGTH = "Ghi chú hoàn tiền phải từ 5 đến 500 ký tự (ghi rõ số TK hoặc mã giao dịch hoàn).";
+
+    /** Không phải Quản lý mà xác nhận hoàn tiền. */
+    public static final String MSG172_REFUND_NO_PERMISSION = "Bạn không có quyền thực hiện xác nhận hoàn tiền.";
+
+    /** Giao dịch không ở trạng thái cần hoàn. */
+    public static final String MSG173_REFUND_NOT_APPLICABLE = "Giao dịch không tồn tại, không yêu cầu hoàn tiền hoặc đã được hoàn trước đó.";
+
+    /** Xác nhận hoàn tiền xong. */
+    public static final String MSG174_REFUND_CONFIRMED = "Đã xác nhận hoàn tiền thành công.";
+
+    /** ?page= sai. */
+    public static final String MSG175_PAGE_NUMBER_INVALID = "Số trang không hợp lệ.";
+
+    /** ?status= sai. */
+    public static final String MSG176_STATUS_FILTER_INVALID = "Trạng thái lọc không hợp lệ.";
+
+    /** Đọc lịch sử giao dịch lỗi. */
+    public static final String MSG177_TRANSACTION_HISTORY_LOAD_FAILED = "Chưa tải được lịch sử giao dịch. Vui lòng thử lại.";
+
+    /** Khách tạo đơn mua online xong. */
+    public static final String MSG178_PENDING_ORDER_CREATED = "Đã tạo đơn chờ thanh toán.";
+
+    /** Mã gói trên URL sai. */
+    public static final String MSG179_PACKAGE_ID_INVALID = "Mã gói không hợp lệ.";
+
+    /** Đọc gói lỗi. */
+    public static final String MSG180_PACKAGE_LOAD_FAILED = "Chưa đọc được thông tin gói. Vui lòng thử lại.";
+
+    /** Chưa chọn ngày bắt đầu gói. */
+    public static final String MSG181_START_DATE_REQUIRED = "Vui lòng chọn ngày bắt đầu.";
+
+    /** Hồ sơ khách không còn hiệu lực. */
+    public static final String MSG182_PROFILE_INACTIVE = "Hồ sơ không còn hiệu lực.";
+
+    /** Gói không có / không thuộc khách. */
+    public static final String MSG183_SUBSCRIPTION_NOT_FOUND = "Không tìm thấy gói tập của bạn.";
+
+    /** Chọn lại đúng ngày cũ. */
+    public static final String MSG184_START_DATE_UNCHANGED = "Ngày bắt đầu không thay đổi.";
+
+    /** Ngày bắt đầu ngoài khoảng cho phép. %s = từ ngày, đến ngày. */
+    public static final String MSG185_START_DATE_RANGE = "Chỉ được chọn ngày bắt đầu từ %s đến %s.";
+
+    /** Gói bị đổi bởi phiên khác. */
+    public static final String MSG186_SUBSCRIPTION_CHANGED_RELOAD = "Gói vừa thay đổi, vui lòng tải lại trang và thử lại.";
+
+    /** Đổi ngày bắt đầu xong. */
+    public static final String MSG187_START_DATE_SAVED = "Đã lưu ngày bắt đầu.";
+
+    /** Lưu ngày bắt đầu lỗi. */
+    public static final String MSG188_START_DATE_SAVE_FAILED = "Chưa lưu được ngày bắt đầu. Vui lòng thử lại.";
+
+    // ===== 6.3 Đơn nghỉ phép (StaffLeaveService, LeaveRequestService, LeaveRequestFormServlet, LeaveRequestReviewServlet) =====
+
+    /** Nộp đơn: lý do sai độ dài. */
+    public static final String MSG189_LEAVE_REASON_LENGTH = "Lý do nghỉ phải từ 5 đến 500 ký tự.";
+
+    /** Nhân viên trong session không còn khớp DB. */
+    public static final String MSG190_STAFF_INFO_CHANGED_RELOGIN = "Thông tin nhân viên đã thay đổi. Vui lòng đăng nhập lại.";
+
+    /** Đã có đơn chưa bị từ chối cùng ngày, ca. */
+    public static final String MSG191_LEAVE_DUPLICATE = "Bạn đã có đơn nghỉ trùng ngày và ca này.";
+
+    /** Quá giờ chốt nộp đơn. */
+    public static final String MSG192_LEAVE_TOO_LATE_ASK_MANAGER = "Đã quá hạn gửi đơn. Vui lòng báo quản lý.";
+
+    /** Phép năm còn ít hơn số ngày xin. */
+    public static final String MSG193_LEAVE_ANNUAL_NOT_ENOUGH = "Không đủ phép năm. Xem phương án chuyển phần vượt sang không lương và xác nhận trước khi gửi.";
+
+    /** Quỹ phép đổi giữa lúc xem và lúc gửi. */
+    public static final String MSG194_LEAVE_QUOTA_CHANGED = "Quỹ phép đã thay đổi. Vui lòng xem lại số ngày và xác nhận phương án mới.";
+
+    /** Thiếu tham số quỹ phép năm. */
+    public static final String MSG195_LEAVE_QUOTA_NOT_CONFIGURED = "Chưa cấu hình quỹ phép năm. Vui lòng liên hệ quản lý.";
+
+    /** Không có nhân viên Working. */
+    public static final String MSG196_WORKING_EMPLOYEE_NOT_FOUND = "Không tìm thấy nhân viên đang làm việc.";
+
+    /** Chưa chọn loại nghỉ. */
+    public static final String MSG197_LEAVE_TYPE_REQUIRED = "Vui lòng chọn loại nghỉ.";
+
+    /** Loại nghỉ gửi lên không hỗ trợ. */
+    public static final String MSG198_LEAVE_TYPE_UNSUPPORTED = "Chỉ hỗ trợ nghỉ phép năm hoặc nghỉ không lương.";
+
+    /** Chưa chọn ca nghỉ. */
+    public static final String MSG199_LEAVE_SHIFT_REQUIRED = "Vui lòng chọn ca nghỉ.";
+
+    /** Chưa chọn ngày nghỉ. */
+    public static final String MSG200_LEAVE_DATE_REQUIRED = "Vui lòng chọn ngày nghỉ.";
+
+    /** Khoảng ngày nghỉ sai. */
+    public static final String MSG201_LEAVE_RANGE_RULE = "Chọn ngày kết thúc từ ngày bắt đầu, tối đa 31 ngày trong cùng năm.";
+
+    /** Đơn nhiều ngày nhưng chọn nửa ca. */
+    public static final String MSG202_LEAVE_MULTI_DAY_FULL_DAY = "Đơn nhiều ngày phải chọn Cả ngày.";
+
+    /** Ngày nghỉ là hôm nay hoặc đã qua. */
+    public static final String MSG203_LEAVE_DATE_AFTER_TODAY = "Ngày nghỉ phải sau ngày hôm nay.";
+
+    /** Mã đơn nghỉ sai. */
+    public static final String MSG204_LEAVE_ID_INVALID = "Mã đơn không hợp lệ.";
+
+    /** Rút đơn không được. */
+    public static final String MSG205_LEAVE_WITHDRAW_FAILED = "Không thể rút đơn (đơn không tồn tại, đã được xử lý hoặc không phải của bạn).";
+
+    /** Bộ lọc ngày ngược. */
+    public static final String MSG206_LEAVE_FILTER_DATE_ORDER = "Từ ngày phải trước hoặc trùng Đến ngày.";
+
+    /** Duyệt hàng loạt: số đơn ngoài 1–50. */
+    public static final String MSG207_LEAVE_BULK_COUNT = "Chọn từ 1 đến 50 đơn để duyệt.";
+
+    /** Danh sách mã đơn gửi lên hỏng. */
+    public static final String MSG208_LEAVE_LIST_INVALID_RELOAD = "Danh sách đơn không hợp lệ. Vui lòng tải lại trang.";
+
+    /** Không phải Quản lý. */
+    public static final String MSG209_LEAVE_NO_PERMISSION = "Bạn không có quyền xử lý đơn nghỉ phép.";
+
+    /** Duyệt sau hạn: thiếu xác nhận / lý do. */
+    public static final String MSG210_LEAVE_LATE_APPROVAL_RULE = "Duyệt muộn cần xác nhận nhân viên nghỉ đúng ngày/ca và nhập lý do từ 5 đến 500 ký tự.";
+
+    /** Đơn đã được người khác duyệt / từ chối. */
+    public static final String MSG211_LEAVE_ALREADY_HANDLED = "Đơn này đã được xử lý bởi người khác.";
+
+    /** Từ chối (đơn nghỉ, yêu cầu bảo trì): lý do sai độ dài. */
+    public static final String MSG212_REJECT_REASON_LENGTH = "Lý do từ chối phải từ 5 đến 500 ký tự.";
+
+    /** Đơn đổi trạng thái giữa lúc xem và lúc bấm. */
+    public static final String MSG213_LEAVE_STATUS_CHANGED_RELOAD = "Đơn này đã thay đổi trạng thái. Vui lòng tải lại trang.";
+
+    /** CSRF token sai / hết hạn khi gửi form. */
+    public static final String MSG214_FORM_SESSION_EXPIRED = "Phiên làm việc không hợp lệ hoặc đã hết hạn. Vui lòng thử lại.";
+
+    /** Rút đơn xong. */
+    public static final String MSG215_LEAVE_WITHDRAWN = "Đã rút đơn xin nghỉ phép thành công.";
+
+    /** Nộp đơn xong. */
+    public static final String MSG216_LEAVE_SUBMITTED = "Đã gửi yêu cầu nghỉ. Xem kết quả từng phần trong Đơn đã nộp.";
+
+    // ===== 6.4 Cơ sở vật chất và bảo trì (FacilityService, MaintenanceRequestService và các Servlet) =====
+
+    /** Mã nhóm thiết bị sai. */
+    public static final String MSG217_FACILITY_ID_INVALID = "Mã nhóm cơ sở vật chất không hợp lệ.";
+
+    /** Tên nhóm máy sai độ dài. */
+    public static final String MSG218_FACILITY_NAME_LENGTH = "Tên nhóm máy phải từ 3 đến 100 ký tự.";
+
+    /** Chưa chọn phân loại. */
+    public static final String MSG219_FACILITY_CATEGORY_REQUIRED = "Vui lòng chọn phân loại cơ sở vật chất.";
+
+    /** Đơn vị tính quá dài. */
+    public static final String MSG220_FACILITY_UNIT_LENGTH = "Đơn vị tính tối đa 15 ký tự.";
+
+    /** Nhóm máy đã bị xóa / không có. */
+    public static final String MSG221_FACILITY_NOT_FOUND_FOR_UPDATE = "Không tìm thấy nhóm máy để cập nhật.";
+
+    /** Thêm nhóm máy lỗi. */
+    public static final String MSG222_FACILITY_CREATE_FAILED = "Không thể thêm mới nhóm máy. Vui lòng thử lại.";
+
+    /** Mã nhóm máy gửi lên sai. */
+    public static final String MSG223_FACILITY_GROUP_ID_INVALID = "Mã nhóm máy không hợp lệ.";
+
+    /** Thêm cá thể máy chưa chọn nhóm. */
+    public static final String MSG224_FACILITY_GROUP_REQUIRED = "Vui lòng chọn nhóm máy tương ứng.";
+
+    /** Mã máy sai độ dài. */
+    public static final String MSG225_ITEM_CODE_LENGTH = "Mã máy phải từ 2 đến 20 ký tự (VD: TM-001).";
+
+    /** Tên hiển thị máy sai độ dài. */
+    public static final String MSG226_ITEM_LABEL_LENGTH = "Tên hiển thị / Quy cách phải từ 1 đến 50 ký tự (VD: Số 1, 6 kg).";
+
+    /** Ghi chú vị trí quá dài. */
+    public static final String MSG227_ITEM_LOCATION_LENGTH = "Ghi chú vị trí tối đa 100 ký tự.";
+
+    /** Trùng mã máy. %s = mã máy. */
+    public static final String MSG228_ITEM_CODE_EXISTS = "Mã máy '%s' đã tồn tại trong hệ thống.";
+
+    /** Cá thể máy không có. */
+    public static final String MSG229_ITEM_NOT_FOUND_FOR_UPDATE = "Không tìm thấy cá thể máy để cập nhật.";
+
+    /** Thêm cá thể máy lỗi. */
+    public static final String MSG230_ITEM_CREATE_FAILED = "Không thể tạo mới cá thể máy.";
+
+    /** Mã cá thể máy gửi lên sai. */
+    public static final String MSG231_ITEM_ID_INVALID = "Mã cá thể máy không hợp lệ.";
+
+    /** Báo hỏng chưa chọn máy. */
+    public static final String MSG232_MAINTENANCE_ITEM_REQUIRED = "Vui lòng chọn ít nhất một mã máy cụ thể cần báo hỏng.";
+
+    /** Mô tả hỏng hóc sai độ dài. */
+    public static final String MSG233_MAINTENANCE_DESCRIPTION_LENGTH = "Mô tả hỏng hóc phải từ 10 đến 500 ký tự.";
+
+    /** Danh sách máy gửi lên không hợp lệ. */
+    public static final String MSG234_MAINTENANCE_ITEM_INVALID = "Vui lòng chọn ít nhất một mã máy cụ thể hợp lệ.";
+
+    /** Máy đã ngưng hoạt động. */
+    public static final String MSG235_MAINTENANCE_ITEM_INACTIVE = "Mã máy không tồn tại hoặc đã ngưng hoạt động.";
+
+    /** Duyệt yêu cầu không còn Chờ duyệt. */
+    public static final String MSG236_MAINTENANCE_APPROVE_ONLY_PENDING = "Chỉ yêu cầu đang Chờ duyệt mới được phê duyệt.";
+
+
+    /** Từ chối yêu cầu không còn Chờ duyệt. */
+    public static final String MSG238_MAINTENANCE_REJECT_ONLY_PENDING = "Chỉ yêu cầu đang Chờ duyệt mới được từ chối.";
+
+    /** Nghiệm thu: ghi chú sai độ dài. */
+    public static final String MSG239_MAINTENANCE_CLOSE_NOTE_LENGTH = "Ghi chú nghiệm thu phải từ 5 đến 500 ký tự.";
+
+    /** Đóng yêu cầu chưa ở trạng thái đang xử lý. */
+    public static final String MSG240_MAINTENANCE_CLOSE_ONLY_IN_PROGRESS = "Chỉ yêu cầu đang xử lý mới được nghiệm thu và đóng.";
+
+    /** Bước 1 báo hỏng chưa chọn thiết bị. */
+    public static final String MSG241_MAINTENANCE_DEVICE_REQUIRED = "Vui lòng chọn ít nhất một thiết bị cần báo hỏng.";
+
+    /** Thiết bị đã ngừng sử dụng. */
+    public static final String MSG242_MAINTENANCE_DEVICE_INACTIVE = "Thiết bị không tồn tại hoặc đã ngừng sử dụng.";
+
+    /** Gửi báo hỏng xong. %s = các mã máy. */
+    public static final String MSG243_MAINTENANCE_SENT = "Đã gửi yêu cầu bảo trì %s thành công!";
+
+    /** action gửi lên không có. */
+    public static final String MSG244_ACTION_UNSUPPORTED = "Thao tác không được hỗ trợ.";
+
+    /** Sửa nhóm máy xong. */
+    public static final String MSG245_FACILITY_UPDATED = "Cập nhật nhóm máy thành công!";
+
+    /** Thêm nhóm máy xong. */
+    public static final String MSG246_FACILITY_CREATED = "Thêm mới nhóm máy thành công!";
+
+    /** Bật nhóm máy. */
+    public static final String MSG247_FACILITY_SHOWN = "Đã hiển thị nhóm máy vào danh mục vận hành.";
+
+    /** Tắt nhóm máy. */
+    public static final String MSG248_FACILITY_HIDDEN = "Đã tạm dừng / ẩn nhóm máy.";
+
+    /** Sửa cá thể máy xong. %s = mã máy. */
+    public static final String MSG249_ITEM_UPDATED = "Cập nhật cá thể máy %s thành công!";
+
+    /** Thêm cá thể máy xong. %s = mã máy. */
+    public static final String MSG250_ITEM_CREATED = "Thêm cá thể máy %s thành công!";
+
+    /** Thanh lý máy xong. */
+    public static final String MSG251_ITEM_RETIRED = "Đã thanh lý cá thể máy.";
+
+    /** Duyệt yêu cầu bảo trì xong. */
+    public static final String MSG252_MAINTENANCE_APPROVED = "Đã duyệt yêu cầu bảo trì.";
+
+    /** Từ chối yêu cầu bảo trì xong. */
+    public static final String MSG253_MAINTENANCE_REJECTED = "Đã từ chối yêu cầu bảo trì.";
+
+    /** Nghiệm thu xong. */
+    public static final String MSG254_MAINTENANCE_CLOSED = "Đã nghiệm thu và đóng yêu cầu bảo trì.";
+
+    // ===== 6.5 Ca làm việc, check-in, bảo lưu, xóa hồ sơ (ShiftService, FreezeService, CustomerDeletionService và các Servlet lễ tân) =====
+
+    /** Mở ca đã mở / đã chốt. */
+    public static final String MSG255_SHIFT_ALREADY_OPENED_OR_CLOSED = "Ca làm việc này đã được mở hoặc đã chốt từ trước.";
+
+    /** Mở ca ngày đã qua. */
+    public static final String MSG256_SHIFT_PAST_DAY = "Không thể mở ca làm việc của ngày trong quá khứ.";
+
+    /** Mở ca ngày tương lai. */
+    public static final String MSG257_SHIFT_FUTURE_DAY = "Không thể mở trước ca làm việc của ngày trong tương lai.";
+
+    /** Ngày nghỉ cả ngày. */
+    public static final String MSG258_SHIFT_GYM_CLOSED = "Hôm nay phòng tập đóng cửa cả ngày theo lịch nghỉ, không thể mở ca làm việc.";
+
+    /** Ca ngày trước chưa chốt. %s = tên ca, ngày. */
+    public static final String MSG259_SHIFT_OLD_NOT_CLOSED = "Không thể mở ca mới vì %s ngày %s chưa được chốt sổ. Vui lòng chốt ca cũ trước.";
+
+    /** Có ca khác đang mở. %s = tên ca. */
+    public static final String MSG260_SHIFT_OTHER_OPEN = "Hiện đang có %s đang mở. Vui lòng chốt ca trước khi mở ca mới.";
+
+    /** Lý do không mở được (hiện trên màn). %s = tên ca. */
+    public static final String MSG261_SHIFT_OTHER_OPEN_SHORT = "Hiện đang có %s đang mở. Vui lòng chốt ca trước.";
+
+    /** Mở ca sáng khi ca chiều đã chốt. */
+    public static final String MSG262_SHIFT_MORNING_AFTER_AFTERNOON_CLOSED = "Ca sáng không thể mở vì Ca chiều của ngày hôm nay đã chốt.";
+
+    /** Mở ca sáng khi ca chiều đang mở. */
+    public static final String MSG263_SHIFT_MORNING_AFTER_AFTERNOON_OPEN = "Ca sáng không thể mở vì Ca chiều của ngày hôm nay đang mở.";
+
+    /** Mở ca sáng sau 13:00. */
+    public static final String MSG264_SHIFT_MORNING_OVER = "Đã quá thời gian ca sáng (kết thúc lúc 13:00). Vui lòng mở Ca chiều.";
+
+    /** Mở ca chiều khi ca sáng chưa chốt. */
+    public static final String MSG265_SHIFT_MORNING_STILL_OPEN = "Hiện đang có Ca sáng đang mở. Vui lòng chốt Ca sáng trước khi mở Ca chiều.";
+
+    /** Mở ca chiều trước 13:00. */
+    public static final String MSG266_SHIFT_AFTERNOON_NOT_YET = "Chưa đến giờ bắt đầu Ca chiều (từ 13:00). Vui lòng mở Ca sáng.";
+
+    /** Chốt ca không ở trạng thái mở. */
+    public static final String MSG267_SHIFT_CLOSE_ONLY_OPEN = "Chỉ có thể chốt ca đang ở trạng thái Đang mở.";
+
+    /** Thao tác đơn của ca khác. */
+    public static final String MSG268_ORDER_NOT_IN_OPEN_SHIFT = "Đơn hàng không thuộc ca làm việc đang mở.";
+
+    /** Xác nhận chuyển khoản khi đơn không còn Pending. */
+    public static final String MSG269_ORDER_NOT_AWAITING_CONFIRM = "Đơn hàng này không còn ở trạng thái chờ xác nhận.";
+
+    /** Hủy đơn không còn hủy được. */
+    public static final String MSG270_ORDER_NOT_CANCELLABLE = "Đơn hàng này không còn ở trạng thái cho phép hủy.";
+
+    /** Mã ca gửi lên sai. */
+    public static final String MSG271_SHIFT_INVALID = "Ca làm việc không hợp lệ.";
+
+    /** Mở ca xong. */
+    public static final String MSG272_SHIFT_OPENED = "Mở ca làm việc thành công.";
+
+    /** Tiền mặt đếm được sai. */
+    public static final String MSG273_COUNTED_CASH_INVALID = "Số tiền mặt đếm được không hợp lệ.";
+
+    /** Chốt ca xong. */
+    public static final String MSG274_SHIFT_CLOSED = "Đã chốt ca làm việc và gửi sổ ca lên Quản lý.";
+
+    /** Mã đơn gửi lên sai. */
+    public static final String MSG275_ORDER_INVALID = "Đơn hàng không hợp lệ.";
+
+    /** Xác nhận chuyển khoản xong. */
+    public static final String MSG276_TRANSFER_CONFIRMED = "Đã xác nhận thanh toán chuyển khoản thành công.";
+
+    /** Hủy đơn tại quầy xong. */
+    public static final String MSG277_COUNTER_ORDER_CANCELLED = "Đã hủy đơn hàng tại quầy thành công.";
+
+    /** Lý do bảo lưu quá ngắn. */
+    public static final String MSG278_FREEZE_REASON_MIN = "Lý do bảo lưu phải có ít nhất 5 ký tự.";
+
+    /** Thiếu ngày bảo lưu. */
+    public static final String MSG279_FREEZE_DATES_REQUIRED = "Vui lòng nhập đầy đủ ngày bắt đầu và ngày kết thúc bảo lưu.";
+
+    /** Bảo lưu bắt đầu hôm nay / đã qua. %s = ngày mai. */
+    public static final String MSG280_FREEZE_START_FROM_TOMORROW = "Bảo lưu chỉ được bắt đầu sớm nhất từ ngày mai (%s).";
+
+    /** Ngày kết thúc bảo lưu trước ngày bắt đầu. */
+    public static final String MSG281_FREEZE_END_BEFORE_START = "Ngày kết thúc dự kiến không được trước ngày bắt đầu bảo lưu.";
+
+    /** Nhân viên bảo lưu gói của chính mình. */
+    public static final String MSG282_STAFF_OWN_FREEZE = "Nhân viên không được tự bảo lưu gói tập của chính mình.";
+
+    /** Kết thúc bảo lưu đã kết thúc. */
+    public static final String MSG283_FREEZE_ALREADY_ENDED = "Đợt bảo lưu này đã được kết thúc trước đó.";
+
+    /** Nhân viên thao tác hồ sơ khách của chính mình. */
+    public static final String MSG284_STAFF_OWN_PROFILE = "Nhân viên không được tự thao tác trên hồ sơ của chính mình.";
+
+    /** Chưa chọn thời gian bảo lưu. */
+    public static final String MSG285_FREEZE_PERIOD_REQUIRED = "Vui lòng chọn đầy đủ thời gian bảo lưu.";
+
+    /** Lý do bảo lưu quá dài. */
+    public static final String MSG286_FREEZE_REASON_MAX = "Lý do bảo lưu không được vượt quá 500 ký tự.";
+
+    /** Ngày gửi lên sai định dạng. */
+    public static final String MSG287_DATE_FORMAT_INVALID = "Định dạng ngày không hợp lệ.";
+
+    /** Mã đợt bảo lưu sai. */
+    public static final String MSG288_FREEZE_ID_INVALID = "Mã đợt bảo lưu không hợp lệ.";
+
+    /** Yêu cầu xóa hồ sơ đã Inactive. */
+    public static final String MSG289_PROFILE_ALREADY_INACTIVE = "Hồ sơ khách hàng này đã ngừng hoạt động.";
+
+    /** Yêu cầu đã có người xử lý. */
+    public static final String MSG290_REQUEST_HANDLED_BY_OTHER = "Yêu cầu này đã được xử lý bởi người khác.";
+
+    /** Hồ sơ vừa ngừng hoạt động. */
+    public static final String MSG291_PROFILE_INACTIVE_RELOAD = "Hồ sơ không còn hoạt động. Vui lòng tải lại danh sách.";
+
+    /** Duyệt xóa hồ sơ xong. */
+    public static final String MSG292_DELETION_APPROVED = "Đã duyệt yêu cầu xóa và ngừng hoạt động hồ sơ khách hàng.";
+
+    /** Từ chối xóa hồ sơ xong. */
+    public static final String MSG293_DELETION_REJECTED = "Đã từ chối yêu cầu xóa hồ sơ.";
+
+    /** Check-in: gói gửi lên sai. */
+    public static final String MSG294_CHECKIN_PACKAGE_INVALID = "Thông tin gói tập không hợp lệ.";
+
+    /** Check-in xong. %s = tên khách. */
+    public static final String MSG295_CHECKIN_DONE = "%s đã vào tập thành công.";
+
+    /** Chụp ảnh check-in: không có hồ sơ. */
+    public static final String MSG296_CHECKIN_PHOTO_PROFILE_NOT_FOUND = "Không tìm thấy hồ sơ khách cần cập nhật ảnh.";
+
+    /** Lưu ảnh check-in xong. */
+    public static final String MSG297_CHECKIN_PHOTO_SAVED = "Đã lưu ảnh check-in vào hồ sơ hội viên.";
+
+    // ===== 6.6 PT, chỉ số cơ thể, tài khoản, thông báo, phản hồi, thư viện bài tập =====
+
+    /** Chỉ số cơ thể: lần đo không có / không thuộc khách. */
+    public static final String MSG298_MEASUREMENT_NOT_FOUND = "Không tìm thấy lần đo này.";
+
+    /** Chỉ số cơ thể: thiếu ngày đo. */
+    public static final String MSG299_MEASUREMENT_DATE_REQUIRED = "Chọn ngày đo.";
+
+    /** Lưu lần đo xong. %s = ngày, BMI. */
+    public static final String MSG300_MEASUREMENT_SAVED = "Đã lưu lần đo ngày %s · BMI %s.";
+
+    /** Xóa lần đo xong. */
+    public static final String MSG301_MEASUREMENT_DELETED = "Đã xóa lần đo.";
+
+    /** Lưu được nhưng ghi nhật ký lỗi. */
+    public static final String MSG302_SAVED_BUT_AUDIT_FAILED = "Thông tin đã được cập nhật nhưng chưa ghi được nhật ký thao tác.";
+
+    /** API thông báo nhận action lạ. */
+    public static final String MSG303_NOTIFICATION_ACTION_INVALID = "Thao tác thông báo không hợp lệ.";
+
+    /** Đổi email trùng email cũ. */
+    public static final String MSG304_NEW_EMAIL_SAME = "Email mới phải khác email hiện tại.";
+
+    /** Đổi SĐT trùng SĐT cũ. */
+    public static final String MSG305_NEW_PHONE_SAME = "Số điện thoại mới phải khác số điện thoại hiện tại.";
+
+    /** wger lỗi và chưa có dữ liệu cũ. */
+    public static final String MSG306_EXERCISE_LIBRARY_UNAVAILABLE = "Chưa tải được thư viện bài tập từ wger. Vui lòng thử lại sau ít phút.";
+
+    /** Bán gói PT: giữ lịch xong. %d = số buổi, phút; %s = mã đơn. */
+    public static final String MSG307_PT_SALE_HELD = "Đã giữ %d buổi trong %d phút · đơn %s. Thu tiền để chốt.";
+
+    /** Bán gói PT: chưa chọn cách thu. */
+    public static final String MSG308_PT_SALE_METHOD_REQUIRED = "Chọn cách thu tiền: tiền mặt hoặc chuyển khoản.";
+
+    /** Bán gói PT: mã giao dịch quá dài. */
+    public static final String MSG309_PT_SALE_REFERENCE_LENGTH = "Mã giao dịch chuyển khoản tối đa 50 ký tự.";
+
+    /** Bán gói PT: thu tiền xong. %s = số tiền, mã đơn; %d = số buổi. */
+    public static final String MSG310_PT_SALE_PAID = "Đã thu %s · đơn %s · %d buổi đã vào lịch PT.";
+
+    /** Bán gói PT: hủy giữ chỗ. %s = mã đơn. */
+    public static final String MSG311_PT_SALE_RELEASED = "Đã hủy giữ chỗ đơn %s, các khung đã trả lại cho PT.";
+
+    /** Phản hồi sai độ dài. */
+    public static final String MSG312_FEEDBACK_CONTENT_LENGTH = "Nội dung phản hồi phải từ 10 đến 1000 ký tự.";
+
+    /** Dời buổi chưa chọn khung. */
+    public static final String MSG313_PT_NEW_SLOT_REQUIRED = "Chọn một khung giờ mới cho buổi này.";
+
+    /** Ghi chú quá dài. %d = số ký tự tối đa. */
+    public static final String MSG314_NOTE_MAX_LENGTH = "Ghi chú tối đa %d ký tự.";
+
+    /** Dời buổi xong. %s = giờ mới. */
+    public static final String MSG315_PT_SESSION_MOVED = "Đã dời buổi sang %s.";
+
+    /** Chuyển buổi chưa chọn PT. */
+    public static final String MSG316_PT_TARGET_REQUIRED = "Chọn PT nhận buổi này.";
+
+    /** Chuyển buổi xong. %s = thời gian, tên PT. */
+    public static final String MSG317_PT_SESSION_TRANSFERRED = "Đã chuyển buổi %s cho %s.";
+
+    /** Hủy buổi xong. %s = thời gian. */
+    public static final String MSG318_PT_SESSION_CANCELLED = "Đã hủy buổi %s.";
+
+    /** Xóa ảnh đại diện khi chưa có ảnh. */
+    public static final String MSG319_AVATAR_EMPTY = "Tài khoản chưa có ảnh đại diện.";
+
+    /** Công bố lịch khi không có thay đổi. */
+    public static final String MSG320_PT_PUBLISH_NOTHING = "Chọn ít nhất một khung nháp hoặc khung cần gỡ trước khi công bố.";
+
+    /** Thời lượng buổi đổi giữa lúc soạn và lúc công bố. */
+    public static final String MSG321_PT_DURATION_CHANGED = "Thời lượng buổi đã thay đổi. Tải lại lịch và kiểm tra nháp trước khi công bố.";
+
+    /** Công bố chỉ gỡ khung. %d = số khung. */
+    public static final String MSG322_PT_SLOTS_REMOVED = "Đã gỡ %d khung giờ.";
 
     private Messages() {
     }

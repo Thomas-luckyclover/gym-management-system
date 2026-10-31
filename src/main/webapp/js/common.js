@@ -166,7 +166,6 @@ const MESSAGES = {
     // EN: This account cannot be used to sign in. Please contact an administrator.
     MSG37_ACCOUNT_INACTIVE: "Tài khoản này không thể đăng nhập. Vui lòng liên hệ quản trị viên.",
     // EN: This account has no password yet. Please use Forgot password to set your password
-    MSG38_NO_PASSWORD_YET: "Tài khoản này chưa có mật khẩu. Vui lòng dùng Quên mật khẩu để đặt mật khẩu.",
     // EN: Enter your email or phone number.
     MSG39_IDENTIFIER_REQUIRED: "Nhập email hoặc số điện thoại của bạn.",
     // EN: Signed out.
@@ -329,6 +328,7 @@ function initCommon() {
     bindArticleImageFallbacks();
     bindHintBoxes();
     syncHeaderUserAvatar();
+    bindCsrfToForms();
 
     // B3
     bindPageSizeSelects();
@@ -1372,6 +1372,51 @@ function handleLeavePageLinkClick(event) {
     });
 }
 
+// ===== CSRF TOKEN =====
+// Token của phiên nằm ở <meta name="csrf-token"> (common/head.jspf, chỉ có khi đã đăng nhập).
+// Gắn vào mọi form POST (cả form tạo sau khi tải trang: gắn lúc bấm gửi) và mọi postData — các trang không phải tự làm.
+
+// Đọc token; chưa đăng nhập → "" (không gắn gì)
+function getCsrfToken() {
+    const meta = document.querySelector('meta[name="csrf-token"]');
+    return meta === null ? "" : meta.getAttribute("content") || "";
+}
+
+// Thêm csrfToken vào FormData / URLSearchParams nếu chưa có
+function addCsrfToken(body) {
+    const token = getCsrfToken();
+    if (token === "" || typeof body.has !== "function" || body.has("csrfToken")) {
+        return;
+    }
+    body.append("csrfToken", token);
+}
+
+// Thêm ô ẩn csrfToken vào 1 form POST nếu form chưa có
+function ensureCsrfInput(form) {
+    const token = getCsrfToken();
+    const isPost = (form.getAttribute("method") || "").toLowerCase() === "post";
+    if (token === "" || !isPost || form.querySelector('input[name="csrfToken"]') !== null) {
+        return;
+    }
+    const input = document.createElement("input");
+    input.type = "hidden";
+    input.name = "csrfToken";
+    input.value = token;
+    form.appendChild(input);
+}
+
+// B1: gắn cho mọi form POST đang có trên trang; B2: form tạo sau (hộp thoại, JS) → gắn ngay lúc gửi
+function bindCsrfToForms() {
+    for (const form of document.querySelectorAll("form")) {
+        ensureCsrfInput(form);
+    }
+    document.addEventListener("submit", function (event) {
+        if (event.target instanceof HTMLFormElement) {
+            ensureCsrfInput(event.target);
+        }
+    }, true);
+}
+
 // ===== 5. HIỆN/ẨN MẬT KHẨU (GBR-30) =====
 
 // Gắn nút con mắt cho ô mật khẩu — initCommon tự gọi
@@ -1403,14 +1448,12 @@ function bindPasswordToggles() {
         const isHidden = input.type === "password";
         input.type = isHidden ? "text" : "password";
 
-        const icon = button.querySelector("i");
-        if (icon) {
-            icon.className = isHidden ? "fa-solid fa-eye-slash" : "fa-solid fa-eye";
-        } else {
-            button.innerHTML = isHidden
-                ? '<i class="fa-solid fa-eye-slash" aria-hidden="true"></i>'
-                : '<i class="fa-solid fa-eye" aria-hidden="true"></i>';
-        }
+        // Luôn thay bằng thẻ <i> MỚI, không sửa class của thẻ cũ: icons.js đã đổi thẻ cũ thành SVG con mắt
+        // (đánh dấu data-icon-done) nên đổi class không vẽ lại hình → trước đây icon biến mất sau lần bấm đầu.
+        // Thẻ mới được MutationObserver của icons.js bắt và vẽ SVG mắt mở / mắt gạch.
+        button.innerHTML = isHidden
+            ? '<i class="fa-solid fa-eye-slash" aria-hidden="true"></i>'
+            : '<i class="fa-solid fa-eye" aria-hidden="true"></i>';
 
         button.setAttribute("aria-label", isHidden ? "Ẩn mật khẩu" : "Hiện mật khẩu");
     });
@@ -1749,6 +1792,13 @@ async function sendAjaxRequest(method, url, data) {
         } else {
             requestOptions.body = toUrlSearchParams(data);
         }
+    }
+    // CSRF: mọi request ghi dữ liệu mang theo token của phiên (Servlet kiểm bằng RequestUtil.isValidCsrfToken).
+    if (upperMethod !== "GET") {
+        if (!requestOptions.body) {
+            requestOptions.body = new URLSearchParams();
+        }
+        addCsrfToken(requestOptions.body);
     }
 
     // B2: gửi request; lỗi mạng (không tới được server) → MSG05

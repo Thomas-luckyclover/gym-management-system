@@ -42,8 +42,10 @@
   padding: 0;
   list-style: none;
 }
+/* flex-wrap: màn hẹp (điện thoại) nút "Tiếp tục thu tiền" xuống dòng thay vì đè lên "còn mm:ss". */
 .sale-holds-list li {
   display: flex;
+  flex-wrap: wrap;
   align-items: center;
   justify-content: space-between;
   gap: var(--space-2);
@@ -57,7 +59,9 @@
   gap: var(--space-2);
   min-width: 0;
 }
+/* Mã đơn (PT-20261031-0007) không bẻ ở dấu gạch ngang. */
 .sale-holds-code {
+  white-space: nowrap;
   font-variant-numeric: tabular-nums;
   font-weight: var(--font-weight-semibold);
   color: var(--arena-ink);
@@ -588,7 +592,7 @@ html body.dock.pt-sale-page .content .sale-card :is(h2, h3) {
   justify-items: center;
   align-content: center;
   min-width: 64px;
-  min-height: 40px;
+  min-height: 44px;               /* chạm tay ≥ 44px; nút "+ Thêm giờ" và ô nhập giờ cùng chiều cao */
   padding: var(--space-1) var(--space-3);
   border-radius: var(--arena-radius-chip);
   background: var(--arena-chalk);
@@ -692,32 +696,39 @@ html body.dock.pt-sale-page .content .sale-card :is(h2, h3) {
 .plan-add-time [hidden] {
   display: none;
 }
-.plan-chip-add {
+/* Nút "+ Thêm giờ" là .plan-chip nên cao bằng chip giờ bên cạnh; chỉ khác viền nét đứt.
+   Màu chữ / viền dùng --arena-accent-text (sáng #24468F, tối #7FD3DA): --arena-700 gần trùng nền tối nên mất chữ. */
+.plan-chip.plan-chip-add {
   display: inline-flex;
   align-items: center;
   justify-content: center;
   box-sizing: border-box;
-  min-height: 44px;               /* chạm tay ≥ 44px */
   padding: var(--space-1) var(--space-3);
-  border: 1px dashed var(--arena-700);
+  border: 1px dashed var(--arena-accent-text);
   border-radius: var(--arena-radius-chip);
   background: transparent;
-  color: var(--arena-700);
+  box-shadow: none;
+  color: var(--arena-accent-text);
   font: inherit;
+  font-size: var(--font-size-sm);
   font-weight: var(--font-weight-semibold);
+  white-space: nowrap;
   cursor: pointer;
   transition: background-color var(--duration-fast) var(--ease-out), color var(--duration-fast) var(--ease-out);
 }
-.plan-chip-add:hover {
+.plan-chip.plan-chip-add:hover {
+  border-style: solid;
   background: var(--arena-700);
+  box-shadow: none;
   color: var(--arena-on-dark);
 }
+/* Ô nhập giờ + Xác nhận / Hủy: cao bằng chip (min-height của .plan-chip) để hàng không bị lệch khi mở. */
 .plan-time-input {
   box-sizing: border-box;
   width: 132px;
   height: 44px;
   padding: 0 var(--space-3);
-  border: 1px solid var(--arena-700);
+  border: 1px solid var(--arena-accent-text);
   border-radius: var(--arena-radius-chip);
   background: var(--arena-chalk);
   color: var(--arena-ink);
@@ -752,16 +763,58 @@ html body.dock.pt-sale-page .content .sale-card :is(h2, h3) {
   outline-offset: var(--focus-outline-offset);
 }
 
-/* Pumpy nhỏ cạnh dòng nhắc dưới nút Giữ lịch (trang trí). */
+/* Pumpy (receptionist/_sale-pumpy.jspf) + bong bóng nhắc bước kế tiếp (p[data-plan-note], pt-sale-plan.js đổi chữ).
+   Bong bóng có đuôi nhọn chỉ về phía Pumpy; nền --arena-surface để đọc được ở cả 2 theme. */
 .sale-note {
   display: flex;
-  align-items: center;
+  align-items: flex-end;
   gap: var(--space-2);
 }
 .sale-pumpy {
-  width: 54px;
-  height: 54px;
-  flex-shrink: 0;
+  flex: none;
+  width: 84px;
+  height: auto;
+}
+/* Theme tối: thân xanh đậm gần trùng nền → viền sáng mảnh quanh hình để Pumpy nổi lên. */
+html[data-theme="dark"] .sale-pumpy {
+  filter: drop-shadow(0 0 1.5px rgba(255, 255, 255, 0.55));
+}
+.sale-pumpy-wave {
+  transform-box: fill-box;
+  transform-origin: 0% 100%;
+  animation: sale-pumpy-wave 2.4s var(--ease-out) infinite;
+}
+@keyframes sale-pumpy-wave {
+  0%, 60%, 100% { transform: rotate(0deg); }
+  70% { transform: rotate(-14deg); }
+  80% { transform: rotate(8deg); }
+  90% { transform: rotate(-8deg); }
+}
+.sale-bubble {
+  position: relative;
+  flex: 1;
+  min-width: 0;
+  margin-bottom: var(--space-3);
+  padding: var(--space-2-5) var(--space-3);
+  border-radius: var(--arena-radius-tile);
+  background: var(--arena-surface);
+  box-shadow: inset 0 0 0 1px var(--arena-chalk-line-strong);
+  color: var(--arena-ink);
+}
+.sale-bubble b {
+  font-weight: var(--font-weight-semibold);
+}
+/* Đuôi bong bóng: hình vuông xoay 45°, cùng nền + viền 2 cạnh, nằm sát mép trái phía dưới. */
+.sale-bubble::before {
+  content: "";
+  position: absolute;
+  left: -5px;
+  bottom: 14px;
+  width: 10px;
+  height: 10px;
+  background: var(--arena-surface);
+  box-shadow: inset 1px -1px 0 var(--arena-chalk-line-strong);
+  transform: rotate(45deg);
 }
 
 /* Từng tuần: điều hướng ‹ Tuần 3/9 › + dãy tab tuần. */
@@ -1249,9 +1302,21 @@ html body.dock.pt-sale-page .sale-summary {
   margin: 0;
 }
 
-/* ===== Lưới thẻ dòng máy (Facilities) ===== */
-.facility-grid-section {
-    min-height: 0;
+
+/* ==================== 9. ĐIỆN THOẠI + GIẢM CHUYỂN ĐỘNG ==================== */
+
+@media (max-width: 1100px) {
+  /* iPad: 4 ô bước chỉ rộng ~160px → "Giữ chỗ & thu tiền" bị cắt. Cho chữ xuống dòng. */
+  .sale-stepper li {
+    white-space: normal;
+    line-height: var(--line-height-snug);
+  }
+  .sale-layout {
+    grid-template-columns: minmax(0, 1fr);
+  }
+  html body.dock.pt-sale-page .sale-summary {
+    position: static;
+  }
 }
 
 .facility-cards-grid {
@@ -2094,7 +2159,8 @@ textarea#descriptionInput.is-invalid {
   .plan-editor {
     animation: none;
   }
-  .sale-search.is-loading .sale-search-box > i {
+  .sale-search.is-loading .sale-search-box > i,
+  .sale-pumpy-wave {
     animation: none;
   }
   .sale *,

@@ -15,6 +15,32 @@ import java.time.LocalDateTime;
  */
 public class AccountDAO {
 
+    // ===== Tạo tài khoản =====
+
+    /**
+     * Thêm 1 tài khoản Active cho Person (CounterAccountService gọi khi lễ tân tạo hồ sơ tại quầy).
+     * @param conn connection của transaction tạo hồ sơ
+     * @param personId Persons.PersonId
+     * @param passwordHash bản băm BCrypt của mật khẩu tạm (PasswordUtil.hashPassword), không bao giờ là mật khẩu thô
+     * @return AccountId vừa tạo
+     * @throws SQLException lỗi ghi DB (VD Person đã có tài khoản — UQ_Accounts_Person)
+     */
+    public int insert(Connection conn, int personId, String passwordHash) throws SQLException {
+        String sql = "INSERT INTO Accounts (PersonId, PasswordHash, Status, FailedLoginCount, CreatedAt) "
+                + "VALUES (?, ?, 'Active', 0, SYSDATETIME())";
+        try (PreparedStatement stmt = conn.prepareStatement(sql, java.sql.Statement.RETURN_GENERATED_KEYS)) {
+            stmt.setInt(1, personId);
+            stmt.setString(2, passwordHash);
+            stmt.executeUpdate();
+            try (ResultSet keys = stmt.getGeneratedKeys()) {
+                if (keys.next()) {
+                    return keys.getInt(1);
+                }
+            }
+        }
+        throw new SQLException("Không lấy được AccountId vừa tạo");
+    }
+
     // ===== Tìm tài khoản =====
 
     /**

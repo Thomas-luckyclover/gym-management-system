@@ -25,13 +25,11 @@
 
                                 <div class="main">
 
-                                    <%--=====Thanh trên cùng (dashboard: thông tin khách, do Servlet lấy từ
-                                        CustomerDashboardService)=====--%>
-                                        <header class="topbar">
-                                            <div class="tb-left">
-                                                <h1 class="tb-title">Mua gói</h1>
-                                                <p class="tb-subtitle">Chọn gói tập hoặc vé ngày, giá đã gồm VAT.</p>
-                                            </div>
+                    <div class="top-right">
+                        <%@ include file="/WEB-INF/jsp/common/notification-bell.jspf" %>
+                        <%@ include file="/WEB-INF/jsp/common/topbar-user.jspf" %>
+                    </div>
+                </header>
 
                                             <c:if test="${not empty dashboard}">
                                                 <div class="top-right">
@@ -517,29 +515,14 @@
                                                                                                                                         </h2>
                                                                                                                                     </c:otherwise>
                                                                                                                                 </c:choose>
-                                                                                                                                <%-- Bỏ
-                                                                                                                                    dòng
-                                                                                                                                    loại
-                                                                                                                                    gói
-                                                                                                                                    khi
-                                                                                                                                    trùng
-                                                                                                                                    tiêu
-                                                                                                                                    đề
-                                                                                                                                    (ví
-                                                                                                                                    dụ "Buổi PT lẻ"
-                                                                                                                                    )
-                                                                                                                                    cho
-                                                                                                                                    khỏi
-                                                                                                                                    lặp
-                                                                                                                                    --%>
-                                                                                                                                    <c:if
-                                                                                                                                        test="${fn:toUpperCase(option.typeLabel) ne fn:toUpperCase(pkg.packageName)}">
-                                                                                                                                        <span
-                                                                                                                                            class="package-card__kind">
-                                                                                                                                            <c:out
-                                                                                                                                                value="${fn:toUpperCase(option.typeLabel)}" />
-                                                                                                                                        </span>
-                                                                                                                                    </c:if>
+                                                                                                                                <%-- Bỏ dòng loại gói khi trùng tiêu đề (ví dụ "Buổi PT lẻ") cho khỏi lặp --%>
+                                                                                                                                <c:if test="${fn:toUpperCase(option.typeLabel) ne fn:toUpperCase(pkg.packageName)}">
+                                                                                                                                <span
+                                                                                                                                    class="package-card__kind">
+                                                                                                                                    <c:out
+                                                                                                                                        value="${fn:toUpperCase(option.typeLabel)}" />
+                                                                                                                                </span>
+                                                                                                                                </c:if>
                                                                                                                         </div>
 
                                                                                                                         <div
@@ -773,114 +756,99 @@
 
                                                                                                                                 <div
                                                                                                                                     class="package-dialog__body">
-                                                                                                                                    <%-- Ảnh
-                                                                                                                                        minh
-                                                                                                                                        họa
-                                                                                                                                        theo
-                                                                                                                                        loại
-                                                                                                                                        gói
-                                                                                                                                        (CSS
-                                                                                                                                        vẽ
-                                                                                                                                        theo
-                                                                                                                                        data-tone
-                                                                                                                                        của
-                                                                                                                                        hộp
-                                                                                                                                        thoại)
-                                                                                                                                        --%>
-                                                                                                                                        <div class="package-dialog__image"
-                                                                                                                                            aria-hidden="true">
-                                                                                                                                        </div>
+                                                                                                                                    <%-- Ảnh minh họa theo loại gói (CSS vẽ theo data-tone của hộp thoại) --%>
+                                                                                                                                    <div class="package-dialog__image" aria-hidden="true"></div>
 
-                                                                                                                                        <c:if
-                                                                                                                                            test="${not empty option.originalPrice}">
-                                                                                                                                            <s
-                                                                                                                                                class="package-card__was">${gms:formatMoney(option.originalPrice)}</s>
-                                                                                                                                        </c:if>
+                                                                                                                                    <c:if
+                                                                                                                                        test="${not empty option.originalPrice}">
+                                                                                                                                        <s
+                                                                                                                                            class="package-card__was">${gms:formatMoney(option.originalPrice)}</s>
+                                                                                                                                    </c:if>
+                                                                                                                                    <div
+                                                                                                                                        class="package-card__price">
+                                                                                                                                        ${gms:formatMoney(pkg.price)}
+                                                                                                                                        <small>/
+                                                                                                                                            <c:out
+                                                                                                                                                value="${option.durationLabel}" />
+                                                                                                                                        </small>
+                                                                                                                                    </div>
+                                                                                                                                    <c:if
+                                                                                                                                        test="${not empty option.card.monthlyPrice}">
                                                                                                                                         <div
-                                                                                                                                            class="package-card__price">
-                                                                                                                                            ${gms:formatMoney(pkg.price)}
-                                                                                                                                            <small>/
-                                                                                                                                                <c:out
-                                                                                                                                                    value="${option.durationLabel}" />
-                                                                                                                                            </small>
+                                                                                                                                            class="package-card__sub">
+                                                                                                                                            ≈
+                                                                                                                                            ${gms:formatMoney(option.card.monthlyPrice)}
+                                                                                                                                            mỗi
+                                                                                                                                            tháng
                                                                                                                                         </div>
-                                                                                                                                        <c:if
-                                                                                                                                            test="${not empty option.card.monthlyPrice}">
-                                                                                                                                            <div
-                                                                                                                                                class="package-card__sub">
-                                                                                                                                                ≈
-                                                                                                                                                ${gms:formatMoney(option.card.monthlyPrice)}
-                                                                                                                                                mỗi
-                                                                                                                                                tháng
-                                                                                                                                            </div>
-                                                                                                                                        </c:if>
-                                                                                                                                        <c:if
-                                                                                                                                            test="${not empty option.savedAmount}">
-                                                                                                                                            <div
-                                                                                                                                                class="package-card__deal">
-                                                                                                                                                <b>-${option.card.savingPercent}%</b>
-                                                                                                                                                Tiết
-                                                                                                                                                kiệm
-                                                                                                                                                ${gms:formatMoney(option.savedAmount)}
-                                                                                                                                                so
-                                                                                                                                                với
-                                                                                                                                                mua
-                                                                                                                                                lẻ
-                                                                                                                                                từng
-                                                                                                                                                tháng
-                                                                                                                                            </div>
-                                                                                                                                        </c:if>
-                                                                                                                                        <c:if
-                                                                                                                                            test="${not empty pkg.estimatedSessionCount}">
-                                                                                                                                            <p
-                                                                                                                                                class="package-dialog__note">
-                                                                                                                                                Khoảng
-                                                                                                                                                ${pkg.estimatedSessionCount}
-                                                                                                                                                buổi
-                                                                                                                                                trong
-                                                                                                                                                thời
-                                                                                                                                                hạn
-                                                                                                                                                gói.
-                                                                                                                                            </p>
-                                                                                                                                        </c:if>
+                                                                                                                                    </c:if>
+                                                                                                                                    <c:if
+                                                                                                                                        test="${not empty option.savedAmount}">
+                                                                                                                                        <div
+                                                                                                                                            class="package-card__deal">
+                                                                                                                                            <b>-${option.card.savingPercent}%</b>
+                                                                                                                                            Tiết
+                                                                                                                                            kiệm
+                                                                                                                                            ${gms:formatMoney(option.savedAmount)}
+                                                                                                                                            so
+                                                                                                                                            với
+                                                                                                                                            mua
+                                                                                                                                            lẻ
+                                                                                                                                            từng
+                                                                                                                                            tháng
+                                                                                                                                        </div>
+                                                                                                                                    </c:if>
+                                                                                                                                    <c:if
+                                                                                                                                        test="${not empty pkg.estimatedSessionCount}">
+                                                                                                                                        <p
+                                                                                                                                            class="package-dialog__note">
+                                                                                                                                            Khoảng
+                                                                                                                                            ${pkg.estimatedSessionCount}
+                                                                                                                                            buổi
+                                                                                                                                            trong
+                                                                                                                                            thời
+                                                                                                                                            hạn
+                                                                                                                                            gói.
+                                                                                                                                        </p>
+                                                                                                                                    </c:if>
 
-                                                                                                                                        <c:if
-                                                                                                                                            test="${not empty pkg.description}">
-                                                                                                                                            <p>
-                                                                                                                                                <c:out
-                                                                                                                                                    value="${pkg.description}" />
-                                                                                                                                            </p>
-                                                                                                                                        </c:if>
+                                                                                                                                    <c:if
+                                                                                                                                        test="${not empty pkg.description}">
+                                                                                                                                        <p>
+                                                                                                                                            <c:out
+                                                                                                                                                value="${pkg.description}" />
+                                                                                                                                        </p>
+                                                                                                                                    </c:if>
 
-                                                                                                                                        <c:if
-                                                                                                                                            test="${not empty pkg.benefitLines}">
-                                                                                                                                            <h3>Quyền
-                                                                                                                                                lợi
-                                                                                                                                            </h3>
-                                                                                                                                            <ul
-                                                                                                                                                class="package-dialog__benefits">
-                                                                                                                                                <c:forEach
-                                                                                                                                                    var="benefitLine"
-                                                                                                                                                    items="${pkg.benefitLines}">
-                                                                                                                                                    <li><i class="fa-solid fa-check"
-                                                                                                                                                            aria-hidden="true"></i>
-                                                                                                                                                        <c:out
-                                                                                                                                                            value="${benefitLine}" />
-                                                                                                                                                    </li>
-                                                                                                                                                </c:forEach>
-                                                                                                                                            </ul>
-                                                                                                                                        </c:if>
+                                                                                                                                    <c:if
+                                                                                                                                        test="${not empty pkg.benefitLines}">
+                                                                                                                                        <h3>Quyền
+                                                                                                                                            lợi
+                                                                                                                                        </h3>
+                                                                                                                                        <ul
+                                                                                                                                            class="package-dialog__benefits">
+                                                                                                                                            <c:forEach
+                                                                                                                                                var="benefitLine"
+                                                                                                                                                items="${pkg.benefitLines}">
+                                                                                                                                                <li><i class="fa-solid fa-check"
+                                                                                                                                                        aria-hidden="true"></i>
+                                                                                                                                                    <c:out
+                                                                                                                                                        value="${benefitLine}" />
+                                                                                                                                                </li>
+                                                                                                                                            </c:forEach>
+                                                                                                                                        </ul>
+                                                                                                                                    </c:if>
 
-                                                                                                                                        <section
-                                                                                                                                            class="package-dialog__howto">
-                                                                                                                                            <h3>Cách
-                                                                                                                                                mua
-                                                                                                                                            </h3>
-                                                                                                                                            <p>
-                                                                                                                                                <c:out
-                                                                                                                                                    value="${option.purchaseHint}" />
-                                                                                                                                            </p>
-                                                                                                                                        </section>
+                                                                                                                                    <section
+                                                                                                                                        class="package-dialog__howto">
+                                                                                                                                        <h3>Cách
+                                                                                                                                            mua
+                                                                                                                                        </h3>
+                                                                                                                                        <p>
+                                                                                                                                            <c:out
+                                                                                                                                                value="${option.purchaseHint}" />
+                                                                                                                                        </p>
+                                                                                                                                    </section>
                                                                                                                                 </div>
 
                                                                                                                                 <%-- SingleSession

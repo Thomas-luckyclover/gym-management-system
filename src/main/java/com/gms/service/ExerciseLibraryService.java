@@ -60,8 +60,6 @@ public class ExerciseLibraryService {
     static final Map<Integer, String> EQUIPMENT_LABELS = new LinkedHashMap<>();
     // 16 cơ của wger (fixtures/muscles.json). Mã lạ (wger thêm sau) → bỏ qua, không lỗi.
     static final Map<Integer, String> MUSCLE_LABELS = new LinkedHashMap<>();
-    // Ảnh dự phòng theo nhóm cơ (webapp/images/exercises, public domain từ free-exercise-db, xem SOURCES.json).
-    static final Map<Integer, String> FALLBACK_IMAGES = new LinkedHashMap<>();
 
     static {
         CATEGORY_LABELS.put(11, "Ngực");
@@ -85,15 +83,6 @@ public class ExerciseLibraryService {
         EQUIPMENT_LABELS.put(11, "Dây kháng lực");
         EQUIPMENT_LABELS.put(5, "Bóng tập");
         EQUIPMENT_LABELS.put(4, "Thảm tập");
-
-        FALLBACK_IMAGES.put(11, "/images/exercises/chest.jpg");
-        FALLBACK_IMAGES.put(12, "/images/exercises/back.jpg");
-        FALLBACK_IMAGES.put(13, "/images/exercises/shoulders.jpg");
-        FALLBACK_IMAGES.put(8, "/images/exercises/arms.jpg");
-        FALLBACK_IMAGES.put(10, "/images/exercises/abs.jpg");
-        FALLBACK_IMAGES.put(9, "/images/exercises/legs.jpg");
-        FALLBACK_IMAGES.put(14, "/images/exercises/calves.jpg");
-        FALLBACK_IMAGES.put(15, "/images/exercises/cardio.jpg");
 
         MUSCLE_LABELS.put(1, "Tay trước");
         MUSCLE_LABELS.put(2, "Vai trước");
@@ -165,7 +154,7 @@ public class ExerciseLibraryService {
             // B2: dữ liệu quá 1 ngày → tải lại từ wger (lỗi thì giữ bản cũ).
             LocalDateTime lastSynced = syncIfNeeded(now);
             if (lastSynced == null) {
-                return ServiceResult.fail("Chưa tải được thư viện bài tập từ wger. Vui lòng thử lại sau ít phút.");
+                return ServiceResult.fail(Messages.MSG306_EXERCISE_LIBRARY_UNAVAILABLE);
             }
             view.setSyncedAtText(DateTimeUtil.formatDateTime(lastSynced));
             view.setStale(lastFailureAt != null && needsSync(lastSynced, now));
@@ -191,6 +180,8 @@ public class ExerciseLibraryService {
             for (ExerciseItem item : items) {
                 fillLabels(item);
             }
+            // Bài thiếu ảnh wger → ảnh minh họa trong kho 194 ảnh (khớp tên trước, rồi theo nhóm cơ), không trùng trên trang.
+            ExerciseImagePool.assign(items);
             view.setItems(items);
             view.setTotal(total);
             view.setPage(pageNumber);
@@ -390,15 +381,12 @@ public class ExerciseLibraryService {
         return Math.max(1, (total + PAGE_SIZE - 1) / PAGE_SIZE);
     }
 
-    /** Điền 3 nhãn tiếng Việt cho 1 bài; bài không có ảnh wger → ảnh dự phòng theo nhóm cơ. */
+    /** Điền 3 nhãn tiếng Việt cho 1 bài. Ảnh minh họa cho bài thiếu ảnh wger: ExerciseImagePool.assign (cả trang). */
     static void fillLabels(ExerciseItem item) {
         item.setCategoryLabel(CATEGORY_LABELS.getOrDefault(item.getCategoryId(), "Khác"));
         String equipment = joinLabels(item.getEquipmentIds(), EQUIPMENT_LABELS);
         item.setEquipmentText(equipment.isEmpty() ? "Không dụng cụ" : equipment);
         item.setMuscleText(joinLabels(item.getMuscleIds(), MUSCLE_LABELS));
-        if (item.getImageUrl() == null) {
-            item.setFallbackImage(FALLBACK_IMAGES.get(item.getCategoryId()));
-        }
     }
 
     /** [1, 8] + bảng nhãn → "Thanh đòn, Ghế tập"; mã không có trong bảng → bỏ qua. */

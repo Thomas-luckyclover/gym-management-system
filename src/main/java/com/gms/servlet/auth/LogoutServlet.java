@@ -36,6 +36,10 @@ public class LogoutServlet extends HttpServlet {
     @Override
     protected void doPost(HttpServletRequest request, HttpServletResponse response)
             throws ServletException, IOException {
+        // CSRF: chặn trang lạ tự gửi form đăng xuất người dùng (token do common.js gắn vào form).
+        if (RequestUtil.rejectInvalidCsrf(request, response, "/")) {
+            return;
+        }
         processLogout(request, response);
     }
 
