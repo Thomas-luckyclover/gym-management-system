@@ -1,5 +1,12 @@
 # File notes — mâu thuẫn tài liệu & quyết định đã chốt
 
+## Tài khoản tạo tại quầy: gửi mật khẩu tạm qua email — THAY CBR-31 (31/10/2026, ĐÃ CODE)
+- **SRS cũ (CBR-31)**: tài khoản Lễ tân tạo không có mật khẩu, không gửi email; khách đăng nhập gặp MSG38 rồi phải qua Quên mật khẩu. **Đã bỏ** theo quyết định của nhóm.
+- **Mới**: màn Bán hàng tại quầy (`/receptionist/sales`, nhánh dev_mb3_NhanLTT đã merge) → "Tạo hồ sơ khách hàng": hồ sơ **Self** bắt buộc email (đúng định dạng, không trùng Person đang hoạt động — DBR-23). Cùng transaction tạo Person + Customer + **Account Active** với mật khẩu tạm 10 ký tự (có chữ + số, bỏ ký tự dễ nhầm 0/O/1/l/I), chỉ lưu BCrypt; gửi email "[Super Gym] Tài khoản và mật khẩu tạm của bạn" **trước khi commit** → gửi lỗi thì rollback hết, báo MSG04. Hồ sơ **Dependent**: không email, không tài khoản (CBR-21).
+- Lễ tân thấy toast "Đã tạo hồ sơ KH-… và tài khoản. Mật khẩu tạm đã gửi tới ab***@gmail.com." Khách đăng nhập bằng email hoặc SĐT + mật khẩu tạm, tự đổi ở Tài khoản → Mật khẩu (không ép đổi, **không thêm cột DB**).
+- **Code**: `CounterAccountService` (mới), `AccountDAO.insert`, `EmailGateway.sendTemporaryPassword`, `CounterSaleService.quickCreateCustomer` (B4.5), ô `email` ở form + JS ẩn khi Dependent. Bỏ MSG38: `AuthService` B6, `LoginServlet`, bảng "Chưa thể đăng nhập" ở login.jsp, `SessionKey.RECOVERY_PREFILL_EMAIL`. Hash NULL còn sót → tính như sai mật khẩu.
+- **Seed**: 3 tài khoản tại quầy (Account 9, 25, 113) trước để NULL, nay dùng mật khẩu chung Gms@2026 (đóng vai mật khẩu tạm đã gửi). Sửa cả `tools/seeddata.py` cho khớp.
+
 ## Mốc chia ca sáng / ca chiều = 13:00 (31/10/2026, ĐÃ CODE)
 - **Vì sao**: SRS chỉ nói "mỗi ngày mở cửa tự chia ca sáng và ca chiều" (UC-11, CBR-104), không nêu giờ. Code đang lệch 4 mốc: khóa khung khi PT nghỉ 12:00 (`PtScheduleService.isOnLeave`, `PtSessionHandleDAO`), kiểm CBR-83 khi nộp đơn "buổi kết thúc sau 12:00" (`LeaveRequestDAO.countScheduledSessions`), ca lễ tân 13:00 (`ShiftDAO`, seed mở/đóng ca 05:30–13:00 / 13:00–22:00), gán ca đơn bán PT 14:00 (`PtSaleService`).
 - **Đã chốt**: 1 hằng số `AppConstants.AFTERNOON_SHIFT_START = 13:00`. Khung / buổi thuộc ca theo **giờ bắt đầu**: trước 13:00 = ca sáng, từ 13:00 = ca chiều. 5 chỗ trên dùng chung hằng số (SQL dùng `'13:00'` kèm comment trỏ về hằng số).

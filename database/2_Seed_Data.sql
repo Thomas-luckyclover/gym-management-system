@@ -72,7 +72,7 @@ INSERT INTO Persons (PersonId, FullName, DateOfBirth, Phone, Email, Avatar, IsRe
  (110, N'Đinh Văn Khoa', '1995-01-15', '0935000110', 'khoa.dinh@gmail.com', NULL, 0, '2026-08-12 10:00:00'), -- vừa xin mã < 60 giây
  (111, N'Tạ Thanh Bình', '1998-11-30', '0935000111', 'binh.ta@gmail.com', NULL, 0, '2026-08-13 10:00:00'), -- sai mã 5 lần → email bị khóa xác thực
  (112, N'Cao Thị Quỳnh', '2000-07-07', '0935000112', 'quynh.cao@gmail.com', NULL, 0, '2026-08-14 10:00:00'), -- mã khôi phục đã hết hạn
- (113, N'Hồ Thị Nhung', '1994-02-02', '0935000113', 'nhung.ho@gmail.com', NULL, 0, '2026-09-20 09:00:00'), -- TK Lễ tân vừa tạo, chưa đặt MK
+ (113, N'Hồ Thị Nhung', '1994-02-02', '0935000113', 'nhung.ho@gmail.com', NULL, 0, '2026-09-20 09:00:00'), -- TK Lễ tân vừa tạo tại quầy (mật khẩu tạm đã gửi email)
  (201, N'Bùi Quốc Yến', '1994-07-11', '0907007437', 'yen.bui201@gmail.com', NULL, 0, '2026-09-07 10:05:00'),
  (202, N'Nguyễn Đức Long', '1978-12-04', '0917007474', 'long.nguyen202@gmail.com', NULL, 0, '2026-06-26 17:34:00'),
  (203, N'Phạm Thị Bình', '1997-10-21', '0937007511', 'binh.pham203@gmail.com', NULL, 0, '2026-06-17 16:55:00'),
@@ -219,7 +219,7 @@ INSERT INTO Customers (CustomerId, PersonId, CustomerCode, CheckInPhoto, Custome
 SET IDENTITY_INSERT Customers OFF;
 
 /* ============================================================================
-   Accounts — 68 dòng. Mật khẩu chung Gms@2026 (trừ TK chưa đặt MK).
+   Accounts — 68 dòng. Mật khẩu chung Gms@2026 (TK tạo tại quầy cũng vậy: đóng vai mật khẩu tạm đã gửi email).
    ============================================================================ */
 SET IDENTITY_INSERT Accounts ON;
 INSERT INTO Accounts (AccountId, PersonId, PasswordHash, Status, FailedLoginCount, LockedUntil, LastLoginAt, CreatedAt) VALUES
@@ -231,7 +231,7 @@ INSERT INTO Accounts (AccountId, PersonId, PasswordHash, Status, FailedLoginCoun
  (6, 7, '$2a$10$o22fNyHpwvbuAj8q.LKCI.KMakVydfKblTjnBh7rgiUTrt55ZnXmu', 'Active', 0, NULL, '2026-10-01 07:30:00', '2026-08-20 17:40:00'),
  (7, 8, '$2a$10$o22fNyHpwvbuAj8q.LKCI.KMakVydfKblTjnBh7rgiUTrt55ZnXmu', 'Active', 0, NULL, '2026-09-30 17:45:00', '2026-08-20 17:45:00'),
  (8, 11, '$2a$10$o22fNyHpwvbuAj8q.LKCI.KMakVydfKblTjnBh7rgiUTrt55ZnXmu', 'Active', 0, NULL, '2026-09-29 12:00:00', '2026-07-15 11:10:00'),
- (9, 13, NULL, 'Active', 0, NULL, NULL, '2026-09-21 10:00:00'), -- Lễ tân tạo (CBR-24) → MSG38, đặt MK qua Quên mật khẩu
+ (9, 13, '$2a$10$o22fNyHpwvbuAj8q.LKCI.KMakVydfKblTjnBh7rgiUTrt55ZnXmu', 'Active', 0, NULL, NULL, '2026-09-21 10:00:00'), -- Lễ tân tạo tại quầy, đã gửi mật khẩu tạm qua email (thay CBR-31; seed dùng Gms@2026)
  (10, 14, '$2a$10$o22fNyHpwvbuAj8q.LKCI.KMakVydfKblTjnBh7rgiUTrt55ZnXmu', 'Active', 0, NULL, '2026-10-03 08:50:00', '2026-09-20 21:20:00'),
  (11, 17, '$2a$10$o22fNyHpwvbuAj8q.LKCI.KMakVydfKblTjnBh7rgiUTrt55ZnXmu', 'Active', 0, NULL, '2026-10-03 07:00:00', '2025-01-05 08:05:00'),
  (12, 18, '$2a$10$o22fNyHpwvbuAj8q.LKCI.KMakVydfKblTjnBh7rgiUTrt55ZnXmu', 'Active', 0, NULL, '2026-10-03 07:20:00', '2025-01-05 08:05:00'),
@@ -255,8 +255,8 @@ INSERT INTO Accounts (AccountId, PersonId, PasswordHash, Status, FailedLoginCoun
  (110, 110, '$2a$10$o22fNyHpwvbuAj8q.LKCI.KMakVydfKblTjnBh7rgiUTrt55ZnXmu', 'Active', 0, NULL, '2026-09-18 08:00:00', '2026-08-12 10:10:00'),
  (111, 111, '$2a$10$o22fNyHpwvbuAj8q.LKCI.KMakVydfKblTjnBh7rgiUTrt55ZnXmu', 'Active', 0, NULL, '2026-09-18 08:00:00', '2026-08-13 10:10:00'),
  (112, 112, '$2a$10$o22fNyHpwvbuAj8q.LKCI.KMakVydfKblTjnBh7rgiUTrt55ZnXmu', 'Active', 0, NULL, '2026-09-18 08:00:00', '2026-08-14 10:10:00'),
- (113, 113, NULL, 'Active', 0, NULL, NULL, '2026-09-20 09:10:00'), -- Lễ tân tạo, chưa đặt MK → MSG38
- (25, 15, NULL, 'Active', 0, NULL, NULL, DATEADD(MINUTE, 540, CAST(@Today AS DATETIME2(0)))), -- Lễ tân tạo khi bán gói 1 tháng (CBR-24)
+ (113, 113, '$2a$10$o22fNyHpwvbuAj8q.LKCI.KMakVydfKblTjnBh7rgiUTrt55ZnXmu', 'Active', 0, NULL, NULL, '2026-09-20 09:10:00'), -- Lễ tân tạo tại quầy, đã gửi mật khẩu tạm qua email (thay CBR-31; seed dùng Gms@2026), khách chưa đăng nhập
+ (25, 15, '$2a$10$o22fNyHpwvbuAj8q.LKCI.KMakVydfKblTjnBh7rgiUTrt55ZnXmu', 'Active', 0, NULL, NULL, DATEADD(MINUTE, 540, CAST(@Today AS DATETIME2(0)))), -- Lễ tân tạo khi bán gói 1 tháng, đã gửi mật khẩu tạm (thay CBR-31; seed dùng Gms@2026)
  (201, 201, '$2a$10$o22fNyHpwvbuAj8q.LKCI.KMakVydfKblTjnBh7rgiUTrt55ZnXmu', 'Active', 0, NULL, '2026-10-15 10:05:00', '2026-09-07 10:13:00'),
  (202, 202, '$2a$10$o22fNyHpwvbuAj8q.LKCI.KMakVydfKblTjnBh7rgiUTrt55ZnXmu', 'Active', 0, NULL, '2026-07-07 17:34:00', '2026-06-26 17:42:00'),
  (203, 203, '$2a$10$o22fNyHpwvbuAj8q.LKCI.KMakVydfKblTjnBh7rgiUTrt55ZnXmu', 'Active', 0, NULL, '2026-07-07 16:55:00', '2026-06-17 17:03:00'),

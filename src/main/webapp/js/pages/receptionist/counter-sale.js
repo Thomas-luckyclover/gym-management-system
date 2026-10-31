@@ -199,6 +199,9 @@ function initQuickCustomerModal() {
     const wrapPhone = document.getElementById("wrapPhone");
     const qcPhone = document.getElementById("qcPhone");
     const wrapGuardian = document.getElementById("wrapGuardian");
+    // Ô email (#wrapEmail, #qcEmail): chỉ hồ sơ Self có tài khoản → Dependent thì ẩn + bỏ required.
+    const wrapEmail = document.getElementById("wrapEmail");
+    const qcEmail = document.getElementById("qcEmail");
     for (const radio of radioTypes) {
         radio.addEventListener("change", function () {
             const isDep = this.value === "Dependent";
@@ -210,6 +213,12 @@ function initQuickCustomerModal() {
             }
             if (qcPhone !== null) {
                 qcPhone.required = !isDep;
+            }
+            if (wrapEmail !== null) {
+                wrapEmail.hidden = isDep;
+            }
+            if (qcEmail !== null) {
+                qcEmail.required = !isDep;
             }
         });
     }

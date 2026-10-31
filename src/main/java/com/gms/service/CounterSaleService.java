@@ -2,6 +2,7 @@ package com.gms.service;
 
 import com.gms.constant.Messages;
 import com.gms.constant.Role;
+import com.gms.integration.EmailSendException;
 import com.gms.dao.CounterSaleDAO;
 import com.gms.dao.CustomerDAO;
 import com.gms.dao.OrderDAO;
@@ -66,6 +67,7 @@ public class CounterSaleService {
     private final VoucherDAO voucherDAO = new VoucherDAO();
     private final SystemConfigService configService = new SystemConfigService();
     private final AuditLogService auditLogService = new AuditLogService();
+    private final CounterAccountService counterAccountService = new CounterAccountService();
 
     /**
      * Dựng dữ liệu màn Chọn gói.
@@ -247,6 +249,7 @@ public class CounterSaleService {
         String guardianName = input.getGuardianName() == null ? "" : input.getGuardianName().trim();
         String guardianRel = input.getGuardianRelationship() == null ? "" : input.getGuardianRelationship().trim();
         String guardianPhone = input.getGuardianPhone() == null ? "" : input.getGuardianPhone().trim();
+        String email = input.getEmail() == null ? "" : input.getEmail().trim();
 
         if (isDependent) {
             // Dependent: Phone cá nhân là NULL, bắt buộc thông tin giám hộ
@@ -268,6 +271,13 @@ public class CounterSaleService {
             guardianName = null;
             guardianRel = null;
             guardianPhone = null;
+            // Hồ sơ Self tại quầy luôn có tài khoản (thay CBR-31) → email bắt buộc để gửi mật khẩu tạm (DBR-23).
+            if (!ValidationUtil.isValidEmail(email)) {
+                return ServiceResult.failField("email", "Nhập email đúng định dạng (VD: ten@gmail.com) để gửi mật khẩu tạm cho khách.");
+            }
+        }
+        if (isDependent) {
+            email = null;   // Dependent không có tài khoản (CBR-21), không lưu email ở form này
         }
 
         try (Connection connection = DBContext.getConnection()) {
@@ -283,6 +293,10 @@ public class CounterSaleService {
                 if (existingPerson != null) {
                     return ServiceResult.failField("phone", "Số điện thoại " + phone + " đã tồn tại trong hệ thống với khách: " + existingPerson.getFullName() + ".");
                 }
+                // DBR-23: email không trùng Person đang hoạt động; chỉ báo "đã dùng", không lộ của ai.
+                if (personDAO.findByEmail(email) != null) {
+                    return ServiceResult.failField("email", "Email này đã được dùng cho một tài khoản khác.");
+                }
             }
 
             // B4: thực hiện transaction tạo Person + Customer
@@ -293,6 +307,7 @@ public class CounterSaleService {
                 person.setFullName(fullName);
                 person.setDateOfBirth(dob);
                 person.setPhone(phone);
+                person.setEmail(email);
                 person.setReleased(false);
                 int personId = personDAO.insert(connection, person);
 
@@ -325,11 +340,26 @@ public class CounterSaleService {
                         fullName
                 );
 
+                // B4.5: hồ sơ Self → tạo tài khoản + gửi mật khẩu tạm qua email (thay CBR-31, 31/10/2026).
+                //       Gửi TRƯỚC commit: email lỗi → rollback cả hồ sơ, lễ tân thử lại (không có hồ sơ "mồ côi" thiếu tài khoản).
+                String doneMessage = "Đã tạo hồ sơ khách hàng " + customerCode + ".";
+                if (!isDependent) {
+                    int newAccountId = counterAccountService.createWithTempPassword(connection, personId, email, fullName, customerCode);
+                    auditLogService.logInTransaction(connection, accountId, Role.RECEPTIONIST,
+                            "Tạo tài khoản tại quầy, gửi mật khẩu tạm qua email", "Accounts", newAccountId,
+                            "PersonId", null, String.valueOf(personId), fullName);
+                    doneMessage = "Đã tạo hồ sơ " + customerCode + " và tài khoản. Mật khẩu tạm đã gửi tới "
+                            + CounterAccountService.maskEmail(email) + ".";
+                }
+
                 connection.commit();
 
                 // B5: đọc lại dòng CounterCustomerRow vừa tạo
                 CounterCustomerRow row = counterSaleDAO.findCustomer(connection, customerId, today, receptionist[1]);
-                return ServiceResult.ok(row, "Đã tạo hồ sơ khách hàng " + customerCode + " thành công!");
+                return ServiceResult.ok(row, doneMessage);
+            } catch (EmailSendException e) {
+                connection.rollback();
+                return ServiceResult.fail(Messages.MSG04_SYSTEM_BUSY);
             } catch (SQLException | RuntimeException e) {
                 connection.rollback();
                 throw e;

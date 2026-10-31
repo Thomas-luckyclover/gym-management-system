@@ -97,8 +97,6 @@ public final class Messages {
     public static final String MSG36_LOCK_EXPIRED = "Đã hết thời gian khóa. Bạn có thể đăng nhập lại.";
     // EN: This account cannot be used to sign in. Please contact an administrator.
     public static final String MSG37_ACCOUNT_INACTIVE = "Tài khoản này không thể đăng nhập. Vui lòng liên hệ quản trị viên.";
-    // EN: This account has no password yet. Please use Forgot password to set your password
-    public static final String MSG38_NO_PASSWORD_YET = "Tài khoản này chưa có mật khẩu. Vui lòng dùng Quên mật khẩu để đặt mật khẩu.";
     // EN: Enter your email or phone number.
     public static final String MSG39_IDENTIFIER_REQUIRED = "Nhập email hoặc số điện thoại của bạn.";
     // EN: Signed out.

@@ -120,10 +120,8 @@ public class AuthService {
                 }
             }
 
-            // B6: Kiểm tra tài khoản chưa có mật khẩu
-            if (account.getPasswordHash() == null || account.getPasswordHash().trim().isEmpty()) {
-                return ServiceResult.fail(Messages.MSG38_NO_PASSWORD_YET);
-            }
+            // B6: (đã bỏ luồng MSG38 "chưa có mật khẩu" — từ 31/10/2026 tài khoản tại quầy được tạo kèm mật khẩu tạm
+            //     gửi qua email, thay CBR-31). Hash rỗng nếu còn sót thì PasswordUtil.checkPassword trả false → tính như sai mật khẩu.
 
             // B6a: lấy mọi vai trò còn hiệu lực của Person (DBR-65)
             PersonProfile profile = fetchPersonProfile(conn, account.getPersonId());

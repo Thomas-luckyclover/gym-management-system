@@ -20,7 +20,7 @@
     <%@ include file="/WEB-INF/jsp/common/head.jspf" %>
     <title>Chọn khách · Super Gym Lễ tân</title>
     <link rel="stylesheet" href="${ctx}/css/pages/receptionist/counter-sale.css?v=20261031_quickmodal">
-    <script src="${ctx}/js/pages/receptionist/counter-sale.js?v=20261031_quickmodal" defer></script>
+    <script src="${ctx}/js/pages/receptionist/counter-sale.js?v=20261031_tempPwd" defer></script>
 </head>
 <body class="dock theme-staff counter-sale-page">
 <%@ include file="/WEB-INF/jsp/common/flash-toast.jspf" %>
@@ -146,6 +146,15 @@
                         <input type="date" id="qcDob" name="dateOfBirth" class="quick-input" min="1924-01-01" required>
                         <span class="quick-field-error" id="err_dateOfBirth" hidden></span>
                     </div>
+                </div>
+
+                <%-- Email (chỉ hồ sơ Self): CounterSaleService tạo tài khoản + gửi mật khẩu tạm tới email này (thay CBR-31).
+                     counter-sale.js ẩn ô và bỏ required khi chọn Dependent (hồ sơ phụ thuộc không có tài khoản — CBR-21). --%>
+                <div class="quick-form-group" id="wrapEmail">
+                    <label class="quick-label" for="qcEmail">Email <span class="quick-req">*</span></label>
+                    <input type="email" id="qcEmail" name="email" class="quick-input" placeholder="ten@gmail.com" maxlength="100" autocomplete="off" required aria-describedby="qcEmailHint">
+                    <p class="quick-hint" id="qcEmailHint">Hệ thống tạo tài khoản và gửi <b>mật khẩu tạm</b> tới email này. Nhắc khách kiểm tra cả mục Spam.</p>
+                    <span class="quick-field-error" id="err_email" hidden></span>
                 </div>
 
                 <%-- Nhóm thông tin người giám hộ (Chỉ hiện khi chọn Dependent) --%>

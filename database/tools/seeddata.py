@@ -52,7 +52,7 @@ P(109, 'Ngô Đức Mạnh', d_(1993, 9, 9), '0935000109', 'manh.ngo@gmail.com',
 P(110, 'Đinh Văn Khoa', d_(1995, 1, 15), '0935000110', 'khoa.dinh@gmail.com', dt_(2026, 8, 12, 10, 0), note='vừa xin mã < 60 giây')
 P(111, 'Tạ Thanh Bình', d_(1998, 11, 30), '0935000111', 'binh.ta@gmail.com', dt_(2026, 8, 13, 10, 0), note='sai mã 5 lần → email bị khóa xác thực')
 P(112, 'Cao Thị Quỳnh', d_(2000, 7, 7), '0935000112', 'quynh.cao@gmail.com', dt_(2026, 8, 14, 10, 0), note='mã khôi phục đã hết hạn')
-P(113, 'Hồ Thị Nhung', d_(1994, 2, 2), '0935000113', 'nhung.ho@gmail.com', dt_(2026, 9, 20, 9, 0), note='TK Lễ tân vừa tạo, chưa đặt MK')
+P(113, 'Hồ Thị Nhung', d_(1994, 2, 2), '0935000113', 'nhung.ho@gmail.com', dt_(2026, 9, 20, 9, 0), note='TK Lễ tân vừa tạo tại quầy (mật khẩu tạm đã gửi email)')
 
 # ============================================================ 2. NHÂN VIÊN
 E = employee
@@ -163,7 +163,7 @@ A(5, 6, dt_(2026, 9, 4, 8, 40), last=dt_(2026, 10, 2, 20, 0))
 A(6, 7, dt_(2026, 8, 20, 17, 40), last=dt_(2026, 10, 1, 7, 30))
 A(7, 8, dt_(2026, 8, 20, 17, 45), last=dt_(2026, 9, 30, 17, 45))
 A(8, 11, dt_(2026, 7, 15, 11, 10), last=dt_(2026, 9, 29, 12, 0))
-A(9, 13, dt_(2026, 9, 21, 10, 0), pw=None, note='Lễ tân tạo (CBR-24) → MSG38, đặt MK qua Quên mật khẩu')
+A(9, 13, dt_(2026, 9, 21, 10, 0), note='Lễ tân tạo tại quầy, đã gửi mật khẩu tạm qua email (thay CBR-31; seed dùng Gms@2026)')
 A(10, 14, dt_(2026, 9, 20, 21, 20), last=dt_(2026, 10, 3, 8, 50))
 A(11, 17, dt_(2025, 1, 5, 8, 5), last=dt_(2026, 10, 3, 7, 0))
 A(12, 18, dt_(2025, 1, 5, 8, 5), last=dt_(2026, 10, 3, 7, 20))
@@ -185,8 +185,8 @@ A(107, 107, dt_(2026, 5, 1, 10, 10), status='Inactive', last=dt_(2026, 8, 30, 18
 A(108, 108, dt_(2026, 8, 10, 10, 10), failed=4, last=dt_(2026, 9, 18, 8, 0), note='sai thêm 1 lần là bị khóa tạm')
 for i in (109, 110, 111, 112):
     A(i, i, get('Persons', i)['CreatedAt'] + timedelta(minutes=10), last=dt_(2026, 9, 18, 8, 0))
-A(113, 113, dt_(2026, 9, 20, 9, 10), pw=None, note='Lễ tân tạo, chưa đặt MK → MSG38')
-A(25, 15, today_dt(0, 9, 0), pw=None, note='Lễ tân tạo khi bán gói 1 tháng (CBR-24)')
+A(113, 113, dt_(2026, 9, 20, 9, 10), note='Lễ tân tạo tại quầy, đã gửi mật khẩu tạm qua email (thay CBR-31; seed dùng Gms@2026), khách chưa đăng nhập')
+A(25, 15, today_dt(0, 9, 0), note='Lễ tân tạo khi bán gói 1 tháng, đã gửi mật khẩu tạm (thay CBR-31; seed dùng Gms@2026)')
 
 # ============================================================ 6. CA ĐANG MỞ HÔM NAY (sống)
 G.LIVE_SHIFT_MORNING = add('Shifts', dict(WorkDate=today_d(), ShiftType='Morning', OpenedByEmployeeId=3,
@@ -982,7 +982,7 @@ o = order(19, PKG['m1'], dt_(2026, 7, 18, 9, 0), 'Online', status='Cancelled',
 # ============================================================ 16. SECTION NOTES
 SECTION.update({
     'Persons': 'ID 1–32 dàn nhân vật chính; 101–113 test xác thực; 201–240 khách thường.',
-    'Accounts': 'Mật khẩu chung Gms@2026 (trừ TK chưa đặt MK).',
+    'Accounts': 'Mật khẩu chung Gms@2026 (TK tạo tại quầy cũng vậy: đóng vai mật khẩu tạm đã gửi email).',
     'Shifts': 'Đủ 2 ca mỗi ngày mở cửa 01/09–02/10 + ca hôm nay (sống).',
     'TimeSlots': 'Lịch PT: slot đã đặt + slot trống công bố dày 05/10–31/10 (có cuối tuần).',
     'Sessions': 'Trước 05/10 đã có kết quả; từ 05/10 Scheduled.',

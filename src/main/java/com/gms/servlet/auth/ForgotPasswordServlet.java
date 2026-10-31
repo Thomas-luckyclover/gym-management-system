@@ -73,17 +73,7 @@ public class ForgotPasswordServlet extends HttpServlet {
             return;
         }
 
-        // B2: đến từ màn Đăng nhập (MSG38 "Đặt mật khẩu"): LoginServlet để sẵn email trong session.
-        //     Lấy ra điền vào ô rồi XÓA ngay (chỉ dùng 1 lần). KHÔNG tự gửi mã — khách phải tự bấm,
-        //     để luật chống gửi liên tục (60 giây, tối đa số lần / giờ) vẫn áp dụng.
-        String prefillEmail = (String) session.getAttribute(SessionKey.RECOVERY_PREFILL_EMAIL);
-        if (prefillEmail != null) {
-            session.removeAttribute(SessionKey.RECOVERY_PREFILL_EMAIL);
-            clearRecovery(session);
-            request.setAttribute("email", prefillEmail);   // → forgot-password.jsp dòng 81 điền sẵn ô Email
-        }
-
-        // B3: hiện đúng bước theo session.
+        // B2: hiện đúng bước theo session.
         showCurrentStep(request, response, session);
     }
 

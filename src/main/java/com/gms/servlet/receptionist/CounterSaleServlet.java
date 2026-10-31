@@ -389,6 +389,7 @@ public class CounterSaleServlet extends HttpServlet {
         String guardianName = RequestUtil.getTrimmedParam(request, "guardianName");
         String guardianRelationship = RequestUtil.getTrimmedParam(request, "guardianRelationship");
         String guardianPhone = RequestUtil.getTrimmedParam(request, "guardianPhone");
+        String email = RequestUtil.getTrimmedParam(request, "email");
 
         LocalDate dob = null;
         if (dobStr != null && !dobStr.isBlank()) {
@@ -402,10 +403,15 @@ public class CounterSaleServlet extends HttpServlet {
                 customerType,
                 guardianName,
                 guardianRelationship,
-                guardianPhone
+                guardianPhone,
+                email
         );
 
         ServiceResult<CounterCustomerRow> result = counterSaleService.quickCreateCustomer(accountId, input);
+        // Thành công: JS chuyển sang Bước 3 ngay → câu "đã gửi mật khẩu tạm tới ab***@…" hiện bằng toast ở trang kế tiếp.
+        if (result.isSuccess()) {
+            RequestUtil.setFlashToast(request, "success", result.getMessage());
+        }
         JsonUtil.writeJson(response, JsonResponse.from(result));
     }
 

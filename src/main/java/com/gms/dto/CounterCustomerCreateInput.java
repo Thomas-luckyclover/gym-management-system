@@ -14,6 +14,9 @@ public class CounterCustomerCreateInput {
     private final String guardianName;
     private final String guardianRelationship;
     private final String guardianPhone;
+    // Form tạo nhanh (counter-sale-customers.jsp, ô qcEmail). Bắt buộc với hồ sơ Self: dùng tạo tài khoản + nhận mật khẩu tạm.
+    // Hồ sơ Dependent không có tài khoản (CBR-21) → bỏ qua.
+    private final String email;
 
     public CounterCustomerCreateInput(
             String fullName,
@@ -22,7 +25,8 @@ public class CounterCustomerCreateInput {
             String customerType,
             String guardianName,
             String guardianRelationship,
-            String guardianPhone) {
+            String guardianPhone,
+            String email) {
         this.fullName = fullName;
         this.phone = phone;
         this.dateOfBirth = dateOfBirth;
@@ -30,6 +34,7 @@ public class CounterCustomerCreateInput {
         this.guardianName = guardianName;
         this.guardianRelationship = guardianRelationship;
         this.guardianPhone = guardianPhone;
+        this.email = email;
     }
 
     public String getFullName() {
@@ -59,5 +64,8 @@ public class CounterCustomerCreateInput {
     public String getGuardianPhone() {
         return guardianPhone;
     }
-}
 
+    public String getEmail() {
+        return email;
+    }
+}
