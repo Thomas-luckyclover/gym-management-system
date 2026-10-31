@@ -133,7 +133,7 @@ public class MaintenanceRequestService {
         if (equipmentItemIds == null || equipmentItemIds.isEmpty()) {
             return ServiceResult.failField(
                     "equipmentItemId",
-                    "Vui lòng chọn ít nhất một mã máy cụ thể cần báo hỏng."
+                    Messages.MSG232_MAINTENANCE_ITEM_REQUIRED
             );
         }
 
@@ -162,7 +162,7 @@ public class MaintenanceRequestService {
         if (!ValidationUtil.isLengthValid(description, 10, 500)) {
             return ServiceResult.failField(
                     "description",
-                    "Mô tả hỏng hóc phải từ 10 đến 500 ký tự."
+                    Messages.MSG233_MAINTENANCE_DESCRIPTION_LENGTH
             );
         }
 
@@ -175,7 +175,7 @@ public class MaintenanceRequestService {
         if (uniqueItemIds.isEmpty()) {
             return ServiceResult.failField(
                     "equipmentItemId",
-                    "Vui lòng chọn ít nhất một mã máy cụ thể hợp lệ."
+                    Messages.MSG234_MAINTENANCE_ITEM_INVALID
             );
         }
 
@@ -206,7 +206,7 @@ public class MaintenanceRequestService {
                         connection.rollback();
                         return ServiceResult.failField(
                                 "equipmentItemId",
-                                "Mã máy không tồn tại hoặc đã ngưng hoạt động."
+                                Messages.MSG235_MAINTENANCE_ITEM_INACTIVE
                         );
                     }
 
@@ -428,7 +428,7 @@ public class MaintenanceRequestService {
                 if (!request.isOpen()) {
                     connection.rollback();
                     return ServiceResult.fail(
-                            "Chỉ yêu cầu đang Chờ duyệt mới được phê duyệt."
+                            Messages.MSG236_MAINTENANCE_APPROVE_ONLY_PENDING
                     );
                 }
 
@@ -562,7 +562,7 @@ public class MaintenanceRequestService {
         if (!ValidationUtil.isValidReason(rejectReason)) {
             return ServiceResult.failField(
                     "rejectReason",
-                    "Lý do từ chối phải từ 5 đến 500 ký tự."
+                    Messages.MSG212_REJECT_REASON_LENGTH
             );
         }
 
@@ -599,7 +599,7 @@ public class MaintenanceRequestService {
                 if (!request.isOpen()) {
                     connection.rollback();
                     return ServiceResult.fail(
-                            "Chỉ yêu cầu đang Chờ duyệt mới được từ chối."
+                            Messages.MSG238_MAINTENANCE_REJECT_ONLY_PENDING
                     );
                 }
 
@@ -689,7 +689,7 @@ public class MaintenanceRequestService {
         if (!ValidationUtil.isLengthValid(acceptanceNote, 5, 500)) {
             return ServiceResult.failField(
                     "acceptanceNote",
-                    "Ghi chú nghiệm thu phải từ 5 đến 500 ký tự."
+                    Messages.MSG239_MAINTENANCE_CLOSE_NOTE_LENGTH
             );
         }
 
@@ -727,7 +727,7 @@ public class MaintenanceRequestService {
                 if (!request.isInProgress()) {
                     connection.rollback();
                     return ServiceResult.fail(
-                            "Chỉ yêu cầu đang xử lý mới được nghiệm thu và đóng."
+                            Messages.MSG240_MAINTENANCE_CLOSE_ONLY_IN_PROGRESS
                     );
                 }
 

@@ -643,8 +643,8 @@ public final class Messages {
     /** Đơn đã được người khác duyệt / từ chối. */
     public static final String MSG211_LEAVE_ALREADY_HANDLED = "Đơn này đã được xử lý bởi người khác.";
 
-    /** Từ chối: lý do sai độ dài. */
-    public static final String MSG212_LEAVE_REJECT_REASON_LENGTH = "Lý do từ chối phải từ 5 đến 500 ký tự.";
+    /** Từ chối (đơn nghỉ, yêu cầu bảo trì): lý do sai độ dài. */
+    public static final String MSG212_REJECT_REASON_LENGTH = "Lý do từ chối phải từ 5 đến 500 ký tự.";
 
     /** Đơn đổi trạng thái giữa lúc xem và lúc bấm. */
     public static final String MSG213_LEAVE_STATUS_CHANGED_RELOAD = "Đơn này đã thay đổi trạng thái. Vui lòng tải lại trang.";
@@ -657,6 +657,120 @@ public final class Messages {
 
     /** Nộp đơn xong. */
     public static final String MSG216_LEAVE_SUBMITTED = "Đã gửi yêu cầu nghỉ. Xem kết quả từng phần trong Đơn đã nộp.";
+
+    // ===== 6.4 Cơ sở vật chất và bảo trì (FacilityService, MaintenanceRequestService và các Servlet) =====
+
+    /** Mã nhóm thiết bị sai. */
+    public static final String MSG217_FACILITY_ID_INVALID = "Mã nhóm cơ sở vật chất không hợp lệ.";
+
+    /** Tên nhóm máy sai độ dài. */
+    public static final String MSG218_FACILITY_NAME_LENGTH = "Tên nhóm máy phải từ 3 đến 100 ký tự.";
+
+    /** Chưa chọn phân loại. */
+    public static final String MSG219_FACILITY_CATEGORY_REQUIRED = "Vui lòng chọn phân loại cơ sở vật chất.";
+
+    /** Đơn vị tính quá dài. */
+    public static final String MSG220_FACILITY_UNIT_LENGTH = "Đơn vị tính tối đa 15 ký tự.";
+
+    /** Nhóm máy đã bị xóa / không có. */
+    public static final String MSG221_FACILITY_NOT_FOUND_FOR_UPDATE = "Không tìm thấy nhóm máy để cập nhật.";
+
+    /** Thêm nhóm máy lỗi. */
+    public static final String MSG222_FACILITY_CREATE_FAILED = "Không thể thêm mới nhóm máy. Vui lòng thử lại.";
+
+    /** Mã nhóm máy gửi lên sai. */
+    public static final String MSG223_FACILITY_GROUP_ID_INVALID = "Mã nhóm máy không hợp lệ.";
+
+    /** Thêm cá thể máy chưa chọn nhóm. */
+    public static final String MSG224_FACILITY_GROUP_REQUIRED = "Vui lòng chọn nhóm máy tương ứng.";
+
+    /** Mã máy sai độ dài. */
+    public static final String MSG225_ITEM_CODE_LENGTH = "Mã máy phải từ 2 đến 20 ký tự (VD: TM-001).";
+
+    /** Tên hiển thị máy sai độ dài. */
+    public static final String MSG226_ITEM_LABEL_LENGTH = "Tên hiển thị / Quy cách phải từ 1 đến 50 ký tự (VD: Số 1, 6 kg).";
+
+    /** Ghi chú vị trí quá dài. */
+    public static final String MSG227_ITEM_LOCATION_LENGTH = "Ghi chú vị trí tối đa 100 ký tự.";
+
+    /** Trùng mã máy. %s = mã máy. */
+    public static final String MSG228_ITEM_CODE_EXISTS = "Mã máy '%s' đã tồn tại trong hệ thống.";
+
+    /** Cá thể máy không có. */
+    public static final String MSG229_ITEM_NOT_FOUND_FOR_UPDATE = "Không tìm thấy cá thể máy để cập nhật.";
+
+    /** Thêm cá thể máy lỗi. */
+    public static final String MSG230_ITEM_CREATE_FAILED = "Không thể tạo mới cá thể máy.";
+
+    /** Mã cá thể máy gửi lên sai. */
+    public static final String MSG231_ITEM_ID_INVALID = "Mã cá thể máy không hợp lệ.";
+
+    /** Báo hỏng chưa chọn máy. */
+    public static final String MSG232_MAINTENANCE_ITEM_REQUIRED = "Vui lòng chọn ít nhất một mã máy cụ thể cần báo hỏng.";
+
+    /** Mô tả hỏng hóc sai độ dài. */
+    public static final String MSG233_MAINTENANCE_DESCRIPTION_LENGTH = "Mô tả hỏng hóc phải từ 10 đến 500 ký tự.";
+
+    /** Danh sách máy gửi lên không hợp lệ. */
+    public static final String MSG234_MAINTENANCE_ITEM_INVALID = "Vui lòng chọn ít nhất một mã máy cụ thể hợp lệ.";
+
+    /** Máy đã ngưng hoạt động. */
+    public static final String MSG235_MAINTENANCE_ITEM_INACTIVE = "Mã máy không tồn tại hoặc đã ngưng hoạt động.";
+
+    /** Duyệt yêu cầu không còn Chờ duyệt. */
+    public static final String MSG236_MAINTENANCE_APPROVE_ONLY_PENDING = "Chỉ yêu cầu đang Chờ duyệt mới được phê duyệt.";
+
+
+    /** Từ chối yêu cầu không còn Chờ duyệt. */
+    public static final String MSG238_MAINTENANCE_REJECT_ONLY_PENDING = "Chỉ yêu cầu đang Chờ duyệt mới được từ chối.";
+
+    /** Nghiệm thu: ghi chú sai độ dài. */
+    public static final String MSG239_MAINTENANCE_CLOSE_NOTE_LENGTH = "Ghi chú nghiệm thu phải từ 5 đến 500 ký tự.";
+
+    /** Đóng yêu cầu chưa ở trạng thái đang xử lý. */
+    public static final String MSG240_MAINTENANCE_CLOSE_ONLY_IN_PROGRESS = "Chỉ yêu cầu đang xử lý mới được nghiệm thu và đóng.";
+
+    /** Bước 1 báo hỏng chưa chọn thiết bị. */
+    public static final String MSG241_MAINTENANCE_DEVICE_REQUIRED = "Vui lòng chọn ít nhất một thiết bị cần báo hỏng.";
+
+    /** Thiết bị đã ngừng sử dụng. */
+    public static final String MSG242_MAINTENANCE_DEVICE_INACTIVE = "Thiết bị không tồn tại hoặc đã ngừng sử dụng.";
+
+    /** Gửi báo hỏng xong. %s = các mã máy. */
+    public static final String MSG243_MAINTENANCE_SENT = "Đã gửi yêu cầu bảo trì %s thành công!";
+
+    /** action gửi lên không có. */
+    public static final String MSG244_ACTION_UNSUPPORTED = "Thao tác không được hỗ trợ.";
+
+    /** Sửa nhóm máy xong. */
+    public static final String MSG245_FACILITY_UPDATED = "Cập nhật nhóm máy thành công!";
+
+    /** Thêm nhóm máy xong. */
+    public static final String MSG246_FACILITY_CREATED = "Thêm mới nhóm máy thành công!";
+
+    /** Bật nhóm máy. */
+    public static final String MSG247_FACILITY_SHOWN = "Đã hiển thị nhóm máy vào danh mục vận hành.";
+
+    /** Tắt nhóm máy. */
+    public static final String MSG248_FACILITY_HIDDEN = "Đã tạm dừng / ẩn nhóm máy.";
+
+    /** Sửa cá thể máy xong. %s = mã máy. */
+    public static final String MSG249_ITEM_UPDATED = "Cập nhật cá thể máy %s thành công!";
+
+    /** Thêm cá thể máy xong. %s = mã máy. */
+    public static final String MSG250_ITEM_CREATED = "Thêm cá thể máy %s thành công!";
+
+    /** Thanh lý máy xong. */
+    public static final String MSG251_ITEM_RETIRED = "Đã thanh lý cá thể máy.";
+
+    /** Duyệt yêu cầu bảo trì xong. */
+    public static final String MSG252_MAINTENANCE_APPROVED = "Đã duyệt yêu cầu bảo trì.";
+
+    /** Từ chối yêu cầu bảo trì xong. */
+    public static final String MSG253_MAINTENANCE_REJECTED = "Đã từ chối yêu cầu bảo trì.";
+
+    /** Nghiệm thu xong. */
+    public static final String MSG254_MAINTENANCE_CLOSED = "Đã nghiệm thu và đóng yêu cầu bảo trì.";
 
     private Messages() {
     }

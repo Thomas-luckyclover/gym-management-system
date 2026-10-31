@@ -554,7 +554,7 @@ public class LeaveRequestService {
             // B1: validate lý do từ chối 5–500 ký tự
             if (!ValidationUtil.isLengthValid(rejectReason, 5, 500)) {
                 return ServiceResult.failField(
-                        "rejectReason", Messages.MSG212_LEAVE_REJECT_REASON_LENGTH);
+                        "rejectReason", Messages.MSG212_REJECT_REASON_LENGTH);
             }
 
             // B2: lấy Manager đang đăng nhập.
