@@ -25,7 +25,7 @@ for i,l in enumerate(lines):
         val=''.join(re.findall(r'"((?:[^"\\]|\\.)*)"',rest))
         msgs.append(dict(num=num,name=name,section=section,doc=(jd[0] if jd else ''),en=en or '',vi=val.replace('\\"','"').replace('\\n',' ')))
         jd=[]; en=None
-json.dump(msgs,open('docs/srs-v27/build/data/msgs.json','w'),ensure_ascii=False,indent=0)
+json.dump(msgs,open('docs/srs-update/build/data/msgs.json','w'),ensure_ascii=False,indent=0)
 print(len(msgs), len({m['num'] for m in msgs}))
 dups=[n for n,c in collections.Counter(m['num'] for m in msgs).items() if c>1]
 print('dups',dups)

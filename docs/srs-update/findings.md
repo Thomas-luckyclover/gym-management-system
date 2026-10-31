@@ -1,4 +1,4 @@
-# Findings (evidence log) — SRS v27
+# Findings (evidence log) — cập nhật SRS 31/10/2026
 ## Auth
 - Login: email or phone + password; P-17/P-18 lock customer-only accounts; staff never auto-locked (AuthService B6c). Forgot password unlocks temp lock. MSG38 flow removed; NULL hash = wrong password.
 - Recovery: 3 steps; email only; code 6 digits valid P-15; step 3 must finish before code expiry; password+unlock+audit in 1 tx; sign out all sessions (CBR-93).

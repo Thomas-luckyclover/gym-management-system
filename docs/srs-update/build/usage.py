@@ -1,5 +1,5 @@
 import json,re,os,collections
-msgs=json.load(open('docs/srs-v27/build/data/msgs.json'))
+msgs=json.load(open('docs/srs-update/build/data/msgs.json'))
 files={}
 for root,_,fs in os.walk('src/main/java'):
     for f in fs:
@@ -22,6 +22,6 @@ for m in msgs:
         if re.search(r'ServiceResult\.fail\(|\.fail\(',c): t['fail']+=1
         if re.search(r'setAttribute\(\s*"(empty|notice|warning|info|banner)',c,re.I): t['In line']+=1
     m['typehint']=dict(t)
-json.dump(msgs,open('docs/srs-v27/build/data/msgs.json','w'),ensure_ascii=False,indent=0)
+json.dump(msgs,open('docs/srs-update/build/data/msgs.json','w'),ensure_ascii=False,indent=0)
 unused=[m['name'] for m in msgs if not m['files']]
 print('unused',len(unused)); print(unused[:60])

@@ -2,7 +2,7 @@ const fs = require('fs');
 const d = require('docx');
 const { Document, Packer, Paragraph, TextRun, Table, TableRow, TableCell, WidthType, ShadingType,
         BorderStyle, AlignmentType, HeadingLevel, PageBreak, Footer, PageNumber, TableLayoutType } = d;
-const data = JSON.parse(fs.readFileSync('docs/srs-v27/build/data/data.json', 'utf8'));
+const data = JSON.parse(fs.readFileSync('docs/srs-update/build/data/data.json', 'utf8'));
 const out = process.argv[2];
 const RED = 'A52A2A', HEAD_FILL = 'E6B8AF', FONT = 'Calibri', SZ = 22; // 11pt
 const TW = 9638; // A4 portrait, 2 cm margins
@@ -33,13 +33,13 @@ const gap = () => para('', { after: 80 });
 
 const C = [];
 C.push(new Paragraph({ alignment: AlignmentType.CENTER, spacing: { after: 120 }, children: [new TextRun({ text: 'SRS G5 — Gym Management System', bold: true, color: RED, font: FONT, size: 40 })] }));
-C.push(new Paragraph({ alignment: AlignmentType.CENTER, spacing: { after: 240 }, children: [new TextRun({ text: 'Bản cập nhật v27 — khớp code nhánh develop (commit 67f59e8, 31/10/2026)', font: FONT, size: 26 })] }));
-C.push(para('Cách dùng: mỗi bảng ở Mục 2 là bảng FULL, giữ đúng cột của SRS — copy nguyên bảng thay bảng cũ. Không đánh lại số ID; mục bỏ hẳn ghi "Withdrawn in v27 — lý do". Mục II (mô tả từng màn / prototype) giữ nguyên theo yêu cầu.', { after: 80 }));
-C.push(para('Nguyên tắc: màn đã code xong → viết theo code (rule, giới hạn, trạng thái, câu thông báo). Màn đang lỗi / chưa xong (ca làm việc, bảo lưu, hồ sơ hội viên, bán buổi PT lẻ tại quầy, các màn chưa có Servlet) → giữ rule SRS, ghi "(Not fully implemented / Not implemented yet)" và liệt kê ở Mục 4. Logic đã có trong code nhưng chưa có màn (chấm điểm PT) cũng được viết lại theo code, ghi "no screen yet".', { after: 80 }));
+C.push(new Paragraph({ alignment: AlignmentType.CENTER, spacing: { after: 240 }, children: [new TextRun({ text: 'Bản cập nhật SRS khớp code nhánh develop — 31/10/2026', font: FONT, size: 26 })] }));
+C.push(para('Cách dùng: mỗi bảng ở Mục 2 là bảng FULL, giữ đúng cột của SRS — copy nguyên bảng thay bảng cũ. Không đánh lại số ID; mục bỏ hẳn ghi "Withdrawn — lý do" và vẫn giữ UC gốc để truy vết. Mục II (mô tả từng màn / prototype) giữ nguyên theo yêu cầu.', { after: 80 }));
+C.push(para('Nguyên tắc: màn đã code xong → viết theo code (rule, giới hạn, trạng thái, câu thông báo). Màn đang lỗi / chưa xong (ca làm việc, bảo lưu, hồ sơ hội viên, bán buổi PT lẻ tại quầy, các màn chưa có Servlet) → giữ rule SRS. Logic đã có trong code nhưng chưa có màn (chấm điểm PT) viết theo code. Các bảng SRS chỉ mô tả yêu cầu, không ghi phiên bản hay tiến độ; tình trạng triển khai chỉ nằm ở cột Trạng thái của Mục 1 và ở Mục 4.', { after: 80 }));
 C.push(para('Màu trạng thái ở bảng theo dõi: xanh = Mới · vàng = Chưa triển khai · xám = Withdrawn · trắng = Sửa theo code.', { after: 200 }));
 
 C.push(H1('1. Bảng theo dõi thay đổi'));
-C.push(note('Chỉ liệt kê ID có thay đổi so với SRS hiện tại (v26). ID không có trong bảng = Giữ nguyên.'));
+C.push(note('Chỉ liệt kê ID có thay đổi so với SRS hiện tại. ID không có trong bảng = Giữ nguyên. Ô Cũ / Mới được rút gọn; toàn văn ở Mục 2.'));
 C.push(table(data.TRACK, [10, 10, 29, 31, 20], { statusCol: 1 }));
 C.push(new Paragraph({ children: [new PageBreak()] }));
 
@@ -52,7 +52,7 @@ C.push(H2('I.2 Main Business Flow — sửa từng đoạn'));
 C.push(note('Business Flow là đoạn văn + sơ đồ nên ghi theo từng đoạn cần thay. Sơ đồ BF-05, BF-06, BF-08 cần vẽ lại theo cột "Replace with".'));
 C.push(table(data.BF, [9, 13, 30, 48])); C.push(gap());
 C.push(H2('I.3.2 Entity Descriptions'));
-C.push(note('34 thực thể. "(Modified)" / "(New)" chỉ để đánh dấu, khi dán vào SRS bỏ phần trong ngoặc. Thực thể "(Unchanged)" giữ như cũ, in lại để đủ bộ.'));
+C.push(note('34 thực thể. Nhãn (Modified) / (New) / (Unchanged) màu xám chỉ để đánh dấu, không dán vào SRS.'));
 for (const [name, st, rows] of data.ENT) {
   C.push(new Paragraph({ spacing: { before: 160, after: 60 }, children: [
     new TextRun({ text: 'Entity: ' + name, bold: true, font: FONT, size: SZ }),
@@ -93,7 +93,7 @@ const doc = new Document({
   styles: { default: { document: { run: { font: FONT, size: SZ } } } },
   sections: [{ properties: { page: { size: { width: 11906, height: 16838 }, margin: { top: 1134, bottom: 1134, left: 1134, right: 1134 } } },
     footers: { default: new Footer({ children: [new Paragraph({ alignment: AlignmentType.RIGHT, children: [
-      new TextRun({ text: 'SRS G5 — v27 update   Page ', font: FONT, size: 18 }), new TextRun({ children: [PageNumber.CURRENT], font: FONT, size: 18 })] })] }) },
+      new TextRun({ text: 'SRS G5 — Update 31/10/2026   Page ', font: FONT, size: 18 }), new TextRun({ children: [PageNumber.CURRENT], font: FONT, size: 18 })] })] }) },
     children: C }],
 });
 Packer.toBuffer(doc).then(b => { fs.writeFileSync(out, b); console.log('written', out, b.length); });

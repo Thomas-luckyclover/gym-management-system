@@ -1,7 +1,7 @@
 # File notes — mâu thuẫn tài liệu & quyết định đã chốt
 
-## SRS v27 — viết lại SRS cho khớp code develop (31/10/2026, ĐÃ CHỐT)
-- File: `docs/srs-v27/SRS-G5-v27-update.docx` (bảng FULL GBR / CBR / BR / DBR / Entity / UC / Actor / Tham số / Data Dictionary / MSG01–MSG322 / NFR, bảng theo dõi, mâu thuẫn UC, code cần sửa). Mục II (prototype từng màn) giữ nguyên.
+## Cập nhật SRS — viết lại SRS cho khớp code develop (31/10/2026, ĐÃ CHỐT)
+- File: `docs/srs-update/SRS-G5-update-31-10-2026.docx` (bảng FULL GBR / CBR / BR / DBR / Entity / UC / Actor / Tham số / Data Dictionary / MSG01–MSG322 / NFR, bảng theo dõi, mâu thuẫn UC, code cần sửa). Mục II (prototype từng màn) giữ nguyên.
 - Quyết định khi viết: UC-31 viết lại thành JOB-04 tự chốt buổi (bỏ BR-54…56, P-07); thời hạn gói theo code + DB (gói tập 1/3/6/12/24/36 tháng, vé ngày 1 ngày, PT 1/3/6/12 tháng; DB 1–36 / 1–12); phân trang ghi theo từng màn (GBR-18); CBR-62 theo quyết định 09/10 (bảo lưu không đổi buổi, JOB-04 chốt sau).
 - Ghi chú của thành viên về CSVC được đối chiếu code: mô tả sự cố 10–500 (không phải 1000), avatar ≤ 5 MB (không phải 2 MB), Employees không có cột Bio, retire máy chưa chặn phiếu đang mở (ghi vào Code cần sửa).
 
