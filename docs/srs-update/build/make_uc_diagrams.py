@@ -99,3 +99,11 @@ diagram('UC_Manager',
         ('n_blog','Manage Blog Posts: create post, view list / detail, edit post, publish / unpublish.',620,880,55,'blog'),
         ('n_dash','View Aggregated Dashboard: operational & revenue report for a date range, export CSV.',620,1020,55,'dash')])
 print('ok', sorted(os.listdir(OUT)))
+# ---------- Admin ----------
+diagram('UC_Admin',
+ [('acc','Manage System Accounts',0),('audit','View Audit Log',0),('rep','View Operational Reports & Audit Metrics',0)],
+ [('a','Admin',90,150)],
+ [('a','acc'),('a','audit'),('a','rep')],
+ notes=[('n_acc','Manage System Accounts: create staff account (Admin, Manager, PT, Receptionist), view account list / detail, change position, lock / unlock account (reason 5–500), unlock temporarily locked customer accounts.',620,60,85,'acc'),
+        ('n_audit','View Audit Log: search and filter sensitive actions, each shown as a readable sentence.',620,170,55,'audit'),
+        ('n_rep','View Operational Reports & Audit Metrics: operational & revenue report for a date range plus audit metrics, export CSV.',620,240,70,'rep')])
