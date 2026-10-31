@@ -11,6 +11,7 @@ import com.gms.util.DBContext;
 import java.math.BigDecimal;
 import java.sql.Connection;
 import java.sql.SQLException;
+import java.util.Base64;
 import java.util.Collections;
 import java.util.LinkedHashMap;
 import java.util.List;
@@ -243,6 +244,115 @@ public class PackageService {
         } catch (SQLException e) {
             return ServiceResult.fail("Lỗi kết nối cơ sở dữ liệu: " + e.getMessage());
         }
+    }
+
+    // ===== Bật/Tắt trạng thái kinh doanh của gói (Commit 17) =====
+
+    /**
+     * Thay đổi trạng thái kinh doanh của gói (Mở bán / Ngừng bán) kèm RowVer.
+     *
+     * @param accountId tài khoản Quản lý thực hiện
+     * @param packageId ID gói dịch vụ
+     * @param targetActive trạng thái mong muốn (true = mở bán, false = ngừng bán)
+     * @param rowVerBase64 chuỗi RowVer Base64 cũ để kiểm soát đồng thời
+     * @param reason lý do thay đổi trạng thái
+     * @return ServiceResult thành công hoặc thất bại
+     */
+    public ServiceResult<Void> togglePackageStatus(int accountId, int packageId, boolean targetActive, String rowVerBase64, String reason) {
+        if (packageId <= 0) {
+            return ServiceResult.fail("Mã gói dịch vụ không hợp lệ.");
+        }
+        if (rowVerBase64 == null || rowVerBase64.isBlank()) {
+            return ServiceResult.fail("Thiếu thông tin phiên bản dữ liệu (RowVer).");
+        }
+
+        byte[] expectedRowVer;
+        try {
+            expectedRowVer = Base64.getDecoder().decode(rowVerBase64.trim());
+        } catch (IllegalArgumentException e) {
+            return ServiceResult.fail("Phiên bản dữ liệu không hợp lệ.");
+        }
+
+        try (Connection conn = getConnection()) {
+            conn.setAutoCommit(false);
+            try {
+                Package pkg = packageDAO.findById(conn, packageId);
+                if (pkg == null) {
+                    conn.rollback();
+                    return ServiceResult.fail("Gói dịch vụ không tồn tại hoặc đã bị xóa.");
+                }
+
+                if (pkg.isActive() == targetActive) {
+                    conn.rollback();
+                    return ServiceResult.ok(null, "Trạng thái gói không thay đổi.");
+                }
+
+                if (targetActive) {
+                    // Mở bán lại: kiểm tra trùng tên với gói khác đang bán
+                    boolean nameDuplicate = packageDAO.existsActiveByName(conn, pkg.getPackageName(), packageId);
+                    if (nameDuplicate) {
+                        conn.rollback();
+                        return ServiceResult.fail("Không thể mở bán lại: Hiện đang có một gói khác cùng tên đang bán.");
+                    }
+
+                    // Kiểm tra thời hạn có còn hợp lệ theo quy định hiện hành P-04 / P-21 hay không
+                    if (!isDurationValidForReactivation(pkg)) {
+                        conn.rollback();
+                        return ServiceResult.fail("Không thể mở bán lại: Thời hạn gói (" + pkg.getDurationValue() + " " + pkg.getDurationUnit() + ") không nằm trong danh mục thời hạn cho phép hiện tại.");
+                    }
+                }
+
+                boolean updated = packageDAO.updateActiveStatus(conn, packageId, targetActive, expectedRowVer);
+                if (!updated) {
+                    conn.rollback();
+                    return ServiceResult.fail(Messages.MSG22_CONCURRENT_EDIT);
+                }
+
+                // Ghi AuditLog
+                String action = targetActive ? "ACTIVATE" : "DEACTIVATE";
+                String defaultNote = targetActive ? "Quản lý mở bán lại gói" : "Quản lý ngừng bán gói";
+                auditLogService.logInTransaction(
+                        conn,
+                        accountId,
+                        Role.MANAGER,
+                        action,
+                        "Packages",
+                        packageId,
+                        "IsActive",
+                        String.valueOf(!targetActive),
+                        String.valueOf(targetActive),
+                        reason != null && !reason.isBlank() ? reason : defaultNote
+                );
+
+                conn.commit();
+                return ServiceResult.ok(null, targetActive ? "Đã mở bán lại gói dịch vụ." : "Đã ngừng bán gói dịch vụ.");
+            } catch (SQLException e) {
+                conn.rollback();
+                return ServiceResult.fail("Lỗi cập nhật trạng thái gói: " + e.getMessage());
+            } finally {
+                conn.setAutoCommit(true);
+            }
+        } catch (SQLException e) {
+            return ServiceResult.fail("Lỗi kết nối cơ sở dữ liệu: " + e.getMessage());
+        }
+    }
+
+    private boolean isDurationValidForReactivation(Package pkg) {
+        if (pkg.getPackageType() == null) {
+            return false;
+        }
+        return switch (pkg.getPackageType()) {
+            case MEMBERSHIP -> "Month".equalsIgnoreCase(pkg.getDurationUnit())
+                    && pkg.getDurationValue() != null
+                    && ALLOWED_MEMBERSHIP_MONTHS.contains(pkg.getDurationValue());
+            case DAY_PASS -> "Day".equalsIgnoreCase(pkg.getDurationUnit())
+                    && pkg.getDurationValue() != null
+                    && pkg.getDurationValue() == 1;
+            case PT_SINGLE, PT_COUPLE -> "Month".equalsIgnoreCase(pkg.getDurationUnit())
+                    && pkg.getDurationValue() != null
+                    && ALLOWED_PT_MONTHS.contains(pkg.getDurationValue());
+            case SINGLE_SESSION -> pkg.getDurationUnit() == null && pkg.getDurationValue() == null;
+        };
     }
 
     // ===== Validate nghiệp vụ cho Gói Hội viên & Vé ngày (DBR-06, DBR-11, DBR-15, P-04) =====
