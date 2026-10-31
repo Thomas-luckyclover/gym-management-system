@@ -27,6 +27,33 @@ import java.util.Set;
  */
 public class CustomerDashboardDAO {
 
+    /** PT phụ trách gói của người đứng tên hoặc người đi kèm; không lộ liên hệ PT khác. */
+    public List<com.gms.dto.CustomerDashboardView.TrainerContact> findTrainers(int customerId) throws SQLException {
+        String sql = "SELECT DISTINCT e.EmployeeId, p.FullName, p.Phone, sub.SubscriptionId "
+                + "FROM Subscriptions sub JOIN Orders o ON o.OrderId = sub.OrderId "
+                + "JOIN Employees e ON e.EmployeeId = sub.PtEmployeeId "
+                + "JOIN Persons p ON p.PersonId = e.PersonId "
+                + "WHERE (sub.CustomerId = ? OR o.PartnerCustomerId = ?) "
+                + "AND sub.Status IN ('Active', 'Frozen') AND e.Status = 'Working' "
+                + "ORDER BY p.FullName, e.EmployeeId";
+        List<com.gms.dto.CustomerDashboardView.TrainerContact> trainers = new ArrayList<>();
+        try (Connection connection = DBContext.getConnection();
+                PreparedStatement statement = connection.prepareStatement(sql)) {
+            statement.setInt(1, customerId);
+            statement.setInt(2, customerId);
+            try (ResultSet resultSet = statement.executeQuery()) {
+                while (resultSet.next()) {
+                    int employeeId = resultSet.getInt("EmployeeId");
+                    String fullName = resultSet.getString("FullName");
+                    String phone = resultSet.getString("Phone");
+                    int subscriptionId = resultSet.getInt("SubscriptionId");
+                    trainers.add(new com.gms.dto.CustomerDashboardView.TrainerContact(employeeId, fullName, phone, subscriptionId));
+                }
+            }
+        }
+        return trainers;
+    }
+
     // =========================================================
     // 1. Kiểm tra quyền vào phòng tập hôm nay
     // =========================================================
@@ -284,6 +311,20 @@ public class CustomerDashboardDAO {
     public List<UpcomingSessionRow> findUpcomingSessions(int customerId, LocalDateTime now)
             throws SQLException {
 
+        return readSessions(customerId, now, false);
+    }
+
+    /** Đọc đủ các buổi Scheduled trong 7 ngày, không cắt TOP 5 của khối sắp tới. */
+    public List<UpcomingSessionRow> findWeekSessions(int customerId, LocalDateTime now) throws SQLException {
+        return readSessions(customerId, now, true);
+    }
+
+    private List<UpcomingSessionRow> readSessions(int customerId, LocalDateTime now, boolean isWeek)
+            throws SQLException {
+        String limit = isWeek ? "" : "TOP 5 ";
+        String dateCondition = isWeek
+                ? "AND t.SlotDate >= ? AND t.SlotDate < DATEADD(DAY, 7, ?) AND t.StartTime >= CAST(? AS TIME) "
+                : "AND (t.SlotDate > ? OR (t.SlotDate = ? AND t.StartTime > CAST(? AS TIME))) ";
         // Điều kiện khách có Membership / DayPass (nếu SingleSession) ngày đó,
         // không trong khoảng bảo lưu.
         String hasMembership = "EXISTS (SELECT 1 FROM Subscriptions m "
@@ -297,7 +338,7 @@ public class CustomerDashboardDAO {
                 + "  AND t.SlotDate BETWEEN f.StartDate AND COALESCE(f.ActualEndDate, f.PlannedEndDate)))";
 
         // Lấy buổi của người đứng tên gói UNION người đi kèm (gói đôi)
-        String sql = "SELECT TOP 5 s.SessionId, t.SlotDate, t.StartTime, t.EndTime, "
+        String sql = "SELECT " + limit + "s.SessionId, t.SlotDate, t.StartTime, t.EndTime, "
                 + "ep.FullName AS PtName, o.PackageNameSnapshot AS PackageName, sub.SubscriptionType, sub.CustomerId, "
                 + "CASE WHEN " + hasMembership + " THEN 0 ELSE 1 END AS MissingMembership "
                 + "FROM Sessions s "
@@ -307,7 +348,7 @@ public class CustomerDashboardDAO {
                 + "JOIN Employees e ON e.EmployeeId = s.PtEmployeeId "
                 + "JOIN Persons ep ON ep.PersonId = e.PersonId "
                 + "WHERE s.Status = 'Scheduled' "
-                + "AND (t.SlotDate > ? OR (t.SlotDate = ? AND t.StartTime > CAST(? AS TIME))) "
+                + dateCondition
                 + "AND ("
                 + "  sub.CustomerId = ? " // người đứng tên
                 + "  OR o.PartnerCustomerId = ? " // người đi kèm (gói đôi)
@@ -321,7 +362,7 @@ public class CustomerDashboardDAO {
                 PreparedStatement stmt = conn.prepareStatement(sql)) {
             stmt.setDate(1, today);
             stmt.setDate(2, today);
-            stmt.setObject(3, now.toLocalTime());
+            stmt.setObject(3, isWeek ? java.time.LocalTime.MIDNIGHT : now.toLocalTime());
             stmt.setInt(4, customerId);
             stmt.setInt(5, customerId);
 

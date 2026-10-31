@@ -35,7 +35,7 @@
         <%@ include file="/WEB-INF/jsp/common/head.jspf" %>
         <title>Trang cá nhân · Super Gym</title>
         <link rel="stylesheet"
-              href="${pageContext.request.contextPath}/css/pages/customer/dashboard.css?v=20261025city">
+              href="${pageContext.request.contextPath}/css/pages/customer/dashboard.css?v=20261031-compact?v=20261025city">
         <link rel="stylesheet"
               href="${pageContext.request.contextPath}/css/dashboard-weather.css?v=20261014s">
         <link rel="stylesheet"
@@ -82,303 +82,6 @@
                     </c:if>
 
                     <c:if test="${not empty dashboard}">
-                        <div class="split">
-                            <div class="col-main">
-
-                                <%-- Status Hero (Khớp prototype 10.1.1) --%>
-                                <c:set var="am" value="${dashboard.activeMembership}" />
-                                <section class="status-hero" data-reveal>
-                                    <div>
-                                        <c:choose>
-                                            <c:when test="${not empty am}">
-                                                <div class="section-label">
-                                                    <c:out value="${am.packageName}" />
-                                                </div>
-                                                <h2>Còn ${am.daysRemaining} ngày tập</h2>
-                                                <c:if test="${am.daysRemaining le 7}">
-                                                    <p class="status-expiring"
-                                                       role="status"><i
-                                                            class="fa-solid fa-hourglass-half"
-                                                            aria-hidden="true"></i> Gói sắp
-                                                        hết hạn. Gia hạn tại quầy hoặc mua
-                                                        gói mới để không bị gián đoạn buổi
-                                                        tập.</p>
-                                                    </c:if>
-                                                <div class="status-meta">
-                                                    <div>
-                                                        <b class="tabular">
-                                                            <c:out
-                                                                value="${gms:formatDate(am.endDate)}" />
-                                                        </b>
-                                                        <span>Hết hạn</span>
-                                                    </div>
-                                                    <c:set var="ptSub" value="${null}" />
-                                                    <c:forEach var="s"
-                                                               items="${dashboard.subscriptions}">
-                                                        <c:if
-                                                            test="${empty ptSub and s.ptPackage and s.status eq 'Active'}">
-                                                            <c:set var="ptSub"
-                                                                   value="${s}" />
-                                                        </c:if>
-                                                    </c:forEach>
-                                                    <c:if
-                                                        test="${not empty ptSub and not empty ptSub.totalSessions}">
-                                                        <div>
-                                                            <b class="tabular">${ptSub.remainingSessions}
-                                                                / ${ptSub.totalSessions}</b>
-                                                            <span>Buổi PT còn lại</span>
-                                                        </div>
-                                                    </c:if>
-                                                    <div>
-                                                        <b class="tabular">
-                                                            <c:out
-                                                                value="${dashboard.customerCode}" />
-                                                        </b>
-                                                        <span>Mã hội viên</span>
-                                                    </div>
-                                                </div>
-                                            </c:when>
-                                            <c:otherwise>
-                                                <div class="section-label">Tài khoản hội
-                                                    viên</div>
-                                                <h2>Chưa có gói tập hiệu lực</h2>
-                                                <div class="status-meta">
-                                                    <div>
-                                                        <b class="tabular">
-                                                            <c:out
-                                                                value="${dashboard.customerStatusLabel}" />
-                                                        </b>
-                                                        <span>Trạng thái</span>
-                                                    </div>
-                                                    <div>
-                                                        <b class="tabular">
-                                                            <c:out
-                                                                value="${dashboard.customerCode}" />
-                                                        </b>
-                                                        <span>Mã hội viên</span>
-                                                    </div>
-                                                </div>
-                                            </c:otherwise>
-                                        </c:choose>
-                                    </div>
-                                    <c:choose>
-                                        <c:when test="${not empty am}">
-                                            <a class="btn btn-primary"
-                                               href="${pageContext.request.contextPath}/customer/packages/purchase">Gia
-                                                hạn <i
-                                                    class="fa-solid fa-arrow-right"></i></a>
-                                            </c:when>
-                                            <c:otherwise>
-                                            <a class="btn btn-primary"
-                                               href="${pageContext.request.contextPath}/customer/packages/purchase">Mua
-                                                gói ngay <i
-                                                    class="fa-solid fa-arrow-right"></i></a>
-                                            </c:otherwise>
-                                        </c:choose>
-                                </section>
-
-                                <%-- Alert Banners --%>
-                                <c:forEach var="b" items="${dashboard.banners}">
-                                    <div class="alert-banner ${b.level eq 'danger' ? 'danger' : 'warn'}"
-                                         role="alert">
-                                        <i
-                                            class="fa-solid ${b.level eq 'danger' ? 'fa-circle-exclamation' : 'fa-triangle-exclamation'}"></i>
-                                        <span>
-                                            <c:out value="${b.message}" />
-                                        </span>
-                                        <c:choose>
-                                            <c:when test="${b.type eq 'EXPIRED'}">
-                                                <a class="btn btn-primary btn-sm"
-                                                   href="${pageContext.request.contextPath}/customer/packages/purchase">Mua
-                                                    gói</a>
-                                                </c:when>
-                                                <c:when
-                                                    test="${b.type eq 'EXPIRING' or b.type eq 'MISSING_MEMBERSHIP'}">
-                                                <a class="btn btn-outline btn-sm"
-                                                   href="${pageContext.request.contextPath}/customer/packages/purchase">Gia
-                                                    hạn</a>
-                                                </c:when>
-                                                <c:when test="${b.type eq 'PENDING_ORDER'}">
-                                                <a class="btn btn-primary btn-sm"
-                                                   href="${pageContext.request.contextPath}/customer/transactions">Thanh
-                                                    toán</a>
-                                                </c:when>
-                                            </c:choose>
-                                    </div>
-                                </c:forEach>
-
-                                <%-- Panel: Buổi tập sắp tới --%>
-                                <section class="panel" data-reveal>
-                                    <div class="panel-head">
-                                        <h2>Buổi tập sắp tới</h2>
-                                        <a class="btn btn-ghost btn-sm"
-                                           href="${pageContext.request.contextPath}/customer/pt-sessions">Tất
-                                            cả lịch <i
-                                                class="fa-solid fa-arrow-right"></i></a>
-                                    </div>
-                                    <c:choose>
-                                        <c:when
-                                            test="${empty dashboard.upcomingSessions}">
-                                            <div class="empty-state"
-                                                 style="padding: var(--space-8) var(--space-4); text-align: center; color: var(--color-text-soft);">
-                                                <i class="fa-regular fa-calendar-xmark"
-                                                   style="font-size: 2rem; margin-bottom: var(--space-3); opacity: 0.6; display: block;"></i>
-                                                <p>Chưa có buổi PT nào sắp tới.</p>
-                                            </div>
-                                        </c:when>
-                                        <c:otherwise>
-                                            <div class="data-list">
-                                                <c:forEach var="u"
-                                                           items="${dashboard.upcomingSessions}">
-                                                    <div class="data-row">
-                                                        <div class="row-main">
-                                                            <div class="row-title">
-                                                                <c:out
-                                                                    value="${gms:formatDate(u.slotDate)}" />
-                                                                ·
-                                                                <c:out
-                                                                    value="${gms:formatTime(u.startTime)}" />
-                                                                –
-                                                                <c:out
-                                                                    value="${gms:formatTime(u.endTime)}" />
-                                                            </div>
-                                                            <div class="row-meta">
-                                                                <span><i
-                                                                        class="fa-solid fa-user-check"></i>
-                                                                    <c:out
-                                                                        value="${u.ptName}" />
-                                                                </span>
-                                                                <span><i
-                                                                        class="fa-solid fa-layer-group"></i>
-                                                                    <c:out
-                                                                        value="${u.packageName}" />
-                                                                </span>
-                                                            </div>
-                                                        </div>
-                                                        <c:choose>
-                                                            <c:when
-                                                                test="${u.missingMembership}">
-                                                                <span
-                                                                    class="badge badge-danger">Chưa
-                                                                    có gói
-                                                                    tập</span>
-                                                                </c:when>
-                                                                <c:otherwise>
-                                                                <span
-                                                                    class="badge badge-info">Đã
-                                                                    xếp</span>
-                                                                </c:otherwise>
-                                                            </c:choose>
-                                                    </div>
-                                                </c:forEach>
-                                            </div>
-                                        </c:otherwise>
-                                    </c:choose>
-                                </section>
-
-                            </div>
-
-                            <%-- Cột phụ (col-side) --%>
-                            <aside class="col-side">
-                                <%-- Thẻ Gói tập --%>
-                                <c:choose>
-                                    <c:when test="${not empty am}">
-                                        <c:set var="picker" value="${dashboard.startPicker}" />
-                                        <div class="side-card" <c:if test="${picker.editable}">data-sdp data-sdp-url="/customer/subscription/start-date" data-sdp-sub="${picker.subscriptionId}" data-sdp-csrf="<c:out value='${csrfToken}' />"</c:if>>
-                                                <span class="section-label">Gói tập</span>
-                                                <h3>
-                                                <c:out value="${am.packageName}" />
-                                            </h3>
-                                            <div class="kpi-bar">
-                                                <i style="width: 100%"></i>
-                                            </div>
-                                                <%-- Hiệu lực gói: ngày bắt đầu → hết hạn, còn lại bao nhiêu ngày. JS đổi ngày chỉ dùng data-sdp-*. --%>
-                                                <div class="validity${picker.editable ? ' sdp-anchor' : ''}">
-                                                    <div class="validity__dates">
-                                                        <div class="validity__col">
-                                                            <span class="validity__label">Bắt đầu</span>
-                                                            <strong class="validity__date" data-sdp-start><c:out value="${gms:formatDate(am.startDate)}" /></strong>
-                                                        </div>
-                                                        <i class="validity__arrow" aria-hidden="true"></i>
-                                                        <div class="validity__col validity__col--end">
-                                                            <span class="validity__label">Hết hạn</span>
-                                                            <strong class="validity__date" data-sdp-end><c:out value="${gms:formatDate(am.endDate)}" /></strong>
-                                                        </div>
-                                                    </div>
-                                                    <c:if test="${picker.editable}"><button type="button" class="sdp-btn validity__change" data-sdp-toggle aria-expanded="false">Đổi ngày bắt đầu</button></c:if>
-                                                    <c:if test="${picker.editable}"><%@ include file="/WEB-INF/jsp/customer/_start-date-picker.jspf" %></c:if>
-                                                    <div class="validity__left"><span>Còn lại</span><b>${am.daysRemaining} ngày</b></div>
-                                                </div>
-                                        </div>
-                                    </c:when>
-                                    <c:otherwise>
-                                        <div class="side-card">
-                                            <span class="section-label">Gói tập</span>
-                                            <h3>Chưa có gói tập</h3>
-                                            <p class="muted"
-                                               style="margin-top: var(--space-2);">Bạn
-                                                cần mua gói tập để vào phòng tập.</p>
-                                            <a class="btn btn-primary btn-sm btn-block"
-                                               style="margin-top: var(--space-4);"
-                                               href="${pageContext.request.contextPath}/customer/packages/purchase">Mua
-                                                gói</a>
-                                        </div>
-                                    </c:otherwise>
-                                </c:choose>
-
-                                <%-- Thẻ Gói PT (nếu có) --%>
-                                <c:forEach var="s"
-                                           items="${dashboard.subscriptions}">
-                                    <c:if test="${s.ptPackage}">
-                                        <div class="side-card">
-                                            <span class="section-label">
-                                                <c:out value="${s.packageName}" />
-                                            </span>
-                                            <h3>Còn ${s.remainingSessions != null ?
-                                                      s.remainingSessions : 0} buổi</h3>
-                                                <c:set var="ptProgressPercent"
-                                                       value="${s.totalSessions != null && s.totalSessions > 0 ? (s.remainingSessions * 100 / s.totalSessions) : 0}" />
-                                            <div class="kpi-bar muted">
-                                                <i
-                                                    style="--progress: ${ptProgressPercent}%;"></i>
-                                            </div>
-                                            <div class="side-row"><span>Tổng số
-                                                    buổi</span><b>${s.totalSessions
-                                                                    != null ? s.totalSessions : 0}
-                                                    buổi</b></div>
-                                            <div class="side-row"><span>Đã
-                                                    dùng</span><b>${s.usedSessions
-                                                                    != null ? s.usedSessions : 0}
-                                                    buổi</b></div>
-                                            <div class="side-row"><span>Hạn
-                                                    dùng</span><b>
-                                                    <c:out
-                                                        value="${gms:formatDate(s.endDate)}" />
-                                                </b></div>
-                                        </div>
-                                    </c:if>
-                                </c:forEach>
-
-                                <%-- Lối tắt / Tiện ích --%>
-                                <div class="side-card">
-                                    <span class="section-label">Lối tắt</span>
-                                    <div class="stack-3"
-                                         style="margin-top: var(--space-3);">
-                                        <a class="btn btn-outline btn-sm btn-block"
-                                           href="${pageContext.request.contextPath}/customer/training-plans">
-                                            <i
-                                                class="fa-solid fa-clipboard-list"></i>
-                                            Xem giáo án của tôi
-                                        </a>
-                                        <a class="btn btn-ghost btn-sm btn-block"
-                                           href="${pageContext.request.contextPath}/customer/feedback">
-                                            <i class="fa-solid fa-inbox"></i>
-                                            Gửi phản ánh góp ý
-                                        </a>
-                                    </div>
-                                </div>
-                            </aside>
-                        </div>
                         <%--=====Lời chào và thời tiết (cùng fragment với PT Dashboard)=====--%>
                         <c:set var="weatherGreetingName" value="${dashboard.fullName}" />
                         <c:set var="weatherAudience" value="customer" />
@@ -418,12 +121,169 @@
                                 </div>
                             </dl>
                         </section>
+
+                        <c:set var="am" value="${dashboard.activeMembership}" />
+                        <div class="split">
+                            <div class="col-main">
+
+                                <%-- Alert Banners --%>
+                                <c:forEach var="b" items="${dashboard.banners}">
+                                    <div class="alert-banner ${b.level eq 'danger' ? 'danger' : 'warn'}"
+                                         role="alert">
+                                        <i
+                                            class="fa-solid ${b.level eq 'danger' ? 'fa-circle-exclamation' : 'fa-triangle-exclamation'}"></i>
+                                        <span>
+                                            <c:out value="${b.message}" />
+                                        </span>
+                                        <c:choose>
+                                            <c:when test="${b.type eq 'EXPIRED'}">
+                                                <a class="btn btn-primary btn-sm"
+                                                   href="${pageContext.request.contextPath}/customer/packages/purchase">Mua
+                                                    gói</a>
+                                                </c:when>
+                                                <c:when
+                                                    test="${b.type eq 'EXPIRING' or b.type eq 'MISSING_MEMBERSHIP'}">
+                                                <a class="btn btn-outline btn-sm"
+                                                   href="${pageContext.request.contextPath}/customer/packages/purchase">Gia
+                                                    hạn</a>
+                                                </c:when>
+                                                <c:when test="${b.type eq 'PENDING_ORDER'}">
+                                                <a class="btn btn-primary btn-sm"
+                                                   href="${pageContext.request.contextPath}/customer/transactions">Thanh
+                                                    toán</a>
+                                                </c:when>
+                                            </c:choose>
+                                    </div>
+                                </c:forEach>
+
+                                <%-- Lịch 7 ngày: Service tạo dashboard.scheduleDays; selectScheduleDay trong dashboard.js đổi ngày. --%>
+                                <section class="panel customer-schedule" aria-label="Lịch PT 7 ngày">
+                                    <div class="panel-head">
+                                        <h2>Lịch tập của bạn</h2>
+                                        <a class="btn btn-outline btn-sm" href="${pageContext.request.contextPath}/customer/pt-sessions">Tất cả lịch</a>
+                                    </div>
+                                    <div class="customer-week" aria-label="Chọn ngày tập">
+                                        <c:forEach var="scheduleDay" items="${dashboard.scheduleDays}" varStatus="dayLoop">
+                                            <button type="button" class="customer-day ${scheduleDay.today ? 'is-active' : ''}"
+                                                    data-schedule-day="${dayLoop.index}" aria-controls="customer-day-${dayLoop.index}"
+                                                    aria-pressed="${scheduleDay.today}">
+                                                <span><c:out value="${scheduleDay.dayLabel}" /></span>
+                                                <b><c:out value="${scheduleDay.dateLabel}" /></b>
+                                                <small>${empty scheduleDay.sessions ? 'Trống' : fn:length(scheduleDay.sessions)}<c:if test="${not empty scheduleDay.sessions}"> buổi</c:if></small>
+                                            </button>
+                                        </c:forEach>
+                                    </div>
+                                    <c:forEach var="scheduleDay" items="${dashboard.scheduleDays}" varStatus="dayLoop">
+                                        <div id="customer-day-${dayLoop.index}" class="customer-day-sessions" ${scheduleDay.today ? '' : 'hidden'}>
+                                            <c:choose>
+                                                <c:when test="${empty scheduleDay.sessions}">
+                                                    <div class="customer-schedule-empty">
+                                                        <p class="empty-state empty-state--relax">Không có buổi PT nào trong ngày này.</p>
+
+                                                        <small>Chọn ngày để xem buổi tập đã xếp.</small>
+                                                    </div>
+                                                </c:when>
+                                                <c:otherwise>
+                                                    <c:forEach var="trainingSession" items="${scheduleDay.sessions}">
+                                                        <div class="data-row">
+                                                            <div class="row-main">
+                                                                <b>${gms:formatTime(trainingSession.startTime)}–${gms:formatTime(trainingSession.endTime)}</b>
+                                                                <p><c:out value="${trainingSession.ptName}" /> · <c:out value="${trainingSession.packageName}" /></p>
+                                                            </div>
+                                                            <span class="badge ${trainingSession.missingMembership ? 'badge-warning' : 'badge-neutral'}">${trainingSession.missingMembership ? 'Chưa có gói tập' : 'Đã xếp'}</span>
+                                                        </div>
+                                                    </c:forEach>
+                                                </c:otherwise>
+                                            </c:choose>
+                                        </div>
+                                    </c:forEach>
+                                </section>
+                                <%-- Gói tập: dữ liệu thật từ dashboard.subscriptions, giữ chức năng đổi ngày khi được phép. --%>
+                                <section class="panel customer-packages" aria-label="Gói tập của bạn">
+                                    <div class="panel-head"><h2>Gói tập của bạn</h2></div>
+                                    <div class="customer-package-grid">
+                                        <c:forEach var="subscription" items="${dashboard.subscriptions}">
+                                            <c:set var="picker" value="${not subscription.ptPackage and subscription.subscriptionId == dashboard.activeMembership.subscriptionId ? dashboard.startPicker : null}" />
+                                            <article class="customer-package-card" <c:if test="${picker.editable}">data-sdp data-sdp-url="/customer/subscription/start-date" data-sdp-sub="${picker.subscriptionId}" data-sdp-csrf="<c:out value='${csrfToken}' />"</c:if>>
+                                                <small><c:out value="${subscription.ptPackage ? 'Gói tập cùng PT' : 'Gói tập gym'}" /> · <c:out value="${subscription.statusLabel}" /></small>
+                                                <h3><c:out value="${subscription.packageName}" /></h3>
+                                                <p>Hết hạn <strong data-sdp-end><c:out value="${gms:formatDate(subscription.endDate)}" /></strong></p>
+                                                <c:choose>
+                                                    <c:when test="${subscription.ptPackage}">
+                                                        <b class="customer-package-balance">Còn ${subscription.remainingSessions == null ? 0 : subscription.remainingSessions}/${subscription.totalSessions == null ? 0 : subscription.totalSessions} buổi</b>
+                                                    </c:when>
+                                                    <c:otherwise>
+                                                        <b class="customer-package-balance">Còn ${subscription.daysRemaining} ngày</b>
+                                                    </c:otherwise>
+                                                </c:choose>
+                                                <c:if test="${picker.editable}">
+                                                    <div class="customer-package-start">Bắt đầu <strong data-sdp-start><c:out value="${gms:formatDate(subscription.startDate)}" /></strong></div>
+                                                    <button type="button" class="sdp-btn" data-sdp-toggle aria-expanded="false">Đổi ngày bắt đầu</button>
+                                                    <%@ include file="/WEB-INF/jsp/customer/_start-date-picker.jspf" %>
+                                                </c:if>
+                                            </article>
+                                        </c:forEach>
+                                        <c:if test="${empty dashboard.subscriptions}"><p>Bạn chưa có gói tập.</p></c:if>
+                                    </div>
+                                    <a class="btn btn-outline btn-sm" href="${pageContext.request.contextPath}/customer/packages/purchase">Xem gói tập</a>
+                                </section>
+
+
+                            </div>
+
+                            <%-- Cột phụ (col-side) --%>
+                            <aside class="col-side">
+                                <%-- PT của bạn: DAO chỉ đọc gói thuộc hội viên; ZaloUtil tạo liên kết từ số điện thoại. --%>
+                                <section class="side-card customer-trainers">
+                                    <h2>PT của bạn</h2>
+                                    <c:forEach var="trainer" items="${dashboard.trainers}">
+                                        <article class="customer-trainer">
+                                            <h3><c:out value="${trainer.fullName}" /></h3>
+                                            <c:forEach var="trainerPackage" items="${trainer.packages}">
+                                                <p class="customer-trainer-package"><c:out value="${trainerPackage.packageName}" /> · còn <b>${trainerPackage.remainingSessions == null ? 0 : trainerPackage.remainingSessions} buổi</b></p>
+                                            </c:forEach>
+                                            <div class="customer-trainer-actions">
+                                                <c:choose>
+                                                    <c:when test="${not empty trainer.phoneUrl}">
+                                                        <a class="btn btn-outline btn-sm" href="<c:out value='${trainer.phoneUrl}' />"><i class="fa-solid fa-phone" aria-hidden="true"></i> <c:out value="${trainer.phone}" /></a>
+                                                        <c:if test="${not empty trainer.zaloUrl}">
+                                                            <a class="btn btn-outline btn-sm customer-zalo" href="<c:out value='${trainer.zaloUrl}' />" target="_blank" rel="noopener noreferrer">Zalo ↗</a>
+                                                        </c:if>
+                                                    </c:when>
+                                                    <c:otherwise><p>Chưa có số điện thoại liên hệ.</p></c:otherwise>
+                                                </c:choose>
+                                            </div>
+                                        </article>
+                                    </c:forEach>
+                                    <c:if test="${empty dashboard.trainers}"><p>Bạn chưa có PT phụ trách gói tập.</p></c:if>
+                                </section>
+                                <%-- Lối tắt / Tiện ích --%>
+                                <div class="side-card">
+                                    <span class="section-label">Lối tắt</span>
+                                    <div class="stack-3"
+                                         style="margin-top: var(--space-3);">
+                                        <a class="btn btn-outline btn-sm btn-block"
+                                           href="${pageContext.request.contextPath}/customer/training-plans">
+                                            <i
+                                                class="fa-solid fa-clipboard-list"></i>
+                                            Xem giáo án của tôi
+                                        </a>
+                                        <a class="btn btn-ghost btn-sm btn-block"
+                                           href="${pageContext.request.contextPath}/customer/feedback">
+                                            <i class="fa-solid fa-inbox"></i>
+                                            Gửi phản ánh góp ý
+                                        </a>
+                                    </div>
+                                </div>
+                            </aside>
+                        </div>
                     </c:if>
 
                 </main>
             </div>
         </div>
 
+        <script src="${pageContext.request.contextPath}/js/pages/customer/dashboard.js?v=20261031-compact" defer></script>
     </body>
 
 </html>

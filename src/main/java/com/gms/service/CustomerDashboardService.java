@@ -161,6 +161,11 @@ public class CustomerDashboardService {
                     unreadCount,
                     membershipCardState);
 
+            // Lịch 7 ngày độc lập với TOP 5 buổi sắp tới; mỗi ngày có danh sách riêng, kể cả ngày trống.
+            List<UpcomingSessionRow> weekSessions = dashboardDAO.findWeekSessions(customerId, now);
+            view.setScheduleDays(buildScheduleDays(now.toLocalDate(), weekSessions));
+            view.setTrainers(groupTrainerPackages(dashboardDAO.findTrainers(customerId), subscriptions));
+
             // Thẻ Gói tập: hiện ô "Đổi ngày" nếu gói còn đổi được. Lỗi ở đây chỉ ẩn ô, không hỏng Dashboard.
             SubscriptionRow activeMembership = view.getActiveMembership();
             if (activeMembership != null && "Membership".equals(activeMembership.getSubscriptionType())) {
@@ -180,6 +185,48 @@ public class CustomerDashboardService {
             e.printStackTrace();
             return ServiceResult.fail(Messages.MSG04_SYSTEM_BUSY);
         }
+    }
+
+    /** Gom một thẻ cho mỗi PT; gắn đúng gói theo ID, không ghép theo tên người có thể trùng. */
+    List<CustomerDashboardView.TrainerContact> groupTrainerPackages(
+            List<CustomerDashboardView.TrainerContact> trainerRows, List<SubscriptionRow> subscriptions) {
+        List<CustomerDashboardView.TrainerContact> trainers = new ArrayList<>();
+        for (CustomerDashboardView.TrainerContact trainerRow : trainerRows) {
+            CustomerDashboardView.TrainerContact selectedTrainer = null;
+            for (CustomerDashboardView.TrainerContact trainer : trainers) {
+                if (trainer.getEmployeeId() == trainerRow.getEmployeeId()) {
+                    selectedTrainer = trainer;
+                    break;
+                }
+            }
+            if (selectedTrainer == null) {
+                selectedTrainer = trainerRow;
+                trainers.add(selectedTrainer);
+            }
+            for (SubscriptionRow subscription : subscriptions) {
+                if (subscription.getSubscriptionId() == trainerRow.getSubscriptionId()) {
+                    selectedTrainer.getPackages().add(subscription);
+                    break;
+                }
+            }
+        }
+        return trainers;
+    }
+
+    /** Service tạo 7 nhóm ngày; JSP chỉ đọc, không tự lọc buổi hoặc gọi database. */
+    List<CustomerDashboardView.ScheduleDay> buildScheduleDays(LocalDate today, List<UpcomingSessionRow> weekSessions) {
+        List<CustomerDashboardView.ScheduleDay> scheduleDays = new ArrayList<>();
+        for (int dayIndex = 0; dayIndex < 7; dayIndex++) {
+            LocalDate date = today.plusDays(dayIndex);
+            List<UpcomingSessionRow> sessionsOfDay = new ArrayList<>();
+            for (UpcomingSessionRow session : weekSessions) {
+                if (date.equals(session.getSlotDate())) {
+                    sessionsOfDay.add(session);
+                }
+            }
+            scheduleDays.add(new CustomerDashboardView.ScheduleDay(date, dayIndex == 0, sessionsOfDay));
+        }
+        return scheduleDays;
     }
 
     // ===== Trạng thái thẻ gói tập =====

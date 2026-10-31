@@ -16,12 +16,78 @@ import java.util.List;
  *   Bảng đọc: Customers + Persons (hồ sơ), Subscriptions (+ tên gói, FreezeRecords khi bảo lưu),
  *             Sessions + TimeSlots + Persons (5 buổi PT sắp tới). Banner do Service tính từ các dữ liệu trên.
  *
- * Thiết kế bất biến (immutable): tất cả field lấy từ DB qua Service, không có setter.
+ * DAO đọc dữ liệu nền; Service gắn thêm lịch tuần, PT và bộ chọn ngày trước khi JSP hiển thị.
  * DAO chỉ đọc trạng thái đang lưu; Dashboard không tự tính lại trạng thái (GBR-14).
  *
  * @author Nguyen Tuan Minh
  */
 public class CustomerDashboardView {
+
+    // Service tạo đủ 7 ngày; DAO đọc PT từ các gói thuộc hội viên đang đăng nhập.
+    private List<ScheduleDay> scheduleDays = List.of();
+    private List<TrainerContact> trainers = List.of();
+
+    public List<ScheduleDay> getScheduleDays() { return scheduleDays; }
+    public void setScheduleDays(List<ScheduleDay> scheduleDays) { this.scheduleDays = scheduleDays; }
+    public List<TrainerContact> getTrainers() { return trainers; }
+    public void setTrainers(List<TrainerContact> trainers) { this.trainers = trainers; }
+
+    /** Một ngày lịch PT: Service gom từ các buổi DAO đọc; JSP hiển thị và JS chọn ngày. */
+    public static class ScheduleDay {
+        private final LocalDate date;
+        private final boolean isToday;
+        private final List<UpcomingSessionRow> sessions;
+
+        public ScheduleDay(LocalDate date, boolean isToday, List<UpcomingSessionRow> sessions) {
+            this.date = date;
+            this.isToday = isToday;
+            this.sessions = sessions;
+        }
+
+        public LocalDate getDate() { return date; }
+        public String getDateLabel() {
+            return date.format(java.time.format.DateTimeFormatter.ofPattern("dd/MM"));
+        }
+        public boolean isToday() { return isToday; }
+        public List<UpcomingSessionRow> getSessions() { return sessions; }
+        public String getDayLabel() {
+            if (isToday) {
+                return "Hôm nay";
+            }
+            return date.getDayOfWeek().getDisplayName(java.time.format.TextStyle.FULL,
+                    java.util.Locale.forLanguageTag("vi-VN"));
+        }
+    }
+
+    /** DAO đọc một PT phụ trách gói còn hiệu lực; dùng chung ZaloUtil, không gọi API ngoài. */
+    public static class TrainerContact {
+        private final int employeeId;
+        private final String fullName;
+        private final String phone;
+        private final int subscriptionId;
+        // Service gắn các gói của đúng PT bằng SubscriptionId; JSP hiện tên và số buổi còn lại.
+        private final List<SubscriptionRow> packages = new ArrayList<>();
+
+        public TrainerContact(int employeeId, String fullName, String phone, int subscriptionId) {
+            this.employeeId = employeeId;
+            this.fullName = fullName;
+            this.phone = phone;
+            this.subscriptionId = subscriptionId;
+        }
+
+        public int getSubscriptionId() { return subscriptionId; }
+        public List<SubscriptionRow> getPackages() { return packages; }
+        public int getEmployeeId() { return employeeId; }
+        public String getFullName() { return fullName; }
+        public String getPhone() { return phone; }
+        public String getZaloUrl() { return com.gms.util.ZaloUtil.toUrl(phone); }
+        public String getPhoneUrl() {
+            if (phone == null || phone.isBlank()) {
+                return null;
+            }
+            return "tel:" + phone.replaceAll("[^0-9+]", "");
+        }
+    }
 
     // ===== Thông tin hồ sơ (DAO: Customers + Persons) =====
     private final String fullName;         // Persons.FullName

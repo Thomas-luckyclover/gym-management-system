@@ -463,3 +463,130 @@ body.customer-dashboard-page { background: var(--pt-bg); color: var(--pt-text); 
 .customer-dashboard-page .data-row:hover { background: var(--pt-panel-2); }
 .customer-dashboard-page .kpi-bar { background: var(--pt-line-strong); }
 .customer-dashboard-page .kpi-bar i { background: linear-gradient(90deg, var(--brand-aqua), var(--brand-ocean)); }
+
+/* Lịch ngang: dashboard.js/selectScheduleDay đổi .is-active và hidden của nội dung từng ngày. */
+.customer-dashboard-page .cust-hero {
+  margin-bottom: var(--space-5);
+}
+.customer-dashboard-page .customer-week {
+  display: grid;
+  grid-template-columns: repeat(7, minmax(0, 1fr));
+  gap: var(--space-2);
+  margin-bottom: var(--space-4);
+}
+.customer-dashboard-page .customer-day {
+  min-width: 0;
+  display: flex;
+  flex-direction: column;
+  align-items: flex-start;
+  gap: var(--space-2);
+  padding: var(--space-3) var(--space-2);
+  background: var(--color-surface);
+  color: var(--color-text);
+  border: var(--border-width) solid var(--color-border);
+  border-radius: var(--radius-sm);
+  font: inherit;
+  cursor: pointer;
+}
+.customer-dashboard-page .customer-day span {
+  text-transform: uppercase;
+  color: var(--color-text-soft);
+  font-size: var(--font-size-xs);
+}
+.customer-dashboard-page .customer-day b {
+  font-size: var(--font-size-sm);
+}
+.customer-dashboard-page .customer-day.is-active {
+  border-color: var(--color-border);
+  border-bottom: var(--border-width-thick) solid var(--color-primary);
+  background: var(--color-surface);
+}
+.customer-dashboard-page .customer-day:focus-visible {
+  outline: var(--focus-outline-width) solid var(--color-primary);
+  outline-offset: var(--focus-outline-offset);
+}
+.customer-dashboard-page .customer-day-sessions[hidden] {
+  display: none;
+}
+.customer-dashboard-page .customer-schedule-empty {
+  padding: var(--space-4);
+  text-align: center;
+  color: var(--color-text-soft);
+  border: var(--border-width) dashed var(--color-border);
+  border-radius: var(--radius-sm);
+}
+.customer-dashboard-page .customer-trainer {
+  padding-block: var(--space-4);
+  border-bottom: var(--border-width) solid var(--color-border);
+}
+.customer-dashboard-page .customer-trainer:last-child {
+  border-bottom: none;
+}
+.customer-dashboard-page .customer-trainer-actions {
+  display: flex;
+  flex-wrap: wrap;
+  gap: var(--space-2);
+  margin-top: var(--space-3);
+}
+@media (max-width: 768px) {
+  .customer-dashboard-page .customer-week {
+    grid-template-columns: repeat(4, minmax(0, 1fr));
+  }
+}
+
+/* Panel gói: thẻ gọn, không lặp lại các hàng tổng/đã dùng và thanh tiến độ. */
+.customer-dashboard-page .customer-package-grid {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: var(--space-3);
+  margin-bottom: var(--space-4);
+}
+.customer-dashboard-page .customer-package-card {
+  min-width: 0;
+  padding: var(--space-4);
+  border: var(--border-width) solid var(--color-border);
+  border-radius: var(--radius-sm);
+  background: var(--color-surface);
+}
+.customer-dashboard-page .customer-package-card h3 {
+  margin: var(--space-2) 0;
+  font-size: var(--font-size-base);
+}
+.customer-dashboard-page .customer-package-card p,
+.customer-dashboard-page .customer-package-card small,
+.customer-dashboard-page .customer-package-start,
+.customer-dashboard-page .customer-trainer-package {
+  color: var(--color-text-soft);
+  font-size: var(--font-size-sm);
+}
+.customer-dashboard-page .customer-package-balance {
+  display: block;
+  margin-top: var(--space-3);
+  font-size: var(--font-size-xl);
+}
+.customer-dashboard-page .customer-trainer-package {
+  margin-top: var(--space-2);
+}
+.customer-dashboard-page .customer-trainer-actions .customer-zalo {
+  background: var(--brand-lagoon);
+  border-color: var(--brand-lagoon);
+  color: var(--dock-text);
+}
+.customer-dashboard-page .customer-trainer-actions .customer-zalo:hover {
+  background: var(--brand-ocean);
+}
+.customer-dashboard-page .customer-schedule-empty .empty-state {
+  margin: 0;
+  padding: var(--space-4);
+  background: transparent;
+  border: none;
+}
+
+.customer-dashboard-page .customer-day.is-active span {
+  color: var(--color-primary);
+}
+@media (max-width: 768px) {
+  .customer-dashboard-page .customer-package-grid {
+    grid-template-columns: minmax(0, 1fr);
+  }
+}
