@@ -52,8 +52,8 @@
 <script src="${pageContext.request.contextPath}/js/icons.js?v=3" defer></script>
 <%-- Chuông thông báo dùng chung cho mọi vai trò đăng nhập có quyền nhận thông báo (SRS 11.2) --%>
 <c:if test="${not empty sessionScope.role or not empty sessionScope.accountId or not empty sessionScope.account}">
-    <link rel="stylesheet" href="${pageContext.request.contextPath}/css/pages/auth/notification-bell.css?v=20261027">
-    <script src="${pageContext.request.contextPath}/js/pages/auth/notification-bell.js?v=20261027" defer></script>
+    <link rel="stylesheet" href="${pageContext.request.contextPath}/css/pages/auth/notification-bell.css?v=20261028detail">
+    <script src="${pageContext.request.contextPath}/js/pages/auth/notification-bell.js?v=20261028detail" defer></script>
 </c:if>
 <%-- Nạp nền cho cả URL Servlet lẫn đường dẫn JSP sau khi forward, không tác động role khác. --%>
 <c:if test="${pageContext.request.requestURI.contains('/customer/') or pageContext.request.requestURI.contains('/pt/')}">
