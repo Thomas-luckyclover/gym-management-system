@@ -1,5 +1,6 @@
 package com.gms.servlet.staff;
 
+import com.gms.constant.Messages;
 import com.gms.constant.SessionKey;
 import com.gms.dto.ServiceResult;
 import com.gms.dto.StaffLeaveFormView;
@@ -84,7 +85,7 @@ public class LeaveRequestFormServlet extends HttpServlet {
         // B1.1: kiểm tra CSRF token chống giả mạo request
         if (!RequestUtil.isValidCsrfToken(request)) {
             RequestUtil.setFlashToast(request, "danger",
-                    "Phiên làm việc không hợp lệ hoặc đã hết hạn. Vui lòng thử lại.");
+                    Messages.MSG214_FORM_SESSION_EXPIRED);
             RequestUtil.redirect(request, response, RequestUtil.getPathWithinApp(request));
             return;
         }
@@ -96,7 +97,7 @@ public class LeaveRequestFormServlet extends HttpServlet {
             ServiceResult<Void> withdrawResult = staffLeaveService.withdrawRequest(accountId, leaveRequestId);
             if (withdrawResult.isSuccess()) {
                 RequestUtil.setFlashToast(request, "success",
-                        "Đã rút đơn xin nghỉ phép thành công.");
+                        Messages.MSG215_LEAVE_WITHDRAWN);
             } else {
                 RequestUtil.setFlashToast(request, "danger", withdrawResult.getMessage());
             }
@@ -151,7 +152,7 @@ public class LeaveRequestFormServlet extends HttpServlet {
 
         // B5: nếu thành công, gắn flash toast và redirect (PRG pattern) về lại trang hiện tại
         RequestUtil.setFlashToast(request, "success",
-                "Đã gửi yêu cầu nghỉ. Xem kết quả từng phần trong Đơn đã nộp.");
+                Messages.MSG216_LEAVE_SUBMITTED);
         RequestUtil.redirect(request, response, RequestUtil.getPathWithinApp(request));
     }
 }

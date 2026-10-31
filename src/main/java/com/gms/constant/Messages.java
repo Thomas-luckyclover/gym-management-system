@@ -572,6 +572,92 @@ public final class Messages {
     /** Lưu ngày bắt đầu lỗi. */
     public static final String MSG188_START_DATE_SAVE_FAILED = "Chưa lưu được ngày bắt đầu. Vui lòng thử lại.";
 
+    // ===== 6.3 Đơn nghỉ phép (StaffLeaveService, LeaveRequestService, LeaveRequestFormServlet, LeaveRequestReviewServlet) =====
+
+    /** Nộp đơn: lý do sai độ dài. */
+    public static final String MSG189_LEAVE_REASON_LENGTH = "Lý do nghỉ phải từ 5 đến 500 ký tự.";
+
+    /** Nhân viên trong session không còn khớp DB. */
+    public static final String MSG190_STAFF_INFO_CHANGED_RELOGIN = "Thông tin nhân viên đã thay đổi. Vui lòng đăng nhập lại.";
+
+    /** Đã có đơn chưa bị từ chối cùng ngày, ca. */
+    public static final String MSG191_LEAVE_DUPLICATE = "Bạn đã có đơn nghỉ trùng ngày và ca này.";
+
+    /** Quá giờ chốt nộp đơn. */
+    public static final String MSG192_LEAVE_TOO_LATE_ASK_MANAGER = "Đã quá hạn gửi đơn. Vui lòng báo quản lý.";
+
+    /** Phép năm còn ít hơn số ngày xin. */
+    public static final String MSG193_LEAVE_ANNUAL_NOT_ENOUGH = "Không đủ phép năm. Xem phương án chuyển phần vượt sang không lương và xác nhận trước khi gửi.";
+
+    /** Quỹ phép đổi giữa lúc xem và lúc gửi. */
+    public static final String MSG194_LEAVE_QUOTA_CHANGED = "Quỹ phép đã thay đổi. Vui lòng xem lại số ngày và xác nhận phương án mới.";
+
+    /** Thiếu tham số quỹ phép năm. */
+    public static final String MSG195_LEAVE_QUOTA_NOT_CONFIGURED = "Chưa cấu hình quỹ phép năm. Vui lòng liên hệ quản lý.";
+
+    /** Không có nhân viên Working. */
+    public static final String MSG196_WORKING_EMPLOYEE_NOT_FOUND = "Không tìm thấy nhân viên đang làm việc.";
+
+    /** Chưa chọn loại nghỉ. */
+    public static final String MSG197_LEAVE_TYPE_REQUIRED = "Vui lòng chọn loại nghỉ.";
+
+    /** Loại nghỉ gửi lên không hỗ trợ. */
+    public static final String MSG198_LEAVE_TYPE_UNSUPPORTED = "Chỉ hỗ trợ nghỉ phép năm hoặc nghỉ không lương.";
+
+    /** Chưa chọn ca nghỉ. */
+    public static final String MSG199_LEAVE_SHIFT_REQUIRED = "Vui lòng chọn ca nghỉ.";
+
+    /** Chưa chọn ngày nghỉ. */
+    public static final String MSG200_LEAVE_DATE_REQUIRED = "Vui lòng chọn ngày nghỉ.";
+
+    /** Khoảng ngày nghỉ sai. */
+    public static final String MSG201_LEAVE_RANGE_RULE = "Chọn ngày kết thúc từ ngày bắt đầu, tối đa 31 ngày trong cùng năm.";
+
+    /** Đơn nhiều ngày nhưng chọn nửa ca. */
+    public static final String MSG202_LEAVE_MULTI_DAY_FULL_DAY = "Đơn nhiều ngày phải chọn Cả ngày.";
+
+    /** Ngày nghỉ là hôm nay hoặc đã qua. */
+    public static final String MSG203_LEAVE_DATE_AFTER_TODAY = "Ngày nghỉ phải sau ngày hôm nay.";
+
+    /** Mã đơn nghỉ sai. */
+    public static final String MSG204_LEAVE_ID_INVALID = "Mã đơn không hợp lệ.";
+
+    /** Rút đơn không được. */
+    public static final String MSG205_LEAVE_WITHDRAW_FAILED = "Không thể rút đơn (đơn không tồn tại, đã được xử lý hoặc không phải của bạn).";
+
+    /** Bộ lọc ngày ngược. */
+    public static final String MSG206_LEAVE_FILTER_DATE_ORDER = "Từ ngày phải trước hoặc trùng Đến ngày.";
+
+    /** Duyệt hàng loạt: số đơn ngoài 1–50. */
+    public static final String MSG207_LEAVE_BULK_COUNT = "Chọn từ 1 đến 50 đơn để duyệt.";
+
+    /** Danh sách mã đơn gửi lên hỏng. */
+    public static final String MSG208_LEAVE_LIST_INVALID_RELOAD = "Danh sách đơn không hợp lệ. Vui lòng tải lại trang.";
+
+    /** Không phải Quản lý. */
+    public static final String MSG209_LEAVE_NO_PERMISSION = "Bạn không có quyền xử lý đơn nghỉ phép.";
+
+    /** Duyệt sau hạn: thiếu xác nhận / lý do. */
+    public static final String MSG210_LEAVE_LATE_APPROVAL_RULE = "Duyệt muộn cần xác nhận nhân viên nghỉ đúng ngày/ca và nhập lý do từ 5 đến 500 ký tự.";
+
+    /** Đơn đã được người khác duyệt / từ chối. */
+    public static final String MSG211_LEAVE_ALREADY_HANDLED = "Đơn này đã được xử lý bởi người khác.";
+
+    /** Từ chối: lý do sai độ dài. */
+    public static final String MSG212_LEAVE_REJECT_REASON_LENGTH = "Lý do từ chối phải từ 5 đến 500 ký tự.";
+
+    /** Đơn đổi trạng thái giữa lúc xem và lúc bấm. */
+    public static final String MSG213_LEAVE_STATUS_CHANGED_RELOAD = "Đơn này đã thay đổi trạng thái. Vui lòng tải lại trang.";
+
+    /** CSRF token sai / hết hạn khi gửi form. */
+    public static final String MSG214_FORM_SESSION_EXPIRED = "Phiên làm việc không hợp lệ hoặc đã hết hạn. Vui lòng thử lại.";
+
+    /** Rút đơn xong. */
+    public static final String MSG215_LEAVE_WITHDRAWN = "Đã rút đơn xin nghỉ phép thành công.";
+
+    /** Nộp đơn xong. */
+    public static final String MSG216_LEAVE_SUBMITTED = "Đã gửi yêu cầu nghỉ. Xem kết quả từng phần trong Đơn đã nộp.";
+
     private Messages() {
     }
 }
