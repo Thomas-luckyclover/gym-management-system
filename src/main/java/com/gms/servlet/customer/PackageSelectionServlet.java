@@ -1,5 +1,6 @@
 package com.gms.servlet.customer;
 
+import com.gms.constant.Messages;
 import com.gms.constant.SessionKey;
 import com.gms.dto.CustomerDashboardView;
 import com.gms.dto.PackageSearchCriteria;
@@ -116,7 +117,7 @@ public class PackageSelectionServlet extends HttpServlet {
         }
 
         // B3: redirect sau POST để refresh trang không tạo thêm đơn.
-        RequestUtil.setFlashToast(request, "success", "Đã tạo đơn chờ thanh toán.");
+        RequestUtil.setFlashToast(request, "success", Messages.MSG178_PENDING_ORDER_CREATED);
         RequestUtil.redirect(request, response, "/customer/checkout?order=" + result.getData());
     }
 

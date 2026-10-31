@@ -417,6 +417,161 @@ public final class Messages {
     /** Thu tiền tại quầy xong. %s = số tiền, mã đơn. */
     public static final String MSG137_COUNTER_PAID = "Đã thu %s · Đơn %s hoàn tất!";
 
+    // ===== 6.2 Mua gói online, thanh toán, hoàn tiền (PaymentService, PaymentCallbackService, ManagerTransactionService, TransactionHistoryService, SubscriptionStartDateService) =====
+
+    /** Mua online: mã gói sai. */
+    public static final String MSG138_PACKAGE_INVALID_CHOOSE_AGAIN = "Gói tập không hợp lệ. Vui lòng chọn lại.";
+
+    /** Mua online: tài khoản không có hồ sơ khách còn hiệu lực. */
+    public static final String MSG139_NO_ACTIVE_CUSTOMER_PROFILE = "Không tìm thấy hồ sơ khách hàng còn hiệu lực.";
+
+    /** Mua online khi hồ sơ đang đóng băng. */
+    public static final String MSG140_PROFILE_FROZEN_CANNOT_BUY = "Hồ sơ đang đóng băng. Bạn chưa thể mua gói tập.";
+
+    /** Gói đã ngừng bán / chỉ bán tại quầy. */
+    public static final String MSG141_PACKAGE_NOT_SOLD_ONLINE = "Gói này không còn bán hoặc không hỗ trợ mua online.";
+
+    /** Mã đơn trên URL sai. */
+    public static final String MSG142_ORDER_CODE_INVALID = "Mã đơn không hợp lệ.";
+
+    /** Đơn không có hoặc không thuộc khách đang đăng nhập. */
+    public static final String MSG143_ORDER_NOT_FOUND = "Không tìm thấy đơn hàng của bạn.";
+
+    /** Thanh toán khi hồ sơ không dùng được. */
+    public static final String MSG144_PROFILE_INACTIVE_OR_FROZEN = "Hồ sơ không còn hiệu lực hoặc đang đóng băng.";
+
+    /** Không còn đơn Pending để áp mã / thanh toán. */
+    public static final String MSG145_PENDING_ORDER_NOT_FOUND = "Không tìm thấy đơn chờ thanh toán của bạn.";
+
+    /** Quá hạn thanh toán online. */
+    public static final String MSG146_ORDER_PAYMENT_EXPIRED = "Đơn đã hết hạn thanh toán. Vui lòng tạo đơn mới.";
+
+    /** Bấm gỡ mã khi đơn chưa có mã. */
+    public static final String MSG147_ORDER_HAS_NO_VOUCHER = "Đơn chưa áp dụng voucher.";
+
+    /** Gỡ mã giảm giá xong. */
+    public static final String MSG148_VOUCHER_REMOVED = "Đã gỡ voucher.";
+
+    /** Áp mã giảm giá xong. */
+    public static final String MSG149_VOUCHER_APPLIED = "Đã áp dụng voucher.";
+
+    /** Đã có giao dịch Pending cho đơn. */
+    public static final String MSG150_PAYMENT_IN_PROGRESS = "Đơn đang có giao dịch thanh toán xử lý. Không tạo thêm giao dịch.";
+
+    /** Giảm giá làm đơn còn 0đ. */
+    public static final String MSG151_VNPAY_AMOUNT_ZERO = "VNPay yêu cầu số tiền lớn hơn 0đ. Vui lòng gỡ hoặc đổi mã giảm giá.";
+
+    /** Tạo link VNPay lỗi. */
+    public static final String MSG152_VNPAY_UNAVAILABLE = "Chưa mở được VNPay. Vui lòng kiểm tra cấu hình merchant và kết nối hệ thống.";
+
+    /** Không đọc được tài khoản trong session. */
+    public static final String MSG153_SESSION_INVALID = "Phiên đăng nhập không hợp lệ.";
+
+    /** Chữ ký VNPay trả về không khớp. */
+    public static final String MSG154_VNPAY_SIGNATURE_INVALID = "Không xác minh được dữ liệu trả về từ VNPay.";
+
+    /** Mã lần thanh toán trên URL sai. */
+    public static final String MSG155_PAYMENT_ATTEMPT_INVALID = "Mã lần thanh toán không hợp lệ.";
+
+    /** Không có giao dịch này. */
+    public static final String MSG156_TRANSACTION_NOT_FOUND = "Không tìm thấy giao dịch.";
+
+    /** Đọc kết quả thanh toán lỗi. */
+    public static final String MSG157_PAYMENT_RESULT_UNREADABLE = "Chưa đọc được kết quả thanh toán. Vui lòng thử lại.";
+
+    /** Mã giao dịch trên URL / form sai. */
+    public static final String MSG158_TRANSACTION_ID_INVALID = "Mã giao dịch không hợp lệ.";
+
+    /** Tiêu đề màn kết quả: giao dịch cần hoàn tiền. */
+    public static final String MSG159_RESULT_NEEDS_RECONCILE_TITLE = "Giao dịch cần đối soát";
+
+    /** Nội dung màn kết quả: giao dịch cần hoàn tiền. */
+    public static final String MSG160_RESULT_NEEDS_RECONCILE_TEXT = "Giao dịch đã được đánh dấu cần hoàn tiền. Vui lòng liên hệ lễ tân.";
+
+    /** Tiêu đề màn kết quả: đơn đã hủy. */
+    public static final String MSG161_RESULT_CANCELLED_TITLE = "Đơn hàng đã hủy";
+
+    /** Nội dung màn kết quả: đơn đã hủy. */
+    public static final String MSG162_RESULT_CANCELLED_TEXT = "Bạn có thể quay lại chọn gói để tạo đơn mới.";
+
+    /** Tiêu đề màn kết quả / thông báo: thanh toán lỗi. */
+    public static final String MSG163_RESULT_FAILED_TITLE = "Thanh toán chưa thành công";
+
+    /** Thanh toán lỗi, còn thanh toán lại được. */
+    public static final String MSG164_RESULT_FAILED_RETRY = "Bạn có thể thanh toán lại khi đơn còn hạn.";
+
+    /** Thanh toán lỗi, không thanh toán lại được. */
+    public static final String MSG165_RESULT_FAILED_NO_RETRY = "Đơn hiện không được thanh toán lại.";
+
+    /** Thông báo cho khách khi thanh toán lỗi. %s = mã đơn. */
+    public static final String MSG166_NOTIFY_PAYMENT_FAILED_RETRY = "Bạn có thể thanh toán lại đơn %s khi đơn còn hạn.";
+
+    /** Tiêu đề màn kết quả: chờ VNPay xác nhận. */
+    public static final String MSG167_RESULT_PENDING_TITLE = "Đang chờ xác nhận thanh toán";
+
+    /** Nội dung màn kết quả: chờ VNPay xác nhận. */
+    public static final String MSG168_RESULT_PENDING_TEXT = "Hệ thống đang tự xác minh kết quả với VNPay. Trang sẽ tự cập nhật.";
+
+    /** Bộ lọc ngày: từ ngày sau đến ngày. */
+    public static final String MSG169_DATE_RANGE_REVERSED = "Ngày bắt đầu không được lớn hơn ngày kết thúc.";
+
+    /** Mã đơn hàng nhập vào sai. */
+    public static final String MSG170_ORDER_CODE_INVALID_FULL = "Mã đơn hàng không hợp lệ.";
+
+    /** Xác nhận hoàn tiền: ghi chú sai độ dài. */
+    public static final String MSG171_REFUND_NOTE_LENGTH = "Ghi chú hoàn tiền phải từ 5 đến 500 ký tự (ghi rõ số TK hoặc mã giao dịch hoàn).";
+
+    /** Không phải Quản lý mà xác nhận hoàn tiền. */
+    public static final String MSG172_REFUND_NO_PERMISSION = "Bạn không có quyền thực hiện xác nhận hoàn tiền.";
+
+    /** Giao dịch không ở trạng thái cần hoàn. */
+    public static final String MSG173_REFUND_NOT_APPLICABLE = "Giao dịch không tồn tại, không yêu cầu hoàn tiền hoặc đã được hoàn trước đó.";
+
+    /** Xác nhận hoàn tiền xong. */
+    public static final String MSG174_REFUND_CONFIRMED = "Đã xác nhận hoàn tiền thành công.";
+
+    /** ?page= sai. */
+    public static final String MSG175_PAGE_NUMBER_INVALID = "Số trang không hợp lệ.";
+
+    /** ?status= sai. */
+    public static final String MSG176_STATUS_FILTER_INVALID = "Trạng thái lọc không hợp lệ.";
+
+    /** Đọc lịch sử giao dịch lỗi. */
+    public static final String MSG177_TRANSACTION_HISTORY_LOAD_FAILED = "Chưa tải được lịch sử giao dịch. Vui lòng thử lại.";
+
+    /** Khách tạo đơn mua online xong. */
+    public static final String MSG178_PENDING_ORDER_CREATED = "Đã tạo đơn chờ thanh toán.";
+
+    /** Mã gói trên URL sai. */
+    public static final String MSG179_PACKAGE_ID_INVALID = "Mã gói không hợp lệ.";
+
+    /** Đọc gói lỗi. */
+    public static final String MSG180_PACKAGE_LOAD_FAILED = "Chưa đọc được thông tin gói. Vui lòng thử lại.";
+
+    /** Chưa chọn ngày bắt đầu gói. */
+    public static final String MSG181_START_DATE_REQUIRED = "Vui lòng chọn ngày bắt đầu.";
+
+    /** Hồ sơ khách không còn hiệu lực. */
+    public static final String MSG182_PROFILE_INACTIVE = "Hồ sơ không còn hiệu lực.";
+
+    /** Gói không có / không thuộc khách. */
+    public static final String MSG183_SUBSCRIPTION_NOT_FOUND = "Không tìm thấy gói tập của bạn.";
+
+    /** Chọn lại đúng ngày cũ. */
+    public static final String MSG184_START_DATE_UNCHANGED = "Ngày bắt đầu không thay đổi.";
+
+    /** Ngày bắt đầu ngoài khoảng cho phép. %s = từ ngày, đến ngày. */
+    public static final String MSG185_START_DATE_RANGE = "Chỉ được chọn ngày bắt đầu từ %s đến %s.";
+
+    /** Gói bị đổi bởi phiên khác. */
+    public static final String MSG186_SUBSCRIPTION_CHANGED_RELOAD = "Gói vừa thay đổi, vui lòng tải lại trang và thử lại.";
+
+    /** Đổi ngày bắt đầu xong. */
+    public static final String MSG187_START_DATE_SAVED = "Đã lưu ngày bắt đầu.";
+
+    /** Lưu ngày bắt đầu lỗi. */
+    public static final String MSG188_START_DATE_SAVE_FAILED = "Chưa lưu được ngày bắt đầu. Vui lòng thử lại.";
+
     private Messages() {
     }
 }

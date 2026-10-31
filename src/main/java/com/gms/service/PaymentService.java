@@ -95,7 +95,7 @@ public class PaymentService {
     public ServiceResult<Integer> createOnlineOrder(int accountId, Integer packageId) {
         // B1: kiểm đầu vào trước khi mở kết nối; không nhận giá/customerId từ form.
         if (accountId <= 0 || packageId == null || packageId <= 0) {
-            return ServiceResult.fail("Gói tập không hợp lệ. Vui lòng chọn lại.");
+            return ServiceResult.fail(Messages.MSG138_PACKAGE_INVALID_CHOOSE_AGAIN);
         }
 
         try (Connection conn = openConnection()) {
@@ -105,11 +105,11 @@ public class PaymentService {
                 PaymentCustomerView customer = paymentDAO.findCustomerForPurchase(conn, accountId);
                 if (customer == null) {
                     conn.rollback();
-                    return ServiceResult.fail("Không tìm thấy hồ sơ khách hàng còn hiệu lực.");
+                    return ServiceResult.fail(Messages.MSG139_NO_ACTIVE_CUSTOMER_PROFILE);
                 }
                 if (customer.isFrozen()) {
                     conn.rollback();
-                    return ServiceResult.fail("Hồ sơ đang đóng băng. Bạn chưa thể mua gói tập.");
+                    return ServiceResult.fail(Messages.MSG140_PROFILE_FROZEN_CANNOT_BUY);
                 }
 
                 // B3: chỉ mua gói còn bán; PT/buổi lẻ có luồng đặt riêng.
@@ -118,7 +118,7 @@ public class PaymentService {
                         || pkg.getPackageType() == Package.Type.DAY_PASS);
                 if (pkg == null || !pkg.isActive() || !isOnlineType || pkg.getPrice() <= 0) {
                     conn.rollback();
-                    return ServiceResult.fail("Gói này không còn bán hoặc không hỗ trợ mua online.");
+                    return ServiceResult.fail(Messages.MSG141_PACKAGE_NOT_SOLD_ONLINE);
                 }
                 int dueMinutes = configService.getInt(SystemConfigService.PAYMENT_DUE_MINUTES);
                 int vatRate = configService.getInt(SystemConfigService.VAT_PERCENT);
@@ -186,12 +186,12 @@ public class PaymentService {
      */
     public ServiceResult<Order> getOwnedOnlineOrder(int accountId, Integer orderId) {
         if (accountId <= 0 || orderId == null || orderId <= 0) {
-            return ServiceResult.fail("Mã đơn không hợp lệ.");
+            return ServiceResult.fail(Messages.MSG142_ORDER_CODE_INVALID);
         }
         try (Connection conn = openConnection()) {
             Order order = orderDAO.findOnlineByIdAndAccount(conn, accountId, orderId);
             if (order == null) {
-                return ServiceResult.fail("Không tìm thấy đơn hàng của bạn.");
+                return ServiceResult.fail(Messages.MSG143_ORDER_NOT_FOUND);
             }
             return ServiceResult.ok(order);
         } catch (SQLException e) {
@@ -205,12 +205,12 @@ public class PaymentService {
      */
     public ServiceResult<CheckoutView> getCheckoutView(int accountId, Integer orderId) {
         if (accountId <= 0 || orderId == null || orderId <= 0) {
-            return ServiceResult.fail("Mã đơn không hợp lệ.");
+            return ServiceResult.fail(Messages.MSG142_ORDER_CODE_INVALID);
         }
         try (Connection conn = openConnection()) {
             Order order = orderDAO.findOnlineByIdAndAccount(conn, accountId, orderId);
             if (order == null) {
-                return ServiceResult.fail("Không tìm thấy đơn hàng của bạn.");
+                return ServiceResult.fail(Messages.MSG143_ORDER_NOT_FOUND);
             }
             String code = voucherDAO.findCodeById(conn, order.getVoucherId());
             LocalDateTime now = DateTimeUtil.now();
@@ -258,7 +258,7 @@ public class PaymentService {
     public ServiceResult<Void> applyVoucher(int accountId, Integer orderId, String rawCode) {
         String code = rawCode == null ? "" : rawCode.trim().toUpperCase(Locale.ROOT);
         if (!ValidationUtil.isValidVoucherCode(code)) {
-            return ServiceResult.failField("voucherCode", "Mã voucher phải có 4–20 ký tự chữ A–Z hoặc số.");
+            return ServiceResult.failField("voucherCode", Messages.MSG124_VOUCHER_CODE_FORMAT);
         }
         return changeVoucher(accountId, orderId, code, false);
     }
@@ -277,7 +277,7 @@ public class PaymentService {
     private ServiceResult<Void> changeVoucher(int accountId, Integer orderId, String code, boolean remove) {
         // B1: kiểm ID trước kết nối; danh tính không lấy từ hidden input.
         if (accountId <= 0 || orderId == null || orderId <= 0) {
-            return ServiceResult.fail("Mã đơn không hợp lệ.");
+            return ServiceResult.fail(Messages.MSG142_ORDER_CODE_INVALID);
         }
         try (Connection conn = openConnection()) {
             conn.setAutoCommit(false);
@@ -286,17 +286,17 @@ public class PaymentService {
                 PaymentCustomerView customer = paymentDAO.findCustomerForPurchase(conn, accountId);
                 if (customer == null || customer.isFrozen()) {
                     conn.rollback();
-                    return ServiceResult.fail("Hồ sơ không còn hiệu lực hoặc đang đóng băng.");
+                    return ServiceResult.fail(Messages.MSG144_PROFILE_INACTIVE_OR_FROZEN);
                 }
                 Order order = orderDAO.findOnlineForUpdate(conn, accountId, orderId);
                 LocalDateTime now = DateTimeUtil.now();
                 if (order == null || !order.isPending()) {
                     conn.rollback();
-                    return ServiceResult.fail("Không tìm thấy đơn chờ thanh toán của bạn.");
+                    return ServiceResult.fail(Messages.MSG145_PENDING_ORDER_NOT_FOUND);
                 }
                 if (order.getPaymentDueAt() == null || !now.isBefore(order.getPaymentDueAt())) {
                     conn.rollback();
-                    return ServiceResult.fail("Đơn đã hết hạn thanh toán. Vui lòng tạo đơn mới.");
+                    return ServiceResult.fail(Messages.MSG146_ORDER_PAYMENT_EXPIRED);
                 }
                 if (paymentDAO.hasPendingTransaction(conn, orderId)) {
                     conn.rollback();
@@ -326,7 +326,7 @@ public class PaymentService {
                     }
                 } else if (oldVoucherId == null) {
                     conn.commit();
-                    return ServiceResult.ok(null, "Đơn chưa áp dụng voucher.");
+                    return ServiceResult.ok(null, Messages.MSG147_ORDER_HAS_NO_VOUCHER);
                 }
 
                 // B4: giữ lượt mới và trả lượt cũ; rowsAffected sai thì rollback tất cả.
@@ -358,7 +358,7 @@ public class PaymentService {
                         oldVoucherId == null ? null : oldVoucherId.toString(),
                         order.getVoucherId() == null ? null : order.getVoucherId().toString(), null);
                 conn.commit();
-                return ServiceResult.ok(null, remove ? "Đã gỡ voucher." : "Đã áp dụng voucher.");
+                return ServiceResult.ok(null, remove ? Messages.MSG148_VOUCHER_REMOVED : Messages.MSG149_VOUCHER_APPLIED);
             } catch (SQLException | RuntimeException e) {
                 conn.rollback();
                 throw e;
@@ -425,7 +425,7 @@ public class PaymentService {
 
         // B1: kiểm tra ID trước khi mở kết nối.
         if (accountId <= 0 || orderId == null || orderId <= 0) {
-            return ServiceResult.fail("Mã đơn không hợp lệ.");
+            return ServiceResult.fail(Messages.MSG142_ORDER_CODE_INVALID);
         }
 
         try (Connection conn = openConnection()) {
@@ -439,7 +439,7 @@ public class PaymentService {
                 if (customer == null || customer.isFrozen()) {
                     conn.rollback();
                     return ServiceResult.fail(
-                            "Hồ sơ không còn hiệu lực hoặc đang đóng băng.");
+                            Messages.MSG144_PROFILE_INACTIVE_OR_FROZEN);
                 }
 
                 // B3: đọc và khóa đơn thuộc tài khoản hiện tại.
@@ -451,21 +451,20 @@ public class PaymentService {
                 if (order == null || !order.isPending()) {
                     conn.rollback();
                     return ServiceResult.fail(
-                            "Không tìm thấy đơn chờ thanh toán của bạn.");
+                            Messages.MSG145_PENDING_ORDER_NOT_FOUND);
                 }
 
                 if (order.getPaymentDueAt() == null
                         || !now.isBefore(order.getPaymentDueAt())) {
                     conn.rollback();
                     return ServiceResult.fail(
-                            "Đơn đã hết hạn thanh toán. Vui lòng tạo đơn mới.");
+                            Messages.MSG146_ORDER_PAYMENT_EXPIRED);
                 }
 
                 if (transactionDAO.hasPending(conn, orderId)) {
                     conn.rollback();
                     return ServiceResult.fail(
-                            "Đơn đang có giao dịch thanh toán xử lý. "
-                            + "Không tạo thêm giao dịch.");
+                            Messages.MSG150_PAYMENT_IN_PROGRESS);
                 }
 
                 long amount = order.getFinalAmount();
@@ -473,8 +472,7 @@ public class PaymentService {
                 if (amount <= 0) {
                     conn.rollback();
                     return ServiceResult.fail(
-                            "VNPay yêu cầu số tiền lớn hơn 0đ. "
-                            + "Vui lòng gỡ hoặc đổi mã giảm giá.");
+                            Messages.MSG151_VNPAY_AMOUNT_ZERO);
                 }
 
                 // B4: hạn link không vượt quá hạn thanh toán của đơn.
@@ -544,8 +542,7 @@ public class PaymentService {
                     + e.getClass().getSimpleName());
 
             return ServiceResult.fail(
-                    "Chưa mở được VNPay. Vui lòng kiểm tra cấu hình "
-                    + "merchant và kết nối hệ thống.");
+                    Messages.MSG152_VNPAY_UNAVAILABLE);
         }
     }
 

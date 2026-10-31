@@ -1,5 +1,6 @@
 package com.gms.service;
 
+import com.gms.constant.Messages;
 import com.gms.constant.Role;
 import com.gms.dao.OrderDAO;
 import com.gms.dao.PackageDAO;
@@ -56,7 +57,7 @@ public class SubscriptionStartDateService {
      */
     public ServiceResult<StartDatePicker> getPicker(int accountId, Integer subscriptionId) {
         if (accountId <= 0 || subscriptionId == null || subscriptionId <= 0) {
-            return ServiceResult.fail("Mã gói không hợp lệ.");
+            return ServiceResult.fail(Messages.MSG179_PACKAGE_ID_INVALID);
         }
         try (Connection conn = openConnection()) {
             PaymentCustomerView customer = findCustomer(conn, accountId);
@@ -66,7 +67,7 @@ public class SubscriptionStartDateService {
             }
             return ServiceResult.ok(buildPicker(conn, subscription, DateTimeUtil.today()));
         } catch (SQLException | RuntimeException e) {
-            return ServiceResult.fail("Chưa đọc được thông tin gói. Vui lòng thử lại.");
+            return ServiceResult.fail(Messages.MSG180_PACKAGE_LOAD_FAILED);
         }
     }
 
@@ -78,7 +79,7 @@ public class SubscriptionStartDateService {
      */
     public ServiceResult<StartDatePicker> getPickerForCustomer(int customerId, Integer subscriptionId) {
         if (customerId <= 0 || subscriptionId == null || subscriptionId <= 0) {
-            return ServiceResult.fail("Mã gói không hợp lệ.");
+            return ServiceResult.fail(Messages.MSG179_PACKAGE_ID_INVALID);
         }
         try (Connection conn = openConnection()) {
             Subscription subscription = subscriptionDAO.findById(conn, subscriptionId);
@@ -87,7 +88,7 @@ public class SubscriptionStartDateService {
             }
             return ServiceResult.ok(buildPicker(conn, subscription, DateTimeUtil.today()));
         } catch (SQLException | RuntimeException e) {
-            return ServiceResult.fail("Chưa đọc được thông tin gói. Vui lòng thử lại.");
+            return ServiceResult.fail(Messages.MSG180_PACKAGE_LOAD_FAILED);
         }
     }
 
@@ -115,10 +116,10 @@ public class SubscriptionStartDateService {
      */
     public ServiceResult<StartDatePicker> changeStartDate(int accountId, Integer subscriptionId, LocalDate chosen) {
         if (accountId <= 0 || subscriptionId == null || subscriptionId <= 0) {
-            return ServiceResult.fail("Mã gói không hợp lệ.");
+            return ServiceResult.fail(Messages.MSG179_PACKAGE_ID_INVALID);
         }
         if (chosen == null) {
-            return ServiceResult.failField("startDate", "Vui lòng chọn ngày bắt đầu.");
+            return ServiceResult.failField("startDate", Messages.MSG181_START_DATE_REQUIRED);
         }
         try (Connection conn = openConnection()) {
             conn.setAutoCommit(false);
@@ -127,14 +128,14 @@ public class SubscriptionStartDateService {
                 PaymentCustomerView customer = findCustomer(conn, accountId);
                 if (customer == null) {
                     conn.rollback();
-                    return ServiceResult.fail("Hồ sơ không còn hiệu lực.");
+                    return ServiceResult.fail(Messages.MSG182_PROFILE_INACTIVE);
                 }
                 Subscription subscription = subscriptionDAO.findForUpdate(conn, subscriptionId);
                 if (subscription == null || subscription.getCustomerId() != customer.getCustomerId()
                         || subscription.getSubscriptionType() != Subscription.Type.MEMBERSHIP
                         || !subscription.isActive()) {
                     conn.rollback();
-                    return ServiceResult.fail("Không tìm thấy gói tập của bạn.");
+                    return ServiceResult.fail(Messages.MSG183_SUBSCRIPTION_NOT_FOUND);
                 }
 
                 // B2: kiểm luật trên dữ liệu vừa khóa, không tin dữ liệu trình duyệt.
@@ -146,7 +147,7 @@ public class SubscriptionStartDateService {
                 }
                 if (chosen.equals(subscription.getStartDate())) {
                     conn.rollback();
-                    return ServiceResult.ok(current, "Ngày bắt đầu không thay đổi.");
+                    return ServiceResult.ok(current, Messages.MSG184_START_DATE_UNCHANGED);
                 }
                 LocalDate otherEnd = subscriptionDAO.findLastMembershipEndExcluding(
                         conn, subscription.getCustomerId(), today, subscription.getSubscriptionId());
@@ -155,8 +156,8 @@ public class SubscriptionStartDateService {
                 if (!options.contains(chosen)) {
                     conn.rollback();
                     return ServiceResult.failField("startDate",
-                            "Chỉ được chọn ngày bắt đầu từ " + DateTimeUtil.formatDate(options.get(0))
-                            + " đến " + DateTimeUtil.formatDate(PackagePeriod.latestStart(today)) + ".");
+                            String.format(Messages.MSG185_START_DATE_RANGE, DateTimeUtil.formatDate(options.get(0)),
+                            DateTimeUtil.formatDate(PackagePeriod.latestStart(today))));
                 }
 
                 // B3: ngày hết hạn tính lại theo thời hạn gói đã bán.
@@ -171,7 +172,7 @@ public class SubscriptionStartDateService {
                 if (subscriptionDAO.updateStartDate(conn, subscription.getSubscriptionId(),
                         subscription.getStartDate(), chosen, newEnd) != 1) {
                     conn.rollback();
-                    return ServiceResult.fail("Gói vừa thay đổi, vui lòng tải lại trang và thử lại.");
+                    return ServiceResult.fail(Messages.MSG186_SUBSCRIPTION_CHANGED_RELOAD);
                 }
                 auditService.logInTransaction(conn, accountId, Role.CUSTOMER, SubscriptionDAO.ACTION_CHANGE_START,
                         "Subscriptions", subscription.getSubscriptionId(), "StartDate",
@@ -181,13 +182,13 @@ public class SubscriptionStartDateService {
 
                 subscription.setStartDate(chosen);
                 subscription.setEndDate(newEnd);
-                return ServiceResult.ok(buildPicker(conn, subscription, today), "Đã lưu ngày bắt đầu.");
+                return ServiceResult.ok(buildPicker(conn, subscription, today), Messages.MSG187_START_DATE_SAVED);
             } catch (SQLException | RuntimeException e) {
                 conn.rollback();
                 throw e;
             }
         } catch (SQLException | RuntimeException e) {
-            return ServiceResult.fail("Chưa lưu được ngày bắt đầu. Vui lòng thử lại.");
+            return ServiceResult.fail(Messages.MSG188_START_DATE_SAVE_FAILED);
         }
     }
 
