@@ -36,7 +36,7 @@ C.push(new Paragraph({ alignment: AlignmentType.CENTER, spacing: { after: 120 },
 C.push(new Paragraph({ alignment: AlignmentType.CENTER, spacing: { after: 240 }, children: [new TextRun({ text: 'Bản cập nhật SRS khớp code nhánh develop — 31/10/2026', font: FONT, size: 26 })] }));
 C.push(para('Cách dùng: mỗi bảng ở Mục 2 là bảng FULL, giữ đúng cột của SRS — copy nguyên bảng thay bảng cũ. Không đánh lại số ID; mục bỏ hẳn ghi "Withdrawn — lý do" và vẫn giữ UC gốc để truy vết. Mục II (mô tả từng màn / prototype) giữ nguyên theo yêu cầu.', { after: 80 }));
 C.push(para('Nguyên tắc: màn đã code xong → viết theo code (rule, giới hạn, trạng thái, câu thông báo). Màn đang lỗi / chưa xong (ca làm việc, bảo lưu, hồ sơ hội viên, bán buổi PT lẻ tại quầy, các màn chưa có Servlet) → giữ rule SRS. Logic đã có trong code nhưng chưa có màn (chấm điểm PT) viết theo code. Các bảng SRS chỉ mô tả yêu cầu, không ghi phiên bản hay tiến độ; tình trạng triển khai chỉ nằm ở cột Trạng thái của Mục 1 và ở Mục 4.', { after: 80 }));
-C.push(para('Màu trạng thái ở bảng theo dõi: xanh = Mới · vàng = Chưa triển khai · xám = Withdrawn · trắng = Sửa theo code.', { after: 200 }));
+C.push(para('Trạng thái ở bảng theo dõi: Mới (xanh) · Chưa triển khai (vàng) = SRS ghi đủ yêu cầu, code chưa làm / chưa hiển thị, làm sau — không phải bỏ · Withdrawn (xám) = nhóm đã chốt bỏ · Sửa theo code (trắng).', { after: 200 }));
 
 C.push(H1('1. Bảng theo dõi thay đổi'));
 C.push(note('Chỉ liệt kê ID có thay đổi so với SRS hiện tại. ID không có trong bảng = Giữ nguyên. Ô Cũ / Mới được rút gọn; toàn văn ở Mục 2.'));
@@ -85,8 +85,8 @@ C.push(new Paragraph({ children: [new PageBreak()] }));
 C.push(H1('3. Mâu thuẫn trong Use Case Specification'));
 C.push(note('Sửa trong phần đặc tả UC (luồng, điều kiện, câu thông báo) cho khớp các bảng ở Mục 2.'));
 C.push(table(data.UCX, [12, 38, 50])); C.push(gap());
-C.push(H1('4. Code cần sửa (không sửa code trong đợt này)'));
-C.push(note('Nhóm A, B: giữ rule SRS, code phải sửa theo. Các dòng cuối là lỗi/rủi ro phát hiện thêm khi đối chiếu.'));
+C.push(H1('4. Code cần sửa / làm tiếp (SRS đã đủ, code làm sau)'));
+C.push(note('Phần code chưa làm hoặc làm chưa đủ so với SRS. SRS ở Mục 2 đã ghi đủ yêu cầu; danh sách này chỉ để nhóm biết phần code còn lại, không ảnh hưởng tới SRS.'));
 C.push(table(data.FIX, [30, 24, 46]));
 
 const doc = new Document({

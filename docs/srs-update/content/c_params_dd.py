@@ -4,7 +4,7 @@ PARAMS = [
  ["P-01","Maximum freezes per membership package (copied into the subscription at sale — GBR-04)","CBR-07, BR-24","1","times","Manager (4.1.2)"],
  ["P-02","Maximum length of one freeze","CBR-08, MSG100","1","months","Manager (4.1.2)"],
  ["P-03","Freeze fee (0 = free of charge)","BR-22","0","VND","Manager (4.1.2)"],
- ["P-04","Membership package durations accepted by the package catalogue: a day pass lasts exactly 1 day; a membership package lasts 1, 3, 6, 12, 24 or 36 months (DBR-19)","DBR-19, BR-107","1 day; 1, 3, 6, 12, 24, 36 months","list","Manager (4.1.2)"],
+ ["P-04","Membership package durations: the list of month values the Manager allows for membership packages; the package catalogue form offers exactly these values (a day pass always lasts 1 day) (DBR-19)","DBR-19, BR-107","1 day; 1, 3, 6, 12, 24, 36 months","list","Manager (4.1.2)"],
  ["P-05","Minimum age for PT services","CBR-13, CBR-14, CBR-15, BR-37","10","years","Manager (4.1.2)"],
  ["P-06","Length of one PT slot / session; the end time of a slot is computed from it when the PT publishes","DBR-20, BR-94","90","minutes","Manager (4.1.2)"],
  ["P-07","Withdrawn — the PT does not mark attendance; sessions are closed automatically by JOB-04 (CBR-42)","—","—","—","—"],
@@ -21,9 +21,9 @@ PARAMS = [
  ["P-18","Temporary lock duration (sign-in and verification codes)","BR-01, BR-02, CBR-94","5","minutes","Manager (4.1.2)"],
  ["P-19","Default opening and closing time of every day (exceptions per date in OperatingHourExceptions)","BR-12, GBR-11, BR-94","05:30-22:00","time range","Manager (4.1.3)"],
  ["P-20","Withdrawn — there is no leave approval deadline and no automatic rejection; JOB-07 only reminds the Manager (CBR-85)","—","—","—","—"],
- ["P-21","PT package durations accepted by the package catalogue: 1, 3, 6 or 12 months (DBR-19)","DBR-19, BR-107","1, 3, 6, 12 months","list","Manager (4.1.2)"],
+ ["P-21","PT package durations: the list of month values the Manager allows for PT packages; the package catalogue form offers exactly these values (DBR-19)","DBR-19, BR-107","1, 3, 6, 12 months","list","Manager (4.1.2)"],
  ["P-22","Minimum number of customers who rated a PT in a month before the monthly average is shown","DBR-69","3","customers","Manager (4.1.2)"],
- ["P-23","Annual leave quota per employee per calendar year (no built-in fallback: if missing, annual leave cannot be submitted — MSG195)","CBR-121, BR-14","14","days / year","Manager (4.1.2)"],
+ ["P-23","Annual leave quota per employee per calendar year; annual leave cannot be requested while it is not configured (MSG195)","CBR-121, BR-14","14","days / year","Manager (4.1.2)"],
 ]
 
 # Data Dictionary: Attribute | Allowed values

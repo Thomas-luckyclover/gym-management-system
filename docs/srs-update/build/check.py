@@ -21,7 +21,7 @@ for k in SRS_TABLES:
 for e, st, rows in d['ENT']: texts.append(('ENT', e, ' | '.join(v for _, v in rows)))
 for r in d['MSG'][1:]: texts.append(('MSG', r[1], r[3] + ' | ' + r[4]))
 # ---------- Q2 no version / status noise ----------
-NOISE = re.compile(r'\bv2\d\b|[Nn]ot (?:fully )?implemented|[Ii]mplemented|Code to fix|[Dd]ecision \d\d/\d\d|no (?:customer )?screen yet|skeleton|\bTODO\b|no longer (?:swap|cancel|mark)|when implemented')
+NOISE = re.compile(r'\bv2\d\b|[Nn]ot (?:fully )?implemented|[Ii]mplemented|Code to fix|[Dd]ecision \d\d/\d\d|no (?:customer )?screen yet|skeleton|\bTODO\b|no longer (?:swap|cancel|mark)|when implemented|not (?:sold|built|done|shown)[^.|]{0,25}\byet\b|\bnot yet (?:sold|built|implemented|available)')
 for k, rid, t in texts:
     m = NOISE.search(t)
     if m: fail('Q2', f'{k} {rid}: "{m.group(0)}"')

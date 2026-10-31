@@ -9,7 +9,7 @@ OVR = {
  [S,"Active · Locked (disabled by the Admin) · Inactive (final; set only when every role of the Person is Inactive, CBR-86). A temporary lockout after repeated wrong passwords applies to customer-only accounts (BR-01) and is tracked in Locked Until; a password reset clears it (BR-02)."]],
 "Package": [
  [P,"The catalogue of purchasable offerings — memberships, day passes, PT packages and single PT sessions — that orders are created from."],
- [K,"Package name (3–50), description (≤ 255), benefits (one per line), package type, duration unit and value, estimated session count (PT packages, 1–255), price (10,000–500,000,000 VND, multiple of 1,000), active flag (on sale), unlocks Exercise Library flag, created time, row version"],
+ [K,"Package name (3–50), description (≤ 255), benefits (≤ 1000 characters, at most 10 lines of 3–100 characters), package type, duration unit and value, estimated session count (PT packages, 1–255), price (10,000–500,000,000 VND, multiple of 1,000), active flag (on sale), unlocks Exercise Library flag, created time, row version"],
  [B,"Five package types: Membership, DayPass, PTSingle, PTCouple, SingleSession. Duration: DayPass = 1 day; Membership = 1–36 months (catalogue offers 1, 3, 6, 12, 24, 36); PTSingle / PTCouple = 1–12 months (catalogue offers 1, 3, 6, 12); SingleSession has no duration (DBR-19). The name is unique among packages on sale (DBR-11)."],
  [S,"On sale (IsActive = 1) · Stopped (IsActive = 0): no longer sold, running orders and subscriptions unaffected (CBR-97, GBR-06). Single-session packages can be edited but not created."]],
 "Subscription": [
@@ -90,7 +90,7 @@ OVR = {
 }
 
 PATCH = {
- "Person": [("JPG or PNG, max 2 MB, 200 × 200 to 2000 × 2000 px, stored as a 256 × 256 centre crop (DBR-64)", "JPG or PNG, max 5 MB, max 2000 × 2000 px; without an avatar the initials are shown (DBR-64)"),
+ "Person": [("JPG or PNG, max 2 MB, 200 × 200 to 2000 × 2000 px, stored as a 256 × 256 centre crop (DBR-64)", "JPG or PNG, max 5 MB, 200 × 200 to 2000 × 2000 px, stored as a 256 × 256 centre crop; without an avatar the initials are shown (DBR-64)"),
             ("Customers and staff change only their own avatar, email, phone and password (CBR-30, CBR-108)", "Customers and staff change only their own avatar (upload or remove), email, phone and password (CBR-30, CBR-108)")],
  "Customer": [("A Self profile uses the phone number on its Person, which is mandatory.", "A Self profile uses the phone number and the email on its Person, both mandatory, and always has a login account (CBR-18, CBR-24)."),
               ("no login account (CBR-21); an email is optional (DBR-26)", "no email and no login account (CBR-21, DBR-26)")],

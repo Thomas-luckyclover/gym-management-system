@@ -29,7 +29,7 @@ C = {
 132:('E','Customer has used up their uses of the voucher (CBR-74)'),
 133:('E','Voucher ran out of uses at payment time because of a concurrent order (GBR-13)'),
 134:('E','Counter payment submitted without choosing cash or transfer'),
-135:('L','Single PT session selected on the counter sale screen (not sold at the counter yet — CBR-54)'),
+135:('L','Single PT session chosen while selling single sessions at the counter is unavailable (CBR-54)'),
 136:('E','Counter sale: membership start date outside today … today + 7 days (CBR-119)'),
 137:('S','Counter payment completed'),
 138:('E','Online purchase: invalid package id'),
