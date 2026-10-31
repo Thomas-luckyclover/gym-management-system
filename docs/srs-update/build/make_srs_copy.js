@@ -5,7 +5,7 @@ const d = JSON.parse(fs.readFileSync('docs/srs-update/build/data/data.json', 'ut
 const sec = JSON.parse(fs.readFileSync('docs/srs-update/build/data/dbr_sec.json', 'utf8'));
 const RED = 'A52A2A', HEAD = 'E6B8AF', FONT = 'Calibri', SZ = 22, TW = 9360;
 const b = { style: BorderStyle.SINGLE, size: 4, color: '000000' }, borders = { top: b, bottom: b, left: b, right: b };
-const P = (t, o = {}) => new Paragraph({ spacing: { after: o.after ?? 0, line: 360 }, children: [new TextRun({ text: String(t ?? ''), bold: !!o.bold, font: FONT, size: SZ })] });
+const P = (t, o = {}) => new Paragraph({ style: 'Normal', spacing: { after: o.after ?? 0, line: 360 }, children: [new TextRun({ text: String(t ?? ''), bold: !!o.bold, font: FONT, size: SZ })] });
 const W = r => { const s = r.reduce((a, x) => a + x, 0); const w = r.map(x => Math.floor(TW * x / s)); w[w.length - 1] += TW - w.reduce((a, x) => a + x, 0); return w; };
 const T = (rows, r) => { const w = W(r); return new Table({ width: { size: TW, type: WidthType.DXA }, columnWidths: w, layout: TableLayoutType.FIXED,
   rows: rows.map((row, i) => new TableRow({ tableHeader: i === 0, children: row.map((c, j) => new TableCell({ borders, width: { size: w[j], type: WidthType.DXA },
