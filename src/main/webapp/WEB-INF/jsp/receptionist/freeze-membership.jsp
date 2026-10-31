@@ -14,9 +14,9 @@
 <head>
     <%@ include file="/WEB-INF/jsp/common/head.jspf" %>
     <title>Bảo lưu gói tập · Super Gym Lễ tân</title>
-    <link rel="stylesheet" href="${pageContext.request.contextPath}/css/pages/receptionist/freeze-membership.css?v=20261031_v11">
+    <link rel="stylesheet" href="${pageContext.request.contextPath}/css/pages/receptionist/freeze-membership.css?v=20261031_v12">
     <link rel="stylesheet" href="${pageContext.request.contextPath}/css/pages/auth/notification-bell.css">
-    <script src="${pageContext.request.contextPath}/js/pages/receptionist/freeze-membership.js?v=20261027_v8" defer></script>
+    <script src="${pageContext.request.contextPath}/js/pages/receptionist/freeze-membership.js?v=20261031_v9" defer></script>
     <script src="${pageContext.request.contextPath}/js/pages/auth/notification-bell.js" defer></script>
 </head>
 
@@ -45,47 +45,9 @@
 
         <main class="content" id="main-content" tabindex="-1">
 
-            <%-- KHỐI 1: THANH TRA CỨU HỘI VIÊN & ĐIỀU HƯỚNG NHANH --%>
-            <section class="panel freeze-search-panel">
-                <div class="search-panel-inner">
-                    <div class="search-title-wrap">
-                        <h2><i class="fa-solid fa-snowflake text-primary"></i> Quản lý bảo lưu gói tập</h2>
-                    </div>
-
-                    <form id="freezeSearchForm" action="${pageContext.request.contextPath}/receptionist/freeze" method="GET" class="toolbar search-toolbar" novalidate>
-                        <div class="search" style="flex:1;">
-                            <i class="fa-solid fa-magnifying-glass"></i>
-                            <input id="freezeQueryInput" name="q" type="search" value="<c:out value='${query}' />"
-                                   placeholder="Nhập tên, mã khách hoặc số điện thoại"
-                                   autocomplete="off" aria-label="Mã khách, số điện thoại hoặc tên" autofocus>
-                        </div>
-                        <div class="search-filter-wrap">
-                            <select id="freezeFilterSelect" name="filter" class="form-control freeze-filter-select" aria-label="Lọc theo trạng thái bảo lưu">
-                                <option value="ALL" <c:if test="${empty currentFilter or currentFilter == 'ALL'}">selected</c:if>>Tất cả hội viên</option>
-                                <option value="FROZEN" <c:if test="${currentFilter == 'FROZEN'}">selected</c:if>>Đang bảo lưu</option>
-                                <option value="ELIGIBLE" <c:if test="${currentFilter == 'ELIGIBLE'}">selected</c:if>>Đủ điều kiện bảo lưu</option>
-                                <option value="ACTIVE" <c:if test="${currentFilter == 'ACTIVE'}">selected</c:if>>Gói đang hoạt động</option>
-                            </select>
-                        </div>
-                        <button class="btn btn-primary" type="submit"><i class="fa-solid fa-search"></i> Tìm kiếm</button>
-                        <c:if test="${not empty query or (not empty currentFilter and currentFilter != 'ALL')}">
-                            <a href="${pageContext.request.contextPath}/receptionist/freeze" class="btn btn-ghost" title="Xóa tất cả bộ lọc"><i class="fa-solid fa-xmark"></i> Xóa lọc</a>
-                        </c:if>
-                    </form>
-                </div>
-
-                <%-- Thông báo không tìm thấy --%>
-                <c:if test="${not empty searchError}">
-                    <div class="alert-banner danger" style="margin-top:var(--space-3);">
-                        <i class="fa-solid fa-circle-xmark"></i>
-                        <span><b>Không tìm thấy:</b> <c:out value="${searchError}" /></span>
-                    </div>
-                </c:if>
-            </section>
-
-            <%-- KHỐI 2: CHI TIẾT & THAO TÁC NGHIỆP VỤ (HIỂN THỊ KHI ĐÃ CHỌN HỘI VIÊN) --%>
+            <%-- KHỐI 1: CHI TIẾT & THAO TÁC NGHIỆP VỤ (HIỂN THỊ KHI ĐÃ CHỌN HỘI VIÊN) --%>
             <c:if test="${not empty freezeCustomer}">
-                <div class="split customer-action-split" style="margin-top:var(--space-4);">
+                <div class="split customer-action-split">
 
                     <%-- CỘT CHÍNH: HỒ SƠ & BIỂU MẪU THAO TÁC --%>
                     <div class="col-main">
@@ -329,9 +291,9 @@
                 </div>
             </c:if>
 
-            <%-- KHỐI 3: TOÀN BỘ BẢNG DỮ LIỆU GYMMASTER & LỊCH SỬ TOÀN HỆ THỐNG (CHỈ HIỂN THỊ KHI CHƯA CHỌN HỘI VIÊN) --%>
+            <%-- KHỐI 2: TOÀN BỘ BẢNG DỮ LIỆU GYMMASTER & LỊCH SỬ TOÀN HỆ THỐNG (CHỈ HIỂN THỊ KHI CHƯA CHỌN HỘI VIÊN) --%>
             <c:if test="${empty freezeCustomer}">
-            <section class="freeze-tabs-card" style="margin-top:var(--space-4);">
+            <section class="freeze-tabs-card">
                 <div class="freeze-tabs-nav">
                     <button type="button" class="freeze-tab-btn active" data-target="#tabMembers">
                         <i class="fa-solid fa-users"></i> Danh sách hội viên & Gói tập
@@ -348,23 +310,36 @@
                     <div class="gym-table-header-bar">
                         <div class="header-titles">
                             <h3><i class="fa-solid fa-table-list text-primary"></i> Quản lý gói tập hội viên</h3>
-                            
                         </div>
-                        <c:if test="${not empty query or (not empty currentFilter and currentFilter != 'ALL')}">
-                            <div class="filter-indicator">
-                                <span>Đang lọc:
-                                    <c:if test="${not empty query}"><b>"<c:out value='${query}' />"</b></c:if>
-                                    <c:if test="${not empty query and not empty currentFilter and currentFilter != 'ALL'}"> · </c:if>
-                                    <c:choose>
-                                        <c:when test="${currentFilter == 'FROZEN'}"><b class="text-warn">Đang bảo lưu</b></c:when>
-                                        <c:when test="${currentFilter == 'ELIGIBLE'}"><b class="text-success">Đủ điều kiện</b></c:when>
-                                        <c:when test="${currentFilter == 'ACTIVE'}"><b class="text-primary">Đang hoạt động</b></c:when>
-                                    </c:choose>
-                                </span>
-                                <a href="${pageContext.request.contextPath}/receptionist/freeze" class="btn btn-ghost btn-xs">Xóa bộ lọc</a>
+                        <form id="freezeSearchForm" action="${pageContext.request.contextPath}/receptionist/freeze" method="GET" class="toolbar search-toolbar" novalidate>
+                            <div class="search">
+                                <i class="fa-solid fa-magnifying-glass"></i>
+                                <input id="freezeQueryInput" name="q" type="search" value="<c:out value='${query}' />"
+                                       placeholder="Nhập tên, mã khách hoặc số điện thoại"
+                                       autocomplete="off" aria-label="Mã khách, số điện thoại hoặc tên">
                             </div>
-                        </c:if>
+                            <div class="search-filter-wrap">
+                                <select id="freezeFilterSelect" name="filter" class="form-control freeze-filter-select" aria-label="Lọc theo trạng thái bảo lưu">
+                                    <option value="ALL" <c:if test="${empty currentFilter or currentFilter == 'ALL'}">selected</c:if>>Tất cả hội viên</option>
+                                    <option value="FROZEN" <c:if test="${currentFilter == 'FROZEN'}">selected</c:if>>Đang bảo lưu</option>
+                                    <option value="ELIGIBLE" <c:if test="${currentFilter == 'ELIGIBLE'}">selected</c:if>>Đủ điều kiện bảo lưu</option>
+                                    <option value="ACTIVE" <c:if test="${currentFilter == 'ACTIVE'}">selected</c:if>>Gói đang hoạt động</option>
+                                </select>
+                            </div>
+                            <button class="btn btn-primary" type="submit"><i class="fa-solid fa-search"></i> Tìm kiếm</button>
+                            <c:if test="${not empty query or (not empty currentFilter and currentFilter != 'ALL')}">
+                                <a href="${pageContext.request.contextPath}/receptionist/freeze" class="btn btn-ghost" title="Xóa tất cả bộ lọc"><i class="fa-solid fa-xmark"></i> Xóa lọc</a>
+                            </c:if>
+                        </form>
                     </div>
+
+                    <%-- Thông báo không tìm thấy hội viên --%>
+                    <c:if test="${not empty searchError}">
+                        <div class="alert-banner danger" style="margin-bottom:var(--space-3);">
+                            <i class="fa-solid fa-circle-xmark"></i>
+                            <span><b>Không tìm thấy:</b> <c:out value="${searchError}" /></span>
+                        </div>
+                    </c:if>
 
                     <div class="gym-table-wrap">
                         <table class="gym-table">
@@ -514,8 +489,19 @@
                     <div class="gym-table-header-bar">
                         <div class="header-titles">
                             <h3><i class="fa-solid fa-clock-rotate-left text-primary"></i> Nhật ký lịch sử bảo lưu phòng tập</h3>
-                            <p>Toàn bộ các đợt bảo lưu đã và đang diễn ra tại phòng tập.</p>
                         </div>
+                        <form id="historySearchForm" action="${pageContext.request.contextPath}/receptionist/freeze#tabHistory" method="GET" class="toolbar search-toolbar" novalidate>
+                            <div class="search">
+                                <i class="fa-solid fa-magnifying-glass"></i>
+                                <input id="historyQueryInput" name="hq" type="search" value="<c:out value='${historyQuery}' />"
+                                       placeholder="Tìm kiếm trong lịch sử bảo lưu..."
+                                       autocomplete="off" aria-label="Tìm kiếm trong lịch sử bảo lưu">
+                            </div>
+                            <button class="btn btn-primary" type="submit"><i class="fa-solid fa-search"></i> Tìm kiếm</button>
+                            <c:if test="${not empty historyQuery}">
+                                <a href="${pageContext.request.contextPath}/receptionist/freeze#tabHistory" class="btn btn-ghost" title="Xóa tìm kiếm lịch sử"><i class="fa-solid fa-xmark"></i> Xóa lọc</a>
+                            </c:if>
+                        </form>
                     </div>
 
                     <div class="gym-table-wrap">
@@ -603,7 +589,14 @@
                                         <tr>
                                             <td colspan="7" style="text-align:center; padding:var(--space-6); color:var(--color-text-muted);">
                                                 <i class="fa-solid fa-circle-info" style="font-size:24px; display:block; margin-bottom:var(--space-2);"></i>
-                                                Chưa có dữ liệu lịch sử bảo lưu nào trong hệ thống.
+                                                <c:choose>
+                                                    <c:when test="${not empty historyQuery}">
+                                                        Không tìm thấy lịch sử bảo lưu phù hợp với từ khóa "<b><c:out value='${historyQuery}' /></b>".
+                                                    </c:when>
+                                                    <c:otherwise>
+                                                        Chưa có dữ liệu lịch sử bảo lưu nào trong hệ thống.
+                                                    </c:otherwise>
+                                                </c:choose>
                                             </td>
                                         </tr>
                                     </c:otherwise>

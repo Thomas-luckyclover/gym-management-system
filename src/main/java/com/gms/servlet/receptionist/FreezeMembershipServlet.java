@@ -78,8 +78,9 @@ public class FreezeMembershipServlet extends HttpServlet {
             return;
         }
 
-        // B3: Lấy từ khóa q và bộ lọc filter người dùng chọn
+        // B3: Lấy từ khóa q (Tab 1), hq (Tab 2) và bộ lọc filter người dùng chọn
         String query = RequestUtil.getTrimmedParam(request, "q");
+        String historyQuery = RequestUtil.getTrimmedParam(request, "hq");
         String filter = RequestUtil.getTrimmedParam(request, "filter");
         if (ValidationUtil.isNullOrEmpty(filter)) {
             filter = "ALL";
@@ -87,7 +88,7 @@ public class FreezeMembershipServlet extends HttpServlet {
         int page = PaginationUtil.getPageNumber(request); // Lấy số trang hiện tại phục vụ phân trang
         int pageSize = 10; // Phân trang 10 khách mỗi trang để vừa vặn giao diện
 
-        if (!ValidationUtil.isNullOrEmpty(query)) { // Nếu từ khóa tìm kiếm không rỗng
+        if (!ValidationUtil.isNullOrEmpty(query)) { // Nếu từ khóa tìm kiếm hội viên không rỗng
             // Gọi hàm lookupCustomerForFreeze để tra cứu khách hàng và gói tập
             ServiceResult<FreezeCustomerView> lookupResult = freezeService.lookupCustomerForFreeze(query, accountId);
 
@@ -108,15 +109,16 @@ public class FreezeMembershipServlet extends HttpServlet {
         }
         request.setAttribute("currentFilter", filter);
 
-        // B4: Lấy danh sách hội viên & hợp đồng hiển thị ở bảng phong cách GymMaster (có hỗ trợ lọc theo trạng thái)
+        // B4: Lấy danh sách hội viên & hợp đồng hiển thị ở bảng phong cách GymMaster (chỉ lọc theo query và filter của Tab 1)
         PageResult<CustomerMembershipRow> membershipsPage = freezeService.getCustomerMembershipsPage(query, filter, page, pageSize);
         request.setAttribute("membershipsPage", membershipsPage);
         request.setAttribute("customerMemberships", membershipsPage.getItems());
 
-        // B5: Lấy toàn bộ lịch sử các đợt bảo lưu hiển thị ở tab "Lịch sử bảo lưu" (lọc theo từ khóa tìm kiếm)
-        List<FreezeRecordItemView> freezeHistoryList = freezeService.getRecentFreezes(query, 50);
+        // B5: Lấy toàn bộ lịch sử các đợt bảo lưu hiển thị ở tab "Lịch sử bảo lưu" (chỉ lọc theo historyQuery của Tab 2)
+        List<FreezeRecordItemView> freezeHistoryList = freezeService.getRecentFreezes(historyQuery, 50);
         request.setAttribute("freezeHistoryList", freezeHistoryList);
         request.setAttribute("recentFreezes", freezeHistoryList); // tương thích ngược
+        request.setAttribute("historyQuery", historyQuery);
         request.setAttribute("activeNav", "freeze");
 
         // B6: Chuyển tiếp dữ liệu từ servlet sang jsp để hiển thị giao diện

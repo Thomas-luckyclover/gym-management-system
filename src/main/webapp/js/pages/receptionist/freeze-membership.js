@@ -162,7 +162,10 @@ document.addEventListener('DOMContentLoaded', function () {
         });
     });
 
-    if (window.location.hash) {
+    const urlParams = new URLSearchParams(window.location.search);
+    if (urlParams.has('hq') || window.location.hash === '#tabHistory') {
+        switchTab('#tabHistory');
+    } else if (window.location.hash) {
         switchTab(window.location.hash);
     }
 
@@ -186,7 +189,7 @@ document.addEventListener('DOMContentLoaded', function () {
         });
     });
 
-    // 7. Tự động áp dụng bộ lọc khi thay đổi lựa chọn ở thanh tìm kiếm
+    // 7. Tự động áp dụng bộ lọc khi thay đổi lựa chọn ở Tab 1
     const filterSelect = document.getElementById('freezeFilterSelect');
     if (filterSelect) {
         filterSelect.addEventListener('change', function () {
@@ -195,14 +198,21 @@ document.addEventListener('DOMContentLoaded', function () {
         });
     }
 
-    // 8. Giữ đúng tab #tabHistory khi tìm kiếm
-    const freezeSearchForm = document.getElementById('freezeSearchForm');
-    if (freezeSearchForm) {
-        freezeSearchForm.addEventListener('submit', function () {
-            const activeTab = document.querySelector('.freeze-tab-pane.active');
-            if (activeTab && activeTab.id === 'tabHistory') {
-                freezeSearchForm.action = freezeSearchForm.action.split('#')[0] + '#tabHistory';
-            }
+    // 8. Tìm kiếm nhanh thời gian thực ở Tab 2 (Lịch sử bảo lưu)
+    const historyInput = document.getElementById('historyQueryInput');
+    if (historyInput) {
+        historyInput.addEventListener('input', function () {
+            const val = this.value.trim().toLowerCase();
+            const rows = document.querySelectorAll('#tabHistory .gym-table tbody tr');
+            rows.forEach(r => {
+                if (r.querySelector('td[colspan]')) return;
+                if (!val) {
+                    r.style.display = '';
+                    return;
+                }
+                const text = r.textContent.toLowerCase();
+                r.style.display = text.includes(val) ? '' : 'none';
+            });
         });
     }
 

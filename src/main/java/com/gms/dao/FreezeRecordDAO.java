@@ -678,29 +678,48 @@ public class FreezeRecordDAO {
         boolean startsWithKh = upper.startsWith("KH");
 
         List<String> params = new ArrayList<>();
-        String namePattern = SqlUtil.toContainsPattern(trimmed);
+        String escaped = escapeLike(trimmed);
+        String startsWithPattern = escaped + "%";
+        String wordBoundaryPattern = "% " + escaped + "%";
 
         if (startsWithKh) {
             // Khách nhập mã hội viên (ví dụ KH-1001, KH-20,...) hoặc tên bắt đầu bằng Kh
-            String sql = "(p.FullName COLLATE Latin1_General_100_CI_AI LIKE ? ESCAPE '\\' OR c.CustomerCode LIKE ?)";
-            params.add(namePattern);
+            String sql = "((p.FullName COLLATE Latin1_General_100_CI_AI LIKE ? ESCAPE '\\' OR p.FullName COLLATE Latin1_General_100_CI_AI LIKE ? ESCAPE '\\') OR c.CustomerCode LIKE ?)";
+            params.add(startsWithPattern);
+            params.add(wordBoundaryPattern);
             params.add("%" + trimmed + "%");
             return new SearchCondition(sql, params);
         } else if (isNumeric) {
             // Khách nhập số điện thoại hoặc đuôi số mã hội viên (ví dụ 0901234504, 2038,...)
-            String sql = "(p.FullName COLLATE Latin1_General_100_CI_AI LIKE ? ESCAPE '\\' OR c.CustomerCode LIKE ? OR p.Phone LIKE ?)";
-            params.add(namePattern);
+            String sql = "((p.FullName COLLATE Latin1_General_100_CI_AI LIKE ? ESCAPE '\\' OR p.FullName COLLATE Latin1_General_100_CI_AI LIKE ? ESCAPE '\\') OR c.CustomerCode LIKE ? OR p.Phone LIKE ?)";
+            params.add(startsWithPattern);
+            params.add(wordBoundaryPattern);
             params.add("%" + trimmed + "%");
             params.add("%" + trimmed + "%");
             return new SearchCondition(sql, params);
         } else {
             // Khách nhập chữ cái/tên thông thường (ví dụ 'h', 'an', 'long', 'hồng',...)
-            // TUYỆT ĐỐI KHÔNG tìm kiếm 'c.CustomerCode LIKE %h%' vì mã khách hàng luôn bắt đầu bằng 'KH-',
-            // chứa chữ 'H' và 'K', dẫn đến LIKE '%h%' khớp 100% tất cả khách hàng trong phòng gym.
-            String sql = "(p.FullName COLLATE Latin1_General_100_CI_AI LIKE ? ESCAPE '\\')";
-            params.add(namePattern);
+            // Tìm theo đầu họ tên hoặc đầu từng từ sau dấu cách để 'hồng' không bị khớp nhầm vào 'phong'
+            String sql = "(p.FullName COLLATE Latin1_General_100_CI_AI LIKE ? ESCAPE '\\' OR p.FullName COLLATE Latin1_General_100_CI_AI LIKE ? ESCAPE '\\')";
+            params.add(startsWithPattern);
+            params.add(wordBoundaryPattern);
             return new SearchCondition(sql, params);
         }
+    }
+
+    private String escapeLike(String text) {
+        if (text == null) {
+            return "";
+        }
+        StringBuilder sb = new StringBuilder();
+        for (int i = 0; i < text.length(); i++) {
+            char c = text.charAt(i);
+            if (c == '%' || c == '_' || c == '[' || c == '\\') {
+                sb.append('\\');
+            }
+            sb.append(c);
+        }
+        return sb.toString();
     }
 
     private String buildFilterCondition(String filter) {
