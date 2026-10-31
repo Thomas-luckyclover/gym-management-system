@@ -60,7 +60,11 @@ def inside(v, p, m=3):
     if kind(v) == 'ellipse':
         a, b = v['w'] / 2 - m, v['h'] / 2 - m; cx, cy = center(v)
         return ((x - cx) / a) ** 2 + ((y - cy) / b) ** 2 < 1
-    return v['x'] + m < x < v['x'] + v['w'] - m and v['y'] + m < y < v['y'] + v['h'] - m
+    inbox = v['x'] + m < x < v['x'] + v['w'] - m and v['y'] + m < y < v['y'] + v['h'] - m
+    if inbox and kind(v) == 'folder':  # the band right of the tab, above the body, is empty space
+        tw, th = float(v['s'].get('tabWidth', 60)), float(v['s'].get('tabHeight', 18))
+        return x < v['x'] + tw or y > v['y'] + th + m
+    return inbox
 
 def in_box(b, p, m=1):
     return b[0] + m < p[0] < b[0] + b[2] - m and b[1] + m < p[1] < b[1] + b[3] - m
