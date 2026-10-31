@@ -1,6 +1,7 @@
 package com.gms.dto;
 
 import com.gms.entity.Customer;
+import com.gms.util.DateTimeUtil;
 import java.time.LocalDate;
 
 /**
@@ -134,6 +135,16 @@ public class CounterCustomerRow {
     }
 
     // JSP đọc ${row.ownProfile}: true thì khóa nút "Chọn" (CBR-115).
+    /**
+     * Ngày cuối của gói tập còn hạn dưới dạng dd/MM/yyyy. Rỗng nếu chưa có gói.
+     */
+    public String getCurrentPackageEndText() {
+        if (currentPackageEnd == null) {
+            return "";
+        }
+        return DateTimeUtil.formatDate(currentPackageEnd);
+    }
+
     public boolean isOwnProfile() {
         return isOwnProfile;
     }
