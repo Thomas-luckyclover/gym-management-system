@@ -121,6 +121,9 @@ public class CustomerDashboardService {
                 }
             }
 
+            // Chỉ chuẩn bị nhãn giao diện theo ngày hiệu lực; JOB vẫn chịu trách nhiệm ghi trạng thái DB.
+            prepareSubscriptionPresentation(subscriptions, now.toLocalDate());
+
             // B4: buổi PT sắp tới
             List<UpcomingSessionRow> upcomingSessions = dashboardDAO.findUpcomingSessions(customerId, now);
 
@@ -204,13 +207,36 @@ public class CustomerDashboardService {
                 trainers.add(selectedTrainer);
             }
             for (SubscriptionRow subscription : subscriptions) {
-                if (subscription.getSubscriptionId() == trainerRow.getSubscriptionId()) {
+                if (subscription.getSubscriptionId() == trainerRow.getSubscriptionId()
+                        && !subscription.isExpiredForDisplay()) {
                     selectedTrainer.getPackages().add(subscription);
                     break;
                 }
             }
         }
-        return trainers;
+        // Không còn gói hiệu lực thì không hiện PT như đang phụ trách hội viên.
+        List<CustomerDashboardView.TrainerContact> activeTrainers = new ArrayList<>();
+        for (CustomerDashboardView.TrainerContact trainer : trainers) {
+            if (!trainer.getPackages().isEmpty()) {
+                activeTrainers.add(trainer);
+            }
+        }
+        return activeTrainers;
+    }
+
+    /** Giữ nguyên trạng thái DB, tách nhãn hiển thị nếu ngày thực tế đã qua hoặc chưa bắt đầu. */
+    void prepareSubscriptionPresentation(List<SubscriptionRow> subscriptions, LocalDate today) {
+        for (SubscriptionRow subscription : subscriptions) {
+            String displayStatus = subscription.getStatus();
+            boolean isRunning = "Active".equals(displayStatus) || "Frozen".equals(displayStatus)
+                    || "Pending".equals(displayStatus);
+            if (isRunning && subscription.getEndDate() != null && subscription.getEndDate().isBefore(today)) {
+                displayStatus = "Expired";
+            } else if (isRunning && subscription.getStartDate() != null && subscription.getStartDate().isAfter(today)) {
+                displayStatus = "Pending";
+            }
+            subscription.setDisplayStatus(displayStatus);
+        }
     }
 
     /** Service tạo 7 nhóm ngày; JSP chỉ đọc, không tự lọc buổi hoặc gọi database. */
@@ -255,9 +281,9 @@ public class CustomerDashboardService {
             }
             if (sub.isPending()) {
                 hasNext = true;
-            } else if ("Active".equals(sub.getStatus()) || "Frozen".equals(sub.getStatus())) {
+            } else if ("Active".equals(sub.getDisplayStatus()) || "Frozen".equals(sub.getDisplayStatus())) {
                 current = sub;
-            } else if ("Expired".equals(sub.getStatus())) {
+            } else if ("Expired".equals(sub.getDisplayStatus())) {
                 hasExpired = true;
             }
         }

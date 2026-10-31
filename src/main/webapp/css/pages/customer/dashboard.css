@@ -567,12 +567,12 @@ body.customer-dashboard-page { background: var(--pt-bg); color: var(--pt-text); 
 .customer-dashboard-page .customer-trainer-package {
   margin-top: var(--space-2);
 }
-.customer-dashboard-page .customer-trainer-actions .customer-zalo {
+html body.dock.customer-dashboard-page:not(.no-arena) .content .customer-trainer-actions .btn.customer-zalo {
   background: var(--brand-lagoon);
   border-color: var(--brand-lagoon);
   color: var(--dock-text);
 }
-.customer-dashboard-page .customer-trainer-actions .customer-zalo:hover {
+html body.dock.customer-dashboard-page:not(.no-arena) .content .customer-trainer-actions .btn.customer-zalo:hover {
   background: var(--brand-ocean);
 }
 .customer-dashboard-page .customer-schedule-empty .empty-state {
@@ -589,4 +589,14 @@ body.customer-dashboard-page { background: var(--pt-bg); color: var(--pt-text); 
   .customer-dashboard-page .customer-package-grid {
     grid-template-columns: minmax(0, 1fr);
   }
+}
+
+/* Gỡ khoảng cách mặc định .panel > * + * ở nút dưới lưới gói. */
+.customer-dashboard-page .customer-packages > .btn {
+  margin-top: var(--space-2);
+  align-self: start;
+  justify-self: start;
+}
+.customer-dashboard-page .customer-package-grid {
+  margin-bottom: 0;
 }

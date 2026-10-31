@@ -35,7 +35,7 @@
         <%@ include file="/WEB-INF/jsp/common/head.jspf" %>
         <title>Trang cá nhân · Super Gym</title>
         <link rel="stylesheet"
-              href="${pageContext.request.contextPath}/css/pages/customer/dashboard.css?v=20261031-compact?v=20261025city">
+              href="${pageContext.request.contextPath}/css/pages/customer/dashboard.css?v=20261031-validity?v=20261025city">
         <link rel="stylesheet"
               href="${pageContext.request.contextPath}/css/dashboard-weather.css?v=20261014s">
         <link rel="stylesheet"
@@ -209,6 +209,12 @@
                                                 <h3><c:out value="${subscription.packageName}" /></h3>
                                                 <p>Hết hạn <strong data-sdp-end><c:out value="${gms:formatDate(subscription.endDate)}" /></strong></p>
                                                 <c:choose>
+                                                    <c:when test="${subscription.expiredForDisplay}">
+                                                        <b class="customer-package-balance">Đã hết hạn</b>
+                                                    </c:when>
+                                                    <c:when test="${subscription.pending}">
+                                                        <b class="customer-package-balance">Bắt đầu ${gms:formatDate(subscription.startDate)}</b>
+                                                    </c:when>
                                                     <c:when test="${subscription.ptPackage}">
                                                         <b class="customer-package-balance">Còn ${subscription.remainingSessions == null ? 0 : subscription.remainingSessions}/${subscription.totalSessions == null ? 0 : subscription.totalSessions} buổi</b>
                                                     </c:when>
@@ -283,7 +289,7 @@
             </div>
         </div>
 
-        <script src="${pageContext.request.contextPath}/js/pages/customer/dashboard.js?v=20261031-compact" defer></script>
+        <script src="${pageContext.request.contextPath}/js/pages/customer/dashboard.js?v=20261031-validity" defer></script>
     </body>
 
 </html>

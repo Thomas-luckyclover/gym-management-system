@@ -14,6 +14,35 @@ import static org.junit.jupiter.api.Assertions.*;
 class CustomerDashboardScheduleTest {
 
     @Test
+    void presentationDistinguishesExpiredFutureAndLastValidDayWithoutWritingStatus() {
+        LocalDate today = com.gms.util.DateTimeUtil.today();
+        SubscriptionRow expired = membership(1, today.minusDays(30), today.minusDays(1), "Active");
+        SubscriptionRow future = membership(2, today.plusDays(1), today.plusDays(90), "Active");
+        SubscriptionRow lastDay = membership(3, today.minusDays(30), today, "Active");
+        SubscriptionRow cancelled = membership(4, today.plusDays(1), today.plusDays(90), "Cancelled");
+        new CustomerDashboardService().prepareSubscriptionPresentation(
+                List.of(expired, future, lastDay, cancelled), today);
+
+        assertEquals("Active", expired.getStatus());
+        assertEquals("Expired", expired.getDisplayStatus());
+        assertEquals("Hết hạn", expired.getStatusLabel());
+        assertEquals("Pending", future.getDisplayStatus());
+        assertEquals("Chưa bắt đầu", future.getStatusLabel());
+        assertEquals("Active", lastDay.getDisplayStatus());
+        assertEquals(1, lastDay.getDaysRemaining());
+        assertEquals("Cancelled", cancelled.getDisplayStatus());
+        com.gms.dto.CustomerDashboardView dashboard = new com.gms.dto.CustomerDashboardView(
+                "Khách", null, "KH-1", "Active", true,
+                List.of(expired, future, lastDay), List.of(), List.of(), null, List.of(), 0, "ACTIVE");
+        assertSame(lastDay, dashboard.getActiveMembership());
+    }
+
+    private SubscriptionRow membership(int id, LocalDate start, LocalDate end, String status) {
+        return new SubscriptionRow(id, "Membership", "Gói tập", start, end, status,
+                null, null, null, null, null, "DH-1", null, null, null, 0, 0);
+    }
+
+    @Test
     void groupsPackagesByTrainerIdRatherThanDisplayName() {
         SubscriptionRow firstPackage = org.mockito.Mockito.mock(SubscriptionRow.class);
         SubscriptionRow secondPackage = org.mockito.Mockito.mock(SubscriptionRow.class);

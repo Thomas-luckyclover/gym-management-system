@@ -214,7 +214,7 @@ public class CustomerDashboardView {
     public SubscriptionRow getActiveMembership() {
         if (subscriptions == null) return null;
         for (SubscriptionRow sub : subscriptions) {
-            if (!sub.isPtPackage() && "Active".equals(sub.getStatus())) {
+            if (!sub.isPtPackage() && "Active".equals(sub.getDisplayStatus())) {
                 return sub;
             }
         }
@@ -243,7 +243,7 @@ public class CustomerDashboardView {
     public SubscriptionRow getCurrentMembership() {
         if (subscriptions == null) return null;
         for (SubscriptionRow sub : subscriptions) {
-            boolean running = "Active".equals(sub.getStatus()) || "Frozen".equals(sub.getStatus());
+            boolean running = "Active".equals(sub.getDisplayStatus()) || "Frozen".equals(sub.getDisplayStatus());
             if (!sub.isPtPackage() && running) {
                 return sub;
             }
@@ -255,7 +255,7 @@ public class CustomerDashboardView {
     public SubscriptionRow getExpiredMembership() {
         if (subscriptions == null) return null;
         for (SubscriptionRow sub : subscriptions) {
-            if (!sub.isPtPackage() && "Expired".equals(sub.getStatus())) {
+            if (!sub.isPtPackage() && "Expired".equals(sub.getDisplayStatus())) {
                 return sub;
             }
         }
@@ -331,6 +331,8 @@ public class CustomerDashboardView {
         private final LocalDate startDate;         // Subscriptions.StartDate
         private final LocalDate endDate;           // Subscriptions.EndDate (ngày cuối còn dùng, GBR-03)
         private final String status;               // Subscriptions.Status: Active | Frozen | Pending | ...
+        // Service đối chiếu ngày để trình bày khi JOB chưa cập nhật DB; không thay đổi status đã lưu.
+        private String displayStatus;
 
         // --- Chỉ có với gói PT (DBR-53, [CHỐT-D2]) ---
         private final Integer totalSessions;       // tổng số buổi của gói (chỉ gói PT)
@@ -378,6 +380,7 @@ public class CustomerDashboardView {
             this.startDate = startDate;
             this.endDate = endDate;
             this.status = status;
+            this.displayStatus = status;
             this.totalSessions = totalSessions;
             this.remainingSessions = remainingSessions;
             this.usedSessions = usedSessions;
@@ -397,6 +400,9 @@ public class CustomerDashboardView {
         public LocalDate getStartDate() { return startDate; }
         public LocalDate getEndDate() { return endDate; }
         public String getStatus() { return status; }
+        public String getDisplayStatus() { return displayStatus; }
+        public void setDisplayStatus(String displayStatus) { this.displayStatus = displayStatus; }
+        public boolean isExpiredForDisplay() { return "Expired".equals(displayStatus); }
         public Integer getTotalSessions() { return totalSessions; }
         public Integer getRemainingSessions() { return remainingSessions; }
         public Integer getUsedSessions() { return usedSessions; }
@@ -487,7 +493,7 @@ public class CustomerDashboardView {
          */
         public long getDaysRemaining() {
             if (endDate == null) return 0;
-            long days = ChronoUnit.DAYS.between(DateTimeUtil.today(), endDate);
+            long days = ChronoUnit.DAYS.between(DateTimeUtil.today(), endDate) + 1;
             return Math.max(days, 0);
         }
 
@@ -534,8 +540,8 @@ public class CustomerDashboardView {
          * Nhãn trạng thái gói tiếng Việt (GBR-01).
          */
         public String getStatusLabel() {
-            if (status == null) return "";
-            switch (status) {
+            if (displayStatus == null) return "";
+            switch (displayStatus) {
                 case "Active":    return "Đang dùng";
                 case "Frozen":    return "Đang bảo lưu";
                 case "Pending":   return "Chưa bắt đầu";
