@@ -32,7 +32,7 @@
         </div>
       </header>
 
-      <main class="content" id="main-content" tabindex="-1">
+      <main class="content review-page-content" id="main-content" tabindex="-1">
 
         <%-- ===== THANH ĐIỀU HƯỚNG TRÊN CÙNG: QUAY LẠI, TIÊU ĐỀ & NÚT THAO TÁC ===== --%>
         <div class="review-top-bar">
@@ -71,7 +71,7 @@
           <%-- CỘT TRÁI (65%): CHI TIẾT SỰ CỐ, ẢNH & THIẾT BỊ --%>
           <div class="review-col-main">
 
-            <%-- Card 1: Thông tin sự cố --%>
+            <%-- Card 1: Mô tả & Ảnh sự cố --%>
             <section class="review-card">
               <div class="review-card-head">
                 <h3 class="review-card-title">Mô tả sự cố</h3>
@@ -87,40 +87,38 @@
               </div>
 
               <div class="review-card-body">
-                <div class="incident-desc-box">
-                  <p class="desc-text"><c:out value="${item.request.description}" /></p>
-                </div>
+                <div class="incident-card-content ${not empty item.request.attachedImages ? 'has-image' : ''}">
+                  <div class="incident-main-col">
+                    <div class="incident-desc-box">
+                      <p class="desc-text"><c:out value="${item.request.description}" /></p>
+                    </div>
 
-                <c:if test="${not empty item.request.affectedItemsNote}">
-                  <div class="affected-items-box">
-                    <span class="detail-label">Ghi chú cá thể / mức tạ ảnh hưởng:</span>
-                    <p class="affected-note-text"><c:out value="${item.request.affectedItemsNote}" /></p>
+                    <c:if test="${not empty item.request.affectedItemsNote}">
+                      <div class="affected-items-box">
+                        <span class="detail-label">Ghi chú cá thể / mức tạ ảnh hưởng:</span>
+                        <p class="affected-note-text"><c:out value="${item.request.affectedItemsNote}" /></p>
+                      </div>
+                    </c:if>
                   </div>
-                </c:if>
-              </div>
-            </section>
 
-            <%-- Card 2: Ảnh sự cố --%>
-            <section class="review-card">
-              <div class="review-card-head">
-                <h3 class="review-card-title">Ảnh sự cố thực tế</h3>
-              </div>
-              <div class="review-card-body">
-                <c:choose>
-                  <c:when test="${not empty item.request.attachedImages}">
-                    <div class="incident-image-container">
-                      <img src="${pageContext.request.contextPath}${item.request.attachedImages}"
-                           alt="Ảnh sự cố ${item.itemCode}"
-                           class="incident-image-preview">
+                  <c:if test="${not empty item.request.attachedImages}">
+                    <div class="incident-image-col">
+                      <a href="${pageContext.request.contextPath}${item.request.attachedImages}"
+                         class="incident-image-thumb-card image-lightbox-trigger"
+                         data-lightbox-image="${pageContext.request.contextPath}${item.request.attachedImages}"
+                         data-lightbox-title="Ảnh sự cố máy ${item.itemCode} (${item.request.requestCode})"
+                         title="Bấm để xem ảnh phóng to ngay trên trang">
+                        <img src="${pageContext.request.contextPath}${item.request.attachedImages}"
+                             alt="Ảnh sự cố thực tế ${item.itemCode}"
+                             class="incident-image-thumb"
+                             onerror="this.onerror=null; this.closest('.incident-image-col').style.display='none';">
+                        <span class="incident-image-caption">
+                          <i class="fa-solid fa-magnifying-glass-plus" aria-hidden="true"></i> Xem ảnh lớn
+                        </span>
+                      </a>
                     </div>
-                  </c:when>
-                  <c:otherwise>
-                    <div class="no-image-placeholder">
-                      <i class="fa-regular fa-image" aria-hidden="true"></i>
-                      <span>Lễ tân không đính kèm ảnh</span>
-                    </div>
-                  </c:otherwise>
-                </c:choose>
+                  </c:if>
+                </div>
               </div>
             </section>
 
