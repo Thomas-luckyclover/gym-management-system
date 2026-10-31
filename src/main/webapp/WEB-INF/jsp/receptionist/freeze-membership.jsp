@@ -14,7 +14,7 @@
 <head>
     <%@ include file="/WEB-INF/jsp/common/head.jspf" %>
     <title>Bảo lưu gói tập · Super Gym Lễ tân</title>
-    <link rel="stylesheet" href="${pageContext.request.contextPath}/css/pages/receptionist/freeze-membership.css?v=20261027_v8">
+    <link rel="stylesheet" href="${pageContext.request.contextPath}/css/pages/receptionist/freeze-membership.css?v=20261031_v11">
     <link rel="stylesheet" href="${pageContext.request.contextPath}/css/pages/auth/notification-bell.css">
     <script src="${pageContext.request.contextPath}/js/pages/receptionist/freeze-membership.js?v=20261027_v8" defer></script>
     <script src="${pageContext.request.contextPath}/js/pages/auth/notification-bell.js" defer></script>
@@ -56,7 +56,7 @@
                         <div class="search" style="flex:1;">
                             <i class="fa-solid fa-magnifying-glass"></i>
                             <input id="freezeQueryInput" name="q" type="search" value="<c:out value='${query}' />"
-                                   placeholder="Nhập mã khách (KH-...), họ tên hoặc 4 số cuối SĐT..."
+                                   placeholder="Nhập tên, mã khách hoặc số điện thoại"
                                    autocomplete="off" aria-label="Mã khách, số điện thoại hoặc tên" autofocus>
                         </div>
                         <div class="search-filter-wrap">
@@ -329,7 +329,8 @@
                 </div>
             </c:if>
 
-            <%-- KHỐI 3: TOÀN BỘ BẢNG DỮ LIỆU GYMMASTER & LỊCH SỬ TOÀN HỆ THỐNG (FULL-WIDTH) --%>
+            <%-- KHỐI 3: TOÀN BỘ BẢNG DỮ LIỆU GYMMASTER & LỊCH SỬ TOÀN HỆ THỐNG (CHỈ HIỂN THỊ KHI CHƯA CHỌN HỘI VIÊN) --%>
+            <c:if test="${empty freezeCustomer}">
             <section class="freeze-tabs-card" style="margin-top:var(--space-4);">
                 <div class="freeze-tabs-nav">
                     <button type="button" class="freeze-tab-btn active" data-target="#tabMembers">
@@ -347,7 +348,7 @@
                     <div class="gym-table-header-bar">
                         <div class="header-titles">
                             <h3><i class="fa-solid fa-table-list text-primary"></i> Quản lý gói tập hội viên</h3>
-                            <p>Nhấp vào bất kỳ dòng nào để chọn hội viên và thực hiện bảo lưu hoặc mở lại thẻ.</p>
+                            
                         </div>
                         <c:if test="${not empty query or (not empty currentFilter and currentFilter != 'ALL')}">
                             <div class="filter-indicator">
@@ -377,8 +378,8 @@
                                     </th>
                                     <th style="width: 22%;">Gói tập & Trạng thái</th>
                                     <th style="width: 19%;">Thời hạn gói tập</th>
-                                    <th style="width: 18%;">Tình trạng bảo lưu</th>
-                                    <th style="width: 13%; text-align: right;">Thao tác</th>
+                                    <th style="width: 18%; text-align: center;">Tình trạng bảo lưu</th>
+                                    <th style="width: 13%; text-align: center;">Thao tác</th>
                                 </tr>
                             </thead>
                             <tbody>
@@ -446,18 +447,18 @@
                                                         <c:out value="${row.freezeStatusLabel}" />
                                                     </span>
                                                 </td>
-                                                <td class="gym-action-cell" style="text-align: right;">
+                                                <td class="gym-action-cell" style="text-align: center;">
                                                     <a href="${pageContext.request.contextPath}/receptionist/freeze?q=${row.customerCode}"
                                                        class="btn btn-ghost btn-sm" title="Chọn khách hàng">
                                                         <c:choose>
                                                             <c:when test="${row.isCurrentlyFrozen()}">
-                                                                <i class="fa-solid fa-unlock text-warn"></i> Mở lại
+                                                                Mở lại
                                                             </c:when>
                                                             <c:when test="${row.isEligibleToFreeze()}">
-                                                                <i class="fa-solid fa-snowflake text-primary"></i> Bảo lưu
+                                                                Bảo lưu
                                                             </c:when>
                                                             <c:otherwise>
-                                                                <i class="fa-solid fa-eye"></i> Xem
+                                                                Xem
                                                             </c:otherwise>
                                                         </c:choose>
                                                     </a>
@@ -521,25 +522,25 @@
                         <table class="gym-table">
                             <thead>
                                 <tr>
-                                    <th style="width: 23%;">
+                                    <th style="width: 19%;">
                                         <div class="th-cust-flex">
                                             <span class="th-avatar-space"></span>
                                             <span>Hội viên</span>
                                         </div>
                                     </th>
-                                    <th style="width: 12%;">Gói tập</th>
-                                    <th style="width: 16%;">Thời gian bảo lưu</th>
-                                    <th style="width: 7%; text-align: center;">Số ngày</th>
-                                    <th style="width: 11%; text-align: center;">Trạng thái</th>
-                                    <th style="width: 16%;">Lý do bảo lưu</th>
-                                    <th style="width: 15%;">Lễ tân tiếp nhận</th>
+                                    <th style="width: 11%;">Gói tập</th>
+                                    <th style="width: 14%;">Thời gian bảo lưu</th>
+                                    <th style="width: 8%; text-align: center;">Số ngày</th>
+                                    <th style="width: 13%; text-align: center;">Trạng thái</th>
+                                    <th style="width: 14%;">Lý do bảo lưu</th>
+                                    <th style="width: 21%;">Lễ tân tiếp nhận</th>
                                 </tr>
                             </thead>
                             <tbody>
                                 <c:choose>
                                     <c:when test="${not empty freezeHistoryList}">
                                         <c:forEach var="item" items="${freezeHistoryList}">
-                                            <tr class="row-clickable" data-href="${pageContext.request.contextPath}/receptionist/freeze?q=${item.customerCode}">
+                                            <tr>
                                                 <td>
                                                     <div class="gym-cust-cell">
                                                         <div class="common-user-avatar sm">
@@ -575,10 +576,10 @@
                                                         </div>
                                                     </div>
                                                 </td>
-                                                <td style="text-align: center;">
-                                                    <span class="badge badge-info" style="font-size:12px;">${item.daysFrozen} ngày</span>
+                                                <td class="gym-days-cell">
+                                                    <b>${item.daysFrozen} ngày</b>
                                                 </td>
-                                                <td style="text-align: center;">
+                                                <td class="gym-status-cell">
                                                     <span class="badge ${item.statusBadgeClass}"><c:out value="${item.statusLabel}" /></span>
                                                 </td>
                                                 <td class="gym-reason-cell">
@@ -613,6 +614,7 @@
                 </div>
 
             </section>
+            </c:if>
         </main>
     </div>
 </div>

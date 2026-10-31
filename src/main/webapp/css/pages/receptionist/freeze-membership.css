@@ -884,7 +884,8 @@
 
 /* Ô thao tác */
 .gym-action-cell {
-  text-align: right;
+  text-align: center;
+  vertical-align: middle;
   min-width: 0;
   white-space: nowrap;
 }
@@ -960,9 +961,37 @@
   color: var(--color-primary-hover, #1d4ed8);
 }
 
-/* Ô lễ tân tiếp nhận: Luôn hiển thị đầy đủ, không bị khuất hay rớt dòng */
-.gym-staff-cell {
+/* Badge trạng thái hoàn thành (đồng bộ với badge-warning, badge-info) */
+.badge-ok {
+  background: var(--color-success-tint);
+  border-color: var(--color-success-border);
+  color: var(--color-success-ink);
+}
+
+/* Ô số ngày: Chữ màu đen/chuẩn như cột Thời gian bảo lưu, căn giữa */
+.gym-days-cell {
+  text-align: center;
+  vertical-align: middle;
+  color: var(--color-text);
+  font-size: var(--font-size-sm);
   white-space: nowrap;
+  padding: 10px 16px;
+}
+
+.gym-days-cell b {
+  font-weight: var(--font-weight-medium);
+  color: var(--color-text);
+}
+
+/* Ô trạng thái: Giãn khoảng cách với cột số ngày */
+.gym-status-cell {
+  text-align: center;
+  vertical-align: middle;
+  padding: 10px 16px;
+}
+
+/* Ô lễ tân tiếp nhận: Luôn hiển thị đầy đủ, không bị khuất hay cắt chữ */
+.gym-staff-cell {
   vertical-align: middle;
 }
 
@@ -972,12 +1001,14 @@
   gap: 6px;
   font-size: var(--font-size-xs);
   color: var(--color-text-soft);
-  white-space: nowrap;
+  line-height: 1.4;
+  word-break: break-word;
 }
 
 .gym-staff-info i {
   color: var(--color-primary);
   font-size: 12px;
+  flex-shrink: 0;
 }
 
 /* Header & Cell bổ sung cho lưới GymMaster chuyên nghiệp */
