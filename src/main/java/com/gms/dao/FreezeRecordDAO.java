@@ -411,7 +411,7 @@ public class FreezeRecordDAO {
      * <p>Xử lý gói đôi (PTCouple) theo CBR-67: buổi chỉ bị Missed nếu partner cũng không có thẻ tập hợp lệ.</p>
      */
     public List<FreezeSessionImpactView> findScheduledSessionsInPeriod(
-            int customerId, LocalDate startDate, LocalDate plannedEndDate) throws SQLException {
+            Connection conn, int customerId, LocalDate startDate, LocalDate plannedEndDate) throws SQLException {
 
         String sql = """
                 SELECT
@@ -460,8 +460,7 @@ public class FreezeRecordDAO {
                 """;
 
         List<FreezeSessionImpactView> list = new ArrayList<>();
-        try (Connection conn = DBContext.getConnection();
-             PreparedStatement stmt = conn.prepareStatement(sql)) {
+        try (PreparedStatement stmt = conn.prepareStatement(sql)) {
             stmt.setInt(1, customerId);
             stmt.setInt(2, customerId);
             stmt.setDate(3, Date.valueOf(startDate));
@@ -494,6 +493,13 @@ public class FreezeRecordDAO {
             }
         }
         return list;
+    }
+
+    public List<FreezeSessionImpactView> findScheduledSessionsInPeriod(
+            int customerId, LocalDate startDate, LocalDate plannedEndDate) throws SQLException {
+        try (Connection conn = DBContext.getConnection()) {
+            return findScheduledSessionsInPeriod(conn, customerId, startDate, plannedEndDate);
+        }
     }
 
     /**
