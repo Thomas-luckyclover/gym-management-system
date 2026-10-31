@@ -20,6 +20,9 @@ for k in SRS_TABLES:
     for r in d[k][1:]: texts.append((k, r[0], ' | '.join(str(c) for c in r)))
 for e, st, rows in d['ENT']: texts.append(('ENT', e, ' | '.join(v for _, v in rows)))
 for r in d['MSG'][1:]: texts.append(('MSG', r[1], r[3] + ' | ' + r[4]))
+for j in d['JOBSPEC']:
+    texts.append(('JOBSPEC', j['title'][:4], ' | '.join(j.get('paras', []) + [j.get('purpose',''), j.get('related',''), j.get('params','')] + j.get('steps', []) + [' '.join(f) for f in j.get('fail', [])])))
+for r in d['S2'][1:]: texts.append(('S2', r[0], ' | '.join(r)))
 # ---------- Q2 no version / status noise ----------
 NOISE = re.compile(r'\bv2\d\b|[Nn]ot (?:fully )?implemented|[Ii]mplemented|Code to fix|[Dd]ecision \d\d/\d\d|no (?:customer )?screen yet|skeleton|\bTODO\b|no longer (?:swap|cancel|mark)|when implemented|not (?:sold|built|done|shown)[^.|]{0,25}\byet\b|\bnot yet (?:sold|built|implemented|available)')
 for k, rid, t in texts:
@@ -42,7 +45,7 @@ for k, rid, t in texts:
             if ref not in msgs: fail('Q3', f'{k} {rid} → missing {ref}')
             continue
         if ref not in ids: fail('Q3', f'{k} {rid} → missing {ref}')
-        elif ref in withdrawn and ref != rid and not is_w and k not in ('UCX', 'BF'):
+        elif ref in withdrawn and ref != rid and not is_w and k not in ('UCX', 'BF', 'S2', 'JOBSPEC'):
             fail('Q3', f'{k} {rid} → withdrawn {ref}')
 # ---------- Q4 no rule codes in message content ----------
 for r in d['MSG'][1:]:
@@ -74,7 +77,7 @@ STALE = [
  (r'(?i)quantity is at least 1|facility quantity', 'facility quantity is computed'),
 ]
 for k, rid, t in texts:
-    if k in ('UCX', 'BF') or t.startswith('Withdrawn') or 'Withdrawn —' in t: continue
+    if k in ('UCX', 'BF', 'S2') or t.startswith('Withdrawn') or 'Withdrawn —' in t: continue
     for rx, why in STALE:
         m = re.search(rx, t)
         if m: fail('Q7', f'{k} {rid}: "{m.group(0)}" — {why}')

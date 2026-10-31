@@ -166,6 +166,8 @@ def short(t, n=230):
     return t if len(t) <= n else t[:n].rsplit(' ', 1)[0] + ' … (full text in section 2)'
 data['TRACK'] = [data['TRACK'][0]] + [[r[0], r[1], short(r[2]), short(r[3]), r[4]] for r in data['TRACK'][1:]]
 data['DEF'] = [['#', 'Acronym', 'Definition']] + DEF
+data['JOBSPEC'] = G['JOBSPEC']
+data['S2'] = [G['S2_COLS']] + G['S2']
 data['LOG'] = [['Date', 'A*M, D', 'In charge', 'Change Description']] + LOG
 json.dump(data, open('docs/srs-update/build/data/data.json', 'w'), ensure_ascii=False)
 print('DEF', len(DEF))

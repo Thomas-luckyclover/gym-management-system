@@ -71,6 +71,21 @@ C.push(note('Phần System Functionalities được yêu cầu giữ lại; 3 b�
 C.push(H3('5.1.b Screen List')); C.push(table(data.SCR, [5, 23, 19, 53]));
 C.push(H3('5.2 External API Inventory')); C.push(table(data.API, [5, 25, 14, 56]));
 C.push(H3('5.3 Background Job Inventory')); C.push(table(data.JOB, [5, 25, 13, 57]));
+C.push(H2('II.13 Background Job Inventory — các phần viết lại'));
+C.push(note('Mục II.13 là đặc tả (không phải prototype) và đang mâu thuẫn với CBR-42 / CBR-85: thay đúng các phần dưới đây, giữ nguyên 13.1–13.3, 13.5, 13.6.'));
+for (const j of data.JOBSPEC) {
+  C.push(H3(j.title));
+  if (j.paras) { j.paras.forEach(t => C.push(para(t, { after: 80 }))); if (j.keep) C.push(note(j.keep)); continue; }
+  C.push(new Paragraph({ spacing: { after: 40 }, children: [new TextRun({ text: 'Trigger: ', bold: true, font: FONT, size: SZ }), new TextRun({ text: j.trigger, font: FONT, size: SZ })] }));
+  C.push(new Paragraph({ spacing: { after: 40 }, children: [new TextRun({ text: 'Purpose: ', bold: true, font: FONT, size: SZ }), new TextRun({ text: j.purpose, font: FONT, size: SZ })] }));
+  C.push(new Paragraph({ spacing: { after: 40 }, children: [new TextRun({ text: 'Related: ', bold: true, font: FONT, size: SZ }), new TextRun({ text: j.related, font: FONT, size: SZ })] }));
+  C.push(new Paragraph({ spacing: { after: 80 }, children: [new TextRun({ text: 'Parameters: ', bold: true, font: FONT, size: SZ }), new TextRun({ text: j.params, font: FONT, size: SZ })] }));
+  C.push(para('Processing steps:', { after: 40 }));
+  let n = 0;
+  j.steps.forEach(t => { const sub = t.startsWith('    '); if (!sub) n += 1; C.push(para(sub ? '        ' + t.trim() : n + '. ' + t, { after: 40 })); });
+  C.push(para('Failure behavior:', { after: 40 }));
+  C.push(table([['Scenario', 'System behavior']].concat(j.fail), [30, 70])); C.push(gap());
+}
 C.push(new Paragraph({ children: [new PageBreak()] }));
 C.push(H2('III.1 General Business Rules')); C.push(table(data.GBR, [9, 37, 15, 21, 18])); C.push(gap());
 C.push(H2('III.2 Common Business Rules')); C.push(table(data.CBR, [10, 71, 19])); C.push(gap());
@@ -85,6 +100,8 @@ C.push(new Paragraph({ children: [new PageBreak()] }));
 C.push(H1('3. Mâu thuẫn trong Use Case Specification'));
 C.push(note('Sửa trong phần đặc tả UC (luồng, điều kiện, câu thông báo) cho khớp các bảng ở Mục 2.'));
 C.push(table(data.UCX, [12, 38, 50])); C.push(gap());
+C.push(H2('3b. Mục II — đoạn còn mâu thuẫn (giữ prototype, chỉ sửa / đánh dấu chữ)'));
+C.push(table(data.S2, [22, 36, 42])); C.push(gap());
 C.push(H1('4. Code cần sửa / làm tiếp (SRS đã đủ, code làm sau)'));
 C.push(note('Phần code chưa làm hoặc làm chưa đủ so với SRS. SRS ở Mục 2 đã ghi đủ yêu cầu; danh sách này chỉ để nhóm biết phần code còn lại, không ảnh hưởng tới SRS.'));
 C.push(table(data.FIX, [30, 24, 46]));
