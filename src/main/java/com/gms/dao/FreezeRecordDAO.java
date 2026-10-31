@@ -409,6 +409,7 @@ public class FreezeRecordDAO {
      * để tính toán và cảnh báo các buổi sẽ bị chuyển sang Missed (MembershipFrozen).
      *
      * <p>Xử lý gói đôi (PTCouple) theo CBR-67: buổi chỉ bị Missed nếu partner cũng không có thẻ tập hợp lệ.</p>
+     * <p>Sử dụng kết nối đang mở để an toàn trong transaction (tránh deadlock tự khóa khi bảng Subscriptions/Customers bị X-Lock).</p>
      */
     public List<FreezeSessionImpactView> findScheduledSessionsInPeriod(
             Connection conn, int customerId, LocalDate startDate, LocalDate plannedEndDate) throws SQLException {
