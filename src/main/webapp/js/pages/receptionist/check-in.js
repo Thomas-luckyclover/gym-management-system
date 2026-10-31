@@ -15,12 +15,12 @@ document.addEventListener('DOMContentLoaded', function () {
     function openModal() {
         photoModal.classList.add('open');
         if (navigator.mediaDevices && navigator.mediaDevices.getUserMedia) {
-            navigator.mediaDevices.getUserMedia({ video: { width: 640, height: 480 } })
+            navigator.mediaDevices.getUserMedia({ video: { width: 640, height: 480 } })//Xin quyền bật Webcam máy tính
                 .then(stream => {
-                    videoStream = stream;
+                    videoStream = stream;//mở luồng steam
                     cameraVideo.srcObject = stream;
-                    cameraVideo.style.display = 'block';
-                    cameraCanvas.style.display = 'none';
+                    cameraVideo.style.display = 'block';//bật màn hình hiển thị webcam
+                    cameraCanvas.style.display = 'none';//giấu canvas, vì canvas sẽ hiển thị ảnh chụp từ webcam
                 })
                 .catch(err => console.warn('Không thể truy cập camera:', err));
         }
@@ -28,9 +28,10 @@ document.addEventListener('DOMContentLoaded', function () {
 
     function closeModal() {
         photoModal.classList.remove('open');
+        //khi bấm dấu x(data-close-modal), sẽ lamf modal tàng hình trở lại
         if (videoStream) {
             videoStream.getTracks().forEach(track => track.stop());
-            videoStream = null;
+            videoStream = null;//tắt luồng stream
         }
     }
 
@@ -49,13 +50,13 @@ document.addEventListener('DOMContentLoaded', function () {
             cameraCanvas.height = cameraVideo.videoHeight || 480;
             ctx.drawImage(cameraVideo, 0, 0, cameraCanvas.width, cameraCanvas.height);
 
-            cameraCanvas.style.display = 'block';
+            cameraCanvas.style.display = 'block';//bấm chụp thì sẽ ẩn video hiện canvas
             cameraVideo.style.display = 'none';
 
             // Chuyển ảnh webcam sang file để submit form
             cameraCanvas.toBlob(blob => {
                 if (blob) {
-                    const file = new File([blob], 'captured-checkin.jpg', { type: 'image/jpeg' });
+                    const file = new File([blob], 'captured-checkin.jpg', { type: 'image/jpeg' });//đóng gói ảnh canvas thành file captured-checkin.jpg
                     const container = new DataTransfer();
                     container.items.add(file);
                     photoFileInput.files = container.files;

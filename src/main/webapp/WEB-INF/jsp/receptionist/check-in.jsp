@@ -228,7 +228,7 @@
                                               <div class="ci-photo${empty lookupResult.checkInPhoto ? ' is-empty' : ''}">
                                                 <c:choose>
                                                   <c:when test="${not empty lookupResult.checkInPhoto}">
-                                                    <img src="<c:url value='${lookupResult.checkInPhoto}' />" alt="Ảnh hội viên">
+                                                    <img src="<c:url value='${lookupResult.checkInPhoto}' />" alt="Ảnh hội viên"><%-- url tự động thêm contextpath vào đường dẫn ảnh --%>
                                                   </c:when>
                                                   <c:otherwise>
                                                     <span>Chưa có<br>ảnh</span>
@@ -418,24 +418,23 @@
                           <c:otherwise>Chụp ảnh check-in tại quầy</c:otherwise>
                         </c:choose>
                       </h3>
-                      <button class="btn btn-ghost btn-sm" type="button" data-close-modal>&times;</button>
+                      <button class="btn btn-ghost btn-sm" type="button" data-close-modal>&times;</button><%-- dấu x đóng modal --%>
                     </div>
                     <p style="font-size:var(--font-size-md);color:var(--color-text-soft);margin-bottom:var(--space-3);">
                       Camera quầy sẽ chụp và lưu vào hồ sơ của <b>
                         <c:out value="${lookupResult.fullName}" />
-                      </b>. Ảnh chỉ dùng để đối chiếu khi khách vào tập.
+                      </b> Ảnh chỉ dùng để đối chiếu khi khách vào tập.
                     </p>
                     <div class="camera-preview">
                       <video id="cameraVideo" autoplay playsinline></video>
                       <canvas id="cameraCanvas" style="display:none;"></canvas>
                     </div>
                     <form action="${pageContext.request.contextPath}/receptionist/check-in" method="POST"
-                      enctype="multipart/form-data">
+                      enctype="multipart/form-data"> <%-- enctype="multipart/form-data" đóng goi dữ liệu form khi upload file, nếu không có thì trình duyệt chỉ đóng gói text và servlet sẽ k nhận đc ảnh --%>
                       <input type="hidden" name="action" value="savePhoto">
                       <input type="hidden" name="customerId" value="${lookupResult.customerId}">
                       <input type="hidden" name="customerCode" value="<c:out value='${lookupResult.customerCode}' />">
-                      <input type="file" id="photoFileInput" name="photoFile" accept="image/jpeg,image/png" required
-                        style="margin-bottom:var(--space-3);font-size:var(--font-size-md);">
+                      <input type="file" id="photoFileInput" name="photoFile" accept="image/jpeg,image/png" required style="margin-bottom:var(--space-3);font-size:var(--font-size-md);">
                       <div class="btn-row" style="justify-content:flex-end;">
                         <button class="btn btn-outline" type="button" id="captureBtn">Chụp từ webcam</button>
                         <button class="btn btn-primary" type="submit">Lưu ảnh check-in</button>

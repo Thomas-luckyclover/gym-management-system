@@ -160,7 +160,7 @@ public class CheckInDAO {
                 + "WHERE s.CustomerId = ? "
                 + "ORDER BY CASE WHEN s.Status = 'Active' THEN 1 WHEN s.Status = 'Frozen' THEN 2 ELSE 3 END, s.EndDate DESC";
         //Sắp xếp theo thứ tự: Active trước, Frozen sau, các trạng thái khác cuối cùng.
-        // Trong mỗi nhóm, sắp xếp theo ngày kết thúc muộn nhất.
+        // Trong mỗi nhóm, sắp xếp theo ngày kết thúc muộn nhất
 
         List<CustomerSubscriptionInfo> list = new ArrayList<>();
         try (Connection conn = DBContext.getConnection();
@@ -320,12 +320,12 @@ public class CheckInDAO {
         //ESCAPE '\\' cho phép sử dụng ký tự thoát trong pattern, ví dụ: nếu keyword chứa ký tự '%' hoặc '_',
         // chúng sẽ được coi là ký tự bình thường thay vì ký tự đại diện trong LIKE.
         //Nếu không có thì hệ thống sẽ gặp 3 lỗi sau:
-        //Sập trang (Crash web): Người dùng chỉ cần gõ một dấu ngoặc vuông [ vào ô tìm kiếm là SQL Server báo lỗi cú pháp $\rightarrow$ Web bị văng lỗi 500 ngay lập tức.
-        //Tìm sai người: Người dùng tìm mã có dấu gạch dưới (vd: KH_01) thì SQL sẽ hiểu _ là ký tự bất kỳ $\rightarrow$ Trả về lung tung cả KHA01, KHB01... (lẫn lộn hồ sơ khách).
-        //Treo máy chủ (Lag database): Người dùng gõ một dấu % $\rightarrow$ SQL sẽ load toàn bộ hàng chục nghìn khách hàng ra ngoài $\rightarrow$ Gây đơ và nghẽn hệ thống.
+        //Sập trang (Crash web): Người dùng chỉ cần gõ một dấu ngoặc vuông [ vào ô tìm kiếm là SQL Server báo lỗi cú pháp -> Web bị văng lỗi 500 ngay lập tức.
+        //Tìm sai người: Người dùng tìm mã có dấu gạch dưới (vd: KH_01) thì SQL sẽ hiểu _ là ký tự bất kỳ -> Trả về lung tung cả KHA01, KHB01... (lẫn lộn hồ sơ khách).
+        //Treo máy chủ (Lag database): Người dùng gõ một dấu % -> SQL sẽ load toàn bộ hàng chục nghìn khách hàng ra ngoài -> Gây đơ và nghẽn hệ thống.
 
         String pattern = isPhoneSuffix ? ("%" + keyword.trim()) : SqlUtil.toContainsPattern(keyword);
-        //Nếu là SĐT: Thêm % vào đằng trước $\rightarrow$ "%5678" (số điện thoại có đuôi là 5678).
+        //Nếu là SĐT: Thêm % vào đằng trước -> "%5678" (số điện thoại có đuôi là 5678).
         //Nếu là Họ tên: SqlUtil.toContainsPattern(keyword) sẽ tạo ra "%tên%" (tên chứa từ khóa đó) và tự động xử lý an toàn các ký tự đặc biệt.
 
         try (Connection conn = DBContext.getConnection();
@@ -352,7 +352,7 @@ public class CheckInDAO {
      */
     public List<CustomerSearchItem> searchCustomersByKeyword(String keyword, int pageNumber, int pageSize)
             throws SQLException {
-        int offset = Math.max(0, (pageNumber - 1) * pageSize);
+        int offset = Math.max(0, (pageNumber - 1) * pageSize); //số người bỏ qua, hàm Math.max đảm bảo không âm
         boolean isPhoneSuffix = keyword != null && keyword.trim().matches("\\d{4}");
         String sql = "SELECT cust.CustomerId, cust.CustomerCode, p.FullName, p.Phone, "
                 + "cust.Status AS CustomerStatus, cust.CheckInPhoto "
@@ -362,6 +362,8 @@ public class CheckInDAO {
                 + (isPhoneSuffix ? "p.Phone LIKE ?" : "p.FullName COLLATE Latin1_General_100_CI_AI LIKE ? ESCAPE '\\'")
                 + " ORDER BY p.FullName, cust.CustomerId "
                 + "OFFSET ? ROWS FETCH NEXT ? ROWS ONLY";
+        //khi ở trang 1, offset = 0 -> bỏ qua 0 dòng, lấy từ 1 đến 10
+        //khi ở trang 2, offset = 10 -> bỏ qua 10 dòng, lấy từ 11 đến 20
 
         List<CustomerSearchItem> list = new ArrayList<>();
         String pattern = isPhoneSuffix ? ("%" + keyword.trim()) : SqlUtil.toContainsPattern(keyword);

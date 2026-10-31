@@ -123,7 +123,7 @@ public class CheckInService {
                         || "DayPass".equalsIgnoreCase(sub.subscriptionType);
                 //Kiểm tra xem phải là membership hoặc daypass hay không, vì chỉ những gói này mới được quyền vào tập tự do
                 if (isGymAccess) {
-                    if ("Active".equalsIgnoreCase(sub.status)) {
+                    if ("Active".equalsIgnoreCase(sub.status)) {//tt ktra k qtrong
                         // Kiểm tra chưa đến ngày bắt đầu (startDate > today)
                         if (sub.startDate != null && sub.startDate.isAfter(today)) {
                             //kiểm tra null trước khi gọi isAfter để tránh NullPointerException

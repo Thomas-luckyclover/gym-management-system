@@ -69,15 +69,14 @@ public class CheckInServlet extends HttpServlet {
                 CheckInLookupResult lookupData = result.getData();
                 //lấy dữ liệu kèm theo khi thực hiện tra cứu (CheckInLookupResult) từ ServiceResult
 
-                // Nếu exact match không tìm thấy (Mã KH / SĐT) → tìm theo một phần tên có phân
-                // trang
+                // Nếu exact match không tìm thấy (Mã KH / SĐT) → tìm theo một phần tên có phân trang
                 if (lookupData.getDecision() == CheckInLookupResult.Decision.NOT_FOUND) {//dòng 73 service
                     PageResult<CustomerSearchItem> searchResultsPage = checkInService.searchCustomersPage(query, page,
                             pageSize);
 
                     if (!searchResultsPage.isEmpty()) {//nếu danh sách kết quả tìm kiếm theo 1 phần tên không rỗng thì không đóng gói lookupResult
                         //ở đây lookupResult sẽ là null, chỉ có searchResultsPage được set vào request để jsp hiển thị danh sách khách hàng
-                        //
+
                         request.setAttribute("searchResultsPage", searchResultsPage);
                         // dong goi thong tin ket qua tim kiem va phan trang (jsp dung searchResultsPage.items)
                     } else {// neu danh sach ket qua tim kiem rong
@@ -197,18 +196,20 @@ public class CheckInServlet extends HttpServlet {
                 + (!ValidationUtil.isNullOrEmpty(customerCode) ? "?q=" + customerCode : "");
 
         Part photoPart = request.getPart("photoFile");
+        //Nhận file ảnh được gửi từ <input name="photoFile">
         if (photoPart == null || photoPart.getSize() == 0) {
             RequestUtil.setFlashToast(request, "error", "Vui lòng chụp ảnh từ webcam hoặc chọn tệp ảnh trước khi lưu.");
             RequestUtil.redirect(request, response, redirectUrl);
             return;
         }
 
-        Path uploadDirectory = Path.of(getServletContext().getRealPath("/uploads/checkin"));
-        Files.createDirectories(uploadDirectory);
+        Path uploadDirectory = Path.of(getServletContext().getRealPath("/uploads/checkin"));//đường dẫn thư mục lưu ảnh check-in trên server
+        Files.createDirectories(uploadDirectory);//
 
         String fileName = "checkin-" + customerId + "-" + UUID.randomUUID() + ".jpg";
+        //đặt tên file ảnh để tránh trùng tên
 
-        try (InputStream is = photoPart.getInputStream()) {
+        try (InputStream is = photoPart.getInputStream()) { //Lệnh này lấy bức ảnh đó tải về và lưu vào một thư mục trên ổ cứng của server.
             Files.copy(is, uploadDirectory.resolve(fileName), StandardCopyOption.REPLACE_EXISTING);
         }
 
