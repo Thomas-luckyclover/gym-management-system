@@ -160,6 +160,173 @@ function initCustomerPage() {
     if (hasText) {
         handleCustomerInput();
     }
+
+    initQuickCustomerModal();
+}
+
+// Khởi tạo Modal tạo nhanh hồ sơ khách hàng tại Step 2
+function initQuickCustomerModal() {
+    const btnOpen = document.getElementById("btnOpenQuickCustomerModal");
+    const backdrop = document.getElementById("quickCustomerBackdrop");
+    const btnClose = document.getElementById("btnCloseQuickModal");
+    const btnCancel = document.getElementById("btnCancelQuickModal");
+    const form = document.getElementById("formQuickCustomer");
+    if (backdrop === null || form === null) {
+        return;
+    }
+
+    if (btnOpen !== null) {
+        btnOpen.addEventListener("click", function () {
+            openQuickCustomerModal();
+        });
+    }
+
+    if (btnClose !== null) {
+        btnClose.addEventListener("click", closeQuickCustomerModal);
+    }
+    if (btnCancel !== null) {
+        btnCancel.addEventListener("click", closeQuickCustomerModal);
+    }
+
+    backdrop.addEventListener("click", function (e) {
+        if (e.target === backdrop) {
+            closeQuickCustomerModal();
+        }
+    });
+
+    // Chuyển đổi giữa loại Self và Dependent
+    const radioTypes = form.querySelectorAll('input[name="customerType"]');
+    const wrapPhone = document.getElementById("wrapPhone");
+    const qcPhone = document.getElementById("qcPhone");
+    const wrapGuardian = document.getElementById("wrapGuardian");
+    for (const radio of radioTypes) {
+        radio.addEventListener("change", function () {
+            const isDep = this.value === "Dependent";
+            if (wrapGuardian !== null) {
+                wrapGuardian.hidden = !isDep;
+            }
+            if (wrapPhone !== null) {
+                wrapPhone.hidden = isDep;
+            }
+            if (qcPhone !== null) {
+                qcPhone.required = !isDep;
+            }
+        });
+    }
+
+    // Submit form tạo nhanh khách hàng
+    form.addEventListener("submit", handleQuickCustomerSubmit);
+}
+
+function openQuickCustomerModal(prefillPhone) {
+    const backdrop = document.getElementById("quickCustomerBackdrop");
+    const form = document.getElementById("formQuickCustomer");
+    const alertBox = document.getElementById("quickModalAlert");
+    if (backdrop === null || form === null) {
+        return;
+    }
+
+    // Reset lỗi
+    clearQuickModalErrors();
+    if (alertBox !== null) {
+        alertBox.hidden = true;
+        alertBox.textContent = "";
+    }
+
+    // Prefill số điện thoại nếu được truyền vào hoặc lấy từ ô tìm kiếm (nếu là số)
+    const qcPhone = document.getElementById("qcPhone");
+    const searchVal = document.getElementById("customerSearch") ? document.getElementById("customerSearch").value.trim() : "";
+    let initialPhone = prefillPhone;
+    if (!initialPhone && /^0\d{9}$/.test(searchVal.replace(/\D/g, ""))) {
+        initialPhone = searchVal.replace(/\D/g, "");
+    }
+    if (qcPhone !== null && initialPhone) {
+        qcPhone.value = initialPhone;
+    }
+
+    backdrop.hidden = false;
+    const nameInput = document.getElementById("qcFullName");
+    if (nameInput !== null) {
+        nameInput.focus();
+    }
+}
+
+function closeQuickCustomerModal() {
+    const backdrop = document.getElementById("quickCustomerBackdrop");
+    if (backdrop !== null) {
+        backdrop.hidden = true;
+    }
+}
+
+function clearQuickModalErrors() {
+    const errorSpans = document.querySelectorAll(".quick-field-error");
+    for (const span of errorSpans) {
+        span.hidden = true;
+        span.textContent = "";
+    }
+}
+
+async function handleQuickCustomerSubmit(e) {
+    e.preventDefault();
+    clearQuickModalErrors();
+    const alertBox = document.getElementById("quickModalAlert");
+    if (alertBox !== null) {
+        alertBox.hidden = true;
+    }
+
+    const form = document.getElementById("formQuickCustomer");
+    const submitBtn = document.getElementById("btnSubmitQuickCustomer");
+    if (form === null || submitBtn === null) {
+        return;
+    }
+
+    const formData = new FormData(form);
+    const params = new URLSearchParams();
+    for (const pair of formData.entries()) {
+        params.append(pair[0], pair[1]);
+    }
+
+    submitBtn.disabled = true;
+    const originalText = submitBtn.innerHTML;
+    submitBtn.innerHTML = '<i class="fa-solid fa-spinner fa-spin" aria-hidden="true"></i> Đang xử lý…';
+
+    try {
+        const response = await postData(CUSTOMER_SEARCH_URL, params);
+        if (!response.success) {
+            if (response.errors && Object.keys(response.errors).length > 0) {
+                for (const field in response.errors) {
+                    const errEl = document.getElementById("err_" + field);
+                    if (errEl !== null) {
+                        errEl.textContent = response.errors[field];
+                        errEl.hidden = false;
+                    }
+                }
+            }
+            if (response.message) {
+                if (alertBox !== null) {
+                    alertBox.textContent = response.message;
+                    alertBox.hidden = false;
+                }
+            }
+            submitBtn.disabled = false;
+            submitBtn.innerHTML = originalText;
+            return;
+        }
+
+        // Tạo thành công: nhận về CounterCustomerRow, chuyển thẳng sang Bước 3 (Thu tiền)
+        const newCustomer = response.data;
+        const packageId = document.getElementById("quickPackageId").value;
+        const targetUrl = getContextPath() + "/receptionist/sales?package=" + encodeURIComponent(packageId) + "&customer=" + encodeURIComponent(newCustomer.customerId);
+        window.location.href = targetUrl;
+    } catch (err) {
+        console.error("Lỗi khi tạo nhanh khách hàng:", err);
+        if (alertBox !== null) {
+            alertBox.textContent = "Không thể kết nối đến máy chủ. Vui lòng thử lại.";
+            alertBox.hidden = false;
+        }
+        submitBtn.disabled = false;
+        submitBtn.innerHTML = originalText;
+    }
 }
 
 // Mỗi lần gõ: chờ 0,25 giây không gõ thêm rồi mới gọi server.
@@ -204,7 +371,7 @@ async function loadCustomers(keyword) {
     const isEmpty = rows === null || rows.length === 0;
     if (isEmpty) {
         showCustomerState('Không tìm thấy khách nào khớp với "' + keyword + '".',
-            'Khách mới thì bấm "+ Tạo hồ sơ" bên dưới.');
+            'Bấm "+ Tạo hồ sơ" để tạo nhanh hồ sơ và tiếp tục mua gói.');
         return;
     }
     renderCustomerRows(rows);

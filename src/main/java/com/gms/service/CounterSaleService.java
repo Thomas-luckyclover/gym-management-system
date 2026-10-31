@@ -3,20 +3,25 @@ package com.gms.service;
 import com.gms.constant.Messages;
 import com.gms.constant.Role;
 import com.gms.dao.CounterSaleDAO;
+import com.gms.dao.CustomerDAO;
 import com.gms.dao.OrderDAO;
+import com.gms.dao.PersonDAO;
 import com.gms.dao.PtSaleDAO;
 import com.gms.dao.ShiftDAO;
 import com.gms.dao.SubscriptionDAO;
 import com.gms.dao.VoucherDAO;
 import com.gms.dto.CounterCheckoutInput;
+import com.gms.dto.CounterCustomerCreateInput;
 import com.gms.dto.CounterCustomerRow;
 import com.gms.dto.CounterPackageCard;
 import com.gms.dto.CounterPackageView;
 import com.gms.dto.CounterSaleReceipt;
 import com.gms.dto.CounterVoucherResult;
 import com.gms.dto.ServiceResult;
+import com.gms.entity.Customer;
 import com.gms.entity.Order;
 import com.gms.entity.Package;
+import com.gms.entity.Person;
 import com.gms.entity.Shift;
 import com.gms.entity.Subscription;
 import com.gms.entity.Voucher;
@@ -52,6 +57,8 @@ public class CounterSaleService {
     private static final int MIN_MONTHS_FOR_SAVING = 3;
 
     private final CounterSaleDAO counterSaleDAO = new CounterSaleDAO();
+    private final CustomerDAO customerDAO = new CustomerDAO();
+    private final PersonDAO personDAO = new PersonDAO();
     private final PtSaleDAO ptSaleDAO = new PtSaleDAO();
     private final ShiftDAO shiftDAO = new ShiftDAO();
     private final OrderDAO orderDAO = new OrderDAO();
@@ -199,6 +206,134 @@ public class CounterSaleService {
                 return ServiceResult.fail(Messages.MSG76_STAFF_OWN_CUSTOMER_PROFILE);
             }
             return ServiceResult.ok(row);
+        } catch (SQLException e) {
+            e.printStackTrace();
+            return ServiceResult.fail(Messages.MSG04_SYSTEM_BUSY);
+        }
+    }
+
+    /**
+     * TẠO NHANH HỒ SƠ KHÁCH HÀNG TẠI QUẦY (Step 2 - Counter Sales).
+     *
+     * Kiểm tra số điện thoại chống trùng 1-1 theo DBR-22.
+     * Tạo Person và Customer trong 1 Transaction, sinh mã KH-nnnn, ghi AuditLog.
+     *
+     * @param accountId mã tài khoản lễ tân từ session
+     * @param input thông tin tạo khách (FullName, Phone, DOB, CustomerType, Guardian...)
+     * @return CounterCustomerRow thông tin khách vừa tạo để chọn ngay sang Bước 3
+     */
+    public ServiceResult<CounterCustomerRow> quickCreateCustomer(int accountId, CounterCustomerCreateInput input) {
+        // B1: kiểm tra input hợp lệ
+        if (input == null) {
+            return ServiceResult.fail("Dữ liệu khách hàng không hợp lệ.");
+        }
+
+        String fullName = input.getFullName() == null ? "" : input.getFullName().trim();
+        if (!ValidationUtil.isValidFullName(fullName)) {
+            return ServiceResult.failField("fullName", "Họ và tên từ 2 đến 50 ký tự, chỉ chứa chữ cái và khoảng trắng.");
+        }
+
+        LocalDate today = DateTimeUtil.today();
+        LocalDate dob = input.getDateOfBirth();
+        if (dob == null || !ValidationUtil.isValidDateOfBirth(dob, today)) {
+            return ServiceResult.failField("dateOfBirth", "Ngày sinh không hợp lệ hoặc vượt quá 100 tuổi.");
+        }
+
+        String rawType = input.getCustomerType();
+        String customerType = "Dependent".equalsIgnoreCase(rawType) ? "Dependent" : "Self";
+        boolean isDependent = "Dependent".equals(customerType);
+
+        String phone = input.getPhone() == null ? "" : input.getPhone().trim();
+        String guardianName = input.getGuardianName() == null ? "" : input.getGuardianName().trim();
+        String guardianRel = input.getGuardianRelationship() == null ? "" : input.getGuardianRelationship().trim();
+        String guardianPhone = input.getGuardianPhone() == null ? "" : input.getGuardianPhone().trim();
+
+        if (isDependent) {
+            // Dependent: Phone cá nhân là NULL, bắt buộc thông tin giám hộ
+            phone = null;
+            if (guardianName.length() < 2 || guardianName.length() > 50) {
+                return ServiceResult.failField("guardianName", "Tên người giám hộ từ 2 đến 50 ký tự.");
+            }
+            if (guardianRel.isEmpty() || guardianRel.length() > 30) {
+                return ServiceResult.failField("guardianRelationship", "Mối quan hệ người giám hộ không được để trống (tối đa 30 ký tự).");
+            }
+            if (!ValidationUtil.isValidPhone(guardianPhone)) {
+                return ServiceResult.failField("guardianPhone", "Số điện thoại người giám hộ phải gồm 10 chữ số bắt đầu bằng 0.");
+            }
+        } else {
+            // Self: Bắt buộc Phone cá nhân (10 số, bắt đầu bằng 0)
+            if (!ValidationUtil.isValidPhone(phone)) {
+                return ServiceResult.failField("phone", "Số điện thoại phải gồm 10 chữ số bắt đầu bằng 0.");
+            }
+            guardianName = null;
+            guardianRel = null;
+            guardianPhone = null;
+        }
+
+        try (Connection connection = DBContext.getConnection()) {
+            // B2: kiểm tra quyền lễ tân
+            int[] receptionist = ptSaleDAO.findReceptionist(connection, accountId);
+            if (receptionist == null) {
+                return ServiceResult.fail(Messages.MSG07_NO_PERMISSION);
+            }
+
+            // B3: kiểm tra trùng số điện thoại (chỉ áp dụng với Self vì Phone cá nhân không được trùng)
+            if (!isDependent) {
+                Person existingPerson = personDAO.findByPhone(phone);
+                if (existingPerson != null) {
+                    return ServiceResult.failField("phone", "Số điện thoại " + phone + " đã tồn tại trong hệ thống với khách: " + existingPerson.getFullName() + ".");
+                }
+            }
+
+            // B4: thực hiện transaction tạo Person + Customer
+            connection.setAutoCommit(false);
+            try {
+                // B4.1: tạo Person
+                Person person = new Person();
+                person.setFullName(fullName);
+                person.setDateOfBirth(dob);
+                person.setPhone(phone);
+                person.setReleased(false);
+                int personId = personDAO.insert(connection, person);
+
+                // B4.2: sinh mã khách hàng KH-nnnn
+                String customerCode = customerDAO.generateNextCustomerCode(connection);
+
+                // B4.3: tạo Customer
+                Customer customer = new Customer();
+                customer.setPersonId(personId);
+                customer.setCustomerCode(customerCode);
+                customer.setCustomerType(customerType);
+                customer.setGuardianName(guardianName);
+                customer.setGuardianRelationship(guardianRel);
+                customer.setGuardianPhone(guardianPhone);
+                customer.setStatus("New");
+
+                int customerId = customerDAO.insert(connection, customer);
+
+                // B4.4: ghi AuditLog
+                auditLogService.logInTransaction(
+                        connection,
+                        accountId,
+                        Role.RECEPTIONIST,
+                        "Tạo nhanh hồ sơ khách hàng tại quầy",
+                        "Customers",
+                        customerId,
+                        "CustomerCode",
+                        null,
+                        customerCode,
+                        fullName
+                );
+
+                connection.commit();
+
+                // B5: đọc lại dòng CounterCustomerRow vừa tạo
+                CounterCustomerRow row = counterSaleDAO.findCustomer(connection, customerId, today, receptionist[1]);
+                return ServiceResult.ok(row, "Đã tạo hồ sơ khách hàng " + customerCode + " thành công!");
+            } catch (SQLException | RuntimeException e) {
+                connection.rollback();
+                throw e;
+            }
         } catch (SQLException e) {
             e.printStackTrace();
             return ServiceResult.fail(Messages.MSG04_SYSTEM_BUSY);

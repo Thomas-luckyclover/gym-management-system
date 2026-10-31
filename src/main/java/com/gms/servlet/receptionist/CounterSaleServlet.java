@@ -2,6 +2,7 @@ package com.gms.servlet.receptionist;
 
 import com.gms.constant.SessionKey;
 import com.gms.dto.CounterCheckoutInput;
+import com.gms.dto.CounterCustomerCreateInput;
 import com.gms.dto.CounterCustomerRow;
 import com.gms.dto.CounterPackageCard;
 import com.gms.dto.CounterPackageView;
@@ -126,6 +127,15 @@ public class CounterSaleServlet extends HttpServlet {
             return;
         }
 
+        String pathInfo = request.getServletPath();
+        String action = RequestUtil.getTrimmedParam(request, "action");
+
+        // Xử lý tạo nhanh hồ sơ khách hàng tại Step 2
+        if ("/receptionist/sales/customers".equals(pathInfo) || "quick-create-customer".equals(action)) {
+            handleQuickCreateCustomer(request, response, accountId);
+            return;
+        }
+
         // B2: đọc và parse các tham số gửi lên từ form.
         Integer packageId = RequestUtil.getPositiveIntParam(request, "packageId");
         Integer customerId = RequestUtil.getPositiveIntParam(request, "customerId");
@@ -210,6 +220,7 @@ public class CounterSaleServlet extends HttpServlet {
      */
     private void showCustomers(HttpServletRequest request, HttpServletResponse response)
             throws ServletException, IOException {
+        request.setAttribute("csrfToken", RequestUtil.getOrCreateCsrfToken(request.getSession(false)));
         RequestUtil.forward(request, response, VIEW_CUSTOMERS);
     }
 
@@ -364,6 +375,38 @@ public class CounterSaleServlet extends HttpServlet {
         }
         request.setAttribute("receipt", receipt);
         RequestUtil.forward(request, response, VIEW_RECEIPT);
+    }
+
+    /**
+     * XỬ LÝ TẠO NHANH HỒ SƠ KHÁCH HÀNG TẠI QUẦY (AJAX POST).
+     */
+    private void handleQuickCreateCustomer(HttpServletRequest request, HttpServletResponse response, int accountId)
+            throws IOException {
+        String fullName = RequestUtil.getTrimmedParam(request, "fullName");
+        String phone = RequestUtil.getTrimmedParam(request, "phone");
+        String dobStr = RequestUtil.getTrimmedParam(request, "dateOfBirth");
+        String customerType = RequestUtil.getTrimmedParam(request, "customerType");
+        String guardianName = RequestUtil.getTrimmedParam(request, "guardianName");
+        String guardianRelationship = RequestUtil.getTrimmedParam(request, "guardianRelationship");
+        String guardianPhone = RequestUtil.getTrimmedParam(request, "guardianPhone");
+
+        LocalDate dob = null;
+        if (dobStr != null && !dobStr.isBlank()) {
+            dob = DateTimeUtil.parseHtmlDate(dobStr);
+        }
+
+        CounterCustomerCreateInput input = new CounterCustomerCreateInput(
+                fullName,
+                phone,
+                dob,
+                customerType,
+                guardianName,
+                guardianRelationship,
+                guardianPhone
+        );
+
+        ServiceResult<CounterCustomerRow> result = counterSaleService.quickCreateCustomer(accountId, input);
+        JsonUtil.writeJson(response, JsonResponse.from(result));
     }
 
     /**
