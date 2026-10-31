@@ -4,7 +4,7 @@ import com.gms.dto.LeaveBalance;
 import com.gms.dto.LeaveEmployeeView;
 import com.gms.dto.LeaveRequestFilter;
 import com.gms.dto.LeaveRequestRow;
-import com.gms.dto.LeaveReviewDetail;
+import com.gms.dto.LeaveReviewDetailView;
 import com.gms.entity.LeaveRequest;
 import com.gms.util.DBContext;
 import com.gms.util.DateTimeUtil;
@@ -355,7 +355,7 @@ public class LeaveRequestDAO {
         return counts;
     }
 
-    public LeaveReviewDetail findReviewDetail(int leaveRequestId, Integer currentManagerEmployeeId) throws SQLException {
+    public LeaveReviewDetailView findReviewDetail(int leaveRequestId, Integer currentManagerEmployeeId) throws SQLException {
         String sql = "SELECT lr.LeaveRequestId, lr.EmployeeId, "
                 + "lr.ReviewedByEmployeeId, lr.LeaveType, "
                 + "lr.FromDate, lr.ToDate, lr.Days, "
@@ -379,7 +379,7 @@ public class LeaveRequestDAO {
             try (ResultSet resultSet = statement.executeQuery()) {
                 if (resultSet.next()) {
                     LeaveRequest lr = mapResultSetToLeaveRequest(resultSet);
-                    LeaveReviewDetail detail = new LeaveReviewDetail(
+                    LeaveReviewDetailView detail = new LeaveReviewDetailView(
                             lr,
                             resultSet.getString("EmployeeCode"),
                             resultSet.getString("EmployeeName"),

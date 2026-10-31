@@ -1,7 +1,7 @@
 package com.gms.service;
 
 import com.gms.dto.LeaveRequestRow;
-import com.gms.dto.LeaveReviewDetail;
+import com.gms.dto.LeaveReviewDetailView;
 import java.math.BigDecimal;
 import java.util.UUID;
 import com.gms.dao.AccountDAO;
@@ -319,7 +319,7 @@ class LeaveRequestServiceTest {
     @Test
     void processedDetailHasBothPartsButNoLiveApprovalChecks() throws Exception {
         var pair = createSplitPair();
-        when(leaveRequestDAO.findReviewDetail(101, null)).thenReturn(new LeaveReviewDetail(pair.get(0), "NV-0050", "Nhân viên test", "Receptionist", null, "Quản lý"));
+        when(leaveRequestDAO.findReviewDetail(101, null)).thenReturn(new LeaveReviewDetailView(pair.get(0), "NV-0050", "Nhân viên test", "Receptionist", null, "Quản lý"));
         when(leaveRequestDAO.findByLeaveGroup(pair.get(0).getLeaveGroupId(), 50)).thenReturn(pair);
         var detail = service.getReviewDetail(101).getData();
         assertEquals(2, detail.getLeaveGroup().getRequests().size());

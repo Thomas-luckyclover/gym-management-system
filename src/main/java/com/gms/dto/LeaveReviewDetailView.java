@@ -5,8 +5,12 @@ import com.gms.util.DateTimeUtil;
 import java.util.ArrayList;
 import java.util.List;
 
-/** Dữ liệu BF-05: DAO đọc, Service xử lý, JSP hiển thị. */
-public class LeaveReviewDetail {
+/**
+ * DTO chi tiết đơn nghỉ phép (BF-05 / UC-15).
+ * - Nguồn: LeaveRequestReviewServlet (request.setAttribute("item", ...))
+ * - Hiển thị: /WEB-INF/jsp/manager/leave-request-review.jsp (qua biến ${item})
+ */
+public class LeaveReviewDetailView {
 
     private final LeaveRequest leaveRequest;
     private final String employeeCode;
@@ -27,7 +31,7 @@ public class LeaveReviewDetail {
     private String approvalBlockMessage;
     private List<ReviewCheck> checks = new ArrayList<>();
 
-    public LeaveReviewDetail(
+    public LeaveReviewDetailView(
             LeaveRequest leaveRequest,
             String employeeCode,
             String fullName,

@@ -1,6 +1,6 @@
 package com.gms.servlet.manager;
 
-import com.gms.dto.LeaveReviewDetail;
+import com.gms.dto.LeaveReviewDetailView;
 import com.gms.dto.LeaveBulkApprovalResult;
 import com.gms.constant.SessionKey;
 import com.gms.dto.ServiceResult;
@@ -165,7 +165,7 @@ public class LeaveRequestReviewServlet extends HttpServlet {
     /** GET và POST lỗi đều đi qua đây, tránh quên nạp dữ liệu hoặc CSRF token. */
     private void showReview(HttpServletRequest request, HttpServletResponse response, int leaveRequestId,
             Integer managerAccountId) throws ServletException, IOException {
-        ServiceResult<LeaveReviewDetail> detailResult = leaveRequestService.getReviewDetail(leaveRequestId, managerAccountId);
+        ServiceResult<LeaveReviewDetailView> detailResult = leaveRequestService.getReviewDetail(leaveRequestId, managerAccountId);
         if (!detailResult.isSuccess()) {
             RequestUtil.setFlashToast(request, "danger", detailResult.getMessage());
             RequestUtil.redirect(request, response, "/manager/leave-requests");

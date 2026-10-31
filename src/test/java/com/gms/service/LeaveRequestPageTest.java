@@ -4,7 +4,7 @@ import com.gms.dao.AccountDAO;
 import com.gms.dao.EmployeeDAO;
 import com.gms.dao.LeaveRequestDAO;
 import com.gms.dto.LeaveRequestFilter;
-import com.gms.dto.LeaveReviewDetail;
+import com.gms.dto.LeaveReviewDetailView;
 import com.gms.dto.LeaveRequestGroupView;
 import com.gms.dto.LeaveRequestRow;
 import com.gms.entity.LeaveRequest;
@@ -100,8 +100,8 @@ class LeaveRequestPageTest {
         when(dao.findByLeaveGroup(groupId, 50)).thenReturn(
                 List.of(second.getLeaveRequest(), first.getLeaveRequest()));
 
-        var firstDetail = new LeaveReviewDetail(first.getLeaveRequest(), "NV-0050", "Test", "PT", null, null);
-        var secondDetail = new LeaveReviewDetail(second.getLeaveRequest(), "NV-0050", "Test", "PT", null, null);
+        var firstDetail = new LeaveReviewDetailView(first.getLeaveRequest(), "NV-0050", "Test", "PT", null, null);
+        var secondDetail = new LeaveReviewDetailView(second.getLeaveRequest(), "NV-0050", "Test", "PT", null, null);
         service = spy(service);
         doReturn(com.gms.dto.ServiceResult.ok(List.of(firstDetail, secondDetail)))
                 .when(service).getReviewParts(101, null);
@@ -123,8 +123,8 @@ class LeaveRequestPageTest {
         var first = request(101).getLeaveRequest();
         var second = request(102).getLeaveRequest();
         first.setLeaveGroupId("11111111-1111-1111-1111-111111111111");
-        var firstDetail = new LeaveReviewDetail(first, "NV-0050", "Test", "PT", null, null);
-        var secondDetail = new LeaveReviewDetail(second, "NV-0050", "Test", "PT", null, null);
+        var firstDetail = new LeaveReviewDetailView(first, "NV-0050", "Test", "PT", null, null);
+        var secondDetail = new LeaveReviewDetailView(second, "NV-0050", "Test", "PT", null, null);
         firstDetail.setLeaveGroup(new LeaveRequestGroupView(List.of(first, second)));
         var reader = spy(service);
         doReturn(com.gms.dto.ServiceResult.ok(firstDetail)).when(reader).getReviewDetail(101, 10);

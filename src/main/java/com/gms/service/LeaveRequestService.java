@@ -12,7 +12,7 @@ import com.gms.dto.LeaveRequestFilter;
 import com.gms.dto.LeaveRequestItemView;
 import com.gms.dto.LeaveRequestRow;
 import com.gms.dto.LeaveRequestGroupView;
-import com.gms.dto.LeaveReviewDetail;
+import com.gms.dto.LeaveReviewDetailView;
 import com.gms.dto.PageResult;
 import com.gms.dto.ServiceResult;
 import com.gms.entity.Account;
@@ -147,7 +147,7 @@ public class LeaveRequestService {
             for (LeaveRequestItemView item : items) {
                 LeaveRequestGroupView group = item.getLeaveGroup();
                 if (group != null && group.getRequests().size() > 1) {
-                    ServiceResult<List<LeaveReviewDetail>> parts = getReviewParts(item.getLeaveRequestId(), managerAccountId);
+                    ServiceResult<List<LeaveReviewDetailView>> parts = getReviewParts(item.getLeaveRequestId(), managerAccountId);
                     if (parts.isSuccess()) {
                         group.setReviewParts(parts.getData());
                     } else {
@@ -260,7 +260,12 @@ public class LeaveRequestService {
         return view;
     }
 
-    /** Mỗi đợt chỉ đọc một lần trên một trang; vẫn thấy phần nằm ngoài bộ lọc hoặc phân trang. */
+    /**
+     * Tải đầy đủ các đơn con trong cùng một đợt nghỉ (chung LeaveGroupId).
+     * - Dùng Map làm cache tạm để tránh gọi CSDL lặp lại nhiều lần trên cùng một trang.
+     * - Luôn đọc đủ cả 2 phần (ví dụ: phần Phép năm đã duyệt và phần Không lương đang chờ),
+     *   kể cả khi một trong hai phần không khớp với bộ lọc trạng thái hiện tại của danh sách.
+     */
     private LeaveRequestGroupView loadLeaveGroup(LeaveRequest request, Map<String, LeaveRequestGroupView> groups)
             throws SQLException {
         if (request.getLeaveGroupId() == null) {
@@ -326,7 +331,7 @@ public class LeaveRequestService {
      * @param leaveRequestId mã đơn
      * @return view đơn, hoặc thông báo lỗi nếu không tìm thấy / lỗi hệ thống
      */
-    public ServiceResult<LeaveReviewDetail> getReviewDetail(int leaveRequestId) {
+    public ServiceResult<LeaveReviewDetailView> getReviewDetail(int leaveRequestId) {
         return getReviewDetail(leaveRequestId, null);
     }
 
@@ -337,13 +342,13 @@ public class LeaveRequestService {
      * @param managerAccountId accountId của Manager đang xem (có thể null)
      * @return view đơn, hoặc thông báo lỗi nếu không tìm thấy / lỗi hệ thống
      */
-    public ServiceResult<LeaveReviewDetail> getReviewDetail(int leaveRequestId, Integer managerAccountId) {
+    public ServiceResult<LeaveReviewDetailView> getReviewDetail(int leaveRequestId, Integer managerAccountId) {
         if (leaveRequestId <= 0) {
             return ServiceResult.fail(String.format(Messages.MSG08_NOT_FOUND, "đơn nghỉ phép"));
         }
         try {
             Integer managerEmployeeId = findWorkingManagerId(managerAccountId);
-            LeaveReviewDetail detail = leaveRequestDAO.findReviewDetail(leaveRequestId, managerEmployeeId);
+            LeaveReviewDetailView detail = leaveRequestDAO.findReviewDetail(leaveRequestId, managerEmployeeId);
             if (detail == null) {
                 return ServiceResult.fail(String.format(Messages.MSG08_NOT_FOUND, "đơn nghỉ phép"));
             }
@@ -376,13 +381,13 @@ public class LeaveRequestService {
     }
 
     /** Nhóm mở rộng: đọc đầy đủ từng đơn cùng đợt, dùng lại kiểm tra của trang chi tiết. */
-    public ServiceResult<List<LeaveReviewDetail>> getReviewParts(int requestId, Integer managerAccountId) {
-        ServiceResult<LeaveReviewDetail> selected = getReviewDetail(requestId, managerAccountId);
+    public ServiceResult<List<LeaveReviewDetailView>> getReviewParts(int requestId, Integer managerAccountId) {
+        ServiceResult<LeaveReviewDetailView> selected = getReviewDetail(requestId, managerAccountId);
         if (!selected.isSuccess()) {
             return ServiceResult.fail(selected.getMessage());
         }
-        LeaveReviewDetail detail = selected.getData();
-        List<LeaveReviewDetail> parts = new ArrayList<>();
+        LeaveReviewDetailView detail = selected.getData();
+        List<LeaveReviewDetailView> parts = new ArrayList<>();
         if (detail.getLeaveGroup() == null) {
             parts.add(detail);
             return ServiceResult.ok(parts);
@@ -392,7 +397,7 @@ public class LeaveRequestService {
                 parts.add(detail);
                 continue;
             }
-            ServiceResult<LeaveReviewDetail> result = getReviewDetail(request.getLeaveRequestId(), managerAccountId);
+            ServiceResult<LeaveReviewDetailView> result = getReviewDetail(request.getLeaveRequestId(), managerAccountId);
             if (!result.isSuccess()) {
                 return ServiceResult.fail(result.getMessage());
             }

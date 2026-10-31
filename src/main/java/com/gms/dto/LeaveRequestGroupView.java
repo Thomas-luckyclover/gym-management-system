@@ -13,7 +13,7 @@ public class LeaveRequestGroupView {
     private final String code;
 
     // Service nạp sẵn để JavaScript chỉ đóng/mở, không cần gọi lại server.
-    private List<LeaveReviewDetail> reviewParts = List.of();
+    private List<LeaveReviewDetailView> reviewParts = List.of();
     private String reviewError;
 
     public LeaveRequestGroupView(List<LeaveRequest> requests) {
@@ -27,11 +27,11 @@ public class LeaveRequestGroupView {
         return requests;
     }
 
-    public List<LeaveReviewDetail> getReviewParts() {
+    public List<LeaveReviewDetailView> getReviewParts() {
         return reviewParts;
     }
 
-    public void setReviewParts(List<LeaveReviewDetail> reviewParts) {
+    public void setReviewParts(List<LeaveReviewDetailView> reviewParts) {
         this.reviewParts = reviewParts;
     }
 

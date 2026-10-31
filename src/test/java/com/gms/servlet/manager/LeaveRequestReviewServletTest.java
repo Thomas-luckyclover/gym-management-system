@@ -1,7 +1,7 @@
 package com.gms.servlet.manager;
 
 import com.gms.constant.SessionKey;
-import com.gms.dto.LeaveReviewDetail;
+import com.gms.dto.LeaveReviewDetailView;
 import com.gms.dto.LeaveBulkApprovalResult;
 import com.gms.dto.ServiceResult;
 import com.gms.entity.LeaveRequest;
@@ -67,7 +67,7 @@ class LeaveRequestReviewServletTest {
         when(service.approveRequest(10, 12, "abc")).thenReturn(
                 ServiceResult.failField("lateApprovalReason", "Cần nhập lý do từ 5 đến 500 ký tự."));
         when(service.getReviewDetail(12, 10)).thenReturn(ServiceResult.ok(
-                new LeaveReviewDetail(new LeaveRequest(), "NV-0050", "Nhân viên test", "PT", null, null)));
+                new LeaveReviewDetailView(new LeaveRequest(), "NV-0050", "Nhân viên test", "PT", null, null)));
         RequestDispatcher dispatcher = mock(RequestDispatcher.class);
         when(request.getRequestDispatcher("/WEB-INF/jsp/manager/leave-request-review.jsp")).thenReturn(dispatcher);
         servlet.doPost(request, response);
@@ -123,7 +123,7 @@ class LeaveRequestReviewServletTest {
     @Test
     void failedDecisionShowsTheDetailAndKeepsTheError() throws Exception {
         when(service.approveRequest(10, 12)).thenReturn(ServiceResult.fail("Ca trực không đủ người."));
-        LeaveReviewDetail detail = new LeaveReviewDetail(new LeaveRequest(), "NV-0050", "Nhân viên test", "PT", null, null);
+        LeaveReviewDetailView detail = new LeaveReviewDetailView(new LeaveRequest(), "NV-0050", "Nhân viên test", "PT", null, null);
         when(service.getReviewDetail(12, 10)).thenReturn(ServiceResult.ok(detail));
         RequestDispatcher dispatcher = mock(RequestDispatcher.class);
         when(request.getRequestDispatcher("/WEB-INF/jsp/manager/leave-request-review.jsp")).thenReturn(dispatcher);
