@@ -78,6 +78,11 @@ public class SelectRoleServlet extends HttpServlet {
             return;
         }
 
+        // CSRF: token sai / thiếu → chặn (form: toast + quay lại; AJAX: JSON 403).
+        if (RequestUtil.rejectInvalidCsrf(request, response, "/select-role")) {
+            return;
+        }
+
         // B1: vai trò người dùng bấm chọn
         Role chosen = Role.fromDbValue(RequestUtil.getTrimmedParam(request, "role"));
 

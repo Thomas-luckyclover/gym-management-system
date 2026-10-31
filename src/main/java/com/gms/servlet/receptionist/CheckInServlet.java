@@ -122,6 +122,11 @@ public class CheckInServlet extends HttpServlet {
             return;
         }
 
+        // CSRF: token sai / thiếu → chặn (form: toast + quay lại; AJAX: JSON 403).
+        if (RequestUtil.rejectInvalidCsrf(request, response, "/receptionist/check-in")) {
+            return;
+        }
+
         int accountId = (Integer) session.getAttribute(SessionKey.ACCOUNT_ID);// lấy id của account từ session
         String action = RequestUtil.getTrimmedParam(request, "action");// đọc tham số action từ form bên jsp để biết ng
                                                                        // dùng muốn làm gì

@@ -281,6 +281,10 @@ document.addEventListener("DOMContentLoaded", function () {
             params.append("action", "refund");
             params.append("transactionId", transId);
             params.append("refundNote", note);
+            // CSRF: fetch tự viết không đi qua postData của common.js → tự gắn token (đọc từ meta csrf-token).
+            if (typeof getCsrfToken === "function") {
+                params.append("csrfToken", getCsrfToken());
+            }
 
             fetch(`${contextPath}/manager/transactions`, {
                 method: "POST",

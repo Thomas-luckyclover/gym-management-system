@@ -106,6 +106,11 @@ public class ShiftServlet extends HttpServlet {
             return;
         }
 
+        // CSRF: token sai / thiếu → chặn (form: toast + quay lại; AJAX: JSON 403).
+        if (RequestUtil.rejectInvalidCsrf(request, response, "/receptionist/shift")) {
+            return;
+        }
+
         int accountId = (Integer) session.getAttribute(SessionKey.ACCOUNT_ID);
         String action = RequestUtil.getTrimmedParam(request, "action");
         int shiftId = RequestUtil.getIntParam(request, "shiftId", 0);

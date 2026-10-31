@@ -328,6 +328,7 @@ function initCommon() {
     bindArticleImageFallbacks();
     bindHintBoxes();
     syncHeaderUserAvatar();
+    bindCsrfToForms();
 
     // B3
     bindPageSizeSelects();
@@ -1371,6 +1372,51 @@ function handleLeavePageLinkClick(event) {
     });
 }
 
+// ===== CSRF TOKEN =====
+// Token của phiên nằm ở <meta name="csrf-token"> (common/head.jspf, chỉ có khi đã đăng nhập).
+// Gắn vào mọi form POST (cả form tạo sau khi tải trang: gắn lúc bấm gửi) và mọi postData — các trang không phải tự làm.
+
+// Đọc token; chưa đăng nhập → "" (không gắn gì)
+function getCsrfToken() {
+    const meta = document.querySelector('meta[name="csrf-token"]');
+    return meta === null ? "" : meta.getAttribute("content") || "";
+}
+
+// Thêm csrfToken vào FormData / URLSearchParams nếu chưa có
+function addCsrfToken(body) {
+    const token = getCsrfToken();
+    if (token === "" || typeof body.has !== "function" || body.has("csrfToken")) {
+        return;
+    }
+    body.append("csrfToken", token);
+}
+
+// Thêm ô ẩn csrfToken vào 1 form POST nếu form chưa có
+function ensureCsrfInput(form) {
+    const token = getCsrfToken();
+    const isPost = (form.getAttribute("method") || "").toLowerCase() === "post";
+    if (token === "" || !isPost || form.querySelector('input[name="csrfToken"]') !== null) {
+        return;
+    }
+    const input = document.createElement("input");
+    input.type = "hidden";
+    input.name = "csrfToken";
+    input.value = token;
+    form.appendChild(input);
+}
+
+// B1: gắn cho mọi form POST đang có trên trang; B2: form tạo sau (hộp thoại, JS) → gắn ngay lúc gửi
+function bindCsrfToForms() {
+    for (const form of document.querySelectorAll("form")) {
+        ensureCsrfInput(form);
+    }
+    document.addEventListener("submit", function (event) {
+        if (event.target instanceof HTMLFormElement) {
+            ensureCsrfInput(event.target);
+        }
+    }, true);
+}
+
 // ===== 5. HIỆN/ẨN MẬT KHẨU (GBR-30) =====
 
 // Gắn nút con mắt cho ô mật khẩu — initCommon tự gọi
@@ -1746,6 +1792,13 @@ async function sendAjaxRequest(method, url, data) {
         } else {
             requestOptions.body = toUrlSearchParams(data);
         }
+    }
+    // CSRF: mọi request ghi dữ liệu mang theo token của phiên (Servlet kiểm bằng RequestUtil.isValidCsrfToken).
+    if (upperMethod !== "GET") {
+        if (!requestOptions.body) {
+            requestOptions.body = new URLSearchParams();
+        }
+        addCsrfToken(requestOptions.body);
     }
 
     // B2: gửi request; lỗi mạng (không tới được server) → MSG05

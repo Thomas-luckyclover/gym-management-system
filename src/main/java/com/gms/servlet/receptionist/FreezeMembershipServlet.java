@@ -129,6 +129,11 @@ public class FreezeMembershipServlet extends HttpServlet {
             return;
         }
 
+        // CSRF: token sai / thiếu → chặn (form: toast + quay lại; AJAX: JSON 403).
+        if (RequestUtil.rejectInvalidCsrf(request, response, "/receptionist/freeze")) {
+            return;
+        }
+
         int accountId = (Integer) session.getAttribute(SessionKey.ACCOUNT_ID);
         String action = RequestUtil.getTrimmedParam(request, "action"); // Đọc action để biết người dùng muốn làm gì
 
