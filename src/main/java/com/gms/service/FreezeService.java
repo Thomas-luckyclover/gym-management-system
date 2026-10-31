@@ -474,7 +474,7 @@ public class FreezeService {
 
                 // B6: Chuyển các buổi PT Scheduled trong kỳ thành Missed (MembershipFrozen) (CBR-62, CBR-67, CBR-68)
                 List<FreezeSessionImpactView> impactedSessions = freezeRecordDAO.findScheduledSessionsInPeriod(
-                        sub.getCustomerId(), startDate, plannedEndDate);
+                        conn, sub.getCustomerId(), startDate, plannedEndDate);
 
                 List<Integer> sessionIdsToMiss = impactedSessions.stream()
                         .filter(FreezeSessionImpactView::isWillBeMissed)
