@@ -1,10 +1,12 @@
 package com.gms.service;
 
+import com.gms.constant.Role;
 import com.gms.dao.PackageDAO;
 import com.gms.dto.ManagerPackageRowView;
 import com.gms.dto.PackageFormInput;
 import com.gms.dto.ServiceResult;
 import com.gms.entity.Package;
+import com.gms.util.DBContext;
 import java.math.BigDecimal;
 import java.sql.Connection;
 import java.sql.SQLException;
@@ -41,6 +43,10 @@ public class PackageService {
 
     public AuditLogService getAuditLogService() {
         return auditLogService;
+    }
+
+    protected Connection getConnection() throws SQLException {
+        return DBContext.getConnection();
     }
 
     /**
@@ -90,6 +96,62 @@ public class PackageService {
             return packageDAO.countRunningOrders(packageId);
         } catch (SQLException e) {
             return 0;
+        }
+    }
+
+    // ===== Thêm mới gói dịch vụ (Commit 15) =====
+
+    /**
+     * Tạo mới gói hội viên / vé ngày (#18).
+     */
+    public ServiceResult<Integer> createMembershipPackage(int accountId, PackageFormInput input) {
+        return createPackageInternal(accountId, input, false);
+    }
+
+    /**
+     * Tạo mới gói PT (#20).
+     */
+    public ServiceResult<Integer> createPtPackage(int accountId, PackageFormInput input) {
+        return createPackageInternal(accountId, input, true);
+    }
+
+    private ServiceResult<Integer> createPackageInternal(int accountId, PackageFormInput input, boolean isPt) {
+        try (Connection conn = getConnection()) {
+            conn.setAutoCommit(false);
+            try {
+                Map<String, String> errors = isPt ? validatePtForm(input, conn) : validateMembershipForm(input, conn);
+                if (!errors.isEmpty()) {
+                    conn.rollback();
+                    return ServiceResult.failFields(errors);
+                }
+
+                Package pkg = mapInputToPackage(input);
+                int newId = packageDAO.insert(conn, pkg);
+
+                // Ghi nhận AuditLog tạo gói
+                auditLogService.logInTransaction(
+                        conn,
+                        accountId,
+                        Role.MANAGER,
+                        "CREATE",
+                        "Packages",
+                        newId,
+                        null,
+                        null,
+                        pkg.getPackageName(),
+                        isPt ? "Tạo mới gói PT" : "Tạo mới gói hội viên"
+                );
+
+                conn.commit();
+                return ServiceResult.ok(newId, "Thêm gói dịch vụ thành công.");
+            } catch (SQLException e) {
+                conn.rollback();
+                return ServiceResult.fail("Lỗi khi thêm gói dịch vụ: " + e.getMessage());
+            } finally {
+                conn.setAutoCommit(true);
+            }
+        } catch (SQLException e) {
+            return ServiceResult.fail("Lỗi kết nối cơ sở dữ liệu: " + e.getMessage());
         }
     }
 
@@ -274,5 +336,22 @@ public class PackageService {
                 }
             }
         }
+    }
+
+    private Package mapInputToPackage(PackageFormInput input) {
+        Package pkg = new Package(input.getPackageId() != null ? input.getPackageId() : 0);
+        pkg.setPackageName(input.getName());
+        pkg.setDescription(input.getDescription());
+        pkg.setBenefits(input.getBenefits());
+        pkg.setPackageType(Package.Type.fromDbValue(input.getType()));
+        pkg.setDurationUnit(input.getDurationUnit());
+        pkg.setDurationValue(input.parseDurationValue());
+        pkg.setEstimatedSessionCount(input.parseEstimatedSessionCount());
+        BigDecimal price = input.parsePrice();
+        pkg.setPrice(price != null ? price.intValue() : 0);
+        pkg.setActive(input.isActive());
+        pkg.setUnlocksExerciseLibrary(input.isUnlocksExerciseLibrary());
+        pkg.setRowVersion(input.decodeRowVersion());
+        return pkg;
     }
 }
