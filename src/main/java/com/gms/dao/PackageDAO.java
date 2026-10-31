@@ -309,6 +309,51 @@ public class PackageDAO {
         }
     }
 
+    /**
+     * Cập nhật thông tin gói dịch vụ với kiểm soát đồng thời lạc quan (RowVer - MSG22).
+     *
+     * @param conn kết nối cơ sở dữ liệu
+     * @param pkg đối tượng Package chứa thông tin mới và RowVer cũ
+     * @return true nếu cập nhật thành công 1 bản ghi, false nếu bị xung đột sửa đổi đồng thời
+     * @throws SQLException lỗi cập nhật cơ sở dữ liệu
+     */
+    public boolean update(Connection conn, Package pkg) throws SQLException {
+        String sql = "UPDATE Packages SET "
+                + "PackageName = ?, "
+                + "Description = ?, "
+                + "Benefits = ?, "
+                + "DurationUnit = ?, "
+                + "DurationValue = ?, "
+                + "EstimatedSessionCount = ?, "
+                + "Price = ?, "
+                + "UnlocksExerciseLibrary = ? "
+                + "WHERE PackageId = ? AND RowVer = ?";
+
+        try (PreparedStatement stmt = conn.prepareStatement(sql)) {
+            stmt.setString(1, pkg.getPackageName());
+            stmt.setString(2, pkg.getDescription());
+            stmt.setString(3, pkg.getBenefits());
+            stmt.setString(4, pkg.getDurationUnit());
+            if (pkg.getDurationValue() != null) {
+                stmt.setInt(5, pkg.getDurationValue());
+            } else {
+                stmt.setNull(5, Types.INTEGER);
+            }
+            if (pkg.getEstimatedSessionCount() != null) {
+                stmt.setInt(6, pkg.getEstimatedSessionCount());
+            } else {
+                stmt.setNull(6, Types.INTEGER);
+            }
+            stmt.setInt(7, pkg.getPrice());
+            stmt.setBoolean(8, pkg.isUnlocksExerciseLibrary());
+            stmt.setInt(9, pkg.getPackageId());
+            stmt.setBytes(10, pkg.getRowVersion());
+
+            int rows = stmt.executeUpdate();
+            return rows > 0;
+        }
+    }
+
     // ===== Hàm phụ =====
 
     /**
