@@ -772,6 +772,137 @@ public final class Messages {
     /** Nghiệm thu xong. */
     public static final String MSG254_MAINTENANCE_CLOSED = "Đã nghiệm thu và đóng yêu cầu bảo trì.";
 
+    // ===== 6.5 Ca làm việc, check-in, bảo lưu, xóa hồ sơ (ShiftService, FreezeService, CustomerDeletionService và các Servlet lễ tân) =====
+
+    /** Mở ca đã mở / đã chốt. */
+    public static final String MSG255_SHIFT_ALREADY_OPENED_OR_CLOSED = "Ca làm việc này đã được mở hoặc đã chốt từ trước.";
+
+    /** Mở ca ngày đã qua. */
+    public static final String MSG256_SHIFT_PAST_DAY = "Không thể mở ca làm việc của ngày trong quá khứ.";
+
+    /** Mở ca ngày tương lai. */
+    public static final String MSG257_SHIFT_FUTURE_DAY = "Không thể mở trước ca làm việc của ngày trong tương lai.";
+
+    /** Ngày nghỉ cả ngày. */
+    public static final String MSG258_SHIFT_GYM_CLOSED = "Hôm nay phòng tập đóng cửa cả ngày theo lịch nghỉ, không thể mở ca làm việc.";
+
+    /** Ca ngày trước chưa chốt. %s = tên ca, ngày. */
+    public static final String MSG259_SHIFT_OLD_NOT_CLOSED = "Không thể mở ca mới vì %s ngày %s chưa được chốt sổ. Vui lòng chốt ca cũ trước.";
+
+    /** Có ca khác đang mở. %s = tên ca. */
+    public static final String MSG260_SHIFT_OTHER_OPEN = "Hiện đang có %s đang mở. Vui lòng chốt ca trước khi mở ca mới.";
+
+    /** Lý do không mở được (hiện trên màn). %s = tên ca. */
+    public static final String MSG261_SHIFT_OTHER_OPEN_SHORT = "Hiện đang có %s đang mở. Vui lòng chốt ca trước.";
+
+    /** Mở ca sáng khi ca chiều đã chốt. */
+    public static final String MSG262_SHIFT_MORNING_AFTER_AFTERNOON_CLOSED = "Ca sáng không thể mở vì Ca chiều của ngày hôm nay đã chốt.";
+
+    /** Mở ca sáng khi ca chiều đang mở. */
+    public static final String MSG263_SHIFT_MORNING_AFTER_AFTERNOON_OPEN = "Ca sáng không thể mở vì Ca chiều của ngày hôm nay đang mở.";
+
+    /** Mở ca sáng sau 13:00. */
+    public static final String MSG264_SHIFT_MORNING_OVER = "Đã quá thời gian ca sáng (kết thúc lúc 13:00). Vui lòng mở Ca chiều.";
+
+    /** Mở ca chiều khi ca sáng chưa chốt. */
+    public static final String MSG265_SHIFT_MORNING_STILL_OPEN = "Hiện đang có Ca sáng đang mở. Vui lòng chốt Ca sáng trước khi mở Ca chiều.";
+
+    /** Mở ca chiều trước 13:00. */
+    public static final String MSG266_SHIFT_AFTERNOON_NOT_YET = "Chưa đến giờ bắt đầu Ca chiều (từ 13:00). Vui lòng mở Ca sáng.";
+
+    /** Chốt ca không ở trạng thái mở. */
+    public static final String MSG267_SHIFT_CLOSE_ONLY_OPEN = "Chỉ có thể chốt ca đang ở trạng thái Đang mở.";
+
+    /** Thao tác đơn của ca khác. */
+    public static final String MSG268_ORDER_NOT_IN_OPEN_SHIFT = "Đơn hàng không thuộc ca làm việc đang mở.";
+
+    /** Xác nhận chuyển khoản khi đơn không còn Pending. */
+    public static final String MSG269_ORDER_NOT_AWAITING_CONFIRM = "Đơn hàng này không còn ở trạng thái chờ xác nhận.";
+
+    /** Hủy đơn không còn hủy được. */
+    public static final String MSG270_ORDER_NOT_CANCELLABLE = "Đơn hàng này không còn ở trạng thái cho phép hủy.";
+
+    /** Mã ca gửi lên sai. */
+    public static final String MSG271_SHIFT_INVALID = "Ca làm việc không hợp lệ.";
+
+    /** Mở ca xong. */
+    public static final String MSG272_SHIFT_OPENED = "Mở ca làm việc thành công.";
+
+    /** Tiền mặt đếm được sai. */
+    public static final String MSG273_COUNTED_CASH_INVALID = "Số tiền mặt đếm được không hợp lệ.";
+
+    /** Chốt ca xong. */
+    public static final String MSG274_SHIFT_CLOSED = "Đã chốt ca làm việc và gửi sổ ca lên Quản lý.";
+
+    /** Mã đơn gửi lên sai. */
+    public static final String MSG275_ORDER_INVALID = "Đơn hàng không hợp lệ.";
+
+    /** Xác nhận chuyển khoản xong. */
+    public static final String MSG276_TRANSFER_CONFIRMED = "Đã xác nhận thanh toán chuyển khoản thành công.";
+
+    /** Hủy đơn tại quầy xong. */
+    public static final String MSG277_COUNTER_ORDER_CANCELLED = "Đã hủy đơn hàng tại quầy thành công.";
+
+    /** Lý do bảo lưu quá ngắn. */
+    public static final String MSG278_FREEZE_REASON_MIN = "Lý do bảo lưu phải có ít nhất 5 ký tự.";
+
+    /** Thiếu ngày bảo lưu. */
+    public static final String MSG279_FREEZE_DATES_REQUIRED = "Vui lòng nhập đầy đủ ngày bắt đầu và ngày kết thúc bảo lưu.";
+
+    /** Bảo lưu bắt đầu hôm nay / đã qua. %s = ngày mai. */
+    public static final String MSG280_FREEZE_START_FROM_TOMORROW = "Bảo lưu chỉ được bắt đầu sớm nhất từ ngày mai (%s).";
+
+    /** Ngày kết thúc bảo lưu trước ngày bắt đầu. */
+    public static final String MSG281_FREEZE_END_BEFORE_START = "Ngày kết thúc dự kiến không được trước ngày bắt đầu bảo lưu.";
+
+    /** Nhân viên bảo lưu gói của chính mình. */
+    public static final String MSG282_STAFF_OWN_FREEZE = "Nhân viên không được tự bảo lưu gói tập của chính mình.";
+
+    /** Kết thúc bảo lưu đã kết thúc. */
+    public static final String MSG283_FREEZE_ALREADY_ENDED = "Đợt bảo lưu này đã được kết thúc trước đó.";
+
+    /** Nhân viên thao tác hồ sơ khách của chính mình. */
+    public static final String MSG284_STAFF_OWN_PROFILE = "Nhân viên không được tự thao tác trên hồ sơ của chính mình.";
+
+    /** Chưa chọn thời gian bảo lưu. */
+    public static final String MSG285_FREEZE_PERIOD_REQUIRED = "Vui lòng chọn đầy đủ thời gian bảo lưu.";
+
+    /** Lý do bảo lưu quá dài. */
+    public static final String MSG286_FREEZE_REASON_MAX = "Lý do bảo lưu không được vượt quá 500 ký tự.";
+
+    /** Ngày gửi lên sai định dạng. */
+    public static final String MSG287_DATE_FORMAT_INVALID = "Định dạng ngày không hợp lệ.";
+
+    /** Mã đợt bảo lưu sai. */
+    public static final String MSG288_FREEZE_ID_INVALID = "Mã đợt bảo lưu không hợp lệ.";
+
+    /** Yêu cầu xóa hồ sơ đã Inactive. */
+    public static final String MSG289_PROFILE_ALREADY_INACTIVE = "Hồ sơ khách hàng này đã ngừng hoạt động.";
+
+    /** Yêu cầu đã có người xử lý. */
+    public static final String MSG290_REQUEST_HANDLED_BY_OTHER = "Yêu cầu này đã được xử lý bởi người khác.";
+
+    /** Hồ sơ vừa ngừng hoạt động. */
+    public static final String MSG291_PROFILE_INACTIVE_RELOAD = "Hồ sơ không còn hoạt động. Vui lòng tải lại danh sách.";
+
+    /** Duyệt xóa hồ sơ xong. */
+    public static final String MSG292_DELETION_APPROVED = "Đã duyệt yêu cầu xóa và ngừng hoạt động hồ sơ khách hàng.";
+
+    /** Từ chối xóa hồ sơ xong. */
+    public static final String MSG293_DELETION_REJECTED = "Đã từ chối yêu cầu xóa hồ sơ.";
+
+    /** Check-in: gói gửi lên sai. */
+    public static final String MSG294_CHECKIN_PACKAGE_INVALID = "Thông tin gói tập không hợp lệ.";
+
+    /** Check-in xong. %s = tên khách. */
+    public static final String MSG295_CHECKIN_DONE = "%s đã vào tập thành công.";
+
+    /** Chụp ảnh check-in: không có hồ sơ. */
+    public static final String MSG296_CHECKIN_PHOTO_PROFILE_NOT_FOUND = "Không tìm thấy hồ sơ khách cần cập nhật ảnh.";
+
+    /** Lưu ảnh check-in xong. */
+    public static final String MSG297_CHECKIN_PHOTO_SAVED = "Đã lưu ảnh check-in vào hồ sơ hội viên.";
+
     private Messages() {
     }
 }

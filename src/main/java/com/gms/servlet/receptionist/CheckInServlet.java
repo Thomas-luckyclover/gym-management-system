@@ -154,7 +154,7 @@ public class CheckInServlet extends HttpServlet {
         boolean photoVerified = "true".equalsIgnoreCase(RequestUtil.getTrimmedParam(request, "photoVerified"));
 
         if (subscriptionId <= 0) { // Kiểm tra ID gói tập hợp lệ phòng ngừa can thiệp dữ liệu
-            RequestUtil.setFlashToast(request, "error", "Thông tin gói tập không hợp lệ.");
+            RequestUtil.setFlashToast(request, "error", Messages.MSG294_CHECKIN_PACKAGE_INVALID);
             RequestUtil.redirect(request, response, "/receptionist/check-in");
             return;
         }
@@ -166,7 +166,7 @@ public class CheckInServlet extends HttpServlet {
             String nameText = !ValidationUtil.isNullOrEmpty(customerName) ? customerName : "Hội viên";
             // nếu tên khách không rỗng thì sử dụng tên khách, nếu rỗng thì sử dụng "Hội
             // viên"
-            RequestUtil.setFlashToast(request, "success", nameText + " đã vào tập thành công.");// thông báo thành công
+            RequestUtil.setFlashToast(request, "success", String.format(Messages.MSG295_CHECKIN_DONE, nameText));// thông báo thành công
             RequestUtil.redirect(request, response, "/receptionist/check-in");
         } else {// nếu checkin thất bại
             // lễ tân k tồn tại trong csdl, khi đang checkin mà quản lý xóa
@@ -189,7 +189,7 @@ public class CheckInServlet extends HttpServlet {
         String customerCode = RequestUtil.getTrimmedParam(request, "customerCode");
 
         if (customerId <= 0) { // Kiểm tra ID khách hàng hợp lệ phòng ngừa can thiệp dữ liệu
-            RequestUtil.setFlashToast(request, "error", "Không tìm thấy hồ sơ khách cần cập nhật ảnh.");
+            RequestUtil.setFlashToast(request, "error", Messages.MSG296_CHECKIN_PHOTO_PROFILE_NOT_FOUND);
             RequestUtil.redirect(request, response, "/receptionist/check-in");
             return;
         }
@@ -222,7 +222,7 @@ public class CheckInServlet extends HttpServlet {
         ServiceResult<Void> updateResult = checkInService.updateCheckInPhoto(customerId, photoPath);
 
         if (updateResult.isSuccess()) {
-            RequestUtil.setFlashToast(request, "success", "Đã lưu ảnh check-in vào hồ sơ hội viên.");
+            RequestUtil.setFlashToast(request, "success", Messages.MSG297_CHECKIN_PHOTO_SAVED);
             String redirectUrl = "/receptionist/check-in"
                     + (!ValidationUtil.isNullOrEmpty(customerCode) ? "?q=" + customerCode : "");
             RequestUtil.redirect(request, response, redirectUrl);

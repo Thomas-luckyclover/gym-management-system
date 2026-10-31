@@ -140,14 +140,14 @@ public class ShiftServlet extends HttpServlet {
     private void handleOpenShift(HttpServletRequest request, HttpServletResponse response,
                                 int accountId, int shiftId) throws IOException {
         if (shiftId <= 0) {
-            RequestUtil.setFlashToast(request, "error", "Ca làm việc không hợp lệ.");
+            RequestUtil.setFlashToast(request, "error", Messages.MSG271_SHIFT_INVALID);
             RequestUtil.redirect(request, response, "/receptionist/shift");
             return;
         }
 
         ServiceResult<Void> result = shiftService.openShift(accountId, shiftId);
         if (result.isSuccess()) {
-            RequestUtil.setFlashToast(request, "success", "Mở ca làm việc thành công.");
+            RequestUtil.setFlashToast(request, "success", Messages.MSG272_SHIFT_OPENED);
         } else {
             RequestUtil.setFlashToast(request, "error", result.getMessage());
         }
@@ -160,7 +160,7 @@ public class ShiftServlet extends HttpServlet {
     private void handleCloseShift(HttpServletRequest request, HttpServletResponse response,
                                  int accountId, int shiftId) throws IOException {
         if (shiftId <= 0) {
-            RequestUtil.setFlashToast(request, "error", "Ca làm việc không hợp lệ.");
+            RequestUtil.setFlashToast(request, "error", Messages.MSG271_SHIFT_INVALID);
             RequestUtil.redirect(request, response, "/receptionist/shift");
             return;
         }
@@ -175,14 +175,14 @@ public class ShiftServlet extends HttpServlet {
                 countedCash = Long.parseLong(cleanNum);
             }
         } catch (NumberFormatException e) {
-            RequestUtil.setFlashToast(request, "error", "Số tiền mặt đếm được không hợp lệ.");
+            RequestUtil.setFlashToast(request, "error", Messages.MSG273_COUNTED_CASH_INVALID);
             RequestUtil.redirect(request, response, "/receptionist/shift?shiftId=" + shiftId);
             return;
         }
 
         ServiceResult<Void> result = shiftService.closeShift(accountId, shiftId, countedCash, varianceReason);
         if (result.isSuccess()) {
-            RequestUtil.setFlashToast(request, "success", "Đã chốt ca làm việc và gửi sổ ca lên Quản lý.");
+            RequestUtil.setFlashToast(request, "success", Messages.MSG274_SHIFT_CLOSED);
         } else {
             RequestUtil.setFlashToast(request, "error", result.getMessage());
         }
@@ -196,14 +196,14 @@ public class ShiftServlet extends HttpServlet {
                                        int accountId, int shiftId) throws IOException {
         int orderId = RequestUtil.getIntParam(request, "orderId", 0);
         if (orderId <= 0) {
-            RequestUtil.setFlashToast(request, "error", "Đơn hàng không hợp lệ.");
+            RequestUtil.setFlashToast(request, "error", Messages.MSG275_ORDER_INVALID);
             RequestUtil.redirect(request, response, "/receptionist/shift?shiftId=" + shiftId);
             return;
         }
 
         ServiceResult<Void> result = shiftService.confirmBankTransfer(accountId, orderId);
         if (result.isSuccess()) {
-            RequestUtil.setFlashToast(request, "success", "Đã xác nhận thanh toán chuyển khoản thành công.");
+            RequestUtil.setFlashToast(request, "success", Messages.MSG276_TRANSFER_CONFIRMED);
         } else {
             RequestUtil.setFlashToast(request, "error", result.getMessage());
         }
@@ -219,14 +219,14 @@ public class ShiftServlet extends HttpServlet {
         String cancelReason = RequestUtil.getTrimmedParam(request, "cancelReason");
 
         if (orderId <= 0) {
-            RequestUtil.setFlashToast(request, "error", "Đơn hàng không hợp lệ.");
+            RequestUtil.setFlashToast(request, "error", Messages.MSG275_ORDER_INVALID);
             RequestUtil.redirect(request, response, "/receptionist/shift?shiftId=" + shiftId);
             return;
         }
 
         ServiceResult<Void> result = shiftService.cancelOrder(accountId, orderId, cancelReason);
         if (result.isSuccess()) {
-            RequestUtil.setFlashToast(request, "success", "Đã hủy đơn hàng tại quầy thành công.");
+            RequestUtil.setFlashToast(request, "success", Messages.MSG277_COUNTER_ORDER_CANCELLED);
         } else {
             RequestUtil.setFlashToast(request, "error", result.getMessage());
         }

@@ -240,7 +240,7 @@ public class FreezeService {
                     // Kiểm tra CBR-115: nhân viên tự thao tác
                     else if (isOwnProfile) {
                         view.setEligibleToFreeze(false);
-                        view.setIneligibilityReason("Nhân viên không được tự bảo lưu gói tập của chính mình (CBR-115).");
+                        view.setIneligibilityReason(Messages.MSG282_STAFF_OWN_FREEZE);
                     }
                     // Đạt đủ điều kiện bảo lưu
                     else {
@@ -353,11 +353,11 @@ public class FreezeService {
         }
 
         if (ValidationUtil.isNullOrEmpty(reason) || reason.trim().length() < 5) {
-            return ServiceResult.fail("Lý do bảo lưu phải có ít nhất 5 ký tự (CK_FreezeRecords_Reason).");
+            return ServiceResult.fail(Messages.MSG278_FREEZE_REASON_MIN);
         }
 
         if (startDate == null || plannedEndDate == null) {
-            return ServiceResult.fail("Vui lòng nhập đầy đủ ngày bắt đầu và ngày kết thúc bảo lưu.");
+            return ServiceResult.fail(Messages.MSG279_FREEZE_DATES_REQUIRED);
         }
 
         LocalDate today = DateTimeUtil.today();
@@ -365,12 +365,12 @@ public class FreezeService {
 
         // DBR-13: Bảo lưu sớm nhất từ ngày mai
         if (startDate.isBefore(minStart)) {
-            return ServiceResult.fail("Bảo lưu chỉ được bắt đầu sớm nhất từ ngày mai (" + DateTimeUtil.formatDate(minStart) + ").");
+            return ServiceResult.fail(String.format(Messages.MSG280_FREEZE_START_FROM_TOMORROW, DateTimeUtil.formatDate(minStart)));
         }
 
         // DBR-13: From <= To
         if (plannedEndDate.isBefore(startDate)) {
-            return ServiceResult.fail("Ngày kết thúc dự kiến không được trước ngày bắt đầu bảo lưu.");
+            return ServiceResult.fail(Messages.MSG281_FREEZE_END_BEFORE_START);
         }
 
         // B2: Mở transaction để thực hiện chuỗi cập nhật nguyên tử
@@ -401,7 +401,7 @@ public class FreezeService {
                 // Kiểm tra CBR-115: Nhân viên không tự bảo lưu gói tập của chính mình
                 if (selfServiceGuard.isOwnCustomerProfile(staffAccountId, sub.getCustomerId())) {
                     conn.rollback();
-                    return ServiceResult.fail("Nhân viên không được tự bảo lưu gói tập của chính mình (CBR-115).");
+                    return ServiceResult.fail(Messages.MSG282_STAFF_OWN_FREEZE);
                 }
 
                 // Kiểm tra BR-21: Chỉ bảo lưu Membership
@@ -567,7 +567,7 @@ public class FreezeService {
 
                 if (freeze.getActualEndDate() != null) {
                     conn.rollback();
-                    return ServiceResult.fail("Đợt bảo lưu này đã được kết thúc trước đó.");
+                    return ServiceResult.fail(Messages.MSG283_FREEZE_ALREADY_ENDED);
                 }
 
                 // B2: Đọc và khóa gói Subscription
@@ -580,7 +580,7 @@ public class FreezeService {
                 // B3: Kiểm tra CBR-115
                 if (selfServiceGuard.isOwnCustomerProfile(staffAccountId, sub.getCustomerId())) {
                     conn.rollback();
-                    return ServiceResult.fail("Nhân viên không được tự thao tác trên hồ sơ của chính mình (CBR-115).");
+                    return ServiceResult.fail(Messages.MSG284_STAFF_OWN_PROFILE);
                 }
 
                 LocalDate today = DateTimeUtil.today();
