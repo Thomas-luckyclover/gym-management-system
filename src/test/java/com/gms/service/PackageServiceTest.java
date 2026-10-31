@@ -1,0 +1,284 @@
+package com.gms.service;
+
+import com.gms.constant.Role;
+import com.gms.dao.PackageDAO;
+import com.gms.dto.PackageFormInput;
+import com.gms.dto.ServiceResult;
+import com.gms.entity.Package;
+import org.junit.jupiter.api.BeforeEach;
+import org.junit.jupiter.api.DisplayName;
+import org.junit.jupiter.api.Test;
+
+import java.lang.reflect.Proxy;
+import java.sql.Connection;
+import java.sql.SQLException;
+import java.util.*;
+
+import static org.junit.jupiter.api.Assertions.*;
+
+/**
+ * Unit Test Suite cho PackageService kiểm tra các ràng buộc nghiệp vụ:
+ * - Gói hội viên & Vé ngày (DBR-06, DBR-11, DBR-15, P-04).
+ */
+class PackageServiceTest {
+
+    private FakePackageDAO fakePackageDAO;
+    private RecordingAuditLogService recordingAuditLogService;
+    private TestablePackageService service;
+
+    private static final int MANAGER_ACCOUNT_ID = 20;
+
+    @BeforeEach
+    void setUp() {
+        fakePackageDAO = new FakePackageDAO();
+        recordingAuditLogService = new RecordingAuditLogService();
+        service = new TestablePackageService(fakePackageDAO, recordingAuditLogService);
+    }
+
+    @Test
+    @DisplayName("Thêm gói hội viên hợp lệ (1 tháng, 500.000 đ) thành công")
+    void testCreateMembershipPackageSuccess() {
+        PackageFormInput input = new PackageFormInput();
+        input.setName("Gói Tập Tiêu Chuẩn 1 Tháng");
+        input.setType("Membership");
+        input.setPrice("500000");
+        input.setDurationUnit("Month");
+        input.setDurationValue("1");
+        input.setActive(true);
+        input.setUnlocksExerciseLibrary(true);
+        input.setDescription("Gói tập 1 tháng tiêu chuẩn");
+        input.setBenefits("Tập luyện không giới hạn khung giờ\nMiễn phí tủ đồ thông minh\nSử dụng phòng tắm nước nóng");
+
+        ServiceResult<Integer> result = service.createMembershipPackage(MANAGER_ACCOUNT_ID, input);
+
+        assertTrue(result.isSuccess());
+        assertNotNull(result.getData());
+        assertEquals("Thêm gói dịch vụ thành công.", result.getMessage());
+        assertEquals(1, recordingAuditLogService.records.size());
+        assertEquals("CREATE", recordingAuditLogService.records.get(0).action);
+    }
+
+    @Test
+    @DisplayName("Tên gói dưới 3 ký tự hoặc trên 50 ký tự bị từ chối (DBR-06)")
+    void testPackageNameLengthValidation() {
+        // Tên quá ngắn (< 3 ký tự)
+        PackageFormInput inputShort = new PackageFormInput();
+        inputShort.setName("AB");
+        inputShort.setType("Membership");
+        inputShort.setPrice("500000");
+        inputShort.setDurationUnit("Month");
+        inputShort.setDurationValue("1");
+
+        ServiceResult<Integer> resultShort = service.createMembershipPackage(MANAGER_ACCOUNT_ID, inputShort);
+        assertFalse(resultShort.isSuccess());
+        assertTrue(resultShort.getFieldErrors().containsKey("name"));
+
+        // Tên quá dài (> 50 ký tự)
+        PackageFormInput inputLong = new PackageFormInput();
+        inputLong.setName("Gói tập thể hình siêu cấp vip pro dành cho gymer năm 2026 vượt quá 50 ký tự");
+        inputLong.setType("Membership");
+        inputLong.setPrice("500000");
+        inputLong.setDurationUnit("Month");
+        inputLong.setDurationValue("1");
+
+        ServiceResult<Integer> resultLong = service.createMembershipPackage(MANAGER_ACCOUNT_ID, inputLong);
+        assertFalse(resultLong.isSuccess());
+        assertTrue(resultLong.getFieldErrors().containsKey("name"));
+    }
+
+    @Test
+    @DisplayName("Giá gói ngoài khoảng 10.000 đ - 500.000.000 đ hoặc không phải bội số 1.000 đ bị từ chối (DBR-11)")
+    void testPackagePriceValidation() {
+        // Giá nhỏ hơn 10.000 đ
+        PackageFormInput inputTooLow = new PackageFormInput();
+        inputTooLow.setName("Gói Giá Rẻ");
+        inputTooLow.setType("Membership");
+        inputTooLow.setPrice("5000");
+        inputTooLow.setDurationUnit("Month");
+        inputTooLow.setDurationValue("1");
+
+        ServiceResult<Integer> resLow = service.createMembershipPackage(MANAGER_ACCOUNT_ID, inputTooLow);
+        assertFalse(resLow.isSuccess());
+        assertTrue(resLow.getFieldErrors().containsKey("price"));
+
+        // Giá không phải bội số của 1.000 đ (lẻ 500 đ)
+        PackageFormInput inputNotMultiple = new PackageFormInput();
+        inputNotMultiple.setName("Gói Lẻ Tiền");
+        inputNotMultiple.setType("Membership");
+        inputNotMultiple.setPrice("100500");
+        inputNotMultiple.setDurationUnit("Month");
+        inputNotMultiple.setDurationValue("1");
+
+        ServiceResult<Integer> resNotMult = service.createMembershipPackage(MANAGER_ACCOUNT_ID, inputNotMultiple);
+        assertFalse(resNotMult.isSuccess());
+        assertTrue(resNotMult.getFieldErrors().containsKey("price"));
+    }
+
+    @Test
+    @DisplayName("Thời hạn gói hội viên không nằm trong P-04 (1, 3, 6, 12, 24, 36) bị từ chối")
+    void testMembershipDurationWhitelistValidation() {
+        PackageFormInput input = new PackageFormInput();
+        input.setName("Gói 5 Tháng Thử Nghiệm");
+        input.setType("Membership");
+        input.setPrice("2000000");
+        input.setDurationUnit("Month");
+        input.setDurationValue("5"); // 5 tháng không nằm trong P-04
+
+        ServiceResult<Integer> result = service.createMembershipPackage(MANAGER_ACCOUNT_ID, input);
+        assertFalse(result.isSuccess());
+        assertTrue(result.getFieldErrors().containsKey("durationValue"));
+    }
+
+    @Test
+    @DisplayName("Vé ngày bắt buộc thời hạn là 1 Ngày theo P-04")
+    void testDayPassDurationValidation() {
+        PackageFormInput inputInvalidDay = new PackageFormInput();
+        inputInvalidDay.setName("Vé Tập 2 Ngày");
+        inputInvalidDay.setType("DayPass");
+        inputInvalidDay.setPrice("100000");
+        inputInvalidDay.setDurationUnit("Day");
+        inputInvalidDay.setDurationValue("2");
+
+        ServiceResult<Integer> result = service.createMembershipPackage(MANAGER_ACCOUNT_ID, inputInvalidDay);
+        assertFalse(result.isSuccess());
+        assertTrue(result.getFieldErrors().containsKey("durationValue"));
+
+        // Hợp lệ: 1 ngày
+        PackageFormInput inputValidDay = new PackageFormInput();
+        inputValidDay.setName("Vé Tập 1 Ngày Chuẩn");
+        inputValidDay.setType("DayPass");
+        inputValidDay.setPrice("80000");
+        inputValidDay.setDurationUnit("Day");
+        inputValidDay.setDurationValue("1");
+
+        ServiceResult<Integer> resultOk = service.createMembershipPackage(MANAGER_ACCOUNT_ID, inputValidDay);
+        assertTrue(resultOk.isSuccess());
+    }
+
+    @Test
+    @DisplayName("Trùng tên gói đang bán bị từ chối (DBR-06)")
+    void testDuplicateActivePackageName() {
+        fakePackageDAO.activeNames.add("Gói Tập Gym 1 Tháng");
+
+        PackageFormInput input = new PackageFormInput();
+        input.setName("Gói Tập Gym 1 Tháng");
+        input.setType("Membership");
+        input.setPrice("600000");
+        input.setDurationUnit("Month");
+        input.setDurationValue("1");
+        input.setActive(true);
+
+        ServiceResult<Integer> result = service.createMembershipPackage(MANAGER_ACCOUNT_ID, input);
+        assertFalse(result.isSuccess());
+        assertTrue(result.getFieldErrors().containsKey("name"));
+    }
+
+    // ===== Lớp giả lập (Fakes & Test Doubles) =====
+
+    static class TestablePackageService extends PackageService {
+        TestablePackageService(PackageDAO packageDAO, AuditLogService auditLogService) {
+            super(packageDAO, auditLogService);
+        }
+
+        @Override
+        protected Connection getConnection() {
+            return (Connection) Proxy.newProxyInstance(
+                    getClass().getClassLoader(),
+                    new Class<?>[]{Connection.class},
+                    (proxy, method, args) -> {
+                        Class<?> returnType = method.getReturnType();
+                        if (returnType == boolean.class) return false;
+                        if (returnType == int.class) return 0;
+                        return null;
+                    }
+            );
+        }
+    }
+
+    static class FakePackageDAO extends PackageDAO {
+        final Map<Integer, Package> packages = new HashMap<>();
+        final Set<String> activeNames = new HashSet<>();
+        int idSequence = 100;
+
+        @Override
+        public Package findById(Connection conn, int packageId) {
+            return packages.get(packageId);
+        }
+
+        @Override
+        public Package findById(int packageId) {
+            return packages.get(packageId);
+        }
+
+        @Override
+        public boolean existsActiveByName(Connection conn, String packageName, Integer excludePackageId) {
+            if (excludePackageId != null && packages.containsKey(excludePackageId)) {
+                Package existing = packages.get(excludePackageId);
+                if (existing.getPackageName().equalsIgnoreCase(packageName)) {
+                    return false;
+                }
+            }
+            return activeNames.contains(packageName);
+        }
+
+        @Override
+        public int insert(Connection conn, Package pkg) {
+            int newId = ++idSequence;
+            packages.put(newId, pkg);
+            if (pkg.isActive()) {
+                activeNames.add(pkg.getPackageName());
+            }
+            return newId;
+        }
+
+        @Override
+        public boolean update(Connection conn, Package pkg) {
+            packages.put(pkg.getPackageId(), pkg);
+            return true;
+        }
+
+        @Override
+        public boolean updateActiveStatus(Connection conn, int packageId, boolean isActive, byte[] expectedRowVer) {
+            Package pkg = packages.get(packageId);
+            if (pkg != null) {
+                pkg.setActive(isActive);
+                if (isActive) {
+                    activeNames.add(pkg.getPackageName());
+                } else {
+                    activeNames.remove(pkg.getPackageName());
+                }
+                return true;
+            }
+            return false;
+        }
+    }
+
+    static class RecordingAuditLogService extends AuditLogService {
+        static class LogRecord {
+            String action;
+            String entityName;
+            Integer entityId;
+            String fieldChanged;
+            String oldValue;
+            String newValue;
+            String reason;
+        }
+
+        final List<LogRecord> records = new ArrayList<>();
+
+        @Override
+        void logInTransaction(Connection conn, Integer accountId, Role actingRole, String action,
+                              String entityName, Integer entityId, String fieldChanged,
+                              String oldValue, String newValue, String reason) {
+            LogRecord r = new LogRecord();
+            r.action = action;
+            r.entityName = entityName;
+            r.entityId = entityId;
+            r.fieldChanged = fieldChanged;
+            r.oldValue = oldValue;
+            r.newValue = newValue;
+            r.reason = reason;
+            records.add(r);
+        }
+    }
+}
