@@ -3691,3 +3691,112 @@ html body.dock:not(.no-arena) .theme-toggle:focus-visible { outline: 2px solid v
     font-size: var(--font-size-xl);
   }
 }
+/* =====================================================================
+   GMS Image Lightbox (Xem ảnh đính kèm trực tiếp trên trang, không mở tab mới)
+   ===================================================================== */
+.gms-lightbox-overlay {
+  display: none;
+  position: fixed;
+  inset: 0;
+  z-index: 99999;
+  align-items: center;
+  justify-content: center;
+  padding: 24px;
+  box-sizing: border-box;
+}
+
+.gms-lightbox-overlay.active {
+  display: flex;
+}
+
+.gms-lightbox-backdrop {
+  position: fixed;
+  inset: 0;
+  background: rgba(2, 6, 23, 0.85);
+  backdrop-filter: blur(8px);
+  -webkit-backdrop-filter: blur(8px);
+  animation: gmsLightboxFadeIn 0.2s ease-out;
+}
+
+.gms-lightbox-content {
+  position: relative;
+  z-index: 2;
+  max-width: 90vw;
+  max-height: 90vh;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  animation: gmsLightboxZoomIn 0.25s cubic-bezier(0.16, 1, 0.3, 1);
+}
+
+.gms-lightbox-close {
+  position: absolute;
+  top: -16px;
+  right: -16px;
+  width: 36px;
+  height: 36px;
+  border-radius: 50%;
+  background: rgba(15, 23, 42, 0.9);
+  color: #fff;
+  border: 1px solid rgba(255, 255, 255, 0.25);
+  font-size: 22px;
+  line-height: 1;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  cursor: pointer;
+  box-shadow: 0 4px 14px rgba(0, 0, 0, 0.5);
+  transition: all 0.15s ease;
+  z-index: 3;
+}
+
+.gms-lightbox-close:hover {
+  background: var(--brand-sunset, #f25c1b);
+  border-color: transparent;
+  transform: scale(1.08);
+}
+
+.gms-lightbox-img-wrapper {
+  max-width: 88vw;
+  max-height: 80vh;
+  overflow: hidden;
+  border-radius: 10px;
+  box-shadow: 0 25px 50px -12px rgba(0, 0, 0, 0.7), 0 0 0 1px rgba(255, 255, 255, 0.1);
+  background: #000;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.gms-lightbox-img {
+  display: block;
+  max-width: 100%;
+  max-height: 80vh;
+  width: auto;
+  height: auto;
+  object-fit: contain;
+}
+
+.gms-lightbox-caption {
+  margin-top: 10px;
+  font-size: 13px;
+  color: #cbd5e1;
+  text-align: center;
+  max-width: 80vw;
+  text-shadow: 0 1px 3px rgba(0, 0, 0, 0.8);
+}
+
+body.gms-lightbox-open {
+  overflow: hidden !important;
+}
+
+@keyframes gmsLightboxFadeIn {
+  from { opacity: 0; }
+  to { opacity: 1; }
+}
+
+@keyframes gmsLightboxZoomIn {
+  from { opacity: 0; transform: scale(0.94); }
+  to { opacity: 1; transform: scale(1); }
+}
+
