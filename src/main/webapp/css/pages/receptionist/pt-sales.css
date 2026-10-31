@@ -56,8 +56,10 @@
   padding: 0;
   list-style: none;
 }
+/* flex-wrap: màn hẹp (điện thoại) nút "Tiếp tục thu tiền" xuống dòng thay vì đè lên "còn mm:ss". */
 .sale-holds-list li {
   display: flex;
+  flex-wrap: wrap;
   align-items: center;
   justify-content: space-between;
   gap: var(--space-2);
@@ -71,7 +73,9 @@
   gap: var(--space-2);
   min-width: 0;
 }
+/* Mã đơn (PT-20261031-0007) không bẻ ở dấu gạch ngang. */
 .sale-holds-code {
+  white-space: nowrap;
   font-variant-numeric: tabular-nums;
   font-weight: var(--font-weight-semibold);
   color: var(--arena-ink);
@@ -760,7 +764,7 @@ html body.dock.pt-sale-page .content .sale-card :is(h2, h3) {
   justify-items: center;
   align-content: center;
   min-width: 64px;
-  min-height: 40px;
+  min-height: 44px;               /* chạm tay ≥ 44px; nút "+ Thêm giờ" và ô nhập giờ cùng chiều cao */
   padding: var(--space-1) var(--space-3);
   border-radius: var(--arena-radius-chip);
   background: var(--arena-chalk);
@@ -864,32 +868,39 @@ html body.dock.pt-sale-page .content .sale-card :is(h2, h3) {
 .plan-add-time [hidden] {
   display: none;
 }
-.plan-chip-add {
+/* Nút "+ Thêm giờ" là .plan-chip nên cao bằng chip giờ bên cạnh; chỉ khác viền nét đứt.
+   Màu chữ / viền dùng --arena-accent-text (sáng #24468F, tối #7FD3DA): --arena-700 gần trùng nền tối nên mất chữ. */
+.plan-chip.plan-chip-add {
   display: inline-flex;
   align-items: center;
   justify-content: center;
   box-sizing: border-box;
-  min-height: 44px;               /* chạm tay ≥ 44px */
   padding: var(--space-1) var(--space-3);
-  border: 1px dashed var(--arena-700);
+  border: 1px dashed var(--arena-accent-text);
   border-radius: var(--arena-radius-chip);
   background: transparent;
-  color: var(--arena-700);
+  box-shadow: none;
+  color: var(--arena-accent-text);
   font: inherit;
+  font-size: var(--font-size-sm);
   font-weight: var(--font-weight-semibold);
+  white-space: nowrap;
   cursor: pointer;
   transition: background-color var(--duration-fast) var(--ease-out), color var(--duration-fast) var(--ease-out);
 }
-.plan-chip-add:hover {
+.plan-chip.plan-chip-add:hover {
+  border-style: solid;
   background: var(--arena-700);
+  box-shadow: none;
   color: var(--arena-on-dark);
 }
+/* Ô nhập giờ + Xác nhận / Hủy: cao bằng chip (min-height của .plan-chip) để hàng không bị lệch khi mở. */
 .plan-time-input {
   box-sizing: border-box;
   width: 132px;
   height: 44px;
   padding: 0 var(--space-3);
-  border: 1px solid var(--arena-700);
+  border: 1px solid var(--arena-accent-text);
   border-radius: var(--arena-radius-chip);
   background: var(--arena-chalk);
   color: var(--arena-ink);

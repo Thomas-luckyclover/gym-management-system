@@ -22,7 +22,7 @@
 <head>
     <%@ include file="/WEB-INF/jsp/common/head.jspf" %>
     <title>Bán gói PT · Super Gym Lễ tân</title>
-    <link rel="stylesheet" href="${ctx}/css/pages/receptionist/pt-sales.css?v=20261030v5">
+    <link rel="stylesheet" href="${ctx}/css/pages/receptionist/pt-sales.css?v=20261031a">
     <script src="${ctx}/js/pages/receptionist/pt-sales.js?v=20261026s" defer></script>
     <script src="${ctx}/js/pages/receptionist/pt-sale-plan.js?v=20261030v4" defer></script>
 </head>
