@@ -58,7 +58,21 @@ public class PackageDAO {
 
         return packages;
     }
-
+   /** Đọc gói tại lúc mua, giữ giá tới cuối transaction; null nếu không tồn tại. */
+    public Package findById(Connection conn, int packageId) throws SQLException {
+        String sql = "SELECT PackageId, PackageName, Description, Benefits, PackageType, "
+                + "DurationUnit, DurationValue, EstimatedSessionCount, Price, IsActive, UnlocksExerciseLibrary, CreatedAt "
+                + "FROM Packages WITH (HOLDLOCK) WHERE PackageId = ?";
+        try (PreparedStatement statement = conn.prepareStatement(sql)) {
+            statement.setInt(1, packageId);
+            try (ResultSet resultSet = statement.executeQuery()) {
+                if (resultSet.next()) {
+                    return mapResultSetToPackage(resultSet);
+                }
+            }
+        }
+        return null;
+    }
     // ===== Hàm phụ =====
 
     /**

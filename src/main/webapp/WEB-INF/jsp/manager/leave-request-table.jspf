@@ -27,6 +27,108 @@
       </thead>
       <tbody>
         <c:forEach var="item" items="${requestItems}">
+          <c:choose>
+            <c:when test="${showEmployee and not empty item.leaveGroup and fn:length(item.leaveGroup.requests) > 1}">
+              <c:set var="groupOpen" value="${item.leaveGroup.containsRequest(reviewId)}" />
+              <c:set var="groupReturnUrl" value="${listReturnUrl}${fn:contains(listReturnUrl, '?') ? '&' : '?'}reviewId=${item.leaveRequestId}#leave-group-${item.leaveGroup.key}" />
+              <%-- Một hàng cho cả đợt; mở rộng ngay bên dưới để xử lý từng phần. --%>
+              <tr id="leave-group-${item.leaveGroup.key}" class="leave-request-row ${groupOpen ? 'leave-row-selected' : ''}" tabindex="0"
+                  aria-label="Đợt nghỉ của <c:out value='${item.fullName}' />. Enter để xem các đơn."
+                  data-leave-reason="<c:out value='${item.reason}' />"
+>
+                <td>
+                  <div class="leave-employee-cell">
+                    <span class="leave-employee-initial" aria-hidden="true"><c:out value="${fn:substring(item.fullName, 0, 1)}" /></span>
+                    <div class="leave-employee-meta">
+                      <b><a class="leave-reason-trigger" href="${pageContext.request.contextPath}/manager/leave-requests/review?id=${item.leaveRequestId}"><c:out value="${item.fullName}" /></a></b>
+                      <small><c:out value="${item.employeeCode}" /> · ${item.position == 'PT' ? 'PT' : 'Lễ tân'}</small>
+                      <small>Nộp ${gms:formatDateTime(item.submittedAt)}</small>
+                    </div>
+                  </div>
+                </td>
+                <td>
+                  <div class="leave-date-cell">
+                    <b>${gms:formatDate(item.leaveGroup.fromDate)} → ${gms:formatDate(item.leaveGroup.toDate)}</b>
+                    <small>Cùng đợt nghỉ · <fmt:formatNumber value="${item.leaveGroup.totalDays}" maxFractionDigits="1" /> ngày</small>
+                    <c:if test="${item.nearLeaveDate}"><span class="leave-near-label">Sắp đến ngày nghỉ</span></c:if>
+                    <c:if test="${item.lateApproval}"><span class="badge badge-warning">Cần duyệt muộn</span></c:if>
+                  </div>
+                </td>
+                <td>
+                  <div class="leave-group-types">
+                    <c:forEach var="part" items="${item.leaveGroup.requests}">
+                      <span class="badge ${part.leaveType.dbValue == 'Annual' ? 'badge-success' : 'badge-warning'}">
+                        ${part.leaveType.dbValue == 'Annual' ? 'Phép năm' : 'Không lương'} · <fmt:formatNumber value="${part.days}" maxFractionDigits="1" /> ngày
+                      </span>
+                    </c:forEach>
+                  </div>
+                </td>
+                <c:if test="${showDecisionColumns}">
+                  <td class="leave-check-cell"><span class="leave-group-note">${fn:length(item.leaveGroup.requests)} đơn cùng đợt</span></td>
+                  <td class="leave-actions-cell">
+                    <button type="button" class="btn btn-sm btn-outline leave-group-toggle"
+                            data-group-target="leave-parts-${item.leaveGroup.key}"
+                            aria-controls="leave-parts-${item.leaveGroup.key}" aria-expanded="${groupOpen}">${groupOpen ? 'Thu gọn ▴' : 'Xem 2 đơn ▾'}</button>
+                  </td>
+                </c:if>
+              </tr>
+                <%-- Service nạp sẵn từng phần; JS chỉ đổi hidden, không tải lại trang. --%>
+                <tr id="leave-parts-${item.leaveGroup.key}" class="leave-expanded-row" ${groupOpen ? '' : 'hidden'}>
+                  <td colspan="${showDecisionColumns ? 5 : 3}">
+                    <section class="leave-group-detail" aria-label="Hai đơn cùng đợt nghỉ">
+                      <div class="leave-group-reason"><small>Lý do</small><p><c:out value="${item.reason}" /></p></div>
+                      <c:if test="${not empty item.leaveGroup.reviewError}"><p class="leave-detail-error" role="alert"><c:out value="${item.leaveGroup.reviewError}" /></p></c:if>
+                      <c:forEach var="part" items="${item.leaveGroup.reviewParts}">
+                        <article class="leave-detail-part">
+                          <div>
+                            <h3><c:out value="${part.leaveRequest.leaveType.displayName}" /></h3>
+                            <c:choose>
+                              <c:when test="${part.leaveRequest.approved}"><c:set var="partStatusClass" value="badge-success" /></c:when>
+                              <c:when test="${part.leaveRequest.pending}"><c:set var="partStatusClass" value="badge-warning" /></c:when>
+                              <c:otherwise><c:set var="partStatusClass" value="badge-danger" /></c:otherwise>
+                            </c:choose>
+                            <span class="badge ${partStatusClass}"><c:out value="${part.leaveRequest.status.displayName}" /></span>
+                          </div>
+                          <div>
+                            <b>${gms:formatDate(part.leaveRequest.fromDate)} → ${gms:formatDate(part.leaveRequest.toDate)}</b>
+                            <small><fmt:formatNumber value="${part.leaveRequest.days}" maxFractionDigits="1" /> ngày · <c:out value="${part.leaveRequest.shiftType.displayName}" /></small>
+                          </div>
+                          <c:choose>
+                            <c:when test="${part.leaveRequest.pending}">
+                              <div class="leave-detail-check ${part.canApprove ? 'pass' : 'fail'}">
+                                <c:choose>
+                                  <c:when test="${part.canApprove}">${part.leaveDatePassed ? 'Cần xác nhận nghỉ thực tế' : 'Đủ điều kiện duyệt'}</c:when>
+                                  <c:otherwise><c:out value="${part.approvalBlockMessage}" default="Bạn không có quyền xử lý đơn này." /></c:otherwise>
+                                </c:choose>
+                              </div>
+                              <form class="leave-detail-actions" action="${pageContext.request.contextPath}/manager/leave-requests/review" method="post">
+                                <input type="hidden" name="csrfToken" value="<c:out value='${csrfToken}' />">
+                                <input type="hidden" name="leaveRequestId" value="${part.leaveRequest.leaveRequestId}">
+                                <input type="hidden" name="returnUrl" value="<c:out value='${groupReturnUrl}' />">
+                                <button type="submit" name="action" value="approve" class="btn btn-sm btn-primary" ${part.canApprove ? '' : 'disabled'}
+                                        data-confirm-title="${part.leaveDatePassed ? 'Xác nhận duyệt muộn' : 'Duyệt đơn nghỉ phép'}"
+                                        data-confirm-text="${part.leaveDatePassed ? 'Xác nhận duyệt muộn' : 'Duyệt'}"
+                                        <c:if test="${part.leaveDatePassed}">data-confirm-reason-name="lateApprovalReason"</c:if>
+                                        data-confirm-message="${part.leaveDatePassed ? 'Xác nhận nhân viên đã nghỉ đúng ngày/ca và duyệt phần' : 'Duyệt phần'} <c:out value='${part.leaveRequest.leaveType.displayName}' />, ${gms:formatDate(part.leaveRequest.fromDate)} → ${gms:formatDate(part.leaveRequest.toDate)}?">${part.leaveDatePassed ? 'Duyệt muộn' : 'Duyệt'}</button>
+                                <button type="submit" name="action" value="reject" class="btn btn-sm btn-outline" ${part.canAct ? '' : 'disabled'}
+                                        data-confirm-title="Từ chối đơn nghỉ phép" data-confirm-text="Từ chối" data-confirm-reason-name="rejectReason"
+                                        data-confirm-message="Từ chối phần <c:out value='${part.leaveRequest.leaveType.displayName}' />, ${gms:formatDate(part.leaveRequest.fromDate)} → ${gms:formatDate(part.leaveRequest.toDate)}?">Từ chối</button>
+                              </form>
+                            </c:when>
+                            <c:otherwise>
+                              <div class="leave-detail-result">
+                                <small><c:out value="${part.reviewerName}" /> · ${gms:formatDateTime(part.leaveRequest.reviewedAt)}</small>
+                                <c:if test="${part.leaveRequest.rejected}"><p><c:out value="${part.leaveRequest.rejectReason}" /></p></c:if>
+                              </div>
+                            </c:otherwise>
+                          </c:choose>
+                        </article>
+                      </c:forEach>
+                    </section>
+                  </td>
+                </tr>
+            </c:when>
+            <c:otherwise>
           <%-- JS mở chi tiết khi bấm hàng hoặc Enter; các nút trong form xử lý riêng. --%>
           <tr class="leave-request-row ${item.nearLeaveDate ? 'leave-row-near' : ''}"
               tabindex="0"
@@ -167,6 +269,8 @@
             </c:if>
 
           </tr>
+            </c:otherwise>
+          </c:choose>
         </c:forEach>
       </tbody>
     </table>

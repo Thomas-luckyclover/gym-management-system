@@ -216,12 +216,16 @@ public class LeaveRequestDAO {
         return index;
     }
 
-    /** Đếm từng đơn cho tab Chờ duyệt/Đã duyệt/Từ chối, áp dụng đầy đủ bộ lọc. */
+    /** Đếm hàng (một đợt hoặc một đơn độc lập) cho các tab trạng thái, áp dụng đầy đủ bộ lọc. */
     public int countRequests(LeaveRequestFilter filter) throws SQLException {
         FilterSql requestFilter = buildFilterSql(filter, true);
-        String sql = "SELECT COUNT(*) FROM LeaveRequests lr "
+        String sql = "SELECT COUNT(*) FROM (SELECT lr.EmployeeId, "
+                + "COALESCE(CONVERT(nvarchar(36), lr.LeaveGroupId), CONVERT(nvarchar(36), lr.LeaveRequestId)) AS GroupKey "
+                + "FROM LeaveRequests lr "
                 + "JOIN Employees e ON e.EmployeeId = lr.EmployeeId "
-                + "JOIN Persons p ON p.PersonId = e.PersonId " + requestFilter.whereClause;
+                + "JOIN Persons p ON p.PersonId = e.PersonId " + requestFilter.whereClause
+                + " GROUP BY lr.EmployeeId, COALESCE(CONVERT(nvarchar(36), lr.LeaveGroupId), "
+                + "CONVERT(nvarchar(36), lr.LeaveRequestId))) groupedRequests";
         try (Connection connection = DBContext.getConnection();
                 PreparedStatement statement = connection.prepareStatement(sql)) {
             bindFilterParameters(statement, requestFilter.parameters, 1);
@@ -232,7 +236,7 @@ public class LeaveRequestDAO {
     }
 
     /**
-     * Phân trang từng đơn tại SQL. Pending: sắp nghỉ hôm nay/ngày mai trước, sau đó nộp trước xếp trước.
+     * Phân trang theo đợt/đơn độc lập tại SQL. Pending: sắp nghỉ hôm nay/ngày mai trước, sau đó nộp trước xếp trước.
      * Đơn đã xử lý: lần xử lý mới nhất trước. Bộ lọc theo ngày gửi đơn, tính cả hai biên.
      */
     public List<LeaveRequestRow> findRequestPage(LeaveRequestFilter filter, int offset, int pageSize,
@@ -244,8 +248,14 @@ public class LeaveRequestDAO {
             orderBy = " ORDER BY CASE WHEN lr.FromDate BETWEEN ? AND ? THEN 0 ELSE 1 END, "
                     + "lr.SubmittedAt ASC, lr.LeaveRequestId ASC ";
         }
-        String sql = MANAGER_REQUEST_SELECT + requestFilter.whereClause + orderBy
-                + "OFFSET ? ROWS FETCH NEXT ? ROWS ONLY";
+        // Chọn một đơn phù hợp làm đại diện cho mỗi đợt trước khi phân trang.
+        String sql = "WITH FilteredRequests AS (SELECT lr.*, ROW_NUMBER() OVER (PARTITION BY lr.EmployeeId, "
+                + "COALESCE(CONVERT(nvarchar(36), lr.LeaveGroupId), CONVERT(nvarchar(36), lr.LeaveRequestId)) "
+                + "ORDER BY lr.FromDate, lr.LeaveRequestId) AS GroupRow "
+                + "FROM LeaveRequests lr JOIN Employees e ON e.EmployeeId = lr.EmployeeId "
+                + "JOIN Persons p ON p.PersonId = e.PersonId " + requestFilter.whereClause + ") "
+                + MANAGER_REQUEST_SELECT.replace("FROM LeaveRequests lr", "FROM FilteredRequests lr")
+                + "WHERE lr.GroupRow = 1 " + orderBy + "OFFSET ? ROWS FETCH NEXT ? ROWS ONLY";
         try (Connection connection = DBContext.getConnection();
                 PreparedStatement statement = connection.prepareStatement(sql)) {
             int paramIndex = bindFilterParameters(statement, requestFilter.parameters, 1);

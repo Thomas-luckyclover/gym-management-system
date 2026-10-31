@@ -21,8 +21,10 @@
             width = Math.max(1, rect.width); height = Math.max(1, rect.height);
             canvas.width = Math.round(width * ratio); canvas.height = Math.round(height * ratio);
             ctx.setTransform(ratio, 0, 0, ratio, 0, 0);
+
             ink = getComputedStyle(card).getPropertyValue("--comic-ink").trim() || ink;
             paper = getComputedStyle(card).getPropertyValue("--comic-paper").trim() || paper;
+
             draw();
         }
         function draw() {

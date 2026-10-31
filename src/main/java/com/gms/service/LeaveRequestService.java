@@ -125,7 +125,7 @@ public class LeaveRequestService {
             return ServiceResult.fail("Từ ngày phải trước hoặc trùng Đến ngày.");
         }
         try {
-            // B1: đếm và phân trang theo đơn, không lấy trang nhân viên rồi lọc lại trong Java.
+            // B1: phân trang theo đợt/đơn độc lập; số trên tab vẫn đếm từng đơn.
             Integer managerEmployeeId = findWorkingManagerId(managerAccountId);
             int totalRequests = leaveRequestDAO.countRequests(filter);
             int totalPages = Math.max(1, (totalRequests + pageSize - 1) / pageSize);

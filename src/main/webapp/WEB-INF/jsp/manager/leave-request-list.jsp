@@ -229,7 +229,7 @@
                 <a class="btn btn-ghost btn-sm" href="${previousUrl}">Trang trước</a>
               </c:if>
 
-              <span>Trang ${listPage.pageNumber} / ${listPage.totalPages} (${listPage.totalItems} ${employeeView ? 'nhân viên' : 'đơn'})</span>
+              <span>Trang ${listPage.pageNumber} / ${listPage.totalPages} (${listPage.totalItems} ${employeeView ? 'nhân viên' : 'mục'})</span>
 
               <c:if test="${listPage.hasNext}">
                 <c:url var="nextUrl" value="/manager/leave-requests">
@@ -248,6 +248,7 @@
           </c:if>
 
         </section>
+
 
       </main>
     </div>
