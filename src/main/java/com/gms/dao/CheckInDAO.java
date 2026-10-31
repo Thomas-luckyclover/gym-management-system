@@ -158,7 +158,16 @@ public class CheckInDAO {
                 + "JOIN Orders o ON s.OrderId = o.OrderId "
                 + "JOIN Packages pkg ON o.PackageId = pkg.PackageId "
                 + "WHERE s.CustomerId = ? "
-                + "ORDER BY CASE WHEN s.Status = 'Active' THEN 1 WHEN s.Status = 'Frozen' THEN 2 ELSE 3 END, s.EndDate DESC";
+                + "ORDER BY CASE "
+                + "  WHEN s.SubscriptionType IN ('Membership', 'DayPass') AND s.Status = 'Active' "
+                + "       AND (s.StartDate IS NULL OR s.StartDate <= CAST(SYSDATETIME() AS DATE)) THEN 1 "
+                + "  WHEN s.SubscriptionType IN ('Membership', 'DayPass') AND s.Status = 'Frozen' THEN 2 "
+                + "  WHEN s.SubscriptionType IN ('Membership', 'DayPass') AND s.Status = 'Active' "
+                + "       AND s.StartDate > CAST(SYSDATETIME() AS DATE) THEN 3 "
+                + "  WHEN s.SubscriptionType = 'DayPass' AND s.Status = 'Used' THEN 4 "
+                + "  WHEN s.SubscriptionType IN ('Membership', 'DayPass') AND s.Status = 'Expired' THEN 5 "
+                + "  WHEN s.SubscriptionType NOT IN ('Membership', 'DayPass') AND s.Status = 'Active' THEN 6 "
+                + "  ELSE 7 END, s.EndDate DESC";
         //Sắp xếp theo thứ tự: Active trước, Frozen sau, các trạng thái khác cuối cùng.
         // Trong mỗi nhóm, sắp xếp theo ngày kết thúc muộn nhất
 
