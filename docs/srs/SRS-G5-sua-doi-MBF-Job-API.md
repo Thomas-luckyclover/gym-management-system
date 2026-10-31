@@ -5,7 +5,7 @@ title: "SRS G5 — Nội dung cần sửa (Main Business Flow, Rules, Job Invent
 # Cách dùng file này
 
 - Mỗi mục ghi rõ **vị trí trong SRS** và **thao tác**: *Thay toàn bộ*, *Thay đoạn*, hoặc *Thêm mới*. Copy phần nội dung bên dưới tiêu đề vào đúng vị trí.
-- Số mục của phần II theo bản SRS của nhóm: **13. Background Job Inventory** (như bản SRS trong docs/srs-update), **14. External API Inventory**.
+- Số mục của phần II theo bản SRS của nhóm: **16. Background Job Inventory**, **17. External API Inventory** (đúng như Mục lục SRS).
 - Phần **Z. Việc còn mở** dành cho nhóm, **không copy** vào SRS.
 - Đối chiếu code: nhánh `develop` (commit fd14ed2).
 
@@ -16,7 +16,7 @@ title: "SRS G5 — Nội dung cần sửa (Main Business Flow, Rules, Job Invent
 | 31/10/2026 | M | Le Cong Minh | Reorganize Main Business Flows into 11 cross-actor flows drawn in BPMN (one pool, lanes per actor, solid sequence flows); split into core and supporting flows |
 | 31/10/2026 | A | Le Cong Minh | Add BF-02 Gym Check-in and BF-11 Gym Closure & Opening Hours Change; add CBR-124 (opening hours change) |
 | 31/10/2026 | D | Le Cong Minh | Remove BF Customer Onboarding (sign-up is described in UC-05); merge Day Pass Check-in into BF-02 and Feedback Reading into BF-10 |
-| 31/10/2026 | M | Le Cong Minh | Update CBR-42, CBR-56, GBR-04, GBR-11, UC-11, DBR-36, Entity OperatingHourException, JOB-04, JOB-08; rewrite Background Job Inventory (13) and External API Inventory (14) |
+| 31/10/2026 | M | Le Cong Minh | Update CBR-42, CBR-56, GBR-04, GBR-11, UC-11, DBR-36, Entity OperatingHourException, JOB-04, JOB-08; rewrite Background Job Inventory (16) and External API Inventory (17) |
 
 # B. Definition and Acronyms — Thay dòng #5
 
@@ -454,9 +454,9 @@ Thay cụm *"a session on a date declared closed all day → Cancelled / GymClos
 | 7 | JOB-07: Remind Managers of leave requests starting tomorrow | Scheduled | Runs: every minute. Threshold: Pending leave request starting tomorrow that has not been reminded yet. Result: ReminderSentAt is set and the Managers receive one bell notification "N leave requests from tomorrow are waiting". No automatic rejection (CBR-85). |
 | 8 | JOB-08: Remind customers without gym access | Scheduled | Runs: daily, after JOB-04 (last in the chain). Threshold: PT sessions Scheduled for tomorrow whose customer cannot use the gym tomorrow (CBR-117), excluding sessions on a closed day or outside that day's opening hours (CBR-56, CBR-124). Result: one bell notification per customer per day ("Nhắc buổi PT ngày dd/MM/yyyy", earliest session of that day, advice depends on missing package or freeze), only for Active accounts, both members of a couple; never sent twice. |
 
-# H. Section II.13 Background Job Inventory — Thay toàn bộ
+# H. Section II.16 Background Job Inventory — Thay toàn bộ
 
-## 13.0 Common behavior for all jobs
+## 16.0 Common behavior for all jobs
 
 All times use the Asia/Ho_Chi_Minh time zone (UTC+7). Jobs run inside the application on the JDK scheduler, started when the application starts and stopped when it stops (NFR-01).
 
@@ -478,7 +478,7 @@ All times use the Asia/Ho_Chi_Minh time zone (UTC+7). Jobs run inside the applic
 | JOB-06 Expire timed-out payment transactions | Every minute | UC-22, UC-37, UC-PAY | CBR-69 |
 | JOB-07 Remind Managers of leave requests starting tomorrow | Every minute | UC-14, UC-15 | CBR-85 |
 
-## 13.1 Resume Expired Membership Freezes (JOB-01)
+## 16.1 Resume Expired Membership Freezes (JOB-01)
 
 **Trigger:** Scheduled — daily at 00:05, first job of the daily chain.
 
@@ -505,7 +505,7 @@ Failure behavior:
 | Error on one freeze | Rolls back that freeze only and logs a warning; the other freezes are still processed. The freeze is processed again in the next run. |
 | No freeze to resume | The job completes immediately with no action — this is normal and expected. |
 
-## 13.2 Expire Membership and PT Packages (JOB-02)
+## 16.2 Expire Membership and PT Packages (JOB-02)
 
 **Trigger:** Scheduled — daily, right after JOB-01.
 
@@ -534,7 +534,7 @@ Failure behavior:
 | Subscription changed by another process | The re-check finds it no longer Active; it is skipped. |
 | Nothing to expire | The job completes immediately with no action — this is normal and expected. |
 
-## 13.3 Expire Unused Day Passes (JOB-03)
+## 16.3 Expire Unused Day Passes (JOB-03)
 
 **Trigger:** Scheduled — daily, right after JOB-02.
 
@@ -561,7 +561,7 @@ Failure behavior:
 | Pass used meanwhile | The re-check finds it Used; it is skipped. |
 | Nothing to expire | The job completes immediately with no action — this is normal and expected. |
 
-## 13.4 Auto-Close PT Sessions (JOB-04)
+## 16.4 Auto-Close PT Sessions (JOB-04)
 
 **Trigger:** Scheduled — daily, right after JOB-03.
 
@@ -593,7 +593,7 @@ Failure behavior:
 | Session already changed by another process | The re-check finds it no longer Scheduled; the session is skipped. |
 | No sessions to close | The job completes immediately with no action — this is normal and expected. |
 
-## 13.5 Cancel Overdue Online Orders (JOB-05)
+## 16.5 Cancel Overdue Online Orders (JOB-05)
 
 **Trigger:** Scheduled — every minute.
 
@@ -621,7 +621,7 @@ Failure behavior:
 | A late payment arrives after cancellation | Handled by API-02 as an invalid payment: the transaction is flagged for refund (CBR-72, BF-06). |
 | No overdue order | The job completes immediately with no action — this is normal and expected. |
 
-## 13.6 Expire Timed-Out Payment Transactions (JOB-06)
+## 16.6 Expire Timed-Out Payment Transactions (JOB-06)
 
 **Trigger:** Scheduled — every minute.
 
@@ -647,7 +647,7 @@ Failure behavior:
 | Transaction already completed | The conditional update changes nothing; the transaction is skipped. |
 | No transaction to expire | The job completes immediately with no action — this is normal and expected. |
 
-## 13.7 Remind Managers of Leave Requests Starting Tomorrow (JOB-07)
+## 16.7 Remind Managers of Leave Requests Starting Tomorrow (JOB-07)
 
 **Trigger:** Scheduled — every minute.
 
@@ -672,7 +672,7 @@ Failure behavior:
 | Notification cannot be written | The transaction is rolled back, ReminderSentAt stays empty and the next run tries again. |
 | No requests due | The job completes immediately with no action — this is normal and expected. |
 
-## 13.8 Remind Customers Without Gym Access (JOB-08)
+## 16.8 Remind Customers Without Gym Access (JOB-08)
 
 **Trigger:** Scheduled — daily, right after JOB-04 (last job of the daily chain).
 
@@ -698,9 +698,9 @@ Failure behavior:
 | Error for one person | Rolls back that person only; other people are still reminded. |
 | Nobody to remind | The job completes immediately with no action — this is normal and expected. |
 
-# I. Section II.14 External API Inventory — Thay toàn bộ
+# I. Section II.17 External API Inventory — Thay toàn bộ
 
-## 14.1 VNPay Payment Request (API-01)
+## 17.1 VNPay Payment Request (API-01)
 
 | Field | Value |
 |---|---|
@@ -715,7 +715,7 @@ Failure behavior:
 | Caller | GMS (outbound, browser redirect). |
 | Auth | Terminal code (vnp_TmnCode) + vnp_SecureHash = HMAC-SHA512 (key = vnpay.hash-secret, stored in deployment configuration) over the non-empty vnp_* parameters sorted by name, joined as key=URL-encoded value with "&", as lowercase hex. |
 
-## 14.2 VNPay IPN Webhook (API-02)
+## 17.2 VNPay IPN Webhook (API-02)
 
 | Field | Value |
 |---|---|
@@ -730,7 +730,7 @@ Failure behavior:
 | Caller | VNPay payment gateway (server-to-server). |
 | Auth | HMAC-SHA512 signature validation (vnp_SecureHash, key = vnpay.hash-secret); the endpoint is public but every request must carry a valid signature, otherwise it is rejected with RspCode 97. |
 
-## 14.3 Email Delivery (API-03)
+## 17.3 Email Delivery (API-03)
 
 | Field | Value |
 |---|---|
@@ -744,7 +744,7 @@ Failure behavior:
 | Caller | GMS (outbound). The system never sends SMS (GBR-15). |
 | Auth | SMTP account (mail.username) + app password (mail.app-password), stored in deployment configuration. |
 
-## 14.4 Weather Forecast (API-04)
+## 17.4 Weather Forecast (API-04)
 
 | Field | Value |
 |---|---|
@@ -758,7 +758,7 @@ Failure behavior:
 | Caller | GMS (outbound), when a PT opens the dashboard. |
 | Auth | None (public API, no key). |
 
-## 14.5 Exercise Data (API-05)
+## 17.5 Exercise Data (API-05)
 
 | Field | Value |
 |---|---|
@@ -777,9 +777,9 @@ Failure behavior:
 
 | # | Chỗ | Code hiện tại (develop) | SRS |
 |---|---|---|---|
-| 1 | JOB-02 | `ExpireMembershipPackagesJob.run()` chỉ có TODO, chưa làm gì | 13.2 |
-| 2 | JOB-03 | `ExpireUnusedDayPassesJob.run()` chỉ có TODO, chưa làm gì | 13.3 |
-| 3 | JOB-04 | `AutoCloseSessionService.evaluate()` chưa có nhánh GymClosed (ngày đóng cửa, ngoài giờ mở cửa) | 13.4 bước 2a, CBR-56, CBR-124 |
+| 1 | JOB-02 | `ExpireMembershipPackagesJob.run()` chỉ có TODO, chưa làm gì | 16.2 |
+| 2 | JOB-03 | `ExpireUnusedDayPassesJob.run()` chỉ có TODO, chưa làm gì | 16.3 |
+| 3 | JOB-04 | `AutoCloseSessionService.evaluate()` chưa có nhánh GymClosed (ngày đóng cửa, ngoài giờ mở cửa) | 16.4 bước 2a, CBR-56, CBR-124 |
 | 4 | Bảo lưu | `FreezeService.applyFreeze()` bước B6 đổi buổi PT trong kỳ thành Missed ngay lúc bảo lưu và trả slot về Free | CBR-62, CBR-68, DBR-38: buổi giữ Scheduled, JOB-04 đóng sau |
 | 5 | Màn #16 Operating Hours (UC-11) | Chưa có màn; không chỗ nào ghi vào bảng OperatingHourExceptions | UC-11, CBR-124 |
 | 6 | Check-in ngày đóng cửa | `CheckInService` không kiểm tra ngày đóng cửa hoặc giờ mở cửa | GBR-11 |
