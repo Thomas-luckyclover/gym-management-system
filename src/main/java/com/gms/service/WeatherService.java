@@ -104,7 +104,7 @@ public class WeatherService {
             lastFetchFailed = false;
         } catch (WeatherUnavailableException | NumberFormatException exception) {
             // B4: giữ số đo thật đã lấy trong ngày và thử lại sau 5 phút.
-            LOGGER.log(Level.WARNING, "Không lấy được thời tiết cho PT Dashboard.", exception);
+            LOGGER.log(Level.WARNING, "Không lấy được thời tiết cho Dashboard.", exception);
             cachedDate = now.toLocalDate();
             cachedUntil = now.plusMinutes(FAILURE_RETRY_MINUTES);
             lastFetchFailed = true;
