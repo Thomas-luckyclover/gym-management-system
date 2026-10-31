@@ -32,6 +32,8 @@ public class EmployeeDAO {
                 + "WHERE PersonId = ? "
                 // ưu tiên dòng đang Working, mới nhất (DBR-65)
                 + "ORDER BY CASE WHEN Status = 'Working' THEN 0 ELSE 1 END, EmployeeId DESC";
+                //1 nhân viên có 2 trạng thái Working và Resigned → ưu tiên lấy dòng Working, nếu không có thì lấy dòng Resigned (mới nhất)
+                //desc để lấy hồ sơ gần đây mới nhất
 
         try (Connection connection = DBContext.getConnection();
                 PreparedStatement statement

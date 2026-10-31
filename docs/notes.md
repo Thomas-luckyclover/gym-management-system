@@ -663,3 +663,18 @@ Hướng dẫn dùng tokens/common hiện có: `docs/frontend-shared-usage.md`.
   - Servlet 6 màn tách hàm phụ để doGet/doPost chỉ còn các bước (getAccountId, loadHeader, loadBookings, loadTimetable, loadBlocks, loadWeather, setPageInfo, isPtWithValidToken…). Hành vi giữ nguyên: 271 test pass; Tomcat + SQL Server: link gói, "Xem trên lịch tập", "Quay lại Gói của tôi", "Xem toàn bộ gói", lịch tháng mở đúng buổi; URL sai (`?package=abc`, `?openSession=-1`) vẫn 200.
 - 24/10/2026 — Lịch PT: Tuần/Danh sách dùng chung nền trạng thái đậm theo token sáng/tối, nhãn chữ và viền nét đứt cho nháp/chờ gỡ; Danh sách căn cố định Giờ/Buổi/Trạng thái/Thao tác, mobile xếp dọc. Có gỡ khung thì nút đổi thành Lưu thay đổi; bóng đỏ dùng nhãn ngắn, lý do đầy đủ vẫn báo khi bấm.
 - Kiểm tra: 7 test JS pass; Chrome headless trên HTML minh họa dùng CSS/JS nguồn qua 16 tổ hợp view/kích thước/theme, xác nhận lại 8 tổ hợp sau chỉnh tương phản (chữ thẻ tối thiểu 5,61:1 sáng, 6,09:1 tối); không tràn trang/cuộn dọc phụ, Tab/Space gỡ và giữ lại được. Không build Java/JSP hoặc deploy theo yêu cầu; Tomcat 9999 vẫn trả CSS cũ. Ảnh/báo cáo lưu ở ../.recovery/pt-schedule-ui-20261024.
+
+
+## Triển khai Danh mục gói Quản lý (#17, #18, #19, #20 — UC-10, 31/10/2026)
+- Đã hoàn thiện toàn diện 4 màn hình Quản lý danh mục gói dịch vụ theo SRS 4.2 & UC-10:
+  - Màn #17: Danh sách gói hội viên & vé ngày (`/manager/membership-packages`).
+  - Màn #18: Biểu mẫu thêm mới / chỉnh sửa gói hội viên & vé ngày (`/manager/membership-packages/form`).
+  - Màn #19: Danh sách gói PT & Buổi lẻ (`/manager/pt-packages`).
+  - Màn #20: Biểu mẫu thêm mới / chỉnh sửa gói PT & Buổi lẻ (`/manager/pt-packages/form`).
+- Đảm bảo trọn vẹn các quy chuẩn nghiệp vụ & kỹ thuật:
+  - Kiểm soát đồng thời lạc quan (Optimistic Concurrency Control): sử dụng cột `RowVer` (ROWVERSION 8 byte) trong SQL Server, truyền chuỗi Base64 qua form; phát hiện xung đột và trả về `MSG22_CONCURRENT_EDIT`.
+  - Danh mục thời hạn: P-04 (Vé ngày: 1 ngày; Gói hội viên: 1, 3, 6, 12, 24, 36 tháng); P-21 (Gói PT: 1, 3, 6, 12 tháng).
+  - Buổi PT lẻ (`SingleSession`): cho phép hiển thị và chỉnh sửa gói lẻ có sẵn; ẩn các trường thời hạn/số buổi theo ràng buộc `CK_Packages_Duration` và `CK_Packages_EstSession`; không cho tạo mới thêm gói lẻ để tránh trùng gói đơn lẻ.
+  - Số buổi ước tính (`EstimatedSessionCount`): áp dụng giới hạn 1–255 buổi (kiểu `TINYINT` trong DB); tự động gợi ý ~22 buổi/tháng khi chọn thời hạn.
+  - Phân quyền thư viện bài tập: Checkbox `UnlocksExerciseLibrary` trên cả 2 biểu mẫu.
+  - Giao diện: Chuẩn Arena Theme (.dock.theme-manager), sử dụng 100% biến từ `tokens.css`, hỗ trợ Live Preview thẻ gói tập theo thời gian thực và cảnh báo hợp đồng đang chạy.
