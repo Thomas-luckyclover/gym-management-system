@@ -1748,6 +1748,9 @@ body.dock ::-webkit-scrollbar-thumb {
 }
 
 /* HintBox chung: mẫu PT Dashboard, dùng .pt-info/.pt-info-trigger/.pt-info-popover. */
+/* Tiêu đề khối + nút (i) cùng 1 hàng (thay cho dòng chữ phụ dưới tiêu đề, 31/10/2026). Tiêu đề giữ cỡ chữ của trang. */
+.title-hint-row { display: flex; flex-wrap: wrap; align-items: center; gap: var(--space-2); }
+.title-hint-row > :is(h1, h2, h3) { margin: 0; }
 .pt-info { position: relative; display: inline-flex; flex: none; }
 .pt-info-trigger {
   display: grid;

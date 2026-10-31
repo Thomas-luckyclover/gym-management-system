@@ -49,8 +49,10 @@
             <section class="panel freeze-search-panel">
                 <div class="search-panel-inner">
                     <div class="search-title-wrap">
-                        <h2><i class="fa-solid fa-snowflake text-primary"></i> Quản lý bảo lưu gói tập</h2>
-                        <p class="search-subtitle">Tra cứu theo mã hội viên (KH-xxxx), số điện thoại hoặc họ tên để thực hiện bảo lưu hoặc mở lại thẻ.</p>
+                        <div class="title-hint-row">
+                            <h2><i class="fa-solid fa-snowflake text-primary"></i> Quản lý bảo lưu gói tập</h2>
+                            <span class="pt-info"><button type="button" class="pt-info-trigger" aria-label="Cách tra cứu hội viên" aria-describedby="freeze-help"><span aria-hidden="true">i</span></button><span id="freeze-help" class="pt-info-popover" role="tooltip">Tra cứu theo mã hội viên (KH-xxxx), số điện thoại hoặc họ tên để thực hiện bảo lưu hoặc mở lại thẻ.</span></span>
+                        </div>
                     </div>
 
                     <form id="freezeSearchForm" action="${pageContext.request.contextPath}/receptionist/freeze" method="GET" class="toolbar search-toolbar" novalidate>

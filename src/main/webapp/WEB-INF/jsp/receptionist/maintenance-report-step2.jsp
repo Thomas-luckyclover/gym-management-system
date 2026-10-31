@@ -19,7 +19,8 @@
       <header class="topbar">
         <div class="tb-left">
           <h1 class="tb-title">Báo hỏng thiết bị</h1>
-          <span class="tb-subtitle">Bước 2/2 · Mô tả để Quản lý duyệt mà không cần ra tận nơi</span>
+          <%-- Câu giải thích chuyển vào hint box chung (.pt-info, common.css / common.js) thay cho dòng chữ phụ dưới tiêu đề. --%>
+          <span class="pt-info"><button type="button" class="pt-info-trigger" aria-label="Hướng dẫn Báo hỏng thiết bị" aria-describedby="report-help"><span aria-hidden="true">i</span></button><span id="report-help" class="pt-info-popover" role="tooltip"><b>Bước 2/2:</b> mô tả rõ để Quản lý duyệt mà không cần ra tận nơi.</span></span>
         </div>
 
         <div class="top-right">
@@ -228,12 +229,7 @@
               <div class="field-label-row">
                 <div class="label-with-hint">
                   <label class="group-title" for="descriptionInput">Mô tả sự cố *</label>
-                  <span class="hint-icon-trigger" tabindex="0" role="tooltip" aria-label="Hướng dẫn mô tả sự cố">
-                    <i class="fa-solid fa-circle-info hint-red-i"></i>
-                    <span class="hint-floating-popover">
-                      Nhập từ 10 - 500 ký tự. Nên ghi rõ mã lỗi trên màn hình (nếu có).
-                    </span>
-                  </span>
+                  <span class="pt-info"><button type="button" class="pt-info-trigger" aria-label="Hướng dẫn mô tả sự cố" aria-describedby="step2-hint-1"><span aria-hidden="true">i</span></button><span id="step2-hint-1" class="pt-info-popover" role="tooltip">Nhập từ 10 - 500 ký tự. Nên ghi rõ mã lỗi trên màn hình (nếu có).</span></span>
                 </div>
                 <span class="char-counter"><span id="charCount">0</span>/500</span>
               </div>
@@ -287,12 +283,7 @@
                 <div class="field-label-row">
                   <div class="label-with-hint">
                     <span class="group-title">Biện pháp tại chỗ</span>
-                    <span class="hint-icon-trigger" tabindex="0" role="tooltip" aria-label="Lưu ý an toàn">
-                      <i class="fa-solid fa-circle-info hint-red-i"></i>
-                      <span class="hint-floating-popover">
-                        Bắt buộc tích nếu sự cố có thể gây chấn thương cho khách.
-                      </span>
-                    </span>
+                    <span class="pt-info"><button type="button" class="pt-info-trigger" aria-label="Lưu ý an toàn" aria-describedby="step2-hint-2"><span aria-hidden="true">i</span></button><span id="step2-hint-2" class="pt-info-popover" role="tooltip">Bắt buộc tích nếu sự cố có thể gây chấn thương cho khách.</span></span>
                   </div>
                 </div>
 
