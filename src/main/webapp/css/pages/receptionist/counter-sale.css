@@ -1008,11 +1008,12 @@ html body.dock .counter-sale .counter-cell-action .btn.btn-primary {
   display: flex;
   align-items: center;
   width: 100%;
+  box-sizing: border-box;
 }
 .counter-voucher-input-wrap input {
   width: 100%;
   min-height: 40px;
-  padding: 0 34px 0 var(--space-3);
+  padding: 0 54px 0 var(--space-3);
   border: 1px solid var(--arena-chalk-line-strong);
   border-radius: var(--arena-radius-chip, 4px);
   background: var(--arena-surface);
@@ -1020,30 +1021,43 @@ html body.dock .counter-sale .counter-cell-action .btn.btn-primary {
   font-size: var(--font-size-sm);
   text-transform: uppercase;
   font-weight: var(--font-weight-bold);
+  letter-spacing: 0.03em;
   transition: all var(--duration-fast);
   box-sizing: border-box;
 }
 .counter-voucher-input-wrap input::placeholder {
   color: var(--arena-steel-ink);
   font-weight: var(--font-weight-normal);
-  text-transform: uppercase;
+  text-transform: none;
   font-size: var(--font-size-xs);
+  letter-spacing: normal;
 }
 .counter-voucher-input-wrap input:focus {
   outline: 2px solid var(--arena-ember);
   border-color: var(--arena-ember);
 }
+.counter-voucher-input-wrap .voucher-valid-icon {
+  position: absolute;
+  right: 32px;
+  top: 50%;
+  transform: translateY(-50%);
+  color: #16a34a;
+  font-size: 15px;
+}
+.counter-voucher-input-wrap .voucher-valid-icon[hidden] {
+  display: none !important;
+}
 .counter-voucher-input-wrap .voucher-clear-btn {
   position: absolute;
-  right: 6px;
+  right: 7px;
   top: 50%;
   transform: translateY(-50%);
   display: inline-flex;
   align-items: center;
   justify-content: center;
-  width: 24px;
-  height: 24px;
-  min-width: 24px;
+  width: 22px;
+  height: 22px;
+  min-width: 22px;
   padding: 0;
   margin: 0;
   border: none;
@@ -1057,11 +1071,42 @@ html body.dock .counter-sale .counter-cell-action .btn.btn-primary {
   transition: all var(--duration-fast);
 }
 .counter-voucher-input-wrap .voucher-clear-btn:hover {
-  background: var(--arena-ember);
+  background: #ef4444;
   color: #ffffff;
 }
 .counter-voucher-input-wrap .voucher-clear-btn[hidden] {
   display: none !important;
+}
+.voucher-status {
+  margin: 2px 0 0;
+  font-size: var(--font-size-xs);
+  line-height: 1.4;
+  min-height: 18px;
+  transition: all var(--duration-fast);
+}
+.voucher-status[data-state="success"] {
+  color: #16a34a;
+  font-weight: 600;
+}
+.voucher-status[data-state="error"] {
+  color: #dc2626;
+  font-weight: 500;
+}
+.voucher-status[hidden] {
+  display: none !important;
+}
+
+.counter-summary-list div.is-discount dt {
+  color: #16a34a;
+  font-weight: 600;
+}
+.counter-summary-list div.is-discount .discount-amount {
+  color: #16a34a;
+  font-weight: 700;
+}
+.receipt-val-discount {
+  color: #16a34a !important;
+  font-weight: 700 !important;
 }
 
 /* 2. Nút chốt tiền đáy cột tóm tắt */

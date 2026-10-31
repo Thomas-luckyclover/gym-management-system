@@ -13,6 +13,7 @@
  */
 
 const CUSTOMER_SEARCH_URL = "/receptionist/sales/customers";
+const VOUCHER_CHECK_URL = "/receptionist/sales/voucher";
 const CUSTOMER_SEARCH_DELAY = 250;     // chờ 0,25 giây sau lần gõ cuối rồi mới gọi server
 const CUSTOMER_MIN_LENGTH = 2;         // khớp MIN_SEARCH_LENGTH trong CounterSaleService
 const CUSTOMER_HINT_TEXT = "Gõ tên, số điện thoại hoặc mã KH để tìm khách.";
@@ -334,28 +335,202 @@ function initCheckoutPage() {
 
     initPaymentMethodToggle();
     initValidityPicker();
-    initVoucherClear();
+    initVoucherLogic();
     initCheckoutSubmit();
 }
 
-// Khởi tạo nút x xóa mã voucher: khi có chữ thì hiện x, bấm x thì xóa rỗng và focus lại
-function initVoucherClear() {
+// Khởi tạo xử lý Voucher tại quầy (tự động kiểm tra AJAX, cập nhật bảng tính tiền, nút x xóa mã)
+function initVoucherLogic() {
+    const checkoutForm = document.getElementById("checkoutForm");
     const voucherInput = document.getElementById("voucherCode");
     const voucherClearBtn = document.getElementById("voucherClearBtn");
-    if (voucherInput === null || voucherClearBtn === null) {
+    const voucherValidIcon = document.getElementById("voucherValidIcon");
+    const voucherStatus = document.getElementById("voucherStatus");
+    const discountRow = document.getElementById("discountRow");
+    const voucherCodeSummary = document.getElementById("voucherCodeSummary");
+    const summaryDiscountAmount = document.getElementById("summaryDiscountAmount");
+    const summaryPreTaxAmount = document.getElementById("summaryPreTaxAmount");
+    const summaryVatAmount = document.getElementById("summaryVatAmount");
+    const summaryTotalAmount = document.getElementById("summaryTotalAmount");
+    const confirmPaymentText = document.getElementById("confirmPaymentText");
+
+    if (checkoutForm === null || voucherInput === null) {
         return;
     }
 
-    function toggleClearBtn() {
-        const hasValue = voucherInput.value.trim().length > 0;
-        voucherClearBtn.hidden = !hasValue;
+    const packageId = parseInt(checkoutForm.dataset.packageId, 10) || 0;
+    const customerId = parseInt(checkoutForm.dataset.customerId, 10) || 0;
+    const basePrice = parseInt(checkoutForm.dataset.basePrice, 10) || 0;
+    const vatRate = parseInt(checkoutForm.dataset.vatRate, 10) || 0;
+
+    let inFlight = null;
+    let checkedCode = "";
+
+    function setVoucherStatus(message, state) {
+        if (voucherStatus === null) {
+            return;
+        }
+        if (!message) {
+            voucherStatus.hidden = true;
+            voucherStatus.textContent = "";
+            voucherStatus.removeAttribute("data-state");
+            return;
+        }
+        voucherStatus.hidden = false;
+        voucherStatus.textContent = message;
+        voucherStatus.setAttribute("data-state", state);
     }
 
-    voucherInput.addEventListener("input", toggleClearBtn);
-    voucherClearBtn.addEventListener("click", function () {
-        voucherInput.value = "";
-        voucherClearBtn.hidden = true;
-        voucherInput.focus();
+    function resetPricesToOriginal() {
+        if (discountRow !== null) {
+            discountRow.hidden = true;
+        }
+        if (voucherValidIcon !== null) {
+            voucherValidIcon.hidden = true;
+        }
+
+        const vatAmount = Math.round((basePrice * vatRate) / (100 + vatRate));
+        const preTaxAmount = basePrice - vatAmount;
+
+        if (summaryPreTaxAmount !== null) {
+            summaryPreTaxAmount.textContent = formatMoney(preTaxAmount);
+        }
+        if (summaryVatAmount !== null) {
+            summaryVatAmount.textContent = formatMoney(vatAmount);
+        }
+        if (summaryTotalAmount !== null) {
+            summaryTotalAmount.textContent = formatMoney(basePrice);
+        }
+        if (confirmPaymentText !== null) {
+            confirmPaymentText.textContent = "Xác nhận đã thu " + formatMoney(basePrice);
+        }
+    }
+
+    function toggleClearBtn() {
+        const hasVal = voucherInput.value.trim().length > 0;
+        if (voucherClearBtn !== null) {
+            voucherClearBtn.hidden = !hasVal;
+        }
+    }
+
+    voucherInput.addEventListener("input", function () {
+        toggleClearBtn();
+        if (voucherValidIcon !== null) {
+            voucherValidIcon.hidden = true;
+        }
+        setVoucherStatus("", "");
+    });
+
+    voucherInput.addEventListener("keydown", function (e) {
+        if (e.key === "Enter") {
+            e.preventDefault();
+            checkVoucher();
+        }
+    });
+
+    voucherInput.addEventListener("blur", function () {
+        const val = voucherInput.value.trim().toUpperCase();
+        if (val !== checkedCode) {
+            checkVoucher();
+        }
+    });
+
+    if (voucherClearBtn !== null) {
+        voucherClearBtn.addEventListener("click", function () {
+            voucherInput.value = "";
+            toggleClearBtn();
+            checkedCode = "";
+            setVoucherStatus("", "");
+            resetPricesToOriginal();
+            voucherInput.focus();
+        });
+    }
+
+    async function checkVoucher() {
+        const rawCode = voucherInput.value.trim().toUpperCase();
+        voucherInput.value = rawCode;
+        toggleClearBtn();
+
+        if (rawCode === "") {
+            checkedCode = "";
+            resetPricesToOriginal();
+            setVoucherStatus("", "");
+            return;
+        }
+
+        checkedCode = rawCode;
+        setVoucherStatus("Đang kiểm tra mã...", "neutral");
+
+        if (inFlight !== null) {
+            return inFlight;
+        }
+
+        inFlight = (async function () {
+            try {
+                const result = await getJson(VOUCHER_CHECK_URL, {
+                    package: packageId,
+                    customer: customerId,
+                    code: rawCode
+                });
+
+                if (result.success && result.data && result.data.valid) {
+                    const data = result.data;
+                    if (voucherValidIcon !== null) {
+                        voucherValidIcon.hidden = false;
+                    }
+                    if (discountRow !== null) {
+                        discountRow.hidden = false;
+                    }
+                    if (voucherCodeSummary !== null) {
+                        voucherCodeSummary.textContent = data.voucherCode;
+                    }
+                    if (summaryDiscountAmount !== null) {
+                        summaryDiscountAmount.textContent = data.discountText;
+                    }
+                    if (summaryPreTaxAmount !== null) {
+                        summaryPreTaxAmount.textContent = data.preTaxText;
+                    }
+                    if (summaryVatAmount !== null) {
+                        summaryVatAmount.textContent = data.vatText;
+                    }
+                    if (summaryTotalAmount !== null) {
+                        summaryTotalAmount.textContent = data.finalText;
+                    }
+                    if (confirmPaymentText !== null) {
+                        confirmPaymentText.textContent = "Xác nhận đã thu " + data.finalText;
+                    }
+                    setVoucherStatus(data.message || "Áp dụng mã giảm giá thành công", "success");
+                } else {
+                    resetPricesToOriginal();
+                    const errMsg = (result.errors && result.errors.voucherCode) || result.message || "Mã giảm giá không hợp lệ";
+                    setVoucherStatus(errMsg, "error");
+                }
+            } catch (err) {
+                resetPricesToOriginal();
+                setVoucherStatus("Lỗi kết nối khi kiểm tra mã. Vui lòng thử lại.", "error");
+            } finally {
+                inFlight = null;
+            }
+        })();
+
+        return inFlight;
+    }
+
+    // Intercept form submit để đảm bảo mã voucher đã được xác thực trước khi gửi
+    checkoutForm.addEventListener("submit", async function (e) {
+        const val = voucherInput.value.trim().toUpperCase();
+        if (val !== "" && val !== checkedCode) {
+            e.preventDefault();
+            await checkVoucher();
+            if (voucherStatus !== null && voucherStatus.getAttribute("data-state") === "error") {
+                return;
+            }
+            if (typeof checkoutForm.requestSubmit === "function") {
+                checkoutForm.requestSubmit();
+            } else {
+                checkoutForm.submit();
+            }
+        }
     });
 
     toggleClearBtn();
