@@ -3,9 +3,9 @@ const fs = require('fs');
 const { Document, Packer, Paragraph, TextRun, Table, TableRow, TableCell, WidthType, ShadingType, BorderStyle, HeadingLevel, TableLayoutType } = require('docx');
 const d = JSON.parse(fs.readFileSync('docs/srs-update/build/data/data.json', 'utf8'));
 const sec = JSON.parse(fs.readFileSync('docs/srs-update/build/data/dbr_sec.json', 'utf8'));
-const RED = 'A52A2A', HEAD = 'E6B8AF', FONT = 'Calibri', SZ = 22, TW = 9638;
+const RED = 'A52A2A', HEAD = 'E6B8AF', FONT = 'Calibri', SZ = 22, TW = 9360;
 const b = { style: BorderStyle.SINGLE, size: 4, color: '000000' }, borders = { top: b, bottom: b, left: b, right: b };
-const P = (t, o = {}) => new Paragraph({ spacing: { after: o.after ?? 0, line: 264 }, children: [new TextRun({ text: String(t ?? ''), bold: !!o.bold, font: FONT, size: SZ })] });
+const P = (t, o = {}) => new Paragraph({ spacing: { after: o.after ?? 0, line: 360 }, children: [new TextRun({ text: String(t ?? ''), bold: !!o.bold, font: FONT, size: SZ })] });
 const W = r => { const s = r.reduce((a, x) => a + x, 0); const w = r.map(x => Math.floor(TW * x / s)); w[w.length - 1] += TW - w.reduce((a, x) => a + x, 0); return w; };
 const T = (rows, r) => { const w = W(r); return new Table({ width: { size: TW, type: WidthType.DXA }, columnWidths: w, layout: TableLayoutType.FIXED,
   rows: rows.map((row, i) => new TableRow({ tableHeader: i === 0, children: row.map((c, j) => new TableCell({ borders, width: { size: w[j], type: WidthType.DXA },
@@ -51,5 +51,5 @@ C.push(H2('5. Data Dictionary')); C.push(T(d.DD, [33, 67])); C.push(gap());
 C.push(H2('6. System Messages')); C.push(T(d.MSG, [5, 12, 13, 30, 40])); C.push(gap());
 C.push(H2('7. Other Requirements')); C.push(T(d.NFR, [9, 18, 73]));
 const doc = new Document({ styles: { default: { document: { run: { font: FONT, size: SZ } } } },
-  sections: [{ properties: { page: { size: { width: 11906, height: 16838 }, margin: { top: 1134, bottom: 1134, left: 1134, right: 1134 } } }, children: C }] });
+  sections: [{ properties: { page: { size: { width: 12240, height: 15840 }, margin: { top: 1440, bottom: 1440, left: 1440, right: 1440 } } }, children: C }] });
 Packer.toBuffer(doc).then(buf => { fs.writeFileSync(process.argv[2], buf); console.log('ok', buf.length); });
