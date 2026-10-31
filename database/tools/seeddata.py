@@ -229,7 +229,7 @@ single_session(2, 5, d_(2026, 9, 26), (10, 30), 'Online', dt_(2026, 9, 25, 19, 0
 o = order(3, PKG['m1'], dt_(2026, 7, 1, 18, 55), 'Counter')
 subscription(o, d_(2026, 7, 1))
 o = order(3, PKG['pt1'], dt_(2026, 7, 3, 9, 0), 'Counter', method='Transfer')
-pt_package(o, 5, d_(2026, 7, 6), (7, 0), events={d_(2026, 8, 6): ('cancel', 'PackageExpired', 'Gói PT hết hạn, buổi còn lại chưa diễn ra (CBR-55)'),
+pt_package(o, 5, d_(2026, 7, 6), (7, 0), events={d_(2026, 8, 6): ('cancel', 'PackageExpired', 'Gói PT hết hạn, buổi còn lại chưa diễn ra'),
                                               d_(2026, 7, 15): ('missed', 'NoCheckIn')},
            note='gói PT đã hết; 03–05/08 Missed vì hết gói tập (CBR-64)')
 
@@ -690,43 +690,43 @@ leave_request(8, 'Annual', d_(2026, 10, 26), d_(2026, 10, 26), 'FullDay', 1.0,
 
 # Tám mẫu độc lập: sắp nghỉ, một ca, không lương, đã duyệt, từ chối, duyệt muộn, nhiều ngày, thiếu phép.
 leave_request(3, 'Unpaid', d_(2026, 10, 27), d_(2026, 10, 27), 'Morning', 1.0,
-    '[DEMO-01] Sắp nghỉ: xin nghỉ ca sáng để giải quyết việc gia đình.',
+    'Sắp nghỉ: xin nghỉ ca sáng để giải quyết việc gia đình.',
     submitted=dt_(2026, 10, 26, 8, 0))
 leave_request(5, 'Annual', d_(2026, 10, 28), d_(2026, 10, 28), 'Morning', 1.0,
-    '[DEMO-02] Phép năm một ca: đưa người thân đi làm thủ tục buổi sáng.',
+    'Phép năm một ca: đưa người thân đi làm thủ tục buổi sáng.',
     submitted=dt_(2026, 10, 26, 8, 10))
 leave_request(5, 'Unpaid', d_(2026, 11, 1), d_(2026, 11, 1), 'Morning', 1.0,
-    '[DEMO-03] Chủ động xin nghỉ không lương dù vẫn còn phép năm.',
+    'Chủ động xin nghỉ không lương dù vẫn còn phép năm.',
     submitted=dt_(2026, 10, 26, 8, 20))
 leave_request(5, 'Annual', d_(2026, 10, 21), d_(2026, 10, 21), 'Morning', 1.0,
-    '[DEMO-04] Đơn đã duyệt: nghỉ giải quyết thủ tục cá nhân.',
+    'Đơn đã duyệt: nghỉ giải quyết thủ tục cá nhân.',
     status='Approved', reviewer=2, submitted=dt_(2026, 10, 18, 8, 0), reviewed=dt_(2026, 10, 19, 8, 0))
 leave_request(5, 'Unpaid', d_(2026, 10, 30), d_(2026, 10, 30), 'Afternoon', 1.0,
-    '[DEMO-05] Đơn từ chối: xin nghỉ để tham gia lớp học cá nhân.',
-    status='Rejected', reviewer=2, reject_reason='[DEMO] Chưa bố trí được người thay ca, vui lòng chọn ngày khác.', submitted=dt_(2026, 10, 26, 8, 30), reviewed=dt_(2026, 10, 26, 9, 0))
+    'Đơn từ chối: xin nghỉ để tham gia lớp học cá nhân.',
+    status='Rejected', reviewer=2, reject_reason='Chưa bố trí được người thay ca, vui lòng chọn ngày khác.', submitted=dt_(2026, 10, 26, 8, 30), reviewed=dt_(2026, 10, 26, 9, 0))
 leave_request(6, 'Unpaid', d_(2026, 10, 25), d_(2026, 10, 25), 'FullDay', 1.0,
-    '[DEMO-06] Ngày nghỉ đã qua nhưng đơn vẫn đang chờ xử lý.',
+    'Ngày nghỉ đã qua nhưng đơn vẫn đang chờ xử lý.',
     submitted=dt_(2026, 10, 23, 8, 0))
 leave_request(9, 'Annual', d_(2026, 11, 3), d_(2026, 11, 5), 'FullDay', 3.0,
-    '[DEMO-07] Nghỉ nhiều ngày: về quê dự việc gia đình trong ba ngày.',
+    'Nghỉ nhiều ngày: về quê dự việc gia đình trong ba ngày.',
     submitted=dt_(2026, 10, 26, 8, 40))
 leave_request(14, 'Annual', d_(2026, 11, 18), d_(2026, 12, 2), 'FullDay', 15.0,
-    '[DEMO-08] Thiếu phép: xin 15 ngày khi quỹ phép năm được cấu hình 14 ngày.',
+    'Thiếu phép: xin 15 ngày khi quỹ phép năm được cấu hình 14 ngày.',
     submitted=dt_(2026, 10, 26, 8, 50))
 
 # Hai cặp cùng đợt nghỉ: A cùng chờ; B phép năm đã duyệt, không lương bị từ chối.
 leave_request(3, 'Annual', d_(2026, 11, 8), d_(2026, 11, 12), 'FullDay', 5.0,
-    '[DEMO-SPLIT-A] Đợt nghỉ 9 ngày, phần phép năm đang chờ.',
+    'Đợt nghỉ 9 ngày, phần phép năm đang chờ.',
     submitted=dt_(2026, 10, 26, 9, 0), group='11111111-0524-4620-8000-000000000001')
 leave_request(3, 'Unpaid', d_(2026, 11, 13), d_(2026, 11, 16), 'FullDay', 4.0,
-    '[DEMO-SPLIT-A] Cùng đợt nghỉ 9 ngày, phần không lương đang chờ.',
+    'Cùng đợt nghỉ 9 ngày, phần không lương đang chờ.',
     submitted=dt_(2026, 10, 26, 9, 0), group='11111111-0524-4620-8000-000000000001')
 leave_request(3, 'Annual', d_(2026, 11, 20), d_(2026, 11, 24), 'FullDay', 5.0,
-    '[DEMO-SPLIT-B] Phần phép năm đã được duyệt trong đợt 9 ngày.',
+    'Phần phép năm đã được duyệt trong đợt 9 ngày.',
     status='Approved', reviewer=2, submitted=dt_(2026, 10, 26, 9, 0), reviewed=dt_(2026, 10, 26, 10, 0), group='22222222-0524-4620-8000-000000000002')
 leave_request(3, 'Unpaid', d_(2026, 11, 25), d_(2026, 11, 28), 'FullDay', 4.0,
-    '[DEMO-SPLIT-B] Phần không lương bị từ chối trong cùng đợt.',
-    status='Rejected', reviewer=2, reject_reason='[DEMO] Chưa bố trí được nhân sự cho phần không lương.', submitted=dt_(2026, 10, 26, 9, 0), reviewed=dt_(2026, 10, 26, 10, 0), group='22222222-0524-4620-8000-000000000002')
+    'Phần không lương bị từ chối trong cùng đợt.',
+    status='Rejected', reviewer=2, reject_reason='Chưa bố trí được nhân sự cho phần không lương.', submitted=dt_(2026, 10, 26, 9, 0), reviewed=dt_(2026, 10, 26, 10, 0), group='22222222-0524-4620-8000-000000000002')
 
 FAC = [
     ('Máy chạy bộ Technogym', 'Cardio', 'Khu cardio tầng 1', '/images/facilities/treadmill.jpg', 'máy', 1),
@@ -910,12 +910,12 @@ notify(2, 'Họp nhân sự cuối tháng', 'Toàn bộ PT và lễ tân họp l
 notify(2, 'Cập nhật mẫu giáo án', 'PT dùng mẫu giáo án mới từ tuần sau, xem file trong nhóm.', 'PTs', sent=dt_(2026, 10, 1, 10, 0))
 notify(2, 'Quy trình đối soát ca', 'Lễ tân nhớ ghi lý do khi tiền đếm lệch với hệ thống.', 'Receptionists', sent=dt_(2026, 9, 30, 9, 0))
 notify(2, 'Ưu đãi gia hạn tháng 10', 'Hội viên gia hạn trong tháng 10 nhận thêm 1 buổi đo InBody.', 'ActiveMembers', sched=dt_(2026, 10, 10, 8, 0), note='hẹn giờ, chưa gửi')
-notify(None, 'Buổi tập bị hủy do phòng tập nghỉ', 'Buổi PT ngày 18/09 bị hủy vì phòng tập nghỉ cả ngày, không trừ buổi (CBR-57).', 'Individual',
+notify(None, 'Buổi tập bị hủy do phòng tập nghỉ', 'Buổi PT ngày 18/09 bị hủy vì phòng tập nghỉ cả ngày, không trừ buổi.', 'Individual',
        sent=dt_(2026, 9, 10, 9, 1), to=[4, 5, 6, 7, 15, 16, 17])
-notify(None, 'Buổi tập đã chuyển PT', 'Buổi PT ngày 29/09 lúc 18:00 chuyển sang PT Lý Hoàng Long (CBR-46).', 'Individual',
+notify(None, 'Buổi tập đã chuyển PT', 'Buổi PT ngày 29/09 lúc 18:00 chuyển sang PT Lý Hoàng Long.', 'Individual',
        sent=dt_(2026, 9, 27, 20, 16), to=[5, 22])
-notify(None, 'Đơn nghỉ bị từ chối', 'Đơn nghỉ ngày 16/09 bị từ chối do quá hạn duyệt (CBR-85).', 'Individual', sent=dt_(2026, 9, 15, 20, 0), to=[14])
-notify(None, 'Buổi tập đã được dời', 'Buổi PT ngày 15/09 dời sang 06:00 ngày 16/09 (BR-64).', 'Individual', sent=dt_(2026, 9, 13, 20, 16), to=[6, 7])
+notify(None, 'Đơn nghỉ bị từ chối', 'Đơn nghỉ ngày 16/09 bị từ chối do quá hạn duyệt.', 'Individual', sent=dt_(2026, 9, 15, 20, 0), to=[14])
+notify(None, 'Buổi tập đã được dời', 'Buổi PT ngày 15/09 dời sang 06:00 ngày 16/09.', 'Individual', sent=dt_(2026, 9, 13, 20, 16), to=[6, 7])
 
 CFG = [('P-01', '1', 'Số lần bảo lưu tối đa mỗi gói tập (lần)'),
        ('P-02', '1', 'Thời gian bảo lưu tối đa mỗi lần (tháng)'),
@@ -935,8 +935,8 @@ CFG = [('P-01', '1', 'Số lần bảo lưu tối đa mỗi gói tập (lần)')
        ('P-17', '5', 'Số lần sai trước khi khóa tạm (đăng nhập và mã xác thực)'),
        ('P-18', '5', 'Thời gian khóa tạm (phút)'),
        ('P-19', '05:30-22:00', 'Giờ mở cửa mặc định hằng ngày'),
-       ('P-21', '1M,2M,3M', 'Thời hạn gói PT (tháng) — DBR-19'),
-       ('P-22', '3', "Minimum customers to show a PT's average rating (DBR-69)"),
+       ('P-21', '1M,2M,3M', 'Thời hạn gói PT (tháng)'),
+       ('P-22', '3', "Số khách tối thiểu để hiện điểm đánh giá trung bình của PT"),
        ('P-23', '14', 'Định mức phép năm demo (ngày/năm)')]
 for k, v, d in CFG:
     add('SystemConfigs', dict(ConfigKey=k, ConfigValue=v, Description=d,
@@ -960,7 +960,7 @@ AUD = [(12, 'Manager', 'Đổi giá gói dịch vụ', 'Packages', 2, 'Price', '
        (12, 'Manager', 'Duyệt xóa hồ sơ khách', 'Customers', 12, 'Status', 'Active', 'Inactive', 'Khách chuyển vào Nam, không tập nữa', dt_(2026, 9, 15, 16, 0)),
        (None, None, 'Hủy đơn quá hạn thanh toán', 'Orders', None, 'Status', 'Pending', 'Cancelled', 'Quá hạn thanh toán 20 phút', dt_(2026, 9, 20, 21, 45)),
        (12, 'Manager', 'Cho nhân viên nghỉ việc', 'Employees', 8, 'Status', 'Working', 'Resigned', 'Nhân viên nghỉ việc từ 31/08/2026', dt_(2026, 8, 31, 18, 0)),
-       (None, None, 'Vô hiệu hóa tài khoản vì không còn vai trò', 'Accounts', 18, 'Status', 'Active', 'Inactive', 'CBR-86', dt_(2026, 8, 31, 18, 0)),
+       (None, None, 'Vô hiệu hóa tài khoản vì không còn vai trò', 'Accounts', 18, 'Status', 'Active', 'Inactive', 'Tài khoản không còn vai trò nào đang hoạt động', dt_(2026, 8, 31, 18, 0)),
        (13, 'Receptionist', 'Bảo lưu gói tập', 'Subscriptions', None, 'Status', 'Active', 'Frozen', 'Khách đi công tác nước ngoài 1 tháng', dt_(2026, 9, 27, 10, 30)),
        (11, 'Admin', 'Khóa tài khoản', 'Accounts', 23, 'Status', 'Active', 'Locked', 'PT vi phạm nội quy, tạm khóa chờ xử lý', dt_(2026, 9, 25, 9, 0)),
        (11, 'Admin', 'Khóa tài khoản', 'Accounts', 101, 'Status', 'Active', 'Locked', 'Khách dùng chung tài khoản cho người khác', dt_(2026, 9, 10, 20, 5)),

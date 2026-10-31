@@ -4525,7 +4525,7 @@ INSERT INTO Sessions (SessionId, SubscriptionId, TimeSlotId, PtEmployeeId, Statu
  (23, 7, 25, 5, 'Missed', 366667, 256667, '2026-08-04 00:05:00', 1, 'NoMembership', NULL, NULL, NULL, NULL, 0),
  (24, 7, 26, 5, 'Missed', 366667, 256667, '2026-08-05 00:05:00', 1, 'NoMembership', NULL, NULL, NULL, NULL, 0),
  (25, 7, 27, 5, 'Missed', 366667, 256667, '2026-08-06 00:05:00', 1, 'NoMembership', NULL, NULL, NULL, NULL, 0),
- (26, 7, 28, 5, 'Cancelled', 366667, 256667, NULL, 0, NULL, 'PackageExpired', N'Gói PT hết hạn, buổi còn lại chưa diễn ra (CBR-55)', '2026-08-07 00:05:00', NULL, 0),
+ (26, 7, 28, 5, 'Cancelled', 366667, 256667, NULL, 0, NULL, 'PackageExpired', N'Gói PT hết hạn, buổi còn lại chưa diễn ra', '2026-08-07 00:05:00', NULL, 0),
  (27, 9, 29, 7, 'CheckedIn', 366667, 220000, '2026-09-08 00:05:00', 1, NULL, NULL, NULL, NULL, NULL, 0),
  (28, 9, 30, 7, 'CheckedIn', 366667, 220000, '2026-09-09 00:05:00', 1, NULL, NULL, NULL, NULL, NULL, 0),
  (29, 9, 31, 7, 'CheckedIn', 366667, 220000, '2026-09-10 00:05:00', 1, NULL, NULL, NULL, NULL, NULL, 0),
@@ -4996,7 +4996,7 @@ INSERT INTO SessionMoveLogs (SessionMoveLogId, SessionId, MoveType, OldTimeSlotI
  (2, 88, 'PtTransfer', 91, 92, 5, 13, 15, N'PT Sơn ốm, khách chọn PT Long', '2026-09-27 20:15:00'),
  (3, 133, 'PtReschedule', 137, 138, 6, 6, 16, N'PT bận họp chuyên môn', '2026-09-13 20:15:00'),
  (4, 193, 'PtOnBehalfSwap', 198, 199, 5, 5, 15, N'Khách gọi điện nhờ PT dời buổi', '2026-09-22 20:15:00'),
- (5, 367, 'PtReschedule', 373, 964, 5, 5, 15, N'Dời buổi sáng 28/10 sang 31/10 để nộp đơn nghỉ ca sáng (CBR-83)', '2026-10-25 19:30:00');
+ (5, 367, 'PtReschedule', 373, 964, 5, 5, 15, N'Dời buổi sáng 28/10 sang 31/10 để nộp đơn nghỉ ca sáng', '2026-10-25 19:30:00');
 SET IDENTITY_INSERT SessionMoveLogs OFF;
 
 /* ============================================================================
@@ -5011,18 +5011,18 @@ INSERT INTO LeaveRequests (LeaveRequestId, EmployeeId, ReviewedByEmployeeId, Ass
  (5, 7, NULL, 2, 'Sick', '2026-10-24', '2026-10-24', 'Morning', 1.0, N'Khám chấn thương cổ tay tại bệnh viện thể thao', 'Pending', NULL, '2026-10-20 10:00:00', NULL, NULL, NULL),
  (6, 9, NULL, NULL, 'Unpaid', '2026-10-25', '2026-10-25', 'Afternoon', 1.0, N'Xin nghỉ giải quyết thủ tục giấy tờ hành chính cá nhân', 'Pending', NULL, '2026-10-20 11:30:00', NULL, NULL, NULL),
  (7, 8, NULL, 2, 'Annual', '2026-10-26', '2026-10-26', 'FullDay', 1.0, N'Nghỉ giải quyết việc gia đình đột xuất', 'Pending', NULL, '2026-10-20 13:45:00', NULL, NULL, NULL),
- (8, 3, NULL, NULL, 'Unpaid', '2026-10-27', '2026-10-27', 'Morning', 1.0, N'[DEMO-01] Sắp nghỉ: xin nghỉ ca sáng để giải quyết việc gia đình.', 'Pending', NULL, '2026-10-26 08:00:00', NULL, NULL, NULL),
- (9, 5, NULL, NULL, 'Annual', '2026-10-28', '2026-10-28', 'Morning', 1.0, N'[DEMO-02] Phép năm một ca: đưa người thân đi làm thủ tục buổi sáng.', 'Pending', NULL, '2026-10-26 08:10:00', NULL, NULL, NULL),
- (10, 5, NULL, NULL, 'Unpaid', '2026-11-01', '2026-11-01', 'Morning', 1.0, N'[DEMO-03] Chủ động xin nghỉ không lương dù vẫn còn phép năm.', 'Pending', NULL, '2026-10-26 08:20:00', NULL, NULL, NULL),
- (11, 5, 2, NULL, 'Annual', '2026-10-21', '2026-10-21', 'Morning', 1.0, N'[DEMO-04] Đơn đã duyệt: nghỉ giải quyết thủ tục cá nhân.', 'Approved', NULL, '2026-10-18 08:00:00', '2026-10-19 08:00:00', NULL, NULL),
- (12, 5, 2, NULL, 'Unpaid', '2026-10-30', '2026-10-30', 'Afternoon', 1.0, N'[DEMO-05] Đơn từ chối: xin nghỉ để tham gia lớp học cá nhân.', 'Rejected', N'[DEMO] Chưa bố trí được người thay ca, vui lòng chọn ngày khác.', '2026-10-26 08:30:00', '2026-10-26 09:00:00', NULL, NULL),
- (13, 6, NULL, NULL, 'Unpaid', '2026-10-25', '2026-10-25', 'FullDay', 1.0, N'[DEMO-06] Ngày nghỉ đã qua nhưng đơn vẫn đang chờ xử lý.', 'Pending', NULL, '2026-10-23 08:00:00', NULL, NULL, NULL),
- (14, 9, NULL, NULL, 'Annual', '2026-11-03', '2026-11-05', 'FullDay', 3.0, N'[DEMO-07] Nghỉ nhiều ngày: về quê dự việc gia đình trong ba ngày.', 'Pending', NULL, '2026-10-26 08:40:00', NULL, NULL, NULL),
- (15, 14, NULL, NULL, 'Annual', '2026-11-18', '2026-12-02', 'FullDay', 15.0, N'[DEMO-08] Thiếu phép: xin 15 ngày khi quỹ phép năm được cấu hình 14 ngày.', 'Pending', NULL, '2026-10-26 08:50:00', NULL, NULL, NULL),
- (16, 3, NULL, NULL, 'Annual', '2026-11-08', '2026-11-12', 'FullDay', 5.0, N'[DEMO-SPLIT-A] Đợt nghỉ 9 ngày, phần phép năm đang chờ.', 'Pending', NULL, '2026-10-26 09:00:00', NULL, NULL, '11111111-0524-4620-8000-000000000001'),
- (17, 3, NULL, NULL, 'Unpaid', '2026-11-13', '2026-11-16', 'FullDay', 4.0, N'[DEMO-SPLIT-A] Cùng đợt nghỉ 9 ngày, phần không lương đang chờ.', 'Pending', NULL, '2026-10-26 09:00:00', NULL, NULL, '11111111-0524-4620-8000-000000000001'),
- (18, 3, 2, NULL, 'Annual', '2026-11-20', '2026-11-24', 'FullDay', 5.0, N'[DEMO-SPLIT-B] Phần phép năm đã được duyệt trong đợt 9 ngày.', 'Approved', NULL, '2026-10-26 09:00:00', '2026-10-26 10:00:00', NULL, '22222222-0524-4620-8000-000000000002'),
- (19, 3, 2, NULL, 'Unpaid', '2026-11-25', '2026-11-28', 'FullDay', 4.0, N'[DEMO-SPLIT-B] Phần không lương bị từ chối trong cùng đợt.', 'Rejected', N'[DEMO] Chưa bố trí được nhân sự cho phần không lương.', '2026-10-26 09:00:00', '2026-10-26 10:00:00', NULL, '22222222-0524-4620-8000-000000000002');
+ (8, 3, NULL, NULL, 'Unpaid', '2026-10-27', '2026-10-27', 'Morning', 1.0, N'Sắp nghỉ: xin nghỉ ca sáng để giải quyết việc gia đình.', 'Pending', NULL, '2026-10-26 08:00:00', NULL, NULL, NULL),
+ (9, 5, NULL, NULL, 'Annual', '2026-10-28', '2026-10-28', 'Morning', 1.0, N'Phép năm một ca: đưa người thân đi làm thủ tục buổi sáng.', 'Pending', NULL, '2026-10-26 08:10:00', NULL, NULL, NULL),
+ (10, 5, NULL, NULL, 'Unpaid', '2026-11-01', '2026-11-01', 'Morning', 1.0, N'Chủ động xin nghỉ không lương dù vẫn còn phép năm.', 'Pending', NULL, '2026-10-26 08:20:00', NULL, NULL, NULL),
+ (11, 5, 2, NULL, 'Annual', '2026-10-21', '2026-10-21', 'Morning', 1.0, N'Đơn đã duyệt: nghỉ giải quyết thủ tục cá nhân.', 'Approved', NULL, '2026-10-18 08:00:00', '2026-10-19 08:00:00', NULL, NULL),
+ (12, 5, 2, NULL, 'Unpaid', '2026-10-30', '2026-10-30', 'Afternoon', 1.0, N'Đơn từ chối: xin nghỉ để tham gia lớp học cá nhân.', 'Rejected', N'Chưa bố trí được người thay ca, vui lòng chọn ngày khác.', '2026-10-26 08:30:00', '2026-10-26 09:00:00', NULL, NULL),
+ (13, 6, NULL, NULL, 'Unpaid', '2026-10-25', '2026-10-25', 'FullDay', 1.0, N'Ngày nghỉ đã qua nhưng đơn vẫn đang chờ xử lý.', 'Pending', NULL, '2026-10-23 08:00:00', NULL, NULL, NULL),
+ (14, 9, NULL, NULL, 'Annual', '2026-11-03', '2026-11-05', 'FullDay', 3.0, N'Nghỉ nhiều ngày: về quê dự việc gia đình trong ba ngày.', 'Pending', NULL, '2026-10-26 08:40:00', NULL, NULL, NULL),
+ (15, 14, NULL, NULL, 'Annual', '2026-11-18', '2026-12-02', 'FullDay', 15.0, N'Thiếu phép: xin 15 ngày khi quỹ phép năm được cấu hình 14 ngày.', 'Pending', NULL, '2026-10-26 08:50:00', NULL, NULL, NULL),
+ (16, 3, NULL, NULL, 'Annual', '2026-11-08', '2026-11-12', 'FullDay', 5.0, N'Đợt nghỉ 9 ngày, phần phép năm đang chờ.', 'Pending', NULL, '2026-10-26 09:00:00', NULL, NULL, '11111111-0524-4620-8000-000000000001'),
+ (17, 3, NULL, NULL, 'Unpaid', '2026-11-13', '2026-11-16', 'FullDay', 4.0, N'Cùng đợt nghỉ 9 ngày, phần không lương đang chờ.', 'Pending', NULL, '2026-10-26 09:00:00', NULL, NULL, '11111111-0524-4620-8000-000000000001'),
+ (18, 3, 2, NULL, 'Annual', '2026-11-20', '2026-11-24', 'FullDay', 5.0, N'Phần phép năm đã được duyệt trong đợt 9 ngày.', 'Approved', NULL, '2026-10-26 09:00:00', '2026-10-26 10:00:00', NULL, '22222222-0524-4620-8000-000000000002'),
+ (19, 3, 2, NULL, 'Unpaid', '2026-11-25', '2026-11-28', 'FullDay', 4.0, N'Phần không lương bị từ chối trong cùng đợt.', 'Rejected', N'Chưa bố trí được nhân sự cho phần không lương.', '2026-10-26 09:00:00', '2026-10-26 10:00:00', NULL, '22222222-0524-4620-8000-000000000002');
 SET IDENTITY_INSERT LeaveRequests OFF;
 
 INSERT INTO LeaveRequestTransfers (LeaveRequestId, FromEmployeeId, ToEmployeeId, Note, CreatedAt) VALUES
@@ -5308,10 +5308,10 @@ INSERT INTO Notifications (NotificationId, SentByEmployeeId, Title, Content, Aud
  (3, 2, N'Cập nhật mẫu giáo án', N'PT dùng mẫu giáo án mới từ tuần sau, xem file trong nhóm.', 'PTs', NULL, '2026-10-01 10:00:00', '2026-10-01 09:30:00'),
  (4, 2, N'Quy trình đối soát ca', N'Lễ tân nhớ ghi lý do khi tiền đếm lệch với hệ thống.', 'Receptionists', NULL, '2026-09-30 09:00:00', '2026-09-30 08:30:00'),
  (5, 2, N'Ưu đãi gia hạn tháng 10', N'Hội viên gia hạn trong tháng 10 nhận thêm 1 buổi đo InBody.', 'ActiveMembers', '2026-10-10 08:00:00', NULL, '2026-10-10 07:30:00'), -- hẹn giờ, chưa gửi
- (6, NULL, N'Buổi tập bị hủy do phòng tập nghỉ', N'Buổi PT ngày 18/09 bị hủy vì phòng tập nghỉ cả ngày, không trừ buổi (CBR-57).', 'Individual', NULL, '2026-09-10 09:01:00', '2026-09-10 08:31:00'),
- (7, NULL, N'Buổi tập đã chuyển PT', N'Buổi PT ngày 29/09 lúc 18:00 chuyển sang PT Lý Hoàng Long (CBR-46).', 'Individual', NULL, '2026-09-27 20:16:00', '2026-09-27 19:46:00'),
- (8, NULL, N'Đơn nghỉ bị từ chối', N'Đơn nghỉ ngày 16/09 bị từ chối do quá hạn duyệt (CBR-85).', 'Individual', NULL, '2026-09-15 20:00:00', '2026-09-15 19:30:00'),
- (9, NULL, N'Buổi tập đã được dời', N'Buổi PT ngày 15/09 dời sang 06:00 ngày 16/09 (BR-64).', 'Individual', NULL, '2026-09-13 20:16:00', '2026-09-13 19:46:00');
+ (6, NULL, N'Buổi tập bị hủy do phòng tập nghỉ', N'Buổi PT ngày 18/09 bị hủy vì phòng tập nghỉ cả ngày, không trừ buổi.', 'Individual', NULL, '2026-09-10 09:01:00', '2026-09-10 08:31:00'),
+ (7, NULL, N'Buổi tập đã chuyển PT', N'Buổi PT ngày 29/09 lúc 18:00 chuyển sang PT Lý Hoàng Long.', 'Individual', NULL, '2026-09-27 20:16:00', '2026-09-27 19:46:00'),
+ (8, NULL, N'Đơn nghỉ bị từ chối', N'Đơn nghỉ ngày 16/09 bị từ chối do quá hạn duyệt.', 'Individual', NULL, '2026-09-15 20:00:00', '2026-09-15 19:30:00'),
+ (9, NULL, N'Buổi tập đã được dời', N'Buổi PT ngày 15/09 dời sang 06:00 ngày 16/09.', 'Individual', NULL, '2026-09-13 20:16:00', '2026-09-13 19:46:00');
 SET IDENTITY_INSERT Notifications OFF;
 
 /* ============================================================================
@@ -5429,8 +5429,8 @@ INSERT INTO SystemConfigs (SystemConfigId, ConfigKey, ConfigValue, Description, 
  (17, 'P-17', '5', N'Số lần sai trước khi khóa tạm (đăng nhập và mã xác thực)', '2026-09-01 09:00:00', 2),
  (18, 'P-18', '5', N'Thời gian khóa tạm (phút)', '2026-09-01 09:00:00', 2),
  (19, 'P-19', '05:30-22:00', N'Giờ mở cửa mặc định hằng ngày', '2026-09-01 09:00:00', 2),
- (21, 'P-21', '1M,2M,3M', N'Thời hạn gói PT (tháng) — DBR-19', '2026-09-01 09:00:00', 2),
- (22, 'P-22', '3', 'Minimum customers to show a PT''s average rating (DBR-69)', '2026-10-06 09:00:00', 2),
+ (21, 'P-21', '1M,2M,3M', N'Thời hạn gói PT (tháng)', '2026-09-01 09:00:00', 2),
+ (22, 'P-22', '3', N'Số khách tối thiểu để hiện điểm đánh giá trung bình của PT', '2026-10-06 09:00:00', 2),
  (23, 'P-23', '14', N'Định mức phép năm demo (ngày/năm)', '2026-09-01 09:00:00', 2);
 SET IDENTITY_INSERT SystemConfigs OFF;
 
@@ -5459,7 +5459,7 @@ INSERT INTO AuditLogs (AuditLogId, AccountId, ActingRole, Action, EntityName, En
  (6, 12, 'Manager', N'Duyệt xóa hồ sơ khách', 'Customers', 12, 'Status', 'Active', 'Inactive', N'Khách chuyển vào Nam, không tập nữa', '2026-09-15 16:00:00'),
  (7, NULL, NULL, N'Hủy đơn quá hạn thanh toán', 'Orders', NULL, 'Status', 'Pending', 'Cancelled', N'Quá hạn thanh toán 20 phút', '2026-09-20 21:45:00'),
  (8, 12, 'Manager', N'Cho nhân viên nghỉ việc', 'Employees', 8, 'Status', 'Working', 'Resigned', N'Nhân viên nghỉ việc từ 31/08/2026', '2026-08-31 18:00:00'),
- (9, NULL, NULL, N'Vô hiệu hóa tài khoản vì không còn vai trò', 'Accounts', 18, 'Status', 'Active', 'Inactive', 'CBR-86', '2026-08-31 18:00:00'),
+ (9, NULL, NULL, N'Vô hiệu hóa tài khoản vì không còn vai trò', 'Accounts', 18, 'Status', 'Active', 'Inactive', N'Tài khoản không còn vai trò nào đang hoạt động', '2026-08-31 18:00:00'),
  (10, 13, 'Receptionist', N'Bảo lưu gói tập', 'Subscriptions', NULL, 'Status', 'Active', 'Frozen', N'Khách đi công tác nước ngoài 1 tháng', '2026-09-27 10:30:00'),
  (11, 11, 'Admin', N'Khóa tài khoản', 'Accounts', 23, 'Status', 'Active', 'Locked', N'PT vi phạm nội quy, tạm khóa chờ xử lý', '2026-09-25 09:00:00'),
  (12, 11, 'Admin', N'Khóa tài khoản', 'Accounts', 101, 'Status', 'Active', 'Locked', N'Khách dùng chung tài khoản cho người khác', '2026-09-10 20:05:00'),
