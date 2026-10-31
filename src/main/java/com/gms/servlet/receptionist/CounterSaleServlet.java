@@ -6,6 +6,7 @@ import com.gms.dto.CounterCustomerRow;
 import com.gms.dto.CounterPackageCard;
 import com.gms.dto.CounterPackageView;
 import com.gms.dto.CounterSaleReceipt;
+import com.gms.dto.CounterVoucherResult;
 import com.gms.dto.JsonResponse;
 import com.gms.dto.ServiceResult;
 import com.gms.service.CounterSaleService;
@@ -34,11 +35,12 @@ import java.util.Map;
  * GET /receptionist/sales                 Chọn gói → counter-sale-packages.jsp
  * GET /receptionist/sales?package=3       Chọn khách → counter-sale-customers.jsp
  * GET /receptionist/sales/customers?q=mai AJAX tìm khách → JSON tối đa 20 khách
+ * GET /receptionist/sales/voucher?package=3&customer=12&code=WELCOME10 AJAX kiểm tra voucher → JSON
  * GET /receptionist/sales?package=3&customer=12 Xác nhận & Thu tiền → counter-sale-next.jsp
  * GET /receptionist/sales?receipt=101     In/xem biên lai thu tiền → counter-sale-receipt.jsp
  * POST /receptionist/sales                Xác nhận thu tiền tại quầy (tiền mặt / chuyển khoản)
  */
-@WebServlet(urlPatterns = {"/receptionist/sales", "/receptionist/sales/customers"})
+@WebServlet(urlPatterns = {"/receptionist/sales", "/receptionist/sales/customers", "/receptionist/sales/voucher"})
 public class CounterSaleServlet extends HttpServlet {
 
     private static final String PAGE_URL = "/receptionist/sales";
@@ -64,6 +66,13 @@ public class CounterSaleServlet extends HttpServlet {
         boolean isCustomerSearch = request.getServletPath().endsWith("/customers");
         if (isCustomerSearch) {
             writeCustomers(response, accountId, RequestUtil.getTrimmedParam(request, "q"));
+            return;
+        }
+
+        // B2.1: URL /receptionist/sales/voucher là ô kiểm tra mã giảm giá gọi AJAX, trả JSON rồi dừng.
+        boolean isVoucherCheck = request.getServletPath().endsWith("/voucher");
+        if (isVoucherCheck) {
+            writeVoucherCheck(request, response, accountId);
             return;
         }
 
@@ -244,6 +253,31 @@ public class CounterSaleServlet extends HttpServlet {
             rows.add(row);
         }
         JsonUtil.writeJson(response, JsonResponse.success(rows));
+    }
+
+    /**
+     * HÀM PHỤ — kiểm tra mã giảm giá và trả JSON cho JavaScript cập nhật realtime bảng tính tiền.
+     *
+     * @param request HTTP request
+     * @param response HTTP response
+     * @param accountId mã tài khoản lễ tân từ session
+     */
+    private void writeVoucherCheck(HttpServletRequest request, HttpServletResponse response, int accountId)
+            throws IOException {
+        Integer packageId = RequestUtil.getPositiveIntParam(request, "package");
+        Integer customerId = RequestUtil.getPositiveIntParam(request, "customer");
+        String code = RequestUtil.getTrimmedParam(request, "code");
+        if (code == null || code.isEmpty()) {
+            code = RequestUtil.getTrimmedParam(request, "voucher");
+        }
+
+        if (packageId == null || customerId == null) {
+            JsonUtil.writeJson(response, JsonResponse.error("Thiếu thông tin gói hoặc khách hàng."));
+            return;
+        }
+
+        ServiceResult<CounterVoucherResult> result = counterSaleService.checkVoucher(accountId, packageId, customerId, code);
+        JsonUtil.writeJson(response, JsonResponse.from(result));
     }
 
     /**
