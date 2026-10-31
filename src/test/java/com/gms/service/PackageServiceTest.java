@@ -1,5 +1,6 @@
 package com.gms.service;
 
+import com.gms.constant.Messages;
 import com.gms.constant.Role;
 import com.gms.dao.PackageDAO;
 import com.gms.dto.PackageFormInput;
@@ -20,6 +21,7 @@ import static org.junit.jupiter.api.Assertions.*;
  * Unit Test Suite cho PackageService kiểm tra các ràng buộc nghiệp vụ:
  * - Gói hội viên & Vé ngày (DBR-06, DBR-11, DBR-15, P-04).
  * - Gói PT & Buổi lẻ (DBR-06, DBR-11, DBR-15, P-21, CK_Packages_EstSession).
+ * - Kiểm soát đồng thời (optimistic concurrency - MSG22) & Thay đổi trạng thái bán (Commit 20).
  */
 class PackageServiceTest {
 
@@ -290,6 +292,127 @@ class PackageServiceTest {
         assertTrue(res11.getFieldErrors().containsKey("benefits"));
     }
 
+    // ===== Tests cho Optimistic Locking & Status Toggling (Commit 20) =====
+
+    @Test
+    @DisplayName("Xung đột phiên bản đồng thời (RowVer) trả về thông báo MSG22")
+    void testOptimisticLockingConflict() {
+        Package pkg = new Package(1);
+        pkg.setPackageName("Gói 1 Tháng");
+        pkg.setPackageType(Package.Type.MEMBERSHIP);
+        pkg.setDurationUnit("Month");
+        pkg.setDurationValue(1);
+        pkg.setPrice(600000);
+        pkg.setActive(true);
+        byte[] originalRowVer = new byte[]{0, 0, 0, 0, 0, 0, 0, 1};
+        pkg.setRowVersion(originalRowVer);
+        fakePackageDAO.packages.put(1, pkg);
+
+        // Giả lập xung đột: fakePackageDAO.update trả về false (do RowVer trên DB đã bị người khác đổi)
+        fakePackageDAO.simulateConcurrencyConflict = true;
+
+        PackageFormInput input = new PackageFormInput();
+        input.setPackageId(1);
+        input.setName("Gói 1 Tháng Cập Nhật");
+        input.setType("Membership");
+        input.setPrice("650000");
+        input.setDurationUnit("Month");
+        input.setDurationValue("1");
+        input.setRowVersion(Base64.getEncoder().encodeToString(originalRowVer));
+
+        ServiceResult<Integer> result = service.updateMembershipPackage(MANAGER_ACCOUNT_ID, input);
+        assertFalse(result.isSuccess());
+        assertEquals(Messages.MSG22_CONCURRENT_EDIT, result.getMessage());
+    }
+
+    @Test
+    @DisplayName("Cập nhật giá gói ghi nhận AuditLog riêng biệt UPDATE_PRICE")
+    void testPriceUpdateAuditLogging() {
+        Package pkg = new Package(2);
+        pkg.setPackageName("Gói 3 Tháng");
+        pkg.setPackageType(Package.Type.MEMBERSHIP);
+        pkg.setDurationUnit("Month");
+        pkg.setDurationValue(3);
+        pkg.setPrice(1500000);
+        pkg.setActive(true);
+        byte[] rowVer = new byte[]{0, 0, 0, 0, 0, 0, 0, 2};
+        pkg.setRowVersion(rowVer);
+        fakePackageDAO.packages.put(2, pkg);
+
+        PackageFormInput input = new PackageFormInput();
+        input.setPackageId(2);
+        input.setName("Gói 3 Tháng");
+        input.setType("Membership");
+        input.setPrice("1800000"); // Đổi giá từ 1.500.000 -> 1.800.000
+        input.setDurationUnit("Month");
+        input.setDurationValue("3");
+        input.setRowVersion(Base64.getEncoder().encodeToString(rowVer));
+
+        ServiceResult<Integer> result = service.updateMembershipPackage(MANAGER_ACCOUNT_ID, input);
+        assertTrue(result.isSuccess());
+
+        boolean hasPriceAudit = recordingAuditLogService.records.stream()
+                .anyMatch(r -> "UPDATE_PRICE".equals(r.action) && "Price".equals(r.fieldChanged));
+        assertTrue(hasPriceAudit, "Phải ghi nhận AuditLog UPDATE_PRICE khi đổi giá");
+    }
+
+    @Test
+    @DisplayName("Ngừng bán gói thành công và ghi AuditLog DEACTIVATE")
+    void testDeactivatePackage() {
+        Package pkg = new Package(3);
+        pkg.setPackageName("Gói Ngừng Bán Demo");
+        pkg.setPackageType(Package.Type.MEMBERSHIP);
+        pkg.setDurationUnit("Month");
+        pkg.setDurationValue(6);
+        pkg.setPrice(2500000);
+        pkg.setActive(true);
+        byte[] rowVer = new byte[]{0, 0, 0, 0, 0, 0, 0, 3};
+        pkg.setRowVersion(rowVer);
+        fakePackageDAO.packages.put(3, pkg);
+
+        ServiceResult<Void> result = service.togglePackageStatus(
+                MANAGER_ACCOUNT_ID,
+                3,
+                false,
+                Base64.getEncoder().encodeToString(rowVer),
+                "Ngừng kinh doanh để chuyển sang gói khuyến mãi mới"
+        );
+
+        assertTrue(result.isSuccess());
+        assertFalse(fakePackageDAO.packages.get(3).isActive());
+        assertEquals("Đã ngừng bán gói dịch vụ.", result.getMessage());
+    }
+
+    @Test
+    @DisplayName("Mở bán lại gói bị từ chối nếu tên gói trùng với một gói khác đang bán")
+    void testReactivateDuplicateNameFails() {
+        // Gói đang active
+        fakePackageDAO.activeNames.add("Gói Tập Gym 1 Tháng");
+
+        // Gói đang inactive trùng tên muốn mở lại
+        Package inactivePkg = new Package(4);
+        inactivePkg.setPackageName("Gói Tập Gym 1 Tháng");
+        inactivePkg.setPackageType(Package.Type.MEMBERSHIP);
+        inactivePkg.setDurationUnit("Month");
+        inactivePkg.setDurationValue(1);
+        inactivePkg.setPrice(600000);
+        inactivePkg.setActive(false);
+        byte[] rowVer = new byte[]{0, 0, 0, 0, 0, 0, 0, 4};
+        inactivePkg.setRowVersion(rowVer);
+        fakePackageDAO.packages.put(4, inactivePkg);
+
+        ServiceResult<Void> result = service.togglePackageStatus(
+                MANAGER_ACCOUNT_ID,
+                4,
+                true,
+                Base64.getEncoder().encodeToString(rowVer),
+                "Mở lại gói"
+        );
+
+        assertFalse(result.isSuccess());
+        assertTrue(result.getMessage().contains("đang có một gói khác cùng tên đang bán"));
+    }
+
     // ===== Lớp giả lập (Fakes & Test Doubles) =====
 
     static class TestablePackageService extends PackageService {
@@ -315,6 +438,7 @@ class PackageServiceTest {
     static class FakePackageDAO extends PackageDAO {
         final Map<Integer, Package> packages = new HashMap<>();
         final Set<String> activeNames = new HashSet<>();
+        boolean simulateConcurrencyConflict = false;
         int idSequence = 100;
 
         @Override
@@ -350,12 +474,18 @@ class PackageServiceTest {
 
         @Override
         public boolean update(Connection conn, Package pkg) {
+            if (simulateConcurrencyConflict) {
+                return false;
+            }
             packages.put(pkg.getPackageId(), pkg);
             return true;
         }
 
         @Override
         public boolean updateActiveStatus(Connection conn, int packageId, boolean isActive, byte[] expectedRowVer) {
+            if (simulateConcurrencyConflict) {
+                return false;
+            }
             Package pkg = packages.get(packageId);
             if (pkg != null) {
                 pkg.setActive(isActive);
