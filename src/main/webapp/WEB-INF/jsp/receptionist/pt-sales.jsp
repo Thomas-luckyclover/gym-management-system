@@ -22,9 +22,9 @@
 <head>
     <%@ include file="/WEB-INF/jsp/common/head.jspf" %>
     <title>Bán gói PT · Super Gym Lễ tân</title>
-    <link rel="stylesheet" href="${ctx}/css/pages/receptionist/pt-sales.css?v=20261031a">
+    <link rel="stylesheet" href="${ctx}/css/pages/receptionist/pt-sales.css?v=20261031b">
     <script src="${ctx}/js/pages/receptionist/pt-sales.js?v=20261026s" defer></script>
-    <script src="${ctx}/js/pages/receptionist/pt-sale-plan.js?v=20261030v4" defer></script>
+    <script src="${ctx}/js/pages/receptionist/pt-sale-plan.js?v=20261031a" defer></script>
 </head>
 <body class="dock theme-staff pt-sale-page">
 <%@ include file="/WEB-INF/jsp/common/flash-toast.jspf" %>
@@ -388,22 +388,15 @@
                             </label>
                             <button class="btn btn-primary sale-main" type="submit" disabled data-plan-submit><i class="fa-solid fa-lock" aria-hidden="true"></i> Giữ lịch 15 phút</button>
                         </form>
+                        <%-- Pumpy + bong bóng nhắc bước kế tiếp (pt-sale-plan.js renderSummary đổi chữ theo trạng thái).
+                             Chữ không nói "bên trái / bên phải" vì iPad / điện thoại xếp 1 cột. --%>
                         <div class="sale-note">
-                            <%-- Pumpy nhỏ cổ vũ lễ tân (trang trí, màu giống Pumpy ở guest/_mascot.jspf) --%>
-                            <svg class="sale-pumpy" viewBox="0 0 120 120" role="img" aria-label="Pumpy cổ vũ lễ tân">
-                                <circle cx="60" cy="64" r="42" fill="#D6F55B" stroke="#141414" stroke-width="5"/>
-                                <path d="M30 44 L33 20 L48 34 Z M90 44 L87 20 L72 34 Z" fill="#D6F55B" stroke="#141414" stroke-width="4" stroke-linejoin="round"/>
-                                <circle cx="46" cy="58" r="5" fill="#141414"/><circle cx="74" cy="58" r="5" fill="#141414"/>
-                                <circle cx="47.5" cy="56.5" r="1.6" fill="#fff"/><circle cx="75.5" cy="56.5" r="1.6" fill="#fff"/>
-                                <path d="M50 72 Q60 80 70 72" fill="none" stroke="#141414" stroke-width="4" stroke-linecap="round"/>
-                                <ellipse cx="42" cy="70" rx="6" ry="3.5" fill="#fff" opacity="0.5"/>
-                                <ellipse cx="78" cy="70" rx="6" ry="3.5" fill="#fff" opacity="0.5"/>
-                            </svg>
-                            <p class="sale-msg" data-plan-note>Chọn lịch tập bên trái và khách ở cột Đơn bán để giữ lịch.</p>
+                            <%@ include file="/WEB-INF/jsp/receptionist/_sale-pumpy.jspf" %>
+                            <p class="sale-msg sale-bubble" data-plan-note aria-live="polite">Chọn giờ tập ở phần <b>Lịch tập</b>, rồi tìm khách ở ô <b>Khách mua gói</b> để giữ lịch.</p>
                         </div>
                     </c:when>
                     <c:otherwise>
-                        <p class="sale-msg">Chọn gói, PT và ngày bắt đầu bên trái để xếp lịch.</p>
+                        <p class="sale-msg">Chọn gói, PT và ngày bắt đầu ở phần <b>Gói &amp; PT</b> để xếp lịch.</p>
                     </c:otherwise>
                 </c:choose>
             </aside>

@@ -1403,14 +1403,12 @@ function bindPasswordToggles() {
         const isHidden = input.type === "password";
         input.type = isHidden ? "text" : "password";
 
-        const icon = button.querySelector("i");
-        if (icon) {
-            icon.className = isHidden ? "fa-solid fa-eye-slash" : "fa-solid fa-eye";
-        } else {
-            button.innerHTML = isHidden
-                ? '<i class="fa-solid fa-eye-slash" aria-hidden="true"></i>'
-                : '<i class="fa-solid fa-eye" aria-hidden="true"></i>';
-        }
+        // Luôn thay bằng thẻ <i> MỚI, không sửa class của thẻ cũ: icons.js đã đổi thẻ cũ thành SVG con mắt
+        // (đánh dấu data-icon-done) nên đổi class không vẽ lại hình → trước đây icon biến mất sau lần bấm đầu.
+        // Thẻ mới được MutationObserver của icons.js bắt và vẽ SVG mắt mở / mắt gạch.
+        button.innerHTML = isHidden
+            ? '<i class="fa-solid fa-eye-slash" aria-hidden="true"></i>'
+            : '<i class="fa-solid fa-eye" aria-hidden="true"></i>';
 
         button.setAttribute("aria-label", isHidden ? "Ẩn mật khẩu" : "Hiện mật khẩu");
     });

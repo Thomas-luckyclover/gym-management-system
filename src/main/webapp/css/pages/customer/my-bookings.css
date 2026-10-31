@@ -591,6 +591,16 @@
   .booking-rows.is-single li { grid-template-columns: minmax(0, 1fr) auto; gap: var(--space-1) var(--space-3); }
   .booking-rows-note,
   .booking-rows-action { grid-column: 1 / -1; justify-self: start; }
+
+  /* Dải "Các buổi của gói": vạch ngăn tuần (.booking-dot-week, JSP chèn trước buổi đầu tuần) rơi giữa hàng
+     khi màn hẹp → ô lệch lung tung. Trên điện thoại vạch thành chỗ ngắt hàng: mỗi tuần 1 hàng (≤ 7 ô vừa 1 hàng). */
+  .booking-dots .booking-dot-week {
+    flex-basis: 100%;
+    height: 0;
+    margin: 0;
+    background: none;
+  }
+  .booking-dots .booking-dot-week:first-child { display: none; }
 }
 
 @media (prefers-reduced-motion: reduce) {

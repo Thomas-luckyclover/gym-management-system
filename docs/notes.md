@@ -1,5 +1,15 @@
 # File notes — mâu thuẫn tài liệu & quyết định đã chốt
 
+## Soát giao diện điện thoại / iPad / máy tính + con mắt mật khẩu + Pumpy Bán gói PT (31/10/2026, ĐÃ CODE)
+- **Cách soát**: chạy app thật (Tomcat 10.1 + SQL Server seed), chụp 6 màn ở 390 / 768 / 1024 / 1440: Lịch tập, Gói của tôi, Chỉ số cơ thể (khách) · Lịch dạy, Tổng quan (PT) · Bán gói PT (lễ tân). Không đổi Java / DB.
+- **Topbar chung (common.css, cuối file)**: ≤900px topbar được xuống dòng — tiêu đề đủ chữ ở hàng trên, cụm nút dồn phải hàng dưới (trước: ≤480px tiêu đề bị cắt "Bá…", "L…"). Tên + mã tài khoản trên điện thoại vẫn ẩn kiểu chỉ trình đọc màn hình (quy tắc Arena cũ, giữ nguyên).
+- **Lịch tập (khách)**: ≤900px (cả iPad dọc) dùng kiểu xem 1 ngày + dải chọn ngày như điện thoại (trước: 7 cột ~90px, thẻ buổi tràn sang cột bên). 901–1100px: 7 cột thu gọn, giờ / nhãn được xuống dòng. Máy tính: nhãn trạng thái giữ 1 dòng.
+- **Gói của tôi**: điện thoại — vạch ngăn tuần trong "Các buổi của gói" thành chỗ ngắt hàng → mỗi tuần 1 hàng.
+- **Chỉ số cơ thể**: ≤600px bảng lịch sử thành thẻ (Ngày · Cân nặng · Thay đổi / BMI · Mỡ · Cơ · Vòng eo / Ghi chú), nhãn lấy từ `data-label` JSP gắn; ≤760px chữ trục biểu đồ to hơn (trước ~5px).
+- **Bán gói PT**: thanh bước iPad được xuống dòng; Pumpy vẽ lại đúng mẫu linh vật (`receptionist/_sale-pumpy.jspf`: mèo tròn xanh, bụng xoáy, vẫy tay) + bong bóng nhắc bước kế tiếp. Câu nhắc không nói "bên trái / cột phải" (iPad / điện thoại 1 cột) mà gọi tên phần: "Lịch tập", "Khách mua gói", "Gói & PT".
+- **Con mắt mật khẩu (common.js `bindPasswordToggles`)**: lỗi bấm 1 lần là icon biến mất (icons.js đã đổi `<i>` thành SVG, code cũ chỉ đổi class). Nay mỗi lần bấm thay bằng `<i>` mới để icons.js vẽ lại mắt mở / mắt gạch. Đã thử: Đăng nhập, Đăng ký, Đổi mật khẩu (Tài khoản); Quên mật khẩu dùng cùng markup + CSS với Đăng nhập.
+- **Giữ nguyên (đã cân nhắc)**: Lịch dạy PT trên iPad cuộn ngang trong khung lịch (CSS ghi rõ chủ ý, có chế độ Danh sách); dải ngày Tổng quan PT trên điện thoại cuộn ngang.
+
 ## Thư viện bài tập — /customer/exercises + /pt/exercises (27/10/2026, ĐÃ CODE, CÓ SỬA DB)
 - **Nghiệp vụ**: thư viện bài tập là **đặc quyền hội viên**. Khách xem được khi đang có gói **tập (Membership)** hoặc **gói PT** còn hiệu lực hôm nay (Active hoặc Frozen, StartDate ≤ hôm nay ≤ EndDate; gói đôi tính cả người đi kèm). PT luôn xem được (tra bài khi soạn giáo án). Màn chỉ xem, không lưu gì của người dùng.
 - **Khóa** có 3 câu: chưa từng mua (NEVER) · hết hạn ngày X (EXPIRED) · gói bắt đầu từ ngày Y (NOT_STARTED); kèm danh sách gói đang bán có đặc quyền + nút "Xem các gói". Kiểm ở Service, gõ thẳng URL vẫn bị khóa.
