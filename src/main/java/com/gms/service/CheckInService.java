@@ -90,7 +90,11 @@ public class CheckInService {
             result.setFullName(customer.fullName);
             result.setPhone(customer.phone);
             result.setAvatar(customer.avatar);
-            result.setCheckInPhoto(customer.checkInPhoto);
+            String photo = customer.checkInPhoto;
+            if (photo != null && (photo.trim().isEmpty() || "null".equalsIgnoreCase(photo.trim()))) {
+                photo = null;
+            }
+            result.setCheckInPhoto(photo);
             result.setCustomerStatus(customer.customerStatus);
 
             // Kiểm tra yêu cầu xoá đang chờ Quản lý duyệt (UC-17)
@@ -184,7 +188,7 @@ public class CheckInService {
                     result.setCanCheckIn(true);
                 } else {
                     // Gói Membership: Phải có ảnh check-in tại quầy (CBR-37, CBR-38)
-                    if (ValidationUtil.isNullOrEmpty(customer.checkInPhoto)) {
+                    if (ValidationUtil.isNullOrEmpty(photo)) {
                         result.setDecision(Decision.WARN_MISSING_PHOTO);
                         result.setMessage("Khách mua online, chưa có ảnh check-in. Chụp ảnh tại quầy rồi mới cho vào.");
                         result.setCanCheckIn(false);

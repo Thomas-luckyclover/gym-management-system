@@ -112,7 +112,8 @@ public class CheckInDAO {
                     info.customerId = rs.getInt("CustomerId");
                     info.personId = rs.getInt("PersonId");
                     info.customerCode = rs.getString("CustomerCode");
-                    info.checkInPhoto = rs.getString("CheckInPhoto");
+                    String rawPhoto = rs.getString("CheckInPhoto");
+                    info.checkInPhoto = (rawPhoto != null && "null".equalsIgnoreCase(rawPhoto.trim())) ? null : rawPhoto;
                     info.customerType = rs.getString("CustomerType");
                     info.customerStatus = rs.getString("CustomerStatus");
                     info.fullName = rs.getString("FullName").trim();
@@ -383,7 +384,8 @@ public class CheckInDAO {
                     item.setFullName(rs.getString("FullName"));
                     item.setPhone(rs.getString("Phone"));
                     item.setCustomerStatus(rs.getString("CustomerStatus"));
-                    item.setCheckInPhoto(rs.getString("CheckInPhoto"));
+                    String searchPhoto = rs.getString("CheckInPhoto");
+                    item.setCheckInPhoto((searchPhoto != null && "null".equalsIgnoreCase(searchPhoto.trim())) ? null : searchPhoto);
                     list.add(item);
                 }
             }
