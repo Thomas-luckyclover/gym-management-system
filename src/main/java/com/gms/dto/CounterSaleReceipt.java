@@ -79,10 +79,29 @@ public class CounterSaleReceipt {
     // Cách dùng: in ở dòng "Lễ tân thu tiền" trên biên lai.
     private final String receptionistName;
 
+    // DAO: Orders.DiscountAmount (đồng), 0 nếu không áp dụng voucher.
+    // Ý nghĩa: số tiền được miễn giảm từ voucher ưu đãi.
+    // Cách dùng: in ở dòng "Giảm giá" trên biên lai nếu > 0.
+    private final long discountAmount;
+
+    // DAO: Vouchers.VoucherCode áp dụng (null nếu không có voucher).
+    // Ý nghĩa: mã ưu đãi khách hàng đã sử dụng.
+    // Cách dùng: in kèm dòng giảm giá trên biên lai.
+    private final String voucherCode;
+
     public CounterSaleReceipt(int orderId, String orderCode, String customerName, String customerCode,
             String phoneText, String packageName, String durationText, String startDateText,
             String endDateText, long finalAmount, String paymentMethod, String paymentMethodText,
             String paidAtText, String receptionistName) {
+        this(orderId, orderCode, customerName, customerCode, phoneText, packageName, durationText,
+                startDateText, endDateText, finalAmount, paymentMethod, paymentMethodText, paidAtText,
+                receptionistName, 0L, null);
+    }
+
+    public CounterSaleReceipt(int orderId, String orderCode, String customerName, String customerCode,
+            String phoneText, String packageName, String durationText, String startDateText,
+            String endDateText, long finalAmount, String paymentMethod, String paymentMethodText,
+            String paidAtText, String receptionistName, long discountAmount, String voucherCode) {
         this.orderId = orderId;
         this.orderCode = orderCode;
         this.customerName = customerName;
@@ -97,6 +116,8 @@ public class CounterSaleReceipt {
         this.paymentMethodText = paymentMethodText;
         this.paidAtText = paidAtText;
         this.receptionistName = receptionistName;
+        this.discountAmount = discountAmount;
+        this.voucherCode = voucherCode;
     }
 
     // Mã đơn tự tăng trong database, dùng trong URL hoặc đối soát kỹ thuật.
@@ -167,5 +188,15 @@ public class CounterSaleReceipt {
     // Tên lễ tân thu tiền, in ở dòng nhân viên phụ trách trên biên lai POS.
     public String getReceptionistName() {
         return receptionistName;
+    }
+
+    // Số tiền giảm giá được trừ, 0 nếu không có voucher.
+    public long getDiscountAmount() {
+        return discountAmount;
+    }
+
+    // Mã voucher áp dụng, null nếu không có voucher.
+    public String getVoucherCode() {
+        return voucherCode;
     }
 }
