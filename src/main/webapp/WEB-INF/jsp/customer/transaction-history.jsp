@@ -21,7 +21,13 @@
 
             <div class="main">
                 <header class="topbar">
-                    <h1 class="tb-title">Lịch sử giao dịch</h1>
+                    <div class="tb-left">
+                        <h1 class="tb-title">Lịch sử giao dịch</h1>
+                    </div>
+                    <div class="top-right">
+                        <%@ include file="/WEB-INF/jsp/common/notification-bell.jspf" %>
+                        <%@ include file="/WEB-INF/jsp/common/topbar-user.jspf" %>
+                    </div>
                 </header>
 
                 <main class="content" id="main-content">
