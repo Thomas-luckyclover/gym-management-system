@@ -135,7 +135,8 @@ public class AutoCloseSessionService {
                         sessionId,
                         today,
                         outcome.status(),
-                        outcome.missedReason());
+                        outcome.missedReason(),
+                        outcome.cancelType());
                 if (!updated) {
                     connection.rollback();
                     return false;
@@ -182,7 +183,8 @@ public class AutoCloseSessionService {
      * record = lớp chỉ chứa dữ liệu; Java tự tạo constructor + getter: outcome.status(), outcome.missedReason().
      * VD: (MISSED, NO_CHECK_IN) hoặc (CHECKED_IN, null).
      */
-    public record Outcome(Session.Status status, Session.MissedReason missedReason) {
+    public record Outcome(Session.Status status, Session.MissedReason missedReason,
+            Session.CancelType cancelType) {
     }
 
     /**
@@ -195,6 +197,15 @@ public class AutoCloseSessionService {
      * VD gói đôi: người đứng tên thiếu membership, người tập cùng có membership và có check-in → CheckedIn.
      */
     public static Outcome evaluate(SessionAutoCloseData data) {
+        // B0: ngày nghỉ hoặc slot nằm ngoài giờ mở cửa thì hủy theo GymClosed, không tính commission.
+        if (data.isGymClosedAllDay()
+                || data.getGymOpenTime() == null
+                || data.getGymCloseTime() == null
+                || data.getSlotStartTime().isBefore(data.getGymOpenTime())
+                || data.getSlotEndTime().isAfter(data.getGymCloseTime())) {
+            return new Outcome(Session.Status.CANCELLED, null, Session.CancelType.GYM_CLOSED);
+        }
+
         boolean coupleSession = isCoupleSession(data);
 
         // B1: từng người có dùng được gym vào ngày tập không.
@@ -214,22 +225,22 @@ public class AutoCloseSessionService {
         // B3: cả buổi bị chặn và có người đang bảo lưu → Missed / MembershipFrozen.
         if (allCustomersCannotUseGym && hasFrozenCustomer(data, coupleSession)) {
             return new Outcome(Session.Status.MISSED,
-                    Session.MissedReason.MEMBERSHIP_FROZEN);
+                    Session.MissedReason.MEMBERSHIP_FROZEN, null);
         }
 
         // B4: cả buổi bị chặn, không ai bảo lưu → Missed / NoMembership.
         if (allCustomersCannotUseGym) {
             return new Outcome(Session.Status.MISSED,
-                    Session.MissedReason.NO_MEMBERSHIP);
+                    Session.MissedReason.NO_MEMBERSHIP, null);
         }
 
         // B5: còn ít nhất 1 người vào được gym → giờ mới xét check-in trong ngày.
         if (data.hasCheckInOnSessionDate()) {
-            return new Outcome(Session.Status.CHECKED_IN, null);
+            return new Outcome(Session.Status.CHECKED_IN, null, null);
         }
 
         // B6: không ai check-in → Missed / NoCheckIn.
-        return new Outcome(Session.Status.MISSED, Session.MissedReason.NO_CHECK_IN);
+        return new Outcome(Session.Status.MISSED, Session.MissedReason.NO_CHECK_IN, null);
     }
 
     /** HÀM PHỤ — gọi ở đầu evaluate. true khi buổi thuộc gói PT đôi; loại khác chỉ có 1 khách. */
