@@ -15,7 +15,7 @@
   <title>Thông báo · Super Gym</title>
 
   <link rel="stylesheet"
-        href="${pageContext.request.contextPath}/css/pages/auth/account-settings.css">
+        href="${pageContext.request.contextPath}/css/pages/auth/account-settings.css?v=20261101avatar">
   <link rel="stylesheet" href="${pageContext.request.contextPath}/css/pages/auth/notification-bell.css">
 
 </head>
@@ -61,6 +61,7 @@
 
       <div class="top-right">
 
+        <%@ include file="/WEB-INF/jsp/common/notification-bell.jspf" %>
         <%@ include file="/WEB-INF/jsp/common/topbar-user.jspf" %>
 
       </div>
