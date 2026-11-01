@@ -210,6 +210,17 @@ public class MaintenanceRequestService {
                         );
                     }
 
+                    // Kiểm tra quy tắc BR-105 & GBR-13: Máy đang bảo trì hoặc đã có yêu cầu Open/InProgress thì không được báo hỏng thêm
+                    if (equipmentItem.getStatus() == EquipmentItem.Status.UNDER_MAINTENANCE
+                            || maintenanceRequestDAO.hasActiveRequest(connection, itemId)) {
+
+                        connection.rollback();
+                        return ServiceResult.failField(
+                                "equipmentItemId",
+                                "Thiết bị " + equipmentItem.getItemCode() + " đang trong quá trình bảo trì hoặc đã có yêu cầu chờ duyệt."
+                        );
+                    }
+
                     Facility facility =
                             facilityDAO.findById(connection, equipmentItem.getFacilityId());
                     String facilityName = facility != null ? facility.getFacilityName() : "Thiết bị";
@@ -549,6 +560,166 @@ public class MaintenanceRequestService {
     }
 
     /**
+     * Manager approves multiple Open maintenance requests in a single database transaction (Batch Approval).
+     *
+     * @param accountId           authenticated manager account ID
+     * @param requestIds          list of maintenance request IDs to approve
+     * @param setUnderMaintenance whether to mark the physical individual equipment items as UnderMaintenance
+     * @param managerNote         optional common manager note applied to all approved requests
+     * @return ServiceResult containing the count of successfully approved requests
+     */
+    public ServiceResult<Integer> approveRequestsBatch(
+            int accountId,
+            List<Integer> requestIds,
+            boolean setUnderMaintenance,
+            String managerNote
+    ) {
+        if (requestIds == null || requestIds.isEmpty()) {
+            return ServiceResult.fail("Vui lòng chọn ít nhất một yêu cầu bảo trì để duyệt.");
+        }
+
+        List<Integer> validIds = requestIds.stream()
+                .filter(id -> id != null && id > 0)
+                .distinct()
+                .toList();
+
+        if (validIds.isEmpty()) {
+            return ServiceResult.fail("Vui lòng chọn ít nhất một yêu cầu bảo trì để duyệt.");
+        }
+
+        try (Connection connection = openConnection()) {
+            connection.setAutoCommit(false);
+
+            try {
+                Employee manager = findEmployeeForAccount(accountId, Role.MANAGER);
+                if (manager == null) {
+                    connection.rollback();
+                    return ServiceResult.fail(Messages.MSG04_SYSTEM_BUSY);
+                }
+
+                int approvedCount = 0;
+
+                for (int reqId : validIds) {
+                    MaintenanceRequest request = maintenanceRequestDAO.findByIdForUpdate(connection, reqId);
+                    if (request == null || !request.isOpen()) {
+                        continue;
+                    }
+
+                    boolean updated = maintenanceRequestDAO.approve(
+                            connection,
+                            reqId,
+                            manager.getEmployeeId(),
+                            setUnderMaintenance,
+                            managerNote
+                    );
+
+                    if (!updated) {
+                        continue;
+                    }
+
+                    if (setUnderMaintenance) {
+                        EquipmentItem equipmentItem =
+                                equipmentItemDAO.findById(connection, request.getEquipmentItemId());
+
+                        if (equipmentItem != null
+                                && equipmentItem.getStatus() != EquipmentItem.Status.UNDER_MAINTENANCE) {
+
+                            EquipmentItem.Status oldStatus = equipmentItem.getStatus();
+                            boolean itemUpdated = equipmentItemDAO.updateStatus(
+                                    connection,
+                                    request.getEquipmentItemId(),
+                                    EquipmentItem.Status.UNDER_MAINTENANCE
+                            );
+
+                            if (itemUpdated) {
+                                auditLogService.logInTransaction(
+                                        connection,
+                                        accountId,
+                                        Role.MANAGER,
+                                        "Cập nhật trạng thái máy con",
+                                        "EquipmentItem",
+                                        request.getEquipmentItemId(),
+                                        "Status",
+                                        oldStatus.getDbValue(),
+                                        EquipmentItem.Status.UNDER_MAINTENANCE.getDbValue(),
+                                        "Chuyển máy " + equipmentItem.getItemCode() + " sang bảo trì khi duyệt hàng loạt yêu cầu " + request.getRequestCode()
+                                );
+                            }
+                        }
+                    }
+
+                    auditLogService.logInTransaction(
+                            connection,
+                            accountId,
+                            Role.MANAGER,
+                            "Duyệt yêu cầu bảo trì",
+                            "MaintenanceRequest",
+                            reqId,
+                            "Status",
+                            MaintenanceRequest.Status.OPEN.getDbValue(),
+                            MaintenanceRequest.Status.IN_PROGRESS.getDbValue(),
+                            managerNote
+                    );
+
+                    EquipmentItem notifItem = equipmentItemDAO.findById(connection, request.getEquipmentItemId());
+                    Facility notifFac = (notifItem != null) ? facilityDAO.findById(connection, notifItem.getFacilityId()) : null;
+                    String deviceDetail = "";
+                    if (notifItem != null) {
+                        String facName = (notifFac != null && notifFac.getFacilityName() != null)
+                                ? notifFac.getFacilityName() : "";
+                        String itemCode = notifItem.getItemCode() != null ? notifItem.getItemCode() : "";
+                        String itemLabel = notifItem.getItemLabel() != null ? notifItem.getItemLabel() : "";
+                        if (!itemLabel.isBlank() && !itemLabel.equalsIgnoreCase(itemCode)) {
+                            deviceDetail = facName + " (" + itemCode + " - " + itemLabel + ")";
+                        } else {
+                            deviceDetail = facName + " (" + itemCode + ")";
+                        }
+                    }
+                    if (deviceDetail.isBlank()) {
+                        deviceDetail = "Mã máy #" + request.getEquipmentItemId();
+                    }
+
+                    StringBuilder notifContent = new StringBuilder();
+                    notifContent.append(request.getRequestCode())
+                            .append(" · ")
+                            .append(deviceDetail)
+                            .append(": Quản lý đã duyệt yêu cầu, chuyển sang trạng thái Đang xử lý.");
+                    if (managerNote != null && !managerNote.isBlank()) {
+                        notifContent.append(" Ghi chú: ").append(managerNote.trim());
+                    }
+
+                    notificationService.notifyEmployeeInTransaction(
+                            connection,
+                            request.getReportedByEmployeeId(),
+                            "Bảo trì · Đã được duyệt",
+                            notifContent.toString()
+                    );
+
+                    approvedCount++;
+                }
+
+                if (approvedCount == 0) {
+                    connection.rollback();
+                    return ServiceResult.fail("Không có yêu cầu bảo trì nào ở trạng thái Chờ duyệt được chọn.");
+                }
+
+                connection.commit();
+                return ServiceResult.ok(approvedCount);
+
+            } catch (SQLException e) {
+                connection.rollback();
+                throw e;
+            } finally {
+                connection.setAutoCommit(true);
+            }
+
+        } catch (SQLException e) {
+            e.printStackTrace();
+            return ServiceResult.fail(Messages.MSG04_SYSTEM_BUSY);
+        }
+    }
+
+    /**
      * Manager rejects an Open maintenance request with a required justification reason (BR-49).
      */
     public ServiceResult<Void> rejectRequest(
@@ -834,6 +1005,170 @@ public class MaintenanceRequestService {
                 connection.commit();
 
                 return ServiceResult.ok(null);
+
+            } catch (SQLException e) {
+                connection.rollback();
+                throw e;
+            } finally {
+                connection.setAutoCommit(true);
+            }
+
+        } catch (SQLException e) {
+            e.printStackTrace();
+            return ServiceResult.fail(Messages.MSG04_SYSTEM_BUSY);
+        }
+    }
+
+    /**
+     * Receptionist inspects and closes multiple InProgress maintenance requests in a single database transaction (Batch Closure).
+     *
+     * @param accountId      authenticated receptionist account ID
+     * @param requestIds     list of maintenance request IDs to close
+     * @param acceptanceNote verification and acceptance notes (5-500 characters, applied to all closed requests)
+     * @return ServiceResult containing the count of successfully closed requests
+     */
+    public ServiceResult<Integer> closeRequestsBatch(
+            int accountId,
+            List<Integer> requestIds,
+            String acceptanceNote
+    ) {
+        if (!ValidationUtil.isLengthValid(acceptanceNote, 5, 500)) {
+            return ServiceResult.failField(
+                    "acceptanceNote",
+                    Messages.MSG239_MAINTENANCE_CLOSE_NOTE_LENGTH
+            );
+        }
+
+        if (requestIds == null || requestIds.isEmpty()) {
+            return ServiceResult.fail("Vui lòng chọn ít nhất một yêu cầu bảo trì để nghiệm thu.");
+        }
+
+        List<Integer> validIds = requestIds.stream()
+                .filter(id -> id != null && id > 0)
+                .distinct()
+                .toList();
+
+        if (validIds.isEmpty()) {
+            return ServiceResult.fail("Vui lòng chọn ít nhất một yêu cầu bảo trì để nghiệm thu.");
+        }
+
+        try (Connection connection = openConnection()) {
+            connection.setAutoCommit(false);
+
+            try {
+                Employee receptionist = findEmployeeForAccount(accountId, Role.RECEPTIONIST);
+                if (receptionist == null) {
+                    connection.rollback();
+                    return ServiceResult.fail(Messages.MSG04_SYSTEM_BUSY);
+                }
+
+                int closedCount = 0;
+
+                for (int reqId : validIds) {
+                    MaintenanceRequest request = maintenanceRequestDAO.findByIdForUpdate(connection, reqId);
+                    if (request == null || !request.isInProgress()) {
+                        continue;
+                    }
+
+                    boolean updated = maintenanceRequestDAO.close(
+                            connection,
+                            reqId,
+                            receptionist.getEmployeeId(),
+                            acceptanceNote.trim()
+                    );
+
+                    if (!updated) {
+                        continue;
+                    }
+
+                    boolean hasOtherInProgress = maintenanceRequestDAO.hasInProgressRequest(
+                            connection,
+                            request.getEquipmentItemId()
+                    );
+
+                    if (!hasOtherInProgress) {
+                        EquipmentItem equipmentItem =
+                                equipmentItemDAO.findById(connection, request.getEquipmentItemId());
+
+                        if (equipmentItem != null
+                                && equipmentItem.getStatus() != EquipmentItem.Status.AVAILABLE
+                                && equipmentItem.getStatus() != EquipmentItem.Status.RETIRED) {
+
+                            EquipmentItem.Status oldStatus = equipmentItem.getStatus();
+                            boolean itemUpdated = equipmentItemDAO.updateStatus(
+                                    connection,
+                                    request.getEquipmentItemId(),
+                                    EquipmentItem.Status.AVAILABLE
+                            );
+
+                            if (itemUpdated) {
+                                auditLogService.logInTransaction(
+                                        connection,
+                                        accountId,
+                                        Role.RECEPTIONIST,
+                                        "Khôi phục trạng thái máy con",
+                                        "EquipmentItem",
+                                        request.getEquipmentItemId(),
+                                        "Status",
+                                        oldStatus.getDbValue(),
+                                        EquipmentItem.Status.AVAILABLE.getDbValue(),
+                                        "Khôi phục máy " + equipmentItem.getItemCode() + " khả dụng sau khi nghiệm thu hàng loạt yêu cầu " + request.getRequestCode()
+                                );
+                            }
+                        }
+                    }
+
+                    auditLogService.logInTransaction(
+                            connection,
+                            accountId,
+                            Role.RECEPTIONIST,
+                            "Đóng yêu cầu bảo trì",
+                            "MaintenanceRequest",
+                            reqId,
+                            "Status",
+                            MaintenanceRequest.Status.IN_PROGRESS.getDbValue(),
+                            MaintenanceRequest.Status.CLOSED.getDbValue(),
+                            acceptanceNote.trim()
+                    );
+
+                    if (request.getReviewedByEmployeeId() != null) {
+                        EquipmentItem closeItem = equipmentItemDAO.findById(connection, request.getEquipmentItemId());
+                        Facility closeFac = (closeItem != null) ? facilityDAO.findById(connection, closeItem.getFacilityId()) : null;
+                        String closeDeviceDetail = "";
+                        if (closeItem != null) {
+                            String facName = (closeFac != null && closeFac.getFacilityName() != null) ? closeFac.getFacilityName() : "";
+                            closeDeviceDetail = facName + " (" + closeItem.getItemCode() + ")";
+                        } else {
+                            closeDeviceDetail = "Mã máy #" + request.getEquipmentItemId();
+                        }
+
+                        StringBuilder closeContent = new StringBuilder();
+                        closeContent.append(request.getRequestCode())
+                                .append(" · ")
+                                .append(closeDeviceDetail)
+                                .append(": Yêu cầu đã được Lễ tân nghiệm thu và đóng.");
+                        if (acceptanceNote != null && !acceptanceNote.isBlank()) {
+                            closeContent.append(" Nghiệm thu: ").append(acceptanceNote.trim());
+                        }
+
+                        notificationService.notifyEmployeeInTransaction(
+                                connection,
+                                request.getReviewedByEmployeeId(),
+                                "Bảo trì · Đã hoàn tất",
+                                closeContent.toString()
+                        );
+                    }
+
+                    closedCount++;
+                }
+
+                if (closedCount == 0) {
+                    connection.rollback();
+                    return ServiceResult.fail("Không có yêu cầu bảo trì nào ở trạng thái Đang xử lý được chọn.");
+                }
+
+                connection.commit();
+                return ServiceResult.ok(closedCount);
 
             } catch (SQLException e) {
                 connection.rollback();
