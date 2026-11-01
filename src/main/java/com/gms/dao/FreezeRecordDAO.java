@@ -324,7 +324,7 @@ public class FreezeRecordDAO {
                   AND s.SubscriptionType = 'Membership'
                   AND pkg.PackageType = 'Membership'
                   AND o.Status != 'Cancelled'
-                  AND s.Status IN ('Active', 'Frozen')
+                  AND (s.Status = 'Frozen' OR (s.Status = 'Active' AND s.EndDate >= CAST(SYSDATETIME() AS DATE)))
                 ORDER BY CASE WHEN s.Status = 'Frozen' THEN 1 WHEN s.Status = 'Active' THEN 2 ELSE 3 END,
                          s.EndDate DESC
                 """;
@@ -764,7 +764,7 @@ public class FreezeRecordDAO {
                 SELECT COUNT(*)
                 FROM Customers c
                 JOIN Persons p ON p.PersonId = c.PersonId
-                OUTER APPLY (
+                CROSS APPLY (
                     SELECT TOP 1 sub.*, o.PackageId
                     FROM Subscriptions sub
                     JOIN Orders o ON o.OrderId = sub.OrderId
@@ -773,6 +773,7 @@ public class FreezeRecordDAO {
                       AND sub.SubscriptionType = 'Membership'
                       AND pkg.PackageType = 'Membership'
                       AND o.Status != 'Cancelled'
+                      AND (sub.Status = 'Frozen' OR (sub.Status = 'Active' AND sub.EndDate >= CAST(SYSDATETIME() AS DATE)))
                     ORDER BY 
                         CASE sub.Status WHEN 'Frozen' THEN 1 WHEN 'Active' THEN 2 ELSE 3 END,
                         sub.EndDate DESC
@@ -832,7 +833,7 @@ public class FreezeRecordDAO {
                     openFr.PlannedEndDate AS OpenFreezeEnd
                 FROM Customers c
                 JOIN Persons p ON p.PersonId = c.PersonId
-                OUTER APPLY (
+                CROSS APPLY (
                     SELECT TOP 1 sub.*, o.PackageId
                     FROM Subscriptions sub
                     JOIN Orders o ON o.OrderId = sub.OrderId
@@ -841,6 +842,7 @@ public class FreezeRecordDAO {
                       AND sub.SubscriptionType = 'Membership'
                       AND pkg.PackageType = 'Membership'
                       AND o.Status != 'Cancelled'
+                      AND (sub.Status = 'Frozen' OR (sub.Status = 'Active' AND sub.EndDate >= CAST(SYSDATETIME() AS DATE)))
                     ORDER BY 
                         CASE sub.Status WHEN 'Frozen' THEN 1 WHEN 'Active' THEN 2 ELSE 3 END,
                         sub.EndDate DESC

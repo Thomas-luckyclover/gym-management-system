@@ -382,64 +382,51 @@ document.addEventListener('DOMContentLoaded', function () {
         }
     });
 
-    // 4. Quản lý Tabs (Danh sách hội viên & Gói tập vs Lịch sử bảo lưu)
-    const tabButtons = document.querySelectorAll('.freeze-tab-btn');
-    const tabPanes = document.querySelectorAll('.freeze-tab-pane');
+    // 4. Quản lý Tabs: Sử dụng liên kết URL thuần (?tab=members hoặc ?tab=history) để tải lại trang độc lập
 
-    function switchTab(targetId) {
-        if (!targetId) return;
-        tabButtons.forEach(b => {
-            if (b.dataset.target === targetId || b.getAttribute('data-target') === targetId) {
-                b.classList.add('active');
-            } else {
-                b.classList.remove('active');
-            }
-        });
-        tabPanes.forEach(p => {
-            if ('#' + p.id === targetId || p.id === targetId.replace('#', '')) {
-                p.classList.add('active');
-            } else {
-                p.classList.remove('active');
-            }
-        });
+    // 5. Thao tác chỉ thực hiện qua nút trong cột Thao tác (không click cả dòng)
+
+    // 6. Xử lý modal xem chi tiết lý do bảo lưu (chỉ hiển thị nội dung lý do)
+    const reasonModal = document.getElementById('modalViewReason');
+
+    function openReasonModal(btn) {
+        if (!reasonModal) return;
+        const reason = btn.getAttribute('data-reason') || '';
+        const textEl = document.getElementById('reasonModalText');
+
+        if (textEl) {
+            textEl.textContent = reason || '(Không ghi nhận lý do)';
+        }
+
+        reasonModal.classList.add('open');
     }
 
-    tabButtons.forEach(btn => {
-        btn.addEventListener('click', function (e) {
-            e.preventDefault();
-            const targetId = this.dataset.target || this.getAttribute('data-target');
-            switchTab(targetId);
-            if (history.replaceState) {
-                history.replaceState(null, null, targetId);
-            }
-        });
-    });
-
-    const urlParams = new URLSearchParams(window.location.search);
-    if (urlParams.has('hq') || urlParams.has('hfilter') || window.location.hash === '#tabHistory') {
-        switchTab('#tabHistory');
-    } else if (window.location.hash) {
-        switchTab(window.location.hash);
+    function closeReasonModal() {
+        if (reasonModal) reasonModal.classList.remove('open');
     }
 
-    // 5. Cho phép click vào cả dòng bảng để chọn khách hàng
-    document.querySelectorAll('.gym-table tr[data-href]').forEach(row => {
-        row.addEventListener('click', function (e) {
-            if (e.target.closest('a') || e.target.closest('button') || e.target.closest('input[type="checkbox"]')) return;
-            const href = this.getAttribute('data-href');
-            if (href) window.location.href = href;
-        });
-    });
-
-    // 6. Xử lý mở rộng / thu gọn lý do bảo lưu dài (chống vỡ bảng khi lý do dài tới 400 - 500 ký tự)
-    document.querySelectorAll('.btn-toggle-reason').forEach(btn => {
+    document.querySelectorAll('.btn-view-reason').forEach(btn => {
         btn.addEventListener('click', function (e) {
             e.stopPropagation();
-            const textSpan = this.parentElement.querySelector('.reason-text');
-            if (!textSpan) return;
-            const isExpanded = textSpan.classList.toggle('expanded');
-            this.textContent = isExpanded ? 'Thu gọn' : 'Xem thêm';
+            e.preventDefault();
+            openReasonModal(this);
         });
+    });
+
+    document.querySelectorAll('[data-close-reason-modal]').forEach(btn => {
+        btn.addEventListener('click', closeReasonModal);
+    });
+
+    if (reasonModal) {
+        reasonModal.addEventListener('click', function (e) {
+            if (e.target === reasonModal) closeReasonModal();
+        });
+    }
+
+    document.addEventListener('keydown', function (e) {
+        if (e.key === 'Escape' && reasonModal && reasonModal.classList.contains('open')) {
+            closeReasonModal();
+        }
     });
 
     // 7. Tự động áp dụng bộ lọc khi thay đổi lựa chọn ở Tab 1

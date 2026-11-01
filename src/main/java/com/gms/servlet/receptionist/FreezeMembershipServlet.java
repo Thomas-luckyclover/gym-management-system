@@ -79,7 +79,19 @@ public class FreezeMembershipServlet extends HttpServlet {
             return;
         }
 
-        // B3: Lấy từ khóa q (Tab 1), hq (Tab 2) và bộ lọc filter người dùng chọn
+        // B3: Xác định tab đang chọn (members hoặc history) để tải dữ liệu và tách độc lập 2 khung tìm kiếm
+        String currentTab = RequestUtil.getTrimmedParam(request, "tab");
+        if (ValidationUtil.isNullOrEmpty(currentTab)) {
+            if (!ValidationUtil.isNullOrEmpty(RequestUtil.getTrimmedParam(request, "hq"))
+                    || !ValidationUtil.isNullOrEmpty(RequestUtil.getTrimmedParam(request, "hfilter"))) {
+                currentTab = "history";
+            } else {
+                currentTab = "members";
+            }
+        }
+        request.setAttribute("currentTab", currentTab);
+
+        // Lấy từ khóa q (Tab 1), hq (Tab 2) và bộ lọc filter người dùng chọn
         String query = RequestUtil.getTrimmedParam(request, "q");
         String historyQuery = RequestUtil.getTrimmedParam(request, "hq");
         String historyFilter = RequestUtil.getTrimmedParam(request, "hfilter");

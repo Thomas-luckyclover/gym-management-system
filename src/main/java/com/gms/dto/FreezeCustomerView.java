@@ -349,4 +349,30 @@ public class FreezeCustomerView {
     public void setFreezeHistory(List<FreezeRecordItemView> freezeHistory) {
         this.freezeHistory = freezeHistory;
     }
+
+    public Long getDaysRemaining() {
+        if (!hasMembership || packageEndDate == null) {
+            return null;
+        }
+        LocalDate today = LocalDate.now();
+        try {
+            today = com.gms.util.DateTimeUtil.today();
+        } catch (Throwable ignored) {
+        }
+        return java.time.temporal.ChronoUnit.DAYS.between(today, packageEndDate);
+    }
+
+    public String getDaysRemainingText() {
+        Long days = getDaysRemaining();
+        if (days == null) {
+            return "";
+        }
+        if (days < 0) {
+            return "Đã hết hạn";
+        } else if (days == 0) {
+            return "Hết hạn hôm nay";
+        } else {
+            return "Còn " + days + " ngày";
+        }
+    }
 }
