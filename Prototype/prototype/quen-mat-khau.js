@@ -5,8 +5,8 @@
 
 const ACCOUNTS = [
   { email: 'an.nguyen@email.com', name: 'Nguyễn Minh An' },
-  { email: 'cu.khach@email.com',  name: 'Trần Văn Cũ' },
-  { email: 'thu.ha@email.com',    name: 'Lê Thu Hà' },
+  { email: 'hoa.nt@gms.vn',       name: 'Nguyễn Thị Hoa' },
+  { email: 'long.h@gms.vn',       name: 'Hoàng Long' },
 ];
 const RESET_CODE = '123456';
 const RESET_TTL = 15 * 60;          // mã khôi phục có hiệu lực 15 phút

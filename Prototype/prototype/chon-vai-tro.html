@@ -1,0 +1,46 @@
+<!DOCTYPE html>
+<html lang="vi">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
+<title>Chọn vai trò — Super Gym</title>
+<meta name="description" content="Chọn vai trò làm việc sau khi đăng nhập.">
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Montserrat:wght@600;700;800&family=Inter:wght@400;500;600;700&display=swap">
+<script src="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/7.3.1/js/all.min.js" crossorigin="anonymous"></script>
+<link rel="stylesheet" href="style.css">
+<link rel="stylesheet" href="customer.css">
+</head>
+<body class="dark auth-dark">
+<div id="toastRoot"></div>
+<div id="modalRoot"></div>
+
+<!-- ============ #68 — CHỌN VAI TRÒ ============ -->
+<div class="auth-shell">
+  <div class="auth-top">
+    <a class="auth-brand" href="index.html">Super Gym</a>
+    <div style="display:flex;align-items:center;gap:16px">
+      <div class="cust-topbar-actions" style="margin:0"></div>
+      <a class="auth-back" href="dang-nhap.html"><i class="fa-solid fa-arrow-right-from-bracket"></i> Đăng xuất</a>
+    </div>
+  </div>
+
+  <div class="auth-card">
+    <div class="auth-head">
+      <h1>Chọn vai trò</h1>
+      <p>Xin chào <b>Nguyễn Thị Hoa</b>. Tài khoản của bạn dùng được cho nhiều vai trò. Bạn có thể đổi vai trò bất cứ lúc nào trên menu tài khoản.</p>
+    </div>
+    <div style="display:grid;gap:12px">
+      <a class="btn btn-primary btn-block" href="lt/check-in.html" style="justify-content:flex-start;gap:12px">
+        <i class="fa-solid fa-cash-register" style="width:20px"></i><span>Lễ tân</span><small style="margin-left:auto;opacity:.75">NV-0042</small>
+      </a>
+      <a class="btn btn-outline btn-block" href="kh/trang-ca-nhan.html" style="justify-content:flex-start;gap:12px">
+        <i class="fa-solid fa-user" style="width:20px"></i><span>Hội viên</span><small style="margin-left:auto;opacity:.75">KH-0430</small>
+      </a>
+    </div>
+  </div>
+  <p class="auth-foot-note">© 2026 Super Gym</p>
+</div>
+
+<script src="app.js"></script>
+</body>
+</html>
