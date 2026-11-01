@@ -142,10 +142,28 @@
           </form>
 
           <%-- Bảng dữ liệu --%>
+          <%-- Thanh hành động hàng loạt (chỉ hiện khi có chọn checkbox) --%>
+          <div id="bulkActionBar" class="bulk-action-bar" style="display: none;">
+            <div class="bulk-info">
+              <span class="bulk-icon"><i class="fa-solid fa-list-check"></i></span>
+              <span class="bulk-text">Đã chọn <strong id="bulkSelectedCount">0</strong> yêu cầu chờ duyệt</span>
+              <span class="bulk-codes text-muted" id="bulkCodesPreview"></span>
+            </div>
+            <div class="bulk-buttons">
+              <button type="button" class="btn btn-outline btn-sm" id="btnCancelBulk">Bỏ chọn</button>
+              <button type="button" class="btn btn-primary btn-sm" id="btnTriggerBulkApprove">
+                <i class="fa-solid fa-clipboard-check"></i> Duyệt hàng loạt (<span id="bulkBtnCount">0</span>)
+              </button>
+            </div>
+          </div>
+
           <div class="table-responsive-wrapper">
             <table class="maintenance-data-table">
               <thead>
                 <tr>
+                  <th style="width: 44px; text-align: center;">
+                    <input type="checkbox" id="checkAllOpen" class="bulk-checkbox" title="Chọn tất cả đơn chờ duyệt">
+                  </th>
                   <th style="width: 110px;">MÃ</th>
                   <th style="width: 220px;">THIẾT BỊ · MÁY</th>
                   <th>SỰ CỐ</th>
@@ -160,6 +178,22 @@
                   <c:when test="${not empty requestPage.items}">
                     <c:forEach var="item" items="${requestPage.items}">
                       <tr>
+                        <%-- Cột Chọn hàng loạt --%>
+                        <td style="text-align: center;">
+                          <c:choose>
+                            <c:when test="${item.request.open}">
+                              <input type="checkbox"
+                                     class="bulk-checkbox row-select-checkbox"
+                                     value="${item.request.maintenanceRequestId}"
+                                     data-request-code="<c:out value='${item.request.requestCode}' />"
+                                     data-item-code="<c:out value='${item.itemCode}' />">
+                            </c:when>
+                            <c:otherwise>
+                              <span class="checkbox-disabled-mark" title="Chỉ duyệt được đơn chờ duyệt">-</span>
+                            </c:otherwise>
+                          </c:choose>
+                        </td>
+
                         <%-- Cột MÃ --%>
                         <td>
                           <strong class="request-code"><c:out value="${item.request.requestCode}" /></strong>
@@ -239,7 +273,7 @@
                   </c:when>
                   <c:otherwise>
                     <tr>
-                      <td colspan="7" class="table-empty-message">
+                      <td colspan="8" class="table-empty-message">
                         Không có yêu cầu bảo trì nào phù hợp với bộ lọc hiện tại.
                       </td>
                     </tr>
@@ -294,5 +328,186 @@
       </main>
     </div>
   </div>
+
+  <%-- ===== MODAL DUYỆT HÀNG LOẠT ===== --%>
+  <div id="modalBulkApprove" class="gms-modal" role="dialog" aria-modal="true" aria-labelledby="modalBulkTitle">
+    <div class="gms-modal-dialog">
+      <form action="${pageContext.request.contextPath}/manager/maintenance-requests" method="post" id="formBulkApprove">
+        <input type="hidden" name="csrfToken" value="${csrfToken}">
+        <input type="hidden" name="action" value="batchApprove">
+        <input type="hidden" name="requestIds" id="bulkRequestIdsHidden">
+
+        <div class="gms-modal-header">
+          <h3 class="gms-modal-title" id="modalBulkTitle">Phê duyệt hàng loạt yêu cầu bảo trì</h3>
+          <button type="button" class="gms-modal-close" onclick="closeBulkModal()">&times;</button>
+        </div>
+        <div class="gms-modal-body">
+          <div class="bulk-modal-summary">
+            Xác nhận phê duyệt đồng loạt <strong id="modalSummaryCount">0</strong> yêu cầu bảo trì đã chọn:
+            <div class="bulk-modal-tags" id="modalSummaryTags"></div>
+          </div>
+
+          <label class="modal-checkbox-row" style="margin-top: 14px;">
+            <input type="checkbox" name="setUnderMaintenance" value="true" checked>
+            <span>Chuyển tất cả thiết bị liên quan sang <b>Đang bảo trì</b> (khách không thể sử dụng)</span>
+          </label>
+
+          <div class="field" style="margin-top: var(--space-3);">
+            <label class="field-label" for="bulkManagerNoteInput">Ghi chú chỉ đạo chung cho lễ tân / kỹ thuật (không bắt buộc)</label>
+            <textarea id="bulkManagerNoteInput"
+                      name="managerNote"
+                      class="form-input"
+                      rows="3"
+                      maxlength="500"
+                      placeholder="VD: Duyệt bảo trì dàn máy; kiểm tra vệ sinh và bôi trơn định kỳ..."></textarea>
+            <small class="field-hint">Ghi chú này sẽ được lưu chung vào tất cả các phiếu được duyệt.</small>
+          </div>
+        </div>
+        <div class="gms-modal-footer">
+          <button type="button" class="btn btn-ghost" onclick="closeBulkModal()">Hủy</button>
+          <button type="submit" class="btn btn-primary" id="btnSubmitBulkApprove">
+            <i class="fa-solid fa-check-double"></i> Xác nhận duyệt tất cả
+          </button>
+        </div>
+      </form>
+    </div>
+  </div>
+
+  <script>
+    (function () {
+      var checkAll = document.getElementById('checkAllOpen');
+      var rowCheckboxes = document.querySelectorAll('.row-select-checkbox');
+      var bulkActionBar = document.getElementById('bulkActionBar');
+      var bulkSelectedCount = document.getElementById('bulkSelectedCount');
+      var bulkBtnCount = document.getElementById('bulkBtnCount');
+      var bulkCodesPreview = document.getElementById('bulkCodesPreview');
+      var btnCancelBulk = document.getElementById('btnCancelBulk');
+      var btnTriggerBulkApprove = document.getElementById('btnTriggerBulkApprove');
+
+      var modalBulk = document.getElementById('modalBulkApprove');
+      var bulkRequestIdsHidden = document.getElementById('bulkRequestIdsHidden');
+      var modalSummaryCount = document.getElementById('modalSummaryCount');
+      var modalSummaryTags = document.getElementById('modalSummaryTags');
+
+      function getSelectedCheckboxes() {
+        return Array.from(rowCheckboxes).filter(function (cb) {
+          return cb.checked;
+        });
+      }
+
+      function updateBulkUI() {
+        var selected = getSelectedCheckboxes();
+        var count = selected.length;
+
+        if (count > 0) {
+          bulkActionBar.style.display = 'flex';
+          bulkSelectedCount.textContent = count;
+          bulkBtnCount.textContent = count;
+
+          var codes = selected.map(function (cb) {
+            return cb.getAttribute('data-request-code') || ('#' + cb.value);
+          });
+
+          if (codes.length <= 4) {
+            bulkCodesPreview.textContent = '(' + codes.join(', ') + ')';
+          } else {
+            bulkCodesPreview.textContent = '(' + codes.slice(0, 3).join(', ') + '... +' + (codes.length - 3) + ' đơn khác)';
+          }
+        } else {
+          bulkActionBar.style.display = 'none';
+          bulkCodesPreview.textContent = '';
+        }
+
+        // Sync checkAll state
+        if (rowCheckboxes.length > 0) {
+          var allChecked = Array.from(rowCheckboxes).every(function (cb) {
+            return cb.checked;
+          });
+          checkAll.checked = allChecked;
+          checkAll.indeterminate = count > 0 && !allChecked;
+        }
+      }
+
+      if (checkAll) {
+        checkAll.addEventListener('change', function () {
+          var isChecked = checkAll.checked;
+          rowCheckboxes.forEach(function (cb) {
+            cb.checked = isChecked;
+          });
+          updateBulkUI();
+        });
+      }
+
+      rowCheckboxes.forEach(function (cb) {
+        cb.addEventListener('change', updateBulkUI);
+      });
+
+      if (btnCancelBulk) {
+        btnCancelBulk.addEventListener('click', function () {
+          rowCheckboxes.forEach(function (cb) {
+            cb.checked = false;
+          });
+          if (checkAll) {
+            checkAll.checked = false;
+            checkAll.indeterminate = false;
+          }
+          updateBulkUI();
+        });
+      }
+
+      if (btnTriggerBulkApprove) {
+        btnTriggerBulkApprove.addEventListener('click', function () {
+          var selected = getSelectedCheckboxes();
+          if (selected.length === 0) return;
+
+          var ids = selected.map(function (cb) { return cb.value; });
+          bulkRequestIdsHidden.value = ids.join(',');
+          modalSummaryCount.textContent = selected.length;
+
+          modalSummaryTags.innerHTML = '';
+          selected.forEach(function (cb) {
+            var code = cb.getAttribute('data-request-code') || ('#' + cb.value);
+            var itemCode = cb.getAttribute('data-item-code') || '';
+            var tag = document.createElement('span');
+            tag.className = 'bulk-code-pill';
+            tag.textContent = code + (itemCode ? ' (' + itemCode + ')' : '');
+            modalSummaryTags.appendChild(tag);
+          });
+
+          openBulkModal();
+        });
+      }
+
+      window.closeBulkModal = function () {
+        if (modalBulk) {
+          modalBulk.classList.remove('show');
+        }
+      };
+
+      window.openBulkModal = function () {
+        if (modalBulk) {
+          modalBulk.classList.add('show');
+          var noteInput = document.getElementById('bulkManagerNoteInput');
+          if (noteInput) {
+            noteInput.focus();
+          }
+        }
+      };
+
+      window.addEventListener('keydown', function (e) {
+        if (e.key === 'Escape' && modalBulk && modalBulk.classList.contains('show')) {
+          closeBulkModal();
+        }
+      });
+
+      if (modalBulk) {
+        modalBulk.addEventListener('click', function (e) {
+          if (e.target === modalBulk) {
+            closeBulkModal();
+          }
+        });
+      }
+    })();
+  </script>
 </body>
 </html>
