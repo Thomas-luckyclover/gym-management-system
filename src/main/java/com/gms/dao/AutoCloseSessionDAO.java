@@ -8,6 +8,7 @@ import java.sql.Date;
 import java.sql.PreparedStatement;
 import java.sql.ResultSet;
 import java.sql.SQLException;
+import java.sql.Time;
 import java.sql.Types;
 import java.time.LocalDate;
 import java.util.ArrayList;
@@ -91,6 +92,10 @@ public class AutoCloseSessionDAO {
         String sql = """
                 SELECT s.SessionId, t.SlotDate, pt.SubscriptionType, o.PartnerCustomerId,
                        -- Khách đứng tên: membership, DayPass và bảo lưu tại ngày tập.
+                       t.StartTime, t.EndTime,
+                       CASE WHEN ex.IsClosedAllDay = 1 THEN 1 ELSE 0 END AS GymClosedAllDay,
+                       COALESCE(ex.OpenTime, TRY_CONVERT(time(0), LEFT(cfg.ConfigValue, 5))) AS GymOpenTime,
+                       COALESCE(ex.CloseTime, TRY_CONVERT(time(0), RIGHT(cfg.ConfigValue, 5))) AS GymCloseTime,
                        CASE WHEN EXISTS (
                            SELECT 1 FROM Subscriptions gym
                            WHERE gym.CustomerId = pt.CustomerId
@@ -151,6 +156,8 @@ public class AutoCloseSessionDAO {
                 JOIN TimeSlots t ON t.TimeSlotId = s.TimeSlotId
                 JOIN Subscriptions pt ON pt.SubscriptionId = s.SubscriptionId
                 JOIN Orders o ON o.OrderId = pt.OrderId
+                LEFT JOIN OperatingHourExceptions ex ON ex.ApplyDate = t.SlotDate
+                LEFT JOIN SystemConfigs cfg ON cfg.ConfigKey = 'P-19'
                 WHERE s.SessionId = ?
                   AND s.Status = 'Scheduled'
                   AND t.SlotDate < ?
@@ -191,9 +198,19 @@ public class AutoCloseSessionDAO {
                         resultSet.getBoolean("PartnerHasMembership"),
                         resultSet.getBoolean("PartnerHasDayPass"),
                         resultSet.getBoolean("PartnerFrozen"),
-                        resultSet.getBoolean("HasCheckInOnSessionDate"));
+                        resultSet.getBoolean("HasCheckInOnSessionDate"),
+                        resultSet.getBoolean("GymClosedAllDay"),
+                        resultSet.getTime("StartTime").toLocalTime(),
+                        resultSet.getTime("EndTime").toLocalTime(),
+                        toLocalTime(resultSet.getTime("GymOpenTime")),
+                        toLocalTime(resultSet.getTime("GymCloseTime")));
             }
         }
+    }
+
+    /** SQL TIME có thể null khi cấu hình P-19 lỗi; để Service xử lý như dữ liệu không hợp lệ. */
+    private static java.time.LocalTime toLocalTime(Time value) {
+        return value == null ? null : value.toLocalTime();
     }
 
 
@@ -209,12 +226,15 @@ public class AutoCloseSessionDAO {
      * @return true = UPDATE đổi đúng 1 buổi; false = buổi không còn Scheduled → Service rollback
      */
     public boolean closeScheduledSession(Connection connection, int sessionId, LocalDate today,
-            Session.Status status, Session.MissedReason missedReason) throws SQLException {
+            Session.Status status, Session.MissedReason missedReason,
+            Session.CancelType cancelType) throws SQLException {
         // B1: WHERE kiểm tra lại Scheduled, tránh ghi đè buổi đã được chốt/hủy.
         String sql = """
                 UPDATE s
                 SET Status = ?,
                     MissedReason = ?,
+                    CancelType = ?,
+                    CommissionAmount = CASE WHEN ? = 'GymClosed' THEN 0 ELSE CommissionAmount END,
                     IsAutoClosed = 1,
                     AttendanceMarkedAt = SYSDATETIME()
                 FROM Sessions s
@@ -234,8 +254,21 @@ public class AutoCloseSessionDAO {
                 statement.setString(2, missedReason.getDbValue());
             }
 
-            statement.setInt(3, sessionId);
-            statement.setDate(4, Date.valueOf(today));
+            if (cancelType == null) {
+                statement.setNull(3, Types.VARCHAR);
+            } else {
+                statement.setString(3, cancelType.getDbValue());
+            }
+
+            // GymClosed không phát sinh hoa hồng; các kết quả khác giữ nguyên giá trị đã chốt.
+            if (cancelType == null) {
+                statement.setNull(4, Types.VARCHAR);
+            } else {
+                statement.setString(4, cancelType.getDbValue());
+            }
+
+            statement.setInt(5, sessionId);
+            statement.setDate(6, Date.valueOf(today));
 
             // B3: trả số dòng đã đổi thành true/false; DAO chưa tự commit transaction.
             return statement.executeUpdate() == 1;
