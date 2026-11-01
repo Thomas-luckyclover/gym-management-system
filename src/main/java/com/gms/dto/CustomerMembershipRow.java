@@ -207,4 +207,30 @@ public class CustomerMembershipRow {
         }
         return "Chưa có gói";
     }
+
+    public Long getDaysRemaining() {
+        if (!hasMembership() || endDate == null) {
+            return null;
+        }
+        LocalDate today = LocalDate.now();
+        try {
+            today = com.gms.util.DateTimeUtil.today();
+        } catch (Throwable ignored) {
+        }
+        return java.time.temporal.ChronoUnit.DAYS.between(today, endDate);
+    }
+
+    public String getDaysRemainingText() {
+        Long days = getDaysRemaining();
+        if (days == null) {
+            return "";
+        }
+        if (days < 0) {
+            return "Đã hết hạn";
+        } else if (days == 0) {
+            return "Hết hạn hôm nay";
+        } else {
+            return "Còn " + days + " ngày";
+        }
+    }
 }

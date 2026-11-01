@@ -324,7 +324,7 @@ public class FreezeRecordDAO {
                   AND s.SubscriptionType = 'Membership'
                   AND pkg.PackageType = 'Membership'
                   AND o.Status != 'Cancelled'
-                  AND s.Status IN ('Active', 'Frozen')
+                  AND (s.Status = 'Frozen' OR (s.Status = 'Active' AND s.EndDate >= CAST(SYSDATETIME() AS DATE)))
                 ORDER BY CASE WHEN s.Status = 'Frozen' THEN 1 WHEN s.Status = 'Active' THEN 2 ELSE 3 END,
                          s.EndDate DESC
                 """;
@@ -554,7 +554,23 @@ public class FreezeRecordDAO {
      * Lấy danh sách các lượt bảo lưu mới nhất của hệ thống có hỗ trợ lọc theo từ khóa (tên, mã khách, SĐT...).
      */
     public List<FreezeRecordItemView> findRecentFreezes(String keyword, int limit) throws SQLException {
+        return findRecentFreezes(keyword, null, limit);
+    }
+
+    /**
+     * Lấy danh sách các lượt bảo lưu có hỗ trợ lọc theo từ khóa và trạng thái bảo lưu.
+     */
+    public List<FreezeRecordItemView> findRecentFreezes(String keyword, String statusFilter, int limit) throws SQLException {
         SearchCondition cond = buildSearchCondition(keyword);
+        String statusSql = "";
+        if ("FROZEN".equalsIgnoreCase(statusFilter)) {
+            statusSql = " AND fr.ActualEndDate IS NULL ";
+        } else if ("CANCELLED".equalsIgnoreCase(statusFilter)) {
+            statusSql = " AND fr.ActualEndDate IS NOT NULL AND fr.ActualEndDate < fr.PlannedEndDate ";
+        } else if ("COMPLETED".equalsIgnoreCase(statusFilter)) {
+            statusSql = " AND fr.ActualEndDate IS NOT NULL AND fr.ActualEndDate >= fr.PlannedEndDate ";
+        }
+
         String sql = """
                 SELECT TOP (?)
                     fr.FreezeRecordId,
@@ -570,7 +586,8 @@ public class FreezeRecordDAO {
                     fr.Reason,
                     empP.FullName AS HandledByEmployeeName,
                     emp.EmployeeCode AS HandledByEmployeeCode,
-                    fr.CreatedAt
+                    fr.CreatedAt,
+                    s.EndDate AS SubscriptionEndDate
                 FROM FreezeRecords fr
                 JOIN Subscriptions s ON s.SubscriptionId = fr.SubscriptionId
                 JOIN Customers c ON c.CustomerId = s.CustomerId
@@ -582,6 +599,7 @@ public class FreezeRecordDAO {
                 WHERE c.DeletedAt IS NULL
                 """
                 + (cond != null ? " AND " + cond.sqlCondition + " " : "")
+                + statusSql
                 + """
                 ORDER BY fr.CreatedAt DESC
                 """;
@@ -629,7 +647,8 @@ public class FreezeRecordDAO {
                     fr.Reason,
                     empP.FullName AS HandledByEmployeeName,
                     emp.EmployeeCode AS HandledByEmployeeCode,
-                    fr.CreatedAt
+                    fr.CreatedAt,
+                    s.EndDate AS SubscriptionEndDate
                 FROM FreezeRecords fr
                 JOIN Subscriptions s ON s.SubscriptionId = fr.SubscriptionId
                 JOIN Customers c ON c.CustomerId = s.CustomerId
@@ -678,29 +697,48 @@ public class FreezeRecordDAO {
         boolean startsWithKh = upper.startsWith("KH");
 
         List<String> params = new ArrayList<>();
-        String namePattern = SqlUtil.toContainsPattern(trimmed);
+        String escaped = escapeLike(trimmed);
+        String startsWithPattern = escaped + "%";
+        String wordBoundaryPattern = "% " + escaped + "%";
 
         if (startsWithKh) {
             // Khách nhập mã hội viên (ví dụ KH-1001, KH-20,...) hoặc tên bắt đầu bằng Kh
-            String sql = "(p.FullName COLLATE Latin1_General_100_CI_AI LIKE ? ESCAPE '\\' OR c.CustomerCode LIKE ?)";
-            params.add(namePattern);
+            String sql = "((p.FullName COLLATE Latin1_General_100_CI_AI LIKE ? ESCAPE '\\' OR p.FullName COLLATE Latin1_General_100_CI_AI LIKE ? ESCAPE '\\') OR c.CustomerCode LIKE ?)";
+            params.add(startsWithPattern);
+            params.add(wordBoundaryPattern);
             params.add("%" + trimmed + "%");
             return new SearchCondition(sql, params);
         } else if (isNumeric) {
             // Khách nhập số điện thoại hoặc đuôi số mã hội viên (ví dụ 0901234504, 2038,...)
-            String sql = "(p.FullName COLLATE Latin1_General_100_CI_AI LIKE ? ESCAPE '\\' OR c.CustomerCode LIKE ? OR p.Phone LIKE ?)";
-            params.add(namePattern);
+            String sql = "((p.FullName COLLATE Latin1_General_100_CI_AI LIKE ? ESCAPE '\\' OR p.FullName COLLATE Latin1_General_100_CI_AI LIKE ? ESCAPE '\\') OR c.CustomerCode LIKE ? OR p.Phone LIKE ?)";
+            params.add(startsWithPattern);
+            params.add(wordBoundaryPattern);
             params.add("%" + trimmed + "%");
             params.add("%" + trimmed + "%");
             return new SearchCondition(sql, params);
         } else {
             // Khách nhập chữ cái/tên thông thường (ví dụ 'h', 'an', 'long', 'hồng',...)
-            // TUYỆT ĐỐI KHÔNG tìm kiếm 'c.CustomerCode LIKE %h%' vì mã khách hàng luôn bắt đầu bằng 'KH-',
-            // chứa chữ 'H' và 'K', dẫn đến LIKE '%h%' khớp 100% tất cả khách hàng trong phòng gym.
-            String sql = "(p.FullName COLLATE Latin1_General_100_CI_AI LIKE ? ESCAPE '\\')";
-            params.add(namePattern);
+            // Tìm theo đầu họ tên hoặc đầu từng từ sau dấu cách để 'hồng' không bị khớp nhầm vào 'phong'
+            String sql = "(p.FullName COLLATE Latin1_General_100_CI_AI LIKE ? ESCAPE '\\' OR p.FullName COLLATE Latin1_General_100_CI_AI LIKE ? ESCAPE '\\')";
+            params.add(startsWithPattern);
+            params.add(wordBoundaryPattern);
             return new SearchCondition(sql, params);
         }
+    }
+
+    private String escapeLike(String text) {
+        if (text == null) {
+            return "";
+        }
+        StringBuilder sb = new StringBuilder();
+        for (int i = 0; i < text.length(); i++) {
+            char c = text.charAt(i);
+            if (c == '%' || c == '_' || c == '[' || c == '\\') {
+                sb.append('\\');
+            }
+            sb.append(c);
+        }
+        return sb.toString();
     }
 
     private String buildFilterCondition(String filter) {
@@ -728,7 +766,7 @@ public class FreezeRecordDAO {
                 SELECT COUNT(*)
                 FROM Customers c
                 JOIN Persons p ON p.PersonId = c.PersonId
-                OUTER APPLY (
+                CROSS APPLY (
                     SELECT TOP 1 sub.*, o.PackageId
                     FROM Subscriptions sub
                     JOIN Orders o ON o.OrderId = sub.OrderId
@@ -737,6 +775,7 @@ public class FreezeRecordDAO {
                       AND sub.SubscriptionType = 'Membership'
                       AND pkg.PackageType = 'Membership'
                       AND o.Status != 'Cancelled'
+                      AND (sub.Status = 'Frozen' OR (sub.Status = 'Active' AND sub.EndDate >= CAST(SYSDATETIME() AS DATE)))
                     ORDER BY 
                         CASE sub.Status WHEN 'Frozen' THEN 1 WHEN 'Active' THEN 2 ELSE 3 END,
                         sub.EndDate DESC
@@ -796,7 +835,7 @@ public class FreezeRecordDAO {
                     openFr.PlannedEndDate AS OpenFreezeEnd
                 FROM Customers c
                 JOIN Persons p ON p.PersonId = c.PersonId
-                OUTER APPLY (
+                CROSS APPLY (
                     SELECT TOP 1 sub.*, o.PackageId
                     FROM Subscriptions sub
                     JOIN Orders o ON o.OrderId = sub.OrderId
@@ -805,6 +844,7 @@ public class FreezeRecordDAO {
                       AND sub.SubscriptionType = 'Membership'
                       AND pkg.PackageType = 'Membership'
                       AND o.Status != 'Cancelled'
+                      AND (sub.Status = 'Frozen' OR (sub.Status = 'Active' AND sub.EndDate >= CAST(SYSDATETIME() AS DATE)))
                     ORDER BY 
                         CASE sub.Status WHEN 'Frozen' THEN 1 WHEN 'Active' THEN 2 ELSE 3 END,
                         sub.EndDate DESC
@@ -933,7 +973,23 @@ public class FreezeRecordDAO {
 
         String empName = rs.getString("HandledByEmployeeName");
         String empCode = rs.getString("HandledByEmployeeCode");
-        item.setHandledByEmployeeName(empCode + " - " + empName);
+        item.setHandledByEmployeeName(empName);
+        item.setHandledByEmployeeCode(empCode);
+
+        Date subEndD = null;
+        try {
+            subEndD = rs.getDate("SubscriptionEndDate");
+        } catch (SQLException ignored) {
+        }
+        if (subEndD != null) {
+            LocalDate subEndDate = subEndD.toLocalDate();
+            if (actual == null) {
+                long plannedDays = ChronoUnit.DAYS.between(start, planned) + 1;
+                item.setNewEndDate(subEndDate.plusDays(Math.max(0, plannedDays)));
+            } else {
+                item.setNewEndDate(subEndDate);
+            }
+        }
 
         Timestamp ts = rs.getTimestamp("CreatedAt");
         item.setCreatedAt(ts != null ? ts.toLocalDateTime() : null);
