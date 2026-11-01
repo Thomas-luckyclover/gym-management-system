@@ -7,7 +7,7 @@
   const desc = document.getElementById('mtDesc');
 
   /* mở từ nút "Báo hỏng" ở danh mục thì chọn sẵn thiết bị */
-  const preset = new URLSearchParams(location.search).get('tb');
+  const preset = (new URLSearchParams(location.search).get('tb') || '').split(',')[0];
   if (preset && [...eq.options].some(o => o.value === preset)) eq.value = preset;
 
   form.addEventListener('submit', e => {
@@ -73,6 +73,8 @@
   /* ---------- bộ lọc ---------- */
   const q = document.getElementById('mtq');
   const st = document.getElementById('mtSt');
+  const priF = document.getElementById('mtPriF');
+  const priOf = row => row.querySelector('.fa-flag')?.parentElement.textContent.trim();
 
   const list = makeList({
     listSel: '#mtList',
@@ -80,12 +82,13 @@
     unit: 'yêu cầu',
     matcher(row) {
       return viKey(row.dataset.q).includes(viKey(q.value.trim()))
-        && (st.value === 'all' || row.dataset.st === st.value);
+        && (st.value === 'all' || row.dataset.st === st.value)
+        && (priF.value === 'all' || priOf(row) === priF.value);
     },
   });
-  [q, st].forEach(el => el.addEventListener('input', list.reset));
+  [q, st, priF].forEach(el => el.addEventListener('input', list.reset));
   document.getElementById('mtReset').addEventListener('click', () => {
-    q.value = ''; st.value = 'all';
+    q.value = ''; st.value = 'all'; priF.value = 'all';
     list.reset();
   });
   list.render();

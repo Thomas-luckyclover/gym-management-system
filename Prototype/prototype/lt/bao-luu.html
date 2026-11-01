@@ -32,11 +32,12 @@
         <a href="hoi-vien.html"><i class="fa-solid fa-user-group"></i>Hồ sơ khách</a>
         <a href="bao-luu.html" aria-current="page"><i class="fa-solid fa-circle-pause"></i>Bảo lưu</a>
         <h4>Cơ sở vật chất</h4>
-        <a href="co-so-vat-chat.html"><i class="fa-solid fa-boxes-stacked"></i>Danh mục</a>
+        <a href="co-so-vat-chat.html"><i class="fa-solid fa-boxes-stacked"></i>Báo hỏng thiết bị</a>
         <a href="bao-tri.html"><i class="fa-solid fa-screwdriver-wrench"></i>Yêu cầu bảo trì</a>
         <h4>Cá nhân</h4>
         <a href="nghi-phep.html"><i class="fa-solid fa-plane-departure"></i>Nghỉ phép</a>
         <a href="tai-khoan.html"><i class="fa-solid fa-user-gear"></i>Cài đặt tài khoản</a>
+        <a href="../chon-vai-tro.html"><i class="fa-solid fa-repeat"></i>Đổi vai trò</a>
       </nav>
       <div class="cust-sidebar-foot">
         <a href="../dang-nhap.html"><i class="fa-solid fa-arrow-right-from-bracket"></i>Đăng xuất</a>
@@ -70,18 +71,18 @@
         <div class="col-main">
           <section class="panel">
             <div class="panel-head">
-              <div><h2>Thông tin bảo lưu</h2><p>Miễn phí · tối đa 30 ngày · mỗi gói dùng được một lần.</p></div>
+              <div><h2>Thiết lập thời gian bảo lưu</h2><p>Miễn phí · tối đa 1 tháng · mỗi gói dùng được một lần.</p></div>
             </div>
             <form id="fzForm" novalidate>
               <label class="field">
-                <span class="field-label">Khách</span>
+                <span class="field-label">Hội viên *</span>
                 <select id="fzCust">
                   <option value="">Chọn khách…</option>
                   <option value="KH-1001">KH-1001 · Trần Bảo Ngọc</option>
                   <option value="KH-1002">KH-1002 · Lê Minh Tuấn</option>
-                  <option value="KH-1003">KH-1003 · Phạm Thu Trang</option>
+                  <option value="KH-1003">KH-1003 · Phạm Minh Châu</option>
                   <option value="KH-1004">KH-1004 · Đỗ Văn Khang</option>
-                  <option value="KH-1005">KH-1005 · Vũ Hải Nam</option>
+                  <option value="KH-1005">KH-1005 · Vũ Hoài Nam</option>
                   <option value="KH-1006">KH-1006 · Ngô Thị Lan</option>
                   <option value="KH-1008">KH-1008 · Bùi Thanh Hà</option>
                   <option value="KH-1009">KH-1009 · Trịnh Quốc Bảo</option>
@@ -96,24 +97,24 @@
               </div>
 
               <div class="form-grid">
-                <label class="field"><span class="field-label">Ngày bắt đầu</span>
+                <label class="field"><span class="field-label">Ngày bắt đầu *</span>
                   <input id="fzStart" type="date" value="2026-09-21" min="2026-09-21">
                   <span class="field-error" id="fzStartErr" hidden></span></label>
-                <label class="field"><span class="field-label">Ngày kết thúc</span>
+                <label class="field"><span class="field-label">Ngày kết thúc dự kiến *</span>
                   <input id="fzEnd" type="date" value="2026-10-20">
-                  <span class="field-hint"><i class="fa-solid fa-circle-info"></i><span id="fzDays">30 ngày — chạm trần cho phép.</span></span>
+                  <span class="field-hint"><i class="fa-solid fa-circle-info"></i><span id="fzDays">Chọn ngày bắt đầu và ngày kết thúc.</span></span>
                   <span class="field-error" id="fzEndErr" hidden></span></label>
               </div>
 
               <label class="field">
-                <span class="field-label">Lý do</span>
-                <textarea id="fzReason" rows="3" placeholder="Đi công tác, chấn thương, về quê dài ngày…"></textarea>
+                <span class="field-label">Lý do bảo lưu *</span>
+                <textarea id="fzReason" rows="3" minlength="5" maxlength="500" placeholder="Nhập lý do bảo lưu (ví dụ: công tác, chấn thương... tối thiểu 5 ký tự)"></textarea>
                 <span class="field-error" id="fzReasonErr" hidden></span>
               </label>
 
               <div class="alert-banner warn" id="fzClash" hidden>
                 <i class="fa-solid fa-triangle-exclamation"></i>
-                <span><b>Có buổi PT nằm trong khoảng bảo lưu.</b> Các buổi dưới đây sẽ bị huỷ và hoàn lại vào số buổi còn lại của khách.
+                <span><b>Có buổi PT nằm trong khoảng bảo lưu.</b> Các buổi dưới đây chuyển thành Vắng (gói đang bảo lưu): vẫn tính là đã dùng, không hoàn lại. Khung của PT trở lại Còn trống.
                   <span class="clash-list" id="fzClashList"></span>
                 </span>
               </div>
