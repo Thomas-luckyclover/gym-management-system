@@ -586,7 +586,8 @@ public class FreezeRecordDAO {
                     fr.Reason,
                     empP.FullName AS HandledByEmployeeName,
                     emp.EmployeeCode AS HandledByEmployeeCode,
-                    fr.CreatedAt
+                    fr.CreatedAt,
+                    s.EndDate AS SubscriptionEndDate
                 FROM FreezeRecords fr
                 JOIN Subscriptions s ON s.SubscriptionId = fr.SubscriptionId
                 JOIN Customers c ON c.CustomerId = s.CustomerId
@@ -646,7 +647,8 @@ public class FreezeRecordDAO {
                     fr.Reason,
                     empP.FullName AS HandledByEmployeeName,
                     emp.EmployeeCode AS HandledByEmployeeCode,
-                    fr.CreatedAt
+                    fr.CreatedAt,
+                    s.EndDate AS SubscriptionEndDate
                 FROM FreezeRecords fr
                 JOIN Subscriptions s ON s.SubscriptionId = fr.SubscriptionId
                 JOIN Customers c ON c.CustomerId = s.CustomerId
@@ -971,7 +973,23 @@ public class FreezeRecordDAO {
 
         String empName = rs.getString("HandledByEmployeeName");
         String empCode = rs.getString("HandledByEmployeeCode");
-        item.setHandledByEmployeeName(empCode + " - " + empName);
+        item.setHandledByEmployeeName(empName);
+        item.setHandledByEmployeeCode(empCode);
+
+        Date subEndD = null;
+        try {
+            subEndD = rs.getDate("SubscriptionEndDate");
+        } catch (SQLException ignored) {
+        }
+        if (subEndD != null) {
+            LocalDate subEndDate = subEndD.toLocalDate();
+            if (actual == null) {
+                long plannedDays = ChronoUnit.DAYS.between(start, planned) + 1;
+                item.setNewEndDate(subEndDate.plusDays(Math.max(0, plannedDays)));
+            } else {
+                item.setNewEndDate(subEndDate);
+            }
+        }
 
         Timestamp ts = rs.getTimestamp("CreatedAt");
         item.setCreatedAt(ts != null ? ts.toLocalDateTime() : null);

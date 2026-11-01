@@ -16,7 +16,7 @@
     <%@ include file="/WEB-INF/jsp/common/head.jspf" %>
     <title>Bảo lưu gói tập · Super Gym Lễ tân</title>
     <link rel="stylesheet" href="${pageContext.request.contextPath}/css/pages/receptionist/customer-list.css?v=20261031-fixed-page">
-    <link rel="stylesheet" href="${pageContext.request.contextPath}/css/pages/receptionist/freeze-membership.css?v=20261101_v31">
+    <link rel="stylesheet" href="${pageContext.request.contextPath}/css/pages/receptionist/freeze-membership.css?v=20261101_v33">
     <link rel="stylesheet" href="${pageContext.request.contextPath}/css/pages/auth/notification-bell.css">
     <script src="${pageContext.request.contextPath}/js/pages/receptionist/freeze-membership.js?v=20261101_v23" defer></script>
     <script src="${pageContext.request.contextPath}/js/pages/auth/notification-bell.js" defer></script>
@@ -318,7 +318,7 @@
                                                     · <span class="badge badge-info">${item.daysFrozen} ngày</span>
                                                 </div>
                                                 <div class="sub-line">Lý do: <c:out value="${item.reason}" /></div>
-                                                <div class="staff-line">Lễ tân tiếp nhận: <c:out value="${item.handledByEmployeeName}" /></div>
+                                                <div class="staff-line">Lễ tân tiếp nhận: <b><c:out value="${item.handledByEmployeeName}" /></b> <c:if test="${not empty item.handledByEmployeeCode}">(<c:out value="${item.handledByEmployeeCode}" />)</c:if></div>
                                             </div>
                                             <div class="history-item-status">
                                                 <span class="badge ${item.statusBadgeClass}"><c:out value="${item.statusLabel}" /></span>
@@ -735,13 +735,13 @@
                         <table class="bf07-table">
                             <thead>
                                 <tr>
-                                    <th style="width: 20%;">Hội viên</th>
-                                    <th style="width: 12%;">Gói tập</th>
-                                    <th style="width: 15%;">Thời gian bảo lưu</th>
-                                    <th style="width: 9%; text-align: center;">Số ngày</th>
-                                    <th style="width: 13%; text-align: center;">Trạng thái</th>
-                                    <th style="width: 12%; text-align: center;">Lý do bảo lưu</th>
-                                    <th style="width: 19%;">Lễ tân tiếp nhận</th>
+                                    <th style="width: 19%;">Hội viên</th>
+                                    <th style="width: 15%;">Gói tập</th>
+                                    <th style="width: 17%;">Thời gian bảo lưu</th>
+                                    <th style="width: 11%; text-align: center;">Hạn mới</th>
+                                    <th style="width: 11%; text-align: center;">Trạng thái</th>
+                                    <th style="width: 10%; text-align: center;">Lý do bảo lưu</th>
+                                    <th style="width: 17%;">Lễ tân tiếp nhận</th>
                                 </tr>
                             </thead>
                             <tbody>
@@ -761,9 +761,11 @@
                                                     </div>
                                                 </td>
                                                 <td>
-                                                    <span class="pkg-name">
-                                                        <i class="fa-solid fa-box-archive text-warning"></i> <c:out value="${item.packageName}" />
-                                                    </span>
+                                                    <div class="gym-pkg-cell">
+                                                        <span class="pkg-name">
+                                                            <i class="fa-solid fa-box-archive text-warning"></i> <c:out value="${item.packageName}" />
+                                                        </span>
+                                                    </div>
                                                 </td>
                                                 <td>
                                                     <div class="gym-dates-cell">
@@ -778,10 +780,16 @@
                                                                 </c:otherwise>
                                                             </c:choose>
                                                         </div>
+                                                        <div class="gym-history-days" style="margin-top: 3px;">
+                                                            <span class="badge badge-info">${item.daysFrozen} ngày</span>
+                                                        </div>
                                                     </div>
                                                 </td>
-                                                <td class="gym-days-cell" style="text-align: center;">
-                                                    <b>${item.daysFrozen} ngày</b>
+                                                <td class="gym-new-date-cell" style="text-align: center;">
+                                                    <b class="text-success"><c:out value="${gms:formatDate(item.newEndDate)}" default="--" /></b>
+                                                    <c:if test="${empty item.actualEndDate and not empty item.newEndDate}">
+                                                        <div class="text-soft" style="font-size: 11px;">(Dự kiến)</div>
+                                                    </c:if>
                                                 </td>
                                                 <td class="gym-status-cell" style="text-align: center;">
                                                     <span class="badge ${item.statusBadgeClass}"><c:out value="${item.statusLabel}" /></span>
@@ -795,7 +803,10 @@
                                                 <td class="gym-staff-cell">
                                                     <div class="gym-staff-info">
                                                         <i class="fa-solid fa-user-tie"></i>
-                                                        <span><c:out value="${item.handledByEmployeeName}" /></span>
+                                                        <div>
+                                                            <div class="staff-name"><c:out value="${item.handledByEmployeeName}" /></div>
+                                                            <div class="staff-code"><c:out value="${item.handledByEmployeeCode}" /></div>
+                                                        </div>
                                                     </div>
                                                 </td>
                                             </tr>

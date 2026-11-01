@@ -1164,6 +1164,7 @@
   overflow: hidden;
 }
 
+.pkg-name,
 .gym-pkg-cell .pkg-name {
   font-weight: var(--font-weight-semibold);
   font-size: var(--font-size-sm);
@@ -1171,7 +1172,7 @@
   display: inline-flex;
   align-items: center;
   gap: var(--space-2);
-  white-space: nowrap;
+  white-space: nowrap !important;
   overflow: hidden;
   text-overflow: ellipsis;
 }
@@ -1649,6 +1650,21 @@
   color: var(--color-success-ink);
 }
 
+/* Badge trạng thái hết lượt / từ chối trong bảng (đồng bộ góc bo, cỡ chữ, độ tương phản với badge-warning và badge-ok) */
+.bf07-table .badge-danger,
+.gym-status-cell .badge-danger {
+  background: var(--color-danger-tint) !important;
+  border: var(--border-width) solid var(--color-danger-border) !important;
+  color: var(--color-danger-ink) !important;
+  font-size: var(--font-size-xs) !important;
+  font-weight: var(--font-weight-semibold) !important;
+  border-radius: var(--arena-radius-chip, 2px) !important;
+  padding: var(--space-1) var(--space-2-5) !important;
+  display: inline-flex !important;
+  align-items: center !important;
+  gap: var(--space-1-5) !important;
+}
+
 /* Ô số ngày: Chữ màu đen/chuẩn như cột Thời gian bảo lưu, căn giữa */
 .gym-days-cell {
   text-align: center;
@@ -1671,6 +1687,19 @@
   padding: 10px 16px;
 }
 
+/* Ô hạn mới sau bảo lưu (chữ màu xanh nổi bật) */
+.gym-new-date-cell {
+  text-align: center;
+  vertical-align: middle;
+  white-space: nowrap;
+}
+
+.gym-new-date-cell .text-success {
+  color: #34d399 !important;
+  font-weight: 600;
+  font-size: var(--font-size-sm, 14px);
+}
+
 /* Ô lễ tân tiếp nhận: Luôn hiển thị đầy đủ, không bị khuất hay cắt chữ */
 .gym-staff-cell {
   vertical-align: middle;
@@ -1679,17 +1708,28 @@
 .gym-staff-info {
   display: inline-flex;
   align-items: center;
-  gap: 6px;
-  font-size: var(--font-size-xs);
-  color: var(--color-text-soft);
+  gap: 8px;
   line-height: 1.4;
   word-break: break-word;
 }
 
 .gym-staff-info i {
   color: var(--color-primary);
-  font-size: 12px;
+  font-size: 14px;
   flex-shrink: 0;
+}
+
+.gym-staff-info .staff-name {
+  font-weight: var(--font-weight-medium, 500);
+  color: var(--color-text);
+  font-size: var(--font-size-sm, 14px);
+  line-height: 1.3;
+}
+
+.gym-staff-info .staff-code {
+  font-size: var(--font-size-xs, 12px);
+  color: var(--color-text-soft);
+  line-height: 1.3;
 }
 
 /* Header & Cell bổ sung cho lưới GymMaster chuyên nghiệp */
