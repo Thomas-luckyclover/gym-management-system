@@ -1,0 +1,2113 @@
+[
+ {
+  "no": 1,
+  "file": "dang-nhap.html",
+  "status": "coded",
+  "blocks": [
+   "Đăng nhập",
+   "Chưa thể đăng nhập",
+   "Tài khoản tạm khoá"
+  ],
+  "fields": [
+   "Email hoặc số điện thoại",
+   "Mật khẩu"
+  ],
+  "columns": [],
+  "actions": [
+   "Đăng nhập",
+   "Quên mật khẩu?",
+   "Đăng ký",
+   "Đặt mật khẩu",
+   "Thử lại",
+   "Quay lại"
+  ],
+  "states": [
+   "Chưa có tài khoản?"
+  ]
+ },
+ {
+  "no": 2,
+  "file": "dang-ky.html",
+  "status": "coded",
+  "blocks": [
+   "Tạo tài khoản",
+   "Kích hoạt hồ sơ",
+   "Đặt mật khẩu",
+   "Nhập mã xác thực",
+   "Không tạo được tài khoản",
+   "Email không khớp hồ sơ",
+   "Cần bổ sung thông tin tại quầy",
+   "Tạo tài khoản thành công"
+  ],
+  "fields": [
+   "Số điện thoại",
+   "Email",
+   "Mật khẩu",
+   "Xác nhận mật khẩu",
+   "Họ và tên",
+   "Ngày sinh",
+   "Email đã đăng ký tại quầy",
+   "Mật khẩu mới",
+   "Mã xác thực (6 số)"
+  ],
+  "columns": [],
+  "actions": [
+   "Tiếp tục",
+   "Tạo tài khoản",
+   "Xác thực",
+   "Gửi lại mã",
+   "Đăng nhập ngay"
+  ],
+  "states": [
+   "Số điện thoại này đã có tài khoản",
+   "Đã gửi mã xác thực tới"
+  ]
+ },
+ {
+  "no": 3,
+  "file": "quen-mat-khau.html",
+  "status": "coded",
+  "blocks": [
+   "Quên mật khẩu",
+   "Nhập mã khôi phục",
+   "Đặt mật khẩu mới",
+   "Đổi mật khẩu thành công"
+  ],
+  "fields": [
+   "Email",
+   "Mã khôi phục (6 số)",
+   "Mật khẩu mới",
+   "Nhập lại mật khẩu mới"
+  ],
+  "columns": [],
+  "actions": [
+   "Gửi mã khôi phục",
+   "Xác nhận mã",
+   "Gửi lại mã",
+   "Đổi mật khẩu",
+   "Về trang đăng nhập"
+  ],
+  "states": []
+ },
+ {
+  "no": 4,
+  "file": "Admin/gms_admin_mockup_v24.html",
+  "status": "coded",
+  "note": "Account Settings, khối Admin",
+  "blocks": [
+   "Hồ sơ",
+   "Ảnh đại diện",
+   "Email và số điện thoại",
+   "Đổi mật khẩu"
+  ],
+  "fields": [
+   "Họ và tên",
+   "Mã nhân viên",
+   "Vai trò",
+   "Email",
+   "Số điện thoại",
+   "Mã xác thực",
+   "Mật khẩu hiện tại",
+   "Mật khẩu mới",
+   "Nhập lại mật khẩu mới"
+  ],
+  "columns": [],
+  "actions": [
+   "Tải ảnh lên",
+   "Gỡ ảnh",
+   "Gửi mã xác thực",
+   "Xác nhận thay đổi",
+   "Đổi mật khẩu",
+   "Đổi vai trò"
+  ],
+  "states": []
+ },
+ {
+  "no": 4,
+  "file": "Manager/gms_manager_mockup_v24.html",
+  "status": "uncoded",
+  "blocks": [
+   "Thông tin nhân sự",
+   "Hồ sơ",
+   "Đổi mật khẩu"
+  ],
+  "fields": [
+   "Mã nhân viên",
+   "Email",
+   "Số điện thoại",
+   "Mật khẩu hiện tại",
+   "Mật khẩu mới",
+   "Nhập lại mật khẩu mới"
+  ],
+  "columns": [],
+  "actions": [
+   "Đổi ảnh",
+   "Gỡ ảnh",
+   "Lưu thay đổi",
+   "Đổi mật khẩu",
+   "Đổi vai trò"
+  ],
+  "states": [
+   "Đổi mật khẩu thành công"
+  ]
+ },
+ {
+  "no": 4,
+  "file": "kh/tai-khoan.html",
+  "status": "coded",
+  "blocks": [
+   "Thông tin cá nhân",
+   "Xác thực thay đổi",
+   "Thông tin khách hàng",
+   "Đổi mật khẩu",
+   "Hồ sơ phụ thuộc"
+  ],
+  "fields": [
+   "Họ và tên",
+   "Ngày sinh",
+   "Địa chỉ email",
+   "Số điện thoại",
+   "Mã xác thực (6 chữ số)",
+   "Mã khách hàng",
+   "Loại khách hàng",
+   "Trạng thái hội viên",
+   "Ngày tham gia",
+   "Mật khẩu hiện tại",
+   "Mật khẩu mới",
+   "Xác nhận mật khẩu mới"
+  ],
+  "columns": [],
+  "actions": [
+   "Hồ sơ",
+   "Mật khẩu",
+   "Đổi email",
+   "Đổi số điện thoại",
+   "Xác nhận email",
+   "Gửi lại mã",
+   "Hủy",
+   "Chọn ảnh",
+   "Lưu ảnh",
+   "Xóa ảnh",
+   "Đổi mật khẩu"
+  ],
+  "states": [
+   "Mã còn hiệu lực:",
+   "Mã xác thực đã hết hạn. Vui lòng gửi lại mã mới."
+  ]
+ },
+ {
+  "no": 5,
+  "file": "index.html",
+  "status": "coded",
+  "blocks": [
+   "Mọi thứ bạn cần để",
+   "Chọn gói phù hợp với",
+   "Huấn luyện cùng",
+   "Huấn luyện viên của Super Gym",
+   "Bài viết mới nhất",
+   "Câu hỏi thường gặp"
+  ],
+  "fields": [],
+  "columns": [],
+  "actions": [
+   "Đăng ký gói này",
+   "Giới thiệu"
+  ],
+  "states": [
+   "Gói Ngày",
+   "Gói 1 Tháng",
+   "Gói 3 Tháng",
+   "Gói 6 Tháng",
+   "Gói 12 Tháng",
+   "Mở Thư viện bài tập",
+   "05:30 – 22:00"
+  ]
+ },
+ {
+  "no": 6,
+  "file": "blog.html",
+  "status": "coded",
+  "blocks": [
+   "Tập luyện."
+  ],
+  "fields": [
+   "Tìm bài viết…"
+  ],
+  "columns": [],
+  "actions": [
+   "Tất cả",
+   "Tập luyện",
+   "Dinh dưỡng",
+   "Tin tức"
+  ],
+  "states": []
+ },
+ {
+  "no": 7,
+  "file": "blog/an-gi-truoc-sau-buoi-tap.html",
+  "status": "coded",
+  "blocks": [
+   "Đọc tiếp"
+  ],
+  "fields": [],
+  "columns": [],
+  "actions": [
+   "Quay lại danh sách"
+  ],
+  "states": []
+ },
+ {
+  "no": 8,
+  "file": "Admin/gms_admin_mockup_v24.html",
+  "status": "uncoded",
+  "blocks": [
+   "Danh sách tài khoản hệ thống"
+  ],
+  "fields": [
+   "Tìm theo tên, email hoặc số điện thoại",
+   "Tất cả vai trò",
+   "Tất cả trạng thái",
+   "Ưu tiên theo cấp bậc"
+  ],
+  "columns": [
+   "Tài khoản",
+   "Vai trò",
+   "SĐT",
+   "Trạng thái",
+   "Đăng nhập gần nhất"
+  ],
+  "actions": [
+   "Thêm tài khoản",
+   "Xuất Excel",
+   "Xem"
+  ],
+  "states": [
+   "Hoạt động",
+   "Đã khóa",
+   "Ngừng hoạt động",
+   "Không có tài khoản khớp bộ lọc"
+  ]
+ },
+ {
+  "no": 9,
+  "file": "Admin/gms_admin_mockup_v24.html",
+  "status": "uncoded",
+  "blocks": [
+   "Thêm tài khoản",
+   "Thông tin tài khoản",
+   "Sau khi tạo"
+  ],
+  "fields": [
+   "Họ và tên",
+   "Email",
+   "Số điện thoại",
+   "Vai trò"
+  ],
+  "columns": [],
+  "actions": [
+   "Tạo tài khoản",
+   "Hủy"
+  ],
+  "states": [
+   "Nhập họ và tên.",
+   "Email phải có dạng ten@tenmien.",
+   "SĐT phải gồm 10 chữ số"
+  ]
+ },
+ {
+  "no": 10,
+  "file": "Admin/gms_admin_mockup_v24.html",
+  "status": "uncoded",
+  "blocks": [
+   "Thông tin tài khoản",
+   "Trạng thái & quyền",
+   "Hoạt động gần đây"
+  ],
+  "fields": [
+   "Họ và tên",
+   "Email",
+   "Số điện thoại",
+   "Vai trò"
+  ],
+  "columns": [],
+  "actions": [
+   "Sửa thông tin",
+   "Lưu thay đổi",
+   "Khóa tài khoản",
+   "Mở khóa tài khoản",
+   "Vô hiệu hóa (nghỉ việc)"
+  ],
+  "states": [
+   "Admin cuối cùng còn hoạt động",
+   "Tài khoản đang bị khóa",
+   "Ngừng hoạt động"
+  ]
+ },
+ {
+  "no": 11,
+  "file": "Admin/gms_admin_mockup_v24.html",
+  "status": "uncoded",
+  "blocks": [
+   "Khách đang khóa tạm"
+  ],
+  "fields": [],
+  "columns": [
+   "Tài khoản",
+   "SĐT",
+   "Trạng thái",
+   "Số lần sai",
+   "Tự mở khóa sau"
+  ],
+  "actions": [
+   "Xem",
+   "Quay lại danh sách nhân viên"
+  ],
+  "states": [
+   "Khóa tạm",
+   "Hiện không có tài khoản khách nào đang bị"
+  ]
+ },
+ {
+  "no": 12,
+  "file": "Admin/gms_admin_mockup_v24.html",
+  "status": "uncoded",
+  "blocks": [
+   "Thông tin tài khoản khách",
+   "Quy tắc khóa tạm"
+  ],
+  "fields": [
+   "Email",
+   "SĐT",
+   "Số lần sai liên tiếp"
+  ],
+  "columns": [],
+  "actions": [
+   "Mở khóa ngay"
+  ],
+  "states": [
+   "Đang khóa tạm do nhập sai mật khẩu",
+   "Tự mở khóa lúc",
+   "Tài khoản đã mở khóa"
+  ]
+ },
+ {
+  "no": 13,
+  "file": "Admin/gms_admin_mockup_v24.html",
+  "status": "uncoded",
+  "blocks": [
+   "Audit Log"
+  ],
+  "fields": [
+   "Người thao tác",
+   "Đối tượng",
+   "Từ ngày",
+   "Đến ngày"
+  ],
+  "columns": [],
+  "actions": [],
+  "states": [
+   "Chỉ tra cứu. Bản ghi không sửa, không xóa được.",
+   "Lý do:",
+   "Không có bản ghi nào khớp bộ lọc"
+  ]
+ },
+ {
+  "no": 14,
+  "file": "Manager/gms_manager_mockup_v24.html",
+  "status": "uncoded",
+  "blocks": [
+   "Tham số vận hành"
+  ],
+  "fields": [],
+  "columns": [
+   "Mã",
+   "Tham số",
+   "Giá trị hiện tại"
+  ],
+  "actions": [],
+  "states": [
+   "Thay đổi chỉ áp dụng cho bản ghi tạo mới"
+  ]
+ },
+ {
+  "no": 15,
+  "file": "Manager/gms_manager_mockup_v24.html",
+  "status": "uncoded",
+  "blocks": [
+   "Giá trị hiện tại"
+  ],
+  "fields": [
+   "Giá trị mới"
+  ],
+  "columns": [],
+  "actions": [
+   "Lưu",
+   "Hủy"
+  ],
+  "states": [
+   "Giá trị không hợp lệ"
+  ]
+ },
+ {
+  "no": 16,
+  "file": "Manager/gms_manager_mockup_v24.html",
+  "status": "uncoded",
+  "blocks": [
+   "Giờ mặc định",
+   "Ngày có giờ khác"
+  ],
+  "fields": [
+   "Giờ mở cửa",
+   "Giờ đóng cửa",
+   "Ngày áp dụng",
+   "Đóng cửa cả ngày",
+   "Ghi chú"
+  ],
+  "columns": [
+   "Ngày",
+   "Giờ",
+   "Ghi chú"
+  ],
+  "actions": [
+   "Lưu giờ mặc định",
+   "Thêm ngoại lệ",
+   "Lưu ngoại lệ"
+  ],
+  "states": []
+ },
+ {
+  "no": 17,
+  "file": "Manager/gms_manager_mockup_v24.html",
+  "status": "uncoded",
+  "blocks": [
+   "Danh mục gói"
+  ],
+  "fields": [],
+  "columns": [
+   "Tên gói",
+   "Loại",
+   "Thời hạn",
+   "Giá (gồm VAT)",
+   "Đơn đang chạy",
+   "Thư viện bài tập",
+   "Trạng thái"
+  ],
+  "actions": [
+   "Thêm gói",
+   "Ngừng bán",
+   "Bán lại"
+  ],
+  "states": [
+   "Đang bán",
+   "Ngừng bán"
+  ]
+ },
+ {
+  "no": 18,
+  "file": "Manager/gms_manager_mockup_v24.html",
+  "status": "uncoded",
+  "blocks": [],
+  "fields": [
+   "Tên gói",
+   "Thời hạn",
+   "Giá (đã gồm VAT)",
+   "Mô tả",
+   "Quyền lợi",
+   "Mở Thư viện bài tập cho hội viên"
+  ],
+  "columns": [],
+  "actions": [
+   "Lưu",
+   "Hủy",
+   "Ngừng bán"
+  ],
+  "states": [
+   "Tên gói không được để trống.",
+   "Nhập giá lớn hơn 0."
+  ]
+ },
+ {
+  "no": 19,
+  "file": "Manager/gms_manager_mockup_v24.html",
+  "status": "uncoded",
+  "blocks": [
+   "Danh mục gói"
+  ],
+  "fields": [
+   "Mọi loại gói PT"
+  ],
+  "columns": [
+   "Tên gói",
+   "Loại",
+   "Thời hạn",
+   "Số buổi dự kiến",
+   "Giá (gồm VAT)",
+   "Giá trị 1 buổi",
+   "Trạng thái"
+  ],
+  "actions": [
+   "Thêm gói PT",
+   "Ngừng bán",
+   "Bán lại"
+  ],
+  "states": [
+   "Gói đơn",
+   "Gói couple",
+   "Buổi lẻ"
+  ]
+ },
+ {
+  "no": 20,
+  "file": "Manager/gms_manager_mockup_v24.html",
+  "status": "uncoded",
+  "blocks": [],
+  "fields": [
+   "Tên gói",
+   "Loại",
+   "Thời hạn",
+   "Số buổi dự kiến",
+   "Giá (đã gồm VAT)",
+   "Mô tả",
+   "Quyền lợi"
+  ],
+  "columns": [],
+  "actions": [
+   "Lưu",
+   "Hủy"
+  ],
+  "states": [
+   "Gói buổi lẻ chỉ được sửa"
+  ]
+ },
+ {
+  "no": 21,
+  "file": "Manager/gms_manager_mockup_v24.html",
+  "status": "uncoded",
+  "blocks": [
+   "Voucher"
+  ],
+  "fields": [
+   "Mọi trạng thái",
+   "Mọi phạm vi"
+  ],
+  "columns": [
+   "Mã",
+   "Giảm",
+   "Đã dùng",
+   "Phạm vi",
+   "Hiệu lực",
+   "Trạng thái"
+  ],
+  "actions": [
+   "Thêm voucher",
+   "Vô hiệu hóa",
+   "Xóa"
+  ],
+  "states": [
+   "Đang hoạt động",
+   "Hết hạn",
+   "Hết lượt",
+   "Chưa bắt đầu",
+   "Đã vô hiệu hóa"
+  ]
+ },
+ {
+  "no": 22,
+  "file": "Manager/gms_manager_mockup_v24.html",
+  "status": "uncoded",
+  "blocks": [
+   "Mã & giá trị giảm",
+   "Giới hạn & hiệu lực"
+  ],
+  "fields": [
+   "Mã voucher",
+   "Loại giảm",
+   "Giá trị giảm",
+   "Tổng lượt tối đa",
+   "Số lần mỗi khách",
+   "Giá trị đơn tối thiểu",
+   "Phạm vi",
+   "Hiệu lực từ ngày",
+   "Đến ngày"
+  ],
+  "columns": [],
+  "actions": [
+   "Lưu voucher",
+   "Hủy"
+  ],
+  "states": [
+   "Mã voucher đã tồn tại."
+  ]
+ },
+ {
+  "no": 23,
+  "file": "Manager/gms_manager_mockup_v24.html",
+  "status": "uncoded",
+  "blocks": [
+   "Nhân sự"
+  ],
+  "fields": [
+   "Mọi chức danh",
+   "Mọi trạng thái"
+  ],
+  "columns": [
+   "Mã nhân viên",
+   "Nhân sự",
+   "Chức danh",
+   "SĐT",
+   "Hoa hồng",
+   "Trạng thái"
+  ],
+  "actions": [
+   "Thêm nhân sự"
+  ],
+  "states": [
+   "Đang làm việc",
+   "Đã nghỉ việc"
+  ]
+ },
+ {
+  "no": 24,
+  "file": "Manager/gms_manager_mockup_v24.html",
+  "status": "uncoded",
+  "blocks": [
+   "Tài khoản đăng nhập",
+   "Việc đang treo"
+  ],
+  "fields": [
+   "Mã nhân viên",
+   "Họ và tên",
+   "Ngày sinh",
+   "Chức danh",
+   "SĐT",
+   "Email (dùng để đăng nhập)",
+   "Ngày vào làm",
+   "% hoa hồng"
+  ],
+  "columns": [],
+  "actions": [
+   "Lưu",
+   "Hủy",
+   "Ghi nhận nghỉ việc"
+  ],
+  "states": [
+   "Ngày nghỉ việc",
+   "Lý do nghỉ việc"
+  ]
+ },
+ {
+  "no": 25,
+  "file": "lt/nghi-phep.html",
+  "status": "coded",
+  "blocks": [
+   "Tạo đơn nghỉ phép",
+   "Đơn đã nộp"
+  ],
+  "fields": [
+   "Loại nghỉ",
+   "Ca nghỉ",
+   "Ngày nghỉ",
+   "Đến ngày (bỏ trống nếu nghỉ một ngày)",
+   "Lý do"
+  ],
+  "columns": [],
+  "actions": [
+   "Nộp đơn nghỉ phép",
+   "Rút đơn"
+  ],
+  "states": [
+   "Dự kiến gửi",
+   "Chờ duyệt",
+   "Đã duyệt",
+   "Từ chối",
+   "Tôi đồng ý gửi phần vượt phép thành đơn không lương."
+  ]
+ },
+ {
+  "no": 25,
+  "file": "pt/nghi-phep.html",
+  "status": "coded",
+  "blocks": [
+   "Tạo đơn nghỉ phép",
+   "Dự kiến gửi",
+   "Đơn đã nộp",
+   "Hạn nộp",
+   "Nhân sự còn lại ít nhất nếu duyệt"
+  ],
+  "fields": [
+   "Loại nghỉ",
+   "Ca nghỉ",
+   "Từ ngày",
+   "Đến ngày (bỏ trống nếu nghỉ một ngày)",
+   "Lý do",
+   "Nghỉ phép năm",
+   "Nghỉ không lương",
+   "Cả ngày",
+   "Ca sáng",
+   "Ca chiều"
+  ],
+  "columns": [],
+  "actions": [
+   "Nộp đơn nghỉ phép",
+   "Rút đơn",
+   "Xem lịch dạy",
+   "Xử lý buổi"
+  ],
+  "states": [
+   "Chờ duyệt",
+   "Đã duyệt",
+   "Từ chối",
+   "Lý do từ chối:",
+   "Tôi đồng ý gửi phần vượt phép thành đơn không lương."
+  ]
+ },
+ {
+  "no": 26,
+  "file": "Manager/gms_manager_mockup_v24.html",
+  "status": "coded",
+  "blocks": [
+   "Quản lý đơn nghỉ phép"
+  ],
+  "fields": [
+   "Tên hoặc mã nhân viên",
+   "Chức vụ",
+   "Loại nghỉ"
+  ],
+  "columns": [
+   "Nhân viên",
+   "Ngày nghỉ / Ca",
+   "Loại nghỉ",
+   "Kiểm tra",
+   "Thao tác",
+   "Số đơn"
+  ],
+  "actions": [
+   "Chờ duyệt",
+   "Đã duyệt",
+   "Từ chối",
+   "Tất cả",
+   "Lọc",
+   "Xóa lọc",
+   "Duyệt các đơn đã chọn",
+   "Duyệt",
+   "Xem đơn",
+   "Trang trước",
+   "Trang sau"
+  ],
+  "states": [
+   "Cần duyệt muộn",
+   "Thiếu người",
+   "Đạt"
+  ]
+ },
+ {
+  "no": 27,
+  "file": "Manager/gms_manager_mockup_v24.html",
+  "status": "coded",
+  "blocks": [
+   "Đơn nghỉ phép #",
+   "Điều kiện duyệt",
+   "Kết quả xử lý",
+   "Các đơn cùng đợt nghỉ"
+  ],
+  "fields": [
+   "Thời gian nghỉ",
+   "Ca làm việc",
+   "Loại nghỉ",
+   "Thời điểm gửi đơn",
+   "Lý do xin nghỉ",
+   "Người xử lý",
+   "Thời gian xử lý",
+   "Lý do từ chối"
+  ],
+  "columns": [
+   "Ca trực",
+   "Trước đơn",
+   "Sau duyệt",
+   "Tối thiểu",
+   "Kết quả"
+  ],
+  "actions": [
+   "Duyệt",
+   "Từ chối",
+   "Quay lại danh sách",
+   "Xác nhận duyệt",
+   "Từ chối đơn",
+   "Xác nhận duyệt muộn"
+  ],
+  "states": [
+   "Phê duyệt đơn nghỉ phép",
+   "Từ chối đơn nghỉ phép",
+   "Lý do xác nhận nghỉ thực tế",
+   "Thiếu người"
+  ]
+ },
+ {
+  "no": 28,
+  "file": "lt/hoi-vien.html",
+  "status": "coded",
+  "blocks": [],
+  "fields": [
+   "Tìm hội viên",
+   "Trạng thái hồ sơ",
+   "Gói tập"
+  ],
+  "columns": [
+   "Hội viên",
+   "Liên hệ",
+   "Gói hiện tại",
+   "Trạng thái",
+   "Thao tác"
+  ],
+  "actions": [
+   "Chi tiết",
+   "Xóa",
+   "Xem yêu cầu",
+   "Xóa lọc"
+  ],
+  "states": [
+   "Đang hoạt động",
+   "Đang bảo lưu",
+   "Hết hạn",
+   "Chờ duyệt xoá",
+   "Chưa có gói",
+   "Xóa hồ sơ hội viên",
+   "Lý do xóa *"
+  ]
+ },
+ {
+  "no": 29,
+  "file": "lt/ho-so-khach.html",
+  "status": "coded",
+  "blocks": [
+   "Bước 1 · Kiểm tra số điện thoại",
+   "Thông tin hồ sơ",
+   "Người giám hộ",
+   "Ảnh check-in",
+   "Xóa hồ sơ",
+   "Gói tập và lịch PT"
+  ],
+  "fields": [
+   "Loại hồ sơ",
+   "Họ và tên",
+   "Ngày sinh",
+   "Email",
+   "Số điện thoại giám hộ"
+  ],
+  "columns": [],
+  "actions": [
+   "Kiểm tra",
+   "Tạo hồ sơ",
+   "Mở camera quầy",
+   "Đề nghị xóa hồ sơ"
+  ],
+  "states": [
+   "Số này đã có hồ sơ",
+   "Lý do xóa *"
+  ]
+ },
+ {
+  "no": 30,
+  "file": "Manager/gms_manager_mockup_v24.html",
+  "status": "coded",
+  "blocks": [
+   "Hồ sơ hội viên"
+  ],
+  "fields": [
+   "Tên, mã hội viên, số điện thoại hoặc email",
+   "Trạng thái hồ sơ"
+  ],
+  "columns": [
+   "Hội viên",
+   "Liên hệ",
+   "Gói hiện tại",
+   "Trạng thái",
+   "Thao tác",
+   "Hội viên / Yêu cầu",
+   "Thời điểm gửi",
+   "Lý do yêu cầu"
+  ],
+  "actions": [
+   "Tất cả hồ sơ",
+   "Chờ duyệt xóa",
+   "Tìm"
+  ],
+  "states": [
+   "Chưa có gói",
+   "Hoạt động",
+   "Đang bảo lưu",
+   "Hết hạn",
+   "Ngừng hoạt động",
+   "Chờ duyệt xóa"
+  ]
+ },
+ {
+  "no": 31,
+  "file": "Manager/gms_manager_mockup_v24.html",
+  "status": "coded",
+  "blocks": [
+   "Gói tập và lịch PT"
+  ],
+  "fields": [
+   "Mã khách",
+   "Loại hồ sơ",
+   "Ngày sinh",
+   "Số điện thoại",
+   "Email",
+   "Ngày tham gia"
+  ],
+  "columns": [],
+  "actions": [],
+  "states": [
+   "Buổi PT"
+  ]
+ },
+ {
+  "no": 32,
+  "file": "Manager/gms_manager_mockup_v24.html",
+  "status": "coded",
+  "blocks": [
+   "Yêu cầu xóa hồ sơ",
+   "Gói tập và lịch PT"
+  ],
+  "fields": [
+   "Lý do từ chối"
+  ],
+  "columns": [],
+  "actions": [
+   "Duyệt xóa hồ sơ",
+   "Từ chối",
+   "Xác nhận từ chối",
+   "← Chờ duyệt xóa"
+  ],
+  "states": [
+   "Chờ duyệt",
+   "Từ chối yêu cầu xóa"
+  ]
+ },
+ {
+  "no": 33,
+  "file": "lt/check-in.html",
+  "status": "coded",
+  "blocks": [
+   "Tìm khách",
+   "Kết quả tìm kiếm"
+  ],
+  "fields": [
+   "Nhập mã khách (KH-...), họ tên hoặc 4 số cuối SĐT..."
+  ],
+  "columns": [],
+  "actions": [
+   "Tìm",
+   "Xóa lọc",
+   "Xác nhận vào tập"
+  ],
+  "states": [
+   "Đủ điều kiện vào tập.",
+   "Từ chối vào tập.",
+   "Đang bảo lưu",
+   "Hết hạn"
+  ]
+ },
+ {
+  "no": 34,
+  "file": "lt/bao-luu.html",
+  "status": "coded",
+  "blocks": [
+   "Thiết lập thời gian bảo lưu",
+   "Gói hiện tại",
+   "Quy tắc"
+  ],
+  "fields": [
+   "Hội viên *",
+   "Ngày bắt đầu *",
+   "Ngày kết thúc dự kiến *",
+   "Lý do bảo lưu *"
+  ],
+  "columns": [],
+  "actions": [
+   "Lưu bảo lưu"
+  ],
+  "states": [
+   "Không bảo lưu được."
+  ]
+ },
+ {
+  "no": 35,
+  "file": "kh/mua-goi.html",
+  "js": "kh/mua-goi.js",
+  "status": "coded",
+  "blocks": [
+   "Bộ lọc gói",
+   "Gói Ngày",
+   "Gói 9 Tháng",
+   "Gói PT 1 Tháng"
+  ],
+  "fields": [
+   "Sắp xếp",
+   "Loại gói",
+   "Thời hạn",
+   "Hình thức mua",
+   "Khoảng giá",
+   "Giá từ",
+   "Giá đến"
+  ],
+  "columns": [],
+  "actions": [
+   "Chọn gói",
+   "Chỉ mua tại quầy",
+   "Xoá lọc"
+  ],
+  "states": [
+   "Thanh toán trực tuyến",
+   "Không có gói nào khớp bộ lọc",
+   "trên"
+  ]
+ },
+ {
+  "no": 36,
+  "file": "kh/thanh-toan.html",
+  "js": "kh/thanh-toan.js",
+  "status": "coded",
+  "blocks": [
+   "Xác nhận và thanh toán",
+   "Gói tập của bạn",
+   "Tóm tắt thanh toán",
+   "Phương thức"
+  ],
+  "fields": [
+   "Khách hàng",
+   "Mã đơn",
+   "Giá gói",
+   "Mã giảm giá",
+   "Nhập mã giảm giá",
+   "Tổng thanh toán",
+   "Đã bao gồm VAT",
+   "Tiền trước thuế"
+  ],
+  "columns": [],
+  "actions": [
+   "Áp dụng",
+   "Gỡ mã giảm giá",
+   "Tiến hành thanh toán",
+   "Thanh toán lại",
+   "Mua lại"
+  ],
+  "states": [
+   "Chờ thanh toán",
+   "Còn lại",
+   "Thanh toán không thành công",
+   "quá hạn thanh toán",
+   "Gói mới nối tiếp gói đang dùng"
+  ]
+ },
+ {
+  "no": 37,
+  "file": "lt/ban-hang.html",
+  "status": "coded",
+  "blocks": [
+   "1 · Chọn gói cho khách",
+   "2 · Chọn khách",
+   "3 · Voucher và ngày bắt đầu",
+   "4 · Phương thức thanh toán",
+   "Đơn hàng"
+  ],
+  "fields": [
+   "Tìm gói theo tên…",
+   "Tên, số điện thoại hoặc mã KH (KH-0102)",
+   "Ngày bắt đầu"
+  ],
+  "columns": [],
+  "actions": [
+   "+ Tạo hồ sơ",
+   "Kết đơn",
+   "Tiền mặt",
+   "Chuyển khoản"
+  ],
+  "states": [
+   "Đây là đơn gia hạn."
+  ]
+ },
+ {
+  "no": 38,
+  "file": "lt/ban-goi-pt.html",
+  "status": "coded",
+  "blocks": [
+   "1 · Gói &amp; PT",
+   "2 · Lịch tập",
+   "3 · Khách mua gói",
+   "Đơn bán"
+  ],
+  "fields": [
+   "Huấn luyện viên",
+   "Người tập cùng (gói Couple)"
+  ],
+  "columns": [],
+  "actions": [
+   "Giữ lịch 15 phút",
+   "Xác nhận đã thu tiền",
+   "Hủy giữ chỗ"
+  ],
+  "states": [
+   "Đang giữ chỗ, còn"
+  ]
+ },
+ {
+  "no": 39,
+  "file": "lt/ca-lam-viec.html",
+  "status": "coded",
+  "blocks": [
+   "Giao dịch trong ca"
+  ],
+  "fields": [
+   "Hình thức",
+   "Trạng thái"
+  ],
+  "columns": [],
+  "actions": [
+   "Huỷ đơn",
+   "Chốt ca",
+   "Lọc",
+   "Xác nhận đã nhận tiền"
+  ],
+  "states": [
+   "Tiền mặt",
+   "Chuyển khoản",
+   "Tổng thu",
+   "Đơn chờ xử lý",
+   "Chờ xác nhận",
+   "Đã thanh toán",
+   "Đã huỷ"
+  ]
+ },
+ {
+  "no": 40,
+  "file": "kh/lich-su-giao-dich.html",
+  "js": "kh/lich-su-giao-dich.js",
+  "status": "coded",
+  "blocks": [
+   "Chi tiết"
+  ],
+  "fields": [
+   "Thời gian",
+   "Trạng thái",
+   "Giá gốc",
+   "Giảm giá",
+   "Đã gồm VAT",
+   "Phương thức",
+   "Mã đơn"
+  ],
+  "columns": [],
+  "actions": [
+   "Chi tiết",
+   "Xoá lọc"
+  ],
+  "states": [
+   "Thành công",
+   "Đang chờ",
+   "Thất bại",
+   "Hết hạn",
+   "perPage: 20"
+  ]
+ },
+ {
+  "no": 41,
+  "file": "Manager/gms_manager_mockup_v24.html",
+  "status": "coded",
+  "blocks": [
+   "Giao dịch toàn hệ thống"
+  ],
+  "fields": [
+   "Mã đơn hoặc tên khách hàng...",
+   "Tất cả phương thức",
+   "Tất cả trạng thái",
+   "Cần hoàn tiền"
+  ],
+  "columns": [
+   "Mã đơn / Kênh",
+   "Thời gian",
+   "Khách hàng",
+   "Gói tập & Voucher",
+   "Tổng tiền",
+   "Phương thức",
+   "Trạng thái đơn",
+   "Hoàn tiền",
+   "Thao tác",
+   "Ngày ca",
+   "Loại ca",
+   "Người mở",
+   "Người chốt",
+   "Giờ mở — đóng",
+   "Tiền mặt kiểm đếm",
+   "Tiền mặt dự tính",
+   "Chênh lệch tiền",
+   "Chuyển khoản"
+  ],
+  "actions": [
+   "Đơn hàng",
+   "Lịch sử ca",
+   "Lọc",
+   "Xóa lọc",
+   "Chi tiết",
+   "Xác nhận hoàn tiền",
+   "Xuất Excel"
+  ],
+  "states": [
+   "Cần hoàn tiền",
+   "Xác nhận hoàn tiền ngoài hệ thống",
+   "Ghi chú xác nhận hoàn tiền"
+  ]
+ },
+ {
+  "no": 42,
+  "file": "lt/co-so-vat-chat.html",
+  "status": "coded",
+  "blocks": [
+   "Chiếc nào bị hỏng?"
+  ],
+  "fields": [
+   "Tìm theo tên máy hoặc số trên tem dán"
+  ],
+  "columns": [],
+  "actions": [
+   "Chọn tất cả",
+   "Bỏ chọn",
+   "Tiếp tục: mô tả sự cố →",
+   "Xóa lọc"
+  ],
+  "states": [
+   "Đang bảo trì",
+   "Sẵn sàng"
+  ]
+ },
+ {
+  "no": 43,
+  "file": "Manager/gms_manager_mockup_v24.html",
+  "status": "coded",
+  "blocks": [
+   "Cơ sở vật chất & Thiết bị",
+   "Nhóm máy (",
+   "Danh sách cá thể máy ("
+  ],
+  "fields": [
+   "Tên nhóm máy",
+   "Phân loại",
+   "Khu vực đặt",
+   "Đơn vị tính",
+   "Mã máy cá thể",
+   "Tên hiển thị / Quy cách",
+   "Vị trí chi tiết"
+  ],
+  "columns": [
+   "Mã máy",
+   "Tên hiển thị / Quy cách",
+   "Vị trí chi tiết",
+   "Trạng thái",
+   "Thao tác"
+  ],
+  "actions": [
+   "Thêm nhóm máy",
+   "Sửa nhóm",
+   "Ẩn khỏi danh mục",
+   "Thêm cá thể máy",
+   "Lưu nhóm máy",
+   "Lưu cá thể",
+   "Sửa",
+   "Thanh lý"
+  ],
+  "states": [
+   "Khả dụng",
+   "Đang bảo trì",
+   "Đã thanh lý",
+   "Đang ẩn",
+   "Đang vận hành"
+  ]
+ },
+ {
+  "no": 44,
+  "file": "Manager/gms_manager_mockup_v24.html",
+  "status": "merged",
+  "blocks": [],
+  "fields": [],
+  "columns": [],
+  "actions": [],
+  "states": []
+ },
+ {
+  "no": 45,
+  "file": "lt/bao-tri.html",
+  "status": "coded",
+  "blocks": [
+   "Báo hỏng thiết bị · Bước 2",
+   "Danh sách yêu cầu"
+  ],
+  "fields": [
+   "Loại sự cố *",
+   "Mức ưu tiên *",
+   "Mô tả sự cố *",
+   "Ảnh sự cố (không bắt buộc)"
+  ],
+  "columns": [],
+  "actions": [
+   "Gửi yêu cầu",
+   "Đóng yêu cầu"
+  ],
+  "states": [
+   "Chờ duyệt",
+   "Đang xử lý",
+   "Đã đóng",
+   "Từ chối",
+   "Ghi chú nghiệm thu"
+  ]
+ },
+ {
+  "no": 46,
+  "file": "Manager/gms_manager_mockup_v24.html",
+  "status": "coded",
+  "blocks": [
+   "Yêu cầu bảo trì",
+   "Danh sách yêu cầu"
+  ],
+  "fields": [
+   "Mã yêu cầu, mã máy hoặc tên thiết bị",
+   "Mức ưu tiên"
+  ],
+  "columns": [
+   "Mã",
+   "Thiết bị · Máy",
+   "Sự cố",
+   "Ưu tiên",
+   "Ngày báo · Người báo",
+   "Trạng thái",
+   "Thao tác"
+  ],
+  "actions": [
+   "Tất cả",
+   "Chờ duyệt",
+   "Đang xử lý",
+   "Từ chối",
+   "Đã đóng",
+   "Lọc",
+   "Xóa lọc"
+  ],
+  "states": [
+   "Không có yêu cầu nào khớp bộ lọc."
+  ]
+ },
+ {
+  "no": 47,
+  "file": "Manager/gms_manager_mockup_v24.html",
+  "status": "coded",
+  "blocks": [
+   "Mô tả sự cố",
+   "Ảnh sự cố thực tế",
+   "Thông tin thiết bị",
+   "Người gửi yêu cầu",
+   "Tiến trình xử lý"
+  ],
+  "fields": [
+   "Dòng thiết bị",
+   "Mã máy",
+   "Vị trí",
+   "Khả dụng trong phòng",
+   "Ghi chú cho lễ tân (không bắt buộc)",
+   "Lý do từ chối"
+  ],
+  "columns": [],
+  "actions": [
+   "Duyệt yêu cầu",
+   "Từ chối",
+   "Xác nhận duyệt",
+   "Từ chối yêu cầu",
+   "Quay lại danh sách"
+  ],
+  "states": [
+   "Phê duyệt yêu cầu bảo trì",
+   "Từ chối yêu cầu bảo trì",
+   "Chuyển trạng thái máy sang Đang bảo trì",
+   "Lễ tân không đính kèm ảnh"
+  ]
+ },
+ {
+  "no": 48,
+  "file": "kh/trang-ca-nhan.html",
+  "status": "coded",
+  "blocks": [
+   "Bạn vào tập được hôm nay",
+   "Buổi tập sắp tới",
+   "Thông báo",
+   "Gói tập",
+   "Gói PT 3 Tháng",
+   "Chuỗi tập"
+  ],
+  "fields": [
+   "Mã hội viên",
+   "Buổi PT còn lại",
+   "Hết hạn"
+  ],
+  "columns": [],
+  "actions": [
+   "Gia hạn",
+   "Thanh toán",
+   "Đổi ngày bắt đầu",
+   "Tất cả lịch"
+  ],
+  "states": [
+   "Ngoài hạn gói",
+   "chờ thanh toán",
+   "3 tuần liên tiếp"
+  ]
+ },
+ {
+  "no": 49,
+  "file": "pt/trang-chu.html",
+  "status": "coded",
+  "blocks": [
+   "Chào Hoàng Long",
+   "Lịch dạy của bạn",
+   "Cần chú ý",
+   "Khách phụ trách",
+   "Thời tiết"
+  ],
+  "fields": [
+   "Buổi hôm nay",
+   "Buổi đầu ngày",
+   "Cần chú ý"
+  ],
+  "columns": [],
+  "actions": [
+   "Xử lý buổi",
+   "Dời buổi",
+   "Zalo",
+   "Mở lịch dạy",
+   "Khách của tôi"
+  ],
+  "states": [
+   "Chưa có gói tập",
+   "Tiếp theo"
+  ]
+ },
+ {
+  "no": 50,
+  "file": "kh/lich-cua-toi.html",
+  "js": "kh/lich-cua-toi.js",
+  "status": "coded",
+  "blocks": [
+   "Gói của bạn",
+   "Vào phòng tập",
+   "Lịch cố định",
+   "Các buổi của gói",
+   "Các buổi lẻ của bạn"
+  ],
+  "fields": [
+   "Buổi tới",
+   "Tiến độ",
+   "PT của gói"
+  ],
+  "columns": [],
+  "actions": [
+   "Xem trên lịch tập",
+   "Mua gói thành viên",
+   "Gọi lễ tân",
+   "Đặt buổi lẻ",
+   "Nhắn Zalo"
+  ],
+  "states": [
+   "Đang tập",
+   "Đã kết thúc",
+   "Buổi lẻ",
+   "Đã check-in",
+   "Vắng",
+   "Đã hủy",
+   "Sắp tới",
+   "Chưa có gói nào kết thúc"
+  ]
+ },
+ {
+  "no": 51,
+  "file": "kh/buoi-pt.html",
+  "js": "kh/buoi-pt.js",
+  "status": "coded",
+  "blocks": [
+   "Lịch tập",
+   "Cách xem lịch"
+  ],
+  "fields": [
+   "Ngày muốn xem"
+  ],
+  "columns": [
+   "Khung giờ",
+   "Thứ 2",
+   "Chủ nhật"
+  ],
+  "actions": [
+   "Xem",
+   "Tuần",
+   "Tháng",
+   "Thêm vào lịch",
+   "Nhắn Zalo",
+   "Gọi PT"
+  ],
+  "states": [
+   "Đã xếp",
+   "Hoàn thành",
+   "Vắng",
+   "Đã hủy",
+   "Không check-in",
+   "Tuần này chưa có buổi PT nào"
+  ]
+ },
+ {
+  "no": 52,
+  "file": "kh/dat-buoi-le.html",
+  "js": "kh/dat-buoi-le.js",
+  "status": "uncoded",
+  "blocks": [
+   "Chọn huấn luyện viên",
+   "Khung giờ trống",
+   "Đã đặt buổi"
+  ],
+  "fields": [
+   "Chuyên môn",
+   "Rảnh khung giờ",
+   "Phải trả"
+  ],
+  "columns": [],
+  "actions": [
+   "Chọn khung giờ",
+   "Xem lịch của tôi",
+   "Xoá lọc"
+  ],
+  "states": [
+   "Slot được giữ 20 phút",
+   "450.000đ"
+  ]
+ },
+ {
+  "no": 53,
+  "file": "kh/doi-lich.html",
+  "status": "withdrawn",
+  "blocks": [],
+  "fields": [],
+  "columns": [],
+  "actions": [],
+  "states": []
+ },
+ {
+  "no": 54,
+  "file": "pt/lich-ranh.html",
+  "status": "coded",
+  "blocks": [
+   "Thêm khung giờ",
+   "Lịch tuần",
+   "Danh sách"
+  ],
+  "fields": [
+   "Ngày",
+   "Giờ bắt đầu",
+   "Kết thúc",
+   "Tuần trước",
+   "Tuần sau",
+   "Tuần này"
+  ],
+  "columns": [],
+  "actions": [
+   "Thêm vào nháp",
+   "Gỡ hết khung trống",
+   "Chép sang tuần sau",
+   "Công bố",
+   "Bỏ tất cả",
+   "Gỡ công bố",
+   "Xử lý buổi"
+  ],
+  "states": [
+   "Còn trống",
+   "Đã có khách",
+   "Thay đổi chờ lưu",
+   "Dời buổi",
+   "Chuyển PT",
+   "Hủy buổi",
+   "Lý do hủy",
+   "Hạn gói đến",
+   "Khách đã đồng ý nhận lại tiền mặt cho buổi này.",
+   "Để sau"
+  ]
+ },
+ {
+  "no": 55,
+  "file": "pt/lich-ranh.html",
+  "status": "merged",
+  "blocks": [],
+  "fields": [],
+  "columns": [],
+  "actions": [],
+  "states": []
+ },
+ {
+  "no": 56,
+  "file": "pt/diem-danh.html",
+  "status": "withdrawn",
+  "blocks": [],
+  "fields": [],
+  "columns": [],
+  "actions": [],
+  "states": []
+ },
+ {
+  "no": 57,
+  "file": "pt/khach-cua-toi.html",
+  "status": "uncoded",
+  "blocks": [],
+  "fields": [
+   "Trạng thái gói",
+   "Gói PT",
+   "Tìm tên khách hoặc mã hội viên"
+  ],
+  "columns": [],
+  "actions": [
+   "Xoá lọc",
+   "Ghi chú",
+   "Giáo án"
+  ],
+  "states": [
+   "Gói đang chạy",
+   "Gói hết hạn",
+   "Buổi kế tiếp",
+   "Gói tập tới",
+   "Còn hiệu lực",
+   "Hết hạn"
+  ]
+ },
+ {
+  "no": 58,
+  "file": "pt/ghi-chu.html",
+  "status": "uncoded",
+  "blocks": [
+   "Lịch sử ghi chú"
+  ],
+  "fields": [
+   "Khách *",
+   "Nội dung ghi chú *"
+  ],
+  "columns": [],
+  "actions": [
+   "Lưu ghi chú"
+  ],
+  "states": [
+   "Ghi chú này chỉ bạn nhìn thấy. Khách và PT khác không xem được."
+  ]
+ },
+ {
+  "no": 59,
+  "file": "pt/giao-an.html",
+  "status": "uncoded",
+  "blocks": [
+   "Giáo án tập",
+   "Thực đơn",
+   "Trạng thái"
+  ],
+  "fields": [
+   "Khách *",
+   "Nội dung giáo án",
+   "Nội dung thực đơn"
+  ],
+  "columns": [],
+  "actions": [
+   "Lưu nháp",
+   "Xuất bản cho khách"
+  ],
+  "states": [
+   "Đã xuất bản",
+   "Khách chỉ xem được sau khi bạn bấm Xuất bản."
+  ]
+ },
+ {
+  "no": 60,
+  "file": "kh/giao-an.html",
+  "status": "uncoded",
+  "blocks": [
+   "Người soạn"
+  ],
+  "fields": [
+   "Xuất bản lúc"
+  ],
+  "columns": [],
+  "actions": [
+   "Giáo án tập",
+   "Thực đơn"
+  ],
+  "states": [
+   "Không tìm thấy mục nào"
+  ]
+ },
+ {
+  "no": 61,
+  "file": "kh/gop-y.html",
+  "js": "kh/gop-y.js",
+  "status": "uncoded",
+  "blocks": [
+   "Bạn muốn nói gì với Quản lý?"
+  ],
+  "fields": [
+   "Nội dung *",
+   "Từ 10 đến 1000 ký tự"
+  ],
+  "columns": [],
+  "actions": [
+   "Gửi góp ý",
+   "Gửi góp ý khác"
+  ],
+  "states": [
+   "Đã gửi",
+   "10 đến 1000 ký tự"
+  ]
+ },
+ {
+  "no": 62,
+  "file": "Manager/gms_manager_mockup_v24.html",
+  "status": "uncoded",
+  "blocks": [
+   "Góp ý của khách"
+  ],
+  "fields": [
+   "Trạng thái đọc",
+   "Từ ngày",
+   "Đến ngày"
+  ],
+  "columns": [
+   "Khách hàng",
+   "Thời điểm gửi",
+   "Nội dung",
+   "Trạng thái"
+  ],
+  "actions": [
+   "Lọc",
+   "Xóa lọc"
+  ],
+  "states": [
+   "Chưa đọc",
+   "Đã đọc"
+  ]
+ },
+ {
+  "no": 63,
+  "file": "Manager/gms_manager_mockup_v24.html",
+  "status": "uncoded",
+  "blocks": [
+   "Quản lý blog"
+  ],
+  "fields": [
+   "Mọi danh mục",
+   "Mọi trạng thái"
+  ],
+  "columns": [
+   "Tiêu đề",
+   "Danh mục",
+   "Ngày đăng",
+   "Trạng thái"
+  ],
+  "actions": [
+   "Viết bài",
+   "Gỡ đăng",
+   "Đăng lại"
+  ],
+  "states": [
+   "Đang đăng",
+   "Nháp / đã gỡ"
+  ]
+ },
+ {
+  "no": 64,
+  "file": "Manager/gms_manager_mockup_v24.html",
+  "status": "uncoded",
+  "blocks": [
+   "Bài viết mới",
+   "Ảnh bìa"
+  ],
+  "fields": [
+   "Tiêu đề",
+   "Danh mục",
+   "Trạng thái",
+   "Tóm tắt",
+   "Nội dung"
+  ],
+  "columns": [],
+  "actions": [
+   "Lưu bài viết",
+   "Hủy"
+  ],
+  "states": [
+   "Tiêu đề phải từ 5 đến 200 ký tự."
+  ]
+ },
+ {
+  "no": 65,
+  "file": "Manager/gms_manager_mockup_v24.html",
+  "status": "uncoded",
+  "blocks": [
+   "Gửi thông báo",
+   "Đã gửi gần đây"
+  ],
+  "fields": [
+   "Tiêu đề",
+   "Nội dung (chỉ văn bản)",
+   "Đối tượng nhận",
+   "Thời điểm gửi",
+   "Ngày giờ gửi"
+  ],
+  "columns": [],
+  "actions": [
+   "Gửi thông báo",
+   "Gửi ngay",
+   "Hẹn giờ"
+  ],
+  "states": [
+   "Tất cả hội viên",
+   "Hội viên đang hoạt động",
+   "Huấn luyện viên PT",
+   "Toàn bộ nhân viên"
+  ]
+ },
+ {
+  "no": 66,
+  "file": "Manager/gms_manager_mockup_v24.html",
+  "status": "uncoded",
+  "blocks": [
+   "Doanh thu theo ngày",
+   "Doanh thu theo gói",
+   "Hoa hồng PT"
+  ],
+  "fields": [
+   "Từ ngày",
+   "Đến ngày"
+  ],
+  "columns": [
+   "Gói",
+   "Số đơn",
+   "Doanh thu",
+   "PT",
+   "Hoàn thành",
+   "Vắng",
+   "Hủy",
+   "Hoa hồng"
+  ],
+  "actions": [],
+  "states": [
+   "Lượt check-in"
+  ]
+ },
+ {
+  "no": 67,
+  "file": "Admin/gms_admin_mockup_v24.html",
+  "status": "uncoded",
+  "blocks": [
+   "Báo cáo vận hành",
+   "Lượt check-in theo ngày",
+   "Nhân sự theo ca",
+   "Chỉ số audit & bảo mật",
+   "Thao tác nhạy cảm theo loại",
+   "Người thao tác nhiều nhất"
+  ],
+  "fields": [
+   "Từ ngày",
+   "Đến ngày"
+  ],
+  "columns": [
+   "Ca",
+   "PT",
+   "Lễ tân",
+   "Đơn nghỉ duyệt"
+  ],
+  "actions": [
+   "Xem báo cáo",
+   "Mở Audit Log"
+  ],
+  "states": [
+   "Lượt check-in",
+   "Hội viên mới",
+   "Buổi PT hoàn thành",
+   "Buổi PT vắng",
+   "Thao tác nhạy cảm",
+   "Khóa tạm tài khoản khách",
+   "Tài khoản nhân viên bị khóa",
+   "Đơn nghỉ tự từ chối"
+  ]
+ },
+ {
+  "no": 68,
+  "file": "chon-vai-tro.html",
+  "status": "new",
+  "blocks": [
+   "Chọn vai trò"
+  ],
+  "fields": [],
+  "columns": [],
+  "actions": [
+   "Lễ tân",
+   "Hội viên",
+   "Đăng xuất"
+  ],
+  "states": [
+   "Tài khoản của bạn dùng được cho nhiều vai trò"
+  ]
+ },
+ {
+  "no": 69,
+  "file": "gioi-thieu.html",
+  "status": "new",
+  "blocks": [
+   "Triết lý tập luyện",
+   "Giá trị cốt lõi",
+   "Từ một tầng hầm",
+   "Liên hệ"
+  ],
+  "fields": [],
+  "columns": [],
+  "actions": [
+   "Khám phá gói tập",
+   "Đăng ký ngay",
+   "Xem bảng giá"
+  ],
+  "states": [
+   "Tiến bộ đo được",
+   "Kỹ thuật trước mức tạ",
+   "Có người đồng hành",
+   "Mọi thứ trong một tài khoản",
+   "12 Nguyễn Huệ",
+   "05:30 – 22:00"
+  ]
+ },
+ {
+  "no": 70,
+  "file": "kh/ket-qua-thanh-toan.html",
+  "js": "kh/ket-qua-thanh-toan.js",
+  "status": "new",
+  "blocks": [
+   "Xem thử trạng thái"
+  ],
+  "fields": [
+   "Mã đơn",
+   "Gói tập",
+   "Số tiền của đơn",
+   "Hiệu lực"
+  ],
+  "columns": [],
+  "actions": [
+   "Đổi ngày",
+   "Quay lại thanh toán",
+   "Chọn gói",
+   "Trang cá nhân",
+   "Gói của tôi",
+   "Lịch sử giao dịch"
+  ],
+  "states": [
+   "Thanh toán thành công",
+   "Thanh toán không thành công",
+   "Bạn đã hủy thanh toán",
+   "Đang chờ cổng thanh toán xác nhận",
+   "Cần hoàn tiền",
+   "Chưa xác minh được kết quả"
+  ]
+ },
+ {
+  "no": 71,
+  "file": "kh/thu-vien-bai-tap.html",
+  "js": "kh/thu-vien-bai-tap.js",
+  "status": "new",
+  "blocks": [
+   "Thư viện bài tập dành cho hội viên",
+   "Lọc theo nhóm cơ"
+  ],
+  "fields": [
+   "Tên bài (tiếng Anh)",
+   "Dụng cụ",
+   "Sắp xếp"
+  ],
+  "columns": [],
+  "actions": [
+   "Lọc",
+   "Xóa lọc",
+   "Xem các gói"
+  ],
+  "states": [
+   "Tất cả"
+  ]
+ },
+ {
+  "no": 71,
+  "file": "pt/thu-vien-bai-tap.html",
+  "status": "new",
+  "blocks": [
+   "Thư viện bài tập"
+  ],
+  "fields": [
+   "Tên bài (tiếng Anh)",
+   "Dụng cụ",
+   "Sắp xếp",
+   "maxlength=\"50\""
+  ],
+  "columns": [],
+  "actions": [
+   "Lọc",
+   "Xóa lọc"
+  ],
+  "states": [
+   "Tất cả"
+  ]
+ },
+ {
+  "no": 72,
+  "file": "kh/chi-so-co-the.html",
+  "js": "kh/chi-so-co-the.js",
+  "status": "new",
+  "blocks": [
+   "Lịch sử đo",
+   "Ghi lần đo"
+  ],
+  "fields": [
+   "Ngày đo",
+   "Cân nặng (kg)",
+   "Chiều cao (cm)",
+   "Tỷ lệ mỡ (%)",
+   "Tỷ lệ cơ (%)",
+   "Vòng eo (cm)",
+   "Ghi chú"
+  ],
+  "columns": [
+   "Ngày",
+   "Cân nặng",
+   "Thay đổi",
+   "BMI",
+   "Mỡ",
+   "Cơ",
+   "Vòng eo",
+   "Ghi chú",
+   "Xóa"
+  ],
+  "actions": [
+   "Lưu lần đo"
+  ],
+  "states": [
+   "Cần ít nhất 2 lần đo",
+   "Đã lưu lần đo",
+   "Xóa lần đo"
+  ]
+ },
+ {
+  "no": 73,
+  "file": "app.js",
+  "status": "new",
+  "blocks": [
+   "Thông báo"
+  ],
+  "fields": [],
+  "columns": [],
+  "actions": [
+   "Đọc tất cả"
+  ],
+  "states": [
+   "Mới",
+   "Chưa có thông báo nào."
+  ]
+ }
+]
