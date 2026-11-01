@@ -202,10 +202,11 @@ public class AccountSettingsView {
         if (parts.length == 0) {
             return "—";
         }
-        String lastName = parts[parts.length - 1];
-        if (lastName.isEmpty()) {
-            return "—";
+        String first = parts[0].substring(0, 1);
+        if (parts.length == 1) {
+            return first.toUpperCase(Locale.forLanguageTag("vi-VN"));
         }
-        return lastName.substring(0, 1).toUpperCase(Locale.forLanguageTag("vi-VN"));
+        String last = parts[parts.length - 1].substring(0, 1);
+        return (first + last).toUpperCase(Locale.forLanguageTag("vi-VN"));
     }
 }
