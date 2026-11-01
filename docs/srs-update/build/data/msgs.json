@@ -1,0 +1,4342 @@
+[
+{
+"num": 1,
+"name": "MSG01_NO_RESULT",
+"section": "5.1 Hệ thống, danh sách, quyền truy cập",
+"doc": "",
+"en": "No results found. Try different keywords or clear some filters.",
+"vi": "Không tìm thấy kết quả. Hãy thử từ khóa khác hoặc bỏ bớt bộ lọc.",
+"files": [
+"BlogService.java"
+],
+"typehint": {
+"Toast (success)": 1
+}
+},
+{
+"num": 2,
+"name": "MSG02_EMPTY_LIST",
+"section": "5.1 Hệ thống, danh sách, quyền truy cập",
+"doc": "",
+"en": "No %s yet.",
+"vi": "Chưa có %s.",
+"files": [],
+"typehint": {}
+},
+{
+"num": 3,
+"name": "MSG03_NO_DATA_IN_RANGE",
+"section": "5.1 Hệ thống, danh sách, quyền truy cập",
+"doc": "",
+"en": "No data in the selected time range.",
+"vi": "Không có dữ liệu trong khoảng thời gian đã chọn.",
+"files": [],
+"typehint": {}
+},
+{
+"num": 4,
+"name": "MSG04_SYSTEM_BUSY",
+"section": "5.1 Hệ thống, danh sách, quyền truy cập",
+"doc": "",
+"en": "The system is busy. Please try again in a few minutes.",
+"vi": "Hệ thống đang bận. Vui lòng thử lại sau ít phút.",
+"files": [
+"AccountSettingsService.java",
+"AccountSettingsServlet.java",
+"AuditLogService.java",
+"AuthService.java",
+"BlogService.java",
+"BodyStatsService.java",
+"CheckInService.java",
+"CheckInServlet.java",
+"ContactChangeService.java",
+"CounterSaleService.java",
+"CustomerDashboardService.java",
+"CustomerDeletionService.java",
+"EmailSendException.java",
+"ExerciseLibraryService.java",
+"FacilityService.java",
+"FeedbackService.java",
+"FreezeMembershipServlet.java",
+"FreezeService.java",
+"HomeService.java",
+"LeaveRequestService.java",
+"MaintenanceRequestService.java",
+"MaintenanceRequestServlet.java",
+"ManagerTransactionService.java",
+"MyBookingService.java",
+"MyPtSessionService.java",
+"NotificationService.java",
+"PackageSelectionService.java",
+"PasswordRecoveryService.java",
+"PaymentService.java",
+"PtDashboardService.java",
+"PtSaleService.java",
+"PtScheduleService.java",
+"PtSessionHandleService.java",
+"RegistrationService.java",
+"ReportService.java",
+"ShiftService.java",
+"ShiftServlet.java",
+"StaffLeaveService.java",
+"SystemReportService.java",
+"VerificationCodeService.java",
+"package-info.java"
+],
+"typehint": {
+"Toast (error)": 3,
+"fail": 166
+}
+},
+{
+"num": 5,
+"name": "MSG05_CONNECTION_LOST",
+"section": "5.1 Hệ thống, danh sách, quyền truy cập",
+"doc": "",
+"en": "Connection lost. Check your network and try again.",
+"vi": "Mất kết nối. Hãy kiểm tra mạng và thử lại.",
+"files": [],
+"typehint": {}
+},
+{
+"num": 6,
+"name": "MSG06_SESSION_EXPIRED",
+"section": "5.1 Hệ thống, danh sách, quyền truy cập",
+"doc": "",
+"en": "Your session has expired. Please sign in again.",
+"vi": "Phiên đăng nhập đã hết hạn. Vui lòng đăng nhập lại.",
+"files": [
+"AuthFilter.java",
+"CustomerDeletionService.java",
+"NotificationApiServlet.java",
+"PtScheduleServlet.java"
+],
+"typehint": {
+"fail": 5
+}
+},
+{
+"num": 7,
+"name": "MSG07_NO_PERMISSION",
+"section": "5.1 Hệ thống, danh sách, quyền truy cập",
+"doc": "",
+"en": "You do not have permission to access this function.",
+"vi": "Bạn không có quyền truy cập chức năng này.",
+"files": [
+"AccountSettingsServlet.java",
+"AuthFilter.java",
+"BodyStatsService.java",
+"CounterSaleService.java",
+"CustomerDashboardService.java",
+"CustomerDeletionService.java",
+"MyBookingService.java",
+"MyPtSessionService.java",
+"PtDashboardService.java",
+"PtSaleService.java",
+"PtScheduleService.java",
+"PtScheduleServlet.java",
+"PtSessionHandleService.java",
+"RoleAreaFilter.java",
+"SelectRoleServlet.java",
+"ShiftService.java"
+],
+"typehint": {
+"Toast (error)": 1,
+"fail": 34
+}
+},
+{
+"num": 8,
+"name": "MSG08_NOT_FOUND",
+"section": "5.1 Hệ thống, danh sách, quyền truy cập",
+"doc": "",
+"en": "This %s could not be found.",
+"vi": "Không tìm thấy %s.",
+"files": [
+"AccountSettingsService.java",
+"CheckInService.java",
+"CounterSaleService.java",
+"CustomerDeletionService.java",
+"FacilityService.java",
+"FreezeService.java",
+"LeaveRequestService.java",
+"MaintenanceRequestService.java",
+"ManagerTransactionService.java",
+"NotificationService.java",
+"ShiftService.java",
+"StaffLeaveService.java"
+],
+"typehint": {
+"fail": 51,
+"Toast (success)": 1
+}
+},
+{
+"num": 9,
+"name": "MSG09_REQUIRED",
+"section": "5.2 Kiểm tra dữ liệu nhập (dùng chung)",
+"doc": "",
+"en": "%s is required.",
+"vi": "%s là bắt buộc.",
+"files": [
+"AccountSettingsService.java",
+"AccountSettingsServlet.java",
+"AuthService.java",
+"CheckInService.java",
+"ContactChangeService.java",
+"PasswordRecoveryService.java",
+"RegistrationService.java",
+"SystemReportService.java"
+],
+"typehint": {
+"In red, under the field": 9,
+"fail": 2
+}
+},
+{
+"num": 10,
+"name": "MSG10_MAX_LENGTH",
+"section": "5.2 Kiểm tra dữ liệu nhập (dùng chung)",
+"doc": "",
+"en": "Exceed max length of %d.",
+"vi": "Vượt quá độ dài tối đa %d ký tự.",
+"files": [
+"CustomerDeletionService.java",
+"RegistrationService.java",
+"ShiftService.java"
+],
+"typehint": {
+"fail": 2,
+"In red, under the field": 1
+}
+},
+{
+"num": 11,
+"name": "MSG11_INVALID_EMAIL",
+"section": "5.2 Kiểm tra dữ liệu nhập (dùng chung)",
+"doc": "",
+"en": "Invalid email format.",
+"vi": "Email không đúng định dạng.",
+"files": [
+"ContactChangeService.java",
+"PasswordRecoveryService.java",
+"RegistrationService.java",
+"ServiceResult.java"
+],
+"typehint": {
+"Toast (success)": 1,
+"fail": 1,
+"In red, under the field": 1
+}
+},
+{
+"num": 12,
+"name": "MSG12_EMAIL_USED",
+"section": "5.2 Kiểm tra dữ liệu nhập (dùng chung)",
+"doc": "",
+"en": "This email is already used by another account.",
+"vi": "Email này đã được tài khoản khác sử dụng.",
+"files": [
+"ContactChangeService.java",
+"CounterSaleService.java",
+"RegistrationService.java"
+],
+"typehint": {
+"fail": 1
+}
+},
+{
+"num": 13,
+"name": "MSG13_INVALID_PHONE",
+"section": "5.2 Kiểm tra dữ liệu nhập (dùng chung)",
+"doc": "",
+"en": "Phone number must be 10 digits, start with 0 and use a valid Vietnamese carrier prefix.",
+"vi": "Số điện thoại phải gồm 10 chữ số, bắt đầu bằng 0 và có đầu số nhà mạng Việt Nam hợp lệ.",
+"files": [
+"ContactChangeService.java",
+"RegisterServlet.java",
+"RegistrationService.java"
+],
+"typehint": {
+"In red, under the field": 2
+}
+},
+{
+"num": 14,
+"name": "MSG14_PHONE_USED",
+"section": "5.2 Kiểm tra dữ liệu nhập (dùng chung)",
+"doc": "",
+"en": "This phone number already belongs to another profile.",
+"vi": "Số điện thoại này đã thuộc về một hồ sơ khác.",
+"files": [
+"ContactChangeService.java"
+],
+"typehint": {}
+},
+{
+"num": 15,
+"name": "MSG15_DOB_IN_FUTURE",
+"section": "5.2 Kiểm tra dữ liệu nhập (dùng chung)",
+"doc": "",
+"en": "Date of birth cannot be in the future.",
+"vi": "Ngày sinh không được ở tương lai.",
+"files": [
+"RegistrationService.java"
+],
+"typehint": {
+"In red, under the field": 1
+}
+},
+{
+"num": 16,
+"name": "MSG16_DATE_RANGE_REVERSED",
+"section": "5.2 Kiểm tra dữ liệu nhập (dùng chung)",
+"doc": "",
+"en": "The start date must be on or before the end date.",
+"vi": "Ngày bắt đầu phải trước hoặc bằng ngày kết thúc.",
+"files": [
+"ReportService.java",
+"SystemReportService.java"
+],
+"typehint": {
+"fail": 1
+}
+},
+{
+"num": 17,
+"name": "MSG17_POSITIVE_NUMBER",
+"section": "5.2 Kiểm tra dữ liệu nhập (dùng chung)",
+"doc": "",
+"en": "Enter a number greater than 0.",
+"vi": "Nhập một số lớn hơn 0.",
+"files": [
+"ShiftService.java"
+],
+"typehint": {
+"fail": 1
+}
+},
+{
+"num": 18,
+"name": "MSG18_DATE_TOO_EARLY",
+"section": "5.2 Kiểm tra dữ liệu nhập (dùng chung)",
+"doc": "",
+"en": "Only dates from %s onwards can be selected.",
+"vi": "Chỉ được chọn ngày từ %s trở đi.",
+"files": [],
+"typehint": {}
+},
+{
+"num": 19,
+"name": "MSG19_TOO_SHORT",
+"section": "5.2 Kiểm tra dữ liệu nhập (dùng chung)",
+"doc": "",
+"en": "Be more specific, at least %d characters.",
+"vi": "Vui lòng ghi cụ thể hơn, tối thiểu %d ký tự.",
+"files": [
+"CustomerDeletionService.java",
+"ShiftService.java"
+],
+"typehint": {
+"fail": 2
+}
+},
+{
+"num": 20,
+"name": "MSG20_INVALID_IMAGE",
+"section": "5.2 Kiểm tra dữ liệu nhập (dùng chung)",
+"doc": "",
+"en": "Only JPG or PNG images up to %s are accepted.",
+"vi": "Chỉ chấp nhận ảnh JPG hoặc PNG, tối đa %s.",
+"files": [
+"AccountSettingsService.java"
+],
+"typehint": {}
+},
+{
+"num": 21,
+"name": "MSG21_SELECT_REQUIRED",
+"section": "5.2 Kiểm tra dữ liệu nhập (dùng chung)",
+"doc": "",
+"en": "Please select %s.",
+"vi": "Vui lòng chọn %s.",
+"files": [
+"FeedbackService.java",
+"MaintenanceRequestService.java"
+],
+"typehint": {}
+},
+{
+"num": 22,
+"name": "MSG22_CONCURRENT_EDIT",
+"section": "5.2 Kiểm tra dữ liệu nhập (dùng chung)",
+"doc": "",
+"en": "This record was just updated by someone else. Reload before saving.",
+"vi": "Bản ghi này vừa được người khác cập nhật. Hãy tải lại trước khi lưu.",
+"files": [
+"AccountSettingsService.java",
+"PackageService.java",
+"ShiftService.java"
+],
+"typehint": {
+"fail": 5
+}
+},
+{
+"num": 23,
+"name": "MSG23_SAVED",
+"section": "5.3 Lưu, xóa, thao tác chung",
+"doc": "",
+"en": "Changes saved.",
+"vi": "Đã lưu thay đổi.",
+"files": [
+"FeedbackService.java",
+"PackageService.java",
+"ServiceResult.java"
+],
+"typehint": {
+"Toast (success)": 2
+}
+},
+{
+"num": 24,
+"name": "MSG24_NOTHING_TO_SAVE",
+"section": "5.3 Lưu, xóa, thao tác chung",
+"doc": "",
+"en": "There is nothing to save.",
+"vi": "Không có thay đổi nào để lưu.",
+"files": [],
+"typehint": {}
+},
+{
+"num": 25,
+"name": "MSG25_CREATED",
+"section": "5.3 Lưu, xóa, thao tác chung",
+"doc": "",
+"en": "%s added.",
+"vi": "Đã thêm %s.",
+"files": [],
+"typehint": {}
+},
+{
+"num": 26,
+"name": "MSG26_DELETED",
+"section": "5.3 Lưu, xóa, thao tác chung",
+"doc": "",
+"en": "%s deleted.",
+"vi": "Đã xóa %s.",
+"files": [
+"CustomerDeletionService.java"
+],
+"typehint": {
+"Toast (success)": 1
+}
+},
+{
+"num": 27,
+"name": "MSG27_CONFIRM_DELETE",
+"section": "5.3 Lưu, xóa, thao tác chung",
+"doc": "",
+"en": "Delete %s? This action cannot be undone.",
+"vi": "Xóa %s? Thao tác này không thể hoàn tác.",
+"files": [],
+"typehint": {}
+},
+{
+"num": 28,
+"name": "MSG28_UNSAVED_CHANGES",
+"section": "5.3 Lưu, xóa, thao tác chung",
+"doc": "",
+"en": "Your changes have not been saved. Leaving now will discard them.",
+"vi": "Thay đổi của bạn chưa được lưu. Rời trang lúc này sẽ mất các thay đổi.",
+"files": [],
+"typehint": {}
+},
+{
+"num": 29,
+"name": "MSG29_STILL_REFERENCED",
+"section": "5.3 Lưu, xóa, thao tác chung",
+"doc": "",
+"en": "Cannot delete: %s still refers to it. Deactivate it instead.",
+"vi": "Không thể xóa: %s vẫn đang tham chiếu tới mục này. Hãy ngừng hoạt động thay vì xóa.",
+"files": [],
+"typehint": {}
+},
+{
+"num": 30,
+"name": "MSG30_DEACTIVATED",
+"section": "5.3 Lưu, xóa, thao tác chung",
+"doc": "",
+"en": "%s deactivated.",
+"vi": "Đã ngừng hoạt động %s.",
+"files": [],
+"typehint": {}
+},
+{
+"num": 31,
+"name": "MSG31_REACTIVATED",
+"section": "5.3 Lưu, xóa, thao tác chung",
+"doc": "",
+"en": "%s reactivated.",
+"vi": "Đã kích hoạt lại %s.",
+"files": [],
+"typehint": {}
+},
+{
+"num": 32,
+"name": "MSG32_EXPORTED",
+"section": "5.3 Lưu, xóa, thao tác chung",
+"doc": "",
+"en": "%s downloaded.",
+"vi": "Đã tải xuống %s.",
+"files": [
+"ManagerDashboardServlet.java"
+],
+"typehint": {}
+},
+{
+"num": 33,
+"name": "MSG33_WRONG_CREDENTIALS_ATTEMPTS_LEFT",
+"section": "5.4 Đăng nhập, mật khẩu, tài khoản cá nhân",
+"doc": "",
+"en": "Incorrect email, phone number or password. You have %d attempts left.",
+"vi": "Email, số điện thoại hoặc mật khẩu không đúng. Bạn còn %d lần thử.",
+"files": [
+"AuthService.java"
+],
+"typehint": {
+"fail": 1
+}
+},
+{
+"num": 34,
+"name": "MSG34_WRONG_CREDENTIALS_STAFF",
+"section": "5.4 Đăng nhập, mật khẩu, tài khoản cá nhân",
+"doc": "",
+"en": "Incorrect email, phone number or password. Please check again.",
+"vi": "Email, số điện thoại hoặc mật khẩu không đúng. Vui lòng kiểm tra lại.",
+"files": [
+"AuthService.java"
+],
+"typehint": {
+"fail": 2
+}
+},
+{
+"num": 35,
+"name": "MSG35_ACCOUNT_TEMP_LOCKED",
+"section": "5.4 Đăng nhập, mật khẩu, tài khoản cá nhân",
+"doc": "",
+"en": "Account locked for %d minutes after too many failed attempts. Try again in %s.",
+"vi": "Tài khoản bị khóa %d phút do nhập sai quá nhiều lần. Thử lại sau %s.",
+"files": [
+"AuthService.java",
+"LoginServlet.java"
+],
+"typehint": {
+"fail": 2
+}
+},
+{
+"num": 36,
+"name": "MSG36_LOCK_EXPIRED",
+"section": "5.4 Đăng nhập, mật khẩu, tài khoản cá nhân",
+"doc": "",
+"en": "The lock has expired. You can sign in again.",
+"vi": "Đã hết thời gian khóa. Bạn có thể đăng nhập lại.",
+"files": [],
+"typehint": {}
+},
+{
+"num": 37,
+"name": "MSG37_ACCOUNT_INACTIVE",
+"section": "5.4 Đăng nhập, mật khẩu, tài khoản cá nhân",
+"doc": "",
+"en": "This account cannot be used to sign in. Please contact an administrator.",
+"vi": "Tài khoản này không thể đăng nhập. Vui lòng liên hệ quản trị viên.",
+"files": [
+"AuthService.java",
+"PasswordRecoveryService.java",
+"SelectRoleServlet.java"
+],
+"typehint": {
+"Toast (error)": 1,
+"fail": 4
+}
+},
+{
+"num": 39,
+"name": "MSG39_IDENTIFIER_REQUIRED",
+"section": "5.4 Đăng nhập, mật khẩu, tài khoản cá nhân",
+"doc": "",
+"en": "Enter your email or phone number.",
+"vi": "Nhập email hoặc số điện thoại của bạn.",
+"files": [
+"AuthService.java"
+],
+"typehint": {
+"In red, under the field": 1
+}
+},
+{
+"num": 40,
+"name": "MSG40_SIGNED_OUT",
+"section": "5.4 Đăng nhập, mật khẩu, tài khoản cá nhân",
+"doc": "",
+"en": "Signed out.",
+"vi": "Đã đăng xuất.",
+"files": [
+"LogoutServlet.java"
+],
+"typehint": {}
+},
+{
+"num": 41,
+"name": "MSG41_EMAIL_NOT_FOUND",
+"section": "5.4 Đăng nhập, mật khẩu, tài khoản cá nhân",
+"doc": "",
+"en": "No account found with this email.",
+"vi": "Không tìm thấy tài khoản với email này.",
+"files": [
+"PasswordRecoveryService.java"
+],
+"typehint": {}
+},
+{
+"num": 42,
+"name": "MSG42_CODE_SENT",
+"section": "5.4 Đăng nhập, mật khẩu, tài khoản cá nhân",
+"doc": "",
+"en": "A code has been sent to %s. It is valid for %d minutes.",
+"vi": "Mã đã được gửi tới %s. Mã có hiệu lực trong %d phút.",
+"files": [
+"VerificationCodeService.java"
+],
+"typehint": {
+"Toast (success)": 1
+}
+},
+{
+"num": 43,
+"name": "MSG43_WRONG_CODE",
+"section": "5.4 Đăng nhập, mật khẩu, tài khoản cá nhân",
+"doc": "",
+"en": "Incorrect code. Check again or press Resend code.",
+"vi": "Mã không đúng. Hãy kiểm tra lại hoặc bấm Gửi lại mã.",
+"files": [
+"VerificationCodeService.java"
+],
+"typehint": {
+"fail": 1
+}
+},
+{
+"num": 44,
+"name": "MSG44_CODE_EXPIRED",
+"section": "5.4 Đăng nhập, mật khẩu, tài khoản cá nhân",
+"doc": "",
+"en": "This code has expired. Press Resend code to get a new one.",
+"vi": "Mã đã hết hạn. Bấm Gửi lại mã để nhận mã mới.",
+"files": [
+"ForgotPasswordServlet.java",
+"VerificationCodeService.java"
+],
+"typehint": {
+"Toast (error)": 1
+}
+},
+{
+"num": 45,
+"name": "MSG45_CODE_RESENT",
+"section": "5.4 Đăng nhập, mật khẩu, tài khoản cá nhân",
+"doc": "",
+"en": "A new verification code has been sent.",
+"vi": "Đã gửi mã xác thực mới.",
+"files": [
+"ForgotPasswordServlet.java",
+"RegisterServlet.java"
+],
+"typehint": {
+"Toast (success)": 1
+}
+},
+{
+"num": 46,
+"name": "MSG46_PASSWORD_TOO_SHORT",
+"section": "5.4 Đăng nhập, mật khẩu, tài khoản cá nhân",
+"doc": "",
+"en": "Password must be at least %d characters.",
+"vi": "Mật khẩu phải có ít nhất %d ký tự.",
+"files": [],
+"typehint": {}
+},
+{
+"num": 47,
+"name": "MSG47_PASSWORD_MISMATCH",
+"section": "5.4 Đăng nhập, mật khẩu, tài khoản cá nhân",
+"doc": "",
+"en": "The passwords do not match.",
+"vi": "Mật khẩu nhập lại không khớp.",
+"files": [
+"AccountSettingsService.java",
+"PasswordRecoveryService.java",
+"RegistrationService.java"
+],
+"typehint": {
+"In red, under the field": 2
+}
+},
+{
+"num": 48,
+"name": "MSG48_PASSWORD_SAME_AS_OLD",
+"section": "5.4 Đăng nhập, mật khẩu, tài khoản cá nhân",
+"doc": "",
+"en": "The new password must differ from the current one.",
+"vi": "Mật khẩu mới phải khác mật khẩu hiện tại.",
+"files": [
+"AccountSettingsService.java"
+],
+"typehint": {}
+},
+{
+"num": 49,
+"name": "MSG49_PASSWORD_CHANGED",
+"section": "5.4 Đăng nhập, mật khẩu, tài khoản cá nhân",
+"doc": "",
+"en": "Password changed. All your other sessions have been signed out.",
+"vi": "Đã đổi mật khẩu. Các phiên đăng nhập khác của bạn đã bị đăng xuất.",
+"files": [
+"AccountSettingsServlet.java",
+"PasswordRecoveryService.java"
+],
+"typehint": {
+"Toast (success)": 1
+}
+},
+{
+"num": 50,
+"name": "MSG50_PHONE_ACCEPTED",
+"section": "5.4 Đăng nhập, mật khẩu, tài khoản cá nhân",
+"doc": "",
+"en": "Phone number accepted. Please fill in your registration details.",
+"vi": "Số điện thoại hợp lệ. Vui lòng điền thông tin đăng ký.",
+"files": [],
+"typehint": {}
+},
+{
+"num": 51,
+"name": "MSG51_PHONE_HAS_ACCOUNT",
+"section": "5.4 Đăng nhập, mật khẩu, tài khoản cá nhân",
+"doc": "",
+"en": "This phone number already has an account. Please sign in or use Forgot password.",
+"vi": "Số điện thoại này đã có tài khoản. Vui lòng đăng nhập hoặc dùng Quên mật khẩu.",
+"files": [
+"RegistrationService.java"
+],
+"typehint": {
+"fail": 1
+}
+},
+{
+"num": 52,
+"name": "MSG52_PHONE_DIFFERENT_EMAIL",
+"section": "5.4 Đăng nhập, mật khẩu, tài khoản cá nhân",
+"doc": "",
+"en": "This phone number is registered with a different email (%s). Use that email, or visit the front desk to have it updated.",
+"vi": "Số điện thoại này đã đăng ký với email khác (%s). Hãy dùng email đó, hoặc đến quầy lễ tân để cập nhật.",
+"files": [
+"RegistrationService.java"
+],
+"typehint": {
+"fail": 1
+}
+},
+{
+"num": 53,
+"name": "MSG53_PROFILE_NO_EMAIL",
+"section": "5.4 Đăng nhập, mật khẩu, tài khoản cá nhân",
+"doc": "",
+"en": "Your profile has no email on file, so it cannot be activated online. Please visit the front desk to add one.",
+"vi": "Hồ sơ của bạn chưa có email nên không thể kích hoạt trực tuyến. Vui lòng đến quầy lễ tân để bổ sung.",
+"files": [
+"ContactChangeService.java",
+"RegistrationService.java"
+],
+"typehint": {
+"fail": 3
+}
+},
+{
+"num": 54,
+"name": "MSG54_ACCOUNT_CREATED",
+"section": "5.4 Đăng nhập, mật khẩu, tài khoản cá nhân",
+"doc": "",
+"en": "Your account has been created. Please sign in.",
+"vi": "Đã tạo tài khoản. Vui lòng đăng nhập.",
+"files": [
+"RegistrationService.java"
+],
+"typehint": {
+"Toast (success)": 2
+}
+},
+{
+"num": 55,
+"name": "MSG55_EMAIL_CHANGE_CODE_SENT",
+"section": "5.4 Đăng nhập, mật khẩu, tài khoản cá nhân",
+"doc": "",
+"en": "A verification code has been sent to the new email address.",
+"vi": "Mã xác thực đã được gửi tới địa chỉ email mới.",
+"files": [
+"ContactChangeService.java"
+],
+"typehint": {
+"Toast (success)": 1
+}
+},
+{
+"num": 56,
+"name": "MSG56_EMAIL_CHANGED",
+"section": "5.4 Đăng nhập, mật khẩu, tài khoản cá nhân",
+"doc": "",
+"en": "Sign-in email updated. We notified the old address and signed out your other sessions.",
+"vi": "Đã cập nhật email đăng nhập. Chúng tôi đã thông báo tới email cũ và đăng xuất các phiên khác của bạn.",
+"files": [
+"ContactChangeService.java"
+],
+"typehint": {
+"Toast (success)": 1
+}
+},
+{
+"num": 57,
+"name": "MSG57_PHONE_CHANGED",
+"section": "5.4 Đăng nhập, mật khẩu, tài khoản cá nhân",
+"doc": "",
+"en": "Phone number updated.",
+"vi": "Đã cập nhật số điện thoại.",
+"files": [
+"ContactChangeService.java"
+],
+"typehint": {
+"Toast (success)": 1
+}
+},
+{
+"num": 58,
+"name": "MSG58_AVATAR_CHANGED",
+"section": "5.4 Đăng nhập, mật khẩu, tài khoản cá nhân",
+"doc": "",
+"en": "Profile picture updated.",
+"vi": "Đã cập nhật ảnh đại diện.",
+"files": [
+"AccountSettingsServlet.java"
+],
+"typehint": {}
+},
+{
+"num": 58,
+"name": "MSG58_AVATAR_REMOVED",
+"section": "5.4 Đăng nhập, mật khẩu, tài khoản cá nhân",
+"doc": "",
+"en": "Profile picture removed.",
+"vi": "Đã xóa ảnh đại diện.",
+"files": [
+"AccountSettingsService.java"
+],
+"typehint": {
+"Toast (success)": 1
+}
+},
+{
+"num": 59,
+"name": "MSG59_OTHER_DEVICES_SIGNED_OUT",
+"section": "5.4 Đăng nhập, mật khẩu, tài khoản cá nhân",
+"doc": "",
+"en": "All other devices have been signed out.",
+"vi": "Đã đăng xuất khỏi tất cả thiết bị khác.",
+"files": [],
+"typehint": {}
+},
+{
+"num": 60,
+"name": "MSG60_UPDATED_BY_FRONT_DESK",
+"section": "5.4 Đăng nhập, mật khẩu, tài khoản cá nhân",
+"doc": "",
+"en": "This information is updated by the front desk. Please bring your ID to the counter.",
+"vi": "Thông tin này do lễ tân cập nhật. Vui lòng mang giấy tờ tùy thân đến quầy.",
+"files": [],
+"typehint": {}
+},
+{
+"num": 61,
+"name": "MSG61_VERIFICATION_LOCKED",
+"section": "5.4 Đăng nhập, mật khẩu, tài khoản cá nhân",
+"doc": "",
+"en": "Too many attempts. Verification for this email is locked for %d minutes. Try again in %s.",
+"vi": "Thử quá nhiều lần. Xác thực cho email này bị khóa %d phút. Thử lại sau %s.",
+"files": [
+"VerificationCodeService.java"
+],
+"typehint": {
+"fail": 4
+}
+},
+{
+"num": 62,
+"name": "MSG62_CODE_ATTEMPTS_LEFT",
+"section": "5.5 Số lần còn lại khi nhập / gửi lại mã xác thực (CBR-94)",
+"doc": "",
+"en": "You have %d attempt(s) left to enter the code.",
+"vi": "Bạn còn %d lần nhập mã.",
+"files": [
+"ForgotPasswordServlet.java"
+],
+"typehint": {}
+},
+{
+"num": 63,
+"name": "MSG63_CODE_LAST_ATTEMPT",
+"section": "5.5 Số lần còn lại khi nhập / gửi lại mã xác thực (CBR-94)",
+"doc": "",
+"en": "One more wrong entry will lock verification for this email for %d minutes.",
+"vi": "Nhập sai thêm một lần nữa sẽ khóa xác thực cho email này trong %d phút.",
+"files": [
+"ForgotPasswordServlet.java"
+],
+"typehint": {}
+},
+{
+"num": 64,
+"name": "MSG64_CODE_RESENDS_LEFT",
+"section": "5.5 Số lần còn lại khi nhập / gửi lại mã xác thực (CBR-94)",
+"doc": "",
+"en": "You can request %d more code(s) within 60 minutes.",
+"vi": "Bạn còn có thể yêu cầu %d mã nữa trong 60 phút.",
+"files": [
+"ForgotPasswordServlet.java"
+],
+"typehint": {}
+},
+{
+"num": 65,
+"name": "MSG65_CODE_RESEND_WILL_LOCK",
+"section": "5.5 Số lần còn lại khi nhập / gửi lại mã xác thực (CBR-94)",
+"doc": "",
+"en": "No code requests left. Requesting another code will lock verification for %d minutes.",
+"vi": "Đã hết lượt yêu cầu mã. Yêu cầu thêm sẽ khóa xác thực trong %d phút.",
+"files": [
+"ForgotPasswordServlet.java"
+],
+"typehint": {}
+},
+{
+"num": 66,
+"name": "MSG66_PASSWORD_RULE",
+"section": "5.6 Luật DBR / CBR bổ sung (MSG66–MSG105)",
+"doc": "DBR-02: mật khẩu phải có cả chữ và số.",
+"en": "Password must be %d–%d characters and contain both letters and digits.",
+"vi": "Mật khẩu phải dài %d–%d ký tự và có cả chữ lẫn số.",
+"files": [
+"AccountSettingsService.java",
+"PasswordRecoveryService.java",
+"RegistrationService.java"
+],
+"typehint": {
+"In red, under the field": 2
+}
+},
+{
+"num": 67,
+"name": "MSG67_FULL_NAME_RULE",
+"section": "5.6 Luật DBR / CBR bổ sung (MSG66–MSG105)",
+"doc": "DBR-01: họ tên sai ký tự.",
+"en": "Full name may contain only letters, spaces, apostrophes or hyphens.",
+"vi": "Họ tên chỉ được chứa chữ cái, khoảng trắng, dấu nháy đơn hoặc dấu gạch nối.",
+"files": [
+"RegistrationService.java"
+],
+"typehint": {
+"In red, under the field": 1
+}
+},
+{
+"num": 68,
+"name": "MSG68_CODE_FORMAT",
+"section": "5.6 Luật DBR / CBR bổ sung (MSG66–MSG105)",
+"doc": "DBR-03: mã xác thực sai định dạng.",
+"en": "The verification code must be exactly 6 digits.",
+"vi": "Mã xác thực phải gồm đúng 6 chữ số.",
+"files": [
+"VerificationCodeService.java"
+],
+"typehint": {}
+},
+{
+"num": 69,
+"name": "MSG69_DOB_TOO_OLD",
+"section": "5.6 Luật DBR / CBR bổ sung (MSG66–MSG105)",
+"doc": "DBR-04: tuổi vượt quá 100.",
+"en": "Invalid date of birth (age must not exceed %d).",
+"vi": "Ngày sinh không hợp lệ (tuổi không được vượt quá %d).",
+"files": [
+"RegistrationService.java"
+],
+"typehint": {
+"In red, under the field": 1
+}
+},
+{
+"num": 70,
+"name": "MSG70_CODE_RESEND_TOO_SOON",
+"section": "5.6 Luật DBR / CBR bổ sung (MSG66–MSG105)",
+"doc": "CBR-94: bấm \"Gửi lại mã\" khi chưa đủ 60 giây kể từ lần gửi trước.",
+"en": "Please wait %d more seconds before resending the code.",
+"vi": "Vui lòng chờ thêm %d giây trước khi gửi lại mã.",
+"files": [
+"VerificationCodeService.java"
+],
+"typehint": {
+"fail": 1
+}
+},
+{
+"num": 71,
+"name": "MSG71_CURRENT_PASSWORD_WRONG",
+"section": "5.6 Luật DBR / CBR bổ sung (MSG66–MSG105)",
+"doc": "UC-04: đổi mật khẩu nhưng mật khẩu hiện tại nhập sai.",
+"en": "The current password is incorrect.",
+"vi": "Mật khẩu hiện tại không đúng.",
+"files": [
+"AccountSettingsService.java"
+],
+"typehint": {}
+},
+{
+"num": 72,
+"name": "MSG72_FULL_NAME_LENGTH",
+"section": "5.6 Luật DBR / CBR bổ sung (MSG66–MSG105)",
+"doc": "DBR-01: họ tên ngoài độ dài cho phép.",
+"en": "Full name must be %d–%d characters.",
+"vi": "Họ tên phải dài %d–%d ký tự.",
+"files": [
+"RegistrationService.java"
+],
+"typehint": {
+"In red, under the field": 1
+}
+},
+{
+"num": 73,
+"name": "MSG73_POST_UNAVAILABLE",
+"section": "5.6 Luật DBR / CBR bổ sung (MSG66–MSG105)",
+"doc": "CBR-100: bài viết đã gỡ hoặc không tồn tại trên trang công khai.",
+"en": "This post is no longer available.",
+"vi": "Bài viết này không còn khả dụng.",
+"files": [
+"BlogDetailServlet.java",
+"BlogService.java"
+],
+"typehint": {
+"Toast (warning)": 1,
+"fail": 4
+}
+},
+{
+"num": 74,
+"name": "MSG74_CHOOSE_ROLE",
+"section": "5.6 Luật DBR / CBR bổ sung (MSG66–MSG105)",
+"doc": "CBR-113: chọn vai trò làm việc khi tài khoản có nhiều vai trò.",
+"en": "Choose the role you want to work in.",
+"vi": "Chọn vai trò bạn muốn làm việc.",
+"files": [],
+"typehint": {}
+},
+{
+"num": 75,
+"name": "MSG75_ROLE_SWITCHED",
+"section": "5.6 Luật DBR / CBR bổ sung (MSG66–MSG105)",
+"doc": "CBR-113: đổi vai trò thành công.",
+"en": "You are now working as %s.",
+"vi": "Bạn đang làm việc với vai trò %s.",
+"files": [],
+"typehint": {}
+},
+{
+"num": 76,
+"name": "MSG76_STAFF_OWN_CUSTOMER_PROFILE",
+"section": "5.6 Luật DBR / CBR bổ sung (MSG66–MSG105)",
+"doc": "CBR-115: nhân viên không được thao tác trên hồ sơ khách hàng của chính mình.",
+"en": "You cannot perform this action on your own customer profile. Please ask another colleague.",
+"vi": "Bạn không thể thao tác trên hồ sơ khách hàng của chính mình. Vui lòng nhờ đồng nghiệp khác.",
+"files": [
+"CounterSaleService.java",
+"CustomerDeletionService.java",
+"ShiftService.java"
+],
+"typehint": {
+"fail": 6
+}
+},
+{
+"num": 77,
+"name": "MSG77_LEAVE_SUBMISSION_DEADLINE",
+"section": "5.6 Luật DBR / CBR bổ sung (MSG66–MSG105)",
+"doc": "CBR-84, P-12: nộp đơn nghỉ phép quá hạn cut-off.",
+"en": "Submission deadline passed. Leave on %s had to be submitted before %s on the previous day.",
+"vi": "Đã quá hạn nộp. Đơn nghỉ ngày %s phải nộp trước %s của ngày hôm trước.",
+"files": [
+"StaffLeaveService.java"
+],
+"typehint": {
+"fail": 1
+}
+},
+{
+"num": 78,
+"name": "MSG78_LEAVE_BLOCKED_BY_SESSIONS",
+"section": "5.6 Luật DBR / CBR bổ sung (MSG66–MSG105)",
+"doc": "CBR-83: nộp đơn nghỉ phép khi vẫn còn lịch tập PT.",
+"en": "You still have %d scheduled session(s) in this period. Reschedule, transfer or cancel them before submitting the request.",
+"vi": "Bạn còn %d buổi dạy trùng lịch nghỉ. Xem lịch và liên hệ quản lý để giải quyết trước khi gửi đơn.",
+"files": [
+"StaffLeaveService.java"
+],
+"typehint": {}
+},
+{
+"num": 79,
+"name": "MSG79_LEAVE_BREAKS_MIN_STAFFING",
+"section": "5.6 Luật DBR / CBR bổ sung (MSG66–MSG105)",
+"doc": "BR-14, CBR-88, CBR-90: duyệt nghỉ phép làm thiếu nhân sự tối thiểu của ca.",
+"en": "Cannot approve: the %s shift on %s would have fewer than %d %s(s) on duty.",
+"vi": "Không thể duyệt: ca %s ngày %s sẽ có ít hơn %d %s trực.",
+"files": [],
+"typehint": {}
+},
+{
+"num": 81,
+"name": "MSG81_PT_REQUIRES_MEMBERSHIP",
+"section": "5.6 Luật DBR / CBR bổ sung (MSG66–MSG105)",
+"doc": "CBR-59, BR-37: bán gói PT cho khách chưa có gói hội viên còn hạn.",
+"en": "%s needs a valid membership package before a PT package can be sold.",
+"vi": "%s cần có gói hội viên còn hiệu lực trước khi mua gói PT.",
+"files": [],
+"typehint": {}
+},
+{
+"num": 82,
+"name": "MSG82_PT_MIN_AGE",
+"section": "5.6 Luật DBR / CBR bổ sung (MSG66–MSG105)",
+"doc": "CBR-13, CBR-14, CBR-15, P-05: khách chưa đủ tuổi tối thiểu dùng PT.",
+"en": "PT services are available only to customers aged %d or older.",
+"vi": "Dịch vụ PT chỉ dành cho khách từ %d tuổi trở lên.",
+"files": [],
+"typehint": {}
+},
+{
+"num": 83,
+"name": "MSG83_CHECKIN_NO_PACKAGE",
+"section": "5.6 Luật DBR / CBR bổ sung (MSG66–MSG105)",
+"doc": "BR-27: check-in thất bại vì không có gói tập hoặc vé ngày hợp lệ hôm nay.",
+"en": "Check-in refused: the customer has no valid membership package or day pass today.",
+"vi": "Từ chối check-in: hôm nay khách không có gói hội viên hoặc vé ngày hợp lệ.",
+"files": [],
+"typehint": {}
+},
+{
+"num": 84,
+"name": "MSG84_DAY_PASS_USED",
+"section": "5.6 Luật DBR / CBR bổ sung (MSG66–MSG105)",
+"doc": "CBR-36, BR-29: vé ngày đã được sử dụng.",
+"en": "This day pass has already been used.",
+"vi": "Vé ngày này đã được sử dụng.",
+"files": [],
+"typehint": {}
+},
+{
+"num": 85,
+"name": "MSG85_VOUCHER_INVALID",
+"section": "5.6 Luật DBR / CBR bổ sung (MSG66–MSG105)",
+"doc": "CBR-73, CBR-74, CBR-76: voucher không hợp lệ.",
+"en": "This voucher cannot be applied: %s.",
+"vi": "Không thể áp dụng voucher này: %s.",
+"files": [
+"PaymentService.java"
+],
+"typehint": {}
+},
+{
+"num": 86,
+"name": "MSG86_VOUCHER_PAYMENT_PENDING",
+"section": "5.6 Luật DBR / CBR bổ sung (MSG66–MSG105)",
+"doc": "CBR-75: thay đổi voucher khi thanh toán đang xử lý.",
+"en": "The voucher cannot be changed while a payment is in progress.",
+"vi": "Không thể đổi voucher khi đang xử lý thanh toán.",
+"files": [
+"PaymentService.java"
+],
+"typehint": {
+"fail": 1
+}
+},
+{
+"num": 87,
+"name": "MSG87_CLOSE_SHIFT_PENDING_ORDERS",
+"section": "5.6 Luật DBR / CBR bổ sung (MSG66–MSG105)",
+"doc": "CBR-78: đóng ca khi còn đơn hàng quầy đang Pending.",
+"en": "Cannot close the shift: %d counter order(s) are still Pending.",
+"vi": "Không thể đóng ca: còn %d đơn tại quầy đang chờ thanh toán.",
+"files": [
+"ShiftService.java"
+],
+"typehint": {
+"fail": 1
+}
+},
+{
+"num": 88,
+"name": "MSG88_LAST_ACTIVE_ADMIN",
+"section": "5.6 Luật DBR / CBR bổ sung (MSG66–MSG105)",
+"doc": "BR-06, BR-07: khóa, hạ quyền hoặc cho thôi việc Admin hoạt động cuối cùng.",
+"en": "This is the last active Admin account. It cannot be locked, demoted or set to Resigned.",
+"vi": "Đây là tài khoản Admin hoạt động cuối cùng. Không thể khóa, hạ quyền hoặc chuyển sang Đã nghỉ việc.",
+"files": [],
+"typehint": {}
+},
+{
+"num": 89,
+"name": "MSG89_POSITION_CHANGE_UNFINISHED",
+"section": "5.6 Luật DBR / CBR bổ sung (MSG66–MSG105)",
+"doc": "CBR-87: đổi vị trí công việc khi còn công việc chưa hoàn thành.",
+"en": "The position cannot be changed while unfinished work remains: %s.",
+"vi": "Không thể đổi vị trí khi còn công việc chưa hoàn thành: %s.",
+"files": [],
+"typehint": {}
+},
+{
+"num": 90,
+"name": "MSG90_SWAP_LIMIT_REACHED",
+"section": "5.6 Luật DBR / CBR bổ sung (MSG66–MSG105)",
+"doc": "BR-73, P-08: gói PT đã dùng hết lượt đổi PT.",
+"en": "This PT package has already used all %d swaps.",
+"vi": "Gói PT này đã dùng hết %d lượt đổi.",
+"files": [],
+"typehint": {}
+},
+{
+"num": 91,
+"name": "MSG91_SESSION_CANNOT_CHANGE",
+"section": "5.6 Luật DBR / CBR bổ sung (MSG66–MSG105)",
+"doc": "BR-70, BR-76: buổi tập đã bắt đầu hoặc không còn ở trạng thái Scheduled.",
+"en": "This session has already started or is no longer scheduled, so it cannot be changed.",
+"vi": "Buổi tập đã bắt đầu hoặc không còn ở trạng thái đã xếp lịch, nên không thể thay đổi.",
+"files": [
+"PtSessionHandleService.java"
+],
+"typehint": {}
+},
+{
+"num": 92,
+"name": "MSG92_NO_MEMBERSHIP_ON_DATE",
+"section": "5.6 Luật DBR / CBR bổ sung (MSG66–MSG105)",
+"doc": "CBR-61, CBR-60: ngày tập không nằm trong thời hạn gói hội viên.",
+"en": "The customer has no valid membership package on %s. Please choose another date.",
+"vi": "Khách không có gói hội viên hợp lệ vào ngày %s. Vui lòng chọn ngày khác.",
+"files": [],
+"typehint": {}
+},
+{
+"num": 93,
+"name": "MSG93_UPDATED_BY_MANAGER",
+"section": "5.6 Luật DBR / CBR bổ sung (MSG66–MSG105)",
+"doc": "CBR-108: nhân viên xem trường thông tin nhân sự trong Account Settings.",
+"en": "This information is updated by the Manager.",
+"vi": "Thông tin này do Quản lý cập nhật.",
+"files": [],
+"typehint": {}
+},
+{
+"num": 94,
+"name": "MSG94_ONLY_ADMIN_CAN_CHANGE",
+"section": "5.6 Luật DBR / CBR bổ sung (MSG66–MSG105)",
+"doc": "CBR-109: nhân viên xem vị trí hoặc trạng thái tài khoản trong Account Settings.",
+"en": "Only the Admin can change this information.",
+"vi": "Chỉ Admin mới có thể thay đổi thông tin này.",
+"files": [],
+"typehint": {}
+},
+{
+"num": 95,
+"name": "MSG95_PASSWORD_RESET_COMPLETED",
+"section": "5.6 Luật DBR / CBR bổ sung (MSG66–MSG105)",
+"doc": "UC-03, CBR-93: đặt lại mật khẩu qua Quên mật khẩu hoàn tất.",
+"en": "Your password has been reset and all sessions have been signed out. Please sign in.",
+"vi": "Đã đặt lại mật khẩu và đăng xuất mọi phiên. Vui lòng đăng nhập.",
+"files": [],
+"typehint": {}
+},
+{
+"num": 96,
+"name": "MSG96_DELETION_REQUEST_SENT",
+"section": "5.6 Luật DBR / CBR bổ sung (MSG66–MSG105)",
+"doc": "CBR-16, BR-16: gửi yêu cầu xóa tài khoản cho Quản lý phê duyệt.",
+"en": "Deletion request sent to the Manager for approval.",
+"vi": "Đã gửi yêu cầu xóa tới Quản lý để duyệt.",
+"files": [
+"CustomerDeletionService.java"
+],
+"typehint": {
+"Toast (success)": 1
+}
+},
+{
+"num": 97,
+"name": "MSG97_CANCEL_ORDER_OUTSIDE_SHIFT",
+"section": "5.6 Luật DBR / CBR bổ sung (MSG66–MSG105)",
+"doc": "CBR-11: hủy đơn hàng tại quầy ngoài ca mở tạo đơn.",
+"en": "This order can only be cancelled during the open shift that created it.",
+"vi": "Chỉ có thể hủy đơn này trong ca đang mở đã tạo đơn.",
+"files": [
+"ShiftService.java"
+],
+"typehint": {
+"fail": 1
+}
+},
+{
+"num": 98,
+"name": "MSG98_ONLINE_ORDER_DEADLINE_PASSED",
+"section": "5.6 Luật DBR / CBR bổ sung (MSG66–MSG105)",
+"doc": "CBR-70: thanh toán đơn online quá hạn.",
+"en": "The payment deadline has passed and the order was cancelled. Please create a new order.",
+"vi": "Đã quá hạn thanh toán và đơn đã bị hủy. Vui lòng tạo đơn mới.",
+"files": [],
+"typehint": {}
+},
+{
+"num": 99,
+"name": "MSG99_FREEZE_REFUSED",
+"section": "5.6 Luật DBR / CBR bổ sung (MSG66–MSG105)",
+"doc": "BR-21, BR-23, BR-24: từ chối bảo lưu gói tập.",
+"en": "This package cannot be frozen: %s.",
+"vi": "Không thể bảo lưu gói này: %s.",
+"files": [
+"FreezeService.java"
+],
+"typehint": {
+"fail": 4
+}
+},
+{
+"num": 100,
+"name": "MSG100_FREEZE_LIMIT",
+"section": "5.6 Luật DBR / CBR bổ sung (MSG66–MSG105)",
+"doc": "CBR-08, DBR-13: thời hạn bảo lưu vượt quá quy định.",
+"en": "A freeze can last at most %d month(s) and must end by %s.",
+"vi": "Bảo lưu tối đa %d tháng và phải kết thúc trước ngày %s.",
+"files": [
+"FreezeService.java"
+],
+"typehint": {
+"fail": 1
+}
+},
+{
+"num": 101,
+"name": "MSG101_PROFILE_PENDING_DELETION",
+"section": "5.6 Luật DBR / CBR bổ sung (MSG66–MSG105)",
+"doc": "CBR-16: hồ sơ đã có yêu cầu xóa đang chờ duyệt.",
+"en": "This profile already has a pending deletion request.",
+"vi": "Hồ sơ này đã có yêu cầu xóa đang chờ duyệt.",
+"files": [
+"CustomerDeletionService.java",
+"FreezeService.java"
+],
+"typehint": {
+"fail": 2
+}
+},
+{
+"num": 102,
+"name": "MSG102_STAFF_ALREADY_EXISTS",
+"section": "5.6 Luật DBR / CBR bổ sung (MSG66–MSG105)",
+"doc": "DBR-65: thêm hồ sơ nhân viên cho người đã có hồ sơ nhân viên đang hoạt động.",
+"en": "This person already has an active staff record.",
+"vi": "Người này đã có hồ sơ nhân viên đang hoạt động.",
+"files": [],
+"typehint": {}
+},
+{
+"num": 103,
+"name": "MSG103_SLOT_ALREADY_TAKEN",
+"section": "5.6 Luật DBR / CBR bổ sung (MSG66–MSG105)",
+"doc": "CBR-53, DBR-36: slot đã bị người khác chọn trước.",
+"en": "This slot has just been taken. Please choose another slot.",
+"vi": "Khung giờ này vừa được người khác chọn. Vui lòng chọn khung giờ khác.",
+"files": [
+"PtSaleService.java",
+"PtSessionHandleService.java"
+],
+"typehint": {}
+},
+{
+"num": 104,
+"name": "MSG104_SLOT_OVERLAPS",
+"section": "5.6 Luật DBR / CBR bổ sung (MSG66–MSG105)",
+"doc": "DBR-33: slot trùng với slot đã có của PT.",
+"en": "This slot overlaps an existing slot (%s–%s).",
+"vi": "Khung giờ này trùng với khung giờ đã có (%s–%s).",
+"files": [],
+"typehint": {}
+},
+{
+"num": 105,
+"name": "MSG105_ACTION_OUTSIDE_WINDOW",
+"section": "5.6 Luật DBR / CBR bổ sung (MSG66–MSG105)",
+"doc": "BR-54, BR-69, BR-70: thao tác ngoài khung giờ cho phép.",
+"en": "This action is outside the allowed time window.",
+"vi": "Thao tác này nằm ngoài khung thời gian cho phép.",
+"files": [],
+"typehint": {}
+},
+{
+"num": 106,
+"name": "MSG106_PT_RATING_NOT_ELIGIBLE",
+"section": "5.6 Luật DBR / CBR bổ sung (MSG66–MSG105)",
+"doc": "CBR-116: PT chưa có buổi đã chốt của khách trong tháng.",
+"en": "You cannot rate this PT without a CheckedIn or Missed session this month.",
+"vi": "Bạn chưa thể đánh giá PT này vì tháng này chưa có buổi Đã check-in hoặc Vắng.",
+"files": [
+"FeedbackService.java"
+],
+"typehint": {
+"fail": 1
+}
+},
+{
+"num": 107,
+"name": "MSG107_PT_RATING_UPDATED",
+"section": "5.6 Luật DBR / CBR bổ sung (MSG66–MSG105)",
+"doc": "DBR-67: chấm lại cùng PT cùng tháng.",
+"en": "Your PT rating has been updated.",
+"vi": "Đã cập nhật đánh giá PT của bạn.",
+"files": [
+"FeedbackService.java"
+],
+"typehint": {
+"Toast (success)": 1
+}
+},
+{
+"num": 108,
+"name": "MSG108_HOLD_NO_LONGER_VALID",
+"section": "5.6 Luật DBR / CBR bổ sung (MSG66–MSG105)",
+"doc": "Đơn giữ chỗ tại quầy không còn hiệu lực (đã thu tiền / hủy / quá hạn giữ).",
+"en": "This order no longer holds a slot (paid, cancelled, or expired after %d minutes).",
+"vi": "Đơn này không còn giữ chỗ (đã thu tiền, đã hủy hoặc quá %d phút). Bán lại từ đầu.",
+"files": [
+"PtSaleService.java"
+],
+"typehint": {}
+},
+{
+"num": 109,
+"name": "MSG109_SHIFT_NOT_OPEN_FOR_SALE",
+"section": "6.1 Bán hàng tại quầy (CounterSaleService, CounterSaleServlet)",
+"doc": "Bán gói tại quầy khi ca chưa mở.",
+"en": "",
+"vi": "Chưa mở ca làm việc. Vui lòng mở ca ở màn Ca làm việc trước khi bán gói.",
+"files": [
+"CounterSaleService.java"
+],
+"typehint": {
+"fail": 1
+}
+},
+{
+"num": 110,
+"name": "MSG110_SHIFT_NOT_OPEN_FOR_PAYMENT",
+"section": "6.1 Bán hàng tại quầy (CounterSaleService, CounterSaleServlet)",
+"doc": "Thu tiền tại quầy khi ca chưa mở.",
+"en": "",
+"vi": "Chưa mở ca làm việc. Vui lòng mở ca trước khi thu tiền.",
+"files": [
+"CounterSaleService.java"
+],
+"typehint": {
+"fail": 1
+}
+},
+{
+"num": 111,
+"name": "MSG111_CUSTOMER_DATA_INVALID",
+"section": "6.1 Bán hàng tại quầy (CounterSaleService, CounterSaleServlet)",
+"doc": "Form tạo nhanh hồ sơ gửi lên rỗng / hỏng.",
+"en": "",
+"vi": "Dữ liệu khách hàng không hợp lệ.",
+"files": [
+"CounterSaleService.java"
+],
+"typehint": {
+"fail": 1
+}
+},
+{
+"num": 112,
+"name": "MSG112_ORDER_DATA_INVALID",
+"section": "6.1 Bán hàng tại quầy (CounterSaleService, CounterSaleServlet)",
+"doc": "Dữ liệu thanh toán tại quầy gửi lên rỗng / hỏng.",
+"en": "",
+"vi": "Thông tin đơn hàng không hợp lệ.",
+"files": [
+"CounterSaleService.java",
+"CounterSaleServlet.java"
+],
+"typehint": {
+"Toast (error)": 1,
+"fail": 2
+}
+},
+{
+"num": 113,
+"name": "MSG113_QUICK_FULL_NAME_RULE",
+"section": "6.1 Bán hàng tại quầy (CounterSaleService, CounterSaleServlet)",
+"doc": "Tạo nhanh hồ sơ: họ tên sai.",
+"en": "",
+"vi": "Họ và tên từ 2 đến 50 ký tự, chỉ chứa chữ cái và khoảng trắng.",
+"files": [
+"CounterSaleService.java"
+],
+"typehint": {}
+},
+{
+"num": 114,
+"name": "MSG114_QUICK_DOB_INVALID",
+"section": "6.1 Bán hàng tại quầy (CounterSaleService, CounterSaleServlet)",
+"doc": "Tạo nhanh hồ sơ: ngày sinh sai.",
+"en": "",
+"vi": "Ngày sinh không hợp lệ hoặc vượt quá 100 tuổi.",
+"files": [
+"CounterSaleService.java"
+],
+"typehint": {}
+},
+{
+"num": 115,
+"name": "MSG115_GUARDIAN_NAME_RULE",
+"section": "6.1 Bán hàng tại quầy (CounterSaleService, CounterSaleServlet)",
+"doc": "Hồ sơ phụ thuộc: tên người giám hộ sai.",
+"en": "",
+"vi": "Tên người giám hộ từ 2 đến 50 ký tự.",
+"files": [
+"CounterSaleService.java"
+],
+"typehint": {}
+},
+{
+"num": 116,
+"name": "MSG116_GUARDIAN_RELATIONSHIP_RULE",
+"section": "6.1 Bán hàng tại quầy (CounterSaleService, CounterSaleServlet)",
+"doc": "Hồ sơ phụ thuộc: thiếu mối quan hệ.",
+"en": "",
+"vi": "Mối quan hệ người giám hộ không được để trống (tối đa 30 ký tự).",
+"files": [
+"CounterSaleService.java"
+],
+"typehint": {}
+},
+{
+"num": 117,
+"name": "MSG117_GUARDIAN_PHONE_RULE",
+"section": "6.1 Bán hàng tại quầy (CounterSaleService, CounterSaleServlet)",
+"doc": "Hồ sơ phụ thuộc: SĐT người giám hộ sai.",
+"en": "",
+"vi": "Số điện thoại người giám hộ phải gồm 10 chữ số bắt đầu bằng 0.",
+"files": [
+"CounterSaleService.java"
+],
+"typehint": {}
+},
+{
+"num": 118,
+"name": "MSG118_PHONE_TEN_DIGITS",
+"section": "6.1 Bán hàng tại quầy (CounterSaleService, CounterSaleServlet)",
+"doc": "Tạo nhanh hồ sơ: SĐT sai định dạng.",
+"en": "",
+"vi": "Số điện thoại phải gồm 10 chữ số bắt đầu bằng 0.",
+"files": [
+"CounterSaleService.java"
+],
+"typehint": {}
+},
+{
+"num": 119,
+"name": "MSG119_TEMP_PASSWORD_EMAIL_REQUIRED",
+"section": "6.1 Bán hàng tại quầy (CounterSaleService, CounterSaleServlet)",
+"doc": "Tạo nhanh hồ sơ Self: thiếu / sai email nhận mật khẩu tạm.",
+"en": "",
+"vi": "Nhập email đúng định dạng (VD: ten@gmail.com) để gửi mật khẩu tạm cho khách.",
+"files": [
+"CounterSaleService.java"
+],
+"typehint": {}
+},
+{
+"num": 120,
+"name": "MSG120_PHONE_EXISTS_FOR_CUSTOMER",
+"section": "6.1 Bán hàng tại quầy (CounterSaleService, CounterSaleServlet)",
+"doc": "Tạo nhanh hồ sơ: SĐT đã có. %s = SĐT, tên khách.",
+"en": "",
+"vi": "Số điện thoại %s đã tồn tại trong hệ thống với khách: %s.",
+"files": [
+"CounterSaleService.java"
+],
+"typehint": {}
+},
+{
+"num": 121,
+"name": "MSG121_PROFILE_CREATED",
+"section": "6.1 Bán hàng tại quầy (CounterSaleService, CounterSaleServlet)",
+"doc": "Tạo nhanh hồ sơ phụ thuộc xong. %s = mã KH.",
+"en": "",
+"vi": "Đã tạo hồ sơ khách hàng %s.",
+"files": [
+"CounterSaleService.java"
+],
+"typehint": {}
+},
+{
+"num": 122,
+"name": "MSG122_PROFILE_AND_ACCOUNT_CREATED",
+"section": "6.1 Bán hàng tại quầy (CounterSaleService, CounterSaleServlet)",
+"doc": "Tạo nhanh hồ sơ Self xong. %s = mã KH, email đã che.",
+"en": "",
+"vi": "Đã tạo hồ sơ %s và tài khoản. Mật khẩu tạm đã gửi tới %s.",
+"files": [
+"CounterSaleService.java"
+],
+"typehint": {}
+},
+{
+"num": 123,
+"name": "MSG123_VOUCHER_CODE_REQUIRED",
+"section": "6.1 Bán hàng tại quầy (CounterSaleService, CounterSaleServlet)",
+"doc": "Bấm áp mã khi ô mã trống.",
+"en": "",
+"vi": "Vui lòng nhập mã giảm giá.",
+"files": [
+"CounterSaleService.java"
+],
+"typehint": {}
+},
+{
+"num": 124,
+"name": "MSG124_VOUCHER_CODE_FORMAT",
+"section": "6.1 Bán hàng tại quầy (CounterSaleService, CounterSaleServlet)",
+"doc": "Mã giảm giá sai định dạng.",
+"en": "",
+"vi": "Mã giảm giá phải có 4–20 ký tự chữ A–Z hoặc số.",
+"files": [
+"CounterSaleService.java",
+"PaymentService.java"
+],
+"typehint": {
+"fail": 1
+}
+},
+{
+"num": 125,
+"name": "MSG125_VOUCHER_NOT_FOUND",
+"section": "6.1 Bán hàng tại quầy (CounterSaleService, CounterSaleServlet)",
+"doc": "Không có mã giảm giá này.",
+"en": "",
+"vi": "Mã giảm giá không tồn tại.",
+"files": [
+"CounterSaleService.java"
+],
+"typehint": {
+"fail": 1
+}
+},
+{
+"num": 126,
+"name": "MSG126_VOUCHER_INACTIVE",
+"section": "6.1 Bán hàng tại quầy (CounterSaleService, CounterSaleServlet)",
+"doc": "Mã giảm giá đã tắt.",
+"en": "",
+"vi": "Mã giảm giá đã ngừng áp dụng.",
+"files": [
+"CounterSaleService.java"
+],
+"typehint": {
+"fail": 1
+}
+},
+{
+"num": 127,
+"name": "MSG127_VOUCHER_OUT_OF_DATE",
+"section": "6.1 Bán hàng tại quầy (CounterSaleService, CounterSaleServlet)",
+"doc": "Ngoài thời gian áp dụng của mã.",
+"en": "",
+"vi": "Mã giảm giá chưa đến ngày bắt đầu hoặc đã hết hạn.",
+"files": [
+"CounterSaleService.java"
+],
+"typehint": {
+"fail": 1
+}
+},
+{
+"num": 128,
+"name": "MSG128_VOUCHER_USED_UP",
+"section": "6.1 Bán hàng tại quầy (CounterSaleService, CounterSaleServlet)",
+"doc": "Mã hết lượt dùng chung.",
+"en": "",
+"vi": "Mã giảm giá đã hết lượt sử dụng.",
+"files": [
+"CounterSaleService.java"
+],
+"typehint": {
+"fail": 1
+}
+},
+{
+"num": 129,
+"name": "MSG129_VOUCHER_SCOPE_PACKAGE_OR_DAY_PASS",
+"section": "6.1 Bán hàng tại quầy (CounterSaleService, CounterSaleServlet)",
+"doc": "Phạm vi mã không khớp loại gói.",
+"en": "",
+"vi": "Mã chỉ áp dụng cho gói tập hoặc vé ngày.",
+"files": [
+"CounterSaleService.java"
+],
+"typehint": {
+"fail": 1
+}
+},
+{
+"num": 130,
+"name": "MSG130_VOUCHER_SCOPE_MEMBERSHIP",
+"section": "6.1 Bán hàng tại quầy (CounterSaleService, CounterSaleServlet)",
+"doc": "Mã chỉ dành cho gói hội viên.",
+"en": "",
+"vi": "Mã giảm giá chỉ áp dụng cho gói hội viên.",
+"files": [
+"CounterSaleService.java"
+],
+"typehint": {
+"fail": 1
+}
+},
+{
+"num": 131,
+"name": "MSG131_VOUCHER_MIN_ORDER",
+"section": "6.1 Bán hàng tại quầy (CounterSaleService, CounterSaleServlet)",
+"doc": "Đơn chưa đạt giá trị tối thiểu. %s = số tiền.",
+"en": "",
+"vi": "Đơn hàng phải từ %s mới được áp dụng mã này.",
+"files": [
+"CounterSaleService.java"
+],
+"typehint": {
+"fail": 1
+}
+},
+{
+"num": 132,
+"name": "MSG132_VOUCHER_CUSTOMER_LIMIT",
+"section": "6.1 Bán hàng tại quầy (CounterSaleService, CounterSaleServlet)",
+"doc": "Khách đã dùng hết lượt của mã.",
+"en": "",
+"vi": "Khách hàng đã dùng hết số lượt của mã giảm giá này.",
+"files": [
+"CounterSaleService.java"
+],
+"typehint": {
+"fail": 1
+}
+},
+{
+"num": 133,
+"name": "MSG133_VOUCHER_JUST_USED_UP",
+"section": "6.1 Bán hàng tại quầy (CounterSaleService, CounterSaleServlet)",
+"doc": "Mã hết lượt ngay lúc thanh toán (người khác vừa dùng).",
+"en": "",
+"vi": "Mã giảm giá vừa hết lượt sử dụng. Vui lòng thử lại.",
+"files": [
+"CounterSaleService.java"
+],
+"typehint": {
+"fail": 1
+}
+},
+{
+"num": 134,
+"name": "MSG134_PAYMENT_METHOD_REQUIRED",
+"section": "6.1 Bán hàng tại quầy (CounterSaleService, CounterSaleServlet)",
+"doc": "Chưa chọn cách thu tiền.",
+"en": "",
+"vi": "Vui lòng chọn hình thức thu tiền: Tiền mặt hoặc Chuyển khoản.",
+"files": [
+"CounterSaleService.java"
+],
+"typehint": {
+"fail": 1
+}
+},
+{
+"num": 135,
+"name": "MSG135_PT_SINGLE_NOT_AT_COUNTER",
+"section": "6.1 Bán hàng tại quầy (CounterSaleService, CounterSaleServlet)",
+"doc": "Gói buổi PT lẻ chưa bán ở màn này.",
+"en": "",
+"vi": "Chưa có màn bán buổi PT lẻ tại quầy.",
+"files": [
+"CounterSaleService.java"
+],
+"typehint": {
+"fail": 1
+}
+},
+{
+"num": 136,
+"name": "MSG136_COUNTER_START_DATE_RANGE",
+"section": "6.1 Bán hàng tại quầy (CounterSaleService, CounterSaleServlet)",
+"doc": "Ngày bắt đầu gói ngoài khoảng cho phép. %s = từ ngày, đến ngày.",
+"en": "",
+"vi": "Ngày bắt đầu chỉ được chọn trong vòng 7 ngày tới (từ %s đến %s).",
+"files": [
+"CounterSaleService.java"
+],
+"typehint": {
+"fail": 1
+}
+},
+{
+"num": 137,
+"name": "MSG137_COUNTER_PAID",
+"section": "6.1 Bán hàng tại quầy (CounterSaleService, CounterSaleServlet)",
+"doc": "Thu tiền tại quầy xong. %s = số tiền, mã đơn.",
+"en": "",
+"vi": "Đã thu %s · Đơn %s hoàn tất!",
+"files": [
+"CounterSaleService.java"
+],
+"typehint": {
+"Toast (success)": 1
+}
+},
+{
+"num": 138,
+"name": "MSG138_PACKAGE_INVALID_CHOOSE_AGAIN",
+"section": "6.2 Mua gói online, thanh toán, hoàn tiền (PaymentService, PaymentCallbackService, ManagerTransactionService, TransactionHistoryService, SubscriptionStartDateService)",
+"doc": "Mua online: mã gói sai.",
+"en": "",
+"vi": "Gói tập không hợp lệ. Vui lòng chọn lại.",
+"files": [
+"PaymentService.java"
+],
+"typehint": {
+"fail": 1
+}
+},
+{
+"num": 139,
+"name": "MSG139_NO_ACTIVE_CUSTOMER_PROFILE",
+"section": "6.2 Mua gói online, thanh toán, hoàn tiền (PaymentService, PaymentCallbackService, ManagerTransactionService, TransactionHistoryService, SubscriptionStartDateService)",
+"doc": "Mua online: tài khoản không có hồ sơ khách còn hiệu lực.",
+"en": "",
+"vi": "Không tìm thấy hồ sơ khách hàng còn hiệu lực.",
+"files": [
+"PaymentService.java"
+],
+"typehint": {
+"fail": 1
+}
+},
+{
+"num": 140,
+"name": "MSG140_PROFILE_FROZEN_CANNOT_BUY",
+"section": "6.2 Mua gói online, thanh toán, hoàn tiền (PaymentService, PaymentCallbackService, ManagerTransactionService, TransactionHistoryService, SubscriptionStartDateService)",
+"doc": "Mua online khi hồ sơ đang đóng băng.",
+"en": "",
+"vi": "Hồ sơ đang đóng băng. Bạn chưa thể mua gói tập.",
+"files": [
+"PaymentService.java"
+],
+"typehint": {
+"fail": 1
+}
+},
+{
+"num": 141,
+"name": "MSG141_PACKAGE_NOT_SOLD_ONLINE",
+"section": "6.2 Mua gói online, thanh toán, hoàn tiền (PaymentService, PaymentCallbackService, ManagerTransactionService, TransactionHistoryService, SubscriptionStartDateService)",
+"doc": "Gói đã ngừng bán / chỉ bán tại quầy.",
+"en": "",
+"vi": "Gói này không còn bán hoặc không hỗ trợ mua online.",
+"files": [
+"PaymentService.java"
+],
+"typehint": {
+"fail": 1
+}
+},
+{
+"num": 142,
+"name": "MSG142_ORDER_CODE_INVALID",
+"section": "6.2 Mua gói online, thanh toán, hoàn tiền (PaymentService, PaymentCallbackService, ManagerTransactionService, TransactionHistoryService, SubscriptionStartDateService)",
+"doc": "Mã đơn trên URL sai.",
+"en": "",
+"vi": "Mã đơn không hợp lệ.",
+"files": [
+"PaymentService.java"
+],
+"typehint": {
+"fail": 4
+}
+},
+{
+"num": 143,
+"name": "MSG143_ORDER_NOT_FOUND",
+"section": "6.2 Mua gói online, thanh toán, hoàn tiền (PaymentService, PaymentCallbackService, ManagerTransactionService, TransactionHistoryService, SubscriptionStartDateService)",
+"doc": "Đơn không có hoặc không thuộc khách đang đăng nhập.",
+"en": "",
+"vi": "Không tìm thấy đơn hàng của bạn.",
+"files": [
+"PaymentCallbackService.java",
+"PaymentService.java"
+],
+"typehint": {
+"fail": 4
+}
+},
+{
+"num": 144,
+"name": "MSG144_PROFILE_INACTIVE_OR_FROZEN",
+"section": "6.2 Mua gói online, thanh toán, hoàn tiền (PaymentService, PaymentCallbackService, ManagerTransactionService, TransactionHistoryService, SubscriptionStartDateService)",
+"doc": "Thanh toán khi hồ sơ không dùng được.",
+"en": "",
+"vi": "Hồ sơ không còn hiệu lực hoặc đang đóng băng.",
+"files": [
+"PaymentService.java"
+],
+"typehint": {
+"fail": 2
+}
+},
+{
+"num": 145,
+"name": "MSG145_PENDING_ORDER_NOT_FOUND",
+"section": "6.2 Mua gói online, thanh toán, hoàn tiền (PaymentService, PaymentCallbackService, ManagerTransactionService, TransactionHistoryService, SubscriptionStartDateService)",
+"doc": "Không còn đơn Pending để áp mã / thanh toán.",
+"en": "",
+"vi": "Không tìm thấy đơn chờ thanh toán của bạn.",
+"files": [
+"PaymentService.java"
+],
+"typehint": {
+"fail": 2
+}
+},
+{
+"num": 146,
+"name": "MSG146_ORDER_PAYMENT_EXPIRED",
+"section": "6.2 Mua gói online, thanh toán, hoàn tiền (PaymentService, PaymentCallbackService, ManagerTransactionService, TransactionHistoryService, SubscriptionStartDateService)",
+"doc": "Quá hạn thanh toán online.",
+"en": "",
+"vi": "Đơn đã hết hạn thanh toán. Vui lòng tạo đơn mới.",
+"files": [
+"PaymentService.java"
+],
+"typehint": {
+"fail": 2
+}
+},
+{
+"num": 147,
+"name": "MSG147_ORDER_HAS_NO_VOUCHER",
+"section": "6.2 Mua gói online, thanh toán, hoàn tiền (PaymentService, PaymentCallbackService, ManagerTransactionService, TransactionHistoryService, SubscriptionStartDateService)",
+"doc": "Bấm gỡ mã khi đơn chưa có mã.",
+"en": "",
+"vi": "Đơn chưa áp dụng voucher.",
+"files": [
+"PaymentService.java"
+],
+"typehint": {
+"Toast (success)": 1
+}
+},
+{
+"num": 148,
+"name": "MSG148_VOUCHER_REMOVED",
+"section": "6.2 Mua gói online, thanh toán, hoàn tiền (PaymentService, PaymentCallbackService, ManagerTransactionService, TransactionHistoryService, SubscriptionStartDateService)",
+"doc": "Gỡ mã giảm giá xong.",
+"en": "",
+"vi": "Đã gỡ voucher.",
+"files": [
+"PaymentService.java"
+],
+"typehint": {
+"Toast (success)": 1
+}
+},
+{
+"num": 149,
+"name": "MSG149_VOUCHER_APPLIED",
+"section": "6.2 Mua gói online, thanh toán, hoàn tiền (PaymentService, PaymentCallbackService, ManagerTransactionService, TransactionHistoryService, SubscriptionStartDateService)",
+"doc": "Áp mã giảm giá xong.",
+"en": "",
+"vi": "Đã áp dụng voucher.",
+"files": [
+"PaymentService.java"
+],
+"typehint": {
+"Toast (success)": 1
+}
+},
+{
+"num": 150,
+"name": "MSG150_PAYMENT_IN_PROGRESS",
+"section": "6.2 Mua gói online, thanh toán, hoàn tiền (PaymentService, PaymentCallbackService, ManagerTransactionService, TransactionHistoryService, SubscriptionStartDateService)",
+"doc": "Đã có giao dịch Pending cho đơn.",
+"en": "",
+"vi": "Đơn đang có giao dịch thanh toán xử lý. Không tạo thêm giao dịch.",
+"files": [
+"PaymentService.java"
+],
+"typehint": {
+"fail": 1
+}
+},
+{
+"num": 151,
+"name": "MSG151_VNPAY_AMOUNT_ZERO",
+"section": "6.2 Mua gói online, thanh toán, hoàn tiền (PaymentService, PaymentCallbackService, ManagerTransactionService, TransactionHistoryService, SubscriptionStartDateService)",
+"doc": "Giảm giá làm đơn còn 0đ.",
+"en": "",
+"vi": "VNPay yêu cầu số tiền lớn hơn 0đ. Vui lòng gỡ hoặc đổi mã giảm giá.",
+"files": [
+"PaymentService.java"
+],
+"typehint": {
+"fail": 1
+}
+},
+{
+"num": 152,
+"name": "MSG152_VNPAY_UNAVAILABLE",
+"section": "6.2 Mua gói online, thanh toán, hoàn tiền (PaymentService, PaymentCallbackService, ManagerTransactionService, TransactionHistoryService, SubscriptionStartDateService)",
+"doc": "Tạo link VNPay lỗi.",
+"en": "",
+"vi": "Chưa mở được VNPay. Vui lòng kiểm tra cấu hình merchant và kết nối hệ thống.",
+"files": [
+"PaymentService.java"
+],
+"typehint": {
+"fail": 1
+}
+},
+{
+"num": 153,
+"name": "MSG153_SESSION_INVALID",
+"section": "6.2 Mua gói online, thanh toán, hoàn tiền (PaymentService, PaymentCallbackService, ManagerTransactionService, TransactionHistoryService, SubscriptionStartDateService)",
+"doc": "Không đọc được tài khoản trong session.",
+"en": "",
+"vi": "Phiên đăng nhập không hợp lệ.",
+"files": [
+"PaymentCallbackService.java",
+"TransactionHistoryService.java"
+],
+"typehint": {
+"fail": 2
+}
+},
+{
+"num": 154,
+"name": "MSG154_VNPAY_SIGNATURE_INVALID",
+"section": "6.2 Mua gói online, thanh toán, hoàn tiền (PaymentService, PaymentCallbackService, ManagerTransactionService, TransactionHistoryService, SubscriptionStartDateService)",
+"doc": "Chữ ký VNPay trả về không khớp.",
+"en": "",
+"vi": "Không xác minh được dữ liệu trả về từ VNPay.",
+"files": [
+"PaymentCallbackService.java"
+],
+"typehint": {
+"fail": 1
+}
+},
+{
+"num": 155,
+"name": "MSG155_PAYMENT_ATTEMPT_INVALID",
+"section": "6.2 Mua gói online, thanh toán, hoàn tiền (PaymentService, PaymentCallbackService, ManagerTransactionService, TransactionHistoryService, SubscriptionStartDateService)",
+"doc": "Mã lần thanh toán trên URL sai.",
+"en": "",
+"vi": "Mã lần thanh toán không hợp lệ.",
+"files": [
+"PaymentCallbackService.java"
+],
+"typehint": {
+"fail": 1
+}
+},
+{
+"num": 156,
+"name": "MSG156_TRANSACTION_NOT_FOUND",
+"section": "6.2 Mua gói online, thanh toán, hoàn tiền (PaymentService, PaymentCallbackService, ManagerTransactionService, TransactionHistoryService, SubscriptionStartDateService)",
+"doc": "Không có giao dịch này.",
+"en": "",
+"vi": "Không tìm thấy giao dịch.",
+"files": [
+"PaymentCallbackService.java"
+],
+"typehint": {
+"fail": 2
+}
+},
+{
+"num": 157,
+"name": "MSG157_PAYMENT_RESULT_UNREADABLE",
+"section": "6.2 Mua gói online, thanh toán, hoàn tiền (PaymentService, PaymentCallbackService, ManagerTransactionService, TransactionHistoryService, SubscriptionStartDateService)",
+"doc": "Đọc kết quả thanh toán lỗi.",
+"en": "",
+"vi": "Chưa đọc được kết quả thanh toán. Vui lòng thử lại.",
+"files": [
+"PaymentCallbackService.java"
+],
+"typehint": {
+"fail": 2
+}
+},
+{
+"num": 158,
+"name": "MSG158_TRANSACTION_ID_INVALID",
+"section": "6.2 Mua gói online, thanh toán, hoàn tiền (PaymentService, PaymentCallbackService, ManagerTransactionService, TransactionHistoryService, SubscriptionStartDateService)",
+"doc": "Mã giao dịch trên URL / form sai.",
+"en": "",
+"vi": "Mã giao dịch không hợp lệ.",
+"files": [
+"ManagerTransactionService.java",
+"PaymentCallbackService.java"
+],
+"typehint": {
+"fail": 2
+}
+},
+{
+"num": 159,
+"name": "MSG159_RESULT_NEEDS_RECONCILE_TITLE",
+"section": "6.2 Mua gói online, thanh toán, hoàn tiền (PaymentService, PaymentCallbackService, ManagerTransactionService, TransactionHistoryService, SubscriptionStartDateService)",
+"doc": "Tiêu đề màn kết quả: giao dịch cần hoàn tiền.",
+"en": "",
+"vi": "Giao dịch cần đối soát",
+"files": [
+"PaymentCallbackService.java"
+],
+"typehint": {
+"Toast (success)": 1
+}
+},
+{
+"num": 160,
+"name": "MSG160_RESULT_NEEDS_RECONCILE_TEXT",
+"section": "6.2 Mua gói online, thanh toán, hoàn tiền (PaymentService, PaymentCallbackService, ManagerTransactionService, TransactionHistoryService, SubscriptionStartDateService)",
+"doc": "Nội dung màn kết quả: giao dịch cần hoàn tiền.",
+"en": "",
+"vi": "Giao dịch đã được đánh dấu cần hoàn tiền. Vui lòng liên hệ lễ tân.",
+"files": [
+"PaymentCallbackService.java"
+],
+"typehint": {}
+},
+{
+"num": 161,
+"name": "MSG161_RESULT_CANCELLED_TITLE",
+"section": "6.2 Mua gói online, thanh toán, hoàn tiền (PaymentService, PaymentCallbackService, ManagerTransactionService, TransactionHistoryService, SubscriptionStartDateService)",
+"doc": "Tiêu đề màn kết quả: đơn đã hủy.",
+"en": "",
+"vi": "Đơn hàng đã hủy",
+"files": [
+"PaymentCallbackService.java"
+],
+"typehint": {
+"Toast (success)": 1
+}
+},
+{
+"num": 162,
+"name": "MSG162_RESULT_CANCELLED_TEXT",
+"section": "6.2 Mua gói online, thanh toán, hoàn tiền (PaymentService, PaymentCallbackService, ManagerTransactionService, TransactionHistoryService, SubscriptionStartDateService)",
+"doc": "Nội dung màn kết quả: đơn đã hủy.",
+"en": "",
+"vi": "Bạn có thể quay lại chọn gói để tạo đơn mới.",
+"files": [
+"PaymentCallbackService.java"
+],
+"typehint": {}
+},
+{
+"num": 163,
+"name": "MSG163_RESULT_FAILED_TITLE",
+"section": "6.2 Mua gói online, thanh toán, hoàn tiền (PaymentService, PaymentCallbackService, ManagerTransactionService, TransactionHistoryService, SubscriptionStartDateService)",
+"doc": "Tiêu đề màn kết quả / thông báo: thanh toán lỗi.",
+"en": "",
+"vi": "Thanh toán chưa thành công",
+"files": [
+"PaymentCallbackService.java"
+],
+"typehint": {
+"Toast (success)": 1
+}
+},
+{
+"num": 164,
+"name": "MSG164_RESULT_FAILED_RETRY",
+"section": "6.2 Mua gói online, thanh toán, hoàn tiền (PaymentService, PaymentCallbackService, ManagerTransactionService, TransactionHistoryService, SubscriptionStartDateService)",
+"doc": "Thanh toán lỗi, còn thanh toán lại được.",
+"en": "",
+"vi": "Bạn có thể thanh toán lại khi đơn còn hạn.",
+"files": [
+"PaymentCallbackService.java"
+],
+"typehint": {}
+},
+{
+"num": 165,
+"name": "MSG165_RESULT_FAILED_NO_RETRY",
+"section": "6.2 Mua gói online, thanh toán, hoàn tiền (PaymentService, PaymentCallbackService, ManagerTransactionService, TransactionHistoryService, SubscriptionStartDateService)",
+"doc": "Thanh toán lỗi, không thanh toán lại được.",
+"en": "",
+"vi": "Đơn hiện không được thanh toán lại.",
+"files": [
+"PaymentCallbackService.java"
+],
+"typehint": {}
+},
+{
+"num": 166,
+"name": "MSG166_NOTIFY_PAYMENT_FAILED_RETRY",
+"section": "6.2 Mua gói online, thanh toán, hoàn tiền (PaymentService, PaymentCallbackService, ManagerTransactionService, TransactionHistoryService, SubscriptionStartDateService)",
+"doc": "Thông báo cho khách khi thanh toán lỗi. %s = mã đơn.",
+"en": "",
+"vi": "Bạn có thể thanh toán lại đơn %s khi đơn còn hạn.",
+"files": [
+"PaymentCallbackService.java"
+],
+"typehint": {}
+},
+{
+"num": 167,
+"name": "MSG167_RESULT_PENDING_TITLE",
+"section": "6.2 Mua gói online, thanh toán, hoàn tiền (PaymentService, PaymentCallbackService, ManagerTransactionService, TransactionHistoryService, SubscriptionStartDateService)",
+"doc": "Tiêu đề màn kết quả: chờ VNPay xác nhận.",
+"en": "",
+"vi": "Đang chờ xác nhận thanh toán",
+"files": [
+"PaymentCallbackService.java"
+],
+"typehint": {
+"Toast (success)": 1
+}
+},
+{
+"num": 168,
+"name": "MSG168_RESULT_PENDING_TEXT",
+"section": "6.2 Mua gói online, thanh toán, hoàn tiền (PaymentService, PaymentCallbackService, ManagerTransactionService, TransactionHistoryService, SubscriptionStartDateService)",
+"doc": "Nội dung màn kết quả: chờ VNPay xác nhận.",
+"en": "",
+"vi": "Hệ thống đang tự xác minh kết quả với VNPay. Trang sẽ tự cập nhật.",
+"files": [
+"PaymentCallbackService.java"
+],
+"typehint": {}
+},
+{
+"num": 169,
+"name": "MSG169_DATE_RANGE_REVERSED",
+"section": "6.2 Mua gói online, thanh toán, hoàn tiền (PaymentService, PaymentCallbackService, ManagerTransactionService, TransactionHistoryService, SubscriptionStartDateService)",
+"doc": "Bộ lọc ngày: từ ngày sau đến ngày.",
+"en": "",
+"vi": "Ngày bắt đầu không được lớn hơn ngày kết thúc.",
+"files": [
+"ManagerTransactionService.java"
+],
+"typehint": {
+"fail": 2
+}
+},
+{
+"num": 170,
+"name": "MSG170_ORDER_CODE_INVALID_FULL",
+"section": "6.2 Mua gói online, thanh toán, hoàn tiền (PaymentService, PaymentCallbackService, ManagerTransactionService, TransactionHistoryService, SubscriptionStartDateService)",
+"doc": "Mã đơn hàng nhập vào sai.",
+"en": "",
+"vi": "Mã đơn hàng không hợp lệ.",
+"files": [
+"ManagerTransactionService.java",
+"SystemTransactionServlet.java"
+],
+"typehint": {
+"fail": 1
+}
+},
+{
+"num": 171,
+"name": "MSG171_REFUND_NOTE_LENGTH",
+"section": "6.2 Mua gói online, thanh toán, hoàn tiền (PaymentService, PaymentCallbackService, ManagerTransactionService, TransactionHistoryService, SubscriptionStartDateService)",
+"doc": "Xác nhận hoàn tiền: ghi chú sai độ dài.",
+"en": "",
+"vi": "Ghi chú hoàn tiền phải từ 5 đến 500 ký tự (ghi rõ số TK hoặc mã giao dịch hoàn).",
+"files": [
+"ManagerTransactionService.java"
+],
+"typehint": {
+"fail": 1
+}
+},
+{
+"num": 172,
+"name": "MSG172_REFUND_NO_PERMISSION",
+"section": "6.2 Mua gói online, thanh toán, hoàn tiền (PaymentService, PaymentCallbackService, ManagerTransactionService, TransactionHistoryService, SubscriptionStartDateService)",
+"doc": "Không phải Quản lý mà xác nhận hoàn tiền.",
+"en": "",
+"vi": "Bạn không có quyền thực hiện xác nhận hoàn tiền.",
+"files": [
+"ManagerTransactionService.java"
+],
+"typehint": {
+"fail": 1
+}
+},
+{
+"num": 173,
+"name": "MSG173_REFUND_NOT_APPLICABLE",
+"section": "6.2 Mua gói online, thanh toán, hoàn tiền (PaymentService, PaymentCallbackService, ManagerTransactionService, TransactionHistoryService, SubscriptionStartDateService)",
+"doc": "Giao dịch không ở trạng thái cần hoàn.",
+"en": "",
+"vi": "Giao dịch không tồn tại, không yêu cầu hoàn tiền hoặc đã được hoàn trước đó.",
+"files": [
+"ManagerTransactionService.java"
+],
+"typehint": {
+"fail": 1
+}
+},
+{
+"num": 174,
+"name": "MSG174_REFUND_CONFIRMED",
+"section": "6.2 Mua gói online, thanh toán, hoàn tiền (PaymentService, PaymentCallbackService, ManagerTransactionService, TransactionHistoryService, SubscriptionStartDateService)",
+"doc": "Xác nhận hoàn tiền xong.",
+"en": "",
+"vi": "Đã xác nhận hoàn tiền thành công.",
+"files": [
+"SystemTransactionServlet.java"
+],
+"typehint": {
+"Toast (success)": 1
+}
+},
+{
+"num": 175,
+"name": "MSG175_PAGE_NUMBER_INVALID",
+"section": "6.2 Mua gói online, thanh toán, hoàn tiền (PaymentService, PaymentCallbackService, ManagerTransactionService, TransactionHistoryService, SubscriptionStartDateService)",
+"doc": "?page= sai.",
+"en": "",
+"vi": "Số trang không hợp lệ.",
+"files": [
+"TransactionHistoryService.java"
+],
+"typehint": {
+"fail": 1
+}
+},
+{
+"num": 176,
+"name": "MSG176_STATUS_FILTER_INVALID",
+"section": "6.2 Mua gói online, thanh toán, hoàn tiền (PaymentService, PaymentCallbackService, ManagerTransactionService, TransactionHistoryService, SubscriptionStartDateService)",
+"doc": "?status= sai.",
+"en": "",
+"vi": "Trạng thái lọc không hợp lệ.",
+"files": [
+"TransactionHistoryService.java"
+],
+"typehint": {
+"fail": 1
+}
+},
+{
+"num": 177,
+"name": "MSG177_TRANSACTION_HISTORY_LOAD_FAILED",
+"section": "6.2 Mua gói online, thanh toán, hoàn tiền (PaymentService, PaymentCallbackService, ManagerTransactionService, TransactionHistoryService, SubscriptionStartDateService)",
+"doc": "Đọc lịch sử giao dịch lỗi.",
+"en": "",
+"vi": "Chưa tải được lịch sử giao dịch. Vui lòng thử lại.",
+"files": [
+"TransactionHistoryService.java"
+],
+"typehint": {
+"fail": 1
+}
+},
+{
+"num": 178,
+"name": "MSG178_PENDING_ORDER_CREATED",
+"section": "6.2 Mua gói online, thanh toán, hoàn tiền (PaymentService, PaymentCallbackService, ManagerTransactionService, TransactionHistoryService, SubscriptionStartDateService)",
+"doc": "Khách tạo đơn mua online xong.",
+"en": "",
+"vi": "Đã tạo đơn chờ thanh toán.",
+"files": [
+"PackageSelectionServlet.java"
+],
+"typehint": {
+"Toast (success)": 1
+}
+},
+{
+"num": 179,
+"name": "MSG179_PACKAGE_ID_INVALID",
+"section": "6.2 Mua gói online, thanh toán, hoàn tiền (PaymentService, PaymentCallbackService, ManagerTransactionService, TransactionHistoryService, SubscriptionStartDateService)",
+"doc": "Mã gói trên URL sai.",
+"en": "",
+"vi": "Mã gói không hợp lệ.",
+"files": [
+"SubscriptionStartDateService.java"
+],
+"typehint": {
+"fail": 3
+}
+},
+{
+"num": 180,
+"name": "MSG180_PACKAGE_LOAD_FAILED",
+"section": "6.2 Mua gói online, thanh toán, hoàn tiền (PaymentService, PaymentCallbackService, ManagerTransactionService, TransactionHistoryService, SubscriptionStartDateService)",
+"doc": "Đọc gói lỗi.",
+"en": "",
+"vi": "Chưa đọc được thông tin gói. Vui lòng thử lại.",
+"files": [
+"SubscriptionStartDateService.java"
+],
+"typehint": {
+"Toast (success)": 2,
+"fail": 2
+}
+},
+{
+"num": 181,
+"name": "MSG181_START_DATE_REQUIRED",
+"section": "6.2 Mua gói online, thanh toán, hoàn tiền (PaymentService, PaymentCallbackService, ManagerTransactionService, TransactionHistoryService, SubscriptionStartDateService)",
+"doc": "Chưa chọn ngày bắt đầu gói.",
+"en": "",
+"vi": "Vui lòng chọn ngày bắt đầu.",
+"files": [
+"SubscriptionStartDateService.java"
+],
+"typehint": {}
+},
+{
+"num": 182,
+"name": "MSG182_PROFILE_INACTIVE",
+"section": "6.2 Mua gói online, thanh toán, hoàn tiền (PaymentService, PaymentCallbackService, ManagerTransactionService, TransactionHistoryService, SubscriptionStartDateService)",
+"doc": "Hồ sơ khách không còn hiệu lực.",
+"en": "",
+"vi": "Hồ sơ không còn hiệu lực.",
+"files": [
+"SubscriptionStartDateService.java"
+],
+"typehint": {
+"fail": 1
+}
+},
+{
+"num": 183,
+"name": "MSG183_SUBSCRIPTION_NOT_FOUND",
+"section": "6.2 Mua gói online, thanh toán, hoàn tiền (PaymentService, PaymentCallbackService, ManagerTransactionService, TransactionHistoryService, SubscriptionStartDateService)",
+"doc": "Gói không có / không thuộc khách.",
+"en": "",
+"vi": "Không tìm thấy gói tập của bạn.",
+"files": [
+"SubscriptionStartDateService.java"
+],
+"typehint": {
+"fail": 1
+}
+},
+{
+"num": 184,
+"name": "MSG184_START_DATE_UNCHANGED",
+"section": "6.2 Mua gói online, thanh toán, hoàn tiền (PaymentService, PaymentCallbackService, ManagerTransactionService, TransactionHistoryService, SubscriptionStartDateService)",
+"doc": "Chọn lại đúng ngày cũ.",
+"en": "",
+"vi": "Ngày bắt đầu không thay đổi.",
+"files": [
+"SubscriptionStartDateService.java"
+],
+"typehint": {
+"Toast (success)": 1
+}
+},
+{
+"num": 185,
+"name": "MSG185_START_DATE_RANGE",
+"section": "6.2 Mua gói online, thanh toán, hoàn tiền (PaymentService, PaymentCallbackService, ManagerTransactionService, TransactionHistoryService, SubscriptionStartDateService)",
+"doc": "Ngày bắt đầu ngoài khoảng cho phép. %s = từ ngày, đến ngày.",
+"en": "",
+"vi": "Chỉ được chọn ngày bắt đầu từ %s đến %s.",
+"files": [
+"SubscriptionStartDateService.java"
+],
+"typehint": {}
+},
+{
+"num": 186,
+"name": "MSG186_SUBSCRIPTION_CHANGED_RELOAD",
+"section": "6.2 Mua gói online, thanh toán, hoàn tiền (PaymentService, PaymentCallbackService, ManagerTransactionService, TransactionHistoryService, SubscriptionStartDateService)",
+"doc": "Gói bị đổi bởi phiên khác.",
+"en": "",
+"vi": "Gói vừa thay đổi, vui lòng tải lại trang và thử lại.",
+"files": [
+"SubscriptionStartDateService.java"
+],
+"typehint": {
+"fail": 1
+}
+},
+{
+"num": 187,
+"name": "MSG187_START_DATE_SAVED",
+"section": "6.2 Mua gói online, thanh toán, hoàn tiền (PaymentService, PaymentCallbackService, ManagerTransactionService, TransactionHistoryService, SubscriptionStartDateService)",
+"doc": "Đổi ngày bắt đầu xong.",
+"en": "",
+"vi": "Đã lưu ngày bắt đầu.",
+"files": [
+"SubscriptionStartDateService.java"
+],
+"typehint": {
+"Toast (success)": 1
+}
+},
+{
+"num": 188,
+"name": "MSG188_START_DATE_SAVE_FAILED",
+"section": "6.2 Mua gói online, thanh toán, hoàn tiền (PaymentService, PaymentCallbackService, ManagerTransactionService, TransactionHistoryService, SubscriptionStartDateService)",
+"doc": "Lưu ngày bắt đầu lỗi.",
+"en": "",
+"vi": "Chưa lưu được ngày bắt đầu. Vui lòng thử lại.",
+"files": [
+"SubscriptionStartDateService.java"
+],
+"typehint": {
+"fail": 1
+}
+},
+{
+"num": 189,
+"name": "MSG189_LEAVE_REASON_LENGTH",
+"section": "6.3 Đơn nghỉ phép (StaffLeaveService, LeaveRequestService, LeaveRequestFormServlet, LeaveRequestReviewServlet)",
+"doc": "Nộp đơn: lý do sai độ dài.",
+"en": "",
+"vi": "Lý do nghỉ phải từ 5 đến 500 ký tự.",
+"files": [
+"StaffLeaveService.java"
+],
+"typehint": {}
+},
+{
+"num": 190,
+"name": "MSG190_STAFF_INFO_CHANGED_RELOGIN",
+"section": "6.3 Đơn nghỉ phép (StaffLeaveService, LeaveRequestService, LeaveRequestFormServlet, LeaveRequestReviewServlet)",
+"doc": "Nhân viên trong session không còn khớp DB.",
+"en": "",
+"vi": "Thông tin nhân viên đã thay đổi. Vui lòng đăng nhập lại.",
+"files": [
+"StaffLeaveService.java"
+],
+"typehint": {
+"fail": 1
+}
+},
+{
+"num": 191,
+"name": "MSG191_LEAVE_DUPLICATE",
+"section": "6.3 Đơn nghỉ phép (StaffLeaveService, LeaveRequestService, LeaveRequestFormServlet, LeaveRequestReviewServlet)",
+"doc": "Đã có đơn chưa bị từ chối cùng ngày, ca.",
+"en": "",
+"vi": "Bạn đã có đơn nghỉ trùng ngày và ca này.",
+"files": [
+"StaffLeaveService.java"
+],
+"typehint": {
+"fail": 1
+}
+},
+{
+"num": 192,
+"name": "MSG192_LEAVE_TOO_LATE_ASK_MANAGER",
+"section": "6.3 Đơn nghỉ phép (StaffLeaveService, LeaveRequestService, LeaveRequestFormServlet, LeaveRequestReviewServlet)",
+"doc": "Quá giờ chốt nộp đơn.",
+"en": "",
+"vi": "Đã quá hạn gửi đơn. Vui lòng báo quản lý.",
+"files": [
+"StaffLeaveService.java"
+],
+"typehint": {
+"fail": 1
+}
+},
+{
+"num": 193,
+"name": "MSG193_LEAVE_ANNUAL_NOT_ENOUGH",
+"section": "6.3 Đơn nghỉ phép (StaffLeaveService, LeaveRequestService, LeaveRequestFormServlet, LeaveRequestReviewServlet)",
+"doc": "Phép năm còn ít hơn số ngày xin.",
+"en": "",
+"vi": "Không đủ phép năm. Xem phương án chuyển phần vượt sang không lương và xác nhận trước khi gửi.",
+"files": [
+"StaffLeaveService.java"
+],
+"typehint": {}
+},
+{
+"num": 194,
+"name": "MSG194_LEAVE_QUOTA_CHANGED",
+"section": "6.3 Đơn nghỉ phép (StaffLeaveService, LeaveRequestService, LeaveRequestFormServlet, LeaveRequestReviewServlet)",
+"doc": "Quỹ phép đổi giữa lúc xem và lúc gửi.",
+"en": "",
+"vi": "Quỹ phép đã thay đổi. Vui lòng xem lại số ngày và xác nhận phương án mới.",
+"files": [
+"StaffLeaveService.java"
+],
+"typehint": {}
+},
+{
+"num": 195,
+"name": "MSG195_LEAVE_QUOTA_NOT_CONFIGURED",
+"section": "6.3 Đơn nghỉ phép (StaffLeaveService, LeaveRequestService, LeaveRequestFormServlet, LeaveRequestReviewServlet)",
+"doc": "Thiếu tham số quỹ phép năm.",
+"en": "",
+"vi": "Chưa cấu hình quỹ phép năm. Vui lòng liên hệ quản lý.",
+"files": [
+"StaffLeaveService.java"
+],
+"typehint": {
+"fail": 2
+}
+},
+{
+"num": 196,
+"name": "MSG196_WORKING_EMPLOYEE_NOT_FOUND",
+"section": "6.3 Đơn nghỉ phép (StaffLeaveService, LeaveRequestService, LeaveRequestFormServlet, LeaveRequestReviewServlet)",
+"doc": "Không có nhân viên Working.",
+"en": "",
+"vi": "Không tìm thấy nhân viên đang làm việc.",
+"files": [
+"StaffLeaveService.java"
+],
+"typehint": {
+"fail": 1
+}
+},
+{
+"num": 197,
+"name": "MSG197_LEAVE_TYPE_REQUIRED",
+"section": "6.3 Đơn nghỉ phép (StaffLeaveService, LeaveRequestService, LeaveRequestFormServlet, LeaveRequestReviewServlet)",
+"doc": "Chưa chọn loại nghỉ.",
+"en": "",
+"vi": "Vui lòng chọn loại nghỉ.",
+"files": [
+"StaffLeaveService.java"
+],
+"typehint": {}
+},
+{
+"num": 198,
+"name": "MSG198_LEAVE_TYPE_UNSUPPORTED",
+"section": "6.3 Đơn nghỉ phép (StaffLeaveService, LeaveRequestService, LeaveRequestFormServlet, LeaveRequestReviewServlet)",
+"doc": "Loại nghỉ gửi lên không hỗ trợ.",
+"en": "",
+"vi": "Chỉ hỗ trợ nghỉ phép năm hoặc nghỉ không lương.",
+"files": [
+"StaffLeaveService.java"
+],
+"typehint": {}
+},
+{
+"num": 199,
+"name": "MSG199_LEAVE_SHIFT_REQUIRED",
+"section": "6.3 Đơn nghỉ phép (StaffLeaveService, LeaveRequestService, LeaveRequestFormServlet, LeaveRequestReviewServlet)",
+"doc": "Chưa chọn ca nghỉ.",
+"en": "",
+"vi": "Vui lòng chọn ca nghỉ.",
+"files": [
+"StaffLeaveService.java"
+],
+"typehint": {}
+},
+{
+"num": 200,
+"name": "MSG200_LEAVE_DATE_REQUIRED",
+"section": "6.3 Đơn nghỉ phép (StaffLeaveService, LeaveRequestService, LeaveRequestFormServlet, LeaveRequestReviewServlet)",
+"doc": "Chưa chọn ngày nghỉ.",
+"en": "",
+"vi": "Vui lòng chọn ngày nghỉ.",
+"files": [
+"StaffLeaveService.java"
+],
+"typehint": {}
+},
+{
+"num": 201,
+"name": "MSG201_LEAVE_RANGE_RULE",
+"section": "6.3 Đơn nghỉ phép (StaffLeaveService, LeaveRequestService, LeaveRequestFormServlet, LeaveRequestReviewServlet)",
+"doc": "Khoảng ngày nghỉ sai.",
+"en": "",
+"vi": "Chọn ngày kết thúc từ ngày bắt đầu, tối đa 31 ngày trong cùng năm.",
+"files": [
+"StaffLeaveService.java"
+],
+"typehint": {}
+},
+{
+"num": 202,
+"name": "MSG202_LEAVE_MULTI_DAY_FULL_DAY",
+"section": "6.3 Đơn nghỉ phép (StaffLeaveService, LeaveRequestService, LeaveRequestFormServlet, LeaveRequestReviewServlet)",
+"doc": "Đơn nhiều ngày nhưng chọn nửa ca.",
+"en": "",
+"vi": "Đơn nhiều ngày phải chọn Cả ngày.",
+"files": [
+"StaffLeaveService.java"
+],
+"typehint": {}
+},
+{
+"num": 203,
+"name": "MSG203_LEAVE_DATE_AFTER_TODAY",
+"section": "6.3 Đơn nghỉ phép (StaffLeaveService, LeaveRequestService, LeaveRequestFormServlet, LeaveRequestReviewServlet)",
+"doc": "Ngày nghỉ là hôm nay hoặc đã qua.",
+"en": "",
+"vi": "Ngày nghỉ phải sau ngày hôm nay.",
+"files": [
+"StaffLeaveService.java"
+],
+"typehint": {}
+},
+{
+"num": 204,
+"name": "MSG204_LEAVE_ID_INVALID",
+"section": "6.3 Đơn nghỉ phép (StaffLeaveService, LeaveRequestService, LeaveRequestFormServlet, LeaveRequestReviewServlet)",
+"doc": "Mã đơn nghỉ sai.",
+"en": "",
+"vi": "Mã đơn không hợp lệ.",
+"files": [
+"StaffLeaveService.java"
+],
+"typehint": {
+"fail": 1
+}
+},
+{
+"num": 205,
+"name": "MSG205_LEAVE_WITHDRAW_FAILED",
+"section": "6.3 Đơn nghỉ phép (StaffLeaveService, LeaveRequestService, LeaveRequestFormServlet, LeaveRequestReviewServlet)",
+"doc": "Rút đơn không được.",
+"en": "",
+"vi": "Không thể rút đơn (đơn không tồn tại, đã được xử lý hoặc không phải của bạn).",
+"files": [
+"StaffLeaveService.java"
+],
+"typehint": {
+"fail": 1
+}
+},
+{
+"num": 206,
+"name": "MSG206_LEAVE_FILTER_DATE_ORDER",
+"section": "6.3 Đơn nghỉ phép (StaffLeaveService, LeaveRequestService, LeaveRequestFormServlet, LeaveRequestReviewServlet)",
+"doc": "Bộ lọc ngày ngược.",
+"en": "",
+"vi": "Từ ngày phải trước hoặc trùng Đến ngày.",
+"files": [
+"LeaveRequestService.java"
+],
+"typehint": {
+"fail": 3
+}
+},
+{
+"num": 207,
+"name": "MSG207_LEAVE_BULK_COUNT",
+"section": "6.3 Đơn nghỉ phép (StaffLeaveService, LeaveRequestService, LeaveRequestFormServlet, LeaveRequestReviewServlet)",
+"doc": "Duyệt hàng loạt: số đơn ngoài 1–50.",
+"en": "",
+"vi": "Chọn từ 1 đến 50 đơn để duyệt.",
+"files": [
+"LeaveRequestService.java"
+],
+"typehint": {
+"fail": 1
+}
+},
+{
+"num": 208,
+"name": "MSG208_LEAVE_LIST_INVALID_RELOAD",
+"section": "6.3 Đơn nghỉ phép (StaffLeaveService, LeaveRequestService, LeaveRequestFormServlet, LeaveRequestReviewServlet)",
+"doc": "Danh sách mã đơn gửi lên hỏng.",
+"en": "",
+"vi": "Danh sách đơn không hợp lệ. Vui lòng tải lại trang.",
+"files": [
+"LeaveRequestReviewServlet.java",
+"LeaveRequestService.java"
+],
+"typehint": {
+"fail": 1
+}
+},
+{
+"num": 209,
+"name": "MSG209_LEAVE_NO_PERMISSION",
+"section": "6.3 Đơn nghỉ phép (StaffLeaveService, LeaveRequestService, LeaveRequestFormServlet, LeaveRequestReviewServlet)",
+"doc": "Không phải Quản lý.",
+"en": "",
+"vi": "Bạn không có quyền xử lý đơn nghỉ phép.",
+"files": [
+"LeaveRequestService.java"
+],
+"typehint": {
+"fail": 3
+}
+},
+{
+"num": 210,
+"name": "MSG210_LEAVE_LATE_APPROVAL_RULE",
+"section": "6.3 Đơn nghỉ phép (StaffLeaveService, LeaveRequestService, LeaveRequestFormServlet, LeaveRequestReviewServlet)",
+"doc": "Duyệt sau hạn: thiếu xác nhận / lý do.",
+"en": "",
+"vi": "Duyệt muộn cần xác nhận nhân viên nghỉ đúng ngày/ca và nhập lý do từ 5 đến 500 ký tự.",
+"files": [
+"LeaveRequestService.java"
+],
+"typehint": {}
+},
+{
+"num": 211,
+"name": "MSG211_LEAVE_ALREADY_HANDLED",
+"section": "6.3 Đơn nghỉ phép (StaffLeaveService, LeaveRequestService, LeaveRequestFormServlet, LeaveRequestReviewServlet)",
+"doc": "Đơn đã được người khác duyệt / từ chối.",
+"en": "",
+"vi": "Đơn này đã được xử lý bởi người khác.",
+"files": [
+"LeaveRequestService.java"
+],
+"typehint": {
+"fail": 2
+}
+},
+{
+"num": 212,
+"name": "MSG212_REJECT_REASON_LENGTH",
+"section": "6.3 Đơn nghỉ phép (StaffLeaveService, LeaveRequestService, LeaveRequestFormServlet, LeaveRequestReviewServlet)",
+"doc": "Từ chối (đơn nghỉ, yêu cầu bảo trì): lý do sai độ dài.",
+"en": "",
+"vi": "Lý do từ chối phải từ 5 đến 500 ký tự.",
+"files": [
+"LeaveRequestService.java",
+"MaintenanceRequestService.java"
+],
+"typehint": {}
+},
+{
+"num": 213,
+"name": "MSG213_LEAVE_STATUS_CHANGED_RELOAD",
+"section": "6.3 Đơn nghỉ phép (StaffLeaveService, LeaveRequestService, LeaveRequestFormServlet, LeaveRequestReviewServlet)",
+"doc": "Đơn đổi trạng thái giữa lúc xem và lúc bấm.",
+"en": "",
+"vi": "Đơn này đã thay đổi trạng thái. Vui lòng tải lại trang.",
+"files": [
+"LeaveRequestService.java"
+],
+"typehint": {
+"fail": 1
+}
+},
+{
+"num": 214,
+"name": "MSG214_FORM_SESSION_EXPIRED",
+"section": "6.3 Đơn nghỉ phép (StaffLeaveService, LeaveRequestService, LeaveRequestFormServlet, LeaveRequestReviewServlet)",
+"doc": "CSRF token sai / hết hạn khi gửi form.",
+"en": "",
+"vi": "Phiên làm việc không hợp lệ hoặc đã hết hạn. Vui lòng thử lại.",
+"files": [
+"FacilityManagementServlet.java",
+"LeaveRequestFormServlet.java",
+"LeaveRequestReviewServlet.java",
+"MaintenanceReportServlet.java",
+"MaintenanceRequestReviewServlet.java",
+"MaintenanceRequestServlet.java",
+"RequestUtil.java"
+],
+"typehint": {
+"Toast (error)": 1
+}
+},
+{
+"num": 215,
+"name": "MSG215_LEAVE_WITHDRAWN",
+"section": "6.3 Đơn nghỉ phép (StaffLeaveService, LeaveRequestService, LeaveRequestFormServlet, LeaveRequestReviewServlet)",
+"doc": "Rút đơn xong.",
+"en": "",
+"vi": "Đã rút đơn xin nghỉ phép thành công.",
+"files": [
+"LeaveRequestFormServlet.java"
+],
+"typehint": {
+"Toast (success)": 1
+}
+},
+{
+"num": 216,
+"name": "MSG216_LEAVE_SUBMITTED",
+"section": "6.3 Đơn nghỉ phép (StaffLeaveService, LeaveRequestService, LeaveRequestFormServlet, LeaveRequestReviewServlet)",
+"doc": "Nộp đơn xong.",
+"en": "",
+"vi": "Đã gửi yêu cầu nghỉ. Xem kết quả từng phần trong Đơn đã nộp.",
+"files": [
+"LeaveRequestFormServlet.java"
+],
+"typehint": {
+"Toast (success)": 1
+}
+},
+{
+"num": 217,
+"name": "MSG217_FACILITY_ID_INVALID",
+"section": "6.4 Cơ sở vật chất và bảo trì (FacilityService, MaintenanceRequestService và các Servlet)",
+"doc": "Mã nhóm thiết bị sai.",
+"en": "",
+"vi": "Mã nhóm cơ sở vật chất không hợp lệ.",
+"files": [
+"FacilityService.java"
+],
+"typehint": {
+"fail": 1
+}
+},
+{
+"num": 218,
+"name": "MSG218_FACILITY_NAME_LENGTH",
+"section": "6.4 Cơ sở vật chất và bảo trì (FacilityService, MaintenanceRequestService và các Servlet)",
+"doc": "Tên nhóm máy sai độ dài.",
+"en": "",
+"vi": "Tên nhóm máy phải từ 3 đến 100 ký tự.",
+"files": [
+"FacilityService.java"
+],
+"typehint": {}
+},
+{
+"num": 219,
+"name": "MSG219_FACILITY_CATEGORY_REQUIRED",
+"section": "6.4 Cơ sở vật chất và bảo trì (FacilityService, MaintenanceRequestService và các Servlet)",
+"doc": "Chưa chọn phân loại.",
+"en": "",
+"vi": "Vui lòng chọn phân loại cơ sở vật chất.",
+"files": [
+"FacilityService.java"
+],
+"typehint": {}
+},
+{
+"num": 220,
+"name": "MSG220_FACILITY_UNIT_LENGTH",
+"section": "6.4 Cơ sở vật chất và bảo trì (FacilityService, MaintenanceRequestService và các Servlet)",
+"doc": "Đơn vị tính quá dài.",
+"en": "",
+"vi": "Đơn vị tính tối đa 15 ký tự.",
+"files": [
+"FacilityService.java"
+],
+"typehint": {}
+},
+{
+"num": 221,
+"name": "MSG221_FACILITY_NOT_FOUND_FOR_UPDATE",
+"section": "6.4 Cơ sở vật chất và bảo trì (FacilityService, MaintenanceRequestService và các Servlet)",
+"doc": "Nhóm máy đã bị xóa / không có.",
+"en": "",
+"vi": "Không tìm thấy nhóm máy để cập nhật.",
+"files": [
+"FacilityService.java"
+],
+"typehint": {
+"fail": 1
+}
+},
+{
+"num": 222,
+"name": "MSG222_FACILITY_CREATE_FAILED",
+"section": "6.4 Cơ sở vật chất và bảo trì (FacilityService, MaintenanceRequestService và các Servlet)",
+"doc": "Thêm nhóm máy lỗi.",
+"en": "",
+"vi": "Không thể thêm mới nhóm máy. Vui lòng thử lại.",
+"files": [
+"FacilityService.java"
+],
+"typehint": {
+"fail": 1
+}
+},
+{
+"num": 223,
+"name": "MSG223_FACILITY_GROUP_ID_INVALID",
+"section": "6.4 Cơ sở vật chất và bảo trì (FacilityService, MaintenanceRequestService và các Servlet)",
+"doc": "Mã nhóm máy gửi lên sai.",
+"en": "",
+"vi": "Mã nhóm máy không hợp lệ.",
+"files": [
+"FacilityService.java"
+],
+"typehint": {
+"fail": 1
+}
+},
+{
+"num": 224,
+"name": "MSG224_FACILITY_GROUP_REQUIRED",
+"section": "6.4 Cơ sở vật chất và bảo trì (FacilityService, MaintenanceRequestService và các Servlet)",
+"doc": "Thêm cá thể máy chưa chọn nhóm.",
+"en": "",
+"vi": "Vui lòng chọn nhóm máy tương ứng.",
+"files": [
+"FacilityService.java"
+],
+"typehint": {}
+},
+{
+"num": 225,
+"name": "MSG225_ITEM_CODE_LENGTH",
+"section": "6.4 Cơ sở vật chất và bảo trì (FacilityService, MaintenanceRequestService và các Servlet)",
+"doc": "Mã máy sai độ dài.",
+"en": "",
+"vi": "Mã máy phải từ 2 đến 20 ký tự (VD: TM-001).",
+"files": [
+"FacilityService.java"
+],
+"typehint": {}
+},
+{
+"num": 226,
+"name": "MSG226_ITEM_LABEL_LENGTH",
+"section": "6.4 Cơ sở vật chất và bảo trì (FacilityService, MaintenanceRequestService và các Servlet)",
+"doc": "Tên hiển thị máy sai độ dài.",
+"en": "",
+"vi": "Tên hiển thị / Quy cách phải từ 1 đến 50 ký tự (VD: Số 1, 6 kg).",
+"files": [
+"FacilityService.java"
+],
+"typehint": {}
+},
+{
+"num": 227,
+"name": "MSG227_ITEM_LOCATION_LENGTH",
+"section": "6.4 Cơ sở vật chất và bảo trì (FacilityService, MaintenanceRequestService và các Servlet)",
+"doc": "Ghi chú vị trí quá dài.",
+"en": "",
+"vi": "Ghi chú vị trí tối đa 100 ký tự.",
+"files": [
+"FacilityService.java"
+],
+"typehint": {}
+},
+{
+"num": 228,
+"name": "MSG228_ITEM_CODE_EXISTS",
+"section": "6.4 Cơ sở vật chất và bảo trì (FacilityService, MaintenanceRequestService và các Servlet)",
+"doc": "Trùng mã máy. %s = mã máy.",
+"en": "",
+"vi": "Mã máy '%s' đã tồn tại trong hệ thống.",
+"files": [
+"FacilityService.java"
+],
+"typehint": {}
+},
+{
+"num": 229,
+"name": "MSG229_ITEM_NOT_FOUND_FOR_UPDATE",
+"section": "6.4 Cơ sở vật chất và bảo trì (FacilityService, MaintenanceRequestService và các Servlet)",
+"doc": "Cá thể máy không có.",
+"en": "",
+"vi": "Không tìm thấy cá thể máy để cập nhật.",
+"files": [
+"FacilityService.java"
+],
+"typehint": {
+"fail": 1
+}
+},
+{
+"num": 230,
+"name": "MSG230_ITEM_CREATE_FAILED",
+"section": "6.4 Cơ sở vật chất và bảo trì (FacilityService, MaintenanceRequestService và các Servlet)",
+"doc": "Thêm cá thể máy lỗi.",
+"en": "",
+"vi": "Không thể tạo mới cá thể máy.",
+"files": [
+"FacilityService.java"
+],
+"typehint": {
+"fail": 1
+}
+},
+{
+"num": 231,
+"name": "MSG231_ITEM_ID_INVALID",
+"section": "6.4 Cơ sở vật chất và bảo trì (FacilityService, MaintenanceRequestService và các Servlet)",
+"doc": "Mã cá thể máy gửi lên sai.",
+"en": "",
+"vi": "Mã cá thể máy không hợp lệ.",
+"files": [
+"FacilityService.java"
+],
+"typehint": {
+"fail": 1
+}
+},
+{
+"num": 232,
+"name": "MSG232_MAINTENANCE_ITEM_REQUIRED",
+"section": "6.4 Cơ sở vật chất và bảo trì (FacilityService, MaintenanceRequestService và các Servlet)",
+"doc": "Báo hỏng chưa chọn máy.",
+"en": "",
+"vi": "Vui lòng chọn ít nhất một mã máy cụ thể cần báo hỏng.",
+"files": [
+"MaintenanceRequestService.java"
+],
+"typehint": {}
+},
+{
+"num": 233,
+"name": "MSG233_MAINTENANCE_DESCRIPTION_LENGTH",
+"section": "6.4 Cơ sở vật chất và bảo trì (FacilityService, MaintenanceRequestService và các Servlet)",
+"doc": "Mô tả hỏng hóc sai độ dài.",
+"en": "",
+"vi": "Mô tả hỏng hóc phải từ 10 đến 500 ký tự.",
+"files": [
+"MaintenanceRequestService.java"
+],
+"typehint": {}
+},
+{
+"num": 234,
+"name": "MSG234_MAINTENANCE_ITEM_INVALID",
+"section": "6.4 Cơ sở vật chất và bảo trì (FacilityService, MaintenanceRequestService và các Servlet)",
+"doc": "Danh sách máy gửi lên không hợp lệ.",
+"en": "",
+"vi": "Vui lòng chọn ít nhất một mã máy cụ thể hợp lệ.",
+"files": [
+"MaintenanceRequestService.java"
+],
+"typehint": {}
+},
+{
+"num": 235,
+"name": "MSG235_MAINTENANCE_ITEM_INACTIVE",
+"section": "6.4 Cơ sở vật chất và bảo trì (FacilityService, MaintenanceRequestService và các Servlet)",
+"doc": "Máy đã ngưng hoạt động.",
+"en": "",
+"vi": "Mã máy không tồn tại hoặc đã ngưng hoạt động.",
+"files": [
+"MaintenanceRequestService.java"
+],
+"typehint": {}
+},
+{
+"num": 236,
+"name": "MSG236_MAINTENANCE_APPROVE_ONLY_PENDING",
+"section": "6.4 Cơ sở vật chất và bảo trì (FacilityService, MaintenanceRequestService và các Servlet)",
+"doc": "Duyệt yêu cầu không còn Chờ duyệt.",
+"en": "",
+"vi": "Chỉ yêu cầu đang Chờ duyệt mới được phê duyệt.",
+"files": [
+"MaintenanceRequestService.java"
+],
+"typehint": {
+"fail": 1
+}
+},
+{
+"num": 238,
+"name": "MSG238_MAINTENANCE_REJECT_ONLY_PENDING",
+"section": "6.4 Cơ sở vật chất và bảo trì (FacilityService, MaintenanceRequestService và các Servlet)",
+"doc": "Từ chối yêu cầu không còn Chờ duyệt.",
+"en": "",
+"vi": "Chỉ yêu cầu đang Chờ duyệt mới được từ chối.",
+"files": [
+"MaintenanceRequestService.java"
+],
+"typehint": {
+"fail": 1
+}
+},
+{
+"num": 239,
+"name": "MSG239_MAINTENANCE_CLOSE_NOTE_LENGTH",
+"section": "6.4 Cơ sở vật chất và bảo trì (FacilityService, MaintenanceRequestService và các Servlet)",
+"doc": "Nghiệm thu: ghi chú sai độ dài.",
+"en": "",
+"vi": "Ghi chú nghiệm thu phải từ 5 đến 500 ký tự.",
+"files": [
+"MaintenanceRequestService.java"
+],
+"typehint": {}
+},
+{
+"num": 240,
+"name": "MSG240_MAINTENANCE_CLOSE_ONLY_IN_PROGRESS",
+"section": "6.4 Cơ sở vật chất và bảo trì (FacilityService, MaintenanceRequestService và các Servlet)",
+"doc": "Đóng yêu cầu chưa ở trạng thái đang xử lý.",
+"en": "",
+"vi": "Chỉ yêu cầu đang xử lý mới được nghiệm thu và đóng.",
+"files": [
+"MaintenanceRequestService.java"
+],
+"typehint": {
+"fail": 1
+}
+},
+{
+"num": 241,
+"name": "MSG241_MAINTENANCE_DEVICE_REQUIRED",
+"section": "6.4 Cơ sở vật chất và bảo trì (FacilityService, MaintenanceRequestService và các Servlet)",
+"doc": "Bước 1 báo hỏng chưa chọn thiết bị.",
+"en": "",
+"vi": "Vui lòng chọn ít nhất một thiết bị cần báo hỏng.",
+"files": [
+"MaintenanceReportServlet.java"
+],
+"typehint": {
+"Toast (warning)": 2
+}
+},
+{
+"num": 242,
+"name": "MSG242_MAINTENANCE_DEVICE_INACTIVE",
+"section": "6.4 Cơ sở vật chất và bảo trì (FacilityService, MaintenanceRequestService và các Servlet)",
+"doc": "Thiết bị đã ngừng sử dụng.",
+"en": "",
+"vi": "Thiết bị không tồn tại hoặc đã ngừng sử dụng.",
+"files": [
+"MaintenanceReportServlet.java"
+],
+"typehint": {
+"Toast (warning)": 1
+}
+},
+{
+"num": 243,
+"name": "MSG243_MAINTENANCE_SENT",
+"section": "6.4 Cơ sở vật chất và bảo trì (FacilityService, MaintenanceRequestService và các Servlet)",
+"doc": "Gửi báo hỏng xong. %s = các mã máy.",
+"en": "",
+"vi": "Đã gửi yêu cầu bảo trì %s thành công!",
+"files": [
+"MaintenanceReportServlet.java"
+],
+"typehint": {
+"Toast (success)": 1
+}
+},
+{
+"num": 244,
+"name": "MSG244_ACTION_UNSUPPORTED",
+"section": "6.4 Cơ sở vật chất và bảo trì (FacilityService, MaintenanceRequestService và các Servlet)",
+"doc": "action gửi lên không có.",
+"en": "",
+"vi": "Thao tác không được hỗ trợ.",
+"files": [
+"FacilityManagementServlet.java"
+],
+"typehint": {
+"Toast (warning)": 1
+}
+},
+{
+"num": 245,
+"name": "MSG245_FACILITY_UPDATED",
+"section": "6.4 Cơ sở vật chất và bảo trì (FacilityService, MaintenanceRequestService và các Servlet)",
+"doc": "Sửa nhóm máy xong.",
+"en": "",
+"vi": "Cập nhật nhóm máy thành công!",
+"files": [
+"FacilityManagementServlet.java"
+],
+"typehint": {
+"Toast (success)": 1
+}
+},
+{
+"num": 246,
+"name": "MSG246_FACILITY_CREATED",
+"section": "6.4 Cơ sở vật chất và bảo trì (FacilityService, MaintenanceRequestService và các Servlet)",
+"doc": "Thêm nhóm máy xong.",
+"en": "",
+"vi": "Thêm mới nhóm máy thành công!",
+"files": [
+"FacilityManagementServlet.java"
+],
+"typehint": {
+"Toast (success)": 1
+}
+},
+{
+"num": 247,
+"name": "MSG247_FACILITY_SHOWN",
+"section": "6.4 Cơ sở vật chất và bảo trì (FacilityService, MaintenanceRequestService và các Servlet)",
+"doc": "Bật nhóm máy.",
+"en": "",
+"vi": "Đã hiển thị nhóm máy vào danh mục vận hành.",
+"files": [
+"FacilityManagementServlet.java"
+],
+"typehint": {
+"Toast (success)": 1
+}
+},
+{
+"num": 248,
+"name": "MSG248_FACILITY_HIDDEN",
+"section": "6.4 Cơ sở vật chất và bảo trì (FacilityService, MaintenanceRequestService và các Servlet)",
+"doc": "Tắt nhóm máy.",
+"en": "",
+"vi": "Đã tạm dừng / ẩn nhóm máy.",
+"files": [
+"FacilityManagementServlet.java"
+],
+"typehint": {
+"Toast (success)": 1
+}
+},
+{
+"num": 249,
+"name": "MSG249_ITEM_UPDATED",
+"section": "6.4 Cơ sở vật chất và bảo trì (FacilityService, MaintenanceRequestService và các Servlet)",
+"doc": "Sửa cá thể máy xong. %s = mã máy.",
+"en": "",
+"vi": "Cập nhật cá thể máy %s thành công!",
+"files": [
+"FacilityManagementServlet.java"
+],
+"typehint": {
+"Toast (success)": 1
+}
+},
+{
+"num": 250,
+"name": "MSG250_ITEM_CREATED",
+"section": "6.4 Cơ sở vật chất và bảo trì (FacilityService, MaintenanceRequestService và các Servlet)",
+"doc": "Thêm cá thể máy xong. %s = mã máy.",
+"en": "",
+"vi": "Thêm cá thể máy %s thành công!",
+"files": [
+"FacilityManagementServlet.java"
+],
+"typehint": {
+"Toast (success)": 1
+}
+},
+{
+"num": 251,
+"name": "MSG251_ITEM_RETIRED",
+"section": "6.4 Cơ sở vật chất và bảo trì (FacilityService, MaintenanceRequestService và các Servlet)",
+"doc": "Thanh lý máy xong.",
+"en": "",
+"vi": "Đã thanh lý cá thể máy.",
+"files": [
+"FacilityManagementServlet.java"
+],
+"typehint": {
+"Toast (success)": 1
+}
+},
+{
+"num": 252,
+"name": "MSG252_MAINTENANCE_APPROVED",
+"section": "6.4 Cơ sở vật chất và bảo trì (FacilityService, MaintenanceRequestService và các Servlet)",
+"doc": "Duyệt yêu cầu bảo trì xong.",
+"en": "",
+"vi": "Đã duyệt yêu cầu bảo trì.",
+"files": [
+"MaintenanceRequestReviewServlet.java"
+],
+"typehint": {}
+},
+{
+"num": 253,
+"name": "MSG253_MAINTENANCE_REJECTED",
+"section": "6.4 Cơ sở vật chất và bảo trì (FacilityService, MaintenanceRequestService và các Servlet)",
+"doc": "Từ chối yêu cầu bảo trì xong.",
+"en": "",
+"vi": "Đã từ chối yêu cầu bảo trì.",
+"files": [
+"MaintenanceRequestReviewServlet.java"
+],
+"typehint": {}
+},
+{
+"num": 254,
+"name": "MSG254_MAINTENANCE_CLOSED",
+"section": "6.4 Cơ sở vật chất và bảo trì (FacilityService, MaintenanceRequestService và các Servlet)",
+"doc": "Nghiệm thu xong.",
+"en": "",
+"vi": "Đã nghiệm thu và đóng yêu cầu bảo trì.",
+"files": [
+"MaintenanceRequestServlet.java"
+],
+"typehint": {}
+},
+{
+"num": 255,
+"name": "MSG255_SHIFT_ALREADY_OPENED_OR_CLOSED",
+"section": "6.5 Ca làm việc, check-in, bảo lưu, xóa hồ sơ (ShiftService, FreezeService, CustomerDeletionService và các Servlet lễ tân)",
+"doc": "Mở ca đã mở / đã chốt.",
+"en": "",
+"vi": "Ca làm việc này đã được mở hoặc đã chốt từ trước.",
+"files": [
+"ShiftService.java"
+],
+"typehint": {
+"fail": 1
+}
+},
+{
+"num": 256,
+"name": "MSG256_SHIFT_PAST_DAY",
+"section": "6.5 Ca làm việc, check-in, bảo lưu, xóa hồ sơ (ShiftService, FreezeService, CustomerDeletionService và các Servlet lễ tân)",
+"doc": "Mở ca ngày đã qua.",
+"en": "",
+"vi": "Không thể mở ca làm việc của ngày trong quá khứ.",
+"files": [
+"ShiftService.java"
+],
+"typehint": {
+"fail": 1
+}
+},
+{
+"num": 257,
+"name": "MSG257_SHIFT_FUTURE_DAY",
+"section": "6.5 Ca làm việc, check-in, bảo lưu, xóa hồ sơ (ShiftService, FreezeService, CustomerDeletionService và các Servlet lễ tân)",
+"doc": "Mở ca ngày tương lai.",
+"en": "",
+"vi": "Không thể mở trước ca làm việc của ngày trong tương lai.",
+"files": [
+"ShiftService.java"
+],
+"typehint": {
+"fail": 1
+}
+},
+{
+"num": 258,
+"name": "MSG258_SHIFT_GYM_CLOSED",
+"section": "6.5 Ca làm việc, check-in, bảo lưu, xóa hồ sơ (ShiftService, FreezeService, CustomerDeletionService và các Servlet lễ tân)",
+"doc": "Ngày nghỉ cả ngày.",
+"en": "",
+"vi": "Hôm nay phòng tập đóng cửa cả ngày theo lịch nghỉ, không thể mở ca làm việc.",
+"files": [
+"ShiftService.java"
+],
+"typehint": {
+"fail": 1
+}
+},
+{
+"num": 259,
+"name": "MSG259_SHIFT_OLD_NOT_CLOSED",
+"section": "6.5 Ca làm việc, check-in, bảo lưu, xóa hồ sơ (ShiftService, FreezeService, CustomerDeletionService và các Servlet lễ tân)",
+"doc": "Ca ngày trước chưa chốt. %s = tên ca, ngày.",
+"en": "",
+"vi": "Không thể mở ca mới vì %s ngày %s chưa được chốt sổ. Vui lòng chốt ca cũ trước.",
+"files": [
+"ShiftService.java"
+],
+"typehint": {
+"fail": 1
+}
+},
+{
+"num": 260,
+"name": "MSG260_SHIFT_OTHER_OPEN",
+"section": "6.5 Ca làm việc, check-in, bảo lưu, xóa hồ sơ (ShiftService, FreezeService, CustomerDeletionService và các Servlet lễ tân)",
+"doc": "Có ca khác đang mở. %s = tên ca.",
+"en": "",
+"vi": "Hiện đang có %s đang mở. Vui lòng chốt ca trước khi mở ca mới.",
+"files": [
+"ShiftService.java"
+],
+"typehint": {
+"fail": 1
+}
+},
+{
+"num": 261,
+"name": "MSG261_SHIFT_OTHER_OPEN_SHORT",
+"section": "6.5 Ca làm việc, check-in, bảo lưu, xóa hồ sơ (ShiftService, FreezeService, CustomerDeletionService và các Servlet lễ tân)",
+"doc": "Lý do không mở được (hiện trên màn). %s = tên ca.",
+"en": "",
+"vi": "Hiện đang có %s đang mở. Vui lòng chốt ca trước.",
+"files": [
+"ShiftService.java"
+],
+"typehint": {}
+},
+{
+"num": 262,
+"name": "MSG262_SHIFT_MORNING_AFTER_AFTERNOON_CLOSED",
+"section": "6.5 Ca làm việc, check-in, bảo lưu, xóa hồ sơ (ShiftService, FreezeService, CustomerDeletionService và các Servlet lễ tân)",
+"doc": "Mở ca sáng khi ca chiều đã chốt.",
+"en": "",
+"vi": "Ca sáng không thể mở vì Ca chiều của ngày hôm nay đã chốt.",
+"files": [
+"ShiftService.java"
+],
+"typehint": {
+"fail": 1
+}
+},
+{
+"num": 263,
+"name": "MSG263_SHIFT_MORNING_AFTER_AFTERNOON_OPEN",
+"section": "6.5 Ca làm việc, check-in, bảo lưu, xóa hồ sơ (ShiftService, FreezeService, CustomerDeletionService và các Servlet lễ tân)",
+"doc": "Mở ca sáng khi ca chiều đang mở.",
+"en": "",
+"vi": "Ca sáng không thể mở vì Ca chiều của ngày hôm nay đang mở.",
+"files": [
+"ShiftService.java"
+],
+"typehint": {
+"fail": 1
+}
+},
+{
+"num": 264,
+"name": "MSG264_SHIFT_MORNING_OVER",
+"section": "6.5 Ca làm việc, check-in, bảo lưu, xóa hồ sơ (ShiftService, FreezeService, CustomerDeletionService và các Servlet lễ tân)",
+"doc": "Mở ca sáng sau 13:00.",
+"en": "",
+"vi": "Đã quá thời gian ca sáng (kết thúc lúc 13:00). Vui lòng mở Ca chiều.",
+"files": [
+"ShiftService.java"
+],
+"typehint": {
+"fail": 1
+}
+},
+{
+"num": 265,
+"name": "MSG265_SHIFT_MORNING_STILL_OPEN",
+"section": "6.5 Ca làm việc, check-in, bảo lưu, xóa hồ sơ (ShiftService, FreezeService, CustomerDeletionService và các Servlet lễ tân)",
+"doc": "Mở ca chiều khi ca sáng chưa chốt.",
+"en": "",
+"vi": "Hiện đang có Ca sáng đang mở. Vui lòng chốt Ca sáng trước khi mở Ca chiều.",
+"files": [
+"ShiftService.java"
+],
+"typehint": {
+"fail": 1
+}
+},
+{
+"num": 266,
+"name": "MSG266_SHIFT_AFTERNOON_NOT_YET",
+"section": "6.5 Ca làm việc, check-in, bảo lưu, xóa hồ sơ (ShiftService, FreezeService, CustomerDeletionService và các Servlet lễ tân)",
+"doc": "Mở ca chiều trước 13:00.",
+"en": "",
+"vi": "Chưa đến giờ bắt đầu Ca chiều (từ 13:00). Vui lòng mở Ca sáng.",
+"files": [
+"ShiftService.java"
+],
+"typehint": {
+"fail": 1
+}
+},
+{
+"num": 267,
+"name": "MSG267_SHIFT_CLOSE_ONLY_OPEN",
+"section": "6.5 Ca làm việc, check-in, bảo lưu, xóa hồ sơ (ShiftService, FreezeService, CustomerDeletionService và các Servlet lễ tân)",
+"doc": "Chốt ca không ở trạng thái mở.",
+"en": "",
+"vi": "Chỉ có thể chốt ca đang ở trạng thái Đang mở.",
+"files": [
+"ShiftService.java"
+],
+"typehint": {
+"fail": 1
+}
+},
+{
+"num": 268,
+"name": "MSG268_ORDER_NOT_IN_OPEN_SHIFT",
+"section": "6.5 Ca làm việc, check-in, bảo lưu, xóa hồ sơ (ShiftService, FreezeService, CustomerDeletionService và các Servlet lễ tân)",
+"doc": "Thao tác đơn của ca khác.",
+"en": "",
+"vi": "Đơn hàng không thuộc ca làm việc đang mở.",
+"files": [
+"ShiftService.java"
+],
+"typehint": {
+"fail": 1
+}
+},
+{
+"num": 269,
+"name": "MSG269_ORDER_NOT_AWAITING_CONFIRM",
+"section": "6.5 Ca làm việc, check-in, bảo lưu, xóa hồ sơ (ShiftService, FreezeService, CustomerDeletionService và các Servlet lễ tân)",
+"doc": "Xác nhận chuyển khoản khi đơn không còn Pending.",
+"en": "",
+"vi": "Đơn hàng này không còn ở trạng thái chờ xác nhận.",
+"files": [
+"ShiftService.java"
+],
+"typehint": {
+"fail": 1
+}
+},
+{
+"num": 270,
+"name": "MSG270_ORDER_NOT_CANCELLABLE",
+"section": "6.5 Ca làm việc, check-in, bảo lưu, xóa hồ sơ (ShiftService, FreezeService, CustomerDeletionService và các Servlet lễ tân)",
+"doc": "Hủy đơn không còn hủy được.",
+"en": "",
+"vi": "Đơn hàng này không còn ở trạng thái cho phép hủy.",
+"files": [
+"ShiftService.java"
+],
+"typehint": {
+"fail": 1
+}
+},
+{
+"num": 271,
+"name": "MSG271_SHIFT_INVALID",
+"section": "6.5 Ca làm việc, check-in, bảo lưu, xóa hồ sơ (ShiftService, FreezeService, CustomerDeletionService và các Servlet lễ tân)",
+"doc": "Mã ca gửi lên sai.",
+"en": "",
+"vi": "Ca làm việc không hợp lệ.",
+"files": [
+"ShiftServlet.java"
+],
+"typehint": {
+"Toast (error)": 2
+}
+},
+{
+"num": 272,
+"name": "MSG272_SHIFT_OPENED",
+"section": "6.5 Ca làm việc, check-in, bảo lưu, xóa hồ sơ (ShiftService, FreezeService, CustomerDeletionService và các Servlet lễ tân)",
+"doc": "Mở ca xong.",
+"en": "",
+"vi": "Mở ca làm việc thành công.",
+"files": [
+"ShiftServlet.java"
+],
+"typehint": {
+"Toast (success)": 1
+}
+},
+{
+"num": 273,
+"name": "MSG273_COUNTED_CASH_INVALID",
+"section": "6.5 Ca làm việc, check-in, bảo lưu, xóa hồ sơ (ShiftService, FreezeService, CustomerDeletionService và các Servlet lễ tân)",
+"doc": "Tiền mặt đếm được sai.",
+"en": "",
+"vi": "Số tiền mặt đếm được không hợp lệ.",
+"files": [
+"ShiftServlet.java"
+],
+"typehint": {
+"Toast (error)": 1
+}
+},
+{
+"num": 274,
+"name": "MSG274_SHIFT_CLOSED",
+"section": "6.5 Ca làm việc, check-in, bảo lưu, xóa hồ sơ (ShiftService, FreezeService, CustomerDeletionService và các Servlet lễ tân)",
+"doc": "Chốt ca xong.",
+"en": "",
+"vi": "Đã chốt ca làm việc và gửi sổ ca lên Quản lý.",
+"files": [
+"ShiftServlet.java"
+],
+"typehint": {
+"Toast (success)": 1
+}
+},
+{
+"num": 275,
+"name": "MSG275_ORDER_INVALID",
+"section": "6.5 Ca làm việc, check-in, bảo lưu, xóa hồ sơ (ShiftService, FreezeService, CustomerDeletionService và các Servlet lễ tân)",
+"doc": "Mã đơn gửi lên sai.",
+"en": "",
+"vi": "Đơn hàng không hợp lệ.",
+"files": [
+"ShiftServlet.java"
+],
+"typehint": {
+"Toast (error)": 2
+}
+},
+{
+"num": 276,
+"name": "MSG276_TRANSFER_CONFIRMED",
+"section": "6.5 Ca làm việc, check-in, bảo lưu, xóa hồ sơ (ShiftService, FreezeService, CustomerDeletionService và các Servlet lễ tân)",
+"doc": "Xác nhận chuyển khoản xong.",
+"en": "",
+"vi": "Đã xác nhận thanh toán chuyển khoản thành công.",
+"files": [
+"ShiftServlet.java"
+],
+"typehint": {
+"Toast (success)": 1
+}
+},
+{
+"num": 277,
+"name": "MSG277_COUNTER_ORDER_CANCELLED",
+"section": "6.5 Ca làm việc, check-in, bảo lưu, xóa hồ sơ (ShiftService, FreezeService, CustomerDeletionService và các Servlet lễ tân)",
+"doc": "Hủy đơn tại quầy xong.",
+"en": "",
+"vi": "Đã hủy đơn hàng tại quầy thành công.",
+"files": [
+"ShiftServlet.java"
+],
+"typehint": {
+"Toast (success)": 1
+}
+},
+{
+"num": 278,
+"name": "MSG278_FREEZE_REASON_MIN",
+"section": "6.5 Ca làm việc, check-in, bảo lưu, xóa hồ sơ (ShiftService, FreezeService, CustomerDeletionService và các Servlet lễ tân)",
+"doc": "Lý do bảo lưu quá ngắn.",
+"en": "",
+"vi": "Lý do bảo lưu phải có ít nhất 5 ký tự.",
+"files": [
+"FreezeMembershipServlet.java",
+"FreezeService.java"
+],
+"typehint": {
+"Toast (error)": 1,
+"fail": 1
+}
+},
+{
+"num": 279,
+"name": "MSG279_FREEZE_DATES_REQUIRED",
+"section": "6.5 Ca làm việc, check-in, bảo lưu, xóa hồ sơ (ShiftService, FreezeService, CustomerDeletionService và các Servlet lễ tân)",
+"doc": "Thiếu ngày bảo lưu.",
+"en": "",
+"vi": "Vui lòng nhập đầy đủ ngày bắt đầu và ngày kết thúc bảo lưu.",
+"files": [
+"FreezeService.java"
+],
+"typehint": {
+"fail": 1
+}
+},
+{
+"num": 280,
+"name": "MSG280_FREEZE_START_FROM_TOMORROW",
+"section": "6.5 Ca làm việc, check-in, bảo lưu, xóa hồ sơ (ShiftService, FreezeService, CustomerDeletionService và các Servlet lễ tân)",
+"doc": "Bảo lưu bắt đầu hôm nay / đã qua. %s = ngày mai.",
+"en": "",
+"vi": "Bảo lưu chỉ được bắt đầu sớm nhất từ ngày mai (%s).",
+"files": [
+"FreezeService.java"
+],
+"typehint": {
+"fail": 1
+}
+},
+{
+"num": 281,
+"name": "MSG281_FREEZE_END_BEFORE_START",
+"section": "6.5 Ca làm việc, check-in, bảo lưu, xóa hồ sơ (ShiftService, FreezeService, CustomerDeletionService và các Servlet lễ tân)",
+"doc": "Ngày kết thúc bảo lưu trước ngày bắt đầu.",
+"en": "",
+"vi": "Ngày kết thúc dự kiến không được trước ngày bắt đầu bảo lưu.",
+"files": [
+"FreezeService.java"
+],
+"typehint": {
+"fail": 1
+}
+},
+{
+"num": 282,
+"name": "MSG282_STAFF_OWN_FREEZE",
+"section": "6.5 Ca làm việc, check-in, bảo lưu, xóa hồ sơ (ShiftService, FreezeService, CustomerDeletionService và các Servlet lễ tân)",
+"doc": "Nhân viên bảo lưu gói của chính mình.",
+"en": "",
+"vi": "Nhân viên không được tự bảo lưu gói tập của chính mình.",
+"files": [
+"FreezeService.java"
+],
+"typehint": {
+"fail": 1
+}
+},
+{
+"num": 283,
+"name": "MSG283_FREEZE_ALREADY_ENDED",
+"section": "6.5 Ca làm việc, check-in, bảo lưu, xóa hồ sơ (ShiftService, FreezeService, CustomerDeletionService và các Servlet lễ tân)",
+"doc": "Kết thúc bảo lưu đã kết thúc.",
+"en": "",
+"vi": "Đợt bảo lưu này đã được kết thúc trước đó.",
+"files": [
+"FreezeService.java"
+],
+"typehint": {
+"fail": 1
+}
+},
+{
+"num": 284,
+"name": "MSG284_STAFF_OWN_PROFILE",
+"section": "6.5 Ca làm việc, check-in, bảo lưu, xóa hồ sơ (ShiftService, FreezeService, CustomerDeletionService và các Servlet lễ tân)",
+"doc": "Nhân viên thao tác hồ sơ khách của chính mình.",
+"en": "",
+"vi": "Nhân viên không được tự thao tác trên hồ sơ của chính mình.",
+"files": [
+"FreezeService.java"
+],
+"typehint": {
+"fail": 1
+}
+},
+{
+"num": 285,
+"name": "MSG285_FREEZE_PERIOD_REQUIRED",
+"section": "6.5 Ca làm việc, check-in, bảo lưu, xóa hồ sơ (ShiftService, FreezeService, CustomerDeletionService và các Servlet lễ tân)",
+"doc": "Chưa chọn thời gian bảo lưu.",
+"en": "",
+"vi": "Vui lòng chọn đầy đủ thời gian bảo lưu.",
+"files": [
+"FreezeMembershipServlet.java"
+],
+"typehint": {
+"Toast (error)": 1
+}
+},
+{
+"num": 286,
+"name": "MSG286_FREEZE_REASON_MAX",
+"section": "6.5 Ca làm việc, check-in, bảo lưu, xóa hồ sơ (ShiftService, FreezeService, CustomerDeletionService và các Servlet lễ tân)",
+"doc": "Lý do bảo lưu quá dài.",
+"en": "",
+"vi": "Lý do bảo lưu không được vượt quá 500 ký tự.",
+"files": [
+"FreezeMembershipServlet.java"
+],
+"typehint": {
+"Toast (error)": 1
+}
+},
+{
+"num": 287,
+"name": "MSG287_DATE_FORMAT_INVALID",
+"section": "6.5 Ca làm việc, check-in, bảo lưu, xóa hồ sơ (ShiftService, FreezeService, CustomerDeletionService và các Servlet lễ tân)",
+"doc": "Ngày gửi lên sai định dạng.",
+"en": "",
+"vi": "Định dạng ngày không hợp lệ.",
+"files": [
+"FreezeMembershipServlet.java"
+],
+"typehint": {
+"Toast (error)": 1
+}
+},
+{
+"num": 288,
+"name": "MSG288_FREEZE_ID_INVALID",
+"section": "6.5 Ca làm việc, check-in, bảo lưu, xóa hồ sơ (ShiftService, FreezeService, CustomerDeletionService và các Servlet lễ tân)",
+"doc": "Mã đợt bảo lưu sai.",
+"en": "",
+"vi": "Mã đợt bảo lưu không hợp lệ.",
+"files": [
+"FreezeMembershipServlet.java"
+],
+"typehint": {
+"Toast (error)": 1
+}
+},
+{
+"num": 289,
+"name": "MSG289_PROFILE_ALREADY_INACTIVE",
+"section": "6.5 Ca làm việc, check-in, bảo lưu, xóa hồ sơ (ShiftService, FreezeService, CustomerDeletionService và các Servlet lễ tân)",
+"doc": "Yêu cầu xóa hồ sơ đã Inactive.",
+"en": "",
+"vi": "Hồ sơ khách hàng này đã ngừng hoạt động.",
+"files": [
+"CustomerDeletionService.java"
+],
+"typehint": {
+"fail": 1
+}
+},
+{
+"num": 290,
+"name": "MSG290_REQUEST_HANDLED_BY_OTHER",
+"section": "6.5 Ca làm việc, check-in, bảo lưu, xóa hồ sơ (ShiftService, FreezeService, CustomerDeletionService và các Servlet lễ tân)",
+"doc": "Yêu cầu đã có người xử lý.",
+"en": "",
+"vi": "Yêu cầu này đã được xử lý bởi người khác.",
+"files": [
+"CustomerDeletionService.java"
+],
+"typehint": {
+"fail": 4
+}
+},
+{
+"num": 291,
+"name": "MSG291_PROFILE_INACTIVE_RELOAD",
+"section": "6.5 Ca làm việc, check-in, bảo lưu, xóa hồ sơ (ShiftService, FreezeService, CustomerDeletionService và các Servlet lễ tân)",
+"doc": "Hồ sơ vừa ngừng hoạt động.",
+"en": "",
+"vi": "Hồ sơ không còn hoạt động. Vui lòng tải lại danh sách.",
+"files": [
+"CustomerDeletionService.java"
+],
+"typehint": {
+"fail": 1
+}
+},
+{
+"num": 292,
+"name": "MSG292_DELETION_APPROVED",
+"section": "6.5 Ca làm việc, check-in, bảo lưu, xóa hồ sơ (ShiftService, FreezeService, CustomerDeletionService và các Servlet lễ tân)",
+"doc": "Duyệt xóa hồ sơ xong.",
+"en": "",
+"vi": "Đã duyệt yêu cầu xóa và ngừng hoạt động hồ sơ khách hàng.",
+"files": [
+"CustomerDeletionService.java"
+],
+"typehint": {
+"Toast (success)": 1
+}
+},
+{
+"num": 293,
+"name": "MSG293_DELETION_REJECTED",
+"section": "6.5 Ca làm việc, check-in, bảo lưu, xóa hồ sơ (ShiftService, FreezeService, CustomerDeletionService và các Servlet lễ tân)",
+"doc": "Từ chối xóa hồ sơ xong.",
+"en": "",
+"vi": "Đã từ chối yêu cầu xóa hồ sơ.",
+"files": [
+"CustomerDeletionService.java"
+],
+"typehint": {
+"Toast (success)": 1
+}
+},
+{
+"num": 294,
+"name": "MSG294_CHECKIN_PACKAGE_INVALID",
+"section": "6.5 Ca làm việc, check-in, bảo lưu, xóa hồ sơ (ShiftService, FreezeService, CustomerDeletionService và các Servlet lễ tân)",
+"doc": "Check-in: gói gửi lên sai.",
+"en": "",
+"vi": "Thông tin gói tập không hợp lệ.",
+"files": [
+"CheckInServlet.java"
+],
+"typehint": {
+"Toast (error)": 1
+}
+},
+{
+"num": 295,
+"name": "MSG295_CHECKIN_DONE",
+"section": "6.5 Ca làm việc, check-in, bảo lưu, xóa hồ sơ (ShiftService, FreezeService, CustomerDeletionService và các Servlet lễ tân)",
+"doc": "Check-in xong. %s = tên khách.",
+"en": "",
+"vi": "%s đã vào tập thành công.",
+"files": [
+"CheckInServlet.java"
+],
+"typehint": {
+"Toast (success)": 1
+}
+},
+{
+"num": 296,
+"name": "MSG296_CHECKIN_PHOTO_PROFILE_NOT_FOUND",
+"section": "6.5 Ca làm việc, check-in, bảo lưu, xóa hồ sơ (ShiftService, FreezeService, CustomerDeletionService và các Servlet lễ tân)",
+"doc": "Chụp ảnh check-in: không có hồ sơ.",
+"en": "",
+"vi": "Không tìm thấy hồ sơ khách cần cập nhật ảnh.",
+"files": [
+"CheckInServlet.java"
+],
+"typehint": {
+"Toast (error)": 1
+}
+},
+{
+"num": 297,
+"name": "MSG297_CHECKIN_PHOTO_SAVED",
+"section": "6.5 Ca làm việc, check-in, bảo lưu, xóa hồ sơ (ShiftService, FreezeService, CustomerDeletionService và các Servlet lễ tân)",
+"doc": "Lưu ảnh check-in xong.",
+"en": "",
+"vi": "Đã lưu ảnh check-in vào hồ sơ hội viên.",
+"files": [
+"CheckInServlet.java"
+],
+"typehint": {
+"Toast (success)": 1
+}
+},
+{
+"num": 298,
+"name": "MSG298_MEASUREMENT_NOT_FOUND",
+"section": "6.6 PT, chỉ số cơ thể, tài khoản, thông báo, phản hồi, thư viện bài tập",
+"doc": "Chỉ số cơ thể: lần đo không có / không thuộc khách.",
+"en": "",
+"vi": "Không tìm thấy lần đo này.",
+"files": [
+"BodyStatsService.java",
+"BodyStatsServlet.java"
+],
+"typehint": {
+"fail": 2
+}
+},
+{
+"num": 299,
+"name": "MSG299_MEASUREMENT_DATE_REQUIRED",
+"section": "6.6 PT, chỉ số cơ thể, tài khoản, thông báo, phản hồi, thư viện bài tập",
+"doc": "Chỉ số cơ thể: thiếu ngày đo.",
+"en": "",
+"vi": "Chọn ngày đo.",
+"files": [
+"BodyStatsService.java"
+],
+"typehint": {
+"fail": 1
+}
+},
+{
+"num": 300,
+"name": "MSG300_MEASUREMENT_SAVED",
+"section": "6.6 PT, chỉ số cơ thể, tài khoản, thông báo, phản hồi, thư viện bài tập",
+"doc": "Lưu lần đo xong. %s = ngày, BMI.",
+"en": "",
+"vi": "Đã lưu lần đo ngày %s · BMI %s.",
+"files": [
+"BodyStatsService.java"
+],
+"typehint": {
+"Toast (success)": 1
+}
+},
+{
+"num": 301,
+"name": "MSG301_MEASUREMENT_DELETED",
+"section": "6.6 PT, chỉ số cơ thể, tài khoản, thông báo, phản hồi, thư viện bài tập",
+"doc": "Xóa lần đo xong.",
+"en": "",
+"vi": "Đã xóa lần đo.",
+"files": [
+"BodyStatsService.java"
+],
+"typehint": {
+"Toast (success)": 1,
+"fail": 1
+}
+},
+{
+"num": 302,
+"name": "MSG302_SAVED_BUT_AUDIT_FAILED",
+"section": "6.6 PT, chỉ số cơ thể, tài khoản, thông báo, phản hồi, thư viện bài tập",
+"doc": "Lưu được nhưng ghi nhật ký lỗi.",
+"en": "",
+"vi": "Thông tin đã được cập nhật nhưng chưa ghi được nhật ký thao tác.",
+"files": [
+"AccountSettingsServlet.java"
+],
+"typehint": {}
+},
+{
+"num": 303,
+"name": "MSG303_NOTIFICATION_ACTION_INVALID",
+"section": "6.6 PT, chỉ số cơ thể, tài khoản, thông báo, phản hồi, thư viện bài tập",
+"doc": "API thông báo nhận action lạ.",
+"en": "",
+"vi": "Thao tác thông báo không hợp lệ.",
+"files": [
+"NotificationApiServlet.java"
+],
+"typehint": {
+"fail": 1
+}
+},
+{
+"num": 304,
+"name": "MSG304_NEW_EMAIL_SAME",
+"section": "6.6 PT, chỉ số cơ thể, tài khoản, thông báo, phản hồi, thư viện bài tập",
+"doc": "Đổi email trùng email cũ.",
+"en": "",
+"vi": "Email mới phải khác email hiện tại.",
+"files": [
+"ContactChangeService.java"
+],
+"typehint": {}
+},
+{
+"num": 305,
+"name": "MSG305_NEW_PHONE_SAME",
+"section": "6.6 PT, chỉ số cơ thể, tài khoản, thông báo, phản hồi, thư viện bài tập",
+"doc": "Đổi SĐT trùng SĐT cũ.",
+"en": "",
+"vi": "Số điện thoại mới phải khác số điện thoại hiện tại.",
+"files": [
+"ContactChangeService.java"
+],
+"typehint": {}
+},
+{
+"num": 306,
+"name": "MSG306_EXERCISE_LIBRARY_UNAVAILABLE",
+"section": "6.6 PT, chỉ số cơ thể, tài khoản, thông báo, phản hồi, thư viện bài tập",
+"doc": "wger lỗi và chưa có dữ liệu cũ.",
+"en": "",
+"vi": "Chưa tải được thư viện bài tập từ wger. Vui lòng thử lại sau ít phút.",
+"files": [
+"ExerciseLibraryService.java"
+],
+"typehint": {
+"fail": 1
+}
+},
+{
+"num": 307,
+"name": "MSG307_PT_SALE_HELD",
+"section": "6.6 PT, chỉ số cơ thể, tài khoản, thông báo, phản hồi, thư viện bài tập",
+"doc": "Bán gói PT: giữ lịch xong. %d = số buổi, phút; %s = mã đơn.",
+"en": "",
+"vi": "Đã giữ %d buổi trong %d phút · đơn %s. Thu tiền để chốt.",
+"files": [
+"PtSaleService.java"
+],
+"typehint": {
+"Toast (success)": 1
+}
+},
+{
+"num": 308,
+"name": "MSG308_PT_SALE_METHOD_REQUIRED",
+"section": "6.6 PT, chỉ số cơ thể, tài khoản, thông báo, phản hồi, thư viện bài tập",
+"doc": "Bán gói PT: chưa chọn cách thu.",
+"en": "",
+"vi": "Chọn cách thu tiền: tiền mặt hoặc chuyển khoản.",
+"files": [
+"PtSaleService.java"
+],
+"typehint": {
+"fail": 1
+}
+},
+{
+"num": 309,
+"name": "MSG309_PT_SALE_REFERENCE_LENGTH",
+"section": "6.6 PT, chỉ số cơ thể, tài khoản, thông báo, phản hồi, thư viện bài tập",
+"doc": "Bán gói PT: mã giao dịch quá dài.",
+"en": "",
+"vi": "Mã giao dịch chuyển khoản tối đa 50 ký tự.",
+"files": [
+"PtSaleService.java"
+],
+"typehint": {
+"fail": 1
+}
+},
+{
+"num": 310,
+"name": "MSG310_PT_SALE_PAID",
+"section": "6.6 PT, chỉ số cơ thể, tài khoản, thông báo, phản hồi, thư viện bài tập",
+"doc": "Bán gói PT: thu tiền xong. %s = số tiền, mã đơn; %d = số buổi.",
+"en": "",
+"vi": "Đã thu %s · đơn %s · %d buổi đã vào lịch PT.",
+"files": [
+"PtSaleService.java"
+],
+"typehint": {
+"Toast (success)": 1
+}
+},
+{
+"num": 311,
+"name": "MSG311_PT_SALE_RELEASED",
+"section": "6.6 PT, chỉ số cơ thể, tài khoản, thông báo, phản hồi, thư viện bài tập",
+"doc": "Bán gói PT: hủy giữ chỗ. %s = mã đơn.",
+"en": "",
+"vi": "Đã hủy giữ chỗ đơn %s, các khung đã trả lại cho PT.",
+"files": [
+"PtSaleService.java"
+],
+"typehint": {
+"Toast (success)": 1
+}
+},
+{
+"num": 312,
+"name": "MSG312_FEEDBACK_CONTENT_LENGTH",
+"section": "6.6 PT, chỉ số cơ thể, tài khoản, thông báo, phản hồi, thư viện bài tập",
+"doc": "Phản hồi sai độ dài.",
+"en": "",
+"vi": "Nội dung phản hồi phải từ 10 đến 1000 ký tự.",
+"files": [
+"FeedbackService.java"
+],
+"typehint": {}
+},
+{
+"num": 313,
+"name": "MSG313_PT_NEW_SLOT_REQUIRED",
+"section": "6.6 PT, chỉ số cơ thể, tài khoản, thông báo, phản hồi, thư viện bài tập",
+"doc": "Dời buổi chưa chọn khung.",
+"en": "",
+"vi": "Chọn một khung giờ mới cho buổi này.",
+"files": [
+"PtSessionHandleService.java"
+],
+"typehint": {
+"fail": 1
+}
+},
+{
+"num": 314,
+"name": "MSG314_NOTE_MAX_LENGTH",
+"section": "6.6 PT, chỉ số cơ thể, tài khoản, thông báo, phản hồi, thư viện bài tập",
+"doc": "Ghi chú quá dài. %d = số ký tự tối đa.",
+"en": "",
+"vi": "Ghi chú tối đa %d ký tự.",
+"files": [
+"BodyStatsService.java",
+"PtSessionHandleService.java"
+],
+"typehint": {
+"fail": 1
+}
+},
+{
+"num": 315,
+"name": "MSG315_PT_SESSION_MOVED",
+"section": "6.6 PT, chỉ số cơ thể, tài khoản, thông báo, phản hồi, thư viện bài tập",
+"doc": "Dời buổi xong. %s = giờ mới.",
+"en": "",
+"vi": "Đã dời buổi sang %s.",
+"files": [
+"PtSessionHandleService.java"
+],
+"typehint": {
+"Toast (success)": 1
+}
+},
+{
+"num": 316,
+"name": "MSG316_PT_TARGET_REQUIRED",
+"section": "6.6 PT, chỉ số cơ thể, tài khoản, thông báo, phản hồi, thư viện bài tập",
+"doc": "Chuyển buổi chưa chọn PT.",
+"en": "",
+"vi": "Chọn PT nhận buổi này.",
+"files": [
+"PtSessionHandleService.java"
+],
+"typehint": {
+"fail": 1
+}
+},
+{
+"num": 317,
+"name": "MSG317_PT_SESSION_TRANSFERRED",
+"section": "6.6 PT, chỉ số cơ thể, tài khoản, thông báo, phản hồi, thư viện bài tập",
+"doc": "Chuyển buổi xong. %s = thời gian, tên PT.",
+"en": "",
+"vi": "Đã chuyển buổi %s cho %s.",
+"files": [
+"PtSessionHandleService.java"
+],
+"typehint": {
+"Toast (success)": 1
+}
+},
+{
+"num": 318,
+"name": "MSG318_PT_SESSION_CANCELLED",
+"section": "6.6 PT, chỉ số cơ thể, tài khoản, thông báo, phản hồi, thư viện bài tập",
+"doc": "Hủy buổi xong. %s = thời gian.",
+"en": "",
+"vi": "Đã hủy buổi %s.",
+"files": [
+"PtSessionHandleService.java"
+],
+"typehint": {
+"Toast (success)": 1
+}
+},
+{
+"num": 319,
+"name": "MSG319_AVATAR_EMPTY",
+"section": "6.6 PT, chỉ số cơ thể, tài khoản, thông báo, phản hồi, thư viện bài tập",
+"doc": "Xóa ảnh đại diện khi chưa có ảnh.",
+"en": "",
+"vi": "Tài khoản chưa có ảnh đại diện.",
+"files": [
+"AccountSettingsService.java"
+],
+"typehint": {
+"fail": 1
+}
+},
+{
+"num": 320,
+"name": "MSG320_PT_PUBLISH_NOTHING",
+"section": "6.6 PT, chỉ số cơ thể, tài khoản, thông báo, phản hồi, thư viện bài tập",
+"doc": "Công bố lịch khi không có thay đổi.",
+"en": "",
+"vi": "Chọn ít nhất một khung nháp hoặc khung cần gỡ trước khi công bố.",
+"files": [
+"PtScheduleService.java"
+],
+"typehint": {
+"fail": 1
+}
+},
+{
+"num": 321,
+"name": "MSG321_PT_DURATION_CHANGED",
+"section": "6.6 PT, chỉ số cơ thể, tài khoản, thông báo, phản hồi, thư viện bài tập",
+"doc": "Thời lượng buổi đổi giữa lúc soạn và lúc công bố.",
+"en": "",
+"vi": "Thời lượng buổi đã thay đổi. Tải lại lịch và kiểm tra nháp trước khi công bố.",
+"files": [
+"PtScheduleService.java"
+],
+"typehint": {
+"fail": 1
+}
+},
+{
+"num": 322,
+"name": "MSG322_PT_SLOTS_REMOVED",
+"section": "6.6 PT, chỉ số cơ thể, tài khoản, thông báo, phản hồi, thư viện bài tập",
+"doc": "Công bố chỉ gỡ khung. %d = số khung.",
+"en": "",
+"vi": "Đã gỡ %d khung giờ.",
+"files": [
+"PtScheduleService.java"
+],
+"typehint": {
+"Toast (success)": 1
+}
+}
+]

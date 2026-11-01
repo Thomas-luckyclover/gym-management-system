@@ -1,0 +1,853 @@
+{
+"uc": [
+[
+"UC-01",
+"Login",
+"System User",
+"Authenticate with an email address or phone number plus a password; either identifies exactly one account. If the account serves more than one role that is not Inactive, the user selects the working role (staff position or Customer) on the Select Role screen before any home screen opens; an account with a single role goes straight to that role's home screen. An account created at the counter that has no password yet cannot sign in and is pointed to Forgot Password. An account that serves only the Customer role is locked for 5 minutes after 5 consecutive wrong passwords (P-17, P-18); an account that serves any staff role is never locked automatically."
+],
+[
+"UC-02",
+"Logout",
+"System User",
+"End the current session and securely sign out."
+],
+[
+"UC-03",
+"Recover Password",
+"System User, Email Gateway",
+"Reset a forgotten password via a time-limited verification code sent to the registered email; all active sessions are invalidated after a successful reset. The same flow is used to set the first password of an account created by the Receptionist at the counter."
+],
+[
+"UC-04",
+"Manage Personal Account",
+"System User",
+"View one's own profile and keep sign-in details current, in any role. Customers and staff may change only their avatar, email, phone number and password. A new email is verified by a code sent to the new email; a new phone number is verified by a code sent to the account's current email; the new value is checked for duplicates before the code is sent and again when saved. After an email change the old email is notified and every other session is signed out. Customer name, date of birth, check-in photo and guardian details are changed only by the Receptionist; staff personnel details are changed by the Manager; position and account status are changed only by the Admin. The Dependent profiles tab is shown only in the Customer role, and the account menu offers Switch Role when the account serves more than one role."
+],
+[
+"UC-05",
+"Register Account",
+"Guest",
+"Self-register as a new customer directly on the website; phone/email uniqueness is validated against existing records"
+],
+[
+"UC-Claim",
+"Claim An Existing Profile Via Verification Code",
+"Guest",
+"Link a walk-in profile already created by the Receptionist to a new self-service login using a verification code sent to the email on file, so no duplicate customer record is created. If the email supplied does not match, the guest is told the profile is registered under a different address; if the profile already has a login, the guest is routed to password recovery; if the profile holds no email address, the guest is asked to complete the claim at the counter."
+],
+[
+"UC-IDENT",
+"Check Phone/Email Duplication & Identify Profile",
+"",
+"Detect whether a phone/email already exists in the system and route Register/Claim flows accordingly — invoked by UC-05."
+],
+[
+"UC-06",
+"Explore Services & Pricing",
+"Guest",
+"Browse packages, pricing, and blog content publicly before signing up."
+],
+[
+"UC-07",
+"Manage System Accounts",
+"Admin",
+"Create staff accounts and their employee records for every position (Admin, Manager, PT, Receptionist); if the phone number matches an active Person, check an identity document and attach the staff role to that Person, reusing the existing account. Change an employee's position (only when no unfinished work remains; only the Admin can create or promote an Admin). Lock or unlock an account with a reason of 5–500 characters, including early unlock of a temporarily locked customer account. An account becomes Inactive only automatically, when every role of its Person is Inactive. The last active Admin cannot be deleted, locked, demoted or set to Resigned. Customer accounts are never created here; passwords are reset only by the owner through Forgot Password."
+],
+[
+"UC-08",
+"View Audit Log",
+"Admin",
+"Review a chronological, field-level log of data-changing actions for traceability."
+],
+[
+"UC-09",
+"Configure System Parameters",
+"Manager",
+"Set system parameters — financial (VAT, default PT commission %) and operational (freeze limit and duration, minimum shift staffing, leave submission cut-off and leave approval cut-off, attendance window, swap limit, online payment deadline, and so on). Price and parameter changes never apply retroactively to existing orders."
+],
+[
+"UC-10",
+"Manage Service Package Catalog",
+"Manager",
+"Create, update, publish and retire the packages the gym sells — gym membership packages, day passes and PT packages (single and couple) — each with its name, duration or session count, price and sale status. Retiring a package only stops new sales; packages already purchased keep the terms captured at the time of purchase."
+],
+[
+"UC-11",
+"Configure Operating Hours",
+"Manager",
+"Define a default daily operating schedule, with the ability to configure exceptions for specific dates. Every open day is split automatically into a morning and an afternoon shift — there is no manual rostering. Operating hours are used to validate bookings, check-ins and PT time-slot declarations."
+],
+[
+"UC-12",
+"Manage Vouchers",
+"Manager",
+"Create and maintain discount vouchers: code, discount value, validity period, total usage cap, per-customer usage limit, minimum order value, and the package types the voucher may be applied to. PT packages are outside every voucher's scope. A voucher can be deactivated; codes already applied to an order keep the terms captured at that time."
+],
+[
+"UC-13",
+"Manage Personnel Records",
+"Manager",
+"Maintain the personnel details of existing staff: full name, date of birth, specialty, years of experience, hire date, PT commission rate and employment status. Staff accounts are created and positions are changed only by the Admin (UC-07); email and phone number are changed by the staff member in UC-04. Recording a resignation (reason required) sets the employee to Resigned, signs out every session of the account and keeps the account Active only if the Person still has another role that is not Inactive."
+],
+[
+"UC-14",
+"Submit Leave Request",
+"Staff",
+"Request time off. A request must be submitted before the submission cut-off on the day immediately preceding the leave date (configurable, 15:00 by default); unexpected absences are handled directly with the Manager outside the system. For a PT, submission is blocked if a teaching session is already scheduled within the requested period. Final approval is also subject to the minimum on-duty headcount for the affected shift."
+],
+[
+"UC-15",
+"Process Staff Leave Requests",
+"Manager",
+"Approve or reject leave requests. Approval is blocked if it would breach minimum shift staffing, and a rejection requires a reason. If the Manager takes no action by the approval cut-off on the day immediately preceding the leave date (configurable, 20:00 by default), the request is rejected automatically."
+],
+[
+"UC-16",
+"Manage Customer Profiles",
+"Receptionist",
+"Create, look up and update customer profiles at the counter, including walk-in and dependent profiles, and capture the check-in photo used to verify entry. The phone number and email are checked for duplicates before a profile is created. Every deletion request needs a reason: a profile with no active package and no unused quota is removed straight away, otherwise the request is sent to the Manager for approval."
+],
+[
+"UC-17",
+"Process Customer Deletion Requests",
+"Manager",
+"Approve/reject pending deletion requests for members with an active package/unused quota, reviewing the reason submitted by Receptionist."
+],
+[
+"UC-18",
+"Freeze A Membership Package",
+"Receptionist",
+"Pause an active membership package (never a PT package or expired package) free of charge, within the freeze count and length limits (P-01, P-02). A freeze is never blocked by PT sessions: before saving, the system lists every Scheduled session inside the freeze period, and on saving they become Missed (reason: membership frozen). The package resumes automatically at the end of the freeze; the Receptionist may also end it early, and the end date moves out only by the days actually frozen. A Receptionist cannot freeze their own package"
+],
+[
+"UC-19",
+"Check A Customer In At The Gym",
+"Receptionist",
+"Look up a customer's profile by customer code or phone number and manually record their check-in; verify the customer against the check-in photo; entry is granted only if the customer has a valid gym membership package or day pass — a PT-only package does not grant gym access."
+],
+[
+"UC-20",
+"Create Order & Collect Payment At Counter",
+"Receptionist",
+"Record an in-person purchase (including day pass) for a new or existing customer and collect cash or bank transfer (confirmed only after the money is received); price, VAT and discount are snapshotted. A wrong paid order can be cancelled only within the same shift, with a reason, and refunded at the counter."
+],
+[
+"UC-21",
+"Sell A PT Package",
+"Receptionist",
+"Process the sale of a single or couple PT package. The customer must hold a valid gym membership (both members for a couple package), and customers under 10 cannot buy either type. The customer chooses the PT, and the Receptionist sets a fixed weekly schedule matching the PT's declared slots; the initial fixed schedule falls on weekdays only, with weekends shown but not selectable. Payment is by cash or bank transfer only. The package is sold by term: the Receptionist picks the start date, the end date is start date plus the package duration (last day inclusive), and one session is generated for every Monday-to-Friday in the term at the fixed slot; the number of sessions is fixed when the order is Paid. An employee who also trains as a customer must choose a different PT, and the Receptionist cannot sell to their own customer profile.. Alternatively, for a walk-in customer without an account, the Receptionist can sell a single session for today only, checked against the customer's day pass or gym membership for that day and against age (under 10 not allowed), with payment taken immediately."
+],
+[
+"UC-22",
+"Purchase A Package Via Self-Service",
+"Customer, VNPay",
+"Buy a gym membership package online through a payment gateway without visiting the counter; not applicable to PT packages, which sell only through Receptionist. A failed or expired payment can be retried until the order's payment deadline; after that the order is cancelled and a new order is needed."
+],
+[
+"UC-23",
+"Apply A Voucher To An Order",
+"Customer, Receptionist",
+"Apply a discount voucher to an order — one voucher per order. Validity is checked when the code is applied: validity period, total usage, per-customer limit, minimum order value measured on the price before discount, and whether the order's package type falls inside the voucher's scope. PT packages never accept a voucher. Usage is counted on apply and returned if the voucher is removed or the order is cancelled; the voucher cannot be changed while a payment is pending."
+],
+[
+"UC-PAY",
+"Process Payment & Record Transaction",
+"VNPay",
+"Record each payment attempt as a transaction. Counter payments (cash/transfer) succeed immediately; online payments go through the gateway — success marks the order Paid and grants the package, failure or expiry keeps the order pending for retry. A success received for a cancelled or mismatched order is flagged for manual refund."
+],
+[
+"UC-24",
+"Look Up Personal Transaction History",
+"Customer",
+"View one's own past orders and payments."
+],
+[
+"UC-25",
+"Open Shift, Reconcile Transactions & Close Shift",
+"Receptionist",
+"Open the shift, view transactions recorded in it, cancel a wrong order if needed, then compare expected cash from successful cash transactions with cash on hand; any discrepancy requires a reason before closing. The shift cannot be closed while any counter order from that shift is still Pending — each must be paid or cancelled first."
+],
+[
+"UC-26",
+"Look Up System-Wide Transaction History",
+"Manager",
+"View all transactions across the gym for oversight; filter by payment method and list successful payments that need a manual refund."
+],
+[
+"UC-27",
+"Manage Facility/Equipment Catalog",
+"Manager",
+"Maintain the register of facilities and equipment — name, category, location or area, quantity and current condition. The register is what the Receptionist selects from when reporting a fault, and retired items stop appearing in new maintenance requests."
+],
+[
+"UC-28",
+"Create Facility Maintenance Request",
+"Receptionist",
+"Report a facility/equipment issue that needs repair, initiating an approval workflow only Manager can advance"
+],
+[
+"UC-29",
+"Process Facility Maintenance Requests",
+"Manager",
+"Review and approve/reject facility maintenance requests submitted by Receptionist; approved requests move to In Progress and are closed by Receptionist once resolved."
+],
+[
+"UC-30",
+"Declare Available Time Slots",
+"PT",
+"Set 90-minute time slots available to teach, including weekends (required to support weekend-only session swaps). Declared slots may not overlap, no buffer time is required between consecutive sessions, they must fall within the configured operating hours, and they may be published for any future date without limit."
+],
+[
+"UC-31",
+"Mark Session No-Show",
+"PT",
+"Record attendance for a scheduled session, including marking a client absent, which deducts the quota with no refund. Attendance can be recorded from the session start until 24 hours after it ends. For a couple package, absence is recorded only when both members are absent. If nothing is marked, the session closes automatically: Completed if the customer checked in that day, otherwise Missed. A session falling on a day when the customer no longer holds a valid gym membership does not take place and closes as Missed."
+],
+[
+"UC-32",
+"Track Teaching Schedule & Assigned Clients",
+"PT",
+"View upcoming sessions and the list of assigned clients on a dashboard. Sessions created via a Receptionist-sold PT package appear here automatically once paid, without requiring PT confirmation."
+],
+[
+"UC-33",
+"Write Private Notes On Clients",
+"PT",
+"Record notes about a client, visible and editable only by the PT who wrote them."
+],
+[
+"UC-34",
+"Draft Training Plans & Meal Plans",
+"PT",
+"Create/update a workout & diet plan attached to a client's profile, visible to the client once published."
+],
+[
+"UC-35",
+"Handle A Session The PT Cannot Teach",
+"PT",
+"After arranging matters directly with the customer, the PT resolves a scheduled session they cannot teach. Only the PT in charge can act, and only while the session is still Scheduled and has not started. There are three options: reschedule to another free slot of the same PT within the PT package term (never after its end date); transfer to another PT the customer has chosen, in which case the commission goes to the new PT; or cancel, which requires a reason and confirmation that the customer agreed to be repaid in cash by the PT outside the system. A cancelled session is still deducted from the package quota and the original PT still earns the commission. The session value never changes and no refund transaction is created. A rescheduled or transferred session must fall on a date the customer still holds a valid gym membership. The customer is notified automatically (both members for a couple package), and the new PT is notified on transfer. The same screen offers 'Swap on behalf of the customer' for a customer without an account (BR-62), logged as PtOnBehalfSwap and counted toward the swap limit."
+],
+[
+"UC-36",
+"Track Personal Training Schedule",
+"Customer",
+"View upcoming and past PT sessions."
+],
+[
+"UC-37",
+"Book A Single Session With A PT",
+"Customer",
+"Reserve a one-off, per-session training slot with a chosen PT. The date must fall within the customer's valid membership package period, or be the current day if the customer instead holds a valid day pass. Selectable slots are limited to the current week, with the following week opening from Saturday onward. The slot becomes Held as soon as the Pending order is created and stays Held until the order's payment deadline; it becomes Booked when the order is Paid and returns to Free if the order is cancelled. Payment is made only through the online gateway."
+],
+[
+"UC-38",
+"Reschedule A Session In A PT Package",
+"Customer",
+"Swap a package session's date and time to a weekend slot the PT has declared free, selectable only within the current week, with the following week opening from Saturday onward, and only to a date the customer still holds a valid gym package. A package allows up to 3 swaps in total. For a couple package, either member may perform the swap. Where the customer has no self-service account, the PT performs the swap on their behalf, and it counts toward the same limit of 3\\."
+],
+[
+"UC-39",
+"Cancel A Booked Session",
+"Customer",
+"Cancel a previously booked session at any time; always deducted from quota with no refund, with a warning shown before confirming."
+],
+[
+"UC-40",
+"View Training Plan & Meal Plan From PT",
+"Customer",
+"View the workout/diet plan authored by the assigned PT"
+],
+[
+"UC-41",
+"Track Membership & Package Status",
+"Customer",
+"Check status (Active/Frozen/Expired) and remaining quota of owned packages; Frozen/Expired status blocks check-in and new PT bookings."
+],
+[
+"UC-42",
+"Submit Feedback",
+"Customer",
+"Send feedback via the suggestion box — the sole feedback channel in the system, visible only to Manager"
+],
+[
+"UC-43",
+"View Customer Feedback",
+"Manager",
+"Review feedback submitted by customers through the sole feedback channel in the system."
+],
+[
+"UC-44",
+"Send Notifications",
+"Manager",
+"Broadcast text-only notifications to customers or staff."
+],
+[
+"UC-45",
+"Manage Blog Posts",
+"Manager",
+"Write, edit, publish and unpublish the blog articles shown on the public site. Published posts appear on the public pages browsed by guests; unpublishing removes a post from the public site without deleting it."
+],
+[
+"UC-46",
+"View Aggregated Dashboard",
+"Manager",
+"View a single consolidated operational report; the query range is not limited, reflecting a snapshot at query time."
+],
+[
+"UC-47",
+"View Operational Reports & Audit Metrics",
+"Admin",
+"View system-wide operational reports plus additional audit-related metrics not visible to the Manager."
+]
+],
+"actors": [
+[
+"#",
+"Actor",
+"Description"
+],
+[
+"1",
+"System User",
+"Abstract actor, parent of every actor that holds a login account (Customer, PT, Receptionist, Manager, Admin). Exists so that Log In, Log Out, Password Recovery, and Manage Personal Account are defined once instead of once per role. Guest does not inherit from this actor, since Guest has no account yet — Guest reaches Customer only through registration (UC-05), which is modeled as a note, not a generalization arrow."
+],
+[
+"2",
+"Guest",
+"A person who does not yet have an account. Browses public content (services, pricing, blog) and registers an account. Becomes a Customer once the account is active. Not a specialisation of Customer — the two actors share no use case."
+],
+[
+"3",
+"Customer",
+"A person who has an account with the gym. Buys packages online, books, reschedules, or cancels PT sessions, tracks their own schedule, membership status and transaction history, views training and meal plans, and submits feedbacks."
+],
+[
+"4",
+"Staff",
+"Abstract actor, parent of PT and Receptionist. Exists so that leave-request submission is defined once for both roles. Never assigned a use case other than Submit Leave Request."
+],
+[
+"5",
+"PT (Personal Trainer)",
+"Publishes availability for any future date (no weekly/monthly limit), marks no-show sessions when a customer does not attend, reschedules, reassigns, or cancels a session they can't teach, tracks their teaching schedule and assigned clients, writes private notes on clients, and drafts training and meal plans. Inherits from Staff."
+],
+[
+"6",
+"Receptionist",
+"Front-desk operator. Manages customer profiles and creates customer login accounts, sells packages at the counter, collects payment, checks customers in, reports and closes facility maintenance requests once confirmed fixed, freezes memberships, and reconciles cash at shift close."
+],
+[
+"7",
+"Manager",
+"Runs the gym. Configures system parameters, operating hours, the service package catalogue and vouchers; maintains personnel details of existing staff (full name, date of birth, specialty, experience, hire date, commission rate, resignation) but never creates staff accounts or changes a position; manages the facility catalogue and blog posts; approves or rejects customer deletion requests, leave requests and maintenance requests; views system-wide transactions and records refunds made outside the system for invalid online payments; is the only role that reads customer feedback; sends notifications; views the aggregated dashboard (without audit data). A Manager may not approve the deletion of their own customer profile"
+],
+[
+"8",
+"Admin",
+"System administrator. Creates and manages all internal accounts (Admin, Manager, PT, Receptionist), views the audit log, and views operational reports with audit metrics. Does not create customer accounts."
+],
+[
+"9",
+"Payment Gateway (VNPay)",
+"External system. Receives online payment requests for self-service membership purchases (UC-22) and self-service single PT session bookings (UC-37), and returns the payment result. Not used when a PT single/couple package is sold at the counter (UC-21) — those are always paid in cash or bank transfer."
+],
+[
+"10",
+"Email / OTP Service",
+"External system. Delivers one-time email verification codes for account registration, password recovery, and profile claiming. Not used for sign-in — login is email/phone plus password only, no OTP."
+]
+],
+"screens": [
+[
+"#",
+"Screen Name",
+"Feature",
+"Description"
+],
+[
+"1",
+"Sign In",
+"Authentication",
+"Allows any user to authenticate with email or phone number and reach their role-specific area"
+],
+[
+"2",
+"Register Account",
+"Authentication",
+"Allows a guest to create a customer account, or activate an account on an existing profile with a code sent to its email"
+],
+[
+"3",
+"Forgot Password",
+"Authentication",
+"Allows any user to reset their password with a recovery code sent to the registered email"
+],
+[
+"4",
+"Account Settings",
+"Authentication",
+"Allows the signed-in user to view their profile and change avatar, email, phone and password; customers also see a Dependent profiles tab"
+],
+[
+"5",
+"Home",
+"Public website",
+"Presents services, price list, trainers, opening hours and latest posts to guests"
+],
+[
+"6",
+"Blog List",
+"Public website",
+"Lists published posts with category filter and paging"
+],
+[
+"7",
+"Blog Details",
+"Public website",
+"Shows the full content of one published post"
+],
+[
+"8",
+"User List",
+"System account management",
+"Lists all staff accounts with role and status filters"
+],
+[
+"9",
+"Add User Account",
+"System account management",
+"Allows Admin to create a staff account and assign its role"
+],
+[
+"10",
+"User Details",
+"System account management",
+"Allows Admin to view, edit, lock or deactivate one account; blocks any action on the last active Admin"
+],
+[
+"11",
+"Temporarily Locked Customers",
+"System account management",
+"Lists customer accounts locked after too many failed sign-in attempts"
+],
+[
+"12",
+"Unlock Customer Account",
+"System account management",
+"Shows a locked customer account with its auto-unlock time and an Unlock now action"
+],
+[
+"13",
+"Audit Log",
+"System account management",
+"Lets Admin search sensitive actions, each shown as a plain readable sentence"
+],
+[
+"14",
+"Operating Parameters",
+"Configuration & catalogue",
+"Lists all configurable system parameters with their current values"
+],
+[
+"15",
+"Edit Parameter",
+"Configuration & catalogue",
+"Allows Manager to change one parameter within its valid range"
+],
+[
+"16",
+"Operating Hours",
+"Configuration & catalogue",
+"Sets the default opening hours plus per-day exceptions"
+],
+[
+"17",
+"Membership Package List",
+"Configuration & catalogue",
+"Lists membership packages and day passes with status and running orders"
+],
+[
+"18",
+"Membership Package Form",
+"Configuration & catalogue",
+"Adds or edits a package: name, duration, VAT-inclusive price, description, status"
+],
+[
+"19",
+"PT Package List",
+"Configuration & catalogue",
+"Lists single and couple PT packages"
+],
+[
+"20",
+"PT Package Form",
+"Configuration & catalogue",
+"Adds or edits a PT package: session count, type, price, status"
+],
+[
+"21",
+"Voucher List",
+"Configuration & catalogue",
+"Lists vouchers with usage progress, scope and status filters"
+],
+[
+"22",
+"Voucher Form",
+"Configuration & catalogue",
+"Adds or edits a voucher: code, value, validity, total and per-customer limits, scope"
+],
+[
+"23",
+"Staff List",
+"Staff & leave",
+"Lists staff filtered by position and employment status"
+],
+[
+"24",
+"Staff Details",
+"Staff & leave",
+"Adds or edits a staff record, sets PT commission, records resignation"
+],
+[
+"25",
+"Leave Request Form",
+"Staff & leave",
+"Lets a PT or receptionist submit a leave request and review their own requests Shows the Manager queue with status tabs and remaining approval time per request"
+],
+[
+"26",
+"Leave Request List",
+"Staff & leave",
+"Shows the Manager queue with status tabs and remaining approval time per request"
+],
+[
+"27",
+"Leave Request Approval",
+"Staff & leave",
+"Approves or rejects one request; Approve is disabled when minimum staffing would be broken"
+],
+[
+"28",
+"Customer Profile List",
+"Membership",
+"Lets the receptionist search customer profiles and open or create one"
+],
+[
+"29",
+"Customer Profile Form",
+"Membership",
+"Creates or edits a profile with phone duplicate check, guardian block, check-in photo and deletion request"
+],
+[
+"30",
+"Customer List (Manager)",
+"Membership",
+"Read-only list with status tabs, member flag and pending-deletion badge"
+],
+[
+"31",
+"Customer Details (Manager)",
+"Membership",
+"Read-only profile with current packages and PT sessions"
+],
+[
+"32",
+"Member Deletion Approval",
+"Membership",
+"Approves or rejects a receptionist's request to delete a customer profile"
+],
+[
+"33",
+"Member Check-in",
+"Membership",
+"Looks a customer up by code or phone, verifies photo and entitlement, confirms entry"
+],
+[
+"34",
+"Freeze Membership",
+"Membership",
+"Freezes a membership for a period and shows the new expiry date"
+],
+[
+"35",
+"Package Selection",
+"Sales & payment",
+"Lets a customer browse, filter and pick a membership package or day pass"
+],
+[
+"36",
+"Checkout / Payment",
+"Sales & payment",
+"Shows order summary, voucher box, payment countdown and the pending, successful, failed and expired states"
+],
+[
+"37",
+"In-person Package Sale",
+"Sales & payment",
+"Four-step counter sale: customer → package → voucher → payment"
+],
+[
+"38",
+"PT Package Sale",
+"Sales & payment",
+"Five-step counter sale: customer → package type → trainer → pick sessions → confirm schedule"
+],
+[
+"39",
+"Shift & Cash Reconciliation",
+"Sales & payment",
+"Opens a shift, lists its transactions, voids orders with a reason, counts cash and closes the shift"
+],
+[
+"40",
+"Personal Transaction History",
+"Sales & payment",
+"Shows a customer their own orders and payment attempts with order detail"
+],
+[
+"41",
+"System-wide Transactions",
+"Sales & payment",
+"Shows Manager all orders and transactions plus the closed-shift history"
+],
+[
+"42",
+"Facility Catalog View",
+"Facility & maintenance",
+"Read-only equipment catalogue for the receptionist and entry point for reporting a fault"
+],
+[
+"43",
+"Facility List",
+"Facility & maintenance",
+"Lists equipment with category and condition filters"
+],
+[
+"44",
+"Facility Form",
+"Facility & maintenance",
+"Adds or edits one equipment item"
+],
+[
+"45",
+"Maintenance Request Form & My Requests",
+"Facility & maintenance",
+"Lets the receptionist raise a fault report and close one after verifying the repair"
+],
+[
+"46",
+"Maintenance Request List",
+"Facility & maintenance",
+"Shows the Manager queue with status tabs"
+],
+[
+"47",
+"Maintenance Request Approval",
+"Facility & maintenance",
+"Approves or rejects a request; rejection requires a reason"
+],
+[
+"48",
+"Customer Dashboard",
+"Training schedule & coaching",
+"Shows the customer their package status, upcoming sessions and warnings"
+],
+[
+"49",
+"PT Dashboard",
+"Training schedule & coaching",
+"Shows the trainer today's sessions, clients and pending actions"
+],
+[
+"50",
+"My Bookings",
+"Training schedule & coaching",
+"Lists the customer's sessions with filters and a cancel action"
+],
+[
+"51",
+"My PT Sessions",
+"Training schedule & coaching",
+"Lists the sessions of the customer's PT package with remaining quota and warning labels"
+],
+[
+"52",
+"Book Single Session",
+"Training schedule & coaching",
+"Lets a customer pick a trainer and slot and pay online to hold it"
+],
+[
+"53",
+"Swap Session",
+"Training schedule & coaching",
+"Moves a PT session to a weekend slot, up to three times per package"
+],
+[
+"54",
+"Available Time Slots",
+"Training schedule & coaching",
+"Lets a PT publish or remove availability by week in calendar or list view"
+],
+[
+"55",
+"Add Time Slot",
+"Training schedule & coaching",
+"Lets a PT declare a new 90-minute slot inside that day's opening hours"
+],
+[
+"56",
+"Session Attendance",
+"Training schedule & coaching",
+"Lets a PT mark absences and handle a session he cannot teach: reschedule, transfer, cancel, or change on the customer's request"
+],
+[
+"57",
+"Client List",
+"Training schedule & coaching",
+"Lists the clients assigned to the trainer with their package status"
+],
+[
+"58",
+"Private Client Notes",
+"Training schedule & coaching",
+"Stores notes about a client visible only to the trainer who wrote them"
+],
+[
+"59",
+"Workout & Diet Plan Editor",
+"Training schedule & coaching",
+"Lets a PT draft and publish a workout plan and meal plan for a client"
+],
+[
+"60",
+"My Plan",
+"Training schedule & coaching",
+"Lets the customer read the published workout plan and meal plan"
+],
+[
+"61",
+"Submit Feedback",
+"Feedback",
+"Lets a customer send feedback to the Manager"
+],
+[
+"62",
+"Feedback List",
+"Feedback",
+"Lets the Manager read customer feedback with read/unread state"
+],
+[
+"63",
+"Blog Management",
+"Content & notification",
+"Lists blog posts and lets the Manager publish or unpublish them"
+],
+[
+"64",
+"Blog Post Editor",
+"Content & notification",
+"Composes or edits a blog post and publishes it to the public site"
+],
+[
+"65",
+"Send Notification",
+"Content & notification",
+"Lets the Manager send a notification to a chosen audience"
+],
+[
+"66",
+"Operational & Revenue Report",
+"Reporting",
+"Shows Manager revenue, packages, check-ins and PT commission over a chosen period"
+],
+[
+"67",
+"System Operational Report",
+"Reporting",
+"Shows Admin operational figures plus audit-related metrics"
+]
+],
+"api": [
+[
+"#",
+"API Name",
+"Calling Path",
+"Description"
+],
+[
+"1",
+"API-01: VNPay payment request",
+"GMS → VNPay",
+"Builds a signed VNPay 2.1.0 payment URL for one payment attempt of a Pending online order and redirects the customer's browser to the gateway; the link expires after 5 minutes, never beyond the order's payment deadline."
+],
+[
+"2",
+"API-02: VNPay IPN webhook",
+"VNPay → GMS",
+"Receives the official payment result (GET /api/v1/commerce/payment/webhook/vnpay), verifies the signature and records the transaction; marks the order Paid only when it is still Pending and the amount matches."
+],
+[
+"3",
+"API-03: Email delivery (SMTP)",
+"GMS → Mail server",
+"Sends 6-digit verification codes (SignUp, Claim, Recovery, EmailChange, PhoneChange) and the old-email notice when the login email changes, through SMTP port 587 with TLS."
+],
+[
+"4",
+"API-04: Weather forecast (Open-Meteo)",
+"GMS → Open-Meteo",
+"Reads today's weather at the gym for the PT Dashboard; cached for 30 minutes; the weather card is hidden if unavailable."
+]
+],
+"jobs": [
+[
+"#",
+"Job Name",
+"Group",
+"Description"
+],
+[
+"1",
+"JOB-01: Resume expired membership freezes",
+"Scheduled",
+"Runs: daily at 00:05 (Asia/Ho_Chi_Minh), first in the daily chain. Threshold: freeze still in progress whose Planned End Date is before today. Result: package Frozen → Active; ActualEndDate − StartDate + 1 frozen days are added to the package End Date."
+],
+[
+"2",
+"JOB-02: Expire membership and PT packages",
+"Scheduled",
+"Runs: daily, right after JOB-01. Threshold: package End Date is before today. Result: membership → Expired, a member with no valid package left → Expired; PT package → Expired and its leftover Scheduled sessions → Cancelled (PackageExpired, CBR-55)."
+],
+[
+"3",
+"JOB-03: Expire unused day passes",
+"Scheduled",
+"Runs: daily, right after JOB-02. Threshold: the pass's valid day has ended without a check-in. Result: day pass → Expired; a member with no valid package left → Expired."
+],
+[
+"4",
+"JOB-04: Auto-close unmarked PT sessions",
+"Scheduled",
+"Runs: daily, right after JOB-03. Threshold: session still Scheduled more than 24 hours after its end time (P-07). Result: no valid membership for a PT-package session → Missed (NoMembership, evaluated first); customer checked in on the session day → Completed; otherwise → Missed (NoCheckIn)."
+],
+[
+"5",
+"JOB-05: Cancel overdue online orders",
+"Scheduled",
+"Runs: every minute. Threshold: online order still Pending past the payment deadline stored on the order (creation + P-09, default 20 minutes). Result: order → Cancelled (PaymentTimeout); Pending transactions → Expired; voucher use returned; Held slot → Free."
+],
+[
+"6",
+"JOB-06: Expire timed-out payment transactions",
+"Scheduled",
+"Runs: every minute. Threshold: transaction still Pending past its own deadline — 5 minutes after its payment link is created, never beyond the order's deadline. Result: transaction → Expired; the order stays Pending so the customer can pay again."
+],
+[
+"7",
+"JOB-07: Remind and auto-reject overdue leave requests",
+"Scheduled",
+"Runs: every minute. Threshold: approval cut-off of 20:00 on the day before the leave date (P-20). Result: Managers reminded before the cut-off; after it, request → Rejected and the staff member notified."
+]
+]
+}
