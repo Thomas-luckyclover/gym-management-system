@@ -18,7 +18,9 @@ import jakarta.servlet.http.HttpSession;
 
 import java.io.IOException;
 import java.time.LocalDate;
+import java.util.ArrayList;
 import java.util.Collections;
+import java.util.List;
 import java.util.Map;
 
 /**
@@ -32,6 +34,7 @@ public class MaintenanceRequestServlet extends HttpServlet {
             "receptionist/maintenance-requests";
 
     private static final String ACTION_CLOSE = "close";
+    private static final String ACTION_BATCH_CLOSE = "batchClose";
 
     private final MaintenanceRequestService maintenanceRequestService =
             new MaintenanceRequestService();
@@ -90,6 +93,11 @@ public class MaintenanceRequestServlet extends HttpServlet {
             return;
         }
 
+        if (ACTION_BATCH_CLOSE.equals(action)) {
+            handleBatchClose(request, response, accountId);
+            return;
+        }
+
         // Unknown action fallback
         RequestUtil.setFlashToast(
                 request,
@@ -137,6 +145,69 @@ public class MaintenanceRequestServlet extends HttpServlet {
                     request,
                     "success",
                     Messages.MSG254_MAINTENANCE_CLOSED
+            );
+        } else {
+            RequestUtil.setFlashToast(
+                    request,
+                    "error",
+                    result.getMessage()
+            );
+        }
+
+        RequestUtil.redirect(
+                request,
+                response,
+                "/receptionist/maintenance-requests"
+        );
+    }
+
+    private void handleBatchClose(
+            HttpServletRequest request,
+            HttpServletResponse response,
+            int accountId
+    ) throws IOException {
+
+        String rawIds = RequestUtil.getTrimmedParam(request, "requestIds");
+        List<Integer> requestIds = new ArrayList<>();
+
+        if (rawIds != null && !rawIds.isBlank()) {
+            for (String part : rawIds.split(",")) {
+                try {
+                    int id = Integer.parseInt(part.trim());
+                    if (id > 0 && !requestIds.contains(id)) {
+                        requestIds.add(id);
+                    }
+                } catch (NumberFormatException ignored) {
+                }
+            }
+        }
+
+        String[] multiIds = request.getParameterValues("requestIds");
+        if (multiIds != null) {
+            for (String mid : multiIds) {
+                try {
+                    int id = Integer.parseInt(mid.trim());
+                    if (id > 0 && !requestIds.contains(id)) {
+                        requestIds.add(id);
+                    }
+                } catch (NumberFormatException ignored) {
+                }
+            }
+        }
+
+        String acceptanceNote = RequestUtil.getTrimmedParam(request, "acceptanceNote");
+
+        ServiceResult<Integer> result = maintenanceRequestService.closeRequestsBatch(
+                accountId,
+                requestIds,
+                acceptanceNote
+        );
+
+        if (result.isSuccess()) {
+            RequestUtil.setFlashToast(
+                    request,
+                    "success",
+                    "Đã nghiệm thu và đóng thành công " + result.getData() + " yêu cầu bảo trì."
             );
         } else {
             RequestUtil.setFlashToast(
