@@ -537,25 +537,20 @@ public class CounterSaleService {
             boolean isPackageNotExpired = hasPackageEnd && !customer.getCurrentPackageEnd().isBefore(today);
             boolean isChained = isPackageNotExpired;
 
+            LocalDate earliestStart = isChained ? customer.getCurrentPackageEnd().plusDays(1) : today;
+            LocalDate maxAllowedStartDate = earliestStart.plusDays(7);
+
             LocalDate startDate;
-            if (isChained) {
-                // Khách có gói còn hạn: bắt buộc tự động nối tiếp sau ngày hết hạn gói cũ.
-                startDate = customer.getCurrentPackageEnd().plusDays(1);
-            } else {
-                // Khách mới hoặc hết hạn: mặc định hôm nay, hoặc cho phép hẹn trong 7 ngày tới.
-                if (input.getStartDate() != null) {
-                    LocalDate maxAllowedStartDate = today.plusDays(7);
-                    boolean isBeforeToday = input.getStartDate().isBefore(today);
-                    boolean isAfterMaxDate = input.getStartDate().isAfter(maxAllowedStartDate);
-                    boolean isOutOfRange = isBeforeToday || isAfterMaxDate;
-                    if (isOutOfRange) {
-                        return ServiceResult.fail("Ngày bắt đầu chỉ được chọn trong vòng 7 ngày tới (từ "
-                                + DateTimeUtil.formatDate(today) + " đến " + DateTimeUtil.formatDate(maxAllowedStartDate) + ").");
-                    }
-                    startDate = input.getStartDate();
-                } else {
-                    startDate = today;
+            if (input.getStartDate() != null) {
+                boolean isBeforeEarliest = input.getStartDate().isBefore(earliestStart);
+                boolean isAfterMaxDate = input.getStartDate().isAfter(maxAllowedStartDate);
+                if (isBeforeEarliest || isAfterMaxDate) {
+                    return ServiceResult.fail("Ngày bắt đầu chỉ được chọn trong vòng 7 ngày tới (từ "
+                            + DateTimeUtil.formatDate(earliestStart) + " đến " + DateTimeUtil.formatDate(maxAllowedStartDate) + ").");
                 }
+                startDate = input.getStartDate();
+            } else {
+                startDate = earliestStart;
             }
 
             LocalDate endDate;
