@@ -11,6 +11,47 @@ import java.time.LocalTime;
  */
 public class MyPtSessionRow {
 
+    /**
+     * DAO tạo từ một dòng JOIN Sessions/TimeSlots/Subscriptions/Orders/Persons.
+     * Các field hiển thị do Service tính (statusLabel, explanation, ended...) vẫn để trống
+     * và được fillDisplay điền sau đó.
+     */
+    public MyPtSessionRow(int sessionId, String status, String missedReason, String cancelType,
+            String cancelReason, LocalDateTime cancelledAt, LocalDate slotDate,
+            LocalTime startTime, LocalTime endTime, int subscriptionId, String type,
+            LocalDate packageStartDate, LocalDate packageEndDate, int holderCustomerId,
+            Integer partnerCustomerId, String packageName, int sessionNo, int totalSessions,
+            int ptEmployeeId, String ptName, String ptPhone, String holderName,
+            String partnerFullName) {
+        this.sessionId = sessionId;
+        this.status = status;
+        this.missedReason = missedReason;
+        this.cancelType = cancelType;
+        this.cancelReason = cancelReason;
+        this.cancelledAt = cancelledAt;
+        this.slotDate = slotDate;
+        this.startTime = startTime;
+        this.endTime = endTime;
+        this.subscriptionId = subscriptionId;
+        this.type = type;
+        this.packageStartDate = packageStartDate;
+        this.packageEndDate = packageEndDate;
+        this.holderCustomerId = holderCustomerId;
+        this.partnerCustomerId = partnerCustomerId;
+        this.packageName = packageName;
+        this.sessionNo = sessionNo;
+        this.totalSessions = totalSessions;
+        this.ptEmployeeId = ptEmployeeId;
+        this.ptName = ptName;
+        this.ptPhone = ptPhone;
+        this.holderName = holderName;
+        this.partnerFullName = partnerFullName;
+    }
+
+    /** Constructor rỗng để Service/test tạo row nhỏ rồi chỉ set các field cần kiểm tra. */
+    public MyPtSessionRow() {
+    }
+
     // ---------------- Phần 1: DAO đọc từ DB (SESSIONS_SQL → readSessionRow) ----------------
     // Bảng gốc Sessions: một dòng là một buổi; các field dưới đây lấy trực tiếp, không ghép chữ từ bảng khác.
     private int sessionId;               // Sessions.SessionId
