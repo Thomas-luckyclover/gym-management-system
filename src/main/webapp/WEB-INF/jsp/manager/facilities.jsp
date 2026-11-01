@@ -267,7 +267,13 @@
                                       Sửa
                                     </button>
 
-                                    <form method="post" action="${pageContext.request.contextPath}/manager/facilities" style="display:inline;">
+                                    <c:choose>
+                                      <c:when test="${item.underMaintenance || not empty item.activeRequestCode}">
+                                        <button type="button" class="btn btn-xs btn-danger" disabled
+                                                title="Không thể thanh lý máy đang có yêu cầu bảo trì (CBR-99)">Thanh lý</button>
+                                      </c:when>
+                                      <c:otherwise>
+                                        <form method="post" action="${pageContext.request.contextPath}/manager/facilities" style="display:inline;">
                                       <input type="hidden" name="csrfToken" value="${csrfToken}">
                                       <input type="hidden" name="action" value="retireItem">
                                       <input type="hidden" name="facilityId" value="${selectedFacility.facilityId}">
@@ -277,7 +283,9 @@
                                               data-confirm-message="Bạn có chắc chắn muốn thanh lý máy ${item.itemCode}? Máy sẽ chuyển sang trạng thái Ngừng sử dụng vĩnh viễn."
                                               data-confirm-text="Thanh lý"
                                               data-confirm-danger="true">Thanh lý</button>
-                                    </form>
+                                        </form>
+                                      </c:otherwise>
+                                    </c:choose>
                                   </c:if>
                                 </div>
                               </td>
