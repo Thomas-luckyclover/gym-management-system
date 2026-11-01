@@ -487,44 +487,67 @@ body.dock{--sidebar-w:252px}
 
 <script>
 /* ======================= DATA ======================= */
-const ME = {id:'NV001', name:'Trần Minh Quân', email:'quan.tm@gms.vn', phone:'0912345678'};
+const ME = {id:'NV-0001', name:'Trần Minh Quân', email:'quan.tm@gms.vn', phone:'0912345678'};
 
 let users = [
-  {id:'NV001',name:'Trần Minh Quân',role:'Admin',email:'quan.tm@gms.vn',phone:'0912345678',status:'active',since:'03/2024',lastLogin:'19/09/2026 08:02'},
-  {id:'NV002',name:'Lê Thu Hà',role:'Admin',email:'ha.lt@gms.vn',phone:'0987112233',status:'locked',since:'06/2024',lockReason:'Nghỉ thai sản, tạm khóa để bảo mật',lastLogin:'28/07/2026 17:45'},
-  {id:'NV003',name:'Nguyễn Văn An',role:'Manager',email:'an.nv@gms.vn',phone:'0903456789',status:'active',since:'03/2024',lastLogin:'19/09/2026 07:31'},
-  {id:'NV010',name:'Trịnh Hải Yến',role:'Manager',email:'yen.th@gms.vn',phone:'0917334455',status:'active',since:'11/2024',lastLogin:'18/09/2026 21:14'},
-  {id:'NV004',name:'Phạm Đức Thắng',role:'PT',email:'thang.pd@gms.vn',phone:'0934567890',status:'active',since:'05/2024',pending:'Còn 3 buổi PT Scheduled và phụ trách 2 gói PT đang chạy',lastLogin:'19/09/2026 06:10'},
-  {id:'NV005',name:'Hoàng Mai Linh',role:'PT',email:'linh.hm@gms.vn',phone:'0978123456',status:'active',since:'08/2024',lastLogin:'18/09/2026 19:52'},
-  {id:'NV011',name:'Đinh Công Sơn',role:'PT',email:'son.dc@gms.vn',phone:'0966558812',status:'active',since:'02/2025',lastLogin:'19/09/2026 05:48'},
-  {id:'NV012',name:'Mai Phương Thảo',role:'PT',email:'thao.mp@gms.vn',phone:'0827441290',status:'active',since:'06/2025',lastLogin:'17/09/2026 18:05'},
-  {id:'NV008',name:'Đỗ Quang Huy',role:'PT',email:'huy.dq@gms.vn',phone:'0961234987',status:'inactive',since:'02/2024',leftAt:'02/09/2026',lastLogin:'02/09/2026 11:20'},
-  {id:'NV006',name:'Nguyễn Thị Hoa',role:'Lễ tân',email:'hoa.nt@gms.vn',phone:'0356789012',status:'active',since:'04/2024',lastLogin:'19/09/2026 13:58'},
-  {id:'NV009',name:'Bùi Khánh Vân',role:'Lễ tân',email:'van.bk@gms.vn',phone:'0707654321',status:'active',since:'07/2025',lastLogin:'19/09/2026 05:55'},
-  {id:'NV013',name:'Lý Thanh Trúc',role:'Lễ tân',email:'truc.lt@gms.vn',phone:'0588901234',status:'active',since:'03/2026',lastLogin:'18/09/2026 22:03'},
-  {id:'NV007',name:'Vũ Thanh Tùng',role:'Lễ tân',email:'tung.vt@gms.vn',phone:'0389012345',status:'locked',since:'01/2025',lockReason:'Nghi lộ mật khẩu, chờ đặt lại',lastLogin:'19/09/2026 10:47'},
+  {id:'NV-0001',name:'Trần Minh Quân',role:'Admin',email:'quan.tm@gms.vn',phone:'0912345678',status:'active',since:'03/2024',lastLogin:'19/09/2026 08:02'},
+  {id:'NV-0002',name:'Lê Thu Hương',role:'Admin',email:'huong.lt@gms.vn',phone:'0987112233',status:'locked',since:'06/2024',lockReason:'Nghỉ thai sản, tạm khóa để bảo mật',lastLogin:'28/07/2026 17:45'},
+  {id:'NV-0010',name:'Nguyễn Văn An',role:'Manager',email:'an.nv@gms.vn',phone:'0903456789',status:'active',since:'03/2024',lastLogin:'19/09/2026 07:31'},
+  {id:'NV-0011',name:'Trịnh Hải Yến',role:'Manager',email:'yen.th@gms.vn',phone:'0917334455',status:'active',since:'11/2024',lastLogin:'18/09/2026 21:14'},
+  {id:'NV-0121',name:'Phạm Thu Trang',role:'PT',email:'trang.pt@gms.vn',phone:'0934567890',status:'active',since:'05/2024',pending:'Còn 3 buổi PT Scheduled và phụ trách 2 gói PT đang chạy',lastLogin:'19/09/2026 06:10'},
+  {id:'NV-0118',name:'Hoàng Long',role:'PT',email:'long.h@gms.vn',phone:'0978123456',status:'active',since:'08/2024',lastLogin:'18/09/2026 19:52'},
+  {id:'NV-0127',name:'Đỗ Minh Khoa',role:'PT',email:'khoa.dm@gms.vn',phone:'0966558812',status:'active',since:'02/2025',lastLogin:'19/09/2026 05:48'},
+  {id:'NV-0133',name:'Vũ Hải Yến',role:'PT',email:'yen.vh@gms.vn',phone:'0827441290',status:'active',since:'06/2025',lastLogin:'17/09/2026 18:05'},
+  {id:'NV-0090',name:'Đỗ Quang Huy',role:'PT',email:'huy.dq@gms.vn',phone:'0961234987',status:'inactive',since:'02/2024',leftAt:'02/09/2026',lastLogin:'02/09/2026 11:20'},
+  {id:'NV-0042',name:'Nguyễn Thị Hoa',role:'Lễ tân',email:'hoa.nt@gms.vn',phone:'0356789012',status:'active',since:'04/2024',lastLogin:'19/09/2026 13:58'},
+  {id:'NV-0057',name:'Bùi Khánh Vân',role:'Lễ tân',email:'van.bk@gms.vn',phone:'0707654321',status:'active',since:'07/2025',lastLogin:'19/09/2026 05:55'},
+  {id:'NV-0140',name:'Lý Thanh Trúc',role:'Lễ tân',email:'truc.lt@gms.vn',phone:'0588901234',status:'active',since:'03/2026',lastLogin:'18/09/2026 22:03'},
+  {id:'NV-0073',name:'Vũ Thanh Tùng',role:'Lễ tân',email:'tung.vt@gms.vn',phone:'0389012345',status:'locked',since:'01/2025',lockReason:'Nghi lộ mật khẩu, chờ đặt lại',lastLogin:'19/09/2026 10:47'},
 ];
 
 // Tài khoản khách đang khóa tạm (E6.6 / E6.8)
 let tempLocked = [
-  {id:'KH-10482',name:'Phan Thảo Vy',role:'Khách',email:'thaovy.p@gmail.com',phone:'0915778899',status:'temp',fails:5,unlockInSec:192},
-  {id:'KH-09917',name:'Lương Gia Bảo',role:'Khách',email:'giabao.l@gmail.com',phone:'0398221144',status:'temp',fails:5,unlockInSec:41},
+  {id:'KH-1482',name:'Phan Thảo Vy',role:'Khách',email:'thaovy.p@gmail.com',phone:'0915778899',status:'temp',fails:5,unlockInSec:192},
+  {id:'KH-0917',name:'Lương Gia Bảo',role:'Khách',email:'giabao.l@gmail.com',phone:'0398221144',status:'temp',fails:5,unlockInSec:41},
 ];
 const customers = [...tempLocked];
 
 const audit = [
   {d:'19/09/2026',t:'14:20',type:'Hội viên',role:'Lễ tân',actor:'Nguyễn Thị Hoa',did:'đổi SĐT của hội viên',obj:'Trần Bảo Ngọc',from:'0901 234 567',to:'0902 345 678',why:'khách đổi số'},
   {d:'19/09/2026',t:'11:05',type:'Tài khoản',role:'Admin',actor:'Trần Minh Quân',did:'khóa tài khoản của Lễ tân',obj:'Vũ Thanh Tùng',from:'Hoạt động',to:'Đã khóa',why:'nghi lộ mật khẩu, chờ đặt lại'},
-  {d:'19/09/2026',t:'09:42',type:'Giá gói',role:'Manager',actor:'Nguyễn Văn An',did:'đổi giá gói',obj:'Gói tập 3 tháng',from:'1.350.000đ',to:'1.290.000đ',why:'khuyến mãi tháng 10'},
+  {d:'19/09/2026',t:'09:42',type:'Giá gói',role:'Manager',actor:'Nguyễn Văn An',did:'đổi giá gói',obj:'Gói 3 Tháng',from:'2.290.000đ',to:'2.190.000đ',why:'khuyến mãi tháng 10'},
   {d:'19/09/2026',t:'08:15',type:'Tài khoản',role:'Hệ thống',actor:'',did:'khóa tạm tài khoản khách',obj:'Phan Thảo Vy',from:'Hoạt động',to:'Khóa tạm 5 phút',why:'nhập sai mật khẩu 5 lần liên tiếp'},
-  {d:'18/09/2026',t:'20:00',type:'Đơn nghỉ phép',role:'Hệ thống',actor:'',did:'tự từ chối đơn nghỉ của PT',obj:'Hoàng Mai Linh',from:'Chờ duyệt',to:'Từ chối',why:'quá hạn duyệt'},
+  {d:'18/09/2026',t:'20:00',type:'Đơn nghỉ phép',role:'Hệ thống',actor:'',did:'tự từ chối đơn nghỉ của PT',obj:'Hoàng Long',from:'Chờ duyệt',to:'Từ chối',why:'quá hạn duyệt'},
   {d:'18/09/2026',t:'17:31',type:'Đơn nghỉ phép',role:'Manager',actor:'Nguyễn Văn An',did:'duyệt đơn nghỉ ngày 20/09 của Lễ tân',obj:'Bùi Khánh Vân',from:'Chờ duyệt',to:'Đã duyệt',why:'ca 20/09 vẫn đủ 1 Lễ tân'},
-  {d:'18/09/2026',t:'15:48',type:'Voucher',role:'Manager',actor:'Nguyễn Văn An',did:'vô hiệu hóa voucher',obj:'THU2026',from:'Hoạt động',to:'Ngừng hoạt động',why:'hết ngân sách chương trình'},
+  {d:'18/09/2026',t:'15:48',type:'Voucher',role:'Manager',actor:'Nguyễn Văn An',did:'vô hiệu hóa voucher',obj:'HE2026',from:'Hoạt động',to:'Ngừng hoạt động',why:'hết ngân sách chương trình'},
   {d:'18/09/2026',t:'10:12',type:'Tài khoản',role:'Admin',actor:'Trần Minh Quân',did:'tạo tài khoản Lễ tân cho',obj:'Bùi Khánh Vân',from:'',to:'Hoạt động',why:'nhân viên mới ca sáng'},
   {d:'17/09/2026',t:'16:40',type:'Hội viên',role:'Lễ tân',actor:'Bùi Khánh Vân',did:'từ chối yêu cầu xóa hồ sơ của hội viên',obj:'Đặng Minh Khoa',from:'Chờ xử lý',to:'Từ chối',why:'hội viên còn gói tập đang chạy'},
   {d:'17/09/2026',t:'09:03',type:'Tài khoản',role:'Admin',actor:'Trần Minh Quân',did:'mở khóa sớm tài khoản khách',obj:'Ngô Thị Lan',from:'Khóa tạm',to:'Hoạt động',why:'khách gọi tổng đài xác minh danh tính'},
   {d:'02/09/2026',t:'18:10',type:'Tài khoản',role:'Admin',actor:'Trần Minh Quân',did:'vô hiệu hóa tài khoản PT',obj:'Đỗ Quang Huy',from:'Hoạt động',to:'Ngừng hoạt động',why:'nghỉ việc từ 02/09'},
 ];
+
+
+/* ---------- #73 Notification Bell ---------- */
+const BELL=[["Tài khoản Vũ Thanh Tùng đang bị khóa, chờ đặt lại mật khẩu.", "19/09/2026 10:40"], ["Phan Thảo Vy bị khóa tạm do nhập sai mật khẩu 5 lần.", "19/09/2026 08:15"], ["Nhật ký: Manager đổi giá Gói 3 Tháng.", "19/09/2026 09:42"], ["Đã tạo tài khoản Lễ tân Bùi Khánh Vân.", "18/09/2026 10:12"]];
+let bellRead=[];
+function bellHTML(){
+  const un=BELL.filter((_,i)=>!bellRead.includes(i)).length;
+  return `<div class="notif-bell" style="position:relative"><button class="btn" type="button" data-bell aria-label="Thông báo" aria-expanded="false">🔔 <span class="pill">${un||''}</span></button>
+    <div class="card" data-bell-panel hidden style="position:absolute;right:0;top:100%;width:min(360px,90vw);z-index:60;margin-top:6px">
+      <div class="card-head"><h2>Thông báo</h2><button class="btn" type="button" data-bell-all>Đọc tất cả</button></div>
+      <ul style="list-style:none;margin:0;padding:6px 16px 12px">${BELL.slice(0,10).map((n,i)=>`<li data-n="${i}" style="padding:10px 0;border-bottom:1px solid var(--border);cursor:pointer"><b>${n[0]}</b>${bellRead.includes(i)?'':' <span class="pill">Mới</span>'}<div class="muted" style="font-size:12px">${n[1]}</div></li>`).join('')}</ul></div></div>`;
+}
+document.addEventListener('click',e=>{
+  const w=e.target.closest('.notif-bell');
+  if(!w){document.querySelectorAll('[data-bell-panel]').forEach(p=>p.hidden=true);return}
+  if(e.target.closest('[data-bell]')){const p=w.querySelector('[data-bell-panel]');p.hidden=!p.hidden;return}
+  const n=e.target.closest('[data-n]');
+  if(n&&!bellRead.includes(+n.dataset.n))bellRead.push(+n.dataset.n);
+  if(e.target.closest('[data-bell-all]'))bellRead=BELL.map((_,i)=>i);
+  const open=!w.querySelector('[data-bell-panel]').hidden;
+  w.outerHTML=bellHTML();
+  if(open)document.querySelector('[data-bell-panel]').hidden=false;
+});
 
 const MSG = {
   'MSG-028':'Đã tạo tài khoản. Nhân viên đăng nhập được ngay bằng email hoặc SĐT.',
@@ -581,9 +604,13 @@ function shell(active, crumbs, body, title){
         <nav class="nav" aria-label="Điều hướng chính">
           <div class="nav-group">Tài khoản & bảo mật</div>
           ${nav('users','#/users','users','Tài khoản hệ thống')}
+          ${nav('locked','#/locked','lock','Khách khóa tạm')}
           ${nav('audit','#/audit','log','Audit Log')}
           <div class="nav-group">Theo dõi</div>
           ${nav('report','#/report','chart','Báo cáo')}
+          <div class="nav-group">Cá nhân</div>
+          ${nav('settings','#/settings','users','Cài đặt tài khoản')}
+          <a href="../chon-vai-tro.html">${I.users}<span>Đổi vai trò</span></a>
         </nav>
         <div class="side-foot"><button class="logout" onclick="location.hash='#/signin'">Đăng xuất</button></div>
       </aside>
@@ -593,7 +620,7 @@ function shell(active, crumbs, body, title){
       <header class="topbar">
         <div class="tb-left">${parent?`<div class="crumbs">${parent}</div>`:''}<h1 class="tb-title">${title||parts[parts.length-1].replace(/<[^>]+>/g,'')}</h1></div>
         <div class="top-right">
-          
+          ${bellHTML()}
           <a class="tb-user" href="#/settings" title="Cài đặt tài khoản"><span class="avatar">${initials(ME.name)}</span><span class="tb-user-text"><b>${ME.name}</b><small>Admin</small></span></a>
         </div>
       </header>
@@ -700,7 +727,7 @@ function viewUserList(){
         <span class="right">Hiển thị <select class="select" id="fSize" aria-label="Số dòng mỗi trang">${[5,10,20,50].map(n=>`<option ${n===size?'selected':''}>${n}</option>`).join('')}</select> / trang</span>
       </div>
     </div>`;
-  render(shell('users',staff?'<b>Tài khoản hệ thống</b>':'<a href="#/users" data-tab="staff">Tài khoản hệ thống</a> / <b>Khách đang khóa tạm</b>',body));
+  render(shell(staff?'users':'locked',staff?'<b>Tài khoản hệ thống</b>':'<a href="#/users" data-tab="staff">Tài khoản hệ thống</a> / <b>Khách đang khóa tạm</b>',body));
 
   document.querySelectorAll('[data-tab]').forEach(b=>b.onclick=e=>{e.preventDefault();listState.tab=b.dataset.tab;listState.page=1;viewUserList()});
   document.querySelectorAll('[data-page]').forEach(b=>b.onclick=()=>{listState.page=+b.dataset.page;viewUserList()});
@@ -990,8 +1017,8 @@ function viewReport(){
       <div class="audit-body">
         <div class="audit-stats">
           <div class="stat"><div class="l">Thao tác nhạy cảm</div><div class="v">67</div><div class="d">Trong kỳ đã chọn</div></div>
-          <div class="stat"><div class="l">Khóa tạm tài khoản khách</div><div class="v">23</div><div class="d">3 lần Admin mở sớm</div></div>
-          <div class="stat"><div class="l">Tài khoản nhân viên bị khóa</div><div class="v">2</div><div class="d">Đang khóa tại thời điểm truy vấn</div></div>
+          <div class="stat"><div class="l">Khóa tạm tài khoản khách</div><div class="v">23</div><div class="d">3 lần Admin mở sớm · đang khóa ${tempLocked.length}</div></div>
+          <div class="stat"><div class="l">Tài khoản nhân viên bị khóa</div><div class="v">${users.filter(u=>u.status==='locked').length}</div><div class="d">Đang khóa tại thời điểm truy vấn</div></div>
           <div class="stat"><div class="l">Đơn nghỉ tự từ chối</div><div class="v">4</div><div class="d">Do quá hạn duyệt</div></div>
         </div>
         <div class="two" style="margin:0">
@@ -1014,25 +1041,39 @@ function viewReport(){
 /* ======================= 1.4.1 ACCOUNT SETTINGS ======================= */
 function viewSettings(){
   const body=`
-    <div class="page-head"><div><h1>Cài đặt tài khoản</h1><p>Hồ sơ và mật khẩu của chính bạn.</p></div></div>
+    <div class="page-head"><div><h1>Cài đặt tài khoản</h1><p>Hồ sơ, ảnh đại diện, email, số điện thoại và mật khẩu của chính bạn.</p></div></div>
     <div class="detail">
+      <div>
       <div class="card"><div class="card-pad">
-        <h2>Hồ sơ</h2><p class="sub">Đổi email cần xác thực qua mã gửi tới email mới.</p>
+        <h2>Hồ sơ</h2><p class="sub">Dữ liệu nhân sự do Quản lý nhập, bạn chỉ xem.</p>
+        <dl class="kv"><dt>Họ và tên</dt><dd>${ME.name}</dd><dt>Mã nhân viên</dt><dd class="num">${ME.id}</dd><dt>Vai trò</dt><dd>Admin</dd><dt>Làm việc từ</dt><dd>03/2024</dd></dl>
+      </div></div>
+      <div class="card" style="margin-top:16px"><div class="card-pad">
+        <h2>Ảnh đại diện</h2><p class="sub">JPG hoặc PNG, tối đa 2 MB.</p>
+        <div style="display:flex;align-items:center;gap:16px"><span class="avatar">${initials(ME.name)}</span>
+          <button class="btn" onclick="toast('MSG-029','success')">Tải ảnh lên</button>
+          <button class="btn btn-danger" onclick="toast('MSG-029','success')">Gỡ ảnh</button></div>
+      </div></div>
+      <div class="card" style="margin-top:16px"><div class="card-pad">
+        <h2>Email và số điện thoại</h2><p class="sub">Đổi email hoặc số điện thoại cần mã xác thực gửi tới email, hiệu lực 15 phút.</p>
         <div class="form-grid">
-          <div class="f full"><label for="s-name">Họ và tên</label><input class="input" id="s-name" value="${ME.name}"></div>
-          <div class="f"><label for="s-email">Email</label><input class="input" id="s-email" value="${ME.email}"></div>
-          <div class="f"><label for="s-phone">Số điện thoại</label><input class="input num" id="s-phone" value="${ME.phone}"></div>
-        </div></div>
-        <div class="form-actions"><button class="btn btn-primary" onclick="toast('MSG-029','success')">Lưu thay đổi</button></div>
+          <div class="f"><label for="s-email">Email</label><input class="input" id="s-email" value="${ME.email}" maxlength="100"></div>
+          <div class="f"><label for="s-phone">Số điện thoại</label><input class="input num" id="s-phone" value="${ME.phone}" maxlength="10"></div>
+          <div class="f"><label for="s-code">Mã xác thực</label><input class="input num" id="s-code" maxlength="6" placeholder="6 chữ số"></div>
+        </div>
+        <div class="form-actions"><button class="btn" onclick="toast('MSG-029','success')">Gửi mã xác thực</button>
+          <button class="btn btn-primary" onclick="toast('MSG-029','success')">Xác nhận thay đổi</button></div>
+      </div></div>
       </div>
       <div class="card"><div class="card-pad">
-        <h2>Đổi mật khẩu</h2><p class="sub">Đổi xong, mọi phiên đăng nhập khác bị đăng xuất.</p>
+        <h2>Đổi mật khẩu</h2><p class="sub">Đổi xong, mọi phiên đăng nhập khác bị đăng xuất. Mật khẩu 8–64 ký tự, có chữ và số.</p>
         <div class="f" style="margin-bottom:12px"><label for="p1">Mật khẩu hiện tại</label><input class="input" type="password" id="p1"></div>
-        <div class="f" style="margin-bottom:12px"><label for="p2">Mật khẩu mới</label><input class="input" type="password" id="p2"></div>
-        <button class="btn">Đổi mật khẩu</button>
+        <div class="f" style="margin-bottom:12px"><label for="p2">Mật khẩu mới</label><input class="input" type="password" id="p2" minlength="8" maxlength="64"></div>
+        <div class="f" style="margin-bottom:12px"><label for="p3">Nhập lại mật khẩu mới</label><input class="input" type="password" id="p3" minlength="8" maxlength="64"></div>
+        <button class="btn btn-primary" onclick="toast('MSG-029','success')">Đổi mật khẩu</button>
       </div></div>
     </div>`;
-  render(shell('', '<b>Cài đặt tài khoản</b>', body));
+  render(shell('settings', '<b>Cài đặt tài khoản</b>', body));
 }
 
 /* ======================= 1.1.1 SIGN IN / 1.2.1 FORGOT (L4) ======================= */
@@ -1118,7 +1159,8 @@ function route(){
   const h=(location.hash||'#/signin').split('?')[0];
   if(h==='#/signin') return viewSignIn();
   if(h==='#/forgot') return viewForgot();
-  if(h==='#/users') return viewUserList();
+  if(h==='#/users'){listState.tab='staff';return viewUserList();}
+  if(h==='#/locked'){listState.tab='temp';return viewUserList();}
   if(h.startsWith('#/users/')) return viewUserDetail(decodeURIComponent(h.slice(8)));
   if(h==='#/audit') return viewAudit();
   if(h==='#/report') return viewReport();
