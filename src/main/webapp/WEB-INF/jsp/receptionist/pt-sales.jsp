@@ -46,6 +46,7 @@
                 </span>
             </div>
             <div class="top-right">
+                <%@ include file="/WEB-INF/jsp/common/notification-bell.jspf" %>
                 <%@ include file="/WEB-INF/jsp/common/topbar-user.jspf" %>
             </div>
         </header>
