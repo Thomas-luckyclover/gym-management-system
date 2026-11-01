@@ -30,12 +30,15 @@
       <a href="mua-goi.html"><i class="fa-solid fa-cart-shopping"></i>Mua gói</a>
       <a href="lich-su-giao-dich.html"><i class="fa-solid fa-receipt"></i>Lịch sử giao dịch</a>
         <h4>Lịch tập</h4>
-      <a href="lich-cua-toi.html"><i class="fa-solid fa-calendar-check"></i>Lịch của tôi</a>
-      <a href="buoi-pt.html"><i class="fa-solid fa-user-check"></i>Buổi PT của tôi</a>
+      <a href="lich-cua-toi.html"><i class="fa-solid fa-box-open"></i>Gói của tôi</a>
+      <a href="buoi-pt.html"><i class="fa-solid fa-calendar-check"></i>Lịch của tôi</a>
       <a href="dat-buoi-le.html"><i class="fa-solid fa-calendar-plus"></i>Đặt buổi lẻ</a>
       <a href="giao-an.html"><i class="fa-solid fa-clipboard-list"></i>Giáo án của tôi</a>
+      <a href="thu-vien-bai-tap.html"><i class="fa-solid fa-person-running"></i>Thư viện bài tập</a>
+      <a href="chi-so-co-the.html"><i class="fa-solid fa-weight-scale"></i>Chỉ số cơ thể</a>
         <h4>Tài khoản</h4>
       <a href="tai-khoan.html"><i class="fa-solid fa-user-gear"></i>Cài đặt tài khoản</a>
+      <a href="../chon-vai-tro.html"><i class="fa-solid fa-repeat"></i>Đổi vai trò</a>
         <h4>Hòm thư</h4>
       <a href="gop-y.html" aria-current="page"><i class="fa-solid fa-inbox"></i>Hòm thư góp ý</a>
       </nav>
@@ -73,8 +76,9 @@
               <div class="panel-head"><h2>Bạn muốn nói gì với Quản lý?</h2></div>
               <form id="feedbackForm" novalidate>
                 <label class="field">
-                  <span class="field-label">Nội dung</span>
-                  <textarea id="feedbackText" rows="8" placeholder="Ví dụ: khu tạ giờ cao điểm thiếu ghế bench."></textarea>
+                  <span class="field-label">Nội dung *</span>
+                  <textarea id="feedbackText" rows="8" minlength="10" maxlength="1000" required placeholder="Ví dụ: khu tạ giờ cao điểm thiếu ghế bench."></textarea>
+                  <span class="field-hint"><i class="fa-solid fa-circle-info"></i><span>Từ 10 đến 1000 ký tự.</span></span>
                   <span class="field-error" id="feedbackTextErr" hidden></span>
                 </label>
                 <button class="btn btn-primary" type="submit">Gửi góp ý</button>
