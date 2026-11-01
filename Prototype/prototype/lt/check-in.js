@@ -25,14 +25,50 @@
     if (outside.checked) { show('__closed'); return; }
 
     const key = viKey(raw);
-    const hit = cards.find(c =>
-      c.dataset.ci && c.dataset.ci[0] !== '_' &&
-      (viKey(c.dataset.ci) === key || c.dataset.phone === raw));
+    const real = cards.filter(c => c.dataset.ci && c.dataset.ci[0] !== '_');
+    // 1) trùng đúng mã khách hoặc số điện thoại -> mở thẳng
+    let hit = real.find(c => viKey(c.dataset.ci) === key || c.dataset.phone === raw);
+    // 2) tìm theo một phần tên hoặc 4 số cuối SĐT -> có thể ra nhiều khách
+    if (!hit) {
+      const found = real.filter(c => viKey(nameOf(c)).includes(key) || (/^\d{4}$/.test(raw) && c.dataset.phone.endsWith(raw)));
+      if (found.length > 1) { showResults(found); return; }
+      hit = found[0];
+    }
+    resultsBox.hidden = true;
 
     if (!hit) { show('__none'); return; }
     if (usedToday.has(hit.dataset.ci)) { show('__used'); return; }
     show(hit.dataset.ci);
   }
+
+  const resultsBox = document.getElementById('ciResults');
+  const nameOf = c => c.querySelector('.ci-id h2').childNodes[0].textContent.trim();
+
+  /* nhiều khách trùng tên: hiện danh sách, chọn một người để xem điều kiện vào tập */
+  function showResults(found) {
+    cards.forEach(c => { c.hidden = true; });
+    document.getElementById('ciResultCount').textContent = found.length + ' khách';
+    document.getElementById('ciResultList').innerHTML = found.map(c => `
+      <div class="data-row">
+        <div class="row-main">
+          <div class="row-title">${nameOf(c)}</div>
+          <div class="row-meta"><span><i class="fa-solid fa-id-card"></i> ${c.dataset.ci}</span>
+            <span><i class="fa-solid fa-phone"></i> ${formatPhoneDisplay(c.dataset.phone)}</span></div>
+        </div>
+        <button class="btn btn-primary btn-sm" type="button" data-pick="${c.dataset.ci}">Chọn</button>
+      </div>`).join('');
+    resultsBox.hidden = false;
+  }
+  document.addEventListener('click', e => {
+    const pick = e.target.closest('[data-pick]');
+    if (!pick) return;
+    resultsBox.hidden = true;
+    q.value = pick.dataset.pick;
+    lookup();
+  });
+  document.getElementById('ciClear').addEventListener('click', () => {
+    q.value = ''; resultsBox.hidden = true; cards.forEach(c => { c.hidden = true; }); q.focus();
+  });
 
   form.addEventListener('submit', e => { e.preventDefault(); lookup(); });
 
@@ -84,7 +120,7 @@
   });
 
   function logEntry(name) {
-    const now = new Date();
+    const now = sampleNow();
     const row = document.createElement('div');
     row.className = 'data-row';
     row.innerHTML = `<div class="row-main"><div class="row-title">${name}</div></div>
