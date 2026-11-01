@@ -11,7 +11,7 @@
         <link rel="stylesheet"
               href="${pageContext.request.contextPath}/css/pages/customer/dashboard.css?v=7">
         <link rel="stylesheet"
-              href="${pageContext.request.contextPath}/css/pages/customer/transaction-history.css?v=11">
+              href="${pageContext.request.contextPath}/css/pages/customer/transaction-history.css?v=20261101_vGymTransDate">
         <script src="${pageContext.request.contextPath}/js/pages/customer/transaction-history.js?v=1" defer></script>
     </head>
 
@@ -95,7 +95,12 @@
                                                 <button type="button" class="th-row"
                                                         data-th-open="th-dialog-${item.transactionId}"
                                                         data-status="${item.displayStatus}">
-                                                    <span class="th-row__title"><c:out value="${item.packageName}"/></span>
+                                                    <span class="th-row__title">
+                                                        <c:out value="${item.packageName}"/>
+                                                        <c:if test="${item.hasValidity}">
+                                                            <span class="th-row__period"><i class="fa-regular fa-calendar-check" aria-hidden="true"></i> <c:out value="${item.fullValidityText}"/></span>
+                                                        </c:if>
+</span>
                                                     <span class="th-row__meta">
                                                         <span class="th-row__date"><c:out value="${item.createdDateText}"/></span>
                                                         <span class="th-row__method"><c:out value="${item.paymentMethodLabel}"/></span>
@@ -116,6 +121,17 @@
                                                     <div class="th-dialog__body">
                                                         <h2 class="th-dialog__title"><c:out value="${item.packageName}"/></h2>
                                                         <span class="th-status" data-status="${item.displayStatus}"><c:out value="${item.shortStatusLabel}"/></span>
+
+                                                        <c:if test="${item.hasValidity}">
+                                                            <p class="th-dialog__section">Thời hạn gói tập</p>
+                                                            <dl class="th-dialog__list">
+                                                                <c:if test="${not empty item.durationText}">
+                                                                    <div><dt>Thời lượng</dt><dd><c:out value="${item.durationText}"/></dd></div>
+                                                                </c:if>
+                                                                <div><dt>Bắt đầu từ</dt><dd><strong class="th-dialog__date-highlight"><c:out value="${item.startText}"/></strong></dd></div>
+                                                                <div><dt>Hết hạn vào</dt><dd><strong class="th-dialog__date-highlight"><c:out value="${item.endText}"/></strong></dd></div>
+                                                            </dl>
+                                                        </c:if>
 
                                                         <p class="th-dialog__section">Thanh toán</p>
                                                         <dl class="th-dialog__list">
