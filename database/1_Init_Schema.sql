@@ -148,7 +148,7 @@ GO
 CREATE TABLE Accounts (
     AccountId        INT IDENTITY(1,1) NOT NULL,
     PersonId         INT           NOT NULL,
-    PasswordHash     VARCHAR(255)  NULL,      -- NULL = Lễ tân tạo, khách chưa đặt mật khẩu (CBR-24, CBR-31)
+    PasswordHash     VARCHAR(255)  NULL,      -- BCrypt. Từ 31/10/2026 tài khoản tại quầy cũng có mật khẩu tạm gửi email (thay CBR-31); NULL chỉ còn ở dữ liệu cũ → đăng nhập tính như sai mật khẩu
     Status           VARCHAR(10)   NOT NULL CONSTRAINT DF_Accounts_Status    DEFAULT ('Active'), -- Active | Locked (Admin khóa) | Inactive (mọi vai trò Inactive — CBR-86, cuối)
     FailedLoginCount TINYINT       NOT NULL CONSTRAINT DF_Accounts_Failed    DEFAULT (0),        -- BR-01, BR-02
     LockedUntil      DATETIME2(0)  NULL,      -- khóa TẠM do sai mật khẩu, không đổi Status

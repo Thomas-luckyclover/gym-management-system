@@ -41,8 +41,8 @@ class MyPtSessionServiceTest {
 
     @ParameterizedTest
     @CsvSource({
-        "06:00, 0", "08:59, 0", "09:00, 0", "11:59, 0",
-        "12:00, 1", "14:59, 1", "15:00, 1", "17:59, 1",
+        "05:30, 0", "08:59, 0", "12:00, 0", "12:59, 0",
+        "13:00, 1", "14:59, 1", "15:00, 1", "17:59, 1",
         "18:00, 2", "20:30, 2", "22:00, 2"
     })
     void startTimeFallsIntoCorrectBand(LocalTime startTime, int expectedBand) {

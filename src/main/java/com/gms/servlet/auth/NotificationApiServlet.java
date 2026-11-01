@@ -91,6 +91,11 @@ public class NotificationApiServlet
             return;
         }
 
+        // CSRF: token sai / thiếu → JSON 403 (postData trong common.js tự gửi token đọc từ meta csrf-token).
+        if (RequestUtil.rejectInvalidCsrf(request, response, "/")) {
+            return;
+        }
+
         String action =
                 RequestUtil.getTrimmedParam(
                         request,
@@ -127,7 +132,7 @@ public class NotificationApiServlet
 
             result =
                     ServiceResult.fail(
-                            "Thao tác thông báo không hợp lệ."
+                            Messages.MSG303_NOTIFICATION_ACTION_INVALID
                     );
         }
 

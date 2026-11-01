@@ -2,7 +2,7 @@ package com.gms.service;
 
 import com.gms.dto.LeaveRequestRow;
 import com.gms.dto.LeaveEmployeeView;
-import com.gms.dto.LeaveReviewDetail;
+import com.gms.dto.LeaveReviewDetailView;
 import com.gms.constant.Role;
 import com.gms.dao.AccountDAO;
 import com.gms.dao.EmployeeDAO;
@@ -304,7 +304,7 @@ class LeaveApprovalSafetyTest {
 
     @Test
     void confirmationRequiresEveryApplicableCheckToPass() {
-        var detail = new LeaveReviewDetail(request, "NV-0050", "PT test", "PT", null, null);
+        var detail = new LeaveReviewDetailView(request, "NV-0050", "PT test", "PT", null, null);
         detail.setCanAct(true);
         var quota = new com.gms.dto.ReviewCheck("ANNUAL_QUOTA", "Quỹ phép", true, true, "Đạt");
         var sessions = new com.gms.dto.ReviewCheck("SESSIONS", "Lịch PT", true, false, "Trùng lịch");
@@ -343,7 +343,7 @@ class LeaveApprovalSafetyTest {
     @Test
     void reviewBlocksConfirmationWhenTheEmployeeHasResigned() throws Exception {
         stubManagerAndCurrentRequest();
-        when(dao.findReviewDetail(12, 7)).thenReturn(new LeaveReviewDetail(
+        when(dao.findReviewDetail(12, 7)).thenReturn(new LeaveReviewDetailView(
                 request, "NV-0050", "PT test", "PT", null, null));
         when(dao.findWorkingPosition(connection, 50)).thenReturn(null);
         try (MockedStatic<DBContext> database = mockStatic(DBContext.class)) {
@@ -365,7 +365,7 @@ class LeaveApprovalSafetyTest {
         request.setFromDate(DateTimeUtil.today().minusDays(2));
         request.setToDate(request.getFromDate());
         request.setDays(new BigDecimal("0.5"));
-        when(dao.findReviewDetail(12, 7)).thenReturn(new LeaveReviewDetail(
+        when(dao.findReviewDetail(12, 7)).thenReturn(new LeaveReviewDetailView(
                 request, "NV-0050", "PT test", "PT", null, "Quản lý test"));
 
         var result = service.getReviewDetail(12, 10);
@@ -596,7 +596,7 @@ class LeaveApprovalSafetyTest {
         when(dao.countRequests(any())).thenReturn(1);
         when(dao.findRequestPage(any(), eq(0), eq(20), isNull())).thenReturn(java.util.List.of(
                 new LeaveRequestRow(request, "NV-0050", "PT test", "PT", null)));
-        when(dao.findReviewDetail(12, 7)).thenReturn(new LeaveReviewDetail(
+        when(dao.findReviewDetail(12, 7)).thenReturn(new LeaveReviewDetailView(
                 request, "NV-0050", "PT test", "PT", null, null));
         try (MockedStatic<DBContext> database = mockStatic(DBContext.class)) {
             database.when(DBContext::getConnection).thenReturn(connection);
@@ -624,7 +624,7 @@ class LeaveApprovalSafetyTest {
                 new LeaveEmployeeView(50, "NV-0050", "PT test", "PT", null, "Working")));
         when(dao.findEmployeeRequests(any(), eq(java.util.List.of(50)), isNull())).thenReturn(java.util.List.of(
                 new LeaveRequestRow(request, "NV-0050", "PT test", "PT", null)));
-        when(dao.findReviewDetail(12, 7)).thenReturn(new LeaveReviewDetail(
+        when(dao.findReviewDetail(12, 7)).thenReturn(new LeaveReviewDetailView(
                 request, "NV-0050", "PT test", "PT", null, null));
         when(dao.approve(connection, 12, 7)).thenReturn(true);
         try (MockedStatic<DBContext> database = mockStatic(DBContext.class)) {

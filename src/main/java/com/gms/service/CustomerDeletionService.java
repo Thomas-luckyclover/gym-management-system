@@ -122,7 +122,7 @@ public class CustomerDeletionService {
                     }
                     if ("Inactive".equalsIgnoreCase(customer.getStatus())) {
                         connection.rollback();
-                        return ServiceResult.fail("Hồ sơ khách hàng này đã ngừng hoạt động (Inactive).");
+                        return ServiceResult.fail(Messages.MSG289_PROFILE_ALREADY_INACTIVE);
                     }
                     if (customerDeletionRequestDAO.hasPendingRequest(connection, customerId)) {
                         connection.rollback();
@@ -244,7 +244,7 @@ public class CustomerDeletionService {
                     }
                     if (deletionRequest.getStatus() != CustomerDeletionRequest.Status.PENDING) {
                         connection.rollback();
-                        return ServiceResult.fail("Yêu cầu này đã được xử lý bởi người khác.");
+                        return ServiceResult.fail(Messages.MSG290_REQUEST_HANDLED_BY_OTHER);
                     }
 
                     // Chặn tự duyệt hồ sơ của chính mình (CBR-115, MSG76)
@@ -257,14 +257,14 @@ public class CustomerDeletionService {
                     Customer customer = customerDAO.findById(connection, deletionRequest.getCustomerId(), true);
                     if (customer == null || "Inactive".equals(customer.getStatus())) {
                         connection.rollback();
-                        return ServiceResult.fail("Hồ sơ không còn hoạt động. Vui lòng tải lại danh sách.");
+                        return ServiceResult.fail(Messages.MSG291_PROFILE_INACTIVE_RELOAD);
                     }
 
                     // B2.2: chỉ duyệt khi yêu cầu vẫn Pending.
                     boolean approved = customerDeletionRequestDAO.approve(connection, requestId, managerEmployee.getEmployeeId());
                     if (!approved) {
                         connection.rollback();
-                        return ServiceResult.fail("Yêu cầu này đã được xử lý bởi người khác.");
+                        return ServiceResult.fail(Messages.MSG290_REQUEST_HANDLED_BY_OTHER);
                     }
 
                     // B2.3: ngừng hồ sơ, giữ nguyên giao dịch, gói và buổi tập để tra cứu.
@@ -305,7 +305,7 @@ public class CustomerDeletionService {
                 SessionRegistryListener.invalidateSessionsOfAccount(customerAccountIdToInvalidate, null);
             }
 
-            return ServiceResult.ok("Đã duyệt yêu cầu xóa và ngừng hoạt động hồ sơ khách hàng.");
+            return ServiceResult.ok(Messages.MSG292_DELETION_APPROVED);
 
         } catch (SQLException e) {
             e.printStackTrace();
@@ -353,7 +353,7 @@ public class CustomerDeletionService {
                     }
                     if (deletionRequest.getStatus() != CustomerDeletionRequest.Status.PENDING) {
                         connection.rollback();
-                        return ServiceResult.fail("Yêu cầu này đã được xử lý bởi người khác.");
+                        return ServiceResult.fail(Messages.MSG290_REQUEST_HANDLED_BY_OTHER);
                     }
 
                     // Chặn thao tác trên hồ sơ của chính mình (CBR-115, MSG76)
@@ -366,7 +366,7 @@ public class CustomerDeletionService {
                     boolean rejected = customerDeletionRequestDAO.reject(connection, requestId, managerEmployee.getEmployeeId(), rejectReason.trim());
                     if (!rejected) {
                         connection.rollback();
-                        return ServiceResult.fail("Yêu cầu này đã được xử lý bởi người khác.");
+                        return ServiceResult.fail(Messages.MSG290_REQUEST_HANDLED_BY_OTHER);
                     }
 
                     // Ghi AuditLog
@@ -395,7 +395,7 @@ public class CustomerDeletionService {
                     );
 
                     connection.commit();
-                    return ServiceResult.ok("Đã từ chối yêu cầu xóa hồ sơ.");
+                    return ServiceResult.ok(Messages.MSG293_DELETION_REJECTED);
 
                 } catch (SQLException e) {
                     connection.rollback();

@@ -3,29 +3,302 @@
    Design System: Super Gym / theme-staff (var tokens)
    ===================================================================== */
 
-/* ===== Layout chung Bước 1 ===== */
-.catalog-step1-content {
-    display: flex;
-    flex-direction: column;
-    gap: var(--space-3, 12px);
-    padding-bottom: 72px; /* Dành chỗ cho thanh sticky bottom */
+
+/* ==================== 1. KHUNG TRANG ==================== */
+
+.sale {
+  --sale-line: var(--arena-card-line);
+  --sale-aside: 340px;
+  display: grid;
+  gap: var(--arena-gap);
+}
+.sale :is(h2, h3, p, ul, ol, dl, dd, fieldset, table) {
+  margin: 0;
+}
+.sale fieldset {
+  min-width: 0;
+  padding: 0;
+  border: 0;
+}
+/* Đơn đang giữ chỗ — danh sách để lễ tân tìm lại sau khi mất URL ?order= (bấm Back / đăng xuất). 30/10/2026. */
+.sale-holds {
+  display: grid;
+  gap: var(--space-2);
+  padding: var(--space-2) var(--space-3);
+  border-radius: var(--arena-radius-chip);
+  background: var(--arena-chalk);
+  box-shadow: inset 0 0 0 1px var(--color-warning-ink);
+  margin-bottom: var(--space-2);
+}
+.sale-holds-title {
+  color: var(--color-warning-ink);
+  font-weight: var(--font-weight-semibold);
+}
+.sale-holds-list {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
+  gap: var(--space-2);
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+/* flex-wrap: màn hẹp (điện thoại) nút "Tiếp tục thu tiền" xuống dòng thay vì đè lên "còn mm:ss". */
+.sale-holds-list li {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  justify-content: space-between;
+  gap: var(--space-2);
+  padding: var(--space-2);
+  border-radius: var(--arena-radius-chip);
+  box-shadow: inset 0 0 0 1px var(--arena-chalk-line-strong);
+}
+.sale-holds-info {
+  display: flex;
+  align-items: center;
+  gap: var(--space-2);
+  min-width: 0;
+}
+/* Mã đơn (PT-20261031-0007) không bẻ ở dấu gạch ngang. */
+.sale-holds-code {
+  white-space: nowrap;
+  font-variant-numeric: tabular-nums;
+  font-weight: var(--font-weight-semibold);
+  color: var(--arena-ink);
+}
+.sale-holds-time {
+  color: var(--arena-steel-ink);
+  white-space: nowrap;
 }
 
-/* ===== Khung tìm kiếm & Chip tags khu vực ===== */
-.catalog-filter-box {
-    background: var(--color-surface);
-    border: var(--border-width) solid var(--color-border);
-    border-radius: var(--radius-md, 8px);
-    padding: 10px 14px;
-    box-shadow: var(--shadow-sm, 0 1px 2px rgba(0,0,0,0.05));
+.sale-layout {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) var(--sale-aside);
+  align-items: start;
+  gap: var(--arena-gap);
+}
+.sale-flow {
+  display: grid;
+  gap: var(--arena-gap);
+  min-width: 0;
+}
+.sale-flow > * {
+  min-width: 0;
 }
 
-.filter-label {
-    display: block;
-    font-size: 11.5px;
-    font-weight: var(--font-weight-semibold);
-    color: var(--color-text-subtle);
-    margin-bottom: 4px;
+/* Thanh bước: 4 ô nối nhau. Đang làm = xanh đặc, đã xong = tích xanh lá, chưa tới = mờ. */
+.sale-stepper {
+  display: grid;
+  grid-template-columns: repeat(4, minmax(0, 1fr));
+  gap: var(--space-2);
+  padding: 0;
+  counter-reset: none;
+  list-style: none;
+}
+.sale-stepper li {
+  display: flex;
+  align-items: center;
+  gap: var(--space-2);
+  min-width: 0;
+  padding: var(--space-2) var(--space-3);
+  border-radius: var(--arena-radius-chip);
+  background: var(--arena-chalk);
+  box-shadow: inset 0 -2px 0 var(--arena-chalk-line);
+  color: var(--arena-steel-ink);
+  font-size: var(--font-size-sm);
+  font-weight: var(--font-weight-semibold);
+  white-space: nowrap;
+}
+.sale-stepper span {
+  display: inline-grid;
+  flex: none;
+  place-items: center;
+  width: 24px;
+  height: 24px;
+  border-radius: var(--arena-radius-chip);
+  background: var(--arena-surface);
+  box-shadow: inset 0 0 0 1px var(--arena-chalk-line-strong);
+  font-family: var(--font-brand-mono);
+  font-size: var(--font-size-xs);
+  font-variant-numeric: tabular-nums;
+}
+.sale-stepper .is-current {
+  box-shadow: inset 0 -2px 0 var(--arena-700);
+  color: var(--arena-ink);
+}
+.sale-stepper .is-current span {
+  background: var(--arena-700);
+  box-shadow: none;
+  color: var(--arena-on-dark);
+}
+.sale-stepper .is-done {
+  box-shadow: inset 0 -2px 0 var(--color-success-border);
+  color: var(--arena-ink);
+}
+.sale-stepper .is-done span {
+  background: var(--color-success-tint);
+  box-shadow: inset 0 0 0 1px var(--color-success-border);
+  color: transparent;
+  position: relative;
+}
+.sale-stepper .is-done span::after {
+  content: "\2713";
+  position: absolute;
+  color: var(--color-success-ink);
+  font-weight: var(--font-weight-bold);
+}
+
+
+/* ==================== 2. THẺ BƯỚC + CHỮ BÁO ==================== */
+
+html body.dock.pt-sale-page .sale-card {
+  display: grid;
+  align-content: start;
+  gap: var(--space-4);
+  padding: var(--arena-pad);
+  border-radius: var(--arena-radius-chip);
+  background: var(--arena-chalk);
+  box-shadow: var(--arena-shadow-light);
+  color: var(--arena-ink);
+}
+/* Tiêu đề trong thẻ luôn màu mực của thẻ. common.css (theme sáng) tô TRẮNG mọi h1–h3 không nằm trong .panel/.card…
+   (dành cho tiêu đề đặt trên nền ảnh) → "Gói & PT", "Lịch tập", "Từng tuần", "Đơn bán" bị mất chữ trên thẻ sáng. */
+html body.dock.pt-sale-page .content .sale-card :is(h2, h3) {
+  color: var(--arena-ink);
+}
+.sale-alert {
+  grid-auto-flow: column;
+  justify-content: space-between;
+  align-items: center;
+}
+.sale-card-head {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: baseline;
+  justify-content: space-between;
+  gap: var(--space-1) var(--space-3);
+}
+.sale-card-head h2 {
+  display: flex;
+  align-items: center;
+  gap: var(--space-2);
+  font-family: var(--font-brand-display);
+  font-size: var(--font-size-lg);
+  font-weight: var(--font-weight-extrabold);
+  font-variant-numeric: tabular-nums;
+  letter-spacing: -0.01em;
+}
+.sale-card-head p {
+  color: var(--arena-steel-ink);
+  font-size: var(--font-size-sm);
+  font-variant-numeric: tabular-nums;
+  text-wrap: pretty;
+}
+/* Nhãn + nút (i) hint box chung (.pt-info, common.css) — thay cho dòng chữ phụ dưới tiêu đề. */
+.sale-label-row {
+  display: flex;
+  align-items: center;
+  gap: var(--space-2);
+}
+.sale-label-row .sale-field-label {
+  margin: 0;
+}
+.sale-label-row .pt-info-trigger {
+  width: var(--control-height-sm);
+  height: var(--control-height-sm);
+  min-width: var(--control-height-sm);
+  min-height: var(--control-height-sm);
+}
+.sale-field-label {
+  display: block;
+  margin-bottom: var(--space-2);
+  color: var(--arena-ink);
+  font-size: var(--font-size-sm);
+  font-weight: var(--font-weight-semibold);
+}
+.sale-field-label small {
+  color: var(--arena-steel-ink);
+  font-weight: var(--font-weight-regular);
+}
+.sale-msg {
+  color: var(--arena-steel-ink);
+  font-size: var(--font-size-sm);
+  line-height: var(--line-height-normal);
+  text-wrap: pretty;
+}
+.sale-msg.is-error {
+  padding: var(--space-2) var(--space-3);
+  border-radius: var(--arena-radius-chip);
+  background: var(--color-danger-tint);
+  box-shadow: inset 0 0 0 1px var(--color-danger-border);
+  color: var(--color-danger-ink);
+  font-weight: var(--font-weight-medium);
+}
+/* Hộp nhắc PT chưa công bố đủ T2–T6 (đầu phần Lịch tập). */
+.plan-alert {
+  display: flex;
+  align-items: flex-start;
+  gap: var(--space-3);
+  margin-bottom: var(--space-4);
+  padding: var(--space-3) var(--space-4);
+  border-radius: var(--arena-radius-chip);
+  background: var(--color-warning-tint);
+  box-shadow: inset 0 0 0 1px var(--color-warning-border);
+  color: var(--color-warning-ink);
+  font-size: var(--font-size-sm);
+  line-height: var(--line-height-normal);
+}
+.plan-alert > i,
+.plan-alert > svg {
+  flex: none;
+  width: 18px;
+  height: 18px;
+  margin-top: 2px;
+}
+.plan-alert p {
+  margin: 0;
+  text-wrap: pretty;
+}
+/* Tên thứ PT chưa công bố trong Lịch mẫu: thêm nhãn vàng nhỏ. */
+.plan-row-day .plan-row-flag {
+  justify-self: start;
+  padding: 1px var(--space-1-5);
+  border-radius: var(--arena-radius-chip);
+  background: var(--color-warning-tint);
+  box-shadow: inset 0 0 0 1px var(--color-warning-border);
+  color: var(--color-warning-ink);
+  font-weight: var(--font-weight-semibold);
+  white-space: nowrap;
+}
+.sale-empty {
+  padding: var(--space-5);
+  border-radius: var(--arena-radius-chip);
+  background: var(--arena-surface);
+  box-shadow: inset 0 0 0 1px var(--sale-line);
+  color: var(--arena-ink-soft);
+  font-size: var(--font-size-sm);
+  text-align: center;
+  text-wrap: pretty;
+}
+.sale-badge {
+  padding: 2px var(--space-2);
+  border-radius: var(--arena-radius-chip);
+  background: var(--color-warning-tint);
+  box-shadow: inset 0 0 0 1px var(--color-warning-border);
+  color: var(--color-warning-ink);
+  font-family: var(--font-body);
+  font-size: var(--font-size-xs);
+  font-weight: var(--font-weight-semibold);
+  letter-spacing: 0;
+}
+.sale-inline {
+  justify-self: start;
+}
+/* Form đang gửi lại (JS thêm is-busy): mờ nhẹ để biết server đang tính. */
+#sale-form.is-busy {
+  opacity: 0.6;
+  pointer-events: none;
+  transition: opacity var(--duration-base) var(--ease-out);
 }
 
 .search-bar-row {
@@ -44,27 +317,793 @@
     color: var(--color-text);
 }
 
-.search-bar-row input[type="search"]:focus {
-    outline: none;
-    border-color: var(--color-primary);
-    box-shadow: 0 0 0 2px var(--color-primary-tint);
+
+/* ==================== 4. THẺ KHÁCH ==================== */
+
+.sale-avatar {
+  display: grid;
+  flex: none;
+  place-items: center;
+  width: 36px;
+  height: 36px;
+  border-radius: var(--radius-circle);
+  background: color-mix(in srgb, var(--arena-700) 22%, var(--arena-surface));
+  color: var(--arena-ink);
+  font-family: var(--font-brand-display);
+  font-size: var(--font-size-base);
+  font-weight: var(--font-weight-extrabold);
+}
+.sale-avatar.is-lg {
+  width: 48px;
+  height: 48px;
+  font-size: var(--font-size-lg);
+}
+.sale-customer {
+  display: grid;
+  grid-template-columns: auto minmax(0, 1fr) auto;
+  align-items: center;
+  gap: var(--space-3) var(--space-4);
+  padding: var(--space-3) var(--space-4);
+  border-radius: var(--arena-radius-chip);
+  background: var(--arena-surface);
+  box-shadow: inset 0 0 0 1px var(--sale-line);
+}
+.sale-customer.is-blocked {
+  box-shadow: inset 0 0 0 1px var(--color-danger-border);
+}
+.sale-customer-main {
+  display: grid;
+  gap: 2px;
+  min-width: 0;
+}
+.sale-customer-role {
+  color: var(--arena-steel-ink);
+  font-family: var(--font-brand-mono);
+  font-size: var(--font-size-2xs);
+  letter-spacing: var(--letter-spacing-wide);
+  text-transform: uppercase;
+}
+.sale-customer-name {
+  font-size: var(--font-size-md);
+  font-weight: var(--font-weight-bold);
+  overflow-wrap: anywhere;
+}
+.sale-customer-meta {
+  display: flex;
+  flex-wrap: wrap;
+  gap: var(--space-1) var(--space-3);
+  color: var(--arena-steel-ink);
+  font-size: var(--font-size-sm);
+  font-variant-numeric: tabular-nums;
+}
+.sale-customer-status {
+  display: flex;
+  align-items: flex-start;   /* icon dính dòng đầu khi lý do (Chưa có gói / Chưa đủ tuổi) xuống 2 dòng */
+  gap: var(--space-1-5);
+  min-width: 0;
+  max-width: 18rem;
+  padding: var(--space-1) var(--space-2);
+  border-radius: var(--arena-radius-chip);
+  background: var(--color-success-tint);
+  color: var(--color-success-ink);
+  font-size: var(--font-size-xs);
+  font-weight: var(--font-weight-semibold);
+  font-variant-numeric: tabular-nums;
+  overflow-wrap: anywhere;    /* lý do dài / không dấu cách cũng không tràn ra ngoài thẻ */
+}
+.sale-customer-status > i {
+  flex: none;
+  margin-top: 2px;           /* canh icon ngang dòng chữ đầu tiên */
+}
+.sale-customer.is-blocked .sale-customer-status {
+  background: var(--color-danger-tint);
+  color: var(--color-danger-ink);
 }
 
-.location-chips-row {
-    display: flex;
-    flex-wrap: wrap;
-    gap: 4px;
+
+/* ==================== 5. Ô GÓI, Ô PT, NGÀY ==================== */
+
+.sale-tiles {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(190px, 1fr));
+  gap: var(--arena-gap-tile);
+}
+.sale-pts {
+  display: flex;
+  flex-wrap: wrap;
+  gap: var(--space-2);
+}
+.sale-tile,
+.sale-pt,
+.sale-method label {
+  position: relative;
+  border-radius: var(--arena-radius-chip);
+  background: var(--arena-surface);
+  box-shadow: inset 0 0 0 1px var(--sale-line);
+  cursor: pointer;
+  transition: box-shadow var(--duration-base) var(--ease-out), background-color var(--duration-base) var(--ease-out);
+}
+.sale-tile {
+  display: grid;
+  gap: 2px;
+  padding: var(--space-3);
+}
+.sale-pt {
+  display: flex;
+  align-items: center;
+  gap: var(--space-2);
+  min-height: 44px;
+  padding: var(--space-1) var(--space-3) var(--space-1) var(--space-1);
+  font-size: var(--font-size-sm);
+  font-weight: var(--font-weight-semibold);
+}
+.sale-pt .sale-avatar {
+  width: 32px;
+  height: 32px;
+  font-size: var(--font-size-xs);
+}
+:is(.sale-tile, .sale-pt, .sale-method label) input {
+  position: absolute;
+  opacity: 0;
+  pointer-events: none;
+}
+.sale-tile strong {
+  font-size: var(--font-size-base);
+  font-weight: var(--font-weight-bold);
+}
+.sale-tile small {
+  color: var(--arena-steel-ink);
+  font-size: var(--font-size-xs);
+  font-variant-numeric: tabular-nums;
+}
+:is(.sale-tile, .sale-pt, .sale-method label):hover {
+  box-shadow: inset 0 0 0 1px var(--arena-hover-line);
+}
+:is(.sale-tile, .sale-pt, .sale-method label):has(input:checked) {
+  background: var(--arena-today-tint);
+  box-shadow: inset 0 0 0 2px var(--arena-700);
+}
+.sale-pt:has(input:checked) .sale-avatar {
+  background: var(--arena-700);
+  color: var(--arena-on-dark);
+}
+:is(.sale-tile, .sale-pt, .sale-method label):has(input:focus-visible) {
+  outline: var(--focus-outline-width) solid var(--arena-focus-ring);
+  outline-offset: var(--focus-outline-offset);
+}
+.sale-start {
+  display: grid;
+  max-width: 240px;
+}
+.sale .sale-start input[aria-invalid="true"] {
+  box-shadow: inset 0 0 0 2px var(--color-danger-border);
+}
+.sale-start + .sale-msg {
+  max-width: 420px;
 }
 
-.loc-chip {
-    padding: 2px 8px;
-    border: var(--border-width) solid var(--color-border);
-    border-radius: var(--radius-pill, 9999px);
-    background: var(--color-surface);
-    color: var(--color-text);
-    font-size: 11.5px;
-    text-decoration: none;
-    transition: all var(--duration-fast) var(--ease-standard);
+
+/* ==================== 6. LỊCH TẬP (pt-sale-plan.js vẽ) ==================== */
+
+/* Màu có 2 nghĩa, không trộn:
+     CHỌN       xanh đĩa đặc + dấu ✓  (nút giờ của lịch mẫu, ô ngày đang sửa)
+     TRẠNG THÁI xanh lá có buổi · vàng PT cần dời sau · đỏ chưa xếp được · xám Nghỉ — chỉ ở phần Từng tuần. */
+.sale-plan {
+  gap: var(--space-5);
+}
+.plan-total {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: baseline;
+  gap: var(--space-1) var(--space-2);
+}
+.plan-total strong {
+  color: var(--arena-ink);
+  font-family: var(--font-brand-display);
+  font-size: var(--font-size-md);
+}
+.plan-issue {
+  padding: 2px var(--space-2);
+  border: 0;
+  border-radius: var(--arena-radius-chip);
+  background: var(--color-danger-tint);
+  box-shadow: inset 0 0 0 1px var(--color-danger-border);
+  color: var(--color-danger-ink);
+  font: inherit;
+  font-size: var(--font-size-xs);
+  font-weight: var(--font-weight-semibold);
+  cursor: pointer;
+}
+.plan-issue:hover {
+  text-decoration: underline;
+  text-underline-offset: 2px;
+}
+.plan-block {
+  display: grid;
+  gap: var(--space-3);
+}
+.plan-block + .plan-block {
+  padding-top: var(--space-5);
+  border-top: var(--border-width) solid var(--arena-chalk-line);
+}
+.plan-block-head {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  justify-content: space-between;
+  gap: var(--space-2) var(--space-4);
+}
+.plan-block-head h3 {
+  margin: 0;
+  color: var(--arena-ink);
+  font-family: var(--font-brand-display);
+  font-size: var(--font-size-base);
+  font-weight: var(--font-weight-bold);
+}
+.plan-hint {
+  color: var(--arena-steel-ink);
+  font-size: var(--font-size-sm);
+  text-wrap: pretty;
+}
+.plan-hint b {
+  color: var(--arena-ink);
+}
+
+/* Lịch mẫu: mỗi thứ 1 hàng = tên thứ | dãy chip giờ. */
+.plan-pattern {
+  display: grid;
+  border-radius: var(--arena-radius-chip);
+  background: var(--arena-surface);
+  box-shadow: inset 0 0 0 1px var(--sale-line);
+}
+.plan-row {
+  display: grid;
+  grid-template-columns: 112px minmax(0, 1fr);
+  align-items: center;
+  gap: var(--space-3);
+  padding: var(--space-2-5) var(--space-3);
+}
+.plan-row + .plan-row {
+  border-top: var(--border-width) solid var(--arena-grid-line);
+}
+.plan-row-day {
+  display: grid;
+  gap: 1px;
+}
+.plan-row-day strong {
+  font-size: var(--font-size-sm);
+  font-weight: var(--font-weight-bold);
+}
+.plan-row-day small {
+  color: var(--arena-steel-ink);
+  font-size: var(--font-size-2xs);
+  font-variant-numeric: tabular-nums;
+}
+.plan-chips {
+  display: flex;
+  flex-wrap: wrap;
+  gap: var(--space-1-5);
+}
+
+/* Chip = <label> bọc radio thật. Chọn: xanh đĩa đặc + ✓. Khóa: gạch mờ, vẫn đọc được lý do. */
+.plan-chip {
+  position: relative;
+  display: inline-grid;
+  justify-items: center;
+  align-content: center;
+  min-width: 64px;
+  min-height: 44px;               /* chạm tay ≥ 44px; nút "+ Thêm giờ" và ô nhập giờ cùng chiều cao */
+  padding: var(--space-1) var(--space-3);
+  border-radius: var(--arena-radius-chip);
+  background: var(--arena-chalk);
+  box-shadow: inset 0 0 0 1px var(--arena-chalk-line-strong);
+  color: var(--arena-ink);
+  cursor: pointer;
+  transition: box-shadow var(--duration-fast) var(--ease-out), background-color var(--duration-fast) var(--ease-out),
+    color var(--duration-fast) var(--ease-out);
+}
+.plan-chip input {
+  position: absolute;
+  opacity: 0;
+  pointer-events: none;
+}
+.plan-chip-text {
+  font-size: var(--font-size-sm);
+  font-weight: var(--font-weight-semibold);
+  font-variant-numeric: tabular-nums;
+  white-space: nowrap;
+}
+.plan-chip-meta {
+  color: var(--color-warning-ink);
+  font-size: var(--font-size-2xs);
+  font-weight: var(--font-weight-semibold);
+  line-height: 1.2;
+}
+.plan-chip-sub {
+  color: var(--arena-steel-ink);
+  font-size: var(--font-size-2xs);
+  line-height: 1.2;
+  white-space: nowrap;
+}
+.plan-chip:has(input:checked) .plan-chip-sub {
+  color: var(--arena-on-dark);
+  opacity: 0.8;
+}
+.plan-chip.is-disabled .plan-chip-sub {
+  color: var(--arena-steel-ink);
+}
+.plan-chip.is-rest .plan-chip-text {
+  color: var(--arena-steel-ink);
+}
+.plan-chip:hover:not(.is-disabled) {
+  box-shadow: inset 0 0 0 1px var(--arena-700);
+}
+.plan-chip:has(input:checked) {
+  background: var(--arena-700);
+  box-shadow: none;
+  color: var(--arena-on-dark);
+}
+.plan-chip:has(input:checked) .plan-chip-text {
+  color: var(--arena-on-dark);
+}
+.plan-chip:has(input:checked) .plan-chip-text::before {
+  content: "\2713\00a0";
+  font-weight: var(--font-weight-bold);
+}
+.plan-chip:has(input:checked) .plan-chip-meta {
+  color: var(--arena-on-dark);
+  opacity: 0.85;
+}
+/* "Nghỉ" đang chọn: nền xám + viền xanh (vẫn thấy ✓) — để giờ tập nổi hơn ngày nghỉ. */
+.plan-chip.is-rest:has(input:checked) {
+  background: var(--arena-closed);
+  box-shadow: inset 0 0 0 1px var(--arena-700);
+}
+.plan-chip.is-rest:has(input:checked) .plan-chip-text {
+  color: var(--arena-ink);
+}
+.plan-chip:has(input:focus-visible) {
+  outline: var(--focus-outline-width) solid var(--arena-focus-ring);
+  outline-offset: var(--focus-outline-offset);
+}
+.plan-chip.is-disabled {
+  background: var(--arena-closed);
+  box-shadow: none;
+  cursor: not-allowed;
+}
+.plan-chip.is-disabled .plan-chip-text {
+  color: var(--arena-steel-ink);
+  text-decoration: line-through;
+}
+.plan-chip.is-disabled .plan-chip-meta {
+  color: var(--arena-steel-ink);
+}
+.plan-chip.is-blocked .plan-chip-meta {
+  max-width: 160px;
+  color: var(--color-danger-ink);
+  text-align: center;
+  white-space: normal;
+}
+
+/* ===== Ô "+ Thêm giờ" (lễ tân tự nhập giờ PT chưa công bố) — 30/10/2026 ===== */
+.plan-add-time {
+  display: inline-flex;
+  align-items: center;
+  gap: var(--space-2);
+  flex-wrap: wrap;
+}
+/* Nút/ô bên trong có display:inline-flex nên đè mất thuộc tính hidden → buộc ẩn lại khi đóng. */
+.plan-add-time [hidden] {
+  display: none;
+}
+/* Nút "+ Thêm giờ" là .plan-chip nên cao bằng chip giờ bên cạnh; chỉ khác viền nét đứt.
+   Màu chữ / viền dùng --arena-accent-text (sáng #24468F, tối #7FD3DA): --arena-700 gần trùng nền tối nên mất chữ. */
+.plan-chip.plan-chip-add {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  box-sizing: border-box;
+  padding: var(--space-1) var(--space-3);
+  border: 1px dashed var(--arena-accent-text);
+  border-radius: var(--arena-radius-chip);
+  background: transparent;
+  box-shadow: none;
+  color: var(--arena-accent-text);
+  font: inherit;
+  font-size: var(--font-size-sm);
+  font-weight: var(--font-weight-semibold);
+  white-space: nowrap;
+  cursor: pointer;
+  transition: background-color var(--duration-fast) var(--ease-out), color var(--duration-fast) var(--ease-out);
+}
+.plan-chip.plan-chip-add:hover {
+  border-style: solid;
+  background: var(--arena-700);
+  box-shadow: none;
+  color: var(--arena-on-dark);
+}
+/* Ô nhập giờ + Xác nhận / Hủy: cao bằng chip (min-height của .plan-chip) để hàng không bị lệch khi mở. */
+.plan-time-input {
+  box-sizing: border-box;
+  width: 132px;
+  height: 44px;
+  padding: 0 var(--space-3);
+  border: 1px solid var(--arena-accent-text);
+  border-radius: var(--arena-radius-chip);
+  background: var(--arena-chalk);
+  color: var(--arena-ink);
+  font: inherit;
+  font-variant-numeric: tabular-nums;
+}
+.plan-time-confirm,
+.plan-time-cancel {
+  box-sizing: border-box;
+  height: 44px;                   /* chạm tay ≥ 44px */
+  padding: 0 var(--space-3);
+  border: 0;
+  border-radius: var(--arena-radius-chip);
+  font: inherit;
+  font-weight: var(--font-weight-semibold);
+  cursor: pointer;
+}
+.plan-time-confirm {
+  background: var(--arena-700);
+  color: var(--arena-on-dark);
+}
+.plan-time-cancel {
+  background: transparent;
+  box-shadow: inset 0 0 0 1px var(--arena-chalk-line-strong);
+  color: var(--arena-ink);
+}
+.plan-time-input:focus-visible,
+.plan-time-confirm:focus-visible,
+.plan-time-cancel:focus-visible,
+.plan-chip-add:focus-visible {
+  outline: var(--focus-outline-width) solid var(--arena-focus-ring);
+  outline-offset: var(--focus-outline-offset);
+}
+
+/* Pumpy (receptionist/_sale-pumpy.jspf) + bong bóng nhắc bước kế tiếp (p[data-plan-note], pt-sale-plan.js đổi chữ).
+   Bong bóng có đuôi nhọn chỉ về phía Pumpy; nền --arena-surface để đọc được ở cả 2 theme. */
+.sale-note {
+  display: flex;
+  align-items: flex-end;
+  gap: var(--space-2);
+}
+.sale-pumpy {
+  flex: none;
+  width: 84px;
+  height: auto;
+}
+/* Theme tối: thân xanh đậm gần trùng nền → viền sáng mảnh quanh hình để Pumpy nổi lên. */
+html[data-theme="dark"] .sale-pumpy {
+  filter: drop-shadow(0 0 1.5px rgba(255, 255, 255, 0.55));
+}
+.sale-pumpy-wave {
+  transform-box: fill-box;
+  transform-origin: 0% 100%;
+  animation: sale-pumpy-wave 2.4s var(--ease-out) infinite;
+}
+@keyframes sale-pumpy-wave {
+  0%, 60%, 100% { transform: rotate(0deg); }
+  70% { transform: rotate(-14deg); }
+  80% { transform: rotate(8deg); }
+  90% { transform: rotate(-8deg); }
+}
+.sale-bubble {
+  position: relative;
+  flex: 1;
+  min-width: 0;
+  margin-bottom: var(--space-3);
+  padding: var(--space-2-5) var(--space-3);
+  border-radius: var(--arena-radius-tile);
+  background: var(--arena-surface);
+  box-shadow: inset 0 0 0 1px var(--arena-chalk-line-strong);
+  color: var(--arena-ink);
+}
+.sale-bubble b {
+  font-weight: var(--font-weight-semibold);
+}
+/* Đuôi bong bóng: hình vuông xoay 45°, cùng nền + viền 2 cạnh, nằm sát mép trái phía dưới. */
+.sale-bubble::before {
+  content: "";
+  position: absolute;
+  left: -5px;
+  bottom: 14px;
+  width: 10px;
+  height: 10px;
+  background: var(--arena-surface);
+  box-shadow: inset 1px -1px 0 var(--arena-chalk-line-strong);
+  transform: rotate(45deg);
+}
+
+/* Từng tuần: điều hướng ‹ Tuần 3/9 › + dãy tab tuần. */
+.plan-week-nav {
+  display: flex;
+  align-items: center;
+  gap: var(--space-2);
+}
+.plan-week-label {
+  min-width: 15rem;
+  color: var(--arena-ink);
+  font-size: var(--font-size-sm);
+  font-weight: var(--font-weight-semibold);
+  font-variant-numeric: tabular-nums;
+  text-align: center;
+}
+.plan-nav {
+  display: grid;
+  place-items: center;
+  width: 36px;
+  height: 36px;
+  border: 0;
+  border-radius: var(--arena-radius-chip);
+  background: var(--arena-surface);
+  box-shadow: inset 0 0 0 1px var(--arena-chalk-line-strong);
+  color: var(--arena-ink);
+  cursor: pointer;
+}
+.plan-nav:hover:not(:disabled) {
+  box-shadow: inset 0 0 0 1px var(--arena-700);
+}
+.plan-nav:disabled {
+  opacity: 0.4;
+  cursor: default;
+}
+.plan-nav:focus-visible,
+.plan-tab:focus-visible,
+.plan-day:focus-visible,
+.plan-reset:focus-visible,
+.plan-issue:focus-visible {
+  outline: var(--focus-outline-width) solid var(--arena-focus-ring);
+  outline-offset: var(--focus-outline-offset);
+}
+.plan-tabs {
+  display: flex;
+  gap: var(--space-1);
+  overflow-x: auto;
+  padding-bottom: 2px;
+  scrollbar-width: thin;
+}
+.plan-tab {
+  position: relative;
+  display: grid;
+  flex: none;
+  justify-items: center;
+  min-width: 52px;
+  padding: var(--space-1) var(--space-2);
+  border: 0;
+  border-radius: var(--arena-radius-chip);
+  background: transparent;
+  box-shadow: inset 0 -2px 0 var(--arena-chalk-line);
+  color: var(--arena-steel-ink);
+  font: inherit;
+  font-variant-numeric: tabular-nums;
+  cursor: pointer;
+}
+.plan-tab b {
+  font-size: var(--font-size-sm);
+}
+.plan-tab small {
+  font-size: var(--font-size-2xs);
+}
+.plan-tab:hover {
+  color: var(--arena-ink);
+}
+.plan-tab[aria-selected="true"] {
+  box-shadow: inset 0 -2px 0 var(--arena-700);
+  color: var(--arena-ink);
+}
+/* Chấm trạng thái góc phải trên: đỏ = có ngày chưa xếp được; xanh đĩa = có ngày sửa riêng. */
+.plan-tab.has-bad::after,
+.plan-tab.has-edit::after {
+  content: "";
+  position: absolute;
+  top: 4px;
+  right: 6px;
+  width: 6px;
+  height: 6px;
+  border-radius: var(--radius-circle);
+  background: var(--arena-700);
+}
+.plan-tab.has-bad::after {
+  background: var(--color-danger);
+}
+
+/* 5 ô ngày T2–T6. Ô là <button>: bấm để sửa riêng ngày đó. */
+.plan-week {
+  display: grid;
+  grid-template-columns: repeat(5, minmax(0, 1fr));
+  gap: var(--space-2);
+  animation: plan-in var(--duration-base) var(--ease-out);
+}
+@keyframes plan-in {
+  from { opacity: 0.4; transform: translateY(2px); }
+}
+.plan-day {
+  display: grid;
+  align-content: start;
+  gap: var(--space-1);
+  min-height: 108px;
+  padding: var(--space-2) var(--space-2-5);
+  border: 0;
+  border-radius: var(--arena-radius-chip);
+  background: var(--arena-surface);
+  box-shadow: inset 0 0 0 1px var(--sale-line);
+  color: var(--arena-ink);
+  font: inherit;
+  text-align: left;
+  cursor: pointer;
+  transition: box-shadow var(--duration-fast) var(--ease-out), transform var(--duration-fast) var(--ease-out);
+}
+button.plan-day:hover {
+  box-shadow: inset 0 0 0 1px var(--arena-hover-line);
+}
+.plan-day-head {
+  display: flex;
+  justify-content: space-between;
+  gap: var(--space-1);
+  color: var(--arena-steel-ink);
+  font-size: var(--font-size-xs);
+  font-variant-numeric: tabular-nums;
+}
+.plan-day-head b {
+  color: var(--arena-ink);
+}
+.plan-day-time {
+  display: flex;
+  align-items: baseline;
+  gap: var(--space-1);
+  font-variant-numeric: tabular-nums;
+}
+.plan-day-time strong {
+  font-family: var(--font-brand-display);
+  font-size: var(--font-size-lg);
+  font-weight: var(--font-weight-extrabold);
+  letter-spacing: -0.02em;
+}
+.plan-day-time small {
+  color: inherit;
+  font-size: var(--font-size-xs);
+  opacity: 0.8;
+}
+.plan-day-note {
+  font-size: var(--font-size-2xs);
+  line-height: 1.35;
+  text-wrap: pretty;
+}
+.plan-day-rest {
+  color: var(--arena-steel-ink);
+  font-size: var(--font-size-sm);
+}
+/* Nhãn "PT chưa mở": buổi sẽ tự tạo khung mới → vàng, cùng màu hộp nhắc + ô "Đã xác nhận với PT". */
+.plan-day-fresh,
+.plan-key .is-fresh::before {
+  background: var(--color-warning-tint);
+  box-shadow: inset 0 0 0 1px var(--color-warning-border);
+  color: var(--color-warning-ink);
+}
+.plan-day-fresh {
+  justify-self: start;
+  padding: 1px var(--space-1-5);
+  border-radius: var(--arena-radius-chip);
+  font-size: var(--font-size-2xs);
+  font-weight: var(--font-weight-semibold);
+  white-space: nowrap;
+}
+.plan-day-flag {
+  justify-self: start;
+  margin-top: auto;
+  padding: 1px var(--space-1-5);
+  border-radius: var(--arena-radius-chip);
+  background: var(--arena-info-chip);
+  color: var(--arena-ink);
+  font-size: var(--font-size-2xs);
+  font-weight: var(--font-weight-semibold);
+}
+.plan-day.is-ok,
+.plan-key .is-ok::before {
+  background: var(--color-success-tint);
+  box-shadow: inset 0 0 0 1px var(--color-success-border);
+  color: var(--color-success-ink);
+}
+.plan-day.is-warn,
+.plan-key .is-warn::before {
+  background: var(--color-warning-tint);
+  box-shadow: inset 0 0 0 1px var(--color-warning-border);
+  color: var(--color-warning-ink);
+}
+.plan-day.is-bad,
+.plan-key .is-bad::before {
+  background: var(--color-danger-tint);
+  box-shadow: inset 0 0 0 1px var(--color-danger-border);
+  color: var(--color-danger-ink);
+}
+.plan-day.is-bad .plan-day-time {
+  font-weight: var(--font-weight-bold);
+  text-decoration: line-through;
+}
+.plan-day.is-off,
+.plan-day.is-skipped {
+  background: var(--arena-closed);
+  box-shadow: none;
+}
+.plan-day.is-out {
+  background: transparent;
+  box-shadow: inset 0 0 0 1px var(--arena-grid-line);
+  cursor: default;
+  opacity: 0.55;
+}
+.plan-day.is-edited,
+.plan-key .is-edit::before {
+  box-shadow: inset 0 0 0 2px var(--arena-700);
+}
+.plan-day[aria-pressed="true"] {
+  box-shadow: inset 0 0 0 2px var(--arena-700), var(--arena-lift);
+  transform: translateY(-1px);
+}
+
+/* Ô sửa riêng 1 ngày: hiện ngay dưới tuần, cùng kiểu chip với lịch mẫu. */
+.plan-editor {
+  display: grid;
+  gap: var(--space-3);
+  padding: var(--space-3) var(--space-4);
+  border-radius: var(--arena-radius-chip);
+  background: var(--arena-surface);
+  box-shadow: inset 0 0 0 2px var(--arena-700);
+  animation: plan-in var(--duration-base) var(--ease-out);
+}
+.plan-editor[hidden] {
+  display: none;
+}
+.plan-editor-head {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: var(--space-3);
+}
+.plan-editor-title {
+  font-size: var(--font-size-sm);
+}
+.plan-editor-title span {
+  color: var(--arena-steel-ink);
+}
+.plan-reset {
+  justify-self: start;
+  padding: 0;
+  border: 0;
+  background: none;
+  color: var(--arena-ink);
+  font: inherit;
+  font-size: var(--font-size-sm);
+  font-weight: var(--font-weight-semibold);
+  text-decoration: underline;
+  text-underline-offset: 3px;
+  cursor: pointer;
+}
+
+.plan-key {
+  display: flex;
+  flex-wrap: wrap;
+  gap: var(--space-1) var(--space-4);
+  padding: 0;
+  color: var(--arena-steel-ink);
+  font-size: var(--font-size-xs);
+  list-style: none;
+}
+.plan-key li {
+  display: flex;
+  align-items: center;
+  gap: var(--space-1-5);
+}
+.plan-key li::before {
+  content: "";
+  width: 12px;
+  height: 12px;
+  border-radius: var(--arena-radius-chip);
+}
+.plan-key .is-edit::before {
+  background: var(--arena-surface);
 }
 
 .loc-chip:hover {
@@ -72,16 +1111,212 @@
     color: var(--color-primary);
 }
 
-.loc-chip.active {
-    background: var(--color-primary);
-    border-color: var(--color-primary);
-    color: #ffffff;
-    font-weight: var(--font-weight-semibold);
+
+/* ==================== 8. ĐƠN BÁN ==================== */
+
+html body.dock.pt-sale-page .sale-summary {
+  position: sticky;
+  top: var(--space-4);
+}
+/* Khách trong cột Đơn bán (cột hẹp): thẻ khách 2 cột, trạng thái gói xuống dòng; ô tìm gọn. */
+.sale-who {
+  display: grid;
+  gap: var(--space-2);
+  padding-bottom: var(--space-4);
+  border-bottom: var(--border-width) solid var(--arena-chalk-line);
+}
+.sale-who .sale-field-label {
+  margin: 0;
+}
+.sale-summary .sale-customer {
+  grid-template-columns: auto minmax(0, 1fr);
+  gap: var(--space-2) var(--space-3);
+  padding: var(--space-3);
+}
+.sale-summary .sale-avatar.is-lg {
+  width: 40px;
+  height: 40px;
+  font-size: var(--font-size-base);
+}
+.sale-summary .sale-customer-status {
+  grid-column: 1 / -1;
+  justify-self: start;
+  max-width: none;
+}
+.sale-summary .sale-search-box input {
+  padding-right: var(--space-3);
+}
+.sale-summary .sale-suggest em,
+.sale-summary .sale-results em {
+  grid-column: 2;
+  max-width: none;
+  text-align: left;
+}
+.sale-summary .sale-suggest [role="option"],
+.sale-summary .sale-results a {
+  grid-template-columns: auto minmax(0, 1fr);
+}
+.sale-code {
+  font-family: var(--font-brand-mono);
+}
+.sale-timer {
+  display: flex;
+  align-items: center;
+  gap: var(--space-2);
+  padding: var(--space-3);
+  border-radius: var(--arena-radius-chip);
+  background: var(--color-warning-tint);
+  box-shadow: inset 0 0 0 1px var(--color-warning-border);
+  color: var(--color-warning-ink);
+  font-size: var(--font-size-sm);
+  font-weight: var(--font-weight-semibold);
+}
+.sale-timer b {
+  margin-left: auto;
+  font-family: var(--font-brand-display);
+  font-size: var(--font-size-2xl);
+  font-variant-numeric: tabular-nums;
+  letter-spacing: -0.02em;
+}
+.sale-facts {
+  display: grid;
+  border-radius: var(--arena-radius-chip);
+  background: var(--arena-surface);
+  box-shadow: inset 0 0 0 1px var(--sale-line);
+}
+.sale-facts > div {
+  display: grid;
+  grid-template-columns: 56px minmax(0, 1fr);
+  gap: var(--space-2);
+  padding: var(--space-2) var(--space-3);
+  font-size: var(--font-size-sm);
+}
+.sale-facts > div + div {
+  border-top: var(--border-width) solid var(--arena-grid-line);
+}
+.sale-facts dt {
+  color: var(--arena-steel-ink);
+}
+.sale-facts dd {
+  font-weight: var(--font-weight-semibold);
+  font-variant-numeric: tabular-nums;
+  overflow-wrap: anywhere;
+}
+.sale-total {
+  display: flex;
+  align-items: baseline;
+  justify-content: space-between;
+  gap: var(--space-3);
+}
+.sale-total span {
+  color: var(--arena-steel-ink);
+  font-size: var(--font-size-sm);
+}
+.sale-total strong {
+  font-family: var(--font-brand-display);
+  font-size: var(--font-size-2xl);
+  font-weight: var(--font-weight-extrabold);
+  font-variant-numeric: tabular-nums;
+  letter-spacing: -0.02em;
+}
+.sale-pay {
+  display: grid;
+  gap: var(--space-3);
+}
+.sale-method {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: var(--space-2);
+}
+.sale-method legend {
+  grid-column: 1 / -1;
+}
+.sale-method label {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: var(--space-2);
+  min-height: 44px;
+  font-size: var(--font-size-sm);
+  font-weight: var(--font-weight-semibold);
+}
+.sale-ref {
+  display: grid;
+}
+/* Ô mã giao dịch chỉ hiện khi chọn Chuyển khoản (CSS :has, không JS). */
+.sale-pay:has(input[value="Cash"]:checked) .sale-ref {
+  display: none;
+}
+.sale-confirm {
+  display: flex;
+  align-items: flex-start;
+  gap: var(--space-2);
+  font-size: var(--font-size-sm);
+  cursor: pointer;
+}
+.sale-confirm input {
+  flex: none;
+  width: 18px;
+  height: 18px;
+  margin-top: 1px;
+  accent-color: var(--arena-700);
+}
+/* Ô "Đã xác nhận với PT": khung vàng giống hộp nhắc bên trái → lễ tân thấy 2 chỗ là 1 việc. */
+.sale-pt-confirm {
+  padding: var(--space-3);
+  border-radius: var(--arena-radius-chip);
+  background: var(--color-warning-tint);
+  box-shadow: inset 0 0 0 1px var(--color-warning-border);
+  color: var(--color-warning-ink);
+  transition: background-color 160ms ease, box-shadow 160ms ease;
+}
+.sale-pt-confirm[hidden] {
+  display: none;
+}
+.sale-pt-confirm span {
+  display: grid;
+  gap: 2px;
+}
+.sale-pt-confirm small {
+  font-size: var(--font-size-xs);
+  opacity: 0.9;
+}
+.sale-pt-confirm:has(input:checked) {
+  background: var(--color-success-tint);
+  box-shadow: inset 0 0 0 1px var(--color-success-border);
+  color: var(--color-success-ink);
+}
+.sale-pt-confirm:has(input:focus-visible) {
+  outline: 2px solid var(--arena-700);
+  outline-offset: 2px;
+}
+.sale-main {
+  width: 100%;
+  min-height: 48px;
+  gap: var(--space-2);
+}
+.sale-release {
+  width: 100%;
+}
+.sale-summary > form {
+  margin: 0;
 }
 
-/* ===== Lưới thẻ dòng máy (Facilities) ===== */
-.facility-grid-section {
-    min-height: 0;
+
+/* ==================== 9. ĐIỆN THOẠI + GIẢM CHUYỂN ĐỘNG ==================== */
+
+@media (max-width: 1100px) {
+  /* iPad: 4 ô bước chỉ rộng ~160px → "Giữ chỗ & thu tiền" bị cắt. Cho chữ xuống dòng. */
+  .sale-stepper li {
+    white-space: normal;
+    line-height: var(--line-height-snug);
+  }
+  .sale-layout {
+    grid-template-columns: minmax(0, 1fr);
+  }
+  html body.dock.pt-sale-page .sale-summary {
+    position: static;
+  }
 }
 
 .facility-cards-grid {
@@ -879,13 +2114,59 @@ textarea#descriptionInput.is-invalid {
     display: flex;
     flex-direction: column;
     text-align: left;
+  }
+  .sale-start {
+    max-width: none;
+  }
+  /* Lịch tập: tên thứ nằm trên dãy giờ; 5 ô ngày thành danh sách dọc (ngày trái, giờ phải). */
+  .plan-row {
+    grid-template-columns: minmax(0, 1fr);
+    gap: var(--space-2);
+  }
+  .plan-row-day {
+    grid-auto-flow: column;
+    justify-content: start;
+    align-items: baseline;
+    gap: var(--space-2);
+  }
+  .plan-week-nav {
+    width: 100%;
+    justify-content: space-between;
+  }
+  .plan-week-label {
+    min-width: 0;
+  }
+  .plan-week {
+    grid-template-columns: minmax(0, 1fr);
+    gap: var(--space-1-5);
+  }
+  .plan-day {
+    grid-template-columns: 76px minmax(0, 1fr);
+    align-items: center;
+    min-height: 56px;
+  }
+  .plan-day-head {
+    grid-row: span 3;
+    flex-direction: column;
+    justify-content: center;
+  }
+  .plan-day-flag {
+    margin-top: 0;
+  }
 }
-
-.drop-main-text {
-    font-size: 12px;
-    font-weight: 600;
-    color: var(--color-text);
-    line-height: 1.25;
+@media (prefers-reduced-motion: reduce) {
+  .plan-week,
+  .plan-editor {
+    animation: none;
+  }
+  .sale-search.is-loading .sale-search-box > i,
+  .sale-pumpy-wave {
+    animation: none;
+  }
+  .sale *,
+  #sale-form.is-busy {
+    transition: none !important;
+  }
 }
 
 .drop-sub-text {

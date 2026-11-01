@@ -1,5 +1,6 @@
 package com.gms.servlet.manager;
 
+import com.gms.constant.Messages;
 import com.gms.constant.SessionKey;
 import com.gms.dao.MaintenanceRequestDAO;
 import com.gms.dto.ServiceResult;
@@ -78,7 +79,7 @@ public class MaintenanceRequestReviewServlet extends HttpServlet {
             RequestUtil.setFlashToast(
                     request,
                     "error",
-                    "Yêu cầu không hợp lệ hoặc đã hết hạn (CSRF)."
+                    Messages.MSG214_FORM_SESSION_EXPIRED
             );
             RequestUtil.redirect(
                     request,
@@ -120,7 +121,7 @@ public class MaintenanceRequestReviewServlet extends HttpServlet {
                 RequestUtil.setFlashToast(
                         request,
                         "success",
-                        "Đã duyệt yêu cầu bảo trì."
+                        Messages.MSG252_MAINTENANCE_APPROVED
                 );
 
                 RequestUtil.redirect(
@@ -163,7 +164,7 @@ public class MaintenanceRequestReviewServlet extends HttpServlet {
                 RequestUtil.setFlashToast(
                         request,
                         "success",
-                        "Đã từ chối yêu cầu bảo trì."
+                        Messages.MSG253_MAINTENANCE_REJECTED
                 );
 
                 RequestUtil.redirect(

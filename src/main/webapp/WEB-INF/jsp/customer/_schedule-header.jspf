@@ -31,21 +31,7 @@
         <%-- Chuông thông báo dùng chung (notification-bell.js gọi /api/notifications): thông báo hệ thống, vd JOB-08 nhắc buổi PT ngày mai. --%>
         <%@ include file="/WEB-INF/jsp/common/notification-bell.jspf" %>
         <%-- Góc phải: chữ viết tắt, tên và mã khách; chỉ hiện nếu đã lấy được dashboard. --%>
-        <c:if test="${not empty dashboard}">
-            <a class="tb-user" href="${pageContext.request.contextPath}/account">
-                <span class="avatar">
-                    <c:out value="${dashboard.initials}" />
-                </span>
-                <span class="tb-user-text">
-                    <b>
-                        <c:out value="${dashboard.fullName}" />
-                    </b>
-                    <span>
-                        <c:out value="${dashboard.customerCode}" />
-                    </span>
-                </span>
-            </a>
-        </c:if>
+        <%@ include file="/WEB-INF/jsp/common/topbar-user.jspf" %>
         <%-- KẾT THÚC thông tin tài khoản góc phải. --%>
     </div>
 </header>

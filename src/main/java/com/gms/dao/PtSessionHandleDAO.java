@@ -126,9 +126,10 @@ public class PtSessionHandleDAO {
                    CASE WHEN EXISTS (SELECT 1 FROM LeaveRequests lr
                                      WHERE lr.EmployeeId = t.PtEmployeeId AND t.SlotDate BETWEEN lr.FromDate AND lr.ToDate
                                        AND lr.Status IN ('Pending', 'Approved')
+                                       -- mốc ca 13:00 = AppConstants.AFTERNOON_SHIFT_START (khung thuộc ca theo giờ bắt đầu)
                                        AND (lr.ShiftType = 'FullDay'
-                                            OR (lr.ShiftType = 'Morning' AND t.StartTime < '12:00')
-                                            OR (lr.ShiftType = 'Afternoon' AND t.StartTime >= '12:00')))
+                                            OR (lr.ShiftType = 'Morning' AND t.StartTime < '13:00')
+                                            OR (lr.ShiftType = 'Afternoon' AND t.StartTime >= '13:00')))
                         THEN 1 ELSE 0 END AS PtOnLeave,
                    CASE WHEN EXISTS (SELECT 1 FROM Sessions s2
                                      JOIN TimeSlots t2       ON t2.TimeSlotId = s2.TimeSlotId

@@ -120,8 +120,6 @@ public class ExerciseLibraryView {
     // Service: STT bài đầu / cuối của trang, ví dụ "Hiện 13–24 / 78 bài".
     private int firstIndex;
     private int lastIndex;
-    // Service: các số trang quanh trang hiện tại (tối đa 5) cho thanh phân trang.
-    private List<Option> pageLinks = new ArrayList<>();
 
     // Service: 8 chip nhóm cơ (kèm số bài) + 12 dụng cụ + 2 cách sắp xếp.
     private List<Option> categories = new ArrayList<>();
@@ -261,16 +259,6 @@ public class ExerciseLibraryView {
     // Gán STT cuối (Service)
     public void setLastIndex(int lastIndex) {
         this.lastIndex = lastIndex;
-    }
-
-    // Các số trang quanh trang hiện tại
-    public List<Option> getPageLinks() {
-        return pageLinks;
-    }
-
-    // Gán số trang (Service)
-    public void setPageLinks(List<Option> pageLinks) {
-        this.pageLinks = pageLinks;
     }
 
     // Chip nhóm cơ

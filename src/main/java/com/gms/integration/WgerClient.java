@@ -17,12 +17,45 @@ import java.util.ArrayList;
 import java.util.List;
 
 /**
- * Gọi API wger.de để lấy Thư viện bài tập (miễn phí, không cần key; dữ liệu giấy phép CC BY-SA 4.0).
+ * Gọi API wger.de để tải Thư viện bài tập (miễn phí, không cần API key; dữ liệu giấy phép CC BY-SA 4.0).
  *
- *   GET https://wger.de/api/v2/exerciseinfo/?language__code=en&limit=100&offset=0
- *   → JSON { count, next, previous, results: [ { id, category{id}, muscles[{id}], equipment[{id}],
- *                                                images[{image, is_main}], translations[{name, description, language}] } ] }
- *   Lấy hết các trang theo link "next". Chỉ ExerciseLibraryService gọi, tối đa 1 lần mỗi ngày.
+ * ============ HƯỚNG DẪN ĐỌC (hiểu cả file này trong 30 phút) ============
+ *
+ * 1) API NÀY LÀ GÌ?
+ *    wger cung cấp 1 API HTTP miễn phí. Mình gửi 1 request GET tới URL, wger trả về 1 chuỗi JSON.
+ *    URL dùng (xem FIRST_PAGE_URL bên dưới):
+ *      https://wger.de/api/v2/exerciseinfo/?format=json&language__code=en&limit=100&offset=0
+ *        └─────────────┘ └───────────────┘ └────────────────────────────────────┘
+ *           tên miền          endpoint                tham số lọc
+ *        · language__code=en  → chỉ lấy bài có bản DỊCH tiếng Anh (language = 2)
+ *        · limit=100          → mỗi trang tối đa 100 bài
+ *        · offset=0           → bắt đầu từ bài 0 (trang 2 dùng offset=100, ...)
+ *
+ * 2) JSON TRẢ VỀ CÓ DẠNG GÌ? (chỉ cần nhớ 2 khóa chính):
+ *    {
+ *      "count": 939,                  // tổng số bài
+ *      "next": "…&offset=100",        // link lấy trang kế tiếp; null = đã hết bài
+ *      "results": [ { …1 bài tập… } ] // danh sách bài của trang này
+ *    }
+ *
+ * 3) MỖI "BÀI TẬP" (1 phần tử trong results) chứa:
+ *    · id               → mã bài (lưu vào bảng Exercises.ExerciseId)
+ *    · category {id}    → nhóm cơ (8 Arms, 9 Legs, 10 Abs, 11 Chest, …)
+ *    · muscles [{id}]   → cơ chính (dịch tiếng Việt ở Service)
+ *    · equipment [{id}] → dụng cụ (dịch tiếng Việt ở Service)
+ *    · images [{image, is_main}] → ảnh minh họa (lấy ảnh is_main, hoặc ảnh đầu tiên)
+ *    · translations [{name, description, language}] → tên + mô tả theo từng ngôn ngữ;
+ *                                                       language = 2 là tiếng Anh
+ *
+ * 4) LUỒNG ĐỌC TRONG FILE NÀY (đọc theo thứ tự):
+ *    fetchAll()      → lặp qua các trang bằng link "next" tới khi hết
+ *        └─ get(url) → gửi 1 request GET, nhận chuỗi JSON
+ *        └─ parsePage(json, list) → tách "next" + gọi parseExercise cho từng bài
+ *              └─ parseExercise(node) → đọc tên Anh, mã, nhóm cơ, dụng cụ, ảnh, mô tả
+ *                    └─ pickImage(images)    → chọn ảnh chính (is_main) hoặc ảnh đầu
+ *                    └─ stripHtml(desc)      → bỏ thẻ HTML, chỉ giữ chữ thường
+ *
+ * Chỉ ExerciseLibraryService gọi fetchAll (tối đa 1 lần mỗi ngày — xem syncIfNeeded).
  */
 public class WgerClient {
 

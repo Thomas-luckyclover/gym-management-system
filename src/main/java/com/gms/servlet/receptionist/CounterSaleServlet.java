@@ -1,5 +1,6 @@
 package com.gms.servlet.receptionist;
 
+import com.gms.constant.Messages;
 import com.gms.constant.SessionKey;
 import com.gms.dto.CounterCheckoutInput;
 import com.gms.dto.CounterCustomerCreateInput;
@@ -150,7 +151,7 @@ public class CounterSaleServlet extends HttpServlet {
         boolean noPackage = packageId == null;
         boolean noCustomer = customerId == null;
         if (noPackage || noCustomer) {
-            RequestUtil.setFlashToast(request, "error", "Dữ liệu đơn hàng không hợp lệ.");
+            RequestUtil.setFlashToast(request, "error", Messages.MSG112_ORDER_DATA_INVALID);
             RequestUtil.redirect(request, response, PAGE_URL);
             return;
         }
@@ -396,6 +397,7 @@ public class CounterSaleServlet extends HttpServlet {
         String guardianName = RequestUtil.getTrimmedParam(request, "guardianName");
         String guardianRelationship = RequestUtil.getTrimmedParam(request, "guardianRelationship");
         String guardianPhone = RequestUtil.getTrimmedParam(request, "guardianPhone");
+        String email = RequestUtil.getTrimmedParam(request, "email");
 
         LocalDate dob = null;
         if (dobStr != null && !dobStr.isBlank()) {
@@ -409,10 +411,15 @@ public class CounterSaleServlet extends HttpServlet {
                 customerType,
                 guardianName,
                 guardianRelationship,
-                guardianPhone
+                guardianPhone,
+                email
         );
 
         ServiceResult<CounterCustomerRow> result = counterSaleService.quickCreateCustomer(accountId, input);
+        // Thành công: JS chuyển sang Bước 3 ngay → câu "đã gửi mật khẩu tạm tới ab***@…" hiện bằng toast ở trang kế tiếp.
+        if (result.isSuccess()) {
+            RequestUtil.setFlashToast(request, "success", result.getMessage());
+        }
         JsonUtil.writeJson(response, JsonResponse.from(result));
     }
 

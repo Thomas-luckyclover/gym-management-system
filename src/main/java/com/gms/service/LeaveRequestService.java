@@ -12,7 +12,7 @@ import com.gms.dto.LeaveRequestFilter;
 import com.gms.dto.LeaveRequestItemView;
 import com.gms.dto.LeaveRequestRow;
 import com.gms.dto.LeaveRequestGroupView;
-import com.gms.dto.LeaveReviewDetail;
+import com.gms.dto.LeaveReviewDetailView;
 import com.gms.dto.PageResult;
 import com.gms.dto.ServiceResult;
 import com.gms.entity.Account;
@@ -74,7 +74,7 @@ public class LeaveRequestService {
     public ServiceResult<PageResult<LeaveEmployeeView>> getEmployeePage(
             LeaveRequestFilter filter, Integer managerAccountId, int page, int pageSize) {
         if (hasReversedDateRange(filter)) {
-            return ServiceResult.fail("Từ ngày phải trước hoặc trùng Đến ngày.");
+            return ServiceResult.fail(Messages.MSG206_LEAVE_FILTER_DATE_ORDER);
         }
         try {
             // B1: lấy trang nhân viên; khi chọn ngày, SQL chỉ giữ người có đơn phù hợp.
@@ -122,7 +122,7 @@ public class LeaveRequestService {
     public ServiceResult<PageResult<LeaveRequestItemView>> getRequestPage(
             LeaveRequestFilter filter, Integer managerAccountId, int page, int pageSize) {
         if (hasReversedDateRange(filter)) {
-            return ServiceResult.fail("Từ ngày phải trước hoặc trùng Đến ngày.");
+            return ServiceResult.fail(Messages.MSG206_LEAVE_FILTER_DATE_ORDER);
         }
         try {
             // B1: phân trang theo đợt/đơn độc lập; số trên tab vẫn đếm từng đơn.
@@ -147,7 +147,7 @@ public class LeaveRequestService {
             for (LeaveRequestItemView item : items) {
                 LeaveRequestGroupView group = item.getLeaveGroup();
                 if (group != null && group.getRequests().size() > 1) {
-                    ServiceResult<List<LeaveReviewDetail>> parts = getReviewParts(item.getLeaveRequestId(), managerAccountId);
+                    ServiceResult<List<LeaveReviewDetailView>> parts = getReviewParts(item.getLeaveRequestId(), managerAccountId);
                     if (parts.isSuccess()) {
                         group.setReviewParts(parts.getData());
                     } else {
@@ -193,7 +193,7 @@ public class LeaveRequestService {
     /** Số đơn trên bốn tab, giữ các bộ lọc và bỏ riêng trạng thái đang chọn. */
     public ServiceResult<Map<String, Integer>> getStatusCounts(LeaveRequestFilter filter) {
         if (hasReversedDateRange(filter)) {
-            return ServiceResult.fail("Từ ngày phải trước hoặc trùng Đến ngày.");
+            return ServiceResult.fail(Messages.MSG206_LEAVE_FILTER_DATE_ORDER);
         }
         try {
             Map<String, Integer> counts = leaveRequestDAO.getStatusCounts(filter);
@@ -260,7 +260,12 @@ public class LeaveRequestService {
         return view;
     }
 
-    /** Mỗi đợt chỉ đọc một lần trên một trang; vẫn thấy phần nằm ngoài bộ lọc hoặc phân trang. */
+    /**
+     * Tải đầy đủ các đơn con trong cùng một đợt nghỉ (chung LeaveGroupId).
+     * - Dùng Map làm cache tạm để tránh gọi CSDL lặp lại nhiều lần trên cùng một trang.
+     * - Luôn đọc đủ cả 2 phần (ví dụ: phần Phép năm đã duyệt và phần Không lương đang chờ),
+     *   kể cả khi một trong hai phần không khớp với bộ lọc trạng thái hiện tại của danh sách.
+     */
     private LeaveRequestGroupView loadLeaveGroup(LeaveRequest request, Map<String, LeaveRequestGroupView> groups)
             throws SQLException {
         if (request.getLeaveGroupId() == null) {
@@ -326,7 +331,7 @@ public class LeaveRequestService {
      * @param leaveRequestId mã đơn
      * @return view đơn, hoặc thông báo lỗi nếu không tìm thấy / lỗi hệ thống
      */
-    public ServiceResult<LeaveReviewDetail> getReviewDetail(int leaveRequestId) {
+    public ServiceResult<LeaveReviewDetailView> getReviewDetail(int leaveRequestId) {
         return getReviewDetail(leaveRequestId, null);
     }
 
@@ -337,13 +342,13 @@ public class LeaveRequestService {
      * @param managerAccountId accountId của Manager đang xem (có thể null)
      * @return view đơn, hoặc thông báo lỗi nếu không tìm thấy / lỗi hệ thống
      */
-    public ServiceResult<LeaveReviewDetail> getReviewDetail(int leaveRequestId, Integer managerAccountId) {
+    public ServiceResult<LeaveReviewDetailView> getReviewDetail(int leaveRequestId, Integer managerAccountId) {
         if (leaveRequestId <= 0) {
             return ServiceResult.fail(String.format(Messages.MSG08_NOT_FOUND, "đơn nghỉ phép"));
         }
         try {
             Integer managerEmployeeId = findWorkingManagerId(managerAccountId);
-            LeaveReviewDetail detail = leaveRequestDAO.findReviewDetail(leaveRequestId, managerEmployeeId);
+            LeaveReviewDetailView detail = leaveRequestDAO.findReviewDetail(leaveRequestId, managerEmployeeId);
             if (detail == null) {
                 return ServiceResult.fail(String.format(Messages.MSG08_NOT_FOUND, "đơn nghỉ phép"));
             }
@@ -376,13 +381,13 @@ public class LeaveRequestService {
     }
 
     /** Nhóm mở rộng: đọc đầy đủ từng đơn cùng đợt, dùng lại kiểm tra của trang chi tiết. */
-    public ServiceResult<List<LeaveReviewDetail>> getReviewParts(int requestId, Integer managerAccountId) {
-        ServiceResult<LeaveReviewDetail> selected = getReviewDetail(requestId, managerAccountId);
+    public ServiceResult<List<LeaveReviewDetailView>> getReviewParts(int requestId, Integer managerAccountId) {
+        ServiceResult<LeaveReviewDetailView> selected = getReviewDetail(requestId, managerAccountId);
         if (!selected.isSuccess()) {
             return ServiceResult.fail(selected.getMessage());
         }
-        LeaveReviewDetail detail = selected.getData();
-        List<LeaveReviewDetail> parts = new ArrayList<>();
+        LeaveReviewDetailView detail = selected.getData();
+        List<LeaveReviewDetailView> parts = new ArrayList<>();
         if (detail.getLeaveGroup() == null) {
             parts.add(detail);
             return ServiceResult.ok(parts);
@@ -392,7 +397,7 @@ public class LeaveRequestService {
                 parts.add(detail);
                 continue;
             }
-            ServiceResult<LeaveReviewDetail> result = getReviewDetail(request.getLeaveRequestId(), managerAccountId);
+            ServiceResult<LeaveReviewDetailView> result = getReviewDetail(request.getLeaveRequestId(), managerAccountId);
             if (!result.isSuccess()) {
                 return ServiceResult.fail(result.getMessage());
             }
@@ -410,13 +415,13 @@ public class LeaveRequestService {
      */
     public ServiceResult<LeaveBulkApprovalResult> approveRequests(int managerAccountId, List<Integer> requestIds) {
         if (requestIds == null || requestIds.isEmpty() || requestIds.size() > 50) {
-            return ServiceResult.fail("Chọn từ 1 đến 50 đơn để duyệt.");
+            return ServiceResult.fail(Messages.MSG207_LEAVE_BULK_COUNT);
         }
         // B1: kiểm tra mã và bỏ mã trùng bằng danh sách thường; tối đa 50 phần tử.
         List<Integer> uniqueRequestIds = new ArrayList<>();
         for (Integer requestId : requestIds) {
             if (requestId == null || requestId <= 0) {
-                return ServiceResult.fail("Danh sách đơn không hợp lệ. Vui lòng tải lại trang.");
+                return ServiceResult.fail(Messages.MSG208_LEAVE_LIST_INVALID_RELOAD);
             }
             if (!uniqueRequestIds.contains(requestId)) {
                 uniqueRequestIds.add(requestId);
@@ -461,7 +466,7 @@ public class LeaveRequestService {
             // B1: lấy Manager từ tài khoản đăng nhập; không lấy EmployeeId từ form.
             Employee manager = findEmployeeForAccount(managerAccountId);
             if (!isWorkingManager(manager)) {
-                return ServiceResult.fail("Bạn không có quyền xử lý đơn nghỉ phép.");
+                return ServiceResult.fail(Messages.MSG209_LEAVE_NO_PERMISSION);
             }
 
             // B2: mở Transaction để đảm bảo duyệt đơn + ghi audit log + gửi thông báo diễn ra đồng thời
@@ -482,7 +487,7 @@ public class LeaveRequestService {
                     if (isLateApproval && !ValidationUtil.isLengthValid(lateApprovalReason, 5, 500)) {
                         connection.rollback();
                         return ServiceResult.failField("lateApprovalReason",
-                                "Duyệt muộn cần xác nhận nhân viên nghỉ đúng ngày/ca và nhập lý do từ 5 đến 500 ký tự.");
+                                Messages.MSG210_LEAVE_LATE_APPROVAL_RULE);
                     }
                     String position = leaveRequestDAO.findWorkingPosition(connection, request.getEmployeeId());
                     ServiceResult<Void> checks = validateApproval(connection, request, position);
@@ -496,7 +501,7 @@ public class LeaveRequestService {
                     if (!isApproved) {
                         // Nếu 0 dòng bị ảnh hưởng, có nghĩa người khác đã duyệt/từ chối đơn này trước đó
                         connection.rollback();
-                        return ServiceResult.fail("Đơn này đã được xử lý bởi người khác.");
+                        return ServiceResult.fail(Messages.MSG211_LEAVE_ALREADY_HANDLED);
                     }
 
                     // B2.3: ghi nhật ký kiểm toán (Audit Log)
@@ -554,13 +559,13 @@ public class LeaveRequestService {
             // B1: validate lý do từ chối 5–500 ký tự
             if (!ValidationUtil.isLengthValid(rejectReason, 5, 500)) {
                 return ServiceResult.failField(
-                        "rejectReason", "Lý do từ chối phải từ 5 đến 500 ký tự.");
+                        "rejectReason", Messages.MSG212_REJECT_REASON_LENGTH);
             }
 
             // B2: lấy Manager đang đăng nhập.
             Employee manager = findEmployeeForAccount(managerAccountId);
             if (!isWorkingManager(manager)) {
-                return ServiceResult.fail("Bạn không có quyền xử lý đơn nghỉ phép.");
+                return ServiceResult.fail(Messages.MSG209_LEAVE_NO_PERMISSION);
             }
 
             // B3: mở Transaction để từ chối + ghi audit log + gửi thông báo
@@ -580,7 +585,7 @@ public class LeaveRequestService {
                             connection, leaveRequestId, manager.getEmployeeId(), rejectReason);
                     if (!isRejected) {
                         connection.rollback();
-                        return ServiceResult.fail("Đơn này đã được xử lý bởi người khác.");
+                        return ServiceResult.fail(Messages.MSG211_LEAVE_ALREADY_HANDLED);
                     }
 
                     // B3.2: ghi nhật ký kiểm toán (Audit Log)
@@ -635,11 +640,11 @@ public class LeaveRequestService {
     private ServiceResult<LeaveRequest> validateDecision(Connection connection, int requestId, int managerEmployeeId)
             throws SQLException {
         if (!"Manager".equals(leaveRequestDAO.findWorkingPosition(connection, managerEmployeeId))) {
-            return ServiceResult.fail("Bạn không có quyền xử lý đơn nghỉ phép.");
+            return ServiceResult.fail(Messages.MSG209_LEAVE_NO_PERMISSION);
         }
         LeaveRequest current = leaveRequestDAO.findById(connection, requestId);
         if (current == null || !current.isPending()) {
-            return ServiceResult.fail("Đơn này đã thay đổi trạng thái. Vui lòng tải lại trang.");
+            return ServiceResult.fail(Messages.MSG213_LEAVE_STATUS_CHANGED_RELOAD);
         }
         return ServiceResult.ok(current);
     }

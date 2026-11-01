@@ -69,7 +69,7 @@ public class ContactChangeService {
             if (account != null) {
                 Person currentPerson = personDAO.findById(account.getPersonId());
                 if (currentPerson != null && trimmedEmail.equalsIgnoreCase(currentPerson.getEmail())) {
-                    return ServiceResult.failField("email", "Email mới phải khác email hiện tại.");
+                    return ServiceResult.failField("email", Messages.MSG304_NEW_EMAIL_SAME);
                 }
             }
 
@@ -119,7 +119,7 @@ public class ContactChangeService {
             if (account != null) {
                 Person currentPerson = personDAO.findById(account.getPersonId());
                 if (currentPerson != null && trimmedPhone.equals(currentPerson.getPhone())) {
-                    return ServiceResult.failField("phone", "Số điện thoại mới phải khác số điện thoại hiện tại.");
+                    return ServiceResult.failField("phone", Messages.MSG305_NEW_PHONE_SAME);
                 }
             }
 

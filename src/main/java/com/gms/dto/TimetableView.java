@@ -11,6 +11,9 @@ import java.util.List;
  *   Cột  = 7 ngày, Thứ 2 → Chủ nhật
  *   Ô    = các buổi bắt đầu trong khung đó của ngày đó (thường 0 hoặc 1 buổi)
  *
+ *   Ai tạo?   MyPtSessionService.getWeek — xếp các MyPtSessionRow (DAO đọc) vào 3 band Sáng/Chiều/Tối (bandOf).
+ *   Ai in?    my-pt-sessions.jsp khi view = week.
+ *
  * JSP đọc: ${timetable.days} cho tiêu đề cột, ${timetable.bands} → band.cells[i] → danh sách buổi.
  */
 public class TimetableView {

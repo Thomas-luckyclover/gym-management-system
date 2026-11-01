@@ -1,5 +1,6 @@
 package com.gms.service;
 
+import com.gms.constant.Messages;
 import com.gms.dao.NotificationDAO;
 import com.gms.dao.OrderDAO;
 import com.gms.dao.PackageDAO;
@@ -238,10 +239,8 @@ public class PaymentCallbackService {
                     notifyCustomer(
                             conn,
                             order,
-                            "Thanh toán chưa thành công",
-                            "Bạn có thể thanh toán lại đơn "
-                            + order.getOrderCode()
-                            + " khi đơn còn hạn.");
+                            Messages.MSG163_RESULT_FAILED_TITLE,
+                            String.format(Messages.MSG166_NOTIFY_PAYMENT_FAILED_RETRY, order.getOrderCode()));
 
                     conn.commit();
                     return reply("00", "Confirm Success");
@@ -516,21 +515,21 @@ public class PaymentCallbackService {
             int accountId, Map<String, String> params) {
 
         if (accountId <= 0) {
-            return ServiceResult.fail("Phiên đăng nhập không hợp lệ.");
+            return ServiceResult.fail(Messages.MSG153_SESSION_INVALID);
         }
 
         try {
             // B1: không tin dữ liệu chưa được kiểm chữ ký.
             if (!vnPayClient.verifySignature(params)) {
                 return ServiceResult.fail(
-                        "Không xác minh được dữ liệu trả về từ VNPay.");
+                        Messages.MSG154_VNPAY_SIGNATURE_INVALID);
             }
 
             String txnRef = parseTxnRef(params.get("vnp_TxnRef"));
 
             if (txnRef == null) {
                 return ServiceResult.fail(
-                        "Mã lần thanh toán không hợp lệ.");
+                        Messages.MSG155_PAYMENT_ATTEMPT_INVALID);
             }
 
             try (Connection conn = openConnection()) {
@@ -540,7 +539,7 @@ public class PaymentCallbackService {
 
                 if (payment == null || !payment.isOnlineGateway()) {
                     return ServiceResult.fail(
-                            "Không tìm thấy giao dịch.");
+                            Messages.MSG156_TRANSACTION_NOT_FOUND);
                 }
 
                 // B3: kiểm đơn thuộc khách đang đăng nhập.
@@ -549,7 +548,7 @@ public class PaymentCallbackService {
 
                 if (order == null) {
                     return ServiceResult.fail(
-                            "Không tìm thấy đơn hàng của bạn.");
+                            Messages.MSG143_ORDER_NOT_FOUND);
                 }
 
                 return ServiceResult.ok(payment.getTransactionId());
@@ -557,7 +556,7 @@ public class PaymentCallbackService {
 
         } catch (SQLException | RuntimeException e) {
             return ServiceResult.fail(
-                    "Chưa đọc được kết quả thanh toán. Vui lòng thử lại.");
+                    Messages.MSG157_PAYMENT_RESULT_UNREADABLE);
         }
     }
 
@@ -572,7 +571,7 @@ public class PaymentCallbackService {
                 || transactionId == null
                 || transactionId <= 0) {
 
-            return ServiceResult.fail("Mã giao dịch không hợp lệ.");
+            return ServiceResult.fail(Messages.MSG158_TRANSACTION_ID_INVALID);
         }
 
         try (Connection conn = openConnection()) {
@@ -581,7 +580,7 @@ public class PaymentCallbackService {
                     = transactionDAO.findById(conn, transactionId, false);
 
             if (payment == null || !payment.isOnlineGateway()) {
-                return ServiceResult.fail("Không tìm thấy giao dịch.");
+                return ServiceResult.fail(Messages.MSG156_TRANSACTION_NOT_FOUND);
             }
 
             Order order = orderDAO.findOnlineByIdAndAccount(
@@ -589,16 +588,15 @@ public class PaymentCallbackService {
 
             if (order == null) {
                 return ServiceResult.fail(
-                        "Không tìm thấy đơn hàng của bạn.");
+                        Messages.MSG143_ORDER_NOT_FOUND);
             }
 
             // B2: hiển thị theo dữ liệu đã được ghi trong DB.
             if (payment.isNeedsRefund()) {
                 return ServiceResult.ok(new PaymentResultView(
                         order,
-                        "Giao dịch cần đối soát",
-                        "Giao dịch đã được đánh dấu cần hoàn tiền. "
-                        + "Vui lòng liên hệ lễ tân.",
+                        Messages.MSG159_RESULT_NEEDS_RECONCILE_TITLE,
+                        Messages.MSG160_RESULT_NEEDS_RECONCILE_TEXT,
                         false,
                         false,
                         false));
@@ -619,8 +617,8 @@ public class PaymentCallbackService {
             if (order.isCancelled()) {
                 return ServiceResult.ok(new PaymentResultView(
                         order,
-                        "Đơn hàng đã hủy",
-                        "Bạn có thể quay lại chọn gói để tạo đơn mới.",
+                        Messages.MSG161_RESULT_CANCELLED_TITLE,
+                        Messages.MSG162_RESULT_CANCELLED_TEXT,
                         false,
                         false,
                         false));
@@ -635,10 +633,10 @@ public class PaymentCallbackService {
 
                 return ServiceResult.ok(new PaymentResultView(
                         order,
-                        "Thanh toán chưa thành công",
+                        Messages.MSG163_RESULT_FAILED_TITLE,
                         retryable
-                                ? "Bạn có thể thanh toán lại khi đơn còn hạn."
-                                : "Đơn hiện không được thanh toán lại.",
+                                ? Messages.MSG164_RESULT_FAILED_RETRY
+                                : Messages.MSG165_RESULT_FAILED_NO_RETRY,
                         false,
                         false,
                         retryable));
@@ -647,16 +645,15 @@ public class PaymentCallbackService {
             // Return có thể đến trước IPN; chưa có xác nhận thì chưa báo Paid.
             return ServiceResult.ok(new PaymentResultView(
                     order,
-                    "Đang chờ xác nhận thanh toán",
-                    "Hệ thống đang tự xác minh kết quả với VNPay. "
-                    + "Trang sẽ tự cập nhật.",
+                    Messages.MSG167_RESULT_PENDING_TITLE,
+                    Messages.MSG168_RESULT_PENDING_TEXT,
                     false,
                     true,
                     false));
 
         } catch (SQLException | RuntimeException e) {
             return ServiceResult.fail(
-                    "Chưa đọc được kết quả thanh toán. Vui lòng thử lại.");
+                    Messages.MSG157_PAYMENT_RESULT_UNREADABLE);
         }
     }
 

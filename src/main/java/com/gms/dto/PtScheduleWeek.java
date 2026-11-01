@@ -1,5 +1,7 @@
 package com.gms.dto;
 
+import com.gms.constant.AppConstants;
+
 import java.time.LocalDate;
 import java.util.List;
 
@@ -52,6 +54,13 @@ public class PtScheduleWeek {
 
     public int getAxisEndHour() { return axisEndHour; }
     public void setAxisEndHour(int axisEndHour) { this.axisEndHour = axisEndHour; }
+
+    /**
+     * Giờ chia ca sáng / ca chiều = AppConstants.AFTERNOON_SHIFT_START (13). Không lưu field: mốc cố định của hệ thống.
+     * JSP dùng 2 chỗ: vạch "Ca chiều" trên lưới tuần (--shift-split = giờ này − axisStartHour)
+     * và dòng ngăn "Ca sáng / Ca chiều" ở kiểu danh sách.
+     */
+    public int getShiftSplitHour() { return AppConstants.AFTERNOON_SHIFT_START.getHour(); }
 
     public int getSessionMinutes() { return sessionMinutes; }
     public void setSessionMinutes(int sessionMinutes) { this.sessionMinutes = sessionMinutes; }

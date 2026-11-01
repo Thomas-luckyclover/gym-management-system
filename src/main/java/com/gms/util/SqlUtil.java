@@ -37,6 +37,7 @@ public final class SqlUtil {
             boolean isSpecial = character == '%' || character == '_' || character == '[' || character == ESCAPE_CHAR;
             if (isSpecial) {
                 pattern.append(ESCAPE_CHAR);
+                //tự động chèn "//" để escape ký tự đặc biệt trong LIKE
             }
             pattern.append(character);
         }

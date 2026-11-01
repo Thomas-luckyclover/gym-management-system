@@ -186,7 +186,7 @@ public class StaffLeaveService {
         }
 
         if (!ValidationUtil.isLengthValid(reason, 5, 500)) {
-            return ServiceResult.failField("reason", "Lý do nghỉ phải từ 5 đến 500 ký tự.");
+            return ServiceResult.failField("reason", Messages.MSG189_LEAVE_REASON_LENGTH);
         }
 
         try {
@@ -219,16 +219,16 @@ public class StaffLeaveService {
                     String currentPosition = leaveRequestDAO.findWorkingPosition(connection, employee.getEmployeeId());
                     if (!employee.getPosition().getDbValue().equals(currentPosition)) {
                         connection.rollback();
-                        return ServiceResult.fail("Thông tin nhân viên đã thay đổi. Vui lòng đăng nhập lại.");
+                        return ServiceResult.fail(Messages.MSG190_STAFF_INFO_CHANGED_RELOGIN);
                     }
                     if (leaveRequestDAO.hasConflictingLeave(connection, employee.getEmployeeId(), leaveDate, toDate, shiftType.getDbValue())) {
                         connection.rollback();
-                        return ServiceResult.fail("Bạn đã có đơn nghỉ trùng ngày và ca này.");
+                        return ServiceResult.fail(Messages.MSG191_LEAVE_DUPLICATE);
                     }
                     // B4: khóa chung với duyệt/rút đơn, kiểm tra lại quỹ và lịch trong cùng transaction.
                     if (DateTimeUtil.now().isAfter(deadline)) {
                         connection.rollback();
-                        return ServiceResult.fail("Đã quá hạn gửi đơn. Vui lòng báo quản lý.");
+                        return ServiceResult.fail(Messages.MSG192_LEAVE_TOO_LATE_ASK_MANAGER);
                     }
                     int conflicts = countSessionConflicts(connection, employee, leaveDate, toDate, shiftType);
                     if (conflicts > 0) {
@@ -238,12 +238,12 @@ public class StaffLeaveService {
                     LeaveSubmissionPreview plan = calculateSubmission(connection, employee, leaveType, leaveDate, toDate, null);
                     if (plan.isNeedsUnpaidConsent() && !acceptUnpaid) {
                         connection.rollback();
-                        return ServiceResult.failField("acceptUnpaid", "Không đủ phép năm. Xem phương án chuyển phần vượt sang không lương và xác nhận trước khi gửi.");
+                        return ServiceResult.failField("acceptUnpaid", Messages.MSG193_LEAVE_ANNUAL_NOT_ENOUGH);
                     }
                     if (acceptUnpaid && leaveType == LeaveRequest.LeaveType.ANNUAL
                             && (expectedAnnualDays != plan.getAnnualDays() || expectedUnpaidDays != plan.getUnpaidDays())) {
                         connection.rollback();
-                        return ServiceResult.failField("acceptUnpaid", "Quỹ phép đã thay đổi. Vui lòng xem lại số ngày và xác nhận phương án mới.");
+                        return ServiceResult.failField("acceptUnpaid", Messages.MSG194_LEAVE_QUOTA_CHANGED);
                     }
 
                     // B5: tạo một hoặc hai phần, sau đó lưu và ghi audit bằng cùng Connection.
@@ -267,7 +267,7 @@ public class StaffLeaveService {
             }
 
         } catch (IllegalStateException e) {
-            return ServiceResult.fail("Chưa cấu hình quỹ phép năm. Vui lòng liên hệ quản lý.");
+            return ServiceResult.fail(Messages.MSG195_LEAVE_QUOTA_NOT_CONFIGURED);
         } catch (SQLException e) {
             e.printStackTrace();
             return ServiceResult.fail(Messages.MSG04_SYSTEM_BUSY);
@@ -284,7 +284,7 @@ public class StaffLeaveService {
         try {
             Employee employee = findEmployeeForAccount(accountId);
             if (employee == null) {
-                return ServiceResult.fail("Không tìm thấy nhân viên đang làm việc.");
+                return ServiceResult.fail(Messages.MSG196_WORKING_EMPLOYEE_NOT_FOUND);
             }
             StaffingPreview staffing = loadStaffingPreview(employee, fromDate, toDate, shiftType.getDbValue());
             try (Connection connection = DBContext.getConnection()) {
@@ -294,7 +294,7 @@ public class StaffLeaveService {
                         plan.getRemainingAnnualDays(), plan.isNeedsUnpaidConsent(), conflicts, staffing));
             }
         } catch (IllegalStateException e) {
-            return ServiceResult.fail("Chưa cấu hình quỹ phép năm. Vui lòng liên hệ quản lý.");
+            return ServiceResult.fail(Messages.MSG195_LEAVE_QUOTA_NOT_CONFIGURED);
         } catch (SQLException e) {
             e.printStackTrace();
             return ServiceResult.fail(Messages.MSG04_SYSTEM_BUSY);
@@ -396,31 +396,31 @@ public class StaffLeaveService {
             LocalDate toDate, LeaveRequest.ShiftType shiftType) {
         // B1: validate dữ liệu đầu vào cơ bản
         if (leaveType == null) {
-            return ServiceResult.failField("leaveType", "Vui lòng chọn loại nghỉ.");
+            return ServiceResult.failField("leaveType", Messages.MSG197_LEAVE_TYPE_REQUIRED);
         }
         // Đơn mới chỉ nhận phép năm hoặc không lương; Sick chỉ giữ để đọc đơn cũ.
         if (leaveType != LeaveRequest.LeaveType.ANNUAL && leaveType != LeaveRequest.LeaveType.UNPAID) {
-            return ServiceResult.failField("leaveType", "Chỉ hỗ trợ nghỉ phép năm hoặc nghỉ không lương.");
+            return ServiceResult.failField("leaveType", Messages.MSG198_LEAVE_TYPE_UNSUPPORTED);
         }
         if (shiftType == null) {
-            return ServiceResult.failField("shiftType", "Vui lòng chọn ca nghỉ.");
+            return ServiceResult.failField("shiftType", Messages.MSG199_LEAVE_SHIFT_REQUIRED);
         }
         if (leaveDate == null) {
-            return ServiceResult.failField("leaveDate", "Vui lòng chọn ngày nghỉ.");
+            return ServiceResult.failField("leaveDate", Messages.MSG200_LEAVE_DATE_REQUIRED);
         }
 
         if (toDate == null || toDate.isBefore(leaveDate)
                 || ChronoUnit.DAYS.between(leaveDate, toDate) >= 31
                 || leaveDate.getYear() != toDate.getYear()) {
-            return ServiceResult.failField("toDate", "Chọn ngày kết thúc từ ngày bắt đầu, tối đa 31 ngày trong cùng năm.");
+            return ServiceResult.failField("toDate", Messages.MSG201_LEAVE_RANGE_RULE);
         }
         if (!leaveDate.equals(toDate) && shiftType != LeaveRequest.ShiftType.FULL_DAY) {
-            return ServiceResult.failField("shiftType", "Đơn nhiều ngày phải chọn Cả ngày.");
+            return ServiceResult.failField("shiftType", Messages.MSG202_LEAVE_MULTI_DAY_FULL_DAY);
         }
 
         LocalDate today = DateTimeUtil.today();
         if (!leaveDate.isAfter(today)) {
-            return ServiceResult.failField("leaveDate", "Ngày nghỉ phải sau ngày hôm nay.");
+            return ServiceResult.failField("leaveDate", Messages.MSG203_LEAVE_DATE_AFTER_TODAY);
         }
 
         return ServiceResult.ok(null);
@@ -435,7 +435,7 @@ public class StaffLeaveService {
      */
     public ServiceResult<Void> withdrawRequest(int accountId, int leaveRequestId) {
         if (leaveRequestId <= 0) {
-            return ServiceResult.fail("Mã đơn không hợp lệ.");
+            return ServiceResult.fail(Messages.MSG204_LEAVE_ID_INVALID);
         }
 
         try {
@@ -453,7 +453,7 @@ public class StaffLeaveService {
                     boolean isDeleted = leaveRequestDAO.withdraw(connection, leaveRequestId, employee.getEmployeeId());
                     if (!isDeleted) {
                         connection.rollback();
-                        return ServiceResult.fail("Không thể rút đơn (đơn không tồn tại, đã được xử lý hoặc không phải của bạn).");
+                        return ServiceResult.fail(Messages.MSG205_LEAVE_WITHDRAW_FAILED);
                     }
 
                     // B2.1: ghi Audit Log ghi nhận nhân viên tự rút đơn

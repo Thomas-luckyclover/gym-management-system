@@ -155,11 +155,11 @@ public class PtSessionHandleService {
             LocalDateTime now) {
         Integer slotId = parseSlotId(slotIdText);
         if (slotId == null) {
-            return ServiceResult.fail("Chọn một khung giờ mới cho buổi này.");
+            return ServiceResult.fail(Messages.MSG313_PT_NEW_SLOT_REQUIRED);
         }
         String note = trimToNull(reason);
         if (note != null && note.length() > REASON_MAX) {
-            return ServiceResult.fail("Ghi chú tối đa " + REASON_MAX + " ký tự.");
+            return ServiceResult.fail(String.format(Messages.MSG314_NOTE_MAX_LENGTH, REASON_MAX));
         }
 
         return inTransaction(connection -> {
@@ -182,7 +182,7 @@ public class PtSessionHandleService {
                     + (note == null ? "" : " Ghi chú: " + note);
             notify(connection, handleDAO.findCustomerAccounts(connection, session), "PT dời buổi tập", content);
 
-            return ServiceResult.ok(target.getSlotDate(), "Đã dời buổi sang " + newTime + ".");
+            return ServiceResult.ok(target.getSlotDate(), String.format(Messages.MSG315_PT_SESSION_MOVED, newTime));
         });
     }
 
@@ -193,7 +193,7 @@ public class PtSessionHandleService {
     public ServiceResult<LocalDate> transfer(int accountId, int sessionId, String slotIdText, LocalDateTime now) {
         Integer slotId = parseSlotId(slotIdText);
         if (slotId == null) {
-            return ServiceResult.fail("Chọn PT nhận buổi này.");
+            return ServiceResult.fail(Messages.MSG316_PT_TARGET_REQUIRED);
         }
 
         return inTransaction(connection -> {
@@ -226,7 +226,7 @@ public class PtSessionHandleService {
                         session.getPtName() + " chuyển cho bạn buổi " + when + " với khách " + session.getCustomerNames() + ".");
             }
 
-            return ServiceResult.ok(session.getSlotDate(), "Đã chuyển buổi " + when + " cho " + target.getPtName() + ".");
+            return ServiceResult.ok(session.getSlotDate(), String.format(Messages.MSG317_PT_SESSION_TRANSFERRED, when, target.getPtName()));
         });
     }
 
@@ -259,7 +259,7 @@ public class PtSessionHandleService {
                     "Buổi PT " + when + " đã bị " + session.getPtName() + " hủy. Lý do: " + withoutEndDot(note)
                             + ". Khoản hoàn tiền mặt thực hiện như bạn đã thỏa thuận với PT.");
 
-            return ServiceResult.ok(session.getSlotDate(), "Đã hủy buổi " + when + ".");
+            return ServiceResult.ok(session.getSlotDate(), String.format(Messages.MSG318_PT_SESSION_CANCELLED, when));
         });
     }
 

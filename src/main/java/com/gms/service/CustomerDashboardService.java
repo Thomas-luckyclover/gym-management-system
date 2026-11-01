@@ -43,6 +43,14 @@ import java.util.Set;
  * - Banner cảnh báo (5 loại — [CHỐT-D1])
  *
  * @author Nguyen Tuan Minh
+ *
+ * ❓ VẤN ĐÁP (mỗi câu kèm luồng file để mở theo khi trả lời):
+ *   1) Dashboard khách hiển thị gì? → hồ sơ (tên/mã/avatar), "vào phòng tập được không" (canUseGym), gói tập đang dùng, 5 buổi PT sắp tới, banner cảnh báo.
+ *      File: servlet/customer/CustomerDashboardServlet.java → service/CustomerDashboardService.java → dao/CustomerDashboardDAO.java → WEB-INF/jsp/customer/dashboard.jsp.
+ *   2) canUseGym tính thế nào? → CustomerDashboardDAO.canUseGymToday: có Membership/DayPass Active phủ hôm nay và không bảo lưu.
+ *      File: service/CustomerDashboardService.java → dao/CustomerDashboardDAO.java (canUseGymToday).
+ *   3) Dashboard có tự đổi trạng thái gói không? → KHÔNG (GBR-14, chỉ đọc): hết hạn / bảo lưu / tự đóng buổi là việc của JOB-01…04.
+ *      File: dao/CustomerDashboardDAO.java (chỉ SELECT) — việc đổi trạng thái nằm ở job/*.java (JOB-01…04).
  */
 public class CustomerDashboardService {
 
@@ -113,6 +121,9 @@ public class CustomerDashboardService {
                 }
             }
 
+            // Chỉ chuẩn bị nhãn giao diện theo ngày hiệu lực; JOB vẫn chịu trách nhiệm ghi trạng thái DB.
+            prepareSubscriptionPresentation(subscriptions, now.toLocalDate());
+
             // B4: buổi PT sắp tới
             List<UpcomingSessionRow> upcomingSessions = dashboardDAO.findUpcomingSessions(customerId, now);
 
@@ -153,6 +164,19 @@ public class CustomerDashboardService {
                     unreadCount,
                     membershipCardState);
 
+            List<SubscriptionRow> visibleSubscriptions = new ArrayList<>();
+            for (SubscriptionRow subscription : subscriptions) {
+                if (!subscription.isExpiredForDisplay()) {
+                    visibleSubscriptions.add(subscription);
+                }
+            }
+            view.setVisibleSubscriptions(visibleSubscriptions);
+
+            // Lịch 7 ngày độc lập với TOP 5 buổi sắp tới; mỗi ngày có danh sách riêng, kể cả ngày trống.
+            List<UpcomingSessionRow> weekSessions = dashboardDAO.findWeekSessions(customerId, now);
+            view.setScheduleDays(buildScheduleDays(now.toLocalDate(), weekSessions));
+            view.setTrainers(groupTrainerPackages(dashboardDAO.findTrainers(customerId), subscriptions));
+
             // Thẻ Gói tập: hiện ô "Đổi ngày" nếu gói còn đổi được. Lỗi ở đây chỉ ẩn ô, không hỏng Dashboard.
             SubscriptionRow activeMembership = view.getActiveMembership();
             if (activeMembership != null && "Membership".equals(activeMembership.getSubscriptionType())) {
@@ -172,6 +196,71 @@ public class CustomerDashboardService {
             e.printStackTrace();
             return ServiceResult.fail(Messages.MSG04_SYSTEM_BUSY);
         }
+    }
+
+    /** Gom một thẻ cho mỗi PT; gắn đúng gói theo ID, không ghép theo tên người có thể trùng. */
+    List<CustomerDashboardView.TrainerContact> groupTrainerPackages(
+            List<CustomerDashboardView.TrainerContact> trainerRows, List<SubscriptionRow> subscriptions) {
+        List<CustomerDashboardView.TrainerContact> trainers = new ArrayList<>();
+        for (CustomerDashboardView.TrainerContact trainerRow : trainerRows) {
+            CustomerDashboardView.TrainerContact selectedTrainer = null;
+            for (CustomerDashboardView.TrainerContact trainer : trainers) {
+                if (trainer.getEmployeeId() == trainerRow.getEmployeeId()) {
+                    selectedTrainer = trainer;
+                    break;
+                }
+            }
+            if (selectedTrainer == null) {
+                selectedTrainer = trainerRow;
+                trainers.add(selectedTrainer);
+            }
+            for (SubscriptionRow subscription : subscriptions) {
+                if (subscription.getSubscriptionId() == trainerRow.getSubscriptionId()
+                        && !subscription.isExpiredForDisplay()) {
+                    selectedTrainer.getPackages().add(subscription);
+                    break;
+                }
+            }
+        }
+        // Không còn gói hiệu lực thì không hiện PT như đang phụ trách hội viên.
+        List<CustomerDashboardView.TrainerContact> activeTrainers = new ArrayList<>();
+        for (CustomerDashboardView.TrainerContact trainer : trainers) {
+            if (!trainer.getPackages().isEmpty()) {
+                activeTrainers.add(trainer);
+            }
+        }
+        return activeTrainers;
+    }
+
+    /** Giữ nguyên trạng thái DB, tách nhãn hiển thị nếu ngày thực tế đã qua hoặc chưa bắt đầu. */
+    void prepareSubscriptionPresentation(List<SubscriptionRow> subscriptions, LocalDate today) {
+        for (SubscriptionRow subscription : subscriptions) {
+            String displayStatus = subscription.getStatus();
+            boolean isRunning = "Active".equals(displayStatus) || "Frozen".equals(displayStatus)
+                    || "Pending".equals(displayStatus);
+            if (isRunning && subscription.getEndDate() != null && subscription.getEndDate().isBefore(today)) {
+                displayStatus = "Expired";
+            } else if (isRunning && subscription.getStartDate() != null && subscription.getStartDate().isAfter(today)) {
+                displayStatus = "Pending";
+            }
+            subscription.setDisplayStatus(displayStatus);
+        }
+    }
+
+    /** Service tạo 7 nhóm ngày; JSP chỉ đọc, không tự lọc buổi hoặc gọi database. */
+    List<CustomerDashboardView.ScheduleDay> buildScheduleDays(LocalDate today, List<UpcomingSessionRow> weekSessions) {
+        List<CustomerDashboardView.ScheduleDay> scheduleDays = new ArrayList<>();
+        for (int dayIndex = 0; dayIndex < 7; dayIndex++) {
+            LocalDate date = today.plusDays(dayIndex);
+            List<UpcomingSessionRow> sessionsOfDay = new ArrayList<>();
+            for (UpcomingSessionRow session : weekSessions) {
+                if (date.equals(session.getSlotDate())) {
+                    sessionsOfDay.add(session);
+                }
+            }
+            scheduleDays.add(new CustomerDashboardView.ScheduleDay(date, dayIndex == 0, sessionsOfDay));
+        }
+        return scheduleDays;
     }
 
     // ===== Trạng thái thẻ gói tập =====
@@ -200,9 +289,9 @@ public class CustomerDashboardService {
             }
             if (sub.isPending()) {
                 hasNext = true;
-            } else if ("Active".equals(sub.getStatus()) || "Frozen".equals(sub.getStatus())) {
+            } else if ("Active".equals(sub.getDisplayStatus()) || "Frozen".equals(sub.getDisplayStatus())) {
                 current = sub;
-            } else if ("Expired".equals(sub.getStatus())) {
+            } else if ("Expired".equals(sub.getDisplayStatus())) {
                 hasExpired = true;
             }
         }

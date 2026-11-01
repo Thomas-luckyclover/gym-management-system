@@ -109,7 +109,7 @@ public class BodyStatsService {
         try {
             day = LocalDate.parse(dateText == null ? "" : dateText.trim());
         } catch (DateTimeException exception) {
-            return ServiceResult.fail("Chọn ngày đo.");
+            return ServiceResult.fail(Messages.MSG299_MEASUREMENT_DATE_REQUIRED);
         }
         BigDecimal weight = parseNumber(weightText);
         BigDecimal height = parseNumber(heightText);
@@ -129,8 +129,8 @@ public class BodyStatsService {
                 return ServiceResult.fail(Messages.MSG07_NO_PERMISSION);
             }
             statsDAO.save(customerId, day, weight, height, fat, muscle, waist, note);
-            return ServiceResult.ok(null, "Đã lưu lần đo ngày " + DateTimeUtil.formatDate(day)
-                    + " · BMI " + format(bmi(weight, height)) + ".");
+            return ServiceResult.ok(null, String.format(Messages.MSG300_MEASUREMENT_SAVED, DateTimeUtil.formatDate(day),
+                    format(bmi(weight, height))));
         } catch (SQLException exception) {
             exception.printStackTrace();
             return ServiceResult.fail(Messages.MSG04_SYSTEM_BUSY);
@@ -145,9 +145,9 @@ public class BodyStatsService {
                 return ServiceResult.fail(Messages.MSG07_NO_PERMISSION);
             }
             if (!statsDAO.delete(customerId, measurementId)) {
-                return ServiceResult.fail("Không tìm thấy lần đo này.");
+                return ServiceResult.fail(Messages.MSG298_MEASUREMENT_NOT_FOUND);
             }
-            return ServiceResult.ok(null, "Đã xóa lần đo.");
+            return ServiceResult.ok(null, Messages.MSG301_MEASUREMENT_DELETED);
         } catch (SQLException exception) {
             exception.printStackTrace();
             return ServiceResult.fail(Messages.MSG04_SYSTEM_BUSY);
@@ -351,7 +351,7 @@ public class BodyStatsService {
             return "Vòng eo phải từ 40 đến 200 cm (bỏ trống nếu không đo).";
         }
         if (note != null && note.length() > 200) {
-            return "Ghi chú tối đa 200 ký tự.";
+            return String.format(Messages.MSG314_NOTE_MAX_LENGTH, 200);
         }
         return null;
     }

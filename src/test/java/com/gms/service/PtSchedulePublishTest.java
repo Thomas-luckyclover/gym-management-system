@@ -87,7 +87,7 @@ class PtSchedulePublishTest {
         leave.setShiftType("Morning");
         leave.setStatus(status);
         assertThrows(IllegalArgumentException.class, () -> validate(drafts("08:00"), List.of(), List.of(leave), List.of(), NOW));
-        assertDoesNotThrow(() -> validate(drafts("12:00"), List.of(), List.of(leave), List.of(), NOW));
+        assertDoesNotThrow(() -> validate(drafts("13:00"), List.of(), List.of(leave), List.of(), NOW));
         leave.setStatus("Rejected");
         assertDoesNotThrow(() -> validate(drafts("08:00"), List.of(), List.of(leave), List.of(), NOW));
     }

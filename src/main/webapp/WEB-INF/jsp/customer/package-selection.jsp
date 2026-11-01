@@ -25,13 +25,11 @@
 
                                 <div class="main">
 
-                                    <%--=====Thanh trên cùng (dashboard: thông tin khách, do Servlet lấy từ
-                                        CustomerDashboardService)=====--%>
-                                        <header class="topbar">
-                                            <div class="tb-left">
-                                                <h1 class="tb-title">Mua gói</h1>
-                                                <p class="tb-subtitle">Chọn gói tập hoặc vé ngày, giá đã gồm VAT.</p>
-                                            </div>
+                    <div class="top-right">
+                        <%@ include file="/WEB-INF/jsp/common/notification-bell.jspf" %>
+                        <%@ include file="/WEB-INF/jsp/common/topbar-user.jspf" %>
+                    </div>
+                </header>
 
                                             <c:if test="${not empty dashboard}">
                                                 <div class="top-right">

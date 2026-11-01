@@ -7,7 +7,7 @@
 <head>
   <%@ include file="/WEB-INF/jsp/common/head.jspf" %>
   <title>Yêu cầu bảo trì · Super Gym Lễ tân</title>
-  <link rel="stylesheet" href="${pageContext.request.contextPath}/css/pages/receptionist/maintenance-requests.css?v=20261023fix1">
+  <link rel="stylesheet" href="${pageContext.request.contextPath}/css/pages/receptionist/maintenance-requests.css?v=20261031spacing1">
 
 </head>
 
@@ -36,7 +36,7 @@
         </div>
       </header>
 
-      <main class="content" id="main-content" tabindex="-1">
+      <main class="content maintenance-receptionist-content" id="main-content" tabindex="-1">
 
         <%-- ===== Thống kê trạng thái ===== --%>
         <div class="maintenance-stats">
@@ -98,21 +98,15 @@
                 method="get"
                 class="maintenance-filter">
 
+            <c:if test="${not empty statusFilter}">
+              <input type="hidden" name="status" value="<c:out value='${statusFilter}' />">
+            </c:if>
+
             <input type="search"
                    name="keyword"
                    maxlength="100"
                    value="<c:out value='${keyword}' />"
                    placeholder="Mã yêu cầu hoặc tên thiết bị">
-
-            <select name="status">
-              <option value="">Tất cả trạng thái</option>
-              <c:forEach var="status" items="${statusOptions}">
-                <option value="${status.dbValue}"
-                        <c:if test="${statusFilter == status.dbValue}">selected</c:if>>
-                  <c:out value="${status.displayName}" />
-                </option>
-              </c:forEach>
-            </select>
 
             <select name="priority">
               <option value="">Tất cả mức ưu tiên</option>
@@ -165,12 +159,19 @@
                           </c:choose>
                         </strong>
 
-                        <span class="badge
-                          ${item.request.open ? 'badge-warning' :
-                            item.request.inProgress ? 'badge-info' :
-                            item.request.closed ? 'badge-success' : 'badge-neutral'}">
-                          <c:out value="${item.request.status.displayName}" />
-                        </span>
+                        <div class="maintenance-badges-group">
+                          <c:if test="${item.request.warningTagPlaced}">
+                            <span class="badge badge-danger">
+                              <i class="fa-solid fa-triangle-exclamation"></i> Đã đặt cảnh báo
+                            </span>
+                          </c:if>
+                          <span class="badge
+                            ${item.request.open ? 'badge-warning' :
+                              item.request.inProgress ? 'badge-info' :
+                              item.request.closed ? 'badge-success' : 'badge-neutral'}">
+                            <c:out value="${item.request.status.displayName}" />
+                          </span>
+                        </div>
                       </div>
 
                       <div class="maintenance-meta">
@@ -193,23 +194,35 @@
                         </span>
 
                         <span>
-                          Phát hiện: <b><c:out value="${item.request.detectedBy.displayName}" /></b>
-                        </span>
-
-                        <span>
                           Người báo: <b><c:out value="${item.reporterName}" /></b>
                         </span>
-
-                        <c:if test="${item.request.warningTagPlaced}">
-                          <span class="badge badge-danger">
-                            Đã đặt cảnh báo
-                          </span>
-                        </c:if>
                       </div>
 
-                      <p class="maintenance-description">
-                        <c:out value="${item.request.description}" />
-                      </p>
+                      <div class="maintenance-body-row">
+                        <div class="maintenance-desc-col">
+                          <p class="maintenance-description">
+                            <c:out value="${item.request.description}" />
+                          </p>
+                        </div>
+
+                        <c:if test="${not empty item.request.attachedImages}">
+                          <div class="maintenance-image-col">
+                            <a href="${pageContext.request.contextPath}${item.request.attachedImages}"
+                               class="maintenance-image-thumb-card image-lightbox-trigger"
+                               data-lightbox-image="${pageContext.request.contextPath}${item.request.attachedImages}"
+                               data-lightbox-title="Ảnh sự cố máy ${item.itemCode} (${item.request.requestCode})"
+                               title="Bấm để xem ảnh phóng to ngay trên trang">
+                              <img src="${pageContext.request.contextPath}${item.request.attachedImages}"
+                                   alt="Ảnh sự cố thực tế ${item.itemCode}"
+                                   class="maintenance-thumbnail-img"
+                                   onerror="this.onerror=null; this.closest('.maintenance-image-col').style.display='none';">
+                              <span class="maintenance-thumbnail-caption">
+                                <i class="fa-solid fa-magnifying-glass-plus" aria-hidden="true"></i> Xem ảnh
+                              </span>
+                            </a>
+                          </div>
+                        </c:if>
+                      </div>
 
                       <div class="maintenance-progress">
                         <c:choose>
@@ -311,44 +324,58 @@
           <c:if test="${requestPage.totalPages > 1}">
             <div class="maintenance-pager">
 
-              <c:if test="${requestPage.hasPrevious}">
-                <c:url var="previousUrl"
-                       value="/receptionist/maintenance-requests">
-                  <c:param name="page" value="${requestPage.pageNumber - 1}" />
-                  <c:param name="pageSize" value="${requestPage.pageSize}" />
-                  <c:param name="keyword" value="${keyword}" />
-                  <c:param name="status" value="${statusFilter}" />
-                  <c:param name="priority" value="${priorityFilter}" />
-                  <c:param name="reportedDate" value="${reportedDateFilter}" />
-                </c:url>
+              <c:choose>
+                <c:when test="${requestPage.hasPrevious}">
+                  <c:url var="previousUrl"
+                         value="/receptionist/maintenance-requests">
+                    <c:param name="page" value="${requestPage.pageNumber - 1}" />
+                    <c:param name="pageSize" value="${requestPage.pageSize}" />
+                    <c:param name="keyword" value="${keyword}" />
+                    <c:param name="status" value="${statusFilter}" />
+                    <c:param name="priority" value="${priorityFilter}" />
+                    <c:param name="reportedDate" value="${reportedDateFilter}" />
+                  </c:url>
 
-                <a class="btn btn-ghost btn-sm"
-                   href="${previousUrl}">
-                  Trang trước
-                </a>
-              </c:if>
+                  <a class="btn btn-ghost btn-sm"
+                     href="${previousUrl}">
+                    ‹ Trang trước
+                  </a>
+                </c:when>
+                <c:otherwise>
+                  <button type="button" class="btn btn-ghost btn-sm" disabled>
+                    ‹ Trang trước
+                  </button>
+                </c:otherwise>
+              </c:choose>
 
-              <span>
+              <span class="pager-info">
                 Trang ${requestPage.pageNumber}
                 / ${requestPage.totalPages}
               </span>
 
-              <c:if test="${requestPage.hasNext}">
-                <c:url var="nextUrl"
-                       value="/receptionist/maintenance-requests">
-                  <c:param name="page" value="${requestPage.pageNumber + 1}" />
-                  <c:param name="pageSize" value="${requestPage.pageSize}" />
-                  <c:param name="keyword" value="${keyword}" />
-                  <c:param name="status" value="${statusFilter}" />
-                  <c:param name="priority" value="${priorityFilter}" />
-                  <c:param name="reportedDate" value="${reportedDateFilter}" />
-                </c:url>
+              <c:choose>
+                <c:when test="${requestPage.hasNext}">
+                  <c:url var="nextUrl"
+                         value="/receptionist/maintenance-requests">
+                    <c:param name="page" value="${requestPage.pageNumber + 1}" />
+                    <c:param name="pageSize" value="${requestPage.pageSize}" />
+                    <c:param name="keyword" value="${keyword}" />
+                    <c:param name="status" value="${statusFilter}" />
+                    <c:param name="priority" value="${priorityFilter}" />
+                    <c:param name="reportedDate" value="${reportedDateFilter}" />
+                  </c:url>
 
-                <a class="btn btn-ghost btn-sm"
-                   href="${nextUrl}">
-                  Trang sau
-                </a>
-              </c:if>
+                  <a class="btn btn-ghost btn-sm"
+                     href="${nextUrl}">
+                    Trang sau ›
+                  </a>
+                </c:when>
+                <c:otherwise>
+                  <button type="button" class="btn btn-ghost btn-sm" disabled>
+                    Trang sau ›
+                  </button>
+                </c:otherwise>
+              </c:choose>
 
             </div>
           </c:if>

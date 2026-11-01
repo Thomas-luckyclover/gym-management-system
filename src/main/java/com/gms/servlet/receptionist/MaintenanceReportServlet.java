@@ -1,5 +1,6 @@
 package com.gms.servlet.receptionist;
 
+import com.gms.constant.Messages;
 import com.gms.dto.ServiceResult;
 import com.gms.entity.Account;
 import com.gms.entity.EquipmentItem;
@@ -65,7 +66,7 @@ public class MaintenanceReportServlet extends HttpServlet {
         }
 
         if (targetItemIds.isEmpty()) {
-            RequestUtil.setFlashToast(request, "warning", "Vui lòng chọn ít nhất một thiết bị cần báo hỏng.");
+            RequestUtil.setFlashToast(request, "warning", Messages.MSG241_MAINTENANCE_DEVICE_REQUIRED);
             response.sendRedirect(request.getContextPath() + "/receptionist/facilities");
             return;
         }
@@ -83,7 +84,7 @@ public class MaintenanceReportServlet extends HttpServlet {
         }
 
         if (selectedItems.isEmpty()) {
-            RequestUtil.setFlashToast(request, "warning", "Thiết bị không tồn tại hoặc đã ngừng sử dụng.");
+            RequestUtil.setFlashToast(request, "warning", Messages.MSG242_MAINTENANCE_DEVICE_INACTIVE);
             response.sendRedirect(request.getContextPath() + "/receptionist/facilities");
             return;
         }
@@ -129,7 +130,7 @@ public class MaintenanceReportServlet extends HttpServlet {
 
         // Kiểm tra CSRF token
         if (!RequestUtil.isValidCsrfToken(request)) {
-            RequestUtil.setFlashToast(request, "danger", "Phiên làm việc hết hạn hoặc không hợp lệ. Vui lòng thử lại.");
+            RequestUtil.setFlashToast(request, "danger", Messages.MSG214_FORM_SESSION_EXPIRED);
             response.sendRedirect(request.getContextPath() + "/receptionist/facilities");
             return;
         }
@@ -157,7 +158,7 @@ public class MaintenanceReportServlet extends HttpServlet {
         }
 
         if (itemIds.isEmpty()) {
-            RequestUtil.setFlashToast(request, "warning", "Vui lòng chọn ít nhất một thiết bị cần báo hỏng.");
+            RequestUtil.setFlashToast(request, "warning", Messages.MSG241_MAINTENANCE_DEVICE_REQUIRED);
             response.sendRedirect(request.getContextPath() + "/receptionist/facilities");
             return;
         }
@@ -211,7 +212,7 @@ public class MaintenanceReportServlet extends HttpServlet {
 
         if (result.isSuccess()) {
             String codes = String.join(", ", result.getData());
-            RequestUtil.setFlashToast(request, "success", "Đã gửi yêu cầu bảo trì " + codes + " thành công!");
+            RequestUtil.setFlashToast(request, "success", String.format(Messages.MSG243_MAINTENANCE_SENT, codes));
             response.sendRedirect(request.getContextPath() + "/receptionist/maintenance-requests");
         } else {
             request.setAttribute("formError", result.getMessage());

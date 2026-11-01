@@ -63,11 +63,10 @@
 
         <%-- Thông tin cá nhân: chỉ email và điện thoại dùng các action cập nhật hiện có. --%>
         <section class="account-profile-section" aria-labelledby="personalInformationTitle">
-            <h2 id="personalInformationTitle">Thông tin cá nhân</h2>
-            <p class="account-subtitle">
-                Bạn có thể tự thay đổi ảnh đại diện, email và số điện thoại.
-                Họ tên và ngày sinh chỉ do Lễ tân cập nhật; vui lòng liên hệ quầy khi cần điều chỉnh.
-            </p>
+            <div class="title-hint-row">
+                <h2 id="personalInformationTitle">Thông tin cá nhân</h2>
+                <span class="pt-info"><button type="button" class="pt-info-trigger" aria-label="Ai được sửa thông tin cá nhân" aria-describedby="personal-help"><span aria-hidden="true">i</span></button><span id="personal-help" class="pt-info-popover" role="tooltip">Bạn có thể tự thay đổi ảnh đại diện, email và số điện thoại. Họ tên và ngày sinh chỉ do Lễ tân cập nhật; vui lòng liên hệ quầy khi cần điều chỉnh.</span></span>
+            </div>
             <div class="account-form-grid">
                 <div class="field">
                     <label class="field-label" for="profileFullName">Họ và tên</label>
@@ -224,10 +223,10 @@
 
         <%-- Thông tin khách: Customers của chính Person đăng nhập, không phải hồ sơ được giám hộ. --%>
         <section class="account-profile-section" aria-labelledby="roleInformationTitle">
-            <h2 id="roleInformationTitle">Thông tin khách hàng</h2>
-            <p class="account-subtitle">
-                Các thông tin này chỉ được xem. Vui lòng liên hệ quầy Lễ tân nếu cần hỗ trợ.
-            </p>
+            <div class="title-hint-row">
+                <h2 id="roleInformationTitle">Thông tin khách hàng</h2>
+                <span class="pt-info"><button type="button" class="pt-info-trigger" aria-label="Thông tin khách hàng chỉ xem" aria-describedby="role-help"><span aria-hidden="true">i</span></button><span id="role-help" class="pt-info-popover" role="tooltip">Các thông tin này chỉ được xem. Vui lòng liên hệ quầy Lễ tân nếu cần hỗ trợ.</span></span>
+            </div>
             <div class="account-form-grid">
                 <div class="field">
                     <label class="field-label" for="profileCustomerCode">Mã khách hàng</label>

@@ -221,8 +221,20 @@ function initAvatarManagement() {
 
     if (btnRemoveAvatar && removeAvatarForm) {
         btnRemoveAvatar.addEventListener("click", function () {
-            const confirmed = window.confirm("Bạn có chắc chắn muốn xóa ảnh đại diện hiện tại?");
-            if (confirmed) {
+            if (typeof openConfirmDialog === "function") {
+                openConfirmDialog({
+                    title: "Xóa ảnh đại diện",
+                    message: "Bạn có chắc chắn muốn xóa ảnh đại diện hiện tại?",
+                    confirmText: "Xóa ảnh",
+                    cancelText: "Hủy",
+                    isDanger: true,
+                    onConfirm: function () {
+                        btnRemoveAvatar.disabled = true;
+                        btnRemoveAvatar.textContent = "Đang xóa...";
+                        removeAvatarForm.submit();
+                    }
+                });
+            } else if (window.confirm("Bạn có chắc chắn muốn xóa ảnh đại diện hiện tại?")) {
                 btnRemoveAvatar.disabled = true;
                 btnRemoveAvatar.textContent = "Đang xóa...";
                 removeAvatarForm.submit();

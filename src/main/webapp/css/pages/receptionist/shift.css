@@ -118,6 +118,12 @@
   gap: var(--space-3);
 }
 
+.hero-actions .btn:disabled {
+  opacity: var(--opacity-disabled);
+  cursor: not-allowed;
+  pointer-events: auto;
+}
+
 /* ===== 2. KHỐI KPI DOANH THU (kpi-grid) ===== */
 .kpi-grid {
   display: grid;

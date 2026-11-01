@@ -240,7 +240,7 @@ public class FreezeService {
                     // Kiểm tra CBR-115: nhân viên tự thao tác
                     else if (isOwnProfile) {
                         view.setEligibleToFreeze(false);
-                        view.setIneligibilityReason("Nhân viên không được tự bảo lưu gói tập của chính mình (CBR-115).");
+                        view.setIneligibilityReason(Messages.MSG282_STAFF_OWN_FREEZE);
                     }
                     // Đạt đủ điều kiện bảo lưu
                     else {
@@ -353,11 +353,11 @@ public class FreezeService {
         }
 
         if (ValidationUtil.isNullOrEmpty(reason) || reason.trim().length() < 5) {
-            return ServiceResult.fail("Lý do bảo lưu phải có ít nhất 5 ký tự (CK_FreezeRecords_Reason).");
+            return ServiceResult.fail(Messages.MSG278_FREEZE_REASON_MIN);
         }
 
         if (startDate == null || plannedEndDate == null) {
-            return ServiceResult.fail("Vui lòng nhập đầy đủ ngày bắt đầu và ngày kết thúc bảo lưu.");
+            return ServiceResult.fail(Messages.MSG279_FREEZE_DATES_REQUIRED);
         }
 
         LocalDate today = DateTimeUtil.today();
@@ -365,12 +365,12 @@ public class FreezeService {
 
         // DBR-13: Bảo lưu sớm nhất từ ngày mai
         if (startDate.isBefore(minStart)) {
-            return ServiceResult.fail("Bảo lưu chỉ được bắt đầu sớm nhất từ ngày mai (" + DateTimeUtil.formatDate(minStart) + ").");
+            return ServiceResult.fail(String.format(Messages.MSG280_FREEZE_START_FROM_TOMORROW, DateTimeUtil.formatDate(minStart)));
         }
 
         // DBR-13: From <= To
         if (plannedEndDate.isBefore(startDate)) {
-            return ServiceResult.fail("Ngày kết thúc dự kiến không được trước ngày bắt đầu bảo lưu.");
+            return ServiceResult.fail(Messages.MSG281_FREEZE_END_BEFORE_START);
         }
 
         // B2: Mở transaction để thực hiện chuỗi cập nhật nguyên tử
@@ -401,7 +401,7 @@ public class FreezeService {
                 // Kiểm tra CBR-115: Nhân viên không tự bảo lưu gói tập của chính mình
                 if (selfServiceGuard.isOwnCustomerProfile(staffAccountId, sub.getCustomerId())) {
                     conn.rollback();
-                    return ServiceResult.fail("Nhân viên không được tự bảo lưu gói tập của chính mình (CBR-115).");
+                    return ServiceResult.fail(Messages.MSG282_STAFF_OWN_FREEZE);
                 }
 
                 // Kiểm tra BR-21: Chỉ bảo lưu Membership
@@ -474,7 +474,7 @@ public class FreezeService {
 
                 // B6: Chuyển các buổi PT Scheduled trong kỳ thành Missed (MembershipFrozen) (CBR-62, CBR-67, CBR-68)
                 List<FreezeSessionImpactView> impactedSessions = freezeRecordDAO.findScheduledSessionsInPeriod(
-                        sub.getCustomerId(), startDate, plannedEndDate);
+                        conn, sub.getCustomerId(), startDate, plannedEndDate);
 
                 List<Integer> sessionIdsToMiss = impactedSessions.stream()
                         .filter(FreezeSessionImpactView::isWillBeMissed)
@@ -567,7 +567,7 @@ public class FreezeService {
 
                 if (freeze.getActualEndDate() != null) {
                     conn.rollback();
-                    return ServiceResult.fail("Đợt bảo lưu này đã được kết thúc trước đó.");
+                    return ServiceResult.fail(Messages.MSG283_FREEZE_ALREADY_ENDED);
                 }
 
                 // B2: Đọc và khóa gói Subscription
@@ -580,7 +580,7 @@ public class FreezeService {
                 // B3: Kiểm tra CBR-115
                 if (selfServiceGuard.isOwnCustomerProfile(staffAccountId, sub.getCustomerId())) {
                     conn.rollback();
-                    return ServiceResult.fail("Nhân viên không được tự thao tác trên hồ sơ của chính mình (CBR-115).");
+                    return ServiceResult.fail(Messages.MSG284_STAFF_OWN_PROFILE);
                 }
 
                 LocalDate today = DateTimeUtil.today();
@@ -621,7 +621,7 @@ public class FreezeService {
                         "ActualEndDate",
                         "NULL (Planned=" + DateTimeUtil.formatDate(freeze.getPlannedEndDate()) + ")",
                         DateTimeUtil.formatDate(actualEnd) + " (Gia hạn +" + daysFrozen + " ngày)",
-                        "Hủy bảo lưu sớm tại quầy Lễ tân (BR-26)"
+                        "Hủy bảo lưu sớm tại quầy Lễ tân"
                 );
                 auditLogDAO.insert(conn, log);
 
@@ -745,32 +745,40 @@ public class FreezeService {
     // =========================================================================
 
     /**
-     * Lấy danh sách các đợt bảo lưu gần đây phục vụ hiển thị trên bảng dữ liệu quầy Lễ tân.
+     * Lấy danh sách các đợt bảo lưu gần đây phục vụ hiển thị trên bảng dữ liệu quầy Lễ tân (có hỗ trợ lọc theo từ khóa).
      */
-    public List<FreezeRecordItemView> getRecentFreezes(int limit) {
+    public List<FreezeRecordItemView> getRecentFreezes(String keyword, int limit) {
         try {
-            return freezeRecordDAO.findRecentFreezes(limit);
+            return freezeRecordDAO.findRecentFreezes(keyword, limit);
         } catch (SQLException e) {
             LOGGER.log(Level.SEVERE, "Lỗi khi lấy danh sách bảo lưu gần đây", e);
             return List.of();
         }
     }
 
+    public List<FreezeRecordItemView> getRecentFreezes(int limit) {
+        return getRecentFreezes(null, limit);
+    }
+
     /**
      * Lấy danh sách hội viên kèm gói tập Membership phục vụ hiển thị lưới dữ liệu tương tự GymMaster.
      */
-    public PageResult<CustomerMembershipRow> getCustomerMembershipsPage(String keyword, int pageNumber, int pageSize) {
+    public PageResult<CustomerMembershipRow> getCustomerMembershipsPage(String keyword, String filter, int pageNumber, int pageSize) {
         try {
-            long total = freezeRecordDAO.countCustomerMemberships(keyword);
+            long total = freezeRecordDAO.countCustomerMemberships(keyword, filter);
             if (total == 0) {
                 return new PageResult<>(List.of(), pageNumber, pageSize, 0);
             }
-            List<CustomerMembershipRow> items = freezeRecordDAO.findCustomerMemberships(keyword, pageNumber, pageSize);
+            List<CustomerMembershipRow> items = freezeRecordDAO.findCustomerMemberships(keyword, filter, pageNumber, pageSize);
             return new PageResult<>(items, pageNumber, pageSize, total);
         } catch (SQLException e) {
             LOGGER.log(Level.SEVERE, "Lỗi khi lấy danh sách hội viên và gói tập", e);
             return new PageResult<>(List.of(), pageNumber, pageSize, 0);
         }
+    }
+
+    public PageResult<CustomerMembershipRow> getCustomerMembershipsPage(String keyword, int pageNumber, int pageSize) {
+        return getCustomerMembershipsPage(keyword, "ALL", pageNumber, pageSize);
     }
 }
 

@@ -4,8 +4,11 @@ import java.time.LocalDate;
 import java.time.LocalTime;
 
 /**
- * Buổi đã bị dời/đổi (SessionMoveLogs): lần dời ĐẦU TIÊN cho biết giờ gốc, lần dời CUỐI cho biết ai dời.
+ * Buổi đã bị dời/đổi: lần dời ĐẦU TIÊN cho biết giờ gốc, lần dời CUỐI cho biết ai dời.
  * Màn Gói của tôi dùng để ghi lý do cho "Buổi khác giờ".
+ *
+ *   Ai tạo?   MyBookingDAO.findMoves — đọc bảng SessionMoveLogs (không phải Service tự tính).
+ *   Ai dùng?  MyBookingService.moveNote ghép lý do "đổi từ giờ X sang giờ Y".
  */
 public class SessionMoveInfo {
 

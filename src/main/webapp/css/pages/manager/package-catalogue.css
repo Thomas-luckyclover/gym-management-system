@@ -1,0 +1,348 @@
+/* ==========================================================================
+   Manager Package Catalogue — Styles for screens #17, #18, #19, #20
+   Arena Theme (.dock.theme-manager) — 100% token compliant
+   ========================================================================== */
+
+/* --- Top Navigation Tabs: Membership vs PT --- */
+.catalogue-nav-tabs {
+  display: flex;
+  gap: var(--space-2, 8px);
+  margin-bottom: var(--space-4, 16px);
+  border-bottom: 1px solid var(--border-subtle, #e2e8f0);
+  padding-bottom: 2px;
+}
+
+.catalogue-tab-item {
+  display: inline-flex;
+  align-items: center;
+  gap: var(--space-2, 8px);
+  padding: var(--space-2, 8px) var(--space-4, 16px);
+  font-size: var(--font-size-sm, 13px);
+  font-weight: 600;
+  color: var(--text-secondary, #64748b);
+  border-radius: var(--radius-md, 8px) var(--radius-md, 8px) 0 0;
+  border-bottom: 2px solid transparent;
+  text-decoration: none;
+  transition: all 0.15s ease-in-out;
+}
+
+.catalogue-tab-item:hover {
+  color: var(--text-primary, #0f172a);
+  background-color: var(--bg-hover, #f8fafc);
+}
+
+.catalogue-tab-item.active {
+  color: var(--primary-base, #ea580c);
+  border-bottom-color: var(--primary-base, #ea580c);
+  background-color: var(--primary-subtle, #fff7ed);
+}
+
+.catalogue-tab-item .badge {
+  font-size: var(--font-size-xs, 11px);
+  padding: 2px 6px;
+  border-radius: var(--radius-pill, 9999px);
+}
+
+/* --- Filter & Action Bar --- */
+.catalogue-filter-bar {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  justify-content: space-between;
+  gap: var(--space-3, 12px);
+  background: var(--bg-surface, #ffffff);
+  border: 1px solid var(--border-subtle, #e2e8f0);
+  border-radius: var(--radius-md, 8px);
+  padding: var(--space-3, 12px) var(--space-4, 16px);
+  margin-bottom: var(--space-4, 16px);
+}
+
+.catalogue-filter-group {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: var(--space-3, 12px);
+  flex: 1;
+}
+
+.search-input-wrap {
+  position: relative;
+  min-width: 240px;
+  flex: 1;
+  max-width: 380px;
+}
+
+.search-input-wrap input {
+  width: 100%;
+  padding-left: 34px;
+}
+
+.search-input-wrap svg {
+  position: absolute;
+  left: 10px;
+  top: 50%;
+  transform: translateY(-50%);
+  width: 16px;
+  height: 16px;
+  color: var(--text-muted, #94a3b8);
+  pointer-events: none;
+}
+
+/* --- Catalogue Table --- */
+.catalogue-table-card {
+  background: var(--bg-surface, #ffffff);
+  border: 1px solid var(--border-subtle, #e2e8f0);
+  border-radius: var(--radius-md, 8px);
+  overflow: hidden;
+  box-shadow: var(--shadow-sm, 0 1px 2px 0 rgba(0, 0, 0, 0.05));
+}
+
+.catalogue-table {
+  width: 100%;
+  border-collapse: collapse;
+  text-align: left;
+  font-size: var(--font-size-sm, 13px);
+}
+
+.catalogue-table th {
+  background: var(--bg-subtle, #f8fafc);
+  color: var(--text-secondary, #64748b);
+  font-weight: 600;
+  padding: var(--space-3, 12px) var(--space-4, 16px);
+  border-bottom: 1px solid var(--border-subtle, #e2e8f0);
+  white-space: nowrap;
+}
+
+.catalogue-table td {
+  padding: var(--space-3, 12px) var(--space-4, 16px);
+  border-bottom: 1px solid var(--border-subtle, #e2e8f0);
+  color: var(--text-primary, #0f172a);
+  vertical-align: middle;
+}
+
+.catalogue-table tr:last-child td {
+  border-bottom: none;
+}
+
+.catalogue-table tr:hover td {
+  background-color: var(--bg-hover, #f8fafc);
+}
+
+.catalogue-table tr.row-inactive td {
+  background-color: var(--bg-muted, #f1f5f9);
+  color: var(--text-muted, #94a3b8);
+}
+
+.package-name-cell {
+  font-weight: 600;
+  color: var(--text-primary, #0f172a);
+}
+
+.package-sub-desc {
+  font-size: var(--font-size-xs, 11px);
+  color: var(--text-secondary, #64748b);
+  margin-top: 2px;
+  max-width: 320px;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.package-price-cell {
+  font-weight: 700;
+  color: var(--primary-base, #ea580c);
+  white-space: nowrap;
+}
+
+/* --- Badges --- */
+.badge-status {
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+  font-size: var(--font-size-xs, 11px);
+  font-weight: 600;
+  padding: 3px 8px;
+  border-radius: var(--radius-pill, 9999px);
+  white-space: nowrap;
+}
+
+.badge-status.active {
+  background-color: var(--success-light, #dcfce7);
+  color: var(--success-text, #166534);
+}
+
+.badge-status.inactive {
+  background-color: var(--neutral-light, #e2e8f0);
+  color: var(--text-secondary, #64748b);
+}
+
+.badge-running {
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+  font-size: var(--font-size-xs, 11px);
+  font-weight: 600;
+  padding: 2px 7px;
+  border-radius: var(--radius-sm, 4px);
+  background-color: var(--info-light, #e0f2fe);
+  color: var(--info-text, #0369a1);
+}
+
+.badge-running.has-running {
+  background-color: var(--warning-light, #fef3c7);
+  color: var(--warning-text, #92400e);
+}
+
+/* --- Action Buttons --- */
+.table-actions {
+  display: flex;
+  align-items: center;
+  gap: var(--space-2, 8px);
+}
+
+/* --- Form Layout (#18 & #20) --- */
+.package-form-grid {
+  display: grid;
+  grid-template-columns: minmax(460px, 1.8fr) minmax(320px, 1.2fr);
+  gap: var(--space-4, 20px);
+  align-items: start;
+}
+
+@media (max-width: 960px) {
+  .package-form-grid {
+    grid-template-columns: 1fr;
+  }
+}
+
+.package-form-card {
+  background: var(--bg-surface, #ffffff);
+  border: 1px solid var(--border-subtle, #e2e8f0);
+  border-radius: var(--radius-md, 8px);
+  padding: var(--space-4, 20px);
+  box-shadow: var(--shadow-sm, 0 1px 2px 0 rgba(0, 0, 0, 0.05));
+}
+
+.form-section-title {
+  font-size: var(--font-size-md, 15px);
+  font-weight: 700;
+  color: var(--text-primary, #0f172a);
+  margin-bottom: var(--space-3, 12px);
+  padding-bottom: var(--space-2, 8px);
+  border-bottom: 1px solid var(--border-subtle, #e2e8f0);
+}
+
+.form-row-2col {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: var(--space-3, 12px);
+}
+
+@media (max-width: 600px) {
+  .form-row-2col {
+    grid-template-columns: 1fr;
+  }
+}
+
+/* --- Live Preview Card (Right Column) --- */
+.preview-sticky-wrap {
+  position: sticky;
+  top: calc(var(--topbar-height, 68px) + 16px);
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-3, 12px);
+}
+
+.running-alert-box {
+  background-color: var(--warning-light, #fef3c7);
+  border: 1px solid var(--warning-border, #fde68a);
+  border-radius: var(--radius-md, 8px);
+  padding: var(--space-3, 12px) var(--space-4, 16px);
+  color: var(--warning-text, #92400e);
+  font-size: var(--font-size-xs, 12px);
+  display: flex;
+  gap: var(--space-2, 8px);
+  line-height: 1.45;
+}
+
+.package-preview-card {
+  background: var(--bg-surface, #ffffff);
+  border: 2px solid var(--border-default, #cbd5e1);
+  border-radius: var(--radius-lg, 12px);
+  padding: var(--space-4, 20px);
+  box-shadow: var(--shadow-md, 0 4px 6px -1px rgba(0, 0, 0, 0.1));
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-3, 12px);
+  transition: all 0.2s ease-in-out;
+}
+
+.package-preview-card.preview-popular {
+  border-color: var(--primary-base, #ea580c);
+  background: linear-gradient(180deg, var(--primary-subtle, #fff7ed) 0%, var(--bg-surface, #ffffff) 24%);
+}
+
+.preview-badge-pill {
+  align-self: flex-start;
+  font-size: 11px;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+  padding: 3px 8px;
+  border-radius: var(--radius-pill, 9999px);
+  background-color: var(--primary-base, #ea580c);
+  color: #ffffff;
+}
+
+.preview-title {
+  font-size: 18px;
+  font-weight: 700;
+  color: var(--text-primary, #0f172a);
+  margin: 0;
+}
+
+.preview-price {
+  font-size: 24px;
+  font-weight: 800;
+  color: var(--primary-base, #ea580c);
+}
+
+.preview-price span {
+  font-size: 13px;
+  font-weight: 500;
+  color: var(--text-secondary, #64748b);
+}
+
+.preview-specs {
+  display: flex;
+  gap: var(--space-2, 8px);
+  font-size: var(--font-size-xs, 12px);
+  color: var(--text-secondary, #64748b);
+  border-top: 1px dashed var(--border-subtle, #e2e8f0);
+  border-bottom: 1px dashed var(--border-subtle, #e2e8f0);
+  padding: 8px 0;
+}
+
+.preview-benefit-list {
+  list-style: none;
+  padding: 0;
+  margin: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+  font-size: var(--font-size-xs, 12px);
+  color: var(--text-primary, #0f172a);
+}
+
+.preview-benefit-list li {
+  display: flex;
+  align-items: flex-start;
+  gap: 6px;
+}
+
+.preview-benefit-list li svg {
+  width: 14px;
+  height: 14px;
+  color: var(--success-base, #16a34a);
+  flex-shrink: 0;
+  margin-top: 2px;
+}

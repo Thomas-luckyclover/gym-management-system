@@ -1,5 +1,6 @@
 package com.gms.service;
 
+import com.gms.constant.Messages;
 import com.gms.dao.TransactionHistoryDAO;
 import com.gms.dto.ServiceResult;
 import com.gms.dto.TransactionHistoryItem;
@@ -25,17 +26,17 @@ public class TransactionHistoryService {
             String status) {
 
         if (accountId <= 0) {
-            return ServiceResult.fail("Phiên đăng nhập không hợp lệ.");
+            return ServiceResult.fail(Messages.MSG153_SESSION_INVALID);
         }
 
         if (page < 1 || page > 100000) {
-            return ServiceResult.fail("Số trang không hợp lệ.");
+            return ServiceResult.fail(Messages.MSG175_PAGE_NUMBER_INVALID);
         }
 
         String filter = status == null ? "" : status.trim();
 
         if (!filter.isEmpty() && !VALID_STATUSES.contains(filter)) {
-            return ServiceResult.fail("Trạng thái lọc không hợp lệ.");
+            return ServiceResult.fail(Messages.MSG176_STATUS_FILTER_INVALID);
         }
 
         int offset = (page - 1) * PAGE_SIZE;
@@ -58,7 +59,7 @@ public class TransactionHistoryService {
                     + ", errorCode=" + e.getErrorCode());
 
             return ServiceResult.fail(
-                    "Chưa tải được lịch sử giao dịch. Vui lòng thử lại.");
+                    Messages.MSG177_TRANSACTION_HISTORY_LOAD_FAILED);
         }
     }
 }

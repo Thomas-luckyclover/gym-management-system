@@ -9,32 +9,110 @@ import java.util.ArrayList;
 import java.util.List;
 
 /**
- * Dữ liệu hiển thị trên Customer Dashboard (UC-41, SRS 9.1.1).
+ * Dữ liệu hiển thị trên Customer Dashboard (UC-41, SRS 9.1.1), biến JSP "dashboard".
  *
- * Thiết kế bất biến (immutable): tất cả field lấy từ DB qua Service, không có setter.
+ *   Ai tạo?   CustomerDashboardService.getDashboard (CustomerDashboardServlet gọi) — DAO đọc, Service gom 1 lần.
+ *   Ai in?    customer/dashboard.jsp (+ _schedule-header.jspf hiện tên/mã khách ở topbar).
+ *   Bảng đọc: Customers + Persons (hồ sơ), Subscriptions (+ tên gói, FreezeRecords khi bảo lưu),
+ *             Sessions + TimeSlots + Persons (5 buổi PT sắp tới). Banner do Service tính từ các dữ liệu trên.
+ *
+ * DAO đọc dữ liệu nền; Service gắn thêm lịch tuần, PT và bộ chọn ngày trước khi JSP hiển thị.
  * DAO chỉ đọc trạng thái đang lưu; Dashboard không tự tính lại trạng thái (GBR-14).
  *
  * @author Nguyen Tuan Minh
  */
 public class CustomerDashboardView {
 
-    // ===== Thông tin hồ sơ =====
-    private final String fullName;
-    private final String avatar;
-    private final String customerCode;
-    private final String customerStatus;
+    // Service tạo đủ 7 ngày; DAO đọc PT từ các gói thuộc hội viên đang đăng nhập.
+    private List<ScheduleDay> scheduleDays = List.of();
+    private List<TrainerContact> trainers = List.of();
+    // Service chọn các gói chưa hết hạn cho panel; subscriptions gốc vẫn dùng kiểm tra/cảnh báo.
+    private List<SubscriptionRow> visibleSubscriptions = List.of();
 
+    public List<SubscriptionRow> getVisibleSubscriptions() { return visibleSubscriptions; }
+    public void setVisibleSubscriptions(List<SubscriptionRow> visibleSubscriptions) {
+        this.visibleSubscriptions = visibleSubscriptions;
+    }
+
+    public List<ScheduleDay> getScheduleDays() { return scheduleDays; }
+    public void setScheduleDays(List<ScheduleDay> scheduleDays) { this.scheduleDays = scheduleDays; }
+    public List<TrainerContact> getTrainers() { return trainers; }
+    public void setTrainers(List<TrainerContact> trainers) { this.trainers = trainers; }
+
+    /** Một ngày lịch PT: Service gom từ các buổi DAO đọc; JSP hiển thị và JS chọn ngày. */
+    public static class ScheduleDay {
+        private final LocalDate date;
+        private final boolean isToday;
+        private final List<UpcomingSessionRow> sessions;
+
+        public ScheduleDay(LocalDate date, boolean isToday, List<UpcomingSessionRow> sessions) {
+            this.date = date;
+            this.isToday = isToday;
+            this.sessions = sessions;
+        }
+
+        public LocalDate getDate() { return date; }
+        public String getDateLabel() {
+            return date.format(java.time.format.DateTimeFormatter.ofPattern("dd/MM"));
+        }
+        public boolean isToday() { return isToday; }
+        public List<UpcomingSessionRow> getSessions() { return sessions; }
+        public String getDayLabel() {
+            if (isToday) {
+                return "Hôm nay";
+            }
+            return date.getDayOfWeek().getDisplayName(java.time.format.TextStyle.FULL,
+                    java.util.Locale.forLanguageTag("vi-VN"));
+        }
+    }
+
+    /** DAO đọc một PT phụ trách gói còn hiệu lực; dùng chung ZaloUtil, không gọi API ngoài. */
+    public static class TrainerContact {
+        private final int employeeId;
+        private final String fullName;
+        private final String phone;
+        private final int subscriptionId;
+        // Service gắn các gói của đúng PT bằng SubscriptionId; JSP hiện tên và số buổi còn lại.
+        private final List<SubscriptionRow> packages = new ArrayList<>();
+
+        public TrainerContact(int employeeId, String fullName, String phone, int subscriptionId) {
+            this.employeeId = employeeId;
+            this.fullName = fullName;
+            this.phone = phone;
+            this.subscriptionId = subscriptionId;
+        }
+
+        public int getSubscriptionId() { return subscriptionId; }
+        public List<SubscriptionRow> getPackages() { return packages; }
+        public int getEmployeeId() { return employeeId; }
+        public String getFullName() { return fullName; }
+        public String getPhone() { return phone; }
+        public String getZaloUrl() { return com.gms.util.ZaloUtil.toUrl(phone); }
+        public String getPhoneUrl() {
+            if (phone == null || phone.isBlank()) {
+                return null;
+            }
+            return "tel:" + phone.replaceAll("[^0-9+]", "");
+        }
+    }
+
+    // ===== Thông tin hồ sơ (DAO: Customers + Persons) =====
+    private final String fullName;         // Persons.FullName
+    private final String avatar;           // Persons.Avatar; null thì JSP hiện initials
+    private final String customerCode;     // Customers.CustomerCode
+    private final String customerStatus;   // Customers.Status (New | Active | Frozen | Expired)
+
+    // DAO: CustomerDashboardDAO.canUseGymToday — có Subscriptions Membership/DayPass Active phủ hôm nay, không bảo lưu.
     private final boolean canUseGym;
 
-    /** Danh sách gói tập/PT đang có hiệu lực hoặc chưa bắt đầu. */
+    // DAO: CustomerDashboardDAO — Subscriptions (+ tên gói); mỗi dòng là 1 gói đang dùng / chưa bắt đầu.
     private final List<SubscriptionRow> subscriptions;
 
-    // ===== Buổi PT sắp tới ([CHỐT-D3]: 5 buổi Scheduled gần nhất từ bây giờ) =====
-
+    // ===== Buổi PT sắp tới (DAO: Sessions + TimeSlots + Persons tên PT) =====
+    // [CHỐT-D3]: 5 buổi Scheduled gần nhất từ bây giờ.
     private final List<UpcomingSessionRow> upcomingSessions;
 
-    // ===== Banners cảnh báo ([CHỐT-D1]) =====
-
+    // ===== Banners cảnh báo (Service tính — [CHỐT-D1], không đọc bảng riêng) =====
     private final List<BannerItem> banners;
 
     // ===== Chuyên cần (mở rộng ngoài SRS, tính trong CustomerDashboardService) =====
@@ -143,7 +221,7 @@ public class CustomerDashboardView {
     public SubscriptionRow getActiveMembership() {
         if (subscriptions == null) return null;
         for (SubscriptionRow sub : subscriptions) {
-            if (!sub.isPtPackage() && "Active".equals(sub.getStatus())) {
+            if (!sub.isPtPackage() && "Active".equals(sub.getDisplayStatus())) {
                 return sub;
             }
         }
@@ -172,7 +250,7 @@ public class CustomerDashboardView {
     public SubscriptionRow getCurrentMembership() {
         if (subscriptions == null) return null;
         for (SubscriptionRow sub : subscriptions) {
-            boolean running = "Active".equals(sub.getStatus()) || "Frozen".equals(sub.getStatus());
+            boolean running = "Active".equals(sub.getDisplayStatus()) || "Frozen".equals(sub.getDisplayStatus());
             if (!sub.isPtPackage() && running) {
                 return sub;
             }
@@ -184,7 +262,7 @@ public class CustomerDashboardView {
     public SubscriptionRow getExpiredMembership() {
         if (subscriptions == null) return null;
         for (SubscriptionRow sub : subscriptions) {
-            if (!sub.isPtPackage() && "Expired".equals(sub.getStatus())) {
+            if (!sub.isPtPackage() && "Expired".equals(sub.getDisplayStatus())) {
                 return sub;
             }
         }
@@ -253,21 +331,24 @@ public class CustomerDashboardView {
 
     public static class SubscriptionRow {
 
-        private final int subscriptionId;
-        private final String subscriptionType;
-        private final String packageName;
-        private final LocalDate startDate;
-        private final LocalDate endDate;
-        private final String status;
+        // DAO đọc bảng Subscriptions (+ Packages.PackageName / Orders.PackageNameSnapshot cho tên gói).
+        private final int subscriptionId;          // Subscriptions.SubscriptionId
+        private final String subscriptionType;     // Subscriptions.SubscriptionType: Membership | DayPass | PTSingle | PTCouple | SingleSession
+        private final String packageName;          // tên gói lúc mua
+        private final LocalDate startDate;         // Subscriptions.StartDate
+        private final LocalDate endDate;           // Subscriptions.EndDate (ngày cuối còn dùng, GBR-03)
+        private final String status;               // Subscriptions.Status: Active | Frozen | Pending | ...
+        // Service đối chiếu ngày để trình bày khi JOB chưa cập nhật DB; không thay đổi status đã lưu.
+        private String displayStatus;
 
         // --- Chỉ có với gói PT (DBR-53, [CHỐT-D2]) ---
-        private final Integer totalSessions;
-        private final Integer remainingSessions;
-        private final Integer usedSessions;
+        private final Integer totalSessions;       // tổng số buổi của gói (chỉ gói PT)
+        private final Integer remainingSessions;   // số buổi còn lại
+        private final Integer usedSessions;        // số buổi đã qua
 
         // --- Bảo lưu nếu Frozen (DBR-51) ---
-        private final LocalDate freezeStart;
-        private final LocalDate freezeEnd;
+        private final LocalDate freezeStart;       // FreezeRecords.StartDate — ngày bắt đầu bảo lưu
+        private final LocalDate freezeEnd;         // FreezeRecords.EndDate — ngày hết bảo lưu
 
         // --- Thông tin đơn lúc mua, hiện trong khung "Chi tiết gói" (DBR-50: chép mô tả và quyền lợi lúc bán) ---
         private final String orderCode;
@@ -306,6 +387,7 @@ public class CustomerDashboardView {
             this.startDate = startDate;
             this.endDate = endDate;
             this.status = status;
+            this.displayStatus = status;
             this.totalSessions = totalSessions;
             this.remainingSessions = remainingSessions;
             this.usedSessions = usedSessions;
@@ -325,6 +407,9 @@ public class CustomerDashboardView {
         public LocalDate getStartDate() { return startDate; }
         public LocalDate getEndDate() { return endDate; }
         public String getStatus() { return status; }
+        public String getDisplayStatus() { return displayStatus; }
+        public void setDisplayStatus(String displayStatus) { this.displayStatus = displayStatus; }
+        public boolean isExpiredForDisplay() { return "Expired".equals(displayStatus); }
         public Integer getTotalSessions() { return totalSessions; }
         public Integer getRemainingSessions() { return remainingSessions; }
         public Integer getUsedSessions() { return usedSessions; }
@@ -415,7 +500,7 @@ public class CustomerDashboardView {
          */
         public long getDaysRemaining() {
             if (endDate == null) return 0;
-            long days = ChronoUnit.DAYS.between(DateTimeUtil.today(), endDate);
+            long days = ChronoUnit.DAYS.between(DateTimeUtil.today(), endDate) + 1;
             return Math.max(days, 0);
         }
 
@@ -462,8 +547,8 @@ public class CustomerDashboardView {
          * Nhãn trạng thái gói tiếng Việt (GBR-01).
          */
         public String getStatusLabel() {
-            if (status == null) return "";
-            switch (status) {
+            if (displayStatus == null) return "";
+            switch (displayStatus) {
                 case "Active":    return "Đang dùng";
                 case "Frozen":    return "Đang bảo lưu";
                 case "Pending":   return "Chưa bắt đầu";
@@ -481,14 +566,16 @@ public class CustomerDashboardView {
      */
     public static class UpcomingSessionRow {
 
-        private final int sessionId;
-        private final LocalDate slotDate;
-        private final LocalTime startTime;
-        private final LocalTime endTime;
-        private final String ptName;
+        // DAO đọc: Sessions + TimeSlots (ngày/giờ) + Persons (tên PT) + tên gói.
+        private final int sessionId;               // Sessions.SessionId
+        private final LocalDate slotDate;          // TimeSlots.SlotDate
+        private final LocalTime startTime;         // TimeSlots.StartTime
+        private final LocalTime endTime;           // TimeSlots.EndTime
+        private final String ptName;               // Persons.FullName của PT dạy buổi này
 
         /** Tên gói (VD: "Gói PT cá nhân 10 buổi"). */
         private final String packageName;
+        // Service tính: buổi này khách chưa có Membership/DayPass phủ ngày → tô nhãn "Chưa có gói tập".
         private final boolean missingMembership;
 
         public UpcomingSessionRow(

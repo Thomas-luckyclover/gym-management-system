@@ -33,6 +33,15 @@ import java.util.List;
  *   3. DÙNG CHUNG       openConnection()
  *
  * Service giữ quy tắc nghiệp vụ; AutoCloseSessionDAO chỉ đọc / ghi SQL.
+ *
+ * ❓ VẤN ĐÁP (mỗi câu kèm luồng file để mở theo khi trả lời):
+ *   1) JOB-04 làm gì? → mỗi ngày 00:05 tự chốt các buổi PT đã QUA ngày mà còn "Scheduled" (PT không điểm danh tay).
+ *      File: job/BackgroundJobScheduler.java → job/AutoCloseUnmarkedSessionsJob.java → service/AutoCloseSessionService.java.
+ *   2) Chốt ra kết quả gì? → evaluate(): vào được gym + có check-in → CheckedIn; vào được nhưng không check-in → Missed/NoCheckIn;
+ *      không vào được gym → Missed/NoMembership (hoặc MembershipFrozen nếu đang bảo lưu).
+ *      File: service/AutoCloseSessionService.java (evaluate) → dao/AutoCloseSessionDAO.java (đọc/ghi bảng Sessions).
+ *   3) Mỗi buổi chốt có an toàn không? → mỗi buổi 1 TRANSACTION (closeOneSession): đổi trạng thái + ghi AuditLog; lỗi giữa chừng thì rollback.
+ *      File: service/AutoCloseSessionService.java (closeOneSession) → service/AuditLogService.java + dao/AutoCloseSessionDAO.java.
  */
 public class AutoCloseSessionService {
 

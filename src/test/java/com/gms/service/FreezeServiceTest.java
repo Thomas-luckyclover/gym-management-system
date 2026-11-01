@@ -142,7 +142,7 @@ class FreezeServiceTest {
         FreezeCustomerView view = res.getData();
         assertTrue(view.isOwnProfile());
         assertFalse(view.isEligibleToFreeze());
-        assertTrue(view.getIneligibilityReason().contains("CBR-115"));
+        assertEquals(Messages.MSG282_STAFF_OWN_FREEZE, view.getIneligibilityReason());
     }
 
     @Test
@@ -286,7 +286,7 @@ class FreezeServiceTest {
 
         ServiceResult<Void> res = freezeService.applyFreeze(STAFF_ACCOUNT_ID, SUB_ID, start, end, "Công tác nước ngoài");
         assertFalse(res.isSuccess());
-        assertTrue(res.getMessage().contains("CBR-115"));
+        assertEquals(Messages.MSG282_STAFF_OWN_FREEZE, res.getMessage());
     }
 
     @Test
@@ -362,6 +362,35 @@ class FreezeServiceTest {
         assertNotNull(log);
         assertEquals("FREEZE_MEMBERSHIP", log.getAction());
         assertEquals("Frozen", log.getNewValue());
+    }
+
+    @Test
+    @DisplayName("Transaction: applyFreeze sử dụng kết nối transactional khi truy vấn buổi PT chịu ảnh hưởng")
+    void testApplyFreeze_TransactionalSessionLookup() {
+        LocalDate today = LocalDate.now();
+        Subscription sub = createSubscription(SUB_ID, CUST_ID, Subscription.Type.MEMBERSHIP,
+                Subscription.Status.ACTIVE, today.minusMonths(1), today.plusMonths(6), 0, 1);
+        fakeFreezeRecordDAO.setSubscription(sub);
+
+        LocalDate start = today.plusDays(1);
+        LocalDate end = today.plusDays(10);
+
+        FreezeSessionImpactView session1 = new FreezeSessionImpactView();
+        session1.setSessionId(701);
+        session1.setWillBeMissed(true);
+
+        FreezeSessionImpactView session2 = new FreezeSessionImpactView();
+        session2.setSessionId(702);
+        session2.setWillBeMissed(true);
+
+        fakeFreezeRecordDAO.setScheduledSessions(List.of(session1, session2));
+
+        ServiceResult<Void> res = freezeService.applyFreeze(
+                STAFF_ACCOUNT_ID, SUB_ID, start, end, "Bảo lưu dài ngày vì phẫu thuật");
+
+        assertTrue(res.isSuccess());
+        assertTrue(res.getMessage().contains("2 buổi PT"));
+        assertEquals(List.of(701, 702), fakeFreezeRecordDAO.getMissedSessionIds());
     }
 
     @Test
@@ -668,6 +697,11 @@ class FreezeServiceTest {
         }
 
         @Override
+        public List<FreezeSessionImpactView> findScheduledSessionsInPeriod(Connection conn, int customerId, LocalDate startDate, LocalDate plannedEndDate) {
+            return scheduledSessions;
+        }
+
+        @Override
         public List<FreezeSessionImpactView> findScheduledSessionsInPeriod(int customerId, LocalDate startDate, LocalDate plannedEndDate) {
             return scheduledSessions;
         }
@@ -675,6 +709,11 @@ class FreezeServiceTest {
         @Override
         public void markSessionsMissedDueToFreeze(Connection conn, List<Integer> sessionIds) {
             missedSessionIds.addAll(sessionIds);
+        }
+
+        @Override
+        public List<FreezeRecordItemView> findRecentFreezes(String keyword, int limit) {
+            return List.of();
         }
 
         @Override

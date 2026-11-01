@@ -30,7 +30,7 @@ public final class PasswordUtil {
     /**
      * So khớp mật khẩu nhập vào với hash trong DB.
      * @param rawPassword mật khẩu người dùng nhập
-     * @param passwordHash hash lấy từ DB (có thể null nếu tài khoản chưa đặt mật khẩu — MSG38)
+     * @param passwordHash hash lấy từ DB (null nếu dữ liệu cũ thiếu mật khẩu → trả false, tính như sai mật khẩu)
      * @return true nếu khớp; false nếu không khớp, hash null hoặc hash sai định dạng
      */
     public static boolean checkPassword(String rawPassword, String passwordHash) {

@@ -593,3 +593,98 @@
   padding: var(--space-3) var(--space-4);
   background: var(--color-surface);
 }
+
+/* Form PT/Lễ tân: chỉ thu gọn màn nhân viên, không ảnh hưởng trang manager dùng cùng CSS. */
+html body.dock.staff-leave-page .leave-staff-content {
+  max-width: calc(var(--space-12) * 10);
+}
+html body.dock.staff-leave-page .leave-panel {
+  padding: var(--space-4-5);
+  margin-bottom: var(--space-4);
+}
+html body.dock.staff-leave-page .leave-form-grid {
+  gap: var(--space-3);
+  margin-bottom: var(--space-3);
+}
+html body.dock.staff-leave-page #leaveForm .field {
+  margin: 0;
+  min-width: 0;
+}
+html body.dock.staff-leave-page #leaveForm .field-label {
+  display: flex;
+  justify-content: flex-start;
+  gap: var(--space-1);
+  margin-bottom: var(--space-2);
+  font-size: var(--font-size-sm);
+}
+html body.dock.staff-leave-page #leaveForm .field-label > span {
+  margin: 0;
+  float: none;
+  color: var(--color-danger);
+}
+html body.dock.staff-leave-page #leaveForm :is(input[type="date"], select) {
+  min-height: var(--control-height-md);
+  padding: var(--space-2) var(--space-3);
+  font-size: var(--font-size-base);
+}
+html body.dock.staff-leave-page #leaveReason {
+  min-height: calc(var(--space-12) + var(--space-5));
+  padding: var(--space-3);
+  font-size: var(--font-size-base);
+}
+html body.dock.staff-leave-page .leave-date-hint {
+  display: block;
+  margin: var(--space-1) 0 var(--space-3);
+}
+html body.dock.staff-leave-page #leaveForm .leave-reason-field {
+  margin-block: var(--space-3);
+}
+html body.dock.staff-leave-page .leave-submission-plan {
+  gap: var(--space-2);
+  padding: var(--space-3);
+  margin-block: var(--space-3);
+  font-size: var(--font-size-sm);
+}
+html body.dock.staff-leave-page .leave-plan-part {
+  padding-block: var(--space-1);
+  gap: var(--space-2) var(--space-4);
+}
+html body.dock.staff-leave-page #leavePlanParts {
+  display: grid;
+  gap: var(--space-2);
+}
+html body.dock.staff-leave-page #leaveBalanceText {
+  padding-top: var(--space-2);
+  border-top: var(--border-width) solid var(--color-border);
+  color: var(--color-text-soft);
+}
+/* leave-request-form.js: renderPlan/resetPlan ẩn/hiện #leaveScheduleWarning và cập nhật message. */
+html body.dock.staff-leave-page .leave-schedule-warning {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  flex-wrap: wrap;
+  gap: var(--space-2);
+  padding: var(--space-2) var(--space-3);
+  border: var(--border-width) solid var(--color-danger-border);
+  border-radius: var(--radius-sm);
+  background: var(--color-danger-tint);
+  color: var(--color-danger-ink);
+  font-size: var(--font-size-sm);
+}
+html body.dock.staff-leave-page .leave-schedule-warning[hidden] {
+  display: none;
+}
+html body.dock.staff-leave-page .leave-empty {
+  padding: var(--space-4);
+}
+@media (min-width: 641px) {
+  html body.dock.staff-leave-page .leave-form-grid {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+}
+@media (max-width: 640px) {
+  html body.dock.staff-leave-page .leave-form-grid {
+    grid-template-columns: minmax(0, 1fr);
+  }
+}
