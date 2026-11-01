@@ -17,7 +17,10 @@
             <div class="main">
                 <header class="topbar">
                     <div class="tb-left"><h1 class="tb-title">Thanh toán</h1></div>
-                    <div class="top-right"><span class="tb-user-text"><c:out value="${customerName}" /></span></div>
+                    <div class="top-right">
+                        <%@ include file="/WEB-INF/jsp/common/notification-bell.jspf" %>
+                        <%@ include file="/WEB-INF/jsp/common/topbar-user.jspf" %>
+                    </div>
                 </header>
                 <main class="content" id="main-content">
                     <a class="checkout-back" href="${pageContext.request.contextPath}/customer/packages">← Quay lại chọn gói</a>
