@@ -25,7 +25,13 @@ href="${pageContext.request.contextPath}/css/pages/customer/start-date-picker.cs
 
         <div class="main">
             <header class="topbar">
-                <h1 class="tb-title">Kết quả thanh toán</h1>
+                <div class="tb-left">
+                    <h1 class="tb-title">Kết quả thanh toán</h1>
+                </div>
+                <div class="top-right">
+                    <%@ include file="/WEB-INF/jsp/common/notification-bell.jspf" %>
+                    <%@ include file="/WEB-INF/jsp/common/topbar-user.jspf" %>
+                </div>
             </header>
 
             <main class="content" id="main-content">
