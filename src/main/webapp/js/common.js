@@ -3027,7 +3027,7 @@ document.addEventListener("DOMContentLoaded", function () {
         if (!avatarUrl) {
             return;
         }
-        const userContainers = document.querySelectorAll(".tb-user, .guest-account, .pt-top-actions");
+        const userContainers = document.querySelectorAll(".tb-user, .guest-account");
         userContainers.forEach(function (container) {
             const avatarEl = container.querySelector(".avatar, .pt-user-avatar, .guest-account__avatar");
             if (!avatarEl) {
