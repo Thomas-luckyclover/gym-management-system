@@ -7,8 +7,9 @@
 
   form.addEventListener('submit', e => {
     e.preventDefault();
-    if (!text.value.trim()) {
-      return fieldError(text, 'feedbackTextErr', 'Nội dung góp ý không được để trống.');
+    const n = text.value.trim().length;
+    if (n < 10 || n > 1000) {
+      return fieldError(text, 'feedbackTextErr', 'Nội dung góp ý phải từ 10 đến 1000 ký tự.');
     }
     showStep('done');
     showToast('success', 'Cảm ơn bạn đã góp ý. Góp ý được gửi tới Quản lý.');

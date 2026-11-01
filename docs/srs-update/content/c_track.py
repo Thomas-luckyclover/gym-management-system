@@ -36,7 +36,7 @@ UCX = [
 ["UC-27","Flat list with Quantity; separate form screen #44; delete blocked by open requests","Master–detail groups / items, computed quantities, retire item, hide group (BR-104, CBR-99)."],
 ["UC-28","One request for one facility","Two-step report, several items, one request per item, single transaction, Managers notified (BR-105)."],
 ["UC-30","\"including weekends (required to support weekend-only session swaps)\"; separate Add Time Slot screen","Weekend slots are allowed for PT reschedules (customers do not swap). Draft–publish on one weekly screen with withdraw / copy week (BR-94, BR-95)."],
-["UC-31","\"Mark Session No-Show\": PT marks Absent from session start until 24 h after end (P-07)","Rewritten as \"Auto-Close PT Sessions\" by JOB-04 (CBR-42). BR-54, BR-55, BR-56 and P-07 withdrawn."],
+["UC-31","\"Mark Session No-Show\": PT marks Absent from session start until 24 h after end (P-07)","Withdrawn: attendance is closed by the background job JOB-04 (CBR-42), not a use case. BR-54, BR-55, BR-56 and P-07 withdrawn."],
 ["UC-32","Session attendance screen #56 for marking absences","Dashboard + weekly PT schedule; no attendance marking."],
 ["UC-35","Four options incl. change on behalf of a customer without an account (counts toward 3 swaps); PT verifies guardian phone; commission \"goes to the new PT\"","Three options (BR-64 – BR-66); reschedule search window 14 days; commission recomputed with the receiving PT's rate (BR-68); no phone verification (CBR-33)."],
 ["UC-36","My Bookings: list with filters and a Cancel action; My PT Sessions: remaining quota and swap count","Both view only: My Bookings = package summary with one call to action (BR-98); My PT Sessions = week / month timetable (BR-99). No cancel, no swap counter."],

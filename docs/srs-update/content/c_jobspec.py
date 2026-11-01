@@ -7,7 +7,7 @@ JOBSPEC = [
  {"title": "13.4 Auto-Close PT Sessions (JOB-04) — replace the whole section",
   "trigger": "Scheduled — daily, right after JOB-03",
   "purpose": "Closes every PT session whose date has passed and that is still Scheduled, so the session quota and the PT commission are final. The PT never marks attendance (CBR-42).",
-  "related": "UC-31, UC-32, UC-36 · Rules CBR-42, CBR-56, CBR-63, CBR-64, CBR-67, CBR-68, CBR-80, CBR-117, DBR-37, DBR-38",
+  "related": "UC-32, UC-36 · Rules CBR-42, CBR-56, CBR-63, CBR-64, CBR-67, CBR-68, CBR-80, CBR-117, DBR-37, DBR-38",
   "params": "None.",
   "steps": [
    "Find sessions still Scheduled whose session date is before today, however many days late.",

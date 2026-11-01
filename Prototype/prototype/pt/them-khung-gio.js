@@ -28,7 +28,7 @@
     const date = dateEl.value;
     if (!date) return fieldError(dateEl, 'slotDateErr', 'Vui lòng chọn ngày.');
     const d = new Date(date + 'T00:00:00');
-    const today = new Date(); today.setHours(0, 0, 0, 0);
+    const today = sampleNow(); today.setHours(0, 0, 0, 0);
     if (d < today) return fieldError(dateEl, 'slotDateErr', 'Chỉ khai báo được cho ngày trong tương lai.');
 
     if (!startEl.value) return fieldError(startEl, 'slotStartErr', 'Vui lòng nhập giờ bắt đầu.');

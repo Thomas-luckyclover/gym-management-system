@@ -32,11 +32,12 @@
         <a href="hoi-vien.html" aria-current="page"><i class="fa-solid fa-user-group"></i>Hồ sơ khách</a>
         <a href="bao-luu.html"><i class="fa-solid fa-circle-pause"></i>Bảo lưu</a>
         <h4>Cơ sở vật chất</h4>
-        <a href="co-so-vat-chat.html"><i class="fa-solid fa-boxes-stacked"></i>Danh mục</a>
+        <a href="co-so-vat-chat.html"><i class="fa-solid fa-boxes-stacked"></i>Báo hỏng thiết bị</a>
         <a href="bao-tri.html"><i class="fa-solid fa-screwdriver-wrench"></i>Yêu cầu bảo trì</a>
         <h4>Cá nhân</h4>
         <a href="nghi-phep.html"><i class="fa-solid fa-plane-departure"></i>Nghỉ phép</a>
         <a href="tai-khoan.html"><i class="fa-solid fa-user-gear"></i>Cài đặt tài khoản</a>
+        <a href="../chon-vai-tro.html"><i class="fa-solid fa-repeat"></i>Đổi vai trò</a>
       </nav>
       <div class="cust-sidebar-foot">
         <a href="../dang-nhap.html"><i class="fa-solid fa-arrow-right-from-bracket"></i>Đăng xuất</a>
@@ -116,7 +117,7 @@
                 <div class="form-grid">
                   <label class="field span-2">
                     <span class="field-label">Họ và tên</span>
-                    <input id="cfName" type="text" placeholder="Nguyễn Văn A">
+                    <input id="cfName" type="text" maxlength="50" placeholder="Nguyễn Văn A">
                     <span class="field-error" id="cfNameErr" hidden></span>
                   </label>
                   <label class="field">
@@ -127,7 +128,7 @@
                   </label>
                   <label class="field" data-self>
                     <span class="field-label">Email</span>
-                    <input id="cfEmail" type="email" placeholder="ban@email.com">
+                    <input id="cfEmail" type="email" maxlength="100" placeholder="ban@email.com">
                     <span class="field-hint"><i class="fa-solid fa-circle-info"></i><span>Nếu để trống, khách sẽ không có tài khoản đăng nhập (phải ra quầy mỗi lần).</span></span>
                     <span class="field-error" id="cfEmailErr" hidden></span>
                   </label>
@@ -161,6 +162,11 @@
                 </div>
               </form>
             </section>
+
+            <section class="panel">
+              <div class="panel-head"><h2>Gói tập và lịch PT</h2></div>
+              <p class="muted">Hồ sơ mới chưa có gói tập hoặc buổi PT. Sau khi bán gói ở quầy, gói và lịch PT của khách hiện ở đây.</p>
+            </section>
           </div>
 
           <aside class="col-side">
@@ -171,9 +177,9 @@
               <button class="btn btn-ghost btn-sm btn-block" type="button" id="camBtn"><i class="fa-solid fa-camera"></i> Mở camera quầy</button>
             </div>
             <div class="side-card">
-              <span class="section-label">Xoá hồ sơ</span>
+              <span class="section-label">Xóa hồ sơ</span>
               <p class="muted">Lễ tân gửi đề nghị kèm lý do. Quản lý duyệt thì hồ sơ mới ẩn khỏi danh sách.</p>
-              <button class="btn btn-ghost btn-sm btn-block" type="button" id="delBtn"><i class="fa-solid fa-trash-can"></i> Đề nghị xoá hồ sơ</button>
+              <button class="btn btn-ghost btn-sm btn-block" type="button" id="delBtn"><i class="fa-solid fa-trash-can"></i> Đề nghị xóa hồ sơ</button>
             </div>
           </aside>
         </div>

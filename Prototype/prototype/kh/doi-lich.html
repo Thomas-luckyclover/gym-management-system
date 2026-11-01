@@ -68,161 +68,18 @@
     </header>
 
     <main class="cust-content">
-      <div class="step-panel" data-step="form">
-        <div class="split">
-          <div class="col-main">
-
-            <section class="panel">
-              <div class="panel-head"><h2>Ngày giờ mới</h2><span class="muted">T7 và CN trong tuần</span></div>
-              <div class="toolbar" style="border:none;padding:0;background:transparent">
-                <b data-week-label style="font-size:.88rem"></b>
-        <label for="slotBand">Khung giờ</label>
-        <select id="slotBand">
-          <option value="all">Cả ngày</option>
-          <option value="sang">Sáng · 06:00–10:00</option>
-          <option value="chieu">Chiều · 14:00–16:00</option>
-          <option value="toi">Tối · 18:00–20:00</option>
-        </select>
-                <button class="btn btn-ghost btn-sm reset" type="button" id="slotReset">Đặt lại</button>
-              </div>
-              <div class="note-box" style="margin-bottom:var(--space-3)">
-                <i class="fa-solid fa-circle-info"></i>
-                <span>Chỉ được đổi sang T7 hoặc CN. T2-T6 hiển thị nhưng không thể chọn (theo BR-75).</span>
-              </div>
-              <div class="slot-grid">
-          <div class="slot-day out-of-range">
-            <b data-day-label="0">T2<em>–</em></b>
-            <button class="slot" type="button" aria-pressed="false" data-day="0" data-time="06:00" data-band="sang" disabled title="Chỉ được đổi sang T7 hoặc CN">06:00</button>
-            <button class="slot" type="button" aria-pressed="false" data-day="0" data-time="08:00" data-band="sang" disabled title="Chỉ được đổi sang T7 hoặc CN">08:00</button>
-            <button class="slot" type="button" aria-pressed="false" data-day="0" data-time="10:00" data-band="sang" disabled title="Chỉ được đổi sang T7 hoặc CN">10:00</button>
-            <button class="slot" type="button" aria-pressed="false" data-day="0" data-time="14:00" data-band="chieu" disabled title="Chỉ được đổi sang T7 hoặc CN">14:00</button>
-            <button class="slot" type="button" aria-pressed="false" data-day="0" data-time="16:00" data-band="chieu" disabled title="Chỉ được đổi sang T7 hoặc CN">16:00</button>
-            <button class="slot" type="button" aria-pressed="false" data-day="0" data-time="18:00" data-band="toi" disabled title="Chỉ được đổi sang T7 hoặc CN">18:00</button>
-            <button class="slot" type="button" aria-pressed="false" data-day="0" data-time="19:00" data-band="toi" disabled title="Chỉ được đổi sang T7 hoặc CN">19:00</button>
-            <button class="slot" type="button" aria-pressed="false" data-day="0" data-time="20:00" data-band="toi" disabled title="Chỉ được đổi sang T7 hoặc CN">20:00</button>
-          </div>
-          <div class="slot-day out-of-range">
-            <b data-day-label="1">T3<em>–</em></b>
-            <button class="slot" type="button" aria-pressed="false" data-day="1" data-time="06:00" data-band="sang" disabled title="Chỉ được đổi sang T7 hoặc CN">06:00</button>
-            <button class="slot" type="button" aria-pressed="false" data-day="1" data-time="08:00" data-band="sang" disabled title="Chỉ được đổi sang T7 hoặc CN">08:00</button>
-            <button class="slot" type="button" aria-pressed="false" data-day="1" data-time="10:00" data-band="sang" disabled title="Chỉ được đổi sang T7 hoặc CN">10:00</button>
-            <button class="slot" type="button" aria-pressed="false" data-day="1" data-time="14:00" data-band="chieu" disabled title="Chỉ được đổi sang T7 hoặc CN">14:00</button>
-            <button class="slot" type="button" aria-pressed="false" data-day="1" data-time="16:00" data-band="chieu" disabled title="Chỉ được đổi sang T7 hoặc CN">16:00</button>
-            <button class="slot" type="button" aria-pressed="false" data-day="1" data-time="18:00" data-band="toi" disabled title="Chỉ được đổi sang T7 hoặc CN">18:00</button>
-            <button class="slot" type="button" aria-pressed="false" data-day="1" data-time="19:00" data-band="toi" disabled title="Chỉ được đổi sang T7 hoặc CN">19:00</button>
-            <button class="slot" type="button" aria-pressed="false" data-day="1" data-time="20:00" data-band="toi" disabled title="Chỉ được đổi sang T7 hoặc CN">20:00</button>
-          </div>
-          <div class="slot-day out-of-range">
-            <b data-day-label="2">T4<em>–</em></b>
-            <button class="slot" type="button" aria-pressed="false" data-day="2" data-time="06:00" data-band="sang" disabled title="Chỉ được đổi sang T7 hoặc CN">06:00</button>
-            <button class="slot" type="button" aria-pressed="false" data-day="2" data-time="08:00" data-band="sang" disabled title="Chỉ được đổi sang T7 hoặc CN">08:00</button>
-            <button class="slot" type="button" aria-pressed="false" data-day="2" data-time="10:00" data-band="sang" disabled title="Chỉ được đổi sang T7 hoặc CN">10:00</button>
-            <button class="slot" type="button" aria-pressed="false" data-day="2" data-time="14:00" data-band="chieu" disabled title="Chỉ được đổi sang T7 hoặc CN">14:00</button>
-            <button class="slot" type="button" aria-pressed="false" data-day="2" data-time="16:00" data-band="chieu" disabled title="Chỉ được đổi sang T7 hoặc CN">16:00</button>
-            <button class="slot" type="button" aria-pressed="false" data-day="2" data-time="18:00" data-band="toi" disabled title="Chỉ được đổi sang T7 hoặc CN">18:00</button>
-            <button class="slot" type="button" aria-pressed="false" data-day="2" data-time="19:00" data-band="toi" disabled title="Chỉ được đổi sang T7 hoặc CN">19:00</button>
-            <button class="slot" type="button" aria-pressed="false" data-day="2" data-time="20:00" data-band="toi" disabled title="Chỉ được đổi sang T7 hoặc CN">20:00</button>
-          </div>
-          <div class="slot-day out-of-range">
-            <b data-day-label="3">T5<em>–</em></b>
-            <button class="slot" type="button" aria-pressed="false" data-day="3" data-time="06:00" data-band="sang" disabled title="Chỉ được đổi sang T7 hoặc CN">06:00</button>
-            <button class="slot" type="button" aria-pressed="false" data-day="3" data-time="08:00" data-band="sang" disabled title="Chỉ được đổi sang T7 hoặc CN">08:00</button>
-            <button class="slot" type="button" aria-pressed="false" data-day="3" data-time="10:00" data-band="sang" disabled title="Chỉ được đổi sang T7 hoặc CN">10:00</button>
-            <button class="slot" type="button" aria-pressed="false" data-day="3" data-time="14:00" data-band="chieu" disabled title="Chỉ được đổi sang T7 hoặc CN">14:00</button>
-            <button class="slot" type="button" aria-pressed="false" data-day="3" data-time="16:00" data-band="chieu" disabled title="Chỉ được đổi sang T7 hoặc CN">16:00</button>
-            <button class="slot" type="button" aria-pressed="false" data-day="3" data-time="18:00" data-band="toi" disabled title="Chỉ được đổi sang T7 hoặc CN">18:00</button>
-            <button class="slot" type="button" aria-pressed="false" data-day="3" data-time="19:00" data-band="toi" disabled title="Chỉ được đổi sang T7 hoặc CN">19:00</button>
-            <button class="slot" type="button" aria-pressed="false" data-day="3" data-time="20:00" data-band="toi" disabled title="Chỉ được đổi sang T7 hoặc CN">20:00</button>
-          </div>
-          <div class="slot-day out-of-range">
-            <b data-day-label="4">T6<em>–</em></b>
-            <button class="slot" type="button" aria-pressed="false" data-day="4" data-time="06:00" data-band="sang" disabled title="Chỉ được đổi sang T7 hoặc CN">06:00</button>
-            <button class="slot" type="button" aria-pressed="false" data-day="4" data-time="08:00" data-band="sang" disabled title="Chỉ được đổi sang T7 hoặc CN">08:00</button>
-            <button class="slot" type="button" aria-pressed="false" data-day="4" data-time="10:00" data-band="sang" disabled title="Chỉ được đổi sang T7 hoặc CN">10:00</button>
-            <button class="slot" type="button" aria-pressed="false" data-day="4" data-time="14:00" data-band="chieu" disabled title="Chỉ được đổi sang T7 hoặc CN">14:00</button>
-            <button class="slot" type="button" aria-pressed="false" data-day="4" data-time="16:00" data-band="chieu" disabled title="Chỉ được đổi sang T7 hoặc CN">16:00</button>
-            <button class="slot" type="button" aria-pressed="false" data-day="4" data-time="18:00" data-band="toi" disabled title="Chỉ được đổi sang T7 hoặc CN">18:00</button>
-            <button class="slot" type="button" aria-pressed="false" data-day="4" data-time="19:00" data-band="toi" disabled title="Chỉ được đổi sang T7 hoặc CN">19:00</button>
-            <button class="slot" type="button" aria-pressed="false" data-day="4" data-time="20:00" data-band="toi" disabled title="Chỉ được đổi sang T7 hoặc CN">20:00</button>
-          </div>
-          <div class="slot-day">
-            <b data-day-label="5">T7<em>–</em></b>
-            <button class="slot" type="button" aria-pressed="false" data-day="5" data-time="06:00" data-band="sang" disabled title="Slot đã có người đặt">06:00</button>
-            <button class="slot" type="button" aria-pressed="false" data-day="5" data-time="08:00" data-band="sang">08:00</button>
-            <button class="slot" type="button" aria-pressed="false" data-day="5" data-time="10:00" data-band="sang">10:00</button>
-            <button class="slot" type="button" aria-pressed="false" data-day="5" data-time="14:00" data-band="chieu">14:00</button>
-            <button class="slot" type="button" aria-pressed="false" data-day="5" data-time="16:00" data-band="chieu" disabled title="Slot đã có người đặt">16:00</button>
-            <button class="slot" type="button" aria-pressed="false" data-day="5" data-time="18:00" data-band="toi">18:00</button>
-            <button class="slot" type="button" aria-pressed="false" data-day="5" data-time="19:00" data-band="toi">19:00</button>
-            <button class="slot" type="button" aria-pressed="false" data-day="5" data-time="20:00" data-band="toi">20:00</button>
-          </div>
-          <div class="slot-day">
-            <b data-day-label="6">CN<em>–</em></b>
-            <button class="slot" type="button" aria-pressed="false" data-day="6" data-time="06:00" data-band="sang">06:00</button>
-            <button class="slot" type="button" aria-pressed="false" data-day="6" data-time="08:00" data-band="sang">08:00</button>
-            <button class="slot" type="button" aria-pressed="false" data-day="6" data-time="10:00" data-band="sang">10:00</button>
-            <button class="slot" type="button" aria-pressed="false" data-day="6" data-time="14:00" data-band="chieu">14:00</button>
-            <button class="slot" type="button" aria-pressed="false" data-day="6" data-time="16:00" data-band="chieu">16:00</button>
-            <button class="slot" type="button" aria-pressed="false" data-day="6" data-time="18:00" data-band="toi">18:00</button>
-            <button class="slot" type="button" aria-pressed="false" data-day="6" data-time="19:00" data-band="toi" disabled title="Slot đã có người đặt">19:00</button>
-            <button class="slot" type="button" aria-pressed="false" data-day="6" data-time="20:00" data-band="toi">20:00</button>
-          </div>
-              </div>
-          <div class="legend">
-            <span><i></i> Còn trống</span>
-            <span><i class="taken"></i> Đã có người đặt</span>
-            <span><i class="picked"></i> Đang chọn</span>
-          </div>
-            </section>
-
-          </div>
-
-          <aside class="col-side">
-            <div class="side-card">
-              <span class="section-label">Buổi hiện tại</span>
-              <h3>23/09/2026 · 19:00</h3>
-              <div class="side-row"><span>Huấn luyện viên</span><b>Hoàng Long</b></div>
-              <div class="side-row"><span>Nguồn buổi</span><b>Gói PT 10 buổi</b></div>
-            </div>
-            <div class="side-card">
-              <span class="section-label">Buổi mới</span>
-              <div class="side-row"><span>Ngày giờ</span><b data-summary-slot>Chưa chọn</b></div>
-              <p class="muted" style="margin-top:var(--space-3)">Không đổi PT ở màn này.</p>
-              <button class="btn btn-primary btn-block" type="button" id="swapBtn" disabled style="margin-top:var(--space-4)">Chọn ngày giờ</button>
-            </div>
-          </aside>
+      <section class="panel">
+        <div class="empty-state">
+          <div class="empty-icon"><i class="fa-solid fa-circle-info"></i></div>
+          <p>Màn này đã bỏ: khách không đổi lịch buổi PT. Xem lịch tại Lịch của tôi.</p>
+          <a class="btn btn-primary" href="buoi-pt.html">Xem Lịch của tôi</a>
         </div>
-      </div>
-
-      <div class="step-panel" data-step="noquota" hidden>
-        <div class="split"><div class="col-main">
-          <div class="alert-banner warn">
-            <i class="fa-solid fa-triangle-exclamation"></i>
-            <span>Đã dùng hết 3 lượt đổi lịch của gói này.</span>
-          </div>
-          <section class="panel">
-            <p class="muted">Buổi giữ nguyên ngày giờ hiện tại. Nếu không tập được, bạn hủy buổi — nhưng buổi vẫn bị trừ.</p>
-            <a class="btn btn-primary btn-block" href="lich-cua-toi.html">Quay lại lịch</a>
-          </section>
-        </div></div>
-      </div>
-
-      <div class="step-panel" data-step="done" hidden>
-        <div class="split"><div class="col-main">
-          <section class="panel">
-            <div class="success-icon" style="margin-inline:auto"><i class="fa-solid fa-circle-check"></i></div>
-            <h2 style="text-align:center">Đã đổi lịch</h2>
-            <p class="muted" style="text-align:center">Buổi chuyển sang <b data-done-slot></b></p>
-            <a class="btn btn-primary btn-block" href="lich-cua-toi.html">Quay lại lịch</a>
-          </section>
-        </div></div>
-      </div>
+      </section>
     </main>
   </div>
 </div>
 
 <script src="../app.js"></script>
 <script src="customer.js"></script>
-<script src="doi-lich.js"></script>
 </body>
 </html>

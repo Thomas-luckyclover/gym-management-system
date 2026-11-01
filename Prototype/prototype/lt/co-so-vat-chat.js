@@ -22,4 +22,18 @@
   });
 
   list.render();
+
+  /* bước 1 báo hỏng: chọn thiết bị rồi sang bước 2 (bao-tri.html) */
+  const boxes = () => [...document.querySelectorAll('[data-pick]:not(:disabled)')];
+  const picked = () => boxes().filter(b => b.checked).map(b => b.dataset.pick);
+  const next = document.getElementById('eqNext');
+  function syncPick() {
+    const p = picked();
+    document.getElementById('eqPicked').textContent = p.length ? `Đã chọn ${p.length} thiết bị: ${p.join(', ')}` : 'Chưa chọn thiết bị nào.';
+    next.disabled = !p.length;
+  }
+  document.addEventListener('change', e => { if (e.target.matches('[data-pick]')) syncPick(); });
+  document.getElementById('eqAll').addEventListener('click', () => { boxes().forEach(b => { b.checked = true; }); syncPick(); });
+  document.getElementById('eqNone').addEventListener('click', () => { boxes().forEach(b => { b.checked = false; }); syncPick(); });
+  next.addEventListener('click', () => { location.href = 'bao-tri.html?tb=' + picked().join(','); });
 })();
