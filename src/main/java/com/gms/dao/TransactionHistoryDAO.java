@@ -6,6 +6,8 @@ import java.sql.PreparedStatement;
 import java.sql.ResultSet;
 import java.sql.SQLException;
 import java.sql.Timestamp;
+import java.sql.Date;
+import java.time.LocalDate;
 import java.time.LocalDateTime;
 import java.util.ArrayList;
 import java.util.List;
@@ -33,6 +35,10 @@ public class TransactionHistoryDAO {
                     t.NeedsRefund,
                     t.RefundedAt,
                     s.SubscriptionId,
+                    s.StartDate,
+                    s.EndDate,
+                    pk.DurationUnit,
+                    pk.DurationValue,
                     pk.PackageType,
                     o.UnitPriceSnapshot,
                     o.DiscountAmount,
@@ -85,6 +91,13 @@ public class TransactionHistoryDAO {
                     int subscriptionValue = rows.getInt("SubscriptionId");
                     Integer subscriptionId = rows.wasNull()
                             ? null : subscriptionValue;
+                    Date startSql = rows.getDate("StartDate");
+                    LocalDate startDate = startSql == null ? null : startSql.toLocalDate();
+                    Date endSql = rows.getDate("EndDate");
+                    LocalDate endDate = endSql == null ? null : endSql.toLocalDate();
+                    String durationUnit = rows.getString("DurationUnit");
+                    int durVal = rows.getInt("DurationValue");
+                    Integer durationValue = rows.wasNull() ? null : durVal;
 
                     items.add(new TransactionHistoryItem(
                             rows.getInt("TransactionId"),
@@ -104,7 +117,11 @@ public class TransactionHistoryDAO {
                             rows.getLong("DiscountAmount"),
                             rows.getString("VoucherCode"),
                             rows.getInt("VatRateSnapshot"),
-                            rows.getLong("VatAmount")));
+                            rows.getLong("VatAmount"),
+                            startDate,
+                            endDate,
+                            durationUnit,
+                            durationValue));
                 }
             }
         }

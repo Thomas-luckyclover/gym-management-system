@@ -154,9 +154,10 @@ public class SubscriptionStartDateService {
                         today, subscription.getStartDate(), otherEnd);
                 if (!options.contains(chosen)) {
                     conn.rollback();
+                    LocalDate maxOpt = options.isEmpty() ? PackagePeriod.latestStart(today) : options.get(options.size() - 1);
                     return ServiceResult.failField("startDate",
                             "Chỉ được chọn ngày bắt đầu từ " + DateTimeUtil.formatDate(options.get(0))
-                            + " đến " + DateTimeUtil.formatDate(PackagePeriod.latestStart(today)) + ".");
+                            + " đến " + DateTimeUtil.formatDate(maxOpt) + ".");
                 }
 
                 // B3: ngày hết hạn tính lại theo thời hạn gói đã bán.
@@ -226,5 +227,95 @@ public class SubscriptionStartDateService {
     /** Test ghi đè để không cần SQL Server. */
     protected Connection openConnection() throws SQLException {
         return DBContext.getConnection();
+    }
+
+    /**
+     * Lấy picker cho đơn hàng vừa bán tại quầy (màn biên lai counter-sale-receipt.jsp).
+     */
+    public StartDatePicker pickerForOrderId(int orderId) {
+        if (orderId <= 0) {
+            return null;
+        }
+        try (Connection conn = openConnection()) {
+            Subscription subscription = subscriptionDAO.findByOrderId(conn, orderId);
+            if (subscription == null) {
+                return null;
+            }
+            return buildPicker(conn, subscription, DateTimeUtil.today());
+        } catch (SQLException | RuntimeException e) {
+            return null;
+        }
+    }
+
+    /**
+     * Lễ tân quầy đổi ngày bắt đầu cho gói Membership của hội viên.
+     */
+    public ServiceResult<StartDatePicker> changeStartDateByStaff(int staffAccountId, Integer subscriptionId, LocalDate chosen) {
+        if (staffAccountId <= 0 || subscriptionId == null || subscriptionId <= 0) {
+            return ServiceResult.fail("Mã gói không hợp lệ.");
+        }
+        if (chosen == null) {
+            return ServiceResult.failField("startDate", "Vui lòng chọn ngày bắt đầu.");
+        }
+        try (Connection conn = openConnection()) {
+            conn.setAutoCommit(false);
+            try {
+                Subscription subscription = subscriptionDAO.findForUpdate(conn, subscriptionId);
+                if (subscription == null || subscription.getSubscriptionType() != Subscription.Type.MEMBERSHIP
+                        || !subscription.isActive()) {
+                    conn.rollback();
+                    return ServiceResult.fail("Không tìm thấy gói tập hợp lệ.");
+                }
+                LocalDate today = DateTimeUtil.today();
+                StartDatePicker current = buildPicker(conn, subscription, today);
+                if (current == null) {
+                    conn.rollback();
+                    return ServiceResult.fail("Gói không thuộc diện được đổi ngày.");
+                }
+                if (current.getLockReason() != null) {
+                    conn.rollback();
+                    return ServiceResult.fail(current.getLockReason());
+                }
+                if (chosen.equals(subscription.getStartDate())) {
+                    conn.rollback();
+                    return ServiceResult.ok(current, "Ngày bắt đầu không thay đổi.");
+                }
+                LocalDate otherEnd = subscriptionDAO.findLastMembershipEndExcluding(
+                        conn, subscription.getCustomerId(), today, subscription.getSubscriptionId());
+                List<LocalDate> options = PackagePeriod.optionsForPurchased(
+                        today, subscription.getStartDate(), otherEnd);
+                if (!options.contains(chosen)) {
+                    conn.rollback();
+                    LocalDate maxOpt = options.isEmpty() ? PackagePeriod.latestStart(today) : options.get(options.size() - 1);
+                    return ServiceResult.failField("startDate",
+                            "Chỉ được chọn ngày bắt đầu từ " + DateTimeUtil.formatDate(options.get(0))
+                            + " đến " + DateTimeUtil.formatDate(maxOpt) + ".");
+                }
+                Order order = orderDAO.findForCallback(conn, subscription.getOrderId(), false);
+                Package pkg = order == null ? null : packageDAO.findById(conn, order.getPackageId());
+                if (pkg == null || pkg.getDurationMonths() <= 0) {
+                    throw new SQLException("Không đọc được thời hạn gói");
+                }
+                LocalDate newEnd = PackagePeriod.endDate(chosen, pkg.getDurationMonths());
+                if (subscriptionDAO.updateStartDate(conn, subscription.getSubscriptionId(),
+                        subscription.getStartDate(), chosen, newEnd) != 1) {
+                    conn.rollback();
+                    return ServiceResult.fail("Gói vừa thay đổi, vui lòng tải lại trang và thử lại.");
+                }
+                auditService.logInTransaction(conn, staffAccountId, Role.RECEPTIONIST, SubscriptionDAO.ACTION_CHANGE_START,
+                        "Subscriptions", subscription.getSubscriptionId(), "StartDate",
+                        subscription.getStartDate().toString(), chosen.toString(),
+                        "Lễ tân đổi ngày; hết hạn mới " + newEnd);
+                conn.commit();
+                subscription.setStartDate(chosen);
+                subscription.setEndDate(newEnd);
+                return ServiceResult.ok(buildPicker(conn, subscription, today), "Đã lưu ngày bắt đầu.");
+            } catch (SQLException | RuntimeException e) {
+                conn.rollback();
+                throw e;
+            }
+        } catch (SQLException | RuntimeException e) {
+            return ServiceResult.fail("Chưa lưu được ngày bắt đầu. Vui lòng thử lại.");
+        }
     }
 }
