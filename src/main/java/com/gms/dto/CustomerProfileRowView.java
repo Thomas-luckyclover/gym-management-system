@@ -1,5 +1,6 @@
 package com.gms.dto;
 
+import com.gms.util.ZaloUtil;
 import java.time.LocalDateTime;
 
 /**
@@ -104,6 +105,11 @@ public class CustomerProfileRowView {
 
     public String getPhone() {
         return phone;
+    }
+
+    /** JSP dùng số liên hệ do DAO đọc để mở Zalo, cùng cách với dashboard. */
+    public String getZaloUrl() {
+        return ZaloUtil.toUrl(phone);
     }
 
     public String getEmail() {

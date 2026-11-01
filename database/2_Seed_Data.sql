@@ -2620,11 +2620,11 @@ INSERT INTO TimeSlots (TimeSlotId, PtEmployeeId, SlotDate, StartTime, EndTime, S
  (397, 13, '2026-11-04', '11:00:00', '12:30:00', 'Booked', NULL, NULL, '2026-10-25 21:00:00'),
  (398, 13, '2026-11-05', '11:00:00', '12:30:00', 'Booked', NULL, NULL, '2026-10-26 21:00:00'),
  (399, 13, '2026-11-06', '11:00:00', '12:30:00', 'Booked', NULL, NULL, '2026-10-27 21:00:00'),
- (400, 13, '2026-11-09', '11:00:00', '12:30:00', 'Booked', NULL, NULL, '2026-10-30 21:00:00');
+ (400, 13, '2026-11-09', '11:00:00', '12:30:00', 'Free', NULL, NULL, '2026-10-30 21:00:00');
 INSERT INTO TimeSlots (TimeSlotId, PtEmployeeId, SlotDate, StartTime, EndTime, Status, HeldByOrderId, HoldExpiresAt, CreatedAt) VALUES
- (401, 13, '2026-11-10', '11:00:00', '12:30:00', 'Booked', NULL, NULL, '2026-10-31 21:00:00'),
- (402, 13, '2026-11-11', '11:00:00', '12:30:00', 'Booked', NULL, NULL, '2026-11-01 21:00:00'),
- (403, 13, '2026-11-12', '11:00:00', '12:30:00', 'Booked', NULL, NULL, '2026-11-02 21:00:00'),
+ (401, 13, '2026-11-10', '11:00:00', '12:30:00', 'Free', NULL, NULL, '2026-10-31 21:00:00'),
+ (402, 13, '2026-11-11', '11:00:00', '12:30:00', 'Free', NULL, NULL, '2026-11-01 21:00:00'),
+ (403, 13, '2026-11-12', '11:00:00', '12:30:00', 'Free', NULL, NULL, '2026-11-02 21:00:00'),
  (404, 13, '2026-11-13', '11:00:00', '12:30:00', 'Booked', NULL, NULL, '2026-11-03 21:00:00'),
  (405, 13, '2026-11-16', '11:00:00', '12:30:00', 'Booked', NULL, NULL, '2026-11-06 21:00:00'),
  (406, 13, '2026-11-17', '11:00:00', '12:30:00', 'Booked', NULL, NULL, '2026-11-07 21:00:00'),
@@ -3365,7 +3365,7 @@ INSERT INTO TimeSlots (TimeSlotId, PtEmployeeId, SlotDate, StartTime, EndTime, S
  (1140, 14, '2026-11-08', '10:00:00', '11:30:00', 'Free', NULL, NULL, '2026-10-01 21:00:00'),
  (1141, 14, '2026-11-08', '15:00:00', '16:30:00', 'Free', NULL, NULL, '2026-10-01 21:00:00'),
  (1142, 5, '2026-11-09', '09:30:00', '11:00:00', 'Free', NULL, NULL, '2026-10-01 21:00:00'),
- (1143, 5, '2026-11-09', '11:00:00', '12:30:00', 'Free', NULL, NULL, '2026-10-01 21:00:00'),
+ (1143, 5, '2026-11-09', '11:00:00', '12:30:00', 'Booked', NULL, NULL, '2026-10-01 21:00:00'),
  (1144, 5, '2026-11-09', '20:00:00', '21:30:00', 'Free', NULL, NULL, '2026-10-01 21:00:00'),
  (1145, 6, '2026-11-09', '08:00:00', '09:30:00', 'Free', NULL, NULL, '2026-10-01 21:00:00'),
  (1146, 6, '2026-11-09', '09:30:00', '11:00:00', 'Free', NULL, NULL, '2026-10-01 21:00:00'),
@@ -3384,7 +3384,7 @@ INSERT INTO TimeSlots (TimeSlotId, PtEmployeeId, SlotDate, StartTime, EndTime, S
  (1159, 14, '2026-11-09', '10:00:00', '11:30:00', 'Free', NULL, NULL, '2026-10-01 21:00:00'),
  (1160, 14, '2026-11-09', '15:00:00', '16:30:00', 'Free', NULL, NULL, '2026-10-01 21:00:00'),
  (1161, 5, '2026-11-10', '09:30:00', '11:00:00', 'Free', NULL, NULL, '2026-10-01 21:00:00'),
- (1162, 5, '2026-11-10', '11:00:00', '12:30:00', 'Free', NULL, NULL, '2026-10-01 21:00:00'),
+ (1162, 5, '2026-11-10', '11:00:00', '12:30:00', 'Booked', NULL, NULL, '2026-10-01 21:00:00'),
  (1163, 5, '2026-11-10', '20:00:00', '21:30:00', 'Free', NULL, NULL, '2026-10-01 21:00:00'),
  (1164, 6, '2026-11-10', '08:00:00', '09:30:00', 'Free', NULL, NULL, '2026-10-01 21:00:00'),
  (1165, 6, '2026-11-10', '09:30:00', '11:00:00', 'Free', NULL, NULL, '2026-10-01 21:00:00'),
@@ -3403,7 +3403,7 @@ INSERT INTO TimeSlots (TimeSlotId, PtEmployeeId, SlotDate, StartTime, EndTime, S
  (1178, 14, '2026-11-10', '10:00:00', '11:30:00', 'Free', NULL, NULL, '2026-10-01 21:00:00'),
  (1179, 14, '2026-11-10', '15:00:00', '16:30:00', 'Free', NULL, NULL, '2026-10-01 21:00:00'),
  (1180, 5, '2026-11-11', '09:30:00', '11:00:00', 'Free', NULL, NULL, '2026-10-01 21:00:00'),
- (1181, 5, '2026-11-11', '11:00:00', '12:30:00', 'Free', NULL, NULL, '2026-10-01 21:00:00'),
+ (1181, 5, '2026-11-11', '11:00:00', '12:30:00', 'Booked', NULL, NULL, '2026-10-01 21:00:00'),
  (1182, 5, '2026-11-11', '20:00:00', '21:30:00', 'Free', NULL, NULL, '2026-10-01 21:00:00'),
  (1183, 6, '2026-11-11', '08:00:00', '09:30:00', 'Free', NULL, NULL, '2026-10-01 21:00:00'),
  (1184, 6, '2026-11-11', '09:30:00', '11:00:00', 'Free', NULL, NULL, '2026-10-01 21:00:00'),
@@ -3422,7 +3422,7 @@ INSERT INTO TimeSlots (TimeSlotId, PtEmployeeId, SlotDate, StartTime, EndTime, S
  (1197, 14, '2026-11-11', '10:00:00', '11:30:00', 'Free', NULL, NULL, '2026-10-01 21:00:00'),
  (1198, 14, '2026-11-11', '15:00:00', '16:30:00', 'Free', NULL, NULL, '2026-10-01 21:00:00'),
  (1199, 5, '2026-11-12', '09:30:00', '11:00:00', 'Free', NULL, NULL, '2026-10-01 21:00:00'),
- (1200, 5, '2026-11-12', '11:00:00', '12:30:00', 'Free', NULL, NULL, '2026-10-01 21:00:00');
+ (1200, 5, '2026-11-12', '11:00:00', '12:30:00', 'Booked', NULL, NULL, '2026-10-01 21:00:00');
 INSERT INTO TimeSlots (TimeSlotId, PtEmployeeId, SlotDate, StartTime, EndTime, Status, HeldByOrderId, HoldExpiresAt, CreatedAt) VALUES
  (1201, 5, '2026-11-12', '20:00:00', '21:30:00', 'Free', NULL, NULL, '2026-10-01 21:00:00'),
  (1202, 6, '2026-11-12', '08:00:00', '09:30:00', 'Free', NULL, NULL, '2026-10-01 21:00:00'),
@@ -4893,10 +4893,10 @@ INSERT INTO Sessions (SessionId, SubscriptionId, TimeSlotId, PtEmployeeId, Statu
  (391, 155, 397, 13, 'Scheduled', 382609, 229565, NULL, 0, NULL, NULL, NULL, NULL, NULL, 0),
  (392, 155, 398, 13, 'Scheduled', 382609, 229565, NULL, 0, NULL, NULL, NULL, NULL, NULL, 0),
  (393, 155, 399, 13, 'Scheduled', 382609, 229565, NULL, 0, NULL, NULL, NULL, NULL, NULL, 0),
- (394, 155, 400, 13, 'Scheduled', 382609, 229565, NULL, 0, NULL, NULL, NULL, NULL, NULL, 0),
- (395, 155, 401, 13, 'Scheduled', 382609, 229565, NULL, 0, NULL, NULL, NULL, NULL, NULL, 0),
- (396, 155, 402, 13, 'Scheduled', 382609, 229565, NULL, 0, NULL, NULL, NULL, NULL, NULL, 0),
- (397, 155, 403, 13, 'Scheduled', 382609, 229565, NULL, 0, NULL, NULL, NULL, NULL, NULL, 0),
+ (394, 155, 1143, 5, 'Scheduled', 382609, 267826, NULL, 0, NULL, NULL, NULL, NULL, NULL, 0),
+ (395, 155, 1162, 5, 'Scheduled', 382609, 267826, NULL, 0, NULL, NULL, NULL, NULL, NULL, 0),
+ (396, 155, 1181, 5, 'Scheduled', 382609, 267826, NULL, 0, NULL, NULL, NULL, NULL, NULL, 0),
+ (397, 155, 1200, 5, 'Scheduled', 382609, 267826, NULL, 0, NULL, NULL, NULL, NULL, NULL, 0),
  (398, 155, 404, 13, 'Scheduled', 382609, 229565, NULL, 0, NULL, NULL, NULL, NULL, NULL, 0),
  (399, 155, 405, 13, 'Scheduled', 382609, 229565, NULL, 0, NULL, NULL, NULL, NULL, NULL, 0),
  (400, 155, 406, 13, 'Scheduled', 382609, 229565, NULL, 0, NULL, NULL, NULL, NULL, NULL, 0);
@@ -4988,7 +4988,7 @@ INSERT INTO Sessions (SessionId, SubscriptionId, TimeSlotId, PtEmployeeId, Statu
 SET IDENTITY_INSERT Sessions OFF;
 
 /* ============================================================================
-   SessionMoveLogs — 5 dòng.
+   SessionMoveLogs — 9 dòng, gồm 4 buổi Long chuyển trước khi gửi đơn nghỉ.
    ============================================================================ */
 SET IDENTITY_INSERT SessionMoveLogs ON;
 INSERT INTO SessionMoveLogs (SessionMoveLogId, SessionId, MoveType, OldTimeSlotId, NewTimeSlotId, OldPtEmployeeId, NewPtEmployeeId, RequestedByAccountId, Reason, MovedAt) VALUES
@@ -4996,33 +4996,43 @@ INSERT INTO SessionMoveLogs (SessionMoveLogId, SessionId, MoveType, OldTimeSlotI
  (2, 88, 'PtTransfer', 91, 92, 5, 13, 15, N'PT Sơn ốm, khách chọn PT Long', '2026-09-27 20:15:00'),
  (3, 133, 'PtReschedule', 137, 138, 6, 6, 16, N'PT bận họp chuyên môn', '2026-09-13 20:15:00'),
  (4, 193, 'PtOnBehalfSwap', 198, 199, 5, 5, 15, N'Khách gọi điện nhờ PT dời buổi', '2026-09-22 20:15:00'),
- (5, 367, 'PtReschedule', 373, 964, 5, 5, 15, N'Dời buổi sáng 28/10 sang 31/10 để nộp đơn nghỉ ca sáng', '2026-10-25 19:30:00');
+ (5, 367, 'PtReschedule', 373, 964, 5, 5, 15, N'Dời buổi sáng 28/10 sang 31/10 để nộp đơn nghỉ ca sáng', '2026-10-25 19:30:00'),
+ (6, 394, 'PtTransfer', 400, 1143, 13, 5, 22, N'Chuyển buổi cho PT Sơn trước khi gửi đơn nghỉ 09–12/11', '2026-11-03 19:00:00'),
+ (7, 395, 'PtTransfer', 401, 1162, 13, 5, 22, N'Chuyển buổi cho PT Sơn trước khi gửi đơn nghỉ 09–12/11', '2026-11-03 19:00:00'),
+ (8, 396, 'PtTransfer', 402, 1181, 13, 5, 22, N'Chuyển buổi cho PT Sơn trước khi gửi đơn nghỉ 09–12/11', '2026-11-03 19:00:00'),
+ (9, 397, 'PtTransfer', 403, 1200, 13, 5, 22, N'Chuyển buổi cho PT Sơn trước khi gửi đơn nghỉ 09–12/11', '2026-11-03 19:00:00');
 SET IDENTITY_INSERT SessionMoveLogs OFF;
 
 /* ============================================================================
-   LeaveRequests — 19 dòng.
+   BF-05 — 21 đơn, mốc thuyết trình thứ Sáu 06/11/2026.
+   #8, #13: duyệt muộn, #9: nghỉ hôm nay, #10: nghỉ ngày mai.
+   #16–17: cùng đợt, Long còn 2 ngày phép sau đơn lịch sử #20.
+   #18–19: cùng đợt đã xử lý riêng, #21 giữ quỹ cho phần phép năm #18.
+   Đơn PT đã gửi không trùng lịch Scheduled, đơn mới không dùng Sick.
    ============================================================================ */
 SET IDENTITY_INSERT LeaveRequests ON;
 INSERT INTO LeaveRequests (LeaveRequestId, EmployeeId, ReviewedByEmployeeId, AssignedToEmployeeId, LeaveType, FromDate, ToDate, ShiftType, Days, Reason, Status, RejectReason, SubmittedAt, ReviewedAt, ReminderSentAt, LeaveGroupId) VALUES
- (1, 5, 2, 2, 'Annual', '2026-10-18', '2026-10-18', 'Morning', 0.5, N'Về quê có việc gia đình', 'Approved', NULL, '2026-10-16 09:00:00', '2026-10-17 15:30:00', NULL, NULL),
- (2, 4, 2, 2, 'Sick', '2026-10-19', '2026-10-19', 'Afternoon', 0.5, N'Nghỉ khám sức khỏe ca chiều', 'Rejected', N'Ca chiều thiếu lễ tân trực quầy, vui lòng đổi ca khác', '2026-10-18 08:30:00', '2026-10-18 16:00:00', NULL, NULL),
- (3, 6, NULL, 2, 'Annual', '2026-10-22', '2026-10-22', 'Morning', 1.0, N'Tham gia hội thảo chuyên môn fitness buổi sáng', 'Pending', NULL, '2026-10-20 08:30:00', NULL, NULL, NULL),
- (4, 3, NULL, 2, 'Annual', '2026-10-23', '2026-10-24', 'FullDay', 2.0, N'Nghỉ phép thường niên cùng gia đình 2 ngày', 'Pending', NULL, '2026-10-20 09:15:00', NULL, NULL, NULL),
- (5, 7, NULL, 2, 'Sick', '2026-10-24', '2026-10-24', 'Morning', 1.0, N'Khám chấn thương cổ tay tại bệnh viện thể thao', 'Pending', NULL, '2026-10-20 10:00:00', NULL, NULL, NULL),
- (6, 9, NULL, NULL, 'Unpaid', '2026-10-25', '2026-10-25', 'Afternoon', 1.0, N'Xin nghỉ giải quyết thủ tục giấy tờ hành chính cá nhân', 'Pending', NULL, '2026-10-20 11:30:00', NULL, NULL, NULL),
- (7, 8, NULL, 2, 'Annual', '2026-10-26', '2026-10-26', 'FullDay', 1.0, N'Nghỉ giải quyết việc gia đình đột xuất', 'Pending', NULL, '2026-10-20 13:45:00', NULL, NULL, NULL),
- (8, 3, NULL, NULL, 'Unpaid', '2026-10-27', '2026-10-27', 'Morning', 1.0, N'Sắp nghỉ: xin nghỉ ca sáng để giải quyết việc gia đình.', 'Pending', NULL, '2026-10-26 08:00:00', NULL, NULL, NULL),
- (9, 5, NULL, NULL, 'Annual', '2026-10-28', '2026-10-28', 'Morning', 1.0, N'Phép năm một ca: đưa người thân đi làm thủ tục buổi sáng.', 'Pending', NULL, '2026-10-26 08:10:00', NULL, NULL, NULL),
- (10, 5, NULL, NULL, 'Unpaid', '2026-11-01', '2026-11-01', 'Morning', 1.0, N'Chủ động xin nghỉ không lương dù vẫn còn phép năm.', 'Pending', NULL, '2026-10-26 08:20:00', NULL, NULL, NULL),
- (11, 5, 2, NULL, 'Annual', '2026-10-21', '2026-10-21', 'Morning', 1.0, N'Đơn đã duyệt: nghỉ giải quyết thủ tục cá nhân.', 'Approved', NULL, '2026-10-18 08:00:00', '2026-10-19 08:00:00', NULL, NULL),
- (12, 5, 2, NULL, 'Unpaid', '2026-10-30', '2026-10-30', 'Afternoon', 1.0, N'Đơn từ chối: xin nghỉ để tham gia lớp học cá nhân.', 'Rejected', N'Chưa bố trí được người thay ca, vui lòng chọn ngày khác.', '2026-10-26 08:30:00', '2026-10-26 09:00:00', NULL, NULL),
- (13, 6, NULL, NULL, 'Unpaid', '2026-10-25', '2026-10-25', 'FullDay', 1.0, N'Ngày nghỉ đã qua nhưng đơn vẫn đang chờ xử lý.', 'Pending', NULL, '2026-10-23 08:00:00', NULL, NULL, NULL),
- (14, 9, NULL, NULL, 'Annual', '2026-11-03', '2026-11-05', 'FullDay', 3.0, N'Nghỉ nhiều ngày: về quê dự việc gia đình trong ba ngày.', 'Pending', NULL, '2026-10-26 08:40:00', NULL, NULL, NULL),
- (15, 14, NULL, NULL, 'Annual', '2026-11-18', '2026-12-02', 'FullDay', 15.0, N'Thiếu phép: xin 15 ngày khi quỹ phép năm được cấu hình 14 ngày.', 'Pending', NULL, '2026-10-26 08:50:00', NULL, NULL, NULL),
- (16, 3, NULL, NULL, 'Annual', '2026-11-08', '2026-11-12', 'FullDay', 5.0, N'Đợt nghỉ 9 ngày, phần phép năm đang chờ.', 'Pending', NULL, '2026-10-26 09:00:00', NULL, NULL, '11111111-0524-4620-8000-000000000001'),
- (17, 3, NULL, NULL, 'Unpaid', '2026-11-13', '2026-11-16', 'FullDay', 4.0, N'Cùng đợt nghỉ 9 ngày, phần không lương đang chờ.', 'Pending', NULL, '2026-10-26 09:00:00', NULL, NULL, '11111111-0524-4620-8000-000000000001'),
- (18, 3, 2, NULL, 'Annual', '2026-11-20', '2026-11-24', 'FullDay', 5.0, N'Phần phép năm đã được duyệt trong đợt 9 ngày.', 'Approved', NULL, '2026-10-26 09:00:00', '2026-10-26 10:00:00', NULL, '22222222-0524-4620-8000-000000000002'),
- (19, 3, 2, NULL, 'Unpaid', '2026-11-25', '2026-11-28', 'FullDay', 4.0, N'Phần không lương bị từ chối trong cùng đợt.', 'Rejected', N'Chưa bố trí được nhân sự cho phần không lương.', '2026-10-26 09:00:00', '2026-10-26 10:00:00', NULL, '22222222-0524-4620-8000-000000000002');
+ (1, 5, 2, 2, 'Annual', '2026-10-28', '2026-10-28', 'Morning', 0.5, N'Về quê có việc gia đình', 'Approved', NULL, '2026-10-26 09:00:00', '2026-10-27 15:30:00', NULL, NULL),
+ (2, 4, 2, 2, 'Sick', '2026-10-29', '2026-10-29', 'Afternoon', 0.5, N'Nghỉ khám sức khỏe ca chiều', 'Rejected', N'Ca chiều thiếu lễ tân trực quầy, vui lòng đổi ca khác', '2026-10-28 08:30:00', '2026-10-28 16:00:00', NULL, NULL),
+ (3, 6, NULL, 2, 'Annual', '2026-11-04', '2026-11-04', 'Morning', 1.0, N'Tham gia hội thảo chuyên môn fitness buổi sáng', 'Pending', NULL, '2026-11-01 08:30:00', NULL, NULL, NULL),
+ (4, 3, NULL, 2, 'Annual', '2026-11-09', '2026-11-10', 'FullDay', 2.0, N'Nghỉ phép thường niên cùng gia đình 2 ngày', 'Pending', NULL, '2026-11-02 09:15:00', NULL, NULL, NULL),
+ (5, 7, NULL, 2, 'Unpaid', '2026-11-10', '2026-11-10', 'Morning', 1.0, N'Xin nghỉ không lương ca sáng để giải quyết việc cá nhân', 'Pending', NULL, '2026-11-03 10:00:00', NULL, NULL, NULL),
+ (6, 9, NULL, NULL, 'Unpaid', '2026-11-11', '2026-11-11', 'Afternoon', 1.0, N'Xin nghỉ giải quyết thủ tục giấy tờ hành chính cá nhân', 'Pending', NULL, '2026-11-03 11:30:00', NULL, NULL, NULL),
+ (7, 5, NULL, 2, 'Annual', '2026-11-15', '2026-11-15', 'FullDay', 1.0, N'Xin nghỉ theo kế hoạch để giải quyết việc gia đình', 'Pending', NULL, '2026-11-03 13:45:00', NULL, NULL, NULL),
+ (8, 9, NULL, NULL, 'Annual', '2026-11-05', '2026-11-05', 'Morning', 1.0, N'Cần duyệt muộn: ngày nghỉ hôm qua nhưng Manager chưa kịp duyệt.', 'Pending', NULL, '2026-11-04 08:00:00', NULL, NULL, NULL),
+ (9, 14, NULL, NULL, 'Annual', '2026-11-06', '2026-11-06', 'Morning', 1.0, N'Xin nghỉ ca sáng ngày 06/11 để đưa người thân đi khám.', 'Pending', NULL, '2026-11-05 14:00:00', NULL, NULL, NULL),
+ (10, 5, NULL, NULL, 'Unpaid', '2026-11-07', '2026-11-07', 'Morning', 1.0, N'Sắp đến ngày nghỉ: xin nghỉ ngày mai để giải quyết việc cá nhân.', 'Pending', NULL, '2026-11-05 15:30:00', NULL, NULL, NULL),
+ (11, 14, 2, NULL, 'Annual', '2026-11-02', '2026-11-02', 'Morning', 1.0, N'Đơn đã duyệt: nghỉ giải quyết thủ tục cá nhân.', 'Approved', NULL, '2026-10-30 08:00:00', '2026-10-31 08:00:00', NULL, NULL),
+ (12, 5, 2, NULL, 'Unpaid', '2026-11-03', '2026-11-03', 'Afternoon', 1.0, N'Đơn từ chối: xin nghỉ để tham gia lớp học cá nhân.', 'Rejected', N'Chưa bố trí được người thay ca, vui lòng chọn ngày khác.', '2026-11-01 08:30:00', '2026-11-01 09:00:00', NULL, NULL),
+ (13, 6, NULL, NULL, 'Unpaid', '2026-11-03', '2026-11-03', 'Morning', 1.0, N'Ca nghỉ đã qua nhưng đơn vẫn đang chờ quản lý xác nhận để duyệt muộn.', 'Pending', NULL, '2026-11-02 08:00:00', NULL, NULL, NULL),
+ (14, 9, NULL, NULL, 'Annual', '2026-11-16', '2026-11-18', 'FullDay', 3.0, N'Nghỉ nhiều ngày: về quê dự việc gia đình trong ba ngày.', 'Pending', NULL, '2026-11-04 08:40:00', NULL, NULL, NULL),
+ (15, 14, NULL, NULL, 'Unpaid', '2026-11-18', '2026-12-02', 'FullDay', 15.0, N'Chủ động xin nghỉ không lương 15 ngày, không sử dụng quỹ phép năm.', 'Pending', NULL, '2026-11-04 08:50:00', NULL, NULL, NULL),
+ (16, 13, NULL, NULL, 'Annual', '2026-11-09', '2026-11-10', 'FullDay', 2.0, N'Đợt nghỉ 4 ngày Lý Hoàng Long: phần 1 Phép năm 2 ngày.', 'Pending', NULL, '2026-11-04 09:00:00', NULL, NULL, '33333333-0524-4620-8000-000000000003'),
+ (17, 13, NULL, NULL, 'Unpaid', '2026-11-11', '2026-11-12', 'FullDay', 2.0, N'Đợt nghỉ 4 ngày Lý Hoàng Long: phần 2 Không lương 2 ngày.', 'Pending', NULL, '2026-11-04 09:00:00', NULL, NULL, '33333333-0524-4620-8000-000000000003'),
+ (18, 3, 2, NULL, 'Annual', '2026-11-23', '2026-11-25', 'FullDay', 3.0, N'Phần phép năm đã được duyệt trong đợt 5 ngày.', 'Approved', NULL, '2026-11-04 09:00:00', '2026-11-04 10:00:00', NULL, '44444444-0524-4620-8000-000000000004'),
+ (19, 3, 2, NULL, 'Unpaid', '2026-11-26', '2026-11-27', 'FullDay', 2.0, N'Phần không lương bị từ chối trong cùng đợt.', 'Rejected', N'Chưa bố trí được nhân sự cho phần không lương.', '2026-11-04 09:00:00', '2026-11-04 10:00:00', NULL, '44444444-0524-4620-8000-000000000004'),
+ (20, 13, 2, NULL, 'Annual', '2026-08-16', '2026-08-27', 'FullDay', 12.0, N'Nghỉ phép năm đã được duyệt, còn 2 ngày phép để gửi đợt nghỉ tháng 11.', 'Approved', NULL, '2026-08-15 09:00:00', '2026-08-15 10:00:00', NULL, NULL),
+ (21, 3, 2, NULL, 'Annual', '2026-08-01', '2026-08-09', 'FullDay', 9.0, N'Nghỉ phép năm đã được duyệt trong tháng 8.', 'Approved', NULL, '2026-07-30 09:00:00', '2026-07-31 10:00:00', NULL, NULL);
 SET IDENTITY_INSERT LeaveRequests OFF;
 
 INSERT INTO LeaveRequestTransfers (LeaveRequestId, FromEmployeeId, ToEmployeeId, Note, CreatedAt) VALUES

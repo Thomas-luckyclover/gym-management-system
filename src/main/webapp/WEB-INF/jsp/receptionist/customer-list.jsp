@@ -188,9 +188,14 @@
                                                             </div>
                                                         </td>
                                                         <td data-label="Liên hệ">
-                                                            <span>
-                                                                <c:out value="${profile.phone}" default="—" />
-                                                            </span>
+                                                            <c:choose>
+                                                                <c:when test="${managerView and not empty profile.zaloUrl}">
+                                                                    <a href="<c:out value='${profile.zaloUrl}' />" target="_blank" rel="noopener noreferrer" title="Mở Zalo">
+                                                                        <c:out value="${profile.phone}" />
+                                                                    </a>
+                                                                </c:when>
+                                                                <c:otherwise><span><c:out value="${profile.phone}" default="—" /></span></c:otherwise>
+                                                            </c:choose>
                                                             <span class="bf07-sub bf07-wrap">
                                                                 <c:out value="${profile.email}" default="Chưa có email" />
                                                             </span>
