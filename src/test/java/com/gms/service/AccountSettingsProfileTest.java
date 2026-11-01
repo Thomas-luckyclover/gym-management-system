@@ -42,26 +42,29 @@ import static org.junit.jupiter.api.Assertions.*;
 class AccountSettingsProfileTest {
 
     // ==========================================
-    // 1. Fallback 1-letter initials tests (từ cuối cùng trong họ và tên)
+    // 1. Fallback 2-letter initials tests (chữ đầu họ + chữ đầu tên theo chuẩn GMS)
     // ==========================================
 
     @Test
-    @DisplayName("Avatar fallback: Chỉ lấy 1 chữ cái đầu của tên (từ cuối cùng), giữ nguyên dấu tiếng Việt")
+    @DisplayName("Avatar fallback: Lấy 2 chữ cái đầu (chữ đầu họ + chữ đầu tên), giữ nguyên dấu tiếng Việt")
     void testInitials_VietnameseFullName() {
         AccountSettingsView view1 = createViewWithName("Nguyễn Hải Đăng");
-        assertEquals("Đ", view1.getInitials());
+        assertEquals("NĐ", view1.getInitials());
 
         AccountSettingsView view2 = createViewWithName("Nguyễn Đăng Vũ");
-        assertEquals("V", view2.getInitials());
+        assertEquals("NV", view2.getInitials());
 
         AccountSettingsView view3 = createViewWithName("Trần Minh Anh");
-        assertEquals("A", view3.getInitials());
+        assertEquals("TA", view3.getInitials());
 
         AccountSettingsView view4 = createViewWithName("Lê Hoàng Nam");
-        assertEquals("N", view4.getInitials());
+        assertEquals("LN", view4.getInitials());
 
         AccountSettingsView view5 = createViewWithName("Trần Hưng");
-        assertEquals("H", view5.getInitials());
+        assertEquals("TH", view5.getInitials());
+
+        AccountSettingsView view6 = createViewWithName("Lê Thị Thanh Tâm");
+        assertEquals("LT", view6.getInitials());
     }
 
     @Test
@@ -74,7 +77,7 @@ class AccountSettingsProfileTest {
         assertEquals("Đ", viewAccentedSingle.getInitials());
 
         AccountSettingsView viewMultipleSpaces = createViewWithName("   Nguyễn   Hải   Đăng   ");
-        assertEquals("Đ", viewMultipleSpaces.getInitials());
+        assertEquals("NĐ", viewMultipleSpaces.getInitials());
 
         AccountSettingsView viewNull = createViewWithName(null);
         assertEquals("—", viewNull.getInitials());
