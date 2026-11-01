@@ -199,4 +199,15 @@ public class CounterSaleReceipt {
     public String getVoucherCode() {
         return voucherCode;
     }
+
+    /** Tạo bản sao receipt với ngày bắt đầu và kết thúc mới sau khi đổi ngày. */
+    public CounterSaleReceipt withUpdatedDates(String newStartText, String newEndText) {
+        return new CounterSaleReceipt(
+                this.orderId, this.orderCode, this.customerName, this.customerCode,
+                this.phoneText, this.packageName, this.durationText,
+                newStartText, newEndText, this.finalAmount, this.paymentMethod,
+                this.paymentMethodText, this.paidAtText, this.receptionistName,
+                this.discountAmount, this.voucherCode
+        );
+    }
 }
